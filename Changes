@@ -2081,3 +2081,4 @@ seen. gmtime warning still there
 - Fixed minor badwords /rehash memleak.
 - Added link::options::nohostcheck which makes Unreal not to validate the incomming host/IP
   against the link::host field, usefull for dynamic DNS hosts.
+- Some documentation improvements regarding link::hostname.

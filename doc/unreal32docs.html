@@ -1434,11 +1434,15 @@ link &lt;server-name&gt; {
    You can specify this if you use ident for authentication, normally you will set this to "*".
 </p>
 <p><b>hostname</b><br>
-  The remote host or IP of the remote server. This is used for both connecting and for 
-  authentication/verification on the "connection-receiving" side.
-  Examples: 1.2.3.4 (normal IP), hub.blah.com (host), * (cannot connect TO but will
-  allow a server connection with right pass from everywhere), ::ffff:1.2.3.4 (for linking 
-  to ipv4 server from ipv6).
+  The remote host or IP of the remote server. This is used for both connecting AND for 
+  authentication/verification on the incomming side. Some examples:<br>
+  <table border="0">
+  <tr><td><i>1.2.3.4</i></td><td> normal IP</td></tr>
+  <tr><td><i>hub.blah.com</i></td><td> host: only for outgoing, cannot accept _incomming_ connections unless 
+  link::options::nohostcheck is present</td></tr>
+  <tr><td><i>*</i></td><td> cannot connect TO but will allow a server connection (with correct password) from everywhere</td></tr>
+  <tr><td><i>::ffff:1.2.3.4</i></td><td> for linking ipv6 to ipv4.</td></tr>
+  </table>
 </p>
 <p><b>bind-ip</b> (optional)<br>
   Can be used to bind to a specific IP (ex: 192.168.0.1) from where we should 
