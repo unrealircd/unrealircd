@@ -31,7 +31,7 @@ typedef char			(*cFP)();	/* char * function pointer */
 #define irc_dlopen(x,y) LoadLibrary(x)
 #define irc_dlclose FreeLibrary
 #define irc_dlsym(x,y,z) z = (void *)GetProcAddress(x,y)
-#define irc_dlsymtype(x,y,z,t) z = ((t) *)GetProcAddress(x,y)
+#define irc_dlsymtype(x,y,z,t) z = ((t))GetProcAddress(x,y)
 #undef irc_dlerror
 #elif defined(HPUX)
 #define irc_dlopen(x,y) shl_load(x,y,0L)
@@ -44,10 +44,10 @@ typedef char			(*cFP)();	/* char * function pointer */
 #define irc_dlclose dlclose
 #if defined(UNDERSCORE)
 #define irc_dlsym(x,y,z) z = obsd_dlsym(x,y)
-#define irc_dlsymtype(x,y,z,t) z = ((t) *) obsd_dlsym(x,y)
+#define irc_dlsymtype(x,y,z,t) z = ((t)) obsd_dlsym(x,y)
 #else
 #define irc_dlsym(x,y,z) z = dlsym(x,y)
-#define irc_dlsymtype(x,y,z,t) z = ((t) *) dlsym(x,y)
+#define irc_dlsymtype(x,y,z,t) z = ((t)) dlsym(x,y)
 #endif
 #define irc_dlerror dlerror
 #define DLLFUNC 
