@@ -3204,3 +3204,5 @@ This is the 3.2 fixes branch.
   any 'weak spots' (which server to attack/[D]DoS). Obviously opers will always
   see the real map.
 - unreal32docs.html: added flat-map and set::restrict-usermodes "s"; security tips.
+- Fixed a compile error regarding AF_MAX (#0001839) reported by Rocko
+

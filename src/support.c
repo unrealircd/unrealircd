@@ -35,6 +35,7 @@ static char sccsid[] = "@(#)support.c	2.21 4/13/94 1990, 1991 Armin Gruner;\
 #ifdef _WIN32
 #include <io.h>
 #else
+#include <sys/socket.h>
 #include <string.h>
 #include <utime.h>
 extern int errno;		/* ...seems that errno.h doesn't define this everywhere */
