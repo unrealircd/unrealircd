@@ -402,3 +402,4 @@
 - Removed FNAME_OPERLOG and replaced it with log {} flag oper
 - Removed OWNLOGON (did nothing?)
 - Replaced FNAME_USERLOG with log {} flag connects (logs user connects and disconnects)
+- added temporary define #define OLD_CLOAK
