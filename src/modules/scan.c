@@ -50,43 +50,15 @@
 #ifdef _WIN32
 #include "version.h"
 #endif
-#define IS_SCAN_C
-
 #include "modules/scan.h"
-#include "modules/blackhole.h"
 
-#define MSG_SCAN 	"SCAN"	/* scan */
-#define TOK_SCAN "??"
- /* 
- * Structure containing what hosts currently being checked.
- * refcnt = 0 means it is doomed for cleanup
-*/
-HStruct			Hosts[SCAN_AT_ONCE];
-VHStruct		VHosts[SCAN_AT_ONCE];
+struct SOCKADDR_IN Scan_endpoint;
 
-/* 
- * If it is legal to edit Hosts table
-*/
-MUTEX				HSlock;
-MUTEX				VSlock;
+static Scan_AddrStruct *Scannings = NULL;
+MUTEX Scannings_lock;
 
-MUTEX				blackhole_mutex;
-ConfigItem_blackhole		blackhole_conf;
-char				blackhole_stop = 0;
-SOCKET				blackholefd = 0;
-struct SOCKADDR_IN		blackholesin;
-/* Some prototypes .. aint they sweet? */
-DLLFUNC int			h_scan_connect(aClient *sptr);
-DLLFUNC EVENT			(HS_Cleanup);
-DLLFUNC EVENT			(VS_Ban);
-DLLFUNC int			h_scan_info(aClient *sptr);
-DLLFUNC int			m_scan(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-DLLFUNC int			h_config_set_blackhole(void);
-DLLFUNC int			h_config_set_blackhole_rehash(void);
-DLLFUNC void 			blackhole(void *p);
-THREAD				acceptthread;
-THREAD_ATTR			acceptthread_attr;
-Event *e_hscleanup, *e_vsban;
+DLLFUNC int h_scan_connect(aClient *sptr);
+DLLFUNC int	h_config_set_scan(void);
 
 #ifndef DYNAMIC_LINKING
 ModuleHeader m_scan_Header
@@ -102,11 +74,6 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
-/*
- * The purpose of these ifdefs, are that we can "static" link the ircd if we
- * want to
-*/
-
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Init(int module_load)
@@ -115,18 +82,8 @@ int    m_scan_Init(int module_load)
 #endif
 {
 	add_Hook(HOOKTYPE_LOCAL_CONNECT, h_scan_connect);
-	add_Hook(HOOKTYPE_SCAN_INFO, h_scan_info);
-	bzero(Hosts, sizeof(Hosts));
-	bzero(VHosts, sizeof(VHosts));
-	e_hscleanup = EventAdd("hscleanup", 1, 0, HS_Cleanup, NULL);
-	e_vsban = EventAdd("vsban", 1, 0, VS_Ban, NULL);
-	IRCCreateMutex(HSlock);
-	IRCCreateMutex(VSlock);
-	add_Command(MSG_SCAN, TOK_SCAN, m_scan, MAXPARA);
-	blackhole_stop = 0;
-	bzero(&blackhole_conf, sizeof(blackhole_conf));
-	add_Hook(HOOKTYPE_CONFIG_UNKNOWN, h_config_set_blackhole);
-	add_Hook(HOOKTYPE_REHASH, h_config_set_blackhole_rehash);
+	add_Hook(HOOKTYPE_CONFIG_UNKNOWN, h_config_set_scan);
+	IRCCreateMutex(Scannings_lock);
 	return MOD_SUCCESS;
 }
 
@@ -137,179 +94,87 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_scan_Load(int module_load)
 #endif
 {
-	if (!blackhole_conf.ip || !blackhole_conf.port)
-	{
-		config_progress("set::blackhole: missing ip/port mask or configuration not loaded. using %s:6013",
-			conf_listen->ip);
-		blackhole_conf.ip = strdup(conf_listen->ip);
-		blackhole_conf.port = 6013;
-	}
-	if ((blackholefd = socket(AFINET, SOCK_STREAM, 0)) == -1)
-	{
-		config_error("set::blackhole: could not create socket");
-		blackholefd = -1;
-		return -1;
-	}		
-#ifndef INET6
-	blackholesin.SIN_ADDR.S_ADDR = inet_addr(blackhole_conf.ip);
-#else
-	inet_pton(AFINET, blackhole_conf.ip, &blackholesin.SIN_ADDR);
-#endif
-	
-	blackholesin.SIN_PORT = htons(blackhole_conf.port);
-	blackholesin.SIN_FAMILY = AFINET;
-	blackhole_stop = 0;
-	if (bind(blackholefd, (struct SOCKADDR *)&blackholesin, sizeof(blackholesin)))
-	{
-		CLOSE_SOCK(blackholefd);
-		config_error("set::blackhole: could not bind to %s:%i - %s", blackhole_conf.ip, blackhole_conf.port,
-			strerror(errno)); 
-		blackholefd = -1;
-		return -1;
-	}
-
-	listen(blackholefd, LISTEN_SIZE);
-	/* Create blackhole accept() thread */
-	IRCCreateThread(acceptthread, acceptthread_attr, blackhole, NULL);
 	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
+DLLFUNC int	Mod_Unload(void)
 #else
-int	m_scan_Unload(int module_unload)
+int	m_scan_Unload(void)
 #endif
 {
-	SOCKET fd;
-	int j,i;
-	if (del_Command(MSG_SCAN, TOK_SCAN, m_scan) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-				m_scan_Header.name);
-	}
-	del_Hook(HOOKTYPE_LOCAL_CONNECT, h_scan_connect);
-	del_Hook(HOOKTYPE_SCAN_INFO, h_scan_info);
-	EventDel(e_hscleanup);
-	EventDel(e_vsban);
-	i = 1;
-	while (i)
-	{
-		i = 0;
-		HS_Cleanup(NULL);
-		IRCMutexLock(HSlock);
-		for (j = 0; j < SCAN_AT_ONCE;  j++)
-			if (Hosts[i].host[0])
-				i++;
-		IRCMutexUnlock(HSlock);
-	}
-	i = 1;
-	while (i)
-	{
-		i = 0;
-		VS_Ban(NULL);
-		IRCMutexLock(VSlock);
-		for (j = 0; j < SCAN_AT_ONCE;  j++)
-			if (VHosts[i].host[0])
-				i++;
-		IRCMutexUnlock(VSlock);
-		
-	}
-	/* We need to catch it, and throw it out as soon as we get it */	
-	IRCMutexLock(HSlock);
-	IRCMutexDestroy(HSlock);
-	IRCMutexLock(VSlock);
-	IRCMutexDestroy(VSlock);
-	del_Hook(HOOKTYPE_CONFIG_UNKNOWN, h_config_set_blackhole);
-	del_Hook(HOOKTYPE_REHASH, h_config_set_blackhole_rehash);
-	blackhole_stop = 1;
-	if (blackholefd)
-	{
-		fd = socket(AFINET, SOCK_STREAM, 0);
-		if (fd >-1)
-		{
-			connect(fd, (struct sockaddr *) &blackholesin, sizeof(blackholesin));
-		}
-		IRCJoinThread(acceptthread, NULL);
-		CLOSE_SOCK(fd);
-	}
-	if (blackhole_conf.ip)
-		MyFree(blackhole_conf.ip);
+	return MOD_SUCCESS;
 }
 
-HStruct	*HS_Add(char *host)
+/*
+ * An little status indicator
+ *
+*/
+
+int	Scan_IsBeingChecked(struct IN_ADDR *ia)
 {
-	int	i;
+	int		ret = 0;
+	Scan_AddrStruct *sr = NULL;
+
+	IRCMutexLock(Scannings_lock);
+	for (sr = Scannings; sr; sr = sr->next)
+	{
+		if (bcmp(&sr->in, ia, sizeof(Scan_AddrStruct)))
+		{
+			ret = 1;
+			break;
+		}
+	}	
+	IRCMutexUnlock(Scannings_lock);
+	return ret;
+}
+
+/*
+ * Event based crack code to clean up the Scannings 
+*/
+
+EVENT(e_scannings_clean)
+{
+	Scan_AddrStruct *sr = NULL;
+	Scan_AddrStruct *q, t;
+	IRCMutexLock(Scannings_lock);
+	for (sr = Scannings; sr; sr = sr->next)
+	{
+		IRCMutexLock(sr->lock);
+		if (sr->refcnt == 0)
+		{
+			q = sr->next;
+			if (sr->prev)
+				sr->prev->next = sr->prev;
+			else
+				Scannings = sr->next;
+			if (sr->next)
+				sr->next->prev = sr->prev;
+			t.next = sr->next;
+			IRCMutexUnlock(sr->lock);
+			IRCMutexDestroy(sr->lock);
+			MyFree(sr);
+			sr = &t;			
+			continue;
+		}
+		IRCMutexUnlock(sr->lock);
+	}	
+	IRCMutexUnlock(Scannings_lock);
 	
-	for (i = 0; i < SCAN_AT_ONCE; i++)
-		if (!(*Hosts[i].host))
-		{
-			strcpy(Hosts[i].host, host);
-			return (&Hosts[i]);
-		}
-	return NULL;
 }
 
-VHStruct	*VS_Add(char *host, char *reason)
+/*
+ * Instead of using the honey and bee infested VS_ban method, we simply
+ * abuse the fact that events system is now provided with a lock to ensure
+ * that we can actually queue in these bloody bans ..
+ * Expect that data will be freed at end of routine -Stskeeps
+ */
+ 
+EVENT(e_scan_ban)
 {
-	int	i;
-	
-	for (i = 0; i < SCAN_AT_ONCE; i++)
-		if (!(*VHosts[i].host))
-		{
-			strcpy(VHosts[i].host, host);
-			strcpy(VHosts[i].reason, reason);
-			return (&VHosts[i]);
-		}
-	return NULL;
-}
-
-
-HStruct *HS_Find(char *host)
-{
-	int	i;
-
-	for (i = 0; i < SCAN_AT_ONCE; i++)
-		if (!strcmp(Hosts[i].host, host))
-		{
-			return (&Hosts[i]);
-		}
-	return NULL;
-}
-
-VHStruct *VS_Find(char *host)
-{
-	int	i;
-
-	for (i = 0; i < SCAN_AT_ONCE; i++)
-		if (!strcmp(VHosts[i].host, host))
-		{
-			return (&VHosts[i]);
-		}
-	return NULL;
-}
-
-DLLFUNC EVENT(HS_Cleanup)
-{
-	int i;
-
-	/* If it is called as a event, get lock */
-	if (data == NULL)
-		IRCMutexLock(HSlock);			
-	for (i = 0; i < SCAN_AT_ONCE; i++)
-		if (Hosts[i].host[0] && (Hosts[i].refcnt <= 0))
-		{
-			*(Hosts[i].host) = '\0';	
-			Hosts[i].refcnt = 0;
-		}
-	if (data == NULL)
-		IRCMutexUnlock(HSlock);
-}
-
-DLLFUNC EVENT(VS_Ban)
-{
-	int i;
+	Scan_Result *sr = (Scan_Result *) data;
 	char hostip[128], mo[100], mo2[100], reason[256];
 	char *tkllayer[9] = {
 		me.name,	/*0  server.name */
@@ -322,196 +187,145 @@ DLLFUNC EVENT(VS_Ban)
 		NULL,		/*7  set_at */
 		NULL		/*8  reason */
 	};
-
-	if (data == NULL)
-		IRCMutexLock(VSlock);			
-	for (i = 0; i < SCAN_AT_ONCE; i++)
-		if (*VHosts[i].host && *VHosts[i].reason)
-		{
-			
-			strcpy(hostip, VHosts[i].host);
-			tkllayer[4] = hostip;
-			tkllayer[5] = me.name;
-			ircsprintf(mo, "%li", SOCKSBANTIME + TStime());
-			ircsprintf(mo2, "%li", TStime());
-			tkllayer[6] = mo;
-			tkllayer[7] = mo2;
-			strcpy(reason, VHosts[i].reason);
-			tkllayer[8] = reason;
-			m_tkl(&me, &me, 9, tkllayer);
-			/* De-stroy */
-			*VHosts[i].host = '\0';
-		    *VHosts[i].reason = '\0';
-		}
-	if (data == NULL)
-		IRCMutexUnlock(VSlock);
-
+	/* Weirdness */
+	if (!sr)
+		return;
 	
+	strcpy(hostip, Inet_ia2p(&sr->in));
+	tkllayer[4] = hostip;
+	tkllayer[5] = me.name;
+	ircsprintf(mo, "%li", SOCKSBANTIME + TStime());
+	ircsprintf(mo2, "%li", TStime());
+	tkllayer[6] = mo;
+	tkllayer[7] = mo2;
+	tkllayer[8] = sr->reason;
+	m_tkl(&me, &me, 9, tkllayer);
+	MyFree((char *)sr);
+	return;
 }
+
+void	Eadd_scan(struct IN_ADDR *in, char *reason)
+{
+	Scan_Result *sr = (Scan_Result *) MyMalloc(sizeof(Scan_Result));
+	sr->in = *in;
+	strcpy(sr->reason, reason);
+	EventAdd("scan_ban", 0, 1, e_scan_ban, (void *)sr);
+	return;
+}
+
+/*
+ * Aah, the root of evil. This will create small linked lists with small little
+ * and cute mutexes and reference counts.. we really should use semaphores, but ey..
+ * This will also start an insanity of scanning threads to make system admins insane..
+ *
+ * -Stskeeps
+*/
 
 DLLFUNC int h_scan_connect(aClient *sptr)
 {
-	Hook			*hook;
-	HStruct			*h;
-	vFP			*vfp;
-	THREAD			thread;
-	THREAD_ATTR		thread_attr;
-	char			addrbuf[1024];
-
-#ifndef INET6
-	strcpy(addrbuf, (char *)inet_ntoa(sptr->ip));
-#else
-	inet_ntop(AFINET, (void *)&sptr->ip,
-	            addrbuf, sizeof(addrbuf));
-#endif
-
-	if (Find_except(addrbuf, 0))
-		return 0;
-		
-	IRCMutexLock(HSlock);
-	HS_Cleanup((void *)1);
-	if (HS_Find(addrbuf))
-	{
-		/* Not gonna scan, already scanning */
-		IRCMutexUnlock(HSlock);
-		return 0;
-	}
-	if (h = HS_Add(addrbuf))
-	{
-		/* Run scanning threads, refcnt++ for each thread that uses the struct */
-		/* Use hooks, making it easy, remember to convert to vFP */
-		for (hook = Hooks[HOOKTYPE_SCAN_HOST]; hook; hook = hook->next)
-		{
-	        h->refcnt++;
-			/* Create thread for connection */
-			IRCCreateThread(thread, thread_attr, (hook->func.voidfunc), h); 
-		}
-		IRCMutexUnlock(HSlock);
-		return 1;
-	}
-	else
-	{
-		/* We got no more slots back .. actually .. shouldn't we call HS_cleanup 
-		   And run h_scan_connect again?. Is this too loopy?
-		*/
-		sendto_realops("Problem: We ran out of Host slots. Cannot scan %s. increase SCAN_AT_ONCE",
-			addrbuf);
-		IRCMutexUnlock(HSlock);
-		return 0;
-	}
-}
-
-DLLFUNC int h_scan_info(aClient *sptr)
-{
-	int i;
-	/* We're gonna read from Hosts, so we better get a lock */
-	IRCMutexLock(HSlock);
-	IRCMutexLock(VSlock);
-	sendto_one(sptr, ":%s NOTICE %s :*** scan API $Id$ by Stskeeps",
-			me.name, sptr->name);
-	sendto_one(sptr, ":%s NOTICE %s :*** Currently scanning:",
-		me.name, sptr->name);
-	for (i = 0; i < SCAN_AT_ONCE; i++)
-		if (*Hosts[i].host)
-			sendto_one(sptr, ":%s NOTICE %s :*** IP: %s refcnt: %i",
-				me.name, sptr->name, Hosts[i].host, Hosts[i].refcnt);
-	sendto_one(sptr, ":%s NOTICE %s :*** Currently banning:",
-		me.name, sptr->name);
-	for (i = 0; i < SCAN_AT_ONCE; i++)
-		if (*VHosts[i].host)
-			sendto_one(sptr, ":%s NOTICE %s :*** IP: %s Reason: %s",
-				me.name, sptr->name, VHosts[i].host, VHosts[i].reason);
+	Scan_AddrStruct *sr = NULL;
+	Hook		*hook = NULL;
+	vFP		*vfp;
+	THREAD		thread;
+	THREAD_ATTR	thread_attr;
 	
-	IRCMutexUnlock(HSlock);
-	IRCMutexUnlock(VSlock);
-	return 0;
-}
-
-DLLFUNC int m_scan(aClient *cptr, aClient *sptr, int parc, char *parv[])
-{
-	if (!IsOper(sptr))
+	if (Find_except(Inet_ia2p(&sptr->ip), 0))
 		return 0;
-	HS_Cleanup(NULL);
-	RunHook(HOOKTYPE_SCAN_INFO, sptr);
-	return 0;
+	
+	if (Scan_IsBeingChecked(&sptr->ip))
+		return 0;
+	
+	sr = MyMalloc(sizeof(Scan_AddrStruct));
+	sr->in = sptr->ip;
+	sr->refcnt = 0;
+	IRCCreateMutex(sr->lock);
+	sr->prev = NULL;
+	IRCMutexLock(Scannings_lock);
+	sr->next = Scannings;
+	Scannings = sr;
+	IRCMutexUnlock(Scannings_lock);
+	for (hook = Hooks[HOOKTYPE_SCAN_HOST]; hook; hook = hook->next)
+	{
+		IRCMutexLock(sr->lock);
+		sr->refcnt++;
+		IRCCreateThread(thread, thread_attr, (hook->func.voidfunc), sr);
+		IRCMutexUnlock(sr->lock);
+	}
+	return 1;
 }
 
-DLLFUNC int     h_config_set_blackhole_rehash(void)
-{
-	if (blackhole_conf.ip)
-		MyFree(blackhole_conf.ip);
-	if (blackhole_conf.outip)
-		MyFree(blackhole_conf.outip);
-	blackhole_conf.ip = NULL;
-	blackhole_conf.outip = NULL;
-}
+/*
+ * Config file interfacing 
+ *
+ * We use this format:
+ *     set
+ *     {
+ *         scan {
+ *                // This is where we ask the proxies to connect
+ *                endpoint [ip]:port;
+ *         };
+ *    };
+ * 
+ */
 
-DLLFUNC int	h_config_set_blackhole(void)
+DLLFUNC int	h_config_set_scan(void)
 {
 	ConfigItem_unknown_ext *sets;
-	
+	ConfigEntry *ce;
 	char	*ip;
 	char	*port;
 	int	iport;
 	for (sets = conf_unknown_set; sets; 
 		sets = (ConfigItem_unknown_ext *)sets->next)
 	{
-		if (!strcmp(sets->ce_varname, "blackhole"))
+		if (!strcmp(sets->ce_varname, "scan"))
 		{
-			if (!sets->ce_vardata)
+		        for (ce = sets->ce_entries; ce; ce = (ConfigEntry *)ce->ce_next)
 			{
-				config_error("%s:%i: set::blackhole - missing parameter");
-				goto explodeblackhole;
+				if (!strcmp(ce->ce_varname, "endpoint"))
+				{
+					if (!ce->ce_vardata)
+					{
+						config_error("%s:%i: set::scan::endpoint: syntax [ip]:port",
+							     ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+						goto deleteconf;
+					}
+					ipport_seperate(ce->ce_vardata, &ip, &port);
+					if (!ip || !*ip)
+					{
+						config_error("%s:%i: set::scan::endpoint: illegal ip",
+							     ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+						goto deleteconf;
+					}
+				        if (!port || !*port)
+					{
+						config_error("%s:%i: set::scan::endpoint: missing/invalid port",
+							    ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+					        goto deleteconf;
+					}
+					iport = atol(port);
+					if ((iport < 0) || (iport > 65535))
+					{
+						config_error("%s:%i: set::scan::endpoint: illegal port",
+							     ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+						goto deleteconf;
+					}
+#ifndef INET6
+					Scan_endpoint.SIN_ADDR.S_ADDR = inet_addr(ip);
+#else
+				        inet_pton(AFINET, ip, Scan_endpoint.SIN_ADDR.S_ADDR);
+#endif
+					Scan_endpoint.SIN_PORT = htons(iport);
+					Scan_endpoint.SIN_FAMILY = AFINET;
+				}
+				
+				
 			}
-			if (sets->ce_entries)
-			{
-				blackhole_conf.outip = strdup(sets->ce_entries->ce_varname);
-			}
-			ipport_seperate(sets->ce_vardata, &ip, &port);
-			if (!ip || !*ip)
-			{
-				config_error("%s:%i: set::blackhole: illegal ip:port mask",
-					sets->ce_fileptr->cf_filename, sets->ce_varlinenum);
-				goto explodeblackhole;
-			}
-			if (strchr(ip, '*'))
-			{
-				config_error("%s:%i: set::blackhole: illegal ip, (mask)",
-					sets->ce_fileptr->cf_filename, sets->ce_varlinenum);
-				goto explodeblackhole;
-			}
-			if (!port || !*port)
-			{
-				config_error("%s:%i: set::blackhole: missing port in mask",
-					sets->ce_fileptr->cf_filename, sets->ce_varlinenum);
-				goto explodeblackhole;
-			}
-			iport = atol(port);
-			if ((iport < 0) || (iport > 65535))
-			{
-				config_error("%s:%i: set::blackhole: illegal port (must be 0..65536)",
-					sets->ce_fileptr->cf_filename, sets->ce_varlinenum);
-				goto explodeblackhole;
-			}
- 			blackhole_conf.ip = strdup(ip);
- 			blackhole_conf.port = iport;			
-	explodeblackhole:
-			DelListItem(sets, conf_unknown_set);
+			deleteconf:
+			del_ConfigItem(sets, conf_unknown_set);
 			continue;
 		}	
 	}
 	return 0;
 }
 
-DLLFUNC void blackhole(void *p)
-{
-	int	callerfd;
-	while (blackhole_stop != 1)
-	{
-		callerfd = accept(blackholefd, NULL, NULL);
-		CLOSE_SOCK(callerfd);
-	}
-	CLOSE_SOCK(blackholefd);
-	blackhole_stop = 0;
-	IRCExitThread(NULL);	
-}

@@ -52,25 +52,23 @@
 #endif
 
 #include "modules/scan.h"
-#include "modules/blackhole.h"
 
 #ifndef SCAN_ON_PORT
 #define SCAN_ON_PORT 1080
 #endif
 
 
-static iFP			xVS_add = NULL;
-static ConfigItem_blackhole	*blackh_conf = NULL;
-void	scan_socks_scan(HStruct *h);
-void	scan_socks4_scan(HStruct *h);
-void	scan_socks5_scan(HStruct *h);
+static vFP			xEadd_scan = NULL;
+static struct SOCKADDR_IN	*xScan_endpoint = NULL;
+
+void	scan_socks_scan(Scan_AddrStruct *sr);
+void	scan_socks4_scan(Scan_AddrStruct *sr);
+void	scan_socks5_scan(Scan_AddrStruct *sr);
 
 static Mod_SymbolDepTable modsymdep[] = 
 {
-	MOD_Dep(VS_Add, xVS_add, "src/modules/scan.so"),
-	MOD_Dep(HSlock, xHSlock, "src/modules/scan.so"),
-	MOD_Dep(VSlock, xVSlock, "src/modules/scan.so"),
-	MOD_Dep(blackhole_conf, blackh_conf, "src/modules/scan.so"),
+	MOD_Dep(Eadd_scan, xEadd_scan, "src/modules/scan.so"),
+	MOD_Dep(Scan_endpoint, xScan_endpoint, "src/modules/scan.so"),
 	{NULL, NULL}
 };
 
@@ -131,47 +129,57 @@ int	scan_socks_Unload(int module_unload)
 #define HICHAR(s)	(((unsigned short) s) >> 8)
 #define LOCHAR(s)	(((unsigned short) s) & 0xFF)
 
-void scan_socks_scan(HStruct *h) {
+void scan_socks_scan(Scan_AddrStruct *h)
+{
 	THREAD thread[2];
 	THREAD_ATTR thread_attr;
-	IRCMutexLock((*xHSlock));
+	IRCMutexLock((h->lock));
 	h->refcnt++;
 	IRCCreateThread(thread[0], thread_attr, scan_socks4_scan, h);
 	h->refcnt++;
 	IRCCreateThread(thread[1], thread_attr, scan_socks5_scan, h);
-	IRCMutexUnlock((*xHSlock));
+	IRCMutexUnlock((h->lock));
 	IRCJoinThread(thread[0], NULL);
 	IRCJoinThread(thread[1], NULL);
-	IRCMutexLock((*xHSlock));
+	IRCMutexLock((h->lock));
 	h->refcnt--;
-	IRCMutexUnlock((*xHSlock));
+	IRCMutexUnlock((h->lock));
 	IRCExitThread(NULL);
 	return;
 }
 	
 
-void	scan_socks4_scan(HStruct *h)
+void	scan_socks4_scan(Scan_AddrStruct *h)
 {
 	int			retval;
-	char			host[SCAN_HOSTLENGTH];
-	struct			sockaddr_in sin;
-	SOCKET				fd;
-	int				sinlen = sizeof(struct sockaddr_in);
-	unsigned short	sport = blackh_conf->port;
-	unsigned char   socksbuf[12];
-	unsigned long   theip;
+	char			*cp;
+	struct			SOCKADDR_IN sin;
+	struct			in_addr ia4;
+	SOCKET			fd;
+	unsigned char		socksbuf[10];
+	int			sinlen = sizeof(struct SOCKADDR_IN);
+	unsigned long   	theip;
 	fd_set			rfds;
 	struct timeval  	tv;
-	int				len;
+	int			len;
 	/* Get host */
-	IRCMutexLock((*xHSlock));
-	strcpy(host, h->host);
-	IRCMutexUnlock((*xHSlock));
+
+	IRCMutexLock((h->lock));
+	sin.SIN_ADDR.S_ADDR = h->in.S_ADDR;
+	IRCMutexUnlock((h->lock));
 	/* IPv6 ?*/
-	if (strchr(host, ':'))
+#ifdef INET6
+	/* ::ffff:ip hack */
+	cp = (u_char)&h->in->s6_addr;
+	if (!(cp[0] == 0 && cp[1] == 0 && cp[2] == 0 && cp[3] == 0 && cp[4] == 0
+	    && cp[5] == 0 && cp[6] == 0 && cp[7] == 0 && cp[8] == 0
+	    && cp[9] == 0 && ((cp[10] == 0 && cp[11] == 0) || (cp[10] == 0xff
+	    && cp[11] == 0xff))))
+
 		goto exituniverse;
-		
-	sin.sin_addr.s_addr = inet_addr(host);
+#endif
+	sin.SIN_ADDR.S_ADDR = h->in.S_ADDR;
+
 	if ((fd = socket(AFINET, SOCK_STREAM, 0)) < 0)
 	{
 		goto exituniverse;
@@ -179,7 +187,7 @@ void	scan_socks4_scan(HStruct *h)
 	}
 
 	sin.sin_port = htons((unsigned short)SCAN_ON_PORT);
-	sin.sin_family = AF_INET;
+	sin.sin_family = AFINET;
 	/* We do this non-blocking to prevent a hang of the entire ircd with newer
 	 * versions of glibc.  Don't you just love new "features?"
 	 * Passing null to this is probably bad, a better method is needed. 
@@ -217,14 +225,17 @@ void	scan_socks4_scan(HStruct *h)
 		CLOSE_SOCK(fd);
 		goto exituniverse;
 	}
-				
-	sin.sin_addr.s_addr = inet_addr(blackh_conf->outip ? blackh_conf->outip : blackh_conf->ip);
-	theip = htonl(sin.sin_addr.s_addr);
+#ifdef INET6
+	ia4.s_addr = inet_aton(Inet_ia2p(xScan_endpoint));
+#else
+	bcopy(&xScan_endpoint->sin_addr, &ia4, sizeof(struct IN_ADDR));
+#endif
+	theip = htonl(ia4.s_addr);
 	bzero(socksbuf, sizeof(socksbuf));
 	socksbuf[0] = 4;
 	socksbuf[1] = 1;
-	socksbuf[2] = HICHAR(sport);
-	socksbuf[3] = LOCHAR(sport);
+	socksbuf[2] = LOCHAR(xScan_endpoint->sin_port);
+	socksbuf[3] = HICHAR(xScan_endpoint->sin_port);
 	socksbuf[4] = (theip >> 24);
 	socksbuf[5] = (theip >> 16) & 0xFF;
 	socksbuf[6] = (theip >> 8) & 0xFF;
@@ -252,9 +263,9 @@ void	scan_socks4_scan(HStruct *h)
 		if (socksbuf[1] == 90)
 		{
 			/* We found SOCKS. */
-			IRCMutexLock((*xVSlock));
-			(*xVS_add)(host, "Open SOCKS4 server");
-			IRCMutexUnlock((*xVSlock));
+			IRCMutexLock((h->lock));
+			(*xEadd_scan)(&h->in, "Open SOCKS4 server");
+			IRCMutexUnlock((h->lock));
 			goto exituniverse;
 		}
 	}
@@ -263,43 +274,52 @@ void	scan_socks4_scan(HStruct *h)
 		CLOSE_SOCK(fd);
 	}
 exituniverse:
-	IRCMutexLock((*xHSlock));
+	IRCMutexLock((h->lock));
 	h->refcnt--;
-	IRCMutexUnlock((*xHSlock));
+	IRCMutexUnlock((h->lock));
 	IRCExitThread(NULL);
 	return;
 }
 
-void	scan_socks5_scan(HStruct *h)
+void	scan_socks5_scan(Scan_AddrStruct *h)
 {
 	int			retval;
-	char			host[SCAN_HOSTLENGTH];
-	struct			sockaddr_in sin;
-	SOCKET				fd;
-	int				sinlen = sizeof(struct sockaddr_in);
-	unsigned short	sport = blackh_conf->port;
-	unsigned char   socksbuf[12];
-	unsigned long   theip;
+	char			*cp;
+	struct			SOCKADDR_IN sin;
+	struct			in_addr ia4;
+	SOCKET			fd;
+	int			sinlen = sizeof(struct SOCKADDR_IN);
+	unsigned long   	theip;
 	fd_set			rfds;
 	struct timeval  	tv;
-	int				len;
+	int			len;
+	unsigned char		socksbuf[10];
 	/* Get host */
-	IRCMutexLock((*xHSlock));
-	strcpy(host, h->host);
-	IRCMutexUnlock((*xHSlock));
+
+	IRCMutexLock((h->lock));
+	sin.SIN_ADDR.S_ADDR = h->in.S_ADDR;
+	IRCMutexUnlock((h->lock));
 	/* IPv6 ?*/
-	if (strchr(host, ':'))
+#ifdef INET6
+	/* ::ffff:ip hack */
+	cp = (u_char)&h->in->s6_addr;
+	if (!(cp[0] == 0 && cp[1] == 0 && cp[2] == 0 && cp[3] == 0 && cp[4] == 0
+	    && cp[5] == 0 && cp[6] == 0 && cp[7] == 0 && cp[8] == 0
+	    && cp[9] == 0 && ((cp[10] == 0 && cp[11] == 0) || (cp[10] == 0xff
+	    && cp[11] == 0xff))))
+
 		goto exituniverse;
-		
-	sin.sin_addr.s_addr = inet_addr(host);
+#endif
+	sin.SIN_ADDR.S_ADDR = h->in.S_ADDR;
+
 	if ((fd = socket(AFINET, SOCK_STREAM, 0)) < 0)
 	{
 		goto exituniverse;
 		return;
 	}
 
-	sin.sin_port = htons(SCAN_ON_PORT);
-	sin.sin_family = AF_INET;
+	sin.sin_port = htons((unsigned short)SCAN_ON_PORT);
+	sin.sin_family = AFINET;
 	/* We do this non-blocking to prevent a hang of the entire ircd with newer
 	 * versions of glibc.  Don't you just love new "features?"
 	 * Passing null to this is probably bad, a better method is needed. 
@@ -337,9 +357,13 @@ void	scan_socks5_scan(HStruct *h)
 		CLOSE_SOCK(fd);
 		goto exituniverse;
 	}
-				
-	sin.sin_addr.s_addr = inet_addr(blackh_conf->outip ? blackh_conf->outip : blackh_conf->ip);
-	theip = htonl(sin.sin_addr.s_addr);
+#ifdef INET6
+	ia4.s_addr = inet_aton(Inet_ia2p(xScan_endpoint));
+#else
+	bcopy(&xScan_endpoint->sin_addr, &ia4, sizeof(struct IN_ADDR));
+#endif
+	theip = htonl(ia4.s_addr);
+
 	bzero(socksbuf, sizeof(socksbuf));
 
 	if (send(fd, "\5\1\0", 3, 0) != 3) {
@@ -373,8 +397,8 @@ void	scan_socks5_scan(HStruct *h)
 	socksbuf[5] = (theip >> 16) & 0xFF;
 	socksbuf[6] = (theip >> 8) & 0xFF;
 	socksbuf[7] = theip & 0xFF;
-	socksbuf[8] = HICHAR(sport);
-	socksbuf[9] = LOCHAR(sport);
+	socksbuf[8] = HICHAR(xScan_endpoint->sin_port);
+	socksbuf[9] = LOCHAR(xScan_endpoint->sin_port);
 	
 	if ((retval = send(fd, socksbuf, 10, 0)) != 10)
 	{
@@ -397,9 +421,9 @@ void	scan_socks5_scan(HStruct *h)
 		if (socksbuf[1] == 5 && socksbuf[1] == 0)
 		{
 			/* We found SOCKS. */
-			IRCMutexLock((*xVSlock));
-			(*xVS_add)(host, "Open SOCKS5 server");
-			IRCMutexUnlock((*xVSlock));
+			IRCMutexLock((h->lock));
+			(*xEadd_scan)(&h->in, "Open SOCKS5 server");
+			IRCMutexUnlock((h->lock));
 			goto exituniverse;
 		}
 	}
@@ -408,9 +432,9 @@ void	scan_socks5_scan(HStruct *h)
 		CLOSE_SOCK(fd);
 	}
 exituniverse:
-	IRCMutexLock((*xHSlock));
+	IRCMutexLock(h->lock);
 	h->refcnt--;
-	IRCMutexUnlock((*xHSlock));
+	IRCMutexUnlock(h->lock);
 	IRCExitThread(NULL);
 	return;
 }

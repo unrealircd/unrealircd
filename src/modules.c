@@ -130,7 +130,7 @@ char  *Module_Load (char *path, int load)
 		if (Module_Find(mod_header->name))
 		{
 		        irc_dlclose(Mod);
-			return ("Module already loaded");
+			return (NULL);
 		}
 		mod = (Module *)Module_make(mod_header, Mod);
 		irc_dlsym(Mod, "Mod_Init", Mod_Init);
@@ -150,6 +150,11 @@ char  *Module_Load (char *path, int load)
 		{
 			Module_free(mod);
 			return ("Unable to locate Mod_Load"); 
+		}
+		if (Module_Depend_Resolve(mod) == -1)
+		{
+			Module_free(mod);
+			return ("Dependancy problem");
 		}
 		if ((ret = (*Mod_Init)(load)) < MOD_SUCCESS)
 		{
@@ -386,7 +391,7 @@ void	module_loadall(int module_load)
 			continue;
 		}
 		/* Call the module_load */
-		if ((*fp)(module_load) < 0)
+		if ((*fp)(module_load) != MOD_SUCCESS)
 		{
 			config_error("cannot load module %s", mi->header->name);
 		}

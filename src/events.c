@@ -139,18 +139,16 @@ inline void	DoEvents(void)
 		if ((eventptr->every == 0) || ((TStime() - eventptr->last) >= eventptr->every))
 		{
 			if (eventptr->howmany > 0)
-			{
-
 				eventptr->howmany--;
-				if (eventptr->howmany == 0)
-				{
-					temp.next = EventDel(eventptr);
-					eventptr = &temp;
-					continue;
-				}
-			}
 			eventptr->last = TStime();
 			(*eventptr->event)(eventptr->data);
+			if (eventptr->howmany == 0)
+			{
+				temp.next = EventDel(eventptr);
+				eventptr = &temp;
+				continue;
+			}
+
 		}
 	
 #ifndef HAVE_NO_THREADS

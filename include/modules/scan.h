@@ -23,48 +23,19 @@
 /* We need it */
 #include "threads.h"
 
- /*
- * Settings:
- * 
- * SCAN_AT_ONCE
- *  - How many the scanning module can support scanning at once
- * Memory will be SCAN_AT_ONCE * (HOSTLENGTH + 1)
-*/
+typedef struct _Scan_Result {
+	struct IN_ADDR	in;
+	char	reason[60];
+} Scan_Result;
 
-#define SCAN_AT_ONCE 100
-#define SCAN_HOSTLENGTH 30
-
-
-typedef struct _HStruct HStruct;
-typedef struct _VHStruct VHStruct;
-
-struct _HStruct
+typedef struct _Scan_AddrStruct
 {
-	char			host[SCAN_HOSTLENGTH];
-	unsigned char	refcnt;
-};
+	struct _Scan_AddrStruct *prev, *next;
+	struct IN_ADDR 		in;
+	unsigned char		refcnt;
+	MUTEX		 	lock;
+} Scan_AddrStruct;
 
-struct _VHStruct
-{
-	char			host[SCAN_HOSTLENGTH];
-	char			reason[50];
-};
 
-#ifndef IS_SCAN_C
-extern HStruct			Hosts[SCAN_AT_ONCE];
-extern VHStruct		VHosts[SCAN_AT_ONCE];
-extern MUTEX	HSlock;
-extern MUTEX	VSlock;
-/* 
- * If it is legal to edit Hosts table
-*/
-MUTEX		*xHSlock;
-MUTEX		*xVSlock;
-#endif
-/* Some prototypes .. aint they sweet? */
-DLLFUNC int			h_scan_connect(aClient *sptr);
-DLLFUNC EVENT		(HS_Cleanup);
-DLLFUNC EVENT		(VS_Ban);
-DLLFUNC int			h_scan_info(aClient *sptr);
-DLLFUNC int			m_scan(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-VHStruct			*VS_Add(char *host, char *reason);
+extern EVENT(e_scannings_clean);
+ 

@@ -2354,7 +2354,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			ca2->ce_vardata = cep->ce_vardata;
 			ca2->ce_varname = cep->ce_varname;
 			ca2->ce_entries = cep->ce_entries;
-			DelListItem(ca2, conf_unknown_set);
+			AddListItem(ca2, conf_unknown_set);
 /*			config_status("%s:%i: unknown directive set::%s",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 				cep->ce_varname); */

@@ -30,10 +30,10 @@ typedef	struct {
 #define AUTHTYPE_SHA1	    3 
 #define AUTHTYPE_SSL_PUBKEY 4
 
-#ifdef USE_SSL
-#define AUTHENABLE_MD5
-#define AUTHENABLE_SHA1
-#define AUTHENABLE_SSL_PUBKEY
+ #ifdef USE_SSL
+//#define AUTHENABLE_MD5
+//#define AUTHENABLE_SHA1
+//#define AUTHENABLE_SSL_PUBKEY
 /* OpenSSL provides a crypt() */
 #ifndef AUTHENABLE_UNIXCRYPT
 #define AUTHENABLE_UNIXCRYPT
