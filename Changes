@@ -2675,3 +2675,4 @@ seen. gmtime warning still there
 - Added configure/Config stuff for libcurl
 - Added a ./curlinstall script to help with installing curl (Read INSTALL.REMOTEINC for
   more information).
+- Added code to make remote includes able to use SSL (HTTPS/FTPS) if SSL support is enabled

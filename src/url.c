@@ -25,6 +25,10 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+#ifdef USE_SSL
+extern char *SSLKeyPasswd;
+#endif
+
 CURLM *multihandle;
 
 /* Stores information about the async transfer.
@@ -93,6 +97,24 @@ char *url_getfilename(char *url)
         return NULL;
 }
 
+#ifdef USE_SSL
+/*
+ * Sets up all of the SSL options necessary to support HTTPS/FTPS
+ * transfers.
+ */
+static void set_curl_ssl_options(CURL *curl)
+{
+	if (USE_EGD)
+		curl_easy_setopt(curl, CURLOPT_EGDSOCKET, EGD_PATH);
+	curl_easy_setopt(curl, CURLOPT_SSLCERT, SSL_SERVER_CERT_PEM);
+	if (SSLKeyPasswd)
+		curl_easy_setopt(curl, CURLOPT_SSLKEYPASSWD, SSLKeyPasswd);
+	curl_easy_setopt(curl, CURLOPT_SSLKEY, SSL_SERVER_KEY_PEM);
+	if (iConf.trusted_ca_file)
+		curl_easy_setopt(curl, CURLOPT_CAINFO, iConf.trusted_ca_file);
+}
+#endif
+
 /*
  * Used by CURLOPT_WRITEFUNCTION to actually write the data to
  * a stream.
@@ -126,6 +148,9 @@ char *download_file(char *url, char **error)
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, fd);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download);
 		curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
+#ifdef USE_SSL
+		set_curl_ssl_options(curl);
+#endif
 		bzero(errorbuf, CURL_ERROR_SIZE);
 		curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorbuf);
 		res = curl_easy_perform(curl);
@@ -185,6 +210,9 @@ void download_file_async(char *url, time_t cachetime, vFP callback)
                 curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download);
                 curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)handle->fd);
 		curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
+#ifdef USE_SSL
+		set_curl_ssl_options(curl);
+#endif
 		bzero(handle->errorbuf, CURL_ERROR_SIZE);
 		curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, handle->errorbuf);
 		curl_easy_setopt(curl, CURLOPT_PRIVATE, (char *)handle);
@@ -269,3 +297,5 @@ void url_do_transfers_async(void)
 
 	}
 }
+
+
