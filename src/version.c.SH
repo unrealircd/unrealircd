@@ -91,6 +91,8 @@ char *unrealcredits[] =
 	"{X} (Laurie) x@tspre.org",
 	"- Making the main code/design of UnrealIRCd/32 gui",
 	"  bugfounds, etc",
+	"host54.net",
+	"- Donating webhosting",
 	"TheDarkOne & x-irc.net",
 	"- Donating DNS and development shells",
 	"storm-services.net",

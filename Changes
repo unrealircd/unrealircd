@@ -945,3 +945,4 @@ seen. gmtime warning still there
 - Changed the name of the hook functions from add_Hook, del_Hook,
   add_HookX, del_HookX to HookAdd, HookDel, HookAddEx, HookDelEx
   so the names are more standard.
+- Added host54.net to /credits
