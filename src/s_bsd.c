@@ -406,7 +406,10 @@ int  inetport(cptr, name, port)
 #ifndef INET6
 		server.SIN_ADDR.S_ADDR = inet_addr(ipname);
 #else
-		inet_pton(AFINET, ipname, server.SIN_ADDR.S_ADDR);
+		if (strchr(ipname, '.'))
+			inet_pton(AF_INET, ipname, server.SIN_ADDR.S_ADDR);
+		else
+			inet_pton(AF_INET6, ipname, server.SIN_ADDR.S_ADDR);
 #endif
 		server.SIN_PORT = htons(port);
 		/*
@@ -2423,7 +2426,10 @@ static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
 #ifndef INET6
 		server.SIN_ADDR.S_ADDR = inet_addr(aconf->bindip);	
 #else
-		inet_pton(AFINET, aconf->bindip, server.SIN_ADDR.S_ADDR);
+		if (strchr(aconf->bindip, '.'))
+			inet_pton(AF_INET, aconf->bindip, server.SIN_ADDR.S_ADDR);
+		else
+			inet_pton(AF_INET6, aconf->bindip, server.SIN_ADDR.S_ADDR);
 #endif
 	}
 	if (bind(cptr->fd, (struct SOCKADDR *)&server, sizeof(server)) == -1)

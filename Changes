@@ -840,3 +840,4 @@ seen. gmtime warning still there
 - Updated the win32 makefile
 - modulize documentation, some web server fixes, preparation for uabr
 - Some more VFS/PHTML fixes, it actually works now, thanks to butter
+- Fixed a IPv6 bindip problem
