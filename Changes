@@ -263,3 +263,5 @@
 - Renamed src/win32/win32gui.c to src/win32/gui.c
 - Reorganized much of the Windows code
 - Fixed a whois bug when PREFIX_AQ is undefined, reported by Shaun
+- Moved the RTF win32 code to a seperate file
+- More win32 code cleanups

@@ -141,8 +141,8 @@ EXP_OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MD5.OBJ \
  SRC/EXTBANS.OBJ $(ZIPOBJ) $(CURLOBJ)
 
-OBJ_FILES=$(EXP_OBJ_FILES) SRC/GUI.OBJ SRC/SERVICE.OBJ SRC/DEBUG.OBJ \
- SRC/WIN32.OBJ
+OBJ_FILES=$(EXP_OBJ_FILES) SRC/GUI.OBJ SRC/SERVICE.OBJ SRC/DEBUG.OBJ SRC/RTF.OBJ \
+ SRC/EDITOR.OBJ SRC/WIN32.OBJ 
 
 MOD_FILES=SRC/MODULES/L_COMMANDS.C SRC/MODULES/M_CHGHOST.C SRC/MODULES/M_SDESC.C \
  SRC/MODULES/M_SETIDENT.C SRC/MODULES/M_SETNAME.C SRC/MODULES/M_SETHOST.C \
@@ -365,6 +365,12 @@ src/crule.obj: src/crule.c $(INCLUDES)
 
 src/gui.obj: src/win32/gui.c $(INCLUDES) ./include/resource.h
         $(CC) $(CFLAGS) src/win32/gui.c
+
+src/rtf.obj: src/win32/rtf.c $(INCLUDES) ./src/win32/win32.h
+	$(CC) $(CFLAGS) src/win32/rtf.c
+
+src/editor.obj: src/win32/editor.c $(INCLUDES) ./include/resource.h ./src/win32/win32.h
+        $(CC) $(CFLAGS) src/win32/editor.c
 
 src/service.obj: src/win32/service.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/win32/service.c
