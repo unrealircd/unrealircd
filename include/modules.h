@@ -244,6 +244,7 @@ void CommandDel(Command *command);
 #define HOOKTYPE_SERVER_CONNECT 11
 #define HOOKTYPE_SERVER_QUIT 12
 #define HOOKTYPE_STATS 13
+#define HOOKTYPE_JOIN 14
 /* Module flags */
 #define MODFLAG_NONE	0x0000
 #define MODFLAG_LOADED	0x0001 /* (mod_load has been called and suceeded) */

@@ -1246,3 +1246,4 @@ seen. gmtime warning still there
   people bitching about their servers going down.
 *** beta8 released ***
 - Added log {} syslog support (appears to work fine) [#0000099]
+- Added HOOKTYPE_JOIN
