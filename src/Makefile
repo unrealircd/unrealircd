@@ -29,7 +29,7 @@ OBJS=auth.o aln.o badwords.o channel.o cloak.o crule.o dbuf.o \
 	s_misc.o s_numeric.o s_serv.o s_svs.o $(STRTOUL) socket.o \
 	ssl.o s_user.o scache.o send.o support.o umodes.o s_stats.o \
 	version.o webtv.o whowas.o zip.o cidr.o random.o extcmodes.o \
-	extbans.o
+	extbans.o $(URL)
 
 SRC=$(OBJS:%.o=%.c)
 
@@ -40,7 +40,7 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 		'MANDIR=${MANDIR}' 'RM=${RM}' 'CP=${CP}' 'TOUCH=${TOUCH}' \
 		'RES=${RES}' 'SHELL=${SHELL}' 'STRTOUL=${STRTOUL}' \
 		'CRYPTOLIB=${CRYPTOLIB}' 'REGEX=${REGEX}' \
-		'CRYPTOINCLUDES=${CRYPTOINCLUDES}'
+		'CRYPTOINCLUDES=${CRYPTOINCLUDES}' 'URL=${URL}' \
 
 MAKE = make $(MAKEARGS)
 
@@ -249,6 +249,9 @@ extcmodes.o: extcmodes.c $(INCLUDES)
 
 extbans.o: extbans.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c extbans.c
+
+url.o: url.c $(INCLUDES) include/url.h
+	$(CC) $(CFLAGS) -c url.c
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 

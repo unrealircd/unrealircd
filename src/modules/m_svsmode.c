@@ -328,16 +328,29 @@ char *xtok = show_change ? TOK_SVS2MODE : TOK_SVSMODE;
 				if ((what == MODE_DEL) && (acptr->umodes & UMODE_INVISIBLE))
 					IRCstats.invisible--;
 				goto setmodex;
+			case 'O': /* Locops are opers too! */
+				if (what == MODE_ADD)
+				{
+#ifndef NO_FDLIST
+					if (!IsAnOper(acptr) && MyClient(acptr))
+						addto_fdlist(acptr->slot, &oper_fdlist);
+#endif
+					acptr->umodes &= ~UMODE_OPER;
+				}
+#ifndef NO_FDLIST
+				if (what == MODE_DEL && (acptr->umodes & UMODE_LOCOP) && MyClient(acptr))
+					delfrom_fdlist(acptr->slot, &oper_fdlist);
+#endif
+				goto setmodex;					
 			case 'o':
 				if ((what == MODE_ADD) && !(acptr->umodes & UMODE_OPER))
 				{
-					if (IsLocOp(acptr))
-						acptr->umodes &= ~UMODE_LOCOP; /* can't be both local and global */
-					IRCstats.operators++;
 #ifndef NO_FDLIST
-					if (MyClient(acptr))
+					if (MyClient(acptr) && !IsLocOp(acptr))
 						addto_fdlist(acptr->slot, &oper_fdlist);
 #endif
+					acptr->umodes &= ~UMODE_LOCOP; /* can't be both local and global */
+					IRCstats.operators++;
 				}
 				if ((what == MODE_DEL) && (acptr->umodes & UMODE_OPER))
 				{

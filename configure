@@ -828,6 +828,7 @@ Optional Features:
   --enable-ssl=           enable ssl will check /usr/local/ssl /usr/lib/ssl
                           /usr/ssl /usr/pkg /usr/local /usr
   --enable-ziplinks       enable ziplinks will check /usr/local /usr /usr/pkg
+  --enable-libcurl=DIR    enable libcurl (remote include) support
   --enable-dynamic-linking
                           Make the IRCd dynamically link shared objects rather
                           than statically
@@ -9586,6 +9587,24 @@ echo "$as_me: WARNING: disabling ziplink support" >&2;}
 
 fi;
 
+
+	# Check whether --enable-libcurl or --disable-libcurl was given.
+if test "${enable_libcurl+set}" = set; then
+  enableval="$enable_libcurl"
+
+		CURLCFLAG=`$enableval/bin/curl-config --cflags`
+		CFLAGS="$CFLAGS $CURLCFLAG -DUSE_LIBCURL"
+		CURLLIBS=`$enableval/bin/curl-config --libs`
+
+				if test "x`echo $CURLLIBS |grep .*ares.*`" = x ; then
+			CURLLIBS="$CURLLIBS -L$enableval/ares -lares"
+		fi
+		IRCDLIBS="$IRCDLIBS $CURLLIBS"
+		URL="url.o"
+
+
+fi;
+
 # Check whether --enable-dynamic-linking or --disable-dynamic-linking was given.
 if test "${enable_dynamic_linking+set}" = set; then
   enableval="$enable_dynamic_linking"
@@ -10545,6 +10564,7 @@ s,@STRTOUL@,$STRTOUL,;t t
 s,@CRYPTOLIB@,$CRYPTOLIB,;t t
 s,@MODULEFLAGS@,$MODULEFLAGS,;t t
 s,@HAVE_ZLIB@,$HAVE_ZLIB,;t t
+s,@URL@,$URL,;t t
 s,@IRCDDIR@,$IRCDDIR,;t t
 s,@BINDIR@,$BINDIR,;t t
 s,@FD_SETSIZE@,$FD_SETSIZE,;t t

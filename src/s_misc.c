@@ -458,7 +458,7 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 				MyFree(sptr->user->lopt);
 			}
 			on_for = TStime() - sptr->firsttime;
-			if IsHidden(sptr)
+			if (IsHidden(sptr))
 				ircd_log(LOG_CLIENT, "Disconnect - (%ld:%ld:%ld) %s!%s@%s [VHOST %s]",
 					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
 					sptr->name, sptr->user->username,
@@ -562,7 +562,7 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 				sendto_ops("WARNING, srvptr!=sptr but "
 				    "find_server did!  Server %s on "
 				    "%s thought it was on %s while "
-				    "loosing %s.  Tell coding team.",
+				    "losing %s.  Tell coding team.",
 				    acptr->name, acptr->serv->up,
 				    acptr->srvptr ? acptr->
 				    srvptr->name : "<noserver>", sptr->name);

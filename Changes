@@ -2669,3 +2669,9 @@ seen. gmtime warning still there
 - Fixed a PATH_MAX vs MAX_PATH problem
 - Fixed a bug where if a Mod_Load returned MOD_FAILED, the module was not removed (#0001426)
   reported by AngryWolf
+- Fixed a bunch of oper fdlist bugs regarding locops
+- Fixed a couple of minor typos in the source
+- Removed the old configure checks for pthreads
+- Added configure/Config stuff for libcurl
+- Added a ./curlinstall script to help with installing curl (Read INSTALL.REMOTEINC for
+  more information).

@@ -35,7 +35,7 @@ typedef struct
 {
 	vFP callback;
 	FILE *fd;
-	char filename[MAX_PATH];
+	char filename[PATH_MAX];
 	char errorbuf[CURL_ERROR_SIZE];
 } FileHandle;
 

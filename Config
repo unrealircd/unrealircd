@@ -39,6 +39,9 @@ else
 ARG="$ARG--enable-ziplinks=$ZIPLINKSDIR "
 fi
 fi
+if [ "$REMOTEINC" = "1" ] ; then
+ARG="$ARG--enable-libcurl=$CURLDIR "
+fi
 if [ "$INET6" = "1" ] ; then
 ARG="$ARG--enable-inet6 "
 fi
@@ -89,6 +92,8 @@ MAXSENDQLENGTH="3000000"
 BUFFERPOOL="18"
 MAXCONNECTIONS="1024"
 INET6=""
+REMOTEINC=""
+CURLDIR=""
 PREFIXAQ=""
 EXTRAPARA=""
 if [ "`eval echo -n 'a'`" = "-n a" ] ; then
@@ -388,6 +393,52 @@ fi
 
 TEST=""
 while [ -z "$TEST" ] ; do
+    if [ "$REMOTEINC" = "1" ] ; then
+	TEST="Yes"
+    else
+	TEST="No"
+    fi
+    echo ""
+    echo "Do you want to enable remote includes?"
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	cc=$TEST
+    fi
+    case "$cc" in
+	[Yy]*)
+	    REMOTEINC="1"
+	    ;;
+	[Nn]*)
+	    REMOTEINC=""
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter either Yes or No"
+	    TEST=""
+	    ;;
+    esac
+done
+
+if [ "$REMOTEINC" = "1" ] ; then
+	TEST=""
+	while [ -z "$TEST" ] ; do
+		echo ""
+		echo "Specify the directory you installed libcurl to"
+		echo $n "[$TEST] -> $c"
+		read cc
+		if [ -z "$cc" ] ; then
+		    TEST=""
+		else
+		    TEST=$cc
+		    CURLDIR=$cc
+		fi
+	done
+fi
+
+
+TEST=""
+while [ -z "$TEST" ] ; do
     if [ "$PREFIXAQ" = "1" ] ; then
 	TEST="Yes"
     else
@@ -565,6 +616,8 @@ CRYPTOIRCD="$CRYPTOIRCD"
 SSLDIR="$SSLDIR"
 ZIPLINKS="$ZIPLINKS"
 ZIPLINKSDIR="$ZIPLINKSDIR"
+REMOTEINC="$REMOTEINC"
+CURLDIR="$CURLDIR"
 EXTRAPARA="$EXTRAPARA"
 __EOF__
 RUN_CONFIGURE
@@ -586,7 +639,6 @@ cat << __EOF__
 | * Stskeeps  stskeeps@unrealircd.com                                   |
 | * codemastr codemastr@unrealircd.com                                  |
 | * Syzop     syzop@unrealircd.com                                      |
-| * McSkaf    mcskaf@unrealircd.com                                     |
 |_______________________________________________________________________|
 __EOF__
 

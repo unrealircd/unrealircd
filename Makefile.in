@@ -101,6 +101,8 @@ IRCDDIR=@IRCDDIR@
 #REGEX=../extras/regex/regex.o
 REGEX=@REGEX@
 
+URL=@URL@
+
 # [CHANGEME]
 # If you get a link-time error dealing with strtoul, comment out
 # this line.
@@ -135,7 +137,7 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 		'RM=${RM}' 'CP=${CP}' 'TOUCH=${TOUCH}' \
 		'SHELL=${SHELL}' 'STRTOUL=${STRTOUL}' \
 		'CRYPTOLIB=${CRYPTOLIB}' 'REGEX=${REGEX}' \
-		'CRYPTOINCLUDES=${CRYPTOINCLUDES}'
+		'CRYPTOINCLUDES=${CRYPTOINCLUDES}' 'URL=${URL}'
 
 custommodule:
 	cd src; ${MAKE} ${MAKEARGS} MODULEFILE=${MODULEFILE} 'EXLIBS=${EXLIBS}' custommodule
