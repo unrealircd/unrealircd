@@ -226,3 +226,16 @@ char	*Inet_ia2p(struct IN_ADDR *ia)
 		return((char *)inet_ntop(AFINET, ia, buf, sizeof(buf)));
 #endif
 }
+
+char	*Inet_ia2pNB(struct IN_ADDR *ia, int compressed)
+{
+	static char buf[256];
+#ifndef INET6
+	return ((char *)inet_ntoa(*ia));
+#else
+	if (compressed)
+		return ((char *)inet_ntop(AFINET, ia, buf, sizeof(buf)));
+	else
+		return ((char *)inetntop(AFINET, ia, buf, sizeof(buf)));
+#endif	
+}

@@ -324,6 +324,8 @@ int  dgets(int fd, char *buf, int num)
 }
 
 #ifdef INET6
+
+
 /*
  * inetntop: return the : notation of a given IPv6 internet number.
  *           make sure the compressed representation (rfc 1884) isn't used.

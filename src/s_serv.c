@@ -626,6 +626,19 @@ CMD_FUNC(m_server)
 		   are better */
 		aconf = Find_link(cptr->username, cptr->sockhost, cptr->sockhost,
 		    servername);
+		
+#ifdef INET6
+		/*  
+		 * We first try match on uncompressed form ::ffff:192.168.1.5 thing included
+		*/
+		if (!aconf)
+			aconf = Find_link(cptr->username, cptr->sockhost, Inet_ia2pNB(&cptr->ip, 0), servername);
+		/* 
+		 * Then on compressed 
+		*/
+		if (!aconf)
+			aconf = Find_link(cptr->username, cptr->sockhost, Inet_ia2pNB(&cptr->ip, 0), servername);
+#endif		
 		if (!aconf)
 		{
 			sendto_one(cptr,
