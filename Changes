@@ -31,3 +31,5 @@
   m_server_estab, reported and fixed by Kanzen_Greiver
 - Fixed some more points of ->passwd bugs
 - Made it so you don't get a +W notice if you /who or /whois yourself reported by Ron885
+- You can no longer specify an *@unrealircd.com/org, or unreal-*@lists.sourceforge.net email
+  as your KLINE_ADDRESS (the "Why am I K:lined?" messages got too annoying)

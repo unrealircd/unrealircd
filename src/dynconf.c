@@ -529,12 +529,16 @@ void doneconf(int type)
 	if (!KLINE_ADDRESS || (*KLINE_ADDRESS == '\0'))
 		strcat(errormsg, "- Missing KLINE_ADDRESS\n");
 #ifndef DEVELOP
-	if (KLINE_ADDRESS)
+	if (KLINE_ADDRESS) 
 		if (!strchr(KLINE_ADDRESS, '@') && !strchr(KLINE_ADDRESS, ':'))
 		{
 			strcat(errormsg,
 			    "- KLINE_ADDRESS is not an e-mail or an URL\n");
 		}
+		else if (!match("*@unrealircd.com", KLINE_ADDRESS) || !match("*@unrealircd.org",KLINE_ADDRESS) || !match("unreal-*@lists.sourceforge.net",KLINE_ADDRESS)) 
+			strcat(errormsg,
+			   "- KLINE_ADDRESS may not be an UnrealIRCd Team address\n");
+	
 #endif
 	if ((MAXCHANNELSPERUSER < 1))
 		strcat(errormsg,
