@@ -1,113 +1,91 @@
 
-Unreal3.2.1 Release Notes
+Unreal3.2.2 Release Notes
 ==========================
 
-Please READ this document carefully, otherwise your ircd won't boot!
-
-This is a RECOMMENDED RELEASE due to the fact that the previous
-cloaking algorithm has been cracked. Besides that, this version
-also brings quite some exciting new features (win32 module support,
-and a _lot_ more).
-
 ==[ GENERAL INFORMATION ]==
-- If you are upgrading on *NIX, make sure you run make clean and ./Config before doing make
+- If you are upgrading on *NIX, make sure you run 'make clean' and './Config'
+  first before doing 'make'
 - The official UnrealIRCd documentation is doc/unreal32docs.html
   online version at: http://www.vulnscan.org/UnrealIrcd/unreal32docs.html
   FAQ: http://www.vulnscan.org/UnrealIrcd/faq/
   Read them before asking for help.
 - Report bugs at http://bugs.unrealircd.org/
+- When upgrading a network, we assume you are upgrading from the previous
+  version (3.2.1). If you got a net running with servers that are several
+  versions behind (eg: 3.2) then you might experience (desynch) problems.
+  Also, if you try to use the new features, some might not work properly
+  until all your servers are upgraded. It is therefore recommended to
+  upgrade all servers in a 'short' timespan (x day[s], not weeks).
 
 == [ NEW ]==
-- [!] Cloaking has been modulized.
-  - This means you now MUST load a cloaking module in order to boot.
-    Example: loadmodule "src/modules/cloak.so";
-  - 2 cloaking modules are provided: 'cloak' and 'oldcloak':
-  - 'cloak' is the new, RECOMMENDED, and much more secure cloaking algorithm that uses
-    md5 internally. It requires 3 keys of 5-100 characters (10-20 is fine) consisting
-    of mixed lowercase (a-z), uppercase (A-Z) and digits (0-9). So for example:
-    set { cloak-keys { "AHsHS6ds2sQGAkish"; "qF5D3orm6Evba26hjf"; "f6oaO2hhd6sIHSfs"; };
-  - 'oldcloak' is the <=3.2 cloaking algorithm, it is ONLY meant for use during the
-    upgrade process (it will give a warning if you use it), you should switch to the
-    much more secure 'cloak' module AS SOON AS POSSIBLE. As mentioned earlier, the old
-    cloaking algorithm has been cracked so it makes no sense to keep using it.
-  - 3rd party cloak modules are also possible.
-- [!] Windows now also supports modules
-  - This means you MUST load commands.dll and a cloaking module on windows too, eg:
-    loadmodule "modules/commands.dll";
-    loadmodule "modules/cloak.dll";
-  - 3rd party modules are now easy to install too... developers can put .dll files
-    online which you just need to put in your modules\ directory (or, that could
-    even be done by an installer), after that you just add a loadmodule line for it,
-    like: loadmodule "modules/leetmod.dll";
-    NOTE: Just as on *NIX, you'll have to upgrade your modules every release.
-- set::spamfilter::virus-help-channel-deny: blocks any normal joins to the
-  virus-help-channel (only people force-joined by spamfilter and opers can join).
-- set::options::flat-map: Makes all server appear as directly-linked in /links,
-  /map, etc. Thus, link info (which server is linked to which) is hidden from users.
-- NickIP was added, this means IP's of users are now known by all servers:
-  - IP is now shown in the 'is connecting from' line in /whois (if selfwhois or oper)
-  - "Far connects" (+s +F) together with HCN (Hybrid Connect Notice) can now see
-    IP's as well. This allows you to use for example 1 central BOPM.
-  - New /who options:
-    - /who +i <ip/mask> allows you to search by IP (eg: /who +i 10.*)
-    - /who +I will show IP's of everyone (bit like /who +R)
-- Added DCCALLOW system (taken from bahamut). With this system you can block certain
-  (or all) DCC SENDs and then allow the user to 'override' this limit for every user
-  he/she trusts via '/DCCALLOW +User'. This is an attempt to stop (or at least limit)
-  the spreading of viruses and other malware.
-  - added deny dcc::soft option, if 'soft' is set to yes in a deny dcc block it means
-    users can override it via DCCALLOW.
-  - set::maxdccallow controls the max. number of items on the DCCALLOW list (default:10)
-- Added allow dcc { } by which you can make certain exceptions over deny dcc { }
-- Added extended ban type ~n (nickchange ban). if a user matches this (s)he can not
-  change nicks unless (s)he has voice or higher (ex: +b ~n:*!*@*.aol.com).
-- Added set::restrict-extendedbans by which you can disallow normal users to use any
-  extended bans ("*") or disallow only certain ones (eg: "qc").
-  You could also use this if you are on a mixed-version-network and are (very) concerned
-  about desynchs, then you could restrict 'n' till all servers are upgraded.
-- Added CIDR support (eg: 192.168.0.0/16). Now implemented for: ban ip, ban user,
-  allow, except ban/tkl/throttle, and TKL (*lines).
-- '/dns c' will clear the DNS cache
-- Added new logtype 'spamfilter' to log spamfilter matches.
-- Added 'can_addline' operflag, this is now required in order to use /addline.
-- Spanish and Hungarian translations of unreal32docs were added.
-- Readded support for the T (topic time) and C (creation time) flags for /list. 
-- Added support for the ELIST 005 token (ELIST=MNUCT)
+- set::hosts now supports the user@host format (ident)
+- oper::modes: set individual modes on oper-up, overrides set::modes-on-oper
+- SAPART and SVSPART reasons
+- USERIP command: works just like USERHOST but displays (cloaked) IPs instead.
+- Salted passwords: md5/sha1/ripemd160 passwords generated by mkpasswd are
+  now 'salted' which makes some cracking techniques a lot harder.
+  Additionally, 'md5' password encryption is now always available on *NIX.
+- Channel aliases: Ability for alias { } blocks to send to a channel,
+  useful for example for a /SPAMREPORT command.
+- Added spamfilter 'user' ('u') target, this gets matched against the
+  nick!user@host:realname mask of every user.
+  Ex: /spamfilter add u gzline 86400 Please_go_away Drone[0-9]+!.+@.+:Drone[0-9]
+  This would gzline any users that have both a nick and realname with 'Drone'
+  followed by digits.
+- Added spamfilter 'away' ('a') target.
+- Oper-up notices moved to a new snomask 'o'
+- Win32: can now handle (near) 4096 connections instead of 1024.
+- French docs
+- Module coders: HOOKTYPE_REMOTE_JOIN, HOOKTYPE_REMOTE_PART, HOOKTYPE_REMOTE_KICK
 
 ==[ MAJOR BUGS FIXED ]==
-- win32: crash bugs in TRE on /rehash are probably fixed.
-- qlines (banned nicks) could cause crashes
+- Memory corruption bug in qlines
+- Crash on first connect if compiled with SSL enabled on: Mac OS X, Sun
+  Solaris, Opteron w/Linux, and perhaps others (non-i386).
 - (quickly) rehashing + autoconnect link blocks could cause a crash
-- The previous cloaking algorithm had some serious flaws by which the cloak keys
-  could be discovered. Thus, enabling an attacker to 'uncloak' any hosts (especially
-  unresolved IP's but probably also normal hosts with some more effort).
+- Win32: using 100% cpu on startup in some cases [*]
+- Win32: crash on windows 2003 when installing [*]
+- IPv6: various nameserver fixes: hosts in link::hostname are now working,
+  also resolving of hostnames of clients should now work as expected (this
+  mainly affected non-BIND nameservers).
+- new TRE version v0.7.0 fixes (invalid) regex crash
+- Too broad regex in badword::word caused the ircd to hang
+- Win32: remote include bug could cause a crash [*]
 
 ==[ MINOR BUGS FIXED ]==
-- GUEST support wasn't working
-- empty set::ssl::options would cause a crash
-- compiles fine with SSL support on OpenBSD 3.5 now.
-- Local opers can now join +O (operonly) channels
-- Permanent modules: custom allow/except/ban/deny types were lost after /rehash
-- Fixed an SVSNICK bug that could lead to duplicate users in very rare circumstances
+- Win32: error msg producing garbage upon a module load error [*]
+- bans were also affecting halfops in some cases (eg: changing of nick) which
+  was incorrect. Also +b ~n also affected voiced users, this is also fixed.
+- ident in vhost { } was never sent out to other servers
+- Modules: HOOKTYPE_SERVER_QUIT was called twice, could have caused crashes
+- Win32: Spamfilters only added on notices might not have worked all the time
+- Bans on blah@IP were not always applied
+- except tkl { } did not validate the ident@
+- local TKLs (klines, zlines) were accidently distributed to other servers
+  if someone tried to add an already-existing TKL.
+- Numeric conflict of SVSWATCH and SVSJOIN
+- chanmode +mu: <IRC> messages were not always properly relayed
+- Resolver not working in FreeBSD jail
+- Chinese/Japanese (gbk) nick code
 
 ==[ CHANGED ]==
-- spamfilter.conf updates
-- usage of CHG* commands are now no longer logged from U:lines
-- services admins are now shown as 'Services Administrator' in /whois again.
-- Changed the way MSG/NOTICE <prefix>#chan works:
-  - It now goes to <prefix> and higher, so '/notice +#chan hi!' goes to +vhoaq
-  - You need at least voice in order to be able to msg/notice +#chan, %#chan or @#chan
-  - You need at least ops in order to be able to msg/notice &#chan or ~#chan
-  - Any multi-prefix targets will be converted automatically (eg: ~&@#chan to @#chan)
-- SVSJOIN now also supports channel keys
-- Docs, help.conf and other text updates
-- Added zlib+SSL+curl version check on boot to protect against crashes
-- Win32: socket errors are now more clear (less 'Unknown error <code>' now).
-- Win32: now using dynamically linked libc to get rid of some crashbugs. The dll,
-  msvcr70d.dll, will be downloaded automatically if needed.
-- Made the 'negative TS' warning a bit more annoying since a lot of people don't
-  understand how critical correct time for IRC is.
-- Several servernotices were turned into numerics
+- allow-userhost-change force-rejoin is now also applied to opers that oper
+  up and receive a vhost.
+- Removed * and ^ flags from /whois if PREFIX_AQ is disabled
+- Using a new Makefile on *NIX so it requires less memory to compile unreal
+- *NIX: 'md5' password encryption is now always available.
+- Win32: 'Install as a service' is now unchecked by default
+- Win32: zip/non-zip modules are now binary compatible (just like ssl/non-ssl)
+- Made /whois show the usermodes to opers regardless of the eyes snomask
+- Snomasks are now shown in the /whois umode output
+- 005 tokens heavily updated, also modulized.
+- Docs, help.conf, spamfilter.conf and other text updates
+- Win32: Now using the release library msvcr70.dll [*]
+- Module coders: HOOKTYPE_REMOTE_CONNECT now also gets called upon netsynch.
+- Slowed down qline floods
+- You can now specify multiple types in an except tkl { } block
+
+ [*]: fix was also in the 3.2.1b win32 release
 
 ==[ ADDITIONAL INFO ]==
-* See Changelog
+* See Changelog for more details

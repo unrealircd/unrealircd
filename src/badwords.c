@@ -185,7 +185,7 @@ char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
 	static char cleanstr[4096];
 	char buf[4096];
 	char *ptr;
-	int  matchlen, stringlen, cleaned;
+	int  matchlen, m, stringlen, cleaned;
 	ConfigItem_badword *this_word;
 	
 	*blocked = 0;
@@ -244,8 +244,11 @@ char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
 				{
 					if (pmatch[0].rm_so == -1)
 						break;
+					m = pmatch[0].rm_eo - pmatch[0].rm_so;
+					if (m == 0)
+						break; /* anti-loop */
 					cleaned = 1;
-					matchlen += pmatch[0].rm_eo - pmatch[0].rm_so;
+					matchlen += m;
 					strlncat(buf, ptr, sizeof buf, pmatch[0].rm_so);
 					if (this_word->replace)
 						strlcat(buf, this_word->replace, sizeof buf); 

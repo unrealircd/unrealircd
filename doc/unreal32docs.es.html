@@ -22,13 +22,14 @@
 <a href="unreal32docs.html">English</a> | 
 <a href="unreal32docs.de.html">German</a> | 
 Spanish | 
-<a href="unreal32docs.hu.html">Hungarian</a>
+<a href="unreal32docs.hu.html">Hungarian</a> | 
+<a href="unreal32docs.fr.html">French</a>
 <br><br>
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
-  <font size="4">Versi&oacute;n: 3.2.1</font><br>
-  <b>Versi&oacute;n actual :</b> 3.2.1<br>
-  <b>&Uacute;ltima actualizaci&oacute;n del documento:</b> 2004-07-03</div>
+  <font size="4">Versi&oacute;n: 3.2.2</font><br>
+  <b>Versi&oacute;n actual :</b> 3.2.2<br>
+  <b>&Uacute;ltima actualizaci&oacute;n del documento:</b> 2004-10-11</div>
 <br>
   <b>Programadores:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contribuciones:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -195,8 +196,8 @@ Windows:<br>
 <p><b>Instrucciones de instalaci&oacute;n</b><br>
 Linux:<br>
 <ol>
-<li>gunzip -d Unreal3.2.tar.gz
-<li>tar xvf Unreal3.2.tar
+<li>gunzip -d Unreal3.2.2.tar.gz
+<li>tar xvf Unreal3.2.2.tar
 <li>cd Unreal3.2
 <li>./Config
 <li>Responda a las preguntas que se le formulen. Si no conoce alguna, utilice el valor por defecto.
@@ -261,6 +262,8 @@ Windows:<br>
    q - notificaciones de denegaci&oacute;n de nicksdeny nick (Q:line)<br>
    s - notificaciones del servidor [*]<br>
    S - notificaciones del filtro de spam<br>
+   o - notificaciones de identificaciones de Operadores de red
+   <br>
    [*: disponible para usuarios no operadores]<br>
   </p>
 <p>Puede controlar qu&eacute; m&aacute;scaras puede obtener (set::snomask-on-connect) y cu&aacute;les para operadores (set::snomask-on-oper, oper::snomask)</p>
@@ -294,7 +297,7 @@ Windows:<br>
 <p>No puede conectar normalmente a un puerto SSL. As&iacute;, no podr&aacute; usar el puerto 6667 para SSL. Adem&aacute;s se requiere un cliente o una pasarela que entienda el protocolo SSL.</p>
 <p>Clientes que soportan SSL: <A HREF="http://www.xchat.org/" TARGET="_blank">XChat</a>,
                              <A HREF="http://www.irssi.org/" TARGET="_blank">irssi</a>,
-                             <A HREF="http://www.irssi.org/" TARGET="_blank">mIRC</a> (6.14 y posteriores, 
+                             <A HREF="http://www.mirc.com/" TARGET="_blank">mIRC</a> (6.14 y posteriores, 
                              con <a href="http://www.mirc.co.uk/ssl.html" target="_blank">pasos adicionales</a>)</p>
 <p>Para clientes que no soporten SSL puede usar una pasarela como <A HREF="http://www.stunnel.org/" TARGET="_blank">stunnel</A>. Aqu&iacute; tiene un ejemplo (para stunnel 4.x):<br>
   <pre>
@@ -467,7 +470,38 @@ Los m&oacute;dulos pueden a&ntilde;adir otros tipos de ban.
   <table border=0>
    <tr valign="top">
      <td><b>[tipo]</b></td>
-     <td> especifica la ubicaci&oacute;n, puede especificar varias ubicaciones: 'c' mensajes de canales, 'p' privados, 'n' notices, 'N' notices al canal, 'P' mensajes part, 'q' mensajes quit, 'd' dcc</td>
+     <td> especifica el destino:<br>
+   <table>
+   <tr><td><b>Char:</b></td><td><b>Config item:</b></td>
+   <td><b>Descripci&oacute;n:</b></td>
+   </tr>
+   <tr><td>c</td><td>channel</td>
+   <td>Mensaje a canal </td>
+   </tr>
+   <tr><td>p</td><td>private</td>
+   <td>Mensaje privado (de usuario-&gt;usuario)</td>
+   </tr>
+   <tr><td>n</td>
+   <td>private-notice</td>
+   <td>Aviso privado </td>
+   </tr>
+   <tr><td>N</td><td>channel-notice</td>
+   <td>Aviso a canal </td>
+   </tr>
+   <tr><td>P</td><td>part</td>
+   <td>Mensaje part</td>
+   </tr>
+   <tr><td>q</td><td>quit</td>
+   <td>Mensaje quit </td>
+   </tr>
+   <tr><td>d</td><td>dcc</td>
+   <td>Archivo DCC </td>
+   </tr>
+   <tr><td>u</td><td>user</td>
+   <td>User ban, coincidir&aacute; con nick!user.@host:realname</td>
+   </tr>
+   </table>
+   Puede especificar varios destinos, por ejemplo: cpNn</td>
    </tr>
    <tr valign="top">
      <td><b>[accci&oacute;n]</b></td>
@@ -500,7 +534,7 @@ Los m&oacute;dulos pueden a&ntilde;adir otros tipos de ban.
 <tr><td>dccblock</td>
 <td>marca el usuario para no poder enviar m&aacute;s DCCs</td>
 </tr>
-<tr><td>viruschan</td>
+<tr valign="top"><td>viruschan</td>
 <td>fuerza su salida de todos los canales, fuerza su entrada a set::spamfilter::virus-help-channel, desactiva todos los comandos menos PONG, ADMIN y mensajes a set::spamfilter::virus-help-channel</td>
 </tr>
 </table></tr></td>
@@ -527,7 +561,13 @@ Los m&oacute;dulos pueden a&ntilde;adir otros tipos de ban.
    <br>
    Los filtros de spam a&ntilde;adidos con /spamfilter son globales en la red. Trabajan pase lo que pase aunque el usuario tenga +G. S&oacute;lo los operadores y servicios de red est&aacute;n excemtos del filtrado.
    <p>Puede a&ntilde;adir filtros de spam en el archivo de configuraci&oacute;n pero estos filtros ser&aacute;n locales. Su uso se describe en el bloque spamfilter <a href="#spamfilter">here</a><br>
-</p>
+   Ejemplo:<br>
+   <pre>spamfilter {
+	regex "//write \$decode\(.+\|.+load -rs";
+	target { private; channel; };
+	reason "Generic $decode exploit";
+	action block;
+};</pre></p>
 <p><b>set::spamfilter::ban-time</b> permite modificar el valor por defecto del tkltiempo (por defecto 1 d&iacute;a)<br>
    <b>set::spamfilter::ban-reason</b> permite especificar una raz&oacute;n por defecto (por defecto  'Spam/advertising')<br>
    <b>set::spamfilter::virus-help-channel</b> permite especificar un canal para forzar la entrada en la acci&oacute;n 'viruschan' (por defecto #help)<br>
@@ -794,6 +834,7 @@ listen *:6601 {
 	swhois &lt;informaci&oacute;n whois&gt;;
 	snomask &lt;snomask&gt;;
 	maxlogins &lt;num&gt;;
+modes &lt;modos&gt;;
 };
 </pre>
 <p>El bloque oper permite asignar Operadores de Red para tu servidor. <b>oper::</b> especifica el nombre de usuario para /oper. <b>oper::from::userhost </b>es una m&aacute;scara user@host que debe coincidir. Puede especificar m&aacute;s de una m&aacute;scara usando varios oper::from::userhost. <b>oper::password</b> es la contrase&ntilde;a que deber&aacute; especificar, <b>oper::password::</b> permite especificar un m&eacute;todo de cifrado para esta contrase&ntilde;a. M&eacute;todos v&aacute;lidos: crypt, md5, sha1 y ripemd-160. Si no utilizar&aacute; m&eacute;todo de cifrado, este bloque puede omitirse.</p>
@@ -1085,7 +1126,7 @@ listen *:6601 {
 <p>La directriz <b>oper::snomask</b> fija las m&aacute;scaras de servidor que recibir&aacute;. Vea la <a href="#feature_snomasks">secci&oacute;n 3.3</a> 
   <font color=blue>[opcional]</font></p>
 <p>La directriz <b>oper::maxlogins</b> restringe el n&uacute;mero de intentos para hacerse operador. Si lo fija a 1, s&oacute;lo podr&aacute; haber un operador usando este bloque al mismo tiempo <font color=blue>[opcional]</font></p>
-
+<p>La&nbsp;directriz <b>oper::modes</b> establece qu&eacute; modos recibe el operador cuando se identifica. <font color=blue>[opcional]</font></p>
 <p>Ejemplo:<br>
 <pre>
 oper bobsmith {
@@ -1424,9 +1465,15 @@ except ban {
 except tkl {
 	mask &lt;hostmask&gt;;
 	type &lt;tipo&gt;;
+	type {
+		&lt;type&gt;;
+		&lt;type&gt;;
+		...
+	};
 };</pre>
 </p>
-<p>Este bloque permite a un usuario saltarse los bloqueos tkl puestos a su host. Es muy &uacute;til cuando se banea a todo un proveedor o ISP y quiere permitir a alguien en concreto. La directriz <b>except::mask</b> especifica la m&aacute;scara user@host a permitir. <b>except::type </b>especifica el tipo de ban a saltarse. Tipos v&aacute;lidos: gline, gzline, qline, gqline y shun, para Glines, Global Zlines, Qlines, Global Qlines y shuns, respectivamente.</p>
+<p>Este bloque permite a un usuario saltarse los bloqueos tkl puestos a su host. Es muy &uacute;til cuando se banea a todo un proveedor o ISP y quiere permitir a alguien en concreto. La directriz <b>except::mask</b> especifica la m&aacute;scara user@host a permitir. <b>except::type </b>especifica el tipo de ban a saltarse. Tipos v&aacute;lidos: gline, gzline, qline, gqline y shun, para Glines, Global Zlines, Qlines, Global Qlines y shuns, respectivamente. 
+Si se usa el formato type { }, se pueden especificar varios tipos a la vez.</p>
 <p>Ejemplo:<br>
 <pre>
 except tkl {
@@ -1671,6 +1718,7 @@ link &lt;nombre-servidor&gt; {
 	leaf &lt;leaf-mask&gt;;
 	leafdepth &lt;profundidad&gt;;
 	class &lt;clase&gt;;
+ciphers &lt;ssl-ciphers&gt;;
 	options {
 		&lt;opci&oacute;n&gt;;
 		&lt;opci&oacute;n&gt;;
@@ -1720,6 +1768,8 @@ link &lt;nombre-servidor&gt; {
   Es la clase a la se relacionar&aacute; este servidor, generalmente la clase server.</p>
 <p><b>compression-level</b> (opcional)<br>
   Especifica el nivel de compresi&oacute;n (1-9) si se especifica el par&aacute;metro link::options::zip.</p>
+<p><b>ciphers</b> (opcional)<br>
+  Especifica los &quot;ciphers&quot; ssl para este enlace. Para obtener una lista de los &quot;ciphers&quot; disponibles, use el comando 'openssl ciphers. Deben especificarse separados por ':'. </p>
 <p><b>bloque options </b><br>
   Algunas de las opciones son:<br>
 <table border="0">
@@ -1768,17 +1818,17 @@ link hub.mynet.com {
 <p>Sintaxis [alias est&aacute;ndar]:<br>
 <pre>
 alias &lt;nombre&gt; {
-	nick &lt;nick-destino&gt;;
+ target &lt;destino&gt;;
 	type &lt;tipo&gt;;
 };</pre>
 </p>
 <p>(Nota: puede ver m&aacute;s archivos de alias est&aacute;ndars que lleva UnrealIRCd en este <a href="#includedirective">enlace</a>)</p>
-<p>Este bloque (est&aacute;ndar) le permite redireccionar comandos a usuarios, generlamente a bots como por ejemplo /chanserv para enviarle privados. <b>alias::</b> especifica el nombre del comando, por ejemplo chanserv. <b>alias::nick</b> el nick al que se le enviar&aacute; el mensaje y puede omitirse. <b>alias::type</b> define el tipo de alias: services (el usuario est&aacute; en el servidor de servicios), stats (en el de estad&iacute;sticas) y normal (en un servidor normal). Este bloque tiene otro prop&oacute;sito detallado a continuaci&oacute;n.</p>
+<p>Este bloque (est&aacute;ndar) le permite redireccionar comandos a usuarios, generlamente a bots como por ejemplo /chanserv para enviarle privados. <b>alias::</b> especifica el nombre del comando, por ejemplo chanserv. <b>alias::target</b> el nick o canal al que se le enviar&aacute; el mensaje y puede omitirse. <b>alias::type</b> define el tipo de alias: services (el usuario est&aacute; en el servidor de servicios), stats (en el de estad&iacute;sticas), normal (en un servidor normal) y channel (el target es un canal). Este bloque tiene otro prop&oacute;sito detallado a continuaci&oacute;n.</p>
 <p>Sintaxis [alias de comandos]:<br>
 <pre>
 alias &lt;nombre&gt; {
 	format &lt;expresi&oacute;n-regular&gt; {
-		nick &lt;nick-destino&gt;;
+		target &lt;destino&gt;;
 		type &lt;tipo&gt;;
 		parameters &lt;par&aacute;metros-del-mensaje&gt;;
 	};
@@ -1788,7 +1838,7 @@ alias &lt;nombre&gt; {
 	type command;
 };</pre>
 </p>
-<p>Este uso es m&aacute;s extenso y tiene m&aacute;s posibilidades. Por ejemplo, puede crear aliases como /identify. <b>alias::</b> es el mismo que el anterior: el nombre del comando. <b>alias::format</b> especifica la expresi&oacute;n regular que debe coincidir con el texto enviado. Si lo hace, se usan las subentradas. As&iacute; puede tener varios alias::format para seguir distintas acciones seg&uacute;n la coincidencia, a partir de sus subentradas. <b>alias::format::nick</b> es el nick de destino. <b>alias::format::type</b> es el tipo de alias. <b>alias::format::parameters</b> es lo que se enviar&aacute; como par&aacute;metro al alias. Para especificar un par&aacute;metro que se enviar&aacute; al nick, use % seguido del n&uacute;mero de par&aacute;metro. Por ejemplo, %1 enviar&aacute; el primer par&aacute;metro. Para especificar todos los par&aacute;metros a partir de uno, use %n- donde n es el n&uacute;mero de par&aacute;metro. Por ejemplo, %2- enviar&iacute;a todos los par&aacute;metros a partir del segundo, inclu&iacute;do. Para m&aacute;s informaci&oacute;n consulte doc/example.conf.</p>
+<p>Este uso es m&aacute;s extenso y tiene m&aacute;s posibilidades. Por ejemplo, puede crear aliases como /identify. <b>alias::</b> es el mismo que el anterior: el nombre del comando. <b>alias::format</b> especifica la expresi&oacute;n regular que debe coincidir con el texto enviado. Si lo hace, se usan las subentradas. As&iacute; puede tener varios alias::format para seguir distintas acciones seg&uacute;n la coincidencia, a partir de sus subentradas. <b>alias::format::target</b> es el nick o canal de destino. <b>alias::format::type</b> es el tipo de alias. <b>alias::format::parameters</b> es lo que se enviar&aacute; como par&aacute;metro al alias. Para especificar un par&aacute;metro que se enviar&aacute; al nick, use % seguido del n&uacute;mero de par&aacute;metro. Por ejemplo, %1 enviar&aacute; el primer par&aacute;metro. Para especificar todos los par&aacute;metros a partir de uno, use %n- donde n es el n&uacute;mero de par&aacute;metro. Por ejemplo, %2- enviar&iacute;a todos los par&aacute;metros a partir del segundo, inclu&iacute;do. Adem&aacute;s, puede usarse %n para que sea reemplazado por el nick que ejecuta el comando. Para m&aacute;s informaci&oacute;n consulte doc/example.conf.</p>
 <p></p></div>
 <p><font class="block_section">4.33 - </font><font class="block_name">Bloque help </font>
    <font class="block_optional">OPCIONAL</font><a name="helpblock"></a>
@@ -1847,8 +1897,8 @@ spamfilter {
 };</pre>
 </p>
 <p><b>regex</b> es la expresi&oacute;n regular a comparar.<br>
-   <b>target</b> especifica las ubicaciones: channel, private, private-notice, channel-notice, part, quit, dcc.<br>
-   <b>action</b> define la acci&oacute;n a tomar, vea <a href="#feature_spamfilter">aqu&iacute;</a> para las acciones posibles. <br>
+   <b>target</b> especifica los destinos, vea <a href="#feature_spamfilter">aqu&iacute;</a> para los tipos posibles (ej: 'channel').<br>
+   <b>action</b> define la acci&oacute;n a tomar, vea <a href="#feature_spamfilter">aqu&iacute;</a> para las acciones posibles (ej: 'gline'). <br>
    <b>reason</b> opcional: especifica la raz&oacute;n.<br>
    <b>ban-time</b> opcional: especifica la durada de la *line..<br>
 </p>
@@ -1996,17 +2046,17 @@ set {
 <p><font class="set">set::hiddenhost-prefix &lt;prefijo&gt;;</font><br>
   Define el prefijo del host virtual. Suele ser un reflejo del nombre de la red.</p>
 <p><font class="set">set::hosts::local &lt;vhost-locop&gt;;</font><br>
-  Define el host que se les asignar&aacute; a los operadores locales si llevan +x.</p>
+  Define el host que se les asignar&aacute; a los operadores locales si llevan +x. Puede especificar un user@host para este campo. </p>
 <p><font class="set">set::hosts::global &lt;vhost-globop&gt;;</font><br>
-  Define el host que se les asignar&aacute; a los operadores globales si llevan +x.</p>
+  Define el host que se les asignar&aacute; a los operadores globales si llevan +x. Puede especificar un user@host para este campo.</p>
 <p><font class="set">set::hosts::coadmin &lt;vhost-coadmin&gt;;</font><br>
-  Define el host que se les asignar&aacute; a los co-admin si llevan +x.</p>
+  Define el host que se les asignar&aacute; a los co-admin si llevan +x. Puede especificar un user@host para este campo.</p>
 <p><font class="set">set::hosts::admin &lt;vhost-admin&gt;;</font><br>
-  Define el host que se les asignar&aacute; a los administradores si llevan +x.</p>
+  Define el host que se les asignar&aacute; a los administradores si llevan +x. Puede especificar un user@host para este campo.</p>
 <p><font class="set">set::hosts::servicesadmin &lt;vhost-admin-servicios&gt;;</font><br>
-  Define el host que se les asignar&aacute; a los administradores de servicios si llevan +x.</p>
+  Define el host que se les asignar&aacute; a los administradores de servicios si llevan +x. Puede especificar un user@host para este campo.</p>
 <p><font class="set">set::hosts::netadmin &lt;vhost-admin-red&gt;;</font><br>
-  Define el host que se les asignar&aacute; a los administradores de red si llevan +x.</p>
+  Define el host que se les asignar&aacute; a los administradores de red si llevan +x. Puede especificar un user@host para este campo.</p>
 <p><font class="set">set::hosts::host-on-oper-up &lt;yes/no&gt;;</font><br>
   Si est&aacute; en 'yes', recibir&aacute;n el host autom&aacute;ticamente acompa&ntilde;ado del modo +x si no lo tuvieran. Si no, deber&aacute;n ponerse el modo +x manualmente.</p>
 <p><font class="set">set::ssl::egd &lt;archivo&gt;;</font><br>

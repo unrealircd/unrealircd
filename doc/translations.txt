@@ -10,6 +10,9 @@ There a few requirements however:
   unreal32docs.html (www.vulnscan.org/UnrealIrcd/unreal32docs.html).
 - Of course the translation should be correct.. So also 'technically',
   it's therefore recommended that have some real experience with Unreal ;)
+- If you are accepted and start working on it, it would be nice if you
+  could put your docs-in-progress online somewhere so we can see how
+  progress is going a bit.
 - Someone (usually the person who translated it) needs to be willing
   to actively maintain the docs. This is very important! If docs are
   out of date (out-of-synch) there will be confusion among users.

@@ -154,6 +154,10 @@ aTKline *tkl_add_line(int type, char *usermask, char *hostmask, char *reason, ch
 			nl->ptr.spamf->tkl_duration = spamf_tkl_duration;
 			nl->ptr.spamf->tkl_reason = strdup(spamf_tkl_reason); /* already encoded */
 		}
+		if (nl->subtype & SPAMF_USER)
+			loop.do_bancheck_spamf_user = 1;
+		if (nl->subtype & SPAMF_AWAY)
+			loop.do_bancheck_spamf_away = 1;
 	}
 	else if (type & TKL_KILL || type & TKL_ZAP || type & TKL_SHUN)
 	{
@@ -420,7 +424,7 @@ int  find_tkline_match(aClient *cptr, int xx)
 
 		if (excepts->netmask)
 		{
-			if (match_ip(cptr->ip, NULL, NULL, excepts->netmask))
+			if (match_ip(cptr->ip, host2, excepts->mask, excepts->netmask))
 				return 1;		
 		} else
 		if (!match(excepts->mask, host) || !match(excepts->mask, host2))
@@ -552,6 +556,24 @@ int  find_shun(aClient *cptr)
 	return 2;
 }
 
+/** Checks if the user matches a spamfilter of type 'u' (user,
+ * nick!user@host:realname ban).
+ * Written by: Syzop
+ * Assumes: only call for clients, possible assume on local clients [?]
+ * Return values: see dospamfilter()
+ */
+int find_spamfilter_user(aClient *sptr)
+{
+char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64]; /* n!u@h:r */
+
+	if (IsAnOper(sptr))
+		return 0;
+
+	ircsprintf(spamfilter_user, "%s!%s@%s:%s",
+		sptr->name, sptr->user->username, sptr->user->realhost, sptr->info);
+	return dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL);
+}
+
 aTKline *find_qline(aClient *cptr, char *nick, int *ishold)
 {
 	aTKline *lp;
@@ -586,7 +608,7 @@ aTKline *find_qline(aClient *cptr, char *nick, int *ishold)
 		return lp;
 	}
 
-	chost = cptr->sockhost;
+	chost = cptr->user ? cptr->user->realhost : (MyConnect(cptr) ? cptr->sockhost : "unknown");
 	cname = cptr->user ? cptr->user->username : "unknown";
 	strcpy(host, make_user_host(cname, chost));
 
@@ -603,7 +625,7 @@ aTKline *find_qline(aClient *cptr, char *nick, int *ishold)
 			continue;
 		if (excepts->netmask)
 		{
-			if (match_ip(cptr->ip, NULL, NULL, excepts->netmask))
+			if (MyConnect(cptr) && match_ip(cptr->ip, NULL, NULL, excepts->netmask))
 				return NULL;
 		} else
 		if (!match(excepts->mask, host) || (host2 && !match(excepts->mask, host2)))
@@ -1060,7 +1082,8 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				 			parv[1], parv[2], parv[3], parv[4],
 				 			tk->setby, tk->expire_at, tk->set_at, tk->ptr.spamf->tkl_duration,
 				 			tk->ptr.spamf->tkl_reason, tk->reason);
-				 	} else
+				 	} 
+					else if (type & TKL_GLOBAL)
 				 		sendto_serv_butone(cptr,
 				 			":%s TKL %s %s %s %s %s %ld %ld :%s", sptr->name,
 				 			parv[1], parv[2], parv[3], parv[4],
@@ -1441,9 +1464,17 @@ int dospamfilter(aClient *sptr, char *str_in, int type, char *target)
 {
 aTKline *tk;
 int n;
-char *str = (char *)StripControlCodes(str_in);
+char *str;
 
-	if (!IsPerson(sptr) || IsAnOper(sptr) || IsULine(sptr))
+	if (type == SPAMF_USER)
+		str = str_in;
+	else
+		str = (char *)StripControlCodes(str_in);
+
+	/* (note: using sptr->user check here instead of IsPerson()
+	 * due to SPAMF_USER where user isn't marked as client/person yet.
+	 */
+	if (!sptr->user || IsAnOper(sptr) || IsULine(sptr))
 		return 0;
 
 	for (tk = tklines[tkl_hash('F')]; tk; tk = tk->next)
@@ -1493,6 +1524,16 @@ char *str = (char *)StripControlCodes(str_in);
 					case SPAMF_DCC:
 						sendnotice(sptr, "DCC to %s blocked: %s",
 							target, unreal_decodespace(tk->ptr.spamf->tkl_reason));
+						break;
+					case SPAMF_AWAY:
+						/* hack to deal with 'after-away-was-set-filters' */
+						if (sptr->user->away && !strcmp(str_in, sptr->user->away))
+						{
+							/* free away & broadcast the unset */
+							MyFree(sptr->user->away);
+							sptr->user->away = NULL;
+							sendto_serv_butone_token(sptr, sptr->name, MSG_AWAY, TOK_AWAY, "");
+						}
 						break;
 					default:
 						break;

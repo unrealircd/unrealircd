@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_map)
 
 DLLFUNC int MOD_INIT(m_map)(ModuleInfo *modinfo)
 {
-	add_Command(MSG_MAP, TOK_MAP, m_map, MAXPARA);
+	CommandAdd(modinfo->handle, MSG_MAP, TOK_MAP, m_map, MAXPARA, M_USER|M_ANNOUNCE);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -72,11 +72,6 @@ DLLFUNC int MOD_LOAD(m_map)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(m_map)(int module_unload)
 {
-	if (del_Command(MSG_MAP, TOK_MAP, m_map) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-			MOD_HEADER(m_map).name);
-	}
 	return MOD_SUCCESS;
 }
 

@@ -19,13 +19,15 @@
 <body>
 <a href="unreal32docs.html">English</a> | German | 
 <a href="unreal32docs.es.html">Spanish</a> | 
-<a href="unreal32docs.hu.html">Hungarian</a><br><br>
+<a href="unreal32docs.hu.html">Hungarian</a> | 
+<a href="unreal32docs.fr.html">French</a>
+<br><br>
 
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
-  <font size="4">Version: 3.2.1 </font><br>
-  <b>Aktuelle Version:</b> 3.2.1<br>
-  <b>Letztes Dokumentation Update:</b>      2004-07-03</div>
+  <font size="4">Version: 3.2.2 </font><br>
+  <b>Aktuelle Version:</b> 3.2.2<br>
+  <b>Letztes Dokumentation Update:</b>       2004-10-11</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
 <b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
@@ -208,8 +210,8 @@ Bug gemeldet wird!</p></div>
   </a>  senden. <p><b>Installationsanleitungen</b><br>
 Linux:<br>
 <ol>
-<li>gunzip -d Unreal3.2.tar.gz
-<li>tar xvf Unreal3.2.tar
+<li>gunzip -d Unreal3.2.2.tar.gz
+<li>tar xvf Unreal3.2.2.tar
 <li>cd Unreal3.2
 <li>./Config
 <li>Die hierbei angezeigten Fragen nach bestem Wissen beantworten. Allgemein ist
@@ -306,6 +308,7 @@ N - globale nick Änderungs- Meldungen<br>
 Nicks<br>
 s - Server Nachrichten anzeigen [*]<br>
 S - Spamfilter Nachrichten anzeigen<br>
+o - Oper-up Meldungen anzeigen<br>
 [*: Diese snomask ist auch für Nicht-IrcOps möglich]<br>
    </p>
 <p>Es kann eingestellt werden, welche snomasks man automatisch erhält (set::snomask-on-connect)
@@ -734,87 +737,152 @@ Ebenso können über Module andere erweiterte Bann Typen definiert werden.
 Spamfilter ist ein neues System gegen Spam, Belästigungen, Würmer etc. Es
 arbeitet ein wenig ähnlich wie 'badwords', hat aber einige Erweiterungen..<br>
 <br>
-Spamfilter werden durch den&nbsp; /spamfilter Befehl gesetzt, der die folgende
-Syntax hat:<br>
+Spamfilter werden durch den&nbsp; /spamfilter Befehl mit der folgenden Syntax
+gesetzt:<br>
 <b>/spamfilter [add|del|remove|+|-] [type] [action] [tkltime] [reason] [regex]<br>
 </b>
 <table border="0" cellspacing="1" width="959">
   <tr>
     <td width="74" valign="top"><b>[type]&nbsp;</b></td>
-    <td colspan="2" width="871"> gibt den Zieltyp an, also welche Art von Nachrichten. Man kann
-verschiedene angeben. es gilt: 'c' für Channel Nachrichten, 'p' für private
-Nachrichten, 'n' für private Notice, 'N' für Channel Notice, 'P' Part Meldung, 'q'
-für Quit Meldung und&nbsp; 'd' für dcc</td>
+    <td colspan="4" width="871"> gibt an, auf welchen Nachrichtentyp reagiert
+      werden soll;</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td width="123"><b>Zeichen:</b></td>
+    <td colspan="2" width="127"><b>Config Eintrag</b></td>
+    <td width="621"><b>Bedeutung</b></td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td width="123">c</td>
+    <td colspan="2" width="127">channel</td>
+    <td width="621">Nachricht im Channel (öffentlich)</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td width="123">p</td>
+    <td colspan="2" width="127">privat</td>
+    <td width="621">Private Nachricht (von User --&gt; User)</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td width="123">n</td>
+    <td colspan="2" width="127">private-notice</td>
+    <td width="621">Private Notiz</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td width="123">N</td>
+    <td colspan="2" width="127">channel-notice</td>
+    <td width="621">Channel Notiz</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td width="123">P</td>
+    <td colspan="2" width="127">part</td>
+    <td width="621">Grund Angabe beim Verlassen des Channels</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td width="123">q</td>
+    <td colspan="2" width="127">quit</td>
+    <td width="621">Grund Angabe beim Beenden des Chats</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td width="123">d</td>
+    <td colspan="2" width="127">dcc</td>
+    <td width="621">DCC Dateiname</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td width="123">u</td>
+    <td colspan="2" width="127">user</td>
+    <td width="621">bannt User, geprüft wird auf nick!user@host:realname</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td colspan="4" width="871">Es ist möglich, mehrere Ziele anzugeben, wie
+      z.B.: cpNn</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td colspan="4" width="871"></td>
   </tr>
   <tr>
     <td width="74"><b>[action]</b></td>
-    <td colspan="2" width="871"><i>[action]</i> gibt an, welche Aktion erfolgen soll (es kann nur 1 Aktion
+    <td colspan="4" width="871">gibt an, welche Aktion erfolgen soll (es kann nur 1 Aktion
 angegeben werden)</td>
   </tr>
   <tr>
     <td width="74"></td>
-    <td width="76">kill</td>
-    <td width="789">Killt den User</td>
+    <td colspan="4" width="871"></td>
   </tr>
   <tr>
     <td width="74"></td>
-    <td width="76">tempshun</td>
-    <td width="789">setzt für die laufende Verbindung einen Shun auf den User
+    <td width="1" colspan="2">kill</td>
+    <td width="915" colspan="2">Killt den User</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td width="1" colspan="2">tempshun</td>
+    <td width="915" colspan="2">setzt für die laufende Verbindung einen Shun auf den User
       (bei Reconnect ist der Shun aufgehoben</td>
   </tr>
   <tr>
     <td width="74"></td>
-    <td width="76">shun</td>
-    <td width="789">Setzt einen Shun auf den Host</td>
+    <td width="1" colspan="2">shun</td>
+    <td width="915" colspan="2">Setzt einen Shun auf den Host</td>
   </tr>
   <tr>
     <td width="74"></td>
-    <td width="76">kline</td>
-    <td width="789">Setzt eine kline auf den Host</td>
+    <td width="1" colspan="2">kline</td>
+    <td width="915" colspan="2">Setzt eine kline auf den Host</td>
   </tr>
   <tr>
     <td width="74"></td>
-    <td width="76">gline</td>
-    <td width="789">Setzt eine gline auf den Host</td>
+    <td width="1" colspan="2">gline</td>
+    <td width="915" colspan="2">Setzt eine gline auf den Host</td>
   </tr>
   <tr>
     <td width="74"></td>
-    <td width="76">zline</td>
-    <td width="789">Setzt eine zline auf den Host</td>
+    <td width="1" colspan="2">zline</td>
+    <td width="915" colspan="2">Setzt eine zline auf den Host</td>
   </tr>
   <tr>
     <td width="74"></td>
-    <td width="76">gzline</td>
-    <td width="789">Setzt eine gzline (globale zline) auf den Host</td>
+    <td width="1" colspan="2">gzline</td>
+    <td width="915" colspan="2">Setzt eine gzline (globale zline) auf den Host</td>
   </tr>
   <tr>
     <td width="74"></td>
-    <td width="76">block</td>
-    <td width="789">Blockiert lediglich die Nachricht</td>
+    <td width="1" colspan="2">block</td>
+    <td width="915" colspan="2">Blockiert lediglich die Nachricht</td>
   </tr>
   <tr>
     <td width="74"></td>
-    <td width="76">dccblock</td>
-    <td width="789">markiert den User derart, dass er nicht in der Lage ist,
+    <td width="1" colspan="2">dccblock</td>
+    <td width="915" colspan="2">markiert den User derart, dass er nicht in der Lage ist,
       irgend welche DCCs zu senden</td>
   </tr>
   <tr>
     <td width="74"></td>
-    <td width="76">viruschan</td>
-    <td width="789">User wird aus allen Channels entfernt, wird in den unter <b>set::spamfilter::virus-help-channel</b>
+    <td width="1" colspan="2">viruschan</td>
+    <td width="915" colspan="2">User wird aus allen Channels entfernt, wird in den unter <b>set::spamfilter::virus-help-channel</b>
       eingetragenen Channel geforwardet, alle Befehle außer PONG und ADMIN
       werden deaktiviert und msg/notices werden zum Channel aus <b>set::spamfilter::virus-help-channel</b>
-      geleitet</td>
+      geleitet.</td>
   </tr>
   <tr>
     <td width="74" valign="top"><b>[tkltime]</b></td>
-    <td colspan="2" width="871">Die Zeitdauer, die für eine durch den Filter
+    <td colspan="4" width="871">Die Zeitdauer, die für eine durch den Filter
       gesetzte Line gilt. Um den Default zu benutzen oder zum Übergehen (z.B. wenn action = 'block'),
       lediglich ein '-' eintragen,</td>
   </tr>
   <tr>
     <td width="74" valign="top"><b>[reason]</b></td>
-    <td colspan="2" width="871">Der anzuzeigende Grund für Block- oder *lines
+    <td colspan="4" width="871">Der anzuzeigende Grund für Block- oder *lines
       Befehle. Man kann hier KEINE Leerzeichen eintragen, aber Unterstriche
       ('_') werden zur Laufzeit in Leerzeichen umgesetzt. Ein doppelter
       Underscore ('__') erzeugt einen Underscore ('_') in der Ausgabe. Auch hier
@@ -822,7 +890,7 @@ angegeben werden)</td>
   </tr>
   <tr>
     <td width="74" valign="top"><b>[regex]</b></td>
-    <td colspan="2" width="871">&nbsp;gibt den Ausdruck oder das 'bad word' an, welches geblockt werden
+    <td colspan="4" width="871">&nbsp;gibt den Ausdruck oder das 'bad word' an, welches geblockt werden
 soll, oder worauf die Aktion erfolgen soll</td>
   </tr>
 </table>
@@ -853,6 +921,15 @@ nur lokal für den Server, auf dem sie eingetragen sind (also nicht netzweit),
 gültig.
 Die Syntax dieser spamfilter { } Blöcke wird <a href="#spamfilter">hier</a>
 erklärt:<br>
+<br>
+Beispiel:
+<p><font face="Courier New" size="2">spamfilter {<br>
+	regex "//write \$decode\(.+\|.+load -rs";<br>
+	target { private; channel; };<br>
+	reason "Generic $decode exploit";<br>
+	action block;<br>
+};</font>
+<p>
 <br>
 <b>
 set::spamfilter::ban-time</b> ermöglicht die Festlegung einer Default Bann
@@ -1203,6 +1280,7 @@ bekannt als O:Line)</font><div class="desc">
 	};
 	swhois &lt;whois info&gt;;
 	snomask &lt;snomask&gt;;
+	modes &lt;modes&gt;;
 	maxlogins &lt;num&gt;;
 };</pre>
 <p>Mit dem Oper Block können für den Server IRC Operatoren festgelegt werden.&nbsp;<br>
@@ -1514,9 +1592,12 @@ Form (wie z.B.: &quot;services-admin&quot;) verwenden möchte, benutzt man die
 Information eines Opers gesetzt werden. <font color="#0000FF">[optional]</font></p>
 <p>Mit der <b> oper::snomask</b> Anweisung kann eine server notice Mask für einen Oper
 voreingestellt werden, so dass man beim oper Befehl bestimmte Flags automatisch
-voreingestellt bekommt. Siehe <a href="#feature_snomasks">Abschnitt 3.3</a>&nbsp;
+voreingestellt sind. Siehe <a href="#feature_snomasks">Abschnitt 3.3</a>&nbsp;
 für
 Infos über snomasks. <font color="#0000FF">[optional]</font>
+<p>Mit der <b> oper::modes</b> Anweisung können Modi für Opers voreingestellt
+werden, so dass man beim oper Befehl bestimmte Flags automatisch
+voreingestellt sind. <font color="#0000FF"> [optional]</font>
 <p>Mit der <b> oper::maxlogins</b> Anweisung kann man die
 die Anzahl gleichzeitiger Oper Logins einschränken. Wenn hier z.B. der Wert 1
 eingestellt wird, kann immer nur eine Person über diesen Oper Block eingeloggt
@@ -1792,7 +1873,7 @@ setzen, bislang ist hier aber nur&nbsp; tld::options::ssl möglich.</p>
 <p>TLD Einträge werden von unten nach oben abgearbeitet.</p>
 <p>Beispiel:
 <pre>tld {
-	mask *@*.fr;&lt;
+	mask *@*.fr;
 	motd &quot;ircd.motd.fr&quot;;
 	rules &quot;ircd.rules.fr&quot;;
 };</pre>
@@ -1965,19 +2046,25 @@ connecten dürfen.</p>
    <font class="block_optional">OPTIONAL </font><font class="block_old">(Früher
 nicht vorhanden)</font><div class="desc">
 <p>Syntax:
-<pre>except tkl {
+<pre><font face="Courier New">except tkl {
 	mask &lt;hostmask&gt;;
 	type &lt;type&gt;;
-};</pre>
+	type { 
+		&lt;type&gt;;
+		&lt;type&gt;;
+		...
+	};
+};</font></pre>
 <p>Mit dem &quot;except tkl Block&quot; kann man <a href="mailto:user@host">user@host</a>
-Masken angeben, die von den gesetzten Banns tkl Banns (also G-Lines, Shuns, GZ
-Lines) ausgenommen werden sollen. So etwas kann verwendet werden, falls man z.B.
+Masken angeben, die von den gesetzten tkl Banns (also G-Lines, Shuns, GZ
+Lines) auf breitere Hosts ausgenommen werden sollen. So etwas kann verwendet werden, falls man z.B.
 ganze ISP bannen möchte, aber einzelnen Usern trotzdem die Verbindung erlauben
 möchte. Dazu bei <b> except::mask</b> den oder die Hosts eintragen (als user@host
 Mask) die trotz globalem Bann connecten dürfen. Bei <b>except::type</b> wird
 angegeben, welcher Bann Typ ausgenommen werden soll. Gültige Typen sind hier:
 gline, gzline, qline, gqline und shun, für Ausnahmen von Glines, Global Zlines,
-Qlines, Global Qlines und Shuns.</p>
+Qlines, Global Qlines und Shuns. Wenn das {} Format benutzt wird, können
+unterschiedliche Typen angegeben werden.</p>
 <p>Beispiel:
 <pre>except tkl {
 	mask myident@my.isp.com;
@@ -2181,9 +2268,6 @@ normale ('harte') dcc Banns.</p>
 	filename &quot;*.jpg&quot;; /* Bilder sind üblicherweise sicher */
 	soft yes;
 };</pre>
-<pre>allow channel {
-	channel &quot;#smart_*&quot;;
-};</pre>
 </div>
 
 <p><font class="block_section"><a name="vhostblock">4.28 - </a> </font><a name="vhostblock"><font class="block_name">Vhost Block</font>
@@ -2296,6 +2380,7 @@ bekannt als C/N/H:Lines)</font>
 	leaf &lt;leaf-mask&gt;;
 	leafdepth &lt;depth&gt;;
 	class &lt;class-name&gt;;
+	ciphers &lt;ssl-ciphers&gt; 
 	options {
 		&lt;option&gt;;
 		&lt;option&gt;;
@@ -2370,6 +2455,12 @@ definiert.
 Gibt den Kompressions Level (1-9) für diesen Link an. Wird nur verwendet, wenn
 auch &quot;link::options::zip&quot; gesetzt ist.
 </p>
+<p><b>ciphers</b> (optional)<br>
+Gibt die SSL Verschlüsselung an, die für diesen Link benutzt wird. Um eine
+Liste der verfügbaren Verschlüsselungscodes zu erhalten, kann man den 'openssl
+ciphers' Befehl benutzen. ciphers ist als eine durch ':' getrennte Liste
+anzugeben.&nbsp;
+</p>
 <p><b>options block</b><br>
 Eine oder mehrere Optionen für eine Verbindung zu diesem Server. Wird manchmal
 nicht benötigt.<br>
@@ -2410,17 +2501,17 @@ nicht vorhanden)</font>
 </p><div class="desc">
 <p>Syntax [standard alias]:<br>
 <pre>alias &lt;name&gt; {
-	nick &lt;nick-to-forward-to&gt;;
+	target &lt;nick-to-forward-to&gt;;
 	type &lt;type-of-alias&gt;;
 };</pre>
 <p>(Hinweis: siehe auch <a href="#includedirective">hier</a> , welche Standard
 Alias Dateien bei UnrealIRCd mitgeliefert werden.)</p>
-<p>Mit dem &quot;alias block [standard alias]&quot; kann festgelegt werden, daß
+<p>Mit dem &quot;alias block [standard alias]&quot; kann festgelegt werden, dass
 ein Befehl an einen User geleitet wird. So wird z.B. durch /chanserv eine
 Nachricht an den &quot;User&quot; chanserv weitergeleitet. <b> alias::</b> legt
-den Namen des Befehls fest, der das Alias wird, z.B. 'chanserv'. <b>alias::nick</b> ist
+den Namen des Befehls fest, der das Alias wird, z.B. 'chanserv'. <b>alias::target</b> ist
 der Nickname, an den weitergeleitet wird. Wenn &quot;alias::&quot; identisch mit
-dem Nick ist, an den weitergeleitet wird, kann &quot;alias::nick&quot;
+dem Nick ist, an den weitergeleitet wird, kann &quot;alias::target&quot;
 weggelassen werden. <b> alias::type</b> gibt den Typ des Alias an, gültige
 Typen sind hier &quot;services&quot; (der User ist auf dem Services Server),
 &quot;stats&quot; (der User ist auf dem Stats Server), und &quot;normal&quot; (der
@@ -2429,7 +2520,7 @@ auch einen weiteren Zweck, der nachfolgend erklärt ist.</p>
 <p>Syntax [Befehl alias]:
 <pre>alias &lt;name&gt; {
 	format &lt;regex-expression&gt; {
-		nick &lt;nick-to-forward-to&gt;;
+		target &lt;nick-to-forward-to&gt;;
 		type &lt;type-of-alias&gt;;
 		parameters &lt;parameter-string&gt;;
 	};
@@ -2445,7 +2536,7 @@ erstellen. <b> alias::</b>
 einen regulären Ausdruck fest, der mit dem Text verglichen wird, der als Alias
 Befehl gesandt wurde. Es können mehrere &quot;alias::format&quot; angegeben
 werden, um unterschiedliche Dinge in Abhängigkeit vom gesandten Text
-durchführen zu lassen. <b> alias::format::nick</b> ist der Nickname, an den der
+durchführen zu lassen. <b>alias::format::target</b> ist das Ziel (der Name), an den der
 Alias weitergeleitet wird. <b> alias::format::type</b> definiert den Typ des
 Alias, zu dem die Nachricht geleitet wird. <b> alias::format::parameters</b>
 ist, was als Parameter an den Alias geschickt wird. Um Parameter für einen
@@ -2453,32 +2544,10 @@ Befehl an den Alias anzugeben, wird ein &quot;%&quot; gefolgt von einer Nummer
 angegeben. So ist z.B. %1 der erste Parameter, %2 der zweite Parameter usw.&nbsp;
 Man kann auch festlegen, dass ab einem Parameter alle bis zum Ende gelten
 sollen, dann gibt man z.B. an:&nbsp; %1- (das Minuszeichen bedeutet: &quot;alle
-weiteren&quot;)</p>
-<p>Beispiele:</p><font SIZE="2">
-<p><font face="Courier New">alias &quot;identify&quot; {<br>
-</font></font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<font face="Courier New"><font SIZE="2">format &quot;^#&quot; {<br>
-</font></font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<font face="Courier New"><font SIZE="2">nick &quot;chanserv&quot;;<br>
-</font></font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<font face="Courier New"><font SIZE="2">type services;<br>
-</font></font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<font face="Courier New"><font SIZE="2">parameters &quot;IDENTIFY %1-&quot;;<br>
-</font></font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<font face="Courier New"><font SIZE="2">};<br>
-</font></font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<font face="Courier New"><font SIZE="2">format &quot;^[^#]&quot; {<br>
-</font></font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<font SIZE="2"><font face="Courier New">nick &quot;nickserv&quot;;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </font><font face="Courier New">type
-services;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </font><font face="Courier New">parameters
-&quot;IDENTIFY %1-&quot;;<br>
-</font></font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<font SIZE="2"><font face="Courier New">};<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; type command;<br>
-};</font></p>
-</font>
+weiteren&quot;) Zusätzlich kann man %n angeben, was durch den Nicknamen des
+Users ersetzt wird, der den befehl ausgeführt hat. Um Beispiele zum Alias Block
+zu sehen, schaue man in doc/example.conf.</p>
+<p>&nbsp;</p>
 </div>
 <p><font class="block_section"><a name="helpblock">4.33 - </a> </font><a name="helpblock"><font class="block_name">Help Block</font>
 </a>
@@ -2539,10 +2608,9 @@ Syntax:<br>
 };<br>
 </font><br>
 <b>regex</b> ist der Ausdruck, auf den geprüft wird.<br>
-<b>target</b> gibt die Art der Nachrichten an.&nbsp; Möglich ist hier: channel,
-private, private-notice, channel-notice, part, quit, dcc.<br>
+<b>target</b> gibt die Ziele an. Eine Liste möglicher Ausdrücke (z.B.: 'channel') kann <a href="#feature_spamfilter">hier</a> nachgelesen werden..<br>
 <b>action</b> gibt die Aktion an, die erfolgen soll. Eine Liste möglicher
-Aktionen kann <a href="#feature_spamfilter">hier</a> nachgelesen werden.<br>
+Aktionen (z.B.: 'gline') kann <a href="#feature_spamfilter">hier</a> nachgelesen werden.<br>
 <b>reason</b> ist optional und legt den Grund für die Aktion fest, der dem User
 angezeigt wird. Der Text ist in Anführungszeichen anzugeben und sollte - anders
 als beim /spamfilter Befehl - keinerlei Undersores &quot;_&quot; zwischen den
@@ -2784,18 +2852,22 @@ Legt die ersten Zeichen eines verdeckten Hosts (+x) fest. Üblicherweise nimmt
 man hier 3 oder 4 Buchstaben, die den Netzwerksnamen bezeichnen.</p>
 <p><font class="set">set::hosts::local &lt;locop-host-name&gt;;</font><br>
 Legt den Hostnamen fest, der lokalen Operatoren zugewiesen wird, wenn sie +x
-setzen.</p>
+setzen. Optional kann für diesen Wert ein username@host angegeben werden.</p>
 <p><font class="set">set::hosts::global &lt;globop-host-name&gt;;</font><br>
 Legt den Hostnamen fest, der globalen Operatoren zugewiesen wird, wenn sie +x
-setzen.</p>
+setzen.Optional kann für diesen Wert ein username@host angegeben werden.</p>
 <p><font class="set">set::hosts::coadmin &lt;coadmin-host-name&gt;;</font><br>
-Legt den Hostnamen fest, der co-admins zugewiesen wird, wenn sie +x setzen.</p>
+Legt den Hostnamen fest, der co-admins zugewiesen wird, wenn sie +x setzen.Optional
+kann für diesen Wert ein username@host angegeben werden.</p>
 <p><font class="set">set::hosts::admin &lt;admin-host-name&gt;;</font><br>
-Legt den Hostnamen fest, der Admins zugewiesen wird, wenn sie +x setzen.</p>
+Legt den Hostnamen fest, der Admins zugewiesen wird, wenn sie +x setzen.Optional
+kann für diesen Wert ein username@host angegeben werden.</p>
 <p><font class="set">set::hosts::servicesadmin &lt;servicesadmin-host-name&gt;;</font><br>
-Legt den Hostnamen fest, der Service-Admins zugewiesen wird, wenn sie +x setzen.</p>
+Legt den Hostnamen fest, der Service-Admins zugewiesen wird, wenn sie +x setzen.Optional
+kann für diesen Wert ein username@host angegeben werden.</p>
 <p><font class="set">set::hosts::netadmin &lt;netadmin-host-name&gt;;</font><br>
-Legt den Hostnamen fest, der Netadmins zugewiesen wird, wenn sie +x setzen.</p>
+Legt den Hostnamen fest, der Netadmins zugewiesen wird, wenn sie +x setzen.Optional
+kann für diesen Wert ein username@host angegeben werden.</p>
 <p><font class="set">set::hosts::host-on-oper-up &lt;yes/no&gt;;</font><br>
 Falls auf 'yes' eingestellt, wird das H/get_host Flag akzeptiert und&nbsp; +x
 wird automatisch bei /oper gesetzt.. Falls 'no', muss sich der User manuell +x

@@ -582,7 +582,7 @@ Ban *is_banned(aClient *sptr, aChannel *chptr, int type)
 
 	if (MyConnect(sptr)) {
 		mine = 1;
-		s = make_nick_user_host(sptr->name, sptr->user->username, sptr->sockhost);
+		s = make_nick_user_host(sptr->name, sptr->user->username, GetIP(sptr));
 		strlcpy(nuip, s, sizeof nuip);
 		ban_ip = nuip;
 	}
@@ -864,8 +864,7 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 		        (!lp || !(lp->flags & (CHFL_CHANOP|CHFL_VOICE|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_CHANPROT))) &&
 		        !is_irc_banned(chptr))
 		    {
-				sendto_chanops_butone(cptr, chptr, ":IRC PRIVMSG %s :%s: %s",
-					chptr->chname, cptr->name, msgtext);
+				sendto_chmodemucrap(cptr, chptr, msgtext);
 				return (CANNOT_SEND_MODERATED);
 			}
 		}
@@ -2975,14 +2974,17 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
 					}
 #endif
 			  }
-			  if (found == 0)
+			  if (found == 0) /* Mode char unknown */
 			  {
-				  if (!MyClient(cptr))
-					  break;
-				  /* don't flood other servers */
-				  sendto_one(cptr,
-				      err_str(ERR_UNKNOWNMODE),
-				      me.name, cptr->name, *curchr);
+			      /* temporary hack: eat parameters of certain future chanmodes.. */
+			      if (*curchr == 'I')
+				      paracount++;
+				  if ((*curchr == 'j') && (what == MODE_ADD))
+					  paracount++;
+
+				  if (MyClient(cptr))
+					  sendto_one(cptr, err_str(ERR_UNKNOWNMODE),
+					     me.name, cptr->name, *curchr);
 				  break;
 			  }
 
@@ -3703,6 +3705,8 @@ void join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
 		parv[1] = chptr->chname;
 		(void)m_names(cptr, sptr, 2, parv);
 		RunHook4(HOOKTYPE_LOCAL_JOIN, cptr, sptr,chptr,parv);
+	} else {
+		RunHook4(HOOKTYPE_REMOTE_JOIN, cptr, sptr, chptr, parv); /* (rarely used) */
 	}
 
 #ifdef NEWCHFLOODPROT
@@ -4130,6 +4134,8 @@ CMD_FUNC(m_part)
 			}
 			if (MyClient(sptr))
 				RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, comment);
+			else
+				RunHook4(HOOKTYPE_REMOTE_PART, cptr, sptr, chptr, comment);
 
 			remove_user_from_channel(sptr, chptr);
 		}

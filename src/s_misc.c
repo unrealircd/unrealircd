@@ -597,11 +597,8 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 		for (acptr = client; acptr; acptr = next)
 		{
 			next = acptr->next;
-			if (IsServer(acptr) && acptr->srvptr == sptr) {
-				exit_client(sptr, acptr,	/* RECURSION */
-				    sptr, comment1);
-				RunHook(HOOKTYPE_SERVER_QUIT, acptr);
-			}
+			if (IsServer(acptr) && acptr->srvptr == sptr)
+				exit_client(sptr, acptr, sptr, comment1); /* RECURSION */
 			/*
 			 * I am not masking SQUITS like I do QUITs.  This
 			 * is probobly something we could easily do, but
@@ -990,6 +987,8 @@ int flags = 0;
 			case 'P': flags |= SPAMF_PART; break;
 			case 'q': flags |= SPAMF_QUIT; break;
 			case 'd': flags |= SPAMF_DCC; break;
+			case 'u': flags |= SPAMF_USER; break;
+			case 'a': flags |= SPAMF_AWAY; break;
 			default:
 				if (sptr)
 				{
@@ -1020,6 +1019,10 @@ int flags = 0;
 		return SPAMF_QUIT;
 	if (!strcmp(s, "dcc"))
 		return SPAMF_DCC;
+	if (!strcmp(s, "user"))
+		return SPAMF_USER;
+	if (!strcmp(s, "away"))
+		return SPAMF_AWAY;
 	return 0;
 }
 
@@ -1042,6 +1045,10 @@ char *p = buf;
 		*p++ = 'q';
 	if (v & SPAMF_DCC)
 		*p++ = 'd';
+	if (v & SPAMF_USER)
+		*p++ = 'u';
+	if (v & SPAMF_AWAY)
+		*p++ = 'a';
 	*p = '\0';
 	return buf;
 }
@@ -1063,6 +1070,10 @@ char *spamfilter_inttostring_long(int v)
 			return "QUIT";
 		case SPAMF_DCC:
 			return "DCC";
+		case SPAMF_USER:
+			return "user";
+		case SPAMF_AWAY:
+			return "AWAY";
 		default:
 			return "UNKNOWN";
 	}

@@ -34,7 +34,7 @@ static char *replies[] = {
 /* 002    RPL_YOURHOST */ ":%s 002 %s :Your host is %s, running version %s",
 /* 003    RPL_CREATED */  ":%s 003 %s :This server was created %s",
 /* 004    RPL_MYINFO */   ":%s 004 %s %s %s %s %s",
-/* 005    RPL_PROTOCTL */ ":%s 005 %s",
+/* 005    RPL_ISUPPORT */ ":%s 005 %s %s :are supported by this server",
 /* 006    RPL_MAP */      ":%s 006 %s :%s%-*s(%d)  %s",
 /* 007    RPL_MAPEND */   ":%s 007 %s :End of /MAP",
 /* 008    RPL_SNOMASK */  ":%s 008 %s :Server notice mask (%s)",
@@ -134,7 +134,7 @@ static char *replies[] = {
 /* 102 */ NULL,
 /* 103 */ NULL,
 /* 104 */ NULL,
-/* 105    RPL_REMOTEPROTOCTL */ ":%s 105 %s",
+/* 105    RPL_REMOTEISUPPORT */ ":%s 105 %s %s :are supported by this server",
 /* 106 */ NULL,
 /* 107 */ NULL,
 /* 108 */ NULL,
@@ -377,7 +377,7 @@ static char *replies[] = {
 /* 337 */ NULL,
 /* 338 */ NULL, /* ircu, bahamut */
 /* 339 */ NULL, /* Used */
-/* 340 */ NULL, /* ircu */
+/* 340    RPL_USERIP */ ":%s 340 %s :%s %s %s %s %s",
 /* 341    RPL_INVITING */ ":%s 341 %s %s %s",
 /* 342    RPL_SUMMONING */ ":%s 342 %s %s :User summoned to irc",
 /* 343 */ NULL,
@@ -416,7 +416,7 @@ static char *replies[] = {
 /* 376    RPL_ENDOFMOTD */ ":%s 376 %s :End of /MOTD command.",
 /* 377 */ NULL, /* aircd, austhex */
 /* 378    RPL_WHOISHOST */ ":%s 378 %s %s :is connecting from *@%s %s",
-/* 379    RPL_WHOISMODES */ ":%s 379 %s %s :is using modes %s",
+/* 379    RPL_WHOISMODES */ ":%s 379 %s %s :is using modes %s %s",
 /* 380 */ NULL, /* aircd, austhex */
 /* 381    RPL_YOUREOPER */ ":%s 381 %s :You are now an IRC Operator",
 /* 382    RPL_REHASHING */ ":%s 382 %s %s :Rehashing",

@@ -204,15 +204,15 @@ static void who_sendhelp(aClient *sptr)
     "Flag a: user is away",
     "Flag c <channel>:       user is on <channel>,",
     "                        no wildcards accepted",
-    "Flag h <host>:          user has string <host> in their hostname,",
+    "Flag h <host>:          user has string <host> in his/her hostname,",
     "                        wildcards accepted",
-    "Flag m <usermodes>:     user has <usermodes> set on them,",
-    "                        only O/o/C/A/a/N are allowed",
-    "Flag n <nick>:          user has string <nick> in their nickname,",
+    "Flag m <usermodes>:     user has <usermodes> set, only",
+    "                        O/o/C/A/a/N are allowed",
+    "Flag n <nick>:          user has string <nick> in his/her nickname,",
     "                        wildcards accepted",
     "Flag s <server>:        user is on server <server>,",
     "                        wildcards not accepted",
-    "Flag u <user>:          user has string <user> in their username,",
+    "Flag u <user>:          user has string <user> in his/her username,",
     "                        wildcards accepted",
     "Behavior flags:",
     "Flag M: check for user in channels I am a member of",
@@ -227,23 +227,23 @@ static void who_sendhelp(aClient *sptr)
     "Flag a: user is away",
     "Flag c <channel>:       user is on <channel>,",
     "                        no wildcards accepted",
-    "Flag g <gcos/realname>: user has string <gcos> in their GCOS,",
+    "Flag g <gcos/realname>: user has string <gcos> in his/her GCOS,",
     "                        wildcards accepted",
-    "Flag h <host>:          user has string <host> in their hostname,",
+    "Flag h <host>:          user has string <host> in his/her hostname,",
     "                        wildcards accepted",
-    "Flag i <ip>:            user has string <ip> in their hostname,",
+    "Flag i <ip>:            user has string <ip> in his/her IP address,",
     "                        wildcards accepted",
-    "Flag m <usermodes>:     user has <usermodes> set on them",
-    "Flag n <nick>:          user has string <nick> in their nickname,",
+    "Flag m <usermodes>:     user has <usermodes> set",
+    "Flag n <nick>:          user has string <nick> in his/her nickname,",
     "                        wildcards accepted",
     "Flag s <server>:        user is on server <server>,",
     "                        wildcards not accepted",
-    "Flag u <user>:          user has string <user> in their username,",
+    "Flag u <user>:          user has string <user> in his/her username,",
     "                        wildcards accepted",
     "Behavior flags:",
     "Flag M: check for user in channels I am a member of",
     "Flag R: show users' real hostnames",
-    "Flag I: show user's IP address",
+    "Flag I: show users' IP addresses",
     NULL
   };
   char **s;
@@ -544,10 +544,16 @@ char has_common_chan = 0;
 		else
 		{
 			/* a user/mask who */
+
+			/* If the common channel info hasn't been set, set it now */
+			if (!wfl.common_channels_only)
+				has_common_chan = has_common_channels(sptr, acptr);
+
 			if (IsInvisible(acptr) && !has_common_chan)
 			{
-				/* don't show them unless it's an exact match */
-				if ((who_flags & WF_WILDCARD))
+				/* don't show them unless it's an exact match 
+				   or it is the user requesting the /who */
+				if ((who_flags & WF_WILDCARD) && sptr != acptr)
 					break;
 			}
 		}

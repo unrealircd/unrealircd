@@ -263,6 +263,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	SetClient(x)		((x)->status = STAT_CLIENT)
 #define	SetLog(x)		((x)->status = STAT_LOG)
 
+#define IsSynched(x)	(x->serv->flags.synced)
+
 /* opt.. */
 #define OPT_SJOIN	0x0001
 #define OPT_NOT_SJOIN	0x0002
@@ -327,7 +329,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
  * -DuffJ
  */
 
-#define SNO_DEFOPER "+kscfvGq"
+#define SNO_DEFOPER "+kscfvGqo"
 #define SNO_DEFUSER "+ks"
 
 #define SEND_UMODES (SendUmodes)
@@ -684,7 +686,9 @@ struct MotdItem {
 struct aloopStruct {
 	unsigned do_garbage_collect : 1;
 	unsigned ircd_booted : 1;
-	unsigned do_bancheck : 1;
+	unsigned do_bancheck : 1; /* perform *line bancheck? */
+	unsigned do_bancheck_spamf_user : 1; /* perform 'user' spamfilter bancheck */
+	unsigned do_bancheck_spamf_away : 1; /* perform 'away' spamfilter bancheck */
 	unsigned ircd_rehashing : 1;
 	unsigned tainted : 1;
 	aClient *rehash_save_cptr, *rehash_save_sptr;
@@ -768,6 +772,7 @@ struct Server {
 #define M_ALIAS			0x0020
 #define M_RESETIDLE		0x0040
 #define M_VIRUS			0x0080
+#define M_ANNOUNCE		0x0100
 
 
 /* tkl:
@@ -791,6 +796,8 @@ struct Server {
 #define SPAMF_PART			0x0010 /* P */
 #define SPAMF_QUIT			0x0020 /* q */
 #define SPAMF_DCC			0x0040 /* d */
+#define SPAMF_USER			0x0080 /* u */
+#define SPAMF_AWAY			0x0100 /* a */
 
 struct _spamfilter {
 	unsigned short action; /* see BAN_ACT* */
@@ -921,11 +928,13 @@ struct Client {
 	long receiveM;		/* Statistics: protocol messages received */
 #ifdef ZIP_LINKS
 	struct Zdata *zip;	/* zip data */
+#elif defined(_WIN32)
+	void *zip_NOTUSED; /* (win32 binary compatability) */
 #endif
 #ifdef USE_SSL
 	SSL		*ssl;
 #elif defined(_WIN32)
-	void	*ssl_NOTUSED;
+	void	*ssl_NOTUSED; /* (win32 binary compatability) */
 #endif
 #ifndef NO_FDLIST
 	long lastrecvM;		/* to check for activity --Mika */
@@ -1091,6 +1100,7 @@ struct _configitem_oper {
 	anAuthStruct	 *auth;
 	ConfigItem_class *class;
 	ConfigItem	 *from;
+	unsigned long	 modes;
 	long		 oflags;
 	int			maxlogins;
 };
@@ -1260,24 +1270,24 @@ struct _configitem_unknown_ext {
 	ConfigEntry     *ce_entries;
 };
 
-#define ALIAS_SERVICES 1
-#define ALIAS_STATS 2
-#define ALIAS_NORMAL 3
-#define ALIAS_COMMAND 4
+
+typedef enum { 
+	ALIAS_SERVICES=1, ALIAS_STATS, ALIAS_NORMAL, ALIAS_COMMAND, ALIAS_CHANNEL
+} AliasType;
 
 struct _configitem_alias {
 	ConfigItem *prev, *next;
 	ConfigFlag flag;
 	ConfigItem_alias_format *format;
 	char *alias, *nick;
-	short type;
+	AliasType type;
 };
 
 struct _configitem_alias_format {
 	ConfigItem *prev, *next;
 	ConfigFlag flag;
 	char *nick;
-	short type;
+	AliasType type;
 	char *format, *parameters;
 	regex_t expr;
 };

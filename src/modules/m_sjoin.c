@@ -379,7 +379,7 @@ CMD_FUNC(m_sjoin)
 		while (
 		    (*tp == '@') || (*tp == '+') || (*tp == '%')
 		    || (*tp == '*') || (*tp == '~') || (*tp == '&')
-		    || (*tp == '"'))
+		    || (*tp == '"') || (*tp == '\''))
 		{
 			switch (*(tp++))
 			{
@@ -405,6 +405,8 @@ CMD_FUNC(m_sjoin)
 				  modeflags |= CHFL_EXCEPT;
 				  goto getnick;
 				  break;
+			  case '\'': /* future: invex chanmode (+I) */
+			  	  goto docontinue;
 			}
 		}
 	     getnick:
@@ -472,6 +474,7 @@ CMD_FUNC(m_sjoin)
 #endif
 			} else {
 				add_user_to_channel(chptr, acptr, modeflags);
+				RunHook4(HOOKTYPE_REMOTE_JOIN, cptr, acptr, chptr, NULL);
 				if (chptr->mode.mode & MODE_AUDITORIUM)
 				{
 					if (modeflags & (CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER))
@@ -517,6 +520,8 @@ CMD_FUNC(m_sjoin)
 				}
 			}
 		}
+docontinue:
+		continue;
 	}
 
 	if (modebuf[1])

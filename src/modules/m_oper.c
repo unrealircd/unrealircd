@@ -252,7 +252,10 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 
 /* new oper code */
 
-		sptr->umodes |= OPER_MODES;
+		if (aconf->modes)
+			sptr->umodes |= aconf->modes;
+		else
+			sptr->umodes |= OPER_MODES;
 
 /* handle oflags that trigger umodes */
 		
@@ -270,7 +273,19 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 
 		sptr->oflag = aconf->oflags;
 		if ((aconf->oflags & OFLAG_HIDE) && iNAH && !BadPtr(host)) {
-			iNAH_host(sptr, host);
+			char *c;
+			char *vhost = host;
+
+			if ((c = strchr(host, '@')))
+			{
+				vhost =	c+1;
+				strncpy(sptr->user->username, host, c-host);
+				sptr->user->username[c-host] = 0;
+				sendto_serv_butone_token(NULL, sptr->name, MSG_SETIDENT, 
+							 TOK_SETIDENT, "%s", 
+							 sptr->user->username);
+			}
+			iNAH_host(sptr, vhost);
 			SetHidden(sptr);
 		} else
 		if (IsHidden(sptr) && !sptr->user->virthost) {
@@ -292,15 +307,14 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 
 
 		if (announce != NULL) {
-			sendto_ops
-			    ("%s (%s@%s) [%s] %s",
+			sendto_snomask(SNO_OPER, 
+			    "%s (%s@%s) [%s] %s",
 			    parv[0], sptr->user->username, GetHost(sptr),
 			    parv[1], announce);
-				sendto_serv_butone(&me,
-				    ":%s GLOBOPS :%s (%s@%s) [%s] %s",
-				    me.name, parv[0], sptr->user->username,
-				    GetHost(sptr), parv[1], announce);
-
+			sendto_serv_butone_token(NULL, me.name, MSG_SENDSNO, TOK_SENDSNO, 
+			    "o :%s (%s@%s) [%s] %s",
+			    parv[0], sptr->user->username,
+			    GetHost(sptr), parv[1], announce);
 		} 
 		if (aconf->snomask)
 			set_snomask(sptr, aconf->snomask);

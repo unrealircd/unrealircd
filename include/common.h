@@ -150,8 +150,9 @@ extern char *strtoken(char **, char *, char *);
 
 extern MODVAR u_char tolowertab[], touppertab[];
 
-#if defined(CHINESE_NICK) || defined(JAPANESE_NICK)
+#if defined(NICK_GB2312) || defined(NICK_GBK) || defined(NICK_GBK_JAP)
 #define USE_LOCALE
+#include <ctype.h>
 #endif
 
 #ifndef USE_LOCALE
@@ -248,67 +249,18 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
  #define EXPAR4 ""
 #endif /* EXTCMODE */
 
-#define PROTOCTL_CLIENT_1         \
-		"MAP"             \
-		" KNOCK"          \
-		" SAFELIST"       \
-		" HCN"	          \
-		" MAXCHANNELS=%i" \
-		" MAXBANS=%i"     \
-		" NICKLEN=%i"     \
-		" TOPICLEN=%i"    \
-		" KICKLEN=%i"     \
-		" MAXTARGETS=%i"  \
-		" AWAYLEN=%i"	  \
-		" :are supported by this server"
-#define PROTOCTL_PARAMETERS_1	  \
-		MAXCHANNELSPERUSER, \
-		MAXBANS, \
-		NICKLEN, \
-		TOPICLEN, \
-		TOPICLEN, \
-		MAXTARGETS, \
-		TOPICLEN
-
 #ifdef PREFIX_AQ
-#define CHPFIX	"(qaohv)~&@%+"
-#define CHPAR1	"be"
+#define CHPFIX        "(qaohv)~&@%+"
+#define CHPAR1        "be"
 #else
-#define CHPFIX	"(ohv)@%+"
-#define CHPAR1	"beqa"
+#define CHPFIX        "(ohv)@%+"
+#define CHPAR1        "beqa"
 #endif /* PREFIX_AQ */
 
-#define CHPAR2	"kfL"
-#define CHPAR3	"l"
-#define CHPAR4	"psmntirRcOAQKVGCuzNSM"
+#define CHPAR2        "kfL"
+#define CHPAR3        "l"
+#define CHPAR4        "psmntirRcOAQKVGCuzNSM"
 
-#define PROTOCTL_CLIENT_2	  \
-		"WALLCHOPS"	  \
-		" WATCH=%i"	  \
-		" SILENCE=%i"	  \
-		" MODES=%i"	  \
-		" CHANTYPES=%s"   \
-		" PREFIX=%s"      \
-		" CHANMODES=%s%s,%s%s,%s%s,%s%s" \
-		" NETWORK=%s" 	  \
-		" CASEMAPPING=%s" \
-		" EXTBAN=~,%s" \
-		" ELIST=MNUCT" \
-		" :are supported by this server"
-
-#define PROTOCTL_PARAMETERS_2	  \
-		MAXWATCH, \
-		SILENCE_LIMIT, \
-		MAXMODEPARAMS, \
-		"#", \
-		CHPFIX, \
-		CHPAR1, EXPAR1, \
-		CHPAR2, EXPAR2, \
-		CHPAR3, EXPAR3, \
-		"psmntirRcOAQKVGCuzNSM", EXPAR4, \
-		ircnet005, \
-		"ascii", \
-		extbanstr
 
 /* Server-Server PROTOCTL -Stskeeps
  * Please check send_proto() for more. -- Syzop

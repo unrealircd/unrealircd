@@ -23,6 +23,7 @@
 #include "sys.h"
 #include "numeric.h"
 #include "channel.h"
+#include "macros.h"
 #include <fcntl.h>
 #ifndef _WIN32
 #include <sys/socket.h>
@@ -132,10 +133,6 @@ static int	_test_set		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_badword		(ConfigFile *conf, ConfigEntry *ce);
 #endif
 static int	_test_deny		(ConfigFile *conf, ConfigEntry *ce);
-/* static int	_test_deny_dcc		(ConfigFile *conf, ConfigEntry *ce); ** TODO? */
-/* static int	_test_deny_link		(ConfigFile *conf, ConfigEntry *ce); ** TODO? */
-/* static int	_test_deny_channel	(ConfigFile *conf, ConfigEntry *ce); ** TODO? */
-/* static int	_test_deny_version	(ConfigFile *conf, ConfigEntry *ce); ** TODO? */
 static int	_test_allow_channel	(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_allow_dcc		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_loadmodule	(ConfigFile *conf, ConfigEntry *ce);
@@ -276,6 +273,15 @@ static OperFlag _LogFlags[] = {
 	{ LOG_SERVER, "server-connects" },
 	{ LOG_SPAMFILTER, "spamfilter" },
 	{ LOG_TKL, "tkl" },
+};
+
+/* This MUST be alphabetized */
+static OperFlag ExceptTklFlags[] = {
+	{ TKL_GLOBAL|TKL_KILL,	"gline" },
+	{ TKL_GLOBAL|TKL_NICK,	"gqline" },
+	{ TKL_GLOBAL|TKL_ZAP,	"gzline" },
+	{ TKL_NICK,		"qline" },
+	{ TKL_GLOBAL|TKL_SHUN,	"shun" }
 };
 
 #ifdef USE_SSL
@@ -1362,7 +1368,7 @@ void config_progress(char *format, ...)
 
 ConfigCommand *config_binary_search(char *cmd) {
 	int start = 0;
-	int stop = sizeof(_ConfigCommands)/sizeof(_ConfigCommands[0])-1;
+	int stop = ARRAY_SIZEOF(_ConfigCommands)-1;
 	int mid;
 	while (start <= stop) {
 		mid = (start+stop)/2;
@@ -1532,6 +1538,7 @@ int	init_conf(char *rootconf, int rehash)
 		if (rehash)
 		{
 			Hook *h;
+			del_async_connects();
 			config_rehash();
 #ifndef STATIC_LINKING
 			Unload_all_loaded_modules();
@@ -2879,12 +2886,27 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 
 		if (cep->ce_vardata)
 		{
+			int valid = 0;
+			char *p;
 			if (strlen(cep->ce_vardata) > (REALLEN-1))
 			{
 				config_error("%s:%i: too long me::info, must be max. %i characters",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum, REALLEN-1);
 				errors++;
 		
+			}
+			/* Valid me::info? Any data except spaces is ok */
+			for (p=cep->ce_vardata; *p; p++)
+				if (*p != ' ')
+				{
+					valid = 1;
+					break;
+				}
+			if (!valid)
+			{
+				config_error("%s:%i: empty me::info, should be a server description.",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+				errors++;
 			}
 		}
 	}
@@ -3008,7 +3030,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 	{
 		for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 		{
-			if ((ofp = config_binary_flags_search(_OperFlags, cepp->ce_varname, sizeof(_OperFlags)/sizeof(_OperFlags[0])))) 
+			if ((ofp = config_binary_flags_search(_OperFlags, cepp->ce_varname, ARRAY_SIZEOF(_OperFlags)))) 
 				oper->oflags |= ofp->flag;
 		}
 	}
@@ -3019,6 +3041,10 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 	if ((cep = config_find_entry(ce->ce_entries, "snomask")))
 	{
 		ircstrdup(oper->snomask, cep->ce_vardata);
+	}
+	if ((cep = config_find_entry(ce->ce_entries, "modes")))
+	{
+		oper->modes = set_usermode(cep->ce_vardata);
 	}
 	if ((cep = config_find_entry(ce->ce_entries, "maxlogins")))
 	{
@@ -3083,6 +3109,8 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			}
 			else if (!strcmp(cep->ce_varname, "snomask")) {
 			}
+			else if (!strcmp(cep->ce_varname, "modes")) {
+			}
 			else if (!strcmp(cep->ce_varname, "maxlogins"))
 			{
 				long l = config_checkval(cep->ce_vardata, CFG_TIME);
@@ -3118,7 +3146,7 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 						errors++; 
 						continue;
 					}
-					if (!config_binary_flags_search(_OperFlags, cepp->ce_varname, sizeof(_OperFlags)/sizeof(_OperFlags[0]))) {
+					if (!config_binary_flags_search(_OperFlags, cepp->ce_varname, ARRAY_SIZEOF(_OperFlags))) {
 						if (!strcmp(cepp->ce_varname, "can_stealth"))
 						{
 						 config_status("%s:%i: unknown oper flag '%s' [feature no longer exists]",
@@ -3685,7 +3713,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 		{
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
-				if ((ofp = config_binary_flags_search(_ListenerFlags, cepp->ce_varname, sizeof(_ListenerFlags)/sizeof(_ListenerFlags[0]))))
+				if ((ofp = config_binary_flags_search(_ListenerFlags, cepp->ce_varname, ARRAY_SIZEOF(_ListenerFlags))))
 					tmpflags |= ofp->flag;
 			}
 #ifndef USE_SSL
@@ -3830,7 +3858,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 					errors++; continue;
 				}
-				if (!config_binary_flags_search(_ListenerFlags, cepp->ce_varname, sizeof(_ListenerFlags)/sizeof(_ListenerFlags[0])))
+				if (!config_binary_flags_search(_ListenerFlags, cepp->ce_varname, ARRAY_SIZEOF(_ListenerFlags)))
 				{
 					config_error("%s:%i: unknown listen option '%s'",
 						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
@@ -4250,6 +4278,30 @@ int errors = 0, gotfilename=0;
 	return errors;
 }
 
+void create_tkl_except(char *mask, char *type)
+{
+	ConfigItem_except *ca;
+	struct irc_netmask tmp;
+	OperFlag *opf;
+	ca = MyMallocEx(sizeof(ConfigItem_except));
+	ca->mask = strdup(mask);
+	
+	opf = config_binary_flags_search(ExceptTklFlags, type, ARRAY_SIZEOF(ExceptTklFlags));
+	ca->type = opf->flag;
+	
+	if (ca->type & TKL_KILL || ca->type & TKL_ZAP || ca->type & TKL_SHUN)
+	{
+		tmp.type = parse_netmask(ca->mask, &tmp);
+		if (tmp.type != HM_HOST)
+		{
+			ca->netmask = MyMallocEx(sizeof(struct irc_netmask));
+			bcopy(&tmp, ca->netmask, sizeof(struct irc_netmask));
+		}
+	}
+	ca->flag.type = CONF_EXCEPT_TKL;
+	AddListItem(ca, conf_except);
+}
+
 int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 {
 
@@ -4302,32 +4354,14 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 	else if (!strcmp(ce->ce_vardata, "tkl")) {
 		cep2 = config_find_entry(ce->ce_entries, "mask");
 		cep3 = config_find_entry(ce->ce_entries, "type");
-		ca = MyMallocEx(sizeof(ConfigItem_except));
-		ca->mask = strdup(cep2->ce_vardata);
-		if (!strcmp(cep3->ce_vardata, "gline"))
-			ca->type = TKL_KILL|TKL_GLOBAL;
-		else if (!strcmp(cep3->ce_vardata, "qline"))
-			ca->type = TKL_NICK;
-		else if (!strcmp(cep3->ce_vardata, "gqline"))
-			ca->type = TKL_NICK|TKL_GLOBAL;
-		else if (!strcmp(cep3->ce_vardata, "gzline"))
-			ca->type = TKL_ZAP|TKL_GLOBAL;
-		else if (!strcmp(cep3->ce_vardata, "shun"))
-			ca->type = TKL_SHUN|TKL_GLOBAL;
-		else 
-		{}
-		
-		if (ca->type & TKL_KILL || ca->type & TKL_ZAP || ca->type & TKL_SHUN)
+		if (cep3->ce_vardata)
+			create_tkl_except(cep2->ce_vardata, cep3->ce_vardata);
+		else
 		{
-			tmp.type = parse_netmask(ca->mask, &tmp);
-			if (tmp.type != HM_HOST)
-			{
-				ca->netmask = MyMallocEx(sizeof(struct irc_netmask));
-				bcopy(&tmp, ca->netmask, sizeof(struct irc_netmask));
-			}
+			ConfigEntry *cepp;
+			for (cepp = cep3->ce_entries; cepp; cepp = cepp->ce_next)
+				create_tkl_except(cep2->ce_vardata, cepp->ce_varname);
 		}
-		ca->flag.type = CONF_EXCEPT_TKL;
-		AddListItem(ca, conf_except);
 	}
 	else {
 		int value;
@@ -4416,31 +4450,84 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 	}
 #endif
 	else if (!strcmp(ce->ce_vardata, "tkl")) {
-		if (!config_find_entry(ce->ce_entries, "mask"))
-		{
-			config_error("%s:%i: except tkl without mask item",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			return 1;
-		}
-		if (!(cep3 = config_find_entry(ce->ce_entries, "type")))
-		{
-			config_error("%s:%i: except tkl without type item",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			return 1;
-		}
+		char has_mask = 0, has_type = 0;
+
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 		{
-			if (!cep->ce_vardata)
-			{
-				config_error("%s:%i: except tkl item without contents",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-				errors++;
-				continue;
-			}
 			if (!strcmp(cep->ce_varname, "mask"))
 			{
+				if (!cep->ce_vardata)
+				{
+					config_error("%s:%i: except tkl item without contents",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+					errors++;
+					continue;
+				}
+				has_mask = 1;
 			}
-			else if (!strcmp(cep->ce_varname, "type")) {}
+			else if (!strcmp(cep->ce_varname, "type"))
+			{
+				if (cep->ce_vardata)
+				{
+					OperFlag *opf;
+					if (!strcmp(cep->ce_vardata, "tkline") || 
+					    !strcmp(cep->ce_vardata, "tzline"))
+					{
+						config_error("%s:%i: except tkl of type %s is"
+							     " deprecated. Use except ban {}"
+							     " instead", 
+							     cep->ce_fileptr->cf_filename,
+							     cep->ce_varlinenum, 
+							     cep->ce_vardata);
+						errors++;
+					}
+					if (!config_binary_flags_search(ExceptTklFlags, 
+					     cep->ce_vardata, ARRAY_SIZEOF(ExceptTklFlags)))
+					{
+						config_error("%s:%i: unknown except tkl type %s",
+							     cep->ce_fileptr->cf_filename, 
+							     cep->ce_varlinenum,
+							     cep->ce_vardata);
+						return 1;
+					}
+				}
+				else if (cep->ce_entries)
+				{
+					ConfigEntry *cepp;
+					for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+					{
+						OperFlag *opf;
+						if (!strcmp(cepp->ce_varname, "tkline") || 
+						    !strcmp(cepp->ce_varname, "tzline"))
+						{
+							config_error("%s:%i: except tkl of type %s is"
+								     " deprecated. Use except ban {}"
+								     " instead", 
+								     cepp->ce_fileptr->cf_filename,
+								     cepp->ce_varlinenum, 
+								     cepp->ce_varname);
+							errors++;
+						}
+						if (!config_binary_flags_search(ExceptTklFlags, 
+						     cepp->ce_varname, ARRAY_SIZEOF(ExceptTklFlags)))
+						{
+							config_error("%s:%i: unknown except tkl type %s",
+								     cepp->ce_fileptr->cf_filename, 
+								     cepp->ce_varlinenum,
+								     cepp->ce_varname);
+							return 1;
+						}
+					}
+				}
+				else
+				{
+					config_error("%s:%i: except tkl item without contents",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+					errors++;
+					continue;
+				}
+				has_type = 1;
+			}
 			else
 			{
 				config_error("%s:%i: unknown except tkl directive %s",
@@ -4449,28 +4536,17 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 		}
-		if (!strcmp(cep3->ce_vardata, "gline")) {}
-		else if (!strcmp(cep3->ce_vardata, "qline")) {}
-		else if (!strcmp(cep3->ce_vardata, "gqline")) {}
-		else if (!strcmp(cep3->ce_vardata, "gzline")){}
-		else if (!strcmp(cep3->ce_vardata, "shun")) {}
-		else if (!strcmp(cep3->ce_vardata, "tkline")) {
-			config_error("%s:%i: except tkl of type tkline is deprecated. Use except ban {} instead", 
-				cep3->ce_fileptr->cf_filename, cep3->ce_varlinenum);
-			errors++;
-		}
-		else if (!strcmp(cep3->ce_vardata, "tzline")) {
-			config_error("%s:%i: except tkl of type tzline is deprecated. Use except ban {} instead", 
-				cep3->ce_fileptr->cf_filename, cep3->ce_varlinenum);
-			errors++;
-		}
-		else 
+		if (!has_mask)
 		{
-			config_error("%s:%i: unknown except tkl type %s",
-				cep3->ce_fileptr->cf_filename, cep3->ce_varlinenum,
-				cep3->ce_vardata);
+			config_error("%s:%i: except tkl without mask item",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 			return 1;
-
+		}
+		if (!has_type)
+		{
+			config_error("%s:%i: except tkl without type item",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			return 1;
 		}
 		return errors;
 	}
@@ -4890,7 +4966,7 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 		}
 		else 
 		{
-			char *errbuf = unreal_checkregex(word->ce_vardata,1,0);
+			char *errbuf = unreal_checkregex(word->ce_vardata,1,1);
 			if (errbuf)
 			{
 				config_error("%s:%i: badword::%s contains an invalid regex: %s",
@@ -5185,7 +5261,7 @@ int     _conf_log(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "flags")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
-				if ((ofp = config_binary_flags_search(_LogFlags, cepp->ce_varname, sizeof(_LogFlags)/sizeof(_LogFlags[0])))) 
+				if ((ofp = config_binary_flags_search(_LogFlags, cepp->ce_varname, ARRAY_SIZEOF(_LogFlags)))) 
 					ca->flags |= ofp->flag;
 			}
 		}
@@ -5258,7 +5334,7 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 					errors++; continue;
 				}
-				if (!config_binary_flags_search(_LogFlags, cepp->ce_varname, sizeof(_LogFlags)/sizeof(_LogFlags[0]))) {
+				if (!config_binary_flags_search(_LogFlags, cepp->ce_varname, ARRAY_SIZEOF(_LogFlags))) {
 					 config_error("%s:%i: unknown log flag '%s'",
 						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
 						cepp->ce_varname);
@@ -5313,7 +5389,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 					continue;
 				}
-				if ((ofp = config_binary_flags_search(_LinkFlags, cepp->ce_varname, sizeof(_LinkFlags)/sizeof(_LinkFlags[0])))) 
+				if ((ofp = config_binary_flags_search(_LinkFlags, cepp->ce_varname, ARRAY_SIZEOF(_LinkFlags)))) 
 					link->options |= ofp->flag;
 
 			}
@@ -5465,7 +5541,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 						errors++; 
 						continue;
 				}
-				if (!(ofp = config_binary_flags_search(_LinkFlags, cepp->ce_varname, sizeof(_LinkFlags)/sizeof(_LinkFlags[0])))) {
+				if (!(ofp = config_binary_flags_search(_LinkFlags, cepp->ce_varname, ARRAY_SIZEOF(_LinkFlags)))) {
 					 config_error("%s:%i: unknown link option '%s'",
 						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
 						cepp->ce_varname);
@@ -5728,6 +5804,8 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "silence-limit")) {
 			tempiConf.silence_limit = atol(cep->ce_vardata);
+			if (loop.ircd_booted)
+				IsupportSetValue(IsupportFind("SILENCE"), cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "auto-join")) {
 			ircstrdup(tempiConf.auto_join_chans, cep->ce_vardata);
@@ -5795,6 +5873,13 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "maxchannelsperuser")) {
 			tempiConf.maxchannelsperuser = atoi(cep->ce_vardata);
+			if (loop.ircd_booted)
+			{
+				char tmpbuf[512];
+				IsupportSetValue(IsupportFind("MAXCHANNELS"), cep->ce_vardata);
+				ircsprintf(tmpbuf, "#:%s", cep->ce_vardata);
+				IsupportSetValue(IsupportFind("CHANLIMIT"), tmpbuf);
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "maxdccallow")) {
 			tempiConf.maxdccallow = atoi(cep->ce_vardata);
@@ -5807,6 +5892,8 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					*cep->ce_vardata='-';
 			}
 			ircstrdup(tempiConf.network.x_ircnet005, tmp);
+			if (loop.ircd_booted)
+				IsupportSetValue(IsupportFind("NETWORK"), tmp);
 			cep->ce_vardata = tmp;
 		}
 		else if (!strcmp(cep->ce_varname, "default-server")) {
@@ -6489,6 +6576,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "hosts")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
+				char *c, *host;
 				if (!cepp->ce_vardata)
 				{
 					config_error("%s:%i: set::hosts item without value",
@@ -6525,6 +6613,60 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					errors++;
 					continue;
 
+				}
+				if ((c = strchr(cepp->ce_vardata, '@')))
+				{
+					char *tmp;
+					if (!(*(c+1)) || (c-cepp->ce_vardata) > USERLEN ||
+					    c == cepp->ce_vardata)
+					{
+						config_error("%s:%i: illegal value for set::hosts::%s",
+							     cepp->ce_fileptr->cf_filename,
+							     cepp->ce_varlinenum, 
+							     cepp->ce_varname);
+						errors++;
+						continue;
+					}
+					for (tmp = cepp->ce_vardata; tmp != c; tmp++)
+					{
+						if (*tmp == '~' && tmp == cepp->ce_vardata)
+							continue;
+						if (!isallowed(*tmp))
+							break;
+					}
+					if (tmp != c)
+					{
+						config_error("%s:%i: illegal value for set::hosts::%s",
+							     cepp->ce_fileptr->cf_filename,
+							     cepp->ce_varlinenum, 
+							     cepp->ce_varname);
+						errors++;
+						continue;
+					}
+					host = c+1;
+				}
+				else
+					host = cepp->ce_vardata;
+				if (strlen(host) > HOSTLEN)
+				{
+					config_error("%s:%i: illegal value for set::hosts::%s",
+						     cepp->ce_fileptr->cf_filename,
+						     cepp->ce_varlinenum, 
+						     cepp->ce_varname);
+					errors++;
+					continue;
+				}
+				for (; *host; host++)
+				{
+					if (!isallowed(*host) && *host != ':')
+					{
+						config_error("%s:%i: illegal value for set::hosts::%s",
+							     cepp->ce_fileptr->cf_filename,
+							     cepp->ce_varlinenum, 
+							     cepp->ce_varname);
+						errors++;
+						continue;
+					}
 				}
 			}
 		}
@@ -6778,7 +6920,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 		*(cSlash+1)=0;
 	}
 	hFind = FindFirstFile(ce->ce_vardata, &FindData);
-	if (!FindData.cFileName) {
+	if (!FindData.cFileName || hFind == INVALID_HANDLE_VALUE) {
 		config_status("%s:%i: loadmodule %s: failed to load",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			ce->ce_vardata);
@@ -6793,7 +6935,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 		if ((ret = Module_Create(path))) {
 			config_status("%s:%i: loadmodule %s: failed to load: %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				FindData.cFileName, ret);
+				path, ret);
 			free(path);
 			return -1;
 		}
@@ -6987,7 +7129,8 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 			ircstrdup(format->format, cep->ce_vardata);
 			regcomp(&format->expr, cep->ce_vardata, REG_ICASE|REG_EXTENDED);
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
-				if (!strcmp(cepp->ce_varname, "nick")) {
+				if (!strcmp(cepp->ce_varname, "nick") ||
+				    !strcmp(cepp->ce_varname, "target")) {
 					ircstrdup(format->nick, cepp->ce_vardata);
 				}
 				else if (!strcmp(cepp->ce_varname, "parameters")) {
@@ -7000,12 +7143,15 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 						format->type = ALIAS_STATS;
 					else if (!strcmp(cepp->ce_vardata, "normal"))
 						format->type = ALIAS_NORMAL;
+					else if (!strcmp(cepp->ce_vardata, "channel"))
+						format->type = ALIAS_CHANNEL;
 				}
 			}
 			AddListItem(format, alias->format);
 		}		
 				
-		else if (!strcmp(cep->ce_varname, "nick")) {
+		else if (!strcmp(cep->ce_varname, "nick") || !strcmp(cep->ce_varname, "target")) 
+		{
 			ircstrdup(alias->nick, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "type")) {
@@ -7015,6 +7161,8 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 				alias->type = ALIAS_STATS;
 			else if (!strcmp(cep->ce_vardata, "normal"))
 				alias->type = ALIAS_NORMAL;
+			else if (!strcmp(cep->ce_vardata, "channel"))
+				alias->type = ALIAS_CHANNEL;
 			else if (!strcmp(cep->ce_vardata, "command"))
 				alias->type = ALIAS_COMMAND;
 		}
@@ -7096,9 +7244,9 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 				cep->ce_varlinenum);
 				errors++;
 			}
-			if (!config_find_entry(cep->ce_entries, "nick"))
+			if (!config_find_entry(cep->ce_entries, "nick") && !config_find_entry(cep->ce_entries, "target"))
 			{
-				config_error("%s:%i: alias::format::nick missing", cep->ce_fileptr->cf_filename,
+				config_error("%s:%i: alias::format::target missing", cep->ce_fileptr->cf_filename,
 					cep->ce_varlinenum);
 				errors++;
 			}
@@ -7111,7 +7259,8 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 						cepp->ce_varname);
 					errors++; continue;
 				}
-				if (!strcmp(cepp->ce_varname, "nick")) 
+				if (!strcmp(cepp->ce_varname, "nick") ||
+				    !strcmp(cepp->ce_varname, "target")) 
 					;
 				else if (!strcmp(cepp->ce_varname, "type"))
 				{
@@ -7120,6 +7269,8 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 					else if (!strcmp(cepp->ce_vardata, "stats"))
 						;
 					else if (!strcmp(cepp->ce_vardata, "normal"))
+						;
+					else if (!strcmp(cepp->ce_vardata, "channel"))
 						;
 					else {
 						config_status("%s:%i: unknown alias type",
@@ -7136,7 +7287,7 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 				}
 			}
 		}
-		else if (!strcmp(cep->ce_varname, "nick")) 
+		else if (!strcmp(cep->ce_varname, "nick") || !strcmp(cep->ce_varname, "target")) 
 			;
 		else if (!strcmp(cep->ce_varname, "type")) {
 			if (!strcmp(cep->ce_vardata, "services"))
@@ -7144,6 +7295,8 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 			else if (!strcmp(cep->ce_vardata, "stats"))
 				;
 			else if (!strcmp(cep->ce_vardata, "normal"))
+				;
+			else if (!strcmp(cep->ce_vardata, "channel"))
 				;
 			else if (!strcmp(cep->ce_vardata, "command"))
 				;

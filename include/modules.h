@@ -99,6 +99,7 @@ typedef struct {
 #define MOBJ_CMDOVERRIDE  0x0080
 #define MOBJ_EXTBAN       0x0100
 #define MOBJ_CALLBACK     0x0200
+#define MOBJ_ISUPPORT	  0x0400
 
 typedef struct {
         long mode;
@@ -294,6 +295,13 @@ typedef struct _versionflag {
 	ModuleChild *parents;
 } Versionflag;
 
+typedef struct _isupport {
+	struct _isupport *prev, *next;
+	char *token;
+	char *value;
+	Module *owner;
+} Isupport;
+
 typedef struct _ModuleObject {
 	struct _ModuleObject *prev, *next;
 	short type;
@@ -308,6 +316,7 @@ typedef struct _ModuleObject {
 		Cmdoverride *cmdoverride;
 		Extban *extban;
 		Callback *callback;
+		Isupport *isupport;
 	} object;
 } ModuleObject;
 
@@ -461,6 +470,11 @@ void *obsd_dlsym(void *handle, char *symbol);
 Versionflag *VersionflagAdd(Module *module, char flag);
 void VersionflagDel(Versionflag *vflag, Module *module);
 
+Isupport *IsupportAdd(Module *module, const char *token, const char *value);
+void IsupportSetValue(Isupport *isupport, const char *value);
+void IsupportDel(Isupport *isupport);
+Isupport *IsupportFind(const char *token);
+
 #define add_Hook(hooktype, func) HookAddMain(NULL, hooktype, func, NULL, NULL)
 #define HookAdd(hooktype, func) HookAddMain(NULL, hooktype, func, NULL, NULL)
 #define HookAddEx(module, hooktype, func) HookAddMain(module, hooktype, func, NULL, NULL)
@@ -569,6 +583,9 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_TKL_DEL 40
 #define HOOKTYPE_LOCAL_KILL 41
 #define HOOKTYPE_LOG 42
+#define HOOKTYPE_REMOTE_JOIN 43
+#define HOOKTYPE_REMOTE_PART 44
+#define HOOKTYPE_REMOTE_KICK 45
 
 /* Hook return values */
 #define HOOK_CONTINUE 0

@@ -574,10 +574,11 @@ void sendto_chmodemucrap(aClient *from, aChannel *chptr, char *text)
 	Member *lp;
 	aClient *acptr;
 	int  i;
+	int remote = MyClient(from) ? 0 : 1;
 
 	sprintf(tcmd, ":%s %s %s :%s", from->name, TOK_PRIVATE, chptr->chname, text); /* token */
 	sprintf(ccmd, ":%s %s %s :%s", from->name, MSG_PRIVATE, chptr->chname, text); /* msg */
-	sprintf(xcmd, ":IRC PRIVMSG %s :%s: %s", chptr->chname, from->name, text); /* local */
+	sprintf(xcmd, ":IRC!IRC@%s PRIVMSG %s :%s: %s", me.name, chptr->chname, from->name, text); /* local */
 
 	++sentalong_marker;
 	for (lp = chptr->members; lp; lp = lp->next)
@@ -587,6 +588,8 @@ void sendto_chmodemucrap(aClient *from, aChannel *chptr, char *text)
 		if (IsDeaf(acptr) && !sendanyways)
 			continue;
 		if (!(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
+			continue;
+		if (remote && (acptr->from == from->from)) /* don't send it back to where it came from */
 			continue;
 		i = acptr->from->slot;
 		if (MyConnect(acptr) && IsRegisteredUser(acptr))
@@ -1137,7 +1140,7 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
 			for (users = channels->chptr->members; users; users = users->next)
 			{
 				cptr = users->cptr;
-				if (!MyConnect(cptr) || sentalong[cptr->slot] == sentalong_marker)
+				if (!MyConnect(cptr) || (cptr->slot < 0) || (sentalong[cptr->slot] == sentalong_marker))
 					continue;
 				if ((channels->chptr->mode.mode & MODE_AUDITORIUM) &&
 				    !(is_chanownprotop(user, channels->chptr) || is_chanownprotop(cptr, channels->chptr)))

@@ -244,3 +244,170 @@
 - Changed version to 3.2.1
 - Moved the 3.2 changes to Changes.old
 ** 3.2.1 release **
+- Fixed a win32 module problem where file not found errors would display random characters,
+  reported by STING
+- Fixed a bug where the allow-userhost-change force-rejoin setting was not applied to users
+  who /oper and receive an oper-host (#0001901) reported by hypnetric.
+- Removed the /hs alias pointing to HelpServ for Anope since this conflicts with HostServ
+  (#0001709) reported by DukePyrolator
+- Fixed ban bug: halfops were also prevented from doing nickchanges if banned, plus..
+  +b ~n:*!*@* also made nickchanges impossible for voiced(&halfop'ed) people (so like half
+  of the purpose of it was defeated @$#&@#). Reported by Rocko.
+- Fixed a bug where an ident in a vhost {} was never sent out to other servers and added
+  user@host support for set::hosts (#0001834) reported/suggested by bleepy.
+- Fixed defizzer module. Reported by Rocko and netrixtardis.
+- Removed the * and ^ flags from /whois if PREFIX_AQ is not enabled (requested by many people)
+- Updated the /who docs to use correct English
+- Added documentation for the /who and /whois flags (#0001881) reported by AngryWolf and Bugz.
+- Added src/win32/win32.c for generic win32 helper functions
+- Renamed src/win32/win32gui.c to src/win32/gui.c
+- Reorganized much of the Windows code
+- Fixed a whois bug when PREFIX_AQ is undefined, reported by Shaun
+- Moved the RTF win32 code to a seperate file
+- More win32 code cleanups
+- Added src/win32/editor.c (woops), (#0001932) reported by Troco
+- Fixed a problem with /who incorrectly showing the ? flag to opers even when the user should
+  be visible (#0001888) reported by Bugz and aquanight
+- Added SAPART and SVSPART reasons. Note, to fully work it requires all servers to upgrade,
+  and due to a bug in older versions, it could cause problems if linked to 3.2 or earlier
+  (#0001859) suggested by Bugz
+- Fixed a minor issue where Unreal registered itself as an NT service incorrectly
+  (#0001950) reported by rocafella
+- Possibly fixed a bug that could cause Unreal to eat 100% CPU at startup on Windows.
+  (#0001635) reported by eggburt. Thanks to STING for helping to debug this.
+- Implemented a new modules Makefile written by fez (#0001930).
+- Added oper::modes to specify modes to be set for a particular oper (overrides 
+  set::modes-on-oper), suggested by parker182 (#0001899).
+- doc/example.conf now simply refers to unreal32docs.html for oper flags (#0001973)
+  reported by vonitsanet and AngryWolf.
+- Fixed crash-on-first-connect if SSL was enabled. This seemed to happen on Mac OS X,
+  Sun Solaris, Opteron@Linux and perhaps others (#1982, #1984, #2110), reported by bit,
+  lion and liverbugg.
+- Fixed a bug if me::info was set to "".
+- Added a missing error message for ModuleGetErrorStr. Additionally added error checking to
+  ensure NULL is returned when an invalid error code is specified (#0001986) reported by
+  AngryWolf.
+- Applied patch from slePP for bug #0001252: if IPv6 was enabled then in some cases names
+  were not properly resolved. Original bug reported by kormat.
+- Fixed bugs regarding HOOKTYPE_SERVER_QUIT: was sometimes called twice and could cause
+  crashes due read-after-free. Reported by SET (#0001988).
+- Fixed possible crash if /rehash'ing and a servername was just resolving (due to
+  /connect or autoconnect) and was not present in the cache. Reported and traced by sh0
+  (#0001976).
+- Fixed compile bug at *NIX caused by ModuleGetErrorStr fix.
+- Improved doc/compiling_win32.txt a lot: now VC7 only, and has instructions on:
+  compiling modules and their (binary) compatability, zip links (zlib), ssl (OpenSSL)...
+  Remote includes (curl and c-ares) instructions still need to be added.
+- Made 'Install as a service' unchecked by default, this should help beginners a lot.
+- Updated doc/compiling_win32.txt again with curl build instructions.
+  Also linked to a page with an unreal dev package which contains zlib+ssl+curl
+  precompiled. This basically means many people no longer need to compile zlib/ssl/curl
+  anymore themselves (which is a pain to do and takes a lot of time).
+- Windows: the 'notice' parameter in the usermsg callback was always 0 due some windows/vc
+  weirdness, this also affected spamfilter (so any spamfilters added only at notice
+  and not at msg on windows would not work). Now using the real 'notice' parameter.
+- unbroke spamfilter not working for msgs/notices (oops..).
+- Made zip/non-zip modules on win32 binary compatible. Since it was nowhere documented
+  that you should pass the ZIP_LINKS etc options to 'nmake -f makefile.win32 custommodule'
+  many people didn't do this which caused odd problems when reading certain clientstructs.
+  Module coders: in the meantime, for 3.2.1 mods, use something like:
+  nmake -f makefile.win32 USE_ZIPLINKS=1 ZLIB_INC_DIR="c:\dev\zlib" 
+   ZLIB_LIB_DIR="c:\dev\zlib\dll32" custommodule MODULEFILE=m_mymodule
+  For 3.2.2+ these additional parameters will no longer be needed (but wouldn't harm either).
+- Some doc/example.conf clarifications, mainly for modules @ win32.
+- Made /whois show the user's modes to opers regardless of +e
+- Added snomask to the /whois umode output
+- Added a patch by rocafella to fix a crash when installing Unreal on Win2003 (#0001949).
+- Moved the Command API functions to a separate file.
+- Redesigned the 005 token:
+  - Now renamed to RPL_ISUPPORT.
+  - Replaced KNOCK and MAP tokens with new CMDS token (see doc/technical/005.txt)
+  - Implemented most tokens from the isupport draft (STATUSMSG, EXCEPTS, CHANLIMIT,
+    CHANNELLEN, MAXLIST).
+  - Removed MAXBANS.
+  - Made the isupport system dynamic and provide an API for modules to add tokens, may need
+    testing.
+  - Added an M_ANNOUNCE flag for CommandAdd to add the command to the CMDS token, may need
+    testing.
+- Fixed some compile warnings.
+- Fixed a bug where bans were not matched against IPs in all circumstances (#0002045) 
+  reported by heper.
+- Fixed a bug with IP based except tkl {} lines did not validate the ident portion of the mask
+  (#0002049) reported by Rocko.
+- Fixed a problem where a local TKL could be sent to remote servers when it is being changed
+  (#0002048) reported by AngryWolf.
+- Added documentation for link::ciphers to unreal32docs.html (#0002019) reported by Bugz.
+- Updated documentation to reflect that cmode +M allows voiced users to talk, not just
+  registered users (#0002020) reported by crazy.
+- Made it so WATCH will not respond with an erroneous reply if the parameter was simply + or -
+  (#0002017) reported by GouraudShading.
+- SVSO now removes +v (#0002023) reported by w00t and aquanight.
+- Exported the isupport functions for use in Windows modules.
+- Added a new snomask, +o to show oper-up notices (oper only), (#0001965) suggested by 
+  vonitsanet.
+- Added a /userip command that works just like ircu's.
+- Fixed a typo in the *nix Makefile reported by Troco (#0002059)
+- Added french docs, translated by Kolibot & Babass.
+- Changed some stuff to use the release version of MS libraries.
+- Updated installer for msvcr70.dll
+- Fixed prefix bug caused by previous 'fix'/behavior change. Reported by aquanight (#0002067).
+- Updated doc/technical/token.txt and resolved 2 token conflicts. SVSWATCH is now Sw and
+  SVSJOIN is now BX (#0002073) reported by trystanscott.
+- Fixed a bug regarding chanmode +mu where the <IRC> messages were not properly relayed
+  to all servers. Reported by Aenox (#0002079).
+- Added salted passwords. Salts are useful because it "protects" against stored-plaintext
+  attacks (eg: rainbow) and prevents cracking of several passwords at once.
+  This change means /MKPASSWD will now just generate a different string than before.
+  Do note however, that the old syntax/encrypted passwords will still work and _will continue
+  to work_ in the future, for at least the whole 3.2* series.
+  If you are concerned with security and have some time, then converting your passwords
+  is probably a good idea... Just in case your configuration file gets stolen one day ;).
+- MD5 password encryption is now always available on *NIX, even if SSL is disabled.
+- Temporary fix for ircsprintf %lu 1..6 issue.
+- Fixed a problem with +u for some clients that have a strict interpretation of the RFC.
+- Added TRE 0.7.0, fixes #0001952 reported by Praetorian
+- Fixed an (unimportant) cloak typo / made it a few nanosec faster. Reported by Martin Brulisauer.
+- Fixed resolver not working in FreeBSD jail, reported & patch provided by urkel (#0002097).
+- Added a %n specifier to command aliases that is replaced by the user's nickname,
+  requested by many people.
+- Added the ability for an alias {} to send to a channel (#0001686) requested by JasonTik
+  - As a result, alias[::format]::nick is now called alias[::format]::target to avoid
+    confusion. ::nick is maintained for backwards compatibility.
+- Fixed a problem where IsupportAdd did not return a value.
+- Module coders: Added HOOKTYPE_REMOTE_JOIN, HOOKTYPE_REMOTE_PART, HOOKTYPE_REMOTE_KICK (all
+  work just the same as the HOOKTYPE_LOCAL_* variants).
+- Module coders: HOOKTYPE_REMOTE_CONNECT is now also called during net-merge. You can use
+  IsSynched(sptr->srvptr) to find out if it's called due to a net merge (0) or a connect (1).
+- Added spamfiler 'user' (u) target. This regex is checked against nick!user@host:realname
+  when a user connects. This makes it easy to ban drones with simple patterns.
+  For example: '/spamfilter add u gzline 86400 Drone[0-9]+!.+@.+:Drone[0-9]'
+  would kill any drones that have both a nick and realname with 'Drone' followed by digits.
+- If a nick is qlined, the user is now lagged up to limit qline floods a bit (#0001335).
+- Made docs a bit more clear on spamfilter targettypes.
+- Fix for too broad regex in badword::word causing the IRCd to hang, reported by Flop
+  (#0002101).
+- IPv6: Fixed hostnames in link::hostname not working, reported by Jasmin (#0001990).
+- Fixed OOB read/write on user quit (did no harm on Linux&FreeBSD).
+- Fixed some tiny memory leaks (~100 bytes) on rehash.
+- Updated chinese&japanese GBK nick code, fix supplied by Xuefer (#0002051).
+- Added release notes (unfinished).
+- Added file: include/macros.h and a new macro, ARRAY_SIZEOF.
+- Added the ability to specify multiple types in a tkl except, suggested by Bugz (#0002085).
+- Added spamfilter 'away' ('a') target (#0002057).
+- Fixed a qline duplicate msg bug I think
+- Windows version can now hold ~4096 connections instead of ~1024
+- help.conf: clarified MKPASSWD documentation, reported by hypnetric (#0001926).
+- Some modeskip handling for future versions
+- Fixed serious heap corruption bug if remote users were using qlined nicks, thanks to
+  Gilou and Trankill for making me able to trace this issue down (#0002032).
+- Fixed qline notices again: now gives msg #1 for local qlined-nick attempts, and
+  another msg in case of a remote client (eg: oper) using a qlined nick.
+- Added some future SJOIN skip stuff.
+- Updated version to 3.2.2-pre1 already.
+** internal 3.2.2-pre1 release **
+- Fixed some doc & release notes typos. Reported by Rocko, HiT.
+- French doc updates, hopefully synched now.
+- (revert of badsyntax fix)
+- Forgot to mention away spamfilter target in helpop, reported by Rocko.
+- Changed version to 3.2.2
+** 3.2.2 release **

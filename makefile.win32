@@ -101,9 +101,9 @@ OPENSSL_LIB=/LIBPATH:"$(OPENSSL_LIB_DIR)"
 !ENDIF
 
 !IFDEF DEBUG
-DBGCFLAG=/MDd /Zi
+DBGCFLAG=/MD /Zi
 DBGLFLAG=/debug /debugtype:BOTH
-MODDBGCFLAG=/LDd /MDd /Zi
+MODDBGCFLAG=/LDd /MD /Zi
 !ELSE
 DBGCFLAG=/MD /O2 /G5
 MODDBGCFLAG=/LD /MD
@@ -138,10 +138,11 @@ EXP_OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ \
  SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ \
  SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ \
- SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MD5.OBJ \
+ SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MD5.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ \
  SRC/EXTBANS.OBJ $(ZIPOBJ) $(CURLOBJ)
 
-OBJ_FILES=$(EXP_OBJ_FILES) SRC/WIN32GUI.OBJ SRC/SERVICE.OBJ SRC/DEBUG.OBJ
+OBJ_FILES=$(EXP_OBJ_FILES) SRC/GUI.OBJ SRC/SERVICE.OBJ SRC/DEBUG.OBJ SRC/RTF.OBJ \
+ SRC/EDITOR.OBJ SRC/WIN32.OBJ 
 
 MOD_FILES=SRC/MODULES/L_COMMANDS.C SRC/MODULES/M_CHGHOST.C SRC/MODULES/M_SDESC.C \
  SRC/MODULES/M_SETIDENT.C SRC/MODULES/M_SETNAME.C SRC/MODULES/M_SETHOST.C \
@@ -170,7 +171,7 @@ MOD_FILES=SRC/MODULES/L_COMMANDS.C SRC/MODULES/M_CHGHOST.C SRC/MODULES/M_SDESC.C
  SRC/MODULES/M_RULES.C SRC/MODULES/M_CLOSE.C SRC/MODULES/M_MAP.C SRC/MODULES/M_EOS.C \
  SRC/MODULES/M_SERVER.C SRC/MODULES/M_STATS.C SRC/MODULES/M_SVSFLINE.C \
  SRC/MODULES/M_DCCDENY.C SRC/MODULES/M_UNDCCDENY.C SRC/MODULES/M_WHOWAS.C \
- SRC/MODULES/M_CONNECT.C SRC/MODULES/M_DCCALLOW.C
+ SRC/MODULES/M_CONNECT.C SRC/MODULES/M_DCCALLOW.C SRC/MODULES/M_USERIP.C
 
 DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDENT.DLL \
  SRC/MODULES/M_SETNAME.DLL SRC/MODULES/M_SETHOST.DLL SRC/MODULES/M_CHGIDENT.DLL \
@@ -201,7 +202,7 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/M_CLOSE.DLL SRC/MODULES/M_MAP.DLL SRC/MODULES/M_EOS.DLL \
  SRC/MODULES/M_SERVER.DLL SRC/MODULES/M_STATS.DLL SRC/MODULES/M_SVSFLINE.DLL \
  SRC/MODULES/M_DCCDENY.DLL SRC/MODULES/M_UNDCCDENY.DLL SRC/MODULES/M_WHOWAS.DLL \
- SRC/MODULES/M_CONNECT.DLL SRC/MODULES/M_DCCALLOW.DLL \
+ SRC/MODULES/M_CONNECT.DLL SRC/MODULES/M_DCCALLOW.DLL SRC/MODULES/M_USERIP.DLL \
  SRC/MODULES/CLOAK.DLL SRC/MODULES/OLDCLOAK.DLL
 
 
@@ -362,17 +363,26 @@ src/hash.obj: src/hash.c $(INCLUDES) ./include/hash.h
 src/crule.obj: src/crule.c $(INCLUDES)
         $(CC) $(CFLAGS) src/crule.c
 
-src/win32gui.obj: src/win32/win32gui.c $(INCLUDES) ./include/resource.h
-        $(CC) $(CFLAGS) src/win32/win32gui.c
+src/gui.obj: src/win32/gui.c $(INCLUDES) ./include/resource.h
+        $(CC) $(CFLAGS) src/win32/gui.c
+
+src/rtf.obj: src/win32/rtf.c $(INCLUDES) ./src/win32/win32.h
+	$(CC) $(CFLAGS) src/win32/rtf.c
+
+src/editor.obj: src/win32/editor.c $(INCLUDES) ./include/resource.h ./src/win32/win32.h
+        $(CC) $(CFLAGS) src/win32/editor.c
 
 src/service.obj: src/win32/service.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/win32/service.c
 
-src/unreal.obj: src/win32/unreal.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/win32/unreal.c
-
 src/debug.obj: src/win32/debug.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/win32/debug.c
+
+src/win32.obj: src/win32/win32.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/win32/win32.c
+
+src/unreal.obj: src/win32/unreal.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/win32/unreal.c
 
 src/res_comp.obj: src/res_comp.c $(INCLUDES)
         $(CC) $(CFLAGS) src/res_comp.c
@@ -412,6 +422,12 @@ src/url.obj: src/url.c $(INCLUDES) ./include/url.h
 
 src/extbans.obj: src/extbans.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/extbans.c
+
+src/api-isupport.obj: src/api-isupport.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/api-isupport.c
+
+src/api-command.obj: src/api-command.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/api-command.c
 
 src/zip.obj: src/zip.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/zip.c
@@ -712,6 +728,9 @@ src/modules/m_connect.dll: src/modules/m_connect.c $(INCLUDES)
 
 src/modules/m_dccallow.dll: src/modules/m_dccallow.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_dccallow.c $(MODLFLAGS)
+
+src/modules/m_userip.dll: src/modules/m_userip.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/m_userip.c $(MODLFLAGS)
 
 src/modules/cloak.dll: src/modules/cloak.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/cloak.c $(MODLFLAGS)

@@ -24,12 +24,12 @@
      /**/
 #define COMPILEINFO DEBUGMODESET DEBUGSET
 /*
- * Version Unreal3.2.1
+ * Version Unreal3.2.2
  */
-#define UnrealProtocol 		2304
+#define UnrealProtocol 		2305
 #define PATCH1  		"3"
 #define PATCH2  		".2"
-#define PATCH3  		".1"
+#define PATCH3  		".2"
 #define PATCH4  		""
 #define PATCH5  		""
 #define PATCH6  		""

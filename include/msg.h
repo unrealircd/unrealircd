@@ -239,7 +239,6 @@
 #define MSG_TSCTL 	"TSCTL"
 #define TOK_TSCTL 	"AW"
 #define MSG_SVSJOIN 	"SVSJOIN"
-#define TOK_SVSJOIN 	"BR"
 #define MSG_SAJOIN 	"SAJOIN"
 #define TOK_SAJOIN 	"AX"
 #define MSG_SVSPART 	"SVSPART"

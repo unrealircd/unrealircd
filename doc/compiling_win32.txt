@@ -1,30 +1,20 @@
 ==[ IMPORTANT MESSAGE ABOUT DISABLING NOSPOOF ]==
 Disabling NOSPOOF at windows (w9x, nt, w2k, xp) is NOT recommended since this
-will allow users to use "spoofed hosts" (like the IP of someone you trust).
+WILL allow users to use "spoofed hosts" (like the IP of someone you trust).
 
 If you got problems with NOSPOOF fix your client (bot?) instead (you should
 PONG back to the initial PING at connect).
 
-==[ HOW TO COMPILE UNREALIRCD WITHOUT SSL AT WINDOWS ]==
+==[ GENERAL GUIDELINES ]==
 First of all you need Microsoft Visual C++, compiling with cygwin
 is not supported.
 
-== "old" VC++ 6.0 ==
-1. You need the Platform SDK (PSDK)
-   Grab it at: http://www.microsoft.com/msdownload/platformsdk/sdkupdate/ ->
-   core sdk -> install this sdk.
-   Note that this can take some time to download because it's >200Mb
-   (450mb installed) [!].
-2. To compile:
-   start -> programs -> platform sdk blabla -> open build env. -> (choose os) ->
-   set blabla build env (debug). This will launch a DOS window.
-3. Go to your UnrealIrcd dir (like: cd \dev\unreal3.2) and then compile with:
-   nmake -f makefile.win32
-   This will generate a wircd.exe and unreal.exe
-4. Copy the src\win32\tre.dll to your UnrealIrcd main dir.
-5. Done!
+VC++ 7.x (.NET) is highly recommended. VC 6 might work but it requires
+the Platform SDK (PSDK), it also has quite some bugs (there are 5 servicepacks!).
+Basically VC7 is just much easier and known to work, therefore we'll assume
+in this text that you are using it.
 
-== VC++ 7.x (.NET) ==
+== Simple compile (no SSL/ZIP/Remote includes) ==
 1. Start the Visual Studio .NET Command Prompt
 2. Go to your UnrealIrcd dir (like: cd \dev\unreal3.2) and then compile with:
    nmake -f makefile.win32
@@ -32,12 +22,132 @@ is not supported.
 3. Copy the src\win32\tre.dll to your UnrealIrcd main dir.
 4. Done!
 
-==[ HOW TO COMPILE UNREALIRCD WITH SSL AT WINDOWS ]==
-Ouch, that's much work ;).
-You need to compile openssl yourself.
-Then have a look at makefile.win32 for instruction on how
-to enable / specify path / etc...
-DO NOT ask us for help with compiling openssl!
+== Compiling modules ==
+1. Put your module (the .c file) in src\modules (eg: c:\dev\unreal3.2\src\modules).
+2. Start the Visual Studio .NET Command Prompt
+3. Go to your UnrealIrcd dir (like: cd \dev\unreal3.2).
+4. Compile the module with:
+   nmake -f makefile.win32 custommodule MODULEFILE=<name>
+   <name> is the name of the module WITHOUT the .c suffix, so if your
+   module has the filename 'm_crappymod.c', then you use:
+   nmake -f makefile.win32 custommodule MODULEFILE=m_crappymod
+5. Done. A .dll file should have been created.
 
-==[ AND ZIP LINKS SUPPORT? ]==
-See makefile.win32 for instructions.
+If you compiled with VC7 and used the official source (not a CVS version,
+but for example 3.2.1 source) then the module should work on all these
+versions (binary compatible) and you could for example put them on
+your website so users can download them.
+Such a module will work on both SSL and non-SSL, there should be no need
+for separate versions... unless, of course, you use SSL-specific code in your mod.
+DO NOT download a CVS version & compile your mod and then start
+distributing the .dll for use at another (non-CVS) version!!
+Every time we change a struct (and in some other cases) it makes the
+binary/module binary incompatible which practically means your module
+will CRASH or cause memory corruption and other subtle errors.
+
+== COMPILING WITH ZIP LINKS / SSL / REMOTE INCLUDES SUPPORT ==
+First of all, DO NOT use any precompiled libs from the official
+zlib/openssl/curl sites. We require certain compile parameters.
+Versions downloaded from such sites will often CRASH.
+
+The easiest is to download the UnrealIRCd development package
+which contains zlib, openssl and curl precompiled for you.
+See: www.vulnscan.org/unrealwin32dev/
+
+Just extract it somewhere (eg: to c:\dev).
+Then, use compile flags to enable the features + specify where to look.
+Here are examples if you used c:\dev:
+ZIP: nmake -f makefile.win32 USE_ZIPLINKS=1 ZLIB_INC_DIR="c:\dev\zlib" ZLIB_LIB_DIR="c:\dev\zlib\dll32"
+SSL: nmake -f makefile.win32 USE_SSL=1 OPENSSL_INC_DIR="c:\dev\openssl\include" OPENSSL_LIB_DIR="c:\dev\openssl\lib" 
+CURL: nmake -f makefile.win32 USE_REMOTEINC=1 LIBCURL_INC_DIR="c:\dev\curl\include" LIBCURL_LIB_DIR="c:\dev\curl\lib"
+
+Obviously you can (and probably will) combine all these options, like
+to build a zip+ssl+curl version (all in 1 line):
+nmake -f makefile.win32 USE_ZIPLINKS=1 ZLIB_INC_DIR="c:\dev\zlib" ZLIB_LIB_DIR="c:\dev\zlib\dll32"
+USE_SSL=1 OPENSSL_INC_DIR="c:\dev\openssl\include" OPENSSL_LIB_DIR="c:\dev\openssl\lib" USE_REMOTEINC=1
+LIBCURL_INC_DIR="c:\dev\curl\include" LIBCURL_LIB_DIR="c:\dev\curl\lib"
+
+== COMPILING ZLIB/SSL/CURL YOURSELF ==
+This is quite some work.. With the precomiled method shown above it
+just takes like 5-10 minutes to have a zlib+ssl+curl Unreal version.
+But if you want to compile each of these libs manually then it will
+probably take an hour or so.
+
+** THE INFORMATION BELOW IS OUTDATED, WE GOT RID OF MDd, USE MD INSTEAD
+   AND DONT COMPILE OPENSSL W/DEBUG ***
+
+== ZIP LINKS (zlib) ==
+[NOTE: precompiled dlls should NOT be used because they will cause a crash
+       (this is due to different compile parameters / api call systems]
+To compile with ziplinks support you need to do the following:
+Download the SOURCE from http://www.winimage.com/zLibDll/
+(at the time of writing, http://www.winimage.com/zLibDll/zlib121.zip)
+and extract it to somewhere, for example c:\dev\zlib-1.2.1
+
+Then, edit win32\makefile.msc:
+- Change -MD to -MDd
+- Add -D ZLIB_WINAPI to CFLAGS
+- so the result will be like:
+  CFLAGS  = -nologo -MDd -O2 $(LOC) -D ZLIB_WINAPI
+- Then compile: nmake -f win32\Makefile.msc
+- Assuming the above step went fine, your zlib is now ready.
+- Now, to compile UnrealIRCd with ziplinks you do something like this:
+  nmake -f makefile.win32 USE_ZIPLINKS=1 ZLIB_INC_DIR="c:\dev\zlib-1.2.1" ZLIB_LIB_DIR="c:\dev\zlib-1.2.1"
+  Obviously, change the paths if needed [1st = *.h files, 2nd=*.dll/*.lib]
+
+== SSL (OpenSSL) ==
+[note: openssl requires perl to configure/compile!]
+- Download latest openssl (eg: openssl-0.9.7d.tar.gz) and extract it somewhere
+  (we'll use c:\dev\openssl-0.9.7d in this example)
+- Open util\do_masm.bat, add 'debug' to the lines with 'mk1mf.pl' BUT be careful
+  since it should NOT be the last word, so add it somewhere before that.
+  For example: perl util\mk1mf.pl dll debug VC-W31-32 >ms\w31dll.mak
+- Start the 
+- Now we go build openssl, run:
+  ms\do_masm
+  nmake -f ms\ntdll.mak
+- Assuming the above step went fine, your OpenSSL is now ready.
+- Now, to compile UnrealIRCd with ziplinks you do something like this:
+  nmake -f makefile.win32 USE_SSL=1 OPENSSL_INC_DIR="c:\openssl\inc32\openssl" OPENSSL_LIB_DIR="C:\Dev\openssl\out32dll.dbg"
+  Obviously, change the paths if needed [1st=*.h files, 2nd=*.dll/*.lib]
+
+== REMOTE INCLUDES (curl, c-ares) ==
+- Download latest c-ares source from http://daniel.haxx.se/projects/c-ares/
+  Download latest curl source from http://curl.haxx.se/download.html
+  Extract both somewhere (eg: c:\dev\c-ares-1.2.0 and c:\dev\curl-7.12.0)
+- Open vc\vc.dsw from your ares directory. Assuming you have VC7 it will ask
+  whether it should convert the project, choose 'Yes to all'.
+- (solution explorer) areslib -> properties
+  C/C++ -> code generation -> runtime library: Change to
+  'Multi-threaded Debug DLL (/MDd)'
+- at the time of writing 'ares_free_errmem.c' should be removed from the
+  project file (solution explorer -> source files -> find the file + press
+  delete). Also 'ares_version.c' and 'ares_cancel.c' should be added
+  (solution explorer -> source files -> rightclick -> add -> add existing ->
+   go down a few directories if needed and choose the file).
+- right click at 'areslib' in the solution explorer and select 'Build'.
+  Assuming it compiled fine, we are done with c-ares.
+- Now go to the curl directory and open lib\curllib.dsw. Choose 'Yes to all'
+  again when asked about converting.
+- Open config-win32.h (@header files in solution explorer) and add:
+  #define USE_ARES 1
+- Open include\curl\multi.h and change the line with:
+  #include <winsock2.h>
+  to:
+  #include <winsock.h>
+- (solution explorer) curllib -> properties
+  - C/C++ -> code generation -> runtime library: Change to
+    'Multi-threaded Debug DLL (/MDd)'
+  - C/C++ -> general -> additional include directories:
+    add the path to your <c-ares-directory> (eg: C:\Dev\c-ares-1.2.0).
+  - linker -> general -> additional library directories:
+    add the path to your <c-ares-directory>\vc\areslib\Debug,
+    for example C:\Dev\c-ares-1.2.0\vc\areslib\Debug.
+  - linker -> input -> additional dependencies:
+    add: areslib.lib
+  - linker -> input -> Module defenition file:
+    set to: libcurl.def
+  Done with editting properties.
+- Now: Build -> rebuild solution, everything should compile fine.
+- Now, to compile UnrealIRCd with remote includes you do something like this:
+  nmake -f makefile.win32 USE_REMOTEINC=1 LIBCURL_INC_DIR="C:\Dev\curl-7.12.0\include" LIBCURL_LIB_DIR="C:\Dev\curl-7.12.0\lib\Debug"

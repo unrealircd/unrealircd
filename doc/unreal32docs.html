@@ -21,12 +21,14 @@
 <body>
 English | <a href="unreal32docs.de.html">German</a> | 
 <a href="unreal32docs.es.html">Spanish</a> | 
-<a href="unreal32docs.hu.html">Hungarian</a><br><br>
+<a href="unreal32docs.hu.html">Hungarian</a> | 
+<a href="unreal32docs.fr.html">French</a>
+<br><br>
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
-  <font size="4">Version: 3.2.1</font><br>
-  <b>Current Version:</b> 3.2.1<br>
-  <b>Last doc update:</b> 2004-07-03</div>
+  <font size="4">Version: 3.2.2</font><br>
+  <b>Current Version:</b> 3.2.2<br>
+  <b>Last doc update:</b> 2004-10-11</div>
 <br>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -164,7 +166,7 @@ Windows:<br>
 
 <p><font size="+2"><b>2.0 - Installation</b></font><a name="installation" id="installation"></a><br><div class="desc">
   <br>
-  <b>Tested & Supported Operating Systems:</b><br>
+  <b>Tested &amp; Supported Operating Systems:</b><br>
 <ul>
 <li><b>*NIX versions:</b>
 <ul>
@@ -192,8 +194,8 @@ Windows:<br>
 <p><b>Installation Instructions</b><br>
 Linux:<br>
 <ol>
-<li>gunzip -d Unreal3.2.tar.gz
-<li>tar xvf Unreal3.2.tar
+<li>gunzip -d Unreal3.2.2.tar.gz
+<li>tar xvf Unreal3.2.2.tar
 <li>cd Unreal3.2
 <li>./Config
 <li>Answer these questions to the best of your knowledge. Generally if your not 
@@ -262,6 +264,7 @@ Windows:<br>
    q - deny nick (Q:line) rejection notices<br>
    s - receives server notices [*]<br>
    S - receives spamfilter notices<br>
+   o - receives oper-up notices<br>
    [*: this snomask is also allowed to non-ircops]<br>
    </p>
 <p>You can control which snomasks you automatically get (set::snomask-on-connect) and which you get
@@ -302,7 +305,7 @@ Windows:<br>
    that understands the SSL protocol.</p>
 <p>Clients that support SSL: <A HREF="http://www.xchat.org/" TARGET="_blank">XChat</a>,
                              <A HREF="http://www.irssi.org/" TARGET="_blank">irssi</a>,
-                             <A HREF="http://www.irssi.org/" TARGET="_blank">mIRC</a> (6.14 and up, 
+                             <A HREF="http://www.mirc.com/" TARGET="_blank">mIRC</a> (6.14 and up, 
                              also requires some <a href="http://www.mirc.co.uk/ssl.html" target="_blank">additional steps</a>)</p>
 <p>For clients which do not support SSL you can use a tunnel like
    <A HREF="http://www.stunnel.org/" TARGET="_blank">stunnel</A>, here's a stunnel.conf example (for stunnel 4.x):<br>
@@ -466,8 +469,19 @@ Modules can also add other extended ban types.<br>
 <p>Spamfilters are added via the /spamfilter command which uses the following syntax:<br>
    <b>/spamfilter [add|del|remove|+|-] [type] [action] [tkltime] [reason] [regex]</b><br>
    <table border=0>
-   <tr valign="top"><td><b>[type]</b></td><td> specifies the target type, you can specify multiple targets:
-   'c' channel msg, 'p' private msg, 'n' private notice, 'N' channel notice, 'P' part msg, 'q' quit msg, 'd' dcc</td></tr>
+   <tr valign="top"><td><b>[type]</b></td><td> specifies the target type:<br>
+   <table>
+   <tr><td><b>Char:</b></td><td><b>Config item:</b></td><td><b>Description:</b></td></tr>
+   <tr><td>c</td><td>channel</td><td>Channel message</td></tr>
+   <tr><td>p</td><td>private</td><td>Private message (from user-&gt;user)</td></tr>
+   <tr><td>n</td><td>private-notice</td><td>Private notice</td></tr>
+   <tr><td>N</td><td>channel-notice</td><td>Channel notice</td></tr>
+   <tr><td>P</td><td>part</td><td>Part reason</td></tr>
+   <tr><td>q</td><td>quit</td><td>Quit reason</td></tr>
+   <tr><td>d</td><td>dcc</td><td>DCC filename</td></tr>
+   <tr><td>u</td><td>user</td><td>User ban, will be matched against nick!user@host:realname</td></tr>
+   </table>
+   You can specify multiple targets, like: cpNn</td></tr>
    <tr valign="top"><td><b>[action]</b></td><td> specifies the action to be taken (only 1 action can be specified)<br>
 <table>
 <tr><td>kill</td><td>kills the user</td></tr>
@@ -479,7 +493,7 @@ Modules can also add other extended ban types.<br>
 <tr><td>gzline</td><td>puts a gzline (global zline) on the host</td></tr>
 <tr><td>block</td><td>block the message only</td></tr>
 <tr><td>dccblock</td><td>mark the user so (s)he's unable to send any DCCs</td></tr>
-<tr><td>viruschan</td><td>part all channels, join set::spamfilter::virus-help-channel, disables all commands 
+<tr valign="top"><td>viruschan</td><td>part all channels, join set::spamfilter::virus-help-channel, disables all commands 
  except PONG, ADMIN, and msg/notices to set::spamfilter::virus-help-channel</td></tr>
 </table></tr></td>
    <tr valign="top"><td><b>[tkltime]</b></td><td> The duration of the *line added by the filter, use '-' to use the default or to skip 
@@ -505,7 +519,14 @@ into spaces at runtime. And double underscore ('__') gets an underscore ('_'). A
 <p>You can also add spamfilters in the config file but these will be local spamfilters (not 
    network-wide, though you could use remote includes for this). 
    The syntax of these spamfilter { } blocks are explained <a href="#spamfilter">here</a><br>
-</p>
+   Example:<br>
+   <pre>spamfilter {
+	regex "//write \$decode\(.+\|.+load -rs";
+	target { private; channel; };
+	reason "Generic $decode exploit";
+	action block;
+};</pre></p>
+
 <p><b>set::spamfilter::ban-time</b> allows you to modify the default ban time for *lines added by spamfilter (default: 1 day)<br>
    <b>set::spamfilter::ban-reason</b> allows you to specify a default reason for the *lines (default: 'Spam/advertising')<br>
    <b>set::spamfilter::virus-help-channel</b> allows you to specify the channel to join for action 'viruschan' (default: #help)<br>
@@ -805,6 +826,7 @@ listen *:6601 {
 	};
 	swhois &lt;whois info&gt;;
 	snomask &lt;snomask&gt;;
+	modes &lt;modes&gt;;
 	maxlogins &lt;num&gt;;
 };
 </pre></p>
@@ -1107,6 +1129,8 @@ listen *:6601 {
   information. <font color=blue>[optional]</font></p>
 <p>The <b>oper::snomask</b> directive allows you to preset an oper's server notice mask 
   on oper up. For a list of available SNOMASKs, see <a href="#feature_snomasks">Section 3.3</a> 
+  <font color=blue>[optional]</font></p>
+<p>The <b>oper::modes</b> directive allows you to preset an oper's modes on oper up.
   <font color=blue>[optional]</font></p>
 <p>The <b>oper::maxlogins</b> allows you to restrict the number of concurrent oper logins from this host,
    for example if you set it to 1 then only 1 person can be oper'ed via this block at any time. 
@@ -1460,6 +1484,11 @@ except ban {
 except tkl {
 	mask &lt;hostmask&gt;;
 	type &lt;type&gt;;
+	type { 
+		&lt;type&gt;;
+		&lt;type&gt;;
+		...
+	};
 };</pre></p>
 <p>The except tkl block allows you to specify a user@host that will override a 
   tkl ban placed on a broader host. This is useful when you want an ISP banned, but 
@@ -1467,7 +1496,8 @@ except tkl {
   specifies the user@host mask of the client who will be allowed to connect. The 
   except::type specifies which type of ban this should override. Valid types are
   gline, gzline, qline, gqline, and shun, which make an exception from Glines, 
-  Global Zlines, Qlines, Global Qlines, and shuns.</p>
+  Global Zlines, Qlines, Global Qlines, and shuns. If the type {} format is used,
+  multiple types may be specified.</p>
 <p>Example:<br>
 <pre>
 except tkl {
@@ -1757,6 +1787,7 @@ link &lt;server-name&gt; {
 	leaf &lt;leaf-mask&gt;;
 	leafdepth &lt;depth&gt;;
 	class &lt;class-name&gt;;
+	ciphers &lt;ssl-ciphers&gt;;
 	options {
 		&lt;option&gt;;
 		&lt;option&gt;;
@@ -1816,6 +1847,10 @@ link &lt;server-name&gt; {
 <p><b>compression-level</b> (optional)<br>
   Specifies the compression level (1-9) for this link. Only used if link::options::zip is set.
 </p>
+<p><b>ciphers</b> (optional)<br>
+  Specifies the SSL ciphers to use for this link. To obtain a list of available ciphers, use
+  the `openssl ciphers` command. Ciphers should be specified as a : separated list.
+</p>
 <p><b>options block</b><br>
   One or more options used for connecting to the server. Sometimes not needed.<br>
 <table border="0">
@@ -1854,23 +1889,24 @@ link hub.mynet.com {
 <p>Syntax [standard alias]:<br>
 <pre>
 alias &lt;name&gt; {
-	nick &lt;nick-to-forward-to&gt;;
+	target &lt;nick-to-forward-to&gt;;
 	type &lt;type-of-alias&gt;;
 };</pre></p>
 <p>(Note: also see <a href="#includedirective">here</a> about the standard alias files UnrealIRCd has)</p>
 <p>The alias block [standard alias] allows you to forward a command to a user, 
   for example /chanserv sends a message to the user chanserv. The alias:: specifies 
-  the name of the command that will be the alias (eg: chanserv), alias::nick is 
-  the nickname it will forward to, if the alias:: is the same as the nick it will 
-  forward to, alias::nick can be left out. The alias::type specifies the type 
+  the name of the command that will be the alias (eg: chanserv), alias::target is 
+  the nickname or channel it will forward to, if the alias:: is the same as the target, it will 
+  forward to, alias::target can be left out. The alias::type specifies the type 
   of alias, valid types are services (the user is on the services server), stats 
-  (the user is on the stats server), and normal (the user is a normal user on 
-  any server). The alias block also has another purpose which is explained below.</p>
+  (the user is on the stats server), normal (the user is a normal user on 
+  any server), and channel (the target is a channel name). The alias block also has another
+  purpose which is explained below.</p>
 <p>Syntax [command alias]:<br>
 <pre>
 alias &lt;name&gt; {
 	format &lt;regex-expression&gt; {
-		nick &lt;nick-to-forward-to&gt;;
+		target &lt;nick-to-forward-to&gt;;
 		type &lt;type-of-alias&gt;;
 		parameters &lt;parameter-string&gt;;
 	};
@@ -1885,15 +1921,16 @@ alias &lt;name&gt; {
   a regular expression that compares against the text sent to the alias command, 
   when matched the sub-entries of that alias::format will be used, you may have 
   multiple alias::format's to make the command do different things depending on 
-  the text sent to it. The alias::format::nick is the nickname to forward this
+  the text sent to it. The alias::format::target is the target to forward this
   alias to. The alias::format::type specifies the type of the alias that the
   message should be forwarded to. The alias::format::parameters is what will 
   be sent as the parameters to this alias. To specify one of the parameters given 
   to the command alias specify % followed by a number, for example, %1 is the 
   first parameter. To specify all parameters from a given parameter to the end 
   do % followed by the number and a -, for example %2- returns all parameters 
-  from the second till the last. For examples of using the alias block in the 
-  command format, consult doc/example.conf.</p>
+  from the second till the last. Additionally, you may specify %n which will be replaced 
+  by the nickname of the user who executed the command. For examples of using the alias
+  block in the command format, consult doc/example.conf.</p>
 <p></p></div>
 <p><font class="block_section">4.33 - </font><font class="block_name">Help Block</font>
    <font class="block_optional">OPTIONAL</font><a name="helpblock"></a>
@@ -1951,9 +1988,8 @@ spamfilter {
 	ban-time &lt;time&gt;;
 };</pre></p>
 <p><b>regex</b> is the regex to be matched.<br>
-   <b>target</b> specifies the targets, possible targets are: channel, private, private-notice, channel-notice, 
-   part, quit, dcc.<br>
-   <b>action</b> specifies the action to be taken, see <a href="#feature_spamfilter">here</a> for a list of possible actions.<br>
+   <b>target</b> specifies the targets, see <a href="#feature_spamfilter">here</a> for a list of possible types (eg: 'channel').<br>
+   <b>action</b> specifies the action to be taken, see <a href="#feature_spamfilter">here</a> for a list of possible actions (eg: 'gline').<br>
    <b>reason</b> optional: specifies the ban or block reason, else the default is used.<br>
    <b>ban-time</b> optional: specifies the duration of a *line ban, else the default is used (1 day).<br>
 </p>
@@ -2160,18 +2196,23 @@ set {
   Defines the prefix that will be used on hiddenhosts (+x). This is usually three 
   or four letters representing the network name.</p>
 <p><font class="set">set::hosts::local &lt;locop-host-name&gt;;</font><br>
-  Defines the hostname that will be assigned to local opers when they set +x.</p>
+  Defines the hostname that will be assigned to local opers when they set +x. You may
+  optionally specify a username@host for this value.</p>
 <p><font class="set">set::hosts::global &lt;globop-host-name&gt;;</font><br>
   Defines the hostname that will be assigned to global operators when they set 
-  +x.</p>
+  +x. You may optionally specify a username@host for this value.</p>
 <p><font class="set">set::hosts::coadmin &lt;coadmin-host-name&gt;;</font><br>
-  Sets the hostname that will be assigned to co-admins when they set +x.</p>
+  Sets the hostname that will be assigned to co-admins when they set +x. You may
+  optionally specify a username@host for this value.</p>
 <p><font class="set">set::hosts::admin &lt;admin-host-name&gt;;</font><br>
-  Defines the hostname that will be set for admins when they set +x.</p>
+  Defines the hostname that will be set for admins when they set +x. You may
+  optionally specify a username@host for this value.</p>
 <p><font class="set">set::hosts::servicesadmin &lt;servicesadmin-host-name&gt;;</font><br>
-  Sets the hostname that will be given to services-admins when they set +x.</p>
+  Sets the hostname that will be given to services-admins when they set +x. You may
+  optionally specify a username@host for this value.</p>
 <p><font class="set">set::hosts::netadmin &lt;netadmin-host-name&gt;;</font><br>
-  Sets the hostname that will be given to netadmins when they set +x.</p>
+  Sets the hostname that will be given to netadmins when they set +x. You may
+  optionally specify a username@host for this value.</p>
 <p><font class="set">set::hosts::host-on-oper-up &lt;yes/no&gt;;</font><br>
   If set to yes, the H/get_host flag will be honored and +x will be automatically 
   set at /oper. If set to no, the user must set +x manually to receive the oper 

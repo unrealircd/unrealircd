@@ -76,6 +76,7 @@ Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 {
 Extban *tmp;
 int slot;
+char tmpbuf[512];
 
 	if (findmod_by_bantype(req.flag))
 	{
@@ -108,12 +109,18 @@ int slot;
 		module->errorcode = MODERR_NOERROR;
 	}
 	ExtBan_highest = slot;
-	make_extbanstr();
+	if (loop.ircd_booted)
+	{
+		make_extbanstr();
+		ircsprintf(tmpbuf, "~,%s", extbanstr);
+		IsupportSetValue(IsupportFind("EXTBAN"), tmpbuf);
+	}
 	return &ExtBan_Table[slot];
 }
 
 void ExtbanDel(Extban *eb)
 {
+char tmpbuf[512];
 	/* Just zero it all away.. */
 
 	if (eb->owner)
@@ -131,6 +138,8 @@ void ExtbanDel(Extban *eb)
 	}
 	memset(eb, 0, sizeof(Extban));
 	make_extbanstr();
+	ircsprintf(tmpbuf, "~,%s", extbanstr);
+	IsupportSetValue(IsupportFind("EXTBAN"), tmpbuf);
 	/* Hmm do we want to go trough all chans and remove the bans?
 	 * I would say 'no' because perhaps we are just reloading,
 	 * and else.. well... screw them?
@@ -194,6 +203,9 @@ int extban_moden_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type
 char *ban = banin + 3;
 
 	if (type != BANCHK_NICK)
+		return 0;
+
+	if (has_voice(sptr, chptr))
 		return 0;
 	
 	if ((ban_realhost && !match(ban, ban_realhost)) ||

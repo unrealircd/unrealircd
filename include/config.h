@@ -93,14 +93,6 @@
 #undef SECURECHANMSGSONLYGOTOSECURE
 
 /*
- * be compatible with older cloak keys? If you link to servers beta4 and 
- * earlier without this the cloak keys will produce diff results
- * Not recommended, however, as beta4 and earlier 3.2 has an insecure
- * cloak algo -griever
- */
-#undef COMPAT_BETA4_KEYS
-
-/*
   If you want SHUN_NOTICES, define this
 */
 #undef SHUN_NOTICES
@@ -108,8 +100,9 @@
 /*
    If you want to support chinese and/or japanese nicks
 */
-#undef CHINESE_NICK
-#undef JAPANESE_NICK
+#undef NICK_GB2312
+#undef NICK_GBK
+#undef NICK_GBK_JAP
 
 /*
   Remote rehash
@@ -377,25 +370,13 @@
 #define PORTNUM 6667		/* 6667 is default */
 
 /*
- * Maximum number of network connections your server will allow.  This should
- * never exceed max. number of open file descrpitors and wont increase this.
- * Should remain LOW as possible. Most sites will usually have under 30 or so
- * connections. A busy hub or server may need this to be as high as 50 or 60.
- * Making it over 100 decreases any performance boost gained from it being low.
- * if you have a lot of server connections, it may be worth splitting the load
- * over 2 or more servers.
- * 1 server = 1 connection, 1 user = 1 connection.
- * This should be at *least* 3: 1 listen port, 1 dns port + 1 client
- *
- * Note: this figure will be too high for most systems. If you get an
- * fd-related error on compile, change this to 256.
- *
- * Windows users: This should be a fairly high number.  Some operations
- * will slow down because of this, but it is _required_ because of the way
- * windows NT(and possibly 95) allocate fd handles. A good number is 16384.
+ * Maximum number of network connections your server will allow.
+ * This is usually configured via ./Config on *NIX,
+ * the setting mentioned below is the default for Windows.
+ * 2004-10-13: 1024 -> 4096
  */
 #ifndef MAXCONNECTIONS
-#define MAXCONNECTIONS	1024
+#define MAXCONNECTIONS	4096
 #endif
 
 /*

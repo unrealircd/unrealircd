@@ -138,6 +138,8 @@ extern fdlist serv_fdlist;
 CMD_FUNC(m_version)
 {
 	extern char serveropts[];
+	extern char *IsupportStrings[];
+	int reply, i;
 
 	/* Only allow remote VERSIONs if registered -- Syzop */
 	if (!IsPerson(sptr) && !IsServer(cptr))
@@ -163,15 +165,15 @@ CMD_FUNC(m_version)
 		if (IsAnOper(sptr))
 			sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, curl_version());
 #endif
-		if (MyClient(sptr)) {
+		if (MyClient(sptr))
 normal:
-			sendto_one(sptr, ":%s 005 %s " PROTOCTL_CLIENT_1, me.name, sptr->name, PROTOCTL_PARAMETERS_1);
-			sendto_one(sptr, ":%s 005 %s " PROTOCTL_CLIENT_2, me.name, sptr->name, PROTOCTL_PARAMETERS_2);
-		}
-		else {
-			sendto_one(sptr, ":%s 105 %s " PROTOCTL_CLIENT_1, me.name, sptr->name, PROTOCTL_PARAMETERS_1);
-			sendto_one(sptr, ":%s 105 %s " PROTOCTL_CLIENT_2, me.name, sptr->name, PROTOCTL_PARAMETERS_2);
-		}
+			reply = RPL_ISUPPORT;
+		else
+			reply = RPL_REMOTEISUPPORT;
+		/* Send the text */
+		for (i = 0; IsupportStrings[i]; i++)
+			sendto_one(sptr, rpl_str(reply), me.name, sptr->name, 
+				   IsupportStrings[i]); 
 	}
 	return 0;
 }
@@ -437,6 +439,8 @@ CMD_FUNC(m_watch)
 		 */
 		if (*s == '+')
 		{
+			if (!*(s+1))
+				continue;
 			if (do_nick_name(s + 1))
 			{
 				if (sptr->watches >= MAXWATCH)
@@ -461,6 +465,8 @@ CMD_FUNC(m_watch)
 		 */
 		if (*s == '-')
 		{
+			if (!*(s+1))
+				continue;
 			del_from_watch_hash_table(s + 1, sptr);
 			show_watch(sptr, s + 1, RPL_WATCHOFF, RPL_WATCHOFF);
 

@@ -69,6 +69,10 @@ void iNAH_host(aClient *sptr, char *host)
 {
 	if (!sptr->user)
 		return;
+
+	if (UHOST_ALLOWED == UHALLOW_REJOIN)
+		rejoin_doparts(sptr);
+
 	if (sptr->user->virthost)
 	{
 		MyFree(sptr->user->virthost);
@@ -79,6 +83,9 @@ void iNAH_host(aClient *sptr, char *host)
 		sendto_serv_butone_token(&me, sptr->name, MSG_SETHOST,
 		    TOK_SETHOST, "%s", sptr->user->virthost);
 	sptr->umodes |= UMODE_SETHOST;
+	
+	if (UHOST_ALLOWED == UHALLOW_REJOIN)
+		rejoin_dojoinandmode(sptr);
 }
 
 long set_usermode(char *umode)
@@ -602,7 +609,12 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 **	a change should be global, some confusion would
 **	result if only few servers allowed it...
 */
-#if defined(CHINESE_NICK) || defined(JAPANESE_NICK)
+
+#if defined(NICK_GB2312) || defined(NICK_GBK) || defined(NICK_GBK_JAP)
+#define NICK_MULTIBYTE
+#endif
+
+#ifdef NICK_MULTIBYTE
 /* Chinese Nick Verification Code - Added by RexHsu on 08/09/00 (beta2)
  * Now Support All GBK Words,Thanks to Mr.WebBar <climb@guomai.sh.cn>!
  * Special Char Bugs Fixed by RexHsu 09/01/00 I dont know whether it is
@@ -619,34 +631,56 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
  * 6. 日文平假名编码区(a4a1-a4f3) -->work correctly?maybe...
  * 7. 日文片假名编码区(a5a1-a5f7) -->work correctly?maybe...
  * 8. 韩文编码区(xxxx-yyyy)
+ *
+ * isvalidChinese() rewritten by Xuefer (2004-10-10),
+ * this will probably be the last time we do it this way,
+ * in 3.2.3 we are gonna try a more generic aproach. -- Syzop
  */
-int  isvalidChinese(const unsigned char c1, const unsigned char c2)
+
+int isvalidChinese(const unsigned char c1, const unsigned char c2)
 {
-	const unsigned int GBK_S = 0xb0a1;
-	const unsigned int GBK_E = 0xf7fe;
-	const unsigned int GBK_2_S = 0x8140;
-	const unsigned int GBK_2_E = 0xa0fe;
-	const unsigned int GBK_3_S = 0xaa40;
-	const unsigned int GBK_3_E = 0xfea0;
-	const unsigned int JPN_PING_S = 0xa4a1;
-	const unsigned int JPN_PING_E = 0xa4f3;
-	const unsigned int JPN_PIAN_S = 0xa5a1;
-	const unsigned int JPN_PIAN_E = 0xa5f7;
-	unsigned int AWord = c1 * 256 + c2;
-#if defined(CHINESE_NICK) && defined(JAPANESE_NICK)
-	return (AWord >= GBK_S && AWord <= GBK_E || AWord >= GBK_2_S
-	    && AWord <= GBK_2_E || AWord >= JPN_PING_S && AWord <= JPN_PING_E
-	    || AWord >= JPN_PIAN_S && AWord <= JPN_PIAN_E) ? 1 : 0;
+    unsigned int w = (((unsigned int)c1) << 8) | c2;
+
+/* rang of w/c1/c2 (rw never used) */
+#define rw(s, e) (w >= ((unsigned int )s) && w <= ((unsigned int )e))
+#define r1(s, e) (c1 >= ((unsigned char)s) && c1 <= ((unsigned char)e))
+#define r2(s, e) (c2 >= ((unsigned char)s) && c2 <= ((unsigned char)e))
+#define e1(e) (c1 == (unsigned char)e)
+
+#ifdef NICK_GBK_JAP
+    /* GBK/1 */
+    /* JIS_PIN part 1 */
+    if (e1(0xA4) && r2(0xA1, 0xF3)) return 1;
+    /* JIS_PIN part 2 */
+    if (e1(0xA5) && r2(0xA1, 0xF6)) return 1;
 #endif
-#if defined(CHINESE_NICK) && !defined(JAPANESE_NICK)
-	return (AWord >= GBK_S && AWord <= GBK_E || AWord >= GBK_2_S
-	    && AWord <= GBK_2_E ? 1 : 0);
-#endif
-#if !defined(CHINESE_NICK) && defined(JAPANESE_NICK)
-	return (AWord >= JPN_PING_S && AWord <= JPN_PING_E
-	    || AWord >= JPN_PIAN_S && AWord <= JPN_PIAN_E) ? 1 : 0;
+#if defined(NICK_GB2312) || defined(NICK_GBK)
+    /* GBK/2 BC with GB2312 */
+    if (r2(0xA1, 0xFE))
+    {
+        /* Block 16-55, ordered by Chinese Spelling(PinYin) 3755 chars */
+        if (r1(0xB0, 0xD6)) return 1;
+        /* Block 55 is NOT full (w <= 0xd7f9) */
+        if (e1(0xD7) && c2 <= (unsigned char)0xF9 /* r2(0xA1, 0xF9)*/) return 1;
+        /* Block 56-87 is level 2 chars, ordered by writing 3008 chars */
+        if (r1(0xD8, 0xF7)) return 1;
+    }
 #endif
 
+#ifdef NICK_GBK
+    /* GBK/3 */
+    if (r1(0x81, 0xA0) && r2(0x40, 0xFE)) return 1;
+    /* GBK/4 */
+    if (r2(0x40, 0xA0) && r1(0xAA, 0xFE)) return 1;
+#endif
+
+    /* all failed */
+    return 0;
+
+#undef rw
+#undef r1
+#undef r2
+#undef e1
 }
 
 /* Chinese Nick Supporting Code (Switch Mode) - Modified by RexHsu on 08/09/00 */
@@ -965,6 +999,9 @@ int register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char
 			return xx;
 		}
 		find_shun(sptr);
+		xx = find_spamfilter_user(sptr);
+		if (xx < 0)
+			return xx;
 		RunHookReturnInt(HOOKTYPE_PRE_LOCAL_CONNECT, sptr, !=0);
 	}
 	else
@@ -1000,9 +1037,12 @@ int register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char
 			sendto_one(sptr, ":%s 004 %s %s CR1.8.03-%s %s %s",
 				    me.name, parv[0],
 				    me.name, version, umodestring, cmodestring);
-			
-		sendto_one(sptr, ":%s 005 %s " PROTOCTL_CLIENT_1, me.name, nick, PROTOCTL_PARAMETERS_1);
-		sendto_one(sptr, ":%s 005 %s " PROTOCTL_CLIENT_2, me.name, nick, PROTOCTL_PARAMETERS_2);
+		{
+			extern char *IsupportStrings[];
+			int i;
+			for (i = 0; IsupportStrings[i]; i++)
+				sendto_one(sptr, rpl_str(RPL_ISUPPORT), me.name, nick, IsupportStrings[i]);
+		}
 #ifdef USE_SSL
 		if (sptr->flags & FLAGS_SSL)
 			if (sptr->ssl)
@@ -1319,7 +1359,7 @@ CMD_FUNC(m_nick)
 	}
 	if (!IsULine(sptr) && (tklban = find_qline(sptr, nick, &ishold)))
 	{
-		if (IsServer(sptr) && !ishold)
+		if (IsServer(sptr) && !ishold) /* server introducing new client */
 		{
 			acptrs =
 			    (aClient *)find_server_b64_or_real(sptr->user ==
@@ -1332,15 +1372,14 @@ CMD_FUNC(m_nick)
 				    && !IsServer(sptr) ? sptr->name : "<unregistered>"),
 				    acptrs ? acptrs->name : "unknown server");
 		}
-		else if (!ishold)
+		
+		if (IsServer(cptr) && IsPerson(sptr)) /* remote user changing nick */
 		{
-			sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s",
-			    nick,
-			    *sptr->name ? sptr->name : "<unregistered>",
-			    me.name);
+			sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s", nick,
+				sptr->name, sptr->srvptr ? sptr->srvptr->name : "<unknown>");
 		}
 
-		if (!IsServer(cptr))
+		if (!IsServer(cptr)) /* local */
 		{
 			if (ishold)
 			{
@@ -1351,6 +1390,7 @@ CMD_FUNC(m_nick)
 			}
 			if (!IsOper(cptr))
 			{
+				sptr->since += 4; /* lag them up */
 				sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
 				    me.name, BadPtr(parv[0]) ? "*" : parv[0],
 				    nick, tklban->reason);
@@ -1656,6 +1696,7 @@ CMD_FUNC(m_nick)
 			    cptr->name, backupbuf);
 			sptr->lastnick = TStime();
 		}
+		newusr = 1;
 	}
 	else if (sptr->name[0] && IsPerson(sptr))
 	{
@@ -1670,7 +1711,7 @@ CMD_FUNC(m_nick)
 		{
 			for (mp = sptr->user->channel; mp; mp = mp->next)
 			{
-				if (is_banned(sptr, mp->chptr, BANCHK_NICK) && !is_chanownprotop(sptr, mp->chptr))
+				if (!is_skochanop(sptr, mp->chptr) && is_banned(sptr, mp->chptr, BANCHK_NICK))
 				{
 					sendto_one(sptr,
 					    err_str(ERR_BANNICKCHANGE),
