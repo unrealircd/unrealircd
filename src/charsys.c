@@ -289,6 +289,7 @@ char euro_west=0, chinese=0;
 	}
 	if (euro_west || !strcmp(name, "swedish"))
 	{
+		/* supplied by Tank */
 		/* ao, Ao, a", A", o", O" */ 
 		charsys_addallowed("åÅäÄöÖ");
 	}
