@@ -3156,3 +3156,5 @@ This is the 3.2 fixes branch.
     in a different way (have a look at src/modules/cloak.c).
 - spamfilter: Added Bloodhound.Exploit.6 sig
 - Compile fixes for win32 modules with ssl/zip/curl
+- Changed 'Services operator' in /whois (back) to 'Services administrator', this was
+  requested by many people and seems to be the best after all (#0001634).

@@ -346,7 +346,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (IsNetAdmin(acptr))
 					strcat(buf, "a Network Administrator");
 				else if (IsSAdmin(acptr))
-					strcat(buf, "a Services Operator");
+					strcat(buf, "a Services Administrator");
 				else if (IsAdmin(acptr) && !IsCoAdmin(acptr))
 					strcat(buf, "a Server Administrator");
 				else if (IsCoAdmin(acptr))
