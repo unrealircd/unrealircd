@@ -137,6 +137,9 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 		'CRYPTOLIB=${CRYPTOLIB}' 'REGEX=${REGEX}' \
 		'CRYPTOINCLUDES=${CRYPTOINCLUDES}'
 
+custommodule:
+	cd src; ${MAKE} ${MAKEARGS} MODULEFILE=${MODULEFILE} custommodule
+
 server:
 build:
 	-@if [ ! -f include/setup.h ] ; then \

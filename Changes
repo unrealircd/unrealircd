@@ -1178,4 +1178,6 @@ v- Fixed some bugreport stuff
 - Unbroken Griever's broken hunt_server_token broken token fix
 - Various fixes to virthost system, may fix some memory corruptions,
   and potential exploits.
-        
+- Made makefile ability to "make custommodule MODULEFILE=m_zline"
+  if m_zline.c is in src/modules/, it will get compiled. This SHOULD
+  help 3rd party modules atleast

@@ -52,6 +52,10 @@ all: build
 
 build: $(MODULES)
 
+custommodule: $(MODULEFILE).c
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o $(MODULEFILE).so $(MODULEFILE).c		
+
 commands.so: l_commands.c $(COMMANDS) $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -o commands.so l_commands.c \
 	$(COMMANDS)

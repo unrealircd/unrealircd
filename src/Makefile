@@ -52,6 +52,9 @@ all: build
 
 build: ircd mods
 
+custommodule:
+	cd modules; make $(MAKEARGS) MODULEFILE=$(MODULEFILE) custommodule
+
 ircd: $(OBJS)
 	$(CC) $(CFLAGS) $(CRYPTOLIB) -o ircd $(OBJS) $(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
 
