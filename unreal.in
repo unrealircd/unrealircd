@@ -14,6 +14,8 @@ elif [ "$1" = "rehash" ] ; then
 elif [ "$1" = "restart" ] ; then
 	echo "Restarting UnrealIRCd"
 	kill -2 `cat $PID_FILE`
+elif [ "$1" = "mkpasswd" ] ; then
+	@BINDIR@ -P $2 $3
 else
-	echo "Usage: unreal start|stop|rehash|restart"
+	echo "Usage: unreal start|stop|rehash|restart|mkpasswd"
 fi

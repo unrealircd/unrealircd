@@ -904,6 +904,26 @@ int  InitwIRCD(argc, argv)
 			  unrealmanual();
 			  exit(0);
 #endif
+#ifndef _WIN32
+		  case 'P': {
+			  short type;
+			  char *result;
+			  srandom(TStime());
+			  if ((type = Auth_FindType(p)) == -1) {
+				printf("No such auth type %s\n", p);
+				exit(0);
+			  }
+			  p = *++argv;
+			  argc--;
+			  if (!(result = Auth_Make(type, p))) {
+				printf("Authentication failed\n");
+				exit(0);
+			  }
+			  printf("Encrypted password is: %s\n", result);
+			  exit(0);
+		  }
+#endif			
+			
 		  case 'p':
 			  if ((portarg = atoi(p)) > 0)
 				  portnum = portarg;

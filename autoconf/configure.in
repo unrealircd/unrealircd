@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(crypt/mkpasswd.c)
+AC_INIT(src/ircd.c)
 AC_CONFIG_HEADER(include/setup.h)
 AC_PROG_CC
 if test "$ac_cv_prog_gcc" = "yes"; then
@@ -348,5 +348,5 @@ CFLAGS="$CFLAGS -D_AMIGA -m68040"
 CFLAGS="$CFLAGS -D_AMIGA -m68060"
 ;;
 esac
-AC_OUTPUT(Makefile crypt/Makefile src/modules/Makefile unreal)
+AC_OUTPUT(Makefile src/modules/Makefile unreal)
 chmod 0700 unreal
