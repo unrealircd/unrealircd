@@ -1418,7 +1418,7 @@ int	config_post_test()
 	if (!requiredstuff.settings.maxchannelsperuser)
 		Error("set::maxchannelsperuser missing");
 	if (!requiredstuff.settings.name_server)
-		Error("set::dns::name-server missing");
+		Error("set::dns::nameserver missing");
 	if (!requiredstuff.settings.host_timeout)
 		Error("set::dns::host-timeout missing");
 	if (!requiredstuff.settings.host_retries)
