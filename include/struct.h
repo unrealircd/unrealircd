@@ -593,7 +593,7 @@ typedef struct Whowas {
 	char *realname;
 	char *away;
 	long umodes;
-	time_t logoff;
+	TS   logoff;
 	struct Client *online;	/* Pointer to new nickname for chasing or NULL */
 	struct Whowas *next;	/* for hash table... */
 	struct Whowas *prev;	/* for hash table... */
@@ -623,7 +623,7 @@ struct ConfItem {
 	char *passwd;
 	char *name;
 	int  port;
-	time_t hold;		/* Hold action until this time (calendar time) */
+	TS   hold;		/* Hold action until this time (calendar time) */
 	int  tmpconf;
 #ifndef VMSP
 	aClass *class;		/* Class of connection */
@@ -683,7 +683,7 @@ struct User {
 	Link *invited;		/* chain of invite pointer blocks */
 	Link *silence;		/* chain of silence pointer blocks */
 	char *away;		/* pointer to away message */
-	time_t last;
+	TS   last;
 	u_int32_t servicestamp;	/* Services' time stamp variable */
 	int  refcnt;		/* Number of times this block is referenced */
 	int  joined;		/* number of channels joined */
@@ -705,9 +705,9 @@ struct Server {
 	char *up;		/* uplink for this server */
 	char by[NICKLEN + 1];
 	aConfItem *nline;	/* N-line pointer for this server */
-	time_t timestamp;	/* Remotely determined connect try time */
-	unsigned short numeric; /* NS numeric, 0 if none */
-	long	users;
+	TS   timestamp;		/* Remotely determined connect try time */
+	unsigned short numeric;	/* NS numeric, 0 if none */
+	long users;
 #ifdef	LIST_DEBUG
 	aClient *bcptr;
 #endif
@@ -741,8 +741,8 @@ struct t_kline {
 	char *hostmask;
 	char *reason;
 	char *setby;
-	time_t expire_at;
-	time_t set_at;
+	TS   expire_at;
+	TS   set_at;
 	aTKline *next;
 	aTKline *prev;
 };
@@ -793,12 +793,12 @@ struct Client {
 	struct Client *next, *prev, *hnext;
 	anUser *user;		/* ...defined, if this is a User */
 	aServer *serv;		/* ...defined, if this is a server */
-	time_t lasttime;	/* ...should be only LOCAL clients? --msa */
-	time_t firsttime;	/* time client was created */
-	time_t since;		/* last time we parsed something */
-	time_t lastnick;	/* TimeStamp on nick */
-	time_t nextnick;	/* Time the next nick change will be allowed */
-	time_t nexttarget;	/* Time until a change in targets is allowed */
+	TS   lasttime;		/* ...should be only LOCAL clients? --msa */
+	TS   firsttime;		/* time client was created */
+	TS   since;		/* last time we parsed something */
+	TS   lastnick;		/* TimeStamp on nick */
+	TS   nextnick;		/* Time the next nick change will be allowed */
+	TS   nexttarget;	/* Time until a change in targets is allowed */
 	u_char targets[MAXTARGETS];	/* Hash values of current targets */
 	aWhowas *whowas;
 	long flags;		/* client flags */
@@ -863,7 +863,7 @@ struct Client {
 					 */
 	char passwd[PASSWDLEN + 1];
 #ifdef DEBUGMODE
-	time_t cputime;
+	TS   cputime;
 #endif
 };
 
@@ -885,8 +885,8 @@ struct stats {
 	unsigned long is_ckr;	/* k-bytes received to clients */
 	unsigned long is_sks;	/* k-bytes sent to servers */
 	unsigned long is_skr;	/* k-bytes received to servers */
-	time_t is_cti;		/* time spent connected by clients */
-	time_t is_sti;		/* time spent connected by servers */
+	TS   is_cti;		/* time spent connected by clients */
+	TS   is_sti;		/* time spent connected by servers */
 	unsigned int is_ac;	/* connections accepted */
 	unsigned int is_ref;	/* accepts refused */
 	unsigned int is_unco;	/* unknown commands */
@@ -909,11 +909,11 @@ struct ListOptions {
 	short int showall;
 	unsigned short usermin;
 	int  usermax;
-	time_t currenttime;
-	time_t chantimemin;
-	time_t chantimemax;
-	time_t topictimemin;
-	time_t topictimemax;
+	TS   currenttime;
+	TS   chantimemin;
+	TS   chantimemax;
+	TS   topictimemin;
+	TS   topictimemax;
 };
 
 /* mode structure for channels */
@@ -929,7 +929,7 @@ struct SMode {
 	/* x:y */
 	int  msgs;		/* x */
 	int  per;		/* y */
-	unsigned short  kmode;	/* mode  0 = kick  1 = ban */
+	unsigned short kmode;	/* mode  0 = kick  1 = ban */
 };
 
 /* Message table structure */
@@ -954,7 +954,7 @@ struct Message {
 
 struct Notify {
 	aNotify *hnext;
-	time_t lasttime;
+	TS   lasttime;
 	Link *notify;
 	char nick[1];
 };
@@ -975,7 +975,7 @@ struct SLink {
 		struct {
 			char *banstr;
 			char *who;
-			time_t when;
+			TS   when;
 		} ban;
 	} value;
 };
@@ -984,7 +984,7 @@ struct SBan {
 	struct SBan *next;
 	char *banstr;
 	char *who;
-	time_t when;
+	TS   when;
 };
 
 struct DSlink {
@@ -1003,10 +1003,10 @@ struct DSlink {
 struct Channel {
 	struct Channel *nextch, *prevch, *hnextch;
 	Mode mode;
-	time_t creationtime;
+	TS   creationtime;
 	char *topic;
 	char *topic_nick;
-	time_t topic_time;
+	TS   topic_time;
 	int  users;
 	Link *members;
 	Link *invites;
@@ -1100,7 +1100,7 @@ struct Channel {
 
 struct FloodOpt {
 	int  nmsg;
-	time_t lastmsg;
+	TS   lastmsg;
 };
 
 /* Misc macros */

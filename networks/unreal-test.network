@@ -25,5 +25,5 @@ Set netdomain .....: testnet.ircsystems.net
 Set helpchan ......: #testnet
 Set STATS_SERVER ..: stats.testnet.ircsystems.net
 Set HUB ...........: 1
-Set iNAH ..........: 0
+Set iNAH ..........: 1
 Set net_quit ......: test

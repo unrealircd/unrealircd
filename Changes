@@ -543,3 +543,4 @@
 - Added Dianora's /userhost
 - Recoded /links using NS
 - Recoded /map a bit using NS, and added usercounts to Server struct
+- Some crazy time_t -> TS stuff, will save us some time in 2038

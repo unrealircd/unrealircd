@@ -85,6 +85,8 @@ void free();
 #endif
 
 
+#define TS time_t
+
 extern int match PROTO((char *, char *));
 #define mycmp(a,b) \
  ( (toupper((a)[0])!=toupper((b)[0])) || smycmp((a)+1,(b)+1) )
@@ -115,7 +117,7 @@ extern int inet_netof PROTO((struct IN_ADDR));
 #endif
 
 int  global_count, max_global_count;
-extern char *myctime PROTO((time_t));
+extern char *myctime PROTO((TS));
 extern char *strtoken PROTO((char **, char *, char *));
 
 #define PRECISE_CHECK
@@ -225,7 +227,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 		" CHANTYPES=%s"    \
 		" PREFIX=%s"     \
 		" :are supported by this server"
-		
+
 #define PROTOCTL_PARAMETERS MAXWATCH, \
                             MAXSILES, \
                             MAXMODEPARAMS, \
@@ -235,7 +237,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                             TOPICLEN, \
                             TOPICLEN, \
                             "#",      \
-                            "(ohv)@%+"       
+                            "(ohv)@%+"
 
 /* Server-Server PROTOCTL -Stskeeps */
 #define PROTOCTL_SERVER "NOQUIT TOKEN NICKv2 SJOIN SJOIN2 UMODE2 VL SJ3 NS" ZIPSTUFF
@@ -257,6 +259,6 @@ extern int lu_noninv, lu_inv, lu_serv, lu_oper,
     lu_unknown, lu_channel, lu_lu, lu_lulocal, lu_lserv,
     lu_clu, lu_mlu, lu_cglobalu, lu_mglobalu;
 
-time_t now;
+TS   now;
 
 #endif /* __common_include__ */
