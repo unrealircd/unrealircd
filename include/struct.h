@@ -806,6 +806,7 @@ struct t_vhline {
 #define LISTENER_JAVACLIENT	0x000010
 #define LISTENER_MASK		0x000020
 #define LISTENER_SSL		0x000040
+#define LISTENER_BOUND		0x000080
 
 #define CONNECT_SSL		0x000001
 #define CONNECT_ZIP		0x000002 
@@ -866,7 +867,7 @@ struct Client {
 	long receiveK;		/* Statistics: total k-bytes received */
 	u_short sendB;		/* counters to count upto 1-k lots of bytes */
 	u_short receiveB;	/* sent and received. */
-	aClient *acpt;		/* listening client which we accepted from */
+	aClient *listener;
 	Link *confs;		/* Configuration record associated */
 	int  authfd;		/* fd for rfc931 authentication */
 #ifdef SOCKSPORT

@@ -1093,6 +1093,10 @@ int  InitwIRCD(argc, argv)
 	Debug((DEBUG_ERROR, "Port = %d", portnum));
 	if (inetport(&me, conf_listen->ip, portnum))
 		exit(1);
+	conf_listen->options |= LISTENER_BOUND;
+	me.umodes = conf_listen->options;
+	ircd_log("* Bound to %s:%i\n", conf_listen->ip, conf_listen->port);	
+	run_configuration();
 	botmotd = (aMotd *) read_botmotd(BPATH);
 	rules = (aMotd *) read_rules(RPATH);
 	opermotd = (aMotd *) read_opermotd(OPATH);

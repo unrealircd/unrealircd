@@ -1785,6 +1785,28 @@ void	report_configuration(void)
 }	
 
 
+void	run_configuration(void)
+{
+	ConfigItem_listen 	*listenptr;
+	
+	for (listenptr = conf_listen; listenptr; listenptr = (ConfigItem_listen *) listenptr->next)
+	{
+		if (!(listenptr->options & LISTENER_BOUND))
+		{
+			ircd_log("Binding to %s:%i", listenptr->ip, listenptr->port);
+			if (add_listener2(listenptr) == -1)
+			{
+				ircd_log("Failed to bind to %s:%i", listenptr->ip, listenptr->port);
+			}
+				else
+			{
+				ircd_log("Bound to %s:%i", listenptr->ip, listenptr->port);
+			}
+		}
+	}
+}
+
+
 /*
  * Lookup functions
  * -Stskeeps
@@ -1836,3 +1858,5 @@ ConfigItem_listen	*Find_listen(char *ipmask, int port)
 	}
 	return NULL;
 }
+
+

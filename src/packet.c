@@ -70,7 +70,7 @@ int  dopacket(cptr, buffer, length)
 {
 	char *ch1;
 	char *ch2;
-	aClient *acpt = cptr->acpt;
+	aClient *acpt = cptr->listener;
 
 	me.receiveB += length;	/* Update bytes received */
 	cptr->receiveB += length;
@@ -112,8 +112,8 @@ int  dopacket(cptr, buffer, length)
 				*ch1 = '\0';
 				me.receiveM += 1;	/* Update messages received */
 				cptr->receiveM += 1;
-				if (cptr->acpt != &me)
-					cptr->acpt->receiveM += 1;
+				if (cptr->listener != &me)
+					cptr->listener->receiveM += 1;
 				cptr->count = 0;	/* ...just in case parse returns with
 							   ** FLUSH_BUFFER without removing the
 							   ** structure pointed by cptr... --msa

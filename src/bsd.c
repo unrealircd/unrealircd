@@ -101,7 +101,7 @@ int  deliver_it(cptr, str, len)
 	char *str;
 {
 	int  retval;
-	aClient *acpt = cptr->acpt;
+	aClient *acpt = cptr->listener;
 
 #ifdef	DEBUGMODE
 	writecalls++;

@@ -935,7 +935,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		sendto_one(sptr, rpl_str(RPL_YOURHOST), me.name, nick,
 		    me.name, version);
 		sendto_one(sptr, rpl_str(RPL_CREATED), me.name, nick, creation);
-		if (!(sptr->acpt->umodes & LISTENER_JAVACLIENT))
+		if (!(sptr->listener->umodes & LISTENER_JAVACLIENT))
 #ifndef _WIN32
 			sendto_one(sptr, rpl_str(RPL_MYINFO), me.name, parv[0],
 			    me.name, version, umodestring, cmodestring);
@@ -2971,7 +2971,7 @@ int  m_user(cptr, sptr, parc, parv)
 	if (IsServer(cptr) && !IsUnknown(sptr))
 		return 0;
 
-	if (MyClient(sptr) && (sptr->acpt->umodes & LISTENER_SERVERSONLY)) {
+	if (MyClient(sptr) && (sptr->listener->umodes & LISTENER_SERVERSONLY)) {
 		return exit_client(cptr, sptr, sptr, "This port is for servers only");
 	}
 		

@@ -605,7 +605,7 @@ int  m_server(cptr, sptr, parc, parv)
 			inpath);
 		return exit_client(cptr, cptr, cptr, "Bad Password");
 	}		
-	if (MyConnect(sptr) && (sptr->acpt->umodes & LISTENER_CLIENTSONLY))
+	if (MyConnect(sptr) && (sptr->listener->umodes & LISTENER_CLIENTSONLY))
 	{
 		 return exit_client(cptr, sptr, sptr, "This port is for clients only");
 	}

@@ -83,3 +83,5 @@
 - Merged in sts-laptop branch
 - Made /admin use the new config (had to modify some newconf stuff to make a backwards copy
   of the list as well)
+- Added listen {} runtime-configuration code work :))
+- Removed unrealircd.conf from stock

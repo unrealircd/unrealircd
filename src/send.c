@@ -272,8 +272,8 @@ void sendbufto_one(aClient *to)
 	 */
 	to->sendM += 1;
 	me.sendM += 1;
-	if (to->acpt != &me)
-		to->acpt->sendM += 1;
+	if (to->listener != &me)
+		to->listener->sendM += 1;
 	/*
 	 * This little bit is to stop the sendQ from growing too large when
 	 * there is no need for it to. Thus we call send_queued() every time
@@ -1628,7 +1628,7 @@ void sendto_connectnotice(nick, user, sptr)
 	char connecth[1024];
 	ircsprintf(connectd,
 	    "*** Notice -- Client connecting on port %d: %s (%s@%s) %s%s%s",
-	    sptr->acpt->port, nick, user->username, user->realhost,
+	    sptr->listener->port, nick, user->username, user->realhost,
 #ifdef USE_SSL
 	IsSecure(sptr) ? "[secure " : "", 
 	IsSecure(sptr) ? SSL_get_cipher((SSL *)sptr->ssl) : "",

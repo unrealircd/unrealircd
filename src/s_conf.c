@@ -194,7 +194,7 @@ int  attach_Iline(cptr, hp, sockhost)
 	{
 		if (aconf->status != CONF_CLIENT)
 			continue;
-		if (aconf->port && aconf->port != cptr->acpt->port)
+		if (aconf->port && aconf->port != cptr->listener->port)
 			continue;
 		if (!aconf->host || !aconf->name)
 			goto attach_iline;
@@ -1677,12 +1677,12 @@ int  find_kill(cptr)
 		if ((tmp->status == CONF_KILL) && tmp->host && tmp->name &&
 		    (match(tmp->host, host) == 0) &&
 		    (!name || match(tmp->name, name) == 0) &&
-			(!tmp->port || (tmp->port == cptr->acpt->port))) {
+			(!tmp->port || (tmp->port == cptr->listener->port))) {
 		for (tmp2 = conf; tmp2; tmp2 = tmp2->next)
 		if ((tmp2->status == CONF_EXCEPT) && tmp2->host && tmp2->name &&
 		    (match(tmp2->host, host) == 0) &&
 		    (!name || match(tmp2->name, name) == 0) &&
-		    (!tmp2->port || (tmp2->port == cptr->acpt->port)))
+		    (!tmp2->port || (tmp2->port == cptr->listener->port)))
 			return 0;
 
 			if (BadPtr(tmp->passwd))

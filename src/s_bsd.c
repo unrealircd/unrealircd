@@ -405,7 +405,7 @@ int  add_listener(aconf)
 
 	cptr = make_client(NULL, NULL);
 	cptr->flags = FLAGS_LISTEN;
-	cptr->acpt = cptr;
+	cptr->listener = cptr;
 	cptr->from = cptr;
 	SetMe(cptr);
 	strncpyzt(cptr->name, aconf->host, sizeof(cptr->name));
@@ -463,6 +463,33 @@ int  add_listener(aconf)
 	else
 		free_client(cptr);
 	return 0;
+}
+
+int add_listener2(ConfigItem_listen *conf)
+{
+	aClient *cptr;
+
+	cptr = make_client(NULL, NULL);
+	cptr->flags = FLAGS_LISTEN;
+	cptr->listener = cptr;
+	cptr->from = cptr;
+	SetMe(cptr);
+	strncpyzt(cptr->name, conf->ip, sizeof(cptr->name));
+	if (inetport(cptr, conf->ip, conf->port))
+		cptr->fd = -2;
+
+	cptr->umodes = conf->options ? conf->options : LISTENER_NORMAL;
+	if (cptr->fd >= 0)
+	{
+		set_non_blocking(cptr->fd, cptr);
+		return 1;
+	}
+	else
+	{
+		free_client(cptr);
+		return -1;
+	}
+		
 }
 
 /*
@@ -1162,18 +1189,6 @@ void close_connection(cptr)
 		DBufClear(&cptr->sendQ);
 		DBufClear(&cptr->recvQ);
 	
-		/*
-		 * clean up extra sockets from P-lines which have been
-		 * discarded.
-		 */
-		if (cptr->acpt != &me && cptr->acpt != cptr)
-		{
-			aconf = cptr->acpt->confs->value.aconf;
-			if (aconf->clients > 0)
-				aconf->clients--;
-			if (!aconf->clients && IsIllegal(aconf))
-				close_connection(cptr->acpt);
-		}
 	}
 	for (; highest_fd > 0; highest_fd--)
 		if (local[highest_fd])
@@ -1405,11 +1420,8 @@ aClient *add_connection(cptr, fd)
 {
 	Link lin;
 	aClient *acptr;
-	aConfItem *aconf = NULL;
 	acptr = make_client(NULL, &me);
 
-	if (cptr != &me)
-		aconf = cptr->confs->value.aconf;
 	/* Removed preliminary access check. Full check is performed in
 	 * m_server and m_user instead. Also connection time out help to
 	 * get rid of unwanted connections.
@@ -1440,8 +1452,6 @@ aClient *add_connection(cptr, fd)
 			return NULL;
 		}
 		/* don't want to add "Failed in connecting to" here.. */
-		if (aconf && IsIllegal(aconf))
-			goto add_con_refuse;
 		/* Copy ascii address to 'sockhost' just in case. Then we
 		 * have something valid to put into error messages...
 		 */
@@ -1534,13 +1544,11 @@ aClient *add_connection(cptr, fd)
 #endif /*USENEWDNS*/
 	}
 
-	if (aconf)
-		aconf->clients++;
 	acptr->fd = fd;
 	if (fd > highest_fd)
 		highest_fd = fd;
 	local[fd] = acptr;
-	acptr->acpt = cptr;
+	acptr->listener = cptr;
 #ifdef USE_SSL
 	if (cptr->umodes & LISTENER_SSL)
 	{
@@ -2176,8 +2184,8 @@ int  read_message(delay, listp)
 			 */
 			(void)add_connection(cptr, fd);
 			nextping = TStime();
-			if (!cptr->acpt)
-				cptr->acpt = &me;
+			if (!cptr->listener)
+				cptr->listener = &me;
 		}
 
 	for (i = highest_fd; i >= 0; i--)
@@ -2566,8 +2574,8 @@ int  read_message(delay, listp)
 			(void)add_connection(cptr, fd);
 
 			nextping = TStime();
-			if (!cptr->acpt)
-				cptr->acpt = &me;
+			if (!cptr->listener)
+				cptr->listener = &me;
 
 			continue;
 		}
@@ -2822,7 +2830,7 @@ int  connect_server(aconf, by, hp)
 	if (cptr->fd > highest_fd)
 		highest_fd = cptr->fd;
 	local[cptr->fd] = cptr;
-	cptr->acpt = &me;
+	cptr->listener = &me;
 	SetConnecting(cptr);
 	IRCstats.unknown++;
 	get_sockhost(cptr, aconf->host);
