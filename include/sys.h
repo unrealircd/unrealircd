@@ -27,7 +27,7 @@
 #include <malloc.h>
 #define alloca _alloca
 #else
-# ifdef __GNUC__
+# if defined(__GNUC__) && !defined(alloca)
 #  define alloca __builtin_alloca
 # else
 #  if HAVE_ALLOCA_H

@@ -516,3 +516,7 @@
 - Added some error checking to /sapart (#0002253) suggested by Troco.
 - Imported TRE 0.7.2 for Windows
 - Imported TRE 0.7.2 for *nix
+- Got rid of wma/wmv in dccallow.conf, better to require an explicit select here due to
+  recent DRM exploits (spyware etc).
+- Fixed /restart reasons, reported by SouL-FoRTuNe.
+- Partial (incomplete!) fix for alloca warnings during compile (especially w/SSL).

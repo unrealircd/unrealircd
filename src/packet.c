@@ -237,7 +237,7 @@ void	init_CommandHash(void)
 	add_Command(MSG_MOTD, TOK_MOTD, m_motd, MAXPARA);
 	add_Command(MSG_DNS, TOK_DNS, m_dns, MAXPARA);
 	add_Command(MSG_REHASH, TOK_REHASH, m_rehash, MAXPARA);
-	add_Command(MSG_RESTART, TOK_RESTART, m_restart, MAXPARA);
+	add_Command(MSG_RESTART, TOK_RESTART, m_restart, 2);
 	add_Command(MSG_DIE, TOK_DIE, m_die, MAXPARA);
 	add_Command(MSG_DALINFO, TOK_DALINFO, m_dalinfo, MAXPARA);
 	add_Command(MSG_CREDITS, TOK_CREDITS, m_credits, MAXPARA);

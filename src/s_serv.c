@@ -1051,7 +1051,7 @@ CMD_FUNC(m_restart)
 		else 
 			reason = parv[1];
 	}
-	else if (parc == 3)
+	else if (parc > 2)
 	{
 		/* Syntax: /restart <pass> <reason> */
 		if (conf_drpass)
