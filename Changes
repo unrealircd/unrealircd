@@ -488,3 +488,4 @@
   bugs on architectures where 'long' and 'int' have different sizes (eg: opteron).
 - Added a set::gline-address which works like set::kline-address (#0001298) suggested by
   Bugz.
+- Added missing documentation for spamfilter away target (#0002205) reported by Dukat.
