@@ -1977,3 +1977,5 @@ seen. gmtime warning still there
 - Moved the "flood from unknown connection" notices to snomask +f
 - Fixed compile error
 - Fixed a restrict-usermodes bug reported by Rocko (#0000796)
+- Minor /die and /restart code cleanups
+- Added channel mode +M to 005 (#0000803) reported by jollino

@@ -3709,10 +3709,6 @@ CMD_FUNC(m_restart)
 			    parv[0]);
 			return 0;
 		}
-		if (x == -2)
-		{
-			return 0;
-		}
 		if (x < 1)
 		{
 			return 0;
@@ -4359,10 +4355,6 @@ CMD_FUNC(m_die)
 		{
 			sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name,
 			    parv[0]);
-			return 0;
-		}
-		if (i == -2)
-		{
 			return 0;
 		}
 		if (i < 1)

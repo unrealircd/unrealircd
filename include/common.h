@@ -268,7 +268,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                  "ohvbeqa", \
                  "kfL", \
 		 "l", \
-		 "psmntirRcOAQKVHGCuzNS", \
+		 "psmntirRcOAQKVGCuzNSM", \
 		 ircnet005
 			    
 /* Server-Server PROTOCTL -Stskeeps */
