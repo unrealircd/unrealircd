@@ -734,18 +734,16 @@ typedef struct ircstatsx {
 
 extern ircstats IRCstats;
 
-typedef struct {
-	long	mode;
-	char	flag;
-	int	(*allowed)(aClient *sptr);
-} aUMtable;
-
-extern aUMtable *Usermode_Table;
-extern short	 Usermode_highest;
 #include "modules.h"
+
+extern Umode *Usermode_Table;
+extern short	 Usermode_highest;
 
 extern Snomask *Snomask_Table;
 extern short Snomask_highest;
+
+extern Umode *UmodeAdd(Module *module, char ch, int options, int (*allowed)(aClient *sptr), long *mode);
+extern void UmodeDel(Umode *umode);
 
 extern Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr), long *mode);
 extern void SnomaskDel(Snomask *sno);

@@ -350,6 +350,9 @@ void Unload_all_loaded_modules(void)
 			else if (objs->type == MOBJ_SNOMASK) {
 				SnomaskDel(objs->object.snomask);
 			}
+			else if (objs->type == MOBJ_UMODE) {
+				UmodeDel(objs->object.umode);
+			}
 		}
 		for (child = mi->children; child; child = childnext)
 		{
@@ -395,6 +398,9 @@ void Unload_all_testing_modules(void)
 			}
 			else if (objs->type == MOBJ_SNOMASK) {
 				SnomaskDel(objs->object.snomask);
+			}
+			else if (objs->type == MOBJ_UMODE) {
+				UmodeDel(objs->object.umode);
 			}
 
 		}
@@ -448,6 +454,9 @@ int    Module_free(Module *mod)
 		}
 		else if (objs->type == MOBJ_SNOMASK) {
 			SnomaskDel(objs->object.snomask);
+		}
+		else if (objs->type == MOBJ_UMODE) {
+			UmodeDel(objs->object.umode);
 		}
 	}
 	for (p = Modules; p; p = p->next)

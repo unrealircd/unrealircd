@@ -2164,7 +2164,7 @@ void set_snomask(aClient *sptr, char *snomask) {
 		 	 		continue;
 		 	 	if (*p == Snomask_Table[i].flag)
 		 	 	{
-					if (!Snomask_Table[i].allowed(sptr))
+					if (Snomask_Table[i].allowed && !Snomask_Table[i].allowed(sptr))
 						continue;
 		 	 		if (what == MODE_ADD)
 			 	 		sptr->user->snomask |= Snomask_Table[i].mode;
@@ -2200,7 +2200,7 @@ void create_snomask(aClient *sptr, anUser *user, char *snomask) {
 		 	 		continue;
 		 	 	if (*p == Snomask_Table[i].flag)
 		 	 	{
-					if (!Snomask_Table[i].allowed(sptr))
+					if (Snomask_Table[i].allowed && !Snomask_Table[i].allowed(sptr))
 						continue;
 		 	 		if (what == MODE_ADD)
 			 	 		user->snomask |= Snomask_Table[i].mode;

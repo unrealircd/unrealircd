@@ -326,6 +326,7 @@ extern void		win_error();
 extern char modebuf[MAXMODEPARAMS*2+1], parabuf[504];
 extern void add_entropy_configfile(struct stat st, char *buf);
 extern void unload_all_unused_snomasks();
+extern void unload_all_unused_umodes();
 /*
  * Config parser (IRCd)
 */
@@ -6423,6 +6424,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	if (init_conf(configfile, 1) == 0)
 		run_configuration();
 	unload_all_unused_snomasks();
+	unload_all_unused_umodes();
 	loop.ircd_rehashing = 0;	
 	return 1;
 }

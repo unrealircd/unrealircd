@@ -95,6 +95,15 @@ typedef struct {
 #define MOBJ_HOOKTYPE 0x0008
 #define MOBJ_VERSIONFLAG 0x0010
 #define MOBJ_SNOMASK 0x0020
+#define MOBJ_UMODE 0x0040
+
+typedef struct {
+        long mode;
+        char flag;
+        int (*allowed)(aClient *sptr);
+        char unloaded;
+        Module *owner;
+} Umode;
 
 typedef struct {
         long mode;
@@ -125,6 +134,7 @@ typedef struct _ModuleObject {
 		Hooktype *hooktype;
 		Versionflag *versionflag;
 		Snomask *snomask;
+		Umode *umode;
 	} object;
 } ModuleObject;
 
