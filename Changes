@@ -2395,3 +2395,4 @@ seen. gmtime warning still there
 - Fixed a double OperOverride notice bug reported by DukePyrolator (#0001180).
 - Doc fixes/updates reported by Angrywolf (#0001163, #0001176).
 - Fixed a /rehash crash regarding badword all & regex badwords, reported by Angrywolf (#0001230).
+- Fixed an old bug where allow::hostname localhost (or *@localhost) didn't work (#0001115).

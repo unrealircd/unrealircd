@@ -2246,6 +2246,23 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 		(void)strncat(uhost, sockhost, sizeof(uhost) - strlen(uhost));
 		if (!match(aconf->ip, uhost))
 			goto attach;
+
+		/* Hmm, localhost is a special case, hp == NULL and sockhost contains
+		 * 'localhost' instead of an ip... -- Syzop. */
+		if (!strcmp(sockhost, "localhost"))
+		{
+			if (index(aconf->hostname, '@'))
+			{
+				strcpy(uhost, cptr->username);
+				strcat(uhost, "@localhost");
+			}
+			else
+				strcpy(uhost, "localhost");
+
+			if (!match(aconf->hostname, uhost))
+				goto attach;
+		}
+		
 		continue;
 	      attach:
 /*		if (index(uhost, '@'))  now flag based -- codemastr */
