@@ -689,3 +689,5 @@ seen. gmtime warning still there
 - Various preparitions for beta1
 - Commited the web server prototype made by Stskeeps, web design by WildChild
 - Ripped out the old DF watch system, using bahamut's now
+- Fixed an sdesc bug reported by Alzirr
+- Fixed a little gcc 3.0 bug with Unreal

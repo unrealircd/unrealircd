@@ -718,15 +718,13 @@ extern TS check_pings(TS currenttime, int check_kills)
 static int bad_command()
 {
 #ifndef _WIN32
-
-	(void)printf
-	    ("Usage: ircd %s[-h servername] [-p portnumber] [-x loglevel] [-t] [-H]\n",
 #ifdef CMDLINE_CONFIG
-	    "[-f config] "
+#define CMDLINE_CFG "[-f config] "
 #else
-	    ""
+#define CMDLINE_CFG ""
 #endif
-	    );
+	(void)printf
+	    ("Usage: ircd %s[-h servername] [-p portnumber] [-x loglevel] [-t] [-H]\n",CMDLINE_CFG);
 	(void)printf("Server not started\n\n");
 #else
 	MessageBox(NULL,
