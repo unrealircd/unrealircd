@@ -462,6 +462,7 @@
 - Fixed a +f bug, found by NiQuiL
 - Applied McSkaf's winlocal.patch, seems to work ok, fixed some problems
   though in unix/win32 (cptr->fd can be -3. Should fix some READ ERRORS as
-  well. McSkaf, do me a favour and remove all of the C++ comments in the
-  source (//) or modify them to /* */
+  well. 
+- Some Open(aaaaaaaaaaargh)BSD patches, most stubborn compiler i've ever 
+seen. gmtime warning still there
 

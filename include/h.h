@@ -42,7 +42,7 @@ extern aClient *client, me, *local[];
 extern aChannel *channel;
 extern struct stats *ircstp;
 extern int bootopt;
-extern TS TSoffset;
+extern time_t TSoffset;
 /* Prototype added to force errors -- Barubary */
 extern TS check_pings(TS now, int check_kills);
 extern TS TS2ts(char *s);
@@ -197,9 +197,9 @@ extern int inetport(aClient *, char *, int);
 extern void init_sys();
 
 #ifdef NO_FDLIST
-extern int read_message(TS);
+extern int read_message(time_t);
 #else
-extern int read_message(TS, fdlist *);
+extern int read_message(time_t, fdlist *);
 #endif
 
 extern void report_error(char *, aClient *);
@@ -257,7 +257,7 @@ extern int check_registered_user(aClient *);
 extern char *get_client_name(aClient *, int);
 extern char *get_client_host(aClient *);
 extern char *my_name_for_link(char *, aConfItem *);
-extern char *myctime(TS), *date(TS);
+extern char *myctime(time_t), *date(time_t);
 extern int exit_client(aClient *, aClient *, aClient *, char *);
 extern void initstats(), tstats(aClient *, char *);
 extern char *check_string(char *);
@@ -298,8 +298,8 @@ extern struct hostent *gethost_byaddr(char *, Link *);
 extern struct hostent *gethost_byname(char *, Link *);
 extern void flush_cache();
 extern int init_resolver(int);
-extern TS timeout_query_list(TS);
-extern TS expire_cache(TS);
+extern time_t timeout_query_list(time_t);
+extern time_t expire_cache(time_t);
 extern void del_queries(char *);
 
 extern void clear_channel_hash_table();

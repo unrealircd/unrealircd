@@ -23,7 +23,7 @@
 #
 
 IRCDCONF = ../ircd.conf
-LIBS=-lcrypt
+LIBS=
 
 all: mkpasswd
 crypt: install

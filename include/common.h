@@ -126,7 +126,7 @@ extern int inet_netof PROTO((struct IN_ADDR));
 #endif
 
 int  global_count, max_global_count;
-extern char *myctime PROTO((TS));
+extern char *myctime PROTO((time_t));
 extern char *strtoken PROTO((char **, char *, char *));
 
 #define PRECISE_CHECK
