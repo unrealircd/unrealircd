@@ -96,6 +96,9 @@
 /* Define if you have the <sys/rusage.h> header file. */
 #undef RUSAGEH
 
+/* Define if you have the <glob.h> header file. */
+#undef GLOBH
+
 /* Define if you have regex */
 #undef HAVE_REGEX
 

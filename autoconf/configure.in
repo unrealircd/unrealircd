@@ -84,6 +84,7 @@ AC_CHECK_HEADER(regex.h,AC_DEFINE(HAVE_REGEX),AC_INSTALL_REGEX)
 AC_CHECK_HEADER(openssl/ssl.h,openssl=yes)
 AC_CHECK_HEADER(malloc.h,AC_DEFINE(MALLOCH,<malloc.h>))
 AC_CHECK_HEADER(sys/rusage.h,AC_DEFINE(RUSAGEH))
+AC_CHECK_HEADER(glob.h,AC_DEFINE(GLOBH))
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_C_INLINE

@@ -610,3 +610,4 @@ seen. gmtime warning still there
 - Added in Griever's SJOIN fix
 - Made mod_depend a bit cleaner to use
 - Removed some remnants of umode +b
+- Added configure check for glob.h
