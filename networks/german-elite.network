@@ -1,25 +1,19 @@
-ver^2.2
-#
-# German-Elite (irc.german-elite.net) Network Configuration File
-# -----------------------------------------
-#
-
-Network >..........: German-Elite
-Set ircnetwork ....: German-Elite
-Set defserv .......: irc.german-elite.net
-Set SERVICES_NAME .: services.german-elite.net
-Set oper_host .....: ircop.german-elite.net
-Set admin_host ....: admin.german-elite.net
-Set locop_host ....: locop.german-elite.net
-Set sadmin_host ...: csop.german-elite.net
-Set netadmin_host .: netadmin.german-elite.net
-Set coadmin_host ..: coadmin.german-elite.net
-Set techadmin_host : techadmin.german-elite.net
-Set hidden_host ...: GE
-Set netdomain .....: german-elite.net
-Set helpchan ......: #german-elite
-Set STATS_SERVER ..: stats.german-elite.net
-Set HUB ...........: 1
-Set iNAH ..........: 1
-Set net_quit ......: GE
-
+set {
+	network-name		"German-Elite";
+	default-server		"irc.german-elite.net";
+	services-server		"services.german-elite.net";
+	stats-server		"stats.german-elite.net";
+	help-channel		"#german-elite";
+	hiddenhost-prefix	"GE";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"locop.german-elite.net";
+		global		"ircop.german-elite.net";
+		coadmin		"coadmin.german-elite.net";
+		admin		"admin.german-elite.net";
+		servicesadmin	"csop.german-elite.net";
+		techadmin	"techadmin.german-elite.net";
+		netadmin	"netadmin.german-elite.net";
+		host-on-oper-up	"on";
+	};
+};

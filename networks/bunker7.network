@@ -1,29 +1,19 @@
-ver^2.2
-#
-# Bunker7.net Network Configuration File
-# -----------------------------------------
-#  Added-at:     17 August 1999 12:34 CT
-#  Author:       Rogue
-#  E-Mail:       rogue@bunker7.net
-#  $Id$
-# -----------------------------------------
-#
-
-Network >..........: bunker7
-Set ircnetwork ....: bunker7
-Set defserv .......: irc.bunker7.net
-Set SERVICES_NAME .: services.bunker7.net
-Set oper_host .....: global.bunker7.net
-Set admin_host ....: admin.bunker7.net
-Set locop_host ....: local.bunker7.net
-Set sadmin_host ...: sadm.bunker7.net
-Set netadmin_host .: netadmin.bunker7.net
-Set coadmin_host ..: coadmin.bunker7.net
-Set techadmin_host : techadmin.bunker7.net
-Set hidden_host ...: bunker7
-Set netdomain .....: bunker7.net
-Set helpchan ......: #bunker7
-Set STATS_SERVER ..: stats.bunker7.net
-Set HUB ...........: 1
-Set iNAH ..........: 0
-Set net_quit ......: B7
+set {
+	network-name		"bunker7";
+	default-server		"irc.bunker7.net";
+	services-server		"services.bunker7.net";
+	stats-server		"stats.bunker7.net";
+	help-channel		"#bunker7";
+	hiddenhost-prefix	"bunker7";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"local.bunker7.net";
+		global		"global.bunker7.net";
+		coadmin		"coadmin.bunker7.net";
+		admin		"admin.bunker7.net";
+		servicesadmin	"sadm.bunker7.net";
+		techadmin	"techadmin.bunker7.net";
+		netadmin	"netadmin.bunker7.net";
+		host-on-oper-up	"off";
+	};
+};

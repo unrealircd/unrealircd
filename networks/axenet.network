@@ -1,25 +1,19 @@
-ver^2.2
-#
-# AXEnet (irc.axenet.org) Network Configuration File
-# --------------------------------------------------
-#
-
-Network >..........: Axenet
-Set ircnetwork ....: Axenet
-Set defserv .......: irc.axenet.org
-Set SERVICES_NAME .: services.axenet.org
-Set oper_host .....: ircop.axenet.org
-Set admin_host ....: admin.axenet.org
-Set locop_host ....: locop.axenet.org
-Set sadmin_host ...: csop.axenet.org
-Set netadmin_host .: netadmin.axenet.org
-Set coadmin_host ..: coadmin.axenet.org
-Set techadmin_host : techadmin.axenet.org
-Set hidden_host ...: axe
-Set netdomain .....: axenet.org
-Set helpchan ......: #axenethelp
-Set STATS_SERVER ..: stats.axenet.org
-Set HUB ...........: 1
-Set iNAH ..........: 1
-Set net_quit ......: axe
-
+set {
+	network-name		"Axenet";
+	default-server		"irc.axenet.org";
+	services-server		"services.axenet.org";
+	stats-server		"stats.axenet.org";
+	help-channel		"#axenethelp";
+	hiddenhost-prefix	"axe";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"locop.axenet.org";
+		global		"ircop.axenet.org";
+		coadmin		"coadmin.axenet.org";
+		admin		"admin.axenet.org";
+		servicesadmin	"csop.axenet.org";
+		techadmin	"techadmin.axenet.org";
+		netadmin	"netadmin.axenet.org";
+		host-on-oper-up	"on";
+	};
+};

@@ -1,72 +1,19 @@
-ver^2.2
-#
-# Network Configuration File Template
-# -----------------------------------------
-#  Added-at:     <day> <month> <year> <hh:dd> GMT
-#  Author:       <nick> (<real name>)
-#  E-Mail:       <email>
-#  $Id$
-# -----------------------------------------
-# This is a template so you can create your own network configuration files
-# Just follow the instructions and it will prolly work ;)
-# 0 = No   1 = Yes
-# -------------------------------------------------------
-#
-# These two specify the name of the IRC network, set the same in both fields
-Network >..........: UzayNet
-Set ircnetwork ....: UzayNet
-
-# This is where your DNS pool is (like irc.dal.net)
-Set defserv .......: uzaynet.com
-
-
-# This is the name of your Services Server
-Set SERVICES_NAME .: service.uzaynet.com
-
-# This is the virtual hostname IRCops will get if iNAH option is enabled
-# on oper up
-Set oper_host .....: ircop.uzaynet.com
-
-# This is the virtual hostname Server Admins will get if iNAH option is enabled
-# on oper up
-Set admin_host ....: admin.uzaynet.com
-
-# This is the virtual hostname Local IRCops will get if iNAH option is enabled
-# on oper up
-
-Set locop_host ....: locop.uzaynet.com
-
-# This is the virtual hostname Services Operators/Admins will get
-# if iNAH option is enabled on oper up
-
-Set sadmin_host ...: serviceop.uzaynet.com
-
-# This is the virtual hostname NetAdmins will get
-# if iNAH option is enabled on oper up
-
-Set netadmin_host .: netadmin.uzaynet.com
-
-# This is the virtual hostname CoAdmins will get
-# if iNAH option is enabled on oper up
-Set coadmin_host ..: coadmin.uzaynet.com
-
-
-# This is the virtual hostname TechAdmins will get
-# if iNAH option is enabled on oper up
-Set techadmin_host : techadmin.uzaynet.com
-
-# This is the prefix of the hidden host (cloaking) hostname
-Set hidden_host ...: UzayNet
-# This is the domain of the IRC network
-Set netdomain .....: uzaynet.com
-# This is where people can go for help
-Set helpchan ......: #Help
-# This is the name of the stats server
-Set STATS_SERVER ..: statserv.uzaynet.com
-# -- Not in use--
-Set HUB ...........: 1
-# This enables the auto-setting of f.x @netadmin.network.net 
-# on oper up
-Set iNAH ..........: 1
-# -- Not in use but still here --
-Set net_quit ......: ic
+set {
+	network-name		"UzayNet";
+	default-server		"uzaynet.com";
+	services-server		"service.uzaynet.com";
+	stats-server		"statserv.uzaynet.com";
+	help-channel		"#Help";
+	hiddenhost-prefix	"UzayNet";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"locop.uzaynet.com";
+		global		"ircop.uzaynet.com";
+		coadmin		"coadmin.uzaynet.com";
+		admin		"admin.uzaynet.com";
+		servicesadmin	"serviceop.uzaynet.com";
+		techadmin	"techadmin.uzaynet.com";
+		netadmin	"netadmin.uzaynet.com";
+		host-on-oper-up	"on";
+	};
+};

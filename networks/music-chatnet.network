@@ -1,29 +1,19 @@
-ver^2.2
-#
-# Music-ChatNET (Irc.Music-ChatNET.Com) Network Configuration File
-# --------------------------------------------------
-# Added-at: 21 November 2000 22:40
-# Author: Chad
-# Email: Chad@Music-ChatNET.Com
-# -----------------------------------------
-#
-
-Network >..........: Music-ChatNET
-Set ircnetwork ....: Music-ChatNET
-Set defserv .......: Irc.Music-ChatNET.Com
-Set SERVICES_NAME .: Services.Music-ChatNET.Com
-Set oper_host .....: IRCop.Music-ChatNET.Com
-Set admin_host ....: Admin.Music-ChatNET.Com
-Set locop_host ....: LOcop.Music-ChatNET.Com
-Set sadmin_host ...: CSop.Music-ChatNET.Com
-Set netadmin_host .: NetAdmin.Music-ChatNET.Com
-Set coadmin_host ..: CoAdmin.Music-ChatNET.Com
-Set techadmin_host : TechAdmin.Music-ChatNET.Com
-Set hidden_host ...: MCN
-Set netdomain .....: Music-ChatNET.Com
-Set helpchan ......: #Music-Chat
-Set STATS_SERVER ..: Stats.Music-ChatNET.Com
-Set HUB ...........: not_in_use
-Set iNAH ..........: 1
-Set net_quit ......: not_in_use
-
+set {
+	network-name		"Music-ChatNET";
+	default-server		"Irc.Music-ChatNET.Com";
+	services-server		"Services.Music-ChatNET.Com";
+	stats-server		"Stats.Music-ChatNET.Com";
+	help-channel		"#Music-Chat";
+	hiddenhost-prefix	"MCN";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"LOcop.Music-ChatNET.Com";
+		global		"IRCop.Music-ChatNET.Com";
+		coadmin		"CoAdmin.Music-ChatNET.Com";
+		admin		"Admin.Music-ChatNET.Com";
+		servicesadmin	"CSop.Music-ChatNET.Com";
+		techadmin	"TechAdmin.Music-ChatNET.Com";
+		netadmin	"NetAdmin.Music-ChatNET.Com";
+		host-on-oper-up	"on";
+	};
+};

@@ -1,29 +1,19 @@
-ver^2.2
-#
-# Unreal-Team () Network Configuration File
-# --------------------------------------------------
-#  Added-at:     14 July 1999 00:00 GMT
-#  Author:       Stskeeps (Carsten Munk)
-#  E-Mail:       stskeeps@tspre.org
-#  $Id$
-# -----------------------------------------
-#
-
-Network >..........: TESTnet
-Set ircnetwork ....: TESTnet
-Set defserv .......: irc.testnet.ircsystems.net
-Set SERVICES_NAME .: services.testnet.ircsystems.net
-Set oper_host .....: ircop.testnet.ircsystems.net
-Set admin_host ....: admin.testnet.ircsystems.net
-Set locop_host ....: locop.testnet.ircsystems.net
-Set sadmin_host ...: csops.testnet.ircsystems.net
-Set netadmin_host .: netadmin.testnet.ircsystems.net
-Set coadmin_host ..: coadmin.testnet.ircsystems.net
-Set techadmin_host : techadmin.testnet.ircsystems.net
-Set hidden_host ...: unreal
-Set netdomain .....: testnet.ircsystems.net
-Set helpchan ......: #testnet
-Set STATS_SERVER ..: stats.testnet.ircsystems.net
-Set HUB ...........: 1
-Set iNAH ..........: 1
-Set net_quit ......: test
+set {
+	network-name		"TESTnet";
+	default-server		"irc.testnet.ircsystems.net";
+	services-server		"services.testnet.ircsystems.net";
+	stats-server		"stats.testnet.ircsystems.net";
+	help-channel		"#testnet";
+	hiddenhost-prefix	"unreal";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"locop.testnet.ircsystems.net";
+		global		"ircop.testnet.ircsystems.net";
+		coadmin		"coadmin.testnet.ircsystems.net";
+		admin		"admin.testnet.ircsystems.net";
+		servicesadmin	"csops.testnet.ircsystems.net";
+		techadmin	"techadmin.testnet.ircsystems.net";
+		netadmin	"netadmin.testnet.ircsystems.net";
+		host-on-oper-up	"on";
+	};
+};

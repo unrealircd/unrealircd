@@ -1,71 +1,19 @@
-ver^2.2
-#
-# Network Configuration File Template
-# -----------------------------------------
-#  Added-at:     <day> <month> <year> <hh:dd> GMT
-#  Author:       <nick> (<real name>)
-#  E-Mail:       <email>
-#  $Id$
-# -----------------------------------------
-# This is a template so you can create your own network configuration files
-# Just follow the instructions and it will prolly work ;)
-# 0 = No   1 = Yes
-# -------------------------------------------------------
-#
-# These two specify the name of the IRC network, set the same in both fields
-Network >..........: TSpre
-Set ircnetwork ....: TSpre
-
-# This is where your DNS pool is (like irc.dal.net)
-Set defserv .......: irc.tspre.org
-
-# This is the name of your Services Server
-Set SERVICES_NAME .: services.tspre.org
-
-# This is the virtual hostname IRCops will get if iNAH option is enabled
-# on oper up
-Set oper_host .....: ircop.tspre.org
-
-# This is the virtual hostname Server Admins will get if iNAH option is enabled
-# on oper up
-Set admin_host ....: admin.tspre.org
-
-# This is the virtual hostname Local IRCops will get if iNAH option is enabled
-# on oper up
-
-Set locop_host ....: locop.tspre.org
-
-# This is the virtual hostname Services Operators/Admins will get
-# if iNAH option is enabled on oper up
-
-Set sadmin_host ...: serviceop.tspre.org
-
-# This is the virtual hostname NetAdmins will get
-# if iNAH option is enabled on oper up
-
-Set netadmin_host .: netadmin.tspre.org
-
-# This is the virtual hostname CoAdmins will get
-# if iNAH option is enabled on oper up
-Set coadmin_host ..: coadmin.tspre.org
-
-
-# This is the virtual hostname TechAdmins will get
-# if iNAH option is enabled on oper up
-Set techadmin_host : techadmin.tspre.org
-
-# This is the prefix of the hidden host (cloaking) hostname
-Set hidden_host ...: ts
-# This is the domain of the IRC network
-Set netdomain .....: tspre.org
-# This is where people can go for help
-Set helpchan ......: #TSpre
-# This is the name of the stats server
-Set STATS_SERVER ..: stats.tspre.org
-# -- Not in use--
-Set HUB ...........: 1
-# This enables the auto-setting of f.x @netadmin.network.net 
-# on oper up
-Set iNAH ..........: 0
-# -- Not in use but still here --
-Set net_quit ......: ic
+set {
+	network-name		"TSpre";
+	default-server		"irc.tspre.org";
+	services-server		"services.tspre.org";
+	stats-server		"stats.tspre.org";
+	help-channel		"#TSpre";
+	hiddenhost-prefix	"ts";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"locop.tspre.org";
+		global		"ircop.tspre.org";
+		coadmin		"coadmin.tspre.org";
+		admin		"admin.tspre.org";
+		servicesadmin	"serviceop.tspre.org";
+		techadmin	"techadmin.tspre.org";
+		netadmin	"netadmin.tspre.org";
+		host-on-oper-up	"off";
+	};
+};

@@ -332,5 +332,5 @@
   do fp_m_join = module_sym("m_join");
 - Put out m_chghost, m_sethost in modules, remade Makefile structure and
   added src/modules
-
-
+- Modified an old Unreal3.1.1 to be network file converter, and converted
+  all of the module files to the new format.

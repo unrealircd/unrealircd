@@ -1,42 +1,19 @@
-ver^2.2
-#
-# Network Configuration File Template
-# -----------------------------------------
-# Added-at: <day> <month> <year> <hh:dd> GMT
-# Author: <nick> (<real name>)
-# E-Mail: <email>
-# $Id$
-# -----------------------------------------
-# This is a template so you can create your own network configuration files
-# Just follow the instructions and it will prolly work ;)
-ver^2.2
-#
-# SheyToyBox (irc.sheytoybox.net) Network Configuration File
-# --------------------------------------------------
-# Added-at: 26 August 2000 19:08
-# Author: Robertsog
-# Email: robertsog@netzero.com <mailto:robertsog@netzero.com>
-# -----------------------------------------
-#
-
-Network >..........: SheyToyBox
-Set ircnetwork ....: SheyToyBox
-Set defserv .......: irc.sheytoybox.net
-Set SERVICES_NAME .: services.sheytoybox.net
-Set oper_host .....: ircop.sheytoybox.net
-Set admin_host ....: admin.sheytoybox.net
-Set locop_host ....: locop.sheytoybox.net
-Set sadmin_host ...: csops.sheytoybox.net
-Set netadmin_host .: netadmin.sheytoybox.net
-Set coadmin_host ..: coadmin.sheytoybox.net
-Set techadmin_host : techadmin.sheytoybox.net
-Set hidden_host ...: shey
-Set netdomain .....: sheytoybox.net
-Set helpchan ......: #Shey's_toybox
-Set STATS_SERVER ..: stats.sheytoybox.net
-Set HUB ...........: not_in_use
-Set iNAH ..........: 1
-Set net_quit ......: not_in_use
-
-
-
+set {
+	network-name		"SheyToyBox";
+	default-server		"irc.sheytoybox.net";
+	services-server		"services.sheytoybox.net";
+	stats-server		"stats.sheytoybox.net";
+	help-channel		"#Shey's_toybox";
+	hiddenhost-prefix	"shey";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"locop.sheytoybox.net";
+		global		"ircop.sheytoybox.net";
+		coadmin		"coadmin.sheytoybox.net";
+		admin		"admin.sheytoybox.net";
+		servicesadmin	"csops.sheytoybox.net";
+		techadmin	"techadmin.sheytoybox.net";
+		netadmin	"netadmin.sheytoybox.net";
+		host-on-oper-up	"on";
+	};
+};

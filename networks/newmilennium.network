@@ -1,26 +1,19 @@
-ver^2.2
-#
-# newmilennium.net Network Configuration File
-# Made by: Dave Ellsworth (MasterJedi)
-# E-Mail: mj@planetz.net
-# ---------------------------------------
-
-
-Network >..........: NewMilennium
-Set ircnetwork ....: NewMilennium
-Set defserv .......: irc.NewMilennium.net
-Set SERVICES_NAME .: Services.NewMilennium.net
-Set oper_host .....: ircop.newmilennium.net
-Set admin_host ....: admin.newmilennium.net
-Set locop_host ....: locop.newmilennium.net
-Set sadmin_host ...: serviceop.newmilennium.net
-Set netadmin_host .: netadmin.newmilennium.net
-Set coadmin_host ..: coadmin.newmilennium.net
-Set techadmin_host : techadmin.newmilennium.net
-Set hidden_host ...: newmilennium
-Set netdomain .....: newmilennium.net
-Set helpchan ......: #newmilennium
-Set STATS_SERVER ..: stats.newmilennium.net
-Set HUB ...........: 1
-Set iNAH ..........: 1
-Set net_quit ......: SN
+set {
+	network-name		"NewMilennium";
+	default-server		"irc.NewMilennium.net";
+	services-server		"Services.NewMilennium.net";
+	stats-server		"stats.newmilennium.net";
+	help-channel		"#newmilennium";
+	hiddenhost-prefix	"newmilennium";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"locop.newmilennium.net";
+		global		"ircop.newmilennium.net";
+		coadmin		"coadmin.newmilennium.net";
+		admin		"admin.newmilennium.net";
+		servicesadmin	"serviceop.newmilennium.net";
+		techadmin	"techadmin.newmilennium.net";
+		netadmin	"netadmin.newmilennium.net";
+		host-on-oper-up	"on";
+	};
+};

@@ -1,28 +1,19 @@
-ver^2.2
-#
-# My IRC Network (irc.auspice.org) Network Configuration File
-# --------------------------------------------------
-#  Added-at:     01 Dec 2000 00:31
-#  Author:	 In Mean
-#  Email:	 auspice@auspice.org
-# -----------------------------------------
-#
-
-Network >..........: Auspice
-Set ircnetwork ....: Auspice
-Set defserv .......: irc.auspice.org
-Set SERVICES_NAME .: Services.auspice.org
-Set oper_host .....: oper.auspice.org
-Set admin_host ....: admin.auspice.org
-Set locop_host ....: locop.auspice.org
-Set sadmin_host ...: csop.auspice.org
-Set netadmin_host .: netadmin.auspice.org
-Set coadmin_host ..: coadmin.auspice.org
-Set techadmin_host : techadmin.auspice.org
-Set hidden_host ...: khmer
-Set netdomain .....: auspice.org
-Set helpchan ......: #services
-Set STATS_SERVER ..: Services.auspice.org
-Set HUB ...........: not_in_use
-Set iNAH ..........: 0
-Set net_quit ......: not_in_use
+set {
+	network-name		"Auspice";
+	default-server		"irc.auspice.org";
+	services-server		"Services.auspice.org";
+	stats-server		"Services.auspice.org";
+	help-channel		"#services";
+	hiddenhost-prefix	"khmer";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"locop.auspice.org";
+		global		"oper.auspice.org";
+		coadmin		"coadmin.auspice.org";
+		admin		"admin.auspice.org";
+		servicesadmin	"csop.auspice.org";
+		techadmin	"techadmin.auspice.org";
+		netadmin	"netadmin.auspice.org";
+		host-on-oper-up	"off";
+	};
+};

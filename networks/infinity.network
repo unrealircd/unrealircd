@@ -1,29 +1,19 @@
-ver^2.2
-#
-# Global-IRC.net Network Configuration File
-# -----------------------------------------
-#  Added-at:     14 July 1999 00:00 GMT
-#  Author:       Stskeeps (Carsten Munk)
-#  E-Mail:       stskeeps@global-irc.net
-#  $Id$
-# -----------------------------------------
-#
-
-Network >..........: Infinity-IRC.org
-Set ircnetwork ....: Infinity-IRC.org
-Set defserv .......: irc.infinity-irc.org
-Set SERVICES_NAME .: services.infinity-irc.org
-Set oper_host .....: IRCop.Infinity-IRC.org
-Set admin_host ....: IRCop-Admin.Infinity-IRC.org
-Set locop_host ....: LOCop.Infinity-IRC.org
-Set sadmin_host ...: IRCop-ServiceAdmin.Infinity-IRC.org
-Set netadmin_host .: IRCop-NetAdmin.Infinity-IRC.org
-Set coadmin_host ..: IRCop-CoAdmin.Infinity-IRC.org
-Set techadmin_host : IRCop-TechAdmin.Infinity-IRC.org
-Set hidden_host ...: Infinity
-Set netdomain .....: Infinity-IRC.org
-Set helpchan ......: #Infinity
-Set STATS_SERVER ..: stats.infinity-irc.org
-Set HUB ...........: 1
-Set iNAH ..........: 1
-Set net_quit ......: IN
+set {
+	network-name		"Infinity-IRC.org";
+	default-server		"irc.infinity-irc.org";
+	services-server		"services.infinity-irc.org";
+	stats-server		"stats.infinity-irc.org";
+	help-channel		"#Infinity";
+	hiddenhost-prefix	"Infinity";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"LOCop.Infinity-IRC.org";
+		global		"IRCop.Infinity-IRC.org";
+		coadmin		"IRCop-CoAdmin.Infinity-IRC.org";
+		admin		"IRCop-Admin.Infinity-IRC.org";
+		servicesadmin	"IRCop-ServiceAdmin.Infinity-IRC.org";
+		techadmin	"IRCop-TechAdmin.Infinity-IRC.org";
+		netadmin	"IRCop-NetAdmin.Infinity-IRC.org";
+		host-on-oper-up	"on";
+	};
+};

@@ -1,30 +1,19 @@
-ver^2.2
-#
-# StaticEdge (irc.staticedge.com) Network Configuration File
-# --------------------------------------------------
-#  Added-at:     06 July 2000 00:00 GMT
-#  Author:       ^Scott^ (Scott Anderson)
-#  E-Mail:       admin@staticedge.com
-#  $Id$
-# -----------------------------------------
-#
-
-Network >..........: StaticEdge
-Set ircnetwork ....: StaticEdge
-Set defserv .......: irc.staticedge.com
-Set SERVICES_NAME .: Services.StaticEdge.Com
-Set oper_host .....: Opers.StaticEdge.Com
-Set admin_host ....: Admins.StaticEdge.Com
-Set locop_host ....: LocalOps.StaticEdge.Com
-Set sadmin_host ...: CSOps.StaticEdge.Com
-Set netadmin_host .: NetAdmin.StaticEdge.Com
-Set coadmin_host ..: CoAdmins.StaticEdge.Com
-Set techadmin_host : TechAdmins.StaticEdge.Com
-Set hidden_host ...: static
-Set netdomain .....: StaticEdge.Com
-Set helpchan ......: #StaticEdge
-Set STATS_SERVER ..: Stats.StaticEdge.Com
-Set HUB ...........: 1
-Set iNAH ..........: 1
-Set net_quit ......: SE
-
+set {
+	network-name		"StaticEdge";
+	default-server		"irc.staticedge.com";
+	services-server		"Services.StaticEdge.Com";
+	stats-server		"Stats.StaticEdge.Com";
+	help-channel		"#StaticEdge";
+	hiddenhost-prefix	"static";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"LocalOps.StaticEdge.Com";
+		global		"Opers.StaticEdge.Com";
+		coadmin		"CoAdmins.StaticEdge.Com";
+		admin		"Admins.StaticEdge.Com";
+		servicesadmin	"CSOps.StaticEdge.Com";
+		techadmin	"TechAdmins.StaticEdge.Com";
+		netadmin	"NetAdmin.StaticEdge.Com";
+		host-on-oper-up	"on";
+	};
+};
