@@ -3,7 +3,7 @@
 
 ; #define USE_SSL
 ; Uncomment the above line to package an SSL build
-; #define USE_ZIP
+#define USE_ZIP
 ; Uncomment the above line to package with ZIP support
 
 

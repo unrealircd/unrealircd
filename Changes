@@ -2593,3 +2593,6 @@ seen. gmtime warning still there
 - Made "operator count bug" not notice all opers (log only), unless in debugmode.
 - Added comment regarding MLOCK and set::restrict-chanmodes in unreal32docs.html.
 - Made PREFIX_AQ a ./Config question at *NIX and enabled it by default at Win32.
+- Added stuff that will easy the transition to extended bans next release.
+- Added beta19 release notes
+- Made USE_ZIP the default again in src/win32/unrealinst.iss

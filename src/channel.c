@@ -2198,6 +2198,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  tmpstr = clean_ban_mask(param);
 		  if (BadPtr(tmpstr))
 		     break; /* ignore ban, but eat param */
+		  if (MyClient(cptr) && (*tmpstr == '~') && (what == MODE_ADD))
+		     break; /* deny for now.. */
 		  /* For bounce, we don't really need to worry whether
 		   * or not it exists on our server.  We'll just always
 		   * bounce it. */
@@ -2219,6 +2221,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  tmpstr = clean_ban_mask(param);
 		  if (BadPtr(tmpstr))
 		     break; /* ignore except, but eat param */
+		  if (MyClient(cptr) && (*tmpstr == '~') && (what == MODE_ADD))
+		     break; /* deny for now.. */
 		  /* For bounce, we don't really need to worry whether
 		   * or not it exists on our server.  We'll just always
 		   * bounce it. */
@@ -3086,6 +3090,13 @@ char *clean_ban_mask(char *mask)
 	for (; (*mask && (*mask == ':')); mask++);
 	if (!*mask)
 		return NULL;
+
+	/* This was added right before beta19 release to ease the
+	 * beta19<->beta20 transfer when we implement extended bans.
+	 * This is only to accept such masks from remote servers!
+	 */
+	if (*mask == '~')
+		return mask;
 
 	if ((user = index((cp = mask), '!')))
 		*user++ = '\0';
