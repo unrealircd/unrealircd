@@ -228,3 +228,6 @@
 - Config change in SSL.h detection part
 - SSL error change to sendto_umode(UMODE_JUNK)
 - Fixed a hash error, topic problem
+
+[fixes]
+- Fixed a +d bug (it didnt send ` prefixes)

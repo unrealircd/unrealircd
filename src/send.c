@@ -398,7 +398,8 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 		good:
 		
 		i = acptr->from->fd;
-		if (MyConnect(acptr) && IsRegisteredUser(acptr) && !IsDeaf(acptr))
+		if (MyConnect(acptr) && IsRegisteredUser(acptr) && (IsDeaf(acptr)
+			    && !(sendanyways == 1)))
 		{
 			sendto_prefix_one(acptr, from, ":%s %s %s :%s",
 				from->name, cmd, nick, text);
@@ -408,7 +409,7 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 		{
 			/* Now check whether a message has been sent to this
 			 * remote link already */
-			if ((sentalong[i] == 0) && (!IsDeaf(acptr)))
+			if ((sentalong[i] == 0) && ((!IsDeaf(acptr) && !(sendanyways == 1))))
 			{
 				if (IsToken(acptr->from))
 					sendto_one(acptr, "%s", tcmd);
