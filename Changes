@@ -511,3 +511,4 @@
 - Disabled anything with time in /list options temporary, causes bugs
 - Fixed a little /chghost bug
 - Fixed a SJ3 bug with ban syncing to SJ2 servers
+- Fixed some cloak bugs(???)

@@ -12,7 +12,8 @@ Unreal3.1-Silverheart Release Notes
   
    M:irc.fyremoon.net:*:Description:6667:20
 
-  Where 20 is the numeric. Numerics are 1-255, 0 means no numeric (bad)
+  Where 20 is the numeric. Numerics are 1-255, 0 means no numeric (bad),
+  and no server must have same numeric
 
 * We have introduced encrypted irc connections, and we will soon have a
   client out for it (this is not SSL). Stay tuned in #UnrealIRCd for more

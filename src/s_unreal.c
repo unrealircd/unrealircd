@@ -179,7 +179,7 @@ int  m_sethost(cptr, sptr, parc, parv)
 	if (sptr->user->virthost)
 		MyFree(sptr->user->virthost);
 	sptr->user->virthost = MyMalloc(strlen(vhost) + 1);
-	sprintf(sptr->user->virthost, "%s", vhost);
+	ircsprintf(sptr->user->virthost, "%s", vhost);
 	/* spread it out */
 	sendto_serv_butone_token(cptr, sptr->name, MSG_SETHOST, TOK_SETHOST,
 	    "%s", parv[1]);

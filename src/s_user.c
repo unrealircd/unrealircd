@@ -107,10 +107,12 @@ static int user_modes[] = { UMODE_OPER, 'o',
 
 void iNAH_host(aClient *sptr, char *host)
 {
+	if (!sptr->user)
+		return;
 	if (sptr->user->virthost)
 		MyFree(sptr->user->virthost);
 	sptr->user->virthost = MyMalloc(strlen(host) + 1);
-	ircsprintf(sptr->user->virthost, host);
+	ircsprintf(sptr->user->virthost, "%s", host);
 	if (MyConnect(sptr))
 		sendto_serv_butone_token(&me, sptr->name, MSG_SETHOST,
 		    TOK_SETHOST, "%s", sptr->user->virthost);
@@ -4354,8 +4356,8 @@ int  m_umode(cptr, sptr, parc, parv)
 
 	if (IsHidden(sptr) && !(setflags & UMODE_HIDE))
 	{
-		sptr->user->virthost =
-		    (char *)make_virthost(sptr->user->realhost,
+		sptr->user->virthost = 
+		(char *)make_virthost(sptr->user->realhost,
 		    sptr->user->virthost, 1);
 	}
 

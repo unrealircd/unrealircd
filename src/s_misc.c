@@ -1,3 +1,4 @@
+
 /*
  *   Unreal Internet Relay Chat Daemon, src/s_misc.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
@@ -302,7 +303,7 @@ char *get_client_host(cptr)
 		return get_client_name(cptr, FALSE);
 	(void)ircsprintf(nbuf, "%s[%-.*s@%-.*s]",
 	    cptr->name, USERLEN,
-	    (!(cptr->flags & FLAGS_GOTID)) ? "" : cptr->username,
+  	    (!(cptr->flags & FLAGS_GOTID)) ? "" : cptr->username,
 	    HOSTLEN, cptr->hostp->h_name);
 	return nbuf;
 }
@@ -520,7 +521,7 @@ int  exit_client(cptr, sptr, from, comment)
 		 */
 		if (cptr && !recurse)
 		{
-			(void)strcpy(comment1, sptr->srvptr->name);
+			(void)strcat(comment1, sptr->srvptr->name);
 			(void)strcat(comment1, " ");
 			(void)strcat(comment1, sptr->name);
 		}

@@ -215,8 +215,6 @@ char *make_virthost(char *curr, char *new, int mode)
 	int  i;
 	if (curr == NULL)
 		return;
-	if (new == NULL)
-		return;
 
 	mask = hidehost(curr, 0);
 	if (mode == 0)
