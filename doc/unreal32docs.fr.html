@@ -26,7 +26,7 @@ French
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2.2-CVS</font><br>
-  <b>Derni&egrave;re mise &agrave; jour de la documentation:</b> 2004-12-01</div>
+  <b>Derni&egrave;re mise &agrave; jour de la documentation:</b> 2004-01-29</div>
 <br>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -628,7 +628,7 @@ Certains modules peuvent ajouter d'autres types de ban &eacute;tendus.<br>
 <p>Ces valeurs sont plutôt claires. Le <b>nom</b> d&eacute;fini le nom du serveur, 
   <b>info</b> d&eacute;fini les ligne d'information sur le serveur, <b>numeric</b> d&eacute;fini 
   un num&eacute;rique pour identifier le serveur. Ce dernier doit avoir une valeur comprise 
-  entre 1 et 255 qui est SPÉCIFIQUE au serveur ce qui signifie qu'aucun autre serveur 
+  entre 0 et 254 qui est SPÉCIFIQUE au serveur ce qui signifie qu'aucun autre serveur 
   du r&eacute;seau ne doit avoir le même num&eacute;rique.</p>
 <p>Exemple:<br>
 </p><pre>me {
@@ -3023,10 +3023,10 @@ spamfilter {
 	d - denylinkauto - envoie la liste des links block (auto) interdits<br>
 	D - denylinkall - envoie la liste des links block (tous) interdits<br>
 	e - exceptthrottle - envoie la liste des except throttle block <br>
-	E - exceptban - envoie des except ban block<br>
+	E - exceptban - envoie la liste des except ban et except tkl block<br>
 	f - spamfilter - envoie la liste des spamfilter<br>
 	F - denydcc - envoie la liste des deny dcc block<br>
-	G - gline - envoie la liste des gline <br>
+	G - gline - envoie la liste des gline et des gzline<br>
 	&nbsp;&nbsp;Flags secondaires: [+/-mrs] [masque] [raison] [mis par]<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;m Renvoie les glines contenant / ne contenant pas la mask sp&eacute;cifi&eacute; <br>
 	&nbsp;&nbsp;&nbsp;&nbsp;r Renvoie les glines dont la raison est / n'est pas celle sp&eacute;cifi&eacute;e<br>
@@ -3039,17 +3039,17 @@ spamfilter {
 	M - command - envoie le nombre de fois que les commandes ont &eacute;t&eacute; utilis&eacute;es<br>
 	n - banrealname - envoie la liste des ban realname block<br>
 	O - oper - envoie la liste des oper block<br>
+	P - port - envoie les informations concernant les ports<br>
+	q - sqline - envoie la liste des SQLINE<br>
+	Q - bannick - envoie la liste des ban nick block <br>
+	r - chanrestrict - envoie la liste des chans deny / allow block<br>
+	R - usage - envoie les informations d'usage<br>
 	S - set - envoie la liste des set block<br>
 	s - shun - envoie la liste des shuns<br>
   	&nbsp;&nbsp;Flags secondaires: [+/-mrs] [masque] [raison] [mis par]<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;m Renvoie les glines contenant / ne contenant pas la mask sp&eacute;cifi&eacute; <br>
 	&nbsp;&nbsp;&nbsp;&nbsp;r Renvoie les glines dont la raison est / n'est pas celle sp&eacute;cifi&eacute;e<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;s Renvoie les glines mis / n'ont mis par la personne sp&eacute;cifi&eacute;e<br>
-	P - port - envoie les informations concernant les ports<br>
-	q - sqline - envoie la liste des SQLINE<br>
-	Q - bannick - envoie la liste des ban nick block <br>
-	r - chanrestrict - envoie la liste des chans deny / allow block<br>
-	R - usage - envoie les informations d'usage<br>
 	t - tld - envoie la liste des tld block<br>
 	T - traffic - envoie les informations sur le traffic<br>
 	u - uptime - envoie l'uptime du serveur et le nombre de connections<br>
