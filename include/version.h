@@ -32,7 +32,7 @@
 #define PATCH2  		".1"
 #define PATCH3  		".6"
 #define PATCH4  		"-Noon"
-#define PATCH5  		"[beta1]"
+#define PATCH5  		""
 #define PATCH6  		""
 #define PATCH7  		""
 #define PATCH8  		COMPILEINFO
