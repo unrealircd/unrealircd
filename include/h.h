@@ -99,6 +99,7 @@ extern ConfigItem_log		*conf_log;
 extern ConfigItem_alias		*conf_alias;
 extern ConfigItem_include	*conf_include;
 extern ConfigItem_help		*conf_help;
+extern ConfigItem_offchans	*conf_offchans;
 extern int		completed_connection(aClient *);
 extern void clear_unknown();
 extern EVENT(tkl_check_expire);

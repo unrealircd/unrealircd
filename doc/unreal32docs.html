@@ -91,7 +91,8 @@
   ---4.30. <a href="#linkblock">Link Block -=- (C/N/H:Lines)</a><br>
   ---4.31. <a href="#aliasblock">Alias Block</a><br>
   ---4.32. <a href="#helpblock">Help Block</a><br>
-  ---4.33. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
+  ---4.33. <a href="#officialchannels">Official Channels Block</a><br>
+  ---4.34. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
   5. <a href="#addtlfiles">Additional Files</a><br>
   6. <a href="#userchannelmodes">User & Channel Modes</a><br>
   7. <a href="#useropercommands">User & Oper Commands</a><br>
@@ -1620,7 +1621,29 @@ help &lt;name&gt; {
   for the help block are the text that will be displayed to the user when requesting 
   the /helpop.</p>
 <p></p></div>
-<p><font class="block_section">4.33 - </font><font class="block_name">Set Block</font>
+
+<p><font class="block_section">4.33 - </font><font class="block_name">Official Channels Block</font>
+   <font class="block_optional">OPTIONAL</font><a name="officialchannels"></a>
+</p><div class="desc">
+<p>Syntax:<br>
+<pre>
+official-channels {
+	"#channel" { topic "The default topic"; };
+};</pre></p>
+<p>Official channels are shown in /list even if no users are in the channel.
+   The <b>topic</b> is optional and is only shown in /list if it has 0 users.
+</p>
+
+<p>Example:<br>
+<pre>
+official-channels {
+	"#Help" { topic "The official help channel, if nobody is present type /helpop helpme"; };
+	"#Home";
+	"#Main" { topic "The main channel"; };
+};</pre></p>
+</div>
+
+<p><font class="block_section">4.34 - </font><font class="block_name">Set Block</font>
    <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as unrealircd.conf/networks file)</font><a name="setblock"></a>
 </p><div class="desc">
 <p>The set file is what use to be our networks/unrealircd.conf and our networks 

@@ -2406,3 +2406,4 @@ seen. gmtime warning still there
 - Added warn option to deny channel, this will send a notice to the eyes snomask when a user
   attempts to join. Suggested by Joolz (#0000992).
 - Added clientsonly/serversonly/ssl/java flags to /stats P (#0000992).
+- Added official-channels block. These channels are listed in /list even if they have 0 users.

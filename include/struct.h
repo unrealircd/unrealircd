@@ -108,6 +108,7 @@ typedef struct _configitem_alias ConfigItem_alias;
 typedef struct _configitem_alias_format ConfigItem_alias_format;
 typedef struct _configitem_include ConfigItem_include;
 typedef struct _configitem_help ConfigItem_help;
+typedef struct _configitem_offchans ConfigItem_offchans;
 typedef struct liststruct ListStruct;
 
 #define CFG_TIME 0x0001
@@ -1177,6 +1178,12 @@ struct _configitem_help {
 	ConfigFlag flag;
 	char *command;
 	aMotd *text;
+};
+
+struct _configitem_offchans {
+	ConfigItem *prev, *next;
+	char chname[CHANNELLEN+1];
+	char *topic;
 };
 
 #define HM_HOST 1

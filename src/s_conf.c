@@ -104,6 +104,7 @@ static int	_conf_loadmodule	(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_log		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_alias		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_help		(ConfigFile *conf, ConfigEntry *ce);
+static int	_conf_offchans		(ConfigFile *conf, ConfigEntry *ce);
 
 /* 
  * Validation commands 
@@ -137,6 +138,7 @@ static int	_test_loadmodule	(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_log		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_alias		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_help		(ConfigFile *conf, ConfigEntry *ce);
+static int	_test_offchans		(ConfigFile *conf, ConfigEntry *ce);
  
 /* This MUST be alphabetized */
 static ConfigCommand _ConfigCommands[] = {
@@ -158,6 +160,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "loadmodule",		NULL,		 	_test_loadmodule},
 	{ "log",		_conf_log,		_test_log	},
 	{ "me", 		_conf_me,		_test_me	},
+	{ "official-channels", 		_conf_offchans,		_test_offchans	},
 	{ "oper", 		_conf_oper,		_test_oper	},
 	{ "set",		_conf_set,		_test_set	},
 	{ "tld",		_conf_tld,		_test_tld	},
@@ -366,6 +369,7 @@ ConfigItem_badword	*conf_badword_channel = NULL;
 ConfigItem_badword      *conf_badword_message = NULL;
 ConfigItem_badword	*conf_badword_quit = NULL;
 #endif
+ConfigItem_offchans	*conf_offchans = NULL;
 
 aConfiguration		iConf;
 aConfiguration		tempiConf;
@@ -1506,6 +1510,7 @@ void	config_rehash()
 	ConfigItem_log			*log_ptr;
 	ConfigItem_alias		*alias_ptr;
 	ConfigItem_help			*help_ptr;
+	ConfigItem_offchans		*of_ptr;
 	OperStat 			*os_ptr;
 	ListStruct 	*next, *next2;
 
@@ -1791,6 +1796,14 @@ void	config_rehash()
 		ircfree(os_ptr->flag);
 		MyFree(os_ptr);
 	}
+	iConf.oper_only_stats_ext = NULL;
+	for (of_ptr = conf_offchans; of_ptr; of_ptr = (ConfigItem_offchans *)next)
+	{
+		next = (ListStruct *)of_ptr->next;
+		ircfree(of_ptr->topic);
+		MyFree(of_ptr);
+	}
+	conf_offchans = NULL;
 }
 
 int	config_post_test()
@@ -6062,6 +6075,84 @@ void	run_configuration(void)
 		}
 	}
 }
+
+int	_conf_offchans(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep, *cepp;
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		ConfigItem_offchans *of = MyMallocEx(sizeof(ConfigItem_offchans));
+		strlcpy(of->chname, cep->ce_varname, CHANNELLEN+1);
+		for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+		{
+			if (!strcmp(cepp->ce_varname, "topic"))
+				of->topic = strdup(cepp->ce_vardata);
+		}
+		AddListItem(of, conf_offchans);
+	}
+	return 0;
+}
+
+int	_test_offchans(ConfigFile *conf, ConfigEntry *ce)
+{
+	int errors = 0;
+	ConfigEntry *cep, *cep2;
+	char checkchan[CHANNELLEN + 1];
+	
+	if (!ce->ce_entries)
+	{
+		config_error("%s:%i: empty official-channels block", 
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return 1;
+	}
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (strlen(cep->ce_varname) > CHANNELLEN)
+		{
+			config_error("%s:%i: official-channels: '%s' name too long (max %d characters).",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname, CHANNELLEN);
+			errors++;
+			continue;
+		}
+		strcpy(checkchan, cep->ce_varname); /* safe */
+		clean_channelname(checkchan);
+		if (strcmp(checkchan, cep->ce_varname) || (*cep->ce_varname != '#'))
+		{
+			config_error("%s:%i: official-channels: '%s' is not a valid channel name.",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+			errors++;
+			continue;
+		}
+		for (cep2 = cep->ce_entries; cep2; cep2 = cep2->ce_next)
+		{
+			if (!cep2->ce_vardata)
+			{
+				config_error("%s:%i: official-channels::%s: %s has no value",
+					cep2->ce_fileptr->cf_filename, cep2->ce_varlinenum, cep->ce_varname, cep2->ce_varname);
+				errors++;
+				continue;
+			}
+			if (!strcmp(cep2->ce_varname, "topic"))
+			{
+				if (strlen(cep2->ce_vardata) > TOPICLEN)
+				{
+					config_error("%s:%i: official-channels::%s: topic too long (max %d characters).",
+						cep2->ce_fileptr->cf_filename, cep2->ce_varlinenum, cep->ce_varname, TOPICLEN);
+					errors++;
+					continue;
+				}
+			} else {
+				config_error("%s:%i: official-channels::%s: unknown directive '%s'.",
+					cep2->ce_fileptr->cf_filename, cep2->ce_varlinenum, cep->ce_varname, cep2->ce_varname);
+				errors++;
+				continue;
+			}
+		}
+	}
+	return errors;
+}
+
 
 int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 {

@@ -4473,6 +4473,25 @@ void send_list(aClient *cptr, int numsend)
 	LOpts *lopt = cptr->user->lopt;
 	unsigned int  hashnum;
 
+	/* Begin of /list? then send official channels. */
+	if ((lopt->starthash == 0) && conf_offchans)
+	{
+		ConfigItem_offchans *x;
+		for (x = conf_offchans; x; x = (ConfigItem_offchans *)x->next)
+		{
+			if (find_channel(x->chname, (aChannel *)NULL))
+				continue; /* exists, >0 users.. will be sent later */
+			sendto_one(cptr,
+			    rpl_str(RPL_LIST), me.name,
+			    cptr->name, x->chname,
+			    0,
+#ifdef LIST_SHOW_MODES
+			    "",
+#endif					    
+			    x->topic ? x->topic : "");
+		}
+	}
+
 	for (hashnum = lopt->starthash; hashnum < CH_MAX; hashnum++)
 	{
 		if (numsend > 0)

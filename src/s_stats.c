@@ -53,6 +53,7 @@ int stats_denyver(aClient *, char *);
 int stats_notlink(aClient *, char *);
 int stats_class(aClient *, char *);
 int stats_zip(aClient *, char *);
+int stats_officialchannels(aClient *, char *);
 
 #define SERVER_AS_PARA 0x1
 #define FLAGS_AS_PARA 0x2
@@ -101,6 +102,7 @@ struct statstab StatsTable[] = {
 	{ 'f', "denydcc",	stats_denydcc,		0		},	
 	{ 'g', "gline",		stats_gline,		FLAGS_AS_PARA	},
 	{ 'h', "link", 		stats_links,		0 		},
+	{ 'j', "officialchans", stats_officialchannels, 0 },
 	{ 'k', "kline",		stats_kline,		0 		},
 	{ 'l', "linkinfo",	stats_linkinfo,		SERVER_AS_PARA 	},
 	{ 'n', "banrealname",	stats_banrealname,	0 		},
@@ -194,6 +196,8 @@ inline void stats_help(aClient *sptr)
 		"   s Return glines set by/not set by clients matching the specified name");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"I - allow - Send the allow block list");
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+		"j - officialchans - Send the offical channels list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"K - kline - Send the ban user/ban ip/except ban block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
@@ -1065,6 +1069,16 @@ int stats_chanrestrict(aClient *sptr, char *para)
 int stats_shun(aClient *sptr, char *para)
 {
 	tkl_stats(sptr, TKL_GLOBAL|TKL_SHUN, para);
+	return 0;
+}
+
+/* should this be moved to a seperate stats flag? */
+int stats_officialchannels(aClient *sptr, char *para)
+{
+ConfigItem_offchans *x;
+	for (x = conf_offchans; x; x = (ConfigItem_offchans *)x->next)
+		sendto_one(sptr, ":%s %i %s :%s %s",
+			me.name, RPL_TEXT, sptr->name, x->chname, x->topic ? x->topic : "");
 	return 0;
 }
 
