@@ -133,7 +133,7 @@ int  m_version(cptr, sptr, parc, parv)
 {
 	extern char serveropts[];
 
-	if (hunt_server(cptr, sptr, ":%s VERSION :%s", 1, parc,
+	if (hunt_server_token(cptr, sptr, MSG_VERSION, TOK_VERSION, ":%s", 1, parc,
 	    parv) == HUNTED_ISME)
 	{
 		sendto_one(sptr, rpl_str(RPL_VERSION), me.name,
@@ -1538,7 +1538,7 @@ int  m_info(cptr, sptr, parc, parv)
 	char *parv[];
 {
 
-	if (hunt_server(cptr, sptr, ":%s INFO :%s", 1, parc,
+	if (hunt_server_token(cptr, sptr, MSG_INFO, TOK_INFO, ":%s", 1, parc,
 	    parv) == HUNTED_ISME)
 	{
 		m_info_send(sptr);
@@ -1559,7 +1559,7 @@ int  m_dalinfo(cptr, sptr, parc, parv)
 {
 	char **text = dalinfotext;
 
-	if (hunt_server(cptr, sptr, ":%s DALINFO :%s", 1, parc,
+	if (hunt_server_token(cptr, sptr, MSG_DALINFO, TOK_DALINFO, ":%s", 1, parc,
 	    parv) == HUNTED_ISME)
 	{
 		while (*text)
@@ -1590,7 +1590,7 @@ int  m_license(cptr, sptr, parc, parv)
 {
 	char **text = gnulicense;
 
-	if (hunt_server(cptr, sptr, ":%s LICENSE :%s", 1, parc,
+	if (hunt_server_token(cptr, sptr, MSG_LICENSE, TOK_LICENSE, ":%s", 1, parc,
 	    parv) == HUNTED_ISME)
 	{
 		while (*text)
@@ -1616,7 +1616,7 @@ int  m_credits(cptr, sptr, parc, parv)
 {
 	char **text = unrealcredits;
 
-	if (hunt_server(cptr, sptr, ":%s CREDITS :%s", 1, parc,
+	if (hunt_server_token(cptr, sptr, MSG_CREDITS, TOK_CREDITS, ":%s", 1, parc,
 	    parv) == HUNTED_ISME)
 	{
 		while (*text)
@@ -1937,7 +1937,7 @@ int  m_stats(cptr, sptr, parc, parv)
 	int  doall = 0, wilds = 0, showports = IsAnOper(sptr), remote = 0;
 	char *name;
 
-	if (hunt_server(cptr, sptr, ":%s STATS %s :%s", 2, parc,
+	if (hunt_server_token(cptr, sptr, MSG_STATS, TOK_STATS, "%s :%s", 2, parc,
 	    parv) != HUNTED_ISME)
 		return 0;
 	if (OPER_ONLY_STATS) {
@@ -2690,14 +2690,6 @@ int  m_lusers(cptr, sptr, parc, parv)
 	char *parv[];
 {
 
-/*	Doesn't work anyways --Stskeeps
-
-	if (parc > 2)
-		if(hunt_server(cptr, sptr, ":%s LUSERS %s :%s", 2, parc, parv)
-				!= HUNTED_ISME)
-			return 0;
-*/
-
 	/* Just to correct results ---Stskeeps */
 	if (IRCstats.clients > IRCstats.global_max)
 		IRCstats.global_max = IRCstats.clients;
@@ -2805,7 +2797,7 @@ void load_tunefile(void)
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	if (hunt_server(cptr, sptr, ":%s CONNECT %s %s :%s",
+	if (hunt_server_token(cptr, sptr, MSG_CONNECT, TOK_CONNECT, "%s %s :%s",
 	    3, parc, parv) != HUNTED_ISME)
 		return 0;
 
@@ -3253,7 +3245,7 @@ int  m_time(cptr, sptr, parc, parv)
 	int  parc;
 	char *parv[];
 {
-	if (hunt_server(cptr, sptr, ":%s TIME :%s", 1, parc,
+	if (hunt_server_token(cptr, sptr, MSG_TIME, TOK_TIME, ":%s", 1, parc,
 	    parv) == HUNTED_ISME)
 		sendto_one(sptr, rpl_str(RPL_TIME), me.name, parv[0], me.name,
 		    date((long)0));
@@ -3289,9 +3281,6 @@ int  m_svskill(cptr, sptr, parc, parv)
 	if (!IsULine(sptr))
 		return -1;
 
-/*	if (hunt_server(cptr,sptr,":%s SVSKILL %s :%s",1,parc,parv) != HUNTED_ISME)
-		return 0;
-*/
 
 	if (!(acptr = find_client(parv[1], NULL)))
 		return 0;
@@ -3318,7 +3307,7 @@ int  m_admin(cptr, sptr, parc, parv)
 
 	   /* Only allow remote ADMINs if registered -- Barubary */
 	if (IsPerson(sptr) || IsServer(cptr))
-		if (hunt_server(cptr, sptr, ":%s ADMIN :%s", 1, parc,
+		if (hunt_server_token(cptr, sptr, MSG_ADMIN, TOK_ADMIN, ":%s", 1, parc,
 		    parv) != HUNTED_ISME)
 			return 0;
 
@@ -3403,14 +3392,14 @@ int  m_rehash(cptr, sptr, parc, parv)
 			if (parv[2])
 			{
 				if ((x =
-				    hunt_server(cptr, sptr, ":%s REHASH %s %s",
+				    hunt_server_token(cptr, sptr, MSG_REHASH, TOK_REHASH, "%s %s",
 				    1, parc, parv)) != HUNTED_ISME)
 					return 0;
 			}
 			else
 			{
 				if ((x =
-				    hunt_server(cptr, sptr, ":%s REHASH %s", 1,
+				    hunt_server_token(cptr, sptr, MSG_REHASH, TOK_REHASH, "%s", 1,
 				    parc, parv)) != HUNTED_ISME)
 					return 0;
 			}
@@ -3575,7 +3564,7 @@ int  m_restart(cptr, sptr, parc, parv)
 		}
 
 		if ((x =
-		    hunt_server(cptr, sptr, ":%s RESTART %s %s :%s", 2, parc,
+		    hunt_server_token(cptr, sptr, MSG_RESTART, TOK_RESTART, "%s %s :%s", 2, parc,
 		    parv)) != HUNTED_ISME)
 			return 0;
 	}
@@ -3652,7 +3641,7 @@ int  m_trace(cptr, sptr, parc, parv)
 
 
 	if (parc > 2)
-		if (hunt_server(cptr, sptr, ":%s TRACE %s :%s", 2, parc, parv))
+		if (hunt_server_token(cptr, sptr, MSG_TRACE, TOK_TRACE, "%s :%s", 2, parc, parv))
 			return 0;
 
 	if (parc > 1)
@@ -3666,7 +3655,7 @@ int  m_trace(cptr, sptr, parc, parv)
 		return 0;
 	}
 
-	switch (hunt_server(cptr, sptr, ":%s TRACE :%s", 1, parc, parv))
+	switch (hunt_server_token(cptr, sptr, MSG_TRACE, TOK_TRACE, ":%s", 1, parc, parv))
 	{
 	  case HUNTED_PASS:	/* note: gets here only if parv[1] exists */
 	  {
@@ -3838,8 +3827,8 @@ int  m_motd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	int  svsnofile = 0;
 	char userhost[HOSTLEN + USERLEN + 6];
 
-	if (hunt_server(cptr, sptr, ":%s MOTD :%s", 1, parc,
-	    parv) != HUNTED_ISME)
+	if (hunt_server_token(cptr, sptr, MSG_MOTD, TOK_MOTD, ":%s", 1, parc, parv) !=
+HUNTED_ISME)
 		return 0;
 #ifndef TLINE_Remote
 	if (!MyConnect(sptr))
@@ -4098,7 +4087,7 @@ aMotd *read_file(char *filename, aMotd **list)
 int  m_botmotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aMotd *temp;
-	if (hunt_server(cptr, sptr, ":%s BOTMOTD :%s", 1, parc,
+	if (hunt_server_token(cptr, sptr, MSG_BOTMOTD, TOK_BOTMOTD, ":%s", 1, parc,
 	    parv) != HUNTED_ISME)
 		return 0;
 
@@ -4130,7 +4119,7 @@ int  m_rules(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	ConfigItem_tld *ptr;
 	aMotd *temp;
 	char userhost[USERLEN + HOSTLEN + 6];
-	if (hunt_server(cptr, sptr, ":%s RULES :%s", 1, parc,
+	if (hunt_server_token(cptr, sptr, MSG_RULES, TOK_RULES, ":%s", 1, parc,
 	    parv) != HUNTED_ISME)
 		return 0;
 #ifndef TLINE_Remote

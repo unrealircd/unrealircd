@@ -4299,7 +4299,7 @@ int m_names(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 
 	if (parc > 1 &&
-	    hunt_server(cptr, sptr, ":%s NAMES %s %s", 2, parc, parv))
+	    hunt_server_token(cptr, sptr, MSG_NAMES, TOK_NAMES, "%s %s", 2, parc, parv))
 		return 0;
 
 	for (s = para; *s; s++)

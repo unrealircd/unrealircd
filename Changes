@@ -1087,3 +1087,5 @@ seen. gmtime warning still there
 - Fixed yet another serious sts bug, we have to release beta6 soon :P~
 - Fixed check_for_target_limit, should be more lenient now
 - Sts is going for a record here, fixed ANOTHER auth bug in the SAME function
+- Added hunt_server_token (the same as hunt_server except if the
+  server supports tokens, the token is used)
