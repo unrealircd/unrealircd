@@ -1301,7 +1301,12 @@ int  m_server_estab(cptr)
 			if (!SupportSJOIN(cptr))
 				send_channel_modes(cptr, chptr);
 			else
-				send_channel_modes_sjoin(cptr, chptr);
+				if (SupportSJOIN(cptr) && !SupportSJ3(cptr))
+				{
+					send_channel_modes_sjoin(cptr, chptr);
+				}
+				else
+					send_channel_modes_sjoin3(cptr, chptr);
 			if (chptr->topic_time)
 				sendto_one(cptr, "%s %s %s %lu :%s",
 				    (IsToken(cptr) ? TOK_TOPIC : MSG_TOPIC),
