@@ -186,6 +186,13 @@ void	scan_socks4_scan(Scan_AddrStruct *h)
 	IRCMutexUnlock((h->lock));
 	/* IPv6 ?*/
 #ifdef INET6
+	IRCMutexLock((h->lock));
+#ifndef INET6
+	sin.SIN_ADDR.S_ADDR = h->in.S_ADDR;
+#else
+	bcopy(sin.SIN_ADDR.S_ADDR, h->in.S_ADDR, sizeof(h->in.S_ADDR));
+#endif
+	IRCMutexUnlock((h->lock));
 	/* ::ffff:ip hack */
 	cp = (u_char *)&h->in.s6_addr;
 	if (!(cp[0] == 0 && cp[1] == 0 && cp[2] == 0 && cp[3] == 0 && cp[4] == 0
@@ -222,7 +229,7 @@ void	scan_socks4_scan(Scan_AddrStruct *h)
 	 */
 	set_non_blocking(fd, NULL);
 	if ((retval = connect(fd, (struct sockaddr *)&sin,
-                sizeof(sin))) == -1 && !(ERRNO == P_EWOULDBLOCK))
+                sizeof(sin))) == -1 && !(ERRNO == P_EINPROGRESS))
 	{
 		/* we have no socks server! */
 		CLOSE_SOCK(fd);	

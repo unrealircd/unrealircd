@@ -1281,3 +1281,5 @@ seen. gmtime warning still there
 - Fixed a typo displaying a message to edit config.h after compiling reported by dimplesx
   (#0000133)
 - Fixed a bug where except ban didn't work (reported by Hercules)
+- Fixed a scanner memory leak, and made some changes to make the HTTP scanner work
+- Fixed a bug in the socks scanner causing it to fail

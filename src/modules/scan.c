@@ -111,12 +111,25 @@ int    m_scan_Load(int module_load)
 	if (Scan_endpoint.SIN_PORT == 0)
 	{
 		
+		if (*conf_listen->ip == '*') {
+			ircd_log(LOG_ERROR, "Scan.so failed to load: set::scan::endpoint is missing");
+			HooktypeDel(ScanHost,ScanModInfo.handle);
+			HookDel(LocConnect);
+			HookDel(ConfUnknown);
+			HookDel(ServerStats);
+			LockEventSystem();
+			EventDel(Scannings_clean);
+			UnlockEventSystem();
+			IRCMutexDestroy(Scannings_lock);
+			return MOD_FAILED;
+		}
+
 #ifndef INET6
-		Scan_endpoint.SIN_ADDR.S_ADDR = inet_addr("127.0.0.1");
+		Scan_endpoint.SIN_ADDR.S_ADDR = inet_addr(conf_listen->ip);
 #else
-	        inet_pton(AFINET, "127.0.0.1", Scan_endpoint.SIN_ADDR.S_ADDR);
+	        inet_pton(AFINET, conf_listen->ip, Scan_endpoint.SIN_ADDR.S_ADDR);
 #endif
-		Scan_endpoint.SIN_PORT = htons(2121);
+		Scan_endpoint.SIN_PORT = htons(conf_listen->port);
 		Scan_endpoint.SIN_FAMILY = AFINET;
 	}
 	if (Scan_BanTime == 0)
@@ -159,9 +172,11 @@ int	m_scan_Unload(void)
 		HooktypeDel(ScanHost,ScanModInfo.handle);
 		HookDel(LocConnect);
 		HookDel(ConfUnknown);
+		HookDel(ServerStats);
 		LockEventSystem();
 		EventDel(Scannings_clean);
 		UnlockEventSystem();
+		IRCMutexDestroy(Scannings_lock);
 	}
 	return ret;
 }
