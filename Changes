@@ -580,3 +580,4 @@ seen. gmtime warning still there
 - Added ./configure, autoconf generated configure script, (still need to update ./Config)
 - Config fixes, settings.h and Makefile.dist are now dead. RIP.
 - Fixed a typo in configure
+- Rewrote Config, it is now perfectly suited for an autoconf interface rather than a standalone config

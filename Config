@@ -1,109 +1,87 @@
 #!/bin/sh
-#
-# Based off Config by Michael Graff (explorer@flame.org)
-# Copyright 1996, 1997
-#
-# (original that is =P)
-# UnrealIRCd - by Techie
-#
-# You may distribute this file without changes freely providing this notice
-# remains intact.  This file may not be redistributed or made available for
-# distribution without the author's prior consent.
-#
-# $Id$
-IRCD_VERSION="Unreal3.2-Selene"
-CONF_DATE=`date`
-#
-trap "" 13 14 15
-OPTIONS=Settings
-AUTO_CONFIG=""
-#
-c=''
-n=''
-#
-DIR=`pwd`
+# Rewritten completely to be an interface to autoconf by codemastr
+# This was inspired by the config by Michael Graff (explorer@flame.org)
+# but was written from scratch
+
+# In order to be faster than the old Config, this assumes that all information
+# in the cache file is valid and therefore doesn't check it, so if you messed with
+# default values thats your problem :P
+
+c=""
+n=""
 NOSPOOF="1"
-DPATH="$DIR"
-SPATH="$DIR/src/ircd"
+DPATH="`pwd`"
+SPATH="`pwd`/src/ircd"
+HUB=""
+DOMAINNAME=`hostname`
+DEFPERM="0600"
+CRYPTOIRCD=""
 CRYPT_OPER_PASSWORD=""
 CRYPT_LINK_PASSWORD=""
 CRYPT_ILINE_PASSWORD=""
 CRYPT_XLINE_PASSWORD=""
 LISTEN_SIZE="5"
+NICKNAMEHISTORYLENGTH="2000"
 MAXSENDQLENGTH="3000000"
 BUFFERPOOL="9"
-NICKNAMEHISTORYLENGTH="2000"
 MAXCONNECTIONS="1024"
-DEFPERM="0600"
-HUB=""
-#
-# load $OPTIONS if present
-#
-if [ -r "$OPTIONS" ] ; then
-    . $OPTIONS
+
+if [ "`eval echo -n 'a'`" = "-n a" ] ; then
+        c="\c"
+else
+        n="-n"
 fi
 
-#
-2>/dev/null
-if [ "`eval echo -n 'a'`" = "-n a" ] ; then
-        c='\c'
-else
-        n='-n'
+
+#parse arguments
+NOCACHE=""
+NOINTRO=""
+if [ "$1" = "-nocache" -o "$2" = "-nocache" ] ; then
+    NOCACHE="1"
+fi
+if [ "$1" = "-nointro" -o "$2" = "-nointro" ] ; then
+    NOINTRO="1"
+fi
+
+if [ -f "config.settings" -a -z $NOCACHE ] ; then
+    . config.settings
 fi
 
 clear
 
-    if [ -r .CHANGES.NEW ] ; then
+    if [ -f ".CHANGES.NEW" -a -z $NOINTRO ] ; then
         more .CHANGES.NEW
-        echo $n "[Enter to begin]"
+        echo $n "[Enter to continue]"
         read cc
         clear
     fi
-    if [ -r .RELEASE.NOTES ] ; then
+    if [ -f ".RELEASE.NOTES" -a -z $NOINTRO ] ; then
         more .RELEASE.NOTES
-        echo $n "[Enter to begin]"
+        echo $n "[Enter to continue]"
         read cc
         clear
     fi
 
-cat << __EOF__
-Welcome to the configuration for the Unreal IRCD.
-This UnrealIRCD version is: $IRCD_VERSION, Good Luck.
-
-Enter "none" at any prompt to effect a null entry.
-
-__EOF__
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    if [ -n "$NOSPOOF" ] ; then
-	FOO="Yes"
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$NOSPOOF" = "1" ] ; then
+	TEST="Yes"
     else
-	FOO="No"
+	TEST="No"
     fi
     echo ""
-    echo "Many operating systems are running with insecure TCP stacks."
-    echo "This allows IP spoofing attacks, which are very difficult for"
-    echo "operators to track down and ban."
+    echo "Many older operating systems have an insecure TCP/IP stack"
+    echo "which may be vulnerable to IP spoofing attacks, if you run"
+    echo "an operating system that is vulnerable to such attacks"
+    echo "enable this option. If you aren't sure if your OS is vulnerable"
+    echo "you should still enable it."
     echo ""
-    echo "If you are CERTAIN your operating system has secure TCP stacks"
-    echo "you do not need to define this.  If you are not certain, define"
-    echo "this and find out if you need it later or not.  You can mail the"
-    echo "source mailing list later; someone there can help you determine"
-    echo "if your OS is secure or not."
-    echo ""
-
     echo "Do you have an insecure operating system and therefore want to"
     echo "use the server anti-spoof protection?"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	cc=$TEST
     fi
     case "$cc" in
 	[Yy]*)
@@ -114,72 +92,54 @@ while [ -z "$FOO" ] ; do
 	    ;;
 	*)
 	    echo ""
-	    echo "You need to enter either Yes or No here..."
-	    echo ""
-	    FOO=""
+	    echo "You must enter either Yes or No"
+	    TEST=""
 	    ;;
     esac
 done
 
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    FOO="$DPATH"
+TEST=""
+while [ -z "$TEST" ] ; do
+    TEST="$DPATH"
     echo ""
     echo "What directory are all the server configuration files in?"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	DPATH=$TEST
+	break
     fi
 done
 DPATH=$cc
 
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    FOO="$SPATH"
+TEST=""
+while [ -z "$TEST" ] ; do
+    TEST="$SPATH"
     echo ""
-    echo "What is the explicit path to where the ircd binary will be"
-    echo "installed?  This should point to a file, not a directory"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo "What is the path to the ircd binary including the name of the binary?"
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	SPATH=$TEST
+	break
     fi
 done
 SPATH=$cc
 
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    if [ -n "$HUB" ] ; then
-	FOO="Hub"
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$HUB" = "1" ] ; then
+	TEST="Hub"
     else
-	FOO="Hub"
+	TEST="Leaf"
     fi
     echo ""
     echo "Would you like to compile as a hub or as a leaf?"
-    echo "Type Hub for selecting hub and Leaf for a leaf.."
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo "Type Hub to select hub and Leaf to select leaf."
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	cc=$TEST
     fi
     case "$cc" in
 	[Hh]*)
@@ -190,73 +150,66 @@ while [ -z "$FOO" ] ; do
 	    ;;
 	*)
 	    echo ""
-	    echo "You need to enter either Hub or Leaf here..."
-	    echo ""
-	    FOO=""
+	    echo "You must enter either Hub or Leaf"
+	    TEST=""
 	    ;;
     esac
 done
 
-DOMAINNAME=`hostname`
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    FOO="$DOMAINNAME"
+TEST=""
+while [ -z "$TEST" ] ; do
+    TEST="$DOMAINNAME"
     echo ""
-    echo "What is your box hostname?"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo "What is the hostname of the server running your IRCd?"
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	DOMAINNAME=$TEST
+	break
     fi
 done
 DOMAINNAME=$cc
 
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    FOO="$DEFPERM"
+TEST=""
+while [ -z "$TEST" ] ; do
+    TEST="$DEFPERM"
     echo ""
-    echo "What should the default permissions for your ircd.conf be? (Set this to 0 to disable)"
+    echo "What should the default permissions for your configuration files be? (Set this to 0 to disable)"
     echo "It is strongly recommended that you use 0600 to prevent unwanted reading of the file"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	DEFPERM=$TEST
+	break
     fi
+    case "$cc" in
+	[0-9]*)
+	    DEFPERM="$cc"
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter a number"
+	    TEST=""
+	    ;;
+    esac
+
 done
 DEFPERM=$cc
 
 
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    if [ -n "$CRYPTOIRCD" ] ; then
-	FOO="Yes"
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$CRYPTOIRCD" = "1" ] ; then
+	TEST="Yes"
     else
-	FOO="No"
+	TEST="No"
     fi
     echo ""
-    echo "Do you want to support SSL (Secure Sockets Layer) connections"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo "Do you want to support SSL (Secure Sockets Layer) connections?"
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	cc=$TEST
     fi
     case "$cc" in
 	[Yy]*)
@@ -267,32 +220,25 @@ while [ -z "$FOO" ] ; do
 	    ;;
 	*)
 	    echo ""
-	    echo "You need to enter either Yes or No here..."
-	    echo ""
-	    FOO=""
+	    echo "You must enter either Yes or No"
+	    TEST=""
 	    ;;
     esac
 done
 
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    if [ -n "$CRYPT_OPER_PASSWORD" ] ; then
-	FOO="Yes"
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$CRYPT_OPER_PASSWORD" = "1" ] ; then
+	TEST="Yes"
     else
-	FOO="No"
+	TEST="No"
     fi
     echo ""
-    echo "Do you use encrypted operator passwords?"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo "Do you want use encrypted oper {} passwords?"
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	cc=$TEST
     fi
     case "$cc" in
 	[Yy]*)
@@ -303,33 +249,25 @@ while [ -z "$FOO" ] ; do
 	    ;;
 	*)
 	    echo ""
-	    echo "You need to enter either Yes or No here..."
-	    echo ""
-	    FOO=""
+	    echo "You must enter either Yes or No"
+	    TEST=""
 	    ;;
     esac
 done
 
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    if [ -n "$CRYPT_LINK_PASSWORD" ] ; then
-	FOO="Yes"
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$CRYPT_LINK_PASSWORD" = "1" ] ; then
+	TEST="Yes"
     else
-	FOO="No"
+	TEST="No"
     fi
     echo ""
-    echo "Do you use encrypted incoming link passwords? (N lines only,"
-    echo "C lines must remain unencrypted always)"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo "Do you want use encrypted incoming link {} passwords?"
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	cc=$TEST
     fi
     case "$cc" in
 	[Yy]*)
@@ -340,33 +278,26 @@ while [ -z "$FOO" ] ; do
 	    ;;
 	*)
 	    echo ""
-	    echo "You need to enter either Yes or No here..."
-	    echo ""
-	    FOO=""
+	    echo "You must enter either Yes or No"
+	    TEST=""
 	    ;;
     esac
 done
 
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-if [ -n "$CRYPT_XLINE_PASSWORD" ] ; then
-	FOO="yes"
+TEST=""
+while [ -z "$TEST" ] ; do
+if [ "$CRYPT_XLINE_PASSWORD" = "1" ] ; then
+	TEST="yes"
 else 
-	FOO="No"
+	TEST="No"
 fi
 echo ""
-echo "Do you want to use encrypted Restart/Die passwords?"
-echo $n "[$FOO] -> $c"
-if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+echo "Do you want to use encrypted drpass {} passwords?"
+echo $n "[$TEST] -> $c"
 	read cc
-else
-	cc=""
-runonce=Yes
-fi
-if [ -z "$cc" ] ; then
-	cc=$FOO
-fi
+	if [ -z "$cc" ] ; then
+		cc=$TEST
+	fi
 	case "$cc" in
 		[Yy]*)
 			CRYPT_XLINE_PASSWORD="1"
@@ -376,31 +307,24 @@ fi
 			;;
 		*)
 			echo ""
-			echo "You need to enter either Yes or No here..."
-			echo ""
-			FOO=""
+	                echo "You must enter either Yes or No"
+			TEST=""
 			;;
 		esac
 done
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-if [ -n "$CRYPT_ILINE_PASSWORD" ] ; then
-	FOO="Yes"
+TEST=""
+while [ -z "$TEST" ] ; do
+if [ "$CRYPT_ILINE_PASSWORD" = "1" ] ; then
+	TEST="Yes"
 else
-	FOO="No"
+	TEST="No"
 fi
 echo ""
-echo "Do you want to use encrypted I:line passwords?"
-echo $n "[$FOO] -> $c"
-if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+echo "Do you want to use encrypted allow {} passwords?"
+echo $n "[$TEST] -> $c"
 	read cc
-else
-	cc=""
-	runonce=Yes
-fi
 if [ -z "$cc" ] ; then
-	cc=$FOO
+	cc=$TEST
 fi
 	case "$cc" in
 		[Yy]*)
@@ -411,30 +335,23 @@ fi
 			;;
 		*)
 			echo ""
-			echo "You need to enter either Yes or No here..."
-			echo ""
-			FOO=""
+	                echo "You must enter either Yes or No"
+			TEST=""
 			;;
 		esac
 done		
 
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    FOO="$LISTEN_SIZE"
+TEST=""
+while [ -z "$TEST" ] ; do
+    TEST="$LISTEN_SIZE"
     echo ""
-    echo "What listen() backlog value do you wish to use?  Some servers"
-    echo "have problems with more than 5, others work fine with many, many"
-    echo "more."
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo "What listen() backlog value do you wish to use?  Some older servers"
+    echo "have problems with more than 5, others work fine with many more."
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	LISTEN_SIZE=$TEST
+	break
     fi
     case "$cc" in
 	[1-9]*)
@@ -442,28 +359,22 @@ while [ -z "$FOO" ] ; do
 	    ;;
 	*)
 	    echo ""
-	    echo "You need to enter a number here."
-	    echo ""
-	    FOO=""
+	    echo "You must enter a number"
+	    TEST=""
 	    ;;
     esac
 done
 
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    FOO="$NICKNAMEHISTORYLENGTH"
+TEST=""
+while [ -z "$TEST" ] ; do
+    TEST="$NICKNAMEHISTORYLENGTH"
     echo ""
     echo "How far back do you want to keep the nickname history?"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	NICKNAMEHISTORYLENGTH=$TEST
+	break
     fi
     case "$cc" in
 	[1-9]*)
@@ -471,84 +382,71 @@ while [ -z "$FOO" ] ; do
 	    ;;
 	*)
 	    echo ""
-	    echo "You need to enter a number here."
-	    echo ""
-	    FOO=""
+	    echo "You must enter a number"
+	    TEST=""
 	    ;;
     esac
 done
 
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    FOO="$MAXSENDQLENGTH"
+TEST=""
+while [ -z "$TEST" ] ; do
+    TEST="$MAXSENDQLENGTH"
     echo ""
-    echo "What sendq length do you wish to have?"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo "What is the maximum sendq length you wish to have?"
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	MAXSENDQLENGTH=$TEST
+	break
     fi
     case "$cc" in
-	[1-9]*)
+	[1-9][0-9][0-9][0-9]*)
 	    MAXSENDQLENGTH="$cc"
 	    ;;
 	*)
 	    echo ""
-	    echo "You need to enter a number here."
-	    echo ""
-	    FOO=""
+	    echo "You must enter a number greater than or equal to 1000"
+	    TEST=""
 	    ;;
     esac
 done
 
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    FOO="$BUFFERPOOL"
+TEST=""
+while [ -z "$TEST" ] ; do
+    TEST="$BUFFERPOOL"
     echo ""
-    echo "How many buffer pools would you like (number * MAXSENDQLENGTH) ?"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo "How many buffer pools would you like?
+    echo "This number will be multiplied by MAXSENDQLENGTH."
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	BUFFERPOOL=$TEST
+	break
     fi
     case "$cc" in
-	*)
+	[1-9]*)
 	    BUFFERPOOL="$cc"
 	    ;;
+	*)
+	    echo ""
+	    echo "You must enter a number"
+	    TEST=""
+	    ;;
     esac
+
 done
 
 echo ""
-echo ""
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    FOO="$MAXCONNECTIONS"
+TEST=""
+while [ -z "$TEST" ] ; do
+    TEST="$MAXCONNECTIONS"
     echo ""
-    echo "How many file descriptors (or sockets) can the irc server use?"
-    echo "(The result above, if any - shows how many sockets that the ircd can use",
-    echo " and can be used as an answer here)"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo "How many file descriptors (or sockets) can the IRCd use?"
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	MAXCONNECTIONS=$TEST
+	break
     fi
     case "$cc" in
 	[1-9][0-9][0-9]*)
@@ -556,14 +454,13 @@ while [ -z "$FOO" ] ; do
 	    ;;
 	*)
 	    echo ""
-	    echo "You need to enter a number here, greater or equal to 100."
-	    echo ""
-	    FOO=""
+	    echo "You must to enter a number greater than or equal to 100"
+	    TEST=""
 	    ;;
     esac
 done
-rm -f $OPTIONS
-cat > $OPTIONS << __EOF__
+rm -f config.settings
+cat > config.settings << __EOF__
 #
 NOSPOOF="$NOSPOOF"
 DPATH="$DPATH"
@@ -618,24 +515,21 @@ echo $CONF
 $CONF
 cat << __EOF__
 
- _____________________________________________________________________
-|                                                                     |
-|                    UnrealIRCd Compile-Time Config                   |
-|                                                                     |
-| The file "$OPTIONS" was either created or rewritten to contain your |
-| answers to the above questions.                                     |
-|                                                                     |
-|_____________________________________________________________________|
-|_____________________________________________________________________|
-|                                                                     |
-| Now all you have todo is type 'make' and let it compile. When thats |
-| done, you will receive other instructions on what todo next.        |
-|                                                                     |
-|_____________________________________________________________________|
-|_____________________________________________________________________|
-| - The UnrealIRCd Team -                                             |
-| * Stskeeps  stskeeps@unrealircd.com                                 |
-| * codemastr codemastr@unrealircd.com                                |
-| * DrBin     drbin@unrealircd.com                                    |
-|_____________________________________________________________________|
+ _______________________________________________________________________
+|                                                                       |
+|                    UnrealIRCd Compile-Time Config                     |
+|_______________________________________________________________________|
+|_______________________________________________________________________|
+|                                                                       |
+| Now all you have to do is type 'make' and let it compile. When that's |
+| done, you will receive other instructions on what to do next.         |
+|                                                                       |
+|_______________________________________________________________________|
+|_______________________________________________________________________|
+|                        - The UnrealIRCd Team -                        |
+|                                                                       |
+| * Stskeeps  stskeeps@unrealircd.com                                   |
+| * codemastr codemastr@unrealircd.com                                  |
+| * DrBin     drbin@unrealircd.com                                      |
+|_______________________________________________________________________|
 __EOF__
