@@ -447,6 +447,21 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 			hostmask = usermask;
 			usermask = "*";
 		}
+		
+		if ((*type == 'z') || (*type == 'Z'))
+		{
+			/* It's a (G)ZLINE, make sure the user isn't specyfing a HOST.
+			 * Just a warning for now, but perhaps in 3.2.4 we should make this an error.
+			 */
+			for (p=hostmask; *p; p++)
+				if (isalpha(*p))
+				{
+					sendnotice(sptr, "WARNING: (g)zlines should be placed on user@IPMASK, not user@hostmask "
+					                 "(this is because (g)zlines are processed BEFORE a dns lookup is done)");
+					break;
+				}
+		}
+		/* set 'p' right for later... */
 		p = hostmask-1;
 	}
 	else

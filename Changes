@@ -716,3 +716,9 @@
         So use with care on mixed-version nets.
 - Fixed /(G)ZLINE [nick] placing the *line on *@host instead of *@IP, reported by
   Snake (#0002246).
+- A warning is now sent to the oper if (s)he tries to add a (G)ZLINE on *@host.
+  (G)ZLINES should have an ipmask, not a hostmask, because they are processed BEFORE
+  any dns lookups are done. Therefore any (g)zlines placed will probably work
+  (but not necessarily) for like an hour (or whatever TTL), but after that the
+  (ab)user can get in again so this is usually not what you want ;).
+  I suppose I'll add a FAQ entry about this.
