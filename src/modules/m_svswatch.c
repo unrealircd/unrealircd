@@ -47,7 +47,7 @@ DLLFUNC int m_svswatch(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_SVSWATCH       "SVSWATCH"
-#define TOK_SVSWATCH       "BW"
+#define TOK_SVSWATCH       "Bw"
 
 ModuleHeader MOD_HEADER(m_svswatch)
   = {

@@ -47,7 +47,7 @@ DLLFUNC int m_svsjoin(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_SVSJOIN       "SVSJOIN"
-#define TOK_SVSJOIN       "BR"
+#define TOK_SVSJOIN       "BX"
 
 ModuleHeader MOD_HEADER(m_svsjoin)
   = {
