@@ -2661,13 +2661,15 @@ int  m_stats(cptr, sptr, parc, parv)
 		stat = '*';
 		  break;
 	}
+	sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, parv[0], stat);
+
+
 	if (stat != '*')
 		sendto_umode(UMODE_EYES, "Stats \'%c\' requested by %s (%s@%s)",
 			stat, sptr->name, sptr->user->username,
 			IsHidden(sptr) ? sptr->user->virthost : sptr->user->
 			realhost);
 		
-	sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, parv[0], stat);
 	return 0;
 }
 
