@@ -630,3 +630,5 @@
 - Fixed the passwd NICK problem
 - Fixed the problem with NewDNS (ive always known about it but never known how it happens) [a pointer prob]
 - Redhat 7 (broken string.h problem), ./Config
+- Added SSL connections, open ports with P:ip:s:*:port to make them SSL
+  ports, made after hq.alert.sk's implementation
