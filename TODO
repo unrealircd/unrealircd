@@ -1,47 +1,21 @@
-                 Unreal3.1-Silverheart
+TODO for Unreal Next:
 
-Scheduled for 4.0:
-* /mode #channel +T hostmask=#channel
- 
-  On join and a person matches the hostmask, 
-  the person will be joined to #channel instead
-  
-/mode # T says what T records there are
-----------------
+Write in entries in this form:
+==============================
 
-* B:Lines or ircu i:lines
-* Config Remote access 
+* nick - date - priority - [ title ]:
+  description
 
------------------------------------------------------------
+If you think that a priority should be higher, make it++
 
-Assigned to DrBin:
-------------------
-* Write Windowze GUI for Remote admin thing
-* Write protocoll specification for remote admin thing
-* Implement protocoll =)
-* modify all instances of exit() to be more win32 frendly =) ...
-* Bugg Stskeeps about the 1-message-per-1.5-sec ... and to use an unrealircd.conf line
-   to say what %age of CPU _can_ be used by the server ... and work out what that means...
+   Priority is 1..10, where 10 is highest, and 1 is lowest.
+----
+TODO :
+----
 
------------------------------------------------------------
-* X-Windows GUI (how bad it can be but hey! :P)
-* IPv6 support (will need to recode IP portion of cloak.c)
-  HERZ|v6 is HERZ@3ffe:2502:100:f00d:0:0:0:1 (uncloaked)
-  HERZ|v6 is HERZ@3ffe:2502:100:f00d:0:0:0:*4314*
-    or something :P
-  (from irc2.10.3)
-* CTCP flood protection(?)
-* A /who flag system, like bahamut's
-* Recode dynconf and all the other new confs
-* Make proxy scanner scan port 23 also  (postponed)
-* #define for auto oflag +H
-* Port to MacOS 7-9, 68k architecture and PPC
-* Port to BeOS
-* Fix up the flag and proto system
-* Split up Link (SLink)
-* Add Dlink (DSLink)
-* Option to allow color striping of QUIT/PART msgs in +S channels
-* Option to hide QUIT/PART msgs in +c channels (if it has color) or in +m channels (if not +v)
+* stskeeps - Tue Dec 12 2000 - 1 - [ IPv6 ]:
+    Add IPv6 compatiblity (requested by many people). Must allow :'s in
+    hostnames, will kill backwards compatiblity when IPv6 is enabled
 
-
------------------------------------------------------
+* stskeeps - Tue Dec 12 2000 - 1 - [ Code ] :
+    Split up code, and make the placement of functions more logic
