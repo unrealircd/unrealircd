@@ -793,7 +793,7 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 	 * #0000053 by |savage|, speedup 
 	*/
 	
-	if (!MyClient(cptr))
+	if (!MyClient(cptr) && IsClient(cptr))
 	{
 		/* channelmode +mu is a special case.. sux!. -- Syzop */		
 

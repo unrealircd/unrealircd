@@ -2407,3 +2407,4 @@ seen. gmtime warning still there
   attempts to join. Suggested by Joolz (#0000992).
 - Added clientsonly/serversonly/ssl/java flags to /stats P (#0000992).
 - Added official-channels block. These channels are listed in /list even if they have 0 users.
+- Fixed a crashbug introduced by +mu fixes 3 days ago (#0001237).
