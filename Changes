@@ -722,3 +722,4 @@ seen. gmtime warning still there
 - Fixed a MOTD rehash bug found by fryo
 - Made CR compatilbity actually work, it autojoins now :)
 - Started updating network files (remove all the obsolete ones)
+- Fixed SQLINE problem 
