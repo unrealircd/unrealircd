@@ -2099,7 +2099,7 @@ int  m_unsqline(cptr, sptr, parc, parv)
 {
 	aSqlineItem *asqline;
 
-	if (!IsServer(sptr) || parc < 1)
+	if (!IsServer(sptr) || parc < 2)
 		return 0;
 
 	sendto_serv_butone_token(cptr, parv[0], MSG_UNSQLINE, TOK_UNSQLINE,
