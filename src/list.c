@@ -131,7 +131,7 @@ aClient *make_client(from, servr)
 	cptr->serv = NULL;
 	cptr->srvptr = servr;
 	cptr->status = STAT_UNKNOWN;
-	cptr->fd = INVALID_SOCKET;
+	cptr->fd = -1;
 	cptr->passwd;
 	(void)strcpy(cptr->username, "unknown");
 	if (size == CLIENT_LOCAL_SIZE)
@@ -141,9 +141,9 @@ aClient *make_client(from, servr)
 		cptr->class = NULL;
 		cptr->sockhost[0] = '\0';
 		cptr->buffer[0] = '\0';
-		cptr->authfd = INVALID_SOCKET;
+		cptr->authfd = -1;
 #ifdef SOCKSPORT
-		cptr->socksfd = INVALID_SOCKET;
+		cptr->socksfd = -1;
 #endif
 	}
 	return (cptr);

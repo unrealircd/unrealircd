@@ -108,28 +108,26 @@ void init_socks(aClient *cptr)
  * otherwise, the connection is checked to see if it is a "secure"
  * socks4+ server
  */
-void start_socks(cptr)
-	aClient *cptr;
+void start_socks(aClient *cptr)
 {
 	struct SOCKADDR_IN sin;
 	int  sinlen = sizeof(struct SOCKADDR_IN);
-
-	if ((cptr->socksfd = socket(AFINET, SOCK_STREAM, 0)) == -1)
+ 
+	if ((cptr->socksfd = socket(AFINET, SOCK_STREAM, 0)) < 0)
 	{
 		Debug((DEBUG_ERROR, "Unable to create socks socket for %s:%s",
 		    get_client_name(cptr, TRUE), strerror(get_sockerr(cptr))));
 		return;
 	}
-#ifndef _WIN32			/* this is here in s_auth.c, so I guess it breaks win */
-	if (cptr->socksfd >= (MAXCONNECTIONS - 3))
+	if (++OpenFiles >= (MAXCONNECTIONS - 3))
 	{
 		sendto_ops("Can't allocate fd for socks on %s",
 		    get_client_name(cptr, TRUE));
-		close(cptr->socksfd);
+		CLOSE_SOCK(cptr->socksfd);
+		--OpenFiles;
 		cptr->socksfd = -1;
 		return;
 	}
-#endif
 #ifndef INET6
 	if (Find_except((char *)inetntoa((char *)&cptr->ip),0))
 #else
@@ -151,16 +149,13 @@ void start_socks(cptr)
 #ifndef _WIN32
 	    sinlen) == -1 && errno != EINPROGRESS)
 #else
-	    sinlen) == -1 && (WSAGetLastError() !=
-	    WSAEINPROGRESS && WSAGetLastError() != WSAEWOULDBLOCK))
+	    sinlen) == -1 && (WSAGetLastError() != WSAEINPROGRESS && 
+		WSAGetLastError() != WSAEWOULDBLOCK))
 #endif
 	{
 		/* we have no socks server! */
-#ifndef _WIN32
-		close(cptr->socksfd);
-#else
-		closesocket(cptr->socksfd);
-#endif
+		CLOSE_SOCK(cptr->socksfd);
+		--OpenFiles;
 		cptr->socksfd = -1;
 #ifdef SHOWCONNECTINFO
 		sendto_one(cptr, REPORT_NO_SOCKS);
@@ -168,17 +163,11 @@ void start_socks(cptr)
 		return;
 	}
 	cptr->flags |= (FLAGS_WRSOCKS | FLAGS_SOCKS);
-	if (cptr->socksfd > highest_fd)
-		highest_fd = cptr->socksfd;
 	return;
 
-      skip_socks:
-#ifndef _WIN32
-	close(cptr->socksfd);
-#else
-	closesocket(cptr->socksfd);
-#endif
-	cptr->socksfd = -1;
+skip_socks:
+	CLOSE_SOCK(cptr->socksfd);
+	--OpenFiles;
 	cptr->socksfd = -1;
 #ifdef SHOWCONNECTINFO
 	sendto_one(cptr, REPORT_NO_SOCKS);
@@ -191,8 +180,7 @@ void start_socks(cptr)
  *
  * send the socks server a query to see if it's open.
  */
-void send_socksquery(cptr)
-	aClient *cptr;
+void send_socksquery(aClient *cptr)
 {
 
 	struct SOCKADDR_IN sin;
@@ -213,14 +201,8 @@ void send_socksquery(cptr)
 
 	if (send(cptr->socksfd, socksbuf, 9, 0) != 9)
 	{
-#ifndef _WIN32
-		close(cptr->socksfd);
-#else
-		closesocket(cptr->socksfd);
-#endif
-		if (cptr->socksfd == highest_fd)
-			while (!local[highest_fd])
-				highest_fd--;
+		CLOSE_SOCK(cptr->socksfd);
+		--OpenFiles;
 		cptr->socksfd = -1;
 		cptr->flags &= ~FLAGS_SOCKS;
 #ifdef SHOWCONNECTINFO
@@ -239,22 +221,14 @@ void send_socksquery(cptr)
  * process the socks reply.
  */
 
-void read_socks(cptr)
-	aClient *cptr;
+void read_socks(aClient *cptr)
 {
 	unsigned char socksbuf[12];
 	int  len;
 
 	len = recv(cptr->socksfd, socksbuf, 9, 0);
-
-#ifndef _WIN32
-	(void)close(cptr->socksfd);
-#else
-	(void)closesocket(cptr->socksfd);
-#endif
-	if (cptr->socksfd == highest_fd)
-		while (!local[highest_fd])
-			highest_fd--;
+	CLOSE_SOCK(cptr->socksfd);
+	--OpenFiles;
 	cptr->socksfd = -1;
 	ClearSocks(cptr);
 

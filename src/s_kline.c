@@ -5,7 +5,7 @@
  *
  *
  *   See file AUTHORS in IRC package for additional names of
- *   the programmers. 
+ *   the programmers.
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ extern char zlinebuf[];
 /*
 
  *     type =  TKL_*
- *	usermask@hostmask 
+ *	usermask@hostmask
  *	reason
  *	setby = whom set it
  *	expire_at = when to expire - 0 if not to expire
@@ -176,9 +176,9 @@ aTKline *tkl_expire(aTKline * tmp)
 		for (i1 = 0; i1 <= 5; i1++)
 		{
 			/* winlocal
-			for (i = 0; i <= (MAXCONNECTIONS - 1); i++)	
+			for (i = 0; i <= (MAXCONNECTIONS - 1); i++)
 			*/
-			for (i = 0; i <= highest_fd; ++i)	
+			for (i = 0; i <= LastSlot; ++i)
 			{
 				if (acptr = local[i])
 					if (MyClient(acptr) && IsShunned(acptr))
@@ -186,13 +186,9 @@ aTKline *tkl_expire(aTKline * tmp)
 						chost = acptr->sockhost;
 						cname = acptr->user->username;
 
-						cip =
-						    (char *)inet_ntoa(acptr->
-						    ip);
+						cip = (char *)inet_ntoa(acptr->ip);
 
-
-						if (!(*tmp->hostmask < '0')
-						    && (*tmp->hostmask > '9'))
+						if (!(*tmp->hostmask < '0') && (*tmp->hostmask > '9'))
 							is_ip = 1;
 						else
 							is_ip = 0;
@@ -271,7 +267,7 @@ int  find_tkline_match(aClient *cptr, int xx)
 	for (lp = tklines; lp; lp = lp->next)
 	{
 		points = 0;
-		
+
 		if (!match(lp->usermask, cname) && !match(lp->hostmask, chost))
 			points = 1;
 		if (!match(lp->usermask, cname) && !match(lp->hostmask, cip))
@@ -283,8 +279,8 @@ int  find_tkline_match(aClient *cptr, int xx)
 	}
 
 	if (points != 1)
-		return -1;	
-	
+		return -1;
+
 	if ((lp->type & TKL_KILL) && (xx != 2))
 	{
 		if (lp->type & TKL_GLOBAL)
@@ -292,7 +288,7 @@ int  find_tkline_match(aClient *cptr, int xx)
 			ircstp->is_ref++;
 			sendto_one(cptr,
 				":%s NOTICE %s :*** You are %s from %s (%s)",
-					me.name, cptr->name, 
+					me.name, cptr->name,
 					(lp->expire_at ? "banned" : "permanently banned"),
 					ircnetwork, lp->reason);
 			ircsprintf(msge, "User has been %s from %s (%s)",
@@ -306,7 +302,7 @@ int  find_tkline_match(aClient *cptr, int xx)
 			ircstp->is_ref++;
 			sendto_one(cptr,
 				":%s NOTICE %s :*** You are %s from %s (%s)",
-					me.name, cptr->name, 
+					me.name, cptr->name,
 					(lp->expire_at ? "banned" : "permanently banned"),
 				me.name, lp->reason);
 			ircsprintf(msge, "User is %s (%s)",
@@ -314,7 +310,7 @@ int  find_tkline_match(aClient *cptr, int xx)
 				lp->reason);
 			return (exit_client(cptr, cptr, &me,
 				msge));
-			
+
 		}
 	}
 	if (lp->type & TKL_ZAP)
@@ -400,7 +396,7 @@ void tkl_stats(aClient *cptr)
 	   We output in this row:
 	   Glines,GZlines,KLine, ZLIne
 	   Character:
-	   G, Z, K, z                                    
+	   G, Z, K, z
 	 */
 	tkl_check_expire(NULL);
 	curtime = TStime();
@@ -477,14 +473,14 @@ void tkl_synch(aClient *sptr)
 
 /*
   Service function for timed *:lines
-  
+
   add:  TKL + type user host setby expire_at set_at reason
   del:  TKL - type user host removedby
   list: TKL ?
 
   only global lines are spread out this way.
      type= G = G:Line
-           Z = Z:Line	
+           Z = Z:Line
 */
 
 int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])

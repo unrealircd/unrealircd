@@ -4,7 +4,7 @@
  *                      University of Oulu, Computing Center
  *
  *   See file AUTHORS in IRC package for additional names of
- *   the programmers. 
+ *   the programmers.
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -251,7 +251,7 @@ unsigned char *StripColors(unsigned char *text) {
 	new_str[i] = 0;
 	return new_str;
 }
-	
+
 
 char umodestring[512];
 
@@ -279,7 +279,7 @@ void make_umodestr(void)
 **
 **	for (x = client; x = next_client(x,mask); x = x->next)
 **		HandleMatchingClient;
-**	      
+**
 */
 aClient *next_client(next, ch)
 	aClient *next;		/* First client to check */
@@ -457,13 +457,13 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 **	result if only few servers allowed it...
 */
 #if defined(CHINESE_NICK) || defined(JAPANESE_NICK)
-/* Chinese Nick Verification Code - Added by RexHsu on 08/09/00 (beta2) 
+/* Chinese Nick Verification Code - Added by RexHsu on 08/09/00 (beta2)
  * Now Support All GBK Words,Thanks to Mr.WebBar <climb@guomai.sh.cn>!
  * Special Char Bugs Fixed by RexHsu 09/01/00 I dont know whether it is
  * okay now?May I am right ;p
  * Thanks dilly for providing me Japanese code range!
  * Now I am meeting a nickname conflicting problem....
- * 
+ *
  * GBK Libary Reference:
  * 1. GBK2312·Çºº×Ö·ûºÅÇø(A1A1----A9FE)
  * 2. GBK2312ºº×ÖÇø(B0A1----F7FE)
@@ -1089,9 +1089,9 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		if (buf[0] != '\0' && buf[1] != '\0')
 			sendto_one(cptr, ":%s MODE %s :%s", cptr->name,
 			    cptr->name, buf);
-		
+
 		for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *) tlds->next) {
-			if (!match(tlds->mask, cptr->user->realhost)) 
+			if (!match(tlds->mask, cptr->user->realhost))
 				break;
 		}
 		if (tlds && !BadPtr(tlds->channel)) {
@@ -1171,7 +1171,7 @@ int  m_svsnick(cptr, sptr, parc, parv)
 			(void)add_to_client_hash_table(parv[2], acptr);
 			if (IsPerson(acptr))
 				hash_check_notify(acptr, RPL_LOGON);
-			
+
 		}
 	}
 	return 0;
@@ -1268,7 +1268,7 @@ int  m_nick(cptr, sptr, parc, parv)
 	   ** we simply need to ignore the NICK. Also when we got that server
 	   ** name (again) but from another direction. --Run
 	 */
-	/* 
+	/*
 	   ** We should really only deal with this for msgs from servers.
 	   ** -- Aeto
 	 */
@@ -1498,7 +1498,7 @@ int  m_nick(cptr, sptr, parc, parv)
 	   ** if it was a "NICK new"). Otherwise we kill the youngest
 	   ** when user@host differ, or the oldest when they are the same.
 	   ** --Run
-	   ** 
+	   **
 	 */
 	if (IsServer(sptr))
 	{
@@ -1559,7 +1559,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		if ((differ && (acptr->lastnick < lastnick)) ||
 		    (!differ && (acptr->lastnick > lastnick)))
 		{
-			/* 
+			/*
 			 * Introduce our "correct" user to the other server
 			 */
 
@@ -1638,7 +1638,7 @@ int  m_nick(cptr, sptr, parc, parv)
 			    sptr->from->name, acptr->from->name);
 			sptr->flags |= FLAGS_KILLED;
 			(void)exit_client(NULL, sptr, &me, "Nick collision");
-			/* 
+			/*
 			 * Introduce our "correct" user to the other server
 			 */
 			/* Kill their user. */
@@ -1936,7 +1936,7 @@ static int m_message(cptr, sptr, parc, parv, notice)
 			/* F:Line stuff by _Jozeph_ added by Stskeeps with comments */
 			if (*parv[2] == 1 && MyClient(sptr) && !IsOper(sptr))
 				/* somekinda ctcp thing
-				   and i don't want to waste cpu on what others already checked.. 
+				   and i don't want to waste cpu on what others already checked..
 				   (should this be checked ??) --Sts
 				 */
 			{
@@ -1947,7 +1947,7 @@ static int m_message(cptr, sptr, parc, parv, notice)
 					ConfigItem_deny_dcc *fl;
 					char *end, file[BUFSIZE];
 					int  size_string = 0;
-					
+
 					if (sptr->flags & FLAGS_DCCBLOCK)
 					{
 						sendto_one(sptr, ":%s NOTICE %s :*** You are blocked from sending files as you have tried to send a forbidden file - reconnect to regain ability to send",
@@ -2135,7 +2135,7 @@ static int m_message(cptr, sptr, parc, parv, notice)
 				acptr = find_server_quick(server + 1);
 				if (acptr)
 				{
-					/* 
+					/*
 					   ** Not destined for a user on me :-(
 					 */
 					if (!IsMe(acptr))
@@ -2397,7 +2397,7 @@ int  m_statserv(cptr, sptr, parc, parv)
 }
 
 
-/* 
+/*
  * Automatic NickServ/ChanServ direction for the identify command
  * -taz
  */
@@ -2444,8 +2444,8 @@ int  m_identify(cptr, sptr, parc, parv)
 
 /*
  * Automatic NickServ/ChanServ parsing. If the second word of parv[1]
- * starts with a '#' this message goes to ChanServ. If it starts with 
- * anything else, it goes to NickServ. If there is no second word in 
+ * starts with a '#' this message goes to ChanServ. If it starts with
+ * anything else, it goes to NickServ. If there is no second word in
  * parv[1], the message defaultly goes to NickServ. If parv[1] == 'help'
  * the user in instructed to /cs, /ns or /ms HELP for the help they need.
  * -taz
@@ -2707,7 +2707,7 @@ int  m_who(cptr, sptr, parc, parv)
 			if (!acptr->user->channel && !isinvis)
 				showperson = 1;
 			/*
-			   ** This is brute force solution, not efficient...? ;( 
+			   ** This is brute force solution, not efficient...? ;(
 			   ** Show entry, if no mask or any of the fields match
 			   ** the mask. --msa
 			 */
@@ -2974,8 +2974,8 @@ int  m_whois(cptr, sptr, parc, parv)
 			if (user->away)
 				sendto_one(sptr, rpl_str(RPL_AWAY), me.name,
 				    parv[0], name, user->away);
-			/* makesure they aren't +H (we'll also check 
-			   before we display a helpop or IRCD Coder msg) 
+			/* makesure they aren't +H (we'll also check
+			   before we display a helpop or IRCD Coder msg)
 			   -- codemastr */
 			if ((IsAnOper(acptr) || IsServices(acptr))
 			    && (!IsHideOper(acptr) || sptr == acptr
@@ -3032,7 +3032,7 @@ int  m_whois(cptr, sptr, parc, parv)
 					    me.name, RPL_WHOISSPECIAL, parv[0],
 					    name, acptr->user->swhois);
 			}
-			/* 
+			/*
 			 * Fix /whois to not show idle times of
 			 * global opers to anyone except another
 			 * global oper or services.
@@ -3356,7 +3356,7 @@ int  m_kill(cptr, sptr, parc, parv)
 			strcpy(inpath,
 			    IsHidden(cptr) ? cptr->user->virthost : cptr->user->
 			    realhost);
-			if (kcount < 2)	/* Only check the path the first time 
+			if (kcount < 2)	/* Only check the path the first time
 					   around, or it gets appended to itself. */
 				if (!BadPtr(path))
 				{
@@ -3403,10 +3403,10 @@ int  m_kill(cptr, sptr, parc, parv)
 		*/
                 ircd_log
                     (LOG_KILL, "KILL (%s) by  %s(%s!%s)",
-                           make_nick_user_host 
+                           make_nick_user_host
                      (acptr->name, acptr->user->username, (IsHidden(acptr) ? acptr->user->virthost : acptr->user->realhost)),
                             parv[0],
-                            inpath, 
+                            inpath,
                             path);
 		/*
 		   ** And pass on the message to other servers. Note, that if KILL
@@ -3458,7 +3458,7 @@ int  m_kill(cptr, sptr, parc, parv)
 				killer = path;
 			(void)ircsprintf(buf2, "Killed (%s)", killer);
 		}
-		
+
 		if (exit_client(cptr, acptr, sptr, buf2) == FLUSH_BUFFER)
 			return FLUSH_BUFFER;
 	}
@@ -3466,7 +3466,7 @@ int  m_kill(cptr, sptr, parc, parv)
 }
 
 /***********************************************************************
- * m_away() - Added 14 Dec 1988 by jto. 
+ * m_away() - Added 14 Dec 1988 by jto.
  *            Not currently really working, I don't like this
  *            call at all...
  *
@@ -4016,7 +4016,7 @@ int  m_oper(cptr, sptr, parc, parv)
 		    UMODE_FLOOD | UMODE_CLIENT | UMODE_KILLS);
 		send_umode_out(cptr, sptr, old);
 #ifndef NO_FDLIST
-		addto_fdlist(sptr->fd, &oper_fdlist);
+		addto_fdlist(sptr->slot, &oper_fdlist);
 #endif
 		sendto_one(sptr, rpl_str(RPL_YOUREOPER), me.name, parv[0]);
 
@@ -4600,7 +4600,7 @@ int  m_umode(cptr, sptr, parc, parv)
 		if ((sptr->umodes & (UMODE_FCLIENT)) && !IsOper(sptr))
 			sptr->umodes &= ~UMODE_FCLIENT;
 
-		/* Agents 
+		/* Agents
 		   if ((sptr->umodes & (UMODE_AGENT)) && !(sptr->oflag & OFLAG_AGENT))
 		   sptr->umodes &= ~UMODE_AGENT; */
 		if ((sptr->umodes & UMODE_HIDING) && !IsAnOper(sptr))
@@ -4656,7 +4656,7 @@ int  m_umode(cptr, sptr, parc, parv)
 	    MyConnect(sptr))
 	{
 #ifndef NO_FDLIST
-		delfrom_fdlist(sptr->fd, &oper_fdlist);
+		delfrom_fdlist(sptr->slot, &oper_fdlist);
 #endif
 		sptr->oflag = 0;
 	}
@@ -4667,7 +4667,7 @@ int  m_umode(cptr, sptr, parc, parv)
 		IRCstats.operators--;
 #ifndef NO_FDLIST
 		if (MyConnect(sptr))
-			delfrom_fdlist(sptr->fd, &oper_fdlist);
+			delfrom_fdlist(sptr->slot, &oper_fdlist);
 #endif
 	}
 	if (!(setflags & UMODE_INVISIBLE) && IsInvisible(sptr))
@@ -4688,11 +4688,11 @@ int  m_umode(cptr, sptr, parc, parv)
 	return 0;
 }
 
-/* 
+/*
     m_umode2 added by Stskeeps
     parv[0] - sender
     parv[1] - modes to change
-    
+
     Small wrapper to bandwidth save
 */
 
@@ -4995,7 +4995,7 @@ void send_umode_out(cptr, sptr, old)
 
 	send_umode(NULL, sptr, old, SEND_UMODES, buf);
 
-	for (i = highest_fd; i >= 0; i--)
+	for (i = LastSlot; i >= 0; i--)
 		if ((acptr = local[i]) && IsServer(acptr) &&
 		    (acptr != cptr) && (acptr != sptr) && *buf)
 			if (!SupportUMODE2(acptr))
@@ -5024,7 +5024,7 @@ void send_umode_out_nickv2(cptr, sptr, old)
 
 	send_umode(NULL, sptr, old, SEND_UMODES, buf);
 
-	for (i = highest_fd; i >= 0; i--)
+	for (i = LastSlot; i >= 0; i--)
 		if ((acptr = local[i]) && IsServer(acptr)
 		    && !SupportNICKv2(acptr) && (acptr != cptr)
 		    && (acptr != sptr) && *buf)
@@ -5057,7 +5057,7 @@ void send_svsmode_out(cptr, sptr, bsptr, old)
 }
 
 /***********************************************************************
- * m_silence() - Added 19 May 1994 by Run. 
+ * m_silence() - Added 19 May 1994 by Run.
  *
  ***********************************************************************/
 
@@ -5402,7 +5402,7 @@ int  m_sapart(cptr, sptr, parc, parv)
 
 	return 0;
 }
-/* These just waste space 
+/* These just waste space
 int m_noshortn(cptr, sptr, parc, parv)
 aClient	*cptr, *sptr;
 int	parc;

@@ -160,7 +160,7 @@ TS   last_garbage_collect = 0;
 char **myargv;
 int  portnum = -1;		/* Server port number, listening this */
 char *configfile = CONFIGFILE;	/* Server configuration file */
-int  debuglevel = -1;		/* Server debug level */
+int  debuglevel = 10;		/* Server debug level */
 int  bootopt = 0;		/* Server boot option flags */
 char *debugmode = "";		/*  -"-    -"-   -"-  */
 char *sbrk0;			/* initial sbrk(0) */
@@ -210,7 +210,7 @@ VOIDSIG s_die()
 #ifdef	USE_SYSLOG
 	(void)syslog(LOG_CRIT, "Server Killed By SIGTERM");
 #endif
-	flush_connections(me.fd);
+	flush_connections(&me);
 #ifndef _WIN32
 	exit(-1);
 #endif
@@ -338,21 +338,8 @@ VOIDSIG s_segv()
 	    ("Dumped core to %s - please read Unreal.nfo on what to do!",
 	    corename);
 #endif
-	flush_connections(me.fd);
-
-#ifndef _WIN32
-	for (i = 3; i < MAXCONNECTIONS; i++)
-	{
-		(void)close(i);
-	}
-	kill(p, SIGQUIT);
-#else
-	for (i = 0; i < highest_fd; i++)
-	{
-		if (closesocket(i) == -1)
-			close(i);
-	}
-#endif
+	flush_connections(&me);
+	close_connections();
 	exit(-1);
 }
 
@@ -363,7 +350,7 @@ void server_reboot(mesg)
 
 	sendto_realops("Aieeeee!!!  Restarting server... %s", mesg);
 	Debug((DEBUG_NOTICE, "Restarting server... %s", mesg));
-	flush_connections(me.fd);
+	flush_connections(&me);
 	/*
 	   ** fd 0 must be 'preserved' if either the -d or -i options have
 	   ** been passed to us before restarting.
@@ -381,10 +368,7 @@ void server_reboot(mesg)
 		(void)close(0);
 	(void)execv(MYNAME, myargv);
 #else
-	for (i = 0; i < highest_fd; i++)
-		if (closesocket(i) == -1)
-			close(i);
-
+	close_connections();
 	(void)execv(myargv[0], myargv);
 #endif
 #ifdef USE_SYSLOG
@@ -536,7 +520,7 @@ extern TS check_pings(TS currenttime, int check_kills)
 	TS   oldest = 0;
 	static char banbuf[1024];
 
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 	{
 		/* If something we should not touch .. */
 		if (!(cptr = local[i]) || IsMe(cptr) || IsLog(cptr))
@@ -644,11 +628,8 @@ extern TS check_pings(TS currenttime, int check_kills)
 				{
 					if (cptr->authfd >= 0)
 					{
-#ifndef _WIN32
-						(void)close(cptr->authfd);
-#else
-						(void)closesocket(cptr->authfd);
-#endif
+						CLOSE_SOCK(cptr->authfd);
+						--OpenFiles;
 						cptr->authfd = -1;
 						cptr->count = 0;
 						*cptr->buffer = '\0';
@@ -657,11 +638,8 @@ extern TS check_pings(TS currenttime, int check_kills)
 #ifdef SOCKSPORT
 					if (cptr->socksfd >= 0)
 					{
-#ifndef _WIN32
-						(void)close(cptr->socksfd);
-#else
-						(void)closesocket(cptr->socksfd);
-#endif /* _WIN32 */
+						CLOSE_SOCK(cptr->socksfd);
+						--OpenFiles;
 						cptr->socksfd = -1;
 					}
 #endif /* SOCKSPORT */
@@ -795,7 +773,7 @@ inline TS   check_fdlists(now)
 	int  pri;		/* temp. for priority */
 	int  i, j;
 	j = 0;
-	for (i = highest_fd; i >= 0; i--)
+	for (i = LastSlot; i >= 0; i--)
 	{
 		if (!(cptr = local[i]))
 			continue;
@@ -1189,6 +1167,7 @@ int  InitwIRCD(argc, argv)
 	me.serv->up = me_hash;
 	me.serv->numeric = conf_me->numeric;
 	add_server_to_table(&me);
+	timeofday = time(NULL);
 	me.lasttime = me.since = me.firsttime = TStime();
 	(void)add_to_client_hash_table(me.name, &me);
 #if !defined(_AMIGA) && !defined(_WIN32) && !defined(NO_FORKING)
@@ -1355,7 +1334,7 @@ void SocketLoop(void *dummy)
 		}
 
 #endif
-		Debug((DEBUG_DEBUG, "Got message(s)"));
+		//Debug((DEBUG_DEBUG, "Got message(s)"));
 		/*
 		   ** ...perhaps should not do these loops every time,
 		   ** but only if there is some chance of something
@@ -1380,7 +1359,7 @@ void SocketLoop(void *dummy)
 		   ** have data in them (or at least try to flush)
 		   ** -avalon
 		 */
-		flush_connections(me.fd);
+		flush_connections(&me);
 	}
 }
 
@@ -1407,7 +1386,7 @@ static void open_debugfile()
 		cptr->port = debuglevel;
 		cptr->flags = 0;
 		cptr->listener = cptr;
-		local[2] = cptr;
+		/* local[2] = cptr;  winlocal */
 		(void)strcpy(cptr->sockhost, me.sockhost);
 # ifndef _WIN32
 		(void)printf("isatty = %d ttyname = %#x\n",
@@ -1435,7 +1414,7 @@ static void open_debugfile()
 		    cptr->port, myctime(time(NULL))));
 	}
 	else
-		local[2] = NULL;
+		/* local[2] = NULL; winlocal */
 #endif
 	return;
 }

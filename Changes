@@ -499,4 +499,7 @@ seen. gmtime warning still there
 - Converted htmcalc/lcf to events
 - Fixed /stats L bug found by larne
 - Fixed the loop, made htmcalc more clean
+- Applied McSkaf's winlocal patch II, only changed Debug() and removed
+  DEBUGMODE from config.h. Still cores, but we might be closer to a
+  solution. Broken code, do not use devel right now
 

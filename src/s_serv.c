@@ -4,7 +4,7 @@
  *                      University of Oulu, Computing Center
  *
  *   See file AUTHORS in IRC package for additional names of
- *   the programmers. 
+ *   the programmers.
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -370,7 +370,7 @@ int  m_protoctl(cptr, sptr, parc, parv)
 			options = dummyblank;
 		else
 		{
-			options = &equal[1];	
+			options = &equal[1];
 			equal[0] = '\0';
 		}
 */
@@ -560,7 +560,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *conf);
 **      parv[2] = hopcount
 **      parv[3] = numeric
 **      parv[4] = serverinfo
-**      
+**
 ** on old protocols, serverinfo is parv[3], and numeric is left out
 **
 **  Recode 2001 by Stskeeps
@@ -596,7 +596,7 @@ int  m_server(cptr, sptr, parc, parv)
 	}
 
 	/*
-	 *  We do some parameter checks now. We want atleast upto serverinfo now 
+	 *  We do some parameter checks now. We want atleast upto serverinfo now
 	 */
 	if (parc < 4 || (!*parv[3]))
 	{
@@ -760,7 +760,7 @@ int  m_server(cptr, sptr, parc, parv)
 				    sizeof(cptr->info));
 
 				for (vlines = conf_deny_version; vlines; vlines = (ConfigItem_deny_version *) vlines->next) {
-					if (!match(vlines->mask, cptr->name)) 
+					if (!match(vlines->mask, cptr->name))
 						break;
 				}
 				if (vlines) {
@@ -801,7 +801,7 @@ int  m_server(cptr, sptr, parc, parv)
 					if (result)
 						return exit_client(cptr, cptr, cptr,
 							"Denied by V:line");
-					
+
 					for (i = 0; vflags[i]; i++) {
 						if (vflags[i] == '!') {
 							i++;
@@ -824,8 +824,8 @@ int  m_server(cptr, sptr, parc, parv)
 			}
 			else
 				strncpyzt(cptr->info, info[0] ? info : me.name,
-				    sizeof(cptr->info));					
-							
+				    sizeof(cptr->info));
+
 		}
 		else
 				strncpyzt(cptr->info, info[0] ? info : me.name,
@@ -838,28 +838,28 @@ int  m_server(cptr, sptr, parc, parv)
 			{
 				sendto_locfailops("Link %s denied, colliding server numeric",
 					inpath);
-				
+
 				return exit_client(cptr, cptr, cptr,
 				    "Colliding server numeric (choose another)");
 			}
 		}
 		for (deny = conf_deny_link; deny; deny = (ConfigItem_deny_link *) deny->next) {
-			if (deny->flag.type == CRULE_ALL && !match(deny->mask, servername) 
+			if (deny->flag.type == CRULE_ALL && !match(deny->mask, servername)
 				&& crule_eval(deny->rule)) {
 				sendto_ops("Refused connection from %s.",
 					get_client_host(cptr));
 				return exit_client(cptr, cptr, cptr,
 					"Disallowed by connection rule");
 			}
-		}  
-				
+		}
+
 		/* Start synch now */
 		m_server_synch(cptr, numeric, aconf);
 	}
 	else
 	{
 		m_server_remote(cptr, sptr, parc, parv);
-		return 0;  
+		return 0;
 	}
 }
 
@@ -873,7 +873,7 @@ int	m_server_remote(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	long	numeric = 0;
 	char	*servername = parv[1];
 	int	i;
-	
+
 	if ((acptr = find_server(servername, NULL)))
 	{
 		/* Found. Bad. Quit. */
@@ -931,7 +931,7 @@ int	m_server_remote(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			sendto_locfailops("Link %s(%s) cancelled, colliding server numeric",
 					cptr->name, servername);
-				
+
 			return exit_client(cptr, cptr, cptr,
 			    "Colliding server numeric (choose another)");
 		}
@@ -948,7 +948,7 @@ int	m_server_remote(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	 * server are also U:lined, very helpful if HIDE_ULINES is on
 	 */
 	if (IsULine(cptr)
-	    || (Find_uline(acptr->name))) 
+	    || (Find_uline(acptr->name)))
 		acptr->flags |= FLAGS_ULINE;
 	add_server_to_table(acptr);
 	IRCstats.servers++;
@@ -956,7 +956,7 @@ int	m_server_remote(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	acptr->flags |= FLAGS_TS8;
 	add_client_to_list(acptr);
 	(void)add_to_client_hash_table(acptr->name, acptr);
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 	{
 		if (!(bcptr = local[i]) || !IsServer(bcptr) ||
 			    bcptr == cptr || IsMe(bcptr))
@@ -989,8 +989,8 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	aClient		*acptr;
 	aChannel	*chptr;
 	int		i;
-		
-	
+
+
 	if (cptr->passwd)
 	{
 		MyFree(cptr->passwd);
@@ -1011,7 +1011,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	IRCstats.servers++;
 	IRCstats.unknown--;
 #ifndef NO_FDLIST
-	addto_fdlist(cptr->fd, &serv_fdlist);
+	addto_fdlist(cptr->slot, &serv_fdlist);
 #endif
 	if ((Find_uline(cptr->name)))
 		cptr->flags |= FLAGS_ULINE;
@@ -1045,7 +1045,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	cptr->serv->conf->class->clients++;
 	cptr->class = cptr->serv->conf->class;
 	add_server_to_table(cptr);
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 	{
 		if (!(acptr = local[i]) || !IsServer(acptr) ||
 		    acptr == cptr || IsMe(acptr))
@@ -1361,7 +1361,7 @@ int  m_server_estab(cptr)
 		cptr->passwd = NULL;
 	}
 #ifndef	HUB
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 		if (local[i] && IsServer(local[i]))
 		{
 			ircstp->is_ref++;
@@ -1481,7 +1481,7 @@ int  m_server_estab(cptr)
 	   ** need to send different names to different servers
 	   ** (domain name matching) Send new server to other servers.
 	 */
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 	{
 		if (!(acptr = local[i]) || !IsServer(acptr) ||
 		    acptr == cptr || IsMe(acptr))
@@ -1516,7 +1516,7 @@ int  m_server_estab(cptr)
 	   ** there are no NICK's to be cancelled...). Of course,
 	   ** if cancellation occurs, all this info is sent anyway,
 	   ** and I guess the link dies when a read is attempted...? --msa
-	   ** 
+	   **
 	   ** Note: Link cancellation to occur at this point means
 	   ** that at least two servers from my fragment are building
 	   ** up connection this other fragment at the same time, it's
@@ -1806,7 +1806,7 @@ int  m_links(cptr, sptr, parc, parv)
 ** by Stskeeps
 **  parv[0] = sender prefix
 **  parv[1] = max global count
-**  parv[2] = time of end sync 
+**  parv[2] = time of end sync
 **  parv[3] = unreal protocol using (numeric)
 **  parv[4] = cloak-crc (> u2302)
 **  parv[5] = free(**)
@@ -1917,7 +1917,7 @@ int  m_netinfo(cptr, sptr, parc, parv)
 		sendto_realops
 			("Link %s is having a different cloak key - %s != %s",
 				cptr->name, parv[4], buf);
-	}	
+	}
 	SetNetInfo(cptr);
 }
 
@@ -1925,7 +1925,7 @@ int  m_netinfo(cptr, sptr, parc, parv)
 #define IRCDTOTALVERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
 #endif
 
-/* 
+/*
  * sends m_info into to sptr
 */
 
@@ -1984,7 +1984,7 @@ void m_info_send(sptr)
 ** m_info
 **	parv[0] = sender prefix
 **	parv[1] = servername
-**  Modified for hardcode by Stskeeps  
+**  Modified for hardcode by Stskeeps
 */
 
 int  m_info(cptr, sptr, parc, parv)
@@ -2421,7 +2421,7 @@ int  m_stats(cptr, sptr, parc, parv)
 	switch (stat)
 	{
 #ifdef STRIPBADWORDS
-	  case 'b': 
+	  case 'b':
 	  {
 		  ConfigItem_badword *words;
 
@@ -2429,7 +2429,7 @@ int  m_stats(cptr, sptr, parc, parv)
 			  sendto_one(sptr, ":%s %i %s :c %s %s", me.name, RPL_TEXT, sptr->name,  words->word, words->replace ? words->replace : "<censored>");
 		  }
 		  for (words = conf_badword_message; words; words = (ConfigItem_badword *) words->next) {
-			  sendto_one(sptr, ":%s %i %s :m %s %s", me.name, RPL_TEXT, sptr->name, words->word, words->replace ? words->replace : "<censored>");		
+			  sendto_one(sptr, ":%s %i %s :m %s %s", me.name, RPL_TEXT, sptr->name, words->word, words->replace ? words->replace : "<censored>");
 		  }
 		  break;
 	  }
@@ -2449,7 +2449,7 @@ int  m_stats(cptr, sptr, parc, parv)
 			  remote = 1;
 			  wilds = 0;
 		  }
-		  for (i = 0; i <= highest_fd; i++)
+		  for (i = 0; i <= LastSlot; i++)
 		  {
 			  if (!(acptr = local[i]))
 				  continue;
@@ -2522,7 +2522,7 @@ int  m_stats(cptr, sptr, parc, parv)
 	  case 'C':
 	  case 'c':
 	  case 'H':
-	  case 'h':	  
+	  case 'h':
 		  for (link_p = conf_link; link_p; link_p = (ConfigItem_link *) link_p->next)
 		  {
 			sendto_one(sptr, ":%s 213 %s C %s@%s * %s %i %s %s%s%s",
@@ -2564,7 +2564,7 @@ int  m_stats(cptr, sptr, parc, parv)
 		  for (allows = conf_allow; allows; allows = (ConfigItem_allow *) allows->next) {
 			  sendto_one(sptr, rpl_str(RPL_STATSILINE), me.name,
 				  parv[0], allows->ip, allows->hostname, allows->maxperip, allows->class->name, allows->server ? allows->server : defserv, allows->port ? allows->port : 6667);
-		  }		  	
+		  }
 		  break;
 	  }
 	  case 'E':
@@ -2624,19 +2624,19 @@ int  m_stats(cptr, sptr, parc, parv)
 			  if (excepts->flag.type == 1)
 				 sendto_one(sptr, rpl_str(RPL_STATSKLINE),
 				     me.name, parv[0], "E", excepts->mask, "");
-		  }	
+		  }
 		  break;
 	  }
 	  case 'M':
 	  case 'm':
-		  for (i = 0; i <= 255; i++)  
+		  for (i = 0; i <= 255; i++)
 			  for (mptr = CommandHash[i]; mptr; mptr = mptr->next)
 				  if (mptr->count)
 #ifndef DEBUGMODE
 					  sendto_one(sptr, rpl_str(RPL_STATSCOMMANDS),
 					      me.name, parv[0], mptr->cmd,
 					      mptr->count, mptr->bytes);
-#else	
+#else
 					  sendto_one(sptr, rpl_str(RPL_STATSCOMMANDS),
 					      me.name, parv[0], mptr->cmd,
 					      mptr->count, mptr->bytes,
@@ -2646,7 +2646,7 @@ int  m_stats(cptr, sptr, parc, parv)
 					      mptr->rticks / CLOCKS_PER_SEC);
 #endif
 		  break;
-	  case 'n': 
+	  case 'n':
 	  {
 		  ConfigItem_ban *bans;
 
@@ -2687,14 +2687,14 @@ int  m_stats(cptr, sptr, parc, parv)
 	  case 'P':
 	  	  if (IsOper(sptr))
 	  	  {
-			  for (i = 0; i <= highest_fd; i++)
+			  for (i = 0; i <= LastSlot; i++)
 			  {
-			        if (!(acptr = local[i]))
-					  continue;
+			    if (!(acptr = local[i]))
+					continue;
 	  	  	  	if (!IsListening(acptr))
 	  	  	  		continue;
 	  	  	  	sendto_one(sptr, ":%s NOTICE %s :*** Listener on %s:%i, clients %i. is %s",
-	  	  	  		me.name, sptr->name, 
+	  	  	  		me.name, sptr->name,
 	  	  	  		((ConfigItem_listen *)acptr->class)->ip,
 	  	  	  		((ConfigItem_listen *)acptr->class)->port,
 	  	  	  		((ConfigItem_listen *)acptr->class)->clients,
@@ -2812,7 +2812,7 @@ int  m_stats(cptr, sptr, parc, parv)
 		  ConfigItem_deny_version *versions;
 
 		  for (versions = conf_deny_version; versions; versions = (ConfigItem_deny_version *) versions->next) {
-			  sendto_one(sptr, rpl_str(RPL_STATSVLINE), me.name, sptr->name, 
+			  sendto_one(sptr, rpl_str(RPL_STATSVLINE), me.name, sptr->name,
 				  versions->version, versions->flags, versions->mask);
 		  }
 		  break;
@@ -2829,8 +2829,8 @@ int  m_stats(cptr, sptr, parc, parv)
 				sendto_one(sptr, rpl_str(RPL_STATSXLINE),
 					me.name, sptr->name, link_p->servername,
 					link_p->port);
-			}	
-		  } 
+			}
+		  }
 		  break;
 	  case 'Y':
 	  case 'y':
@@ -2995,7 +2995,7 @@ int  m_summon(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 Link *helpign = NULL;
 
-/* Now just empty ignore-list, in future reload dynamic help. 
+/* Now just empty ignore-list, in future reload dynamic help.
  * Move out to help.c -Donwulff */
 void reset_help()
 {
@@ -3021,7 +3021,7 @@ int  m_help(cptr, sptr, parc, parv)
 
 	message = parc > 1 ? parv[1] : NULL;
 
-/* Drags along from wallops code... I'm not sure what it's supposed to do, 
+/* Drags along from wallops code... I'm not sure what it's supposed to do,
    at least it won't do that gracefully, whatever it is it does - but
    checking whether or not it's a person _is_ good... -Donwulff */
 
@@ -3273,7 +3273,7 @@ void load_tunefile(void)
 
 /* Evaluate deny link */
 	for (deny = conf_deny_link; deny; deny = (ConfigItem_deny_link *) deny->next) {
-		if (deny->flag.type == CRULE_ALL && !match(deny->mask, aconf->servername) 
+		if (deny->flag.type == CRULE_ALL && !match(deny->mask, aconf->servername)
 			&& crule_eval(deny->rule)) {
 			sendto_one(sptr,
 				"NOTICE %s :Connect: Disallowed by connection rule",
@@ -3351,7 +3351,7 @@ int  m_wallops(cptr, sptr, parc, parv)
 }
 
 
-/* m_gnotice  (Russell) sort of like wallop, but only to +g clients on 
+/* m_gnotice  (Russell) sort of like wallop, but only to +g clients on
 ** this server.
 **	parv[0] = sender prefix
 **	parv[1] = message text
@@ -3422,7 +3422,7 @@ int  m_addline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			fprintf (conf,"%s ",parv[i]);
 		else
 			fprintf (conf,"%s\n",parv[i]);
-	} 
+	}
 	/* I dunno what Potvin was smoking when he made this code, but it plain SUX
 	 * this should work just as good, and no need for a loop -- codemastr */
 	fprintf(conf, "%s\n", text);
@@ -4042,7 +4042,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 ** parv[2] - reason for restart (optional & only if X:line exists)
 **
 ** The password is only valid if there is a matching X line in the
-** config file. If it is not,  then it becomes the 
+** config file. If it is not,  then it becomes the
 */
 int  m_restart(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;
@@ -4214,7 +4214,7 @@ int  m_trace(cptr, sptr, parc, parv)
 	/* report all direct connections */
 
 	now = TStime();
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 	{
 		char *name;
 		char *class;
@@ -4257,7 +4257,7 @@ int  m_trace(cptr, sptr, parc, parv)
 			   * but anyone can see all the opers.
 			   */
 /*			if (IsOper(sptr) &&
- * Allow opers to see invisible users on a remote trace or wildcard 
+ * Allow opers to see invisible users on a remote trace or wildcard
  * search  ... sure as hell  helps to find clonebots.  --Russell
  *			    (MyClient(sptr) || !(dow && IsInvisible(acptr)))
  *                           || !dow || IsAnOper(acptr)) */
@@ -4434,8 +4434,8 @@ int  m_opermotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return 0;
 }
 
-/* 
- * A merge from ircu and bahamut, and some extra stuff added by codemastr 
+/*
+ * A merge from ircu and bahamut, and some extra stuff added by codemastr
  */
 
 aMotd *read_rules(char *filename)
@@ -4487,8 +4487,8 @@ aMotd *read_rules(char *filename)
 }
 
 
-/* 
- * A merge from ircu and bahamut, and some extra stuff added by codemastr 
+/*
+ * A merge from ircu and bahamut, and some extra stuff added by codemastr
  */
 
 aMotd *read_motd(char *filename)
@@ -4546,8 +4546,8 @@ aMotd *read_motd(char *filename)
 }
 
 
-/* 
- * A merge from ircu and bahamut, and some extra stuff added by codemastr 
+/*
+ * A merge from ircu and bahamut, and some extra stuff added by codemastr
  * we can now use 1 function for multiple files -- codemastr
  */
 
@@ -4698,7 +4698,7 @@ int  m_close(cptr, sptr, parc, parv)
 		return 0;
 	}
 
-	for (i = highest_fd; i; i--)
+	for (i = LastSlot; i >= 0; --i)
 	{
 		if (!(acptr = local[i]))
 			continue;
@@ -4720,7 +4720,7 @@ int  m_close(cptr, sptr, parc, parv)
 }
 
 /* m_die, this terminates the server, and it intentionally does not
- * have a reason. If you use it you should first do a GLOBOPS and 
+ * have a reason. If you use it you should first do a GLOBOPS and
  * then a server notice to let everyone know what is going down...
  */
 int  m_die(cptr, sptr, parc, parv)
@@ -4773,7 +4773,7 @@ int  m_die(cptr, sptr, parc, parv)
 	/* Let the +s know what is going on */
 	sendto_ops("Server Terminating by request of %s", parv[0]);
 
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 	{
 		if (!(acptr = local[i]))
 			continue;
@@ -4908,7 +4908,7 @@ int  localdie(void)
 	aClient *acptr;
 	int  i;
 
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 	{
 		if (!(acptr = local[i]))
 			continue;

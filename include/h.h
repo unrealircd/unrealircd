@@ -195,7 +195,9 @@ extern int dbufalloc, dbufblocks, debuglevel;
 #else
 extern int dbufalloc, dbufblocks, debuglevel, errno, h_errno;
 #endif
-extern int highest_fd, debuglevel, portnum, debugtty, maxusersperchannel;
+extern short LastSlot; /* last used index in local client array */
+extern int OpenFiles;  /* number of files currently open */
+extern int debuglevel, portnum, debugtty, maxusersperchannel;
 extern int readcalls, udpfd, resfd;
 extern aClient *add_connection(aClient *, int);
 extern int add_listener(aConfItem *);
@@ -371,5 +373,16 @@ int	del_Command(char *cmd, char *token, int (*func)());
 char *crule_parse(char *);
 int crule_eval(char *);
 void crule_free(char **);
+
+/* Add clients to LocalClients array */
+extern void add_local_client(aClient* cptr);
+/* Remove clients from LocalClients array */
+extern void remove_local_client(aClient* cptr);
+/*
+ * Close all local socket connections, invalidate client fd's
+ * WIN32 cleanup winsock lib
+ */
+extern void close_connections(void);
+extern void flush_connections(aClient *cptr);
 
 #define HASH_CHECK BASE_VERSION

@@ -178,7 +178,7 @@ int  crule_directcon(numargs, crulearg)
 	aClient *acptr;
 
 	/* adapted from m_trace and exit_one_client */
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 	{
 		if (!(acptr = local[i]) || !IsServer(acptr))
 			continue;
@@ -204,7 +204,7 @@ int  crule_via(numargs, crulearg)
 		acptr = lp->value.cptr;
 		if (match((char *)crulearg[1], acptr->name))
 			continue;
-		if (match((char *)crulearg[0], (local[acptr->fd])->name))
+		if (match((char *)crulearg[0], (local[acptr->slot])->name))
 			continue;
 		return (1);
 	}
@@ -221,7 +221,7 @@ int  crule_directop(numargs, crulearg)
 	aClient *acptr;
 
 	/* adapted from m_trace */
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 	{
 		if (!(acptr = local[i]) || !IsAnOper(acptr))
 			continue;

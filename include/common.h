@@ -215,7 +215,6 @@ static char *StsMalloc(size_t size, char *file, long line)
 
 #endif
 
-extern void flush_connections();
 extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 
 /*

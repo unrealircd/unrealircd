@@ -80,7 +80,7 @@ void delfrom_fdlist(int fd, fdlist * listp)
 
 void init_fdlist(fdlist * listp)
 {
-	listp->last_entry = 0;
+	listp->last_entry = -1;
 	memset((char *)listp->entry, '\0', sizeof(listp->entry));
 	return;
 }

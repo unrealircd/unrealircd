@@ -154,6 +154,12 @@ char serveropts[] = {
 
 
 #ifdef DEBUGMODE
+#ifndef _WIN32
+#define SET_ERRNO(x) errno = x
+#else
+#define SET_ERRNO(x) WSASetLastError(x)
+#endif /* _WIN32 */
+
 static char debugbuf[1024];
 
 #ifndef	USE_VARARGS
@@ -162,63 +168,48 @@ void debug(level, form, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10)
 	int  level;
 	char *form, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8, *p9, *p10;
 {
-# ifndef _WIN32
-	int  err = errno;
-# else
-	int  err = WSAGetLastError();
-# endif
-#else
-# ifndef _WIN32
-void debug(int level, char *form, ...)
 #else
 void debug(int level, char *form, ...)
-#endif
 #endif
 {
-# ifndef _WIN32
+	int err = ERRNO;
+
 	va_list vl;
-	int  err = errno;
 	va_start(vl, form);
 
 	if ((debuglevel >= 0) && (level <= debuglevel))
 	{
-#ifndef	USE_VARARGS
-		(void)ircsprintf(debugbuf, form,
-		    p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
+#ifndef USE_VARARGS
+		(void)ircsprintf(debugbuf, form, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
 #else
+# ifndef _WIN32
 		(void)ircvsprintf(debugbuf, form, vl);
+# else
+		vsprintf(debugbuf, form, vl);
+		strcat(debugbuf,"\r\n");
+# endif
 #endif
 
-#ifndef _WIN32
+#if 0
 		if (local[2])
 		{
 			local[2]->sendM++;
 			local[2]->sendB += strlen(debugbuf);
 		}
+#endif
+#ifndef _WIN32
 		(void)fprintf(stderr, "%s", debugbuf);
 		(void)fputc('\n', stderr);
-	}
-	errno = err;
 #else
-		strcat(debugbuf, "\r");
-#ifndef _WIN32GUI
+# ifndef _WIN32GUI
 		Cio_Puts(hCio, debugbuf, strlen(debugbuf));
+# else
+		OutputDebugString(debugbuf);
+# endif
 #endif
 	}
-	WSASetLastError(err);
-#endif
-# else
-	va_list vlArgs;
-	char buf[1024];
-	int  err = WSAGetLastError();
-
-	va_start(vlArgs, form);
-	vsprintf(buf, form, vlArgs);
-	va_end(vlArgs);
-	strcat(buf,"\r\n");
-	OutputDebugString(buf);
-	WSASetLastError(err);
-# endif
+	va_end(vl);
+	SET_ERRNO(err);
 }
 
 /*

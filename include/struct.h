@@ -816,7 +816,7 @@ struct Client {
 	long flags;		/* client flags */
 	long umodes;		/* client usermodes */
 	aClient *from;		/* == self, if Local Client, *NEVER* NULL! */
-	SOCKET  fd;		/* >= 0, for local clients */
+	int  fd;		/* >= 0, for local clients */
 	unsigned char hopcount;		/* number of servers to this 0 = local */
 	short status;		/* Client type */
 	char name[HOSTLEN + 1];	/* Unique name of the client, nick or host */
@@ -858,9 +858,10 @@ struct Client {
 	u_short receiveB;	/* sent and received. */
 	aClient *listener;
 	ConfigItem_class *class;		/* Configuration record associated */
-	SOCKET authfd;		/* fd for rfc931 authentication */
+	int authfd;		/* fd for rfc931 authentication */
+    short slot;         /* my offset in the local fd table */
 #ifdef SOCKSPORT
-	SOCKET socksfd;
+	int socksfd;
 #endif
 	struct IN_ADDR ip;	/* keep real ip# too */
 	u_short port;		/* and the remote port# too :-) */

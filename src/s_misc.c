@@ -124,7 +124,7 @@ char *convert_time (time_t ltime)
 	unsigned long days = 0,hours = 0,minutes = 0,seconds = 0;
 	static char buffer[40];
 
-	
+
 	*buffer = '\0';
 	seconds = ltime % 60;
 	ltime = (ltime - seconds) / 60;
@@ -434,9 +434,9 @@ int  exit_client(cptr, sptr, from, comment)
 	{
 #ifndef NO_FDLIST
 		if (IsAnOper(sptr))
-			delfrom_fdlist(sptr->fd, &oper_fdlist);
+			delfrom_fdlist(sptr->slot, &oper_fdlist);
 		if (IsServer(sptr))
-			delfrom_fdlist(sptr->fd, &serv_fdlist);
+			delfrom_fdlist(sptr->slot, &serv_fdlist);
 #endif
 		if (sptr->class)
 			sptr->class->clients--;
@@ -455,7 +455,7 @@ int  exit_client(cptr, sptr, from, comment)
 				MyFree(sptr->serv->conf);
 			}
 		}
-		
+
 		if (sptr->listener)
 			if (sptr->listener->class)
 			{
@@ -465,9 +465,9 @@ int  exit_client(cptr, sptr, from, comment)
 				    && (listen_conf->clients == 0))
 				{
 					/* Call listen cleanup */
-					listen_cleanup();					
+					listen_cleanup();
 				}
-			}	
+			}
 		sptr->flags |= FLAGS_CLOSING;
 		if (IsPerson(sptr))
 		{
@@ -617,7 +617,7 @@ int  exit_client(cptr, sptr, from, comment)
 		}
 		recurse--;
 	}
-	
+
 
 	/*
 	 * Finally, clear out the server we lost itself
@@ -659,12 +659,11 @@ static void exit_one_client_backend(cptr, sptr, from, comment, split)
 		   ** need to send different names to different servers
 		   ** (domain name matching)
 		 */
-		for (i = 0; i <= highest_fd; i++)
+		for (i = 0; i <= LastSlot; i++)
 		{
 			aConfItem *aconf;
 
-			if (!(acptr = local[i]) || !IsServer(acptr) ||
-			    acptr == cptr || IsMe(acptr))
+			if (!(acptr = local[i]) || !IsServer(acptr) || acptr == cptr || IsMe(acptr))
 				continue;
 			/*
 			   ** SQUIT going "upstream". This is the remote
@@ -675,13 +674,11 @@ static void exit_one_client_backend(cptr, sptr, from, comment, split)
 			 */
 			if (sptr->from == acptr)
 			{
-				sendto_one(acptr, ":%s SQUIT %s :%s",
-				    from->name, sptr->name, comment);
+				sendto_one(acptr, ":%s SQUIT %s :%s", from->name, sptr->name, comment);
 			}
 			else
 			{
-				sendto_one(acptr, "SQUIT %s :%s",
-				    sptr->name, comment);
+				sendto_one(acptr, "SQUIT %s :%s", sptr->name, comment);
 			}
 		}
 	}
@@ -779,7 +776,7 @@ void checklist()
 
 	if (!(bootopt & BOOT_AUTODIE))
 		return;
-	for (j = i = 0; i <= highest_fd; i++)
+	for (j = i = 0; i <= LastSlot; i++)
 		if (!(acptr = local[i]))
 			continue;
 		else if (IsClient(acptr))
@@ -814,7 +811,7 @@ void tstats(cptr, name)
 #ifndef _WIN32
 	for (i = 0; i < MAXCONNECTIONS; i++)
 #else
-	for (i = 0; i < highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 #endif
 	{
 		if (!(acptr = local[i]))

@@ -816,7 +816,6 @@ static char *ParseCodes(char *buffer)
 		j++;
 	}
 	return out;
-
 }
 
 

@@ -28,7 +28,11 @@
 #include "license.h"
 
 char *generation = "1";
+#ifdef _WIN32
+char *creation = __TIMESTAMP__;
+#else
 char *creation = "Sun Feb 27 2000 at 11:55:29 GMT";
+#endif
 #define IRCDTOTALVERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
 char *version = IRCDTOTALVERSION;
 
@@ -39,12 +43,12 @@ char *infotext[] =
 char *unrealcredits[] =
 {
 	"-=-=-=-=-=-=-=-=-=-= [ " IRCDTOTALVERSION " Credits ] -=-=-=-=-",
-	"The people on this list is people who have helped up through",
-	"the development of UnrealIRCd. The Unreal Team would like to thank",
+	"\0030,1The\0031,0 \0032people \0033on \0034,14\2\37this\2\37 \0035,0list \0036are \0037people \2\0038who\2 \0039have \00310helped \00311up \00312through",
+	"\00313the \00314development \00315of \0031UnrealIRCd. The Unreal Team would like to thank",
 	"those people by listing them here:",
 	"-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=",
 	"              \2\37The UnrealIRCd Team would like to thank:\2\37",
-	"Nutcais (Phil Hawkins)",
+	"\26Nutcais\26 (Phil Hawkins)",
 	"- the original shell for Unreal development, useful comments,",
 	"  being a real IRCbrother for me (Stskeeps) :), learning me a lot",
 	"  about IRC stuff, getting me more and more into IRCd business",

@@ -189,4 +189,48 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 # define IRCDCONF_DELIMITER ':'
 #endif
 
+/*
+ * Socket, File, and Error portability macros
+ */
+#ifndef _WIN32
+
+#define READ_SOCK(fd, buf, len) read((fd), (buf), (len))
+#define WRITE_SOCK(fd, buf, len) write((fd), (buf), (len))
+#define CLOSE_SOCK(fd) close(fd)
+#define IOCTL(x, y, z) ioctl((x), (y), (z))
+#define ERRNO errno
+#define STRERROR(x) strerror(x)
+
+/* error constant portability */
+#define P_EMFILE        EMFILE
+#define P_ENOBUFS       ENOBUFS
+#define P_EWOULDBLOCK   EWOULDBLOCK
+#define P_EAGAIN        EAGAIN
+#define P_EINPROGRESS   EINPROGRESS
+#define P_EINTR         EINTR
+#define P_ETIMEDOUT     ETIMEDOUT
+#define P_ENOTSOCK	ENOTSOCK
+
+#else
+
+/* IO and Error portability macros */
+#define READ_SOCK(fd, buf, len) recv((fd), (buf), (len), 0)
+#define WRITE_SOCK(fd, buf, len) send((fd), (buf), (len), 0)
+#define CLOSE_SOCK(fd) closesocket(fd)
+#define IOCTL(x, y, z) ioctlsocket((x), (y), (z))
+#define ERRNO WSAGetLastError()
+#define STRERROR(x) nt_strerror(x)
+
+/* Error constant portability */
+#define P_EMFILE        WSAEMFILE
+#define P_ENOBUFS       WSAENOBUFS
+#define P_EWOULDBLOCK   WSAEWOULDBLOCK
+#define P_EAGAIN        WSAEWOULDBLOCK
+#define P_EINPROGRESS   WSAEWOULDBLOCK
+#define P_EINTR         WSAEINTR
+#define P_ETIMEDOUT     WSAETIMEDOUT
+#define P_ENOTSOCK		WSAENOTSOCK
+
+#endif
+
 #endif /* __sys_include__ */

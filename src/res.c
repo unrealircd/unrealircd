@@ -1637,7 +1637,7 @@ static void rem_cache(ocp)
 	   ** Cleanup any references to this structure by destroying the
 	   ** pointer.
 	 */
-	for (hashv = highest_fd; hashv >= 0; hashv--)
+	for (hashv = LastSlot; hashv >= 0; hashv--)
 		if ((cptr = local[hashv]) && (cptr->hostp == hp))
 			cptr->hostp = NULL;
 	/*
