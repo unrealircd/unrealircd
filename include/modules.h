@@ -39,9 +39,9 @@
 #endif
 
 #ifndef STATIC_LINKING
-#define SymD(name, container, realsym) {name, (vFP *) &container}
+#define SymD(name, container) {#name, (vFP *) &container}
 #else
-#define SymD(name, container, realsym) {realsym, (vFP *) &container}
+#define SymD(name, container) {name, (vFP *) &container}
 #endif
 
 typedef struct moduleInfo 	ModuleInfo;
