@@ -154,6 +154,8 @@ char *unrealcredits[] =
         "   thingies, being a general wierdoe etc. ",
 	"Dark-Prince",
 	" - Systray code, sharing ideas, code, bugs, and a lot of stuff",
+	"Bleep",
+	" - The brilliant ircu win32 port",
 	"Sporty_McFly  Cedric",
 	" - Comments, helping me when I got problems with my life and so on",
         "   *toh* to him - Thanks!",
