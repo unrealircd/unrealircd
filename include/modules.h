@@ -438,7 +438,7 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_LOCAL_NICKCHANGE 2
 #define HOOKTYPE_LOCAL_CONNECT 3
 #define HOOKTYPE_REHASHFLAG 4
-#undef HOOKTYPE_SCAN_INFO
+#define HOOKTYPE_PRE_LOCAL_PART 5
 #define HOOKTYPE_CONFIGPOSTTEST 6
 #define HOOKTYPE_REHASH 7
 #define HOOKTYPE_PRE_LOCAL_CONNECT 8

@@ -2601,3 +2601,5 @@ seen. gmtime warning still there
 *** beta19 release ***
 - Changed the HOOKTYPE_REHASHFLAG syntax to (aClient *cptr, aClient *sptr, char *flag)
   requested by AngryWolf (#0001365)
+- Added HOOKTYPE_PRE_LOCAL_PART to allow changing of part messages suggested by AngryWolf
+  (#0001365)

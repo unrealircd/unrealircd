@@ -3931,8 +3931,14 @@ CMD_FUNC(m_part)
 			parc = 2;
 		}
 		if (MyConnect(sptr))
-			RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, comment);
-
+		{
+			Hook *tmphook;
+			for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_PART]; tmphook; tmphook = tmphook->next) {
+				comment = (*(tmphook->func.pcharfunc))(sptr, chptr, comment);
+				if (!comment)
+					break;
+			}
+		}
 		if (1)
 		{
 			if ((chptr->mode.mode & MODE_AUDITORIUM) && !is_chanownprotop(sptr, chptr))
@@ -3977,6 +3983,9 @@ CMD_FUNC(m_part)
 					    sptr, PartFmt2, parv[0],
 					    chptr->chname, comment);
 			}
+			if (MyClient(sptr))
+				RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, comment);
+
 			remove_user_from_channel(sptr, chptr);
 		}
 	}
