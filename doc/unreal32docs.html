@@ -27,7 +27,7 @@ English | <a href="unreal32docs.de.html">German</a> |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2.2-CVS</font><br>
-  <b>Last doc update:</b> 2005-01-29</div>
+  <b>Last doc update:</b> 2005-02-13</div>
 <br>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -510,9 +510,9 @@ Modules can also add other extended ban types.<br>
 <tr valign="top"><td>viruschan</td><td>part all channels, join set::spamfilter::virus-help-channel, disables all commands 
  except PONG, ADMIN, and msg/notices to set::spamfilter::virus-help-channel</td></tr>
 </table></tr></td>
-   <tr valign="top"><td><b>[tkltime]</b></td><td> The duration of the *line added by the filter, use '-' to use the default or to skip 
+   <tr valign="top"><td><b>[tkltime]</b></td><td> The duration of the *line/shun added by the filter, use '-' to use the default or to skip 
    (eg: if action = 'block')</td></tr>
-   <tr valign="top"><td><b>[reason]</b></td><td> Block or *line reason.. you CANNOT use spaces in this, but underscores ('_') will be translated
+   <tr valign="top"><td><b>[reason]</b></td><td> Block/*line/shun reason.. you CANNOT use spaces in this, but underscores ('_') will be translated
 into spaces at runtime. And double underscore ('__') gets an underscore ('_'). Again, use '-' to use the default reason.</td></tr>
    <tr valign="top"><td><b>[regex]</b></td><td> this is the actual regex or 'bad word' where we should block on and perform the action at</td></tr>
    </table>
@@ -541,8 +541,8 @@ into spaces at runtime. And double underscore ('__') gets an underscore ('_'). A
 	action block;
 };</pre></p>
 
-<p><b>set::spamfilter::ban-time</b> allows you to modify the default ban time for *lines added by spamfilter (default: 1 day)<br>
-   <b>set::spamfilter::ban-reason</b> allows you to specify a default reason for the *lines (default: 'Spam/advertising')<br>
+<p><b>set::spamfilter::ban-time</b> allows you to modify the default ban time for *lines/shuns added by spamfilter (default: 1 day)<br>
+   <b>set::spamfilter::ban-reason</b> allows you to specify a default reason (default: 'Spam/advertising')<br>
    <b>set::spamfilter::virus-help-channel</b> allows you to specify the channel to join for action 'viruschan' (default: #help)<br>
    <b>set::spamfilter::virus-help-channel-deny</b> allows you to block any normal joins to virus-help-channel (default: no)<br>
 </p></div>
@@ -2008,7 +2008,7 @@ spamfilter {
    <b>target</b> specifies the targets, see <a href="#feature_spamfilter">here</a> for a list of possible types (eg: 'channel').<br>
    <b>action</b> specifies the action to be taken, see <a href="#feature_spamfilter">here</a> for a list of possible actions (eg: 'gline').<br>
    <b>reason</b> optional: specifies the ban or block reason, else the default is used.<br>
-   <b>ban-time</b> optional: specifies the duration of a *line ban, else the default is used (1 day).<br>
+   <b>ban-time</b> optional: specifies the duration of a *line ban or shun, else the default is used (1 day).<br>
 </p>
 
 <p>Examples:<br>
@@ -2294,9 +2294,9 @@ set {
   If you specify an 'action' like zline/gline/etc in ban version, then you can specify here 
   how long the ip should be banned, the default is 86400 (1 day).</p>
  <p><font class="set">set::spamfilter::ban-time &lt;value&gt;</font><br>
-  Same as above but for *lines added by spamfilter</p>
+  Same as above but for *lines/shuns added by spamfilter</p>
  <p><font class="set">set::spamfilter::ban-reason &lt;reason&gt;</font><br>
-  Reason to be used for *lines added by spamfilter</p>
+  Reason to be used for entries added by spamfilter</p>
  <p><font class="set">set::spamfilter::virus-help-channel &lt;channel&gt;</font><br>
   The channel to use for the 'viruschan' action in spamfilter</p>
  <p><font class="set">set::spamfilter::virus-help-channel-deny &lt;yes|no&gt;</font><br>

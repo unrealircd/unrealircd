@@ -232,21 +232,15 @@ aClient *acptr;
 	
 					cip = GetIP(acptr);
 
-					if (!(*tmp->hostmask < '0') && (*tmp->hostmask > '9'))
+					if ((*tmp->hostmask >= '0') && (*tmp->hostmask <= '9'))
 						is_ip = 1;
 					else
 						is_ip = 0;
 
-					if (is_ip ==
-					    0 ? (!match(tmp->hostmask,
-					    chost)
-					    && !match(tmp->usermask,
-					    cname)) : (!match(tmp->
-					    hostmask, chost)
-					    || !match(tmp->hostmask,
-					    cip))
-					    && !match(tmp->usermask,
-					    cname))
+					if (is_ip == 0 ?
+					    (!match(tmp->hostmask, chost) && !match(tmp->usermask, cname)) : 
+					    (!match(tmp->hostmask, chost) || !match(tmp->hostmask, cip))
+					    && !match(tmp->usermask, cname))
 					{
 						ClearShunned(acptr);
 #ifdef SHUN_NOTICES
