@@ -29,3 +29,4 @@ struct _conf_blackhole
 	char	*ip;
 	short	port;
 };
+

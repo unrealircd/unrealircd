@@ -640,3 +640,4 @@ seen. gmtime warning still there
 - Hmm .. minor s_bsd.c read_message fix
 - Some /info stuff, updated docs, .CHANGES.NEW, .RELEASENOTES
 - /htm fix by Griever
+- Fixed a bunch of warnings reported by Red Hat 7

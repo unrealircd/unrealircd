@@ -146,7 +146,7 @@ aClient *find_server_by_numeric(long value)
 			return (lp->value.cptr);
 #ifdef PIPEDEBUG
 	kill(getpid(), SIGPIPE);
-#endif PIPEDEBUG
+#endif
 	return NULL;
 }
 
