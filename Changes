@@ -101,3 +101,4 @@
 - Made /mode (umode change) only send 1 unknown mode msg, forgot who suggested this one
 - Made /rehash -motd/rules use tld {} 
 - Heavily recoded /rehash (removed a ton of coding)
+- Updated match() to have some optimizations from bahamut

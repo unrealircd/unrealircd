@@ -380,13 +380,13 @@ int  find_nline(aClient *cptr)
 		for (aconf = conf; aconf; aconf = aconf->next)
 	{
 		if (aconf->status & CONF_NLINE
-		&& (match(aconf->host, cptr->info) == 0)) {
+		&& (_match(aconf->host, cptr->info) == 0)) {
 			for (aconf2 = conf; aconf2; aconf2 = aconf2->next)
 		if ((aconf2->status == CONF_EXCEPT) &&
 		    aconf2->host && aconf2->name
-		    && (match(aconf2->host, cptr->sockhost) == 0)
+		    && (_match(aconf2->host, cptr->sockhost) == 0)
 		    && (!cptr->user->username
-		    || match(aconf2->name, cptr->user->username) == 0))
+		    || _match(aconf2->name, cptr->user->username) == 0))
 			return 0;
 			break;
 	}

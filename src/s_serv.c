@@ -3735,7 +3735,7 @@ else {
 				cr_rehash();
 				return 0;
 			}
-			if (!match("-o*motd", parv[1]))
+			if (!_match("-o*motd", parv[1]))
 			{
 				if (!IsAdmin(sptr))
 					return 0;
@@ -3745,7 +3745,7 @@ else {
 				opermotd = (aMotd *) read_opermotd(OPATH);
 				return 0;
 			}
-			if (!match("-b*motd", parv[1]))
+			if (!_match("-b*motd", parv[1]))
 			{
 				if (!IsAdmin(sptr))
 					return 0;

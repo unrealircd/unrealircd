@@ -41,7 +41,7 @@ u_char touppertab[], tolowertab[];
  * match()
  *  written by binary
  */
-int  match(mask, name)
+static inline match2(mask, name)
 	char *mask, *name;
 {
 	u_char *m;		/* why didn't the old one use registers ?!??!?!?! */
@@ -393,3 +393,31 @@ u_char char_atribs[] = {
 /* e0-ef */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 /* f0-ff */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
+
+/* Old match() */
+int _match(char *mask, char *name) {
+	return match2(mask,name);
+}
+
+
+/* Old match() plus some optimizations from bahamut */
+int match(char *mask, char *name) {
+	if (mask[0] == '*' && mask[1] == '!') {
+		mask += 2;
+		while (*name != '!' && *name)
+			name++;
+		if (!*name)
+			return 1;
+		name++;
+	}
+		
+	if (mask[0] == '*' && mask[1] == '@') {
+		mask += 2;
+		while (*name != '@' && *name)
+			name++;
+		if (!*name)
+			return 1;
+		name++;
+	}
+	return match2(mask,name);
+}
