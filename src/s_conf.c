@@ -947,7 +947,7 @@ void config_progress(char *format, ...)
 
 ConfigCommand *config_binary_search(char *cmd) {
 	int start = 0;
-	int stop = sizeof(_ConfigCommands)/sizeof(_ConfigCommands[0]);
+	int stop = sizeof(_ConfigCommands)/sizeof(_ConfigCommands[0])-1;
 	int mid;
 	while (start <= stop) {
 		mid = (start+stop)/2;
@@ -1556,10 +1556,11 @@ int	config_run()
 
 OperFlag *config_binary_flags_search(OperFlag *table, char *cmd, int size) {
 	int start = 0;
-	int stop = size;
+	int stop = size-1;
 	int mid;
 	while (start <= stop) {
 		mid = (start+stop)/2;
+
 		if (smycmp(cmd,table[mid].name) < 0) {
 			stop = mid-1;
 		}
@@ -4164,6 +4165,7 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 					 config_error("%s:%i: unknown log flag '%s'",
 						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
 						cepp->ce_varname);
+
 					errors++; 
 				}
 			}

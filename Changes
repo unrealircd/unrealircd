@@ -1747,3 +1747,5 @@ seen. gmtime warning still there
   h. (#0000556)
 - Added a pretty_time_val function, this converts a number such as 86400 to "1 day"
   to make it easier to read.
+- Fixed a bug in the binary search functions that could cause crashes when unknown config
+  directives were added. Reported by 1of10 (#0000587)
