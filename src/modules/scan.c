@@ -74,7 +74,7 @@ MUTEX				blackhole_mutex;
 ConfigItem_blackhole		blackhole_conf;
 char				blackhole_stop = 0;
 SOCKET				blackholefd = 0;
-struct SOCKADDR_IN		blackholesin;
+static struct SOCKADDR_IN		blackholesin;
 /* Some prototypes .. aint they sweet? */
 DLLFUNC int			h_scan_connect(aClient *sptr);
 DLLFUNC EVENT			(HS_Cleanup);

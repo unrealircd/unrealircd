@@ -851,3 +851,4 @@ seen. gmtime warning still there
 - Various coding regardign bugreport
 - Made port default to 6667 when options autoconnect in link {}
 - Made some changes to allow Unreal to compile on win32
+- Fixed a scan.c bug on win32
