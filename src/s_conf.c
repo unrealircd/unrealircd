@@ -1117,24 +1117,10 @@ int  initconf(opt)
 	while ((i = dgets(fd, line, sizeof(line) - 1)) > 0)
 	{
 		line[i] = '\0';
-		if ((tmp = (char *)index(line, '\n')))
-			*tmp = 0;
-		if ((tmp = (char *)index(line, '\r')))
-			*tmp = 0;
-		else
-			while (dgets(fd, c, sizeof(c) - 1) > 0)
-			{
-				if ((tmp = (char *)index(c, '\n')))
-				{
-					*tmp = 0;
-					break;
-				}
-				if ((tmp = (char *)index(c, '\r')))
-				{
-					*tmp = 0;
-					break;
-				}
-			}
+		iCstrip(line);
+/*		while (dgets(fd, c, sizeof(c) - 1) > 0)
+		{
+		} */
 		/*
 		 * Do quoting of characters and # detection.
 		 */
