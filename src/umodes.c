@@ -72,6 +72,7 @@ long UMODE_DEAF = 0L;          /* Deaf */
 long UMODE_HIDEOPER = 0L;      /* Hide oper mode */
 long UMODE_SETHOST = 0L;       /* Used sethost */
 long UMODE_STRIPBADWORDS = 0L; /* Strip badwords */
+long UMODE_HIDEWHOIS = 0L;     /* Hides channels in /whois */
 
 long AllUmodes;		/* All umodes */
 long SendUmodes;	/* All umodes which are sent to other servers (global umodes) */
@@ -114,6 +115,7 @@ void	umode_init(void)
 	UMODE_HIDEOPER = umode_gget('H');  /* 0x20000000	 Hide oper mode */
 	UMODE_SETHOST = umode_gget('t');   /* 0x40000000	 used sethost */
 	UMODE_STRIPBADWORDS = umode_gget('G'); /* 0x80000000	 */
+	UMODE_HIDEWHOIS = umode_gget('p'); /* Hides channels in /whois */
 }
 
 void make_umodestr(void)

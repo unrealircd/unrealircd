@@ -1992,3 +1992,5 @@ seen. gmtime warning still there
 - (Hopefully) fixed some Ziplinks problems
 - Added missing except tkl {} documentation
 - Documentation update and cleanup
+- Added umode +p (hide channels in whois). For opers, channels are shown as "!#chan" to indicate
+  that the user is +p and the channel is only shown because you are an oper.

@@ -429,7 +429,7 @@ extern long UMODE_DEAF;      /* 0x10000000       Deaf */
 extern long UMODE_HIDEOPER;  /* 0x20000000	 Hide oper mode */
 extern long UMODE_SETHOST;   /* 0x40000000	 used sethost */
 extern long UMODE_STRIPBADWORDS; /* 0x80000000	 */
-
+extern long UMODE_HIDEWHOIS; /* hides channels in /whois */
 extern long AllUmodes, SendUmodes;
 
 #ifndef HAVE_STRLCPY
