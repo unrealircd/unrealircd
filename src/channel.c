@@ -5330,13 +5330,23 @@ CMD_FUNC(m_sjoin)
 		modebuf[1] = '\0';
 		parabuf[0] = '\0';
 		b = 1;
-		for (ban = chptr->banlist; ban; ban = ban->next)
+		while(chptr->banlist)
 		{
+			ban = chptr->banlist;
 			Addit('b', ban->banstr);
+			chptr->banlist = ban->next;
+			MyFree(ban->banstr);
+			MyFree(ban->who);
+			free_ban(ban);
 		}
-		for (ban = chptr->exlist; ban; ban = ban->next)
+		while(chptr->exlist)
 		{
+			ban = chptr->exlist;
 			Addit('e', ban->banstr);
+			chptr->exlist = ban->next;
+			MyFree(ban->banstr);
+			MyFree(ban->who);
+			free_ban(ban);
 		}
 		for (lp = chptr->members; lp; lp = lp->next)
 		{

@@ -2375,3 +2375,4 @@ seen. gmtime warning still there
   in include/config.h.
 - Fixed ~5 compiler warnings at *NIX and ~20 at windows. Some of them _could_ have caused problems.
 - Moved EOS debugging code to DEBUGMODE.
+- Fixed a channel sync bug reported by thilo&Rocko (#0001218).
