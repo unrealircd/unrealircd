@@ -1986,6 +1986,7 @@ static int m_message(cptr, sptr, parc, parv, notice)
 					strlcat(pfixchan, p2, sizeof(pfixchan));
 					nick = pfixchan;
 				}
+			}
 			cansend =
 			    !IsULine(sptr) ? can_send(sptr, chptr,
 			    parv[2]) : 0;
