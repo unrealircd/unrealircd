@@ -357,10 +357,15 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 	if (!strcmp(vhost->password, pwd)) {
+		char olduser[USERLEN];
 		if (sptr->user->virthost)
 			MyFree(sptr->user->virthost);
 		sptr->user->virthost = MyMalloc(strlen(vhost->virthost) + 1);
-		strcpy(sptr->user->virthost, vhost->virthost);
+		strncpy(sptr->user->virthost, vhost->virthost, HOSTLEN);
+		if (vhost->virtuser) {
+			strcmp(olduser, sptr->user->username);
+			strncpy(sptr->user->username, vhost->virtuser, USERLEN);
+		}
 		sptr->umodes |= UMODE_HIDE;
 		sptr->umodes |= UMODE_SETHOST;
 		sendto_serv_butone_token(cptr, sptr->name,
@@ -369,13 +374,15 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr, ":%s MODE %s :+tx",
 		    sptr->name, sptr->name);
 		sendto_one(sptr,
-		    ":%s NOTICE %s :*** Your hostname is now %s",
-		    me.name, sptr->name, vhost->virthost);
+		    ":%s NOTICE %s :*** Your vhost is now %s%s%s",
+		    me.name, sptr->name, vhost->virtuser ? vhost->virtuser : "", 
+			vhost->virtuser ? "@" : "", vhost->virthost);
 		sendto_umode(UMODE_EYES,
-		    "[\2vhost\2] %s (%s!%s@%s) is now using vhost %s",
+		    "[\2vhost\2] %s (%s!%s@%s) is now using vhost %s%s%s",
 		    user, sptr->name,
-		    sptr->user->username,
-		    sptr->user->realhost, vhost->virthost);
+		    vhost->virtuser ? olduser : sptr->user->username,
+		    sptr->user->realhost, vhost->virtuser ? vhost->virtuser : "", 
+		    	vhost->virtuser ? "@" : "", vhost->virthost);
 		return 0;
 	}
 	else {

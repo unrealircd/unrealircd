@@ -1592,7 +1592,15 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 		}
 		if (!strcmp(cep->ce_varname, "vhost"))
 		{
-			vhost->virthost = strdup(cep->ce_vardata);
+			char *user, *host;
+			user = strtok(cep->ce_vardata, "@");
+			host = strtok(NULL, "");
+			if (!host)
+				vhost->virthost = strdup(user);
+			else {
+				vhost->virtuser = strdup(user);
+				vhost->virthost = strdup(host);
+			}
 		} 
 		else if (!strcmp(cep->ce_varname, "from"))
 		{	
@@ -2801,27 +2809,43 @@ void	validate_configuration(void)
 		}
 	}
 	for (vhost_ptr = conf_vhost; vhost_ptr; vhost_ptr = (ConfigItem_vhost *)vhost_ptr->next) {
+		int nope = 0;
+		ConfigItem_oper_from *vhost_from;
+
 		for (s = vhost_ptr->virthost; *s; s++)
 		{
 			if (!isallowed(*s)) {
-				ConfigItem_oper_from *vhost_from;
-				Warning("vhost::vhost %s is not valid. Deleting vhost {} block", vhost_ptr->virthost);
-				ircfree(vhost_ptr->login);
-				ircfree(vhost_ptr->virthost);
-				ircfree(vhost_ptr->password);
-				for (vhost_from = (ConfigItem_oper_from *) vhost_ptr->from; vhost_from; vhost_from = (ConfigItem_oper_from *) vhost_from->next)
-				{
-					ircfree(vhost_from->name);
-					t.next = del_ConfigItem((ConfigItem *)vhost_from, (ConfigItem **)&vhost_ptr->from);
-					MyFree(vhost_from);
-					vhost_from = (ConfigItem_oper_from *) &t;
-				}
-				t.next = del_ConfigItem((ConfigItem *)vhost_ptr, (ConfigItem **)&conf_vhost);
-				MyFree(vhost_ptr);
-				vhost_ptr = (ConfigItem_vhost *)&t;
+				nope = 1;
 				break;
 			}
 		}
+		if (!nope && vhost_ptr->virtuser) {
+			for (s = vhost_ptr->virtuser; *s; s++) {
+				if (!isallowed(*s)) {
+					nope = 1;
+					break;
+				}
+			}
+		}
+		if (nope) {
+			Warning("vhost::vhost %s%s%s is not valid. Deleting vhost {} block", vhost_ptr->virtuser ?
+				vhost_ptr->virtuser : "", vhost_ptr->virtuser ? "@" : "", vhost_ptr->virthost);
+			ircfree(vhost_ptr->login);
+			ircfree(vhost_ptr->virthost);
+			ircfree(vhost_ptr->virtuser);
+			ircfree(vhost_ptr->password);
+			for (vhost_from = (ConfigItem_oper_from *) vhost_ptr->from; vhost_from; vhost_from = (ConfigItem_oper_from *) vhost_from->next)
+			{
+				ircfree(vhost_from->name);
+				t.next = del_ConfigItem((ConfigItem *)vhost_from, (ConfigItem **)&vhost_ptr->from);
+				MyFree(vhost_from);
+				vhost_from = (ConfigItem_oper_from *) &t;
+			}
+			t.next = del_ConfigItem((ConfigItem *)vhost_ptr, (ConfigItem **)&conf_vhost);
+			MyFree(vhost_ptr);
+			vhost_ptr = (ConfigItem_vhost *)&t;
+		}
+
 	}
 
 				
@@ -2999,6 +3023,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		ircfree(vhost_ptr->login);
 		ircfree(vhost_ptr->password);
 		ircfree(vhost_ptr->virthost);
+		ircfree(vhost_ptr->virtuser);
 		for (vhost_from = (ConfigItem_oper_from *) vhost_ptr->from; vhost_from; 
 			vhost_from = (ConfigItem_oper_from *) vhost_from->next)
 		{

@@ -1023,7 +1023,7 @@ struct _configitem_vhost {
 	ConfigFlag 	flag;
 	ConfigItem 	*prev, *next;
 	ConfigItem       *from;
-	char		*login, *password, *virthost;
+	char		*login, *password, *virthost, *virtuser;
 };
 
 struct _configitem_link {

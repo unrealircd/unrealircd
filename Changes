@@ -376,3 +376,6 @@
 - Added tld::channel so you can make people join a channel based on hostmask
 - Made it so a motd or rules loaded in 2 seperate tld {} is only read into memory once (may need debugging?)
 - Fixed a bug where the IRCd didn't validate hosts specified in a vhost {}
+- Added the ability to specify a username to spoof in a vhost {} instead of vhost "host.name";
+  you can vhost "user@host.name"; (suggested by IpAddress)
+- Fixed a bug where you could use an infinitely large host in a vhost {} (now limited to HOSTLEN)
