@@ -29,9 +29,6 @@
 #include "hash.h"
 #include <stdio.h>
 #include <sys/types.h>
-#ifdef ZIP_LINKS
-#include "zip.h"
-#endif
 #ifndef _WIN32
 #include <netinet/in.h>
 #include <netdb.h>
@@ -55,6 +52,9 @@
 #include <openssl/err.h>    
 #include <openssl/evp.h>
 #include <openssl/rand.h>
+#endif
+#ifdef ZIP_LINKS
+#include "zip.h"
 #endif
 #include "auth.h" 
 #ifdef HAVE_REGEX
@@ -126,6 +126,10 @@ typedef struct Command aCommand;
 typedef struct SMember Member;
 typedef struct SMembership Membership;
 typedef struct SMembershipL MembershipL;
+
+#ifdef ZIP_LINKS
+typedef struct  Zdata   aZdata;
+#endif
 
 #ifdef NEED_U_INT32_T
 typedef unsigned int u_int32_t;	/* XXX Hope this works! */
@@ -255,38 +259,43 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPT_VHP		0x1000
 #define OPT_NOT_VHP	0x2000
 
+/* client->flags (32 bits): 28 used, 4 free */
 #define	FLAGS_PINGSENT   0x0001	/* Unreplied ping sent */
 #define	FLAGS_DEADSOCKET 0x0002	/* Local socket is dead--Exiting soon */
 #define	FLAGS_KILLED     0x0004	/* Prevents "QUIT" from being sent for this */
 #define	FLAGS_BLOCKED    0x0008	/* socket is in a blocked condition */
-/* #define	FLAGS_UNIX	 0x0010	 */
+#define FLAGS_UNOCCUP1   0x0010 /* [FREE] */
 #define	FLAGS_CLOSING    0x0020	/* set when closing to suppress errors */
 #define	FLAGS_LISTEN     0x0040	/* used to mark clients which we listen() on */
 #define	FLAGS_CHKACCESS  0x0080	/* ok to check clients access if set */
 #define	FLAGS_DOINGDNS	 0x0100	/* client is waiting for a DNS response */
-#define	FLAGS_AUTH	 0x0200	/* client is waiting on rfc931 response */
+#define	FLAGS_AUTH       0x0200	/* client is waiting on rfc931 response */
 #define	FLAGS_WRAUTH	 0x0400	/* set if we havent writen to ident server */
-#define	FLAGS_LOCAL	 0x0800	/* set for local clients */
-#define	FLAGS_GOTID	 0x1000	/* successful ident lookup achieved */
-#define	FLAGS_DOID	 0x2000	/* I-lines say must use ident return */
-#define	FLAGS_NONL	 0x4000	/* No \n in buffer */
-#define FLAGS_TS8	 0x8000	/* Why do you want to know? */
-#define FLAGS_ULINE	0x10000	/* User/server is considered U-lined */
-#define FLAGS_SQUIT	0x20000	/* Server has been /squit by an oper */
-#define FLAGS_PROTOCTL	0x40000	/* Received a PROTOCTL message */
-#define FLAGS_PING      0x80000
-#define FLAGS_ASKEDPING 0x100000
-#define FLAGS_NETINFO   0x200000
-#define FLAGS_HYBNOTICE 0x400000
-#define FLAGS_QUARANTINE     0x800000
-#define FLAGS_UNOCCUP2   0x1000000
-#define FLAGS_UNOCCUP3   0x2000000
-#define FLAGS_SHUNNED    0x4000000
-#ifdef USE_SSL
-#define FLAGS_SSL	 0x10000000
+#define	FLAGS_LOCAL      0x0800	/* set for local clients */
+#define	FLAGS_GOTID      0x1000	/* successful ident lookup achieved */
+#define	FLAGS_DOID       0x2000	/* I-lines say must use ident return */
+#define	FLAGS_NONL       0x4000	/* No \n in buffer */
+#define FLAGS_TS8        0x8000	/* Why do you want to know? */
+#define FLAGS_ULINE      0x10000	/* User/server is considered U-lined */
+#define FLAGS_SQUIT      0x20000	/* Server has been /squit by an oper */
+#define FLAGS_PROTOCTL   0x40000	/* Received a PROTOCTL message */
+#define FLAGS_PING       0x80000
+#define FLAGS_ASKEDPING  0x100000
+#define FLAGS_NETINFO    0x200000
+#define FLAGS_HYBNOTICE  0x400000
+#define FLAGS_QUARANTINE 0x800000
+#ifdef ZIP_LINKS
+#define FLAGS_ZIP        0x1000000
 #endif
-#define FLAGS_DCCBLOCK	0x40000000
-#define FLAGS_MAP       0x80000000	/* Show this entry in /map */
+#define FLAGS_UNOCCUP2   0x2000000 /* [FREE] */
+#define FLAGS_SHUNNED    0x4000000
+#define FLAGS_UNOCCUP3   0x8000000 /* [FREE] */
+#ifdef USE_SSL
+#define FLAGS_SSL        0x10000000
+#endif
+#define FLAGS_UNOCCUP4   0x20000000 /* [FREE] */
+#define FLAGS_DCCBLOCK   0x40000000
+#define FLAGS_MAP        0x80000000	/* Show this entry in /map */
 /* Dec 26th, 1997 - added flags2 when I ran out of room in flags -DuffJ */
 
 /* Dec 26th, 1997 - having a go at
@@ -312,8 +321,10 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 
 #define SNO_NONOPERS (SNO_KILLS | SNO_SNOTICE)
 
-#define	SEND_UMODES (UMODE_INVISIBLE|UMODE_OPER|UMODE_WALLOP|UMODE_FAILOP|UMODE_HELPOP|UMODE_RGSTRONLY|UMODE_REGNICK|UMODE_SADMIN|UMODE_NETADMIN|UMODE_COADMIN|UMODE_ADMIN|UMODE_SERVICES|UMODE_HIDE|UMODE_WHOIS|UMODE_KIX|UMODE_BOT|UMODE_SECURE|UMODE_HIDING|UMODE_DEAF|UMODE_VICTIM|UMODE_HIDEOPER|UMODE_SETHOST|UMODE_STRIPBADWORDS|UMODE_WEBTV)
-#define	ALL_UMODES (SEND_UMODES|UMODE_SERVNOTICE|UMODE_LOCOP|UMODE_SERVICES)
+#define SEND_UMODES (SendUmodes)
+#define ALL_UMODES (AllUmodes)
+/* SEND_UMODES and ALL_UMODES are now handled by umode_get/umode_lget/umode_gget -- Syzop. */
+
 #define	FLAGS_ID	(FLAGS_DOID|FLAGS_GOTID)
 
 #define PROTO_NOQUIT	0x1	/* Negotiated NOQUIT protocol */
@@ -342,7 +353,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsKix(x)		((x)->umodes & UMODE_KIX)
 #define IsHelpOp(x)		((x)->umodes & UMODE_HELPOP)
 #define IsAdmin(x)		((x)->umodes & UMODE_ADMIN)
-#define IsHiding(x)		((x)->umodes & UMODE_HIDING)
 
 #ifdef STRIPBADWORDS
 #define IsFilteringWords(x)	((x)->umodes & UMODE_STRIPBADWORDS)
@@ -383,6 +393,14 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsSecure(x)		(0)
 #endif
 
+#ifdef ZIP_LINKS
+#define IsZipped(x) 	((x)->flags & FLAGS_ZIP)
+#define IsZipStart(x)	(((x)->flags & FLAGS_ZIP) && ((x)->zip->first == 1))
+#else
+#define IsZipped(x)		(0)
+#define IsZipStart(x)	(0)
+#endif
+
 #define IsHybNotice(x)		((x)->flags & FLAGS_HYBNOTICE)
 #define SetHybNotice(x)         ((x)->flags |= FLAGS_HYBNOTICE)
 #define ClearHybNotice(x)	((x)->flags &= ~FLAGS_HYBNOTICE)
@@ -396,6 +414,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #else
 #define IsNotSpoof(x)           (1)
 #endif
+
+#define GetHost(x)			(IsHidden(x) ? (x)->user->virthost : (x)->user->realhost)
 
 #define SetKillsF(x)		((x)->user->snomask |= SNO_KILLS)
 #define SetClientF(x)		((x)->user->snomask |= SNO_CLIENT)
@@ -441,6 +461,10 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define ClearHidden(x)          ((x)->umodes &= ~UMODE_HIDE)
 #define ClearHideOper(x)    ((x)->umodes &= ~UMODE_HIDEOPER)
 
+#ifdef ZIP_LINKS
+#define SetZipped(x)        ((x)->flags |= FLAGS_ZIP)
+#define ClearZipped(x)      ((x)->flags &= ~FLAGS_ZIP)
+#endif
 
 /*
  * ProtoCtl options
@@ -510,6 +534,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OFLAG_ISGLOBAL	(OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
 #define OFLAG_NADMIN	(OFLAG_NETADMIN | OFLAG_SADMIN | OFLAG_ADMIN | OFLAG_GLOBAL)
 #define OFLAG_ADMIN_	(OFLAG_ADMIN | OFLAG_GLOBAL)
+#define OFLAG_COADMIN_	(OFLAG_COADMIN | OFLAG_GLOBAL)
 #define OFLAG_SADMIN_	(OFLAG_SADMIN | OFLAG_GLOBAL)
 
 #define OPCanOverride(x) ((x)->oflag & OFLAG_OVERRIDE)
@@ -738,6 +763,7 @@ extern short	 Usermode_highest;
 #define CONNECT_ZIP		0x000002 
 #define CONNECT_AUTO		0x000004
 #define CONNECT_QUARANTINE	0x000008
+#define CONNECT_NODNSCACHE	0x000010
 
 #define SSLFLAG_FAILIFNOCERT 	0x1
 #define SSLFLAG_VERIFYCERT 	0x2
@@ -816,6 +842,7 @@ struct Client {
 #ifdef DEBUGMODE
 	TS   cputime;
 #endif
+	char *error_str;	/* Quit reason set by dead_link in case of socket/buffer error */
 };
 
 
@@ -887,6 +914,7 @@ struct _configflag_tld
 #define CONF_EXCEPT_SCAN	0
 #define CONF_EXCEPT_BAN		1
 #define CONF_EXCEPT_TKL		2
+#define CONF_EXCEPT_THROTTLE	3
 
 
 struct _configitem {
@@ -909,7 +937,7 @@ struct _configitem_class {
 	ConfigItem *prev, *next;
 	ConfigFlag flag;
 	char	   *name;
-	int	   pingfreq, connfreq, maxclients, sendq, clients;
+	int	   pingfreq, connfreq, maxclients, sendq, recvq, clients;
 };
 
 struct _configflag_allow {
@@ -985,7 +1013,7 @@ struct _configitem_link {
 	ConfigFlag	flag;
 	char		*servername, *username, *hostname, *bindip, *hubmask, *leafmask, *connpwd;
 	anAuthStruct	*recvauth;
-	short		port, options;
+	u_short		port, options;
 	unsigned char 	leafdepth;
 	int		refcount;
 	ConfigItem_class	*class;
@@ -993,6 +1021,9 @@ struct _configitem_link {
 	time_t			hold;
 #ifdef USE_SSL
 	char		*ciphers;
+#endif
+#ifdef ZIP_LINKS
+	int compression_level;
 #endif
 };
 
@@ -1013,10 +1044,20 @@ struct _configitem_ban {
 
 };
 
+#ifdef FAST_BADWORD_REPLACE
+#define BADW_TYPE_FAST    0x1
+#define BADW_TYPE_FAST_L  0x2
+#define BADW_TYPE_FAST_R  0x4
+#define BADW_TYPE_REGEX   0x8
+#endif
+
 struct _configitem_badword {
 	ConfigItem      *prev, *next;
 	ConfigFlag	flag;
 	char		*word, *replace;
+#ifdef FAST_BADWORD_REPLACE
+	unsigned short	type;
+#endif
 	regex_t 	expr;
 };
 
@@ -1092,6 +1133,7 @@ struct _configitem_alias_format {
 	char *nick;
 	short type;
 	char *format, *parameters;
+	regex_t expr;
 };
 
 #define INCLUDE_NOTLOADED 1
@@ -1321,7 +1363,7 @@ struct liststruct {
 #define MODE_NOKNOCK		0x800000
 #define MODE_NOINVITE  		0x1000000
 #define MODE_FLOODLIMIT		0x2000000
-#define MODE_NOHIDING		0x4000000
+#define MODE_MODREG		0x4000000
 #ifdef STRIPBADWORDS
 #define MODE_STRIPBADWORDS	0x8000000
 #endif
@@ -1364,7 +1406,10 @@ struct liststruct {
 
 #define	isvalid(c) (((c) >= 'A' && (c) <= '~') || isdigit(c) || (c) == '-')
 
-#define	MyConnect(x)			((x)->fd >= 0)
+/* remote fds are set to -256, else its a local fd (a local fd
+ * can get -1 or -2 in case it has been closed). -- Syzop
+ */
+#define	MyConnect(x)			((x)->fd != -256)
 #define	MyClient(x)			(MyConnect(x) && IsClient(x))
 #define	MyOper(x)			(MyConnect(x) && IsOper(x))
 
@@ -1447,7 +1492,7 @@ struct Command {
 
 struct ThrottlingBucket
 {
-	struct ThrottlingBucket *next, *prev;
+	struct ThrottlingBucket *prev, *next;
 	struct IN_ADDR	in;
 	time_t		since;
 };
@@ -1460,7 +1505,6 @@ void	del_throttling_bucket(struct ThrottlingBucket *bucket);
 int	throttle_can_connect(struct IN_ADDR *in);
 
 #endif
-
 
 #endif /* __struct_include__ */
 

@@ -100,13 +100,66 @@ aTKline *tkl_del_line(aTKline *tkl)
 
 }
 
+/*
+ * tkl_check_local_remove_shun:
+ * removes shun from currently connected users affected by tmp.
+ */
+static void tkl_check_local_remove_shun(aTKline *tmp)
+{
+long i1, i;
+char *chost, *cname, *cip;
+int  is_ip;
+aClient *acptr;
+
+	for (i1 = 0; i1 <= 5; i1++)
+	{
+		/* winlocal
+		for (i = 0; i <= (MAXCONNECTIONS - 1); i++)
+		*/
+		for (i = 0; i <= LastSlot; ++i)
+		{
+			if ((acptr = local[i]))
+				if (MyClient(acptr) && IsShunned(acptr))
+				{
+					chost = acptr->sockhost;
+					cname = acptr->user->username;
+
+	
+					cip = (char *)Inet_ia2p(&acptr->ip);
+
+					if (!(*tmp->hostmask < '0') && (*tmp->hostmask > '9'))
+						is_ip = 1;
+					else
+						is_ip = 0;
+
+					if (is_ip ==
+					    0 ? (!match(tmp->hostmask,
+					    chost)
+					    && !match(tmp->usermask,
+					    cname)) : (!match(tmp->
+					    hostmask, chost)
+					    || !match(tmp->hostmask,
+					    cip))
+					    && !match(tmp->usermask,
+					    cname))
+					{
+						ClearShunned(acptr);
+#ifdef SHUN_NOTICES
+						sendto_one(acptr,
+						    ":%s NOTICE %s :*** You are no longer shunned",
+						    me.name,
+						    acptr->name);
+#endif
+					}
+				}
+		}
+	}
+}
+
 aTKline *tkl_expire(aTKline * tmp)
 {
 	char whattype[512];
-	long i, i1;
-	char *chost, *cname, *cip;
-	int  is_ip;
-	aClient *acptr;
+
 	if (!tmp)
 		return NULL;
 
@@ -157,52 +210,7 @@ aTKline *tkl_expire(aTKline * tmp)
 	    TStime() - tmp->set_at);
 
 	if (tmp->type & TKL_SHUN)
-	{
-		for (i1 = 0; i1 <= 5; i1++)
-		{
-			/* winlocal
-			for (i = 0; i <= (MAXCONNECTIONS - 1); i++)
-			*/
-			for (i = 0; i <= LastSlot; ++i)
-			{
-				if ((acptr = local[i]))
-					if (MyClient(acptr) && IsShunned(acptr))
-					{
-						chost = acptr->sockhost;
-						cname = acptr->user->username;
-
-	
-						cip = (char *)Inet_ia2p(&acptr->ip);
-
-						if (!(*tmp->hostmask < '0') && (*tmp->hostmask > '9'))
-							is_ip = 1;
-						else
-							is_ip = 0;
-
-						if (is_ip ==
-						    0 ? (!match(tmp->hostmask,
-						    chost)
-						    && !match(tmp->usermask,
-						    cname)) : (!match(tmp->
-						    hostmask, chost)
-						    || !match(tmp->hostmask,
-						    cip))
-						    && !match(tmp->usermask,
-						    cname))
-						{
-							ClearShunned(acptr);
-#ifdef SHUN_NOTICES
-							sendto_one(acptr,
-							    ":%s NOTICE %s :*** You are no longer shunned",
-							    me.name,
-							    acptr->name);
-#endif
-						}
-					}
-			}
-		}
-	}
-
+		tkl_check_local_remove_shun(tmp);
 
 	return (tkl_del_line(tmp));
 }
@@ -240,9 +248,9 @@ int  find_tkline_match(aClient *cptr, int xx)
 	int	points = 0;
 	ConfigItem_except *excepts;
 	char host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
+	int match_type = 0;
 	if (IsServer(cptr) || IsMe(cptr))
 		return -1;
-
 
 	nowtime = TStime();
 	chost = cptr->sockhost;
@@ -268,8 +276,13 @@ int  find_tkline_match(aClient *cptr, int xx)
 		return 1;
 	strcpy(host, make_user_host(cname, chost));
 	strcpy(host2, make_user_host(cname, cip));
+	if (((lp->type & TKL_KILL) || (lp->type & TKL_ZAP)) && !(lp->type & TKL_GLOBAL))
+		match_type = CONF_EXCEPT_BAN;
+	else
+		match_type = CONF_EXCEPT_TKL;
 	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
-		if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != lp->type)
+		if (excepts->flag.type != match_type || (match_type == CONF_EXCEPT_TKL && 
+		    excepts->type != lp->type))
 			continue;
 		if (!match(excepts->mask, host) || !match(excepts->mask, host2))
 			return 1;		
@@ -644,6 +657,8 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					      "%s removed %s %s@%s (set at %s - reason: %s)",
 					      parv[5], txt, tk->usermask,
 					      tk->hostmask, gmt, tk->reason);
+					  if (type & TKL_SHUN)
+					      tkl_check_local_remove_shun(tk);
 					  tkl_del_line(tk);
 					  if (type & TKL_GLOBAL)
 						  sendto_serv_butone(cptr,

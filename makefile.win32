@@ -48,7 +48,7 @@ MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OB
  SRC/M_UNSQLINE.OBJ SRC/M_UNZLINE.OBJ SRC/M_WHOIS.OBJ \
  SRC/SCAN.OBJ SRC/SCAN_SOCKS.OBJ SRC/SCAN_HTTP.OBJ SRC/M_TKL.OBJ SRC/M_VHOST.OBJ \
  SRC/M_CYCLE.OBJ SRC/M_SVSJOIN.OBJ SRC/M_SVSPART.OBJ SRC/M_SVSLUSERS.OBJ \
- SRC/INVISIBILITY.OBJ
+ SRC/M_SVSWATCH.OBJ SRC/M_SVSSILENCE.OBJ
 
 ALL: CONF UNREAL.EXE WIRCD.EXE
 
@@ -366,6 +366,12 @@ src/m_svspart.obj: src/modules/m_svspart.c $(INCLUDES)
 src/m_svslusers.obj: src/modules/m_svslusers.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/modules/m_svslusers.c
 
+src/m_svswatch.obj: src/modules/m_svswatch.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_svswatch.c
+
+src/m_svssilence.obj: src/modules/m_svssilence.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_svssilence.c
+
 src/scan.obj: src/modules/scan.c $(INCLUDES)
         $(CC) $(CFLAGS) src/modules/scan.c
 
@@ -377,9 +383,6 @@ src/scan_socks.obj: src/modules/scan_socks.c $(INCLUDES)
 
 src/scan_http.obj: src/modules/scan_http.c $(INCLUDES)
         $(CC) $(CFLAGS) src/modules/scan_http.c
-
-src/invisibility.obj: src/modules/invisibility.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/modules/invisibility.c
 
 src/win32/win32.res: src/win32/win32gui.rc
         $(RC) /l 0x409 /fosrc/win32/win32.res /i ./include /i ./src \

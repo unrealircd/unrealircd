@@ -516,6 +516,18 @@ CMD_FUNC(m_protoctl)
 			    proto, cptr->name));
 			cptr->proto |= PROTO_SJB64;
 		}
+		else if (strcmp(s, "ZIP") == 0)
+		{
+			if (remove)
+			{
+				cptr->proto &= ~PROTO_ZIP;
+				continue;
+			}
+			Debug((DEBUG_ERROR,
+				"Chose protocol %s for link %s",
+				proto, cptr->name));
+			cptr->proto |= PROTO_ZIP;
+		}
 		/*
 		 * Add other protocol extensions here, with proto
 		 * containing the base option, and options containing
@@ -623,6 +635,30 @@ CMD_FUNC(m_server)
 	 */
 	if (IsUnknown(cptr) || IsHandshake(cptr))
 	{
+		char xerrmsg[256];
+		ConfigItem_link *link;
+		
+		strcpy(xerrmsg, "No matching link configuration");
+		/* First check if the server is in the list */
+		if (!servername) {
+			strcpy(xerrmsg, "Null servername");
+			goto errlink;
+		}
+		for(link = conf_link; link; link = (ConfigItem_link *) link->next)
+			if (!match(link->servername, servername))
+				break;
+		if (!link) {
+			snprintf(xerrmsg, 256, "No link block named '%s'", servername);
+			goto errlink;
+		}
+		if (link->username && match(link->username, cptr->username)) {
+			snprintf(xerrmsg, 256, "Username '%s' didn't match '%s'",
+				cptr->username, link->username);
+			/* I assume nobody will have 2 link blocks with the same servername
+			 * and different username. -- Syzop
+			 */
+			goto errlink;
+		}
 		/* For now, we don't check based on DNS, it is slow, and IPs
 		   are better */
 		aconf = Find_link(cptr->username, cptr->sockhost, cptr->sockhost,
@@ -642,12 +678,16 @@ CMD_FUNC(m_server)
 #endif		
 		if (!aconf)
 		{
+			snprintf(xerrmsg, 256, "Server is in link block but IP/host didn't match");
+errlink:
+			/* Send the "simple" error msg to the server */
 			sendto_one(cptr,
 			    "ERROR :Link denied (No matching link configuration) %s",
 			    inpath);
+			/* And send the "verbose" error msg only to local failops */
 			sendto_locfailops
-			    ("Link denied for %s(%s@%s) (No matching link configuration) %s",
-			    servername, cptr->username, cptr->sockhost, inpath);
+			    ("Link denied for %s(%s@%s) (%s) %s",
+			    servername, cptr->username, cptr->sockhost, xerrmsg, inpath);
 			return exit_client(cptr, sptr, &me,
 			    "Link denied (No matching link configuration)");
 		}
@@ -658,7 +698,7 @@ CMD_FUNC(m_server)
 			    "ERROR :Link denied (Authentication failed) %s",
 			    inpath);
 			sendto_locfailops
-			    ("Link denied (Authentication failed) %s", inpath);
+			    ("Link denied (Authentication failed [Bad password?]) %s", inpath);
 			return exit_client(cptr, sptr, &me,
 			    "Link denied (Authentication failed)");
 		}
@@ -832,7 +872,8 @@ CMD_FUNC(m_server)
 		if (aconf->options & CONNECT_QUARANTINE)
 			cptr->flags |= FLAGS_QUARANTINE;
 		/* Start synch now */
-		m_server_synch(cptr, numeric, aconf);
+		if (m_server_synch(cptr, numeric, aconf) == FLUSH_BUFFER)
+			return FLUSH_BUFFER;
 	}
 	else
 	{
@@ -980,6 +1021,25 @@ CMD_FUNC(m_server_remote)
 	return 0;
 }
 
+/*
+ * send_proto:
+ * sends PROTOCTL message to server, taking care of whether ZIP
+ * should be enabled or not.
+ */
+void send_proto(aClient *cptr, ConfigItem_link *aconf)
+{
+#ifdef ZIP_LINKS
+	if (aconf->options & CONNECT_ZIP)
+	{
+		sendto_one(cptr, "PROTOCTL %s ZIP", PROTOCTL_SERVER);
+	} else {
+#endif
+		sendto_one(cptr, "PROTOCTL %s", PROTOCTL_SERVER);
+#ifdef ZIP_LINKS
+	}
+#endif
+}
+
 int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 {
 	char		*inpath = get_client_name(cptr, TRUE);
@@ -995,13 +1055,46 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	}
 	if (IsUnknown(cptr))
 	{
-		sendto_one(cptr, "PROTOCTL %s", PROTOCTL_SERVER);
+		/* If this is an incomming connection, then we have just received
+		 * their stuff and now send our stuff back.
+		 */
+		send_proto(cptr, aconf);
 		sendto_one(cptr, "PASS :%s", aconf->connpwd);
 		sendto_one(cptr, "SERVER %s 1 :U%d-%s-%i %s",
 			    me.name, UnrealProtocol,
 			    serveropts, me.serv->numeric,
 			    (me.info[0]) ? (me.info) : "IRCers United");
 	}
+#ifdef ZIP_LINKS
+	if (aconf->options & CONNECT_ZIP)
+	{
+		if (cptr->proto & PROTO_ZIP)
+		{
+			if (zip_init(cptr, aconf->compression_level ? aconf->compression_level : ZIP_DEFAULT_LEVEL) == -1)
+			{
+				zip_free(cptr);
+				sendto_realops("Unable to setup compressed link for %s", get_client_name(cptr, TRUE));
+				return exit_client(cptr, cptr, &me, "zip_init() failed");
+			}
+			SetZipped(cptr);
+			cptr->zip->first = 1;
+		} else {
+			sendto_realops("WARNING: Remote doesnt have link::options::zip set. Compression disabled.");
+		}
+	}
+#endif
+
+#if 0
+/* Disabled because it may generate false warning when linking with cvs versions between b14 en b15 -- Syzop */
+	if ((cptr->proto & PROTO_ZIP) && !(aconf->options & CONNECT_ZIP))
+	{
+#ifdef ZIP_LINKS
+		sendto_realops("WARNING: Remote requested compressed link, but we don't have link::options::zip set. Compression disabled.");
+#else
+		sendto_realops("WARNING: Remote requested compressed link, but we don't have zip links support compiled in. Compression disabled.");
+#endif
+	}
+#endif
 	/* Set up server structure */
 	SetServer(cptr);
 	IRCstats.me_servers++;
@@ -1018,17 +1111,23 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 #ifdef USE_SSL
 	if (IsSecure(cptr))
 	{
-		sendto_serv_butone(&me, ":%s SMO o :(\2link\2) Secure link %s -> %s established (%s)",
-			me.name, me.name, inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
-		sendto_realops("(\2link\2) Secure link %s -> %s established (%s)",
+		sendto_serv_butone(&me, ":%s SMO o :(\2link\2) Secure %slink %s -> %s established (%s)",
+			me.name,
+			IsZipped(cptr) ? "ZIP" : "",
+			me.name, inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
+		sendto_realops("(\2link\2) Secure %slink %s -> %s established (%s)",
+			IsZipped(cptr) ? "ZIP" : "",
 			me.name, inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
 	}
 	else
 #endif
 	{
-		sendto_serv_butone(&me, ":%s SMO o :(\2link\2) Link %s -> %s established",
-			me.name, me.name, inpath);
-		sendto_realops("(\2link\2) Link %s -> %s established",
+		sendto_serv_butone(&me, ":%s SMO o :(\2link\2) %sLink %s -> %s established",
+			me.name,
+			IsZipped(cptr) ? "ZIP" : "",
+			me.name, inpath);
+		sendto_realops("(\2link\2) %sLink %s -> %s established",
+			IsZipped(cptr) ? "ZIP" : "",
 			me.name, inpath);
 	}
 	(void)add_to_client_hash_table(cptr->name, cptr);
@@ -1199,8 +1298,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 					    server), acptr->user->servicestamp,
 					    (!buf
 					    || *buf == '\0' ? "+" : buf),
-					    IsHidden(acptr) ? acptr->user->
-					    virthost : acptr->user->realhost,
+					    GetHost(acptr),
 					    acptr->info);
 			}
 
@@ -1397,6 +1495,17 @@ CMD_FUNC(m_netinfo)
 	    ("Link %s -> %s is now synced [secs: %li recv: %li.%li sent: %li.%li]",
 	    cptr->name, me.name, (TStime() - endsync), sptr->receiveK,
 	    sptr->receiveB, sptr->sendK, sptr->sendB);
+#ifdef ZIP_LINKS
+	if ((MyConnect(cptr)) && (IsZipped(cptr)) && cptr->zip->in->total_out && cptr->zip->out->total_in) {
+		sendto_realops
+		("Zipstats for link to %s: decompressed (in): %01lu/%01lu (%3.1f%%), compressed (out): %01lu/%01lu (%3.1f%%)",
+			get_client_name(cptr, TRUE),
+			cptr->zip->in->total_in, cptr->zip->in->total_out,
+			(100.0*(float)cptr->zip->in->total_in) /(float)cptr->zip->in->total_out,
+			cptr->zip->out->total_in, cptr->zip->out->total_out,
+			(100.0*(float)cptr->zip->out->total_out) /(float)cptr->zip->out->total_in);
+	}
+#endif
 
 	sendto_serv_butone(&me,
 	    ":%s SMO o :\2(sync)\2 Link %s -> %s is now synced [secs: %li recv: %li.%li sent: %li.%li]",
@@ -1971,10 +2080,28 @@ CMD_FUNC(m_stats)
 		  ConfigItem_badword *words;
 
 		  for (words = conf_badword_channel; words; words = (ConfigItem_badword *) words->next) {
+ #ifdef FAST_BADWORD_REPLACE
+			  sendto_one(sptr, ":%s %i %s :c %c %s%s%s %s",
+			      me.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
+			      (words->type & BADW_TYPE_FAST_L) ? "*" : "",
+			      words->word,
+			      (words->type & BADW_TYPE_FAST_R) ? "*" : "",
+			      words->replace ? words->replace : "<censored>");
+ #else
 			  sendto_one(sptr, ":%s %i %s :c %s %s", me.name, RPL_TEXT, sptr->name,  words->word, words->replace ? words->replace : "<censored>");
+ #endif
 		  }
 		  for (words = conf_badword_message; words; words = (ConfigItem_badword *) words->next) {
+ #ifdef FAST_BADWORD_REPLACE
+			  sendto_one(sptr, ":%s %i %s :m %c %s%s%s %s",
+			      me.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
+			      (words->type & BADW_TYPE_FAST_L) ? "*" : "",
+			      words->word,
+			      (words->type & BADW_TYPE_FAST_R) ? "*" : "",
+			      words->replace ? words->replace : "<censored>");
+ #else
 			  sendto_one(sptr, ":%s %i %s :m %s %s", me.name, RPL_TEXT, sptr->name, words->word, words->replace ? words->replace : "<censored>");
+ #endif
 		  }
 		  break;
 	  }
@@ -2404,12 +2531,48 @@ CMD_FUNC(m_stats)
 		  for (classes = conf_class; classes; classes = (ConfigItem_class *) classes->next) {
 			  sendto_one(sptr, rpl_str(RPL_STATSYLINE),
 				me.name, sptr->name, classes->name, classes->pingfreq, classes->connfreq,
-				classes->maxclients, classes->sendq);
+				classes->maxclients, classes->sendq, classes->recvq ? classes->recvq : CLIENT_FLOOD);
 		  }
 		  break;
 	  }
 	  case 'Z':
 	  case 'z':
+		  if (!strcasecmp(parv[1], "zip"))
+		  {
+			/* Ugly, but I want a '/stats zip' -- Syzop */
+			if (!IsAnOper(sptr)) {
+				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+				return 0;
+			}
+#ifndef ZIP_LINKS
+			sendto_one(sptr, ":%s NOTICE %s :Sorry this server doesn't support zip links", me.name, parv[0]);
+#else
+			for (i=0; i <= LastSlot; i++)
+			{
+				if (!(acptr = local[i]))
+					continue;
+				if (!IsServer(acptr) || !IsZipped(acptr))
+					continue;
+				if (acptr->zip->in->total_out && acptr->zip->out->total_in)
+				{
+				  sendto_one(sptr,
+				    ":%s NOTICE %s :Zipstats for link to %s (compresslevel %d): decompressed (in): %01lu/%01lu (%3.1f%%), compressed (out): %01lu/%01lu (%3.1f%%)",
+				    me.name, parv[0], get_client_name(acptr, TRUE),
+				    acptr->serv->conf->compression_level ? acptr->serv->conf->compression_level : ZIP_DEFAULT_LEVEL,
+				    acptr->zip->in->total_in, acptr->zip->in->total_out,
+				    (100.0*(float)acptr->zip->in->total_in) /(float)acptr->zip->in->total_out,
+				    acptr->zip->out->total_in, acptr->zip->out->total_out,
+				    (100.0*(float)acptr->zip->out->total_out) /(float)acptr->zip->out->total_in);
+				} else {
+					sendto_one(sptr, ":%s NOTICE %s :Zipstats for link to %s: unavailable", me.name, parv[0]);
+				}
+			}
+#endif
+			sendto_snomask(SNO_EYES, "Stats 'zip' requested by %s (%s@%s)",
+		    	sptr->name, sptr->user->username, GetHost(sptr));
+			stat = '*';
+			break;
+		  } /* 'zip' */
 		  if (IsAnOper(sptr))
 			  count_memory(sptr, parv[0]);
 		  break;
@@ -2489,9 +2652,7 @@ CMD_FUNC(m_stats)
 
 	if (stat != '*')
 		sendto_snomask(SNO_EYES, "Stats \'%c\' requested by %s (%s@%s)",
-		    stat, sptr->name, sptr->user->username,
-		    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
-		    realhost);
+		    stat, sptr->name, sptr->user->username, GetHost(sptr));
 
 	return 0;
 }
@@ -2596,8 +2757,15 @@ CMD_FUNC(m_help)
 
 	if (IsServer(sptr) || IsHelpOp(sptr))
 	{
-		if (BadPtr(message))
+		if (BadPtr(message)) {
+			if (MyClient(sptr)) {
+				parse_help(sptr, parv[0], NULL);
+				sendto_one(sptr,
+					":%s NOTICE %s :*** NOTE: As a helpop you have to prefix your text with ? to query the help system, like: /helpop ?usercmds",
+					me.name, sptr->name);
+			}
 			return 0;
+		}
 		if (message[0] == '?')
 		{
 			parse_help(sptr, parv[0], message + 1);
@@ -2872,8 +3040,8 @@ CMD_FUNC(m_connect)
 		      me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], aconf->servername);
 		  break;
 	  case -2:
-		  sendto_one(sptr, ":%s %s %s :*** Hostname %s is unknown for server %s.",
-		      me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], aconf->hostname, aconf->servername);
+		  sendto_one(sptr, ":%s %s %s :*** Resolving hostname '%s'...",
+		      me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], aconf->hostname);
 		  break;
 	  default:
 		  sendto_one(sptr,
@@ -3299,6 +3467,7 @@ CMD_FUNC(m_admin)
 ** now allows the -flags in remote rehash
 ** ugly code but it seems to work :) -- codemastr
 ** added -all and fixed up a few lines -- niquil (niquil@programmer.net)
+** fixed remote rehashing, but it's getting a bit weird code again -- Syzop
 */
 CMD_FUNC(m_rehash)
 {
@@ -3317,6 +3486,20 @@ CMD_FUNC(m_rehash)
 		return 0;
 	}
 	x = 0;
+
+	if (BadPtr(parv[2])) {
+		/* If the argument starts with a '-' (like -motd, -opermotd, etc) then it's
+		 * assumed not to be a server. -- Syzop
+		 */
+		if (parv[1] && (parv[1][0] == '-'))
+			x = HUNTED_ISME;
+		else
+			x = hunt_server_token(cptr, sptr, MSG_REHASH, TOK_REHASH, "%s", 1, parc, parv);
+	} else {
+		x = hunt_server_token(cptr, sptr, MSG_REHASH, TOK_REHASH, "%s %s", 1, parc, parv);
+	}
+	if (x != HUNTED_ISME)
+		return 0; /* Now forwarded or server didnt exist */
 
 	if (cptr != sptr)
 	{
@@ -3337,30 +3520,11 @@ CMD_FUNC(m_rehash)
 		}
 		parv[1] = parv[2];
 	}
-	else
-	{
-		if (find_server_quick(parv[1]))
-		{
-			if (parv[2])
-			{
-				if ((x =
-				    hunt_server_token(cptr, sptr, MSG_REHASH, TOK_REHASH, "%s %s",
-				    1, parc, parv)) != HUNTED_ISME)
-					return 0;
-			}
-			else
-			{
-				if ((x =
-				    hunt_server_token(cptr, sptr, MSG_REHASH, TOK_REHASH, "%s", 1,
-				    parc, parv)) != HUNTED_ISME)
-					return 0;
-			}
-		}
-	}
+
 	if (!BadPtr(parv[1]))
 	{
 
-		if (!IsAdmin(sptr))
+		if (!IsAdmin(sptr) && !IsCoAdmin(sptr))
 		{
 			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 			return 0;
@@ -3374,6 +3538,8 @@ CMD_FUNC(m_rehash)
 				aMotd *amotd;
 				sendto_ops("%sRehashing everything on the request of %s",
 					cptr != sptr ? "Remotely " : "",sptr->name);
+				if (cptr != sptr)
+					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing everything", me.name, sptr->name);
 				opermotd = (aMotd *) read_file(OPATH, &opermotd);
 				botmotd = (aMotd *) read_file(BPATH, &botmotd);
 				motd = (aMotd *) read_motd(MPATH);
@@ -3413,6 +3579,8 @@ CMD_FUNC(m_rehash)
 				    ("%sRehashing OperMOTD on request of %s",
 				    cptr != sptr ? "Remotely " : "",
 				    sptr->name);
+				if (cptr != sptr)
+					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing OperMOTD", me.name, sptr->name);
 				opermotd = (aMotd *) read_file(OPATH, &opermotd);
 				return 0;
 			}
@@ -3422,6 +3590,8 @@ CMD_FUNC(m_rehash)
 				    ("%sRehashing BotMOTD on request of %s",
 				    cptr != sptr ? "Remotely " : "",
 				    sptr->name);
+				if (cptr != sptr)
+					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing BotMOTD", me.name, sptr->name);
 				botmotd = (aMotd *) read_file(BPATH, &botmotd);
 				return 0;
 			}
@@ -3434,6 +3604,8 @@ CMD_FUNC(m_rehash)
 				    ("%sRehashing all MOTDs and RULES on request of %s",
 				    cptr != sptr ? "Remotely " : "",
 				    sptr->name);
+				if (cptr != sptr)
+					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing all MOTDs and RULES", me.name, sptr->name);
 				motd = (aMotd *) read_motd(MPATH);
 				rules = (aMotd *) read_rules(RPATH);
 				for (tlds = conf_tld; tlds;
@@ -3462,12 +3634,19 @@ CMD_FUNC(m_rehash)
 				}
 				return 0;
 			}
+			/* didn't match / fall trough... should we continue?? */
+			sendto_ops("%s is %srehashing server config file (unknown option)",
+				sptr->name, cptr != sptr ? "Remotely " : "");
+			if (cptr != sptr)
+				sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing server config file (unknown option)",
+					me.name, sptr->name);
 		}
 	}
 	else
 		sendto_ops("%s is rehashing server config file", parv[0]);
 
-	sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
+	if (cptr == sptr)
+		sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
 	return rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
 }
 
@@ -3684,8 +3863,7 @@ CMD_FUNC(m_trace)
 					      rpl_str(RPL_TRACEOPERATOR),
 					      me.name,
 					      parv[0], class, acptr->name,
-					      IsHidden(acptr) ? acptr->user->
-					      virthost : acptr->user->realhost,
+					      GetHost(acptr),
 					      now - acptr->lasttime);
 				  else
 					  sendto_one(sptr,
@@ -4144,9 +4322,7 @@ CMD_FUNC(m_close)
 	}
 	sendto_one(sptr, rpl_str(RPL_CLOSEEND), me.name, parv[0], closed);
 	sendto_realops("%s!%s@%s closed %d unknown connections", sptr->name,
-	    sptr->user->username,
-	    IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost,
-	    closed);
+	    sptr->user->username, GetHost(sptr), closed);
 	IRCstats.unknown = 0;
 	return 0;
 }

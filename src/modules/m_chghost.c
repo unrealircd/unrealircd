@@ -178,6 +178,30 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if ((acptr = find_person(parv[1], NULL)))
 	{
+		switch (UHOST_ALLOWED)
+		{
+			case UHALLOW_NEVER:
+				if (MyClient(sptr))
+				{
+					sendto_one(sptr, ":%s NOTICE %s :*** /ChgHost is disabled", me.name, sptr->name);
+					return 0;
+				}
+				break;
+			case UHALLOW_ALWAYS:
+				break;
+			case UHALLOW_NOCHANS:
+				if (IsPerson(acptr) && MyClient(sptr) && acptr->user->joined)
+				{
+					sendto_one(sptr, ":%s NOTICE %s :*** /ChgHost can not be used while %s is on a channel", me.name, sptr->name, acptr->name);
+					return 0;
+				}
+				break;
+			case UHALLOW_REJOIN:
+				rejoin_doparts(acptr);
+				/* join sent later when the host has been changed */
+				break;
+		}
+				
 		if (!IsULine(sptr))
 		{
 			sendto_snomask(SNO_EYES,
@@ -195,6 +219,8 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			acptr->user->virthost = 0;
 		}
 		acptr->user->virthost = strdup(parv[2]);
+		if (UHOST_ALLOWED == UHALLOW_REJOIN)
+			rejoin_dojoinandmode(acptr);
 		return 0;
 	}
 	else

@@ -118,12 +118,6 @@ int	m_unzline_Unload(int module_unload)
 
 DLLFUNC int m_unzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	char userhost[512 + 2] = "", *in;
-	int  uline = 0, akill = 0;
-	char *mask, *server = NULL;
-	ConfigItem_ban *bconf;
-	uline = IsULine(sptr) ? 1 : 0;
-
         if (!MyClient(sptr) || !OPCanZline(sptr))
         {
                 sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);

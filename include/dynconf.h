@@ -49,6 +49,8 @@ struct zNetwork {
 	char *x_stats_server;
 };
 
+enum UHAllowed { UHALLOW_ALWAYS, UHALLOW_NOCHANS, UHALLOW_REJOIN, UHALLOW_NEVER };
+
 typedef struct zConfiguration aConfiguration;
 struct zConfiguration {
 	unsigned som:1;
@@ -59,6 +61,7 @@ struct zConfiguration {
 	unsigned ident_check:1;
 	unsigned fail_oper_warn:1;
 	unsigned show_connect_info:1;
+	unsigned dont_resolve:1;
 	unsigned use_egd;
 	long host_timeout;
 	int  host_retries;
@@ -67,6 +70,7 @@ struct zConfiguration {
 	long conn_modes;
 	long oper_modes;
 	char *oper_snomask;
+	char *user_snomask;
 	char *auto_join_chans;
 	char *oper_auto_join_chans;
 	char *oper_only_stats;
@@ -80,6 +84,8 @@ struct zConfiguration {
 	char *trusted_ca_file;
 	long ssl_options;
 #endif
+	enum UHAllowed userhost_allowed;
+	char *restrict_usermodes;
 	aNetwork network;
 };
 
@@ -91,12 +97,14 @@ extern aConfiguration iConf;
 #define CONN_MODES			iConf.conn_modes
 #define OPER_MODES			iConf.oper_modes
 #define OPER_SNOMASK			iConf.oper_snomask
+#define CONNECT_SNOMASK			iConf.user_snomask
 #define SHOWOPERMOTD			iConf.som
 #define HIDE_ULINES			iConf.hide_ulines
 #define ALLOW_CHATOPS			iConf.allow_chatops
 #define MAXCHANNELSPERUSER		iConf.maxchannelsperuser
 #define WEBTV_SUPPORT			iConf.webtv_support
 #define NO_OPER_HIDING			iConf.no_oper_hiding
+#define DONT_RESOLVE			iConf.dont_resolve
 #define AUTO_JOIN_CHANS			iConf.auto_join_chans
 #define OPER_AUTO_JOIN_CHANS		iConf.oper_auto_join_chans
 #define HOST_TIMEOUT			iConf.host_timeout
@@ -134,4 +142,5 @@ extern aConfiguration iConf;
 #define CLOAK_KEY3			iConf.network.key3
 #define CLOAK_KEYCRC			iConf.network.keycrc
 #define STATIC_QUIT			iConf.static_quit
-
+#define UHOST_ALLOWED			iConf.userhost_allowed
+#define RESTRICT_USERMODES	iConf.restrict_usermodes

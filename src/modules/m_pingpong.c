@@ -89,7 +89,7 @@ int    m_pingpong_Init(ModuleInfo *modinfo)
 	Debug((DEBUG_NOTICE, "INIT"));
 
 	add_Command(MSG_PING, TOK_PING, m_ping, MAXPARA);
-	add_CommandX(MSG_PONG, TOK_PONG, m_pong, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
+	add_CommandX(MSG_PONG, TOK_PONG, m_pong, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER|M_SHUN);
 	return MOD_SUCCESS;
 	
 }

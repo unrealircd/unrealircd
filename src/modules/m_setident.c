@@ -199,13 +199,13 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	/* illegal?! */
 	for (s = vident; *s; s++)
 	{
+		if ((*s == '~') && (s == vident))
+			continue;
 		if (!isallowed(*s))
 		{
 			legalident = 0;
+			break;
 		}
-		if (*s == '~')
-			legalident = 1;
-
 	}
 
 	if (legalident == 0)
@@ -216,19 +216,43 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
+	switch (UHOST_ALLOWED)
+	{
+		case UHALLOW_ALWAYS:
+			break;
+		case UHALLOW_NEVER:
+			if (MyClient(sptr))
+			{
+				sendto_one(sptr, ":%s NOTICE %s :*** /SetIdent is disabled", me.name, sptr->name);
+				return 0;
+			}
+			break;
+		case UHALLOW_NOCHANS:
+			if (MyClient(sptr) && sptr->user->joined)
+			{
+				sendto_one(sptr, ":%s NOTICE %s :*** /SetIdent can not be used while you are on a channel", me.name, sptr->name);
+				return 0;
+			}
+			break;
+		case UHALLOW_REJOIN:
+			rejoin_doparts(sptr);
+			break;
+	}
+
 	/* get it in */
 	ircsprintf(sptr->user->username, "%s", vident);
 	/* spread it out */
 	sendto_serv_butone_token(cptr, sptr->name,
 	    MSG_SETIDENT, TOK_SETIDENT, "%s", parv[1]);
 
+	if (UHOST_ALLOWED == UHALLOW_REJOIN)
+		rejoin_dojoinandmode(sptr);
+
 	if (MyConnect(sptr))
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :Your nick!user@host-mask is now (%s!%s@%s) - To disable ident set change it manually by /setident'ing again",
-		    me.name, parv[0], parv[0], sptr->user->username,
-		    IsHidden(sptr) ? sptr->user->virthost : sptr->
-		    user->realhost);
+		    me.name, parv[0], parv[0], sptr->user->username, GetHost(sptr));
 	}
 	return 0;
 }

@@ -55,8 +55,9 @@ static char sccsid[] = "@(#)s_auth.c	1.18 4/18/94 (C) 1992 Darren Reed";
  */
 void start_auth(aClient *cptr)
 {
-	struct SOCKADDR_IN sock;
-
+	struct SOCKADDR_IN sock, us;
+	int len;
+	
 	if (IDENT_CHECK == 0) {
 		cptr->flags &= ~(FLAGS_WRAUTH | FLAGS_AUTH);
 		return;
@@ -81,21 +82,24 @@ void start_auth(aClient *cptr)
 		return;
 	}
 
-	if (SHOWCONNECTINFO)
-		sendto_one(cptr, REPORT_DO_ID);
+	if (SHOWCONNECTINFO && !cptr->serv)
+		sendto_one(cptr, "%s", REPORT_DO_ID);
 
 	set_non_blocking(cptr->authfd, cptr);
 
-
-	/* Use the listener that the user got in on, dah? */
+	/* Bind to the IP the user got in */
+	len = sizeof(us);
+	if (!getsockname(cptr->fd, (struct SOCKADDR *)&us, &len))
+	{
 #ifndef INET6
-	sock.SIN_ADDR = cptr->listener->ip; 
+		sock.SIN_ADDR = us.SIN_ADDR;
 #else
-	bcopy((char *)&cptr->listener->ip, (char *)&sock.SIN_ADDR, sizeof(struct IN_ADDR));
+		bcopy(&us.SIN_ADDR, &sock.SIN_ADDR, sizeof(struct IN_ADDR));
 #endif
-	sock.SIN_PORT = 0;
-	sock.SIN_FAMILY = AFINET;	/* redundant? */
-	(void)bind(cptr->authfd, (struct SOCKADDR *)&sock, sizeof(sock));
+		sock.SIN_PORT = 0;
+		sock.SIN_FAMILY = AFINET;	/* redundant? */
+		(void)bind(cptr->authfd, (struct SOCKADDR *)&sock, sizeof(sock));
+	}
 
 	bcopy((char *)&cptr->ip, (char *)&sock.SIN_ADDR,
 	    sizeof(struct IN_ADDR));
@@ -114,8 +118,8 @@ void start_auth(aClient *cptr)
 		cptr->authfd = -1;
 		if (!DoingDNS(cptr))
 			SetAccess(cptr);
-		if (SHOWCONNECTINFO) 
-			sendto_one(cptr, REPORT_FAIL_ID);
+		if (SHOWCONNECTINFO && !cptr->serv) 
+			sendto_one(cptr, "%s", REPORT_FAIL_ID);
 		return;
 	}
 	cptr->flags |= (FLAGS_WRAUTH | FLAGS_AUTH);
@@ -154,14 +158,16 @@ void send_authports(aClient *cptr)
 	    authbuf, inetntoa((char *)&them.SIN_ADDR)));
 	if (WRITE_SOCK(cptr->authfd, authbuf, strlen(authbuf)) != strlen(authbuf))
 	{
+		if (ERRNO == P_EAGAIN)
+			return; /* Not connected yet, try again later */
 authsenderr:
 		ircstp->is_abad++;
 		CLOSE_SOCK(cptr->authfd);
 		--OpenFiles;
 		cptr->authfd = -1;
 		cptr->flags &= ~FLAGS_AUTH;
-		if (SHOWCONNECTINFO)
-			sendto_one(cptr, REPORT_FAIL_ID);
+		if (SHOWCONNECTINFO && !cptr->serv)
+			sendto_one(cptr, "%s", REPORT_FAIL_ID);
 		if (!DoingDNS(cptr))
 			SetAccess(cptr);
 	}
@@ -236,8 +242,8 @@ void read_authports(aClient *cptr)
 	if (len > 0)
 		Debug((DEBUG_INFO, "ident reply: [%s]", cptr->buffer));
 
-	if (SHOWCONNECTINFO)
-		sendto_one(cptr, REPORT_FIN_ID);
+	if (SHOWCONNECTINFO && !cptr->serv)
+		sendto_one(cptr, "%s", REPORT_FIN_ID);
 
 	if (!locp || !remp || !*ruser)
 	{

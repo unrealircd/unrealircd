@@ -424,15 +424,7 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 		if (IsPerson(sptr))
 		{
 			RunHook(HOOKTYPE_LOCAL_QUIT, sptr);
-			sendto_snomask(SNO_CLIENT,
-			    "*** Notice -- Client exiting: %s (%s@%s) [%s]",
-			    sptr->name, sptr->user->username,
-			    sptr->user->realhost, comment);
-			sendto_conn_hcn
-			    ("*** Notice -- Client exiting: %s (%s@%s) [%s] [%s]",
-			    sptr->name, sptr->user->username,
-			    sptr->user->realhost, comment, Inet_ia2p(&sptr->ip));
-
+			sendto_connectnotice(sptr->name, sptr->user, sptr, 1, comment);
 			/* Clean out list and watch structures -Donwulff */
 			hash_del_watch_list(sptr);
 			if (sptr->user && sptr->user->lopt)

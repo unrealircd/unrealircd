@@ -184,18 +184,42 @@ int m_chgident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if ((acptr = find_person(parv[1], NULL)))
 	{
+		switch (UHOST_ALLOWED)
+		{
+			case UHALLOW_NEVER:
+				if (MyClient(sptr))
+				{
+					sendto_one(sptr, ":%s NOTICE %s :*** /ChgIdent is disabled", me.name, sptr->name);
+					return 0;
+				}
+				break;
+			case UHALLOW_ALWAYS:
+				break;
+			case UHALLOW_NOCHANS:
+				if (IsPerson(acptr) && MyClient(sptr) && acptr->user->joined)
+				{
+					sendto_one(sptr, ":%s NOTICE %s :*** /ChgIdent can not be used while %s is on a channel", me.name, sptr->name, acptr->name);
+					return 0;
+				}
+				break;
+			case UHALLOW_REJOIN:
+				rejoin_doparts(acptr);
+				/* join sent later when the ident has been changed */
+				break;
+		}
 		if (!IsULine(sptr))
 		{
 			sendto_snomask(SNO_EYES,
 			    "%s changed the virtual ident of %s (%s@%s) to be %s",
 			    sptr->name, acptr->name, acptr->user->username,
-			    (acptr->umodes & UMODE_HIDE ? acptr->
-			    user->realhost : acptr->user->realhost), parv[2]);
+			    GetHost(acptr), parv[2]);
 		}
 		sendto_serv_butone_token(cptr, sptr->name,
 		    MSG_CHGIDENT,
 		    TOK_CHGIDENT, "%s %s", acptr->name, parv[2]);
 		ircsprintf(acptr->user->username, "%s", parv[2]);
+		if (UHOST_ALLOWED == UHALLOW_REJOIN)
+			rejoin_dojoinandmode(acptr);
 		return 0;
 	}
 	else

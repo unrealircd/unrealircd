@@ -1,7 +1,6 @@
 /*
- *   Unreal Internet Relay Chat Daemon, src/modules/m_quit.c
- *   (C) 2000-2001 Carsten V. Munk and the UnrealIRCd Team
- *   Moved to modules by Fish (Justin Hammond)
+ *   Unreal Internet Relay Chat Daemon, src/modules/m_svswatch.c
+ *   (C) 2003 Bram Matthys (Syzop) and the UnrealIRCd Team
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -33,6 +32,7 @@
 #ifdef _WIN32
 #include <io.h>
 #endif
+#include <sys/timeb.h>
 #include <fcntl.h>
 #include "h.h"
 #include "proto.h"
@@ -43,23 +43,22 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+DLLFUNC int m_svswatch(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
-#define MSG_QUIT        "QUIT"  /* QUIT */
-#define TOK_QUIT        ","     /* 44 */
-
+#define MSG_SVSWATCH       "SVSWATCH"
+#define TOK_SVSWATCH       "BW"
 
 #ifndef DYNAMIC_LINKING
-ModuleHeader m_quit_Header
+ModuleHeader m_svswatch_Header
 #else
-#define m_quit_Header Mod_Header
+#define m_svswatch_Header Mod_Header
 ModuleHeader Mod_Header
 #endif
   = {
-	"quit",	/* Name of module */
+	"svswatch",	/* Name of module */
 	"$Id$", /* Version */
-	"command /quit", /* Short description of module */
+	"command /svswatch", /* Short description of module */
 	"3.2-b8-1",
 	NULL 
     };
@@ -73,13 +72,13 @@ ModuleHeader Mod_Header
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
 #else
-int    m_quit_Init(ModuleInfo *modinfo)
+int    m_svswatch_Init(ModuleInfo *modinfo)
 #endif
 {
 	/*
 	 * We call our add_Command crap here
 	*/
-	add_CommandX(MSG_QUIT, TOK_QUIT, m_quit, 1, M_UNREGISTERED|M_USER);
+	add_Command(MSG_SVSWATCH, TOK_SVSWATCH, m_svswatch, MAXPARA);
 	return MOD_SUCCESS;
 	
 }
@@ -88,7 +87,7 @@ int    m_quit_Init(ModuleInfo *modinfo)
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_quit_Load(int module_load)
+int    m_svswatch_Load(int module_load)
 #endif
 {
 	return MOD_SUCCESS;
@@ -100,50 +99,39 @@ int    m_quit_Load(int module_load)
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Unload(int module_unload)
 #else
-int	m_quit_Unload(int module_unload)
+int	m_svswatch_Unload(int module_unload)
 #endif
 {
-	if (del_Command(MSG_QUIT, TOK_QUIT, m_quit) < 0)
+	if (del_Command(MSG_SVSWATCH, TOK_SVSWATCH, m_svswatch) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_quit_Header.name);
+				m_svswatch_Header.name);
 	}
-	return MOD_SUCCESS;
-	
+	return MOD_SUCCESS;	
 }
 
-
-/*
-** m_quit
-**	parv[0] = sender prefix
-**	parv[1] = comment
-*/
-DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
+/* m_svswatch() - written by Syzop, suggested by Griever.
+ * parv[0] - sender
+ * parv[1] - target nick
+ * parv[2] - parameters
+ */
+CMD_FUNC(m_svswatch)
 {
-	char *ocomment = (parc > 1 && parv[1]) ? parv[1] : parv[0];
-	static char comment[TOPICLEN + 1];
+	aClient *acptr;
+	if (!IsULine(sptr))
+		return 0;
 
-	if (!IsServer(cptr))
+	if (parc < 3 || BadPtr(parv[2]) || !(acptr = find_person(parv[1], NULL)))
+		return 0;
+
+	if (MyClient(acptr))
 	{
-		char *s = comment;
-		if (STATIC_QUIT)
-		{
-			return exit_client(cptr, sptr, sptr, STATIC_QUIT);
-		}
-		if (!prefix_quit || strcmp(prefix_quit, "no"))
-			s = ircsprintf(comment, "%s ",
-		    		BadPtr(prefix_quit) ? "Quit:" : prefix_quit);
-		ocomment = (char *)stripbadwords_quit(ocomment);
-		if (!IsAnOper(sptr) && ANTI_SPAM_QUIT_MSG_TIME)
-			if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
-				ocomment = parv[0];
-		strncpy(s, ocomment, TOPICLEN - (s - comment));
-		comment[TOPICLEN] = '\0';
-		return exit_client(cptr, sptr, sptr, comment);
+		parv[0] = parv[1];
+		parv[1] = parv[2];
+		(void)m_watch(acptr, acptr, 2, parv);
 	}
 	else
-	{
-		return exit_client(cptr, sptr, sptr, ocomment);
-	}
-}
+		sendto_one(acptr, ":%s SVSWATCH %s :%s", parv[0], parv[1], parv[2]);
 
+	return 0;
+}

@@ -251,7 +251,7 @@ static char *replies[] = {
 /* 215    RPL_STATSILINE */ ":%s 215 %s I %s * %s %d %s %s %d",
 /* 216    RPL_STATSKLINE */ ":%s 216 %s %s %s %s",
 /* 217    RPL_STATSQLINE */ ":%s 217 %s Q %s %s",
-/* 218    RPL_STATSYLINE */ ":%s 218 %s Y %s %d %d %d %ld",
+/* 218    RPL_STATSYLINE */ ":%s 218 %s Y %s %d %d %d %ld %ld",
 /* 219    RPL_ENDOFSTATS */ ":%s 219 %s %c :End of /STATS report",
 /* 220    RPL_STATSBLINE */ ":%s 220 %s %c %s %s %s %d %d",
 /* 221    RPL_UMODEIS */ ":%s 221 %s %s",
@@ -335,7 +335,7 @@ static char *replies[] = {
 /* 299 */ NULL,
 /* 300 */ NULL, /* Used */
 /* 301    RPL_AWAY */ ":%s 301 %s %s :%s",
-/* 302    RPL_USERHOST */ ":%s 302 %s :",
+/* 302    RPL_USERHOST */ ":%s 302 %s :%s %s %s %s %s",
 /* 303    RPL_ISON */ ":%s 303 %s :",
 /* 304 */ NULL, /* Used */
 /* 305    RPL_UNAWAY */ ":%s 305 %s :You are no longer marked as being away",

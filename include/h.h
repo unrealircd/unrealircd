@@ -50,6 +50,8 @@ extern TS TS2ts(char *s);
 extern time_t timeofday;
 /* newconf */
 #define get_sendq(x) ((x)->class ? (x)->class->sendq : MAXSENDQLENGTH) 
+/* get_recvq is only called in send.c for local connections */
+#define get_recvq(x) ((x)->class->recvq ? (x)->class->recvq : CLIENT_FLOOD) 
 
 #define CMD_FUNC(x) int (x) (aClient *cptr, aClient *sptr, int parc, char *parv[])
 
@@ -87,6 +89,7 @@ extern ConfigItem_link		*conf_link;
 extern ConfigItem_ban		*conf_ban;
 extern ConfigItem_badword	*conf_badword_channel;
 extern ConfigItem_badword       *conf_badword_message;
+extern ConfigItem_badword	*conf_badword_quit;
 extern ConfigItem_deny_dcc	*conf_deny_dcc;
 extern ConfigItem_deny_channel  *conf_deny_channel;
 extern ConfigItem_deny_link	*conf_deny_link;
@@ -177,6 +180,7 @@ extern void set_snomask(aClient *sptr, char *snomask);
 extern char *get_sno_str(aClient *sptr);
 /* for services */
 extern void del_invite(aClient *, aChannel *);
+extern int add_silence(aClient *, char *, int);
 extern int del_silence(aClient *, char *);
 extern void send_user_joins(aClient *, aClient *);
 extern void clean_channelname(char *);
@@ -266,12 +270,10 @@ extern int send_queued(aClient *);
 extern void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr);
 extern void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr);
 extern void sendto_locfailops(char *pattern, ...);
-extern void sendto_connectnotice(char *nick, anUser *user, aClient *sptr);
+extern void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnect, char *comment);
 extern void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr, char *nick, int hopcount,
 int lastnick, char *username, char *realhost, char *server, long servicestamp, char *info, char *umodes,
 char *virthost);
-extern void sendto_channels_inviso_part(aClient *user);
-extern void sendto_channels_inviso_join(aClient *user);
 extern void    sendto_message_one(aClient *to, aClient *from, char *sender,
     char *cmd, char *nick, char *msg);
 #define PREFIX_ALL		0
@@ -302,7 +304,6 @@ extern void sendto_failops_whoare_opers(char *, ...);
 extern void sendto_failops(char *, ...);
 extern void sendto_opers(char *, ...);
 extern void sendto_umode(int, char *, ...);
-extern void sendto_conn_hcn(char *, ...);
 extern void sendto_snomask(int snomask, char *pattern, ...);
 extern int writecalls, writeb[];
 extern int deliver_it(aClient *, char *, int);
@@ -310,6 +311,8 @@ extern int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr);
 extern int  check_for_target_limit(aClient *sptr, void *target, const char *name);
 extern char *stripbadwords_message(char *str);
 extern char *stripbadwords_channel(char *str);
+extern char *stripbadwords_quit(char *str);
+extern char *stripbadwords(char *, ConfigItem_badword *);
 extern unsigned char *StripColors(unsigned char *);
 extern const char *StripControlCodes(unsigned char *text);
 extern char *canonize(char *buffer);
@@ -335,7 +338,9 @@ extern int m_umode(aClient *, aClient *, int, char **);
 extern int m_names(aClient *, aClient *, int, char **);
 extern int m_server_estab(aClient *);
 extern void umode_init(void);
-extern long umode_get(char ch);
+extern long umode_get(char, int);
+#define umode_lget(x) umode_get(x, 0);
+#define umode_gget(x) umode_get(x, 1);
 extern int  umode_delete(char ch, long val);
 extern void send_umode(aClient *, aClient *, long, long, char *);
 extern void send_umode_out(aClient *, aClient *, long);
@@ -419,12 +424,13 @@ extern long UMODE_WHOIS;     /* 0x100000	 gets notice on /whois */
 extern long UMODE_KIX;       /* 0x200000	 usermode +q */
 extern long UMODE_BOT;       /* 0x400000	 User is a bot */
 extern long UMODE_SECURE;    /*	0x800000	 User is a secure connect */
-extern long UMODE_HIDING;    /* 0x2000000	 Totally invisible .. */
 extern long UMODE_VICTIM;    /* 0x8000000	 Intentional Victim */
 extern long UMODE_DEAF;      /* 0x10000000       Deaf */
 extern long UMODE_HIDEOPER;  /* 0x20000000	 Hide oper mode */
 extern long UMODE_SETHOST;   /* 0x40000000	 used sethost */
 extern long UMODE_STRIPBADWORDS; /* 0x80000000	 */
+
+extern long AllUmodes, SendUmodes;
 
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *dst, const char *src, size_t size);
@@ -521,7 +527,7 @@ extern char *oflagstr(long oflag);
 extern int rehash(aClient *cptr, aClient *sptr, int sig);
 extern int _match(char *mask, char *name);
 extern void outofmemory(void);
-extern unsigned long crc32(const unsigned char *s, unsigned int len);
+extern unsigned long our_crc32(const unsigned char *s, unsigned int len);
 extern int add_listener2(ConfigItem_listen *conf);
 extern void link_cleanup(ConfigItem_link *link_ptr);
 extern void       listen_cleanup();
@@ -536,6 +542,7 @@ extern void       validate_configuration(void);
 extern void       run_configuration(void);
 extern aMotd *read_file(char *filename, aMotd **list);
 CMD_FUNC(m_server_remote);
+extern void send_proto(aClient *, ConfigItem_link *);
 extern char *xbase64enc(long i);
 extern void unload_all_modules(void);
 extern void flush_fdlist_connections(fdlist * listp);

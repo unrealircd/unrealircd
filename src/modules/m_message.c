@@ -136,6 +136,7 @@ int	m_message_Unload(int module_unload)
 ** rev argv 6/91
 **
 */
+static int recursive_webtv = 0;
 DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice)
 {
 	aClient *acptr;
@@ -151,9 +152,10 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 	static char *err_cantsend[] = {
 		"You need voice (+v)",
 		"No external channel messages",
-		"Colour is not permitted in this channel",
+		"Color is not permitted in this channel",
 		"You are banned",
 		"CTCPs are not permitted in this channel",
+		"You must have a registered nick (+r) to talk on this channel",
 		NULL
 	};
 
@@ -197,17 +199,27 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 		 */
 		if (!strcasecmp(nick, "ircd") && MyClient(sptr))
 		{
-			parse(sptr, parv[2], (parv[2] + strlen(parv[2])));
+			if (!recursive_webtv)
+			{
+				recursive_webtv = 1;
+				parse(sptr, parv[2], (parv[2] + strlen(parv[2])));
+				recursive_webtv = 0;
+			}
 			continue;
 		}
 		if (!strcasecmp(nick, "irc") && MyClient(sptr))
 		{
-			if (webtv_parse(sptr, parv[2]) == -2)
+			if (!recursive_webtv)
 			{
-				parse(sptr, parv[2],
-				    (parv[2] + strlen(parv[2])));
+				recursive_webtv = 1;
+				if (webtv_parse(sptr, parv[2]) == -2)
+				{
+					parse(sptr, parv[2],
+					    (parv[2] + strlen(parv[2])));
+				}
+				recursive_webtv = 0;
+				continue;
 			}
-			continue;
 		}
 		if (*nick != '#' && (acptr = find_person(nick, NULL)))
 		{
@@ -287,7 +299,9 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 
 			if (!is_silenced(sptr, acptr))
 			{
-				char *newcmd = cmd;
+				char *newcmd = cmd, *text;
+				Hook *tmphook;
+				
 				if (notice && IsWebTV(acptr) && *parv[2] != '\1')
 					newcmd = MSG_PRIVATE;
 				if (!notice && MyConnect(sptr) &&
@@ -295,16 +309,24 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 					sendto_one(sptr, rpl_str(RPL_AWAY),
 					    me.name, parv[0], acptr->name,
 					    acptr->user->away);
+
 #ifdef STRIPBADWORDS
-				if (!(IsULine(acptr) || IsULine(sptr)) &&
-				    IsFilteringWords(acptr))
-					sendto_message_one(acptr, sptr,
-					    parv[0], newcmd, nick,
-					    stripbadwords_message(parv[2]));
+				if (!(IsULine(acptr) || IsULine(sptr)) && IsFilteringWords(acptr))
+					text = stripbadwords_message(parv[2]);
 				else
 #endif
-					sendto_message_one(acptr,
-					    sptr, parv[0], newcmd, nick, parv[2]);
+					text = parv[2];
+
+				for (tmphook = Hooks[HOOKTYPE_USERMSG]; tmphook; tmphook = tmphook->next) {
+					text = (*(tmphook->func.pcharfunc))(cptr, sptr, acptr, text, (int)(newcmd == MSG_NOTICE ? 1 : 0) );
+					if (!text)
+						break;
+				}
+				if (!text)
+					continue;
+					
+				sendto_message_one(acptr,
+				    sptr, parv[0], newcmd, nick, text);
 			}
 			continue;
 		}
@@ -335,6 +357,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 			    !IsULine(sptr) ? can_send(sptr, chptr, parv[2]) : 0;
 			if (!cansend)
 			{
+				Hook *tmphook;
 				/*if (chptr->mode.mode & MODE_FLOODLIMIT) */
 				/* When we do it this way it appears to work? */
 				if (chptr->mode.per)
@@ -347,11 +370,24 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				    (chptr->mode.mode & MODE_STRIP ?
 				    (char *)StripColors(parv[2]) : parv[2]);
 #ifdef STRIPBADWORDS
+ #ifdef STRIPBADWORDS_CHAN_ALWAYS
+				text = stripbadwords_channel(text);
+ #else
 				text =
 				    (char *)(chptr->
 				    mode.mode & MODE_STRIPBADWORDS ? (char
 				    *)stripbadwords_channel(text) : text);
+ #endif
 #endif
+				for (tmphook = Hooks[HOOKTYPE_CHANMSG]; tmphook; tmphook = tmphook->next) {
+					text = (*(tmphook->func.pcharfunc))(cptr, sptr, chptr, text, notice);
+					if (!text)
+						break;
+				}
+				
+				if (!text)
+					continue;
+
 				sendto_channelprefix_butone_tok(cptr,
 				    sptr, chptr,
 				    prefix,

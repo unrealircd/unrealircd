@@ -109,8 +109,6 @@ int	m_svslusers_Unload(int module_unload)
 */
 int  m_svslusers(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-        aClient *acptr;
-
         if (!IsULine(sptr) || parc < 4)
 		return -1;  
         if (hunt_server_token(cptr, sptr, MSG_SVSLUSERS, TOK_SVSLUSERS, "%s %s :%s", 1, parc,

@@ -1,4 +1,0 @@
-#!/bin/sh
-# $Id$
-
-lynx http://www.unrealircd.com/register.html

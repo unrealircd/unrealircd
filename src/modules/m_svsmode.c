@@ -115,7 +115,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	
 	int i = 4;
 
-
+	*parabuf = '\0';
 	modebuf[0] = 0;
 	if(!(chptr = find_channel(parv[1], NULL)))
 		return 0;
@@ -246,9 +246,8 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						acptr->user->username, acptr->user->realhost),
 						sizeof uhost);
 					strlcpy(vhost, make_nick_user_host(acptr->name,
-						acptr->user->username, acptr->user->virthost
-						? acptr->user->virthost : 
-					 acptr->user->realhost), sizeof vhost);
+						acptr->user->username, GetHost(acptr)),
+						sizeof vhost);
 					ban = chptr->exlist;
 					while (ban) {
 						bnext = ban->next;

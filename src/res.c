@@ -55,7 +55,9 @@ static ResRQ *last, *first;
 ** Currently the list is only protected on Windows because we don't use 
 ** threads to access it on Unix
 */
+#ifdef _WIN32
 static MUTEX g_hResMutex;
+#endif
 static int lock_request();
 static int unlock_request();
 
@@ -79,6 +81,10 @@ static int hash_name(char *);
 static int bad_hostname(char *, int);
 #ifdef _WIN32
 static	void	async_dns(void *parm);
+#endif
+
+#ifndef _WIN32
+extern TS nextexpire;
 #endif
 
 static struct cacheinfo {
@@ -353,8 +359,8 @@ time_t timeout_query_list(time_t now)
 				switch (rptr->cinfo.flags)
 				{
 				  case ASYNC_CLIENT:
-					  if (SHOWCONNECTINFO)
-						  sendto_one(cptr, REPORT_FAIL_DNS);
+					  if (SHOWCONNECTINFO && !cptr->serv)
+						  sendto_one(cptr, "%s", REPORT_FAIL_DNS);
 					  ClearDNS(cptr);
                       if (!DoingAuth(cptr))
 						  SetAccess(cptr);
@@ -564,7 +570,7 @@ static int do_query_name(Link *lp, char *name, ResRQ *rptr)
 	{
 		rptr = make_request(lp);
 #ifdef INET6
-		rptr->type = T_AAAA;
+		rptr->type = T_ANY; /* Was T_AAAA: now using T_ANY so we fetch both A and AAAA -- Syzop */
 #else
 		rptr->type = T_A;
 #endif
@@ -574,7 +580,7 @@ static int do_query_name(Link *lp, char *name, ResRQ *rptr)
 	Debug((DEBUG_DNS, "do_query_name(): %s ", hname));
 #ifndef _WIN32
 #ifdef INET6
-	return (query_name(hname, C_IN, T_AAAA, rptr));
+	return (query_name(hname, C_IN, T_ANY, rptr)); /* Was T_AAAA: now using T_ANY so we fetch both A and AAAA -- Syzop */
 #else
 	return (query_name(hname, C_IN, T_A, rptr));
 #endif
@@ -1360,7 +1366,7 @@ static void update_list(ResRQ *rptr, aCache *cachep)
 #ifdef INET6
 	for (i = 0; HE(cp)->h_addr_list[i]; i++)
 #else
-	for (i = 0; &HE(cp)->h_addr_list[i]; i++)
+	for (i = 0; HE(cp)->h_addr_list[i]; i++)
 #endif
 		;
 	addrcount = i;
@@ -1641,14 +1647,24 @@ static aCache *make_cache(ResRQ *rptr)
 	hp->h_length = rptr->he.h_length;
 	hp->h_name = rptr->he.h_name;
 #endif
-	if (rptr->ttl < 600)
+	if (rptr->ttl < AR_TTL)
 	{
 		reinfo.re_shortttl++;
-		cp->ttl = 600;
+		cp->ttl = AR_TTL;
 	}
 	else
 		cp->ttl = rptr->ttl;
 	cp->expireat = TStime() + cp->ttl;
+#ifndef _WIN32
+	/* Update next dns cache clean time, this way it will be cleaned when needed.
+	 * I don't know how to do multithreaded (win32), as a consequence it can take
+	 * AR_TTL (300s) too much before we expire this entry at win32 -- Syzop
+	 */
+	if (nextexpire > cp->expireat) {
+		nextexpire = cp->expireat;
+		Debug((DEBUG_DNS, "Adjusting nextexpire to %lu", nextexpire));
+	}
+#endif
 	HE(rptr)->h_name = NULL;
 #ifdef DEBUGMODE
 	Debug((DEBUG_INFO, "make_cache:made cache %#x", cp));
@@ -1791,6 +1807,7 @@ time_t expire_cache(time_t now)
 	aCache *cp, *cp2;
 	time_t next = 0;
 
+	Debug((DEBUG_DEBUG, "expire_cache(%lu)", now));
 	for (cp = cachetop; cp; cp = cp2)
 	{
 		cp2 = cp->list_next;
@@ -1803,6 +1820,13 @@ time_t expire_cache(time_t now)
 		else if (!next || next > cp->expireat)
 			next = cp->expireat;
 	}
+	/* Always check at least AR_TTL seconds, ugly workaround for
+	 * (win32 specific) problem with not removing caches (otherwise a new cache could
+	 * be added later while the next expire_cache will be about XX hours :/) -- Syzop
+	 */
+	if (next > now + AR_TTL)
+		next = now + AR_TTL;
+	Debug((DEBUG_DEBUG, "next expire_cache at %lu", (next > now) ? next : (now + AR_TTL)));
 	return (next > now) ? next : (now + AR_TTL);
 }
 
@@ -1923,8 +1947,7 @@ static int bad_hostname(char *name, int len)
 	char *s, c;
 
 	for (s = name; (c = *s) && len; s++, len--)
-		if (isspace(c) || (c == 0x7) || (c == ':') ||
-		    (c == '*') || (c == '?'))
+		if (!isalnum(c) && (c != '_') && (c != '-') && (c != '.'))
 			return -1;
 	return 0;
 }

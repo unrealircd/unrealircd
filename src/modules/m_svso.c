@@ -81,6 +81,9 @@ static int oper_access[] = {
         OFLAG_WHOIS, 'W',
         OFLAG_HIDE, 'H',
         OFLAG_INVISIBLE, '^',
+	OFLAG_TKL, 't',
+	OFLAG_GZL, 'Z',
+	OFLAG_OVERRIDE, 'v', 
         0, 0
 };
 
@@ -186,7 +189,7 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 acptr->umodes &=
                     ~(UMODE_NETADMIN | UMODE_WHOIS);
                 acptr->umodes &=
-                    ~(UMODE_KIX | UMODE_HIDING | UMODE_DEAF | UMODE_HIDEOPER);
+                    ~(UMODE_KIX | UMODE_DEAF | UMODE_HIDEOPER);
                 acptr->oflag = 0;
                 acptr->user->snomask &= ~(SNO_CLIENT|SNO_FLOOD|SNO_FCLIENT|SNO_EYES|SNO_VHOST);
                 send_umode_out(acptr, acptr, fLag);

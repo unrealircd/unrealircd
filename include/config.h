@@ -122,6 +122,11 @@
 #define STRIPBADWORDS
 
 /*
+ * Always strip badwords in channels? (channel does not have to be +G)
+*/
+#undef STRIPBADWORDS_CHAN_ALWAYS
+
+/*
  * NO_OPEROVERRIDE
  *   This will disable OperMode, OperTopic and Banwalks
 */
@@ -380,6 +385,8 @@
  * this controls the number of bytes the server will allow a client to
  * send to the server without processing before disconnecting the client for
  * flooding it.  Values greater than 8000 make no difference to the server.
+ * NOTE: you can now also set this in class::recvq, if that's not present,
+ *       this default value will be used.
  */
 #define	CLIENT_FLOOD	8000
 
@@ -509,6 +516,11 @@
  * automaticly to switch for the current nick of that user. (seconds)
  */
 #define KILLCHASETIMELIMIT 90	/* Recommended value: 90 */
+
+/*
+ * Use much faster badwords replace routine (>100 times faster).
+ */
+#define FAST_BADWORD_REPLACE
 
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MOTD MPATH

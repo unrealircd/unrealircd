@@ -1,23 +1,25 @@
 #
 # UnrealIRCd Makefile - codemastr
-# SSL portions, - stskeeps
-# This requires an openssl compile in c:\openssl, 
-# with .lib in lib\, .dll in bin\ and openssl/ in include/openssl
-#
+# with special ZIP_LINKS support by Syzop,
+# This requires zlib in c:\dev\zlib with dll's in c:\dev\zlib\dll32
+# (grab from http://www.winimage.com/zLibDll/ the "pre-built zlib DLL")
+
 CC=cl
 LINK=link
 RC=rc
 # Here you put your settings
 DEBUG=1
-FD_SETSIZE=/D USE_SSL=1 /D SCAN_API=1 /D FD_SETSIZE=16384
+FD_SETSIZE=/D SCAN_API=1 /D FD_SETSIZE=16384
 !IFNDEF DEBUG 
-CFLAGS=/MT /O2 /G5 /I ./INCLUDE /I c:\openssl\include /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D STATIC_LINKING /D _WIN32GUI /D NOSPOOF=1 /c
-LFLAGS=c:\openssl\lib\ssleay32.lib c:\openssl\lib\libeay32.lib kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib dbghelp.lib \
- oldnames.lib libcmt.lib comctl32.lib comdlg32.lib /nodefaultlib /nologo /out:WIRCD.EXE
+CFLAGS=/MT /J /O2 /G5 /I ./INCLUDE /I c:\dev\zlib /Fosrc/ /nologo\
+ $(FD_SETSIZE) $(NS_ADDRESS) /D STATIC_LINKING /D _WIN32GUI /D NOSPOOF=1 /D ZIP_LINKS /D _WINDOWS /D ZLIB_DLL /c
+LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib dbghelp.lib \
+ oldnames.lib libcmt.lib comctl32.lib comdlg32.lib c:\dev\zlib\dll32\zlib.lib /nodefaultlib /nologo /out:WIRCD.EXE
 !ELSE
-CFLAGS=  /MTd /Zi /I ./INCLUDE /I c:\openssl\include /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D STATIC_LINKING /D _WIN32GUI /D NOSPOOF=1 /c
-LFLAGS=c:\openssl\lib\ssleay32.lib c:\openssl\lib\libeay32.lib kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib dbghelp.lib\
- oldnames.lib libcmt.lib comctl32.lib comdlg32.lib \
+CFLAGS=/MTd /J /Zi /I ./INCLUDE /I c:\dev\zlib /Fosrc/ /nologo\
+ $(FD_SETSIZE) $(NS_ADDRESS) /D STATIC_LINKING /D _WIN32GUI /D NOSPOOF=1 /D ZIP_LINKS /D _WINDOWS /D ZLIB_DLL /c
+LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib dbghelp.lib\
+ oldnames.lib libcmt.lib comctl32.lib comdlg32.lib c:\dev\zlib\dll32\zlib.lib \
  advapi32.lib /nodefaultlib /nologo /debug /debugtype:BOTH /OUT:WIRCD.EXE 
 !ENDIF
 
@@ -38,7 +40,7 @@ OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ \
  SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ \
  SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ \
- SRC/SERVICE.OBJ SRC/DEBUG.OBJ SRC/RANDOM.OBJ
+ SRC/SERVICE.OBJ SRC/DEBUG.OBJ SRC/RANDOM.OBJ SRC/ZIP.OBJ
 
 MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OBJ \
  SRC/M_SETNAME.OBJ SRC/M_SETHOST.OBJ SRC/M_CHGIDENT.OBJ SRC/M_SVSMOTD.OBJ \
@@ -233,6 +235,9 @@ src/cidr.obj: src/cidr.c $(INCLUDES)
 
 src/random.obj: src/random.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/random.c
+
+src/zip.obj: src/zip.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/zip.c
 
 src/ssl.obj: src/ssl.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/ssl.c

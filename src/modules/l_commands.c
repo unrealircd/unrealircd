@@ -93,14 +93,12 @@ extern int m_unzline_Init(ModuleInfo *modinfo), m_unkline_Init(ModuleInfo *modin
 extern int m_sqline_Init(ModuleInfo *modinfo), m_unsqline_Init(ModuleInfo *modinfo), m_tkl_Init(ModuleInfo *modinfo);
 extern int m_vhost_Init(ModuleInfo *modinfo), m_cycle_Init(ModuleInfo *modinfo), m_svsjoin_Init(ModuleInfo *modinfo);
 extern int m_svspart_Init(ModuleInfo *modinfo), m_svslusers_Init(ModuleInfo *modinfo);
+extern int m_svswatch_Init(ModuleInfo *modinfo), m_svssilence_Init(ModuleInfo *modinfo);
 #ifdef GUEST
 extern int m_guest_Init(ModuleInfo *modinfo);
 #endif
 #ifdef SCAN_API
 extern int m_scan_Init(ModuleInfo *modinfo), scan_socks_Init(ModuleInfo *modinfo), scan_http_Init(ModuleInfo *modinfo);
-#endif
-#ifdef _WIN32
-extern int invisibility_Init(ModuleInfo *modinfo);
 #endif
 
 extern int m_sethost_Load(int module_load), m_setname_Load(int module_load), m_chghost_Load(int module_load);
@@ -118,14 +116,12 @@ extern int m_unzline_Load(int module_load), m_unkline_Load(int module_load);
 extern int m_sqline_Load(int module_load), m_unsqline_Load(int module_load), m_tkl_Load(int module_load);
 extern int m_vhost_Load(int module_load), m_cycle_Load(int module_load), m_svsjoin_Load(int module_load);
 extern int m_svspart_Load(int module_load), m_svslusers_Load(int module_load);
+extern int m_svswatch_Load(int module_load), m_svssilence_Load(int module_load);
 #ifdef GUEST
 extern int m_guest_Load(int module_load);
 #endif
 #ifdef SCAN_API
 extern int m_scan_Load(int module_load), scan_socks_Load(int module_load), scan_http_Load(int module_load);
-#endif
-#ifdef _WIN32
-extern int invisibility_Load(int module_load);
 #endif
 
 extern int m_sethost_Unload(), m_setname_Unload(), m_chghost_Unload(), m_chgident_Unload();
@@ -139,14 +135,12 @@ extern int m_pingpong_Unload(), m_oper_Unload(), m_akill_Unload(), m_rakill_Unlo
 extern int m_unzline_Unload(), m_unkline_Unload();
 extern int m_sqline_Unload(), m_unsqline_Unload(), m_tkl_Unload(), m_vhost_Unload();
 extern int m_cycle_Unload(), m_svsjoin_Unload(), m_svspart_Unload(), m_svslusers_Unload();
+extern int m_svswatch_Unload(), m_svssilence_Unload();
 #ifdef GUEST
 extern int m_guest_Unload();
 #endif
 #ifdef SCAN_API
 extern int m_scan_Unload(), scan_socks_Unload(), scan_http_Unload();
-#endif
-#ifdef _WIN32
-extern int invisibility_Unload();
 #endif
 
 #ifdef DYNAMIC_LINKING
@@ -155,7 +149,9 @@ DLLFUNC int Mod_Test(ModuleInfo *modinfo)
 int l_commands_Test(ModuleInfo *modinfo)
 #endif
 {
+#ifdef SCAN_API
 	Module p;
+#endif
 	bcopy(modinfo,&ModCmdsInfo,modinfo->size);
 #ifdef SCAN_API
         p.header = &scan_socks_Header;
@@ -225,6 +221,8 @@ int    l_commands_Init(ModuleInfo *modinfo)
 	m_cycle_Init(&ModCmdsInfo);
 	m_svsjoin_Init(&ModCmdsInfo);
 	m_svspart_Init(&ModCmdsInfo);
+	m_svswatch_Init(&ModCmdsInfo);
+	m_svssilence_Init(&ModCmdsInfo);
 	m_svslusers_Init(&ModCmdsInfo);
 #ifdef GUEST
 	m_guest_Init(&ModCmdsInfo);
@@ -233,9 +231,6 @@ int    l_commands_Init(ModuleInfo *modinfo)
 	m_scan_Init(&ModCmdsInfo);
 	scan_socks_Init(&ModCmdsInfo);
 	scan_http_Init(&ModCmdsInfo);
-#endif
-#ifdef _WIN32
-	invisibility_Init(&ModCmdsInfo);
 #endif
 	return MOD_SUCCESS;
 }
@@ -286,6 +281,8 @@ int    l_commands_Load(int module_load)
 	m_cycle_Load(module_load);
 	m_svsjoin_Load(module_load);
 	m_svspart_Load(module_load);
+	m_svswatch_Load(module_load);
+	m_svssilence_Load(module_load);
 	m_svslusers_Load(module_load);
 #ifdef GUEST
 	m_guest_Load(module_load);
@@ -294,9 +291,6 @@ int    l_commands_Load(int module_load)
 	m_scan_Load(module_load);
 	scan_socks_Load(module_load);
 	scan_http_Load(module_load);
-#endif
-#ifdef _WIN32
-	invisibility_Load(module_load);
 #endif
 	return MOD_SUCCESS;
 }
@@ -341,12 +335,15 @@ int	l_commands_Unload(int module_unload)
 	m_rakill_Unload();
 	m_unzline_Unload();
 	m_unkline_Unload();
+	m_tkl_Unload();
 	m_sqline_Unload();
 	m_unsqline_Unload();
 	m_vhost_Unload();
 	m_cycle_Unload();
 	m_svsjoin_Unload();
 	m_svspart_Unload();
+	m_svswatch_Unload();
+	m_svssilence_Unload();
 	m_svslusers_Unload();
 #ifdef GUEST
 	m_guest_Unload();
@@ -355,9 +352,6 @@ int	l_commands_Unload(int module_unload)
 	scan_socks_Unload();
 	scan_http_Unload();
 	m_scan_Unload();
-#endif
-#ifdef _WIN32
-	invisibility_Unload();
 #endif
 	return MOD_SUCCESS;
 }

@@ -33,7 +33,7 @@ R_MODULES=m_sethost.so m_chghost.so m_chgident.so m_setname.so \
 	 m_quit.so m_rakill.so m_rping.so m_sendumode.so m_sqline.so \
 	 m_tsctl.so m_unkline.so m_unsqline.so m_unzline.so m_whois.so \
 	 m_tkl.so m_vhost.so m_cycle.so m_svsjoin.so m_svspart.so \
-	 invisibility.so scan.so scan_socks.so scan_http.so web/httpd.so
+	 m_svswatch.so m_svssilence.so scan.so scan_socks.so scan_http.so web/httpd.so
 
 COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
          m_sdesc.c m_svsmode.c m_swhois.c m_svsmotd.c m_svsnline.c \
@@ -43,7 +43,7 @@ COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
 	 m_quit.c m_rakill.c m_rping.c m_sendumode.c m_sqline.c \
 	 m_tsctl.c m_unkline.c m_unsqline.c m_unzline.c m_whois.c \
 	 m_tkl.c m_vhost.c m_cycle.c m_svsjoin.c m_svspart.c \
-	 m_svslusers.c
+	 m_svslusers.c m_svswatch.c m_svssilence.c
 
 
 MODULES=commands.so $(R_MODULES)
@@ -64,11 +64,6 @@ commands.so: l_commands.c $(COMMANDS) $(INCLUDES)
 m_adminchat.so: m_adminchat.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_adminchat.so m_adminchat.c
-
-invisibility.so: invisibility.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o invisibility.so invisibility.c
-
 
 m_akill.so: m_akill.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
@@ -237,6 +232,14 @@ m_svspart.so: m_svspart.c $(INCLUDES)
 m_svslusers.so: m_svslusers.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_svslusers.so m_svslusers.c
+
+m_svswatch.so: m_svswatch.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_svswatch.so m_svswatch.c
+
+m_svssilence.so: m_svssilence.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_svssilence.so m_svssilence.c
 
 scan.so: scan.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \

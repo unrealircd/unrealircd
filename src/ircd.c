@@ -489,7 +489,7 @@ extern TS check_pings(TS currenttime)
 		 * ** already done when "FLAGS_DEADSOCKET" is set.
 		 */
 		if (cptr->flags & FLAGS_DEADSOCKET) {
-			(void)exit_client(cptr, cptr, &me, "Dead socket");
+			(void)exit_client(cptr, cptr, &me, cptr->error_str ? cptr->error_str : "Dead socket");
 			continue;
 		}
 		killflag = 0;
@@ -600,7 +600,7 @@ extern TS check_pings(TS currenttime)
 						cptr->count = 0;
 						*cptr->buffer = '\0';
 					}
-					if (SHOWCONNECTINFO) {
+					if (SHOWCONNECTINFO && !cptr->serv) {
 						if (DoingDNS(cptr))
 							sendto_one(cptr,
 							    REPORT_FAIL_DNS);
@@ -1024,6 +1024,9 @@ int InitwIRCD(int argc, char *argv[])
 	fprintf(stderr, "                           v%s\n", VERSIONONLY);
 #ifdef USE_SSL
 	fprintf(stderr, "                     using %s\n\n", OPENSSL_VERSION_TEXT);
+#endif
+#ifdef ZIP_LINKS
+	fprintf(stderr, "                     using zlib %s\n\n", zlibVersion());
 #endif
 #endif
 	clear_client_hash_table();

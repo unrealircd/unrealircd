@@ -57,6 +57,7 @@ void send_umode_out_nickv2(aClient *, aClient *, long);
 void send_umode(aClient *, aClient *, long, long, char *);
 void set_snomask(aClient *, char *);
 int create_snomask(char *, int);
+char *get_snostr(long sno);
 /* static  Link    *is_banned(aClient *, aChannel *); */
 int  dontspread = 0;
 extern char *me_hash;
@@ -984,7 +985,7 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 	{
 		IRCstats.unknown--;
 		IRCstats.me_clients++;
-		if IsHidden(sptr)
+		if (IsHidden(sptr))
 			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s [VHOST %s]", nick,
 				user->username, user->realhost, user->virthost);
 		else
@@ -1031,7 +1032,7 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 			    sptr->name, olduser, userbad, stripuser);
 #endif
 		nextping = TStime();
-		sendto_connectnotice(nick, user, sptr);
+		sendto_connectnotice(nick, user, sptr, 0, NULL);
 		if (IsSecure(sptr))
 			sptr->umodes |= UMODE_SECURE;
 	}
@@ -1095,7 +1096,7 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 	}
 
 	hash_check_watch(sptr, RPL_LOGON);	/* Uglier hack */
-	send_umode(NULL, sptr, 0, SEND_UMODES, buf);
+	send_umode(NULL, sptr, 0, SEND_UMODES|UMODE_SERVNOTICE, buf);
 	/* NICKv2 Servers ! */
 	sendto_serv_butone_nickcmd(cptr, sptr, nick,
 	    sptr->hopcount + 1, sptr->lastnick, user->username, user->realhost,
@@ -1120,6 +1121,9 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 		if (buf[0] != '\0' && buf[1] != '\0')
 			sendto_one(cptr, ":%s MODE %s :%s", cptr->name,
 			    cptr->name, buf);
+		if (user->snomask)
+			sendto_one(sptr, rpl_str(RPL_SNOMASK),
+				me.name, sptr->name, get_snostr(user->snomask));
 		strcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost));
 
 		for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *) tlds->next) {
@@ -1182,7 +1186,7 @@ CMD_FUNC(m_nick)
 	char nick[NICKLEN + 2], *s;
 	Membership *mp;
 	time_t lastnick = (time_t) 0;
-	int  differ = 1;
+	int  differ = 1, update_watch = 1;
 
 	/*
 	 * If the user didn't specify a nickname, complain
@@ -1762,12 +1766,13 @@ CMD_FUNC(m_nick)
 			if (register_user(cptr, sptr, nick,
 			    sptr->user->username, NULL, NULL) == FLUSH_BUFFER)
 				return FLUSH_BUFFER;
+			update_watch = 0;
 		}
 	}
 	/*
 	 *  Finally set new nick name.
 	 */
-	if (sptr->name[0])
+	if (update_watch && sptr->name[0])
 	{
 		(void)del_from_client_hash_table(sptr->name, sptr);
 		if (IsPerson(sptr))
@@ -1785,7 +1790,7 @@ CMD_FUNC(m_nick)
 			    sptr->user->server, sptr->name,
 			    sptr->user->username, sptr->user->realhost);
 	}
-	else if (IsPerson(sptr))
+	else if (IsPerson(sptr) && update_watch)
 		hash_check_watch(sptr, RPL_LOGON);
 
 	return 0;
@@ -1958,6 +1963,11 @@ CMD_FUNC(m_user)
 	if (!IsServer(cptr))
 	{
 		sptr->umodes |= CONN_MODES;
+		if (CONNECT_SNOMASK)
+		{
+			sptr->umodes |= UMODE_SERVNOTICE;
+			user->snomask = create_snomask(CONNECT_SNOMASK, 0);
+		}
 	}
 
 	strncpyzt(user->realhost, host, sizeof(user->realhost));
@@ -2072,10 +2082,8 @@ CMD_FUNC(m_userhost)
 		cn = p;
 	}
 
-	ircsprintf(buf, "%s%s %s %s %s %s",
-	    rpl_str(RPL_USERHOST),
+	sendto_one(sptr, rpl_str(RPL_USERHOST), me.name, parv[0],
 	    response[0], response[1], response[2], response[3], response[4]);
-	sendto_one(sptr, buf, me.name, parv[0]);
 
 	return 0;
 }
@@ -2121,7 +2129,7 @@ CMD_FUNC(m_ison)
 			{
 				strcpy(namebuf, acptr->user->username);
 				strcat(namebuf, "@");
-				strcat(namebuf, acptr->user->realhost);
+				strcat(namebuf, GetHost(acptr));
 				if (match(user, namebuf))
 					continue;
 				*--user = '!';
@@ -2215,7 +2223,7 @@ CMD_FUNC(m_umode)
 	char **p, *m;
 	aClient *acptr;
 	int  what, setflags, setsnomask = 0;
-	short rpterror = 0;
+	short rpterror = 0, umode_restrict_err = 0;
 
 	what = MODE_ADD;
 
@@ -2240,7 +2248,7 @@ CMD_FUNC(m_umode)
 	{
 		sendto_one(sptr, rpl_str(RPL_UMODEIS),
 		    me.name, parv[0], get_mode_str(sptr));
-		if (SendServNotice(sptr) && sptr->user->snomask)
+		if (sptr->user->snomask)
 			sendto_one(sptr, rpl_str(RPL_SNOMASK),
 				me.name, parv[0], get_sno_str(sptr));
 		return 0;
@@ -2260,6 +2268,18 @@ CMD_FUNC(m_umode)
 	 */
 	p = &parv[2];
 	for (m = *p; *m; m++)
+	{
+		if (MyClient(sptr) && RESTRICT_USERMODES &&
+		    !IsAnOper(sptr) && strchr(RESTRICT_USERMODES, *m))
+		{
+			if (!umode_restrict_err)
+			{
+				sendto_one(sptr, ":%s NOTICE %s :Setting/removing of usermode(s) '%s' has been disabled.",
+					me.name, sptr->name, RESTRICT_USERMODES);
+				umode_restrict_err = 1;
+			}
+			continue;
+		}
 		switch (*m)
 		{
 		  case '+':
@@ -2284,6 +2304,8 @@ CMD_FUNC(m_umode)
 			  if (what == MODE_DEL) {
 				if (parc >= 4 && sptr->user->snomask) {
 					set_snomask(sptr, parv[3]); 
+					if (sptr->user->snomask == 0)
+						goto def;
 					break;
 				}
 				else {
@@ -2296,15 +2318,35 @@ CMD_FUNC(m_umode)
 					set_snomask(sptr, IsAnOper(sptr) ? SNO_DEFOPER : SNO_DEFUSER);
 				else
 					set_snomask(sptr, parv[3]);
+				goto def;
 			  }
 		  case 'o':
 			  if(sptr->from->flags & FLAGS_QUARANTINE)
 				break;
 			  goto def;
-		  case 'I':
-			  if (NO_OPER_HIDING == 1 && what == MODE_ADD
-			      && MyClient(sptr))
-				  break;
+		  case 'x':
+			  switch (UHOST_ALLOWED)
+			  {
+				case UHALLOW_ALWAYS:
+					goto def;
+				case UHALLOW_NEVER:
+					if (MyClient(sptr))
+					{
+						sendto_one(sptr, ":%s NOTICE %s :*** Setting %cx is disabled", me.name, sptr->name, what == MODE_ADD ? '+' : '-');
+						return 0;
+					}
+					break;
+				case UHALLOW_NOCHANS:
+					if (MyClient(sptr) && sptr->user->joined)
+					{
+						sendto_one(sptr, ":%s NOTICE %s :*** Setting %cx can not be done while you are on channels", me.name, sptr->name, what == MODE_ADD ? '+' : '-');
+						return 0;
+					}
+					break;
+				case UHALLOW_REJOIN:
+					/* Handled later */
+					break;
+			  }
 			  goto def;
 		  case 'B':
 			  if (what == MODE_ADD && MyClient(sptr))
@@ -2331,7 +2373,8 @@ CMD_FUNC(m_umode)
 				  }
 			  }
 			  break;
-		}
+		} /* switch */
+	} /* for */
 	/*
 	 * stop users making themselves operators too easily
 	 */
@@ -2355,39 +2398,14 @@ CMD_FUNC(m_umode)
 	 */
 	if (!IsAnOper(sptr) && !IsServer(cptr))
 	{
-		if (IsWhois(sptr))
-			sptr->umodes &= ~UMODE_WHOIS;
-		if (IsAdmin(sptr))
-			ClearAdmin(sptr);
-		if (IsSAdmin(sptr))
-			ClearSAdmin(sptr);
-		if (IsNetAdmin(sptr))
-			ClearNetAdmin(sptr);
-		if (IsHideOper(sptr))
-			ClearHideOper(sptr);
-		if (IsCoAdmin(sptr))
-			ClearCoAdmin(sptr);
-		if (IsHelpOp(sptr))
-			ClearHelpOp(sptr);
-		if (sptr->user->snomask & SNO_CLIENT)
-			sptr->user->snomask &= ~SNO_CLIENT;
-		if (sptr->user->snomask & SNO_FCLIENT)
-			sptr->user->snomask &= ~SNO_FCLIENT;
-		if (sptr->user->snomask & SNO_FLOOD)
-			sptr->user->snomask &= ~SNO_FLOOD;
-		if (sptr->user->snomask & SNO_JUNK)
-			sptr->user->snomask &= ~SNO_JUNK;
-		if (sptr->user->snomask & SNO_EYES)
-			sptr->user->snomask &= ~SNO_EYES;
-		if (sptr->user->snomask & SNO_VHOST)
-			sptr->user->snomask &= ~SNO_VHOST;
-		if (sptr->user->snomask & SNO_TKL)
-			sptr->user->snomask &= ~SNO_TKL;
-		if (sptr->user->snomask & SNO_NICKCHANGE)
-			sptr->user->snomask &= ~SNO_NICKCHANGE;
-		if (sptr->user->snomask & SNO_QLINE)
-			sptr->user->snomask &= ~SNO_QLINE;
-
+		sptr->umodes &= ~UMODE_WHOIS;
+		ClearAdmin(sptr);
+		ClearSAdmin(sptr);
+		ClearNetAdmin(sptr);
+		ClearHideOper(sptr);
+		ClearCoAdmin(sptr);
+		ClearHelpOp(sptr);
+		sptr->user->snomask &= (SNO_NONOPERS);
 	}
 
 	/*
@@ -2405,9 +2423,6 @@ CMD_FUNC(m_umode)
 				ClearNetAdmin(sptr);
 			if (IsCoAdmin(sptr) && !OPIsCoAdmin(sptr))
 				ClearCoAdmin(sptr);
-			if ((sptr->umodes & UMODE_HIDING)
-			    && !(sptr->oflag & OFLAG_INVISIBLE))
-				sptr->umodes &= ~UMODE_HIDING;
 			if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
 			    && !IsSecure(sptr))
 				sptr->umodes &= ~UMODE_SECURE;
@@ -2419,43 +2434,9 @@ CMD_FUNC(m_umode)
 		if ((sptr->umodes & (UMODE_KIX)) && !IsNetAdmin(sptr))
 			sptr->umodes &= ~UMODE_KIX;
 
-		if ((sptr->umodes & UMODE_HIDING) && !IsAnOper(sptr))
-			sptr->umodes &= ~UMODE_HIDING;
-
-		if ((sptr->umodes & UMODE_HIDING)
-		    && !(sptr->oflag & OFLAG_INVISIBLE))
-			sptr->umodes &= ~UMODE_HIDING;
 		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
 		    && !IsSecure(sptr))
 			sptr->umodes &= ~UMODE_SECURE;
-
-		if ((sptr->umodes & (UMODE_HIDING))
-		    && !(setflags & UMODE_HIDING))
-		{
-			sendto_umode(UMODE_ADMIN,
-			    "[+I] Activated total invisibility mode on %s",
-			    sptr->name);
-			sendto_serv_butone(cptr,
-			    ":%s SMO A :[+I] Activated total invisibility mode on %s",
-			    me.name, sptr->name);
-			sendto_channels_inviso_part(sptr);
-		}
-
-		if (!(sptr->umodes & (UMODE_HIDING)))
-		{
-			if (setflags & UMODE_HIDING)
-			{
-				sendto_umode(UMODE_ADMIN,
-				    "[+I] De-activated total invisibility mode on %s",
-				    sptr->name);
-				sendto_serv_butone(cptr,
-				    ":%s SMO A :[+I] De-activated total invisibility mode on %s",
-				    me.name, sptr->name);
-				sendto_channels_inviso_join(sptr);
-
-			}
-		}
-
 	}
 	/*
 	 * For Services Protection...
@@ -2479,14 +2460,40 @@ CMD_FUNC(m_umode)
 		    sptr->user->virthost, 1);
 		sendto_serv_butone_token_opt(cptr, OPT_VHP, sptr->name,
 			MSG_SETHOST, TOK_SETHOST, "%s", sptr->user->virthost);
+		if (UHOST_ALLOWED == UHALLOW_REJOIN)
+		{
+			/* LOL, this is ugly ;) */
+			sptr->umodes &= ~UMODE_HIDE;
+			rejoin_doparts(sptr);
+			sptr->umodes |= UMODE_HIDE;
+			rejoin_dojoinandmode(sptr);
+			if (MyClient(sptr))
+				sptr->since += 7; /* Add fake lag */
+		}
 	}
+
 	if (!IsHidden(sptr) && (setflags & UMODE_HIDE))
 	{
-			if (sptr->user->virthost)
-			{
-				MyFree(sptr->user->virthost);
-				sptr->user->virthost = NULL;
-			}
+		if (UHOST_ALLOWED == UHALLOW_REJOIN)
+		{
+			/* LOL, this is ugly ;) */
+			sptr->umodes |= UMODE_HIDE;
+			rejoin_doparts(sptr);
+			sptr->umodes &= ~UMODE_HIDE;
+			rejoin_dojoinandmode(sptr);
+			if (MyClient(sptr))
+				sptr->since += 7; /* Add fake lag */
+		}
+		if (sptr->user->virthost)
+		{
+			MyFree(sptr->user->virthost);
+			sptr->user->virthost = NULL;
+		}
+		/* (Re)create the cloaked virthost, because it will be used
+		 * for ban-checking... free+recreate here because it could have
+		 * been a vhost for example. -- Syzop
+		 */
+		sptr->user->virthost = (char *)make_virthost(sptr->user->realhost, sptr->user->virthost, 1);
 	}
 	/*
 	 * If I understand what this code is doing correctly...
@@ -2546,7 +2553,6 @@ CMD_FUNC(m_umode)
 	if (MyConnect(sptr) && setsnomask != sptr->user->snomask)
 		sendto_one(sptr, rpl_str(RPL_SNOMASK),
 			me.name, parv[0], get_sno_str(sptr));
-
 
 	return 0;
 }
@@ -2699,7 +2705,7 @@ int  del_silence(aClient *sptr, char *mask)
 	return -1;
 }
 
-static int add_silence(aClient *sptr, char *mask)
+int add_silence(aClient *sptr, char *mask, int senderr)
 {
 	Link *lp;
 	int  cnt = 0, len = 0;
@@ -2710,8 +2716,8 @@ static int add_silence(aClient *sptr, char *mask)
 		if (MyClient(sptr))
 			if ((len > MAXSILELENGTH) || (++cnt >= MAXSILES))
 			{
-				sendto_one(sptr, err_str(ERR_SILELISTFULL),
-				    me.name, sptr->name, mask);
+				if (senderr)
+					sendto_one(sptr, err_str(ERR_SILELISTFULL), me.name, sptr->name, mask);
 				return -1;
 			}
 			else
@@ -2778,7 +2784,7 @@ CMD_FUNC(m_silence)
 			c = '+';
 		cp = pretty_mask(cp);
 		if ((c == '-' && !del_silence(sptr, cp)) ||
-		    (c != '-' && !add_silence(sptr, cp)))
+		    (c != '-' && !add_silence(sptr, cp, 1)))
 		{
 			sendto_prefix_one(sptr, sptr, ":%s SILENCE %c%s",
 			    parv[0], c, cp);
@@ -2803,7 +2809,7 @@ CMD_FUNC(m_silence)
 		}
 		else
 		{
-			(void)add_silence(sptr, parv[2]);
+			(void)add_silence(sptr, parv[2], 1);
 			if (!MyClient(acptr))
 				sendto_one(acptr, ":%s SILENCE %s :%s",
 				    parv[0], parv[1], parv[2]);

@@ -249,6 +249,11 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		if ((aconf->oflags & OFLAG_HIDE) && iNAH && !BadPtr(host)) {
 			iNAH_host(sptr, host);
 			SetHidden(sptr);
+		} else
+		if (IsHidden(sptr) && !sptr->user->virthost) {
+			/* +x has just been set by modes-on-oper and iNAH is off */
+			sptr->user->virthost = (char *)make_virthost(sptr->user->realhost,
+			                                             sptr->user->virthost, 1);
 		}
 
 		if (!IsOper(sptr))
@@ -259,23 +264,19 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 				SetHidden(sptr);
 			}
 			sendto_ops("%s (%s@%s) is now a local operator (o)",
-			    parv[0], sptr->user->username,
-			    IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost);
-				
+			    parv[0], sptr->user->username, GetHost(sptr));
 		}
 
 
 		if (announce != NULL) {
 			sendto_ops
 			    ("%s (%s@%s) [%s] %s",
-			    parv[0], sptr->user->username,
-			    IsHidden(sptr) ? sptr->user->virthost : sptr->
-			    user->realhost, parv[1], announce);
+			    parv[0], sptr->user->username, GetHost(sptr),
+			    parv[1], announce);
 				sendto_serv_butone(&me,
 				    ":%s GLOBOPS :%s (%s@%s) [%s] %s",
 				    me.name, parv[0], sptr->user->username,
-				    IsHidden(sptr) ? sptr->
-				    user->virthost : sptr->user->realhost, parv[1], announce);
+				    GetHost(sptr), parv[1], announce);
 
 		} 
 		if (aconf->snomask)
@@ -284,6 +285,11 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 			set_snomask(sptr, OPER_SNOMASK);
 		else
 			set_snomask(sptr, SNO_DEFOPER);
+		if (sptr->user->snomask)
+		{
+			sptr->user->snomask |= SNO_SNOTICE; /* set +s if needed */
+			sptr->umodes |= UMODE_SERVNOTICE;
+		}
 		send_umode_out(cptr, sptr, old);
 		sendto_one(sptr, rpl_str(RPL_SNOMASK),
 			me.name, parv[0], get_sno_str(sptr));

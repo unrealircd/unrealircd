@@ -52,6 +52,7 @@ extern fdlist oper_fdlist;
 static char sendbuf[2048];
 static char tcmd[1024];
 static char ccmd[1024];
+static char xcmd[1024];
 
 /* this array is used to ensure we send a msg only once to a remote 
 ** server.  like, when we are sending a message to all channel members
@@ -74,13 +75,8 @@ int  sendanyways = 0;
 **	Instead, mark it with FLAGS_DEADSOCKET. This should
 **	generate ExitClient from the main loop.
 **
-**	If 'notice' is not NULL, it is assumed to be a format
-**	for a message to local opers. I can contain only one
-**	'%s', which will be replaced by the sockhost field of
-**	the failing link.
-**
-**	Also, the notice is skipped for "uninteresting" cases,
-**	like Persons and yet unknown connections...
+**	notice will be the quit message. notice will also be
+**	sent to failops in case 'to' is a server.
 */
 static int dead_link(aClient *to, char *notice)
 {
@@ -94,15 +90,11 @@ static int dead_link(aClient *to, char *notice)
 	DBufClear(&to->recvQ);
 	DBufClear(&to->sendQ);
 	
-#ifndef _WIN32
-	error = strerror(errno);
-#else
-	error = strerror(WSAGetLastError());
-#endif	
 	if (!IsPerson(to) && !IsUnknown(to) && !(to->flags & FLAGS_CLOSING))
-		(void)sendto_failops_whoare_opers(notice, get_client_name(to, FALSE),
-			error);
+		(void)sendto_failops_whoare_opers("Closing link: %s - %s",
+			notice, get_client_name(to, FALSE));
 	Debug((DEBUG_ERROR, notice, get_client_name(to, FALSE), error));
+	to->error_str = strdup(notice);
 	return -1;
 }
 
@@ -157,7 +149,9 @@ int  send_queued(aClient *to)
 {
 	char *msg;
 	int  len, rlen;
-
+#ifdef ZIP_LINKS
+	int more = 0;
+#endif
 	if (IsBlocked(to))
 		return -1;		/* Can't write to already blocked socket */
 
@@ -174,12 +168,33 @@ int  send_queued(aClient *to)
 		 */
 		return -1;
 	}
+#ifdef ZIP_LINKS
+	/*
+	** Here, we must make sure than nothing will be left in to->zip->outbuf
+	** This buffer needs to be compressed and sent if all the sendQ is sent
+	*/
+	if ((IsZipped(to)) && to->zip->outcount) {
+		if (DBufLength(&to->sendQ) > 0) {
+			more = 1;
+		} else {
+			msg = zip_buffer(to, NULL, &len, 1);
+			if (len == -1)
+				return dead_link(to, "fatal error in zip_buffer()");
+			if (!dbuf_put(&to->sendQ, msg, len))
+				return dead_link(to, "Buffer allocation error");
+		}
+	}
+#endif
 	while (DBufLength(&to->sendQ) > 0)
 	{
 		msg = dbuf_map(&to->sendQ, &len);
 		/* Returns always len > 0 */
 		if ((rlen = deliver_it(to, msg, len)) < 0)
-			return dead_link(to, "Write error to %s, closing link (%s)");
+		{
+			char buf[256];
+			snprintf(buf, 256, "Write error: %s", strerror(ERRNO));
+			return dead_link(to, buf);
+		}
 		(void)dbuf_delete(&to->sendQ, rlen);
 		to->lastsq = DBufLength(&to->sendQ) / 1024;
 		if (rlen < len)
@@ -189,6 +204,20 @@ int  send_queued(aClient *to)
 			SetBlocked(to);
 			break;
 		}
+#ifdef ZIP_LINKS
+		if (DBufLength(&to->sendQ) == 0 && more) {
+			/*
+			** The sendQ is now empty, compress what's left
+			** uncompressed and try to send it too
+			*/
+			more = 0;
+			msg = zip_buffer(to, NULL, &len, 1);
+			if (len == -1)
+				return dead_link(to, "fatal error in zip_buffer()");
+			if (!dbuf_put(&to->sendQ, msg, len))
+				return dead_link(to, "Buffer allocation error");
+		}
+#endif
 	}
 
 	return (IsDead(to)) ? -1 : 0;
@@ -215,7 +244,8 @@ void vsendto_one(aClient *to, char *pattern, va_list vl)
 void sendbufto_one(aClient *to)
 {
 	int  len;
-
+	char *msg = sendbuf;
+	
 	Debug((DEBUG_ERROR, "Sending [%s] to %s", sendbuf, to->name));
 
 	if (to->from)
@@ -236,7 +266,7 @@ void sendbufto_one(aClient *to)
 	}
 
 	len = strlen(sendbuf);
-	if (sendbuf[len - 1] != '\n')
+	if (!len || (sendbuf[len - 1] != '\n'))
 	{
 		if (len > 510)
 			len = 510;
@@ -250,6 +280,8 @@ void sendbufto_one(aClient *to)
 		char tmp_sendbuf[sizeof(sendbuf)];
 
 		strcpy(tmp_sendbuf, sendbuf);
+		if (len >= 2)
+			tmp_sendbuf[len - 2]  = '\0'; /* strip CRLF */
 		sendto_ops("Trying to send [%s] to myself!", tmp_sendbuf);
 		return;
 	}
@@ -264,7 +296,20 @@ void sendbufto_one(aClient *to)
 		return;
 	}
 
+#ifdef ZIP_LINKS
+	/*
+	** data is first stored in to->zip->outbuf until
+	** it's big enough to be compressed and stored in the sendq.
+	** send_queued is then responsible to never let the sendQ
+	** be empty and to->zip->outbuf not empty.
+	*/
+	if (IsZipped(to))
+		msg = zip_buffer(to, msg, &len, 0);
+	
+	if (len && !dbuf_put(&to->sendQ, msg, len))
+#else
 	if (!dbuf_put(&to->sendQ, sendbuf, len))
+#endif
 	{
 		dead_link(to, "Buffer allocation error");
 		return;
@@ -389,6 +434,7 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 
 	sprintf(tcmd, ":%s %s %s :%s", from->name, tok, nick, text);
 	sprintf(ccmd, ":%s %s %s :%s", from->name, cmd, nick, text);
+	sprintf(xcmd, "%s %s :%s", cmd, nick, text);
 
 	++sentalong_marker;
 	for (lp = chptr->members; lp; lp = lp->next)
@@ -413,8 +459,8 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 			continue;
 		if (MyConnect(acptr) && IsRegisteredUser(acptr))
 		{
-			sendto_prefix_one(acptr, from, ":%s %s %s :%s",
-				from->name, cmd, nick, text);
+			sendto_prefix_one(acptr, from, ":%s %s",
+				from->name, xcmd);
 			sentalong[i] = sentalong_marker;
 		}
 		else
@@ -931,6 +977,9 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
 				cptr = users->cptr;
 				if (!MyConnect(cptr) || sentalong[cptr->slot] == sentalong_marker)
 					continue;
+				if ((channels->chptr->mode.mode & MODE_AUDITORIUM) &&
+				    !(is_chanownprotop(user, channels->chptr) || is_chanownprotop(cptr, channels->chptr)))
+					continue;
 				sentalong[cptr->slot] = sentalong_marker;
 				vsendto_prefix_one(cptr, user, pattern, vl);
 			}
@@ -1194,34 +1243,6 @@ void sendto_snomask(int snomask, char *pattern, ...)
 }
 
 /*
- * sendto_conn_hcn
- *
- *  Send to umode +c && IsHybNotice(cptr)
- */
-void sendto_conn_hcn(char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-	int  i;
-	char nbuf[1024];
-
-	va_start(vl, pattern);
-	for (i = 0; i <= LastSlot; i++)
-		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-		    IsPerson(cptr) && 
-		    (cptr->user->snomask & SNO_CLIENT) && IsHybNotice(cptr))
-		{
-			(void)ircsprintf(nbuf, ":%s NOTICE %s :",
-			    me.name, cptr->name);
-			(void)strncat(nbuf, pattern,
-			    sizeof(nbuf) - strlen(nbuf));
-			vsendto_one(cptr, nbuf, vl);
-		}
-	va_end(vl);
-	return;
-}
-
-/*
  * sendto_failops_whoare_opers
  *
  *      Send to *local* mode +g ops only who are also +o.
@@ -1414,10 +1435,7 @@ void vsendto_prefix_one(struct Client *to, struct Client *from,
 			    && !MyConnect(from))
 			{
 				strcat(sender, "@");
-
-				    (void)strcat(sender,
-				    (!IsHidden(from) ? user->realhost : user->
-				    virthost));
+				(void)strcat(sender, GetHost(from));
 				flag = 1;
 			}
 		}
@@ -1429,14 +1447,15 @@ void vsendto_prefix_one(struct Client *to, struct Client *from,
 		    && (IsHidden(from) ? *user->virthost : *user->realhost))
 		{
 			strcat(sender, "@");
-			strcat(sender,
-			    (!IsHidden(from) ? user->realhost : user->
-			    virthost));
+			strcat(sender, GetHost(from));
 		}
 		*sendbuf = ':';
 		strcpy(&sendbuf[1], sender);
 		/* Assuming 'pattern' always starts with ":%s ..." */
-		ircvsprintf(sendbuf + strlen(sendbuf), &pattern[3], vl);
+		if (!strcmp(&pattern[3], "%s"))
+			strcpy(sendbuf + strlen(sendbuf), va_arg(vl, char *)); /* This can speed things up by 30% -- Syzop */
+		else
+			ircvsprintf(sendbuf + strlen(sendbuf), &pattern[3], vl);
 	}
 	else
 		ircvsprintf(sendbuf, pattern, vl);
@@ -1499,7 +1518,7 @@ void sendto_realops(char *pattern, ...)
 	return;
 }
 
-void sendto_connectnotice(char *nick, anUser *user, aClient *sptr)
+void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnect, char *comment)
 {
 	aClient *cptr;
 	int  i;
@@ -1507,21 +1526,31 @@ void sendto_connectnotice(char *nick, anUser *user, aClient *sptr)
 	char connecth[1024];
 
 	RunHook(HOOKTYPE_LOCAL_CONNECT, sptr);
-	ircsprintf(connectd,
-	    "*** Notice -- Client connecting on port %d: %s (%s@%s) [%s] %s%s%s",
-	    sptr->listener->port, nick, user->username, user->realhost,
-	    sptr->class ? sptr->class->name : "",
+	if (!disconnect)
+	{
+		ircsprintf(connectd,
+		    "*** Notice -- Client connecting on port %d: %s (%s@%s) [%s] %s%s%s",
+		    sptr->listener->port, nick, user->username, user->realhost,
+		    sptr->class ? sptr->class->name : "",
 #ifdef USE_SSL
-	IsSecure(sptr) ? "[secure " : "",
-	IsSecure(sptr) ? SSL_get_cipher((SSL *)sptr->ssl) : "",
-	IsSecure(sptr) ? "]" : "");
+		IsSecure(sptr) ? "[secure " : "",
+		IsSecure(sptr) ? SSL_get_cipher((SSL *)sptr->ssl) : "",
+		IsSecure(sptr) ? "]" : "");
 #else
-	"", "", "");
+		"", "", "");
 #endif
-	ircsprintf(connecth,
-	    "*** Notice -- Client connecting: %s (%s@%s) [%s] {%s}", nick,
-	    user->username, user->realhost, Inet_ia2p(&sptr->ip),
-	    sptr->class ? sptr->class->name : "0");
+		ircsprintf(connecth,
+		    "*** Notice -- Client connecting: %s (%s@%s) [%s] {%s}", nick,
+		    user->username, user->realhost, Inet_ia2p(&sptr->ip),
+		    sptr->class ? sptr->class->name : "0");
+	}
+	else 
+	{
+		ircsprintf(connectd, "*** Notice -- Client exiting: %s (%s@%s) [%s]",
+			nick, user->username, user->realhost, comment);
+		ircsprintf(connecth, "*** Notice -- Client exiting: %s (%s@%s) [%s] [%s]",
+			nick, user->username, user->realhost, comment, Inet_ia2p(&sptr->ip));
+	}
 
 	for (i = 0; i <= LastSlot; i++)
 		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
@@ -1629,75 +1658,3 @@ void	sendto_message_one(aClient *to, aClient *from, char *sender,
                          sender, cmd, nick, msg);
 }
 
-/* The following functions are for +/-I -- codemastr */
-
-void sendto_channels_inviso_join(aClient *user)
-{
-        Membership *channels;
-       	Member *users;
-        aClient *cptr;
-
-		++sentalong_marker;
-		if (user->fd >= 0)
-			sentalong[user->slot] = sentalong_marker;
-        if (user->user)
-			for (channels = user->user->channel; channels; channels = channels->next)
-				for (users = channels->chptr->members; users; users = users->next)
-				{
-					cptr = users->cptr;
-                    if (!MyConnect(cptr) || IsNetAdmin(cptr) || sentalong[cptr->slot] == sentalong_marker || cptr == user)
-						continue;
-                    sentalong[cptr->slot] = sentalong_marker;
-                    sendto_one(cptr, ":%s!%s@%s JOIN :%s", user->name, user->user->username,
-		               (IsHidden(user) ? user->user->virthost : user->user->realhost), channels->chptr->chname);
-				}
-	return;
-}
-
-void sendto_channels_inviso_part(aClient *user)
-{
-        Membership *channels;
-        Member *users;
-        aClient *cptr;
-
-		++sentalong_marker;
-		if (user->fd >= 0)
-			sentalong[user->slot] = sentalong_marker;
-        if (user->user)
-			for (channels = user->user->channel; channels; channels = channels->next)
-				for (users = channels->chptr->members; users; users = users->next)
-				{
-					cptr = users->cptr;
-                    if (!MyConnect(cptr) || IsNetAdmin(cptr) || sentalong[cptr->slot] == sentalong_marker || cptr == user)
-						continue;
-                    sentalong[cptr->slot] = sentalong_marker;
-                	sendto_one(cptr, ":%s!%s@%s PART :%s", user->name, user->user->username, (IsHidden(user) ? user->user->virthost : user->user->realhost), channels->chptr->chname);
-				}
-	return;
-}
-
-void sendto_channel_ntadmins(aClient *from, aChannel *chptr, char *pattern, ...)
-{
-	va_list vl;
-    Member *lp;
-    aClient *acptr;
-    int  i;
-
-    va_start(vl, pattern);
-    ++sentalong_marker;
-    for (lp = chptr->members; lp; lp = lp->next)
-	{
-		acptr = lp->cptr;
-        if (acptr->from == from || !IsNetAdmin(acptr) || (IsDeaf(acptr) && !(sendanyways == 1)))
-			continue;
-        if (MyConnect(acptr))   /* (It is always a client) */
-			vsendto_prefix_one(acptr, from, pattern, vl);
-        else if (sentalong[(i = acptr->from->slot)] != sentalong_marker)
-		{
-			sentalong[i] = sentalong_marker;
-            vsendto_prefix_one(acptr, from, pattern, vl);
-		}
-	}
-	va_end(vl);
-	return;
-}

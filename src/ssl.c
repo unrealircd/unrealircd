@@ -25,6 +25,7 @@
 #include "h.h"
 #include "proto.h"
 #include "sys.h"
+#include <string.h>
 #ifdef _WIN32
 #include <windows.h>
 
@@ -152,7 +153,6 @@ static int ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 	int verify_err = 0;
 
 	verify_err = X509_STORE_CTX_get_error(ctx);
-	ircd_log(LOG_ERROR, "%i", verify_err);	
 	if (preverify_ok)
 		return 1;
 	if (iConf.ssl_options & SSLFLAG_VERIFYCERT)
@@ -181,6 +181,7 @@ void init_ctx_server(void)
 	SSL_CTX_set_options(ctx_server, SSL_OP_NO_SSLv2);
 	SSL_CTX_set_verify(ctx_server, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE
 			| (iConf.ssl_options & SSLFLAG_FAILIFNOCERT ? SSL_VERIFY_FAIL_IF_NO_PEER_CERT : 0), ssl_verify_callback);
+	SSL_CTX_set_session_cache_mode(ctx_server, SSL_SESS_CACHE_OFF);
 
 	if (SSL_CTX_use_certificate_file(ctx_server, SSL_SERVER_CERT_PEM, SSL_FILETYPE_PEM) <= 0)
 	{
@@ -218,6 +219,7 @@ void init_ctx_client(void)
 		exit(2);
 	}
 	SSL_CTX_set_default_passwd_cb(ctx_client, ssl_pem_passwd_cb);
+	SSL_CTX_set_session_cache_mode(ctx_client, SSL_SESS_CACHE_OFF);
 	if (SSL_CTX_use_certificate_file(ctx_client, SSL_SERVER_CERT_PEM, SSL_FILETYPE_PEM) <= 0)
 	{
 		ircd_log(LOG_ERROR, "Failed to load SSL certificate %s (client)", SSL_SERVER_CERT_PEM);
@@ -602,6 +604,7 @@ static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
     	sptr->name, ssl_func, ssl_errstr);
     SET_ERRNO(errtmp ? errtmp : P_EIO); /* Stick a generic I/O error */
     sptr->flags |= FLAGS_DEADSOCKET;
+    sptr->error_str = strdup(strerror(errtmp));
     return -1;
 }
 

@@ -271,12 +271,10 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 				parv[0], alias->nick);
 	}
 	else if (alias->type == ALIAS_COMMAND) {
-		regex_t pcomp;
 		ConfigItem_alias_format *format;
 		char *ptr = parv[1];
 		for (format = alias->format; format; format = (ConfigItem_alias_format *)format->next) {
-			regcomp(&pcomp, format->format, REG_ICASE|REG_EXTENDED);
-			if (regexec(&pcomp, ptr, 0, NULL, 0) == 0) {
+			if (regexec(&format->expr, ptr, 0, NULL, 0) == 0) {
 				/* Parse the parameters */
 				int i = 0, j = 0, k = 1;
 				char output[501];
@@ -325,11 +323,9 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 				xparv[1] = output;
 				xparv[2] = NULL;
 				m_alias(cptr, sptr, 2, xparv, format->nick);
-				regfree(&pcomp);
 				free(current);
 				break;
 			}
-			regfree(&pcomp);
 		}
 		return 0;
 	}

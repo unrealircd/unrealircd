@@ -176,9 +176,8 @@ int	m_scan_Unload(void)
 		HookDel(ConfRun);
 		HookDel(ConfPostTest);
 		HookDel(ServerStats);
-		LockEventSystem();
-		EventDel(Scannings_clean);
-		UnlockEventSystem();
+		/* Mark for deletion */
+		EventMarkDel(Scannings_clean);
 		IRCMutexDestroy(Scannings_lock);
 		if (scan_message)
 			free(scan_message);
@@ -312,7 +311,7 @@ DLLFUNC int h_scan_connect(aClient *sptr)
 	
 	if (Scan_IsBeingChecked(&sptr->ip))
 		return 0;
-	if (scan_message)
+	if (scan_message && !sptr->serv)
 		sendto_one(sptr, ":%s NOTICE %s :%s",
 			me.name, sptr->name, scan_message);
 	sr = MyMalloc(sizeof(Scan_AddrStruct));
@@ -441,7 +440,6 @@ DLLFUNC int h_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs) 
 
 DLLFUNC int h_config_run(ConfigFile *cf, ConfigEntry *ce, int type) {
 	ConfigEntry *cep;
-	int errors = 0;
 
 	if (type != CONFIG_SET)
 		return 0;

@@ -40,6 +40,7 @@
 #include "common.h"
 #include "sys.h"
 #include "h.h"
+#include "proto.h"
 #include "numeric.h"
 #ifdef	DBMALLOC
 #include "malloc.h"
@@ -131,7 +132,6 @@ aClient *make_client(aClient *from, aClient *servr)
 	cptr->serv = NULL;
 	cptr->srvptr = servr;
 	cptr->status = STAT_UNKNOWN;
-	cptr->fd = -1;
 	
 	(void)strcpy(cptr->username, "unknown");
 	if (size == CLIENT_LOCAL_SIZE)
@@ -143,14 +143,26 @@ aClient *make_client(aClient *from, aClient *servr)
 		cptr->sockhost[0] = '\0';
 		cptr->buffer[0] = '\0';
 		cptr->authfd = -1;
+		cptr->fd = -1;
+	} else {
+		cptr->fd = -256;
 	}
 	return (cptr);
 }
 
 void free_client(aClient *cptr)
 {
-	if (MyClient(cptr) && cptr->passwd)
-		MyFree((char *)cptr->passwd);
+	if (MyConnect(cptr))
+	{
+		if (cptr->passwd)
+			MyFree((char *)cptr->passwd);
+		if (cptr->error_str)
+			MyFree(cptr->error_str);
+#ifdef ZIP_LINKS
+		if (cptr->zip)
+			zip_free(cptr);
+#endif
+	}
 	MyFree((char *)cptr);
 }
 

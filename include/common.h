@@ -224,12 +224,6 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
  * you are doing.
  */
 
-#ifdef ZIP_LINKS
-#define ZIPSTUFF " ZIP"
-#else
-#define ZIPSTUFF ""
-#endif
-
 /* IRCu/Hybrid/Unreal way now :) -Stskeeps */
 
 #define PROTOCTL_CLIENT_1         \
@@ -274,7 +268,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                  "ohvbeqa", \
                  "kfL", \
 		 "l", \
-		 "psmntirRcOAQKVHGCuzN", \
+		 "psmntirRcOAQKVHGCuzNS", \
 		 ircnet005
 			    
 /* Server-Server PROTOCTL -Stskeeps */
@@ -287,8 +281,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                         " VL" \
                         " SJ3" \
                         " NS" \
-                        " SJB64" \
-                        ZIPSTUFF
+                        " SJB64"
 
 #ifdef _WIN32
 /*
@@ -335,5 +328,6 @@ TS   now;
 #endif
 #endif
 
+#define READBUF_SIZE 8192
 
 #endif /* __common_include__ */

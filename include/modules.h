@@ -116,6 +116,7 @@ struct _irchook {
 	union {
 		int (*intfunc)();
 		void (*voidfunc)();
+		char *(*pcharfunc)();
 	} func;
 	Module *owner;
 };
@@ -194,10 +195,13 @@ struct _eventinfo {
 };
 
 
+/* Huh? Why are those not marked as extern?? -- Syzop */
+
 #define EventAdd(name, every, howmany, event, data) EventAddEx(NULL, name, every, howmany, event, data)
 Event   *EventAddEx(Module *, char *name, long every, long howmany,
                   vFP event, void *data);
 Event   *EventDel(Event *event);
+Event   *EventMarkDel(Event *event);
 Event   *EventFind(char *name);
 int     EventMod(Event *event, EventInfo *mods);
 void    DoEvents(void);
@@ -223,14 +227,16 @@ int	Module_free(Module *mod);
 void *obsd_dlsym(void *handle, char *symbol);
 #endif
 
-#define add_Hook(hooktype, func) HookAddMain(NULL, hooktype, func, NULL)
-#define HookAdd(hooktype, func) HookAddMain(NULL, hooktype, func, NULL)
-#define HookAddEx(module, hooktype, func) HookAddMain(module, hooktype, func, NULL)
-#define HookAddVoid(hooktype, func) HookAddMain(NULL, hooktype, NULL, func)
-#define HookAddVoidEx(module, hooktype, func) HookAddMain(module, hooktype, NULL, func)
-#define add_HookX(hooktype, func1, func2) HookAddMain(NULL, hooktype, func1, func2)
+#define add_Hook(hooktype, func) HookAddMain(NULL, hooktype, func, NULL, NULL)
+#define HookAdd(hooktype, func) HookAddMain(NULL, hooktype, func, NULL, NULL)
+#define HookAddEx(module, hooktype, func) HookAddMain(module, hooktype, func, NULL, NULL)
+#define HookAddVoid(hooktype, func) HookAddMain(NULL, hooktype, NULL, func, NULL)
+#define HookAddVoidEx(module, hooktype, func) HookAddMain(module, hooktype, NULL, func, NULL)
+#define HookAddPChar(hooktype, func) HookAddMain(NULL, hooktype, NULL, NULL, func)
+#define HookAddPCharEx(module, hooktype, func) HookAddMain(module, hooktype, NULL, NULL, func)
+#define add_HookX(hooktype, func1, func2, func3) HookAddMain(NULL, hooktype, func1, func2, func3)
 
-Hook	*HookAddMain(Module *module, int hooktype, int (*intfunc)(), void (*voidfunc)());
+Hook	*HookAddMain(Module *module, int hooktype, int (*intfunc)(), void (*voidfunc)(), char *(*pcharfunc)());
 Hook	*HookDel(Hook *hook);
 
 Hooktype *HooktypeAdd(Module *module, char *string, int *type);
@@ -262,6 +268,9 @@ void CommandDel(Command *command);
 #define HOOKTYPE_LOCAL_JOIN 14
 #define HOOKTYPE_CONFIGTEST 15
 #define HOOKTYPE_CONFIGRUN 16
+#define HOOKTYPE_USERMSG 17
+#define HOOKTYPE_CHANMSG 18
+
 /* Module flags */
 #define MODFLAG_NONE	0x0000
 #define MODFLAG_LOADED	0x0001 /* Fully loaded */

@@ -118,7 +118,7 @@ void set_sock_opts(int, aClient *);
 #else
 void set_sock_opts(int, aClient *);
 #endif
-static char readbuf[8192];
+static char readbuf[READBUF_SIZE];
 char zlinebuf[BUFSIZE];
 extern char *version;
 extern ircstats IRCstats;
@@ -265,11 +265,10 @@ void add_local_domain(char *hname, int size)
 */
 void report_error(char *text, aClient *cptr)
 {
-	int errtmp = ERRNO;
-	char *host;
-	int  err, len = sizeof(err);
+	int errtmp = ERRNO, origerr = ERRNO;
+	char *host, xbuf[256];
+	int  err, len = sizeof(err), n;
 	
-
 	host = (cptr) ? get_client_name(cptr, FALSE) : "";
 
 	Debug((DEBUG_ERROR, text, host, strerror(errtmp)));
@@ -286,8 +285,20 @@ void report_error(char *text, aClient *cptr)
 			if (err)
 				errtmp = err;
 #endif
-	sendto_snomask(SNO_JUNK, text, host, strerror(errtmp));
-	ircd_log(LOG_ERROR, text,host,strerror(errtmp));
+	if (origerr != errtmp) {
+		/* Socket error is different than original error,
+		 * some tricks are needed because of 2x strerror() (or at least
+		 * according to the man page) -- Syzop.
+		 */
+		snprintf(xbuf, 200, "[syserr='%s'", strerror(origerr));
+		n = strlen(xbuf);
+		snprintf(xbuf+n, 256-n, ", sockerr='%s']", strerror(errtmp));
+		sendto_snomask(SNO_JUNK, text, host, xbuf);
+		ircd_log(LOG_ERROR, text, host, xbuf);
+	} else {
+		sendto_snomask(SNO_JUNK, text, host, strerror(errtmp));
+		ircd_log(LOG_ERROR, text,host,strerror(errtmp));
+	}
 	return;
 }
 
@@ -413,7 +424,7 @@ int  inetport(aClient *cptr, char *name, int port)
 		{
 			ircsprintf(backupbuf, "Error binding stream socket to IP %s port %i",
 				ipname, port);
-			strlcat(backupbuf, "- %s:%s", sizeof backupbuf);
+			strlcat(backupbuf, " - %s:%s", sizeof backupbuf);
 			report_error(backupbuf, cptr);
 			CLOSE_SOCK(cptr->fd);
 			cptr->fd = -1;
@@ -687,7 +698,11 @@ static int check_init(aClient *cptr, char *sockn, size_t size)
 	}
 	else if (getpeername(cptr->fd, (struct SOCKADDR *)&sk, &len) == -1)
 	{
-		report_error("connect failure: %s %s", cptr);
+		/* On Linux 2.4 and FreeBSD the socket may just have been disconnected
+		 * so it's not a serious error and can happen quite frequently -- Syzop
+		 */
+		if (ERRNO != P_ENOTCONN)
+			report_error("connect failure: %s %s", cptr);
 		return -1;
 	}
 	(void)strlcpy(sockn, (char *)Inet_si2p(&sk), size);
@@ -796,7 +811,7 @@ int completed_connection(aClient *cptr)
 	if (!BadPtr(aconf->connpwd))
 		sendto_one(cptr, "PASS :%s", aconf->connpwd);
 
-	sendto_one(cptr, "PROTOCTL %s", PROTOCTL_SERVER);
+	send_proto(cptr, aconf);
 	sendto_one(cptr, "SERVER %s 1 :U%d-%s%s-%i %s",
 	    me.name, UnrealProtocol, serveropts, extraflags ? extraflags : "", me.serv->numeric,
 	    me.info);
@@ -1020,9 +1035,11 @@ void set_sock_opts(int fd, aClient *cptr)
 		char *s = readbuf, *t = readbuf + sizeof(readbuf) / 2;
 
 		opt = sizeof(readbuf) / 8;
-		if (getsockopt(fd, IPPROTO_IP, IP_OPTIONS, (OPT_TYPE *)t,
-		    &opt) < 0)
-			report_error("getsockopt(IP_OPTIONS) %s:%s", cptr);
+		if (getsockopt(fd, IPPROTO_IP, IP_OPTIONS, (OPT_TYPE *)t, &opt) < 0)
+		{
+		    if (ERRNO != P_ECONNRESET) /* FreeBSD can generate this -- Syzop */
+		        report_error("getsockopt(IP_OPTIONS) %s:%s", cptr);
+		}
 		else if (opt > 0 && opt != sizeof(readbuf) / 8)
 		{
 			for (*readbuf = '\0'; opt > 0; opt--, s += 3)
@@ -1033,7 +1050,8 @@ void set_sock_opts(int fd, aClient *cptr)
 		}
 		if (setsockopt(fd, IPPROTO_IP, IP_OPTIONS, (OPT_TYPE *)NULL,
 		    0) < 0)
-			report_error("setsockopt(IP_OPTIONS) %s:%s", cptr);
+		    if (ERRNO != P_ECONNRESET) /* FreeBSD can generate this -- Syzop */
+			    report_error("setsockopt(IP_OPTIONS) %s:%s", cptr);
 	}
 #endif
 }
@@ -1177,7 +1195,11 @@ aClient *add_connection(aClient *cptr, int fd)
 
 		if (getpeername(fd, (struct SOCKADDR *)&addr, &len) == -1)
 		{
-			report_error("Failed in connecting to %s :%s", cptr);
+			/* On Linux 2.4 and FreeBSD the socket may just have been disconnected
+			 * so it's not a serious error and can happen quite frequently -- Syzop
+			 */
+			if (ERRNO != P_ENOTCONN)
+				report_error("Failed in connecting to %s :%s", cptr);
 add_con_refuse:
 			ircstp->is_ref++;
 			acptr->fd = -2;
@@ -1303,11 +1325,13 @@ void	start_of_normal_client_handshake(aClient *acptr)
 {
 	Link	lin;
 	acptr->status = STAT_UNKNOWN;	
-	if (SHOWCONNECTINFO) {
-		sendto_one(acptr, REPORT_DO_DNS);
+	if (SHOWCONNECTINFO && !acptr->serv) {
+		sendto_one(acptr, "%s", REPORT_DO_DNS);
 	}
 	lin.flags = ASYNC_CLIENT;
 	lin.value.cptr = acptr;
+	if (DONT_RESOLVE)
+		goto skipdns;
 	Debug((DEBUG_DNS, "lookup %s", acptr->sockhost));
 	acptr->hostp = gethost_byaddr((char *)&acptr->ip, &lin);
 	
@@ -1315,10 +1339,11 @@ void	start_of_normal_client_handshake(aClient *acptr)
 		SetDNS(acptr);
 	else
 	{
-		if (SHOWCONNECTINFO)
-			sendto_one(acptr, REPORT_FIN_DNSC);
+		if (SHOWCONNECTINFO && !acptr->serv)
+			sendto_one(acptr, "%s", REPORT_FIN_DNSC);
 	}
 	nextdnscheck = 1;
+skipdns:
 	start_auth(acptr);
 }
 
@@ -1378,14 +1403,14 @@ static int read_packet(aClient *cptr, fd_set *rfd)
 		if (dbuf_put(&cptr->recvQ, readbuf, length) < 0)
 			return exit_client(cptr, cptr, cptr, "dbuf_put fail");
 
-		if (IsPerson(cptr) && DBufLength(&cptr->recvQ) > CLIENT_FLOOD)
+		if (IsPerson(cptr) && DBufLength(&cptr->recvQ) > get_recvq(cptr))
 		{
 			sendto_snomask(SNO_FLOOD,
 			    "*** Flood -- %s!%s@%s (%d) exceeds %d recvQ",
 			    cptr->name[0] ? cptr->name : "*",
 			    cptr->user ? cptr->user->username : "*",
 			    cptr->user ? cptr->user->realhost : "*",
-			    DBufLength(&cptr->recvQ), CLIENT_FLOOD);
+			    DBufLength(&cptr->recvQ), get_recvq(cptr));
 			return exit_client(cptr, cptr, cptr, "Excess Flood");
 		}
 
@@ -1545,14 +1570,14 @@ static int read_packet(aClient *cptr)
 #ifdef NO_OPER_FLOOD
 		    !IsAnOper(cptr) &&
 #endif
-		    DBufLength(&cptr->recvQ) > CLIENT_FLOOD)
+		    DBufLength(&cptr->recvQ) > get_recvq(cptr))
 		{
 			sendto_snomask(SNO_FLOOD,
 			    "Flood -- %s!%s@%s (%d) Exceeds %d RecvQ",
 			    cptr->name[0] ? cptr->name : "*",
 			    cptr->user ? cptr->user->username : "*",
 			    cptr->user ? cptr->user->realhost : "*",
-			    DBufLength(&cptr->recvQ), CLIENT_FLOOD);
+			    DBufLength(&cptr->recvQ), get_recvq(cptr));
 			return exit_client(cptr, cptr, cptr, "Excess Flood");
 		}
 		return do_client_queue(cptr);
@@ -1653,7 +1678,11 @@ int  read_message(time_t delay, fdlist *listp)
 					FD_SET(cptr->fd, &read_set);
 			}
 			if ((cptr->fd >= 0) && (DBufLength(&cptr->sendQ) || IsConnecting(cptr) ||
-			    (DoList(cptr) && IsSendable(cptr))))
+			    (DoList(cptr) && IsSendable(cptr))
+#ifdef ZIP_LINKS
+				|| ((IsZipped(cptr)) && (cptr->zip->outcount > 0))
+#endif
+			    ))
 			{
 				FD_SET(cptr->fd, &write_set);
 			}
@@ -1783,7 +1812,7 @@ int  read_message(time_t delay, fdlist *listp)
 			 */
 			if ((fd = accept(cptr->fd, NULL, NULL)) < 0)
 			{
-		        if (ERRNO != P_EWOULDBLOCK)
+		        if ((ERRNO != P_EWOULDBLOCK) && (ERRNO != P_ECONNABORTED))
 					report_error("Cannot accept connections %s:%s", cptr);
 				break;
 			}
@@ -1795,11 +1824,11 @@ int  read_message(time_t delay, fdlist *listp)
 				    get_client_name(cptr, TRUE));
 #ifndef INET6
 				(void)send(fd,
-				    "ERROR :All connections in use\r\n", 32, 0);
+				    "ERROR :All connections in use\r\n", 31, 0);
 #else
 				(void)sendto(fd,
 				    "ERROR :All connections in use\r\n",
-				    32, 0, 0, 0);
+				    31, 0, 0, 0);
 #endif
 				CLOSE_SOCK(fd);
 				--OpenFiles;
@@ -1862,7 +1891,12 @@ deadsocket:
 			}
 		}
 		length = 1;	/* for fall through case */
-		if ((!NoNewLine(cptr) || FD_ISSET(cptr->fd, &read_set)) 
+		/* Note: these DoingDNS/DoingAuth checks are here because of a
+		 * filedescriptor race condition, so don't remove them without
+		 * being sure that has been fixed. -- Syzop
+		 */
+		if ((!NoNewLine(cptr) || FD_ISSET(cptr->fd, &read_set)) &&
+		    !(DoingDNS(cptr) || DoingAuth(cptr))
 #ifdef USE_SSL
 			&& 
 			!(IsSSLAcceptHandshake(cptr) || IsSSLConnectHandshake(cptr))
@@ -2095,6 +2129,8 @@ int  read_message(time_t delay, fdlist *listp)
 			res_pfd = pfd;
 		}
 
+/* FIXME: no ZIP link handling here, but this code doesnt work anyway -- Syzop */
+
 		if (me.socksfd >= 0)
 		{
 			PFD_SETR(me.socksfd);
@@ -2286,6 +2322,10 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	char *s;
 	int  errtmp, len;
 
+	if (aconf->options & CONNECT_NODNSCACHE) {
+		/* Remove "cache" if link::options::nodnscache is set */
+		memset(&aconf->ipnum, '\0', sizeof(struct IN_ADDR));
+	}
 	/*
 	 * If we dont know the IP# for this host and itis a hostname and
 	 * not a ip# string, then try and find the appropriate host record.
@@ -2521,8 +2561,8 @@ void do_dns_async(int id)
 				ClearDNS(cptr);
 				cptr->hostp = hp;
 
-				if (SHOWCONNECTINFO)
-		          	        sendto_one(cptr, cptr->hostp ? REPORT_FIN_DNS : REPORT_FAIL_DNS);
+				if (SHOWCONNECTINFO && !cptr->serv)
+		          	        sendto_one(cptr, "%s", cptr->hostp ? REPORT_FIN_DNS : REPORT_FAIL_DNS);
 				  if (!DoingAuth(cptr))
 					  SetAccess(cptr);
 			    }
@@ -2533,6 +2573,36 @@ void do_dns_async(int id)
 			  bcopy(hp->h_addr, (char *)&aconf->ipnum,
 		      sizeof(struct IN_ADDR));
 		break;
+		case ASYNC_CONNECT :
+			/* Async connect support, the only problem is we don't know who did the /connect
+			 * anymore, so we send the statusinfo to all local ops ;P -- Syzop
+			 */
+			aconf = (ConfigItem_link *) ln.value.aconf;
+			if (hp && aconf)
+			{
+				int n;
+				bcopy(hp->h_addr, (char *)&aconf->ipnum, sizeof(struct IN_ADDR));
+				n = connect_server(aconf, (aClient *)NULL, hp);
+				/* I love semi-duplicate code */
+				switch(n) {
+					case 0:
+						sendto_realops("Connecting to %s[%s].", aconf->servername, aconf->hostname);
+						break;
+					case -1:
+						sendto_realops("Couldn't connect to %s.", aconf->servername);
+						break;
+					case -2:
+						/* Should not happen since hp is not NULL */
+						sendto_realops("Hostname %s is unknown for server %s (!?).", aconf->hostname, aconf->servername);
+						break;
+					default:
+						sendto_realops("Connection to %s failed: %s", aconf->servername, strerror(n));
+				}
+			}
+			if (!hp) {
+				sendto_realops("Hostname %s is unknown for server %s.", aconf->hostname, aconf->servername);
+			}
+			break;
 		default :
 			break;
 		}

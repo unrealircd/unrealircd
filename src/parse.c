@@ -161,7 +161,7 @@ void ban_flooder(aClient *cptr)
 		NULL		/*8  reason */
 	};
 
-	strlcpy(hostip, (char *)inetntoa((char *)&cptr->ip), sizeof(hostip));
+	strlcpy(hostip, Inet_ia2p(&cptr->ip), sizeof(hostip));
 
 	tkllayer[4] = hostip;
 	tkllayer[5] = me.name;
@@ -335,8 +335,10 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 			   ** should never be generated, though...  --msa
 			   ** Hm, when is the buffer empty -- if a command
 			   ** code has been found ?? -Armin
+			   ** This error should indeed not be sent in case
+			   ** of notices -- Syzop.
 			 */
-			if (!IsRegistered(cptr)) {
+			if (!IsRegistered(cptr) && stricmp(ch, "NOTICE")) {
 				sendto_one(from, ":%s %d %s :You have not registered",
 				    me.name, ERR_NOTREGISTERED, ch);
 				return -1;

@@ -50,7 +50,9 @@
 u_int32_t getrandom32()
 {
 u_int32_t result;
+#ifdef USE_SSL
 int n;
+#endif
 #ifndef _WIN32
 static struct timeval prevt;
 struct timeval nowt;
@@ -96,7 +98,7 @@ void add_entropy_configfile(struct stat st, char *buf)
 {
 	entropy_cfgsize = (entropy_cfgsize << 4) ^ st.st_size;
 	entropy_cfgmtime = (entropy_cfgmtime << 4) ^ st.st_mtime;
-	entropy_cfgcrc = entropy_cfgcrc ^ (unsigned int)crc32(buf, strlen(buf));
+	entropy_cfgcrc = entropy_cfgcrc ^ (unsigned int)our_crc32(buf, strlen(buf));
 	Debug((DEBUG_INFO, "add_entropy_configfile: cfgsize: %u", entropy_cfgsize));
 	Debug((DEBUG_INFO, "add_entropy_configfile: cfgmtime: %u",
 		(unsigned int)entropy_cfgmtime));
@@ -111,10 +113,13 @@ void init_random()
 {
 unsigned int seed, egd = 0;
 time_t now = TStime();
+#ifdef USE_SSL
+int n;
+#endif
 #ifndef _WIN32
 struct timeval nowt;
 unsigned int xrnd = 0;
-int fd, n;
+int fd;
 #else
 MEMORYSTATUS mstat;
 struct _timeb nowt;

@@ -494,8 +494,8 @@ static int can_see(aClient *sptr, aClient *acptr, aChannel *channel)
     /* if they only want people with a certain server */
     if (wfl.want_server != WHO_DONTCARE)
       {
-	if (((wfl.want_server == WHO_WANT) && strcmp(wfl.server, acptr->user->server)) ||
-	    ((wfl.want_server == WHO_DONTWANT) && !strcmp(wfl.server, acptr->user->server)))
+	if (((wfl.want_server == WHO_WANT) && stricmp(wfl.server, acptr->user->server)) ||
+	    ((wfl.want_server == WHO_DONTWANT) && !stricmp(wfl.server, acptr->user->server)))
 	  {
 	    return WHO_CANTSEE;
 	  }
@@ -509,12 +509,7 @@ static int can_see(aClient *sptr, aClient *acptr, aChannel *channel)
 	if (IsAnOper(sptr))
 	  host = acptr->user->realhost;
 	else
-	  {
-	    if (IsHidden(acptr))
-	      host = acptr->user->virthost;
-	    else
-	      host = acptr->user->realhost;
-	  }
+	  host = GetHost(acptr);
 
 	if (((wfl.want_host == WHO_WANT) && match(wfl.host, host)) ||
 	    ((wfl.want_host == WHO_DONTWANT) && !match(wfl.host, host)))
@@ -575,10 +570,6 @@ static int can_see(aClient *sptr, aClient *acptr, aChannel *channel)
 	      break;
 	  }
 
-	if (IsHiding(acptr))
-	  /* if they're +I .. only show them if the other person is an oper */
-	  break;
-
 	if (IsInvisible(acptr) && !member)
 	  break;
 
@@ -617,7 +608,7 @@ static void do_channel_who(aClient *sptr, aChannel *channel, char *mask)
 {
   Member *cm = channel->members;
   
-  if (IsMember(sptr, channel))
+  if (IsMember(sptr, channel) || IsNetAdmin(sptr))
     who_flags |= WF_ONCHANNEL;
 
   for (cm = channel->members; cm; cm = cm->next)
@@ -676,6 +667,8 @@ static void make_who_status(aClient *sptr, aClient *acptr, aChannel *channel,
 
 static void do_other_who(aClient *sptr, char *mask)
 {
+int oper = IsAnOper(sptr);
+
   /* wildcard? */
   if (strchr(mask, '*') || strchr(mask, '?'))
     {
@@ -691,9 +684,26 @@ static void do_other_who(aClient *sptr, char *mask)
 	  char *channel;
 	  int flg;
 
-	  if (match(mask, acptr->name))
-	    continue;
-
+	  if (!oper) {
+		if (match(mask, acptr->name))
+			continue;
+	  } else {
+		/* I could have done this with chinese logic, but I prefered
+		 * to do it a bit more clean (ahem :P), like this. -- Syzop
+		 */
+		if (!match(mask, acptr->name))
+			goto matchok;
+		if (!oper)
+			continue;
+		if (!acptr->user)
+			continue;
+		if (!match(mask, acptr->user->realhost))
+			goto matchok;
+		if (IsHidden(acptr) && !match(mask, acptr->user->virthost))
+			goto matchok;
+		continue;
+	}
+matchok:
 	  if ((cansee = can_see(sptr, acptr, NULL)) & WHO_CANTSEE)
 	    continue;
 
@@ -755,11 +765,6 @@ static char *first_visible_channel(aClient *sptr, aClient *acptr, int *flg)
 
   *flg = 0;
 
-  /* this is a bit cack, but it seems the only way
-     (and is the current behaviour) since +I is not channel-specific */
-  if (IsHiding(acptr))
-    return "*";
-
   for (lp = acptr->user->channel; lp; lp = lp->next)
     {
       aChannel *chptr = lp->chptr;
@@ -784,9 +789,6 @@ static char *first_visible_channel(aClient *sptr, aClient *acptr, int *flg)
 static int has_common_channels(aClient *c1, aClient *c2)
 {
   Membership *lp;
-
-  if (!IsAnOper(c1) && IsHiding(c2))
-    return 0;
 
   for (lp = c1->user->channel; lp; lp = lp->next)
     {

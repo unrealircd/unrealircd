@@ -1783,7 +1783,6 @@ seen. gmtime warning still there
 - Fixed so crypt() works on !HAVE_CRYPT systems with openssl 0.9.7+ too
   (yes, this makes us able to compile win32-ssl)
 ** beta14 released **
-<<<<<<< Changes
 - Fixed example.conf set::dns::retries, 2s -> 2
 - Updated help.conf: added access level required for channel modes, added chanmode +G, etc.
 - Fix for missing mode 'S' in 005 CHANMODES= message
@@ -1957,4 +1956,4 @@ seen. gmtime warning still there
 - Doc/text updates
 - Changed version to beta15
 - Fixed /setident bug
-*** beta15 released **
+*** beta15 release **

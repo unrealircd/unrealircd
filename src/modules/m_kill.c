@@ -245,9 +245,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			   **   ...!operhost!oper
 			   **   ...!operhost!oper (comment)
 			 */
-			strlcpy(inpath,
-			    IsHidden(cptr) ? cptr->user->virthost : cptr->user->
-			    realhost, sizeof inpath);
+			strlcpy(inpath, GetHost(cptr), sizeof inpath);
 			if (kcount < 2) {	/* Only check the path the first time
 					   around, or it gets appended to itself. */
 				if (!BadPtr(path))
@@ -297,7 +295,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 ircd_log
                     (LOG_KILL, "KILL (%s) by  %s(%s!%s)",
                            make_nick_user_host
-                     (acptr->name, acptr->user->username, (IsHidden(acptr) ? acptr->user->virthost : acptr->user->realhost)),
+                     (acptr->name, acptr->user->username, GetHost(acptr)),
                             parv[0],
                             inpath,
                             path);
