@@ -73,7 +73,7 @@ extern int lifesux;
 /* Some forward declarations */
 CMD_FUNC(do_join);
 void add_invite(aClient *, aChannel *);
-char *clean_ban_mask(char *);
+char *clean_ban_mask(char *, int);
 int add_banid(aClient *, aChannel *, char *);
 int can_join(aClient *, aClient *, aChannel *, char *, char *,
     char **);
@@ -545,30 +545,42 @@ int del_banid(aChannel *chptr, char *banid)
  * Moved to struct.h
  */
 
+/* Those 3 pointers can be used by extended ban modules so they
+ * don't have to do 3 make_nick_user_host()'s all the time:
+ */
+char *ban_realhost = NULL, *ban_virthost = NULL, *ban_ip = NULL;
+
 /*
  * is_banned - returns a pointer to the ban structure if banned else NULL
  */
-extern Ban *is_banned(aClient *cptr, aClient *sptr, aChannel *chptr)
+Ban *is_banned(aClient *cptr, aClient *sptr, aChannel *chptr, int type)
 {
 	Ban *tmp, *tmp2;
-	char *s;
+	char *s, *p;
 	static char realhost[NICKLEN + USERLEN + HOSTLEN + 6];
 	static char virthost[NICKLEN + USERLEN + HOSTLEN + 6];
 	static char     nuip[NICKLEN + USERLEN + HOSTLEN + 6];
 	int dovirt = 0, mine = 0;
+	ExtBanInfo *extban;
 
 	if (!IsPerson(cptr))
 		return NULL;
 
-	if (MyConnect(cptr)) { /* MyClient()... but we already know it's a person.. */
+	ban_realhost = realhost;
+	ban_ip = ban_virthost = NULL;
+
+	if (MyConnect(sptr)) {
 		mine = 1;
 		s = make_nick_user_host(cptr->name, cptr->user->username, Inet_ia2p(&cptr->ip));
 		strlcpy(nuip, s, sizeof nuip);
+		ban_ip = nuip;
 	}
 
 	if (cptr->user->virthost)
 		if (strcmp(cptr->user->realhost, cptr->user->virthost))
+		{
 			dovirt = 1;
+		}
 
 	s = make_nick_user_host(cptr->name, cptr->user->username,
 	    cptr->user->realhost);
@@ -579,24 +591,49 @@ extern Ban *is_banned(aClient *cptr, aClient *sptr, aChannel *chptr)
 		s = make_nick_user_host(cptr->name, cptr->user->username,
 		    cptr->user->virthost);
 		strlcpy(virthost, s, sizeof virthost);
+		ban_virthost = virthost;
 	}
 		/* We now check +b first, if a +b is found we then see if there is a +e.
  * If a +e was found we return NULL, if not, we return the ban.
  */
 	for (tmp = chptr->banlist; tmp; tmp = tmp->next)
-		if ((match(tmp->banstr, realhost) == 0) ||
-		    (dovirt && (match(tmp->banstr, virthost) == 0)) ||
-		    (mine && (match(tmp->banstr, nuip) == 0)))
+	{
+		if (*tmp->banstr == '~')
 		{
-			/* Ban found, now check for +e */
-			for (tmp2 = chptr->exlist; tmp2; tmp2 = tmp2->next)
-				if ((match(tmp2->banstr, realhost) == 0) ||
-				    (dovirt && (match(tmp2->banstr, virthost) == 0)) ||
-				    (mine && (match(tmp2->banstr, nuip) == 0)) )
-					return (NULL);
-
-			break;
+			extban = findmod_by_bantype(tmp->banstr[1]);
+			if (!extban)
+				continue;
+			if (!extban->is_banned(sptr, chptr, tmp->banstr, type))
+				continue;
+		} else {
+			if ((match(tmp->banstr, realhost) == 0) ||
+			    (dovirt && (match(tmp->banstr, virthost) == 0)) ||
+			    (mine && (match(tmp->banstr, nuip) == 0)))
+			{
+				/* matches.. do nothing */
+			} else
+				continue;
 		}
+
+		/* Ban found, now check for +e */
+		for (tmp2 = chptr->exlist; tmp2; tmp2 = tmp2->next)
+		{
+			if (*tmp2->banstr == '~')
+			{
+				extban = findmod_by_bantype(tmp2->banstr[1]);
+				if (!extban)
+					continue;
+				if (extban->is_banned(sptr, chptr, tmp2->banstr, type))
+					return NULL;
+			} else {
+				if ((match(tmp2->banstr, realhost) == 0) ||
+					(dovirt && (match(tmp2->banstr, virthost) == 0)) ||
+					(mine && (match(tmp2->banstr, nuip) == 0)) )
+					return NULL;
+			}
+		}
+		break; /* ban found and not on except */
+	}
 
 	return (tmp);
 }
@@ -868,7 +905,7 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 	if ((!lp
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 	    CHFL_HALFOP | CHFL_CHANPROT))) && MyClient(cptr)
-	    && is_banned(cptr, cptr, chptr))
+	    && is_banned(cptr, cptr, chptr, BANCHK_MSG))
 		return (CANNOT_SEND_BAN);
 
 	return 0;
@@ -2204,11 +2241,24 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  break;
 		  }
 		  retval = 1;
-		  tmpstr = clean_ban_mask(param);
+		  tmpstr = clean_ban_mask(param, what);
 		  if (BadPtr(tmpstr))
-		     break; /* ignore ban, but eat param */
-		  if (MyClient(cptr) && (*tmpstr == '~') && (what == MODE_ADD))
-		     break; /* deny for now.. */
+		      break; /* ignore ban, but eat param */
+		  if ((tmpstr[0] == '~') && MyClient(cptr) && !bounce)
+		  {
+		      /* extban: check access if needed */
+		      ExtBanInfo *p = findmod_by_bantype(tmpstr[1]);
+		      if (p && p->is_ok && !p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_BAN))
+		      {
+		          if (IsAnOper(cptr))
+		          {
+		              /* TODO: send operoverride notice */
+		          } else {
+		              p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS_ERR, what, EXBTYPE_BAN);
+		              break;
+		          }
+		      }
+		  }
 		  /* For bounce, we don't really need to worry whether
 		   * or not it exists on our server.  We'll just always
 		   * bounce it. */
@@ -2227,11 +2277,24 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  break;
 		  }
 		  retval = 1;
-		  tmpstr = clean_ban_mask(param);
+		  tmpstr = clean_ban_mask(param, what);
 		  if (BadPtr(tmpstr))
 		     break; /* ignore except, but eat param */
-		  if (MyClient(cptr) && (*tmpstr == '~') && (what == MODE_ADD))
-		     break; /* deny for now.. */
+		  if ((tmpstr[0] == '~') && MyClient(cptr) && !bounce)
+		  {
+		      /* extban: check access if needed */
+		      ExtBanInfo *p = findmod_by_bantype(tmpstr[1]);
+		      if (p && p->is_ok && !p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_EXCEPT))
+		      {
+		          if (IsAnOper(cptr))
+		          {
+		              /* TODO: send operoverride notice */
+		          } else {
+		              p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS_ERR, what, EXBTYPE_EXCEPT);
+		              break;
+		          }
+		      }
+		  }
 		  /* For bounce, we don't really need to worry whether
 		   * or not it exists on our server.  We'll just always
 		   * bounce it. */
@@ -3085,11 +3148,12 @@ char *trim_str(char *str, int len)
  *   on next clean_ban_mask or make_nick_user_host call.
  * - mask is fragged in some cases, this could be bad.
  */
-char *clean_ban_mask(char *mask)
+char *clean_ban_mask(char *mask, int what)
 {
 	char *cp;
 	char *user;
 	char *host;
+	ExtBanInfo *p;
 
 	cp = index(mask, ' ');
 	if (cp)
@@ -3100,12 +3164,24 @@ char *clean_ban_mask(char *mask)
 	if (!*mask)
 		return NULL;
 
-	/* This was added right before beta19 release to ease the
-	 * beta19<->beta20 transfer when we implement extended bans.
-	 * This is only to accept such masks from remote servers!
-	 */
-	if (*mask == '~')
+	/* Extended ban? */
+	if ((*mask == '~') && mask[1] && (mask[2] == ':'))
+	{
+		p = findmod_by_bantype(mask[1]);
+		if (!p)
+			return NULL; /* extended bantype not supported */
+		if (p->conv_param)
+			return p->conv_param(mask);
+		/* else, do some basic sanity checks and cut it off at 80 bytes */
+		if ((cp[1] != ':') || (cp[2] == '\0'))
+		    return NULL; /* require a ":<char>" after extban type */
+		if (strlen(mask) > 80)
+			mask[80] = '\0';
 		return mask;
+	}
+
+	if ((*mask == '~') && !strchr(mask, '@'))
+		return NULL; /* not and extended ban and not a ~user@host ban either. */
 
 	if ((user = index((cp = mask), '!')))
 		*user++ = '\0';
@@ -3188,7 +3264,7 @@ int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *lin
                 return (ERR_ADMONLY);
 
 	/* Admin, Coadmin, Netadmin, and SAdmin can still walk +b in +O */
-	banned = is_banned(cptr, sptr, chptr);
+	banned = is_banned(cptr, sptr, chptr, BANCHK_JOIN);
         if (IsOper(sptr) && !IsAdmin(sptr) && !IsCoAdmin(sptr) && !IsNetAdmin(sptr)
 	    && !IsSAdmin(sptr) && banned
             && (chptr->mode.mode & MODE_OPERONLY))
@@ -4305,7 +4381,7 @@ CMD_FUNC(m_topic)
 		{
 			if ((chptr->mode.mode & MODE_OPERONLY && !IsAnOper(sptr) && !IsMember(sptr, chptr)) ||
 			    (chptr->mode.mode & MODE_ADMONLY && !IsAdmin(sptr) && !IsMember(sptr, chptr)) ||
-			    (is_banned(sptr,sptr,chptr) && !IsAnOper(sptr) && !IsMember(sptr, chptr))) {
+			    (is_banned(sptr,sptr,chptr,BANCHK_JOIN) && !IsAnOper(sptr) && !IsMember(sptr, chptr))) {
 				sendto_one(sptr, err_str(ERR_NOTONCHANNEL), me.name, parv[0], name);
 				return 0;
 			}
@@ -4586,7 +4662,7 @@ CMD_FUNC(m_invite)
 
 
 	if (over && MyConnect(acptr)) {
-	        if (is_banned(acptr, sptr, chptr))
+	        if (is_banned(acptr, sptr, chptr, BANCHK_JOIN))
         	{
                         sendto_snomask(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +b).",
@@ -5359,7 +5435,7 @@ CMD_FUNC(m_knock)
 		return 0;
 	}
 
-	if (is_banned(cptr, sptr, chptr))
+	if (is_banned(cptr, sptr, chptr, BANCHK_JOIN))
 	{
 		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
 		    me.name, sptr->name, chptr->chname, "You're banned!");

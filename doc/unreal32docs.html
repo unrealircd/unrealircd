@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta19-CVS<br>
-  <b>Last doc update:</b> 2003-12-10</div>
+  <b>Last doc update:</b> 2003-12-20</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke / McSkaf<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -58,7 +58,8 @@
   -- 3.10. <a href="#feature_ziplinks">Zip links</a><br>
   -- 3.11. <a href="#feature_dyndns">Dynamic DNS/IP linking support</a><br>
   -- 3.12. <a href="#feature_antiflood">Anti-flood features</a><br>
-  -- 3.13. <a href="#feature_other">Other features</a><br>
+  -- 3.13. <a href="#feature_bantypes">Ban types</a><br>
+  -- 3.14. <a href="#feature_other">Other features</a><br>
   4. <a href="#configuringyourunrealircdconf">Configuring your unrealircd.conf 
   file</a><br>
   ---4.1. <a href="#configurationfileexplained">Configuration file explained</a><br>
@@ -391,7 +392,40 @@ will just wait 5m and flood again). It also depends on the floodtype, users unab
 having them unable to change their nick (+N) or send ctcps to the channel (+C) so you might want to use different removal times.
 </p></div>
 
-<p><font size="+2"><b>3.13 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
+<p><font size="+2"><b>3.13 - Ban types</b></font><a name="feature_bantypes"></a></p><div class="desc">
+<p>
+<b>Basic bantypes and cloaked hosts</b><br>
+UnrealIRCd supports the basic bantypes like <i>+b nick!user@host</i>.<br>
+Also, if a masked host of someone is 'rox-ACB17294.isp.com' and you place a ban *!*@rox-ACB17294.isp.com,
+then if the user sets himself -x (and his hosts becomes for example 'dial-123.isp.com) then the ban 
+will still match. Bans are always checked against real hosts AND masked hosts.<br>
+IP bans are also available (eg: *!*@128.*) and are also always checked.<br>
+<br>
+Bans on cloaked IPs require some explanation:<br>
+If a user has the IP 1.2.3.4 his cloaked host could be 341C6CEC.8FC6128B.303AEBC6.IP.<br>
+If you ban *!*@341C6CEC.8FC6128B.303AEBC6.IP you would ban *!*@1.2.3.4 (obvious...)<br>
+If you ban *!*@*.8FC6128B.303AEBC6.IP you ban *!*@1.2.3.*<br>
+If you ban *!*@*.303AEBC6.IP you ban *!*@1.2.*<br>
+This information might be helpful to you when deciding how broad a ban should be.<br>
+<br>
+<b>Extended bantypes</b><br>
+Extended bans look like ~[!]&lt;type&gt;:&lt;stuff&gt;. Currently the following types are available:<br>
+<table border=1>
+<tr><td>type:</td><td>name</td><td>explanation:</td></tr>
+<tr><td>~q</td><td>quiet</td><td>People matching these bans can join but are unable to speak, 
+ unless they have +v or higher. <i>Ex: ~q:*!*@blah.blah.com</i></td></tr>
+<tr><td>~c</td><td>channel</td><td>If the user is in this channel then (s)he is unable to join. 
+<i>Ex: ~c:#lamers</i></td></tr>
+<tr><td>~r</td><td>realname</td><td>If the realname of a user matches this then (s)he is unable to join.<br>
+ <i>Ex: ~r:*Stupid_bot_script*</i><br>
+ NOTE: an underscore ('_') matches both a space (' ') and an underscore ('_'), so this ban would match 
+ 'Stupid bot script v1.4'.</td></tr>
+</table>
+These bantypes are also supported in the channel exception list (+e).<br>
+Modules can also add other extended ban types.<br>
+</p></div>
+
+<p><font size="+2"><b>3.14 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
 <p>UnrealIRCd has a lot of features so not everything is covered here... You'll find that out by yourself.</p></div>
 
 <p> </p>

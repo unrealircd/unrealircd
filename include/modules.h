@@ -215,6 +215,53 @@ typedef struct {
 } CmodeInfo;
 #endif
 
+/*** Extended bans ***/
+
+#define EXBCHK_ACCESS		0 /* Check access */
+#define EXBCHK_ACCESS_ERR	1 /* Check access and send error */
+
+#define EXBTYPE_BAN			0 /* a ban */
+#define EXBTYPE_EXCEPT		1 /* an except */
+
+#define EXTBANTABLESZ		32
+
+typedef struct {
+	/** extended ban character */
+	char	flag;
+
+	/** access checking [optional].
+	 * aClient *: the client
+	 * aChannel *: the channel
+	 * para: the ban parameter
+	 * int: check type (see EXBCHK_*)
+	 * int: what (MODE_ADD or MODE_DEL)
+	 * int: what2 (EXBTYPE_BAN or EXBTYPE_EXCEPT)
+	 * return value: 1=ok, 0=bad
+	 * NOTE: just set this of NULL if you want only +hoaq to place/remove bans as usual.
+	 * NOTE2: This has not been tested yet!!
+	 */
+	int			(*is_ok)(aClient *, aChannel *, char *para, int, int, int);
+
+	/** Convert input parameter to output [optional].
+	 * like with normal bans '+b blah' gets '+b blah!*@*', and it allows
+	 * you to limit the length of the ban too. You can set this to NULL however
+	 * to use the value as-is.
+	 * char *: the input parameter.
+	 * return value: pointer to output string (temp. storage)
+	 */
+	char *		(*conv_param)(char *);
+
+	/** Checks if the user is affected by this ban [required].
+	 * Called from is_banned.
+	 * aClient *: the client
+	 * aChannel *: the channel
+	 * para: the ban entry
+	 * int: a value of BANCHK_* (see struct.h)
+	 */
+	int			(*is_banned)(aClient *, aChannel *, char *, int);
+} ExtBanInfo;
+
+
 typedef struct _command {
 	struct _command *prev, *next;
 	aCommand *cmd, *tok;

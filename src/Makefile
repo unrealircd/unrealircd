@@ -28,7 +28,8 @@ OBJS=auth.o aln.o badwords.o channel.o cloak.o crule.o dbuf.o \
 	s_bsd.o s_conf.o s_debug.o s_err.o s_extra.o s_kline.o \
 	s_misc.o s_numeric.o s_serv.o s_svs.o $(STRTOUL) socket.o \
 	ssl.o s_user.o scache.o send.o support.o umodes.o s_stats.o \
-	version.o webtv.o whowas.o zip.o cidr.o random.o extcmodes.o 
+	version.o webtv.o whowas.o zip.o cidr.o random.o extcmodes.o \
+	extbans.o
 
 SRC=$(OBJS:%.o=%.c)
 
@@ -245,6 +246,9 @@ random.o: random.c $(INCLUDES)
 
 extcmodes.o: extcmodes.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c extcmodes.c
+
+extbans.o: extbans.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c extbans.c
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 

@@ -2638,3 +2638,22 @@ seen. gmtime warning still there
   /who /whois and /whowas
 - Merged all of the win32 makefiles into a single file (makefile.win32) with some
   configurable macros to decide whether ziplinks and/or ssl should be enabled
+- Added "extended bans". An idea from SorceryNet ircd.
+  These bans look like ~<type>:<stuff>. Currently the following bans are available:
+  ~q: quiet bans (ex: ~q:*!*@blah.blah.com). People matching these bans can join
+      but are unable to speak, unless they have +v or higher.
+  ~c: channel bans (ex: ~c:#idiots). People in #idiots are unable to join the channel.
+  ~r: gecos (realname) bans (ex: ~r:*Stupid_bot_script*). If the realname of a user
+      matches this then (s)he is unable to join.
+      NOTE: an underscore ('_') matches both a space (' ') and an underscore ('_'),
+            so this ban would match 'Stupid bot script v1.4'.
+
+  These bantypes can also be used in the channel exception list (+e).
+  +e ~r:*w00t* makes anyone with 'w00t' in their realname able to join,
+  and +e ~c:#admin makes anyone in #admin able to join, etc..
+
+  This system allows modules to add extended bantypes too.
+
+  This feature requires some additional testing, also the module interface will
+  probably be changed in the next few weeks, and perhaps more extended bans will
+  be added before next release.. we'll see...

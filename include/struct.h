@@ -1619,6 +1619,11 @@ int	throttle_can_connect(struct IN_ADDR *in);
  #define CHANOPPFX "@"
 #endif
 
+/* used for is_banned type field: */
+#define BANCHK_JOIN		0	/* checking if a ban forbids the person from joining */
+#define BANCHK_MSG		1	/* checking if a ban forbids the person from sending messages */
+#define BANCHK_NICK		2	/* checking if a ban forbids the person from changing his/her nick */
+
 #endif /* __struct_include__ */
 
 #include "dynconf.h"

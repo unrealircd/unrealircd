@@ -862,6 +862,7 @@ int InitwIRCD(int argc, char *argv[])
 #ifdef EXTCMODE
 	extcmode_init();
 #endif
+	extban_init();
 	clear_scache_hash_table();
 #ifdef FORCE_CORE
 	corelim.rlim_cur = corelim.rlim_max = RLIM_INFINITY;

@@ -67,6 +67,8 @@ static inline int match2(char *mask, char *name)
 	}
 	else if (cm != '?' && lc(cm) != lc(*n))
 		return 1;	/* most likely first chars won't match */
+	else if ((cm == '_') && (*n != ' ') && (*n != '_'))
+		return 1;	/* false: '_' but first character not '_' nor ' ' */
 	else if ((*m == '\0') && (*n == '\0'))
 		return 0;  /* true: both are empty */
 	else if (*n == '\0')
@@ -135,6 +137,16 @@ static inline int match2(char *mask, char *name)
 			cm = lc(*(++m));	/* just skip and go to next */
 			if (!*n)
 				return 1; /* false: no character left */
+			n++;
+			if (!*n)	/* return true if end of both, */
+				return (cm ? 1 : 0);	/* false if end of test str only */
+			continue;
+		}
+		if (cm == '_')	/* found _: check for '_' or ' ' */
+		{
+			cm = lc(*(++m));	/* just skip and go to next */
+			if ((*n != ' ') && (*n != '_'))
+				return 1; /* false: didnt match or no character left */
 			n++;
 			if (!*n)	/* return true if end of both, */
 				return (cm ? 1 : 0);	/* false if end of test str only */
