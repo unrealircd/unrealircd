@@ -1834,6 +1834,7 @@ deadsocket:
 #endif		
 			)
 			length = read_packet(cptr, &read_set);
+#ifdef USE_SSL
 		if ((cptr->ssl != NULL) && 
 			(IsSSLAcceptHandshake(cptr) || IsSSLConnectHandshake(cptr)) &&
 			FD_ISSET(cptr->fd, &read_set))
@@ -1854,6 +1855,7 @@ deadsocket:
 
 			}
 		}
+#endif
 		if (length > 0)
 			flush_connections(cptr);
 		if ((length != FLUSH_BUFFER) && IsDead(cptr))

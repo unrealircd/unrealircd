@@ -1433,3 +1433,4 @@ seen. gmtime warning still there
   token.txt, protoctl.txt, and vl.txt
 - Send +f and +L in correct part of 005.
 - Fixed SSL linking, again..
+- SSL compile error fix in s_bsd.c
