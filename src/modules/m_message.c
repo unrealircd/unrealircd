@@ -99,6 +99,7 @@ DLLFUNC int MOD_UNLOAD(m_message)(int module_unload)
 	return MOD_SUCCESS;
 }
 
+static int check_dcc(aClient *sptr, char *target, aClient *targetcli, char *text);
 
 /*
 ** m_message (used in m_private() and m_notice())
@@ -122,7 +123,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 	int  cansend = 0;
 	int  prefix = 0;
 	char pfixchan[CHANNELLEN + 32];
-	int n;
+	int ret;
 
 	/*
 	 * Reasons why someone can't send to a channel
@@ -172,7 +173,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 		 */
 		if (!strcasecmp(nick, "ircd") && MyClient(sptr))
 		{
-			int ret = 0;
+			ret = 0;
 			if (!recursive_webtv)
 			{
 				recursive_webtv = 1;
@@ -185,7 +186,6 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 		{
 			if (!recursive_webtv)
 			{
-				int ret;
 				recursive_webtv = 1;
 				ret = webtv_parse(sptr, parv[2]);
 				if (ret == -99)
@@ -219,78 +219,17 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 					return 0;
 				}
 			}
-			/* F:Line stuff by _Jozeph_ added by Stskeeps with comments */
-			if (*parv[2] == 1 && MyClient(sptr) && !IsOper(sptr))
-				/* somekinda ctcp thing
-				   and i don't want to waste cpu on what others already checked..
-				   (should this be checked ??) --Sts
-				 */
+
+			if (MyClient(sptr) && (*parv[2] == 1))
 			{
-				ctcp = &parv[2][1];
-				/* Most likely a DCC send .. */
-				if (!myncmp(ctcp, "DCC SEND ", 9))
-				{
-					ConfigItem_deny_dcc *fl;
-					char *end, file[BUFSIZE];
-					int  size_string = 0;
-
-					if (sptr->flags & FLAGS_DCCBLOCK)
-					{
-						sendto_one(sptr, ":%s NOTICE %s :*** You are blocked from sending files as you have tried to send a forbidden file - reconnect to regain ability to send",
-							me.name, sptr->name);
-						continue;
-					}
-					ctcp = &parv[2][10];
-					if (*ctcp == '"' && *(ctcp+1))
-						end = index(ctcp+1, '"');
-					else
-						end = index(ctcp, ' ');
-					/* check if it was fake.. just pass it along then .. */
-					if (!end || (end < ctcp))
-						goto dcc_was_ok;
-
-					size_string = (int)(end - ctcp);
-
-					if (!size_string
-					    || (size_string > (BUFSIZE - 1)))
-						goto dcc_was_ok;
-
-					strncpy(file, ctcp, size_string);
-					file[size_string] = '\0';
-
-					if ((n = dospamfilter(sptr, file, SPAMF_DCC, acptr->name)) < 0)
-						return n;
-
-					if ((fl =
-					    (ConfigItem_deny_dcc *)
-					    dcc_isforbidden(cptr, sptr, acptr,
-					    file)))
-					{
-						sendto_one(sptr,
-						    ":%s %d %s :*** Cannot DCC SEND file %s to %s (%s)",
-						    me.name, RPL_TEXT,
-						    sptr->name, file,
-						    acptr->name,
-						    fl->reason ? fl->reason :
-						    "Possible infected virus file");
-						sendto_one(sptr, ":%s NOTICE %s :*** You have been blocked from sending files, reconnect to regain permission to send files",
-							me.name, sptr->name);
-
-						sendto_umode(UMODE_VICTIM,
-						    "%s tried to send forbidden file %s (%s) to %s (is blocked now)",
-						    sptr->name, file, fl->reason, acptr->name);
-						sendto_serv_butone(NULL, ":%s SMO v :%s tried to send forbidden file %s (%s) to %s (is blocked now)",
-							me.name, sptr->name, file, fl->reason, acptr->name);
-						sptr->flags |= FLAGS_DCCBLOCK;
-						continue;
-					}
-					/* if it went here it was a legal send .. */
-				}
+				ret = check_dcc(sptr, acptr->name, acptr, parv[2]);
+				if (ret < 0)
+					return ret;
+				if (ret == 0)
+					continue;
 			}
-		      dcc_was_ok:
 
-			if (MyClient(sptr)
-			    && check_for_target_limit(sptr, acptr, acptr->name))
+			if (MyClient(sptr) && check_for_target_limit(sptr, acptr, acptr->name))
 				continue;
 
 			if (!is_silenced(sptr, acptr))
@@ -327,8 +266,8 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 
 				if (MyClient(sptr))
 				{
-					n = dospamfilter(sptr, text, newcmd == MSG_NOTICE ? SPAMF_USERNOTICE : SPAMF_USERMSG, acptr->name);
-					if (n < 0)
+					ret = dospamfilter(sptr, text, newcmd == MSG_NOTICE ? SPAMF_USERNOTICE : SPAMF_USERMSG, acptr->name);
+					if (ret < 0)
 						return FLUSH_BUFFER;
 				}
 
@@ -393,6 +332,14 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				nick = pfixchan;
 			}
 			
+			if (MyClient(sptr) && (*parv[2] == 1))
+			{
+				ret = check_dcc(sptr, chptr->chname, NULL, parv[2]);
+				if (ret < 0)
+					return ret;
+				if (ret == 0)
+					continue;
+			}
 			if (IsVirus(sptr) && strcasecmp(chptr->chname, SPAMFILTER_VIRUSCHAN))
 			{
 				sendnotice(sptr, "You are only allowed to talk in '%s'", SPAMFILTER_VIRUSCHAN);
@@ -454,9 +401,9 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 
 				if (MyClient(sptr))
 				{
-					n = dospamfilter(sptr, text, notice ? SPAMF_CHANNOTICE : SPAMF_CHANMSG, chptr->chname);
-					if (n < 0)
-						return n;
+					ret = dospamfilter(sptr, text, notice ? SPAMF_CHANNOTICE : SPAMF_CHANMSG, chptr->chname);
+					if (ret < 0)
+						return ret;
 				}
 
 				for (tmphook = Hooks[HOOKTYPE_CHANMSG]; tmphook; tmphook = tmphook->next) {
@@ -686,4 +633,88 @@ static int is_silenced(aClient *sptr, aClient *acptr)
 		}
 	}
 	return 0;
+}
+
+/** Checks if a DCC is allowed.
+ * PARAMETERS:
+ * sptr:		the client to check for
+ * target:		the target (eg a user or a channel)
+ * targetcli:	the target client, NULL in case of a channel
+ * text:		the whole msg
+ * RETURNS:
+ * 1:			allowed (no dcc, etc)
+ * 0:			block
+ * <0:			immediately return with this value (could be FLUSH_BUFFER)
+ * HISTORY:
+ * F:Line stuff by _Jozeph_ added by Stskeeps with comments.
+ * moved and various improvements by Syzop (dcc resume, dccs to channels).
+ */
+static int check_dcc(aClient *sptr, char *target, aClient *targetcli, char *text)
+{
+char *ctcp;
+ConfigItem_deny_dcc *fl;
+char *end, file[BUFSIZE];
+int size_string, ret;
+
+	if ((*text != 1) || !MyClient(sptr) || IsOper(sptr))
+		return 1;
+
+	ctcp = &text[1];
+	/* Most likely a DCC send .. */
+	if (!myncmp(ctcp, "DCC SEND ", 9))
+		ctcp = text + 10;
+	else if (!myncmp(ctcp, "DCC RESUME ", 11))
+		ctcp = text + 12;
+	else
+		return 1; /* something else, allow */
+
+	if (sptr->flags & FLAGS_DCCBLOCK)
+	{
+		sendto_one(sptr, ":%s NOTICE %s :*** You are blocked from sending files as you have tried to "
+		                 "send a forbidden file - reconnect to regain ability to send",
+			me.name, sptr->name);
+		return 0;
+	}
+	if (*ctcp == '"' && *(ctcp+1))
+		end = index(ctcp+1, '"');
+	else
+		end = index(ctcp, ' ');
+
+	/* check if it was fake.. just pass it along then .. */
+	if (!end || (end < ctcp))
+		return 1; /* allow */
+
+	size_string = (int)(end - ctcp);
+
+	if (!size_string || (size_string > (BUFSIZE - 1)))
+		return 1; /* allow */
+
+	strncpy(file, ctcp, size_string);
+	file[size_string] = '\0';
+
+	if ((ret = dospamfilter(sptr, file, SPAMF_DCC, target)) < 0)
+		return ret;
+
+	if ((fl = (ConfigItem_deny_dcc *)dcc_isforbidden(sptr, sptr, targetcli, file)))
+	{
+		sendto_one(sptr,
+		    ":%s %d %s :*** Cannot DCC SEND file %s to %s (%s)",
+		    me.name, RPL_TEXT,
+		    sptr->name, file,
+		    target,
+		    fl->reason ? fl->reason :
+		    "Possible infected virus file");
+		sendto_one(sptr, ":%s NOTICE %s :*** You have been blocked from sending files, reconnect to regain permission to send files",
+			me.name, sptr->name);
+
+		sendto_umode(UMODE_VICTIM,
+		    "%s tried to send forbidden file %s (%s) to %s (is blocked now)",
+		    sptr->name, file, fl->reason, target);
+		sendto_serv_butone(NULL, ":%s SMO v :%s tried to send forbidden file %s (%s) to %s (is blocked now)",
+			me.name, sptr->name, file, fl->reason, target);
+		sptr->flags |= FLAGS_DCCBLOCK;
+		return 0; /* block */
+	}
+
+	return 1; /* allowed */
 }

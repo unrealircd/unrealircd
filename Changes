@@ -2968,3 +2968,4 @@ seen. gmtime warning still there
 - Fixed a problem in 'tkl update': lowest expire time won instead of
   highest. Reported by Malcolm.
 - Fixed a tkl update problem with sqlines
+- Improved dcc blocking support (both for spamfilter and deny dcc).

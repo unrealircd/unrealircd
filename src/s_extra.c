@@ -48,23 +48,24 @@ ID_Copyright("(C) Carsten Munk 1999");
        2     = set by ircops by /dccdeny
 */
 
-#define AllocCpy(x,y) x = (char *) MyMalloc(strlen(y) + 1); strcpy(x,y)
-
 /* ircd.dcc configuration */
 
+/* checks if the dcc is blacklisted.
+ * NOTE: 'target' can be NULL if the target was a channel
+ */
 ConfigItem_deny_dcc *dcc_isforbidden(aClient *cptr, aClient *sptr, aClient *target, char *filename)
 {
 	ConfigItem_deny_dcc *p;
 
-	if (!conf_deny_dcc || !target || !filename)
+	if (!conf_deny_dcc || !filename)
 		return NULL;
 
 	if (IsOper(sptr) || IsULine(sptr))
 		return NULL;
 
-	if (IsOper(target))
+	if (target && IsOper(target))
 		return NULL;
-	if (IsVictim(target))
+	if (target && IsVictim(target))
 	{
 		return NULL;
 	}
