@@ -1640,13 +1640,13 @@ int  read_message(time_t delay, fdlist *listp)
 		wait.tv_sec = MIN(delay, delay2);
 		wait.tv_usec = 0;
 #ifdef	HPUX
-		nfds = select(FD_SETSIZE, (int *)&read_set, (int *)&write_set,
+		nfds = select(MAXCONNECTIONS, (int *)&read_set, (int *)&write_set,
 		    0, &wait);
 #else
 # ifndef _WIN32
-		nfds = select(FD_SETSIZE, &read_set, &write_set, 0, &wait);
+		nfds = select(MAXCONNECTIONS, &read_set, &write_set, 0, &wait);
 # else
-		nfds = select(FD_SETSIZE, &read_set, &write_set, &excpt_set, &wait);
+		nfds = select(MAXCONNECTIONS, &read_set, &write_set, &excpt_set, &wait);
 # endif
 #endif
 	    if (nfds == -1 && ((ERRNO == P_EINTR) || (ERRNO == P_ENOTSOCK)))

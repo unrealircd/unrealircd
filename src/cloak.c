@@ -161,21 +161,23 @@ unsigned long crc32(const unsigned char *s, unsigned int len)
   return crc32val;
 }
 
-char *hidehost(char *host)
+char *hidehost(char *rhost)
 {
 	static char	cloaked[512];
 	static char	h1[512];
 	static char	h2[4][4];
 	static char	h3[300];
+	char		*host;
 	unsigned long		l[8];
 	int		i;
-	char		*p;
+	char		*p, *q;
 
-	for (p = host; *p; p++) {
-		if (isupper(*p))
-		*p = tolower(*p);
+	host = malloc(strlen(rhost)+1);
+	q = host;
+	for (p = rhost; *p; p++, q++) {
+		*q = tolower(*p);
 	}
-
+	*q = '\0';
 	/* Find out what kind of host we're dealing with here */
 	/* IPv6 ? */	
 	if (strchr(host, ':'))
@@ -213,6 +215,7 @@ char *hidehost(char *host)
 	        }
 		ircsprintf(cloaked, "%lx:%lx:%lx:IP",
 			l[2], l[1], l[0]);
+		free(host);
 		return cloaked;
 	}
 	/* Is this a IPv4 IP? */
@@ -251,6 +254,7 @@ char *hidehost(char *host)
 		l[0] &= 0x7FFFFFFF;
 		l[1] &= 0xFFFFFFFF;
 		snprintf(cloaked, sizeof cloaked, "%lX.%lX.%lX.IP", l[2], l[1], l[0]);
+		free(host);
 		return cloaked;
 	}
 	else
@@ -279,10 +283,11 @@ char *hidehost(char *host)
 				l[0], p);
 		else
 			snprintf(cloaked, sizeof cloaked, "%s-%lX", hidden_host, l[0]);
-			
+		free(host);	
 		return cloaked;
 	}
 	/* Couldn't cloak, -WTF? */
+	free(host);
 	return NULL;
 }
 

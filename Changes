@@ -1414,3 +1414,9 @@ seen. gmtime warning still there
 - Fixed a bug where /who always reported 0 hops reported by Alzirr (#0000242)
 - More SSL horror and fixed a missing , in m_who
 - Fixed !SSL compile error
+- Made the win32 installer have the option of installing as a service under NT and fixed a
+  shortcut bug
+- Fixed sptr->user->realhost becoming lowercase upon a +x
+- Fixed +bbbbb lots of crap desynch bug
+- Fixed OperOverride snotice bugs with halfop
+- Standardized OperOverride notices

@@ -70,7 +70,6 @@ extern ircstats IRCstats;
 extern int lifesux;
 #endif
 
-void over_notice(aClient *, aClient *, aChannel *, char *);
 static void add_invite(aClient *, aChannel *);
 static int add_banid(aClient *, aChannel *, char *);
 static int can_join(aClient *, aClient *, aChannel *, char *, char *,
@@ -1049,7 +1048,6 @@ CMD_FUNC(m_samode)
  */
 CMD_FUNC(m_mode)
 {
-	static char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
 	long unsigned sendts = 0;
 	Ban *ban;
 	aClient *user;
@@ -1086,12 +1084,12 @@ CMD_FUNC(m_mode)
 
 	if (parc < 3)
 	{
-		*mode_buf = *parabuf = '\0';
+		*modebuf = *parabuf = '\0';
 		
-		mode_buf[1] = '\0';
-		channel_modes(sptr, mode_buf, parabuf, chptr);
+		modebuf[1] = '\0';
+		channel_modes(sptr, modebuf, parabuf, chptr);
 		sendto_one(sptr, rpl_str(RPL_CHANNELMODEIS), me.name, parv[0],
-		    chptr->chname, mode_buf, parabuf);
+		    chptr->chname, modebuf, parabuf);
 		sendto_one(sptr, rpl_str(RPL_CREATIONTIME), me.name, parv[0],
 		    chptr->chname, chptr->creationtime);
 		return 0;
@@ -1221,24 +1219,24 @@ CMD_FUNC(m_mode)
 		return 0;
 	}
 	opermode = 0;
-	/* opermode stuff --sts */
+
 #ifndef NO_OPEROVERRIDE
-	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr))
-		if (IsOper(sptr))
-		{
-			sendts = 0;
-			opermode = 1;
-			goto aftercheck;
-		}
+        if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
+            && !is_half_op(sptr, chptr) && IsOper(sptr))
+        {
+                sendts = 0;
+                opermode = 1;
+                goto aftercheck;
+        }
+
+        if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
+            && is_half_op(sptr, chptr) && IsOper(sptr))
+        {
+                opermode = 2;
+                goto aftercheck;
+        }
 #endif
-/*-------*/
 
-
-	if (is_half_op(sptr, chptr))
-	{
-		opermode = 2;
-		goto aftercheck;
-	}
 	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
 	    && !is_half_op(sptr, chptr)
 	    && (cptr == sptr || !IsSAdmin(sptr) || !IsOper(sptr)))
@@ -1306,19 +1304,17 @@ void bounce_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[])
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
 	int  pcount;
 	long oldm, oldl;
-	char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
 
 	oldm = chptr->mode.mode;
 	oldl = chptr->mode.limit;
 	set_mode(chptr, cptr, parc, parv, &pcount, pvar, 1);
-	make_mode_str(chptr, oldm, oldl, pcount, pvar, mode_buf, parabuf, 1);
 
 	if (chptr->creationtime)
 		sendto_one(cptr, ":%s MODE %s &%s %s %lu", me.name,
-		    chptr->chname, mode_buf, parabuf, chptr->creationtime);
+		    chptr->chname, modebuf, parabuf, chptr->creationtime);
 	else
 		sendto_one(cptr, ":%s MODE %s &%s %s", me.name, chptr->chname,
-		    mode_buf, parabuf);
+		    modebuf, parabuf);
 
 	/* the '&' denotes a bounce so servers won't bounce a bounce */
 }
@@ -1333,7 +1329,6 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
 	int  pcount;
 	long oldm, oldl;
 	char tschange = 0, isbounce = 0;	/* fwd'ing bounce */
-	char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
 
 	if (**parv == '&')
 		isbounce = 1;
@@ -1341,7 +1336,6 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
 	oldl = chptr->mode.limit;
 
 	set_mode(chptr, sptr, parc, parv, &pcount, pvar, 0);
-	make_mode_str(chptr, oldm, oldl, pcount, pvar, mode_buf, parabuf, 0);
 
 	if (IsServer(sptr))
 	{
@@ -1372,8 +1366,8 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
 		if (sendts == -1 && chptr->creationtime)
 			sendts = chptr->creationtime;
 	}
-	if (*mode_buf == '\0' || (*(mode_buf + 1) == '\0' && (*mode_buf == '+'
-	    || *mode_buf == '-')))
+	if (*modebuf == '\0' || (*(modebuf + 1) == '\0' && (*modebuf == '+'
+	    || *modebuf == '-')))
 	{
 		if (tschange || isbounce) {	/* relay bounce time changes */
 			if (chptr->creationtime)
@@ -1392,10 +1386,11 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
 #ifndef NO_OPEROVERRIDE
 	if (opermode == 1)
 	{
-		if (MyClient(sptr) && mode_buf[1])
+		if (modebuf[1])
 			sendto_snomask(SNO_EYES,
-			    "*** OperMode [IRCop: %s] - [Channel: %s] - [Mode: %s %s]",
-			    sptr->name, chptr->chname, mode_buf, parabuf);
+			    "*** OperOverride -- %s (%s@%s) MODE %s %s %s",
+			    sptr->name, sptr->user->username, sptr->user->realhost,
+			    chptr->chname, modebuf, parabuf);
 		sendts = 0;
 	}
 #endif
@@ -1404,27 +1399,27 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
 	{
 		sendto_serv_butone_token(NULL, me.name, MSG_GLOBOPS,
 		    TOK_GLOBOPS, ":%s used SAMODE %s (%s %s)", sptr->name,
-		    chptr->chname, mode_buf, parabuf);
+		    chptr->chname, modebuf, parabuf);
 		sendto_failops_whoare_opers
 		    ("from %s: %s used SAMODE %s (%s %s)", me.name, sptr->name,
-		    chptr->chname, mode_buf, parabuf);
+		    chptr->chname, modebuf, parabuf);
 		sptr = &me;
 		sendts = 0;
 	}
 	/* Should stop null modes */
-	if (*(mode_buf + 1) == '\0')
+	if (*(modebuf + 1) == '\0')
 		return;
 	
 	sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
-	    sptr->name, chptr->chname, mode_buf, parabuf);
+	    sptr->name, chptr->chname, modebuf, parabuf);
 	if (IsServer(sptr) && sendts != -1)
 		sendto_serv_butone_token(cptr, sptr->name, MSG_MODE, TOK_MODE,
 		    "%s %s%s %s %lu", chptr->chname, isbounce ? "&" : "",
-		    mode_buf, parabuf, sendts);
+		    modebuf, parabuf, sendts);
 	else
 		sendto_serv_butone_token(cptr, sptr->name, MSG_MODE, TOK_MODE,
 		    "%s %s%s %s", chptr->chname, isbounce ? "&" : "",
-		    mode_buf, parabuf);
+		    modebuf, parabuf);
 	/* tell them it's not a timestamp, in case the last param
 	   ** is a number. */
 }
@@ -1434,10 +1429,10 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
  *  If bounce is set to 1, it will make the string it needs for a bounce.
  */
 void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount, 
-	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *parabuf, char bounce)
+	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf, char bounce)
 {
 
-	char tmpbuf[MODEBUFLEN], *tmpstr;
+	char tmpbuf[MODEBUFLEN+3], *tmpstr;
 	aCtab *tab = &cFlagTab[0];
 	char *x = mode_buf;
 	int  what, cnt, z;
@@ -1446,7 +1441,7 @@ void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount,
 
 	*tmpbuf = '\0';
 	*mode_buf = '\0';
-	*parabuf = '\0';
+	*para_buf = '\0';
 	what = 0;
 	/* + param-less modes */
 	tab = &cFlagTab[0];
@@ -1468,7 +1463,7 @@ void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount,
 	}
 
 	*x = '\0';
-/* + param-less modes */
+	/* - param-less modes */
 	tab = &cFlagTab[0];
 	while (tab->mode != 0x0)
 	{
@@ -1513,7 +1508,7 @@ void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount,
 			*x++ = 'l';
 			if (bounce)
 				chptr->mode.limit = oldl;	/* set it back */
-			ircsprintf(parabuf, "%s%d ", parabuf, chptr->mode.limit);
+			ircsprintf(para_buf, "%s%d ", para_buf, chptr->mode.limit);
 		}
 	}
 	/* reconstruct bkov chain */
@@ -1531,10 +1526,10 @@ void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount,
 		}
 		*x++ = *(pvar[cnt] + 1);
 		tmpstr = &pvar[cnt][2];
-		z = MODEBUFLEN - 1 - strlen(parabuf);
-		m = parabuf;
+		z = (MODEBUFLEN * MAXMODEPARAMS);
+		m = para_buf;
 		while ((*m)) { m++; }
-		while ((*tmpstr) && ((m-parabuf) < z))
+		while ((*tmpstr) && ((m-para_buf) < z))
 		{
 			*m = *tmpstr; 
 			m++;
@@ -1545,9 +1540,9 @@ void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount,
 	}
 	if (bounce)
 		chptr->mode.mode = oldm;
-	z = strlen(parabuf);
-	if (parabuf[z - 1] == ' ')
-		parabuf[z - 1] = '\0';
+	z = strlen(para_buf);
+	if (para_buf[z - 1] == ' ')
+		para_buf[z - 1] = '\0';
 	*x = '\0';
 	if (*mode_buf == '\0')
 	{
@@ -1587,7 +1582,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	char *xp;
 
 	chasing = 0;
-	if (opermode == 2 && !is_chan_op(cptr, chptr) && !IsULine(cptr))
+	if (is_half_op(cptr, chptr) && !is_chan_op(cptr, chptr) && !IsULine(cptr)
+	    && !IsOper(cptr))
 	{
 		/* Ugly halfop hack --sts 
 		   - this allows halfops to do +b +e +v and so on */
@@ -2183,15 +2179,22 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
 	char *curchr;
 	u_int what = MODE_ADD;
 	long modetype = 0;
-	char *param = NULL;
+	int  paracount = 1;
 #ifdef DEVELOP
 	char *tmpo = NULL;
 #endif
 	aCtab *tab = &cFlagTab[0];
 	aCtab foundat;
 	int  found = 0;
-	int  paracount = 1;
+	unsigned int htrig = 0;
+	long oldm, oldl;
+	
+	paracount = 1;
 	*pcount = 0;
+
+	oldm = chptr->mode.mode;
+	oldl = chptr->mode.limit;
+
 	for (curchr = parv[0]; *curchr; curchr++)
 	{
 		switch (*curchr)
@@ -2239,23 +2242,43 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
 				      me.name, cptr->name, *curchr);
 				  break;
 			  }
+
+#ifndef NO_OPEROVERRIDE
+                          if ((Halfop_mode(modetype) == FALSE) && opermode == 2 && htrig != 1)
+                          {
+				opermode = 0;
+				htrig = 1;
+                          }
+#endif
+
 			  /* We can afford to send off a param */
-			  if (parc - paracount >= 1)
-			  {
-			  	param = parv[paracount];
-			  }
-			  else
-			  	param = NULL;
-			  
-			  if (param && ((strlen(param) >= MODEBUFLEN)))
-				  param[MODEBUFLEN - 1] = '\0';
+			  if (parc <= paracount)
+			  	parv[paracount] = NULL;
+			  if (parv[paracount] &&
+			      strlen(parv[paracount]) >= MODEBUFLEN)
+			        parv[paracount][MODEBUFLEN-1] = '\0';
 			  paracount +=
 			      do_mode_char(chptr, modetype, *curchr,
-			      param, what, cptr, pcount, pvar,
+			      parv[paracount], what, cptr, pcount, pvar,
 			      bounce);
 			  break;
 		}
 	}
+
+	make_mode_str(chptr, oldm, oldl, *pcount, pvar, modebuf, parabuf, bounce);
+
+#ifndef NO_OPEROVERRIDE
+        if (htrig == 1)
+        {
+                /* This is horrible. Just horrible. */
+                if (!((modebuf[0] == '+' || modebuf[0] == '-') && modebuf[1] == '\0'))
+                sendto_snomask(SNO_EYES, "*** OperOverride -- %s (%s@%s) MODE %s %s %s",
+                      cptr->name, cptr->user->username, cptr->user->realhost,
+                      chptr->chname, modebuf, parabuf);
+                htrig = 0;
+        }
+#endif
+
 }
 
 int  DoesOp(char *modebuf)
@@ -2421,33 +2444,6 @@ static int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, ch
 
 	return 0;
 }
-
-/* Sends notices to +e's about opers possibly abusing priv's
- * By NiQuiL (niquil@programmer.net)
- * suggestion by -ins4ne-
- */
-
-void over_notice(aClient *cptr, aClient *sptr, aChannel *chptr, char *key)
-{
-	Link *lp;
-
-	for (lp = sptr->user->invited; lp; lp = lp->next)
-	 if (lp->value.chptr == chptr)
-	  break;
-
-	if (is_banned(cptr, sptr, chptr) && IsOper(sptr) && !IsULine(sptr))
-	{
-		sendto_snomask(SNO_EYES, "*** Banwalk [IRCop: %s] [Channel: %s]",sptr->name,chptr->chname);
-	} else if (IsOper(sptr) && !IsULine(sptr) && *chptr->mode.key && (BadPtr(key) || 
-            mycmp(chptr->mode.key, key))) {
-		sendto_snomask(SNO_EYES, "*** Keywalk [IRCop: %s] [Channel: %s]",sptr->name,chptr->chname);
-	} else if (IsOper(sptr) && !IsULine(sptr) && (chptr->mode.mode & MODE_INVITEONLY) && !lp) {
-		sendto_snomask(SNO_EYES, "*** Invitewalk [IRCop: %s] [Channel: %s]",sptr->name,chptr->chname);
-	}
-
-}
-
-
 
 /*
 ** Remove bells and commas from channel name
@@ -3074,7 +3070,6 @@ CMD_FUNC(m_join)
 		/*
 		   **  Complete user entry to the new channel (if any)
 		 */
-		(void)over_notice(cptr, sptr, chptr, key);
 		add_user_to_channel(chptr, sptr, flags);
 		/*
 		   ** notify all other users on the new channel
@@ -3477,10 +3472,9 @@ CMD_FUNC(m_kick)
 					    && is_chan_op(who, chptr)))
 					{
 						sendto_snomask(SNO_EYES,
-						    "*** OperKick [%s @ %s -> %s (%s)]",
-						    sptr->name,
-						    chptr->chname,
-						    who->name, comment);
+						    "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
+						    sptr->name, sptr->user->username, sptr->user->realhost,
+						    chptr->chname, who->name, comment);
 						goto attack;
 					}	/* is_chan_op */
 				if (is_chanprot(who, chptr)
@@ -3489,10 +3483,9 @@ CMD_FUNC(m_kick)
 					if (IsNetAdmin(sptr))
 					{	/* IRCop kicking owner/prot */
 						sendto_snomask(SNO_EYES,
-						    "*** OperKick [%s @ %s -> %s (%s)]",
-						    sptr->name,
-						    chptr->chname,
-						    who->name, comment);
+						    "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
+						    sptr->name, sptr->user->username, sptr->user->realhost,
+						    chptr->chname, who->name, comment);
 						goto attack;
 					}
 					else if (!IsULine(sptr)
@@ -3708,8 +3701,9 @@ CMD_FUNC(m_topic)
 				return 0;
 #endif
 				sendto_snomask(SNO_EYES,
-				    "*** OperTopic [IRCop: %s] - [Channel: %s] - [Topic: %s]",
-				    sptr->name, chptr->chname, topic);
+				    "*** OperOverride -- %s (%s@%s) TOPIC %s \'%s\'",
+				    sptr->name, sptr->user->username, sptr->user->realhost,
+				    chptr->chname, topic);
 			}
 			/* setting a topic */
 			topiClen = strlen(topic);
@@ -3885,9 +3879,6 @@ void send_list(aClient *cptr, int numsend)
 	aChannel *chptr;
 	LOpts *lopt = cptr->user->lopt;
 	unsigned int  hashnum;
-#ifdef LIST_SHOW_MODES
-char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
-#endif
 
 	for (hashnum = lopt->starthash; hashnum < CH_MAX; hashnum++)
 	{
@@ -3934,12 +3925,12 @@ char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
 				    lopt->yeslist, chptr->topic)))
 					continue;
 #ifdef LIST_SHOW_MODES
-				mode_buf[0] = '[';
-				channel_modes(cptr, &mode_buf[1], parabuf, chptr);
-				if (mode_buf[2] == '\0')
-					mode_buf[0] = '\0';
+				modebuf[0] = '[';
+				channel_modes(cptr, &modebuf[1], parabuf, chptr);
+				if (modebuf[2] == '\0')
+					modebuf[0] = '\0';
 				else
-					strlcat(mode_buf, "]", sizeof mode_buf);
+					strlcat(modebuf, "]", sizeof modebuf);
 #endif
 				if (!IsAnOper(cptr))
 					sendto_one(cptr,
@@ -3950,7 +3941,7 @@ char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
 					    "*", chptr->users,
 #ifdef LIST_SHOW_MODES
 					    ShowChannel(cptr, chptr) ?
-					    mode_buf : "",
+					    modebuf : "",
 #endif
 					    ShowChannel(cptr,
 					    chptr) ? (chptr->topic ?
@@ -3961,7 +3952,7 @@ char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
 					    cptr->name, chptr->chname,
 					    chptr->users,
 #ifdef LIST_SHOW_MODES
-					    mode_buf,
+					    modebuf,
 #endif					    
 					    (chptr->topic ? chptr->topic : ""));
 				numsend--;
@@ -4088,9 +4079,6 @@ CMD_FUNC(m_list)
 	TS   chantimemin, chantimemax;
 	TS   topictimemin, topictimemax;
 	Link *yeslist = NULL, *nolist = NULL;
-#ifdef LIST_SHOW_MODES
-	char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
-#endif
 
 	static char *usage[] = {
 		"   Usage: /LIST <options>",
@@ -4269,12 +4257,12 @@ CMD_FUNC(m_list)
 				  chptr = find_channel(name, NullChn);
 				  if (chptr && ShowChannel(sptr, chptr)) {
 #ifdef LIST_SHOW_MODES
-					mode_buf[0] = '[';
-					channel_modes(sptr, &mode_buf[1], parabuf, chptr);
-					if (mode_buf[2] == '\0')
-						mode_buf[0] = '\0';
+					modebuf[0] = '[';
+					channel_modes(sptr, &modebuf[1], parabuf, chptr);
+					if (modebuf[2] == '\0')
+						modebuf[0] = '\0';
 					else
-						strlcat(mode_buf, "]", sizeof mode_buf);
+						strlcat(modebuf, "]", sizeof modebuf);
 #endif
 					  sendto_one(sptr,
 					      rpl_str(RPL_LIST),
@@ -4284,7 +4272,7 @@ CMD_FUNC(m_list)
 					      chptr->users,
 #ifdef LIST_SHOW_MODES
 					      ShowChannel(sptr, chptr) ?
-					      mode_buf : "",
+					      modebuf : "",
 #endif
 					      (chptr->topic ? chptr->topic :
 					      ""));
