@@ -679,3 +679,5 @@ seen. gmtime warning still there
 - Fixed a validate_conf problem found by Janos
 - Fixed some minor invalid numeric stuff
 - Fixed problem with MAXCONNECTIONS when no parameters given in ./configure
+- Fixed some possible points of confusion with hash.c regarding unsigned int
+  & signed int

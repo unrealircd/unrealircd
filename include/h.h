@@ -318,7 +318,7 @@ extern int hash_check_notify(aClient *, int);
 extern int hash_del_notify_list(aClient *);
 extern void count_watch_memory(int *, u_long *);
 extern aNotify *hash_get_notify(char *);
-extern aChannel *hash_get_chan_bucket(int);
+extern aChannel *hash_get_chan_bucket(unsigned int);
 extern aClient *hash_find_client(char *, aClient *);
 extern aClient *hash_find_nickserver(char *, aClient *);
 extern aClient *hash_find_server(char *, aClient *);

@@ -118,7 +118,7 @@ unsigned hash_nick_name(nname)
  * range. There is little or no point hashing on a full channel name
  * which maybe 255 chars long.
  */
-int  hash_channel_name(char *name)
+unsigned int  hash_channel_name(char *name)
 {
 	unsigned char *hname = (unsigned char *)name;
 	unsigned int hash = 0;
@@ -186,7 +186,7 @@ void clear_notify_hash_table(void)
  */
 int  add_to_client_hash_table(char *name, aClient *cptr)
 {
-	int  hashv;
+	unsigned int  hashv;
 
 	hashv = hash_nick_name(name);
 	cptr->hnext = (aClient *)clientTable[hashv].list;
@@ -200,7 +200,7 @@ int  add_to_client_hash_table(char *name, aClient *cptr)
  */
 int  add_to_channel_hash_table(char *name, aChannel *chptr)
 {
-	int  hashv;
+	unsigned int  hashv;
 
 	hashv = hash_channel_name(name);
 	chptr->hnextch = (aChannel *)channelTable[hashv].list;
@@ -215,7 +215,7 @@ int  add_to_channel_hash_table(char *name, aChannel *chptr)
 int  del_from_client_hash_table(char *name, aClient *cptr)
 {
 	aClient *tmp, *prev = NULL;
-	int  hashv;
+	unsigned int  hashv;
 
 	hashv = hash_nick_name(name);
 	for (tmp = (aClient *)clientTable[hashv].list; tmp; tmp = tmp->hnext)
@@ -249,7 +249,7 @@ int  del_from_client_hash_table(char *name, aClient *cptr)
 int  del_from_channel_hash_table(char *name, aChannel *chptr)
 {
 	aChannel *tmp, *prev = NULL;
-	int  hashv;
+	unsigned int  hashv;
 
 	hashv = hash_channel_name(name);
 	for (tmp = (aChannel *)channelTable[hashv].list; tmp;
@@ -282,7 +282,7 @@ aClient *hash_find_client(char *name, aClient *cptr)
 {
 	aClient *tmp;
 	aHashEntry *tmp3;
-	int  hashv;
+	unsigned int  hashv;
 
 	hashv = hash_nick_name(name);
 	tmp3 = &clientTable[hashv];
@@ -317,7 +317,7 @@ aClient *hash_find_nickserver(char *name, aClient *cptr)
 {
 	aClient *tmp;
 	aHashEntry *tmp3;
-	int  hashv;
+	unsigned int  hashv;
 	char *serv;
 
 	serv = (char *)strchr(name, '@');
@@ -350,7 +350,7 @@ aClient *hash_find_server(char *server, aClient *cptr)
 #endif
 	aHashEntry *tmp3;
 
-	int  hashv;
+	unsigned int  hashv;
 
 	hashv = hash_nick_name(server);
 	tmp3 = &clientTable[hashv];
@@ -409,7 +409,7 @@ aClient *hash_find_server(char *server, aClient *cptr)
  */
 aChannel *hash_find_channel(char *name, aChannel *chptr)
 {
-	int  hashv;
+	unsigned int  hashv;
 	aChannel *tmp;
 	aHashEntry *tmp3;
 
@@ -441,7 +441,7 @@ int  m_hash(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 
 aChannel *hash_get_chan_bucket(hashv)
-	int  hashv;
+	unsigned int  hashv;
 {
 	if (hashv > CH_MAX)
 		return NULL;
@@ -497,7 +497,7 @@ int  add_to_notify_hash_table(nick, cptr)
 	char *nick;
 	aClient *cptr;
 {
-	int  hashv;
+	unsigned int  hashv;
 	aNotify *anptr;
 	Link *lp;
 
@@ -553,7 +553,7 @@ int  hash_check_notify(cptr, reply)
 	aClient *cptr;
 	int  reply;
 {
-	int  hashv;
+	unsigned int  hashv;
 	aNotify *anptr;
 	Link *lp;
 
@@ -589,7 +589,7 @@ int  hash_check_notify(cptr, reply)
 aNotify *hash_get_notify(name)
 	char *name;
 {
-	int  hashv;
+	unsigned int  hashv;
 	aNotify *anptr;
 
 
@@ -609,7 +609,7 @@ int  del_from_notify_hash_table(nick, cptr)
 	char *nick;
 	aClient *cptr;
 {
-	int  hashv;
+	unsigned int  hashv;
 	aNotify *anptr, *nlast = NULL;
 	Link *lp, *last = NULL;
 
@@ -694,7 +694,7 @@ int  del_from_notify_hash_table(nick, cptr)
 int  hash_del_notify_list(cptr)
 	aClient *cptr;
 {
-	int  hashv;
+	unsigned int  hashv;
 	aNotify *anptr;
 	Link *np, *lp, *last;
 
