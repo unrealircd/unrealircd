@@ -10,5 +10,9 @@ unreal-support@lists.sourceforge.net or ask at IRC:
 
 For any sake, read Unreal.nfo and read doc/faq before asking questions
 
-Press Escape now if you want to abort the setup, or press Enter
-to continue.
+NOTE: If the code is changed in any way, or the version string is changed, 
+      we do _NOT_ support the product, except if you got explicit permission
+      from one of the UnrealIRCd coders. If it fails and you messed with it, 
+      you can't blame noone but yourself. Also, non-official UnrealIRCd/32 
+      builds (if it doesn't say "geniune" in the display) are _NOT_
+      supported.

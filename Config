@@ -96,13 +96,11 @@ fi
 
 clear
 
-if [ "$LAST_VERSION" != "$IRCD_VERSION" ] ; then
     if [ -r .CHANGES.NEW ] ; then
         more .CHANGES.NEW
         echo $n "[Enter to begin]"
         read cc
     fi
-fi
 
 if [ "$1" = "-n" ] ; then
     if [ "$LAST_VERSION" != "$IRCD_VERSION" ] ; then
