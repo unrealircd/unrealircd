@@ -1300,6 +1300,8 @@ tld {
 	motd &lt;motd-fájl&gt;;
 	rules &lt;rules-fájl&gt;;
 	shortmotd &lt;rövid-motd-fájl&gt;;
+	opermotd &lt;oper-motd-fájl&gt;;
+	botmotd &lt;bot-motd-fájl&gt;;
 	channel &lt;csatornanév&gt;;
 	options {
 		ssl;
@@ -1308,11 +1310,12 @@ tld {
 <p>A tld blokkal motd-ket, szabályokat és egy csatornát rendelhetsz felhasználókhoz
   a hostjaik alapján. Ez hasznos, ha különbözõ motd-t szeretnél különbözõ nyelvekhez.
   A <b>tld::mask</b> egy user@host maszk, amire a felhasználó usernevének és hostnevének
-  illenie kell. A <b>tld::motd</b>, a <b>tld::shortmotd</b> és a <b>tld::rules</b> rendre
-  azokat az motd, shortmotd és rules fájlokat határozzák meg, amelyek erre a hostmaszkra vonatkoznak.
-  A tld::shortmotd szabadon választható. A <b>tld::channel</b> szintén, ez utóbbival egy olyan csatornanevet
-  határozhatsz meg, ahová a felhasználó kapcsolódáskor lesz beléptetve. Ha ez meg van adva,
-  felülbírálja az alapértelmezett auto join csatornát.
+  illenie kell. A <b>tld::motd</b>, a <b>tld::shortmotd</b>, a <b>tld::opermotd</b>,
+  a <b>tld::botmotd</b> és a <b>tld::rules</b> rendre azokat az motd, rövid motd, opermotd,
+  botmotd valamint rules fájlokat határozzák meg, amelyek erre a hostmaszkra vonatkoznak.
+  A tld::shortmotd, a tld::opermotd és a tld::botmotd szabadon választható. A <b>tld::channel</b>
+  szintén, ez utóbbival egy olyan csatornanevet határozhatsz meg, ahová a felhasználó kapcsolódáskor
+  lesz beléptetve. Ha ez meg van adva, felülbírálja az alapértelmezett auto join csatornát.
   A <b>tld::options</b> blokkal további követelményeket állíthatsz be;
   jelenleg csak a tld::options::ssl, ami a fájlokat csak SSL felhasználóknak jeleníti meg, és a
   tld::options::remote, ami a fájlokat csak távoli felhasználóknak jeleníti meg, állnak rendelkezésre.</p>
