@@ -1825,7 +1825,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	{
 		/* Ugly halfop hack --sts 
 		   - this allows halfops to do +b +e +v and so on */
-		if (Halfop_mode(modetype) == FALSE)
+		/* (Syzop/20040413: Allow remote halfop modes */
+		if ((Halfop_mode(modetype) == FALSE) && MyClient(cptr))
 		{
 			int eaten = 0;
 			while (tab->mode != 0x0)

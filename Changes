@@ -3086,3 +3086,5 @@ seen. gmtime warning still there
   just to be sure... (#0001724).
 - Updated server<->server code for MODE so operoverride bug #0001704 and other
   feature requests can be fixed/added in the future (3.2.1).
+- Fixed /who +m bug for opers, reported by Bugz (#0001715).
+- Fixed halfop mode code to not check remote halfop modes (desynch danger).
