@@ -125,6 +125,14 @@
 #undef NO_OPEROVERRIDE
 
 /*
+ * OPEROVERRIDE_VERIFY
+ *   This will prompt opers before permitting them to join +s/+p
+ *   channels, preventing them from "accidentally" joining random
+ *   channels
+ */
+#define OPEROVERRIDE_VERIFY 1
+
+/*
  * Disable /sethost, /setident, /chgname, /chghost, /chgident 
 */
 #undef DISABLE_USERMOD

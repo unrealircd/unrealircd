@@ -3867,7 +3867,11 @@ int  m_invite(cptr, sptr, parc, parv)
 	else
 		return 0;
 	
+#ifdef ENABLE_INVISOPER
+	if (over == 1 && !IsHiding(sptr))
+#else
 	if (over == 1)
+#endif
 		sendto_channelops_butone(NULL, &me, chptr,
 		  ":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
 	  	  me.name, chptr->chname, sptr->name);

@@ -591,3 +591,22 @@ Temp removed +q/+a prefixes to give client coders
 chance to implement PREFIX= sanely
 --Luke
 ===================================
+
+Added a nice little win32 fix to cloak.c to stop snprintf
+from breaking things all over the place
+--Luke
+===================================
+
+Fixed win32 settings.h for the few who actually recompile
+their own win32 version.
+--Luke
+===================================
+
+Minor issue with +I and new invite system resolved.
+We should remove +I altogether...
+--Luke
+===================================
+
+Rmed a bunch of files in doc/ redid some other documentation.
+--Luke
+===================================

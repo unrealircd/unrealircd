@@ -33,6 +33,11 @@ static char sccxid[] = "@(#)cloak.c		9.00 7/12/99 UnrealIRCd";
 #include <string.h>
 #include "h.h"
 
+/* crack fix for win32 compiling */
+#ifdef _WIN32
+#define snprintf _snprintf
+#endif
+
 #undef KEY
 #undef KEY2
 #undef KEY3

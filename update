@@ -21,13 +21,13 @@ TMP=`which wget`
 TMP2=`echo $TMP | cut -c1`
 
 if [ "$TMP2" == "/" ] ; then
-	wget http://unreal.tspre.org/update.sh
+	wget http://update.unrealircd.com/update.sh
 else
 	echo "wget not found trying lynx"
-	lynx -source http://unreal.tspre.org/update.sh > update.sh
+	lynx -source http://update.unrealircd.com/update.sh > update.sh
 fi
 else
-	lynx -source http://unreal.tspre.org/update.sh > update.sh
+	lynx -source http://update.unrealircd.com/update.sh > update.sh
 fi
 
 chmod +x update.sh

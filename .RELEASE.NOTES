@@ -9,10 +9,17 @@ Unreal3.1.4-Meadows Release Notes
   and operate okay, but the differences in cloaking will make it easier for
   individuals to evade bans by simply switching servers.
 
-* Also, before this version if a 3.2 server with IPv6 enabled was linked to the
+* Before this version if a 3.2 server with IPv6 enabled was linked to the
   network, and a client connected using IPv6, it caused 3.1.x servers to segfault,
   as the cloaking routine was unable to deal with IPv6 format addresses. This is
   also corrected in this version
+
+* Other serious bugs involving the mode system have been resolved. These problems
+  include problems that could potentially generate a desynch on the network. This is
+  yet another reason you should use all 3.1.4 servers.
+
+* The OperOverride system is completely redone. You must now invite yourself (as an
+  oper) into a channel in order to walk any modes on join.
 
 * Please Note: There have been a couple of configuration file changes! This is
   IMPORTANT. Your IRCd WILL NOT START if you don't change the cloak key values found
@@ -28,3 +35,5 @@ Unreal3.1.4-Meadows Release Notes
 * The rest of the changes can be found (obviously) in the Changes file.
 
 * Finally, read Unreal.nfo as usual AND THE DOCS in doc/.
+
+- Luke (luke@unrealircd.com)
