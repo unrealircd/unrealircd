@@ -2354,15 +2354,26 @@ void over_notice(aClient *cptr, aClient *sptr, aChannel *chptr, char *key)
         {
                 sendto_umode(UMODE_EYES, "*** OperOverride -- %s (%s@%s) BANWALK %s",sptr->name,
 				sptr->user->username, sptr->user->realhost, chptr->chname);
-        } else if (IsOper(sptr) && !IsULine(sptr) && *chptr->mode.key && (BadPtr(key) ||
+        } 
+	else if (IsOper(sptr) && !IsULine(sptr) && *chptr->mode.key && (BadPtr(key) ||
             mycmp(chptr->mode.key, key))) {
                 sendto_umode(UMODE_EYES, "*** OperOverride -- %s (%s@%s) KEYWALK %s",sptr->name,
 				sptr->user->username, sptr->user->realhost, chptr->chname);
-        } else if (IsOper(sptr) && !IsULine(sptr) && (chptr->mode.mode & MODE_INVITEONLY) && !lp) {
+        }
+	else if (IsOper(sptr) && !IsULine(sptr) && (chptr->mode.mode & MODE_INVITEONLY) && !lp) {
                 sendto_umode(UMODE_EYES, "*** OperOverride -- %s (%s@%s) INVITEWALK %s",sptr->name,
 				sptr->user->username, sptr->user->realhost, chptr->chname);
         }
-
+	else if (IsOper(sptr) && !IsUline(sptr) && (chptr->mode.mode & MODE_RGSTRONLY) &&
+	     !IsARegNick(sptr)) {
+		sendto_umode(UMODE_EYES, "*** OperOverride -- %s (%s@%s) REGNICKWALK %s",sptr->name,
+				sptr->user->username, sptr->user->realhost, chptr->chname);
+	}
+	else if (IsOper(sptr) && !IsUline(sptr) && (chptr->mode.limit && chptr->users >= chptr->mode.limit))
+	{
+		sendto_umode(UMODE_EYES, "*** OperOverride -- %s (%s@%s) LIMITWALK %s",sptr->name,
+				sptr->user->username, sptr->user->realhost, chptr->chname);
+	}
 }
 
 /*
