@@ -1319,6 +1319,10 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		{
 			allow->ip = strdup(cep->ce_vardata);
 		} else
+		if (!strcmp(cep->ce_varname, "maxperip"))
+		{
+			allow->maxperip = atoi(cep->ce_vardata);
+		} else
 		if (!strcmp(cep->ce_varname, "hostname"))
 		{
 			allow->hostname = strdup(cep->ce_vardata);
@@ -2096,7 +2100,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 {
 	ConfigItem_allow *aconf;
 	char *hname;
-	int  i;
+	int  i, ii = 0;
 	static char uhost[HOSTLEN + USERLEN + 3];
 	static char fullname[HOSTLEN + 1];
 
@@ -2143,12 +2147,21 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 			cptr->flags |= FLAGS_DOID;
 		get_sockhost(cptr, uhost);
 		/* FIXME */
-		if (aconf->password && !strcmp(aconf->password, "ONE"))
+		if (aconf->maxperip)
 		{
+			ii = 1;
 			for (i = highest_fd; i >= 0; i--)
 				if (local[i] && MyClient(local[i]) &&
 				    local[i]->ip.S_ADDR == cptr->ip.S_ADDR)
-					return -1;	/* Already got one with that ip# */
+				{
+					ii++;
+					if (ii > aconf->maxperip)
+					{
+						exit_client(cptr, cptr, &me,
+							"Too many connections from your IP");
+						return -5;	/* Already got one with that ip# */
+					}
+				}
 		}
 		/* TODO: I:line pwds */
 		/* if no password, and no password given, ok */

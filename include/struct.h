@@ -990,6 +990,7 @@ struct _configitem_allow {
 	char	         *ip;
 	char	   	 *hostname;
 	char		 *password;
+	short		 maxperip;
 	ConfigItem_class *class;
 };
 
