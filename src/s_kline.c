@@ -227,8 +227,8 @@ EVENT(tkl_check_expire)
 
 
 /*
-	returns -1 if no tkline found
-	returns >= 0 if client exits
+	returns <0 if client exists (banned)
+	returns 1 if it is excepted
 */
 
 int  find_tkline_match(aClient *cptr, int xx)
@@ -265,14 +265,14 @@ int  find_tkline_match(aClient *cptr, int xx)
 	}
 
 	if (points != 1)
-		return -1;
+		return 1;
 	strcpy(host, make_user_host(cname, chost));
 	strcpy(host2, make_user_host(cname, cip));
 	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
 		if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != lp->type)
 			continue;
 		if (!match(excepts->mask, host) || !match(excepts->mask, host2))
-			return -1;		
+			return 1;		
 	}
 	
 	if ((lp->type & TKL_KILL) && (xx != 2))
@@ -317,14 +317,14 @@ int  find_tkline_match(aClient *cptr, int xx)
 	if (lp->type & (TKL_SHUN))
 	{
 		if (IsShunned(cptr))
-			return -1;
+			return 1;
 		if (IsAdmin(cptr))
-			return -1;
+			return 1;
 		SetShunned(cptr);
-		return -1;
+		return 2;
 	}
 
-	return -1;
+	return 3;
 }
 
 int  find_tkline_match_zap(aClient *cptr)
@@ -369,22 +369,6 @@ int  find_tkline_match_zap(aClient *cptr)
 		}
 	}
 	return -1;
-}
-
-
-int  tkl_sweep(void)
-{
-	/* just sweeps local for people that should be killed */
-	aClient *acptr;
-	long i;
-
-	tkl_check_expire(NULL);
-	for (i = 0; i <= (MAXCONNECTIONS - 1); i++)
-	{
-		if ((acptr = local[i]))
-			find_tkline_match(acptr, 0);
-	}
-	return 1;
 }
 
 
@@ -597,7 +581,8 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			      (LOG_TKL, "Permanent %s added for %s@%s on %s GMT (from %s: %s)",
 			      txt, parv[3], parv[4], gmt, parv[5], parv[8]);
 		  }
-		  loop.do_tkl_sweep = 1;
+		  loop.do_bancheck = 1;
+		  /* Makes check_pings be run ^^  */
 		  if (type & TKL_GLOBAL)
 		  {
 			  sendto_serv_butone(cptr,

@@ -211,7 +211,6 @@ DLLFUNC int m_akill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_serv_butone(cptr, ":%s AKILL %s %s",
 		    IsServer(cptr) ? parv[0] : me.name, hostmask, usermask);
 
-
-	check_pings(TStime(), 1);
+	loop.do_bancheck = 1;
 	return 0;
 }

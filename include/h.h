@@ -45,7 +45,7 @@ extern struct stats *ircstp;
 extern int bootopt;
 extern time_t TSoffset;
 /* Prototype added to force errors -- Barubary */
-extern TS check_pings(TS now, int check_kills);
+extern TS check_pings(TS now);
 extern TS TS2ts(char *s);
 extern time_t timeofday;
 /* newconf */

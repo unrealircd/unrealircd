@@ -171,7 +171,6 @@ TS   nextconnect = 1;		/* time for next try_connections call */
 TS   nextping = 1;		/* same as above for check_pings() */
 TS   nextdnscheck = 0;		/* next time to poll dns to force timeouts */
 TS   nextexpire = 1;		/* next expire run on the dns cache */
-TS   nextkillcheck = 1;		/* next time to check for nickserv kills */
 TS   lastlucheck = 0;
 
 #ifdef UNREAL_DEBUG
@@ -363,11 +362,6 @@ char *areason;
 
 EVENT(loop_event)
 {
-	if (loop.do_tkl_sweep)
-	{
-		tkl_sweep();
-		loop.do_tkl_sweep = 0;
-	}
 	if (loop.do_garbage_collect == 1)
 	{
 		garbage_collect(NULL);			
@@ -483,13 +477,17 @@ static TS try_connections(TS currenttime)
    AKILL/RAKILL/KLINE/UNKLINE/REHASH.  Very significant CPU usage decrease.
    -- Barubary */
 
-extern TS check_pings(TS currenttime, int check_kills)
+
+
+extern TS check_pings(TS currenttime)
 {
-	aClient *cptr;
+	aClient *cptr = NULL;
 	ConfigItem_ban *bconf = NULL;
-	int  ping = 0, killflag = 0, i = 0;
-	TS   oldest = 0;
-	static char banbuf[1024];
+	char	killflag = 0;
+	int 	i = 0;
+	char	banbuf[1024];
+	TS	ping;
+	TS   	oldest = 0;
 
 	for (i = 0; i <= LastSlot; i++)
 	{
@@ -506,165 +504,164 @@ extern TS check_pings(TS currenttime, int check_kills)
 			(void)exit_client(cptr, cptr, &me, "Dead socket");
 			continue;
 		}
-		bconf = NULL;
-		if (check_kills)
-		{
-			if (IsPerson(cptr))
-			{
-				bconf =
-				    Find_ban(make_user_host(cptr->
-				    user ? cptr->user->username : cptr->
-				    username,
-				    cptr->user ? cptr->user->realhost : cptr->
-				    sockhost), CONF_BAN_USER);
-				if (bconf)
-					killflag = 1;
-				else
-					killflag = 0;
-			}
-		}
-		else
-			killflag = 0;
-
-		if (check_kills && !killflag && IsPerson(cptr))
-		{
-			if ((bconf =
-			    Find_ban(inetntoa((char *)&cptr->ip), CONF_BAN_IP)))
-			{
-				killflag = 1;
-			} 
-			if (bconf)
-				killflag = 1;
+		killflag = 0;
+		/*
+		 * Check if user is banned
+		*/	
+		if (loop.do_bancheck)
+		{	
 			if (find_tkline_match(cptr, 0) < 0)
 			{
+				/* Client exited */
 				continue;
 			}
-			if (!IsAnOper(cptr)
-			    && (bconf =
-			    Find_ban(cptr->info, CONF_BAN_REALNAME)))
+			if (!killflag && IsPerson(cptr))
 			{
-				killflag = 1;
-			}
-		}
-		if (killflag)
-		{
-			if (IsPerson(cptr))
-			{
-				sendto_realops
-				    ("Kill line active for %s (%s)",
-				    get_client_name(cptr, FALSE),
-				    bconf ?
-				    bconf->
-				    reason ? bconf->reason : "no reason" :
-				    "no reason");
-				if (bconf && bconf->reason)
+				/* 
+				 * If it's a user, we check for CONF_BAN_USER
+				*/
+				bconf =
+				    Find_ban(make_user_host(cptr->
+					    user ? cptr->user->username : cptr->
+					    username,
+					    cptr->user ? cptr->user->realhost : cptr->
+						    sockhost), CONF_BAN_USER);
+				if (bconf)
+					killflag++;
+			
+				if (!killflag && !IsAnOper(cptr) && 
+					(bconf = Find_ban(cptr->info, CONF_BAN_REALNAME)))
 				{
-					ircsprintf(banbuf,
-					    "User has been banned (%s)",
-					    bconf->reason);
-					(void)exit_client(cptr, cptr, &me,
-					    banbuf);
+					killflag++;
+				}
+
+			}
+			/* If no cookie, we search for Z:lines*/
+			if (!killflag)
+				if ((bconf =
+					Find_ban(Inet_ia2p(&cptr->ip), CONF_BAN_IP)))
+					killflag++;
+			if (killflag)
+			{
+				if (IsPerson(cptr))
+					sendto_realops("Ban active for %s (%s)",
+						get_client_name(cptr, FALSE),
+						bconf->reason ? bconf->reason  : "no reason");
+			
+				if (IsServer(cptr))
+					sendto_realops("Ban active for server %s (%s)",
+						get_client_name(cptr, FALSE),
+						bconf->reason ? bconf->reason : "no reason");
+				if (bconf->reason)
+				{
+					if (IsPerson(cptr))
+						snprintf(banbuf, sizeof banbuf - 1, "User has been banned (%s)",
+							bconf->reason);
+					snprintf(banbuf, sizeof banbuf - 1, "Banned (%s)",
+						bconf->reason);
+					(void)exit_client(cptr, cptr, &me, banbuf);
 				}
 				else
-				{
-					(void)exit_client(cptr, cptr, &me,
-					    "User has been banned");
+				{	
+					if (IsPerson(cptr))
+						(void)exit_client(cptr, cptr, &me, "User has been banned");
+					else
+						(void)exit_client(cptr, cptr, &me, "Banned");
 				}
 			}
 			else
 			{
-				exit_client(cptr, cptr, &me, "Banned");
-			}
-			continue;
-		}
-		/* If we go here, its a ping timeout */
-		ping =
-		    IsRegistered(cptr) ? (cptr->class ? cptr->
-		    class->pingfreq : CONNECTTIMEOUT) : CONNECTTIMEOUT;
-		Debug((DEBUG_DEBUG, "c(%s)=%d p %d k %d a %d", cptr->name,
-		    cptr->status, ping, killflag,
-		    currenttime - cptr->lasttime));
-		if (ping < (currenttime - cptr->lasttime))
-		{
-			if (((cptr->flags & FLAGS_PINGSENT)
-			    && ((currenttime - cptr->lasttime) >= (2 * ping)))
-			    || ((!IsRegistered(cptr)
-			    && (currenttime - cptr->since) >= ping)))
-
-			{
-				if (!IsRegistered(cptr) &&
-				    (DoingDNS(cptr) || DoingAuth(cptr)
-				    ))
+				/* We go into ping phase */
+				ping =
+				    IsRegistered(cptr) ? (cptr->class ? cptr->
+		   	 		class->pingfreq : CONNECTTIMEOUT) : CONNECTTIMEOUT;
+				Debug((DEBUG_DEBUG, "c(%s)=%d p %d k %d a %d", cptr->name,
+				    cptr->status, ping, killflag,
+					    currenttime - cptr->lasttime));
+				if (ping < (currenttime - cptr->lasttime))
 				{
-					if (cptr->authfd >= 0)
+					if (((cptr->flags & FLAGS_PINGSENT)
+					    && ((currenttime - cptr->lasttime) >= (2 * ping)))
+					    || ((!IsRegistered(cptr)
+					    && (currenttime - cptr->since) >= ping)))
+			
 					{
-						CLOSE_SOCK(cptr->authfd);
-						--OpenFiles;
-						cptr->authfd = -1;
-						cptr->count = 0;
-						*cptr->buffer = '\0';
+						/* One of these days you could use a 300 char terminal ..*/
+						if (!IsRegistered(cptr) &&
+						    (DoingDNS(cptr) || DoingAuth(cptr)
+						    ))
+						{
+							if (cptr->authfd >= 0)
+							{
+								CLOSE_SOCK(cptr->authfd);
+								--OpenFiles;
+								cptr->authfd = -1;
+								cptr->count = 0;
+								*cptr->buffer = '\0';
+							}
+							if (SHOWCONNECTINFO) {
+								if (DoingDNS(cptr))
+									sendto_one(cptr,
+									    REPORT_FAIL_DNS);
+								else if (DoingAuth(cptr))
+									sendto_one(cptr,
+								    REPORT_FAIL_ID);
+							}
+							Debug((DEBUG_NOTICE,
+							    "DNS/AUTH timeout %s",
+							    get_client_name(cptr, TRUE)));
+							del_queries((char *)cptr);
+							    ClearAuth(cptr);
+							ClearDNS(cptr);
+							SetAccess(cptr);
+							cptr->firsttime = currenttime;
+							cptr->lasttime = currenttime;
+							continue;
+						}
+						if (IsServer(cptr) || IsConnecting(cptr) ||
+				    			IsHandshake(cptr))
+						{
+							sendto_realops
+							    ("No response from %s, closing link",
+							    get_client_name(cptr, FALSE));
+							sendto_serv_butone(&me,
+							    ":%s GLOBOPS :No response from %s, closing link",
+							    me.name, get_client_name(cptr,
+							    FALSE));
+						}
+						exit_client(cptr, cptr, &me, "Ping timeout");
+						continue;
 					}
-					if (SHOWCONNECTINFO) {
-						if (DoingDNS(cptr))
-							sendto_one(cptr,
-							    REPORT_FAIL_DNS);
-						else if (DoingAuth(cptr))
-							sendto_one(cptr,
-							    REPORT_FAIL_ID);
+					else if (IsRegistered(cptr) &&
+					    ((cptr->flags & FLAGS_PINGSENT) == 0))
+					{
+						/*
+						 * if we havent PINGed the connection and we havent
+						 * heard from it in a while, PING it to make sure
+						 * it is still alive.
+						 */
+						cptr->flags |= FLAGS_PINGSENT;
+						/* not nice but does the job */
+						cptr->lasttime = currenttime - ping;
+						sendto_one(cptr, "%s :%s",
+						    IsToken(cptr) ? TOK_PING : MSG_PING,
+						    me.name);
 					}
-					Debug((DEBUG_NOTICE,
-					    "DNS/AUTH timeout %s",
-					    get_client_name(cptr, TRUE)));
-					del_queries((char *)cptr);
-					    ClearAuth(cptr);
-					ClearDNS(cptr);
-					SetAccess(cptr);
-					cptr->firsttime = currenttime;
-					cptr->lasttime = currenttime;
-					continue;
-				}
-				if (IsServer(cptr) || IsConnecting(cptr) ||
-				    IsHandshake(cptr))
-				{
-					sendto_realops
-					    ("No response from %s, closing link",
-					    get_client_name(cptr, FALSE));
-					sendto_serv_butone(&me,
-					    ":%s GLOBOPS :No response from %s, closing link",
-					    me.name, get_client_name(cptr,
-					    FALSE));
-				}
-				exit_client(cptr, cptr, &me, "Ping timeout");
-				continue;
-			}
-			else if (IsRegistered(cptr) &&
-			    ((cptr->flags & FLAGS_PINGSENT) == 0))
-			{
+				}	
+
 				/*
-				 * if we havent PINGed the connection and we havent
-				 * heard from it in a while, PING it to make sure
-				 * it is still alive.
+		 		* Check UNKNOWN connections - if they have been in this state
+				* for > 100s, close them.
 				 */
-				cptr->flags |= FLAGS_PINGSENT;
-				/* not nice but does the job */
-				cptr->lasttime = currenttime - ping;
-				sendto_one(cptr, "%s :%s",
-				    IsToken(cptr) ? TOK_PING : MSG_PING,
-				    me.name);
+				if (IsUnknown(cptr))
+					if (cptr->firsttime ? ((TStime() - cptr->firsttime) >
+					    100) : 0)
+						(void)exit_client(cptr, cptr, &me,
+						    "Connection Timed Out");
+				
 			}
 		}
-
-		/*
-		 * Check UNKNOWN connections - if they have been in this state
-		 * for > 100s, close them.
-		 */
-		if (IsUnknown(cptr))
-			if (cptr->firsttime ? ((TStime() - cptr->firsttime) >
-			    100) : 0)
-				(void)exit_client(cptr, cptr, &me,
-				    "Connection Timed Out");
 	}
-
 	/* EXPLANATION
 	 * on a server with a large volume of clients, at any given point
 	 * there may be a client which needs to be pinged the next second,
@@ -679,7 +676,8 @@ extern TS check_pings(TS currenttime, int check_kills)
 	 * - lucas
 	 *
 	 */
-
+	if (loop.do_bancheck)
+		loop.do_bancheck = 0;
 	oldest = currenttime + 9;
 	Debug((DEBUG_NOTICE, "Next check_ping() call at: %s, %d %d %d",
 	    myctime(oldest), ping, oldest, currenttime));
@@ -1202,8 +1200,6 @@ int  InitwIRCD(int argc, char *argv[])
 #ifndef NO_FDLIST
 	check_fdlists(TStime());
 #endif
-	nextkillcheck = TStime() + (TS)1;
-	
 
 #ifdef _WIN32
 	return 1;
@@ -1221,6 +1217,9 @@ void SocketLoop(void *dummy)
 	
 	while (1)
 #else
+	/* Forever drunk .. forever drunk ..
+	 * (Sorry Alphaville.)
+	*/
 	for (;;)
 #endif
 	{
@@ -1329,11 +1328,11 @@ void SocketLoop(void *dummy)
 		   ** ping times) --msa
 		 */
 #ifdef NO_FDLIST
-		if (timeofday >= nextping)
+		if ((timeofday >= nextping) || (loop.do_bancheck))
 #else
-		if (timeofday >= nextping && !lifesux)
+		if ((timeofday >= nextping && !lifesux) || (loop.do_bancheck))
 #endif
-			nextping = check_pings(timeofday, 0);
+			nextping = check_pings(timeofday);
 		if (dorehash)
 		{
 			(void)rehash(&me, &me, 1);

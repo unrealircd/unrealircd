@@ -3695,7 +3695,8 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	listen_cleanup();
 	close_listeners();
 	run_configuration();
-	check_pings(TStime(), 1);
+	loop.do_bancheck = 1;
+	/* Check pings is done AFTERWARDS return anyhow, fuckheads. */
 	sendto_realops("Completed rehash");
 	return 0;
 }

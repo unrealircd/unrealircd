@@ -180,6 +180,8 @@ DLLFUNC int m_unkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 	/* This wasn't here before -- Barubary */
-	check_pings(TStime(), 1);
+	/* check_pings crap */
+	/* No, and it shouldn't have been, dork. It crashes the IRCd randomly. -Stskeeps */ 
+	loop.do_bancheck = 1;
 	return 0;
 }
