@@ -119,7 +119,7 @@ VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 	chdir(path);
 
 	/* Register the service controller */
-	IRCDStatusHandle = RegisterServiceCtrlHandler("unreal", IRCDCtrlHandler); 
+	IRCDStatusHandle = RegisterServiceCtrlHandler("UnrealIRCd", IRCDCtrlHandler); 
  
 	VerInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	GetVersionEx(&VerInfo);

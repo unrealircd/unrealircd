@@ -271,3 +271,7 @@
 - Added SAPART and SVSPART reasons. Note, to fully work it requires all servers to upgrade,
   and due to a bug in older versions, it could cause problems if linked to 3.2 or earlier
   (#0001859) suggested by Bugz
+- Fixed a minor issue where Unreal registered itself as an NT service incorrectly
+  (#0001950) reported by rocafella
+- Possibly fixed a bug that could cause Unreal to eat 100% CPU at startup on Windows.
+  (#0001635) reported by eggburt. Thanks to STING for helping to debug this.
