@@ -34,6 +34,7 @@ DLLFUNC int m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type);
+DLLFUNC int m_spamfilter(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_GLINE "GLINE"
@@ -43,6 +44,7 @@ DLLFUNC int m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], cha
 #define MSG_GZLINE "GZLINE"
 #define MSG_KLINE "KLINE"
 #define MSG_ZLINE "ZLINE"
+#define MSG_SPAMFILTER	"SPAMFILTER"
 #define TOK_NONE ""
 
 ModuleHeader MOD_HEADER(m_tkl)
@@ -66,6 +68,7 @@ DLLFUNC int MOD_INIT(m_tkl)(ModuleInfo *modinfo)
 	add_Command(MSG_ZLINE, TOK_NONE, m_tzline, 3);
 	add_Command(MSG_KLINE, TOK_NONE, m_tkline, 3);
 	add_Command(MSG_GZLINE, TOK_NONE, m_gzline, 3);
+/*	add_Command(MSG_SPAMFILTER, TOK_NONE, m_spamfilter, 5); Work in progress --- Syzop */
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -393,4 +396,129 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	return 0;
 }
 
+int spamfilter_usage(aClient *sptr)
+{
+	/* TODO! */
+	sendto_one(sptr, ":%s NOTICE %s :No! that's wrong!!!", me.name, sptr->name);
+	return 0;
+}
 
+DLLFUNC int m_spamfilter(aClient *cptr, aClient *sptr, int parc, char *parv[])
+{
+TS   secs;
+int  whattodo = 0;	/* 0 = add  1 = del */
+int  i;
+aClient *acptr = NULL;
+char *mask = NULL;
+char mo[1024], mo2[1024];
+char *p, *usermask, *hostmask;
+char *tkllayer[9] = {
+	me.name,	/*0  server.name */
+	NULL,		/*1  +|- */
+	"F",		/*2  F   */
+	NULL,		/*3  usermask (targets) */
+	NULL,		/*4  hostmask (action) */
+	NULL,		/*5  setby */
+	"0",		/*6  expire_at */
+	NULL,		/*7  set_at */
+	""	/*8  regex */
+};
+struct tm *t;
+int targets = 0, action = 0;
+char targetbuf[64], actionbuf[2];
+
+	if (IsServer(sptr))
+		return 0;
+
+	if (!OPCanTKL(sptr) || !IsOper(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+		sptr->name);
+		return 0;
+	}
+
+	if (parc == 1)
+	{
+		/* TODO: stats */
+		return 0;
+	}
+	if ((parc < 5) || BadPtr(parv[4]))
+		return spamfilter_usage(sptr);
+
+	/* parv[1]: [add|del|+|-]
+	 * parv[2]: type
+	 * parv[3]: action
+	 * parv[4]: regex
+	 */
+	if (!strcmp(parv[1], "add") || !strcmp(parv[1], "+"))
+		whattodo = 0;
+	else if (!strcmp(parv[1], "del") || !strcmp(parv[1], "-") || !strcmp(parv[1], "remove"))
+		whattodo = 1;
+	else
+	{
+		sendto_one(sptr, ":%s NOTICE %s :1st parameter invalid", me.name, sptr->name);
+		return spamfilter_usage(sptr);
+	}
+
+	targets = spamfilter_gettargets(parv[2]);
+	/* very limited 'type' checking, TODO ? */
+	if (!targets)
+	{
+		sendto_one(sptr, ":%s NOTICE %s :Invalid 'type' field (%s)", me.name, sptr->name, parv[4]);
+		return spamfilter_usage(sptr);
+	}
+	strncpyzt(targetbuf, spamfilter_target_inttostring(targets), sizeof(targetbuf));
+
+	action = banact_stringtoval(parv[3]);
+	if (!action)
+	{
+		sendto_one(sptr, ":%s NOTICE %s :Invalid 'action' field (%s)", me.name, sptr->name, parv[3]);
+		return spamfilter_usage(sptr);
+	}
+	actionbuf[0] = banact_valtochar(action);
+	actionbuf[1] = '\0';
+	
+	/* now check the regex... */
+	p = unreal_checkregex(parv[4]);
+	if (p)
+	{
+		sendto_one(sptr, ":%s NOTICE %s :Error in regex '%s': %s",
+			me.name, sptr->name, parv[4], p);
+		return 0;
+	}
+
+	tkllayer[1] = whattodo ? "-" : "+";
+	tkllayer[3] = targetbuf;
+	tkllayer[4] = actionbuf;
+	tkllayer[5] = make_nick_user_host(sptr->name, sptr->user->username, GetHost(sptr));
+	tkllayer[8] = parv[4];
+	if (whattodo == 0)
+	{
+		if (secs == 0)
+			ircsprintf(mo, "%li", secs); /* "0" */
+		else
+			ircsprintf(mo, "%li", secs + TStime());
+		ircsprintf(mo2, "%li", TStime());
+		tkllayer[6] = mo;
+		tkllayer[7] = mo2;
+		/* Blerghhh... */
+		i = atol(mo);
+		t = gmtime((TS *)&i);
+		if (!t)
+		{
+			sendto_one(sptr,
+				":%s NOTICE %s :*** [error] The time you specified is out of range",
+				me.name, sptr->name);
+			return 0;
+		}
+		/* call the tkl layer .. */
+		m_tkl(&me, &me, 9, tkllayer);
+	}
+	else
+	{
+		/* call the tkl layer .. */
+		m_tkl(&me, &me, 6, tkllayer);
+	}
+
+	return 0;
+}

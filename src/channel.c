@@ -888,12 +888,12 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 		return (CANNOT_SEND_NOPRIVMSGS);
 
 	lp = find_membership_link(cptr->user->channel, chptr);
-	if ((chptr->mode.mode & MODE_MODREG) && !IsRegNick(cptr) && 
+	if ((chptr->mode.mode & MODE_MODREG) && !op_can_override(cptr) && !IsRegNick(cptr) && 
 	    (!lp
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 	    CHFL_HALFOP | CHFL_CHANPROT))))
 		return CANNOT_SEND_MODREG;
-	if (chptr->mode.mode & MODE_MODERATED && !IsOper(cptr) &&
+	if (chptr->mode.mode & MODE_MODERATED && !op_can_override(cptr) &&
 	    (!lp
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 	    CHFL_HALFOP | CHFL_CHANPROT))))

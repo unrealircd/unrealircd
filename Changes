@@ -2709,3 +2709,13 @@ seen. gmtime warning still there
 - Made /who +M show +i users since they are already visible (#0001489) reported by penna
 - Made /who +M take chmode +u (auditorium) into account
 - Corrected the SVSNLINE documentation in help.conf (reported by Certus)
+- internal: Ok, I'm committing this in parts... did most of the TKL spamfilter
+  integration now, no.. it doesn't work at all yet but most of the internal stuff
+  has now been done (but I temporarely need to work on other things now).
+   moved/added a lot of regex stuff, banaction/spamfilter helper functions, etc
+  into s_misc.c. [note: current code has some bugs but since the stuff isn't
+  used that's no problem... it's also a bit ugly, do NOT mail me about these things ;p]
+- Enabled talk-trough-+M for opers (just like +m)
+- Disabled talk-trough-+m/+M for opers if NO_OPEROVERRIDE is defined
+- Display zlib/SSL version in /version (oper only)... will prolly be improved later.
+- updated doc/compiling_win32.txt

@@ -771,3 +771,234 @@ char *p;
 			return 0;
 	return 1;
 }
+
+/** Checks if the specified regex (or fast badwords) is valid.
+ * returns NULL in case of success [!],
+ * pointer to buffer with error message otherwise
+ */
+char *unreal_checkregex(char *s)
+{
+int errorcode, errorbufsize, regex=0;
+char *errtmp, *tmp;
+static char errorbuf[512];
+regex_t expr;
+
+	for (tmp = s; *tmp; tmp++) {
+		if ((int)*tmp < 65 || (int)*tmp > 123) {
+			if ((s == tmp) && (*tmp == '*'))
+				continue;
+			if ((*(tmp + 1) == '\0') && (*tmp == '*'))
+				continue;
+			regex = 1;
+			break;
+		}
+	}
+	if (regex)
+	{
+		errorcode = regcomp(&expr, s, REG_ICASE|REG_EXTENDED);
+		if (errorcode > 0)
+		{
+			errorbufsize = regerror(errorcode, &expr, NULL, 0)+1;
+			errtmp = MyMalloc(errorbufsize);
+			regerror(errorcode, &expr, errtmp, errorbufsize);
+			strncpyzt(errorbuf, errtmp, sizeof(errorbuf));
+			free(errorbuf);
+			regfree(&expr);
+			return errorbuf;
+		}
+		regfree(&expr);
+	}
+	return NULL;
+}
+
+int banact_stringtoval(char *s)
+{
+	if (!strcmp(s, "kill"))
+		return BAN_ACT_KILL;
+	if (!strcmp(s, "tempshun"))
+		return BAN_ACT_TEMPSHUN;
+	if (!strcmp(s, "shun"))
+		return BAN_ACT_SHUN;
+	if (!strcmp(s, "kline"))
+		return BAN_ACT_KLINE;
+	if (!strcmp(s, "gline"))
+		return BAN_ACT_GLINE;
+	if (!strcmp(s, "zline"))
+		return BAN_ACT_ZLINE;
+	if (!strcmp(s, "gzline"))
+		return BAN_ACT_GZLINE;
+	if (!strcmp(s, "block"))
+		return BAN_ACT_BLOCK;
+	return 0;
+}
+
+#define SPF_REGEX_FLAGS (REG_ICASE|REG_EXTENDED|REG_NOSUB)
+
+/** Allocates a new Spamfilter entry and compiles/fills in the info.
+ * NOTE: originally I wanted to integrate both badwords and spamfilter
+ * into one function, but that was quickly getting ugly :(.
+ */
+Spamfilter *unreal_buildspamfilter(char *s)
+{
+Spamfilter *e = MyMallocEx(sizeof(Spamfilter));
+char *tmp;
+char regex;
+#ifdef FAST_BADWORD_REPLACE
+int ast_l = 0, ast_r = 0;
+
+	/* The fast badwords routine can do: "blah" "*blah" "blah*" and "*blah*",
+	 * in all other cases use regex.
+	 */
+	for (tmp = s; *tmp; tmp++) {
+		if ((int)*tmp < 65 || (int)*tmp > 123) {
+			if ((s == tmp) && (*tmp == '*')) {
+				ast_l = 1; /* Asterisk at the left */
+				continue;
+			}
+			if ((*(tmp + 1) == '\0') && (*tmp == '*')) {
+				ast_r = 1; /* Asterisk at the right */
+				continue;
+			}
+			regex = 1;
+			break;
+		}
+	}
+	if (regex) {
+		e->type = BADW_TYPE_REGEX;
+		regcomp(&e->expr, s, SPF_REGEX_FLAGS);
+	} else {
+		char *tmpw;
+		e->type = BADW_TYPE_FAST;
+		e->word = tmpw = MyMalloc(strlen(s) - ast_l - ast_r + 1);
+		/* Copy except for asterisks */
+		for (tmp = s; *tmp; tmp++)
+			if (*tmp != '*')
+				*tmpw++ = *tmp;
+		*tmpw = '\0';
+		if (ast_l)
+			e->type |= BADW_TYPE_FAST_L;
+		if (ast_r)
+			e->type |= BADW_TYPE_FAST_R;
+	}
+#else
+	for (tmp = s; *tmp; tmp++) {
+		if ((int)*tmp < 65 || (int)*tmp > 123) {
+			regex = 1;
+			break;
+		}
+	}
+	if (regex) {
+		e->word = strdup(s);
+	}
+	else {
+		e->word = MyMalloc(strlen(s) + strlen(PATTERN) -1);
+		ircsprintf(e->word, PATTERN, s);
+	}
+	regcomp(&e->expr, e->word, SPF_REGEX_FLAGS);
+#endif
+
+	return e;
+}
+
+int banact_chartoval(char c)
+{
+	switch(c)
+	{
+		case 'k': return BAN_ACT_KLINE;
+		case 'K': return BAN_ACT_KILL;
+		case 'S': return BAN_ACT_TEMPSHUN;
+		case 's': return BAN_ACT_SHUN;
+		case 'z': return BAN_ACT_ZLINE;
+		case 'g': return BAN_ACT_GLINE; 
+		case 'Z': return BAN_ACT_GZLINE; 
+		default: return 0;
+	}
+	return 0; /* NOTREACHED */
+}
+
+char banact_valtochar(int val)
+{
+	switch(val)
+	{
+		case BAN_ACT_KLINE: return 'k';
+		case BAN_ACT_KILL: return 'K';
+		case BAN_ACT_TEMPSHUN: return 'S';
+		case BAN_ACT_SHUN: return 's';
+		case BAN_ACT_ZLINE: return 'z';
+		case BAN_ACT_GLINE: return 'g';
+		case BAN_ACT_GZLINE: return 'Z';
+		default: return '\0';
+	}
+	return '\0'; /* NOTREACHED */
+}
+
+char *banact_valtostring(int val)
+{
+	switch(val)
+	{
+		case BAN_ACT_KLINE: return "kline";
+		case BAN_ACT_KILL: return "kill";
+		case BAN_ACT_TEMPSHUN: return "tempshun";
+		case BAN_ACT_SHUN: return "shun";
+		case BAN_ACT_ZLINE: return "zline";
+		case BAN_ACT_GLINE: return "gline";
+		case BAN_ACT_GZLINE: return "gzline";
+		default: return "UNKNOWN";
+	}
+	return "UNKNOWN"; /* NOTREACHED */
+}
+
+int spamfilter_gettarghelper(char *s)
+{
+	if (!strcmp(s, "channel"))
+		return SPAMF_CHANMSG;
+	if (!strcmp(s, "private"))
+		return SPAMF_USERMSG;
+	if (!strcmp(s, "part"))
+		return SPAMF_PART;
+	if (!strcmp(s, "quit"))
+		return SPAMF_QUIT;
+	if (!strcmp(s, "dcc"))
+		return SPAMF_DCC;
+	return 0;
+}
+
+/** Extract target flags from string 's'.
+ */
+int spamfilter_gettargets(char *s)
+{
+int flags = 0;
+
+	for (; *s; s++)
+	{
+		switch (*s)
+		{
+			case 'c': flags |= SPAMF_CHANMSG; break;
+			case 'u': flags |= SPAMF_USERMSG; break;
+			case 'p': flags |= SPAMF_PART; break;
+			case 'q': flags |= SPAMF_QUIT; break;
+			case 'd': flags |= SPAMF_DCC; break;
+			default: break;
+		}
+	}
+	return flags;
+}
+
+char *spamfilter_target_inttostring(int v)
+{
+static char buf[128];
+char *p = buf;
+
+	if (v & SPAMF_CHANMSG)
+		*p++ = 'c';
+	if (v & SPAMF_USERMSG)
+		*p++ = 'u';
+	if (v & SPAMF_PART)
+		*p++ = 'p';
+	if (v & SPAMF_QUIT)
+		*p++ = 'q';
+	if (v & SPAMF_DCC)
+		*p++ = 'd';
+	*p = '\0';
+	return buf;
+}

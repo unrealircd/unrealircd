@@ -4553,35 +4553,14 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 		}
 		else 
 		{
-			
-			int errorcode, errorbufsize, regex=0;
-			char *errorbuf, *tmp;
-			for (tmp = word->ce_vardata; *tmp; tmp++) {
-				if ((int)*tmp < 65 || (int)*tmp > 123) {
-					if ((word->ce_vardata == tmp) && (*tmp == '*'))
-						continue;
-					if ((*(tmp + 1) == '\0') && (*tmp == '*'))
-						continue;
-					regex = 1;
-					break;
-				}
-			}
-			if (regex)
+			char *errbuf = unreal_checkregex(word->ce_vardata);
+			if (errbuf)
 			{
-				errorcode = regcomp(&expr, word->ce_vardata, REG_ICASE|REG_EXTENDED);
-				if (errorcode > 0)
-				{
-					errorbufsize = regerror(errorcode, &expr, NULL, 0)+1;
-					errorbuf = MyMalloc(errorbufsize);
-					regerror(errorcode, &expr, errorbuf, errorbufsize);
-					config_error("%s:%i: badword::%s contains an invalid regex: %s",
-						word->ce_fileptr->cf_filename,
-						word->ce_varlinenum,
-						word->ce_varname, errorbuf);
-					errors++;
-					free(errorbuf);
-				}
-				regfree(&expr);
+				config_error("%s:%i: badword::%s contains an invalid regex: %s",
+					word->ce_fileptr->cf_filename,
+					word->ce_varlinenum,
+					word->ce_varname, errbuf);
+				errors++;
 			}
 		}
 
@@ -5079,23 +5058,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 	ca->reason = strdup(cep->ce_vardata);
 	cep = config_find_entry(ce->ce_entries, "action");
 	if (cep)
-	{
-		if (!strcmp(cep->ce_vardata, "kill"))
-			ca->action = BAN_ACT_KILL;
-		else if (!strcmp(cep->ce_vardata, "tempshun"))
-			ca->action = BAN_ACT_TEMPSHUN;
-		else if (!strcmp(cep->ce_vardata, "shun"))
-			ca->action = BAN_ACT_SHUN;
-		else if (!strcmp(cep->ce_vardata, "kline"))
-			ca->action = BAN_ACT_KLINE;
-		else if (!strcmp(cep->ce_vardata, "zline"))
-			ca->action = BAN_ACT_ZLINE;
-		else if (!strcmp(cep->ce_vardata, "gline"))
-			ca->action = BAN_ACT_GLINE;
-		else if (!strcmp(cep->ce_vardata, "gzline"))
-			ca->action = BAN_ACT_GZLINE;
-	}
-
+		ca ->action = banact_stringtoval(cep->ce_vardata);
 	AddListItem(ca, conf_ban);
 	return 0;
 }
@@ -5181,10 +5144,7 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 	cep = config_find_entry(ce->ce_entries, "action");
 	if (cep)
 	{
-		if (strcmp(cep->ce_vardata, "kill")  && strcmp(cep->ce_vardata, "shun") &&
-		    strcmp(cep->ce_vardata, "kline") && strcmp(cep->ce_vardata, "zline") &&
-		    strcmp(cep->ce_vardata, "gline") && strcmp(cep->ce_vardata, "gzline") &&
-		    strcmp(cep->ce_vardata, "tempshun"))
+		if (!banact_stringtoval(cep->ce_vardata))
 		{
 			config_error("%s:%i: ban %s::action has unknown action type '%s'",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata, cep->ce_vardata);

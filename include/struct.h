@@ -72,6 +72,7 @@ extern int sendanyways;
 typedef struct aloopStruct LoopStruct;
 typedef struct ConfItem aConfItem;
 typedef struct t_kline aTKline;
+typedef struct _spamfilter Spamfilter;
 /* New Config Stuff */
 typedef struct _configentry ConfigEntry;
 typedef struct _configfile ConfigFile;
@@ -726,13 +727,27 @@ struct Server {
 #define TKL_GLOBAL	0x0004
 #define TKL_SHUN	0x0008
 #define TKL_QUIET	0x0010
+#define TKL_SPAMF	0x0020
+
+#define SPAMF_CHANMSG	0x0001
+#define SPAMF_USERMSG	0x0002
+#define SPAMF_PART		0x0004
+#define SPAMF_QUIT		0x0008
+#define SPAMF_DCC		0x0010
+
+struct _spamfilter {
+	unsigned short type; /* see BADW_TYPE* */
+	unsigned short action; /* see BAN_ACT* */
+	char *word; /* the word in case of BADW_TYPE_FAST* type, else NULL */
+	regex_t expr;
+};
 
 struct t_kline {
 	aTKline *prev, *next;
 	int type;
-	unsigned short subtype; /* these 2 are only used.. */
-	unsigned short action;  /* ..for anti-spam TKL's */ 
-	char usermask[USERLEN+2]; /* room for '*' and a nul byte [usually 10+2=12] */
+	unsigned short subtype; /* subtype (currently spamfilter only), see SPAMF_* */
+	Spamfilter *spamf;
+	char usermask[USERLEN + 3];
 	char *hostmask, *reason, *setby;
 	TS expire_at, set_at;
 };
@@ -943,6 +958,7 @@ struct _configflag_tld
 #define BAN_ACT_ZLINE		4
 #define BAN_ACT_GLINE		5
 #define BAN_ACT_GZLINE		6
+#define BAN_ACT_BLOCK		7 /* for spamfilter only */
 
 #define CRULE_ALL		0
 #define CRULE_AUTO		1
@@ -1087,6 +1103,7 @@ struct _configitem_ban {
 };
 
 #ifdef FAST_BADWORD_REPLACE
+#define BADW_TYPE_INVALID 0x0
 #define BADW_TYPE_FAST    0x1
 #define BADW_TYPE_FAST_L  0x2
 #define BADW_TYPE_FAST_R  0x4
