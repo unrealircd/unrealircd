@@ -37,6 +37,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef PIPEDEBUG
+#include <signal.h>
+#endif
 #ifdef _WIN32
 #include <io.h>
 #endif
@@ -144,6 +147,9 @@ aClient *find_server_by_numeric(long value)
 	for (lp = servers; lp; lp = lp->next)
 		if (lp->value.cptr->serv->numeric == value)
 			return (lp->value.cptr);
+#ifdef PIPEDEBUG
+	kill(getpid(), SIGPIPE);
+#endif PIPEDEBUG
 	return NULL;
 }
 
@@ -152,7 +158,12 @@ aClient *find_server_by_base64(char *b64)
 	if (b64)
 		return find_server_by_numeric(base64dec(b64));
 	else
+	{
+#ifdef PIPEDEBUG
+		kill(getpid(), SIGPIPE);
+#endif
 		return NULL;
+	}
 }
 
 char *find_server_id(aClient *which)
@@ -167,6 +178,9 @@ aClient *find_server_quick_search(char *name)
 	for (lp = servers; lp; lp = lp->next)
 		if (!match(name, lp->value.cptr->name))
 			return (lp->value.cptr);
+#ifdef PIPEDEBUG
+	kill(getpid(), SIGPIPE);
+#endif
 	return NULL;
 }
 
@@ -178,6 +192,9 @@ aClient *find_server_quick_straight(char *name)
 	for (lp = servers; lp; lp = lp->next)
 		if (!strcmp(name, lp->value.cptr->name))
 			return (lp->value.cptr);
+#ifdef PIPEDEBUG
+	kill(getpid(), SIGPIPE);
+#endif
 	return NULL;
 }
 
@@ -212,6 +229,9 @@ aClient *find_server_b64_or_real(char *name)
 	{
 		return find_server_quick_straight(name);
 	}
+#ifdef PIPEDEBUG
+	kill(getpid(), SIGPIPE);
+#endif
 	return NULL;
 	
 }

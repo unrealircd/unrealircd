@@ -1146,7 +1146,8 @@ int  m_nick(cptr, sptr, parc, parv)
 	   ** is present in the nicklist (due to the way the below for loop is
 	   ** constructed). -avalon
 	 */
-	if ((acptr = find_server_quick(nick)))
+	/* I managed to fuck this up i guess --stskeeps */
+	if ((acptr = find_server(nick, NULL)))
 	{
 		if (MyConnect(sptr))
 		{

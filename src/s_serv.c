@@ -721,7 +721,7 @@ int  m_server(cptr, sptr, parc, parv)
 		}
 		/* bzero(cptr->passwd, sizeof(cptr->passwd)); */
 	}
-	if ((acptr = find_server_quickx(host, NULL)))
+	if ((acptr = find_server/*_quickx*/(host, NULL)))
 	{
 		/*
 		 * This link is trying feed me a server that I already have
@@ -1568,7 +1568,7 @@ int  m_netinfo(cptr, sptr, parc, parv)
 			sendto_one(cptr,
 			    "ERROR :unProtocol 2090 is not compatible with unProtocol %li",
 			    UnrealProtocol);
-			exit_client(cptr, cptr, cptr,
+			return exit_client(cptr, cptr, cptr,
 			    "Link using unProtocol 2090");
 		}
 		return 0;
