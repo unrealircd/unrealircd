@@ -614,6 +614,8 @@ int  is_chan_op(aClient *cptr, aChannel *chptr)
 {
 	Membership *lp;
 /* chanop/halfop ? */
+	if (IsServer(cptr))
+		return 1;
 	if (chptr)
 		if ((lp = find_membership_link(cptr->user->channel, chptr)))
 			return ((lp->flags & CHFL_CHANOP));
@@ -626,6 +628,8 @@ int  has_voice(aClient *cptr, aChannel *chptr)
 {
 	Membership *lp;
 
+	if (IsServer(cptr))
+		return 1;
 	if (chptr)
 		if ((lp = find_membership_link(cptr->user->channel, chptr)))
 			return (lp->flags & CHFL_VOICE);
@@ -636,6 +640,8 @@ int  is_halfop(aClient *cptr, aChannel *chptr)
 {
 	Membership *lp;
 
+	if (IsServer(cptr))
+		return 1;
 	if (chptr)
 		if ((lp = find_membership_link(cptr->user->channel, chptr)))
 			if (!(lp->flags & CHFL_CHANOP))
@@ -648,6 +654,8 @@ int  is_chanowner(aClient *cptr, aChannel *chptr)
 {
 	Membership *lp;
 
+	if (IsServer(cptr))
+		return 1;
 	if (chptr)
 		if ((lp = find_membership_link(cptr->user->channel, chptr)))
 			return (lp->flags & CHFL_CHANOWNER);
@@ -658,6 +666,8 @@ int  is_chanowner(aClient *cptr, aChannel *chptr)
 int is_chanownprotop(aClient *cptr, aChannel *chptr) {
 	Membership *lp;
 		
+	if (IsServer(cptr))
+		return 1;
 	if (chptr)
 		if ((lp = find_membership_link(cptr->user->channel, chptr)))
 			if (lp->flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP))

@@ -267,3 +267,6 @@
 - Added find_member_link and find_membership_link. Made Floodopt only 
   get allocated for local users. Removed aFloodOpt in Link,
 - Made a speedup in is_halfop (dumb code)
+- Somehow is_halfop and co got called when a server set a mode .., added
+  IsServer check (auto-return 1)
+
