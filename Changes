@@ -1969,3 +1969,4 @@ seen. gmtime warning still there
 - Fixed a /version bug
 - Improved fake lag stuff
 - Improved previous /version bugfix
+- Fixed some missing /helpop info reported by Jaw959 (#0000782)
