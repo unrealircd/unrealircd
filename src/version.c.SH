@@ -187,7 +187,7 @@ char *unrealcredits[] =
 	" - Well. let's see.. pissing off users.. etc etc ... etc..",
 	"evilpanda",
 	" - Hosting CVS and causing more trouble than a stone in a ant nest",
-	"^Tux^, Luke, ][rish",
+	"^Tux^, Luke, ][rish, narf",
 	" - Luke: gotcha. ^Tux^/][rish: Inspirations for the MEXS project", 
 	"evilgoat",
 	" - When asked to clone flood development server with 200 clones",
