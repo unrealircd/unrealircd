@@ -481,4 +481,5 @@ seen. gmtime warning still there
 - Fixed some compilation error with IPv6
 - Fixed-fixed listen format troubles, larne++
 - Possible fixed some +d bug(s)
-
+- Added doc/unrealircd.conf.txt (by devdev), doc/services-install-guide
+  (zyrol, edited a bit by stskeeps)

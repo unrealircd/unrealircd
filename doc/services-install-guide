@@ -1,0 +1,83 @@
+   Services Install Guide For Unreal 3.2 by zyrorl (zyrorl@unrealircd.com)
+   =======================================================================
+			
+			last updated:  4/5/2001 (4th May 2001)
+
+             				
+First  of all  you will  be required  to download  a services  package for  your
+network.
+
+A few of the most popular services are:
+
+	IRCServices	-	http://www.ircservices.za.net/ 
+	Epona		-	http://www.pegsoft.net/epona/
+	Wrecked		-	http://www.wrecked.net/services/index.html  
+	Magick		-       http://www.magick.tm/           
+	Sirius		-	http://ircsystems.net/sirius       
+
+After you  have downloaded  the appropriate  services package,  you will have to
+upload it to  your shell, and  untar and un-gzip  the file by  typing: tar -zxvf
+services.x.x.tar.gz
+
+Then you will need to enter the directory created by your services package  (for
+a listing type ls -a) and type ./configure . This will run the configure  script
+to setup your  services. The script  will ask you  questions regarding the  path
+want to install your services to, where  you want the services data files to  be
+installed to, encryption options, and the type of ircd that you are using  (Most
+probably Unreal).  If  you have previously  used any other  services package, it
+may also ask you if you would like to convert their databases.  It may also  ask
+you if you would like the services to dump a core file when a segmentation fault
+occurs so that you can find out the  cause of the problem and bug report to  the
+developers of the ircd services.
+
+Then you will be required to  compile your services package by typing  "make" or
+possibly  "gmake".  To  install services  after compiled,  type "make  install".
+Then you will need  to enter the directory  that you specified for  the location
+for the data of the services.  You  will most likely see a example.conf file  in
+the folder.  You will  need to rename this  file to services.conf by  typing "mv
+example.conf services.conf"  and then  you will  need to  edit the services.conf
+file in your favourite  text editor.  We recommend  new users use pico,  to edit
+the file using  pico type "pico  services.conf". Edit the  file to your  liking,
+make sure you follow their recommendations  in settings, and make sure you  edit
+the root services passwords, server to link to, password and port.
+
+After you have configured your services  you will then be required to  edit your
+unrealircd.conf.  You will require to add server connection lines to your server
+in order for services to work.  All  services on your network will need to  have
+the same U  line as the  server that services  are linking to.  A sample of  the
+configuration for services for unrealircd.conf is listed below:
+
+link   services.yournetwork.net  {  
+	username	 *;   
+	hostname	0.0.0.0;   /*Server Ip Address Or Hostmask */ 
+	bind-ip		*; /* IP To Bind To When Connecting  */  
+	port		 6667;   /* Port Number */   
+	password-connect "passwordsend";  /*Password To Send On Connection*/  
+	password-receive "passwordreceive"; 	/* Password To Receive From 
+						Server Connecting */ 
+	class	servers; 
+	options { autoconnect; }; 
+};
+
+Make sure  you then  add a  u:line entry  for services.  All the servers on your
+network will  be required  to have  a U:line.   For UnrealIRCD  3.2 the  U:lines
+should look something like this:
+
+ulines {
+	services.yournetwork.net;
+};
+
+Servers Running UnrealIRCD 3.1.1 Darkshades or below the U:Line for the  servers
+should look something like this:
+
+	U:services.yournetwork.net:*:*
+
+You will then be required  to edit your unrealircd.conf's network  configuration
+services name line, which  has to be the  same name as chosen  on the connection
+line for your services. ie. in  this case your network configuration line  would
+look something like:
+
+	services-name 		"services.yournetwork.net";
+
+Then you will  require to /rehash  your ircd and  then go back  to your services
+directory and type ./services to run services.
