@@ -272,8 +272,6 @@ extern void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int di
 extern void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr, char *nick, int hopcount,
 int lastnick, char *username, char *realhost, char *server, long servicestamp, char *info, char *umodes,
 char *virthost);
-extern void sendto_channels_inviso_part(aClient *user);
-extern void sendto_channels_inviso_join(aClient *user);
 extern void    sendto_message_one(aClient *to, aClient *from, char *sender,
     char *cmd, char *nick, char *msg);
 #define PREFIX_ALL		0

@@ -494,8 +494,8 @@ static int can_see(aClient *sptr, aClient *acptr, aChannel *channel)
     /* if they only want people with a certain server */
     if (wfl.want_server != WHO_DONTCARE)
       {
-	if (((wfl.want_server == WHO_WANT) && strcmp(wfl.server, acptr->user->server)) ||
-	    ((wfl.want_server == WHO_DONTWANT) && !strcmp(wfl.server, acptr->user->server)))
+	if (((wfl.want_server == WHO_WANT) && stricmp(wfl.server, acptr->user->server)) ||
+	    ((wfl.want_server == WHO_DONTWANT) && !stricmp(wfl.server, acptr->user->server)))
 	  {
 	    return WHO_CANTSEE;
 	  }

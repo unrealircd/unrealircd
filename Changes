@@ -1916,4 +1916,5 @@ seen. gmtime warning still there
 - Fixed MyConnect()/MyClient() bug causing memory leak.
 - Fixed a bug with TKL and rehash
 - Recoded aliases (regex style) to be much faster.
-
+- Removed some leftover +I code
+- Fixed a bug in /who where +s was case sensitive. Reported by jollino (#0000736)
