@@ -104,58 +104,43 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 
+	if (MyClient(sptr) && !IsAnOper(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+			parv[0]);
+		return 0;
+	}
+
 #ifdef DISABLE_USERMOD
 	if (MyClient(sptr))
 	{
-		sendto_one(sptr, ":%s NOTICE %s :*** The /chghost command is disabled on this server", me.name, sptr->name);
+		sendto_one(sptr, err_str(ERR_DISABLED), me.name, sptr->name, "CHGHOST",
+			"This command is disabled on this server");
 		return 0;
 	}
 #endif
 
-	if (MyClient(sptr))
-		if (!IsAnOper(sptr))
-		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			    parv[0]);
-			return 0;
-
-		}
-
-	if (parc < 3)
+	if ((parc < 3) || !*parv[2])
 	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** /ChgHost syntax is /ChgHost <nick> <newhost>",
-		    me.name, sptr->name);
-		return 0;
-	}
-
-	if (strlen(parv[2]) < 1)
-	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** Write atleast something to change the host to!",
-		    me.name, sptr->name);
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "CHGHOST");
 		return 0;
 	}
 
 	if (strlen(parv[2]) > (HOSTLEN))
 	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** ChgHost Error: Too long hostname!!",
-		    me.name, sptr->name);
+		sendnotice(sptr, "*** ChgName Error: Requested hostname too long -- rejected.");
 		return 0;
 	}
 
 	if (!valid_host(parv[2]))
 	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** /ChgHost Error: A hostname may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them",
-		    me.name, parv[0]);
+		sendnotice(sptr, "*** /ChgHost Error: A hostname may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them");
 		return 0;
 	}
 
 	if (parv[2][0] == ':')
 	{
-		sendto_one(sptr, ":%s NOTICE %s :*** A hostname cannot start with ':'", me.name, sptr->name);
+		sendnotice(sptr, "*** A hostname cannot start with ':'");
 		return 0;
 	}
 
@@ -164,9 +149,7 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		DYN_LOCAL(char, did_parts, acptr->user->joined);
 		if (!strcmp(GetHost(acptr), parv[2]))
 		{
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** /ChgHost Error: requested host is same as current host.",
-			    me.name, parv[0]);
+			sendnotice(sptr, "*** /ChgHost Error: requested host is same as current host.");
 			DYN_FREE(did_parts);
 			return 0;
 		}
@@ -175,7 +158,8 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			case UHALLOW_NEVER:
 				if (MyClient(sptr))
 				{
-					sendto_one(sptr, ":%s NOTICE %s :*** /ChgHost is disabled", me.name, sptr->name);
+					sendto_one(sptr, err_str(ERR_DISABLED), me.name, sptr->name, "CHGHOST",
+						"This command is disabled on this server");
 					DYN_FREE(did_parts);
 					return 0;
 				}
@@ -185,7 +169,7 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			case UHALLOW_NOCHANS:
 				if (IsPerson(acptr) && MyClient(sptr) && acptr->user->joined)
 				{
-					sendto_one(sptr, ":%s NOTICE %s :*** /ChgHost can not be used while %s is on a channel", me.name, sptr->name, acptr->name);
+					sendnotice(sptr, "*** /ChgHost can not be used while %s is on a channel", acptr->name);
 					DYN_FREE(did_parts);
 					return 0;
 				}

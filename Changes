@@ -668,3 +668,4 @@
   the nickchars system printing out incorrect set:: directives.
 - spamfilter.conf and dccallow.conf are now also copied upon make install, reported by
   TommyTheKid (#0002313).
+- Made CHGIDENT, CHGHOST and CHGNAME use more numerics (where possible) (#0002358).

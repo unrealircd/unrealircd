@@ -139,6 +139,7 @@
 
 #define ERR_TOOMANYDCC       514
 
+#define ERR_DISABLED         517
 #define ERR_NOINVITE		 518
 #define ERR_ADMONLY			 519
 #define ERR_OPERONLY		 520

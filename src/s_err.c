@@ -573,7 +573,7 @@ static char *replies[] = {
 /* 514    ERR_TOOMANYDCC */ ":%s 514 %s %s :Your dcc allow list is full. Maximum size is %d entries",
 /* 515 */ NULL, /* ircu */
 /* 516 */ NULL, /* ircu */
-/* 517 */ NULL, /* ircu */
+/* 517    ERR_DISABLED*/ ":%s 517 %s %s :%s", /* ircu */
 /* 518    518 */ ":%s 518 %s :Cannot invite (+V) at channel %s",
 /* 519    519 */ ":%s 519 %s :Cannot join channel %s (Admin only)",
 /* 520    520 */ ":%s 520 %s :Cannot join channel %s (IRCops only)",
