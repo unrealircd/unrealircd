@@ -396,7 +396,7 @@ int			config_verbose = 0;
 
 void add_include(char *);
 #ifdef USE_LIBCURL
-void add_remote_include(char *, char *);
+void add_remote_include(char *, char *, int);
 int remote_include(ConfigEntry *ce);
 #endif
 void unload_notloaded_includes(void);
@@ -7305,11 +7305,11 @@ static void conf_download_complete(char *url, char *file, char *errorbuf, int ca
 			char *file = unreal_getfilename(urlfile);
 			char *tmp = unreal_mktemp("tmp", file);
 			unreal_copyfile(inc->file, tmp);
-			add_remote_include(tmp, url);
+			add_remote_include(tmp, url, 0);
 			free(urlfile);
 		}
 		else
-			add_remote_include(file, url);
+			add_remote_include(file, url, 0);
 	}
 	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
 	{
@@ -7470,7 +7470,7 @@ int remote_include(ConfigEntry *ce)
 		else
 		{
 			if ((ret = load_conf(file)) >= 0)
-				add_remote_include(file, ce->ce_vardata);
+				add_remote_include(file, ce->ce_vardata, INCLUDE_USED);
 			free(file);
 			return ret;
 		}
@@ -7487,7 +7487,7 @@ int remote_include(ConfigEntry *ce)
 		if (config_verbose > 0)
 			config_status("Loading %s from download", ce->ce_vardata);
 		if ((ret = load_conf(file)) >= 0)
-			add_remote_include(file, ce->ce_vardata);
+			add_remote_include(file, ce->ce_vardata, INCLUDE_USED);
 		return ret;
 	}
 	return 0;
@@ -7509,12 +7509,12 @@ void add_include(char *file)
 	}
 	inc = MyMallocEx(sizeof(ConfigItem_include));
 	inc->file = strdup(file);
-	inc->flag.type = INCLUDE_NOTLOADED;
+	inc->flag.type = INCLUDE_NOTLOADED|INCLUDE_USED;
 	AddListItem(inc, conf_include);
 }
 
 #ifdef USE_LIBCURL
-void add_remote_include(char *file, char *url)
+void add_remote_include(char *file, char *url, int flags)
 {
 	ConfigItem_include *inc;
 
@@ -7527,10 +7527,11 @@ void add_remote_include(char *file, char *url)
 		if (!stricmp(url, inc->url))
 			return;
 	}
+
 	inc = MyMallocEx(sizeof(ConfigItem_include));
 	inc->file = strdup(file);
 	inc->url = strdup(url);
-	inc->flag.type = (INCLUDE_NOTLOADED|INCLUDE_REMOTE);
+	inc->flag.type = (INCLUDE_NOTLOADED|INCLUDE_REMOTE|flags);
 	AddListItem(inc, conf_include);
 }
 #endif
@@ -7542,7 +7543,7 @@ void unload_notloaded_includes(void)
 	for (inc = conf_include; inc; inc = next)
 	{
 		next = (ConfigItem_include *)inc->next;
-		if (inc->flag.type & INCLUDE_NOTLOADED)
+		if ((inc->flag.type & INCLUDE_NOTLOADED) || !(inc->flag.type & INCLUDE_USED))
 		{
 #ifdef USE_LIBCURL
 			if (inc->flag.type & INCLUDE_REMOTE)
@@ -7567,20 +7568,21 @@ void unload_loaded_includes(void)
 	for (inc = conf_include; inc; inc = next)
 	{
 		next = (ConfigItem_include *)inc->next;
-		if (inc->flag.type & INCLUDE_NOTLOADED)
-			continue;
-#ifdef USE_LIBCURL
-		if (inc->flag.type & INCLUDE_REMOTE)
+		if (!(inc->flag.type & INCLUDE_NOTLOADED) || !(inc->flag.type & INCLUDE_USED))
 		{
-			remove(inc->file);
-			free(inc->url);
-			if (inc->errorbuf)
-				free(inc->errorbuf);
-		}
+#ifdef USE_LIBCURL
+			if (inc->flag.type & INCLUDE_REMOTE)
+			{
+				remove(inc->file);
+				free(inc->url);
+				if (inc->errorbuf)
+					free(inc->errorbuf);
+			}
 #endif
-		free(inc->file);
-		DelListItem(inc, conf_include);
-		free(inc);
+			free(inc->file);
+			DelListItem(inc, conf_include);
+			free(inc);
+		}
 	}
 }
 			

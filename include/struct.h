@@ -1236,6 +1236,7 @@ struct _configitem_alias_format {
 #define INCLUDE_NOTLOADED  0x1
 #define INCLUDE_REMOTE     0x2
 #define INCLUDE_DLQUEUED   0x4
+#define INCLUDE_USED       0x8
 	
 struct _configitem_include {
 	ConfigItem *prev, *next;
