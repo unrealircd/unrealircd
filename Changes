@@ -1604,3 +1604,4 @@ seen. gmtime warning still there
 - Fixed bug #0000371 reported by havlaz about an extra \n slipped in with the TKL notice
 - Fixed bug with all TKL commands not accepting nicks anymore (#0000370 reported by Ravage)
 - Fixed bug #0000342 reported by James LiGate about tokens leaking through from clients
+- Removed some IPv6 resolver specifics that seemed illogical (reference to Jollino's IPv6 crashes)
