@@ -1953,14 +1953,14 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 		ca->flag.type = 1;
 		add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_except);
 	}
-	else if (!strcmp(ce->ce_vardata, "socks")) {
+	else if (!strcmp(ce->ce_vardata, "scan")) {
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 		{
 			if (!strcmp(cep->ce_varname, "mask")) {
 				ca->mask = strdup(cep->ce_vardata);
 			}
 			else {
-			config_status("%s:%i: unknown directive except::socks::%s",
+			config_status("%s:%i: unknown directive except::scan::%s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				cep->ce_varname);
 			}
@@ -3740,7 +3740,7 @@ ConfigItem_ulines *Find_uline(char *host) {
 ConfigItem_except *Find_except(char *host, short type) {
 	ConfigItem_except *excepts;
 
-	if (!host || !type)
+	if (!host)
 		return NULL;
 
 	for(excepts = conf_except; excepts; excepts =(ConfigItem_except *) excepts->next) {

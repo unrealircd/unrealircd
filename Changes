@@ -830,3 +830,6 @@ seen. gmtime warning still there
 - Added a bug reporting tool (still alpha)
 - Removed some win32 debug code that was left, reported by TheEggMan
 - Win32 cleanup
+- Made except socks become except scan, and made it actually WORK, and some
+  bugreport fixes
+

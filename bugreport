@@ -13,7 +13,7 @@ echo "Operating system:" >> $BUGREPORT
 ls -l *core* >> $BUGREPORT
 uname -a >> $BUGREPORT
 gdb -x .bugreport.gdb src/ircd *core* >> $BUGREPORT 2>&1
-
+more $BUGREPORT
 cat |sendmail -t << __EOF__&
 To: bugs-unreal@tspre.org
 From: autobugreport@unrealircd.com

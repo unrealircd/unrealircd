@@ -355,23 +355,27 @@ DLLFUNC int h_scan_connect(aClient *sptr)
 	vFP			*vfp;
 	THREAD			thread;
 	THREAD_ATTR		thread_attr;
-#ifdef INET6 
 	char			addrbuf[1024];
+
+#ifndef INET6
+	strcpy(addrbuf, (char *)inet_ntoa(sptr->ip));
+#else
+	inet_ntop(AFINET, (void *)&sptr->ip,
+	            addrbuf, sizeof(addrbuf));
 #endif
+
+	if (Find_except(addrbuf, 0))
+		return 0;
+		
 	IRCMutexLock(HSlock);
 	HS_Cleanup((void *)1);
-	if (HS_Find((char *)inet_ntoa(sptr->ip)))
+	if (HS_Find(addrbuf))
 	{
 		/* Not gonna scan, already scanning */
 		IRCMutexUnlock(HSlock);
 		return 0;
 	}
-#ifndef INET6
-	if (h = HS_Add((char *)inet_ntoa(sptr->ip)))
-#else
-	if (h = HS_Add((char *) inet_ntop(AFINET, (void *)&sptr->ip,
-	            addrbuf, sizeof(addrbuf))))
-#endif
+	if (h = HS_Add(addrbuf))
 	{
 		/* Run scanning threads, refcnt++ for each thread that uses the struct */
 		/* Use hooks, making it easy, remember to convert to vFP */
@@ -390,7 +394,7 @@ DLLFUNC int h_scan_connect(aClient *sptr)
 		   And run h_scan_connect again?. Is this too loopy?
 		*/
 		sendto_realops("Problem: We ran out of Host slots. Cannot scan %s. increase SCAN_AT_ONCE",
-			sptr->sockhost);
+			addrbuf);
 		IRCMutexUnlock(HSlock);
 		return 0;
 	}
