@@ -200,51 +200,6 @@ int advanced_check(char *userhost, int ipstat)
 
 }
 
-
-
-int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[])
-{
-	aClient *acptr;
-
-	if (!(check_registered(sptr) && IsULine(sptr) && parc > 2))
-		return 0;
-	/* svsnoop bugfix --binary */
-	if (hunt_server(cptr, sptr, ":%s SVSNOOP %s :%s", 1, parc,
-	    parv) == HUNTED_ISME)
-	{
-		if (parv[2][0] == '+')
-		{
-			SVSNOOP = 1;
-			sendto_ops("This server has been placed in NOOP mode");
-			for (acptr = &me; acptr; acptr = acptr->prev)
-			{
-				if (MyClient(acptr) && IsAnOper(acptr))
-				{
-					if (IsAnOper(acptr))
-						IRCstats.operators--;
-					acptr->umodes &=
-					    ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP | UMODE_SERVICES |
-					    UMODE_SADMIN | UMODE_ADMIN);
-					acptr->umodes &=
-		    				~(UMODE_NETADMIN | UMODE_TECHADMIN | UMODE_WHOIS);
-					acptr->umodes &=
-					    ~(UMODE_KIX | UMODE_HIDING | UMODE_DEAF | UMODE_HIDEOPER);
-					acptr->user->oflag = 0;
-					acptr->user->snomask &= ~(SNO_CLIENT|SNO_FLOOD|SNO_FCLIENT|
-						SNO_EYES|SNO_VHOST);
-				
-				}
-			}
-
-		}
-		else
-		{
-			SVSNOOP = 0;
-			sendto_ops("This server is no longer in NOOP mode");
-		}
-	}
-}
-
 /*
 ** m_svso - Stskeeps
 **      parv[0] = sender prefix

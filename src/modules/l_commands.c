@@ -92,6 +92,9 @@ int    l_commands_init(int module_load)
 	m_svsmotd_init(module_load);
 	m_svsnline_init(module_load);
 	m_who_init(module_load);
+	m_mkpasswd_init(module_load);
+	m_away_init(module_load);
+	m_svsnoop_init(module_load);
 #ifdef SCAN_API
 	module_depend_resolve(&scan_socks_depend[0]);
 	m_scan_init(module_load);
@@ -116,6 +119,9 @@ void    l_commands_load(int module_load)
 	m_svsmotd_load(module_load);
 	m_svsnline_load(module_load);
 	m_who_load(module_load);
+	m_mkpasswd_load(module_load);
+	m_away_load(module_load);
+	m_svsnoop_load(module_load);
 #ifdef SCAN_API
 	m_scan_load(module_load);
 	scan_socks_load(module_load);
@@ -139,6 +145,9 @@ void	l_commands_unload(void)
 	m_svsmotd_unload();
 	m_svsnline_unload();
 	m_who_unload();
+	m_mkpasswd_unload();
+	m_away_unload();
+	m_svsnoop_unload();
 #ifdef SCAN_API
 	scan_socks_unload();
 	m_scan_unload();

@@ -157,7 +157,6 @@ void	init_CommandHash(void)
 	add_CommandX(MSG_ERROR, TOK_ERROR, m_error, MAXPARA, M_UNREGISTERED|M_SERVER);
 	add_Command(MSG_KILL, TOK_KILL, m_kill, MAXPARA);
 	add_CommandX(MSG_PROTOCTL, TOK_PROTOCTL, m_protoctl, MAXPARA, M_UNREGISTERED|M_SERVER|M_USER);
-	add_Command(MSG_AWAY, TOK_AWAY, m_away, MAXPARA);
 	add_CommandX(MSG_SERVER, TOK_SERVER, m_server, MAXPARA, M_UNREGISTERED|M_SERVER);
 	add_Command(MSG_SQUIT, TOK_SQUIT, m_squit, MAXPARA);
 	add_Command(MSG_WHOWAS, TOK_WHOWAS, m_whowas, MAXPARA);
@@ -176,7 +175,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_USERS, TOK_USERS, m_users, MAXPARA);
 	add_Command(MSG_SAMODE, TOK_SAMODE, m_samode, MAXPARA);
 	add_Command(MSG_SVSKILL, TOK_SVSKILL, m_svskill, MAXPARA);
-	add_Command(MSG_SVSNOOP, TOK_SVSNOOP, m_svsnoop, MAXPARA);
 	add_Command(MSG_SERVICES, TOK_SERVICES, m_services, 1);
 	add_Command(MSG_HELP, TOK_HELP, m_help, 1);
 	add_Command(MSG_HELPOP, TOK_HELP, m_help, 1);
@@ -207,7 +205,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_GLINE, TOK_GLINE, m_gline, MAXPARA);
 	add_Command(MSG_REMGLINE, TOK_REMGLINE, m_remgline, MAXPARA);
 	add_Command(MSG_DALINFO, TOK_DALINFO, m_dalinfo, MAXPARA);
-	add_Command(MSG_MKPASSWD, TOK_MKPASSWD, m_mkpasswd, MAXPARA);
 	add_Command(MSG_ADDLINE, TOK_ADDLINE, m_addline, 1);
 	add_Command(MSG_ADMINCHAT, TOK_ADMINCHAT, m_admins, 1);
 	add_Command(MSG_TECHAT, TOK_TECHAT, m_techat, 1);
