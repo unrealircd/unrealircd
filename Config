@@ -49,6 +49,7 @@ NEEDSKIPNAME=""
 CRYPTOLIB=""
 CRYPTOIRCD=""
 CCPATH=''
+STRCASECMP=undef
 SIGNAL=''
 BLOCKING=''
 TMP=/tmp/.Configtmp$$.c
@@ -793,6 +794,27 @@ else
 fi
 $RM -f $EXEC $TMP
 
+echo $n "Do we have an broken /usr/include/string.h ... $c"
+cat > $TMP <<__EOF__
+#include <string.h>
+main()
+{
+	char	*s = "moocows";
+	char	*p = "moocows";
+
+	if (strcasecmp(s, p))
+		exit(0);
+	exit(0);
+}
+__EOF__
+$COMP >/dev/null 2>&1
+if [ $? -ne 0 ] ; then
+	echo " no$c"
+	STRCASECMP=undef
+else
+	echo "yes"
+	STRCASECMP=define
+fi
 #
 # what do we need that isn't here already ?
 #
@@ -1074,6 +1096,7 @@ cat > $SETUP  <<__EOF__
 #$NINETNETOF	NEED_INET_NETOF
 #$GETTIMEOFDAY	GETTIMEOFDAY
 #$LRAND48	LRAND48
+#$STRCASECMP    GOT_STRCASECMP
 __EOF__
 if [ "$MALLOCH" = "undef" ] ; then
 	echo "#undef	MALLOCH" >> $SETUP
