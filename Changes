@@ -3230,3 +3230,5 @@ This is the 3.2 fixes branch.
 - Seems I forgot to del_Command() SPAMFILTER and TEMPSHUN.
 - Made the win32 socket error reporting also handle regular system errors (#0001851) 
   reported by Troco
+- Added a doc/translations.txt which describes the (current) translation process
+  and requirements a bit.
