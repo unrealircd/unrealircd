@@ -23,11 +23,11 @@ Name: "installservice"; Description: "Install &Service"; GroupDescription: "Serv
 [Files]
 Source: "..\..\wircd.exe"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\..\WIRCD.pdb"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\..\.CHANGES.NEW"; DestDir: "{app}\CHANGES.NEW.txt"; CopyMode: alwaysoverwrite
-Source: "..\..\.CONFIG.RANT"; DestDir: "{app}\CONFIG.RANT.txt"; CopyMode: alwaysoverwrite
-Source: "..\..\.NEW_CONFIG"; DestDir: "{app}\NEW_CONFIG.txt"; CopyMode: alwaysoverwrite
-Source: "..\..\.RELEASE.NOTES"; DestDir: "{app}\RELEASE.NOTES.txt"; CopyMode: alwaysoverwrite
-Source: "..\..\.SICI"; DestDir: "{app}\SICI.txt"; CopyMode: alwaysoverwrite
+Source: "..\..\.CHANGES.NEW"; DestDir: "{app}"; DestName: "CHANGES.NEW.txt";CopyMode: alwaysoverwrite
+Source: "..\..\.CONFIG.RANT"; DestDir: "{app}"; DestName: "CONFIG.RANT.txt"; CopyMode: alwaysoverwrite
+Source: "..\..\.NEW_CONFIG"; DestDir: "{app}"; DestName: "NEW_CONFIG.txt"; CopyMode: alwaysoverwrite
+Source: "..\..\.RELEASE.NOTES"; DestDir: "{app}"; DestName: "RELEASE.NOTES.txt"; CopyMode: alwaysoverwrite
+Source: "..\..\.SICI"; DestDir: "{app}"; DestName: "SICI.txt"; CopyMode: alwaysoverwrite
 Source: "..\..\badwords.channel.conf"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\..\badwords.message.conf"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\..\Changes"; DestDir: "{app}"; CopyMode: alwaysoverwrite
@@ -35,7 +35,7 @@ Source: "..\..\Changes.old"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\..\Donation"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: ".\gnu_regex.dll"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\..\help.conf"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\..\LICENSE"; DestDir: "{app}\LICENSE.txt"; CopyMode: alwaysoverwrite
+Source: "..\..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; CopyMode: alwaysoverwrite
 Source: "..\..\Unreal.nfo"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\..\doc\*.*"; DestDir: "{app}\doc"; CopyMode: alwaysoverwrite
 Source: "..\..\aliases\*"; DestDir: "{app}\aliases"; CopyMode: alwaysoverwrite
