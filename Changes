@@ -1696,4 +1696,4 @@ seen. gmtime warning still there
 - Fixed set::scan::bind-ip and set::scan::ban-time typos in unreal32docs.html
 - Changed set::scan:ban-time to set::scan::bantime and added set::scan::timeout in 
   unreal32docs.html
-
+- Fixed some logical module rehash issues

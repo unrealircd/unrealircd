@@ -237,6 +237,16 @@ char  *Module_Create(char *path_)
 	
 }
 
+void Module_DelayChildren(Module *m)
+{
+	ModuleChild *c;
+	for (c = m->children; c; c = c->next)
+	{
+		c->child->flags |= MODFLAG_DELAYED;
+		Module_DelayChildren(c->child);
+	}
+}
+
 Module *Module_make(ModuleHeader *header, 
 #ifdef _WIN32
        HMODULE mod
@@ -299,15 +309,23 @@ void Unload_all_loaded_modules(void)
 	ModuleChild *child, *childnext;
 	ModuleObject *objs, *objnext;
 	iFP Mod_Unload;
+	int ret;
 
 	for (mi = Modules; mi; mi = next)
 	{
 		next = mi->next;
-		if (!(mi->flags & MODFLAG_LOADED))
+		if (!(mi->flags & MODFLAG_LOADED) || (mi->flags & MODFLAG_DELAYED))
 			continue;
 		irc_dlsym(mi->dll, "Mod_Unload", Mod_Unload);
 		if (Mod_Unload)
-			(*Mod_Unload)(0);
+		{
+			ret = (*Mod_Unload)(0);
+			if (ret == MOD_DELAY)
+			{
+				mi->flags |= MODFLAG_DELAYED;
+				Module_DelayChildren(mi);
+			}
+		}
 		for (objs = mi->objects; objs; objs = objnext) {
 			objnext = objs->next;
 			if (objs->type == MOBJ_EVENT) {
@@ -463,6 +481,7 @@ int     Module_Unload(char *name, int unload)
 	if (ret == MOD_DELAY)
 	{
 		m->flags |= MODFLAG_DELAYED;
+		Module_DelayChildren(m);
 		return 2;
 	}
 	if (ret == MOD_FAILED)
