@@ -985,6 +985,7 @@ struct _configitem_class {
 	int	   pingfreq;
 	int	   maxclients;
 	int	   sendq;
+	int	   connfreq;
 	
 	int	   clients;
 };
@@ -1083,6 +1084,7 @@ struct _configitem_link {
 	ConfigItem_class 	*class;
 	short			options;
 	struct IN_ADDR 		ipnum;
+	time_t			hold;
 };
 
 struct _configitem_except {

@@ -858,6 +858,15 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			} 
 		} else
+		if (!strcmp(cep->ce_varname, "connfreq"))
+		{
+			class->connfreq = atol(cep->ce_vardata);
+			if (class->connfreq < 0)
+			{
+				config_error("%s:%i: class::connfreq with illegal value (<0))",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			} 
+		} else
 		if (!strcmp(cep->ce_varname, "sendq"))
 		{
 			class->sendq = atol(cep->ce_vardata);

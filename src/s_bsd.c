@@ -838,8 +838,8 @@ static int completed_connection(cptr)
 */
 void close_connection(cptr)
 	aClient *cptr;
-{
-	aConfItem *aconf;
+{	
+	ConfigItem_link *aconf;
 	int  i, j;
 	int  empty = cptr->fd;
 
@@ -899,11 +899,11 @@ void close_connection(cptr)
 	 * the SQUIT flag has been set, then we don't schedule a fast
 	 * reconnect.  Pisses off too many opers. :-)  -Cabal95
 	 */
-#ifdef OLD
 	if (IsServer(cptr) && !(cptr->flags & FLAGS_SQUIT) &&
-	    (aconf = find_conf_exact(cptr->name, cptr->username,
-	    cptr->sockhost, CONF_CONNECT_SERVER)))
+	    (!cptr->serv->conf->flag.temporary && 
+	      (cptr->serv->conf->options & CONNECT_AUTO)))
 	{
+		aconf = cptr->serv->conf;
 		/*
 		 * Reschedule a faster reconnect, if this was a automaticly
 		 * connected configuration entry. (Note that if we have had
@@ -912,11 +912,10 @@ void close_connection(cptr)
 		 */
 		aconf->hold = TStime();
 		aconf->hold += (aconf->hold - cptr->since > HANGONGOODLINK) ?
-		    HANGONRETRYDELAY : ConfConFreq(aconf);
+		    HANGONRETRYDELAY : aconf->class->connfreq;
 		if (nextconnect > aconf->hold)
 			nextconnect = aconf->hold;
 	}
-#endif
 #ifdef USE_SSL
 	if (cptr->flags & FLAGS_SSL)
 	{

@@ -411,25 +411,22 @@ char *areason;
 static TS try_connections(currenttime)
 	TS   currenttime;
 {
-	aConfItem *aconf;
+	ConfigItem_link *aconf;
 	aClient *cptr;
-	aConfItem **pconf;
 	int  connecting, confrq;
 	TS   next = 0;
-	aClass *cltmp;
-	aConfItem *cconf, *con_conf;
-	int  con_class = 0;
+	ConfigItem_class *cltmp;
 
 	connecting = FALSE;
 	Debug((DEBUG_NOTICE, "Connection check at   : %s",
 	    myctime(currenttime)));
-#ifdef OLD
-	for (aconf = conf; aconf; aconf = aconf->next)
+	for (aconf = conf_link; aconf; aconf = (ConfigItem_link *) aconf->next)
 	{
 		/* Also when already connecting! (update holdtimes) --SRB */
-		if (!(aconf->status & CONF_CONNECT_SERVER) || aconf->port <= 0)
+		if (!(aconf->options & CONNECT_AUTO))
 			continue;
-		cltmp = Class(aconf);
+			
+		cltmp = aconf->class;
 		/*
 		   ** Skip this entry if the use of it is still on hold until
 		   ** future. Otherwise handle this entry (and set it on hold
@@ -445,53 +442,34 @@ static TS try_connections(currenttime)
 			continue;
 		}
 
-		confrq = get_con_freq(cltmp);
+		confrq = cltmp->connfreq;
 		aconf->hold = currenttime + confrq;
 		/*
 		   ** Found a CONNECT config with port specified, scan clients
 		   ** and see if this server is already connected?
 		 */
-		cptr = find_name(aconf->name, (aClient *)NULL);
+		cptr = find_name(aconf->servername, (aClient *)NULL);
 
-		if (!cptr && (Links(cltmp) < MaxLinks(cltmp)) &&
-		    (!connecting || (Class(cltmp) > con_class)))
+		if (!cptr && (cltmp->clients < cltmp->maxclients))
 		{
 			/* Check connect rules to see if we're allowed to try */
+#ifdef FIXME
 			for (cconf = conf; cconf; cconf = cconf->next)
 				if ((cconf->status & CONF_CRULE) &&
 				    (match(cconf->host, aconf->name) == 0))
 					if (crule_eval(cconf->passwd))
 						break;
-			if (!cconf)
-			{
-				con_class = Class(cltmp);
-				con_conf = aconf;
-				/* We connect only one at time... */
-				connecting = TRUE;
-			}
+			
+#endif
+			if (connect_server(aconf, (aClient *)NULL,
+			    (struct hostent *)NULL) == 0)
+				sendto_ops("Connection to %s[%s] activated.",
+				    aconf->servername, aconf->hostname);
+			
 		}
 		if ((next > aconf->hold) || (next == 0))
 			next = aconf->hold;
 	}
-	if (connecting)
-	{
-		if (con_conf->next)	/* are we already last? */
-		{
-			for (pconf = &conf; (aconf = *pconf);
-			    pconf = &(aconf->next))
-				/* put the current one at the end and
-				 * make sure we try all connections
-				 */
-				if (aconf == con_conf)
-					*pconf = aconf->next;
-			(*pconf = con_conf)->next = 0;
-		}
-		if (connect_server(con_conf, (aClient *)NULL,
-		    (struct hostent *)NULL) == 0)
-			sendto_ops("Connection to %s[%s] activated.",
-			    con_conf->name, con_conf->host);
-	}
-#endif
 	Debug((DEBUG_NOTICE, "Next connection check : %s", myctime(next)));
 	return (next);
 }
