@@ -415,3 +415,4 @@
 - Made the WATCH command work for WebTV users (#0002121) suggested by White_Magic.
 - Some text updates... docs: now 3.2.2-CVS, lso got rid of double version to avoid
   confusion. credits: fixed typo.
+- Added updated auspice.conf from Rocko since previous one was outdated (#0002147).
