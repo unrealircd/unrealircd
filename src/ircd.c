@@ -243,10 +243,22 @@ VOIDSIG s_restart()
 
 VOIDSIG s_segv()
 {
+#ifdef	POSIX_SIGNALS
+	struct sigaction act;
+#endif
+
 	int  i;
 	FILE *log;
 	int  p;
 	char corename[512];
+#ifdef POSIX_SIGNALS
+	act.sa_flags = 0;
+	act.sa_handler = SIG_DFL;
+	(void)sigemptyset(&act.sa_mask);
+	(void)sigaddset(&act.sa_mask, SIGSEGV);
+	
+#endif
+
 #ifdef USE_SYSLOG
 	(void)syslog(LOG_WARNING, "Server terminating: Segmention fault!!!");
 	(void)closelog();

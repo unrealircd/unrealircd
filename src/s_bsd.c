@@ -968,11 +968,12 @@ static int completed_connection(cptr)
 		return -1;
 	}
 #ifdef USE_SSL
-	if (cline->options & CONNECT_SSL)
-		if (!ssl_client_handshake(cptr))
+	if ((cline->options & CONNECT_SSL))
+		if (ssl_client_handshake(cptr) == -2)
 		{
-			sendto_realops("Could not handshake SSL with %s", get_client_name(cptr, FALSE));
-			return -1;
+			sendto_realops("Could not handshake SSL with %s, trying again", get_client_name(cptr, FALSE));
+			cptr->flags |= FLAGS_SSL_HSHAKE;
+			return -2;
 		}
 		else
 		{
@@ -1880,6 +1881,7 @@ int  read_message(delay, listp)
 			{
 				FD_SET(i, &read_set);
 			}
+			
 			else if (!IsMe(cptr))
 			{
 				if (DBufLength(&cptr->recvQ) && delay2 > 2)
@@ -1889,6 +1891,7 @@ int  read_message(delay, listp)
 			}
 
 			if (DBufLength(&cptr->sendQ) || IsConnecting(cptr) ||
+			    cptr->flags & FLAGS_SSL_HSHAKE ||
 			    (DoList(cptr) && IsSendable(cptr)))
 				FD_SET(i, &write_set);
 		}
@@ -2122,6 +2125,7 @@ int  read_message(delay, listp)
 	{
 		if (!(cptr = local[i]) || IsMe(cptr))
 			continue;
+			
 		if (FD_ISSET(i, &write_set))
 		{
 			int  write_err = 0;
@@ -2132,6 +2136,14 @@ int  read_message(delay, listp)
 			ClearBlocked(cptr);
 			if (IsConnecting(cptr))
 				write_err = completed_connection(cptr);
+#ifdef USE_SSL
+			if (cptr->flags & FLAGS_SSL_HSHAKE)
+			{
+				write_err = completed_connection(cptr);
+				if (write_err == -2)
+					write_err = 0;
+			}
+#endif
 			if (!write_err)
 			{
 				if (DoList(cptr) && IsSendable(cptr))

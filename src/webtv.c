@@ -58,7 +58,7 @@ aMessage	webtv_cmds[] =
 };
 
 
-void	webtv_parse(aClient *sptr, char *string)
+int	webtv_parse(aClient *sptr, char *string)
 {
 	char *cmd = NULL, *s = NULL;
 	int i;
@@ -73,7 +73,7 @@ void	webtv_parse(aClient *sptr, char *string)
 	
 	cmd = strtok(string, " ");
 	if (!cmd)
-		return;	
+		return -2;	
 		
 	for (message = webtv_cmds; message->command; message++)
 		if (strcasecmp(message->command, cmd) == 0)
@@ -81,9 +81,11 @@ void	webtv_parse(aClient *sptr, char *string)
 
 	if (!message->command || !message->func)
  	{
-		sendto_one(sptr, ":IRC %s %s :Sorry, \"%s\" is an unknown command to me",
-			MSG_PRIVATE, sptr->name, cmd);
-		return;
+/*		sendto_one(sptr, ":IRC %s %s :Sorry, \"%s\" is an unknown command to me",
+			MSG_PRIVATE, sptr->name, cmd); */
+		/* restore the string*/
+		cmd[strlen(cmd)]= ' ';
+		return -2;
 	}
 
 	i = 0;
@@ -122,7 +124,7 @@ void	webtv_parse(aClient *sptr, char *string)
 	para[++i] = NULL;
 
 	(*message->func) (sptr->from, sptr, i, para);
-	return;
+	return 0;
 }
 
 int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])

@@ -1755,7 +1755,10 @@ static int m_message(cptr, sptr, parc, parv, notice)
 		}
 		if (!strcasecmp(nick, "irc") && MyClient(sptr))
 		{
-			webtv_parse(sptr, parv[2]);
+			if (webtv_parse(sptr, parv[2]) == -2)
+			{
+				parse(sptr, parv[2], (parv[2] + strlen(parv[2])), msgtab);
+			}
 			continue;
 		}
 		if (*nick != '#' && (acptr = find_person(nick, NULL)))
@@ -2800,7 +2803,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			}
 			if (acptr->umodes & UMODE_SECURE)
 			{
-				sendto_one(sptr, ":%s %d %s %s :%s %s",me.name, 
+				sendto_one(sptr, ":%s %d %s %s :%s",me.name, 
 				RPL_WHOISSPECIAL,
 				parv[0], name, "is a \2Secure Connection\2");
 			}

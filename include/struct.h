@@ -962,9 +962,7 @@ struct Message {
 	char *cmd;
 	int  (*func) ();
 	unsigned int count;
-	short  parameters;
-	/* bit 0 set means that this command is allowed to be used
-	 * only on the average of once per 2 seconds -SRB */
+	unsigned short  parameters;
 	u_char token[3];	/* Cheat for tokenized value */
 	unsigned long bytes;
 #ifdef DEBUGMODE
