@@ -266,7 +266,7 @@ extern int send_queued(aClient *);
 extern void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr);
 extern void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr);
 extern void sendto_locfailops(char *pattern, ...);
-extern void sendto_connectnotice(char *nick, anUser *user, aClient *sptr);
+extern void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnect, char *comment);
 extern void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr, char *nick, int hopcount,
 int lastnick, char *username, char *realhost, char *server, long servicestamp, char *info, char *umodes,
 char *virthost);
@@ -302,7 +302,6 @@ extern void sendto_failops_whoare_opers(char *, ...);
 extern void sendto_failops(char *, ...);
 extern void sendto_opers(char *, ...);
 extern void sendto_umode(int, char *, ...);
-extern void sendto_conn_hcn(char *, ...);
 extern void sendto_snomask(int snomask, char *pattern, ...);
 extern int writecalls, writeb[];
 extern int deliver_it(aClient *, char *, int);

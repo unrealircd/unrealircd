@@ -1031,7 +1031,7 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 			    sptr->name, olduser, userbad, stripuser);
 #endif
 		nextping = TStime();
-		sendto_connectnotice(nick, user, sptr);
+		sendto_connectnotice(nick, user, sptr, 0, NULL);
 		if (IsSecure(sptr))
 			sptr->umodes |= UMODE_SECURE;
 	}

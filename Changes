@@ -1825,3 +1825,5 @@ seen. gmtime warning still there
 - Minor documentation update for SVSNLINE. (#0000651)
 - Tweaked fix for 2-bans-needed-trick a bit.
 - Fixed crash when link::leaf was empty. (#0000610)
+- Fixed a bug where HCN would mean client exiting notices were displayed twice. As are result
+  of the fix, sendto_conn_hcn has also been removed. Reported by AngryWolf (#0000672)
