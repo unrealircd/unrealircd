@@ -96,8 +96,8 @@ extern ConfigItem_unknown_ext   *conf_unknown_set;
 extern ConfigItem_alias		*conf_alias;
 extern ConfigItem_include	*conf_include;
 extern void clear_unknown();
-EVENT(tkl_check_expire);
-
+extern EVENT(tkl_check_expire);
+extern EVENT(e_unload_module_delayed);
 ConfigItem_class	*Find_class(char *name);
 ConfigItem_deny_dcc	*Find_deny_dcc(char *name);
 ConfigItem_oper		*Find_oper(char *name);

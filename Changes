@@ -937,3 +937,5 @@ seen. gmtime warning still there
 - Made Events do thread locking (so we can do funny things and kill small
   furry animals in the attempt for the perfect scanning module) .. yes, this 
   is drunken coding
+- Made delayed module unloading possible, make a int mod_delay() adding
+  an event, for e_unload_module_delayed

@@ -255,6 +255,7 @@ int	unload_module(char *name)
 {
 #ifndef STATIC_LINKING
 	int	i;
+	int	(*mod_delay)();
 	
 	for (i = 0; i < MAXMODULES; i++)
 		if (Modules[i])
@@ -262,6 +263,23 @@ int	unload_module(char *name)
 				break;		
 	if (i == MAXMODULES)
 		return -1;
+	
+	
+	mod_delay = irc_dlsym(Modules[i]->dll, "mod_delay");
+	if (mod_delay)
+	{
+		/* 
+		 * We are to question the modules mod_delay() if to unload or not
+	 	 * 1 if we are to delay, 0 if not ..
+	 	 * The module MUST queue a module unload event
+	 	 */
+		if ((*mod_delay)() == 1)
+		{
+			/* Return */
+			return 2;
+		}
+	}
+	 
 	
 	/* Call unload */
 	(*Modules[i]->unload)();
@@ -424,9 +442,17 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			return 0;
 		}
 		sendto_realops("Trying to unload module %s", parv[2]);
-		if (unload_module(parv[2]) == 1)
-			sendto_realops("Unloaded module %s", parv[2]);
-		
+		i = unload_module(parv[2]);
+		{
+			if (i == 1)
+				sendto_realops("Unloaded module %s", parv[2]);
+			else if (i == 2)
+				sendto_realops("Delaying module unload of %s",
+					parv[2]);
+			else if (i == -1)
+				sendto_realops("Couldn't unload module %s",	
+					parv[2]);
+		}
 	}		
 	else
 	if (!match(parv[1], "status"))
@@ -476,3 +502,26 @@ void	del_HookX(int hooktype, int (*func)(), void (*vfunc)())
 		}
 }
 
+EVENT(e_unload_module_delayed)
+{
+	char	*name = (char *) data;
+	int	i; 
+	sendto_realops("Delayed unload of module %s in progress",
+		name);
+	
+	i = unload_module(name);
+	if (i == 2)
+	{
+		sendto_realops("Delayed unload of %s, again",
+			name);
+	}
+	if (i == -1)
+	{
+		sendto_realops("Failed to unload '%s'", name);
+	}
+	if (i == 1)
+	{
+		sendto_realops("Unloaded module %s", name);
+	}
+	return;
+}
