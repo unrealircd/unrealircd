@@ -789,3 +789,4 @@ seen. gmtime warning still there
 - Fixed vhost bug that forgot to add a \0 in the end of the string
 - /who fix
 - Another /who fix, what crashed it I assume - helped by narf to find this
+- Fixed a bug were operflag eyes didn't work

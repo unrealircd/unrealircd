@@ -3699,6 +3699,8 @@ int  m_oper(cptr, sptr, parc, parv)
 		sptr->umodes |=
 		    (UMODE_SERVNOTICE | UMODE_WALLOP | UMODE_FAILOP);
 		set_snomask(sptr, SNO_DEFOPER);
+		if (aconf->oflags & OFLAG_EYES)
+			sptr->user->snomask |= SNO_EYES;
 		send_umode_out(cptr, sptr, old);
 		sendto_one(sptr, rpl_str(RPL_SNOMASK),
 			me.name, parv[0], get_sno_str(sptr));
