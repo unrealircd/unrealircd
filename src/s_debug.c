@@ -56,9 +56,6 @@ char serveropts[] = {
 #ifndef	NO_DEFAULT_INVISIBLE
 	'I',
 #endif
-#ifdef	LEAST_IDLE
-	'L',
-#endif
 #ifdef NOSPOOF
 	'n',
 #endif
@@ -94,6 +91,12 @@ char serveropts[] = {
 #endif
 #ifdef USE_SSL
 	'e',
+#endif
+#ifndef NO_OPEROVERRIDE
+	'O',
+#endif
+#ifndef OPEROVERRIDE_VERIFY
+	'o',
 #endif
 	'\0'
 };

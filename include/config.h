@@ -161,6 +161,12 @@
  */
 /* #define NOSPOOF 1  */
 
+
+/*
+ * Enables locops to override the RFC1459 flood control too
+*/
+#undef FAKE_LAG_FOR_LOCOPS
+
 /*
  * HOSTILENAME - Define this if you want the hostile username patch included,
  *		 it will strip characters that are not 0-9,a-z,A-Z,_,- or .
@@ -176,6 +182,18 @@
 */
 
 #define NICK_DELAY 15		/* recommended value 15 */
+
+/*
+ * This makes topics include nick!user@host instead of nick in topic whoset, 
+ * ALL servers must be Unreal3.2-beta12 or higher, and services may have some
+ * problems with this
+*/
+#undef TOPIC_NICK_IS_NUHOST
+
+/*
+ * Use JOIN instead of SJOIN on every remotely sent JOIN
+*/
+#undef JOIN_INSTEAD_OF_SJOIN_ON_REMOTEJOIN
 
 /*
 ** Freelinks garbage collector -Stskeeps
@@ -554,7 +572,6 @@
 #endif
 #endif
 
-#undef LEAST_IDLE
 
 #if defined(mips) || defined(PCS)
 #undef SYSV

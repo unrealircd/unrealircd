@@ -1,5 +1,5 @@
 
-Unreal3.2-Selene (BETA11) RELEASE NOTES
+Unreal3.2-Selene (BETA12) Release Notes
 ======================================
     
      I M P O R T A N T   R E A D I N G
@@ -22,6 +22,14 @@ Unreal3.2-Selene (BETA11) RELEASE NOTES
   uncrackable (within 55 years, that is). The +x algorithm was changed slightly
   to fix a method of cracking that was found. #define COMPAT_BETA4_KEYS to use the beta4
   system for compatibility with older betas.
+
+* If you use Linux and have problems where the IRCd complains that
+  MAXCONNECTIONS is larger than FD_SETSIZE, you need to get your root to
+  edit /usr/include/bits/types.h - #define __FD_SETSIZE 1024 to be some
+  number that is equal or higher than MAXCONNECTIONS. This is a problem with
+  Linux that it is hardcoded and non overrideable in some distributions. We
+  recommend you use FreeBSD or the variants of this if you need to run high
+  load IRC servers. 
 
 * We use autoconf to help with compiliation, and this should make us able
   to a lot more platform (we have even ported to BeOS). 
@@ -114,16 +122,16 @@ Unreal3.2-Selene (BETA11) RELEASE NOTES
 * The old blackhole is now set::scan::endpoint and specifies an IP and port to tell
   proxies to connect to.
 
-* You can now specify a cipher list for SSL links (read doc/conf.doc for more info)
+* You can now specify a cipher list for SSL links (read doc/unreal32docs.html for more info)
 
 * +I is now in invisibility.so so it is easily disabled
 
-* set::socks has been replaced by set::scan (read doc/conf.doc for more info)
+* set::socks has been replaced by set::scan (read doc/unreal32docs.html for more info)
 
 * If you experince problems with the scanners, perhaps check out BOPM
   (http://www.blitzed.org/bopm)
 
-* log {} syslog support added (read doc/conf.doc for more info)
+* log {} syslog support added (read doc/unreal32docs.html for more info)
 
 * Added ripemd-160 password encryption support
 
@@ -148,7 +156,7 @@ Unreal3.2-Selene (BETA11) RELEASE NOTES
 
 * Made the config parser smarter when it comes to time values and size values. Entries are
   no longer limited to 1d2h1m. You can now enter "1day 2 hours 1 minute" for example. See
-  doc/conf.doc for more information.
+  doc/unreal32docs.html for more information.
 
 * The operoverride code has been rewritten to be less intrusive. You can now no longer
   automatically join a channel for which you must override a mode. You must /invite
@@ -166,6 +174,21 @@ Unreal3.2-Selene (BETA11) RELEASE NOTES
 
 * Added technical documentation in doc/technical. This directory will contain information
   about the protocol used by Unreal.
+
+* Added EGD support for SSL. EGD allows entropy to be gathered on systems that do not
+  have a random device (/dev/random or /dev/urandom) or have an unreliable random device.
+  Unreal has been tested using EGADS (http://www.securesoftware.com/egads.php) [With EGD 
+  support enabled], PRNGD 
+  (http://www.aet.tu-cottbus.de/personen/jaenicke/postfix_tls/prngd.html), and EGD
+  (http://egd.sourceforge.net). Other EGD compatible programs should work as well.
+
+* We have created a new complete set of docs!  doc/unreal32docs.html is now a complete
+  set of docs!  It is still not finished, however it contains atleast what was already
+  avail. in the other doc files.  
+  It can also be view online @ http://www.unrealircd.com/unreal32docs.html
+
+* We have removed ./Setup - Please read the new docs for information on configuring &
+  setting up Unreal3.2
 
 * MAKE SURE YOU RERUN ./Config AND RUN make clean BEFORE USING THIS VERSION!!!
 

@@ -277,10 +277,11 @@ char *hidehost(char *rhost)
 		l[0] = ((crc32(host, strlen(host)) ^ KEY2) + KEY) ^ KEY3;
 #endif
 		l[0] &= 0x3FFFFFFF;
-		p++;
-		if (*p)
+		if (*p) {
+			p++;
 			snprintf(cloaked, sizeof cloaked, "%s-%lX.%s", hidden_host,
 				l[0], p);
+		}
 		else
 			snprintf(cloaked, sizeof cloaked, "%s-%lX", hidden_host, l[0]);
 		free(host);	

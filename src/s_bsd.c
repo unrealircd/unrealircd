@@ -529,8 +529,12 @@ void init_sys(void)
 	{
 		if (limit.rlim_max < MAXCONNECTIONS)
 		{
-			(void)fprintf(stderr, "ircd fd table too big\n");
-			(void)fprintf(stderr, "Hard Limit: %ld IRC max: %d\n",
+			(void)fprintf(stderr, "The OS enforces a limit on max open files\n");
+#ifndef LONG_LONG_RLIM_T
+			(void)fprintf(stderr, "Hard Limit: %ld MAXCONNECTIONS: %d\n",
+#else
+			(void)fprintf(stderr, "Hard Limit: %lld MAXCONNECTIONS: %d\n",
+#endif
 			    limit.rlim_max, MAXCONNECTIONS);
 			(void)fprintf(stderr, "Fix MAXCONNECTIONS\n");
 			exit(-1);
@@ -543,8 +547,15 @@ void init_sys(void)
 		exit(-1);
 	}
 }
-
 #endif
+#endif
+#ifndef _WIN32
+	if (MAXCONNECTIONS > FD_SETSIZE)
+	{
+		fprintf(stderr, "MAXCONNECTIONS (%d) is higher than FD_SETSIZE (%d)\n", MAXCONNECTIONS, FD_SETSIZE);
+		fprintf(stderr, "You might need to recompile the IRCd, or if you're running Linux, read the release notes\n");
+		exit(-1);
+	}
 #endif
 	/* Startup message
 	   pid = getpid();
@@ -617,10 +628,6 @@ init_dgram:
 
 	resfd = init_resolver(0x1f);
 	Debug((DEBUG_DNS, "resfd %d", resfd));
-#ifndef _WIN32
-	if (MAXCONNECTIONS > FD_SETSIZE)
-		abort();
-#endif
 	return;
 }
 

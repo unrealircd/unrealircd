@@ -7,7 +7,7 @@
 # or included in any package without permission from the author.
 #
 # NO WARRANTY IS INCLUDED
-CURRENT_VERSION="Unreal3.2-beta11"
+CURRENT_VERSION="Unreal3.2-beta12"
 WHATYAWANT="wget"
 clear
 cat .UPDATE

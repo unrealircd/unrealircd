@@ -245,3 +245,6 @@
 
 /* Define if you have gethostbyname_r with 6 parameters */
 #undef HAVE_GETHOSTBYNAME_R_6
+
+/* Define if rlim_t is long long */
+#undef LONG_LONG_RLIM_T

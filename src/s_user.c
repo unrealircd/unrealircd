@@ -645,45 +645,6 @@ extern char *canonize(char *buffer)
 
 extern char cmodestring[512];
 
-CMD_FUNC(m_post)
-{
-	char *tkllayer[9] = {
-		me.name,	/*0  server.name */
-		"+",		/*1  +|- */
-		"z",		/*2  G   */
-		"*",		/*3  user */
-		NULL,		/*4  host */
-		NULL,
-		NULL,		/*6  expire_at */
-		NULL,		/*7  set_at */
-		NULL		/*8  reason */
-	};
-	char hostip[128], mo[128], mo2[128];
-
-	if (!MyClient(sptr))
-		return 0;
-
-	if (IsRegistered(sptr))
-		return 0;
-
-	strcpy(hostip, (char *)inetntoa((char *)&sptr->ip));
-
-	sendto_one(sptr,
-	    ":%s NOTICE AUTH :*** Proxy connection detected (bad!)", me.name);
-	sendto_snomask(SNO_EYES, "Attempted WWW Proxy connect from client %s",
-	    get_client_host(sptr));
-	exit_client(cptr, sptr, &me, "HTTP proxy connection");
-
-	tkllayer[4] = hostip;
-	tkllayer[5] = me.name;
-	ircsprintf(mo, "%li", 0 + TStime());
-	ircsprintf(mo2, "%li", TStime());
-	tkllayer[6] = mo;
-	tkllayer[7] = mo2;
-	tkllayer[8] = "HTTP Proxy";
-	return m_tkl(&me, &me, 9, tkllayer);
-}
-
 /*
 ** register_user
 **	This function is called when both NICK and USER messages
@@ -2696,33 +2657,7 @@ CMD_FUNC(m_silence)
 	return 0;
 }
 
-/* m_svsjoin() - Lamego - Wed Jul 21 20:04:48 1999
-   Copied off PTlink IRCd (C) PTlink coders team.
-	parv[0] - sender
-	parv[1] - nick to make join
-	parv[2] - channel(s) to join
-*/
-CMD_FUNC(m_svsjoin)
-{
-	aClient *acptr;
-	if (!IsULine(sptr))
-		return 0;
 
-	if (parc != 3 || !(acptr = find_person(parv[1], NULL)))
-		return 0;
-
-	if (MyClient(acptr))
-	{
-		parv[0] = parv[1];
-		parv[1] = parv[2];
-		(void)m_join(acptr, acptr, 2, parv);
-	}
-	else
-		sendto_one(acptr, ":%s SVSJOIN %s %s", parv[0],
-		    parv[1], parv[2]);
-
-	return 0;
-}
 
 /* m_sajoin() - Lamego - Wed Jul 21 20:04:48 1999
    Copied off PTlink IRCd (C) PTlink coders team.
@@ -2771,33 +2706,7 @@ CMD_FUNC(m_sajoin)
 
 	return 0;
 }
-/* m_svspart() - Lamego - Wed Jul 21 20:04:48 1999
-   Copied off PTlink IRCd (C) PTlink coders team.
-  Modified for PART by Stskeeps
-	parv[0] - sender
-	parv[1] - nick to make part
-	parv[2] - channel(s) to part
-*/
-CMD_FUNC(m_svspart)
-{
-	aClient *acptr;
-	if (!IsULine(sptr))
-		return 0;
 
-	if (parc != 3 || !(acptr = find_person(parv[1], NULL))) return 0;
-
-	if (MyClient(acptr))
-	{
-		parv[0] = parv[1];
-		parv[1] = parv[2];
-		(void)m_part(acptr, acptr, 2, parv);
-	}
-	else
-		sendto_one(acptr, ":%s SVSPART %s %s", parv[0],
-		    parv[1], parv[2]);
-
-	return 0;
-}
 
 /* m_sapart() - Lamego - Wed Jul 21 20:04:48 1999
    Copied off PTlink IRCd (C) PTlink coders team.

@@ -2,15 +2,16 @@
 
 [Setup]
 AppName=UnrealIRCd
-AppVerName=UnrealIRCd3.2-beta11
+AppVerName=UnrealIRCd3.2-beta12
 AppPublisher=UnrealIRCd Team
 AppPublisherURL=http://www.unrealircd.com
 AppSupportURL=http://www.unrealircd.com
 AppUpdatesURL=http://www.unrealircd.com
+AppMutex=UnrealMutex
 DefaultDirName={pf}\Unreal3.2
 DefaultGroupName=UnrealIRCd
 AllowNoIcons=yes
-LicenseFile=.\gpl.rtf
+LicenseFile=.\gplplusssl.rtf
 Compression=bzip/9
 MinVersion=4.0.1111,4.0.1381
 OutputDir=../../
@@ -19,15 +20,15 @@ OutputDir=../../
 Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"
 Name: "quicklaunchicon"; Description: "Create a &Quick Launch icon"; GroupDescription: "Additional icons:"; Flags: unchecked
 Name: "installservice"; Description: "Install &Service"; GroupDescription: "Service support:"; MinVersion: 0,4.0
+Name: "makecert"; Description: "Create &Certificate"; GroupDescription: "SSL options:";
 
 [Files]
 Source: "..\..\wircd.exe"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\..\WIRCD.pdb"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\..\.CHANGES.NEW"; DestDir: "{app}\CHANGES.NEW.txt"; CopyMode: alwaysoverwrite
-Source: "..\..\.CONFIG.RANT"; DestDir: "{app}\CONFIG.RANT.txt"; CopyMode: alwaysoverwrite
-Source: "..\..\.NEW_CONFIG"; DestDir: "{app}\NEW_CONFIG.txt"; CopyMode: alwaysoverwrite
-Source: "..\..\.RELEASE.NOTES"; DestDir: "{app}\RELEASE.NOTES.txt"; CopyMode: alwaysoverwrite
-Source: "..\..\.SICI"; DestDir: "{app}\SICI.txt"; CopyMode: alwaysoverwrite
+Source: "..\..\.CHANGES.NEW"; DestDir: "{app}"; DestName: "CHANGES.NEW.txt"; CopyMode: alwaysoverwrite
+Source: "..\..\.CONFIG.RANT"; DestDir: "{app}"; DestName: "CONFIG.RANT.txt"; CopyMode: alwaysoverwrite
+Source: "..\..\.RELEASE.NOTES"; DestDir: "{app}"; DestName: "RELEASE.NOTES.txt"; CopyMode: alwaysoverwrite
+Source: "..\..\.SICI"; DestDir: "{app}"; DestName: "SICI.txt"; CopyMode: alwaysoverwrite
 Source: "..\..\badwords.channel.conf"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\..\badwords.message.conf"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\..\Changes"; DestDir: "{app}"; CopyMode: alwaysoverwrite
@@ -35,17 +36,18 @@ Source: "..\..\Changes.old"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\..\Donation"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: ".\gnu_regex.dll"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\..\help.conf"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\..\LICENSE"; DestDir: "{app}\LICENSE.txt"; CopyMode: alwaysoverwrite
+Source: "..\..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; CopyMode: alwaysoverwrite
 Source: "..\..\Unreal.nfo"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\..\doc\*.*"; DestDir: "{app}\doc"; CopyMode: alwaysoverwrite
 Source: "..\..\aliases\*"; DestDir: "{app}\aliases"; CopyMode: alwaysoverwrite
 Source: "..\..\networks\*"; DestDir: "{app}\networks"; CopyMode: alwaysoverwrite
-Source: "..\..\openssl.exe"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\..\ssleay32.dll"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\..\libeay32.dll"; DestDir: "{app}"; CopyMode: alwaysoverwrite
+Source: "..\..\unreal.exe"; DestDir: "{app}"; CopyMode: alwaysoverwrite; MinVersion: 0,4.0
+Source: "c:\openssl\bin\openssl.exe"; DestDir: "{app}"; CopyMode: alwaysoverwrite
+Source: "c:\openssl\bin\ssleay32.dll"; DestDir: "{app}"; CopyMode: alwaysoverwrite
+Source: "c:\openssl\bin\libeay32.dll"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: ".\makecert.bat"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: ".\encpem.bat"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\..\unreal.exe"; DestDir: "{app}"; CopyMode: alwaysoverwrite; MinVersion: 0,4.0
+Source: "..\ssl.cnf"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: isxdl.dll; DestDir: {tmp}; CopyMode: dontcopy
 
 [UninstallDelete]
@@ -68,7 +70,9 @@ begin
   output := ExpandConstant('{app}\DbgHelp.Dll');
   GetVersionNumbersString(dbghelp,m);
   if ((CurPage = wpReady) AND NOT FileExists(output)) then begin
-    if StrToInt(m[1]) < 5 then begin
+    if (NOT FileExists(dbghelp)) then
+      m := StringOfChar('0',1);
+    if (StrToInt(m[1]) < 5) then begin
      answer := MsgBox('DbgHelp.dll version 5.0 or higher is required to install Unreal, do you wish to install it now?', mbConfirmation, MB_YESNO);
      if answer = IDYES then begin
       tmp := ExpandConstant('{tmp}\dbghelp.dll');
@@ -94,15 +98,19 @@ end;
 [Icons]
 Name: "{group}\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"
 Name: "{group}\Uninstall UnrealIRCd"; Filename: "{uninstallexe}"; WorkingDir: "{app}"
+Name: "{group}\Makecert"; Filename: "{app}\makecert.bat"; WorkingDir: "{app}"
+Name: "{group}\Encpem"; Filename: "{app}\encpem.bat"; WorkingDir: "{app}"
+Name: "{group}\Documentation"; Filename: "{app}\doc\unreal32docs.html"; WorkingDir: "{app}"
 Name: "{userdesktop}\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"; Tasks: quicklaunchicon
 
 [Run]
 Filename: "notepad"; Description: "View example.conf"; Parameters: "{app}\doc\example.conf"; Flags: postinstall skipifsilent shellexec runmaximized
-Filename: "notepad"; Description: "View conf.doc"; Parameters: "{app}\doc\conf.doc"; Flags: postinstall skipifsilent shellexec runmaximized
-Filename: "notepad"; Description: "View Release Notes"; Parameters: "{app}\.RELEASE.NOTES"; Flags: postinstall skipifsilent shellexec runmaximized
+Filename: "{app}\doc\unreal32docs.html"; Description: "View UnrealIRCd documentation"; Parameters: ""; Flags: postinstall skipifsilent shellexec runmaximized
+Filename: "notepad"; Description: "View Release Notes"; Parameters: "{app}\RELEASE.NOTES.txt"; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "notepad"; Description: "View Changes"; Parameters: "{app}\Changes"; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "{app}\unreal.exe"; Parameters: "install"; Flags: runminimized nowait; Tasks: installservice
+Filename: "{app}\makecert.bat"; Tasks: makecert
 
 [UninstallRun]
 Filename: "{app}\unreal.exe"; Parameters: "uninstall"; Flags: runminimized; RunOnceID: "DelService"; Tasks: installservice

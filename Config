@@ -31,6 +31,9 @@ fi
 if [ "$INET6" = "1" ] ; then
 ARG="$ARG--enable-inet6 "
 fi
+if [ "$STANDARD_THREADS" = "1" ] ; then
+ARG="$ARG--enable-standardthreads "
+fi
 ARG="$ARG--with-listen=$LISTEN_SIZE "
 ARG="$ARG--with-dpath=$DPATH "
 ARG="$ARG--with-spath=$SPATH "
@@ -73,6 +76,7 @@ BUFFERPOOL="9"
 MAXCONNECTIONS="1024"
 INET6=""
 EXTRAPARA=""
+STANDARD_THREADS="1"
 if [ "`eval echo -n 'a'`" = "-n a" ] ; then
         c="\c"
 else
@@ -431,6 +435,37 @@ while [ -z "$TEST" ] ; do
 	    ;;
     esac
 done
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$STANDARD_THREADS" = "1" ] ; then
+	TEST="Yes"
+    else
+	TEST="No"
+    fi
+    echo ""
+    echo "Do you want use your OS's provided threads implementation (if not, it will maybe use the one Unreal finds)"
+    echo "If you experince problems with sudden lockups of the IRCd, and you're running Linux, you might want to say Yes here"
+    echo "A sideeffect, under Linux is that each thread is shown as a PID - meaning in ps it will show as a lot of ircd processes"
+    echo "You might want to know your sysadmins opinion on this if that is the case"
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	cc=$TEST
+    fi
+    case "$cc" in
+	[Yy]*)
+	    STANDARD_THREADS="1"
+	    ;;
+	[Nn]*)
+	    STANDARD_THREADS=""
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter either Yes or No"
+	    TEST=""
+	    ;;
+    esac
+done
 
 echo ""
 echo "Would you like any more parameters to configure?"
@@ -458,6 +493,7 @@ HUB="$HUB"
 DOMAINNAME="$DOMAINNAME"
 DEFPERM="$DEFPERM"
 CRYPTOIRCD="$CRYPTOIRCD"
+STANDARD_THREADS="1"
 EXTRAPARA="$EXTRAPARA"
 __EOF__
 RUN_CONFIGURE

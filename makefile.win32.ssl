@@ -1,19 +1,22 @@
 #
 # UnrealIRCd Makefile - codemastr
+# SSL portions, - stskeeps
+# This requires an openssl compile in c:\openssl, 
+# with .lib in lib\, .dll in bin\ and openssl/ in include/openssl
 #
 CC=cl
 LINK=link
 RC=rc
 # Here you put your settings
 DEBUG=1
-FD_SETSIZE=/D SCAN_API=1 /D FD_SETSIZE=16384
+FD_SETSIZE=/D USE_SSL=1 /D SCAN_API=1 /D FD_SETSIZE=16384
 !IFNDEF DEBUG 
-CFLAGS=/MT /O2 /G5 /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D STATIC_LINKING /D _WIN32GUI /D NOSPOOF=1 /c
-LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib dbghelp.lib \
+CFLAGS=/MT /O2 /G5 /I ./INCLUDE /I c:\openssl\include /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D STATIC_LINKING /D _WIN32GUI /D NOSPOOF=1 /c
+LFLAGS=c:\openssl\lib\ssleay32.lib c:\openssl\lib\libeay32.lib kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib dbghelp.lib \
  oldnames.lib libcmt.lib comctl32.lib comdlg32.lib /nodefaultlib /nologo /out:WIRCD.EXE
 !ELSE
-CFLAGS=  /MTd /Zi /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D STATIC_LINKING /D _WIN32GUI /D NOSPOOF=1 /c
-LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib dbghelp.lib\
+CFLAGS=  /MTd /Zi /I ./INCLUDE /I c:\openssl\include /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D STATIC_LINKING /D _WIN32GUI /D NOSPOOF=1 /c
+LFLAGS=c:\openssl\lib\ssleay32.lib c:\openssl\lib\libeay32.lib kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib dbghelp.lib\
  oldnames.lib libcmt.lib comctl32.lib comdlg32.lib \
  advapi32.lib /nodefaultlib /nologo /debug /debugtype:BOTH /OUT:WIRCD.EXE 
 !ENDIF

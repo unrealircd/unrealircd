@@ -59,6 +59,7 @@ struct zConfiguration {
 	unsigned ident_check:1;
 	unsigned fail_oper_warn:1;
 	unsigned show_connect_info:1;
+	unsigned use_egd;
 	long host_timeout;
 	int  host_retries;
 	char *name_server;
@@ -70,6 +71,12 @@ struct zConfiguration {
 	char *oper_only_stats;
 	int  maxchannelsperuser;
 	int  anti_spam_quit_message_time;
+	char *egd_path;
+	char *static_quit;
+#ifdef USE_SSL
+	char *x_server_cert_pem;
+	char *x_server_key_pem;
+#endif
 	aNetwork network;
 };
 
@@ -96,6 +103,8 @@ extern aConfiguration iConf;
 #define SHOWCONNECTINFO			iConf.show_connect_info
 #define OPER_ONLY_STATS			iConf.oper_only_stats
 #define ANTI_SPAM_QUIT_MSG_TIME		iConf.anti_spam_quit_message_time
+#define USE_EGD				iConf.use_egd
+#define EGD_PATH			iConf.egd_path
 
 #define ircnetwork			iConf.network.x_ircnetwork
 #define ircnet005			iConf.network.x_ircnet005
@@ -113,8 +122,11 @@ extern aConfiguration iConf;
 #define STATS_SERVER		iConf.network.x_stats_server
 #define iNAH				iConf.network.x_inah
 #define prefix_quit			iConf.network.x_prefix_quit
+#define SSL_SERVER_CERT_PEM		(iConf.x_server_cert_pem ? iConf.x_server_cert_pem : "server.cert.pem")
+#define SSL_SERVER_KEY_PEM		(iConf.x_server_key_pem ? iConf.x_server_key_pem : "server.key.pem")
 
 #define CLOAK_KEY1			iConf.network.key
 #define CLOAK_KEY2			iConf.network.key2
 #define CLOAK_KEY3			iConf.network.key3
 #define CLOAK_KEYCRC			iConf.network.keycrc
+#define STATIC_QUIT			iConf.static_quit

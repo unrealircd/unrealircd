@@ -39,7 +39,12 @@ elif test "$ac_cv_sizeof_long" = 4 ; then
   AC_CHECK_TYPE(u_int32_t, unsigned long)
 else
   AC_MSG_ERROR([Cannot find a type with size of 32 bits])
-fi])
+fi
+AC_CHECK_SIZEOF(rlim_t)
+if test "$ac_cv_sizeof_rlim_t" = 8 ; then
+AC_DEFINE(LONG_LONG_RLIM_T)
+fi
+])
 
 
 dnl @synopsis ACX_PTHREAD([ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])

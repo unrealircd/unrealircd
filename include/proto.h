@@ -63,9 +63,6 @@ extern EVENT(save_tunefile);
 aMotd *read_rules(char *filename);
 aMotd *read_motd(char *filename);
 
-/* s_unreal.c */
-void unrealmanual(void);
-
 /* s_user.c */
 int  check_for_target_limit(aClient *sptr, void *target, const char *name);
 void make_umodestr(void);

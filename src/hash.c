@@ -425,23 +425,6 @@ aChannel *hash_find_channel(char *name, aChannel *chptr)
 		}
 	return chptr;
 }
-/*
- * NOTE: this command is not supposed to be an offical part of the ircd
- * protocol.  It is simply here to help debug and to monitor the
- * performance of the hash functions and table, enabling a better
- * algorithm to be sought if this one becomes troublesome. -avalon
- * 
- * Needs rewriting for DOUGH_HASH, consider this a place holder until
- * thats done. Hopefully for hybrid-5, if not. tough. - Dianora
- * 
- */
-
-int  m_hash(aClient *cptr, aClient *sptr, int parc, char *parv[])
-{
-	return 0;
-}
-
-
 aChannel *hash_get_chan_bucket(unsigned int hashv)
 {
 	if (hashv > CH_MAX)
@@ -745,3 +728,5 @@ int   hash_del_watch_list(aClient *cptr)
 	
 	return 0;
 }
+
+

@@ -1,7 +1,6 @@
 /*
- *   Unreal Internet Relay Chat Daemon, src/modules/m_rakill.c
+ *   Unreal Internet Relay Chat Daemon, src/modules/m_cycle.c
  *   (C) 2000-2001 Carsten V. Munk and the UnrealIRCd Team
- *   Moved to modules by Fish (Justin Hammond)
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -33,6 +32,7 @@
 #ifdef _WIN32
 #include <io.h>
 #endif
+#include <sys/timeb.h>
 #include <fcntl.h>
 #include "h.h"
 #include "proto.h"
@@ -43,23 +43,22 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_rakill(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+DLLFUNC int m_cycle(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
-#define MSG_RAKILL      "RAKILL"        /* RAKILL */
-#define TOK_RAKILL      "Y"     /* 89 */
-
+#define MSG_CYCLE       "CYCLE"
+#define TOK_CYCLE       "BP"
 
 #ifndef DYNAMIC_LINKING
-ModuleHeader m_rakill_Header
+ModuleHeader m_cycle_Header
 #else
-#define m_rakill_Header Mod_Header
+#define m_cycle_Header Mod_Header
 ModuleHeader Mod_Header
 #endif
   = {
-	"rakill",	/* Name of module */
+	"cycle",	/* Name of module */
 	"$Id$", /* Version */
-	"command /rakill", /* Short description of module */
+	"command /cycle", /* Short description of module */
 	"3.2-b8-1",
 	NULL 
     };
@@ -73,13 +72,13 @@ ModuleHeader Mod_Header
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
 #else
-int    m_rakill_Init(ModuleInfo *modinfo)
+int    m_cycle_Init(ModuleInfo *modinfo)
 #endif
 {
 	/*
 	 * We call our add_Command crap here
 	*/
-	add_Command(MSG_RAKILL, TOK_RAKILL, m_rakill, MAXPARA);
+	add_Command(MSG_CYCLE, TOK_CYCLE, m_cycle, MAXPARA);
 	return MOD_SUCCESS;
 	
 }
@@ -88,80 +87,44 @@ int    m_rakill_Init(ModuleInfo *modinfo)
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_rakill_Load(int module_load)
+int    m_cycle_Load(int module_load)
 #endif
 {
 	return MOD_SUCCESS;
 	
 }
-
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Unload(int module_unload)
 #else
-int	m_rakill_Unload(int module_unload)
+int	m_cycle_Unload(int module_unload)
 #endif
 {
-	if (del_Command(MSG_RAKILL, TOK_RAKILL, m_rakill) < 0)
+	if (del_Command(MSG_CYCLE, TOK_CYCLE, m_cycle) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_rakill_Header.name);
+				m_cycle_Header.name);
 	}
-	return MOD_SUCCESS;
-	
+	return MOD_SUCCESS;	
 }
 
-
 /*
-** m_rakill;
-**      parv[0] = sender prefix
-**      parv[1] = hostmask
-**      parv[2] = username
-**      parv[3] = comment
+ * m_cycle() - Stskeeps
+ * parv[0] = prefix
+ * parv[1] = channels
 */
-DLLFUNC int m_rakill(aClient *cptr, aClient *sptr, int parc, char *parv[])
+
+CMD_FUNC(m_cycle)
 {
-	char *hostmask, *usermask;
-	char	mo[1024];
-	char *tkllayer[6] = {
-		me.name,	/*0  server.name */
-		"-",		/*1  - */
-		"G",		/*2  G   */
-		NULL,		/*3  user */
-		NULL,		/*4  host */
-		NULL		/*5  whoremoved */
-	};
-
-	if (parc < 2 && IsPerson(sptr))
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "RAKILL");
-		return 0;
-	}
-
-	if (IsServer(sptr) && parc < 3)
-		return 0;
-
-	if (!IsServer(cptr))
-	{
-		if (!IsOper(sptr))
-		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			    sptr->name);
-		}
-		else
-		{
-			sendto_one(sptr, ":%s NOTICE %s :*** RAKILL is depreciated and should not be used. Please use /gline -user@host instead", 
-				me.name, sptr->name);
-		}
-		return 0;
-	}
+	char	channels[1024];
 	
-	tkllayer[3] = parv[2];
-	tkllayer[4] = parv[1];	
-	tkllayer[5] = sptr->name;
-	m_tkl(&me, &me, 6, tkllayer);
-	loop.do_bancheck = 1;
-	return 0;
+        if (parc < 2)
+                return 0;
+        parv[2] = "cycling";
+	strncpy(channels, parv[1], 1020);
+        (void)m_part(cptr, sptr, 3, parv);
+	parv[1] = channels;
+        parv[2] = NULL;
+	return m_join(cptr, sptr, 2, parv);
 }

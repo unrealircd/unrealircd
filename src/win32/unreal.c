@@ -20,10 +20,14 @@
 #include <windows.h>
 #include <string.h>
 #include <stdio.h>
+static 	OSVERSIONINFO VerInfo;
 
 #define IRCD_SERVICE_CONTROL_REHASH 128
 void show_usage() {
-	fprintf(stderr, "unreal start|stop|rehash|restart|install|uninstall");
+	fprintf(stderr, "unreal start|stop|rehash|restart|install|uninstall|config <option> <value>");
+	fprintf(stderr, "\nValid config options:\nstartup auto|manual\n");
+	if (VerInfo.dwMajorVersion == 5) 
+		fprintf(stderr, "crashrestart delay\n");
 }
 
 char *show_error(DWORD code) {
@@ -34,15 +38,13 @@ char *show_error(DWORD code) {
 
 
 int main(int argc, char *argv[]) {
-	OSVERSIONINFO VerInfo;
 	char *bslash;
+	VerInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	GetVersionEx(&VerInfo);
 	if (argc < 2) {
 		show_usage();
 		return -1;
-			
-	}
-	VerInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	GetVersionEx(&VerInfo);
+		}
 	if (!stricmp(argv[1], "install")) {
 		SC_HANDLE hService, hSCManager;
 		char path[MAX_PATH+1];
@@ -124,6 +126,63 @@ int main(int argc, char *argv[]) {
 		SC_HANDLE hService = OpenService(hSCManager, "UnrealIRCd", SERVICE_USER_DEFINED_CONTROL); 
 		ControlService(hService, IRCD_SERVICE_CONTROL_REHASH, &status);
 		printf("UnrealIRCd NT Service successfully rehashed");
+	}
+	else if (!stricmp(argv[1], "config")) {
+		SERVICE_STATUS status;
+		SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+		SC_HANDLE hService = OpenService(hSCManager, "UnrealIRCd",
+						 SERVICE_CHANGE_CONFIG|SERVICE_START); 
+		if (argc < 3) {
+			show_usage();
+			return -1;
+		}
+		if (!stricmp(argv[2], "startup")) {
+			if (ChangeServiceConfig(hService, SERVICE_NO_CHANGE,
+					    !stricmp(argv[3], "auto") ? SERVICE_AUTO_START
+						: SERVICE_DEMAND_START, SERVICE_NO_CHANGE,
+					    NULL, NULL, NULL, NULL, NULL, NULL, NULL)) 
+				printf("UnrealIRCd NT Service configuration changed");
+			else
+				printf("UnrealIRCd NT Service configuration change failed - %s", show_error(GetLastError()));	
+		}
+		else if (!stricmp(argv[2], "crashrestart") && VerInfo.dwMajorVersion == 5) {
+			SERVICE_FAILURE_ACTIONS hFailActions;
+			SC_ACTION hAction;
+			memset(&hFailActions, 0, sizeof(hFailActions));
+			if (argc >= 4) {
+				hFailActions.dwResetPeriod = 30;
+				hFailActions.cActions = 1;
+				hAction.Type = SC_ACTION_RESTART;
+				hAction.Delay = atoi(argv[3])*60000;
+				hFailActions.lpsaActions = &hAction;
+				if (ChangeServiceConfig2(hService, SERVICE_CONFIG_FAILURE_ACTIONS, 	
+						     &hFailActions))
+					printf("UnrealIRCd NT Service configuration changed");
+				else
+					printf("UnrealIRCd NT Service configuration change failed - %s", show_error(GetLastError()));	
+			}
+			else {
+				hFailActions.dwResetPeriod = 0;
+				hFailActions.cActions = 0;
+				hAction.Type = SC_ACTION_NONE;
+				hFailActions.lpsaActions = &hAction;
+				if (ChangeServiceConfig2(hService, SERVICE_CONFIG_FAILURE_ACTIONS,
+						     &hFailActions)) 
+					printf("UnrealIRCd NT Service configuration changed");
+				else
+					printf("UnrealIRCd NT Service configuration change failed - %s", show_error(GetLastError()));	
+
+				
+			}
+		}
+		else {
+			show_usage();
+			return -1;
+		}	
+	}
+	else {
+		show_usage();
+		return -1;
 	}
 
 		

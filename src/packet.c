@@ -1,4 +1,3 @@
-
 /************************************************************************
  *   Unreal Internet Relay Chat Daemon, src/packet.c
  *   Copyright (C) 1990  Jarkko Oikarinen and
@@ -174,7 +173,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_GLOBOPS, TOK_GLOBOPS, m_globops, 1);
 	add_Command(MSG_CHATOPS, TOK_CHATOPS, m_chatops, 1);
 	add_Command(MSG_LOCOPS, TOK_LOCOPS, m_locops, 1);
-	add_Command(MSG_HASH, TOK_HASH, m_hash, MAXPARA);
 	add_Command(MSG_DNS, TOK_DNS, m_dns, MAXPARA);
 	add_Command(MSG_REHASH, TOK_REHASH, m_rehash, MAXPARA);
 	add_Command(MSG_RESTART, TOK_RESTART, m_restart, MAXPARA);
@@ -189,20 +187,15 @@ void	init_CommandHash(void)
 	add_Command(MSG_NETINFO, TOK_NETINFO, m_netinfo, MAXPARA);
 	add_Command(MSG_ADDMOTD, TOK_ADDMOTD, m_addmotd, 1);
 	add_Command(MSG_ADDOMOTD, TOK_ADDOMOTD, m_addomotd, 1);
-	add_Command(MSG_SVSJOIN, TOK_SVSJOIN, m_svsjoin, MAXPARA);
 	add_Command(MSG_SAJOIN, TOK_SAJOIN, m_sajoin, MAXPARA);
-	add_Command(MSG_SVSPART, TOK_SVSPART, m_svspart, MAXPARA);
 	add_Command(MSG_SAPART, TOK_SAPART, m_sapart, MAXPARA);
 	add_Command(MSG_SVSFLINE, TOK_SVSFLINE, m_svsfline, MAXPARA);
-	add_Command(MSG_VHOST, TOK_VHOST, m_vhost, MAXPARA);
 	add_Command(MSG_BOTMOTD, TOK_BOTMOTD, m_botmotd, MAXPARA);
 	add_Command(MSG_SJOIN, TOK_SJOIN, m_sjoin, MAXPARA);
 	add_Command(MSG_UMODE2, TOK_UMODE2, m_umode2, MAXPARA);
 	add_Command(MSG_DCCDENY, TOK_DCCDENY, m_dccdeny, 2);
 	add_Command(MSG_UNDCCDENY, TOK_UNDCCDENY, m_undccdeny, MAXPARA);
-/*	add_Command(MSG_SHUN, TOK_SHUN, m_shun, MAXPARA); */
 	add_Command(MSG_NEWJOIN, TOK_JOIN, m_join, MAXPARA);
-	add_Command(MSG_CYCLE, TOK_CYCLE, m_cycle, MAXPARA);	
 	add_Command(MSG_MODULE, TOK_MODULE, m_module, MAXPARA);	
 	add_Command(MSG_TKL, TOK_TKL, m_tkl, MAXPARA);
 		

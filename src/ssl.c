@@ -125,14 +125,14 @@ void init_ctx_server(void)
 	}
 	SSL_CTX_set_default_passwd_cb(ctx_server, ssl_pem_passwd_cb);
 	SSL_CTX_set_options(ctx_server, SSL_OP_NO_SSLv2);
-	if (SSL_CTX_use_certificate_file(ctx_server, CERTF, SSL_FILETYPE_PEM) <= 0)
+	if (SSL_CTX_use_certificate_file(ctx_server, SSL_SERVER_CERT_PEM, SSL_FILETYPE_PEM) <= 0)
 	{
-		ircd_log(LOG_ERROR, "Failed to load SSL certificate %s", CERTF);
+		ircd_log(LOG_ERROR, "Failed to load SSL certificate %s", SSL_SERVER_CERT_PEM);
 		exit(3);
 	}
-	if (SSL_CTX_use_PrivateKey_file(ctx_server, KEYF, SSL_FILETYPE_PEM) <= 0)
+	if (SSL_CTX_use_PrivateKey_file(ctx_server, SSL_SERVER_KEY_PEM, SSL_FILETYPE_PEM) <= 0)
 	{
-		ircd_log(LOG_ERROR, "Failed to load SSL private key %s", KEYF);
+		ircd_log(LOG_ERROR, "Failed to load SSL private key %s", SSL_SERVER_KEY_PEM);
 		exit(4);
 	}
 
@@ -152,14 +152,14 @@ void init_ctx_client(void)
 		exit(2);
 	}
 	SSL_CTX_set_default_passwd_cb(ctx_client, ssl_pem_passwd_cb);
-	if (SSL_CTX_use_certificate_file(ctx_client, CERTF, SSL_FILETYPE_PEM) <= 0)
+	if (SSL_CTX_use_certificate_file(ctx_client, SSL_SERVER_CERT_PEM, SSL_FILETYPE_PEM) <= 0)
 	{
-		ircd_log(LOG_ERROR, "Failed to load SSL certificate %s (client)", CERTF);
+		ircd_log(LOG_ERROR, "Failed to load SSL certificate %s (client)", SSL_SERVER_CERT_PEM);
 		exit(3);
 	}
-	if (SSL_CTX_use_PrivateKey_file(ctx_client, KEYF, SSL_FILETYPE_PEM) <= 0)
+	if (SSL_CTX_use_PrivateKey_file(ctx_client, SSL_SERVER_KEY_PEM, SSL_FILETYPE_PEM) <= 0)
 	{
-		ircd_log(LOG_ERROR, "Failed to load SSL private key %s (client)", KEYF);
+		ircd_log(LOG_ERROR, "Failed to load SSL private key %s (client)", SSL_SERVER_KEY_PEM);
 		exit(4);
 	}
 
@@ -176,6 +176,17 @@ void init_ssl(void)
 
 	SSL_load_error_strings();
 	SSLeay_add_ssl_algorithms();
+	if (USE_EGD) {
+#if OPENSSL_VERSION_NUMBER >= 0x000907000
+		if (!EGD_PATH)
+			RAND_status();
+		else
+
+#else
+		if (EGD_PATH) 
+#endif
+			RAND_egd(EGD_PATH);		
+	}
 	init_ctx_server();
 	init_ctx_client();
 }

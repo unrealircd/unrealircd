@@ -30,7 +30,7 @@
 #define PATCH1  		"3"
 #define PATCH2  		".2"
 #define PATCH3  		"-Selene"
-#define PATCH4  		"[beta11]"
+#define PATCH4  		"[beta12]"
 #define PATCH5  		""
 #define PATCH6  		""
 #define PATCH7  		""

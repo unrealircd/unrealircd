@@ -126,7 +126,10 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (!IsServer(cptr))
 	{
 		char *s = comment;
-
+		if (STATIC_QUIT)
+		{
+			return exit_client(cptr, sptr, sptr, STATIC_QUIT);
+		}
 		if (!prefix_quit || strcmp(prefix_quit, "no"))
 			s = ircsprintf(comment, "%s ",
 		    		BadPtr(prefix_quit) ? "Quit:" : prefix_quit);

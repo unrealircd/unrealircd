@@ -1453,3 +1453,104 @@ seen. gmtime warning still there
   on Linux FSU Pthread installs. (When we got a better way, we will have full doug lea malloc..)
 - Made OPEROVERRIDE_VERIFY default undeffed
 - SSL fixes to deal with not allowing SSLv2
+*** beta11 released ***
+- Removed src/s_unreal.c contained 2 functions, 1 never used, 1 used once
+- Removed /hash (did nothing), removed /post (replaced by scan_http)
+- Modulized /vhost, /cycle, /svsjoin, /svspart
+- Fixed a autoconf problem where FD_SETSIZE was NOT replaced when it wasn't big enough
+  (abort() problem on some installs.)
+- Readded find_match_server which got removed, m_rping uses it. Now in hash.c
+- Added note about Linux and FD_SETSIZE > 1024 in release notes
+- Made IRCd bitch properly when MAXCONNECTIONS>FD_SETSIZE
+- Fixed a make install bug due to removing obsolete files, reported by Morbid (#0000250)
+- Removed find_match_server from hash.c since it wasn't removed and was instead already
+  moved to s_serv.
+- .. Fixed a problem with normal unix source compiling as codemastr had
+  #ifdef _WIN32 'ed find_match_server, causing me to believe it was gone.
+- Allowed SQLINE/UNSQLINE to come from a U:lined client as well
+- Module load fix for a minor fuckup in SQLINE/UNSQLINE
+- Fixed a long existing bug where when MAXCONNECTIONS is too high it was displayed as set
+  to 0
+- Fixed the bug where /invite doesn't work (TEST BEFORE COMMIT!) reported by havlaz
+  (#0000255)
+- Fixed problem where the parameters of the RAKILL aliasing to TKL were switched, 
+  and a missing return for normal users.
+- Fixed a win32 SSL installer problem
+- Fixed problem with DEBUG ERROR when SSL handshaking (reported by some people)
+- Fixed a bug where the win32 installer didn't install dbghelp.dll on systems that don't
+  have any version of the dll.
+- Removed GNU malloc totally from the FSU pthreads distribution
+- Added some somewhat path specifics to unrealinstssl.iss
+- Fixed some installer problems wrt SSL compile, and added makefile.win32.ssl
+- Removed /doc/faq included in new doc set
+- Added set::ssl::egd for Entropy Gathering Daemon support see doc/conf.doc or
+  doc/example.conf for more information.
+- Updated credits
+- Removed ./Setup - No longer supported (read the docs!)
+- Removed .NEW_CONFIG - No longer needed
+- Removed INSTALL - Refer to NEW docs Unreal32docs.html
+- Removed doc/commands.txt - Refer to NEW docs Unreal32docs.html
+- Removed doc/faq - Refer to NEW docs Unreal32docs.html
+- Removed doc/conf.doc - Refer to NEW Docs Unreal32docs.html
+- Removed doc/unrealircd.doc - Refer to NEW docs Unreal32docs.html
+- Removed doc/Elite.Changes - Out Dated
+- Removed doc/services-install-guide - Refer to NEW docs Unreal32docs.html
+- Modfied Unreal.nfo to include ref. to new docs
+- Removed old docs and added new docs to Makefile.in
+- Updated .CHANGES.NEW with new version # and link to docs
+- Updated .RELEASE.NOTES with new version # and link to docs
+- Added NEW doc/unreal32docs.html Docs
+- Fixed an oper::swhois bug where the swhois was not propagated reported by FrostByghte
+  (#0000247)
+- Converted cr/lf to just lf in doc/unrea32docs.html
+- Fixed a bug where set {} info wasn't cleared out at rehash
+- Removed .NEW_CONFIG referenced from the win32 installer scripts
+- Removed LEAST_IDLE, wtf did that do in the first place?
+- Added version flags (O and o) for oper override and oper override verify
+- FAKE_LAG_FOR_LOCOPS define added in config.h - enables local ops to
+  override RFC1459 flood control
+- Fixed grammar error thanks to MorPheus
+- Fixed halfops kicking halfops bug thanks to Jim_
+- Fixed a typo in /akill and /rakill obsolete depreciation notices reported by zak (#0000272)
+- Added set::ssl::certificate and set::ssl::key to point to where we got the certificate
+  PEM and the private key PEM
+- Fixed a /invite bug where remote clients couldn't be invited, reported by Alzirr (#0000275)
+- Fixed a bug where if the hostname didn't have a dot (ie. localhost) host cloaking broke
+  reported by Ron885
+- Rewrote /helpop to work as advertised, reported by FrostByghte (#0000217)
+- Fixed a set {} memory leak on /rehash
+- Made it so Unreal can still be launched by clicking wircd.exe when in NT service mode
+- Stripped the docs. 100kb down, but a reformat in something other than MS
+  word would really really help.
+- Changed version to beta12
+- Add config option to the unreal service utility options are:
+  unreal config startup auto|manual
+    auto starts the service when the pc boots, manual requires you to run Unreal manually
+  unreal config crashrestart delay (2k/XP only)
+    specifies how long to wait after a crash to restart Unreal (in minutes). If no delay is
+    specified, no action is taken when a crash occurs
+- Made some changes to the win32 resolver, hopefully this will fix the crash bugs
+- Made /die exit gracefully when in service mode
+- Made it so Unreal (win32) can't be reinstalled or uninstalled while it is currently
+  running
+- Some install script win32 changes to deal with unreal32docs.html
+- win32 install script changes to deal with version switchover
+- Added src/win32/gplplusssl.rtf for ssl-install script to show during
+  install in license - GPL + the notes from openssl
+- Made minor changes to help.conf
+- Fixed +O/+A ban implementation issues
+- Reformated unreal32docs.html in something other than MS Word 93k now!
+- Corrected release date in doc/unreal32.docs
+- Removed ssl.rnd as it was not supposed to be provided by CVS
+- Made standard-threads default, and made a Config option if to use FSU
+  pthreads or not
+- Made set::static-quit - check doc/example.conf for documentation - but
+  this allows the admin to decide a standard custom quit for users. so they
+  won't be able to make their own quits. This affects set::prefix-quit and
+  ANTI_SPAM_QUIT_TIME - it simply replaces it with the message if enabled
+- Make makecert.bat and encpem.bat show their use in titlebar when run
+- Added define TOPIC_NICK_IS_NUHOST - nick!user@host in topic-whoset, undeffed by
+  default, read warning in config.h. Only use with 3.2-beta12 or higher
+- Made so every join is a SJOIN to prevent TS0 problems. Read config.h to disable this if it causes problems
+- Added set::static-quit to unreal32docs.html
+- Updated docs to include ripemd-160 encryption option

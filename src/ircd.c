@@ -76,6 +76,7 @@ ID_Notes("2.48 3/9/94");
 #ifdef __FreeBSD__
 char *malloc_options = "h" MALLOC_FLAGS_EXTRA;
 #endif
+time_t TSoffset = 0;
 
 /* Added DrBin */
 #ifndef BIG_SECURITY_HOLE
@@ -221,8 +222,17 @@ VOIDSIG s_die()
 	for (i = LastSlot; i >= 0; i--)
 		if ((cptr = local[i]) && DBufLength(&cptr->sendQ) > 0)
 			(void)send_queued(cptr);
+	if (!IsService)
 #endif
 	exit(-1);
+#ifdef _WIN32
+	else {
+		SERVICE_STATUS status;
+		SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+		SC_HANDLE hService = OpenService(hSCManager, "UnrealIRCd", SERVICE_STOP); 
+		ControlService(hService, SERVICE_CONTROL_STOP, &status);
+	}
+#endif
 }
 
 #ifndef _WIN32
@@ -771,6 +781,9 @@ int InitwIRCD(int argc, char *argv[])
 #ifndef NO_FDLIST
 	TS   nextfdlistcheck = 0;	/*end of priority code */
 #endif
+#ifdef _WIN32
+	CreateMutex(NULL, FALSE, "UnrealMutex");
+#endif
 #if !defined(_WIN32) && !defined(_AMIGA)
 	sbrk0 = (char *)sbrk((size_t)0);
 	uid = getuid();
@@ -1231,9 +1244,11 @@ void SocketLoop(void *dummy)
 #ifndef NO_FDLIST
 	TS   nextfdlistcheck = 0;	/*end of priority code */
 #endif
-
+	
+	
 	while (1)
 #else
+	nextping = timeofday;
 	/*
 	 * Forever drunk .. forever drunk ..
 	 * * (Sorry Alphaville.)
@@ -1308,6 +1323,7 @@ void SocketLoop(void *dummy)
 			delay = MIN(delay, TIMESEC);
 #ifdef NO_FDLIST
 		(void)read_message(delay);
+		timeofday = time(NULL) + TSoffset;
 #else
 		(void)read_message(0, &serv_fdlist);	/* servers */
 		(void)read_message(1, &busycli_fdlist);	/* busy clients */
@@ -1330,6 +1346,7 @@ void SocketLoop(void *dummy)
 			}
 		} else {
 			read_message(delay, NULL);	/*  check everything */
+			timeofday = time(NULL) + TSoffset;
 		}
 
 #endif

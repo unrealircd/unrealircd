@@ -1,7 +1,6 @@
 /*
- *   Unreal Internet Relay Chat Daemon, src/modules/m_rakill.c
+ *   Unreal Internet Relay Chat Daemon, src/modules/m_svsjoin.c
  *   (C) 2000-2001 Carsten V. Munk and the UnrealIRCd Team
- *   Moved to modules by Fish (Justin Hammond)
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -33,6 +32,7 @@
 #ifdef _WIN32
 #include <io.h>
 #endif
+#include <sys/timeb.h>
 #include <fcntl.h>
 #include "h.h"
 #include "proto.h"
@@ -43,23 +43,22 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_rakill(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+DLLFUNC int m_svsjoin(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
-#define MSG_RAKILL      "RAKILL"        /* RAKILL */
-#define TOK_RAKILL      "Y"     /* 89 */
-
+#define MSG_SVSJOIN       "SVSJOIN"
+#define TOK_SVSJOIN       "BR"
 
 #ifndef DYNAMIC_LINKING
-ModuleHeader m_rakill_Header
+ModuleHeader m_svsjoin_Header
 #else
-#define m_rakill_Header Mod_Header
+#define m_svsjoin_Header Mod_Header
 ModuleHeader Mod_Header
 #endif
   = {
-	"rakill",	/* Name of module */
+	"svsjoin",	/* Name of module */
 	"$Id$", /* Version */
-	"command /rakill", /* Short description of module */
+	"command /svsjoin", /* Short description of module */
 	"3.2-b8-1",
 	NULL 
     };
@@ -73,13 +72,13 @@ ModuleHeader Mod_Header
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
 #else
-int    m_rakill_Init(ModuleInfo *modinfo)
+int    m_svsjoin_Init(ModuleInfo *modinfo)
 #endif
 {
 	/*
 	 * We call our add_Command crap here
 	*/
-	add_Command(MSG_RAKILL, TOK_RAKILL, m_rakill, MAXPARA);
+	add_Command(MSG_SVSJOIN, TOK_SVSJOIN, m_svsjoin, MAXPARA);
 	return MOD_SUCCESS;
 	
 }
@@ -88,7 +87,7 @@ int    m_rakill_Init(ModuleInfo *modinfo)
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_rakill_Load(int module_load)
+int    m_svsjoin_Load(int module_load)
 #endif
 {
 	return MOD_SUCCESS;
@@ -100,68 +99,41 @@ int    m_rakill_Load(int module_load)
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Unload(int module_unload)
 #else
-int	m_rakill_Unload(int module_unload)
+int	m_svsjoin_Unload(int module_unload)
 #endif
 {
-	if (del_Command(MSG_RAKILL, TOK_RAKILL, m_rakill) < 0)
+	if (del_Command(MSG_SVSJOIN, TOK_SVSJOIN, m_svsjoin) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_rakill_Header.name);
+				m_svsjoin_Header.name);
 	}
-	return MOD_SUCCESS;
-	
+	return MOD_SUCCESS;	
 }
 
-
-/*
-** m_rakill;
-**      parv[0] = sender prefix
-**      parv[1] = hostmask
-**      parv[2] = username
-**      parv[3] = comment
+/* m_svsjoin() - Lamego - Wed Jul 21 20:04:48 1999
+   Copied off PTlink IRCd (C) PTlink coders team.
+	parv[0] - sender
+	parv[1] - nick to make join
+	parv[2] - channel(s) to join
 */
-DLLFUNC int m_rakill(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_svsjoin)
 {
-	char *hostmask, *usermask;
-	char	mo[1024];
-	char *tkllayer[6] = {
-		me.name,	/*0  server.name */
-		"-",		/*1  - */
-		"G",		/*2  G   */
-		NULL,		/*3  user */
-		NULL,		/*4  host */
-		NULL		/*5  whoremoved */
-	};
+	aClient *acptr;
+	if (!IsULine(sptr))
+		return 0;
 
-	if (parc < 2 && IsPerson(sptr))
+	if (parc != 3 || !(acptr = find_person(parv[1], NULL)))
+		return 0;
+
+	if (MyClient(acptr))
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "RAKILL");
-		return 0;
+		parv[0] = parv[1];
+		parv[1] = parv[2];
+		(void)m_join(acptr, acptr, 2, parv);
 	}
+	else
+		sendto_one(acptr, ":%s SVSJOIN %s %s", parv[0],
+		    parv[1], parv[2]);
 
-	if (IsServer(sptr) && parc < 3)
-		return 0;
-
-	if (!IsServer(cptr))
-	{
-		if (!IsOper(sptr))
-		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			    sptr->name);
-		}
-		else
-		{
-			sendto_one(sptr, ":%s NOTICE %s :*** RAKILL is depreciated and should not be used. Please use /gline -user@host instead", 
-				me.name, sptr->name);
-		}
-		return 0;
-	}
-	
-	tkllayer[3] = parv[2];
-	tkllayer[4] = parv[1];	
-	tkllayer[5] = sptr->name;
-	m_tkl(&me, &me, 6, tkllayer);
-	loop.do_bancheck = 1;
 	return 0;
 }

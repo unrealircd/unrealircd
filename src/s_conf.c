@@ -2330,6 +2330,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckNull(cep);
 			OPER_MODES = (long) set_usermode(cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "static-quit")) {
+			CheckNull(cep);
+			ircstrdup(STATIC_QUIT, cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "auto-join")) {
 			CheckNull(cep);
 			ircstrdup(AUTO_JOIN_CHANS, cep->ce_vardata);
@@ -2476,6 +2480,29 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				CLOAK_KEY2, CLOAK_KEY3);
 			CLOAK_KEYCRC = (long) crc32(temp, strlen(temp));
 		}
+#ifdef USE_SSL
+		else if (!strcmp(cep->ce_varname, "ssl")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				if (!strcmp(cepp->ce_varname, "egd")) {
+					USE_EGD = 1;
+					if (cepp->ce_vardata)
+						EGD_PATH = strdup(cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "certificate"))
+				{
+					if (!cepp->ce_vardata)
+						continue;
+					ircstrdup(iConf.x_server_cert_pem, cepp->ce_varname);	
+				}
+				else if (!strcmp(cepp->ce_varname, "key"))
+				{
+					if (!cepp->ce_vardata)
+						continue;
+					ircstrdup(iConf.x_server_key_pem, cepp->ce_varname);	
+				}
+			}
+		}
+#endif
 		else
 		{
 			ConfigItem_unknown_ext *ca2 = MyMalloc(sizeof(ConfigItem_unknown_ext));
@@ -3755,6 +3782,31 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		DelListItem(help_ptr, conf_help);
 		MyFree(help_ptr);
 	}
+	ircfree(KLINE_ADDRESS);
+	ircfree(AUTO_JOIN_CHANS);
+	ircfree(OPER_AUTO_JOIN_CHANS);
+	ircfree(OPER_ONLY_STATS);
+	ircfree(ircnetwork);
+	ircfree(ircnet005);
+	ircfree(defserv);
+	ircfree(SERVICES_NAME);
+	ircfree(STATS_SERVER);
+	ircfree(helpchan);
+	ircfree(hidden_host);
+	ircfree(prefix_quit);
+	ircfree(NAME_SERVER);
+	ircfree(locop_host);
+	ircfree(oper_host);
+	ircfree(coadmin_host);
+	ircfree(admin_host);
+	ircfree(sadmin_host);
+	ircfree(netadmin_host);
+	ircfree(STATIC_QUIT);
+#ifdef USE_SSL
+	ircfree(iConf.x_server_cert_pem);
+	ircfree(iConf.x_server_key_pem);
+#endif
+	bzero(&iConf, sizeof(iConf));
 
 	/* rehash_modules */
 	init_conf2(configfile);
@@ -4139,6 +4191,15 @@ void report_dynconf(aClient *sptr)
 			sptr->name, OPER_ONLY_STATS);
 	sendto_one(sptr, ":%s %i %s :anti-spam-quit-message-time: %d", me.name, RPL_TEXT,
 		sptr->name, ANTI_SPAM_QUIT_MSG_TIME);
+#ifdef USE_SSL
+	sendto_one(sptr, ":%s %i %s :ssl::egd: %s", me.name, RPL_TEXT,
+		sptr->name, EGD_PATH ? EGD_PATH : (USE_EGD ? "1" : "0"));
+	sendto_one(sptr, ":%s %i %s :ssl::certificate: %s", me.name, RPL_TEXT,
+		sptr->name, SSL_SERVER_CERT_PEM);
+	sendto_one(sptr, ":%s %i %s :ssl::key: %s", me.name, RPL_TEXT,
+		sptr->name, SSL_SERVER_KEY_PEM);
+#endif
+
 	sendto_one(sptr, ":%s %i %s :options::show-opermotd: %d", me.name, RPL_TEXT,
 	    sptr->name, SHOWOPERMOTD);
 	sendto_one(sptr, ":%s %i %s :options::hide-ulines: %d", me.name, RPL_TEXT,
@@ -4159,6 +4220,8 @@ void report_dynconf(aClient *sptr)
 	    sptr->name, AUTO_JOIN_CHANS ? AUTO_JOIN_CHANS : "0");
 	sendto_one(sptr, ":%s %i %s :oper-auto-join: %s", me.name,
 	    RPL_TEXT, sptr->name, OPER_AUTO_JOIN_CHANS ? OPER_AUTO_JOIN_CHANS : "0");
+	sendto_one(sptr, ":%s %i %s :static-quit: %s", me.name, 
+		RPL_TEXT, sptr->name, STATIC_QUIT ? STATIC_QUIT : "<none>");	
 	sendto_one(sptr, ":%s %i %s :dns::timeout: %li", me.name, RPL_TEXT,
 	    sptr->name, HOST_TIMEOUT);
 	sendto_one(sptr, ":%s %i %s :dns::retries: %d", me.name, RPL_TEXT,

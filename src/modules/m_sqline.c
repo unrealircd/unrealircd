@@ -123,7 +123,7 @@ DLLFUNC int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	/* So we do not make double entries */
 	int		addit = 0;
 
-	if (!IsServer(sptr) || parc < 2)
+	if (!(IsServer(sptr) || IsULine(sptr)) || parc < 2)
 		return 0;
 
 	if (parv[2])

@@ -212,7 +212,7 @@ install: all
 	$(INSTALL) -m 0700 networks/makenet $(IRCDDIR)/networks
 	$(INSTALL) -m 0600 networks/networks.ndx $(IRCDDIR)/networks
 	$(INSTALL) -m 0700 -d $(IRCDDIR)/doc
-	$(INSTALL) -m 0600 doc/Authors doc/conf.doc doc/faq doc/coding-guidelines doc/example.conf doc/features.txt doc/unrealircd.conf.txt doc/commands.txt doc/example.settings doc/services-install-guide doc/unrealircd.doc $(IRCDDIR)/doc
+	$(INSTALL) -m 0600 doc/Authors doc/example.conf doc/example.settings doc/coding-guidelines doc/tao.of.irc doc/unreal32docs.html $(IRCDDIR)/doc
 	$(INSTALL) -m 0700 -d $(IRCDDIR)/aliases
 	$(INSTALL) -m 0600 aliases/*.conf $(IRCDDIR)/aliases
 	$(TOUCH) $(IRCDDIR)/unrealircd.conf
