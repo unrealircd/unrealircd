@@ -182,7 +182,7 @@ TS   NOW;
 #if	defined(PROFIL) && !defined(_WIN32)
 extern etext();
 
-VOIDSIG s_monitor()
+VOIDSIG s_monitor(void)
 {
 	static int mon = 0;
 #ifdef	POSIX_SIGNALS
@@ -247,8 +247,7 @@ VOIDSIG s_rehash()
 #endif
 }
 
-void restart(mesg)
-	char *mesg;
+void restart(char *mesg)
 {
 #ifdef	USE_SYSLOG
 	(void)syslog(LOG_WARNING, "Restarting Server because: %s", mesg);
@@ -273,7 +272,7 @@ VOIDSIG s_restart()
 }
 
 
-VOIDSIG s_segv()
+VOIDSIG s_segv(void)
 {
 	char	*argv[] = 
 	{
@@ -323,8 +322,7 @@ VOIDSIG dummy()
 #endif /* _WIN32 */
 
 
-void server_reboot(mesg)
-	char *mesg;
+void server_reboot(char *mesg)
 {
 	int  i;
 #ifdef _WIN32
@@ -432,8 +430,7 @@ EVENT(garbage_collect)
 **	function should be made latest. (No harm done if this
 **	is called earlier or later...)
 */
-static TS try_connections(currenttime)
-	TS   currenttime;
+static TS try_connections(TS currenttime)
 {
 	ConfigItem_link *aconf;
 	ConfigItem_deny_link *deny;
@@ -711,7 +708,7 @@ extern TS check_pings(TS currenttime, int check_kills)
 **	This is called when the commandline is not acceptable.
 **	Give error message and exit without starting anything.
 */
-static int bad_command()
+static int bad_command(void)
 {
 #ifndef _WIN32
 #ifdef CMDLINE_CONFIG
@@ -734,8 +731,7 @@ char chess[] = {
 	85, 110, 114, 101, 97, 108, 0
 };
 #ifndef NO_FDLIST
-inline TS   check_fdlists(now)
-	TS   now;
+inline TS   check_fdlists(TS now)
 {
 	aClient *cptr;
 	int  pri;		/* temp. for priority */
@@ -778,12 +774,10 @@ EVENT(e_check_fdlists)
 extern time_t TSoffset;
 
 #ifndef _WIN32
-int  main(argc, argv)
+int  main(int argc, char *argv[])
 #else
-int  InitwIRCD(argc, argv)
+int  InitwIRCD(int argc, char *argv[])
 #endif
-	int  argc;
-	char *argv[];
 {
 #ifdef _WIN32
 	WORD wVersionRequested = MAKEWORD(1, 1);
@@ -1379,7 +1373,7 @@ void SocketLoop(void *dummy)
  * set from the command line by -x, use /dev/null as the dummy logfile as long
  * as DEBUGMODE has been defined, else dont waste the fd.
  */
-static void open_debugfile()
+static void open_debugfile(void)
 {
 #ifdef	DEBUGMODE
 	int  fd;

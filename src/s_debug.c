@@ -245,9 +245,7 @@ void debug(int level, char *form, ...)
  * different field names for "struct rusage".
  * -avalon
  */
-void send_usage(cptr, nick)
-	aClient *cptr;
-	char *nick;
+void send_usage(aClient *cptr, char *nick)
 {
 
 #ifdef GETRUSAGE_2
@@ -352,9 +350,7 @@ void send_usage(cptr, nick)
 }
 #endif
 
-void count_memory(cptr, nick)
-	aClient *cptr;
-	char *nick;
+void count_memory(aClient *cptr, char *nick)
 {
 	extern aChannel *channel;
 	extern aClass *classes;

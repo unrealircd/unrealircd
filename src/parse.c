@@ -64,9 +64,7 @@ static char nsprefix = 0;
 **	the old. 'name' is now assumed to be a null terminated
 **	string and the search is the for server and user.
 */
-aClient inline *find_client(name, cptr)
-	char *name;
-	aClient *cptr;
+aClient inline *find_client(char *name, aClient *cptr)
 {
 
 	if (name)
@@ -76,9 +74,7 @@ aClient inline *find_client(name, cptr)
 	return cptr;
 }
 
-aClient inline *find_nickserv(name, cptr)
-	char *name;
-	aClient *cptr;
+aClient inline *find_nickserv(char *name, aClient *cptr)
 {
 	if (name)
 		cptr = hash_find_nickserver(name, cptr);
@@ -100,9 +96,7 @@ aClient inline *find_nickserv(name, cptr)
 **	the old. 'name' is now assumed to be a null terminated
 **	string.
 */
-aClient inline *find_server(name, cptr)
-	char *name;
-	aClient *cptr;
+aClient inline *find_server(char *name, aClient *cptr)
 {
 	if (name)
 	{
@@ -112,9 +106,7 @@ aClient inline *find_server(name, cptr)
 }
 
 
-aClient inline *find_name(name, cptr)
-	char *name;
-	aClient *cptr;
+aClient inline *find_name(char *name, aClient *cptr)
 {
 	aClient *c2ptr = cptr;
 
@@ -141,9 +133,7 @@ aClient inline *find_name(name, cptr)
 /*
 **  Find person by (nick)name.
 */
-aClient *find_person(name, cptr)
-	char *name;
-	aClient *cptr;
+aClient *find_person(char *name, aClient *cptr)
 {
 	aClient *c2ptr = cptr;
 
@@ -189,9 +179,7 @@ void ban_flooder(aClient *cptr)
  *
  * NOTE: parse() should not be called recusively by any other fucntions!
  */
-int  parse(cptr, buffer, bufend)
-	aClient *cptr;
-	char *buffer, *bufend;
+int  parse(aClient *cptr, char *buffer, char *bufend)
 {
 	aClient *from = cptr;
 	char *ch, *s;
@@ -470,8 +458,7 @@ int  parse(cptr, buffer, bufend)
 /*
  * field breakup for ircd.conf file.
  */
-char *getfield(newline)
-	char *newline;
+char *getfield(char *newline)
 {
 	static char *line = NULL;
 	char *end, *field, *x;
@@ -514,9 +501,7 @@ char *getfield(newline)
 	return (field);
 }
 
-static int cancel_clients(cptr, sptr, cmd)
-	aClient *cptr, *sptr;
-	char *cmd;
+static int cancel_clients(aClient *cptr, aClient *sptr, char *cmd)
 {
 	/*
 	 * kill all possible points that are causing confusion here,
@@ -626,9 +611,7 @@ static int cancel_clients(cptr, sptr, cmd)
 	return exit_client(cptr, cptr, &me, "Fake prefix");
 }
 
-static void remove_unknown(cptr, sender)
-	aClient *cptr;
-	char *sender;
+static void remove_unknown(aClient *cptr, char *sender)
 {
 	if (!IsRegistered(cptr) || IsClient(cptr))
 		return;

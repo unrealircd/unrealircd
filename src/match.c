@@ -41,8 +41,7 @@ u_char touppertab[], tolowertab[];
  * match()
  *  written by binary
  */
-static inline match2(mask, name)
-	char *mask, *name;
+static inline match2(char *mask, char *name)
 {
 	u_char *m;		/* why didn't the old one use registers */
 	u_char *n;		/* because registers suck -- codemastr */
@@ -162,8 +161,7 @@ static inline match2(mask, name)
  * This particular version is "in place", so that it changes the pattern
  * which is to be reduced to a "minimal" size.
  */
-char *collapse(pattern)
-	char *pattern;
+char *collapse(char *pattern)
 {
 	char *s;
 	char *s1;
@@ -207,9 +205,7 @@ char *collapse(pattern)
  *		<0, if s1 lexicographically less than s2
  *		>0, if s1 lexicographically greater than s2
  */
-int  smycmp(s1, s2)
-	char *s1;
-	char *s2;
+int  smycmp(char *s1, char *s2)
 {
 	u_char *str1;
 	u_char *str2;
@@ -229,10 +225,7 @@ int  smycmp(s1, s2)
 }
 
 
-int  myncmp(str1, str2, n)
-	char *str1;
-	char *str2;
-	int  n;
+int  myncmp(char *str1, char *str2, int n)
 {
 	u_char *s1;
 	u_char *s2;

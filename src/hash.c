@@ -70,8 +70,7 @@ static aHashEntry channelTable[CH_MAX];
 #define ONE_EIGHTH              ((int) (BITS_IN_int / 8))
 #define HIGH_BITS               ( ~((unsigned int)(~0) >> ONE_EIGHTH ))
 
-unsigned int hash_nn_name(hname)
-	const char *hname;
+unsigned int hash_nn_name(const char *hname)
 {
 	unsigned int hash_value, i;
 
@@ -90,8 +89,7 @@ unsigned int hash_nn_name(hname)
 }
 
 
-unsigned hash_nick_name(nname)
-	char *nname;
+unsigned hash_nick_name(char *nname)
 {
 	unsigned hash = 0;
 	int  hash2 = 0;
@@ -160,12 +158,12 @@ unsigned int hash_whowas_name(char *name)
  * 
  * Nullify the hashtable and its contents so it is completely empty.
  */
-void clear_client_hash_table()
+void clear_client_hash_table(void)
 {
 	memset((char *)clientTable, '\0', sizeof(aHashEntry) * U_MAX);
 }
 
-void clear_channel_hash_table()
+void clear_channel_hash_table(void)
 {
 	memset((char *)channelTable, '\0', sizeof(aHashEntry) * CH_MAX);
 }
@@ -430,8 +428,7 @@ int  m_hash(aClient *cptr, aClient *sptr, int parc, char *parv[])
 }
 
 
-aChannel *hash_get_chan_bucket(hashv)
-	unsigned int  hashv;
+aChannel *hash_get_chan_bucket(unsigned int hashv)
 {
 	if (hashv > CH_MAX)
 		return NULL;
@@ -459,9 +456,7 @@ aChannel *hash_get_chan_bucket(hashv)
 
 static   aWatch  *watchTable[WATCHHASHSIZE];
 
-void  count_watch_memory(count, memory)
-int   *count;
-u_long   *memory;
+void  count_watch_memory(int *count, u_long *memory)
 {
 	int   i = WATCHHASHSIZE;
 	aWatch  *anptr;
@@ -486,9 +481,7 @@ void  clear_watch_hash_table(void)
 /*
  * add_to_watch_hash_table
  */
-int   add_to_watch_hash_table(nick, cptr)
-char  *nick;
-aClient  *cptr;
+int   add_to_watch_hash_table(char *nick, aClient *cptr)
 {
 	unsigned int   hashv;
 	aWatch  *anptr;
@@ -539,9 +532,7 @@ aClient  *cptr;
 /*
  *  hash_check_watch
  */
-int   hash_check_watch(cptr, reply)
-aClient  *cptr;
-int   reply;
+int   hash_check_watch(aClient *cptr, int reply)
 {
 	unsigned int   hashv;
 	aWatch  *anptr;
@@ -577,8 +568,7 @@ int   reply;
 /*
  * hash_get_watch
  */
-aWatch  *hash_get_watch(name)
-char  *name;
+aWatch  *hash_get_watch(char *name)
 {
 	unsigned int   hashv;
 	aWatch  *anptr;
@@ -596,9 +586,7 @@ char  *name;
 /*
  * del_from_watch_hash_table
  */
-int   del_from_watch_hash_table(nick, cptr)
-char  *nick;
-aClient  *cptr;
+int   del_from_watch_hash_table(char *nick, aClient *cptr)
 {
 	unsigned int   hashv;
 	aWatch  *anptr, *nlast = NULL;
@@ -675,8 +663,7 @@ aClient  *cptr;
 /*
  * hash_del_watch_list
  */
-int   hash_del_watch_list(cptr)
-aClient  *cptr;
+int   hash_del_watch_list(aClient *cptr)
 {
 	unsigned int   hashv;
 	aWatch  *anptr;

@@ -150,9 +150,7 @@ struct crule_funclistent crule_funclist[] = {
 	{"", 0, NULL}		/* this must be here to mark end of list */
 };
 
-int  crule_connected(numargs, crulearg)
-	int  numargs;
-	void *crulearg[];
+int  crule_connected(int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	aClient *acptr;
@@ -170,9 +168,7 @@ int  crule_connected(numargs, crulearg)
 #endif
 }
 
-int  crule_directcon(numargs, crulearg)
-	int  numargs;
-	void *crulearg[];
+int  crule_directcon(int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	int  i;
@@ -191,9 +187,7 @@ int  crule_directcon(numargs, crulearg)
 #endif
 }
 
-int  crule_via(numargs, crulearg)
-	int  numargs;
-	void *crulearg[];
+int  crule_via(int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	aClient *acptr;
@@ -213,9 +207,7 @@ int  crule_via(numargs, crulearg)
 #endif
 }
 
-int  crule_directop(numargs, crulearg)
-	int  numargs;
-	void *crulearg[];
+int  crule_directop(int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	int  i;
@@ -232,9 +224,7 @@ int  crule_directop(numargs, crulearg)
 #endif
 }
 
-int  crule__andor(numargs, crulearg)
-	int  numargs;
-	void *crulearg[];
+int  crule__andor(int numargs, void *crulearg[])
 {
 	int  result1;
 
@@ -253,9 +243,7 @@ int  crule__andor(numargs, crulearg)
 		    (void *)((crule_treeptr) crulearg[1])->arg));
 }
 
-int  crule__not(numargs, crulearg)
-	int  numargs;
-	void *crulearg[];
+int  crule__not(int numargs, void *crulearg[])
 {
 	return (!((crule_treeptr) crulearg[0])->funcptr
 	    (((crule_treeptr) crulearg[0])->numargs,
@@ -271,9 +259,7 @@ int  crule_eval(rule)
 }
 #endif
 
-int  crule_gettoken(next_tokp, ruleptr)
-	int *next_tokp;
-	char **ruleptr;
+int  crule_gettoken(int *next_tokp, char **ruleptr)
 {
 	char pending = '\0';
 
@@ -330,11 +316,7 @@ int  crule_gettoken(next_tokp, ruleptr)
 	return CR_NOERR;
 }
 
-void crule_getword(word, wordlenp, maxlen, ruleptr)
-	char *word;
-	int *wordlenp;
-	int  maxlen;
-	char **ruleptr;
+void crule_getword(char *word, int *wordlenp, int maxlen, char **ruleptr)
 {
 	char *word_ptr;
 
@@ -368,8 +350,7 @@ void crule_getword(word, wordlenp, maxlen, ruleptr)
  *    word , arglist
  */
 
-char *crule_parse(rule)
-	char *rule;
+char *crule_parse(char *rule)
 {
 	char *ruleptr = rule;
 	int  next_tok;
@@ -399,10 +380,7 @@ char *crule_parse(rule)
 	return NULL;
 }
 
-int  crule_parseorexpr(orrootp, next_tokp, ruleptr)
-	crule_treeptr *orrootp;
-	int *next_tokp;
-	char **ruleptr;
+int  crule_parseorexpr(crule_treeptr *orrootp, int *next_tokp, char **ruleptr)
 {
 	int  errcode = CR_NOERR;
 	crule_treeptr andexpr;
@@ -456,10 +434,7 @@ int  crule_parseorexpr(orrootp, next_tokp, ruleptr)
 	return (errcode);
 }
 
-int  crule_parseandexpr(androotp, next_tokp, ruleptr)
-	crule_treeptr *androotp;
-	int *next_tokp;
-	char **ruleptr;
+int  crule_parseandexpr(crule_treeptr *androotp, int *next_tokp, char **ruleptr)
 {
 	int  errcode = CR_NOERR;
 	crule_treeptr primary;
@@ -513,10 +488,7 @@ int  crule_parseandexpr(androotp, next_tokp, ruleptr)
 	return (errcode);
 }
 
-int  crule_parseprimary(primrootp, next_tokp, ruleptr)
-	crule_treeptr *primrootp;
-	int *next_tokp;
-	char **ruleptr;
+int  crule_parseprimary(crule_treeptr *primrootp, int *next_tokp, char **ruleptr)
 {
 	crule_treeptr *insertionp;
 	int  errcode = CR_NOERR;
@@ -581,10 +553,7 @@ int  crule_parseprimary(primrootp, next_tokp, ruleptr)
 	return (errcode);
 }
 
-int  crule_parsefunction(funcrootp, next_tokp, ruleptr)
-	crule_treeptr *funcrootp;
-	int *next_tokp;
-	char **ruleptr;
+int  crule_parsefunction(crule_treeptr *funcrootp, int *next_tokp, char **ruleptr)
 {
 	int  errcode = CR_NOERR;
 	char funcname[CR_MAXARGLEN];
@@ -630,10 +599,7 @@ int  crule_parsefunction(funcrootp, next_tokp, ruleptr)
 		return (CR_EXPCTOPEN);
 }
 
-int  crule_parsearglist(argrootp, next_tokp, ruleptr)
-	crule_treeptr argrootp;
-	int *next_tokp;
-	char **ruleptr;
+int  crule_parsearglist(crule_treeptr argrootp, int *next_tokp, char **ruleptr)
 {
 	int  errcode = CR_NOERR;
 	char *argelemp = NULL;
@@ -692,8 +658,7 @@ int  crule_parsearglist(argrootp, next_tokp, ruleptr)
  * DO NOT CALL THIS FUNTION WITH A POINTER TO A NULL POINTER
  * (ie: if *elem is NULL, you're doing it wrong - seg fault)
  */
-void crule_free(elem)
-	char **elem;
+void crule_free(char **elem)
 {
 	int  arg, numargs;
 
@@ -725,8 +690,7 @@ void crule_free(elem)
 }
 
 #ifdef CR_DEBUG
-void print_tree(printelem)
-	crule_treeptr printelem;
+void print_tree(crule_treeptr printelem)
 {
 	int  funcnum, arg;
 

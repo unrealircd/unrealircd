@@ -117,10 +117,7 @@ int	m_whois_Unload(int module_unload)
 **	parv[0] = sender prefix
 **	parv[1] = nickname masklist
 */
-DLLFUNC int  m_whois(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	static anUser UnknownUser = {
 		NULL,		/* channel */

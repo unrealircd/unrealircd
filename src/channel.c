@@ -231,7 +231,7 @@ Membership *find_membership_link(Membership *lp, aChannel *ptr)
 /* 
  * Member functions
 */
-Member	*make_member()
+Member	*make_member(void)
 {
 	Member *lp;
 	int	i;
@@ -2858,10 +2858,7 @@ int channel_link(aClient *cptr, aClient *sptr, int parc, char *parv[])
  * parv[1] = channels
 */
 
-int  m_cycle(cptr, sptr, parc, parv)
-        aClient *cptr, *sptr;
-        int  parc;
-        char *parv[];
+int  m_cycle(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char	channels[1024];
 	

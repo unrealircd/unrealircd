@@ -372,7 +372,7 @@ int  find_tkline_match_zap(aClient *cptr)
 }
 
 
-int  tkl_sweep()
+int  tkl_sweep(void)
 {
 	/* just sweeps local for people that should be killed */
 	aClient *acptr;

@@ -118,10 +118,7 @@ int	m_kill_Unload(int module_unload)
 **	parv[1] = kill victim(s) - comma separated list
 **	parv[2] = kill path
 */
-DLLFUNC int  m_kill(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	static anUser UnknownUser = {
 		NULL,		/* channel */

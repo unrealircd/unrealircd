@@ -67,9 +67,7 @@ char	*my_itoa(int i)
 **	$Id$
 */
 
-char *strtoken(save, str, fs)
-	char **save;
-	char *str, *fs;
+char *strtoken(char **save, char *str, char *fs)
 {
 	char *pos = *save;	/* keep last position across calls */
 	char *tmp;
@@ -103,8 +101,7 @@ char *strtoken(save, str, fs)
 ** NOT encouraged to use!
 */
 
-char *strtok2(str, fs)
-	char *str, *fs;
+char *strtok2(char *str, char *fs)
 {
 	static char *pos;
 
@@ -121,8 +118,7 @@ char *strtok2(str, fs)
 **	$Id$
 */
 
-char *strerror(err_no)
-	int  err_no;
+char *strerror(int err_no)
 {
 	extern char *sys_errlist[];	/* Sigh... hopefully on all systems */
 	extern int sys_nerr;
@@ -165,8 +161,7 @@ char *strerror(err_no)
 **	$Id$
 */
 
-char *inetntoa(in)
-	char *in;
+char *inetntoa(char *in)
 {
 	static char buf[16];
 	u_char *s = (u_char *)in;
@@ -189,8 +184,7 @@ char *inetntoa(in)
 **
 */
 
-int  inet_netof(in)
-	struct IN_ADDR in;
+int  inet_netof(istruct IN_ADDR n)
 {
 	int  addr = in.s_net;
 
@@ -333,11 +327,7 @@ int  dgets(int fd, char *buf, int num)
  * inetntop: return the : notation of a given IPv6 internet number.
  *           make sure the compressed representation (rfc 1884) isn't used.
  */
-char *inetntop(af, in, out, the_size)
-	int  af;
-	const void *in;
-	char *out;
-	size_t the_size;
+char *inetntop(int af, const void *in, char *out, size_t the_size)
 {
 	static char local_dummy[MYDUMMY_SIZE];
 

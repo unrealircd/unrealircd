@@ -69,7 +69,7 @@ Membership *freemembership = NULL;
 MembershipL *freemembershipL = NULL;
 int  numclients = 0;
 
-void initlists()
+void initlists(void)
 {
 #ifdef	DEBUGMODE
 	bzero((char *)&cloc, sizeof(cloc));
@@ -81,7 +81,7 @@ void initlists()
 #endif
 }
 
-void outofmemory()
+void outofmemory(void)
 {
 	Debug((DEBUG_FATAL, "Out of memory: restarting server..."));
 	restart("Out of Memory");
@@ -98,8 +98,7 @@ void outofmemory()
 **			associated with the client defined by
 **			'from'). ('from' is a local client!!).
 */
-aClient *make_client(from, servr)
-	aClient *from, *servr;
+aClient *make_client(aClient *from, aClient *servr)
 {
 	aClient *cptr = NULL;
 	unsigned size = CLIENT_REMOTE_SIZE;
@@ -147,8 +146,7 @@ aClient *make_client(from, servr)
 	return (cptr);
 }
 
-void free_client(cptr)
-	aClient *cptr;
+void free_client(aClient *cptr)
 {
 	if (MyClient(cptr) && cptr->passwd)
 		MyFree((char *)cptr->passwd);
@@ -159,8 +157,7 @@ void free_client(cptr)
 ** 'make_user' add's an User information block to a client
 ** if it was not previously allocated.
 */
-anUser *make_user(cptr)
-	aClient *cptr;
+anUser *make_user(aClient *cptr)
 {
 	anUser *user;
 
@@ -191,8 +188,7 @@ anUser *make_user(cptr)
 	return user;
 }
 
-aServer *make_server(cptr)
-	aClient *cptr;
+aServer *make_server(aClient *cptr)
 {
 
 	aServer *serv = cptr->serv;
@@ -218,9 +214,7 @@ aServer *make_server(cptr)
 **	Decrease user reference count by one and realease block,
 **	if count reaches 0
 */
-void free_user(user, cptr)
-	anUser *user;
-	aClient *cptr;
+void free_user(anUser *user, aClient *cptr)
 {
 	if (--user->refcnt <= 0)
 	{
@@ -251,8 +245,7 @@ void free_user(user, cptr)
  * taken the code from ExitOneClient() for this and placed it here.
  * - avalon
  */
-void remove_client_from_list(cptr)
-	aClient *cptr;
+void remove_client_from_list(aClient *cptr)
 {
 	if (IsServer(cptr))
 	{
@@ -318,8 +311,7 @@ void remove_client_from_list(cptr)
  * in this file, shouldnt they ?  after all, this is list.c, isnt it ?
  * -avalon
  */
-void add_client_to_list(cptr)
-	aClient *cptr;
+void add_client_to_list(aClient *cptr)
 {
 	/*
 	 * since we always insert new clients to the top of the list,
@@ -335,9 +327,7 @@ void add_client_to_list(cptr)
 /*
  * Look for ptr in the linked listed pointed to by link.
  */
-Link *find_user_link(lp, ptr)
-	Link *lp;
-	aClient *ptr;
+Link *find_user_link(Link *lp, aClient *ptr)
 {
 	if (ptr)
 		while (lp)
@@ -361,8 +351,7 @@ int find_str_match_link(Link *lp, char *charptr)
 	return 0;
 }
 
-void free_str_list(lp)
-	Link *lp;
+void free_str_list(Link *lp)
 {
 	Link *next;
 
@@ -381,7 +370,7 @@ void free_str_list(lp)
 
 #define	LINKSIZE	(4072/sizeof(Link))
 
-Link *make_link()
+Link *make_link(void)
 {
 	Link *lp;
 	int  i;
@@ -419,8 +408,7 @@ Link *make_link()
 	return lp;
 }
 
-void free_link(lp)
-	Link *lp;
+void free_link(Link *lp)
 {
 	lp->next = freelink;
 	freelink = lp;
@@ -431,7 +419,7 @@ void free_link(lp)
 #endif
 }
 
-Ban *make_ban()
+Ban *make_ban(void)
 {
 	Ban *lp;
 
@@ -442,8 +430,7 @@ Ban *make_ban()
 	return lp;
 }
 
-void free_ban(lp)
-	Ban *lp;
+void free_ban(Ban *lp)
 {
 	MyFree((char *)lp);
 #ifdef	DEBUGMODE
@@ -451,7 +438,7 @@ void free_ban(lp)
 #endif
 }
 
-aClass *make_class()
+aClass *make_class(void)
 {
 	aClass *tmp;
 
@@ -462,8 +449,7 @@ aClass *make_class()
 	return tmp;
 }
 
-void free_class(tmp)
-	aClass *tmp;
+void free_class(aClass *tmp)
 {
 	MyFree((char *)tmp);
 #ifdef	DEBUGMODE
@@ -472,9 +458,7 @@ void free_class(tmp)
 }
 
 #ifdef	DEBUGMODE
-void send_listinfo(cptr, name)
-	aClient *cptr;
-	char *name;
+void send_listinfo(aClient *cptr, char *name)
 {
 	int  inuse = 0, mem = 0, tmp = 0;
 

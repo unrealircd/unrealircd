@@ -126,10 +126,7 @@ extern fdlist serv_fdlist;
 **	parv[0] = sender prefix
 **	parv[1] = remote server
 */
-int  m_version(cptr, sptr, parc, parv)
-	aClient *sptr, *cptr;
-	int  parc;
-	char *parv[];
+int  m_version(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	extern char serveropts[];
 
@@ -150,25 +147,13 @@ int  m_version(cptr, sptr, parc, parv)
 	return 0;
 }
 
-/*int IsMe (acptr)
-aClient *acptr, server;
-{
-if (memcmp (acptr, server, sizeof(aClient)) == 0)
-return 1;
-return 0;
- }*/
-
-
 /*
 ** m_squit
 **	parv[0] = sender prefix
 **	parv[1] = server name
 **	parv[parc-1] = comment
 */
-int  m_squit(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_squit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aConfItem *aconf;
 	char *server;
@@ -320,10 +305,7 @@ int  m_squit(cptr, sptr, parc, parv)
  *	parv[0] = Sender prefix
  *	parv[1+] = Options
  */
-int  m_protoctl(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_protoctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	int  i;
 #ifndef PROTOCTL_MADNESS
@@ -560,10 +542,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *conf);
 **
 **  Recode 2001 by Stskeeps
 */
-int  m_server(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_server(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *servername = NULL;	/* Pointer for servername */
  /*	char *password = NULL; */
@@ -1308,10 +1287,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 **
 ** Recoded by Stskeeps
 */
-int  m_links(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_links(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	Link *lp;
 	aClient *acptr;
@@ -1348,10 +1324,7 @@ int  m_links(cptr, sptr, parc, parv)
 **  parv[8] = ircnet
 **/
 
-int  m_netinfo(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_netinfo(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	long 		lmax;
 	time_t	 	xx;
@@ -1451,8 +1424,7 @@ int  m_netinfo(cptr, sptr, parc, parv)
  * sends m_info into to sptr
 */
 
-void m_info_send(sptr)
-	aClient *sptr;
+void m_info_send(aClient *sptr)
 {
 	sendto_one(sptr, ":%s %d %s :=-=-=-= %s =-=-=-=",
 	    me.name, RPL_INFO, sptr->name, IRCDTOTALVERSION);
@@ -1532,10 +1504,7 @@ void m_info_send(sptr)
 **  Modified for hardcode by Stskeeps
 */
 
-int  m_info(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_info(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 
 	if (hunt_server_token(cptr, sptr, MSG_INFO, TOK_INFO, ":%s", 1, parc,
@@ -1552,10 +1521,7 @@ int  m_info(cptr, sptr, parc, parv)
 **      parv[0] = sender prefix
 **      parv[1] = servername
 */
-int  m_dalinfo(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_dalinfo(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char **text = dalinfotext;
 
@@ -1583,10 +1549,7 @@ int  m_dalinfo(cptr, sptr, parc, parv)
 **      parv[0] = sender prefix
 **      parv[1] = servername
 */
-int  m_license(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_license(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char **text = gnulicense;
 
@@ -1609,10 +1572,7 @@ int  m_license(cptr, sptr, parc, parv)
 **      parv[0] = sender prefix
 **      parv[1] = servername
 */
-int  m_credits(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_credits(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char **text = unrealcredits;
 
@@ -1642,10 +1602,7 @@ int  m_credits(cptr, sptr, parc, parv)
  * RPL_WATCHOFF	- Succesfully removed from WATCH-list.
  * ERR_TOOMANYWATCH - Take a guess :>  Too many WATCH entries.
  */
-static void show_watch(cptr, name, rpl1, rpl2)
-	aClient *cptr;
-	char *name;
-	int  rpl1, rpl2;
+static void show_watch(aClient *cptr, char *name, int rpl1, int rpl2)
 {
 	aClient *acptr;
 
@@ -1665,10 +1622,7 @@ static void show_watch(cptr, name, rpl1, rpl2)
 /*
  * m_watch
  */
-int  m_watch(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_watch(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 	char *s, **pav = parv, *user;
@@ -1911,10 +1865,7 @@ char *get_client_name2(aClient *acptr, int showports)
 **            it--not reversed as in ircd.conf!
 */
 
-int  m_stats(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_stats(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 #ifndef DEBUGMODE
 	static char Sformat[] =
@@ -2544,10 +2495,7 @@ int  m_summon(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **
 **	parv[0] = sender prefix
 **	parv[*] = parameters
-*/ int m_error(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+*/ int m_error(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *para;
 
@@ -2585,7 +2533,7 @@ Link *helpign = NULL;
 
 /* Now just empty ignore-list, in future reload dynamic help.
  * Move out to help.c -Donwulff */
-void reset_help()
+void reset_help(void)
 {
 	free_str_list(helpign);
 }
@@ -2598,10 +2546,7 @@ void reset_help()
 **	parv[0] = sender prefix
 **	parv[1] = optional message text
 */
-int  m_help(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_help(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *message, *s;
 	Link *tmpl;
@@ -2684,10 +2629,7 @@ int  m_help(cptr, sptr, parc, parv)
  * parv[1] = host/server mask.
  * parv[2] = server to query
  */
-int  m_lusers(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_lusers(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 
 	/* Just to correct results ---Stskeeps */
@@ -2769,10 +2711,7 @@ void load_tunefile(void)
    **  parv[1] = servername
    **  parv[2] = port number
    **  parv[3] = remote server
- */ int m_connect(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+ */ int m_connect(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	int  port, tmpport, retval;
 	ConfigItem_link	*aconf;
@@ -2907,10 +2846,7 @@ void load_tunefile(void)
 **	parv[0] = sender prefix
 **	parv[1] = message text
 */
-int  m_wallops(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_wallops(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *message;
 	message = parc > 1 ? parv[1] : NULL;
@@ -2937,10 +2873,7 @@ int  m_wallops(cptr, sptr, parc, parv)
 **	parv[0] = sender prefix
 **	parv[1] = message text
 */
-int  m_gnotice(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_gnotice(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *message;
 
@@ -3111,10 +3044,7 @@ int  m_addomotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **      parv[0] = sender prefix
 **      parv[1] = message text
 */
-int  m_globops(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_globops(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *message;
 
@@ -3142,10 +3072,7 @@ int  m_globops(cptr, sptr, parc, parv)
 **      parv[0] = sender prefix
 **      parv[1] = message text
 */
-int  m_locops(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_locops(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *message;
 
@@ -3171,10 +3098,7 @@ int  m_locops(cptr, sptr, parc, parv)
 **      parv[0] = sender prefix
 **      parv[1] = message text
 */
-int  m_chatops(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_chatops(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *message;
 
@@ -3208,10 +3132,7 @@ int  m_chatops(cptr, sptr, parc, parv)
 **      parv[0] = sender prefix
 **      parv[1] = message text
 */
-int  m_goper(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_goper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *message;
 
@@ -3240,10 +3161,7 @@ int  m_goper(cptr, sptr, parc, parv)
 **	parv[0] = sender prefix
 **	parv[1] = servername
 */
-int  m_time(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_time(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	if (hunt_server_token(cptr, sptr, MSG_TIME, TOK_TIME, ":%s", 1, parc,
 	    parv) == HUNTED_ISME)
@@ -3258,10 +3176,7 @@ int  m_time(cptr, sptr, parc, parv)
 **	parv[1] = client
 **	parv[2] = kill message
 */
-int  m_svskill(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_svskill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 	/* this is very wierd ? */
@@ -3297,10 +3212,7 @@ int  m_svskill(cptr, sptr, parc, parv)
 **	parv[0] = sender prefix
 **	parv[1] = servername
 */
-int  m_admin(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_admin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	ConfigItem_admin *admin;
 	/* Users may want to get the address in case k-lined, etc. -- Barubary
@@ -3345,10 +3257,7 @@ int  m_admin(cptr, sptr, parc, parv)
 ** ugly code but it seems to work :) -- codemastr
 ** added -all and fixed up a few lines -- niquil (niquil@programmer.net)
 */
-int  m_rehash(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_rehash(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	int  x;
 
@@ -3531,10 +3440,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 ** The password is only valid if there is a matching X line in the
 ** config file. If it is not,  then it becomes the
 */
-int  m_restart(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_restart(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *pass = NULL, *encr;
 	int  x;
@@ -3626,10 +3532,7 @@ int  m_restart(cptr, sptr, parc, parv)
 **	parv[0] = sender prefix
 **	parv[1] = servername
 */
-int  m_trace(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_trace(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	int  i;
 	aClient *acptr;
@@ -4167,10 +4070,7 @@ int  m_rules(aClient *cptr, aClient *sptr, int parc, char *parv[])
 /*
 ** m_close - added by Darren Reed Jul 13 1992.
 */
-int  m_close(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_close(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 	int  i;
@@ -4208,10 +4108,7 @@ int  m_close(cptr, sptr, parc, parv)
  * have a reason. If you use it you should first do a GLOBOPS and
  * then a server notice to let everyone know what is going down...
  */
-int  m_die(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_die(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 	int  i;
@@ -4274,11 +4171,7 @@ int  numservers = 0;
  * New /MAP format -Potvin
  * dump_map function.
  */
-void dump_map(cptr, server, mask, prompt_length, length)
-	aClient *cptr, *server;
-	char *mask;
-	int  prompt_length;
-	int  length;
+void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_length, int length)
 {
 	static char prompt[64];
 	char *p = &prompt[prompt_length];
@@ -4348,10 +4241,7 @@ void dump_map(cptr, server, mask, prompt_length, length)
 **      parv[0] = sender prefix
 **      parv[1] = server mask
 **/
-int  m_map(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_map(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	Link *lp;
 	aClient *acptr;

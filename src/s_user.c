@@ -240,9 +240,7 @@ char umodestring[UMODETABLESZ+1];
 **		HandleMatchingClient;
 **
 */
-aClient *next_client(next, ch)
-	aClient *next;		/* First client to check */
-	char *ch;		/* search string (may include wilds) */
+aClient *next_client(aClient *next, char *ch)
 {
 	aClient *tmp = next;
 
@@ -583,8 +581,7 @@ int  do_nick_name(char *pnick)
 
 
 #else
-int  do_nick_name(nick)
-	char *nick;
+int  do_nick_name(char *nick)
 {
 	char *ch;
 
@@ -607,8 +604,7 @@ int  do_nick_name(nick)
 ** reduce a string of duplicate list entries to contain only the unique
 ** items.  Unavoidably O(n^2).
 */
-extern char *canonize(buffer)
-	char *buffer;
+extern char *canonize(char *buffer)
 {
 	static char cbuf[BUFSIZ];
 	char *s, *t, *cp = cbuf;
@@ -712,10 +708,7 @@ int  m_post(aClient *cptr, aClient *sptr, int parc, char *parv[])
 extern aTKline *tklines;
 extern int badclass;
 
-extern int register_user(cptr, sptr, nick, username, umode, virthost)
-	aClient *cptr;
-	aClient *sptr;
-	char *nick, *username, *virthost, *umode;
+extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost)
 {
 	ConfigItem_ban *bconf;
 	char *parv[3], *tmpstr;
@@ -1097,10 +1090,7 @@ extern int register_user(cptr, sptr, nick, username, umode, virthost)
 **	parv[9] = virthost, * if none
 **	parv[10] = info
 */
-int  m_nick(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	ConfigItem_ban *aconf;
 	aClient *acptr, *serv = NULL;
@@ -1782,10 +1772,7 @@ char *get_modestr(long umodes)
 **	parv[3] = server host name (used only from other servers)
 **	parv[4] = users real name info
 */
-int  m_user(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_user(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 #define	UFLAGS	(UMODE_INVISIBLE|UMODE_WALLOP|UMODE_SERVNOTICE)
 	char *username, *host, *server, *realname, *umodex = NULL, *virthost =
@@ -1912,10 +1899,7 @@ int  m_user(cptr, sptr, parc, parv)
 **	parv[0] = sender prefix
 **	parv[1] = password
 */
-int  m_pass(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_pass(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *password = parc > 1 ? parv[1] : NULL;
 	int  PassLen = 0;
@@ -1947,10 +1931,7 @@ int  m_pass(cptr, sptr, parc, parv)
  * information only (no spurious AWAY labels or channels).
  * Re-written by Dianora 1999
  */
-int  m_userhost(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_userhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 
 	char *p;		/* scratch end pointer */
@@ -2017,10 +1998,7 @@ int  m_userhost(cptr, sptr, parc, parv)
  * ISON :nicklist
  */
 
-int  m_ison(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_ison(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char namebuf[USERLEN + HOSTLEN + 4];
 	aClient *acptr;
@@ -2436,10 +2414,7 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
     Small wrapper to bandwidth save
 */
 
-int  m_umode2(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_umode2(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *xparv[5] = {
 		parv[0],
@@ -2459,10 +2434,7 @@ int  m_umode2(cptr, sptr, parc, parv)
  * send the MODE string for user (user) to connection cptr
  * -avalon
  */
-void send_umode(cptr, sptr, old, sendmask, umode_buf)
-	aClient *cptr, *sptr;
-	long old, sendmask;
-	char *umode_buf;
+void send_umode(aClient *cptr, aClient *sptr, long old, long sendmask, char *umode_buf)
 {
 	int i;
 	long flag;
@@ -2515,9 +2487,7 @@ void send_umode(cptr, sptr, old, sendmask, umode_buf)
 /*
  * added Sat Jul 25 07:30:42 EST 1992
  */
-void send_umode_out(cptr, sptr, old)
-	aClient *cptr, *sptr;
-	long old;
+void send_umode_out(aClient *cptr, aClient *sptr, long old)
 {
 	int  i;
 	aClient *acptr;
@@ -2545,9 +2515,7 @@ void send_umode_out(cptr, sptr, old)
 
 }
 
-void send_umode_out_nickv2(cptr, sptr, old)
-	aClient *cptr, *sptr;
-	long old;
+void send_umode_out_nickv2(aClient *cptr, aClient *sptr, long old)
 {
 	int  i;
 	aClient *acptr;
@@ -2569,9 +2537,7 @@ void send_umode_out_nickv2(cptr, sptr, old)
 
 
 
-int  del_silence(sptr, mask)
-	aClient *sptr;
-	char *mask;
+int  del_silence(aClient *sptr, char *mask)
 {
 	Link **lp;
 	Link *tmp;
@@ -2588,9 +2554,7 @@ int  del_silence(sptr, mask)
 	return -1;
 }
 
-static int add_silence(sptr, mask)
-	aClient *sptr;
-	char *mask;
+static int add_silence(aClient *sptr, char *mask)
 {
 	Link *lp;
 	int  cnt = 0, len = 0;
@@ -2632,10 +2596,7 @@ static int add_silence(sptr, mask)
 **      parv[2] = mask
 */
 
-int  m_silence(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_silence(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	Link *lp;
 	aClient *acptr;
@@ -2718,10 +2679,7 @@ int  m_silence(cptr, sptr, parc, parv)
 	parv[1] - nick to make join
 	parv[2] - channel(s) to join
 */
-int  m_svsjoin(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_svsjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 	if (!IsULine(sptr))
@@ -2751,10 +2709,7 @@ int  m_svsjoin(cptr, sptr, parc, parv)
 	parv[1] - nick to make join
 	parv[2] - channel(s) to join
 */
-int  m_sajoin(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_sajoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 	if (!IsSAdmin(sptr) && !IsULine(sptr))
@@ -2800,10 +2755,7 @@ int  m_sajoin(cptr, sptr, parc, parv)
 	parv[1] - nick to make part
 	parv[2] - channel(s) to part
 */
-int  m_svspart(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_svspart(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 	if (!IsULine(sptr))
@@ -2832,10 +2784,7 @@ int  m_svspart(cptr, sptr, parc, parv)
 	parv[1] - nick to make part
 	parv[2] - channel(s) to part
 */
-int  m_sapart(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_sapart(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 	if (!IsSAdmin(sptr) && !IsULine(sptr))

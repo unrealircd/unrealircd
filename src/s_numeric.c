@@ -50,11 +50,7 @@ static char buffer[1024];
 **	sending back a neat error message -- big danger of creating
 **	a ping pong error message...
 */
-int  do_numeric(numeric, cptr, sptr, parc, parv)
-	int  numeric;
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  do_numeric(int numeric, aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 	aChannel *chptr;

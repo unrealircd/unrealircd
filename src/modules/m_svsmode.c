@@ -284,10 +284,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
  * parv[2] - modes to change
  * parv[3] - Service Stamp (if mode == d)
  */
-int  m_svsmode(cptr, sptr, parc, parv)
-        aClient *cptr, *sptr;
-        int  parc;
-        char *parv[];
+int  m_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	int i;
         char **p, *m;
@@ -396,10 +393,7 @@ int  m_svsmode(cptr, sptr, parc, parv)
  * parv[2] - modes to change
  * parv[3] - Service Stamp (if mode == d)
  */
-int  m_svs2mode(cptr, sptr, parc, parv)
-        aClient *cptr, *sptr;
-        int  parc;
-        char *parv[];
+int  m_svs2mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
         int  i;
         char **p, *m;

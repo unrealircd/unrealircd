@@ -75,9 +75,7 @@ int  sendanyways = 0;
 **	Also, the notice is skipped for "uninteresting" cases,
 **	like Persons and yet unknown connections...
 */
-static int dead_link(to, notice)
-	aClient *to;
-	char *notice;
+static int dead_link(aClient *to, char *notice)
 {
 	char	*error = NULL;
 	
@@ -148,8 +146,7 @@ void flush_fdlist_connections(fdlist * listp)
 **	when there is a chance the some output would be possible. This
 **	attempts to empty the send queue as far as possible...
 */
-int  send_queued(to)
-	aClient *to;
+int  send_queued(aClient *to)
 {
 	char *msg;
 	int  len, rlen;
@@ -1641,10 +1638,7 @@ void sendto_realops(char *pattern, ...)
 	return;
 }
 
-void sendto_connectnotice(nick, user, sptr)
-	char *nick;
-	anUser *user;
-	aClient *sptr;
+void sendto_connectnotice(char *nick, anUser *user, aClient *sptr)
 {
 	aClient *cptr;
 	int  i;

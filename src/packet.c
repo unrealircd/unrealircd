@@ -45,10 +45,7 @@ aCommand	*CommandHash[256];
 */
 void    add_CommandX(char *cmd, char *token, int (*func)(), unsigned char parameters, int flags) ;
 
-int  dopacket(cptr, buffer, length)
-	aClient *cptr;
-	char *buffer;
-	int  length;
+int  dopacket(aClient *cptr, char *buffer, int length)
 {
 	char *ch1;
 	char *ch2;

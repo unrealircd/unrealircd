@@ -217,9 +217,7 @@ void close_connections(void)
 ** (as suggested by eps@TOASTER.SFSU.EDU)
 */
 
-void add_local_domain(hname, size)
-	char *hname;
-	int  size;
+void add_local_domain(char *hname, int size)
 {
 #ifdef RES_INIT
 	/* try to fix up unqualified names */
@@ -259,9 +257,7 @@ void add_local_domain(hname, size)
 **	cptr	if not NULL, is the *LOCAL* client associated with
 **		the error.
 */
-void report_error(text, cptr)
-	char *text;
-	aClient *cptr;
+void report_error(char *text, aClient *cptr)
 {
 	int errtmp = ERRNO;
 	char *host;
@@ -292,9 +288,7 @@ void report_error(text, cptr)
 	return;
 }
 
-void report_baderror(text, cptr)
-	char *text;
-	aClient *cptr;
+void report_baderror(char *text, aClient *cptr)
 {
 #ifndef _WIN32
 	int  errtmp = errno;	/* debug may change 'errno' */
@@ -337,10 +331,7 @@ void report_baderror(text, cptr)
  * depending on the IP# mask given by 'name'.  Returns the fd of the
  * socket created or -1 on error.
  */
-int  inetport(cptr, name, port)
-	aClient *cptr;
-	char *name;
-	int  port;
+int  inetport(aClient *cptr, char *name, int port)
 {
 	static struct SOCKADDR_IN server;
 	int  ad[4], len = sizeof(server);
@@ -497,7 +488,7 @@ int add_listener2(ConfigItem_listen *conf)
  * and in a state where they can accept connections.
  */
 
-void close_listeners()
+void close_listeners(void)
 {
 	aClient *cptr;
 	int  i, reloop = 1;
@@ -532,7 +523,7 @@ void close_listeners()
 /*
  * init_sys
  */
-void init_sys()
+void init_sys(void)
 {
 	int  fd;
 #ifndef USE_POLL
@@ -634,7 +625,7 @@ init_dgram:
 	return;
 }
 
-void write_pidfile()
+void write_pidfile(void)
 {
 #ifdef IRCD_PIDFILE
 	int  fd;
@@ -662,9 +653,7 @@ void write_pidfile()
  * from either the server's sockhost (if client fd is a tty or localhost)
  * or from the ip# converted into a string. 0 = success, -1 = fail.
  */
-static int check_init(cptr, sockn)
-	aClient *cptr;
-	char *sockn;
+static int check_init(aClient *cptr, char *sockn)
 {
 	struct SOCKADDR_IN sk;
 	int  len = sizeof(struct SOCKADDR_IN);
@@ -710,8 +699,7 @@ static int check_init(cptr, sockn)
  * -1 = Access denied
  * -2 = Bad socket.
  */
-int  check_client(cptr)
-	aClient *cptr;
+int  check_client(aClient *cptr)
 {
 	static char sockname[HOSTLEN + 1];
 	struct hostent *hp = NULL;
@@ -780,8 +768,7 @@ int  check_client(cptr)
 **	Return	TRUE, if successfully completed
 **		FALSE, if failed and ClientExit
 */
-static int completed_connection(cptr)
-	aClient *cptr;
+static int completed_connection(aClient *cptr)
 {
 	ConfigItem_link *aconf = cptr->serv ? cptr->serv->conf : NULL;
 	extern char serveropts[];
@@ -824,8 +811,7 @@ static int completed_connection(cptr)
 **	Close the physical connection. This function must make
 **	MyConnect(cptr) == FALSE, and set cptr->from == NULL.
 */
-void close_connection(cptr)
-	aClient *cptr;
+void close_connection(aClient *cptr)
 {
 	ConfigItem_link *aconf;
 	int  i, j;
@@ -986,9 +972,7 @@ void close_connection(cptr)
 /*
 ** set_sock_opts
 */
-void set_sock_opts(fd, cptr)
-	int  fd;
-	aClient *cptr;
+void set_sock_opts(int fd, aClient *cptr)
 {
 	int  opt;
 #ifdef SO_REUSEADDR
@@ -1056,8 +1040,7 @@ void set_sock_opts(fd, cptr)
 }
 
 
-int  get_sockerr(cptr)
-	aClient *cptr;
+int  get_sockerr(aClient *cptr)
 {
 #ifndef _WIN32
 	int  errtmp = errno, err = 0, len = sizeof(err);
@@ -1106,9 +1089,7 @@ int set_blocking(int fd)
 **	blocking version of IRC--not a problem if you are a
 **	lightly loaded node...)
 */
-void set_non_blocking(fd, cptr)
-	int  fd;
-	aClient *cptr;
+void set_non_blocking(int fd, aClient *cptr)
 {
 	int  res, nonb = 0;
 
@@ -1311,9 +1292,7 @@ add_con_refuse:
 */
 
 #ifndef USE_POLL
-static int read_packet(cptr, rfd)
-	aClient *cptr;
-	fd_set *rfd;
+static int read_packet(aClient *cptr, fd_set *rfd)
 {
 	int  dolen = 0, length = 0, done;
 	time_t now = TStime();
@@ -1564,15 +1543,9 @@ static int read_packet(aClient *cptr)
 
 #ifndef USE_POLL
 #ifdef NO_FDLIST
-int  read_message(delay)
+int  read_message(time_t delay)
 #else
-int  read_message(delay, listp)
-#endif
-	time_t delay;		/* Don't ever use ZERO here, unless you mean to poll and then
-				 * you have to have sleep/wait somewhere else in the code.--msa
-				 */
-#ifndef NO_FDLIST
-	fdlist *listp;
+int  read_message(time_t delay, fdlist *listp)
 #endif
 {
 	aClient *cptr;
@@ -1946,12 +1919,8 @@ deadsocket:
 #ifdef NO_FDLIST
 #error You cannot set NO_FDLIST and USE_POLL at same time!
 #else
-int  read_message(delay, listp)
+int  read_message(time_t delay, fdlist *listp)
 #endif
-	time_t delay;		/* Don't ever use ZERO here, unless you mean to poll and then
-				 * you have to have sleep/wait somewhere else in the code.--msa
-				 */
-	fdlist *listp;
 {
 	aClient *cptr;
 	int  nfds;
@@ -2235,10 +2204,7 @@ int  read_message(delay, listp)
 /*
  * connect_server
  */
-int  connect_server(aconf, by, hp)
-	ConfigItem_link *aconf;
-	aClient *by;
-	struct hostent *hp;
+int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 {
 	struct SOCKADDR *svp;
 	aClient *cptr, *c2ptr;
@@ -2354,10 +2320,7 @@ int  connect_server(aconf, by, hp)
 	return 0;
 }
 
-static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
-	ConfigItem_link *aconf;
-	aClient *cptr;
-	int *lenp;
+static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int *lenp)
 {
 	static struct SOCKADDR_IN server;
 	struct hostent *hp;
@@ -2445,10 +2408,9 @@ static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
  */
 
 #ifndef _WIN32
-static void do_dns_async()
+static void do_dns_async(void)
 #else
-void do_dns_async(id)
-	int  id;
+void do_dns_async(int id)
 #endif
 {
 	static	Link	ln;

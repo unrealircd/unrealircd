@@ -160,7 +160,7 @@ void init_ctx_client(void)
 	}
 }
 
-void init_ssl()
+void init_ssl(void)
 {
 	/* SSL preliminaries. We keep the certificate and key with the context. */
 

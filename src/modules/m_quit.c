@@ -118,10 +118,7 @@ int	m_quit_Unload(int module_unload)
 **	parv[0] = sender prefix
 **	parv[1] = comment
 */
-DLLFUNC int  m_quit(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *ocomment = (parc > 1 && parv[1]) ? parv[1] : parv[0];
 	static char comment[TOPICLEN];

@@ -140,11 +140,7 @@ int	m_message_Unload(int module_unload)
 #define PREFIX_VOICE	0x2
 #define PREFIX_OP	0x4
 
-DLLFUNC int m_message(cptr, sptr, parc, parv, notice)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
-	int  notice;
+DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice)
 {
 	aClient *acptr;
 	char *s;
@@ -484,10 +480,7 @@ DLLFUNC int m_message(cptr, sptr, parc, parv, notice)
 **	parv[2] = message text
 */
 
-DLLFUNC int  m_private(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+DLLFUNC int  m_private(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	return m_message(cptr, sptr, parc, parv, 0);
 }
@@ -499,10 +492,7 @@ DLLFUNC int  m_private(cptr, sptr, parc, parv)
 **	parv[2] = notice text
 */
 
-DLLFUNC int  m_notice(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+DLLFUNC int  m_notice(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	return m_message(cptr, sptr, parc, parv, 1);
 }
@@ -519,9 +509,7 @@ DLLFUNC int  m_notice(cptr, sptr, parc, parv)
  * but more over, if this is detected on a server not local to sptr
  * the SILENCE mask is sent upstream.
  */
-static int is_silenced(sptr, acptr)
-	aClient *sptr;
-	aClient *acptr;
+static int is_silenced(aClient *sptr, aClient *acptr)
 {
 	Link *lp;
 	anUser *user;

@@ -1152,3 +1152,5 @@ v- Fixed some bugreport stuff
 - Cleaned up a bunch of -Wall warnings (unused variables, etc)
 - -Wall cleanup cleanup with SSL AUTH problem
 - Fix for /version crash, reported by RaYmAn
+- Made all functions use new-style parameter lists
+
