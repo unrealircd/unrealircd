@@ -55,6 +55,8 @@ extern char *my_itoa(long i);
 */
 #define ircdupstr(x,y) if (x) MyFree(x); x = strdup(y)
 #define ircstrdup ircdupstr
+#define ircfree(x) if (x) MyFree(x)
+
 typedef struct _confcommand ConfigCommand;
 struct	_confcommand
 {
@@ -1230,6 +1232,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 		config_status("%s:%i: warning: redefining a record in listen %s",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			ce->ce_vardata);
+
 	}
 
 	
@@ -1288,6 +1291,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	} 
 	if (isnew)
 		add_ConfigItem((ConfigItem *)listen, (ConfigItem **)&conf_listen);
+	listen->flag.temporary = 0;
 }
 
 /*
@@ -1952,6 +1956,55 @@ void	run_configuration(void)
 	}
 }
 
+int     rehash(cptr, sptr, sig)
+        aClient *cptr, *sptr;
+        int  sig;
+{
+	ConfigItem_oper	*oper_ptr;
+	ConfigItem_class *class_ptr;
+	ConfigItem_ulines *uline_ptr;
+	
+	ConfigItem 	t;
+	for (oper_ptr = conf_oper; oper_ptr; oper_ptr = (ConfigItem_oper *) oper_ptr->next)
+	{	
+		ConfigItem_oper_from *oper_from;
+		
+		ircfree(oper_ptr->name);
+		ircfree(oper_ptr->password);
+		for (oper_from = (ConfigItem_oper_from *) oper_ptr->from; oper_from; oper_from = (ConfigItem_oper_from *) oper_from->next)
+		{
+			ircfree(oper_ptr->name);
+			t.next = del_ConfigItem((ConfigItem *)oper_ptr, (ConfigItem **)&oper_ptr->from);
+			MyFree(oper_from);
+			oper_from = (ConfigItem_oper_from *) &t;
+		}
+		t.next = del_ConfigItem((ConfigItem *)oper_ptr, (ConfigItem **)&conf_oper);
+		MyFree(oper_ptr);
+		oper_ptr = (ConfigItem_oper *) &t;
+	}
+	for (class_ptr = conf_class; class_ptr; class_ptr = (ConfigItem_class *) class_ptr->next)
+	{
+		class_ptr->flag.temporary = 1;
+		/* We'll wipe it out when it has no clients */
+		if (!class_ptr->clients)
+		{
+			ircfree(class_ptr->name);
+			t.next = del_ConfigItem((ConfigItem *) class_ptr, (ConfigItem **)conf_class);
+			MyFree(class_ptr);
+			class_ptr = (ConfigItem_class *) &t;			
+		}
+	}
+	for (uline_ptr = conf_ulines; uline_ptr; uline_ptr = (ConfigItem_ulines *) uline_ptr->next)
+	{
+		/* We'll wipe it out when it has no clients */
+		ircfree(uline_ptr->servername);
+		t.next = del_ConfigItem((ConfigItem *) uline_ptr, (ConfigItem **)conf_ulines);
+		MyFree(uline_ptr);
+		uline_ptr = (ConfigItem_ulines *) &t;			
+	}
+		
+}
+
 
 /*
  * Lookup functions
@@ -2218,3 +2271,5 @@ ConfigItem_vhost *Find_vhost(char *name) {
 	}
 	return NULL;
 }
+
+

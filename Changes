@@ -179,3 +179,10 @@
 - Classes keep reference counts now, and moving classes (oper) works good
   too.
 - Added /trace class search results (class->clients)
+- Fixed some protocol error in server_synch
+- Made listener code work good .. 
+- Made reference counts work again
+- Started some rehash work
+- Made full class work on servers too
+
+ 

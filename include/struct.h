@@ -1046,6 +1046,7 @@ struct _configitem_listen {
 	char		*ip;
 	int		port;
 	long		options;
+	long		clients;
 };
 
 struct _configitem_vhost {

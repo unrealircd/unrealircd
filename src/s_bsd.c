@@ -478,7 +478,7 @@ int add_listener2(ConfigItem_listen *conf)
 	strncpyzt(cptr->name, conf->ip, sizeof(cptr->name));
 	if (inetport(cptr, conf->ip, conf->port))
 		cptr->fd = -2;
-
+	cptr->class = (ConfigItem_class *)conf;
 	cptr->umodes = conf->options ? conf->options : LISTENER_NORMAL;
 	if (cptr->fd >= 0)
 	{
@@ -1535,6 +1535,14 @@ aClient *add_connection(cptr, fd)
 		highest_fd = fd;
 	local[fd] = acptr;
 	acptr->listener = cptr;
+	if (!acptr->listener->class)
+	{
+		sendto_ops("ERROR: !acptr->listener->class");
+	}
+	else
+	{
+		((ConfigItem_listen *) acptr->listener->class)->clients++;
+	}
 #ifdef USE_SSL
 	if (cptr->umodes & LISTENER_SSL)
 	{

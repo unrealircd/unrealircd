@@ -727,6 +727,13 @@ int  m_server(cptr, sptr, parc, parv)
 			sendto_one(cptr, "ERROR :Banned server (%s)", bconf->reason ? bconf->reason : "no reason");
 			return exit_client(cptr, cptr, &me, "Banned server");
 		}
+		if (aconf->class->clients + 1 > aconf->class->maxclients)
+		{
+			sendto_realops
+				("Cancelling link %s, full class",
+					get_client_name(cptr, TRUE));
+			return exit_client(cptr, cptr, &me, "Full class");
+		}
 		/* OK, let us check in the data now now */
 		hop = TS2ts(parv[2]);
 		numeric = (parc > 4) ? TS2ts(parv[3]) : 0;
@@ -960,6 +967,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	cptr->serv->numeric = numeric;
 	cptr->serv->conf = aconf;
 	cptr->serv->conf->refcount++;
+	cptr->serv->conf->class->clients++;
 	
 	add_server_to_table(cptr);
 	for (i = 0; i <= highest_fd; i++)
@@ -970,7 +978,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 
 		if (SupportNS(acptr))
 		{
-			sendto_one(acptr, "%c%s %s %s 2 %i :%s",
+			sendto_one(cptr, "%c%s %s %s 2 %i :%s",
 			    (me.serv->numeric ? '@' : ':'),
 			    (me.serv->numeric ? base64enc(me.
 			    serv->numeric) : me.name),
@@ -979,7 +987,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 		}
 		else
 		{
-			sendto_one(acptr, ":%s %s %s 2 :%s",
+			sendto_one(cptr, ":%s %s %s 2 :%s",
 			    me.name,
 			    (IsToken(acptr) ? TOK_SERVER : MSG_SERVER),
 			    cptr->name, cptr->info);

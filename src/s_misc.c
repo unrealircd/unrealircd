@@ -445,8 +445,14 @@ int  exit_client(cptr, sptr, from, comment)
 		if (IsClient(sptr))
 			IRCstats.me_clients--;
 		if (IsServer(sptr))
+		{
 			IRCstats.me_servers--;
+			sptr->serv->conf->refcount--;
+		}
 		
+		if (sptr->listener)
+			if (sptr->listener->class)
+				((ConfigItem_listen *)sptr->listener->class)->clients--;
 		sptr->flags |= FLAGS_CLOSING;
 		if (IsPerson(sptr))
 		{
