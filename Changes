@@ -246,3 +246,4 @@
 - Fixed restart bug, reported by RaYmAn
 - Fix-fixed " Fixed /whois to not show idle times of global opers to
      anyone" patch
+- Fixed a recently found exploit involving reverse DNS (fix from bahamut)
