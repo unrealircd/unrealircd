@@ -28,7 +28,7 @@ English | <a href="unreal32docs.de.html">German</a> |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2.2-CVS</font><br>
-  <b>Last doc update:</b> 2005-02-13</div>
+  <b>Last doc update:</b> 2005-03-05</div>
 <br>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -438,6 +438,15 @@ Especially the remove-mode times are a matter of taste.. you should think like..
 the situation, do I want to have the channel locked for like 15 minutes (=not nice for users) or 5 minutes (=likely the flooders 
 will just wait 5m and flood again). It also depends on the floodtype, users unable to join (+i) or speak (+m) is worse than 
 having them unable to change their nick (+N) or send ctcps to the channel (+C) so you might want to use different removal times.
+<br>
+<b>Channel mode j</b><br>
+The +f mode includes a feature to prevent join floods, however this feature is "global." For
+example, if it is set to 5:10 and 5 <u>different</u> users join in 10 seconds, the flood 
+protection is triggered. Channel mode +j is different. This mode works on a per-user basis. 
+Rather than protecting against join floods, it is designed to protect against join-part floods 
+(revolving door floods). The mode takes a parameter of the form X:Y where X is the number of 
+joins and Y is the number of seconds. If a user exceeds this limit, he/she will be prevented 
+from joining the channel.
 </p></div>
 
 <p><font size="+2"><b>3.13 - Ban types</b></font><a name="feature_bantypes"></a></p><div class="desc">

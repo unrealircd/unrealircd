@@ -749,3 +749,4 @@
 - Fix for above, also reported by Trocotronic.
 ** internal 3.2.3-pre2 release **
 - Fixed a couple of typos in doc/example.conf (#0002393) reported by AngryWolf.
+- Added documentation about channel mode +j (#0002392) suggested by Dukat.
