@@ -955,6 +955,10 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 #endif
 		sendto_one(sptr, rpl_str(RPL_PROTOCTL), me.name, nick,
 		    PROTOCTL_PARAMETERS);
+		if (sptr->flags & FLAGS_SSL)
+			if (sptr->ssl)
+				sendto_one(sptr, ":%s NOTICE %s :*** You are connected to %s with %s",
+					me.name, sptr->name, me.name, ssl_get_cipher(sptr->ssl));
 		(void)m_lusers(sptr, sptr, 1, parv);
 		update_load();
 		(void)m_motd(sptr, sptr, 1, parv);

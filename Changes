@@ -225,3 +225,4 @@
 - socks set {} options are now optional. Defaults are used if missing
 - If an invalid ban or except is found, it is removed
 - Some small SSL fixes .. 
+- Added a notice on connect for SSL users with key length
