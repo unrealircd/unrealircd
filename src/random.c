@@ -50,7 +50,9 @@
 u_int32_t getrandom32()
 {
 u_int32_t result;
+#ifdef USE_SSL
 int n;
+#endif
 #ifndef _WIN32
 static struct timeval prevt;
 struct timeval nowt;
@@ -111,10 +113,13 @@ void init_random()
 {
 unsigned int seed, egd = 0;
 time_t now = TStime();
+#ifdef USE_SSL
+int n;
+#endif
 #ifndef _WIN32
 struct timeval nowt;
 unsigned int xrnd = 0;
-int fd, n;
+int fd;
 #else
 MEMORYSTATUS mstat;
 struct _timeb nowt;
