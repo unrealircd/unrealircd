@@ -3328,3 +3328,4 @@ This is the 3.2 fixes branch.
 - Fixed serious crashbug due to quick-rehashing bugfix! Basically if you did a /REHASH and
   the clientcount for a class reached 0 (due to quits) it would crash.
 ** internal 3.2.1-pre2 release **
+- Added hungarian docs, translated by AngryWolf.
