@@ -1690,3 +1690,4 @@ seen. gmtime warning still there
 - Small typo in config validation found by ins4ne
 - Changed the way return values work in conf3 to better report the number of errors that
   occurred.
+- Cleaned up some module code, also removed /module load|unload (just use /rehash)

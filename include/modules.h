@@ -267,6 +267,7 @@ void CommandDel(Command *command);
 #define MODFLAG_LOADED	0x0001 /* Fully loaded */
 #define MODFLAG_TESTING 0x0002 /* Not yet initialized */
 #define MODFLAG_INIT	0x0004 /* Initialized */
+#define MODFLAG_DELAYED 0x0008 /* Delayed unload */
 
 /* Module function return values */
 #define MOD_SUCCESS 0

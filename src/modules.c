@@ -88,7 +88,7 @@ Module *Module_Find(char *name)
 	
 	for (p = Modules; p; p = p->next)
 	{
-		if (!(p->flags & MODFLAG_TESTING))
+		if (!(p->flags & MODFLAG_TESTING) || (p->flags & MODFLAG_DELAYED))
 			continue;
 		if (!strcmp(p->header->name, name))
 		{
@@ -462,6 +462,7 @@ int     Module_Unload(char *name, int unload)
 	ret = (*Mod_Unload)(unload);
 	if (ret == MOD_DELAY)
 	{
+		m->flags |= MODFLAG_DELAYED;
 		return 2;
 	}
 	if (ret == MOD_FAILED)
@@ -484,18 +485,11 @@ vFP Module_SymEx(
 {
 #ifndef STATIC_LINKING
 	vFP	fp;
-	char	buf[512];
 
 	if (!name)
 		return NULL;
 	
-	ircsprintf(buf, "_%s", name);
-
-	/* Run through all modules and check for symbols */
 	irc_dlsym(mod, name, fp);
-	if (fp)
-		return (fp);
-	irc_dlsym(mod, buf, fp);
 	if (fp)
 		return (fp);
 	return NULL;
@@ -507,23 +501,17 @@ vFP Module_Sym(char *name)
 {
 #ifndef STATIC_LINKING
 	vFP	fp;
-	char	buf[512];
 	Module *mi;
 	
 	if (!name)
 		return NULL;
-	
-	ircsprintf(buf, "_%s", name);
 
 	/* Run through all modules and check for symbols */
 	for (mi = Modules; mi; mi = mi->next)
 	{
-		if (!(mi->flags & MODFLAG_TESTING))
+		if (!(mi->flags & MODFLAG_TESTING) || (mi->flags & MODFLAG_DELAYED))
 			continue;
 		irc_dlsym(mi->dll, name, fp);
-		if (fp)
-			return (fp);
-		irc_dlsym(mi->dll, buf, fp);
 		if (fp)
 			return (fp);
 	}
@@ -535,26 +523,17 @@ vFP Module_SymX(char *name, Module **mptr)
 {
 #ifndef STATIC_LINKING
 	vFP	fp;
-	char	buf[512];
 	Module *mi;
 	
 	if (!name)
 		return NULL;
 	
-	ircsprintf(buf, "_%s", name);
-
 	/* Run through all modules and check for symbols */
 	for (mi = Modules; mi; mi = mi->next)
 	{
-		if (!(mi->flags & MODFLAG_TESTING))
+		if (!(mi->flags & MODFLAG_TESTING) || (mi->flags & MODFLAG_DELAYED))
 			continue;
 		irc_dlsym(mi->dll, name, fp);
-		if (fp)
-		{
-			*mptr = mi;
-			return (fp);
-		}
-		irc_dlsym(mi->dll, buf, fp);
 		if (fp)
 		{
 			*mptr = mi;
@@ -685,71 +664,19 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	if (parc < 2)
+	if (!Modules)
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "MODULE");
-		return 0;
+		sendto_one(sptr, ":%s NOTICE %s :*** No modules loaded", me.name, sptr->name);
+		return 1;
 	}
-	if (!match(parv[1], "load"))
+	for (mi = Modules; mi; mi = mi->next)
 	{
-		if (parc < 3)
-		{
-			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-			    me.name, parv[0], "MODULE LOAD");
-			return 0;
-		}
-		if (!(ret = Module_Create(parv[2])))
-		{
-			sendto_realops("Loaded module %s", parv[2]);
-			return 0;
-		}
-		else
-		{
-			sendto_realops("Module load of %s failed: %s",
-				parv[2], ret);
-		}
-	}
-	else
-	if (!match(parv[1], "unload"))
-	{
-		if (parc < 3)
-		{
-			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-			    me.name, parv[0], "MODULE UNLOAD");
-			return 0;
-		}
-		sendto_realops("Trying to unload module %s", parv[2]);
-		i = Module_Unload(parv[2], 0);
-		{
-			if (i == 1)
-				sendto_realops("Unloaded module %s", parv[2]);
-			else if (i == 2)
-				sendto_realops("Delaying module unload of %s",
-					parv[2]);
-			else if (i == -1)
-				sendto_realops("Couldn't unload module %s",	
-					parv[2]);
-		}
-	}		
-	else
-	if (!match(parv[1], "status"))
-	{
-		if (!Modules)
-		{
-			sendto_one(sptr, ":%s NOTICE %s :*** No modules loaded", me.name, sptr->name);
-			return 1;
-		}
-		for (mi = Modules; mi; mi = mi->next)
-		{
-			sendto_one(sptr, ":%s NOTICE %s :*** %s - %s (%s)", me.name, sptr->name,
-				mi->header->name, mi->header->version, mi->header->description);	
-		}
-	}
-	else
-	{
-		sendto_one(sptr, ":%s NOTICE %s :*** Syntax: /module load|unload|status",
-			me.name, sptr->name);
+		char delayed[32];
+		if (mi->flags & MODFLAG_DELAYED)
+			strcpy(delayed, "[Unloading]");
+		sendto_one(sptr, ":%s NOTICE %s :*** %s - %s (%s) %s", me.name, sptr->name,
+			mi->header->name, mi->header->version, mi->header->description,
+			(mi->flags & MODFLAG_DELAYED) ? delayed : "");	
 	}
 	return 1;
 }
