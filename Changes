@@ -2458,3 +2458,13 @@ seen. gmtime warning still there
 - Made /who * disabled (for non-opers) in HTM mode
 - Added usermode +T - No CTCP (excludes ACTION and DCC), (#001288) suggested by White_Magic
   and others.
+- Optimized the channel privmsg/notice code again (sendto_channelprefix_butone_tok),
+  now ~33% faster.
+- Yet another code audit:
+  - (Just for the record, this audit has nothing to do with the ircnet buffer overflow,
+     unrealircd is not vulnerable)
+  - Various fixes
+  - Visual bug regarding +f & server synching, it was sometimes setting mode +f multiple
+    times depending on the ban-/userlist.
+  - Fixed a possible desynch regarding chmode +L.
+  - Fixed possible client confusion regarding bans.

@@ -183,7 +183,7 @@ void	flag_del(char ch)
 #define SET_ERRNO(x) WSASetLastError(x)
 #endif /* _WIN32 */
 
-static char debugbuf[1024];
+static char debugbuf[4096];
 
 #ifndef	USE_VARARGS
 /*VARARGS2*/

@@ -109,7 +109,7 @@ static char *PartFmt2 = ":%s PART %s :%s";
  * some buffers for rebuilding channel/nick lists with ,'s
  */
 static char nickbuf[BUFSIZE], buf[BUFSIZE];
-char modebuf[MAXMODEPARAMS*2+1], parabuf[504];
+char modebuf[BUFSIZE], parabuf[BUFSIZE];
 #include "sjoin.h"
 
 typedef struct {
@@ -2172,6 +2172,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  }
 		  retval = 1;
 		  tmpstr = clean_ban_mask(param);
+		  if (BadPtr(tmpstr))
+		     break; /* ignore ban, but eat param */
 		  /* For bounce, we don't really need to worry whether
 		   * or not it exists on our server.  We'll just always
 		   * bounce it. */
@@ -2191,6 +2193,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  }
 		  retval = 1;
 		  tmpstr = clean_ban_mask(param);
+		  if (BadPtr(tmpstr))
+		     break; /* ignore except, but eat param */
 		  /* For bounce, we don't really need to worry whether
 		   * or not it exists on our server.  We'll just always
 		   * bounce it. */
@@ -2238,20 +2242,10 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  break;
 		  if (what == MODE_ADD)
 		  {
+		      char *tmp;
 			  if (!param || *pcount >= MAXMODEPARAMS)
 			  {
 				  retval = 0;
-				  break;
-			  }
-			  if (!stricmp(param, chptr->mode.link))
-				break;
-			  if (!stricmp(param, chptr->chname))
-			  {
-				  if (MyClient(cptr))
-					  sendto_one(cptr,
-					      ":%s %s %s :*** %s cannot be linked to itself.",
-					      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name,
-					      chptr->chname);
 				  break;
 			  }
 			  if (strchr(param, ','))
@@ -2270,20 +2264,34 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 					      me.name, cptr->name, param);
 				  break;
 			  }
+			  /* Now make it a clean channelname.. This has to be done before all checking
+			   * because it could have been changed later to something disallowed (like
+			   * self-linking). -- Syzop
+			   */
+			  strlcpy(tmpbuf, param, CHANNELLEN+1);
+			  clean_channelname(tmpbuf);
+			  /* don't allow linking to local chans either.. */
+			  if ((tmp = strchr(tmpbuf, ':')))
+				*tmp = '\0';
+
+			  if (!stricmp(tmpbuf, chptr->mode.link))
+				break;
+			  if (!stricmp(tmpbuf, chptr->chname))
+			  {
+				  if (MyClient(cptr))
+					  sendto_one(cptr,
+					      ":%s %s %s :*** %s cannot be linked to itself.",
+					      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name,
+					      chptr->chname);
+				  break;
+			  }
 			  if (!bounce)	/* don't do the mode at all. */
 			  {
-				  char *tmp;
-				  clean_channelname(param);
-				  /* This may same like duplicate code, but it's not. -- Syzop */
-				  if ((tmp = strchr(param, ':')))
-					*tmp = '\0';
-				  if (strlen(param) > CHANNELLEN)
-				    param[CHANNELLEN] = '\0';
-
-				  strncpyzt(chptr->mode.link, param,
+				  strncpyzt(chptr->mode.link, tmpbuf,
 				      sizeof(chptr->mode.link));
-			  }
-			  tmpstr = param;
+			      tmpstr = tmpbuf;
+			  } else
+			      tmpstr = param; /* Use the original value if bounce?? -- Syzop */
 		  }
 		  else
 		  {
@@ -3007,11 +3015,22 @@ char *trim_str(char *str, int len)
 	return str;
 }
 
+/* clean_ban_mask:	makes a proper banmask
+ * RETURNS: pointer to correct banmask or NULL in case of error
+ * NOTES:
+ * - A pointer is returned to a static buffer, which is overwritten
+ *   on next clean_ban_mask or make_nick_user_host call.
+ */
 char *clean_ban_mask(char *mask)
 {
 	char *cp;
 	char *user;
 	char *host;
+
+	/* Strip any ':' at beginning coz that desynchs clients/banlists */
+	if (cp = mask; (*cp && (*cp == ':')); cp++);
+	if (*!cp)
+		return NULL;
 
 	if ((user = index((cp = mask), '!')))
 		*user++ = '\0';
@@ -5879,13 +5898,17 @@ CMD_FUNC(m_sjoin)
 		{
 			char *x;
 			int i;
-			chptr->mode.floodprot->per = MAX(chptr->mode.floodprot->per, oldmode.floodprot->per);
-			for (i=0; i < NUMFLD; i++)
-				chptr->mode.floodprot->l[i] = MAX(chptr->mode.floodprot->l[i], oldmode.floodprot->l[i]);
-			for (i=0; i < NUMFLD; i++)
-				chptr->mode.floodprot->a[i] = MAX(chptr->mode.floodprot->a[i], oldmode.floodprot->a[i]);
-			x = channel_modef_string(chptr->mode.floodprot);
-			Addit('f', x);
+
+			if (memcmp(chptr->mode.floodprot, oldmode.floodprot, sizeof(ChanFloodProt)))
+			{
+				chptr->mode.floodprot->per = MAX(chptr->mode.floodprot->per, oldmode.floodprot->per);
+				for (i=0; i < NUMFLD; i++)
+					chptr->mode.floodprot->l[i] = MAX(chptr->mode.floodprot->l[i], oldmode.floodprot->l[i]);
+				for (i=0; i < NUMFLD; i++)
+					chptr->mode.floodprot->a[i] = MAX(chptr->mode.floodprot->a[i], oldmode.floodprot->a[i]);
+				x = channel_modef_string(chptr->mode.floodprot);
+				Addit('f', x);
+			}
 		}
 #else
 		if ((oldmode.kmode != chptr->mode.kmode)
