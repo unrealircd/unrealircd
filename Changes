@@ -1517,3 +1517,4 @@ seen. gmtime warning still there
 - Fixed a /invite bug where remote clients couldn't be invited, reported by Alzirr (#0000275)
 - Fixed a bug where if the hostname didn't have a dot (ie. localhost) host cloaking broke
   reported by Ron885
+- Rewrote /helpop to work as advertised, reported by FrostByghte (#0000217)

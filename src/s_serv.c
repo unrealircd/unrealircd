@@ -2604,32 +2604,39 @@ CMD_FUNC(m_help)
 			parse_help(sptr, parv[0], message + 1);
 			return 0;
 		}
-		if (message[1] == '!')
-			sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL,
-			    parv[0], MSG_HELP, TOK_HELP, "%s", message);
 		if (!myncmp(message, "IGNORE ", 7))
 		{
 			tmpl = make_link();
 			DupString(tmpl->value.cp, message + 7);
 			tmpl->next = helpign;
 			helpign = tmpl;
+			return 0;
 		}
+		if (message[0] == '!')
+			message++;
+		sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL,
+		    parv[0], MSG_HELP, TOK_HELP, "%s", message);
 		sendto_umode(UMODE_HELPOP, "*** HelpOp -- from %s (HelpOp): %s",
 		    parv[0], message);
 	}
 	else if (MyConnect(sptr))
 	{
 		/* New syntax: ?... never goes out, !... always does. */
-		if (!BadPtr(message))
-		{
-			parse_help(sptr, parv[0], message);
+		if (BadPtr(message)) {
+			parse_help(sptr, parv[0], NULL);
 			return 0;
 		}
-		if ((!BadPtr(message) && !(message[0] == '!'))
-		    || BadPtr(message))
+		else if (message[0] == '?') {
+			parse_help(sptr, parv[0], message+1);
+			return 0;
+		}
+		else if (message[0] == '!') {
+			message++;
+		}
+		else {
 			if (parse_help(sptr, parv[0], message))
 				return 0;
-
+		}
 		s = make_nick_user_host(cptr->name, cptr->user->username,
 		    cptr->user->realhost);
 		for (tmpl = helpign; tmpl; tmpl = tmpl->next)
