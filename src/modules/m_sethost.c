@@ -157,14 +157,14 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	/* bad bad bad boys .. ;p */
 	if (vhost == NULL)
-	{
+	{	
 		if (MyConnect(sptr))
 		{
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** Syntax: /SetHost <new host>",
 			    me.name, parv[0]);
 		}
-		return;
+		return 0;
 	}
 	/* uh uh .. too small */
 	if (strlen(parv[1]) < 1)
@@ -173,6 +173,7 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** /SetHost Error: Atleast write SOMETHING that makes sense (':' string)",
 			    me.name, sptr->name);
+		return 0;
 	}
 	/* too large huh? */
 	if (strlen(parv[1]) > (HOSTLEN))
@@ -182,7 +183,7 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** /SetHost Error: Hostnames are limited to %i characters.",
 			    me.name, sptr->name, HOSTLEN);
-		return;
+		return 0;
 	}
 
 	/* illegal?! */

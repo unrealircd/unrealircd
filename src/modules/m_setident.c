@@ -164,7 +164,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    ":%s NOTICE %s :*** Syntax: /SetIdent <new host>",
 			    me.name, parv[0]);
 		}
-		return;
+		return 1;
 	}
 	if (strlen(parv[1]) < 1)
 	{
@@ -172,6 +172,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** /SetIdent Error: Atleast write SOMETHING that makes sense (':' string)",
 			    me.name, sptr->name);
+		return 0;
 	}
 
 	/* too large huh? */
@@ -182,7 +183,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** /SetIdent Error: Usernames are limited to %i characters.",
 			    me.name, sptr->name, USERLEN);
-		return;
+		return 0;
 	}
 
 	/* illegal?! */
