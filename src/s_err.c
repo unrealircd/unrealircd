@@ -291,7 +291,7 @@ static Numeric numeric_replies[] = {
 /* 212 */ RPL_STATSCOMMANDS, "%s %u %u",
 #endif
 /* 213 */ RPL_STATSCLINE, "%c %s * %s %d %d",
-	0, (char *)NULL,
+/* 214 */ RPL_STATSOLDNLINE, "%c %s * %s %d %d",
 /* 215 */ RPL_STATSILINE, "%c %s * %s %d %d",
 /* 216 */ RPL_STATSKLINE, "%c %s %s %s %d %d",
 /* 217 */ RPL_STATSQLINE, "%c %s %s %s %d %d",

@@ -234,6 +234,8 @@
 #define RPL_STATSLINKINFO    211
 #define RPL_STATSCOMMANDS    212
 #define RPL_STATSCLINE       213
+#define RPL_STATSOLDNLINE    214
+
 #define RPL_STATSILINE       215
 #define RPL_STATSKLINE       216
 #define RPL_STATSQLINE       217

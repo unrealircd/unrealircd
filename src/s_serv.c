@@ -1808,8 +1808,9 @@ int  m_summon(cptr, sptr, parc, parv)
 **            it--not reversed as in ircd.conf!
 */
 
-static int report_array[18][3] = {
+static int report_array[][3] = {
 	{CONF_CONNECT_SERVER, RPL_STATSCLINE, 'C'},
+	{CONF_NOCONNECT_SERVER,  RPL_STATSOLDNLINE, 'N'},
 	{CONF_NLINE, RPL_STATSNLINE, 'n'},
 	{CONF_CLIENT, RPL_STATSILINE, 'I'},
 	{CONF_KILL, RPL_STATSKLINE, 'K'},
