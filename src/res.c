@@ -1360,7 +1360,7 @@ static void update_list(ResRQ *rptr, aCache *cachep)
 #ifdef INET6
 	for (i = 0; HE(cp)->h_addr_list[i]; i++)
 #else
-	for (i = 0; &HE(cp)->h_addr_list[i]; i++)
+	for (i = 0; HE(cp)->h_addr_list[i]; i++)
 #endif
 		;
 	addrcount = i;

@@ -1804,3 +1804,4 @@ seen. gmtime warning still there
 - Fixed bug in non-working channel mode +H. (#0000572)
 - Fixed bug in channel mode +L #aaaaaaaa<etc>
 - Added win32 compile instructions in doc/compiling_win32.txt.
+- Fixed major (?) bug in resolver (affects ipv4 only), could cause long stalls / crashes.
