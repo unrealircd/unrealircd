@@ -2,7 +2,7 @@
 Unreal3.1-Silverheart Release Notes
 ===================================
 
-* It is most wise to have a Unreal3.1-only network whenever possible. Do not
+* It is most wise to have a Unreal3.1 (FINAL) -only network whenever possible. Do not
   link this to 2.1.7 or alike (might have unexpected problems). Unreal3.0
   linking might at times cause channel desynchs because of 3.0 broken SJOIN
   code. 
@@ -23,3 +23,7 @@ Unreal3.1-Silverheart Release Notes
 
 * Documentation will show up on the website sooner or later, 
   http://unreal.tspre.org
+
+* Read Unreal.nfo for any sake. To update your IRCd, please run the ./update
+  script. This requires "wget" and "cvs" on the box to function
+ 
