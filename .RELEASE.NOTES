@@ -3,7 +3,10 @@ Unreal3.2RC1 Release Notes
 ============================
 
 ==[ GENERAL INFORMATION ]==
->> TODO << 
+* Unreal3.2 is now no longer beta, Unreal has proven itself to be stable, therefore
+  this version is called RC1 (Release Candicate 1)... After this we will release
+  RC2, and hopefully after that 3.2 final.
+  As a consequence of this, the old 3.1 series are no longer supported.
 * If you are upgrading, make sure you run ./Config and make clean before doing make
 * The official UnrealIRCd documentation is doc/unreal32docs.html
   online version at: http://www.vulnscan.org/UnrealIrcd/unreal32docs.html
@@ -68,10 +71,11 @@ Unreal3.2RC1 Release Notes
   can not be overcome.
 
 ==[ MAJOR BUGS FIXED ]==
->> TODO <<
+* security: fixed a possible spoofing bug on win32
+* security: fixed serious information disclosure bug
+* fdlist bugs regarding local operators.
 
 ==[ MINOR BUGS FIXED ]==
-* fdlist bugs regarding local operators.
 * operoverride bug regarding halfops
 * Various module system fixes: handling of "failure to load" problems,
   permanent modules, 
