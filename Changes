@@ -1000,3 +1000,4 @@ seen. gmtime warning still there
 - TKL mods compile and run fine, set{} stuff to decide what funcs are 
   avail forthcoming
 - SMO recoded but wierd because sendto_umode and sendto_snomask are wierd
+- chatops actually checks if sender is an oper, why did no one notice this?

@@ -3198,6 +3198,13 @@ int  m_chatops(cptr, sptr, parc, parv)
 		    me.name, parv[0], "CHATOPS");
 		return 0;
 	}
+
+	if (MyClient(sptr) && !IsAnOper(cptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVELEGES), me.name, sptr->name);
+		return 0;
+	}
+
 	sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL,
 	    parv[0], MSG_CHATOPS, TOK_CHATOPS, ":%s", message);
 		sendto_umode(UMODE_OPER, "*** ChatOps -- from %s: %s",
