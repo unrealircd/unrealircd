@@ -237,6 +237,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 		" KNOCK"          \
 		" SAFELIST"       \
 		" HCN"	          \
+		" WALLCHOPS"	  \
 		" WATCH=%i"       \
 		" SILENCE=%i"     \
 		" MODES=%i"       \
@@ -260,9 +261,9 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                             TOPICLEN, \
                             "#",      \
                             "(ohv)@%+", \
-                            "ohvLbefqa", \
-                            "fLk", \
-			    "l", \
+                            "ohvbeqa", \
+                            "k", \
+			    "lfL", \
 			    "psmntirRcOAQKVHGCuzN"
 			    
 /* Server-Server PROTOCTL -Stskeeps */

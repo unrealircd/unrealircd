@@ -452,3 +452,5 @@
 - Applied res.c.patch from McSkaf, fixes win32 GPF, but fixed mising HE(ocp)
 - Applied s_debug.c/config.h patch from McSkaf, makes DEBUGMODE under
   win32 working again - fixed some errors in the unix part of it.
+- Made the rehash button work in Win32
+- Fixed up some CHANMODES= support and added WALLCHOPS support

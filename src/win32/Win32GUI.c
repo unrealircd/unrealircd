@@ -64,7 +64,7 @@ LRESULT CALLBACK BotMotdDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK RulesDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK StatusDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK ConfigErrorDLG(HWND, UINT, WPARAM, LPARAM);
-extern  void      SocketLoop(void *dummy), s_rehash();
+extern  void      SocketLoop(void *dummy), rehash(aClient *, aClient *, int);
 static char *StripCodes(char *);
 HINSTANCE hInst;
 NOTIFYICONDATA SysTray;
@@ -198,9 +198,10 @@ static HMENU hAbout, hConfig;
 	         p.x = LOWORD(lParam);
 		     p.y = HIWORD(lParam);
 			 if ((p.x >= 24) && (p.x <= 78) && (p.y >= 178) && (p.y <= 190))
-             {
+        	     {
 				 MessageBox(hDlg, "Rehashing the wIRCd", "Rehashing", MB_OK);
-         		 rehash();
+ 				 sendto_realops("server config file is being rehashed from the console");
+	         		 rehash(&me, &me, 0);
 				 return 0;
 			 }
 			 else if ((p.x >= 85) && (p.x <= 132) && (p.y >= 178) && (p.y <= 190))  {
