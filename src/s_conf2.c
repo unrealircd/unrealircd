@@ -502,12 +502,12 @@ ConfigFile *config_load(char *filename)
 	fd = open(filename, O_RDONLY);
 	if (fd == -1)
 	{
-		config_error("Couldn't open \"%s\": %i\n", filename, errno);
+		config_error("Couldn't open \"%s\": %s\n", filename, strerror(errno));
 		return NULL;
 	}
 	if (fstat(fd, &sb) == -1)
 	{
-		config_error("Couldn't fstat \"%s\": %i\n", filename, errno);
+		config_error("Couldn't fstat \"%s\": %s\n", filename, strerror(errno));
 		close(fd);
 		return NULL;
 	}
@@ -526,8 +526,8 @@ ConfigFile *config_load(char *filename)
 	ret = read(fd, buf, sb.st_size);
 	if (ret != sb.st_size)
 	{
-		config_error("Error reading \"%s\": %i\n", filename,
-			ret == -1 ? errno : EFAULT);
+		config_error("Error reading \"%s\": %s\n", filename,
+			ret == -1 ? strerror(errno) : strerror(EFAULT));
 		free(buf);
 		close(fd);
 		return NULL;
