@@ -1,5 +1,5 @@
-/************************************************************************
-/************************************************************************
+
+/*
  *   Unreal Internet Relay Chat Daemon, src/s_misc.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
@@ -63,7 +63,6 @@ extern float currentrate2;
 extern ircstats IRCstats;
 extern char	*me_hash;
 
-ID_CVS("$Id$");
 static void exit_one_client PROTO((aClient *, aClient *, aClient *, char *));
 static void exit_one_client_in_split PROTO((aClient *, aClient *, aClient *,
     char *));
@@ -303,7 +302,7 @@ char *get_client_host(cptr)
 		return get_client_name(cptr, FALSE);
 	(void)ircsprintf(nbuf, "%s[%-.*s@%-.*s]",
 	    cptr->name, USERLEN,
-	    (!(cptr->flags & FLAGS_GOTID)) ? "" : cptr->username,
+  	    (!(cptr->flags & FLAGS_GOTID)) ? "" : cptr->username,
 	    HOSTLEN, cptr->hostp->h_name);
 	return nbuf;
 }

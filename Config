@@ -33,6 +33,7 @@ STRINGH=undef
 STRINGSH=undef
 RUSAGEH=undef
 NOINDEX=undef
+FORCECORE=define
 NSTRERROR=undef
 NSTRTOKEN=undef
 NSTRTOK=undef
@@ -104,6 +105,13 @@ clear
         more .CHANGES.NEW
         echo $n "[Enter to begin]"
         read cc
+        clear
+    fi
+    if [ -r .RELEASE.NOTES ] ; then
+        more .RELEASE.NOTES
+        echo $n "[Enter to begin]"
+        read cc
+        clear
     fi
 
 if [ "$1" = "-n" ] ; then
@@ -157,7 +165,7 @@ case "$OS" in
         CRYPT_OPER_PASSWORD=""
         CRYPT_LINK_PASSWORD=""
 	CRYPT_ILINE_PASSWORD=""
-	CRYPT+XLINE_PASSWORD=""
+	CRYPT_XLINE_PASSWORD=""
         echo "You are using FreeBSD 4.0; You can use encrypted passwords now."
         ;;
     *FreeBSD*3*)
@@ -738,6 +746,39 @@ __EOF__
 	fi
 fi
 #
+# Can we set the core size to unlimited
+#
+
+echo $n "Can we set the core size to unlimited...$c"
+cat > $TMP <<__EOF__
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <unistd.h>
+main() {
+	struct rlimit corelim;
+	corelim.rlim_cur = corelim.rlim_max = RLIM_INFINITY;
+        	if (setrlimit(RLIMIT_CORE, &corelim))
+			exit(1);
+	exit(0);
+}
+__EOF__
+
+$COMP >/dev/null 2>&1
+if [ $? -ne 0 ] ; then
+	echo " no"
+	FORCECORE=undef
+else
+	$EXEC
+	if [ $? -ne 1 ] ; then
+		echo " yes"
+	else
+		echo " no"
+		FORCECORE=undef
+	fi
+fi
+$RM -f $EXEC $TMP
+
+#
 # what do we need that isn't here already ?
 #
 echo "What else do I need that you don't have..."
@@ -873,7 +914,7 @@ cat > $TMP <<__EOF__
 #endif
 main()
 {
-	char  *t = "1\0", *s;
+	char  t[] = "a\0", *s;
 	s = strtok(t, ",");
 	if (!strcmp(t, s))
 		exit(0);
@@ -1009,6 +1050,7 @@ cat > $SETUP  <<__EOF__
 #$STDDEFH	STDDEFH
 #$SYSSYSLOGH	SYSSYSLOGH
 #$NOINDEX	NOINDEX
+#$FORCECORE	FORCE_CORE
 #$NSTRERROR	NEED_STRERROR
 #$NSTRTOKEN	NEED_STRTOKEN
 #$NSTRTOK	NEED_STRTOK
@@ -1194,7 +1236,7 @@ while [ -z "$FOO" ] ; do
     esac
 done
 
-DOMAINNAME=`hostname -f`
+DOMAINNAME=`hostname`
 FOO=""
 runonce=""
 while [ -z "$FOO" ] ; do

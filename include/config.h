@@ -197,11 +197,12 @@
 
 /* #undef	DEBUGMODE	/* define DEBUGMODE to enable debugging mode.*/
 
+/* We not check whether this is ok at compile time -- codemastr */
 /*
  * defining FORCE_CORE will automatically "unlimit core", forcing the
  * server to dump a core file whenever it has a fatal error.  -mlv
  */
-#define FORCE_CORE
+/* #define FORCE_CORE */
 
 /*
  * Full pathnames and defaults of irc system's support files. Please note that
@@ -399,6 +400,7 @@
 #define OperServ "OperServ"
 #define HelpServ "HelpServ"
 #define StatServ "StatServ"
+#define InfoServ "InfoServ"
 
 /*
  * How many seconds in between simultaneous nick changes?

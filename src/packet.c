@@ -1,3 +1,4 @@
+
 /************************************************************************
  *   Unreal Internet Relay Chat Daemon, src/packet.c
  *   Copyright (C) 1990  Jarkko Oikarinen and
@@ -24,64 +25,65 @@
 #include "msg.h"
 #include "h.h"
 
-ID_CVS("$Id$");
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
 ID_Notes("2.12 1/30/94");
 
 #ifdef CRYPTOIRCD
-char	*ep_encrypt(aClient *cptr, char *string, int *len)
+char *ep_encrypt(aClient *cptr, char *string, int *len)
 {
-	static unsigned char	cryptobuffer[8192];
-	char		ivec[9];
-	int		length;
-	char		*c;
-	int		num;
+	static unsigned char cryptobuffer[8192];
+	char ivec[9];
+	int  length;
+	char *c;
+	int  num;
 
 	if (!cptr->cryptinfo)
 		return string;
-		
+
 	bzero(cryptobuffer, sizeof(cryptobuffer));
 	bzero(ivec, sizeof(ivec));
 	num = 0;
-	
+
 	if ((c = (char *)strchr(string, '\n')))
 		*c = '\0';
 	if ((c = (char *)strchr(string, '\r')))
-		*c = '\0';	
-	
+		*c = '\0';
+
 	length = strlen(string) + 1;
-	cryptobuffer[0] = (unsigned char) length / 256;
-	cryptobuffer[1] = (unsigned char) length - (cryptobuffer[0] * 256);
-	
+	cryptobuffer[0] = (unsigned char)length / 256;
+	cryptobuffer[1] = (unsigned char)length - (cryptobuffer[0] * 256);
+
 	if (cptr->cryptinfo->method == METHOD_BLOWFISH)
 	{
-		BF_cfb64_encrypt(string, &cryptobuffer[2], length, cptr->cryptinfo->key, ivec, &num, BF_ENCRYPT);
+		BF_cfb64_encrypt(string, &cryptobuffer[2], length,
+		    cptr->cryptinfo->key, ivec, &num, BF_ENCRYPT);
 		*len = length + 2;
 		return (cryptobuffer);
 	}
 }
 
-char 	*ep_decrypt(aClient *cptr, char *string)
+char *ep_decrypt(aClient *cptr, char *string)
 {
-	static char	decryptbuffer[8192];
-	int	num;
-	char	ivec[9];
-	int	length;
-	
+	static char decryptbuffer[8192];
+	int  num;
+	char ivec[9];
+	int  length;
+
 	if (!cptr->cryptinfo)
 		return string;
-	
+
 	bzero(decryptbuffer, sizeof(decryptbuffer));
 	bzero(ivec, sizeof(ivec));
 	num = 0;
 	length = (*(string) * 256) + (*(string + 1));
-	
+
 	if (cptr->cryptinfo->method == METHOD_BLOWFISH)
 	{
-		BF_cfb64_encrypt(string + 2, decryptbuffer, length, cptr->cryptinfo->key, ivec, &num, BF_DECRYPT);
-		return (decryptbuffer);		
-	}	
+		BF_cfb64_encrypt(string + 2, decryptbuffer, length,
+		    cptr->cryptinfo->key, ivec, &num, BF_DECRYPT);
+		return (decryptbuffer);
+	}
 }
 #endif
 /*
@@ -129,7 +131,7 @@ int  dopacket(cptr, buffer, length)
 #ifdef CRYPTOIRCD
 	int  lengthweneed, num, lengthbackup, li;
 	char *s;
-	char	f[4096], x[512];
+	char f[4096], x[512];
 #endif
 
 	me.receiveB += length;	/* Update bytes received */
@@ -163,36 +165,44 @@ int  dopacket(cptr, buffer, length)
 			*ch1 = *ch2++;
 			if (ch1 - cptr->buffer > 2)
 			{
-				lengthweneed = ((unsigned char) *cptr->buffer) * 256 
-					+ ((unsigned char) *(cptr->buffer + 1));
+				lengthweneed =
+				    ((unsigned char)*cptr->buffer) * 256 +
+				    ((unsigned char)*(cptr->buffer + 1));
 				lengthbackup = ch1 - cptr->buffer;
 				if (lengthbackup >= (lengthweneed + 1))
 				{
 					ch1 = cptr->buffer;
 					cptr->count = 0;
-					Debug((DEBUG_ERROR, "packet recieved len %i", lengthweneed));
-					s = (char *) ep_decrypt(cptr, cptr->buffer);
+					Debug((DEBUG_ERROR,
+					    "packet recieved len %i",
+					    lengthweneed));
+					s =
+					    (char *)ep_decrypt(cptr,
+					    cptr->buffer);
 					me.receiveM += 1;
 					cptr->receiveM += 1;
 					if (cptr->acpt != &me)
 						cptr->acpt->receiveM += 1;
-					if (parse(cptr, s, s + lengthweneed, msgtab) == FLUSH_BUFFER)
+					if (parse(cptr, s, s + lengthweneed,
+					    msgtab) == FLUSH_BUFFER)
 						return FLUSH_BUFFER;
 					if (cptr->flags & FLAGS_DEADSOCKET)
-						return exit_client(cptr, cptr, &me, "Dead socket");
-				 }
-				 else
-					if (ch1 < cptr->buffer + (sizeof(cptr->buffer) - 1))
+						return exit_client(cptr, cptr,
+						    &me, "Dead socket");
+				}
+				else
+				    if (ch1 <
+				    cptr->buffer + (sizeof(cptr->buffer) - 1))
 					ch1++;
 			}
 			else
-				if (ch1 < cptr->buffer + (sizeof(cptr->buffer) - 1))
-					ch1++;
-				
+			    if (ch1 < cptr->buffer + (sizeof(cptr->buffer) - 1))
+				ch1++;
+
 		}
-		
+
 	}
-		else
+	else
 #endif
 		while (--length >= 0)
 		{
@@ -201,7 +211,7 @@ int  dopacket(cptr, buffer, length)
 			 * Yuck.  Stuck.  To make sure we stay backward compatible,
 			 * we must assume that either CR or LF terminates the message
 			 * and not CR-LF.  By allowing CR or LF (alone) into the body
-	 		 * of messages, backward compatibility is lost and major
+			 * of messages, backward compatibility is lost and major
 			 * problems will arise. - Avalon
 			 */
 			if (g < '\16' && (g == '\n' || g == '\r'))
@@ -233,10 +243,10 @@ int  dopacket(cptr, buffer, length)
 					    "Dead Socket");
 				ch1 = cptr->buffer;
 			}
-			else if (ch1 < cptr->buffer + (sizeof(cptr->buffer) - 1))
+			else if (ch1 <
+			    cptr->buffer + (sizeof(cptr->buffer) - 1))
 				ch1++;	/* There is always room for the null */
 		}
 	cptr->count = ch1 - cptr->buffer;
 	return 0;
 }
-

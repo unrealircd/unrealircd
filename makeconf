@@ -13,6 +13,7 @@ ADMADDR="admin@no.where.com"
 OPERNAME="admin"
 OPERADDR="*@*"
 OPERPASS="password"
+NUMERIC=""
 PORT="6667"
 OPRT="default"
 LINKPASS="linkpass"
@@ -174,6 +175,15 @@ if [ ! -z "$cc" ]; then
 fi
 
 echo " "
+echo "What server numeric does the server have (range = 1..256)"
+echo "Must NOT be the same as other servers you link with"
+echo $n " [] -> $c"
+read cc
+if [ ! -z "$cc" ]; then
+	NUMERIC="$cc"
+fi
+
+echo " "
 echo "What is your real name? (ie: John Doe)"
 echo $n " [$ADMIN] -> $c"
 read cc
@@ -311,7 +321,7 @@ cat > $CONF << __EOF__
 ########################
 
 ############ Server Info ############
-M:$SERVNAME:$VIRTUAL:$COMMENT:$PORT
+M:$SERVNAME:$VIRTUAL:$COMMENT:$PORT:$NUMERIC
 #####################################
 
 ############ Administrator Information #############

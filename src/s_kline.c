@@ -255,7 +255,7 @@ int  find_tkline_match(cptr, xx)
 
 	nowtime = TStime();
 	chost = cptr->sockhost;
-	cname = cptr->user->username;
+	cname = (xx != 2) ? cptr->user->username : NULL;
 
 	cip = (char *)inet_ntoa(cptr->ip);
 
@@ -267,13 +267,12 @@ int  find_tkline_match(cptr, xx)
 		else
 			is_ip = 0;
 
-		if (is_ip == 0 ? (!match(lp->hostmask, chost)
-		    && !match(lp->usermask, cname)) : (!match(lp->hostmask,
-		    chost) || !match(lp->hostmask, cip))
-		    && !match(lp->usermask, cname) && (xx != 2 || !match(lp->usermask, cname)))
+		if (xx != 2 ? is_ip == 0 ? (!match(lp->hostmask, chost)
+				&& !match(lp->usermask, cname)) :
+				(!match(lp->hostmask, chost) || !match(lp->hostmask, cip))
+				: !match(lp->hostmask, chost))
 		{
-			
-			if ((lp->type & (TKL_KILL)) && (xx != 2))
+			if (lp->type & TKL_KILL)
 			{
 				if (lp->type & TKL_GLOBAL)
 				{

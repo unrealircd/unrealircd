@@ -1,0 +1,19 @@
+#!/bin/sh
+#
+# Auto-update script for Unreal3.1 and higher
+# (C) Carsten V. Munk 2000
+#
+# This script may not be modified without consent of the author,
+# or included in any package without permission from the author.
+#
+# NO WARRANTY IS INCLUDED
+CURRENT_VERSION="Unreal3.1-Silverheart"
+clear
+cat .UPDATE
+cd src
+rm update.sh
+wget http://unreal.tspre.org/update.sh
+chmod +x update.sh
+export CURRENT_VERSION
+./update.sh
+exit 1

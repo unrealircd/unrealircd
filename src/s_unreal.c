@@ -1,4 +1,5 @@
 /************************************************************************
+/************************************************************************
  *   IRC - Internet Relay Chat, s_unreal.c
  *   (C) 1999 Carsten Munk (Techie/Stskeeps) <cmunk@toybox.flirt.org>
  *
@@ -41,7 +42,6 @@
 #include <fcntl.h>
 #include "h.h"
 
-ID_CVS("$Id$");
 ID_Copyright("(C) Carsten Munk 1999");
 
 time_t TSoffset = 0;
@@ -178,7 +178,7 @@ int  m_sethost(cptr, sptr, parc, parv)
 	if (sptr->user->virthost)
 		MyFree(sptr->user->virthost);
 	sptr->user->virthost = MyMalloc(strlen(vhost) + 1);
-	sprintf(sptr->user->virthost, "%s", vhost);
+	ircsprintf(sptr->user->virthost, "%s", vhost);
 	/* spread it out */
 	sendto_serv_butone_token(cptr, sptr->name, MSG_SETHOST, TOK_SETHOST,
 	    "%s", parv[1]);
@@ -277,8 +277,7 @@ int  m_chghost(cptr, sptr, parc, parv)
 			sendto_umode(UMODE_EYES,
 			    "%s changed the virtual hostname of %s (%s@%s) to be %s",
 			    sptr->name, acptr->name, acptr->user->username,
-			    (acptr->umodes & UMODE_HIDE ? acptr->
-			    user->virthost : acptr->user->realhost), parv[2]);
+			    acptr->user->realhost, parv[2]);
 		}
 		acptr->umodes |= UMODE_HIDE;
 		acptr->umodes |= UMODE_SETHOST;

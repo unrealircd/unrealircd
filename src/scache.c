@@ -114,34 +114,6 @@ char *find_by_hash(int hash)
 }
 
 
-char *find_by_aln(char *s)
-{
-	return (find_by_hash(convertfromaln(s)));
-}
-
-
-char *find_server_aln(char *s)
-{
-	return (convert2aln(hash(s)));
-
-}
-
-char	*does_servername_collide(char *s)
-{
-	int	i = hash(s);
-	
-	if (scache_hash[i])
-	{
-		if (strcmp(s, scache_hash[i]->name))
-			return scache_hash[i]->name;
-		else
-			return NULL;
-	}
-	else
-	{
-		return NULL;
-	}
-}
 
 /*
  * Added so s_debug could check memory usage in here -Dianora 
@@ -184,9 +156,8 @@ void list_scache(aClient *sptr)
 		{
 			if (ptr->name)
 				sendto_one(sptr,
-				    ":%s NOTICE %s :server=%s hash=%i ALN=%s",
-				    me.name, sptr->name, ptr->name, hash_index,
-				    convert2aln(hash_index));
+				    ":%s NOTICE %s :server=%s hash=%i",
+				    me.name, sptr->name, ptr->name, hash_index);
 			ptr = ptr->next;
 		}
 	}

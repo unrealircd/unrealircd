@@ -41,7 +41,6 @@
 #include <fcntl.h>
 #include "h.h"
 
-ID_CVS("$Id$");
 ID_Copyright("(C) Carsten Munk 2000");
 
 ircstats IRCstats;

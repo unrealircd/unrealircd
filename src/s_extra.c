@@ -1,7 +1,6 @@
-/************************************************************************
-/************************************************************************
+/*
  *   Unreal Internet Relay Chat Daemon, src/s_extra.c
- *   (C) 1999 Carsten Munk (Techie/Stskeeps) <stskeeps@tspre.org>
+ *   (C) 1999-2000 Carsten Munk (Techie/Stskeeps) <stskeeps@tspre.org>
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers. 
@@ -42,7 +41,6 @@
 #include <fcntl.h>
 #include "h.h"
 
-ID_CVS("$Id$");
 ID_Copyright("(C) Carsten Munk 1999");
 
 /*

@@ -1,4 +1,4 @@
-/************************************************************************
+/*
  *   IRC - Internet Relay Chat, ircd/s_zip.c
  *   Copyright (C) 1996  Christophe Kalt
  *

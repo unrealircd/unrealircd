@@ -1,5 +1,4 @@
-/************************************************************************
-/************************************************************************
+/*
  *   Unreal Internet Relay Chat Daemon, src/s_err.c
  *   Copyright (C) 1992 Darren Reed
  *
@@ -26,7 +25,6 @@
 static char sccsid[] = "@(#)s_err.c	1.12 11/1/93 (C) 1992 Darren Reed";
 #endif
 
-ID_CVS("$Id$");
 
 /* Redone to be similar to bahamut's s_err.c -- codemastr */
 
@@ -36,8 +34,8 @@ static char *replies[] = {
 /* 002    RPL_YOURHOST */ ":%s 002 %s :Your host is %s, running version %s",
 /* 003    RPL_CREATED */  ":%s 003 %s :This server was created %s",
 /* 004    RPL_MYINFO */   ":%s 004 %s %s %s %s %s",
-/* 005    RPL_PROTOCTL */ ":%s 005 %s %s :are available on this server",
-/* 006    RPL_MAP */      ":%s 006 %s :%s%-*s\2[Users:%5d]  [%2d%%]\2",
+/* 005    RPL_PROTOCTL */ PROTOCTL_CLIENT,
+/* 006    RPL_MAP */      ":%s 006 %s :%s%-*s(%d)  %s",
 /* 007    RPL_MAPEND */   ":%s 007 %s :End of /MAP",
 /* 008 */ NULL,
 /* 009 */ NULL,
@@ -1067,6 +1065,3 @@ char *getreply(int numeric) {
 	else
           return(replies[numeric]);
 }
-
-/* this was the old RPL_MYINFO line .... 
-   RPL_MYINFO, "%s %s oiwsghOkcSNfraAbexTCWq biklmnopstvRzqxOAqa", */

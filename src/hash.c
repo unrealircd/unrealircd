@@ -25,7 +25,6 @@
 #include "hash.h"
 #include "h.h"
 
-ID_CVS("$Id$");
 ID_Copyright("(C) 1991 Darren Reed");
 ID_Notes("2.10 7/3/93");
 
@@ -572,8 +571,8 @@ int  hash_check_notify(cptr, reply)
 		    lp->value.cptr->name, cptr->name,
 		    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
 		    (IsPerson(cptr) ?
-		    (IsHidden(cptr) ? cptr->user->virthost : cptr->user->
-		    realhost) : "<N/A>"), anptr->lasttime, cptr->info);
+		    (IsHidden(cptr) ? cptr->user->virthost : cptr->
+		    user->realhost) : "<N/A>"), anptr->lasttime, cptr->info);
 
 	return 0;
 }

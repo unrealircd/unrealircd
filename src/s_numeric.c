@@ -1,5 +1,4 @@
-/************************************************************************
-/************************************************************************
+/*
  *   Unreal Internet Relay Chat Daemon, src/s_numeric.c
  *   Copyright (C) 1990 Jarkko Oikarinen
  *
@@ -32,7 +31,6 @@ Computing Center and Jarkko Oikarinen";
 #include "numeric.h"
 #include "h.h"
 
-ID_CVS("$Id$");
 
 static char buffer[1024];
 

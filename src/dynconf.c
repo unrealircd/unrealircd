@@ -38,7 +38,6 @@
 #include "h.h"
 #include "setup.h"
 
-ID_CVS("$Id$");
 ID_Copyright("(C) 1999-2000 Carsten Munk");
 
 #define DoDebug fprintf(stderr, "[%s] %s | %li\n", babuf, __FILE__, __LINE__);

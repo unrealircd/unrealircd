@@ -47,11 +47,9 @@
 #endif
 
 #ifdef DEVELOP_CVS
-#define ID_CVS(x) static char id_cvs[] = x
 #define ID_Copyright(x) static char id_copyright[] = x
 #define ID_Notes(x) static char id_notes[] = x
 #else
-#define ID_CVS(x)
 #define ID_Copyright(x)
 #define ID_Notes(x)
 #endif
@@ -208,8 +206,39 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 #define ZIPSTUFF ""
 #endif
 
-#define PROTOCTL_CLIENT "TOKEN WATCH=128 SAFELIST HCN PREFIX=@+%"
-#define PROTOCTL_SERVER "NOQUIT TOKEN NICKv2 SJOIN SJOIN2 UMODE2 ALN VL SJ3" ZIPSTUFF
+/* IRCu/Hybrid/Unreal way now :) -Stskeeps */
+
+#define PROTOCTL_CLIENT           \
+		":%s 005 %s"      \
+		" MAP"            \
+		" KNOCK"          \
+		" SAFELIST"       \
+		" HCN"	          \
+		" WATCH=%i"       \
+		" SILENCE=%i"     \
+		" MODES=%i"       \
+		" MAXCHANNELS=%i" \
+		" MAXBANS=%i"     \
+		" NICKLEN=%i"     \
+		" TOPICLEN=%i"    \
+		" KICKLEN=%i"     \
+		" CHANTYPES=%s"    \
+		" PREFIX=%s"     \
+		" :are supported by this server"
+		
+#define PROTOCTL_PARAMETERS MAXWATCH, \
+                            MAXSILES, \
+                            MAXMODEPARAMS, \
+                            MAXCHANNELSPERUSER, \
+                            MAXBANS, \
+                            NICKLEN, \
+                            TOPICLEN, \
+                            TOPICLEN, \
+                            "#",      \
+                            "(ohv)@%+"       
+
+/* Server-Server PROTOCTL -Stskeeps */
+#define PROTOCTL_SERVER "NOQUIT TOKEN NICKv2 SJOIN SJOIN2 UMODE2 VL SJ3 NS" ZIPSTUFF
 
 #ifdef _WIN32
 /*

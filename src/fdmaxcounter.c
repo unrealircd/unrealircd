@@ -22,11 +22,11 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-main() 
+main()
 {
-	int	i;
-	int	s;
-	
+	int  i;
+	int  s;
+
 	for (i = 1; i <= 10000; i++)
 	{
 		s = socket(AF_INET, SOCK_STREAM, 0);

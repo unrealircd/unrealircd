@@ -81,6 +81,11 @@ extern int R_do_socks, R_good_socks, R_no_socks;
 #endif
 extern aChannel *find_channel PROTO((char *, aChannel *));
 extern void remove_user_from_channel PROTO((aClient *, aChannel *));
+extern char *base64enc PROTO((unsigned long));
+extern unsigned long base64dec PROTO((char *));
+extern void add_server_to_table PROTO((aClient *));
+extern void remove_server_from_tabel PROTO((aClient *));
+
 /* for services */
 extern void del_invite PROTO((aClient *, aChannel *));
 extern int del_silence PROTO((aClient *, char *));
@@ -101,7 +106,7 @@ extern aClient *find_nickserv PROTO((char *, aClient *));
 extern aClient *find_person PROTO((char *, aClient *));
 extern aClient *find_server PROTO((char *, aClient *));
 extern aClient *find_service PROTO((char *, aClient *));
-
+extern aClient *find_server_quick PROTO((char *));
 extern char *find_or_add PROTO((char *));
 extern int attach_conf PROTO((aClient *, aConfItem *));
 extern aConfItem *attach_confs PROTO((aClient *, char *, int));
