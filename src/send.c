@@ -977,7 +977,8 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
 				cptr = users->cptr;
 				if (!MyConnect(cptr) || sentalong[cptr->slot] == sentalong_marker)
 					continue;
-				if ((channels->chptr->mode.mode & MODE_AUDITORIUM) && !is_chanownprotop(user, channels->chptr))
+				if ((channels->chptr->mode.mode & MODE_AUDITORIUM) &&
+				    !(is_chanownprotop(user, channels->chptr) || is_chanownprotop(cptr, channels->chptr)))
 					continue;
 				sentalong[cptr->slot] = sentalong_marker;
 				vsendto_prefix_one(cptr, user, pattern, vl);

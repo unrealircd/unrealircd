@@ -1929,3 +1929,4 @@ seen. gmtime warning still there
 - Updated win32 compile instructions
 - Fixed set::dns error messages
 - Fixed win32 compile error
+- Fixed chmode +u again.
