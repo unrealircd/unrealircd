@@ -4477,7 +4477,7 @@ CMD_FUNC(m_names)
 	for (cm = chptr->members; cm; cm = cm->next)
 	{
 		acptr = cm->cptr;
-		if (IsInvisible(acptr) && !member)
+		if (IsInvisible(acptr) && !member && !IsNetAdmin(sptr))
 			continue;
 		if (IsHiding(acptr) && acptr != sptr && !IsNetAdmin(sptr))
 			continue;

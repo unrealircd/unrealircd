@@ -1796,3 +1796,4 @@ seen. gmtime warning still there
   affects connected clients immediately. (#0000593)
 - Fixed SVSMODE bug in handling of non-qaohvbe modes. (#0000631)
 - Fixed time calculation bug. (#0000634)
+- Made netadmins able to see users in all chans by using /who #chan or /names #chan.
