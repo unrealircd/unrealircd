@@ -294,7 +294,7 @@ Windows:<br>
 <p>No puede conectar normalmente a un puerto SSL. As&iacute;, no podr&aacute; usar el puerto 6667 para SSL. Adem&aacute;s se requiere un cliente o una pasarela que entienda el protocolo SSL.</p>
 <p>Clientes que soportan SSL: <A HREF="http://www.xchat.org/" TARGET="_blank">XChat</a>,
                              <A HREF="http://www.irssi.org/" TARGET="_blank">irssi</a>,
-                             <A HREF="http://www.irssi.org/" TARGET="_blank">mIRC</a> (6.14 y posteriores, 
+                             <A HREF="http://www.mirc.com/" TARGET="_blank">mIRC</a> (6.14 y posteriores, 
                              con <a href="http://www.mirc.co.uk/ssl.html" target="_blank">pasos adicionales</a>)</p>
 <p>Para clientes que no soporten SSL puede usar una pasarela como <A HREF="http://www.stunnel.org/" TARGET="_blank">stunnel</A>. Aqu&iacute; tiene un ejemplo (para stunnel 4.x):<br>
   <pre>
@@ -1996,17 +1996,17 @@ set {
 <p><font class="set">set::hiddenhost-prefix &lt;prefijo&gt;;</font><br>
   Define el prefijo del host virtual. Suele ser un reflejo del nombre de la red.</p>
 <p><font class="set">set::hosts::local &lt;vhost-locop&gt;;</font><br>
-  Define el host que se les asignar&aacute; a los operadores locales si llevan +x.</p>
+  Define el host que se les asignar&aacute; a los operadores locales si llevan +x. Puede especificar un user@host para este campo. </p>
 <p><font class="set">set::hosts::global &lt;vhost-globop&gt;;</font><br>
-  Define el host que se les asignar&aacute; a los operadores globales si llevan +x.</p>
+  Define el host que se les asignar&aacute; a los operadores globales si llevan +x. Puede especificar un user@host para este campo.</p>
 <p><font class="set">set::hosts::coadmin &lt;vhost-coadmin&gt;;</font><br>
-  Define el host que se les asignar&aacute; a los co-admin si llevan +x.</p>
+  Define el host que se les asignar&aacute; a los co-admin si llevan +x. Puede especificar un user@host para este campo.</p>
 <p><font class="set">set::hosts::admin &lt;vhost-admin&gt;;</font><br>
-  Define el host que se les asignar&aacute; a los administradores si llevan +x.</p>
+  Define el host que se les asignar&aacute; a los administradores si llevan +x. Puede especificar un user@host para este campo.</p>
 <p><font class="set">set::hosts::servicesadmin &lt;vhost-admin-servicios&gt;;</font><br>
-  Define el host que se les asignar&aacute; a los administradores de servicios si llevan +x.</p>
+  Define el host que se les asignar&aacute; a los administradores de servicios si llevan +x. Puede especificar un user@host para este campo.</p>
 <p><font class="set">set::hosts::netadmin &lt;vhost-admin-red&gt;;</font><br>
-  Define el host que se les asignar&aacute; a los administradores de red si llevan +x.</p>
+  Define el host que se les asignar&aacute; a los administradores de red si llevan +x. Puede especificar un user@host para este campo.</p>
 <p><font class="set">set::hosts::host-on-oper-up &lt;yes/no&gt;;</font><br>
   Si est&aacute; en 'yes', recibir&aacute;n el host autom&aacute;ticamente acompa&ntilde;ado del modo +x si no lo tuvieran. Si no, deber&aacute;n ponerse el modo +x manualmente.</p>
 <p><font class="set">set::ssl::egd &lt;archivo&gt;;</font><br>
