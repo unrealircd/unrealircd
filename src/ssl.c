@@ -182,13 +182,15 @@ int  ssl_client_handshake(aClient *cptr)
 			get_client_name(cptr, FALSE));
 		return -1;
 	}
-	set_blocking(cptr->fd);
+/*	set_blocking(cptr->fd); */
 	SSL_set_fd((SSL *)cptr->ssl, cptr->fd);
 	SSL_set_connect_state((SSL *)cptr->ssl);
 	if (SSL_connect((SSL *)cptr->ssl) <= 0)
 	{
+#if 0
 		sendto_realops("Couldn't SSL_connect");
 		return -2;
+#endif
 	}
 	set_non_blocking(cptr->fd, cptr);
 	cptr->flags |= FLAGS_SSL;

@@ -928,3 +928,5 @@ seen. gmtime warning still there
 - Added the ability to create new files via the win32 editor
 - Fixed a win32 editor bug caused by me being drunk or something :P
 - Fixed the last of the font and editor-cutting-text bugs (hopefully)
+- Commented out three lines of code that were causing SSL to freeze on 
+  /connect, TODO: code in new SSL error handling (Griever)
