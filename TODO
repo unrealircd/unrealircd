@@ -112,3 +112,12 @@ InTe[_:#roxnet> -oxygen.phrozen.org- *** Global -- from Irc.LinuxFreakz.Net:
           
          P:ip:W:*:port
            UnrealHTTPD!
+
+* codemastr - Wed 20 Dec 2000 - 3 - [ General ]
+	
+	Recode badwords to allow a different replace word for each word
+
+* codemastr - Wed 20 Dec 2000 - 1 - [ Install ]
+	
+	Add make install
+
