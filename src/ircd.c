@@ -29,7 +29,6 @@ Computing Center and Jarkko Oikarinen";
 #include "common.h"
 #include "sys.h"
 #include "numeric.h"
-#include "userload.h"
 #include "msg.h"
 #include <sys/stat.h>
 #include <signal.h>

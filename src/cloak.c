@@ -28,7 +28,6 @@ static char sccxid[] = "@(#)cloak.c		9.00 7/12/99 UnrealIRCd";
 #include "msg.h"
 #include "ircsprintf.h"
 #include "channel.h"
-#include "userload.h"
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>

@@ -222,7 +222,6 @@
  */
 
 /* #undef	DEBUGMODE	   define DEBUGMODE to enable debugging mode.*/
-#define DEBUGMODE
 
 /* We not check whether this is ok at compile time -- codemastr */
 /*
