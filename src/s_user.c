@@ -1978,7 +1978,13 @@ static int m_message(cptr, sptr, parc, parv, notice)
 					ConfigItem_deny_dcc *fl;
 					char *end, file[BUFSIZE];
 					int  size_string = 0;
-
+					
+					if (sptr->flags & FLAGS_DCCBLOCK)
+					{
+						sendto_one(sptr, ":%s NOTICE %s :*** You are blocked from sending files as you have tried to send a forbidden file - reconnect to regain ability to send",
+							me.name, sptr->name);
+						continue;
+					}
 					ctcp = &parv[2][10];
 					end = (char *)index(ctcp, ' ');
 
@@ -2001,22 +2007,20 @@ static int m_message(cptr, sptr, parc, parv, notice)
 					    file)))
 					{
 						sendto_one(sptr,
-						    ":%s %d %s :Cannot DCC SEND file %s to %s (%s)",
+						    ":%s %d %s :*** Cannot DCC SEND file %s to %s (%s)",
 						    me.name, RPL_TEXT,
 						    sptr->name, file,
 						    acptr->name,
 						    fl->reason ? fl->reason :
 						    "Possible infected virus file");
-						/* Alert +e's too so preventive measure can be taken */
-						sendto_umode(UMODE_EYES,
-						    "%s tried to send forbidden file %s (%s) to %s",
-						    sptr->name, file,
-						    fl->reason, acptr->name);
-						sendto_umode(UMODE_VICTIM,
-						    "%s tried to send forbidden file %s (%s) to %s",
-						    sptr->name, file,
-						    fl->reason, acptr->name);
+						sendto_one(sptr, ":%s NOTICE %s :*** You have been blocked from sending files, reconnect to regain permission to send files",
+							me.name, sptr->name);
 
+						sendto_umode(UMODE_VICTIM,
+						    "%s tried to send forbidden file %s (%s) to %s (is blocked now)",
+						    sptr->name, file,
+						    fl->reason, acptr->name);
+						sptr->flags |= FLAGS_DCCBLOCK;
 						continue;
 					}
 					/* if it went here it was a legal send .. */

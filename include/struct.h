@@ -253,7 +253,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define FLAGS_SSL	 0x10000000
 #define FLAGS_SSL_HSHAKE 0x20000000
 #endif
-
+#define FLAGS_DCCBLOCK	0x40000000
 #define FLAGS_MAP       0x80000000	/* Show this entry in /map */
 /* Dec 26th, 1997 - added flags2 when I ran out of room in flags -DuffJ */
 
