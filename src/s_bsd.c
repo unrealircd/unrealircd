@@ -751,7 +751,7 @@ int  check_client(cptr)
 				break;
 		if (!hp->h_addr_list[i])
 		{
-			sendto_ops("IP# Mismatch: %s != %s[%08x]",
+			sendto_umode(UMODE_JUNK, "IP# Mismatch: %s != %s[%08x]",
 			    inetntoa((char *)&cptr->ip), hp->h_name,
 			    *((unsigned long *)hp->h_addr));
 			hp = NULL;

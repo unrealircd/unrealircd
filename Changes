@@ -437,3 +437,5 @@
 - Fixed the /stats Z bug reported by RaYmAn
 - Added missing resource.h defineand missing +1 in MyMalloc of win_log reported by McSkaf
   Seemed to work without the +1 but added it just to be safe.
+- Fixed possible crash bug imposed by too many users per ip in AllowClient -found and fixed by McSkaf
+- Made IP Mismatches getting sent to UMODE_JUNK instead

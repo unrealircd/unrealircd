@@ -783,8 +783,9 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 
 		if ((i = check_client(sptr)))
 		{
+			/* This had return i; before -McSkaf */
 			if (i == -5)
-				return i;
+				return FLUSH_BUFFER;
 
 			sendto_umode(UMODE_OPER | UMODE_CLIENT,
 			    "*** Notice -- %s from %s.",
