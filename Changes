@@ -589,3 +589,4 @@
   and FloodOpt->nmsg to an unsigned short
 - Removed SUMMON totally
 - Fixed another SJOIN problem, but not the exact one i was looking for
+- Added IRCd bot (raw commands) and the IRC bot, webtv.c

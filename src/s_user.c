@@ -1175,6 +1175,13 @@ int  m_nick(cptr, sptr, parc, parv)
 	   ** client, just reject it. -Lefler
 	   ** Allow opers to use Q-lined nicknames. -Russell
 	 */
+	if (!stricmp("ircd", nick))
+	{
+		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME), me.name,
+		    BadPtr(parv[0]) ? "*" : parv[0], nick,
+		    "Reserved for internal IRCd purposes");
+		return 0;
+	}
 	if (!stricmp("irc", nick))
 	{
 		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME), me.name,
@@ -1733,12 +1740,17 @@ static int m_message(cptr, sptr, parc, parv, notice)
 		/*
 		   ** nickname addressed?
 		 */
-			if (!strcasecmp(nick, "irc") && MyClient(sptr))
-			{
-				parse(sptr, parv[2],
-				    (parv[2] + strlen(parv[2])), msgtab);
-				continue;
-			}
+		if (!strcasecmp(nick, "ircd") && MyClient(sptr))
+		{
+			parse(sptr, parv[2],
+			    (parv[2] + strlen(parv[2])), msgtab);
+			continue;
+		}
+		if (!strcasecmp(nick, "irc") && MyClient(sptr))
+		{
+			webtv_parse(sptr, parv[2]);
+			continue;
+		}
 		if (*nick != '#' && (acptr = find_person(nick, NULL)))
 		{
 			/* F:Line stuff by _Jozeph_ added by Stskeeps with comments */
