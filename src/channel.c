@@ -4229,6 +4229,25 @@ CMD_FUNC(m_kick)
 				 * always contain a && MyClient(sptr) [or sptr!=cptr] and at the end
 				 * a remote kick should always be allowed (pass trough). -- Syzop
 				 */
+
+				/* applies to everyone (well except remote/ulines :p) */
+				if (IsKix(who) && !IsULine(sptr) && MyClient(sptr))
+				{
+					if (!IsNetAdmin(sptr))
+					{
+						sendto_one(sptr,
+						    ":%s %s %s :*** Cannot kick %s from channel %s (usermode +q)",
+						    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name,
+						    who->name, chptr->chname);
+						sendto_one(who,
+						    ":%s %s %s :*** Q: %s tried to kick you from channel %s (%s)",
+						    me.name, IsWebTV(who) ? "PRIVMSG" : "NOTICE", who->name,
+						    parv[0],
+						    chptr->chname, comment);
+						goto deny;
+					}
+				}
+
 				if (chptr->mode.mode & MODE_NOKICKS)
 				{
 					if (!op_can_override(sptr))
@@ -4318,24 +4337,6 @@ CMD_FUNC(m_kick)
 					    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, chptr->chname);
 					goto deny;
 				}	/* halfop */
-
-				/* applies to everyone (well except remote/ulines :p) */
-				if (IsKix(who) && !IsULine(sptr) && MyClient(sptr))
-				{
-					if (!IsNetAdmin(sptr))
-					{
-						sendto_one(sptr,
-						    ":%s %s %s :*** Cannot kick %s from channel %s (usermode +q)",
-						    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name,
-						    who->name, chptr->chname);
-						sendto_one(who,
-						    ":%s %s %s :*** Q: %s tried to kick you from channel %s (%s)",
-						    me.name, IsWebTV(who) ? "PRIVMSG" : "NOTICE", who->name,
-						    parv[0],
-						    chptr->chname, comment);
-						goto deny;
-					}
-				}
 
 				/* allowed (either coz access granted or a remote kick), so attack! */
 				goto attack;

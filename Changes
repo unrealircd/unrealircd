@@ -2866,3 +2866,5 @@ seen. gmtime warning still there
   under Linux 2.2 (thanks to FunTeenChat for helping track this down)
 - Updated /credits. Now includes everyone who has sent in donations, thanks
   to everyone!
+- Fixed a bug in "unkickable users" (umode +q), they could still be kicked
+  by non-netadmin ircops in some (many) cases, reported by Zell (#0001541).
