@@ -2396,3 +2396,4 @@ seen. gmtime warning still there
 - Doc fixes/updates reported by Angrywolf (#0001163, #0001176).
 - Fixed a /rehash crash regarding badword all & regex badwords, reported by Angrywolf (#0001230).
 - Fixed an old bug where allow::hostname localhost (or *@localhost) didn't work (#0001115).
+- Fixed a chroot bug, reported by iceblade (#0001112).

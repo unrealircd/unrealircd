@@ -1016,7 +1016,7 @@ int InitwIRCD(int argc, char *argv[])
 		}
 	}
 
-#ifndef	CHROOT
+#ifndef	CHROOTDIR
 	if (chdir(dpath)) {
 # ifndef _WIN32
 		perror("chdir");
