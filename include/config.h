@@ -77,11 +77,6 @@
 #define SHOW_SECRET
 
 /*
- * This allows you to see modes in /list
-*/
-#define LIST_SHOW_MODES
-
-/*
  * Admin's chat...
  */
 #define ADMINCHAT 1
@@ -91,11 +86,6 @@
  *
 */
 #undef SECURECHANMSGSONLYGOTOSECURE
-
-/*
-  If you want SHUN_NOTICES, define this
-*/
-#undef SHUN_NOTICES
 
 /*
    If you want to support chinese and/or japanese nicks
@@ -120,37 +110,10 @@
 #undef STRIPBADWORDS_CHAN_ALWAYS
 
 /*
- * NO_OPEROVERRIDE
- *   This will disable OperMode, OperTopic and Banwalks
-*/
-#undef NO_OPEROVERRIDE
-
-/*
- * OPEROVERRIDE_VERIFY
- *   This will prompt opers before permitting them to join +p/+s
- *   channels, decreasing the chances of someone "accidentally"
- *   entering a random channel.
- */
-#undef OPEROVERRIDE_VERIFY
-
-/*
  * THROTTLING
  *   This will only allow 1 connection per ip in set::throttle::period time
  */
 #define THROTTLING
-
-/*
- * NAZIISH_CHBAN_HANDLING (formerly ANNOYING_BAN_THING)
- *   Reject bans that are matched by existing bans, causes chanserv
- *   To flood-kick an akicked user if their akick is matched by another
- *   Ban, but if you don't mind, this can free up ban list space I guess
- */
-#undef NAZIISH_CHBAN_HANDLING
-
-/*
- * Disable /sethost, /setident, /chgname, /chghost, /chgident
-*/
-#undef DISABLE_USERMOD
 
 /*
  * No spoof code
@@ -170,13 +133,6 @@
  *		 it will strip characters that are not 0-9,a-z,A-Z,_,- or .
  */
 #define HOSTILENAME		/* [DO NOT CHANGE!] */
-
-/*
- * This makes topics include nick!user@host instead of nick in topic whoset, 
- * ALL servers must be Unreal3.2-beta12 or higher, and services may have some
- * problems with this
-*/
-#undef TOPIC_NICK_IS_NUHOST
 
 /*
  * Use JOIN instead of SJOIN on every remotely sent JOIN

@@ -423,12 +423,7 @@ int add_exbanid(aClient *cptr, aChannel *chptr, char *banid)
 			{
 			  /* Temp workaround added in b19. -- Syzop */
 			  if (!mycmp(ban->banstr, banid) || (!strchr(banid, '\\') && !strchr(ban->banstr, '\\')))
-#ifdef NAZIISH_CHBAN_HANDLING
-				if (!match(ban->banstr, banid) ||
-				    !match(banid, ban->banstr))
-#else
 				if (!match(ban->banstr, banid))
-#endif
 					return -1;
 			}
 		else if (!mycmp(ban->banstr, banid))

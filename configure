@@ -850,6 +850,13 @@ Optional Packages:
                           stored
   --with-fd-setsize=size  Specify the max file descriptors to use
   --with-spath            Specify the location of the executable
+  --with-showlistmodes    Specify whether modes are shown in /list
+  --with-topicisnuhost    Display nick!user@host as the topic setter
+  --with-shunnotices      Notify a user when he/she is no longer shunned
+  --with-no-operoverride  Disable OperOverride
+  --with-disableusermod   Disable /set* and /chg*
+  --with-operoverride-verify
+                          Require opers to invite themselves to +s/+p channels
 
 Some influential environment variables:
   CC          C compiler command
@@ -9702,6 +9709,60 @@ _ACEOF
 
 fi;
 
+# Check whether --with-showlistmodes or --without-showlistmodes was given.
+if test "${with_showlistmodes+set}" = set; then
+  withval="$with_showlistmodes"
+  cat >>confdefs.h <<\_ACEOF
+#define LIST_SHOW_MODES 1
+_ACEOF
+
+fi;
+
+# Check whether --with-topicisnuhost or --without-topicisnuhost was given.
+if test "${with_topicisnuhost+set}" = set; then
+  withval="$with_topicisnuhost"
+  cat >>confdefs.h <<\_ACEOF
+#define TOPIC_NICK_IS_NUHOST 1
+_ACEOF
+
+fi;
+
+# Check whether --with-shunnotices or --without-shunnotices was given.
+if test "${with_shunnotices+set}" = set; then
+  withval="$with_shunnotices"
+  cat >>confdefs.h <<\_ACEOF
+#define SHUN_NOTICES 1
+_ACEOF
+
+fi;
+
+# Check whether --with-no-operoverride or --without-no-operoverride was given.
+if test "${with_no_operoverride+set}" = set; then
+  withval="$with_no_operoverride"
+  cat >>confdefs.h <<\_ACEOF
+#define NO_OPEROVERRIDE 1
+_ACEOF
+
+fi;
+
+# Check whether --with-disableusermod or --without-disableusermod was given.
+if test "${with_disableusermod+set}" = set; then
+  withval="$with_disableusermod"
+  cat >>confdefs.h <<\_ACEOF
+#define DISABLE_USERMOD 1
+_ACEOF
+
+fi;
+
+# Check whether --with-operoverride-verify or --without-operoverride-verify was given.
+if test "${with_operoverride_verify+set}" = set; then
+  withval="$with_operoverride_verify"
+  cat >>confdefs.h <<\_ACEOF
+#define OPEROVERRIDE_VERIFY 1
+_ACEOF
+
+fi;
+
 # Check whether --enable-ssl or --disable-ssl was given.
 if test "${enable_ssl+set}" = set; then
   enableval="$enable_ssl"
@@ -10008,6 +10069,9 @@ if test "$ac_cv_c_compiler_gnu" = "yes"; then
 	case `uname -s` in
 		Darwin*)
 		ac_cv_pic="-bundle -flat_namespace -undefined suppress"
+		;;
+		HP-UX*)
+		ac_cv_pic="-fPIC"
 		;;
 	esac
 else

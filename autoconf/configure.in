@@ -50,8 +50,6 @@ AC_DEFINE(STATIC_LINKING)
 
 hold_cflags=$CFLAGS
 CFLAGS="$CFLAGS -export-dynamic"
-AC_CACHE_CHECK(if we need a flag to export symbols, ac_export_dynamic, [
-
 AC_CACHE_CHECK(if we need the -export-dynamic flag, ac_cv_export_dynamic, [
 AC_TRY_LINK(, [int i];, ac_cv_export_dynamic=yes, ac_cv_export_dynamic=no)])
 if test "$ac_cv_export_dynamic" = "no"; then
@@ -339,6 +337,18 @@ AC_DEFINE_UNQUOTED(SPATH,"$withval") BINDIR="$withval",AC_DEFINE_UNQUOTED(SPATH,
 AC_ARG_ENABLE(nospoof, [AC_HELP_STRING([--enable-nospoof],[Enable spoofing protection])], AC_DEFINE(NOSPOOF))
 AC_ARG_ENABLE(prefixaq, [AC_HELP_STRING([--enable-prefixaq],[Enable chanadmin and chanowner prefixes])], AC_DEFINE(PREFIX_AQ))
 AC_ARG_ENABLE(hub, [AC_HELP_STRING([--enable-hub],[Compile as a hub server])], AC_DEFINE(HUB))
+AC_ARG_WITH(showlistmodes, [AC_HELP_STRING([--with-showlistmodes], [Specify whether modes are shown in /list])],
+	AC_DEFINE(LIST_SHOW_MODES))
+AC_ARG_WITH(topicisnuhost, [AC_HELP_STRING([--with-topicisnuhost], [Display nick!user@host as the topic setter])],
+	AC_DEFINE(TOPIC_NICK_IS_NUHOST))
+AC_ARG_WITH(shunnotices, [AC_HELP_STRING([--with-shunnotices], [Notify a user when he/she is no longer shunned])],
+	AC_DEFINE(SHUN_NOTICES))
+AC_ARG_WITH(no-operoverride, [AC_HELP_STRING([--with-no-operoverride], [Disable OperOverride])],
+	AC_DEFINE(NO_OPEROVERRIDE))
+AC_ARG_WITH(disableusermod, [AC_HELP_STRING([--with-disableusermod], [Disable /set* and /chg*])],
+	AC_DEFINE(DISABLE_USERMOD))
+AC_ARG_WITH(operoverride-verify, [AC_HELP_STRING([--with-operoverride-verify], [Require opers to invite themselves to +s/+p channels])],
+	AC_DEFINE(OPEROVERRIDE_VERIFY))
 CHECK_SSL
 CHECK_ZLIB
 CHECK_LIBCURL

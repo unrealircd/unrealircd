@@ -434,3 +434,7 @@
 - Documented the default behavior of snomasks when /mode nick +s is used (#0002141) suggested
   by Bugz.
 - Added "const" to the functions in match.c, (#0002116) suggested by Xuefer.
+- Made ./Config better handle command line arguments
+- Removed NAZIISH_CHBAN_HANDLING as it didn't do anything
+- Added -advanced flag to ./Config to configure advanced options (#0002145) suggested by
+  Bugz. As a result, some config.h options are now in ./Config -advanced.
