@@ -130,6 +130,12 @@ inline void 	add_CommandX(char *cmd, int (*func)(), int count, int parameters,
 
 void	init_CommandHash(void)
 {
+#ifdef DEVELOP_DEBUG
+	aCommand	 *p;
+	int		 i;
+#endif
+	long		chainlength;
+	
 	bzero(CommandHash, sizeof(CommandHash));
 	add_CommandX(MSG_PRIVATE, m_private, 0, MAXPARA, TOK_PRIVATE, 0L);
 	add_CommandX(MSG_NOTICE, m_notice, 0, MAXPARA, TOK_NOTICE, 0L);
@@ -267,6 +273,18 @@ void	init_CommandHash(void)
 	add_CommandX(MSG_NEWJOIN, m_join, 0, MAXPARA, TOK_JOIN, 0L);
 	add_CommandX(MSG_BOTSERV, m_botserv, 0, 1, TOK_BOTSERV,0L);
 	add_CommandX(TOK_BOTSERV, m_botserv, 0, 1, TOK_BOTSERV,0L);
+	
+#ifdef DEVELOP_DEBUG
+	for (i = 0; i <= 255; i++)
+	{
+		chainlength = 0;
+		for (p = CommandHash[i]; p; p = p->next)
+			chainlength++;
+		if (chainlength)
+			fprintf(stderr, "%c chainlength = %i\r\n",
+					i, chainlength);
+	}				
+#endif
 }
 
 void	add_Command_backend(char *cmd, int (*func)(), unsigned char parameters, unsigned char token)
