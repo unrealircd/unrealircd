@@ -1883,3 +1883,4 @@ seen. gmtime warning still there
 - Added the ability to enable ziplinks via ./Config as well as specify a directory zlib is
   in. Also added the ability to specify a directory for OpenSSL.
 - ZIP_LINKS fixes/debugging.
+- Code (comments) cleanup

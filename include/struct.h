@@ -259,40 +259,43 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPT_VHP		0x1000
 #define OPT_NOT_VHP	0x2000
 
+/* client->flags (32 bits): 28 used, 4 free */
 #define	FLAGS_PINGSENT   0x0001	/* Unreplied ping sent */
 #define	FLAGS_DEADSOCKET 0x0002	/* Local socket is dead--Exiting soon */
 #define	FLAGS_KILLED     0x0004	/* Prevents "QUIT" from being sent for this */
 #define	FLAGS_BLOCKED    0x0008	/* socket is in a blocked condition */
-/* #define	FLAGS_UNIX	 0x0010	 */
+#define FLAGS_UNOCCUP1   0x0010 /* [FREE] */
 #define	FLAGS_CLOSING    0x0020	/* set when closing to suppress errors */
 #define	FLAGS_LISTEN     0x0040	/* used to mark clients which we listen() on */
 #define	FLAGS_CHKACCESS  0x0080	/* ok to check clients access if set */
 #define	FLAGS_DOINGDNS	 0x0100	/* client is waiting for a DNS response */
-#define	FLAGS_AUTH	 0x0200	/* client is waiting on rfc931 response */
+#define	FLAGS_AUTH       0x0200	/* client is waiting on rfc931 response */
 #define	FLAGS_WRAUTH	 0x0400	/* set if we havent writen to ident server */
-#define	FLAGS_LOCAL	 0x0800	/* set for local clients */
-#define	FLAGS_GOTID	 0x1000	/* successful ident lookup achieved */
-#define	FLAGS_DOID	 0x2000	/* I-lines say must use ident return */
-#define	FLAGS_NONL	 0x4000	/* No \n in buffer */
-#define FLAGS_TS8	 0x8000	/* Why do you want to know? */
-#define FLAGS_ULINE	0x10000	/* User/server is considered U-lined */
-#define FLAGS_SQUIT	0x20000	/* Server has been /squit by an oper */
-#define FLAGS_PROTOCTL	0x40000	/* Received a PROTOCTL message */
-#define FLAGS_PING      0x80000
-#define FLAGS_ASKEDPING 0x100000
-#define FLAGS_NETINFO   0x200000
-#define FLAGS_HYBNOTICE 0x400000
-#define FLAGS_QUARANTINE     0x800000
+#define	FLAGS_LOCAL      0x0800	/* set for local clients */
+#define	FLAGS_GOTID      0x1000	/* successful ident lookup achieved */
+#define	FLAGS_DOID       0x2000	/* I-lines say must use ident return */
+#define	FLAGS_NONL       0x4000	/* No \n in buffer */
+#define FLAGS_TS8        0x8000	/* Why do you want to know? */
+#define FLAGS_ULINE      0x10000	/* User/server is considered U-lined */
+#define FLAGS_SQUIT      0x20000	/* Server has been /squit by an oper */
+#define FLAGS_PROTOCTL   0x40000	/* Received a PROTOCTL message */
+#define FLAGS_PING       0x80000
+#define FLAGS_ASKEDPING  0x100000
+#define FLAGS_NETINFO    0x200000
+#define FLAGS_HYBNOTICE  0x400000
+#define FLAGS_QUARANTINE 0x800000
 #ifdef ZIP_LINKS
-#define FLAGS_ZIP   0x1000000
+#define FLAGS_ZIP        0x1000000
 #endif
-#define FLAGS_UNOCCUP3   0x2000000
+#define FLAGS_UNOCCUP2   0x2000000 /* [FREE] */
 #define FLAGS_SHUNNED    0x4000000
+#define FLAGS_UNOCCUP3   0x8000000 /* [FREE] */
 #ifdef USE_SSL
-#define FLAGS_SSL	 0x10000000
+#define FLAGS_SSL        0x10000000
 #endif
-#define FLAGS_DCCBLOCK	0x40000000
-#define FLAGS_MAP       0x80000000	/* Show this entry in /map */
+#define FLAGS_UNOCCUP4   0x20000000 /* [FREE] */
+#define FLAGS_DCCBLOCK   0x40000000
+#define FLAGS_MAP        0x80000000	/* Show this entry in /map */
 /* Dec 26th, 1997 - added flags2 when I ran out of room in flags -DuffJ */
 
 /* Dec 26th, 1997 - having a go at
