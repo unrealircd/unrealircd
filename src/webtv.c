@@ -129,7 +129,6 @@ int	webtv_parse(aClient *sptr, char *string)
 int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	static anUser UnknownUser = {
-		NULL,		/* nextu */
 		NULL,		/* channel */
 		NULL,		/* invited */
 		NULL,		/* silence */

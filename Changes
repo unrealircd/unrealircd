@@ -1024,3 +1024,6 @@ seen. gmtime warning still there
 - Changed to beta5
 - Fixed some slave work.. return MOD_SUCCESS; in all command modules..
 - make install fix
+- Fixed a last minute bug in win32
+- Fixed a bug affecting DEFAULT_PERMISSIONS reported by ashukmin
+- Fixes for ->user structures

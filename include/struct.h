@@ -611,7 +611,6 @@ typedef struct Whowas {
  * Client structures
  */
 struct User {
-	struct User *nextu;
 	Membership *channel;		/* chain of channel pointer blocks */
 	Link *invited;		/* chain of invite pointer blocks */
 	Link *silence;		/* chain of silence pointer blocks */

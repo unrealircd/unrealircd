@@ -875,7 +875,7 @@ int	init_conf2(char *filename)
 		if (!includes) {
 			includes = MyMalloc(sizeof(ConfigItem_include));
 			includes->file = strdup(filename);
-			DelListItem(includes, conf_include);
+			AddListItem(includes, conf_include);
 		}
 		return i;
 	}
@@ -961,7 +961,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_varlinenum);
 		return -1;
 	}
-#if !defined(_WIN32) && !defined(_AMIGA) && defined(DEFAULT_PERMISSIONS)
+#if !defined(_WIN32) && !defined(_AMIGA) && DEFAULT_PERMISSIONS != 0
 	chmod(ce->ce_vardata, DEFAULT_PERMISSIONS);
 #endif
 #ifdef GLOBH

@@ -123,7 +123,6 @@ DLLFUNC int  m_kill(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	static anUser UnknownUser = {
-		NULL,		/* nextu */
 		NULL,		/* channel */
 		NULL,		/* invited */
 		NULL,		/* silence */

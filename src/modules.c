@@ -307,6 +307,7 @@ vFP Module_Sym(char *name)
 	char	buf[512];
 	int	i;
 	Module *mi;
+	
 	if (!name)
 		return NULL;
 	

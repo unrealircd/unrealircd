@@ -132,6 +132,7 @@ aClient *make_client(from, servr)
 	cptr->srvptr = servr;
 	cptr->status = STAT_UNKNOWN;
 	cptr->fd = -1;
+	
 	cptr->passwd;
 	(void)strcpy(cptr->username, "unknown");
 	if (size == CLIENT_LOCAL_SIZE)
@@ -178,13 +179,19 @@ anUser *make_user(cptr)
 		user->invited = NULL;
 		user->silence = NULL;
 		user->server = NULL;
+		user->serv = NULL;
+		user->servicestamp = 0;
 		user->lopt = NULL;
 		user->whowas = NULL;
 		user->snomask = 0;
 		user->oflag = 0;
+		*user->realhost = '\0';
 		user->virthost = MyMalloc(5);
 		*user->virthost = '\0';
 		cptr->user = user;
+		user->last = TStime();
+		user->nexttarget = TStime();
+		
 	}
 	return user;
 }
@@ -202,7 +209,6 @@ aServer *make_server(cptr)
 		servs.inuse++;
 #endif
 		serv->user = NULL;
-		serv->nexts = NULL;
 		*serv->by = '\0';
 		serv->numeric = 0;
 		serv->users = 0;
