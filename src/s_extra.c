@@ -364,7 +364,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		strncpy(sptr->user->virthost, vhost->virthost, HOSTLEN);
 		if (vhost->virtuser) {
 			strcpy(olduser, sptr->user->username);
-			strncpy(sptr->user->username, vhost->virtuser, USERLEN+1);
+			strncpy(sptr->user->username, vhost->virtuser, USERLEN);
 		}
 		sptr->umodes |= UMODE_HIDE;
 		sptr->umodes |= UMODE_SETHOST;

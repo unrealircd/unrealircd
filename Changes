@@ -386,3 +386,4 @@
   files. sptr->flags & FLAGS_DCCBLOCKED.
 - Readded timestamp to log, accidentily got removed
 - Made it so /stats C doesn't show the user@host of servers to non-opers
+- Possibly fixed the vhost crashing bug, with much help from IpAddress
