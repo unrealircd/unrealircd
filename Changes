@@ -2207,3 +2207,5 @@ seen. gmtime warning still there
 - Resolver fix nr #1 (prolly not "the real problem").
 - Minor oob fix for parse_v4_netmask
 - Fixed another serious bug in the win32 resolver.
+- Removed mutex stuff from rem_request, no longer needed, should make the resolver much
+  faster.

@@ -254,18 +254,13 @@ static void rem_request(ResRQ *old)
 	if (!old)
 		return;
 
-	lock_request();
-
 #ifdef _WIN32
 	/* don't remove if async_dns() thread is running because it needs this memory
 	** we should consider terminating the thread here esp.
 	** if exit_client() called us
 	*/
 	if (old->locked)
-	{
-		unlock_request();
 		return;
-	}
 #endif
 	for (rptr = &first; *rptr; r2ptr = *rptr, rptr = &(*rptr)->next)
 		if (*rptr == old)
@@ -292,7 +287,6 @@ static void rem_request(ResRQ *old)
 	if (r2ptr->name)
 		MyFree(r2ptr->name);
 	MyFree(r2ptr);
-	unlock_request();
 	return;
 }
 
