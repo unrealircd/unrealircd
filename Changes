@@ -1861,3 +1861,4 @@ seen. gmtime warning still there
 - Fixed bug in ipv6 + unknown connection flood.
 - Don't encrypt SSL certificate by default @ win32.
 - Fixed /topic for opers when not in +s-channel.
+- Improved unreal32docs.html readability/layout/text.
