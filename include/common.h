@@ -272,8 +272,8 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                  "#",      \
                  "(ohv)@%+", \
                  "ohvbeqa", \
-                 "k", \
-		 "lfL", \
+                 "kfL", \
+		 "l", \
 		 "psmntirRcOAQKVHGCuzN", \
 		 ircnet005
 			    

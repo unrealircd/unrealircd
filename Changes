@@ -1431,3 +1431,4 @@ seen. gmtime warning still there
 - Fixed some SJ3 bugs that could cause desync in rare cases
 - Added some technical documentation in doc/technical. Docs include: 005.txt, base64.txt,
   token.txt, protoctl.txt, and vl.txt
+- Send +f and +L in correct part of 005.
