@@ -3222,6 +3222,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 	else
 	{
 		isnew = 0;
+		class->flag.temporary = 0; /* clear!!! damnit */
 	}
 	cep = config_find_entry(ce->ce_entries, "pingfreq");
 	class->pingfreq = atol(cep->ce_vardata);
