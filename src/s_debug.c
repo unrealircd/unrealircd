@@ -62,9 +62,6 @@ char serveropts[] = {
 #ifdef	USE_SYSLOG
 	'Y',
 #endif
-#ifdef NO_IDENT_CHECKING
-	'K',
-#endif
 #ifdef INET6
 	'6',
 #endif
@@ -85,6 +82,9 @@ char serveropts[] = {
 #endif
 #ifdef ZIP_LINKS
 	'Z',
+#endif
+#ifdef EXTCMODE
+	'E',
 #endif
 	'\0'
 };
@@ -345,196 +345,4 @@ void send_usage(aClient *cptr, char *nick)
 }
 #endif
 
-void count_memory(aClient *cptr, char *nick)
-{
-	extern aChannel *channel;
-	extern int flinks;
-	extern Link *freelink;
-	extern MemoryInfo StatsZ;
 
-	aClient *acptr;
-	Ban *ban;
-	Link *link;
-	aChannel *chptr;
-
-	int  lc = 0,		/* local clients */
-	     ch = 0,		/* channels */
-	     lcc = 0,		/* local client conf links */
-	     rc = 0,		/* remote clients */
-	     us = 0,		/* user structs */
-	     chu = 0,		/* channel users */
-	     chi = 0,		/* channel invites */
-	     chb = 0,		/* channel bans */
-	     wwu = 0,		/* whowas users */
-	     fl = 0,		/* free links */
-	     cl = 0,		/* classes */
-	     co = 0;		/* conf lines */
-
-	int  usi = 0,		/* users invited */
-	     usc = 0,		/* users in channels */
-	     aw = 0,		/* aways set */
-	     wwa = 0,		/* whowas aways */
-	     wlh = 0,		/* watchlist headers */
-	     wle = 0;		/* watchlist entries */
-
-	u_long chm = 0,		/* memory used by channels */
-	     chbm = 0,		/* memory used by channel bans */
-	     lcm = 0,		/* memory used by local clients */
-	     rcm = 0,		/* memory used by remote clients */
-	     awm = 0,		/* memory used by aways */
-	     wwam = 0,		/* whowas away memory used */
-	     wwm = 0,		/* whowas array memory used */
-	     com = 0,		/* memory used by conf lines */
-	     wlhm = 0,		/* watchlist memory used */
-	     db = 0,		/* memory used by dbufs */
-	     rm = 0,		/* res memory used */
-	     totcl = 0, totch = 0, totww = 0, tot = 0;
-
-	count_whowas_memory(&wwu, &wwam);
-	count_watch_memory(&wlh, &wlhm);
-	wwm = sizeof(aName) * NICKNAMEHISTORYLENGTH;
-
-	for (acptr = client; acptr; acptr = acptr->next)
-	{
-		if (MyConnect(acptr))
-		{
-			lc++;
-			/*for (link = acptr->confs; link; link = link->next)
-				lcc++;
-			wle += acptr->notifies;*/
-			
-		}
-		else
-			rc++;
-		if (acptr->user)
-		{
-			Membership *mb;
-			us++;
-			for (link = acptr->user->invited; link;
-			    link = link->next)
-				usi++;
-			for (mb = acptr->user->channel; mb;
-			    mb = mb->next)
-				usc++;
-			if (acptr->user->away)
-			{
-				aw++;
-				awm += (strlen(acptr->user->away) + 1);
-			}
-		}
-	}
-	lcm = lc * CLIENT_LOCAL_SIZE;
-	rcm = rc * CLIENT_REMOTE_SIZE;
-
-	for (chptr = channel; chptr; chptr = chptr->nextch)
-	{
-		Member *member;
-		
-		ch++;
-		chm += (strlen(chptr->chname) + sizeof(aChannel));
-		for (member = chptr->members; member; member = member->next)
-			chu++;
-		for (link = chptr->invites; link; link = link->next)
-			chi++;
-		for (ban = chptr->banlist; ban; ban = ban->next)
-		{
-			chb++;
-			chbm += (strlen(ban->banstr) + 1 +
-			    strlen(ban->who) + 1 + sizeof(Ban));
-		}
-	}
-
-/*	for (aconf = conf; aconf; aconf = aconf->next)
-	{
-		co++;
-		com += aconf->host ? strlen(aconf->host) + 1 : 0;
-		com += aconf->passwd ? strlen(aconf->passwd) + 1 : 0;
-		com += aconf->name ? strlen(aconf->name) + 1 : 0;
-		com += sizeof(aConfItem);
-	}
-
-	for (cltmp = classes; cltmp; cltmp = cltmp->next)
-		cl++;
-*/
-	sendto_one(cptr, ":%s %d %s :Client Local %d(%d) Remote %d(%d)",
-	    me.name, RPL_STATSDEBUG, nick, lc, lcm, rc, rcm);
-	sendto_one(cptr, ":%s %d %s :Users %d(%d) Invites %d(%d)",
-	    me.name, RPL_STATSDEBUG, nick, us, us * sizeof(anUser), usi,
-	    usi * sizeof(Link));
-	sendto_one(cptr, ":%s %d %s :User channels %d(%d) Aways %d(%d)",
-	    me.name, RPL_STATSDEBUG, nick, usc, usc * sizeof(Link), aw, awm);
-	sendto_one(cptr, ":%s %d %s :WATCH headers %d(%d) entries %d(%d)",
-	    me.name, RPL_STATSDEBUG, nick, wlh, wlhm, wle, wle * sizeof(Link));
-	sendto_one(cptr, ":%s %d %s :Attached confs %d(%d)",
-	    me.name, RPL_STATSDEBUG, nick, lcc, lcc * sizeof(Link));
-
-	totcl = lcm + rcm + us * sizeof(anUser) + usc * sizeof(Link) + awm;
-	totcl += lcc * sizeof(Link) + usi * sizeof(Link) + wlhm;
-	totcl += wle * sizeof(Link);
-
-	sendto_one(cptr, ":%s %d %s :Conflines %d(%d)",
-	    me.name, RPL_STATSDEBUG, nick, co, com);
-
-	sendto_one(cptr, ":%s %d %s :Classes %d(%d)",
-	    me.name, RPL_STATSDEBUG, nick, StatsZ.classes, StatsZ.classesmem);
-
-	sendto_one(cptr, ":%s %d %s :Channels %d(%d) Bans %d(%d)",
-	    me.name, RPL_STATSDEBUG, nick, ch, chm, chb, chbm);
-	sendto_one(cptr, ":%s %d %s :Channel members %d(%d) invite %d(%d)",
-	    me.name, RPL_STATSDEBUG, nick, chu, chu * sizeof(Link),
-	    chi, chi * sizeof(Link));
-
-	totch = chm + chbm + chu * sizeof(Link) + chi * sizeof(Link);
-
-	sendto_one(cptr, ":%s %d %s :Whowas users %d(%d) away %d(%d)",
-	    me.name, RPL_STATSDEBUG, nick, wwu, wwu * sizeof(anUser),
-	    wwa, wwam);
-	sendto_one(cptr, ":%s %d %s :Whowas array %d(%d)",
-	    me.name, RPL_STATSDEBUG, nick, NICKNAMEHISTORYLENGTH, wwm);
-
-	totww = wwu * sizeof(anUser) + wwam + wwm;
-
-	sendto_one(cptr,
-	    ":%s %d %s :Hash: client %d(%d) chan %d(%d) watch %d(%d)", me.name,
-	    RPL_STATSDEBUG, nick, U_MAX, sizeof(aHashEntry) * U_MAX, CH_MAX,
-	    sizeof(aHashEntry) * CH_MAX, WATCHHASHSIZE,
-	    sizeof(aWatch *) * WATCHHASHSIZE);
-	db = dbufblocks * sizeof(dbufbuf);
-	sendto_one(cptr, ":%s %d %s :Dbuf blocks %d(%d)",
-	    me.name, RPL_STATSDEBUG, nick, dbufblocks, db);
-
-	link = freelink;
-	while ((link = link->next))
-		fl++;
-	fl++;
-	sendto_one(cptr, ":%s %d %s :Link blocks free %d(%d) total %d(%d)",
-	    me.name, RPL_STATSDEBUG, nick, fl, fl * sizeof(Link),
-	    flinks, flinks * sizeof(Link));
-
-	rm = cres_mem(cptr,cptr->name);
-
-	tot = totww + totch + totcl + com + cl * sizeof(aClass) + db + rm;
-	tot += fl * sizeof(Link);
-	tot += sizeof(aHashEntry) * U_MAX;
-	tot += sizeof(aHashEntry) * CH_MAX;
-	tot += sizeof(aWatch *) * WATCHHASHSIZE;
-
-	sendto_one(cptr, ":%s %d %s :Total: ww %d ch %d cl %d co %d db %d",
-	    me.name, RPL_STATSDEBUG, nick, totww, totch, totcl, com, db);
-#if !defined(_WIN32) && !defined(_AMIGA)
-#ifdef __alpha
-	sendto_one(cptr, ":%s %d %s :TOTAL: %d sbrk(0)-etext: %u",
-	    me.name, RPL_STATSDEBUG, nick, tot,
-	    (u_int)sbrk((size_t)0) - (u_int)sbrk0);
-#else
-	sendto_one(cptr, ":%s %d %s :TOTAL: %d sbrk(0)-etext: %ul",
-	    me.name, RPL_STATSDEBUG, nick, tot,
-	    (u_long)sbrk((size_t)0) - (u_long)sbrk0);
-
-#endif
-#else
-	sendto_one(cptr, ":%s %d %s :TOTAL: %d",
-	    me.name, RPL_STATSDEBUG, nick, tot);
-#endif
-	return;
-}

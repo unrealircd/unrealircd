@@ -45,12 +45,7 @@ DLLFUNC int m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], cha
 #define MSG_ZLINE "ZLINE"
 #define TOK_NONE ""
 
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_tkl_Header
-#else
-#define m_tkl_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+ModuleHeader MOD_HEADER(m_tkl)
   = {
 	"tkl",	/* Name of module */
 	"$Id$", /* Version */
@@ -59,17 +54,8 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
-
-/* The purpose of these ifdefs, are that we can "static" link the ircd if we
- * want to
-*/
-
 /* This is called on module init, before Server Ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    m_tkl_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_tkl)(ModuleInfo *modinfo)
 {
 	/*
 	 * We call our add_Command crap here
@@ -83,22 +69,13 @@ int    m_tkl_Init(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int    m_tkl_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_tkl)(int module_load)
 {
 	return MOD_SUCCESS;
 }
 
-
 /* Called when module is unloaded */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_tkl_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(m_tkl)(int module_unload)
 {
 	if ((del_Command(MSG_GLINE, TOK_GLINE, m_gline) < 0) ||
 	    (del_Command(MSG_SHUN, TOK_SHUN, m_shun) < 0 ) ||
@@ -108,7 +85,7 @@ int	m_tkl_Unload(int module_unload)
 
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_tkl_Header.name);
+				MOD_HEADER(m_tkl).name);
 	}
 	return MOD_SUCCESS;
 }
@@ -137,7 +114,7 @@ DLLFUNC int m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc == 1)
 	{
-		tkl_stats(sptr);
+		tkl_stats(sptr, TKL_KILL|TKL_GLOBAL, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
 		return 0;
 	}
@@ -160,7 +137,7 @@ DLLFUNC int m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc == 1)
 	{
-		tkl_stats(sptr);
+		tkl_stats(sptr, TKL_GLOBAL|TKL_ZAP, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
 		return 0;
 	}
@@ -183,7 +160,7 @@ DLLFUNC int m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc == 1)
 	{
-		tkl_stats(sptr);
+		tkl_stats(sptr, TKL_GLOBAL|TKL_SHUN, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
 		return 0;
 	}
@@ -206,7 +183,7 @@ DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc == 1)
 	{
-		tkl_stats(sptr);
+		tkl_stats(sptr, TKL_KILL, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
 		return 0;
 	}
@@ -233,7 +210,7 @@ DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc == 1)
 	{
-		tkl_stats(sptr);
+		tkl_stats(sptr, TKL_ZAP, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
 		return 0;
 	}
@@ -276,7 +253,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 
 	if (parc == 1)
 	{
-		tkl_stats(sptr);
+		tkl_stats(sptr, 0, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
 		return 0;
 	}
@@ -374,7 +351,12 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	if (whattodo == 0)
 	{
 		if (secs == 0)
-			ircsprintf(mo, "%li", secs);
+		{
+			if (DEFAULT_BANTIME && (parc <= 3))
+				ircsprintf(mo, "%li", DEFAULT_BANTIME + TStime());
+			else
+				ircsprintf(mo, "%li", secs); /* "0" */
+		}
 		else
 			ircsprintf(mo, "%li", secs + TStime());
 		ircsprintf(mo2, "%li", TStime());

@@ -40,26 +40,13 @@ static char rcsid[] = "@(#)$Id$";
 #if 0
 #undef	DEBUG	/* because there is a lot of debug code in here :-) */
 #endif
-#ifdef _WIN32
-#define HE(x) (x)->he
-#else
 #define HE(x) (&((x)->he))
-#endif
 static char hostbuf[HOSTLEN + 1 + 100];	/* +100 for INET6 */
 static char dot[] = ".";
 static int incache = 0;
 static CacheTable hashtable[ARES_CACSIZE];
 static aCache *cachetop = NULL;
 static ResRQ *last, *first;
-/* control access to request queue - allow only one thread at a time.
-** Currently the list is only protected on Windows because we don't use 
-** threads to access it on Unix
-*/
-#ifdef _WIN32
-static MUTEX g_hResMutex;
-#endif
-static int lock_request();
-static int unlock_request();
 
 static void rem_cache(aCache *);
 static void rem_request(ResRQ *);
@@ -79,14 +66,9 @@ static int hash_number(unsigned char *);
 static void update_list(ResRQ *, aCache *);
 static int hash_name(char *);
 static int bad_hostname(char *, int);
-#ifdef _WIN32
-static	void	async_dns(void *parm);
-#endif
 #define CLI_HASH_VALUE local[tcc % 256]
 
-#ifndef _WIN32
 extern TS nextexpire;
-#endif
 
 static struct cacheinfo {
 	int  ca_adds;
@@ -117,16 +99,6 @@ int init_resolver(int op)
 {
 	int  ret = 0;
 
-#ifdef _WIN32
-	IRCCreateMutex(g_hResMutex);
-	if (g_hResMutex == NULL)
-	{
-		ircd_log(LOG_ERROR, "IRCCreateMutex failed: %s:%i.  %s", 
-				 __FILE__, __LINE__,strerror(GetLastError()));
-		return ret;
-	}
-#endif
-
 	if (op & RES_INITLIST)
 	{
 		bzero((char *)&reinfo, sizeof(reinfo));
@@ -154,7 +126,6 @@ int init_resolver(int op)
 
 	if (op & RES_INITSOCK)
 	{
-#ifndef _WIN32
 		int  on = 0;
 
 #ifdef INET6
@@ -164,7 +135,6 @@ int init_resolver(int op)
 		ret = resfd = socket(AF_INET, SOCK_DGRAM, 0);
 #endif
 		(void)setsockopt(ret, SOL_SOCKET, SO_BROADCAST, &on, on);
-#endif
 	}
 #ifdef DEBUGMODE
 	if (op & RES_INITDEBG)
@@ -180,54 +150,10 @@ int init_resolver(int op)
 	return ret;
 }
 
-/* get access to resolver request queue */
-static int lock_request()
-{
-	int iRc = 1;
-#ifdef _WIN32
-	DWORD dwWaitRes;
-
-	if (g_hResMutex)
-	{
-		dwWaitRes = IRCMutexLock(g_hResMutex);
-		if (dwWaitRes != WAIT_OBJECT_0)
-		{
-			ircd_log(LOG_ERROR, "IRCMutexLock failed with %d: %s:%i.  %s", 
-					 dwWaitRes, __FILE__, __LINE__,strerror(GetLastError()));
-			iRc = 0;
-		}
-	}
-#endif
-	return iRc;
-}
-
-/* release access to resolver request queue */
-static int unlock_request()
-{
-	int iRc = 1;
-
-#ifdef _WIN32
-	BOOL bRc;
-
-	if (g_hResMutex)
-	{
-		bRc = IRCMutexUnlock(g_hResMutex);
-		if (!bRc)
-		{
-			ircd_log(LOG_ERROR, "IRCMutexUnlock failed: %s:%i.  %s", 
-					 __FILE__, __LINE__,strerror(GetLastError()));
-			iRc = 0;
-		}
-	}
-#endif
-	return iRc;
-}
-
 static int add_request(ResRQ *new)
 {
 	if (!new)
 		return -1;
-	lock_request();
 	if (!first)
 		first = last = new;
 	else
@@ -237,7 +163,6 @@ static int add_request(ResRQ *new)
 	}
 	new->next = NULL;
 	reinfo.re_requests++;
-	unlock_request();
 	return 0;
 }
 
@@ -254,14 +179,6 @@ static void rem_request(ResRQ *old)
 	if (!old)
 		return;
 
-#ifdef _WIN32
-	/* don't remove if async_dns() thread is running because it needs this memory
-	** we should consider terminating the thread here esp.
-	** if exit_client() called us
-	*/
-	if (old->locked)
-		return;
-#endif
 	for (rptr = &first; *rptr; r2ptr = *rptr, rptr = &(*rptr)->next)
 		if (*rptr == old)
 		{
@@ -274,16 +191,11 @@ static void rem_request(ResRQ *old)
 	Debug((DEBUG_INFO, "rem_request:Remove %#x at %#x %#x", old, *rptr, r2ptr));
 #endif
 	r2ptr = old;
-#ifndef _WIN32
 	if (r2ptr->he.h_name)
 		MyFree(r2ptr->he.h_name);
 	for (i = 0; i < MAXALIASES; i++)
 		if ((s = r2ptr->he.h_aliases[i]))
 			MyFree(s);
-#else
-	if (r2ptr->he)
-		MyFree(r2ptr->he);
-#endif
 	if (r2ptr->name)
 		MyFree(r2ptr->name);
 	MyFree(r2ptr);
@@ -309,16 +221,9 @@ static ResRQ *make_request(Link *lp)
 	else
 		bzero((char *)&nreq->cinfo, sizeof(Link));
 	nreq->timeout = HOST_TIMEOUT;	/* start at 4 and exponential inc. */
-#ifndef _WIN32
 	nreq->he.h_addrtype = AFINET;
 	nreq->he.h_name = NULL;
 	nreq->he.h_aliases[0] = NULL;
-#else
-        nreq->he = (struct hostent *)MyMalloc(MAXGETHOSTSTRUCT);
-        bzero((char *)nreq->he, MAXGETHOSTSTRUCT);
-        nreq->he->h_addrtype = AFINET;
-        nreq->he->h_name = NULL;
-#endif
 	(void)add_request(nreq);
 	return nreq;
 }
@@ -334,16 +239,11 @@ time_t timeout_query_list(time_t now)
 	aClient *cptr;
 
 	Debug((DEBUG_DNS, "timeout_query_list at %s", myctime(now)));
-	lock_request();
 	for (rptr = first; rptr; rptr = r2ptr)
 	{
 		r2ptr = rptr->next;
 		tout = rptr->sentat + rptr->timeout;
-#ifndef _WIN32
 		if (now >= tout)
-#else
-		if (now >= tout && !rptr->locked)
-#endif
 		{
 			if (--rptr->retries <= 0)
 			{
@@ -373,9 +273,7 @@ time_t timeout_query_list(time_t now)
 			{
 				rptr->sentat = now;
 				rptr->timeout += rptr->timeout;
-#ifndef _WIN32
 				resend_query(rptr);
-#endif
 				tout = now + rptr->timeout;
 #ifdef DEBUGMODE
 				Debug((DEBUG_INFO, "r %x now %d retry %d c %x",
@@ -387,7 +285,6 @@ time_t timeout_query_list(time_t now)
 		if (!next || tout < next)
 			next = tout;
 	}
-	unlock_request();
 	return (next > now) ? next : (now + AR_TTL);
 }
 
@@ -399,14 +296,12 @@ void del_queries(char *cp)
 {
 	ResRQ *rptr, *r2ptr;
 
-	lock_request();
 	for (rptr = first; rptr; rptr = r2ptr)
 	{
 		r2ptr = rptr->next;
 		if (cp == rptr->cinfo.value.cp)
 			rem_request(rptr);
 	}
-	unlock_request();
 }
 
 /*
@@ -416,7 +311,6 @@ void del_queries(char *cp)
  * isnt present. Returns number of messages successfully sent to
  * nameservers or -1 if no successful sends.
  */
-#ifndef _WIN32
 static int send_res_msg(char *msg, int len, int rcount)
 {
 #ifdef DEBUGMODE
@@ -469,7 +363,6 @@ static int send_res_msg(char *msg, int len, int rcount)
 #else
 		ircd_res.nsaddr_list[i].sin_family = AF_INET;
 #endif
-		ERRNO = 0;
 #ifdef INET6
 		if (sendto(resfd, msg, len, 0,
 		    (struct sockaddr *)&(ircd_res.nsaddr_list[i]),
@@ -487,12 +380,11 @@ static int send_res_msg(char *msg, int len, int rcount)
 		}
 		else
 			Debug((DEBUG_ERROR, "s_r_m:sendto: %d on %d",
-			    errno, resfd));
+			    ERRNO, resfd));
 	}
 
 	return (sent) ? sent : -1;
 }
-#endif
 
 /*
  * find a dns request id (id is determined by dn_mkquery)
@@ -501,11 +393,9 @@ static ResRQ *find_id(int id)
 {
 	ResRQ *rptr;
 
-	lock_request();
 	for (rptr = first; rptr; rptr = rptr->next)
 		if (rptr->id == id)
 			break;
-	unlock_request();
 	return rptr;
 }
 
@@ -515,11 +405,7 @@ struct hostent *gethost_byname(char *name, Link *lp)
 
 	reinfo.re_na_look++;
 	if ((cp = find_cache_name(name)))
-#ifndef _WIN32
 		return (struct hostent *)&(cp->he);
-#else
-		return (struct hostent *)cp->he;
-#endif
 	if (!lp)
 		return NULL;
 	(void)do_query_name(lp, name, NULL);
@@ -532,11 +418,7 @@ struct hostent *gethost_byaddr(char *addr, Link *lp)
 
 	reinfo.re_nu_look++;
 	if ((cp = find_cache_number(NULL, addr)))
-#ifndef _WIN32
 		return (struct hostent *)&(cp->he);
-#else
-		return (struct hostent *)cp->he;
-#endif
 	if (!lp)
 		return NULL;
 	(void)do_query_number(lp, (struct IN_ADDR *)addr, NULL);
@@ -545,7 +427,6 @@ struct hostent *gethost_byaddr(char *addr, Link *lp)
 
 static int do_query_name(Link *lp, char *name, ResRQ *rptr)
 {
-#ifndef _WIN32
 	char hname[HOSTLEN + 1];
 	int  len;
 
@@ -559,7 +440,6 @@ static int do_query_name(Link *lp, char *name, ResRQ *rptr)
 		(void)strncat(hname, ircd_res.defdname,
 		    sizeof(hname) - len - 1);
 	}
-#endif
 
 	/*
 	 * Store the name passed as the one to lookup and generate other host
@@ -577,16 +457,10 @@ static int do_query_name(Link *lp, char *name, ResRQ *rptr)
 		(void)strcpy(rptr->name, name);
 	}
 	Debug((DEBUG_DNS, "do_query_name(): %s ", hname));
-#ifndef _WIN32
 #ifdef INET6
 	return (query_name(hname, C_IN, T_ANY, rptr)); /* Was T_AAAA: now using T_ANY so we fetch both A and AAAA -- Syzop */
 #else
 	return (query_name(hname, C_IN, T_A, rptr));
-#endif
-#else
-	 rptr->id = _beginthread(async_dns, 0, (void *)rptr);
-         rptr->sends++;
-         return 0;
 #endif
 }
 
@@ -597,7 +471,6 @@ static int do_query_number(Link *lp, struct IN_ADDR *numb, ResRQ *rptr)
 {
 	char ipbuf[128];
 	u_char *cp;
-#ifndef _WIN32
 #ifdef INET6
 	cp = (u_char *)&numb->s6_addr;
 	if (cp[0] == 0 && cp[1] == 0 && cp[2] == 0 && cp[3] == 0 && cp[4] == 0
@@ -641,7 +514,6 @@ static int do_query_number(Link *lp, struct IN_ADDR *numb, ResRQ *rptr)
 	(void)ircsprintf(ipbuf, "%u.%u.%u.%u.in-addr.arpa.",
 	    (u_int)(cp[3]), (u_int)(cp[2]), (u_int)(cp[1]), (u_int)(cp[0]));
 #endif
-#endif
 	Debug((DEBUG_DNS, "do_query_number: built %s rptr = %lx",
 		ipbuf, rptr));
 
@@ -649,7 +521,6 @@ static int do_query_number(Link *lp, struct IN_ADDR *numb, ResRQ *rptr)
 	{
 		rptr = make_request(lp);
 		rptr->type = T_PTR;
-#ifndef _WIN32
 #ifdef INET6
 		bcopy(numb->s6_addr, rptr->addr.s6_addr, IN6ADDRSZ);
 		bcopy((char *)numb->s6_addr,
@@ -660,31 +531,10 @@ static int do_query_number(Link *lp, struct IN_ADDR *numb, ResRQ *rptr)
 		    (char *)&rptr->he.h_addr, sizeof(struct in_addr));
 #endif
 		rptr->he.h_length = sizeof(struct IN_ADDR);
-#else
-#ifndef INET6
-		rptr->addr.S_ADDR = numb->S_ADDR;
-#else
-		bcopy(numb->s6_addr, rptr->addr.s6_addr, IN6ADDRSZ);
-#endif
-		rptr->he->h_length = sizeof(struct IN_ADDR);
-
-/*		rptr->addr.s_addr = numb->s_addr;
-		bcopy((char *)&numb->s_addr,
-		    (char *)&rptr->he->h_addr, sizeof(struct in_addr));
-		rptr->he->h_length = sizeof(struct IN_ADDR);*/
-
-#endif
 	}
-#ifndef _WIN32
 	return (query_name(ipbuf, C_IN, T_PTR, rptr));
-#else
-         rptr->id = _beginthread(async_dns, 0, (void *)rptr);
-         rptr->sends++;
-         return 0;
-#endif
 }
 
-#ifndef _WIN32
 /*
  * generate a query based on class, type and name.
  */
@@ -701,10 +551,11 @@ static int query_name(char *name, int class, int type, ResRQ *rptr)
 	if (r <= 0)
 	{
 		Debug((DEBUG_DNS, "query_name: NO_RECOVERY"));
-		h_errno = NO_RECOVERY;
+		SET_ERRNO(NO_RECOVERY);
 		return r;
 	}
 	hptr = (HEADER *) buf;
+#ifndef _WIN32
 	(void)gettimeofday(&tv, NULL);
 	do
 	{
@@ -720,14 +571,25 @@ static int query_name(char *name, int class, int type, ResRQ *rptr)
 		hptr->id = htons(nstmp);
 		k++;
 	}
+#else
+	do
+	{
+		/* WIN32: actually this should be safe since it was seeded already */
+		hptr->id = htons(rand() & 0xffff);
+	}
+#endif
 	while (find_id(ntohs(hptr->id)));
+	/* The above loop takes care of preventing requests with duplicate id's,
+	 * it belongs to the do { } block. -- Syzop
+	 */
+
 	rptr->id = ntohs(hptr->id);
 	rptr->sends++;
 	s = send_res_msg(buf, r, rptr->sends);
 	if (s == -1)
 	{
 		Debug((DEBUG_DNS, "query_name: TRY_AGAIN"));
-		h_errno = TRY_AGAIN;
+		SET_ERRNO(TRY_AGAIN);
 		return -1;
 	}
 	else
@@ -810,17 +672,13 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 		cp += 2;	/* INT16SZ */
 		rptr->type = type;
 
-		len = strlen(hostbuf);
 		/* name server never returns with trailing '.' */
 		if (!index(hostbuf, '.') && (ircd_res.options & RES_DEFNAMES))
 		{
 			(void)strlcat(hostbuf, dot, sizeof hostbuf);
-			len++;
-			(void)strncat(hostbuf, ircd_res.defdname,
-			    sizeof(hostbuf) - 1 - len);
-			len = MIN(len + strlen(ircd_res.defdname),
-			    sizeof(hostbuf) - 1);
+			(void)strlcat(hostbuf, ircd_res.defdname, sizeof hostbuf);
 		}
+		len = strlen(hostbuf);
 
 		switch (type)
 		{
@@ -936,18 +794,11 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 	}
 	return ans;
 }
-#endif
 /*
  * read a dns reply from the nameserver and process it.
  */
-#ifndef _WIN32
 struct hostent *get_res(char *lp)
-#else
-struct hostent *get_res(char *lp,long id)
-#endif
 {
-
-#ifndef _WIN32
 	static char buf[sizeof(HEADER) + MAXPACKET];
 	HEADER *hptr;
 #ifdef INET6
@@ -957,14 +808,12 @@ struct hostent *get_res(char *lp,long id)
 #endif
 	int  rc, a, max;
 	SOCK_LEN_TYPE len = sizeof(sin);
-#else
-	struct hostent *he;
-#endif
 
 	ResRQ	*rptr = NULL;
 	aCache	*cp = NULL;
 #ifndef _WIN32
 	(void)alarm((unsigned)4);
+#endif
 #ifdef INET6
 	rc = recvfrom(resfd, buf, sizeof(buf), 0, (struct sockaddr *)&sin,
 	    &len);
@@ -972,8 +821,9 @@ struct hostent *get_res(char *lp,long id)
 	rc = recvfrom(resfd, buf, sizeof(buf), 0, (struct sockaddr *)&sin,
 	    &len);
 #endif
-
+#ifndef _WIN32
 	(void)alarm((unsigned)0);
+#endif
 	if (rc <= sizeof(HEADER))
 		goto getres_err;
 	/*
@@ -989,24 +839,17 @@ struct hostent *get_res(char *lp,long id)
 	Debug((DEBUG_NOTICE, "get_res:id = %d rcode = %d ancount = %d",
 	    hptr->id, hptr->rcode, hptr->ancount));
 #endif
-#endif
 	reinfo.re_replies++;
 	/*
 	 * response for an id which we have already received an answer for
 	 * just ignore this response.
 	 */
-	lock_request();
-#ifndef _WIN32
 	rptr = find_id(hptr->id);
-#else
-	rptr = find_id(id);
-#endif
 	if (!rptr)
 		goto getres_err;
 	/*
 	 * check against possibly fake replies
 	 */
-#ifndef _WIN32
 	max = MIN(ircd_res.nscount, rptr->sends);
 	if (!max)
 		max = 1;
@@ -1035,19 +878,19 @@ struct hostent *get_res(char *lp,long id)
 		switch (hptr->rcode)
 		{
 		  case NXDOMAIN:
-			  h_errno = TRY_AGAIN;
+			  SET_ERRNO(TRY_AGAIN);
 			  break;
 		  case SERVFAIL:
-			  h_errno = TRY_AGAIN;
+			  SET_ERRNO(TRY_AGAIN);
 			  break;
 		  case NOERROR:
-			  h_errno = NO_DATA;
+			  SET_ERRNO(NO_DATA);
 			  break;
 		  case FORMERR:
 		  case NOTIMP:
 		  case REFUSED:
 		  default:
-			  h_errno = NO_RECOVERY;
+			  SET_ERRNO(NO_RECOVERY);
 			  break;
 		}
 		reinfo.re_errors++;
@@ -1055,10 +898,10 @@ struct hostent *get_res(char *lp,long id)
 		   ** If a bad error was returned, we stop here and dont send
 		   ** send any more (no retries granted).
 		 */
-		if (h_errno != TRY_AGAIN)
+		if (ERRNO != TRY_AGAIN)
 		{
 			Debug((DEBUG_DNS, "Fatal DNS error %d for %d",
-			    h_errno, hptr->rcode));
+			    ERRNO, hptr->rcode));
 			rptr->resend = 0;
 			rptr->retries = 0;
 		}
@@ -1135,7 +978,7 @@ struct hostent *get_res(char *lp,long id)
 	 */
 	if (rptr)
 	{
-		if (h_errno != TRY_AGAIN)
+		if (ERRNO != TRY_AGAIN)
 		{
 			/*
 			 * If we havent tried with the default domain and its
@@ -1173,49 +1016,6 @@ struct hostent *get_res(char *lp,long id)
 		else if (lp)
 			bcopy((char *)&rptr->cinfo, lp, sizeof(Link));
 	}
-#else
-/* WIN32 */
-        he = rptr->he;
-         if (he && he->h_name && ((struct IN_ADDR *)he->h_addr)->S_ADDR &&
-	             rptr->locked < 2)
-             {
-                 /*
-                  * We only need to re-check the DNS if its a "byaddr" call,
-                  * the "byname" calls will work correctly. -Cabal95
-                  */
-                 char        tempname[120];
-                 int        i;
-                 long        amt;
-                 struct        hostent        *hp, *he = rptr->he;
-
-                 strlcpy(tempname, he->h_name, sizeof tempname);
-                 hp = gethostbyname(tempname);
-                 if (hp && !bcmp(hp->h_addr, he->h_addr, sizeof(struct IN_ADDR)))
-                     {
-                     }
-
-                 else
-                         rptr->he->h_name = NULL;
-             }
-
-         if (lp)
-                 bcopy((char *)&rptr->cinfo, lp, sizeof(Link));
-
-         cp = make_cache(rptr);
- # ifdef DEBUG
-         Debug((DEBUG_INFO,"get_res:cp=%#x rptr=%#x (made)", cp, rptr));
- # endif
-         rptr->locked = 0;
-         rem_request(rptr);
-	 unlock_request();
-         return cp ? (struct hostent *)cp->he : NULL;
-
- getres_err:
-         if (lp && rptr)
-                 bcopy((char *)&rptr->cinfo, lp, sizeof(Link));
-	 unlock_request();
-
-#endif
 	return (struct hostent *)NULL;
 }
 
@@ -1339,7 +1139,6 @@ static void update_list(ResRQ *rptr, aCache *cachep)
 	*cpp = cp->list_next;
 	cp->list_next = cachetop;
 	cachetop = cp;
-#ifndef _WIN32
 	if (!rptr)
 		return;
 
@@ -1446,7 +1245,6 @@ static void update_list(ResRQ *rptr, aCache *cachep)
 			bcopy(s, (char *)*--ab, sizeof(struct IN_ADDR));
 		}
 	}
-#endif
 	return;
 }
 
@@ -1584,17 +1382,12 @@ static aCache *make_cache(ResRQ *rptr)
 	/*
 	   ** shouldn't happen but it just might...
 	 */
-#ifndef _WIN32
 	if (!rptr->he.h_name || !WHOSTENTP(rptr->he.h_addr.S_ADDR) )
-#else
-		if (!rptr->he->h_name || !((struct IN_ADDR *)rptr->he->h_addr)->S_ADDR)
-#endif
 		return NULL;
 	/*
 	   ** Make cache entry.  First check to see if the cache already exists
 	   ** and if so, return a pointer to it.
 	 */
-#ifndef _WIN32
 	for (i = 0; WHOSTENTP(rptr->he.h_addr_list[i].S_ADDR); i++)
 		if ((cp = find_cache_number(rptr,
 #ifdef INET6
@@ -1603,25 +1396,12 @@ static aCache *make_cache(ResRQ *rptr)
 		    (char *)&(rptr->he.h_addr_list[i].S_ADDR))))
 #endif
 		return cp;
-#else
-		for (i = 0; rptr->he->h_addr_list[i] &&
-	     ((struct IN_ADDR *)rptr->he->h_addr_list[i])->S_ADDR; i++)
- 		if ((cp = find_cache_number(rptr,
-				(char *)&((struct IN_ADDR *)rptr->he->h_addr_list[i])->S_ADDR)))
-			return cp;
-#endif
-
-
 
 	/*
 	   ** a matching entry wasnt found in the cache so go and make one up.
 	 */
 	cp = (aCache *)MyMalloc(sizeof(aCache));
 	bzero((char *)cp, sizeof(aCache));
-#ifdef _WIN32
-         cp->he = (struct hostent *)MyMalloc(MAXGETHOSTSTRUCT);
-         res_copyhostent(rptr->he, cp->he);
-#else
 	hp = &cp->he;
 	for (i = 0; i < MAXADDRS - 1; i++)
 		if (!WHOSTENTP(rptr->he.h_addr_list[i].S_ADDR))
@@ -1661,7 +1441,6 @@ static aCache *make_cache(ResRQ *rptr)
 	hp->h_addrtype = rptr->he.h_addrtype;
 	hp->h_length = rptr->he.h_length;
 	hp->h_name = rptr->he.h_name;
-#endif
 	if (rptr->ttl < AR_TTL)
 	{
 		reinfo.re_shortttl++;
@@ -1670,7 +1449,6 @@ static aCache *make_cache(ResRQ *rptr)
 	else
 		cp->ttl = rptr->ttl;
 	cp->expireat = TStime() + cp->ttl;
-#ifndef _WIN32
 	/* Update next dns cache clean time, this way it will be cleaned when needed.
 	 * I don't know how to do multithreaded (win32), as a consequence it can take
 	 * AR_TTL (300s) too much before we expire this entry at win32 -- Syzop
@@ -1679,7 +1457,6 @@ static aCache *make_cache(ResRQ *rptr)
 		nextexpire = cp->expireat;
 		Debug((DEBUG_DNS, "Adjusting nextexpire to %lu", nextexpire));
 	}
-#endif
 	HE(rptr)->h_name = NULL;
 #ifdef DEBUGMODE
 	Debug((DEBUG_INFO, "make_cache:made cache %#x", cp));
@@ -1716,11 +1493,7 @@ static aCache *rem_list(aCache *cp)
 static void rem_cache(aCache *ocp)
 {
 	aCache **cp;
-#ifndef _WIN32
 	struct hostent *hp = &ocp->he;
-#else
-	struct hostent *hp = ocp->he;
-#endif
 	int  hashv;
 	aClient *cptr;
 
@@ -1779,9 +1552,6 @@ static void rem_cache(aCache *ocp)
 			*cp = ocp->hnum_next;
 			break;
 		}
-#ifdef _WIN32
-         MyFree(hp);
-#else
 	/*
 	 * free memory used to hold the various host names and the array
 	 * of alias pointers.
@@ -1804,7 +1574,6 @@ static void rem_cache(aCache *ocp)
 			MyFree(*hp->h_addr_list);
 		MyFree(hp->h_addr_list);
 	}
-#endif
 	MyFree(ocp);
 
 	incache--;
@@ -1898,6 +1667,19 @@ int m_dns(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 		return 2;
 	}
+	if (IsOper(sptr) && parv[1] && *parv[1] == 'i')
+	{
+		int i;
+		/* Display nameserver list */
+		sendto_one(sptr, "NOTICE %s :Nameserver list has %d server(s):", sptr->name, ircd_res.nscount);
+		for (i = 0; i < ircd_res.nscount; i++)
+			sendto_one(sptr, "NOTICE %s :%d. %s",
+				sptr->name, i, inet_ntoa(ircd_res.nsaddr_list[i].sin_addr));
+		sendto_one(sptr, "NOTICE %s :retrans=%d s, retry=%d times", sptr->name, ircd_res.retrans, ircd_res.retry);
+		sendto_one(sptr, "NOTICE %s :Default domain name: %s", sptr->name, ircd_res.defdname);
+		sendto_one(sptr, "NOTICE %s :End of info.", sptr->name);
+		return 2;
+	}
 	sendto_one(sptr, "NOTICE %s :Ca %d Cd %d Ce %d Cl %d Ch %d:%d Cu %d",
 	    sptr->name,
 	    cainfo.ca_adds, cainfo.ca_dels, cainfo.ca_expires,
@@ -1923,11 +1705,7 @@ u_long cres_mem(aClient *sptr, char *nick)
 	for (; c; c = c->list_next)
 	{
 		sm += sizeof(*c);
-#ifndef _WIN32
 		h = &c->he;
-#else
-		h = c->he;
-#endif
 #ifdef INET6
 		for (i = 0; h->h_addr_list[i]; i++)
 #else
@@ -1966,120 +1744,3 @@ static int bad_hostname(char *name, int len)
 			return -1;
 	return 0;
 }
-
-#ifdef _WIN32
-/*
- * Main thread function for handling DNS requests.
- */
-void	async_dns(void *parm)
-{
-	ResRQ	*rptr = (ResRQ *)parm;
-	struct hostent	*hp, *he = rptr->he;
-	int	i, x;
-	long	amt;
-
-	if (rptr->type == T_A)
-	    {
-		rptr->locked = 2;
-		hp = gethostbyname(rptr->name);
-	    }
-	else
-	    {
-		rptr->locked = 1;
-		hp = gethostbyaddr((char *)(&rptr->addr.S_ADDR), 4, PF_INET);
-	    }
-	if ( !hp )
-	    {
-		/*
-		 * Now heres a stupid check to forget, this apprently is
-		 * what hasbeen causing most of the crashes.  I hope anyway.
-		 */
-		do_dns_async(rptr->id);
-		_endthread();
-	    }
-	if ( (hp->h_aliases[0] && (hp->h_aliases[0]-(char *)hp)>MAXGETHOSTSTRUCT) ||
-	     (hp->h_addr_list[0] && (hp->h_addr_list[0]-(char *)hp)>MAXGETHOSTSTRUCT))
-	    {
-		/*
-		 * Seems windows does some weird, aka stupid, stuff with DNS.
-		 * If the address is resolved from the HOSTS file, then the
-		 * pointers will exceed MAXGETHOSTSTRUCT. Good and bad. Good
-		 * because its an easy way to tell if the Admin is spoofing
-		 * with his HOSTS file, bad because it also causes invalid
-		 * pointers without this check. -Cabal95
-		 */
-		do_dns_async(rptr->id);
-		_endthread();
-	    }
-
-	res_copyhostent(hp, rptr->he);
-	do_dns_async(rptr->id);
-	_endthread();
-}
-
-int	res_copyhostent(struct hostent *from, struct hostent *to)
-{
-	int	amt, x, i;
-
-	to->h_addrtype = from->h_addrtype;
-	to->h_length = from->h_length;
-	/*
-	 * Get to "primary" offset in to hostent buffer and copy over
-	 * to hostname.
-	 */
-	amt = (long)to + sizeof(struct hostent);
-	to->h_name = (char *)amt;
-	/*
-	 * WIN32: FIXME: THIS LOOKS BAD
-	*/
-	strcpy(to->h_name, from->h_name);
-	amt += strlen(to->h_name)+1;
-	/* Setup tto alias list */
-	if (amt&0x3)
-		amt = (amt&0xFFFFFFFC)+4;
-	to->h_aliases = (char **)amt;
-	for (x = 0; from->h_aliases[x]; x++)
-		;
-	x *= sizeof(char *);
-	amt += sizeof(char *) + x;
-	for (i = 0; from->h_aliases[i]; i++)
-	    {
-		to->h_aliases[i] = (char *)amt;
-		strcpy(to->h_aliases[i], from->h_aliases[i]);
-		amt += strlen(to->h_aliases[i])+1;
-		if (amt&0x3)
-			amt = (amt&0xFFFFFFFC)+4;
-	    }
-	to->h_aliases[i] = NULL;
-	/* Setup tto IP address list */
-	to->h_addr_list = (char **)amt;
-	for (x = 0; from->h_addr_list[x]; x++)
-		;
-	x *= sizeof(char *);
-	amt += sizeof(char *) + x;
-	for (i = 0; from->h_addr_list[i]; i++)
-	    {
-		to->h_addr_list[i] = (char *)amt;
-#ifndef INET6
-		((struct IN_ADDR *)to->h_addr_list[i])->S_ADDR = ((struct IN_ADDR *)from->h_addr_list[i])->S_ADDR;
-#else
-		bcopy(((struct IN_ADDR *)from->h_addr_list[i])->S_ADDR,((struct IN_ADDR *)to->h_addr_list[i])->S_ADDR, IN6ADDRSZ);
-#endif
-		amt += sizeof(struct IN_ADDR); /* Prolly 4 */
-	    }
-	to->h_addr_list[i] = NULL;
-
-#ifdef WINDNSDEBUG
-	{
-		int aliascnt = 0, addrcnt = 0;
-		for (aliascnt = 0; from->h_aliases[aliascnt]; aliascnt++);
-		for (addrcnt = 0; from->h_addr_list[addrcnt]; addrcnt++);
-		ircd_log(LOG_ERROR, "resolver: amt=0x%x, to=0x%x, len=%d, max=%d [%d aliases, %d addrs]",
-			amt, to, (char *)amt - (char *)to, MAXGETHOSTSTRUCT, aliascnt, addrcnt);
-	}
-#endif
-	if ((char *)amt + 4 > (char *)to + MAXGETHOSTSTRUCT)
-		ircd_log(LOG_ERROR, "resolver: overflow???");
-	return 1;
-}
-#endif /*_WIN32*/

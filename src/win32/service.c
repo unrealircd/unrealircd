@@ -26,8 +26,8 @@
 #include "version.h"
 #include <string.h>
 
-static SERVICE_STATUS IRCDStatus; 
-static SERVICE_STATUS_HANDLE IRCDStatusHandle; 
+SERVICE_STATUS IRCDStatus; 
+SERVICE_STATUS_HANDLE IRCDStatusHandle; 
 #define IRCD_SERVICE_CONTROL_REHASH 128
 
 BOOL IsService = FALSE;
@@ -116,13 +116,13 @@ VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv) {
 			else if (VerInfo.dwMinorVersion == 1)
 				strcat(OSName, "XP ");
 			else if (VerInfo.dwMinorVersion == 2)
-				strcat(OSName, ".NET Server ");
+				strcat(OSName, "Server 2003 ");
 		}
 		strcat(OSName, VerInfo.szCSDVersion);
 	}
 	if (OSName[strlen(OSName)-1] == ' ')
 		OSName[strlen(OSName)-1] = 0;
-
+	InitDebug();
 	if ((error = WSAStartup(MAKEWORD(1, 1), &WSAData)) != 0) {
 		IRCDStatus.dwCurrentState = SERVICE_STOPPED;
 		IRCDStatus.dwCheckPoint = 0;
@@ -141,11 +141,9 @@ VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv) {
 		SetServiceStatus(IRCDStatusHandle, &IRCDStatus); 
 		return;
 	}	
-
 	IRCDStatus.dwCurrentState = SERVICE_RUNNING;
 	IRCDStatus.dwCheckPoint = 0;
 	IRCDStatus.dwWaitHint = 0;  
-
 	SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
 
 	SocketLoop(0);

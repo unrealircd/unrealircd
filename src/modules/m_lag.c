@@ -49,12 +49,7 @@ DLLFUNC int m_lag(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_LAG         "LAG"   /* Lag detect */
 #define TOK_LAG         "AF"    /* a or ? */
 
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_lag_Header
-#else
-#define m_lag_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+ModuleHeader MOD_HEADER(m_lag)
   = {
 	"lag",	/* Name of module */
 	"$Id$", /* Version */
@@ -63,48 +58,29 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
-
-/* The purpose of these ifdefs, are that we can "static" link the ircd if we
- * want to
-*/
-
 /* This is called on module init, before Server Ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    m_lag_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_lag)(ModuleInfo *modinfo)
 {
 	/*
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_LAG, TOK_LAG, m_lag, MAXPARA);
 	return MOD_SUCCESS;
-	
 }
 
 /* Is first run when server is 100% ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int    m_lag_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_lag)(int module_load)
 {
 	return MOD_SUCCESS;
 }
 
-
 /* Called when module is unloaded */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_lag_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(m_lag)(int module_unload)
 {
 	if (del_Command(MSG_LAG, TOK_LAG, m_lag) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_lag_Header.name);
+				MOD_HEADER(m_lag).name);
 	}
 	return MOD_SUCCESS;
 	

@@ -138,7 +138,7 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 		'CRYPTOINCLUDES=${CRYPTOINCLUDES}'
 
 custommodule:
-	cd src; ${MAKE} ${MAKEARGS} MODULEFILE=${MODULEFILE} EXLIBS=${EXLIBS} custommodule
+	cd src; ${MAKE} ${MAKEARGS} MODULEFILE=${MODULEFILE} 'EXLIBS=${EXLIBS}' custommodule
 
 server:
 build:

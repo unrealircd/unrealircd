@@ -591,7 +591,7 @@ static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
      * IRC protocol wasn`t SSL enabled .. --vejeta
      */
     sendto_snomask(SNO_JUNK, "Exiting ssl client %s: %s: %s",
-    	sptr->name, ssl_func, ssl_errstr);
+    	get_client_name(sptr, TRUE), ssl_func, ssl_errstr);
     sptr->flags |= FLAGS_DEADSOCKET;
 	if (errtmp)
 	{

@@ -406,6 +406,7 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 				link_cleanup(sptr->serv->conf);
 				MyFree(sptr->serv->conf);
 			}
+			ircd_log(LOG_SERVER, "SQUIT %s (%s)", sptr->name, comment);
 		}
 
 		if (sptr->listener)
@@ -443,6 +444,10 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 				ircd_log(LOG_CLIENT, "Disconnect - (%d:%d:%d) %s!%s@%s",
 					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
 					sptr->name, sptr->user->username, sptr->user->realhost);
+		} else
+		if (IsUnknown(sptr))
+		{
+			RunHook2(HOOKTYPE_UNKUSER_QUIT, sptr, comment);
 		}
 
 		if (sptr->fd >= 0 && !IsConnecting(sptr))
@@ -650,6 +655,10 @@ static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from, char *c
 					    sptr->user->server, sptr->name,
 					    sptr->user->username,
 					    sptr->user->realhost, comment);
+			if (!MyClient(sptr))
+			{
+				RunHook2(HOOKTYPE_REMOTE_QUIT, sptr, comment);
+			}
 			while ((mp = sptr->user->channel))
 				remove_user_from_channel(sptr, mp->chptr);
 
@@ -702,91 +711,25 @@ void initstats(void)
 	bzero((char *)&ircst, sizeof(ircst));
 }
 
-void tstats(aClient *cptr, char *name)
+void verify_opercount(aClient *orig, char *tag)
 {
-	aClient *acptr;
-	int  i;
-	struct stats *sp;
-	struct stats tmp;
-	time_t now = TStime();
+int counted = 0;
+aClient *acptr;
+char text[2048];
 
-	sp = &tmp;
-	bcopy((char *)ircstp, (char *)sp, sizeof(*sp));
-	for (i = 0; i <= LastSlot; i++)
+	for (acptr = client; acptr; acptr = acptr->next)
 	{
-		if (!(acptr = local[i]))
-			continue;
-		if (IsServer(acptr))
-		{
-			sp->is_sbs += acptr->sendB;
-			sp->is_sbr += acptr->receiveB;
-			sp->is_sks += acptr->sendK;
-			sp->is_skr += acptr->receiveK;
-			sp->is_sti += now - acptr->firsttime;
-			sp->is_sv++;
-			if (sp->is_sbs > 1023)
-			{
-				sp->is_sks += (sp->is_sbs >> 10);
-				sp->is_sbs &= 0x3ff;
-			}
-			if (sp->is_sbr > 1023)
-			{
-				sp->is_skr += (sp->is_sbr >> 10);
-				sp->is_sbr &= 0x3ff;
-			}
-		}
-		else if (IsClient(acptr))
-		{
-			sp->is_cbs += acptr->sendB;
-			sp->is_cbr += acptr->receiveB;
-			sp->is_cks += acptr->sendK;
-			sp->is_ckr += acptr->receiveK;
-			sp->is_cti += now - acptr->firsttime;
-			sp->is_cl++;
-			if (sp->is_cbs > 1023)
-			{
-				sp->is_cks += (sp->is_cbs >> 10);
-				sp->is_cbs &= 0x3ff;
-			}
-			if (sp->is_cbr > 1023)
-			{
-				sp->is_ckr += (sp->is_cbr >> 10);
-				sp->is_cbr &= 0x3ff;
-			}
-		}
-		else if (IsUnknown(acptr))
-			sp->is_ni++;
+		if (IsAnOper(acptr) && !IsHideOper(acptr))
+			counted++;
 	}
-
-	sendto_one(cptr, ":%s %d %s :accepts %u refused %u",
-	    me.name, RPL_STATSDEBUG, name, sp->is_ac, sp->is_ref);
-	sendto_one(cptr, ":%s %d %s :unknown commands %u prefixes %u",
-	    me.name, RPL_STATSDEBUG, name, sp->is_unco, sp->is_unpf);
-	sendto_one(cptr, ":%s %d %s :nick collisions %u unknown closes %u",
-	    me.name, RPL_STATSDEBUG, name, sp->is_kill, sp->is_ni);
-	sendto_one(cptr, ":%s %d %s :wrong direction %u empty %u",
-	    me.name, RPL_STATSDEBUG, name, sp->is_wrdi, sp->is_empt);
-	sendto_one(cptr, ":%s %d %s :numerics seen %u mode fakes %u",
-	    me.name, RPL_STATSDEBUG, name, sp->is_num, sp->is_fake);
-	sendto_one(cptr, ":%s %d %s :auth successes %u fails %u",
-	    me.name, RPL_STATSDEBUG, name, sp->is_asuc, sp->is_abad);
-	sendto_one(cptr, ":%s %d %s :local connections %u udp packets %u",
-	    me.name, RPL_STATSDEBUG, name, sp->is_loc, sp->is_udp);
-	sendto_one(cptr, ":%s %d %s :Client Server",
-	    me.name, RPL_STATSDEBUG, name);
-	sendto_one(cptr, ":%s %d %s :connected %u %u",
-	    me.name, RPL_STATSDEBUG, name, sp->is_cl, sp->is_sv);
-	sendto_one(cptr, ":%s %d %s :bytes sent %u.%uK %u.%uK",
-	    me.name, RPL_STATSDEBUG, name,
-	    sp->is_cks, sp->is_cbs, sp->is_sks, sp->is_sbs);
-	sendto_one(cptr, ":%s %d %s :bytes recv %u.%uK %u.%uK",
-	    me.name, RPL_STATSDEBUG, name,
-	    sp->is_ckr, sp->is_cbr, sp->is_skr, sp->is_sbr);
-	sendto_one(cptr, ":%s %d %s :time connected %u %u",
-	    me.name, RPL_STATSDEBUG, name, sp->is_cti, sp->is_sti);
-#ifndef NO_FDLIST
-	sendto_one(cptr,
-	    ":%s %d %s :incoming rate %0.2f kb/s - outgoing rate %0.2f kb/s",
-	    me.name, RPL_STATSDEBUG, name, currentrate, currentrate2);
-#endif
+	if (counted == IRCstats.operators)
+		return;
+	sprintf(text, "[BUG] operator count bug! value in /lusers is '%d', we counted '%d', "
+	               "user='%s', userserver='%s', tag=%s. "
+	               "please report to UnrealIRCd team at http://bugs.unrealircd.org/",
+	               IRCstats.operators, counted, orig->name ? orig->name : "<null>",
+	               orig->srvptr ? orig->srvptr->name : "<null>", tag ? tag : "<null>");
+	sendto_realops("%s", text);
+	ircd_log(LOG_ERROR, "%s", text);
+	IRCstats.operators = counted;
 }

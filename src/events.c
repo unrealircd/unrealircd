@@ -61,6 +61,8 @@ Event	*EventAddEx(Module *module, char *name, long every, long howmany,
 	
 	if (!name || (every < 0) || (howmany < 0) || !event)
 	{
+		if (module)
+			module->errorcode = MODERR_INVALID;
 		return NULL;
 	}
 	newevent = (Event *) MyMallocEx(sizeof(Event));
@@ -78,6 +80,7 @@ Event	*EventAddEx(Module *module, char *name, long every, long howmany,
 		eventobj->object.event = newevent;
 		eventobj->type = MOBJ_EVENT;
 		AddListItem(eventobj, module->objects);
+		module->errorcode = MODERR_NOERROR;
 	}
 	return newevent;
 	
@@ -126,7 +129,11 @@ Event	*EventFind(char *name)
 
 int EventMod(Event *event, EventInfo *mods) {
 	if (!event || !mods)
+	{
+		if (event && event->owner)
+			event->owner->errorcode = MODERR_INVALID;
 		return -1;
+	}
 
 	if (mods->flags & EMOD_EVERY)
 		event->every = mods->every;
@@ -140,6 +147,8 @@ int EventMod(Event *event, EventInfo *mods) {
 		event->event = mods->event;
 	if (mods->flags & EMOD_DATA)
 		event->data = mods->data;
+	if (event->owner)
+		event->owner->errorcode = MODERR_NOERROR;
 	return 0;
 }
 

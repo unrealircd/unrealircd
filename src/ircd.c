@@ -106,6 +106,8 @@ aClient *client = &me;		/* Pointer to beginning of Client list */
 extern char backupbuf[8192];
 #ifdef _WIN32
 extern void CleanUpSegv(int sig);
+extern SERVICE_STATUS_HANDLE IRCDStatusHandle;
+extern SERVICE_STATUS IRCDStatus;
 #endif
 #ifndef NO_FDLIST
 fdlist default_fdlist;
@@ -208,24 +210,25 @@ VOIDSIG s_die()
 #ifdef _WIN32
 	int  i;
 	aClient *cptr;
-#endif
-	unload_all_modules();
-#ifndef _WIN32
-	flush_connections(&me);
-#else
-	for (i = LastSlot; i >= 0; i--)
-		if ((cptr = local[i]) && DBufLength(&cptr->sendQ) > 0)
-			(void)send_queued(cptr);
 	if (!IsService)
-#endif
-	exit(-1);
-#ifdef _WIN32
+	{
+		unload_all_modules();
+		for (i = LastSlot; i >= 0; i--)
+			if ((cptr = local[i]) && DBufLength(&cptr->sendQ) > 0)
+				(void)send_queued(cptr);
+		
+		exit(-1);
+	}
 	else {
 		SERVICE_STATUS status;
 		SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 		SC_HANDLE hService = OpenService(hSCManager, "UnrealIRCd", SERVICE_STOP); 
 		ControlService(hService, SERVICE_CONTROL_STOP, &status);
 	}
+#else
+	unload_all_modules();
+	flush_connections(&me);
+	exit(-1);
 #endif
 }
 
@@ -340,8 +343,11 @@ void server_reboot(char *mesg)
 	(void)execv(MYNAME, myargv);
 #else
 	close_connections();
-	CleanUp();
-	(void)execv(myargv[0], myargv);
+	if (!IsService)
+	{
+		CleanUp();
+		(void)execv(myargv[0], myargv);
+	}
 #endif
 #ifndef _WIN32
 	Debug((DEBUG_FATAL, "Couldn't restart server: %s", strerror(errno)));
@@ -350,6 +356,26 @@ void server_reboot(char *mesg)
 	    strerror(GetLastError())));
 #endif
 	unload_all_modules();
+#ifdef _WIN32
+	if (IsService)
+	{
+		SERVICE_STATUS status;
+		PROCESS_INFORMATION pi;
+		STARTUPINFO si;
+		char fname[MAX_PATH];
+		bzero(&status, sizeof(status));
+		bzero(&si, sizeof(si));
+		IRCDStatus.dwCurrentState = SERVICE_STOP_PENDING;
+		SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
+		GetModuleFileName(GetModuleHandle(NULL), fname, MAX_PATH);
+		CreateProcess(fname, "restartsvc", NULL, NULL, FALSE, 
+			0, NULL, NULL, &si, &pi);
+		IRCDStatus.dwCurrentState = SERVICE_STOPPED;
+		SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
+		ExitProcess(0);
+	}
+	else
+#endif
 	exit(-1);
 }
 
@@ -830,6 +856,9 @@ int InitwIRCD(int argc, char *argv[])
 	setup_signals();
 	init_ircstats();
 	umode_init();
+#ifdef EXTCMODE
+	extcmode_init();
+#endif
 	clear_scache_hash_table();
 #ifdef FORCE_CORE
 	corelim.rlim_cur = corelim.rlim_max = RLIM_INFINITY;
@@ -987,7 +1016,7 @@ int InitwIRCD(int argc, char *argv[])
 		}
 	}
 
-#ifndef	CHROOT
+#ifndef	CHROOTDIR
 	if (chdir(dpath)) {
 # ifndef _WIN32
 		perror("chdir");
@@ -1070,6 +1099,9 @@ int InitwIRCD(int argc, char *argv[])
 	load_tunefile();
 	make_umodestr();
 	make_cmodestr();
+#ifdef EXTCMODE
+	make_extcmodestr();
+#endif
 	if (!find_Command_simple("AWAY") || !find_Command_simple("KILL") ||
 		!find_Command_simple("OPER") || !find_Command_simple("PING"))
 	{

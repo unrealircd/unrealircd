@@ -52,10 +52,19 @@ enum UHAllowed { UHALLOW_ALWAYS, UHALLOW_NOCHANS, UHALLOW_REJOIN, UHALLOW_NEVER 
 
 struct ChMode {
         long mode;
+#ifdef NEWCHFLOODPROT
+		ChanFloodProt	floodprot;
+#else
         unsigned short  msgs;
         unsigned short  per; 
         unsigned char   kmode;
+#endif
 };
+
+typedef struct _OperStat {
+	struct _OperStat *prev, *next;
+	char *flag;
+} OperStat;
 
 typedef struct zConfiguration aConfiguration;
 struct zConfiguration {
@@ -86,6 +95,7 @@ struct zConfiguration {
 	char *auto_join_chans;
 	char *oper_auto_join_chans;
 	char *oper_only_stats;
+	OperStat *oper_only_stats_ext;
 	int  maxchannelsperuser;
 	int  anti_spam_quit_message_time;
 	char *egd_path;
@@ -99,6 +109,7 @@ struct zConfiguration {
 	enum UHAllowed userhost_allowed;
 	char *restrict_usermodes;
 	char *restrict_channelmodes;
+	char *channel_command_prefix;
 	long unknown_flood_bantime;
 	long unknown_flood_amount;
 	struct ChMode modes_on_join;
@@ -106,8 +117,11 @@ struct zConfiguration {
 	unsigned char away_count;
 	long away_period;
 #endif
+	unsigned char nick_count;
+	long nick_period;
 	int ident_connect_timeout;
 	int ident_read_timeout;
+	long default_bantime;
 	aNetwork network;
 };
 
@@ -180,8 +194,13 @@ extern aConfiguration iConf;
 #define AWAY_PERIOD			iConf.away_period
 #define AWAY_COUNT			iConf.away_count
 #endif
+#define NICK_PERIOD			iConf.nick_period
+#define NICK_COUNT			iConf.nick_count
 
 #define IDENT_CONNECT_TIMEOUT	iConf.ident_connect_timeout
 #define IDENT_READ_TIMEOUT		iConf.ident_read_timeout
 
 #define MKPASSWD_FOR_EVERYONE	iConf.mkpasswd_for_everyone
+#define CHANCMDPFX iConf.channel_command_prefix
+
+#define DEFAULT_BANTIME			iConf.default_bantime

@@ -81,12 +81,7 @@ static oper_oflag_t oper_oflags[] = {
 		0 },
 };
 
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_oper_Header
-#else
-#define m_oper_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+ModuleHeader MOD_HEADER(m_oper)
   = {
 	"oper",	/* Name of module */
 	"$Id$", /* Version */
@@ -95,17 +90,8 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
-
-/* The purpose of these ifdefs, are that we can "static" link the ircd if we
- * want to
-*/
-
 /* This is called on module init, before Server Ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    m_oper_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_oper)(ModuleInfo *modinfo)
 {
 	/*
 	 * We call our add_Command crap here
@@ -115,27 +101,18 @@ int    m_oper_Init(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int    m_oper_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_oper)(int module_load)
 {
 	return MOD_SUCCESS;
 }
 
-
 /* Called when module is unloaded */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_oper_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(m_oper)(int module_unload)
 {
 	if (del_Command(MSG_OPER, TOK_OPER, m_oper) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_oper_Header.name);
+				MOD_HEADER(m_oper).name);
 	}
 	return MOD_SUCCESS;
 }
@@ -202,6 +179,8 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		sendto_realops
 		    ("Failed OPER attempt by %s (%s@%s) [host doesnt match]",
 		    parv[0], sptr->user->username, sptr->sockhost);
+		ircd_log(LOG_OPER, "OPER NOHOSTMATCH (%s) by (%s!%s@%s)", name, parv[0],
+			sptr->user->username, sptr->sockhost);
 		sptr->since += 7;
 		return 0;
 	}
@@ -223,7 +202,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 				MyFree(sptr->user->swhois);
 			sptr->user->swhois = MyMalloc(strlen(aconf->swhois) +1);
 			strcpy(sptr->user->swhois, aconf->swhois);
-			sendto_serv_butone_token(cptr, sptr->name,
+			sendto_serv_butone_token(cptr, me.name,
 				MSG_SWHOIS, TOK_SWHOIS, "%s :%s", sptr->name, aconf->swhois);
 		}
 
@@ -288,6 +267,12 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 			sptr->user->snomask |= SNO_SNOTICE; /* set +s if needed */
 			sptr->umodes |= UMODE_SERVNOTICE;
 		}
+		/* This is for users who have both 'admin' and 'coadmin' in their conf */
+		if (IsCoAdmin(sptr) && IsAdmin(sptr))
+		{
+			sptr->umodes &= ~UMODE_COADMIN;
+			sptr->oflag &= ~OFLAG_COADMIN;
+		}
 		send_umode_out(cptr, sptr, old);
 		sendto_one(sptr, rpl_str(RPL_SNOMASK),
 			me.name, parv[0], get_sno_str(sptr));
@@ -295,6 +280,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 #ifndef NO_FDLIST
 		addto_fdlist(sptr->slot, &oper_fdlist);
 #endif
+		RunHook2(HOOKTYPE_LOCAL_OPER, sptr, 1);
 		sendto_one(sptr, rpl_str(RPL_YOUREOPER), me.name, parv[0]);
 		if (IsInvisible(sptr) && !(old & UMODE_INVISIBLE))
 			IRCstats.invisible++;
@@ -324,6 +310,8 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 			sendto_one(sptr,
 			    ":%s %s %s :*** Your attempt has been logged.", me.name,
 			    IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name);
+		ircd_log(LOG_OPER, "OPER FAILEDAUTH (%s) by (%s!%s@%s)", name, parv[0],
+			sptr->user->username, sptr->sockhost);
 		sendto_realops
 		    ("Failed OPER attempt by %s (%s@%s) using UID %s [FAILEDAUTH]",
 		    parv[0], sptr->user->username, sptr->sockhost, name);

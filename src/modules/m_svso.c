@@ -87,12 +87,7 @@ static int oper_access[] = {
 
 extern ircstats IRCstats;
 
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_svso_Header
-#else
-#define m_svso_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+ModuleHeader MOD_HEADER(m_svso)
   = {
 	"m_svso",
 	"$Id$",
@@ -101,35 +96,23 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    m_svso_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_svso)(ModuleInfo *modinfo)
 {
 	add_Command(MSG_SVSO, TOK_SVSO, m_svso, MAXPARA);
 	return MOD_SUCCESS;
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int    m_svso_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_svso)(int module_load)
 {
 	return MOD_SUCCESS;
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_svso_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(m_svso)(int module_unload)
 {
 	if (del_Command(MSG_SVSO, TOK_SVSO, m_svso) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_svso_Header.name);
+				MOD_HEADER(m_svso).name);
 	}
 	return MOD_SUCCESS;
 }
@@ -180,7 +163,10 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
         {
                 fLag = acptr->umodes;
                 if (IsOper(acptr) && !IsHideOper(acptr))
+                {
                         IRCstats.operators--;
+                        VERIFY_OPERCOUNT(acptr, "svso");
+                }
                 if (IsAnOper(acptr))
                         delfrom_fdlist(acptr->slot, &oper_fdlist);
                 acptr->umodes &=
@@ -191,7 +177,8 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 acptr->umodes &=
                     ~(UMODE_KIX | UMODE_DEAF | UMODE_HIDEOPER);
                 acptr->oflag = 0;
-                acptr->user->snomask &= ~(SNO_CLIENT|SNO_FLOOD|SNO_FCLIENT|SNO_EYES|SNO_VHOST);
+		acptr->user->snomask &= ~(SNO_CLIENT|SNO_FLOOD|SNO_FCLIENT|SNO_JUNK|SNO_EYES|SNO_VHOST|SNO_NICKCHANGE|SNO_QLINE|SNO_TKL);
+		RunHook2(HOOKTYPE_LOCAL_OPER, acptr, 0);
                 send_umode_out(acptr, acptr, fLag);
         }
 	return 0;

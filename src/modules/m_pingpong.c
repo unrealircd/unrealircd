@@ -56,13 +56,7 @@ DLLFUNC int m_nospoof(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_PONG        "PONG"  /* PONG */
 #define TOK_PONG        "9"     /* 57 */  
 
-
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_pingpong_Header
-#else
-#define m_pingpong_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+ModuleHeader MOD_HEADER(m_pingpong)
   = {
 	"pingpong",	/* Name of module */
 	"$Id$", /* Version */
@@ -71,17 +65,8 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
-
-/* The purpose of these ifdefs, are that we can "static" link the ircd if we
- * want to
-*/
-
 /* This is called on module init, before Server Ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    m_pingpong_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_pingpong)(ModuleInfo *modinfo)
 {
 	/*
 	 * We call our add_Command crap here
@@ -95,36 +80,27 @@ int    m_pingpong_Init(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int    m_pingpong_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_pingpong)(int module_load)
 {
 	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_pingpong_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(m_pingpong)(int module_unload)
 {
 	if (del_Command(MSG_PING, TOK_PING, m_ping) < 0)
 	{
 		sendto_realops("Failed to delete command ping when unloading %s",
-				m_pingpong_Header.name);
+				MOD_HEADER(m_pingpong).name);
 	}
 	if (del_Command(MSG_PONG, TOK_PONG, m_pong) < 0)
 	{
 		sendto_realops("Failed to delete command pong when unloading %s",
-				m_pingpong_Header.name);
+				MOD_HEADER(m_pingpong).name);
 	}
 	return MOD_SUCCESS;
 }
-
 
 /*
 ** m_ping

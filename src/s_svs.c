@@ -278,7 +278,6 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 				char output[501];
 				char nums[4];
 				char *current = MyMalloc(strlen(parv[1])+1);
-				char *xparv[3];
 				bzero(current, strlen(parv[1])+1);
 				bzero(output, sizeof output);
 				while(format->parameters[i] && j < 500) {
@@ -317,10 +316,39 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 					output[j++] = format->parameters[i++];
 				}
 				output[j] = 0;
-				xparv[0] = parv[0];
-				xparv[1] = output;
-				xparv[2] = NULL;
-				m_alias(cptr, sptr, 2, xparv, format->nick);
+				if (format->type == ALIAS_SERVICES) {
+					if (SERVICES_NAME && (acptr = find_person(format->nick, NULL)))
+						sendto_one(acptr, ":%s %s %s@%s :%s", parv[0],
+						IsToken(acptr->from) ? TOK_PRIVATE : MSG_PRIVATE, 
+						format->nick, SERVICES_NAME, output);
+					else
+						sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
+							parv[0], format->nick);
+				}
+				else if (format->type == ALIAS_STATS) {
+					if (STATS_SERVER && (acptr = find_person(format->nick, NULL)))
+						sendto_one(acptr, ":%s %s %s@%s :%s", parv[0],
+							IsToken(acptr->from) ? TOK_PRIVATE : MSG_PRIVATE, 
+							format->nick, STATS_SERVER, output);
+					else
+					sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
+						parv[0], format->nick);
+				}
+				else if (format->type == ALIAS_NORMAL) {
+					if ((acptr = find_person(format->nick, NULL))) {
+						if (MyClient(acptr))
+							sendto_one(acptr, ":%s!%s@%s PRIVMSG %s :%s", parv[0], 
+							sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost,
+							format->nick, output);
+						else
+							sendto_one(acptr, ":%s %s %s :%s", parv[0],
+								IsToken(acptr->from) ? TOK_PRIVATE : MSG_PRIVATE, 
+								format->nick, output);
+					}
+					else
+						sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name,
+							parv[0], format->nick);
+				}
 				free(current);
 				break;
 			}

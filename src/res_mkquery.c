@@ -89,7 +89,7 @@ const u_char *newrr_in, u_char *buf, int buflen)
 
 	if ((ircd_res.options & RES_INIT) == 0 && ircd_res_init() == -1)
 	{
-		h_errno = NETDB_INTERNAL;
+		SET_ERRNO(NETDB_INTERNAL);
 		return (-1);
 	}
 #ifdef DEBUGMODE

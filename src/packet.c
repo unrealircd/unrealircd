@@ -70,7 +70,7 @@ int  dopacket(aClient *cptr, char *buffer, int length)
 			acpt->receiveB &= 0x03ff;
 		}
 	}
-	else if (me.receiveB > 1023)
+	if (me.receiveB > 1023)
 	{
 		me.receiveK += (me.receiveB >> 10);
 		me.receiveB &= 0x03ff;
@@ -244,7 +244,7 @@ void	init_CommandHash(void)
 	add_Command(MSG_TIME, TOK_TIME, m_time, MAXPARA);
 	add_Command(MSG_CONNECT, TOK_CONNECT, m_connect, MAXPARA);
 	add_CommandX(MSG_VERSION, TOK_VERSION, m_version, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
-	add_Command(MSG_STATS, TOK_STATS, m_stats, MAXPARA);
+	add_Command(MSG_STATS, TOK_STATS, m_stats, 3);
 	add_Command(MSG_LINKS, TOK_LINKS, m_links, MAXPARA);
 	add_CommandX(MSG_ADMIN, TOK_ADMIN, m_admin, MAXPARA, M_UNREGISTERED|M_USER|M_SHUN);
 	add_Command(MSG_SUMMON, NULL, m_summon, 1);
@@ -287,6 +287,7 @@ void	init_CommandHash(void)
 	add_Command(MSG_NEWJOIN, TOK_JOIN, m_join, MAXPARA);
 	add_Command(MSG_MODULE, TOK_MODULE, m_module, MAXPARA);	
 	add_Command(MSG_TKL, TOK_TKL, m_tkl, MAXPARA);
+	add_CommandX(MSG_EOS, TOK_EOS, m_eos, MAXPARA, M_SERVER);
 		
 #ifdef DEVELOP_DEBUG
 	for (i = 0; i <= 255; i++)
@@ -344,6 +345,7 @@ Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigne
 		cmdobj->object.command = command;
 		cmdobj->type = MOBJ_COMMAND;
 		AddListItem(cmdobj, module->objects);
+		module->errorcode = MODERR_NOERROR;
 	}
 	return command;
 }

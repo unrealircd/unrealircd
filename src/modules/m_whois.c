@@ -51,13 +51,7 @@ DLLFUNC int m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_WHOIS       "WHOIS" /* WHOI */
 #define TOK_WHOIS       "#"     /* 35 */
 
-
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_whois_Header
-#else
-#define m_whois_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+ModuleHeader MOD_HEADER(m_whois)
   = {
 	"whois",	/* Name of module */
 	"$Id$", /* Version */
@@ -66,17 +60,8 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
-
-/* The purpose of these ifdefs, are that we can "static" link the ircd if we
- * want to
-*/
-
 /* This is called on module init, before Server Ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    m_whois_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_whois)(ModuleInfo *modinfo)
 {
 	/*
 	 * We call our add_Command crap here
@@ -86,27 +71,18 @@ int    m_whois_Init(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int    m_whois_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_whois)(int module_load)
 {
 	return MOD_SUCCESS;
 }
 
-
 /* Called when module is unloaded */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_whois_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(m_whois)(int module_unload)
 {
 	if (del_Command(MSG_WHOIS, TOK_WHOIS, m_whois) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_whois_Header.name);
+				MOD_HEADER(m_whois).name);
 	}
 	return MOD_SUCCESS;
 }
@@ -119,22 +95,6 @@ int	m_whois_Unload(int module_unload)
 */
 DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	static anUser UnknownUser = {
-		NULL,		/* channel */
-		NULL,		/* invited */
-		NULL,		/* silence */
-		NULL,		/* away */
-#ifdef NO_FLOOD_AWAY
-		0,		/* last_away */
-		0,		/* away_count */
-#endif
-		0,		/* servicestamp */
-		1,		/* refcount */
-		0,		/* joined */
-		"<Unknown>",	/* username */
-		"<Unknown>",	/* host */
-		"<Unknown>"	/* server */
-	};
 	Membership *lp;
 	anUser *user;
 	aClient *acptr, *a2cptr;
@@ -163,7 +123,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	for (tmp = parv[1]; (nick = strtoken(&p, tmp, ",")); tmp = NULL)
 	{
-		int  invis, showchannel, member, wilds;
+		unsigned char invis, showchannel, member, wilds, hideoper; /* <- these are all boolean-alike */
 
 		found = 0;
 		/* We do not support "WHOIS *" */
@@ -186,7 +146,10 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			 *   the target user(s) are on;
 			 */
 
-			user = acptr->user ? acptr->user : &UnknownUser;
+			if (!IsPerson(acptr))
+				continue;
+
+			user = acptr->user;
 			name = (!*acptr->name) ? "?" : acptr->name;
 
 			invis = acptr != sptr && IsInvisible(acptr);
@@ -194,8 +157,9 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 			a2cptr = find_server_quick(user->server);
 
-			if (!IsPerson(acptr))
-				continue;
+			hideoper = 0;
+			if (IsHideOper(acptr) && (acptr != sptr) && !IsAnOper(sptr))
+				hideoper = 1;
 
 			if (IsWhois(acptr) && (sptr != acptr))
 			{
@@ -249,7 +213,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (acptr == sptr)
 					showchannel = 1;
 				/* Hey, if you are editting here... don't forget to change the webtv w_whois ;p. */
-				
+
 				if (showchannel)
 				{
 					long access;
@@ -313,9 +277,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			/* makesure they aren't +H (we'll also check
 			   before we display a helpop or IRCD Coder msg)
 			   -- codemastr */
-			if ((IsAnOper(acptr) || IsServices(acptr))
-			    && (!IsHideOper(acptr) || sptr == acptr
-			    || IsAnOper(sptr)))
+			if ((IsAnOper(acptr) || IsServices(acptr)) && !hideoper)
 			{
 				buf[0] = '\0';
 				if (IsNetAdmin(acptr))
@@ -339,32 +301,21 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					    parv[0], name, buf);
 			}
 
-			if (IsHelpOp(acptr) && (!IsHideOper(acptr)
-			    || sptr == acptr || IsAnOper(sptr)))
-				if (!user->away)
-					sendto_one(sptr,
-					    rpl_str(RPL_WHOISHELPOP), me.name,
-					    parv[0], name);
+			if (IsHelpOp(acptr) && !hideoper && !user->away)
+				sendto_one(sptr, rpl_str(RPL_WHOISHELPOP), me.name, parv[0], name);
 
 			if (acptr->umodes & UMODE_BOT)
-			{
-				sendto_one(sptr, rpl_str(RPL_WHOISBOT),
-				    me.name, parv[0], name, ircnetwork);
-			}
+				sendto_one(sptr, rpl_str(RPL_WHOISBOT), me.name, parv[0], name, ircnetwork);
+
 			if (acptr->umodes & UMODE_SECURE)
-			{
 				sendto_one(sptr, ":%s %d %s %s :%s", me.name,
-				    RPL_WHOISSPECIAL,
-				    parv[0], name,
-				    "is a Secure Connection");
-			}
-			if (user->swhois && !IsHideOper(acptr))
-			{
-				if (*user->swhois != '\0')
+				    RPL_WHOISSPECIAL, parv[0], name, "is a Secure Connection");
+
+			if (!BadPtr(user->swhois) && !hideoper)
 					sendto_one(sptr, ":%s %d %s %s :%s",
 					    me.name, RPL_WHOISSPECIAL, parv[0],
 					    name, acptr->user->swhois);
-			}
+
 			/*
 			 * Fix /whois to not show idle times of
 			 * global opers to anyone except another

@@ -51,13 +51,7 @@ DLLFUNC int m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_MKPASSWD 	"MKPASSWD"	
 #define TOK_MKPASSWD 	"y"	
 
-
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_mkpasswd_Header
-#else
-#define m_mkpasswd_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+ModuleHeader MOD_HEADER(m_mkpasswd)
   = {
 	"m_mkpasswd",
 	"$Id$",
@@ -66,40 +60,27 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    m_mkpasswd_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_mkpasswd)(ModuleInfo *modinfo)
 {
 	add_Command(MSG_MKPASSWD, TOK_MKPASSWD, m_mkpasswd, MAXPARA);
 	return MOD_SUCCESS;
-	
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int    m_mkpasswd_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_mkpasswd)(int module_load)
 {
 	return MOD_SUCCESS;
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_mkpasswd_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(m_mkpasswd)(int module_unload)
 {
 	if (del_Command(MSG_MKPASSWD, TOK_MKPASSWD, m_mkpasswd) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_mkpasswd_Header.name);
+				MOD_HEADER(m_mkpasswd).name);
 	}
 	return MOD_SUCCESS;
-	
 }
+
 /*
 ** m_mkpasswd
 **      parv[0] = sender prefix

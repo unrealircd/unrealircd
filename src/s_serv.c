@@ -1019,6 +1019,7 @@ CMD_FUNC(m_server_remote)
 	strncpyzt(acptr->info, info, sizeof(acptr->info));
 	acptr->serv->up = find_or_add(parv[0]);
 	SetServer(acptr);
+	ircd_log(LOG_SERVER, "SERVER %s", acptr->name);
 	/* Taken from bahamut makes it so all servers behind a U:lined
 	 * server are also U:lined, very helpful if HIDE_ULINES is on
 	 */
@@ -1064,13 +1065,16 @@ CMD_FUNC(m_server_remote)
  */
 void send_proto(aClient *cptr, ConfigItem_link *aconf)
 {
+char buf[512];
+	sprintf(buf, "CHANMODES=%s%s,%s%s,%s%s,%s%s",
+		CHPAR1, EXPAR1, CHPAR2, EXPAR2, CHPAR3, EXPAR3, CHPAR4, EXPAR4);
 #ifdef ZIP_LINKS
 	if (aconf->options & CONNECT_ZIP)
 	{
-		sendto_one(cptr, "PROTOCTL %s ZIP", PROTOCTL_SERVER);
+		sendto_one(cptr, "PROTOCTL %s ZIP %s", PROTOCTL_SERVER, buf);
 	} else {
 #endif
-		sendto_one(cptr, "PROTOCTL %s", PROTOCTL_SERVER);
+		sendto_one(cptr, "PROTOCTL %s %s", PROTOCTL_SERVER, buf);
 #ifdef ZIP_LINKS
 	}
 #endif
@@ -1083,6 +1087,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	aClient		*acptr;
 	int		i;
 
+	ircd_log(LOG_SERVER, "SERVER %s", cptr->name);
 
 	if (cptr->passwd)
 	{
@@ -1230,6 +1235,24 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 				    acptr->name, acptr->hopcount + 1,
 				    acptr->info);
 
+			/* Also signal to the just-linked server which
+			 * servers are fully linked.
+			 * Now you might ask yourself "Why don't we just
+			 * assume every server you get during link phase
+			 * is fully linked?", well.. there's a race condition
+			 * if 2 servers link (almost) at the same time,
+			 * then you would think the other one is fully linked
+			 * while in fact he was not.. -- Syzop.
+			 */
+			if (acptr->serv->flags.synced)
+			{
+				sendto_one(cptr, ":%s %s", acptr->name,
+					(IsToken(cptr) ? TOK_EOS : MSG_EOS));
+#ifdef DEBUGMODE
+				ircd_log(LOG_ERROR, "[EOSDBG] m_server_synch: sending to uplink '%s' with src %s...",
+					cptr->name, acptr->name);
+#endif
+			}
 		}
 	}
 	/* Synching nick information */
@@ -1424,6 +1447,14 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	    IRCstats.global_max, TStime(), UnrealProtocol,
 	    CLOAK_KEYCRC,
 	    ircnetwork);
+
+	/* Send EOS (End Of Sync) to the just linked server... */
+	sendto_one(cptr, ":%s %s", me.name,
+		(IsToken(cptr) ? TOK_EOS : MSG_EOS));
+#ifdef DEBUGMODE
+	ircd_log(LOG_ERROR, "[EOSDBG] m_server_synch: sending to justlinked '%s' with src ME...",
+			cptr->name);
+#endif
 	return 0;
 
 }
@@ -2019,710 +2050,6 @@ char *get_client_name2(aClient *acptr, int showports)
 	strcpy((char *)strrchr((char *)pointer, '.'), ".0]");
 
 	return pointer;
-}
-
-/*
-** m_stats
-**	parv[0] = sender prefix
-**	parv[1] = statistics selector (defaults to Message frequency)
-**	parv[2] = server name (current server defaulted, if omitted)
-**
-*/
-/*
-**    Note:   The info is reported in the order the server uses
-**            it--not reversed as in unrealircd.conf!
-*/
-
-CMD_FUNC(m_stats)
-{
-#ifndef DEBUGMODE
-	static char Sformat[] =
-	    ":%s %d %s SendQ SendM SendBytes RcveM RcveBytes Open_since :Idle";
-	static char Lformat[] = ":%s %d %s %s%s %u %u %u %u %u %u :%u";
-#else
-	static char Sformat[] =
-	    ":%s %d %s SendQ SendM SendBytes RcveM RcveBytes Open_since CPU :Idle";
-	static char Lformat[] = ":%s %d %s %s%s %u %u %u %u %u %u %s";
-	char pbuf[96];		/* Should be enough for to ints */
-#endif
-	ConfigItem_link *link_p;
-	ConfigItem_oper *oper_p;
-	ConfigItem_oper_from *oper_p_from;
-	aCommand *mptr;
-	aClient *acptr;
-	char stat = parc > 1 ? parv[1][0] : '\0';
-	char stat2;
-	int  i;
-	int  doall = 0, wilds = 0, showports = IsAnOper(sptr), remote = 0;
-	char *name;
-
-	if (IsServer(sptr))
-		return 0;
-	if (hunt_server_token(cptr, sptr, MSG_STATS, TOK_STATS, "%s :%s", 2, parc,
-	    parv) != HUNTED_ISME)
-		return 0;
-	if (OPER_ONLY_STATS) {
-		if (!IsAnOper(sptr) && strchr(OPER_ONLY_STATS, '*'))
-		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-			return 0;
-		}
-		stat2 = tolower(stat);
-		if (!IsAnOper(sptr) && (stat2 == 'c' || stat2 == 'f' || stat2 == 'i' ||  stat2 == 'h' || 
-			stat2 == 'y' || stat2 == 'x' || stat2 == 'g' || stat2 == 'k' || stat2 == 'o' || 
-			stat2 == 'z' || stat2 == 'l')) {
-			if (strchr(OPER_ONLY_STATS, toupper(stat)) || strchr(OPER_ONLY_STATS, stat2)) {
-				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-				return 0;
-			}
-			if (stat2 == 'c') {
-				if (strchr(OPER_ONLY_STATS, 'h') || strchr(OPER_ONLY_STATS, 'H')) {
-					sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-					return 0;
-				}
-			}
-			if (stat2 == 'h') {
-				if (strchr(OPER_ONLY_STATS, 'c') || strchr(OPER_ONLY_STATS, 'C')) {
-					sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-					return 0;
-				}
-			}
-		}
-		if (!IsAnOper(sptr) && strchr(OPER_ONLY_STATS, stat))
-		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-			return 0;
-		}
-	}
-	if (parc > 2)
-	{
-		name = parv[2];
-		if (!mycmp(name, me.name))
-			doall = 2;
-		else if (match(name, me.name) == 0)
-			doall = 1;
-		if (index(name, '*') || index(name, '?'))
-			wilds = 1;
-	}
-	else
-		name = me.name;
-
-	switch (stat)
-	{
-#ifdef STRIPBADWORDS
-	  case 'b':
-	  {
-		  ConfigItem_badword *words;
-
-		  for (words = conf_badword_channel; words; words = (ConfigItem_badword *) words->next) {
- #ifdef FAST_BADWORD_REPLACE
-			  sendto_one(sptr, ":%s %i %s :c %c %s%s%s %s",
-			      me.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
-			      (words->type & BADW_TYPE_FAST_L) ? "*" : "",
-			      words->word,
-			      (words->type & BADW_TYPE_FAST_R) ? "*" : "",
-			      words->action == BADWORD_REPLACE ? 
-				(words->replace ? words->replace : "<censored>") : "");
- #else
-			  sendto_one(sptr, ":%s %i %s :c %s %s", me.name, RPL_TEXT, sptr->name,  words->word, 
-				words->action == BADWORD_REPLACE ? 
-				(words->replace ? words->replace : "<censored>") : "");
- #endif
-		  }
-		  for (words = conf_badword_message; words; words = (ConfigItem_badword *) words->next) {
- #ifdef FAST_BADWORD_REPLACE
-			  sendto_one(sptr, ":%s %i %s :m %c %s%s%s %s",
-			      me.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
-			      (words->type & BADW_TYPE_FAST_L) ? "*" : "",
-			      words->word,
-			      (words->type & BADW_TYPE_FAST_R) ? "*" : "",
-			      words->action == BADWORD_REPLACE ? 
-				(words->replace ? words->replace : "<censored>") : "");
- #else
-			  sendto_one(sptr, ":%s %i %s :m %s %s", me.name, RPL_TEXT, sptr->name, words->word, 
-				words->action == BADWORD_REPLACE ? 
-				(words->replace ? words->replace : "<censored>") : "");
-
- #endif
-		  }
-		  for (words = conf_badword_quit; words; words = (ConfigItem_badword *) words->next) {
- #ifdef FAST_BADWORD_REPLACE
-			  sendto_one(sptr, ":%s %i %s :q %c %s%s%s %s",
-			      me.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
-			      (words->type & BADW_TYPE_FAST_L) ? "*" : "",
-			      words->word,
-			      (words->type & BADW_TYPE_FAST_R) ? "*" : "",
-			      words->action == BADWORD_REPLACE ? 
-				(words->replace ? words->replace : "<censored>") : "");
- #else
-			  sendto_one(sptr, ":%s %i %s :q %s %s", me.name, RPL_TEXT, sptr->name, words->word, 
-				words->action == BADWORD_REPLACE ? 
-				(words->replace ? words->replace : "<censored>") : "");
-
- #endif
-		  }
-		  break;
-	  }
-#endif
-	  case 'L':
-	  case 'l':
-		  /*
-		   * send info about connections which match, or all if the
-		   * mask matches me.name.  Only restrictions are on those who
-		   * are invisible not being visible to 'foreigners' who use
-		   * a wild card based search to list it.
-		   */
-		  sendto_one(sptr, Sformat, me.name, RPL_STATSLINKINFO,
-		      parv[0]);
-		  if (IsServer(cptr))
-		  {
-			  remote = 1;
-			  wilds = 0;
-		  }
-		  for (i = 0; i <= LastSlot; i++)
-		  {
-			  if (!(acptr = local[i]))
-				  continue;
-			  if (IsInvisible(acptr) && (doall || wilds) &&
-			      !(MyConnect(sptr) && IsOper(sptr)) &&
-			      !IsAnOper(acptr) && (acptr != sptr))
-				  continue;
-			  if (remote && doall && !IsServer(acptr) &&
-			      !IsMe(acptr))
-				  continue;
-			  if (remote && !doall && IsServer(acptr))
-				  continue;
-			  if (!doall && wilds && match(name, acptr->name))
-				  continue;
-			  if (!(parc == 2 && (IsServer(acptr)
-			      || (acptr->flags & FLAGS_LISTEN))) && !(doall
-			      || wilds) && mycmp(name, acptr->name))
-				  continue;
-
-#ifdef DEBUGMODE
-			  ircsprintf(pbuf, "%d :%d", acptr->cputime,
-			      (acptr->user && MyConnect(acptr)) ?
-			      TStime() - acptr->last : 0);
-#endif
-			  if (IsOper(sptr))
-			  {
-				  sendto_one(sptr, Lformat, me.name,
-				      RPL_STATSLINKINFO, parv[0],
-				      (isupper(stat)) ?
-				      get_client_name2(acptr, showports) :
-				      get_client_name(acptr, FALSE),
-				      get_cptr_status(acptr),
-				      (int)DBufLength(&acptr->sendQ),
-				      (int)acptr->sendM, (int)acptr->sendK,
-				      (int)acptr->receiveM,
-				      (int)acptr->receiveK,
-				      TStime() - acptr->firsttime,
-#ifndef DEBUGMODE
-				      (acptr->user && MyConnect(acptr)) ?
-				      TStime() - acptr->last : 0);
-#else
-				      pbuf);
-#endif
-				  if (!IsServer(acptr) && !IsMe(acptr) && IsAnOper(acptr) && sptr != acptr)
-					  sendto_one(acptr,
-					      ":%s %s %s :*** %s did a /stats L on you! IP may have been shown",
-					      me.name, IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, sptr->name);
-			  }
-			  else if (!strchr(acptr->name, '.'))
-				  sendto_one(sptr, Lformat, me.name,
-				      RPL_STATSLINKINFO, parv[0],
-				      IsHidden(acptr) ? acptr->name :
-				      (isupper(stat)) ?	/* Potvin - PreZ */
-				      get_client_name2(acptr, showports) :
-				      get_client_name(acptr, FALSE),
-				      get_cptr_status(acptr),
-				      (int)DBufLength(&acptr->sendQ),
-				      (int)acptr->sendM, (int)acptr->sendK,
-				      (int)acptr->receiveM,
-				      (int)acptr->receiveK,
-				      TStime() - acptr->firsttime,
-#ifndef DEBUGMODE
-				      (acptr->user && MyConnect(acptr)) ?
-				      TStime() - acptr->last : 0);
-#else
-				      pbuf);
-#endif
-		  }
-		  break;
-	  case 'C':
-	  case 'c':
-	  case 'H':
-	  case 'h':
-		  for (link_p = conf_link; link_p; link_p = (ConfigItem_link *) link_p->next)
-		  {
-			sendto_one(sptr, ":%s 213 %s C %s@%s * %s %i %s %s%s%s%s%s",
-				me.name, sptr->name, IsOper(sptr) ? link_p->username : "*",
-				IsOper(sptr) ? link_p->hostname : "*", link_p->servername,
-				link_p->port,
-				link_p->class->name,
-				(link_p->options & CONNECT_AUTO) ? "a" : "",
-				(link_p->options & CONNECT_SSL) ? "S" : "",
-				(link_p->options & CONNECT_ZIP) ? "z" : "",
-				(link_p->options & CONNECT_NODNSCACHE) ? "d" : "",
-				(link_p->options & CONNECT_NOHOSTCHECK) ? "h" : "");
-			if (link_p->hubmask)
-			{
-				sendto_one(sptr, ":%s 244 %s H %s * %s",
-					me.name, sptr->name, link_p->hubmask,
-					link_p->servername);
-			}
-			else
-			if (link_p->leafmask)
-			{
-				sendto_one(sptr, ":%s 241 %s L %s * %s %d",
-					me.name, sptr->name,
-					link_p->leafmask, link_p->servername, link_p->leafdepth);
-			}
-		  }
-		  break;
-	  case 'f':
-	  case 'F':
-		  report_flines(sptr);
-		  break;
-
-	  case 'G':
-	  case 'g':
-		  tkl_stats(sptr);
-		  break;
-	  case 'I':
-	  case 'i':
-	  {
-		  ConfigItem_allow *allows;
-		  for (allows = conf_allow; allows; allows = (ConfigItem_allow *) allows->next) {
-			  sendto_one(sptr, rpl_str(RPL_STATSILINE), me.name,
-				  parv[0], allows->ip, allows->hostname, allows->maxperip, allows->class->name, allows->server ? allows->server : defserv, allows->port ? allows->port : 6667);
-		  }
-		  break;
-	  }
-	  case 'E':
-	  {
-		  ConfigItem_except *excepts;
-		  for (excepts = conf_except; excepts; excepts = (ConfigItem_except *) excepts->next) {
-			if (excepts->flag.type == 1)
-				sendto_one(sptr, rpl_str(RPL_STATSKLINE), me.name,
-				    parv[0], "E", excepts->mask, "");
-		  }
-		  break;
-	  }
-	  case 'e':
-	  {
-		  ConfigItem_except *excepts;
-		  for (excepts = conf_except; excepts;
-		      excepts = (ConfigItem_except *) excepts->next)
-		  {
-			  if (excepts->flag.type == 0)
-				  sendto_one(sptr, rpl_str(RPL_STATSELINE),
-				      me.name, parv[0], excepts->mask);
-		  }
-		  break;
-	  }
-	  case 'K':
-	  case 'k':
-	  {
-		  ConfigItem_ban *bans;
-		  ConfigItem_except *excepts;
-		  char type[2];
-  		  for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) {
-			  if (bans->flag.type == CONF_BAN_USER) {
-				if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
-					  type[0] = 'K';
-				else if (bans->flag.type2 == CONF_BAN_TYPE_AKILL)
-					  type[0] = 'A';
-				else if (bans->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
-					  type[0] = 'k';
-				type[1] = '\0';
-	  			sendto_one(sptr, rpl_str(RPL_STATSKLINE),
-			 	    me.name, parv[0], type, bans->mask, bans->reason ? bans->reason : "<no reason>");
-			  }
-			  else if (bans->flag.type == CONF_BAN_IP) {
-				if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
-					type[0] = 'Z';
-				else if (bans->flag.type2 == CONF_BAN_TYPE_AKILL)
-					type[0] = 'S';
-				else if (bans->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
-					type[0] = 'z';
-				type[1] = '\0';
-				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
-				    me.name, parv[0], type, bans->mask, bans->reason ? bans->reason : "<no reason>");
-			  }
-
-		  }
-		  for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
-			  if (excepts->flag.type == 1)
-				 sendto_one(sptr, rpl_str(RPL_STATSKLINE),
-				     me.name, parv[0], "E", excepts->mask, "");
-		  }
-		  break;
-	  }
-	  case 'm':
-		LockEventSystem();
-		EventStatus(sptr);
-		UnlockEventSystem();
-		break;
-
-	  case 'M':
-		  for (i = 0; i <= 255; i++)
-			  for (mptr = CommandHash[i]; mptr; mptr = mptr->next)
-				  if (mptr->count)
-#ifndef DEBUGMODE
-					  sendto_one(sptr, rpl_str(RPL_STATSCOMMANDS),
-					      me.name, parv[0], mptr->cmd,
-					      mptr->count, mptr->bytes);
-#else
-					  sendto_one(sptr, rpl_str(RPL_STATSCOMMANDS),
-					      me.name, parv[0], mptr->cmd,
-					      mptr->count, mptr->bytes,
-					      mptr->lticks,
-					      mptr->lticks / CLOCKS_PER_SEC,
-					      mptr->rticks,
-					      mptr->rticks / CLOCKS_PER_SEC);
-#endif
-		  break;
-	  case 'n':
-	  {
-		  ConfigItem_ban *bans;
-
-		  for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) {
-			  if (bans->flag.type == CONF_BAN_REALNAME)
-				sendto_one(sptr, rpl_str(RPL_STATSNLINE),
-				    me.name, parv[0], bans->mask, bans->reason ? bans->reason : "<no reason>");
-		  }
-		  break;
-	  }
-	  case 'N':
-		  if (IsOper(sptr))
-			  report_network(sptr);
-		  break;
-	  case 'o':
-	  case 'O':
-		  for (oper_p = conf_oper; oper_p; oper_p = (ConfigItem_oper *) oper_p->next)
-		  {
-		  	if (!oper_p->from)
-		  		sendto_one(sptr, rpl_str(RPL_STATSOLINE),
-		  			me.name, sptr->name, 
-		  			'O', "(none)", oper_p->name,
-		  			oflagstr(oper_p->oflags),
-		  			oper_p->class->name ? oper_p->class->name : "");
-			else
-				for (oper_p_from = (ConfigItem_oper_from *) oper_p->from; oper_p_from; oper_p_from = (ConfigItem_oper_from *) oper_p_from->next)
-			  		sendto_one(sptr, rpl_str(RPL_STATSOLINE),
-			  			me.name, sptr->name, 
-			  			'O', oper_p_from->name, oper_p->name,
-			  			oflagstr(oper_p->oflags),
-			  			oper_p->class->name? oper_p->class->name : "");
-		  }
-		  break;
-	  case 'P':
-	  	  if (IsOper(sptr))
-	  	  {
-			  for (i = 0; i <= LastSlot; i++)
-			  {
-			    if (!(acptr = local[i]))
-					continue;
-	  	  	  	if (!IsListening(acptr))
-	  	  	  		continue;
-	  	  	  	sendto_one(sptr, ":%s %s %s :*** Listener on %s:%i, clients %i. is %s",
-	  	  	  		me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name,
-	  	  	  		((ConfigItem_listen *)acptr->class)->ip,
-	  	  	  		((ConfigItem_listen *)acptr->class)->port,
-	  	  	  		((ConfigItem_listen *)acptr->class)->clients,
-	  	  	   		((ConfigItem_listen *)acptr->class)->flag.temporary ? "TEMPORARY" : "PERM");
-	  	  	  }
-	  	  }
-	  	  break;
-	  case 'Q':
-	  {
-		  ConfigItem_ban *bans;
-
-		  for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) {
-			  if (bans->flag.type == CONF_BAN_NICK && (bans->flag.type2 != CONF_BAN_TYPE_AKILL))
-				sendto_one(sptr, rpl_str(RPL_STATSQLINE),
-				    me.name, parv[0],  bans->reason, bans->mask);
-		  }
-	  }
-		  break;
-	  case 'q':
-	  {
-		  ConfigItem_ban *bans;
-
-		  for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) {
-			  if (bans->flag.type == CONF_BAN_NICK && (bans->flag.type2 == CONF_BAN_TYPE_AKILL))
-				sendto_one(sptr, rpl_str(RPL_SQLINE_NICK),
-				    me.name, parv[0], bans->mask, bans->reason ? bans->reason : "No Reason");
-		  }
-		  break;
-	  }
-	  case 'R':
-#ifdef DEBUGMODE
-		  send_usage(sptr, parv[0]);
-#endif
-		  break;
-	  case 's':
-		  if (IsOper(sptr))
-		  {
-			  sendto_one(sptr, ":%s %s %s :*** SCACHE:",
-			      me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name);
-			  list_scache(sptr);
-			  sendto_one(sptr, ":%s %s %s :*** NS:", me.name,
-			      IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name);
-			  ns_stats(sptr);
-		  }
-		  break;
-	  case 'S':
-		  if (IsOper(sptr)) {
-			  report_dynconf(sptr);
-			  RunHook2(HOOKTYPE_STATS, sptr, "S");
-		  }
-		  break;
-	  case 'D':
-	  {
-		  ConfigItem_deny_link *links;
-
-		  for (links = conf_deny_link; links; links = (ConfigItem_deny_link *) links->next) {
-			  if (links->flag.type == CRULE_ALL)
-				  sendto_one(sptr, rpl_str(RPL_STATSDLINE), me.name, sptr->name,
-					  "D", links->mask, links->prettyrule);
-		  }
-		  break;
-	  }
-	  case 'd':
-	  {
-		  ConfigItem_deny_link *links;
-
-		  for (links = conf_deny_link; links; links = (ConfigItem_deny_link *) links->next) {
-			  if (links->flag.type == CRULE_AUTO)
-				  sendto_one(sptr, rpl_str(RPL_STATSDLINE), me.name, sptr->name,
-					  "d", links->mask, links->prettyrule);
-		  }
-		  break;
-	  }
-	  case 'r': {
-		  ConfigItem_deny_channel *dchans;
-		  ConfigItem_allow_channel *achans;
-		  for (dchans = conf_deny_channel; dchans; dchans = (ConfigItem_deny_channel *) dchans->next) {
-			sendto_one(sptr, ":%s %i %s :deny %s %s", me.name, RPL_TEXT, sptr->name,
-			    dchans->channel, dchans->reason);
-		  }
-  		  for (achans = conf_allow_channel; achans; achans = (ConfigItem_allow_channel *) achans->next) {
-			sendto_one(sptr, ":%s %i %s :allow %s", me.name, RPL_TEXT, sptr->name,
-			    achans->channel);
-		  }
-		  break;
-	  }
-	  case 't':
-	  {
-		  ConfigItem_tld *tld;
-		  for (tld = conf_tld; tld; tld = (ConfigItem_tld *) tld->next)
-		  {
-			  sendto_one(sptr, rpl_str(RPL_STATSTLINE), me.name,
-			      parv[0], tld->mask, tld->motd_file,
-			      tld->rules_file ? tld->rules_file : "none");
-		  }
-		  break;
-	  }
-	  case 'T':		/* /stats T not t:lines .. */
-		  tstats(sptr, parv[0]);
-		  break;
-	  case 'U':
-	  {
-		  ConfigItem_ulines *ulines;
-		  for (ulines = conf_ulines; ulines;
-		      ulines = (ConfigItem_ulines *) ulines->next)
-		  {
-			  sendto_one(sptr, rpl_str(RPL_STATSULINE), me.name,
-			      parv[0], ulines->servername);
-		  }
-		  break;
-	  }
-	  case 'u':
-	  {
-		  time_t tmpnow;
-
-		  tmpnow = TStime() - me.since;
-		  sendto_one(sptr, rpl_str(RPL_STATSUPTIME), me.name, parv[0],
-		      tmpnow / 86400, (tmpnow / 3600) % 24, (tmpnow / 60) % 60,
-		      tmpnow % 60);
-		  sendto_one(sptr, rpl_str(RPL_STATSCONN), me.name, parv[0],
-		      max_connection_count, IRCstats.me_max);
-		  break;
-	  }
-	  case 'v':
-	  {
-		  ConfigItem_deny_version *versions;
-
-		  for (versions = conf_deny_version; versions; versions = (ConfigItem_deny_version *) versions->next) {
-			  sendto_one(sptr, rpl_str(RPL_STATSVLINE), me.name, sptr->name,
-				  versions->version, versions->flags, versions->mask);
-		  }
-		  break;
-	  }
-	  case 'V': {
-		  ConfigItem_vhost *vhosts;
-		  for(vhosts = conf_vhost; vhosts; vhosts = (ConfigItem_vhost *) vhosts->next) {
-			for (oper_p_from = (ConfigItem_oper_from *)vhosts->from; oper_p_from; oper_p_from = (ConfigItem_oper_from *)oper_p_from->next) {
-				sendto_one(sptr, ":%s %i %s :vhost %s%s%s %s %s", me.name, RPL_TEXT, sptr->name,
-				     vhosts->virtuser ? vhosts->virtuser : "", vhosts->virtuser ? "@" : "",
-				     vhosts->virthost, vhosts->login, oper_p_from->name);
-			}
-		  }
-		  break;
-	  }
-	  case 'X':
-	  case 'x':
-		  for (link_p = conf_link; link_p; link_p = (ConfigItem_link *) link_p->next)
-		  {
-			if (!find_server_quick(link_p->servername))
-			{
-				sendto_one(sptr, rpl_str(RPL_STATSXLINE),
-					me.name, sptr->name, link_p->servername,
-					link_p->port);
-			}
-		  }
-		  break;
-	  case 'Y':
-	  case 'y':
-	  {
-		  ConfigItem_class *classes;
-		  for (classes = conf_class; classes; classes = (ConfigItem_class *) classes->next) {
-			  sendto_one(sptr, rpl_str(RPL_STATSYLINE),
-				me.name, sptr->name, classes->name, classes->pingfreq, classes->connfreq,
-				classes->maxclients, classes->sendq, classes->recvq ? classes->recvq : CLIENT_FLOOD);
-		  }
-		  break;
-	  }
-	  case 'Z':
-	  case 'z':
-		  if (!strcasecmp(parv[1], "zip"))
-		  {
-			/* Ugly, but I want a '/stats zip' -- Syzop */
-			if (!IsAnOper(sptr)) {
-				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-				return 0;
-			}
-#ifndef ZIP_LINKS
-			sendto_one(sptr, ":%s %i %s :Sorry this server doesn't support zip links", me.name, RPL_TEXT, parv[0]);
-#else
-			for (i=0; i <= LastSlot; i++)
-			{
-				if (!(acptr = local[i]))
-					continue;
-				if (!IsServer(acptr) || !IsZipped(acptr))
-					continue;
-				if (acptr->zip->in->total_out && acptr->zip->out->total_in)
-				{
-				  sendto_one(sptr,
-				    ":%s %i %s :Zipstats for link to %s (compresslevel %d): decompressed (in): %01lu/%01lu (%3.1f%%), compressed (out): %01lu/%01lu (%3.1f%%)",
-				    me.name, RPL_TEXT, parv[0], get_client_name(acptr, TRUE),
-				    acptr->serv->conf->compression_level ? acptr->serv->conf->compression_level : ZIP_DEFAULT_LEVEL,
-				    acptr->zip->in->total_in, acptr->zip->in->total_out,
-				    (100.0*(float)acptr->zip->in->total_in) /(float)acptr->zip->in->total_out,
-				    acptr->zip->out->total_in, acptr->zip->out->total_out,
-				    (100.0*(float)acptr->zip->out->total_out) /(float)acptr->zip->out->total_in);
-				} else {
-					sendto_one(sptr, ":%s %i %s :Zipstats for link to %s: unavailable", me.name, RPL_TEXT, parv[0]);
-				}
-			}
-#endif
-			sendto_snomask(SNO_EYES, "Stats 'zip' requested by %s (%s@%s)",
-		    	sptr->name, sptr->user->username, GetHost(sptr));
-			stat = '*';
-			break;
-		  } /* 'zip' */
-		  if (IsAnOper(sptr))
-			  count_memory(sptr, parv[0]);
-		  break;
-	  default:
-		  /* Display a help menu */
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "/Stats flags:");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "b - Send the badwords list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "C - Send the link block list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "d - Send the deny link (auto) block list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "D - Send the deny link (all) block list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "e - Send the except socks block list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "E - Send the except ban block list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "F - Send the deny dcc block list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "G - Report TKL information (G:lines/Shuns)");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "H - Send the link block list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "I - Send the allow block list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "K - Send the ban user/ban ip/except ban block list (Includes AKILLs)");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "L - Send Link information");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "m - Send the events list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "M - Send list of how many times each command was used");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "n - Send the ban realname block list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "N - Send network configuration list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "O - Send the oper block list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "P - Send information about ports");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "q - Send the SQLINE list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "Q - Send the ban nick block list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "r - Send the channel deny/allow block list");
-#ifdef DEBUGMODE
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "R - Send the usage list");
-#endif
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "s - Send the SCache and NS list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "S - Send the dynamic configuration list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "t - Send the tld block list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "T - Send connection information");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "u - Send server uptime and connection count");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "U - Send the ulines block list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "v - Send the deny version block list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "V - Send the vhost block list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "X - Send a list of servers that are not currently linked");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "Y - Send the class block list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "Z - Send memory usage information");
-#ifdef ZIP_LINKS
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "zip - Send compression information about ziplinked servers");
-#endif
-		  stat = '*';
-		  break;
-	}
-	sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, parv[0], stat);
-
-
-	if (stat != '*')
-		sendto_snomask(SNO_EYES, "Stats \'%c\' requested by %s (%s@%s)",
-		    stat, sptr->name, sptr->user->username, GetHost(sptr));
-
-	return 0;
 }
 
 /*
@@ -3625,11 +2952,13 @@ CMD_FUNC(m_rehash)
 				opermotd = (aMotd *) read_file(OPATH, &opermotd);
 				botmotd = (aMotd *) read_file(BPATH, &botmotd);
 				rehash_motdrules();
+				RunHook(HOOKTYPE_REHASHFLAG, parv[1]);
 				return 0;
 			}
 			if (!strnicmp("-gar", parv[1], 4))
 			{
 				loop.do_garbage_collect = 1;
+				RunHook(HOOKTYPE_REHASHFLAG, parv[1]);
 				return 0;
 			}
 			if (!_match("-o*motd", parv[1]))
@@ -3641,6 +2970,7 @@ CMD_FUNC(m_rehash)
 				if (cptr != sptr)
 					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing OperMOTD", me.name, sptr->name);
 				opermotd = (aMotd *) read_file(OPATH, &opermotd);
+				RunHook(HOOKTYPE_REHASHFLAG, parv[1]);
 				return 0;
 			}
 			if (!_match("-b*motd", parv[1]))
@@ -3652,6 +2982,7 @@ CMD_FUNC(m_rehash)
 				if (cptr != sptr)
 					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing BotMOTD", me.name, sptr->name);
 				botmotd = (aMotd *) read_file(BPATH, &botmotd);
+				RunHook(HOOKTYPE_REHASHFLAG, parv[1]);
 				return 0;
 			}
 			if (!strnicmp("-motd", parv[1], 5)
@@ -3664,14 +2995,11 @@ CMD_FUNC(m_rehash)
 				if (cptr != sptr)
 					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing all MOTDs and RULES", me.name, sptr->name);
 				rehash_motdrules();
+				RunHook(HOOKTYPE_REHASHFLAG, parv[1]);
 				return 0;
 			}
-			/* didn't match / fall trough... should we continue?? */
-			sendto_ops("%s is %srehashing server config file (unknown option)",
-				sptr->name, cptr != sptr ? "Remotely " : "");
-			if (cptr != sptr)
-				sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing server config file (unknown option)",
-					me.name, sptr->name);
+			RunHook(HOOKTYPE_REHASHFLAG, parv[1]);
+			return 0;
 		}
 	}
 	else
@@ -4547,4 +3875,26 @@ aClient *find_match_server(char *mask)
 		continue;
 	}
 	return acptr;
+}
+
+/*
+ * EOS (End Of Sync) command.
+ * Type: Broadcast
+ * Purpose: Broadcasted over a network if a server is synced (after the users, channels,
+ *          etc are introduced). Makes us able to know if a server is linked.
+ * History: Added in beta18 (in cvs since 2003-08-11) by Syzop
+ */
+CMD_FUNC(m_eos)
+{
+	if (!IsServer(sptr))
+		return 0;
+	sptr->serv->flags.synced = 1;
+	/* pass it on ^_- */
+#ifdef DEBUGMODE
+	ircd_log(LOG_ERROR, "[EOSDBG] m_eos: got sync from %s (path:%s)", sptr->name, cptr->name);
+	ircd_log(LOG_ERROR, "[EOSDBG] m_eos: broadcasting it back to everyone except route from %s", cptr->name);
+#endif
+	sendto_serv_butone_token(cptr,
+		parv[0], MSG_EOS, TOK_EOS, "", NULL);
+	return 0;
 }

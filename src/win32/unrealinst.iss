@@ -3,13 +3,13 @@
 
 ; #define USE_SSL
 ; Uncomment the above line to package an SSL build
-#define USE_ZIP
+; #define USE_ZIP
 ; Uncomment the above line to package with ZIP support
 
 
 [Setup]
 AppName=UnrealIRCd
-AppVerName=UnrealIRCd3.2-beta17
+AppVerName=UnrealIRCd3.2-beta18
 AppPublisher=UnrealIRCd Team
 AppPublisherURL=http://www.unrealircd.com
 AppSupportURL=http://www.unrealircd.com
@@ -51,7 +51,6 @@ Source: "..\..\badwords.message.conf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\Changes"; DestDir: "{app}"; DestName: "Changes.txt"; Flags: ignoreversion
 Source: "..\..\Changes.old"; DestDir: "{app}"; DestName: "Changes.old.txt"; Flags: ignoreversion
 Source: "..\..\Donation"; DestDir: "{app}"; DestName: "Donation.txt"; Flags: ignoreversion
-Source: ".\gnu_regex.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\help.conf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
 Source: "..\..\Unreal.nfo"; DestDir: "{app}"; Flags: ignoreversion
@@ -59,6 +58,7 @@ Source: "..\..\doc\*.*"; DestDir: "{app}\doc"; Flags: ignoreversion
 Source: "..\..\aliases\*"; DestDir: "{app}\aliases"; Flags: ignoreversion
 Source: "..\..\networks\*"; DestDir: "{app}\networks"; Flags: ignoreversion
 Source: "..\..\unreal.exe"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0,4.0
+Source: "tre.dll"; DestDir: "{app}"; Flags: ignoreversion
 #ifdef USE_SSL
 Source: "c:\openssl\bin\openssl.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\openssl\bin\ssleay32.dll"; DestDir: "{app}"; Flags: ignoreversion

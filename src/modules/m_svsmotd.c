@@ -52,12 +52,7 @@ DLLFUNC int m_svsmotd(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_SVSMOTD 	"SVSMOTD"	
 #define TOK_SVSMOTD 	"AS"	
 
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_svsmotd_Header
-#else
-#define m_svsmotd_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+ModuleHeader MOD_HEADER(m_svsmotd)
   = {
 	"m_svsmotd",
 	"$Id$",
@@ -66,35 +61,23 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    m_svsmotd_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_svsmotd)(ModuleInfo *modinfo)
 {
 	add_Command(MSG_SVSMOTD, TOK_SVSMOTD, m_svsmotd, MAXPARA);
 	return MOD_SUCCESS;
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int    m_svsmotd_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_svsmotd)(int module_load)
 {
 	return MOD_SUCCESS;
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_svsmotd_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(m_svsmotd)(int module_unload)
 {
 	if (del_Command(MSG_SVSMOTD, TOK_SVSMOTD, m_svsmotd) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_svsmotd_Header.name);
+				MOD_HEADER(m_svsmotd).name);
 	}
 	return MOD_SUCCESS;
 }
@@ -141,8 +124,12 @@ int  m_svsmotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
           default:
                   return 0;
         }
-        sendto_serv_butone_token(cptr, parv[0], MSG_SVSMOTD, TOK_SVSMOTD,
-            "%s :%s", parv[1], parv[2]);
+		if (parv[2])
+	        sendto_serv_butone_token(cptr, parv[0], MSG_SVSMOTD, TOK_SVSMOTD,
+	            "%s :%s", parv[1], parv[2]);
+		else
+	        sendto_serv_butone_token(cptr, parv[0], MSG_SVSMOTD, TOK_SVSMOTD,
+	            "%s", parv[1]);
 
         if (conf == NULL)
         {

@@ -7,6 +7,12 @@
 # or included in any package without permission from the author.
 #
 # NO WARRANTY IS INCLUDED
+
+# TEMP added by Syzop till the new updater thing is finished.
+echo "Please see doc/unreal32docs.html section 1.2 (\"Notes on upgrading between 3.2 versions\")."
+exit 1
+# ORIGINAL CODE FOLLOWS:
+
 CURRENT_VERSION="Unreal3.2-beta12"
 WHATYAWANT="wget"
 clear

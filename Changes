@@ -2229,3 +2229,215 @@ seen. gmtime warning still there
 - Docs update
 - Temporarily disabled compiling TRE 
 *** Unreal3.2-beta17 release *** (god save us)
+- Modified './update', now points to docs until we have a new update thingy.
+- Fixed bug with /list and '?' wildcard, reported by maGGus.
+- Fixed a few fdlist bugs in SVSMODE/SVS2MODE found by Aither.
+- IPv6: added warning if a ::ffff:a.b.c.d type addr doesn't work since this "feature"
+  is disabled by default at newer *BSD versions. Also improved another warning.
+- Added set::channel-command-prefix to allow channel text which starts with specific characters
+  to be sent to +d clients (for in channel commands).
+- Added a README
+- Added some checking in fdlist add/remove functions.
+- Updated docs a bit (how-to-get-support/FAQ link style).
+- Rewrote the win32 editor handling of mIRC codes. The new system should be more stable,
+  and it supports more features, such as background colors. Just a note, the editor should
+  be able to display any mIRC code without problem, however, some codes may be changed once
+  you save the file. For example, reverse is replaced with ctrl+k0,1 and color code 99 is 
+  treated as a 1 if used for a text color and 0 if used for a bgcolor. This might cause
+  problems when displaying in some clients, however not all clients support color code 99.
+  As for the reverse, if I can come up with a decent way to still keep the original reverse
+  code, I will change it to do that. So in short, if you need the color codes to stay
+  _exactly_ the way they are, then you shouldn't use the editor on that file. Also, color 
+  codes that are 0..9 are translated to 2 digits, ie "2" becomes "02" this is to prevent 
+  problems when a number follows directly after the color code. 
+- Added support for editting short motds in the win32 editor.
+- Added a goto button on the win32 editor toolbar.
+- Made the win32 editor window maximizable.
+- Added a find text feature to the win32 editor.
+- Added HOOKTYPE_LOCAL_OPER (first param = aClient of oper, second param = 1 if the user
+  just became an oper, 0 if they just -o'ed)
+- Added a system to allow modules to create snomasks using functions SnomaskAdd and SnomaskDel
+- Fixed ban version crash and another read-after-free.
+- Fixed problem with make custommodule and multiple EXLIBS arguments (EXLIBS="-la -lb -lc").
+- Fixed a bug with +b and +e involving how trimming should occur when a mask is too long.
+  (#0001103) reported by Troco.
+- Fixed a bug in aliases reported by darko``
+- Updated help.conf and unreal32docs.html (#0001111) reported by SciFi, AngryWolf, and Zerwas.
+- Cleaned up some code for /die under Windows
+- Fixed ircd.c compile error discovered by Ravage
+- Made unreal work with Linux under PPC (#0001105,#0000929) reported by drevlan and Cruiser
+  and thanks to drevlan for donating a linux ppc shell to help track down the problem
+- Fixed a problem where Unreal would sometimes die without outputting information about the
+  crash under Windows
+- Made /restart work under Windows in NT service mode.
+- Fixed a documentation typo (#0001027) reported by Soldier007
+- Fixed a bunch of logging problems reported by LRL (#0001034).
+- Fixed a problem with a fix for +b/+e reported by AngryWolf (#0001117)
+- Fixed a documentation typo reported by Z3l3zT (#0001066)
+- Clarified what ban server {} does, suggested by Joolz (#0001110)
+- Fixed a problem related to crontab reported by LRL (#0001034)
+- Fixed a problem in PPC detection
+- Will now error at too large cloak keys (2147483647 and greater) because it's dangerous
+  and could cause cloak key differences (ex: mixed ia32&ia64 networks).
+- Some minor text/documentation fixes.
+- First big part of modulized extended channelmodes system:
+  - Adds room for at least 32 (new) channel modes.
+  - Supports both paramless and 1-parameter modes.
+  - Modulized: modules can add new channelmodes, but are unloadable (permanent).
+  - Everything is ifdef'd, and EXTCMODE is disabled by default in config.h
+  - It will send CHANMODES= in the PROTOCTL message on server link, this enables
+    servers and services to see which modes are supported and of what type
+    they are (1-parameter, paramless, etc).
+  And now the bad part:
+  - The system has not been fully tested, it will contain bugs (for example I'm
+    aware of some memory leaks).
+  - A few features are missing: warning/error on linking if chanmodes mismatch, unloading
+    of channel modes (not planned soon), 005 broadcasts on change and maybe more..
+  - The function (and maybe variable) names will be changed in the next weeks/months
+  - You should be carefull with parameter modes + services. Things will get desynced
+    if services don't recognize it's a parameter mode. This also applies to clients
+    without 005 CHANMODES= support.
+  - No documentation
+
+  I really suggest module coders to wait a few weeks till the system is ready..
+  In the meantime, don't report bugs or ask for support on this.
+- Fixed bug with SWHOIS: oper::swhois wasn't broadcasted correctly which made it
+  only show up in local (or server) /whois, reported by format (#0001141).
+- minor m_kick tweak.
+- Fixed bug in /silence regarding cloaked hosts, reported by kuwatog (#0001157).
+- Fixed a problem with a Sleep call on win32
+- Rewrote the /stats system. The new system allows for long flags for example
+  /stats gline to list glines rather than just /stats G (old flags are still
+  supported). Additionally, for glines an extended syntax is now supported allowing
+  more refined searches. /stats G +m *@*.aol.com lists only glines that match that 
+  mask. For more info do /stats ?. 
+- Added stats flags for except throttle and ban version blocks
+- stats bugfixes: a null pointer crash and a '/stats k' bug.
+- Fixed a couple of problems in the new stats system
+- Fixed another stats problem, reported by Angrywolf (#0001163)
+- Rewrote the usermode module interface to be more stable and consistent with other
+  module functions. New functions are UmodeAdd and UmodeDel (backwards compatibility
+  is available for the old functions).
+- Fixed a bug in the snomask and umode system dealing with removing flags
+- Added two module functions ModuleGetOptions and ModuleSetOptions to retrieve/toggle
+  module options
+- Fixed a bug effecting +k/+L where you could /mode #chan +k test, /mode #chan +k test
+  and each time it would send a mode change (#0001170) reported by Airnike.
+- A few documentation updates/fixes
+- 005 CHANMODES= set back to original value before extcmode merge
+- made some functions in channel.c non-static so module coders
+  can use them (they are not defined in the header files [yet] however).
+- fixed 2 minor oob write issues
+- Fixed a bug with stats l/L
+- Updated example.conf with a more strict default oper-only-stats.
+- Made '/stats S' and '/stats Z' oper only again (always).
+- Hopefully fixed incoming/outgoing rate in /stats T. Only the stats of the first
+  listener was counted instead of the total. This also explains why on some (many?)
+  ircd configurations it always showed 0.00 kb/s and why HTM (high traffic mode)
+  was never kicking in.
+- A few doc updates (example.conf).
+- Added EOS command (End Of Sync), which is sent between servers after a server has
+  succesfully synced (after introducing of channels, users, etc). This way we can
+  easily distinct between linked servers and a connecting server.
+  This is needed / very helpful for: snomask +F, new +f anti flood system, prolly
+  other things as well. Services don't support this command, but it's not
+  needed atm since +F/+f both ignore U lines.
+- Internal: changed 2 MyMalloc's to MyMallocEx (mem zerofill).. nothing was currently
+  affected by this but it's easy to forget if you add new stuff.
+- Fixed minor /WALLOPS bug reported by Praetorian_ (#0001195).
+- Internal code cleanups: EOS var rename, got rid of old UnknownUser structs, moved
+  anti away flood to new flood struct.
+- Changed away flood configuration to set::anti-flood::away-flood <count>:<period>.
+- Added nickflood protection, can be set in set::anti-flood::nick-flood <count>:<period>
+  to allow max 'count' nickchanges per 'period' seconds. The default is 3 per 60s.
+  As usual, the nickchange limiting does not apply to ircops.
+- Allow o/a/q'd users to nickchange if banned (#0001150).
+- Added badword all { }, this will add the badword to the badword channel, badword message
+  and badword quit lists... could be useful :p.
+- Little config.h cleanup (removed obsolete non-working defines).
+- Allow opers to talk in channel even if +m (#0001109).
+- Implemented the *nix resolver under windows. This should solve 90% of the problems that
+  exist in the Windows version. There may be some problems with the resolver that still
+  need to be worked out, however it should be much more stable than before. Some of this
+  code is based on the ircu Windows NT port by run.
+- Fixed a problem with /quote dns i
+- Rewrote a whole bunch of stuff in the extcmode code
+- Extended the module system to allow better error reporting using ModuleGetError and
+  ModuleGetErrorStr
+- Changed channel mode +f, it's a much more advanced antiflood mode now.
+  It can protect against joinfloods, ctcpfloods, nickfloods and message/notice floods.
+  For example +f [10j]:15 allows 10 joins per 15 seconds, if the limit is reached the
+  channel is set automatically +i (invite only) by the server.
+  You can read more about it in section 3.12 'Anti-Flood features' of unreal32docs.html:
+  http://www.vulnscan.org/UnrealIrcd/unreal32docs.html#feature_antiflood
+  This change can cause desynch problems if both old+f and new+f servers are used on
+  a network. It's (currrently!) possible to use the old +f system if you undef NEWCHFLOODPROT
+  in include/config.h.
+- Fixed ~5 compiler warnings at *NIX and ~20 at windows. Some of them _could_ have caused problems.
+- Moved EOS debugging code to DEBUGMODE.
+- Fixed a channel sync bug reported by thilo&Rocko (#0001218).
+- Fixed minor config parser memleak reported by AngryWolf (#0001214).
+- Fixed bug regarding hidden opers + m_whois cleanup (#0001208).
+- Made SSL users unable to -z themselves, also added 2 flags to /stats S,
+  reported by Joolz (#0001200).
+- Fixed problem with opers having both 'admin' and 'coadmin' causing double-notices (#0001043).
+- +f now also allows you to specify an 'action'. For example +f [30j#R]:15 will set the
+  channel +R (instead of +i) if more than 30 joins in 15 seconds are reached.
+  The following combinations are allowed: c#m, c#M, j#R and m#M. (docs will be updated later)
+- Probably fixed a bug regarding 'setting mode' notice with +f (was sometimes sent to non-chanops).
+- Fixed multiple chmode +u bugs: remote join, netjoin, +mu relay between servers, kick and
+  a part bug. Most of them reported by Lx (#0001097).
+- Fixed a bug in +f + modes-on-join + 't' subfloodtype, reported by Rocko (#0001228).
+- Fixed a crashbug with +f and services, reported by Rocko (#0001227).
+- And another +f + modes-on-join one...
+- Made anti away flood system work just like anti nick flood (#0001205).
+  NO_FLOOD_AWAY is now enabled and away-flood is set to 4 per 120s by default.
+- Fixed a double OperOverride notice bug reported by DukePyrolator (#0001180).
+- Doc fixes/updates reported by Angrywolf (#0001163, #0001176).
+- Fixed a /rehash crash regarding badword all & regex badwords, reported by Angrywolf (#0001230).
+- Fixed an old bug where allow::hostname localhost (or *@localhost) didn't work (#0001115).
+- Fixed a chroot bug, reported by iceblade (#0001112).
+- Badwords filtering is now only done for local clients, previously every server was filtering
+  the message. This will reduce CPU usage, especially at hubs (#0001022).
+- Will now strip/block color codes in quits if any channel the user is in has mode +S/+c.
+- Temporarely added trace code for hunting down negative operator counts (#0001155).
+- Made it so that with +M and user not +r and not voice/halfop/ops/etc the part message isn't
+  shown, just like with +m.
+- Added warn option to deny channel, this will send a notice to the eyes snomask when a user
+  attempts to join. Suggested by Joolz (#0000992).
+- Added clientsonly/serversonly/ssl/java flags to /stats P (#0000992).
+- Added official-channels block. These channels are listed in /list even if they have 0 users.
+- Fixed a crashbug introduced by +mu fixes 3 days ago (#0001237).
+- Fixed a typo where /knock would say the channel is +I if +V is set, reported by Certus
+- Improved SSL error msg sent to junk snomask.
+- Fixed Q:lined nickname msgs during linking and a debug fix.
+- Fixed a SVSMOTD crashbug (removing of motd).
+- Fix-for-fix-for-+mu-fix (it was still crashing)... don't ask.
+- Minor +f code tweaks.
+- Added checks for ipv4 listen lines on ipv6 compile.
+- Finished some of the extcmode code (memleaks).
+- Fixed a problem in the new win32 resolver code
+- Added HOOKTYPE_UNKUSER_QUIT (disconnects of unregistered clients).
+- Fixed a Linux PPC problem (#0001242)
+- Made the win32 version use libtre for regex rather than GNU regex
+  libtre is smaller, faster, and more feature rich.
+- Fixed some issues regarding unsetting of -R/-M when server set that mode due to a flood (+f),
+  it would set the mode back immediately after next msg/join, counters are now reset.
+- Updated documentation
+- Added set::default-bantime. It allows you to set the default time for a gline/kline/gzline/
+  shun/etc when the time is not not specified (like with /gline *@*.stupid.net).
+- Added HOOKTYPE_LOCAL_PASS and HOOKTYPE_REMOTE_CONNECT
+- Added HOOKTYPE_REMOTE_QUIT
+- Added beta18 release notes (might be changed)
+- Added HOOKTYPE_REHASHFLAG (triggered when /rehash is passed a flag)
+- Fix for HOOKTYPE_REMOTE_QUIT (was called for local quits too)
+- Redid the join/kick/topic hooks
+- Added a few macros (MOD_HEADER, MOD_INIT, MOD_TEST, MOD_LOAD, MOD_UNLOAD) to make
+  setting up a module for both static and dynamic linking easier
+- Fixed a win32 resolver lockup bug
+- Fixed hunt_server* bug
+- Very Very small change to doc/example.conf
+- Updated .CHANGES.NEW to read Beta18
+- Minor doc update.
+- Updated all the modules to use the new macros
+- Changed version to 'beta18'

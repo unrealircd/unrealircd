@@ -151,11 +151,294 @@ struct __res_state ircd_res
  * machine, you should say "nameserver 0.0.0.0" or "nameserver 127.0.0.1"
  * in the configuration file.
  *
+ * Copied WIN32 specific code from ircu NT port :p.
+ *
  * Return 0 if completes successfully, -1 on error
  */
+
+#ifdef _WIN32
+extern OSVERSIONINFO VerInfo;
+void get_res_from_reg_9x()
+{
+	register char *cp, **pp, *ap;
+	register int n;
+	HKEY hKey;
+	char buf[BUFSIZ];
+	int key_len = BUFSIZ;
+	int key_type;
+	ircd_res.nscount = 0;
+
+	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, "System\\CurrentControlSet\\Services\\VxD\\MSTCP",
+		0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+	{
+		Debug((DEBUG_DNS, "Error: get_res_from_reg_9x: unable to open registry key"));
+		return;
+	}
+	/* Retreive the Domain key */
+	if (RegQueryValueEx(hKey, "Domain", 0, &key_type, buf, &key_len) != ERROR_SUCCESS)
+	{
+		Debug((DEBUG_DNS, "get_res_from_reg_9x: RegQueryValueEx: Domain failed"));
+	}
+	else
+		strlcpy(ircd_res.defdname, buf, sizeof(ircd_res.defdname));
+	key_len = BUFSIZ;
+
+	/* Retreive the SearchList key */
+	if (RegQueryValueEx(hKey, "SearchList", 0, &key_type, buf, &key_len) != ERROR_SUCCESS)
+	{
+		Debug((DEBUG_DNS, "get_res_from_reg_9x: RegQueryValueEx: SearchList failed"));
+	}
+	else
+	{
+		cp = ircd_res.defdname;
+		pp = ircd_res.dnsrch;
+		*pp++ = cp;
+		for (n = 0; *cp && pp < ircd_res.dnsrch + MAXDNSRCH; cp++)
+		{
+			if (*cp == ',')
+			{
+				*cp = 0;
+				n = 1;
+			} 
+			else if (n)
+			{
+				*pp++ = cp;
+				n = 0;
+			}
+		}
+		/* null terminate the last domain if there are excess */
+		while (*cp && *cp != ',')
+			++cp;
+		*cp = 0;
+		*pp++ = 0;
+	}
+	key_len = BUFSIZ;
+
+	/* Retreive the NameServer key */
+	if (RegQueryValueEx(hKey, "NameServer", 0, &key_type, buf, &key_len) != ERROR_SUCCESS)
+	{
+		Debug((DEBUG_DNS, "get_res_from_reg_9x: RegQueryValueEx: NameServer failed"));
+	}
+	else
+	{
+		struct in_addr a;
+		cp = ap = buf;
+		if (*buf != '\0')
+		{
+			do {
+				n = 0;
+				while (*cp && *cp != ',')
+					++cp;
+				if (*cp)
+				{
+					*cp = 0;
+					n = 1;
+				}
+				if (inet_addr(ap) != INADDR_NONE)
+				{
+					ircd_res.nsaddr_list[ircd_res.nscount].sin_addr.s_addr = inet_addr(ap);
+					ircd_res.nsaddr_list[ircd_res.nscount].sin_family = AF_INET;
+					ircd_res.nsaddr_list[ircd_res.nscount].sin_port = htons(NAMESERVER_PORT);
+					ircd_res.nscount++;
+				}
+				if (!n)
+					break;
+				ap = ++cp;
+			} while (ircd_res.nscount <= MAXNS);
+		}
+	}
+	RegCloseKey(hKey);
+}
+
+int get_res_nt(HKEY hKey, char *subkey, char *obuf, int *size)
+{
+	if (RegQueryValueEx(hKey, subkey, 0, NULL, obuf, size) != ERROR_SUCCESS)
+	{
+		*size = 0;
+		return 0;
+	}
+	if (*size == 1)
+	{
+		*size = 0;
+		return 0;
+	}
+	return 1;
+}
+
+int get_res_interfaces_nt(HKEY hKey, char *subkey, char *obuf, int *size)
+{
+	char buf[BUFSIZ];
+	int key_len = BUFSIZ;
+	int idx = 0;
+	FILETIME lastwrite;
+	HKEY hVal;
+	while (RegEnumKeyEx(hKey, idx++, buf, &key_len, 0, NULL, NULL, &lastwrite) != ERROR_NO_MORE_ITEMS)
+	{
+		if (RegOpenKeyEx(hKey, buf, 0, KEY_QUERY_VALUE, &hVal) != ERROR_SUCCESS)
+			continue;
+		key_len = BUFSIZ;
+
+		if (!get_res_nt(hVal, subkey, obuf, &key_len))
+		{
+			RegCloseKey(hVal);
+			key_len = BUFSIZ;
+			continue;
+		}
+		else
+		{
+			RegCloseKey(hVal);
+			*size = key_len;
+			return 1;
+		}
+		key_len = BUFSIZ;
+	}
+	*size = 0;
+	return 0;
+}
+
+void get_res_from_reg_nt() 
+{
+	register char *cp, **pp, *ap;
+	register int n;
+	HKEY hKey, hInter;
+	char buf[BUFSIZ];
+	int key_len = BUFSIZ;
+	ircd_res.nscount = 0;
+
+	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, "System\\CurrentControlSet\\Services\\Tcpip\\Parameters",
+		0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+	{
+		Debug((DEBUG_DNS, "Error: get_res_from_reg_nt: unable to open registry key"));
+		return;
+	}
+	RegOpenKeyEx(hKey, "Interfaces", 0, KEY_QUERY_VALUE|KEY_ENUMERATE_SUB_KEYS, &hInter);
+
+	/* Retreive the Domain key */
+	if (!get_res_nt(hKey, "Domain", buf, &key_len))
+	{
+		key_len = BUFSIZ;
+		/* Try DHCP key */
+		if (!get_res_nt(hKey, "DhcpDomain", buf, &key_len))
+		{
+			key_len = BUFSIZ;
+			if (!get_res_interfaces_nt(hInter, "Domain", buf, &key_len))
+			{
+				key_len = BUFSIZ;
+				if (!get_res_interfaces_nt(hInter, "DhcpDomain", buf, &key_len))
+				{
+					Debug((DEBUG_DNS, "get_res_from_reg_nt: RegQueryValueEx: Domain failed"));
+				}
+			}
+		}
+	}
+	if (key_len > 0)
+		strlcpy(ircd_res.defdname, buf, sizeof(ircd_res.defdname));
+
+	/* Retreive the SearchList key */
+	key_len = BUFSIZ;
+	if (!get_res_nt(hKey, "SearchList", buf, &key_len))
+	{
+		key_len = BUFSIZ;
+		/* Try DHCP key */
+		if (!get_res_nt(hKey, "DhcpSearchList", buf, &key_len))
+		{
+			key_len = BUFSIZ;
+			if (!get_res_interfaces_nt(hInter, "SearchList", buf, &key_len))
+			{
+				key_len = BUFSIZ;
+				if (!get_res_interfaces_nt(hInter, "DhcpSearchList", buf, &key_len))
+				{
+					Debug((DEBUG_DNS, "get_res_from_reg_nt: RegQueryValueEx: SearchList failed"));
+				}
+			}
+		}
+	}
+	if (key_len > 0)
+	{
+		/*
+		 * Set search list to be blank-separated strings
+		 * on rest of line.
+		 */
+		cp = ircd_res.defdname;
+		pp = ircd_res.dnsrch;
+		*pp++ = cp;
+		for (n = 0; *cp && pp < ircd_res.dnsrch + MAXDNSRCH; cp++)
+		{
+			if (*cp == ' ' || *cp == '\t')
+			{
+				*cp = 0;
+				n = 1;
+			} else
+			if (n)
+			{
+				*pp++ = cp;
+				n = 0;
+			}
+		}
+		/* null terminate the last domain if there are excess */
+		while (*cp && *cp != ' ' && *cp != '\t')
+			++cp;
+		*cp = 0;
+		*pp++ = 0;
+	}	
+
+	/* Retreive the NameServer key */
+	key_len = BUFSIZ;
+	if (!get_res_nt(hKey, "NameServer", buf, &key_len))
+	{
+		key_len = BUFSIZ;
+		/* Try DHCP key */
+		if (!get_res_nt(hKey, "DhcpNameServer", buf, &key_len))
+		{
+			key_len = BUFSIZ;
+			if (!get_res_interfaces_nt(hInter, "NameServer", buf, &key_len))
+			{
+				key_len = BUFSIZ;
+				if (!get_res_interfaces_nt(hInter, "DhcpNameServer", buf, &key_len))
+				{
+					Debug((DEBUG_DNS, "get_res_from_reg_nt: RegQueryValue: NameServer failed"));
+				}
+			}
+		}
+	}
+	if (key_len > 0)
+	{
+		struct in_addr a;
+		cp = ap = buf;
+		if (*buf != '\0')
+		{
+			do {
+				n = 0;
+				while (*cp && *cp != ' ' && *cp != '\t')
+					++cp;
+				if (*cp)
+				{
+					*cp = 0;
+					n = 1;
+				}
+				if (inet_addr(ap) != INADDR_NONE)
+				{
+					ircd_res.nsaddr_list[ircd_res.nscount].sin_addr.s_addr = inet_addr(ap);
+					ircd_res.nsaddr_list[ircd_res.nscount].sin_family = AF_INET;
+					ircd_res.nsaddr_list[ircd_res.nscount].sin_port = htons(NAMESERVER_PORT);
+					ircd_res.nscount++;
+				}
+				if (!n)
+					break;
+				ap = ++cp;
+			} while (ircd_res.nscount <= MAXNS);
+		}
+	}
+	RegCloseKey(hInter);
+	RegCloseKey(hKey);
+}
+#endif
+
 int ircd_res_init(void)
 {
+#ifndef _WIN32
 	register FILE *fp;
+#endif
 	register char *cp, **pp;
 	register int n;
 	char buf[MAXDNAME];
@@ -254,6 +537,7 @@ int ircd_res_init(void)
 		*pp++ = 0;
 	}
 
+#ifndef _WIN32
 #define	MATCH(line, name) \
 	(!strncmp(line, name, sizeof(name) - 1) && \
 	(line[sizeof(name) - 1] == ' ' || \
@@ -262,7 +546,6 @@ int ircd_res_init(void)
 #ifdef	NEXT
 	if (ircd_netinfo_res_init(&haveenv, &havesearch) == 0)
 #endif
-#ifndef _WIN32
 		if ((fp = fopen(IRC_RESCONF, "r")) != NULL)
 		{
 			/* read the config file */
@@ -460,7 +743,14 @@ int ircd_res_init(void)
 #endif
 			(void)fclose(fp);
 		}
-#endif		
+#else /* WIN32-specific code follows: */
+	if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS)
+		get_res_from_reg_9x();
+	else if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_NT)
+		get_res_from_reg_nt();
+	
+#endif /* WIN32 */
+
 	if (ircd_res.defdname[0] == 0 &&
 	    gethostname(buf, sizeof(ircd_res.defdname) - 1) == 0 &&
 	    (cp = strchr(buf, '.')) != NULL)
@@ -502,6 +792,15 @@ int ircd_res_init(void)
 	if ((cp = getenv("RES_OPTIONS")) != NULL)
 		ircd_res_setoptions(cp, "env");
 	ircd_res.options |= RES_INIT;
+
+#ifdef DEBUGMODE
+	{
+		int i;
+		Debug((DEBUG_DNS, "res_init: %d nameserver(s):", ircd_res.nscount));
+		for (i=0; i < ircd_res.nscount; i++)
+			Debug((DEBUG_DNS, "%d. %s", i, inet_ntoa(ircd_res.nsaddr_list[i].sin_addr)));
+	}
+#endif
 	return (0);
 }
 

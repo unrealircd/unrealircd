@@ -49,19 +49,13 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 DLLFUNC int  m_notice(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int  m_private(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
-
 /* Place includes here */
 #define MSG_PRIVATE     "PRIVMSG"       /* PRIV */
 #define TOK_PRIVATE     "!"     /* 33 */
 #define MSG_NOTICE      "NOTICE"        /* NOTI */
 #define TOK_NOTICE      "B"     /* 66 */
 
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_message_Header
-#else
-#define m_message_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+ModuleHeader MOD_HEADER(m_message)
   = {
 	"message",	/* Name of module */
 	"$Id$", /* Version */
@@ -70,17 +64,8 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
-
-/* The purpose of these ifdefs, are that we can "static" link the ircd if we
- * want to
-*/
-
 /* This is called on module init, before Server Ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    m_message_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_message)(ModuleInfo *modinfo)
 {
 	/*
 	 * We call our add_Command crap here
@@ -92,33 +77,23 @@ int    m_message_Init(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int    m_message_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_message)(int module_load)
 {
 	return MOD_SUCCESS;
-	
 }
 
-
 /* Called when module is unloaded */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_message_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(m_message)(int module_unload)
 {
 	if (del_Command(MSG_PRIVATE, TOK_PRIVATE, m_private) < 0)
 	{
 		sendto_realops("Failed to delete command privmsg when unloading %s",
-				m_message_Header.name);
+				MOD_HEADER(m_message).name);
 	}
 	if (del_Command(MSG_NOTICE, TOK_NOTICE, m_notice) < 0)
 	{
 		sendto_realops("Failed to delete command notice when unloading %s",
-				m_message_Header.name);
+				MOD_HEADER(m_message).name);
 	}
 	return MOD_SUCCESS;
 }
@@ -201,26 +176,28 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 		 */
 		if (!strcasecmp(nick, "ircd") && MyClient(sptr))
 		{
+			int ret = 0;
 			if (!recursive_webtv)
 			{
 				recursive_webtv = 1;
-				parse(sptr, parv[2], (parv[2] + strlen(parv[2])));
+				ret = parse(sptr, parv[2], (parv[2] + strlen(parv[2])));
 				recursive_webtv = 0;
 			}
-			return 0;
+			return ret;
 		}
 		if (!strcasecmp(nick, "irc") && MyClient(sptr))
 		{
 			if (!recursive_webtv)
 			{
+				int ret;
 				recursive_webtv = 1;
-				if (webtv_parse(sptr, parv[2]) == -2)
+				ret = webtv_parse(sptr, parv[2]);
+				if (ret == -99)
 				{
-					parse(sptr, parv[2],
-					    (parv[2] + strlen(parv[2])));
+					ret = parse(sptr, parv[2], (parv[2] + strlen(parv[2])));
 				}
 				recursive_webtv = 0;
-				return 0;
+				return ret;
 			}
 		}
 		if (*nick != '#' && (acptr = find_person(nick, NULL)))
@@ -316,7 +293,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 					    acptr->user->away);
 
 #ifdef STRIPBADWORDS
-				if (!(IsULine(acptr) || IsULine(sptr)) && IsFilteringWords(acptr))
+				if (MyClient(sptr) && !IsULine(acptr) && IsFilteringWords(acptr))
 				{
 					text = stripbadwords_message(parv[2], &blocked);
 					if (blocked)
@@ -399,32 +376,26 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				int blocked = 0;
 #endif
 				Hook *tmphook;
-				/*if (chptr->mode.mode & MODE_FLOODLIMIT) */
-				/* When we do it this way it appears to work? */
+#ifdef NEWCHFLOODPROT
+				if (chptr->mode.floodprot && chptr->mode.floodprot->l[FLD_TEXT])
+#else
 				if (chptr->mode.per)
-					if (check_for_chan_flood(cptr, sptr,
-					    chptr) == 1)
+#endif
+					if (check_for_chan_flood(cptr, sptr, chptr) == 1)
 						continue;
 
-				sendanyways = (parv[2][0] == '`' ? 1 : 0);
-				text =
-				    (chptr->mode.mode & MODE_STRIP ?
-				    (char *)StripColors(parv[2]) : parv[2]);
+				if (!CHANCMDPFX)
+					sendanyways = (parv[2][0] == '`' ? 1 : 0);
+				else
+					sendanyways = (strchr(CHANCMDPFX,parv[2][0]) ? 1 : 0);
+				text = parv[2];
+				if (MyClient(sptr) && (chptr->mode.mode & MODE_STRIP))
+					text = StripColors(parv[2]);
 #ifdef STRIPBADWORDS
+				if (MyClient(sptr))
+				{
  #ifdef STRIPBADWORDS_CHAN_ALWAYS
-				text = stripbadwords_channel(text,& blocked);
-				if (blocked)
-				{
-					if (!notice)
-						sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
-						    me.name, parv[0], parv[0],
-						    err_cantsend[6], p2);
-					continue;
-				}
- #else
-				if (chptr->mode.mode & MODE_STRIPBADWORDS)
-				{
-					text = stripbadwords_channel(text, &blocked);
+					text = stripbadwords_channel(text,& blocked);
 					if (blocked)
 					{
 						if (!notice)
@@ -433,8 +404,21 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 							    err_cantsend[6], p2);
 						continue;
 					}
-				}
+ #else
+					if (chptr->mode.mode & MODE_STRIPBADWORDS)
+					{
+						text = stripbadwords_channel(text, &blocked);
+						if (blocked)
+						{
+							if (!notice)
+								sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
+								    me.name, parv[0], parv[0],
+								    err_cantsend[6], p2);
+							continue;
+						}
+					}
  #endif
+				}
 #endif
 				for (tmphook = Hooks[HOOKTYPE_CHANMSG]; tmphook; tmphook = tmphook->next) {
 					text = (*(tmphook->func.pcharfunc))(cptr, sptr, chptr, text, notice);
@@ -451,13 +435,32 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				    notice ? MSG_NOTICE : MSG_PRIVATE,
 				    notice ? TOK_NOTICE : TOK_PRIVATE,
 				    nick, text);
+
+#ifdef NEWCHFLOODPROT
+				if (chptr->mode.floodprot && !is_skochanop(sptr, chptr) &&
+				    !IsULine(sptr) && do_chanflood(chptr->mode.floodprot, FLD_MSG) &&
+				    MyClient(sptr))
+				{
+					do_chanflood_action(chptr, FLD_MSG, "msg/notice");
+				}
+				
+				if (chptr->mode.floodprot && !is_skochanop(sptr, chptr) &&
+				    (text[0] == '\001') && strncmp(text+1, "ACTION ", 7) &&
+				    do_chanflood(chptr->mode.floodprot, FLD_CTCP) && MyClient(sptr))
+				{
+					do_chanflood_action(chptr, FLD_CTCP, "CTCP");
+				}
+#endif
 				sendanyways = 0;
 				continue;
 			}
-			else if (!notice)
+			else
+			if (!notice && MyClient(sptr))
+			{
 				sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
 				    me.name, parv[0], parv[0],
 				    err_cantsend[cansend - 1], p2);
+			}
 			continue;
 		}
 		else if (p2)
@@ -609,14 +612,29 @@ static int is_silenced(aClient *sptr, aClient *acptr)
 	Link *lp;
 	anUser *user;
 	static char sender[HOSTLEN + NICKLEN + USERLEN + 5];
-
+	static char senderx[HOSTLEN + NICKLEN + USERLEN + 5];
+	char checkv = 0;
+	
 	if (!(acptr->user) || !(lp = acptr->user->silence) ||
 	    !(user = sptr->user)) return 0;
+
 	ircsprintf(sender, "%s!%s@%s", sptr->name, user->username,
 	    user->realhost);
+	/* We also check for matches against sptr->user->virthost if present,
+	 * this is checked regardless of mode +x so you can't do tricks like:
+	 * evil has +x and msgs, victim places silence on +x host, evil does -x
+	 * and can msg again. -- Syzop
+	 */
+	if (sptr->user->virthost)
+	{
+		ircsprintf(senderx, "%s!%s@%s", sptr->name, user->username,
+		    sptr->user->virthost);
+		checkv = 1;
+	}
+
 	for (; lp; lp = lp->next)
 	{
-		if (!match(lp->value.cp, sender))
+		if (!match(lp->value.cp, sender) || (checkv && !match(lp->value.cp, senderx)))
 		{
 			if (!MyConnect(sptr))
 			{

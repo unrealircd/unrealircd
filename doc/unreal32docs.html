@@ -20,15 +20,17 @@
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
-  <b>Current Version:</b> 3.2 Beta17<br>
-  <b>Last doc update:</b> 2003-06-15 </div>
+  <b>Current Version:</b> 3.2 Beta18<br>
+  <b>Last doc update:</b> 2003-09-22</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Luke / McSkaf / Syzop<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
 <p>Due to the increasing complexity of UnrealIRCd3.2 We have switched to an easier 
   to navigate, more inclusive documentation set. To view this documentation you 
   must have a compatible browser, which are listed below. Up to date docs are 
-  available @ <a href="http://www.vulnscan.org/UnrealIrcd/unreal32docs.html">http://www.vulnscan.org/UnrealIrcd/unreal32docs.html</a></p>
+  available at <a href="http://www.vulnscan.org/UnrealIrcd/unreal32docs.html">http://www.vulnscan.org/UnrealIrcd/unreal32docs.html</a>
+  and a FAQ at <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">http://www.vulnscan.org/UnrealIrcd/faq/</a>.
+</p>
 <p><b>Compatible Browsers: </b><br>
 <ul>
 <li>Opera 6.02
@@ -55,7 +57,7 @@
   -- 3.9. <a href="#feature_ipv6">IPv6</a><br>
   -- 3.10. <a href="#feature_ziplinks">Zip links</a><br>
   -- 3.11. <a href="#feature_dyndns">Dynamic DNS/IP linking support</a><br>
-  -- 3.12. <a href="#feature_throttling">Throttling</a><br>
+  -- 3.12. <a href="#feature_antiflood">Anti-flood features</a><br>
   -- 3.13. <a href="#feature_other">Other features</a><br>
   4. <a href="#configuringyourunrealircdconf">Configuring your unrealircd.conf 
   file</a><br>
@@ -91,11 +93,12 @@
   ---4.30. <a href="#linkblock">Link Block -=- (C/N/H:Lines)</a><br>
   ---4.31. <a href="#aliasblock">Alias Block</a><br>
   ---4.32. <a href="#helpblock">Help Block</a><br>
-  ---4.33. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
+  ---4.33. <a href="#officialchannels">Official Channels Block</a><br>
+  ---4.34. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
   5. <a href="#addtlfiles">Additional Files</a><br>
   6. <a href="#userchannelmodes">User & Channel Modes</a><br>
   7. <a href="#useropercommands">User & Oper Commands</a><br>
-  8. <a href="#faq">Frequently Asked Questions (FAQ)</a><br> 
+  8. <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">Frequently Asked Questions (FAQ)</a><br> 
 </p>
 <p><b><font size="+2">1.0 &#8211;Introduction & Notes <a name="IntroductionNotes"></a></font></b><br>
 </p><div class="desc">
@@ -105,10 +108,11 @@
   of the UnrealIRCd Development Team. This document may be copied/printed/reproduced/published 
   as many times as you like, provided it is for use with UnrealIRCd and it is not 
   modified in anyway. &#8211; Copyright UnrealIRCd Development Team 2002-2003</p>
-<p>Please read this manual before asking for help, you may also want to take a look
-   at the <a href="#faq">FAQ</a> for common problems. If that didn't help you can
-   ask for support at <a href="irc://irc.ircsystems.net/unreal-support">irc.ircsystems.net (port 6667) channel #unreal-support</a> (strict UnrealIRCd support, don't
-   ask for help about services!). If you have a real bug (like a crash) then report it at 
+<p>Please read this manual before asking for help, you also REALLY want to take a look at the 
+   <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">FAQ</a> since over 80% of your questions/problems are answered in it. If you still
+   need help you can ask for support at irc.ircsystems.net (port 6667) channel #unreal-support (note 
+   that we REQUIRE you to read the docs and faq and we only help with UnrealIRCd, not with services!). 
+   If you have a real bug (like a crash) then report it at 
    <a href="http://bugs.unrealircd.org" TARGET="_blank">http://bugs.unrealircd.org</a>.</p></div>
 
 <p><font size="+2"><b>1.1 &#8211; Notes on upgrading/mixing 3.1.x -&gt; 3.2 </b></font><a name="notesonolder"></a><br>
@@ -125,7 +129,7 @@
 Linux:<br>
 <ul>
 <li>Rename your old UnrealIRCd directory (or otherwise you'll overwrite it in the next step)
-<li>Extract the new UnrealIRCd version and run ./Config and make(*NIX).
+<li>Extract the new UnrealIRCd version and run ./Config and make
 <li>Copy your old configuration files to the new directory (unrealircd.conf, motd, rules, server.* [SSL certs], network file, etc)</p></ul>
 Windows:<br>
 <ul>
@@ -134,8 +138,8 @@ Windows:<br>
 <li>Run the installer for the new version of Unreal.
 <li>Copy your old configuration files to the new folder.
 </ul>
-<p>Please also check .RELEASE.NOTES and maybe even Changes to see what has been changed. 
-   If you notice any changes (or bugs) between version, BE SURE TO READ THOSE FILES FIRST before reporting it as a bug!.</p></div>
+<p>Please also check .RELEASE.NOTES to see what has been changed. 
+   If you notice any changes (or bugs) between version, BE SURE TO READ THE RELEASE NOTES FIRST before reporting it as a bug!.</p></div>
 
 <p><font size="+2"><b>2.0 - Installation</b></font><a name="installation" id="installation"></a><br><div class="desc">
   <br>
@@ -197,14 +201,14 @@ Windows:<br>
 <p>This is controlled by usermode +x (like: /mode yournick +x), admins can also force +x to be enabled 
    by default, or make it so users can never do -x.</p>
 <p>The cloaked host is generated by a formula which uses 3 "cloak keys." You are required
-   to set these 3 keys in your config file, they should be 3 random numbers between 10,000 and 4,294,967,295.
+   to set these 3 keys in your config file, they should be 3 random numbers between 10,000 and 2,147,483,646.
    If someone else knows these keys they can decode the cloaked host and discover the real one, that's why you
-   have to keep them secret. The cloak keys must be the same on all servers on the network.</p>
+   have to keep them secret. _The cloak keys must be the same on all servers on the network_.</p>
 </div>
 <p><font size="+2"><b>3.2 - Modules</b></font><a name="feature_modules"></a></p><div class="desc">
 <p>UnrealIRCd supports modules (except under windows) which is nice because:<br>
    - You can load/reload/unload them while the ircd is running (by /rehash). This allows some bugs to be fixed or new features to be added without requiring a restart.<br>
-   - Other people can create modules as well with new commands or usermodes for example.<br>
+   - Other people can create (3rd party) modules with new commands, usermodes and even channelmodes.<br>
    UnrealIRCd only comes with a few modules, take a look at www.unrealircd.com -&gt; modules
    or use google to find 3rd party modules.</p>
 <p>Note that you need to load at least the commands module!</p></div>
@@ -263,7 +267,8 @@ Windows:<br>
 <p>You need to have your IRC server compiled with SSL support. To setup an SSL port you need to set listen::options::ssl.</p>
 <p>You cannot connect normally to a SSL port (so don't make port 6667 ssl!), you need a client or a tunnel
    that understands the SSL protocol.</p>
-<p>Clients that support SSL: <A HREF="http://www.xchat.org/" TARGET="_blank">XChat</a></p>
+<p>Clients that support SSL: <A HREF="http://www.xchat.org/" TARGET="_blank">XChat</a>,
+                             <A HREF="http://www.irssi.org/" TARGET="_blank">irssi</a></p>
 <p>For all other clients which don't support SSL (like mIRC) you can use a tunnel like
    <A HREF="http://www.stunnel.org/" TARGET="_blank">stunnel</A>, here's a stunnel.conf example (for stunnel 4.x):<br>
    <pre>
@@ -278,25 +283,86 @@ Windows:<br>
 <p>If you are really concerned about security/sniffing then you also need to validate certificates on the client end.
    That's however way too off topic to explain here. Learn about SSL, don't ask us, it has nothing to do with UnrealIRCd.</p></div>
 <p><font size="+2"><b>3.9 - IPv6</b></font><a name="feature_ipv6"></a></p><div class="desc">
-<p>UnrealIRCd supports IPv6, since beta15 it seems to work well although there might be some
-   bugs in it. You need to compile with IPv6 support (answer yes to the ./Config question), ofcourse your
-   OS needs to have IPv6 support enabled too.</p>
+<p>UnrealIRCd supports IPv6, since beta15 it seems to be stable.<br> 
+   Your OS needs to have IPv6 support and you need to enable IPv6 support in UnrealIRCd during ./Config as well.<br>
 <p>Although microsoft has an experimental IPv6 implementation for w2k/XP it is not (yet) supported by UnrealIRCd.</p></div>
 
 <p><font size="+2"><b>3.10 - Zip links</b></font><a name="feature_ziplinks"></a></p><div class="desc">
 <p>Zip links can be turned on for server&lt;-&gt;server links, it compresses the data by using zlib.
    It can save 60-80% bandwidth... So it's quite useful for low-bandwidth links or links with
    many users, it can help a lot when you are linking since a lot of data is sent about every user/channel/etc.</p>
-<p>To compile with zip links support, you need to answer Yes to the zlib question in ./Config and set it in link::options::zip</p></div>
+<p>To compile with zip links support, you need to answer Yes to the zlib question in ./Config and set it in link::options::zip 
+   (on both sides)</p></div>
 
 <p><font size="+2"><b>3.11 - Dynamic DNS/IP linking support</b></font><a name="feature_dyndns"></a></p><div class="desc">
 <p>UnrealIRCd has some (new) nice features which helps dynamic IP users using dynamic DNS (like blah.dyndns.org).
    If you are linking two dynamic DNS hosts, then set link::options::nodnscache and link::options::nohostcheck. 
 </p></div>
 
-<p><font size="+2"><b>3.12 - Throttling</b></font><a name="feature_throttling"></a></p><div class="desc">
-<p>Throttling is a method that allows you to limit how fast a user can disconnect and then reconnect to your server. 
-   You can config it in your set::throttle block to allow X connections in YY seconds from the same IP.</p></div>
+<p><font size="+2"><b>3.12 - Anti-Flood features</b></font><a name="feature_antiflood"></a></p><div class="desc">
+<p>
+<b>Throttling</b><br>
+Throttling is a method that allows you to limit how fast a user can disconnect and then reconnect to your server. 
+ You can config it in your set::throttle block to allow X connections in YY seconds from the same IP.<br>
+<b>Channel modes</b><br>
+There are also some channel modes which can be very effective against floods. To name a few:<br>
+<b>K</b> = no /knock, <b>N</b> = no nickchanges, <b>C</b> = no CTCPs, <b>M</b> = only registered users can talk.<br>
+As of beta18 there's also a much more advanced channelmode +f...<br>
+<b>Channel mode f</b><br>
+Instead of using scripts and bots to protect against channel floods it is now build into the ircd.<br>
+This is an example +f mode: <i>*** Blah sets mode: +f [10j]:15</i><br>
+This means 10 joins per 15 seconds are allowed in the channel, if the limit is hit, the channel will be set +i automatically.<br>
+The following floodtypes are available:<br>
+<table border=1 cellpadding=3 cellspacing=1>
+<tr><td>mode:</td><td>name:</td><td>default action:</td><td>other avail. actions:</td><td>comments</td></tr>
+<tr><td>c</td><td>CTCPs</td><td>auto +C</td><td>m, M</td><td>&nbsp;</td></tr>
+<tr><td>j</td><td>joins</td><td>auto +i</td><td>R</td><td>&nbsp;</td></tr>
+<tr><td>k</td><td>knocks</td><td>auto +K</td><td>&nbsp;</td><td><font size=-1>(counted for local clients only)</font></td></tr>
+<tr><td>m</td><td>messages/notices</td><td>auto +m</td><td>M</td><td>&nbsp;</td></tr>
+<tr><td>n</td><td>nickchanges</td><td>auto +N</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+<tr><td>t</td><td>text</td><td>kick</td><td>b</td><td>per-user messages/notices like the old +f. Will kick or ban the user.</td></tr>
+</table>
+<p />&nbsp;
+Example:
+<pre>
+<font color=green>*** ChanOp sets mode: +f [20j,50m,7n]:15</font>
+&lt;ChanOp&gt; lalala
+<font color=green>*** Evil1 (~fdsdsfddf@Clk-17B4D84B.blah.net) has joined #test
+*** Evil2 (~jcvibhcih@Clk-3472A942.xx.someispcom) has joined #test
+*** Evil3 (~toijhlihs@Clk-38D374A3.aol.com) has joined #test
+*** Evil4 (~eihjifihi@Clk-5387B42F.dfdfd.blablalba.be) has joined #test</font>
+-- snip XX lines --
+<font color=green>*** Evil21 (~jiovoihew@Clk-48D826C3.e.something.org) has joined #test</font>
+<font color=brown>-server1.test.net:#test *** Channel joinflood detected (limit is 20 per 15 seconds), putting +i</font>
+<font color=green>*** server1.test.net sets mode: +i</font>
+&lt;Evil2&gt; fsdjfdshfdkjfdkjfdsgdskjgsdjgsdsdfsfdujsflkhsfdl
+&lt;Evil12&gt; fsdjfdshfdkjfdkjfdsgdskjgsdjgsdsdfsfdujsflkhsfdl
+&lt;Evil15&gt; fsdjfdshfdkjfdkjfdsgdskjgsdjgsdsdfsfdujsflkhsfdl
+&lt;Evil10&gt; fsdjfdshfdkjfdkjfdsgdskjgsdjgsdsdfsfdujsflkhsfdl
+&lt;Evil8&gt; fsdjfdshfdkjfdkjfdsgdskjgsdjgsdsdfsfdujsflkhsfdl
+-- snip XX lines --
+<font color=brown>-server1.test.net:#test *** Channel msg/noticeflood detected (limit is 50 per 15 seconds), putting +m</font>
+<font color=green>*** server1.test.net sets mode: +m</font>
+<font color=green>*** Evil1 is now known as Hmmm1</font>
+<font color=green>*** Evil2 is now known as Hmmm2</font>
+<font color=green>*** Evil3 is now known as Hmmm3</font>
+<font color=green>*** Evil4 is now known as Hmmm4</font>
+<font color=green>*** Evil5 is now known as Hmmm5</font>
+<font color=green>*** Evil6 is now known as Hmmm6</font>
+<font color=green>*** Evil7 is now known as Hmmm7</font>
+<font color=green>*** Evil8 is now known as Hmmm8</font>
+<font color=brown>-server1.test.net:#test *** Channel nickflood detected (limit is 7 per 15 seconds), putting +N</font>
+<font color=green>*** server1.test.net sets mode: +N</font>
+</pre>
+
+Instead of the default action, you can for some floodtypes specify another one, for example: <i>+f [20j#R,50m#M]:15</i><br>
+This will set the channel +R if the joinlimit is reached (&gt;20 joins in 15 seconds),
+and will set the channel +M if the msg limit is reached (&gt;50 messages in 15 seconds).<br>
+Look at the table above to see more options.<br>
+<br>
+The old +f mode (msgflood per-user) is also still available as 't', +f 10:6 is now called +f [10t]:6 and 
++f *20:10 is now +f [20t#b]:10. Currently the ircd will automatically convert old +f mode types to new ones.<br>
+</p></div>
 
 <p><font size="+2"><b>3.13 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
 <p>UnrealIRCd has a lot of features so not everything is covered here... You'll find that out by yourself.</p></div>
@@ -423,7 +489,7 @@ class &lt;name&gt; {
 <p><b>maxclients</b> specifies the maximum (total) number of clients/servers which can be in this class</p>
 <p><b>sendq</b> specifies the amount of data which can be in the send queue (very high for servers with low bandwith, medium for clients)</p>
 <p><b>recvq</b> specifies the amount of data which can be in the receive queue and is used for flood control 
- (this only applies to normal users, try experimenting with values 3000-8000, >8000 is no difference and 8000 is the default).</p>
+ (this only applies to normal users, try experimenting with values 3000-8000, 8000 is the default).</p>
 <p>Examples:<br>
 <pre>
 class clients {
@@ -526,7 +592,7 @@ listen &lt;ip:port&gt; {
   no options are required, you may specify this without any directives in the 
   form listen &lt;ip:port&gt;;.</p>
 <p><b>ip and port</b><br>
-  ip is usually set at * but you can specify an IP here to only bind to that IP. 
+  You can set ip to * to bind to all available ips, or specify one to only bind to that ip (usually needed at shell providers).
   The port is the port you want to listen on. You can also set the port to a range rather than an individual
   value. For example, 6660-6669 would listen on ports 6660 through 6669 (inclusive). IPv6 users, see below.</p>
 <p><b>Info for IPv6 users</b><br>
@@ -534,7 +600,7 @@ listen &lt;ip:port&gt; {
   Like [::1]:6667 (listen at localhost on port 6667). If you are using IPv6 and you 
   want to listen at a specific IPv4 addr you need to use ::ffff:ipv4ip. For example: 
   [::ffff:203.123.67.1]:6667 which will listen at 203.123.67.1 on port 6667. 
-  Ofcourse you can also just use * with IPv6.</p>
+  Ofcourse you can also just use *.</p>
 <p><b>options block</b> (optional)<br>
   You can specify special options for this port if you want, valid options are:<br>
 <table border="0">
@@ -557,6 +623,7 @@ listen *:6601 {
 </pre></p>
 <p>Or if there are no options:</p>
 <p>listen *:8067;<br>
+  listen 213.12.31.126:6667;<br>
   listen *:6660-6669;</p></div>
 <p><font class="block_section">4.7 - </font><font class="block_name">Oper Block</font>
    <font class="block_recommended">RECOMMENDED</font> <font class="block_old">(Previously known as the O:Line)</font><a name="operblock"></a><div class="desc">
@@ -690,11 +757,6 @@ listen *:6601 {
     <td>Can use /kline -u@h</td>
   </tr>
   <tr> 
-    <td><div align="center">t</div></td>
-    <td><div align="center">can_gkline</div></td>
-    <td>Can use /gline and /shun</td>
-  </tr>
-  <tr> 
     <td><div align="center">n</div></td>
     <td><div align="center">can_localnotice</div></td>
     <td>Can send local server notices</td>
@@ -732,7 +794,7 @@ listen *:6601 {
   <tr> 
     <td><div align="center">v</div></td>
     <td><div align="center">can_override</div></td>
-    <td>Can use OperOverride</td>
+    <td>Can use <a href="#operoverride">OperOverride</a></td>
   </tr>
 </table>
 <p>Certin flags give you other flags by default:</p>
@@ -760,10 +822,10 @@ listen *:6601 {
   </tr>
   <tr> 
     <td>can_globops</td>
-    <td>can_glopops</td>
-    <td>can_glopops</td>
-    <td>can_glopops</td>
-    <td>can_glopops</td>
+    <td>can_globops</td>
+    <td>can_globops</td>
+    <td>can_globops</td>
+    <td>can_globops</td>
   </tr>
   <tr> 
     <td>can_wallops</td>
@@ -851,6 +913,11 @@ oper bobsmith {
 	snomask frebWqFv;
 };
 </pre></p>
+<a name="operoverride"><b>Some little info about OperOverride:</b><br>
+OperOverride are things like: joining a +ikl channel and going trough bans (you need to /invite yourself first however), 
+op'ing yourself in a channel, etc.<br>
+The can_override operflag was added as an attempt to stop oper abuse.
+No oper is able to override by default, you would have to give them the can_override flag explicitly.
 <p> </p></div>
 <p><font class="block_section">4.8 - </font><font class="block_name">DRpass Block</font>
    <font class="block_recommended">RECOMMENDED</font> <font class="block_old">(Previously known as the X:Line)</font><a name="drpassblock"></a><div class="desc">
@@ -1064,9 +1131,11 @@ ban server {
 	mask &lt;server-name&gt;;
 	reason &lt;reason-for-ban&gt;;
 };</pre></p>
-<p>This block disables a server's ability to connect to your server. The ban::mask 
-  field specifies a wildcard mask to match against the server attempting to connect's 
-  name, and ban::reason specifies the reason for which this ban has been placed.</p>
+<p>This block disables a server's ability to connect to the network. If the server links 
+  directly to your server, the link is denied. If the server links to a remote server, the 
+  local server will disconnect from the network. The ban::mask field specifies a wildcard
+  mask to match against the server attempting to connect's name, and ban::reason specifies 
+  the reason for which this ban has been placed.</p>
 <p>Example:<br>
 <pre>
 ban server {
@@ -1257,19 +1326,28 @@ deny channel {
 	channel "&lt;channel-mask&gt;";
 	reason &lt;reason-for-ban&gt;;
 	redirect "&lt;channel-name&gt;";
+	warn [on|off];
 };</pre></p>
 <p> </p>
 <p>The deny channel block allows you to disallow users from joining specific channels. 
-  The deny::channel directive specifies a wildcard mask of channels the users 
-  may not join, and the deny::reason specifies the reason why the channel may 
-  not be joined. Additionally, you may specify a deny::redirect. If this is specified,
+  The <b>deny::channel</b> directive specifies a wildcard mask of channels the users 
+  may not join, and the <b>deny::reason</b> specifies the reason why the channel may 
+  not be joined. Additionally, you may specify a <b>deny::redirect</b>. If this is specified,
   when a user tries to join a channel that matches deny::channel, he/she will be redirected
-  to deny::redirect.</p>
+  to deny::redirect. And there's also <b>deny::warn</b> which (if set to on) will send an
+  opernotice (to EYES snomask) if the user tries to join.
+</p>
 <p>Example</p>
 <pre>
 deny channel {
 	channel "#unrealsucks";
 	reason "No it don't!";
+};
+
+deny channel {
+	channel "#*teen*sex*";
+	reason "You == dead";
+	warn on;
 };
 
 deny channel {
@@ -1347,9 +1425,9 @@ badword &lt;type&gt; {
 };</pre></p>
 <p>The badword block allows you to manipulate the list used for user and channel 
   mode +G to strip "badwords". The badword:: specifies the type, valid 
-  types are channel, message, and quit, channel is for the channel +G list, message 
-  is for the user +G list, and quit is for quit message censoring. The badword::word
-  can be a simple word or a regular expression we should search for. The 
+  types are channel, message, quit, and all. channel is for the channel +G list, message 
+  is for the user +G list, quit is for quit message censoring, and all adds it to all three lists. 
+  The badword::word can be a simple word or a regular expression we should search for. The 
   badword::replace is what we should replace this match with. If badword::replace 
   is left out, the word is replaced with &lt;censored&gt;. The badword::action defines
   what action should be taken if this badword is found. If you specify replace, then the
@@ -1554,17 +1632,39 @@ help &lt;name&gt; {
   for the help block are the text that will be displayed to the user when requesting 
   the /helpop.</p>
 <p></p></div>
-<p><font class="block_section">4.33 - </font><font class="block_name">Set Block</font>
+
+<p><font class="block_section">4.33 - </font><font class="block_name">Official Channels Block</font>
+   <font class="block_optional">OPTIONAL</font><a name="officialchannels"></a>
+</p><div class="desc">
+<p>Syntax:<br>
+<pre>
+official-channels {
+	"#channel" { topic "The default topic"; };
+};</pre></p>
+<p>Official channels are shown in /list even if no users are in the channel.
+   The <b>topic</b> is optional and is only shown in /list if it has 0 users.
+</p>
+
+<p>Example:<br>
+<pre>
+official-channels {
+	"#Help" { topic "The official help channel, if nobody is present type /helpop helpme"; };
+	"#Home";
+	"#Main" { topic "The main channel"; };
+};</pre></p>
+</div>
+
+<p><font class="block_section">4.34 - </font><font class="block_name">Set Block</font>
    <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as unrealircd.conf/networks file)</font><a name="setblock"></a>
 </p><div class="desc">
 <p>The set file is what use to be our networks/unrealircd.conf and our networks 
   file. On single server networks, rather than have 3 files, on single server 
   networks, you can just include the set statements in the unrealircd.conf, on 
   multi-server networks, i recommend still using a networks file.</p>
-<p>Now, if your server is on a network, chances are you will all basically use 
-  the same Set settings. Therefore it makes more sense to have a network file, 
-  which is loaded with a include:: directive. Below you will find all of the set 
-  directives available.</p>
+  <p>Now, if your server is on a network, chances are you will all basically use 
+    the same Set settings. Therefore it makes more sense to have a network file, 
+    which is loaded with a include:: directive. Refer to section <a href="#includedirective">4.9</a>. 
+    Below you will find all of the set directives available.</p>
 <p>In this doc we refer to settings / directives in the &lt;block-name&gt;::&lt;block-directive&gt; 
   format. This format is NOT the format that it can be entered into the configuration 
   file. IT MUST be converted to the format listed below. It is presented in the 
@@ -1644,9 +1744,17 @@ set {
 <p><font class="set">set::oper-only-stats &lt;stats-list&gt;;</font><br>
   Specifies a list of stats flags with no seperators that defines stats flags 
   only opers can use. Leave this value out to allow users to use all flags, or 
-  specify * for users to be able to use no flags.</p>
+  specify * for users to be able to use no flags. Only short operflags may be specifed
+  here.</p>
+<p><font class="set">set::oper-only-stats {&lt;stats-flag&gt;; &lt;stats-flag&gt;;};</font><br>
+  Specifies a list of stats flags that can only be used by opers. This only works with long
+  stats flags.</p>
 <p><font class="set">set::maxchannelsperuser &lt;amount-of-channels&gt;;</font><br>
   Specifies the number of channels a single user may be in at any one time.</p>
+<p><font class="set">set::channel-command-prefix &lt;command-prefixes&gt;;</font><br>
+  Specifies the prefix characters for services "in channel commands". Messages starting with 
+  any of the specified characters will still be sent even if the client is +d. The default 
+  value is "`".</p>
 <p><font class="set">set::allow-userhost-change [never|always|not-on-channels|force-rejoin]</font><br>
   Specifies what happens when the user@host changes (+x/-x/chghost/chgident/setident/vhost/etc).<br>
   <i>never</i> disables all the commands, <i>always</i> does always allow it even when in channels 
@@ -1753,20 +1861,29 @@ set {
  <p><font class="set">set::anti-flood::unknown-flood-amount &lt;amount&gt;;</font><br>
   Specifies the amount of data (in KiloBytes) that the unknown connection must send
   in order for the user to be killed.</p>
- <p><font class="set">set::anti-flood::away-count &lt;amount&gt;;</font><br>
-  Specifies the number of aways a user must execute before flood protection is triggered.
-  This requires NO_FLOOD_AWAY to be defined.</p>
- <p><font class="set">set::anti-flood::away-period &lt;timevalue&gt;;</font><br>
-  Specifies the amount of time in which the set::anti-flood::away-count of /aways must be
-  executed for flood protection to be triggered. This requires NO_FLOOD_AWAY to be defined.</p>
+ <p><font class="set">set::anti-flood::away-flood &lt;count&gt;:&lt;period&gt;</font><br>
+  Away flood protection: limits /away to 'count' changes per 'period' seconds.
+  This requires NO_FLOOD_AWAY to be enabled in config.h. Example: <i>away-flood 5:60s;</i>
+  means max 5 changes per 60 seconds.</p>
+ <p><font class="set">set::anti-flood::nick-flood &lt;count&gt;:&lt;period&gt;</font><br>
+  Nickflood protection: limits nickchanges to 'count' per 'period' seconds.
+  For example <i>nick-flood 4:90</i> means 4 per 90 seconds, the default is 3 per 60.</p>
+ <p><font class="set">set::default-bantime &lt;time&gt;</font><br>
+  Default bantime when doing /kline, /gline, /zline, /shun, etc without time parameter 
+  (like /gline *@some.nasty.isp), the default is permanent (0). Example: <i>default-bantime 90d;</i></p>
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; Additional Files<a name="addtlfiles"></a>
   </font></b></p><div class="desc">
   In addition to the configuration files, Unreal has a few other files, such as MOTD, OperMOTD, 
-  BotMOTD, and Rules. Listed below are the names of these files and their uses.
+  BotMOTD, and Rules. Listed below are the names of these files and their uses.<br>
+  Note that the motd files (all types) and rules files can also be specified in a tld block, 
+  these are just the files used by default (and for remote MOTD/RULES's).<p />&nbsp;
 <table width="83%" border="1">
   <tr>
-    <td>ircd.motd</td><td>Displayed when a /motd is executed and when a user connects</td> 
+    <td>ircd.motd</td><td>Displayed when a /motd is executed and (if ircd.smotd is not present) when a user connects</td> 
+  </tr>
+  <tr>
+    <td>ircd.smotd</td><td>Displayed on connect only (short MOTD)</td>
   </tr>
   <tr>
     <td>ircd.rules</td><td>Displayed when a /rules is executed</td>
@@ -1993,7 +2110,7 @@ set {
   </tr>
   <tr> 
     <td><div align="center">d</div></td>
-    <td>Makes it so you can not receive private messages</td>
+    <td>Makes it so you can not receive channel PRIVMSGs</td>
   </tr>
   <tr> 
     <td><div align="center">k</div></td>
@@ -2023,13 +2140,25 @@ set {
     <td><div align="center">p</div></td>
     <td>Hides the channels you are in in a /whois reply</td>
   </tr>
+  <tr> 
+    <td><div align="center">R</div></td>
+    <td>Allows you to only receive PRIVMSGs/NOTICEs from registered (+r) users</td>
+  </tr>
+  <tr> 
+    <td><div align="center">V</div></td>
+    <td>Marks you as a WebTV user</td>
+  </tr>
+  <tr>
+    <td><div align="center">z</div></td>
+    <td>Indicates that you are an SSL client</td>
+  </tr>
 </table>
 <p></p></div>
 <p><font size="+2"><b>7 &#8211; User & Oper Commands Table<a name="useropercommands" id="useropercommands"></a></b></font></p><div class="desc">
 <p>NOTE: the /helpop documentation is more up to date, use <i>/helpop command</i> (or <i>/helpop ?command</i> if you are oper) 
 to get more information on a command.</p>
 
-<table width="75%" border="1">
+<table width="90%" border="1">
   <tr> 
     <td width="33%"><div align="center"><b>Command</b></div></td>
     <td width="57%"><div align="center"><b>Description</b></div></td>
@@ -2072,9 +2201,9 @@ to get more information on a command.</p>
     <td>All</td>
   </tr>
   <tr> 
-    <td height="39">part &lt;channel1, channel2, ...&gt;</td>
-    <td>Allows you to part (leave) channels. Using the /part #channel1, #channel2, 
-      channel3 will allow you to part more than one channel at a time. </td>
+    <td height="39">cycle &lt;channel1, channel2, ...&gt;</td>
+    <td>Cycles the given channel(s). This command is equivilent
+      to sending a PART then a JOIN command.</td>
     <td>All</td>
   </tr>
   <tr> 
@@ -2249,12 +2378,21 @@ to get more information on a command.</p>
     <td>All</td>
   </tr>
   <tr> 
+    <td height="39">dns &lt;option&gt;</td>
+    <td>Returns information about the IRC server's DNS cache.
+        Note, since most clients have a builtin DNS command,
+        you will most likely need to use /raw DNS to use this.
+        Opers may specify an l as the first parameter to the command
+        to receive a list of entries in the DNS cache.</td>
+    <td>All</td>
+  </tr>
+  <tr> 
     <td height="39">oper &lt;userid&gt; &lt;password&gt;<br></td>
     <td>Command to give a user operator status if they match an Oper Block<br></td>
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">wallop &lt;message&gt;</td>
+    <td height="39">wallops &lt;message&gt;</td>
     <td>Sends a message to all users with umode +w</td>
     <td>IRCop</td>
   </tr>
@@ -2307,8 +2445,8 @@ to get more information on a command.</p>
   </tr>
   <tr> 
     <td height="39">shun +-&lt;user@host&gt; &lt;time to shun&gt; :&lt;reason&gt;<br></td>
-    <td>Prevents a user from executing ANY commands on the server, and prevents 
-      them from speaking. Time to shun is in seconds, or you can use 1d for 1 days. 
+    <td>Prevents a user from executing ANY commands and prevents them from speaking. 
+      Shuns are global (like glines). Time to shun is in seconds, or you can use 1d for 1 days. 
       To remove a shun, put a &#8211;user@host. Setting time to 0 makes it permanent. 
       <br></td>
     <td>IRCop</td>
@@ -2495,43 +2633,64 @@ to get more information on a command.</p>
   </tr>
   <tr>
     <td height="36">stats &lt;option&gt;<br></td>
-    <td>b - Send the badwords list<br>
-      C - Send the link block list<br>
-      d - Send the deny link (auto) block list<br>
-      D - Send the deny link (all) block list<br>
-      e - Send the except socks block list<br>
-      E - Send the except ban block list<br>
-      F - Send the deny dcc block list<br>
-      G - Report TKL information (G:lines/Shuns)<br>
-      H - Send the link block list<br>
-      I - Send the allow block list<br>
-      K - Send the ban user/ban ip/except ban block list (Includes AKILLs)<br>
-      L - Send Link information<br>
-      m - Send the events list<br>
-      M - Send list of how many times each command was used<br>
-      n - Send the ban realname block list<br>
-      N - Send network configuration list<br>
-      O - Send the oper block list<br>
-      q - Send the SQLINE list<br>
-      Q - Send the ban nick block list<br>
-      r - Send the channel deny/allow block list<br>
-      s - Send the SCache and NS list<br>
-      S - Send the dynamic configuration list<br>
-      t - Send the tld block list<br>
-      T - Send connection information<br>
-      u - Send server uptime and connection count<br>
-      U - Send the ulines block list<br>
-      v - Send the deny version block list<br>
-      V - Send the vhost block list<br>
-      y - Send the class block list<br>
-      Z - Send memory usage information</td>
-    <td>Admin</td>
+	<td>
+	B - banversion - Send the ban version list<br>
+	b - badword - Send the badwords list<br>
+	C - link - Send the link block list<br>
+	d - denylinkauto - Send the deny link (auto) block list<br>
+	D - denylinkall - Send the deny link (all) block list<br>
+	e - excepthrottle - Send the except trottle block list<br>
+	E - exceptban - Send the except ban block list<br>
+	F - denydcc - Send the deny dcc block list<br>
+	G - gline - Send the gline list<br>
+	&nbsp;&nbsp;Extended flags: [+/-mrs] [mask] [reason] [setby]<br>
+	&nbsp;&nbsp;&nbsp;&nbsp;m Return glines matching/not matching the specified mask<br>
+	&nbsp;&nbsp;&nbsp;&nbsp;r Return glines with a reason matching/not matching the specified reason<br>
+   	&nbsp;&nbsp;&nbsp;&nbsp;s Return glines set by/not set by clients matching the specified name<br>
+	I - allow - Send the allow block list<br>
+	K - kline - Send the ban user/ban ip/except ban block list<br>
+	l - linkinfo - Send link information<br>
+	L - linkinfoall - Send all link information<br>
+	M - command - Send list of how many times each command was used<br>
+	n - banrealname - Send the ban realname block list<br>
+	O - oper - Send the oper block list<br>
+	S - set - Send the set block list<br>
+	s - shun - Send the shun list<br>
+  	&nbsp;&nbsp;Extended flags: [+/-mrs] [mask] [reason] [setby]<br>
+	&nbsp;&nbsp;&nbsp;&nbsp;m Return shuns matching/not matching the specified mask<br>
+	&nbsp;&nbsp;&nbsp;&nbsp;r Return shuns with a reason matching/not matching the specified reason<br>
+	&nbsp;&nbsp;&nbsp;&nbsp;s Return shuns set by/not set by clients matching the specified name<br>
+	P - port - Send information about ports<br>
+	q - sqline - Send the SQLINE list<br>
+	Q - bannick - Send the ban nick block list<br>
+	r - chanrestrict - Send the channel deny/allow block list<br>
+	R - usage - Send usage information<br>
+	t - tld - Send the tld block list<br>
+	T - traffic - Send traffic information<br>
+	u - uptime - Send the server uptime and connection count<br>
+	U - uline - Send the ulines block list<br>
+	v - Send the deny version block list<br>
+	V - Send the vhost block list<br>
+	X - notlink - Send the list of servers that are not current linked<br>
+	Y - class - Send the class block list<br>
+	z - zip - Send compression information about ziplinked servers (if compiled with ziplinks support)<br>
+	Z - mem - Send memory usage information<br>
+	</td>
+    <td>All</td>
   </tr>
   <tr>
     <td height="36">module<br></td>
     <td>
 	Lists all loaded modules
+     </td>
     <td>Admin</td>
+  </tr>
+  <tr>
+    <td height="36">close<br></td>
+    <td>
+	This command will disconnect all unknown connections from the IRC server.
+    </td>
+    <td>IRCOp</td>
   </tr>
 </table>
 

@@ -177,15 +177,15 @@ anUser *make_user(aClient *cptr)
 	user = cptr->user;
 	if (!user)
 	{
-		user = (anUser *)MyMalloc(sizeof(anUser));
+		user = (anUser *)MyMallocEx(sizeof(anUser));
 #ifdef	DEBUGMODE
 		users.inuse++;
 #endif
 		user->swhois = NULL;
 		user->away = NULL;
 #ifdef NO_FLOOD_AWAY
-		user->last_away = 0;
-		user->away_count = 0;
+		user->flood.away_t = 0;
+		user->flood.away_c = 0;
 #endif
 		user->refcnt = 1;
 		user->joined = 0;
@@ -211,7 +211,7 @@ aServer *make_server(aClient *cptr)
 
 	if (!serv)
 	{
-		serv = (aServer *)MyMalloc(sizeof(aServer));
+		serv = (aServer *)MyMallocEx(sizeof(aServer));
 #ifdef	DEBUGMODE
 		servs.inuse++;
 #endif
@@ -275,7 +275,10 @@ void remove_client_from_list(aClient *cptr)
 			IRCstats.invisible--;
 		}
 		if (IsOper(cptr) && !IsHideOper(cptr))
+		{
 			IRCstats.operators--;
+			VERIFY_OPERCOUNT(cptr, "rmvlist");
+		}
 		IRCstats.clients--;
 		if (cptr->srvptr && cptr->srvptr->serv)
 			cptr->srvptr->serv->users--;

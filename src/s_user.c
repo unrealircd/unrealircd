@@ -56,29 +56,13 @@ void send_umode_out(aClient *, aClient *, long);
 void send_umode_out_nickv2(aClient *, aClient *, long);
 void send_umode(aClient *, aClient *, long, long, char *);
 void set_snomask(aClient *, char *);
-int create_snomask(char *, int);
+void create_snomask(aClient *, anUser *, char *);
 extern int short_motd(aClient *sptr);
-char *get_snostr(long sno);
 /* static  Link    *is_banned(aClient *, aChannel *); */
 int  dontspread = 0;
 extern char *me_hash;
 extern char backupbuf[];
 static char buf[BUFSIZE];
-
-int sno_mask[] = { 
-	SNO_KILLS, 'k',
-	SNO_CLIENT, 'c',
-	SNO_FLOOD, 'f',
-	SNO_FCLIENT, 'F',
-	SNO_JUNK, 'j',
-	SNO_VHOST, 'v',
-	SNO_EYES, 'e',
-	SNO_TKL, 'G',
-	SNO_NICKCHANGE, 'n',
-	SNO_QLINE, 'q',
-	SNO_SNOTICE, 's',
-	0, 0
-};
 
 void iNAH_host(aClient *sptr, char *host)
 {
@@ -367,6 +351,9 @@ int  hunt_server(aClient *cptr, aClient *sptr, char *command, int server, int pa
 			if (IsRegistered(acptr) && (acptr != cptr))
 				break;
 		}
+	/* Fix for unregistered client receiving msgs: */
+	if (acptr && MyConnect(acptr) && IsUnknown(acptr))
+		acptr = NULL;
 	if (acptr)
 	{
 		if (IsMe(acptr) || MyClient(acptr))
@@ -443,6 +430,9 @@ int  hunt_server_token(aClient *cptr, aClient *sptr, char *command, char *token,
 			if (IsRegistered(acptr) && (acptr != cptr))
 				break;
 		}
+	/* Fix for unregistered client receiving msgs: */
+	if (acptr && MyConnect(acptr) && IsUnknown(acptr))
+		acptr = NULL;
 	if (acptr)
 	{
 		char buff[1024];
@@ -559,6 +549,7 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 	for (p = sptr->targets; p < &sptr->targets[MAXTARGETS - 1];)
 		if (*++p == hash)
 		{
+			/* move targethash to first position... */
 			memmove(&sptr->targets[1], &sptr->targets[0],
 			    p - sptr->targets);
 			sptr->targets[0] = hash;
@@ -570,7 +561,7 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 		sptr->since += TARGET_DELAY; /* lag them up */
 		sptr->nexttarget += TARGET_DELAY;
 		sendto_one(sptr, err_str(ERR_TARGETTOOFAST), me.name, sptr->name,
-			name);
+			name, sptr->nexttarget - TStime());
 
 		return 1;
 	}
@@ -1191,7 +1182,7 @@ CMD_FUNC(m_nick)
 	Membership *mp;
 	time_t lastnick = (time_t) 0;
 	int  differ = 1, update_watch = 1;
-
+	unsigned char newusr = 0;
 	/*
 	 * If the user didn't specify a nickname, complain
 	 */
@@ -1206,6 +1197,19 @@ CMD_FUNC(m_nick)
 		*s = '\0';
 
 	strncpyzt(nick, parv[1], NICKLEN + 1);
+
+	if (MyConnect(sptr) && sptr->user && !IsAnOper(sptr))
+	{
+		if ((sptr->user->flood.nick_c >= NICK_COUNT) && 
+		    (TStime() - sptr->user->flood.nick_t < NICK_PERIOD))
+		{
+			/* Throttle... */
+			sendto_one(sptr, err_str(ERR_NCHANGETOOFAST), me.name, sptr->name, nick,
+				(int)(NICK_PERIOD - (TStime() - sptr->user->flood.nick_t)));
+			return 0;
+		}
+	}
+
 	/*
 	 * if do_nick_name() returns a null name OR if the server sent a nick
 	 * name and do_nick_name() changed it in some way (due to rules of nick
@@ -1315,10 +1319,12 @@ CMD_FUNC(m_nick)
 			    (aClient *)find_server_b64_or_real(sptr->user ==
 			    NULL ? (char *)parv[6] : (char *)sptr->user->
 			    server);
-			sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s", nick,
-			    (*sptr->name != 0
-			    && !IsServer(sptr) ? sptr->name : "<unregistered>"),
-			    acptrs ? acptrs->name : "unknown server");
+			/* (NEW: no unregistered q:line msgs anymore during linking) */
+			if (!acptrs || (acptrs->serv && acptrs->serv->flags.synced))
+				sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s", nick,
+				    (*sptr->name != 0
+				    && !IsServer(sptr) ? sptr->name : "<unregistered>"),
+				    acptrs ? acptrs->name : "unknown server");
 		}
 		else
 		{
@@ -1668,7 +1674,7 @@ CMD_FUNC(m_nick)
 		{
 			for (mp = cptr->user->channel; mp; mp = mp->next)
 			{
-				if (is_banned(cptr, &me, mp->chptr))
+				if (is_banned(cptr, &me, mp->chptr) && !is_chanownprotop(cptr, mp->chptr))
 				{
 					sendto_one(cptr,
 					    err_str(ERR_BANNICKCHANGE),
@@ -1687,6 +1693,14 @@ CMD_FUNC(m_nick)
 					return 0;
 				}
 			}
+
+			if (TStime() - sptr->user->flood.nick_t >= NICK_PERIOD)
+			{
+				sptr->user->flood.nick_t = TStime();
+				sptr->user->flood.nick_c = 1;
+			} else
+				sptr->user->flood.nick_c++;
+
 			sendto_snomask(SNO_NICKCHANGE, "*** Notice -- %s (%s@%s) has changed his/her nickname to %s", sptr->name, sptr->user->username, sptr->user->realhost, nick);
 
 			RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, sptr, nick);
@@ -1775,7 +1789,7 @@ CMD_FUNC(m_nick)
 			    sptr->user->username, NULL, NULL) == FLUSH_BUFFER)
 				return FLUSH_BUFFER;
 			update_watch = 0;
-
+			newusr = 1;
 		}
 	}
 	/*
@@ -1802,6 +1816,25 @@ CMD_FUNC(m_nick)
 	else if (IsPerson(sptr) && update_watch)
 		hash_check_watch(sptr, RPL_LOGON);
 
+#ifdef NEWCHFLOODPROT
+	if (sptr->user && !newusr)
+	{
+		for (mp = sptr->user->channel; mp; mp = mp->next)
+		{
+			aChannel *chptr = mp->chptr;
+			if (chptr && !(mp->flags & (CHFL_CHANOP|CHFL_VOICE|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_CHANPROT)) &&
+			    chptr->mode.floodprot && do_chanflood(chptr->mode.floodprot, FLD_NICK) && MyClient(sptr))
+			{
+				do_chanflood_action(chptr, FLD_NICK, "nick");
+			}
+		}	
+	}
+#endif
+	if (newusr && !MyClient(sptr) && IsPerson(sptr))
+	{
+		RunHook(HOOKTYPE_REMOTE_CONNECT, sptr);
+	}
+
 	return 0;
 }
 
@@ -1812,16 +1845,15 @@ CMD_FUNC(m_nick)
 ** returns an ascii string of modes
 */
 char *get_sno_str(aClient *sptr) {
-	int flag;
-	int *s;
+	int i;
 	char *m;
 
 	m = buf;
 
 	*m++ = '+';
-	for (s = sno_mask; (flag = *s) && (m - buf < BUFSIZE - 4); s += 2)
-		if (sptr->user->snomask & flag)
-			*m++ = (char)(*(s + 1));
+	for (i = 0; i <= Snomask_highest && (m - buf < BUFSIZE - 4); i++)
+		if (Snomask_Table[i].flag && sptr->user->snomask & Snomask_Table[i].mode)
+			*m++ = Snomask_Table[i].flag;
 	*m = 0;
 	return buf;
 }
@@ -1834,7 +1866,6 @@ char *get_mode_str(aClient *acptr)
 	m = buf;
 	*m++ = '+';
 	for (i = 0; (i <= Usermode_highest) && (m - buf < BUFSIZE - 4); i++)
-		
 		if (Usermode_Table[i].flag && (acptr->umodes & Usermode_Table[i].mode))
 			*m++ = Usermode_Table[i].flag;
 	*m = '\0';
@@ -1858,16 +1889,15 @@ char *get_modestr(long umodes)
 }
 
 char *get_snostr(long sno) {
-	int flag;
-	int *s;
+	int i;
 	char *m;
 
 	m = buf;
 
 	*m++ = '+';
-	for (s = sno_mask; (flag = *s) && (m - buf < BUFSIZE - 4); s += 2)
-		if (sno & flag)
-			*m++ = (char)(*(s + 1));
+	for (i = 0; i <= Snomask_highest && (m - buf < BUFSIZE - 4); i++)
+		if (Snomask_Table[i].flag && sno & Snomask_Table[i].mode)
+			*m++ = Snomask_Table[i].flag;
 	*m = 0;
 	return buf;
 }
@@ -1975,7 +2005,7 @@ CMD_FUNC(m_user)
 		if (CONNECT_SNOMASK)
 		{
 			sptr->umodes |= UMODE_SERVNOTICE;
-			user->snomask = create_snomask(CONNECT_SNOMASK, 0);
+			create_snomask(sptr, user, CONNECT_SNOMASK);
 		}
 	}
 
@@ -2030,6 +2060,7 @@ CMD_FUNC(m_pass)
 		    me.name, parv[0]);
 		return 0;
 	}
+
 	PassLen = strlen(password);
 	if (cptr->passwd)
 		MyFree(cptr->passwd);
@@ -2037,6 +2068,9 @@ CMD_FUNC(m_pass)
 		PassLen = PASSWDLEN;
 	cptr->passwd = MyMalloc(PassLen + 1);
 	strncpyzt(cptr->passwd, password, PassLen + 1);
+
+	/* note: the original non-truncated password is supplied as 2nd parameter. */
+	RunHookReturnInt2(HOOKTYPE_LOCAL_PASS, sptr, password, !=0);
 	return 0;
 }
 
@@ -2161,7 +2195,7 @@ CMD_FUNC(m_ison)
 void set_snomask(aClient *sptr, char *snomask) {
 	int what = MODE_ADD;
 	char *p;
-	int *s, flag;
+	int i;
 	if (snomask == NULL) {
 		sptr->user->snomask = 0;
 		return;
@@ -2176,28 +2210,32 @@ void set_snomask(aClient *sptr, char *snomask) {
 				what = MODE_DEL;
 				break;
 			default:
-				for (s = sno_mask; (flag = *s); s += 2)
-					if (*p == (char) (*(s + 1))) {
-						if (what == MODE_ADD)
-							sptr->user->snomask |= flag;
-						else
-							sptr->user->snomask &= ~flag;
-					}
-				
+		 	 for (i = 0; i <= Snomask_highest; i++)
+		 	 {
+		 	 	if (!Snomask_Table[i].flag)
+		 	 		continue;
+		 	 	if (*p == Snomask_Table[i].flag)
+		 	 	{
+					if (Snomask_Table[i].allowed && !Snomask_Table[i].allowed(sptr))
+						continue;
+		 	 		if (what == MODE_ADD)
+			 	 		sptr->user->snomask |= Snomask_Table[i].mode;
+			 	 	else
+			 	 		sptr->user->snomask &= ~Snomask_Table[i].mode;
+		 	 	}
+		 	 }				
 		}
-	}
-	if (!IsAnOper(sptr)) {
-		sptr->user->snomask &= (SNO_NONOPERS);
 	}
 }
 
-int create_snomask(char *snomask, int oper) {
+void create_snomask(aClient *sptr, anUser *user, char *snomask) {
 	int what = MODE_ADD;
 	char *p;
-	int *s, flag, sno = 0;
-	
-	if (snomask == NULL) 
-		return sno;
+	int i;
+	if (snomask == NULL) {
+		user->snomask = 0;
+		return;
+	}
 	
 	for (p = snomask; p && *p; p++) {
 		switch (*p) {
@@ -2208,20 +2246,22 @@ int create_snomask(char *snomask, int oper) {
 				what = MODE_DEL;
 				break;
 			default:
-				for (s = sno_mask; (flag = *s); s += 2)
-					if (*p == (char) (*(s + 1))) {
-						if (what == MODE_ADD)
-							sno |= flag;
-						else
-							sno &= ~flag;
-					}
-				
+		 	 for (i = 0; i <= Snomask_highest; i++)
+		 	 {
+		 	 	if (!Snomask_Table[i].flag)
+		 	 		continue;
+		 	 	if (*p == Snomask_Table[i].flag)
+		 	 	{
+					if (Snomask_Table[i].allowed && !Snomask_Table[i].allowed(sptr))
+						continue;
+		 	 		if (what == MODE_ADD)
+			 	 		user->snomask |= Snomask_Table[i].mode;
+			 	 	else
+			 	 		user->snomask &= ~Snomask_Table[i].mode;
+		 	 	}
+		 	 }				
 		}
 	}
-	if (!oper) {
-		sno &= (SNO_NONOPERS);
-	}
-	return sno;
 }
 
 /*
@@ -2428,7 +2468,6 @@ CMD_FUNC(m_umode)
 		ClearHideOper(sptr);
 		ClearCoAdmin(sptr);
 		ClearHelpOp(sptr);
-		sptr->user->snomask &= (SNO_NONOPERS);
 	}
 
 	/*
@@ -2457,9 +2496,10 @@ CMD_FUNC(m_umode)
 		if ((sptr->umodes & (UMODE_KIX)) && !IsNetAdmin(sptr) && !IsSAdmin(sptr))
 			sptr->umodes &= ~UMODE_KIX;
 
-		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
-		    && !IsSecure(sptr))
+		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE) && !IsSecure(sptr))
 			sptr->umodes &= ~UMODE_SECURE;
+		if (MyClient(sptr) && !(sptr->umodes & UMODE_SECURE) && IsSecure(sptr))
+			sptr->umodes |= UMODE_SECURE;
 	}
 	/*
 	 * For Services Protection...
@@ -2552,6 +2592,7 @@ CMD_FUNC(m_umode)
 			sptr->user->snomask &= ~SNO_NICKCHANGE;
 		if (sptr->user->snomask & SNO_QLINE)
 			sptr->user->snomask &= ~SNO_QLINE;
+		RunHook2(HOOKTYPE_LOCAL_OPER, sptr, 0);
 	}
 
 	if ((sptr->umodes & UMODE_BOT) && !(setflags & UMODE_BOT))
@@ -2563,10 +2604,16 @@ CMD_FUNC(m_umode)
 	if (!(setflags & UMODE_OPER) && IsOper(sptr))
 		IRCstats.operators++;
 	if ((setflags & UMODE_OPER) && !IsOper(sptr))
+	{
 		IRCstats.operators--;
+		VERIFY_OPERCOUNT(sptr, "umode1");
+	}
 	/* FIXME: This breaks something */
 	if (!(setflags & UMODE_HIDEOPER) && IsHideOper(sptr))
+	{
 		IRCstats.operators--;
+		VERIFY_OPERCOUNT(sptr, "umode2");
+	}
 	if ((setflags & UMODE_HIDEOPER) && !IsHideOper(sptr))
 		IRCstats.operators++;
 	if (!(setflags & UMODE_INVISIBLE) && IsInvisible(sptr))

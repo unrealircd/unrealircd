@@ -49,12 +49,8 @@ DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_CHGNAME     "CHGNAME"
 #define TOK_CHGNAME     "BK"
 
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_chgname_Header
-#else
-#define m_chgname_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+
+ModuleHeader MOD_HEADER(m_chgname)
   = {
 	"chgname",	/* Name of module */
 	"$Id$", /* Version */
@@ -64,16 +60,8 @@ ModuleHeader Mod_Header
     };
 
 
-/* The purpose of these ifdefs, are that we can "static" link the ircd if we
- * want to
-*/
-
 /* This is called on module init, before Server Ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    m_chgname_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_chgname)(ModuleInfo *modinfo)
 {
 	/*
 	 * We call our add_Command crap here
@@ -85,11 +73,7 @@ int    m_chgname_Init(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int    m_chgname_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_chgname)(int module_load)
 {
 	return MOD_SUCCESS;
 	
@@ -97,21 +81,17 @@ int    m_chgname_Load(int module_load)
 
 
 /* Called when module is unloaded */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_chgname_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(m_chgname)(int module_unload)
 {
 	if (del_Command(MSG_CHGNAME, TOK_CHGNAME, m_chgname) < 0)
 	{
 		sendto_realops("Failed to delete command chgname when unloading %s",
-				m_chgname_Header.name);
+				MOD_HEADER(m_chgname).name);
 	}
 	if (del_Command(MSG_SVSNAME, TOK_CHGNAME, m_chgname) < 0)
 	{
 		sendto_realops("Failed to delete command svsname when unloading %s",
-				m_chgname_Header.name);
+				MOD_HEADER(m_chgname).name);
 	}
 	return MOD_SUCCESS;
 	

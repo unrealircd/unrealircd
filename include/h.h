@@ -99,6 +99,7 @@ extern ConfigItem_log		*conf_log;
 extern ConfigItem_alias		*conf_alias;
 extern ConfigItem_include	*conf_include;
 extern ConfigItem_help		*conf_help;
+extern ConfigItem_offchans	*conf_offchans;
 extern int		completed_connection(aClient *);
 extern void clear_unknown();
 extern EVENT(tkl_check_expire);
@@ -110,7 +111,7 @@ extern EVENT(e_clean_out_throttling_buckets);
 extern void  module_loadall(int module_load);
 extern long set_usermode(char *umode);
 extern char *get_modestr(long umodes);
-extern void tkl_stats(aClient *cptr);
+extern void tkl_stats(aClient *cptr, int type, char *para);
 extern void                    config_error(char *format, ...);
 extern int			config_verbose;
 extern void config_progress(char *format, ...);
@@ -213,10 +214,10 @@ extern int dgets(int, char *, int);
 extern char *inetntoa(char *);
 
 #if !defined(HAVE_SNPRINT) || !defined(HAVE_VSNPRINTF)
-#ifndef _WIN32
+/* #ifndef _WIN32 XXX why was this?? -- Syzop. */
 extern int snprintf (char *str, size_t count, const char *fmt, ...);
 extern int vsnprintf (char *str, size_t count, const char *fmt, va_list arg);
-#endif
+/* #endif */
 #endif
 
 #ifdef _WIN32
@@ -371,11 +372,7 @@ extern void add_client_to_list(aClient *);
 extern void checklist();
 extern void remove_client_from_list(aClient *);
 extern void initlists();
-#ifndef _WIN32
 extern struct hostent *get_res(char *);
-#else
-extern struct hostent *get_res(char *, long);
-#endif
 extern struct hostent *gethost_byaddr(char *, Link *);
 extern struct hostent *gethost_byname(char *, Link *);
 extern void flush_cache();
@@ -437,6 +434,18 @@ extern long UMODE_SETHOST;   /* 0x40000000	 used sethost */
 extern long UMODE_STRIPBADWORDS; /* 0x80000000	 */
 extern long UMODE_HIDEWHOIS; /* hides channels in /whois */
 extern long AllUmodes, SendUmodes;
+
+extern long SNO_KILLS;
+extern long SNO_CLIENT;
+extern long SNO_FLOOD;
+extern long SNO_FCLIENT;
+extern long SNO_JUNK;
+extern long SNO_VHOST;
+extern long SNO_EYES;
+extern long SNO_TKL;
+extern long SNO_NICKCHANGE;
+extern long SNO_QLINE;
+extern long SNO_SNOTICE;
 
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *dst, const char *src, size_t size);
@@ -516,6 +525,7 @@ extern long xbase64dec(char *b64);
 extern aClient *find_server_b64_or_real(char *name);
 extern aClient *find_server_by_base64(char *b64);
 extern int is_chanownprotop(aClient *cptr, aChannel *chptr);
+extern int is_skochanop(aClient *cptr, aChannel *chptr);
 extern char *make_virthost(char *curr, char *new, int mode);
 extern int  channel_canjoin(aClient *sptr, char *name);
 extern char *collapse(char *pattern);
@@ -550,7 +560,7 @@ extern void       run_configuration(void);
 extern void rehash_motdrules();
 extern aMotd *read_file(char *filename, aMotd **list);
 extern aMotd *read_file_ex(char *filename, aMotd **list, struct tm *);
-CMD_FUNC(m_server_remote);
+extern CMD_FUNC(m_server_remote);
 extern void send_proto(aClient *, ConfigItem_link *);
 extern char *xbase64enc(long i);
 extern void unload_all_modules(void);
@@ -573,3 +583,34 @@ extern char trouble_info[1024];
 extern void rejoin_doparts(aClient *sptr);
 extern void rejoin_dojoinandmode(aClient *sptr);
 extern void ident_failed(aClient *cptr);
+
+extern char extchmstr[4][64];
+#ifdef EXTCMODE
+extern int extcmode_default_requirechop(aClient *, aChannel *, char *, int, int);
+extern int extcmode_default_requirehalfop(aClient *, aChannel *, char *, int, int);
+extern Cmode_t extcmode_get(Cmode *);
+extern void extcmode_init(void);
+extern CmodeParam *extcmode_get_struct(CmodeParam *, char);
+extern void make_extcmodestr();
+extern CmodeParam *extcmode_duplicate_paramlist(CmodeParam *);
+extern void extcmode_free_paramlist(CmodeParam *);
+#endif
+extern CMD_FUNC(m_eos);
+extern int do_chanflood(ChanFloodProt *, int);
+extern void do_chanflood_action(aChannel *, int, char *);
+extern char *channel_modef_string(ChanFloodProt *);
+extern void chmode_str(struct ChMode, char *, char *);
+extern char *get_cptr_status(aClient *);
+extern char *get_snostr(long);
+#ifdef _WIN32
+extern void InitDebug(void);
+extern int InitwIRCD(int argc, char **);
+extern void SocketLoop(void *);
+#endif
+#ifdef STATIC_LINKING
+extern int l_commands_Init(ModuleInfo *);
+extern int l_commands_Test(ModuleInfo *);
+extern int l_commands_Load(int);
+#endif
+extern void sendto_chmodemucrap(aClient *, aChannel *, char *);
+extern void verify_opercount(aClient *, char *);

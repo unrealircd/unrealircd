@@ -108,6 +108,7 @@ typedef struct _configitem_alias ConfigItem_alias;
 typedef struct _configitem_alias_format ConfigItem_alias_format;
 typedef struct _configitem_include ConfigItem_include;
 typedef struct _configitem_help ConfigItem_help;
+typedef struct _configitem_offchans ConfigItem_offchans;
 typedef struct liststruct ListStruct;
 
 #define CFG_TIME 0x0001
@@ -122,6 +123,7 @@ typedef struct Server aServer;
 typedef struct SLink Link;
 typedef struct SBan Ban;
 typedef struct SMode Mode;
+typedef struct SChanFloodProt ChanFloodProt;
 typedef struct ListOptions LOpts;
 typedef struct FloodOpt aFloodOpt;
 typedef struct MotdItem aMotd;
@@ -307,23 +309,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
  * -DuffJ
  */
 
-
-#define SNO_KILLS      0x0001
-#define SNO_CLIENT     0x0002
-#define SNO_FLOOD      0x0004
-#define SNO_FCLIENT    0x0008
-#define SNO_JUNK       0x0010
-#define SNO_VHOST      0x0020
-#define SNO_EYES       0x0040
-#define SNO_TKL        0x0080
-#define SNO_NICKCHANGE 0x0100
-#define SNO_QLINE      0x0200
-#define SNO_SNOTICE    0x0400
-
 #define SNO_DEFOPER "+kscfvGq"
 #define SNO_DEFUSER "+ks"
-
-#define SNO_NONOPERS (SNO_KILLS | SNO_SNOTICE)
 
 #define SEND_UMODES (SendUmodes)
 #define ALL_UMODES (AllUmodes)
@@ -376,7 +363,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsWebTV(x)		((x)->umodes & UMODE_WEBTV)
 #define	IsPerson(x)		((x)->user && IsClient(x))
 #define	IsPrivileged(x)		(IsAnOper(x) || IsServer(x))
-#define	SendWallops(x)		(!IsMe(x) && ((x)->umodes & UMODE_WALLOP))
+#define	SendWallops(x)		(!IsMe(x) && IsPerson(x) && ((x)->umodes & UMODE_WALLOP))
 #define	SendServNotice(x)	(((x)->user) && ((x)->user->snomask & SNO_SNOTICE))
 #define	IsListening(x)		((x)->flags & FLAGS_LISTEN)
 // #define	DoAccess(x)		((x)->flags & FLAGS_CHKACCESS)
@@ -642,6 +629,7 @@ struct aloopStruct {
 	unsigned do_garbage_collect : 1;
 	unsigned ircd_booted : 1;
 	unsigned do_bancheck : 1;
+	unsigned ircd_rehashing : 1;
 	unsigned tainted : 1;
 };
 
@@ -670,10 +658,6 @@ struct User {
 	Link *invited;		/* chain of invite pointer blocks */
 	Link *silence;		/* chain of silence pointer blocks */
 	char *away;		/* pointer to away message */
-#ifdef NO_FLOOD_AWAY
-	time_t last_away;	/* last time the user set away */
-	unsigned char away_count;	/* number of times away has been set */
-#endif
 	u_int32_t servicestamp;	/* Services' time stamp variable */
 	signed char refcnt;	/* Number of times this block is referenced */
 	unsigned short joined;		/* number of channels joined */
@@ -688,6 +672,14 @@ struct User {
 #ifdef	LIST_DEBUG
 	aClient *bcptr;
 #endif
+	struct {
+		time_t nick_t;
+		unsigned char nick_c;
+#ifdef NO_FLOOD_AWAY
+		time_t away_t;			/* last time the user set away */
+		unsigned char away_c;	/* number of times away has been set */
+#endif
+	} flood;
 };
 
 struct Server {
@@ -702,6 +694,9 @@ struct Server {
 #ifdef	LIST_DEBUG
 	aClient *bcptr;
 #endif
+	struct {
+		unsigned synced:1;		/* Server linked? (3.2beta18+) */
+	} flags;
 };
 
 #define M_UNREGISTERED 0x0001
@@ -748,15 +743,29 @@ typedef struct ircstatsx {
 
 extern ircstats IRCstats;
 
-typedef struct {
-	long	mode;
-	char	flag;
-	int	(*allowed)(aClient *sptr);
-} aUMtable;
+#include "modules.h"
 
-extern aUMtable *Usermode_Table;
+extern Umode *Usermode_Table;
 extern short	 Usermode_highest;
 
+extern Snomask *Snomask_Table;
+extern short Snomask_highest;
+
+#ifdef EXTCMODE
+extern Cmode *Channelmode_Table;
+extern unsigned short Channelmode_highest;
+#endif
+
+extern Umode *UmodeAdd(Module *module, char ch, int options, int (*allowed)(aClient *sptr), long *mode);
+extern void UmodeDel(Umode *umode);
+
+extern Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr), long *mode);
+extern void SnomaskDel(Snomask *sno);
+
+#ifdef EXTCMODE
+extern Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode);
+extern void CmodeDel(Cmode *cmode);
+#endif
 
 #define LISTENER_NORMAL		0x000001
 #define LISTENER_CLIENTSONLY	0x000002
@@ -1102,6 +1111,7 @@ struct _configitem_deny_channel {
 	ConfigItem		*prev, *next;
 	ConfigFlag		flag;
 	char			*channel, *reason, *redirect;
+	unsigned char	warn;
 };
 
 struct _configitem_allow_channel {
@@ -1170,6 +1180,12 @@ struct _configitem_help {
 	aMotd *text;
 };
 
+struct _configitem_offchans {
+	ConfigItem *prev, *next;
+	char chname[CHANNELLEN+1];
+	char *topic;
+};
+
 #define HM_HOST 1
 #define HM_IPV4 2
 #define HM_IPV6 3
@@ -1225,16 +1241,46 @@ struct ListOptions {
 	TS   topictimemax;
 };
 
+#ifdef EXTCMODE
+#define EXTCMODETABLESZ 32
+#endif /* EXTCMODE */
+
+/* this can be like ~60-90 bytes, therefore it's in a seperate struct */
+#define FLD_CTCP	0 /* c */
+#define FLD_JOIN	1 /* j */
+#define FLD_KNOCK	2 /* k */
+#define FLD_MSG		3 /* m */
+#define FLD_NICK	4 /* n */
+#define FLD_TEXT	5 /* t */
+
+#define NUMFLD	6 /* 6 flood types */
+
+struct SChanFloodProt {
+	unsigned short	per; /* setting: per <XX> seconds */
+	time_t			t[NUMFLD]; /* runtime: timers */
+	unsigned short	c[NUMFLD]; /* runtime: counters */
+	unsigned short	l[NUMFLD]; /* setting: limit */
+	unsigned char	a[NUMFLD]; /* setting: action */
+};
+
 /* mode structure for channels */
 struct SMode {
 	long mode;
+#ifdef EXTCMODE
+	Cmode_t extmode;
+	CmodeParam *extmodeparam;
+#endif
 	int  limit;
 	char key[KEYLEN + 1];
 	char link[LINKLEN + 1];
+#ifdef NEWCHFLOODPROT
+	ChanFloodProt *floodprot;
+#else
 	/* x:y */
 	unsigned short  msgs;		/* x */
 	unsigned short  per;		/* y */
 	unsigned char	 kmode;	/* mode  0 = kick  1 = ban */
+#endif
 };
 
 /* Used for notify-hash buckets... -Donwulff */
@@ -1489,7 +1535,6 @@ extern char *gnulicense[];
 #include "ssl.h"
 #endif
 #define EVENT_HASHES EVENT_DRUGS
-#include "modules.h"
 #include "events.h"
 struct Command {
 	aCommand		*prev, *next;
@@ -1526,5 +1571,8 @@ int	throttle_can_connect(struct IN_ADDR *in);
 
 #endif
 
+#define VERIFY_OPERCOUNT(clnt,tag) { if (IRCstats.operators < 0) verify_opercount(clnt,tag); } while(0)
+
 #endif /* __struct_include__ */
 
+#include "dynconf.h"

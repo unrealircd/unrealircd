@@ -17,19 +17,17 @@
 #    0,10,20,30,40,50 * * * *   /home/mydir/ircdchk >/dev/null 2>&1
 #
 # change this to the mail address to mail output to:
-MAIL=me
-# change this to the directory you run your ircd from:
-dir="../src"
+# MAIL=me
 
-# change this to the name of your ircd's file in that directory:
-ircdexe="ircd"
+# These values shouldn't need to be changed
 
-# I wouldn't touch this if I were you.
-ircdname="../ircd.pid"
+# The path to the ircd binary
+ircdexe="@BINDIR@"
+
+# The path to the ircd pid file
+ircdname="@IRCDDIR@/ircd.pid"
 
 ########## you probably don't need to change anything below here ##########
-
-cd $dir
 if test -r $ircdname; then
   # there is a pid file -- is it current?
   ircdpid=`cat $ircdname`
@@ -46,4 +44,4 @@ fi
 echo ""
 echo "Couldn't find the ircd running.  Reloading it..."
 echo ""
-./$ircdexe
+$ircdexe

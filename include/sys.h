@@ -215,7 +215,12 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 #define P_ECONNABORTED	ECONNABORTED
 #define P_ECONNRESET	ECONNRESET
 #define P_ENOTCONN	ENOTCONN
+#define P_EMSGSIZE	EMSGSIZE
 #else
+/* WIN32 */
+
+#define NETDB_INTERNAL  -1  /* see errno */
+#define NETDB_SUCCESS   0   /* no problem */
 
 /* IO and Error portability macros */
 #define READ_SOCK(fd, buf, len) recv((fd), (buf), (len), 0)
@@ -239,6 +244,7 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 #define P_ECONNABORTED	WSAECONNABORTED
 #define P_ECONNRESET	WSAECONNRESET
 #define P_ENOTCONN	WSAENOTCONN
+#define P_EMSGSIZE	WSAEMSGSIZE
 #endif
 
 #endif /* __sys_include__ */

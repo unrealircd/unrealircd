@@ -49,12 +49,7 @@ DLLFUNC int m_svswatch(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_SVSWATCH       "SVSWATCH"
 #define TOK_SVSWATCH       "BW"
 
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_svswatch_Header
-#else
-#define m_svswatch_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+ModuleHeader MOD_HEADER(m_svswatch)
   = {
 	"svswatch",	/* Name of module */
 	"$Id$", /* Version */
@@ -63,17 +58,8 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
-
-/* The purpose of these ifdefs, are that we can "static" link the ircd if we
- * want to
-*/
-
 /* This is called on module init, before Server Ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    m_svswatch_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_svswatch)(ModuleInfo *modinfo)
 {
 	/*
 	 * We call our add_Command crap here
@@ -84,28 +70,19 @@ int    m_svswatch_Init(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int    m_svswatch_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_svswatch)(int module_load)
 {
 	return MOD_SUCCESS;
 	
 }
 
-
 /* Called when module is unloaded */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_svswatch_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(m_svswatch)(int module_unload)
 {
 	if (del_Command(MSG_SVSWATCH, TOK_SVSWATCH, m_svswatch) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_svswatch_Header.name);
+				MOD_HEADER(m_svswatch).name);
 	}
 	return MOD_SUCCESS;	
 }

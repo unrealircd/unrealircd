@@ -1,6 +1,6 @@
 /************************************************************************
  *   IRC - Internet Relay Chat, Win32GUI.c
- *   Copyright (C) 2000-2002 David Flynn (DrBin) & Dominick Meglio (codemastr)
+ *   Copyright (C) 2000-2003 David Flynn (DrBin) & Dominick Meglio (codemastr)
  *   
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@
 #include <richedit.h>
 #include <commdlg.h>
 
-#define MIRC_COLORS "{\\colortbl ;\\red255\\green255\\blue255;\\red0\\green0\\blue127;\\red0\\green147\\blue0;\\red255\\green0\\blue0;\\red147\\green0\\blue0;\\red128\\green0\\blue128;\\red255\\green128\\blue0;\\red255\\green255\\blue0;\\red0\\green255\\blue0;\\red0\\green128\\blue128;\\red0\\green255\\blue255;\\red0\\green0\\blue252;\\red255\\green0\\blue255;\\red128\\green128\\blue128;\\red192\\green192\\blue192;\\red0\\green0\\blue0;}"
+#define MIRC_COLORS "{\\colortbl;\\red255\\green255\\blue255;\\red0\\green0\\blue127;\\red0\\green147\\blue0;\\red255\\green0\\blue0;\\red127\\green0\\blue0;\\red156\\green0\\blue156;\\red252\\green127\\blue0;\\red255\\green255\\blue0;\\red0\\green252\\blue0;\\red0\\green147\\blue147;\\red0\\green255\\blue255;\\red0\\green0\\blue252;\\red255\\green0\\blue255;\\red127\\green127\\blue127;\\red210\\green210\\blue210;\\red0\\green0\\blue0;}"
 
 /* Lazy macro */
 #define ShowDialog(handle, inst, template, parent, proc) {\
@@ -109,12 +109,12 @@ HWND hwIRCDWnd=NULL;
 HWND hwTreeView;
 HWND hWndMod;
 HANDLE hMainThread = 0;
-UINT WM_TASKBARCREATED;
+UINT WM_TASKBARCREATED, WM_FINDMSGSTRING;
 FARPROC lpfnOldWndProc;
 HMENU hContext;
 OSVERSIONINFO VerInfo;
 char OSName[256];
-
+HWND hFind;
 void TaskBarCreated() {
 	HICON hIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(ICO_MAIN), IMAGE_ICON,16, 16, 0);
 	SysTray.cbSize = sizeof(NOTIFYICONDATA);
@@ -189,48 +189,6 @@ LRESULT RESubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
 /* Somewhat respectable RTF to IRC parser
  * (c) 2001 codemastr
  */
-typedef struct colorlist {
-	struct colorlist *prev,*next;
-	unsigned char *color;
-} ColorList;
-
-ColorList *TextColors = NULL;
-void AddColor(unsigned char *color) {
-	ColorList *clist;
-
-	clist = MyMallocEx(sizeof(ColorList));
-	if (!clist)
-		return;
-	clist->color = strdup(color);
-	AddListItem(clist,TextColors);
-}
-
-ColorList *DelNewestColor() {
-	ColorList *p = TextColors, *q;
-	if (!p)
-		return NULL;
-	q = TextColors->next;
-	MyFree(p->color);
-
-	TextColors = p->next;
-
-	if (p->next)
-		p->next->prev = NULL;
-	MyFree(p);
-	return q;
-}
-
-void WipeColors() {
-	ColorList *clist, *next;
-
-	for (clist = TextColors; clist; clist = next)
-	{
-			next = clist->next;
-			MyFree(clist->color);
-			MyFree(clist);
-	}
-
-}
 DWORD CALLBACK SplitIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) {
 	StreamIO *stream = (StreamIO*)dwCookie;
 	if (*stream->size == 0)
@@ -276,199 +234,303 @@ DWORD CALLBACK BufferIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) {
 	return 0;
 }
 
-DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb) {
-	unsigned char *buffer = malloc(cb);
-	int i = 0, j = 0, k = 0, start = 0, end = 0;
-	int incolor = 0, bold = 0, uline = 0;
-	unsigned char cmd[15], value[500], color[25], colorbuf[4];
-	unsigned char colors[16];
-	pbBuff++;
-	TextColors = NULL;
+#define iseol(x) ((x) == '\r' || (x) == '\n')
+
+typedef struct colorlist {
+	struct colorlist *next;
+	unsigned char *color;
+} IRCColor;
+
+IRCColor *TextColors = NULL;
+IRCColor *BgColors = NULL;
+
+void ColorPush(unsigned char *color, IRCColor **stack)
+{
+	IRCColor *t = MyMallocEx(sizeof(IRCColor));
+	t->color = strdup(color);
+	t->next = *stack;
+	(*stack) = t;
+}
+
+void ColorPop(IRCColor **stack)
+{
+	IRCColor *p = *stack;
+	if (!(*stack))
+		return;
+	MyFree(p->color);
+	
+	*stack = p->next;
+	MyFree(p);
+}
+
+void ColorEmpty(IRCColor **stack)
+{
+	IRCColor *t, *next;
+	for (t = *stack; t; t = next)
+	{
+		next = t->next;
+		MyFree(t->color);
+		MyFree(t);
+	}
+}
+
+DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb) 
+{
+	unsigned char *buffer = malloc(cb*2);
+	int colors[17], bold = 0, uline = 0, incolor = 0, inbg = 0;
+	int lastwascf = 0, lastwascf0 = 0;
+	int i = 0;
+	TextColors = BgColors = NULL;
 	bzero(buffer, cb);
-	for (; *pbBuff; pbBuff++) {
-		if (*pbBuff == '\r' || *pbBuff == '\n')
+
+	for (; *pbBuff; pbBuff++)
+	{
+		if (iseol(*pbBuff) || *pbBuff == '{' || *pbBuff == '}')
 			continue;
-		if (*pbBuff == '{' || *pbBuff == '}')
-			continue;
-		if (*pbBuff == '\\') {
+		else if (*pbBuff == '\\')
+		{
+			/* RTF control sequence */
 			pbBuff++;
-			if (*pbBuff == '\\') {
-				buffer[i] = '\\';
-				i++;
-				continue;
-			}
-			if (*pbBuff == '{') {
-				buffer[i] = '{';
-				i++;
-				continue;
-			}
-			if (*pbBuff == '}') {
-				buffer[i] = '}';
-				i++;
-				continue;
-			}
-			if (*pbBuff == '\'') {
+			if (*pbBuff == '\\' || *pbBuff == '{' || *pbBuff == '}')
+				buffer[i++] = *pbBuff;
+			else if (*pbBuff == '\'')
+			{
+				/* Extended ASCII character */
 				unsigned char ltr, ultr[3];
-				ultr[0] = *++pbBuff;
-				ultr[1] = *++pbBuff;
+				ultr[0] = *(++pbBuff);
+				ultr[1] = *(++pbBuff);
 				ultr[2] = 0;
 				ltr = strtoul(ultr,NULL,16);
-				buffer[i] = ltr;
-				i++;
-				continue;
+				buffer[i++] = ltr;
 			}
-			value[0] = cmd[0] = 0;
-			for (j = k = start = end = 0;
-				*pbBuff && *pbBuff != '\\' && *pbBuff != '\r' && *pbBuff != '\n';
-				pbBuff++) {
-					if (*pbBuff == '{') {
-						start++;
-						pbBuff++;
-						for (; *pbBuff; pbBuff++) {
-							if (*pbBuff == '{')
-								start++;
-							if (*pbBuff == '}') {
-								end++;
-								if (start == end) {
-									pbBuff++;
-									break;
-								}
-							}
-							value[k] = *pbBuff;
-							k++;
-						}
-						break;
-					}
-				if (*pbBuff == ' ') {
-					pbBuff++;
-					break;
+			else
+			{
+				int j;
+				char cmd[128];
+				/* Capture the control sequence */
+				for (j = 0; *pbBuff && *pbBuff != '\\' && !isspace(*pbBuff) &&
+					!iseol(*pbBuff); pbBuff++)
+				{
+					cmd[j++] = *pbBuff;
 				}
-
-					cmd[j] = *pbBuff;
-					j++;
-			}
+				if (*pbBuff != ' ')
+					pbBuff--;
 				cmd[j] = 0;
-				value[k] = 0;
-				if (!strcmp(cmd, "par")) {
-					if (bold) 
-						buffer[i++] = '\2';
-					if (uline)
-						buffer[i++] = '\37';
-					if (incolor)
-						buffer[i++] = '\3';
+				if (!strcmp(cmd, "fonttbl{"))
+				{
+					/* Eat the parameter */
+					while (*pbBuff && *pbBuff != '}')
+						pbBuff++;
+					lastwascf = lastwascf0 = 0;
+				}
+				if (!strcmp(cmd, "colortbl"))
+				{
+					char color[128];
+					int k = 0, m = 1;
+					/* Capture the color table */
+					while (*pbBuff && !isalnum(*pbBuff))
+						pbBuff++;
+					for (; *pbBuff && *pbBuff != '}'; pbBuff++)
+					{
+						if (*pbBuff == ';')
+						{
+							color[k]=0;
+							if (!strcmp(color, "\\red255\\green255\\blue255"))
+								colors[m++] = 0;
+							else if (!strcmp(color, "\\red0\\green0\\blue0"))
+								colors[m++] = 1;
+							else if (!strcmp(color, "\\red0\\green0\\blue127"))
+								colors[m++] = 2;
+							else if (!strcmp(color, "\\red0\\green147\\blue0"))
+								colors[m++] = 3;
+							else if (!strcmp(color, "\\red255\\green0\\blue0"))
+								colors[m++] = 4;
+							else if (!strcmp(color, "\\red127\\green0\\blue0"))
+								colors[m++] = 5;
+							else if (!strcmp(color, "\\red156\\green0\\blue156"))
+								colors[m++] = 6;
+							else if (!strcmp(color, "\\red252\\green127\\blue0"))
+								colors[m++] = 7;
+							else if (!strcmp(color, "\\red255\\green255\\blue0"))
+								colors[m++] = 8;
+							else if (!strcmp(color, "\\red0\\green252\\blue0"))
+								colors[m++] = 9;
+							else if (!strcmp(color, "\\red0\\green147\\blue147"))
+								colors[m++] = 10;
+							else if (!strcmp(color, "\\red0\\green255\\blue255"))
+								colors[m++] = 11;
+							else if (!strcmp(color, "\\red0\\green0\\blue252"))
+								colors[m++] = 12;
+							else if (!strcmp(color, "\\red255\\green0\\blue255"))
+								colors[m++] = 13;
+							else if (!strcmp(color, "\\red127\\green127\\blue127"))
+								colors[m++] = 14;
+							else if (!strcmp(color, "\\red210\\green210\\blue210")) 
+								colors[m++] = 15;
+							k=0;
+						}
+						else
+							color[k++] = *pbBuff;
+					}
+					lastwascf = lastwascf0 = 0;
+				}
+				else if (!strcmp(cmd, "tab"))
+				{
+					buffer[i++] = '\t';
+					lastwascf = lastwascf0 = 0;
+				}
+				else if (!strcmp(cmd, "par"))
+				{
+					if (bold || uline || incolor || inbg)
+						buffer[i++] = '\17';
 					buffer[i++] = '\r';
 					buffer[i++] = '\n';
+					if (!*(pbBuff+3) || *(pbBuff+3) != '}')
+					{
 					if (bold)
 						buffer[i++] = '\2';
 					if (uline)
 						buffer[i++] = '\37';
-					if (incolor) {
+					if (incolor)
+					{
 						buffer[i++] = '\3';
 						strcat(buffer, TextColors->color);
 						i += strlen(TextColors->color);
+						if (inbg)
+						{
+							buffer[i++] = ',';
+							strcat(buffer, BgColors->color);
+							i += strlen(BgColors->color);
+						}
 					}
+					else if (inbg) {
+						buffer[i++] = '\3';
+						buffer[i++] = '0';
+						buffer[i++] = '1';
+						buffer[i++] = ',';
+						strcat(buffer, BgColors->color);
+						i += strlen(BgColors->color);
+					}
+}
 				}
-				else if (!strcmp(cmd, "tab"))
-					buffer[i++] = '\t';
-				else if (!strcmp(cmd, "b")) {
+				else if (!strcmp(cmd, "b"))
+				{
 					bold = 1;
 					buffer[i++] = '\2';
+					lastwascf = lastwascf0 = 0;
 				}
-				else if (!strcmp(cmd, "b0")) {
+				else if (!strcmp(cmd, "b0"))
+				{
 					bold = 0;
 					buffer[i++] = '\2';
+					lastwascf = lastwascf0 = 0;
 				}
-
-				else if (!strcmp(cmd, "ul")) { 
+				else if (!strcmp(cmd, "ul"))
+				{
 					uline = 1;
 					buffer[i++] = '\37';
+					lastwascf = lastwascf0 = 0;
 				}
-				else if (!strcmp(cmd, "ulnone")) {
+				else if (!strcmp(cmd, "ulnone"))
+				{
 					uline = 0;
 					buffer[i++] = '\37';
+					lastwascf = lastwascf0 = 0;
 				}
-				else if (!strcmp(cmd, "colortbl")) {
-					int l = 0, m = 0;
-					color[0] = 0;
-					pbBuff++;
-					for (; *pbBuff && *pbBuff != '}'; pbBuff++) {
-						if (*pbBuff != ';') {
-							color[l] = *pbBuff;
-							l++;
-						}
-						else {
-							color[l] = 0;
-							l = 0;
-							m++;
-							if (!strcmp(color, "\\red255\\green255\\blue255"))
-								colors[m] = 0;
-							else if (!strcmp(color, "\\red0\\green0\\blue0"))
-								colors[m] = 1;
-							else if (!strcmp(color, "\\red0\\green0\\blue127"))
-								colors[m] = 2;
-							else if (!strcmp(color, "\\red0\\green147\\blue0"))
-								colors[m] = 3;
-							else if (!strcmp(color, "\\red255\\green0\\blue0"))
-								colors[m] = 4;
-							else if (!strcmp(color, "\\red127\\green0\\blue0"))
-								colors[m] = 5;
-							else if (!strcmp(color, "\\red156\\green0\\blue156"))
-								colors[m] = 6;
-							else if (!strcmp(color, "\\red252\\green127\\blue0"))
-								colors[m] = 7;
-							else if (!strcmp(color, "\\red255\\green255\\blue0"))
-								colors[m] = 8;
-							else if (!strcmp(color, "\\red0\\green252\\blue0"))
-								colors[m] = 9;
-							else if (!strcmp(color, "\\red0\\green147\\blue147"))
-								colors[m] = 10;
-							else if (!strcmp(color, "\\red0\\green255\\blue255"))
-								colors[m] = 11;
-							else if (!strcmp(color, "\\red0\\green0\\blue252"))
-								colors[m] = 12;
-							else if (!strcmp(color, "\\red255\\green0\\blue255"))
-								colors[m] = 13;
-							else if (!strcmp(color, "\\red127\\green127\\blue127"))
-								colors[m] = 14;
-							else if (!strcmp(color, "\\red210\\green210\\blue210")) 
-								colors[m] = 15;
-						}
-					}
-					pbBuff++;
+				else if (!strcmp(cmd, "cf0"))
+				{
+					lastwascf0 = 1;
+					lastwascf = 0;
 				}
-				else if (!strcmp(cmd, "f1")) {
-					write(fd, buffer, i);
-					close(fd);
-					return 0;
-				}
-				else if (!strcmp(cmd, "cf0")) {
-					incolor = 0;
+				else if (!strcmp(cmd, "highlight0"))
+				{
+					inbg = 0;
+					ColorPop(&BgColors);
 					buffer[i++] = '\3';
-					DelNewestColor();
+					if (lastwascf0)
+					{
+						incolor = 0;
+						ColorPop(&TextColors);
+						lastwascf0 = 0;
+					}
+					else if (incolor)
+					{
+						strcat(buffer, TextColors->color);
+						i += strlen(TextColors->color);
+						buffer[i++] = ',';
+						buffer[i++] = '0';
+						buffer[i++] = '0';
+					}
+					lastwascf = lastwascf0 = 0;
 				}
-				else if (!strncmp(cmd, "cf", 2)) {
+				else if (!strncmp(cmd, "cf", 2))
+				{
 					unsigned char number[3];
-					int num = 0;
+					int num;
 					incolor = 1;
 					strcpy(number, &cmd[2]);
 					num = atoi(number);
 					buffer[i++] = '\3';
-					sprintf(number, "%d", colors[num]);
-					AddColor(number);
+					if (colors[num] < 10)
+						sprintf(number, "0%d", colors[num]);
+					else
+						sprintf(number, "%d", colors[num]);
+					ColorPush(number, &TextColors);
+					strcat(buffer,number);
+					i += strlen(number);
+					lastwascf = 1;
+					lastwascf0 = 0;
+				}
+				else if (!strncmp(cmd, "highlight", 9))
+				{
+					int num;
+					unsigned char number[3];
+					inbg = 1;
+					num = atoi(&cmd[9]);
+					if (colors[num] < 10)
+						sprintf(number, "0%d", colors[num]);
+					else
+						sprintf(number, "%d", colors[num]);
+					if (incolor && !lastwascf)
+					{
+						buffer[i++] = '\3';
+						strcat(buffer, TextColors->color);
+						i += strlen(TextColors->color);
+					}
+					else if (!incolor)
+					{
+						buffer[i++] = '\3';
+						buffer[i++] = '0';
+						buffer[i++] = '1';
+					}
+					buffer[i++] = ',';
 					strcat(buffer, number);
 					i += strlen(number);
+					ColorPush(number, &BgColors);
+					lastwascf = lastwascf0 = 0;
 				}
-				pbBuff--;
-				continue;
+				else
+					lastwascf = lastwascf0 = 0;
+
+				if (lastwascf0 && incolor)
+				{
+					incolor = 0;
+					ColorPop(&TextColors);
+					buffer[i++] = '\3';
+				}
+			}
 		}
-		else {
-			buffer[i] = *pbBuff;
-			i++;
+		else
+		{
+			lastwascf = lastwascf0 = 0;
+			buffer[i++] = *pbBuff;
 		}
+				
 	}
 	write(fd, buffer, i);
 	close(fd);
-	WipeColors();
+	ColorEmpty(&TextColors);
+	ColorEmpty(&BgColors);
 	return 0;
 }
 
@@ -490,12 +552,37 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
 		SC_HANDLE hService, hSCManager = OpenSCManager(NULL, NULL, GENERIC_EXECUTE);
 		if ((hService = OpenService(hSCManager, "UnrealIRCd", GENERIC_EXECUTE))) {
-			StartServiceCtrlDispatcher(DispatchTable);
+			int save_err = 0;
+			StartServiceCtrlDispatcher(DispatchTable); 
 			if (GetLastError() == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT)
-				StartService(hService, 0, NULL);
+			{ 
+				SERVICE_STATUS status;
+				/* Restart handling, it's ugly but it's as 
+				 * pretty as it is gonna get :)
+				 */
+				if (__argc == 2 && !strcmp(__argv[1], "restartsvc"))
+				{
+					QueryServiceStatus(hService, &status);
+					if (status.dwCurrentState != SERVICE_STOPPED)
+					{
+						ControlService(hService,
+							SERVICE_CONTROL_STOP, &status);
+						while (status.dwCurrentState == SERVICE_STOP_PENDING)
+						{
+							QueryServiceStatus(hService, &status);
+							if (status.dwCurrentState != SERVICE_STOPPED)
+								Sleep(1000);
+						}
+					}
+				}
+				if (!StartService(hService, 0, NULL))
+					save_err = GetLastError();
+			}
+
 			CloseServiceHandle(hService);
 			CloseServiceHandle(hSCManager);
-			exit(0);
+			if (save_err != ERROR_SERVICE_DISABLED)
+				exit(0);
 		}
 	}
 	strcpy(OSName, "Windows ");
@@ -526,7 +613,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			else if (VerInfo.dwMinorVersion == 1) 
 				strcat(OSName, "XP ");
 			else if (VerInfo.dwMinorVersion == 2)
-				strcat(OSName, ".NET Server ");
+				strcat(OSName, "Server 2003 ");
 		}
 		strcat(OSName, VerInfo.szCSDVersion);
 	}
@@ -534,6 +621,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		OSName[strlen(OSName)-1] = 0;
 	InitCommonControls();
 	WM_TASKBARCREATED = RegisterWindowMessage("TaskbarCreated");
+	WM_FINDMSGSTRING = RegisterWindowMessage(FINDMSGSTRING);
 	atexit(CleanUp);
 	if(!LoadLibrary("riched20.dll"))
 		LoadLibrary("riched32.dll");
@@ -655,6 +743,7 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 						}
 
 						AppendMenu(hConfig, MF_STRING, IDM_MOTD, MPATH);
+						AppendMenu(hConfig, MF_STRING, IDM_SMOTD, SMPATH);
 						AppendMenu(hConfig, MF_STRING, IDM_OPERMOTD, OPATH);
 						AppendMenu(hConfig, MF_STRING, IDM_BOTMOTD, BPATH);
 						AppendMenu(hConfig, MF_STRING, IDM_RULES, RPATH);
@@ -667,6 +756,8 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 									AppendMenu(hConfig, MF_STRING, i++, tlds->motd_file);
 								if (!tlds->flag.rulesptr)
 									AppendMenu(hConfig, MF_STRING, i++, tlds->rules_file);
+								if (tlds->smotd_file)
+									AppendMenu(hConfig, MF_STRING, i++, tlds->smotd_file);
 							}
 						}
 						AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
@@ -740,6 +831,7 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 				}
 
 				AppendMenu(hConfig, MF_STRING, IDM_MOTD, MPATH);
+				AppendMenu(hConfig, MF_STRING, IDM_SMOTD, SMPATH);
 				AppendMenu(hConfig, MF_STRING, IDM_OPERMOTD, OPATH);
 				AppendMenu(hConfig, MF_STRING, IDM_BOTMOTD, BPATH);
 				AppendMenu(hConfig, MF_STRING, IDM_RULES, RPATH);
@@ -752,6 +844,8 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 							AppendMenu(hConfig, MF_STRING, i++, tlds->motd_file);
 						if (!tlds->flag.rulesptr)
 							AppendMenu(hConfig, MF_STRING, i++, tlds->rules_file);
+						if (tlds->smotd_file)
+							AppendMenu(hConfig, MF_STRING, i++, tlds->smotd_file);
 					}
 				}
 				AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
@@ -852,6 +946,10 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 					case IDM_MOTD:
 						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, 
 							(LPARAM)MPATH);
+						break;
+					case IDM_SMOTD:
+						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, 
+							(LPARAM)SMPATH);
 						break;
 					case IDM_OPERMOTD:
 						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG,
@@ -983,7 +1081,7 @@ LRESULT CALLBACK FromFileReadDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 				/* Only allocate the amount we need */
 				buffer = malloc(sb.st_size+1);
 				buffer[0] = 0;
-				len = read(fd, buffer, sb.st_size);
+				len = read(fd, buffer, sb.st_size); 
 				buffer[len] = 0;
 				len = CountRTFSize(buffer)+1;
 				string = malloc(len);
@@ -1124,21 +1222,27 @@ HWND DrawToolbar(HWND hwndParent, UINT iID) {
 		{ 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0}, 0L, 0}
 	};
 		
-	TBBUTTON tbAddButtons[3] = {
+	TBBUTTON tbAddButtons[7] = {
 		{ 0, IDC_BOLD, TBSTATE_ENABLED, TBSTYLE_CHECK, {0}, 0L, 0},
 		{ 1, IDC_UNDERLINE, TBSTATE_ENABLED, TBSTYLE_CHECK, {0}, 0L, 0},
-		{ 2, IDC_COLOR, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0L, 0}
+		{ 2, IDC_COLOR, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0L, 0},
+		{ 3, IDC_BGCOLOR, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0L, 0},
+		{ 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0}, 0L, 0},
+		{ 4, IDC_GOTO, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0L, 0},
+		{ STD_FIND, IDC_FIND, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0L, 0}
 	};
 	hTool = CreateToolbarEx(hwndParent, WS_VISIBLE|WS_CHILD|TBSTYLE_FLAT|TBSTYLE_TOOLTIPS, 
 				IDC_TOOLBAR, 0, HINST_COMMCTRL, IDB_STD_SMALL_COLOR,
 				tbButtons, 10, 0,0,100,30, sizeof(TBBUTTON));
 	tbBit.hInst = hInst;
 	tbBit.nID = IDB_BITMAP1;
-	newidx = SendMessage(hTool, TB_ADDBITMAP, (WPARAM)3, (LPARAM)&tbBit);
+	newidx = SendMessage(hTool, TB_ADDBITMAP, (WPARAM)5, (LPARAM)&tbBit);
 	tbAddButtons[0].iBitmap += newidx;
 	tbAddButtons[1].iBitmap += newidx;
 	tbAddButtons[2].iBitmap += newidx;
-	SendMessage(hTool, TB_ADDBUTTONS, (WPARAM)3, (LPARAM)&tbAddButtons);
+	tbAddButtons[3].iBitmap += newidx;
+	tbAddButtons[5].iBitmap += newidx;
+	SendMessage(hTool, TB_ADDBUTTONS, (WPARAM)7, (LPARAM)&tbAddButtons);
 	return hTool;
 }
 
@@ -1182,9 +1286,55 @@ LRESULT CALLBACK GotoDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
 LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 	HWND hWnd;
 	static FINDREPLACE find;
+	static char findbuf[256];
 	static unsigned char *file;
 	static HWND hTool, hClip, hStatus;
+	static RECT rOld;
 	CHARFORMAT2 chars;
+
+	if (message == WM_FINDMSGSTRING)
+	{
+		FINDREPLACE *fr = (FINDREPLACE *)lParam;
+
+		if (fr->Flags & FR_FINDNEXT)
+		{
+			HWND hRich = GetDlgItem(hDlg, IDC_TEXT);
+			DWORD flags=0;
+			FINDTEXTEX ft;
+			CHARRANGE chrg;
+
+			if (fr->Flags & FR_DOWN)
+				flags |= FR_DOWN;
+			if (fr->Flags & FR_MATCHCASE)
+				flags |= FR_MATCHCASE;
+			if (fr->Flags & FR_WHOLEWORD)
+				flags |= FR_WHOLEWORD;
+			ft.lpstrText = fr->lpstrFindWhat;
+			SendMessage(hRich, EM_EXGETSEL, 0, (LPARAM)&chrg);
+			if (flags & FR_DOWN)
+			{
+				ft.chrg.cpMin = chrg.cpMax;
+				ft.chrg.cpMax = -1;
+			}
+			else
+			{
+				ft.chrg.cpMin = chrg.cpMin;
+				ft.chrg.cpMax = -1;
+			}
+			if (SendMessage(hRich, EM_FINDTEXTEX, flags, (LPARAM)&ft) == -1)
+			{
+				MessageBox(NULL, "Unreal has finished searching the document",
+					"Find", MB_ICONINFORMATION|MB_OK);
+			}
+			else
+			{
+				SendMessage(hRich, EM_EXSETSEL, 0, (LPARAM)&(ft.chrgText));
+				SendMessage(hRich, EM_SCROLLCARET, 0, 0);
+				SetFocus(hRich);
+			}
+		}
+		return TRUE;
+	}
 	switch (message) {
 		case WM_INITDIALOG: {
 			int fd,len;
@@ -1245,6 +1395,38 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			}
 			return (TRUE);
 			}
+		case WM_WINDOWPOSCHANGING:
+		{
+			GetClientRect(hDlg, &rOld);
+			return FALSE;
+		}
+		case WM_SIZE:
+		{
+			DWORD new_width, new_height;
+			HWND hRich;
+			RECT rOldRich;
+			DWORD old_width, old_height;
+			DWORD old_rich_width, old_rich_height;
+			if (hDlg == hFind)
+				return FALSE;
+			new_width =  LOWORD(lParam);
+			new_height = HIWORD(lParam);
+			hRich  = GetDlgItem(hDlg, IDC_TEXT);
+			SendMessage(hStatus, WM_SIZE, 0, 0);
+			SendMessage(hTool, TB_AUTOSIZE, 0, 0);
+			old_width = rOld.right-rOld.left;
+			old_height = rOld.bottom-rOld.top;
+			new_width = new_width - old_width;
+			new_height = new_height - old_height;
+			GetWindowRect(hRich, &rOldRich);
+			old_rich_width = rOldRich.right-rOldRich.left;
+			old_rich_height = rOldRich.bottom-rOldRich.top;
+			SetWindowPos(hRich, NULL, 0, 0, old_rich_width+new_width, 
+				old_rich_height+new_height,
+				SWP_NOMOVE|SWP_NOREPOSITION|SWP_NOZORDER);
+			bzero(&rOld, sizeof(RECT));
+			return TRUE;
+		}
 		case WM_NOTIFY:
 			switch (((NMHDR *)lParam)->code) {
 				case EN_SELCHANGE: {
@@ -1323,6 +1505,15 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 					case IDC_COLOR:
 						strcpy(lpttt->szText, "Text Color");
 						break;
+					case IDC_BGCOLOR:
+						strcpy(lpttt->szText, "Background Color");
+						break;
+					case IDC_GOTO:
+						strcpy(lpttt->szText, "Goto");
+						break;
+					case IDC_FIND:
+						strcpy(lpttt->szText, "Find");
+						break;
 				}
 				return (TRUE);
 			}
@@ -1374,7 +1565,32 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				return TRUE;
 			}
 			if (LOWORD(wParam) == IDC_COLOR) 
+			{
 				DialogBoxParam(hInst, "Color", hDlg, (DLGPROC)ColorDLG, (LPARAM)WM_USER+10);
+				return 0;
+			}
+			if (LOWORD(wParam) == IDC_BGCOLOR)
+			{
+				DialogBoxParam(hInst, "Color", hDlg, (DLGPROC)ColorDLG, (LPARAM)WM_USER+11);
+				return 0;
+			}
+			if (LOWORD(wParam) == IDC_GOTO)
+			{
+				DialogBox(hInst, "GOTO", hDlg, (DLGPROC)GotoDLG);
+				return 0;
+			}
+			if (LOWORD(wParam) == IDC_FIND)
+			{
+				static FINDREPLACE fr;
+				bzero(&fr, sizeof(FINDREPLACE));
+				fr.lStructSize = sizeof(FINDREPLACE);
+				fr.hwndOwner = hDlg;
+				fr.lpstrFindWhat = findbuf;
+				fr.wFindWhatLen = 255;
+				hFind = FindText(&fr);
+				return 0;
+			}
+				
 		hWnd = GetDlgItem(hDlg, IDC_TEXT);
 		if (LOWORD(wParam) == IDM_COPY) {
 			SendMessage(hWnd, WM_COPY, 0, 0);
@@ -1480,6 +1696,17 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			SetFocus(hWnd);
 			break;
 		}
+		case WM_USER+11: {
+			HWND hWnd = GetDlgItem(hDlg, IDC_TEXT);
+			EndDialog((HWND)lParam, TRUE);
+			chars.cbSize = sizeof(CHARFORMAT2);
+			chars.dwMask = CFM_BACKCOLOR;
+			chars.crBackColor = (COLORREF)wParam;
+			SendMessage(hWnd, EM_SETCHARFORMAT, (WPARAM)SCF_SELECTION, (LPARAM)&chars);
+			SendMessage(hWnd, EM_HIDESELECTION, 0, 0);
+			SetFocus(hWnd);
+			break;
+		}
 		case WM_CHANGECBCHAIN:
 			if ((HWND)wParam == hClip)
 				hClip = (HWND)lParam;
@@ -1510,6 +1737,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			}
 			else
 				EndDialog(hDlg, TRUE);
+			break;
 		}
 		case WM_DESTROY:
 			ChangeClipboardChain(hDlg, hClip);
@@ -1721,169 +1949,406 @@ LRESULT CALLBACK ColorDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 /* find how big a buffer expansion we need for RTF transformation */
 int CountRTFSize(unsigned char *buffer) {
 	int size = 0;
-	short bold = 0, uline = 0, reverse = 0;
-	unsigned char *buf = buffer;
+	char bold = 0, uline = 0, incolor = 0, inbg = 0, reverse = 0;
+	char *buf = buffer;
 
-	for (; *buf; buf++, size++) {
-		if (*buf == '{' || *buf == '}' || *buf == '\\') {
+	for (; *buf; buf++) 
+	{
+		if (*buf == '{' || *buf == '}' || *buf == '\\')
 			size++;
+		else if (*buf == '\r')
+		{
+			if (*(buf+1) && *(buf+1) == '\n')
+			{
+				buf++;
+				if (bold)
+					size += 3;
+				if (uline)
+					size += 7;
+				if (incolor && !reverse)
+					size += 4;
+				if (inbg && !reverse)
+					size += 11;
+				if (reverse)
+					size += 15;
+				if (bold || uline || incolor || inbg || reverse)
+					size++;
+				bold = uline = incolor = inbg = reverse = 0;
+				size +=6;
+				continue;
+			}
+		}
+		else if (*buf == '\2')
+		{
+			if (bold)
+				size += 4;
+			else
+				size += 3;
+			bold = !bold;
 			continue;
 		}
-		if (*buf == '\r') {
-			buf++;
-			if (*buf == '\n')
-				size += 5;
+		else if (*buf == '\3' && reverse)
+		{
+			if (*(buf+1) && isdigit(*(buf+1)))
+			{
+				++buf;
+				if (*(buf+1) && isdigit(*(buf+1)))
+					++buf;
+				if (*(buf+1) && *(buf+1) == ',')
+				{
+					if (*(buf+2) && isdigit(*(buf+2)))
+					{
+						buf+=2;
+						if (*(buf+1) && isdigit(*(buf+1)))
+							++buf;
+					}
+				}
+			}
+			continue;
 		}
-		if (*buf == '\2') {
-			if (bold) 
-				size += 3;
-			else  
-				size += 2;
-			bold = ~bold;
-		}
-		if (*buf == '\3') {
-			unsigned char color[3];
-			int number;
+		else if (*buf == '\3' && !reverse)
+		{
 			size += 3;
-			if (!isdigit(*(buf+1)))
-				size += 12;
-			if (isdigit(*(buf+1))) {
+			if (*(buf+1) && !isdigit(*(buf+1)))
+			{
+				incolor = 0;
+				size++;
+				if (inbg)
+				{
+					inbg = 0;
+					size += 11;
+				}
+			}
+			else if (*(buf+1))
+			{
+				unsigned char color[3];
+				int number;
 				color[0] = *(++buf);
 				color[1] = 0;
-				if (isdigit(*(buf+1)))
+				if (*(buf+1) && isdigit(*(buf+1)))
 					color[1] = *(++buf);
 				color[2] = 0;
 				number = atoi(color);
-				if (number > 15 && number != 99)
-					number %= 16;
-				if (number > 9)
+				if (number == 99 || number == 1) 
 					size += 2;
-				else
+				else if (number == 0) 
 					size++;
+				else  {
+					number %= 16;
+					_itoa(number, color, 10);
+					size += strlen(color);
+				}
+				color[2] = 0;
+				number = atoi(color);
+				if (*(buf+1) && *(buf+1) == ',')
+				{
+					if (*(buf+2) && isdigit(*(buf+2)))
+					{
+						size += 10;
+						buf++;
+						color[0] = *(++buf);
+						color[1] = 0;
+						if (*(buf+1) && isdigit(*(buf+1)))
+							color[1] = *(++buf);
+						color[2] = 0;
+						number = atoi(color);
+						if (number == 1)
+							size += 2;
+						else if (number == 0 || number == 99)
+							size++;
+						else
+						{
+							number %= 16;
+							_itoa(number, color, 10);
+							size += strlen(color);
+						}
+						inbg = 1;
+					}
+				}
+				incolor = 1;
 			}
+			size++;
+			continue;
 		}
-
-		if (*buf == '\37') {
-			if (uline)
-				size += 7;
-			else
-				size += 3;
-			uline = ~uline;
-		}
-		if (*buf == '\17') {
-			if (uline)
-				size += 7;
+		else if (*buf == '\17')
+		{
 			if (bold)
 				size += 3;
-			uline = bold = 0;
+			if (uline)
+				size += 7;
+			if (incolor && !reverse)
+				size += 4;
+			if (inbg && !reverse)
+				size += 11;
+			if (reverse)
+				size += 15;
+			if (bold || uline || incolor || inbg || reverse)
+				size++;
+			bold = uline = incolor = inbg = reverse = 0;
+			continue;
 		}
-	}
-	return (size+494);
+		else if (*buf == '\26')
+		{
+			if (reverse)
+				size += 16;
+			else
+				size += 17;
+			reverse = !reverse;
+			continue;
+		}
+		else if (*buf == '\37')
+		{
+			if (uline)
+				size += 8;
+			else
+				size += 4;
+			uline = !uline;
+			continue;
+		}
+		size++;
+	}			
+	size+=strlen("{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fmodern\\fprq1\\"
+		"fcharset0 Fixedsys;}}\r\n"
+		MIRC_COLORS
+		"\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20")+1;
+	return (size);
 }
 
 void IRCToRTF(unsigned char *buffer, unsigned char *string) {
-	unsigned char *tmp = buffer;
+	unsigned char *tmp;
 	int i = 0;
-	short bold = 0, uline = 0;
+	short bold = 0, uline = 0, incolor = 0, inbg = 0, reverse = 0;
 	sprintf(string, "{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fmodern\\fprq1\\"
 		"fcharset0 Fixedsys;}}\r\n"
 		MIRC_COLORS
 		"\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20");
-	i = 487;
-	for (tmp; *tmp; tmp++, i++) {
-		if (*tmp == '{') {
+	i = strlen(string);
+	for (tmp = buffer; *tmp; tmp++)
+	{
+		if (*tmp == '{')
+		{
 			strcat(string, "\\{");
-			i++;
+			i+=2;
 			continue;
 		}
-		if (*tmp == '}') {
+		else if (*tmp == '}')
+		{
 			strcat(string, "\\}");
-			i++;
+			i+=2;
 			continue;
 		}
-		if (*tmp == '\\') {
+		else if (*tmp == '\\')
+		{
 			strcat(string, "\\\\");
-			i++;
+			i+=2;
 			continue;
 		}
-		if (*tmp == '\r') {
-			tmp++;
-			if (*tmp == '\n') {
+		else if (*tmp == '\r')
+		{
+			if (*(tmp+1) && *(tmp+1) == '\n')
+			{
+				tmp++;
+				if (bold)
+				{
+					strcat(string, "\\b0 ");
+					i+=3;
+				}
+				if (uline)
+				{
+					strcat(string, "\\ulnone");
+					i+=7;
+				}
+				if (incolor && !reverse)
+				{
+					strcat(string, "\\cf0");
+					i+=4;
+				}
+				if (inbg && !reverse)
+				{
+					strcat(string, "\\highlight0");
+					i +=11;
+				}
+				if (reverse) {
+					strcat(string, "\\cf0\\highlight0");
+					i += 15;
+				}
+				if (bold || uline || incolor || inbg || reverse)
+					string[i++] = ' ';
+				bold = uline = incolor = inbg = reverse = 0;
 				strcat(string, "\\par\r\n");
-				i += 5;
-				continue;
+				i +=6;
 			}
-		}
-		if (*tmp == '\2') {
-			if (bold) {
-				strcat(string, "\\b0 ");
-				i += 3;
-			}
-			else {
-				strcat(string, "\\b ");
-				i += 2;
-			}
-			bold = ~bold;
+			else
+				string[i++]='\r';
 			continue;
 		}
-		if (*tmp == '\3') {
-			unsigned char color[3];
-			int number;
+		else if (*tmp == '\2')
+		{
+			if (bold)
+			{
+				strcat(string, "\\b0 ");
+				i+=4;
+			}
+			else
+			{
+				strcat(string, "\\b ");
+				i+=3;
+			}
+			bold = !bold;
+			continue;
+		}
+		else if (*tmp == '\3' && reverse)
+		{
+			if (*(tmp+1) && isdigit(*(tmp+1)))
+			{
+				++tmp;
+				if (*(tmp+1) && isdigit(*(tmp+1)))
+					++tmp;
+				if (*(tmp+1) && *(tmp+1) == ',')
+				{
+					if (*(tmp+2) && isdigit(*(tmp+2)))
+					{
+						tmp+=2;
+						if (*(tmp+1) && isdigit(*(tmp+1)))
+							++tmp;
+					}
+				}
+			}
+			continue;
+		}
+		else if (*tmp == '\3' && !reverse)
+		{
 			strcat(string, "\\cf");
 			i += 3;
-			if (!isdigit(*(tmp+1))) {
-				strcat(string, "0");
-				i++;
+			if (*(tmp+1) && !isdigit(*(tmp+1)))
+			{
+				incolor = 0;
+				string[i++] = '0';
+				if (inbg)
+				{
+					inbg = 0;
+					strcat(string, "\\highlight0");
+					i += 11;
+				}
 			}
-			else {
+			else if (*(tmp+1))
+			{
+				unsigned char color[3];
+				int number;
 				color[0] = *(++tmp);
 				color[1] = 0;
-				if (isdigit(*(tmp+1)))
+				if (*(tmp+1) && isdigit(*(tmp+1)))
 					color[1] = *(++tmp);
 				color[2] = 0;
 				number = atoi(color);
-				if (number == 99 || number == 1) {
-					strcat(string, "16");
+				if (number == 99 || number == 1)
+				{
+					strcat(string, "16"); 
 					i += 2;
 				}
-				else if (number == 0) {
-					string[i] = '1';
+				else if (number == 0) 
+				{
+					strcat(string, "1");
 					i++;
 				}
-				else {
+				else
+				{
 					number %= 16;
 					_itoa(number, color, 10);
 					strcat(string, color);
 					i += strlen(color);
 				}
+				if (*(tmp+1) && *(tmp+1) == ',')
+				{
+					if (*(tmp+2) && isdigit(*(tmp+2)))
+					{
+						strcat(string, "\\highlight");
+						i += 10;
+						tmp++;
+						color[0] = *(++tmp);
+						color[1] = 0;
+						if (*(tmp+1) && isdigit(*(tmp+1)))
+							color[1] = *(++tmp);
+						color[2] = 0;
+						number = atoi(color);
+						if (number == 1)
+						{
+							strcat(string, "16");
+							i += 2;
+						}
+						else if (number == 0 || number == 99)
+							string[i++] = '1';
+						else
+						{
+							number %= 16;
+							_itoa(number, color, 10);
+							strcat(string,color);
+							i += strlen(color);
+						}
+						inbg = 1;
+					}
+				}
+				incolor=1;
 			}
-			string[i] = ' ';
+			string[i++] = ' ';
 			continue;
 		}
-		if (*tmp == '\37') {
+		else if (*tmp == '\17') {
 			if (uline) {
-				strcat(string, "\\ulnone ");
-				i += 7;
-			}
-			else {
-				strcat(string, "\\ul ");
-				i += 3;
-			}
-			uline = ~uline;
-			continue;
-		}
-		if (*tmp == '\17') {
-			if (uline) {
-				strcat(string, "\\ulnone ");
+				strcat(string, "\\ulnone");
 				i += 7;
 			}
 			if (bold) {
-				strcat(string, "\\b0 ");
+				strcat(string, "\\b0");
 				i += 3;
 			}
-			uline = bold = 0;
+			if (incolor && !reverse) {
+				strcat(string, "\\cf0");
+				i += 4;
+			}
+			if (inbg && !reverse)
+			{
+				strcat(string, "\\highlight0");
+				i += 11;
+			}
+			if (reverse) {
+				strcat(string, "\\cf0\\highlight0");
+				i += 15;
+			}
+			if (uline || bold || incolor || inbg || reverse)
+				string[i++] = ' ';
+			uline = bold = incolor = inbg = reverse = 0;
+			continue;
 		}
-		string[i] = *tmp;
+		else if (*tmp == '\26')
+		{
+			if (reverse)
+			{
+				strcat(string, "\\cf0\\highlight0 ");
+				i += 16;
+			}
+			else
+			{
+				strcat(string, "\\cf1\\highlight16 ");
+				i += 17;
+			}
+			reverse = !reverse;
+			continue;
+		}
+
+		else if (*tmp == '\37') {
+			if (uline) {
+				strcat(string, "\\ulnone ");
+				i += 8;
+			}
+			else {
+				strcat(string, "\\ul ");
+				i += 4;
+			}
+			uline = !uline;
+			continue;
+		}
+		string[i++] = *tmp;
 	}
 	strcat(string, "}");
 	return;

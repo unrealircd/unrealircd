@@ -51,13 +51,7 @@ DLLFUNC int m_svsnick(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_SVSNICK 	"SVSNICK"	
 #define TOK_SVSNICK 	"e"	
 
-
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_svsnick_Header
-#else
-#define m_svsnick_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+ModuleHeader MOD_HEADER(m_svsnick)
   = {
 	"m_svsnick",
 	"$Id$",
@@ -66,35 +60,23 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    m_svsnick_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_svsnick)(ModuleInfo *modinfo)
 {
 	add_Command(MSG_SVSNICK, TOK_SVSNICK, m_svsnick, MAXPARA);
 	return MOD_SUCCESS;
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int    m_svsnick_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_svsnick)(int module_load)
 {
 	return MOD_SUCCESS;
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_svsnick_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(m_svsnick)(int module_unload)
 {
 	if (del_Command(MSG_SVSNICK, TOK_SVSNICK, m_svsnick) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_svsnick_Header.name);
+				MOD_HEADER(m_svsnick).name);
 	}
 	return MOD_SUCCESS;
 }

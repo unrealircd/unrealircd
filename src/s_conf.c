@@ -104,6 +104,7 @@ static int	_conf_loadmodule	(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_log		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_alias		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_help		(ConfigFile *conf, ConfigEntry *ce);
+static int	_conf_offchans		(ConfigFile *conf, ConfigEntry *ce);
 
 /* 
  * Validation commands 
@@ -137,6 +138,7 @@ static int	_test_loadmodule	(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_log		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_alias		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_help		(ConfigFile *conf, ConfigEntry *ce);
+static int	_test_offchans		(ConfigFile *conf, ConfigEntry *ce);
  
 /* This MUST be alphabetized */
 static ConfigCommand _ConfigCommands[] = {
@@ -158,6 +160,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "loadmodule",		NULL,		 	_test_loadmodule},
 	{ "log",		_conf_log,		_test_log	},
 	{ "me", 		_conf_me,		_test_me	},
+	{ "official-channels", 		_conf_offchans,		_test_offchans	},
 	{ "oper", 		_conf_oper,		_test_oper	},
 	{ "set",		_conf_set,		_test_set	},
 	{ "tld",		_conf_tld,		_test_tld	},
@@ -325,7 +328,8 @@ extern void		win_error();
 #endif
 extern char modebuf[MAXMODEPARAMS*2+1], parabuf[504];
 extern void add_entropy_configfile(struct stat st, char *buf);
-
+extern void unload_all_unused_snomasks();
+extern void unload_all_unused_umodes();
 /*
  * Config parser (IRCd)
 */
@@ -365,6 +369,7 @@ ConfigItem_badword	*conf_badword_channel = NULL;
 ConfigItem_badword      *conf_badword_message = NULL;
 ConfigItem_badword	*conf_badword_quit = NULL;
 #endif
+ConfigItem_offchans	*conf_offchans = NULL;
 
 aConfiguration		iConf;
 aConfiguration		tempiConf;
@@ -445,6 +450,30 @@ void port_range(char *string, int *start, int *end)
 	*c = '\0';
 	*start = atoi(string);
 	*end = atoi((c+1));
+}
+
+/** Parses '5:60s' config values.
+ * orig: original string
+ * times: pointer to int, first value (before the :)
+ * period: pointer to int, second value (after the :) in seconds
+ * RETURNS: 0 for parse error, 1 if ok.
+ * REMARK: times&period should be ints!
+ */
+int config_parse_flood(char *orig, int *times, int *period)
+{
+char *x;
+
+	*times = *period = 0;
+	x = strchr(orig, ':');
+	/* 'blah', ':blah', '1:' */
+	if (!x || (x == orig) || (*(x+1) == '\0'))
+		return 0;
+
+	*x = '\0';
+	*times = atoi(orig);
+	*period = config_checkval(x+1, CFG_TIME);
+	*x = ':'; /* restore */
+	return 1;
 }
 
 long config_checkval(char *orig, unsigned short flags) {
@@ -563,7 +592,7 @@ typedef struct {
 } aCtab;
 extern aCtab cFlagTab[];
 
-void set_channelmodes(char *modes, struct ChMode *store)
+void set_channelmodes(char *modes, struct ChMode *store, int warn)
 {
 	aCtab *tab;
 	char *param = strchr(modes, ' ');
@@ -587,6 +616,127 @@ void set_channelmodes(char *modes, struct ChMode *store)
 		{
 			case 'f':
 			{
+#ifdef NEWCHFLOODPROT
+				/* TODO */
+				ChanFloodProt newf;
+				
+				memset(&newf, 0, sizeof(newf));
+				if (!param)
+					break;
+				if (param[0] != '[')
+				{
+					if (warn)
+						config_status("set::modes-on-join: please use the new +f format: '10:5' becomes '[10t]:5' "
+					                  "and '*10:5' becomes '[10t#b]:5'.");
+				} else
+				{
+					char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
+					int v, i;
+					unsigned short warnings = 0, breakit;
+					
+					/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
+					strlcpy(xbuf, param, sizeof(xbuf));
+					p2 = strchr(xbuf+1, ']');
+					if (!p2)
+						break;
+					*p2 = '\0';
+					if (*(p2+1) != ':')
+						break;
+					breakit = 0;
+					for (x = strtok(xbuf+1, ","); x; x = strtok(NULL, ","))
+					{
+						/* <number><1 letter>[optional: '#'+1 letter] */
+						p = x;
+						while(isdigit(*p)) { p++; }
+						if ((*p == '\0') ||
+						    !((*p == 'c') || (*p == 'j') || (*p == 'k') ||
+						    (*p == 'm') || (*p == 'n') || (*p == 't')))
+							break;
+						c = *p;
+						*p = '\0';
+						v = atoi(x);
+						if ((v < 1) || (v > 999)) /* out of range... */
+							break;
+						p++;
+						a = '\0';
+						if (*p != '\0')
+						{
+							if (*p == '#')
+							{
+								p++;
+								a = *p;
+							}
+						}
+						switch(c)
+						{
+							case 'c':
+								newf.l[FLD_CTCP] = v;
+								if ((a == 'm') || (a == 'M'))
+									newf.a[FLD_CTCP] = a;
+								else
+									newf.a[FLD_CTCP] = 'C';
+								break;
+							case 'j':
+								newf.l[FLD_JOIN] = v;
+								if (a == 'R')
+									newf.a[FLD_JOIN] = a;
+								else
+									newf.a[FLD_JOIN] = 'i';
+								break;
+							case 'k':
+								newf.l[FLD_KNOCK] = v;
+								newf.a[FLD_KNOCK] = 'K';
+								break;
+							case 'm':
+								newf.l[FLD_MSG] = v;
+								if (a == 'M')
+									newf.a[FLD_MSG] = a;
+								else
+									newf.a[FLD_MSG] = 'm';
+								break;
+							case 'n':
+								newf.l[FLD_NICK] = v;
+								newf.a[FLD_NICK] = 'N';
+								break;
+							case 't':
+								newf.l[FLD_TEXT] = v;
+								if (a == 'b')
+									newf.a[FLD_TEXT] = 'b';
+								break;
+							default:
+								breakit=1;
+								break;
+						}
+						if (breakit)
+							break;
+					} /* for strtok.. */
+					if (breakit)
+						break;
+					/* parse 'per' */
+					p2++;
+					if (*p2 != ':')
+						break;
+					p2++;
+					if (!*p2)
+						break;
+					v = atoi(p2);
+					if ((v < 1) || (v > 999)) /* 'per' out of range */
+						break;
+					newf.per = v;
+					/* Is anything turned on? (to stop things like '+f []:15' */
+					breakit = 1;
+					for (v=0; v < NUMFLD; v++)
+						if (newf.l[v])
+							breakit=0;
+					if (breakit)
+						break;
+					
+					/* w00t, we passed... */
+					memcpy(&store->floodprot, &newf, sizeof(newf));
+					store->mode |= MODE_FLOODLIMIT;
+					break;
+				}
+#else
 				char kmode = 0;
 				char *xp;
 				int msgs=0, per=0;
@@ -622,6 +772,7 @@ void set_channelmodes(char *modes, struct ChMode *store)
 				store->per = per;
 				store->kmode = kmode; 					     
 				store->mode |= MODE_FLOODLIMIT;
+#endif
 				break;
 			}
 			default:
@@ -646,11 +797,19 @@ void chmode_str(struct ChMode modes, char *mbuf, char *pbuf)
 				*mbuf++ = tab->flag;
 		}
 	}
+#ifdef NEWCHFLOODPROT
+	if (modes.floodprot.per)
+	{
+		*mbuf++ = 'f';
+		sprintf(pbuf, "%s", channel_modef_string(&modes.floodprot));
+	}
+#else
 	if (modes.per)
 	{
 		*mbuf++ = 'f';
 		sprintf(pbuf, "%s%d:%d", modes.kmode ? "*" : "", modes.msgs, modes.per);
 	}
+#endif
 	*mbuf++=0;
 }
 
@@ -1113,6 +1272,7 @@ void	free_iConf(aConfiguration *i)
 	ircfree(i->auto_join_chans);
 	ircfree(i->oper_auto_join_chans);
 	ircfree(i->oper_only_stats);
+	ircfree(i->channel_command_prefix);
 	ircfree(i->oper_snomask);
 	ircfree(i->user_snomask);
 	ircfree(i->egd_path);
@@ -1149,6 +1309,10 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->oper_snomask = strdup(SNO_DEFOPER);
 	i->ident_read_timeout = 30;
 	i->ident_connect_timeout = 10;
+	i->nick_count = 3; i->nick_period = 60; /* nickflood protection: max 3 per 60s */
+#ifdef NO_FLOOD_AWAY
+	i->away_count = 4; i->away_period = 120; /* awayflood protection: max 4 per 120s */
+#endif
 }
 
 int	init_conf(char *rootconf, int rehash)
@@ -1346,6 +1510,8 @@ void	config_rehash()
 	ConfigItem_log			*log_ptr;
 	ConfigItem_alias		*alias_ptr;
 	ConfigItem_help			*help_ptr;
+	ConfigItem_offchans		*of_ptr;
+	OperStat 			*os_ptr;
 	ListStruct 	*next, *next2;
 
 	USE_BAN_VERSION = 0;
@@ -1624,7 +1790,20 @@ void	config_rehash()
 		DelListItem(help_ptr, conf_help);
 		MyFree(help_ptr);
 	}
-
+	for (os_ptr = iConf.oper_only_stats_ext; os_ptr; os_ptr = (OperStat *)next)
+	{
+		next = (ListStruct *)os_ptr->next;
+		ircfree(os_ptr->flag);
+		MyFree(os_ptr);
+	}
+	iConf.oper_only_stats_ext = NULL;
+	for (of_ptr = conf_offchans; of_ptr; of_ptr = (ConfigItem_offchans *)next)
+	{
+		next = (ListStruct *)of_ptr->next;
+		ircfree(of_ptr->topic);
+		MyFree(of_ptr);
+	}
+	conf_offchans = NULL;
 }
 
 int	config_post_test()
@@ -2080,6 +2259,23 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 		(void)strncat(uhost, sockhost, sizeof(uhost) - strlen(uhost));
 		if (!match(aconf->ip, uhost))
 			goto attach;
+
+		/* Hmm, localhost is a special case, hp == NULL and sockhost contains
+		 * 'localhost' instead of an ip... -- Syzop. */
+		if (!strcmp(sockhost, "localhost"))
+		{
+			if (index(aconf->hostname, '@'))
+			{
+				strcpy(uhost, cptr->username);
+				strcat(uhost, "@localhost");
+			}
+			else
+				strcpy(uhost, "localhost");
+
+			if (!match(aconf->hostname, uhost))
+				goto attach;
+		}
+		
 		continue;
 	      attach:
 /*		if (index(uhost, '@'))  now flag based -- codemastr */
@@ -2148,6 +2344,7 @@ ConfigItem_vhost *Find_vhost(char *name) {
 }
 
 
+/** returns NULL if allowed and struct if denied */
 ConfigItem_deny_channel *Find_channel_allowed(char *name)
 {
 	ConfigItem_deny_channel *dchannel;
@@ -2198,157 +2395,6 @@ char *pretty_time_val(long timeval)
 		sprintf(buf, "%s%ld second%s", buf, timeval%60, timeval%60 != 1 ? "s" : "");
 	return buf;
 }
-
-/* Report the unrealircd.conf info -codemastr*/
-void report_dynconf(aClient *sptr)
-{
-	char *uhallow;
-	sendto_one(sptr, ":%s %i %s :*** Dynamic Configuration Report ***",
-	    me.name, RPL_TEXT, sptr->name);
-	sendto_one(sptr, ":%s %i %s :kline-address: %s", me.name, RPL_TEXT,
-	    sptr->name, KLINE_ADDRESS);
-	sendto_one(sptr, ":%s %i %s :modes-on-connect: %s", me.name, RPL_TEXT,
-	    sptr->name, get_modestr(CONN_MODES));
-	sendto_one(sptr, ":%s %i %s :modes-on-oper: %s", me.name, RPL_TEXT,
-	    sptr->name, get_modestr(OPER_MODES));
-	*modebuf = *parabuf = 0;
-	chmode_str(iConf.modes_on_join, modebuf, parabuf);
-	sendto_one(sptr, ":%s %i %s :modes-on-join: %s %s", me.name, RPL_TEXT,
-		sptr->name, modebuf, parabuf);
-	sendto_one(sptr, ":%s %i %s :snomask-on-oper: %s", me.name, RPL_TEXT,
-	    sptr->name, OPER_SNOMASK);
-	sendto_one(sptr, ":%s %i %s :snomask-on-connect: %s", me.name, RPL_TEXT,
-	    sptr->name, CONNECT_SNOMASK ? CONNECT_SNOMASK : "+");
-	if (OPER_ONLY_STATS)
-		sendto_one(sptr, ":%s %i %s :oper-only-stats: %s", me.name, RPL_TEXT,
-			sptr->name, OPER_ONLY_STATS);
-	if (RESTRICT_USERMODES)
-		sendto_one(sptr, ":%s %i %s :restrict-usermodes: %s", me.name, RPL_TEXT,
-			sptr->name, RESTRICT_USERMODES);
-	if (RESTRICT_CHANNELMODES)
-		sendto_one(sptr, ":%s %i %s :restrict-channelmodes: %s", me.name, RPL_TEXT,
-			sptr->name, RESTRICT_CHANNELMODES);
-	switch (UHOST_ALLOWED)
-	{
-		case UHALLOW_ALWAYS:
-			uhallow = "always";
-			break;
-		case UHALLOW_NEVER:
-			uhallow = "never";
-			break;
-		case UHALLOW_NOCHANS:
-			uhallow = "not-on-channels";
-			break;
-		case UHALLOW_REJOIN:
-			uhallow = "force-rejoin";
-			break;
-	}
-	sendto_one(sptr, ":%s %i %s :anti-spam-quit-message-time: %s", me.name, RPL_TEXT, 
-		sptr->name, pretty_time_val(ANTI_SPAM_QUIT_MSG_TIME));
-	sendto_one(sptr, ":%s %i %s :allow-userhost-change: %s", me.name, RPL_TEXT, sptr->name, uhallow);
-#ifdef USE_SSL
-	sendto_one(sptr, ":%s %i %s :ssl::egd: %s", me.name, RPL_TEXT,
-		sptr->name, EGD_PATH ? EGD_PATH : (USE_EGD ? "1" : "0"));
-	sendto_one(sptr, ":%s %i %s :ssl::certificate: %s", me.name, RPL_TEXT,
-		sptr->name, SSL_SERVER_CERT_PEM);
-	sendto_one(sptr, ":%s %i %s :ssl::key: %s", me.name, RPL_TEXT,
-		sptr->name, SSL_SERVER_KEY_PEM);
-	sendto_one(sptr, ":%s %i %s :ssl::trusted-ca-file: %s", me.name, RPL_TEXT, sptr->name,
-	 iConf.trusted_ca_file ? iConf.trusted_ca_file : "<none>");
-	sendto_one(sptr, ":%s %i %s :ssl::options: %s %s %s", me.name, RPL_TEXT, sptr->name,
-		iConf.ssl_options & SSLFLAG_FAILIFNOCERT ? "FAILIFNOCERT" : "",
-		iConf.ssl_options & SSLFLAG_VERIFYCERT ? "VERIFYCERT" : "",
-		iConf.ssl_options & SSLFLAG_DONOTACCEPTSELFSIGNED ? "DONOTACCEPTSELFSIGNED" : "");
-#endif
-
-	sendto_one(sptr, ":%s %i %s :options::show-opermotd: %d", me.name, RPL_TEXT,
-	    sptr->name, SHOWOPERMOTD);
-	sendto_one(sptr, ":%s %i %s :options::hide-ulines: %d", me.name, RPL_TEXT,
-	    sptr->name, HIDE_ULINES);
-	sendto_one(sptr, ":%s %i %s :options::webtv-support: %d", me.name, RPL_TEXT,
-	    sptr->name, WEBTV_SUPPORT);
-	sendto_one(sptr, ":%s %i %s :options::identd-check: %d", me.name, RPL_TEXT,
-	    sptr->name, IDENT_CHECK);
-	sendto_one(sptr, ":%s %i %s :options::fail-oper-warn: %d", me.name, RPL_TEXT,
-	    sptr->name, FAILOPER_WARN);
-	sendto_one(sptr, ":%s %i %s :options::show-connect-info: %d", me.name, RPL_TEXT,
-	    sptr->name, SHOWCONNECTINFO);
-	sendto_one(sptr, ":%s %i %s :maxchannelsperuser: %i", me.name, RPL_TEXT,
-	    sptr->name, MAXCHANNELSPERUSER);
-	sendto_one(sptr, ":%s %i %s :auto-join: %s", me.name, RPL_TEXT,
-	    sptr->name, AUTO_JOIN_CHANS ? AUTO_JOIN_CHANS : "0");
-	sendto_one(sptr, ":%s %i %s :oper-auto-join: %s", me.name,
-	    RPL_TEXT, sptr->name, OPER_AUTO_JOIN_CHANS ? OPER_AUTO_JOIN_CHANS : "0");
-	sendto_one(sptr, ":%s %i %s :static-quit: %s", me.name, 
-		RPL_TEXT, sptr->name, STATIC_QUIT ? STATIC_QUIT : "<none>");	
-	sendto_one(sptr, ":%s %i %s :dns::timeout: %s", me.name, RPL_TEXT,
-	    sptr->name, pretty_time_val(HOST_TIMEOUT));
-	sendto_one(sptr, ":%s %i %s :dns::retries: %d", me.name, RPL_TEXT,
-	    sptr->name, HOST_RETRIES);
-	sendto_one(sptr, ":%s %i %s :dns::nameserver: %s", me.name, RPL_TEXT,
-	    sptr->name, NAME_SERVER);
-#ifdef THROTTLING
-	sendto_one(sptr, ":%s %i %s :throttle::period: %s", me.name, RPL_TEXT,
-			sptr->name, THROTTLING_PERIOD ? pretty_time_val(THROTTLING_PERIOD) : "disabled");
-	sendto_one(sptr, ":%s %i %s :throttle::connections: %d", me.name, RPL_TEXT,
-			sptr->name, THROTTLING_COUNT ? THROTTLING_COUNT : -1);
-#endif
-	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-bantime: %s", me.name, RPL_TEXT,
-			sptr->name, pretty_time_val(UNKNOWN_FLOOD_BANTIME));
-	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-amount: %dKB", me.name, RPL_TEXT,
-			sptr->name, UNKNOWN_FLOOD_AMOUNT);
-#ifdef NO_FLOOD_AWAY
-	if (AWAY_PERIOD)
-	{
-		sendto_one(sptr, ":%s %i %s :anti-flood::away-count: %d", me.name, RPL_TEXT, 
-			sptr->name, AWAY_COUNT);
-		sendto_one(sptr, ":%s %i %s :anti-flood::away-period: %s", me.name, RPL_TEXT,
-			sptr->name, pretty_time_val(AWAY_PERIOD));
-	}
-#endif
-	sendto_one(sptr, ":%s %i %s :ident::connect-timeout: %s", me.name, RPL_TEXT,
-			sptr->name, pretty_time_val(IDENT_CONNECT_TIMEOUT));
-	sendto_one(sptr, ":%s %i %s :ident::read-timeout: %s", me.name, RPL_TEXT,
-			sptr->name, pretty_time_val(IDENT_READ_TIMEOUT));
-	
-}
-
-/* Report the network file info -codemastr */
-void report_network(aClient *sptr)
-{
-	sendto_one(sptr, ":%s %i %s :*** Network Configuration Report ***",
-	    me.name, RPL_TEXT, sptr->name);
-	sendto_one(sptr, ":%s %i %s :network-name: %s", me.name, RPL_TEXT,
-	    sptr->name, ircnetwork);
-	sendto_one(sptr, ":%s %i %s :default-server: %s", me.name, RPL_TEXT,
-	    sptr->name, defserv);
-	sendto_one(sptr, ":%s %i %s :services-server: %s", me.name, RPL_TEXT,
-	    sptr->name, SERVICES_NAME);
-	sendto_one(sptr, ":%s %i %s :stats-server: %s", me.name, RPL_TEXT,
-	    sptr->name, STATS_SERVER);
-	sendto_one(sptr, ":%s %i %s :hosts::global: %s", me.name, RPL_TEXT,
-	    sptr->name, oper_host);
-	sendto_one(sptr, ":%s %i %s :hosts::admin: %s", me.name, RPL_TEXT,
-	    sptr->name, admin_host);
-	sendto_one(sptr, ":%s %i %s :hosts::local: %s", me.name, RPL_TEXT,
-	    sptr->name, locop_host);
-	sendto_one(sptr, ":%s %i %s :hosts::servicesadmin: %s", me.name, RPL_TEXT,
-	    sptr->name, sadmin_host);
-	sendto_one(sptr, ":%s %i %s :hosts::netadmin: %s", me.name, RPL_TEXT,
-	    sptr->name, netadmin_host);
-	sendto_one(sptr, ":%s %i %s :hosts::coadmin: %s", me.name, RPL_TEXT,
-	    sptr->name, coadmin_host);
-	sendto_one(sptr, ":%s %i %s :hiddenhost-prefix: %s", me.name, RPL_TEXT,
-	    sptr->name, hidden_host);
-	sendto_one(sptr, ":%s %i %s :help-channel: %s", me.name, RPL_TEXT,
-	    sptr->name, helpchan);
-	sendto_one(sptr, ":%s %i %s :hosts::host-on-oper-up: %i", me.name, RPL_TEXT, sptr->name,
-	    iNAH);
-	sendto_one(sptr, ":%s %i %s :cloak-keys: %X", me.name, RPL_TEXT, sptr->name,
-		CLOAK_KEYCRC);
-}
-
-
 
 /*
  * Actual config parser funcs
@@ -3405,6 +3451,15 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return 1;
 	}
+#ifdef INET6
+	if ((strlen(ip) > 6) && !strchr(ip, ':') && isdigit(ip[strlen(ip)-1]))
+	{
+		config_error("%s:%i: listen: ip set to '%s' (ipv4) on an IPv6 compile, "
+		              "use the ::ffff:1.2.3.4 form instead",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ip);
+		return 1;
+	}
+#endif
 	port_range(port, &start, &end);
 	if (start == end)
 	{
@@ -4267,6 +4322,22 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 }
 
 #ifdef STRIPBADWORDS
+
+static ConfigItem_badword *copy_badword_struct(ConfigItem_badword *ca, int regex, int regflags)
+{
+	ConfigItem_badword *x = MyMalloc(sizeof(ConfigItem_badword));
+	memcpy(x, ca, sizeof(ConfigItem_badword));
+	x->word = strdup(ca->word);
+	if (ca->replace)
+		x->replace = strdup(ca->replace);
+	if (regex) 
+	{
+		memset(&x->expr, 0, sizeof(regex_t));
+		regcomp(&x->expr, x->word, regflags);
+	}
+	return x;
+}
+
 int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
@@ -4357,10 +4428,15 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 		AddListItem(ca, conf_badword_channel);
 	else if (!strcmp(ce->ce_vardata, "message"))
 		AddListItem(ca, conf_badword_message);
-	else
+	else if (!strcmp(ce->ce_vardata, "quit"))
 		AddListItem(ca, conf_badword_quit);
+	else if (!strcmp(ce->ce_vardata, "all"))
+	{
+		AddListItem(ca, conf_badword_channel);
+		AddListItem(copy_badword_struct(ca,regex,regflags), conf_badword_message);
+		AddListItem(copy_badword_struct(ca,regex,regflags), conf_badword_quit);
+	}
 	return 1;
-
 }
 
 int _test_badword(ConfigFile *conf, ConfigEntry *ce) { 
@@ -4379,7 +4455,8 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return 1;
 	}
-	else if (strcmp(ce->ce_vardata, "channel") && strcmp(ce->ce_vardata, "message") && strcmp(ce->ce_vardata, "quit")) {
+	else if (strcmp(ce->ce_vardata, "channel") && strcmp(ce->ce_vardata, "message") && 
+	         strcmp(ce->ce_vardata, "quit") && strcmp(ce->ce_vardata, "all")) {
 			config_error("%s:%i: badword with unknown type",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return 1;
@@ -4779,8 +4856,11 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 		if (cep->ce_vardata && (strlen(cep->ce_vardata) > 6) && !strchr(cep->ce_vardata, ':') &&
 		    isdigit(cep->ce_vardata[strlen(cep->ce_vardata)-1]))
 		{
-			config_status("%s:%i: link %s is probably IPv4, use the ::ffff:1.2.3.4 form instead",
-						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, ce->ce_vardata);
+			config_error("%s:%i: link %s has link::hostname set to '%s' (IPv4) on a IPv6 compile, "
+			              "use the ::ffff:1.2.3.4 form instead",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, ce->ce_vardata,
+						cep->ce_vardata);
+			errors++;
 		}
 	}
 #endif
@@ -4905,6 +4985,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else {
 		int value;
+		free(ca); /* ca isn't used, modules have their own list. */
 		for (global_i = Hooks[HOOKTYPE_CONFIGRUN]; global_i;
 		     global_i = global_i->next)
 		{
@@ -5038,7 +5119,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			tempiConf.oper_modes = (long) set_usermode(cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "modes-on-join")) {
-			set_channelmodes(cep->ce_vardata, &tempiConf.modes_on_join);
+			set_channelmodes(cep->ce_vardata, &tempiConf.modes_on_join, 0);
 		}
 		else if (!strcmp(cep->ce_varname, "snomask-on-oper")) {
 			ircstrdup(tempiConf.oper_snomask, cep->ce_vardata);
@@ -5064,6 +5145,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				tempiConf.userhost_allowed = UHALLOW_NOCHANS;
 			else
 				tempiConf.userhost_allowed = UHALLOW_REJOIN;
+		}
+		else if (!strcmp(cep->ce_varname, "channel-command-prefix")) {
+			ircstrdup(tempiConf.channel_command_prefix, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "restrict-usermodes")) {
 			int i;
@@ -5093,7 +5177,19 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			tempiConf.anti_spam_quit_message_time = config_checkval(cep->ce_vardata,CFG_TIME);
 		}
 		else if (!strcmp(cep->ce_varname, "oper-only-stats")) {
-			ircstrdup(tempiConf.oper_only_stats, cep->ce_vardata);
+			if (!cep->ce_entries)
+			{
+				ircstrdup(tempiConf.oper_only_stats, cep->ce_vardata);
+			}
+			else
+			{
+				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				{
+					OperStat *os = MyMalloc(sizeof(OperStat));
+					ircstrdup(os->flag, cepp->ce_varname);
+					AddListItem(os, tempiConf.oper_only_stats_ext);
+				}
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "maxchannelsperuser")) {
 			tempiConf.maxchannelsperuser = atoi(cep->ce_vardata);
@@ -5165,7 +5261,22 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.away_count = atol(cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "away-period"))
 					tempiConf.away_period = config_checkval(cepp->ce_vardata, CFG_TIME);
+				else if (!strcmp(cepp->ce_varname, "away-flood"))
+				{
+					int cnt, period;
+					config_parse_flood(cepp->ce_vardata, &cnt, &period);
+					tempiConf.away_count = cnt;
+					tempiConf.away_period = period;
+				}
 #endif
+				else if (!strcmp(cepp->ce_varname, "nick-flood"))
+				{
+					int cnt, period;
+					config_parse_flood(cepp->ce_vardata, &cnt, &period);
+					tempiConf.nick_count = cnt;
+					tempiConf.nick_period = period;
+				}
+
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "options")) {
@@ -5243,6 +5354,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				if (!strcmp(cepp->ce_varname, "read-timeout"))
 					tempiConf.ident_read_timeout = config_checkval(cepp->ce_vardata,CFG_TIME);
 			}
+		}
+		else if (!strcmp(cep->ce_varname, "default-bantime"))
+		{
+			tempiConf.default_bantime = config_checkval(cep->ce_vardata,CFG_TIME);
 		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 #ifdef USE_SSL
@@ -5356,6 +5471,8 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckNull(cep);
 			for (c = cep->ce_vardata; *c; c++)
 			{
+				if (*c == ' ')
+					break; /* don't check the parameter ;p */
 				switch (*c)
 				{
 					case 'q':
@@ -5377,7 +5494,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						break;
 				}
 			}
-			set_channelmodes(cep->ce_vardata, &temp);
+			set_channelmodes(cep->ce_vardata, &temp, 1);
 			if (temp.mode & MODE_NOKNOCK && !(temp.mode & MODE_INVITEONLY))
 			{
 				config_error("%s:%i: set::modes-on-join has +K but not +i",
@@ -5417,6 +5534,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "oper-auto-join")) {
 			CheckNull(cep);
 		}
+		else if (!strcmp(cep->ce_varname, "channel-command-prefix")) {
+			CheckNull(cep);
+		}
 		else if (!strcmp(cep->ce_varname, "allow-userhost-change")) {
 			CheckNull(cep);
 			if (stricmp(cep->ce_vardata, "always") && 
@@ -5435,7 +5555,20 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckNull(cep);
 		}
 		else if (!strcmp(cep->ce_varname, "oper-only-stats")) {
-			CheckNull(cep);
+			if (!cep->ce_entries)
+			{
+				CheckNull(cep);
+			}
+			else
+			{
+				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				{
+					if (!cepp->ce_varname)
+						config_error("%s:%i: blank set::oper-only-stats item",
+							cepp->ce_fileptr->cf_filename,
+							cepp->ce_varlinenum);
+				}
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "maxchannelsperuser")) {
 			CheckNull(cep);
@@ -5594,7 +5727,33 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						errors++;
 					}
 				}
+				else if (!strcmp(cepp->ce_varname, "away-flood"))
+				{
+					int cnt, period;
+					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
+					    (cnt < 1) || (cnt > 255) || (period < 10))
+					{
+						config_error("%s:%i: set::anti-flood::away-flood error. Syntax is '<count>:<period>' (eg 5:60), "
+						             "count should be 1-255, period should be greater than 9",
+							cepp->ce_fileptr->cf_filename,
+							cepp->ce_varname);
+						errors++;
+					}
+				}
 #endif
+				else if (!strcmp(cepp->ce_varname, "nick-flood"))
+				{
+					int cnt, period;
+					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
+					    (cnt < 1) || (cnt > 255) || (period < 5))
+					{
+						config_error("%s:%i: set::anti-flood::away-flood error. Syntax is '<count>:<period>' (eg 5:60), "
+						             "count should be 1-255, period should be greater than 4",
+							cepp->ce_fileptr->cf_filename,
+							cepp->ce_varname);
+						errors++;
+					}
+				}
 				else
 				{
 					config_error("%s:%i: unknown option set::anti-flood::%s",
@@ -5702,6 +5861,20 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 				continue;
 			}		
+			/* values which are >LONG_MAX are (re)set to LONG_MAX, problem is
+			 * that 'long' could be 32 or 64 bits resulting in different limits (LONG_MAX),
+			 * which then again results in different cloak keys.
+			 * We could warn/error here or silently reset them to 2147483647...
+			 * IMO it's best to error because the value 2147483647 would be predictable
+			 * (actually that's even unrelated to this 64bit problem).
+			 */
+			if ((l1 >= 2147483647) || (l2 >= 2147483647) || (l3 >= 2147483647))
+			{
+				config_error("%s:%i: set::cloak-keys: values must be below 2147483647 (2^31-1)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+				continue;
+			}
 			requiredstuff.settings.cloakkeys = 1;	
 		}
 		else if (!strcmp(cep->ce_varname, "scan")) {
@@ -5729,6 +5902,16 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					errors++;
 					continue;
 				}
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "default-bantime")) {
+			long x;
+			x = config_checkval(cep->ce_vardata,CFG_TIME);
+			if ((x < 0) > (x > 2000000000))
+			{
+				config_error("%s:%i: set::default-bantime: value '%ld' out of range",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, x);
+				errors++;
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
@@ -5916,6 +6099,84 @@ void	run_configuration(void)
 		}
 	}
 }
+
+int	_conf_offchans(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep, *cepp;
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		ConfigItem_offchans *of = MyMallocEx(sizeof(ConfigItem_offchans));
+		strlcpy(of->chname, cep->ce_varname, CHANNELLEN+1);
+		for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+		{
+			if (!strcmp(cepp->ce_varname, "topic"))
+				of->topic = strdup(cepp->ce_vardata);
+		}
+		AddListItem(of, conf_offchans);
+	}
+	return 0;
+}
+
+int	_test_offchans(ConfigFile *conf, ConfigEntry *ce)
+{
+	int errors = 0;
+	ConfigEntry *cep, *cep2;
+	char checkchan[CHANNELLEN + 1];
+	
+	if (!ce->ce_entries)
+	{
+		config_error("%s:%i: empty official-channels block", 
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return 1;
+	}
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (strlen(cep->ce_varname) > CHANNELLEN)
+		{
+			config_error("%s:%i: official-channels: '%s' name too long (max %d characters).",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname, CHANNELLEN);
+			errors++;
+			continue;
+		}
+		strcpy(checkchan, cep->ce_varname); /* safe */
+		clean_channelname(checkchan);
+		if (strcmp(checkchan, cep->ce_varname) || (*cep->ce_varname != '#'))
+		{
+			config_error("%s:%i: official-channels: '%s' is not a valid channel name.",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+			errors++;
+			continue;
+		}
+		for (cep2 = cep->ce_entries; cep2; cep2 = cep2->ce_next)
+		{
+			if (!cep2->ce_vardata)
+			{
+				config_error("%s:%i: official-channels::%s: %s has no value",
+					cep2->ce_fileptr->cf_filename, cep2->ce_varlinenum, cep->ce_varname, cep2->ce_varname);
+				errors++;
+				continue;
+			}
+			if (!strcmp(cep2->ce_varname, "topic"))
+			{
+				if (strlen(cep2->ce_vardata) > TOPICLEN)
+				{
+					config_error("%s:%i: official-channels::%s: topic too long (max %d characters).",
+						cep2->ce_fileptr->cf_filename, cep2->ce_varlinenum, cep->ce_varname, TOPICLEN);
+					errors++;
+					continue;
+				}
+			} else {
+				config_error("%s:%i: official-channels::%s: unknown directive '%s'.",
+					cep2->ce_fileptr->cf_filename, cep2->ce_varlinenum, cep->ce_varname, cep2->ce_varname);
+				errors++;
+				continue;
+			}
+		}
+	}
+	return errors;
+}
+
 
 int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 {
@@ -6185,6 +6446,10 @@ int	_conf_deny_channel(ConfigFile *conf, ConfigEntry *ce)
 		{
 			ircstrdup(deny->reason, cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "warn"))
+		{
+			deny->warn = config_checkval(cep->ce_vardata,CFG_YESNO);
+		}
 	}
 	AddListItem(deny, conf_deny_channel);
 	return 0;
@@ -6318,6 +6583,8 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 			else if (!strcmp(cep->ce_varname, "redirect"))
 				;
 			else if (!strcmp(cep->ce_varname, "reason"))
+				;
+			else if (!strcmp(cep->ce_varname, "warn"))
 				;
 			else 
 			{
@@ -6506,6 +6773,7 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 
 int     rehash(aClient *cptr, aClient *sptr, int sig)
 {
+	loop.ircd_rehashing = 1;
 	flush_connections(&me);
 	if (sig == 1)
 	{
@@ -6518,7 +6786,9 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	}
 	if (init_conf(configfile, 1) == 0)
 		run_configuration();
-	
+	unload_all_unused_snomasks();
+	unload_all_unused_umodes();
+	loop.ircd_rehashing = 0;	
 	return 1;
 }
 

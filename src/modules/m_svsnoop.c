@@ -55,13 +55,7 @@ DLLFUNC int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 extern ircstats IRCstats;
 extern int SVSNOOP;
 
-
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_svsnoop_Header
-#else
-#define m_svsnoop_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+ModuleHeader MOD_HEADER(m_svsnoop)
   = {
 	"m_svsnoop",
 	"$Id$",
@@ -70,35 +64,23 @@ ModuleHeader Mod_Header
 	NULL
     };
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    m_svsnoop_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_svsnoop)(ModuleInfo *modinfo)
 {
 	add_Command(MSG_SVSNOOP, TOK_SVSNOOP, m_svsnoop, MAXPARA);
 	return MOD_SUCCESS;
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int    m_svsnoop_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_svsnoop)(int module_load)
 {
 	return MOD_SUCCESS;
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_svsnoop_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(m_svsnoop)(int module_unload)
 {
 	if (del_Command(MSG_SVSNOOP, TOK_SVSNOOP, m_svsnoop) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_svsnoop_Header.name);
+				MOD_HEADER(m_svsnoop).name);
 	}
 	return MOD_SUCCESS;
 }
@@ -123,6 +105,7 @@ int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[])
                                         if (IsAnOper(acptr))
                                         {
                                                 IRCstats.operators--;
+                                                VERIFY_OPERCOUNT(acptr, "svsnoop");
                                                 delfrom_fdlist(acptr->slot, &oper_fdlist);
                                         }
                                         acptr->umodes &=
@@ -133,9 +116,9 @@ int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[])
                                         acptr->umodes &=
                                             ~(UMODE_KIX | UMODE_DEAF | UMODE_HIDEOPER);
                                         acptr->oflag = 0;
-                                       acptr->user->snomask &= ~(SNO_CLIENT|SNO_FLOOD|SNO_FCLIENT|
-                                                SNO_EYES|SNO_VHOST);
-
+                                        acptr->user->snomask &= ~(SNO_CLIENT|SNO_FLOOD|SNO_FCLIENT|
+                                                SNO_JUNK|SNO_TKL|SNO_EYES|SNO_VHOST|SNO_NICKCHANGE|SNO_QLINE);
+					RunHook2(HOOKTYPE_LOCAL_OPER, acptr, 0);
                                 }
                         }
 

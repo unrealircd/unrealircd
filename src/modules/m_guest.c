@@ -31,7 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 #ifdef _WIN32
-#define snprintf _snprintf
+//#define snprintf _snprintf
 #include <io.h>
 #endif
 #include <fcntl.h>
@@ -48,12 +48,8 @@ DLLFUNC int m_guest(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 static Hook *GuestHook = NULL;
 #endif
 /* Place includes here */
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_guest_Header
-#else
-#define m_guest_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+
+ModuleHeader MOD_HEADER(m_guest)
   = {
 	"guest",	/* Name of module */
 	"$Id$", /* Version */
@@ -63,16 +59,8 @@ ModuleHeader Mod_Header
     };
 
 ModuleInfo *ModGuestInfo;
-/* The purpose of these ifdefs, are that we can "static" link the ircd if we
- * want to
-*/
-
 /* This is called on module init, before Server Ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    m_guest_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_guest)(ModuleInfo *modinfo)
 {
 	/*
 	 * We call our add_Command crap here
@@ -86,11 +74,7 @@ int    m_guest_Init(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int    m_guest_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_guest)(int module_load)
 {
 	return MOD_SUCCESS;
 	
@@ -98,19 +82,13 @@ int    m_guest_Load(int module_load)
 
 
 /* Called when module is unloaded */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_guest_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(m_guest)(int module_unload)
 {
 #ifdef GUEST
 	HookDel(GuestHook);
 #endif
 	return MOD_SUCCESS;
 }
-
-
 
 DLLFUNC int m_guest(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {

@@ -31,11 +31,11 @@ OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/S_DEBUG.OBJ  SRC/SUPPORT.OBJ SRC/LIST.OBJ \
  SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/S_BSD.OBJ \
  SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/WIN32GUI.OBJ \
- SRC/VERSION.OBJ SRC/RES_INIT.OBJ \
+ SRC/VERSION.OBJ SRC/RES_INIT.OBJ SRC/RES_COMP.OBJ SRC/RES_MKQUERY.OBJ SRC/RES_SKIPNAME.OBJ \
  SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ \
  SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ \
  SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ \
- SRC/SERVICE.OBJ SRC/DEBUG.OBJ SRC/RANDOM.OBJ
+ SRC/SERVICE.OBJ SRC/DEBUG.OBJ SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/S_STATS.OBJ
 
 MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OBJ \
  SRC/M_SETNAME.OBJ SRC/M_SETHOST.OBJ SRC/M_CHGIDENT.OBJ SRC/M_SVSMOTD.OBJ \
@@ -70,7 +70,7 @@ CONF:
 	
 
 ./WIRCD.EXE: $(OBJ_FILES) $(MOD_FILES) SRC/win32/WIN32.RES
-        $(LINK) $(LFLAGS) $(OBJ_FILES) $(MOD_FILES) SRC/win32/WIN32.RES SRC/WIN32/GNU_REGEX.LIB  /MAPINFO:LINES /MAP
+        $(LINK) $(LFLAGS) $(OBJ_FILES) $(MOD_FILES) SRC/win32/WIN32.RES SRC/WIN32/TRE.LIB /MAPINFO:LINES /MAP
 	-@erase src\win32\win32.res
 !IFNDEF DEBUG
  @echo Non Debug version built 
@@ -101,6 +101,9 @@ src/ircsprintf.obj: src/ircsprintf.c $(INCLUDES)
 
 src/packet.obj: src/packet.c $(INCLUDES)
         $(CC) $(CFLAGS) src/packet.c
+
+src/s_stats.obj: src/s_stats.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/s_stats.c
 
 src/fdlist.obj: src/fdlist.c $(INCLUDES)
         $(CC) $(CFLAGS) src/fdlist.c
@@ -138,6 +141,12 @@ src/list.obj: src/list.c $(INCLUDES)
 
 src/res.obj: src/res.c $(INCLUDES)
         $(CC) $(CFLAGS) src/res.c
+
+src/res_mkquery.obj: src/res_mkquery.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/res_mkquery.c
+
+src/res_skipname.obj: src/res_skipname.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/res_skipname.c
 
 src/s_bsd.obj: src/s_bsd.c $(INCLUDES)
         $(CC) $(CFLAGS) src/s_bsd.c
@@ -230,6 +239,9 @@ src/cidr.obj: src/cidr.c $(INCLUDES)
 
 src/random.obj: src/random.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/random.c
+
+src/extcmodes.obj: src/extcmodes.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/extcmodes.c
 
 src/ssl.obj: src/ssl.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/ssl.c
