@@ -1653,7 +1653,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 		{
 			link->connpwd = strdup(cep->ce_vardata);
 		} else
-		if (!strcmp(cep->ce_varname, "password-recieve"))
+		if (!strcmp(cep->ce_varname, "password-receive"))
 		{
 			link->recvpwd = strdup(cep->ce_vardata);
 		} else

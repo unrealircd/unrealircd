@@ -1099,9 +1099,8 @@ int  m_svsnick(cptr, sptr, parc, parv)
 				return exit_client(cptr, acptr, sptr,
 				    "Nickname collision due to Services enforced "
 				    "nickname change, your nick was overruled");
-			if (strchr(parv[2], '.'))
-				return exit_client(cptr, acptr, sptr,
-				    "SVSNICK Collide (nick changed to be server)");
+			if (do_nick_name(parv[2]) == 0)
+				return 0;
 			acptr->umodes &= ~UMODE_REGNICK;
 			acptr->lastnick = TS2ts(parv[3]);
 			sendto_common_channels(acptr, ":%s NICK :%s", parv[1],

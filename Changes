@@ -111,3 +111,6 @@
   Sts(TM)coding
 - Added set {} (unrealircd.conf/network file replacement)
 - Made vhost {} use from {} for hosts
+- Fixed some stskeeps-drunk-coding stuff in m_server
+- Fixed a typo "receive" not "recieve"
+- Made SVSNICK check if a nick is valid

@@ -651,8 +651,8 @@ int  m_server(cptr, sptr, parc, parv)
 	{
 		/* For now, we don't check based on DNS, it is slow, and IPs
 		   are better */
-		aconf = Find_link(servername, cptr->username, cptr->sockhost,
-		    cptr->sockhost);
+		aconf = Find_link(cptr->username, cptr->sockhost, cptr->sockhost,
+		    servername);
 		if (!aconf)
 		{
 			sendto_one(cptr,
