@@ -197,7 +197,7 @@ int  loadbadwords_channel(char *wordfile)
 			 */
 			channelword[i] =
 			    (char *)MyMalloc(strlen(buf) + strlen(PATTERN) - 1);
-			sprintf(channelword[i], PATTERN, buf);
+			ircsprintf(channelword[i], PATTERN, buf);
 		}
 		channel_wordlist++;
 	}
@@ -261,7 +261,7 @@ int  loadbadwords_message(char *wordfile)
 			 */
 			messageword[i] =
 			    (char *)MyMalloc(strlen(buf) + strlen(PATTERN) - 1);
-			sprintf(messageword[i], PATTERN, buf);
+			ircsprintf(messageword[i], PATTERN, buf);
 		}
 		message_wordlist++;
 	}
