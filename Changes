@@ -597,7 +597,7 @@
 - Fixed some more -Wall warnings
 - ./update now checks when you specify wget if it exists, if not it tries lynx
 - Cached MOTDs are now dynamically allocated (saves alot of memory)
-- Made aClient->passwd dynamically allocated (saves 32bytes per user/server) [may need debugging]
+- Made aClient->passwd dynamically allocated (saves 32bytes per user/server)
 - Fixed a NOTICE crash bug, reported by EJ
 - Removed a excessive va_end in send.c
 - Fixed a bug when running the ircd with -h
@@ -615,3 +615,8 @@
 - Fixed a bug where +K could be set when +i was not (reported by rapta)
 - Made it so if you set -i on a channel that is +K it sets -iK
 - Fixed whowas so it no longer reports away messages
+- Made major changes to +I (may need debugging)
+  - When you set +I while on a chan it sends a PART to the rest of the channel
+  - When you set -I which on a chan it sends a JOIN to the rest of the channel
+  - Net/TechAdmins now receive a JOIN/PART when you JOIN/PART a channel
+  - Net/TechAdmins can now see +I users in /names

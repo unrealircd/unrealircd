@@ -1737,3 +1737,76 @@ void	sendto_message_one(aClient *to, aClient *from, char *sender,
         sendto_prefix_one(to, from, ":%s %s %s :%s",
                          sender, cmd, nick, msg);
 }
+
+/* The following functions are for +/-I -- codemastr */
+
+void sendto_channels_inviso_join(aClient *user)
+{
+        Link *channels;
+        Link *users;
+        aClient *cptr;
+
+        memset((char *)sentalong, '\0', sizeof(sentalong));
+        if (user->fd >= 0)
+                sentalong[user->fd] = 1;
+        if (user->user)
+                for (channels = user->user->channel; channels; channels = channels->next)
+                        for (users = channels->value.chptr->members; users; users = users->next)
+			{
+                                cptr = users->value.cptr;
+                                if (!MyConnect(cptr) || IsTechAdmin(cptr) || IsNetAdmin(cptr) || sentalong[cptr->fd] || cptr == user)
+                                        continue;
+                                sentalong[cptr->fd]++;
+                                sendto_one(cptr, ":%s!%s@%s JOIN :%s", user->name, user->user->username,
+				(IsHidden(user) ? user->user->virthost : user->user->realhost), channels->value.chptr->chname); 
+			}
+	return;
+}
+
+void sendto_channels_inviso_part(aClient *user)
+{
+        Link *channels;
+        Link *users;
+        aClient *cptr;
+
+        memset((char *)sentalong, '\0', sizeof(sentalong));
+        if (user->fd >= 0)
+                sentalong[user->fd] = 1;
+        if (user->user)
+                for (channels = user->user->channel; channels; channels = channels->next)
+                        for (users = channels->value.chptr->members; users; users = users->next)
+			{
+                                cptr = users->value.cptr;
+                                if (!MyConnect(cptr) || IsTechAdmin(cptr) || IsNetAdmin(cptr) || sentalong[cptr->fd] || cptr == user)
+                                        continue;
+                                sentalong[cptr->fd]++;
+                		sendto_one(cptr, ":%s!%s@%s PART :%s", user->name, user->user->username, (IsHidden(user) ? user->user->virthost : user->user->realhost), channels->value.chptr->chname);
+			}
+	return;
+}
+
+void sendto_channel_ntadmins(aClient *from, aChannel *chptr, char *pattern, ...)
+{
+        va_list vl;
+        Link *lp;
+        aClient *acptr;
+        int  i;
+
+        va_start(vl, pattern);
+        ++sentalong_marker;
+        for (lp = chptr->members; lp; lp = lp->next)
+	{
+                acptr = lp->value.cptr;
+                if (acptr->from == from || !(IsNetAdmin(acptr) || IsTechAdmin(acptr)) || (IsDeaf(acptr) && !(sendanyways == 1)))
+                        continue;
+                if (MyConnect(acptr))   /* (It is always a client) */
+                        vsendto_prefix_one(acptr, from, pattern, vl);
+                else if (sentalong[(i = acptr->from->fd)] != sentalong_marker)
+		{
+                        sentalong[i] = sentalong_marker;
+                        vsendto_prefix_one(acptr, from, pattern, vl);
+		}
+	}
+	va_end(vl);
+	return;
+}

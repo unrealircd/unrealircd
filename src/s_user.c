@@ -4390,6 +4390,7 @@ int  m_umode(cptr, sptr, parc, parv)
 			sendto_serv_butone(cptr,
 			    ":%s SMO A :[+I] Activated total invisibility mode on %s",
 			    me.name, sptr->name);
+			sendto_channels_inviso_part(sptr);
 		}
 		if (!(sptr->umodes & (UMODE_HIDING)))
 		{
@@ -4401,6 +4402,8 @@ int  m_umode(cptr, sptr, parc, parv)
 				sendto_serv_butone(cptr,
 				    ":%s SMO A :[+I] De-activated total invisibility mode on %s",
 				    me.name, sptr->name);
+				sendto_channels_inviso_join(sptr);
+
 			}
 		}
 	}

@@ -2975,6 +2975,8 @@ int  m_join(cptr, sptr, parc, parv)
 				sendto_serv_butone_token(&me, me.name, MSG_SMO,
 				    TOK_SMO, "A :[+I] %s invisible joined %s",
 				    sptr->name, chptr->chname);
+				sendto_channel_ntadmins(sptr, chptr,  ":%s JOIN :%s",
+				    sptr->name, chptr->chname);
 			}
 		}
 		else if (chptr->mode.mode & MODE_AUDITORIUM)
@@ -3110,6 +3112,12 @@ int  m_part(cptr, sptr, parc, parv)
 					    me.name, MSG_SMO, TOK_SMO,
 					    "A :[+I] %s invisible parted %s",
 					    sptr->name, chptr->chname);
+					if (parc < 3)
+						sendto_channel_ntadmins(sptr, chptr, ":%s PART %s",
+						    sptr->name, chptr->chname);
+					else
+						sendto_channel_ntadmins(sptr, chptr, ":%s PART %s :%s",
+						    sptr->name, chptr->chname, comment);
 				}
 				if (MyClient(sptr))
 					/* awful hack .. */
@@ -4183,7 +4191,7 @@ int  m_names(cptr, sptr, parc, parv)
 		acptr = cm->value.cptr;
 		if (IsInvisible(acptr) && !member)
 			continue;
-		if (IsHiding(acptr) && acptr != sptr)
+		if (IsHiding(acptr) && acptr != sptr && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
 			continue;
 		if (chptr->mode.mode & MODE_AUDITORIUM)
 			if (!is_chan_op(sptr, chptr)
