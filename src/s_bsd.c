@@ -1710,8 +1710,8 @@ int  read_message(delay, listp)
 			
 			else if (!IsMe(cptr))
 			{
-				if (DBufLength(&cptr->recvQ) && delay2 > 2)
-					delay2 = 1;
+/*				if (DBufLength(&cptr->recvQ) && delay2 > 2)
+					delay2 = 1; */
 				if (DBufLength(&cptr->recvQ) < 4088)
 					FD_SET(i, &read_set);
 			}
@@ -1736,8 +1736,8 @@ int  read_message(delay, listp)
 		}
 #endif
 
-		wait.tv_sec = MIN(delay2, delay);
-		wait.tv_usec = usec;
+		wait.tv_sec = delay;
+		wait.tv_usec = 0;
 #ifdef	HPUX
 		nfds = select(FD_SETSIZE, (int *)&read_set, (int *)&write_set,
 		    0, &wait);
