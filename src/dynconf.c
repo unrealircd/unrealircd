@@ -391,6 +391,18 @@ int  load_conf2(FILE * conf, char *filename, int type)
 			{
 				EXEMPT_ALL = atoi(setto);
 			}
+			else if (strcmp(var, "CLOAK_KEY_1") == 0)
+			{
+				CLOAK_KEY1 = ircabs(atol(setto));
+			}
+			else if (strcmp(var, "CLOAK_KEY_2") == 0)
+			{
+				CLOAK_KEY2 = ircabs(atol(setto));
+			}
+			else if (strcmp(var, "CLOAK_KEY_3") == 0)
+			{
+				CLOAK_KEY3 = ircabs(atol(setto));
+			}
 #ifndef BIG_SECURITY_HOLE
 			else if (strcmp(var, "SETUID") == 0)
 			{
@@ -506,12 +518,6 @@ int  load_conf3(FILE * conf, char *filename, int type)
 			{
 				AllocCpy(helpchan, setto);
 			}
-                        else if (strcmp(var, "cloak_key_1") == 0)
-                                CLOAK_KEY1 = ircabs(atol(setto));
-                        else if (strcmp(var, "cloak_key_2") == 0)
-                                CLOAK_KEY2 = ircabs(atol(setto));
-                        else if (strcmp(var, "cloak_key_3") == 0)
-                                CLOAK_KEY3 = ircabs(atol(setto));
 			else if (strcmp(var, "STATS_SERVER") == 0)
 			{
 				AllocCpy(STATS_SERVER, setto);
@@ -562,6 +568,8 @@ void doneconf(int type)
 		strcat(errormsg, "- EXEMPT_ALL is an invalid value\n");
 	if (HOST_RETRIES < 0 || HOST_RETRIES > 10)
 		strcat(errormsg, "- HOST_RETRIES is an invalid value\n");
+        if ((CLOAK_KEY1 < 10000) || (CLOAK_KEY2 < 10000) || (CLOAK_KEY3 < 10000))
+                strcat(errormsg, "- Missing cloak keys, or they're too easy to guess. Make them > 10000\n");
 #define Missing(x) !(x) || (*(x) == '\0')
 	if (Missing(defserv))
 		strcat(errormsg, "- Missing defserv field\n");
@@ -585,8 +593,6 @@ void doneconf(int type)
 		strcat(errormsg, "- Missing netdomain field\n");
 	if (Missing(helpchan))
 		strcat(errormsg, "- Missing helpchan field\n");
-	if ((CLOAK_KEY1 < 10000) || (CLOAK_KEY2 < 10000) || (CLOAK_KEY3 < 10000))
-		strcat(errormsg, "- Missing cloak keys, or they're too easy to guess. Make them > 10000\n");
 	if (Missing(STATS_SERVER))
 		strcat(errormsg, "- Missing STATS_SERVER field\n");
 	if (Missing(iConf.socksbanmessage))

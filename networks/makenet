@@ -7,7 +7,7 @@
 #
 # (c) 2000 codemastr (Dominick Meglio) and the UnrealIRCd Team
 
-VERSION="2.2"
+VERSION="2.3"
 DATE=`date "+%d %B %Y %H:%M"`
 FILE="mynet.network"
 EXISTS="y"
@@ -27,9 +27,6 @@ NETDOMAIN="mynet.org"
 HELPCHAN="#help"
 STATS_SERVER="stats.mynet.org"
 INAH="1"
-CKEY_1="0"
-CKEY_2="0"
-CKEY_3="0"
 SUBMIT="y"
 
 # Checking out how to specify not to make a new line with the current OS
@@ -207,29 +204,6 @@ if [ ! -z $cc ]; then
 	INAH="$cc"
 fi
 
-echo ""
-echo "*** IMPORTANT AND NEW! ***"
-echo "What is your network's first cloak key?"
-echo $n "[$CKEY_1] -> $c"
-read cc
-if [ ! -z $cc ]; then
-	CKEY_1="$cc"
-fi
-
-echo "What is your network's second cloak key?"
-echo $n "[$CKEY_2] -> $c"
-read cc
-if [ ! -z $cc ]; then
-	CKEY_2="$cc"
-fi
-
-echo "What is your network's third cloak key?"
-echo $n "[$CKEY_3] -> $c"
-read cc
-if [ ! -z $cc ]; then
-	CKEY_3="$cc"
-fi
-
 # write the actual conf
 
 cat > $FILE << __EOF__
@@ -260,9 +234,6 @@ Set STATS_SERVER ..: $STATS_SERVER
 Set HUB ...........: not_in_use
 Set iNAH ..........: $INAH
 Set net_quit ......: not_in_use
-Set cloak_key_1 ...: $CKEY_1
-Set cloak_key_2 ...: $CKEY_2
-Set cloak_key_3 ...: $CKEY_3
 __EOF__
 
 echo ""

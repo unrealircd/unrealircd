@@ -364,3 +364,15 @@ when umode +j (JUNK). Also, went through channel.c
 and made all snotices look "nicer"
 --Luke
 ===================================
+
+Moved cloak keys to unrealircd.conf, since the
+.network files are public domain (in general).
+Go lynch Stskeeps if you don't like it.
+--Luke
+===================================
+
+Actually added sample lines to unrealircd.conf
+for EXEMPT_ALL and CLOAK_KEY_n. Also, changed
+version number on both that and the .network
+file, as both have changed since 3.1.3.
+--Luke

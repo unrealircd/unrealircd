@@ -23,8 +23,8 @@
 #define DYNCONF_H
 
 /* config level */
-#define DYNCONF_CONF_VERSION "1.5"
-#define DYNCONF_NETWORK_VERSION "2.2"
+#define DYNCONF_CONF_VERSION "1.6"
+#define DYNCONF_NETWORK_VERSION "2.3"
 
 typedef struct zNetwork aNetwork;
 struct zNetwork {
