@@ -154,7 +154,7 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	/* illegal?! */
 	for (s = parv[2]; *s; s++)
 	{
-		if (!isallowed(*s) && !(*s == ':')
+		if (!isallowed(*s) && !(*s == ':'))
 		{
 			legalhost = 0;
 		}

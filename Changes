@@ -474,3 +474,5 @@ seen. gmtime warning still there
   functionality yet)
 - Made a crazed out IPv6 cloaking
 - Made chghost/chgident able to do :'s
+- Finished up IPv6 - Kudos to bball/NiQuiL (shells), perian/bunda/larne 
+  (testing)
