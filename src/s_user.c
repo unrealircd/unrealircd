@@ -3362,7 +3362,7 @@ int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 			    IsHidden(sptr) ? sptr->
 			    user->virthost : sptr->user->realhost);
 			sptr->user->oflag |= OFLAG_ADMIN|OFLAG_SADMIN|OFLAG_ISGLOBAL;
-			if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
+			if (iNAH == 1 && (aconf->oflags & OFLAG_HIDE))
 				iNAH_host(sptr, netadmin_host);
 		}
 		else if (aconf->oflags & OFLAG_TECHADMIN) {
@@ -3378,7 +3378,7 @@ int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 			    IsHidden(sptr) ? sptr->
 			    user->virthost : sptr->user->realhost);
 			sptr->user->oflag |= OFLAG_ADMIN|OFLAG_SADMIN|OFLAG_ISGLOBAL;
-			if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
+			if (iNAH == 1 && (aconf->oflags & OFLAG_HIDE))
 				iNAH_host(sptr, techadmin_host);
 		}
 		else if (aconf->oflags & OFLAG_ADMIN) {
@@ -3388,7 +3388,7 @@ int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 				    parv[0], sptr->user->username,
 				    IsHidden(sptr) ? sptr->user->virthost : sptr->
 				    user->realhost);
-				if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
+				if (iNAH == 1 && (aconf->oflags & OFLAG_HIDE))
 					iNAH_host(sptr, admin_host);
 			}
 			sptr->user->oflag |= OFLAG_ISGLOBAL;
@@ -3400,7 +3400,7 @@ int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 				    parv[0], sptr->user->username,
 				    IsHidden(sptr) ? sptr->user->virthost : sptr->
 				    user->realhost);
-				if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
+				if (iNAH == 1 && (aconf->oflags & OFLAG_HIDE))
 					iNAH_host(sptr, coadmin_host);
 			}
 			sptr->user->oflag |= OFLAG_ISGLOBAL;
@@ -3412,7 +3412,7 @@ int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 				    sptr->user->username,
 				    IsHidden(sptr) ? sptr->user->virthost : sptr->
 				    user->realhost);
-				if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
+				if (iNAH == 1 && (aconf->oflags & OFLAG_HIDE))
 					iNAH_host(sptr, oper_host);
 			}
 		}
@@ -3423,7 +3423,7 @@ int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 				    parv[0], sptr->user->username,
 				    IsHidden(sptr) ? sptr->user->virthost : sptr->
 				    user->realhost);
-				if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
+				if (iNAH == 1 && (aconf->oflags & OFLAG_HIDE))
 					iNAH_host(sptr, locop_host);
 			}
 		}
@@ -3440,7 +3440,7 @@ int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 				    me.name, parv[0], sptr->user->username,
 				    IsHidden(sptr) ? sptr->
 				    user->virthost : sptr->user->realhost);
-				if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
+				if (iNAH == 1 && (aconf->oflags & OFLAG_HIDE))
 					iNAH_host(sptr, sadmin_host);
 			}
 		}

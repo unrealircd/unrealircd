@@ -820,3 +820,4 @@ seen. gmtime warning still there
 - Made a bunch of messages check +V and if +V use PRIVMSG instead of NOTICE
 - Cleaned up NOSPOOF code a bit
 - Cleaned up /oper (a lot)
+- Fixed a bug where the /oper recode broke oper host masking (found by James-Bond)
