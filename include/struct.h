@@ -479,8 +479,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OFLAG_SADMIN	0x01000000	/* services admin gets +a */
 #define OFLAG_WHOIS     0x02000000	/* gets auto +W on oper up */
 #define OFLAG_HIDE      0x04000000	/* gets auto +x on oper up */
-#define OFLAG_AFOUNDER  0x10000000
-#define OFLAG_COFOUND   0x20000000
+#define OFLAG_TKL       0x10000000	/* can use G:lines and shuns */
+#define OFLAG_GZL       0x20000000	/* can use global Z:lines */
 #define OFLAG_WMASTER	0x40000000
 #define OFLAG_INVISIBLE 0x80000000
 #define OFLAG_LOCAL	(OFLAG_REHASH|OFLAG_HELPOP|OFLAG_GLOBOP|OFLAG_WALLOP|OFLAG_LOCOP|OFLAG_LROUTE|OFLAG_LKILL|OFLAG_KLINE|OFLAG_UNKLINE|OFLAG_LNOTICE|OFLAG_UMODEC|OFLAG_UMODEF)
@@ -488,6 +488,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OFLAG_ISGLOBAL	(OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
 
 
+#define OPCanTKL(x)	((x)->user->oflag & OFLAG_TKL)
+#define OPCanGZL(x)	((x)->user->oflag & OFLAG_GZL)
 #define OPCanZline(x)   ((x)->user->oflag & OFLAG_ZLINE)
 #define OPCanRehash(x)	((x)->user->oflag & OFLAG_REHASH)
 #define OPCanDie(x)	((x)->user->oflag & OFLAG_DIE)

@@ -164,6 +164,8 @@ static int _OldOperFlags[] = {
 	OFLAG_WHOIS, 'W',
 	OFLAG_HIDE, 'H',
 	OFLAG_INVISIBLE, '^',
+	OFLAG_TKL, 't',
+	OFLAG_GZL, 'Z',
 	0, 0
 };
 
@@ -197,6 +199,8 @@ static OperFlag _OperFlags[] = {
 	{ OFLAG_WHOIS,		"get_umodew"},
 	{ OFLAG_INVISIBLE,	"can_stealth"},
 	{ OFLAG_HIDE,		"get_host"},
+	{ OFLAG_TKL,		"can_gkline"},
+	{ OFLAG_GZL,		"can_gzline"},
 	{ 0L, 	NULL  }
 };
 

@@ -705,7 +705,7 @@ int  m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		return;
 	}
-	if (!IsOper(sptr))
+	if (!IsOper(sptr) || !OPCanTKL(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		    sptr->name);
@@ -895,7 +895,7 @@ int  m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
-	if (!IsOper(sptr))
+	if (!IsOper(sptr) || !OPCanTKL(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		    sptr->name);
