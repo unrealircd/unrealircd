@@ -377,7 +377,7 @@ static char *replies[] = {
 /* 337 */ NULL,
 /* 338 */ NULL, /* ircu, bahamut */
 /* 339 */ NULL, /* Used */
-/* 340 */ NULL, /* ircu */
+/* 340    RPL_USERIP */ ":%s 340 %s :%s %s %s %s %s",
 /* 341    RPL_INVITING */ ":%s 341 %s %s %s",
 /* 342    RPL_SUMMONING */ ":%s 342 %s %s :User summoned to irc",
 /* 343 */ NULL,

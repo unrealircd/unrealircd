@@ -184,6 +184,7 @@
 
 #define RPL_LISTSYNTAX       334
 #define RPL_WHOISBOT	     335
+#define RPL_USERIP	     340
 #define RPL_INVITING         341
 #define	RPL_SUMMONING        342
 

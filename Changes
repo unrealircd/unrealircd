@@ -344,3 +344,4 @@
 - Exported the isupport functions for use in Windows modules.
 - Added a new snomask, +o to show oper-up notices (oper only), (#0001965) suggested by 
   vonitsanet.
+- Added a /userip command that works just like ircu's.

@@ -118,13 +118,13 @@ ELIST         flags           MNUCT                        Specifies the set of 
                                                            indicates mask based searching,
                                                            the N flag indicates negative
                                                            mask based searching. The U flag
-                                                           meaning support for user count
+                                                           means support for user count
                                                            searching. The C flag allows channel
                                                            creation time searching, and the T
                                                            flag allows topic set time 
                                                            searching.
 
-CMDS          commands         MAP,KNOCK,DCCALLOW          Specifies a series of commands that
+CMDS          commands         MAP,KNOCK,DCCALLOW,USERIP   Specifies a series of commands that
                                                            can be useful for the client to know
                                                            exist as they may provide a more
                                                            efficient means for the client to

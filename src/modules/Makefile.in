@@ -46,7 +46,7 @@ R_MODULES= \
 	 m_trace.so m_netinfo.so m_links.so m_help.so m_rules.so \
 	 m_close.so m_map.so m_eos.so m_server.so m_stats.so \
 	 m_svsfline.so m_dccdeny.so m_undccdeny.so m_whowas.so \
-	 m_connect.so m_dccallow.so cloak.so oldcloak.so
+	 m_connect.so m_dccallow.so m_userip.so cloak.so oldcloak.so
 
 #note change of .c to .o
 COMMANDS=m_sethost.o m_chghost.o m_chgident.o m_setname.o m_setident.o \
@@ -66,7 +66,7 @@ COMMANDS=m_sethost.o m_chghost.o m_chgident.o m_setname.o m_setident.o \
 	 m_trace.o m_netinfo.o m_links.o m_help.o m_rules.o \
 	 m_close.o m_map.o m_eos.o m_server.o m_stats.o \
 	 m_svsfline.o m_dccdeny.o m_undccdeny.o m_whowas.o \
-	 m_connect.o m_dccallow.o
+	 m_connect.o m_dccallow.o m_userip.o
 
 
 MODULES=commands.so $(R_MODULES)
@@ -714,6 +714,9 @@ m_connect.so: m_connect.c $(INCLUDES)
 m_dccallow.so: m_dccallow.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_dccallow.so m_dccallow.c
+
+m_userip.o: m_userip.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_userip.c
 
 #############################################################################
 #             and now the remaining modules...
