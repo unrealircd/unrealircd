@@ -316,8 +316,8 @@ int match_ipv4(struct IN_ADDR *addr, struct IN_ADDR *mask, int bits)
 {
 #ifndef INET6
 	if ((ntohl(addr->s_addr) & ~((1 << (32 - bits)) - 1)) == ntohl(mask->s_addr))
-		return 0;
-	return 1;
+		return 1;
+	return 0;
 #else
 	struct in_addr ipv4addr, ipv4mask;
 	u_char *cp;
@@ -339,32 +339,12 @@ int match_ipv4(struct IN_ADDR *addr, struct IN_ADDR *mask, int bits)
 #endif
 }
 
-/* int match_ip(aClient *sptr, int type, char *mask, struct irc_netmask netmask)
- * Input: a Client, a netmask type, a string mask, and a netmask struct
+/* int match_ip(struct IN_ADDR addr, char *uhost, char *mask, struct irc_netmask *netmask)
+ * Input: an IP, a userhost, string mask, and a netmask struct
  * Output: if match, 1 else 0
  * Side Effects: None
  */
-#if 0
-int match_ip(struct IN_ADDR addr, char *uhost, char *mask, struct irc_netmask *netmask)
-{
-	if (!netmask)
-		return (!match(mask, uhost));
 
-	switch (netmask->type)
-	{
-		case HM_HOST:
-			return (!match(mask, uhost));
-		case HM_IPV4:
-			return match_ipv4(&addr, &netmask->mask, netmask->bits);
-#ifdef INET6
-		case HM_IPV6:
-			return match_ipv6(&addr, &netmask->mask, netmask->bits);
-#endif
-		default:
-			return 0;
-	}
-}
-#endif
 int match_ip(struct IN_ADDR addr, char *uhost, char *mask, struct irc_netmask *netmask)
 {
 	char *end;
