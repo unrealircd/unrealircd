@@ -21,7 +21,6 @@ set {
                 coadmin         "coadmin.cabonet.org";
                 admin           "admin.cabonet.org";
                 servicesadmin   "csop.cabonet.org";
-                techadmin       "techadmin.cabonet.org";
                 netadmin        "netadmin.cabonet.org";
                 host-on-oper-up "on";
         };

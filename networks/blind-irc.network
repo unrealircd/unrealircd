@@ -21,7 +21,6 @@ set {
                 coadmin         "Blind-Irc.Co.Admin.com";
                 admin           "Blind-Irc.Admin.com";
                 servicesadmin   "Blind-Irc.Csop.com";
-                techadmin       "Blind-Irc.Tech.com";
                 netadmin        "Blind-Irc.NetAdmin.com";
                 host-on-oper-up "on";
         };

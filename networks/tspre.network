@@ -12,7 +12,6 @@ set {
 		coadmin		"coadmin.tspre.org";
 		admin		"admin.tspre.org";
 		servicesadmin	"serviceop.tspre.org";
-		techadmin	"techadmin.tspre.org";
 		netadmin	"netadmin.tspre.org";
 		host-on-oper-up	"off";
 	};

@@ -21,7 +21,6 @@ set {
 		coadmin		"coadmin.darkwar.net";
 		admin		"admin.darkwar.net";
 		servicesadmin	"csop.darkwar.net";
-		techadmin	"techadmin.darkwar.net";
 		netadmin	"netadmin.darkwar.net";
 		host-on-oper-up	"on";
 	};

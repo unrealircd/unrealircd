@@ -21,7 +21,6 @@ set {
                 coadmin         "coadmin.phazenet.com";
                 admin           "admin.phazenet.com";
                 servicesadmin   "csop.phazenet.com";
-                techadmin       "techadmin.phazenet.com";
                 netadmin        "netadmin.phazenet.com";
                 host-on-oper-up "on";
         };

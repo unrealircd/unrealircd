@@ -22,7 +22,6 @@ set {
 		coadmin		"coadmin.global-irc.net";
 		admin		"admin.global-irc.net";
 		servicesadmin	"serviceop.global-irc.net";
-		techadmin	"techadmin.global-irc.net";
 		netadmin	"netadmin.global-irc.net";
 		host-on-oper-up	"off";
 	};

@@ -21,7 +21,6 @@ set {
                 coadmin         "coadmin.isno.net";
                 admin           "admin.isno.net";
                 servicesadmin   "csop.isno.net";
-                techadmin       "techadmin.isno.net";
                 netadmin        "netadmin.isno.net";
                 host-on-oper-up "off";
         };

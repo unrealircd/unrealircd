@@ -241,11 +241,11 @@
 #define MSG_TSCTL 	"TSCTL"
 #define TOK_TSCTL 	"AW"
 #define MSG_SVSJOIN 	"SVSJOIN"
-#define TOK_SVSJOIN 	"AX"
+#define TOK_SVSJOIN 	"BR"
 #define MSG_SAJOIN 	"SAJOIN"
-#define TOK_SAJOIN 	"AY"
+#define TOK_SAJOIN 	"AX"
 #define MSG_SVSPART 	"SVSPART"
-#define TOK_SVSPART 	"AX"
+#define TOK_SVSPART 	"BT"
 #define MSG_SAPART 	"SAPART"
 #define TOK_SAPART 	"AY"
 #define MSG_CHGIDENT 	"CHGIDENT"
@@ -292,6 +292,7 @@
 
 #define MSG_MODULE	"MODULE"
 #define TOK_MODULE	"BQ"
+/* BR and BT are in use */
 
 #define MAXPARA    	15
 
@@ -301,7 +302,7 @@ extern int m_nick(), m_error(), m_samode();
 extern int m_invite(), m_svskill(), m_identify();
 extern int m_chatops(), m_dns();
 extern int m_gnotice(), m_goper(), m_globops(), m_locops();
-extern int m_protoctl();
+extern int m_protoctl(), m_tkl();
 extern int m_motd(), m_user(), m_list();
 extern int m_server(), m_info(), m_links(), m_summon(), m_stats();
 extern int m_users(), m_version(), m_help();
@@ -322,7 +323,7 @@ extern int m_svsjoin(), m_sajoin(), m_svspart(), m_sapart();
 extern int m_svsfline();
 extern int m_vhost(), m_botmotd(), m_sjoin();
 extern int m_umode2(), m_dccdeny(), m_undccdeny();
-extern int m_post(), m_cycle();
+extern int m_post(), m_cycle(), m_opermotd();
 extern int m_module(), m_alias();
 extern int m_hash(), m_rehash(), m_die(), m_restart();
 #endif

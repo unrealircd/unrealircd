@@ -12,7 +12,6 @@ set {
 		coadmin		"CoADMIN.FireIRC.Net";
 		admin		"Admin.FireIRC.Net";
 		servicesadmin	"serviceOP.FireIRC.Net";
-		techadmin	"TechAdmin.FireIRC.Net";
 		netadmin	"NetADMIN.FireIRC.Net";
 		host-on-oper-up	"off";
 	};

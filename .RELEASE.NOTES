@@ -109,6 +109,9 @@ Unreal3.2-Selene (BETA4) RELEASE NOTES
   This allows you to have some crypted passwords and others not. If you have SSL enabled
   you may also use the md5 and sha1 methods.
 
+* The old blackhole is now set::scan::endpoint and specifies an IP and port to tell
+  proxies to connect to.
+
 * MAKE SURE YOU RERUN ./Config AND RUN make clean BEFORE USING THIS VERSION!!!
 
 * THIS IS A BETA VERSION. THINGS MAY NOT WORK. REPORT ANY BUGS TO THESE 

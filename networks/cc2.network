@@ -12,7 +12,6 @@ set {
 		coadmin		"coadmin.cc2.org";
 		admin		"admin.cc2.org";
 		servicesadmin	"services.cc2.org";
-		techadmin	"technician.cc2.org";
 		netadmin	"netadmin.cc2.org";
 		host-on-oper-up	"on";
 	};

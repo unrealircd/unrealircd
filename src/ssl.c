@@ -29,6 +29,32 @@ SSL_CTX *ctx_client;
 
 #define CHK_SSL(err) if ((err)==-1) { ERR_print_errors_fp(stderr); }
 
+int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
+{
+#ifndef _WIN32
+	char *pass;
+	static int before = 0;
+	static char beforebuf[1024];
+	if (before)
+	{
+		strncpy(buf, (char *)beforebuf, size);
+		buf[size - 1] = '\0';
+		return (strlen(buf));
+	}
+	pass = getpass("Password for SSL private key: ");
+	if (pass)
+	{
+		strncpy(buf, (char *)pass, size);
+		strncpy(beforebuf, (char *)pass, sizeof(beforebuf));
+		beforebuf[sizeof(beforebuf) - 1] = '\0';
+		buf[size - 1] = '\0';
+		before = 1;
+		return (strlen(buf));
+	}
+	return 0;
+#endif
+}
+
 void init_ctx_server(void)
 {
 	ctx_server = SSL_CTX_new(SSLv23_server_method());
@@ -37,6 +63,9 @@ void init_ctx_server(void)
 		ircd_log(LOG_ERROR, "Failed to do SSL CTX new");
 		exit(2);
 	}
+#ifndef _WIN32
+	SSL_CTX_set_default_passwd_cb(ctx_server, ssl_pem_passwd_cb);
+#endif
 
 	if (SSL_CTX_use_certificate_file(ctx_server, CERTF, SSL_FILETYPE_PEM) <= 0)
 	{
@@ -64,7 +93,9 @@ void init_ctx_client(void)
 		ircd_log(LOG_ERROR, "Failed to do SSL CTX new client");
 		exit(2);
 	}
-
+#ifndef _WIN32
+	SSL_CTX_set_default_passwd_cb(ctx_client, ssl_pem_passwd_cb);
+#endif
 	if (SSL_CTX_use_certificate_file(ctx_client, CERTF, SSL_FILETYPE_PEM) <= 0)
 	{
 		ircd_log(LOG_ERROR, "Failed to load SSL certificate %s (client)", CERTF);

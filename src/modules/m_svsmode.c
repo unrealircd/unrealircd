@@ -61,7 +61,7 @@ ModuleHeader m_svsmode_Header
 ModuleHeader Mod_Header
 #endif
   = {
-	"test",
+	"m_svsmode",
 	"$Id$",
 	"command /svsmode and svs2mode", 
 	"3.2-b5",

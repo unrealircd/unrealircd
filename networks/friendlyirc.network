@@ -21,7 +21,6 @@ set {
                 coadmin         "coadmin.friendlyirc.net";
                 admin           "admin.friendlyirc.net";
                 servicesadmin   "csop.friendlyirc.net";
-                techadmin       "techadmin.friendlyirc.net";
                 netadmin        "netadmin.friendlyirc.net";
                 host-on-oper-up "on";
         };

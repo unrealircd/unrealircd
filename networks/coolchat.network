@@ -20,7 +20,6 @@ global "staff.coolchat.net";
 coadmin "";
 admin "staff.coolchat.net";
 servicesadmin "[";
-techadmin "staff.coolchat.entstaff.c";
 netadmin "staff.coolchat.net";
 host-on-oper yes;
 };

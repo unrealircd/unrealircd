@@ -155,6 +155,7 @@
  *   Reject bans that are matched by existing bans, causes chanserv
  *   To flood-kick an akicked user if their akick is matched by another
  *   Ban, but if you don't mind, this can free up ban list space I guess
+ */
 #undef NAZIISH_CHBAN_HANDLING
 
 /*
@@ -448,7 +449,7 @@
  */
 
 #define MAXTARGETS		20
-#define TARGET_DELAY		120
+#define TARGET_DELAY		15
 
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
 

@@ -223,7 +223,7 @@ install: all
 	$(INSTALL) -m 0700 -d $(IRCDDIR)/modules
 	$(INSTALL) -m 0700 src/modules/*.so $(IRCDDIR)/modules
 
- pem:	src/ssl.cnf
+pem:	src/ssl.cnf
 	@echo "Generating certificate request .. "
 	$(OPENSSLPATH) req -new \
               -config src/ssl.cnf -out server.req.pem \
@@ -237,4 +237,15 @@ install: all
 	@echo "Setting o-rwx & g-rwx for files... "
 	chmod o-rwx server.req.pem server.key.pem server.cert.pem
 	chmod g-rwx server.req.pem server.key.pem server.cert.pem
-	@echo "Done!."
+	@echo "Done!. If you want to encrypt the private key, run"
+	@echo "make encpem"
+
+encpem: server.key.pem
+	@echo "Encrypting server key .."
+	$(OPENSSLPATH) rsa -in server.key.pem -out server.key.c.pem -des3
+	-@if [ -f server.key.c.pem ] ; then \
+		echo "Replacing unencrypted with encrypted .." ; \
+		cp server.key.c.pem server.key.pem ; \
+		rm -f server.key.c.pem ; \
+	fi
+

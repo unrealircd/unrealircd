@@ -3,6 +3,7 @@
 // Used by Win32GUI.rc
 //
 #define VER_UNREAL                      1
+#define MANIFEST_RESOURCE_ID            2
 #define ICO_MAIN                        129
 #define BMP_LOGO                        130
 #define BMP_BAR                         133
@@ -12,7 +13,10 @@
 #define MENU_REHASH                     144
 #define MENU_SYSTRAY                    145
 #define MENU_CONTEXT                    146
+#define IDB_BITMAP1                     150
 #define IDC_BAR                         1103
+#define IDC_TOOLBAR                     1104
+#define IDC_STATUS                      1105
 #define IDC_TEXT                        1107
 #define IDC_EMAIL                       1108
 #define IDC_URL                         1109
@@ -34,6 +38,7 @@
 #define IDC_FIND                        1132
 #define IDFIND                          1133
 #define IDC_FINDTEXT                    1135
+#define IDC_GOTO                        1135
 #define IDC_MATCHWHOLE                  1137
 #define IDC_MATCHCASE                   1138
 #define IDC_DIRUP                       1139
@@ -59,6 +64,8 @@
 #define IDM_DAL                         40028
 #define IDM_LICENSE                     40029
 #define IDM_HELP                        40030
+#define IDM_SAVE                        40031
+#define IDM_REDO                        40032
 #define IDM_CONF                        40037
 #define IDM_MOTD                        40038
 #define IDM_BOTMOTD                     40039
@@ -81,7 +88,7 @@
 #define IDM_PASTE                       40057
 #define IDM_DELETE                      40058
 #define IDM_SELECTALL                   40059
-#define IDM_NEW				40060
+#define IDM_NEW                         40060
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -89,9 +96,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        149
+#define _APS_NEXT_RESOURCE_VALUE        151
 #define _APS_NEXT_COMMAND_VALUE         40061
-#define _APS_NEXT_CONTROL_VALUE         1164
+#define _APS_NEXT_CONTROL_VALUE         1166
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

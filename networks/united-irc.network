@@ -21,7 +21,6 @@ set {
                 coadmin         "coadmin.united-irc.net";
                 admin           "admin.united-irc.net";
                 servicesadmin   "csop.united-irc.net";
-                techadmin       "techadmin.united-irc.net";
                 netadmin        "netadmin.united-irc.net";
                 host-on-oper-up "on";
         };

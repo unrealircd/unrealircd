@@ -21,7 +21,6 @@ set {
                 coadmin         "COadmin.ShallomChat.org";
                 admin           "Admin.ShallomChat.org";
                 servicesadmin   "CSop.ShallomChat.org";
-                techadmin       "Techadmin.ShallomChat.org";
                 netadmin        "Netadmin.ShallomChat.org";
                 host-on-oper-up "on";
         };

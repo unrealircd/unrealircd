@@ -22,7 +22,6 @@ set {
 		coadmin		"coadmin.roxnet.org";
 		admin		"admin.roxnet.org";
 		servicesadmin	"csops.roxnet.org";
-		techadmin	"techadmin.roxnet.org";
 		netadmin	"netadmin.roxnet.org";
 		host-on-oper-up	"off";
 	};

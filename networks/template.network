@@ -14,7 +14,6 @@ set {
 		coadmin		"coadmin.ircnet.org"; // sets the host to be given to coadmins
 		admin		"admin.ircnet.org"; // sets the host to be given to admins
 		servicesadmin	"serviceop.ircnet.org"; // sets the host to be given to services admins
-		techadmin	"techadmin.ircnet.org"; // sets the host to be given to techadmins
 		netadmin	"netadmin.ircnet.org"; // sets the host to be given to netadmins
 		host-on-oper-up	"off"; // sets whether to assign the hosts on oper up
 	};

@@ -1342,6 +1342,11 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			continue;
 		}
+		if (!strcmp(cep->ce_varname, "password"))
+		{
+			oper->auth = Auth_ConvertConf2AuthStruct(cep);
+			continue;
+		}
 		if (!cep->ce_entries)
 		{
 			/* standard variable */
@@ -1364,10 +1369,6 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 						cep->ce_vardata);
 					oper->class = default_class;
 				}
-			} else
-			if (!strcmp(cep->ce_varname, "password"))
-			{
-				oper->auth = Auth_ConvertConf2AuthStruct(cep);
 			}
 			else if (!strcmp(cep->ce_varname, "swhois")) {
 				ircstrdup(oper->swhois, cep->ce_vardata);
@@ -1415,8 +1416,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 					{
 						if (!strcmp(ofp->name, cepp->ce_varname))
 						{
-							if (!(oper->oflags & ofp->flag))
-								oper->oflags |= ofp->flag;
+							oper->oflags |= ofp->flag;
 							break;
 						}
 					}
@@ -2578,7 +2578,7 @@ int	_conf_deny_link(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_deny_link 	*deny = NULL;
 	ConfigEntry 	    	*cep;
 
-	deny = MyMallocEx(sizeof(ConfigItem_deny_dcc));
+	deny = MyMallocEx(sizeof(ConfigItem_deny_link));
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!cep->ce_varname || !cep->ce_vardata)
@@ -3653,6 +3653,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 
 	/* rehash_modules */
 	init_conf2(configfile);
+	validate_configuration();
 	module_loadall(0);
 	/* Clean up listen records */
 	close_listeners();

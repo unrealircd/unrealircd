@@ -21,7 +21,6 @@ set {
                 coadmin         "coadmin.pheernet.org";
                 admin           "admin.pheernet.org";
                 servicesadmin   "csops.pheernet.org";
-                techadmin       "techadmin.pheernet.org";
                 netadmin        "netadmin.pheernet.org";
                 host-on-oper-up "on";
         };

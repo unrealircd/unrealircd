@@ -19,7 +19,6 @@ global "IRC4ever.net";
 coadmin "IRC4ever.net";
 admin "IRC4ever.net";
 servicesadmin "IRC4ever.net";
-techadmin "IRC4ever.net";
 netadmin "IRC4ever.net";
 host-on-oper yes;
 };

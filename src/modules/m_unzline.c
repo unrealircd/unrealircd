@@ -156,7 +156,7 @@ DLLFUNC int m_unzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		if (parc == 3 && server)
 		{
-			if (hunt_server(cptr, sptr, ":%s UNZLINE %s %s", 2,
+			if (hunt_server_token(cptr, sptr, MSG_UNZLINE, TOK_UNZLINE, "%s %s", 2,
 			    parc, parv) != HUNTED_ISME)
 				return 0;
 			else;

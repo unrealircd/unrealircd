@@ -25,6 +25,7 @@
 #include "h.h"
 #include "hash.h"
 #include "proto.h"
+#include "msg.h"
 #include <string.h>
 
 /* externally defined functions */
@@ -162,7 +163,7 @@ int  m_whowas(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc > 2)
 		max = atoi(parv[2]);
 	if (parc > 3)
-		if (hunt_server(cptr, sptr, ":%s WHOWAS %s %s :%s", 3, parc,
+		if (hunt_server_token(cptr, sptr, MSG_WHOWAS, TOK_WHOWAS, "%s %s :%s", 3, parc,
 		    parv))
 			return 0;
 

@@ -21,7 +21,6 @@ set {
 		coadmin		"CoAdmin.Israel.Net";
 		admin		"Admin.Israel.Net";
 		servicesadmin	"CSop.Israel.Net";
-		techadmin	"TechAdmin.Israel.Net";
 		netadmin	"NetAdmin.Israel.Net";
 		host-on-oper-up	"on";
 	};

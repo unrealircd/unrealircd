@@ -285,7 +285,6 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 							}
 							nums[k] = 0;
 							i--;
-							ircd_log(LOG_ERROR, "num - %s", nums);
 							if (format->parameters[i+1] == '-') {
 								strrangetok(parv[1], current, ' ', atoi(nums),0);
 								i++;

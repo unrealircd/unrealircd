@@ -83,7 +83,7 @@ Module *Module_Find(char *name)
 /*
  * Returns an error if insucessful .. yes NULL is OK! 
 */
-char  *Module_Load (char *path, int load)
+char  *Module_Load (char *path_, int load)
 {
 #ifndef STATIC_LINKING
 #ifdef _WIN32
@@ -95,11 +95,21 @@ char  *Module_Load (char *path, int load)
 	int             (*Mod_Load)();
 	int             (*Mod_Unload)();
 	static char 	errorbuf[1024];
+	char 		*path;
 	ModuleHeader    *mod_header;
 	int		ret = 0;
 	Module          *mod = NULL;
 	Debug((DEBUG_DEBUG, "Attempting to load module from %s",
-	       path));
+	       path_));
+	path = path_;
+
+	if(!strchr(path, '/'))
+	{
+		path = malloc(strlen(path) + 3);
+		strcpy(path, "./");
+		strcat(path, path_);
+	}
+	
 	if ((Mod = irc_dlopen(path, RTLD_NOW)))
 	{
 		/* We have engaged the borg cube. Scan for lifesigns. */
@@ -193,7 +203,9 @@ char  *Module_Load (char *path, int load)
 		/* Return the error .. */
 		return ((char *)irc_dlerror());
 	}
-					     
+	
+	if (path != path_)
+		free(path);				     
 	
 #else /* !STATIC_LINKING */
 	return "We don't support dynamic linking";
@@ -299,6 +311,35 @@ int     Module_Unload(char *name, int unload)
 	return 1;
 }
 
+vFP Module_SymEx(
+#ifdef _WIN32
+	HMODULE mod
+#else
+	void *mod
+#endif
+	, char *name)
+{
+#ifndef STATIC_LINKING
+	vFP	fp;
+	char	buf[512];
+	int	i;
+
+	if (!name)
+		return NULL;
+	
+	ircsprintf(buf, "_%s", name);
+
+	/* Run through all modules and check for symbols */
+	irc_dlsym(mod, name, fp);
+	if (fp)
+		return (fp);
+	irc_dlsym(mod, buf, fp);
+	if (fp)
+		return (fp);
+	return NULL;
+#endif
+	
+}
 
 vFP Module_Sym(char *name)
 {
@@ -437,6 +478,11 @@ int	Module_Depend_Resolve(Module *p)
 #ifndef STATIC_LINKING
 	while (d->pointer)
 	{
+		if ((*(d->pointer) = Module_SymEx(p->dll, d->symbol)))
+		{
+			d++;
+			continue;
+		}
 		*(d->pointer) = Module_SymX(d->symbol, &parental);
 		if (!*(d->pointer))
 		{

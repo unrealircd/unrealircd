@@ -12,7 +12,6 @@ set {
 		coadmin		"CoAdmin.SolarGalaxy.Net";
 		admin		"Admin.SolarGalaxy.Net";
 		servicesadmin	"ServiceOp.SolarGalaxy.Net";
-		techadmin	"TechAdmin.SolarGalaxy.Net";
 		netadmin	"NetAdmin.SolarGalaxy.Net";
 		host-on-oper-up	"on";
 	};

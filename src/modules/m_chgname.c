@@ -77,8 +77,8 @@ int    m_chgname_Init(int module_load)
 	/*
 	 * We call our add_Command crap here
 	*/
-	add_Command(MSG_CHGNAME, TOK_CHGNAME, m_chgname, MAXPARA);
-        add_Command(MSG_SVSNAME, TOK_CHGNAME, m_chgname, MAXPARA);
+	add_Command(MSG_CHGNAME, TOK_CHGNAME, m_chgname, 2);
+        add_Command(MSG_SVSNAME, TOK_CHGNAME, m_chgname, 2);
 	return MOD_SUCCESS;
 	
 }

@@ -21,7 +21,6 @@ set {
                 coadmin         "CoAdmin.AsiaCom.GlobalChat.ca";
                 admin           "Admin.AsiaCom.GlobalChat.ca";
                 servicesadmin   "Csop.AsiaCom.GlobalChat.ca";
-                techadmin       "TechAdmin.AsiaCom.GlobalChat.ca";
                 netadmin        "NetAdmin.AsiaCom.GlobalChat.ca";
                 host-on-oper-up "on";
         };

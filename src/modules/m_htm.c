@@ -151,13 +151,13 @@ DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		case 1:
 			break;
 		case 2:
-			x = hunt_server(cptr, sptr, ":%s HTM %s", 1, parc, parv);
+			x = hunt_server_token(cptr, sptr, MSG_HTM, TOK_HTM, "%s", 1, parc, parv);
 			break;
 		case 3:
-			x = hunt_server(cptr, sptr, ":%s HTM %s %s", 1, parc, parv);
+			x = hunt_server_token(cptr, sptr, MSG_HTM, TOK_HTM, "%s %s", 1, parc, parv);
 			break;
 		default:
-			x = hunt_server(cptr, sptr, ":%s HTM %s %s %s", 1, parc, parv);
+			x = hunt_server_token(cptr, sptr, MSG_HTM, TOK_HTM, "%s %s %s", 1, parc, parv);
 	}
 
 	switch (x) {
@@ -208,7 +208,7 @@ DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (strchr(command, '.'))
 		{
 			if ((x =
-			    hunt_server(cptr, sptr, ":%s HTM %s", 1, parc,
+			    hunt_server_token(cptr, sptr, MSG_HTM, TOK_HTM, "%s", 1, parc,
 			    parv)) != HUNTED_ISME)
 				return 0;
 		}

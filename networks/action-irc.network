@@ -21,7 +21,6 @@ set {
                 coadmin         "CoAdmin.Action-IRC.Net";
                 admin           "Admin.Action-IRC.Net";
                 servicesadmin   "CSOp.Action-IRC.Net";
-                techadmin       "TechAdmin.Action-IRC.Net";
                 netadmin        "NetAdmin.Action-IRC.Net";
                 host-on-oper-up "off";
         };

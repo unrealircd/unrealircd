@@ -12,7 +12,6 @@ set {
 		coadmin		"CoAdmin.Darkfyre.Net";
 		admin		"Admin.Darkfyre.Net";
 		servicesadmin	"CSop.Darkfyre.Net";
-		techadmin	"TechAdmin.Darkfyre.Net";
 		netadmin	"NetAdmin.Darkfyre.Net";
 		host-on-oper-up	"on";
 	};

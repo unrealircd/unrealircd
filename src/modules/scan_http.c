@@ -277,7 +277,7 @@ void	scan_http_scan_port(HSStruct *z)
 		{
 			/* Gotcha */
 			IRCMutexLock((h->lock));
-			(*xEadd_scan)(h->in, "Open HTTP proxy");
+			(*xEadd_scan)(&h->in, "Open HTTP proxy");
 			IRCMutexUnlock((h->lock));
 			goto exituniverse;
 		} 

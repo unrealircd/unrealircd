@@ -92,7 +92,7 @@ ModuleHeader m_svso_Header
 ModuleHeader Mod_Header
 #endif
   = {
-	"test",
+	"m_svso",
 	"$Id$",
 	"command /svso", 
 	"3.2-b5",

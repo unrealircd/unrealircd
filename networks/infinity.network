@@ -12,7 +12,6 @@ set {
 		coadmin		"IRCop-CoAdmin.Infinity-IRC.org";
 		admin		"IRCop-Admin.Infinity-IRC.org";
 		servicesadmin	"IRCop-ServiceAdmin.Infinity-IRC.org";
-		techadmin	"IRCop-TechAdmin.Infinity-IRC.org";
 		netadmin	"IRCop-NetAdmin.Infinity-IRC.org";
 		host-on-oper-up	"on";
 	};

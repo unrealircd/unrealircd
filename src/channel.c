@@ -84,7 +84,8 @@ static void set_mode PROTO((aChannel *, aClient *, int, char **, u_int *,
     char[MAXMODEPARAMS][MODEBUFLEN + 3], int));
 static void make_mode_str PROTO((aChannel *, long, long, int,
     char[MAXMODEPARAMS][MODEBUFLEN + 3], char *, char *, char));
-static int do_mode_char PROTO((aChannel *, long, char, char *, u_int, aClient *,
+static int do_mode_char PROTO((aChannel *, long, char, char *,
+	u_int, aClient *,
     u_int *, char[MAXMODEPARAMS][MODEBUFLEN + 3], char));
 static void do_mode PROTO((aChannel *, aClient *, aClient *, int, char **, int,
     int));
@@ -1070,7 +1071,7 @@ int m_mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
-	sptr->flags &= ~FLAGS_TS8;
+   /*	sptr->flags &= ~FLAGS_TS8; */
 
 	if (MyConnect(sptr))
 		clean_channelname(parv[1]);
@@ -1434,7 +1435,7 @@ void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount,
 	aCtab *tab = &cFlagTab[0];
 	char *x = mode_buf;
 	int  what, cnt, z;
-
+	char *m;
 	what = 0;
 
 	*tmpbuf = '\0';
@@ -1524,11 +1525,17 @@ void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount,
 		}
 		*x++ = *(pvar[cnt] + 1);
 		tmpstr = &pvar[cnt][2];
-		strncat(parabuf, tmpstr, MODEBUFLEN - 1);
-		parabuf[MODEBUFLEN - 1] = '\0';
-		z = strlen(parabuf);
-		parabuf[z] = ' ';	/* add a space */
-		parabuf[z + 1] = '\0';
+		z = MODEBUFLEN - 1 - strlen(parabuf);
+		m = parabuf;
+		while ((*m)) { m++; }
+		while ((*tmpstr) && ((m-parabuf) < z))
+		{
+			*m = *tmpstr; 
+			m++;
+			tmpstr++;
+		}
+		*m++ = ' ';
+		*m = '\0';
 	}
 	if (bounce)
 		chptr->mode.mode = oldm;
@@ -1554,7 +1561,8 @@ void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount,
  *  modified for Unreal by stskeeps..
  */
 
-int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_int what, aClient *cptr,
+int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, 
+	u_int what, aClient *cptr,
 	 u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char bounce)
 {
 	aCtab *tab = &cFlagTab[0];
@@ -1791,7 +1799,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 			  member->flags |= modetype;
 		  else
 			  member->flags &= ~modetype;
-		  if (tmp == member->flags && (bounce || !IsULine(cptr)))
+		  if ((tmp == member->flags) && (bounce || !IsULine(cptr)))
 			  break;
 		  /* It's easier to undo the mode here instead of later
 		   * when you call make_mode_str for a bounce string.
@@ -1813,7 +1821,6 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 		  membership->flags = member->flags;
 		  (void)ircsprintf(pvar[*pcount], "%c%c%s",
 		      what == MODE_ADD ? '+' : '-', tc, who->name);
-
 		  (*pcount)++;
 		  break;
 	  case MODE_LIMIT:
@@ -2220,8 +2227,7 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
 				      me.name, cptr->name, *curchr);
 				  break;
 			  }
-			  if (parv[paracount] &&
-			      strlen(parv[paracount]) >= MODEBUFLEN)
+			  if (parv[paracount] && ((strlen(parv[paracount]) >= MODEBUFLEN)))
 				  parv[paracount][MODEBUFLEN - 1] = '\0';
 			  paracount +=
 			      do_mode_char(chptr, modetype, *curchr,
@@ -2762,8 +2768,10 @@ int channel_link(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 		if (!MyConnect(sptr))
 			flags = CHFL_DEOPPED;
-		if (sptr->flags & FLAGS_TS8)
-			flags |= CHFL_SERVOPOK;
+#if 0
+	/*	if (sptr->flags & FLAGS_TS8)
+			flags |= CHFL_SERVOPOK; */
+#endif
 
 		i1 = 0;
 		if (chptr == NULL)
@@ -3000,8 +3008,10 @@ int m_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 		if (!MyConnect(sptr))
 			flags = CHFL_DEOPPED;
+#if 0
 		if (sptr->flags & FLAGS_TS8)
 			flags |= CHFL_SERVOPOK;
+#endif
 
 		if (!chptr ||
 		    (MyConnect(sptr)
@@ -3138,7 +3148,7 @@ int m_part(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	char *p = NULL, *name;
 	char *comment = (parc > 2 && parv[2]) ? parv[2] : NULL;
 
-	sptr->flags &= ~FLAGS_TS8;
+  /*	sptr->flags &= ~FLAGS_TS8; */
 
 	if (parc < 2 || parv[1][0] == '\0')
 	{
@@ -3341,7 +3351,7 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	Membership *lp, *lp2;
 
 
-	sptr->flags &= ~FLAGS_TS8;
+   /*	sptr->flags &= ~FLAGS_TS8;  */
 
 	if (parc < 3 || *parv[1] == '\0')
 	{
@@ -4289,7 +4299,7 @@ int m_names(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 
 	if (parc > 1 &&
-	    hunt_server(cptr, sptr, ":%s NAMES %s %s", 2, parc, parv))
+	    hunt_server_token(cptr, sptr, MSG_NAMES, TOK_NAMES, "%s %s", 2, parc, parv))
 		return 0;
 
 	for (s = para; *s; s++)

@@ -149,7 +149,8 @@ int	m_oper_Unload(int module_unload)
 **	parv[1] = oper name
 **	parv[2] = oper password
 */
-int  SVSNOOP;
+
+extern int  SVSNOOP;
 
 DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	ConfigItem_oper *aconf;
@@ -357,7 +358,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 
 		sptr->user->oflag = aconf->oflags;
 
-		if ((aconf->oflags & OFLAG_HIDE) && iNAH) {
+		if ((aconf->oflags & OFLAG_HIDE) && iNAH && !BadPtr(host)) {
 			iNAH_host(sptr, (host != NULL) ? host : "eek.host.is.null.pointer");
 		}
 

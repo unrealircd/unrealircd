@@ -50,8 +50,10 @@ DLLFUNC int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_SVSNOOP 	"SVSNOOP"	
 #define TOK_SVSNOOP 	"f"
 
-extern int SVSNOOP;	
+
 extern ircstats IRCstats;
+extern int SVSNOOP;
+
 
 #ifndef DYNAMIC_LINKING
 ModuleHeader m_svsnoop_Header
@@ -60,11 +62,11 @@ ModuleHeader m_svsnoop_Header
 ModuleHeader Mod_Header
 #endif
   = {
-	"test",
+	"m_svsnoop",
 	"$Id$",
 	"command /svsnoop", 
 	"3.2-b5",
-	NULL 
+	NULL
     };
 
 #ifdef DYNAMIC_LINKING
@@ -106,7 +108,7 @@ int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[])
         if (!(check_registered(sptr) && IsULine(sptr) && parc > 2))
                 return 0;
         /* svsnoop bugfix --binary */
-        if (hunt_server(cptr, sptr, ":%s SVSNOOP %s :%s", 1, parc,
+        if (hunt_server_token(cptr, sptr, MSG_SVSNOOP, TOK_SVSNOOP, "%s :%s", 1, parc,
             parv) == HUNTED_ISME)
         {
                 if (parv[2][0] == '+')

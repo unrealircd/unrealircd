@@ -21,7 +21,6 @@ set {
                 coadmin         "coadmin.globo.com.br";
                 admin           "admin.globo.com.br";
                 servicesadmin   "csop.globo.com.br";
-                techadmin       "techadmin.globo.com.br";
                 netadmin        "netadmin.globo.com.br";
                 host-on-oper-up "on";
         };

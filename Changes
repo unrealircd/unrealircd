@@ -1027,3 +1027,70 @@ seen. gmtime warning still there
 - Fixed a last minute bug in win32
 - Fixed a bug affecting DEFAULT_PERMISSIONS reported by ashukmin
 - Fixes for ->user structures
+- beta5 released
+- Fixed a bug causing /map to give away Ulines
+- Fixed a possible segfault in m_stats
+- Bug with crypt not working for /oper fixed
+- Fixed a bug where certain oflags were ignored for new-style config flags
+- Actually enabled MD5, SHA1 methods when SSL was defined. (fix for drunk
+  coding)
+- Fixed yet another Win32 editor bug affecting Windows 95/98/NT4,
+  found by HA|Raptor
+- If host == null, don't set it (m_oper, was setting it to "eek.host.is.null.pointer")
+- Small fix for #427583 mode bug
+- Fixed it so /module load doesnt require you to do ./module.so if the module is in
+  current dir
+- Fixed a freeze bug in m_htm (pthreads now uses recursive mutexes)
+- Reversed freeze bug fix, _NP means NON PORTABLE
+- Fixed a freeze problem with conf_deny_link
+- Fixed a bug under WinXP in the editor
+- Someone removed tkl and opermotd from the command hash (breaks both commands)
+- Made validate_configuration be called on /rehash, reported by Mick
+- Fixed a /chgname bug reported by rob where you had to prefix
+  the name with a : to set a realname with spaces.
+- Fixed a major events bug caused by Stskeeps drunken coding
+  reported by Dragon974
+- Added mutex.c for our mutexes
+- Fixed makenet so techadmin-host is gone
+- Removed set::hosts::techadmin from all network files
+- doh, missing a ! in m_tkl.c that allows us to do bad things(TM)
+- Fix for nested comments, found by lnxgk
+- C++ comment fix, lnxgk again.
+- Crash in scan_http fixed, h->in instead of &h->in = bad
+- Made tld::mask be user@host instead of just host
+- Fixed problem with EventDel, doing eventptr instead of eventptr->name
+- Fixed bug #0000019 reported by Syzop, and bug found by same to deal with
+  individual module loading
+- Fix for svsnoop symdep problem
+- Fixed sts's fix for svsnoop (since he failed to test his fix)
+- Fixed a bug where the win32 editor would always say the file
+  was modified even if it wasn't
+- Fixed .1081 problem, see bug #0000020 for more information about how
+  it REALLY should be fixed
+- Fixed a typo reported by Tracer (bug #0000022)
+- Made support in *nix for encrypted SSL private keys,
+  "make encpem" to make an encrypted server key if you already have one
+- Removed some ancient debugging code (num - %s)
+- Wiped out FLAGS_TS8 because I want to move ->flags into the local section and
+  FLAGS_TS8  had 0 purpose except setting CHFL_SERVOPOK (which did nothing)
+- Fixed typo I made in previous fix causing non-compileness
+- Moved some members of the Client structure to the local section, should be
+  a nice cutdown on memory.
+- Recoded the win32 editor to use a toolbar, and added support
+  for XP style controls
+- Made a few additional cleanups to the win32 code
+- // comments are not supported by many compilers and should not be used
+- Fixed a bug where teh SAJOIN/SAPART/SVSJOIN/SVSPART tokens were screwed up found by 
+  Andy Church
+- Made even more changes to the win32 editor (undo/redo buttons,
+  and current line number display)
+- Fixed yet another serious sts bug, we have to release beta6 soon :P~
+- Fixed check_for_target_limit, should be more lenient now
+- Sts is going for a record here, fixed ANOTHER auth bug in the SAME function
+- Added hunt_server_token (the same as hunt_server except if the
+  server supports tokens, the token is used)
+- Added the ability to go to a specific line in the win32 editor
+  by clicking the current line number in the status bar
+- Converted all calls to hunt_server to hunt_server_token
+- Preparation for release
+- Changed version to beta6 and added final cleanups

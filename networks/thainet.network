@@ -12,7 +12,6 @@ set {
 		coadmin		"coadmin.thai.com";
 		admin		"admin.thai.com";
 		servicesadmin	"serviceop.thai.com";
-		techadmin	"techadmin.thai.com";
 		netadmin	"netadmin.thai.com";
 		host-on-oper-up	"on";
 	};
