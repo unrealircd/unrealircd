@@ -1739,7 +1739,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 			  if (MyClient(cptr))
 			  {
 				  sendto_one(cptr,
-				      ":%s NOTICE %s :*** You cannot %s %s in %s, they are the channel owner (+q).",
+				      ":%s NOTICE %s :*** You cannot %s %s in %s, (s)he is the channel owner (+q).",
 				      me.name, cptr->name, xxx,
 				      member->value.cptr->name, chptr->chname);
 			  }
@@ -1754,7 +1754,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 			  if (MyClient(cptr))
 			  {
 				  sendto_one(cptr,
-				      ":%s NOTICE %s :*** You cannot %s %s in %s, they are a protected user (+a).",
+				      ":%s NOTICE %s :*** You cannot %s %s in %s, (s)he is a protected user (+a).",
 				      me.name, cptr->name, xxx,
 				      member->value.cptr->name, chptr->chname);
 			  }
