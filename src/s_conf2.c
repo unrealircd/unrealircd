@@ -84,6 +84,10 @@ static ConfigFile 	*config_parse(char *filename, char *confdata);
 static void 		config_entry_free(ConfigEntry *ceptr);
 int			ConfigParse(ConfigFile *cfptr);
 
+/* Lookup prototypes, to be moved to some .h */
+ConfigItem_class	*Find_class(char *name);
+
+
 /*
  * Configuration linked lists
 */
@@ -93,9 +97,11 @@ ConfigItem_admin 	*conf_admin = NULL;
 ConfigItem_drpass	*conf_drpass = NULL;
 ConfigItem_ulines	*conf_ulines = NULL;
 ConfigItem_tld		*conf_tld = NULL;
+
 /*
  * MyMalloc with the only difference that it clears the memory too
  * -Stskeeps
+ * Should be moved to support.c
  */
 void	*MyMallocEx(size_t size)
 {
@@ -689,6 +695,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	ConfigItem_class *class;
+	unsigned char isnew = 0;
 	
 	if (!ce->ce_vardata)
 	{
@@ -696,8 +703,20 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return -1;
 	}
-	class = (ConfigItem_class *) MyMallocEx(sizeof(ConfigItem_class));
-	class->name = strdup(ce->ce_vardata);
+	
+	if (!(class = Find_class(ce->ce_vardata)))
+	{
+		class = (ConfigItem_class *) MyMallocEx(sizeof(ConfigItem_class));
+		class->name = strdup(ce->ce_vardata);
+		isnew = 1;
+	}
+	else
+	{
+		isnew = 0;
+		config_status("%s:%i: warning: redefining a record in class %s",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			ce->ce_vardata);
+	}
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!cep->ce_varname)
@@ -740,7 +759,8 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 	}
-	add_ConfigItem((ConfigItem *) class, (ConfigItem **) &conf_class);
+	if (isnew)
+		add_ConfigItem((ConfigItem *) class, (ConfigItem **) &conf_class);
 }
 
 /*
@@ -819,6 +839,11 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
+	ConfigItem_oper *oper;
+	
+	if (!ce->ce_vardata)
+		return;	
+	
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!cep->ce_varname)
@@ -828,8 +853,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 		}
 		if (!cep->ce_entries)
 		{
-			config_status("[oper] Set %s to %s",
-				cep->ce_varname, cep->ce_vardata);
+			
 		}
 		else
 		{
@@ -837,7 +861,6 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 			{
 				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 				{
-					config_status("[oper] got flag %s", cepp->ce_varname);
 				}	
 				continue;
 			}
@@ -929,3 +952,24 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 	}
 	add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_tld);
 }
+
+/*
+ * Lookup functions
+ * -Stskeeps
+*/
+
+ConfigItem_class	*Find_class(char *name)
+{
+	ConfigItem_class	*p;
+	
+	if (!name)
+		return NULL;
+		
+	for (p = conf_class; p; p = (ConfigItem_class *) p->next)
+	{
+		if (!strcmp(name, p->name))
+			return (p);
+	}
+	return NULL;
+}
+
