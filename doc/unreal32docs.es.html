@@ -470,7 +470,37 @@ Los m&oacute;dulos pueden a&ntilde;adir otros tipos de ban.
   <table border=0>
    <tr valign="top">
      <td><b>[tipo]</b></td>
-     <td> especifica la ubicaci&oacute;n, puede especificar varias ubicaciones: 'c' mensajes de canales, 'p' privados, 'n' notices, 'N' notices al canal, 'P' mensajes part, 'q' mensajes quit, 'd' dcc</td>
+     <td> especifica el destino:<br>
+   <table>
+   <tr><td><b>Char:</b></td><td><b>Config item:</b></td>
+   <td><b>Descripci&oacute;n:</b></td>
+   </tr>
+   <tr><td>c</td><td>channel</td>
+   <td>Mensaje a canal </td>
+   </tr>
+   <tr><td>p</td><td>private</td>
+   <td>Mensaje privado (de usuario-&gt;usuario)</td>
+   </tr>
+   <tr><td>n</td><td>notice</td>
+   <td>Aviso privado </td>
+   </tr>
+   <tr><td>N</td><td>channel-notice</td>
+   <td>Aviso a canal </td>
+   </tr>
+   <tr><td>P</td><td>part</td>
+   <td>Mensaje part</td>
+   </tr>
+   <tr><td>q</td><td>quit</td>
+   <td>Mensaje quit </td>
+   </tr>
+   <tr><td>d</td><td>dcc</td>
+   <td>Archivo DCC </td>
+   </tr>
+   <tr><td>u</td><td>user</td>
+   <td>User ban, coincidir&aacute; con nick!user.@host:realname</td>
+   </tr>
+   </table>
+   Puede especificar varios destinos, por ejemplo: cpNn</td>
    </tr>
    <tr valign="top">
      <td><b>[accci&oacute;n]</b></td>
@@ -503,7 +533,7 @@ Los m&oacute;dulos pueden a&ntilde;adir otros tipos de ban.
 <tr><td>dccblock</td>
 <td>marca el usuario para no poder enviar m&aacute;s DCCs</td>
 </tr>
-<tr><td>viruschan</td>
+<tr valign="top"><td>viruschan</td>
 <td>fuerza su salida de todos los canales, fuerza su entrada a set::spamfilter::virus-help-channel, desactiva todos los comandos menos PONG, ADMIN y mensajes a set::spamfilter::virus-help-channel</td>
 </tr>
 </table></tr></td>
@@ -530,7 +560,13 @@ Los m&oacute;dulos pueden a&ntilde;adir otros tipos de ban.
    <br>
    Los filtros de spam a&ntilde;adidos con /spamfilter son globales en la red. Trabajan pase lo que pase aunque el usuario tenga +G. S&oacute;lo los operadores y servicios de red est&aacute;n excemtos del filtrado.
    <p>Puede a&ntilde;adir filtros de spam en el archivo de configuraci&oacute;n pero estos filtros ser&aacute;n locales. Su uso se describe en el bloque spamfilter <a href="#spamfilter">here</a><br>
-</p>
+   Ejemplo:<br>
+   <pre>spamfilter {
+	regex "//write \$decode\(.+\|.+load -rs";
+	target { private; channel; };
+	reason "Generic $decode exploit";
+	action block;
+};</pre></p>
 <p><b>set::spamfilter::ban-time</b> permite modificar el valor por defecto del tkltiempo (por defecto 1 d&iacute;a)<br>
    <b>set::spamfilter::ban-reason</b> permite especificar una raz&oacute;n por defecto (por defecto  'Spam/advertising')<br>
    <b>set::spamfilter::virus-help-channel</b> permite especificar un canal para forzar la entrada en la acci&oacute;n 'viruschan' (por defecto #help)<br>
@@ -1775,17 +1811,17 @@ link hub.mynet.com {
 <p>Sintaxis [alias est&aacute;ndar]:<br>
 <pre>
 alias &lt;nombre&gt; {
-	nick &lt;nick-destino&gt;;
+ target &lt;destino&gt;;
 	type &lt;tipo&gt;;
 };</pre>
 </p>
 <p>(Nota: puede ver m&aacute;s archivos de alias est&aacute;ndars que lleva UnrealIRCd en este <a href="#includedirective">enlace</a>)</p>
-<p>Este bloque (est&aacute;ndar) le permite redireccionar comandos a usuarios, generlamente a bots como por ejemplo /chanserv para enviarle privados. <b>alias::</b> especifica el nombre del comando, por ejemplo chanserv. <b>alias::nick</b> el nick al que se le enviar&aacute; el mensaje y puede omitirse. <b>alias::type</b> define el tipo de alias: services (el usuario est&aacute; en el servidor de servicios), stats (en el de estad&iacute;sticas) y normal (en un servidor normal). Este bloque tiene otro prop&oacute;sito detallado a continuaci&oacute;n.</p>
+<p>Este bloque (est&aacute;ndar) le permite redireccionar comandos a usuarios, generlamente a bots como por ejemplo /chanserv para enviarle privados. <b>alias::</b> especifica el nombre del comando, por ejemplo chanserv. <b>alias::target</b> el nick o canal al que se le enviar&aacute; el mensaje y puede omitirse. <b>alias::type</b> define el tipo de alias: services (el usuario est&aacute; en el servidor de servicios), stats (en el de estad&iacute;sticas), normal (en un servidor normal) y channel (el target es un canal). Este bloque tiene otro prop&oacute;sito detallado a continuaci&oacute;n.</p>
 <p>Sintaxis [alias de comandos]:<br>
 <pre>
 alias &lt;nombre&gt; {
 	format &lt;expresi&oacute;n-regular&gt; {
-		nick &lt;nick-destino&gt;;
+		target &lt;destino&gt;;
 		type &lt;tipo&gt;;
 		parameters &lt;par&aacute;metros-del-mensaje&gt;;
 	};
@@ -1795,7 +1831,7 @@ alias &lt;nombre&gt; {
 	type command;
 };</pre>
 </p>
-<p>Este uso es m&aacute;s extenso y tiene m&aacute;s posibilidades. Por ejemplo, puede crear aliases como /identify. <b>alias::</b> es el mismo que el anterior: el nombre del comando. <b>alias::format</b> especifica la expresi&oacute;n regular que debe coincidir con el texto enviado. Si lo hace, se usan las subentradas. As&iacute; puede tener varios alias::format para seguir distintas acciones seg&uacute;n la coincidencia, a partir de sus subentradas. <b>alias::format::nick</b> es el nick de destino. <b>alias::format::type</b> es el tipo de alias. <b>alias::format::parameters</b> es lo que se enviar&aacute; como par&aacute;metro al alias. Para especificar un par&aacute;metro que se enviar&aacute; al nick, use % seguido del n&uacute;mero de par&aacute;metro. Por ejemplo, %1 enviar&aacute; el primer par&aacute;metro. Para especificar todos los par&aacute;metros a partir de uno, use %n- donde n es el n&uacute;mero de par&aacute;metro. Por ejemplo, %2- enviar&iacute;a todos los par&aacute;metros a partir del segundo, inclu&iacute;do. Para m&aacute;s informaci&oacute;n consulte doc/example.conf.</p>
+<p>Este uso es m&aacute;s extenso y tiene m&aacute;s posibilidades. Por ejemplo, puede crear aliases como /identify. <b>alias::</b> es el mismo que el anterior: el nombre del comando. <b>alias::format</b> especifica la expresi&oacute;n regular que debe coincidir con el texto enviado. Si lo hace, se usan las subentradas. As&iacute; puede tener varios alias::format para seguir distintas acciones seg&uacute;n la coincidencia, a partir de sus subentradas. <b>alias::format::target</b> es el nick o canal de destino. <b>alias::format::type</b> es el tipo de alias. <b>alias::format::parameters</b> es lo que se enviar&aacute; como par&aacute;metro al alias. Para especificar un par&aacute;metro que se enviar&aacute; al nick, use % seguido del n&uacute;mero de par&aacute;metro. Por ejemplo, %1 enviar&aacute; el primer par&aacute;metro. Para especificar todos los par&aacute;metros a partir de uno, use %n- donde n es el n&uacute;mero de par&aacute;metro. Por ejemplo, %2- enviar&iacute;a todos los par&aacute;metros a partir del segundo, inclu&iacute;do. Adem&aacute;s, puede usarse %n para que sea reemplazado por el nick que ejecuta el comando. Para m&aacute;s informaci&oacute;n consulte doc/example.conf.</p>
 <p></p></div>
 <p><font class="block_section">4.33 - </font><font class="block_name">Bloque help </font>
    <font class="block_optional">OPCIONAL</font><a name="helpblock"></a>
@@ -1854,8 +1890,8 @@ spamfilter {
 };</pre>
 </p>
 <p><b>regex</b> es la expresi&oacute;n regular a comparar.<br>
-   <b>target</b> especifica las ubicaciones: channel, private, private-notice, channel-notice, part, quit, dcc.<br>
-   <b>action</b> define la acci&oacute;n a tomar, vea <a href="#feature_spamfilter">aqu&iacute;</a> para las acciones posibles. <br>
+   <b>target</b> especifica los destinos, vea <a href="#feature_spamfilter">aqu&iacute;</a> para los tipos posibles (ej: 'channel').<br>
+   <b>action</b> define la acci&oacute;n a tomar, vea <a href="#feature_spamfilter">aqu&iacute;</a> para las acciones posibles (ej: 'gline'). <br>
    <b>reason</b> opcional: especifica la raz&oacute;n.<br>
    <b>ban-time</b> opcional: especifica la durada de la *line..<br>
 </p>
