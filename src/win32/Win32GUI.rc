@@ -117,6 +117,17 @@ BEGIN
     LTEXT           "",IDC_LMAXCLIENTS,170,118,41,9,SS_SUNKEN,WS_EX_RIGHT
 END
 
+ConfigError DIALOG DISCARDABLE  0, 0, 331, 178
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Configuration Error"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,134,157,50,14
+    EDITTEXT        IDC_CONFIGERROR,7,7,317,142,ES_MULTILINE | 
+                    ES_AUTOHSCROLL | ES_READONLY | ES_WANTRETURN | 
+                    WS_VSCROLL
+END
+
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -191,6 +202,14 @@ BEGIN
         RIGHTMARGIN, 311
         TOPMARGIN, 7
         BOTTOMMARGIN, 162
+    END
+
+    "ConfigError", DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 324
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 171
     END
 END
 #endif    // APSTUDIO_INVOKED

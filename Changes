@@ -433,3 +433,4 @@
 - Fixed a cloak bug caused by stskeeps(tm) "not knowing how to use << and >> coding"
 - Fixed some cloak bugs, and applied +x crypto to hostnames as well
 - Changed some non-error messages in newconf from config_status to config_progress
+- Added a way for newconf to report its errors in windows using a "Config Error" dialog

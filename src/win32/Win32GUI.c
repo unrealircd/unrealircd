@@ -63,6 +63,7 @@ LRESULT CALLBACK OperMotdDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK BotMotdDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK RulesDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK StatusDLG(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK ConfigErrorDLG(HWND, UINT, WPARAM, LPARAM);
 extern  void      SocketLoop(void *dummy), s_rehash();
 static char *StripCodes(char *);
 HINSTANCE hInst;
@@ -72,7 +73,7 @@ HTREEITEM AddItemToTree(HWND, LPSTR, int);
 void win_map(aClient *, HWND);
 extern Link *Servers;
 extern ircstats IRCstats;
-
+char *errors;
 void CleanUp(void)
 {
 	Shell_NotifyIcon(NIM_DELETE ,&SysTray);
@@ -91,6 +92,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	HICON hIcon;
 
 	atexit(CleanUp);
+	InitStackTraceLibrary();
     if (WSAStartup(MAKEWORD(1, 1), &WSAData) != 0)
     {
         MessageBox(NULL, "UnrealIRCD/32 Initalization Error", "Unable to initialize WinSock", MB_OK);
@@ -194,7 +196,7 @@ static HMENU hAbout, hConfig;
 			 if ((p.x >= 24) && (p.x <= 78) && (p.y >= 178) && (p.y <= 190))
              {
 				 MessageBox(hDlg, "Rehashing the wIRCd", "Rehashing", MB_OK);
-         		 s_rehash();
+         		 rehash();
 				 return 0;
 			 }
 			 else if ((p.x >= 85) && (p.x <= 132) && (p.y >= 178) && (p.y <= 190))  {
@@ -831,3 +833,50 @@ void win_map(aClient *server, HWND hwTreeView)
         }
 }
 
+/* ugly stuff, but hey it works -- codemastr */
+void win_log(char *format, ...) {
+        va_list ap;
+        char buf[2048];
+		char *buf2;
+        va_start(ap, format);
+        ircvsprintf(buf, format, ap);
+	strcat(buf, "\r\n");
+	if (errors) {
+		buf2 = MyMalloc(strlen(errors)+strlen(buf));
+		sprintf(buf2, "%s%s",errors,buf);
+		MyFree(errors);
+	}
+	else {
+		buf2 = MyMalloc(strlen(buf));
+		sprintf(buf2, "%s",buf);
+	}
+	errors = buf2;
+        va_end(ap);
+}
+
+void win_error() {
+	if (errors)
+		DialogBox(hInst, "ConfigError", hwIRCDWnd, (DLGPROC)ConfigErrorDLG);
+}
+
+LRESULT CALLBACK ConfigErrorDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
+	switch (message) {
+	case WM_INITDIALOG:
+			MessageBeep(MB_ICONEXCLAMATION);
+			SetDlgItemText(hDlg, IDC_CONFIGERROR, errors);
+			MyFree(errors);
+			return (TRUE);
+
+		case WM_COMMAND:
+			if (LOWORD(wParam) == IDOK)
+				EndDialog(hDlg, TRUE);
+			break;
+		case WM_CLOSE:
+			EndDialog(hDlg, TRUE);
+			break;
+		case WM_DESTROY:
+			break;
+
+		}
+	return (FALSE);
+}

@@ -232,7 +232,10 @@ static void 		config_error(char *format, ...);
 static ConfigFile 	*config_parse(char *filename, char *confdata);
 static void 		config_entry_free(ConfigEntry *ceptr);
 int			ConfigParse(ConfigFile *cfptr);
-
+#ifdef _WIN32
+extern void 		win_log(char *format, ...);
+extern void win_error();
+#endif
 /*
  * Configuration linked lists
 */
@@ -333,7 +336,11 @@ void config_error(char *format, ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
+#ifndef _WIN32
 	fprintf(stderr, "[error] %s\n", buffer);
+#else
+	win_log("[error] %s", buffer);
+#endif
 	sendto_realops("error: %s", buffer);
 	/* We cannot live with this */
 	config_error_flag = 1;
@@ -351,7 +358,11 @@ static void config_status(char *format, ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
+#ifndef _WIN32
 	fprintf(stderr, "* %s\n", buffer);
+#else
+	win_log("* %s", buffer);
+#endif
 	sendto_realops("warning: %s", buffer);
 }
 
@@ -2909,6 +2920,11 @@ void	validate_configuration(void)
 		add_ConfigItem((ConfigItem *)log_ptr, (ConfigItem **) &conf_log);	
 		Warning("No log {} found using ircd.log as default");
 	}
+#ifdef _WIN32
+	if (config_error_flag)
+		win_log("Errors in configuration, terminating program.");
+	win_error();
+#endif
 	if (config_error_flag)
 	{
 		Error("Errors in configuration, terminating program.");
