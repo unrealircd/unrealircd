@@ -2017,3 +2017,4 @@ seen. gmtime warning still there
 - Fixed a long standing typo where doc/example.conf still mentioned oflag e (#0000638)
   reported by twigboy.
 - Possibly fixed an SSL crash bug (#0000871 and #000784) reported by shotgun and comrade
+- Fixed opermode bug which could cause the ircd to crash a while later (#0000823).
