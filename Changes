@@ -664,3 +664,4 @@ seen. gmtime warning still there
 - Made scan_socks & scan work under win32. Only bug is a \1 IP in /quote scan (?)
 - Added set { blackhole "insideip:port" { "outsideip"; }; }; (useful if
   being behind firewall)
+- Fixed a little scan.so bug

@@ -484,10 +484,6 @@ DLLFUNC int	h_config_set_blackhole(void)
 			continue;
 		}	
 	}
-	if (!blackhole_conf.ip || !blackhole_conf.port)
-	{
-		config_error("set::blackhole: missing ip/port mask");
-	}
 	return 0;
 }
 
