@@ -361,7 +361,7 @@ int  find_tkline_match_zap(aClient *cptr)
 				    inetntoa((char *)&cptr->ip), lp->reason);
 #else
 				    inet_ntop(AF_INET6, (char *)&cptr->ip,
-				    mydummy, MYDUMMY_SIZE));
+				    mydummy, MYDUMMY_SIZE), lp->reason);
 #endif
 				strlcpy(zlinebuf, msge, sizeof zlinebuf);
 				return (1);

@@ -101,7 +101,7 @@ void	umode_init(void)
 	UMODE_RGSTRONLY = umode_get('R'); /* 0x0400  Only reg nick message */
 	UMODE_WEBTV = umode_get('V');     /* 0x0800  WebTV Client */
 	UMODE_SERVICES = umode_get('S');  /* 0x4000	 services */
-	UMODE_HIDE = umode_get('x');	     /* 0x8000	 Hide from Nukes */
+//	UMODE_HIDE = umode_get('x');	     /* 0x8000	 Hide from Nukes */
 	UMODE_NETADMIN = umode_get('N');  /* 0x10000	 Network Admin */
 	UMODE_COADMIN = umode_get('C');   /* 0x80000	 Co Admin */
 	UMODE_WHOIS = umode_get('W');     /* 0x100000	 gets notice on /whois */

@@ -1737,3 +1737,4 @@ seen. gmtime warning still there
 - Fixed a docs typo 'channes' instead of 'channels' and a typo that said +I is limited to
   netadmins, reported by PoisonDart316 (#0000547), also removed /unkline and /unzline from
   the docs (replaced with /kline - and /zline -, also reported by PoisonDart316 (#0000548)
+- Fixed bug with INET6 and find_tkline_zap (..)
