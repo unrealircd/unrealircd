@@ -3038,4 +3038,4 @@ seen. gmtime warning still there
 - Added conf check for too large spamfilter regex + reason field. Reported by
   Z3l3zT (#0001648).
 - Added spamfilters for the Nkie worm
-
+- Fixed a little sqline recode memory leak

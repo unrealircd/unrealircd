@@ -5397,6 +5397,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 		nl->reason = strdup(cep->ce_vardata);
 		strcpy(nl->usermask, "*");
 		AddListItem(nl, tklines[tkl_hash('q')]);
+		free(ca);
 		return 0;
 	}
 	else if (!strcmp(ce->ce_vardata, "ip"))
