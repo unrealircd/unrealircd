@@ -60,7 +60,6 @@ ID_Copyright("(C) Carsten Munk 1999");
 aFline *flines = NULL;
 aCRline *crlines = NULL;
 aVhost *vhosts = NULL;
-aHush *hushes = NULL;
 
 char *cannotjoin_msg = NULL;
 

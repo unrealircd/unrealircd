@@ -2654,12 +2654,9 @@ int  channel_link(cptr, sptr, parc, parv)
 			   ** channel so make them (rightfully) the Channel
 			   ** Operator.
 			 */
-			if (!IsModelessChannel(name))
 				flags =
 				    (ChannelExists(name)) ? CHFL_DEOPPED
 				    : CHFL_CHANOP;
-			else
-				flags = CHFL_DEOPPED;
 
 			if (sptr->user->joined >= MAXCHANNELSPERUSER)
 			{
@@ -2865,20 +2862,14 @@ int  m_join(cptr, sptr, parc, parv)
 			   ** Operator.
 			 */
 			/* Where did this come from? Potvin ? --Stskeeps
-			   if (!IsModelessChannel(name))
 			   flags = (ChannelExists(name)) ? CHFL_DEOPPED :
 			   CHFL_CHANOWNER;
-			   else
-			   flags &= ~CHFL_CHANOWNER;
 
 			 */
 
-			if (!IsModelessChannel(name))
 				flags =
 				    (ChannelExists(name)) ? CHFL_DEOPPED
 				    : CHFL_CHANOP;
-			else
-				flags = CHFL_DEOPPED;
 
 			if (!IsAnOper(sptr))	/* opers can join unlimited chans */
 				if (sptr->user->joined >= MAXCHANNELSPERUSER)

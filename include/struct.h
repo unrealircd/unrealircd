@@ -1059,20 +1059,9 @@ struct Channel	{
 				 (MODE_PRIVATE | MODE_SECRET)) == 0)
 
 #define	IsChannelName(name) ((name) && (*(name) == '#'))
-#define IsModelessChannel(name) ((name) && (*(name) == '+'))
 
 #define IsMember(blah,chan) ((blah && blah->user && \
                 find_channel_link((blah->user)->channel, chan)) ? 1 : 0)
-
-struct s_gline {
-	char   name[128];
-	char   sname[128];
-	char   host[128];
-	char   reason[128];
-	char   timemsg[128];
-	long   expire_at;
-	long   set_at;
-};
 
 struct FloodOpt {
 	int	nmsg;

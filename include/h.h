@@ -86,7 +86,6 @@ extern	void	clean_channelname PROTO((char *));
 extern	int	do_nick_name PROTO((char *));
 extern	int	can_send PROTO((aClient *, aChannel *, char *));
 extern	int	is_chan_op PROTO((aClient *, aChannel *));
-extern	int	is_zombie PROTO((aClient *, aChannel *));
 extern	int	has_voice PROTO((aClient *, aChannel *));
 extern	int	is_chanowner PROTO((aClient *, aChannel *));
 extern	int	count_channels PROTO((aClient *));
