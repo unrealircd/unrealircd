@@ -768,4 +768,5 @@ seen. gmtime warning still there
 - Added more network files
 - Fixed some typos in s_conf.c
 - Fixed a win32 bug where /restart didn't remove the tray icon, reported by PHANTOm and Gilou
-- Fixed Osiris's broken example.conf
+- Fixed Osiris's example.conf
+- Fixed IPv6 bindip error found by Madkiss

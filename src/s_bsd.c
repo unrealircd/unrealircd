@@ -2423,7 +2423,7 @@ static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
 #ifndef INET6
 		server.SIN_ADDR.S_ADDR = inet_addr(aconf->bindip);	
 #else
-		inet_pton(AFNET, aconf->bindip, server.SIN_ADDR.S_ADDR);
+		inet_pton(AFINET, aconf->bindip, server.SIN_ADDR.S_ADDR);
 #endif
 	}
 	if (bind(cptr->fd, (struct SOCKADDR *)&server, sizeof(server)) == -1)
