@@ -192,6 +192,7 @@ static int _OldOperFlags[] = {
 	OFLAG_INVISIBLE, '^',
 	OFLAG_TKL, 't',
 	OFLAG_GZL, 'Z',
+	OFLAG_OVERRIDE, 'v',
 	0, 0
 };
 
@@ -209,6 +210,7 @@ static OperFlag _OperFlags[] = {
 	{ OFLAG_LKILL,		"can_localkill" },
 	{ OFLAG_LNOTICE,	"can_localnotice" },
 	{ OFLAG_LROUTE,		"can_localroute" },
+	{ OFLAG_OVERRIDE,	"can_override" },
 	{ OFLAG_REHASH,		"can_rehash" },
 	{ OFLAG_RESTART,        "can_restart" },
 	{ OFLAG_INVISIBLE,	"can_stealth"},

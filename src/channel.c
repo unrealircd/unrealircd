@@ -1,4 +1,4 @@
-/*   Unreal Internet Relay Chat Daemon, src/channel.c
+/* Unreal Internet Relay Chat Daemon, src/channel.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Co Center
  *
@@ -1222,7 +1222,8 @@ CMD_FUNC(m_mode)
 
 #ifndef NO_OPEROVERRIDE
         if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
-            && !is_half_op(sptr, chptr) && IsOper(sptr))
+            && !is_half_op(sptr, chptr) && (MyClient(sptr) ? (IsOper(sptr) &&
+	    OPCanOverride(sptr)) : IsOper(sptr)))
         {
                 sendts = 0;
                 opermode = 1;
@@ -1230,7 +1231,8 @@ CMD_FUNC(m_mode)
         }
 
         if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
-            && is_half_op(sptr, chptr) && IsOper(sptr))
+            && is_half_op(sptr, chptr) && (MyClient(sptr) ? (IsOper(sptr) &&
+	    OPCanOverride(sptr)) : IsOper(sptr)))
         {
                 opermode = 2;
                 goto aftercheck;
@@ -3398,7 +3400,7 @@ CMD_FUNC(m_kick)
 			continue;
 		if (!IsServer(cptr)
 #ifndef NO_OPEROVERRIDE
-		    && !IsOper(sptr)
+		    && (!IsOper(sptr) || !(MyClient(sptr) && OPCanOverride(sptr)))
 #endif
 		    && !IsULine(sptr) && !is_chan_op(sptr, chptr)
 		    && !is_halfop(sptr, chptr))
@@ -3679,10 +3681,12 @@ CMD_FUNC(m_topic)
 		    || IsULine(sptr) || is_halfop(sptr, chptr)) && topic)
 		{
 			/* setting a topic */
-			if (IsOper(sptr) && !(is_halfop(sptr, chptr)
-			    || IsULine(sptr)
-			    || is_chan_op(sptr, chptr))
-			    && (chptr->mode.mode & MODE_TOPICLIMIT))
+			if ((MyClient(sptr) ? (IsOper(sptr) &&
+			     OPCanOverride(sptr)) : IsOper(sptr)) && 
+			     !(is_halfop(sptr, chptr)
+			     || IsULine(sptr)
+			     || is_chan_op(sptr, chptr))
+			     && (chptr->mode.mode & MODE_TOPICLIMIT))
 			{
 #ifdef NO_OPEROVERRIDE
 				return 0;
@@ -3782,7 +3786,8 @@ CMD_FUNC(m_invite)
         if (chptr->mode.mode & MODE_NOINVITE && !IsULine(sptr))
         {
 #ifndef NO_OPEROVERRIDE
-                if (IsOper(sptr) && sptr == acptr)
+                if ((MyClient(sptr) ? (IsOper(sptr) && OPCanOverride(sptr)) :
+		    IsOper(sptr)) && sptr == acptr)
                         over = 1;
                 else {
 #endif
@@ -3797,7 +3802,8 @@ CMD_FUNC(m_invite)
         if (!IsMember(sptr, chptr) && !IsULine(sptr))
         {
 #ifndef NO_OPEROVERRIDE
-                if (IsOper(sptr) && sptr == acptr)
+                if ((MyClient(sptr) ? (IsOper(sptr) && OPCanOverride(sptr)) :
+		    IsOper(sptr)) && sptr == acptr)
                         over = 1;
                 else {
 #endif
@@ -3821,7 +3827,8 @@ CMD_FUNC(m_invite)
                 if (!is_chan_op(sptr, chptr) && !IsULine(sptr))
                 {
 #ifndef NO_OPEROVERRIDE
-                        if (IsOper(sptr) && sptr == acptr)
+                if ((MyClient(sptr) ? (IsOper(sptr) && OPCanOverride(sptr)) :
+		    IsOper(sptr)) && sptr == acptr)
                                 over = 1;
                         else {
 #endif
@@ -3835,7 +3842,8 @@ CMD_FUNC(m_invite)
                 else if (!IsMember(sptr, chptr) && !IsULine(sptr))
                 {
 #ifndef NO_OPEROVERRIDE
-                        if (IsOper(sptr) && sptr == acptr)
+                if ((MyClient(sptr) ? (IsOper(sptr) && OPCanOverride(sptr)) :
+		    IsOper(sptr)) && sptr == acptr)
                                 over = 1;
                         else {
 #endif

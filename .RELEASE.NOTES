@@ -164,7 +164,7 @@ Unreal3.2-Selene (BETA12) Release Notes
   kick" ban override and joining a +s channel without realizing it is +s and therefore you
   shouldn't know it exists.
 
-* If you use the SSL features of Unreal, you should use OpenSSL 0.9.6e or later. This is
+* If you use the SSL features of Unreal, you should use OpenSSL 0.9.6g or later. This is
   important as the older versions may make the program exploitable. See 
   http://www.openssl.org for more information
 
@@ -197,6 +197,11 @@ Unreal3.2-Selene (BETA12) Release Notes
 
 * We have removed ./Setup - Please read the new docs for information on configuring &
   setting up Unreal3.2
+
+* A new oper flag, can_override/v has been added. This is an attempt to stop oper abuse.
+  All opers can no longer use oper-override, this oflag MUST be in place for oper-override
+  to be allowed. Can_override is NOT assumed to be present no matter what your flags,
+  meaning you could be +N but still not be allowed to use oper-override.
 
 * MAKE SURE YOU RERUN ./Config AND RUN make clean BEFORE USING THIS VERSION!!!
 

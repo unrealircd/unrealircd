@@ -1663,3 +1663,7 @@ seen. gmtime warning still there
   you actually have.
 - Fixed a bug in the win32 debugger where the contents of the core file were not written
   until ok was clicked. Reported by Simon Bell.
+- Added an operflag can_override (v) only opers with this flag are allowed to use
+  oper-override.
+- Fixed a bug in SVSO where the t and Z flags could not be removed.
+- Updated .RELEASE.NOTES to include can_override

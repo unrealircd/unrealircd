@@ -498,7 +498,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OFLAG_HIDE      0x04000000	/* gets auto +x on oper up */
 #define OFLAG_TKL       0x10000000	/* can use G:lines and shuns */
 #define OFLAG_GZL       0x20000000	/* can use global Z:lines */
-#define OFLAG_WMASTER	0x40000000
+#define OFLAG_OVERRIDE	0x40000000	/* can use oper-override */
 #define OFLAG_INVISIBLE 0x80000000
 #define OFLAG_LOCAL	(OFLAG_REHASH|OFLAG_HELPOP|OFLAG_GLOBOP|OFLAG_WALLOP|OFLAG_LOCOP|OFLAG_LROUTE|OFLAG_LKILL|OFLAG_KLINE|OFLAG_UNKLINE|OFLAG_LNOTICE)
 #define OFLAG_GLOBAL	(OFLAG_LOCAL|OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
@@ -507,6 +507,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OFLAG_ADMIN_	(OFLAG_ADMIN | OFLAG_GLOBAL)
 #define OFLAG_SADMIN_	(OFLAG_SADMIN | OFLAG_GLOBAL)
 
+#define OPCanOverride(x) ((x)->oflag & OFLAG_OVERRIDE)
 #define OPCanTKL(x)	((x)->oflag & OFLAG_TKL)
 #define OPCanGZL(x)	((x)->oflag & OFLAG_GZL)
 #define OPCanZline(x)   ((x)->oflag & OFLAG_ZLINE)

@@ -80,6 +80,9 @@ int oper_access[] = {
 	OFLAG_WHOIS, 'W',
 	OFLAG_HIDE, 'H',
 	OFLAG_INVISIBLE, '^',
+	OFLAG_TKL, 't',
+	OFLAG_GZL, 'Z',
+	OFLAG_OVERRIDE, 'v',
 	0, 0
 };
 
