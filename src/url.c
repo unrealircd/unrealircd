@@ -41,6 +41,7 @@ typedef struct
 	FILE *fd;
 	char filename[PATH_MAX];
 	char errorbuf[CURL_ERROR_SIZE];
+	time_t cachetime;
 } FileHandle;
 
 /*
@@ -203,6 +204,7 @@ void download_file_async(char *url, time_t cachetime, vFP callback)
 		FileHandle *handle = malloc(sizeof(FileHandle));
 		handle->fd = fopen(tmp, "wb");
 		handle->callback = callback;
+		handle->cachetime = cachetime;
 		strcpy(handle->filename, tmp);
 		if (file)
 			free(file);
@@ -218,6 +220,7 @@ void download_file_async(char *url, time_t cachetime, vFP callback)
 		curl_easy_setopt(curl, CURLOPT_PRIVATE, (char *)handle);
 		if (cachetime)
 		{
+			curl_easy_setopt(curl, CURLOPT_FILETIME, 1);
 			curl_easy_setopt(curl, CURLOPT_TIMECONDITION, CURL_TIMECOND_IFMODSINCE);
 			curl_easy_setopt(curl, CURLOPT_TIMEVALUE, cachetime);
 		}
@@ -271,13 +274,15 @@ void url_do_transfers_async(void)
 			FileHandle *handle;
 			char *url;
 			long code;
+			long last_mod;
 			curl_easy_getinfo(msg->easy_handle, CURLINFO_RESPONSE_CODE, &code);
 			curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, (char*)&handle);
 			curl_easy_getinfo(msg->easy_handle, CURLINFO_EFFECTIVE_URL, &url);
+			curl_easy_getinfo(msg->easy_handle, CURLINFO_FILETIME, &last_mod);
 			fclose(handle->fd);
 			if (msg->data.result == CURLE_OK)
 			{
-				if (code == 304)
+				if (code == 304 || (last_mod != -1 && last_mod < handle->cachetime))
 				{
 					handle->callback(url, NULL, NULL, 1);
 					remove(handle->filename);

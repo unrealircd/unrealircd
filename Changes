@@ -2792,3 +2792,6 @@ seen. gmtime warning still there
 - Added umode +T to help.conf
 - Fixed an issue with add/del/remove in /spamfilter being case sensitive.
 - Fixed invalid nameserver info when chrooted (nameserver was always localhost).
+- Fixed a remote include bug involving cached files. Thanks to chatsphere.net for helping to
+  track this down!
+
