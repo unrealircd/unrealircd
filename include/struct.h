@@ -28,6 +28,7 @@
  * conflicting types with isalnum/isalpha/etc @ redhat. -- Syzop
  */
 #if defined(USE_SSL)
+#define OPENSSL_NO_KRB5
 #include <openssl/rsa.h>       /* SSL stuff */
 #include <openssl/crypto.h>
 #include <openssl/x509.h>

@@ -2071,3 +2071,4 @@ seen. gmtime warning still there
   suggested a LONG time ago by Jaw959
 - Fixed a compile error with openssl enabled at redhat 9.
 - Added some temporarely SQLINE debugging/trace code
+- Fixed a PRIVMSG channelprefix bug reported by aragon (#0000902)

@@ -145,6 +145,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 	char *nick, *server, *p, *cmd, *ctcp, *p2, *pc, *text;
 	int  cansend = 0;
 	int  prefix = 0;
+	char pfixchan[CHANNELLEN + 32];
 
 	/*
 	 * Reasons why someone can't send to a channel
@@ -349,23 +350,35 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 		if (p2 && (chptr = find_channel(p2, NullChn)))
 		{
 			if (p2 != nick)
+			{
+				int len = 0;
 				for (pc = nick; pc != p2; pc++)
 				{
 					switch (*pc)
 					{
 					  case '+':
+						  if (!(prefix & PREFIX_VOICE))
+						  	pfixchan[len++] = '+';
 						  prefix |= PREFIX_VOICE;
 						  break;
 					  case '%':
+						  if (!(prefix & PREFIX_HALFOP))
+						  	pfixchan[len++] = '%';
 						  prefix |= PREFIX_HALFOP;
 						  break;
 					  case '@':
+						  if (!(prefix & PREFIX_OP))
+						  	pfixchan[len++] = '@';
 						  prefix |= PREFIX_OP;
 						  break;
 					  default:
 						  break;	/* ignore it :P */
 					}
 				}
+				pfixchan[len] = '\0';
+				strlcat(pfixchan, p2, sizeof(pfixchan));
+				nick = pfixchan;
+			}
 			cansend =
 			    !IsULine(sptr) ? can_send(sptr, chptr, parv[2]) : 0;
 			if (!cansend)
