@@ -107,33 +107,28 @@ while [ -z "$TEST" ] ; do
     esac
 done
 
-TEST=""
-while [ -z "$TEST" ] ; do
-    TEST="$DPATH"
-    echo ""
-    echo "What directory are all the server configuration files in?"
-    echo $n "[$TEST] -> $c"
-	read cc
-    if [ -z "$cc" ] ; then
-	DPATH=$TEST
-	break
-    fi
-done
-DPATH=$cc
+TEST="$DPATH"
+echo ""
+echo "What directory are all the server configuration files in?"
+echo $n "[$TEST] -> $c"
+read cc
+if [ -z "$cc" ] ; then
+   DPATH=$TEST
+else
+   DPATH=$cc
+fi
 
-TEST=""
-while [ -z "$TEST" ] ; do
-    TEST="$SPATH"
-    echo ""
-    echo "What is the path to the ircd binary including the name of the binary?"
-    echo $n "[$TEST] -> $c"
-	read cc
-    if [ -z "$cc" ] ; then
-	SPATH=$TEST
-	break
-    fi
-done
-SPATH=$cc
+
+TEST="$SPATH"
+echo ""
+echo "What is the path to the ircd binary including the name of the binary?"
+echo $n "[$TEST] -> $c"
+    read cc
+if [ -z "$cc" ] ; then
+    SPATH=$TEST
+else 
+    SPATH=$cc
+fi
 
 TEST=""
 while [ -z "$TEST" ] ; do
@@ -165,19 +160,16 @@ while [ -z "$TEST" ] ; do
     esac
 done
 
-TEST=""
-while [ -z "$TEST" ] ; do
-    TEST="$DOMAINNAME"
-    echo ""
-    echo "What is the hostname of the server running your IRCd?"
-    echo $n "[$TEST] -> $c"
-	read cc
-    if [ -z "$cc" ] ; then
-	DOMAINNAME=$TEST
-	break
-    fi
-done
+TEST="$DOMAINNAME"
+echo ""
+echo "What is the hostname of the server running your IRCd?"
+echo $n "[$TEST] -> $c"
+    read cc
+if [ -z "$cc" ] ; then
+    DOMAINNAME=$TEST
+else
 DOMAINNAME=$cc
+fi
 
 TEST=""
 while [ -z "$TEST" ] ; do
@@ -203,7 +195,6 @@ while [ -z "$TEST" ] ; do
     esac
 
 done
-DEFPERM=$cc
 
 
 TEST=""

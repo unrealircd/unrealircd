@@ -582,3 +582,4 @@ seen. gmtime warning still there
 - Fixed a typo in configure
 - Rewrote Config, it is now perfectly suited for an autoconf interface rather than a standalone config
 - Minor fixes to Config, a license, etc
+- Made changes to Config (removed a few unnecessary loops)
