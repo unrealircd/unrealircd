@@ -775,7 +775,7 @@ int size_string, ret;
 	if ((ret = dospamfilter(sptr, realfile, SPAMF_DCC, target)) < 0)
 		return ret;
 
-	if ((fl = dcc_isforbidden(sptr, targetcli, realfile)))
+	if ((fl = dcc_isforbidden(sptr, realfile)))
 	{
 		char *displayfile = dcc_displayfile(realfile);
 		sendto_one(sptr,
@@ -791,6 +791,17 @@ int size_string, ret;
 		sendto_serv_butone(NULL, ":%s SMO v :%s tried to send forbidden file %s (%s) to %s (is blocked now)",
 			me.name, sptr->name, displayfile, fl->reason, target);
 		sptr->flags |= FLAGS_DCCBLOCK;
+		return 0; /* block */
+	}
+
+	/* Channel dcc (???) and discouraged? just block */
+	if (!targetcli && ((fl = dcc_isdiscouraged(sptr, realfile))))
+	{
+		char *displayfile = dcc_displayfile(realfile);
+		sendto_one(sptr,
+		    ":%s %d %s :*** Cannot DCC SEND file %s to %s (%s)",
+		    me.name, RPL_TEXT,
+		    sptr->name, displayfile, target, fl->reason);
 		return 0; /* block */
 	}
 	return 1; /* allowed */
@@ -838,7 +849,7 @@ int size_string, ret;
 
 	strlcpy(realfile, ctcp, size_string+1);
 
-	if ((fl = dcc_isdiscouraged(from, to, realfile)))
+	if ((fl = dcc_isdiscouraged(from, realfile)))
 	{
 		if (!on_dccallow_list(to, from))
 		{
@@ -849,7 +860,7 @@ int size_string, ret;
 			sendnotice(from, "User %s is currently not accepting DCC SENDs with such a filename/filetype from you. "
 				"Your file %s was not sent.", to->name, displayfile);
 			sendnotice(to, "%s (%s@%s) tried to DCC SEND you a file named '%s', the request has been blocked.",
-				to->name, to->user->username, GetHost(to), displayfile);
+				from->name, from->user->username, GetHost(from), displayfile);
 			if (!IsDCCNotice(to))
 			{
 				SetDCCNotice(to);

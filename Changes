@@ -3256,3 +3256,5 @@ This is the 3.2 fixes branch.
   'safe types' (jpg, jpeg, png, gif, etc). Note that the purpose of this file
   is NOT to get a complete list, rather to limit it to a few 'known safe' entries.
 - Added set::maxdccallow: max number of entries of the DCCALLOW list (default: 10).
+- Various (non-critical) fixes for dccallow reported by Rocko (incorrect nick in deny msg,
+  added set::maxdccallow in docs, added bmp/vob/log/ to dccallow.conf).

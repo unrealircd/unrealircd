@@ -51,9 +51,8 @@ ID_Copyright("(C) Carsten Munk 1999");
  */
 
 /* checks if the dcc is blacklisted.
- * NOTE: 'target' can be NULL if the target was a channel
  */
-ConfigItem_deny_dcc *dcc_isforbidden(aClient *sptr, aClient *target, char *filename)
+ConfigItem_deny_dcc *dcc_isforbidden(aClient *sptr, char *filename)
 {
 ConfigItem_deny_dcc *d;
 ConfigItem_allow_dcc *a;
@@ -78,9 +77,8 @@ ConfigItem_allow_dcc *a;
 }
 
 /* checks if the dcc is discouraged ('soft bans').
- * NOTE: 'target' can be NULL if the target was a channel
  */
-ConfigItem_deny_dcc *dcc_isdiscouraged(aClient *sptr, aClient *target, char *filename)
+ConfigItem_deny_dcc *dcc_isdiscouraged(aClient *sptr, char *filename)
 {
 ConfigItem_deny_dcc *d;
 ConfigItem_allow_dcc *a;
