@@ -38,7 +38,14 @@
 #define DLLFUNC 
 #endif
 
+#ifndef STATIC_LINKING
+#define SymD(name, container, realsym) {name, (vFP *) &container}
+#else
+#define SymD(name, container, realsym) {realsym, (vFP *) &container}
+#endif
+
 typedef struct moduleInfo 	ModuleInfo;
+typedef struct msymboltable	MSymbolTable;
 typedef void			(*vFP)();	/* Void function pointer */
 typedef int			(*iFP)();	/* Integer function pointer */
 typedef char			(*cFP)();	/* char * function pointer */
@@ -55,6 +62,16 @@ struct moduleInfo
 	void	*dll;		/* Return value of dlopen */
 #endif
 	void	(*unload)();	/* pointer to mod_unload */
+};
+
+struct msymboltable
+{
+#ifndef STATIC_LINKING
+	char	*symbol;
+#else
+	vFP	realfunc;
+#endif
+	vFP 	*pointer;
 };
 
 extern ModuleInfo	*module_buffer;
@@ -76,6 +93,7 @@ void	del_HookX(int hooktype, int (*intfunc)(), void (*voidfunc)());
 #define RunHook(hooktype,x) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(x)
 #define RunHookReturn(hooktype,x,ret) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) if((*(global_i->func.intfunc))(x) ret) return
 #define RunHook2(hooktype,x,y) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(x,y)
+
 #define HOOKTYPE_LOCAL_QUIT	1
 #define HOOKTYPE_LOCAL_NICKCHANGE 2
 #define HOOKTYPE_LOCAL_CONNECT 3

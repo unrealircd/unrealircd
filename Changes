@@ -606,3 +606,4 @@ seen. gmtime warning still there
 - Moved m_swhois and m_svsmotd to modules
 - Fixed a bug where configure would pick both -ldescrypt and -lcrypt
 - Fixed /stats to work fully with newconf
+- Added mod_depend checking, see scan_socks.c for example

@@ -19,6 +19,11 @@
 #*   $Id$
 #*/
 
+INCLUDES = ../include/struct.h ../include/config.h \
+	../include/sys.h ../include/common.h ../include/version.h \
+	../include/h.h ../include/numeric.h ../include/msg.h \
+	../include/dynconf.h ../include/modules.h ../include/setup.h
+
 R_MODULES=m_sethost.so m_chghost.so m_chgident.so m_setname.so \
 		m_setident.so m_sdesc.so m_svsmode.so m_swhois.so\
 		m_svsmotd.so \

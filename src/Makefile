@@ -46,7 +46,7 @@ MAKE = make $(MAKEARGS)
 INCLUDES = ../include/struct.h ../include/config.h \
 	../include/sys.h ../include/common.h ../include/version.h \
 	../include/h.h ../include/numeric.h ../include/msg.h \
-	../include/dynconf.h ../include/modules.h
+	../include/dynconf.h ../include/modules.h ../include/setup.h
 
 all: build
 

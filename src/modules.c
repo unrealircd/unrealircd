@@ -1,6 +1,6 @@
 /************************************************************************
  *   UnrealIRCd - Unreal Internet Relay Chat Daemon - src/modules.c
- *   (C) 1999-2000 Carsten Munk (Techie/Stskeeps) <stskeeps@tspre.org>
+ *   (C) 2001 Carsten Munk (Techie/Stskeeps) <stskeeps@tspre.org>
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers. 
@@ -41,6 +41,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+
 #ifndef RTLD_NOW
 #define RTLD_NOW RTLD_LAZY
 #endif
@@ -67,12 +68,30 @@ int  load_module(char *module)
 	void *Mod;
 #endif
 	void (*mod_init) ();
+	void (*mod_load) ();
 	void (*mod_unload) ();
+	MSymbolTable *mod_dep;
 	int  i;
+
 	module_buffer = NULL;
 	if (Mod = irc_dlopen(module, RTLD_NOW))
 	{
 		/* Succeed loading module */
+		/* Locate mod_depend */
+		mod_dep =  irc_dlsym(Mod, "mod_depend");
+		if (!mod_dep)
+			mod_dep = irc_dlsym(Mod, "_mod_depend");
+		if (mod_dep)
+		{
+			if (module_depend_resolve(mod_dep) == -1)
+			{
+				config_progress("%s: cannot load, missing dependancy",
+					module);
+				irc_dlclose(Mod);
+				return -1;
+			}	
+		}		
+		
 		/* Locate mod_init function */
 		mod_init = irc_dlsym(Mod, "mod_init");
 		if (!mod_init)
@@ -279,6 +298,32 @@ void	module_loadall()
 	}
 #endif
 }
+
+int	module_depend_resolve(MSymbolTable *dep)
+{
+	MSymbolTable *d = dep;
+#ifndef STATIC_LINKING
+	while (d->pointer)
+	{
+		*(d->pointer) = module_sym(d->symbol);
+		if (!*(d->pointer))
+		{
+			config_progress("module dependancy error: cannot resolve symbol %s",
+				d->symbol);
+			return -1;
+		}	
+		d++;	
+	}
+	return 0;
+#else
+	while (d->pointer)
+	{
+		*(d->pointer) = d->realfunc;
+		d++;
+	}
+#endif
+}
+
 
 int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {

@@ -51,6 +51,7 @@
 #ifdef _WIN32
 #include "version.h"
 #endif
+
 #include "modules/scan.h"
 #include "modules/blackhole.h"
 
@@ -58,8 +59,9 @@
 #define SCAN_ON_PORT 1080
 #endif
 
+
 iFP			xVS_add = NULL;
-ConfigItem_blackhole	*blackhole_conf = NULL;
+ConfigItem_blackhole	*blackh_conf = NULL;
 void	scan_socks_scan(HStruct *h);
 
 ModuleInfo scan_socks_info
@@ -71,6 +73,22 @@ ModuleInfo scan_socks_info
 	NULL, /* Pointer to our dlopen() return value */
 	NULL 
     };
+
+/*
+ * Our symbol depencies
+*/
+#ifdef STATIC_LINKING
+MSymbolTable scan_socks_depend[] = {
+#else
+MSymbolTable mod_depend[] = {
+#endif
+	SymD("VS_Add", xVS_add, VS_Add),
+	SymD("HSlock", xHSlock, HSlock),
+	SymD("VSlock", xVSlock, VSlock),
+	SymD("blackhole_conf", blackh_conf, blackhole_conf),
+	{NULL, NULL}
+};
+
 
 /*
  * The purpose of these ifdefs, are that we can "static" link the ircd if we
@@ -89,24 +107,6 @@ void    scan_socks_init(void)
 	   the module_load() will use this to add to the modules linked 
 	   list
 	*/
-	xHSlock = (MUTEX *) module_sym("HSlock");
-	xVSlock = (MUTEX *) module_sym("VSlock");
-	xVS_add = (iFP) module_sym("VS_Add");
-	
-	if (!xHSlock || !xVSlock || !xVS_add)
-	{
-		module_buffer = NULL;
-		config_error("scan_socks: i depend on scan.so being loaded");
-		return;
-	}	
-	
-	blackhole_conf = (ConfigItem_blackhole *) module_sym("blackhole_conf");
-	if (!blackhole_conf)
-	{
-		module_buffer = NULL;
-		config_error("scan_socks: i depend on blackhole.so being loaded");
-		return;
-	}
 	module_buffer = &scan_socks_info;
 	
 	/*
@@ -145,7 +145,7 @@ void	scan_socks_scan(HStruct *h)
 	struct			SOCKADDR_IN sin;
 	SOCKET				fd;
 	int				sinlen = sizeof(struct SOCKADDR_IN);
-	unsigned short	sport = blackhole_conf->port;
+	unsigned short	sport = blackh_conf->port;
 	unsigned char   socksbuf[12];
 	unsigned long   theip;
 	fd_set			rfds;
@@ -190,7 +190,7 @@ void	scan_socks_scan(HStruct *h)
 		goto exituniverse;
 	}
 				
-	sin.SIN_ADDR.S_ADDR = inet_addr(blackhole_conf->ip);
+	sin.SIN_ADDR.S_ADDR = inet_addr(blackh_conf->ip);
 	theip = htonl(sin.SIN_ADDR.S_ADDR);
 	bzero(socksbuf, sizeof(socksbuf));
 	socksbuf[0] = 4;
