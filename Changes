@@ -672,3 +672,4 @@ seen. gmtime warning still there
 - Made badword fix found by eternal/Jsmj
 - Changed pthread process check to pthread_join on proposal and idea by
   codemastr
+- Some configure.in fixes to pthread stuff

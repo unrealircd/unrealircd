@@ -235,16 +235,19 @@ pthread_attr_t attrs;
 pid = getpid();
 pthread_attr_init(&attrs);
 pthread_create(&thread, &attrs, (void*)testthreads, NULL);
-pthread_join(&thread, NULL);
+pthread_join(thread, NULL);
 }
 ],ac_cv_thread_multi=no, ac_cv_thread_multi=yes)
 LIBS="$save_LIBS"
 CFLAGS="$save_CFLAGS"
 ])
+if test "$USESTDTHREAD" != "1"; then
 if test "$ac_cv_thread_multi" = "yes"; then
 AC_MSG_RESULT(Ok we'll install FSU Pthreads)
 cd extras
-gunzip -d pthreads.tar.gz
+if [ -f pthreads.tar.gz ] ; then 
+	gunzip -d pthreads.tar.gz
+fi
 tar xf pthreads.tar
 cd threads/src
 ./configure
@@ -257,7 +260,7 @@ fi
 PTHREAD_LIBS="../extras/threads/lib/libgthreads.a ../extras/threads/lib/libmalloc.a"
 fi
 fi
-
+fi
 AC_SUBST(PTHREAD_LIBS)
 AC_SUBST(PTHREAD_CFLAGS)
 AC_SUBST(PTHREAD_CC)
