@@ -2792,6 +2792,10 @@ void	validate_configuration(void)
 		Error("set::cloak-keys are too easy to guess. Please select three other more absurd and crazy numbers - will increase security a lot");
 	}
 #endif
+	if (!conf_listen)
+	{
+		Error("No listeners defined");
+	}
 	/* Now for the real config */
 	if (conf_me)
 	{
@@ -2840,7 +2844,7 @@ void	validate_configuration(void)
 				oper_ptr->name);
 		}
 	}
-
+	
 	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)listen_ptr->next)
 	{
 		if (!listen_ptr->ip)

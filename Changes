@@ -524,4 +524,5 @@ seen. gmtime warning still there
 - Made the Status Dialog update its values every 5 seconds
 - Made slot arrangement be different.
 - Merged McSkaf's hostname patch, debug patch, s_misc patch
+- Made validate_configuration check for !conf_listen
    
