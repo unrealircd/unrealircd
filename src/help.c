@@ -165,7 +165,6 @@ int  parse_help(sptr, name, help)
      SND(" A = Is a Server Administrator");
      SND(" N = Is a Network Administrator");
      SND(" C = Is a Co Administrator");
-/*   SND(" 1 = Is a coder");  Taken out */
      SND(" c = See's all Connects/Disconnects on local server");
      SND(" f = Listen to Flood Alerts from server");
      SND(" r = Identifies the nick as being Registered");
@@ -183,6 +182,7 @@ int  parse_help(sptr, name, help)
      SND(" t = Says that you are using a /VHOST");
      SND(" G = Filters out all Bad words in your messages with <censored>.");
      SND(" z = Marks the client as being on a Secure Connection (SSL)");
+     SND(" j = \"Junk\" mode. Displays misc information + nick changes");
      SND(" ---------------------oOo-------------------");
      SND(" -");
 	}

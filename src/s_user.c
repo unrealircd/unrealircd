@@ -2445,30 +2445,66 @@ static void do_who(sptr, acptr, repchan)
 	aClient *sptr, *acptr;
 	aChannel *repchan;
 {
-	char status[8];
+	char status[9];
 	int  i = 0;
 
-	/* auditoriums only show @'s */
+	/* Invisible opers can only be seen by other opers */
+	if (IsHiding(acptr) && !IsOper(sptr))
+		return;
+	
+	/* auditoriums only show @'s to non opers */
 	if (repchan && (repchan->mode.mode & MODE_AUDITORIUM) &&
-		!is_chan_op(acptr, repchan))
-			return;
-			
+	    !is_chan_op(acptr, repchan) && !IsOper(sptr))
+		return;
+		
 	if (acptr->user->away)
 		status[i++] = 'G';
 	else
 		status[i++] = 'H';
+
 	if (IsARegNick(acptr))
 		status[i++] = 'r';
 
-	/* Check for +H here too -- codemastr */
+	/* They're an oper. Either they aren't +H, they're /whoing themselves, or sptr
+	 * is also an oper.
+	 */
 	if (IsAnOper(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
 		status[i++] = '*';
-	else if (IsInvisible(acptr) && sptr != acptr && IsAnOper(sptr))
-		status[i++] = '%';
+
+	/* They're an oper, +H, and sptr is an oper */
+	if (IsAnOper(acptr) && (IsHideOper(acptr) && IsAnOper(sptr)))
+		status[i++] = '!';
+
+	/* Fun check...either acptr
+	 * is invisible (+i)
+	 * The channel is +s or +p
+	 * is +I (total invisibility) AND sptr is netadmin
+	 * or not an op in an auditorium
+	 * 
+	 * AND
+	 * they aren't /whoing themselves
+	 * AND
+	 * sptr is an oper
+	 */
+	if ((IsInvisible(acptr) || repchan &&
+	    ((repchan->mode.mode & MODE_PRIVATE) || (repchan->mode.mode & MODE_SECRET))
+	    || (IsHiding(acptr) && IsNetAdmin(sptr)) || 
+	    repchan && ((repchan->mode.mode & MODE_AUDITORIUM) &&
+	    !is_chan_op(acptr,repchan))) && (sptr != acptr) && IsAnOper(sptr))
+		status[i++] = '&';
+
+	/* Channel operator */
 	if (repchan && is_chan_op(acptr, repchan))
 		status[i++] = '@';
+
+	/* Channel halfop */
+	else if (repchan && is_half_op(acptr, repchan))
+		status[i++] = '%';
+
+	/* Channel voice */
 	else if (repchan && has_voice(acptr, repchan))
 		status[i++] = '+';
+	
 	status[i] = '\0';
 	if (IsWhois(acptr) && channelwho == 0 && (acptr != sptr))
 	{
@@ -2477,7 +2513,8 @@ static void do_who(sptr, acptr, repchan)
 		    me.name, acptr->name, sptr->name);
 	}
 	if (IsHiding(acptr) && sptr != acptr && !IsNetAdmin(sptr))
-	repchan = NULL;
+		repchan = NULL;
+	
 	sendto_one(sptr, rpl_str(RPL_WHOREPLY), me.name, sptr->name,
 	    (repchan) ? (repchan->chname) : "*", acptr->user->username,
 	    IsHidden(acptr) ? acptr->user->virthost : acptr->user->realhost,
@@ -2565,18 +2602,21 @@ int  m_who(cptr, sptr, parc, parv)
 		chptr = find_channel(channame, NULL);
 		if (chptr)
 		{
-			member = IsMember(sptr, chptr) || IsOper(sptr);
-			if (member || !SecretChannel(chptr))
+			if (IsMember(sptr,chptr) || IsOper(sptr) ||
+			    (!SecretChannel(chptr) && !HiddenChannel(chptr)))
 				for (lp = chptr->members; lp; lp = lp->next)
 				{
-					if (IsHiding(lp->value.cptr))
+					if (!IsOper(sptr) && IsHiding(lp->value.cptr))
 						continue;
-					if (oper && (!IsAnOper(lp->value.cptr)
-					    ))
+					if (oper && (!IsAnOper(lp->value.cptr)))
 						continue;
-					if ((lp->value.cptr != sptr
+					if (oper && IsHideOper(lp->value.cptr) &&
+					    !IsOper(sptr))
+						continue;
+					if ((lp->value.cptr != sptr)
 					    && IsInvisible(lp->value.cptr)
-					    && !member) && !IsOper(sptr))
+					    && !IsMember(sptr,chptr)
+					    && !IsOper(sptr))
 						continue;
 					channelwho = 1;
 					do_who(sptr, lp->value.cptr, chptr);
