@@ -154,6 +154,8 @@ void send_authports(aClient *cptr)
 	    authbuf, inetntoa((char *)&them.SIN_ADDR)));
 	if (WRITE_SOCK(cptr->authfd, authbuf, strlen(authbuf)) != strlen(authbuf))
 	{
+		if (ERRNO == P_EAGAIN)
+			return; /* Not connected yet, try again later */
 authsenderr:
 		ircstp->is_abad++;
 		CLOSE_SOCK(cptr->authfd);

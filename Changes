@@ -1884,3 +1884,4 @@ seen. gmtime warning still there
   in. Also added the ability to specify a directory for OpenSSL.
 - ZIP_LINKS fixes/debugging.
 - Code (comments) cleanup
+- Fixed an ident bug, maybe it actually works now.. (#0000709) reported by marviiin.
