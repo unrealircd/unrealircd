@@ -431,7 +431,7 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 			sendto_conn_hcn
 			    ("*** Notice -- Client exiting: %s (%s@%s) [%s] [%s]",
 			    sptr->name, sptr->user->username,
-			    sptr->user->realhost, comment, sptr->sockhost);
+			    sptr->user->realhost, comment, inet_ntoa(sptr->ip));
 
 			/* Clean out list and watch structures -Donwulff */
 			hash_del_watch_list(sptr);
