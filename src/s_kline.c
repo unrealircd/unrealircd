@@ -538,7 +538,8 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 		  strncpyzt(gmt, asctime(gmtime((TS *)&setat_1)), sizeof(gmt));
 		  strncpyzt(gmt2, asctime(gmtime((TS *)&expiry_1)), sizeof(gmt2));
-
+		  iCstrip(gmt);
+		  iCstrip(gmt2);
 		  switch (type)
 		  {
 		    case TKL_KILL:
