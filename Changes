@@ -1693,4 +1693,5 @@ seen. gmtime warning still there
 - Cleaned up some module code, also removed /module load|unload (just use /rehash)
 - Removed makeconf
 - Fixed errors in doc/example.conf and makenet
+- Fixed set::scan::bind-ip and set::scan::ban-time typos in unreal32docs.html
 
