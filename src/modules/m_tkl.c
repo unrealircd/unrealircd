@@ -466,6 +466,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	}	
 	if (!whattodo)
 	{
+		char c;
 		p++;
 		i = 0;
 		while (*p)
@@ -480,6 +481,21 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 			    ":%s NOTICE %s :*** [error] Too broad mask",
 			    me.name, sptr->name);
 			return 0;
+		}
+		c = tolower(*type);
+		if (c == 'k' || c == 'z' || *type == 'G' || *type == 's')
+		{
+			struct irc_netmask tmp;
+			if ((tmp.type = parse_netmask(hostmask, &tmp)) != HM_HOST)
+			{
+				if (tmp.bits < 16)
+				{
+					sendto_one(sptr,
+					    ":%s NOTICE %s :*** [error] Too broad mask",
+					    me.name, sptr->name);
+					return 0;
+				}
+			}
 		}
 	}
 

@@ -509,3 +509,6 @@
 - Some doc/ updates: removed: Unreal31_to_32.html & example.settings, updated: Authors &
   translations.txt.
 - Added a basic regex tutorial to unreal32docs.html (#0000920)
+- Updated wircd.def
+- Made CIDR no longer accept bitmasks with less than 16bits for /*line commands (#0002240)
+  reported by aquanight.

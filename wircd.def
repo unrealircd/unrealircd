@@ -1,6 +1,6 @@
 ; dlltool --output-def wircd.def.in --export-all-symbols SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ SRC/S_NUMERIC.OBJ SRC/WHOWAS.OBJ SRC/S_AUTH.OBJ SRC/HELP.OBJ SRC/S_MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ SRC/S_DEBUG.OBJ SRC/SUPPORT.OBJ SRC/LIST.OBJ SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/S_BSD.OBJ SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/VERSION.OBJ SRC/RES_INIT.OBJ SRC/RES_COMP.OBJ SRC/RES_MKQUERY.OBJ SRC/RES_SKIPNAME.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MD5.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ SRC/EXTBANS.OBJ
 EXPORTS
-	fast_badword_match
+	zlinebuf
 	AllUmodes
 	AllowClient
 	AuthTypes
@@ -335,6 +335,7 @@ EXPORTS
 	config_status
 	config_test
 	config_verbose
+	config_warn
 	configfile
 	connect_server
 	convert_time
@@ -442,6 +443,7 @@ EXPORTS
 	extcmode_init
 	extended_operoverride
 	extraflags
+	fast_badword_match
 	fast_badword_replace
 	find_Command
 	find_CommandEx
@@ -701,6 +703,7 @@ EXPORTS
 	parse
 	parse_addlag
 	parse_help
+	parse_modsys_version
 	parse_netmask
 	parse_tkl_para
 	place_host_ban
@@ -795,6 +798,9 @@ EXPORTS
 	sendto_serv_nickv2_token
 	sendto_serv_sjoin
 	sendto_snomask
+	sendto_snomask_global
+	sendto_snomask_normal
+	sendto_snomask_normal_global
 	sendto_umode
 	sendto_umode_raw
 	sentalong_marker
@@ -808,6 +814,7 @@ EXPORTS
 	set_snomask
 	set_sock_opts
 	set_usermode
+	settings
 	short_motd
 	smotd
 	smotd_tm
@@ -871,6 +878,7 @@ EXPORTS
 	unreal_encodespace
 	unreal_getfilemodtime
 	unreal_getfilename
+	unreal_getpathname
 	unreal_mktemp
 	unreal_setfilemodtime
 	unrealcredits
@@ -886,4 +894,3 @@ EXPORTS
 	webtv_parse
 	whowas_next
 	write_pidfile
-	zlinebuf
