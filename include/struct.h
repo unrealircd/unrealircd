@@ -626,69 +626,6 @@ typedef struct Whowas {
 	struct Whowas *cprev;	/* for client struct linked list */
 } aWhowas;
 
-
-#ifdef OLD
-
-struct ConfItem {
-	unsigned int status;	/* If CONF_ILLEGAL, delete when no clients */
-	int  clients;		/* Number of *LOCAL* clients using this */
-	struct IN_ADDR ipnum;	/* ip number of host field */
-	char *host;
-	char *passwd;
-	char *name;
-	int  port;
-	TS   hold;		/* Hold action until this time (calendar time) */
-	int  tmpconf;
-#ifndef VMSP
-	aClass *class;		/* Class of connection */
-#endif
-	short options;
-	struct ConfItem *next;
-};
-#endif
-#define	CONF_ILLEGAL		0x80000000
-#define	CONF_MATCH		0x40000000
-#define	CONF_QUARANTINED_SERVER	0x0001
-#define	CONF_CLIENT		0x0002
-#define	CONF_CONNECT_SERVER	0x0004
-#define	CONF_NOCONNECT_SERVER	0x0008
-#define	CONF_LOCOP		0x0010
-#define	CONF_OPERATOR		0x0020
-#define	CONF_ME			0x0040
-#define	CONF_KILL		0x0080
-#define	CONF_ADMIN		0x0100
-#ifdef 	R_LINES
-#define	CONF_RESTRICT		0x0200
-#endif
-#define	CONF_CLASS		0x0400
-#define	CONF_SERVICE		0x0800
-#define	CONF_LEAF		0x1000
-#define	CONF_LISTEN_PORT	0x2000
-#define	CONF_HUB		0x4000
-#define	CONF_UWORLD		0x8000
-#define CONF_QUARANTINED_NICK	0x10000
-#define CONF_ZAP		0x20000
-#define CONF_CONFIG             0x100000
-#define CONF_CRULEALL           0x200000
-#define CONF_CRULEAUTO          0x400000
-#define CONF_MISSING		0x800000
-#define CONF_SADMIN		0x1000000
-#define CONF_DRPASS		0x2000000	/* DIE/RESTART pass - NikB */
-#define CONF_EXCEPT     	0x4000000	/* K:Line exception */
-#define CONF_TLINE		0x8000000	/* T:Line */
-#define CONF_SOCKSEXCEPT	0x10000000
-#define CONF_NLINE		0x20000000
-#define CONF_VERSION		0x40000000
-#define	CONF_OPS		(CONF_OPERATOR | CONF_LOCOP)
-#define	CONF_SERVER_MASK	(CONF_CONNECT_SERVER | CONF_NOCONNECT_SERVER)
-#define	CONF_CLIENT_MASK	(CONF_CLIENT | CONF_SERVICE | CONF_OPS | \
-				 CONF_SERVER_MASK)
-#define CONF_CRULE              (CONF_CRULEALL | CONF_CRULEAUTO)
-#define CONF_QUARANTINE		(CONF_QUARANTINED_SERVER|CONF_QUARANTINED_NICK)
-
-#define	IsIllegal(x)	((x)->status & CONF_ILLEGAL)
-#define IsTemp(x)	((x)->tmpconf)
-
 /*
  * Client structures
  */

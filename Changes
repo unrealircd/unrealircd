@@ -644,3 +644,4 @@ seen. gmtime warning still there
 - Random cosmetic fixes
 - Updated the stats help list for newconf
 - Removed include/userload.h (not used)
+- Removed a few missed userload.h references
