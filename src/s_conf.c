@@ -3224,10 +3224,14 @@ ConfigItem_ban 	*Find_banEx(char *host, short type, short type2)
 int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 {
 	ConfigItem_allow *aconf;
-	char *hname;
+	char *hname, *encr;
 	int  i, ii = 0;
 	static char uhost[HOSTLEN + USERLEN + 3];
 	static char fullname[HOSTLEN + 1];
+#ifdef CRYPT_ILINE_PASSWORD
+        char salt[3];
+        extern char *crypt();
+#endif /* CRYPT_ILINE_PASSWORD */
 
 	for (aconf = conf_allow; aconf; aconf = (ConfigItem_allow *) aconf->next)
 	{
@@ -3291,9 +3295,28 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 		/* if no password, and no password given, ok */
 		if (!aconf->password && !cptr->passwd)
 			goto goforit;
-		/* password does not match  */
-		if ((aconf->password && !cptr->passwd)
-		   || (aconf->password && cptr->passwd && strcmp(aconf->password, cptr->passwd)))
+
+
+#ifdef CRYPT_ILINE_PASSWORD 
+               /* use first two chars of the password they send in as salt */
+               
+               /* passwd may be NULL. Head it off at the pass... */
+               salt[0] = '\0';
+               if (cptr->passwd && aconf->password && aconf->password[0] && aconf->password[1])
+               {
+                       salt[0] = aconf->password[0];
+                       salt[1] = aconf->password[1];
+                       salt[2] = '\0';
+                       encr = crypt(cptr->passwd, salt);
+               }
+                else
+                        encr = "";
+#else /* CRYPT_ILINE_PASSWORD */
+               encr = cptr->passwd;
+#endif /* CRYPT_ILINE_PASSWORD */
+                /* password does not match  */
+                if ((aconf->password && !encr)
+                  || (aconf->password && encr && strcmp(aconf->password, encr)))		/* password does not match  */
 		{
 			exit_client(cptr, cptr, &me,
 				"Password mismatch");

@@ -227,9 +227,7 @@ void	init_CommandHash(void)
 	add_Command(MSG_ADMINCHAT, TOK_ADMINCHAT, m_admins, 1);
 	add_Command(MSG_TECHAT, TOK_TECHAT, m_techat, 1);
 	add_Command(MSG_NACHAT, TOK_NACHAT, m_nachat, 1);
-	add_Command(MSG_SETIDENT, TOK_SETIDENT, m_setident, MAXPARA);
 	add_Command(MSG_LAG, TOK_LAG, m_lag, MAXPARA);
-	add_Command(MSG_SDESC, TOK_SDESC, m_sdesc, 1);
 	add_Command(MSG_STATSERV, TOK_STATSERV, m_statserv, 1);
 	add_Command(MSG_KNOCK, TOK_KNOCK, m_knock, 2);
 	add_Command(MSG_CREDITS, TOK_CREDITS, m_credits, MAXPARA);
@@ -248,7 +246,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_SAJOIN, TOK_SAJOIN, m_sajoin, MAXPARA);
 	add_Command(MSG_SVSPART, TOK_SVSPART, m_svspart, MAXPARA);
 	add_Command(MSG_SAPART, TOK_SAPART, m_sapart, MAXPARA);
-	add_Command(MSG_CHGIDENT, TOK_CHGIDENT, m_chgident, MAXPARA);
 	add_Command(MSG_SWHOIS, TOK_SWHOIS, m_swhois, MAXPARA);
 	add_Command(MSG_SVSO, TOK_SVSO, m_svso, MAXPARA);
 	add_Command(MSG_SVSFLINE, TOK_SVSFLINE, m_svsfline, MAXPARA);

@@ -81,6 +81,9 @@ void    l_commands_init(void)
 	m_setname_init();
 	m_chghost_init();
 	m_chgident_init();
+	m_setident_init();
+	m_sdesc_init();
+	
 	module_buffer = &l_commands_info;
 }
 
@@ -94,5 +97,7 @@ void	l_commands_unload(void)
 	m_setname_unload();
 	m_chghost_unload();
 	m_chgident_unload();
+        m_setident_unload();
+        m_sdesc_unload();
 }
 

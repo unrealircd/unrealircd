@@ -1651,7 +1651,6 @@ int  read_message(delay, listp)
 	time_t delay2 = delay, now;
 	u_long usec = 0;
 	int  res, length, fd, i;
-	int  rhighest_fd = 0;
 	int  auth = 0;
 	
 #ifdef SOCKSPORT
