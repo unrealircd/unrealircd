@@ -342,8 +342,14 @@ static aClient *find_chasing(aClient *sptr, char *user, int *chasing)
 
 	if (chasing)
 		*chasing = 0;
-	if (who)
+	if (who && !IsServer(who))
+	{
 		return who;
+	}
+	else
+	{
+		return NULL;
+	}
 	if (!(who = get_history(user, (long)KILLCHASETIMELIMIT)))
 	{
 		sendto_one(sptr, err_str(ERR_NOSUCHNICK),
