@@ -331,3 +331,5 @@
 - A little anti-0 fix in channel.c
 - Made MODE_X, MODE_I etc show mode change to user
 - Added channel mode +C to disallow channel CTCPs, /me (CTCP ACTION) is still allowed
+- Fixed a bunch of +H bugs
+- Fixed a bug where the channel was still shown in /who for +I users

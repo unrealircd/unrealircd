@@ -2315,7 +2315,7 @@ static void do_who(sptr, acptr, repchan)
 	else
 		status[i++] = 'H';
 	/* Check for +H here too -- codemastr */
-	if (IsAnOper(acptr) && !IsHideOper(acptr))
+	if (IsAnOper(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
 		status[i++] = '*';
 	else if (IsInvisible(acptr) && sptr != acptr && IsAnOper(sptr))
 		status[i++] = '%';
@@ -2330,6 +2330,8 @@ static void do_who(sptr, acptr, repchan)
 		    ":%s NOTICE %s :*** %s either did a /who or a specific /who on you",
 		    me.name, acptr->name, sptr->name);
 	}
+	if (IsHiding(acptr) && sptr != acptr && !IsNetAdmin(sptr) && !IsTechAdmin(sptr))
+	repchan = NULL;
 	sendto_one(sptr, rpl_str(RPL_WHOREPLY), me.name, sptr->name,
 	    (repchan) ? (repchan->chname) : "*", acptr->user->username,
 	    IsHidden(acptr) ? acptr->user->virthost : acptr->user->realhost,
@@ -2422,11 +2424,7 @@ int  m_who(cptr, sptr, parc, parv)
 				for (lp = chptr->members; lp; lp = lp->next)
 				{
 					if (oper && (!IsAnOper(lp->value.cptr)
-					    || IsHideOper(lp->value.cptr)))
-						continue;
-					if (IsHiding(lp->value.cptr)
-					    && !(IsNetAdmin(sptr)
-					    || IsTechAdmin(sptr)))
+					    ))
 						continue;
 					if (lp->value.cptr != sptr
 					    && IsInvisible(lp->value.cptr)
@@ -2445,7 +2443,7 @@ int  m_who(cptr, sptr, parc, parv)
 
 			if (!IsPerson(acptr))
 				continue;
-			if (oper && (!IsAnOper(acptr) || IsHideOper(acptr)))
+			if (oper && (!IsAnOper(acptr) || (IsHideOper(acptr) && sptr != acptr && !IsAnOper(sptr))))
 				continue;
 			showperson = 0;
 			/*
@@ -2708,18 +2706,11 @@ int  m_whois(cptr, sptr, parc, parv)
 				}
 			}
 
-			if (IsULine(acptr, acptr))
-				goto next;
-
-			if (IsHiding(acptr) && sptr != acptr
-			    && !IsNetAdmin(sptr) && !IsTechAdmin(sptr))
-				goto next;
-
-			if (buf[0] != '\0')
+			if (buf[0] != '\0' && !IsULine(acptr, acptr) && (!IsHiding(acptr) ||
+				IsNetAdmin(sptr) || IsTechAdmin(sptr) || sptr == acptr))
 				sendto_one(sptr, rpl_str(RPL_WHOISCHANNELS),
 				    me.name, parv[0], name, buf);
 
-		      next:
 			sendto_one(sptr, rpl_str(RPL_WHOISSERVER),
 			    me.name, parv[0], name, user->server,
 			    a2cptr ? a2cptr->info : "*Not On This Net*");
@@ -2731,7 +2722,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			   before we display a helpop or IRCD Coder msg) 
 			   -- codemastr */
 			if ((IsAnOper(acptr) || IsServices(acptr))
-			    && !IsHideOper(acptr))
+			    && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
 			{
 				buf[0] = '\0';
 				if (IsNetAdmin(acptr))
@@ -2758,7 +2749,7 @@ int  m_whois(cptr, sptr, parc, parv)
 					    parv[0], name, buf, ircnetwork);
 			}
 
-			if (IsHelpOp(acptr) && !IsHideOper(acptr))
+			if (IsHelpOp(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
 				if (!acptr->user->away)
 					sendto_one(sptr,
 					    rpl_str(RPL_WHOISHELPOP), me.name,
@@ -2769,7 +2760,7 @@ int  m_whois(cptr, sptr, parc, parv)
 				sendto_one(sptr, rpl_str(RPL_WHOISBOT),
 				    me.name, parv[0], name, ircnetwork);
 			}
-			if (acptr->umodes & UMODE_CODER && !IsHideOper(acptr))
+			if (acptr->umodes & UMODE_CODER && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
 			{
 				sendto_one(sptr, rpl_str(RPL_WHOISOPERATOR),
 				    me.name, parv[0], name, "a Coder",
