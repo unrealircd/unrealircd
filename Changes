@@ -199,7 +199,13 @@ deled cptr->passwd; above (line 135ish)
 
 *** 3.1.3 Released ***
 
-3.1.4 Changes:
+[ Unreal 3.1.4 ]
+--------------------------------------------------
+The fixes and backports continue. Strange how much
+time maintaining Unreal can eat up...
+
+Beta1
+--------------------------------------------------
 
 Removed tech admin.
 This feature is useless bloat. If you want it back
@@ -219,7 +225,8 @@ NuC for reporting)
 
 Fixed issue in s_user.c where +H opers
 could be identified by normal users in
-a trivial manner
+a trivial manner (thanks to Magnet from
+epiknet)
 --Luke
 ===================================
 
@@ -265,5 +272,14 @@ rewrote m_kick almost entirely (it sucked)
 ===================================
 
 newdns.c removed - another useless file
+--Luke
+===================================
+
+------------------------------------------------
+Beta2
+------------------------------------------------
+
+ripped cloak.c from 3.2, and added Config
+options as needed.
 --Luke
 ===================================

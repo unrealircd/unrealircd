@@ -87,6 +87,9 @@ MAXSENDQLENGTH="3000000"
 BUFFERPOOL="(9 * MAXSENDQLENGTH)"
 NICKNAMEHISTORYLENGTH="2000"
 MAXCONNECTIONS="1024"
+CLOAK_KEY1="100"
+CLOAK_KEY2="100"
+CLOAK_KEY3="100"
 SHOWOPERS="Yes"
 
 #
@@ -1503,6 +1506,12 @@ fi
 		esac
 done		
 
+echo ""
+echo "*** NEW ***"
+echo "In previous versions, E lines only exempted a particular"
+echo "mask from klines. Enabling this option will exempt the mask from"
+echo "glines, zlines, gzlines, and shuns as well."
+
 FOO=""
 runonce=""
 while [ -z "$FOO" ] ; do
@@ -1512,10 +1521,7 @@ else
 	FOO="No"
 fi
 echo ""
-echo "*** NEW ***"
-echo "Do you want E: lines (k line exempts) to apply to everything?"
-echo "(ie, the E line matches glines, zlines, klines, and shuns instead"
-echo " of just klines.)"
+echo "Enable global exemptions with E lines?"
 echo $n "[$FOO] -> $c"
 if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
 	read cc
@@ -1707,6 +1713,100 @@ fi
     esac
 done
 
+echo ""
+echo "*** NEW *** IMPORTANT *** READ AND FILL IN ***"
+echo "The host cloaking feature from 3.2 has been backported. You must"
+echo "choose three (3) numerical keys that are greater than 10000"
+echo "and enter them below. It is STRONGLY ADVISED that you use the same"
+echo "cloak keys for ALL servers on your network."
+echo ""
+
+FOO=""
+runonce=""
+while [ -z "$FOO" ] ; do
+    FOO="$CLOAK_KEY1"
+    echo "Enter your first cloak key."
+    echo $n "[$FOO] -> $c"
+    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+        read cc
+    else
+        cc=""
+        runonce=Yes
+    fi
+    if [ -z "$cc" ] ; then
+        cc=$FOO
+    fi
+    case "$cc" in
+        [1-9][0-9][0-9][0-9][0-9]*)
+            CLOAK_KEY1="$cc"
+            ;;
+        *)
+            echo ""
+            echo "You need to enter a number here, greater than 10000."
+            echo ""
+            FOO=""
+            ;;
+    esac
+done
+
+FOO=""
+runonce=""
+while [ -z "$FOO" ] ; do
+    FOO="$CLOAK_KEY2"
+    echo ""
+    echo "Enter your second cloak key."
+    echo $n "[$FOO] -> $c"
+    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+        read cc
+    else
+        cc=""
+        runonce=Yes
+    fi
+    if [ -z "$cc" ] ; then
+        cc=$FOO
+    fi
+    case "$cc" in
+        [1-9][0-9][0-9][0-9][0-9]*)
+            CLOAK_KEY2="$cc"
+            ;;
+        *)
+            echo ""
+            echo "You need to enter a number here, greater than 10000."
+            echo ""
+            FOO=""
+            ;;
+    esac
+done
+
+FOO=""
+runonce=""
+while [ -z "$FOO" ] ; do
+    FOO="$CLOAK_KEY3"
+    echo ""
+    echo "Enter your third cloak key."
+    echo $n "[$FOO] -> $c"
+    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+        read cc
+    else
+        cc=""
+        runonce=Yes
+    fi
+    if [ -z "$cc" ] ; then
+        cc=$FOO
+    fi
+    case "$cc" in
+        [1-9][0-9][0-9][0-9][0-9]*)
+            CLOAK_KEY3="$cc"
+            ;;
+        *)
+            echo ""
+            echo "You need to enter a number here, greater than 10000."
+            echo ""
+            FOO=""
+            ;;
+    esac
+done
+
 #
 # check FD_SETSIZE and override if needed.
 #
@@ -1864,6 +1964,9 @@ cat > $OPTIONS_H << __EOF__
 #define BUFFERPOOL $BUFFERPOOL
 #define MAXCONNECTIONS $MAXCONNECTIONS
 #define NICKNAMEHISTORYLENGTH $NICKNAMEHISTORYLENGTH
+#define CLOAK_KEY1 $CLOAK_KEY1
+#define CLOAK_KEY2 $CLOAK_KEY2
+#define CLOAK_KEY3 $CLOAK_KEY3
 __EOF__
 
 if [ -n "$CRYPT_OPER_PASSWORD" ] ; then
@@ -1949,6 +2052,9 @@ MAXCONNECTIONS="$MAXCONNECTIONS"
 NICKNAMEHISTORYLENGTH="$NICKNAMEHISTORYLENGTH"
 HUB="$HUB"
 DOMAINNAME="$DOMAINNAME"
+CLOAK_KEY1="$CLOAK_KEY1"
+CLOAK_KEY2="$CLOAK_KEY2"
+CLOAK_KEY3="$CLOAK_KEY3"
 __EOF__
 
 if [ "$OSNAME" = "Linux (with GLIBC 2.x or greater)" ]; then

@@ -32,7 +32,7 @@
 #define PATCH2  		".1"
 #define PATCH3  		".4"
 #define PATCH4  		"-Meadows"
-#define PATCH5  		"[beta1]"
+#define PATCH5  		"[beta2]"
 #define PATCH6  		""
 #define PATCH7  		""
 #define PATCH8  		COMPILEINFO

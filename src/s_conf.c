@@ -857,7 +857,7 @@ int  m_svsnoop(cptr, sptr, parc, parv)
 	if (!(check_registered(sptr) && IsULine(sptr) && parc > 2))
 		return 0;
 	/* svsnoop bugfix --binary */
-	if (hunt_server(cptr, sptr, ":%s SVSNOOP %s :%s", 1, parc,
+	if (hunt_server(cptr, sptr, "%s SVSNOOP %s :%s", 1, parc,
 	    parv) == HUNTED_ISME)
 	{
 		if (parv[2][0] == '+')

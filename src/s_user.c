@@ -3652,7 +3652,7 @@ int  m_oper(cptr, sptr, parc, parv)
 		return 0;
 	}
 
-	if (SVSNOOP)
+	if (SVSNOOP==1)
 	{
 		sendto_one(sptr, ":%s NOTICE %s :*** This server is in NOOP mode, you cannot /oper",
 			me.name, sptr->name);

@@ -1,25 +1,17 @@
 
-Unreal3.1.3-Komara Release Notes
+Unreal3.1.4-Meadows Release Notes
 ===================================
 
-* It is REALLY RECOMMENDED that you run only Unreal3.1.3<->Unreal3.1.3,
-  as Unreal3.1+sf has funny SJOIN bugs that cause the network to
-  desynch. Additionally, all versions prior to this are susceptible to a MODE
-  problem that can cause the ircd to segfault. Fixed versions of 3.1.1 and
-  3.1.2 resolve this issue, but introduced a mode propagation problem when
-  servers split and resynched.
+* This is yet another significant upgrade over the last version. Most notable
+  compatibility wise is the backporting of the new host cloaking from 3.2.
+  As a result of this, we strongly recommend that you convert all of your servers
+  to 3.1.4 and avoid running a network with mixed versions. They'll link fine
+  and operate okay, but the differences in cloaking will make it easier for
+  individuals to evade bans by simply switching servers.
 
-* It is ADVISABLE that you allocate numerics to each server on your network.
-  You simply in the M: line, just after the port, add :numeric, like:
-  
-   M:irc.fyremoon.net:*:Description:6667:20
-
-  Where 20 is the numeric. Numerics are 1-255, 0 means no numeric (bad),
-  and no two servers can have same numeric
-
-* We have introduced encrypted irc connections, using SSL
-      You need to set up a SSL port, P:IP:s:*:port
-      To connect securely to another server, add :S at the end of the C:line
-       and make sure it autoconnect/connects to a SSL port
+* Also, before this version if a 3.2 server with IPv6 enabled was linked to the
+  network, and a client connected using IPv6, it caused 3.1.x servers to segfault,
+  as the cloaking routine was unable to deal with IPv6 format addresses. This is
+  also corrected in this version
 
 * Read Unreal.nfo for any sake AND THE DOCS IN doc/.
