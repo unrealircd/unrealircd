@@ -2123,3 +2123,5 @@ seen. gmtime warning still there
 - Fixed a badword::action block bug with regex (non-fast) badwords, could cause a crash,
   reported by auspice (#0000946).
 - Fixed unprecise RPING output at windoze, reported by pak (#0000945).
+- Fixed a bug where operoverride notices were not send when overriding chmodes +aq (#0000831)
+  reported by _SciFi_

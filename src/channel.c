@@ -1727,21 +1727,32 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 /* do pro-opping here (popping) */
 	  case MODE_CHANOWNER:
 		  if (!IsULine(cptr) && !IsServer(cptr)
-		      && !IsNetAdmin(cptr) && !is_chanowner(cptr, chptr))
+		       && !is_chanowner(cptr, chptr))
 		  {
-			  sendto_one(cptr, err_str(ERR_ONLYSERVERSCANCHANGE),
-			      me.name, cptr->name, chptr->chname);
-			  break;
+			  if (IsNetAdmin(cptr))
+				opermode = 1;
+			  else
+			  {
+				  sendto_one(cptr, err_str(ERR_ONLYSERVERSCANCHANGE),
+				      me.name, cptr->name, chptr->chname);
+				  break;
+			  }
 		  }
 	  case MODE_CHANPROT:
 		  if (!IsULine(cptr) && !IsServer(cptr)
-		      && !IsNetAdmin(cptr) && !is_chanowner(cptr, chptr))
+		      && !is_chanowner(cptr, chptr))
 		  {
-			  sendto_one(cptr,
-			      ":%s %s %s :*** Protected User mode (+a) can only be set by the channel owner",
-			      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
-			  break;
+			  if (IsNetAdmin(cptr))
+				opermode = 1;
+			  else
+			  {
+				  sendto_one(cptr,
+				      ":%s %s %s :*** Protected User mode (+a) can only be set by the channel owner",
+				      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
+				  break;
+			  }
 		  }
+		 
 
 	  case MODE_HALFOP:
 	  case MODE_CHANOP:
