@@ -2137,3 +2137,5 @@ seen. gmtime warning still there
   exists.
 - Renamed channel mode +a to "channel admin" it fits better, and it makes us more consistent 
   with other IRCds.
+- Made the command parsing loop slightly faster by validating command parameters when a command
+  is created rather than when a command is used.

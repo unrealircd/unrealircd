@@ -308,7 +308,7 @@ aCommand *add_Command_backend(char *cmd, int (*func)(), unsigned char parameters
 	bzero(newcmd, sizeof(aCommand));
 	
 	newcmd->cmd = (char *) strdup(cmd);
-	newcmd->parameters = parameters;
+	newcmd->parameters = (parameters > MAXPARA) ? MAXPARA : parameters;
 	newcmd->token = token;
 	newcmd->func = func;
 	newcmd->flags = flags;
