@@ -333,4 +333,5 @@
 - Put out m_chghost, m_sethost in modules, remade Makefile structure and
   added src/modules
 - Modified an old Unreal3.1.1 to be network file converter, and converted
-  all of the module files to the new format.
+  all of the networks files to the new format.
+- Fixed a bug with RAKILL and UNSQLINE not working

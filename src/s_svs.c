@@ -489,7 +489,7 @@ int m_rakill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 		
 	}
-	if (bconf->flag.type != CONF_BAN_TYPE_AKILL)
+	if (bconf->flag.type2 != CONF_BAN_TYPE_AKILL)
 	{
 		sendto_one(sptr, ":%s NOTICE %s :*** Error: Cannot remove other ban types",
 			me.name, sptr->name);
@@ -505,7 +505,7 @@ int m_rakill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	
 	/* Wipe it out. */
-	del_ConfigItem(bconf, &conf_me);
+	del_ConfigItem(bconf, &conf_ban);
 	MyFree(bconf->mask);
 	if (bconf->reason)
 		MyFree(bconf->reason);
@@ -1073,7 +1073,7 @@ int m_unsqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (bconf = Find_banEx(parv[1], CONF_BAN_NICK, CONF_BAN_TYPE_AKILL))
 	{
-		del_ConfigItem(bconf, &conf_me);
+		del_ConfigItem(bconf, &conf_ban);
 		if (bconf->mask)
 			MyFree(bconf->mask);
 		if (bconf->reason)
