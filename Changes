@@ -1563,3 +1563,4 @@ seen. gmtime warning still there
   (#0000285)
 - Fixed a problem with set::ssl::certificate and set::ssl::key that used
   ->ce_varname instead of ->ce_vardata. Found by badSol
+- Added a newline in dynconf.h
