@@ -4870,7 +4870,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 					sendto_channel_butserv(chptr, acptr,
 					    ":%s JOIN :%s", nick,
 					    chptr->chname);
-				sendto_serv_butone_sjoin(cptr, ":%s JOIN :%s",
+				sendto_serv_butone_sjoin(cptr, ":%s JOIN %s",
 				    nick, chptr->chname);
 
 				CheckStatus('q', CHFL_CHANOWNER);
