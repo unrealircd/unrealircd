@@ -1561,3 +1561,5 @@ seen. gmtime warning still there
 - Added vhost::swhois requested by FrostByghte (#0000171)
 - Fixed a win32 password encryption bug when in NT service mode reported by simonbell
   (#0000285)
+- Fixed a problem with set::ssl::certificate and set::ssl::key that used
+  ->ce_varname instead of ->ce_vardata. Found by badSol

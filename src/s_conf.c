@@ -2496,13 +2496,13 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				{
 					if (!cepp->ce_vardata)
 						continue;
-					ircstrdup(iConf.x_server_cert_pem, cepp->ce_varname);	
+					ircstrdup(iConf.x_server_cert_pem, cepp->ce_vardata);	
 				}
 				else if (!strcmp(cepp->ce_varname, "key"))
 				{
 					if (!cepp->ce_vardata)
 						continue;
-					ircstrdup(iConf.x_server_key_pem, cepp->ce_varname);	
+					ircstrdup(iConf.x_server_key_pem, cepp->ce_vardata);	
 				}
 			}
 		}
