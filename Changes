@@ -1512,3 +1512,5 @@ seen. gmtime warning still there
 - Fixed grammar error thanks to MorPheus
 - Fixed halfops kicking halfops bug thanks to Jim_
 - Fixed a typo in /akill and /rakill obsolete depreciation notices reported by zak (#0000272)
+- Added set::ssl::certificate and set::ssl::key to point to where we got the certificate
+  PEM and the private key PEM

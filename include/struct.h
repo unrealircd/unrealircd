@@ -83,7 +83,6 @@ typedef struct _configitem_allow ConfigItem_allow;
 typedef struct _configflag_allow ConfigFlag_allow;
 typedef struct _configitem_allow_channel ConfigItem_allow_channel;
 typedef struct _configitem_vhost ConfigItem_vhost;
-typedef struct _configitem_ssl ConfigItem_ssl;
 typedef struct _configitem_except ConfigItem_except;
 typedef struct _configitem_link	ConfigItem_link;
 typedef struct _configitem_ban ConfigItem_ban;
@@ -960,14 +959,6 @@ struct _configitem_listen {
 	char		*ip;
 	int		port;
 	long		options, clients;
-	ConfigItem_ssl  *ssl;
-};
-
-struct _configitem_ssl {
-	char		*cert;
-	char		*key;
-	char		*ca;
-	char		*cipher;
 };
 
 struct _configitem_vhost {

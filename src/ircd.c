@@ -1232,9 +1232,11 @@ void SocketLoop(void *dummy)
 #ifndef NO_FDLIST
 	TS   nextfdlistcheck = 0;	/*end of priority code */
 #endif
-
+	
+	
 	while (1)
 #else
+	nextping = timeofday;
 	/*
 	 * Forever drunk .. forever drunk ..
 	 * * (Sorry Alphaville.)
@@ -1309,6 +1311,7 @@ void SocketLoop(void *dummy)
 			delay = MIN(delay, TIMESEC);
 #ifdef NO_FDLIST
 		(void)read_message(delay);
+		timeofday = time(NULL) + TSoffset;
 #else
 		(void)read_message(0, &serv_fdlist);	/* servers */
 		(void)read_message(1, &busycli_fdlist);	/* busy clients */
@@ -1331,6 +1334,7 @@ void SocketLoop(void *dummy)
 			}
 		} else {
 			read_message(delay, NULL);	/*  check everything */
+			timeofday = time(NULL) + TSoffset;
 		}
 
 #endif

@@ -2484,6 +2484,18 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					if (cepp->ce_vardata)
 						EGD_PATH = strdup(cepp->ce_vardata);
 				}
+				else if (!strcmp(cepp->ce_varname, "certificate"))
+				{
+					if (!cepp->ce_vardata)
+						continue;
+					ircstrdup(iConf.x_server_cert_pem, cepp->ce_varname);	
+				}
+				else if (!strcmp(cepp->ce_varname, "key"))
+				{
+					if (!cepp->ce_vardata)
+						continue;
+					ircstrdup(iConf.x_server_key_pem, cepp->ce_varname);	
+				}
 			}
 		}
 #endif
@@ -4154,7 +4166,12 @@ void report_dynconf(aClient *sptr)
 #ifdef USE_SSL
 	sendto_one(sptr, ":%s %i %s :ssl::egd: %s", me.name, RPL_TEXT,
 		sptr->name, EGD_PATH ? EGD_PATH : (USE_EGD ? "1" : "0"));
+	sendto_one(sptr, ":%s %i %s :ssl::certificate: %s", me.name, RPL_TEXT,
+		sptr->name, SSL_SERVER_CERT_PEM);
+	sendto_one(sptr, ":%s %i %s :ssl::key: %s", me.name, RPL_TEXT,
+		sptr->name, SSL_SERVER_KEY_PEM);
 #endif
+
 	sendto_one(sptr, ":%s %i %s :options::show-opermotd: %d", me.name, RPL_TEXT,
 	    sptr->name, SHOWOPERMOTD);
 	sendto_one(sptr, ":%s %i %s :options::hide-ulines: %d", me.name, RPL_TEXT,

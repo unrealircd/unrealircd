@@ -72,6 +72,10 @@ struct zConfiguration {
 	int  maxchannelsperuser;
 	int  anti_spam_quit_message_time;
 	char *egd_path;
+#ifdef USE_SSL
+	char *x_server_cert_pem;
+	char *x_server_key_pem;
+#endif
 	aNetwork network;
 };
 
@@ -117,6 +121,8 @@ extern aConfiguration iConf;
 #define STATS_SERVER		iConf.network.x_stats_server
 #define iNAH				iConf.network.x_inah
 #define prefix_quit			iConf.network.x_prefix_quit
+#define SSL_SERVER_CERT_PEM		(iConf.x_server_cert_pem ? iConf.x_server_cert_pem : "server.cert.pem")
+#define SSL_SERVER_KEY_PEM		(iConf.x_server_key_pem ? iConf.x_server_key_pem : "server.key.pem")
 
 #define CLOAK_KEY1			iConf.network.key
 #define CLOAK_KEY2			iConf.network.key2

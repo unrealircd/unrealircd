@@ -1,8 +1,3 @@
-/* Make these what you want for cert & key files */
-#define CERTF  "server.cert.pem"
-#define KEYF  "server.key.pem"
-
-
 extern   SSL_CTX * ctx;
 extern	 SSL_CTX *ctx_server;
 extern	 SSL_CTX *ctx_client;

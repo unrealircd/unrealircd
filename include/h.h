@@ -77,7 +77,6 @@ extern ConfigItem_admin 	*conf_admin;
 extern ConfigItem_admin		*conf_admin_tail;
 extern ConfigItem_drpass	*conf_drpass;
 extern ConfigItem_ulines	*conf_ulines;
-extern ConfigItem_ssl		*conf_ssl;
 extern ConfigItem_tld		*conf_tld;
 extern ConfigItem_oper		*conf_oper;
 extern ConfigItem_listen	*conf_listen;
