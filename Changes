@@ -2723,3 +2723,4 @@ seen. gmtime warning still there
 - Added a patch by AngryWolf to display libcurl info at startup. Also added support to 
   display in /version
 - Added a patch by AngryWolf to add ./unreal version (displays the Unreal version)
+- Made permanent modules receive HOOKTYPE_REHASH to notify of a rehash (#0001499)

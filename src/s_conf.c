@@ -1400,9 +1400,20 @@ int	init_conf(char *rootconf, int rehash)
 		
 		if (rehash)
 		{
+			Hook *h;
 			config_rehash();
 #ifndef STATIC_LINKING
 			Unload_all_loaded_modules();
+
+			/* Notify permanent modules of the rehash */
+			for (h = Hooks[HOOKTYPE_REHASH]; h; h = h->next)
+		        {
+				if (!h->owner)
+					continue;
+				if (!(h->owner->options & MOD_OPT_PERM))
+					continue;
+				(*(h->func.intfunc))();
+			}
 #else
 			RunHook0(HOOKTYPE_REHASH);
 #endif
