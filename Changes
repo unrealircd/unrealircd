@@ -1,4 +1,4 @@
-
+/*
  * UnrealIRCd Changes File - (C) Carsten Munk 1999-2002 &
  *                               The UnrealIRCd Team
  *                              
@@ -1451,5 +1451,4 @@ seen. gmtime warning still there
 - .RELEASE.NOTES change
 - Cleaned out Credits (i'll fix the web part of it later), made doug lea malloc default
   on Linux FSU Pthread installs. (When we got a better way, we will have full doug lea malloc..)
-
-  
+- Made OPEROVERRIDE_VERIFY default undeffed

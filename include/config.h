@@ -133,7 +133,7 @@
  *   channels, decreasing the chances of someone "accidentally"
  *   entering a random channel.
  */
-#define OPEROVERRIDE_VERIFY 1
+#undef OPEROVERRIDE_VERIFY
 
 /*
  * NAZIISH_CHBAN_HANDLING (formerly ANNOYING_BAN_THING)
