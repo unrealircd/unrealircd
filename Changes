@@ -853,3 +853,4 @@ seen. gmtime warning still there
 - Made some changes to allow Unreal to compile on win32
 - Fixed a scan.c bug on win32
 - Made the http scanner work on win32
+- Fixed a bug where /userhost would report oper status regardless of +H
