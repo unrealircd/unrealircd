@@ -112,7 +112,7 @@ char *unrealcredits[] =
 	"zshack, Headbang, Mick, Sp^, WonderWal, bomb, BullFrog, JacobD,",
 	"SirDeath, l33, EiniD, uo, RevPsych and the subgenius.net network,",
 	"^RavenX^, Mich[a]el, {X}, Fish, Shmad, Killer, BrainSCAN, RevNull,",
-	"GoNiS (irc.coreplex.org), Mikey, DrBin, and others",
+	"GoNiS (irc.coreplex.org), Mikey, DrBin, rapta, and others",
 	"",
 	"",
         "                   \2\37Stskeeps would like to thank:\2\37", 
