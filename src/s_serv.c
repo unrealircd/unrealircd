@@ -586,6 +586,10 @@ int  m_server(cptr, sptr, parc, parv)
 		sendto_one(cptr, "ERROR :No servername");
 		return 0;
 	}
+	if ((cptr->acpt->umodes & LISTENER_CLIENTSONLY) && MyConnect(cptr)) {
+		 return exit_client(cptr, sptr, sptr, "This port is for clients only");
+	}
+		
 	hop = 0;
 	host = parv[1];
 	if (parc > 4)
