@@ -667,6 +667,8 @@ static void make_who_status(aClient *sptr, aClient *acptr, aChannel *channel,
 
 static void do_other_who(aClient *sptr, char *mask)
 {
+int oper = IsAnOper(sptr);
+
   /* wildcard? */
   if (strchr(mask, '*') || strchr(mask, '?'))
     {
@@ -682,9 +684,26 @@ static void do_other_who(aClient *sptr, char *mask)
 	  char *channel;
 	  int flg;
 
-	  if (match(mask, acptr->name))
-	    continue;
-
+	  if (!oper) {
+		if (match(mask, acptr->name))
+			continue;
+	  } else {
+		/* I could have done this with chinese logic, but I prefered
+		 * to do it a bit more clean (ahem :P), like this. -- Syzop
+		 */
+		if (!match(mask, acptr->name))
+			goto matchok;
+		if (!oper)
+			continue;
+		if (!acptr->user)
+			continue;
+		if (!match(mask, acptr->user->realhost))
+			goto matchok;
+		if (IsHidden(acptr) && !match(mask, acptr->user->virthost))
+			goto matchok;
+		continue;
+matchok:
+	}
 	  if ((cansee = can_see(sptr, acptr, NULL)) & WHO_CANTSEE)
 	    continue;
 

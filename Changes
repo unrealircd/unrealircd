@@ -1924,3 +1924,5 @@ seen. gmtime warning still there
 - Fixed some case insensitive checks in configfile parsing, fixed to be case sensitive.
 - Module changes: added two hooks: HOOKTYPE_USERMSG and HOOKTYPE_CHANMSG, changed umode_get.
 - Fixed bug with chmode +u: Quits/nick changes of other users were shown.
+- Added /who *.host.com support (ircop only), this was already possible via /who -h <host>
+  but most ppl expect it to work this way too.
