@@ -494,3 +494,5 @@
 - Fixed /notice @%+ bug, where it didnt work at all
 - Fixed a small chmode +u bug
 - Added sendto_chanops_butone because of codemastr's laziness
+- Fixed a few +u bugs 
+- Fixed a +I bug (yes another one)

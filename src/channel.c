@@ -2956,19 +2956,15 @@ int  m_join(cptr, sptr, parc, parv)
 		/*
 		   ** notify all other users on the new channel
 		 */
-		if (!(IsHiding(sptr)))
-			sendto_channel_butserv(chptr, sptr,
-			    ":%s JOIN :%s", parv[0], chptr->chname);
-		else
+		if (IsHiding(sptr))
 		{
 			if (MyClient(sptr))
+			{
 				sendto_one(sptr, ":%s!%s@%s JOIN :%s",
 				    sptr->name, sptr->user->username,
 				    (IsHidden(sptr) ? sptr->user->
 				    virthost : sptr->user->realhost),
 				    chptr->chname);
-			if (MyClient(sptr))
-			{
 				sendto_umode(UMODE_ADMIN,
 				    "*** [+I] %s invisible joined %s",
 				    sptr->name, chptr->chname);
@@ -2978,6 +2974,22 @@ int  m_join(cptr, sptr, parc, parv)
 				    sptr->name, chptr->chname);
 			}
 		}
+		else if (chptr->mode.mode & MODE_AUDITORIUM)  {
+			if (MyClient(sptr))
+				sendto_one(sptr, ":%s!%s@%s JOIN :%s",
+					sptr->name, sptr->user->username,
+					(IsHidden(sptr) ? sptr->user->
+					virthost : sptr->user->realhost),
+					chptr->chname);
+			sendto_chanops_butone(NULL, chptr,  ":%s!%s@%s JOIN :%s",
+				sptr->name, sptr->user->username,
+				(IsHidden(sptr) ? sptr->user->
+				virthost : sptr->user->realhost),
+				chptr->chname);	
+		}	
+		else
+			sendto_channel_butserv(chptr, sptr,
+				":%s JOIN :%s", parv[0], chptr->chname);
 
 		sendto_serv_butone_token(cptr, parv[0], MSG_JOIN,
 		    TOK_JOIN, "%s", chptr->chname);
@@ -3083,22 +3095,8 @@ int  m_part(cptr, sptr, parc, parv)
 
 		if (1)
 		{
-			if (!IsHiding(sptr))
-			{
-				if (parc < 3)
-				{
-					sendto_channel_butserv(chptr,
-					    sptr, PartFmt, parv[0],
-					    chptr->chname);
-				}
-				else
-				{
-					sendto_channel_butserv(chptr,
-					    sptr, PartFmt2, parv[0],
-					    chptr->chname, comment);
-				}
-			}
-			else
+
+			if (IsHiding(sptr))
 			{
 				if (MyClient(sptr))
 				{
@@ -3131,6 +3129,61 @@ int  m_part(cptr, sptr, parc, parv)
 						    sptr->user->realhost),
 						    chptr->chname, comment);
 			}
+		else if (chptr->mode.mode & MODE_AUDITORIUM) {
+			if (MyClient(sptr)) {
+				if (parc < 3) {
+				sendto_chanops_butone(NULL, chptr,
+					":%s!%s@%s PART %s",
+					sptr->name,
+					sptr->user->username,
+					(IsHidden(sptr) ?
+					sptr->user->virthost :
+					sptr->user->realhost),
+					chptr->chname);
+				if (!is_chan_op(cptr, chptr)) 
+					sendto_one(sptr, ":%s!%s@%s PART %s",
+						sptr->name,
+						sptr->user->username,
+						(IsHidden(sptr) ?
+						sptr->user->virthost :
+						sptr->user->realhost),
+						chptr->chname);
+				}
+				else { 
+					sendto_chanops_butone(NULL, chptr,
+					":%s!%s@%s PART %s %s",
+					sptr->name,
+					sptr->user->username,
+					(IsHidden(sptr) ?
+					sptr->user->virthost :
+					sptr->user->realhost),
+					chptr->chname, comment);
+				if (!is_chan_op(cptr, chptr))
+					sendto_one(sptr, ":%s!%s@%s PART %s %s",
+					sptr->name,
+					sptr->user->username,
+					(IsHidden(sptr) ?
+					sptr->user->virthost :
+					sptr->user->realhost),
+					chptr->chname, comment);
+				}
+			}
+		}
+		else {
+
+			if (MyClient(sptr)) {
+
+				if (parc < 3)
+				
+					sendto_channel_butserv(chptr,
+       				        	sptr, PartFmt, parv[0],
+						chptr->chname);
+				else
+					sendto_channel_butserv(chptr,
+						sptr, PartFmt2, parv[0],
+						chptr->chname, comment);
+			}
+		}
 			remove_user_from_channel(sptr, chptr);
 		}
 	}
@@ -4101,7 +4154,7 @@ int  m_names(cptr, sptr, parc, parv)
 		acptr = cm->value.cptr;
 		if (IsInvisible(acptr) && !member)
 			continue;
-		if (IsHiding(acptr))
+		if (IsHiding(acptr) && acptr != sptr)
 			continue;
 		if (chptr->mode.mode & MODE_AUDITORIUM)
 			if (!is_chan_op(sptr, chptr))
