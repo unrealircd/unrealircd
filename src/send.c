@@ -41,7 +41,7 @@ static char sccsid[] =
 
 void vsendto_one(aClient *to, char *pattern, va_list vl);
 void sendbufto_one(aClient *to);
-extern int sendanyways;
+
 #ifndef NO_FDLIST
 extern fdlist serv_fdlist;
 extern fdlist oper_fdlist;
@@ -61,7 +61,7 @@ void vsendto_prefix_one(struct Client *to, struct Client *from,
     const char *pattern, va_list vl);
 
 int  sentalong_marker;
-
+int  sendanyways = 0;
 /*
 ** dead_link
 **	An error has been detected. The link *must* be closed,

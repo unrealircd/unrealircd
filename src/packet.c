@@ -133,18 +133,12 @@ void	init_CommandHash(void)
 	long		chainlength;
 	
 	bzero(CommandHash, sizeof(CommandHash));
-	add_Command(MSG_PRIVATE, TOK_PRIVATE, m_private, MAXPARA);
-	add_Command(MSG_NOTICE, TOK_NOTICE, m_notice, MAXPARA);
 	add_Command(MSG_MODE, TOK_MODE, m_mode, MAXPARA);
 	add_CommandX(MSG_NICK, TOK_NICK, m_nick, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
 	add_CommandX(MSG_JOIN, TOK_JOIN, m_join, MAXPARA, M_USER);
-	add_Command(MSG_PING, TOK_PING, m_ping, MAXPARA);
-	add_Command(MSG_WHOIS, TOK_WHOIS, m_whois, MAXPARA);
 	add_Command(MSG_ISON, TOK_ISON, m_ison, 1);
 	add_CommandX(MSG_USER, TOK_USER, m_user, MAXPARA, M_UNREGISTERED|M_USER);
-	add_CommandX(MSG_PONG, TOK_PONG, m_pong, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
 	add_CommandX(MSG_PART, TOK_PART, m_part, MAXPARA, M_USER);
-	add_CommandX(MSG_QUIT, TOK_QUIT, m_quit, MAXPARA, M_UNREGISTERED|M_USER);
 	add_Command(MSG_WATCH, TOK_WATCH, m_watch, 1);
 	add_Command(MSG_USERHOST, TOK_USERHOST, m_userhost, 1);
 	add_Command(MSG_LUSERS, TOK_LUSERS, m_lusers, MAXPARA);
@@ -153,7 +147,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_KICK, TOK_KICK, m_kick, MAXPARA);
 	add_Command(MSG_WALLOPS, TOK_WALLOPS, m_wallops, 1);
 	add_CommandX(MSG_ERROR, TOK_ERROR, m_error, MAXPARA, M_UNREGISTERED|M_SERVER);
-	add_Command(MSG_KILL, TOK_KILL, m_kill, MAXPARA);
 	add_CommandX(MSG_PROTOCTL, TOK_PROTOCTL, m_protoctl, MAXPARA, M_UNREGISTERED|M_SERVER|M_USER);
 	add_CommandX(MSG_SERVER, TOK_SERVER, m_server, MAXPARA, M_UNREGISTERED|M_SERVER);
 	add_Command(MSG_SQUIT, TOK_SQUIT, m_squit, MAXPARA);
@@ -163,7 +156,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_TRACE, TOK_TRACE, m_trace, MAXPARA);
 	add_CommandX(MSG_PASS, TOK_PASS, m_pass, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
 	add_Command(MSG_TIME, TOK_TIME, m_time, MAXPARA);
-	add_Command(MSG_OPER, TOK_OPER, m_oper, MAXPARA);
 	add_Command(MSG_CONNECT, TOK_CONNECT, m_connect, MAXPARA);
 	add_CommandX(MSG_VERSION, TOK_VERSION, m_version, MAXPARA, M_UNREGISTERED|M_USER);
 	add_Command(MSG_STATS, TOK_STATS, m_stats, MAXPARA);
@@ -179,14 +171,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_MOTD, TOK_MOTD, m_motd, MAXPARA);
 	add_Command(MSG_CLOSE, TOK_CLOSE, m_close, MAXPARA);
 	add_Command(MSG_SILENCE, TOK_SILENCE, m_silence, MAXPARA);
-	add_Command(MSG_AKILL, TOK_AKILL, m_akill, MAXPARA);
-	add_Command(MSG_SQLINE, TOK_SQLINE, m_sqline, MAXPARA);
-	add_Command(MSG_UNSQLINE, TOK_UNSQLINE, m_unsqline, MAXPARA);
-	add_Command(MSG_KLINE, TOK_KLINE, m_kline, MAXPARA);
-	add_Command(MSG_UNKLINE, TOK_UNKLINE, m_unkline, MAXPARA);
-	add_Command(MSG_ZLINE, TOK_ZLINE, m_zline, MAXPARA);
-	add_Command(MSG_UNZLINE, TOK_UNZLINE, m_unzline, MAXPARA);
-	add_Command(MSG_RAKILL, TOK_RAKILL, m_rakill, MAXPARA);
 	add_Command(MSG_GNOTICE, TOK_GNOTICE, m_gnotice, MAXPARA);
 	add_Command(MSG_GOPER, TOK_GOPER, m_goper, MAXPARA);
 	add_Command(MSG_GLOBOPS, TOK_GLOBOPS, m_globops, 1);
@@ -200,25 +184,15 @@ void	init_CommandHash(void)
 	add_Command(MSG_RULES, TOK_RULES, m_rules, MAXPARA);
 	add_Command(MSG_MAP, TOK_MAP, m_map, MAXPARA);
 	add_Command(MSG_GLINE, TOK_GLINE, m_gline, MAXPARA);
-	add_Command(MSG_REMGLINE, TOK_REMGLINE, m_remgline, MAXPARA);
 	add_Command(MSG_DALINFO, TOK_DALINFO, m_dalinfo, MAXPARA);
 	add_Command(MSG_ADDLINE, TOK_ADDLINE, m_addline, 1);
-	add_Command(MSG_ADMINCHAT, TOK_ADMINCHAT, m_admins, 1);
-	add_Command(MSG_TECHAT, TOK_TECHAT, m_techat, 1);
-	add_Command(MSG_NACHAT, TOK_NACHAT, m_nachat, 1);
-	add_Command(MSG_LAG, TOK_LAG, m_lag, MAXPARA);
 	add_Command(MSG_KNOCK, TOK_KNOCK, m_knock, 2);
 	add_Command(MSG_CREDITS, TOK_CREDITS, m_credits, MAXPARA);
 	add_Command(MSG_LICENSE, TOK_LICENSE, m_license, MAXPARA);
-	add_Command(MSG_RPING, TOK_RPING, m_rping, MAXPARA);
-	add_Command(MSG_RPONG, TOK_RPONG, m_rpong, MAXPARA);
 	add_Command(MSG_NETINFO, TOK_NETINFO, m_netinfo, MAXPARA);
-	add_Command(MSG_SENDUMODE, TOK_SENDUMODE, m_sendumode, MAXPARA);
-	add_Command(MSG_SMO, TOK_SMO, m_sendumode, MAXPARA);
 	add_Command(MSG_ADDMOTD, TOK_ADDMOTD, m_addmotd, 1);
 	add_Command(MSG_ADDOMOTD, TOK_ADDOMOTD, m_addomotd, 1);
 	add_Command(MSG_OPERMOTD, TOK_OPERMOTD, m_opermotd, MAXPARA);
-	add_Command(MSG_TSCTL, TOK_TSCTL, m_tsctl, MAXPARA);
 	add_Command(MSG_SVSJOIN, TOK_SVSJOIN, m_svsjoin, MAXPARA);
 	add_Command(MSG_SAJOIN, TOK_SAJOIN, m_sajoin, MAXPARA);
 	add_Command(MSG_SVSPART, TOK_SVSPART, m_svspart, MAXPARA);
@@ -228,12 +202,9 @@ void	init_CommandHash(void)
 	add_Command(MSG_VHOST, TOK_VHOST, m_vhost, MAXPARA);
 	add_Command(MSG_BOTMOTD, TOK_BOTMOTD, m_botmotd, MAXPARA);
 	add_Command(MSG_SJOIN, TOK_SJOIN, m_sjoin, MAXPARA);
-	add_Command(MSG_HTM, TOK_HTM, m_htm, MAXPARA);
 	add_Command(MSG_UMODE2, TOK_UMODE2, m_umode2, MAXPARA);
 	add_Command(MSG_DCCDENY, TOK_DCCDENY, m_dccdeny, 2);
 	add_Command(MSG_UNDCCDENY, TOK_UNDCCDENY, m_undccdeny, MAXPARA);
-	add_Command(MSG_CHGNAME, TOK_CHGNAME, m_chgname, MAXPARA);
-	add_Command(MSG_SVSNAME, TOK_CHGNAME, m_chgname, MAXPARA);
 	add_Command(MSG_SHUN, TOK_SHUN, m_shun, MAXPARA);
 	add_Command(MSG_NEWJOIN, TOK_JOIN, m_join, MAXPARA);
 	add_Command(MSG_CYCLE, TOK_CYCLE, m_cycle, MAXPARA);	
@@ -364,6 +335,8 @@ inline aCommand *find_Command(char *cmd, short token, int flags)
 {
 	aCommand	*p;
 	
+	Debug((DEBUG_NOTICE, "FindCommand %s", cmd));
+
 	for (p = CommandHash[toupper(*cmd)]; p; p = p->next) {
 		if ((flags & M_UNREGISTERED) && !(p->flags & M_UNREGISTERED))
 			continue;
@@ -371,7 +344,6 @@ inline aCommand *find_Command(char *cmd, short token, int flags)
 			continue;
 		if ((flags & M_ALIAS) && !(p->flags & M_ALIAS))
 			continue;
-		
 		if (p->token && token)
 		{
 			if (!strcmp(p->cmd, cmd))

@@ -54,6 +54,9 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>    
 #endif
+extern int sendanyways;
+
+
 typedef struct aloopStruct LoopStruct;
 typedef struct ConfItem aConfItem;
 typedef struct t_kline aTKline;
@@ -737,6 +740,9 @@ typedef struct ircstatsx {
 	int  me_max;		/* local max */
 	int  global_max;	/* global max */
 } ircstats;
+
+extern ircstats IRCstats;
+
 
 #define LISTENER_NORMAL		0x000001
 #define LISTENER_CLIENTSONLY	0x000002

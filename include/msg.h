@@ -331,8 +331,5 @@ extern int m_tkl(), m_vhost(), m_botmotd(), m_sjoin(), m_htm();
 extern int m_umode2(), m_dccdeny(), m_undccdeny();
 extern int m_chgname(), m_shun(), m_post(), m_cycle();
 extern int m_module(), m_alias();
-#ifdef GUEST
-extern int m_guest();
-#endif
 #endif
 
