@@ -1142,66 +1142,82 @@ LRESULT CALLBACK ColorDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		LPDRAWITEMSTRUCT lpdis = (LPDRAWITEMSTRUCT)lParam;
 		if (wParam == IDC_WHITE) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushWhite);
+			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
 			return TRUE;
 			}
 		if (wParam == IDC_BLACK) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushBlack);
+			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
 			return TRUE;
 		}
 		if (wParam == IDC_DARKBLUE) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushDarkBlue);
+			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
 			return TRUE;
 		}
 		if (wParam == IDC_DARKGREEN) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushDarkGreen);
+			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
 			return TRUE;
 		}
 		if (wParam == IDC_RED) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushRed);
+			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
 			return TRUE;
 		}
 		if (wParam == IDC_DARKRED) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushDarkRed);
+			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
 			return TRUE;
 		}
 		if (wParam == IDC_PURPLE) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushPurple);
+			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
 			return TRUE;
 		}
 		if (wParam == IDC_ORANGE) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushOrange);
+			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
 			return TRUE;
 		}
 		if (wParam == IDC_YELLOW) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushYellow);
+			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
 			return TRUE;
 		}
 		if (wParam == IDC_GREEN) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushGreen);
+			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
 			return TRUE;
 		}
 		if (wParam == IDC_VDARKGREEN) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushVDarkGreen);
+			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
 			return TRUE;
 		}
 		if (wParam == IDC_LIGHTBLUE) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushLightBlue);
+			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
 			return TRUE;
 		}
 		if (wParam == IDC_BLUE) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushBlue);
+			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
 			return TRUE;
 		}
 		if (wParam == IDC_PINK) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushPink);
+			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
 			return TRUE;
 		}
 		if (wParam == IDC_DARKGRAY) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushDarkGray);
+			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
 			return TRUE;
 		}
 		if (wParam == IDC_GRAY) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushGray);
+			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
 			return TRUE;
 		}
 		}

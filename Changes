@@ -716,5 +716,4 @@ seen. gmtime warning still there
 - Fixed a bug in the new editor, hopefully now it works flawlessly (?)
 - Fixed a bug in the win32 status dialog causing it to get screwed up, found by Auspice
 - Fixed a scan_socks problem under win32
-
-
+- Added a 3d border to the color selector in the win32 editor
