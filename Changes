@@ -3005,3 +3005,5 @@ seen. gmtime warning still there
 - And some more spamfilter.conf rules (mirseed & fagot).
 - Updated /credits with a few more donators (listed in no particular order)
 - Fixed a little error in the spamfilter.conf
+- And some more spamfilter.conf rules (aplore, gtbot, sdbot, spybot).
+- Minor doc update.
