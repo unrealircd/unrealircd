@@ -3464,6 +3464,7 @@ CMD_FUNC(m_admin)
 ** now allows the -flags in remote rehash
 ** ugly code but it seems to work :) -- codemastr
 ** added -all and fixed up a few lines -- niquil (niquil@programmer.net)
+** fixed remote rehashing, but it's getting a bit weird code again -- Syzop
 */
 CMD_FUNC(m_rehash)
 {
@@ -3482,6 +3483,20 @@ CMD_FUNC(m_rehash)
 		return 0;
 	}
 	x = 0;
+
+	if (BadPtr(parv[2])) {
+		/* If the argument starts with a '-' (like -motd, -opermotd, etc) then it's
+		 * assumed not to be a server. -- Syzop
+		 */
+		if (parv[1] && (parv[1][0] == '-'))
+			x = HUNTED_ISME;
+		else
+			x = hunt_server_token(cptr, sptr, MSG_REHASH, TOK_REHASH, "%s", 1, parc, parv);
+	} else {
+		x = hunt_server_token(cptr, sptr, MSG_REHASH, TOK_REHASH, "%s %s", 1, parc, parv);
+	}
+	if (x != HUNTED_ISME)
+		return 0; /* Now forwarded or server didnt exist */
 
 	if (cptr != sptr)
 	{
@@ -3502,26 +3517,7 @@ CMD_FUNC(m_rehash)
 		}
 		parv[1] = parv[2];
 	}
-	else
-	{
-		if (find_server_quick(parv[1]))
-		{
-			if (parv[2])
-			{
-				if ((x =
-				    hunt_server_token(cptr, sptr, MSG_REHASH, TOK_REHASH, "%s %s",
-				    1, parc, parv)) != HUNTED_ISME)
-					return 0;
-			}
-			else
-			{
-				if ((x =
-				    hunt_server_token(cptr, sptr, MSG_REHASH, TOK_REHASH, "%s", 1,
-				    parc, parv)) != HUNTED_ISME)
-					return 0;
-			}
-		}
-	}
+
 	if (!BadPtr(parv[1]))
 	{
 
@@ -3539,6 +3535,8 @@ CMD_FUNC(m_rehash)
 				aMotd *amotd;
 				sendto_ops("%sRehashing everything on the request of %s",
 					cptr != sptr ? "Remotely " : "",sptr->name);
+				if (cptr != sptr)
+					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing everything", me.name, sptr->name);
 				opermotd = (aMotd *) read_file(OPATH, &opermotd);
 				botmotd = (aMotd *) read_file(BPATH, &botmotd);
 				motd = (aMotd *) read_motd(MPATH);
@@ -3578,6 +3576,8 @@ CMD_FUNC(m_rehash)
 				    ("%sRehashing OperMOTD on request of %s",
 				    cptr != sptr ? "Remotely " : "",
 				    sptr->name);
+				if (cptr != sptr)
+					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing OperMOTD", me.name, sptr->name);
 				opermotd = (aMotd *) read_file(OPATH, &opermotd);
 				return 0;
 			}
@@ -3587,6 +3587,8 @@ CMD_FUNC(m_rehash)
 				    ("%sRehashing BotMOTD on request of %s",
 				    cptr != sptr ? "Remotely " : "",
 				    sptr->name);
+				if (cptr != sptr)
+					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing BotMOTD", me.name, sptr->name);
 				botmotd = (aMotd *) read_file(BPATH, &botmotd);
 				return 0;
 			}
@@ -3599,6 +3601,8 @@ CMD_FUNC(m_rehash)
 				    ("%sRehashing all MOTDs and RULES on request of %s",
 				    cptr != sptr ? "Remotely " : "",
 				    sptr->name);
+				if (cptr != sptr)
+					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing all MOTDs and RULES", me.name, sptr->name);
 				motd = (aMotd *) read_motd(MPATH);
 				rules = (aMotd *) read_rules(RPATH);
 				for (tlds = conf_tld; tlds;
@@ -3627,12 +3631,19 @@ CMD_FUNC(m_rehash)
 				}
 				return 0;
 			}
+			/* didn't match / fall trough... should we continue?? */
+			sendto_ops("%s is %srehashing server config file (unknown option)",
+				sptr->name, cptr != sptr ? "Remotely " : "");
+			if (cptr != sptr)
+				sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing server config file (unknown option)",
+					me.name, sptr->name);
 		}
 	}
 	else
 		sendto_ops("%s is rehashing server config file", parv[0]);
 
-	sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
+	if (cptr == sptr)
+		sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
 	return rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
 }
 
