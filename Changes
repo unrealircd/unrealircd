@@ -2276,3 +2276,4 @@ seen. gmtime warning still there
 - Fixed a documentation typo reported by Z3l3zT (#0001066)
 - Clarified what ban server {} does, suggested by Joolz (#0001110)
 - Fixed a problem related to crontab reported by LRL (#0001034)
+- Fixed a problem in PPC detection
