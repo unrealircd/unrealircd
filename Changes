@@ -2815,3 +2815,5 @@ seen. gmtime warning still there
   called which might look a bit ugly, but is better than before (scattered on 3 places).
 - Added snomasks 'N' which allows you to see nick changes of clients on other servers,
   requested by several people (#0001323).
+- Made setting of -qaohv etc on services (+S) not possible unless you are a netadmin (purpose
+  is to prevent people from deoping BotServ bots). Suggested by shiny (#0000917)

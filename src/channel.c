@@ -2134,6 +2134,16 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  /* we make the rules, we bend the rules */
 		  if (IsServer(cptr) || IsULine(cptr))
 			  goto breaktherules;
+		
+		  /* Services are special! */
+		  if (IsServices(member->cptr) && MyClient(cptr) && !IsNetAdmin(cptr))
+		  {
+			sendto_one(cptr,
+				":%s %s %s :*** You cannot %s %s in %s, it is a network service",
+				me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE",
+				cptr->name, xxx, member->cptr->name, chptr->chname);
+			break;
+		  }
 
 		  if (is_chanowner(member->cptr, chptr)
 		      && member->cptr != cptr
