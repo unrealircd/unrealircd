@@ -2945,3 +2945,5 @@ seen. gmtime warning still there
 - Made it compile on win32 again
 - Modulized: server, stats
 - Modulized: svsfline, dccdeny, undccdeny, whowas
+- Modulized: connect... should be the last one till 3.2final.
+- Fixed some compile warnings/problems caused by modulizing.

@@ -307,7 +307,6 @@ extern int m_tkl();
 extern int m_motd(), m_user();
 extern int m_info(), m_summon();
 extern int m_users(), m_version();
-extern int m_connect();
 extern int m_names();
 extern int m_lusers(), m_umode();
 extern int m_motd();
