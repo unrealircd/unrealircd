@@ -1534,3 +1534,4 @@ seen. gmtime warning still there
 - Made it so Unreal (win32) can't be reinstalled or uninstalled while it is currently
   running
 - Some install script win32 changes to deal with unreal32docs.html
+- win32 install script changes to deal with version switchover
