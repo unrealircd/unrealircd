@@ -1957,6 +1957,19 @@ void	run_configuration(void)
 	}
 }
 
+void	link_cleanup(ConfigItem_link *link_ptr)
+{
+	ircfree(link_ptr->servername);
+	ircfree(link_ptr->username);
+	ircfree(link_ptr->bindip);
+	ircfree(link_ptr->hostname);
+	ircfree(link_ptr->hubmask);	
+	ircfree(link_ptr->leafmask);
+	ircfree(link_ptr->connpwd);
+	ircfree(link_ptr->recvpwd);
+}
+
+
 void	listen_cleanup()
 {
 	int	i = 0;
@@ -2072,14 +2085,7 @@ int     rehash(cptr, sptr, sig)
 	{
 		if (link_ptr->refcount == 0)
 		{
-			ircfree(link_ptr->servername);
-			ircfree(link_ptr->username);
-			ircfree(link_ptr->bindip);
-			ircfree(link_ptr->hostname);
-			ircfree(link_ptr->hubmask);
-			ircfree(link_ptr->leafmask);
-			ircfree(link_ptr->connpwd);
-			ircfree(link_ptr->recvpwd);
+			link_cleanup(link_ptr);
 			t.next = del_ConfigItem((ConfigItem *) link_ptr, (ConfigItem **)&conf_link);
 			MyFree(link_ptr);
 			link_ptr = (ConfigItem_link *) &t;

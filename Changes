@@ -200,3 +200,4 @@
 - Made /rehash work .. sortof. Fixed some crash bugs
 - Added /stats P on listener info (oper-only)
 - listener temporary stuff works now
+- Fixed temporary stuf with conf_link
