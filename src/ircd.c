@@ -574,8 +574,8 @@ extern TS check_pings(TS currenttime, int check_kills)
 		ping =
 		    IsRegistered(cptr) ? (cptr->class ? cptr->
 		    class->pingfreq : CONNECTTIMEOUT) : CONNECTTIMEOUT;
-		Debug((DEBUG_DEBUG, "c(%s)=%d p %d k %d r %d a %d", cptr->name,
-		    cptr->status, ping, killflag, rflag,
+		Debug((DEBUG_DEBUG, "c(%s)=%d p %d k %d a %d", cptr->name,
+		    cptr->status, ping, killflag,
 		    currenttime - cptr->lasttime));
 		if (ping < (currenttime - cptr->lasttime))
 		{
