@@ -3298,7 +3298,14 @@ void	validate_configuration(void)
 				Warning("link %s::class is missing, using default of class 'default'", link_ptr->servername);
 				link_ptr->class = default_class;
 			}
+			if (!link_ptr->port && (link_ptr->options & CONNECT_AUTO))
+			{
+				Warning("link %s::port is 0, and is set to autoconnect, using default of 6667",
+					link_ptr->servername);
+				link_ptr->port = 6667;
+			}
 		}
+		
 	}
 	for (tld_ptr = conf_tld; tld_ptr; tld_ptr = (ConfigItem_tld *) tld_ptr->next)
 	{

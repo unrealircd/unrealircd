@@ -849,3 +849,4 @@ seen. gmtime warning still there
 - Fixed a #undef INET6 bug
 - Made Link denied error a little more descriptive
 - Various coding regardign bugreport
+- Made port default to 6667 when options autoconnect in link {}
