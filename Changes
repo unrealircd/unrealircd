@@ -770,3 +770,4 @@ seen. gmtime warning still there
 - Fixed a win32 bug where /restart didn't remove the tray icon, reported by PHANTOm and Gilou
 - Fixed Osiris's example.conf
 - Fixed IPv6 bindip error found by Madkiss
+- Added log::maxsize, when this size is reached the log is cleared and started over again

@@ -2627,6 +2627,8 @@ int	_conf_log(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_varlinenum);
 			continue;
 		}
+		if (!strcmp(cep->ce_varname, "maxsize")) 
+			log->maxsize = atol(cep->ce_vardata);
 		if (!strcmp(cep->ce_varname, "flags")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{

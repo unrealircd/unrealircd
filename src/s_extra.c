@@ -426,12 +426,25 @@ void ircd_log(int flags, char *format, ...)
 	ConfigItem_log *logs;
 	char buf[2048], timebuf[128];
 	int fd;
+	struct stat fstats;
 	va_start(ap, format);
 	ircvsprintf(buf, format, ap);	
 	strcat(buf, "\n");
 	sprintf(timebuf, "[%s] - ", myctime(TStime()));
 	for (logs = conf_log; logs; logs = (ConfigItem_log *) logs->next) {
 		if (logs->flags & flags) {
+			stat(logs->file, &fstats);
+			if (logs->maxsize && fstats.st_size >= logs->maxsize) {
+#ifndef _WIN32
+				fd = open(logs->file, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR);
+#else
+				fd = open(logs->file, O_CREAT|O_WRONLY|O_TRUNC);
+#endif
+				if (fd == -1)
+					continue;
+				write(fd, "Max file size reached, starting new log file\n", 46);
+			}
+			else {
 #ifndef _WIN32
 			fd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY, S_IRUSR|S_IWUSR);
 #else
@@ -439,6 +452,7 @@ void ircd_log(int flags, char *format, ...)
 #endif
 			if (fd == -1)
 				continue;
+			}	
 			write(fd, timebuf, strlen(timebuf));
 			write(fd, buf, strlen(buf));
 			close(fd);

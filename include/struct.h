@@ -1023,6 +1023,7 @@ struct _configitem_log {
 	ConfigFlag flag;
 	ConfigItem *prev, *next;
 	char *file;
+	long maxsize;
 	int  flags;
 };
 
