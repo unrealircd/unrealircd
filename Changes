@@ -1834,3 +1834,4 @@ seen. gmtime warning still there
   add -lz to IRCDLIBS in Makefile and enable it in include/config.h (and ofcourse set
   link::options::zip on both sides) -- Syzop.
 - Removed unnecessary #ifdef blocks added by previous ZIP_LINKS patch
+- Fixed some minor sending-1-byte-too-much bugs

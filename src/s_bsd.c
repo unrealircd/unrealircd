@@ -1812,11 +1812,11 @@ int  read_message(time_t delay, fdlist *listp)
 				    get_client_name(cptr, TRUE));
 #ifndef INET6
 				(void)send(fd,
-				    "ERROR :All connections in use\r\n", 32, 0);
+				    "ERROR :All connections in use\r\n", 31, 0);
 #else
 				(void)sendto(fd,
 				    "ERROR :All connections in use\r\n",
-				    32, 0, 0, 0);
+				    31, 0, 0, 0);
 #endif
 				CLOSE_SOCK(fd);
 				--OpenFiles;
