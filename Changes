@@ -2111,3 +2111,4 @@ seen. gmtime warning still there
   FLUSH_BUFFER if you just called exit_client, this fixes a read-already-freed-mem bug.
 - Added warning message if set::scan exists
 - Made SVSNOOP work. Reported by Lx (#0000933).
+- Removed some more html files.
