@@ -673,3 +673,4 @@ seen. gmtime warning still there
 - Changed pthread process check to pthread_join on proposal and idea by
   codemastr
 - Some configure.in fixes to pthread stuff
+- Added possiblity to add parameters to configure in Config

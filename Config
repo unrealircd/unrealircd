@@ -53,6 +53,7 @@ ARG="$ARG--with-hostname=$DOMAINNAME "
 ARG="$ARG--with-permissions=$DEFPERM "
 ARG="$ARG--with-fd-setsize=$MAXCONNECTIONS "
 ARG="$ARG--enable-dynamic-linking "
+ARG="$ARG $EXTRAPARA "
 CONF="./configure $ARG"
 echo $CONF
 $CONF
@@ -87,6 +88,7 @@ MAXSENDQLENGTH="3000000"
 BUFFERPOOL="9"
 MAXCONNECTIONS="1024"
 INET6=""
+EXTRAPARA=""
 if [ "`eval echo -n 'a'`" = "-n a" ] ; then
         c="\c"
 else
@@ -560,6 +562,13 @@ while [ -z "$TEST" ] ; do
 	    ;;
     esac
 done
+
+echo ""
+echo "Would you like any more parameters to configure?"
+echo "Write them here:"
+echo $n "[]-> $c"
+read EXTRAPARA
+
 rm -f config.settings
 cat > config.settings << __EOF__
 #
@@ -580,6 +589,7 @@ HUB="$HUB"
 DOMAINNAME="$DOMAINNAME"
 DEFPERM="$DEFPERM"
 CRYPTOIRCD="$CRYPTOIRCD"
+EXTRAPARA="$EXTRAPARA"
 __EOF__
 RUN_CONFIGURE
 cat << __EOF__
