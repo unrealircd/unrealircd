@@ -3020,3 +3020,4 @@ seen. gmtime warning still there
 - Removed the old/unused src/win32/version.c (#0001630) reported by fez
 - Updated docs to mention except tkl {} type qline/gqline
 - spamfilter.conf: added soex trojan. Sig provided by Jay.
+- Fixed a spamfilter memory leak

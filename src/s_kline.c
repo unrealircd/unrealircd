@@ -169,6 +169,7 @@ aTKline *tkl_del_line(aTKline *tkl)
 			MyFree(p->setby);
 			if (p->spamf)
 			{
+				regfree(&p->spamf->expr);
 				if (p->spamf->tkl_reason)
 					MyFree(p->spamf->tkl_reason);
 				MyFree(p->spamf);
