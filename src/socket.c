@@ -73,7 +73,12 @@ int  deliver_it(aClient *cptr, char *str, int len)
 	retval = netwrite(cptr->fd, str, len);
 #else
 	if (IsDead(cptr) || (!IsServer(cptr) && !IsPerson(cptr)
-	    && !IsHandshake(cptr) && !IsUnknown(cptr)))
+	    && !IsHandshake(cptr) 
+#ifdef USE_SSL
+	    && !IsSSLHandshake(cptr)
+#endif 
+ 
+	    && !IsUnknown(cptr)))
 	{
 		str[len] = '\0';
 		sendto_ops

@@ -221,6 +221,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #ifdef USE_SSL
 #define IsSSLAcceptHandshake(x)	((x)->status == STAT_SSL_ACCEPT_HANDSHAKE)
 #define IsSSLConnectHandshake(x)	((x)->status == STAT_SSL_CONNECT_HANDSHAKE)
+#define IsSSLHandshake(x) (IsSSLAcceptHandshake(x) || IsSSLConnectHandshake(x))
 #define SetSSLAcceptHandshake(x)	((x)->status = STAT_SSL_ACCEPT_HANDSHAKE)
 #define SetSSLConnectHandshake(x)	((x)->status = STAT_SSL_CONNECT_HANDSHAKE)
 #endif

@@ -1476,3 +1476,4 @@ seen. gmtime warning still there
 - Fixed problem where the parameters of the RAKILL aliasing to TKL were switched, 
   and a missing return for normal users.
 - Fixed a win32 SSL installer problem
+- Fixed problem with DEBUG ERROR when SSL handshaking (reported by some people)
