@@ -86,6 +86,7 @@ extern	char	*rindex PROTO((char *, char));
 #else
 #include <sys/time.h>
 #endif
+#ifndef DMALLOC
 #if !defined(DEBUGMODE)
 # ifndef _WIN32
 #  define MyFree(x)	if ((x) != NULL) free(x)
@@ -94,6 +95,7 @@ extern	char	*rindex PROTO((char *, char));
 # endif
 #else
 #define	free(x)		MyFree(x)
+#endif
 #endif
 #ifdef NEXT
 #define VOIDSIG int		/* whether signal() returns int of void */

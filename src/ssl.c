@@ -67,7 +67,7 @@ void init_ctx_client(void)
 
 	if (SSL_CTX_use_certificate_file(ctx_client, CERTF, SSL_FILETYPE_PEM) <= 0)
 	{
-		ircd_log("Failed to load SSL certificate %s (client)", "client.pem");
+		ircd_log("Failed to load SSL certificate %s (client)", CERTF);
 		exit(3);
 	}
 	if (SSL_CTX_use_PrivateKey_file(ctx_client, KEYF, SSL_FILETYPE_PEM) <= 0)

@@ -193,13 +193,13 @@ extern unsigned char char_atribs[];
 #define ispunct(c) (!(char_atribs[(u_char)(c)]&(CNTRL|ALPHA|DIGIT)))
 #endif
 
-// #ifndef DMALLOC
+#ifndef DMALLOC
 extern char *MyMalloc();
-// #else
-// #define MyMalloc malloc
-// #define MyRealloc realloc
-// #define MyFree free
-// #endif
+#else
+#define MyMalloc malloc
+#define MyRealloc realloc
+#define MyFree free
+#endif
 extern void flush_connections();
 extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 

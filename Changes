@@ -208,3 +208,4 @@
 - Added SMO *, all users
 - If a +r user is /who'ed, it shows a "r" in flags field. Suggested by
   Mirar.
+- Fixed a typo in ssl.c

@@ -139,8 +139,9 @@ extern void inittoken PROTO(());
 extern void reset_help PROTO(());
 extern int find_exception(char *);	/* hidden host */
 
+#ifndef DMALLOC
 extern char *MyMalloc PROTO((int)), *MyRealloc PROTO((char *, int));
-
+#endif
 extern char *debugmode, *configfile, *sbrk0;
 extern char *getfield PROTO((char *));
 extern void get_sockhost PROTO((aClient *, char *));

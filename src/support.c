@@ -202,7 +202,7 @@ int  inet_netof(in)
 
 #endif /* NEED_INET_NETOF */
 
-
+#ifndef DMALLOC
 #if defined(DEBUGMODE)
 void dumpcore(msg, p1, p2, p3, p4, p5, p6, p7, p8, p9)
 	char *msg, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8, *p9;
@@ -287,6 +287,7 @@ char *MyMalloc(x)
 char *MyRealloc(x, y)
 	char *x;
 	size_t y;
+
 {
 	int  l;
 	char **s;
@@ -404,6 +405,7 @@ char *MyRealloc(x, y)
 	}
 	return ret;
 }
+#endif
 #endif
 /*
  * * read a string terminated by \r or \n in from a fd *
