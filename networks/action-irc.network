@@ -1,0 +1,28 @@
+/*
+ * Action-IRC (Irc.Action-IRC.Net) Network Configuration File
+ * --------------------------------------------------
+ *  Added-at:     20 February 2001 19:59
+ *  Author: bLaDe
+ *  Email: bLaDe@action-irc.net
+ * -----------------------------------------
+ */
+
+set {
+        network-name            "Action-IRC";
+        default-server          "Irc.Action-IRC.Net";
+        services-server         "Services.Action-IRC.Net";
+        stats-server            "Stats.Action-IRC.Net";
+        help-channel            "#Action-Desk";
+        hiddenhost-prefix       "Action-IRC";
+        prefix-quit             "Quit:";
+        hosts {
+                local           "LocOp.Action-IRC.Net";
+                global          "Oper.Action-IRC.Net";
+                coadmin         "CoAdmin.Action-IRC.Net";
+                admin           "Admin.Action-IRC.Net";
+                servicesadmin   "CSOp.Action-IRC.Net";
+                techadmin       "TechAdmin.Action-IRC.Net";
+                netadmin        "NetAdmin.Action-IRC.Net";
+                host-on-oper-up "off";
+        };
+};

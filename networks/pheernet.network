@@ -1,0 +1,28 @@
+/*
+ * PheerNet (irc.pheernet.org) Network Configuration File
+ * --------------------------------------------------
+ *  Added-at:     05 February 2001 15:30
+ *  Author: A_Xer0
+ *  Email: korn@pheernet.org
+ * -----------------------------------------
+ */
+
+set {
+        network-name            "PheerNet";
+        default-server          "irc.pheernet.org";
+        services-server         "services.pheernet.org";
+        stats-server            "stats.pheernet.org";
+        help-channel            "#PheerNet";
+        hiddenhost-prefix       "DP";
+        prefix-quit             "Quit:";
+        hosts {
+                local           "locop.pheernet.org";
+                global          "ircop.pheernet.org";
+                coadmin         "coadmin.pheernet.org";
+                admin           "admin.pheernet.org";
+                servicesadmin   "csops.pheernet.org";
+                techadmin       "techadmin.pheernet.org";
+                netadmin        "netadmin.pheernet.org";
+                host-on-oper-up "on";
+        };
+};

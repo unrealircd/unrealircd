@@ -1,0 +1,28 @@
+/*
+ * Blind-Irc (irc.Blind-Irc.com) Network Configuration File
+ * --------------------------------------------------
+ *  Added-at:     04 February 2001 19:23
+ *  Author: Blind_lemon
+ *  Email: Blind_Lemon@blind-irc.com
+ * -----------------------------------------
+ */
+
+set {
+        network-name            "Blind-Irc";
+        default-server          "irc.Blind-Irc.com";
+        services-server         "Services.Blind-Irc.com";
+        stats-server            "Blind-Irc.Stats.com";
+        help-channel            "#help";
+        hiddenhost-prefix       "~~NO_PEEKING~~";
+        prefix-quit             "Quit:";
+        hosts {
+                local           "Blind-Irc.Locop.com";
+                global          "Blind-Irc.Oper.com";
+                coadmin         "Blind-Irc.Co.Admin.com";
+                admin           "Blind-Irc.Admin.com";
+                servicesadmin   "Blind-Irc.Csop.com";
+                techadmin       "Blind-Irc.Tech.com";
+                netadmin        "Blind-Irc.NetAdmin.com";
+                host-on-oper-up "on";
+        };
+};
