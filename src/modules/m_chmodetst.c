@@ -4,6 +4,8 @@
  * +y <0-100> (1 parameter)
  *
  * It's incomplete (like error signaling) but for testing purposes only.
+ *
+ * Again, this is not an "official module", rather a test module.
  */
 
 #include "config.h"

@@ -65,6 +65,7 @@ DLLFUNC int MOD_INIT(m_sethost)(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_SETHOST, TOK_SETHOST, m_sethost, MAXPARA);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
 	return MOD_SUCCESS;
 }
 

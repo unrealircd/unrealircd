@@ -63,6 +63,7 @@ ModuleHeader MOD_HEADER(m_away)
 DLLFUNC int MOD_INIT(m_away)(ModuleInfo *modinfo)
 {
 	add_Command(MSG_AWAY, TOK_AWAY, m_away, 1);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
 	return MOD_SUCCESS;
 }
 

@@ -67,6 +67,7 @@ DLLFUNC int MOD_INIT(m_sqline)(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_SQLINE, TOK_SQLINE, m_sqline, MAXPARA);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
 	return MOD_SUCCESS;
 }
 

@@ -63,8 +63,8 @@ BEGIN
     LTEXT           "Point your IRC client to irc.unrealircd.com and join #Unreal-Support",
                     IDC_STATIC,14,20,234,9
     LTEXT           "Email us at",IDC_STATIC,14,30,37,8
-    CONTROL         "coders@lists.unrealircd.org",IDC_EMAIL,"Button",
-                    BS_OWNERDRAW,51,30,87,8
+    CONTROL         "unreal-users@lists.sourceforge.net",IDC_EMAIL,"Button",
+                    BS_OWNERDRAW,51,30,110,8
     LTEXT           "Or visit us on the web at",IDC_STATIC,14,40,78,8
     CONTROL         "http://www.unrealircd.com",IDC_URL,"Button",
                     BS_OWNERDRAW,93,40,86,8

@@ -70,6 +70,7 @@ DLLFUNC int MOD_INIT(m_chgident)(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_CHGIDENT, TOK_CHGIDENT, m_chgident, MAXPARA);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
 	return MOD_SUCCESS;
 }
 

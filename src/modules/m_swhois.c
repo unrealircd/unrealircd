@@ -63,6 +63,7 @@ ModuleHeader MOD_HEADER(m_swhois)
 DLLFUNC int MOD_INIT(m_swhois)(ModuleInfo *modinfo)
 {
 	add_Command(MSG_SWHOIS, TOK_SWHOIS, m_swhois, MAXPARA);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
 	return MOD_SUCCESS;
 }
 

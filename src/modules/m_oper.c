@@ -97,6 +97,7 @@ DLLFUNC int MOD_INIT(m_oper)(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_OPER, TOK_OPER, m_oper, MAXPARA);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
 	return MOD_SUCCESS;
 }
 

@@ -63,6 +63,7 @@ ModuleHeader MOD_HEADER(m_mkpasswd)
 DLLFUNC int MOD_INIT(m_mkpasswd)(ModuleInfo *modinfo)
 {
 	add_Command(MSG_MKPASSWD, TOK_MKPASSWD, m_mkpasswd, MAXPARA);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
 	return MOD_SUCCESS;
 }
 

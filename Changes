@@ -2563,3 +2563,17 @@ seen. gmtime warning still there
 - Removed references to tkline/tzline from help.conf. Reported by penna22 (#0001340)
 - Fix for permanent modules w/ config hooks (they were not called).
 - Fixed desynch bug regarding extended channelmodes. Reported by AngryWolf (#0001347)
+- Multiple /module changes (the command):
+  - Normal users can now get a list, versioninfo will be hidden however.
+  - Opers get some additional details like hooks and commandoverride's.
+  - Opers can use /module <servername> to get a remote list of loaded modules.
+  - Added flag [3RD] to show it's a 3rd party module
+  This was requested by by quite some people because serveradmins started to load
+  "spy modules" without clearly mentioning it in the MOTD (which is highly unethical
+  and in some countries even illegal due to privacy law). Also the remote module
+  list was requested by quite a few opers.
+  Sure, this isn't a 100% guarantee but at least if someone goes hiding stuff
+  then it's clear what their intentions are (and thus will be refused support, ..).
+- Changed emailaddr in help window at windows to unreal-users mailinglist.
+- Made the cloak mismatch msg during linking a bit more scary.
+- Added comment to 'Install as a service' option in installer to help n00bs a bit.

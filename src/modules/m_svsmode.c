@@ -68,6 +68,7 @@ DLLFUNC int MOD_INIT(m_svsmode)(ModuleInfo *modinfo)
 {
 	add_Command(MSG_SVSMODE, TOK_SVSMODE, m_svsmode, MAXPARA);
 	add_Command(MSG_SVS2MODE, TOK_SVS2MODE, m_svs2mode, MAXPARA);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
 	return MOD_SUCCESS;
 }
 

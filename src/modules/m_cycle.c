@@ -65,8 +65,8 @@ DLLFUNC int MOD_INIT(m_cycle)(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_CYCLE, TOK_CYCLE, m_cycle, MAXPARA);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
 	return MOD_SUCCESS;
-	
 }
 
 /* Is first run when server is 100% ready */

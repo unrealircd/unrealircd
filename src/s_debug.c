@@ -86,6 +86,8 @@ char serveropts[] = {
 #ifdef EXTCMODE
 	'E',
 #endif
+	'\0', /* Don't change those 3 nuls. -- Syzop */
+	'\0',
 	'\0'
 };
 

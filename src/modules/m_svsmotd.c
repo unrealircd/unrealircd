@@ -64,6 +64,7 @@ ModuleHeader MOD_HEADER(m_svsmotd)
 DLLFUNC int MOD_INIT(m_svsmotd)(ModuleInfo *modinfo)
 {
 	add_Command(MSG_SVSMOTD, TOK_SVSMOTD, m_svsmotd, MAXPARA);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
 	return MOD_SUCCESS;
 }
 

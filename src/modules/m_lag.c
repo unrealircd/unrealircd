@@ -65,6 +65,7 @@ DLLFUNC int MOD_INIT(m_lag)(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_LAG, TOK_LAG, m_lag, MAXPARA);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
 	return MOD_SUCCESS;
 }
 

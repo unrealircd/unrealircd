@@ -72,6 +72,7 @@ DLLFUNC int MOD_INIT(m_message)(ModuleInfo *modinfo)
 	*/
 	add_CommandX(MSG_PRIVATE, TOK_PRIVATE, m_private, MAXPARA, M_USER|M_SERVER|M_RESETIDLE);
 	add_Command(MSG_NOTICE, TOK_NOTICE, m_notice, MAXPARA);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
 	return MOD_SUCCESS;
 	
 }

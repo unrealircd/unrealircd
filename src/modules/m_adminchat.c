@@ -67,6 +67,7 @@ DLLFUNC int MOD_INIT(m_adminchat)(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_ADMINCHAT, TOK_ADMINCHAT, m_admins, 1);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
 	return MOD_SUCCESS;
 }
 

@@ -65,6 +65,7 @@ DLLFUNC int MOD_INIT(m_unkline)(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_UNKLINE, TOK_UNKLINE, m_unkline, MAXPARA);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
 	return MOD_SUCCESS;
 }
 

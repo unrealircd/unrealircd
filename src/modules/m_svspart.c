@@ -65,6 +65,7 @@ DLLFUNC int MOD_INIT(m_svspart)(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_SVSPART, TOK_SVSPART, m_svspart, MAXPARA);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
 	return MOD_SUCCESS;
 }
 

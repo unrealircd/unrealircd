@@ -63,8 +63,8 @@ DLLFUNC int MOD_INIT(m_chghost)(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_CHGHOST, TOK_CHGHOST, m_chghost, MAXPARA);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
 	return MOD_SUCCESS;
-	
 }
 
 DLLFUNC int MOD_LOAD(m_chghost)(int module_load)

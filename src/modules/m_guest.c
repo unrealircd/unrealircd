@@ -69,8 +69,8 @@ DLLFUNC int MOD_INIT(m_guest)(ModuleInfo *modinfo)
 	ModGuestInfo = modinfo;
 	GuestHook = HookAddEx(ModGuestInfo->handle, HOOKTYPE_GUEST, m_guest);
 #endif
+	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
 	return MOD_SUCCESS;
-	
 }
 
 /* Is first run when server is 100% ready */
