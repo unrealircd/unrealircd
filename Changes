@@ -2312,3 +2312,4 @@ seen. gmtime warning still there
   more refined searches. /stats G +m *@*.aol.com lists only glines that match that 
   mask. For more info do /stats ?. 
 - Added stats flags for except throttle and ban version blocks
+- stats bugfixes: a null pointer crash and a '/stats k' bug.

@@ -507,7 +507,7 @@ void tkl_stats(aClient *cptr, int type, char *para)
 	   G, Z, K, z
 	 */
 
-	if (para)
+	if (!BadPtr(para))
 		parse_tkl_para(para, &tklflags);
 	tkl_check_expire(NULL);
 	curtime = TStime();
@@ -515,7 +515,7 @@ void tkl_stats(aClient *cptr, int type, char *para)
 	{
 		if (type && tk->type != type)
 			continue;
-		if (para)
+		if (!BadPtr(para))
 		{
 			if (tklflags.flags & BY_MASK)
 				if (match(tklflags.mask, make_user_host(tk->usermask,

@@ -329,6 +329,7 @@ CMD_FUNC(m_stats)
 	}
 	if (parc < 2 || !*parv[1])
 	{
+		stats_help(sptr);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, parv[0], '*');
 		return 0;
 	}
@@ -991,9 +992,9 @@ int stats_kline(aClient *sptr, char *para)
 				me.name, sptr->name, type, bans->mask, bans->reason 
 				? bans->reason : "<no reason>");
 		}
-		tkl_stats(sptr, TKL_KILL, NULL);
-		tkl_stats(sptr, TKL_ZAP, NULL);
 	}
+	tkl_stats(sptr, TKL_KILL, NULL);
+	tkl_stats(sptr, TKL_ZAP, NULL);
 	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
 		if (excepts->flag.type == 1)
 			sendto_one(sptr, rpl_str(RPL_STATSKLINE),
