@@ -93,7 +93,7 @@ void DeleteTempModules(void)
 	if (!fd) /* Ouch.. this is NOT good!! */
 	{
 		config_error("Unable to open 'tmp' directory: %s, please create one with the appropriate permissions",
-			strerror(ERRNO));
+			strerror(errno));
 		if (!loop.ircd_booted)
 			exit(7);
 		return; 

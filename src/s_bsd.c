@@ -271,7 +271,7 @@ void report_error(char *text, aClient *cptr)
 	
 	host = (cptr) ? get_client_name(cptr, FALSE) : "";
 
-	Debug((DEBUG_ERROR, text, host, strerror(errtmp)));
+	Debug((DEBUG_ERROR, text, host, STRERROR(errtmp)));
 
 	/*
 	 * Get the *real* error from the socket (well try to anyway..).
@@ -290,14 +290,14 @@ void report_error(char *text, aClient *cptr)
 		 * some tricks are needed because of 2x strerror() (or at least
 		 * according to the man page) -- Syzop.
 		 */
-		snprintf(xbuf, 200, "[syserr='%s'", strerror(origerr));
+		snprintf(xbuf, 200, "[syserr='%s'", STRERROR(origerr));
 		n = strlen(xbuf);
-		snprintf(xbuf+n, 256-n, ", sockerr='%s']", strerror(errtmp));
+		snprintf(xbuf+n, 256-n, ", sockerr='%s']", STRERROR(errtmp));
 		sendto_snomask(SNO_JUNK, text, host, xbuf);
 		ircd_log(LOG_ERROR, text, host, xbuf);
 	} else {
-		sendto_snomask(SNO_JUNK, text, host, strerror(errtmp));
-		ircd_log(LOG_ERROR, text,host,strerror(errtmp));
+		sendto_snomask(SNO_JUNK, text, host, STRERROR(errtmp));
+		ircd_log(LOG_ERROR, text,host,STRERROR(errtmp));
 	}
 	return;
 }
@@ -316,7 +316,7 @@ void report_baderror(char *text, aClient *cptr)
 
 /*	fprintf(stderr, text, host, strerror(errtmp));
 	fputc('\n', stderr); */
-	Debug((DEBUG_ERROR, text, host, strerror(errtmp)));
+	Debug((DEBUG_ERROR, text, host, STRERROR(errtmp)));
 
 	/*
 	 * Get the *real* error from the socket (well try to anyway..).
@@ -330,7 +330,7 @@ void report_baderror(char *text, aClient *cptr)
 			if (err)
 				errtmp = err;
 #endif
-	sendto_umode(UMODE_OPER, text, host, strerror(errtmp));
+	sendto_umode(UMODE_OPER, text, host, STRERROR(errtmp));
 	return;
 }
 
@@ -1918,7 +1918,7 @@ deadsocket:
 				}
 				(void)exit_client(cptr, cptr, &me,
 				    ((sockerr = get_sockerr(cptr))
-				    ? strerror(sockerr) : "Client exited"));
+				    ? STRERROR(sockerr) : "Client exited"));
 				continue;
 			}
 		}
@@ -2005,7 +2005,7 @@ deadsocket:
 		if (length != FLUSH_BUFFER)
 			(void)exit_client(cptr, cptr, &me,
 			    ((sockerr = get_sockerr(cptr))
-			    ? strerror(sockerr) : "Client exited"));
+			    ? STRERROR(sockerr) : "Client exited"));
 	}
 	return 0;
 }
@@ -2290,7 +2290,7 @@ int  read_message(time_t delay, fdlist *listp)
 
 				(void)exit_client(cptr, cptr, &me,
 				    ((sockerr =
-				    get_sockerr(cptr)) ? strerror(sockerr) :
+				    get_sockerr(cptr)) ? STRERROR(sockerr) :
 				    "Client exited"));
 				continue;
 			}
@@ -2312,7 +2312,7 @@ int  read_message(time_t delay, fdlist *listp)
 		if (IsDead(cptr))
 		{
 			ircsprintf(errmsg, "Read/Dead Error: %s",
-			    strerror(get_sockerr(cptr)));
+			    STRERROR(get_sockerr(cptr)));
 			exit_client(cptr, cptr, &me, errmsg);
 			continue;
 		}
@@ -2341,7 +2341,7 @@ int  read_message(time_t delay, fdlist *listp)
 		if (length != FLUSH_BUFFER)
 			(void)exit_client(cptr, cptr, &me,
 			    ((sockerr = get_sockerr(cptr))
-			    ? strerror(sockerr) : "Client exited"));
+			    ? STRERROR(sockerr) : "Client exited"));
 
 	}
 	return 0;
@@ -2624,7 +2624,7 @@ static void do_dns_async(void)
 						sendto_realops("Hostname %s is unknown for server %s (!?).", aconf->hostname, aconf->servername);
 						break;
 					default:
-						sendto_realops("Connection to %s failed: %s", aconf->servername, strerror(n));
+						sendto_realops("Connection to %s failed: %s", aconf->servername, STRERROR(n));
 				}
 			}
 			if (!hp) {

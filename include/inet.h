@@ -31,7 +31,7 @@
 #endif
 
 extern int inet_pton(int af, const char *src, void *dst);
-extern const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt);
+extern const char *inet_ntop(int af, const void *src, char *dst, size_t cnt);
 
 #ifdef __STDC__
 # ifndef _WIN32

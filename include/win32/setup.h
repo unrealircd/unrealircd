@@ -30,7 +30,6 @@
 #undef  SYSSYSLOGH
 #define NOINDEX
 #define NOBCOPY
-#define NEED_STRERROR
 #define NEED_STRTOKEN
 #undef  NEED_STRTOK
 #undef  NEED_INET_ADDR

@@ -786,7 +786,6 @@ EXPORTS
 	spamfilter_target_inttostring
 	start_auth
 	start_of_normal_client_handshake
-	strerror
 	stripbadwords
 	stripbadwords_channel
 	stripbadwords_message

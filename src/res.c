@@ -374,7 +374,7 @@ static int send_res_msg(char *msg, int len, int rcount)
 #endif
 
 		{
-			Debug((DEBUG_DNS, "send_res_msg, errno = %s",strerror(ERRNO)));
+			Debug((DEBUG_DNS, "send_res_msg, errno = %s",STRERROR(ERRNO)));
 			reinfo.re_sent++;
 			sent++;
 		}

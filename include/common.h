@@ -331,7 +331,6 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
  * Windows' internal strerror() function doesn't work with socket errors.
  */
 extern int DisplayString(HWND hWnd, char *InBuf, ...);
-#undef	strerror
 #else
 typedef int SOCKET;
 #define INVALID_SOCKET -1

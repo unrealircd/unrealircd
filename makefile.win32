@@ -101,21 +101,21 @@ OPENSSL_LIB=/LIBPATH:"$(OPENSSL_LIB_DIR)"
 !ENDIF
 
 !IFDEF DEBUG
-DBGCFLAG=/MTd /Zi
+DBGCFLAG=/MDd /Zi
 DBGLFLAG=/debug /debugtype:BOTH
-MODDBGCFLAG=/LDd /Zi
+MODDBGCFLAG=/LDd /MDd /Zi
 !ELSE
-DBGCFLAG=/MT /O2 /G5
-MODDBGCFLAG=/LD
+DBGCFLAG=/MD /O2 /G5
+MODDBGCFLAG=/LD /MD
 !ENDIF 
 
 FD_SETSIZE=/D FD_SETSIZE=16384
 CFLAGS=$(DBGCFLAG) $(LIBCURL_INC) $(ZLIB_INC) $(OPENSSL_INC) /I ./INCLUDE /Fosrc/ /nologo \
  $(ZIPCFLAGS) $(CURLCFLAGS) $(FD_SETSIZE) $(SSLCFLAGS) $(NS_ADDRESS) /D NOSPOOF=1 /c 
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib \
- dbghelp.lib oldnames.lib libcmt.lib comctl32.lib comdlg32.lib $(ZLIB_LIB) $(ZIPLIB) \
+ dbghelp.lib oldnames.lib comctl32.lib comdlg32.lib $(ZLIB_LIB) $(ZIPLIB) \
  $(OPENSSL_LIB) $(SSLLIBS) $(LIBCURL_LIB) $(CURLLIB) /def:wircd.def /implib:wircd.lib \
- /nodefaultlib /nologo $(DBGLFLAG) /out:WIRCD.EXE
+ /nologo $(DBGLFLAG) /out:WIRCD.EXE
 MODCFLAGS=$(MODDBGCFLAG) $(SSLCFLAGS) $(ZIPCFLAGS) $(CURLCFLAGS) /Fesrc/modules/ \
  /Fosrc/modules/ /nologo $(LIBCURL_INC) $(ZLIB_INC) $(OPENSSL_INC) /I ./INCLUDE /D \
  DYNAMIC_LINKING /D NOSPOOF /D MODULE_COMPILE

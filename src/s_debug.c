@@ -317,11 +317,7 @@ void send_usage(aClient *cptr, char *nick)
 	if (times(&tmsbuf) == -1)
 	{
 		sendto_one(cptr, ":%s %d %s :times(2) error: %s.",
-#  ifndef _WIN32
-		    me.name, RPL_STATSDEBUG, nick, strerror(errno));
-#  else
-		me.name, RPL_STATSDEBUG, nick, strerror(WSAGetLastError()));
-#  endif
+		    me.name, RPL_STATSDEBUG, nick, STRERROR(ERRNO));
 		return;
 	}
 	secs = tmsbuf.tms_utime + tmsbuf.tms_stime;

@@ -3208,3 +3208,9 @@ This is the 3.2 fixes branch.
 - Imported TRE 0.6.8 for *nix
 - Added NICKIP to doc/technical/protoctl.txt
 - Imported TRE 0.6.8 for windows
+- Redid the win32 version to use a dynamically linked libc. This solves memory issues
+  arising from the fact that dlls do not share the same heap as the exe. As a side effect,
+  however, there is now a dependency on msvcr70d.dll. This DLL does not come with any
+  versions of Windows except 2003. It also comes with any .NET application and the .NET
+  framework. Unreal will automatically download th DLL if it is needed. Reported by Bugz 
+  (#0001833)

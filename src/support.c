@@ -136,19 +136,8 @@ char *strerror(int err_no)
 	if (errp == (char *)NULL)
 	{
 		errp = buff;
-#ifndef _WIN32
 		(void)ircsprintf(errp, "Unknown Error %d", err_no);
-#else
-		switch (err_no)
-		{
-		  case WSAECONNRESET:
-			  ircsprintf(errp, "Connection reset by peer");
-			  break;
-		  default:
-			  ircsprintf(errp, "Unknown Error %d", err_no);
-			  break;
-		}
-#endif
+
 	}
 	return errp;
 }
@@ -1704,7 +1693,7 @@ char *unreal_mktemp(char *dir, char *suffix)
 		fclose(fd);
 	}
 	config_error("Unable to create temporary file in directory '%s': %s",
-		dir, strerror(ERRNO)); /* eg: permission denied :p */
+		dir, strerror(errno)); /* eg: permission denied :p */
 	return NULL; 
 }
 
@@ -1758,7 +1747,7 @@ int unreal_copyfile(char *src, char *dest)
 #endif
 	if (destfd < 0)
 	{
-		config_error("Unable to create file '%s': %s", dest, strerror(ERRNO));
+		config_error("Unable to create file '%s': %s", dest, strerror(errno));
 		return 0;
 	}
 
@@ -1772,7 +1761,7 @@ int unreal_copyfile(char *src, char *dest)
 
 	if (len < 0) /* very unusual.. perhaps an I/O error */
 	{
-		config_error("Read error from file '%s': %s", src, strerror(ERRNO));
+		config_error("Read error from file '%s': %s", src, strerror(errno));
 		goto fail;
 	}
 
@@ -2274,3 +2263,18 @@ inet_pton6(const char *src, unsigned char *dst)
 	return (1);
 }
 #endif /* !HAVE_INET_PTON */
+
+#ifdef _WIN32
+char *sock_strerror(int error)
+{
+	static char buf[1024];
+	static HMODULE hSock = NULL;
+	if (!hSock)
+		hSock = LoadLibraryEx("wsock32.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
+
+	FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS|FORMAT_MESSAGE_FROM_HMODULE,
+		hSock, error, 0, buf, 1024, NULL);
+	
+	return buf;
+}
+#endif

@@ -196,7 +196,7 @@ int  send_queued(aClient *to)
 		if ((rlen = deliver_it(to, msg, len)) < 0)
 		{
 			char buf[256];
-			snprintf(buf, 256, "Write error: %s", strerror(ERRNO));
+			snprintf(buf, 256, "Write error: %s", STRERROR(ERRNO));
 			return dead_link(to, buf);
 		}
 		(void)dbuf_delete(&to->sendQ, rlen);

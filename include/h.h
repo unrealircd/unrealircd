@@ -25,6 +25,7 @@
  * Most of the externs and prototypes thrown in here to 'cleanup' things.
  * -avalon
  */
+#include "setup.h"
 #ifndef NO_FDLIST
 #include "fdlist.h"
 #endif
@@ -208,7 +209,11 @@ extern void reset_help();
 extern MODVAR char *debugmode, *configfile, *sbrk0;
 extern char *getfield(char *);
 extern void get_sockhost(aClient *, char *);
+#ifndef _WIN32
 extern char *strerror(int);
+#else
+extern char *sock_strerror(int);
+#endif
 extern int dgets(int, char *, int);
 extern char *inetntoa(char *);
 

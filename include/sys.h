@@ -234,7 +234,7 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 #define CLOSE_SOCK(fd) closesocket(fd)
 #define IOCTL(x, y, z) ioctlsocket((x), (y), (z))
 #define ERRNO WSAGetLastError()
-#define STRERROR(x) nt_strerror(x)
+#define STRERROR(x) sock_strerror(x)
 #define SET_ERRNO(x) WSASetLastError(x)
 /* Error constant portability */
 #define P_EMFILE        WSAEMFILE
