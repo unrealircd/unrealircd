@@ -176,13 +176,13 @@ DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    "%s changed the GECOS of %s (%s@%s) to be %s",
 			    sptr->name, acptr->name, acptr->user->username,
 			    GetHost(acptr), parv[2]);
+			/* Logging ability added by XeRXeS */
+			ircd_log(LOG_CHGCMDS,
+				"CHGNAME: %s changed the GECOS of %s (%s@%s) to be %s", 
+				sptr->name, acptr->name, acptr->user->username,
+				GetHost(acptr), parv[2]);
 		}
 
-		/* Logging ability added by XeRXeS */
-		ircd_log(LOG_CHGCMDS,
-		"CHGNAME: %s changed the GECOS of %s (%s@%s) to be %s", 
-		sptr->name, acptr->name, acptr->user->username,
-		GetHost(acptr), parv[2]);
 
 		sendto_serv_butone_token(cptr, sptr->name,
 		    MSG_CHGNAME, TOK_CHGNAME, "%s :%s", acptr->name, parv[2]);

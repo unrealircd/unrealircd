@@ -201,13 +201,13 @@ int m_chgident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    "%s changed the virtual ident of %s (%s@%s) to be %s",
 			    sptr->name, acptr->name, acptr->user->username,
 			    GetHost(acptr), parv[2]);
+			/* Logging ability added by XeRXeS */
+			ircd_log(LOG_CHGCMDS,
+				"CHGIDENT: %s changed the virtual ident of %s (%s@%s) to be %s",
+				sptr->name, acptr->name, acptr->user->username,    
+				GetHost(acptr), parv[2]);
 		}
 
-		/* Logging ability added by XeRXeS */
-		ircd_log(LOG_CHGCMDS,
-		"CHGIDENT: %s changed the virtual ident of %s (%s@%s) to be %s",
-		sptr->name, acptr->name, acptr->user->username,    
-		GetHost(acptr), parv[2]);
 
 
 		sendto_serv_butone_token(cptr, sptr->name,
