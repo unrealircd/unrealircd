@@ -1896,3 +1896,4 @@ seen. gmtime warning still there
   for example you can force users to be all +G by setting G in modes-on-connect and
   also in restrict-usermodes. Ofcourse these restrictions do not apply to ircops.
   Feature suggested Gargo (#0000603).
+- Fixed a bug in coadmin: global flags were not added (#0000716).

@@ -217,7 +217,7 @@ static OperFlag _OperFlags[] = {
 	{ OFLAG_UNKLINE,	"can_unkline" },
 	{ OFLAG_WALLOP,         "can_wallops" },
 	{ OFLAG_ZLINE,		"can_zline"},
-	{ OFLAG_COADMIN,	"coadmin"},
+	{ OFLAG_COADMIN_,	"coadmin"},
 	{ OFLAG_HIDE,		"get_host"},
 	{ OFLAG_WHOIS,		"get_umodew"},
 	{ OFLAG_GLOBAL,		"global" },
