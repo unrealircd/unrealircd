@@ -1053,7 +1053,7 @@ int  InitwIRCD(argc, argv)
 	fprintf(stderr, "                           v%s\n\n", VERSIONONLY);
 	clear_client_hash_table();
 	clear_channel_hash_table();
-	clear_notify_hash_table();
+	clear_watch_hash_table();
 	bzero(&loop, sizeof(loop));
 	init_CommandHash();
 	initlists();

@@ -89,7 +89,7 @@ typedef struct _configitem_log ConfigItem_log;
 typedef struct _configitem_unknown ConfigItem_unknown;
 typedef struct _configitem_unknown_ext ConfigItem_unknown_ext;
 
-typedef struct Notify aNotify;
+typedef struct Watch aWatch;
 typedef struct Client aClient;
 typedef struct Channel aChannel;
 typedef struct User anUser;
@@ -795,8 +795,8 @@ struct Client {
 	struct IN_ADDR ip;	/* keep real ip# too */
 	u_short port;		/* and the remote port# too :-) */
 	struct hostent *hostp;
-	u_short notifies;	/* Keep track of count of notifies */
-	Link *notify;		/* Links to clients notify-structures */
+	u_short watches;	/* Keep track of count of notifies */
+	Link *watch;		/* Links to clients notify-structures */
 	char sockhost[HOSTLEN + 1];	/* This is the host name from the socket
 					   ** and after which the connection was
 					   ** accepted.
@@ -1114,10 +1114,10 @@ struct SMode {
 
 /* Used for notify-hash buckets... -Donwulff */
 
-struct Notify {
-	aNotify *hnext;
+struct Watch {
+	aWatch *hnext;
 	TS   lasttime;
-	Link *notify;
+	Link *watch;;
 	char nick[1];
 };
 
@@ -1130,7 +1130,7 @@ struct SLink {
 		aClient *cptr;
 		aChannel *chptr;
 		ConfigItem *aconf;
-		aNotify *nptr;
+		aWatch *wptr;
 		aName *whowas;
 		char *cp;
 		struct {

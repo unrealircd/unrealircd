@@ -2194,7 +2194,7 @@ int  m_watch(cptr, sptr, parc, parv)
 		{
 			if (do_nick_name(s + 1))
 			{
-				if (sptr->notifies >= MAXWATCH)
+				if (sptr->watches >= MAXWATCH)
 				{
 					sendto_one(sptr,
 					    err_str(ERR_TOOMANYWATCH), me.name,
@@ -2203,7 +2203,7 @@ int  m_watch(cptr, sptr, parc, parv)
 					continue;
 				}
 
-				add_to_notify_hash_table(s + 1, sptr);
+				add_to_watch_hash_table(s + 1, sptr);
 			}
 
 			show_watch(sptr, s + 1, RPL_NOWON, RPL_NOWOFF);
@@ -2216,7 +2216,7 @@ int  m_watch(cptr, sptr, parc, parv)
 		 */
 		if (*s == '-')
 		{
-			del_from_notify_hash_table(s + 1, sptr);
+			del_from_watch_hash_table(s + 1, sptr);
 			show_watch(sptr, s + 1, RPL_WATCHOFF, RPL_WATCHOFF);
 
 			continue;
@@ -2228,7 +2228,7 @@ int  m_watch(cptr, sptr, parc, parv)
 		 */
 		if (*s == 'C' || *s == 'c')
 		{
-			hash_del_notify_list(sptr);
+			hash_del_watch_list(sptr);
 
 			continue;
 		}
@@ -2241,39 +2241,39 @@ int  m_watch(cptr, sptr, parc, parv)
 		if (*s == 'S' || *s == 's')
 		{
 			Link *lp;
-			aNotify *anptr;
+			aWatch *anptr;
 			int  count = 0;
 
 			/*
 			 * Send a list of how many users they have on their WATCH list
 			 * and how many WATCH lists they are on.
 			 */
-			anptr = hash_get_notify(sptr->name);
+			anptr = hash_get_watch(sptr->name);
 			if (anptr)
-				for (lp = anptr->notify, count = 1;
+				for (lp = anptr->watch, count = 1;
 				    (lp = lp->next); count++)
 					;
 			sendto_one(sptr, rpl_str(RPL_WATCHSTAT), me.name,
-			    parv[0], sptr->notifies, count);
+			    parv[0], sptr->watches, count);
 
 			/*
 			 * Send a list of everybody in their WATCH list. Be careful
 			 * not to buffer overflow.
 			 */
-			if ((lp = sptr->notify) == NULL)
+			if ((lp = sptr->watch) == NULL)
 			{
 				sendto_one(sptr, rpl_str(RPL_ENDOFWATCHLIST),
 				    me.name, parv[0], *s);
 				continue;
 			}
 			*buf = '\0';
-			strcpy(buf, lp->value.nptr->nick);
+			strcpy(buf, lp->value.wptr->nick);
 			count =
 			    strlen(parv[0]) + strlen(me.name) + 10 +
 			    strlen(buf);
 			while ((lp = lp->next))
 			{
-				if (count + strlen(lp->value.nptr->nick) + 1 >
+				if (count + strlen(lp->value.wptr->nick) + 1 >
 				    BUFSIZE - 2)
 				{
 					sendto_one(sptr, rpl_str(RPL_WATCHLIST),
@@ -2284,8 +2284,8 @@ int  m_watch(cptr, sptr, parc, parv)
 					    10;
 				}
 				strcat(buf, " ");
-				strcat(buf, lp->value.nptr->nick);
-				count += (strlen(lp->value.nptr->nick) + 1);
+				strcat(buf, lp->value.wptr->nick);
+				count += (strlen(lp->value.wptr->nick) + 1);
 			}
 			sendto_one(sptr, rpl_str(RPL_WATCHLIST), me.name,
 			    parv[0], buf);
@@ -2302,12 +2302,12 @@ int  m_watch(cptr, sptr, parc, parv)
 		 */
 		if (*s == 'L' || *s == 'l')
 		{
-			Link *lp = sptr->notify;
+			Link *lp = sptr->watch;
 
 			while (lp)
 			{
 				if ((acptr =
-				    find_person(lp->value.nptr->nick, NULL)))
+				    find_person(lp->value.wptr->nick, NULL)))
 				{
 					sendto_one(sptr, rpl_str(RPL_NOWON),
 					    me.name, parv[0], acptr->name,
@@ -2323,8 +2323,8 @@ int  m_watch(cptr, sptr, parc, parv)
 				else if (isupper(*s))
 					sendto_one(sptr, rpl_str(RPL_NOWOFF),
 					    me.name, parv[0],
-					    lp->value.nptr->nick, "*", "*",
-					    lp->value.nptr->lasttime);
+					    lp->value.wptr->nick, "*", "*",
+					    lp->value.wptr->lasttime);
 				lp = lp->next;
 			}
 

@@ -151,23 +151,11 @@ DLLFUNC int h_u_phtml(HTTPd_Request *r)
 					else
 					if (!strcmp(s, "DATA"))
 					{
-						sockprintf(r->fd, "TEST<br>");
-						sockprintf(r->fd, "TEST<br>");
-						sockprintf(r->fd, "TEST<br>");
-						sockprintf(r->fd, "TEST<br>");
-						sockprintf(r->fd, "TEST<br>");
-						sockprintf(r->fd, "TEST<br>");
-						sockprintf(r->fd, "TEST<br>");
-						sockprintf(r->fd, "TEST<br>");
-						sockprintf(r->fd, "TEST<br>");
-						sockprintf(r->fd, "TEST<br>");
-						sockprintf(r->fd, "TEST<br>");
-						sockprintf(r->fd, "TEST<br>");
-						sockprintf(r->fd, "TEST<br>");
-						sockprintf(r->fd, "TEST<br>");
-						sockprintf(r->fd, "TEST<br>");
-						sockprintf(r->fd, "TEST<br>");
-						sockprintf(r->fd, "TEST<br>");
+						if (section == SECTION_STATS)
+						{
+							sockprintf(r->fd, "My name is %s<br>Been up for %lu", me.name, TStime()-me.since);
+							
+						}
 					}
 					
 				}	

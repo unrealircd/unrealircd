@@ -688,3 +688,4 @@ seen. gmtime warning still there
 - Changed version to -beta1
 - Various preparitions for beta1
 - Commited the web server prototype made by Stskeeps, web design by WildChild
+- Ripped out the old DF watch system, using bahamut's now

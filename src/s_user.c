@@ -984,7 +984,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		}
 	}
 
-	hash_check_notify(sptr, RPL_LOGON);	/* Uglier hack */
+	hash_check_watch(sptr, RPL_LOGON);	/* Uglier hack */
 	send_umode(NULL, sptr, 0, SEND_UMODES, buf);
 	/* NICKv2 Servers ! */
 	sendto_serv_butone_nickcmd(cptr, sptr, nick,
@@ -1081,7 +1081,7 @@ int  m_svsnick(cptr, sptr, parc, parv)
 			{
 				(void)del_from_client_hash_table(acptr->name, acptr);
 				if (IsPerson(acptr))
-					hash_check_notify(acptr, RPL_LOGOFF);
+					hash_check_watch(acptr, RPL_LOGOFF);
 			}
 			if (MyClient(acptr))
 			{
@@ -1090,7 +1090,7 @@ int  m_svsnick(cptr, sptr, parc, parv)
 			(void)strcpy(acptr->name, parv[2]);
 			(void)add_to_client_hash_table(parv[2], acptr);
 			if (IsPerson(acptr))
-				hash_check_notify(acptr, RPL_LOGON);
+				hash_check_watch(acptr, RPL_LOGON);
 
 		}
 	}
@@ -1727,7 +1727,7 @@ int  m_nick(cptr, sptr, parc, parv)
 	{
 		(void)del_from_client_hash_table(sptr->name, sptr);
 		if (IsPerson(sptr))
-			hash_check_notify(sptr, RPL_LOGOFF);
+			hash_check_watch(sptr, RPL_LOGOFF);
 	}
 	(void)strcpy(sptr->name, nick);
 	(void)add_to_client_hash_table(nick, sptr);
@@ -1742,7 +1742,7 @@ int  m_nick(cptr, sptr, parc, parv)
 			    sptr->user->username, sptr->user->realhost);
 	}
 	else if (IsPerson(sptr))
-		hash_check_notify(sptr, RPL_LOGON);
+		hash_check_watch(sptr, RPL_LOGON);
 
 	return 0;
 }
