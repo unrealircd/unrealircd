@@ -2398,6 +2398,10 @@ CMD_FUNC(m_umode)
 		IRCstats.operators++;
 	if ((setflags & UMODE_OPER) && !IsOper(sptr))
 		IRCstats.operators--;
+	if (!(setflags & UMODE_HIDEOPER) && IsHideOper(sptr))
+		IRCstats.operators--;
+	if ((setflags & UMODE_HIDEOPER) && !IsHideOper(sptr))
+		IRCstats.operators++;
 	if (!(setflags & UMODE_INVISIBLE) && IsInvisible(sptr))
 		IRCstats.invisible++;
 	if ((setflags & UMODE_INVISIBLE) && !IsInvisible(sptr))

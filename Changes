@@ -1263,3 +1263,4 @@ seen. gmtime warning still there
 - Fixed a /stats q bug where it would crash if there was an sqline with no reason, reported by toji (#0000120)
 - Fixed a bug that caused locops to see client exiting but not client connecting notices while +s +c,
   reported and fixed by cmx (#0000123)
+- Fixed a bug reported by dimplesx where +H did not decrease the oper count (#0000129)
