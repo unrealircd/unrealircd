@@ -279,8 +279,7 @@ Windows:<br>
    </p>
 <p>Beállíthatod, hogy milyen snomaskokat kapj meg automatikusan (set::snomask-on-connect) és melyeket operátorrá
    váláskor (set::snomask-on-oper, oper::snomask)</p>
-<p>Alapértelmezésben, ha a felhasználó egyszerûen csak a +s módot állítja be, bizonyos snomaszkok lesznek beállítva.
-Közönséges felhasználóknak a +ks, operátoroknak a +kscfvGqo snomaszkok.</p></div>
+<p>Alapértelmezésben, ha a felhasználó egyszerûen csak a +s módot állítja be, bizonyos snomaszkok lesznek beállítva. Közönséges felhasználóknak a +ks, operátoroknak a +kscfvGqo snomaszkok.</p></div>
 
 <p><font size="+2"><b>3.4 - Álnevek</b></font><a name="feature_aliases"></a></p><div class="desc">
 <p>Az álnevek (alias) szolgálnak szerverszintû álparancsok beállítására.
@@ -575,6 +574,7 @@ Egy táblázat az összes választási lehetõségrõl:<br>
 <table border="1">
 <tr><td><b>Név:</b></td><td><b>Leírás:</b></td><td><b>Karakterkészlet/kódolás:</b></td></tr>
 <tr><td>catalan</td><td>Katalán karakterek</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>danish</td><td>Dán karakterek</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>dutch</td><td>Holland karakterek</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>french</td><td>Francia karakterek</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>german</td><td>Német karakterek</td><td>iso8859-1 (latin1)</td></tr>
@@ -583,7 +583,7 @@ Egy táblázat az összes választási lehetõségrõl:<br>
 <tr><td>italian</td><td>Olasz karakterek</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>spanish</td><td>Spanyol karakterek</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>swedish</td><td>Svéd karakterek</td><td>iso8859-1 (latin1)</td></tr>
-<tr><td><b>latin1</b></td><td>catalan, dutch, french, german, swiss-german, spanish, icelandic, italian, swedish</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td><b>latin1</b></td><td>catalan, danish, dutch, french, german, swiss-german, spanish, icelandic, italian, swedish</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>hungarian</td><td>Magyar karakterek</td><td>iso8859-2 (latin2), windows-1250</td></tr>
 <tr><td>polish</td><td>Lengyel karakterek</td><td>iso8859-2 (latin2)</td></tr>
 <tr><td>romanian</td><td>Román karakterek</td><td>iso8859-2 (latin2), windows-1250, iso8859-16</td></tr>
@@ -602,11 +602,18 @@ Egy táblázat az összes választási lehetõségrõl:<br>
 <tr><td><b>chinese</b></td><td>chinese-*</td><td>Több-bájtos: GBK</td></tr>
 <tr><td><b>gbk</b></td><td>chinese-*</td><td>Több-bájtos: GBK</td></tr>
 </table>
-Ügyeljünk arra, hogy néhány kombináció problémákat okozhat. 
+<p>1. MEGJEGYZÉS: Ügyeljünk arra, hogy néhány kombináció problémákat okozhat. 
 Például ha keverjük a latin* és chinese-* nyelveket, azt IRCd nem tudja
 megfelelõen kezelni, és az Unreal hibaüzenetet fog kiírni.
 Más karakterkészletek együttes használata lehet, hogy megjelenítési problémákat okoz, ezért az Unreal
-figyelmeztetést fog adni, ha keverjük a latin1/latin2/greek karakterkészleteket.<br><br>
+figyelmeztetést fog adni, ha keverünk latin1, latin2, greek vagy más nem kompatibilis csoportokat.</p>
+<p>2. MEGJEGYZÉS: A kis- és nagybetûk leképezése (vagyis annak megállapítása, hogy egy bizonyos kisbetûs karakternek melyik a nagybetûs párja) US-ASCII szerint
+történik. Ez azt jelenti, hogy az o" és az O" karakterek nem lesznek "azonosnak" tekintve, ezért
+lehet valakinek a nickje B"ar, és egyidõben egy másiknak BA"r. Ez egy korlátozása a jelenlegi rendszernek
+és az IRCd szabványoknak, amely nem oldható meg egyhamar. A felhasználóknak ennek tudatában kell lenniük.
+Megjegyzendõ, hogy ez a korlátozás csatornákra is vonatkozott, amikben mindig közel minden karakter
+engedélyezett volt, és mindig US-ASCII kis- és nagybetû leképezés volt végrehajtva.</p>
+<p>3. MEGJEGYZÉS: Az alapvetõ nickbeli karakterek (a-z A-Z 0-9 [ \ ] ^ _ - { | }) mindig megengedettek/beleszámítanak a karakterkészletbe.</p>
 
 1. Példa: nyugat-európai népeknek:<br>
 <pre>set { allowed-nickchars { latin1; }; };</pre>
