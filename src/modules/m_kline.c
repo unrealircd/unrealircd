@@ -51,17 +51,16 @@ DLLFUNC int m_kline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_kline_info
+ModuleHeader m_kline_Header
 #else
-#define m_kline_info mod_header
-ModuleInfo mod_header
+#define m_kline_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"kline",	/* Name of module */
 	"$Id$", /* Version */
 	"command /kline", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
@@ -72,9 +71,9 @@ ModuleInfo mod_header
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_kline_init(int module_load)
+int    m_kline_Init(int module_load)
 #endif
 {
 	/*
@@ -85,9 +84,9 @@ int    m_kline_init(int module_load)
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_kline_load(int module_load)
+int    m_kline_Load(int module_load)
 #endif
 {
 }
@@ -95,15 +94,15 @@ int    m_kline_load(int module_load)
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_kline_unload(void)
+int	m_kline_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_KLINE, TOK_KLINE, m_kline) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_kline_info.name);
+				m_kline_Header.name);
 	}
 }
 

@@ -90,47 +90,46 @@ static int oper_access[] = {
 extern ircstats IRCstats;
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_svso_info
+ModuleHeader m_svso_Header
 #else
-#define m_svso_info mod_header
-ModuleInfo mod_header
+#define m_svso_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"test",
 	"$Id$",
 	"command /svso", 
-	NULL,
+	"3.2-b5",
 	NULL 
     };
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_svso_init(int module_load)
+int    m_svso_Init(int module_load)
 #endif
 {
 	add_Command(MSG_SVSO, TOK_SVSO, m_svso, MAXPARA);
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_svso_load(int module_load)
+int    m_svso_Load(int module_load)
 #endif
 {
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_svso_unload(void)
+int	m_svso_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_SVSO, TOK_SVSO, m_svso) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_svso_info.name);
+				m_svso_Header.name);
 	}
 }
 /*

@@ -54,17 +54,16 @@ DLLFUNC char *militime(char *sec, char *usec);
 #define TOK_RPONG       "AN"
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_rping_info
+ModuleHeader m_rping_Header
 #else
-#define m_rping_info mod_header
-ModuleInfo mod_header
+#define m_rping_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"rping",	/* Name of module */
 	"$Id$", /* Version */
 	"command /rping, /rpong", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
@@ -75,9 +74,9 @@ ModuleInfo mod_header
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_rping_init(int module_load)
+int    m_rping_Init(int module_load)
 #endif
 {
 	/*
@@ -89,9 +88,9 @@ int    m_rping_init(int module_load)
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_rping_load(int module_load)
+int    m_rping_Load(int module_load)
 #endif
 {
 }
@@ -99,20 +98,20 @@ int    m_rping_load(int module_load)
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_rping_unload(void)
+int	m_rping_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_RPING, TOK_RPING, m_rping) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_rping_info.name);
+				m_rping_Header.name);
 	}
 	if (del_Command(MSG_RPONG, TOK_RPONG, m_rpong) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_rping_info.name);
+				m_rping_Header.name);
 	}
 }
 

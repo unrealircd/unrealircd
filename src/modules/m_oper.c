@@ -51,17 +51,16 @@ DLLFUNC int m_dummy(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_oper_info
+ModuleHeader m_oper_Header
 #else
-#define m_oper_info mod_header
-ModuleInfo mod_header
+#define m_oper_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"oper",	/* Name of module */
 	"$Id$", /* Version */
 	"command /oper", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
@@ -72,9 +71,9 @@ ModuleInfo mod_header
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_oper_init(int module_load)
+int    m_oper_Init(int module_load)
 #endif
 {
 	/*
@@ -85,9 +84,9 @@ int    m_oper_init(int module_load)
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_oper_load(int module_load)
+int    m_oper_Load(int module_load)
 #endif
 {
 }
@@ -95,15 +94,15 @@ int    m_oper_load(int module_load)
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_oper_unload(void)
+int	m_oper_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_OPER, TOK_OPER, m_oper) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_oper_info.name);
+				m_oper_Header.name);
 	}
 }
 

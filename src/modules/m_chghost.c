@@ -48,18 +48,16 @@
 
 DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_chghost_info
+ModuleHeader m_chghost_Header
+#define Mod_Header m_chghost_Header
 #else
-#define m_chghost_info mod_header
-ModuleInfo mod_header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"chghost",	/* Name of module */
 	"$Id$", /* Version */
 	"/chghost", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
-	NULL 
+	"3.2-b5",
     };
 
 /*
@@ -68,9 +66,9 @@ ModuleInfo mod_header
 */
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_chghost_init(int module_load)
+int    m_chghost_Init(int module_load)
 #endif
 {
 	/*
@@ -79,22 +77,22 @@ int    m_chghost_init(int module_load)
 	add_Command(MSG_CHGHOST, TOK_CHGHOST, m_chghost, MAXPARA);
 }
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_chghost_load(int module_load)
+int    m_chghost_Load(int module_load)
 #endif
 {
 }
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_chghost_unload(void)
+int	m_chghost_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_CHGHOST, TOK_CHGHOST, m_chghost) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_chghost_info.name);
+				Mod_Header.name);
 	}
 }
 

@@ -50,17 +50,16 @@ DLLFUNC int m_setname(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define TOK_SETNAME 	"AE"	
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_setname_info
+ModuleHeader m_setname_Header
 #else
-#define m_setname_info mod_header
-ModuleInfo mod_header
+#define m_setname_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"setname",	/* Name of module */
 	"$Id$", /* Version */
 	"command /setname", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
@@ -70,9 +69,9 @@ ModuleInfo mod_header
 */
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_setname_init(int module_load)
+int    m_setname_Init(int module_load)
 #endif
 {
 	/*
@@ -81,23 +80,23 @@ int    m_setname_init(int module_load)
 	add_Command(MSG_SETNAME, TOK_SETNAME, m_setname, 1);
 }
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_setname_load(int module_load)
+int    m_setname_Load(int module_load)
 #endif
 {
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_setname_unload(void)
+int	m_setname_unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_SETNAME, TOK_SETNAME, m_setname) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_setname_info.name);
+				m_setname_Header.name);
 	}
 }
 

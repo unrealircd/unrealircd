@@ -52,17 +52,16 @@ DLLFUNC int m_svsnline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define TOK_SVSNLINE 	"BR"	/* 127 4ever !;) */
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_svsnline_info
+ModuleHeader m_svsnline_Header
 #else
-#define m_svsnline_info mod_header
-ModuleInfo mod_header
+#define m_svsnline_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"svsnline",	/* Name of module */
 	"$Id$", /* Version */
 	"command /svsnline", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
@@ -73,9 +72,9 @@ ModuleInfo mod_header
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_svsnline_init(int module_load)
+int    m_svsnline_Init(int module_load)
 #endif
 {
 	/*
@@ -86,9 +85,9 @@ int    m_svsnline_init(int module_load)
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_svsnline_load(int module_load)
+int    m_svsnline_Load(int module_load)
 #endif
 {
 }
@@ -96,15 +95,15 @@ int    m_svsnline_load(int module_load)
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_svsnline_unload(void)
+int	m_svsnline_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_SVSNLINE, TOK_SVSNLINE, m_svsnline) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_svsnline_info.name);
+				m_svsnline_Header.name);
 	}
 }
 

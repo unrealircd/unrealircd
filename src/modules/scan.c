@@ -89,17 +89,16 @@ THREAD_ATTR			acceptthread_attr;
 Event *e_hscleanup, *e_vsban;
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_scan_info
+ModuleHeader m_scan_Header
 #else
-#define m_scan_info mod_header
-ModuleInfo mod_header
+#define m_scan_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"scan",	/* Name of module */
 	"$Id$", /* Version */
 	"Scanning API", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
@@ -110,9 +109,9 @@ ModuleInfo mod_header
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_scan_init(int module_load)
+int    m_scan_Init(int module_load)
 #endif
 {
 	add_Hook(HOOKTYPE_LOCAL_CONNECT, h_scan_connect);
@@ -132,9 +131,9 @@ int    m_scan_init(int module_load)
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_scan_load(int module_load)
+int    m_scan_Load(int module_load)
 #endif
 {
 	if (!blackhole_conf.ip || !blackhole_conf.port)
@@ -177,9 +176,9 @@ int    m_scan_load(int module_load)
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_scan_unload(void)
+int	m_scan_Unload(int module_unload)
 #endif
 {
 	SOCKET fd;
@@ -187,7 +186,7 @@ void	m_scan_unload(void)
 	if (del_Command(MSG_SCAN, TOK_SCAN, m_scan) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_scan_info.name);
+				m_scan_Header.name);
 	}
 	del_Hook(HOOKTYPE_LOCAL_CONNECT, h_scan_connect);
 	del_Hook(HOOKTYPE_SCAN_INFO, h_scan_info);

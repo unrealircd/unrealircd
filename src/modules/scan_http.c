@@ -68,34 +68,23 @@ static ConfigItem_blackhole	*blackh_conf = NULL;
 void	scan_http_scan(HStruct *h);
 void	scan_http_scan_port(HSStruct *z);
 #ifndef DYNAMIC_LINKING
-ModuleInfo scan_http_info
+ModuleHeader scan_http_Header
 #else
-ModuleInfo mod_header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"scan_http",	/* Name of module */
 	"$Id$", /* Version */
 	"scanning API: http proxies", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
-	NULL 
+	"3.2-b5",
+	{
+		MOD_Dep(VS_Add, xVS_add, "src/modules/scan.so"),
+		MOD_Dep(HSlock, xHSlock, "src/modules/scan.so"),
+		MOD_Dep(VSlock, xVSlock, "src/modules/scan.so"),
+		MOD_Dep(blackhole_conf, blackh_conf, "src/modules/scan.so"),
+		{NULL,NULL}
+	}
     };
-
-/*
- * Our symbol depencies
-*/
-#ifdef STATIC_LINKING
-MSymbolTable scan_http_depend[] = {
-#else
-MSymbolTable mod_depend[] = {
-#endif
-	SymD(VS_Add, xVS_add, "src/modules/scan.so"),
-	SymD(HSlock, xHSlock, "src/modules/scan.so"),
-	SymD(VSlock, xVSlock, "src/modules/scan.so"),
-	SymD(blackhole_conf, blackh_conf, "src/modules/scan.so"),
-	{NULL, NULL}
-};
-
 
 /*
  * The purpose of these ifdefs, are that we can "static" link the ircd if we
@@ -104,9 +93,9 @@ MSymbolTable mod_depend[] = {
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    scan_http_init(int module_load)
+int    scan_http_Init(int module_load)
 #endif
 {
 	/*
@@ -117,9 +106,9 @@ int    scan_http_init(int module_load)
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    scan_http_load(int module_load)
+int    scan_http_Load(int module_load)
 #endif
 {
 }
@@ -127,9 +116,9 @@ int    scan_http_load(int module_load)
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	scan_http_unload(void)
+int	scan_http_Unload(int module_unload)
 #endif
 {
 	HookDelEx(HOOKTYPE_SCAN_HOST, NULL, scan_http_scan);

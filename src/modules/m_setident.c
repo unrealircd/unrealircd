@@ -48,17 +48,16 @@
 
 DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_setident_info
+ModuleHeader m_setident_Header
 #else
-#define m_setident_info mod_header
-ModuleInfo mod_header
+#define m_setident_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"setident",	/* Name of module */
 	"$Id$", /* Version */
 	"/setident", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
@@ -68,9 +67,9 @@ ModuleInfo mod_header
 */
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_setident_init(int module_load)
+int    m_setident_Init(int module_load)
 #endif
 {
 	/*
@@ -80,22 +79,22 @@ int    m_setident_init(int module_load)
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int	m_setident_load(int module_load)
+int	m_setident_Load(int module_load)
 #endif
 {
 }
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_setident_unload(void)
+int	m_setident_unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_SETIDENT, TOK_SETIDENT, m_setident) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_setident_info.name);
+				m_setident_Header.name);
 	}
 }
 

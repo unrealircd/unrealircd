@@ -49,17 +49,16 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_SETHOST 	"SETHOST"	/* sethost */
 #define TOK_SETHOST 	"AA"	/* 127 4ever !;) */
 #ifndef DYNAMIC_LINKING
-#define mod_header m_sethost_info
-ModuleInfo m_sethost_info
+ModuleHeader m_sethost_Header
+#define Mod_Header m_sethost_Header
 #else
-ModuleInfo mod_header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"sethost",	/* Name of module */
 	"$Id$", /* Version */
 	"command /sethost", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
@@ -69,9 +68,9 @@ ModuleInfo mod_header
 */
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_sethost_init(int module_load)
+int    m_sethost_Init(int module_load)
 #endif
 {
 	/*
@@ -81,23 +80,23 @@ int    m_sethost_init(int module_load)
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_sethost_load(int module_load)
+int    m_sethost_Load(int module_load)
 #endif
 {
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_sethost_unload(void)
+int	m_sethost_unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_SETHOST, TOK_SETHOST, m_sethost) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				mod_header.name);
+				Mod_Header.name);
 	}
 }
 

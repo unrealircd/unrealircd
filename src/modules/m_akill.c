@@ -50,17 +50,16 @@ DLLFUNC int m_akill(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_akill_info
+ModuleHeader m_akill_Header
 #else
-#define m_akill_info mod_header
-ModuleInfo mod_header
+#define m_akill_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"akill",	/* Name of module */
 	"$Id$", /* Version */
 	"command /akill", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
@@ -71,9 +70,9 @@ ModuleInfo mod_header
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_akill_init(int module_load)
+int    m_akill_Init(int module_load)
 #endif
 {
 	/*
@@ -84,9 +83,9 @@ int    m_akill_init(int module_load)
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_akill_load(int module_load)
+int    m_akill_Load(int module_load)
 #endif
 {
 }
@@ -94,15 +93,15 @@ int    m_akill_load(int module_load)
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_akill_unload(void)
+int	m_akill_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_AKILL, TOK_AKILL, m_akill) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_akill_info.name);
+				m_akill_Header.name);
 	}
 }
 

@@ -52,47 +52,46 @@ DLLFUNC int m_svsmotd(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define TOK_SVSMOTD 	"AS"	
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_svsmotd_info
+ModuleHeader m_svsmotd_Header
 #else
-#define m_svsmotd_info mod_header
-ModuleInfo mod_header
+#define m_svsmotd_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"test",
 	"$Id$",
 	"command /svsmotd", 
-	NULL,
+	"3.2-b5",
 	NULL 
     };
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_svsmotd_init(int module_load)
+int    m_svsmotd_Init(int module_load)
 #endif
 {
 	add_Command(MSG_SVSMOTD, TOK_SVSMOTD, m_svsmotd, MAXPARA);
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_svsmotd_load(int module_load)
+int    m_svsmotd_Load(int module_load)
 #endif
 {
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_svsmotd_unload(void)
+int	m_svsmotd_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_SVSMOTD, TOK_SVSMOTD, m_svsmotd) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_svsmotd_info.name);
+				m_svsmotd_Header.name);
 	}
 }
 /*

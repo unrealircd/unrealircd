@@ -65,33 +65,23 @@ void	scan_socks_scan(HStruct *h);
 void	scan_socks4_scan(HStruct *h);
 void	scan_socks5_scan(HStruct *h);
 #ifndef DYNAMIC_LINKING
-ModuleInfo scan_socks_info
+ModuleHeader scan_socks_Header
 #else
-ModuleInfo mod_header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"scan_socks",	/* Name of module */
 	"$Id$", /* Version */
 	"scanning API: socks", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
-	NULL 
+	"3.2-b5",
+	{
+		MOD_Dep(VS_Add, xVS_add, "src/modules/scan.so"),
+		MOD_Dep(HSlock, xHSlock, "src/modules/scan.so"),
+		MOD_Dep(VSlock, xVSlock, "src/modules/scan.so"),
+		MOD_Dep(blackhole_conf, blackh_conf, "src/modules/scan.so"),
+		{NULL, NULL}
+	}
     };
-
-/*
- * Our symbol depencies
-*/
-#ifdef STATIC_LINKING
-MSymbolTable scan_socks_depend[] = {
-#else
-MSymbolTable mod_depend[] = {
-#endif
-	SymD(VS_Add, xVS_add, "src/modules/scan.so"),
-	SymD(HSlock, xHSlock, "src/modules/scan.so"),
-	SymD(VSlock, xVSlock, "src/modules/scan.so"),
-	SymD(blackhole_conf, blackh_conf, "src/modules/scan.so"),
-	{NULL, NULL}
-};
 
 
 /*
@@ -101,9 +91,9 @@ MSymbolTable mod_depend[] = {
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    scan_socks_init(int module_load)
+int    scan_socks_Init(int module_load)
 #endif
 {
 	/*
@@ -114,9 +104,9 @@ int    scan_socks_init(int module_load)
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	mod_Load(int module_load)
 #else
-int    scan_socks_load(int module_load)
+int    scan_socks_Load(int module_load)
 #endif
 {
 }
@@ -124,9 +114,9 @@ int    scan_socks_load(int module_load)
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	mod_unload(int module_unload)
 #else
-void	scan_socks_unload(void)
+int	scan_socks_unload(int module_unload)
 #endif
 {
 	HookDelEx(HOOKTYPE_SCAN_HOST, NULL, scan_socks_scan);

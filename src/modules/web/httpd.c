@@ -75,25 +75,24 @@ void 	httpd_404_header(HTTPd_Request *request, char *path);
 
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo httpd_info
+ModuleHeader httpd_Header
 #else
-#define httpd_info mod_header
-ModuleInfo mod_header
+#define httpd_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"httpd",	/* Name of module */
 	"$Id$", /* Version */
 	"httpd", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    httpd_init(int module_load)
+int    httpd_Init(int module_load)
 #endif
 {
 	HookAddEx(HOOKTYPE_HTTPD_URL, h_u_stats, NULL);
@@ -104,9 +103,9 @@ int    httpd_init(int module_load)
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	mod_Load(int module_load)
 #else
-int    httpd_load(int module_load)
+int    httpd_Load(int module_load)
 #endif
 {
 	/* We set up the http socket */
@@ -143,9 +142,9 @@ int    httpd_load(int module_load)
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	mod_unload(int module_unload)
 #else
-void	httpd_unload(void)
+int	httpd_Unload(int module_unload)
 #endif
 {
 	HookDelEx(HOOKTYPE_HTTPD_URL, h_u_stats, NULL);

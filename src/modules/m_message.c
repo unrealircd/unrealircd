@@ -56,17 +56,16 @@ DLLFUNC int  m_private(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define TOK_NOTICE      "B"     /* 66 */
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_message_info
+ModuleHeader m_message_Header
 #else
-#define m_message_info mod_header
-ModuleInfo mod_header
+#define m_message_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"message",	/* Name of module */
 	"$Id$", /* Version */
 	"private message and notice", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
@@ -77,9 +76,9 @@ ModuleInfo mod_header
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_message_init(int module_load)
+int    m_message_Init(int module_load)
 #endif
 {
 	/*
@@ -91,9 +90,9 @@ int    m_message_init(int module_load)
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_message_load(int module_load)
+int    m_message_Load(int module_load)
 #endif
 {
 }
@@ -101,20 +100,20 @@ int    m_message_load(int module_load)
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_message_unload(void)
+int	m_message_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_PRIVATE, TOK_PRIVATE, m_private) < 0)
 	{
 		sendto_realops("Failed to delete command privmsg when unloading %s",
-				m_message_info.name);
+				m_message_Header.name);
 	}
 	if (del_Command(MSG_NOTICE, TOK_NOTICE, m_notice) < 0)
 	{
 		sendto_realops("Failed to delete command notice when unloading %s",
-				m_message_info.name);
+				m_message_Header.name);
 	}
 }
 
