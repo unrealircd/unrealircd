@@ -927,7 +927,7 @@ struct SMode {
 	/* x:y */
 	int  msgs;		/* x */
 	int  per;		/* y */
-	int  kmode;		/* mode  0 = kick  1 = ban */
+	unsigned short  kmode;	/* mode  0 = kick  1 = ban */
 };
 
 /* Message table structure */

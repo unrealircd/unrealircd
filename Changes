@@ -478,3 +478,4 @@
   %#channel instead of +#channel. Bug report by ^Fanta.
 - Changed find_server_quick to work with masks too ..
 - Removed UPING UDP socket. Only resfd opens a udp fd now
+- Small memory cleanup
