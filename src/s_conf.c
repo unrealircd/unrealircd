@@ -2015,6 +2015,10 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 	{
 		if (!aconf->hostname || !aconf->ip)
 			goto attach;
+		if (aconf->auth && !cptr->passwd && aconf->flags.nopasscont)
+			continue;
+		if (aconf->flags.ssl && !IsSecure(cptr))
+			continue;
 		if (hp)
 			for (i = 0, hname = hp->h_name; hname;
 			    hname = hp->h_aliases[i++])
@@ -3500,6 +3504,10 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 				allow->flags.noident = 1;
 			else if (!strcmp(cepp->ce_varname, "useip")) 
 				allow->flags.useip = 1;
+			else if (!strcmp(cepp->ce_varname, "ssl")) 
+				allow->flags.ssl = 1;
+			else if (!strcmp(cepp->ce_varname, "nopasscont")) 
+				allow->flags.nopasscont = 1;
 		}
 	
 	}
@@ -3702,6 +3710,10 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 			if (!strcmp(cepp->ce_varname, "noident"))
 			{}
 			else if (!strcmp(cepp->ce_varname, "useip")) 
+			{}
+			else if (!strcmp(cepp->ce_varname, "ssl")) 
+			{}
+			else if (!strcmp(cepp->ce_varname, "nopasscont")) 
 			{}
 			else
 			{

@@ -2032,3 +2032,4 @@ seen. gmtime warning still there
 - Fixed cloaking bug reported by Rocko (#0000869).
 - Added set::restrict-channelmodes, works exactly the same as restrict-usermodes, you can for
   example disallow using of channelmode u and L. Suggested by poisoner and others (#0000838).
+- Added allow::options::ssl and allow::options::nopasscont, requested by iguy and Scytale.

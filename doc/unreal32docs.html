@@ -480,6 +480,9 @@ allow {
    Valid options are:<br>
 &nbsp;&nbsp;&nbsp;<b>useip</b> always display IP instead of hostname<br>
 &nbsp;&nbsp;&nbsp;<b>noident</b> don't use ident but use username specified by client<br>
+&nbsp;&nbsp;&nbsp;<b>ssl</b> only match if this client is connected via SSL<br>
+&nbsp;&nbsp;&nbsp;<b>nopasscont</b> continue matching if no password was given (so you can put clients in special classes 
+if they supply a password).
 <p>Examples:<br>
 <pre>
 allow {

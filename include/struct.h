@@ -948,6 +948,8 @@ struct _configitem_class {
 struct _configflag_allow {
 	unsigned	noident :1;
 	unsigned	useip :1;
+	unsigned	ssl :1;
+	unsigned	nopasscont :1;
 };
 
 struct _configitem_allow {
