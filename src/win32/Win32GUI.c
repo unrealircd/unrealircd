@@ -1280,7 +1280,7 @@ int CountRTFSize(char *buffer) {
 		if (*buf == '\r') {
 			buf++;
 			if (*buf == '\n')
-				size += 4;
+				size += 5;
 		}
 		if (*buf == '\2') {
 			if (bold) 

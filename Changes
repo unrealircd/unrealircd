@@ -795,3 +795,4 @@ seen. gmtime warning still there
 - Fixed sts on crack win32 code
 - Fixed a win2000 bug causing Unreal to crash on the credits dialog, thanks to llthangel and WildChild for 
   helping fix the bug
+- Fixed a win32 bug that can cause unexpected crashes while using the editor
