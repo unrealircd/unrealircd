@@ -588,7 +588,7 @@ int  m_server(cptr, sptr, parc, parv)
 	char *ch;
 	int  i;
 	char info[REALLEN + 61], *inpath, *host, *encr;
-	aClient *acptr, *bcptr;
+	aClient *acptr, *bcptr, *ocptr;
 	aConfItem *aconf, *cconf;
 	int  hop, numeric = 0;
 	char *flags = NULL, *protocol = NULL, *inf = NULL;
