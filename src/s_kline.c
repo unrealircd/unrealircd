@@ -989,6 +989,10 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		          return 0; /* bogus */
 		      }
 			  type = TKL_SPAMF | TKL_GLOBAL;
+			  if (parc >= 11)
+			  	reason = parv[10];
+			  else
+			  	reason = parv[8];
 		  }
 		  else if (*parv[2] == 'f')
 		  {
@@ -999,6 +1003,10 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		          return 0; /* bogus */
 		      }
 			  type = TKL_SPAMF;
+			  if (parc >= 11)
+			  	reason = parv[10];
+			  else
+			  	reason = parv[8];
 		  }
 		  else
 			  return 0;
