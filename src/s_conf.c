@@ -2185,16 +2185,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "identd-check")) {
 					IDENT_CHECK = 1;
 				}
-				else if (!strcmp(cepp->ce_varname, "show-tkl")) {
-					SHOWTKL = 1;
-				}
-				else if (!strcmp(cepp->ce_varname, "show-klines")) {
-					SHOWKLINES = 1;
-				}
-				else if (!strcmp(cepp->ce_varname, "show-opers")) {
-					SHOWOPERS = 1;
-				}
 			}
+		}
+		else if (!strcmp(cep->ce_varname, "oper-only-stats")) {
+			ircstrdup(OPER_ONLY_STATS, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "maxchannelsperuser")) {
 			MAXCHANNELSPERUSER = atoi(cep->ce_vardata);
@@ -3766,12 +3760,9 @@ void report_dynconf(aClient *sptr)
 	    sptr->name, KLINE_ADDRESS);
 	sendto_one(sptr, ":%s %i %s :modes-on-connect: %s", me.name, RPL_TEXT,
 	    sptr->name, get_modestr(CONN_MODES));
-	sendto_one(sptr, ":%s %i %s :options::show-opers: %d", me.name, RPL_TEXT,
-	    sptr->name, SHOWOPERS);
-	sendto_one(sptr, ":%s %i %s :options::show-tkl: %d", me.name, RPL_TEXT,
-	    sptr->name, SHOWTKL);
-	sendto_one(sptr, ":%s %i %s :options::show-klines: %d", me.name, RPL_TEXT,
-	    sptr->name, SHOWKLINES);
+	if (OPER_ONLY_STATS)
+		sendto_one(sptr, ":%s %i %s :oper-only-stats: %s", me.name, RPL_TEXT,
+			sptr->name, OPER_ONLY_STATS);
 	sendto_one(sptr, ":%s %i %s :options::show-opermotd: %d", me.name, RPL_TEXT,
 	    sptr->name, SHOWOPERMOTD);
 	sendto_one(sptr, ":%s %i %s :options::hide-ulines: %d", me.name, RPL_TEXT,

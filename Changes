@@ -757,3 +757,5 @@ seen. gmtime warning still there
 - Fixed fence post marker overwrite in /vhost, found and fixed by tgf
 - Made the Win32 version report the actual OS to opers in /version rather than just say 'Win32'
 - Removed some obsolete code
+- Added set::oper-only-stats which allows you to set any/all stats as oper only (* = all). Code is kind of 
+  ugly since some flags are case insensitive and C == H but it works and seems pretty fast.

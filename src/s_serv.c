@@ -2411,6 +2411,7 @@ int  m_stats(cptr, sptr, parc, parv)
 	aCommand *mptr;
 	aClient *acptr;
 	char stat = parc > 1 ? parv[1][0] : '\0';
+	char stat2;
 	int  i;
 	int  doall = 0, wilds = 0, showports = IsAnOper(sptr), remote = 0;
 	char *name;
@@ -2418,17 +2419,39 @@ int  m_stats(cptr, sptr, parc, parv)
 	if (hunt_server(cptr, sptr, ":%s STATS %s :%s", 2, parc,
 	    parv) != HUNTED_ISME)
 		return 0;
-
-#ifdef STATS_ONLYOPER
-	if (!IsAnOper(sptr))
-	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-		return 0;
+	if (OPER_ONLY_STATS) {
+		if (!IsAnOper(sptr) && strchr(OPER_ONLY_STATS, '*'))
+		{
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+			return 0;
+		}
+		stat2 = tolower(stat);
+		if (!IsAnOper(sptr) && (stat2 == 'c' || stat2 == 'f' || stat2 == 'i' ||  stat2 == 'h' || 
+			stat2 == 'y' || stat2 == 'x' || stat2 == 'g' || stat2 == 'k' || stat2 == 'o' || 
+			stat2 == 'z' || stat2 == 'l')) {
+			if (strchr(OPER_ONLY_STATS, toupper(stat)) || strchr(OPER_ONLY_STATS, stat2)) {
+				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+				return 0;
+			}
+			if (stat2 == 'c') {
+				if (strchr(OPER_ONLY_STATS, 'h') || strchr(OPER_ONLY_STATS, 'H')) {
+					sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+					return 0;
+				}
+			}
+			if (stat2 == 'h') {
+				if (strchr(OPER_ONLY_STATS, 'c') || strchr(OPER_ONLY_STATS, 'C')) {
+					sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+					return 0;
+				}
+			}
+		}
+		if (!IsAnOper(sptr) && strchr(OPER_ONLY_STATS, stat))
+		{
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+			return 0;
+		}
 	}
-
-#endif
-
-
 	if (parc > 2)
 	{
 		name = parv[2];
@@ -2619,10 +2642,6 @@ int  m_stats(cptr, sptr, parc, parv)
 		  ConfigItem_ban *bans;
 		  ConfigItem_except *excepts;
 		  char type[2];
-		  if (SHOWKLINES == 0 && (!IsOper(sptr)))
-		  {
-			  break;
-		  }
   		  for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) {
 			  if (bans->flag.type == CONF_BAN_USER) {
 				if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
@@ -2694,10 +2713,6 @@ int  m_stats(cptr, sptr, parc, parv)
 		  break;
 	  case 'o':
 	  case 'O':
-		  if (SHOWOPERS == 0 && (!IsOper(sptr)))
-		  {
-			  break;
-		  }
 		  for (oper_p = conf_oper; oper_p; oper_p = (ConfigItem_oper *) oper_p->next)
 		  {
 		  	if (!oper_p->from)

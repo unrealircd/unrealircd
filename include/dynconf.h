@@ -53,9 +53,6 @@ struct zNetwork {
 typedef struct zConfiguration aConfiguration;
 struct zConfiguration {
 	unsigned som:1;
-	unsigned showopers:1;
-	unsigned showtkl:1;
-	unsigned showklines:1;
 	unsigned hide_ulines:1;
 	unsigned allow_chatops:1;
 	unsigned webtv_support:1;
@@ -68,6 +65,7 @@ struct zConfiguration {
 	long conn_modes;
 	char *auto_join_chans;
 	char *oper_auto_join_chans;
+	char *oper_only_stats;
 	int  socksbantime;
 	int  maxchannelsperuser;
 	char *socksbanmessage;
@@ -81,9 +79,6 @@ extern aConfiguration iConf;
 
 #define KLINE_ADDRESS		iConf.kline_address
 #define CONN_MODES			iConf.conn_modes
-#define SHOWOPERS			iConf.showopers
-#define SHOWTKL				iConf.showtkl
-#define SHOWKLINES			iConf.showklines
 #define SHOWOPERMOTD			iConf.som
 #define HIDE_ULINES			iConf.hide_ulines
 #define ALLOW_CHATOPS			iConf.allow_chatops
@@ -99,6 +94,7 @@ extern aConfiguration iConf;
 #define SOCKSBANTIME			iConf.socksbantime
 #define NAME_SERVER			iConf.name_server
 #define IDENT_CHECK			iConf.ident_check
+#define OPER_ONLY_STATS			iConf.oper_only_stats
 
 
 #define ircnetwork			iConf.network.x_ircnetwork
@@ -117,7 +113,6 @@ extern aConfiguration iConf;
 #define STATS_SERVER		iConf.network.x_stats_server
 #define iNAH				iConf.network.x_inah
 #define prefix_quit			iConf.network.x_prefix_quit
-
 
 #define CLOAK_KEY1			iConf.network.key
 #define CLOAK_KEY2			iConf.network.key2
