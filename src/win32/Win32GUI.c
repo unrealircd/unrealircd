@@ -74,7 +74,6 @@ void win_map(aClient *, HWND);
 extern Link *Servers;
 extern ircstats IRCstats;
 char *errors;
-int Showtray, Minimizetray;
 void CleanUp(void)
 {
 	Shell_NotifyIcon(NIM_DELETE ,&SysTray);
@@ -118,21 +117,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	SysTray.uID = 0;
 	lstrcpy(SysTray.szTip, WIN32_VERSION);
 	Shell_NotifyIcon(NIM_ADD ,&SysTray);
-	RegCreateKey(HKEY_LOCAL_MACHINE, "\\Software\\UnrealIRCd\\", &hKey);
-	if (RegQueryValue(hKey, "Showtray", regbuf, NULL) != 0) {
-		RegSetValueEx(hKey, "Showtray", 0, REG_SZ, "1", 2);
-		Showtray = 1;
-	}
-	else 
-		Showtray = atoi(regbuf);
-	if (RegQueryValue(hKey, "Minimizetray", regbuf, NULL) != 0) {
-		RegSetValueEx(hKey, "Minimizetray", 0, REG_SZ, "1", 2);
-		Minimizetray = 1;
-	}
-	else 
-		Minimizetray = atoi(regbuf);
-	if ((s =  GetCommandLine()))
-		argv[argc++] = s;
+
 	    
 	argv[argc] = NULL;
 
@@ -155,7 +140,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 static HCURSOR hCursor;
-static HMENU hAbout, hConfig, hOptions;
+static HMENU hAbout, hConfig;
 	int wmId, wmEvent;
 	
 	switch (message)
@@ -164,9 +149,6 @@ static HMENU hAbout, hConfig, hOptions;
 				hCursor = LoadCursor(hInst, MAKEINTRESOURCE(CUR_HAND));
 				hAbout = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_ABOUT)),0);
 				hConfig = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_CONFIG)),0);
-				hOptions = GetSubMenu(hConfig, 5);
-				if (Showtray)
-					CheckMenuItem(hOptions, IDM_SHOWICON, MF_CHECKED);
 				SetWindowText(hDlg, WIN32_VERSION);
 				SendMessage(hDlg, WM_SETICON, (WPARAM)ICON_SMALL, 
 					(LPARAM)(HICON)LoadImage(hInst, MAKEINTRESOURCE(ICO_MAIN), IMAGE_ICON,16, 16, 0));
@@ -330,7 +312,6 @@ LRESULT CALLBACK CreditsDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 					strcat(String, "\\par\r\n");
 			    }
 			strcat(String, "\\f1\\par\r\n}");
-			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_SETLIMITTEXT, 0, 0);
 			SetDlgItemText(hDlg, IDC_TEXT, String);
 			return (TRUE);
 			}
