@@ -2345,3 +2345,9 @@ seen. gmtime warning still there
 - Internal: changed 2 MyMalloc's to MyMallocEx (mem zerofill).. nothing was currently
   affected by this but it's easy to forget if you add new stuff.
 - Fixed minor /WALLOPS bug reported by Praetorian_ (#0001195).
+- Internal code cleanups: EOS var rename, got rid of old UnknownUser structs, moved
+  anti away flood to new flood struct.
+- Changed away flood configuration to set::anti-flood::away-flood <count>:<period>.
+- Added nickflood protection, can be set in set::anti-flood::away-flood <count>:<period>
+  to allow max 'count' nickchanges per 'period' seconds. The default is 3 per 60s.
+  As usual, the nickchange limiting does not apply to ircops.

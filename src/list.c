@@ -184,8 +184,8 @@ anUser *make_user(aClient *cptr)
 		user->swhois = NULL;
 		user->away = NULL;
 #ifdef NO_FLOOD_AWAY
-		user->last_away = 0;
-		user->away_count = 0;
+		user->flood.away_t = 0;
+		user->flood.away_c = 0;
 #endif
 		user->refcnt = 1;
 		user->joined = 0;

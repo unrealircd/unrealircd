@@ -1764,12 +1764,13 @@ set {
  <p><font class="set">set::anti-flood::unknown-flood-amount &lt;amount&gt;;</font><br>
   Specifies the amount of data (in KiloBytes) that the unknown connection must send
   in order for the user to be killed.</p>
- <p><font class="set">set::anti-flood::away-count &lt;amount&gt;;</font><br>
-  Specifies the number of aways a user must execute before flood protection is triggered.
-  This requires NO_FLOOD_AWAY to be defined.</p>
- <p><font class="set">set::anti-flood::away-period &lt;timevalue&gt;;</font><br>
-  Specifies the amount of time in which the set::anti-flood::away-count of /aways must be
-  executed for flood protection to be triggered. This requires NO_FLOOD_AWAY to be defined.</p>
+ <p><font class="set">set::anti-flood::away-flood &lt;count&gt;:&lt;period&gt;</font><br>
+  Away flood protection: limits /away to 'count' changes per 'period' seconds.
+  This requires NO_FLOOD_AWAY to be enabled in config.h. Example: <i>away-flood 5:60s;</i>
+  means max 5 changes per 60 seconds.</p>
+ <p><font class="set">set::anti-flood::nick-flood &lt;count&gt;:&lt;period&gt;</font><br>
+  Nickflood protection: limits nickchanges to 'count' per 'period' seconds.
+  For example <i>nick-flood 4:90</i> means 4 per 90 seconds, the default is 3 per 60.</p>
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; Additional Files<a name="addtlfiles"></a>
   </font></b></p><div class="desc">

@@ -1176,12 +1176,12 @@ int stats_set(aClient *sptr, char *para)
 #ifdef NO_FLOOD_AWAY
 	if (AWAY_PERIOD)
 	{
-		sendto_one(sptr, ":%s %i %s :anti-flood::away-count: %d", me.name, RPL_TEXT, 
-			sptr->name, AWAY_COUNT);
-		sendto_one(sptr, ":%s %i %s :anti-flood::away-period: %s", me.name, RPL_TEXT,
-			sptr->name, pretty_time_val(AWAY_PERIOD));
+		sendto_one(sptr, ":%s %i %s :anti-flood::away-flood: %d per %s", me.name, RPL_TEXT, 
+			sptr->name, AWAY_COUNT, pretty_time_val(AWAY_PERIOD));
 	}
 #endif
+	sendto_one(sptr, ":%s %i %s :anti-flood::nick-flood: %d per %s", me.name, RPL_TEXT, 
+		sptr->name, NICK_COUNT, pretty_time_val(NICK_PERIOD));
 	sendto_one(sptr, ":%s %i %s :ident::connect-timeout: %s", me.name, RPL_TEXT,
 			sptr->name, pretty_time_val(IDENT_CONNECT_TIMEOUT));
 	sendto_one(sptr, ":%s %i %s :ident::read-timeout: %s", me.name, RPL_TEXT,
@@ -1417,7 +1417,7 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 			{
 				if (IsServer(acptr))
 					sendto_one(sptr, ":%s NOTICE %s :Server %s is %s",
-						me.name, sptr->name, acptr->name, acptr->serv->flags.linked ? "SYNCED" : "NOT SYNCED!!");
+						me.name, sptr->name, acptr->name, acptr->serv->flags.synced ? "SYNCED" : "NOT SYNCED!!");
 			}
 #endif
 	}

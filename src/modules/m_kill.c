@@ -120,22 +120,6 @@ int	m_kill_Unload(int module_unload)
 */
 DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	static anUser UnknownUser = {
-		NULL,		/* channel */
-		NULL,		/* invited */
-		NULL,		/* silence */
-		NULL,		/* away */
-#ifdef NO_FLOOD_AWAY
-		0,		/* last_away */
-		0,		/* away_count */
-#endif
-		0,		/* servicestamp */
-		1,		/* refcount */
-		0,		/* joined */
-		"<Unknown>",	/* username */
-		"<Unknown>",	/* host */
-		"<Unknown>"	/* server */
-	};
 	aClient *acptr;
 	anUser *auser;
 	char inpath[HOSTLEN * 2 + USERLEN + 5];
@@ -281,7 +265,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		   **    have changed the target because of the nickname change.
 		 */
 
-		auser = acptr->user ? acptr->user : &UnknownUser;
+		auser = acptr->user;
 
 		if (index(parv[0], '.'))
 			sendto_snomask(SNO_KILLS,

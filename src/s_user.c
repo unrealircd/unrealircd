@@ -1191,6 +1191,19 @@ CMD_FUNC(m_nick)
 		*s = '\0';
 
 	strncpyzt(nick, parv[1], NICKLEN + 1);
+
+	if (MyConnect(sptr) && sptr->user && !IsAnOper(sptr))
+	{
+		if ((sptr->user->flood.nick_c >= NICK_COUNT) && 
+		    (TStime() - sptr->user->flood.nick_t < NICK_PERIOD))
+		{
+			/* Throttle... */
+			sendto_one(sptr, err_str(ERR_NCHANGETOOFAST), me.name, sptr->name, nick,
+				(int)(NICK_PERIOD - (TStime() - sptr->user->flood.nick_t)));
+			return 0;
+		}
+	}
+
 	/*
 	 * if do_nick_name() returns a null name OR if the server sent a nick
 	 * name and do_nick_name() changed it in some way (due to rules of nick
@@ -1672,6 +1685,14 @@ CMD_FUNC(m_nick)
 					return 0;
 				}
 			}
+
+			if (TStime() - sptr->user->flood.nick_t >= NICK_PERIOD)
+			{
+				sptr->user->flood.nick_t = TStime();
+				sptr->user->flood.nick_c = 1;
+			} else
+				sptr->user->flood.nick_c++;
+
 			sendto_snomask(SNO_NICKCHANGE, "*** Notice -- %s (%s@%s) has changed his/her nickname to %s", sptr->name, sptr->user->username, sptr->user->realhost, nick);
 
 			RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, sptr, nick);

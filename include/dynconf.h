@@ -113,6 +113,8 @@ struct zConfiguration {
 	unsigned char away_count;
 	long away_period;
 #endif
+	unsigned char nick_count;
+	long nick_period;
 	int ident_connect_timeout;
 	int ident_read_timeout;
 	aNetwork network;
@@ -187,6 +189,8 @@ extern aConfiguration iConf;
 #define AWAY_PERIOD			iConf.away_period
 #define AWAY_COUNT			iConf.away_count
 #endif
+#define NICK_PERIOD			iConf.nick_period
+#define NICK_COUNT			iConf.nick_count
 
 #define IDENT_CONNECT_TIMEOUT	iConf.ident_connect_timeout
 #define IDENT_READ_TIMEOUT		iConf.ident_read_timeout

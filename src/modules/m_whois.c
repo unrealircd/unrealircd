@@ -119,22 +119,6 @@ int	m_whois_Unload(int module_unload)
 */
 DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	static anUser UnknownUser = {
-		NULL,		/* channel */
-		NULL,		/* invited */
-		NULL,		/* silence */
-		NULL,		/* away */
-#ifdef NO_FLOOD_AWAY
-		0,		/* last_away */
-		0,		/* away_count */
-#endif
-		0,		/* servicestamp */
-		1,		/* refcount */
-		0,		/* joined */
-		"<Unknown>",	/* username */
-		"<Unknown>",	/* host */
-		"<Unknown>"	/* server */
-	};
 	Membership *lp;
 	anUser *user;
 	aClient *acptr, *a2cptr;
@@ -186,16 +170,16 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			 *   the target user(s) are on;
 			 */
 
-			user = acptr->user ? acptr->user : &UnknownUser;
+			if (!IsPerson(acptr))
+				continue;
+
+			user = acptr->user;
 			name = (!*acptr->name) ? "?" : acptr->name;
 
 			invis = acptr != sptr && IsInvisible(acptr);
 			member = (user->channel) ? 1 : 0;
 
 			a2cptr = find_server_quick(user->server);
-
-			if (!IsPerson(acptr))
-				continue;
 
 			if (IsWhois(acptr) && (sptr != acptr))
 			{

@@ -448,6 +448,30 @@ void port_range(char *string, int *start, int *end)
 	*end = atoi((c+1));
 }
 
+/** Parses '5:60s' config values.
+ * orig: original string
+ * times: pointer to int, first value (before the :)
+ * period: pointer to int, second value (after the :) in seconds
+ * RETURNS: 0 for parse error, 1 if ok.
+ * REMARK: times&period should be ints!
+ */
+int config_parse_flood(char *orig, int *times, int *period)
+{
+char *x;
+
+	*times = *period = 0;
+	x = strchr(orig, ':');
+	/* 'blah', ':blah', '1:' */
+	if (!x || (x == orig) || (*(x+1) == '\0'))
+		return 0;
+
+	*x = '\0';
+	*times = atoi(orig);
+	*period = config_checkval(x+1, CFG_TIME);
+	*x = ':'; /* restore */
+	return 1;
+}
+
 long config_checkval(char *orig, unsigned short flags) {
 	char *value;
 	char *text;
@@ -1151,6 +1175,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->oper_snomask = strdup(SNO_DEFOPER);
 	i->ident_read_timeout = 30;
 	i->ident_connect_timeout = 10;
+	i->nick_count = 3; i->nick_period = 60; /* nickflood protection: 3 per 60s */
 }
 
 int	init_conf(char *rootconf, int rehash)
@@ -5039,7 +5064,22 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.away_count = atol(cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "away-period"))
 					tempiConf.away_period = config_checkval(cepp->ce_vardata, CFG_TIME);
+				else if (!strcmp(cepp->ce_varname, "away-flood"))
+				{
+					int cnt, period;
+					config_parse_flood(cepp->ce_vardata, &cnt, &period);
+					tempiConf.away_count = cnt;
+					tempiConf.away_period = period;
+				}
 #endif
+				else if (!strcmp(cepp->ce_varname, "nick-flood"))
+				{
+					int cnt, period;
+					config_parse_flood(cepp->ce_vardata, &cnt, &period);
+					tempiConf.nick_count = cnt;
+					tempiConf.nick_period = period;
+				}
+
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "options")) {
@@ -5484,7 +5524,33 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						errors++;
 					}
 				}
+				else if (!strcmp(cepp->ce_varname, "away-flood"))
+				{
+					int cnt, period;
+					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
+					    (cnt < 1) || (cnt > 255) || (period < 10))
+					{
+						config_error("%s:%i: set::anti-flood::away-flood error. Syntax is '<count>:<period>' (eg 5:60), "
+						             "count should be 1-255, period should be greater than 9",
+							cepp->ce_fileptr->cf_filename,
+							cepp->ce_varname);
+						errors++;
+					}
+				}
 #endif
+				else if (!strcmp(cepp->ce_varname, "nick-flood"))
+				{
+					int cnt, period;
+					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
+					    (cnt < 1) || (cnt > 255) || (period < 5))
+					{
+						config_error("%s:%i: set::anti-flood::away-flood error. Syntax is '<count>:<period>' (eg 5:60), "
+						             "count should be 1-255, period should be greater than 4",
+							cepp->ce_fileptr->cf_filename,
+							cepp->ce_varname);
+						errors++;
+					}
+				}
 				else
 				{
 					config_error("%s:%i: unknown option set::anti-flood::%s",

@@ -656,10 +656,6 @@ struct User {
 	Link *invited;		/* chain of invite pointer blocks */
 	Link *silence;		/* chain of silence pointer blocks */
 	char *away;		/* pointer to away message */
-#ifdef NO_FLOOD_AWAY
-	time_t last_away;	/* last time the user set away */
-	unsigned char away_count;	/* number of times away has been set */
-#endif
 	u_int32_t servicestamp;	/* Services' time stamp variable */
 	signed char refcnt;	/* Number of times this block is referenced */
 	unsigned short joined;		/* number of channels joined */
@@ -674,6 +670,14 @@ struct User {
 #ifdef	LIST_DEBUG
 	aClient *bcptr;
 #endif
+	struct {
+		time_t nick_t;
+		unsigned char nick_c;
+#ifdef NO_FLOOD_AWAY
+		time_t away_t;			/* last time the user set away */
+		unsigned char away_c;	/* number of times away has been set */
+#endif
+	} flood;
 };
 
 struct Server {
@@ -689,7 +693,7 @@ struct Server {
 	aClient *bcptr;
 #endif
 	struct {
-		unsigned linked:1;		/* Server linked? (3.2beta18+) */
+		unsigned synced:1;		/* Server linked? (3.2beta18+) */
 	} flags;
 };
 

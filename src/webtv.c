@@ -135,22 +135,6 @@ int	webtv_parse(aClient *sptr, char *string)
 
 int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	static anUser UnknownUser = {
-		NULL,		/* channel */
-		NULL,		/* invited */
-		NULL,		/* silence */
-		NULL,		/* away */
-#ifdef NO_FLOOD_AWAY
-		0,		/* last_away */
-		0,		/* away_count */
-#endif
-		0,		/* servicestamp */
-		1,		/* refcount */
-		0,		/* joined */
-		"<Unknown>",	/* username */
-		"<Unknown>",	/* host */
-		"<Unknown>"	/* server */
-	};
 	Membership *lp;
 	anUser *user;
 	aClient *acptr, *a2cptr;
@@ -203,7 +187,9 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			 */
 			if (!MyConnect(sptr) && !MyConnect(acptr) && wilds)
 				continue;
-			user = acptr->user ? acptr->user : &UnknownUser;
+			if (!IsPerson(acptr))
+				continue;
+			user = acptr->user;
 			name = (!*acptr->name) ? "?" : acptr->name;
 
 			invis = acptr != sptr && IsInvisible(acptr);
@@ -233,8 +219,8 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				continue;
 			a2cptr = find_server_quick(user->server);
 
-			if (!IsPerson(acptr))
-				continue;
+			/* if (!IsPerson(acptr))
+				continue; ** moved to top -- Syzop */
 			sendto_one(sptr, ":IRC PRIVMSG %s :WHOIS information for %s", sptr->name, acptr->name);
 			if (IsWhois(acptr))
 			{

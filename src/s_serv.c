@@ -1244,7 +1244,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 			 * then you would think the other one is fully linked
 			 * while in fact he was not.. -- Syzop.
 			 */
-			if (acptr->serv->flags.linked)
+			if (acptr->serv->flags.synced)
 			{
 				sendto_one(cptr, ":%s %s", acptr->name,
 					(IsToken(cptr) ? TOK_EOS : MSG_EOS));
@@ -3884,7 +3884,7 @@ CMD_FUNC(m_eos)
 {
 	if (!IsServer(sptr))
 		return 0;
-	sptr->serv->flags.linked = 1;
+	sptr->serv->flags.synced = 1;
 	/* pass it on ^_- */
 	ircd_log(LOG_ERROR, "[EOSDBG] m_eos: got sync from %s (path:%s)", sptr->name, cptr->name);
 	ircd_log(LOG_ERROR, "[EOSDBG] m_eos: broadcasting it back to everyone except route from %s", cptr->name);
