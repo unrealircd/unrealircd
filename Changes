@@ -3053,3 +3053,5 @@ seen. gmtime warning still there
   AngryWolf
 - Fixed a resolver problem that could cause hosts to not be resolved on some Windows
   systems
+- Fixed a problem where the win32 GUI's "rehash all" option did not reload motd/rules
+  (#0001678) reported by w00t

@@ -816,7 +816,7 @@ ConfigItem_tld *tlds;
 	}
 }
 
-static void reread_motdsandrules()
+void reread_motdsandrules()
 {
 	motd = (aMotd *) read_file_ex(MPATH, &motd, &motd_tm);
 	rules = (aMotd *) read_file(RPATH, &rules);
