@@ -525,6 +525,18 @@ ban nick { mask "*IRC*op*"; reason "Reserved for ircops"; };
 ban nick { mask "*Oper*"; reason "Reserved for ircops"; };
 ban nick { mask "Status"; reason "Bug in mIRC"; };
 
+/*
+ * Include files
+ */
+include "badwords.channel.conf";
+include "badwords.message.conf";
+
+/*
+ * Some modules;
+*/
+include "src/modules/commands.so";
+include "src/modules/scan.so";
+include "src/modules/scan_socks.so";
 /* Ports */
 listen $VIRTUAL:$PORT;
 __EOF__
@@ -600,5 +612,10 @@ you take a look at your $IRCDCONF right now. Thanks for using UnrealIRCd
 __EOF__
 		rm -f crypter.tmp
 		echo "Have a nice day."
+		echo "[Press enter to continue]"
+		read cc
+		more .CONFIG.RANT
+		echo "[Press enter when you have read all of this]"
+		read cc
 		echo ""
 		exit 1

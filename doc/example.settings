@@ -1,0 +1,61 @@
+/*
+ * Example set {} block
+*/
+
+set {
+	/*
+ 	 * This is the mail users will get shown when k-lined
+	*/
+	kline-address		 "mail.to.mail.to";
+	/*
+	 * What modes will users get when connecting to this server
+	*/
+	modes-on-connect 	 "+ix";
+	/* What channels users will autojoin */
+	auto-join		 "0";
+	/* What channels opers will autojoin on connect*/
+	oper-auto-join		 "0";
+	/* This needs to be an unused port, that the IRCd will bind
+	 * to, and make insecure proxies connect to.
+	*/
+	blackhole		 [ip]:port;
+	dns {
+		/* What IP has our DNS server got? */
+		nameserver 127.0.0.1;
+		/* How long time will we wait for each attempt? */
+		timeout	2s;
+		/* How many attempts will we do */
+		retries 2s;
+	};
+	options {
+		enable-opermotd;
+		enable-chatops;
+		hide-ulines;
+//		webtv-support;
+		identd-check;
+	};
+	
+	socks {
+		ban-message "Insecure SOCKS server";
+		quit-message "Insecure SOCKS server";
+		ban-time "1d";
+	};
+	/*
+	 * How many channels each user can join
+	*/
+	maxchannelsperuser 10;
+	/* 
+	 * This is a new thing in Unreal3.2.
+	 * You _need_ to make three numbers up, bigger than 100000
+	 * These MUST be the SAME on EVERY server in your NETWORK
+	 * If people discover these keys, it is easier for them to crack
+	 * the +x algoritm.
+	*/
+	cloak-keys
+	{
+		0;
+		0;
+		0;
+	};
+	
+};

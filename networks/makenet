@@ -260,9 +260,11 @@ fi
 case "$SUBMIT" in
 	[Nn]*)
 		echo ""
-		echo "Ok all done, all you have to do is,"
-		echo "In your ircd.conf, add the following line:"
-		echo "include \"networks/$FILE\";"
+		echo "" >> ../unrealircd.conf
+		echo "// Added by makenet $DATE" >> ../unrealircd.conf
+		echo "include \"networks/$FILE\";" >> ../unrealircd.conf
+		echo "All done. I have added \"include \"networks/$FILE\ to your unrealircd.conf"
+		echo "You might want to edit it if you have done makenet before"
 		echo "Thank you for choosing UnrealIRCd"
 		exit
 		;;
@@ -285,8 +287,10 @@ Subject: Network file submission for $NETWORK
 .
 __EOF__
 echo ""
-echo "Ok all done, all you have to do is,"
-echo "In your ircd.conf, add the following line:"
-echo "include \"networks/$FILE\";"
+echo "" >> ../unrealircd.conf
+echo "// Added by makenet $DATE" >> ../unrealircd.conf
+echo "include \"networks/$FILE\";" >> ../unrealircd.conf
+echo "All done. I have added \"include \"networks/$FILE\"; to your unrealircd.conf"
+echo "You might want to edit it if you have done makenet before"
 echo "Thank you for choosing UnrealIRCd"
 exit

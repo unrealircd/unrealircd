@@ -666,3 +666,4 @@ seen. gmtime warning still there
   being behind firewall)
 - Fixed a little scan.so bug
 - Fixed so we compile without symbols in win32 .. 
+- Fixed some rant stuff
