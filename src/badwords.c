@@ -231,7 +231,7 @@ char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
 #endif
 			if (this_word->action == BADWORD_BLOCK)
 			{
-				if (!regexec(&this_word->expr, ptr, 0, NULL, 0))
+				if (!regexec(&this_word->expr, cleanstr, 0, NULL, 0))
 				{
 					*blocked = 1;
 					return NULL;

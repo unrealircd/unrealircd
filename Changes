@@ -2120,3 +2120,5 @@ seen. gmtime warning still there
 - Added verification that a vhost::vhost is valid (#0000924) reported by AngryWolf and ChRiS
 - Fixed "make install" error caused by bugreport file removal.
 - Removed some leftover +I code (can_stealth/^).
+- Fixed a badword::action block bug with regex (non-fast) badwords, could cause a crash,
+  reported by auspice (#0000946).
