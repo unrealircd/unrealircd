@@ -1264,3 +1264,6 @@ seen. gmtime warning still there
 - Fixed a bug that caused locops to see client exiting but not client connecting notices while +s +c,
   reported and fixed by cmx (#0000123)
 - Fixed a bug reported by dimplesx where +H did not decrease the oper count (#0000129)
+- Documentation bug #0000152 reported by Tony at sexnet.org fixed regarding
+  example.conf being wrong about set::socks
+ 
