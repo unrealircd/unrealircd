@@ -1299,12 +1299,14 @@ tld {
 	rules &lt;archivo-reglas&gt;;
 	shortmotd &lt;archivo-shortmotd&gt;;
 	channel &lt;nombre-canal&gt;;
+	opermotd &lt;archivo-opermotd&gt;;
+	botmotd &lt;archivo-botmotd&gt;;
 	options {
 		ssl;
 	}
 };</pre>
 </p>
-<p>Este bloque le permite especificar motd, rules y canales para usuarios en funci&oacute;n de su host. Es &uacute;til para tener varios motds en distintos lenguajes. <b>tld::mask </b>es una m&aacute;scara user@host que coincide con la m&aacute;scara del usuario. <b>tld::motd</b>, <b>tld::shortmotd</b>, y <b>tld::rules</b> especifican el motd, shortmod y archivo de reglas espectivamente para mostrar en funci&oacute;n del host. <b>tld::shortmotd</b> es opcional. <b>tld::channel </b>es opcional y permite especificar un canal al que el usuario ser&aacute; forzado cuando conecte. Si existe, omitir&aacute; el canal por defecto en autojoin. El bloque <b>tld::options</b> le permite definir par&aacute;metros adicionales. S&oacute;lo existen tld::options::ssl para clientes SSL y tld::options::remote para clientes remotos.</p>
+<p>Este bloque le permite especificar motd, rules y canales para usuarios en funci&oacute;n de su host. Es &uacute;til para tener varios motds en distintos lenguajes. <b>tld::mask </b>es una m&aacute;scara user@host que coincide con la m&aacute;scara del usuario. <b>tld::motd</b>, <b>tld::shortmotd</b>, <b>tld::opermotd</b>, <b>tld::botmotd</b> y <b>tld::rules</b> especifican el motd, shortmod, opermotd, botmotd y archivo de reglas espectivamente para mostrar en funci&oacute;n del host. <b>tld::shortmotd</b>, <b>tld::opermotd</b> y <b>tld::botmotd</b> son opcionales. <b>tld::channel </b>es opcional y permite especificar un canal al que el usuario ser&aacute; forzado cuando conecte. Si existe, omitir&aacute; el canal por defecto en autojoin. El bloque <b>tld::options</b> le permite definir par&aacute;metros adicionales. S&oacute;lo existen tld::options::ssl para clientes SSL y tld::options::remote para clientes remotos.</p>
 <p>Las entradas TLD se relacionan de arriba abajo. </p>
 <p>Ejemplo:<br>
 <pre>
