@@ -64,6 +64,17 @@ static ConfigItem_blackhole	*blackh_conf = NULL;
 void	scan_socks_scan(HStruct *h);
 void	scan_socks4_scan(HStruct *h);
 void	scan_socks5_scan(HStruct *h);
+
+static Mod_SymbolDepTable modsymdep[] = 
+{
+	MOD_Dep(VS_Add, xVS_add, "src/modules/scan.so"),
+	MOD_Dep(HSlock, xHSlock, "src/modules/scan.so"),
+	MOD_Dep(VSlock, xVSlock, "src/modules/scan.so"),
+	MOD_Dep(blackhole_conf, blackh_conf, "src/modules/scan.so"),
+	{NULL, NULL}
+};
+
+
 #ifndef DYNAMIC_LINKING
 ModuleHeader scan_socks_Header
 #else
@@ -74,13 +85,7 @@ ModuleHeader Mod_Header
 	"$Id$", /* Version */
 	"scanning API: socks", /* Short description of module */
 	"3.2-b5",
-	{
-		MOD_Dep(VS_Add, xVS_add, "src/modules/scan.so"),
-		MOD_Dep(HSlock, xHSlock, "src/modules/scan.so"),
-		MOD_Dep(VSlock, xVSlock, "src/modules/scan.so"),
-		MOD_Dep(blackhole_conf, blackh_conf, "src/modules/scan.so"),
-		{NULL, NULL}
-	}
+    	modsymdep
     };
 
 

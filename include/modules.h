@@ -159,7 +159,7 @@ void	HookDelEx(int hooktype, int (*intfunc)(), void (*voidfunc)());
 #define MODFLAG_LOADED	0x0001 /* (mod_load has been called and suceeded) */
 
 /* Module function return values */
-#define MOD_SUCCESS 1
+#define MOD_SUCCESS 0
 #define MOD_FAILED -1
 #define MOD_DELAY 2
 

@@ -81,6 +81,7 @@ int    l_commands_Init(int module_load)
 	/*
 	 * We call our add_Command crap here
 	*/
+	
 	m_sethost_Init(module_load);
 	m_setname_Init(module_load);
 	m_chghost_Init(module_load);
@@ -126,9 +127,9 @@ int    l_commands_Init(int module_load)
 #ifdef SCAN_API
 	module_depend_resolve(&scan_socks_depend[0]);
 	module_depend_resolve(&scan_http_depend[0]);
-	m_scan_init(module_load);
-	scan_socks_init(module_load);
-	scan_http_init(module_load);
+	m_scan_Init(module_load);
+	scan_socks_Init(module_load);
+	scan_http_Init(module_load);
 #endif
 
 }
@@ -181,9 +182,9 @@ int    l_commands_Load(int module_load)
 	m_guest_Load(module_load);
 #endif
 #ifdef SCAN_API
-	m_scan_load(module_load);
-	scan_socks_load(module_load);
-	scan_http_load(module_load);
+	m_scan_Load(module_load);
+	scan_socks_Load(module_load);
+	scan_http_Load(module_load);
 #endif
 }
 
@@ -236,9 +237,9 @@ int	l_commands_Unload(int module_unload)
 	m_guest_Unload();
 #endif
 #ifdef SCAN_API
-	scan_socks_unload();
-	scan_http_unload();
-	m_scan_unload();
+	scan_socks_Unload();
+	scan_http_Unload();
+	m_scan_Unload();
 #endif
 }
 

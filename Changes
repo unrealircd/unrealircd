@@ -974,3 +974,4 @@ seen. gmtime warning still there
 - Fixed some more module v3 problems and upgrade all modules
 - Fixed a ton of module v3 problems (cause: Stskeeps is an idiot)
 - Yes, even more module v3 bugfixes
+- Module v3 bugfixes. cause: codemastr lack find n replace skill

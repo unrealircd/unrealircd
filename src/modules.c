@@ -97,7 +97,7 @@ char  *Module_Load (char *path, int load)
 	Module          *mod = NULL;
 	Debug((DEBUG_DEBUG, "Attempting to load module from %s",
 	       path));
-	if (Mod = irc_dlopen(path, RTLD_NOW))
+	if ((Mod = irc_dlopen(path, RTLD_NOW)))
 	{
 		/* We have engaged the borg cube. Scan for lifesigns. */
 		if (!(mod_header = irc_dlsym(Mod, "Mod_Header")))
@@ -180,7 +180,7 @@ char  *Module_Load (char *path, int load)
 	else
 	{
 		/* Return the error .. */
-		return (irc_dlerror());
+		return ((char *)irc_dlerror());
 	}
 					     
 	
