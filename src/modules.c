@@ -131,12 +131,8 @@ int  load_module(char *module)
 		if (!mod_unload)
 		{
 			mod_unload = irc_dlsym(Mod, "_mod_load");
-			if (!mod_unload)
-			{
-				return -1;
-			}
 		}
-		else
+		if (mod_unload)
 		{
 			/* if ircd is booted, load it */
 			if (loop.ircd_booted)
