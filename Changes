@@ -1283,3 +1283,4 @@ seen. gmtime warning still there
 - Fixed a scanner memory leak, and made some changes to make the HTTP scanner work
 - Fixed a bug in the socks scanner causing it to fail
 - Removed some typecasts from free calls, *hopefully* it will fix some problems
+- Fixed a bug with \r\n being mistakenly parsed wrong. Thanks to John_z
