@@ -62,7 +62,7 @@ static int bouncedtimes = 0;
 
 struct CHLink chlbounce[MAXBOUNCE];
 int  chbounce = 0;
-static long opermode = 0;
+static short opermode = 0;
 aChannel *channel = NullChn;
 extern char backupbuf[];
 extern aCRline *crlines;
