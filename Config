@@ -87,7 +87,7 @@ BUFFERPOOL="(9 * MAXSENDQLENGTH)"
 NICKNAMEHISTORYLENGTH="2000"
 MAXCONNECTIONS="1024"
 SHOWOPERS="Yes"
-
+DEFPERM="0600"
 #
 # load $OPTIONS if present
 #
@@ -1319,6 +1319,27 @@ while [ -z "$FOO" ] ; do
 done
 DOMAINNAME=$cc
 
+FOO=""
+runonce=""
+while [ -z "$FOO" ] ; do
+    FOO="$DEFPERM"
+    echo ""
+    echo "What should the default permissions for your ircd.conf be? (Set this to 0 to disable)"
+    echo "It is strongly recommended that you use 0600 to prevent unwanted reading of the file"
+    echo $n "[$FOO] -> $c"
+    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+	read cc
+    else
+	cc=""
+	runonce=Yes
+    fi
+    if [ -z "$cc" ] ; then
+	cc=$FOO
+    fi
+done
+DEFPERM=$cc
+
+
 if [ -n "$OPENSSL" ] ; then
 FOO=""
 runonce=""
@@ -1821,7 +1842,11 @@ cat > $OPTIONS_H << __EOF__
 #define MAXCONNECTIONS $MAXCONNECTIONS
 #define NICKNAMEHISTORYLENGTH $NICKNAMEHISTORYLENGTH
 __EOF__
-
+if [ "$DEFPERM" != "0" ] ; then
+    echo "#define DEFAULT_PERMISSIONS $DEFPERM" >> $OPTIONS_H
+else
+    echo "#undef DEFAULT_PERMISSIONS" >> $OPTIONS_H
+fi
 if [ -n "$CRYPT_OPER_PASSWORD" ] ; then
     echo "#define CRYPT_OPER_PASSWORD 1" >> $OPTIONS_H
 else
@@ -1899,6 +1924,7 @@ MAXCONNECTIONS="$MAXCONNECTIONS"
 NICKNAMEHISTORYLENGTH="$NICKNAMEHISTORYLENGTH"
 HUB="$HUB"
 DOMAINNAME="$DOMAINNAME"
+DEFPERM="$DEFPERM"
 __EOF__
 
 if [ "$OSNAME" = "Linux (with GLIBC 2.x or greater)" ]; then

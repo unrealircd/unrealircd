@@ -1022,6 +1022,10 @@ int  InitwIRCD(argc, argv)
 	initwhowas();
 	initstats();
 	booted = FALSE;
+/* Hack to stop people from being able to read the config file */
+#if !defined(_WIN32) && !defined(_AMIGA) && defined(DEFAULT_PERMISSIONS)
+	chmod(CPATH,DEFAULT_PERMISSIONS);
+#endif
 	init_dynconf();
 	init_conf2(configfile);
 	validate_configuration();
