@@ -834,3 +834,4 @@ seen. gmtime warning still there
   bugreport fixes
 - HTTPd VFS fixes
 - Modified updconf to reflect the except socks -> except scan change
+- Fixed a typo in the win32 makefile
