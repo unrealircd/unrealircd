@@ -5616,11 +5616,9 @@ char *comment = "Rejoining because of user@host change";
 		if ((chptr->mode.mode & MODE_AUDITORIUM) &&
 		    !(tmp->flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP)))
 		{
-			if (MyClient(sptr))
-				sendto_one(sptr, ":%s PART %s :%s", sptr->name, chptr->chname, comment);
-			sendto_chanops_butone(sptr, chptr, ":%s PART %s :%s", sptr->name, chptr->chname, comment);
+			sendto_chanops_butone(sptr, chptr, ":%s!%s@%s PART %s :%s", sptr->name, sptr->user->username, GetHost(sptr), chptr->chname, comment);
 		} else
-			sendto_channel_butserv(chptr, sptr, ":%s PART %s :%s", sptr->name, chptr->chname, comment);
+			sendto_channel_butserv_butone(chptr, sptr, sptr, ":%s PART %s :%s", sptr->name, chptr->chname, comment);
 	}
 }
 
@@ -5645,29 +5643,10 @@ char flagbuf[8]; /* For holding "qohva" and "*~@%+" */
 		if ((chptr->mode.mode & MODE_AUDITORIUM) && 
 		    !(flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP)))
 		{
-			if (MyClient(sptr))
-				sendto_one(sptr, ":%s JOIN :%s", sptr->name, chptr->chname);
-			sendto_chanops_butone(sptr, chptr, ":%s JOIN :%s", sptr->name, chptr->chname);
+			sendto_chanops_butone(sptr, chptr, ":%s!%s@%s JOIN :%s", sptr->name, sptr->user->username, GetHost(sptr), chptr->chname);
 		} else
-			sendto_channel_butserv(chptr, sptr, ":%s JOIN :%s", sptr->name, chptr->chname);
+			sendto_channel_butserv_butone(chptr, sptr, sptr, ":%s JOIN :%s", sptr->name, chptr->chname);
 
-		if (MyClient(sptr))
-		{
-			/* Send names to the client.
-			 * Note: the strcpy'ing to a 2nd buffer might not be needed, but many
-			 * functions assume they can modify/frag the parameters at will,
-			 * better safe than sorry. -- Syzop
-			 */
-			char *xpara[3];
-			char nick[NICKLEN + 1];
-			char chan[CHANNELLEN + 1];
-			strcpy(nick, sptr->name);
-			strcpy(chan, chptr->chname);
-			xpara[0] = nick;
-			xpara[1] = chan;
-			xpara[3] = NULL;
-			(void)m_names(sptr, sptr, 2, xpara);
-		}
 		/* Set the modes (if any) */
 		if (flags)
 		{
@@ -5693,7 +5672,7 @@ char flagbuf[8]; /* For holding "qohva" and "*~@%+" */
 					if (i < n - 1)
 						strcat(parabuf, " ");
 				}
-				sendto_channel_butserv(chptr, &me, ":%s MODE %s +%s %s",
+				sendto_channel_butserv_butone(chptr, &me, sptr, ":%s MODE %s +%s %s",
 					me.name, chptr->chname, flagbuf, parabuf);
 			}
 		}

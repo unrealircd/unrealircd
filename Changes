@@ -2002,3 +2002,5 @@ seen. gmtime warning still there
 - Added set::anti-flood::away-count and set::anti-flood::away-period to control the away flood
   system.
 - Moved the "missing user in SJOIN" notice to snomask +j
+- Rewrote some of the set::allow-userhost-change code. Fixes (#000843) and (#0000791) reported
+  by |VIO|Maverick and Rocko
