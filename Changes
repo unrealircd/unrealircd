@@ -2431,3 +2431,4 @@ seen. gmtime warning still there
 - Added beta18 release notes (might be changed)
 - Added HOOKTYPE_REHASHFLAG (triggered when /rehash is passed a flag)
 - Fix for HOOKTYPE_REMOTE_QUIT (was called for local quits too)
+- Redid the join/kick/topic hooks

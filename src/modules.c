@@ -856,14 +856,14 @@ Hooktype *HooktypeAdd(Module *module, char *string, int *type) {
 	}
 	for (hooktype = Hooktypes, i = 0; hooktype->string; hooktype++, i++) ;
 
-	if (i >= 29)
+	if (i >= 39)
 	{
 		if (module)
 			module->errorcode = MODERR_NOSPACE;
 		return NULL;
 	}
 
-	Hooktypes[i].id = i+31;
+	Hooktypes[i].id = i+41;
 	Hooktypes[i].string = strdup(string);
 	parent = MyMallocEx(sizeof(ModuleChild));
 	parent->child = module;
@@ -875,7 +875,7 @@ Hooktype *HooktypeAdd(Module *module, char *string, int *type) {
 		module->errorcode = MODERR_NOERROR;
 	}
 	AddListItem(parent,Hooktypes[i].parents);
-	*type = i+31;
+	*type = i+41;
 	return &Hooktypes[i];
 }
 

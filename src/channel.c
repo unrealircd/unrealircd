@@ -3544,8 +3544,8 @@ CMD_FUNC(do_join)
 
 		if (MyConnect(sptr)) {
 			int breakit = 0;
-			for (global_i = Hooks[HOOKTYPE_LOCAL_JOIN]; global_i; global_i = global_i->next) {
-				if((*(global_i->func.intfunc))(cptr,sptr,chptr,parv) > 0) {
+			for (global_i = Hooks[HOOKTYPE_PRE_LOCAL_JOIN]; global_i; global_i = global_i->next) {
+				if((*(global_i->func.intfunc))(sptr,chptr,parv) > 0) {
 					breakit = 1;
 					break;
 				}
@@ -3557,6 +3557,7 @@ CMD_FUNC(do_join)
 					sub1_from_channel(chptr);
 				continue;
 			}
+			RunHook4(HOOKTYPE_LOCAL_JOIN, cptr, sptr,chptr,parv);
 		}
 
 		/*
@@ -4002,14 +4003,15 @@ CMD_FUNC(m_kick)
 			      attack:
 				if (MyConnect(sptr)) {
 					int breakit = 0;
-					for (global_i = Hooks[HOOKTYPE_LOCAL_KICK]; global_i; global_i = global_i->next) {
-						if((*(global_i->func.intfunc))(cptr,sptr,who,chptr,comment) > 0) {
+					for (global_i = Hooks[HOOKTYPE_PRE_LOCAL_KICK]; global_i; global_i = global_i->next) {
+						if((*(global_i->func.intfunc))(sptr,who,chptr,comment) > 0) {
 							breakit = 1;
 							break;
 						}
 					}
 					if (breakit)
 						continue;
+					RunHook5(HOOKTYPE_LOCAL_KICK, cptr,sptr,who,chptr,comment);
 				}
 				if (lp)
 				{
@@ -4213,12 +4215,13 @@ CMD_FUNC(m_topic)
 			if (MyClient(sptr))
 			{
 				Hook *tmphook;
-				for (tmphook = Hooks[HOOKTYPE_LOCAL_TOPIC]; tmphook; tmphook = tmphook->next) {
-					topic = (*(tmphook->func.pcharfunc))(cptr, sptr, chptr, topic);
+				for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_TOPIC]; tmphook; tmphook = tmphook->next) {
+					topic = (*(tmphook->func.pcharfunc))(sptr, chptr, topic);
 					if (!topic)
 						return 0;
 				}
-			}					
+				RunHook4(HOOKTYPE_LOCAL_TOPIC, cptr, sptr, chptr, topic);
+			}
 			/* setting a topic */
 			topiClen = strlen(topic);
 #ifndef TOPIC_NICK_IS_NUHOST

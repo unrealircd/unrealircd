@@ -23,7 +23,7 @@
 #define MOD_VERSION	"3.2-b5-1"
 #define MOD_WE_SUPPORT  "3.2-b5*"
 #define MAXCUSTOMHOOKS  30
-#define MAXHOOKTYPES	60
+#define MAXHOOKTYPES	70
 typedef void			(*vFP)();	/* Void function pointer */
 typedef int			(*iFP)();	/* Integer function pointer */
 typedef char			(*cFP)();	/* char * function pointer */
@@ -452,7 +452,10 @@ int CommandExists(char *name);
 #define HOOKTYPE_UNKUSER_QUIT 24
 #define HOOKTYPE_LOCAL_PASS 25
 #define HOOKTYPE_REMOTE_CONNECT 26
-#define HOOKTYPE_REMOTE_QUIT 26
+#define HOOKTYPE_REMOTE_QUIT 27
+#define HOOKTYPE_PRE_LOCAL_JOIN 28
+#define HOOKTYPE_PRE_LOCAL_KICK 29
+#define HOOKTYPE_PRE_LOCAL_TOPIC 30
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000
