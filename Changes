@@ -3082,3 +3082,5 @@ seen. gmtime warning still there
 - Made a note in example.conf about not using link::options::autoconnect for services
   (#0001674) suggested by fez
 - Fixed a typo in /credits
+- Fixed something if sptr->user->virthost was NULL (which is/should never be the case),
+  just to be sure... (#0001724).

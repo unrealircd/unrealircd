@@ -1849,7 +1849,7 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 					    hopcount, lastnick, username, realhost,
 					    (long)(sptr->srvptr->serv->numeric),
 					    servicestamp, umodes,
-						  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : virthost),
+						  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : (virthost ? virthost : "*")),
 						    info);
 				else
 					sendto_one(cptr,
@@ -1858,7 +1858,7 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 					    hopcount, lastnick, username, realhost,
 					    SupportNS(cptr) && sptr->srvptr->serv->numeric ? base64enc(sptr->srvptr->serv->numeric) : server,
 					    servicestamp, umodes,
-						  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : virthost),
+						  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : (virthost ? virthost : "*")),
 						    info);
 
 			}
