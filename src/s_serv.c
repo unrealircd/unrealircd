@@ -3897,32 +3897,11 @@ int  m_rehash(cptr, sptr, parc, parv)
 	{
 		if (*parv[1] == '-')
 		{
-			if (!strnicmp("-dcc", parv[1], 4))
-			{
-				sendto_one
-				    (":%s NOTICE %s :*** DCCdeny rehash is now done in the main /rehash",
-				   	me.name, sptr->name);
-				return 0;
-			}
-			if (!strnicmp("-dyn", parv[1], 4))
-			{
-				sendto_one
-				    (":%s NOTICE %s :*** Dynconf rehash is now done in the main /rehash",
-				   	me.name, sptr->name);
-				return 0;
-			}
 			if (!strnicmp("-gar", parv[1], 4))
 			{
 				if (!IsAdmin(sptr))
 					return 0;
 				loop.do_garbage_collect = 1;
-				return 0;
-			}
-			if (!strnicmp("-rest", parv[1], 5))
-			{
-				sendto_one
-				    (":%s NOTICE %s :*** Chrestrict rehash is now done in the main /rehash",
-				   	me.name, sptr->name);
 				return 0;
 			}
 			if (!_match("-o*motd", parv[1]))
@@ -3985,19 +3964,6 @@ int  m_rehash(cptr, sptr, parc, parv)
 
 				return 0;
 			}
-#ifdef OLD
-			if (!strnicmp("-vhos", parv[1], 5))
-			{
-				if (!IsAdmin(sptr))
-					return 0;
-				sendto_ops
-				    ("%sRehashing vhost configuration on request of %s",
-				    cptr != sptr ? "Remotely " : "",
-				    sptr->name);
-				vhost_rehash();
-				return 0;
-			}
-#endif
 		}
 	}
 	else

@@ -353,3 +353,4 @@
 - Added #define HOOKTYPE_LOCAL_NICKCHANGE
 - Made MyMalloc be MyMallocEx in codemastr's log {} code. Fixes junk pointer
   problem - discovered by sts/Morbid
+- Removed the old /rehash flags, reported by Morbid
