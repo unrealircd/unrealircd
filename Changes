@@ -868,7 +868,7 @@ seen. gmtime warning still there
 - Added headers to all the new modules
 - Fixed a typo in config.h
 - Final changes to prepare for beta3
-- Fixed some bugreport stuff
+v- Fixed some bugreport stuff
 - Fixed codemastr-on-crack bug regarding oflag
 - Fixed a win32 bug where the http scanner didn't get loaded
 - Hopefully fixed the weird Z:line bug on win32?
@@ -1102,3 +1102,5 @@ seen. gmtime warning still there
   segfaults
 - Fixed res.c not managing to pass the proper type of parameter to inet_ntoa ONCE
 - Lots of commands were using MAXPARA when they shouldnt have been
+- passworded allow{} in example.conf doesnt match anyone anymore
+- Fixed oper{} locop stuff

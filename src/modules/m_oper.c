@@ -67,7 +67,7 @@ static oper_oflag_t oper_oflags[] = {
 		"is now a co administrator (C)" },
 	{ OFLAG_ISGLOBAL,	&UMODE_OPER,		&oper_host,
 		"is now an operator (O)" },
-	{ 0,			&UMODE_LOCOP,		&locop_host,
+	{ 0xFFFFFFFF,		&UMODE_LOCOP,		&locop_host,
 		"is now a local operator (o)" },
 	{ OFLAG_HELPOP,		&UMODE_HELPOP,		0 ,
 		0 },
