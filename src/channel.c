@@ -3463,9 +3463,9 @@ CMD_FUNC(m_kick)
 						    chptr->chname, who->name, comment);
 						goto attack;
 					}	/* is_chan_op */
-				if (is_chanprot(who, chptr)
+				if ((is_chanprot(who, chptr)
 				    || is_chanowner(who, chptr)
-				    || IsServices(who)) {
+				    || IsServices(who)) && !is_chanowner(sptr, chptr)) {
 					if (IsNetAdmin(sptr))
 					{	/* IRCop kicking owner/prot */
 						sendto_snomask(SNO_EYES,

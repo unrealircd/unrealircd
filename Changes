@@ -1683,3 +1683,5 @@ seen. gmtime warning still there
   need to perform configuration tests. This is currently only implimented for dynamic linking
 - Made the same system work under static linking. This (barring any bugs) should be the
   completion of conf3. :)
+- Fixed a bug where chmode +q users could not kick chmode +a users. (#0000459) reported by
+  jollino.
