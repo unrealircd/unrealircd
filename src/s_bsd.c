@@ -1801,11 +1801,13 @@ int  read_message(time_t delay, fdlist *listp)
 			 */
 			ClearBlocked(cptr);
 			if (IsConnecting(cptr))
+#ifdef USE_SSL
 				if ((cptr->serv) && (cptr->serv->conf->options & CONNECT_SSL))
 				{
 					write_err = ircd_SSL_client_handshake(cptr);
 				}
 				else
+#endif
 					write_err = completed_connection(cptr);
 			if (!write_err)
 			{

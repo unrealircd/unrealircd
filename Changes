@@ -1412,3 +1412,5 @@ seen. gmtime warning still there
   most text files, ie .RELEASE.NOTES becomes RELEASE.NOTES.txt
 - Updated .RELEASE.NOTES
 - Fixed a bug where /who always reported 0 hops reported by Alzirr (#0000242)
+- More SSL horror and fixed a missing , in m_who
+- Fixed !SSL compile error
