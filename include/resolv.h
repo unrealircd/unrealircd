@@ -150,19 +150,19 @@ struct __res_state {
 typedef enum { res_goahead, res_nextns, res_modified, res_done, res_error }
 	res_sendhookact;
 
-typedef res_sendhookact (*res_send_qhook)__P((struct SOCKADDR_IN * const *ns,
+typedef res_sendhookact (*res_send_qhook)(struct SOCKADDR_IN * const *ns,
 					      const u_char **query,
 					      int *querylen,
 					      u_char *ans,
 					      int anssiz,
-					      int *resplen));
+					      int *resplen);
 
-typedef res_sendhookact (*res_send_rhook)__P((const struct SOCKADDR_IN *ns,
+typedef res_sendhookact (*res_send_rhook)(const struct SOCKADDR_IN *ns,
 					      const u_char *query,
 					      int querylen,
 					      u_char *ans,
 					      int anssiz,
-					      int *resplen));
+					      int *resplen);
 #endif
 
 struct res_sym {

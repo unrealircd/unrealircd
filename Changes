@@ -424,3 +424,4 @@
 - Added /rehash -all patch by NiQuiL
 - res.c: fixed ircsprintf problems
 - Fixed ircd_log to work in windows
+- Removed __P, windows doesn't like it, and only old compilers need it

@@ -102,18 +102,18 @@ static char rcsid[] = "$Id$";
 #if defined(NEXT)
 #  define NI_PATH_RESCONF "/locations/resolver"
 #  define NI_TIMEOUT 10
-static int ircd_netinfo_res_init __P((int *haveenv, int *havesearch));
+static int ircd_netinfo_res_init(int *haveenv, int *havesearch);
 #endif
 
-static void ircd_res_setoptions __P((char *, char *));
+static void ircd_res_setoptions(char *, char *);
 
 #ifdef RESOLVSORT
 static const char sort_mask[] = "/&";
 #define ISSORTMASK(ch) (strchr(sort_mask, ch) != NULL)
 #ifdef INET6
-static u_int32_t ircd_net_mask __P((struct in_addr));
+static u_int32_t ircd_net_mask(struct in_addr);
 #else
-static u_int32_t ircd_net_mask __P((struct in_addr));
+static u_int32_t ircd_net_mask(struct in_addr);
 #endif
 #endif
 

@@ -75,17 +75,17 @@ static char rcsid[] = "$Id$";
 #include "resolv.h"
 #include <string.h>
 
-static int ns_name_ntop __P((const u_char *, char *, size_t));
-static int ns_name_pton __P((const char *, u_char *, size_t));
-static int ns_name_unpack __P((const u_char *, const u_char *,
-    const u_char *, u_char *, size_t));
-static int ns_name_pack __P((const u_char *, u_char *, int,
-    const u_char **, const u_char **));
-static int ns_name_uncompress __P((const u_char *, const u_char *,
-    const u_char *, char *, size_t));
-static int ns_name_compress __P((const char *, u_char *, size_t,
-    const u_char **, const u_char **));
-static int ns_name_skip __P((const u_char **, const u_char *));
+static int ns_name_ntop(const u_char *, char *, size_t);
+static int ns_name_pton(const char *, u_char *, size_t);
+static int ns_name_unpack(const u_char *, const u_char *,
+    const u_char *, u_char *, size_t);
+static int ns_name_pack(const u_char *, u_char *, int,
+    const u_char **, const u_char **);
+static int ns_name_uncompress(const u_char *, const u_char *,
+    const u_char *, char *, size_t);
+static int ns_name_compress(const char *, u_char *, size_t,
+    const u_char **, const u_char **);
+static int ns_name_skip(const u_char **, const u_char *);
 
 /*
  * Expand compressed domain name 'comp_dn' to full domain name.
@@ -283,20 +283,12 @@ u_int32_t ircd_getlong(msgp)
 }
 
 void
-#if __STDC__
 ircd__putshort(register u_int16_t s, register u_char *msgp)	/* must match proto */
-#else
-ircd__putshort(s, msgp)
-	register u_int16_t s;
-	register u_char *msgp;
-#endif
 {
 	PUTSHORT(s, msgp);
 }
 
-void ircd__putlong(l, msgp)
-	register u_int32_t l;
-	register u_char *msgp;
+void ircd__putlong(register u_int32_t l,register u_char *msgp)
 {
 	PUTLONG(l, msgp);
 }
@@ -343,10 +335,10 @@ static char digits[] = "0123456789";
 
 /* Forward. */
 
-static int special __P((int));
-static int printable __P((int));
-static int dn_find __P((const u_char *, const u_char *,
-    const u_char *const *, const u_char *const *));
+static int special(int);
+static int printable(int);
+static int dn_find(const u_char *, const u_char *,
+    const u_char *const *, const u_char *const *);
 
 /* Public. */
 
