@@ -772,3 +772,4 @@
 - Some clarifications on /RESTART, remote restarts were well never supported, so the docs
   are now updated on that (no code changes).
 ** internal 3.2.3-pre4 release **
+- Corrected small doc typo in unreal32docs, reported by arbiter.
