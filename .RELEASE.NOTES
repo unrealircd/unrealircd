@@ -37,6 +37,8 @@ Unreal3.2-Selene (BETA1) RELEASE NOTES
 
 * We got limited IPv6 support, and there are some minor bugs in it. 
 
+* The documentation is NOT yet 100% complete
+
 * THIS IS A BETA VERSION. THINGS MAY NOT WORK. REPORT ANY BUGS TO THESE 
   ADDRESSES:
    * coders@lists.unrealircd.org and bugs@lists.unrealircd.org
