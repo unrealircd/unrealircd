@@ -2272,3 +2272,4 @@ seen. gmtime warning still there
 - Made /restart work under Windows in NT service mode.
 - Fixed a documentation typo (#0001027) reported by Soldier007
 - Fixed a bunch of logging problems reported by LRL (#0001034).
+- Fixed a problem with a fix for +b/+e reported by AngryWolf (#0001117)

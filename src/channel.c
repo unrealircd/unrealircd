@@ -2407,6 +2407,8 @@ char *pretty_mask(char *mask)
 char *trim_str(char *str, int len)
 {
 	int l;
+	if (!str)
+		return NULL;
 	if ((l = strlen(str)) > len)
 	{
 		str += l - len;
