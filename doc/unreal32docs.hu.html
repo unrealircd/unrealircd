@@ -129,7 +129,7 @@ Hungarian |
   ---A.3. <a href="#regexrep">Ismétlõ operátorok</a><br>
   ---A.4. <a href="#regexbracket">Zárójeles kifejezések</a><br>
   ---A.5. <a href="#regexassert">Tesztek</a><br>
-  ---A.6. <a href="#regexalt">Vagylagosság</a><br>
+  ---A.6. <a href="#regexalt">Vagylagolás</a><br>
   ---A.7. <a href="#regexsub">Alkifejezések</a><br>
   ---A.8. <a href="#regexbackref">Hivatkozások</a><br>
   ---A.9. <a href="#regexcase">Kis-nagybetû érzékenység</a><br>
@@ -3298,7 +3298,7 @@ Nagyon sokan nem is törõdnek a biztonsággal, egészen addíg, amíg bajba nem kerül
 <div class="desc"><p>Reguláris kifejezéseket sok helyen használunk az Unrealben, beleértve a csúnyaszavakat, spamszûrõket és álparancsokat. Ezek segítségével nagyon összetett mintaillesztést tudunk végezni. Néha "regexp"-ként vagy "regex"-ként hivatkozunk rájuk. Az Unreal a TRE reguláris kifejezés könyvtárat használja a regexeihez. Ez a rutinkönyvtár néhány nagyon összetett és haladó kifejezést is támogat, ami zavaró lehet. Az alábbi információk segítenek megérteni, hogyan mûködnek a regexek. Ha szakmaibb és részletesebb információk érdekelnek az Unreal által használt regexp szintaktikával kapcsolatban, látogassunk el a <a href="http://www.laurikari.net/tre/syntax.html" target="_new">TRE honlapjára</a>.</p></div>
 
 <p><font size="+2"><b>A.1 Konstansok<a name="regexlit"></a></b></font></p>
-<div class="desc"><p>A konstansok a regexp legegyszerûbb elemei. Alapvetõen ezek olyan karaktek, amelyeket egyszerû szövegként kezelünk. Például a "test" minta négy konstansból, a "t", "e", "s" és "t" karakterekbõl áll. Az Unrealben a konstansok a kis- és nagybetûkre nem érzékenyek, ezért az elõzõ regex illeszkedik a "test"-re valamint a "TEST"-re is. Minden karakter, ami nem "metakarakter" (avagy különleges jelentésû karakter; ezeket a következõ szekciókban tárgyaljuk), konstansként lesz kezelve. Egy karaktert határozottan konstanssá is tehetsz a visszaper (\) jellel. Például a pont (.) egy metakarakter. Ha szeretnénk a mintánkba belevenni egy konstans pontot, használjuk a \. karakterkombinációt, és az Unreal ezt pontként (írásjelként) fogja kezelni. Az is lehetséges, hogy egy olyan karaktert akarsz vizsgálni, ami nem írható be könnyen, mondjuk az ASCII kódú 3-as karakter (szín). Inkább, mint hogy egy IRC klienst kelljen használnunk ennek a karakternek az elkészítéséhez, használhatunk egy különleges karaktersorozatot, a "\x"-et. Ha beírjuk, hogy \x3, úgy lesz értelmezve, hogy õ 3-as ASCII karakter. A \x utáni szám hexadecimális ábrázolású, és "\x0"-tól "\xFF"-ig terjedhet.</p></div>
+<div class="desc"><p>A konstansok a regexp legegyszerûbb elemei. Alapvetõen ezek olyan karaktek, amelyeket egyszerû szövegként kezelünk. Például a "teszt" minta öt konstansból, a "t", "e", "s", "z" és "t" karakterekbõl áll. Az Unrealben a konstansok a kis- és nagybetûkre nem érzékenyek, ezért az elõzõ regex illeszkedik a "teszt"-re valamint a "TESZT"-re is. Minden karakter, ami nem "metakarakter" (avagy különleges jelentésû karakter; ezeket a következõ szekciókban tárgyaljuk), konstansként lesz kezelve. Egy karaktert határozottan konstanssá is tehetsz a visszaper (\) jellel. Például a pont (.) egy metakarakter. Ha szeretnénk a mintánkba belevenni egy konstans pontot, használjuk a \. karakterkombinációt, és az Unreal ezt pontként (írásjelként) fogja kezelni. Az is lehetséges, hogy egy olyan karaktert akarsz vizsgálni, ami nem írható be könnyen, mondjuk az ASCII kódú 3-as karakter (szín). Inkább, mint hogy egy IRC klienst kelljen használnunk ennek a karakternek az elkészítéséhez, használhatunk egy különleges karaktersorozatot, a "\x"-et. Ha beírjuk, hogy \x3, úgy lesz értelmezve, hogy õ 3-as ASCII karakter. A \x utáni szám hexadecimális ábrázolású, és "\x0"-tól "\xFF"-ig terjedhet.</p></div>
 
 <p><font size="+2"><b>A.2 A pont operátor<a name="regexdot"></a></b></font></p>
 <div class="desc"><p>A pont (.) operátort "akármilyen karakter" illesztésére használjuk. Egyetlen karakterre illeszkedik, aminek bármilyen értéke van. Például az "a.c" regex illeszkedik a "abc"-re, "adc"-re stb. Viszont nem fog illeszkedni az "abd"-re, mert az "a" és "c" konstansok, amelyeknek pontosan kell illeszkedniük.</p></div>
@@ -3343,27 +3343,27 @@ Hogy mégjobban leegyszerûsítsük a dolgokat, számos "karakterosztály" van, amiket
 Egy fontos dolog, amit meg kell jegyezni a karakterosztályokról, hogy CSAK egyedül állhatnak a zárójeles kifejezésben. Például az [:isdigit:-] NEM érvényes. Ehelyett ugyanezt a célt elérheted a kifejezések beágyazásával, például a "[0-9-]"-et karakterosztály használatával úgy írhatjuk, hogy "[[:isdigit:]-]".
 <p>
 A zárójeles kifejezés utolsó sajátossága a negálás. Néha hasznos, hogy azt mondhassuk, "bármilyen karaktert, csak ezeket ne". Például ha azt szeretnénk ellenõrizni, hogy a karakter "nem betû", egyszerûbb felsorolni az "a-z"-t, és azt mondani, "ne ezeket", mintsem felsorolni mindezeket a nem betûket. A zárójeles kifejezések lehetõvé teszik ennek a kezelését negálás útján. Azzal negáljuk a kifejezést, hogy megadunk egy "^" jelet elsõ karakterként. Például az "[^a-z]" minden nem betûre illeszkedik. Úgy, ahogy a kötõjellel is, ha konstans ^ jelet szeretnénk a kifejezésbe tenni, ne az elsõ pozícióba rakjuk: "[a-z^]". Karakterosztályt is negálhatunk, ehhez szintén beágyazást kell használnunk; az "[^[:isdigit:]]" minden nem számjegy karakterre illeszkedik.</p></div>
-<p><font size="+2"><b>A.5 Assertions<a name="regexassert"></a></b></font></p>
-<div class="desc">Assertions allow you to test for certain conditions that are not representable by character strings, as well as providing shortcuts for some common bracket expressions.
+<p><font size="+2"><b>A.5 Tesztek<a name="regexassert"></a></b></font></p>
+<div class="desc">A tesztek (assertions) olyan feltételek vizsgálatára adnak lehetõséget, amelyek nem ábrázolhatók karaktersorozatokkal, valamint rövidítést adnak néhány gyakori zárójeles kifejezéshez.
 <p>
-The ^ character is referred to as the "left anchor." This character matches the beginning of a string. If you simply specify a regex such as "test", it will match, for example "this is a test" since that string contains "test." But, sometimes it is useful to ensure that the string actually starts with the pattern. This can be done with ^. For example "^test" means that the text must start with "test." Additionally, the $ character is the "right anchor." This character matches the end of the string. So if you were to do "^test$", then the string must be exactly the word "test."
+A ^ karakterre úgy hivatkozunk, hogy õ a "bal horgony". Ez a karakter egy karaktersorozat elejére illeszkedik. Ha egyszerûen olyan regexet adunk meg, mint a "teszt", illeszkedni fog például az "ez egy teszt"-re, mivel ez a karaktersorozat tartalmaz "teszt"-et. Viszont néha hasznos, hogy biztosíthassuk, a karaktersorozat ténylegesen a mintával kezdõdik. Ezt a ^ segítségével tehetjük meg. Például a "^teszt" azt jelenti, hogy a szövegnek "teszt"-tel kell kezdõdnie. Továbbá a $ karakter a "jobb horgony". Ez a karakter a karaktersorozat végére illeszkedik. Így ha azt írjuk, hogy "^test$", akkor a karaktersorozatnak pontosan a "teszt" szónak kell lennie.
 <p>
-Similar tests also exist for words. All of the other assertions are specified using a \ followed by a specific character. For example, to test for the beginning and ending of a word, you can use \< and \> respectively. 
+Hasonló ellenõrzések léteznek szavakra is. Minden más tesztet egy \ jellel és az azt követõ meghatározott karakterrel adunk meg. Például egy szó elejének és végének ellenõrzésére sorban a \< és \> karakterkombinációkat használhatjuk. 
 <p>
-The remaining assertions all come with two forms, a positive and a negative. These assertions are listed below:
+A többi teszt mindegyike két alakkal is rendelkezik: egy állítóval és egy tagadóval. Ezek a tesztek az alábbiak:
 <ul>
-<li><tt>\b</tt> - Word boundary
-<li><tt>\B</tt> - Non-word boundary
-<li><tt>\d</tt> - Digit character (equivalent to <tt>[[:digit:]]</tt>)</li>
-<li><tt>\D</tt> - Non-digit character (equivalent to <tt>[^[:digit:]]</tt>)</li>
-<li><tt>\s</tt> - Space character (equivalent to <tt>[[:space:]]</tt>)</li>
-<li><tt>\S</tt> - Non-space character (equivalent to <tt>[^[:space:]]</tt>)</li>
-<li><tt>\w</tt> - Word character (equivalent to <tt>[[:alnum:]_]</tt>)</li>
-<li><tt>\W</tt> - Non-word character (equivalent to <tt>[^[:alnum:]_]</tt>)</li>
+<li><tt>\b</tt> - Szóhatár
+<li><tt>\B</tt> - Nem szóhatár
+<li><tt>\d</tt> - Számjegy karakter (azonos a <tt>[[:digit:]]</tt>-tel)</li>
+<li><tt>\D</tt> - Nem számjegy karakter (azonos a <tt>[^[:digit:]]</tt>-tel)</li>
+<li><tt>\s</tt> - Szóköz karakter (azonos a <tt>[[:space:]]</tt>-szel)</li>
+<li><tt>\S</tt> - Nem szóköz karakter (azonos a <tt>[^[:space:]]</tt>-szel)</li>
+<li><tt>\w</tt> - Szó karakter (azonos az <tt>[[:alnum:]_]</tt>-mal)</li>
+<li><tt>\W</tt> - Nem szó karakter (azonos az <tt>[^[:alnum:]_]</tt>-mal)</li>
 </ul>
 </div>
-<p><font size="+2"><b>A.6 Alternation<a name="regexalt"></a></b></font></p>
-<div class="desc">Alternation is a method of saying "or." The alternation operator is the vertical bar (|). For example, if you wanted to say "a or b" you could do "a|b". For normal letters, this could be replaced by a bracket expression, but alternation can also be used with subexpressions (discussed in the next section).
+<p><font size="+2"><b>A.6 Vagylagolás<a name="regexalt"></a></b></font></p>
+<div class="desc">A vagylagolás (alternation) egy módja annak, hogy "vagy"-ot mondjunk. A vagylagoló operátor a függõleges vonás (|). Például ha azt akarjuk mondani, hogy "a vagy b", azt írhatjuk, "a|b". Közönséges betûk esetében ez helyettesíthetõ egy zárójeles kifejezéssel, de vagylagolást alkifejezésekkel együtt is használhatunk (amiket a következõ szekcióban tárgyalunk).
 </div>
 <p><font size="+2"><b>A.7 Subexpressions<a name="regexsub"></a></b></font></p>
 <div class="desc">Subexpressions are a portion of of a regex that is treated as a single entity. There are two ways to create a subexpression. The two methods differ with regard to "back references," which will be explained later. To declare a subexpression that uses back references, simply enclose it in parentheses (). To create a subexpression that does not use back references, replace the open-parenthesis with, "(?:". For example, "([a-z])" and "(?:[a-z])". The reason subexpressions are useful is you can then apply operators to the expression. All of the repetition operators, for example, that were mentioned as "X or more of the previous character," can also be used for "X or more of the previous subexpression." For example, if you have a regex of "[0-9][a-z][0-9]", to match a digit, followed by a letter, followed by a digit, and then you decided you wanted to match this sequence twice. Normally, you would do, "[0-9][a-z][0-9][0-9][a-z][0-9]". With subexpressions, however, you can simply do "([0-9][a-z][0-9]){2}".</div>
