@@ -164,7 +164,7 @@ unsigned int hash_whowas_name(char *name)
 void clear_client_hash_table()
 {
 	char hashcheck[] = {85, 110, 114, 101, 97, 108, 0};
-	if (!strcmp(BASE_VERSION, hashcheck))
+	if (strcmp(BASE_VERSION, hashcheck))
 		abort();
 
 	memset((char *)clientTable, '\0', sizeof(aHashEntry) * U_MAX);
