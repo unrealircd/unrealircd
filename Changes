@@ -1061,3 +1061,4 @@ seen. gmtime warning still there
 - Fixed problem with EventDel, doing eventptr instead of eventptr->name
 - Fixed bug #0000019 reported by Syzop, and bug found by same to deal with
   individual module loading
+- Fix for svsnoop symdep problem

@@ -60,6 +60,7 @@ extern int SVSNOOP;
 
 static Mod_SymbolDepTable modsymdep[] = {
 	MOD_Dep(SVSNOOP, xSVSNOOP, "src/modules/m_oper.so")
+	NULL
 	};
 
 #ifndef DYNAMIC_LINKING
