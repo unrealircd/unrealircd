@@ -114,7 +114,7 @@ char  *Module_Load (char *path_, int load)
 	char 		*path;
 	ModuleHeader    *mod_header;
 	int		ret = 0;
-	Module          *mod = NULL, **Mod_Handle = NULL;
+	Module          *mod = NULL, *Mod_Handle = NULL;
 	Debug((DEBUG_DEBUG, "Attempting to load module from %s",
 	       path_));
 	path = path_;

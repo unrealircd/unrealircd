@@ -1186,3 +1186,5 @@ v- Fixed some bugreport stuff
 - Added extras/m_rawto.c - 3rd party module. Fixed some documentation
 - Added andi's OpenBSD fix for the symbol issue with prefix _
 - Added SJOIN fix so it won't accept NULL channels
+- Fixed a problem with Mod_Handler being **, found by andi
+
