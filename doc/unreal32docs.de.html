@@ -27,7 +27,7 @@
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2.2-CVS </font><br>
-  <b>Letztes Dokumentation Update:</b>          2001-1-29</div>
+  <b>Letztes Dokumentation Update:</b>           2001-2-13</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
 <b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
@@ -729,7 +729,9 @@ Gegenwärtig gibt es folgende Typen:
     <td width="25" valign="top">~c</td>
     <td width="54" valign="top">Channel</td>
     <td width="758">Wenn der User in diesem Channel ist, kann er nicht joinen.
-      Beispiel: <i> ~c:#lamers</i></td>
+      Beispiel: <i> ~c:#lamers. </i>Es kann hier auch ein Prefix (+/%/@/&amp;/~)
+      angegeben werden, wodurch erreicht wird, dass dies nur für User mit
+      diesem oder höheren Rechten im angegebenen Channel Auswirkungen hat. <i>Beispiel: +b ~c:#lamers, +e ~c:@#trusted</i></td>
   </tr>
   <tr>
     <td width="25" valign="top">~r</td>
@@ -906,12 +908,12 @@ angegeben werden)</td>
   <tr>
     <td width="74" valign="top"><b>[tkltime]</b></td>
     <td colspan="4" width="871">Die Zeitdauer, die für eine durch den Filter
-      gesetzte Line gilt. Um den Default zu benutzen oder zum Übergehen (z.B. wenn action = 'block'),
+      gesetzte *line/shun gilt. Um den Default zu benutzen oder zum Übergehen (z.B. wenn action = 'block'),
       lediglich ein '-' eintragen,</td>
   </tr>
   <tr>
     <td width="74" valign="top"><b>[reason]</b></td>
-    <td colspan="4" width="871">Der anzuzeigende Grund für Block- oder *lines
+    <td colspan="4" width="871">Der anzuzeigende Grund für Block- oder *lines/shun
       Befehle. Man kann hier KEINE Leerzeichen eintragen, aber Unterstriche
       ('_') werden zur Laufzeit in Leerzeichen umgesetzt. Ein doppelter
       Underscore ('__') erzeugt einen Underscore ('_') in der Ausgabe. Auch hier
@@ -962,10 +964,10 @@ Beispiel:
 <br>
 <b>
 set::spamfilter::ban-time</b> ermöglicht die Festlegung einer Default Bann
-Dauer für *lines die durch den Spamfilter gesetzt wurden (default: 1 Tag)<br>
+Dauer für *lines/shuns, die durch den Spamfilter gesetzt wurden (default: 1 Tag)<br>
 <b>
 set::spamfilter::ban-reason</b> ermöglicht die Festlegung eines Grundes für
-die *lines (Default: 'Spam/advertising'). Mehrere Worte sind durch Underscores
+die *lines/shuns (Default: 'Spam/advertising'). Mehrere Worte sind durch Underscores
 (&quot;_&quot;) und nicht durch Leerzeichen zu trennen.<br>
 <b>set::spamfilter::virus-help-channel</b> ermöglicht die Angabe eines
 Channels, in den bei der Action 'viruschan' gejoined wird (Default: #help)<br>
@@ -1736,7 +1738,7 @@ loadmodule &quot;modules/cloak.dll&quot;;</pre>
 </pre></div>
 <p><font class="block_section"><a name="logblock">4.11 - </a> </font><a name="logblock"><font class="block_name">Log Block</font>
 </a>
-   <font class="block_optional">OPTIONAL</font><div class="desc">
+<font class="block_optional">RECOMMENDED</font><div class="desc">
 <p>Syntax:
 <pre>log &lt;file-name&gt; {
 	maxsize &lt;max-file-size&gt;;
@@ -2647,7 +2649,7 @@ Aktionen (z.B.: 'gline') kann <a href="#feature_spamfilter">hier</a> nachgelesen
 angezeigt wird. Der Text ist in Anführungszeichen anzugeben und sollte - anders
 als beim /spamfilter Befehl - keinerlei Undersores &quot;_&quot; zwischen den
 Worten enthalten (andernfalls werden die Underscores mit angezeigt).<br>
-<b>ban-time</b> ist optional und legt die Zeit für einen *line Bann fest. Ohne
+<b>ban-time</b> ist optional und legt die Zeit für einen *line/shun Bann fest. Ohne
 Angabe gilt der Default von 1 Tag.<br>
 <br>
 Beispiele:
@@ -2876,6 +2878,11 @@ Stellt den Namen des Servers ein, auf dem die Stats laufen. Die Angabe kann
 ausgelassen werden, wenn man keine Stats laufen hat.</p>
 <p><font class="set">set::help-channel &lt;network-help-channel&gt;;</font><br>
 Legt den Namen des Hilfe Channels in diesem Netzwerk fest.</p>
+<p><font class="set">set::allowed-characters&nbsp;</font></p>
+<p><font class="set">set::allowed-characters { &lt;list>; };<br>
+</font>Liste von Zeichen (Sprachen!), die in Nicks akzeptiert werden.
+Gegenwärtig möglich sind: german, french, dutch, spanish (Deutsch,
+Französisch, Niederländisch, Spanisch).</p>
 <p><font class="set">set::cloak-keys { &lt;"key1">; &lt;"key2">; &lt;"key3">; };</font><br>
 Stellt die Verschlüsselungs Keys ein, die für die Erstellung eines +x Host
 erforderlich sind. Diese Einstellung muss auf allen Servern identisch sein,
@@ -2971,12 +2978,10 @@ Definiert man in 'ban version' eine Aktion, wie zline/gline/etc, dann kann man
 hier die Dauer des Banns auf die IP in Sekunden angeben. Default ist 86400 (1
 Tag).</p> 
 <p><b>set::spamfilter::ban-time &lt;value&gt;</b><br>
-Genauso, wie oben, aber für&nbsp; *lines, die durch den Spam Filter gesetzt
+Genauso, wie oben, aber für&nbsp; *lines/shuns, die durch den Spam Filter gesetzt
 wurden.</p> 
 <p><b>set::spamfilter::ban-reason &lt;reason&gt;</b><br>
-Anzuzeigender Grund bei&nbsp; *lines, die durch den Spam Filter gesetzt wurden.
-Mehrere Worte sind durch Underscores (&quot;_&quot;) und nicht durch Leerzeichen
-zu trennen.</p>  
+Grund, der bei Einträgen durch /spamfilter gesetzt wird.</p>  
 <p><b>set::spamfilter::virus-help-channel &lt;channel&gt;</b><br>
 Festlegung des Channels für die Aktion 'viruschan'&nbsp; in Spamfilter</p>   
 <p><b>set::spamfilter::virus-help-channel-deny &lt;yes|no&gt;</b><br>
