@@ -76,7 +76,7 @@ typedef struct _configitem_class ConfigItem_class;
 typedef struct _configitem_oper ConfigItem_oper;
 typedef struct _configitem_drpass ConfigItem_drpass;
 typedef struct _configitem_ulines ConfigItem_ulines;
-
+typedef struct _configitem_tld ConfigItem_tld;
 typedef struct Notify aNotify;
 typedef struct Client aClient;
 typedef struct Channel aChannel;
@@ -987,6 +987,15 @@ struct _configitem_ulines {
 	ConfigItem       *prev;
 	ConfigItem       *next;
 	char 		 *servername;
+};
+
+struct _configitem_tld {
+	ConfigFlag 	flag;
+	ConfigItem 	*prev;
+	ConfigItem	*next;
+	char 		*mask;
+	char		*motd;
+	char		*rules;
 };
 
 /*

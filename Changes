@@ -51,3 +51,4 @@
 - Removed parser builtin directive include, and replaced it with our own
 - The config2 now uses strerror() to display an error, rather than the numeric
 - Fixed s_user.c so umode N and T cannot coexist
+- Added tld (T:line) to the config code

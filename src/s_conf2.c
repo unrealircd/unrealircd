@@ -58,7 +58,7 @@ int	_conf_class	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_drpass	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_ulines	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_include	(ConfigFile *conf, ConfigEntry *ce);
-
+int	_conf_tld	(ConfigFile *conf, ConfigEntry *ce);
 extern int conf_debuglevel;
 
 static ConfigCommand _ConfigCommands[] = {
@@ -69,6 +69,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "drpass", 	_conf_drpass },
 	{ "ulines", 	_conf_ulines },
 	{ "include", 	_conf_include },
+	{ "tld",	_conf_tld },
 	{ NULL, 	NULL  }
 };
 
@@ -91,6 +92,7 @@ ConfigItem_class 	*conf_class = NULL;
 ConfigItem_admin 	*conf_admin = NULL;
 ConfigItem_drpass	*conf_drpass = NULL;
 ConfigItem_ulines	*conf_ulines = NULL;
+ConfigItem_tld		*conf_tld = NULL;
 /*
  * MyMalloc with the only difference that it clears the memory too
  * -Stskeeps
@@ -884,4 +886,46 @@ int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
 				 cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 				 cep->ce_varname);
 	}
+}
+
+int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	ConfigItem_tld *ca;
+
+	ca = MyMallocEx(sizeof(ConfigItem_tld));
+        for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+		{
+			config_error("%s:%i: blank tld item",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum);
+			continue;
+		}
+		if (!cep->ce_vardata)
+		{
+			config_error("%s:%i: missing parameter in tld::%s",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				cep->ce_varname);
+			continue;
+		}
+		
+		if (strcmp(cep->ce_varname, "mask")) {
+			ca->mask = strdup(cep->ce_vardata);
+		}
+		else if (strcmp(cep->ce_varname, "motd")) {
+			ca->motd = strdup(cep->ce_vardata);
+		}
+		else if (strcmp(cep->ce_varname, "rules")) {
+			ca->rules = strdup(cep->ce_vardata);
+		}
+		else
+		{
+			config_error("%s:%i: unknown directive tld::%s",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				cep->ce_varname); 
+		}
+	}
+	add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_tld);
 }
