@@ -94,10 +94,13 @@ void	scan_dummy_scan(HStruct *h)
 	IRCMutexLock(HSlock);
 	strcpy(host, h->host);
 	IRCMutexUnlock(HSlock);
-	IRCMutexLock(VSlock);
-	IRCMutexUnlock(VSlock);
 
-	/* Indicate we don't use that structure anymore */
+	/* Do testing, etc, and find that we need to ban the creep */
+	IRCMutexLock(VSlock);
+	/* Uncomment: VS_add(host, "why it was banned"); */
+	IRCMutexUnlock(VSlock);
+exituniverse:
+	/* Not scanning anymore */
 	IRCMutexLock(HSlock);
 	h->refcnt--;
 	IRCMutexUnlock(HSlock);

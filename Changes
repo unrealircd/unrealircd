@@ -557,4 +557,4 @@ seen. gmtime warning still there
   found by Andrew Church
 - Unknown ban * {}, except * {}, deny * {}, allow * {} are accessible to modules
 - Fixed some scan_socks problems - this needs a good hand with
-  
+- Fixed up scan_dummy.c
