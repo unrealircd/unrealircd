@@ -173,3 +173,5 @@
 - Made /trace work again properly with class names
 - Made /sqline /unsqline work again.
 - Made SQLINE synching work with newconf
+- Fixed a little problem with SERVER servername :info crashing the ircd
+  Long live the Floridan way of counting

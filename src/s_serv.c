@@ -601,7 +601,7 @@ int  m_server(cptr, sptr, parc, parv)
 	/*
 	 *  We do some parameter checks now. We want atleast upto serverinfo now 
 	 */
-	if (parc < 3 || (!*parv[3]))
+	if (parc < 4 || (!*parv[3]))
 	{
 		sendto_one(sptr, "ERROR :Not enough SERVER parameters");
 		return 0;
