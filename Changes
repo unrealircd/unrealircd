@@ -968,3 +968,4 @@ seen. gmtime warning still there
   a Q:line.
 - Added HOOKTYPE_SERVER_CONNECT and HOOKTYPE_SERVER_QUIT for when servers connect and
   disconnect respectively
+- Added module v3 code. Needs testing, and NO MODULES DOES NOT COMPILE

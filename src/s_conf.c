@@ -1249,7 +1249,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 	HANDLE hFind;
 	WIN32_FIND_DATA FindData;
 #endif
-
+	char *ret;
 	if (!ce->ce_vardata)
 	{
 		config_status("%s:%i: loadmodule without filename",
@@ -1270,10 +1270,10 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 		return -1;
 	}	
 	for (i = 0; i < files.gl_pathc; i++) {
-		if (load_module(files.gl_pathv[i],0) != 1) {
-			config_status("%s:%i: loadmodule %s: failed to load",
+		if ((ret = Module_Load(files.gl_pathv[i],0))) {
+			config_status("%s:%i: loadmodule %s: failed to load: %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				files.gl_pathv[i]);
+				files.gl_pathv[i], ret);
 		}
 	}
 	globfree(&files);
@@ -1286,23 +1286,23 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 		FindClose(hFind);
 		return -1;
 	}
-	if (load_module(FindData.cFileName,0) != 1) {
-			config_status("%s:%i: loadmodule %s: failed to load",
+	if ((ret = Module_Load(FindData.cFileName,0))) {
+			config_status("%s:%i: loadmodule %s: failed to load: %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				FindData.cFileName);
+				FindData.cFileName), ret);
 	}
 	while (FindNextFile(hFind, &FindData) != 0) {
-		if (load_module(FindData.cFileName,0) != 1) 
-			config_status("%s:%i: loadmodule %s: failed to load",
+		if (((ret = Module_Load(FindData.cFileName,0)))) 
+			config_status("%s:%i: loadmodule %s: failed to load: %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				FindData.cFileName);
+				FindData.cFileName, ret);
 	}
 	FindClose(hFind);
 #else
-	if (load_module(ce->ce_vardata,0) != 1) {
-			config_status("%s:%i: loadmodule %s: failed to load",
+	if ((ret = Module_Load(ce->ce_vardata,0)))) {
+			config_status("%s:%i: loadmodule %s: failed to load: %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				ce->ce_vardata);
+				ce->ce_vardata, ret);
 				return -1;
 	}
 #endif

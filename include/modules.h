@@ -19,10 +19,9 @@
  *   $Id$
  */
 
-#define MOD_VERSION	2
-#define MAXMODULES	50
+#define MOD_VERSION	"3.2-b5-1"
+#define MOD_WE_SUPPORT  "3.2-b5*"
 #define MAXHOOKTYPES	20
-
 
 #if defined(_WIN32) && !defined(STATIC_LINKING)
 #define DLLFUNC	_declspec(dllexport)
@@ -38,33 +37,63 @@
 #define DLLFUNC 
 #endif
 
-#ifndef STATIC_LINKING
-#define SymD(name, container,module) {#name, (vFP *) &container, module}
-#else
-#define SymD(name, container,module) {(void *)&name, (vFP *) &container}
-#endif
-
-typedef struct moduleInfo 	ModuleInfo;
-typedef struct msymboltable	MSymbolTable;
 typedef void			(*vFP)();	/* Void function pointer */
 typedef int			(*iFP)();	/* Integer function pointer */
 typedef char			(*cFP)();	/* char * function pointer */
 
-struct moduleInfo
+/*
+ * For resolving symbols 
+ * Look further down for definition of the structure
+ */
+typedef struct _mod_symboltable Mod_SymbolDepTable;
+
+/*
+ * Module header that every module must include, with the name of
+ * mod_header
+*/
+
+typedef struct _ModuleHeader {
+	char	*name;
+	char	*version;
+	char	*description;
+	char	*modversion;
+	Mod_SymbolDepTable *symdep;
+} ModuleHeader;
+
+/*
+ * One piece of Borg ass..
+*/
+typedef struct _Module Module;
+
+typedef struct _ModuleChild
 {
-	short	mversion;	/* Written for module header version */
-	char	*name;		/* Name of module */
-	char	*version;	/* $Id$ */
-	char	*description;   /* Small description */
+	struct _ModuleChild *prev, *next; 
+	Module *child; /* Aww. aint it cute? */
+} ModuleChild;
+
+/*
+ * What we use to keep track internally of the modules
+*/
+
+struct _Module
+{
+	struct _Module *prev, *next;
+	ModuleHeader    *header; /* The module's header */
 #ifdef _WIN32
 	HMODULE dll;		/* Return value of LoadLibrary */
 #else
 	void	*dll;		/* Return value of dlopen */
-#endif
-	void	(*unload)();	/* pointer to mod_unload */
+#endif	
+	unsigned char flags;    /* 8-bits for flags .. */
+	ModuleChild *children;
 };
 
-struct msymboltable
+
+/*
+ * Symbol table
+*/
+
+struct _mod_symboltable
 {
 #ifndef STATIC_LINKING
 	char	*symbol;
@@ -77,16 +106,22 @@ struct msymboltable
 #endif
 };
 
-extern ModuleInfo	*module_buffer;
+#ifndef STATIC_LINKING
+#define MOD_Dep(name, container,module) {#name, (vFP *) &container, module}
+#else
+#define MOD_Dep(name, container,module) {(void *)&name, (vFP *) &container}
+#endif
+
+
 extern Hook		*Hooks[MAXHOOKTYPES];
 extern Hook		*global_i;
 
-void 	module_init(void);
-int  	load_module(char *module, int module_load);
-int	unload_module(char *name);
-vFP	module_sym(char *name);
-
-
+void    Module_Init(void);
+char    *Module_Load(char *path, int load);
+int     Module_Unload(char *name, int unload);
+vFP     Module_Sym(char *name);
+vFP     Module_SymX(char *name, Module **mptr);
+int	Module_free(Module *mod);
 
 #define add_Hook(hooktype, func) HookAddEx(hooktype, func, NULL)
 #define del_Hook(hooktype, func) HookDelEx(hooktype, func, NULL)
@@ -122,4 +157,9 @@ void	HookDelEx(int hooktype, int (*intfunc)(), void (*voidfunc)());
 /* Module flags */
 #define MODFLAG_NONE	0x0000
 #define MODFLAG_LOADED	0x0001 /* (mod_load has been called and suceeded) */
+
+/* Module function return values */
+#define MOD_SUCCESS 1
+#define MOD_FAILED -1
+#define MOD_DELAY 2
 
