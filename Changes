@@ -449,3 +449,5 @@
 - Updated the Donation file
 - Added a 'B' flag to /who output for bots, and allowed normal users to /who +m B
   (#0002096) suggested by White_Magic
+- Added support for using \\ in the config file to indicate a \ (#0002178) reported by
+  TimeFX

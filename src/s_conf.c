@@ -1122,11 +1122,15 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				start = ++ptr;
 				for(;*ptr;ptr++)
 				{
-					if ((*ptr == '\\') && (*(ptr+1) == '\"'))
+					if ((*ptr == '\\'))
 					{
-						char *tptr = ptr;
-						while((*tptr = *(tptr+1)))
-							tptr++;
+					
+						if (*(ptr+1) == '\\' || *(ptr+1) == '\"')
+						{
+							char *tptr = ptr;
+							while((*tptr = *(tptr+1)))
+								tptr++;
+						}
 					}
 					else if ((*ptr == '\"') || (*ptr == '\n'))
 						break;
