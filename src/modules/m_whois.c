@@ -35,6 +35,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -81,6 +82,7 @@ int    m_whois_Init(int module_load)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_WHOIS, TOK_WHOIS, m_whois, MAXPARA);
+	return MOD_SUCCESS;
 }
 
 /* Is first run when server is 100% ready */
@@ -90,6 +92,7 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_whois_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 
@@ -105,6 +108,7 @@ int	m_whois_Unload(int module_unload)
 		sendto_realops("Failed to delete commands when unloading %s",
 				m_whois_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 
 
@@ -165,7 +169,7 @@ DLLFUNC int  m_whois(cptr, sptr, parc, parv)
 		if (wilds)
 			continue;
 
-		if (acptr = find_client(nick, NULL))
+		if ((acptr = find_client(nick, NULL)))
 		{
 			if (IsServer(acptr))
 				continue;

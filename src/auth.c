@@ -154,8 +154,6 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 	X509 *x509_client = NULL;
 	FILE *key_file = NULL;
 #endif
-	int	i = 0; /* We can always use this .. */
-	
 	if (!as)
 		return 1;
 		
@@ -260,6 +258,7 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 			return 2;	
 #endif
 	}
+	return -1;
 }
 
 char	*Auth_Make(short type, char *para)
@@ -278,7 +277,6 @@ char	*Auth_Make(short type, char *para)
 #ifdef  AUTHENABLE_SHA1
         SHA_CTX sha1_ctx;
 #endif
-        int i;
 
 	switch (type)
 	{

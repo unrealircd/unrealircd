@@ -23,6 +23,7 @@
 #include "sys.h"
 #include "h.h"
 #include <signal.h>
+#include "inet.h"
 #ifndef _WIN32
 extern int errno;		/* ...seems that errno.h doesn't define this everywhere */
 #endif
@@ -205,11 +206,11 @@ char	*Inet_si2p(struct SOCKADDR_IN *sin)
 
 char	*Inet_ia2p(struct IN_ADDR *ia)
 {
-	static char buf[256]; 
 #ifndef INET6
 	return ((char *)inet_ntoa(*ia));
 #else
 	/* Hack to make proper addresses */
+	static char buf[256]; 
 	u_char	*cp;
 	
 	cp = (u_char *)((struct IN_ADDR *)ia)->s6_addr;

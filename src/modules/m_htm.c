@@ -35,6 +35,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -298,12 +299,12 @@ DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 
 
-
 #else
 	sendto_one(sptr,
 	    ":%s NOTICE %s :*** High traffic mode and fdlists are not enabled on this server",
 	    me.name, sptr->name);
 #endif
+	return 0;
 }
 
 #ifndef NO_FDLIST

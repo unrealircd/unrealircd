@@ -122,6 +122,7 @@ DLLFUNC int	Mod_Load(int module_load)
 int    scan_http_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 
@@ -133,6 +134,7 @@ int	scan_http_Unload(int module_unload)
 #endif
 {
 	HookDel(HttpScanHost);
+	return MOD_SUCCESS;
 }
 
 #define HICHAR(s)	(((unsigned short) s) >> 8)
@@ -179,13 +181,12 @@ void	scan_http_scan_port(HSStruct *z)
 {
 	Scan_AddrStruct		*h = z->hs;
 	int			retval;
+#ifdef INET6
 	unsigned char			*cp;
+#endif
 	struct			SOCKADDR_IN sin;
-	struct			in_addr ia4;
 	SOCKET			fd;
 	unsigned char		httpbuf[160];
-	int			sinlen = sizeof(struct SOCKADDR_IN);
-	unsigned long   	theip;
 	fd_set			rfds;
 	struct timeval  	tv;
 	int			len;
@@ -269,15 +270,13 @@ void	scan_http_scan_port(HSStruct *z)
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
-	if (retval = select(fd + 1, &rfds, NULL, NULL, &tv))
+	if ((retval = select(fd + 1, &rfds, NULL, NULL, &tv)))
 	{
 		/* There's data in the jar. Let's read it */
 		len = recv(fd, httpbuf, 13, 0);
 		CLOSE_SOCK(fd);
 		if (len < 4)
-		{
 			goto exituniverse;
-		}
 		if (!strncmp(httpbuf, "HTTP/1.0 200", 12))
 		{
 			/* Gotcha */

@@ -35,6 +35,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -180,10 +181,10 @@ DLLFUNC int  m_nospoof(cptr, sptr, parc, parv)
 	int  parc;
 	char *parv[];
 {
-	unsigned long result;
 Debug((DEBUG_NOTICE, "NOSPOOF"));
 
 #ifdef NOSPOOF
+	unsigned long result;
 	if (IsNotSpoof(cptr))
 		return 0;
 	if (IsRegistered(cptr))

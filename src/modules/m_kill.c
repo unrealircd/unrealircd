@@ -35,6 +35,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -226,8 +227,6 @@ DLLFUNC int  m_kill(cptr, sptr, parc, parv)
 			    parv[0], parv[1]);
 			return 0;
 		}
-	      aftermath:
-
 		/* From here on, the kill is probably going to be successful. */
 
 		kcount++;
@@ -252,7 +251,7 @@ DLLFUNC int  m_kill(cptr, sptr, parc, parv)
 			strcpy(inpath,
 			    IsHidden(cptr) ? cptr->user->virthost : cptr->user->
 			    realhost);
-			if (kcount < 2)	/* Only check the path the first time
+			if (kcount < 2) {	/* Only check the path the first time
 					   around, or it gets appended to itself. */
 				if (!BadPtr(path))
 				{
@@ -263,6 +262,7 @@ DLLFUNC int  m_kill(cptr, sptr, parc, parv)
 				}
 				else
 					path = cptr->name;
+			}
 		}
 		else if (BadPtr(path))
 			path = "*no-path*";	/* Bogus server sending??? */

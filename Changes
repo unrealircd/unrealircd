@@ -1149,3 +1149,5 @@ v- Fixed some bugreport stuff
   and flag_del(char) for modules to add to flags string. -Sts
 - Removed -win32 postfix for wircds, look in /version for "W" instead
 - Removed ircnetwork part of /version
+- Cleaned up a bunch of -Wall warnings (unused variables, etc)
+

@@ -35,6 +35,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -122,7 +123,7 @@ DLLFUNC int m_unsqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	sendto_serv_butone_token(cptr, parv[0], MSG_UNSQLINE, TOK_UNSQLINE,
 	    "%s", parv[1]);
 
-	if (bconf = Find_banEx(parv[1], CONF_BAN_NICK, CONF_BAN_TYPE_AKILL))
+	if ((bconf = Find_banEx(parv[1], CONF_BAN_NICK, CONF_BAN_TYPE_AKILL)))
 	{
 		DelListItem(bconf, conf_ban);
 		if (bconf->mask)

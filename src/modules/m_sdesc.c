@@ -36,6 +36,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -154,4 +155,5 @@ int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	sendto_ops("Server description for %s is now '%s' changed by %s",
 	    sptr->srvptr->name, sptr->srvptr->info, parv[0]);
+	return 0;
 }

@@ -65,7 +65,6 @@ static long opermode = 0;
 aChannel *channel = NullChn;
 extern char backupbuf[];
 extern ircstats IRCstats;
-extern char *StripColors(char *);
 
 #ifndef NO_FDLIST
 extern int lifesux;
@@ -716,7 +715,6 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 {
 	Membership *lp;
 	int  member;
-	static char tempbuf[1500];
 	/* 
 	 * #0000053 by |savage|, speedup 
 	*/
@@ -2172,7 +2170,7 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
 {
 	char *curchr;
 	u_int what = MODE_ADD;
-	long modetype;
+	long modetype = 0;
 	int  paracount;
 #ifdef DEVELOP
 	char *tmpo = NULL;
@@ -2260,6 +2258,7 @@ int  sendmodeto_one(aClient *cptr, char *from, char *name, char *mode, char *par
 	else
 		sendto_one(cptr, ":%s %s %s %s %s", from,
 		    (IsToken(cptr) ? TOK_MODE : MSG_MODE), name, mode, param);
+	return 0;
 }
 
 char *pretty_mask(char *mask)
@@ -2674,7 +2673,7 @@ int channel_link(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr,
 		    ":%s %s %s :*** Couldn't join %s ! - Link setting was too bouncy",
 		    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, parv[1]);
-		return;
+		return 0;
 	}
 	for (i = 0, name = strtoken(&p, parv[1], ","); name;
 	    name = strtoken(&p, NULL, ","))
@@ -2777,7 +2776,7 @@ int channel_link(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 		i1 = 0;
 		if (chptr == NULL)
-			return;
+			return 0;
 
 		if (!chptr ||
 		    (MyConnect(sptr)
@@ -2873,7 +2872,7 @@ int  m_cycle(cptr, sptr, parc, parv)
         (void)m_part(cptr, sptr, 3, parv);
 	parv[1] = channels;
         parv[2] = NULL;
-        (void)m_join(cptr, sptr, 2, parv);
+	return m_join(cptr, sptr, 2, parv);
 }
 
 
@@ -3244,7 +3243,7 @@ int m_part(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						sendto_channel_ntadmins(sptr, chptr, ":%s PART %s :%s",
 						    sptr->name, chptr->chname, comment);
 				}
-				if (MyClient(sptr))
+				if (MyClient(sptr)) {
 					/* awful hack .. */
 					if (parc < 3)
 						sendto_one(sptr,
@@ -3264,6 +3263,7 @@ int m_part(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						    sptr->user->virthost :
 						    sptr->user->realhost),
 						    chptr->chname, comment);
+				}
 			}
 			else if (chptr->mode.mode & MODE_AUDITORIUM)
 			{
@@ -3350,7 +3350,7 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	aChannel *chptr;
 	int  chasing = 0;
 	char *comment, *name, *p = NULL, *user, *p2 = NULL;
-	Membership *lp, *lp2;
+	Membership *lp;
 
 
    /*	sptr->flags &= ~FLAGS_TS8;  */
@@ -3427,8 +3427,8 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				}
 
 				if (IsOper(sptr))
-					if (!is_chan_op(sptr, chptr)
-					    && !is_halfop(sptr, chptr)
+					if ((!is_chan_op(sptr, chptr)
+					    && !is_halfop(sptr, chptr))
 					    || (is_halfop(sptr, chptr)
 					    && is_chan_op(who, chptr)))
 					{
@@ -3441,7 +3441,7 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					}	/* is_chan_op */
 				if (is_chanprot(who, chptr)
 				    || is_chanowner(who, chptr)
-				    || IsServices(who))
+				    || IsServices(who)) {
 					if (IsNetAdmin(sptr))
 					{	/* IRCop kicking owner/prot */
 						sendto_snomask(SNO_EYES,
@@ -3461,6 +3461,7 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						goto deny;
 						continue;
 					}	/* chanprot/chanowner */
+				}
 				if (is_chan_op(who, chptr)
 				    && is_halfop(sptr, chptr)
 				    && !is_chan_op(sptr, chptr)
@@ -3593,7 +3594,7 @@ int m_topic(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    (chptr->mode.mode & MODE_ADMONLY && !IsAdmin(sptr) && !IsMember(sptr, chptr)) ||
 			    (is_banned(sptr,sptr,chptr) && !IsAnOper(sptr) && !IsMember(sptr, chptr))) {
 				sendto_one(sptr, err_str(ERR_NOTONCHANNEL), me.name, parv[0], name);
-				return;
+				return 0;
 			}
 			if (!chptr->topic)
 				sendto_one(sptr, rpl_str(RPL_NOTOPIC),
@@ -3650,8 +3651,8 @@ int m_topic(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			}
 		}
 		else if (((chptr->mode.mode & MODE_TOPICLIMIT) == 0 ||
-		    is_chan_op(sptr, chptr)) || IsOper(sptr)
-		    || IsULine(sptr) || is_halfop(sptr, chptr) && topic)
+		    (is_chan_op(sptr, chptr)) || IsOper(sptr)
+		    || IsULine(sptr) || is_halfop(sptr, chptr)) && topic)
 		{
 			/* setting a topic */
 			if (IsOper(sptr) && !(is_halfop(sptr, chptr)
@@ -4022,6 +4023,7 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 		remove_user_from_channel(sptr, chptr);
 		return 1;
 	}
+	return 0;
 }
 
 /* Originally from bahamut, modified a bit for Unreal by codemastr
@@ -4655,12 +4657,12 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	Membership *lp2;
 	aParv *ap;
 	int  ts, oldts, pcount, x, y, z, i, f;
-	unsigned short b,c;
+	unsigned short b=0,c;
 	Mode oldmode;
 	char *t, *bp, *tp, *p = NULL;
 	 char *s0 = NULL;
 	long modeflags;
-	Ban *ban=  NULL;
+	Ban *ban=NULL;
 	if (IsClient(sptr) || parc < 3 || !IsServer(sptr))
 		return 0;
 
@@ -4731,8 +4733,6 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		/* remove our modes if any */
 		if (modebuf[1] != '\0')
 		{
-			int  b;
-			Ban *ban;
 
 			ap = mp2parv(modebuf, parabuf);
 			set_mode(chptr, cptr, ap->parc, ap->parv, &pcount,

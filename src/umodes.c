@@ -88,7 +88,7 @@ void	umode_init(void)
 	}
 	Usermode_highest = 0;
 	/* Set up modes */
-	UMODE_INVISIBLE = umode_get('i'); /*  0x0001	/* makes user invisible */
+	UMODE_INVISIBLE = umode_get('i'); /*  0x0001	 makes user invisible */
 	UMODE_OPER = umode_get('o');      /*  0x0002	 Operator */
 	UMODE_WALLOP = umode_get('w');    /*  0x0004	 send wallops to them */
 	UMODE_FAILOP = umode_get('g');    /*  0x0008	 Shows some global messages */

@@ -49,7 +49,6 @@ int  parse_help(sptr, name, help)
 	char *name;
 	char *help;
 {
-	int  i;
 	ConfigItem_help *helpitem;
 	aMotd *text;
 	if (BadPtr(help))

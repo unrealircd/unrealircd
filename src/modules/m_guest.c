@@ -44,7 +44,9 @@
 #endif
 
 DLLFUNC int m_guest(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+#ifdef GUEST
 static Hook *GuestHook = NULL;
+#endif
 /* Place includes here */
 #ifdef DYNAMIC_LINKING
 Module *Mod_Handle = NULL;
@@ -121,14 +123,15 @@ char guestnick[NICKLEN];
 char *param[2];
 
 randnum = 1+(int) (99999.0*rand()/(RAND_MAX+10000.0));
-snprintf(guestnick, NICKLEN, "Guest%li", randnum);
+snprintf(guestnick, NICKLEN, "Guest%d", randnum);
 
 while(find_client(guestnick, (aClient *)NULL))
 { 
 randnum = 1+(int) (99999.0*rand()/(RAND_MAX+10000.0));
-snprintf(guestnick, NICKLEN, "Guest%li", randnum);
+snprintf(guestnick, NICKLEN, "Guest%d", randnum);
 }
 param[0] = sptr->name;
 param[1] = guestnick;
 m_nick(sptr,cptr,2,param);
+	return 0;
 }

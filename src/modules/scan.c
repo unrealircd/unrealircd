@@ -28,6 +28,7 @@
 #include "numeric.h"
 #include "msg.h"
 #include "channel.h"
+#include "inet.h"
 #include <time.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -217,7 +218,7 @@ EVENT(e_scannings_clean)
 EVENT(e_scan_ban)
 {
 	Scan_Result *sr = (Scan_Result *) data;
-	char hostip[128], mo[100], mo2[100], reason[256];
+	char hostip[128], mo[100], mo2[100];
 	char *tkllayer[9] = {
 		me.name,	/*0  server.name */
 		"+",		/*1  +|- */
@@ -267,7 +268,6 @@ DLLFUNC int h_scan_connect(aClient *sptr)
 {
 	Scan_AddrStruct *sr = NULL;
 	Hook		*hook = NULL;
-	vFP		*vfp;
 	THREAD		thread;
 	THREAD_ATTR	thread_attr;
 	

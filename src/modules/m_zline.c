@@ -35,6 +35,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -79,6 +80,7 @@ int    m_zline_Init(int module_load)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_ZLINE, TOK_ZLINE, m_zline, 2);
+	return MOD_SUCCESS;
 }
 
 /* Is first run when server is 100% ready */
@@ -88,6 +90,7 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_zline_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 
@@ -103,6 +106,7 @@ int	m_zline_Unload(int module_unload)
 		sendto_realops("Failed to delete commands when unloading %s",
 				m_zline_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 
 
@@ -116,7 +120,7 @@ int	m_zline_Unload(int module_unload)
 DLLFUNC int m_zline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char userhost[512 + 2] = "", *in;
-	int  uline = 0, i = 0, propo = 0;
+	int  uline = 0, propo = 0;
 	char *reason, *mask, *server, *person;
 	aClient *acptr;
 	ConfigItem_ban *bconf;
@@ -162,7 +166,7 @@ DLLFUNC int m_zline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return -1;
 	}
 
-	if (acptr = find_client(parv[1], NULL))
+	if ((acptr = find_client(parv[1], NULL)))
 	{
 		strcpy(userhost, inetntoa((char *)&acptr->ip));
 		person = &acptr->name[0];
@@ -273,4 +277,5 @@ propo_label:
 		    reason ? reason : "");
 
 	check_pings(TStime(), 1);
+	return 0;
 }

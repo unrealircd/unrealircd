@@ -119,6 +119,7 @@ DLLFUNC int	Mod_Load(int module_load)
 int    scan_socks_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 
@@ -130,6 +131,7 @@ int	scan_socks_Unload(int module_unload)
 #endif
 {
 	HookDel(SocksScanHost);
+	return MOD_SUCCESS;
 }
 
 #define HICHAR(s)	(((unsigned short) s) >> 8)
@@ -158,12 +160,13 @@ void scan_socks_scan(Scan_AddrStruct *h)
 void	scan_socks4_scan(Scan_AddrStruct *h)
 {
 	int			retval;
+#ifdef INET6
 	unsigned char		*cp;
+#endif
 	struct			SOCKADDR_IN sin;
 	struct			in_addr ia4;
 	SOCKET			fd;
 	unsigned char		socksbuf[10];
-	int			sinlen = sizeof(struct SOCKADDR_IN);
 	unsigned long   	theip;
 	fd_set			rfds;
 	struct timeval  	tv;
@@ -261,7 +264,7 @@ void	scan_socks4_scan(Scan_AddrStruct *h)
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
-	if (retval = select(fd + 1, &rfds, NULL, NULL, &tv))
+	if ((retval = select(fd + 1, &rfds, NULL, NULL, &tv)))
 	{
 		/* There's data in the jar. Let's read it */
 		len = recv(fd, socksbuf, 9, 0);
@@ -294,11 +297,12 @@ exituniverse:
 void	scan_socks5_scan(Scan_AddrStruct *h)
 {
 	int			retval;
+#ifdef INET6
 	unsigned char			*cp;
+#endif
 	struct			SOCKADDR_IN sin;
 	struct			in_addr ia4;
 	SOCKET			fd;
-	int			sinlen = sizeof(struct SOCKADDR_IN);
 	unsigned long   	theip;
 	fd_set			rfds;
 	struct timeval  	tv;
@@ -388,7 +392,7 @@ void	scan_socks5_scan(Scan_AddrStruct *h)
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
-	if (retval = select(fd + 1, &rfds, NULL, NULL, &tv))
+	if ((retval = select(fd + 1, &rfds, NULL, NULL, &tv)))
 	{
 		/* There's data in the jar. Let's read it */
 		len = recv(fd, socksbuf, 2, 0);
@@ -423,7 +427,7 @@ void	scan_socks5_scan(Scan_AddrStruct *h)
 	/* Now we wait for data. 10 secs ought to be enough  */
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
-	if (retval = select(fd + 1, &rfds, NULL, NULL, &tv))
+	if ((retval = select(fd + 1, &rfds, NULL, NULL, &tv)))
 	{
 		/* There's data in the jar. Let's read it */
 		len = recv(fd, socksbuf, 2, 0);

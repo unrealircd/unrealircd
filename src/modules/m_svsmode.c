@@ -38,6 +38,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -273,6 +274,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_serv_butone(NULL, ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf);
 		*parabuf = 0;
 	}
+	return 0;
 }
 
 /*

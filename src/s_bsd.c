@@ -166,7 +166,6 @@ void add_local_client(aClient* cptr)
 
 void remove_local_client(aClient* cptr)
 {
-	short i;
 
 	if (LastSlot < 0)
 	{

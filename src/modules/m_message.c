@@ -35,6 +35,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -42,7 +43,7 @@
 #include "version.h"
 #endif
 
-static is_silenced PROTO((aClient *, aClient *));
+static int is_silenced PROTO((aClient *, aClient *));
 
 DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice);
 DLLFUNC int  m_notice(aClient *cptr, aClient *sptr, int parc, char *parv[]);

@@ -43,6 +43,7 @@ Computing Center and Jarkko Oikarinen";
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -94,7 +95,7 @@ long set_usermode(char *umode)
 {
 	int  newumode;
 	int  what;
-	char **p, *m;
+	char *m;
 	int i;
 
 	newumode = 0;
@@ -456,7 +457,7 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 	{
 		sptr->since += TARGET_DELAY; /* lag them up */
 		sptr->nexttarget += TARGET_DELAY;
-		sendto_one(err_str(ERR_TARGETTOOFAST), me.name, sptr->name,
+		sendto_one(sptr, err_str(ERR_TARGETTOOFAST), me.name, sptr->name,
 			name);
 
 		return 1;
@@ -717,7 +718,7 @@ extern int register_user(cptr, sptr, nick, username, umode, virthost)
 	char *nick, *username, *virthost, *umode;
 {
 	ConfigItem_ban *bconf;
-	char *parv[3], *tmpstr, *encr;
+	char *parv[3], *tmpstr;
 #ifdef HOSTILENAME
 	char stripuser[USERLEN + 1], *u1 = stripuser, *u2, olduser[USERLEN + 1],
 	    userbad[USERLEN * 2 + 1], *ubad = userbad, noident = 0;
@@ -726,8 +727,7 @@ extern int register_user(cptr, sptr, nick, username, umode, virthost)
 	anUser *user = sptr->user;
 	aClient *nsptr;
 	int  i;
-	char mo[256], mo2[256];
-	char *tmpx;
+	char mo[256];
 	char *tkllayer[9] = {
 		me.name,	/*0  server.name */
 		"+",		/*1  +|- */
@@ -1103,7 +1103,7 @@ int  m_nick(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	ConfigItem_ban *aconf;
-	aClient *acptr, *serv;
+	aClient *acptr, *serv = NULL;
 	aClient *acptrs;
 	char nick[NICKLEN + 2], *s;
 	Membership *mp;
@@ -1173,7 +1173,7 @@ int  m_nick(cptr, sptr, parc, parv)
 	 */
 	if (IsServer(cptr) &&
 	    (parc > 7
-	    && (!(serv = (aClient *)find_server_b64_or_real(parv[6], NULL))
+	    && (!(serv = (aClient *)find_server_b64_or_real(parv[6]))
 	    || serv->from != cptr->from)))
 	{
 		sendto_realops("Cannot find server %s (%s)", parv[6],
@@ -1615,8 +1615,8 @@ int  m_nick(cptr, sptr, parc, parv)
 		 */
 		if (mycmp(parv[0], nick) ||
 		    /* Next line can be removed when all upgraded  --Run */
-		    !MyClient(sptr) && parc > 2
-		    && TS2ts(parv[2]) < sptr->lastnick)
+		    (!MyClient(sptr) && parc > 2
+		    && TS2ts(parv[2]) < sptr->lastnick))
 			sptr->lastnick = (MyClient(sptr)
 			    || parc < 3) ? TStime() : TS2ts(parv[2]);
 		if (sptr->lastnick < 0)
@@ -2043,7 +2043,7 @@ int  m_ison(cptr, sptr, parc, parv)
 #endif
 	for (s = strtoken(&p, *++pav, " "); s; s = strtoken(&p, NULL, " "))
 	{
-		if (user = index(s, '!'))
+		if ((user = index(s, '!')))
 			*user++ = '\0';
 		if ((acptr = find_person(s, NULL)))
 		{
@@ -2108,11 +2108,11 @@ void set_snomask(aClient *sptr, char *snomask) {
  */
 int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	int  flag;
+	int  flag = 0;
 	int  i;
 	char **p, *m;
 	aClient *acptr;
-	int  what, setflags, setsnomask;
+	int  what, setflags, setsnomask = 0;
 	short rpterror = 0;
 
 	what = MODE_ADD;
@@ -2451,7 +2451,7 @@ int  m_umode2(cptr, sptr, parc, parv)
 
 	if (!parv[1])
 		return 0;
-	m_umode(cptr, sptr, parv[3] ? 4 : 3, xparv);
+	return m_umode(cptr, sptr, parv[3] ? 4 : 3, xparv);
 }
 
 
@@ -2526,7 +2526,7 @@ void send_umode_out(cptr, sptr, old)
 
 	for (i = LastSlot; i >= 0; i--)
 		if ((acptr = local[i]) && IsServer(acptr) &&
-		    (acptr != cptr) && (acptr != sptr) && *buf)
+		    (acptr != cptr) && (acptr != sptr) && *buf) {
 			if (!SupportUMODE2(acptr))
 			{
 				sendto_one(acptr, ":%s MODE %s :%s",
@@ -2539,6 +2539,7 @@ void send_umode_out(cptr, sptr, old)
 				    (IsToken(acptr) ? TOK_UMODE2 : MSG_UMODE2),
 				    buf);
 			}
+		}
 	if (cptr && MyClient(cptr))
 		send_umode(cptr, sptr, old, ALL_UMODES, buf);
 

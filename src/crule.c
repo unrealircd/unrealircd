@@ -38,6 +38,7 @@
 #include "common.h"
 #include "sys.h"
 #include "h.h"
+#include <string.h>
 
 char *collapse PROTO((char *pattern));
 extern aClient *client, *local[];
@@ -375,16 +376,19 @@ char *crule_parse(rule)
 	crule_treeptr ruleroot = NULL;
 	int  errcode = CR_NOERR;
 
-	if ((errcode = crule_gettoken(&next_tok, &ruleptr)) == CR_NOERR)
+	if ((errcode = crule_gettoken(&next_tok, &ruleptr)) == CR_NOERR) {
 		if ((errcode = crule_parseorexpr(&ruleroot, &next_tok,
-		    &ruleptr)) == CR_NOERR)
-			if (ruleroot != NULL)
+		    &ruleptr)) == CR_NOERR) {
+			if (ruleroot != NULL) {
 				if (next_tok == CR_END)
 					return ((char *)ruleroot);
 				else
 					errcode = CR_UNEXPCTTOK;
+			}
 			else
 				errcode = CR_EXPCTOR;
+		}
+	}
 	if (ruleroot != NULL)
 		crule_free((char **)&ruleroot);
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)

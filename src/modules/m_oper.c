@@ -35,6 +35,8 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
+#include "inet.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -155,8 +157,7 @@ extern int  SVSNOOP;
 DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	ConfigItem_oper *aconf;
 	ConfigItem_oper_from *oper_from;
-	char *name, *password, *encr, nuhhost[NICKLEN+USERLEN+HOSTLEN+6], nuhhost2[NICKLEN+USERLEN+HOSTLEN+6];
-	unsigned long oper_type = 0;
+	char *name, *password, nuhhost[NICKLEN+USERLEN+HOSTLEN+6], nuhhost2[NICKLEN+USERLEN+HOSTLEN+6];
 	char* host = 0;
 	int i = 0, j = 0;
 	char* announce = 0;
@@ -210,7 +211,6 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	if (i > 1)
 	{
 		int  old = (sptr->umodes & ALL_UMODES);
-		char *s;
 
 		/* Put in the right class */
 		if (sptr->class)

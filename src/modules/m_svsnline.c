@@ -38,6 +38,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -187,7 +188,7 @@ DLLFUNC int m_svsnline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  if (parc < 3)
 			  return 0;
 		  
-		  if (bconf = Find_banEx(parv[3], CONF_BAN_REALNAME, CONF_BAN_TYPE_AKILL))
+		  if ((bconf = Find_banEx(parv[3], CONF_BAN_REALNAME, CONF_BAN_TYPE_AKILL)))
 		  {
 		  	DelListItem(bconf, conf_ban);
 		  	
@@ -214,5 +215,5 @@ DLLFUNC int m_svsnline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	  }
 
 	}
-
+	return 0;
 }

@@ -98,7 +98,7 @@ void free();
 
 extern int match PROTO((char *, char *));
 #define mycmp(a,b) \
- ( (toupper((a)[0])!=toupper((b)[0])) || smycmp((a)+1,(b)+1) )
+ ( (toupper(a[0])!=toupper(b[0])) || smycmp((a)+1,(b)+1) )
 extern int smycmp PROTO((char *, char *));
 #ifndef GLIBC2_x
 extern int myncmp PROTO((char *, char *, int));
@@ -148,10 +148,10 @@ extern u_char tolowertab[], touppertab[];
 
 #ifndef USE_LOCALE
 #undef tolower
-#define tolower(c) (tolowertab[(c)])
+#define tolower(c) (tolowertab[(int)(c)])
 
 #undef toupper
-#define toupper(c) (touppertab[(c)])
+#define toupper(c) (touppertab[(int)(c)])
 
 #undef isalpha
 #undef isdigit

@@ -795,7 +795,6 @@ int  InitwIRCD(argc, argv)
 #ifdef HAVE_PSTAT
 	union pstun pstats;
 #endif
-	int  i, ggg;
 	int  portarg = 0;
 #ifdef  FORCE_CORE
 	struct rlimit corelim;
@@ -803,8 +802,6 @@ int  InitwIRCD(argc, argv)
 #ifndef NO_FDLIST
 	TS   nextfdlistcheck = 0;	/*end of priority code */
 #endif
-	TS   last_tune = 0;
-	static TS lastglinecheck = 0;
 #if !defined(_WIN32) && !defined(_AMIGA)
 	sbrk0 = (char *)sbrk((size_t)0);
 	uid = getuid();

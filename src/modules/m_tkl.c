@@ -20,6 +20,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -245,10 +246,8 @@ DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 */
 
 DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type) {
-	aTKline *tk;
 	TS   secs;
 	int  whattodo = 0;	/* 0 = add  1 = del */
-	int  found = 0;
 	int  i;
 	char *mask = NULL;
 	char mo[1024], mo2[1024];
@@ -312,7 +311,6 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		}
 	}
 
-      nochecks:
 	usermask = strtok(mask, "@");
 	hostmask = strtok(NULL, "");
 	if (BadPtr(hostmask)) {
@@ -366,6 +364,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		m_tkl(&me, &me, 6, tkllayer);
 
 	}
+	return 0;
 }
 
 

@@ -100,6 +100,9 @@ extern ConfigItem_help		*conf_help;
 extern void clear_unknown();
 extern EVENT(tkl_check_expire);
 extern EVENT(e_unload_module_delayed);
+extern void tkl_stats(aClient *cptr);
+extern void                    config_error(char *format, ...);
+extern void       ipport_seperate(char *string, char **ip, char **port);
 ConfigItem_class	*Find_class(char *name);
 ConfigItem_deny_dcc	*Find_deny_dcc(char *name);
 ConfigItem_oper		*Find_oper(char *name);
@@ -127,9 +130,10 @@ extern Link	*Servers;
 void add_ListItem(ListStruct *, ListStruct **);
 ListStruct *del_ListItem(ListStruct *, ListStruct **);
 /* Remmed out for win32 compatibility.. as stated of 467leaf win32 port.. */
-
+extern aClient *find_match_server(char *mask);
 extern LoopStruct loop;
-
+extern int del_banid(aChannel *chptr, char *banid);
+extern int del_exbanid(aChannel *chptr, char *banid);
 #ifdef SHOWCONNECTINFO
 
 
@@ -152,13 +156,16 @@ extern int R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns,
 extern inline aCommand *find_Command(char *cmd, short token, int flags);
 extern aCommand *find_Command_simple(char *cmd);
 extern aChannel *find_channel(char *, aChannel *);
+extern Membership *find_membership_link(Membership *lp, aChannel *ptr);
 extern Member *find_member_link(Member *, aClient *);
 extern void remove_user_from_channel(aClient *, aChannel *);
 extern char *base64enc(long);
 extern long base64dec(char *);
 extern void add_server_to_table(aClient *);
-extern void remove_server_from_tabel(aClient *);
-
+extern void remove_server_from_table(aClient *);
+extern void iNAH_host(aClient *sptr, char *host);
+extern void set_snomask(aClient *sptr, char *snomask);
+extern char *get_sno_str(aClient *sptr);
 /* for services */
 extern void del_invite(aClient *, aChannel *);
 extern int del_silence(aClient *, char *);
@@ -236,9 +243,20 @@ extern void restart(char *);
 extern void send_channel_modes(aClient *, aChannel *);
 extern void server_reboot(char *);
 extern void terminate(), write_pidfile();
-
+extern void *MyMallocEx(size_t size);
+extern int advanced_check(char *userhost, int ipstat);
 extern int send_queued(aClient *);
 /* i know this is naughty but :P --stskeeps */
+extern void sendto_connectnotice(char *nick, anUser *user, aClient *sptr);
+extern void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr, char *nick, int hopcount,
+int lastnick, char *username, char *realhost, char *server, long servicestamp, char *info, char *umodes,
+char *virthost);
+extern void sendto_channels_inviso_part(aClient *user);
+extern void sendto_channels_inviso_join(aClient *user);
+extern void    sendto_message_one(aClient *to, aClient *from, char *sender,
+    char *cmd, char *nick, char *msg);
+extern void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chptr,
+    int prefix, char *cmd, char *tok, char *nick, char *text);
 extern void sendto_channel_butone(aClient *, aClient *, aChannel *, char *,
     ...);
 extern void sendto_channelops_butone(aClient *, aClient *, aChannel *,
@@ -264,9 +282,17 @@ extern void sendto_failops(char *, ...);
 extern void sendto_opers(char *, ...);
 extern void sendto_umode(int, char *, ...);
 extern void sendto_conn_hcn(char *, ...);
+extern void sendto_snomask(int snomask, char *pattern, ...);
 extern int writecalls, writeb[];
 extern int deliver_it(aClient *, char *, int);
-
+extern int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr);
+extern int  check_for_target_limit(aClient *sptr, void *target, const char *name);
+extern char *stripbadwords_message(char *str);
+extern char *stripbadwords_channel(char *str);
+extern unsigned char *StripColors(unsigned char *);
+extern char *canonize(char *buffer);
+extern int webtv_parse(aClient *sptr, char *string);
+extern ConfigItem_deny_dcc *dcc_isforbidden(aClient *cptr, aClient *sptr, aClient *target, char *filename);
 extern int check_registered(aClient *);
 extern int check_registered_user(aClient *);
 extern char *get_client_name(aClient *, int);
@@ -345,7 +371,7 @@ extern char *find_by_aln(char *);
 extern char *convert2aln(int);
 extern int convertfromaln(char *);
 extern char *find_server_aln(char *);
-extern atime(char *xtime);
+extern time_t atime(char *xtime);
 
 
 /* Mode externs
@@ -405,12 +431,13 @@ char	*Inet_ia2p(struct IN_ADDR *ia);
  * CommandHash -Stskeeps
 */
 extern aCommand *CommandHash[256];
-void	init_CommandHash(void);
-void	add_Command_backend(char *cmd, int (*func)(), unsigned char parameters, unsigned char token, int flags);
-void	add_Command(char *cmd, char *token, int (*func)(), unsigned char parameters);
-void	add_Command_to_list(aCommand *item, aCommand **list);
-aCommand *del_Command_from_list(aCommand *item, aCommand **list);
-int	del_Command(char *cmd, char *token, int (*func)());
+extern void	init_CommandHash(void);
+extern void	add_Command_backend(char *cmd, int (*func)(), unsigned char parameters, unsigned char token, int flags);
+extern void	add_Command(char *cmd, char *token, int (*func)(), unsigned char parameters);
+extern void	add_Command_to_list(aCommand *item, aCommand **list);
+extern aCommand *del_Command_from_list(aCommand *item, aCommand **list);
+extern int	del_Command(char *cmd, char *token, int (*func)());
+extern void    add_CommandX(char *cmd, char *token, int (*func)(), unsigned char parameters, int flags);
 
 /* CRULE */
 char *crule_parse(char *);
@@ -436,6 +463,10 @@ extern anAuthStruct	*Auth_ConvertConf2AuthStruct(ConfigEntry *ce);
 extern void	Auth_DeleteAuthStruct(anAuthStruct *as);
 extern int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para);
 extern char   *Auth_Make(short type, char *para);
-
-
+extern long xbase64dec(char *b64);
+extern aClient *find_server_b64_or_real(char *name);
+extern int is_chanownprotop(aClient *cptr, aChannel *chptr);
+extern char *make_virthost(char *curr, char *new, int mode);
+extern int  channel_canjoin(aClient *sptr, char *name);
+extern char *collapse(char *pattern);
 #define EVENT_DRUGS BASE_VERSION
