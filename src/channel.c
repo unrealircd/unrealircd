@@ -794,7 +794,21 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 	*/
 	
 	if (!MyClient(cptr))
+	{
+		/* channelmode +mu is a special case.. sux!. -- Syzop */		
+
+		lp = find_membership_link(cptr->user->channel, chptr);
+		if ((chptr->mode.mode & MODE_MODERATED) && (chptr->mode.mode & MODE_AUDITORIUM) &&
+		    !IsOper(cptr) &&
+	        (!lp || !(lp->flags & (CHFL_CHANOP|CHFL_VOICE|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_CHANPROT))) &&
+	        !is_irc_banned(chptr))
+	    {
+			sendto_chanops_butone(cptr, chptr, ":IRC PRIVMSG %s :%s: %s",
+				chptr->chname, cptr->name, msgtext);
+			return (CANNOT_SEND_MODERATED);
+		}
 		return 0;
+	}
 
 	if (chptr->mode.mode & MODE_NOCOLOR)
 		if (strchr((char *)msgtext, 3) || strchr((char *)msgtext, 27))
@@ -816,8 +830,7 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 	    CHFL_HALFOP | CHFL_CHANPROT))))
 	    {
 			if ((chptr->mode.mode & MODE_AUDITORIUM) && !is_irc_banned(chptr))
-				sendto_chanops_butone(cptr, chptr, ":IRC PRIVMSG %s :%s: %s",
-						chptr->chname, cptr->name, msgtext);
+				sendto_chmodemucrap(cptr, chptr, msgtext);
 			return (CANNOT_SEND_MODERATED);
 	    }
 
@@ -3756,44 +3769,30 @@ CMD_FUNC(m_part)
 		{
 			if ((chptr->mode.mode & MODE_AUDITORIUM) && !is_chanownprotop(sptr, chptr))
 			{
-				if (MyClient(sptr))
+				if (!comment)
 				{
-					if (!comment)
-					{
-						sendto_chanops_butone(NULL,
-						    chptr, ":%s!%s@%s PART %s",
-						    sptr->name,
-						    sptr->user->username,
-						    GetHost(sptr),
-						    chptr->chname);
-						if (!is_chan_op(sptr, chptr))
-							sendto_one(sptr,
-							    ":%s!%s@%s PART %s",
-							    sptr->name,
-							    sptr->user->
-							    username,
-							    GetHost(sptr),
-							    chptr->chname);
-					}
-					else
-					{
-						sendto_chanops_butone(NULL,
-						    chptr,
+					sendto_chanops_butone(NULL,
+					    chptr, ":%s!%s@%s PART %s",
+					    sptr->name, sptr->user->username, GetHost(sptr),
+					    chptr->chname);
+					if (!is_chan_op(sptr, chptr) && MyClient(sptr))
+						sendto_one(sptr, ":%s!%s@%s PART %s",
+						    sptr->name, sptr->user->username, GetHost(sptr), chptr->chname);
+				}
+				else
+				{
+					sendto_chanops_butone(NULL,
+					    chptr,
+					    ":%s!%s@%s PART %s %s",
+					    sptr->name,
+					    sptr->user->username,
+					    GetHost(sptr),
+					    chptr->chname, comment);
+					if (!is_chan_op(cptr, chptr) && MyClient(sptr))
+						sendto_one(sptr,
 						    ":%s!%s@%s PART %s %s",
-						    sptr->name,
-						    sptr->user->username,
-						    GetHost(sptr),
+						    sptr->name, sptr->user->username, GetHost(sptr),
 						    chptr->chname, comment);
-						if (!is_chan_op(cptr, chptr))
-							sendto_one(sptr,
-							    ":%s!%s@%s PART %s %s",
-							    sptr->name,
-							    sptr->user->
-							    username,
-							    GetHost(sptr),
-							    chptr->chname,
-							    comment);
-					}
 				}
 			}
 			else
@@ -3984,9 +3983,25 @@ CMD_FUNC(m_kick)
 						continue;
 				}
 				if (lp)
-					sendto_channel_butserv(chptr,
-					    sptr, ":%s KICK %s %s :%s",
-					    parv[0], name, who->name, comment);
+				{
+					if ((chptr->mode.mode & MODE_AUDITORIUM) &&
+					    !(lp->flags & (CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER)))
+					{
+						/* Send it only to chanops & victim */
+						sendto_chanops_butone(who, chptr, ":%s!%s@%s KICK %s %s :%s",
+							sptr->name, sptr->user->username, GetHost(sptr),
+							chptr->chname, who->name, comment);
+						if (MyClient(who))
+							sendto_one(who, ":%s!%s@%s KICK %s %s :%s",
+								sptr->name, sptr->user->username, GetHost(sptr),
+								chptr->chname, who->name, comment);
+					} else {
+						/* NORMAL */
+						sendto_channel_butserv(chptr,
+						    sptr, ":%s KICK %s %s :%s",
+						    parv[0], name, who->name, comment);
+					}
+				}
 				sendto_serv_butone_token(cptr, parv[0],
 				    MSG_KICK, TOK_KICK, "%s %s :%s",
 				    name, who->name, comment);
@@ -5524,9 +5539,15 @@ CMD_FUNC(m_sjoin)
 #endif
 			} else {
 				add_user_to_channel(chptr, acptr, modeflags);
-				sendto_channel_butserv(chptr, acptr,
-				    ":%s JOIN :%s", nick,
-				    chptr->chname);
+				if (chptr->mode.mode & MODE_AUDITORIUM)
+				{
+					if (modeflags & (CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER))
+						sendto_channel_butserv(chptr, acptr, ":%s JOIN :%s", nick, chptr->chname);
+					else
+						sendto_chanops_butone(NULL, chptr, ":%s!%s@%s JOIN :%s",
+							acptr->name, acptr->user->username, GetHost(acptr), chptr->chname);
+				} else
+					sendto_channel_butserv(chptr, acptr, ":%s JOIN :%s", nick, chptr->chname);
 #ifdef NEWCHFLOODPROT
 				if (chptr->mode.floodprot && sptr->serv->flags.synced)
 			        do_chanflood(chptr->mode.floodprot, FLD_JOIN);
@@ -6475,12 +6496,13 @@ char m;
 		
 	if (!(chptr->mode.mode & modeflag))
 	{
-		char comment[1024];
+		char comment[1024], target[CHANNELLEN + 8];
 		ircsprintf(comment, "*** Channel %sflood detected (limit is %d per %d seconds), setting mode +%c",
 			text, chptr->mode.floodprot->l[what], chptr->mode.floodprot->per, m);
+		ircsprintf(target, "~&@%%%s", chptr->chname);
 		sendto_channelprefix_butone_tok(NULL, &me, chptr,
 			PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-			MSG_NOTICE, TOK_NOTICE, chptr->chname, comment);
+			MSG_NOTICE, TOK_NOTICE, target, comment);
 		sendto_serv_butone(&me, ":%s MODE %s +%c 0", me.name, chptr->chname, m);
 		sendto_channel_butserv(chptr, &me, ":%s MODE %s +%c", me.name, chptr->chname, m);
 		chptr->mode.mode |= modeflag;

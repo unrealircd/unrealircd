@@ -611,3 +611,4 @@ extern int l_commands_Init(ModuleInfo *);
 extern int l_commands_Test(ModuleInfo *);
 extern int l_commands_Load(int);
 #endif
+extern void sendto_chmodemucrap(aClient *, aChannel *, char *);

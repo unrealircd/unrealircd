@@ -476,10 +476,13 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				sendanyways = 0;
 				continue;
 			}
-			else if (!notice)
+			else
+			if (!notice && MyClient(sptr))
+			{
 				sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
 				    me.name, parv[0], parv[0],
 				    err_cantsend[cansend - 1], p2);
+			}
 			continue;
 		}
 		else if (p2)

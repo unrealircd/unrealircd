@@ -2384,3 +2384,6 @@ seen. gmtime warning still there
 - +f now also allows you to specify an 'action'. For example +f [30j#R]:15 will set the
   channel +R (instead of +i) if more than 30 joins in 15 seconds are reached.
   The following combinations are allowed: c#m, c#M, j#R and m#M. (docs will be updated later)
+- Probably fixed a bug regarding 'setting mode' notice with +f (was sometimes sent to non-chanops).
+- Fixed multiple chmode +u bugs: remote join, netjoin, +mu relay between servers, kick and
+  a part bug. Most of them reported by Lx (#0001097).

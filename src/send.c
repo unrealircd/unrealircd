@@ -513,6 +513,54 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 	return;
 }
 
+/* weird channelmode +mu crap:
+ * - local: deliver msgs to chanops (and higher) like <IRC> SrcNick: hi all
+ * - remote: deliver msgs to every server once (if needed) with real sourcenick.
+ * The problem is we can't send to remote servers with sourcenick (prefix) 'IRC'
+ * because that's a virtual user... Fun... -- Syzop.
+ */
+void sendto_chmodemucrap(aClient *from, aChannel *chptr, char *text)
+{
+	Member *lp;
+	aClient *acptr;
+	int  i;
+
+	sprintf(tcmd, ":%s %s %s :%s", from->name, TOK_PRIVATE, chptr->chname, text); /* token */
+	sprintf(ccmd, ":%s %s %s :%s", from->name, MSG_PRIVATE, chptr->chname, text); /* msg */
+	sprintf(xcmd, ":IRC PRIVMSG %s :%s: %s", chptr->chname, from->name, text); /* local */
+
+	++sentalong_marker;
+	for (lp = chptr->members; lp; lp = lp->next)
+	{
+		acptr = lp->cptr;
+
+		if (IsDeaf(acptr) && !sendanyways)
+			continue;
+		if (!(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
+			continue;
+		i = acptr->from->slot;
+		if (MyConnect(acptr) && IsRegisteredUser(acptr))
+		{
+			sendto_one(acptr, "%s", xcmd);
+			sentalong[i] = sentalong_marker;
+		}
+		else
+		{
+			/* Now check whether a message has been sent to this
+			 * remote link already */
+			if (sentalong[i] != sentalong_marker)
+			{
+				if (IsToken(acptr->from))
+					sendto_one(acptr, "%s", tcmd);
+				else
+					sendto_one(acptr, "%s", ccmd);
+				sentalong[i] = sentalong_marker;
+			}
+		}
+	}
+	return;
+}
+
 
 /*
    sendto_chanops_butone -Stskeeps
