@@ -1071,7 +1071,7 @@ int m_mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
-	sptr->flags &= ~FLAGS_TS8;
+   /*	sptr->flags &= ~FLAGS_TS8; */
 
 	if (MyConnect(sptr))
 		clean_channelname(parv[1]);
@@ -2768,8 +2768,10 @@ int channel_link(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 		if (!MyConnect(sptr))
 			flags = CHFL_DEOPPED;
-		if (sptr->flags & FLAGS_TS8)
-			flags |= CHFL_SERVOPOK;
+#if 0
+	/*	if (sptr->flags & FLAGS_TS8)
+			flags |= CHFL_SERVOPOK; */
+#endif
 
 		i1 = 0;
 		if (chptr == NULL)
@@ -3006,8 +3008,10 @@ int m_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 		if (!MyConnect(sptr))
 			flags = CHFL_DEOPPED;
+#if 0
 		if (sptr->flags & FLAGS_TS8)
 			flags |= CHFL_SERVOPOK;
+#endif
 
 		if (!chptr ||
 		    (MyConnect(sptr)
@@ -3144,7 +3148,7 @@ int m_part(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	char *p = NULL, *name;
 	char *comment = (parc > 2 && parv[2]) ? parv[2] : NULL;
 
-	sptr->flags &= ~FLAGS_TS8;
+  /*	sptr->flags &= ~FLAGS_TS8; */
 
 	if (parc < 2 || parv[1][0] == '\0')
 	{
@@ -3347,7 +3351,7 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	Membership *lp, *lp2;
 
 
-	sptr->flags &= ~FLAGS_TS8;
+   /*	sptr->flags &= ~FLAGS_TS8;  */
 
 	if (parc < 3 || *parv[1] == '\0')
 	{

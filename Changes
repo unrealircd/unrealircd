@@ -1071,3 +1071,5 @@ seen. gmtime warning still there
 - Made support in *nix for encrypted SSL private keys,
   "make encpem" to make an encrypted server key if you already have one
 - Removed some ancient debugging code (num - %s)
+- Wiped out FLAGS_TS8 because I want to move ->flags into the local section and
+  FLAGS_TS8  had 0 purpose except setting CHFL_SERVOPOK (which did nothing)

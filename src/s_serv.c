@@ -956,7 +956,7 @@ int	m_server_remote(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	add_server_to_table(acptr);
 	IRCstats.servers++;
 	(void)find_or_add(acptr->name);
-	acptr->flags |= FLAGS_TS8;
+   /*	acptr->flags |= FLAGS_TS8; */
 	add_client_to_list(acptr);
 	(void)add_to_client_hash_table(acptr->name, acptr);
 	RunHook(HOOKTYPE_SERVER_CONNECT, acptr);
@@ -1019,7 +1019,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 #endif
 	if ((Find_uline(cptr->name)))
 		cptr->flags |= FLAGS_ULINE;
-	cptr->flags |= FLAGS_TS8;
+  /*	cptr->flags |= FLAGS_TS8; */
 	nextping = TStime();
 	(void)find_or_add(cptr->name);
 #ifdef USE_SSL

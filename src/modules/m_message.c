@@ -171,7 +171,7 @@ DLLFUNC int m_message(cptr, sptr, parc, parv, notice)
 	{
 	}
 
-	sptr->flags &= ~FLAGS_TS8;
+  /*	sptr->flags &= ~FLAGS_TS8; */
 	cmd = notice ? MSG_NOTICE : MSG_PRIVATE;
 	if (parc < 2 || *parv[1] == '\0')
 	{

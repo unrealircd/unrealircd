@@ -902,7 +902,7 @@ extern int register_user(cptr, sptr, nick, username, umode, virthost)
 			    "USER server wrong direction");
 		}
 		else
-			sptr->flags |= (acptr->flags & FLAGS_TS8);
+			sptr->flags |= (acptr->flags & /* FLAGS_TS8 */);
 		/* *FINALL* this gets in ircd... -- Barubary */
 		/* We change this a bit .. */
 		if (IsULine(sptr->srvptr))
