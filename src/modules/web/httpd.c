@@ -282,6 +282,7 @@ void	httpd_socketthread(void *preq)
 		MyFree(hp2);
 	}
 	MyFree(request);
+	IRCDetachThread(IRCThreadSelf());
 	IRCExitThread(NULL);
 	return;
 }

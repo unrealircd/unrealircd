@@ -176,6 +176,7 @@ void 	scan_http_scan(Scan_AddrStruct *h)
 	IRCMutexLock((h->lock));
 	h->refcnt--;
 	IRCMutexUnlock((h->lock));
+	IRCDetachThread(IRCThreadSelf());
 	IRCExitThread(NULL);
 	return;
 }

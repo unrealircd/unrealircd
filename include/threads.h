@@ -44,6 +44,7 @@ typedef pthread_mutex_t MUTEX;
 #define IRCMutexDestroy(mutex) TDebug(MutexDestroy); pthread_mutex_destroy(&mutex)
 #define IRCJoinThread(thread,return) TDebug(JoinThread); pthread_join(thread, return)
 #define IRCExitThread(value) TDebug(ExitThread); pthread_exit(value)
+#define IRCDetachThread(value) TDebug(DetachThread); pthread_detach(value);
 #define IRCTerminateThread(thread, value) pthread_cancel(&thread)
 #define IRCThreadSelf() pthread_self()
 #define IRCThreadEqual(thread1, thread2) pthread_equal(thread1,thread2)
@@ -62,6 +63,7 @@ typedef HANDLE MUTEX;
 #define IRCTerminateThread(thread, value) TerminateThread((HANDLE)thread, value)
 #define IRCThreadSelf() GetCurrentThread()
 #define IRCThreadEqual(thread1, thread2) thread1 == thread2 ? 1 : 0
+#define IRCDetachThread(value) ;
 #endif
 
 #endif

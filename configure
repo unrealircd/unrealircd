@@ -5749,7 +5749,7 @@ EOF
 
 cat >> $CONFIG_STATUS <<EOF
 
-CONFIG_FILES=\${CONFIG_FILES-"Makefile src/modules/Makefile unreal"}
+CONFIG_FILES=\${CONFIG_FILES-"Makefile src/modules/Makefile unreal src/compile"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then

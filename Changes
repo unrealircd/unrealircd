@@ -1273,3 +1273,4 @@ seen. gmtime warning still there
 - Fixed some problems with skyper's patch (typos)
 - Fixed a cloak problem on OSes with 64bit integers (reported by wolven)
 - Updated credits
+- Memory leak fixes with scanners

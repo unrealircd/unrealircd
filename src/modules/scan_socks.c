@@ -155,6 +155,7 @@ void scan_socks_scan(Scan_AddrStruct *h)
 	IRCMutexLock((h->lock));
 	h->refcnt--;
 	IRCMutexUnlock((h->lock));
+	IRCDetachThread(IRCThreadSelf());
 	IRCExitThread(NULL);
 	return;
 }
@@ -293,6 +294,7 @@ exituniverse:
 	IRCMutexLock((h->lock));
 	h->refcnt--;
 	IRCMutexUnlock((h->lock));
+	/* We get joined, we need no steekin Detach */
 	IRCExitThread(NULL);
 	return;
 }
@@ -456,6 +458,7 @@ exituniverse:
 	IRCMutexLock(h->lock);
 	h->refcnt--;
 	IRCMutexUnlock(h->lock);
+	/* We need no steekin detach */
 	IRCExitThread(NULL);
 	return;
 }

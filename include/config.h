@@ -594,14 +594,14 @@
 #ifdef	BSD_RELIABLE_SIGNALS
 # if defined(SYSV_UNRELIABLE_SIGNALS) || defined(POSIX_SIGNALS)
 error You stuffed up config.h signals
-#defines use only one.
+#define use only one.
 # endif
 #define	HAVE_RELIABLE_SIGNALS
 #endif
 #ifdef	SYSV_UNRELIABLE_SIGNALS
 # ifdef	POSIX_SIGNALS
      error You stuffed up config.h signals
-#defines use only one.
+#define use only one.
 # endif
 #undef	HAVE_RELIABLE_SIGNALS
 #endif
