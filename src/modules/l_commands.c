@@ -96,8 +96,6 @@ int    l_commands_Init(int module_load)
 	m_who_Init(module_load);
 	m_mkpasswd_Init(module_load);
 	m_away_Init(module_load);
-	p.header = &m_svsnoop_Header;	
-	Module_Depend_Resolve(&p);
 	m_svsnoop_Init(module_load);
 	m_svso_Init(module_load);
 	m_svsnick_Init(module_load);

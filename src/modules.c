@@ -311,6 +311,35 @@ int     Module_Unload(char *name, int unload)
 	return 1;
 }
 
+vFP Module_SymEx(
+#ifdef _WIN32
+	HMODULE mod
+#else
+	void *mod
+#endif
+	, char *name)
+{
+#ifndef STATIC_LINKING
+	vFP	fp;
+	char	buf[512];
+	int	i;
+
+	if (!name)
+		return NULL;
+	
+	ircsprintf(buf, "_%s", name);
+
+	/* Run through all modules and check for symbols */
+	irc_dlsym(mod, name, fp);
+	if (fp)
+		return (fp);
+	irc_dlsym(mod, buf, fp);
+	if (fp)
+		return (fp);
+	return NULL;
+#endif
+	
+}
 
 vFP Module_Sym(char *name)
 {
@@ -449,6 +478,11 @@ int	Module_Depend_Resolve(Module *p)
 #ifndef STATIC_LINKING
 	while (d->pointer)
 	{
+		if ((*(d->pointer) = Module_SymEx(p->dll, d->symbol)))
+		{
+			d++;
+			continue;
+		}
 		*(d->pointer) = Module_SymX(d->symbol, &parental);
 		if (!*(d->pointer))
 		{

@@ -149,7 +149,8 @@ int	m_oper_Unload(int module_unload)
 **	parv[1] = oper name
 **	parv[2] = oper password
 */
-int  SVSNOOP;
+
+extern int  SVSNOOP;
 
 DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	ConfigItem_oper *aconf;

@@ -85,6 +85,7 @@ int  un_gid = 99;
 #ifndef _WIN32
 extern char unreallogo[];
 #endif
+int SVSNOOP = 0;
 extern char *buildid;
 time_t timeofday = 0;
 LoopStruct loop;

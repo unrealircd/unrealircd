@@ -1065,3 +1065,6 @@ seen. gmtime warning still there
 - Fixed sts's fix for svsnoop (since he failed to test his fix)
 - Fixed a bug where the win32 editor would always say the file
   was modified even if it wasn't
+- Fixed .1081 problem, see bug #0000020 for more information about how
+  it REALLY should be fixed
+
