@@ -638,3 +638,4 @@ extern void ExtbanDel(Extban *);
 extern void extban_init(void);
 extern char *trim_str(char *str, int len);
 extern char *ban_realhost, *ban_virthost, *ban_ip;
+extern void join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);

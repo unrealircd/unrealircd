@@ -3576,6 +3576,133 @@ int r;
 	return r;
 }
 
+/* Routine that actually makes a user join the channel
+ * this does no actual checking (banned, etc.) it just adds the user
+ */
+void join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
+{
+	char *parv[] = { 0, 0 };
+	/*
+	   **  Complete user entry to the new channel (if any)
+	 */
+	add_user_to_channel(chptr, sptr, flags);
+	/*
+	   ** notify all other users on the new channel
+	 */
+	if (chptr->mode.mode & MODE_AUDITORIUM)
+	{
+		if (MyClient(sptr))
+			sendto_one(sptr, ":%s!%s@%s JOIN :%s",
+			    sptr->name, sptr->user->username,
+			    GetHost(sptr), chptr->chname);
+		sendto_chanops_butone(NULL, chptr, ":%s!%s@%s JOIN :%s",
+		    sptr->name, sptr->user->username,
+		    GetHost(sptr), chptr->chname);
+	}
+	else
+		sendto_channel_butserv(chptr, sptr,
+		    ":%s JOIN :%s", sptr->name, chptr->chname);
+	
+	sendto_serv_butone_token_opt(cptr, OPT_NOT_SJ3, sptr->name, MSG_JOIN,
+		    TOK_JOIN, "%s", chptr->chname);
+
+#ifdef JOIN_INSTEAD_OF_SJOIN_ON_REMOTEJOIN
+	if ((MyClient(sptr) && !(flags & CHFL_CHANOP)) || !MyClient(sptr))
+		sendto_serv_butone_token_opt(cptr, OPT_SJ3, sptr->name, MSG_JOIN,
+		    TOK_JOIN, "%s", chptr->chname);
+	if (flags & CHFL_CHANOP)
+	{
+#endif
+		/* I _know_ that the "@%s " look a bit wierd
+		   with the space and all .. but its to get around
+		   a SJOIN bug --stskeeps */
+		sendto_serv_butone_token_opt(cptr, OPT_SJ3|OPT_SJB64,
+			me.name, MSG_SJOIN, TOK_SJOIN,
+			"%B %s :%s%s ", chptr->creationtime, 
+			chptr->chname, flags & CHFL_CHANOP ? "@" : "", sptr->name);
+		sendto_serv_butone_token_opt(cptr, OPT_SJ3|OPT_NOT_SJB64,
+			me.name, MSG_SJOIN, TOK_SJOIN,
+			"%li %s :%s%s ", chptr->creationtime, 
+			chptr->chname, flags & CHFL_CHANOP ? "@" : "", sptr->name);
+#ifdef JOIN_INSTEAD_OF_SJOIN_ON_REMOTEJOIN
+	}
+#endif		
+
+	if (MyClient(sptr))
+	{
+		/*
+		   ** Make a (temporal) creationtime, if someone joins
+		   ** during a net.reconnect : between remote join and
+		   ** the mode with TS. --Run
+		 */
+		if (chptr->creationtime == 0)
+		{
+			chptr->creationtime = TStime();
+			sendto_serv_butone_token(cptr, me.name,
+			    MSG_MODE, TOK_MODE, "%s + %lu",
+			    chptr->chname, chptr->creationtime);
+		}
+		del_invite(sptr, chptr);
+		if (flags & CHFL_CHANOP)
+			sendto_serv_butone_token_opt(cptr, OPT_NOT_SJ3, 
+			    me.name,
+			    MSG_MODE, TOK_MODE, "%s +o %s %lu",
+			    chptr->chname, sptr->name,
+			    chptr->creationtime);
+		if (chptr->topic)
+		{
+			sendto_one(sptr, rpl_str(RPL_TOPIC),
+			    me.name, sptr->name, chptr->chname, chptr->topic);
+			sendto_one(sptr,
+			    rpl_str(RPL_TOPICWHOTIME), me.name,
+			    sptr->name, chptr->chname, chptr->topic_nick,
+			    chptr->topic_time);
+		}
+		if (chptr->users == 1 && MODES_ON_JOIN)
+		{
+			chptr->mode.mode = MODES_ON_JOIN;
+#ifdef NEWCHFLOODPROT
+			if (iConf.modes_on_join.floodprot.per)
+			{
+				chptr->mode.floodprot = MyMalloc(sizeof(ChanFloodProt));
+				memcpy(chptr->mode.floodprot, &iConf.modes_on_join.floodprot, sizeof(ChanFloodProt));
+			}
+#else
+			chptr->mode.kmode = iConf.modes_on_join.kmode;
+			chptr->mode.per = iConf.modes_on_join.per;
+			chptr->mode.msgs = iConf.modes_on_join.msgs;
+#endif
+			*modebuf = *parabuf = 0;
+			channel_modes(sptr, modebuf, parabuf, chptr);
+			/* This should probably be in the SJOIN stuff */
+			sendto_serv_butone_token(&me, me.name, MSG_MODE, TOK_MODE, 
+				"%s %s %s %lu", chptr->chname, modebuf, parabuf, 
+				chptr->creationtime);
+			sendto_one(sptr, ":%s MODE %s %s %s", me.name, chptr->chname, modebuf, parabuf);
+		}
+		parv[0] = sptr->name;
+		parv[1] = chptr->chname;
+		(void)m_names(cptr, sptr, 2, parv);
+		RunHook4(HOOKTYPE_LOCAL_JOIN, cptr, sptr,chptr,parv);
+	}
+
+#ifdef NEWCHFLOODPROT
+	/* I'll explain this only once:
+	 * 1. if channel is +f
+	 * 2. local client OR synced server
+	 * 3. then, increase floodcounter
+	 * 4. if we reached the limit AND only if source was a local client.. do the action (+i).
+	 * Nr 4 is done because otherwise you would have a noticeflood with 'joinflood detected'
+	 * from all servers.
+	 */
+	if (chptr->mode.floodprot && (MyClient(sptr) || sptr->srvptr->serv->flags.synced) && 
+	    !IsULine(sptr) && do_chanflood(chptr->mode.floodprot, FLD_JOIN) && MyClient(sptr))
+	{
+		do_chanflood_action(chptr, FLD_JOIN, "join");
+	}
+#endif
+}
+
 /** User request to join a channel.
  * This routine can be called from both m_join or via do_join->can_join->do_join
  * if the channel is 'linked' (chmode +L). We use a counter 'bouncedtimes' which
@@ -3749,10 +3876,6 @@ CMD_FUNC(do_join)
 
 		if (!MyConnect(sptr))
 			flags = CHFL_DEOPPED;
-#if 0
-		if (sptr->flags & FLAGS_TS8)
-			flags |= CHFL_SERVOPOK;
-#endif
 
 		i = -1;
 		if (!chptr ||
@@ -3784,126 +3907,8 @@ CMD_FUNC(do_join)
 			}
 		}
 
-		/*
-		   **  Complete user entry to the new channel (if any)
-		 */
-		add_user_to_channel(chptr, sptr, flags);
-		/*
-		   ** notify all other users on the new channel
-		 */
-		if (chptr->mode.mode & MODE_AUDITORIUM)
-		{
-			if (MyClient(sptr))
-				sendto_one(sptr, ":%s!%s@%s JOIN :%s",
-				    sptr->name, sptr->user->username,
-				    GetHost(sptr), chptr->chname);
-			sendto_chanops_butone(NULL, chptr, ":%s!%s@%s JOIN :%s",
-			    sptr->name, sptr->user->username,
-			    GetHost(sptr), chptr->chname);
-		}
-		else
-			sendto_channel_butserv(chptr, sptr,
-			    ":%s JOIN :%s", parv[0], chptr->chname);
-	
-		sendto_serv_butone_token_opt(cptr, OPT_NOT_SJ3, parv[0], MSG_JOIN,
-			    TOK_JOIN, "%s", chptr->chname);
-
-#ifdef JOIN_INSTEAD_OF_SJOIN_ON_REMOTEJOIN
-		if ((MyClient(sptr) && !(flags & CHFL_CHANOP)) || !MyClient(sptr))
-			sendto_serv_butone_token_opt(cptr, OPT_SJ3, parv[0], MSG_JOIN,
-			    TOK_JOIN, "%s", chptr->chname);
-		if (flags & CHFL_CHANOP)
-		{
-#endif
-			/* I _know_ that the "@%s " look a bit wierd
-			   with the space and all .. but its to get around
-			   a SJOIN bug --stskeeps */
-			sendto_serv_butone_token_opt(cptr, OPT_SJ3|OPT_SJB64,
-				me.name, MSG_SJOIN, TOK_SJOIN,
-				"%B %s :%s%s ", chptr->creationtime, 
-				chptr->chname, flags & CHFL_CHANOP ? "@" : "", sptr->name);
-			sendto_serv_butone_token_opt(cptr, OPT_SJ3|OPT_NOT_SJB64,
-				me.name, MSG_SJOIN, TOK_SJOIN,
-				"%li %s :%s%s ", chptr->creationtime, 
-				chptr->chname, flags & CHFL_CHANOP ? "@" : "", sptr->name);
-#ifdef JOIN_INSTEAD_OF_SJOIN_ON_REMOTEJOIN
-		}
-#endif		
-
-		if (MyClient(sptr))
-		{
-			/*
-			   ** Make a (temporal) creationtime, if someone joins
-			   ** during a net.reconnect : between remote join and
-			   ** the mode with TS. --Run
-			 */
-			if (chptr->creationtime == 0)
-			{
-				chptr->creationtime = TStime();
-				sendto_serv_butone_token(cptr, me.name,
-				    MSG_MODE, TOK_MODE, "%s + %lu",
-				    chptr->chname, chptr->creationtime);
-			}
-			del_invite(sptr, chptr);
-			if (flags & CHFL_CHANOP)
-				sendto_serv_butone_token_opt(cptr, OPT_NOT_SJ3, 
-				    me.name,
-				    MSG_MODE, TOK_MODE, "%s +o %s %lu",
-				    chptr->chname, parv[0],
-				    chptr->creationtime);
-			if (chptr->topic)
-			{
-				sendto_one(sptr, rpl_str(RPL_TOPIC),
-				    me.name, parv[0], name, chptr->topic);
-				sendto_one(sptr,
-				    rpl_str(RPL_TOPICWHOTIME), me.name,
-				    parv[0], name, chptr->topic_nick,
-				    chptr->topic_time);
-			}
-			if (chptr->users == 1 && MODES_ON_JOIN)
-			{
-				chptr->mode.mode = MODES_ON_JOIN;
-#ifdef NEWCHFLOODPROT
-				if (iConf.modes_on_join.floodprot.per)
-				{
-					chptr->mode.floodprot = MyMalloc(sizeof(ChanFloodProt));
-					memcpy(chptr->mode.floodprot, &iConf.modes_on_join.floodprot, sizeof(ChanFloodProt));
-				}
-#else
-				chptr->mode.kmode = iConf.modes_on_join.kmode;
-				chptr->mode.per = iConf.modes_on_join.per;
-				chptr->mode.msgs = iConf.modes_on_join.msgs;
-#endif
-				*modebuf = *parabuf = 0;
-				channel_modes(sptr, modebuf, parabuf, chptr);
-				/* This should probably be in the SJOIN stuff */
-				sendto_serv_butone_token(&me, me.name, MSG_MODE, TOK_MODE, 
-					"%s %s %s %lu", chptr->chname, modebuf, parabuf, 
-					chptr->creationtime);
-				sendto_one(sptr, ":%s MODE %s %s %s", me.name, chptr->chname, modebuf, parabuf);
-			}
-			parv[1] = chptr->chname;
-			(void)m_names(cptr, sptr, 2, parv);
-			RunHook4(HOOKTYPE_LOCAL_JOIN, cptr, sptr,chptr,parv);
-		}
-
-#ifdef NEWCHFLOODPROT
-		/* I'll explain this only once:
-		 * 1. if channel is +f
-		 * 2. local client OR synced server
-		 * 3. then, increase floodcounter
-		 * 4. if we reached the limit AND only if source was a local client.. do the action (+i).
-		 * Nr 4 is done because otherwise you would have a noticeflood with 'joinflood detected'
-		 * from all servers.
-		 */
-		if (chptr->mode.floodprot && (MyClient(sptr) || sptr->srvptr->serv->flags.synced) && 
-		    !IsULine(sptr) && do_chanflood(chptr->mode.floodprot, FLD_JOIN) && MyClient(sptr))
-		{
-			do_chanflood_action(chptr, FLD_JOIN, "join");
-		}
-#endif
+		join_channel(chptr, cptr, sptr, flags);
 	}
-
 	RET(0)
 #undef RET
 }

@@ -2662,3 +2662,5 @@ seen. gmtime warning still there
 - As expected, fixed a crashbug in extended bans system. Reported by Rocko (#0001444).
 - internal: changed is_banned() again: cptr,sptr -> sptr (dropped cptr). It was too
   confusing (and thus causing bad code/bugs) and was never used anyway.
+- Added a function join_channel which will make it easier for module coders to force users
+  to join a channel
