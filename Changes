@@ -1714,3 +1714,4 @@ seen. gmtime warning still there
 - Documentation updates
 - Added back the commands check that didn't get added in conf3 (lamers
   beware)
+- Fixed a typo in the module system

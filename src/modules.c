@@ -200,7 +200,7 @@ char  *Module_Create(char *path_)
 				modinfo.module_load = 0;
 				modinfo.handle = mod;
 				if ((ret = (*Mod_Test)(&modinfo)) < MOD_SUCCESS) {
-					ircsprintf(errorbuf, "Mod_Init returned %i",
+					ircsprintf(errorbuf, "Mod_Test returned %i",
 						   ret);
 					/* We EXPECT the module to have cleaned up it's mess */
 		        		Module_free(mod);
@@ -210,7 +210,7 @@ char  *Module_Create(char *path_)
 			else {
 				if ((ret = (*Mod_Test)(0)) < MOD_SUCCESS)
 				{
-					ircsprintf(errorbuf, "Mod_Init returned %i",
+					ircsprintf(errorbuf, "Mod_Test returned %i",
 						   ret);
 					/* We EXPECT the module to have cleaned up it's mess */
 				        Module_free(mod);
