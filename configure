@@ -9644,12 +9644,12 @@ if test "${with_dpath+set}" = set; then
   cat >>confdefs.h <<_ACEOF
 #define DPATH "$withval"
 _ACEOF
- IRCDDIR="$withval"; mkdir $withval/tmp
+ IRCDDIR="$withval"
 else
   cat >>confdefs.h <<_ACEOF
 #define DPATH "`pwd`"
 _ACEOF
- IRCDDIR="`pwd`" mkdir `pwd`/tmp
+ IRCDDIR="`pwd`"
 fi;
 
 # Check whether --with-fd-setsize or --without-fd-setsize was given.

@@ -984,7 +984,12 @@ int InitwIRCD(int argc, char *argv[])
 		exit(5);
 	}
 #endif	 /*CHROOTDIR*/
-	    myargv = argv;
+#ifndef _WIN32
+	mkdir("tmp", S_IRUSR|S_IWUSR|S_IXUSR); /* Create the tmp dir, if it doesn't exist */
+#else
+	mkdir("tmp");
+#endif
+	myargv = argv;
 #ifndef _WIN32
 	(void)umask(077);	/* better safe than sorry --SRB */
 #else

@@ -325,7 +325,7 @@ AC_DEFINE_UNQUOTED(MYOSNAME,"`uname -a`")
 AC_ARG_WITH(permissions, [AC_HELP_STRING([--with-permissions=permissions],[Specify the default permissions for
 configuration files])], AC_DEFINE_UNQUOTED(DEFAULT_PERMISSIONS,$withval), AC_DEFINE(DEFAULT_PERMISSIONS, 0600)) 
 AC_ARG_WITH(dpath, [AC_HELP_STRING([--with-dpath=path],[Specify the path where configuration files are stored])],
-AC_DEFINE_UNQUOTED(DPATH, "$withval") IRCDDIR="$withval"; mkdir $withval/tmp, AC_DEFINE_UNQUOTED(DPATH,"`pwd`") IRCDDIR="`pwd`" mkdir `pwd`/tmp)
+AC_DEFINE_UNQUOTED(DPATH, "$withval") IRCDDIR="$withval", AC_DEFINE_UNQUOTED(DPATH,"`pwd`") IRCDDIR="`pwd`")
 AC_ARG_WITH(fd-setsize, [AC_HELP_STRING([--with-fd-setsize=size],[Specify the max file descriptors to use])],
 ac_fd=$withval, ac_fd=1024)
 AC_DEFINE_UNQUOTED(MAXCONNECTIONS, $ac_fd)

@@ -3224,3 +3224,5 @@ This is the 3.2 fixes branch.
 - And another one, should be fixed now.
 - Added snomask +S to the documentation (#0001835) reported by medice.
 - Made a bunch of TKL parameters case insensitive (#0001766) reported by medice.
+- Made Unreal create the tmp/ dir at startup, rather than configure (#0001824) suggested by
+  LinDevel
