@@ -1661,3 +1661,5 @@ seen. gmtime warning still there
   can make sure all servers report the same global max and that a local max can be adjusted
   if for example a clone flood occurs. It is NOT designed to make the max count higher than
   you actually have.
+- Fixed a bug in the win32 debugger where the contents of the core file were not written
+  until ok was clicked. Reported by Simon Bell.

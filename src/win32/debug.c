@@ -198,6 +198,7 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e) {
 	sprintf(text, "UnrealIRCd has encountered a fatal error. Debugging information has"
 		" been dumped to wircd.%d.core, please email this file to coders@lists.unrealircd.org.",
 		getpid());
+	fclose(fd);
 	if (!IsService)
 		MessageBox(NULL, text, "Fatal Error", MB_OK);
 	else {
@@ -207,7 +208,6 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e) {
 		fclose(fd);
 	}
 	CleanUp();
-	fclose(fd);
 	return EXCEPTION_EXECUTE_HANDLER;
 }
 
