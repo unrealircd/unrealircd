@@ -1002,3 +1002,6 @@ seen. gmtime warning still there
 - SMO recoded but wierd because sendto_umode and sendto_snomask are wierd
 - chatops actually checks if sender is an oper, why did no one notice this?
 - bugs in SMO ironed out, now sends to someone with ANY of the umodes/snomasks
+- Added #undef SECURECHANMSGSONLYGOTOSECURE - send only channel msgs to +z
+  people on +z channels
+- win32 fixes

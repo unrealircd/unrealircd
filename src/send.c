@@ -351,6 +351,11 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 		i = acptr->from->fd;
 		if (MyConnect(acptr) && IsRegisteredUser(acptr))
 		{
+#ifdef SECURECHANMSGSONLYGOTOSECURE
+			if (chptr->mode.mode & MODE_ONLYSECURE)
+				if (!IsSecure(acptr))
+					continue;
+#endif
 			vsendto_prefix_one(acptr, from, pattern, vl);
 			sentalong[i] = 1;
 		}
@@ -360,6 +365,12 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 			 * remote link already */
 			if (sentalong[i] == 0)
 			{
+#ifdef SECURECHANMSGSONLYGOTOSECURE
+				if (chptr->mode.mode & MODE_ONLYSECURE)
+					if (!IsSecure(acptr->from))
+						continue;
+#endif
+
 				vsendto_prefix_one(acptr, from, pattern, vl);
 				sentalong[i] = 1;
 			}

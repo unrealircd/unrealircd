@@ -103,6 +103,13 @@
 */
 #define PROPER_COREDUMP
 
+
+/* 
+ * If channel mode is +z, only send to secure links & people
+ *
+*/
+#undef SECURECHANMSGSONLYGOTOSECURE
+
 /*
  * be compatible with older cloak keys? If you link to servers beta4 and 
  * earlier without this the cloak keys will produce diff results
