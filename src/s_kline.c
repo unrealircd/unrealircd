@@ -318,9 +318,10 @@ int  find_tkline_match(aClient *cptr, int xx)
 	char host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
 	int match_type = 0;
 	int index;
+	Hook *tmphook;
+
 	if (IsServer(cptr) || IsMe(cptr))
 		return -1;
-	Hook *tmphook;
 
 	nowtime = TStime();
 	chost = cptr->sockhost;
