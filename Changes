@@ -1602,4 +1602,4 @@ seen. gmtime warning still there
 - Fixed bug #0000372 reported by MorPheus where Killed (<everything-but-the-first-char-in-killer-letter-got-shown> (reason))
 - Fixed bug #0000377 reported by MorPheus where IPs of servers were shown in nick collision notices
 - Fixed bug #0000371 reported by havlaz about an extra \n slipped in with the TKL notice
-
+- Fixed bug with all TKL commands not accepting nicks anymore (#0000370 reported by Ravage)

@@ -249,6 +249,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	TS   secs;
 	int  whattodo = 0;	/* 0 = add  1 = del */
 	int  i;
+	aClient *acptr = NULL;
 	char *mask = NULL;
 	char mo[1024], mo2[1024];
 	char *p, *usermask, *hostmask;
@@ -302,6 +303,21 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 			usermask = "*";
 		}
 		p = hostmask-1;
+	}
+	else
+	{
+		/* It's seemingly a nick .. let's see if we can find the user */
+		if ((acptr = find_client(mask, NULL)) && IsPerson(acptr))
+		{
+			usermask = "*";
+			hostmask = acptr->user->realhost;
+			p = hostmask - 1;
+		}
+		else
+		{
+			sendto_one(sptr, rpl_str(ERR_NOSUCHNICK), me.name, sptr->name, mask);
+			return 0;
+		}
 	}	
 	if (!whattodo)
 	{
