@@ -709,7 +709,7 @@ HEADER	*hptr;
 #ifdef __alpha
                 cp += 4;
 #else
-		cp += sizeof(rptr->ttl);
+		cp += sizeof(_getlong);
 #endif
    
 		dlen =  (int)_getshort(cp);
