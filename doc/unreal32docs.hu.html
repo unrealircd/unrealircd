@@ -472,7 +472,8 @@ A modulok bõvíthetik is más típusokkal a kiterjesztett ban típusokat.<br>
    <b>/spamfilter [add|del|remove|+|-] [típus] [tevékenység] [idõtartam] [indok] [regex]</b><br>
    <table border=0>
    <tr valign="top"><td><b>[típus]</b></td><td> meghatározza a célpont típusát; egyszerre többet is meg lehet adni:
-   'c'-t a csatornabeli üzenetekhez, 'p'-t a privát üzenetekhez, 'n'-et a privát értesítésekhez, 'N'-et a csatornabeli értesítésekhez, 'P'-t a part üzenetekhez, 'q'-t a kilépõ üzenetekhez és 'd'-t a dcc-hez</td></tr>
+   'c'-t a csatornabeli üzenetekhez, 'p'-t a privát üzenetekhez, 'n'-et a privát értesítésekhez, 'N'-et a csatornabeli értesítésekhez, 'P'-t a csatornáról lelépést jelzõ üzenetekhez,
+   'q'-t a kilépési üzenetekhez, 'd'-t a dcc-hez, és 'u'-t a felhasználókra (nick!user@host:valósnév alakú illesztési maszk)</td></tr>
    <tr valign="top"><td><b>[tevékenység]</b></td><td> meghatározza az elvégzendõ tevékenységet (csak 1 tevékenység adható meg)<br>
 <table>
 <tr><td>kill</td><td>kilövi a felhasználót</td></tr>
@@ -635,8 +636,8 @@ admin {
 <p>Szintaktika:<br>
 <pre>
 class &lt;name&gt; {
-	pingfreq &lt;ping-frekvencia&gt;;
-	connfreq &lt;kapcsolódási-frekvencia&gt;;
+	pingfreq &lt;ping-gyakoriság&gt;;
+	connfreq &lt;kapcsolódási-gyakoriság&gt;;
 	maxclients &lt;kliensek-maximális-száma&gt;;
 	sendq &lt;küldési-sor-mérete&gt;;
 	recvq &lt;fogadási-sor-mérete&gt;;
@@ -1867,23 +1868,24 @@ link hub.sajatnet.com {
 <p>Szintaktika [szabványos álparancsokra]:<br>
 <pre>
 alias &lt;név&gt; {
-	nick &lt;nick-ahová-továbbítsa&gt;;
+	target &lt;ahová-továbbítsa&gt;;
 	type &lt;álparancs-típusa&gt;;
 };</pre></p>
 <p>(Megjegyzés: lásd még az <a href="#includedirective">include</a> direktívát az UnrealIRCd szabványos álparancsokat tartalmazó fájljairól.)</p>
 <p>Az alias blokk [szabványos álparancsokra] lehetõvé teszi, hogy parancsokat továbbíts egy
   felhasználóhoz, például hogy a /chanserv üzenetet küldjön a chanserv felhasználónak.
-  Az alias:: meghatározza azon parancs nevét, ami lesz az álnév (pl.: chanserv).
-  Az alias::nick az a nicknév, ahová a parancs továbbítva lesz. Ha az alias:: ugyanaz,
-  mint a nicknév, az alias::nick elhagyható. Az alias::type meghatározza az álparancs 
-  típusát; érvényes típusok: services (a felhasználó egy szolgáltatás szerveren van), stats
-  (a felhasználó egy statisztikai szerveren van) és normal (a felhasználó egy közönséges felhasználó
-  bármilyen szerveren). Az alias blokknak van más célja is, amit az alábbiakban magyarázunk el.</p>
+  Az alias:: meghatározza azt a parancsnevet, ami lesz az álnév (pl.: chanserv).
+  Az alias::target egy nick- vagy csatornanév, ahová a parancs továbbítva lesz. Ha az alias:: ugyanaz,
+  mint a továbbítási célpont, az alias::target elhagyható. Az alias::type meghatározza
+  az álparancs típusát; érvényes típusok: services (a felhasználó egy szolgáltatás szerveren van), stats
+  (a felhasználó egy statisztikai szerveren van), normal (a felhasználó egy közönséges felhasználó
+  bármilyen szerveren), és channel (a célpont egy csatornanév). Az alias blokknak van más célja is,
+  amit az alábbiakban magyarázunk el.</p>
 <p>Szintaktika [formázott álparancsokra]:<br>
 <pre>
 alias &lt;név&gt; {
 	format &lt;reguláris-kifejezés&gt; {
-		nick &lt;nick-ahová-továbbítsa&gt;;
+		target &lt;ahová-továbbítsa&gt;;
 		type &lt;álparancs-típusa&gt;;
 		parameters &lt;paraméter-sztring&gt;;
 	};
@@ -1897,16 +1899,17 @@ alias &lt;név&gt; {
   ugyanaz, mint fent, az álparancs neve. Az alias::format blokkok értékei reguláris kifejezések,
   amelyek az álparancshoz küldött szöveggel lesznek összehasonlítva, és ha az egyik illik rá,
   annak az alias::format-nak az albejegyzései lesznek használatban. Lehet egyszerre több
-  alias::format-od is, hogy a parancs különbözõ dolgokat tegyen a neki küldött szövegtõl függõen.
-  Az alias::format::nick egy nicknév, ahová az álparancs továbbításra kerül. Az
-  alias::format::type meghatározza az elõbbi nicknevû felhasználó típusát.
+  alias::format-od is, hogy a parancs különbözõ dolgokat tegyen a neki küldött szövegtõl
+  függõen. Az alias::format::target az álparancs továbbításának célpontja.
+  Az alias::format::type meghatározza az elõbbi nicknevû felhasználó típusát.
   Az alias::format::parameters az, ami megmondja, milyen paraméterek legyenek elküldve
   a felhasználóhoz. Hogy hivatkozz az álparancshoz küldött paraméterek egyikére,
   írj egy % jelet egy azt követõ számmal, például %1 az elsõ paraméter. Lehetõséged van arra is,
   hogy hivatkozz egy adott paramétertõl kezdõdõen az üzenet végéig tartó összes paraméterre,
   ehhez írj be egy % jelet, majd egy számot és egy - jelet, például a %2- visszaadja az összes
-  paramétert a másodiktól kezdõdõen az utolsóig. A formázott álparancsokra vonatkozóan példákat
-  találhatsz a doc/example.conf-ban.</p>
+  paramétert a másodiktól kezdõdõen az utolsóig. Hasonló különleges célt szolgál még a %n is,
+  amit helyettesíteni fog annak a felhasználónak a neve, aki kiadta a parancsot. A formázott
+  álparancsokra vonatkozóan példákat találhatsz a doc/example.conf-ban.</p>
 <p></p></div>
 <p><font class="block_section">4.33 - </font><font class="block_name">Help Blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font><a name="helpblock"></a>
@@ -1965,7 +1968,7 @@ spamfilter {
 };</pre></p>
 <p>A <b>regex</b> egy reguláris kifejezés, amely alapján keresünk.<br>
    A <b>target</b> meghatározza, hol történjen a szûrés, lehetséges célpontok: channel, private, private-notice,
-   channel-notice, part, quit, dcc.<br>
+   channel-notice, part, quit, dcc, user.<br>
    Az <b>action</b> eldönti, mit történjen találat esetén, lásd <a href="#feature_spamfilter">itt</a> a lehetséges tevékenységek listáját.<br>
    A <b>reason</b> kihagyható, a kitiltás vagy a blokkolás indoklószövegének beállítására szolgál; ha nincs megadva, az alapértelmezés lesz használatban.<br>
    A <b>ban-time</b> sem kötelezõ, megadja a *line kitiltások lejárati idejét; ha kihagyod, az alapértelmezés lesz használatban (1 nap).<br>
