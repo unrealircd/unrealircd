@@ -2794,4 +2794,8 @@ seen. gmtime warning still there
 - Fixed invalid nameserver info when chrooted (nameserver was always localhost).
 - Fixed a remote include bug involving cached files. Thanks to chatsphere.net for helping to
   track this down!
-
+- Modified 404 numeric a bit (#0001515).
+- Fixed 'no server notice on /restart or /die', reported by Lx (#0001062). This was caused
+  by a bug in flush_connections(&me), hopefully there won't be any side effects.
+- Fixed file owner problems when IRC_UID/IRC_GID is used (eg: when running chrooted).
+- Fixed crashbug if we were unable to write a remote include file to disk.

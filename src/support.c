@@ -1770,6 +1770,10 @@ int unreal_copyfile(char *src, char *dest)
 
 	close(srcfd);
 	close(destfd);
+#if defined(IRC_UID) && defined(IRC_GID)
+	if (!loop.ircd_booted)
+		chown(dest, IRC_UID, IRC_GID);
+#endif
 	return 1;
 fail:
 	close(srcfd);

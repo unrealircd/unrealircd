@@ -418,7 +418,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 					{
 						if (!notice)
 							sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
-							    me.name, parv[0], parv[0],
+							    me.name, parv[0], chptr->chname,
 							    err_cantsend[6], p2);
 						continue;
 					}
@@ -430,7 +430,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 						{
 							if (!notice)
 								sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
-								    me.name, parv[0], parv[0],
+								    me.name, parv[0], chptr->chname,
 								    err_cantsend[6], p2);
 							continue;
 						}
@@ -487,7 +487,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 			{
 				if (!notice || (cansend == 8)) /* privmsg or 'cannot send notice'... */
 					sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
-					    me.name, parv[0], parv[0],
+					    me.name, parv[0], chptr->chname,
 					    err_cantsend[cansend - 1], p2);
 			}
 			continue;

@@ -145,6 +145,14 @@ char *download_file(char *url, char **error)
 	if (curl)
 	{
 		FILE *fd = fopen(tmp, "wb");
+		if (!fd)
+		{
+			snprintf(errorbuf, CURL_ERROR_SIZE, "Cannot write to %s: %s", tmp, strerror(ERRNO));
+			if (file)
+				free(file);
+			*error = errorbuf;
+			return NULL;
+		}
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, fd);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download);
@@ -156,6 +164,10 @@ char *download_file(char *url, char **error)
 		curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorbuf);
 		res = curl_easy_perform(curl);
 		fclose(fd);
+#if defined(IRC_UID) && defined(IRC_GID)
+		if (!loop.ircd_booted)
+			chown(tmp, IRC_UID, IRC_GID);
+#endif
 	}
 	if (file)
 		free(file);
@@ -195,14 +207,24 @@ void url_init(void)
  */
 void download_file_async(char *url, time_t cachetime, vFP callback)
 {
+	static char errorbuf[CURL_ERROR_SIZE];
 	CURL *curl = curl_easy_init();
 	if (curl)
 	{
-	        char *file = url_getfilename(url);
+	    char *file = url_getfilename(url);
 		char *filename = unreal_getfilename(file);
-        	char *tmp = unreal_mktemp("tmp", filename ? filename : "download.conf");
+        char *tmp = unreal_mktemp("tmp", filename ? filename : "download.conf");
 		FileHandle *handle = malloc(sizeof(FileHandle));
 		handle->fd = fopen(tmp, "wb");
+		if (!handle->fd)
+		{
+			snprintf(errorbuf, sizeof(errorbuf), "Cannot create '%s': %s", tmp, strerror(ERRNO));
+			callback(url, NULL, errorbuf, 0);
+			if (file)
+				MyFree(file);
+			MyFree(handle);
+			return;
+		}
 		handle->callback = callback;
 		handle->cachetime = cachetime;
 		strcpy(handle->filename, tmp);
@@ -280,6 +302,10 @@ void url_do_transfers_async(void)
 			curl_easy_getinfo(msg->easy_handle, CURLINFO_EFFECTIVE_URL, &url);
 			curl_easy_getinfo(msg->easy_handle, CURLINFO_FILETIME, &last_mod);
 			fclose(handle->fd);
+#if defined(IRC_UID) && defined(IRC_GID)
+			if (!loop.ircd_booted)
+				chown(handle->filename, IRC_UID, IRC_GID);
+#endif
 			if (msg->data.result == CURLE_OK)
 			{
 				if (code == 304 || (last_mod != -1 && last_mod < handle->cachetime))
