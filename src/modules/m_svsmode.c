@@ -110,8 +110,11 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	aClient *acptr;
 	char *m;
 	int what;
-	modebuf[0] = 0;
+	
 	int i = 4;
+
+
+	modebuf[0] = 0;
 	if(!(chptr = find_channel(parv[1], NULL)))
 		return 0;
 /*	if (parc >= 4) {
