@@ -39,7 +39,7 @@ MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OB
  SRC/M_SETNAME.OBJ SRC/M_SETHOST.OBJ SRC/M_CHGIDENT.OBJ SRC/M_SVSMOTD.OBJ \
  SRC/M_SVSNLINE.OBJ SRC/M_WHO.OBJ SRC/M_SWHOIS.OBJ SRC/M_SVSMODE.OBJ \
  SRC/M_AWAY.OBJ SRC/M_SVSNOOP.OBJ SRC/M_MKPASSWD.OBJ SRC/M_SVSO.OBJ SRC/M_SVSNICK.OBJ \
- SRC/SCAN.OBJ SRC/SCAN_SOCKS.OBJ 
+ SRC/SCAN.OBJ SRC/SCAN_SOCKS.OBJ SRC/SCAN_HTTP.OBJ
 
 
 ALL: WIRCD.EXE
@@ -258,6 +258,9 @@ src/scan_dummy.obj: src/modules/scan_dummy.c $(INCLUDES)
 
 src/scan_socks.obj: src/modules/scan_socks.c $(INCLUDES)
         $(CC) $(CFLAGS) src/modules/scan_socks.c
+
+src/scan_http.obj: src/modules/scan_http.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/scan_http.c
 
 src/win32/win32.res: src/win32/win32gui.rc
         $(RC) /l 0x409 /fosrc/win32/win32.res /i ./include /i ./src \

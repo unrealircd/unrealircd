@@ -63,8 +63,8 @@ struct _hsstruct
 };
 
 
-iFP			xVS_add = NULL;
-ConfigItem_blackhole	*blackh_conf = NULL;
+static iFP			xVS_add = NULL;
+static ConfigItem_blackhole	*blackh_conf = NULL;
 void	scan_http_scan(HStruct *h);
 void	scan_http_scan_port(HSStruct *z);
 #ifndef DYNAMIC_LINKING

@@ -59,8 +59,8 @@
 #endif
 
 
-iFP			xVS_add = NULL;
-ConfigItem_blackhole	*blackh_conf = NULL;
+static iFP			xVS_add = NULL;
+static ConfigItem_blackhole	*blackh_conf = NULL;
 void	scan_socks_scan(HStruct *h);
 void	scan_socks4_scan(HStruct *h);
 void	scan_socks5_scan(HStruct *h);
