@@ -60,7 +60,7 @@ aMessage	webtv_cmds[] =
 int	webtv_parse(aClient *sptr, char *string)
 {
 	char *cmd = NULL, *s = NULL;
-	int i;
+	int i, n;
 	aMessage *message = webtv_cmds;
 	static char *para[16];
 	
@@ -69,7 +69,8 @@ int	webtv_parse(aClient *sptr, char *string)
 		sendto_one(sptr, ":IRC %s %s :No command given", MSG_PRIVATE, sptr->name);
 		return 0;
 	}
-	
+
+	n = strlen(string);
 	cmd = strtok(string, " ");
 	if (!cmd)
 		return -2;	
@@ -83,7 +84,8 @@ int	webtv_parse(aClient *sptr, char *string)
 /*		sendto_one(sptr, ":IRC %s %s :Sorry, \"%s\" is an unknown command to me",
 			MSG_PRIVATE, sptr->name, cmd); */
 		/* restore the string*/
-		cmd[strlen(cmd)]= ' ';
+		if (strlen(cmd) < n)
+			cmd[strlen(cmd)]= ' ';
 		return -2;
 	}
 

@@ -136,6 +136,7 @@ int	m_message_Unload(int module_unload)
 ** rev argv 6/91
 **
 */
+static int recursive_webtv = 0;
 DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice)
 {
 	aClient *acptr;
@@ -198,17 +199,27 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 		 */
 		if (!strcasecmp(nick, "ircd") && MyClient(sptr))
 		{
-			parse(sptr, parv[2], (parv[2] + strlen(parv[2])));
+			if (!recursive_webtv)
+			{
+				recursive_webtv = 1;
+				parse(sptr, parv[2], (parv[2] + strlen(parv[2])));
+				recursive_webtv = 0;
+			}
 			continue;
 		}
 		if (!strcasecmp(nick, "irc") && MyClient(sptr))
 		{
-			if (webtv_parse(sptr, parv[2]) == -2)
+			if (!recursive_webtv)
 			{
-				parse(sptr, parv[2],
-				    (parv[2] + strlen(parv[2])));
+				recursive_webtv = 1;
+				if (webtv_parse(sptr, parv[2]) == -2)
+				{
+					parse(sptr, parv[2],
+					    (parv[2] + strlen(parv[2])));
+				}
+				recursive_webtv = 0;
+				continue;
 			}
-			continue;
 		}
 		if (*nick != '#' && (acptr = find_person(nick, NULL)))
 		{
