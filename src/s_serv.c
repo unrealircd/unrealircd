@@ -3598,7 +3598,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 	{
 		if (*parv[1] == '-')
 		{
-			if (!match("-dcc*", parv[1]))
+			if (!strnicmp("-dcc", parv[1], 4))
 			{
 				sendto_ops
 				    ("Rehashing dccdeny.conf on request of %s",
@@ -3606,7 +3606,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 				dcc_rehash();
 				return 0;
 			}
-			if (!match("-dyn*", parv[1]))
+			if (!strnicmp("-dyn", parv[1], 4))
 			{
 				if (!IsAdmin(sptr))
 					return 0;
@@ -3616,14 +3616,14 @@ int  m_rehash(cptr, sptr, parc, parv)
 				load_conf(ZCONF, 1);
 				return 0;
 			}
-			if (!match("-gar*", parv[1]))
+			if (!strnicmp("-gar", parv[1], 4))
 			{
 				if (!IsAdmin(sptr))
 					return 0;
 				loop.do_garbage_collect = 1;
 				return 0;
 			}
-			if (!match("-rest*", parv[1]))
+			if (!strnicmp("-rest", parv[1], 5))
 			{
 				if (!IsAdmin(sptr))
 					return 0;
@@ -3652,8 +3652,8 @@ int  m_rehash(cptr, sptr, parc, parv)
 				botmotd = (aMotd *) read_botmotd(BPATH);
 				return 0;
 			}
-			if (!match("-motd*", parv[1])
-			    || !match("-rules*", parv[1]))
+			if (!strnicmp("-motd", parv[1], 5)
+			    || !strnicmp("-rules", parv[1], 6))
 			{
 				if (!IsAdmin(sptr))
 					return 0;
@@ -3665,7 +3665,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 				read_tlines();
 				return 0;
 			}
-			if (!match("-vhos*", parv[1]))
+			if (!strnicmp("-vhos", parv[1], 5))
 			{
 				if (!IsAdmin(sptr))
 					return 0;
@@ -3676,7 +3676,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 				return 0;
 			}
 #ifdef STRIPBADWORDS
-			if (!match("-bad*", parv[1]))
+			if (!strnicmp("-bad", parv[1], 4))
 			{
 				if (!IsAdmin(sptr))
 					return 0;
@@ -3738,7 +3738,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 			{
 				if (*parv[2] == '-')
 				{
-					if (!match("-dcc*", parv[2]))
+					if (!strnicmp("-dcc", parv[2], 4))
 					{
 						sendto_serv_butone(&me,
 						    ":%s GLOBOPS :%s is remotely rehashing dccdeny.conf",
@@ -3749,7 +3749,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 						dcc_rehash();
 						return 0;
 					}
-					if (!match("-dyn*", parv[2]))
+					if (!strnicmp("-dyn", parv[2], 4))
 					{
 						if (!IsAdmin(sptr))
 							return 0;
@@ -3762,7 +3762,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 						load_conf(ZCONF, 1);
 						return 0;
 					}
-					if (!match("-rest*", parv[2]))
+					if (!strnicmp("-rest", parv[2], 5))
 					{
 						if (!IsAdmin(sptr))
 							return 0;
@@ -3805,8 +3805,8 @@ int  m_rehash(cptr, sptr, parc, parv)
 						    read_botmotd(BPATH);
 						return 0;
 					}
-					if (!match("-motd*", parv[2])
-					    || !match("-rules*", parv[2]))
+					if (!strnicmp("-motd", parv[2], 5)
+					    || !strnicmp("-rules", parv[2], 6))
 					{
 						if (!IsAdmin(sptr))
 							return 0;
@@ -3823,7 +3823,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 						read_tlines();
 						return 0;
 					}
-					if (!match("-vhos*", parv[2]))
+					if (!strnicmp("-vhos", parv[2], 5))
 					{
 						if (!IsAdmin(sptr))
 							return 0;

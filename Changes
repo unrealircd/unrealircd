@@ -20,9 +20,10 @@
  *                              
  */                             
                                 
-[ Unreal4.0 ]
+[ Unreal3.2 ]
 - Fixed a _serious_ bug in SERVER command, reported by Valen, Forrester,
   M0rpheus, JK, and Hiten.
 - Fixed /botserv problem
 - Fixed permission problem with SSL .pem files (was o+r)
 - Removed a redundant time.h include reported by trippin
+- Modified rehash flags to use strnicmp rather than match (faster)
