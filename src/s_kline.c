@@ -1301,7 +1301,10 @@ int place_host_ban(aClient *sptr, int action, char *reason, long duration)
 				tkllayer[2] = "S";
 			tkllayer[4] = hostip;
 			tkllayer[5] = me.name;
-			ircsprintf(mo, "%li", duration + TStime());
+			if (!duration)
+				strcpy(mo, "0"); /* perm */
+			else
+				ircsprintf(mo, "%li", duration + TStime());
 			ircsprintf(mo2, "%li", TStime());
 			tkllayer[6] = mo;
 			tkllayer[7] = mo2;
