@@ -297,9 +297,12 @@ char *xtok = show_change ? TOK_SVS2MODE : TOK_SVSMODE;
 		return 0;
 
 	setflags = 0;
-	for (i = 0; i <= Usermode_highest; i++)
-	if (Usermode_Table[i].flag && (acptr->umodes & Usermode_Table[i].mode))
-		setflags |= Usermode_Table[i].mode;
+	if (show_change) /* only used if show_change is set */
+	{
+		for (i = 0; i <= Usermode_highest; i++)
+		if (Usermode_Table[i].flag && (acptr->umodes & Usermode_Table[i].mode))
+			setflags |= Usermode_Table[i].mode;
+	}
 
 	/* parse mode change string(s) */
 	for (m = parv[2]; *m; m++)
