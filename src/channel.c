@@ -562,9 +562,7 @@ int  is_chan_op(cptr, chptr)
 /* chanop/halfop ? */
 	if (chptr)
 		if ((lp = find_user_link(chptr->members, cptr)))
-			return ((lp->flags & CHFL_CHANOP) ||
-				(lp->flags & CHFL_CHANOWNER) ||
-				(lp->flags & CHFL_CHANPROT));
+			return ((lp->flags & CHFL_CHANOP));
 
 	return 0;
 }
@@ -638,8 +636,7 @@ int  is_chanprot(cptr, chptr)
 
 	if (chptr)
 		if ((lp = find_user_link(chptr->members, cptr)))
-			return (lp->flags & CHFL_CHANPROT ||
-				lp->flags & CHFL_CHANOWNER);
+			return (lp->flags & CHFL_CHANPROT);
 
 	return 0;
 }
@@ -3620,7 +3617,7 @@ int  m_topic(cptr, sptr, parc, parv)
 				if (topiClen > (TOPICLEN))
 					topiClen = TOPICLEN;
 
-				if (nicKlen > (NICKLEN+USERLEN+HOSTLEN+4))
+				if (nicKlen > (NICKLEN+USERLEN+HOSTLEN+5))
 					nicKlen = NICKLEN+USERLEN+HOSTLEN+5;
 
 				chptr->topic = MyMalloc(topiClen + 1);
@@ -4852,6 +4849,7 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
                 }
                 /* remove bans */
+		/* reset the buffers */
 		modebuf[0] = '-';
 		modebuf[1] = '\0';
 		parabuf[0] = '\0';
@@ -4860,22 +4858,6 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 {
                         Addit('b', ban->banstr);
                 }
-		/* blah code */
-		if (b > 1)
-		{
-                        modebuf[b] = '\0';
-                        sendto_serv_butone_sjoin(cptr,
-                            ":%s MODE %s %s %s %lu",
-                            sptr->name, chptr->chname,
-                            modebuf, parabuf, chptr->creationtime);
-                        sendto_channel_butserv(chptr,
-                            sptr, ":%s MODE %s %s %s",
-                            sptr->name, chptr->chname, modebuf, parabuf);
-                }
-		modebuf[0] = '-';
-		modebuf[1] = '\0';
-		parabuf[0] = '\0';
-		b = 1;
                 for (ban = chptr->exlist; ban; ban = ban->next)
                 {
                         Addit('e', ban->banstr);

@@ -735,3 +735,20 @@ Fixed semantics with operoverride_verify and +s/+p
 channels.
 --Luke
 ===================================
+
+Kill me. Really. Still trying to fix services fun...
+--Luke
+===================================
+
+Given up for now on fixing the services "problem."
+(it isn't really a problem, afaik, it's just annoying.)
+Anyone that has ideas about what causes it, or how
+it can be fixed email luke@unrealircd.com.
+The problem is that IRC Services 5 starts sending out
+notices about being "unable to set modes for #channel"
+blah blah. There isn't any indication of anything actually
+being bounced, so we're not sure why it happens.
+--Luke
+===================================
+
+*** Unreal 3.1.5 Released ***
