@@ -357,6 +357,7 @@ void count_memory(aClient *cptr, char *nick)
 	extern aChannel *channel;
 	extern int flinks;
 	extern Link *freelink;
+	extern MemoryInfo StatsZ;
 
 	aClient *acptr;
 	Ban *ban;
@@ -404,11 +405,11 @@ void count_memory(aClient *cptr, char *nick)
 	{
 		if (MyConnect(acptr))
 		{
-/*			lc++;
-			for (link = acptr->confs; link; link = link->next)
+			lc++;
+			/*for (link = acptr->confs; link; link = link->next)
 				lcc++;
-			wle += acptr->notifies;
-			*/
+			wle += acptr->notifies;*/
+			
 		}
 		else
 			rc++;
@@ -482,7 +483,7 @@ void count_memory(aClient *cptr, char *nick)
 	    me.name, RPL_STATSDEBUG, nick, co, com);
 
 	sendto_one(cptr, ":%s %d %s :Classes %d(%d)",
-	    me.name, RPL_STATSDEBUG, nick, cl, cl * sizeof(aClass));
+	    me.name, RPL_STATSDEBUG, nick, StatsZ.classes, StatsZ.classesmem);
 
 	sendto_one(cptr, ":%s %d %s :Channels %d(%d) Bans %d(%d)",
 	    me.name, RPL_STATSDEBUG, nick, ch, chm, chb, chbm);

@@ -50,7 +50,7 @@
 #ifdef _WIN32
 #undef GLOBH
 #endif
-
+extern MemoryInfo StatsZ;
 /*
  * TODO:
  *  - deny version {} (V:lines)
@@ -1164,7 +1164,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 			continue;
 		}
 	}
-	if (isnew)
+	if (isnew) 
 		AddListItem(class, conf_class);
 	return 0;
 }
@@ -3146,6 +3146,8 @@ void	validate_configuration(void)
 				class_ptr->maxclients = 100;
 			}
 		}
+		StatsZ.classes++;
+		StatsZ.classesmem += sizeof(ConfigItem_class);
 	}
 	for (oper_ptr = conf_oper; oper_ptr; oper_ptr = (ConfigItem_oper *) oper_ptr->next)
 	{
@@ -3416,7 +3418,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	ConfigItem_help			*help_ptr;
 	ListStruct 	*next, *next2;
 
-
+	bzero(&StatsZ, sizeof(StatsZ));
 	flush_connections(&me);
 	if (sig == 1)
 	{

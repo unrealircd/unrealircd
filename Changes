@@ -1313,3 +1313,5 @@ seen. gmtime warning still there
   - reason for this is because for example ::ffff:192.168.1.5 would really fuck up stuff
   in the IRC protocol
 - Fixed a typo in doc/example.conf that I believe is causing ident not to work
+- Fixed a /stats Z bug where it didn't correctly report local clients
+- Made /stats Z once again report the # of classes and memory used by classes

@@ -95,6 +95,7 @@ extern aMotd *svsmotd;
 extern aMotd *motd;
 extern aMotd *rules;
 extern aMotd *botmotd;
+MemoryInfo StatsZ;
 
 int  R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
 
@@ -803,6 +804,7 @@ int InitwIRCD(int argc, char *argv[])
 	WSAStartup(wVersionRequested, &wsaData);
 #endif
 	bzero((char *)&me, sizeof(me));
+	bzero(&StatsZ, sizeof(StatsZ));
 	setup_signals();
 	init_ircstats();
 	umode_init();

@@ -1115,6 +1115,11 @@ struct stats {
 	unsigned int is_loc;	/* local connections made */
 };
 
+typedef struct _MemoryInfo {
+	unsigned int classes;
+	unsigned long classesmem;
+} MemoryInfo;
+
 struct ListOptions {
 	LOpts *next;
 	Link *yeslist, *nolist;
