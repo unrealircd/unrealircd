@@ -20,4 +20,6 @@
  *                              
  */                             
                                 
-[ Unreal4.0- 
+[ Unreal4.0 ]
+- Fixed a _serious_ bug in SERVER command, reported by Valen, Forester,
+  M0rpheus and JK.

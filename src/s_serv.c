@@ -697,7 +697,7 @@ int  m_server(cptr, sptr, parc, parv)
 		/* use first two chars of the password they send in as salt */
 
 		/* passwd may be NULL. Head it off at the pass... */
-		if (*cptr->passwd)
+		if (cptr->passwd && *cptr->passwd)
 		{
 			char salt[3];
 			extern char *crypt();
@@ -712,7 +712,7 @@ int  m_server(cptr, sptr, parc, parv)
 #else
 		encr = cptr->passwd;
 #endif /* CRYPT_LINK_PASSWORD */
-		if (*aconf->passwd && !StrEq(aconf->passwd, encr))
+		if (aconf->passwd && encr && *aconf->passwd && !StrEq(aconf->passwd, encr))
 		{
 			sendto_one(cptr,
 			    "ERROR :No Access (passwd mismatch) %s", inpath);
