@@ -2791,7 +2791,11 @@ void do_dns_async(id)
 			break;
 		}
 		pkts++;
+#ifndef _WIN32
 		if (ioctl(resfd, FIONREAD, &bytes) == -1)
+#else
+		if (ioctlsocket(resfd, FIONREAD, &bytes) == -1)
+#endif
 			bytes = 0;
 	} while ((bytes > 0) && (pkts < 10));
 }

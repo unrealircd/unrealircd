@@ -69,6 +69,8 @@ static char rcsid[] = "$Id$";
 #ifndef _WIN32
 #include <sys/time.h>
 #include <sys/socket.h>
+#else
+#include <sys/timeb.h>
 #endif
 #include "nameser.h"
 #include "resolv.h"
@@ -816,8 +818,13 @@ static int ircd_netinfo_res_init(haveenv, havesearch)
 
 u_int ircd_res_randomid()
 {
+#ifndef _WIN32
 	struct timeval now;
-
 	gettimeofday(&now, NULL);
 	return (0xffff & (now.tv_sec ^ now.tv_usec ^ getpid()));
+#else
+	struct _timeb now;
+	_ftime(&now);
+	return (0xffff & (now.time ^ now.millitm ^ getpid()));
+#endif
 }
