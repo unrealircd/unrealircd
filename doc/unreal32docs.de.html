@@ -1854,22 +1854,25 @@ bekannt als T:Line)</font><div class="desc">
 	motd &lt;motd-file&gt;;
 	rules &lt;rules-file&gt;;
 	shortmotd &lt;shortmotd-file&gt;;
+        opermotd &lt;opermotd-file&gt;;
+        botmotd &lt;botmotd-file&gt;;
 	channel &lt;channel-name&gt;;
 	options {
 		ssl;
 	}
 };</pre>
-<p>Mit dem TLD Block eine motd (Messageoftheday), rules und channels für einen
+<p>Mit dem TLD Block kann man eine motd (Messageoftheday), rules und channels für
 User basierend auf deren Host festlegen. Das ist nützlich, falls man
 verschiedene motd's für verschiedene Sprachen verwenden möchte.<br>
  <b>tld::mask</b> ist eine user@host Maske, die zum Usernamen und seiner
 Hostmask passen muss.<br>
- <b>tld::motd</b>, <b>tld::shortmotd</b>, und <b>tld::rules</b>  legen die
-jeweiligen Dateien für motd und rules fest, die in Abhängigkeit von der
-Hostmask angezeigt werden.<br>
+ <b>tld::motd</b>, <b>tld::shortmotd, tld::opermotd, tld::botmotd</b>, und <b>tld::rules</b>  legen die
+jeweiligen Dateien für motd, shortmotd, opermotd, botmotd und rules fest, die in Abhängigkeit von der
+Hostmask angezeigt werden. Dabei sind <b>tld::shortmotd, tld::opermotd </b>und<b>
+tld::botmotd</b> optional.<br>
  <b>tld::channel</b> ist optional, und ermöglicht es, einen Channel
 festzulegen, in den der User beim Connect geleitet wird. Wenn dieser Eintrag
-existiert, überschreibt er einen Default Auto join.<br>
+existiert, überschreibt er einen Default Auto join Channel.<br>
  <b>tld::options</b>  ermöglicht es, noch weitere notwendige Bedingungen zu
 setzen, bislang ist hier aber nur&nbsp; tld::options::ssl möglich.</p>
 <p>TLD Einträge werden von unten nach oben abgearbeitet.</p>
