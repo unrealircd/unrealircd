@@ -1985,8 +1985,14 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 				  break;
 			  }
 			  if (!bounce)	/* don't do the mode at all. */
+			  {
+				  char *tmp; 
+				  if ((tmp = strchr(param, ' ')))
+					*tmp = '\0';
+
 				  strncpyzt(chptr->mode.link, param,
 				      sizeof(chptr->mode.link));
+			  }
 			  tmpstr = param;
 		  }
 		  else

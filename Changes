@@ -622,3 +622,4 @@ seen. gmtime warning still there
 - Fixed makeconf
 - Changed the way modules work. We're now at MOD_VERSION 2
 - Changed ALL MODULES to version 2
+- Commited the +k fix to +L
