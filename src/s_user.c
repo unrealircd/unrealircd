@@ -787,15 +787,15 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 		 *
 		 * Moved the noident stuff here. -OnyxDragon
 		 */
-		if (!(sptr->flags & FLAGS_DOID))
+		if (!(sptr->flags & FLAGS_DOID)) 
 			strncpyzt(user->username, username, USERLEN + 1);
-		else if (sptr->flags & FLAGS_GOTID)
+		else if (sptr->flags & FLAGS_GOTID) 
 			strncpyzt(user->username, sptr->username, USERLEN + 1);
 		else
 		{
+
 			/* because username may point to user->username */
 			char temp[USERLEN + 1];
-
 			strncpyzt(temp, username, USERLEN + 1);
 			if (IDENT_CHECK == 0) {
 				strncpy(user->username, temp, USERLEN);

@@ -3959,7 +3959,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 			goto attach;
 		continue;
 	      attach:
-		if (index(uhost, '@'))
+		if (index(uhost, '@')) 
 			cptr->flags |= FLAGS_DOID;
 		get_sockhost(cptr, uhost);
 		/* FIXME */

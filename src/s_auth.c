@@ -115,8 +115,8 @@ void start_auth(aClient *cptr)
 		cptr->authfd = -1;
 		if (!DoingDNS(cptr))
 			SetAccess(cptr);
-	if (SHOWCONNECTINFO)
-		sendto_one(cptr, REPORT_FAIL_ID);
+		if (SHOWCONNECTINFO) 
+			sendto_one(cptr, REPORT_FAIL_ID);
 		return;
 	}
 	cptr->flags |= (FLAGS_WRAUTH | FLAGS_AUTH);

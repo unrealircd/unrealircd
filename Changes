@@ -1312,4 +1312,4 @@ seen. gmtime warning still there
 - Fixed some stuff to deal with #136 - Please note that we do NOT compress our addies
   - reason for this is because for example ::ffff:192.168.1.5 would really fuck up stuff
   in the IRC protocol
-
+- Fixed a typo in doc/example.conf that I believe is causing ident not to work
