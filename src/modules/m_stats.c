@@ -80,7 +80,7 @@ DLLFUNC int MOD_UNLOAD(m_stats)(int module_unload)
 	return MOD_SUCCESS;
 }
 
-extern int  max_connection_count;
+extern MODVAR int  max_connection_count;
 extern char *get_client_name2(aClient *, int);
 
 int stats_banversion(aClient *, char *);
@@ -796,10 +796,9 @@ int stats_vhost(aClient *sptr, char *para)
 
 int stats_mem(aClient *sptr, char *para)
 {
-	extern aChannel *channel;
-	extern int flinks;
-	extern Link *freelink;
-	extern MemoryInfo StatsZ;
+	extern MODVAR int flinks;
+	extern MODVAR Link *freelink;
+	extern MODVAR MemoryInfo StatsZ;
 
 	aClient *acptr;
 	Ban *ban;

@@ -3214,3 +3214,5 @@ This is the 3.2 fixes branch.
   versions of Windows except 2003. It also comes with any .NET application and the .NET
   framework. Unreal will automatically download th DLL if it is needed. Reported by Bugz 
   (#0001833)
+- Fixed some other win32 crashes due to modulizing: WHOWAS, STATS [some], SVSMOTD.
+  All caused by missing "MODVAR"s. Reported by Troco (#0001841).
