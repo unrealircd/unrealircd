@@ -532,3 +532,4 @@ seen. gmtime warning still there
 - Made Config say Unreal3.2
 - Made a popup menu for the tray icon to contain the same 'buttons' as the GUI does
 - Made Unreal run correctly on OpenBSD (thanks to PFAK for the shell)
+- Fixed the /stats C = crash if it is a leaf bug found by BaTmAn

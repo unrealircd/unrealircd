@@ -2560,7 +2560,7 @@ int  m_stats(cptr, sptr, parc, parv)
 			{
 				sendto_one(sptr, ":%s 241 %s L %s * %s %d",
 					me.name, sptr->name,
-					link_p->leafmask, link_p->leafdepth);
+					link_p->leafmask, link_p->servername, link_p->leafdepth);
 			}
 		  }
 		  break;
