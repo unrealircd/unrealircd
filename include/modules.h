@@ -257,6 +257,8 @@ void CommandDel(Command *command);
 #define HOOKTYPE_SERVER_QUIT 12
 #define HOOKTYPE_STATS 13
 #define HOOKTYPE_LOCAL_JOIN 14
+#define HOOKTYPE_CONFIGTEST 15
+#define HOOKTYPE_CONFIGRUN 16
 /* Module flags */
 #define MODFLAG_NONE	0x0000
 #define MODFLAG_LOADED	0x0001 /* (mod_load has been called and suceeded) */
@@ -265,4 +267,12 @@ void CommandDel(Command *command);
 #define MOD_SUCCESS 0
 #define MOD_FAILED -1
 #define MOD_DELAY 2
+
+#define CONFIG_MAIN 1
+#define CONFIG_SET 2
+#define CONFIG_BAN 3
+#define CONFIG_EXCEPT 4
+#define CONFIG_DENY 5
+#define CONFIG_ALLOW 6
+
 #endif

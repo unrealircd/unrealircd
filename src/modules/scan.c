@@ -60,9 +60,10 @@ int Scan_BanTime = 0, Scan_TimeOut = 0;
 static Scan_AddrStruct *Scannings = NULL;
 MUTEX Scannings_lock;
 static char	*scan_message;
-
+extern ConfigEntry		*config_find_entry(ConfigEntry *ce, char *name);
 DLLFUNC int h_scan_connect(aClient *sptr);
-DLLFUNC int	h_config_set_scan(void);
+DLLFUNC int h_config_test(ConfigFile *, ConfigEntry *, int);
+DLLFUNC int h_config_run(ConfigFile *, ConfigEntry *, int);
 DLLFUNC int h_stats_scan(aClient *sptr, char *stats);
 
 #ifndef DYNAMIC_LINKING
@@ -82,7 +83,7 @@ ModuleHeader Mod_Header
 EVENT(e_scannings_clean);
 
 static Event	*Scannings_clean = NULL;
-static Hook 	*LocConnect = NULL, *ConfUnknown = NULL, *ServerStats = NULL;
+static Hook 	*LocConnect = NULL, *ConfTest = NULL, *ConfRun = NULL, *ServerStats = NULL;
 static Hooktype *ScanHost = NULL;
 static int HOOKTYPE_SCAN_HOST;
 ModuleInfo ScanModInfo;
@@ -97,7 +98,8 @@ int    m_scan_Init(ModuleInfo *modinfo)
 	bcopy(modinfo,&ScanModInfo,modinfo->size);
 	ScanHost = (Hooktype *)HooktypeAdd(modinfo->handle, "HOOKTYPE_SCAN_HOST", &HOOKTYPE_SCAN_HOST);
 	LocConnect = HookAddEx(ScanModInfo.handle, HOOKTYPE_LOCAL_CONNECT, h_scan_connect);
-	ConfUnknown = HookAddEx(ScanModInfo.handle, HOOKTYPE_CONFIG_UNKNOWN, h_config_set_scan);
+	ConfTest = HookAddEx(ScanModInfo.handle, HOOKTYPE_CONFIGTEST, h_config_test);
+	ConfRun = HookAddEx(ScanModInfo.handle, HOOKTYPE_CONFIGRUN, h_config_run);
 	ServerStats = HookAddEx(ScanModInfo.handle, HOOKTYPE_STATS, h_stats_scan);
 	bzero(&Scan_bind, sizeof(Scan_bind));
 	IRCCreateMutex(Scannings_lock);
@@ -111,36 +113,6 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_scan_Load(int module_load)
 #endif
 {
-	if (Scan_endpoint.SIN_PORT == 0)
-	{
-		
-		if (*conf_listen->ip == '*') {
-			ircd_log(LOG_ERROR, "Scan.so failed to load: set::scan::endpoint is missing");
-			HooktypeDel(ScanHost,ScanModInfo.handle);
-			HookDel(LocConnect);
-			HookDel(ConfUnknown);
-			HookDel(ServerStats);
-			LockEventSystem();
-			EventDel(Scannings_clean);
-			UnlockEventSystem();
-			IRCMutexDestroy(Scannings_lock);
-			return MOD_FAILED;
-		}
-
-#ifndef INET6
-		Scan_endpoint.SIN_ADDR.S_ADDR = inet_addr(conf_listen->ip);
-#else
-	        inet_pton(AFINET, conf_listen->ip, Scan_endpoint.SIN_ADDR.S_ADDR);
-#endif
-		Scan_endpoint.SIN_PORT = htons(conf_listen->port);
-		Scan_endpoint.SIN_FAMILY = AFINET;
-	}
-	
-	if (Scan_BanTime == 0)
-		Scan_BanTime = 86400;
-
-	if (Scan_TimeOut == 0)
-		Scan_TimeOut = 20;
 	LockEventSystem();
 	Scannings_clean = EventAddEx(ScanModInfo.handle, "e_scannings_clean", 0, 0, e_scannings_clean, NULL);
 	UnlockEventSystem();
@@ -174,7 +146,8 @@ int	m_scan_Unload(void)
 	{
 		HooktypeDel(ScanHost,ScanModInfo.handle);
 		HookDel(LocConnect);
-		HookDel(ConfUnknown);
+		HookDel(ConfTest);
+		HookDel(ConfRun);
 		HookDel(ServerStats);
 		LockEventSystem();
 		EventDel(Scannings_clean);
@@ -347,104 +320,152 @@ DLLFUNC int h_scan_connect(aClient *sptr)
  *    };
  * 
  */
+DLLFUNC h_config_test(ConfigFile *cf, ConfigEntry *ce, int type) {
+	ConfigEntry *cep;
+	int errors = 0;
 
-DLLFUNC int	h_config_set_scan(void)
-{
-	ConfigItem_unknown_ext *sets;
-	ConfigEntry *ce;
-	char	*ip;
-	char	*port;
-	int	iport;
-	for (sets = conf_unknown_set; sets; 
-		sets = (ConfigItem_unknown_ext *)sets->next)
+	if (type != CONFIG_SET)
+		return 0;
+
+	if (!strcmp(ce->ce_varname, "scan"))
 	{
-		if (!strcmp(sets->ce_varname, "scan"))
+		if (!config_find_entry(ce->ce_entries, "endpoint"))
 		{
-		        for (ce = sets->ce_entries; ce; ce = (ConfigEntry *)ce->ce_next)
+			config_error("%s:%i: set::scan::endpoint missing", ce->ce_fileptr->cf_filename,
+				ce->ce_varlinenum);
+			errors++;
+		}
+		if (!config_find_entry(ce->ce_entries, "bantime"))
+		{
+			config_error("%s:%i: set::scan::bantime missing", ce->ce_fileptr->cf_filename,
+				ce->ce_varlinenum);
+			errors++;
+		}
+		if (!config_find_entry(ce->ce_entries, "timeout"))
+		{
+			config_error("%s:%i: set::scan::timeout missing", ce->ce_fileptr->cf_filename,
+				ce->ce_varlinenum);
+			errors++;
+		}
+		if (!config_find_entry(ce->ce_entries, "bind-ip"))
+		{
+			config_error("%s:%i: set::scan::bind-ip missing", ce->ce_fileptr->cf_filename,
+				ce->ce_varlinenum);
+			errors++;
+		}
+		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+		{
+			if (!cep->ce_varname)
 			{
-				if (!strcmp(ce->ce_varname, "bantime")) {
-					if (!ce->ce_vardata) {
-						config_status("%s:%i: set::scan::bantime has no value",
-								ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-						break;
-					}
-					Scan_BanTime = config_checkval(ce->ce_vardata,CFG_TIME);
-				}
-				else
-				if (!strcmp(ce->ce_varname, "timeout")) {
-					if (!ce->ce_vardata) {
-						config_status("%s:%i: set::scan::timeout has no value",
-								ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-						break;
-					}
-					Scan_TimeOut = config_checkval(ce->ce_vardata,CFG_TIME);
-				}
-				else
-				if (!strcmp(ce->ce_varname, "endpoint"))
+				config_error("%s:%i: blank set::scan item",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum);	
+				errors++;
+				continue;
+			}
+			if (!cep->ce_vardata)
+			{
+				config_error("%s:%i: set::scan::%s item without value",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, cep->ce_varname);
+				errors++;
+				continue;
+			}
+			if (!strcmp(cep->ce_varname, "endpoint"))
+			{
+				char copy[256];
+				char *ip, *port;
+				int iport;
+				strcpy(copy, cep->ce_vardata);
+				ipport_seperate(copy, &ip, &port);
+				if (!ip || !*ip)
 				{
-					if (!ce->ce_vardata)
-					{
-						config_status("%s:%i: set::scan::endpoint: syntax [ip]:port",
-							     ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-						break;
-					}
-					ipport_seperate(ce->ce_vardata, &ip, &port);
-					if (!ip || !*ip)
-					{
-						config_status("%s:%i: set::scan::endpoint: illegal ip",
-							     ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-						break;
-					}
-				        if (!port || !*port)
-					{
-						config_status("%s:%i: set::scan::endpoint: missing/invalid port",
-							    ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-					        break;
-					}
-					iport = atol(port);
-					if ((iport < 0) || (iport > 65535))
-					{
-						config_status("%s:%i: set::scan::endpoint: illegal port",
-							     ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-						break;
-					}
-#ifndef INET6
-					Scan_endpoint.SIN_ADDR.S_ADDR = inet_addr(ip);
-#else
-				        inet_pton(AFINET, ip, Scan_endpoint.SIN_ADDR.S_ADDR);
-#endif
-					Scan_endpoint.SIN_PORT = htons(iport);
-					Scan_endpoint.SIN_FAMILY = AFINET;
+					config_error("%s:%i: set::scan::endpoint: illegal ip:port mask",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+					return -1;
 				}
-				else if (!strcmp(ce->ce_varname, "bind-ip"))
+				if (strchr(ip, '*'))
 				{
-					if (!ce->ce_vardata)
-					{
-						config_status("%s:%i: set::scan::bind: syntax [ip]",
-							     ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-						break;
-					}
-#ifndef INET6
-					Scan_bind.S_ADDR = inet_addr(ce->ce_vardata);
-#else
-					inet_pton(AFINET, ce->ce_vardata, Scan_bind.S_ADDR);
-#endif
+					config_error("%s:%i: set::scan::endpoint: illegal ip",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+					return -1;
 				}
-				else if (!strcmp(ce->ce_varname, "message"))
+				if (!port || !*port)
 				{
-					if (!ce->ce_vardata)
-					{
-						config_status("%s:%i: set::scan::message requires an argument",
-							ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-						break;
-					}
-					if (scan_message)
-						free(scan_message);
-					scan_message = strdup(ce->ce_vardata);
+					config_error("%s:%i: set::scan::endpoint: missing port in mask",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+					return -1;
+				}
+				iport = atol(port);
+				if ((iport < 0) || (iport > 65535))
+				{
+					config_error("%s:%i: set::scan::endpoint: illegal port (must be 0..65536)",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+					return -1;
 				}
 			}
-			del_ConfigItem(sets, conf_unknown_set);
-		}	
+			else if (!strcmp(cep->ce_varname, "bind-ip"))
+			{
+				if (strchr(cep->ce_vardata, '*') && strcmp(cep->ce_vardata, "*"))
+				{
+					config_error("%s:%i: set::scan::bind-ip: illegal ip, (mask, and not '*')",
+						ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+					return -1;
+				}
+			}
+			else if (!strcmp(cep->ce_varname, "message"));
+			else if (!strcmp(cep->ce_varname, "bantime"));
+			else if (!strcmp(cep->ce_varname, "timeout"));
+			else 
+			{
+				config_error("%s:%i: unknown directive set::scan::%s",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					cep->ce_varname);
+				errors++;
+			}
+			
+		}
+		return errors ? -1 : 1;
+	}
+	else
+		return 0;
+}
+
+DLLFUNC h_config_run(ConfigFile *cf, ConfigEntry *ce, int type) {
+	ConfigEntry *cep;
+	int errors = 0;
+
+	if (type != CONFIG_SET)
+		return 0;
+	if (!strcmp(ce->ce_varname, "scan"))
+	{
+		char copy[256];
+		char *ip, *port;
+		int iport;
+		cep = config_find_entry(ce->ce_entries, "endpoint");
+		strcpy(copy, cep->ce_vardata);
+		ipport_seperate(copy, &ip, &port);
+#ifndef INET6
+		Scan_endpoint.SIN_ADDR.S_ADDR = inet_addr(ip);
+#else
+	        inet_pton(AFINET, ip, Scan_endpoint.SIN_ADDR.S_ADDR);
+#endif
+		iport = atol(port);
+		Scan_endpoint.SIN_PORT = htons(iport);
+		Scan_endpoint.SIN_FAMILY = AFINET;		
+		cep = config_find_entry(ce->ce_entries, "bantime");
+		Scan_BanTime = config_checkval(cep->ce_vardata,CFG_TIME);
+		cep = config_find_entry(ce->ce_entries, "timeout");
+		Scan_TimeOut = config_checkval(cep->ce_vardata,CFG_TIME);
+		cep = config_find_entry(ce->ce_entries, "bind-ip");
+#ifndef INET6
+		Scan_bind.S_ADDR = inet_addr(cep->ce_vardata);
+#else
+		inet_pton(AFINET, cep->ce_vardata, Scan_bind.S_ADDR);
+#endif
+		if ((cep = config_find_entry(ce->ce_entries, "message")))
+			scan_message = strdup(cep->ce_vardata);
+		return 1;		
 	}
 	return 0;
 }

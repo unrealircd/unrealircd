@@ -93,8 +93,6 @@ extern ConfigItem_deny_link	*conf_deny_link;
 extern ConfigItem_allow_channel *conf_allow_channel;
 extern ConfigItem_deny_version	*conf_deny_version;
 extern ConfigItem_log		*conf_log;
-extern ConfigItem_unknown	*conf_unknown;
-extern ConfigItem_unknown_ext   *conf_unknown_set;
 extern ConfigItem_alias		*conf_alias;
 extern ConfigItem_include	*conf_include;
 extern ConfigItem_help		*conf_help;

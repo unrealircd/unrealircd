@@ -1668,3 +1668,5 @@ seen. gmtime warning still there
 - Fixed a bug in SVSO where the t and Z flags could not be removed.
 - Updated .RELEASE.NOTES to include can_override
 - Fixed a bug where if set::help-channel was missing it was reported twice.
+- Made modules able to have configuration directives in conf3. The system to do this is 
+  completely new and works differently. All remnants of the old system have been removed.

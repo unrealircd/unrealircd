@@ -152,7 +152,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "include",		NULL,	  		_test_include	},
 	{ "link", 		_conf_link,		_test_link	},
 	{ "listen", 		_conf_listen,		_test_listen	},
-	{ "loadmodule",		_conf_loadmodule, 	_test_loadmodule},
+	{ "loadmodule",		NULL,		 	_test_loadmodule},
 	{ "log",		_conf_log,		_test_log	},
 	{ "me", 		_conf_me,		_test_me	},
 	{ "oper", 		_conf_oper,		_test_oper	},
@@ -352,8 +352,6 @@ ConfigItem_allow_channel *conf_allow_channel = NULL;
 ConfigItem_deny_link	*conf_deny_link = NULL;
 ConfigItem_deny_version *conf_deny_version = NULL;
 ConfigItem_log		*conf_log = NULL;
-ConfigItem_unknown	*conf_unknown = NULL;
-ConfigItem_unknown_ext  *conf_unknown_set = NULL;
 ConfigItem_alias	*conf_alias = NULL;
 ConfigItem_include	*conf_include = NULL;
 ConfigItem_help		*conf_help = NULL;
@@ -1060,6 +1058,16 @@ int	load_conf(char *filename)
 		for (cfptr3 = &conf, cfptr2 = conf; cfptr2; cfptr2 = cfptr2->cf_next)
 			cfptr3 = &cfptr2->cf_next;
 		*cfptr3 = cfptr;
+#ifndef _WIN32
+		config_status("Loading modules in %s", filename);
+		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
+			if (!strcmp(ce->ce_varname, "loadmodule"))
+			{
+				 ret = _conf_loadmodule(cfptr, ce);
+				 if (ret < 0) 
+					 	return ret;
+			}
+#endif
 		config_status("Searching through %s for include files..", filename);
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
 			if (!strcmp(ce->ce_varname, "include"))
@@ -1140,6 +1148,17 @@ int	config_run()
 				if ((cc->conffunc) && (cc->conffunc(cfptr, ce) < 0))
 					errors++;
 			}
+			else
+			{
+				int value;
+				for (global_i = Hooks[HOOKTYPE_CONFIGRUN]; global_i;
+				     global_i = global_i->next)
+				{
+					value = (*(global_i->func.intfunc))(cfptr,ce,CONFIG_MAIN);
+					if (value == 1)
+						break;
+				}
+			}
 		}
 	}
 	free_iConf(&iConf);
@@ -1197,9 +1216,30 @@ int	config_test()
 			}
 			else 
 			{
-				config_status("%s:%i: unknown directive %s", 
-					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-					ce->ce_varname);
+				int used = 0;
+				for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
+					global_i = global_i->next) 
+				{
+					int value;
+					value = (*(global_i->func.intfunc))(cfptr,ce,CONFIG_MAIN);
+					if (value == 2)
+						used = 1;
+					if (value == 1)
+					{
+						used = 1;
+						break;
+					}
+					if (value == -1)
+					{
+						used = 1;
+						errors++;
+						break;
+					}
+				}
+				if (!used)
+					config_status("%s:%i: unknown directive %s", 
+						ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+						ce->ce_varname);
 			}
 		}
 	}
@@ -2699,10 +2739,15 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else
 		{
-			ConfigItem_unknown *ca2 = MyMalloc(sizeof(ConfigItem_unknown));
-			ca2->ce = ce;
-			AddListItem(ca2, conf_unknown);
-			return -1;
+			int value;
+			for (global_i = Hooks[HOOKTYPE_CONFIGRUN]; global_i;
+			     global_i = global_i->next)
+			{
+				value = (*(global_i->func.intfunc))(conf,ce,CONFIG_ALLOW);
+				if (value == 1)
+					break;
+			}
+			return 0;
 		}
 	}
 
@@ -2765,9 +2810,31 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else
 		{
-			config_error("%s:%i: allow item with unknown type",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			return -1;
+			int used = 0;
+			for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
+				global_i = global_i->next) 
+			{
+				int value;
+				value = (*(global_i->func.intfunc))(conf,ce,CONFIG_ALLOW);
+				if (value == 2)
+					used = 1;
+				if (value == 1)
+				{
+					used = 1;
+					break;
+				}
+				if (value == -1)
+				{
+					used = 1;
+					errors++;
+					break;
+				}
+			}
+			if (!used) {
+				config_error("%s:%i: allow item with unknown type",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+				return -1;
+			}
 		}
 	}
 
@@ -2974,6 +3041,14 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 		AddListItem(ca, conf_except);
 	}
 	else {
+		int value;
+		for (global_i = Hooks[HOOKTYPE_CONFIGRUN]; global_i;
+		     global_i = global_i->next)
+		{
+			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_EXCEPT);
+			if (value == 1)
+				break;
+		}
 	}
 	return 1;
 }
@@ -3099,10 +3174,32 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 		return 1;
 	}
 	else {
-		config_error("%s:%i: unknown except type %s",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, 
-			ce->ce_vardata);
-		return -1;
+		int used = 0;
+		for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
+			global_i = global_i->next) 
+		{
+			int value;
+			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_EXCEPT);
+			if (value == 2)
+				used = 1;
+			if (value == 1)
+			{
+				used = 1;
+				break;
+			}
+			if (value == -1)
+			{
+				used = 1;
+				errors++;
+				break;
+			}
+		}
+		if (!used) {
+			config_error("%s:%i: unknown except type %s",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, 
+				ce->ce_vardata);
+			return -1;
+		}
 	}
 	return 1;
 }
@@ -3743,7 +3840,17 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 		ca->flag.type = CONF_BAN_USER;
 	else if (!strcmp(ce->ce_vardata, "realname"))
 		ca->flag.type = CONF_BAN_REALNAME;
-
+	else {
+		int value;
+		for (global_i = Hooks[HOOKTYPE_CONFIGRUN]; global_i;
+		     global_i = global_i->next)
+		{
+			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_BAN);
+			if (value == 1)
+				break;
+		}
+		return 0;
+	}
 	cep = config_find_entry(ce->ce_entries, "mask");	
 	ca->mask = strdup(cep->ce_vardata);
 	if (ca->flag.type == CONF_BAN_IP)
@@ -3776,10 +3883,32 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 	{}
 	else
 	{
-		config_error("%s:%i: unknown ban type %s",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			ce->ce_vardata);
-		return -1;
+		int used = 0;
+		for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
+			global_i = global_i->next) 
+		{
+			int value;
+			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_BAN);
+			if (value == 2)
+				used = 1;
+			if (value == 1)
+			{
+				used = 1;
+				break;
+			}
+			if (value == -1)
+			{
+				used = 1;
+				errors++;
+				break;
+			}
+		}
+		if (!used) {
+			config_error("%s:%i: unknown ban type %s",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+				ce->ce_vardata);
+			return -1;
+		}
 	}
 	
 	if (!(cep = config_find_entry(ce->ce_entries, "mask")))
@@ -3980,6 +4109,17 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				
 			}
 #endif
+		}
+		else 
+		{
+			int value;
+			for (global_i = Hooks[HOOKTYPE_CONFIGRUN]; global_i;
+			     global_i = global_i->next)
+			{
+				value = (*(global_i->func.intfunc))(conf,cep,CONFIG_SET);
+				if (value == 1)
+					break;
+			}
 		}
 	}
 	return 0;
@@ -4259,10 +4399,32 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else
 		{
-			config_error("%s:%i: unknown directive set::%s",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				cep->ce_varname);
-			errors++;
+			int used = 0;
+			for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
+				global_i = global_i->next) 
+			{
+				int value;
+				value = (*(global_i->func.intfunc))(conf,cep,CONFIG_SET);
+				if (value == 2)
+					used = 1;
+				if (value == 1)
+				{
+					used = 1;
+					break;
+				}
+				if (value == -1)
+				{
+					used = 1;
+					errors++;
+					break;
+				}
+			}
+			if (!used) {
+				config_error("%s:%i: unknown directive set::%s",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					cep->ce_varname);
+				errors++;
+			}
 		}
 	}
 	return (errors > 0 ? -1 : 1);
@@ -4339,12 +4501,13 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 
 int	_test_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 {
-	if (!ce->ce_vardata)
+/*	if (!ce->ce_vardata)
 	{
 		config_status("%s:%i: loadmodule without filename",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return -1;
 	}
+*/
 	return 1;
 }
 
