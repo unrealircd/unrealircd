@@ -2771,3 +2771,5 @@ seen. gmtime warning still there
   reported by blotter45 (#0001400).
 - Made ./Config remember the libcurl directory, reported by ace (#0001505).
 - Fixed a problem with the snprintf() check, reported by virusx (#0001510).
+- Fixed a bug where multiple spaces could appear in a MODE message, reported by Airnike
+  (#0001169).

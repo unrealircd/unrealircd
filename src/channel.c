@@ -1075,6 +1075,10 @@ void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr)
 	}
 #endif
 
+	/* Remove the trailing space from the parameters -- codemastr */
+	if (*pbuf)
+		pbuf[strlen(pbuf)-1]=0;
+
 	*mbuf++ = '\0';
 	return;
 }
@@ -1143,6 +1147,19 @@ static int send_mode_list(aClient *cptr, char *chname, TS creationtime, Member *
 	return sent;
 }
 
+/* A little kludge to prevent sending double spaces -- codemastr */
+static inline void send_channel_mode(aClient *cptr, char *from, aChannel *chptr)
+{
+	if (*parabuf)
+		sendto_one(cptr, ":%s %s %s %s %s %lu", from,
+			(IsToken(cptr) ? TOK_MODE : MSG_MODE), chptr->chname,
+			modebuf, parabuf, chptr->creationtime);
+	else
+		sendto_one(cptr, ":%s %s %s %s %lu", from,
+			(IsToken(cptr) ? TOK_MODE : MSG_MODE), chptr->chname,
+			modebuf, chptr->creationtime);
+}
+
 /*
  * send "cptr" a full list of the modes for channel chptr.
  */
@@ -1159,9 +1176,7 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 	sent = send_mode_list(cptr, chptr->chname, chptr->creationtime,
 	    chptr->members, CHFL_CHANOP, 'o');
 	if (!sent && chptr->creationtime)
-		sendto_one(cptr, ":%s %s %s %s %s %lu", me.name,
-		    (IsToken(cptr) ? TOK_MODE : MSG_MODE), chptr->chname,
-		    modebuf, parabuf, chptr->creationtime);
+		send_channel_mode(cptr, me.name, chptr);
 	else if (modebuf[1] || *parabuf)
 		sendmodeto_one(cptr, me.name,
 		    chptr->chname, modebuf, parabuf, chptr->creationtime);
@@ -1173,9 +1188,7 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 	sent = send_mode_list(cptr, chptr->chname, chptr->creationtime,
 	    chptr->members, CHFL_HALFOP, 'h');
 	if (!sent && chptr->creationtime)
-		sendto_one(cptr, ":%s %s %s %s %s %lu", me.name,
-		    (IsToken(cptr) ? TOK_MODE : MSG_MODE), chptr->chname,
-		    modebuf, parabuf, chptr->creationtime);
+		send_channel_mode(cptr, me.name, chptr);
 	else if (modebuf[1] || *parabuf)
 		sendmodeto_one(cptr, me.name,
 		    chptr->chname, modebuf, parabuf, chptr->creationtime);
