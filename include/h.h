@@ -110,7 +110,7 @@ extern EVENT(e_clean_out_throttling_buckets);
 extern void  module_loadall(int module_load);
 extern long set_usermode(char *umode);
 extern char *get_modestr(long umodes);
-extern void tkl_stats(aClient *cptr);
+extern void tkl_stats(aClient *cptr, int type, char *para);
 extern void                    config_error(char *format, ...);
 extern int			config_verbose;
 extern void config_progress(char *format, ...);

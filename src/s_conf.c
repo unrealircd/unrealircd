@@ -1347,6 +1347,7 @@ void	config_rehash()
 	ConfigItem_log			*log_ptr;
 	ConfigItem_alias		*alias_ptr;
 	ConfigItem_help			*help_ptr;
+	OperStat 			*os_ptr;
 	ListStruct 	*next, *next2;
 
 	USE_BAN_VERSION = 0;
@@ -1625,7 +1626,12 @@ void	config_rehash()
 		DelListItem(help_ptr, conf_help);
 		MyFree(help_ptr);
 	}
-
+	for (os_ptr = iConf.oper_only_stats_ext; os_ptr; os_ptr = (OperStat *)next)
+	{
+		next = (ListStruct *)os_ptr->next;
+		ircfree(os_ptr->flag);
+		MyFree(os_ptr);
+	}
 }
 
 int	config_post_test()
@@ -2199,157 +2205,6 @@ char *pretty_time_val(long timeval)
 		sprintf(buf, "%s%ld second%s", buf, timeval%60, timeval%60 != 1 ? "s" : "");
 	return buf;
 }
-
-/* Report the unrealircd.conf info -codemastr*/
-void report_dynconf(aClient *sptr)
-{
-	char *uhallow;
-	sendto_one(sptr, ":%s %i %s :*** Dynamic Configuration Report ***",
-	    me.name, RPL_TEXT, sptr->name);
-	sendto_one(sptr, ":%s %i %s :kline-address: %s", me.name, RPL_TEXT,
-	    sptr->name, KLINE_ADDRESS);
-	sendto_one(sptr, ":%s %i %s :modes-on-connect: %s", me.name, RPL_TEXT,
-	    sptr->name, get_modestr(CONN_MODES));
-	sendto_one(sptr, ":%s %i %s :modes-on-oper: %s", me.name, RPL_TEXT,
-	    sptr->name, get_modestr(OPER_MODES));
-	*modebuf = *parabuf = 0;
-	chmode_str(iConf.modes_on_join, modebuf, parabuf);
-	sendto_one(sptr, ":%s %i %s :modes-on-join: %s %s", me.name, RPL_TEXT,
-		sptr->name, modebuf, parabuf);
-	sendto_one(sptr, ":%s %i %s :snomask-on-oper: %s", me.name, RPL_TEXT,
-	    sptr->name, OPER_SNOMASK);
-	sendto_one(sptr, ":%s %i %s :snomask-on-connect: %s", me.name, RPL_TEXT,
-	    sptr->name, CONNECT_SNOMASK ? CONNECT_SNOMASK : "+");
-	if (OPER_ONLY_STATS)
-		sendto_one(sptr, ":%s %i %s :oper-only-stats: %s", me.name, RPL_TEXT,
-			sptr->name, OPER_ONLY_STATS);
-	if (RESTRICT_USERMODES)
-		sendto_one(sptr, ":%s %i %s :restrict-usermodes: %s", me.name, RPL_TEXT,
-			sptr->name, RESTRICT_USERMODES);
-	if (RESTRICT_CHANNELMODES)
-		sendto_one(sptr, ":%s %i %s :restrict-channelmodes: %s", me.name, RPL_TEXT,
-			sptr->name, RESTRICT_CHANNELMODES);
-	switch (UHOST_ALLOWED)
-	{
-		case UHALLOW_ALWAYS:
-			uhallow = "always";
-			break;
-		case UHALLOW_NEVER:
-			uhallow = "never";
-			break;
-		case UHALLOW_NOCHANS:
-			uhallow = "not-on-channels";
-			break;
-		case UHALLOW_REJOIN:
-			uhallow = "force-rejoin";
-			break;
-	}
-	sendto_one(sptr, ":%s %i %s :anti-spam-quit-message-time: %s", me.name, RPL_TEXT, 
-		sptr->name, pretty_time_val(ANTI_SPAM_QUIT_MSG_TIME));
-	sendto_one(sptr, ":%s %i %s :channel-command-prefix: %s", me.name, RPL_TEXT, sptr->name, CHANCMDPFX ? CHANCMDPFX : "`");
-#ifdef USE_SSL
-	sendto_one(sptr, ":%s %i %s :ssl::egd: %s", me.name, RPL_TEXT,
-		sptr->name, EGD_PATH ? EGD_PATH : (USE_EGD ? "1" : "0"));
-	sendto_one(sptr, ":%s %i %s :ssl::certificate: %s", me.name, RPL_TEXT,
-		sptr->name, SSL_SERVER_CERT_PEM);
-	sendto_one(sptr, ":%s %i %s :ssl::key: %s", me.name, RPL_TEXT,
-		sptr->name, SSL_SERVER_KEY_PEM);
-	sendto_one(sptr, ":%s %i %s :ssl::trusted-ca-file: %s", me.name, RPL_TEXT, sptr->name,
-	 iConf.trusted_ca_file ? iConf.trusted_ca_file : "<none>");
-	sendto_one(sptr, ":%s %i %s :ssl::options: %s %s %s", me.name, RPL_TEXT, sptr->name,
-		iConf.ssl_options & SSLFLAG_FAILIFNOCERT ? "FAILIFNOCERT" : "",
-		iConf.ssl_options & SSLFLAG_VERIFYCERT ? "VERIFYCERT" : "",
-		iConf.ssl_options & SSLFLAG_DONOTACCEPTSELFSIGNED ? "DONOTACCEPTSELFSIGNED" : "");
-#endif
-
-	sendto_one(sptr, ":%s %i %s :options::show-opermotd: %d", me.name, RPL_TEXT,
-	    sptr->name, SHOWOPERMOTD);
-	sendto_one(sptr, ":%s %i %s :options::hide-ulines: %d", me.name, RPL_TEXT,
-	    sptr->name, HIDE_ULINES);
-	sendto_one(sptr, ":%s %i %s :options::webtv-support: %d", me.name, RPL_TEXT,
-	    sptr->name, WEBTV_SUPPORT);
-	sendto_one(sptr, ":%s %i %s :options::identd-check: %d", me.name, RPL_TEXT,
-	    sptr->name, IDENT_CHECK);
-	sendto_one(sptr, ":%s %i %s :options::fail-oper-warn: %d", me.name, RPL_TEXT,
-	    sptr->name, FAILOPER_WARN);
-	sendto_one(sptr, ":%s %i %s :options::show-connect-info: %d", me.name, RPL_TEXT,
-	    sptr->name, SHOWCONNECTINFO);
-	sendto_one(sptr, ":%s %i %s :maxchannelsperuser: %i", me.name, RPL_TEXT,
-	    sptr->name, MAXCHANNELSPERUSER);
-	sendto_one(sptr, ":%s %i %s :auto-join: %s", me.name, RPL_TEXT,
-	    sptr->name, AUTO_JOIN_CHANS ? AUTO_JOIN_CHANS : "0");
-	sendto_one(sptr, ":%s %i %s :oper-auto-join: %s", me.name,
-	    RPL_TEXT, sptr->name, OPER_AUTO_JOIN_CHANS ? OPER_AUTO_JOIN_CHANS : "0");
-	sendto_one(sptr, ":%s %i %s :static-quit: %s", me.name, 
-		RPL_TEXT, sptr->name, STATIC_QUIT ? STATIC_QUIT : "<none>");	
-	sendto_one(sptr, ":%s %i %s :dns::timeout: %s", me.name, RPL_TEXT,
-	    sptr->name, pretty_time_val(HOST_TIMEOUT));
-	sendto_one(sptr, ":%s %i %s :dns::retries: %d", me.name, RPL_TEXT,
-	    sptr->name, HOST_RETRIES);
-	sendto_one(sptr, ":%s %i %s :dns::nameserver: %s", me.name, RPL_TEXT,
-	    sptr->name, NAME_SERVER);
-#ifdef THROTTLING
-	sendto_one(sptr, ":%s %i %s :throttle::period: %s", me.name, RPL_TEXT,
-			sptr->name, THROTTLING_PERIOD ? pretty_time_val(THROTTLING_PERIOD) : "disabled");
-	sendto_one(sptr, ":%s %i %s :throttle::connections: %d", me.name, RPL_TEXT,
-			sptr->name, THROTTLING_COUNT ? THROTTLING_COUNT : -1);
-#endif
-	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-bantime: %s", me.name, RPL_TEXT,
-			sptr->name, pretty_time_val(UNKNOWN_FLOOD_BANTIME));
-	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-amount: %dKB", me.name, RPL_TEXT,
-			sptr->name, UNKNOWN_FLOOD_AMOUNT);
-#ifdef NO_FLOOD_AWAY
-	if (AWAY_PERIOD)
-	{
-		sendto_one(sptr, ":%s %i %s :anti-flood::away-count: %d", me.name, RPL_TEXT, 
-			sptr->name, AWAY_COUNT);
-		sendto_one(sptr, ":%s %i %s :anti-flood::away-period: %s", me.name, RPL_TEXT,
-			sptr->name, pretty_time_val(AWAY_PERIOD));
-	}
-#endif
-	sendto_one(sptr, ":%s %i %s :ident::connect-timeout: %s", me.name, RPL_TEXT,
-			sptr->name, pretty_time_val(IDENT_CONNECT_TIMEOUT));
-	sendto_one(sptr, ":%s %i %s :ident::read-timeout: %s", me.name, RPL_TEXT,
-			sptr->name, pretty_time_val(IDENT_READ_TIMEOUT));
-	
-}
-
-/* Report the network file info -codemastr */
-void report_network(aClient *sptr)
-{
-	sendto_one(sptr, ":%s %i %s :*** Network Configuration Report ***",
-	    me.name, RPL_TEXT, sptr->name);
-	sendto_one(sptr, ":%s %i %s :network-name: %s", me.name, RPL_TEXT,
-	    sptr->name, ircnetwork);
-	sendto_one(sptr, ":%s %i %s :default-server: %s", me.name, RPL_TEXT,
-	    sptr->name, defserv);
-	sendto_one(sptr, ":%s %i %s :services-server: %s", me.name, RPL_TEXT,
-	    sptr->name, SERVICES_NAME);
-	sendto_one(sptr, ":%s %i %s :stats-server: %s", me.name, RPL_TEXT,
-	    sptr->name, STATS_SERVER);
-	sendto_one(sptr, ":%s %i %s :hosts::global: %s", me.name, RPL_TEXT,
-	    sptr->name, oper_host);
-	sendto_one(sptr, ":%s %i %s :hosts::admin: %s", me.name, RPL_TEXT,
-	    sptr->name, admin_host);
-	sendto_one(sptr, ":%s %i %s :hosts::local: %s", me.name, RPL_TEXT,
-	    sptr->name, locop_host);
-	sendto_one(sptr, ":%s %i %s :hosts::servicesadmin: %s", me.name, RPL_TEXT,
-	    sptr->name, sadmin_host);
-	sendto_one(sptr, ":%s %i %s :hosts::netadmin: %s", me.name, RPL_TEXT,
-	    sptr->name, netadmin_host);
-	sendto_one(sptr, ":%s %i %s :hosts::coadmin: %s", me.name, RPL_TEXT,
-	    sptr->name, coadmin_host);
-	sendto_one(sptr, ":%s %i %s :hiddenhost-prefix: %s", me.name, RPL_TEXT,
-	    sptr->name, hidden_host);
-	sendto_one(sptr, ":%s %i %s :help-channel: %s", me.name, RPL_TEXT,
-	    sptr->name, helpchan);
-	sendto_one(sptr, ":%s %i %s :hosts::host-on-oper-up: %i", me.name, RPL_TEXT, sptr->name,
-	    iNAH);
-	sendto_one(sptr, ":%s %i %s :cloak-keys: %X", me.name, RPL_TEXT, sptr->name,
-		CLOAK_KEYCRC);
-}
-
-
 
 /*
  * Actual config parser funcs
@@ -5099,7 +4954,19 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			tempiConf.anti_spam_quit_message_time = config_checkval(cep->ce_vardata,CFG_TIME);
 		}
 		else if (!strcmp(cep->ce_varname, "oper-only-stats")) {
-			ircstrdup(tempiConf.oper_only_stats, cep->ce_vardata);
+			if (!cep->ce_entries)
+			{
+				ircstrdup(tempiConf.oper_only_stats, cep->ce_vardata);
+			}
+			else
+			{
+				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				{
+					OperStat *os = MyMalloc(sizeof(OperStat));
+					ircstrdup(os->flag, cepp->ce_varname);
+					AddListItem(os, tempiConf.oper_only_stats_ext);
+				}
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "maxchannelsperuser")) {
 			tempiConf.maxchannelsperuser = atoi(cep->ce_vardata);
@@ -5444,7 +5311,20 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckNull(cep);
 		}
 		else if (!strcmp(cep->ce_varname, "oper-only-stats")) {
-			CheckNull(cep);
+			if (!cep->ce_entries)
+			{
+				CheckNull(cep);
+			}
+			else
+			{
+				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				{
+					if (!cepp->ce_varname)
+						config_error("%s:%i: blank set::oper-only-stats item",
+							cepp->ce_fileptr->cf_filename,
+							cepp->ce_varlinenum);
+				}
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "maxchannelsperuser")) {
 			CheckNull(cep);

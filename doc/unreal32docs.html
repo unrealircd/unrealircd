@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta17<br>
-  <b>Last doc update:</b> 2003-07-28</div>
+  <b>Last doc update:</b> 2003-08-01</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Luke / McSkaf / Syzop<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -1647,7 +1647,11 @@ set {
 <p><font class="set">set::oper-only-stats &lt;stats-list&gt;;</font><br>
   Specifies a list of stats flags with no seperators that defines stats flags 
   only opers can use. Leave this value out to allow users to use all flags, or 
-  specify * for users to be able to use no flags.</p>
+  specify * for users to be able to use no flags. Only short operflags may be specifed
+  here.</p>
+<p><font class="set">set::oper-only-stats {&lt;stats-flag&gt;; &lt;stats-flag&gt;;};</font><br>
+  Specifies a list of stats flags that can only be used by opers. This only works with long
+  stats flags.</p>
 <p><font class="set">set::maxchannelsperuser &lt;amount-of-channels&gt;;</font><br>
   Specifies the number of channels a single user may be in at any one time.</p>
 <p><font class="set">set::channel-command-prefix &lt;command-prefixes&gt;;</font><br>
@@ -2053,7 +2057,7 @@ set {
 <p>NOTE: the /helpop documentation is more up to date, use <i>/helpop command</i> (or <i>/helpop ?command</i> if you are oper) 
 to get more information on a command.</p>
 
-<table width="75%" border="1">
+<table width="90%" border="1">
   <tr> 
     <td width="33%"><div align="center"><b>Command</b></div></td>
     <td width="57%"><div align="center"><b>Description</b></div></td>
@@ -2528,36 +2532,48 @@ to get more information on a command.</p>
   </tr>
   <tr>
     <td height="36">stats &lt;option&gt;<br></td>
-    <td>b - Send the badwords list<br>
-      C - Send the link block list<br>
-      d - Send the deny link (auto) block list<br>
-      D - Send the deny link (all) block list<br>
-      e - Send the except socks block list<br>
-      E - Send the except ban block list<br>
-      F - Send the deny dcc block list<br>
-      G - Report TKL information (G:lines/Shuns)<br>
-      H - Send the link block list<br>
-      I - Send the allow block list<br>
-      K - Send the ban user/ban ip/except ban block list (Includes AKILLs)<br>
-      L - Send Link information<br>
-      m - Send the events list<br>
-      M - Send list of how many times each command was used<br>
-      n - Send the ban realname block list<br>
-      N - Send network configuration list<br>
-      O - Send the oper block list<br>
-      q - Send the SQLINE list<br>
-      Q - Send the ban nick block list<br>
-      r - Send the channel deny/allow block list<br>
-      s - Send the SCache and NS list<br>
-      S - Send the dynamic configuration list<br>
-      t - Send the tld block list<br>
-      T - Send connection information<br>
-      u - Send server uptime and connection count<br>
-      U - Send the ulines block list<br>
-      v - Send the deny version block list<br>
-      V - Send the vhost block list<br>
-      y - Send the class block list<br>
-      Z - Send memory usage information</td>
+	<td>
+	B - banversion - Send the ban version list<br>
+	b - badword - Send the badwords list<br>
+	C - link - Send the link block list<br>
+	d - denylinkauto - Send the deny link (auto) block list<br>
+	D - denylinkall - Send the deny link (all) block list<br>
+	e - excepthrottle - Send the except trottle block list<br>
+	E - exceptban - Send the except ban block list<br>
+	F - denydcc - Send the deny dcc block list<br>
+	G - gline - Send the gline list<br>
+	&nbsp;&nbsp;Extended flags: [+/-mrs] [mask] [reason] [setby]<br>
+	&nbsp;&nbsp;&nbsp;&nbsp;m Return glines matching/not matching the specified mask<br>
+	&nbsp;&nbsp;&nbsp;&nbsp;r Return glines with a reason matching/not matching the specified reason<br>
+   	&nbsp;&nbsp;&nbsp;&nbsp;s Return glines set by/not set by clients matching the specified name<br>
+	I - allow - Send the allow block list<br>
+	K - kline - Send the ban user/ban ip/except ban block list<br>
+	l - linkinfo - Send link information<br>
+	L - linkinfoall - Send all link information<br>
+	M - command - Send list of how many times each command was used<br>
+	n - banrealname - Send the ban realname block list<br>
+	O - oper - Send the oper block list<br>
+	S - set - Send the set block list<br>
+	s - shun - Send the shun list<br>
+	S - set - Send the set block list<br>
+  	&nbsp;&nbsp;Extended flags: [+/-mrs] [mask] [reason] [setby]<br>
+	&nbsp;&nbsp;&nbsp;&nbsp;m Return shuns matching/not matching the specified mask<br>
+	&nbsp;&nbsp;&nbsp;&nbsp;r Return shuns with a reason matching/not matching the specified reason<br>
+	&nbsp;&nbsp;&nbsp;&nbsp;s Return shuns set by/not set by clients matching the specified name<br>
+	P - port - Send information about ports<br>
+	q - sqline - Send the SQLINE list<br>
+	Q - bannick - Send the ban nick block list<br>
+	r - chanrestrict - Send the channel deny/allow block list<br>
+	t - tld - Send the tld block list<br>
+	T - traffic - Send traffic information<br>
+	u - uptime - Send the server uptime and connection count<br>
+	U - uline - Send the ulines block list<br>
+	v - Send the deny version block list<br>
+	V - Send the vhost block list<br>
+	X - notlink - Send the list of servers that are not current linked<br>
+	Y - class - Send the class block list<br>
+	Z - mem - Send memory usage information<br>
+	</td>
     <td>All</td>
   </tr>
   <tr>

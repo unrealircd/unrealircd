@@ -27,8 +27,8 @@ OBJS=auth.o aln.o badwords.o channel.o cloak.o crule.o dbuf.o \
 	res_init.o res_comp.o res_mkquery.o res_skipname.o s_auth.o \
 	s_bsd.o s_conf.o s_debug.o s_err.o s_extra.o s_kline.o \
 	s_misc.o s_numeric.o s_serv.o s_svs.o $(STRTOUL) socket.o \
-	ssl.o s_user.o scache.o send.o support.o umodes.o \
-	version.o webtv.o whowas.o zip.o cidr.o random.o extcmodes.o
+	ssl.o s_user.o scache.o send.o support.o umodes.o s_stats.o \
+	version.o webtv.o whowas.o zip.o cidr.o random.o extcmodes.o 
 
 SRC=$(OBJS:%.o=%.c)
 
@@ -97,6 +97,9 @@ dbuf.o: dbuf.c $(INCLUDES) ../include/dbuf.h
 
 packet.o: packet.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c packet.c
+
+s_stats.o: s_stats.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c s_stats.c
 
 badwords.o: badwords.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c badwords.c

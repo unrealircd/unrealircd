@@ -433,26 +433,111 @@ int  find_tkline_match_zap(aClient *cptr)
 	return -1;
 }
 
+#define BY_MASK 0x1
+#define BY_REASON 0x2
+#define NOT_BY_MASK 0x4
+#define NOT_BY_REASON 0x8
+#define BY_SETBY 0x10
+#define NOT_BY_SETBY 0x20
 
-void tkl_stats(aClient *cptr)
+typedef struct {
+	int flags;
+	char *mask;
+	char *reason;
+	char *setby;
+} TKLFlag;
+
+void parse_tkl_para(char *para, TKLFlag *flag)
+{
+	char *flags = strtok(para, " ");
+	char *tmp;
+	char what = '+';
+
+	bzero(flag, sizeof(TKLFlag));
+	for (; *flags; flags++)
+	{
+		switch (*flags)
+		{
+			case '+':
+				what = '+';
+				break;
+			case '-':
+				what = '-';
+				break;
+			case 'm':
+				if (flag->mask || !(tmp = strtok(NULL, " ")))
+					continue;
+				if (what == '+')
+					flag->flags |= BY_MASK;
+				else
+					flag->flags |= NOT_BY_MASK;
+				flag->mask = tmp;
+				break;
+			case 'r':
+				if (flag->reason || !(tmp = strtok(NULL, " ")))
+					continue;
+				if (what == '+')
+					flag->flags |= BY_REASON;
+				else
+					flag->flags |= NOT_BY_REASON;
+				flag->reason = tmp;
+				break;
+			case 's':
+				if (flag->setby || !(tmp = strtok(NULL, " ")))
+					continue;
+				if (what == '+')
+					flag->flags |= BY_SETBY;
+				else
+					flag->flags |= NOT_BY_SETBY;
+				flag->setby = tmp;
+				break;
+		}
+	}
+}	
+
+void tkl_stats(aClient *cptr, int type, char *para)
 {
 	aTKline *tk;
 	TS   curtime;
-
+	TKLFlag tklflags;
 	/*
 	   We output in this row:
 	   Glines,GZlines,KLine, ZLIne
 	   Character:
 	   G, Z, K, z
 	 */
-	if (!IsAnOper(cptr) && OPER_ONLY_STATS && (strchr(OPER_ONLY_STATS, 'G') || strchr(OPER_ONLY_STATS, 'g'))) {
-		sendto_one(cptr, err_str(ERR_NOPRIVILEGES), me.name, cptr->name);
-		return;
-	}
+
+	if (para)
+		parse_tkl_para(para, &tklflags);
 	tkl_check_expire(NULL);
 	curtime = TStime();
 	for (tk = tklines; tk; tk = tk->next)
 	{
+		if (type && tk->type != type)
+			continue;
+		if (para)
+		{
+			if (tklflags.flags & BY_MASK)
+				if (match(tklflags.mask, make_user_host(tk->usermask,
+					tk->hostmask)))
+					continue;
+			if (tklflags.flags & NOT_BY_MASK)
+				if (!match(tklflags.mask, make_user_host(tk->usermask,
+					tk->hostmask)))
+					continue;
+			if (tklflags.flags & BY_REASON)
+				if (match(tklflags.reason, tk->reason))
+					continue;
+			if (tklflags.flags & NOT_BY_REASON)
+				if (!match(tklflags.reason, tk->reason))
+					continue;
+			if (tklflags.flags & BY_SETBY)
+				if (match(tklflags.setby, tk->setby))
+					continue;
+			if (tklflags.flags & NOT_BY_SETBY)
+				if (!match(tklflags.setby, tk->setby))
+					continue;
+		}
 		if (tk->type == (TKL_KILL | TKL_GLOBAL))
 		{
 			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
@@ -727,7 +812,7 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	  case '?':
 		  if (IsAnOper(sptr))
-			  tkl_stats(sptr);
+			  tkl_stats(sptr,0,NULL);
 	}
 	return 0;
 }

@@ -57,6 +57,11 @@ struct ChMode {
         unsigned char   kmode;
 };
 
+typedef struct _OperStat {
+	struct _OperStat *prev, *next;
+	char *flag;
+} OperStat;
+
 typedef struct zConfiguration aConfiguration;
 struct zConfiguration {
 	unsigned som:1;
@@ -86,6 +91,7 @@ struct zConfiguration {
 	char *auto_join_chans;
 	char *oper_auto_join_chans;
 	char *oper_only_stats;
+	OperStat *oper_only_stats_ext;
 	int  maxchannelsperuser;
 	int  anti_spam_quit_message_time;
 	char *egd_path;

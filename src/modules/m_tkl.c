@@ -137,7 +137,7 @@ DLLFUNC int m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc == 1)
 	{
-		tkl_stats(sptr);
+		tkl_stats(sptr, TKL_KILL|TKL_GLOBAL, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
 		return 0;
 	}
@@ -160,7 +160,7 @@ DLLFUNC int m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc == 1)
 	{
-		tkl_stats(sptr);
+		tkl_stats(sptr, TKL_GLOBAL|TKL_ZAP, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
 		return 0;
 	}
@@ -183,7 +183,7 @@ DLLFUNC int m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc == 1)
 	{
-		tkl_stats(sptr);
+		tkl_stats(sptr, TKL_GLOBAL|TKL_SHUN, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
 		return 0;
 	}
@@ -206,7 +206,7 @@ DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc == 1)
 	{
-		tkl_stats(sptr);
+		tkl_stats(sptr, TKL_KILL, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
 		return 0;
 	}
@@ -233,7 +233,7 @@ DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc == 1)
 	{
-		tkl_stats(sptr);
+		tkl_stats(sptr, TKL_ZAP, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
 		return 0;
 	}
@@ -276,7 +276,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 
 	if (parc == 1)
 	{
-		tkl_stats(sptr);
+		tkl_stats(sptr, 0, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
 		return 0;
 	}

@@ -244,7 +244,7 @@ void	init_CommandHash(void)
 	add_Command(MSG_TIME, TOK_TIME, m_time, MAXPARA);
 	add_Command(MSG_CONNECT, TOK_CONNECT, m_connect, MAXPARA);
 	add_CommandX(MSG_VERSION, TOK_VERSION, m_version, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
-	add_Command(MSG_STATS, TOK_STATS, m_stats, MAXPARA);
+	add_Command(MSG_STATS, TOK_STATS, m_stats, 3);
 	add_Command(MSG_LINKS, TOK_LINKS, m_links, MAXPARA);
 	add_CommandX(MSG_ADMIN, TOK_ADMIN, m_admin, MAXPARA, M_UNREGISTERED|M_USER|M_SHUN);
 	add_Command(MSG_SUMMON, NULL, m_summon, 1);

@@ -2306,3 +2306,9 @@ seen. gmtime warning still there
 - minor m_kick tweak.
 - Fixed bug in /silence regarding cloaked hosts, reported by kuwatog (#0001157).
 - Fixed a problem with a Sleep call on win32
+- Rewrote the /stats system. The new system allows for long flags for example
+  /stats gline to list glines rather than just /stats G (old flags are still
+  supported). Additionally, for glines an extended syntax is now supported allowing
+  more refined searches. /stats G +m *@*.aol.com lists only glines that match that 
+  mask. For more info do /stats ?. 
+- Added stats flags for except throttle and ban version blocks

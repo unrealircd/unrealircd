@@ -92,28 +92,6 @@ void dcc_sync(aClient *sptr)
 	}
 }
 
-void report_flines(aClient *sptr)
-{
-	ConfigItem_deny_dcc *tmp;
-	char *filemask, *reason;
-	char a = 0;
-
-	for (tmp = conf_deny_dcc; tmp; tmp = (ConfigItem_deny_dcc *) tmp->next)
-	{
-		filemask = BadPtr(tmp->filename) ? "<NULL>" : tmp->filename;
-		reason = BadPtr(tmp->reason) ? "<NULL>" : tmp->reason;
-		if (tmp->flag.type2 == CONF_BAN_TYPE_CONF)
-			a = 'c';
-		if (tmp->flag.type2 == CONF_BAN_TYPE_AKILL)
-			a = 's';
-		if (tmp->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
-			a = 'o';
-		sendto_one(sptr, ":%s %i %s :%c %s %s", me.name, RPL_TEXT,
-		    sptr->name, a, filemask, reason);
-	}
-
-}
-
 void	DCCdeny_add(char *filename, char *reason, int type)
 {
 	ConfigItem_deny_dcc *deny = NULL;
