@@ -480,3 +480,5 @@ seen. gmtime warning still there
      listen [ip]:port, for IPv6 - listen [3fff:ff::1]:6667
 - Fixed some compilation error with IPv6
 - Fixed-fixed listen format troubles, larne++
+- Possible fixed some +d bug(s)
+

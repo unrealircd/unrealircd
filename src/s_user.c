@@ -2066,21 +2066,12 @@ static int m_message(cptr, sptr, parc, parv, notice)
 				    mode.mode & MODE_STRIPBADWORDS ? (char
 				    *)stripbadwords_channel(text) : text);
 #endif
-/*				if (!prefix)
-				{
-					sendto_channel_butone(cptr, sptr, chptr,
-					    ":%s %s %s :%s",
-					    parv[0], cmd, nick, text);
-				}
-				else
-				{ */
 				sendto_channelprefix_butone_tok(cptr,
 				    sptr, chptr,
 				    prefix,
 				    notice ? MSG_NOTICE : MSG_PRIVATE,
 				    notice ? TOK_NOTICE : TOK_PRIVATE,
 				    nick, text);
-/*				}*/
 				sendanyways = 0;
 				continue;
 			}
