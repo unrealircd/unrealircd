@@ -409,3 +409,5 @@
 - Possible FD leak in ircd_log, caused by some codemastr coding(TM)
 - #define HELP_WHO for the "did a /who 0 o"
 - Added a new Win32 GUI does it work, no one knows
+- Rewrote the ircd_log function a bit to fix the FD bug better, not sure wtf I was smoking
+  when I wrote the last one :P

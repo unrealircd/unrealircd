@@ -411,17 +411,12 @@ void ircd_log(int flags, char *format, ...)
 	strcat(buf, "\n");
 	sprintf(timebuf, "[%s] - ", myctime(TStime()));
 	for (logs = conf_log; logs; logs = (ConfigItem_log *) logs->next) {
-		fd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY, S_IRUSR|S_IWUSR);
-		if (fd == -1)
-			continue;
 		if (logs->flags & flags) {
+			fd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY, S_IRUSR|S_IWUSR);
+			if (fd == -1)
+				continue;
 			write(fd, timebuf, strlen(timebuf));
 			write(fd, buf, strlen(buf));
-			close(fd);
-		}
-		else
-		{
-			/* anti-codemastr(TM) coding */
 			close(fd);
 		}
 	}
