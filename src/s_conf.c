@@ -3218,6 +3218,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	/* Clean up listen records */
 	close_listeners();
 	listen_cleanup();
+	close_listeners();
 	run_configuration();
 	check_pings(TStime(), 1);
 	sendto_realops("Completed rehash");
