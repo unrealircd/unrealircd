@@ -3977,6 +3977,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 							tlds->motd = amotd;
 						}
 					}
+					tlds->motd = read_motd(tlds->motd_file);
 					if (!tlds->flag.rulesptr) {
 						while (tlds->rules)
 						{
@@ -3986,18 +3987,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 							tlds->rules = amotd;
 						}
 					}
-				}
-				for (tlds = conf_tld; tlds;
-				    tlds = (ConfigItem_tld *) tlds->next) {
-					if (!(tlds->motd = Find_file(tlds->motd_file,0)))
-						tlds->motd = read_motd(tlds->motd_file);
-					else 
-						tlds->flag.motdptr = 1;
-					if (!(tlds->rules = Find_file(tlds->rules_file,0)))
-						tlds->rules = read_rules(tlds->rules_file);
-					else
-						tlds->flag.rulesptr = 1;
-
+					tlds->rules = read_rules(tlds->rules_file);
 				}
 				return 0;
 			}

@@ -1014,13 +1014,11 @@ int  InitwIRCD(argc, argv)
 		{
 			/* run as a specified user */
 
-			(void)fprintf(stderr,
-			    "WARNING: ircd invloked as root\n         changing to uid = %d\n",
-			    IRC_UID);
-			(void)fprintf(stderr,
-			    "         changing to gid %d.\n",
-			    IRC_GID); (void)setuid(IRC_UID);
+			(void)fprintf(stderr, "WARNING: ircd invoked as root\n");
+                        (void)fprintf(stderr, "         changing to uid %d\n", IRC_UID);
+			(void)fprintf(stderr, "         changing to gid %d\n", IRC_GID);
 			(void)setgid(IRC_GID);
+                        (void)setuid(IRC_UID);
 		}
 #else
 		/* check for setuid root as usual */
@@ -1446,4 +1444,3 @@ static void setup_signals()
 	(void)signal(SIGSEGV,CleanUpSegv);
 #endif
 }
-

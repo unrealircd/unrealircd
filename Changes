@@ -742,3 +742,10 @@ seen. gmtime warning still there
 - Added wildcard support to include and loadmodule in win32
 - Added SVSMODE # -e to work just like -b
 - Fixed SVSMODE compile error
+- Added tgf's patches for these bugs:
+   * if you dont have a rules file and do "rehash -motd" then the server 
+   segfaults.
+   * setgid has to be called before setuid... cos if you change to a non-priv
+      uid first then you are not allowed to setgid!
+
+   
