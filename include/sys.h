@@ -185,4 +185,8 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 # define IRCDCONF_DELIMITER ':'
 #endif
 
+#ifndef RTLD_NOW
+#define RTLD_LAZY
+#endif
+
 #endif /* __sys_include__ */

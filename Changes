@@ -458,3 +458,4 @@
 - Possible fixed a buggie in +f
 - Fixed a bug causing Found your hostname (cached) to be displayed 2 times
 - Fixed RTLD_NOW problem with openbsd
+- Removed SJOIN/SJOIN2 support in SJOIN
