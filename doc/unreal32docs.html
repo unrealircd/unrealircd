@@ -439,6 +439,10 @@
   maxperip &lt;max-connections-per-ip&gt;;<br>
   redirect-server &lt;server-to-forward-to&gt;;<br>
   redirect-port &lt;port-to-forward-to&gt;;<br>
+  options {<br>
+  &lt;option&gt;;<br>
+  &lt;option&gt;;<br>
+  };<br>
   };</p>
 <p>The allow class is similar to an I:line but provides more features. The allow::ip 
   specifies a user@ip hostmask for a user to match to connect and allow::hostname 
@@ -452,7 +456,10 @@
   you specify the maximum number of clients that may connect from a single IP. 
   Lastly, the allow block supports redirection when the server is full, allow::redirect-server 
   specifies the address of a server to forward to, and allow::redirect-port specifies 
-  the port, if no port is specified, 6667 is assumed. </p>
+  the port, if no port is specified, 6667 is assumed. The allow::options allows you to specify
+  a few options on how the client should be treated. Currently valid values are
+  allow::options::useip which forces the IP to be displayed rather than a hostname, and 
+  allow::options::noident which forces the username to be used rather than the ident.</p>
 <p>Note: for auto-redirection to occur the client must have support for the redirection 
   numeric, at this time not many clients do.</p>
 <p>Examples:<br>
@@ -2080,15 +2087,11 @@
     <td>Rehashes the servers config file. Including a server name allows you to 
       rehash a remote servers config file. Several flags are also available. They 
       Include <br>
-      -dccdeny - Rehashes dccdeny.conf<br>
-      -dynconf - Rehashes UnrealIRCd Config and Network file<br>
-      -restrict - Rehashes chrestrict.conf<br>
-      -vhost - Rehashes vhost.conf<br>
-      -motd - Rehashes all MOTD files and RULES files (including T:lines)<br>
+      -all - Rehashes all config files
+      -motd - Rehashes all MOTD files and RULES files (including tld {})<br>
       -opermotd - Rehashes the OPERMOTD<br>
       -botmotd - Rehashes the BOTMOTD<br>
       -garbage - Force garbage collection<br>
-      -badwords - Rehashes the badwords config.</td>
     <td>IRCop</td>
   </tr>
   <tr> 
