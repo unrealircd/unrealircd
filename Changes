@@ -1363,3 +1363,4 @@ seen. gmtime warning still there
   stronger than SHA1 and much stronger than MD5)
 - Added MD5 and SHA1 password encryption support to the win32 version whether SSL is
   installed or not using the CryptoAPI library included in Windows.
+- Added extras/channeldumper.c
