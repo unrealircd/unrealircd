@@ -128,16 +128,23 @@ struct hostent *newdns_checkcacheip(aClient *ac)
 void newdns_lookupfromip(int senton)
 {
         DNSCache *i;
-		struct hostent *resolvedhost; /* What we will eventually return*/
-		                              /*filled in by gethostbyaddr() */
+	int ic; /*My GP pointer*/
+	struct hostent *resolvedhost; /* What we will eventually return*/
+	                              /*filled in by gethostbyaddr() */
 
-		aClient *  ac=senton;   /* We are given the address of the struct, as i am a mong, i
-					* I managed to differenciate the pointer twice .. hence the
-					* /  *** / 's  That was a bugger ... anyway this all works*/
+	aClient *  ac=senton;   /* We are given the address of the struct, as i am a mong, i
+				* I managed to differenciate the pointer twice .. hence the
+				* /  *** / 's  That was a bugger ... anyway this all works*/
 
-		unsigned long int ipaddr = (/ac)->ip.s_addr;
+	unsigned long int ipaddr = (ac)->ip.s_addr;
 
-        /*We will need to check for cached names first, but code that second*/
+	CRITICAL_SECTION critsec;
+
+	InitializeCriticalSection(&critsec);
+
+	EnterCriticalSection(&critsec);
+       
+       	/*We will need to check for cached names first, but code that second*/
         resolvedhost = gethostbyaddr(&(*ac).ip,4,AF_INET);
 
         /*ok we need to check if we actually managed to recieve anything*/
@@ -165,14 +172,7 @@ void newdns_lookupfromip(int senton)
 		/* Check that no one is fiddling with this ... if they are, wait for them to stop */
 
 		{
-			CRITICAL_SECTION critsec;
 
-			InitializeCriticalSection(&critsec);
-
-			EnterCriticalSection(&critsec);
-
-
-			/* Set the Make Safe directive, so that nothing else fiddles with the thing while we do ..*/
 
 		if (!first) /*For the first time, ie when we have not created our cache */
 		{
@@ -198,8 +198,13 @@ void newdns_lookupfromip(int senton)
 			}
 			last->cachedhost->h_addrtype = resolvedhost->h_addrtype;
 			last->cachedhost->h_length = resolvedhost->h_length;
-			last->cachedhost->h_addr_list = malloc(resolvedhost->h_length);
-			memcpy (&last->cachedhost->h_addr_list, &resolvedhost->h_addr_list, resolvedhost->h_length);	
+			last->cachedhost->h_addr_list = malloc(/*resolvedhost->h_length*/4);
+			for( ic=0; resolvedhost->h_addr_list[ic] != NULL ;ic++)
+			{
+				last->cachedhost->h_addr_list[ic]= malloc(4);
+				memcpy(*(last->cachedhost->h_addr_list), resolvedhost->h_addr_list[ic],resolvedhost->h_length);
+			}
+			/*memcpy (&last->cachedhost->h_addr_list, &resolvedhost->h_addr_list, resolvedhost->h_length);	*/
 
 			(ac)->hostp= last->cachedhost;
 
@@ -242,8 +247,13 @@ void newdns_lookupfromip(int senton)
 			}
 			last->cachedhost->h_addrtype = resolvedhost->h_addrtype;
 			last->cachedhost->h_length = resolvedhost->h_length;
-			last->cachedhost->h_addr_list = malloc(resolvedhost->h_length);
-			memcpy (&last->cachedhost->h_addr_list, &resolvedhost->h_addr_list, resolvedhost->h_length);
+			last->cachedhost->h_addr_list = malloc(/*resolvedhost->h_length*/4);
+			for( ic=0; resolvedhost->h_addr_list[ic] != NULL ;ic++)
+			{
+				last->cachedhost->h_addr_list[ic]= malloc(4);
+				memcpy(*(last->cachedhost->h_addr_list), resolvedhost->h_addr_list[ic],resolvedhost->h_length);
+			}
+			/*memcpy (&last->cachedhost->h_addr_list, &resolvedhost->h_addr_list, resolvedhost->h_length);*/
 
 			(ac)->hostp= last->cachedhost;
 			
