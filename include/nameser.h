@@ -83,7 +83,9 @@
 #ifndef _ARPA_NAMESER_H_
 #define _ARPA_NAMESER_H_
 
+#ifdef PARAMH
 #include <sys/param.h>
+#endif
 
 #ifdef _AUX_SOURCE
 # include <sys/types.h>
@@ -262,7 +264,7 @@
 
 #if defined(vax) || defined(ns32000) || defined(sun386) || defined(i386) || \
     defined(MIPSEL) || defined(_MIPSEL) || defined(BIT_ZERO_ON_RIGHT) || \
-    defined(__alpha__) || defined(__alpha) || defined(__vax__)
+    defined(__alpha__) || defined(__alpha) || defined(__vax__) || defined(_WIN32)
 #define BYTE_ORDER      LITTLE_ENDIAN
 #endif
 
@@ -287,7 +289,7 @@
          * which will force your compiles to bomb until you fix
          * the above macros.
          */
-  error "Undefined or invalid BYTE_ORDER";
+  #error "Undefined or invalid BYTE_ORDER";
 #endif
 
 /*
