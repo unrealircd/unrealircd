@@ -86,10 +86,10 @@ MSymbolTable scan_socks_depend[] = {
 #else
 MSymbolTable mod_depend[] = {
 #endif
-	SymD(VS_Add, xVS_add),
-	SymD(HSlock, xHSlock),
-	SymD(VSlock, xVSlock),
-	SymD(blackhole_conf, blackh_conf),
+	SymD(VS_Add, xVS_add, "src/modules/scan.so"),
+	SymD(HSlock, xHSlock, "src/modules/scan.so"),
+	SymD(VSlock, xVSlock, "src/modules/scan.so"),
+	SymD(blackhole_conf, blackh_conf, "src/modules/scan.so"),
 	{NULL, NULL}
 };
 

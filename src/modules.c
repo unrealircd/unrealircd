@@ -360,9 +360,18 @@ int	module_depend_resolve(MSymbolTable *dep)
 		*(d->pointer) = module_sym(d->symbol);
 		if (!*(d->pointer))
 		{
-			config_progress("module dependancy error: cannot resolve symbol %s",
-				d->symbol);
-			return -1;
+
+/*			config_progress("module dependancy error: cannot resolve symbol %s",
+				d->symbol);*/
+			config_progress("Unable to resolve symbol %s, attempting to load %s to find it",
+d->symbol, d->module);
+			load_module(d->module,0);
+			*(d->pointer) = module_sym(d->symbol);
+			if (!*(d->pointer)) {
+				config_progress("module dependancy error: cannot resolve symbol %s",
+					d->symbol);
+				return -1;
+			}
 		}	
 		d++;	
 	}

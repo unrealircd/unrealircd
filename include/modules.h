@@ -39,9 +39,9 @@
 #endif
 
 #ifndef STATIC_LINKING
-#define SymD(name, container) {#name, (vFP *) &container}
+#define SymD(name, container,module) {#name, (vFP *) &container, module}
 #else
-#define SymD(name, container) {(void *)&name, (vFP *) &container}
+#define SymD(name, container,module) {(void *)&name, (vFP *) &container}
 #endif
 
 typedef struct moduleInfo 	ModuleInfo;
@@ -72,6 +72,9 @@ struct msymboltable
 	void	*realfunc;
 #endif
 	vFP 	*pointer;
+#ifndef STATIC_LINKING
+	char	*module;
+#endif
 };
 
 extern ModuleInfo	*module_buffer;
