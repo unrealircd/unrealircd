@@ -3805,7 +3805,7 @@ fi
 fi
 
 echo "$ac_t""$ac_cv_pic" 1>&6
-MFLAGS=$ac_cv_pic
+MODULEFLAGS=$ac_cv_pic
 cat >> confdefs.h <<\EOF
 #define DYNAMIC_LINKING 1
 EOF
@@ -4369,7 +4369,7 @@ s%@REGEX@%$REGEX%g
 s%@STRTOUL@%$STRTOUL%g
 s%@NEED_U_INT32_T@%$NEED_U_INT32_T%g
 s%@CRYPTOLIB@%$CRYPTOLIB%g
-s%@MFLAGS@%$MFLAGS%g
+s%@MODULEFLAGS@%$MODULEFLAGS%g
 s%@host@%$host%g
 s%@host_alias@%$host_alias%g
 s%@host_cpu@%$host_cpu%g

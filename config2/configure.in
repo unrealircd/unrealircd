@@ -65,7 +65,7 @@ case `uname -s` in
 esac
 fi
 ])
-MFLAGS=$ac_cv_pic
+MODULEFLAGS=$ac_cv_pic
 AC_DEFINE(DYNAMIC_LINKING)
 ])
 AC_CHECK_HEADER(sys/param.h,AC_DEFINE(PARAMH))
@@ -255,7 +255,7 @@ AC_SUBST(REGEX)
 AC_SUBST(STRTOUL)
 AC_SUBST(NEED_U_INT32_T)
 AC_SUBST(CRYPTOLIB)
-AC_SUBST(MFLAGS)
+AC_SUBST(MODULEFLAGS)
 AC_ARG_WITH(crypt-oper, [ --with-crypt-oper     Specify whether oper passwords should be crypted],
 AC_DEFINE(CRYPT_OPER_PASSWORD))
 AC_ARG_WITH(crypt-iline, [ --with-crypt-iline     Specify whether allow
