@@ -1575,11 +1575,11 @@ creationtime = sendts;
 	if (IsPerson(sptr) && samode && MyClient(sptr))
 	{
 		sendto_serv_butone_token(NULL, me.name, MSG_GLOBOPS,
-		    TOK_GLOBOPS, ":%s used SAMODE %s (%s %s)", sptr->name,
-		    chptr->chname, modebuf, parabuf);
+		    TOK_GLOBOPS, ":%s used SAMODE %s (%s%s%s)", sptr->name,
+		    chptr->chname, modebuf, *parabuf ? " " : "", parabuf);
 		sendto_failops_whoare_opers
-		    ("from %s: %s used SAMODE %s (%s %s)", me.name, sptr->name,
-		    chptr->chname, modebuf, parabuf);
+		    ("from %s: %s used SAMODE %s (%s%s%s)", me.name, sptr->name,
+		    chptr->chname, modebuf, *parabuf ? " " : "", parabuf);
 		sptr = &me;
 		sendts = 0;
 	}
