@@ -89,7 +89,7 @@ char *url_getfilename(char *url)
                 else
                 {
                         char *file = malloc(c-start+1);
-                        strncpy(file, start, c-start);
+                        strlcpy(file, start, c-start+1);
                         return file;
                 }
                 return NULL;

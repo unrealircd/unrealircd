@@ -2977,3 +2977,5 @@ seen. gmtime warning still there
 - Added spamfilter::except which allows you to specify targets
   (eg: channels) where spamfilter should not take action. Requested by Fury
   (#0001586). Ex: set { spamfilter { except "#spamreport,#help"; }; };
+- Fixed a zero-terminate bug in remote includes: urls with '?' in it could
+  cause a crash, reported by Joolz (#0001587).
