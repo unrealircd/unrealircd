@@ -1305,3 +1305,4 @@ seen. gmtime warning still there
 - Fixed a openssl+ipv6 bug, pointed out by Aragon .. This probably breaks some other crap, but what
   the heck..
 - Made ident checking work on IPv6 as well
+- Fixed a /stats L/l bug reported by dimplesx [#0000190]

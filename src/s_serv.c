@@ -2020,7 +2020,7 @@ CMD_FUNC(m_stats)
 #else
 				      pbuf);
 #endif
-				  if (!IsServer(acptr) && !IsMe(acptr) && IsAnOper(acptr))
+				  if (!IsServer(acptr) && !IsMe(acptr) && IsAnOper(acptr) && sptr != acptr)
 					  sendto_one(acptr,
 					      ":%s %s %s :*** %s did a /stats L on you! IP may have been shown",
 					      me.name, IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, sptr->name);
