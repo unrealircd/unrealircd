@@ -35,9 +35,6 @@ static char sccsid[] =
 #include "channel.h"
 #include "userload.h"
 #include "version.h"
-#if defined(PCS) || defined(AIX) || defined(SVR3)
-#include <time.h>
-#endif
 #include <sys/stat.h>
 #include <fcntl.h>
 #ifdef _WIN32

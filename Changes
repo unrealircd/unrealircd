@@ -25,3 +25,4 @@
   M0rpheus, JK, and Hiten.
 - Fixed /botserv problem
 - Fixed permission problem with SSL .pem files (was o+r)
+- Removed a redundant time.h include reported by trippin
