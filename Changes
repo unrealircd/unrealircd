@@ -681,3 +681,4 @@ seen. gmtime warning still there
 - Fixed problem with MAXCONNECTIONS when no parameters given in ./configure
 - Fixed some possible points of confusion with hash.c regarding unsigned int
   & signed int
+- Fixed u_intXX_t problem

@@ -95,18 +95,8 @@ AC_TYPE_SIZE_T
 AC_HEADER_TIME
 AC_STRUCT_TM
 AC_TYPE_UID_T
-AC_CACHE_CHECK([for u_int32_t], ac_cv_u_int32_t, [
-AC_TRY_COMPILE(,[
-#include <sys/types.h>
-int main() {
-u_int32_t test;
-exit(0);
-}
-], ac_cv_u_int32_t=yes,ac_cv_u_int32_t=no)
-])      
-if test "$ac_cv_u_int32_t" = "no"; then
-NEED_UINT32_T="-DNEED_U_INT32_T"
-fi
+unreal_CHECK_TYPE_SIZES
+
 AC_CACHE_CHECK(what kind of nonblocking sockets you have, ac_cv_nonblocking,[
 AC_TRY_RUN([
 #include <sys/types.h>
@@ -262,7 +252,6 @@ AC_CHECK_FUNCS(inet_ntoa,,AC_DEFINE(NEED_INET_NTOA))
 AC_CHECK_FUNCS(inet_netof,,AC_DEFINE(NEED_INET_NETOF))
 AC_SUBST(REGEX)
 AC_SUBST(STRTOUL)
-AC_SUBST(NEED_U_INT32_T)
 AC_SUBST(CRYPTOLIB)
 AC_SUBST(MODULEFLAGS)
 AC_ARG_WITH(crypt-oper, [ --with-crypt-oper     Specify whether oper passwords should be crypted],
