@@ -518,3 +518,5 @@
 - Updated ./ircd to also say to look at ircd.log
 - Fixed a SQLINE synch bug
 - Added command line option -F to prevent the ircd to fork out
+- Fixed the f*cken TKL bug
+- Fixed a netsplit bug

@@ -521,7 +521,7 @@ int  exit_client(cptr, sptr, from, comment)
 		 */
 		if (cptr && !recurse)
 		{
-			(void)strcat(comment1, sptr->srvptr->name);
+			(void)strcpy(comment1, sptr->srvptr->name);
 			(void)strcat(comment1, " ");
 			(void)strcat(comment1, sptr->name);
 		}
