@@ -1036,7 +1036,7 @@ static char buf[512], *i, *o;
 char *unreal_encodespace(char *s)
 {
 static char buf[512], *i, *o;
-	for (i = s, o = buf; (*i) && (o < buf+510); i++)
+	for (i = s, o = buf; (*i) && (o < buf+509); i++)
 	{
 		if (*i == ' ')
 			*o++ = '_';
@@ -1047,9 +1047,6 @@ static char buf[512], *i, *o;
 		}
 		else
 			*o++ = *i;
-
-		if (o > 509)
-			break;
 	}
 	*o = '\0';
 	return buf;
