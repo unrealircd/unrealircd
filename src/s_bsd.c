@@ -1263,7 +1263,7 @@ add_con_refuse:
 		SSL_set_fd(acptr->ssl, fd);
 		SSL_set_nonblocking(acptr->ssl);
 		if (!ircd_SSL_accept(acptr, fd)) {
-			Debug((DEBUG_DEBUG, "Failed SSL accept handshake in instance 1: %s", sptr->sockhost));
+			Debug((DEBUG_DEBUG, "Failed SSL accept handshake in instance 1: %s", acptr->sockhost));
 			SSL_set_shutdown(acptr->ssl, SSL_RECEIVED_SHUTDOWN);
 			SSL_smart_shutdown(acptr->ssl);
   	                SSL_free(acptr->ssl);
