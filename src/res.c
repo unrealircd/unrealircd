@@ -445,12 +445,8 @@ struct hostent *gethost_byname(char *name, Link *lp)
 #endif
 	if (!lp)
 		return NULL;
-#ifndef _WIN32
 	(void)do_query_name(lp, name, NULL);
 	return NULL;
-#else
-	return gethostbyname(name);
-#endif
 }
 
 struct hostent *gethost_byaddr(char *addr, Link *lp)
@@ -472,7 +468,6 @@ struct hostent *gethost_byaddr(char *addr, Link *lp)
 
 static int do_query_name(Link *lp, char *name, ResRQ *rptr)
 {
-//#ifndef _WIN32
 	char hname[HOSTLEN + 1];
 	int  len;
 

@@ -1523,3 +1523,10 @@ seen. gmtime warning still there
 - Stripped the docs. 100kb down, but a reformat in something other than MS
   word would really really help.
 - Changed version to beta12
+- Add config option to the unreal service utility options are:
+  unreal config startup auto|manual
+    auto starts the service when the pc boots, manual requires you to run Unreal manually
+  unreal config crashrestart delay (2k/XP only)
+    specifies how long to wait after a crash to restart Unreal (in minutes). If no delay is
+    specified, no action is taken when a crash occurs
+- Made some changes to the win32 resolver, hopefully this will fix the crash bugs
