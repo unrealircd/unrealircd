@@ -5214,7 +5214,7 @@ char m;
 		char comment[1024], target[CHANNELLEN + 8];
 		ircsprintf(comment, "*** Channel %sflood detected (limit is %d per %d seconds), setting mode +%c",
 			text, chptr->mode.floodprot->l[what], chptr->mode.floodprot->per, m);
-		ircsprintf(target, "@%%%s", chptr->chname);
+		ircsprintf(target, "%%%s", chptr->chname);
 		sendto_channelprefix_butone_tok(NULL, &me, chptr,
 			PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
 			MSG_NOTICE, TOK_NOTICE, target, comment, 0);
