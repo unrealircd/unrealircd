@@ -2075,14 +2075,19 @@ ConfigItem_ban 	*Find_ban(char *host, short type)
 {
 	ConfigItem_ban *ban;
 	
-	/* Person got a exception */
-	if (Find_except(host, type))
-		return NULL;
+	/* Check for an except ONLY if we find a ban, makes it
+	 * faster since most users will not have a ban so excepts
+	 * don't need to be searched -- codemastr
+	 */
 		
 	for (ban = conf_ban; ban; ban = (ConfigItem_ban *) ban->next)
 		if (ban->flag.type == type)
-			if (!match(ban->mask, host))
+			if (!match(ban->mask, host)) {
+				/* Person got a exception */
+				if (Find_except(host, type))
+					return NULL;
 				return ban;
+			}
 	return NULL;
 }
 

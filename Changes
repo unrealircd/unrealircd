@@ -131,3 +131,5 @@
 - Made ban user/ban realname work (s_unreal.c needs to be modified)
 - Added Zogg to credits
 - NOTE: Unreal-devel is handicapped right now, code in progress, do not use
+- Did a little speed up on Find_ban
+- Made /setname and /chgname use ban realname {}
