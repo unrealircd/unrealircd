@@ -572,83 +572,81 @@ extern TS check_pings(TS currenttime)
 			}
 		
 		}
-			/* We go into ping phase */
-			ping =
-			    IsRegistered(cptr) ? (cptr->class ? cptr->
-	   	 		class->pingfreq : CONNECTTIMEOUT) : CONNECTTIMEOUT;
-			Debug((DEBUG_DEBUG, "c(%s)=%d p %d k %d a %d", cptr->name,
-			    cptr->status, ping, killflag,
-				    currenttime - cptr->lasttime));
-			if (ping < (currenttime - cptr->lasttime))
+		/* We go into ping phase */
+		ping =
+		    IsRegistered(cptr) ? (cptr->class ? cptr->
+	   		class->pingfreq : CONNECTTIMEOUT) : CONNECTTIMEOUT;
+		Debug((DEBUG_DEBUG, "c(%s)=%d p %d k %d a %d", cptr->name,
+		    cptr->status, ping, killflag,
+			    currenttime - cptr->lasttime));
+		if (ping < (currenttime - cptr->lasttime))
+		{
+			if (((cptr->flags & FLAGS_PINGSENT)
+			    && ((currenttime - cptr->lasttime) >= (2 * ping)))
+			    || ((!IsRegistered(cptr)
+			    && (currenttime - cptr->since) >= ping)))
 			{
-				if (((cptr->flags & FLAGS_PINGSENT)
-				    && ((currenttime - cptr->lasttime) >= (2 * ping)))
-				    || ((!IsRegistered(cptr)
-				    && (currenttime - cptr->since) >= ping)))
-		
+				/* One of these days you could use a 300 char terminal ..*/
+				if (!IsRegistered(cptr) &&
+				    (DoingDNS(cptr) || DoingAuth(cptr)
+				    ))
 				{
-					/* One of these days you could use a 300 char terminal ..*/
-					if (!IsRegistered(cptr) &&
-					    (DoingDNS(cptr) || DoingAuth(cptr)
-					    ))
+					if (cptr->authfd >= 0)
 					{
-						if (cptr->authfd >= 0)
-						{
-							CLOSE_SOCK(cptr->authfd);
-							--OpenFiles;
-							cptr->authfd = -1;
-							cptr->count = 0;
-							*cptr->buffer = '\0';
-						}
-						if (SHOWCONNECTINFO) {
-							if (DoingDNS(cptr))
-								sendto_one(cptr,
-								    REPORT_FAIL_DNS);
-							else if (DoingAuth(cptr))
-								sendto_one(cptr,
-								    REPORT_FAIL_ID);
-						}
-						Debug((DEBUG_NOTICE,
-						    "DNS/AUTH timeout %s",
-						    get_client_name(cptr, TRUE)));
-						del_queries((char *)cptr);
-						ClearAuth(cptr);
-						ClearDNS(cptr);
-						SetAccess(cptr);
-						cptr->firsttime = currenttime;
-						cptr->lasttime = currenttime;
-						continue;
+						CLOSE_SOCK(cptr->authfd);
+						--OpenFiles;
+						cptr->authfd = -1;
+						cptr->count = 0;
+						*cptr->buffer = '\0';
 					}
-					if (IsServer(cptr) || IsConnecting(cptr) ||
-			    			IsHandshake(cptr))
-					{
-						sendto_realops
-						    ("No response from %s, closing link",
-						    get_client_name(cptr, FALSE));
-						sendto_serv_butone(&me,
-						    ":%s GLOBOPS :No response from %s, closing link",
-						    me.name, get_client_name(cptr,
-						    FALSE));
+					if (SHOWCONNECTINFO) {
+						if (DoingDNS(cptr))
+							sendto_one(cptr,
+							    REPORT_FAIL_DNS);
+						else if (DoingAuth(cptr))
+							sendto_one(cptr,
+							    REPORT_FAIL_ID);
 					}
-					exit_client(cptr, cptr, &me, "Ping timeout");
+					Debug((DEBUG_NOTICE,
+					    "DNS/AUTH timeout %s",
+					    get_client_name(cptr, TRUE)));
+					del_queries((char *)cptr);
+					ClearAuth(cptr);
+					ClearDNS(cptr);
+					SetAccess(cptr);
+					cptr->firsttime = currenttime;
+					cptr->lasttime = currenttime;
 					continue;
 				}
-				else if (IsRegistered(cptr) &&
-				    ((cptr->flags & FLAGS_PINGSENT) == 0))
+				if (IsServer(cptr) || IsConnecting(cptr) ||
+			    		IsHandshake(cptr))
 				{
-					/*
-					 * if we havent PINGed the connection and we havent
-					 * heard from it in a while, PING it to make sure
-					 * it is still alive.
-					 */
-					cptr->flags |= FLAGS_PINGSENT;
-					/* not nice but does the job */
-					cptr->lasttime = currenttime - ping;
-					sendto_one(cptr, "%s :%s",
-					    IsToken(cptr) ? TOK_PING : MSG_PING,
-					    me.name);
+					sendto_realops
+					    ("No response from %s, closing link",
+					    get_client_name(cptr, FALSE));
+					sendto_serv_butone(&me,
+					    ":%s GLOBOPS :No response from %s, closing link",
+					    me.name, get_client_name(cptr,
+					    FALSE));
 				}
-			}	
+				exit_client(cptr, cptr, &me, "Ping timeout");
+				continue;
+			}
+			else if (IsRegistered(cptr) &&
+			    ((cptr->flags & FLAGS_PINGSENT) == 0))
+			{
+				/*
+				 * if we havent PINGed the connection and we havent
+				 * heard from it in a while, PING it to make sure
+				 * it is still alive.
+				 */
+				cptr->flags |= FLAGS_PINGSENT;
+				/* not nice but does the job */
+				cptr->lasttime = currenttime - ping;
+				sendto_one(cptr, "%s :%s",
+				    IsToken(cptr) ? TOK_PING : MSG_PING,
+				    me.name);
+			}
 			/*
 	 		* Check UNKNOWN connections - if they have been in this state
 			* for > 100s, close them.
@@ -659,7 +657,7 @@ extern TS check_pings(TS currenttime)
 					(void)exit_client(cptr, cptr, &me,
 					    "Connection Timed Out");
 						
-
+		}
 	}
 	/* EXPLANATION
 	 * on a server with a large volume of clients, at any given point
