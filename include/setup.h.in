@@ -165,6 +165,8 @@
 #undef u_int16_t
 #undef u_int32_t
 
+/* Define if you have setproctitle */
+#undef HAVE_SETPROCTITLE
 
 /* Local hostname of the server */
 #undef DOMAINNAME
