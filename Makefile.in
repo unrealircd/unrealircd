@@ -102,12 +102,6 @@ IRCDDIR=/usr/local/lib/ircd
 REGEX=@REGEX@
 
 # [CHANGEME]
-# If you get a compile-time error dealing with u_int32_t, comment out
-# this line.
-# NEED_U_INT32_T=	-DNEED_U_INT32_T
-NEED_U_INT32_T=@NEED_U_INT32_T@
-
-# [CHANGEME]
 # If you get a link-time error dealing with strtoul, comment out
 # this line.
 # STRTOUL=	strtoul.o
@@ -122,7 +116,7 @@ FD_SETSIZE=@FD_SETSIZE@
 # Where is your openssl binary
 OPENSSLPATH=@OPENSSLPATH@
 
-CFLAGS=-I$(INCLUDEDIR) $(XCFLAGS) $(NEED_U_INT32_T) $(FD_SETSIZE)
+CFLAGS=-I$(INCLUDEDIR) $(XCFLAGS) $(FD_SETSIZE)
 
 SHELL=/bin/sh
 SUBDIRS=src

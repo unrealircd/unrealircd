@@ -159,6 +159,13 @@
 /* Define if you have SYSV signals */
 #undef UNRELIABLE_SYSV_SIGNALS
 
+/* Define these to be unsigned integral internal types,
+ * of respecitvely 2 and 4 bytes in size, when not already
+ * defined in <sys/types.h>, <stdlib.h> or <stddef.h> */
+#undef u_int16_t
+#undef u_int32_t
+
+
 /* Local hostname of the server */
 #undef DOMAINNAME
 
@@ -209,3 +216,5 @@
 
 /* Define if you want IPv6 enabled */
 #undef INET6
+
+

@@ -4768,6 +4768,8 @@ case "${host_cpu}-${host_os}" in
 SunOS*5.*)
 CFLAGS="$CFLAGS -DSOL20"
 ;;
+*solaris*)
+CFLAGS="$CFLAGS -D_SOLARIS"
 *AmigaOS*68020*)
 CFLAGS="$CFLAGS -D_AMIGA -m68020"
 ;;
