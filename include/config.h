@@ -98,12 +98,6 @@
  */
 #define ADMINCHAT 1
 
-/*
- * If we should catch SIGSEGVs..
-*/
-#define PROPER_COREDUMP
-
-
 /* 
  * If channel mode is +z, only send to secure links & people
  *

@@ -268,20 +268,6 @@ VOIDSIG s_restart()
 }
 
 
-VOIDSIG s_segv(void)
-{
-	char *argv[] = {
-		"./.bugreport",
-		NULL
-	};
-#if !defined(_WIN32) && !defined(_AMIGA)
-	if (fork())
-		abort();
-	execv("/bin/sh", argv);
-	return;
-#endif
-}
-
 #ifndef _WIN32
 VOIDSIG dummy()
 {
@@ -1060,8 +1046,8 @@ int InitwIRCD(int argc, char *argv[])
 		return bad_command();	/* This should exit out */
 #ifndef _WIN32
 	fprintf(stderr, "%s", unreallogo);
-#endif
 	fprintf(stderr, "                           v%s\n\n", VERSIONONLY);
+#endif
 	clear_client_hash_table();
 	clear_channel_hash_table();
 	clear_watch_hash_table();
@@ -1103,13 +1089,17 @@ int InitwIRCD(int argc, char *argv[])
 	make_umodestr();
 	make_cmodestr();
 #ifdef USE_SSL
+#ifndef _WIN32
 	fprintf(stderr, "* Initializing SSL.\n");
+#endif
 	init_ssl();
 #endif
+#ifndef _WIN32
 	fprintf(stderr,
 	    "* Dynamic configuration initialized .. booting IRCd.\n");
 	fprintf(stderr,
 	    "---------------------------------------------------------------------\n");
+#endif
 	open_debugfile();
 #ifndef NO_FDLIST
 	init_fdlist(&serv_fdlist);
@@ -1457,12 +1447,6 @@ static void setup_signals()
 	act.sa_handler = s_die;
 	(void)sigaddset(&act.sa_mask, SIGTERM);
 	(void)sigaction(SIGTERM, &act, NULL);
-/* handling of SIGSEGV as well -sts */
-#ifndef PROPER_COREDUMP
-	act.sa_handler = s_segv;
-	(void)sigaddset(&act.sa_mask, SIGSEGV);
-	(void)sigaction(SIGSEGV, &act, NULL);
-#endif
 #else
 # ifndef	HAVE_RELIABLE_SIGNALS
 	(void)signal(SIGPIPE, dummy);
@@ -1479,7 +1463,6 @@ static void setup_signals()
 	(void)signal(SIGHUP, s_rehash);
 	(void)signal(SIGTERM, s_die);
 	(void)signal(SIGINT, s_restart);
-	(void)signal(SIGSEGV, s_segv);
 #endif
 #ifdef RESTARTING_SYSTEMCALLS
 	/*

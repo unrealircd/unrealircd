@@ -1397,3 +1397,5 @@ seen. gmtime warning still there
   Eventually it will just be removed. Thank god for modules.
 - Fixed a silly bug with regards to matching against compressed IPs in link {} checking
 - Added some release notes with regards to scanners
+- Removed s_segv handler
+- Changed ./update to use update.unrealircd.com
