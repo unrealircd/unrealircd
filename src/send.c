@@ -290,7 +290,7 @@ void sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
     char *pattern, ...)
 {
 	va_list vl;
-	Link *lp;
+	Member *lp;
 	aClient *acptr;
 	int  i;
 
@@ -299,7 +299,7 @@ void sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
 	++sentalong_marker;
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
-		acptr = lp->value.cptr;
+		acptr = lp->cptr;
 		/* ...was the one I should skip */
 		if (acptr->from == one || (IsDeaf(acptr)
 		    && !(sendanyways == 1)))
@@ -323,7 +323,7 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
     char *pattern, ...)
 {
 	va_list vl;
-	Link *lp;
+	Member *lp;
 	aClient *acptr;
 	int  i;
 
@@ -332,7 +332,7 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 		sentalong[i] = 0;
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
-		acptr = lp->value.cptr;
+		acptr = lp->cptr;
 		if (acptr->from == one)
 			continue;	/* ...was the one I should skip
 					   or user not not a channel op */
@@ -371,7 +371,7 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 	int	prefix,
     char *cmd, char *tok, char *nick, char *text)
 {
-	Link *lp;
+	Member *lp;
 	aClient *acptr;
 	int  i;
 	
@@ -381,7 +381,7 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 		sentalong[i] = 0;
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
-		acptr = lp->value.cptr;
+		acptr = lp->cptr;
 		if (acptr->from == one)
 			continue;	/* ...was the one I should skip
 					   or user not not a channel op */
@@ -431,13 +431,13 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 void sendto_chanops_butone(aClient *one, aChannel *chptr, char *pattern, ...)
 {
 	va_list vl;
-	Link *lp;
+	Member *lp;
 	aClient *acptr;
 
 	va_start(vl, pattern);
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
-		acptr = lp->value.cptr;
+		acptr = lp->cptr;
 		if (acptr == one || !(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
 			continue;	/* ...was the one I should skip
 					   or user not not a channel op */
@@ -462,7 +462,7 @@ void sendto_channelops_butone(aClient *one, aClient *from, aChannel *chptr,
     char *pattern, ...)
 {
 	va_list vl;
-	Link *lp;
+	Member *lp;
 	aClient *acptr;
 	int  i;
 
@@ -471,7 +471,7 @@ void sendto_channelops_butone(aClient *one, aClient *from, aChannel *chptr,
 		sentalong[i] = 0;
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
-		acptr = lp->value.cptr;
+		acptr = lp->cptr;
 		if (acptr->from == one || !(lp->flags & CHFL_CHANOP))
 			continue;	/* ...was the one I should skip
 					   or user not not a channel op */
@@ -509,7 +509,7 @@ void sendto_channelvoice_butone(aClient *one, aClient *from, aChannel *chptr,
     char *pattern, ...)
 {
 	va_list vl;
-	Link *lp;
+	Member *lp;
 	aClient *acptr;
 	int  i;
 
@@ -518,7 +518,7 @@ void sendto_channelvoice_butone(aClient *one, aClient *from, aChannel *chptr,
 		sentalong[i] = 0;
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
-		acptr = lp->value.cptr;
+		acptr = lp->cptr;
 		if (acptr->from == one || !(lp->flags & CHFL_VOICE))
 			continue;	/* ...was the one I should skip
 					   or user not (a channel voice or op) */
@@ -556,7 +556,7 @@ void sendto_channelhalfop_butone(aClient *one, aClient *from, aChannel *chptr,
     char *pattern, ...)
 {
 	va_list vl;
-	Link *lp;
+	Member *lp;
 	aClient *acptr;
 	int  i;
 
@@ -565,7 +565,7 @@ void sendto_channelhalfop_butone(aClient *one, aClient *from, aChannel *chptr,
 		sentalong[i] = 0;
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
-		acptr = lp->value.cptr;
+		acptr = lp->cptr;
 		if (acptr->from == one || !(lp->flags & CHFL_HALFOP))
 			continue;	/* ...was the one I should skip
 					   or user not (a channel halfop or op) */
@@ -1049,8 +1049,8 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
 {
 	va_list vl;
 
-	Link *channels;
-	Link *users;
+	Membership *channels;
+	Member *users;
 	aClient *cptr;
 
 	va_start(vl, pattern);
@@ -1060,10 +1060,10 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
 	if (user->user)
 		for (channels = user->user->channel; channels;
 		    channels = channels->next)
-			for (users = channels->value.chptr->members; users;
+			for (users = channels->chptr->members; users;
 			    users = users->next)
 			{
-				cptr = users->value.cptr;
+				cptr = users->cptr;
 				if (!MyConnect(cptr) || sentalong[cptr->fd])
 					continue;
 				sentalong[cptr->fd]++;
@@ -1083,11 +1083,11 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
 void sendto_channel_butserv(aChannel *chptr, aClient *from, char *pattern, ...)
 {
 	va_list vl;
-	Link *lp;
+	Member *lp;
 	aClient *acptr;
 
 	for (va_start(vl, pattern), lp = chptr->members; lp; lp = lp->next)
-		if (MyConnect(acptr = lp->value.cptr))
+		if (MyConnect(acptr = lp->cptr))
 			vsendto_prefix_one(acptr, from, pattern, vl);
 	va_end(vl);
 	return;
@@ -1753,8 +1753,8 @@ void	sendto_message_one(aClient *to, aClient *from, char *sender,
 
 void sendto_channels_inviso_join(aClient *user)
 {
-        Link *channels;
-        Link *users;
+        Membership *channels;
+       	Member *users;
         aClient *cptr;
 
         memset((char *)sentalong, '\0', sizeof(sentalong));
@@ -1762,22 +1762,22 @@ void sendto_channels_inviso_join(aClient *user)
                 sentalong[user->fd] = 1;
         if (user->user)
                 for (channels = user->user->channel; channels; channels = channels->next)
-                        for (users = channels->value.chptr->members; users; users = users->next)
+                        for (users = channels->chptr->members; users; users = users->next)
 			{
-                                cptr = users->value.cptr;
+                                cptr = users->cptr;
                                 if (!MyConnect(cptr) || IsTechAdmin(cptr) || IsNetAdmin(cptr) || sentalong[cptr->fd] || cptr == user)
                                         continue;
                                 sentalong[cptr->fd]++;
                                 sendto_one(cptr, ":%s!%s@%s JOIN :%s", user->name, user->user->username,
-				(IsHidden(user) ? user->user->virthost : user->user->realhost), channels->value.chptr->chname); 
+				(IsHidden(user) ? user->user->virthost : user->user->realhost), channels->chptr->chname); 
 			}
 	return;
 }
 
 void sendto_channels_inviso_part(aClient *user)
 {
-        Link *channels;
-        Link *users;
+        Membership *channels;
+        Member *users;
         aClient *cptr;
 
         memset((char *)sentalong, '\0', sizeof(sentalong));
@@ -1785,13 +1785,13 @@ void sendto_channels_inviso_part(aClient *user)
                 sentalong[user->fd] = 1;
         if (user->user)
                 for (channels = user->user->channel; channels; channels = channels->next)
-                        for (users = channels->value.chptr->members; users; users = users->next)
+                        for (users = channels->chptr->members; users; users = users->next)
 			{
-                                cptr = users->value.cptr;
+                                cptr = users->cptr;
                                 if (!MyConnect(cptr) || IsTechAdmin(cptr) || IsNetAdmin(cptr) || sentalong[cptr->fd] || cptr == user)
                                         continue;
                                 sentalong[cptr->fd]++;
-                		sendto_one(cptr, ":%s!%s@%s PART :%s", user->name, user->user->username, (IsHidden(user) ? user->user->virthost : user->user->realhost), channels->value.chptr->chname);
+                		sendto_one(cptr, ":%s!%s@%s PART :%s", user->name, user->user->username, (IsHidden(user) ? user->user->virthost : user->user->realhost), channels->chptr->chname);
 			}
 	return;
 }
@@ -1799,7 +1799,7 @@ void sendto_channels_inviso_part(aClient *user)
 void sendto_channel_ntadmins(aClient *from, aChannel *chptr, char *pattern, ...)
 {
         va_list vl;
-        Link *lp;
+        Member *lp;
         aClient *acptr;
         int  i;
 
@@ -1807,7 +1807,7 @@ void sendto_channel_ntadmins(aClient *from, aChannel *chptr, char *pattern, ...)
         ++sentalong_marker;
         for (lp = chptr->members; lp; lp = lp->next)
 	{
-                acptr = lp->value.cptr;
+                acptr = lp->cptr;
                 if (acptr->from == from || !(IsNetAdmin(acptr) || IsTechAdmin(acptr)) || (IsDeaf(acptr) && !(sendanyways == 1)))
                         continue;
                 if (MyConnect(acptr))   /* (It is always a client) */

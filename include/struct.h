@@ -105,6 +105,9 @@ typedef struct ircstatsx ircstats;
 typedef struct MotdItem aMotd;
 typedef struct trecord aTrecord;
 typedef struct Command aCommand;
+typedef struct SMember Member;
+typedef struct SMembership Membership;
+typedef struct SMembershipL MembershipL;
 #ifdef NEED_U_INT32_T
 typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #endif
@@ -590,6 +593,11 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	CURSES_TERM	1
 #define	TERMCAP_TERM	2
 
+struct FloodOpt {
+	unsigned short nmsg;
+	TS   lastmsg;
+};
+
 struct MotdItem {
 	char *line;
 	struct MotdItem *next;
@@ -694,7 +702,7 @@ struct ConfItem {
  */
 struct User {
 	struct User *nextu;
-	Link *channel;		/* chain of channel pointer blocks */
+	Membership *channel;		/* chain of channel pointer blocks */
 	Link *invited;		/* chain of invite pointer blocks */
 	Link *silence;		/* chain of silence pointer blocks */
 	char *away;		/* pointer to away message */
@@ -1236,7 +1244,6 @@ struct Notify {
 struct SLink {
 	struct SLink *next;
 	int  flags;
-	aFloodOpt *flood;
 	union {
 		aClient *cptr;
 		aChannel *chptr;
@@ -1250,6 +1257,43 @@ struct SLink {
 			TS   when;
 		} ban;
 	} value;
+};
+
+struct SMember
+{
+	struct SMember *next;
+	aClient	      *cptr;
+	int		flags;
+};
+
+struct Channel {
+	struct Channel *nextch, *prevch, *hnextch;
+	Mode mode;
+	TS   creationtime;
+	char *topic;
+	char *topic_nick;
+	TS   topic_time;
+	unsigned short users;
+	Member *members;
+	Link *invites;
+	Ban *banlist;
+	Ban *exlist;		/* exceptions */
+	char chname[1];
+};
+
+struct SMembershipL
+{
+	struct SMembership 	*next;
+	struct Channel		*chptr;
+	int			flags;
+	aFloodOpt		flood;		
+};
+
+struct SMembership
+{
+	struct SMembership 	*next;
+	struct Channel		*chptr;
+	int			flags;
 };
 
 struct SBan {
@@ -1272,20 +1316,6 @@ struct DSlink {
 
 /* channel structure */
 
-struct Channel {
-	struct Channel *nextch, *prevch, *hnextch;
-	Mode mode;
-	TS   creationtime;
-	char *topic;
-	char *topic_nick;
-	TS   topic_time;
-	unsigned short users;
-	Link *members;
-	Link *invites;
-	Ban *banlist;
-	Ban *exlist;		/* exceptions */
-	char chname[1];
-};
 
 /*
 ** Channel Related macros follow
@@ -1370,12 +1400,8 @@ struct Channel {
 #define	IsChannelName(name) ((name) && (*(name) == '#'))
 
 #define IsMember(blah,chan) ((blah && blah->user && \
-                find_channel_link((blah->user)->channel, chan)) ? 1 : 0)
+                find_membership_link((blah->user)->channel, chan)) ? 1 : 0)
 
-struct FloodOpt {
-	unsigned short nmsg;
-	TS   lastmsg;
-};
 
 /* Misc macros */
 

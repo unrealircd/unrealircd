@@ -64,8 +64,9 @@ void outofmemory();
 int  flinks = 0;
 int  freelinks = 0;
 Link *freelink = NULL;
-
-
+Member *freemember = NULL;
+Membership *freemembership = NULL;
+MembershipL *freemembershipL = NULL;
 int  numclients = 0;
 
 void initlists()
@@ -342,20 +343,6 @@ Link *find_user_link(lp, ptr)
 		while (lp)
 		{
 			if (lp->value.cptr == ptr)
-				return (lp);
-			lp = lp->next;
-		}
-	return NULL;
-}
-
-Link *find_channel_link(lp, ptr)
-	Link *lp;
-	aChannel *ptr;
-{
-	if (ptr)
-		while (lp)
-		{
-			if (lp->value.chptr == ptr)
 				return (lp);
 			lp = lp->next;
 		}

@@ -113,6 +113,7 @@ typedef struct {
 	unsigned  parameters : 1; 
 } aCtab;
 
+
 // typedef struct CFlagTab aCtab;
 #define MODESYS_LINKOK		/* We do this for a TEST  */
 aCtab cFlagTab[] = {
@@ -203,6 +204,130 @@ static int list_length(Link *lp)
 	for (; lp; lp = lp->next)
 		count++;
 	return count;
+}
+
+Member	*find_member_link(Member *lp, aClient *ptr)
+{
+	if (ptr)
+		while (lp)
+		{
+			if (lp->cptr == ptr)
+				return (lp);
+			lp = lp->next;
+		}	
+	return NULL;
+}
+
+Membership *find_membership_link(Membership *lp, aChannel *ptr)
+{
+	if (ptr)
+		while (lp)
+		{
+			if (lp->chptr == ptr)
+				return (lp);
+			lp = lp->next;
+		}
+	return NULL;
+}
+/* 
+ * Member functions
+*/
+Member	*make_member()
+{
+	Member *lp;
+	int	i;
+
+	if (freemember == NULL)
+	{
+		for (i = 1; i <= (4072/sizeof(Member)); i++)		
+		{
+			lp = (Member *)MyMalloc(sizeof(Member));
+			lp->next = freemember;
+			freemember = lp;
+		}
+		lp = freemember;
+		freemember = lp->next;
+	}
+	else
+	{
+		lp = freemember;
+		freemember = freemember->next;
+	}
+	return lp;
+}
+
+void	free_member(Member *lp)
+{
+	lp->next = freemember;
+	freemember = lp;
+}
+
+/* 
+ * Membership functions
+*/
+Membership	*make_membership(int local)
+{
+	Membership *lp = NULL;
+	MembershipL *lp2 = NULL;
+	int	i;
+
+	if (!local)
+	{
+		if (freemembership == NULL)
+		{
+			for (i = 1; i <= (4072/sizeof(Membership)); i++)		
+			{
+				lp = (Membership *)MyMalloc(sizeof(Membership));
+				lp->next = freemembership;
+				freemembership = lp;
+			}
+			lp = freemembership;
+			freemembership = lp->next;
+		}
+		else
+		{
+			lp = freemembership;
+			freemembership = freemembership->next;
+		}
+	}
+	else
+	{
+		if (freemembershipL == NULL)
+		{
+			for (i = 1; i <= (4072/sizeof(MembershipL)); i++)		
+			{
+				lp2 = (MembershipL *)MyMalloc(sizeof(MembershipL));
+				lp2->next = (Membership *) freemembershipL;
+				freemembershipL = lp2;
+			}
+			lp2 = freemembershipL;
+			freemembershipL = (MembershipL *) lp2->next;
+		}
+		else
+		{
+			lp2 = freemembershipL;
+			freemembershipL = (MembershipL *) freemembershipL->next;
+		}
+	}
+	if (local)
+	{
+		return ((Membership *) lp2);
+	}
+	return lp;
+}
+
+void	free_membership(Membership *lp, int local)
+{
+	if (!local)
+	{
+		lp->next = freemembership;
+		freemembership = lp;
+	}
+	else
+	{
+		lp->next = (Membership *) freemembershipL;
+		freemembershipL = (MembershipL *) lp;
+	}
 }
 
 /*
@@ -425,60 +550,58 @@ extern Ban *is_banned(aClient *cptr, aClient *sptr, aChannel *chptr)
  */
 static void add_user_to_channel(aChannel *chptr, aClient *who, int flags)
 {
-	Link *ptr;
+	Member *ptr;
+	Membership *ptr2;
 
 	if (who->user)
 	{
-		ptr = make_link();
-		ptr->value.cptr = who;
+		ptr = make_member();
+		ptr->cptr = who;
 		ptr->flags = flags;
-		/* we should make this more efficient --stskeeps */
-		ptr->flood = (aFloodOpt *) MyMalloc(sizeof(aFloodOpt));
-		ptr->flood->nmsg = 0;
-		ptr->flood->lastmsg = 0;
 		ptr->next = chptr->members;
 		chptr->members = ptr;
 		chptr->users++;
 
-		ptr = make_link();
-		ptr->value.chptr = chptr;
-		ptr->next = who->user->channel;
-		who->user->channel = ptr;
+		ptr2 = make_membership(MyClient(who));
+		/* we should make this more efficient --stskeeps 
+		   is now, as we only use it in membership */
+		ptr2->chptr = chptr;
+		ptr2->next = who->user->channel;
+		ptr2->flags = flags;
+		who->user->channel = ptr2;
 		who->user->joined++;
 	}
 }
 
 void remove_user_from_channel(aClient *sptr, aChannel *chptr)
 {
-	Link **curr;
-	Link *tmp;
-	Link *lp = chptr->members;
+	Member **curr; Membership **curr2;
+	Member *tmp; Membership *tmp2;
+	Member *lp = chptr->members;
 
-	for (; lp && (lp->value.cptr == sptr); lp = lp->next);
+	for (; lp && (lp->cptr == sptr); lp = lp->next);
 	for (;;)
 	{
 		for (curr = &chptr->members; (tmp = *curr); curr = &tmp->next)
-			if (tmp->value.cptr == sptr)
+			if (tmp->cptr == sptr)
 			{
-				if (tmp->flood)
-					MyFree((aFloodOpt *) tmp->flood);
 				*curr = tmp->next;
-				free_link(tmp);
+				free_member(tmp);
 				break;
 			}
-		for (curr = &sptr->user->channel; (tmp = *curr);
-		    curr = &tmp->next)
-			if (tmp->value.chptr == chptr)
+		for (curr2 = &sptr->user->channel; (tmp2 = *curr2);
+		    curr2 = &tmp2->next)
+			if (tmp2->chptr == chptr)
 			{
-				*curr = tmp->next;
-				free_link(tmp);
+				*curr2 = tmp2->next;
+				free_membership(tmp2, MyClient(sptr));
 				break;
 			}
 		sptr->user->joined--;
 		if (lp)
 			break;
 		if (chptr->members)
-			sptr = chptr->members->value.cptr;
+			sptr = chptr->members->cptr;
 		else
 			break;
 		sub1_from_channel(chptr);
@@ -489,10 +612,10 @@ void remove_user_from_channel(aClient *sptr, aChannel *chptr)
 
 int  is_chan_op(aClient *cptr, aChannel *chptr)
 {
-	Link *lp;
+	Membership *lp;
 /* chanop/halfop ? */
 	if (chptr)
-		if ((lp = find_channel_link(cptr->user->channel, chptr)))
+		if ((lp = find_membership_link(cptr->user->channel, chptr)))
 			return ((lp->flags & CHFL_CHANOP));
 
 	return 0;
@@ -501,21 +624,21 @@ int  is_chan_op(aClient *cptr, aChannel *chptr)
 
 int  has_voice(aClient *cptr, aChannel *chptr)
 {
-	Link *lp;
+	Membership *lp;
 
 	if (chptr)
-		if ((lp = find_channel_link(cptr->user->channel, chptr)))
+		if ((lp = find_membership_link(cptr->user->channel, chptr)))
 			return (lp->flags & CHFL_VOICE);
 
 	return 0;
 }
 int  is_halfop(aClient *cptr, aChannel *chptr)
 {
-	Link *lp;
+	Membership *lp;
 
 	if (chptr)
-		if ((lp = find_channel_link(cptr->user->channel, chptr)))
-			if (!is_chan_op(cptr, chptr))	/* excessive but needed */
+		if ((lp = find_membership_link(cptr->user->channel, chptr)))
+			if (!(lp->flags & CHFL_CHANOP))
 				return (lp->flags & CHFL_HALFOP);
 
 	return 0;
@@ -523,20 +646,20 @@ int  is_halfop(aClient *cptr, aChannel *chptr)
 
 int  is_chanowner(aClient *cptr, aChannel *chptr)
 {
-	Link *lp;
+	Membership *lp;
 
 	if (chptr)
-		if ((lp = find_channel_link(cptr->user->channel, chptr)))
+		if ((lp = find_membership_link(cptr->user->channel, chptr)))
 			return (lp->flags & CHFL_CHANOWNER);
 
 	return 0;
 }
 
 int is_chanownprotop(aClient *cptr, aChannel *chptr) {
-	Link *lp;
+	Membership *lp;
 		
 	if (chptr)
-		if ((lp = find_channel_link(cptr->user->channel, chptr)))
+		if ((lp = find_membership_link(cptr->user->channel, chptr)))
 			if (lp->flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP))
 				return 1;
 	return 0;
@@ -544,10 +667,10 @@ int is_chanownprotop(aClient *cptr, aChannel *chptr) {
 
 int  is_chanprot(aClient *cptr, aChannel *chptr)
 {
-	Link *lp;
+	Membership *lp;
 
 	if (chptr)
-		if ((lp = find_channel_link(cptr->user->channel, chptr)))
+		if ((lp = find_membership_link(cptr->user->channel, chptr)))
 			return (lp->flags & CHFL_CHANPROT);
 
 	return 0;
@@ -561,7 +684,7 @@ int  is_chanprot(aClient *cptr, aChannel *chptr)
 
 int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 {
-	Link *lp;
+	Membership *lp;
 	int  member;
 	static char tempbuf[1500];
 	/* Moved check here, kinda faster.
@@ -577,7 +700,7 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 	if (chptr->mode.mode & MODE_NOPRIVMSGS && !member)
 		return (CANNOT_SEND_NOPRIVMSGS);
 
-	lp = find_channel_link(cptr->user->channel, chptr);
+	lp = find_membership_link(cptr->user->channel, chptr);
 
 	if (chptr->mode.mode & MODE_MODERATED &&
 	    (!lp
@@ -690,9 +813,9 @@ static void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr
 	return;
 }
 
-static int send_mode_list(aClient *cptr, char *chname, TS creationtime, Link *top, int mask, char flag)
+static int send_mode_list(aClient *cptr, char *chname, TS creationtime, Member *top, int mask, char flag)
 {
-	Link *lp;
+	Member *lp;
 	char *cp, *name;
 	int  count = 0, send = 0, sent = 0;
 
@@ -717,7 +840,7 @@ static int send_mode_list(aClient *cptr, char *chname, TS creationtime, Link *to
 		{
 			if (!(lp->flags & mask))
 				continue;
-			name = lp->value.cptr->name;
+			name = lp->cptr->name;
 		}
 		if (strlen(parabuf) + strlen(name) + 11 < (size_t)MODEBUFLEN)
 		{
@@ -795,7 +918,7 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 	*modebuf = '+';
 	modebuf[1] = '\0';
 	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
-	    (Link *)chptr->banlist, CHFL_BAN, 'b');
+	    (Member *)chptr->banlist, CHFL_BAN, 'b');
 	if (modebuf[1] || *parabuf)
 		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
 		    parabuf, chptr->creationtime);
@@ -804,7 +927,7 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 	*modebuf = '+';
 	modebuf[1] = '\0';
 	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
-	    (Link *)chptr->exlist, CHFL_EXCEPT, 'e');
+	    (Member *)chptr->exlist, CHFL_EXCEPT, 'e');
 	if (modebuf[1] || *parabuf)
 		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
 		    parabuf, chptr->creationtime);
@@ -979,7 +1102,7 @@ int m_mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (!IsMember(sptr, chptr))
 			return 0;
 		{
-			struct SLink *member;
+			Member *member;
 			/* send chanowner list */
 			/* For our future reference i think there is a 
 			   problem doing this the way i am ... i think
@@ -995,9 +1118,9 @@ int m_mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			   see if they can a) spot whats wrong and[in both cases] b) correct it
 			   *devilish grin* -- DrBin ... after 1 hr of debugging ... realised he
 			   was lookin at the same piece of data... many times */
-			for (member = chptr->members, user = member->value.cptr;
+			for (member = chptr->members, user = member->cptr;
 			    member->next;
-			    member = member->next, user = member->value.cptr)
+			    member = member->next, user = member->cptr)
 			{
 				if (is_chanowner(user, chptr))
 					sendto_one(sptr, rpl_str(RPL_QLIST),
@@ -1018,7 +1141,7 @@ int m_mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (!IsMember(sptr, chptr))
 			return 0;
 		{
-			struct SLink *member;
+			Member *member;
 			/* send chanowner list */
 			/* For our future reference i think there is a 
 			   problem doing this the way i am ... i think
@@ -1034,9 +1157,9 @@ int m_mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			   see if they can a) spot whats wrong and[in both cases] b) correct it
 			   *devilish grin* -- DrBin ... after 1 hr of debugging ... realised he
 			   was lookin at the same piece of data... many times */
-			for (member = chptr->members, user = member->value.cptr;
+			for (member = chptr->members, user = member->cptr;
 			    member->next;
-			    member = member->next, user = member->value.cptr)
+			    member = member->next, user = member->cptr)
 			{
 				if (is_chanprot(user, chptr))
 					sendto_one(sptr, rpl_str(RPL_ALIST),
@@ -1409,7 +1532,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 
 
 	int  retval = 0;
-	Link *member;
+	Member *member = NULL;
+	Membership *membership = NULL;
 	aClient *who;
 	unsigned int tmp = 0;
 	char tmpbuf[512], *tmpstr;
@@ -1586,22 +1710,25 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 			  break;
    		  /* codemastr: your patch is a good idea here, but look at the
    		     member->flags stuff longer down. this caused segfaults */
-   		  if (!(member = find_channel_link(who->user->channel, chptr)))
+   		  if (!(membership = find_membership_link(who->user->channel, chptr)))
 		  {
 			  sendto_one(cptr, err_str(ERR_USERNOTINCHANNEL),
 			      me.name, cptr->name, who->name, chptr->chname);
 			  break;
 		  }
-		  member = find_user_link(chptr->members, who);
+		  member = find_member_link(chptr->members, who);
 		  if (!member)
-		  /* should never happen */
+		  {
+		  	/* should never happen */
+		  	sendto_realops("crap! find_membership_link && !find_member_link !!. Report to unreal team");
 		  	break;
+		  }
 		  /* we make the rules, we bend the rules */
 		  if (IsServer(cptr) || IsULine(cptr))
 			  goto breaktherules;
 
-		  if (is_chanowner(member->value.cptr, chptr)
-		      && member->value.cptr != cptr
+		  if (is_chanowner(member->cptr, chptr)
+		      && member->cptr != cptr
 		      && !is_chanowner(cptr, chptr) && !IsServer(cptr)
 		      && !IsULine(cptr) && (what == MODE_DEL))
 		  {
@@ -1610,12 +1737,12 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 				  sendto_one(cptr,
 				      ":%s NOTICE %s :*** You cannot %s because %s is %s channel owner (+q)",
 				      me.name, cptr->name, xxx,
-				      member->value.cptr->name, chptr->chname);
+				      member->cptr->name, chptr->chname);
 			  }
 			  break;
 		  }
-		  if (is_chanprot(member->value.cptr, chptr)
-		      && member->value.cptr != cptr
+		  if (is_chanprot(member->cptr, chptr)
+		      && member->cptr != cptr
 		      && !is_chanowner(cptr, chptr) && !IsServer(cptr)
 		      && modetype != MODE_CHANOWNER && (what == MODE_DEL))
 		  {
@@ -1624,7 +1751,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 				  sendto_one(cptr,
 				      ":%s NOTICE %s :*** You cannot %s because %s is %s protected user (+a)",
 				      me.name, cptr->name, xxx,
-				      member->value.cptr->name, chptr->chname);
+				      member->cptr->name, chptr->chname);
 			  }
 			  break;
 		  }
@@ -1652,7 +1779,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 			  tc = 'h';
 		  if (modetype == MODE_VOICE)
 			  tc = 'v';
-
+		  /* Make sure membership->flags and member->flags is the same */
+		  membership->flags = member->flags;
 		  (void)ircsprintf(pvar[*pcount], "%c%c%s",
 		      what == MODE_ADD ? '+' : '-', tc, who->name);
 
@@ -2443,7 +2571,7 @@ static void sub1_from_channel(aChannel *chptr)
 int channel_link(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	static char jbuf[BUFSIZE];
-	Link *lp;
+	Membership *lp;
 	aChannel *chptr;
 	char *name, *key = NULL, *link = NULL;
 	int  i, i1, flags = 0;
@@ -2527,7 +2655,7 @@ int channel_link(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			while ((lp = sptr->user->channel))
 			{
-				chptr = lp->value.chptr;
+				chptr = lp->chptr;
 				sendto_channel_butserv(chptr, sptr,
 				    PartFmt, parv[0], chptr->chname);
 				remove_user_from_channel(sptr, chptr);
@@ -2558,7 +2686,8 @@ int channel_link(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 		chptr = get_channel(sptr, name, CREATE);
 
-		if (chptr && (lp = find_user_link(chptr->members, sptr)))
+		/* Faster this way */
+		if (chptr && (lp = find_membership_link(sptr->user->channel, chptr)))
 			continue;
 
 		if (!MyConnect(sptr))
@@ -2654,7 +2783,7 @@ int channel_link(aClient *cptr, aClient *sptr, int parc, char *parv[])
 int m_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	static char jbuf[BUFSIZE];
-	Link *lp;
+	Membership *lp;
 	aChannel *chptr;
 	char *name, *key = NULL, *link = NULL;
 	int  i, flags = 0;
@@ -2728,7 +2857,7 @@ int m_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			while ((lp = sptr->user->channel))
 			{
-				chptr = lp->value.chptr;
+				chptr = lp->chptr;
 				sendto_channel_butserv(chptr, sptr,
 				    PartFmt2, parv[0], chptr->chname,
 				    "Left all channels");
@@ -2780,7 +2909,7 @@ int m_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 
 		chptr = get_channel(sptr, name, CREATE);
-		if (chptr && (lp = find_user_link(chptr->members, sptr)))
+		if (chptr && (lp = find_membership_link(sptr->user->channel, chptr)))
 			continue;
 
 		if (!MyConnect(sptr))
@@ -2924,7 +3053,7 @@ int m_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 int m_part(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aChannel *chptr;
-	Link *lp;
+	Membership *lp;
 	char *p = NULL, *name;
 	char *comment = (parc > 2 && parv[2]) ? parv[2] : NULL;
 
@@ -2952,7 +3081,7 @@ int m_part(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 		if (check_channelmask(sptr, cptr, name))
 			continue;
-		if (!(lp = find_user_link(chptr->members, sptr)))
+		if (!(lp = find_membership_link(sptr->user->channel, chptr)))
 		{
 			/* Normal to get get when our client did a kick
 			   ** for a remote client (who sends back a PART),
@@ -3128,7 +3257,7 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	aChannel *chptr;
 	int  chasing = 0;
 	char *comment, *name, *p = NULL, *user, *p2 = NULL;
-	Link *lp, *lp2;
+	Membership *lp, *lp2;
 
 
 	sptr->flags &= ~FLAGS_TS8;
@@ -3169,12 +3298,12 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			continue;
 		}
 
-		lp2 = find_user_link(chptr->members, sptr);
+		lp2 = find_membership_link(sptr->user->channel, chptr);
 		for (; (user = strtoken(&p2, parv[2], ",")); parv[2] = NULL)
 		{
 			if (!(who = find_chasing(sptr, user, &chasing)))
 				continue;	/* No such user left! */
-			if ((lp = find_user_link(chptr->members, who)))
+			if ((lp = find_membership_link(who->user->channel, chptr)))
 			{
 				if (IsULine(sptr))
 					goto attack;
@@ -3737,8 +3866,8 @@ char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
 
 int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 {
-	Link *lp;
-
+	Membership *lp;
+	MembershipL *lp2;
 	if (!MyClient(sptr))
 		return 0;
 	if (IsOper(sptr) || IsULine(sptr))
@@ -3746,9 +3875,9 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 	if (is_chan_op(sptr, chptr))
 		return 0;
 
-	if (!(lp = find_user_link(chptr->members, sptr)))
+	if (!(lp = find_membership_link(sptr->user->channel, chptr)))
 		return 0;
-
+	
 	if ((chptr->mode.msgs < 1) || (chptr->mode.per < 1))
 		return 0;
 
@@ -3757,21 +3886,21 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 	   and nummsg is higher than mode.msgs
 	   then kick 
 	 */
-
-	if ((TStime() - (lp->flood->lastmsg)) >=	/* current - lastmsgtime */
+	lp2 = (MembershipL *) lp2;
+	if ((TStime() - (lp2->flood.lastmsg)) >=	/* current - lastmsgtime */
 	    chptr->mode.per)	/* mode.per */
 	{
 		/* reset the message counter */
-		lp->flood->lastmsg = TStime();
-		lp->flood->nmsg = 1;
+		lp2->flood.lastmsg = TStime();
+		lp2->flood.nmsg = 1;
 		return 0;	/* forget about it.. */
 	}
 
 	/* increase msgs */
-	lp->flood->nmsg++;
-	lp->flood->lastmsg = TStime();
+	lp2->flood.nmsg++;
+	lp2->flood.lastmsg = TStime();
 
-	if ((lp->flood->nmsg) > chptr->mode.msgs)
+	if ((lp2->flood.nmsg) > chptr->mode.msgs)
 	{
 		char comment[1024], mask[1024];
 
@@ -3792,8 +3921,10 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 		sendto_channel_butserv(chptr, &me,
 		    ":%s KICK %s %s :%s", me.name,
 		    chptr->chname, sptr->name, comment);
-		sendto_serv_butone(cptr, ":%s KICK %s %s :%s",
-		    me.name, chptr->chname, sptr->name, comment);
+		sendto_serv_butone_token(cptr, me.name,
+			MSG_KICK, TOK_KICK, 
+			"%s %s :%s",
+		   chptr->chname, sptr->name, comment);
 		remove_user_from_channel(sptr, chptr);
 		return 1;
 	}
@@ -4063,7 +4194,7 @@ int m_names(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	aChannel *chptr;
 	aClient *acptr;
 	int  member;
-	Link *cm;
+	Member *cm;
 	int  idx, flag = 1, spos;
 	char *s, *para = parv[1];
 
@@ -4127,7 +4258,7 @@ int m_names(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	for (cm = chptr->members; cm; cm = cm->next)
 	{
-		acptr = cm->value.cptr;
+		acptr = cm->cptr;
 		if (IsInvisible(acptr) && !member)
 			continue;
 		if (IsHiding(acptr) && acptr != sptr && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
@@ -4172,7 +4303,7 @@ int m_names(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 void send_user_joins(aClient *cptr, aClient *user)
 {
-	Link *lp;
+	Membership *lp;
 	aChannel *chptr;
 	int  cnt = 0, len = 0, clen;
 	char *mask;
@@ -4183,7 +4314,7 @@ void send_user_joins(aClient *cptr, aClient *user)
 
 	for (lp = user->user->channel; lp; lp = lp->next)
 	{
-		chptr = lp->value.chptr;
+		chptr = lp->chptr;
 		if ((mask = index(chptr->chname, ':')))
 			if (match(++mask, cptr->name))
 				continue;
@@ -4409,7 +4540,8 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	char *s = NULL;
 	aClient *acptr;
 	aChannel *chptr;
-	Link *lp;
+	Member *lp;
+	Membership *lp2;
 	Ban *ban;
 	aParv *ap;
 	int  ts, oldts, pcount, x, y, z, i, f;
@@ -4516,31 +4648,39 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 		for (lp = chptr->members; lp; lp = lp->next)
 		{
+			lp2 = find_membership_link(lp->cptr->user->channel, chptr);
+			if (!lp2)
+			{
+				sendto_realops("Oops! chptr->members && !find_membership_link");
+				continue;
+			}
 			if (lp->flags & MODE_CHANOWNER)
 			{
 				lp->flags &= ~MODE_CHANOWNER;
-				Addit('q', lp->value.cptr->name);
+				Addit('q', lp->cptr->name);
 			}
 			if (lp->flags & MODE_CHANPROT)
 			{
 				lp->flags &= ~MODE_CHANPROT;
-				Addit('a', lp->value.cptr->name);
+				Addit('a', lp->cptr->name);
 			}
 			if (lp->flags & MODE_CHANOP)
 			{
 				lp->flags &= ~MODE_CHANOP;
-				Addit('o', lp->value.cptr->name);
+				Addit('o', lp->cptr->name);
 			}
 			if (lp->flags & MODE_HALFOP)
 			{
 				lp->flags &= ~MODE_HALFOP;
-				Addit('h', lp->value.cptr->name);
+				Addit('h', lp->cptr->name);
 			}
 			if (lp->flags & MODE_VOICE)
 			{
 				lp->flags &= ~MODE_VOICE;
-				Addit('v', lp->value.cptr->name);
+				Addit('v', lp->cptr->name);
 			}
+			/* Those should always match anyways  */
+			lp2->flags = lp->flags;
 		}
 		if (b > 1)
 		{
@@ -5148,8 +5288,8 @@ static int send_ban_list(aClient *cptr, char *chname, TS creationtime, aChannel 
 void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 {
 
-	Link *members;
-	Link *lp;
+	Member *members;
+	Member *lp;
 	char *name;
 	char *bufptr;
 
@@ -5199,7 +5339,7 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 
 
 
-		name = lp->value.cptr->name;
+		name = lp->cptr->name;
 
 		strcpy(bufptr, name);
 		bufptr += strlen(bufptr);
@@ -5251,8 +5391,8 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 
 void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 {
-	Link *members;
-	Link *lp;
+	Member *members;
+	Member *lp;
 	Ban *ban;
 	char *name;
 	char *bufptr;
@@ -5320,9 +5460,7 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 		if (lp->flags & MODE_CHANPROT)
 			*bufptr++ = '~';
 
-
-
-		name = lp->value.cptr->name;
+		name = lp->cptr->name;
 
 		strcpy(bufptr, name);
 		bufptr += strlen(bufptr);

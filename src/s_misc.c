@@ -675,7 +675,7 @@ static void exit_one_client_backend(cptr, sptr, from, comment, split)
 	aClient *acptr;
 	int  i;
 	Link *lp;
-
+	Membership *mp;
 	/*
 	   **  For a server or user quitting, propagage the information to
 	   **  other servers (except to the one where is came from (cptr))
@@ -763,8 +763,8 @@ static void exit_one_client_backend(cptr, sptr, from, comment, split)
 					    sptr->user->server, sptr->name,
 					    sptr->user->username,
 					    sptr->user->realhost, comment);
-			while ((lp = sptr->user->channel))
-				remove_user_from_channel(sptr, lp->value.chptr);
+			while ((mp = sptr->user->channel))
+				remove_user_from_channel(sptr, mp->chptr);
 
 			/* Clean up invitefield */
 			while ((lp = sptr->user->invited))

@@ -112,7 +112,6 @@ void add_server_to_table(aClient *what)
 		ptr = make_link();
 		ptr->value.cptr = what;
 		ptr->flags = what->serv->numeric;
-		ptr->flood = NULL;
 		ptr->next = Servers;
 		Servers = ptr;
 	}

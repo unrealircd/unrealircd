@@ -394,12 +394,13 @@ void count_memory(cptr, nick)
 			rc++;
 		if (acptr->user)
 		{
+			Membership *mb;
 			us++;
 			for (link = acptr->user->invited; link;
 			    link = link->next)
 				usi++;
-			for (link = acptr->user->channel; link;
-			    link = link->next)
+			for (mb = acptr->user->channel; mb;
+			    mb = mb->next)
 				usc++;
 			if (acptr->user->away)
 			{
@@ -413,9 +414,11 @@ void count_memory(cptr, nick)
 
 	for (chptr = channel; chptr; chptr = chptr->nextch)
 	{
+		Member *member;
+		
 		ch++;
 		chm += (strlen(chptr->chname) + sizeof(aChannel));
-		for (link = chptr->members; link; link = link->next)
+		for (member = chptr->members; member; member = member->next)
 			chu++;
 		for (link = chptr->invites; link; link = link->next)
 			chi++;

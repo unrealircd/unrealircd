@@ -262,3 +262,8 @@
 - Adapted /stats M to it. Removed /helpop ?commands temporary. Confirming
   hashtable works.
 - Fixed windows CRLF problem in conf2, reported by Zogg
+- Added Member and Membership and made the IRCd support this. Using
+  "freelinks", todo: garbage collection
+- Added find_member_link and find_membership_link. Made Floodopt only 
+  get allocated for local users. Removed aFloodOpt in Link,
+- Made a speedup in is_halfop (dumb code)

@@ -1165,7 +1165,7 @@ int  m_nick(cptr, sptr, parc, parv)
 	aClient *acptr, *serv;
 	aClient *acptrs;
 	char nick[NICKLEN + 2], *s;
-	Link *lp;
+	Membership *mp;
 	time_t lastnick = (time_t) 0;
 	int  differ = 1;
 
@@ -1647,21 +1647,21 @@ int  m_nick(cptr, sptr, parc, parv)
 		   ** Also set 'lastnick' to current time, if changed.
 		 */
 		if (MyClient(sptr))
-			for (lp = cptr->user->channel; lp; lp = lp->next) {
-				if (is_banned(cptr, &me, lp->value.chptr))
+			for (mp = cptr->user->channel; mp; mp = mp->next) {
+				if (is_banned(cptr, &me, mp->chptr))
 				{
 					sendto_one(cptr,
 					    err_str(ERR_BANNICKCHANGE),
 					    me.name, parv[0],
-					    lp->value.chptr->chname);
+					    mp->chptr->chname);
 					return 0;
 				}
-				if (!IsOper(cptr) && !IsULine(cptr) && lp->value.chptr->mode.mode &
-				   MODE_NONICKCHANGE && !is_chanownprotop(cptr, lp->value.chptr)) {
+				if (!IsOper(cptr) && !IsULine(cptr) && mp->chptr->mode.mode &
+				   MODE_NONICKCHANGE && !is_chanownprotop(cptr, mp->chptr)) {
 					sendto_one(cptr,
 					   err_str(ERR_NONICKCHANGE),
 					   me.name, parv[0],
-					   lp->value.chptr->chname);
+					   mp->chptr->chname);
 					return 0;
 				}
 			}
@@ -2520,7 +2520,8 @@ int  m_who(cptr, sptr, parc, parv)
 {
 	aClient *acptr;
 	char *mask = parc > 1 ? parv[1] : NULL;
-	Link *lp;
+	Membership *mp;
+	Member 	   *ms;
 	aChannel *chptr;
 	aChannel *mychannel;
 	char *channame = NULL, *s;
@@ -2547,8 +2548,8 @@ int  m_who(cptr, sptr, parc, parv)
 		operwho = 1;
 	}
 	if (sptr->user)
-		if ((lp = sptr->user->channel))
-			mychannel = lp->value.chptr;
+		if ((mp = sptr->user->channel))
+			mychannel = mp->chptr;
 
 	/* Allow use of m_who without registering */
 
@@ -2589,19 +2590,20 @@ int  m_who(cptr, sptr, parc, parv)
 		{
 			member = IsMember(sptr, chptr) || IsOper(sptr);
 			if (member || !SecretChannel(chptr))
-				for (lp = chptr->members; lp; lp = lp->next)
+				for (ms = chptr->members; ms; ms = ms->next)
 				{
-					if (IsHiding(lp->value.cptr))
+					acptr = ms->cptr;
+					if (IsHiding(acptr))
 						continue;
-					if (oper && (!IsAnOper(lp->value.cptr)
+					if (oper && (!IsAnOper(acptr)
 					    ))
 						continue;
-					if ((lp->value.cptr != sptr
-					    && IsInvisible(lp->value.cptr)
+					if ((acptr != sptr
+					    && IsInvisible(acptr)
 					    && !member) && !IsOper(sptr))
 						continue;
 					channelwho = 1;
-					do_who(sptr, lp->value.cptr, chptr);
+					do_who(sptr, acptr, chptr);
 				}
 		}
 	}
@@ -2626,9 +2628,9 @@ int  m_who(cptr, sptr, parc, parv)
 			 */
 			isinvis = acptr != sptr && IsInvisible(acptr)
 			    && !IsAnOper(sptr);
-			for (lp = acptr->user->channel; lp; lp = lp->next)
+			for (mp = acptr->user->channel; mp; mp = mp->next)
 			{
-				chptr = lp->value.chptr;
+				chptr = mp->chptr;
 				member = IsMember(sptr, chptr) || IsOper(sptr);
 				if (isinvis && !member)
 					continue;
@@ -2664,7 +2666,7 @@ int  m_who(cptr, sptr, parc, parv)
 			    || match(mask, acptr->user->realhost)) == 0
 			    || match(mask, acptr->user->server) == 0
 			    || match(mask, acptr->info) == 0))
-				do_who(sptr, acptr, ch2ptr);
+				do_who(sptr, cptr, ch2ptr);
 		}
 	sendto_one(sptr, rpl_str(RPL_ENDOFWHO), me.name, parv[0],
 	    BadPtr(mask) ? "*" : mask);
@@ -2715,7 +2717,7 @@ int  m_whois(cptr, sptr, parc, parv)
 		"<Unknown>",	/* host */
 		"<Unknown>"	/* server */
 	};
-	Link *lp;
+	Membership *lp;
 	anUser *user;
 	aClient *acptr, *a2cptr;
 	aChannel *chptr;
@@ -2785,7 +2787,7 @@ int  m_whois(cptr, sptr, parc, parv)
 
 			for (lp = user->channel; lp; lp = lp->next)
 			{
-				chptr = lp->value.chptr;
+				chptr = lp->chptr;
 				member = IsMember(sptr, chptr) || IsOper(sptr);
 				if (invis && !member)
 					continue;
@@ -2848,7 +2850,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			for (len = 0, *buf = '\0', lp = user->channel; lp;
 			    lp = lp->next)
 			{
-				chptr = lp->value.chptr;
+				chptr = lp->chptr;
 				if (!IsServices(sptr) && (IsAnOper(sptr) || ShowChannel(sptr, chptr) || (acptr == sptr)))
 				{
 					if (len + strlen(chptr->chname)

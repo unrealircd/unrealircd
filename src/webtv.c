@@ -143,7 +143,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		"<Unknown>",	/* host */
 		"<Unknown>"	/* server */
 	};
-	Link *lp;
+	Membership *lp;
 	anUser *user;
 	aClient *acptr, *a2cptr;
 	aChannel *chptr;
@@ -204,7 +204,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 			for (lp = user->channel; lp; lp = lp->next)
 			{
-				chptr = lp->value.chptr;
+				chptr = lp->chptr;
 				member = IsMember(sptr, chptr);
 				if (invis && !member)
 					continue;
@@ -265,7 +265,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			for (len = 0, *buf = '\0', lp = user->channel; lp;
 			    lp = lp->next)
 			{
-				chptr = lp->value.chptr;
+				chptr = lp->chptr;
 				if (IsAnOper(sptr) || ShowChannel(sptr, chptr) || (acptr == sptr))
 				{
 					if (len + strlen(chptr->chname)

@@ -34,6 +34,9 @@ extern char *getreply(int);
 #define rpl_str(x) getreply(x)
 #define err_str(x) getreply(x)
 
+extern Member *freemember;
+extern Membership *freemembership;
+extern MembershipL *freemembershipL;
 extern TS nextconnect, nextdnscheck, nextping;
 extern aClient *client, me, *local[];
 extern aChannel *channel;
@@ -126,6 +129,7 @@ extern int R_do_socks, R_good_socks, R_no_socks;
 
 #endif
 extern aChannel *find_channel PROTO((char *, aChannel *));
+extern Member *find_member_link PROTO((Member *, aClient *));
 extern void remove_user_from_channel PROTO((aClient *, aChannel *));
 extern char *base64enc PROTO((long));
 extern long base64dec PROTO((char *));
@@ -324,7 +328,7 @@ extern aClass *make_class PROTO(());
 extern aServer *make_server PROTO(());
 extern aClient *make_client PROTO((aClient *, aClient *));
 extern Link *find_user_link PROTO((Link *, aClient *));
-extern Link *find_channel_link PROTO((Link *, aChannel *));
+extern Member *find_channel_link PROTO((Member *, aChannel *));
 extern char *pretty_mask PROTO((char *));
 extern void add_client_to_list PROTO((aClient *));
 extern void checklist PROTO(());
