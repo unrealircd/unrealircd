@@ -3830,7 +3830,7 @@ int  m_invite(cptr, sptr, parc, parv)
 	 */
 	
 	/* Yes, it's crack induced. This checks if we should even bother going further */
-	if (!(MyConnect(acptr) && chptr && sptr->user &&
+	if (!(chptr && sptr->user &&
 	    (is_chan_op(sptr,chptr) || IsULine(sptr)
 #ifndef NO_OPEROVERRIDE
 	     || IsOper(sptr)
@@ -3885,17 +3885,18 @@ int  m_invite(cptr, sptr, parc, parv)
 #ifdef ENABLE_INVISOPER
 	if (over == 1 && !IsHiding(sptr))
 #else
-	if (over == 1)
+	if (over == 1 && MyConnect(acptr))
 #endif
 		sendto_channelops_butone(NULL, &me, chptr,
 		  ":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
 	  	  me.name, chptr->chname, sptr->name);
-	else if (over == 0)
+	else if (over == 0 && MyConnect(sptr))
 		sendto_channelops_butone(NULL, &me, chptr,
 	    	  ":%s NOTICE @%s :%s invited %s into the channel.",
 		  me.name, chptr->chname, sptr->name, acptr->name);
- 
-	add_invite(acptr, chptr);	
+
+        if (MyConnect(acptr))
+		add_invite(acptr, chptr);	
 	
 	sendto_prefix_one(acptr, sptr, ":%s INVITE %s :%s", parv[0],
 	    acptr->name, ((chptr) ? (chptr->chname) : parv[2]));
