@@ -122,6 +122,7 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *ocomment = (parc > 1 && parv[1]) ? parv[1] : parv[0];
 	static char comment[TOPICLEN + 1];
+	Membership *lp;
 
 	if (!IsServer(cptr))
 	{
@@ -144,6 +145,34 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (!IsAnOper(sptr) && ANTI_SPAM_QUIT_MSG_TIME)
 			if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
 				ocomment = parv[0];
+
+		/* Strip color codes if any channel is +S, use nick as reason if +c. */
+		if (strchr(ocomment, '\003'))
+		{
+			unsigned char filtertype = 0; /* 1=filter, 2=block, highest wins. */
+			for (lp = sptr->user->channel; lp; lp = lp->next)
+			{
+				if (lp->chptr->mode.mode & MODE_NOCOLOR)
+				{
+					filtertype = 2;
+					break;
+				}
+				if (lp->chptr->mode.mode & MODE_STRIP)
+				{
+					if (!filtertype)
+						filtertype = 1;
+				}
+			}
+			if (filtertype == 1)
+			{
+				ocomment = StripColors(ocomment);
+				if (*ocomment == '\0')
+					ocomment = parv[0];
+			} else {
+				ocomment = parv[0];
+			}
+		} /* (strip color codes) */
+
 		strncpy(s, ocomment, TOPICLEN - (s - comment));
 		comment[TOPICLEN] = '\0';
 		return exit_client(cptr, sptr, sptr, comment);

@@ -2399,3 +2399,4 @@ seen. gmtime warning still there
 - Fixed a chroot bug, reported by iceblade (#0001112).
 - Badwords filtering is now only done for local clients, previously every server was filtering
   the message. This will reduce CPU usage, especially at hubs (#0001022).
+- Will now strip/block color codes in quits if any channel the user is in has mode +S/+c.
