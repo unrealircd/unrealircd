@@ -127,10 +127,7 @@ DLLFUNC int  m_kill(cptr, sptr, parc, parv)
 		NULL,		/* invited */
 		NULL,		/* silence */
 		NULL,		/* away */
-		0,		/* last */
-		0,		/* nexttarget */
 		0,		/* servicestamp */
-		0,		/* oflag */
 		1,		/* refcount */
 		0,		/* joined */
 		"<Unknown>",	/* username */

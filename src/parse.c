@@ -440,7 +440,7 @@ int  parse(cptr, buffer, bufend)
 		return (do_numeric(numeric, cptr, from, i, para));
 	cmptr->count++;
 	if (IsRegisteredUser(cptr) && (cmptr->flags & M_RESETIDLE))
-		from->user->last = TStime();
+		cptr->last = TStime();
 
 #ifndef DEBUGMODE
 	if (cmptr->flags & M_ALIAS)

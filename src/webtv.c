@@ -133,10 +133,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		NULL,		/* invited */
 		NULL,		/* silence */
 		NULL,		/* away */
-		0,		/* last */
-		0,		/* nexttarget */
 		0,		/* servicestamp */
-		0,		/* oflag */
 		1,		/* refcount */
 		0,		/* joined */
 		"<Unknown>",	/* username */
@@ -366,7 +363,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			if (acptr->user && MyConnect(acptr))
 				sendto_one(sptr, ":IRC PRIVMSG %s :%s has been idle for %s signed on at %s",
 					sptr->name, acptr->name,
-					(char *)convert_time(TStime() - user->last),
+					(char *)convert_time(TStime() - acptr->last),
 					date(acptr->firsttime));
 		}
 		if (!found)

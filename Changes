@@ -1094,3 +1094,10 @@ seen. gmtime warning still there
 - Converted all calls to hunt_server to hunt_server_token
 - Preparation for release
 - Changed version to beta6 and added final cleanups
+- Added the TKline, TZline, and GZline commands to the documentation
+- Fixed bug in m_tkl_line causing segfaultage
+- Any reason why HOOKTYPE_SERVER_QUIT was being called for clients?
+- Fixed exit_client to do NOQUIT type thing for SQUITs
+- Moved around a lot of aClient/anUser members, hopefully wont cause
+  segfaults
+- Fixed res.c not managing to pass the proper type of parameter to inet_ntoa ONCE

@@ -63,7 +63,7 @@ extern float currentrate2;
 extern ircstats IRCstats;
 extern char	*me_hash;
 
-static void exit_one_client PROTO((aClient *, aClient *, aClient *, char *));
+static void exit_one_client PROTO((aClient *, aClient *, aClient *, char *, int));
 static void exit_one_client_in_split PROTO((aClient *, aClient *, aClient *,
     char *));
 
@@ -558,8 +558,8 @@ int  exit_client(cptr, sptr, from, comment)
 		{
 			next = acptr->next;
 			if (IsClient(acptr) && (acptr->srvptr == sptr))
-				exit_one_client_in_split(NULL, acptr,
-				    &me, comment1);
+				exit_one_client(NULL, acptr,
+				    &me, comment1, 1);
 #ifdef DEBUGMODE
 			else if (IsClient(acptr) &&
 			    (find_server(acptr->user->server, NULL) == sptr))
@@ -612,14 +612,14 @@ int  exit_client(cptr, sptr, from, comment)
 #endif
 		}
 		recurse--;
+		RunHook(HOOKTYPE_SERVER_QUIT, sptr);
 	}
 
 
 	/*
 	 * Finally, clear out the server we lost itself
 	 */
-	RunHook(HOOKTYPE_SERVER_QUIT, sptr);
-	exit_one_client(cptr, sptr, from, comment);
+	exit_one_client(cptr, sptr, from, comment, recurse);
 	return cptr == sptr ? FLUSH_BUFFER : 0;
 }
 
@@ -629,7 +629,7 @@ int  exit_client(cptr, sptr, from, comment)
 */
 /* DANGER: Ugly hack follows. */
 /* Yeah :/ */
-static void exit_one_client_backend(cptr, sptr, from, comment, split)
+static void exit_one_client(cptr, sptr, from, comment, split)
 	aClient *sptr;
 	aClient *cptr;
 	aClient *from;
@@ -660,7 +660,8 @@ static void exit_one_client_backend(cptr, sptr, from, comment, split)
 		{
 			aConfItem *aconf;
 
-			if (!(acptr = local[i]) || !IsServer(acptr) || acptr == cptr || IsMe(acptr))
+			if (!(acptr = local[i]) || !IsServer(acptr) || acptr == cptr || IsMe(acptr)
+			    || (DontSendQuit(acptr) && split))
 				continue;
 			/*
 			   ** SQUIT going "upstream". This is the remote
@@ -749,20 +750,6 @@ static void exit_one_client_backend(cptr, sptr, from, comment, split)
 		hash_check_watch(sptr, RPL_LOGOFF);
 	remove_client_from_list(sptr);
 	return;
-}
-
-static void exit_one_client(cptr, sptr, from, comment)
-	aClient *sptr, *cptr, *from;
-	char *comment;
-{
-	exit_one_client_backend(cptr, sptr, from, comment, 0);
-}
-
-static void exit_one_client_in_split(cptr, sptr, from, comment)
-	aClient *sptr, *cptr, *from;
-	char *comment;
-{
-	exit_one_client_backend(cptr, sptr, from, comment, 1);
 }
 
 

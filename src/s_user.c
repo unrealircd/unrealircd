@@ -451,20 +451,20 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 			return 0;
 		}
 
-	if (TStime() < sptr->user->nexttarget)
+	if (TStime() < sptr->nexttarget)
 	{
 		sptr->since += TARGET_DELAY; /* lag them up */
-		sptr->user->nexttarget += TARGET_DELAY;
+		sptr->nexttarget += TARGET_DELAY;
 
 		return 1;
 	}
 
-	if (TStime() > sptr->user->nexttarget + TARGET_DELAY*MAXTARGETS)
+	if (TStime() > sptr->nexttarget + TARGET_DELAY*MAXTARGETS)
 	{
-		sptr->user->nexttarget = TStime() + TARGET_DELAY*MAXTARGETS;
+		sptr->nexttarget = TStime() + TARGET_DELAY*MAXTARGETS;
 	}
 
-	sptr->user->nexttarget += TARGET_DELAY;
+	sptr->nexttarget += TARGET_DELAY;
 
 	memmove(&sptr->targets[1], &sptr->targets[0], MAXTARGETS - 1);
 	sptr->targets[0] = hash;
@@ -737,7 +737,7 @@ extern int register_user(cptr, sptr, nick, username, umode, virthost)
 		NULL		/*8  reason */
 	};
 	ConfigItem_tld *tlds;
-	user->last = TStime();
+	cptr->last = TStime();
 	parv[0] = sptr->name;
 	parv[1] = parv[2] = NULL;
 
@@ -2316,7 +2316,7 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			if (IsCoAdmin(sptr) && !OPIsCoAdmin(sptr))
 				ClearCoAdmin(sptr);
 			if ((sptr->umodes & UMODE_HIDING)
-			    && !(sptr->user->oflag & OFLAG_INVISIBLE))
+			    && !(sptr->oflag & OFLAG_INVISIBLE))
 				sptr->umodes &= ~UMODE_HIDING;
 			if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
 			    && !IsSecure(sptr))
@@ -2333,7 +2333,7 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sptr->umodes &= ~UMODE_HIDING;
 
 		if ((sptr->umodes & UMODE_HIDING)
-		    && !(sptr->user->oflag & OFLAG_INVISIBLE))
+		    && !(sptr->oflag & OFLAG_INVISIBLE))
 			sptr->umodes &= ~UMODE_HIDING;
 		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
 		    && !IsSecure(sptr))
@@ -2399,7 +2399,7 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifndef NO_FDLIST
 		delfrom_fdlist(sptr->slot, &oper_fdlist);
 #endif
-		sptr->user->oflag = 0;
+		sptr->oflag = 0;
 		if (sptr->user->snomask & SNO_CLIENT)
 			sptr->user->snomask &= ~SNO_CLIENT;
 		if (sptr->user->snomask & SNO_FCLIENT)

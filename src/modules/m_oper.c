@@ -218,7 +218,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 
 		sptr->class = aconf->class;
 		sptr->class->clients++;
-		sptr->user->oflag = 0;
+		sptr->oflag = 0;
 		if (aconf->swhois) {
 			if (sptr->user->swhois)
 				MyFree(sptr->user->swhois);
@@ -230,111 +230,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 
 #ifdef POTVINIZE /* scary shit below */
 
-		sptr->umodes |= (UMODE_SERVNOTICE | UMODE_WALLOP | UMODE_FAILOP);
-		if (aconf->oflags & OFLAG_NETADMIN) {
-			sptr->umodes |= (UMODE_NETADMIN | UMODE_ADMIN | UMODE_SADMIN | UMODE_OPER);
-			sendto_ops
-			    ("%s (%s@%s) is now a network administrator (N)",
-			    parv[0], sptr->user->username,
-			    IsHidden(cptr) ? sptr->user->virthost : sptr->
-			    user->realhost);
-			sendto_serv_butone(&me,
-			    ":%s GLOBOPS :%s (%s@%s) is now a network administrator (N)",
-			    me.name, parv[0], sptr->user->username,
-			    IsHidden(sptr) ? sptr->
-			    user->virthost : sptr->user->realhost);
-			sptr->user->oflag |= OFLAG_ADMIN|OFLAG_SADMIN|OFLAG_ISGLOBAL;
-			if (iNAH == 1 && (aconf->oflags & OFLAG_HIDE))
-				iNAH_host(sptr, netadmin_host);
-		}
-		else if (aconf->oflags & OFLAG_TECHADMIN) {
-			sptr->umodes |= (UMODE_TECHADMIN | UMODE_ADMIN | UMODE_SADMIN | UMODE_OPER);
-			sendto_ops
-			    ("%s (%s@%s) is now a technical administrator (T)",
-			    parv[0], sptr->user->username,
-			    IsHidden(sptr) ? sptr->user->virthost : sptr->
-			    user->realhost);
-			sendto_serv_butone(&me,
-			    ":%s GLOBOPS :%s (%s@%s) is now a technical administrator (T)",
-			    me.name, parv[0], sptr->user->username,
-			    IsHidden(sptr) ? sptr->
-			    user->virthost : sptr->user->realhost);
-			sptr->user->oflag |= OFLAG_ADMIN|OFLAG_SADMIN|OFLAG_ISGLOBAL;
-			if (iNAH == 1 && (aconf->oflags & OFLAG_HIDE))
-				iNAH_host(sptr, techadmin_host);
-		}
-		else if (aconf->oflags & OFLAG_ADMIN) {
-			sptr->umodes |= (UMODE_ADMIN|UMODE_OPER);
-			if (!(aconf->oflags & OFLAG_SADMIN)) {
-				sendto_ops("%s (%s@%s) is now a server admin (A)",
-				    parv[0], sptr->user->username,
-				    IsHidden(sptr) ? sptr->user->virthost : sptr->
-				    user->realhost);
-				if (iNAH == 1 && (aconf->oflags & OFLAG_HIDE))
-					iNAH_host(sptr, admin_host);
-			}
-			sptr->user->oflag |= OFLAG_ISGLOBAL;
-		}
-		else if (aconf->oflags & OFLAG_COADMIN)	{
-			sptr->umodes |= (UMODE_COADMIN|UMODE_OPER);
-			if (!(aconf->oflags & OFLAG_SADMIN)) {
-				sendto_ops("%s (%s@%s) is now a co administrator (C)",
-				    parv[0], sptr->user->username,
-				    IsHidden(sptr) ? sptr->user->virthost : sptr->
-				    user->realhost);
-				if (iNAH == 1 && (aconf->oflags & OFLAG_HIDE))
-					iNAH_host(sptr, coadmin_host);
-			}
-			sptr->user->oflag |= OFLAG_ISGLOBAL;
-		}
-		else if (aconf->oflags & OFLAG_ISGLOBAL) {
-			sptr->umodes |= UMODE_OPER;
-			if (!(aconf->oflags & OFLAG_SADMIN)) {
-				sendto_ops("%s (%s@%s) is now an operator (O)", parv[0],
-				    sptr->user->username,
-				    IsHidden(sptr) ? sptr->user->virthost : sptr->
-				    user->realhost);
-				if (iNAH == 1 && (aconf->oflags & OFLAG_HIDE))
-					iNAH_host(sptr, oper_host);
-			}
-		}
-		else {
-			sptr->umodes |= UMODE_LOCOP;
-			if (!(aconf->oflags & OFLAG_SADMIN)) {
-				sendto_ops("%s (%s@%s) is now a local operator (o)",
-				    parv[0], sptr->user->username,
-				    IsHidden(sptr) ? sptr->user->virthost : sptr->
-				    user->realhost);
-				if (iNAH == 1 && (aconf->oflags & OFLAG_HIDE))
-					iNAH_host(sptr, locop_host);
-			}
-		}
-		if (aconf->oflags & OFLAG_SADMIN)
-		{
-			sptr->umodes |= (UMODE_SADMIN);
-			if (!(aconf->oflags & OFLAG_NETADMIN) && !(aconf->oflags & OFLAG_TECHADMIN)) {
-				sendto_ops("%s (%s@%s) is now a services admin (a)",
-				    parv[0], sptr->user->username,
-				    IsHidden(sptr) ? sptr->user->virthost : sptr->
-				    user->realhost);
-				sendto_serv_butone(&me,
-				    ":%s GLOBOPS :%s (%s@%s) is now a services administrator (a)",
-				    me.name, parv[0], sptr->user->username,
-				    IsHidden(sptr) ? sptr->
-				    user->virthost : sptr->user->realhost);
-				if (iNAH == 1 && (aconf->oflags & OFLAG_HIDE))
-					iNAH_host(sptr, sadmin_host);
-			}
-		}
-		if ((aconf->oflags & OFLAG_HELPOP))
-			sptr->umodes |= UMODE_HELPOP;
-		if (aconf->oflags & OFLAG_WHOIS)
-			sptr->umodes |= UMODE_WHOIS;
-		if (aconf->oflags & OFLAG_HIDE)
-			sptr->umodes |= (UMODE_HIDE);
-		if (aconf->oflags & OFLAG_EYES)
-			sptr->user->snomask |= SNO_EYES;
-		sptr->user->oflag |= aconf->oflags;
+/* Begone evil demons! */
 
 #else
 
@@ -356,7 +252,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 			j++;
 		}
 
-		sptr->user->oflag = aconf->oflags;
+		sptr->oflag = aconf->oflags;
 
 		if ((aconf->oflags & OFLAG_HIDE) && iNAH && !BadPtr(host)) {
 			iNAH_host(sptr, (host != NULL) ? host : "eek.host.is.null.pointer");

@@ -324,7 +324,7 @@ extern int m_svsfline();
 extern int m_vhost(), m_botmotd(), m_sjoin();
 extern int m_umode2(), m_dccdeny(), m_undccdeny();
 extern int m_post(), m_cycle(), m_opermotd();
-extern int m_module(), m_alias();
+extern int m_module(), m_alias(), m_tkl(), m_opermotd();
 extern int m_hash(), m_rehash(), m_die(), m_restart();
 #endif
 
