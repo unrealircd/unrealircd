@@ -1,5 +1,5 @@
 ===============================================
-=            UnrealIRCd v3.2 (beta13)         =
+=            UnrealIRCd v3.2 (beta14)         =
 ===============================================
  Was brought to you by:
 
@@ -7,20 +7,19 @@
   ==============
   * Stskeeps  <stskeeps@tspre.org>
   * codemastr <codemastr@unrealircd.com>
-  * Griever   <griever@unrealircd.com>
   * Luke      <luke@unrealircd.com>
-  * nighthawk <nighthawk@unrealircd.com>
   * McSkaf    <mcskaf@unrealircd.org>
+  * Syzop     <syzop@unrealircd.org>
 
-  Coders team:
+  Contributors
   ============
   * Zogg      <zogg@unrealircd.org>
   * NiQuiL    <niquil@unrealircd.org>
   * assyrian  <assyrian@unrealircd.org>
-
- In former versions:
+  * nighthawk <nighthawk@unrealircd.com>
   * DrBin     <drbin@unrealircd.com>
   * llthangel <llthangel@unrealircd.org>
+  * Griever   <griever@unrealircd.com>
   
   Documentation:
   ==============
