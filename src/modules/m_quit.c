@@ -78,7 +78,7 @@ int    m_quit_Init(int module_load)
 	/*
 	 * We call our add_Command crap here
 	*/
-	add_CommandX(MSG_QUIT, TOK_QUIT, m_quit, MAXPARA, M_UNREGISTERED|M_USER);
+	add_CommandX(MSG_QUIT, TOK_QUIT, m_quit, 1, M_UNREGISTERED|M_USER);
 	return MOD_SUCCESS;
 	
 }

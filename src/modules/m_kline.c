@@ -79,7 +79,7 @@ int    m_kline_Init(int module_load)
 	/*
 	 * We call our add_Command crap here
 	*/
-	add_Command(MSG_KLINE, TOK_KLINE, m_kline, MAXPARA);
+	add_Command(MSG_KLINE, TOK_KLINE, m_kline, 2);
 	return MOD_SUCCESS;
 	
 }

@@ -79,7 +79,7 @@ int    m_kill_Init(int module_load)
 	/*
 	 * We call our add_Command crap here
 	*/
-	add_Command(MSG_KILL, TOK_KILL, m_kill, MAXPARA);
+	add_Command(MSG_KILL, TOK_KILL, m_kill, 2);
 	return MOD_SUCCESS;
 }
 

@@ -77,7 +77,7 @@ int    m_nachat_Init(int module_load)
 	/*
 	 * We call our add_Command crap here
 	*/
-	add_Command(MSG_NACHAT, TOK_NACHAT, m_nachat, MAXPARA);
+	add_Command(MSG_NACHAT, TOK_NACHAT, m_nachat, 1);
 	return MOD_SUCCESS;
 	
 }

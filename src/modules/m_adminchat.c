@@ -77,7 +77,7 @@ int    m_adminchat_Init(int module_load)
 	/*
 	 * We call our add_Command crap here
 	*/
-	add_Command(MSG_ADMINCHAT, TOK_ADMINCHAT, m_admins, MAXPARA);
+	add_Command(MSG_ADMINCHAT, TOK_ADMINCHAT, m_admins, 1);
 	return MOD_SUCCESS;
 }
 

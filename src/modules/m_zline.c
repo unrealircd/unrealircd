@@ -78,7 +78,7 @@ int    m_zline_Init(int module_load)
 	/*
 	 * We call our add_Command crap here
 	*/
-	add_Command(MSG_ZLINE, TOK_ZLINE, m_zline, MAXPARA);
+	add_Command(MSG_ZLINE, TOK_ZLINE, m_zline, 2);
 }
 
 /* Is first run when server is 100% ready */
