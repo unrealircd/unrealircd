@@ -1109,3 +1109,5 @@ v- Fixed some bugreport stuff
 - Maybe (but I doubt it) fixed bug #0000040 (Win32 resolver crash) reported by Kyver
 - Hey everyone it's point release time... I completely screwed up check_for_target_limit
 - Made the kline-address error easier to understand (must be instead of is not)
+- Made a SNOMASK for the +s notices, so you arent forced into hearing them if you just
+  want say +k

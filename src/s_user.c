@@ -72,6 +72,7 @@ int sno_mask[] = {
 	SNO_TKL, 'G',
 	SNO_NICKCHANGE, 'n',
 	SNO_QLINE, 'q',
+	SNO_SNOTICE, 's',
 	0, 0
 };
 
@@ -2095,24 +2096,7 @@ void set_snomask(aClient *sptr, char *snomask) {
 		}
 	}
 	if (!IsAnOper(sptr)) {
-		if (sptr->user->snomask & SNO_CLIENT)
-			sptr->user->snomask &= ~SNO_CLIENT;
-		if (sptr->user->snomask & SNO_FCLIENT)
-			sptr->user->snomask &= ~SNO_FCLIENT;
-		if (sptr->user->snomask & SNO_FLOOD)
-			sptr->user->snomask &= ~SNO_FLOOD;
-		if (sptr->user->snomask & SNO_JUNK)
-			sptr->user->snomask &= ~SNO_JUNK;
-		if (sptr->user->snomask & SNO_EYES)
-			sptr->user->snomask &= ~SNO_EYES;
-		if (sptr->user->snomask & SNO_VHOST)
-			sptr->user->snomask &= ~SNO_VHOST;
-		if (sptr->user->snomask & SNO_TKL)
-			sptr->user->snomask &= ~SNO_TKL;
-		if (sptr->user->snomask & SNO_NICKCHANGE)
-			sptr->user->snomask &= ~SNO_NICKCHANGE;
-		if (sptr->user->snomask & SNO_QLINE)
-			sptr->user->snomask &= ~SNO_QLINE;
+		sptr->user->snomask &= (SNO_NONOPERS);
 	}
 }
 
