@@ -266,3 +266,5 @@
 - Moved the RTF win32 code to a seperate file
 - More win32 code cleanups
 - Added src/win32/editor.c (woops), (#0001932) reported by Troco
+- Fixed a problem with /who incorrectly showing the ? flag to opers even when the user should
+  be visible (#0001888) reported by Bugz and aquanight

@@ -544,10 +544,16 @@ char has_common_chan = 0;
 		else
 		{
 			/* a user/mask who */
+
+			/* If the common channel info hasn't been set, set it now */
+			if (!wfl.common_channels_only)
+				has_common_chan = has_common_channels(sptr, acptr);
+
 			if (IsInvisible(acptr) && !has_common_chan)
 			{
-				/* don't show them unless it's an exact match */
-				if ((who_flags & WF_WILDCARD))
+				/* don't show them unless it's an exact match 
+				   or it is the user requesting the /who */
+				if ((who_flags & WF_WILDCARD) && sptr != acptr)
 					break;
 			}
 		}
