@@ -552,7 +552,7 @@ CMD_FUNC(m_server_remote)
 	/* Taken from bahamut makes it so all servers behind a U:lined
 	 * server are also U:lined, very helpful if HIDE_ULINES is on
 	 */
-	if (IsULine(cptr)
+	if (IsULine(sptr)
 	    || (Find_uline(acptr->name)))
 		acptr->flags |= FLAGS_ULINE;
 	add_server_to_table(acptr);

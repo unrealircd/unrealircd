@@ -504,3 +504,5 @@
 - Fixed dcc filtering a bit more.
 - Made usermode 'g' operonly since it didn't do much, reported by DukePyrolator (#0002024).
 - Fixed tkl except { } not working (post-3.2.2).
+- Fixed bug where servers behind ulines were not ulined, causing for example juped servers to
+  show up if flat-map was enabled, reported by GSF19 (#0002230).
