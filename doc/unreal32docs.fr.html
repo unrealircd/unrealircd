@@ -239,14 +239,10 @@ Windows:<br>
    Cette sp&eacute;cificit&eacute; est utile pour pr&eacute;venir les floods entre utilisateurs depuis qu'ils ne peuvent plus voir l'host ou l'IP r&eacute;el.</p>
 <p>Cela est contrôl&eacute; par le usermode +x (comme : /mode votrepseudo +x), les administrateurs peuvent forcer le mode +x par d&eacute;faut, 
    ou rendre impossible aux utilisateurs d'enlever ce mode.</p>
-<p>Un host cloaked est g&eacute;n&eacute;r&eacute; par un module de cloaking (vous devez en avoir un d'amorc&eacute;), il y en a 2 officiels &agrave; ce jour :<br>
-   <b>cloak:</b> C'est le nouveau module officiel de cloaking qui est plus s&eacute;curis&eacute; que l'ancien, il utilise la m&eacute;thode de 
+<p>Un host cloaked est g&eacute;n&eacute;r&eacute; par un module de cloaking (vous devez en avoir un d'amorc&eacute;), il y en a 1 seul officiel &agrave; ce jour :<br>
+   <b>cloak:</b> C'est le module officiel de cloaking depuis la version 3.2.1, il est plus s&eacute;curis&eacute; que l'ancien algorithme, il utilise la m&eacute;thode de 
    hachage md5 et requi&egrave;re 3 set::cloak-keys:: consistant &agrave; mixer des caract&egrave;res alphanum&eacute;rique (a-z, A-Z et 0-9) 
    [ex: CZCBd45Q6DmtExAd8Bm2"]. Regardez l'example.conf pour un exemple.<br>
-   <b>oldcloak:</b> C'est l'ancien algorithme utilis&eacute; par Unreal3.2 et les versions pr&eacute;c&eacute;dentes, il est ici dans le but 
-   de vous montrer l'&eacute;volution du processus de chiffrage des hosts/IP r&eacute;els. Il n'est plus consid&eacute;r&eacute; comme s&eacute;curis&eacute; 
-   (vous devriez avoir un avertissement si vous l'utilisez) 
-   et vous devriez passer au 'cloak' d&egrave;s que tous les serveurs seront mis &agrave; jour.</p>
 <p>Les Cloak keys DOIVENT être les mêmes sur TOUS LES SERVEURS d'un r&eacute;seau. Elles doivent être gard&eacute;es SECRETES car 
    il est possible de d&eacute;chiffrer l'host original si vous connaissez ces cl&eacute;s (ce qui rendrait le umode +x obsol&egrave;te).</p>
 </div>
