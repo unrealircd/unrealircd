@@ -3539,7 +3539,7 @@ int m_topic(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    me.name, parv[0], name);
 			return 0;
 		}
-		if (parc > 2)
+		if (parc > 2 || SecretChannel(chptr))
 		{
 			if (!IsMember(sptr, chptr) && !IsServer(sptr)
 			    && !IsULine(sptr))

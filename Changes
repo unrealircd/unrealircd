@@ -492,3 +492,4 @@ seen. gmtime warning still there
 - Fixed the problems with 100% cpu, hopefully
 - Fixed the 100% cpu problem, again, HTM is screwed now though?
 - Got /stats O working
+- Made the topic for a +s channel hidden from non-members (reported by Bagge)
