@@ -3876,7 +3876,6 @@ int     _conf_help(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	ConfigItem_help *ca;
 	aMotd *last = NULL, *temp;
-
 	ca = MyMallocEx(sizeof(ConfigItem_help));
 
 	if (!ce->ce_vardata)
@@ -3944,7 +3943,7 @@ int     _conf_log(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 	}
-	AddListItem(ca, conf_help);
+	AddListItem(ca, conf_log);
 	return 1;
 
 }
