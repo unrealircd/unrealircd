@@ -541,7 +541,7 @@ static char *replies[] = {
 /* 486    ERR_NONONREG */ ":%s 486 %s :You must identify to a registered nick to private message %s",
 /* 487    ERR_NOTFORUSERS */ ":%s 487 %s :%s is a server only command",
 /* 488    ERR_HTMDISABLED */ ":%s 488 %s :%s is currently disabled, please try again later.",
-/* 489 */ NULL,
+/* 489    ERR_SECUREONLYCHAN */ ":%s 489 %s %s :Cannot join channel (+z)",
 /* 490 */ NULL,
 /* 491    ERR_NOOPERHOST */ ":%s 491 %s :No O-lines for your host",
 /* 492 */ NULL,

@@ -1370,3 +1370,4 @@ seen. gmtime warning still there
 - Fixed a bug where makeconf would not work after a make install
 - Fixed m_sjoin bug with banlist propagation
 - Fixed compile problem with non-glob/win32 systems (sunos 4.1) found by rshurr
+- Fixed secure channel only (+z) sending ERR_BANNEDFROMCHAN

@@ -2346,7 +2346,7 @@ static int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, ch
 	{
 		sendto_one(sptr, ":%s %s %s :*** Cannot join: %s is a Secure-only channel (+z)",
 				me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, chptr->chname); 
-		return (ERR_BANNEDFROMCHAN);	
+		return (ERR_SECUREONLYCHAN);	
 	}
 	if ((chptr->mode.mode & MODE_OPERONLY) && !IsOper(sptr))
 	{
