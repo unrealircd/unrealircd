@@ -4225,22 +4225,28 @@ else
 
 #include <pthread.h>
 int pid;
-void testthreads() {
-if (getpid() == pid)
-	exit(0);
-exit(1);
+int mypid = -1;
+void testthreads(void *p) {
+	mypid = getpid();
+	pthread_exit(NULL);
 }
 int main() {
-pthread_t thread;
-pthread_attr_t attrs;
-pid = getpid();
-pthread_attr_init(&attrs);
-pthread_create(&thread, &attrs, (void*)testthreads, NULL);
-pthread_join(thread, NULL);
+	pthread_t thread;
+	pthread_attr_t attrs;
+	pid = getpid();
+	pthread_attr_init(&attrs);
+	pthread_create(&thread, &attrs, (void*)testthreads, NULL);
+	while (mypid == -1)
+	{
+	}
+	if (mypid != pid)
+		exit (1);
+	else
+	exit (0);
 }
 
 EOF
-if { (eval echo configure:4244: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:4250: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   ac_cv_thread_multi=no
 else
@@ -4299,12 +4305,12 @@ CC="$PTHREAD_CC"
 CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 IRCDLIBS="$IRCDLIBS $PTHREAD_LIBS"
 echo $ac_n "checking if FD_SETSIZE is large enough to allow $ac_fd file descriptors""... $ac_c" 1>&6
-echo "configure:4303: checking if FD_SETSIZE is large enough to allow $ac_fd file descriptors" >&5
+echo "configure:4309: checking if FD_SETSIZE is large enough to allow $ac_fd file descriptors" >&5
 if test "$cross_compiling" = yes; then
     { echo "configure: error: can not run test program while cross compiling" 1>&2; exit 1; }
 else
   cat > conftest.$ac_ext <<EOF
-#line 4308 "configure"
+#line 4314 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -4316,7 +4322,7 @@ exit(1);
 }
 
 EOF
-if { (eval echo configure:4320: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:4326: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   echo "$ac_t""yes" 1>&6
 else

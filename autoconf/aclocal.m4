@@ -224,18 +224,24 @@ CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 AC_TRY_RUN([
 #include <pthread.h>
 int pid;
-void testthreads() {
-if (getpid() == pid)
-	exit(0);
-exit(1);
+int mypid = -1;
+void testthreads(void *p) {
+	mypid = getpid();
+	pthread_exit(NULL);
 }
 int main() {
-pthread_t thread;
-pthread_attr_t attrs;
-pid = getpid();
-pthread_attr_init(&attrs);
-pthread_create(&thread, &attrs, (void*)testthreads, NULL);
-pthread_join(thread, NULL);
+	pthread_t thread;
+	pthread_attr_t attrs;
+	pid = getpid();
+	pthread_attr_init(&attrs);
+	pthread_create(&thread, &attrs, (void*)testthreads, NULL);
+	while (mypid == -1)
+	{
+	}
+	if (mypid != pid)
+		exit (1);
+	else
+	exit (0);
 }
 ],ac_cv_thread_multi=no, ac_cv_thread_multi=yes)
 LIBS="$save_LIBS"
