@@ -3,7 +3,7 @@
 
 ; #define USE_SSL
 ; Uncomment the above line to package an SSL build
-#define USE_ZIP
+; #define USE_ZIP
 ; Uncomment the above line to package with ZIP support
 
 
@@ -58,6 +58,7 @@ Source: "..\..\doc\*.*"; DestDir: "{app}\doc"; Flags: ignoreversion
 Source: "..\..\aliases\*"; DestDir: "{app}\aliases"; Flags: ignoreversion
 Source: "..\..\networks\*"; DestDir: "{app}\networks"; Flags: ignoreversion
 Source: "..\..\unreal.exe"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0,4.0
+Source: "tre.dll"; DestDir: "{app}"; Flags: ignoreversion
 #ifdef USE_SSL
 Source: "c:\openssl\bin\openssl.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\openssl\bin\ssleay32.dll"; DestDir: "{app}"; Flags: ignoreversion
