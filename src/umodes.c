@@ -76,6 +76,7 @@ long UMODE_HIDEOPER = 0L;      /* Hide oper mode */
 long UMODE_SETHOST = 0L;       /* Used sethost */
 long UMODE_STRIPBADWORDS = 0L; /* Strip badwords */
 long UMODE_HIDEWHOIS = 0L;     /* Hides channels in /whois */
+long UMODE_NOCTCP = 0L;	       /* Blocks ctcp (except dcc and action) */
 
 long SNO_KILLS = 0L;
 long SNO_CLIENT = 0L;
@@ -127,6 +128,7 @@ void	umode_init(void)
 	UmodeAdd(NULL, 's', UMODE_LOCAL, NULL, &UMODE_SERVNOTICE);
 	UmodeAdd(NULL, 'O', UMODE_LOCAL, NULL, &UMODE_LOCOP);
 	UmodeAdd(NULL, 'R', UMODE_GLOBAL, NULL, &UMODE_RGSTRONLY);
+	UmodeAdd(NULL, 'T', UMODE_GLOBAL, NULL, &UMODE_NOCTCP);
 	UmodeAdd(NULL, 'V', UMODE_GLOBAL, NULL, &UMODE_WEBTV);
 	UmodeAdd(NULL, 'S', UMODE_GLOBAL, NULL, &UMODE_SERVICES);
 	UmodeAdd(NULL, 'x', UMODE_GLOBAL, NULL, &UMODE_HIDE);

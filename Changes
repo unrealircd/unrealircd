@@ -2456,4 +2456,5 @@ seen. gmtime warning still there
 - Fixed a problem with HTM where it would never actually read messages from clients
 - Made /who limit output (uses set::who-limit) (#0001244) suggested by Exael23 
 - Made /who * disabled (for non-opers) in HTM mode
-
+- Added usermode +T - No CTCP (excludes ACTION and DCC), (#001288) suggested by White_Magic
+  and others.

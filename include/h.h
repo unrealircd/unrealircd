@@ -285,7 +285,7 @@ extern void    sendto_message_one(aClient *to, aClient *from, char *sender,
 extern void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
     int prefix, char *pattern, ...);
 extern void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chptr,
-    int prefix, char *cmd, char *tok, char *nick, char *text);
+    int prefix, char *cmd, char *tok, char *nick, char *text, char do_send_check);
 extern void sendto_channel_butone(aClient *, aClient *, aChannel *, char *,
     ...);
 extern void sendto_channel_butserv_butone(aChannel *chptr, aClient *from, aClient *one, char *pattern, ...);
@@ -433,6 +433,7 @@ extern long UMODE_HIDEOPER;  /* 0x20000000	 Hide oper mode */
 extern long UMODE_SETHOST;   /* 0x40000000	 used sethost */
 extern long UMODE_STRIPBADWORDS; /* 0x80000000	 */
 extern long UMODE_HIDEWHOIS; /* hides channels in /whois */
+extern long UMODE_NOCTCP;    /* blocks all ctcp (except dcc and action) */
 extern long AllUmodes, SendUmodes;
 
 extern long SNO_KILLS;

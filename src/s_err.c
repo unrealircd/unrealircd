@@ -548,7 +548,7 @@ static char *replies[] = {
 /* 489    ERR_SECUREONLYCHAN */ ":%s 489 %s %s :Cannot join channel (+z)",
 /* 490    ERR_NOSWEAR */ ":%s 490 %s :%s does not accept private messages containing swearing.",
 /* 491    ERR_NOOPERHOST */ ":%s 491 %s :No O-lines for your host",
-/* 492 */ NULL,
+/* 492    ERR_NOCTCP */ ":%s 492 %s :%s does not accept CTCPs",
 /* 493 */ NULL,
 /* 494 */ NULL,
 /* 495 */ NULL,

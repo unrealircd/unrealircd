@@ -439,15 +439,20 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 
 void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chptr,
 	int	prefix,
-    char *cmd, char *tok, char *nick, char *text)
+    char *cmd, char *tok, char *nick, char *text, char do_send_check)
 {
 	Member *lp;
 	aClient *acptr;
 	int  i;
+	char is_ctcp = 0;
 
 	sprintf(tcmd, ":%s %s %s :%s", from->name, tok, nick, text);
 	sprintf(ccmd, ":%s %s %s :%s", from->name, cmd, nick, text);
 	sprintf(xcmd, "%s %s :%s", cmd, nick, text);
+
+	if (do_send_check && *text == 1 && myncmp(text+1,"ACTION ",7) && myncmp(text+1,"DCC ",4))
+		is_ctcp = 1;
+
 
 	++sentalong_marker;
 	for (lp = chptr->members; lp; lp = lp->next)
@@ -478,6 +483,9 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 			continue;
 		if (MyConnect(acptr) && IsRegisteredUser(acptr))
 		{
+			if (IsNoCTCP(acptr) && !IsOper(from) && is_ctcp)
+				continue;
+
 			sendto_prefix_one(acptr, from, ":%s %s",
 				from->name, xcmd);
 			sentalong[i] = sentalong_marker;

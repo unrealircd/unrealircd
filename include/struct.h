@@ -361,6 +361,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsARegNick(x)		((x)->umodes & (UMODE_REGNICK))
 #define IsRegNick(x)		((x)->umodes & UMODE_REGNICK)
 #define IsRegNickMsg(x)		((x)->umodes & UMODE_RGSTRONLY)
+#define IsNoCTCP(x)		((x)->umodes & UMODE_NOCTCP)
 #define IsWebTV(x)		((x)->umodes & UMODE_WEBTV)
 #define	IsPerson(x)		((x)->user && IsClient(x))
 #define	IsPrivileged(x)		(IsAnOper(x) || IsServer(x))
