@@ -232,19 +232,19 @@ int m_undccdeny(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 void dcc_wipe_services(void)
 {
-	ConfigItem_deny_dcc *dconf, t;
+	ConfigItem_deny_dcc *dconf, *next;
 	
-	for (dconf = conf_deny_dcc; dconf; dconf = (ConfigItem_deny_dcc *) dconf->next)
+	for (dconf = conf_deny_dcc; dconf; dconf = (ConfigItem_deny_dcc *) next)
 	{
+		next = dconf->next;
 		if ((dconf->flag.type2 == CONF_BAN_TYPE_AKILL))
 		{
-			t.next = (ConfigItem *)DelListItem(dconf, conf_deny_dcc);
+			DelListItem(dconf, conf_deny_dcc);
 			if (dconf->filename)
 				MyFree(dconf->filename);
 			if (dconf->reason)
 				MyFree(dconf->reason);
 			MyFree(dconf);
-			dconf = &t;
 		}
 	}
 

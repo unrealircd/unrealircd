@@ -207,17 +207,17 @@ aTKline *tkl_expire(aTKline * tmp)
 
 EVENT(tkl_check_expire)
 {
-	aTKline *gp, t;
+	aTKline *gp, *next;
 	TS   nowtime;
 
 	nowtime = TStime();
 
-	for (gp = tklines; gp; gp = gp->next)
+	for (gp = tklines; gp; gp = next)
 	{
+		next = gp->next;
 		if (gp->expire_at <= nowtime && !(gp->expire_at == 0))
 		{
-			t.next = tkl_expire(gp);
-			gp = &t;
+			tkl_expire(gp);
 		}
 	}
 }

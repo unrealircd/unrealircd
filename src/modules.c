@@ -241,7 +241,7 @@ Module *Module_make(ModuleHeader *header,
 int    Module_free(Module *mod)
 {
 	Module *p;
-	ModuleChild *cp;
+	ModuleChild *cp, *cpnext;
 	ModuleObject *objs, *next;
 	/* Do not kill parent if children still alive */
 
@@ -263,8 +263,9 @@ int    Module_free(Module *mod)
 	}
 	for (p = Modules; p; p = p->next)
 	{
-		for (cp = p->children; cp; cp = cp->next)
+		for (cp = p->children; cp; cp = cpnext)
 		{
+			cpnext = cp->next;
 			if (cp->child == mod)
 			{
 				DelListItem(mod, p->children);

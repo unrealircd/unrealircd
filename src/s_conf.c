@@ -440,10 +440,11 @@ void config_progress(char *format, ...)
 
 void clear_unknown() {
 	ConfigItem_unknown *p;
-	ListStruct t;
+	ListStruct *next;
 	ConfigItem_unknown_ext *q;
 
-	for (p = conf_unknown; p; p = (ConfigItem_unknown *)p->next) {
+	for (p = conf_unknown; p; p = (ConfigItem_unknown *)next) {
+		next = (ListStruct *)p->next;
 		if (!strcmp(p->ce->ce_varname, "ban")) 
 			config_status("%s:%i: unknown ban type %s",
 				p->ce->ce_fileptr->cf_filename, p->ce->ce_varlinenum,
@@ -465,17 +466,16 @@ void clear_unknown() {
 				p->ce->ce_fileptr->cf_filename, p->ce->ce_varlinenum,
 				p->ce->ce_varname); 
 
-		t.next = DelListItem(p, conf_unknown);
+		DelListItem(p, conf_unknown);
 		MyFree(p);
-		p = (ConfigItem_unknown *)&t;
 	}
-	for (q = conf_unknown_set; q; q = (ConfigItem_unknown_ext *)q->next) {
+	for (q = conf_unknown_set; q; q = (ConfigItem_unknown_ext *)next) {
+		next = (ListStruct *)q->next;
 		config_status("%s:%i: unknown directive set::%s",
 			q->ce_fileptr->cf_filename, q->ce_varlinenum,
 			q->ce_varname);
-		t.next = DelListItem(q, conf_unknown_set);
+		DelListItem(q, conf_unknown_set);
 		MyFree(q);
-		q = (ConfigItem_unknown_ext *)&t;
 	}
 }
 
@@ -2919,15 +2919,15 @@ void	listen_cleanup()
 {
 	int	i = 0;
 	ConfigItem_listen *listen_ptr;
-	ListStruct t;
-	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)listen_ptr->next)
+	ListStruct *next;
+	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)next)
 	{
+		next = (ListStruct *)listen_ptr->next;
 		if (listen_ptr->flag.temporary && !listen_ptr->clients)
 		{
 			ircfree(listen_ptr->ip);
-			t.next = DelListItem(listen_ptr, conf_listen);
+			DelListItem(listen_ptr, conf_listen);
 			MyFree(listen_ptr);
-			listen_ptr = (ConfigItem_listen *) &t;
 			i++;
 		}
 	}
@@ -2952,7 +2952,7 @@ void	validate_configuration(void)
 	ConfigItem_vhost *vhost_ptr;
 	ConfigItem_log *log_ptr;
 	ConfigItem_alias *alias_ptr;
-	ListStruct t;
+	ListStruct *next, *next2;
 	short hide_host = 1;
 	char *s;
 	struct in_addr in;
@@ -3144,8 +3144,9 @@ void	validate_configuration(void)
 		}
 	}
 	
-	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)listen_ptr->next)
+	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)next)
 	{
+		next = (ListStruct *)listen_ptr->next;
 		if (BadPtr(listen_ptr->ip)) {
 			Warning("listen without ip, using default of *");
 			ircstrdup(listen_ptr->ip,"*");
@@ -3153,9 +3154,8 @@ void	validate_configuration(void)
 		if (!listen_ptr->port) {
 			Warning("listen port illegal. Deleting listen {} block");
 			ircfree(listen_ptr->ip);
-			t.next = DelListItem(listen_ptr, conf_listen);
+			DelListItem(listen_ptr, conf_listen);
 			MyFree(listen_ptr);
-			listen_ptr = (ConfigItem_listen *)&t;
 			continue;
 		}
 	}
@@ -3178,23 +3178,23 @@ void	validate_configuration(void)
 			allow_ptr->class = default_class;
 		}
 	}
-	for (except_ptr = conf_except; except_ptr; except_ptr = (ConfigItem_except *) except_ptr->next)
+	for (except_ptr = conf_except; except_ptr; except_ptr = (ConfigItem_except *)next)
 	{
+		next = (ListStruct *)except_ptr->next;
 		if (BadPtr(except_ptr->mask)) {
 			Warning("except mask missing. Deleting except {} block");
-			t.next = DelListItem(except_ptr, conf_except);
+			DelListItem(except_ptr, conf_except);
 			MyFree(except_ptr);
-			except_ptr = (ConfigItem_except *)&t;
 		}
 	}
-	for (ban_ptr = conf_ban; ban_ptr; ban_ptr = (ConfigItem_ban *) ban_ptr->next)
+	for (ban_ptr = conf_ban; ban_ptr; ban_ptr = (ConfigItem_ban *) next)
 	{
+		next = (ListStruct *)ban_ptr->next;
 		if (BadPtr(ban_ptr->mask)) {
 			Warning("ban mask missing. Deleting ban {} block");
 			ircfree(ban_ptr->reason);
-			t.next = DelListItem(ban_ptr, conf_ban);
+			DelListItem(ban_ptr, conf_ban);
 			MyFree(ban_ptr);
-			ban_ptr = (ConfigItem_ban *)&t;
 			continue;
 		}
 		if (BadPtr(ban_ptr->reason)) {
@@ -3203,15 +3203,15 @@ void	validate_configuration(void)
 		}
 			
 	}
-	for (link_ptr = conf_link; link_ptr; link_ptr = (ConfigItem_link *) link_ptr->next)
+	for (link_ptr = conf_link; link_ptr; link_ptr = (ConfigItem_link *) next)
 	{
+		next = (ListStruct *)link_ptr->next;
 		if (BadPtr(link_ptr->servername))
 		{
 			Warning("link without name. Deleting link {} block");
-			t.next = DelListItem(link_ptr, conf_link);
+			DelListItem(link_ptr, conf_link);
 			link_cleanup(link_ptr);
 			MyFree(link_ptr);
-			link_ptr = (ConfigItem_link *)&t;
 		}
 		else
 		{
@@ -3221,18 +3221,16 @@ void	validate_configuration(void)
 			}
 			if (BadPtr(link_ptr->hostname)) {
 				Warning("link with invalid hostname. Deleting link {} block");
-				t.next = DelListItem(link_ptr, conf_link);
+				DelListItem(link_ptr, conf_link);
 				link_cleanup(link_ptr);
 				MyFree(link_ptr);
-				link_ptr = (ConfigItem_link *)&t;
 				continue;
 			}
 			if (BadPtr(link_ptr->connpwd)) {
 				Warning("link with invalid password-connect. Deleting link {} block");
-				t.next = DelListItem(link_ptr, conf_link);
+				DelListItem(link_ptr, conf_link);
 				link_cleanup(link_ptr);
 				MyFree(link_ptr);
-				link_ptr = (ConfigItem_link *)&t;
 				continue;
 			}
 			if (!link_ptr->class) {
@@ -3248,22 +3246,22 @@ void	validate_configuration(void)
 		}
 		
 	}
-	for (tld_ptr = conf_tld; tld_ptr; tld_ptr = (ConfigItem_tld *) tld_ptr->next)
+	for (tld_ptr = conf_tld; tld_ptr; tld_ptr = (ConfigItem_tld *) next)
 	{
+		next = (ListStruct *)tld_ptr->next;
 		if (BadPtr(tld_ptr->mask)) {
 			Warning("tld without mask. Deleting tld {} block");
-			t.next = DelListItem(tld_ptr, conf_tld);
+			DelListItem(tld_ptr, conf_tld);
 			ircfree(tld_ptr->motd_file);
 			ircfree(tld_ptr->rules_file);
 			MyFree(tld_ptr);
-			tld_ptr = (ConfigItem_tld *)&t;
 			continue;
 		}
 	}
-	for (vhost_ptr = conf_vhost; vhost_ptr; vhost_ptr = (ConfigItem_vhost *)vhost_ptr->next) {
+	for (vhost_ptr = conf_vhost; vhost_ptr; vhost_ptr = (ConfigItem_vhost *)next) {
 		int nope = 0;
 		ConfigItem_oper_from *vhost_from;
-
+		next = (ListStruct *)vhost_ptr->next;
 		for (s = vhost_ptr->virthost; *s; s++)
 		{
 			if (!isallowed(*s)) {
@@ -3286,16 +3284,15 @@ void	validate_configuration(void)
 			ircfree(vhost_ptr->virthost);
 			ircfree(vhost_ptr->virtuser);
 			Auth_DeleteAuthStruct(vhost_ptr->auth);
-			for (vhost_from = (ConfigItem_oper_from *) vhost_ptr->from; vhost_from; vhost_from = (ConfigItem_oper_from *) vhost_from->next)
+			for (vhost_from = (ConfigItem_oper_from *) vhost_ptr->from; vhost_from; vhost_from = (ConfigItem_oper_from *) next2)
 			{
+				next2 = (ListStruct *)vhost_from->next;
 				ircfree(vhost_from->name);
-				t.next = DelListItem(vhost_from, vhost_ptr->from);
+				DelListItem(vhost_from, vhost_ptr->from);
 				MyFree(vhost_from);
-				vhost_from = (ConfigItem_oper_from *) &t;
 			}
-			t.next = DelListItem(vhost_ptr, conf_vhost);
+			DelListItem(vhost_ptr, conf_vhost);
 			MyFree(vhost_ptr);
-			vhost_ptr = (ConfigItem_vhost *)&t;
 		}
 
 	}
@@ -3391,7 +3388,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	ConfigItem_alias		*alias_ptr;
 	ConfigItem_include		*include_ptr;
 	ConfigItem_help			*help_ptr;
-	ListStruct 	t;
+	ListStruct 	*next, *next2;
 
 
 	flush_connections(&me);
@@ -3405,35 +3402,35 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 #endif
 	}
 	RunHook0(HOOKTYPE_REHASH);
-	for (admin_ptr = conf_admin; admin_ptr; admin_ptr = (ConfigItem_admin *) admin_ptr->next)
+	for (admin_ptr = conf_admin; admin_ptr; admin_ptr = (ConfigItem_admin *)next)
 	{
+		next = (ListStruct *)admin_ptr->next;
 		ircfree(admin_ptr->line);
-		t.next = DelListItem(admin_ptr, conf_admin);
+		DelListItem(admin_ptr, conf_admin);
 		MyFree(admin_ptr);
-		admin_ptr = (ConfigItem_admin *) &t;
 	}
 	/* wipe the fckers out ..*/
-	for (oper_ptr = conf_oper; oper_ptr; oper_ptr = (ConfigItem_oper *) oper_ptr->next)
+	for (oper_ptr = conf_oper; oper_ptr; oper_ptr = (ConfigItem_oper *)next)
 	{
 		ConfigItem_oper_from *oper_from;
-
+		next = (ListStruct *)oper_ptr->next;
 		ircfree(oper_ptr->name);
 		ircfree(oper_ptr->swhois);
 		ircfree(oper_ptr->snomask);
 		Auth_DeleteAuthStruct(oper_ptr->auth);
-		for (oper_from = (ConfigItem_oper_from *) oper_ptr->from; oper_from; oper_from = (ConfigItem_oper_from *) oper_from->next)
+		for (oper_from = (ConfigItem_oper_from *) oper_ptr->from; oper_from; oper_from = (ConfigItem_oper_from *) next2)
 		{
+			next2 = (ListStruct *)oper_from->next;
 			ircfree(oper_from->name);
-			t.next = DelListItem(oper_from, oper_ptr->from);
+			DelListItem(oper_from, oper_ptr->from);
 			MyFree(oper_from);
-			oper_from = (ConfigItem_oper_from *) &t;
 		}
-		t.next = DelListItem(oper_ptr, conf_oper);
+		DelListItem(oper_ptr, conf_oper);
 		MyFree(oper_ptr);
-		oper_ptr = (ConfigItem_oper *) &t;
 	}
-	for (class_ptr = conf_class; class_ptr; class_ptr = (ConfigItem_class *) class_ptr->next)
+	for (class_ptr = conf_class; class_ptr; class_ptr = (ConfigItem_class *) next)
 	{
+		next = (ListStruct *)class_ptr->next;
 		if (class_ptr->flag.permanent == 1)
 			continue;
 		class_ptr->flag.temporary = 1;
@@ -3441,54 +3438,53 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		if (!class_ptr->clients)
 		{
 			ircfree(class_ptr->name);
-			t.next = DelListItem(class_ptr, conf_class);
+			DelListItem(class_ptr, conf_class);
 			MyFree(class_ptr);
-			class_ptr = (ConfigItem_class *) &t;
 		}
 	}
-	for (uline_ptr = conf_ulines; uline_ptr; uline_ptr = (ConfigItem_ulines *) uline_ptr->next)
+	for (uline_ptr = conf_ulines; uline_ptr; uline_ptr = (ConfigItem_ulines *) next)
 	{
+		next = (ListStruct *)uline_ptr->next;
 		/* We'll wipe it out when it has no clients */
 		ircfree(uline_ptr->servername);
-		t.next = DelListItem(uline_ptr, conf_ulines);
+		DelListItem(uline_ptr, conf_ulines);
 		MyFree(uline_ptr);
-		uline_ptr = (ConfigItem_ulines *) &t;
 	}
-	for (allow_ptr = conf_allow; allow_ptr; allow_ptr = (ConfigItem_allow *) allow_ptr->next)
+	for (allow_ptr = conf_allow; allow_ptr; allow_ptr = (ConfigItem_allow *) next)
 	{
+		next = (ListStruct *)allow_ptr->next;
 		ircfree(allow_ptr->ip);
 		ircfree(allow_ptr->hostname);
 		Auth_DeleteAuthStruct(allow_ptr->auth);
-		t.next = DelListItem(allow_ptr, conf_allow);
+		DelListItem(allow_ptr, conf_allow);
 		MyFree(allow_ptr);
-		allow_ptr = (ConfigItem_allow *) &t;
 	}
-	for (except_ptr = conf_except; except_ptr; except_ptr = (ConfigItem_except *) except_ptr->next)
+	for (except_ptr = conf_except; except_ptr; except_ptr = (ConfigItem_except *) next)
 	{
+		next = (ListStruct *)except_ptr->next;
 		ircfree(except_ptr->mask);
-		t.next = DelListItem(except_ptr, conf_except);
+		DelListItem(except_ptr, conf_except);
 		MyFree(except_ptr);
-		except_ptr = (ConfigItem_except *) &t;
 	}
-	for (ban_ptr = conf_ban; ban_ptr; ban_ptr = (ConfigItem_ban *) ban_ptr->next)
+	for (ban_ptr = conf_ban; ban_ptr; ban_ptr = (ConfigItem_ban *) next)
 	{
+		next = (ListStruct *)ban_ptr->next;
 		if (ban_ptr->flag.type2 == CONF_BAN_TYPE_CONF || ban_ptr->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
 		{
 			ircfree(ban_ptr->mask);
 			ircfree(ban_ptr->reason);
-			t.next = DelListItem(ban_ptr, conf_ban);
+			DelListItem(ban_ptr, conf_ban);
 			MyFree(ban_ptr);
-			ban_ptr = (ConfigItem_ban *) &t;
 		}
 	}
-	for (link_ptr = conf_link; link_ptr; link_ptr = (ConfigItem_link *) link_ptr->next)
+	for (link_ptr = conf_link; link_ptr; link_ptr = (ConfigItem_link *) next)
 	{
+		next = (ListStruct *)link_ptr->next;
 		if (link_ptr->refcount == 0)
 		{
 			link_cleanup(link_ptr);
-			t.next = DelListItem(link_ptr, conf_link);
+			DelListItem(link_ptr, conf_link);
 			MyFree(link_ptr);
-			link_ptr = (ConfigItem_link *) &t;
 		}
 		else
 		{
@@ -3499,9 +3495,10 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	{
 		listen_ptr->flag.temporary = 1;
 	}
-	for (tld_ptr = conf_tld; tld_ptr; tld_ptr = (ConfigItem_tld *) tld_ptr->next)
+	for (tld_ptr = conf_tld; tld_ptr; tld_ptr = (ConfigItem_tld *) next)
 	{
 		aMotd *motd;
+		next = (ListStruct *)tld_ptr->next;
 		ircfree(tld_ptr->motd_file);
 		ircfree(tld_ptr->rules_file);
 		if (!tld_ptr->flag.motdptr) {
@@ -3520,91 +3517,91 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 				tld_ptr->rules = motd;
 			}
 		}
-		t.next = DelListItem(tld_ptr, conf_tld);
+		DelListItem(tld_ptr, conf_tld);
 		MyFree(tld_ptr);
-		tld_ptr = (ConfigItem_tld *) &t;
 	}
-	for (vhost_ptr = conf_vhost; vhost_ptr; vhost_ptr = (ConfigItem_vhost *) vhost_ptr->next)
+	for (vhost_ptr = conf_vhost; vhost_ptr; vhost_ptr = (ConfigItem_vhost *) next)
 	{
 		ConfigItem_oper_from *vhost_from;
-
+		
+		next = (ListStruct *)vhost_ptr->next;
+		
 		ircfree(vhost_ptr->login);
 		Auth_DeleteAuthStruct(vhost_ptr->auth);
 		ircfree(vhost_ptr->virthost);
 		ircfree(vhost_ptr->virtuser);
 		for (vhost_from = (ConfigItem_oper_from *) vhost_ptr->from; vhost_from;
-			vhost_from = (ConfigItem_oper_from *) vhost_from->next)
+			vhost_from = (ConfigItem_oper_from *) next2)
 		{
+			next2 = (ListStruct *)vhost_from->next;
 			ircfree(vhost_from->name);
-			t.next = DelListItem(vhost_from, vhost_ptr->from);
+			DelListItem(vhost_from, vhost_ptr->from);
 			MyFree(vhost_from);
-			vhost_from = (ConfigItem_oper_from *) &t;
 		}
-		t.next = DelListItem(vhost_ptr, conf_vhost);
+		DelListItem(vhost_ptr, conf_vhost);
 		MyFree(vhost_ptr);
-		vhost_ptr = (ConfigItem_vhost *) &t;
 	}
 
 	for (badword_ptr = conf_badword_channel; badword_ptr;
-		badword_ptr = (ConfigItem_badword *) badword_ptr->next) {
+		badword_ptr = (ConfigItem_badword *) next) {
+		next = (ListStruct *)badword_ptr->next;
 		ircfree(badword_ptr->word);
 			ircfree(badword_ptr->replace);
-		t.next = DelListItem(badword_ptr, conf_badword_channel);
+		DelListItem(badword_ptr, conf_badword_channel);
 		MyFree(badword_ptr);
-		badword_ptr = (ConfigItem_badword *) &t;
 	}
 	for (badword_ptr = conf_badword_message; badword_ptr;
-		badword_ptr = (ConfigItem_badword *) badword_ptr->next) {
+		badword_ptr = (ConfigItem_badword *) next) {
+		next = (ListStruct *)badword_ptr->next;
 		ircfree(badword_ptr->word);
 			ircfree(badword_ptr->replace);
-		t.next = DelListItem(badword_ptr, conf_badword_message);
+		DelListItem(badword_ptr, conf_badword_message);
 		MyFree(badword_ptr);
-		badword_ptr = (ConfigItem_badword *) &t;
 	}
 
-	for (deny_dcc_ptr = conf_deny_dcc; deny_dcc_ptr; deny_dcc_ptr = (ConfigItem_deny_dcc *) deny_dcc_ptr->next)
+	for (deny_dcc_ptr = conf_deny_dcc; deny_dcc_ptr; deny_dcc_ptr = (ConfigItem_deny_dcc *)next)
 	{
+		next = (ListStruct *)deny_dcc_ptr->next;
 		if (deny_dcc_ptr->flag.type2 == CONF_BAN_TYPE_CONF)
 		{
 			ircfree(deny_dcc_ptr->filename);
 			ircfree(deny_dcc_ptr->reason);
-			t.next = DelListItem(deny_dcc_ptr, conf_deny_dcc);
+			DelListItem(deny_dcc_ptr, conf_deny_dcc);
 			MyFree(deny_dcc_ptr);
-			deny_dcc_ptr = (ConfigItem_deny_dcc *) &t;
 		}
 	}
-	for (deny_link_ptr = conf_deny_link; deny_link_ptr; deny_link_ptr = (ConfigItem_deny_link *) deny_link_ptr->next) {
+	for (deny_link_ptr = conf_deny_link; deny_link_ptr; deny_link_ptr = (ConfigItem_deny_link *) next) {
+		next = (ListStruct *)deny_link_ptr->next;
 		ircfree(deny_link_ptr->prettyrule);
 		ircfree(deny_link_ptr->mask);
 		crule_free(&deny_link_ptr->rule);
-		t.next = DelListItem(deny_link_ptr, conf_deny_link);
+		DelListItem(deny_link_ptr, conf_deny_link);
 		MyFree(deny_link_ptr);
-		deny_link_ptr = (ConfigItem_deny_link *) &t;
 	}
-	for (deny_version_ptr = conf_deny_version; deny_version_ptr; deny_version_ptr = (ConfigItem_deny_version *) deny_version_ptr->next) {
+	for (deny_version_ptr = conf_deny_version; deny_version_ptr; deny_version_ptr = (ConfigItem_deny_version *) next) {
+		next = (ListStruct *)deny_version_ptr->next;
 		ircfree(deny_version_ptr->mask);
 		ircfree(deny_version_ptr->version);
 		ircfree(deny_version_ptr->flags);
-		t.next = DelListItem(deny_version_ptr, conf_deny_version);
+		DelListItem(deny_version_ptr, conf_deny_version);
 		MyFree(deny_version_ptr);
-		deny_version_ptr = (ConfigItem_deny_version *) &t;
 	}
 
-	for (deny_channel_ptr = conf_deny_channel; deny_channel_ptr; deny_channel_ptr = (ConfigItem_deny_channel *) deny_channel_ptr->next)
+	for (deny_channel_ptr = conf_deny_channel; deny_channel_ptr; deny_channel_ptr = (ConfigItem_deny_channel *) next)
 	{
+		next = (ListStruct *)deny_channel_ptr->next;
 		ircfree(deny_channel_ptr->channel);
 		ircfree(deny_channel_ptr->reason);
-		t.next = DelListItem(deny_channel_ptr, conf_deny_channel);
+		DelListItem(deny_channel_ptr, conf_deny_channel);
 		MyFree(deny_channel_ptr);
-		deny_channel_ptr = (ConfigItem_deny_channel *) &t;
 	}
 
-	for (allow_channel_ptr = conf_allow_channel; allow_channel_ptr; allow_channel_ptr = (ConfigItem_allow_channel *) allow_channel_ptr->next)
+	for (allow_channel_ptr = conf_allow_channel; allow_channel_ptr; allow_channel_ptr = (ConfigItem_allow_channel *) next)
 	{
+		next = (ListStruct *)allow_channel_ptr->next;
 		ircfree(allow_channel_ptr->channel);
-		t.next = DelListItem(allow_channel_ptr, conf_allow_channel);
+		DelListItem(allow_channel_ptr, conf_allow_channel);
 		MyFree(allow_channel_ptr);
-		allow_channel_ptr = (ConfigItem_allow_channel *) &t;
 	}
 
 	if (conf_drpass)
@@ -3615,40 +3612,42 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		conf_drpass->dieauth = NULL;
 		ircfree(conf_drpass);
 	}
-	for (log_ptr = conf_log; log_ptr; log_ptr = (ConfigItem_log *)log_ptr->next) {
+	for (log_ptr = conf_log; log_ptr; log_ptr = (ConfigItem_log *)next) {
+		next = (ListStruct *)log_ptr->next;
 		ircfree(log_ptr->file);
-		t.next = DelListItem(log_ptr, conf_log);
+		DelListItem(log_ptr, conf_log);
 		MyFree(log_ptr);
-		log_ptr = (ConfigItem_log *)&t;
 	}
-	for (alias_ptr = conf_alias; alias_ptr; alias_ptr = (ConfigItem_alias *)alias_ptr->next) {
+	for (alias_ptr = conf_alias; alias_ptr; alias_ptr = (ConfigItem_alias *)next) {
 		aCommand *cmptr = find_Command(alias_ptr->alias, 0, 0);
 		ConfigItem_alias_format *fmt;
+		next = (ListStruct *)alias_ptr->next;		
 		ircfree(alias_ptr->nick);
 		del_Command(alias_ptr->alias, NULL, cmptr->func);
 		ircfree(alias_ptr->alias);
 		if (alias_ptr->format && alias_ptr->type == ALIAS_COMMAND) {
-			for (fmt = (ConfigItem_alias_format *) alias_ptr->format; fmt; fmt = (ConfigItem_alias_format *) fmt->next)
+			for (fmt = (ConfigItem_alias_format *) alias_ptr->format; fmt; fmt = (ConfigItem_alias_format *) next2)
 			{
+				next2 = (ListStruct *)fmt->next;
 				ircfree(fmt->format);
 				ircfree(fmt->parameters);
-				t.next = DelListItem(fmt, alias_ptr->format);
+				DelListItem(fmt, alias_ptr->format);
 				MyFree(fmt);
-				fmt = (ConfigItem_alias_format *) &t;
 			}
 		}
-		t.next = DelListItem(alias_ptr, conf_alias);
+		DelListItem(alias_ptr, conf_alias);
 		MyFree(alias_ptr);
-		alias_ptr = (ConfigItem_alias *)&t;
 	}
-	for (include_ptr = conf_include; include_ptr; include_ptr = (ConfigItem_include *)include_ptr->next) {
+	for (include_ptr = conf_include; include_ptr; include_ptr = (ConfigItem_include *)next)
+	{
+		next = (ListStruct *)include_ptr->next;	 
 		ircfree(include_ptr->file);
-		t.next = DelListItem(include_ptr, conf_include);
+		DelListItem(include_ptr, conf_include);
 		MyFree(include_ptr);
-		include_ptr = (ConfigItem_include *)&t;
 	}
-	for (help_ptr = conf_help; help_ptr; help_ptr = (ConfigItem_help *)help_ptr->next) {
+	for (help_ptr = conf_help; help_ptr; help_ptr = (ConfigItem_help *)next) {
 		aMotd *text;
+		next = (ListStruct *)help_ptr->next;
 		ircfree(help_ptr->command);
 		while (help_ptr->text) {
 			text = help_ptr->text->next;
@@ -3656,9 +3655,8 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 			ircfree(help_ptr->text);
 			help_ptr->text = text;
 		}
-		t.next = DelListItem(help_ptr, conf_help);
+		DelListItem(help_ptr, conf_help);
 		MyFree(help_ptr);
-		help_ptr = (ConfigItem_help *)&t;
 	}
 
 	/* rehash_modules */

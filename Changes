@@ -1134,3 +1134,4 @@ v- Fixed some bugreport stuff
 - Added a dialog interface to .pem SSL passwords. (Suggestion #0000025)
 - Fixed some minor issues with dialog interface for .pem SSL passwords
 - Added makecert.bat / encpem.bat to src/win32, which are used in SSL release
+- Fixed some t.next's and replaced with codemastr method(tm)
