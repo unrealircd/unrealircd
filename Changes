@@ -651,6 +651,5 @@ seen. gmtime warning still there
    SVSNLINE - :realname mask             - Remove global ban realname
    SVSNLINE *                            - Wipes all global ban realname
 - Fixed FIXME dcc_deny_wipe_services
-- Fixed some IsToken / sendto_serv_butone screwups, actually think they're
-  codemastr(TM) coding
+- Fixed some IsToken / sendto_serv_butone screwups - Stskeeps(TM) coding
    
