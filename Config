@@ -16,6 +16,55 @@
 # in the cache file is valid and therefore doesn't check it, so if you messed with
 # default values thats your problem :P
 
+
+RUN_CONFIGURE () {
+ARG=""
+if [ "$NOSPOOF" = "1" ] ; then
+ARG="$ARG--enable-nospoof "
+fi
+if [ -n "$HUB" ] ; then
+ARG="$ARG--enable-hub "
+fi
+if [  "$CRYPTOIRCD" = "1" ] ; then
+ARG="$ARG--enable-ssl "
+fi
+if [ "$CRYPT_OPER_PASSWORD" = "1" ] ; then
+ARG="$ARG--with-crypt-oper "
+fi
+if [ "$CRYPT_LINK_PASSWORD" = "1" ] ; then
+ARG="$ARG--with-crypt-link "
+fi
+if [ "$CRYPT_XLINE_PASSWORD" = "1" ] ; then
+ARG="$ARG--with-crypt-xline "
+fi
+if [ "$CRYPT_ILINE_PASSWORD" = "1" ] ; then
+ARG="$ARG--with-crypt-iline "
+fi
+ARG="$ARG--with-listen=$LISTEN_SIZE "
+ARG="$ARG--with-dpath=$DPATH "
+ARG="$ARG--with-spath=$SPATH "
+ARG="$ARG--with-nick-history=$NICKNAMEHISTORYLENGTH "
+ARG="$ARG--with-sendq=$MAXSENDQLENGTH "
+ARG="$ARG--with-bufferpool=$BUFFERPOOL "
+ARG="$ARG--with-hostname=$DOMAINNAME "
+ARG="$ARG--with-permissions=$DEFPERM "
+ARG="$ARG--with-fd-setsize=$MAXCONNECTIONS "
+ARG="$ARG--enable-dynamic-linking "
+CONF="./configure $ARG"
+echo $CONF
+$CONF
+if [  "$CRYPTOIRCD" = "1" ] ; then
+if [ ! -f server.req.pem ]; then
+export OPENSSLPATH
+make pem
+cat .SICI
+read cc
+else
+echo "SSL certificate already existing, no need to regenerate"
+fi
+fi
+}
+
 c=""
 n=""
 NOSPOOF=""
@@ -54,6 +103,12 @@ fi
 
 if [ -f "config.settings" -a -z $NOCACHE ] ; then
     . config.settings
+fi
+
+if [ "$1" = "-quick" -o "$1" = "-q" -o "$2" = "-quick" ] ; then
+	echo "running quick config"
+	RUN_CONFIGURE
+	exit 0
 fi
 
 clear
@@ -479,51 +534,7 @@ DOMAINNAME="$DOMAINNAME"
 DEFPERM="$DEFPERM"
 CRYPTOIRCD="$CRYPTOIRCD"
 __EOF__
-ARG=""
-if [ "$NOSPOOF" = "1" ] ; then
-ARG="$ARG--enable-nospoof "
-fi
-if [ -n "$HUB" ] ; then
-ARG="$ARG--enable-hub "
-fi
-if [  "$CRYPTOIRCD" = "1" ] ; then
-ARG="$ARG--enable-ssl "
-fi
-if [ "$CRYPT_OPER_PASSWORD" = "1" ] ; then
-ARG="$ARG--with-crypt-oper "
-fi
-if [ "$CRYPT_LINK_PASSWORD" = "1" ] ; then
-ARG="$ARG--with-crypt-link "
-fi
-if [ "$CRYPT_XLINE_PASSWORD" = "1" ] ; then
-ARG="$ARG--with-crypt-xline "
-fi
-if [ "$CRYPT_ILINE_PASSWORD" = "1" ] ; then
-ARG="$ARG--with-crypt-iline "
-fi
-ARG="$ARG--with-listen=$LISTEN_SIZE "
-ARG="$ARG--with-dpath=$DPATH "
-ARG="$ARG--with-spath=$SPATH "
-ARG="$ARG--with-nick-history=$NICKNAMEHISTORYLENGTH "
-ARG="$ARG--with-sendq=$MAXSENDQLENGTH "
-ARG="$ARG--with-bufferpool=$BUFFERPOOL "
-ARG="$ARG--with-hostname=$DOMAINNAME "
-ARG="$ARG--with-permissions=$DEFPERM "
-ARG="$ARG--with-fd-setsize=$MAXCONNECTIONS "
-ARG="$ARG--enable-dynamic-linking "
-CONF="./configure $ARG"
-echo $CONF
-$CONF
-if [  "$CRYPTOIRCD" = "1" ] ; then
-if [ ! -f server.req.pem ]; then
-export OPENSSLPATH
-make pem
-cat .SICI
-read cc
-else
-echo "SSL certificate already existing, no need to regenerate"
-fi
-fi
+RUN_CONFIGURE
 cat << __EOF__
 
  _______________________________________________________________________

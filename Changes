@@ -591,3 +591,5 @@ seen. gmtime warning still there
 - Fixed an OpenBSD bug reported by perian
 - Moved config/ to autoconf/
 - Some fixes to configure.in that seemly got deleted?
+- Some more configure.in fixes, and made ./Config -q & -quick (do not ask
+  questions, just run with data in config.settings)
