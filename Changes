@@ -211,3 +211,4 @@
 - Fixed a typo in ssl.c
 - Added SICI information, Donation information, fixed a ./Config problem
   overwriting certs ..
+- Added hatblade's files
