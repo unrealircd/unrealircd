@@ -2614,9 +2614,16 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (cep->ce_vardata)
 		{
+			char *p;
 			if (!strchr(cep->ce_vardata, '.'))
 			{	
 				config_error("%s:%i: illegal me::name, must be fully qualified hostname",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+			if (!valid_host(cep->ce_vardata))
+			{
+				config_error("%s:%i: illegal me::name contains invalid character(s) [only a-z, 0-9, _, -, . are allowed]",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 			}

@@ -2013,7 +2013,11 @@ CMD_FUNC(m_user)
 		}
 	}
 
-	strncpyzt(user->realhost, host, sizeof(user->realhost));
+	/* Set it temporarely to at least something trusted,
+	 * this was copying user supplied data directly into user->realhost
+	 * which seemed bad. Not to say this is much better ;p. -- Syzop
+	 */
+	strncpyzt(user->realhost, Inet_ia2p(&sptr->ip), sizeof(user->realhost));
 	user->server = me_hash;
       user_finish:
 	user->servicestamp = sstamp;

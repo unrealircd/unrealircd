@@ -2557,3 +2557,6 @@ seen. gmtime warning still there
 - Made it so chanmode +f flood detection doesn't apply to u-lined servers. This was
   already indirectly the case because services don't support the EOS command, but
   now some (homemade) services do :p. Reported by Troco (#0001337).
+- (Internal) Moved most valid-host checking into 1 function, valid_host(),
+  which checks for invalid characters.
+- Added hostname check for me::name since this could cause mysterious trouble.

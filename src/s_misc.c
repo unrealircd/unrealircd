@@ -733,3 +733,16 @@ char text[2048];
 	ircd_log(LOG_ERROR, "%s", text);
 	IRCstats.operators = counted;
 }
+
+/** Check if the specified hostname does not contain forbidden characters.
+ * RETURNS:
+ * 1 if ok, 0 if rejected.
+ */
+int valid_host(char *host)
+{
+char *p;
+	for (p=host; *p; p++)
+		if (!isalnum(*p) && (*p != '_') && (*p != '-') && (*p != '.') && (*p != ':'))
+			return 0;
+	return 1;
+}

@@ -97,7 +97,6 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 	char *s;
-	int  legalhost = 1;
 
 #ifdef DISABLE_USERMOD
 	if (MyClient(sptr))
@@ -140,20 +139,17 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
-	/* illegal?! */
-	for (s = parv[2]; *s; s++)
-	{
-		if (!isallowed(*s) && !(*s == ':'))
-		{
-			legalhost = 0;
-		}
-	}
-
-	if (legalhost == 0)
+	if (!valid_host(parv[2]))
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** /ChgHost Error: A hostname may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them",
 		    me.name, parv[0]);
+		return 0;
+	}
+
+	if (parv[2][0] == ':')
+	{
+		sendto_one(sptr, ":%s NOTICE %s :*** A hostname cannot start with ':'", me.name, sptr->name);
 		return 0;
 	}
 
