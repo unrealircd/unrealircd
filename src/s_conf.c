@@ -2519,6 +2519,12 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_varlinenum);
 		errors++;
 	}	
+	if (!config_find_entry(ce->ce_entries, "flags"))
+	{
+		config_error("%s:%i: oper::flags missing", ce->ce_fileptr->cf_filename,
+			ce->ce_varlinenum);
+		errors++;
+	}	
 	if (!config_find_entry(ce->ce_entries, "class"))
 	{
 		config_error("%s:%i: oper::class missing", ce->ce_fileptr->cf_filename,
