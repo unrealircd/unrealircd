@@ -394,3 +394,9 @@
 - Removed s_gline, not in use, removed some modeless channel checks (not needed), removed an old zombie
   code, and removed a line from aHush that was missed
 - Added networks/seveneagle.network
+- /msg irc <command> now works whether or not WEBTV_SUPPORT is on
+- Moved /mode #channel ^ and ListBits() to #ifdef DEVELOP
+- Made it so servers behind a U:lined server (ex Juped Server) are U:lined too, helpful if HIDE_ULINES is
+  on (from bahamut)
+- Added find_uline (from bahamut) for the new U:line code
+- Modified /map to work with the new U:line code

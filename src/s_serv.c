@@ -690,6 +690,11 @@ int  m_server(cptr, sptr, parc, parv)
 		strncpyzt(acptr->info, info, sizeof(acptr->info));
 		acptr->serv->up = find_or_add(parv[0]);
 		SetServer(acptr);
+		/* Taken from bahamut makes it so all servers behind a U:lined
+  		 * server are also U:lined, very helpful if HIDE_ULINES is on
+                 */
+		if (IsULine(sptr,sptr) || (find_uline(cptr->confs, acptr->name))) 
+			acptr->flags |= FLAGS_ULINE;
 		IRCstats.servers++;
 		(void)find_or_add(acptr->name);
 		acptr->flags |= FLAGS_TS8;
@@ -729,9 +734,6 @@ int  m_server(cptr, sptr, parc, parv)
 				    IsToken(bcptr) ? TOK_SERVER : MSG_SERVER,
 				    acptr->name, hop + 1, acptr->info);
 		}
-		/* Check for U-line status -- Barubary */
-		if (find_conf_host(cptr->confs, acptr->name, CONF_UWORLD))
-			acptr->flags |= FLAGS_ULINE;
 		return 0;
 	}
 
@@ -902,7 +904,7 @@ int  m_server_estab(cptr)
 #ifndef NO_FDLIST
 	addto_fdlist(cptr->fd, &serv_fdlist);
 #endif
-	if (find_conf_host(cptr->confs, cptr->name, CONF_UWORLD))
+	if ((find_uline(cptr->confs, cptr->name))) 
 		cptr->flags |= FLAGS_ULINE;
 	cptr->flags |= FLAGS_TS8;
 	nextping = TStime();
@@ -918,8 +920,6 @@ int  m_server_estab(cptr)
 	cptr->serv->up = me.name;
 	cptr->srvptr = &me;
 	cptr->serv->nline = aconf;
-	if (find_conf_host(cptr->confs, cptr->name, CONF_UWORLD))
-		cptr->flags |= FLAGS_ULINE;
 
 	/*
 	   ** Old sendto_serv_but_one() call removed because we now
@@ -4483,12 +4483,13 @@ void dump_map(cptr, server, mask, prompt_length, length)
 	{
 		if (HIDE_ULINES == 1)
 		{
-			if (IsServer(acptr) && IsULine(acptr, acptr)
-			    && !IsAnOper(cptr))
-				continue;
-		}
 		if (!IsServer(acptr) || strcmp(acptr->serv->up, server->name))
 			continue;
+
+			if (IsULine(acptr, acptr)
+			    && !IsAnOper(cptr)) 
+				continue;
+		}
 
 		if (match(mask, acptr->name))
 			acptr->flags &= ~FLAGS_MAP;
@@ -4504,6 +4505,10 @@ void dump_map(cptr, server, mask, prompt_length, length)
 		if (!(acptr->flags & FLAGS_MAP) ||	/* != */
 		    !IsServer(acptr) || strcmp(acptr->serv->up, server->name))
 			continue;
+		if (HIDE_ULINES == 1) {
+			if (IsULine(acptr,acptr) && !IsAnOper(cptr))
+			continue;
+		}
 		if (--cnt == 0)
 			*p = '`';
 		dump_map(cptr, acptr, mask, prompt_length + 2, length - 2);
@@ -4533,7 +4538,7 @@ int  m_map(cptr, sptr, parc, parv)
 		parv[1] = "*";
 	for (acptr = client; acptr; acptr = acptr->next)
 		if (IsServer(acptr)
-		    && (strlen(acptr->name) + acptr->hopcount * 2) > longest)
+		    && (strlen(acptr->name) + acptr->hopcount * 2) > longest) 
 			longest = strlen(acptr->name) + acptr->hopcount * 2;
 
 	if (longest > 60)

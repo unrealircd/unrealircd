@@ -659,6 +659,21 @@ aConfItem *find_conf_host(lp, host, statmask)
 	return NULL;
 }
 
+/* Written by Raistlin for bahamut */
+
+aConfItem *find_uline(Link *lp, char *host) {
+	aConfItem *tmp;
+	int         hostlen = host ? strlen(host) : 0;
+	
+	if (hostlen > HOSTLEN || BadPtr(host))
+		return ((aConfItem *) NULL);
+	for (; lp; lp = lp->next) {
+		tmp = lp->value.aconf;
+		if (tmp->status & CONF_UWORLD && (tmp->host && !mycmp(tmp->host, host)))
+			return tmp;
+	}
+	return ((aConfItem *) NULL);
+}
 /* find_exception        
 ** find a virtual exception
 */

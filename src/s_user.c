@@ -867,9 +867,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		else
 			sptr->flags |= (acptr->flags & FLAGS_TS8);
 		/* *FINALL* this gets in ircd... -- Barubary */
-		if (find_conf_host(cptr->confs, sptr->name, CONF_UWORLD)
-		    || (sptr->user && find_conf_host(cptr->confs,
-		    sptr->user->server, CONF_UWORLD)))
+		if ((find_uline(cptr->confs, sptr->user->server)))
 			sptr->flags |= FLAGS_ULINE;
 	}
 
@@ -1690,15 +1688,12 @@ static int m_message(cptr, sptr, parc, parv, notice)
 		/*
 		   ** nickname addressed?
 		 */
-		if (WEBTV_SUPPORT == 1)
-		{
 			if (!strcasecmp(nick, "irc") && MyClient(sptr))
 			{
 				parse(sptr, parv[2],
 				    (parv[2] + strlen(parv[2])), msgtab);
 				continue;
 			}
-		}
 		if (*nick != '#' && (acptr = find_person(nick, NULL)))
 		{
 			/* F:Line stuff by _Jozeph_ added by Stskeeps with comments */

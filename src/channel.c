@@ -2027,6 +2027,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
  * ListBits(bitvalue, bitlength);
  * written by Stskeeps
 */
+#ifdef DEVELOP
 char *ListBits(long bits, long length)
 {
 	char *bitstr, *p;
@@ -2046,6 +2047,7 @@ char *ListBits(long bits, long length)
 	*p = '\0';
 	return (bitstr);
 }
+#endif
 
 
 /* set_mode
@@ -2079,7 +2081,8 @@ void set_mode(chptr, cptr, parc, parv, pcount, pvar, bounce)
 		  case '-':
 			  what = MODE_DEL;
 			  break;
-		  case '^':
+#ifdef DEVELOP  
+		case '^':
 			  tmpo = (char *)ListBits(chptr->mode.mode, 64);
 			  sendto_one(cptr,
 			      ":%s NOTICE %s :*** %s mode is %li (0x%lx) [%s]",
@@ -2087,7 +2090,7 @@ void set_mode(chptr, cptr, parc, parv, pcount, pvar, bounce)
 			      chptr->mode.mode, chptr->mode.mode, tmpo);
 			  MyFree(tmpo);
 			  break;
-
+#endif
 		  case 'x':
 			  if (MyClient(cptr))
 			  {
