@@ -226,6 +226,8 @@
 #define TOK_ADDLINE     "z"	/* 122 */
 #define MSG_GLINE	"GLINE"	/* The awesome g-line */
 #define TOK_GLINE	"}"	/* 125 */
+#define MSG_GZLINE	"GZLINE" /* Teh awesome global z-line */
+#define TOK_GZLINE	"{"	/* ahem? */
 #define MSG_SJOIN	"SJOIN"
 #define TOK_SJOIN	"~"
 #define MSG_SETHOST 	"SETHOST"	/* sethost */
@@ -294,6 +296,8 @@
 #define TOK_BOTMOTD 	"BF"
 #define MSG_REMGLINE	"REMGLINE"	/* remove g-line */
 #define TOK_REMGLINE	"BG"
+#define MSG_REMGZLINE	"REMGZLINE"	/* remove global z-line */
+#define TOK_REMGZLINE	"BP"
 #define MSG_HTM		"HTM"
 #define TOK_HTM		"BH"
 #define MSG_UMODE2	"UMODE2"
@@ -343,7 +347,7 @@ extern int m_service(), m_userhost(), m_ison(), m_watch();
 extern int m_service(), m_servset(), m_servlist(), m_squery();
 extern int m_rehash(), m_restart(), m_die(), m_dns(), m_hash();
 /*extern int m_noshortn(),m_noshortc(),m_noshortm(),m_noshorto(),m_noshorth();*/
-
+extern int m_gzline(), m_remgzline();
 extern int m_gline(), m_remgline(), m_map(), m_svs2mode(), m_admins(),
 m_dalinfo();
 extern int m_addline(), m_rules(), m_mkpasswd();
@@ -451,6 +455,8 @@ struct Message msgtab[] = {
 	{MSG_MAP, m_map, 0, MAXPARA, TOK_MAP, 0L},
 	{MSG_GLINE, m_gline, 0, MAXPARA, TOK_GLINE, 0L},
 	{MSG_REMGLINE, m_remgline, 0, MAXPARA, TOK_REMGLINE, 0L},
+	{MSG_GZLINE, m_gzline, 0, MAXPARA, TOK_GZLINE, 0L},
+	{MSG_REMGZLINE, m_remgzline, 0, MAXPARA, TOK_REMGZLINE, 0L},
 	{MSG_DALINFO, m_dalinfo, 0, MAXPARA, TOK_DALINFO, 0L},
 	{MSG_SVS2MODE, m_svs2mode, 0, MAXPARA, TOK_SVS2MODE, 0L},
 	{MSG_MKPASSWD, m_mkpasswd, 0, MAXPARA, TOK_MKPASSWD, 0L},

@@ -564,6 +564,16 @@ int  m_remgline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	    me.name, sptr->name);
 }
 
+int  m_remgzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
+{
+	if (!IsOper(sptr))
+		return 0;
+
+	sendto_one(sptr,
+	    ":%s NOTICE %s :*** Please use /gzline -mask instead of /Remgzline",
+	    me.name, sptr->name);
+}
+
 extern char cmodestring[512];
 
 int	m_post(aClient *cptr, aClient *sptr, int parc, char *parv[])
@@ -2786,49 +2796,53 @@ int  m_whois(cptr, sptr, parc, parv)
 			found = 1;
 			mlen = strlen(me.name) + strlen(parv[0]) + 6 +
 			    strlen(name);
-			for (len = 0, *buf = '\0', lp = user->channel; lp;
-			    lp = lp->next)
+
+			if (!IsServices(acptr) || (IsServices(acptr) && IsNetAdmin(sptr)))
 			{
-				chptr = lp->value.chptr;
-				if (IsAnOper(sptr) || ShowChannel(sptr, chptr) || (acptr == sptr))
+				for (len = 0, *buf = '\0', lp = user->channel; lp;
+				    lp = lp->next)
 				{
-					if (len + strlen(chptr->chname)
-					    > (size_t)BUFSIZE - 4 - mlen)
+					chptr = lp->value.chptr;
+					if (IsAnOper(sptr) || ShowChannel(sptr, chptr) || (acptr == sptr))
 					{
-						sendto_one(sptr,
-						    ":%s %d %s %s :%s",
-						    me.name,
-						    RPL_WHOISCHANNELS,
-						    parv[0], name, buf);
-						*buf = '\0';
-						len = 0;
-					}
+						if (len + strlen(chptr->chname)
+						    > (size_t)BUFSIZE - 4 - mlen)
+						{
+							sendto_one(sptr,
+							    ":%s %d %s %s :%s",
+							    me.name,
+							    RPL_WHOISCHANNELS,
+							    parv[0], name, buf);
+							*buf = '\0';
+							len = 0;
+						}
 #ifdef SHOW_SECRET
-					if (!(acptr == sptr) && IsAnOper(sptr)
+						if (!(acptr == sptr) && IsAnOper(sptr)
 #else
-					if (!(acptr == sptr) && (IsNetAdmin(sptr))
+						if (!(acptr == sptr) && (IsNetAdmin(sptr))
 #endif
-					&& (showsecret == 1) && SecretChannel(chptr))
-						*(buf + len++) = '~';
-					if (is_chanowner(acptr, chptr))
-						*(buf + len++) = '*';
-					else if (is_chanprot(acptr, chptr))
-						*(buf + len++) = '^';
-					else if (is_chan_op(acptr, chptr))
-						*(buf + len++) = '@';
-					else if (is_half_op(acptr, chptr))
-						*(buf + len++) = '%';
-					else if (has_voice(acptr, chptr))
-						*(buf + len++) = '+';
-					if (len)
-						*(buf + len) = '\0';
-					(void)strcpy(buf + len, chptr->chname);
-					len += strlen(chptr->chname);
-					(void)strcat(buf + len, " ");
-					len++;
+						&& (showsecret == 1) && SecretChannel(chptr))
+							*(buf + len++) = '~';
+						if (is_chanowner(acptr, chptr))
+							*(buf + len++) = '*';
+						else if (is_chanprot(acptr, chptr))
+							*(buf + len++) = '^';
+						else if (is_chan_op(acptr, chptr))
+							*(buf + len++) = '@';
+						else if (is_half_op(acptr, chptr))
+							*(buf + len++) = '%';
+						else if (has_voice(acptr, chptr))
+							*(buf + len++) = '+';
+						if (len)
+							*(buf + len) = '\0';
+						(void)strcpy(buf + len, chptr->chname);
+						len += strlen(chptr->chname);
+						(void)strcat(buf + len, " ");
+						len++;
+					}
 				}
 			}
-
+			
 			if (buf[0] != '\0')
 				sendto_one(sptr, rpl_str(RPL_WHOISCHANNELS),
 				    me.name, parv[0], name, buf);

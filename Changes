@@ -288,3 +288,15 @@ Fixed 3 svsnoops bugs, so it appears to be
 actually working now...
 --Luke
 ===================================
+
++S users no longer show channels in /whois
+--Luke
+===================================
+
+Added a gzline command. I use it with bopm on
+my network all the time, and am getting
+sick of readding it after each new release.
+Additionally, I think it's a useful command
+for anyone to have.
+--Luke
+===================================

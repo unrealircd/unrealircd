@@ -720,6 +720,196 @@ int  m_tkl(cptr, sptr, parc, parv)
 }
 
 /*
+** m_gzline (oper function - /TKL takes care of distribution)
+** /gzline [+|-]u@h mask time :reason
+**
+** parv[0] = sender
+** parv[1] = [+|-]u@h mask
+** parv[2] = for how long
+** parv[3] = reason
+*/
+
+int  m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
+{
+        aTKline *tk;
+        TS   secs;
+        int  whattodo = 0;      /* 0 = add  1 = del */
+        int  found = 0;
+        int  i;
+        char *mask = NULL;
+        char mo[1024], mo2[1024];
+        char *p, *usermask, *hostmask;
+        char *tkllayer[9] = {
+                me.name,        /*0  server.name */
+                NULL,           /*1  +|- */
+                "Z",            /*2  Z   */
+                NULL,           /*3  user */
+                NULL,           /*4  host */
+                NULL,           /*5  setby */
+                NULL,           /*6  expire_at */
+                NULL,           /*7  set_at */
+                NULL            /*8  reason */
+        };
+
+        if (parc == 1)
+        {
+                tkl_stats(sptr);
+                return 0;
+        }
+
+        if (IsServer(sptr))
+        {
+                return;
+        }
+        if (!IsOper(sptr))
+        {
+                sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+                    sptr->name);
+                return 0;
+        }
+
+        if (parc < 2)
+        {
+                sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+                    me.name, sptr->name, "GZLINE");
+                return;
+        }
+
+        mask = parv[1];
+        if (*mask == '-')
+        {
+                if (parc < 2)
+                {
+                        sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+                            me.name, sptr->name, "GZLINE");
+                        return;
+                }
+                whattodo = 1;
+                mask++;
+        }
+        else if (*mask == '+')
+        {
+                if (parc < 4)
+                {
+                        sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+                            me.name, sptr->name, "GZLINE");
+                        return;
+                }
+                whattodo = 0;
+                mask++;
+        }
+        if (whattodo == 0)
+        {
+                if (parc < 4)
+                {
+                        sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+                            me.name, sptr->name, "GZLINE");
+                        return;
+                }
+        }
+
+        /* Check if its a hostmask and legal .. */
+        p = strchr(mask, '@');
+        if (!p || (p == mask))
+        {
+                sendto_one(sptr,
+                    ":%s NOTICE %s :*** [Z:Line error] Please use a *@host mask.",
+                    me.name, sptr->name);
+                return 0;
+        }
+
+        if (whattodo == 1)
+                goto nochecks;
+        if (p)
+        {
+                p++;
+                i = 0;
+                while (*p)
+                {
+                        if (*p != '*' && *p != '.')
+                                i++;
+                        p++;
+                }
+                if (i < 4)
+                {
+                        sendto_one(sptr,
+                            ":%s NOTICE %s :*** [Z:Line error] Too broad mask",
+                            me.name, sptr->name);
+                        return 0;
+                }
+        }
+
+      nochecks:
+        usermask = strtok(mask, "@");
+        hostmask = strtok(NULL, "");
+        tkl_check_expire();
+
+        for (tk = tklines; tk; tk = tk->next)
+        {
+                if (tk->type == (TKL_GLOBAL | TKL_ZAP))
+                {
+                        if (!match(tk->hostmask, usermask)
+                            && !match(tk->usermask, hostmask))
+                        {
+                                found = 1;
+                                break;
+                        }
+                }
+        }
+
+        if ((found == 1) && whattodo == 0)
+        {
+                sendto_one(sptr,
+                    ":%s NOTICE %s :*** [Z:Line error] Match already exists!",
+                    me.name, sptr->name);
+                return 0;
+        }
+        if ((found == 1) && whattodo == 1)
+        {
+                sendto_one(sptr,
+                    ":%s NOTICE %s :*** [Z:Line error] No such Z:Line", me.name,
+                    sptr->name);
+                return 0;
+        }
+        if (whattodo == 0)
+        {
+                secs = atime(parv[2]);
+                if (secs < 0)
+                {
+                        sendto_one(sptr,
+                            ":%s NOTICE %s :*** [Z:Line error] Please specify a positive value for time",
+                            me.name, sptr->name);
+                        return 0;
+                }
+        }
+        tkllayer[1] = whattodo == 0 ? "+" : "-";
+        tkllayer[3] = usermask;
+        tkllayer[4] = hostmask;
+        tkllayer[5] =
+            make_nick_user_host(sptr->name, sptr->user->username,
+            (IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost));
+        if (whattodo == 0)
+        {
+                if (secs == 0)
+                        ircsprintf(mo, "%li", secs);
+                else
+                        ircsprintf(mo, "%li", secs + TStime());
+                ircsprintf(mo2, "%li", TStime());
+                tkllayer[6] = mo;
+                tkllayer[7] = mo2;
+                tkllayer[8] = parv[3];
+                /* call the tkl layer .. */
+                m_tkl(&me, &me, 9, tkllayer);
+        }
+        else
+        {
+                /* call the tkl layer .. */
+                m_tkl(&me, &me, 6, tkllayer);
+
+        }
+}
+
+/*
 ** m_gline (oper function - /TKL takes care of distribution)
 ** /gline [+|-]u@h mask time :reason
 **

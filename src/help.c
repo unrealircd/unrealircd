@@ -116,7 +116,7 @@ int  parse_help(sptr, name, help)
       SND(" -");
 	  SND(" -----------------oOo----------------");
       SND(" OPER     WALLOPS GLOBOPS  CHATOPS LOCOPS");
-      SND(" ADCHAT   NACHAT           KILL    KLINE");
+      SND(" ADCHAT   NACHAT  GZLINE   KILL    KLINE");
       SND(" UNKLINE  ZLINE   UNZLINE  GLINE   SHUN");
       SND(" AKILL    RAKILL  REHASH   RESTART DIE");
       SND(" LAG      SETHOST SETIDENT CHGHOST CHGIDENT");
@@ -1066,6 +1066,24 @@ int  parse_help(sptr, name, help)
       SND(" -");
       SND(" Syntax:  UNZLINE <ip>");
       SND(" Example: UNZLINE 127.0.0.1");
+      SND(" -");
+   }
+   else if (!myncmp(help, "GZLINE", 8))
+   {
+      SND(" -");
+      HDR(" *** ^BGZLINE command^B ***");
+      SND(" -");
+      SND(" This command provides timed Z:Lines. If you match a Z:Line you cannot");
+      SND(" connect to ANY server on the IRC network");
+      SND(" A time of 0 in the ZLINE makes it permanent (Never Expires).");
+      SND(" In Unreal 3.1.4 you may also specify the time in the format 1d10h15m30s.");  
+      SND(" IRC Operator only command.");
+      SND(" -");
+      SND(" Syntax:  GZLINE <user@host mask> <seconds to be banned> :<reason>");
+      SND("          (Adds a Z:line for user@host)");
+      SND("          GZLINE -<user@host mask> (Removes a Z:line for user@host)");
+      SND(" Example: GZLINE *@24.247.1.* 900 :Spammers  (Adds a 15 min Z:line)");
+      SND("          GZLINE *@24.247.1.* 1d5h :Spammers (Adds a 29 hour Z:line)");
       SND(" -");
    }
    else if (!myncmp(help, "GLINE", 8))
