@@ -609,3 +609,4 @@ seen. gmtime warning still there
 - Added mod_depend checking, see scan_socks.c for example
 - Added in Griever's SJOIN fix
 - Made mod_depend a bit cleaner to use
+- Removed some remnants of umode +b
