@@ -730,3 +730,4 @@
 - Made it so halfops can -h themselves, and chanadmins can -a themselves, reported
   by fez (#0001503).
 - Made spamfilter 'u' also check nickchanges, reported by Gilou (#0002251).
+- Updated doc/technical/token.txt, reported by webfox (#0002373).
