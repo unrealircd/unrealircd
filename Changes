@@ -1575,3 +1575,6 @@ seen. gmtime warning still there
 - Fixed a win32 editor bug when using chars with an ASCII code > 128, reported by XircNet
   (#0000298)
 - Fixed a bug in TKL found by DerAlSem where it was possible to add a line for *@* (#0000307)
+- Fixed a /who bug where /who +c #chan wouldn't display the name of the channel
+  requested reported by aproxity (#0000304)
+- Fixed a bug where /who +c #chan would let you see users in a +s channel

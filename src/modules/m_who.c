@@ -191,6 +191,12 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
       sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, parv[0], mask);
       return 0;
     }
+  if (wfl.channel && wfl.want_channel == WHO_WANT && (target_channel =
+      find_channel(wfl.channel, NULL)) != NULL) {
+      do_channel_who(sptr, target_channel, mask);
+      sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, parv[0], mask);
+      return 0;
+  }
   else
     {
       do_other_who(sptr, mask);
