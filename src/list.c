@@ -153,6 +153,8 @@ void free_client(aClient *cptr)
 	{
 		if (cptr->passwd)
 			MyFree((char *)cptr->passwd);
+		if (cptr->error_str)
+			MyFree(cptr->error_str);
 #ifdef ZIP_LINKS
 		if (cptr->zip)
 			zip_free(cptr);

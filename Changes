@@ -1849,3 +1849,4 @@ seen. gmtime warning still there
 - Fixed some typos in aliases/operstats.conf (#0000684) and added an aliases/cygnus.conf
   (#0000686), both reported by katsklaw
 - Added better error messages support instead of just "Dead socket".
+- Ahem... Fix for patch above (memleak).
