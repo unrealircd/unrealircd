@@ -516,13 +516,6 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 				hRehash = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_REHASH)),0);
 				/* About popup menu */
 				hAbout = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_ABOUT)),0);
-				/* Config popup menu ... get menu items from macros */
-				hConfig = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_CONFIG)),0);
-				ModifyMenu(hConfig, IDM_CONF, MF_BYCOMMAND, IDM_CONF, CPATH);
-				ModifyMenu(hConfig, IDM_MOTD, MF_BYCOMMAND, IDM_MOTD, MPATH);
-				ModifyMenu(hConfig, IDM_OPERMOTD, MF_BYCOMMAND, IDM_OPERMOTD, OPATH);
-				ModifyMenu(hConfig, IDM_BOTMOTD, MF_BYCOMMAND, IDM_BOTMOTD, BPATH);
-				ModifyMenu(hConfig, IDM_RULES, MF_BYCOMMAND, IDM_RULES, RPATH);
 				/* Systray popup menu set the items to point to the other menus*/
 				hTray = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_SYSTRAY)),0);
 				ModifyMenu(hTray, IDM_REHASH, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT)hRehash, "&Rehash");
@@ -599,25 +592,20 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 				 return 0;
 			 }
 			 else if ((p.x >= 140) && (p.x <= 186) && (p.y >= 178) && (p.y <= 190))  {
-				static int i = 0, j = 0;
+				unsigned long i = 60000;
 				ClientToScreen(hDlg,&p);
-				DeleteMenu(hConfig, IDM_MOTD, MF_BYCOMMAND);
-				DeleteMenu(hConfig, IDM_OPERMOTD, MF_BYCOMMAND);
-				DeleteMenu(hConfig, IDM_BOTMOTD, MF_BYCOMMAND);
-				DeleteMenu(hConfig, IDM_RULES, MF_BYCOMMAND);
+				DestroyMenu(hConfig);
+				hConfig = CreatePopupMenu();
 
-				while (i >= 6000) 
-					DeleteMenu(hConfig, i--, MF_BYCOMMAND);
-				while(j >= 16000)
-					DeleteMenu(hConfig, j--, MF_BYCOMMAND);
+				AppendMenu(hConfig, MF_STRING, IDM_CONF, CPATH);
+				AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
 
 				if (conf_include) {
 					ConfigItem_include *inc;
-					j = 16000;
 					for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next) {
-						AppendMenu(hConfig, MF_STRING, ++j, inc->file);
+						AppendMenu(hConfig, MF_STRING, i++, inc->file);
 					}
-					AppendMenu(hConfig, MF_SEPARATOR, ++j, NULL);
+					AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
 				}
 
 				AppendMenu(hConfig, MF_STRING, IDM_MOTD, MPATH);
@@ -627,15 +615,16 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 				
 				if (conf_tld) {
 					ConfigItem_tld *tlds;
-					i = 6000;
-					AppendMenu(hConfig, MF_SEPARATOR, 6000, NULL);
+					AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
 					for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *)tlds->next) {
 						if (!tlds->flag.motdptr)
-							AppendMenu(hConfig, MF_STRING, ++i, tlds->motd_file);
+							AppendMenu(hConfig, MF_STRING, i++, tlds->motd_file);
 						if (!tlds->flag.rulesptr)
-							AppendMenu(hConfig, MF_STRING, ++i, tlds->rules_file);
+							AppendMenu(hConfig, MF_STRING, i++, tlds->rules_file);
 					}
 				}
+				AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
+				AppendMenu(hConfig, MF_STRING, IDM_NEW, "New File");
 				TrackPopupMenu(hConfig,TPM_LEFTALIGN|TPM_LEFTBUTTON,p.x,p.y,0,hDlg,NULL);
 
 				return 0;
@@ -653,11 +642,9 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 					 exit(0);
 				 }
 			 }
-		}
-
+			}
 			case WM_COMMAND: {
-				/* Hopefully no one will have more than 10000 files? */
-				if (LOWORD(wParam) > 6000 && LOWORD(wParam) < 35000) {
+				if (LOWORD(wParam) >= 60000 && HIWORD(wParam) == 0 && !lParam) {
 					char path[MAX_PATH];
 					GetMenuString(hConfig,LOWORD(wParam), path, MAX_PATH, MF_BYCOMMAND);
 					DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, 
@@ -764,6 +751,10 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 					case IDM_RULES:
 						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG,
 							(LPARAM)RPATH);
+						break;
+					case IDM_NEW:
+						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, (LPARAM)NULL);
+						break;
 
 				}
 			}
@@ -925,7 +916,10 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			char szText[256];
 			struct stat sb;
 			file = (char *)lParam;
-			wsprintf(szText, "UnrealIRCd Editor - %s", file);
+			if (file)
+				wsprintf(szText, "UnrealIRCd Editor - %s", file);
+			else 
+				strcpy(szText, "UnrealIRCd Editor - New File");
 			SetWindowText(hDlg, szText);			
 			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)RESubClassFunc);
 			hFont = CreateFont(8,0,0,0,FW_HEAVY,0,0,0,ANSI_CHARSET,0,0,PROOF_QUALITY,0,"MS Sans Serif");
@@ -940,8 +934,6 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			chars.dwMask = CFM_FACE;
 			strcpy(chars.szFaceName,"Fixedsys");
 			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_SETCHARFORMAT, (WPARAM)SCF_ALL, (LPARAM)&chars);
-			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_SETWORDBREAKPROCEX, 0,
-(LPARAM)NULL);
 			if ((fd = open(file, _O_RDONLY|_O_BINARY)) != -1) {
 				fstat(fd,&sb);
 				/* Only allocate the amount we need */
@@ -1060,7 +1052,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				char text[256];
 				int ans;
 				if (SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_GETMODIFY, 0, 0) != 0) {
-					sprintf(text, "The text in the %s file has changed.\r\n\r\nDo you want to save the changes?", file);
+					sprintf(text, "The text in the %s file has changed.\r\n\r\nDo you want to save the changes?", file ? file : "new");
 					ans = MessageBox(hDlg, text, "UnrealIRCd", MB_YESNOCANCEL|MB_ICONWARNING);
 					if (ans == IDNO)
 						EndDialog(hDlg, TRUE);
@@ -1074,6 +1066,29 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 		if (LOWORD(wParam) == IDOK) {
 			int fd;
 			EDITSTREAM edit;
+			OPENFILENAME lpopen;
+			if (!file) {
+				char path[MAX_PATH];
+				path[0] = '\0';
+				lpopen.lStructSize = sizeof(OPENFILENAME);
+				lpopen.hwndOwner = hDlg;
+				lpopen.lpstrFilter = NULL;
+				lpopen.lpstrCustomFilter = NULL;
+				lpopen.nFilterIndex = 0;
+				lpopen.lpstrFile = path;
+				lpopen.nMaxFile = MAX_PATH;
+				lpopen.lpstrFileTitle = NULL;
+				lpopen.lpstrInitialDir = DPATH;
+				lpopen.lpstrTitle = NULL;
+				lpopen.Flags = (OFN_ENABLESIZING|OFN_NONETWORKBUTTON|
+						OFN_OVERWRITEPROMPT);
+				if (GetSaveFileName(&lpopen))
+					file = path;
+				else
+					break;
+			}
+				
+			
 			fd = open(file, _O_TRUNC|_O_CREAT|_O_WRONLY|_O_BINARY,_S_IWRITE);
 			edit.dwCookie = 0;
 			edit.pfnCallback = BufferIt;
@@ -1129,7 +1144,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			char text[256];
 			int ans;
 			if (SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_GETMODIFY, 0, 0) != 0) {
-				sprintf(text, "The text in the %s file has changed.\r\n\r\nDo you want to save the changes?", file);
+				sprintf(text, "The text in the %s file has changed.\r\n\r\nDo you want to save the changes?", file ? file : "new");
 				ans = MessageBox(hDlg, text, "UnrealIRCd", MB_YESNOCANCEL|MB_ICONWARNING);
 				if (ans == IDNO)
 					EndDialog(hDlg, TRUE);
