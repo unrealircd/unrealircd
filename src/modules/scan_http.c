@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/scan_socks.c
+ *   IRC - Internet Relay Chat, src/modules/scan_http.c
  *   (C) 2001 Carsten Munk (Techie/Stskeeps) <stskeeps@tspre.org>
  *
  *   SOCKS4 scanning module for scan.so
@@ -54,24 +54,29 @@
 #include "modules/scan.h"
 #include "modules/blackhole.h"
 
-#ifndef SCAN_ON_PORT
-#define SCAN_ON_PORT 1080
-#endif
+typedef struct _hsstruct HSStruct;
+
+struct _hsstruct
+{
+	HStruct *hs;
+	int	port;
+};
 
 
 iFP			xVS_add = NULL;
 ConfigItem_blackhole	*blackh_conf = NULL;
-void	scan_socks_scan(HStruct *h);
+void	scan_http_scan(HStruct *h);
+void	scan_http_scan_port(HSStruct *z);
 #ifndef DYNAMIC_LINKING
-ModuleInfo scan_socks_info
+ModuleInfo scan_http_info
 #else
 ModuleInfo mod_header
 #endif
   = {
   	2,
-	"scan_socks",	/* Name of module */
+	"scan_http",	/* Name of module */
 	"$Id$", /* Version */
-	"scanning API: socks", /* Short description of module */
+	"scanning API: http proxies", /* Short description of module */
 	NULL, /* Pointer to our dlopen() return value */
 	NULL 
     };
@@ -80,7 +85,7 @@ ModuleInfo mod_header
  * Our symbol depencies
 */
 #ifdef STATIC_LINKING
-MSymbolTable scan_socks_depend[] = {
+MSymbolTable scan_http_depend[] = {
 #else
 MSymbolTable mod_depend[] = {
 #endif
@@ -101,20 +106,20 @@ MSymbolTable mod_depend[] = {
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	mod_init(int module_load)
 #else
-int    scan_socks_init(int module_load)
+int    scan_http_init(int module_load)
 #endif
 {
 	/*
 	 * Add scanning hooks
 	*/
-	add_HookX(HOOKTYPE_SCAN_HOST, NULL, scan_socks_scan); 
+	add_HookX(HOOKTYPE_SCAN_HOST, NULL, scan_http_scan); 
 }
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	mod_load(int module_load)
 #else
-int    scan_socks_load(int module_load)
+int    scan_http_load(int module_load)
 #endif
 {
 }
@@ -124,25 +129,62 @@ int    scan_socks_load(int module_load)
 #ifdef DYNAMIC_LINKING
 DLLFUNC void	mod_unload(void)
 #else
-void	scan_socks_unload(void)
+void	scan_http_unload(void)
 #endif
 {
-	del_HookX(HOOKTYPE_SCAN_HOST, NULL, scan_socks_scan);
+	del_HookX(HOOKTYPE_SCAN_HOST, NULL, scan_http_scan);
 }
 
 #define HICHAR(s)	(((unsigned short) s) >> 8)
 #define LOCHAR(s)	(((unsigned short) s) & 0xFF)
 
-void	scan_socks_scan(HStruct *h)
+
+void 	scan_http_scan(HStruct *h)
 {
+	THREAD	thread[5];
+	THREAD_ATTR thread_attr;
+	HSStruct *p = NULL;
+	
+	IRCMutexLock((*xHSlock));
+	/* First we take 3128 .. */
+	h->refcnt++;
+	p = MyMalloc(sizeof(HSStruct));
+	p->hs = h;
+	p->port = 3128;
+	IRCCreateThread(thread[0], thread_attr, scan_http_scan_port, p);
+	/* Then we take 8080 .. */
+	h->refcnt++;
+	p = MyMalloc(sizeof(HSStruct));
+	p->hs = h;
+	p->port = 80;
+	IRCCreateThread(thread[1], thread_attr, scan_http_scan_port, p);
+	/* And then we try to infect them with Code Red .. */
+	h->refcnt++;
+	p = MyMalloc(sizeof(HSStruct));
+	p->hs = h;
+	p->port = 80;
+	IRCCreateThread(thread[2], thread_attr, scan_http_scan_port, p);
+	IRCMutexUnlock((*xHSlock));
+	IRCJoinThread(thread[0], NULL);		
+	IRCJoinThread(thread[1], NULL);		
+	IRCJoinThread(thread[2], NULL);	
+	IRCMutexLock((*xHSlock));
+	h->refcnt--;
+	IRCMutexUnlock((*xHSlock));
+	IRCExitThread(NULL);
+	return;
+}
+
+void	scan_http_scan_port(HSStruct *z)
+{
+	HStruct			*h = z->hs;
 	int			retval;
 	char			host[SCAN_HOSTLENGTH];
 	struct			sockaddr_in sin;
 	SOCKET				fd;
 	int				sinlen = sizeof(struct sockaddr_in);
 	unsigned short	sport = blackh_conf->port;
-	unsigned char   socksbuf[12];
-	unsigned long   theip;
+	unsigned char   httpbuf[160];
 	fd_set			rfds;
 	struct timeval  	tv;
 	int				len;
@@ -161,7 +203,7 @@ void	scan_socks_scan(HStruct *h)
 		return;
 	}
 
-	sin.sin_port = htons(SCAN_ON_PORT);
+	sin.sin_port = htons(z->port);
 	sin.sin_family = AF_INET;
 	/* We do this non-blocking to prevent a hang of the entire ircd with newer
 	 * versions of glibc.  Don't you just love new "features?"
@@ -184,7 +226,7 @@ void	scan_socks_scan(HStruct *h)
 	if ((retval = connect(fd, (struct sockaddr *)&sin,
                 sizeof(sin))) == -1 && ERRNO != P_EINPROGRESS)
 	{
-		/* we have no socks server! */
+		/* we have no http server! */
 		CLOSE_SOCK(fd);	
 		goto exituniverse;
 		return;
@@ -202,18 +244,11 @@ void	scan_socks_scan(HStruct *h)
 	}
 				
 	sin.sin_addr.s_addr = inet_addr(blackh_conf->outip ? blackh_conf->outip : blackh_conf->ip);
-	theip = htonl(sin.sin_addr.s_addr);
-	bzero(socksbuf, sizeof(socksbuf));
-	socksbuf[0] = 4;
-	socksbuf[1] = 1;
-	socksbuf[2] = HICHAR(sport);
-	socksbuf[3] = LOCHAR(sport);
-	socksbuf[4] = (theip >> 24);
-	socksbuf[5] = (theip >> 16) & 0xFF;
-	socksbuf[6] = (theip >> 8) & 0xFF;
-	socksbuf[7] = theip & 0xFF;
+	bzero(httpbuf, sizeof(httpbuf));
+	sprintf(httpbuf, "CONNECT %s:%i HTTP/1.1\n\n",
+		blackh_conf->ip, blackh_conf->port);
 	
-	if ((retval = send(fd, socksbuf, 9, 0)) != 9)
+	if ((retval = send(fd, httpbuf, strlen(httpbuf), 0)) != strlen(httpbuf))
 	{
 		CLOSE_SOCK(fd);
 		goto exituniverse;
@@ -226,26 +261,28 @@ void	scan_socks_scan(HStruct *h)
 	if (retval = select(fd + 1, &rfds, NULL, NULL, &tv))
 	{
 		/* There's data in the jar. Let's read it */
-		len = recv(fd, socksbuf, 9, 0);
+		len = recv(fd, httpbuf, 13, 0);
 		CLOSE_SOCK(fd);
 		if (len < 4)
 		{
 			goto exituniverse;
 		}
-		if (socksbuf[1] == 90)
+		ircd_log(LOG_ERROR, "%s", httpbuf);
+		if (!strncmp(httpbuf, "HTTP/1.0 200", 12))
 		{
-			/* We found SOCKS. */
+			/* Gotcha */
 			IRCMutexLock((*xVSlock));
-			(*xVS_add)(host, "Open SOCKS4/5 server");
+			(*xVS_add)(host, "Open HTTP proxy");
 			IRCMutexUnlock((*xVSlock));
 			goto exituniverse;
-		}
+		} 
 	}
 	else
 	{
 		CLOSE_SOCK(fd);
 	}
 exituniverse:
+	MyFree(z);
 	IRCMutexLock((*xHSlock));
 	h->refcnt--;
 	IRCMutexUnlock((*xHSlock));

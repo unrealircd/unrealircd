@@ -27,7 +27,7 @@ INCLUDES = ../include/struct.h ../include/config.h \
 R_MODULES=m_sethost.so m_chghost.so m_chgident.so m_setname.so \
 		m_setident.so m_sdesc.so m_svsmode.so m_swhois.so\
 		m_svsmotd.so m_svsnline.so m_who.so \
-		scan.so scan_socks.so web/httpd.so
+		scan.so scan_socks.so scan_http.so web/httpd.so
 
 COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
          m_sdesc.c m_svsmode.c m_swhois.c m_svsmotd.c m_svsnline.c \
@@ -95,6 +95,10 @@ scan.so: scan.c $(INCLUDES)
 scan_socks.so: scan_socks.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		 -o scan_socks.so scan_socks.c
+
+scan_http.so: scan_http.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		 -o scan_http.so scan_http.c
 
 web/httpd.so: web/httpd.c web/u_stats.c web/vfs.c web/phtml.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
