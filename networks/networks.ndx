@@ -55,3 +55,5 @@ networks/subtrexnet.network ......: Subtrex.net (http://www.subtrex.net)
 networks/data-storm.network ......: Data-Storm
 networks/tutkunet.network ........: TuTKu.Net
 networks/raptanet.network ........: RaptaNet (http://www.rapta.net)
+networks/irc-chat.network ........: IRC-Chat
+networks/auspice.network .........: auspice
