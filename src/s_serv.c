@@ -1046,18 +1046,10 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	{
 		sendto_serv_butone(&me, ":%s SMO o :(\2link\2) Secure %slink %s -> %s established (%s)",
 			me.name,
-#ifdef ZIP_LINKS
 			(aconf->options & CONNECT_ZIP) ? "ZIP" : "",
-#else
-			"",
-#endif
 			me.name, inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
 		sendto_realops("(\2link\2) Secure %slink %s -> %s established (%s)",
-#ifdef ZIP_LINKS
 			(aconf->options & CONNECT_ZIP) ? "ZIP" : "",
-#else
-			"",
-#endif
 			me.name, inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
 	}
 	else
@@ -1065,18 +1057,10 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	{
 		sendto_serv_butone(&me, ":%s SMO o :(\2link\2) %sLink %s -> %s established",
 			me.name,
-#ifdef ZIP_LINKS
 			(aconf->options & CONNECT_ZIP) ? "ZIP" : "",
-#else
-			"",
-#endif
 			me.name, inpath);
 		sendto_realops("(\2link\2) %sLink %s -> %s established",
-#ifdef ZIP_LINKS
 			(aconf->options & CONNECT_ZIP) ? "ZIP" : "",
-#else
-			"",
-#endif
 			me.name, inpath);
 	}
 	(void)add_to_client_hash_table(cptr->name, cptr);

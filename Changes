@@ -1833,3 +1833,4 @@ seen. gmtime warning still there
 - Added ZIP_LINKS support, no check in ./Config & configure yet.. you currently need to
   add -lz to IRCDLIBS in Makefile and enable it in include/config.h (and ofcourse set
   link::options::zip on both sides) -- Syzop.
+- Removed unnecessary #ifdef blocks added by previous ZIP_LINKS patch
