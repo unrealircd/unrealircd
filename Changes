@@ -3051,3 +3051,5 @@ seen. gmtime warning still there
   raistlinmajere (#0001592)
 - Fixed a problem with /stats S and extended channel modes (#0001675) reported by
   AngryWolf
+- Fixed a resolver problem that could cause hosts to not be resolved on some Windows
+  systems

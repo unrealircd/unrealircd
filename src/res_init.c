@@ -409,7 +409,7 @@ void get_res_from_reg_nt()
 		{
 			do {
 				n = 0;
-				while (*cp && *cp != ' ' && *cp != '\t')
+				while (*cp && *cp != ' ' && *cp != '\t' && *cp != ',')
 					++cp;
 				if (*cp)
 				{
