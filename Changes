@@ -276,7 +276,7 @@ newdns.c removed - another useless file
 ===================================
 
 ------------------------------------------------
-Beta2
+Beta2 Released
 ------------------------------------------------
 
 ripped cloak.c from 3.2, and added Config
@@ -325,7 +325,7 @@ Added temp patch to m_kline to stop segfault
 ===================================
 
 ------------------------------------------------
-Beta3
+Beta3 Released
 ------------------------------------------------
 
 Backported check_pings with loop.do_ban_check from 3.2
@@ -468,5 +468,55 @@ to JK for helping :)
 ===================================
 
 ---------------------------------------------
-Beta4
+Beta4 Released
 ---------------------------------------------
+
+Incorporated STATS_ONLY_OPER patch thanks to
+psycho
+--Luke
+===================================
+
+Added JK /map patch to resolve hidden U lines
+being trivially found.
+--Luke
+===================================
+
+Fixed clients able to connect on server-only port
+bug. (thanks to worf for reporting)
+--Luke
+===================================
+
+Resolved halfops + operoverride issues
+--Luke
+===================================
+
+Fixed problem where normal users could view topics of
++s/+p channels. (removed /topic functionality for
+non channel members altogether. Channel topics can
+still be obtained via /list)
+--Luke
+===================================
+
+Finally fixed *all* mode problems that are known
+at this time. Long parameters no longer create
+desynchs, everything is happy! Fear.
+--Luke
+===================================
+
+Thanks to Zerwas, added numeric 489 for SECUREONLYCHAN
+so +z channels no longer respond with you're banned.
+--Luke
+===================================
+
+Revamped operoverride again to better handle mode walks
+--Luke
+===================================
+
+Fixed a SERIOUS security problem with c/n line passwords
+Thanks a bunch to node357 for reporting!
+--Luke
+===================================
+
+----------------------------------------------
+Beta5 Released
+----------------------------------------------

@@ -541,7 +541,7 @@ static char *replies[] = {
 /* 486    ERR_HTMDISABLED */ ":%s 486 %s :%s is currently disabled, please try again later.",
 /* 487 */ NULL,
 /* 488 */ NULL,
-/* 489 */ NULL,
+/* 489    ERR_SECUREONLYCHAN */ ":%s 489 %s %s :Cannot join channel (+z)",
 /* 490 */ NULL,
 /* 491    ERR_NOOPERHOST */ ":%s 491 %s :No O-lines for your host",
 /* 492 */ NULL,

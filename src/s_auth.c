@@ -96,6 +96,9 @@ void start_auth(cptr)
 	set_non_blocking(cptr->authfd, cptr);
 
 	getsockname(cptr->fd, (struct SOCKADDR *)&sock, &addrlen);
+	
+	/* Use the listener that the user got in on, dah? */
+	sock.SIN_ADDR = cptr->acpt->ip;
 	sock.SIN_PORT = 0;
 	sock.SIN_FAMILY = AFINET;	/* redundant? */
 	(void)bind(cptr->authfd, (struct SOCKADDR *)&sock, sizeof(sock));

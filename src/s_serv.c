@@ -712,7 +712,8 @@ int  m_server(cptr, sptr, parc, parv)
 #else
 		encr = cptr->passwd;
 #endif /* CRYPT_LINK_PASSWORD */
-		if (aconf->passwd && encr && *aconf->passwd && !StrEq(aconf->passwd, encr))
+		if (aconf->passwd && *aconf->passwd  &&
+		    (!encr || !StrEq(aconf->passwd, encr)))
 		{
 			sendto_one(cptr,
 			    "ERROR :No Access (passwd mismatch) %s", inpath);
@@ -2353,7 +2354,10 @@ int  m_stats(cptr, sptr, parc, parv)
 
 #ifdef STATS_ONLYOPER
 	if (!IsAnOper(sptr))
+	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		return 0;
+	}
 
 #endif
 
@@ -4812,7 +4816,8 @@ void dump_map(cptr, server, mask, prompt_length, length)
 	for (lp = (Link *) return_servers(); lp; lp = lp->next)
 	{
 		acptr = lp->value.cptr;
-		if (acptr->srvptr != server)
+		if (acptr->srvptr != server ||
+		    IsULine(acptr) && !IsOper(cptr) && HIDE_ULINES)
 			continue;
 		acptr->flags |= FLAGS_MAP;
 		cnt++;
@@ -4821,7 +4826,7 @@ void dump_map(cptr, server, mask, prompt_length, length)
 	for (lp = (Link *) return_servers(); lp; lp = lp->next)
 	{
 		acptr = lp->value.cptr;
-		if (IsULine(acptr) && HIDE_ULINES && !IsAnOper(cptr))
+		if (IsULine(acptr) && HIDE_ULINES && !IsOper(cptr))
 			continue;		
 		if (acptr->srvptr != server)
 			continue;

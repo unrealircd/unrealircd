@@ -99,7 +99,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	MAXRECIPIENTS 	20
 #define	MAXKILLS	20
 #define	MAXBANS		60
-#define	MAXBANLENGTH	1024
 #define	MAXSILES	5
 #define	MAXSILELENGTH	128
 /*

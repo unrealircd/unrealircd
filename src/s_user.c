@@ -3000,7 +3000,7 @@ int  m_user(cptr, sptr, parc, parv)
 	if (IsServer(cptr) && !IsUnknown(sptr))
 		return 0;
 
-	if (MyClient(sptr) && (sptr->acpt->umodes & LISTENER_SERVERSONLY)) {
+	if (MyConnect(sptr) && (sptr->acpt->umodes & LISTENER_SERVERSONLY)) {
 		return exit_client(cptr, sptr, sptr, "This port is for servers only");
 	}
 		

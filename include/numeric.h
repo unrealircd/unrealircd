@@ -114,7 +114,9 @@
 #define ERR_ATTACKDENY       484
 #define ERR_KILLDENY	     485
 
-#define ERR_HTMDISABLED		 486
+#define ERR_HTMDISABLED	     486
+
+#define ERR_SECUREONLYCHAN   489
 
 #define ERR_NOOPERHOST       491
 #define ERR_NOSERVICEHOST    492
