@@ -49,7 +49,6 @@
 #endif
 
 Hook	   	*Hooks[MAXHOOKTYPES];
-Hook 	   	*global_i = NULL;
 Hooktype	Hooktypes[MAXCUSTOMHOOKS];
 Module          *Modules = NULL;
 Versionflag     *Versionflags = NULL;

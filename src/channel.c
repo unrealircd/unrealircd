@@ -3613,8 +3613,9 @@ CMD_FUNC(do_join)
 
 		if (MyConnect(sptr)) {
 			int breakit = 0;
-			for (global_i = Hooks[HOOKTYPE_PRE_LOCAL_JOIN]; global_i; global_i = global_i->next) {
-				if((*(global_i->func.intfunc))(sptr,chptr,parv) > 0) {
+			Hook *h;
+			for (h = Hooks[HOOKTYPE_PRE_LOCAL_JOIN]; h; h = h->next) {
+				if((*(h->func.intfunc))(sptr,chptr,parv) > 0) {
 					breakit = 1;
 					break;
 				}
@@ -4072,8 +4073,9 @@ CMD_FUNC(m_kick)
 			      attack:
 				if (MyConnect(sptr)) {
 					int breakit = 0;
-					for (global_i = Hooks[HOOKTYPE_PRE_LOCAL_KICK]; global_i; global_i = global_i->next) {
-						if((*(global_i->func.intfunc))(sptr,who,chptr,comment) > 0) {
+					Hook *h;
+					for (h = Hooks[HOOKTYPE_PRE_LOCAL_KICK]; h; h = h->next) {
+						if((*(h->func.intfunc))(sptr,who,chptr,comment) > 0) {
 							breakit = 1;
 							break;
 						}

@@ -360,7 +360,6 @@ void	LockEventSystem(void);
 void	UnlockEventSystem(void);
 extern Hook		*Hooks[MAXHOOKTYPES];
 extern Hooktype		Hooktypes[MAXCUSTOMHOOKS];
-extern Hook		*global_i;
 
 void    Module_Init(void);
 char    *Module_Create(char *path);
@@ -394,35 +393,37 @@ Hook	*HookDel(Hook *hook);
 Hooktype *HooktypeAdd(Module *module, char *string, int *type);
 void HooktypeDel(Hooktype *hooktype, Module *module);
 
-#define RunHook0(hooktype) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next)(*(global_i->func.intfunc))()
-#define RunHook(hooktype,x) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(x)
-#define RunHookReturn(hooktype,x,ret) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) if((*(global_i->func.intfunc))(x) ret) return -1
+#define RunHook0(hooktype) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next)(*(h->func.intfunc))(); } while(0)
+#define RunHook(hooktype,x) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(x); } while(0)
+#define RunHookReturn(hooktype,x,ret) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) if((*(h->func.intfunc))(x) ret) return -1; } while(0)
 #define RunHookReturnInt(hooktype,x,retchk) \
 { \
  int retval; \
- for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) \
+ Hook *h; \
+ for (h = Hooks[hooktype]; h; h = h->next) \
  { \
-  retval = (*(global_i->func.intfunc))(x); \
+  retval = (*(h->func.intfunc))(x); \
   if (retval retchk) return retval; \
  } \
 }
 #define RunHookReturnInt2(hooktype,x,y,retchk) \
 { \
  int retval; \
- for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) \
+ Hook *h; \
+ for (h = Hooks[hooktype]; h; h = h->next) \
  { \
-  retval = (*(global_i->func.intfunc))(x,y); \
+  retval = (*(h->func.intfunc))(x,y); \
   if (retval retchk) return retval; \
  } \
 }
 
-#define RunHookReturnVoid(hooktype,x,ret) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) if((*(global_i->func.intfunc))(x) ret) return
-#define RunHook2(hooktype,x,y) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(x,y)
-#define RunHook3(hooktype,a,b,c) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(a,b,c)
-#define RunHook4(hooktype,a,b,c,d) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(a,b,c,d)
-#define RunHook5(hooktype,a,b,c,d,e) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(a,b,c,d,e)
-#define RunHook6(hooktype,a,b,c,d,e,f) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(a,b,c,d,e,f)
-#define RunHook7(hooktype,a,b,c,d,e,f,g) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(a,b,c,d,e,f,g)
+#define RunHookReturnVoid(hooktype,x,ret) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) if((*(h->func.intfunc))(x) ret) return; } while(0)
+#define RunHook2(hooktype,x,y) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(x,y); } while(0)
+#define RunHook3(hooktype,a,b,c) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(a,b,c); } while(0)
+#define RunHook4(hooktype,a,b,c,d) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(a,b,c,d); } while(0)
+#define RunHook5(hooktype,a,b,c,d,e) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(a,b,c,d,e); } while(0)
+#define RunHook6(hooktype,a,b,c,d,e,f) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(a,b,c,d,e,f); } while(0)
+#define RunHook7(hooktype,a,b,c,d,e,f,g) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(a,b,c,d,e,f,g); } while(0)
 
 Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigned char params, int flags);
 void CommandDel(Command *command);

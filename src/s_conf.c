@@ -1833,6 +1833,7 @@ int	config_post_test()
 {
 #define Error(x) { config_error((x)); errors++; }
 	int 	errors = 0;
+	Hook *h;
 	
 	if (!requiredstuff.conf_me)
 		Error("me {} block missing");
@@ -1872,13 +1873,12 @@ int	config_post_test()
 		Error("set::help-channel missing");
 	if (!requiredstuff.settings.hidhost)
 		Error("set::hiddenhost-prefix missing");
-	for (global_i = Hooks[HOOKTYPE_CONFIGPOSTTEST]; global_i; 
-		global_i = global_i->next) 
+	for (h = Hooks[HOOKTYPE_CONFIGPOSTTEST]; h; h = h->next) 
 	{
 		int value, errs = 0;
-		if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
+		if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
 			continue;
-		value = (*(global_i->func.intfunc))(&errs);
+		value = (*(h->func.intfunc))(&errs);
 		if (value == -1)
 		{
 			errors += errs;
@@ -1896,6 +1896,7 @@ int	config_run()
 	ConfigFile	*cfptr;
 	ConfigCommand	*cc;
 	int		errors = 0;
+	Hook *h;
 	for (cfptr = conf; cfptr; cfptr = cfptr->cf_next)
 	{
 		if (config_verbose > 1)
@@ -1909,10 +1910,9 @@ int	config_run()
 			else
 			{
 				int value;
-				for (global_i = Hooks[HOOKTYPE_CONFIGRUN]; global_i;
-				     global_i = global_i->next)
+				for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
 				{
-					value = (*(global_i->func.intfunc))(cfptr,ce,CONFIG_MAIN);
+					value = (*(h->func.intfunc))(cfptr,ce,CONFIG_MAIN);
 					if (value == 1)
 						break;
 				}
@@ -1970,6 +1970,7 @@ int	config_test()
 	ConfigFile	*cfptr;
 	ConfigCommand	*cc;
 	int		errors = 0;
+	Hook *h;
 
 	for (cfptr = conf; cfptr; cfptr = cfptr->cf_next)
 	{
@@ -1991,13 +1992,12 @@ int	config_test()
 			else 
 			{
 				int used = 0;
-				for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
-					global_i = global_i->next) 
+				for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
 				{
 					int value, errs = 0;
-					if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
+					if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
 						continue;
-					value = (*(global_i->func.intfunc))(cfptr,ce,CONFIG_MAIN,&errs);
+					value = (*(h->func.intfunc))(cfptr,ce,CONFIG_MAIN,&errs);
 					if (value == 2)
 						used = 1;
 					if (value == 1)
@@ -3561,6 +3561,7 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp;
 	ConfigItem_allow *allow;
+	Hook *h;
 
 	if (ce->ce_vardata)
 	{
@@ -3571,10 +3572,9 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		else
 		{
 			int value;
-			for (global_i = Hooks[HOOKTYPE_CONFIGRUN]; global_i;
-			     global_i = global_i->next)
+			for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
 			{
-				value = (*(global_i->func.intfunc))(conf,ce,CONFIG_ALLOW);
+				value = (*(h->func.intfunc))(conf,ce,CONFIG_ALLOW);
 				if (value == 1)
 					break;
 			}
@@ -3635,6 +3635,8 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp;
 	int		errors = 0;
+	Hook *h;
+	
 	if (ce->ce_vardata)
 	{
 		if (!strcmp(ce->ce_vardata, "channel"))
@@ -3644,13 +3646,12 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 		else
 		{
 			int used = 0;
-			for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
-				global_i = global_i->next) 
+			for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
 			{
 				int value, errs = 0;
-				if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
+				if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
 					continue;
-				value = (*(global_i->func.intfunc))(conf,ce,CONFIG_ALLOW,&errs);
+				value = (*(h->func.intfunc))(conf,ce,CONFIG_ALLOW,&errs);
 				if (value == 2)
 					used = 1;
 				if (value == 1)
@@ -3893,7 +3894,7 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 
 	ConfigEntry *cep, *cep2, *cep3;
 	ConfigItem_except *ca;
-
+	Hook *h;
 
 	if (!strcmp(ce->ce_vardata, "ban")) {
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -3943,10 +3944,9 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else {
 		int value;
-		for (global_i = Hooks[HOOKTYPE_CONFIGRUN]; global_i;
-		     global_i = global_i->next)
+		for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
 		{
-			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_EXCEPT);
+			value = (*(h->func.intfunc))(conf,ce,CONFIG_EXCEPT);
 			if (value == 1)
 				break;
 		}
@@ -3959,6 +3959,7 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 
 	ConfigEntry *cep, *cep3;
 	int	    errors = 0;
+	Hook *h;
 
 	if (!ce->ce_vardata)
 	{
@@ -4086,13 +4087,12 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else {
 		int used = 0;
-		for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
-			global_i = global_i->next) 
+		for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
 		{
 			int value, errs = 0;
-			if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
+			if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
 				continue;
-			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_EXCEPT,&errs);
+			value = (*(h->func.intfunc))(conf,ce,CONFIG_EXCEPT,&errs);
 			if (value == 2)
 				used = 1;
 			if (value == 1)
@@ -4989,6 +4989,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 
 	ConfigEntry *cep;
 	ConfigItem_ban *ca;
+	Hook *h;
 
 	ca = MyMallocEx(sizeof(ConfigItem_ban));
 	if (!strcmp(ce->ce_vardata, "nick"))
@@ -5009,10 +5010,9 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 	else {
 		int value;
 		free(ca); /* ca isn't used, modules have their own list. */
-		for (global_i = Hooks[HOOKTYPE_CONFIGRUN]; global_i;
-		     global_i = global_i->next)
+		for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
 		{
-			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_BAN);
+			value = (*(h->func.intfunc))(conf,ce,CONFIG_BAN);
 			if (value == 1)
 				break;
 		}
@@ -5032,6 +5032,8 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	int	    errors = 0;
+	Hook *h;
+	
 	if (!ce->ce_vardata)
 	{
 		config_error("%s:%i: ban without type",	
@@ -5053,13 +5055,12 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 	else
 	{
 		int used = 0;
-		for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
-			global_i = global_i->next) 
+		for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
 		{
 			int value, errs = 0;
-			if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
+			if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
 				continue;
-			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_BAN, &errs);
+			value = (*(h->func.intfunc))(conf,ce,CONFIG_BAN, &errs);
 			if (value == 2)
 				used = 1;
 			if (value == 1)
@@ -5129,6 +5130,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep, *cepp, *ceppp;
 	OperFlag 	*ofl = NULL;
 	char	    temp[512];
+	Hook *h;
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -5440,10 +5442,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else 
 		{
 			int value;
-			for (global_i = Hooks[HOOKTYPE_CONFIGRUN]; global_i;
-			     global_i = global_i->next)
+			for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
 			{
-				value = (*(global_i->func.intfunc))(conf,cep,CONFIG_SET);
+				value = (*(h->func.intfunc))(conf,cep,CONFIG_SET);
 				if (value == 1)
 					break;
 			}
@@ -5460,6 +5461,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 	int		tempi;
 	int	    i;
 	int	    errors = 0;
+	Hook	*h;
 #define CheckNull(x) if ((!(x)->ce_vardata) || (!(*((x)->ce_vardata)))) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -6016,13 +6018,12 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else
 		{
 			int used = 0;
-			for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
-				global_i = global_i->next) 
+			for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
 			{
 				int value, errs = 0;
-				if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
+				if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
 					continue;
-				value = (*(global_i->func.intfunc))(conf,cep,CONFIG_SET, &errs);
+				value = (*(h->func.intfunc))(conf,cep,CONFIG_SET, &errs);
 				if (value == 2)
 					used = 1;
 				if (value == 1)
@@ -6441,6 +6442,8 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 
 int	_conf_deny(ConfigFile *conf, ConfigEntry *ce)
 {
+Hook *h;
+
 	if (!strcmp(ce->ce_vardata, "dcc"))
 		_conf_deny_dcc(conf, ce);
 	else if (!strcmp(ce->ce_vardata, "channel"))
@@ -6452,10 +6455,9 @@ int	_conf_deny(ConfigFile *conf, ConfigEntry *ce)
 	else
 	{
 		int value;
-		for (global_i = Hooks[HOOKTYPE_CONFIGRUN]; global_i;
-		     global_i = global_i->next)
+		for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
 		{
-			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_DENY);
+			value = (*(h->func.intfunc))(conf,ce,CONFIG_DENY);
 			if (value == 1)
 				break;
 		}
@@ -6570,6 +6572,8 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	int	    errors = 0;
+	Hook	*h;
+	
 	if (!ce->ce_vardata)
 	{
 		config_error("%s:%i: deny without type",	
@@ -6791,13 +6795,12 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 	else
 	{
 		int used = 0;
-		for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
-			global_i = global_i->next) 
+		for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
 		{
 			int value, errs = 0;
-			if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
+			if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
 				continue;
-			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_DENY, &errs);
+			value = (*(h->func.intfunc))(conf,ce,CONFIG_DENY, &errs);
 			if (value == 2)
 				used = 1;
 			if (value == 1)
