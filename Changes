@@ -1228,3 +1228,4 @@ seen. gmtime warning still there
   iDW-badSol)
 - Module Insanity Recode (part 1) if the module version is 3.2-b8* we now pass a ModuleInfo struct
   to Mod_Init which contains extended information. This replaces the Mod_Handle method in beta7
+- Module Insanity prototype fix

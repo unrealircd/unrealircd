@@ -87,10 +87,10 @@ extern int m_akill_Init(int module_load), m_rakill_Init(int module_load), m_zlin
 extern int m_unzline_Init(int module_load), m_kline_Init(int module_load), m_unkline_Init(int module_load);
 extern int m_sqline_Init(int module_load), m_unsqline_Init(int module_load), m_tkl_Init(int module_load);
 #ifdef GUEST
-extern int m_guest_Init(int module_load);
+extern int m_guest_Init(ModuleInfo *modinfo);
 #endif
 #ifdef SCAN_API
-extern int m_scan_Init(int module_load), scan_socks_Init(int module_load), scan_http_Init(int module_load);
+extern int m_scan_Init(ModuleInfo *modinfo), scan_socks_Init(ModuleInfo *modinfo), scan_http_Init(ModuleInfo *modinfo);
 #endif
 
 extern int m_sethost_Load(int module_load), m_setname_Load(int module_load), m_chghost_Load(int module_load);
