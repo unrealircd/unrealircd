@@ -267,6 +267,7 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 #define PROTO_UMODE2	0x20	/* Negotiated UMODE2 protocol */
 #define PROTO_ALN	0x40	/* Negotiated ALN protocol */
 #define PROTO_ZIP	0x80	/* Negotiated ZIP protocol */
+#define PROTO_VL	0x100   /* Negotiated VL protocol */
 /*
  * flags macros.
  */
@@ -399,6 +400,7 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 #define SupportSJOIN2(x)	((x)->proto & PROTO_SJOIN2)
 #define SupportUMODE2(x)	((x)->proto & PROTO_UMODE2)
 #define SupportALN(x)		((x)->proto & PROTO_ALN)
+#define SupportVL(x)		((x)->proto & PROTO_VL)
 
 #define SetSJOIN(x)		((x)->proto |= PROTO_SJOIN)
 #define SetNoQuit(x)		((x)->proto |= PROTO_NOQUIT)
@@ -407,6 +409,7 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 #define SetSJOIN2(x)		((x)->proto |= PROTO_SJOIN2)
 #define SetUMODE2(x)		((x)->proto |= PROTO_UMODE2)
 #define SetALN(x)		((x)->proto |= PROTO_ALN)
+#define SetVL(x)		((x)->proto |= PROTO_VL)
 
 #define ClearSJOIN(x)		((x)->proto &= ~PROTO_SJOIN)
 #define ClearNoQuit(x)		((x)->proto &= ~PROTO_NOQUIT)
@@ -843,7 +846,7 @@ struct Client	{
 				     ** and after which the connection was
 				     ** accepted.
 				     */
-	char	*passwd;
+	char	passwd[PASSWDLEN+1];
 #ifdef DEBUGMODE
 	time_t	cputime;
 #endif

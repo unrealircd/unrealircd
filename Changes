@@ -415,3 +415,4 @@
     - /crypto <algoritm> <keyfile laying in keys/> <parameters>
 - Fixed a ->passwd bug caused by codemastr..
 - Added fclose() calls to the vhost, dccdeny, and chrestrict confs
+- Some V:line stuff (added VL protoctl, and parsing of the SERVER command for the proto and flags)

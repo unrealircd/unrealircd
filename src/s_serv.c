@@ -415,6 +415,13 @@ int  m_protoctl(cptr, sptr, parc, parv)
 			    proto, cptr->name));
 			SetALN(cptr);
 		}
+		else if (strcmp(proto, "VL") == 0)
+		{
+			Debug((DEBUG_ERROR,
+			    "Chose protocol %s for link %s",
+			    proto, cptr->name));
+			SetVL(cptr);
+		}
 		/*
 		 * Add other protocol extensions here, with proto
 		 * containing the base option, and options containing
@@ -448,7 +455,7 @@ int  m_server(cptr, sptr, parc, parv)
 	aClient *acptr, *bcptr;
 	aConfItem *aconf, *cconf;
 	int  hop, ts = 0;
-	char *parvaln;
+	char *parvaln, *flags, *protocol, *inf;
 
 	info[0] = '\0';
 	inpath = get_client_name(cptr, FALSE);
@@ -746,6 +753,22 @@ int  m_server(cptr, sptr, parc, parv)
 	   ** status accordingly...
 	 */
 	strncpyzt(cptr->name, host, sizeof(cptr->name));
+	/* For now, just strip the VL stuff if it's there */
+	if (SupportVL(cptr)) {
+		/* we also have a fail safe incase they say they are sending
+		 * VL stuff and don't -- codemastr
+		 */
+		protocol = (char *)strtok((char *)info, "-");
+		if (protocol)
+		flags = (char *)strtok((char *)NULL, " ");
+		if (flags) {
+		inf = (char *)strtok((char *)NULL, "");
+		strncpyzt(cptr->info, inf[0] ? inf : me.name, sizeof(cptr->info));
+		}
+		else
+		strncpyzt(cptr->info, info[0] ? info : me.name, sizeof(cptr->info));
+	}
+	else
 	strncpyzt(cptr->info, info[0] ? info : me.name, sizeof(cptr->info));
 	cptr->hopcount = hop;
 
@@ -790,6 +813,7 @@ int  m_server_estab(cptr)
 	char *inpath, *host, *s, *encr;
 	int  split, i;
 	char *myaln = find_server_aln(me.name);
+	extern	char	serveropts[];	
 
 	inpath = get_client_name(cptr, TRUE);	/* "refresh" inpath with host */
 	split = mycmp(cptr->name, cptr->sockhost);
@@ -860,8 +884,9 @@ int  m_server_estab(cptr)
 		/*
 		   ** Pass my info to the new server
 		 */
-		sendto_one(cptr, "SERVER %s 1 :%s",
-		    my_name_for_link(me.name, aconf),
+		/* modified so we send out the Uproto and flags */
+		sendto_one(cptr, "SERVER %s 1 :U%d-%s %s",
+		    my_name_for_link(me.name, aconf), UnrealProtocol, serveropts,
 		    (me.info[0]) ? (me.info) : "IRCers United");
 	}
 	else
