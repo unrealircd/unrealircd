@@ -446,7 +446,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 			case ';':
 				if (!curce)
 				{
-					config_error("%s:%i Ignoring extra semicolon\n",
+					config_status("%s:%i Ignoring extra semicolon\n",
 						filename, linenumber);
 					break;
 				}
@@ -458,13 +458,13 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 			case '{':
 				if (!curce)
 				{
-					config_error("%s:%i: No name for section start\n",
+					config_status("%s:%i: No name for section start\n",
 							filename, linenumber);
 					continue;
 				}
 				else if (curce->ce_entries)
 				{
-					config_error("%s:%i: Ignoring extra section start\n",
+					config_status("%s:%i: Ignoring extra section start\n",
 							filename, linenumber);
 					continue;
 				}
@@ -485,7 +485,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				}
 				else if (!cursection)
 				{
-					config_error("%s:%i: Ignoring extra close brace\n",
+					config_status("%s:%i: Ignoring extra close brace\n",
 						filename, linenumber);
 					continue;
 				}
@@ -567,7 +567,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				{
 					if (curce->ce_vardata)
 					{
-						config_error("%s:%i: Ignoring extra data\n",
+						config_status("%s:%i: Ignoring extra data\n",
 							filename, linenumber);
 					}
 					else
@@ -601,7 +601,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 			default:
 				if ((*ptr == '*') && (*(ptr+1) == '/'))
 				{
-					config_error("%s:%i Ignoring extra end comment\n",
+					config_status("%s:%i Ignoring extra end comment\n",
 						filename, linenumber);
 					ptr++;
 					break;
@@ -630,7 +630,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				{
 					if (curce->ce_vardata)
 					{
-						config_error("%s:%i: Ignoring extra data\n",
+						config_status("%s:%i: Ignoring extra data\n",
 							filename, linenumber);
 					}
 					else
@@ -2664,7 +2664,19 @@ void	validate_configuration(void)
 	short hide_host = 1;
 	char *s;
 	struct in_addr in;
-	
+	/* These may not have even gotten loaded because of previous errors so don't do
+         * anything -- codemastr
+	 */
+#ifdef _WIN32
+	if (config_error_flag)
+		win_log("Errors in configuration, terminating program.");
+	win_error();
+#endif
+	if (config_error_flag)
+	{
+		Error("Errors in configuration, terminating program.");
+		exit(5);
+	}	
 	/* Let us validate dynconf first */
 	if (!KLINE_ADDRESS || (*KLINE_ADDRESS == '\0'))
 		Error("set::kline-address is missing");

@@ -494,3 +494,4 @@ seen. gmtime warning still there
 - Got /stats O working
 - Made the topic for a +s channel hidden from non-members (reported by Bagge)
 - Removed ce_vardatanum (wasted CPU and memory)
+- Added code to make the config parser try and stay alive when an error is encountered
