@@ -17,7 +17,6 @@ set {
 		coadmin		"coadmin.german-elite.net";
 		admin		"admin.german-elite.net";
 		servicesadmin	"csop.german-elite.net";
-		techadmin	"techadmin.german-elite.net";
 		netadmin	"netadmin.german-elite.net";
 		host-on-oper-up	"on";
 	};

@@ -19,7 +19,6 @@ set {
 		coadmin "staff.zirc.org";
 		admin "staff.zirc.org";
 		servicesadmin "staff.zirc.org";
-		techadmin "staff.zirc.org";
 		netadmin "staff.zirc.org";
 		host-on-oper yes;
 	};

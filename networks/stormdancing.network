@@ -12,7 +12,6 @@ set {
 		coadmin		"CoAdmin.Stormdancing.Net";
 		admin		"Admin.Stormdancing.Net";
 		servicesadmin	"ServiceOp.Stormdancing.Net";
-		techadmin	"TechAdmin.Stormdancing.Net";
 		netadmin	"NetAdmin.Stormdancing.Net";
 		host-on-oper-up	"on";
 	};

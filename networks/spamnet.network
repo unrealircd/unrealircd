@@ -21,7 +21,6 @@ set {
 		coadmin		"coadmin.spamnet.org";
 		admin		"admin.spamnet.org";
 		servicesadmin	"csops.spamnet.org";
-		techadmin	"techadmin.spamnet.org";
 		netadmin	"netadmin.spamnet.org";
 		host-on-oper-up	"on";
 	};

@@ -12,7 +12,6 @@ set {
 		coadmin		"coadmin.unitedirc.com";
 		admin		"admin.unitedirc.com";
 		servicesadmin	"csops.unitedirc.com";
-		techadmin	"techadmin.unitedirc.com";
 		netadmin	"netadmin.unitedirc.com";
 		host-on-oper-up	"on";
 	};

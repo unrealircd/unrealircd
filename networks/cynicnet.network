@@ -21,7 +21,6 @@ set {
                 coadmin         "Coadmin.CynicNet.org";
                 admin           "Admin.CynicNet.org";
                 servicesadmin   "CSOP.CynicNet.org";
-                techadmin       "Techadmin.CynicNet.org";
                 netadmin        "Netadmin.CynicNet.org";
                 host-on-oper-up "on";
         };

@@ -22,7 +22,6 @@ set {
 		coadmin		"coadmin.bunker7.net";
 		admin		"admin.bunker7.net";
 		servicesadmin	"sadm.bunker7.net";
-		techadmin	"techadmin.bunker7.net";
 		netadmin	"netadmin.bunker7.net";
 		host-on-oper-up	"off";
 	};

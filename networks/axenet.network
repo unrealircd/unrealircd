@@ -17,7 +17,6 @@ set {
 		coadmin		"coadmin.axenet.org";
 		admin		"admin.axenet.org";
 		servicesadmin	"csop.axenet.org";
-		techadmin	"techadmin.axenet.org";
 		netadmin	"netadmin.axenet.org";
 		host-on-oper-up	"on";
 	};

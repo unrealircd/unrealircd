@@ -21,7 +21,6 @@ set {
 		coadmin		"CoAdmin.Global-IRC.de";
 		admin		"ServerAdmin.Global-IRC.de";
 		servicesadmin	"ServiceAdmin.Global-IRC.de";
-		techadmin	"TechAdmin.Global-IRC.de";
 		netadmin	"NetworkAdmin.Global-IRC.de";
 		host-on-oper-up	"on";
 	};

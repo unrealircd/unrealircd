@@ -21,7 +21,6 @@ set {
                 coadmin         "coadmin.lostchat.net";
                 admin           "admin.lostchat.net";
                 servicesadmin   "csop.lostchat.net";
-                techadmin       "techadmin.lostchat.net";
                 netadmin        "netadmin.lostchat.net";
                 host-on-oper-up "on";
         };

@@ -19,7 +19,6 @@ set {
 		coadmin "coadmin.x-irc.net";
 		admin "admin.x-irc.net";
 		servicesadmin "csop.x-irc.net";
-		techadmin "techadmin.x-irc.net";
 		netadmin "netadmin.x-irc.net";
 		host-on-oper no;
 	};

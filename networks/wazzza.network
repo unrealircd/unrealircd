@@ -21,7 +21,6 @@ set {
                 coadmin         "coadmin.wazzza.org";
                 admin           "admin.wazzza.org";
                 servicesadmin   "csop.wazzza.org";
-                techadmin       "techadmin.wazzza.org";
                 netadmin        "netadmin.wazzza.org";
                 host-on-oper-up "on";
         };

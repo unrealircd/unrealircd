@@ -21,7 +21,6 @@ set {
                 coadmin         "Co-Admin.irclatino.org";
                 admin           "server-admin.irclatino.org";
                 servicesadmin   "services-operator.irclatino.org";
-                techadmin       "TechAdmin.irclatino.org";
                 netadmin        "NetAdmin.irclatino.org";
                 host-on-oper-up "on";
         };

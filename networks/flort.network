@@ -19,7 +19,6 @@ global "oper.flort.net";
 coadmin "coadmin.flort.net";
 admin "admin.flort.net";
 servicesadmin "csop.flort.net";
-techadmin "tecadmin.flort.net";
 netadmin "netadmin.flort.net";
 host-on-oper yes;
 };

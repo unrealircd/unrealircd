@@ -21,7 +21,6 @@ set {
                 coadmin         "coadmin.chatuniverse.net";
                 admin           "admin.chatuniverse.net";
                 servicesadmin   "csop.chatuniverse.net";
-                techadmin       "techadmin.chatuniverse.net";
                 netadmin        "netadmin.chatuniverse.net";
                 host-on-oper-up "on";
         };

@@ -19,7 +19,6 @@ set {
 		coadmin "coadmin.dark-core.net";
 		admin "admin.dark-core.net";
 		servicesadmin "csop.dark-core.net";
-		techadmin "techadmin.dark-core.net";
 		netadmin "netadmin.dark-core.net";
 		host-on-oper yes;
 	};

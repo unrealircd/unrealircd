@@ -21,7 +21,6 @@ set {
                 coadmin         "coadmin.hub.no.maxat.net";
                 admin           "admin.hub.no.maxat.net";
                 servicesadmin   "csop.hub.no.maxat.net";
-                techadmin       "techadmin.hub.no.maxat.net";
                 netadmin        "netadmin.hub.no.maxat.net";
                 host-on-oper-up "off";
         };

@@ -12,7 +12,6 @@ set {
 		coadmin		"coadmin.uzaynet.com";
 		admin		"admin.uzaynet.com";
 		servicesadmin	"serviceop.uzaynet.com";
-		techadmin	"techadmin.uzaynet.com";
 		netadmin	"netadmin.uzaynet.com";
 		host-on-oper-up	"on";
 	};

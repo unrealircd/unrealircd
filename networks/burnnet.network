@@ -21,7 +21,6 @@ set {
                 coadmin         "coadmin.burncycl.net";
                 admin           "admin.burncycl.net";
                 servicesadmin   "csop.burncycl.net";
-                techadmin       "techadmin.burncycl.net";
                 netadmin        "netadmin.burncycl.net";
                 host-on-oper-up "on";
         };

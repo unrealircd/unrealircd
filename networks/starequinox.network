@@ -20,7 +20,6 @@ global "Oper.StarEquinox.Net";
 coadmin "CoAdmin.StarEquinox.Net";
 admin "Admin.StarEquinox.Net";
 servicesadmin "Oper.StarEquinox.Net";
-techadmin "TechAdmin.StarEquinox.Net";
 netadmin "NetAdmin.StarEquinox.Net";
 host-on-oper yes;
 };

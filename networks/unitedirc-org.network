@@ -19,7 +19,6 @@ set {
 		coadmin "coadmin.unitedirc.prg";
 		admin "admin.unitedirc.org";
 		servicesadmin "csop.unitedirc.org";
-		techadmin "techadmin.unitedirc.org";
 		netadmin "netadmin.unitedirc.org";
 		host-on-oper yes;
 	};

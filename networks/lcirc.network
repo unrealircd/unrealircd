@@ -19,7 +19,6 @@ set {
 		coadmin "coadmin.lcirc.net";
 		admin "admin.lcirc.net";
 		servicesadmin "csop.lcirc.net";
-		techadmin "techadmin.lcirc.net";
 		netadmin "netadmin.lcirc.net";
 		host-on-oper no;
 	};

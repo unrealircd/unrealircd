@@ -1052,4 +1052,4 @@ seen. gmtime warning still there
   reported by Dragon974
 - Added mutex.c for our mutexes
 - Fixed makenet so techadmin-host is gone
-
+- Removed set::hosts::techadmin from all network files

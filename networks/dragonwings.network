@@ -12,7 +12,6 @@ set {
 		coadmin		"coadmin.dragonwings.org";
 		admin		"admin.dragonwings.org";
 		servicesadmin	"serviceop.dragonwings.org";
-		techadmin	"techadmin.dragonwings.org";
 		netadmin	"netadmin.dragonwings.org";
 		host-on-oper-up	"off";
 	};

@@ -21,7 +21,6 @@ set {
                 coadmin         "coadmin.BitchX.cl";
                 admin           "Admin.BitchX.cl";
                 servicesadmin   "cops.BitchX.cl";
-                techadmin       "techadmin.BitchX.cl";
                 netadmin        "NETWORK-ADMINISTARTOR.BitchX.cl";
                 host-on-oper-up "on";
         };

@@ -21,7 +21,6 @@ set {
                 coadmin         "coadmin.phat-net.de";
                 admin           "admin.phat-net.de";
                 servicesadmin   "csop.phat-net.de";
-                techadmin       "techadmin.phat-net.de";
                 netadmin        "admin.phat-net.de";
                 host-on-oper-up "on";
         };

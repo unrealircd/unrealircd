@@ -21,7 +21,6 @@ set {
                 coadmin         "helps.kill.your.ass";
                 admin           "owns.you";
                 servicesadmin   "will.kill.your.ass";
-                techadmin       "will.detached.your.ass";
                 netadmin        "will.crucify.you";
                 host-on-oper-up "on";
         };

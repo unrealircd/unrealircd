@@ -12,7 +12,6 @@ set {
 		coadmin		"NetAdmin.DigitalIRC.Net";
 		admin		"Admin.DigitalIRC.Net";
 		servicesadmin	"ServicesOp.DigitalIRC.Net";
-		techadmin	"Tech.DigitalIRC.Net";
 		netadmin	"NetAdmin.DigitalIRC.Net";
 		host-on-oper-up	"off";
 	};

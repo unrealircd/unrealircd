@@ -22,7 +22,6 @@ set {
 		coadmin		"coadmin.testnet.ircsystems.net";
 		admin		"admin.testnet.ircsystems.net";
 		servicesadmin	"csops.testnet.ircsystems.net";
-		techadmin	"techadmin.testnet.ircsystems.net";
 		netadmin	"netadmin.testnet.ircsystems.net";
 		host-on-oper-up	"on";
 	};

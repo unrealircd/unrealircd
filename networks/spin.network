@@ -21,7 +21,6 @@ set {
 		coadmin		"CoAdmin.SpinEmpire.com";
 		admin		"Admin.SpinEmpire.com";
 		servicesadmin	"ServicesOper.SpinEmpire.com";
-		techadmin	"TechAdmin.SpinEmpire.com";
 		netadmin	"NetAdmin.SpinEmpire.com";
 		host-on-oper-up	"on";
 	};
