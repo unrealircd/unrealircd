@@ -1185,7 +1185,7 @@ CMD_FUNC(m_nick)
 	Membership *mp;
 	time_t lastnick = (time_t) 0;
 	int  differ = 1, update_watch = 1;
-	unsigned char newusr = 0;
+	unsigned char newusr = 0, removemoder = 1;
 	/*
 	 * If the user didn't specify a nickname, complain
 	 */
@@ -1431,17 +1431,17 @@ CMD_FUNC(m_nick)
 	 */
 	if (acptr == sptr) {
 		if (strcmp(acptr->name, nick) != 0)
-			/*
-			   ** Allows change of case in his/her nick
-			 */
+		{
+			/* Allows change of case in his/her nick */
+			removemoder = 0; /* don't set the user -r */
 			goto nickkilldone;	/* -- go and process change */
-		else
+		} else
 			/*
-			   ** This is just ':old NICK old' type thing.
-			   ** Just forget the whole thing here. There is
-			   ** no point forwarding it to anywhere,
-			   ** especially since servers prior to this
-			   ** version would treat it as nick collision.
+			 ** This is just ':old NICK old' type thing.
+			 ** Just forget the whole thing here. There is
+			 ** no point forwarding it to anywhere,
+			 ** especially since servers prior to this
+			 ** version would treat it as nick collision.
 			 */
 			return 0;	/* NICK Message ignored */
 	}
@@ -1737,7 +1737,8 @@ CMD_FUNC(m_nick)
 		sendto_common_channels(sptr, ":%s NICK :%s", parv[0], nick);
 		sendto_serv_butone_token(cptr, parv[0], MSG_NICK, TOK_NICK,
 		    "%s %ld", nick, sptr->lastnick);
-		sptr->umodes &= ~UMODE_REGNICK;
+		if (removemoder)
+			sptr->umodes &= ~UMODE_REGNICK;
 	}
 	else if (!sptr->name[0])
 	{

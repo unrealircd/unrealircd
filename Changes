@@ -3059,3 +3059,5 @@ seen. gmtime warning still there
   of Inno Setup (4.2.0)
 - Made the setup script use the new compression method 'lzma' which makes the setup.exe
   ~300Kb smaller. Now also requires Inno Setup 4.1.6 (tested with 4.2.0).
+- Usermode 'r' (registered) was unset even in case of "case"-nickchanges (like:
+  'Syzop' -> 'syzop'). This affected f.e. ircservices. Reported by LoVeR (#0001679).
