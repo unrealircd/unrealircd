@@ -949,3 +949,11 @@ seen. gmtime warning still there
 - Fixed a FSU Pthreads bug that caused it not to work on Slackware (help from Frank Mueller)
 - Started some work on CIDR support (added some functions from hybrid7)
 - Added some functions for generic linked list modifications
+- Slightly improved +x v2 algo, win32 releases should be compiled with
+  this improvement OFF, at least until 3.2 final. COMPAT_BETA4_KEYS makes 
+  it compat w/ beta4 and pre.
+- Made checking for redundant bans both ways an ifdef, off by default. 
+  Note that undefing this might SLIGHTLY break compat w/ beta4 and pre
+- Added "griever would like to thank" section to /credits
+
+
