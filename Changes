@@ -841,3 +841,5 @@ seen. gmtime warning still there
 - modulize documentation, some web server fixes, preparation for uabr
 - Some more VFS/PHTML fixes, it actually works now, thanks to butter
 - Fixed a IPv6 bindip problem
+- Removed bsd.c and made socket.c, moving signal stuff to ircd.c, possible 
+  fixing a IPv6 bug

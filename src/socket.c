@@ -1,5 +1,5 @@
-/************************************************************************
- *   Unreal Internet Relay Chat Daemon - src/bsd.c
+/*
+ *   Unreal Internet Relay Chat Daemon, src/socket.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
  *
@@ -23,11 +23,6 @@
 #include "sys.h"
 #include "h.h"
 #include <signal.h>
-
-ID_Copyright
-    ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
-
-
 #ifndef _WIN32
 extern int errno;		/* ...seems that errno.h doesn't define this everywhere */
 #endif
@@ -38,40 +33,7 @@ extern char *sys_errlist[];
 #ifdef DEBUGMODE
 int  writecalls = 0, writeb[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 #endif
-#ifndef _WIN32
-VOIDSIG dummy()
-{
-#ifndef HAVE_RELIABLE_SIGNALS
-	(void)signal(SIGALRM, dummy);
-	(void)signal(SIGPIPE, dummy);
-#ifndef HPUX			/* Only 9k/800 series require this, but don't know how to.. */
-# ifdef SIGWINCH
-	(void)signal(SIGWINCH, dummy);
-# endif
-#endif
-#else
-# ifdef POSIX_SIGNALS
-	struct sigaction act;
-
-	act.sa_handler = dummy;
-	act.sa_flags = 0;
-	(void)sigemptyset(&act.sa_mask);
-	(void)sigaddset(&act.sa_mask, SIGALRM);
-	(void)sigaddset(&act.sa_mask, SIGPIPE);
-#  ifdef SIGWINCH
-	(void)sigaddset(&act.sa_mask, SIGWINCH);
-#  endif
-	(void)sigaction(SIGALRM, &act, (struct sigaction *)NULL);
-	(void)sigaction(SIGPIPE, &act, (struct sigaction *)NULL);
-#  ifdef SIGWINCH
-	(void)sigaction(SIGWINCH, &act, (struct sigaction *)NULL);
-#  endif
-# endif
-#endif
-}
-
-#endif /* _WIN32 */
-
+	
 
 /*
 ** deliver_it
@@ -209,3 +171,4 @@ int  deliver_it(aClient *cptr, char *str, int len)
 	}
 	return (retval);
 }
+

@@ -2427,9 +2427,16 @@ static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
 		server.SIN_ADDR.S_ADDR = inet_addr(aconf->bindip);	
 #else
 		if (strchr(aconf->bindip, '.'))
+		{
 			inet_pton(AF_INET, aconf->bindip, server.SIN_ADDR.S_ADDR);
+			server.SIN_FAMILY = AF_INET;
+		}
 		else
+		{
 			inet_pton(AF_INET6, aconf->bindip, server.SIN_ADDR.S_ADDR);
+			server.SIN_FAMILY = AF_INET6;
+
+		}
 #endif
 	}
 	if (bind(cptr->fd, (struct SOCKADDR *)&server, sizeof(server)) == -1)
