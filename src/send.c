@@ -120,7 +120,7 @@ void flush_connections(fd)
 
 }
 /* flush an fdlist intelligently */
-#ifdef NO_FDLIST
+#ifndef NO_FDLIST
 void flush_fdlist_connections(fdlist * listp)
 {
 	int  i, fd;
