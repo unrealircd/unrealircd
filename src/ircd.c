@@ -1062,8 +1062,11 @@ int  InitwIRCD(argc, argv)
 	strncpyzt(me.name, conf_me->name, sizeof(me.name));
 	/* We accept the first listen record */
 	portnum = conf_listen->port;
-	me.ip.S_ADDR =
+/*
+ *      This is completely unneeded-Sts
+   	me.ip.S_ADDR =
 	    *conf_listen->ip != '*' ? inet_addr(conf_listen->ip) : INADDR_ANY;
+*/
 	Debug((DEBUG_ERROR, "Port = %d", portnum));
 	if (inetport(&me, conf_listen->ip, portnum))
 		exit(1);

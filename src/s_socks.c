@@ -194,11 +194,12 @@ void start_socks(cptr)
 void send_socksquery(cptr)
 	aClient *cptr;
 {
+
 	struct SOCKADDR_IN sin;
 	int  sinlen = sizeof(struct SOCKADDR_IN);
 	unsigned char socksbuf[12];
 	unsigned long theip;
-
+#ifndef INET6
 	bcopy((char *)&socksid, (char *)&socksbuf, 9);
 
 	getsockname(cptr->fd, (struct SOCKADDR *)&sin, &sinlen);
@@ -227,6 +228,8 @@ void send_socksquery(cptr)
 #endif
 	}
 	cptr->flags &= ~FLAGS_WRSOCKS;
+#endif
+	cptr->flags &= ~FLAGS_SOCKS;
 	return;
 }
 

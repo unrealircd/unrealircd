@@ -75,7 +75,6 @@ static char rcsid[] = "$Id$";
 #include "nameser.h"
 #include "resolv.h"
 #include <string.h>
-
 #ifndef IRC_RESCONF
 #define IRC_RESCONF "/etc/resolv.conf"
 #endif

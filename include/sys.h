@@ -148,9 +148,9 @@ static unsigned char minus_one[] =
 # define	S_ADDR		s6_addr
 # define	IN_ADDR		in6_addr
 
-# ifndef uint32_t
-#  define uint32_t __u32
-# endif
+// # ifndef uint32_t
+//#  define uint32_t __u32
+// # endif
 
 # define MYDUMMY_SIZE 128
 char mydummy[MYDUMMY_SIZE];
@@ -188,5 +188,8 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 #ifndef RTLD_NOW
 #define RTLD_NOW RTLD_LAZY
 #endif
-
+#ifdef INET6
+#include <netinet/in.h>
+#include <sys/socket.h>
+#endif
 #endif /* __sys_include__ */

@@ -34,7 +34,6 @@
 #ifndef lint
 static char rcsid[] = "@(#)$Id$";
 #endif
-
 /* #undef	DEBUG	/* because there is a lot of debug code in here :-) */
 #ifdef _WIN32
 #define HE(x) (x)->he
@@ -672,8 +671,8 @@ static int proc_answer(rptr, hptr, buf, eob)
 	hp = (struct hent *)&(rptr->he);
 	adr = &hp->h_addr;
 #ifdef INET6
-	while (adr->s6_laddr[0] | adr->s6_laddr[1] | adr->s6_laddr[2] |
-	    adr->s6_laddr[3])
+	while (adr->s6_addr[0] | adr->s6_addr[1] | adr->s6_addr[2] |
+	    adr->s6_addr[3])
 #else
 	while (adr->s_addr)
 #endif
@@ -753,9 +752,9 @@ static int proc_answer(rptr, hptr, buf, eob)
 				  bcopy(cp, (char *)&dr, dlen);
 			  else
 			  {
-				  dr.s6_laddr[0] = dr.s6_laddr[1] = 0;
-				  dr.s6_laddr[2] = htonl(0xffff);
-				  bcopy(cp, &dr.s6_laddr[3], INADDRSZ);
+				  dr.s6_addr[0] = dr.s6_addr[1] = 0;
+				  dr.s6_addr[2] = htonl(0xffff);
+				  bcopy(cp, &dr.s6_addr[3], INADDRSZ);
 			  }
 			  bcopy(dr.s6_addr, adr->s6_addr, IN6ADDRSZ);
 #else
@@ -1200,10 +1199,10 @@ static aCache *add_to_cache(ocp)
 #ifdef INET6
 	Debug((DEBUG_INFO, "add_to_cache:added %s[%08x%08x%08x%08x] cache %#x.",
 	    ocp->he.h_name,
-	    ((struct in6_addr *)HE(ocp)->h_addr_list)->s6_laddr[0],
-	    ((struct in6_addr *)HE(ocp)->h_addr_list)->s6_laddr[1],
-	    ((struct in6_addr *)HE(ocp)->h_addr_list)->s6_laddr[2],
-	    ((struct in6_addr *)HE(ocp)->h_addr_list)->s6_laddr[3], ocp));
+	    ((struct in6_addr *)HE(ocp)->h_addr_list)->s6_addr[0],
+	    ((struct in6_addr *)HE(ocp)->h_addr_list)->s6_addr[1],
+	    ((struct in6_addr *)HE(ocp)->h_addr_list)->s6_addr[2],
+	    ((struct in6_addr *)HE(ocp)->h_addr_list)->s6_addr[3], ocp));
 #else
 	Debug((DEBUG_INFO, "add_to_cache:added %s[%08x] cache %#x.",
 	    HE(ocp)->h_name, HE(ocp)->h_addr_list[0], ocp));
@@ -1424,8 +1423,8 @@ static aCache *find_cache_number(rptr, numb)
 #ifdef INET6
 	Debug((DEBUG_DNS,
 	    "find_cache_number:find %s[%08x%08x%08x%08x]: hashv = %d",
-	    inet_ntop(AF_INET6, numb, mydummy, MYDUMMY_SIZE), ip->s6_laddr[0],
-	    ip->s6_laddr[1], ip->s6_laddr[2], ip->s6_laddr[3], hashv));
+	    inet_ntop(AF_INET6, numb, mydummy, MYDUMMY_SIZE), ip->s6_addr[0],
+	    ip->s6_addr[1], ip->s6_addr[2], ip->s6_addr[3], hashv));
 #else
 	Debug((DEBUG_DNS, "find_cache_number:find %s[%08x]: hashv = %d",
 	    inetntoa(numb), ntohl(ip->s_addr), hashv));

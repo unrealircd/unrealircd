@@ -2059,7 +2059,7 @@ static int m_message(cptr, sptr, parc, parv, notice)
 				sendanyways = (parv[2][0] == '`' ? 1 : 0);
 				text =
 				    (chptr->mode.mode & MODE_STRIP ?
-				    StripColors(parv[2]) : parv[2]);
+				    (char *)StripColors(parv[2]) : parv[2]);
 #ifdef STRIPBADWORDS
 				text =
 				    (char *)(chptr->

@@ -207,6 +207,7 @@ char *hidehost(char *host)
 	else if (*p == ':')
 	{
 		/* Do IPv6 cloaking here */
+			
 		return cloaked;
 	}
 	else
