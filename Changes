@@ -1132,3 +1132,5 @@ v- Fixed some bugreport stuff
 - Added link::cipher for #define USE_SSL, use this to select
   ciphers, read example.conf for more. Closes #000016. Suggested by narf
 - Added a dialog interface to .pem SSL passwords. (Suggestion #0000025)
+- Fixed some minor issues with dialog interface for .pem SSL passwords
+- Added makecert.bat / encpem.bat to src/win32, which are used in SSL release
