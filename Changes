@@ -1976,3 +1976,4 @@ seen. gmtime warning still there
 - Fixed "proxyscan on quit" bug (#0000788)
 - Moved the "flood from unknown connection" notices to snomask +f
 - Fixed compile error
+- Fixed a restrict-usermodes bug reported by Rocko (#0000796)

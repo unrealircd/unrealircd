@@ -2223,10 +2223,11 @@ CMD_FUNC(m_umode)
 	char **p, *m;
 	aClient *acptr;
 	int  what, setflags, setsnomask = 0;
-	short rpterror = 0, umode_restrict_err = 0;
+	short rpterror = 0, umode_restrict_err = 0, modex_err = 0, oper;
 
 	what = MODE_ADD;
-
+	oper = IsAnOper(sptr) ? 1 : 0;
+	
 	if (parc < 2)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
@@ -2270,7 +2271,7 @@ CMD_FUNC(m_umode)
 	for (m = *p; *m; m++)
 	{
 		if (MyClient(sptr) && RESTRICT_USERMODES &&
-		    !IsAnOper(sptr) && strchr(RESTRICT_USERMODES, *m))
+		    !oper && strchr(RESTRICT_USERMODES, *m))
 		{
 			if (!umode_restrict_err)
 			{
@@ -2332,25 +2333,28 @@ CMD_FUNC(m_umode)
 				case UHALLOW_NEVER:
 					if (MyClient(sptr))
 					{
-						sendto_one(sptr, ":%s NOTICE %s :*** Setting %cx is disabled", me.name, sptr->name, what == MODE_ADD ? '+' : '-');
-						return 0;
+						if (!modex_err) {
+							sendto_one(sptr, ":%s NOTICE %s :*** Setting %cx is disabled", me.name, sptr->name, what == MODE_ADD ? '+' : '-');
+							modex_err = 1;
+						}
+						break;
 					}
-					break;
+					goto def;
 				case UHALLOW_NOCHANS:
 					if (MyClient(sptr) && sptr->user->joined)
 					{
-						sendto_one(sptr, ":%s NOTICE %s :*** Setting %cx can not be done while you are on channels", me.name, sptr->name, what == MODE_ADD ? '+' : '-');
-						return 0;
+						if (!modex_err) {
+							sendto_one(sptr, ":%s NOTICE %s :*** Setting %cx can not be done while you are on channels", me.name, sptr->name, what == MODE_ADD ? '+' : '-');
+							modex_err = 1;
+						}
+						break;
 					}
-					break;
+					goto def;
 				case UHALLOW_REJOIN:
 					/* Handled later */
-					break;
+					goto def;
 			  }
-			  goto def;
-		  case 'B':
-			  if (what == MODE_ADD && MyClient(sptr))
-				  (void)m_botmotd(sptr, sptr, 1, parv);
+			  break;
 		  default:
 			def:
 			  
@@ -2530,6 +2534,13 @@ CMD_FUNC(m_umode)
 		if (sptr->user->snomask & SNO_QLINE)
 			sptr->user->snomask &= ~SNO_QLINE;
 	}
+
+	if ((sptr->umodes & UMODE_BOT) && !(setflags & UMODE_BOT))
+	{
+		/* now +B */
+	  (void)m_botmotd(sptr, sptr, 1, parv);
+	}
+
 	if (!(setflags & UMODE_OPER) && IsOper(sptr))
 		IRCstats.operators++;
 	if ((setflags & UMODE_OPER) && !IsOper(sptr))
