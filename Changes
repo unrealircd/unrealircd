@@ -1447,3 +1447,4 @@ seen. gmtime warning still there
 - Removed doc/Etiquette
 - Compile error fix regarding version.h
 - Made +x send out a SETHOST to VHP servers, requested by PreZ@DarkerNet
+- Removed support for SSLv2 (SSLv2 is obsolete and insecure)

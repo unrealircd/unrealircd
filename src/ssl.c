@@ -117,7 +117,7 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 
 void init_ctx_server(void)
 {
-	ctx_server = SSL_CTX_new(SSLv23_server_method());
+	ctx_server = SSL_CTX_new(SSLv3_server_method());
 	if (!ctx_server)
 	{
 		ircd_log(LOG_ERROR, "Failed to do SSL CTX new");
@@ -145,7 +145,7 @@ void init_ctx_server(void)
 
 void init_ctx_client(void)
 {
-	ctx_client = SSL_CTX_new(SSLv23_client_method());
+	ctx_client = SSL_CTX_new(SSLv3_client_method());
 	if (!ctx_client)
 	{
 		ircd_log(LOG_ERROR, "Failed to do SSL CTX new client");
