@@ -223,10 +223,9 @@ void	m_scan_unload(void)
 		{
 			connect(fd, (struct sockaddr *) &blackholesin, sizeof(blackholesin));
 		}
-		
+		IRCJoinThread(acceptthread, NULL);
+		CLOSE_SOCK(fd);
 	}
-	pthread_join(acceptthread, NULL);
-	CLOSE_SOCK(fd);
 }
 
 HStruct	*HS_Add(char *host)

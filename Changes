@@ -630,4 +630,4 @@ seen. gmtime warning still there
 - Moved blackhole into scan.c and removed blackhole.c, and fixed some
   blackhole bugs.
 - Updated thread porting code to support more functions
-
+- Fixed a pthread_join
