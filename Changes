@@ -2468,3 +2468,4 @@ seen. gmtime warning still there
     times depending on the ban-/userlist.
   - Fixed a possible desynch regarding chmode +L.
   - Fixed possible client confusion regarding bans.
+- Now it would be even better if it actually compiles...

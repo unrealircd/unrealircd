@@ -3020,6 +3020,7 @@ char *trim_str(char *str, int len)
  * NOTES:
  * - A pointer is returned to a static buffer, which is overwritten
  *   on next clean_ban_mask or make_nick_user_host call.
+ * - mask is fragged in some cases, this could be bad.
  */
 char *clean_ban_mask(char *mask)
 {
@@ -3027,9 +3028,13 @@ char *clean_ban_mask(char *mask)
 	char *user;
 	char *host;
 
+	cp = index(mask, ' ');
+	if (cp)
+		*cp = '\0';
+
 	/* Strip any ':' at beginning coz that desynchs clients/banlists */
-	if (cp = mask; (*cp && (*cp == ':')); cp++);
-	if (*!cp)
+	for (; (*mask && (*mask == ':')); mask++);
+	if (!*mask)
 		return NULL;
 
 	if ((user = index((cp = mask), '!')))
