@@ -1407,7 +1407,7 @@ int  m_server_estab(cptr)
 		aSqlineItem *tmp;
 		char	*ns = NULL;
 		
-		if (me.serv->numeric)
+		if (me.serv->numeric && SupportNS(cptr))
 			ns = base64enc(me.serv->numeric);
 		else
 			ns = NULL;

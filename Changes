@@ -516,3 +516,4 @@
 - Made it so if the server name specified in the M:line does not contain a "."
   the ircd logs it to ircd.log and dies
 - Updated ./ircd to also say to look at ircd.log
+- Fixed a SQLINE synch bug
