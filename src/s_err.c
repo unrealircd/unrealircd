@@ -1,4 +1,4 @@
- /*
+/*
  *   Unreal Internet Relay Chat Daemon, src/s_err.c
  *   Copyright (C) 1992 Darren Reed
  *
@@ -21,7 +21,7 @@
 #include "numeric.h"
 #include "common.h"
 
-#ifndef CLEAN_COMPILE
+#ifndef lint
 static char sccsid[] = "@(#)s_err.c	1.12 11/1/93 (C) 1992 Darren Reed";
 #endif
 
@@ -34,12 +34,12 @@ static char *replies[] = {
 /* 002    RPL_YOURHOST */ ":%s 002 %s :Your host is %s, running version %s",
 /* 003    RPL_CREATED */  ":%s 003 %s :This server was created %s",
 /* 004    RPL_MYINFO */   ":%s 004 %s %s %s %s %s",
-/* 005    RPL_PROTOCTL */ ":%s 005 %s",
+/* 005    RPL_PROTOCTL */ PROTOCTL_CLIENT,
 /* 006    RPL_MAP */      ":%s 006 %s :%s%-*s(%d)  %s",
 /* 007    RPL_MAPEND */   ":%s 007 %s :End of /MAP",
-/* 008    RPL_SNOMASK */  ":%s 008 %s :Server notice mask (%s)",
+/* 008 */ NULL,
 /* 009 */ NULL,
-/* 010    RPL_REDIR */	  ":%s 010 %s %s %d :Please use this Server/Port instead",
+/* 010 */ NULL,
 /* 011 */ NULL,
 /* 012 */ NULL,
 /* 013 */ NULL,
@@ -134,7 +134,7 @@ static char *replies[] = {
 /* 102 */ NULL,
 /* 103 */ NULL,
 /* 104 */ NULL,
-/* 105    RPL_REMOTEPROTOCTL */ ":%s 105 %s",
+/* 105 */ NULL,
 /* 106 */ NULL,
 /* 107 */ NULL,
 /* 108 */ NULL,
@@ -230,16 +230,16 @@ static char *replies[] = {
 /* 198 */ NULL,
 /* 199 */ NULL,
 /* 200    RPL_TRACELINK */       ":%s 200 %s Link %s%s %s %s",
-/* 201    RPL_TRACECONNECTING */ ":%s 201 %s Attempt %s %s",
-/* 202    RPL_TRACEHANDSHAKE */  ":%s 202 %s Handshaking %s %s",
-/* 203    RPL_TRACEUNKNOWN */    ":%s 203 %s ???? %s %s",
-/* 204    RPL_TRACEOPERATOR */   ":%s 204 %s Operator %s %s [%s] %ld",
-/* 205    RPL_TRACEUSER */       ":%s 205 %s User %s %s [%s] %ld",
-/* 206    RPL_TRACESERVER */     ":%s 206 %s Server %s %dS %dC %s %s!%s@%s %ld",
-/* 207    RPL_TRACESERVICE */    ":%s 207 %s Service %s %s",
-/* 208    RPL_TRACENEWTYPE */    ":%s 208 %s %s 0 %s",
-/* 209    RPL_TRACECLASS */      ":%s 209 %s Class %s %d",
-/* 210    RPL_STATSHELP */       ":%s 210 %s :%s",
+/* 201    RPL_TRACECONNECTING */ ":%s 201 %s Attempt %d %s",
+/* 202    RPL_TRACEHANDSHAKE */  ":%s 202 %s Handshaking %d %s",
+/* 203    RPL_TRACEUNKNOWN */    ":%s 203 %s ???? %d %s",
+/* 204    RPL_TRACEOPERATOR */   ":%s 204 %s Operator %d %s [%s] %ld",
+/* 205    RPL_TRACEUSER */       ":%s 205 %s User %d %s [%s] %ld",
+/* 206    RPL_TRACESERVER */     ":%s 206 %s Server %d %dS %dC %s %s!%s@%s %ld",
+/* 207    RPL_TRACESERVICE */    ":%s 207 %s Service %d %s",
+/* 208    RPL_TRACENEWTYPE */    ":%s 208 %s <newtype> 0 %s",
+/* 209    RPL_TRACECLASS */      ":%s 209 %s Class %d %d",
+/* 210 */ NULL,
 /* 211 */ NULL, /* Used */
 #ifdef DEBUGMODE
 /* 212    RPL_STATSCOMMANDS */ ":%s 212 %s %s %u %u %u %u %u %u",
@@ -248,17 +248,17 @@ static char *replies[] = {
 #endif
 /* 213    RPL_STATSCLINE */ ":%s 213 %s %c %s * %s %d %d %s",
 /* 214    RPL_STATSOLDNLINE */ ":%s 214 %s %c %s * %s %d %d %s",
-/* 215    RPL_STATSILINE */ ":%s 215 %s I %s * %s %d %s %s %d",
-/* 216    RPL_STATSKLINE */ ":%s 216 %s %s %s %s",
-/* 217    RPL_STATSQLINE */ ":%s 217 %s Q %s %s",
-/* 218    RPL_STATSYLINE */ ":%s 218 %s Y %s %d %d %d %ld %ld",
+/* 215    RPL_STATSILINE */ ":%s 215 %s %c %s * %s %d %d",
+/* 216    RPL_STATSKLINE */ ":%s 216 %s %c %s %s %s %d %d",
+/* 217    RPL_STATSQLINE */ ":%s 217 %s %c %s %s %s %d %d",
+/* 218    RPL_STATSYLINE */ ":%s 218 %s %c %d %d %d %d %ld",
 /* 219    RPL_ENDOFSTATS */ ":%s 219 %s %c :End of /STATS report",
 /* 220    RPL_STATSBLINE */ ":%s 220 %s %c %s %s %s %d %d",
 /* 221    RPL_UMODEIS */ ":%s 221 %s %s",
 /* 222    RPL_SQLINE_NICK */ ":%s 222 %s %s :%s",
 /* 223    RPL_STATSGLINE */ ":%s 223 %s %c %s@%s %li %li %s :%s",
 /* 224    RPL_STATSTLINE */ ":%s 224 %s T %s %s %s",
-/* 225    RPL_STATSELINE */ ":%s 225 %s e %s",
+/* 225    RPL_STATSELINE */ ":%s 225 %s e %s %s %s",
 /* 226    RPL_STATSNLINE */ ":%s 226 %s n %s %s",
 /* 227    RPL_STATSVLINE */ ":%s 227 %s V %s %s %s",
 /* 228 */ NULL,
@@ -276,12 +276,12 @@ static char *replies[] = {
 /* 240 */ NULL,
 /* 241    RPL_STATSLLINE */ ":%s 241 %s %c %s * %s %d %d",
 /* 242    RPL_STATSUPTIME */ ":%s 242 %s :Server Up %d days, %d:%02d:%02d",
-/* 243    RPL_STATSOLINE */ ":%s 243 %s %c %s * %s %s %s",
+/* 243    RPL_STATSOLINE */ ":%s 243 %s %c %s * %s %s %d",
 /* 244    RPL_STATSHLINE */ ":%s 244 %s %c %s * %s %d %d",
 /* 245    RPL_STATSSLINE */ ":%s 245 %s %c %s * %s %d %d",
 /* 246 */ NULL,
 /* 247    RPL_STATSXLINE */ ":%s 247 %s X %s %d",
-/* 248    RPL_STATSULINE */ ":%s 248 %s U %s",
+/* 248    RPL_STATSULINE */ ":%s 248 %s %c %s * %s %d %d",
 /* 249 */ NULL,
 /* 250    RPL_STATSCONN */ ":%s 250 %s :Highest connection count: %d (%d clients)",
 /* 251    RPL_LUSERCLIENT */ ":%s 251 %s :There are %d users and %d invisible on %d servers",
@@ -335,7 +335,7 @@ static char *replies[] = {
 /* 299 */ NULL,
 /* 300 */ NULL, /* Used */
 /* 301    RPL_AWAY */ ":%s 301 %s %s :%s",
-/* 302    RPL_USERHOST */ ":%s 302 %s :%s %s %s %s %s",
+/* 302    RPL_USERHOST */ ":%s 302 %s :",
 /* 303    RPL_ISON */ ":%s 303 %s :",
 /* 304 */ NULL, /* Used */
 /* 305    RPL_UNAWAY */ ":%s 305 %s :You are no longer marked as being away",
@@ -372,7 +372,7 @@ static char *replies[] = {
 /* 332    RPL_TOPIC */ ":%s 332 %s %s :%s",
 /* 333    RPL_TOPICWHOTIME */ ":%s 333 %s %s %s %lu",
 /* 334    RPL_LISTSYNTAX */ ":%s 334 %s :%s",
-/* 335    RPL_WHOISBOT */ ":%s 335 %s %s :is a \2Bot\2 on %s",
+/* 335    RPL_WHOISBOT */ ":%s 335 %s %s :is a bot on %s",
 /* 336 */ NULL,
 /* 337 */ NULL,
 /* 338 */ NULL,
@@ -388,7 +388,7 @@ static char *replies[] = {
 /* 348    RPL_EXLIST */ ":%s 348 %s %s %s %s %lu",
 /* 349    RPL_ENDOFEXLIST */ ":%s 349 %s %s :End of Channel Exception List",
 /* 350 */ NULL,
-/* 351    RPL_VERSION */ ":%s 351 %s %s.%s %s :%s%s%s [%s=%li]",
+/* 351    RPL_VERSION */ ":%s 351 %s %s(%s).%s %s :%s [%s=%li%s]",
 /* 352    RPL_WHOREPLY */ ":%s 352 %s %s %s %s %s %s %s :%d %s",
 /* 353    RPL_NAMREPLY */ ":%s 353 %s %s",
 /* 354 */ NULL, /* Reserved for Undernet */
@@ -473,11 +473,7 @@ static char *replies[] = {
 /* 426 */ NULL,
 /* 427 */ NULL,
 /* 428 */ NULL,
-#ifdef NO_FLOOD_AWAY
-/* 429 ERR_TOOMANYAWAY */ ":%s 429 %s :Too Many aways - Flood Protection activated",
-#else
 /* 429 */ NULL,
-#endif
 /* 430 */ NULL,
 /* 431    ERR_NONICKNAMEGIVEN */ ":%s 431 %s :No nickname given",
 /* 432    ERR_ERRONEUSNICKNAME */ ":%s 432 %s %s :Erroneous Nickname: %s",
@@ -542,11 +538,11 @@ static char *replies[] = {
 /* 483    ERR_CANTKILLSERVER */ ":%s 483 %s :You cant kill a server!",
 /* 484    ERR_ATTACKDENY */ ":%s 484 %s %s :Cannot kick protected user %s.",
 /* 485    ERR_KILLDENY */ ":%s 485 %s :Cannot kill protected user %s.",
-/* 486    ERR_NONONREG */ ":%s 486 %s :You must identify to a registered nick to private message %s",
-/* 487    ERR_NOTFORUSERS */ ":%s 487 %s :%s is a server only command",
-/* 488    ERR_HTMDISABLED */ ":%s 488 %s :%s is currently disabled, please try again later.",
+/* 486    ERR_HTMDISABLED */ ":%s 486 %s :%s is currently disabled, please try again later.",
+/* 487 */ NULL,
+/* 488 */ NULL,
 /* 489    ERR_SECUREONLYCHAN */ ":%s 489 %s %s :Cannot join channel (+z)",
-/* 490    ERR_NOSWEAR */ ":%s 490 %s :%s does not accept private messages containing swearing.",
+/* 490 */ NULL,
 /* 491    ERR_NOOPERHOST */ ":%s 491 %s :No O-lines for your host",
 /* 492 */ NULL,
 /* 493 */ NULL,
@@ -578,8 +574,8 @@ static char *replies[] = {
 /* 519    519 */ ":%s 519 %s :Cannot join channel (Admin only)",
 /* 520    520 */ ":%s 520 %s :Cannot join channel (IRCops only)",
 /* 521    ERR_LISTSYNTAX */ ":%s 521 %s Bad list syntax, type /quote list ? or /raw list ?",
-/* 522    ERR_WHOSYNTAX */ ":%s 522 %s :/WHO Syntax incorrect, use /who ? for help",
-/* 523 	  ERR_WHOLIMEXCEED */ ":%s 523 %s :Error, /who limit of %d exceed.   Please narrow your search down and try again",
+/* 522 */ NULL, 
+/* 523 */ NULL,
 /* 524    ERR_OPERSPVERIFY */ ":%s 524 %s :Trying to join +s or +p channel as an oper. Please invite yourself first.",
 /* 525 */ NULL,
 /* 526 */ NULL,
@@ -1060,7 +1056,7 @@ static char *replies[] = {
 };
 
 char *getreply(int numeric) {
-   	if((numeric<0 || numeric>999) || !replies[numeric])
+	if((numeric<0 || numeric>999) || !replies[numeric])
 	  return(replies[ERR_NUMERICERR]);
 	else
           return(replies[numeric]);

@@ -1,0 +1,144 @@
+[ $Id$ ]
+
+UnrealIRCd FAQ
+Made by Stskeeps
+
+This file will contain frequently asked questions about 
+Unreal IRCd. If you need more help email stskeeps@tspre.org
+
+1) * I compile and everything seems fine during the compiling, but when it
+   comes time for the program to link, I get errors complaining about dns and
+   res things. What causes this?
+
+A: You need to make sure -lresolv is included in the "extra libraries"
+   option of ./Config (or IRCDLIBS in top-level makefile)
+
+2) * When I start up the IRCd it complains about something with chdir()?
+
+A: You need to make sure the right directory is specified when you was 
+   asked about "What directory are all the server configuration files in?"
+   ./Config question
+
+3) The server says like: 
+   *** Link server1 -> server2 is now synced [secs: 30 recv: 130.4 sent: 120.0]
+   when I link two servers together, what does that mean?
+
+A: That means the link is "synced" (all infodata transfered about the server).
+   The "secs" (30 in this example) means it took 30 seconds to do the sync
+   "recv: 130.4" means there was recieved 130 KiloBytes and 4 bytes.
+   "sent: 120.0" means there was sent 120 kilobytes from my side.
+
+4) What is a negative TS split?
+
+A: Every computer/server has got a time (so they can do TimeStamps) .. 
+   When the clock on the computer is set wrong and the computer it links 
+   upto is wrong it creates a Negative TS split (means time is lower it
+   actually is. How to fix this is contacting the root of the machine
+   and ask him to fix the time (when you made sure it's YOUR server that's 
+   wrong)
+
+5) What is an uProtocol ?
+
+A: UnrealIRCd uses numbers to check if a link is compatible with itself
+   F.x Unreal v2.1.3 has got number 2103 while version 2.1 only has got 
+   2100 - This means .. if the number is lower/higher than the uProtocol
+   the server uses, it's an incompatible link (of some reasons)
+
+6) How does T:Lines work and what are they?
+
+A: T:Lines is a new Unreal feature that makes it able to show different 
+  MOTDs and RULES to people who matches a certain hostmask . Lemme show you some examples:
+ 
+   T:*.dk:motds/danish.motd:rules/danish.rules
+   T:*.fr:motds/french.motd:rules/french.rules
+ 
+  This will get people from Denmark to see the "Danish" MOTD and the "Dandish" RULLES
+  and people from France to see the French ones:) 
+  
+  NOTE: T:Lines are read up side down so if you have a T:*:ircd.motd:ircd.rules in the bottom
+        it should be at the top so the other motd lines can work as well
+
+7) Where can i download updates to Unreal?
+
+A: Mostly you can download the newest version at 
+   http://www.unrealircd.com
+
+   Versions may be spewed out regulary due to new features and bugs.. 
+
+10) Hosts show up as (null).network.net !!
+A:  This is because you have forgotten to include the network file.
+    The correct form is (in unrealircd.conf)
+    Include ..........: <network file>
+
+    If this doesn't work .. seek me at irc.ircsystems.net #unrealircd
+
+12) My IRCd which runs on a FreeBSD says something about FDs and
+    Max: 0 What shall I do?? 
+A:  Well it's somekinda bug but you can workaround it by removing those
+    lines in src/s_bsd.c: (init_sys())
+
+<- snippet 1 ->
+#ifdef RLIMIT_FD_MAX
+	struct rlimit limit;
+	int     pid;
+
+	if (!getrlimit(RLIMIT_FD_MAX, &limit))
+	    {
+# ifdef	pyr
+		if (limit.rlim_cur < MAXCONNECTIONS)
+#else
+		if (limit.rlim_max < MAXCONNECTIONS)
+# endif
+		    {
+			(void)fprintf(stderr,"ircd fd table too big\n");
+			(void)fprintf(stderr,"Hard Limit: %d IRC max: %d\n",
+				limit.rlim_max, MAXCONNECTIONS);
+			(void)fprintf(stderr,"Fix MAXCONNECTIONS\n");
+			exit(-1);
+		    }
+# ifndef	pyr
+		limit.rlim_cur = limit.rlim_max; /* make soft limit the max */
+		if (setrlimit(RLIMIT_FD_MAX, &limit) == -1)
+		    {
+			(void)fprintf(stderr,"error setting max fd's to %d\n",
+					limit.rlim_cur);
+			exit(-1);
+		    }
+# endif
+	    }
+#endif
+
+<-snippet 2->
+#ifdef sequent
+# ifndef	DYNIXPTX
+	int	fd_limit;
+
+	fd_limit = setdtablesize(MAXCONNECTIONS + 1);
+	if (fd_limit < MAXCONNECTIONS)
+	    {
+		(void)fprintf(stderr,"ircd fd table too big\n");
+		(void)fprintf(stderr,"Hard Limit: %d IRC max: %d\n",
+			fd_limit, MAXCONNECTIONS);
+		(void)fprintf(stderr,"Fix MAXCONNECTIONS\n");
+		exit(-1);
+	    }
+# endif
+#endif
+
+13) I run debian-sparc and i get errors when compiling in match.c
+    What should I do?
+A: If it says like this
+<-snippet->
+match.c: In function 'myncmp':
+match.c:247: argument 'str1' doesn't match prototype
+/usr/include/string.h:255: prototype declaration
+match.c:247: argument 'str2' doesn't match prototype
+/usr/include/string.h:255: prototype declaration
+match.c:247: argument 'n' doesn't match prototype
+/usr/include/string.h:255: prototype declaration
+<-end of snippet>
+
+Then go into include/setup.h and add this line:
+#define GOT_STRCASECMP
+
+(C) Carsten Munk 1999-2000

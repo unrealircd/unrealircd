@@ -1,29 +1,10 @@
 ===============================================
-=            UnrealIRCd v3.2 (beta17)         =
+=            UnrealIRCd v3.1.6                =
 ===============================================
  Was brought to you by:
-
-  The core team:
-  ==============
-  * Stskeeps  <stskeeps@tspre.org>
+  * Stskeeps  <stskeeps@unrealircd.com>
   * codemastr <codemastr@unrealircd.com>
   * Luke      <luke@unrealircd.com>
-  * McSkaf    <mcskaf@unrealircd.org>
-  * Syzop     <syzop@unrealircd.org>
-
-  Contributors
-  ============
-  * Zogg      <zogg@unrealircd.org>
-  * NiQuiL    <niquil@unrealircd.org>
-  * assyrian  <assyrian@unrealircd.org>
-  * nighthawk <nighthawk@unrealircd.com>
-  * DrBin     <drbin@unrealircd.com>
-  * llthangel <llthangel@unrealircd.org>
-  * Griever   <griever@unrealircd.com>
-  
-  Documentation:
-  ==============
-  * CKnight^ <cknight@unrealircd.com>
 
  Precenses on the Internet:
   * http://www.unrealircd.com
@@ -40,9 +21,6 @@ and to get latest stable:
 latest beta:
 "cvs -d :pserver:anonymous@cvs.ircsystems.net:/home/cmunk/ircsystems/cvsroot checkout -r beta -d Unreal-beta unreal"
 
-latest devel:
-"cvs -d :pserver:anonymous@cvs.ircsystems.net:/home/cmunk/ircsystems/cvsroot checkout -r devel -d Unreal-devel unreal"
-
   * To get support
   ================
     * IRC: /server irc.ircsystems.net 6667 - /join #unreal-support
@@ -51,17 +29,31 @@ latest devel:
              READ THE TOPIC before you ask anything. We do this on a free
              base so we are volunteeringly helping you, but we are humans
              like you, and we got to have peace at times as well.]
-    * Mailing list: supporters@lists.unrealircd.org (for support)
-    * READ THE DOCS BEFORE ASKING QUESTIONS! doc/unreal32docs.html 
-             or on the web http://www.unrealircd.com/unreal32docs.html
-    * READ http://support.unrealircd.org
-
-  * Want to discuss, chat, etc?
-  =============================
-   * IRC: /server irc.ircsystems.net 6667 - /join #UnrealIRCd
+    * Mailing list: unreal-support@lists.sourceforge.net (for support)
+    * READ doc/faq BEFORE ASKING QUESTIONS!
  
-  * UnrealIRCd Bugtracker (Where to report bugs or make suggestions)
-  ==============================================
-      http://bugs.unrealircd.org
+  * Got a bug to report? 
+  ====================== 
+    * If the server crashes and dumps core do this:
+       * Go into the Unreal directory and type this:
+           gdb src/ircd core.filename
+         where core.filename is the filename in the dumping core message
+         if it loads gdb, (not saying "command not found" etc), type "bt" in
+         the program (type "quit" to get out again)
+        
+         The output coming out there please mail it to 
+         unreal-dev@lists.sourceforge.net, along with OS type,
+         what "uname -a" says, any clues what it is, if you did anything etc
+         etc. Please keep the core dump files if we ask you to mail us them 
+         if needed
 
+    * If you experince any wierdnesses (that doesnt crash the server)
+      please mail unreal-dev@lists.sourceforge.net with any clues on what
+      you did, what you experinced etc.
 
+  * Got a suggestion?
+  ===================
+    * Mail it to unreal-dev@lists.sourceforge.net :) or catch one from
+      the Unreal team online on IRC:)
+
+ 

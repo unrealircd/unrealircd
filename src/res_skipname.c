@@ -6,7 +6,8 @@
 /*
  * Skip over a compressed domain name. Return the size or -1.
  */
-int dn_skipname(u_char *comp_dn, u_char *eom)
+dn_skipname(comp_dn, eom)
+	u_char *comp_dn, *eom;
 {
 	register u_char *cp;
 	register int n;

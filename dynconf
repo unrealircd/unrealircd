@@ -1,0 +1,21 @@
+             Dynamic Configuration Guide
+
+- Edit ircd.conf to correctly reflect your server configuration.
+
+- Edit networks/unrealircd.conf to suit you. If you're going
+to use your own network file (encouraged), change the "Include"
+line to point to your own network file.
+
+- Assuming you do want your own network file, copy template.network
+in networks/ to yourircnet.network. Edit it to your liking.
+
+If you've completed all these steps *correctly* your server should
+start up without any problems. If there are errors, there is an
+extremely high chance that it's due to user configuration error.
+Please read the documentation and check over your configuration files
+before contacting us.
+
+If the problem persists, and you cannot fix it, email luke@unrealircd.com
+or come on irc.ircsystems.net and /join #unreal-support.
+
+- Luke (luke@unrealircd.com)

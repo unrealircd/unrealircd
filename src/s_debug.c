@@ -19,15 +19,13 @@
  */
 
 
-#ifndef CLEAN_COMPILE
+#ifndef lint
 static char sccsid[] =
     "@(#)s_debug.c	2.30 1/3/94 (C) 1988 University of Oulu, \
 Computing Center and Jarkko Oikarinen";
 #endif
 
 #include "struct.h"
-#include <string.h>
-#include "proto.h"
 /*
  * Option string.  Must be before #ifdef DEBUGMODE.
  */
@@ -37,6 +35,9 @@ char serveropts[] = {
 #endif
 #ifdef	CMDLINE_CONFIG
 	'C',
+#endif
+#ifdef	DO_ID
+	'd',
 #endif
 #ifdef	DEBUGMODE
 	'D',
@@ -50,17 +51,41 @@ char serveropts[] = {
 #ifdef	SHOW_INVISIBLE_LUSERS
 	'i',
 #endif
+#ifndef	NO_DEFAULT_INVISIBLE
+	'I',
+#endif
+#ifdef	CRYPT_OPER_PASSWORD
+	'p',
+#endif
+#ifdef	CRYPT_LINK_PASSWORD
+	'P',
+#endif
 #ifdef NOSPOOF
 	'n',
 #endif
+#ifdef	NPATH
+	'N',
+#endif
+#ifdef	ENABLE_USERS
+	'U',
+#endif
 #ifdef	VALLOC
 	'V',
+#endif
+#ifdef REMOVE_ADVERTISING
+	'R',
 #endif
 #ifdef	_WIN32
 	'W',
 #endif
 #ifdef	USE_SYSLOG
 	'Y',
+#endif
+#ifndef NO_OPEROVERRIDE
+	'O',
+#endif
+#ifdef OPEROVERRIDE_VERIFY
+	'o',
 #endif
 #ifdef NO_IDENT_CHECKING
 	'K',
@@ -77,19 +102,11 @@ char serveropts[] = {
 #ifdef USE_SSL
 	'e',
 #endif
-#ifndef NO_OPEROVERRIDE
-	'O',
-#endif
-#ifndef OPEROVERRIDE_VERIFY
-	'o',
-#endif
-#ifdef ZIP_LINKS
-	'Z',
-#endif
+/* we are a stable ircd */
+	'S',
+	's',
 	'\0'
 };
-
-char *extraflags = NULL;
 
 #include "numeric.h"
 #include "common.h"
@@ -135,54 +152,8 @@ char *extraflags = NULL;
 #define ssize_t unsigned int
 #endif
 
-void	flag_add(char ch)
-{
-	char *newextra;
-	if (extraflags)
-	{
-		char tmp[2] = { ch, 0 };
-		newextra = (char *)MyMalloc(strlen(extraflags) + 2);
-		strcpy(newextra, extraflags);
-		strcat(newextra, tmp);
-		MyFree(extraflags);
-		extraflags = newextra;
-	}
-	else
-	{
-		extraflags = malloc(2);
-		extraflags[0] = ch;
-		extraflags[1] = 0;
-	}
-}
-
-void	flag_del(char ch)
-{
-	int newsz;
-	char *p, *op;
-	char *newflags;
-	newsz = 0;	
-	p = extraflags;
-	for (newsz = 0, p = extraflags; *p; p++)
-		if (*p != ch)
-			newsz++;
-	newflags = MyMalloc(newsz + 1);
-	for (p = newflags, op = extraflags; (*op) && (newsz); newsz--, op++)
-		if (*op != ch)
-			*p++ = *op;
-	*p = '\0';
-	MyFree(extraflags);
-	extraflags = newflags;
-}
-
-
 
 #ifdef DEBUGMODE
-#ifndef _WIN32
-#define SET_ERRNO(x) errno = x
-#else
-#define SET_ERRNO(x) WSASetLastError(x)
-#endif /* _WIN32 */
-
 static char debugbuf[1024];
 
 #ifndef	USE_VARARGS
@@ -191,49 +162,54 @@ void debug(level, form, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10)
 	int  level;
 	char *form, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8, *p9, *p10;
 {
+# ifndef _WIN32
+	int  err = errno;
+# else
+	int  err = WSAGetLastError();
+# endif
 #else
-void debug(int level, char *form, ...)
-#endif
+void debug(level, form, va_alist)
+	int  level;
+	char *form;
+	va_dcl
 {
-	int err = ERRNO;
-
 	va_list vl;
-	va_start(vl, form);
+# ifndef _WIN32
+	int  err = errno;
+# else
+	int  err = WSAGetLastError();
+# endif
+
+	va_start(vl);
+#endif
 
 	if ((debuglevel >= 0) && (level <= debuglevel))
 	{
-#ifndef USE_VARARGS
-		(void)ircsprintf(debugbuf, form, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
+#ifndef	USE_VARARGS
+		(void)ircsprintf(debugbuf, form,
+		    p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
 #else
 		(void)ircvsprintf(debugbuf, form, vl);
-#if 0
-# ifdef _WIN32
-		strcat(debugbuf,"\r\n");
-# endif
-#endif
 #endif
 
-#if 0
+#ifndef _WIN32
 		if (local[2])
 		{
 			local[2]->sendM++;
 			local[2]->sendB += strlen(debugbuf);
 		}
-#endif
-#ifndef _WIN32
 		(void)fprintf(stderr, "%s", debugbuf);
 		(void)fputc('\n', stderr);
+	}
+	errno = err;
 #else
-# ifndef _WIN32GUI
+		strcat(debugbuf, "\r");
+#ifndef _WIN32GUI
 		Cio_Puts(hCio, debugbuf, strlen(debugbuf));
-# else
-		strcat(debugbuf, "\r\n");
-		OutputDebugString(debugbuf);
-# endif
 #endif
 	}
-	va_end(vl);
-	SET_ERRNO(err);
+	WSASetLastError(err);
+#endif
 }
 
 /*
@@ -243,7 +219,9 @@ void debug(int level, char *form, ...)
  * different field names for "struct rusage".
  * -avalon
  */
-void send_usage(aClient *cptr, char *nick)
+void send_usage(cptr, nick)
+	aClient *cptr;
+	char *nick;
 {
 
 #ifdef GETRUSAGE_2
@@ -264,12 +242,15 @@ void send_usage(aClient *cptr, char *nick)
 
 	if (getrusage(RUSAGE_SELF, &rus) == -1)
 	{
+#if !defined(__FreeBSD__) && !defined(__NetBSD__) && !defined(__APPLE__)
+/*		extern char *sys_errlist[]; */
+#endif
 		sendto_one(cptr, ":%s NOTICE %s :Getruseage error: %s.",
-		    me.name, nick, strerror(errno));
+		    me.name, nick, sys_errlist[errno]);
 		return;
 	}
 	secs = rus.ru_utime.tv_sec + rus.ru_stime.tv_sec;
-	rup = TStime() - me.since;
+	rup = time(NULL) - me.since;
 	if (secs == 0)
 		secs = 1;
 
@@ -345,17 +326,22 @@ void send_usage(aClient *cptr, char *nick)
 }
 #endif
 
-void count_memory(aClient *cptr, char *nick)
+void count_memory(cptr, nick)
+	aClient *cptr;
+	char *nick;
 {
 	extern aChannel *channel;
+	extern aClass *classes;
+	extern aConfItem *conf;
 	extern int flinks;
 	extern Link *freelink;
-	extern MemoryInfo StatsZ;
 
 	aClient *acptr;
 	Ban *ban;
 	Link *link;
 	aChannel *chptr;
+	aConfItem *aconf;
+	aClass *cltmp;
 
 	int  lc = 0,		/* local clients */
 	     ch = 0,		/* channels */
@@ -399,22 +385,20 @@ void count_memory(aClient *cptr, char *nick)
 		if (MyConnect(acptr))
 		{
 			lc++;
-			/*for (link = acptr->confs; link; link = link->next)
+			for (link = acptr->confs; link; link = link->next)
 				lcc++;
-			wle += acptr->notifies;*/
-			
+			wle += acptr->notifies;
 		}
 		else
 			rc++;
 		if (acptr->user)
 		{
-			Membership *mb;
 			us++;
 			for (link = acptr->user->invited; link;
 			    link = link->next)
 				usi++;
-			for (mb = acptr->user->channel; mb;
-			    mb = mb->next)
+			for (link = acptr->user->channel; link;
+			    link = link->next)
 				usc++;
 			if (acptr->user->away)
 			{
@@ -428,11 +412,9 @@ void count_memory(aClient *cptr, char *nick)
 
 	for (chptr = channel; chptr; chptr = chptr->nextch)
 	{
-		Member *member;
-		
 		ch++;
 		chm += (strlen(chptr->chname) + sizeof(aChannel));
-		for (member = chptr->members; member; member = member->next)
+		for (link = chptr->members; link; link = link->next)
 			chu++;
 		for (link = chptr->invites; link; link = link->next)
 			chi++;
@@ -444,7 +426,7 @@ void count_memory(aClient *cptr, char *nick)
 		}
 	}
 
-/*	for (aconf = conf; aconf; aconf = aconf->next)
+	for (aconf = conf; aconf; aconf = aconf->next)
 	{
 		co++;
 		com += aconf->host ? strlen(aconf->host) + 1 : 0;
@@ -455,7 +437,7 @@ void count_memory(aClient *cptr, char *nick)
 
 	for (cltmp = classes; cltmp; cltmp = cltmp->next)
 		cl++;
-*/
+
 	sendto_one(cptr, ":%s %d %s :Client Local %d(%d) Remote %d(%d)",
 	    me.name, RPL_STATSDEBUG, nick, lc, lcm, rc, rcm);
 	sendto_one(cptr, ":%s %d %s :Users %d(%d) Invites %d(%d)",
@@ -476,7 +458,7 @@ void count_memory(aClient *cptr, char *nick)
 	    me.name, RPL_STATSDEBUG, nick, co, com);
 
 	sendto_one(cptr, ":%s %d %s :Classes %d(%d)",
-	    me.name, RPL_STATSDEBUG, nick, StatsZ.classes, StatsZ.classesmem);
+	    me.name, RPL_STATSDEBUG, nick, cl, cl * sizeof(aClass));
 
 	sendto_one(cptr, ":%s %d %s :Channels %d(%d) Bans %d(%d)",
 	    me.name, RPL_STATSDEBUG, nick, ch, chm, chb, chbm);
@@ -497,27 +479,30 @@ void count_memory(aClient *cptr, char *nick)
 	sendto_one(cptr,
 	    ":%s %d %s :Hash: client %d(%d) chan %d(%d) watch %d(%d)", me.name,
 	    RPL_STATSDEBUG, nick, U_MAX, sizeof(aHashEntry) * U_MAX, CH_MAX,
-	    sizeof(aHashEntry) * CH_MAX, WATCHHASHSIZE,
-	    sizeof(aWatch *) * WATCHHASHSIZE);
+	    sizeof(aHashEntry) * CH_MAX, NOTIFYHASHSIZE,
+	    sizeof(aNotify *) * NOTIFYHASHSIZE);
 	db = dbufblocks * sizeof(dbufbuf);
 	sendto_one(cptr, ":%s %d %s :Dbuf blocks %d(%d)",
 	    me.name, RPL_STATSDEBUG, nick, dbufblocks, db);
 
 	link = freelink;
-	while ((link = link->next))
+	while (link = link->next)
 		fl++;
 	fl++;
 	sendto_one(cptr, ":%s %d %s :Link blocks free %d(%d) total %d(%d)",
 	    me.name, RPL_STATSDEBUG, nick, fl, fl * sizeof(Link),
 	    flinks, flinks * sizeof(Link));
 
-	rm = cres_mem(cptr,cptr->name);
-
+#ifndef NEWDNS
+	rm = cres_mem(cptr);
+#else /*NEWDNS*/
+	rm = 0;
+#endif /*NEWDNS*/
 	tot = totww + totch + totcl + com + cl * sizeof(aClass) + db + rm;
 	tot += fl * sizeof(Link);
 	tot += sizeof(aHashEntry) * U_MAX;
 	tot += sizeof(aHashEntry) * CH_MAX;
-	tot += sizeof(aWatch *) * WATCHHASHSIZE;
+	tot += sizeof(aNotify *) * NOTIFYHASHSIZE;
 
 	sendto_one(cptr, ":%s %d %s :Total: ww %d ch %d cl %d co %d db %d",
 	    me.name, RPL_STATSDEBUG, nick, totww, totch, totcl, com, db);

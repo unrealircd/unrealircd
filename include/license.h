@@ -16,6 +16,9 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * 
+ *   This file may not be removed from the IRCd package.
+ *   It will be a violation of copyright. 
+ * 
  *   $Id$
  */
 
@@ -24,6 +27,14 @@
  *
 */
 
+static char *Statement[] = {
+	" * This file may not be removed from the IRCd package.",
+	" * It will be a violation of copyright. This program must always",
+	" * stay free and not be charged for, being sold commercially or privately",
+	" * Only charge may be for the transport medium like one CD-ROM, floppy",
+	" * or other kinds.",
+	0
+};
 
 char *gnulicense[] = {
 	"   \2UnrealIRCd License\2",

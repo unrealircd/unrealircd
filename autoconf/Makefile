@@ -1,3 +1,0 @@
-all:
-	@autoconf
-	cp configure ..

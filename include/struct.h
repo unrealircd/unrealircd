@@ -1,3 +1,4 @@
+
 /************************************************************************
  *   Unreal Internet Relay Chat Daemon, include/struct.h
  *   Copyright (C) 1990 Jarkko Oikarinen and
@@ -24,20 +25,6 @@
 #define __struct_include__
 
 #include "config.h"
-/* need to include ssl stuff here coz otherwise you get
- * conflicting types with isalnum/isalpha/etc @ redhat. -- Syzop
- */
-#if defined(USE_SSL)
-#define OPENSSL_NO_KRB5
-#include <openssl/rsa.h>       /* SSL stuff */
-#include <openssl/crypto.h>
-#include <openssl/x509.h>
-#include <openssl/pem.h>
-#include <openssl/ssl.h>
-#include <openssl/err.h>    
-#include <openssl/evp.h>
-#include <openssl/rand.h>
-#endif
 #include "common.h"
 #include "sys.h"
 #include "hash.h"
@@ -51,70 +38,30 @@
 # include <stddef.h>
 #endif
 
-#ifdef HAVE_SYSLOG
+#ifdef USE_SYSLOG
 # include <syslog.h>
 # ifdef SYSSYSLOGH
 #  include <sys/syslog.h>
 # endif
 #endif
-#ifdef ZIP_LINKS
-#include "zip.h"
+#if defined(USE_SSL)
+#include <openssl/rsa.h>       /* SSL stuff */
+#include <openssl/crypto.h>
+#include <openssl/x509.h>
+#include <openssl/pem.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>    
 #endif
-#include "auth.h" 
-#ifdef HAVE_REGEX
-#include <regex.h>
-#else
-#include "../extras/regex/regex.h"
-#endif
-extern int sendanyways;
+typedef struct t_fline aFline;
+typedef struct t_crline aCRline;
+typedef struct t_vhline aVHline;
+typedef struct t_kline aTKline;
+typedef struct t_vhost aVhost;
 
-
+typedef struct SqlineItem aSqlineItem;
 typedef struct aloopStruct LoopStruct;
 typedef struct ConfItem aConfItem;
-typedef struct t_kline aTKline;
-/* New Config Stuff */
-typedef struct _configentry ConfigEntry;
-typedef struct _configfile ConfigFile;
-typedef struct _configflag ConfigFlag;
-typedef struct _configflag_except ConfigFlag_except;
-typedef struct _configflag_ban ConfigFlag_ban;
-typedef struct _configflag_tld ConfigFlag_tld;
-typedef struct _configitem ConfigItem;
-typedef struct _configitem_me ConfigItem_me;
-typedef struct _configitem_admin ConfigItem_admin;
-typedef struct _configitem_class ConfigItem_class;
-typedef struct _configitem_oper ConfigItem_oper;
-typedef struct _configitem_oper_from ConfigItem_oper_from;
-typedef struct _configitem_drpass ConfigItem_drpass;
-typedef struct _configitem_ulines ConfigItem_ulines;
-typedef struct _configitem_tld ConfigItem_tld;
-typedef struct _configitem_listen ConfigItem_listen;
-typedef struct _configitem_allow ConfigItem_allow;
-typedef struct _configflag_allow ConfigFlag_allow;
-typedef struct _configitem_allow_channel ConfigItem_allow_channel;
-typedef struct _configitem_vhost ConfigItem_vhost;
-typedef struct _configitem_except ConfigItem_except;
-typedef struct _configitem_link	ConfigItem_link;
-typedef struct _configitem_ban ConfigItem_ban;
-typedef struct _configitem_badword ConfigItem_badword;
-typedef struct _configitem_deny_dcc ConfigItem_deny_dcc;
-typedef struct _configitem_deny_link ConfigItem_deny_link;
-typedef struct _configitem_deny_channel ConfigItem_deny_channel;
-typedef struct _configitem_deny_version ConfigItem_deny_version;
-typedef struct _configitem_log ConfigItem_log;
-typedef struct _configitem_unknown ConfigItem_unknown;
-typedef struct _configitem_unknown_ext ConfigItem_unknown_ext;
-typedef struct _configitem_alias ConfigItem_alias;
-typedef struct _configitem_alias_format ConfigItem_alias_format;
-typedef struct _configitem_include ConfigItem_include;
-typedef struct _configitem_help ConfigItem_help;
-typedef struct liststruct ListStruct;
-
-#define CFG_TIME 0x0001
-#define CFG_SIZE 0x0002
-#define CFG_YESNO 0x0004
-
-typedef struct Watch aWatch;
+typedef struct Notify aNotify;
 typedef struct Client aClient;
 typedef struct Channel aChannel;
 typedef struct User anUser;
@@ -124,16 +71,9 @@ typedef struct SBan Ban;
 typedef struct SMode Mode;
 typedef struct ListOptions LOpts;
 typedef struct FloodOpt aFloodOpt;
+typedef struct ircstatsx ircstats;
 typedef struct MotdItem aMotd;
 typedef struct trecord aTrecord;
-typedef struct Command aCommand;
-typedef struct SMember Member;
-typedef struct SMembership Membership;
-typedef struct SMembershipL MembershipL;
-
-#ifdef ZIP_LINKS
-typedef struct  Zdata   aZdata;
-#endif
 
 #ifdef NEED_U_INT32_T
 typedef unsigned int u_int32_t;	/* XXX Hope this works! */
@@ -159,10 +99,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	MAXRECIPIENTS 	20
 #define	MAXKILLS	20
 #define	MAXBANS		60
-#define	MAXBANLENGTH	1024
 #define	MAXSILES	5
 #define	MAXSILELENGTH	128
-#define UMODETABLESZ (sizeof(long) * 8)
 /*
  * Watch it - Don't change this unless you also change the ERR_TOOMANYWATCH
  * and PROTOCOL_SUPPORTED settings.
@@ -173,15 +111,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 
 /* NOTE: this must be down here so the stuff from struct.h IT uses works */
 #include "whowas.h"
-
-/* Loggin types */
-#define LOG_ERROR 0x0001
-#define LOG_KILL  0x0002
-#define LOG_TKL   0x0004
-#define LOG_KLINE 0x0008
-#define LOG_CLIENT 0x0010
-#define LOG_SERVER 0x0020
-#define LOG_OPER   0x0040
 
 
 /*
@@ -208,10 +137,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	BOOT_AUTODIE	64
 #define BOOT_NOFORK     128
 
-#define	STAT_LOG	-7	/* logfile for -x */
-#define	STAT_CONNECTING	-6
-#define STAT_SSL_CONNECT_HANDSHAKE -5
-#define STAT_SSL_ACCEPT_HANDSHAKE -4
+#define	STAT_LOG	-6	/* logfile for -x */
+#define	STAT_CONNECTING	-4
 #define	STAT_HANDSHAKE	-3
 #define	STAT_ME		-2
 #define	STAT_UNKNOWN	-1
@@ -230,14 +157,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	IsServer(x)		((x)->status == STAT_SERVER)
 #define	IsClient(x)		((x)->status == STAT_CLIENT)
 #define	IsLog(x)		((x)->status == STAT_LOG)
-
-#ifdef USE_SSL
-#define IsSSLAcceptHandshake(x)	((x)->status == STAT_SSL_ACCEPT_HANDSHAKE)
-#define IsSSLConnectHandshake(x)	((x)->status == STAT_SSL_CONNECT_HANDSHAKE)
-#define IsSSLHandshake(x) (IsSSLAcceptHandshake(x) || IsSSLConnectHandshake(x))
-#define SetSSLAcceptHandshake(x)	((x)->status = STAT_SSL_ACCEPT_HANDSHAKE)
-#define SetSSLConnectHandshake(x)	((x)->status = STAT_SSL_CONNECT_HANDSHAKE)
-#endif
 
 #define	SetConnecting(x)	((x)->status = STAT_CONNECTING)
 #define	SetHandshake(x)		((x)->status = STAT_HANDSHAKE)
@@ -260,46 +179,42 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPT_NOT_SJ3	0x0200
 #define OPT_SJB64	0x0400
 #define OPT_NOT_SJB64	0x0800
-#define OPT_VHP		0x1000
-#define OPT_NOT_VHP	0x2000
 
-/* client->flags (32 bits): 28 used, 4 free */
 #define	FLAGS_PINGSENT   0x0001	/* Unreplied ping sent */
 #define	FLAGS_DEADSOCKET 0x0002	/* Local socket is dead--Exiting soon */
 #define	FLAGS_KILLED     0x0004	/* Prevents "QUIT" from being sent for this */
 #define	FLAGS_BLOCKED    0x0008	/* socket is in a blocked condition */
-#define FLAGS_UNOCCUP1   0x0010 /* [FREE] */
+/* #define	FLAGS_UNIX	 0x0010	 */
 #define	FLAGS_CLOSING    0x0020	/* set when closing to suppress errors */
 #define	FLAGS_LISTEN     0x0040	/* used to mark clients which we listen() on */
 #define	FLAGS_CHKACCESS  0x0080	/* ok to check clients access if set */
 #define	FLAGS_DOINGDNS	 0x0100	/* client is waiting for a DNS response */
-#define	FLAGS_AUTH       0x0200	/* client is waiting on rfc931 response */
+#define	FLAGS_AUTH	 0x0200	/* client is waiting on rfc931 response */
 #define	FLAGS_WRAUTH	 0x0400	/* set if we havent writen to ident server */
-#define	FLAGS_LOCAL      0x0800	/* set for local clients */
-#define	FLAGS_GOTID      0x1000	/* successful ident lookup achieved */
-#define	FLAGS_DOID       0x2000	/* I-lines say must use ident return */
-#define	FLAGS_NONL       0x4000	/* No \n in buffer */
-#define FLAGS_TS8        0x8000	/* Why do you want to know? */
-#define FLAGS_ULINE      0x10000	/* User/server is considered U-lined */
-#define FLAGS_SQUIT      0x20000	/* Server has been /squit by an oper */
-#define FLAGS_PROTOCTL   0x40000	/* Received a PROTOCTL message */
-#define FLAGS_PING       0x80000
-#define FLAGS_ASKEDPING  0x100000
-#define FLAGS_NETINFO    0x200000
-#define FLAGS_HYBNOTICE  0x400000
-#define FLAGS_QUARANTINE 0x800000
-#ifdef ZIP_LINKS
-#define FLAGS_ZIP        0x1000000
+#define	FLAGS_LOCAL	 0x0800	/* set for local clients */
+#define	FLAGS_GOTID	 0x1000	/* successful ident lookup achieved */
+#define	FLAGS_DOID	 0x2000	/* I-lines say must use ident return */
+#define	FLAGS_NONL	 0x4000	/* No \n in buffer */
+#define FLAGS_TS8	 0x8000	/* Why do you want to know? */
+#define FLAGS_ULINE	0x10000	/* User/server is considered U-lined */
+#define FLAGS_SQUIT	0x20000	/* Server has been /squit by an oper */
+#define FLAGS_PROTOCTL	0x40000	/* Received a PROTOCTL message */
+#define FLAGS_PING      0x80000
+#define FLAGS_ASKEDPING 0x100000
+#define FLAGS_NETINFO   0x200000
+#define FLAGS_HYBNOTICE 0x400000
+#ifdef SOCKSPORT
+#define FLAGS_SOCKS     0x800000
+#define FLAGS_WRSOCKS   0x1000000
+#define FLAGS_GOTSOCKS  0x2000000
 #endif
-#define FLAGS_UNOCCUP2   0x2000000 /* [FREE] */
 #define FLAGS_SHUNNED    0x4000000
-#define FLAGS_UNOCCUP3   0x8000000 /* [FREE] */
 #ifdef USE_SSL
-#define FLAGS_SSL        0x10000000
+#define FLAGS_SSL	 0x10000000
+#define FLAGS_SSL_HSHAKE 0x20000000
 #endif
-#define FLAGS_UNOCCUP4   0x20000000 /* [FREE] */
-#define FLAGS_DCCBLOCK   0x40000000
-#define FLAGS_MAP        0x80000000	/* Show this entry in /map */
+
+#define FLAGS_MAP       0x80000000	/* Show this entry in /map */
 /* Dec 26th, 1997 - added flags2 when I ran out of room in flags -DuffJ */
 
 /* Dec 26th, 1997 - having a go at
@@ -307,28 +222,40 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
  * -DuffJ
  */
 
+#define	UMODE_INVISIBLE  0x0001	/* makes user invisible */
+#define	UMODE_OPER       0x0002	/* Operator */
+#define	UMODE_WALLOP     0x0004	/* send wallops to them */
+#define UMODE_FAILOP	 0x0008	/* Shows some global messages */
+#define UMODE_HELPOP	 0x0010	/* Help system operator */
+#define UMODE_REGNICK	 0x0020	/* Nick set by services as registered */
+#define UMODE_SADMIN	 0x0040	/* Services Admin */
+#define UMODE_ADMIN	 0x0080	/* Admin */
+#define	UMODE_SERVNOTICE 0x0100	/* server notices such as kill */
+#define	UMODE_LOCOP      0x0200	/* Local operator -- SRB */
+#define UMODE_KILLS	 0x0400	/* Show server-kills... */
+#define UMODE_CLIENT	 0x0800	/* Show client information */
+#define UMODE_FLOOD	 0x1000	/* Receive flood warnings */
+#define UMODE_JUNK	 0x2000	/* can junk */
+#define UMODE_SERVICES   0x4000	/* services */
+#define UMODE_HIDE	 0x8000	/* Hide from Nukes */
+#define UMODE_NETADMIN  0x10000	/* Network Admin */
+#define UMODE_EYES      0x20000	/* Mode to see server stuff */
+#define UMODE_COADMIN   0x80000	/* Co Admin */
+#define UMODE_WHOIS    0x100000	/* gets notice on /whois */
+#define UMODE_KIX      0x200000	/* usermode +q */
+#define UMODE_BOT       0x400000	/* User is a bot */
+#define UMODE_SECURE	0x800000	/* User is a secure connect */
+#define UMODE_FCLIENT  0x1000000	/* recieve client on far connects.. */
 
-#define SNO_KILLS      0x0001
-#define SNO_CLIENT     0x0002
-#define SNO_FLOOD      0x0004
-#define SNO_FCLIENT    0x0008
-#define SNO_JUNK       0x0010
-#define SNO_VHOST      0x0020
-#define SNO_EYES       0x0040
-#define SNO_TKL        0x0080
-#define SNO_NICKCHANGE 0x0100
-#define SNO_QLINE      0x0200
-#define SNO_SNOTICE    0x0400
+#define	UMODE_VICTIM   0x8000000	/* Intentional Victim */
+#define UMODE_DEAF     0x10000000
+#define UMODE_HIDEOPER 0x20000000	/* Hide oper mode */
+#define UMODE_SETHOST  0x40000000	/* used sethost */
+#define UMODE_STRIPBADWORDS 0x80000000	/* */
 
-#define SNO_DEFOPER "+kscfvGq"
-#define SNO_DEFUSER "+ks"
+#define	SEND_UMODES	(UMODE_INVISIBLE|UMODE_OPER|UMODE_WALLOP|UMODE_FAILOP|UMODE_HELPOP|UMODE_REGNICK|UMODE_SADMIN|UMODE_NETADMIN|UMODE_COADMIN|UMODE_ADMIN|UMODE_SERVICES|UMODE_HIDE|UMODE_EYES|UMODE_WHOIS|UMODE_KIX|UMODE_BOT|UMODE_SECURE|UMODE_FCLIENT|UMODE_DEAF|UMODE_VICTIM|UMODE_HIDEOPER|UMODE_SETHOST|UMODE_STRIPBADWORDS|UMODE_JUNK)
 
-#define SNO_NONOPERS (SNO_KILLS | SNO_SNOTICE)
-
-#define SEND_UMODES (SendUmodes)
-#define ALL_UMODES (AllUmodes)
-/* SEND_UMODES and ALL_UMODES are now handled by umode_get/umode_lget/umode_gget -- Syzop. */
-
+#define	ALL_UMODES (SEND_UMODES|UMODE_SERVNOTICE|UMODE_LOCOP|UMODE_KILLS|UMODE_CLIENT|UMODE_FLOOD|UMODE_SERVICES|UMODE_EYES)
 #define	FLAGS_ID	(FLAGS_DOID|FLAGS_GOTID)
 
 #define PROTO_NOQUIT	0x1	/* Negotiated NOQUIT protocol */
@@ -338,7 +265,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define PROTO_SJOIN2	0x10	/* Negotiated SJOIN2 protocol */
 #define PROTO_UMODE2	0x20	/* Negotiated UMODE2 protocol */
 #define PROTO_NS	0x40	/* Negotiated NS protocol */
-#define PROTO_ZIP	0x80	/* Negotiated ZIP protocol */
 #define PROTO_VL	0x100	/* Negotiated VL protocol */
 #define PROTO_SJ3	0x200	/* Negotiated SJ3 protocol */
 #define PROTO_VHP	0x400	/* Send hostnames in NICKv2 even if not 
@@ -349,10 +275,10 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
  */
 #define IsVictim(x)             ((x)->umodes & UMODE_VICTIM)
 #define IsDeaf(x)               ((x)->umodes & UMODE_DEAF)
-#define IsKillsF(x)		((x)->user->snomask & SNO_KILLS)
-#define IsClientF(x)		((x)->user->snomask & SNO_CLIENT)
-#define IsFloodF(x)		((x)->user->snomask & SNO_FLOOD)
-#define IsEyes(x)		((x)->user->snomask & SNO_EYES)
+#define IsKillsF(x)		((x)->umodes & UMODE_KILLS)
+#define IsClientF(x)		((x)->umodes & UMODE_CLIENT)
+#define IsFloodF(x)		((x)->umodes & UMODE_FLOOD)
+#define IsEyes(x)		((x)->umodes & UMODE_EYES)
 #define IsWhois(x)	        ((x)->umodes & UMODE_WHOIS)
 #define IsKix(x)		((x)->umodes & UMODE_KIX)
 #define IsHelpOp(x)		((x)->umodes & UMODE_HELPOP)
@@ -361,6 +287,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #ifdef STRIPBADWORDS
 #define IsFilteringWords(x)	((x)->umodes & UMODE_STRIPBADWORDS)
 #endif
+
 #define IsNetAdmin(x)		((x)->umodes & UMODE_NETADMIN)
 #define IsCoAdmin(x)		((x)->umodes & UMODE_COADMIN)
 #define IsSAdmin(x)		((x)->umodes & UMODE_SADMIN)
@@ -372,14 +299,12 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	IsAnOper(x)		((x)->umodes & (UMODE_OPER|UMODE_LOCOP))
 #define IsARegNick(x)		((x)->umodes & (UMODE_REGNICK))
 #define IsRegNick(x)		((x)->umodes & UMODE_REGNICK)
-#define IsRegNickMsg(x)		((x)->umodes & UMODE_RGSTRONLY)
-#define IsWebTV(x)		((x)->umodes & UMODE_WEBTV)
 #define	IsPerson(x)		((x)->user && IsClient(x))
 #define	IsPrivileged(x)		(IsAnOper(x) || IsServer(x))
-#define	SendWallops(x)		(!IsMe(x) && ((x)->umodes & UMODE_WALLOP))
-#define	SendServNotice(x)	(((x)->user) && ((x)->user->snomask & SNO_SNOTICE))
+#define	SendWallops(x)		((x)->umodes & UMODE_WALLOP)
+#define	SendServNotice(x)	((x)->umodes & UMODE_SERVNOTICE)
 #define	IsListening(x)		((x)->flags & FLAGS_LISTEN)
-// #define	DoAccess(x)		((x)->flags & FLAGS_CHKACCESS)
+#define	DoAccess(x)		((x)->flags & FLAGS_CHKACCESS)
 #define	IsLocal(x)		((x)->flags & FLAGS_LOCAL)
 #define	IsDead(x)		((x)->flags & FLAGS_DEADSOCKET)
 #define GotProtoctl(x)		((x)->flags & FLAGS_PROTOCTL)
@@ -397,61 +322,54 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsSecure(x)		(0)
 #endif
 
-#ifdef ZIP_LINKS
-#define IsZipped(x) 	((x)->flags & FLAGS_ZIP)
-#define IsZipStart(x)	(((x)->flags & FLAGS_ZIP) && ((x)->zip->first == 1))
-#else
-#define IsZipped(x)		(0)
-#define IsZipStart(x)	(0)
-#endif
-
 #define IsHybNotice(x)		((x)->flags & FLAGS_HYBNOTICE)
 #define SetHybNotice(x)         ((x)->flags |= FLAGS_HYBNOTICE)
 #define ClearHybNotice(x)	((x)->flags &= ~FLAGS_HYBNOTICE)
 #define IsHidden(x)             ((x)->umodes & UMODE_HIDE)
 #define IsHideOper(x)		((x)->umodes & UMODE_HIDEOPER)
-#ifdef USE_SSL
-#define IsSSL(x)		IsSecure(x)
-#endif
+
 #ifdef NOSPOOF
 #define	IsNotSpoof(x)		((x)->nospoof == 0)
 #else
 #define IsNotSpoof(x)           (1)
 #endif
 
-#define GetHost(x)			(IsHidden(x) ? (x)->user->virthost : (x)->user->realhost)
-
-#define SetKillsF(x)		((x)->user->snomask |= SNO_KILLS)
-#define SetClientF(x)		((x)->user->snomask |= SNO_CLIENT)
-#define SetFloodF(x)		((x)->user->snomask |= SNO_FLOOD)
+#define SetKillsF(x)		((x)->umodes |= UMODE_KILLS)
+#define SetClientF(x)		((x)->umodes |= UMODE_CLIENT)
+#define SetFloodF(x)		((x)->umodes |= UMODE_FLOOD)
 #define SetHelpOp(x)		((x)->umodes |= UMODE_HELPOP)
 #define	SetOper(x)		((x)->umodes |= UMODE_OPER)
 #define	SetLocOp(x)    		((x)->umodes |= UMODE_LOCOP)
+#define SetWhois(x)		((x)->umodes |= UMODE_WHOIS)
+#define SetHide(x)		((x)->umodes |= UMODE_HIDE)
 #define SetAdmin(x)		((x)->umodes |= UMODE_ADMIN)
 #define SetSAdmin(x)		((x)->umodes |= UMODE_SADMIN)
 #define SetNetAdmin(x)		((x)->umodes |= UMODE_NETADMIN)
 #define SetCoAdmin(x)		((x)->umodes |= UMODE_COADMIN)
 #define	SetInvisible(x)		((x)->umodes |= UMODE_INVISIBLE)
-#define SetEyes(x)		((x)->user->snomask |= SNO_EYES)
+#define SetEyes(x)		((x)->umodes |= UMODE_EYES)
 #define	SetWallops(x)  		((x)->umodes |= UMODE_WALLOP)
 #define	SetDNS(x)		((x)->flags |= FLAGS_DOINGDNS)
 #define	DoingDNS(x)		((x)->flags & FLAGS_DOINGDNS)
-#define	SetAccess(x)		((x)->flags |= FLAGS_CHKACCESS); Debug((DEBUG_DEBUG, "SetAccess(%s)", (x)->name))
+#define	SetAccess(x)		((x)->flags |= FLAGS_CHKACCESS)
 #define SetBlocked(x)		((x)->flags |= FLAGS_BLOCKED)
 #define	DoingAuth(x)		((x)->flags & FLAGS_AUTH)
+#ifdef SOCKSPORT
+#define DoingSocks(x)           ((x)->flags & FLAGS_SOCKS)
+#endif
 #define	NoNewLine(x)		((x)->flags & FLAGS_NONL)
 #define SetRegNick(x)		((x)->umodes & UMODE_REGNICK)
 #define SetHidden(x)            ((x)->umodes |= UMODE_HIDE)
 #define SetHideOper(x)      ((x)->umodes |= UMODE_HIDEOPER)
-#define IsSecureConnect(x)	((x)->umodes & UMODE_SECURE)
+#define IsSecureConnect(x)      ((x)->umodes & UMODE_SECURE)
 #define ClearAdmin(x)		((x)->umodes &= ~UMODE_ADMIN)
 #define ClearNetAdmin(x)	((x)->umodes &= ~UMODE_NETADMIN)
 #define ClearCoAdmin(x)		((x)->umodes &= ~UMODE_COADMIN)
 #define ClearSAdmin(x)		((x)->umodes &= ~UMODE_SADMIN)
-#define ClearKillsF(x)		((x)->user->snomask &= ~SNO_KILLS)
-#define ClearClientF(x)		((x)->user->snomask &= ~SNO_CLIENT)
-#define ClearFloodF(x)		((x)->user->snomask &= ~SNO_FLOOD)
-#define ClearEyes(x)		((x)->user->snomask &= ~SNO_EYES)
+#define ClearKillsF(x)		((x)->umodes &= ~UMODE_KILLS)
+#define ClearClientF(x)		((x)->umodes &= ~UMODE_CLIENT)
+#define ClearFloodF(x)		((x)->umodes &= ~UMODE_FLOOD)
+#define ClearEyes(x)		((x)->umodes &= ~UMODE_EYES)
 #define ClearHelpOp(x)		((x)->umodes &= ~UMODE_HELPOP)
 #define ClearFailops(x)		((x)->umodes &= ~UMODE_FAILOP)
 #define	ClearOper(x)		((x)->umodes &= ~UMODE_OPER)
@@ -465,9 +383,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define ClearHidden(x)          ((x)->umodes &= ~UMODE_HIDE)
 #define ClearHideOper(x)    ((x)->umodes &= ~UMODE_HIDEOPER)
 
-#ifdef ZIP_LINKS
-#define SetZipped(x)        ((x)->flags |= FLAGS_ZIP)
-#define ClearZipped(x)      ((x)->flags &= ~FLAGS_ZIP)
+#ifdef SOCKSPORT
+#define ClearSocks(x) ((x)->flags &= ~FLAGS_SOCKS)
 #endif
 
 /*
@@ -523,26 +440,24 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OFLAG_LNOTICE	0x00004000	/* Oper can send local serv notices */
 #define OFLAG_GNOTICE	0x00008000	/* Oper can send global notices */
 #define OFLAG_ADMIN	0x00010000	/* Admin */
+#define OFLAG_UMODEC	0x00020000	/* Oper can set umode +c */
+#define OFLAG_UMODEF	0x00040000	/* Oper can set umode +f */
 #define OFLAG_ZLINE	0x00080000	/* Oper can use /zline and /unzline */
-#define OFLAG_NETADMIN	0x00200000	/* netadmin gets +N */
+#define OFLAG_EYES      0x00100000	/* Oper auto gets +e */
+#define OFLAG_NETADMIN  0x00200000	/* netadmin gets +N */
 #define OFLAG_COADMIN	0x00800000	/* co admin gets +C */
 #define OFLAG_SADMIN	0x01000000	/* services admin gets +a */
 #define OFLAG_WHOIS     0x02000000	/* gets auto +W on oper up */
 #define OFLAG_HIDE      0x04000000	/* gets auto +x on oper up */
-#define OFLAG_TKL       0x10000000	/* can use G:lines and shuns */
-#define OFLAG_GZL       0x20000000	/* can use global Z:lines */
-#define OFLAG_OVERRIDE	0x40000000	/* can use oper-override */
-#define OFLAG_LOCAL	(OFLAG_REHASH|OFLAG_HELPOP|OFLAG_GLOBOP|OFLAG_WALLOP|OFLAG_LOCOP|OFLAG_LROUTE|OFLAG_LKILL|OFLAG_KLINE|OFLAG_UNKLINE|OFLAG_LNOTICE)
-#define OFLAG_GLOBAL	(OFLAG_LOCAL|OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
+#ifndef NO_OPEROVERRIDE
+#define OFLAG_CANOVER   0x10000000	/* Oper can utilize operoverride */
+#endif
+#define OFLAG_COFOUND   0x20000000
+#define OFLAG_LOCAL	(OFLAG_REHASH|OFLAG_HELPOP|OFLAG_LOCOP|OFLAG_LROUTE|OFLAG_LKILL|OFLAG_KLINE|OFLAG_UNKLINE|OFLAG_LNOTICE|OFLAG_UMODEC|OFLAG_ZLINE|OFLAG_HIDE)
+#define OFLAG_GLOBAL	(OFLAG_LOCAL|OFLAG_GLOBOP|OFLAG_WALLOP|OFLAG_UMODEF|OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE|OFLAG_HIDE)
 #define OFLAG_ISGLOBAL	(OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
-#define OFLAG_NADMIN	(OFLAG_NETADMIN | OFLAG_SADMIN | OFLAG_ADMIN | OFLAG_GLOBAL)
-#define OFLAG_ADMIN_	(OFLAG_ADMIN | OFLAG_GLOBAL)
-#define OFLAG_COADMIN_	(OFLAG_COADMIN | OFLAG_GLOBAL)
-#define OFLAG_SADMIN_	(OFLAG_SADMIN | OFLAG_GLOBAL)
 
-#define OPCanOverride(x) ((x)->oflag & OFLAG_OVERRIDE)
-#define OPCanTKL(x)	((x)->oflag & OFLAG_TKL)
-#define OPCanGZL(x)	((x)->oflag & OFLAG_GZL)
+
 #define OPCanZline(x)   ((x)->oflag & OFLAG_ZLINE)
 #define OPCanRehash(x)	((x)->oflag & OFLAG_REHASH)
 #define OPCanDie(x)	((x)->oflag & OFLAG_DIE)
@@ -562,8 +477,15 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPIsAdmin(x)	((x)->oflag & OFLAG_ADMIN)
 #define OPIsSAdmin(x)	((x)->oflag & OFLAG_SADMIN)
 #define OPIsNetAdmin(x) ((x)->oflag & OFLAG_NETADMIN)
+#define OPIsGlobal(x)	((x)->oflag & OFLAG_ISGLOBAL)
 #define OPIsCoAdmin(x)	((x)->oflag & OFLAG_COADMIN)
+#define OPCanUModeC(x)	((x)->oflag & OFLAG_UMODEC)
+#define OPCanUModeF(x)	((x)->oflag & OFLAG_UMODEF)
+#define OPIsEyes(x)	((x)->oflag & OFLAG_EYES)
 #define OPIsWhois(x)    ((x)->oflag & OFLAG_WHOIS)
+#ifndef NO_OPEROVERRIDE
+#define OPCanOver(x)	(MyClient(x) ? (IsOper(x) && ((x)->oflag & OFLAG_CANOVER)) : IsOper(x))
+#endif
 
 #define OPSetRehash(x)	((x)->oflag |= OFLAG_REHASH)
 #define OPSetDie(x)	((x)->oflag |= OFLAG_DIE)
@@ -582,10 +504,14 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPSetGNotice(x)	((x)->oflag |= OFLAG_GNOTICE)
 #define OPSSetAdmin(x)	((x)->oflag |= OFLAG_ADMIN)
 #define OPSSetSAdmin(x)	((x)->oflag |= OFLAG_SADMIN)
-#define OPSSetNetAdmin(x) ((x)->oflag |= OFLAG_NETADMIN)
+#define OPSSetNetAdmin(x) ((x)-> oflag |= OFLAG_NETADMIN)
 #define OPSSetCoAdmin(x) ((x)->oflag |= OFLAG_COADMIN)
+#define OPSetUModeC(x)	((x)->oflag |= OFLAG_UMODEC)
+#define OPSetUModeF(x)	((x)->oflag |= OFLAG_UMODEF)
+#define OPSetEyes(x)	((x)->oflag |= OFLAG_EYES)
 #define OPSetZLine(x)	((x)->oflag |= OFLAG_ZLINE)
 #define OPSetWhois(x)   ((x)->oflag |= OFLAG_WHOIS)
+
 #define OPClearRehash(x)	((x)->oflag &= ~OFLAG_REHASH)
 #define OPClearDie(x)		((x)->oflag &= ~OFLAG_DIE)
 #define OPClearRestart(x)	((x)->oflag &= ~OFLAG_RESTART)
@@ -605,8 +531,12 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPClearSAdmin(x)	((x)->oflag &= ~OFLAG_SADMIN)
 #define OPClearNetAdmin(x)	((x)->oflag &= ~OFLAG_NETADMIN)
 #define OPClearCoAdmin(x)	((x)->oflag &= ~OFLAG_COADMIN)
+#define OPClearUModeC(x)	((x)->oflag &= ~OFLAG_UMODEC)
+#define OPClearUModeF(x)	((x)->oflag &= ~OFLAG_UMODEF)
+#define OPClearEyes(x)		((x)->oflag &= ~OFLAG_EYES)
 #define OPClearZLine(x)		((x)->oflag &= ~OFLAG_ZLINE)
 #define OPClearWhois(x)         ((x)->oflag &= ~OFLAG_WHOIS)
+
 /*
  * defined debugging levels
  */
@@ -628,91 +558,160 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	CURSES_TERM	1
 #define	TERMCAP_TERM	2
 
-struct FloodOpt {
-	unsigned short nmsg;
-	TS   firstmsg;
-};
-
 struct MotdItem {
 	char *line;
 	struct MotdItem *next;
 };
 
+/* Hack for T:lines and cached MOTDs */
+struct trecord {
+	char *hostmask;
+	struct MotdItem *tmotd;
+	struct MotdItem *trules;
+	struct tm *tmotd_tm;
+	struct trecord *next;
+};
+
 struct aloopStruct {
 	unsigned do_garbage_collect : 1;
-	unsigned ircd_booted : 1;
-	unsigned do_bancheck : 1;
-	unsigned tainted : 1;
+	unsigned do_tkl_sweep : 1;
+	unsigned do_ban_check : 1;
 };
 
 typedef struct Whowas {
-	int  hashv;
+	long umodes;
 	char *name;
 	char *username;
 	char *hostname;
 	char *virthost;
 	char *servername;
 	char *realname;
-	long umodes;
-	TS   logoff;
 	struct Client *online;	/* Pointer to new nickname for chasing or NULL */
 	struct Whowas *next;	/* for hash table... */
 	struct Whowas *prev;	/* for hash table... */
 	struct Whowas *cnext;	/* for client struct linked list */
 	struct Whowas *cprev;	/* for client struct linked list */
+	int hashv;
+	TS   logoff;
 } aWhowas;
+
+
+struct SqlineItem {
+	char *sqline;
+	char *reason;
+	struct SqlineItem *next;
+	unsigned int status;
+};
+
+struct ConfItem {
+	struct IN_ADDR ipnum;	/* ip number of host field */
+	char *host;
+	char *passwd;
+	char *name;
+	struct ConfItem *next;
+#ifndef VMSP
+        aClass *class;          /* Class of connection */
+#endif
+	unsigned int status;    /* If CONF_ILLEGAL, delete when no clients */
+	TS   hold;              /* Hold action until this time (calendar time) */
+	int  clients;           /* Number of *LOCAL* clients using this */
+	int  port;
+	int  tmpconf;
+	short options;
+};
+
+#define	CONF_ILLEGAL		0x80000000
+#define	CONF_MATCH		0x40000000
+#define	CONF_QUARANTINED_SERVER	0x0001
+#define	CONF_CLIENT		0x0002
+#define	CONF_CONNECT_SERVER	0x0004
+#define	CONF_NOCONNECT_SERVER	0x0008
+#define	CONF_LOCOP		0x0010
+#define	CONF_OPERATOR		0x0020
+#define	CONF_ME			0x0040
+#define	CONF_KILL		0x0080
+#define	CONF_ADMIN		0x0100
+#ifdef 	R_LINES
+#define	CONF_RESTRICT		0x0200
+#endif
+#define	CONF_CLASS		0x0400
+#define	CONF_SERVICE		0x0800
+#define	CONF_LEAF		0x1000
+#define	CONF_LISTEN_PORT	0x2000
+#define	CONF_HUB		0x4000
+#define	CONF_UWORLD		0x8000
+#define CONF_QUARANTINED_NICK	0x10000
+#define CONF_ZAP		0x20000
+#define CONF_CONFIG             0x100000
+#define CONF_CRULEALL           0x200000
+#define CONF_CRULEAUTO          0x400000
+#define CONF_MISSING		0x800000
+#define CONF_SADMIN		0x1000000
+#define CONF_DRPASS		0x2000000	/* DIE/RESTART pass - NikB */
+#define CONF_EXCEPT     	0x4000000	/* K:Line exception */
+#define CONF_TLINE		0x8000000	/* T:Line */
+#define CONF_SOCKSEXCEPT	0x10000000
+#define CONF_NLINE		0x20000000
+#define CONF_VERSION		0x40000000
+#define	CONF_OPS		(CONF_OPERATOR | CONF_LOCOP)
+#define	CONF_SERVER_MASK	(CONF_CONNECT_SERVER | CONF_NOCONNECT_SERVER)
+#define	CONF_CLIENT_MASK	(CONF_CLIENT | CONF_SERVICE | CONF_OPS | \
+				 CONF_SERVER_MASK)
+#define CONF_CRULE              (CONF_CRULEALL | CONF_CRULEAUTO)
+#define CONF_QUARANTINE		(CONF_QUARANTINED_SERVER|CONF_QUARANTINED_NICK)
+
+#define	IsIllegal(x)	((x)->status & CONF_ILLEGAL)
+#define IsTemp(x)	((x)->tmpconf)
 
 /*
  * Client structures
  */
 struct User {
-	Membership *channel;		/* chain of channel pointer blocks */
+	char realhost[HOSTLEN + 1];
+	char username[USERLEN + 1];
+	struct User *nextu;
+	Link *channel;		/* chain of channel pointer blocks */
 	Link *invited;		/* chain of invite pointer blocks */
 	Link *silence;		/* chain of silence pointer blocks */
 	char *away;		/* pointer to away message */
-#ifdef NO_FLOOD_AWAY
-	time_t last_away;	/* last time the user set away */
-	unsigned char away_count;	/* number of times away has been set */
+        char *virthost;
+        char *server;
+        char *swhois;           /* special whois thing */
+	aClient *serv;
+        LOpts *lopt;            /* Saved /list options */
+        aWhowas *whowas;
+#ifdef  LIST_DEBUG
+        aClient *bcptr;
 #endif
+	TS   last;
 	u_int32_t servicestamp;	/* Services' time stamp variable */
-	signed char refcnt;	/* Number of times this block is referenced */
 	unsigned short joined;		/* number of channels joined */
-	char username[USERLEN + 1];
-	char realhost[HOSTLEN + 1];
-	char *virthost;
-	char *server;
-	char *swhois;		/* special whois thing */
-	LOpts *lopt;            /* Saved /list options */
-	aWhowas *whowas;
-	int snomask;
-#ifdef	LIST_DEBUG
-	aClient *bcptr;
-#endif
+	signed char refcnt;     /* Number of times this block is referenced */
 };
 
 struct Server {
-	struct Server 	*nexts;
-	anUser 		*user;		/* who activated this connection */
-	char 		*up;		/* uplink for this server */
-	char 		by[NICKLEN + 1];
-	ConfigItem_link *conf;
-	TS   		timestamp;		/* Remotely determined connect try time */
-	unsigned short  numeric;	/* NS numeric, 0 if none */
-	long		 users;
-#ifdef	LIST_DEBUG
-	aClient *bcptr;
+	char by[NICKLEN + 1];
+	long users;
+	struct Server *nexts;
+	anUser *user;		/* who activated this connection */
+	char *up;		/* uplink for this server */
+	aConfItem *nline;	/* N-line pointer for this server */
+#ifdef  LIST_DEBUG
+        aClient *bcptr;
 #endif
+	TS   timestamp;		/* Remotely determined connect try time */
+	unsigned short numeric;	/* NS numeric, 0 if none */
 };
 
-#define M_UNREGISTERED 0x0001
-#define M_USER 0x0002
-#define M_SERVER 0x0004
-#define M_SHUN 0x0008
-#define M_NOLAG 0x0010
-#define M_ALIAS 0x0020
-#define M_RESETIDLE 0x0040
-
-
+struct t_vhost {
+	char *usermask;
+	char *hostmask;
+	char *login;
+	char *password;
+	char *virthost;
+	aVhost *next;
+	aVhost *prev;
+};
 
 /* tkl:
  *   TKL_KILL|TKL_GLOBAL 	= Global K:Line (G:Line)
@@ -727,36 +726,51 @@ struct Server {
 #define TKL_QUIET	0x0010
 
 struct t_kline {
-	aTKline *prev, *next;
 	int  type;
-	char *usermask, *hostmask, *reason, *setby;
-	TS expire_at, set_at;
+	char *usermask;
+	char *hostmask;
+	char *reason;
+	char *setby;
+        aTKline *next;
+        aTKline *prev;
+	TS   expire_at;
+	TS   set_at;
 };
 
-typedef struct ircstatsx {
+struct ircstatsx {
 	int  clients;		/* total */
 	int  invisible;		/* invisible */
-	unsigned short  servers;		/* servers */
 	int  operators;		/* operators */
 	int  unknown;		/* unknown local connections */
 	int  channels;		/* channels */
 	int  me_clients;	/* my clients */
-	unsigned short  me_servers;	/* my servers */
 	int  me_max;		/* local max */
 	int  global_max;	/* global max */
-} ircstats;
+	unsigned short  servers;                /* servers */
+	unsigned short  me_servers;     /* my servers */
+};
 
-extern ircstats IRCstats;
+struct t_fline {
+	char *mask;
+	char *reason;
+	aFline *next;
+	aFline *prev;
+	int  type;
+};
 
-typedef struct {
-	long	mode;
-	char	flag;
-	int	(*allowed)(aClient *sptr);
-} aUMtable;
+struct t_crline {
+	char *channel;
+	aCRline *next, *prev;
+	int  type;
+};
 
-extern aUMtable *Usermode_Table;
-extern short	 Usermode_highest;
-
+struct t_vhline {
+	char *login;
+	char *password;
+	char *vhost;
+	aVHline *next, *prev;
+	int  type;
+};
 
 #define LISTENER_NORMAL		0x000001
 #define LISTENER_CLIENTSONLY	0x000002
@@ -765,33 +779,31 @@ extern short	 Usermode_highest;
 #define LISTENER_JAVACLIENT	0x000010
 #define LISTENER_MASK		0x000020
 #define LISTENER_SSL		0x000040
-#define LISTENER_BOUND		0x000080
 
 #define CONNECT_SSL		0x000001
-#define CONNECT_ZIP		0x000002 
-#define CONNECT_AUTO		0x000004
-#define CONNECT_QUARANTINE	0x000008
-#define CONNECT_NODNSCACHE	0x000010
-#define CONNECT_NOHOSTCHECK	0x000020
 
-#define SSLFLAG_FAILIFNOCERT 	0x1
-#define SSLFLAG_VERIFYCERT 	0x2
-#define SSLFLAG_DONOTACCEPTSELFSIGNED 0x4
+
 struct Client {
+	char info[REALLEN + 1]; /* Free form additional client information */
+	char name[HOSTLEN + 1]; /* Unique name of the client, nick or host */
+	char username[USERLEN + 1];     /* username here now for auth stuff */
+	u_char targets[MAXTARGETS];     /* Hash values of current targets */
+	long flags;		/* client flags */
+	long umodes;		/* client usermodes */
 	struct Client *next, *prev, *hnext;
 	anUser *user;		/* ...defined, if this is a User */
 	aServer *serv;		/* ...defined, if this is a server */
+	aClient *from;          /* == self, if Local Client, *NEVER* NULL! */
+	aClient *srvptr;        /* Server introducing this.  May be &me */
+	TS   lasttime;		/* ...should be only LOCAL clients? --msa */
+	TS   firsttime;		/* time client was created */
+	TS   since;		/* last time we parsed something */
 	TS   lastnick;		/* TimeStamp on nick */
-	long flags;		/* client flags */
-	long umodes;		/* client usermodes */
-	aClient *from;		/* == self, if Local Client, *NEVER* NULL! */
+	TS   nextnick;		/* Time the next nick change will be allowed */
+	TS   nexttarget;	/* Time until a change in targets is allowed */
 	int  fd;		/* >= 0, for local clients */
+	short status;           /* Client type */
 	unsigned char hopcount;		/* number of servers to this 0 = local */
-	char name[HOSTLEN + 1];	/* Unique name of the client, nick or host */
-	char username[USERLEN + 1];	/* username here now for auth stuff */
-	char info[REALLEN + 1];	/* Free form additional client information */
-	aClient *srvptr;	/* Server introducing this.  May be &me */
-	short status;		/* client type */
 	/*
 	   ** The following fields are allocated only for local clients
 	   ** (directly connected to *this* server with a socket.
@@ -800,397 +812,68 @@ struct Client {
 	   ** these fields, if (from != self).
 	 */
 	int  count;		/* Amount of data in buffer */
-#if 1
-	int  oflag;		/* oper access flags (removed from anUser for mem considerations) */
-	TS   since;		/* time they will next be allowed to send something */
-	TS   firsttime;		/* Time it was created */
-	TS   lasttime;		/* last time any message was received */
-	TS   last;		/* last time a RESETIDLE message was received */
-	TS   nexttarget;	/* next time that a new target will be allowed (msg/notice/invite) */
- 	TS   nextnick;		/* Time the next nick change will be allowed */
-	u_char targets[MAXTARGETS];	/* hash values of targets */
+	char buffer[BUFSIZE];   /* Incoming message buffer */
+	char sockhost[HOSTLEN + 1];     /* This is the host name from the socket
+                                        ** and after which the connection was
+                                        ** accepted.
+                                        */
+	dbuf sendQ;             /* Outgoing message queue--if socket full */
+        dbuf recvQ;             /* Hold for data incoming yet to be parsed */
+	struct IN_ADDR ip;      /* keep real ip# too */
+	long oflag;             /* Operator access flags -Cabal95 */
+        long sendM;             /* Statistics: protocol messages send */
+        long sendK;             /* Statistics: total k-bytes send */
+        long receiveM;          /* Statistics: protocol messages received */
+	long receiveK;          /* Statistics: total k-bytes received */
+#ifndef NO_FDLIST
+	long lastrecvM;		/* to check for activity --Mika */
 #endif
-	char buffer[BUFSIZE];	/* Incoming message buffer */
-	short lastsq;		/* # of 2k blocks when sendqueued called last */
-	dbuf sendQ;		/* Outgoing message queue--if socket full */
-	dbuf recvQ;		/* Hold for data incoming yet to be parsed */
+#ifdef USE_SSL
+        struct  SSL     *ssl;
+        struct X509     *client_cert;
+#endif
+	aClient *acpt;          /* listening client which we accepted from */
+	Link *confs;            /* Configuration record associated */
+	Link *notify;           /* Links to clients notify-structures */
+	char *passwd;
+	struct hostent *hostp;
 #ifdef NOSPOOF
 	u_int32_t nospoof;	/* Anti-spoofing random number */
 #endif
-	short proto;		/* ProtoCtl options */
-	long sendM;		/* Statistics: protocol messages send */
-	long sendK;		/* Statistics: total k-bytes send */
-	long receiveM;		/* Statistics: protocol messages received */
-#ifdef ZIP_LINKS
-	struct Zdata *zip;	/* zip data */
-#endif
-#ifdef USE_SSL
-	SSL		*ssl;
-#endif
 #ifndef NO_FDLIST
-	long lastrecvM;		/* to check for activity --Mika */
 	int  priority;
 #endif
-	long receiveK;		/* Statistics: total k-bytes received */
-	u_short sendB;		/* counters to count upto 1-k lots of bytes */
-	u_short receiveB;	/* sent and received. */
-	aClient *listener;
-	ConfigItem_class *class;		/* Configuration record associated */
-	int authfd;		/* fd for rfc931 authentication */
-        short slot;         /* my offset in the local fd table */
-	struct IN_ADDR ip;	/* keep real ip# too */
+	int  authfd;            /* fd for rfc931 authentication */
+#ifdef SOCKSPORT
+	int  socksfd;
+#endif
+	int proto;		/* ProtoCtl options */
+        u_short sendB;          /* counters to count upto 1-k lots of bytes */
+        u_short receiveB;       /* sent and received. */
 	u_short port;		/* and the remote port# too :-) */
-	struct hostent *hostp;
-	u_short watches;	/* Keep track of count of notifies */
-	Link *watch;		/* Links to clients notify-structures */
-	char sockhost[HOSTLEN + 1];	/* This is the host name from the socket
-					   ** and after which the connection was
-					   ** accepted.
-					 */
-	char *passwd;
+	u_short notifies;	/* Keep track of count of notifies */
+	short lastsq;           /* # of 2k blocks when sendqueued called last */
 #ifdef DEBUGMODE
 	TS   cputime;
 #endif
-	char *error_str;	/* Quit reason set by dead_link in case of socket/buffer error */
 };
-
 
 #define	CLIENT_LOCAL_SIZE sizeof(aClient)
 #define	CLIENT_REMOTE_SIZE offsetof(aClient,count)
 
 /*
- * conf2 stuff -stskeeps
-*/
-
-/* Config flags */
- 
-struct _configfile
-{
-        char            *cf_filename;
-        ConfigEntry     *cf_entries;
-        ConfigFile     *cf_next;
-};
-
-struct _configentry
-{
-        ConfigFile	*ce_fileptr;
-        int 	 	ce_varlinenum, ce_fileposstart, ce_fileposend, ce_sectlinenum;
-        char 		*ce_varname, *ce_vardata;
-        ConfigEntry     *ce_entries, *ce_prevlevel, *ce_next;
-};
-
-struct _configflag 
-{
-	unsigned	temporary : 1;
-	unsigned	permanent : 1;
-};
-
-/* configflag specialized for except socks/ban -Stskeeps */
-
-struct _configflag_except
-{
-	unsigned	temporary : 1;
-	unsigned	type	  : 2;
-};
-
-struct _configflag_ban
-{
-	unsigned	temporary : 1;
-	unsigned	type	  : 4;
-	unsigned	type2	  : 2;
-};
-
-struct _configflag_tld
-{
-	unsigned	temporary : 1;
-	unsigned	motdptr   : 1;
-	unsigned	rulesptr  : 1;
-};
-
-#define CONF_BAN_NICK		1
-#define CONF_BAN_IP		2
-#define CONF_BAN_SERVER		3
-#define CONF_BAN_USER   	4
-#define CONF_BAN_REALNAME 	5
-#define CONF_BAN_VERSION        6
-
-#define CONF_BAN_TYPE_CONF	0
-#define CONF_BAN_TYPE_AKILL	1
-#define CONF_BAN_TYPE_TEMPORARY 2
-
-#define CRULE_ALL		0
-#define CRULE_AUTO		1
-
-#define CONF_EXCEPT_BAN		1
-#define CONF_EXCEPT_TKL		2
-#define CONF_EXCEPT_THROTTLE	3
-
-
-struct _configitem {
-	ConfigFlag flag;
-	ConfigItem *prev, *next;
-};
-
-struct _configitem_me {
-	char	   *name, *info;
-	unsigned short	   numeric;
-};
-
-struct _configitem_admin {
-	ConfigItem *prev, *next;
-	ConfigFlag flag;
-	char	   *line; 
-};
-
-struct _configitem_class {
-	ConfigItem *prev, *next;
-	ConfigFlag flag;
-	char	   *name;
-	int	   pingfreq, connfreq, maxclients, sendq, recvq, clients;
-};
-
-struct _configflag_allow {
-	unsigned	noident :1;
-	unsigned	useip :1;
-	unsigned	ssl :1;
-	unsigned	nopasscont :1;
-};
-
-struct _configitem_allow {
-	ConfigItem       *prev, *next;
-	ConfigFlag 	 flag;
-	char	         *ip, *hostname, *server;
-	anAuthStruct	 *auth;	
-	short		 maxperip;
-	int		 port;
-	ConfigItem_class *class;
-	ConfigFlag_allow flags;
-};
-
-struct _configitem_oper {
-	ConfigItem       *prev, *next;
-	ConfigFlag 	 flag;
-	char		 *name, *swhois, *snomask;
-	anAuthStruct	 *auth;
-	ConfigItem_class *class;
-	ConfigItem	 *from;
-	long		 oflags;
-};
-
-struct _configitem_oper_from {
-	ConfigItem       *prev, *next;
-	ConfigFlag 	 flag;
-	char		 *name;
-};
-
-struct _configitem_drpass {
-	anAuthStruct	 *restartauth;
-	anAuthStruct	 *dieauth;
-};
-
-struct _configitem_ulines {
-	ConfigItem       *prev, *next;
-	ConfigFlag 	 flag;
-	char 		 *servername;
-};
-
-#define TLD_SSL		0x1
-#define TLD_REMOTE	0x2
-
-struct _configitem_tld {
-	ConfigItem 	*prev, *next;
-	ConfigFlag_tld 	flag;
-	char 		*mask, *motd_file, *rules_file, *smotd_file, *channel;
-	struct tm	motd_tm, smotd_tm;
-	aMotd		*rules, *motd, *smotd;
-	u_short		options;
-};
-
-struct _configitem_listen {
-	ConfigItem 	*prev, *next;
-	ConfigFlag 	flag;
-	char		*ip;
-	int		port;
-	long		options, clients;
-	aClient		*listener;
-};
-
-struct _configitem_vhost {
-	ConfigItem 	*prev, *next;
-	ConfigFlag 	flag;
-	ConfigItem       *from;
-	char		*login, *virthost, *virtuser, *swhois;
-	anAuthStruct	*auth;
-};
-
-struct _configitem_link {
-	ConfigItem	*prev, *next;
-	ConfigFlag	flag;
-	char		*servername, *username, *hostname, *bindip, *hubmask, *leafmask, *connpwd;
-	anAuthStruct	*recvauth;
-	u_short		port, options;
-	unsigned char 	leafdepth;
-	int		refcount;
-	ConfigItem_class	*class;
-	struct IN_ADDR 		ipnum;
-	time_t			hold;
-#ifdef USE_SSL
-	char		*ciphers;
-#endif
-#ifdef ZIP_LINKS
-	int compression_level;
-#endif
-};
-
-struct _configitem_except {
-	ConfigItem      *prev, *next;
-	ConfigFlag_except      flag;
-	int type;
-	char		*mask;
-};
-
-struct _configitem_ban {
-	ConfigItem		*prev, *next;
-	ConfigFlag_ban	flag;
-	char			*mask, *reason;
-	struct IN_ADDR netmask;
-	int bits;
-	short masktype;
-
-};
-
-#ifdef FAST_BADWORD_REPLACE
-#define BADW_TYPE_FAST    0x1
-#define BADW_TYPE_FAST_L  0x2
-#define BADW_TYPE_FAST_R  0x4
-#define BADW_TYPE_REGEX   0x8
-#endif
-
-#define BADWORD_REPLACE 1
-#define BADWORD_BLOCK 2
-
-struct _configitem_badword {
-	ConfigItem      *prev, *next;
-	ConfigFlag	flag;
-	char		*word, *replace;
-#ifdef FAST_BADWORD_REPLACE
-	unsigned short	type;
-#endif
-	char		action;
-	regex_t 	expr;
-};
-
-struct _configitem_deny_dcc {
-	ConfigItem		*prev, *next;
-	ConfigFlag_ban		flag;
-	char			*filename, *reason;
-};
-
-struct _configitem_deny_link {
-	ConfigItem              *prev, *next;
-	ConfigFlag_except       flag;
-	char			*mask, *rule, *prettyrule;
-};
-
-struct _configitem_deny_version {
-	ConfigItem		*prev, *next;
-	ConfigFlag		flag;
-	char 			*mask, *version, *flags;
-};
-
-struct _configitem_deny_channel {
-	ConfigItem		*prev, *next;
-	ConfigFlag		flag;
-	char			*channel, *reason, *redirect;
-};
-
-struct _configitem_allow_channel {
-	ConfigItem		*prev, *next;
-	ConfigFlag		flag;
-	char			*channel;
-};
-
-struct _configitem_log {
-	ConfigItem *prev, *next;
-	ConfigFlag flag;
-	char *file;
-	long maxsize;
-	int  flags;
-};
-
-struct _configitem_unknown {
-	ConfigItem *prev, *next;
-	ConfigFlag flag;
-	ConfigEntry *ce;
-};
-
-struct _configitem_unknown_ext {
-	ConfigItem *prev, *next;
-	ConfigFlag flag;
-	char *ce_varname, *ce_vardata;
-	ConfigFile      *ce_fileptr;
-	int             ce_varlinenum;
-	ConfigEntry     *ce_entries;
-};
-
-#define ALIAS_SERVICES 1
-#define ALIAS_STATS 2
-#define ALIAS_NORMAL 3
-#define ALIAS_COMMAND 4
-
-struct _configitem_alias {
-	ConfigItem *prev, *next;
-	ConfigFlag flag;
-	ConfigItem_alias_format *format;
-	char *alias, *nick;
-	short type;
-};
-
-struct _configitem_alias_format {
-	ConfigItem *prev, *next;
-	ConfigFlag flag;
-	char *nick;
-	short type;
-	char *format, *parameters;
-	regex_t expr;
-};
-
-#define INCLUDE_NOTLOADED 1
-	
-struct _configitem_include {
-	ConfigItem *prev, *next;
-	ConfigFlag_ban flag;
-	char *file;
-};
-
-struct _configitem_help {
-	ConfigItem *prev, *next;
-	ConfigFlag flag;
-	char *command;
-	aMotd *text;
-};
-
-#define HM_HOST 1
-#define HM_IPV4 2
-#define HM_IPV6 3
-
-/*
  * statistics structures
  */
 struct stats {
+        unsigned long is_cks;   /* k-bytes sent to clients */
+        unsigned long is_ckr;   /* k-bytes received to clients */
+        unsigned long is_sks;   /* k-bytes sent to servers */
+        unsigned long is_skr;   /* k-bytes received to servers */
+	TS   is_cti;            /* time spent connected by clients */
+        TS   is_sti;            /* time spent connected by servers */
 	unsigned int is_cl;	/* number of client connections */
 	unsigned int is_sv;	/* number of server connections */
 	unsigned int is_ni;	/* connection but no idea who it was */
-	unsigned short is_cbs;	/* bytes sent to clients */
-	unsigned short is_cbr;	/* bytes received to clients */
-	unsigned short is_sbs;	/* bytes sent to servers */
-	unsigned short is_sbr;	/* bytes received to servers */
-	unsigned long is_cks;	/* k-bytes sent to clients */
-	unsigned long is_ckr;	/* k-bytes received to clients */
-	unsigned long is_sks;	/* k-bytes sent to servers */
-	unsigned long is_skr;	/* k-bytes received to servers */
-	TS   is_cti;		/* time spent connected by clients */
-	TS   is_sti;		/* time spent connected by servers */
 	unsigned int is_ac;	/* connections accepted */
 	unsigned int is_ref;	/* accepts refused */
 	unsigned int is_unco;	/* unknown commands */
@@ -1204,45 +887,59 @@ struct stats {
 	unsigned int is_abad;	/* bad auth requests */
 	unsigned int is_udp;	/* packets recv'd on udp port */
 	unsigned int is_loc;	/* local connections made */
+        unsigned short is_cbs;  /* bytes sent to clients */
+        unsigned short is_cbr;  /* bytes received to clients */
+        unsigned short is_sbs;  /* bytes sent to servers */
+        unsigned short is_sbr;  /* bytes received to servers */
 };
-
-typedef struct _MemoryInfo {
-	unsigned int classes;
-	unsigned long classesmem;
-} MemoryInfo;
 
 struct ListOptions {
 	LOpts *next;
 	Link *yeslist, *nolist;
-	unsigned int  starthash;
-	short int showall;
-	unsigned short usermin;
-	int  usermax;
 	TS   currenttime;
 	TS   chantimemin;
 	TS   chantimemax;
 	TS   topictimemin;
 	TS   topictimemax;
+	int  starthash;
+	int  usermax;
+	short int showall;
+	unsigned short usermin;
 };
 
 /* mode structure for channels */
 struct SMode {
 	long mode;
 	int  limit;
-	char key[KEYLEN + 1];
 	char link[LINKLEN + 1];
+        char key[KEYLEN + 1];
 	/* x:y */
 	unsigned short  msgs;		/* x */
 	unsigned short  per;		/* y */
 	unsigned char	 kmode;	/* mode  0 = kick  1 = ban */
 };
 
+/* Message table structure */
+
+struct Message {
+	char *cmd;
+	int  (*func) ();
+	unsigned int count;
+	unsigned parameters : 5;
+	u_char token[3];        /* Cheat for tokenized value */
+	unsigned long bytes;
+#ifdef DEBUGMODE
+        unsigned long lticks;
+        unsigned long rticks;
+#endif
+};
+
 /* Used for notify-hash buckets... -Donwulff */
 
-struct Watch {
-	aWatch *hnext;
+struct Notify {
+	aNotify *hnext;
+	Link *notify;
 	TS   lasttime;
-	Link *watch;
 	char nick[1];
 };
 
@@ -1250,12 +947,12 @@ struct Watch {
 
 struct SLink {
 	struct SLink *next;
-	int  flags;
+	aFloodOpt *flood;
 	union {
 		aClient *cptr;
 		aChannel *chptr;
-		ListStruct *aconf;
-		aWatch *wptr;
+		aConfItem *aconf;
+		aNotify *nptr;
 		aName *whowas;
 		char *cp;
 		struct {
@@ -1264,43 +961,7 @@ struct SLink {
 			TS   when;
 		} ban;
 	} value;
-};
-
-struct SMember
-{
-	struct SMember *next;
-	aClient	      *cptr;
-	int		flags;
-};
-
-struct Channel {
-	struct Channel *nextch, *prevch, *hnextch;
-	Mode mode;
-	TS   creationtime;
-	char *topic;
-	char *topic_nick;
-	TS   topic_time;
-	unsigned short users;
-	Member *members;
-	Link *invites;
-	Ban *banlist;
-	Ban *exlist;		/* exceptions */
-	char chname[1];
-};
-
-struct SMembershipL
-{
-	struct SMembership 	*next;
-	struct Channel		*chptr;
-	int			flags;
-	aFloodOpt		flood;		
-};
-
-struct SMembership
-{
-	struct SMembership 	*next;
-	struct Channel		*chptr;
-	int			flags;
+	int flags;
 };
 
 struct SBan {
@@ -1316,22 +977,27 @@ struct DSlink {
 	union {
 		aClient *cptr;
 		aChannel *chptr;
-		ListStruct *aconf;
+		aConfItem *aconf;
 		char *cp;
 	} value;
-};
-#define AddListItem(item,list) add_ListItem((ListStruct *)item, (ListStruct **)&list)
-#define DelListItem(item,list) del_ListItem((ListStruct *)item, (ListStruct **)&list)
-/* Backwards compatibility */
-#define add_ConfigItem(item,list) add_ListItem((ListStruct *)item, (ListStruct **)&list)
-#define del_ConfigItem(item,list) del_ListItem((ListStruct *)item, (ListStruct **)&list)
-
-struct liststruct {
-	ListStruct *prev, *next;
 };
 
 /* channel structure */
 
+struct Channel {
+	Mode mode;
+	struct Channel *nextch, *prevch, *hnextch;
+	char *topic;
+	char *topic_nick;
+	Link *members;
+	Link *invites;
+	Ban *banlist;
+	Ban *exlist;		/* exceptions */
+	TS   creationtime;
+	TS   topic_time;
+	unsigned short users;
+	char chname[1];
+};
 
 /*
 ** Channel Related macros follow
@@ -1412,12 +1078,19 @@ struct liststruct {
 #define	ShowChannel(v,c)	(PubChannel(c) || IsMember((v),(c)))
 #define	PubChannel(x)		((!x) || ((x)->mode.mode &\
 				 (MODE_PRIVATE | MODE_SECRET)) == 0)
+/* auditorium */
+#define IsAuditorium(x)		((x) && ((x)->mode.mode & MODE_AUDITORIUM))
 
+	
 #define	IsChannelName(name) ((name) && (*(name) == '#'))
 
 #define IsMember(blah,chan) ((blah && blah->user && \
-                find_membership_link((blah->user)->channel, chan)) ? 1 : 0)
+                find_channel_link((blah->user)->channel, chan)) ? 1 : 0)
 
+struct FloodOpt {
+	TS   lastmsg;
+	unsigned short nmsg;
+};
 
 /* Misc macros */
 
@@ -1425,18 +1098,11 @@ struct liststruct {
 
 #define	isvalid(c) (((c) >= 'A' && (c) <= '~') || isdigit(c) || (c) == '-')
 
-/* remote fds are set to -256, else its a local fd (a local fd
- * can get -1 or -2 in case it has been closed). -- Syzop
- */
-#define	MyConnect(x)			((x)->fd != -256)
+#define	MyConnect(x)			((x)->fd >= 0)
 #define	MyClient(x)			(MyConnect(x) && IsClient(x))
 #define	MyOper(x)			(MyConnect(x) && IsOper(x))
 
-#ifdef CLEAN_COMPILE
-#define TStime() (time(NULL) + TSoffset)
-#else
-#define TStime() (timeofday == 0 ? (timeofday = time(NULL) + TSoffset) : timeofday)
-#endif
+#define TStime() (time(NULL)+TSoffset)
 
 /* Lifted somewhat from Undernet code --Rak */
 
@@ -1484,47 +1150,8 @@ extern char *gnulicense[];
 
 #define	FLUSH_BUFFER	-2
 #define	COMMA		","
-
 #ifdef USE_SSL
 #include "ssl.h"
 #endif
-#define EVENT_HASHES EVENT_DRUGS
-#include "modules.h"
-#include "events.h"
-struct Command {
-	aCommand		*prev, *next;
-	char 			*cmd;
-	int			(*func) ();
-	int			flags;
-	unsigned int    	count;
-	unsigned		parameters : 5;
-	unsigned		token : 1;
-	unsigned long   	bytes;
-	Module 			*owner;
-#ifdef DEBUGMODE
-	unsigned long 		lticks;
-	unsigned long 		rticks;
-#endif
-};
-
-#ifdef THROTTLING
-
-struct ThrottlingBucket
-{
-	struct ThrottlingBucket *prev, *next;
-	struct IN_ADDR	in;
-	time_t		since;
-	char		count;
-};
-
-void	init_throttling_hash();
-int	hash_throttling(struct IN_ADDR *in);
-struct	ThrottlingBucket	*find_throttling_bucket(struct IN_ADDR *in);
-void	add_throttling_bucket(struct IN_ADDR *in);
-void	del_throttling_bucket(struct ThrottlingBucket *bucket);
-int	throttle_can_connect(struct IN_ADDR *in);
-
-#endif
 
 #endif /* __struct_include__ */
-

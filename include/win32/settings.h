@@ -1,0 +1,25 @@
+/*
+ * VERSION: Unreal3.1.6 Noon
+ * DATE:    Sat Jun 15 13:43:51 EST 2002
+ * OS:      Win-32
+ *
+ */
+
+#define DPATH "."
+#define SPATH "."
+#define DOMAINNAME "irc.net"
+#define LISTEN_SIZE 5
+#define MAXSENDQLENGTH 3000000
+#define BUFFERPOOL (9 * MAXSENDQLENGTH)
+#define MAXCONNECTIONS 1024
+#define NICKNAMEHISTORYLENGTH 2000
+#define OPEROVERRIDE_VERIFY 1
+#undef CRYPT_OPER_PASSWORD
+#undef USE_SSL
+#undef CRYPT_LINK_PASSWORD
+#undef CRYPT_ILINE_PASSWORD
+#undef CRYPT_XLINE_PASSWORD
+#define HUB 1
+#define HAVE_REGEX 1
+#define NOSPOOF 1
+#define GLIBC2_x

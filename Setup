@@ -1,0 +1,37 @@
+#!/bin/sh
+clear
+echo "Starting up UnrealIRCd Setup"
+echo ""
+echo "Press enter to proceed to setup..."
+read cc
+more -d Unreal.nfo
+echo "Press enter to proceed to FAQ..."
+read cc 
+more -d doc/faq
+echo "Press enter to proceed to configuration..."
+read cc
+if [ "$1" != "-noconfig" ] ; then
+	./Config
+fi
+
+echo "Press enter to proceed to compiling..."
+read cc
+make
+echo "Press enter to proceed to ircd.conf making..."
+read cc
+./makeconf
+echo "Press enter to proceed to network configuration..."
+read cc
+clear
+echo "Do you want to use one of these network files, or make your own?"
+cd networks
+ls *.network
+echo "[Type "no" if you want to make your own]"
+read cc
+if [ "$cc" == "no" ] ; then
+	./makenet
+fi
+echo "Press enter to proceed to dynamic ircd configuration..."
+read cc
+pico unrealircd.conf
+echo "You should be able to run UnrealIRCd using ./ircd now".

@@ -25,7 +25,6 @@
 #include "h.h"
 #include "hash.h"
 #include "proto.h"
-#include "msg.h"
 #include <string.h>
 
 /* externally defined functions */
@@ -69,12 +68,7 @@ void add_history(aClient *cptr, int online)
 	AllocCpy(new->name, cptr->name);
 	AllocCpy(new->username, cptr->user->username);
 	AllocCpy(new->hostname, cptr->user->realhost);
-	if (cptr->user->virthost)
-	{
-		AllocCpy(new->virthost, cptr->user->virthost);
-	}
-	else
-		new->virthost = strdup("");
+	AllocCpy(new->virthost, cptr->user->virthost);
 	new->servername = cptr->user->server;
 	AllocCpy(new->realname, cptr->info);
 
@@ -168,7 +162,7 @@ int  m_whowas(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc > 2)
 		max = atoi(parv[2]);
 	if (parc > 3)
-		if (hunt_server_token(cptr, sptr, MSG_WHOWAS, TOK_WHOWAS, "%s %s :%s", 3, parc,
+		if (hunt_server(cptr, sptr, ":%s WHOWAS %s %s :%s", 3, parc,
 		    parv))
 			return 0;
 

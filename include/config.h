@@ -3,7 +3,7 @@
  *   Copyright (C) 1990 Jarkko Oikarinen
  *
  *   $Id$
- *
+ * 
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
  *   the Free Software Foundation; either version 1, or (at your option)
@@ -23,7 +23,7 @@
 #define	__config_include__
 
 #include "setup.h"
-
+#include "settings.h"
 /*
  *
  *   NOTICE
@@ -35,12 +35,23 @@
  *
  *
  */
+/*
+ * To windows porters:
+ *   You can specify name and url for their diff wircd sites
+ *   #undef WIN32_SPECIFY for not having any notice about it in the wIRCd
+ *    --Techie
+ */
+#undef WIN32_SPECIFY
+
+#ifdef WIN32_SPECIFY
+#define WIN32_PORTER ""
+#define WIN32_URL ""
+#endif
 
  /*
     * Define this if you're testing/debugging/programming.
-#undef DEBUG
   */
-
+#undef DEBUG
 /* Type of host. These should be made redundant somehow. -avalon */
 
 /*	BSD			Nothing Needed 4.{2,3} BSD, SunOS 3.x, 4.x */
@@ -70,21 +81,11 @@
 
 #undef NO_FDLIST
 
-/* Defining this implements a very different handling of channel modes +a and +q.
- * When set, users who are +q will have prefix ~, and +a prefix &. Chmode +a and +q
- * now will also include all of the rights given to +o users, that is +oa is no longer
- * needed, +a is fine. Additionally, due to this change, it is recommended that you only
- * enable this option if you intend to enable it on ALL servers. At this time, this feature
- * is still considered experimental.
- */
-
-#undef PREFIX_AQ
-
 /*
  * Defining this will allow all ircops to see people in +s channels
- * By default, only net/tech admins can see this
+ * By default, only net admins can see this
  */
-#define SHOW_SECRET
+#undef SEE_SECRET
 
 /*
  * This allows you to see modes in /list
@@ -96,22 +97,8 @@
  */
 #define ADMINCHAT 1
 
-/* 
- * If channel mode is +z, only send to secure links & people
- *
-*/
-#undef SECURECHANMSGSONLYGOTOSECURE
-
 /*
- * be compatible with older cloak keys? If you link to servers beta4 and 
- * earlier without this the cloak keys will produce diff results
- * Not recommended, however, as beta4 and earlier 3.2 has an insecure
- * cloak algo -griever
- */
-#undef COMPAT_BETA4_KEYS
-
-/*
-  If you want SHUN_NOTICES, define this
+  If you want SHUN_NOTICES, define this 
 */
 #undef SHUN_NOTICES
 
@@ -132,11 +119,6 @@
 #define STRIPBADWORDS
 
 /*
- * Always strip badwords in channels? (channel does not have to be +G)
-*/
-#undef STRIPBADWORDS_CHAN_ALWAYS
-
-/*
  * NO_OPEROVERRIDE
  *   This will disable OperMode, OperTopic and Banwalks
 */
@@ -144,32 +126,22 @@
 
 /*
  * OPEROVERRIDE_VERIFY
- *   This will prompt opers before permitting them to join +p/+s
- *   channels, decreasing the chances of someone "accidentally"
- *   entering a random channel.
+ *   This will prompt opers before permitting them to join +s/+p
+ *   channels, preventing them from "accidentally" joining random
+ *   channels
  */
+#ifndef NO_OPEROVERRIDE
+#define OPEROVERRIDE_VERIFY 1
+#else
 #undef OPEROVERRIDE_VERIFY
+#endif
 
 /*
- * THROTTLING
- *   This will only allow 1 connection per ip in set::throttle::period time
- */
-#define THROTTLING
-
-/*
- * NAZIISH_CHBAN_HANDLING (formerly ANNOYING_BAN_THING)
- *   Reject bans that are matched by existing bans, causes chanserv
- *   To flood-kick an akicked user if their akick is matched by another
- *   Ban, but if you don't mind, this can free up ban list space I guess
- */
-#undef NAZIISH_CHBAN_HANDLING
-
-/*
- * Disable /sethost, /setident, /chgname, /chghost, /chgident
+ * Disable /sethost, /setident, /chgname, /chghost, /chgident 
 */
 #undef DISABLE_USERMOD
 
-/*
+/* 
   Ident checking
   #define this to disable ident checking
 */
@@ -181,12 +153,6 @@
  * This enables the spoof protection.
  */
 /* #define NOSPOOF 1  */
-
-
-/*
- * Enables locops to override the RFC1459 flood control too
-*/
-#undef FAKE_LAG_FOR_LOCOPS
 
 /*
  * HOSTILENAME - Define this if you want the hostile username patch included,
@@ -205,18 +171,6 @@
 #define NICK_DELAY 15		/* recommended value 15 */
 
 /*
- * This makes topics include nick!user@host instead of nick in topic whoset, 
- * ALL servers must be Unreal3.2-beta12 or higher, and services may have some
- * problems with this
-*/
-#undef TOPIC_NICK_IS_NUHOST
-
-/*
- * Use JOIN instead of SJOIN on every remotely sent JOIN
-*/
-#undef JOIN_INSTEAD_OF_SJOIN_ON_REMOTEJOIN
-
-/*
 ** Freelinks garbage collector -Stskeeps
 **
 ** GARBAGE_COLLECT_EVERY - how many seconds between every garbage collect
@@ -233,11 +187,6 @@
  * than the K line comment (the comment field is treated as a filename)
  */
 #undef	COMMENT_IS_FILE
-
-/*
- * MAXUNKNOWNCONNECTIONSPERIP
-*/
-#define MAXUNKNOWNCONNECTIONSPERIP 3
 
 
 /* Do these work? I dunno... */
@@ -264,10 +213,9 @@
  * If your host supports varargs and has vsprintf(), vprintf() and vscanf()
  * C calls in its library, then you can define USE_VARARGS to use varargs
  * instead of imitation variable arg passing.
-*/
 #define	USE_VARARGS
 
-/* NOTE: with current server code, varargs doesn't survive because it can't
+ * NOTE: with current server code, varargs doesn't survive because it can't
  *       be used in a chain of 3 or more funtions which all have a variable
  *       number of params.  If anyone has a solution to this, please notify
  *       the maintainer.
@@ -275,15 +223,23 @@
 
 /* #undef	DEBUGMODE	   define DEBUGMODE to enable debugging mode.*/
 
+/* We not check whether this is ok at compile time -- codemastr */
+/*
+ * defining FORCE_CORE will automatically "unlimit core", forcing the
+ * server to dump a core file whenever it has a fatal error.  -mlv
+ */
+/* #define FORCE_CORE */
+
 /*
  * Full pathnames and defaults of irc system's support files. Please note that
  * these are only the recommened names and paths. Change as needed.
  * You must define these to something, even if you don't really want them.
  */
-#define	CPATH		"unrealircd.conf"	/* server configuration file */
+#define	CPATH		"ircd.conf"	/* server configuration file */
 #define	MPATH		"ircd.motd"	/* server MOTD file */
-#define SMPATH          "ircd.smotd"    /* short MOTD file */
 #define RPATH   	"ircd.rules"	/* server rules file */
+#define ZPATH		"ircd.notes"	/* server notes */
+#define ZCONF   	"networks/unrealircd.conf"	/* ircd configuration .. */
 #define OPATH   	"oper.motd"	/* Operators MOTD file */
 #define	LPATH		"debug.log"	/* Where the debug file lives, if DEBUGMODE */
 #define	PPATH		"ircd.pid"	/* file for server pid */
@@ -291,6 +247,24 @@
 #define VPATH		"ircd.svsmotd"	/* Services MOTD append. */
 #define BPATH		"bot.motd"	/* Bot MOTD */
 #define IRCDTUNE 	"ircd.tune"	/* tuning .. */
+
+/*
+ * Define this filename to maintain a list of persons who log
+ * into this server. Logging will stop when the file does not exist.
+ * Logging will be disable also if you do not define this.
+ * FNAME_USERLOG just logs user connections, FNAME_OPERLOG logs every
+ * successful use of /oper.  These are either full paths or files within DPATH.
+ */
+#define FNAME_USERLOG "users.log"
+#define FNAME_OPERLOG "opers.log"
+
+/* FAILOPER_WARN
+ *
+ * When defined, warns users on a failed oper attempt that it was/is logged
+ * Only works when FNAME_OPERLOG is defined, and a logfile exists.
+ * NOTE: Failed oper attempts are logged regardless.
+ */
+#define FAILOPER_WARN
 
 /* CHROOTDIR
  *
@@ -350,9 +324,39 @@
  *       starts up the server with a new conf file that has some extra
  *       O-lines. So don't use this unless you're debugging.
  */
-#undef	CMDLINE_CONFIG		/* allow conf-file to be specified on command line */
+#define	CMDLINE_CONFIG		/* allow conf-file to be specified on command line */
 
 /*
+ * If you wish to have the server send 'vital' messages about server
+ * through syslog, define USE_SYSLOG. Only system errors and events critical
+ * to the server are logged although if this is defined with FNAME_USERLOG,
+ * syslog() is used instead of the above file. It is not recommended that
+ * this option is used unless you tell the system administrator beforehand
+ * and obtain their permission to send messages to the system log files.
+ */
+#ifndef _WIN32
+#undef	USE_SYSLOG
+#endif
+
+#ifdef	USE_SYSLOG
+/*
+ * If you use syslog above, you may want to turn some (none) of the
+ * spurious log messages for KILL/SQUIT off.
+ */
+#undef	SYSLOG_KILL		/* log all operator kills to syslog */
+#undef  SYSLOG_SQUIT		/* log all remote squits for all servers to syslog */
+#undef	SYSLOG_CONNECT		/* log remote connect messages for other all servs */
+#undef	SYSLOG_USERS		/* send userlog stuff to syslog */
+#undef	SYSLOG_OPER		/* log all users who successfully become an Op */
+
+/*
+ * If you want to log to a different facility than DAEMON, change
+ * this define.
+ */
+#define LOG_FACILITY LOG_DAEMON
+#endif /* USE_SYSLOG */
+
+/* 
  * Size of the LISTEN request.  Some machines handle this large
  * without problem, but not all.  It defaults to 5, but can be
  * raised if you know your machine handles it.
@@ -372,7 +376,7 @@
  *  Recommended value is 2 * MAXSENDQLENGTH, for hubs, 5 *.
  */
 #ifndef BUFFERPOOL
-#define	BUFFERPOOL     (18 * MAXSENDQLENGTH)
+#define	BUFFERPOOL     (9 * MAXSENDQLENGTH)
 #endif
 
 /*
@@ -381,12 +385,28 @@
  * If you start the server as root but wish to have it run as another user,
  * define IRC_UID to that UID.  This should only be defined if you are running
  * as root and even then perhaps not.
- * use #define IRC_UID <uid>
- * and #define IRC_GID <gid>
  */
- 
-#undef	IRC_UID
-#undef	IRC_GID 
+
+/*
+ * Ok this one is being changed. it is advisable never to run anything that
+ * uses sockets etc. and has the potential for the outside world to connect to it 
+ * to run as root... Hackers do things like buffer overruns, and get dumped on
+ * a shell with root access effectivley ... so DONT do it.. if a program uses a
+ * port <1024 it will run as root, once the program has binded to the socket it
+ * will set its uid to something OTHER than root ... you set that in unrealircd.conf
+ *
+ * If you _must_ insist on running as root and not wanting the program to change its
+ * UID, then define BIG_SECURITY_HOLE below
+ */
+#if !defined(_WIN32)
+/* Change This Line Below \/ */
+#define BIG_SECURITY_HOLE
+/* Its the one above ^^^^^^^ */
+#ifndef BIG_SECURITY_HOLE
+#define	IRC_UID un_uid
+#define	IRC_GID un_gid
+#endif
+#endif
 
 /*
  * CLIENT_FLOOD
@@ -394,18 +414,10 @@
  * this controls the number of bytes the server will allow a client to
  * send to the server without processing before disconnecting the client for
  * flooding it.  Values greater than 8000 make no difference to the server.
- * NOTE: you can now also set this in class::recvq, if that's not present,
- *       this default value will be used.
  */
 #define	CLIENT_FLOOD	8000
 
-/* Anti-Flood options
- * NO_FLOOD_AWAY - enables limiting of how frequently a client can set /away
- */
-
-#undef NO_FLOOD_AWAY
-
-/*
+/* 
  * Define your network service names here.
  */
 #define ChanServ "ChanServ"
@@ -427,7 +439,31 @@
  */
 
 #define MAXTARGETS		20
-#define TARGET_DELAY		15
+#define TARGET_DELAY		120
+
+/* 
+ * Would you like all clients to see the progress of their connections?
+ */
+
+#define SHOWCONNECTINFO
+
+/*
+ * SOCKS proxy checker
+ *
+ * At the moment this isn't an ideal solution, however it's better
+ * than nothing. Smaller servers shouldn't notice much of a performance
+ * hit, larger servers might have to reduce their Y-lines. In either
+ * case it's advisable to increase the number of FD's you define by
+ * about 10%.
+ *
+ * This determines the port on the local ircd machine that the open
+ * SOCKS server test attempts to connect back to. The default should
+ * be fine except for those unusual situations where the default
+ * port is in use for some reason.
+ *
+ * Undefining this will eliminate the checker from ircd.
+ */
+#define SOCKSPORT 6013
 
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
 
@@ -450,7 +486,7 @@
  * 1 server = 1 connection, 1 user = 1 connection.
  * This should be at *least* 3: 1 listen port, 1 dns port + 1 client
  *
- * Note: this figure will be too high for most systems. If you get an
+ * Note: this figure will be too high for most systems. If you get an 
  * fd-related error on compile, change this to 256.
  *
  * Windows users: This should be a fairly high number.  Some operations
@@ -483,7 +519,7 @@
 
 /*
  * Time interval to wait and if no messages have been received, then check for
- * PINGFREQUENCY and CONNECTFREQUENCY
+ * PINGFREQUENCY and CONNECTFREQUENCY 
  */
 #define TIMESEC  60		/* Recommended value: 60 */
 
@@ -496,7 +532,7 @@
 #define PINGFREQUENCY    120	/* Recommended value: 120 */
 
 /*
- * If the connection to to uphost is down, then attempt to reconnect every
+ * If the connection to to uphost is down, then attempt to reconnect every 
  * CONNECTFREQUENCY  seconds.
  */
 #define CONNECTFREQUENCY 600	/* Recommended value: 600 */
@@ -532,24 +568,14 @@
  */
 #define KILLCHASETIMELIMIT 90	/* Recommended value: 90 */
 
-/*
- * Use much faster badwords replace routine (>100 times faster).
- */
-#define FAST_BADWORD_REPLACE
-
-/*
- * Only important for people using IPv6 (default should be ok for now) -Onliner
- * Because ip6.arpa is still not delegated for the 6bone (3ffe::/16)
- * this options allows you to still resolve it using ip6.int.
- */
-#define SIXBONE_HACK
-
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MOTD MPATH
 #define RULES RPATH
+#define SNOTES ZPATH
 #define	MYNAME SPATH
 #define	CONFIGFILE CPATH
 #define	IRCD_PIDFILE PPATH
+#define GLINE_LOG GPATH
 
 #ifdef	__osf__
 #define	OSF
@@ -581,23 +607,17 @@
 #endif
 
 #ifdef DEBUGMODE
-#ifndef _WIN32
-		extern void debug(int, char *, ...);
-#define Debug(x) debug x
+extern void debug();
+# define Debug(x) debug x
+# define LOGFILE LPATH
 #else
-		extern void debug(int, char *, ...);
-#define Debug(x) debug x
+# define Debug(x) ;
+# if VMS
+#	define LOGFILE "NLA0:"
+# else
+#	define LOGFILE "/dev/null"
+# endif
 #endif
-#define LOGFILE LPATH
-#else
-#define Debug(x) ;
-#if VMS
-#define LOGFILE "NLA0:"
-#else
-#define LOGFILE "/dev/null"
-#endif
-#endif
-
 
 #if defined(mips) || defined(PCS)
 #undef SYSV
@@ -611,14 +631,14 @@
 #ifdef	BSD_RELIABLE_SIGNALS
 # if defined(SYSV_UNRELIABLE_SIGNALS) || defined(POSIX_SIGNALS)
 error You stuffed up config.h signals
-#define use only one.
+#defines use only one.
 # endif
 #define	HAVE_RELIABLE_SIGNALS
 #endif
 #ifdef	SYSV_UNRELIABLE_SIGNALS
 # ifdef	POSIX_SIGNALS
      error You stuffed up config.h signals
-#define use only one.
+#defines use only one.
 # endif
 #undef	HAVE_RELIABLE_SIGNALS
 #endif
@@ -643,9 +663,13 @@ error You stuffed up config.h signals
 # define stricmp strcasecmp
 # define strnicmp strncasecmp
 #if defined(CLIENT_FLOOD)
+#  if	(CLIENT_FLOOD > 8000)
+#    define CLIENT_FLOOD 8000
+#  else
 #    if (CLIENT_FLOOD < 512)
      error CLIENT_FLOOD needs redefining.
 #    endif
+#  endif
 #else
      error CLIENT_FLOOD undefined
 #endif
@@ -669,7 +693,7 @@ error You stuffed up config.h signals
 # define BSD_INCLUDES
 #endif
 /*
- * This is just to make Solaris porting easier -- codemastr
+ * This is just to make Solaris porting easier -- codemastr 
  */
 #if defined(SOL20) || defined(SOL25) || defined(SOL26) || defined(SOL27)
 #define _SOLARIS
@@ -680,23 +704,15 @@ error You stuffed up config.h signals
 #ifdef _WIN32
 # undef FORCE_CORE
 #endif
-#ifdef NEED_BCMP
-#define bcmp memcmp
-#endif
-#ifdef NEED_BCOPY
-#define bcopy(a,b,c) memcpy(b,a,c)
-#endif
-#ifdef NEED_BZERO
-#define bzero(a,b) memset(a,0,b)
-#endif
-#ifdef HAVE_CRYPT
-#define AUTHENABLE_UNIXCRYPT
-#endif
-#if defined(AIX) && defined(_XOPEN_SOURCE_EXTENDED) && _XOPEN_SOURCE_EXTENDED
-# define SOCK_LEN_TYPE size_t
-#else
-# define SOCK_LEN_TYPE int
-#endif
-
+/* use cflag longmodes */
+#define Reg1 register
+#define Reg2 register
+#define Reg3 register
+#define Reg4 register
+#define Reg5 register
+#define Reg6 register
+#define Reg7 register
+#define Reg8 register
+#define Reg9 register
+#define Reg10 register
 #endif				/* __config_include__ */
-

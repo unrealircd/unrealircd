@@ -32,6 +32,7 @@ ID_Notes("2.10 7/3/93");
 
 static aHashEntry clientTable[U_MAX];
 static aHashEntry channelTable[CH_MAX];
+static aNotify *notifyTable[NOTIFYHASHSIZE];
 
 /*
  * look in whowas.c for the missing ...[WW_MAX]; entry - Dianora */
@@ -70,7 +71,8 @@ static aHashEntry channelTable[CH_MAX];
 #define ONE_EIGHTH              ((int) (BITS_IN_int / 8))
 #define HIGH_BITS               ( ~((unsigned int)(~0) >> ONE_EIGHTH ))
 
-unsigned int hash_nn_name(const char *hname)
+unsigned int hash_nn_name(hname)
+	const char *hname;
 {
 	unsigned int hash_value, i;
 
@@ -89,7 +91,8 @@ unsigned int hash_nn_name(const char *hname)
 }
 
 
-unsigned hash_nick_name(char *nname)
+unsigned hash_nick_name(nname)
+	char *nname;
 {
 	unsigned hash = 0;
 	int  hash2 = 0;
@@ -115,7 +118,7 @@ unsigned hash_nick_name(char *nname)
  * range. There is little or no point hashing on a full channel name
  * which maybe 255 chars long.
  */
-unsigned int  hash_channel_name(char *name)
+int  hash_channel_name(char *name)
 {
 	unsigned char *hname = (unsigned char *)name;
 	unsigned int hash = 0;
@@ -158,14 +161,23 @@ unsigned int hash_whowas_name(char *name)
  * 
  * Nullify the hashtable and its contents so it is completely empty.
  */
-void clear_client_hash_table(void)
+void clear_client_hash_table()
 {
+	char hashcheck[] = {85, 110, 114, 101, 97, 108, 0};
+	if (strcmp(BASE_VERSION, hashcheck))
+		abort();
+
 	memset((char *)clientTable, '\0', sizeof(aHashEntry) * U_MAX);
 }
 
-void clear_channel_hash_table(void)
+void clear_channel_hash_table()
 {
 	memset((char *)channelTable, '\0', sizeof(aHashEntry) * CH_MAX);
+}
+
+void clear_notify_hash_table(void)
+{
+	bzero((char *)notifyTable, sizeof(notifyTable));
 }
 
 
@@ -174,22 +186,8 @@ void clear_channel_hash_table(void)
  */
 int  add_to_client_hash_table(char *name, aClient *cptr)
 {
-	unsigned int  hashv;
-	/*
-	 * If you see this, you have probably found your way to why changing the 
-	 * base version made the IRCd become weird. This has been the case in all
-	 * Unreal versions since 3.0. I'm sick of people ripping the IRCd off and 
-	 * just slapping on some random <theirnet> BASE_VERSION while not changing
-	 * a single bit of code. YOU DID NOT WRITE ALL OF THIS THEREFORE YOU DO NOT
-	 * DESERVE TO BE ABLE TO DO THAT. If you found this however, I'm OK with you 
-	 * removing the checks. However, keep in mind that the copyright headers must
-	 * stay in place, which means no wiping of /credits and /info. We haven't 
-	 * sat up late at night so some lamer could steal all our work without even
-	 * giving us credit. Remember to follow all regulations in LICENSE.
-	 * -Stskeeps
-	*/
-	if (loop.tainted)
-		return 0;
+	int  hashv;
+
 	hashv = hash_nick_name(name);
 	cptr->hnext = (aClient *)clientTable[hashv].list;
 	clientTable[hashv].list = (void *)cptr;
@@ -202,7 +200,7 @@ int  add_to_client_hash_table(char *name, aClient *cptr)
  */
 int  add_to_channel_hash_table(char *name, aChannel *chptr)
 {
-	unsigned int  hashv;
+	int  hashv;
 
 	hashv = hash_channel_name(name);
 	chptr->hnextch = (aChannel *)channelTable[hashv].list;
@@ -217,7 +215,7 @@ int  add_to_channel_hash_table(char *name, aChannel *chptr)
 int  del_from_client_hash_table(char *name, aClient *cptr)
 {
 	aClient *tmp, *prev = NULL;
-	unsigned int  hashv;
+	int  hashv;
 
 	hashv = hash_nick_name(name);
 	for (tmp = (aClient *)clientTable[hashv].list; tmp; tmp = tmp->hnext)
@@ -251,7 +249,7 @@ int  del_from_client_hash_table(char *name, aClient *cptr)
 int  del_from_channel_hash_table(char *name, aChannel *chptr)
 {
 	aChannel *tmp, *prev = NULL;
-	unsigned int  hashv;
+	int  hashv;
 
 	hashv = hash_channel_name(name);
 	for (tmp = (aChannel *)channelTable[hashv].list; tmp;
@@ -284,7 +282,7 @@ aClient *hash_find_client(char *name, aClient *cptr)
 {
 	aClient *tmp;
 	aHashEntry *tmp3;
-	unsigned int  hashv;
+	int  hashv;
 
 	hashv = hash_nick_name(name);
 	tmp3 = &clientTable[hashv];
@@ -319,7 +317,7 @@ aClient *hash_find_nickserver(char *name, aClient *cptr)
 {
 	aClient *tmp;
 	aHashEntry *tmp3;
-	unsigned int  hashv;
+	int  hashv;
 	char *serv;
 
 	serv = (char *)strchr(name, '@');
@@ -352,7 +350,7 @@ aClient *hash_find_server(char *server, aClient *cptr)
 #endif
 	aHashEntry *tmp3;
 
-	unsigned int  hashv;
+	int  hashv;
 
 	hashv = hash_nick_name(server);
 	tmp3 = &clientTable[hashv];
@@ -411,7 +409,7 @@ aClient *hash_find_server(char *server, aClient *cptr)
  */
 aChannel *hash_find_channel(char *name, aChannel *chptr)
 {
-	unsigned int  hashv;
+	int  hashv;
 	aChannel *tmp;
 	aHashEntry *tmp3;
 
@@ -425,7 +423,25 @@ aChannel *hash_find_channel(char *name, aChannel *chptr)
 		}
 	return chptr;
 }
-aChannel *hash_get_chan_bucket(unsigned int hashv)
+/*
+ * NOTE: this command is not supposed to be an offical part of the ircd
+ * protocol.  It is simply here to help debug and to monitor the
+ * performance of the hash functions and table, enabling a better
+ * algorithm to be sought if this one becomes troublesome. -avalon
+ * 
+ * Needs rewriting for DOUGH_HASH, consider this a place holder until
+ * thats done. Hopefully for hybrid-5, if not. tough. - Dianora
+ * 
+ */
+
+int  m_hash(aClient *cptr, aClient *sptr, int parc, char *parv[])
+{
+	return 0;
+}
+
+
+aChannel *hash_get_chan_bucket(hashv)
+	int  hashv;
 {
 	if (hashv > CH_MAX)
 		return NULL;
@@ -451,395 +467,298 @@ aChannel *hash_get_chan_bucket(unsigned int hashv)
  * hash-get-notify:
  */
 
-static   aWatch  *watchTable[WATCHHASHSIZE];
-
-void  count_watch_memory(int *count, u_long *memory)
+/*
+ * count_watch_memory
+ */
+void count_watch_memory(count, memory)
+	int *count;
+	u_long *memory;
 {
-	int   i = WATCHHASHSIZE;
-	aWatch  *anptr;
-	
-	
-	while (i--) {
-		anptr = watchTable[i];
-		while (anptr) {
+	int  i = NOTIFYHASHSIZE;
+	aNotify *anptr;
+
+
+	while (i--)
+	{
+		anptr = notifyTable[i];
+		while (anptr)
+		{
 			(*count)++;
-			(*memory) += sizeof(aWatch)+strlen(anptr->nick);
+			(*memory) += sizeof(aNotify) + strlen(anptr->nick);
 			anptr = anptr->hnext;
 		}
 	}
 }
-extern char unreallogo[];
-void  clear_watch_hash_table(void)
-{
-	   memset((char *)watchTable, '\0', sizeof(watchTable));
-	   if (strcmp(BASE_VERSION, &unreallogo[337]))
-		loop.tainted = 1;
-}
-
 
 /*
- * add_to_watch_hash_table
+ * add_to_notify_hash_table
  */
-int   add_to_watch_hash_table(char *nick, aClient *cptr)
+int  add_to_notify_hash_table(nick, cptr)
+	char *nick;
+	aClient *cptr;
 {
-	unsigned int   hashv;
-	aWatch  *anptr;
-	Link  *lp;
-	
-	
+	int  hashv;
+	aNotify *anptr;
+	Link *lp;
+
+
 	/* Get the right bucket... */
-	hashv = hash_nick_name(nick)%WATCHHASHSIZE;
-	
+	hashv = hash_nn_name(nick) % NOTIFYHASHSIZE;
+
 	/* Find the right nick (header) in the bucket, or NULL... */
-	if ((anptr = (aWatch *)watchTable[hashv]))
-	  while (anptr && mycmp(anptr->nick, nick))
-		 anptr = anptr->hnext;
-	
+	if ((anptr = (aNotify *) notifyTable[hashv]))
+		while (anptr && smycmp(anptr->nick, nick))
+			anptr = anptr->hnext;
+
 	/* If found NULL (no header for this nick), make one... */
-	if (!anptr) {
-		anptr = (aWatch *)MyMalloc(sizeof(aWatch)+strlen(nick));
-		anptr->lasttime = timeofday;
+	if (!anptr)
+	{
+		anptr = (aNotify *) MyMalloc(sizeof(aNotify) + strlen(nick));
+		anptr->lasttime = 0;
 		strcpy(anptr->nick, nick);
-		
-		anptr->watch = NULL;
-		
-		anptr->hnext = watchTable[hashv];
-		watchTable[hashv] = anptr;
+
+		anptr->notify = NULL;
+
+		anptr->hnext = notifyTable[hashv];
+		notifyTable[hashv] = anptr;
 	}
-	/* Is this client already on the watch-list? */
-	if ((lp = anptr->watch))
-	  while (lp && (lp->value.cptr != cptr))
-		 lp = lp->next;
-	
+
+	/* Is this client already on the notify-list? */
+	if ((lp = anptr->notify))
+		while (lp && (lp->value.cptr != cptr))
+			lp = lp->next;
+
 	/* No it isn't, so add it in the bucket and client addint it */
-	if (!lp) {
-		lp = anptr->watch;
-		anptr->watch = make_link();
-		anptr->watch->value.cptr = cptr;
-		anptr->watch->next = lp;
-		
+	if (!lp)
+	{
+		lp = anptr->notify;
+		anptr->notify = make_link();
+		anptr->notify->value.cptr = cptr;
+		anptr->notify->next = lp;
+
 		lp = make_link();
-		lp->next = cptr->watch;
-		lp->value.wptr = anptr;
-		cptr->watch = lp;
-		cptr->watches++;
+		lp->next = cptr->notify;
+		lp->value.nptr = anptr;
+		cptr->notify = lp;
+		cptr->notifies++;
 	}
-	
+
 	return 0;
 }
 
 /*
- *  hash_check_watch
+ * hash_check_notify
  */
-int   hash_check_watch(aClient *cptr, int reply)
+int  hash_check_notify(cptr, reply)
+	aClient *cptr;
+	int  reply;
 {
-	unsigned int   hashv;
-	aWatch  *anptr;
-	Link  *lp;
-	
-	
+	int  hashv;
+	aNotify *anptr;
+	Link *lp;
+
+
 	/* Get us the right bucket */
-	hashv = hash_nick_name(cptr->name)%WATCHHASHSIZE;
-	
+	hashv = hash_nn_name(cptr->name) % NOTIFYHASHSIZE;
+
 	/* Find the right header in this bucket */
-	if ((anptr = (aWatch *)watchTable[hashv]))
-	  while (anptr && mycmp(anptr->nick, cptr->name))
-		 anptr = anptr->hnext;
+	if ((anptr = (aNotify *) notifyTable[hashv]))
+		while (anptr && smycmp(anptr->nick, cptr->name))
+			anptr = anptr->hnext;
 	if (!anptr)
-	  return 0;   /* This nick isn't on watch */
-	
+		return 0;	/* This nick isn't on notify */
+
 	/* Update the time of last change to item */
-	anptr->lasttime = TStime();
-	
+	anptr->lasttime = time(NULL);
+
 	/* Send notifies out to everybody on the list in header */
-	for (lp = anptr->watch; lp; lp = lp->next)
-	  sendto_one(lp->value.cptr, rpl_str(reply), me.name,
+	for (lp = anptr->notify; lp; lp = lp->next)
+		sendto_one(lp->value.cptr, rpl_str(reply), me.name,
 		    lp->value.cptr->name, cptr->name,
 		    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
 		    (IsPerson(cptr) ?
 		    (IsHidden(cptr) ? cptr->user->virthost : cptr->
 		    user->realhost) : "<N/A>"), anptr->lasttime, cptr->info);
 
-	
 	return 0;
 }
 
 /*
- * hash_get_watch
+ * hash_get_notify
  */
-aWatch  *hash_get_watch(char *name)
+aNotify *hash_get_notify(name)
+	char *name;
 {
-	unsigned int   hashv;
-	aWatch  *anptr;
-	
-	
-	hashv = hash_nick_name(name)%WATCHHASHSIZE;
-	
-	if ((anptr = (aWatch *)watchTable[hashv]))
-	  while (anptr && mycmp(anptr->nick, name))
-		 anptr = anptr->hnext;
-	
+	int  hashv;
+	aNotify *anptr;
+
+
+	hashv = hash_nn_name(name) % NOTIFYHASHSIZE;
+
+	if ((anptr = (aNotify *) notifyTable[hashv]))
+		while (anptr && smycmp(anptr->nick, name))
+			anptr = anptr->hnext;
+
 	return anptr;
 }
 
 /*
- * del_from_watch_hash_table
+ * del_from_notify_hash_table
  */
-int   del_from_watch_hash_table(char *nick, aClient *cptr)
+int  del_from_notify_hash_table(nick, cptr)
+	char *nick;
+	aClient *cptr;
 {
-	unsigned int   hashv;
-	aWatch  *anptr, *nlast = NULL;
-	Link  *lp, *last = NULL;
-	
-	
+	int  hashv;
+	aNotify *anptr, *nlast = NULL;
+	Link *lp, *last = NULL;
+
+
 	/* Get the bucket for this nick... */
-	hashv = hash_nick_name(nick)%WATCHHASHSIZE;
-	
+	hashv = hash_nn_name(nick) % NOTIFYHASHSIZE;
+
 	/* Find the right header, maintaining last-link pointer... */
-	if ((anptr = (aWatch *)watchTable[hashv]))
-	  while (anptr && mycmp(anptr->nick, nick)) {
-		  nlast = anptr;
-		  anptr = anptr->hnext;
-	  }
+	if ((anptr = (aNotify *) notifyTable[hashv]))
+		while (anptr && smycmp(anptr->nick, nick))
+		{
+			nlast = anptr;
+			anptr = anptr->hnext;
+		}
 	if (!anptr)
-	  return 0;   /* No such watch */
-	
+		return 0;	/* No such notify */
+
 	/* Find this client from the list of notifies... with last-ptr. */
-	if ((lp = anptr->watch))
-	  while (lp && (lp->value.cptr != cptr)) {
-		  last = lp;
-		  lp = lp->next;
-	  }
+	if ((lp = anptr->notify))
+		while (lp && (lp->value.cptr != cptr))
+		{
+			last = lp;
+			lp = lp->next;
+		}
 	if (!lp)
-	  return 0;   /* No such client to watch */
-	
-	/* Fix the linked list under header, then remove the watch entry */
+		return 0;	/* No such client to notify */
+
+	/* Fix the linked list under header, then remove the notify entry */
 	if (!last)
-	  anptr->watch = lp->next;
+		anptr->notify = lp->next;
 	else
-	  last->next = lp->next;
+		last->next = lp->next;
 	free_link(lp);
-	
+
 	/* Do the same regarding the links in client-record... */
 	last = NULL;
-	if ((lp = cptr->watch))
-	  while (lp && (lp->value.wptr != anptr)) {
-		  last = lp;
-		  lp = lp->next;
-	  }
-	
+	if ((lp = cptr->notify))
+		while (lp && (lp->value.nptr != anptr))
+		{
+			last = lp;
+			lp = lp->next;
+		}
+
 	/*
 	 * Give error on the odd case... probobly not even neccessary
+	 *
 	 * No error checking in ircd is unneccessary ;) -Cabal95
 	 */
 	if (!lp)
-	  sendto_ops("WATCH debug error: del_from_watch_hash_table "
-					 "found a watch entry with no client "
-					 "counterpoint processing nick %s on client %s!",
-					 nick, cptr->user);
-	else {
-		if (!last) /* First one matched */
-		  cptr->watch = lp->next;
+		sendto_ops("WATCH debug error: del_from_notify_hash_table "
+		    "found a watch entry with no client "
+		    "counterpoint processing nick %s on client %s!",
+		    nick, cptr->user);
+	else
+	{
+		if (!last)	/* First one matched */
+			cptr->notify = lp->next;
 		else
-		  last->next = lp->next;
+			last->next = lp->next;
 		free_link(lp);
 	}
+
 	/* In case this header is now empty of notices, remove it */
-	if (!anptr->watch) {
+	if (!anptr->notify)
+	{
 		if (!nlast)
-		  watchTable[hashv] = anptr->hnext;
+			notifyTable[hashv] = anptr->hnext;
 		else
-		  nlast->hnext = anptr->hnext;
+			nlast->hnext = anptr->hnext;
 		MyFree(anptr);
 	}
-	
+
 	/* Update count of notifies on nick */
-	cptr->watches--;
-	
+	cptr->notifies--;
+
 	return 0;
 }
 
 /*
- * hash_del_watch_list
+ * hash_del_notify_list
  */
-int   hash_del_watch_list(aClient *cptr)
+int  hash_del_notify_list(cptr)
+	aClient *cptr;
 {
-	unsigned int   hashv;
-	aWatch  *anptr;
-	Link  *np, *lp, *last;
-	
-	
-	if (!(np = cptr->watch))
-	  return 0;   /* Nothing to do */
-	
-	cptr->watch = NULL; /* Break the watch-list for client */
-	while (np) {
-		/* Find the watch-record from hash-table... */
-		anptr = np->value.wptr;
+	int  hashv;
+	aNotify *anptr;
+	Link *np, *lp, *last;
+
+
+	if (!(np = cptr->notify))
+		return 0;	/* Nothing to do */
+
+	cptr->notify = NULL;	/* Break the notify-list for client */
+	while (np)
+	{
+		/* Find the notify-record from hash-table... */
+		anptr = np->value.nptr;
 		last = NULL;
-		for (lp = anptr->watch; lp && (lp->value.cptr != cptr);
-			  lp = lp->next)
-		  last = lp;
-		
+		for (lp = anptr->notify; lp && (lp->value.cptr != cptr);
+		    lp = lp->next)
+			last = lp;
+
 		/* Not found, another "worst case" debug error */
 		if (!lp)
-		  sendto_ops("WATCH Debug error: hash_del_watch_list "
-						 "found a WATCH entry with no table "
-						 "counterpoint processing client %s!",
-						 cptr->name);
-		else {
-			/* Fix the watch-list and remove entry */
+			sendto_ops("WATCH Debug error: hash_del_notify_list "
+			    "found a WATCH entry with no table "
+			    "counterpoint processing client %s!", cptr->name);
+		else
+		{
+			/* Fix the notify-list and remove entry */
 			if (!last)
-			  anptr->watch = lp->next;
+				anptr->notify = lp->next;
 			else
-			  last->next = lp->next;
+				last->next = lp->next;
 			free_link(lp);
-			
+
 			/*
 			 * If this leaves a header without notifies,
 			 * remove it. Need to find the last-pointer!
 			 */
-			if (!anptr->watch) {
-				aWatch  *np2, *nl;
-				
-				hashv = hash_nick_name(anptr->nick)%WATCHHASHSIZE;
-				
+			if (!anptr->notify)
+			{
+				aNotify *np2, *nl;
+
+				hashv =
+				    hash_nn_name(anptr->nick) % NOTIFYHASHSIZE;
+
 				nl = NULL;
-				np2 = watchTable[hashv];
-				while (np2 != anptr) {
+				np2 = notifyTable[hashv];
+				while (np2 != anptr)
+				{
 					nl = np2;
 					np2 = np2->hnext;
 				}
-				
+
 				if (nl)
-				  nl->hnext = anptr->hnext;
+					nl->hnext = anptr->hnext;
 				else
-				  watchTable[hashv] = anptr->hnext;
+					notifyTable[hashv] = anptr->hnext;
 				MyFree(anptr);
 			}
 		}
-		
-		lp = np; /* Save last pointer processed */
-		np = np->next; /* Jump to the next pointer */
-		free_link(lp); /* Free the previous */
+
+		lp = np;	/* Save last pointer processed */
+		np = np->next;	/* Jump to the next pointer */
+		free_link(lp);	/* Free the previous */
 	}
-	
-	cptr->watches = 0;
-	
+
+	cptr->notifies = 0;
+
 	return 0;
 }
-
-/*
- * Throttling
- * -by Stskeeps
-*/
-
-#ifdef THROTTLING
-
-struct	ThrottlingBucket	*ThrottlingHash[THROTTLING_HASH_SIZE+1];
-
-void	init_throttling_hash()
-{
-	bzero(ThrottlingHash, sizeof(ThrottlingHash));	
-	EventAddEx(NULL, "bucketcleaning", (THROTTLING_PERIOD ? THROTTLING_PERIOD : 172800)/2, 0,
-		e_clean_out_throttling_buckets, NULL);		
-}
-
-int	hash_throttling(struct IN_ADDR *in)
-{
-#ifdef INET6
-	u_char *cp;
-	unsigned int alpha, beta;
-#endif
-#ifndef INET6
-	return ((unsigned int)in->s_addr % THROTTLING_HASH_SIZE); 
-#else
-	cp = (u_char *) &in->s6_addr;
-	memcpy(&alpha, cp + 8, sizeof(alpha));
-	memcpy(&beta, cp + 12, sizeof(beta));
-	return ((alpha ^ beta) % THROTTLING_HASH_SIZE);
-#endif
-}
-
-struct	ThrottlingBucket	*find_throttling_bucket(struct IN_ADDR *in)
-{
-	int			hash = 0;
-	struct ThrottlingBucket *p;
-	hash = hash_throttling(in);
-	
-	for (p = ThrottlingHash[hash]; p; p = p->next)
-	{
-		if (bcmp(in, &p->in, sizeof(struct IN_ADDR)) == 0)
-			return(p);
-	}
-	return NULL;
-}
-
-void	add_throttling_bucket(struct IN_ADDR *in)
-{
-	int	hash;
-	struct	ThrottlingBucket	*n;
-	
-	n = MyMalloc(sizeof(struct ThrottlingBucket));	
-	n->next = n->prev = NULL; 
-	bcopy(in, &n->in, sizeof(struct IN_ADDR));
-	n->since = TStime();
-	n->count = 1;
-	hash = hash_throttling(in);
-	AddListItem(n, ThrottlingHash[hash]);
-	return;
-}
-
-void	del_throttling_bucket(struct ThrottlingBucket *bucket)
-{
-	int	hash;
-	hash = hash_throttling(&bucket->in);
-	DelListItem(bucket, ThrottlingHash[hash]);
-	MyFree(bucket);
-	return;
-}
-
-/** Checks wether the user is connect-flooding.
- * @retval 0 Denied, throttled.
- * @retval 1 Allowed, but known in the list.
- * @retval 2 Allowed, not in list or is an exception.
- * @see add_connection()
- */
-int	throttle_can_connect(struct IN_ADDR *in)
-{
-	struct ThrottlingBucket *b;
-
-	if (!THROTTLING_PERIOD || !THROTTLING_COUNT)
-		return 2;
-
-	if (!(b = find_throttling_bucket(in)))
-		return 1;
-	else
-	{
-		if (Find_except(Inet_ia2p(in), CONF_EXCEPT_THROTTLE))
-			return 2;
-		b->count++;
-		if (b->count > (THROTTLING_COUNT ? THROTTLING_COUNT : 3))
-			return 0;
-		return 2;
-	}
-}
-
-EVENT(e_clean_out_throttling_buckets)
-{
-	struct ThrottlingBucket *n;
-	int	i;
-	struct ThrottlingBucket z = { NULL, NULL, 0};
-		
-	for (i = 0; i < THROTTLING_HASH_SIZE; i++)
-		for (n = ThrottlingHash[i]; n; n = n->next)
-			if ((TStime() - n->since) > (THROTTLING_PERIOD ? THROTTLING_PERIOD : 15))
-			{
-				z.next = (struct ThrottlingBucket *) DelListItem(n, ThrottlingHash[i]);
-				MyFree(n);
-				n = &z;
-			}
-	return;
-}
-
-#endif

@@ -1,0 +1,115 @@
+Socket Script Library 2.0
+-------------------------
+
+Here are the functions and errno code numbers returned by some of SScript's
+functions:
+
+errno:
+SSCRIPT_SOCKET_FAILED             10
+SSCRIPT_BIND_FAILED               11
+SSCRIPT_GETSOCKETNAME_FAILED      12
+SSCRIPT_FLAGS_FAILED              13
+SSCRIPT_CONNECT_FAILED            20
+SSCRIPT_UDPSEND_FAILED            31
+SSCRIPT_UDPRECEIVE_FAILED         32
+SSCRIPT_READ_FAILED               33
+
+The following are the SScript functions available in this library.
+They return either a string, an int or void. If an error occurs, it returns
+NULL (in case of a string) or -1 (in case of an int) and sets errno to
+the right error code (see above). Note that since each connection is
+associated with a socket number (sockfd), it is possible to make
+multiple connections.
+
+- char *sscript_lindex(char *input_string, int word_number);
+Get <word_number> from <input_string>. Returns the requested word.
+
+- char *sscript_lrange(char *input_string, int starting_at);
+Return everything after <starting_at> in <input_string>.
+
+- int sscript_connect(char *server, int port, char *virtual);
+Connect to <server> at port <port>, binding to virtual address
+<virtual>. If no binding is required, use NULL. Returns the socket
+number.
+
+- int sscript_server(int port);
+Initialize a server socket. Returns the socket number.
+
+- int sscript_wait_clients(int sockfd, int port, int forking);
+Listen to port <port> and wait for clients. This function is a
+blocking function. It will stay there untill it gets a client, and when
+it does, it will create a child and return its associated socket number.
+The child will go in the background if <forking> is set to 1
+(required for multithreading). This returns the child' sockfd.
+
+- char *sscript_get_remote_ip();
+This function returns the IP that connected to a server-oriented program.
+
+- void sscript_disconnect(int sockfd);
+Diconnects the connection pointed by <sockfd>.
+
+- void sscript_dump(int sockfd, char *filename);
+Dumps the content of <filename> to the connection pointed by <sockfd>.
+
+- void sscript_ping(char *hostname);
+Sends a TCP ping (echo to port 7) to <hostname>. This is a blocking
+function and only returns if the ping worked.
+
+- int sscript_test(char *hostname, int port);
+This tests if port <port> from <hostname> is open. Returns 0 if it is.
+
+- char *sscript_version();
+Returns the current library version.
+
+- char *sscript_read(int sockfd, int chop);
+Read from the connection pointed by <sockfd> and clear the last
+char if <chop> is set to 1.
+
+- void sscript_write(int sockfd, char *string);
+Write <string> to the connection pointed by <sockfd>.
+
+- int sscript_udp_send(char *hostname, int port, char *msg);
+Send an UDP packet to <hostname> at port <port> containing the message <msg>
+
+- char *sscript_udp_listen(int port);
+Listen for UDP packets on port <port>. Available to root only.
+
+- char *sscript_icmp_detect();
+Listen for ICMP messages and return the type (see ICMP.types) and the IP
+that sent one. Available to root only.
+
+- char *sscript_resolve_host(char *hostname);
+Resolve <hostname> into an IP.
+
+- char *sscript_resolve_ip(char *ip);
+Resolve <ip> into an hostname.
+
+- char *sscript_get_localhost();
+Get the local hostname.
+
+- void sscript_binary_send(int sockfd, char *filename);
+This function sends a binary file.
+
+- void sscript_binary_get(int sockfd);
+This function receives a binary file.
+
+- char *sscript_login_to_passwd(char *login)
+This function converts a login name to its crypted password.
+
+- char *sscript_uid_to_login(long uid)
+This function finds the login name for the UID provided.
+
+- int sscript_sokstat(char *option, int sockfd)
+This will give the settings for the currently open socket sockfd. Option
+is what you want the setting of and can be sendbuf, recvbuf, error or type.
+
+- char *sscript_time_read(int sockfd, int time);
+This function reads from sockfd for time secs, and then returns what it
+read, or "timeout".
+
+- void sscript_redir(int sockfd1, int sockfd2);
+This function will redirect packets from sockfd1 to sockfd2, and the
+other way around.
+
+- void sscript_nodelay(int sockfd);
+Set the socket in non-blocking mode.

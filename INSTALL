@@ -1,0 +1,156 @@
+$Id$
+
+Installation Procedures for the UnrealIRCD:
+=======================================================================
+Created by Stskeeps <stskeeps@tspre.org>
+=======================================================================
+
+This document describes how to install ircd, the unix daemon that acts as 
+an IRC server.
+
+For more information on UnrealIRCD contact us at
+ unreal-dev@lists.sourceforge.net
+
+The UnrealIRCD is available from http://www.unrealircd.com
+along with the latest copy of this document.
+
+
+=======================================================================
+This version of the UnrealIRCD is known to compile on the following
+platforms, and with the following compilers.  If you wish to add to this
+list, send the relevant information to us.
+
+OS and Version      Compiler and Version     Comments
+------------------- ------------------------ -------------------------------
+NetBSD 1.2B         gcc 2.7.2
+
+FreeBSD 2.1.0       gcc 2.6.3                Do NOT use crypt at all...
+
+SunOS 4.1.4         gcc 2.7-96q1 (Cygnus)
+
+Solaris 2.4         gcc 2.7-96q1 (Cygnus)    (SunOS 5.4)
+
+Solaris 2.5         SunWorks Pro C           (SunOS 5.5.1)
+                    cc: SC4.0 18 Oct 1995 C 4.0
+
+Digital Unix 3.2    gcc 2.7-96q3 (Cygnus)
+
+Linux 2.0.24        gcc 2.7.2.1
+
+HPUX 9.01           gcc 2.6.3
+
+HPUX 10.01          gcc 2.7-96q3 (Cygnus)
+
+Linux PPC                                    (iMac)
+
+AmigaOS 3.0         GCC egcs-2.91.66         (compile with -D_AMIGA)
+
+Windows NT/95       MSVC++ 4.0	             
+
+Linux Mandrake                                Read FAQ 
+
+Linux 2.3.x         gcc 2.95.2                glibc 2.1.3                  
+
+=======================================================================
+Unpacking the Distribution
+
+If you are reading this, you have most likely already done this, but to 
+recap:
+
+The UnrealIRCD server comes tarred and gziped. To uncompress it and expand
+it, use the following commands at the Unix prompt:
+
+gzip -d Unreal3.1.tar.gz
+tar -xvf Unreal3.1.tar
+
+This will create a new directory called Unreal3.0 and unpack the source
+into it.
+
+=======================================================================
+Editing the Configuration Files
+
+In previous versions of the source code many files had to be edited to
+make things right for any given server.
+
+In this version you DO NOT NEED TO EDIT THE Makefile OR ANY FILES
+IN include!  That is, unless you set some strange options.  If you
+find the need to edit include/config.h, for example,
+mail us and tell us why ; Config can be made smarter, and that will make
+it so you won't have to edit anything for the next version.
+
+=======================================================================
+Compiling Your Server
+
+Windows users: You must compile the Config program first. To do this
+run the following command:  $CC src\Config.c
+where $CC is the name of your compiler.  for MSVC users that is 'cl'
+
+To build the server, simply run
+	% ./Config
+to start the configuraton program.  This program looks at your system
+and generate the include/setup.h, include/settings.h, and Options files.
+You will be asked some questions.  Usually the default answers are the best
+ones and most correct.  To accept the default, just hit RETURN.
+
+Next, type 'make'. This will compile your server. Depending on your system,
+this may be a good time for a caffeine break. (MSVC users run 'nmake')
+
+Hopefully, the server will compile without incident. If it does not, and 
+you are not able to determine the error, please email
+unreal-dev@lists.sourceforge.net and hopefully someone will be able to help you with the problem.  If you
+do need to fix something, mail there with a patch.
+
+BE CERTAIN TO INCLUDE OPERATING SYSTEM INFORMATION (uname -a) AND COMPILER
+VERSION (gcc -v, for instance) IN ALL BUG REPORTS.
+
+
+=======================================================================
+Installing the Files
+
+'make install' does not work in this release -- it doesn't do anything
+except a compile if that is needed.
+
+The only files you need are the binary from src/ircd and and an ircd.conf
+(see below for copying doc/example.conf as your initial ircd.conf). You
+probably will want to create a MOTD file too, as well as place the man
+pages from the doc directory to appropriate place in your system.
+
+
+=======================================================================
+Configuring Your Server
+
+The previous step places a file named 'example.conf' into your irc 
+directory you specified to Config.
+
+To create an IRC configuration file, edit: ircd.conf
+
+Now edit this file to reflect your server. The file is mainly 
+self-explanatory. Note that if you plan to use your server on ROXnet,
+make sure that you have the following line:
+
+U:services.roxnet.org:*:*
+
+If you need help configuring your file, please connect to ROXnet,
+(irc.flirt.org or irc.roxnet.org) - go to channel #UnrealIRCd, and ask.
+
+
+=======================================================================
+Starting Your Server
+
+Simply enter the complete path to the executable into the Unix command 
+line, then hit return. Your server is now operational, assuming that you 
+have completed all the steps described above.
+
+NOTE: If you get something like the following when running ircd:
+
+ircd fd table too big
+Hard Limit: 256 IRC max: 1024
+Fix MAXCONNECTIONS
+
+You need to change config.h and recompile. Find the line that says 
+"#define MAXCONNECTIONS 1024", and change it to the number given after 
+"Hard Limit" (most likely 256), then make the server again, following the 
+above instructions.
+
+Enjoy!
+- The UnrealIRCd Team - unreal-dev@lists.sourceforge.net

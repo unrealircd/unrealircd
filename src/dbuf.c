@@ -36,11 +36,12 @@
 */
 
 #include <stdio.h>
-#include <string.h>
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
+#ifdef USE_DMALLOC
 #include "h.h"
+#endif
 ID_Copyright("(C) 1990 Markku Savela");
 ID_Notes("2.17 1/30/94 (C) 1990 Markku Savela");
 #if !defined(VALLOC) && !defined(valloc) && !defined(USE_DMALLOC)
@@ -65,7 +66,7 @@ static dbufbuf *freelist = NULL;
 ** dbuf_alloc - allocates a dbufbuf structure either from freelist or
 ** creates a new one.
 */
-static dbufbuf *dbuf_alloc(void)
+static dbufbuf *dbuf_alloc()
 {
 #if defined(VALLOC) && !defined(DEBUGMODE)
 	dbufbuf *dbptr, *db2ptr;
@@ -83,7 +84,6 @@ static dbufbuf *dbuf_alloc(void)
 	if (dbufalloc * DBUFSIZ > BUFFERPOOL)
 	{
 		dbufalloc--;
-		strcpy(trouble_info, "buffer allocation error! Increase BUFFERPOOL!");
 		return NULL;
 	}
 
@@ -100,10 +100,7 @@ static dbufbuf *dbuf_alloc(void)
 
 	dbptr = (dbufbuf *)valloc(num * sizeof(dbufbuf));
 	if (!dbptr)
-	{
-		strcpy(trouble_info, "buffer allocation error! Out of memory! OUCH!!!");
 		return (dbufbuf *)NULL;
-	}
 
 	num--;
 	for (db2ptr = dbptr; num; num--)
@@ -115,17 +112,15 @@ static dbufbuf *dbuf_alloc(void)
 	return dbptr;
 #else
 	dbufblocks++;
-	dbptr = (dbufbuf *)MyMalloc(sizeof(dbufbuf));
-	if (!dbptr)
-		strcpy(trouble_info, "buffer allocation error! Out of memory! OUCH!!!");
-	return dbptr;
+	return (dbufbuf *)MyMalloc(sizeof(dbufbuf));
 #endif
 }
 
 /*
 ** dbuf_free - return a dbufbuf structure to the freelist
 */
-static void dbuf_free(dbufbuf *ptr)
+static void dbuf_free(ptr)
+	dbufbuf *ptr;
 {
 	dbufalloc--;
 	ptr->next = freelist;
@@ -138,7 +133,8 @@ static void dbuf_free(dbufbuf *ptr)
 ** there is no reason to continue this buffer...). After this
 ** the "dbuf" has consistent EMPTY status... ;)
 */
-static int dbuf_malloc_error(dbuf *dyn)
+static int dbuf_malloc_error(dyn)
+	dbuf *dyn;
 {
 	dbufbuf *p;
 
@@ -150,11 +146,14 @@ static int dbuf_malloc_error(dbuf *dyn)
 		dbuf_free(p);
 	}
 	dyn->tail = dyn->head;
-	return 0;
+	return -1;
 }
 
 
-int  dbuf_put(dbuf *dyn, char *buf, int length)
+int  dbuf_put(dyn, buf, length)
+	dbuf *dyn;
+	char *buf;
+	int  length;
 {
 	dbufbuf **h, *d;
 	int  off;
@@ -206,7 +205,9 @@ int  dbuf_put(dbuf *dyn, char *buf, int length)
 }
 
 
-char *dbuf_map(dbuf *dyn, int *length)
+char *dbuf_map(dyn, length)
+	dbuf *dyn;
+	int *length;
 {
 	if (dyn->head == NULL)
 	{
@@ -220,7 +221,9 @@ char *dbuf_map(dbuf *dyn, int *length)
 	return (dyn->head->data + dyn->offset);
 }
 
-int  dbuf_delete(dbuf *dyn, int length)
+int  dbuf_delete(dyn, length)
+	dbuf *dyn;
+	int  length;
 {
 	dbufbuf *d;
 	int  chunk;
@@ -252,7 +255,10 @@ int  dbuf_delete(dbuf *dyn, int length)
 	return 0;
 }
 
-int  dbuf_get(dbuf *dyn, char *buf, int length)
+int  dbuf_get(dyn, buf, length)
+	dbuf *dyn;
+	char *buf;
+	int  length;
 {
 	int  moved = 0;
 	int  chunk;
@@ -278,7 +284,10 @@ int  dbuf_get(dbuf *dyn, char *buf, int length)
 ** either a \r or \n prsent.  If so, copy as much as possible (determined by
 ** length) into buf and return the amount copied - else return 0.
 */
-int  dbuf_getmsg(dbuf *dyn, char *buf, int length)
+int  dbuf_getmsg(dyn, buf, length)
+	dbuf *dyn;
+	char *buf;
+	int  length;
 {
 	dbufbuf *d;
 	char *s;

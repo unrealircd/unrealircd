@@ -25,176 +25,6 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
 #endif //_WIN32
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
-
-WIRCD DIALOG DISCARDABLE  0, 0, 228, 127
-STYLE DS_MODALFRAME | DS_3DLOOK | DS_NOFAILCREATE | DS_CENTER | 
-    WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Sans Serif"
-BEGIN
-    CONTROL         130,IDC_STATIC,"Static",SS_BITMAP | SS_NOTIFY,14,10,200,
-                    92
-    CONTROL         133,IDC_BAR,"Static",SS_BITMAP,14,107,200,15
-    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,14,104,201,1
-END
-
-FROMVAR DIALOG DISCARDABLE  0, 0, 418, 183
-STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_VISIBLE | 
-    WS_CAPTION | WS_SYSMENU
-CAPTION "UnrealIRCd License"
-FONT 8, "MS Sans Serif"
-BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,184,162,50,14
-    CONTROL         "",IDC_TEXT,"RichEdit20A",WS_BORDER | WS_VSCROLL | 
-                    WS_HSCROLL | WS_TABSTOP | 0x18c4,8,7,402,149
-END
-
-HELP DIALOG DISCARDABLE  0, 0, 318, 94
-STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_CAPTION | 
-    WS_SYSMENU
-CAPTION "Where to get help"
-FONT 8, "MS Sans Serif"
-BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,134,73,50,14
-    LTEXT           "Where to get help:",IDC_STATIC,14,11,60,8
-    LTEXT           "Point your IRC client to irc.unrealircd.com and join #Unreal-Support",
-                    IDC_STATIC,14,20,234,9
-    LTEXT           "Email us at",IDC_STATIC,14,30,37,8
-    CONTROL         "coders@lists.unrealircd.org",IDC_EMAIL,"Button",
-                    BS_OWNERDRAW,51,30,87,8
-    LTEXT           "Or visit us on the web at",IDC_STATIC,14,40,78,8
-    CONTROL         "http://www.unrealircd.com",IDC_URL,"Button",
-                    BS_OWNERDRAW,93,40,86,8
-    LTEXT           "Thank you for choosing UnrealIRCd :)",IDC_STATIC,98,55,
-                    121,9
-END
-
-FROMFILE DIALOG DISCARDABLE  0, 0, 418, 224
-STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_VISIBLE | 
-    WS_CAPTION | WS_SYSMENU
-CAPTION "UnrealIRCd Configuration File"
-FONT 8, "MS Sans Serif"
-BEGIN
-    CONTROL         "",IDC_TEXT,"RichEdit20A",WS_BORDER | WS_VSCROLL | 
-                    WS_HSCROLL | WS_TABSTOP | 0x1084,0,17,418,194
-END
-
-STATUS DIALOGEX 0, 0, 318, 169
-STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_CAPTION | 
-    WS_SYSMENU
-CAPTION "UnrealIRCd Status"
-FONT 8, "MS Sans Serif", 0, 0, 0x1
-BEGIN
-    CONTROL         "Tree1",IDC_TREE,"SysTreeView32",TVS_HASBUTTONS | 
-                    TVS_HASLINES | TVS_DISABLEDRAGDROP | WS_BORDER | 
-                    WS_TABSTOP,13,16,100,125
-    GROUPBOX        "Servers",IDC_STATIC,7,7,112,138
-    GROUPBOX        "Global Statistics",IDC_STATIC,122,7,189,78
-    LTEXT           "Clients:",IDC_STATIC,127,18,26,9
-    LTEXT           "",IDC_CLIENTS,170,18,41,9,SS_SUNKEN,WS_EX_RIGHT
-    LTEXT           "Servers:",IDC_STATIC,221,18,27,8
-    LTEXT           "",IDC_SERVERS,261,18,41,9,SS_SUNKEN,WS_EX_RIGHT
-    LTEXT           "Channels:",IDC_STATIC,127,34,32,8
-    LTEXT           "",IDC_CHANNELS,170,33,41,9,SS_SUNKEN,WS_EX_RIGHT
-    LTEXT           "Invisible:",IDC_STATIC,221,34,28,8
-    LTEXT           "",IDC_INVISO,261,33,41,9,SS_SUNKEN,WS_EX_RIGHT
-    LTEXT           "Operators:",IDC_STATIC,127,51,34,8
-    LTEXT           "",IDC_OPERS,170,51,41,9,SS_SUNKEN,WS_EX_RIGHT
-    LTEXT           "Unknown:",IDC_STATIC,221,51,34,8
-    LTEXT           "",IDC_UNKNOWN,261,51,41,9,SS_SUNKEN,WS_EX_RIGHT
-    LTEXT           "Max Clients:",IDC_STATIC,127,69,39,8
-    LTEXT           "",IDC_MAXCLIENTS,170,69,41,9,SS_SUNKEN,WS_EX_RIGHT
-    GROUPBOX        "Local Statistics",IDC_STATIC,122,90,189,55
-    PUSHBUTTON      "OK",IDOK,134,148,50,14
-    LTEXT           "Clients:",IDC_STATIC,127,100,24,8
-    LTEXT           "",IDC_LCLIENTS,170,100,41,9,SS_SUNKEN,WS_EX_RIGHT
-    LTEXT           "Servers:",IDC_STATIC,221,100,27,8
-    LTEXT           "",IDC_LSERVERS,261,100,41,9,SS_SUNKEN,WS_EX_RIGHT
-    LTEXT           "Max Clients:",IDC_STATIC,127,118,39,8
-    LTEXT           "",IDC_LMAXCLIENTS,170,118,41,9,SS_SUNKEN,WS_EX_RIGHT
-END
-
-CONFIGERROR DIALOG DISCARDABLE  0, 0, 331, 178
-STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
-CAPTION "Configuration Error"
-FONT 8, "MS Sans Serif"
-BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,134,157,50,14
-    EDITTEXT        IDC_CONFIGERROR,7,7,317,142,ES_MULTILINE | 
-                    ES_AUTOHSCROLL | ES_READONLY | ES_WANTRETURN | 
-                    WS_VSCROLL
-END
-
-GOTO DIALOG DISCARDABLE  0, 0, 124, 52
-STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Goto"
-FONT 8, "MS Sans Serif"
-BEGIN
-    LTEXT           "Line Number:",IDC_STATIC,9,12,43,8
-    EDITTEXT        IDC_GOTO,56,9,48,14,ES_AUTOHSCROLL | ES_NUMBER
-    PUSHBUTTON      "Cancel",IDCANCEL,66,31,50,14
-    DEFPUSHBUTTON   "Go To",IDOK,8,31,50,14
-END
-
-COLOR DIALOG DISCARDABLE  0, 0, 156, 37
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Color Selection"
-FONT 8, "MS Sans Serif"
-BEGIN
-    CONTROL         "",IDC_WHITE,"Button",BS_OWNERDRAW | WS_TABSTOP,4,3,13,
-                    12
-    CONTROL         "",IDC_BLACK,"Button",BS_OWNERDRAW | WS_TABSTOP,23,3,13,
-                    12
-    CONTROL         "",IDC_DARKBLUE,"Button",BS_OWNERDRAW | WS_TABSTOP,42,3,
-                    13,12
-    CONTROL         "",IDC_DARKGREEN,"Button",BS_OWNERDRAW | WS_TABSTOP,61,3,
-                    13,12
-    CONTROL         "",IDC_RED,"Button",BS_OWNERDRAW | WS_TABSTOP,80,3,13,12
-    CONTROL         "",IDC_DARKRED,"Button",BS_OWNERDRAW | WS_TABSTOP,99,3,
-                    13,12
-    CONTROL         "",IDC_PURPLE,"Button",BS_OWNERDRAW | WS_TABSTOP,118,3,
-                    13,12
-    CONTROL         "",IDC_ORANGE,"Button",BS_OWNERDRAW | WS_TABSTOP,137,3,
-                    13,12
-    CONTROL         "",IDC_YELLOW,"Button",BS_OWNERDRAW | WS_TABSTOP,4,21,13,
-                    12
-    CONTROL         "",IDC_GREEN,"Button",BS_OWNERDRAW | WS_TABSTOP,23,21,13,
-                    12
-    CONTROL         "",IDC_VDARKGREEN,"Button",BS_OWNERDRAW | WS_TABSTOP,42,
-                    21,13,12
-    CONTROL         "",IDC_LIGHTBLUE,"Button",BS_OWNERDRAW | WS_TABSTOP,61,
-                    21,13,12
-    CONTROL         "",IDC_BLUE,"Button",BS_OWNERDRAW | WS_TABSTOP,80,21,13,
-                    12
-    CONTROL         "",IDC_PINK,"Button",BS_OWNERDRAW | WS_TABSTOP,99,21,13,
-                    12
-    CONTROL         "",IDC_DARKGRAY,"Button",BS_OWNERDRAW | WS_TABSTOP,118,
-                    21,13,12
-    CONTROL         "",IDC_GRAY,"Button",BS_OWNERDRAW | WS_TABSTOP,137,21,13,
-                    12
-END
-
-SSLPass DIALOG DISCARDABLE  0, 0, 174, 57
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "SSL Private Key Password"
-FONT 8, "MS Sans Serif"
-BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,33,35,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,89,35,50,14
-    EDITTEXT        IDC_PASS,11,12,152,14,ES_PASSWORD | ES_AUTOHSCROLL
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// 24
-//
-
-1                       24      MOVEABLE PURE   "wircd.exe.manifest"
-
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -224,6 +54,282 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.K.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+MENU_POPUP MENU DISCARDABLE 
+BEGIN
+    POPUP "popup"
+    BEGIN
+        POPUP "&System"
+        BEGIN
+            MENUITEM "Ircd.&Conf",                  65535
+            MENUITEM "Ircd.&Motd",                  IDM_IRCDMOTD
+            MENUITEM "Ircd.R&ules",                 IDM_IRCDRULES
+            MENUITEM SEPARATOR
+            MENUITEM "&Rehash",                     IDM_REHASH
+        END
+    END
+    POPUP """popup"""
+    BEGIN
+        POPUP "&System"
+        BEGIN
+            MENUITEM "Ircd.&Conf",                  65535
+            MENUITEM "Ircd.&Motd",                  IDM_IRCDMOTD
+            MENUITEM "Ircd.R&ules",                 IDM_IRCDRULES
+            MENUITEM SEPARATOR
+            MENUITEM "&Rehash",                     IDM_REHASH
+        END
+    END
+    POPUP "system"
+    BEGIN
+        MENUITEM "Ircd.&Conf",                  65535
+        MENUITEM "Ircd.&Motd",                  IDM_IRCDMOTD
+        MENUITEM "Ircd.R&ules",                 IDM_IRCDRULES
+        MENUITEM SEPARATOR
+        MENUITEM "&Rehash",                     IDM_REHASH
+        POPUP "Debug Level"
+        BEGIN
+            MENUITEM "&Off",                        IDM_DBGOFF
+            MENUITEM "&Fatal",                      IDM_DBGFATAL
+            MENUITEM "&Error",                      IDM_DBGERROR
+            MENUITEM "&Notice",                     IDM_DBGNOTICE
+            MENUITEM "&DNS",                        IDM_DBGDNS
+            MENUITEM "&Info",                       IDM_DBGINFO
+            MENUITEM "N&umerics",                   IDM_DBGNUM
+            MENUITEM "&Send",                       IDM_DBGSEND
+            MENUITEM "&Debug",                      IDM_DBGDEBUG
+            MENUITEM "&Malloc",                     IDM_DBGMALLOC
+            MENUITEM "&List",                       IDM_DBGLIST
+        END
+        POPUP "WinDebugLevel"
+        BEGIN
+            MENUITEM "1 - Application General",     MM_WINDEBUGLEVEL_0
+            MENUITEM "2 - Flow Debug",              MM_WINDEBUGLEVEL_1
+            MENUITEM "3 - Extreeme Deatail",        MM_WINDEBUGLEVEL_2
+            MENUITEM SEPARATOR
+            MENUITEM "Flush Every WinDebug()",      MM_WINDEBUGLEVEL_FLUSH
+        END
+    END
+    POPUP "help"
+    BEGIN
+        MENUITEM "&Credits...",                 IDM_CREDITS
+        MENUITEM "&Dreamforge Credits...",      IDM_DF
+        MENUITEM "&License...",                 IDM_LICENSE
+        MENUITEM "&About UnrealIRCD/32...",     IDM_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+DLG_IRCDCONF DIALOG DISCARDABLE  0, 0, 294, 159
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "UnrealIRCd Setup"
+FONT 9, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "&Save",IDOK,3,143,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,241,143,50,14
+    EDITTEXT        IDC_IRCDCONF,0,0,294,140,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL | WS_HSCROLL
+END
+
+DLG_IRCDRULES DIALOG DISCARDABLE  0, 0, 294, 159
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "UnrealIRCd Setup"
+FONT 9, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "&Save",IDOK,3,143,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,241,143,50,14
+    EDITTEXT        IDC_IRCDCONF,0,0,294,140,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL | WS_HSCROLL
+END
+
+DLG_IRCDMOTD DIALOG DISCARDABLE  0, 0, 294, 159
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "UnrealIRCd Setup"
+FONT 9, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "&Save",IDOK,3,143,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,241,143,50,14
+    EDITTEXT        IDC_IRCDCONF,0,0,294,140,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL | WS_HSCROLL
+END
+
+WIRCD DIALOG DISCARDABLE  0, 0, 240, 130
+STYLE DS_ABSALIGN | DS_MODALFRAME | DS_3DLOOK | DS_NOFAILCREATE | 
+    WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
+CAPTION "Unreal IRCD/32"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CTEXT           "Ported by Stskeeps <stskeeps@tspre.org> - http://unreal.tspre.org",
+                    TXT_PORT,7,120,225,10
+    CONTROL         "OBM_wIRCD",IDC_STATIC,"Static",SS_BITMAP,7,7,225,97
+    CONTROL         "OBM_bar",IDC_STATIC,"Static",SS_BITMAP,7,105,225,14
+END
+
+WIRCDSTATUS DIALOG DISCARDABLE  0, 0, 400, 164
+STYLE DS_ABSALIGN | DS_MODALFRAME | DS_3DLOOK | DS_NOFAILCREATE | 
+    DS_CENTERMOUSE | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "IRCd Status"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,230,5,168,97
+    LTEXT           "Current Local Users:",TXT_LOCALUSERS,232,7,118,10
+    EDITTEXT        EDIT_CLOCAL,310,7,30,10,ES_READONLY
+    LTEXT           "Max:",TXT_LOCALMAX,345,7,30,10
+    EDITTEXT        EDIT_CLOCALMAX,365,7,30,10,ES_READONLY
+    LTEXT           "Current Global Users:",TXT_GLOBALUSERS,232,17,118,10
+    EDITTEXT        EDIT_GLOBAL,310,17,30,10,ES_READONLY
+    LTEXT           "Max:",TXT_GLOBALMAX,345,17,30,10
+    EDITTEXT        EDIT_GLOBALMAX,365,17,30,10,ES_READONLY
+    LTEXT           "Users:",TXT_NONINV,232,27,118,10
+    EDITTEXT        EDIT_NONINV,310,27,30,10,ES_READONLY
+    LTEXT           "Inv:",TXT_INV,345,27,30,10
+    EDITTEXT        EDIT_INV,365,27,30,10,ES_READONLY
+    LTEXT           "IRC servers networked:",TXT_IRCSERVERS,232,37,118,10
+    EDITTEXT        EDIT_IRCSERVERS,310,37,30,10,ES_READONLY
+    LTEXT           "IRC operator(s) online:",TXT_IRCOPS,232,47,118,10
+    EDITTEXT        EDIT_IRCOPS,310,47,30,10,ES_READONLY
+    LTEXT           "Local clients",TXT_MYUSERS,232,57,118,10
+    EDITTEXT        EDIT_MYUSERS,310,57,30,10,ES_READONLY
+    LTEXT           "Local server links",TXT_MYSERVERS,232,67,118,10
+    EDITTEXT        EDIT_MYSERVERS,310,67,30,10,ES_READONLY
+    LTEXT           "Channels formed",TXT_CHANNELS,232,77,118,10
+    EDITTEXT        EDIT_CHANNELS,310,77,30,10,ES_READONLY
+    CTEXT           "Report from dd/mm/yy hh:dd",TXT_WHEN,260,87,120,10
+    LTEXT           "[ UnrealIRCd/32 v2.1.7 ] - Release *",TXT_VERSION,7,104,
+                    350,10
+    LTEXT           "UnrealIRCd/32 GUI is (C) Stskeeps <stskeeps@tspre.org> and {X} <djhype@home.com>",
+                    TXT_CRINFO,7,114,350,10
+    LTEXT           "UnrealIRCd logo (C) zero9000 (Kevin Alford)",
+                    TXT_CRINFO1,7,124,350,10
+    LTEXT           "Copying/Ripping this GUI for other wIRCds is NOT allowed unless permission is gained by the authors",
+                    TXT_CRINFO2,7,134,350,10
+    LTEXT           "The source is placed under the GPL but the look-n-feel may not be copied",
+                    TXT_CRINFO3,7,144,350,10
+    LTEXT           "- contact stskeeps@tspre.org for more information",TXT_CRINFO4,7,
+                    154,350,10
+    CONTROL         "OBM_wIRCD",IDC_STATIC,"Static",SS_BITMAP,7,5,225,97
+END
+
+WIRCDABOUT DIALOG DISCARDABLE  0, 0, 400, 164
+STYLE DS_ABSALIGN | DS_MODALFRAME | DS_3DLOOK | DS_NOFAILCREATE | 
+    DS_CENTERMOUSE | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "About UnrealIRCd/32"
+FONT 8, "MS Sans Serif"
+BEGIN
+END
+
+DLG_STATS DIALOGEX 0, 0, 359, 263
+STYLE DS_ABSALIGN | DS_MODALFRAME | DS_3DLOOK | DS_NOFAILCREATE | WS_POPUP | 
+    WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "Unreal 3.0 Configuration"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    LTEXT           "Current Local Users:",TXT_LOCALUSERS,110,5,65,8
+    LTEXT           "Max:",TXT_LOCALMAX,224,5,16,8
+    LTEXT           "Current Global Users:",TXT_GLOBALUSERS,115,100,68,8
+    LTEXT           "Max:",TXT_GLOBALMAX,224,100,16,8
+    LTEXT           "Inv:",TXT_INV,280,5,13,8
+    LTEXT           "IRC servers networked:",TXT_IRCSERVERS,110,15,75,8
+    LTEXT           "IRC operator(s) online:",TXT_IRCOPS,115,110,71,8
+    LTEXT           "Local clients",TXT_MYUSERS,110,25,40,8
+    LTEXT           "Local server links",TXT_MYSERVERS,110,34,56,8
+    LTEXT           "Channels formed:",TXT_CHANNELS,115,120,56,8
+    GROUPBOX        "Global",IDC_STATIC,110,90,175,55
+    RTEXT           "",EDIT_GLOBALMAX,245,100,25,8,SS_SUNKEN
+    RTEXT           "",EDIT_GLOBAL,190,100,25,8,SS_SUNKEN
+    RTEXT           "",EDIT_CHANNELS,190,120,25,8,SS_SUNKEN
+    RTEXT           "",EDIT_IRCOPS,190,110,25,8,SS_SUNKEN
+    RTEXT           "",EDIT_CLOCAL,190,5,25,8,SS_SUNKEN
+    RTEXT           "",EDIT_CLOCALMAX,245,5,25,8,SS_SUNKEN
+    RTEXT           "",EDIT_INV,301,5,25,8,SS_SUNKEN
+    RTEXT           "",EDIT_IRCSERVERS,190,15,25,8,SS_SUNKEN
+    RTEXT           "",EDIT_MYUSERS,190,25,25,8,SS_SUNKEN
+    RTEXT           "",EDIT_MYSERVERS,190,34,25,8,SS_SUNKEN
+    LTEXT           "Maximum Possible users",TXT_LOCALMAXPOS,223,15,77,8
+    RTEXT           "",EDIT_LOCALMAXPOS,301,16,25,8,SS_SUNKEN
+END
+
+ABOUTBOX DIALOG DISCARDABLE  0, 0, 294, 159
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "UnrealIRCd About Stuff"
+FONT 9, "Lucida Console"
+BEGIN
+    DEFPUSHBUTTON   "&OK",IDOK,122,143,50,14
+    EDITTEXT        IDC_INFOTEXT,0,0,294,140,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_AUTOHSCROLL | ES_READONLY | ES_WANTRETURN | 
+                    WS_VSCROLL
+END
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+1 VERSIONINFO
+ FILEVERSION 3,0,5,1
+ PRODUCTVERSION 3,0,0,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x29L
+#else
+ FILEFLAGS 0x28L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080904b0"
+        BEGIN
+            VALUE "Comments", "Unreal wIRCd with NT Service Support\0"
+            VALUE "CompanyName", "UnrealIRCD\0"
+            VALUE "FileDescription", "The Unreal Chat Server for Windows\0"
+            VALUE "FileVersion", "3.0.05.01\0"
+            VALUE "InternalName", "Unreal-win32\0"
+            VALUE "LegalCopyright", "Copyright © 2000 Unreal Developer Network\0"
+            VALUE "LegalTrademarks", "All rights reserved\0"
+            VALUE "OriginalFilename", "wircd.exe\0"
+            VALUE "PrivateBuild", "3.0.05.01\0"
+            VALUE "ProductName", "The Unreal Chat Server for Windows\0"
+            VALUE "ProductVersion", "3.0 Release\0"
+            VALUE "SpecialBuild", "For Windows\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x809, 1200
+    END
+END
+
+#endif    // !_MAC
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -233,122 +339,39 @@ END
 #ifdef APSTUDIO_INVOKED
 GUIDELINES DESIGNINFO DISCARDABLE 
 BEGIN
+    "DLG_IRCDCONF", DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 287
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 152
+    END
+
     "WIRCD", DIALOG
     BEGIN
-        BOTTOMMARGIN, 126
-    END
-
-    "FROMVAR", DIALOG
-    BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 411
+        RIGHTMARGIN, 233
         TOPMARGIN, 7
-        BOTTOMMARGIN, 176
+        BOTTOMMARGIN, 119
     END
 
-    "HELP", DIALOG
+    "DLG_STATS", DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 311
+        RIGHTMARGIN, 352
         TOPMARGIN, 7
-        BOTTOMMARGIN, 87
+        BOTTOMMARGIN, 256
     END
 
-    "FROMFILE", DIALOG
+    "ABOUTBOX", DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 411
-        TOPMARGIN, 2
-        BOTTOMMARGIN, 189
-    END
-
-    "STATUS", DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 311
+        RIGHTMARGIN, 287
         TOPMARGIN, 7
-        BOTTOMMARGIN, 162
-    END
-
-    "CONFIGERROR", DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 324
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 171
-    END
-
-    "GOTO", DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 117
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 45
-    END
-
-    "COLOR", DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 149
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 30
-    END
-
-    "SSLPass", DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 167
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 50
+        BOTTOMMARGIN, 152
     END
 END
 #endif    // APSTUDIO_INVOKED
-
-
-#ifndef _MAC
-/////////////////////////////////////////////////////////////////////////////
-//
-// Version
-//
-
-VER_UNREAL VERSIONINFO
- FILEVERSION 1,0,0,0
- PRODUCTVERSION 1,0,0,0
- FILEFLAGSMASK 0x3fL
-#ifdef _DEBUG
- FILEFLAGS 0x1L
-#else
- FILEFLAGS 0x0L
-#endif
- FILEOS 0x10004L
- FILETYPE 0x1L
- FILESUBTYPE 0x0L
-BEGIN
-    BLOCK "StringFileInfo"
-    BEGIN
-        BLOCK "040904b0"
-        BEGIN
-            VALUE "Comments", "\0"
-            VALUE "CompanyName", "none\0"
-            VALUE "FileDescription", "\0"
-            VALUE "FileVersion", "3.2\0"
-            VALUE "InternalName", "UnrealIRCd\0"
-            VALUE "LegalCopyright", "\0"
-            VALUE "LegalTrademarks", "\0"
-            VALUE "OriginalFilename", "\0"
-            VALUE "PrivateBuild", "\0"
-            VALUE "ProductName", "UnrealIRCd\0"
-            VALUE "ProductVersion", "1.0\0"
-            VALUE "SpecialBuild", "\0"
-        END
-    END
-    BLOCK "VarFileInfo"
-    BEGIN
-        VALUE "Translation", 0x409, 1200
-    END
-END
-
-#endif    // !_MAC
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -358,90 +381,18 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-ICO_MAIN                ICON    DISCARDABLE     "icon1.ico"
+sysicon                 ICON    DISCARDABLE     "ico00001.ico"
+WIRCD                   ICON    DISCARDABLE     "icon1.ico"
+sysicondisabled         ICON    DISCARDABLE     "sysicon1.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Bitmap
 //
 
-BMP_LOGO                BITMAP  DISCARDABLE     "unreal.bmp"
-BMP_BAR                 BITMAP  DISCARDABLE     "bar.bmp"
-IDB_BITMAP1             BITMAP  DISCARDABLE     "toolbar.bmp"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Cursor
-//
-
-CUR_HAND                CURSOR  DISCARDABLE     "hand.CUR"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
-
-MENU_ABOUT MENU DISCARDABLE 
-BEGIN
-    POPUP "About"
-    BEGIN
-        MENUITEM "&Credits",                    IDM_CREDITS
-        MENUITEM "&DALnet Credits",             IDM_DAL
-        MENUITEM "&License",                    IDM_LICENSE
-        MENUITEM "&Help",                       IDM_HELP
-    END
-END
-
-MENU_CONFIG MENU DISCARDABLE 
-BEGIN
-    POPUP "Config"
-    BEGIN
-        MENUITEM "ircd.&conf",                  IDM_CONF
-        MENUITEM SEPARATOR
-    END
-END
-
-MENU_REHASH MENU DISCARDABLE 
-BEGIN
-    POPUP "Rehash"
-    BEGIN
-        MENUITEM "&All Files",                  IDM_RHALL
-        MENUITEM SEPARATOR
-        MENUITEM "&Config file",                IDM_RHCONF
-        MENUITEM "&All MOTD and Rules",         IDM_RHMOTD
-        MENUITEM "&OperMOTD",                   IDM_RHOMOTD
-        MENUITEM "&BotMOTD",                    IDM_RHBMOTD
-    END
-END
-
-MENU_SYSTRAY MENU DISCARDABLE 
-BEGIN
-    POPUP "Systray"
-    BEGIN
-        MENUITEM "&Rehash",                     IDM_REHASH
-        MENUITEM "&Status",                     IDM_STATUS
-        MENUITEM "&Config",                     IDM_CONFIG
-        MENUITEM "&About",                      IDM_ABOUT
-        MENUITEM "S&hutdown",                   IDM_SHUTDOWN
-    END
-END
-
-MENU_CONTEXT MENU DISCARDABLE 
-BEGIN
-    POPUP "Context"
-    BEGIN
-        MENUITEM "&Undo",                       IDM_UNDO
-        MENUITEM SEPARATOR
-        MENUITEM "Cu&t",                        IDM_CUT
-        MENUITEM "&Copy",                       IDM_COPY
-        MENUITEM "&Paste",                      IDM_PASTE
-        MENUITEM "&Delete",                     IDM_DELETE
-        MENUITEM SEPARATOR
-        MENUITEM "&Select All",                 IDM_SELECTALL
-    END
-END
-
-#endif    // English (U.S.) resources
+OBM_WIRCD               BITMAP  DISCARDABLE     "unrealircd.bmp"
+OBM_BAR                 BITMAP  DISCARDABLE     "bar.bmp"
+#endif    // English (U.K.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

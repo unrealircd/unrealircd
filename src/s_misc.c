@@ -22,7 +22,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef CLEAN_COMPILE
+#ifndef lint
 static char sccsid[] =
     "@(#)s_misc.c	2.42 3/1/94 (C) 1988 University of Oulu, \
 Computing Center and Jarkko Oikarinen";
@@ -35,6 +35,7 @@ Computing Center and Jarkko Oikarinen";
 #include "common.h"
 #include "sys.h"
 #include "numeric.h"
+#include "userload.h"
 #include <sys/stat.h>
 #include <fcntl.h>
 #if !defined(ULTRIX) && !defined(SGI) && \
@@ -51,7 +52,6 @@ Computing Center and Jarkko Oikarinen";
 # include <io.h>
 #endif
 #include "h.h"
-#include "proto.h"
 #include "channel.h"
 #include <string.h>
 
@@ -64,9 +64,9 @@ extern float currentrate2;
 extern ircstats IRCstats;
 extern char	*me_hash;
 
-static void exit_one_client(aClient *, aClient *, aClient *, char *, int);
-extern void exit_one_client_in_split(aClient *, aClient *, aClient *,
-    char *);
+static void exit_one_client PROTO((aClient *, aClient *, aClient *, char *));
+static void exit_one_client_in_split PROTO((aClient *, aClient *, aClient *,
+    char *));
 
 static char *months[] = {
 	"January", "February", "March", "April",
@@ -84,7 +84,8 @@ static char *weekdays[] = {
  */
 struct stats ircst, *ircstp = &ircst;
 
-char *date(time_t clock)
+char *date(clock)
+	time_t clock;
 {
 	static char buf[80], plus;
 	struct tm *lt, *gm;
@@ -97,7 +98,7 @@ char *date(time_t clock)
 	bcopy((char *)gm, (char *)&gmbuf, sizeof(gmbuf));
 	gm = &gmbuf;
 	lt = localtime(&clock);
-#ifndef _WIN32
+
 	if (lt->tm_yday == gm->tm_yday)
 		minswest = (gm->tm_hour - lt->tm_hour) * 60 +
 		    (gm->tm_min - lt->tm_min);
@@ -105,12 +106,11 @@ char *date(time_t clock)
 		minswest = (gm->tm_hour - (lt->tm_hour + 24)) * 60;
 	else
 		minswest = ((gm->tm_hour + 24) - lt->tm_hour) * 60;
-#else
-	minswest = (_timezone / 60);
-#endif
+
 	plus = (minswest > 0) ? '-' : '+';
 	if (minswest < 0)
 		minswest = -minswest;
+
 	(void)ircsprintf(buf, "%s %s %d %d -- %02d:%02d %c%02d:%02d",
 	    weekdays[lt->tm_wday], months[lt->tm_mon], lt->tm_mday,
 	    1900 + lt->tm_year,
@@ -125,7 +125,7 @@ char *convert_time (time_t ltime)
 	unsigned long days = 0,hours = 0,minutes = 0,seconds = 0;
 	static char buffer[40];
 
-
+	
 	*buffer = '\0';
 	seconds = ltime % 60;
 	ltime = (ltime - seconds) / 60;
@@ -133,8 +133,7 @@ char *convert_time (time_t ltime)
 	ltime = (ltime - minutes) / 60;
 	hours = ltime % 24;
 	days = (ltime - hours) / 24;
-	ircsprintf(buffer, "%ludays %luhours %luminutes %lusecs",
-days, hours, minutes, seconds);
+	ircsprintf(buffer, "%ludays %luhours %lumonths %lusecs", days, hours, minutes, seconds);
 	return(*buffer ? buffer : "");
 }
 
@@ -144,7 +143,8 @@ days, hours, minutes, seconds);
  * string marker (`\-`).  returns the 'fixed' string or "*" if the string
  * was NULL length or a NULL pointer.
  */
-char *check_string(char *s)
+char *check_string(s)
+	char *s;
 {
 	static char star[2] = "*";
 	char *str = s;
@@ -162,29 +162,12 @@ char *check_string(char *s)
 	return (BadPtr(str)) ? star : str;
 }
 
-char *make_user_host(char *name, char *host)
-{
-	static char namebuf[USERLEN + HOSTLEN + 6];
-	char *s = namebuf;
-
-	bzero(namebuf, sizeof(namebuf));
-	name = check_string(name);
-	strncpyzt(s, name, USERLEN + 1);
-	s += strlen(s);
-	*s++ = '@';
-	host = check_string(host);
-	strncpyzt(s, host, HOSTLEN + 1);
-	s += strlen(s);
-	*s = '\0';
-	return (namebuf);
-}
-
-
 /*
  * create a string of form "foo!bar@fubar" given foo, bar and fubar
  * as the parameters.  If NULL, they become "*".
  */
-char *make_nick_user_host(char *nick, char *name, char *host)
+char *make_nick_user_host(nick, name, host)
+	char *nick, *name, *host;
 {
 	static char namebuf[NICKLEN + USERLEN + HOSTLEN + 6];
 	char *s = namebuf;
@@ -217,12 +200,13 @@ char *make_nick_user_host(char *nick, char *name, char *host)
  **
  **/
 
-char *myctime(time_t value)
+char *myctime(value)
+	time_t value;
 {
 	static char buf[28];
 	char *p;
 
-	(void)strlcpy(buf, ctime(&value), sizeof buf);
+	(void)strcpy(buf, ctime(&value));
 	if ((p = (char *)index(buf, '\n')) != NULL)
 		*p = '\0';
 
@@ -243,7 +227,8 @@ char *myctime(time_t value)
 ** error message should be restricted to local clients and some
 ** other thing generated for remotes...
 */
-int  check_registered_user(aClient *sptr)
+int  check_registered_user(sptr)
+	aClient *sptr;
 {
 	if (!IsRegisteredUser(sptr))
 	{
@@ -258,7 +243,8 @@ int  check_registered_user(aClient *sptr)
 ** registered (e.g. we don't know yet whether a server
 ** or user)
 */
-int  check_registered(aClient *sptr)
+int  check_registered(sptr)
+	aClient *sptr;
 {
 	if (!IsRegistered(sptr))
 	{
@@ -292,7 +278,9 @@ int  check_registered(aClient *sptr)
 **	to internal buffer (nbuf). *NEVER* use the returned pointer
 **	to modify what it points!!!
 */
-char *get_client_name(aClient *sptr, int showip)
+char *get_client_name(sptr, showip)
+	aClient *sptr;
+	int  showip;
 {
 	static char nbuf[HOSTLEN * 2 + USERLEN + 5];
 
@@ -323,7 +311,8 @@ char *get_client_name(aClient *sptr, int showip)
 	return sptr->name;
 }
 
-char *get_client_host(aClient *cptr)
+char *get_client_host(cptr)
+	aClient *cptr;
 {
 	static char nbuf[HOSTLEN * 2 + USERLEN + 5];
 
@@ -342,7 +331,9 @@ char *get_client_host(aClient *cptr)
  * Form sockhost such that if the host is of form user@host, only the host
  * portion is copied.
  */
-void get_sockhost(aClient *cptr, char *host)
+void get_sockhost(cptr, host)
+	aClient *cptr;
+	char *host;
 {
 	char *s;
 	if ((s = (char *)index(host, '@')))
@@ -350,6 +341,36 @@ void get_sockhost(aClient *cptr, char *host)
 	else
 		s = host;
 	strncpyzt(cptr->sockhost, s, sizeof(cptr->sockhost));
+}
+
+/*
+ * Return wildcard name of my server name according to given config entry
+ * --Jto
+ */
+char *my_name_for_link(name, aconf)
+	char *name;
+	aConfItem *aconf;
+{
+	static char namebuf[HOSTLEN];
+	int  count = aconf->port;
+	char *start = name;
+
+	if (count <= 0 || count > 5)
+		return start;
+
+	while (count-- && name)
+	{
+		name++;
+		name = (char *)index(name, '.');
+	}
+	if (!name)
+		return start;
+
+	namebuf[0] = '*';
+	(void)strncpy(&namebuf[1], name, HOSTLEN - 1);
+	namebuf[HOSTLEN - 1] = '\0';
+
+	return namebuf;
 }
 
 /*
@@ -373,12 +394,21 @@ void get_sockhost(aClient *cptr, char *host)
 **	FLUSH_BUFFER	if (cptr == sptr)
 **	0		if (cptr != sptr)
 */
-int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
+int  exit_client(cptr, sptr, from, comment)
+	aClient *cptr;		/*
+				   ** The local client originating the exit or NULL, if this
+				   ** exit is generated by this server for internal reasons.
+				   ** This will not get any of the generated messages.
+				 */
+	aClient *sptr;		/* Client exiting */
+	aClient *from;		/* Client firing off this Exit, never NULL! */
+	char *comment;		/* Reason for the exit */
 {
 	aClient *acptr;
 	aClient *next;
+#ifdef	FNAME_USERLOG
 	time_t on_for;
-	ConfigItem_listen *listen_conf;
+#endif
 	static char comment1[HOSTLEN + HOSTLEN + 2];
 	static int recurse = 0;
 
@@ -386,65 +416,83 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 	{
 #ifndef NO_FDLIST
 		if (IsAnOper(sptr))
-			delfrom_fdlist(sptr->slot, &oper_fdlist);
+			delfrom_fdlist(sptr->fd, &oper_fdlist);
 		if (IsServer(sptr))
-			delfrom_fdlist(sptr->slot, &serv_fdlist);
+			delfrom_fdlist(sptr->fd, &serv_fdlist);
 #endif
-		if (sptr->class)
-			sptr->class->clients--;
 		if (IsClient(sptr))
 			IRCstats.me_clients--;
 		if (IsServer(sptr))
-		{
 			IRCstats.me_servers--;
-			sptr->serv->conf->refcount--;
-			if (!sptr->serv->conf->refcount
-			  && sptr->serv->conf->flag.temporary)
-			{
-				/* Due for deletion */
-				DelListItem(sptr->serv->conf, conf_link);
-				link_cleanup(sptr->serv->conf);
-				MyFree(sptr->serv->conf);
-			}
-		}
-
-		if (sptr->listener)
-			if (sptr->listener->class)
-			{
-				listen_conf = (ConfigItem_listen *) sptr->listener->class;
-				listen_conf->clients--;
-				if (listen_conf->flag.temporary
-				    && (listen_conf->clients == 0))
-				{
-					/* Call listen cleanup */
-					listen_cleanup();
-				}
-			}
+		
 		sptr->flags |= FLAGS_CLOSING;
 		if (IsPerson(sptr))
 		{
-			RunHook2(HOOKTYPE_LOCAL_QUIT, sptr, comment);
+			sendto_umode(UMODE_OPER | UMODE_CLIENT,
+			    "*** Notice -- Client exiting: %s (%s@%s) [%s]",
+			    sptr->name, sptr->user->username,
+			    sptr->user->realhost, comment);
 			sendto_connectnotice(sptr->name, sptr->user, sptr, 1, comment);
+		}
+		current_load_data.conn_count--;
+		if (IsPerson(sptr))
+		{
+			char mydom_mask[HOSTLEN + 1];
+			mydom_mask[0] = '\0';
+			strncpy(&mydom_mask[1], DOMAINNAME, HOSTLEN - 1);
+			current_load_data.client_count--;
+			if (match(mydom_mask, sptr->sockhost) == 0)
+				current_load_data.local_count--;
 			/* Clean out list and watch structures -Donwulff */
-			hash_del_watch_list(sptr);
+			hash_del_notify_list(sptr);
 			if (sptr->user && sptr->user->lopt)
 			{
 				free_str_list(sptr->user->lopt->yeslist);
 				free_str_list(sptr->user->lopt->nolist);
 				MyFree(sptr->user->lopt);
 			}
-			on_for = TStime() - sptr->firsttime;
-			if IsHidden(sptr)
-				ircd_log(LOG_CLIENT, "Disconnect - (%d:%d:%d) %s!%s@%s [VHOST %s]",
-					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
-					sptr->name, sptr->user->username,
-					sptr->user->realhost, sptr->user->virthost);
-			else
-				ircd_log(LOG_CLIENT, "Disconnect - (%d:%d:%d) %s!%s@%s",
-					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
-					sptr->name, sptr->user->username, sptr->user->realhost);
 		}
+		update_load();
+#ifdef FNAME_USERLOG
+		on_for = TStime() - sptr->firsttime;
+# if defined(USE_SYSLOG) && defined(SYSLOG_USERS)
+		if (IsPerson(sptr))
+			syslog(LOG_NOTICE, "%s (%3d:%02d:%02d): %s@%s (%s)\n",
+			    myctime(sptr->firsttime),
+			    on_for / 3600, (on_for % 3600) / 60,
+			    on_for % 60, sptr->user->username,
+			    sptr->sockhost, sptr->name);
+# else
+		{
+			char linebuf[160];
+			int  logfile;
 
+			/*
+			 * This conditional makes the logfile active only after
+			 * it's been created - thus logging can be turned off by
+			 * removing the file.
+			 *
+			 * stop NFS hangs...most systems should be able to open a
+			 * file in 3 seconds. -avalon (curtesy of wumpus)
+			 */
+			if (IsPerson(sptr) &&
+			    (logfile =
+			    open(FNAME_USERLOG, O_WRONLY | O_APPEND)) != -1)
+			{
+				(void)ircsprintf(linebuf,
+				    "%s (%3d:%02d:%02d): %s@%s [%s]\n",
+				    myctime(sptr->firsttime),
+				    on_for / 3600, (on_for % 3600) / 60,
+				    on_for % 60,
+				    sptr->user->username, sptr->user->realhost,
+				    sptr->username);
+				(void)write(logfile, linebuf, strlen(linebuf));
+				(void)close(logfile);
+			}
+			/* Modification by stealth@caen.engin.umich.edu */
+		}
+# endif
+#endif
 		if (sptr->fd >= 0 && !IsConnecting(sptr))
 		{
 			if (cptr != NULL && sptr != cptr)
@@ -488,11 +536,6 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 		 */
 		if (cptr && !recurse)
 		{
-			/*
-			 * We are sure as we RELY on sptr->srvptr->name and 
-			 * sptr->name to be less or equal to HOSTLEN
-			 * Waste of strlcpy/strlcat here
-			*/
 			(void)strcpy(comment1, sptr->srvptr->name);
 			(void)strcat(comment1, " ");
 			(void)strcat(comment1, sptr->name);
@@ -504,8 +547,23 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 		{
 			next = acptr->next;
 			if (IsClient(acptr) && (acptr->srvptr == sptr))
-				exit_one_client(NULL, acptr,
-				    &me, comment1, 1);
+				exit_one_client_in_split(NULL, acptr,
+				    &me, comment1);
+#ifdef DEBUGMODE
+			else if (IsClient(acptr) &&
+			    (find_server(acptr->user->server, NULL) == sptr))
+			{
+				sendto_ops("WARNING, srvptr!=sptr but "
+				    "find_server did!  User %s on %s "
+				    "thought it was on %s while "
+				    "loosing %s.  Tell coding team.",
+				    acptr->name, acptr->user->server,
+				    acptr->srvptr ? acptr->
+				    srvptr->name : "<noserver>", sptr->name);
+				exit_one_client_in_split(NULL, acptr, &me,
+				    comment1);
+			}
+#endif
 		}
 
 		/*
@@ -516,11 +574,9 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 		for (acptr = client; acptr; acptr = next)
 		{
 			next = acptr->next;
-			if (IsServer(acptr) && acptr->srvptr == sptr) {
+			if (IsServer(acptr) && acptr->srvptr == sptr)
 				exit_client(sptr, acptr,	/* RECURSION */
 				    sptr, comment1);
-				RunHook(HOOKTYPE_SERVER_QUIT, acptr);
-			}
 			/*
 			 * I am not masking SQUITS like I do QUITs.  This
 			 * is probobly something we could easily do, but
@@ -543,14 +599,13 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 #endif
 		}
 		recurse--;
-		RunHook(HOOKTYPE_SERVER_QUIT, sptr);
 	}
-
+	
 
 	/*
 	 * Finally, clear out the server we lost itself
 	 */
-	exit_one_client(cptr, sptr, from, comment, recurse);
+	exit_one_client(cptr, sptr, from, comment);
 	return cptr == sptr ? FLUSH_BUFFER : 0;
 }
 
@@ -560,12 +615,17 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 */
 /* DANGER: Ugly hack follows. */
 /* Yeah :/ */
-static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from, char *comment, int split)
+static void exit_one_client_backend(cptr, sptr, from, comment, split)
+	aClient *sptr;
+	aClient *cptr;
+	aClient *from;
+	char *comment;
+	int  split;
 {
 	aClient *acptr;
 	int  i;
 	Link *lp;
-	Membership *mp;
+
 	/*
 	   **  For a server or user quitting, propagage the information to
 	   **  other servers (except to the one where is came from (cptr))
@@ -582,11 +642,16 @@ static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from, char *c
 		   ** need to send different names to different servers
 		   ** (domain name matching)
 		 */
-		for (i = 0; i <= LastSlot; i++)
+		for (i = 0; i <= highest_fd; i++)
 		{
+			aConfItem *aconf;
 
-			if (!(acptr = local[i]) || !IsServer(acptr) || acptr == cptr || IsMe(acptr)
-			    || (DontSendQuit(acptr) && split))
+			if (!(acptr = local[i]) || !IsServer(acptr) ||
+			    acptr == cptr || IsMe(acptr))
+				continue;
+			if ((aconf = acptr->serv->nline) &&
+			    (match(my_name_for_link(me.name, aconf),
+			    sptr->name) == 0))
 				continue;
 			/*
 			   ** SQUIT going "upstream". This is the remote
@@ -597,11 +662,13 @@ static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from, char *c
 			 */
 			if (sptr->from == acptr)
 			{
-				sendto_one(acptr, ":%s SQUIT %s :%s", from->name, sptr->name, comment);
+				sendto_one(acptr, ":%s SQUIT %s :%s",
+				    from->name, sptr->name, comment);
 			}
 			else
 			{
-				sendto_one(acptr, "SQUIT %s :%s", sptr->name, comment);
+				sendto_one(acptr, "SQUIT %s :%s",
+				    sptr->name, comment);
 			}
 		}
 	}
@@ -645,13 +712,13 @@ static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from, char *c
 
 			if (!IsULine(sptr) && !split)
 				if (sptr->user->server != me_hash)
-					sendto_snomask(SNO_FCLIENT,
+					sendto_umode(UMODE_FCLIENT,
 					    "*** Notice -- Client exiting at %s: %s!%s@%s (%s)",
 					    sptr->user->server, sptr->name,
 					    sptr->user->username,
 					    sptr->user->realhost, comment);
-			while ((mp = sptr->user->channel))
-				remove_user_from_channel(sptr, mp->chptr);
+			while ((lp = sptr->user->channel))
+				remove_user_from_channel(sptr, lp->value.chptr);
 
 			/* Clean up invitefield */
 			while ((lp = sptr->user->invited))
@@ -672,37 +739,56 @@ static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from, char *c
 		    sptr->from, sptr->next, sptr->prev, sptr->fd,
 		    sptr->status, sptr->user));
 	if (IsRegisteredUser(sptr))
-		hash_check_watch(sptr, RPL_LOGOFF);
+		hash_check_notify(sptr, RPL_LOGOFF);
 	remove_client_from_list(sptr);
 	return;
 }
 
+static void exit_one_client(cptr, sptr, from, comment)
+	aClient *sptr, *cptr, *from;
+	char *comment;
+{
+	exit_one_client_backend(cptr, sptr, from, comment, 0);
+}
 
-void checklist(void)
+static void exit_one_client_in_split(cptr, sptr, from, comment)
+	aClient *sptr, *cptr, *from;
+	char *comment;
+{
+	exit_one_client_backend(cptr, sptr, from, comment, 1);
+}
+
+
+void checklist()
 {
 	aClient *acptr;
 	int  i, j;
 
 	if (!(bootopt & BOOT_AUTODIE))
 		return;
-	for (j = i = 0; i <= LastSlot; i++)
+	for (j = i = 0; i <= highest_fd; i++)
 		if (!(acptr = local[i]))
 			continue;
 		else if (IsClient(acptr))
 			j++;
 	if (!j)
 	{
+#ifdef	USE_SYSLOG
+		syslog(LOG_WARNING, "ircd exiting: autodie");
+#endif
 		exit(0);
 	}
 	return;
 }
 
-void initstats(void)
+void initstats()
 {
 	bzero((char *)&ircst, sizeof(ircst));
 }
 
-void tstats(aClient *cptr, char *name)
+void tstats(cptr, name)
+	aClient *cptr;
+	char *name;
 {
 	aClient *acptr;
 	int  i;
@@ -712,7 +798,11 @@ void tstats(aClient *cptr, char *name)
 
 	sp = &tmp;
 	bcopy((char *)ircstp, (char *)sp, sizeof(*sp));
-	for (i = 0; i <= LastSlot; i++)
+#ifndef _WIN32
+	for (i = 0; i < MAXCONNECTIONS; i++)
+#else
+	for (i = 0; i < highest_fd; i++)
+#endif
 	{
 		if (!(acptr = local[i]))
 			continue;

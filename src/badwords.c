@@ -25,149 +25,10 @@
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 
-/* This was modified a bit in order to use newconf. The loading functions
- * have been trashed and integrated into the config parser. The striping
- * function now only uses REPLACEWORD if no word is specifically defined
- * for the word found. Also the freeing function has been ditched. -- codemastr
- */
-
-#ifdef FAST_BADWORD_REPLACE
-/*
- * our own strcasestr implementation because strcasestr is often not
- * available or is not working correctly (??).
- */
-static char *our_strcasestr(char *haystack, char *needle) {
-int i;
-int nlength = strlen (needle);
-int hlength = strlen (haystack);
-
-	if (nlength > hlength) return NULL;
-	if (hlength <= 0) return NULL;
-	if (nlength <= 0) return haystack;
-	for (i = 0; i <= (hlength - nlength); i++) {
-		if (strncasecmp (haystack + i, needle, nlength) == 0)
-			return haystack + i;
-	}
-  return NULL; /* not found */
-}
-inline int fast_badword_match(ConfigItem_badword *badword, char *line)
-{
- 	char *p;
-	int bwlen = strlen(badword->word);
-	if ((badword->type & BADW_TYPE_FAST_L) && (badword->type & BADW_TYPE_FAST_R))
-		return (our_strcasestr(line, badword->word) ? 1 : 0);
-
-	p = line;
-	while((p = our_strcasestr(p, badword->word)))
-	{
-		if (!(badword->type & BADW_TYPE_FAST_L))
-		{
-			if ((p != line) && isalnum(*(p - 1))) /* aaBLA but no *BLA */
-				goto next;
-		}
-		if (!(badword->type & BADW_TYPE_FAST_R))
-		{
-			if (isalnum(*(p + bwlen)))  /* BLAaa but no BLA* */
-				goto next;
-		}
-		/* Looks like it matched */
-		return 1;
-next:
-		p += bwlen;
-	}
-	return 0;
-}
-/* fast_badword_replace:
- * a fast replace routine written by Syzop used for replacing badwords.
- * searches in line for huntw and replaces it with replacew,
- * buf is used for the result and max is sizeof(buf).
- * (Internal assumptions: max > 0 AND max > strlen(line)+1)
- */
-inline int fast_badword_replace(ConfigItem_badword *badword, char *line, char *buf, int max)
-{
-/* Some aliases ;P */
-char *replacew = badword->replace ? badword->replace : REPLACEWORD;
-char *pold = line, *pnew = buf; /* Pointers to old string and new string */
-char *poldx = line;
-int replacen = -1; /* Only calculated if needed. w00t! saves us a few nanosecs? lol */
-int searchn = -1;
-char *startw, *endw;
-char *c_eol = buf + max - 1; /* Cached end of (new) line */
-int run = 1;
-int cleaned = 0;
-
-	Debug((DEBUG_NOTICE, "replacing %s -> %s in '%s'", badword->word, replacew, line));
-
-	while(run) {
-		pold = our_strcasestr(pold, badword->word);
-		if (!pold)
-			break;
-		cleaned = 1;
-		if (replacen == -1)
-			replacen = strlen(replacew);
-		if (searchn == -1)
-			searchn = strlen(badword->word);
-		/* Hunt for start of word */
- 		if (pold > line) {
-			for (startw = pold; (isalnum(*startw) && (startw != line)); startw--);
-			if (!isalnum(*startw))
-				startw++; /* Don't point at the space/seperator but at the word! */
-		} else {
-			startw = pold;
-		}
-
-		if (!(badword->type & BADW_TYPE_FAST_L) && (pold != startw)) {
-			/* not matched */
-			pold++;
-			continue;
-		}
-
-		/* Hunt for end of word */
-		for (endw = pold; ((*endw != '\0') && (isalnum(*endw))); endw++);
-
-		if (!(badword->type & BADW_TYPE_FAST_R) && (pold+searchn != endw)) {
-			/* not matched */
-			pold++;
-			continue;
-		}
-
-		/* Do we have any not-copied-yet data? */
-		if (poldx != startw) {
-			int tmp_n = startw - poldx;
-			if (pnew + tmp_n >= c_eol) {
-				/* Partial copy and return... */
-				memcpy(pnew, poldx, c_eol - pnew);
-				*c_eol = '\0';
-				return 1;
-			}
-
-			memcpy(pnew, poldx, tmp_n);
-			pnew += tmp_n;
-		}
-		/* Now update the word in buf (pnew is now something like startw-in-new-buffer */
-
-		if (replacen) {
-			if ((pnew + replacen) >= c_eol) {
-				/* Partial copy and return... */
-				memcpy(pnew, replacew, c_eol - pnew);
-				*c_eol = '\0';
-				return 1;
-			}
-			memcpy(pnew, replacew, replacen);
-			pnew += replacen;
-		}
-		poldx = pold = endw;
-	}
-	/* Copy the last part */
-	if (*poldx) {
-		strncpy(pnew, poldx, c_eol - pnew);
-		*(c_eol) = '\0';
-	} else {
-		*pnew = '\0';
-	}
-	return cleaned;
-}
-#endif
+static char *channelword[MAX_WORDS];
+static char *messageword[MAX_WORDS];
+static int channel_wordlist;
+static int message_wordlist;
 
 /*
  * Returns a string, which has been filtered by the words loaded via
@@ -179,108 +40,245 @@ void badwords_stats(aClient *sptr)
 {
 }
 
-char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
+char *stripbadwords_channel(char *str)
 {
 	regmatch_t pmatch[MAX_MATCH];
+	regex_t pcomp;
 	static char cleanstr[4096];
 	char buf[4096];
 	char *ptr;
-	int  matchlen, stringlen, cleaned;
-	ConfigItem_badword *this_word;
-	
-	*blocked = 0;
+	int  errorcode, matchlen, stringlen, this_word;
 
-	if (!start_bw)
+	if (!channel_wordlist)
 		return str;
-
-	/*
-	 * work on a copy
-	 */
-	stringlen = strlcpy(cleanstr, StripControlCodes(str), sizeof cleanstr);
-	memset(&pmatch, 0, sizeof pmatch);
+	strncpy(cleanstr, str, sizeof(cleanstr) - 1);	/* Let's work on a backup */
+	memset(&pmatch, 0, sizeof(pmatch));
+	stringlen = strlen(cleanstr);
 	matchlen = 0;
 	buf[0] = '\0';
-	cleaned = 0;
 
-	for (this_word = start_bw; this_word; this_word = (ConfigItem_badword *)this_word->next)
+	for (this_word = 0; channelword[this_word] != NULL; this_word++)
 	{
-#ifdef FAST_BADWORD_REPLACE
-		if (this_word->type & BADW_TYPE_FAST)
+		if ((errorcode =
+		    regcomp(&pcomp, channelword[this_word], REG_ICASE)) > 0)
 		{
-			if (this_word->action == BADWORD_BLOCK)
-			{
-				if (fast_badword_match(this_word, cleanstr))
-				{
-					*blocked = 1;
-					return NULL;
-				}
-			}
-			else
-			{
-				int n;
-				/* fast_badword_replace() does size checking so we can use 512 here instead of 4096 */
-				n = fast_badword_replace(this_word, cleanstr, buf, 512);
-				if (!cleaned && n)
-					cleaned = n;
-				strcpy(cleanstr, buf);
-				memset(buf, 0, sizeof(buf)); /* regexp likes this somehow */
-			}
-		} else
-		if (this_word->type & BADW_TYPE_REGEX)
-		{
-#endif
-			if (this_word->action == BADWORD_BLOCK)
-			{
-				if (!regexec(&this_word->expr, cleanstr, 0, NULL, 0))
-				{
-					*blocked = 1;
-					return NULL;
-				}
-			}
-			else
-			{
-				ptr = cleanstr; /* set pointer to start of string */
-				while (regexec(&this_word->expr, ptr, MAX_MATCH, pmatch,0) != REG_NOMATCH)
-				{
-					if (pmatch[0].rm_so == -1)
-						break;
-					cleaned = 1;
-					matchlen += pmatch[0].rm_eo - pmatch[0].rm_so;
-					strlncat(buf, ptr, sizeof buf, pmatch[0].rm_so);
-					if (this_word->replace)
-						strlcat(buf, this_word->replace, sizeof buf); 
-					else
-						strlcat(buf, REPLACEWORD, sizeof buf);
-					ptr += pmatch[0].rm_eo;	/* Set pointer after the match pos */
-					memset(&pmatch, 0, sizeof(pmatch));
-				}
-
-				/* All the better to eat you with! */
-				strlcat(buf, ptr, sizeof buf);	
-				memcpy(cleanstr, buf, sizeof cleanstr);
-				memset(buf, 0, sizeof(buf));
-				if (matchlen == stringlen)
-					break;
-			}
-#ifdef FAST_BADWORD_REPLACE
+			regfree(&pcomp);
+			return cleanstr;
 		}
-#endif
+
+		ptr = cleanstr;	/* Set pointer to start of string */
+		while (regexec(&pcomp, ptr, MAX_MATCH, pmatch,
+		    0) != REG_NOMATCH)
+		{
+			if (pmatch[0].rm_so == -1)
+				break;
+			matchlen += pmatch[0].rm_eo - pmatch[0].rm_so;
+			strncat(buf, ptr, pmatch[0].rm_so);
+			strcat(buf, REPLACEWORD);	/* Who's afraid of the big bad buffer overflow? */
+			ptr += pmatch[0].rm_eo;	/* Set pointer after the match pos */
+			memset(&pmatch, 0, sizeof(pmatch));
+		}
+		strcat(buf, ptr);	/* All the better to eat you with! */
+		strncpy(cleanstr, buf, sizeof(cleanstr));
+		memset(buf, 0, sizeof(buf));
+		regfree(&pcomp);
+		if (matchlen == stringlen)
+			break;
 	}
-	return (cleaned) ? cleanstr : str;
+
+	return (cleanstr);
 }
 
-char inline *stripbadwords_channel(char *str, int *blocked)
+char *stripbadwords_message(char *str)
 {
-	return stripbadwords(str, conf_badword_channel, blocked);
+	regmatch_t pmatch[MAX_MATCH];
+	regex_t pcomp;
+	static char cleanstr[4096];
+	char buf[4096];
+	char *ptr;
+	int  errorcode, matchlen, stringlen, this_word;
+
+	if (!message_wordlist)
+		return str;
+	strncpy(cleanstr, str, sizeof(cleanstr) - 1);	/* Let's work on a backup */
+	memset(&pmatch, 0, sizeof(pmatch));
+	stringlen = strlen(cleanstr);
+	matchlen = 0;
+	buf[0] = '\0';
+
+	for (this_word = 0; messageword[this_word] != NULL; this_word++)
+	{
+		if ((errorcode =
+		    regcomp(&pcomp, messageword[this_word], REG_ICASE)) > 0)
+		{
+			regfree(&pcomp);
+			return cleanstr;
+		}
+
+		ptr = cleanstr;	/* Set pointer to start of string */
+		while (regexec(&pcomp, ptr, MAX_MATCH, pmatch,
+		    0) != REG_NOMATCH)
+		{
+			if (pmatch[0].rm_so == -1)
+				break;
+			matchlen += pmatch[0].rm_eo - pmatch[0].rm_so;
+			strncat(buf, ptr, pmatch[0].rm_so);
+			strcat(buf, REPLACEWORD);	/* Who's afraid of the big bad buffer overflow? */
+			ptr += pmatch[0].rm_eo;	/* Set pointer after the match pos */
+			memset(&pmatch, 0, sizeof(pmatch));
+		}
+		strcat(buf, ptr);	/* All the better to eat you with! */
+		strncpy(cleanstr, buf, sizeof(cleanstr));
+		memset(buf, 0, sizeof(buf));
+		regfree(&pcomp);
+		if (matchlen == stringlen)
+			break;
+	}
+
+	return (cleanstr);
 }
 
-char inline *stripbadwords_message(char *str, int *blocked)
+/*
+ * Loads bad words from a file, into a char array. This puts a limitation on 
+ * how many words may be slurped (which is probably a good thing).  The words
+ * are then called by stripbadwords, to filter unwanted (swear) words.
+ */
+int  loadbadwords_channel(char *wordfile)
 {
-	return stripbadwords(str, conf_badword_message, blocked);
-}
-char inline *stripbadwords_quit(char *str, int *blocked)
-{
-	return stripbadwords(str, conf_badword_quit, blocked);
+	FILE *fin;
+	char buf[MAX_WORDLEN];
+	char *ptr;
+	int  i, j, isregex;
+
+	channel_wordlist = 0;
+	memset(channelword, 0, sizeof(messageword));
+
+	if ((fin = fopen(wordfile, "r")) == NULL)
+		return 0;
+
+	for (i = 0; i < MAX_WORDS; i++)
+	{
+		if (fgets(buf, MAX_WORDLEN, fin) == NULL)
+			break;
+		if ((ptr = strchr(buf, '\r')) != NULL
+		    || (ptr = strchr(buf, '\n')) != NULL)
+			*ptr = '\0';
+		if (buf[0] == '\0')
+		{
+			i--;
+			continue;
+		}
+		if (buf[0] == '#')
+		{
+			i--;
+			continue;
+		}
+		for (j = 0, isregex = 0; j < strlen(buf); j++)
+		{
+			if ((int)buf[j] < 65 || (int)buf[j] > 123)
+			{
+				isregex++;	/* Probably is */
+				break;
+			}
+		}
+
+		if (isregex)
+		{
+			/* We don't have to apply a pattern to the word because
+			 * it already *is* a pattern.
+			 */
+			channelword[i] = (char *)MyMalloc(strlen(buf) + 1);
+			strncpy(channelword[i], buf, strlen(buf) + 1);
+		}
+		else
+		{
+			/* PATTERN contains the %s format specifier so we must
+			 * remove 2 chars, and 1 for the \0, which gives us -1
+			 */
+			channelword[i] =
+			    (char *)MyMalloc(strlen(buf) + strlen(PATTERN) - 1);
+			ircsprintf(channelword[i], PATTERN, buf);
+		}
+		channel_wordlist++;
+	}
+	fclose(fin);
+
+	return i;
 }
 
+int  loadbadwords_message(char *wordfile)
+{
+	FILE *fin;
+	char buf[MAX_WORDLEN];
+	char *ptr;
+	int  i, j, isregex;
+
+	message_wordlist = 0;
+	memset(messageword, 0, sizeof(messageword));
+
+	if ((fin = fopen(wordfile, "r")) == NULL)
+		return 0;
+
+	for (i = 0; i < MAX_WORDS; i++)
+	{
+		if (fgets(buf, MAX_WORDLEN, fin) == NULL)
+			break;
+		if ((ptr = strchr(buf, '\r')) != NULL
+		    || (ptr = strchr(buf, '\n')) != NULL)
+			*ptr = '\0';
+		if (buf[0] == '\0')
+		{
+			i--;
+			continue;
+		}
+		if (buf[0] == '#')
+		{
+			i--;
+			continue;
+		}
+
+		for (j = 0, isregex = 0; j < strlen(buf); j++)
+		{
+			if ((int)buf[j] < 65 || (int)buf[j] > 123)
+			{
+				isregex++;	/* Probably is */
+				break;
+			}
+		}
+
+		if (isregex)
+		{
+			/* We don't have to apply a pattern to the word because
+			 * it already *is* a pattern.
+			 */
+			messageword[i] = (char *)MyMalloc(strlen(buf) + 1);
+			strncpy(messageword[i], buf, strlen(buf) + 1);
+		}
+		else
+		{
+			/* PATTERN contains the %s format specifier so we must
+			 * remove 2 chars, and 1 for the \0, which gives us -1
+			 */
+			messageword[i] =
+			    (char *)MyMalloc(strlen(buf) + strlen(PATTERN) - 1);
+			ircsprintf(messageword[i], PATTERN, buf);
+		}
+		message_wordlist++;
+	}
+	fclose(fin);
+
+	return i;
+}
+
+
+void freebadwords(void)
+{
+	int  i;
+
+	for (i = 0; channelword[i] != NULL && i < MAX_WORDS; i++)
+		free(channelword[i]);
+	for (i = 0; messageword[i] != NULL && i < MAX_WORDS; i++)
+		free(messageword[i]);
+	return;
+}
 #endif

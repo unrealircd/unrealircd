@@ -4,12 +4,14 @@
 | some kind of Certification Authority (CA), so your users can check that |
 | they are really connected to the real server, so they feel secure?      |
 |                                                                         |
-| There is an initiative at CACert.org - They offer SSL Certificates      |
-| for use with your IRCd for free, so your users can be sure that they    |
-| can trust you and your server.                                          |
-|                                                                         |
-| To get a free signed certificate please visit http://www.CACert.org     |
-|                                                _________________________|
+| An initiative has been started, to help this problem, as more and more  |
+| SSL-enabled IRC servers will be started in the future, and people will  |
+| have trouble authenticating that they are really at the right server.   |
+| This initiative is called OpenIRC CA - They offer you to sign           |
+| SSL certificates for use with your IRCd for free,                       |
+| so your users can be sure that they can trust you and your server.      |     
+| To get a signed certificate from them please visit the website  	  |
+| http://www.openirc-ca.eu.org						  |
 | 	                                       	| Press enter to continue |
 ---------------------------------------------------------------------------
 

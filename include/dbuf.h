@@ -22,6 +22,14 @@
 #ifndef __dbuf_include__
 #define __dbuf_include__
 
+#ifndef PROTO
+#ifdef __STDC__
+#	define PROTO(x)	x
+#else
+#	define PROTO(x)	()
+#endif /* __STDC__ */
+#endif /* ! PROTO */
+
 /*
 ** dbuf is a collection of functions which can be used to
 ** maintain a dynamic buffering of a byte stream.
@@ -68,7 +76,7 @@ typedef struct dbufbuf {
 **	returns	> 0, if operation successfull
 **		< 0, if failed (due memory allocation problem)
 */
-int dbuf_put(dbuf *, char *, int);
+int dbuf_put PROTO((dbuf *, char *, int));
 					/* Dynamic buffer header */
 					/* Pointer to data to be stored */
 					/* Number of bytes to store */
@@ -88,7 +96,7 @@ int dbuf_put(dbuf *, char *, int);
 **		Negative return values indicate some unspecified
 **		error condition, rather fatal...
 */
-int dbuf_get(dbuf *, char *, int);
+int dbuf_get PROTO((dbuf *, char *, int));
 				/* Dynamic buffer header */
 				/* Pointer to buffer to receive the data */
 				/* Max amount of bytes that can be received */
@@ -117,11 +125,11 @@ int dbuf_get(dbuf *, char *, int);
 **	Note: 	delete can be used alone, there is no real binding
 **		between map and delete functions...
 */
-char *dbuf_map(dbuf *, int *);
+char *dbuf_map PROTO((dbuf *, int *));
 					/* Dynamic buffer header */
 					/* Return number of bytes accessible */
 
-int dbuf_delete(dbuf *, int);
+int dbuf_delete PROTO((dbuf *, int));
 					/* Dynamic buffer header */
 					/* Number of bytes to delete */
 
@@ -139,8 +147,7 @@ int dbuf_delete(dbuf *, int);
 **	allocated buffers and make it empty.
 */
 #define DBufClear(dyn)	dbuf_delete((dyn),DBufLength(dyn))
-#define NOTINIT "\x53\x50\x59";
 
-extern int dbuf_getmsg(dbuf *, char *, int);
+extern int dbuf_getmsg PROTO((dbuf *, char *, int));
 
 #endif /* __dbuf_include__ */

@@ -1,4 +1,4 @@
-/*
+/*                              
  * UnrealIRCd Changes File - (C) Carsten Munk 1999-2002 &
  *                               The UnrealIRCd Team
  *                              
@@ -20,2212 +20,835 @@
  *                              
  */                             
                                 
-[ Unreal3.2 ]
+[ Unreal4.0 ]
 - Fixed a _serious_ bug in SERVER command, reported by Valen, Forrester,
   M0rpheus, JK, and Hiten.
-- Fixed /botserv problem
-- Fixed permission problem with SSL .pem files (was o+r)
-- Removed a redundant time.h include reported by trippin
-- Modified rehash flags to use strnicmp rather than match (faster)
-- Fixed some points of confusion of possible cptr->passwd bug in
-  m_server_estab, reported and fixed by Kanzen_Greiver
-- Fixed some more points of ->passwd bugs
-- Added in devdev's INSTALL replacement
-- Made it so you don't get a +W notice if you /who or /whois yourself reported by Ron885
-- You can no longer specify an *@unrealircd.com/org, or unreal-*@lists.sourceforge.net email
-  as your KLINE_ADDRESS (the "Why am I K:lined?" messages got too annoying)
-- Removed some irc.flirt.org references.
-- Made it so if a channel is +O or +A and you are not +O or +A and not in the channel, you can not
-  /topic #channel same for +b if not +o or on the channel. Suggested by Sysop_Mars
-- Fixed a bug where you would receive a double notice when someone does a /who 0 o
-- Added first part of the new config parser, s_conf2.c
-- Added the next part of the new config parser, and some even more
-- Fixed a missing : on numeric 379 found by script0r
-- Added some a bit functional _conf_class code
-- Some more _conf_class code
-- Typing /stats or /stats invalid-flag will return a list of valid flags
-- You no longer receive a /stats +e notice when no flag is specified, or an invalid flag is specified
-- Some more newconf code, and some more
-- Added drpass (X:line) to the config code
-- Some more config2 code
-- Removed parser builtin directive include, and replaced it with our own
-- The config2 now uses strerror() to display an error, rather than the numeric
-- Fixed s_user.c so umode N and T cannot coexist
-- Added tld (T:line) to the config code
-- Finished _conf_oper
-- A report_configuration code (showoff)
-- Finished _conf_listen
-- Finished _conf_allow
-- Added TODO in top of s_conf2.c
-- Fixed a bug reported by S7 that affected chg* and set* as well as sdesc
-- Started work on the except parser
-- Wierdoe parse things
-- Made except parser use a specialized _configflag_except instead of wasting
-  a byte.
-- Changed version to "Unreal3.2-Selene" (Selene = female character in a
-     comic mag i found at my grandmas :P)
-- Finished _conf_vhost
-- Made _conf_listen understand listen <port> {}
-- Finished _conf_link
-- Added some _conf_link validity and added ->class option (forgot it)
-- Made ircd.c use the newconf with me.* setup. Uses the first and the best
-  as listener
-- Finished _conf_ban (try and attack us now idiots!)
-- Made "No response from", use GLOBOPS instead of GNOTICE. 
-  Fixes TODO Bugfixes Thu Dec 14 2000 Priority 10 added by Stskeeps
-- Fixed telnet close server thing, fixes Wed 20 Dec 2000 priority 9, 
-  added by codemastr
-- Fixed /whois shows what channels +S are in.
-  Closes stskeeps/Dec30-2000-10-Bugfixes =======
-- Fixed a STATS_ONLYOPER bug
-- Fixed a ircd.tune bug (the file may not write if it didn't exist)
-- Fixed a serious bug reported by Kanzen_Griever
-- Merged in sts-laptop branch
-- Made /admin use the new config (had to modify some newconf stuff to make a backwards copy
-  of the list as well)
-- Made U:lines loaded from the newconf, also made /stats U read the U:lines from the newconf
-- Added listen {} runtime-configuration code work :))
-- Removed unrealircd.conf from the stock
-- X:line was replaced with drpass {} in /restart and /die (will make them faster as well)
-- Made +u do a auditorium/star chat feature, suggested by |Martin|=======
-- Fixed a G:line bug that would allow certain masks to be interpreted as *@*
-- Fixed the same bug in shun that affected G:line
-- Made +f faster by replacing 2 strchr()s and a strrchr() with a if () inside an existing loop
-- Fixed a +f bug reported by Enstyne
-- Fixed a SVSMODE/SVS2MODE bug that could cause an incorrect +i and +o count, reported by CaliMonk
-- Fixed another SVS2MODE bug that would make it send an empty MODE change
-- Removed the old chmode +x = +c and +I = +V support (3.x use +cV and 2.1.7 is obsolete)
-- Implimented except socks {} and tld {}
-- Removed the old read_tlines code and made /stats t show tld {} blocks
-- Fixed bug with /whois showing +S user channels (ChanServ)
-- Made /mode (umode change) only send 1 unknown mode msg, forgot who suggested this one
-- Made /rehash -motd/rules use tld {} 
-- Heavily recoded /rehash (removed a ton of coding)
-- Updated match() to have some optimizations from bahamut
-- +GScm now affect /part msgs (requested by SegFault and others)
-- Added Find_link, serv->conf, did a Find_tld fixup, removed serv->nline, 
-  removing a lot of my_name_for_link crap, indented s_serv.c
-- Recoded m_server(YES!) -stskeeps
-- Fixed a +S bug reported by script0r
-- Fixed a #undef USE_SSL problem found by codemastr.. caused by
-  Sts(TM)coding
-- Added set {} (unrealircd.conf/network file replacement)
-- Made vhost {} use from {} for hosts
-- Fixed some stskeeps-drunk-coding stuff in m_server
-- Fixed a typo "receive" not "recieve"
-- Made SVSNICK check if a nick is valid
-- Made get_sendq be a macro
-- Added find_ban, AllowClient() (old attach_Iline)
-- Temporary disabled /svsnoop, /akill, /sqline /unsqline, /kline, /unkline
-  /zline, /rakill, /unzline and /svso
-- chkconf is not being built anymore
-- Ripped out s_conf.c with the roots. 
-- Ripped out add_listener
-- Disabled a lot of stuff that needs to adapt to conf2
-- Made allow {} work
-- Changed allow {} to do user@host instead of user item
-- Took out my_name_for_link
-- Temporary disabled D:d lines/SQLines/Qlines
-- Fixed some /connect stuff
-- Disabled rehash temporary
-- Made ban user/ban realname work (s_unreal.c needs to be modified)
-- Added Zogg to credits
-- NOTE: Unreal-devel is handicapped right now, code in progress, do not use
-- Did a little speed up on Find_ban
-- Made /setname and /chgname use ban realname {}
-- Made /oper work with newconf (come get us now bastards!)
-- Made +c show class names in connect
-- Fixed a minor problem with ban {} and oper {}
-- Made ban nick {} work
-- Added the first (sorta) working version of the config converter
-- updconf now makes use of from {} in oper {} to eliminate duplicate O:lines
-- Made allow {} passwords work (AllowClient) - TODO: I:line encryptions
-- Made allow { maxperip }; work, the old ONE password thing, just better
-- Added a hack to updconf so ONE sets maxperip to 1 and made another hack
-  -I IPMASK:HOSTMASK:IPs,... to allow you to specify an ipmax. ex. 
-  -I *@205.188.*:*@*.aol.com:10,*@*:*@*:100 that will allow 10 on your aol.com allow, 
-  and 100 on your *@* allow
-- /vhost uses newconf
-- Removed old vhost.conf code 
-- Fixed check_pings (check_kills) code, so G:lines & ban nick/ip/realname
-  works again
-- /connect works now :), TODO: D:d lines, V:line needs fixing, badly
-  says "Unknown location" atm on uplink
-- Took out MyMalloc & co, direct to malloc/realloc/free now. Crashed in
-  DEBUGMODE
-- Added ConfigItem_link->ipnum
-- Fixed a compile bug with DEBUGMODE
-- Changed a load of old aConfItem crap .., FIX: ConfigItem_link->options
-- Fixed a /connect bug
-- Made /svsnoop "work" again, moved it to s_svs.c (and made that file too)
-- Made /svso work again, moved it to same place as svsnoop.
-- Made /rakill and /akill work again :). Added banflag.type2
-  FIX: *@* detection
-- Fixed a check_pings problem with usernames
-- ban ip {} works 100% now
-- Made /stats C work and /stats H. Intregrated into one.
-- Made /zline, /unzline work. 
-- Added CONF_BAN_TYPE_TEMPORARY
-- Fixed a ban ip {} bug in check_pings
-- Removed some waste of oldconf
-- Moved advanced_check to s_svs.c
-- Made /kline work again, with newconf
-- Made /trace work again properly with class names
-- Made /sqline /unsqline work again.
-- Made SQLINE synching work with newconf
-- Fixed a little problem with SERVER servername :info crashing the ircd
-  Long live the Floridan way of counting
-- ban server {} works the original way it was intended to now
-- Classes keep reference counts now, and moving classes (oper) works good
-  too.
-- Added /trace class search results (class->clients)
-- Fixed some protocol error in server_synch
-- Made listener code work good .. 
-- Made reference counts work again
-- Started some rehash work
-- Made full class work on servers too
-- Fixed a refcount bug
-- Fixed a spread server bug
-- Some more rehash stuff
-- Fixed check_pings problem (crash)
-- Fixed negative timestamps problem (crash)
-- Fixed a problem with cptr->class counting for servers
-- Made a bunch of /stats flags work with newconf
-- Added some MALLOCD (mini debug malloc by stskeeps..)
-- Removed some C++ comments
-- Made close_listeners work correctly again
-- Removed some old check_* mammut code
-- Fixed a bunch of possible bugs in newconf
-- Added sendto_realops logging of config errors
-- Made /rehash work .. sortof. Fixed some crash bugs
-- Added /stats P on listener info (oper-only)
-- listener temporary stuff works now
-- Fixed temporary stuf with conf_link
-- Fixed a problem with +x
-- Made CPATH be unrealircd.conf and init_conf2 use configfile instead
-- Disabled calls to dynconf
-- Added validate_conf, added dynconf checking, me, admin, class, oper
-  testing
-- Added config_progress() Fixed temporary stuff
-  with conf_link
-- Made tld {} get rehashed
-- Made listen/allow get validated
-- Finished up validate_conf()
-- Made badwords be in newconf (you can now specify a replace word for each word)
-- Made vhosts and badwords rehash
-- Fixed a bug in the rehash code
-- Made it so set::auto-join and set::oper-auto-join can be excluded to mean no auto join
-- Changed prefix_quit to prefix-quit (all others use - not _)
-- Fixed a minor bug causing a mode without any flags to be sent
-- Finished up deny dcc {}.
-   TODOs: dcc_del_wild_match doesn't work. dcc_wipe_services() either
-- Made deny_dcc get rehashed
-- Made it so the IRCd can survive with certain set {} errors (uses defaults)
-- stats-server and services-server are no longer required (missing = disabled services aliases)
-- socks set {} options are now optional. Defaults are used if missing
-- If an invalid ban or except is found, it is removed
-- Some small SSL fixes .. 
-- Added a notice on connect for SSL users with key length
-- Fixed a /kline and /unkline buffer overflow, reported by [-Th3Dud3-]
-- Fixed a crash in /stats k regarding temporary K:lines
-- Fixed a missing " in validate_conf
-- Replaced a few strlen()s with sizeof(), should make the IRCd start a bit faster
-- Fixed a svsmotd bug (from 3.1) prevented adding lines to the svsmotd
-- Recoded some dynamic motd stuff. Now uses 1 function.
-- Removed an unused var from the old T:line code
-- Removed a redundant check in SVSKILL
-- Removed some old code from LUSERS (it was moved due to IRCStats but some leftovers remained)
-- Added deny channel { channel "channelmask"; reason "why"; }; and
-        allow channel { channel "channelmask"; };. Replaces chrestrict
-- Made those above get rehashed
-- Killed ircdupstr and called it ircstrdup
-- Made link { options { work OK again. Had a dead loop as well
-- Made autoconnect work again :>. Changes in behavouir: It connects more at
-  a time now. You need autoconnect flag in options.
-- Minor OpenBSD support cleanup
-- bsd.c, channel.c, s_svs.c, s_unreal.c, s_kline.c, and s_extra.c now use ANSI 
-  standards for naming function params
-- Made connfreq unable to less than 10
-- Added deny link { mask "servermask"; rule "connectionrule"; type all/auto; }; (equivilant of D/dlines)
-- Made admin {} get rehashed
-- Got /stats x to work again
-- Recoded check_pings, with bits used from bahamut-ircd/hybrid-ircd, credits
-  to lucas.
-- Removed return_servers() and made servers be called Servers, and be a
-  global variable. Done on request on Great Master codemastr.
-- Made crule.c use the server list rather than the whole client list for checking (faster)
-- Sped up some channel stuff a lot using a bahamut type user search
-- Added CommandHash optimation .. this is not done 100% yet. uses msgtab as
-  reference
-- Removed msgtab part of parse, removed the bigass hashtable msgtab,
-  removed inittoken, made command initalization happen in init_CommandHash
-- Adapted /stats M to it. Removed /helpop ?commands temporary. Confirming
-  hashtable works.
-- Fixed windows CRLF problem in conf2, reported by Zogg
-- Added Member and Membership and made the IRCd support this. Using
-  "freelinks", todo: garbage collection
-- Added find_member_link and find_membership_link. Made Floodopt only 
-  get allocated for local users. Removed aFloodOpt in Link,
-- Made a speedup in is_halfop (dumb code)
-- Somehow is_halfop and co got called when a server set a mode .., added
-  IsServer check (auto-return 1)
-- Fixed the 9-month old win32 DNS bug, caused by Stskeeps's incidential
-  delete. Found by Zogg and CVSweb
-- Made autoconnect msgs only go to +os
-- Made DNS cache list show a notice to other ops
-- Made /stats C show flags correctly
-- Added deny version {}
-- Made deny link {} rehash
-- Removed class.c, from the old conf
-- Removed dynconf.c, from the old dynconf
-- Fixed a deny version {} bug (oops)
-- Fixed a config_load win32 problem, found by Zogg, fixed by Stskeeps/codemastr
-- Overwrote s_conf.c with s_conf2.c, and removed s_conf2.c. Viva la Conf2!
-- Added /stats I, Y, b, d, D, v
-- /who now got its right behavoiur regarding masks, bug found by Zogg
-  (acptr is not cptr)
-- Made set::modes-on-connect work :) (strip out MODE_X and stuff plz?)
-- Moved dynconf stuff from s_svs.c to s_conf.c, on popular request
-- Made NAME_SERVER (set::dns::nameserver work). The IRCd no longer
-  uses /etc/resolv.conf as reference.
-- Updated most of /stats S for newconf
-- You can now specify oper flags using the old method:
-	(new method) flags { flags here }; (old method) flags flags_here;
-- Removed a lot of vars and stuff from the old config, also made some cleanups to reduce source size
-- Made del_Command(). 
-- Rewrote makeconf and makenet to use newconf (added some new features to makeconf as well)
-- Made MembershipL->flood get bzero on out delegation
-- Removed stskeeps's lazy add_CommandX (tm) code
-- Made IRCd not crash on /kick from servers
-- Fixed a typo in makeconf
-- Made /whois not return channels for services
-- Made makeconf use "ban nick" instead of "ban nickname"
-- Fixed ssl_client_handshake bug reported by IpAddress
-- Made ./Setup not do dynamic configuration any more
-- Changed reference in Setup from ircd.conf to unrealircd.conf (cosmetic)
-- Changed output of updconf from ircd.conf.new to unrealircd.conf.new
-- Changed the output of makeconf from ircd.conf to unrealircd.conf
-- Renamed hostmask to hostname like it should be in makeconf - IpAddress
-- Added "get_host" old 'H' O:flag
-- Added #define KILL_LOGGING, by otherguy
-- Added /cycle #channels, suggested by ^loki^
-- Added Modules, using dlopen() and LoadLibrary for *nix/win32. 
-- Added /module load <path.to.so>, /module status (list modules), 
-  /module unload <modulename>
-- Added loadmodule "filename.so"; and made the modules
-  unable to get loaded twice with same name.
-- Reintroduced "fake lag". Flood algoritm works this way:
-   Make next check for parsing be 
-   (1 + (length of command+parameters / 60)
-- Started on commands.so making, works good atm -on req of codemastr,
-  both as m_module.so and commands.so :) - long live dynamiclinking
-- Fixed bug with double module unloading, bug found by RaYmAn
-- Win32 Changes
-- Had to convert the connect messages back to strlen() because of a bug found by Bagge
-  working on a way to make it better though
-- Added unknown connection flood protection (settable in config.h)
-- Made chmode +z only settable by umode +z users or U:lines or services.
-- Updated badwords.channel.conf and badwords.message.conf to use newconf (requires an include in 
-  the config file)
-- Made conf2 able to load empty files as well, with warnings
-- Added module_sym("functionname"), for modules, like, sajoin might want to
-  do fp_m_join = module_sym("m_join");
-- Put out m_chghost, m_sethost in modules, remade Makefile structure and
-  added src/modules
-- Modified an old Unreal3.1.1 to be network file converter, and converted
-  all of the networks files to the new format.
-- Fixed a bug with RAKILL and UNSQLINE not working
-- Moved m_chgident to an .so
-- Changed license of m_dummy.c (dummy module, skeleton), so people can do
-  closed source modules.
-- Moved m_setname to a .so
-- Started work on the new improved command hashing system
-- Modified command hashing system to Sts's belief of how eggs should be
-  made. (quick, dirty and fcked up)
-- Fixed a bunch of bugs in the command hash system caused by sts:
-  - You can't send numerics to servers
-  - Using ERR_NOPRIVLEDGES (says you aren't oper)
-  - Disabled commands allowed by unregistered users from registered users
-- Removed networks/unrealircd.conf
-- Implimented new logging system using log {} (if you leave it out it reverts to the old ircd.log)
-- Added Hooks, only one working now is HOOKTYPE_LOCAL_QUIT 
-- Added log flag kline (accidentily forgot it)
-- Added #define HOOKTYPE_LOCAL_NICKCHANGE
-- Made MyMalloc be MyMallocEx in codemastr's log {} code. Fixes junk pointer
-  problem - discovered by sts/Morbid
-- Removed the old /rehash flags, reported by Morbid
-- Reverted Demigurus's select() speedup patch, did speedup, but it 
-  also caused a good bit of CPU.
-- Fixed a globops bug that required it to have a : found by ROXnet
-- Removed KILL_LOGGING replaced by log {}, found by Morbid
-- Removed PROTO() and general h.h/proto.h cleanups (made source 3.14K smaller)
-- Implimented a system using chmod() at startup to try and keep the config file from being read 
-  by people who shouldn't have access. (set through ./Config)
-- Added oper::swhois idea by Robertsog (NOTE: since this is done before the mode change, a U:Line changing
-  the SWHOIS after you /oper will override this)
-- Added a donation credit
-- Reverted a change
-- Fixed a double definition (double m_chghost and m_chghost.so)
-- Moved /sdesc, /setident to modules.
-- allow { } now supports encrypted passwords -Syzop
-- Made static linking a little more possible
-- Made /kick not core on users kicking servers. (WTF?)
-- Fixed a problem with users opping servers.. Found by Morbid
-- Fixed a problem with SDESC module token being wrong - Found by eternal
-- If no oper flags are found, default to locop (suggested by devdev)
-- Added tld::channel so you can make people join a channel based on hostmask
-- Made it so a motd or rules loaded in 2 seperate tld {} is only read into memory once (may need debugging?)
-- Fixed a bug where the IRCd didn't validate hosts specified in a vhost {}
-- Added the ability to specify a username to spoof in a vhost {} instead of vhost "host.name";
-  you can vhost "user@host.name"; (suggested by IpAddress)
-- Fixed a bug where you could use an infinitely large host in a vhost {} (now limited to HOSTLEN)
-- Fixed improper old username being displayed reported by IpAddress
-- Added M_NOLAG.
-- Added new CRC32-hex-based IPv4 and hostname cloaking form
-- Make users that send a forbidden file get auto blocked from sending other
-  files. sptr->flags & FLAGS_DCCBLOCKED.
-- Readded timestamp to log, accidentily got removed
-- Made it so /stats C doesn't show the user@host of servers to non-opers
-- Possibly fixed the vhost crashing bug, with much help from IpAddress
-- Found a way to do +x IPv4 cloaking right. 
-- Added set::cloak-keys { longvalue; longvalue; longvalue; }; for the cipher
-- Fixed a NETINFO parameter problem - solves the new NETINFO format
-- Made a little hack to newconf to allow varname=value; to try and keep it some what similar
-  to the new config files of other IRCds. NOTE: the = is completely optional, it is allowed
-  but not required
-- # comments can be used anywhere in a line now (just like // comments) for compatibility with other
-  IRCds
-- Added sajoin/sapart error message patch by NiQuiL (modified slightly by codemastr)
-- Implimented IRCNet style server redirection, based on the hybrid-7 code. Some clients will connect
-  to the specified server automatically, others will require you to do it manually.
-- Made /info use @unrealircd.com emails instead of @tspre.org
-- Removed FNAME_OPERLOG and replaced it with log {} flag oper
-- Removed OWNLOGON (did nothing?)
-- Replaced FNAME_USERLOG with log {} flag connects (logs user connects and disconnects)
-- added temporary define #define OLD_CLOAK
-- Fixed up some codemastr(TM) coding regarding M_*
-- Implimented a cloak fix based on code by Zogg (just used a #define ircabs rather than abs())
-- Expanded the chmod() security fix to files added via include filename;
-- Possible FD leak in ircd_log, caused by some codemastr coding(TM)
-- #define HELP_WHO for the "did a /who 0 o"
-- Added a new Win32 GUI does it work, no one knows
-- Rewrote the ircd_log function a bit to fix the FD bug better, not sure wtf I was smoking
-  when I wrote the last one :P
-- When IRCOps are breaking into chans with invite only (+i) or 
-  key-protection (+k) a eyes-notice is sent like it is on banwalk. -NiQuiL
-- Added unitedirc.network -NiQuiL
-- Removed a , in NiQuiL's banwalk message
-- Fixed DEBUGMODE problem, found by someone ..
-- Don't know why but m_file.so was in the modules makefile, removed
-- Added irc2.10.3's resolver. Fixes debian-woody-libresolv problems..
-  Still some fixes to be done
-- More res.c fixes ..
-- Final res.c fixes 
-- Added /rehash -all patch by NiQuiL
-- res.c: fixed ircsprintf problems
-- Fixed ircd_log to work in windows
-- Removed __P, windows doesn't like it, and only old compilers need it
-- Fixed a ban realname {} bug that _may_ have something to do with the negative user count bug
-- Fixed do_dns_async problem with new res.c
-- Removed doc/ADD-TO-IRCRC, doc/INSTALL, doc/Manual, doc/Operators,
-  doc/irc.1, doc/ircd.8, doc/server-compile-guide
-- Made it so Invitewalk and Keywalk don't show for U:lines
-- Fixed a cloak bug caused by stskeeps(tm) "not knowing how to use << and >> coding"
-- Fixed some cloak bugs, and applied +x crypto to hostnames as well
-- Changed some non-error messages in newconf from config_status to config_progress
-- Added a way for newconf to report its errors in windows using a "Config Error" dialog
-- Fixed the /stats Z bug reported by RaYmAn
-- Added missing resource.h defineand missing +1 in MyMalloc of win_log reported by McSkaf
-  Seemed to work without the +1 but added it just to be safe.
-- Fixed possible crash bug imposed by too many users per ip in AllowClient -found and fixed by McSkaf
-- Made IP Mismatches getting sent to UMODE_JUNK instead
-- Added method mod_load in dummy example and made it work. mod_load() is executed 
-  when server is ready
-- Fixed minor problem with mod_load code
-- Fixed possible crash with /quote dns l
-- Removed newdns
-- Fixed a memory bug in win32 code found and fixed by McSkaf, and fixed a typo
-- Fixed a win32 bug found by RaYmAn causing the tray icon not to be displayed sometimes
-- Fixed a bunch of Win32 bugs reported and fixed by McSkaf
-- Made the IRCd delete its tray icon in win32 on SIGSEGV
-- Brought 005 up-to-date with spefication - added CHANMODES= support
-- Applied res.c.patch from McSkaf, fixes win32 GPF, but fixed mising HE(ocp)
-- Applied s_debug.c/config.h patch from McSkaf, makes DEBUGMODE under
-  win32 working again - fixed some errors in the unix part of it.
-- Made the rehash button work in Win32
-- Fixed up some CHANMODES= support and added WALLCHOPS support
-- Added keyboard shortcuts to the win32 config and about popup menus
-- Possible fixed a buggie in +f
-- Fixed a bug causing Found your hostname (cached) to be displayed 2 times
-- Fixed RTLD_NOW problem with openbsd
-- Removed SJOIN/SJOIN2 support in SJOIN
-- Fixed a +f bug, found by NiQuiL
-- Applied McSkaf's winlocal.patch, seems to work ok, fixed some problems
-  though in unix/win32 (cptr->fd can be -3. Should fix some READ ERRORS as
-  well. 
-- Some Open(aaaaaaaaaaargh)BSD patches, most stubborn compiler i've ever 
-seen. gmtime warning still there
-- Had to revert McSkaf's winlocal.patch, caused too many crashes. I believe
-  there is a better way to do this ..
-- Added a new StripColors heavily based on the one from xchat by Peter Zelezny
-- Fixed doc error in s_conf.c
-- Made IPv6 compile atleast, and work. Current problems:
-- Made you able to bind to specific IPv6 IPs (we don't have FFFF::*
-  functionality yet)
-- Made a crazed out IPv6 cloaking
-- Made chghost/chgident able to do :'s
-- Finished up IPv6 - Kudos to bball/NiQuiL (shells), perian/bunda/larne 
-  (testing)
-- Made listen format able to do:
-     listen [ip]:port, for IPv6 - listen [3fff:ff::1]:6667
-- Fixed some compilation error with IPv6
-- Fixed-fixed listen format troubles, larne++
-- Possible fixed some +d bug(s)
-- Added doc/unrealircd.conf.txt (by devdev), doc/services-install-guide
-  (zyrol, edited a bit by stskeeps)
-- Added richedit 1.0 support so Credits,License, etc show the bold and underline formats in win32
-  code by codemastr with help from McSkaf (still needs work to support reverse and color)
-- Added code so the rich edit _should_ work with any version of the richedit dll
-- Changed all TStime() to use timeofday - CPU SAVE
-- Removed userload.c & userload.h
-- Added McSkaf's patch for the richedit to be able to support reverse codes
-- Fixed the problems with 100% cpu, hopefully
-- Fixed the 100% cpu problem, again, HTM is screwed now though?
-- Got /stats O working
-- Made the topic for a +s channel hidden from non-members (reported by Bagge)
-- Removed ce_vardatanum (wasted CPU and memory)
-- Added code to make the config parser try and stay alive when an error is encountered
-- Added events code and converted some stuff to events
-- Converted htmcalc/lcf to events
-- Fixed /stats L bug found by larne
-- Fixed the loop, made htmcalc more clean
-- Applied McSkaf's winlocal patch II, only changed Debug() and removed
-  DEBUGMODE from config.h. Still cores, but we might be closer to a
-  solution. Broken code, do not use devel right now
-- Fixed to winlocal by McSkaf
-- More fixes
-- Made /die not show admins IP (fixed by Stskeeps after his users nuked him..)
-- Added McSkaf's mIRC color parse patch
-- More winlocal fixes, and a +f bugfix
-- Added HOOKTYPE_LOCAL_CONNECT (aClient *)
-- Fixed DEBUGMODE under win32
-- Fixed /trace problem with slots (idea from ircu2.10.01+winnt)
-- Fixed listener problem, reported by McSkaf
-- Minor Win32 bug fix
-- Fixed problem with addto_fdlist(cptr->fd) caused by slotpatch
-- Fixed minor socksfd problem in read_message
-- Fixed identd problem
-- Commited McSkaf's tab patch for win32
-- Possible fixed fdlist problem with default_fdlist
-- Added some numeric checking in m_server*
-- Made possible speedup of fdlist checking in s_bsd.c
-- Updated makefile.win32 for events.c
-- Added McSkaf's rehash patch
-- Made the Status Dialog update its values every 5 seconds
-- Made slot arrangement be different.
-- Merged McSkaf's hostname patch, debug patch, s_misc patch
-- Made validate_configuration check for !conf_listen
-- Made newconf state unknown directives (found by Madkiss)
-- Small s_socks.c bugfix possible causing indetectable socks
-- Fixed /whois problem, maybe introduced some others?
-- Removed send_out_svsmode, not in use and broken too
-- Made Config say Unreal3.2
-- Made a popup menu for the tray icon to contain the same 'buttons' as the GUI does
-- Made Unreal run correctly on OpenBSD (thanks to PFAK for the shell)
-- Fixed with bug with ircd not -r'ing users on nick switch
-- Fixed the /stats C = crash if it is a leaf bug found by BaTmAn
-- Added a patch by McSkaf to make Unreal reload its tray icon if explorer restarts
-- Fixed a win32 bug found by eternal
-- Fixed yet another win32 bug (I think I should test before I commit ;P)
-- Changed how hooks work, making them support voidfuncs
-- Added src/modules/scan.c and src/modules/scan_dummy.c
-- Made militime() just as accurate on win32 as on linux
-- Made match() a little bit faster
-- Fixed codemastr's broken millitime patch (sys/timeb.h)
-- Added scan_socks.c, added and moved some stuff to
-  include/modules/scan.h (the dir too)
-- Converted threads to IRC*Thread by codemastr. 
-- Updated the win32 thread code (maybe it will work now?)
-- One last final change for the win32 thread stuff, but at least it works now :)
-- Added hooks to allow you to add config directives
-  - HOOKTYPE_CONFIG_UNKNOWN sent after config parsing, look in conf_unknown for all the
-  blocks the config parser didn't understand
-  - HOOKTYPE_REHASH sent when a rehash is being done
-  Note: if you parse a block in conf_unknown make sure to del_ConfigItem it from the list
-  or Unreal will return an unknown directive error for it.
-- Fixed problem with u_int32_t servicesstamps, with SVSMODE and SVS2MODE,
-  found by Andrew Church
-- Unknown ban * {}, except * {}, deny * {}, allow * {} are accessible to modules
-- Fixed some scan_socks problems - this needs a good hand with
-- Fixed up scan_dummy.c
-- Fixed /quote sethost : and /quote setident : exploit, found by ac1d, fixed
-  by Griever
-- Allowed capturing of unknown set {} variables by modules
-- Minor src/Makefile screwup fix
-- Added some pthread checking support
-- Fixed double dependicies bug.. stupid dlsym
-- Added /version using numeric 105 for remove clients to show protoctl (idea from hybrid)
-- Added HOOKTYPE_PRE_LOCAL_CONNECT to allow banning before connection. If the module parsing 
-  this hook returns >0 the register_user exits
-- Removed src/agent.c (empty file)
-- Removed src/userload.obj from the win32 makefile
-- Added link::options::quarantine suggested by DumbFish
-- Made blackhole.so work
-- Fixed a set_non_blocking bug
-- Fixed a codemastr screwup in quarantine code
-- Removed the old SOCKS check code.
-- Fixed a quarantine bug
-- Added NETWORK= numeric 005 token for mIRC 5.91
-- Fixed some scan-socks and blackhole fuckups
-- Added ./configure, autoconf generated configure script, (still need to update ./Config)
-- Config fixes, settings.h and Makefile.dist are now dead. RIP.
-- Fixed a typo in configure
-- Rewrote Config, it is now perfectly suited for an autoconf interface rather than a standalone config
-- Minor fixes to Config, a license, etc
-- Made changes to Config (removed a few unnecessary loops)
-- Made CRYPTOIRCD get cached in config.cache
-- Fixed generation of certs, moved from configure.in to Config
-- Fixed lack of -lssl
-- Fixed the keywalk bug reported by BaTmAn (?)
-- Fixed a few configure problems with sunos and amiga
-- Fixed an OpenBSD bug reported by perian
-- Moved config/ to autoconf/
-- Some fixes to configure.in that seemly got deleted?
-- Some more configure.in fixes, and made ./Config -q & -quick (do not ask
-  questions, just run with data in config.settings)
-- Some more more configure.in fixes, regarding -export-dynamic, and buffer
-  pools, and some illegal if test $var = othervar
-- Fixed a configure.in error with IRCDLOBS
-- Taking some more Config changes
-- Some more INET6 fixes
-- Made Unreal use FSU Pthreads if the pthreads on the system will show multiple copies of Unreal in ps
-- Fixed a /rehash bug dealing with echoing to stderr
-- Added MAXCONNECTIONS to configure
-- Added a little utility to make converting an m_* command to a module easier
-- Moved m_svsmode and m_svs2mode to m_svsmode.so and updated modulize a bit
-- Moved m_swhois and m_svsmotd to modules
-- Fixed a bug where configure would pick both -ldescrypt and -lcrypt
-- Fixed /stats to work fully with newconf
-- Added mod_depend checking, see scan_socks.c for example
-- Added in Griever's SJOIN fix
-- Made mod_depend a bit cleaner to use
-- Removed some remnants of umode +b
-- Added configure check for glob.h
-- Added the ability to use file globs in loadmodule and include (only if your system has glob)
-- Added ./Config option to enable IPv6 (and made a configure check to make sure we can)
-- Fixed autoconf/Makefile screwup caused by codemastr
-- Fixed a problem with IPv6 always enabled (could you check this fix, code?)
-- Fixed a bug allowing channek keys to have spaces
-- Cleaned up some thread porting code
-- Added a new versioning system to allow easy tracking of bugs
-- Made glob() use GLOB_LIMIT on OpenBSD 2.9 to help prevent a DoS
-- Fixed makeconf
-- Changed the way modules work. We're now at MOD_VERSION 2
-- Changed ALL MODULES to version 2
-- Commited the +k fix to +L
-- Made version.c depend on ../Changes
-- Made the ircd call mod_unload when it shuts down
-- Made use of the new module_load parameter in mod_init, and made commands.so use mod_load
-- Fixed a module bug where loading == unloading
-- Moved blackhole into scan.c and removed blackhole.c, and fixed some
-  blackhole bugs.
-- Updated thread porting code to support more functions
-- Fixed a pthread_join
-- Rewrote updconf a bit, should work flawlessly now (?)
-- Made a minor message change to ./Setup
-- Fixed some minor mod_load troubles, and made it go a little more sensible
-  regarding retarded rehashes
-- Added some thread debugging, and fixed a SVS2MODE bug
-- Fixed a major scan bug caused by stskeeps(TM) lazy-coding
-- Hmm .. minor s_bsd.c read_message fix
-- Some /info stuff, updated docs, .CHANGES.NEW, .RELEASENOTES
-- /htm fix by Griever
-- Fixed a bunch of warnings reported by Red Hat 7
-- Random cosmetic fixes
-- Updated the stats help list for newconf
-- Removed include/userload.h (not used)
-- Removed a few missed userload.h references
-- Minor cosmetic fixes, and SVSNLINE (ban realname).
-   SVSNLINE + reason_why_moo :realname mask - Add global ban realname
-    ('_' is converted into spaces)
-   SVSNLINE - :realname mask             - Remove global ban realname
-   SVSNLINE *                            - Wipes all global ban realname
-- Fixed FIXME dcc_deny_wipe_services
-- Fixed some IsToken / sendto_serv_butone screwups - Stskeeps(TM) coding
-- Actually added m_svsnline.c
-- Removed a bunch of unused coding
-- Win32 fixes
-- Made a /scan fix, and fixed some version numbers found by Morbid
-- Updated m_template.c to use module version 2
-- Removed a // comment in src/ircd.c
-- Fixed a bunch of updconf bugs reported by DarkSypher
-- Fixed an SVSFLINE bug when removing an unknown dccdeny
-- Made win32 compile and work ..
-- Made scan_socks & scan work under win32. Only bug is a \1 IP in /quote scan (?)
-- Added set { blackhole "insideip:port" { "outsideip"; }; }; (useful if
-  being behind firewall)
-- Fixed a little scan.so bug
-- Fixed so we compile without symbols in win32 .. 
-- Fixed some rant stuff
-- Fixed a documentation bug in unrealircd.conf.txt, made config_error
-  actually bitch when loop.ircd_booted
-- Made badword fix found by eternal/Jsmj
-- Changed pthread process check to pthread_join on proposal and idea by
-  codemastr
-- Some configure.in fixes to pthread stuff
-- Added possiblity to add parameters to configure in Config
-- Minor SJOIN fix .. 
-- Fixed a ban {} bug where temporary bans were not cleared on rehash
-- Fixed a validate_conf problem found by Janos
-- Fixed some minor invalid numeric stuff
-- Fixed problem with MAXCONNECTIONS when no parameters given in ./configure
-- Fixed some possible points of confusion with hash.c regarding unsigned int
-  & signed int
-- Fixed u_intXX_t problem
-- Removed the redefining stuff in s_conf.c
-- Documentation (example.conf from Osiris)
-- Documentation bug fix
-- Changed version to -beta1
-- Various preparitions for beta1
-- Commited the web server prototype made by Stskeeps, web design by WildChild
-- Ripped out the old DF watch system, using bahamut's now
-- Fixed some CHINESE_NICK stuff
-- Fixed an sdesc bug reported by Alzirr
-- Fixed a little gcc 3.0 bug with Unreal
-- Fixed *** nick has quit (no Days come, days go), by defaulting to "Quit: "
-- Fixed -nexus.nexusirc.org- *** Notice -- Trying to send [:Alzirr WALLOPS
-  :test bug, found by Alzirr 
-- Fixed struct IN_ADDR problems on some OS'es
-- Fixed some more gcc 3.0 problems and made FSU pthreads a bit easier to install
-- Fixed some updconf bugs reported by Joe
-- Fixed a bug where 'fake direction' messages were sent to non-ops reported by Janos
-- Made it so unreal searches harder for SSL headers and libraries
-- Fixed possible bug with allowing :'s in +k/+L .. 
-- Added a credit
-- Fixed a typo in /stats and a /chatops bug found by Cas 
-- Made oper {} (and vhost {}) allow you to enter an IP even if your host resolves by request of Cas
-- Added set::options:show-klines and set::options::show-tkl to make /stats G and /stats K oper only
-- Added a patch by Zogg to fix a socks scanner problem
-- Fixed a /sapart bug found by SubZero
-- Minor bugfix in scan_socks, + some comments
-- Fixed some flaws in httpd, that made it break unmercifully
-- Added correct uptime to web interface
-- Patched in zogg's scan_socks patch, second edition
-- Added in Ossie's example.conf v2
-- Major changes to the win32 editor
-- Fixed a bug in the new editor, hopefully now it works flawlessly (?)
-- Fixed a bug in the win32 status dialog causing it to get screwed up, found by Auspice
-- Fixed a scan_socks problem under win32
-- Added a 3d border to the color selector in the win32 editor
-- Fixed a win32 bug dealing with the new RTF parser
-- Fixed a scan_socks problem under win32
-- Fixed a MOTD rehash bug found by fryo
-- Made CR compatilbity actually work, it autojoins now :)
-- Started updating network files (remove all the obsolete ones)
-- Fixed SQLINE problem 
-- Added doc/coding-guidelines
-- Readded header info to network files which was lost in the update
-- Updated a few network files that managed to slip by the update process
-- Updated networks/networks.ndx and alphabetized it and added all network files submitted in 3.2 format
-  (didn't feel like converting right now ;P)
-- Win32 code cleanup
-- Made my_itoa use _itoa on win32
-- Implimented SVSMODE #channel -b nick to remove all matching bans against a nick, idea from bahamut
-- Added SVSMODE #channel -b to remove all bans
-- Added SVSMODE #channel -qaohv to remove all users of that respective level, and made all the # SVSMODE 
-  flags work in SVS2MODE
-- Made a bunch of config errors non fatal
-- Added 2 more network files (yea, I'm slow)
-- Fixed SQLINE bug, FINALLY. (forgot to set type ..oops..)
-- Added more network files...
-- Fixed a bug affecting /oper and /vhost caused by IP checking
-- Added wildcard support to include and loadmodule in win32
-- Added SVSMODE # -e to work just like -b
-- Fixed SVSMODE compile error
-- Added tgf's patches for these bugs:
-   * if you dont have a rules file and do "rehash -motd" then the server 
-   segfaults.
-   * setgid has to be called before setuid... cos if you change to a non-priv
-      uid first then you are not allowed to setgid!
-- Added more network files
-- Fixed a possible restart/die bug
-- Fixed a bug where /die didn't do anything on win32 reported by Gilou
-- Fixed a bug where /restart didn't send out notices on win32
-- Made /restart call mod_unload for all modules
-- Fixed a typo in the win32 makefile
-- Rewrote Addit, hopefully it fixes the SJOIN problems?
-- Fixed fence post marker overwrite in /vhost, found and fixed by tgf
-- Made the Win32 version report the actual OS to opers in /version rather than just say 'Win32'
-- Removed some obsolete code
-- Added set::oper-only-stats which allows you to set any/all stats as oper only (* = all). Code is kind of 
-  ugly since some flags are case insensitive and C == H but it works and seems pretty fast.
-- Added set::anti-spam-quit-message-time idea from hybrid7
-- Made the config smarter, for yes/no options yes/true/on/1 = yes no/false/off/0 = no
-- Made Unreal be able to recover from a bunch of config errors
-- Added stats flag r to the stats help list
-- Fixed bindip problem with it not being made
-- Made even more config errors recoverable
-- Added more network files
-- Fixed some typos in s_conf.c
-- Fixed a win32 bug where /restart didn't remove the tray icon, reported by PHANTOm and Gilou
-- Fixed Osiris's example.conf
-- Fixed IPv6 bindip error found by Madkiss
-- Added log::maxsize, when this size is reached the log is cleared and started over again
-- Fixed a codemastr-on-crack /version bug, and fixed some IPv6 stuff in
-  scan*
-- Fixed some more IPv6 stuff in httpd
-- Implimented snomask (similar to IRCu) and moved several usermodes to it
-- Added a config check to detect what order we should specify the SSL libraries in
-- Fixed bug with SSL, detected properly and fixed by Chawmp
-- Fixed an oper-only-stats bug
-- Updated some documentation to prepar for release
-- Docs prepare
-- Fixed a major snomask bug found by narf
-- Using bahamut /who now, this needs some testing.
-- HCN fix
-- /who fix .. removed nick matching functionality..
-- Fixed a SNOMASK problem found by Arantis
-- Fixed a umode2 bug that crashed the server
-- Fixed vhost bug that forgot to add a \0 in the end of the string
-- /who fix
-- Another /who fix, what crashed it I assume - helped by narf to find this
-- Fixed a bug were operflag eyes didn't work
-- /who fixes regarding +I +H and crap
-- Preparation for beta2
-- Fixed sts on crack win32 code
-- Fixed a win2000 bug causing Unreal to crash on the credits dialog, thanks to llthangel and WildChild for 
-  helping fix the bug
-- Fixed a win32 bug that can cause unexpected crashes while using the editor
-- Some httpd stuff and a #define CHROOTDIR problem found by Zhadum
-- Added scan_http, scans on 80, 3128, 8080 in a threaded manner
-- Fixed a /gline crash bug found by DemOnBaBy
-- Http proxy scanner cleanup
-- Added SOCKS5 detection based on code in Epona
-- Cleaned up /mode a bit
-- Cleaned up command parsing a bit (faster)
-- Added config directive alias for services/bot aliases
-- Fixed some credits, recoded httpd (still in progress)
-- Disabled #undef PROPER_CORE
-- Added alias {} to doc/example.conf
-- Fixed a bug in alias {} found by RaYmAn
-- Fixed another alias {} bug
-- Added Bahamut usermode +R (only accept private messages from +r users)
-- Moved FAILOPER_WARN define to set::options::fail-oper-warn
-- Fixed an alias {} bug found by James-Bond
-- Moved SHOWCONNECTINFO define to set::options::show-connect-info
-- Added support for nested comments in the configuration file (by chasm)
-- Added chasm to /info
-- Started work on usermode +V (WebTV mode)
-- Some aClient cleanups to reduce memory usage
-- Made a bunch of messages check +V and if +V use PRIVMSG instead of NOTICE
-- Cleaned up NOSPOOF code a bit
-- Cleaned up /oper (a lot)
-- Fixed a bug where the /oper recode broke oper host masking (found by James-Bond)
-- Fixed something that could cause a possible bug in /oper ?
-- log::maxsize can now be entered in the format 1MB, 1MegaByte, 1MByte, etc (KB,MB,GB,TB are the only sizes 
-  recognized)
-- Fixed a bug where log::maxsize would say it started a new log file if the log file didn't exist
-- Converted /mkpasswd, /away, and /svsnoop to modules
-- Added the ability to add aliases like /identify (complex, so see example.conf for samples)
-- Added a bug reporting tool (still alpha)
-- Removed some win32 debug code that was left, reported by TheEggMan
-- Win32 cleanup
-- Made except socks become except scan, and made it actually WORK, and some
-  bugreport fixes
-- HTTPd VFS fixes
-- Modified updconf to reflect the except socks -> except scan change
-- Fixed a typo in the win32 makefile
-- Made the config a bit more sturdy (would have done more, but got boring :P)
-- Moved /svso and /svsnick to modules
-- Updated the win32 makefile
-- modulize documentation, some web server fixes, preparation for uabr
-- Some more VFS/PHTML fixes, it actually works now, thanks to butter
-- Fixed a IPv6 bindip problem
-- Removed bsd.c and made socket.c, moving signal stuff to ircd.c, possible 
-  fixing a IPv6 bug
-- Made Inet_si2p (sin to presensation), fixing the "*", bug, some debugging
-  fixes, fixed a lot of IPv6 bugs, hopefully - thanks to JK for borrowing
-  his box
-- Fixed a #undef INET6 bug
-- Made Link denied error a little more descriptive
-- Various coding regardign bugreport
-- Made port default to 6667 when options autoconnect in link {}
-- Made some changes to allow Unreal to compile on win32
-- Fixed a scan.c bug on win32
-- Made the http scanner work on win32
-- Fixed a bug where /userhost would report oper status regardless of +H
-- Added some stuff that should fix the bug in Windows when including files in other directories
-- Added aliases/ which contains config files for aliases to some popular IRC services (more will be added)
-- Made makeconf load scan_http.so
-- Fixed a /who bug, found by IXpfah
-- Updated makefile.win32 for all the new modules
-- Added in Fish's patches
-- Added bitching when you lack needed IRC commands
-- Removed REMGLINE
-- Fixed a typo in the win32 makefile
-- Really removed remgline (since sts didn't really do it)
-- Made changes so the new modules compile on win32
-- Added headers to all the new modules
-- Fixed a typo in config.h
-- Final changes to prepare for beta3
-- Fixed some bugreport stuff
-- Fixed codemastr-on-crack bug regarding oflag
-- Fixed a win32 bug where the http scanner didn't get loaded
-- Hopefully fixed the weird Z:line bug on win32?
-- Fixed the Z:line bug (caused by stskeeps-on-crack coding) reported by Power2All
-- Removed the tokens for /users, /summon, and /samode (these never come from a server so they don't need
-  it)
-- Added a utility to auto create version.c for win32. It's the worst coding I've ever done, but it works :P
-- Added a hell lot of DNS debugging code, and fixed the BIGENDIAN problem
-  with resolver. Thanks to dawn and Trash.net for shell on a sparc
-- Added umodes.c, long val = get_umode('c');
-- Added new umode system to win32 makefile
-- Made umode_delete(flag, mode);
-- made the umodestring variable smaller to conserve memory
-- Added M_RESETIDLE to fix a /privmsg bug
-- Fixed a bug with nickserv passwords found and fixed by Mathieu
-- Fixed a DEBUGMODE problem with umodes.c
-- Fixed a snomask bug found by Rob
-- Made the missing commands error a little more.. tardfriendly
-- Preperation for beta4
-- Made some nameser.h changes to work win win32
-- Fixed a typo in makenet found by 'Eternal Bliss'
-- Updated module dependancies to allow a module to load the module containing the symbol
-- Fixed a win32 bug where the editor would cut off text, reported by Inter
-- Added make install to copy files for you when you install unreal
-- Replaced killircd, ircd, and rehash with ./unreal start|stop|rehash
-- Fixed a bug where the win32 help dialog links were plain text
-- IPv6 fixes to Inet_si2p & Inet_si2pB
-- IPv6 fixes to make dual ipv4/ipv6 work
-- IPv6 fixes for IP_OPTIONS (disables under IPv6, i mean .. IRC multicast.
-  WTF?)
-- Made ./unreal generated by configure to make sure it has the correct path of the exe
-- Added autoconf check for setproctitle
-- Added some setproctitle(.., me.name) for extra l33tness :P~
-- Changed the setproctitle check to also check in -lutil (some OSes have it there)
-- Added aliases/auspice.conf, and added a /register command to aliases/aliases.conf
-- Fixed a win32 typo in the .rc
-- VERSION M_SERVER fix by skold
-- Fixed connecting with IPv6
-- Ident requests now orgin with the listener that the user connected on
-- More IPv6 fixes, DNS resolving actually works now too.. (crackhead IRCnet
-  coding)
-- Webserver caching fix
-- A little bug fix that prevented the G:line hostmask checker from checking ?
-- Made the /kline hostmask checker work like the G:line checker, (it was too easy to K:line *@*)
-- Fixed a bug where ./unreal rehash would kill the IRCd instead of rehashing :P
-- Made ./unreal restart (to restart Unreal) and made the pid file location more accurate
-- Added support for PS_STRINGS and pstat to change the progrma name (couldn't test since I don't have an OS
-  that uses them)
-- Fixed a win32 bug where pasting text into the editor would not
-  show up in the correct font
-- Added hscroll bars to the win32 editor (if needed)
-- The win32 editor now allows you to edit files included via tld {} (probably needs testing)
-- Made the win32 editor allow you to edit include "" files
-- Recoded the win32 rehash button to be much better
-- Recoded the way the editor menu works (hopefully this is much
-  better?)
-- Added the ability to create new files via the win32 editor
-- Fixed a win32 editor bug caused by me being drunk or something :P
-- Fixed the last of the font and editor-cutting-text bugs (hopefully)
-- Commented out three lines of code that were causing SSL to freeze on 
-  /connect, TODO: code in new SSL error handling (Griever)
-- Fixed password crash bug, found by \dev\NULL-Z-[Zap]
-- Added new auth.c API and a lot of different crap .. will document later
-- Made make install copy modules (oops)
-- Added configure code to get the Auth crypt working
-- Made Events do thread locking (so we can do funny things and kill small
-  furry animals in the attempt for the perfect scanning module) .. yes, this 
-  is drunken coding
-- Made delayed module unloading possible, make a int mod_delay() adding
-  an event, for e_unload_module_delayed
-- Updated makefile.win32 for the Auth system
-- Redid the event system somewhat
-- Fixed a little event issue involving data types.
-- Changed the name of the hook functions from add_Hook, del_Hook,
-  add_HookX, del_HookX to HookAdd, HookDel, HookAddEx, HookDelEx
-  so the names are more standard.
-- Added host54.net to /credits
-- Fixed a FSU Pthreads bug that caused it not to work on Slackware (help from Frank Mueller)
-- Started some work on CIDR support (added some functions from hybrid7)
-- Added some functions for generic linked list modifications
-- Slightly improved +x v2 algo, win32 releases should be compiled with
-  this improvement OFF, at least until 3.2 final. COMPAT_BETA4_KEYS makes 
-  it compat w/ beta4 and pre.
-- Made checking for redundant bans both ways an ifdef, off by default. 
-  Note that undefing this might SLIGHTLY break compat w/ beta4 and pre
-- Added "griever would like to thank" section to /credits
-- Auth/SSL fixes, list.c fix, code: could you add auth.c and ssl.c to
-  makefile.win32?. If SSL is enabled, we can use MD5, SHA1, and crypt()
-  even on win32
-- Added ssl.c and cidr.c to the win32 makefile
-- Added ssl-pubkey auth method (parameter = pem file for public key)
-- Converted tkl, events, commands, hooks, and all config structs to ListStruct
-- can_gkline/t and can_gzline/Z flags added, docs not modded yet
-- Added snomask +n (nick change notices) I personally hate it, but people wanted it...
-- Added oper::snomask to allow you to specify a default snomask for an oper
-- Added snomask +q (Qline notice), triggered when a nick is being denied from a user due to
-  a Q:line.
-- Added HOOKTYPE_SERVER_CONNECT and HOOKTYPE_SERVER_QUIT for when servers connect and
-  disconnect respectively
-- Added module v3 code. Needs testing, and NO MODULES DOES NOT COMPILE
-- Fixed a win32 movude v3 bug
-- Small v3 fix with no dependency problem
-- Fixed some more module v3 problems and upgrade all modules
-- Fixed a ton of module v3 problems (cause: Stskeeps is an idiot)
-- Yes, even more module v3 bugfixes
-- Module v3 bugfixes. cause: codemastr lack find n replace skill
-- Moved the mkpasswd program into ./unreal mkpasswd <method> <password>
-- Recoded m_oper almost completely, note that the fceT flags are ignored
-  now (you still get them, they just dont do shit). Remove them for me 
-  please, as well as the +T usermode. I haven't tested this completely but 
-  I see nowhere a bug could happen.
-- Removed umode +T (useless) and the fue oflags since
-  oper::snomask supercedes them.
-- Fixed another module v3 bug caused by Stskeeps drunkeness
-- Started adding HP-UX module support (Not enough added where it actually works yet)
-- Added some more HP-UX code
-- Made "Module already loaded" a non fatal error (funny msg on rehash)
-- Fixed typical codemastr "Let's delete this from a list we haven't even
-  added it to yet *giggles and twirls around*" bug, do to with config_set_unknown
-- Fixed events bug, added recoded scan module, got a lot of stuff to fix so
-  far. Problems, unloading, (delay), tkl doesn't always sweep it all, 
-- Some scan unloading stuff
-- FIXED THE GOD DAMNED WHOIS BUG THAT I REPORTED *MONTHS* AGO! -Griev
-- Added a new dynamic help system that allows you to add and modify /helpop items
-- Made N also give you OaA, since its what most people use it for *sigh*
-- A and a give you O, set::modes-on-oper
-- Made link::hubmask and link::leafmask actually work properly
-- Big mods to TKL, oper commands split into module, testing
-- TKL mods compile and run fine, set{} stuff to decide what funcs are 
-  avail forthcoming
-- SMO recoded but wierd because sendto_umode and sendto_snomask are wierd
-- chatops actually checks if sender is an oper, why did no one notice this?
-- bugs in SMO ironed out, now sends to someone with ANY of the umodes/snomasks
-- Added #undef SECURECHANMSGSONLYGOTOSECURE - send only channel msgs to +z
-  people on +z channels
-- win32 fixes
-- Scan API cleanup (You don't use goto when break works just as good)
-- Fixed other scanner bugs (hopefully it 100% works now?)
-- Fixed a typo in s_misc.c
-- Config parser fixes (bugs found by Souleh)
-- Changed SERVICES-NAME warning to error
-- Auth_Make fix for crypt method
-- Fixed a /time GMT offset bug under Win32 reported by Dave337
-- Documentation updates
-- Made a few updconf changes
-- Credits updates
-- Added a few more network files (why do I think this job will never end?)
-- CIDR IPv6 fixes, scan_* fixes
-- Credits fixes
-- Final release cleanups
-- Updated /info
-- Added back good old error reporting in ./unreal start
-- Changed to beta5
-- Fixed some slave work.. return MOD_SUCCESS; in all command modules..
-- make install fix
-- Fixed a last minute bug in win32
-- Fixed a bug affecting DEFAULT_PERMISSIONS reported by ashukmin
-- Fixes for ->user structures
-- beta5 released
-- Fixed a bug causing /map to give away Ulines
-- Fixed a possible segfault in m_stats
-- Bug with crypt not working for /oper fixed
-- Fixed a bug where certain oflags were ignored for new-style config flags
-- Actually enabled MD5, SHA1 methods when SSL was defined. (fix for drunk
-  coding)
-- Fixed yet another Win32 editor bug affecting Windows 95/98/NT4,
-  found by HA|Raptor
-- If host == null, don't set it (m_oper, was setting it to "eek.host.is.null.pointer")
-- Small fix for #427583 mode bug
-- Fixed it so /module load doesnt require you to do ./module.so if the module is in
-  current dir
-- Fixed a freeze bug in m_htm (pthreads now uses recursive mutexes)
-- Reversed freeze bug fix, _NP means NON PORTABLE
-- Fixed a freeze problem with conf_deny_link
-- Fixed a bug under WinXP in the editor
-- Someone removed tkl and opermotd from the command hash (breaks both commands)
-- Made validate_configuration be called on /rehash, reported by Mick
-- Fixed a /chgname bug reported by rob where you had to prefix
-  the name with a : to set a realname with spaces.
-- Fixed a major events bug caused by Stskeeps drunken coding
-  reported by Dragon974
-- Added mutex.c for our mutexes
-- Fixed makenet so techadmin-host is gone
-- Removed set::hosts::techadmin from all network files
-- doh, missing a ! in m_tkl.c that allows us to do bad things(TM)
-- Fix for nested comments, found by lnxgk
-- C++ comment fix, lnxgk again.
-- Crash in scan_http fixed, h->in instead of &h->in = bad
-- Made tld::mask be user@host instead of just host
-- Fixed problem with EventDel, doing eventptr instead of eventptr->name
-- Fixed bug #0000019 reported by Syzop, and bug found by same to deal with
-  individual module loading
-- Fix for svsnoop symdep problem
-- Fixed sts's fix for svsnoop (since he failed to test his fix)
-- Fixed a bug where the win32 editor would always say the file
-  was modified even if it wasn't
-- Fixed .1081 problem, see bug #0000020 for more information about how
-  it REALLY should be fixed
-- Fixed a typo reported by Tracer (bug #0000022)
-- Made support in *nix for encrypted SSL private keys,
-  "make encpem" to make an encrypted server key if you already have one
-- Removed some ancient debugging code (num - %s)
-- Wiped out FLAGS_TS8 because I want to move ->flags into the local section and
-  FLAGS_TS8  had 0 purpose except setting CHFL_SERVOPOK (which did nothing)
-- Fixed typo I made in previous fix causing non-compileness
-- Moved some members of the Client structure to the local section, should be
-  a nice cutdown on memory.
-- Recoded the win32 editor to use a toolbar, and added support
-  for XP style controls
-- Made a few additional cleanups to the win32 code
-- // comments are not supported by many compilers and should not be used
-- Fixed a bug where teh SAJOIN/SAPART/SVSJOIN/SVSPART tokens were screwed up found by 
-  Andy Church
-- Made even more changes to the win32 editor (undo/redo buttons,
-  and current line number display)
-- Fixed yet another serious sts bug, we have to release beta6 soon :P~
-- Fixed check_for_target_limit, should be more lenient now
-- Sts is going for a record here, fixed ANOTHER auth bug in the SAME function
-- Added hunt_server_token (the same as hunt_server except if the
-  server supports tokens, the token is used)
-- Added the ability to go to a specific line in the win32 editor
-  by clicking the current line number in the status bar
-- Converted all calls to hunt_server to hunt_server_token
-- Preparation for release
-- Changed version to beta6 and added final cleanups
-- Added the TKline, TZline, and GZline commands to the documentation
-- Fixed bug in m_tkl_line causing segfaultage
-- Any reason why HOOKTYPE_SERVER_QUIT was being called for clients?
-- Fixed exit_client to do NOQUIT type thing for SQUITs
-- Moved around a lot of aClient/anUser members, hopefully wont cause
-  segfaults
-- Fixed res.c not managing to pass the proper type of parameter to inet_ntoa ONCE
-- Lots of commands were using MAXPARA when they shouldnt have been
-- passworded allow{} in example.conf doesnt match anyone anymore
-- Fixed oper{} locop stuff
-- Added can_gzline to doc/conf.doc
-- Replaced EventModEvery with EventMod (allows broader modification)
-- Maybe (but I doubt it) fixed bug #0000040 (Win32 resolver crash) reported by Kyver
-- Hey everyone it's point release time... I completely screwed up check_for_target_limit
-- Made the kline-address error easier to understand (must be instead of is not)
-- Made a SNOMASK for the +s notices, so you arent forced into hearing them if you just
-  want say +k
-- Fixed some return values, can't gline masks with a ! in them anymore
-- ARGH
-- Recoded the module system somewhat, events are now 'stable' meaning if a module doesn't unload an 
-  event the IRCd will not crash. Also fixed a crash involving delayed unloads and cleaned up notices
-- Problem with sendto_ops and !aClient->user  fix
-- Fixed bug in m_tkl_line and various m_line functions (was checking for wrong # of paras)
-- Recoded hooks to take advantage of the module object code
-- Fixed a memory leak in hooks
-- Fixed a bug with module objects involving static linking
-- Recoded hooks to work just like events
-- Fixed a listener bug reported by Dragon974
-- Removed some useless tkl code
-- Fixed #0000046 regarding Module_free memory leak
-- Added patch in #0000053 by |savage|, speedup in can_send
-- Possible fix of #0000042 regarding duplicate scans at same time causing
-  one to slip through, reported by Zogg
-- Fixed a win32 editor bug reported by Jens that limited text additions to 32KB
-- Really fixed bug #0000011 reported by Dragon974 (listener bug)
-- Added link::cipher for #define USE_SSL, use this to select
-  ciphers, read example.conf for more. Closes #000016. Suggested by narf
-- Added a dialog interface to .pem SSL passwords. (Suggestion #0000025)
-- Fixed some minor issues with dialog interface for .pem SSL passwords
-- Added makecert.bat / encpem.bat to src/win32, which are used in SSL release
-- Fixed some t.next's and replaced with codemastr method(tm)
-- Fixed a t.next recode typo
-- Added a ./Config check to see if gcc supports -pipe (speeds up compilation)
-- Made SHOW_SECRET (allow opers to see +s chans in /whois) defined by default, suggested by Sid-V (#0000037)
-- Added except tkl to allow exceptions from tklines, tzlines, shuns, glines, and gzlines, suggested by
-  funraiser [still need to design a way to report in /stats] (#0000044)
-- Documented link::cipher and except tkl in doc/conf.doc
-- Changed umode +I behavoiur to you have to be loading invisibility.so to have
-  the +I functionality. Code is still in IRCd, but isn't used until module
-  is loaded. Loading of this will cause an "R" to be added to /version
-  flags. Hopefully this will satisify some people's thoughts about a so 
-  called spy tool being enabled by default. Also added flag_add(char *) 
-  and flag_del(char) for modules to add to flags string. -Sts
-- Removed -win32 postfix for wircds, look in /version for "W" instead
-- Removed ircnetwork part of /version
-- Cleaned up a bunch of -Wall warnings (unused variables, etc)
-- -Wall cleanup cleanup with SSL AUTH problem
-- Fix for /version crash, reported by RaYmAn
-- Made all functions use new-style parameter lists
-- Moved set::socks::ban-time to set::scan::bantime, and remove the other set::socks::* (not used)
-  also added set::scan::timeout to specify how long the scanner should wait for a response 
-  before giving up
-- Added HOOKTYPE_STATS - allows modules to respond to certain /stats (so far only S is supported)
-- Changed some m_ functions into CMD_FUNC(m_*)
-- Fixed a win32 bug with the scanner code changes
-- Added a win32 menu item that lets you view log files
-- Documented the net set::scan::* directives in doc/conf.doc
-- Fixed a bug in the new usermode system that caused odd Unknown mode flag reporting.
-- Added a shutdown confirm message box to the X button on the win32 GUI 
-  (suggested by dimplesx #0000058
-- Made the win32 version set log files to writable if they are
-  read only (reported by dimplesx #0000057)
-- Removed useless stuff in m_oper (null ptr thing, just dont set them)
-- Fixed auth.c to use random salt
-- Fixed loadmodule invisibility.so: undefined symbol: 
-  get_umode bug, reported by James-Bond, #0000060)
-- BEFORE you use event functions, LockEventSystem(), after,
-  UnlockEventSystem(). In EVENT() functions, the system _is_ locked.
-  This might fix the double recursion mutex problem we got.
-- More -Wall cleanups
-- Fixed hunt_server_token (use IsToken on acptr->from, not acptr)
-- Unbroken Griever's broken hunt_server_token broken token fix
-- Various fixes to virthost system, may fix some memory corruptions,
-  and potential exploits.
-- Made makefile ability to "make custommodule MODULEFILE=m_zline"
-  if m_zline.c is in src/modules/, it will get compiled. This SHOULD
-  help 3rd party modules atleast
-- Added "tainted" variable. 3rd party modules must ++ this upon load,
-  -- upon unload. Will show a "3" in flags.
-- Added extras/m_rawto.c - 3rd party module. Fixed some documentation
-- Added andi's OpenBSD fix for the symbol issue with prefix _
-- Added SJOIN fix so it won't accept NULL channels
-- Fixed a problem with Mod_Handler being **, found by andi
-- Fixed an issue with -x and /quit and whowas, found by RaYmAn
-- Modified the OpenBSD fix to work for all OSes that add an _
-- Fixed m_rawto.c problem found by TheDarkOne
-- Possibly fixed the /who flags bug reported by sbalmos (#0000063)
-- lack of time sucks. openbsd problem
-- Fixed a typo in the docs found by TheEggMan
-- Fixed a m_htm.c problem
-- Updated supporters list in /credits
-- Fixed s_conf.c so a) It uses MyMalloc b) It doesn't cast the return
-  from MyMalloc!
-- Clean compile under -Wunused
-- Clean compile under -Wformat
-- Clean compile under -Wparentheses
-- Clean compile under -Wall -Wno-implicit
-- Fixed #undef STRIPBADWORDS problem, patch by light
-- Blah blah new cloaking shit blah
-- Added a patch by Syzop fixing a memory leak in StripColors
-- Added a patch by Syzop fixing a +k issue using a key with a , and when using long keys
-- Added a patch by Syzop to fix a MyMalloc/MyFree debugmode error
-- Added yet another patch by Syzop to fix a /vhost bug when using very long args
-- Added a patch by Syzop to fix a possible hash bug with /list
-- Made the server pass extraflags at linking for deny version validation
-- Added a patch by Syzop to fix a bug preventing +I from being used (fixes #0000073)
-- Readded examples to doc/conf.doc by request of several users
-- Clean compile with -Wall
-- Win32 cleanup of the -Wall cleanup
-- REALLY clean compile with -Wall (except for wierd TStime stuff)
-- Removed all remnants of PROTO()
-- Removed src/cio_main.c, src/cio_init.c, include/cio.h, include/ciofunc.h extremely old unused code
-- Win32 fix with u_int16_t
-- Removed my_name_for_link (unused)
-- Preparation for release
-- Changed to beta7
-- Fixed a IPv6 problem reported by Zerwas
-- Fixed -Wall warnings for TStime
-- Compile fix for TS2ts 
-- Small release tricks
-*** beta7 released ***
-- Fixed a win32 editor bug where the line count didn't display right away (reported by
-  iDW-badSol)
-- Module Insanity Recode (part 1) if the module version is 3.2-b8* we now pass a ModuleInfo struct
-  to Mod_Init which contains extended information. This replaces the Mod_Handle method in beta7
-- Module Insanity prototype fix
-- Fixed a listen::options::serversonly bug reported by swissSolaris (#0000084)
-- Fixed leftovers of non- char *configfile compliance. Thanks to ace and
-  various other people ..
-- Fixed a /mkpasswd typo and added the updated /mkpasswd syntax to doc/unrealircd.doc, both
-  reported by peck
-- Made the command system use module objects (haven't yet converted modules to use it)
-- Fix with DEBUGMODE
-- Fixed a Chinese nick bug found and fixed by Xuefer
-- Fix with status needed for remote clients too. Found by
-  Craig/FrostyCoolSlug <Craig@e-tidalwave.org>
-- Fixed m_oper setting +O on globops
-- Fixed bug with mode buffer overflow .. I'm not 100% positive it works..
-  Thanks to larne, Luke, SciFi, panda, ^Tux^.. Syzop .. and the countless
-  people bitching about their servers going down.
-*** beta8 released ***
-- Added log {} syslog support (appears to work fine) [#0000099]
-- Added HOOKTYPE_JOIN
-- Converted all modules to 3.2-b8 format (passes ModuleInfo)
-- Updated doc/conf.doc
-- Fix for desynch problem with the fix in /mode system, Thanks to Luke
-- One little patch for humanity, one giant step for science..
-- Cosmetic fix for /setident, found by juli ..
-- Implimented a dynamic hooktype system to allow modules to create their own hooktypes
-- Fixed a conf_unknown bug
-- Added EXLIBS= to make custommodule so a module can specify additional libraries it needs
-- Changed version to beta9 and updated documentation
-- Made +I once again work in win32
-*** beta9 released ***
-- Fixed a stupid m_oper bug
-- Fixed a win32 editor bug causing a crash when you click save multiple times
-- Fixed a /stats q bug where it would crash if there was an sqline with no reason, reported by toji (#0000120)
-- Fixed a bug that caused locops to see client exiting but not client connecting notices while +s +c,
-  reported and fixed by cmx (#0000123)
-- Fixed a bug reported by dimplesx where +H did not decrease the oper count (#0000129)
-- Documentation bug #0000152 reported by Tony at sexnet.org fixed regarding
-  example.conf being wrong about set::socks
-- First part of skyper's security audit patch
-- Some more of skyper's security audit patch. Some of them were simply
-  unfair in regards to performance or blindly added strlcats/strlcpy
-- Fixed some problems with skyper's patch (typos)
-- Fixed a cloak problem on OSes with 64bit integers (reported by wolven)
-- Updated credits
-- Memory leak fixes with scanners
-- Some fixes with connect(). Knowing my luck this will fuck up to hell
-- Fixed another memory leak with the scanners
-- Fixed some helpop typos reported by BiGi (#0000144)
-- Fixed a typo in /stats ? where T/t were reversed, reported by Zer0
-- Fixed a typo displaying a message to edit config.h after compiling reported by dimplesx
-  (#0000133)
-- Fixed a bug where except ban didn't work (reported by Hercules)
-- Fixed a scanner memory leak, and made some changes to make the HTTP scanner work
-- Fixed a bug in the socks scanner causing it to fail
-- Removed some typecasts from free calls, *hopefully* it will fix some problems
-- Fixed a bug with \r\n being mistakenly parsed wrong. Thanks to John_z
-- Fixed a config parser bug that would cause a crash under certain conditions. Reported by 
-  roskecr (#0000173)
-- Rewrote check_pings and the whole way banning people are handled. Do loop.do_bancheck = 1
-   to provoke a bans check. This possibly fixes #00001702, #0000137 and other
-  funny bugs.
-- Fixed a number of bugs in the upper patch. 
-- Fixed an OpenBSD bug reported by RaYmAn, k0adh, and numerous others (#0000104)
-- Credits changes
-- Fixed problem in dopm (short and char should NEVER be passed to va_arg)
-- Fixed HCN so it uses IP instead of sockhost.
-- Changed version to beta10 and updated documentation
-- Removed obsolete network files
-- Added some new network files (hopefully I'll be able to get all the submissions added soon)
-*** beta10 released ***
-- Added a config check to see which (if any) gethostbyname_r exists (based on a macro by Caolan McNamara)
-- Removed some SOCKS scanner debug code that was forgotten
-- Finally REALLY fixed the scanner (note to Stskeeps: bcmp returns 0 when there IS a match)
-- Added OpenIRC-CA in .SICI
-- Fixed a openssl+ipv6 bug, pointed out by Aragon .. This probably breaks some other crap, but what
-  the heck..
-- Made ident checking work on IPv6 as well
-- Fixed a /stats L/l bug reported by dimplesx [#0000190]
-- Fixed some typos in validate_configuration, fixed a hostilename problem when ident
-  checking is off
-- Fixed a hostilename problem reported by Xuefer [#0000158]
-- Fixed some stuff to deal with #136 - Please note that we do NOT compress our addies
-  - reason for this is because for example ::ffff:192.168.1.5 would really fuck up stuff
-  in the IRC protocol
-- Fixed a typo in doc/example.conf that I believe is causing ident not to work
-- Fixed a /stats Z bug where it didn't correctly report local clients
-- Made /stats Z once again report the # of classes and memory used by classes
-- Added an allow::options this fixes some problems with allow, ident is now used
-  unless allow::options::noident is set, also if the user matches an allow by IP rather
-  than by host the hostname is still used for the u@h, unless allow::options::useip is set
-  (idea inspired by danielek)
-- Fixed a bug in the new allow system reported by danielek
-- Fixed a maxperip and a maxunknownconnectionsperip bug in IPv6 reported by danielek
-- Fixed another scanner bug causing the scanner to never timeout
-- Fixed a module bug when there is an include between a module-config-directive and the loadmodule
-- Made it so if a module fails to load it is non-fatal, reported by Adiga007 (#0000194)
-- Made hosts converted to lowercase before run through hidehost() this way ABC.com is the
-  same as abc.com, reported by Magnet (#0000065)
-- Converted the status window in the win32 GUI to a modeless dialog
-- Fixed a win32 bug where the tray config menu didn't contain anything, reported by Jens (#0000127)
-- Fixed a /who bug where + wasn't shown for voices, reported by Wcc (#0000202)
-- Included larne's /who patch, adding a multitude of symbols? :P
-- Split 005 and 105 up in order to conform to the RFC1459 limit of 15 parameters per
-  command
-- Failsafe check (to be removed again) in s_bsd.c
-- [nighthawk 2002-06-16] Added myself to s_serv.c:m_info().
-- Fixed a doc/conf.doc typo reported by SciFi
-- Documented the new allow::options in doc/conf.doc
-- [nighthawk 2002-06-17] Rewrote m_who.c from scratch.  It's slightly different,
-                         help.conf explains exactly how.
-- [nighthawk 2002-06-17] Changed m_quit.c slightly, removed a redundant strlen,
-                         made prefix-quit of "no" not use one at all, since this
-                         is in example.conf and is sensicle..
-- Couple of updates to INSTALL.
-- Updated INSTALL to no longer say 'make install is not needed' reported by wolfy
-- Fixed a oper count bug caused by +H (reported by dwd) [#0000203]
-- Fixed another oper count bug caused by +H and SVSMODE/SVS2MODE [#0000203]
-- Fixed yet another oper count bug caused by SVSO and +H and +O (local oper)
-- Fixed a modes-on-oper bug that could cause a negative invisible and/or oper count if +i
-  or +H was specified in modes-on-oper.
-- Fix a minor stupid in m_quit.c.
-- Added /who +R which shows real host to opers.
-- Added set::scan::bind-ip, set::scan::message, on request of RaYmAn, documented
-  in example.conf
-- Fixed minor problem with former patch
-- Fixed the set::scan::bind-ip patch to work with win32
-- Added 005 token AWAYLEN= from ircu
-- Heavily updated INSTALL
-- Removed Win32 and READMENOW.Win32.txt (obsolete)
-- Started WinXP IPv6 support (added headers)
-- More WinXP IPv6, finished headers, replaced calls to inet_ntoa with Inet_ia2p
-- Added support for the RIPEMD-160 encryption algorithm for encrypted passwords (supposed to be slightly 
-  stronger than SHA1 and much stronger than MD5)
-- Added MD5 and SHA1 password encryption support to the win32 version whether SSL is
-  installed or not using the CryptoAPI library included in Windows.
-- Added extras/channeldumper.c
-- Fixed an alias {} bug reported by Keeper (prefix was :nick not :nick!user@host which screwed up some bots)
-- Fixed a +sp bug reported by Zerwas (#0000160) fixed by JK and Luke
-- Fixed a bug where locops did not receive a hidden host reported by breathingman (#0000221)
-- Fixed a bug where makeconf would not work after a make install
-- Fixed m_sjoin bug with banlist propagation
-- Fixed compile problem with non-glob/win32 systems (sunos 4.1) found by rshurr
-- Fixed secure channel only (+z) sending ERR_BANNEDFROMCHAN
-- WinNT/2k/XP service support added
-  This should currently be considered EXPERIMENTAL
-  To use this you use the unreal.exe utility:
-    unreal install -installs the service
-    unreal uninstall -uninstalls the service
-    unreal start -starts the service
-    unreal stop -stops the service
-    unreal restart -restarts the service
-    unreal rehash -rehashes the config file
-  Config errors are now logged to service.log when in service mode.
-- Added a win32 installer script (for Inno Setup with ISX)
-- Removed a reference to TechAdmins in makeconf, reported by Zerwas (#0000234)
-- Added a new debugger for win32 this version is NT Service compatible, logs to service.log
-  when a crash occurs while running in service mode. The new debugger requires dbghelp.dll
-  version 5.0 or newer. Included natively on Win2k/XP and available as redistributable for
-  other versions. Also removes StackTrace
-- Added src/win32/gpl.rtf (used for installer) made installer download dbghelp.dll if needed
-- Added an installer script to generate the Win32 SSL version
-- Made the win32 uninstaller remove dbghelp.dll if it was added when uninstalling
-- Added a #ifdef _WIN32 for extern BOOL IsService; in ircd.c that made compile break
-  on non WIN32 systems
-- Depricated AKILL/RAKILL and made them alias to TKL G +/- - for normal users they
-  just reply that the commands are depricated. Server compatiblity is maintained. 
-  Eventually it will just be removed. Thank god for modules.
-- Fixed a silly bug with regards to matching against compressed IPs in link {} checking
-- Added some release notes with regards to scanners
-- Removed s_segv handler
-- Changed ./update to use update.unrealircd.com
-- Made ./configure check if it has parameters, and error if it don't.
-- Made ./configure remove uscore.c and uscore binary after test
-- Removed mutex.c
-- Credits changes, various tweaks mzp ftq Gzdqmx qhqdk dqxqmeq oapq otmxxqzsq. Tmbbk tgzfuzs.
-- Fixed some ./configure errors
-- Added ircd/safe_SSL_read/write from bahamut+inet6/azzuranet. This can be done much nicer
-  when newio is done.
-- Updated the config parser to be smarter when dealing with times and sizes
-- Updated doc/conf.doc for any new config changes
-- Made the win32 installer remove the . from the begining of . files and append .txt to
-  most text files, ie .RELEASE.NOTES becomes RELEASE.NOTES.txt
-- Updated .RELEASE.NOTES
-- Fixed a bug where /who always reported 0 hops reported by Alzirr (#0000242)
-- More SSL horror and fixed a missing , in m_who
-- Fixed !SSL compile error
-- Made the win32 installer have the option of installing as a service under NT and fixed a
-  shortcut bug
-- Fixed sptr->user->realhost becoming lowercase upon a +x
-- Fixed +bbbbb lots of crap desynch bug
-- Fixed OperOverride snotice bugs with halfop
-- Standardized OperOverride notices
-- Implemented new operoverride system
-- Fixed some compile errors found by Zerwas and fixed some implementation problems of 
-  the not able to set +z when there's non +z users (ULines not counted) in channel
-- Fixed some SSL errors. read() returns -1 on error, so ircd_SSL_write and
-  ircd_SSL_read must emulate the same. codemastr: could you check what the
-  win32 equiviant of EIO is? I don't think my WSAEIO or whatever I called it
-  in sys.h is correct.
-- Seemingily we can't do SSLv3 only for ctx_server?
-- Fixed some SJ3 bugs that could cause desync in rare cases
-- Added some technical documentation in doc/technical. Docs include: 005.txt, base64.txt,
-  token.txt, protoctl.txt, and vl.txt
-- Send +f and +L in correct part of 005.
-- Fixed SSL linking, again..
-- SSL compile error fix in s_bsd.c
-- Added some OpenSSL version showing
-- Win32 SSL compile fixes
-- Made /trace show correct for SSL handshake(s)
-- RELEASENOTES stuff
-- Win32 installer fixes (changed version to beta11)
-- Changed version to beta11
-- updated .RELEASE.NOTES to explain operinvite
-- Fixed SSL compile error wrt to /trace
-- Removed doc/features.txt, doc/unrealircd.conf.txt, include/relinfo.h,
-  include/stamp.h, src/buildm4, src/chkconf.c, src/conftool.c
-- Removed doc/Etiquette
-- Compile error fix regarding version.h
-- Made +x send out a SETHOST to VHP servers, requested by PreZ@DarkerNet
-- Removed support for SSLv2 (SSLv2 is obsolete and insecure)
-- .RELEASE.NOTES change
-- Cleaned out Credits (i'll fix the web part of it later), made doug lea malloc default
-  on Linux FSU Pthread installs. (When we got a better way, we will have full doug lea malloc..)
-- Made OPEROVERRIDE_VERIFY default undeffed
-- SSL fixes to deal with not allowing SSLv2
-*** beta11 released ***
-- Removed src/s_unreal.c contained 2 functions, 1 never used, 1 used once
-- Removed /hash (did nothing), removed /post (replaced by scan_http)
-- Modulized /vhost, /cycle, /svsjoin, /svspart
-- Fixed a autoconf problem where FD_SETSIZE was NOT replaced when it wasn't big enough
-  (abort() problem on some installs.)
-- Readded find_match_server which got removed, m_rping uses it. Now in hash.c
-- Added note about Linux and FD_SETSIZE > 1024 in release notes
-- Made IRCd bitch properly when MAXCONNECTIONS>FD_SETSIZE
-- Fixed a make install bug due to removing obsolete files, reported by Morbid (#0000250)
-- Removed find_match_server from hash.c since it wasn't removed and was instead already
-  moved to s_serv.
-- .. Fixed a problem with normal unix source compiling as codemastr had
-  #ifdef _WIN32 'ed find_match_server, causing me to believe it was gone.
-- Allowed SQLINE/UNSQLINE to come from a U:lined client as well
-- Module load fix for a minor fuckup in SQLINE/UNSQLINE
-- Fixed a long existing bug where when MAXCONNECTIONS is too high it was displayed as set
-  to 0
-- Fixed the bug where /invite doesn't work (TEST BEFORE COMMIT!) reported by havlaz
-  (#0000255)
-- Fixed problem where the parameters of the RAKILL aliasing to TKL were switched, 
-  and a missing return for normal users.
-- Fixed a win32 SSL installer problem
-- Fixed problem with DEBUG ERROR when SSL handshaking (reported by some people)
-- Fixed a bug where the win32 installer didn't install dbghelp.dll on systems that don't
-  have any version of the dll.
-- Removed GNU malloc totally from the FSU pthreads distribution
-- Added some somewhat path specifics to unrealinstssl.iss
-- Fixed some installer problems wrt SSL compile, and added makefile.win32.ssl
-- Removed /doc/faq included in new doc set
-- Added set::ssl::egd for Entropy Gathering Daemon support see doc/conf.doc or
-  doc/example.conf for more information.
-- Updated credits
-- Removed ./Setup - No longer supported (read the docs!)
-- Removed .NEW_CONFIG - No longer needed
-- Removed INSTALL - Refer to NEW docs Unreal32docs.html
-- Removed doc/commands.txt - Refer to NEW docs Unreal32docs.html
-- Removed doc/faq - Refer to NEW docs Unreal32docs.html
-- Removed doc/conf.doc - Refer to NEW Docs Unreal32docs.html
-- Removed doc/unrealircd.doc - Refer to NEW docs Unreal32docs.html
-- Removed doc/Elite.Changes - Out Dated
-- Removed doc/services-install-guide - Refer to NEW docs Unreal32docs.html
-- Modfied Unreal.nfo to include ref. to new docs
-- Removed old docs and added new docs to Makefile.in
-- Updated .CHANGES.NEW with new version # and link to docs
-- Updated .RELEASE.NOTES with new version # and link to docs
-- Added NEW doc/unreal32docs.html Docs
-- Fixed an oper::swhois bug where the swhois was not propagated reported by FrostByghte
-  (#0000247)
-- Converted cr/lf to just lf in doc/unrea32docs.html
-- Fixed a bug where set {} info wasn't cleared out at rehash
-- Removed .NEW_CONFIG referenced from the win32 installer scripts
-- Removed LEAST_IDLE, wtf did that do in the first place?
-- Added version flags (O and o) for oper override and oper override verify
-- FAKE_LAG_FOR_LOCOPS define added in config.h - enables local ops to
-  override RFC1459 flood control
-- Fixed grammar error thanks to MorPheus
-- Fixed halfops kicking halfops bug thanks to Jim_
-- Fixed a typo in /akill and /rakill obsolete depreciation notices reported by zak (#0000272)
-- Added set::ssl::certificate and set::ssl::key to point to where we got the certificate
-  PEM and the private key PEM
-- Fixed a /invite bug where remote clients couldn't be invited, reported by Alzirr (#0000275)
-- Fixed a bug where if the hostname didn't have a dot (ie. localhost) host cloaking broke
-  reported by Ron885
-- Rewrote /helpop to work as advertised, reported by FrostByghte (#0000217)
-- Fixed a set {} memory leak on /rehash
-- Made it so Unreal can still be launched by clicking wircd.exe when in NT service mode
-- Stripped the docs. 100kb down, but a reformat in something other than MS
-  word would really really help.
-- Changed version to beta12
-- Add config option to the unreal service utility options are:
-  unreal config startup auto|manual
-    auto starts the service when the pc boots, manual requires you to run Unreal manually
-  unreal config crashrestart delay (2k/XP only)
-    specifies how long to wait after a crash to restart Unreal (in minutes). If no delay is
-    specified, no action is taken when a crash occurs
-- Made some changes to the win32 resolver, hopefully this will fix the crash bugs
-- Made /die exit gracefully when in service mode
-- Made it so Unreal (win32) can't be reinstalled or uninstalled while it is currently
-  running
-- Some install script win32 changes to deal with unreal32docs.html
-- win32 install script changes to deal with version switchover
-- Added src/win32/gplplusssl.rtf for ssl-install script to show during
-  install in license - GPL + the notes from openssl
-- Made minor changes to help.conf
-- Fixed +O/+A ban implementation issues
-- Reformated unreal32docs.html in something other than MS Word 93k now!
-- Corrected release date in doc/unreal32.docs
-- Removed ssl.rnd as it was not supposed to be provided by CVS
-- Made standard-threads default, and made a Config option if to use FSU
-  pthreads or not
-- Made set::static-quit - check doc/example.conf for documentation - but
-  this allows the admin to decide a standard custom quit for users. so they
-  won't be able to make their own quits. This affects set::prefix-quit and
-  ANTI_SPAM_QUIT_TIME - it simply replaces it with the message if enabled
-- Make makecert.bat and encpem.bat show their use in titlebar when run
-- Added define TOPIC_NICK_IS_NUHOST - nick!user@host in topic-whoset, undeffed by
-  default, read warning in config.h. Only use with 3.2-beta12 or higher
-- Made so every join is a SJOIN to prevent TS0 problems. Read config.h to disable this if it causes problems
-- Added set::static-quit to unreal32docs.html
-- Updated docs to include ripemd-160 encryption option
-** beta12 released **
-- Fixed problem where SSL handshakes weren't unknown--'ed on remove reported
-  by Alzirr
-- Compile fix regarding above fix
-- Added vhost::swhois requested by FrostByghte (#0000171)
-- Fixed a win32 password encryption bug when in NT service mode reported by simonbell
-  (#0000285)
-- Fixed a problem with set::ssl::certificate and set::ssl::key that used
-  ->ce_varname instead of ->ce_vardata. Found by badSol
-- Added a newline in dynconf.h
-- SSL debugging stuff
-- Added some more debugging stuff, made check_pings a little more readable 
-- More SSL debugging stuff..
-- A minor fix in SSL_is_inited stuff in s_bsd
-- Fixed a bug with installing unreal as a services under NT4 reported by peter (#0000295)
-- Added the oper login the user has /oper'ed to in the 'is now an operator'
-  notice. Suggested by havlaz (#0000287)
-- Fixed a bug where aliases {} didn't use tokens reported by havlaz (#0000288)
-- Fixed a win32 editor bug when using chars with an ASCII code > 128, reported by XircNet
-  (#0000298)
-- Fixed a bug in TKL found by DerAlSem where it was possible to add a line for *@* (#0000307)
-- Fixed a /who bug where /who +c #chan wouldn't display the name of the channel
-  requested reported by aproxity (#0000304)
-- Fixed a bug where /who +c #chan would let you see users in a +s channel
-- Added Nugget's setuid patch
-- Made the IRC_UID stuff more proper..
-- Removed some old debug code from the win32 debugger
-- Compile warning cleanups
-- Made the win32 version default to unsigned chars, and the linux version do the same under gcc
-- Added Syzop's various zero-terminate patches and fixes for crashes when
-  you send commands like JOIN from a server directly
-- Made channel keys be case sensitive
-- Fixed a bug with /who -h in some cases, found by Zer0, fixed by butter (#0000361)
-- Changed auth method sslpubkey into sslclientcert, which means it will check the X509 certificate of the
-  user using X509_cmp. Also needing is some policy/conf setting to adjust if to reject invalid client certificates or whatever..
-- Added set::ssl::options, with three options:
-    fail-if-no-clientcert   - If SSL client connects and doesn't provide a client certificate, abort connection immediately
-    verify-certificate      - Check the certificate's validity using X509 methods, check if we trust CA's, etc. 
-                              It however does slip self signed certificates through UNLESS
-    no-self-signed          - Don't allow self-signed certificates through (requires verify-certificate)
-- Made conf parser mention if we make a link->options with CONNECT_SSL if we don't support SSL (and remove the CONNECT_SSL flag)
-- Made conf parser mention if we make a SSL listener and we don't support SSL
-- Added set::ssl::trusted-ca-file, if enabled, it will point the SSL stuff to use that file as trusted CA's (for verify-certificate)
-- Made conf _not_ bitch that it doesn't know set::ssl
-- Removed some leftover client certificate stuff
-- Fixed bug #0000372 reported by MorPheus where Killed (<everything-but-the-first-char-in-killer-letter-got-shown> (reason))
-- Fixed bug #0000377 reported by MorPheus where IPs of servers were shown in nick collision notices
-- Fixed bug #0000371 reported by havlaz about an extra \n slipped in with the TKL notice
-- Fixed bug with all TKL commands not accepting nicks anymore (#0000370 reported by Ravage)
-- Fixed bug #0000342 reported by James LiGate about tokens leaking through from clients
-- Removed some IPv6 resolver specifics that seemed illogical (reference to Jollino's IPv6 crashes)
-- Fixed crash bug in m_tkl_line found by Keeper
-- Fixed another m_tkl_line bug found by Keeper
-- Fixed an samode bug reported by mcskaf (#0000403)
-- Added the ability to /lusers server.name to get the lusers reply of another server
-  suggested by tony0man (#0000373)
-- Fixed a bug where /htm would report "no such server" when used locally, reported by
-  jollino (#0000343)
-- Possibly fixed some crash bugs in scan_socks and scan_http in Win32 reported by
-  UrLoverGuy13 and Xose (#0000389)
-- Documentation - Updatet sec2.0 - list of Supported OS's for Win32 Version
-- Documentation - Updated sec1.1 - Instructed to use bugs.unrealircd.org to report problems with docs
-- Documentation - Updated misc hyperlinks - doc/unreal32docs.html
-- Documentation - Updated sec3.31 - Added better description to the format we present set:: settings 
-- Documentation - Updated sec3.31 - Added more details to set directives
-- Documentation - Updated sec3.25 - Added option vhost::swhois to section 3.25 Vhost block
-- Documentation - Replaced text vair {} with <> to prevent confusion.
-- Documentation - Documented that lusers now supports remote servers
-- Documentation - Corrected vhost::from example as reported by joolz (#0000329 )
-- Documentation - Corrected set::scan:messages, currently listed as set::messages - as reported by joolz (#0000329) 
-- Documentation - Added channel mode t & description as reported by stfcs (#0000315) 
-- example.conf - Corrected incorrect set::services-services statment in alias block - reported by mcskaf (#0000401)
-- Documentation - Corrected Spelling mistake in HTM mode - Reported by CoNfOuNd (#0000387)
-- Documentation - Added coadmin to table of oper types - Reported by FrostByghte (#0000359)
-- Documentation - Corrected several HTML formating problems
-- Commited first 20% of conf3, if anyone runs devel, DO NOT, it is BROKEN and will most likely NOT FUNCTION
-  and it WILL burn, DIE, and WILL NOT WORK
-- Fixed conf3 bug with _conf_except tkl
-- /kline and /zline now use TKL
-- Removed src/win32/unrealinstssl.iss and merged it into unrealinst.iss, add #define
-  USE_SSL to the file to build an SSL package
-- Added additional NT Service options to the win32 installer
-- Made CLIENT_FLOOD more customizable
-- Fixed some conf3 compile errors and block-modded _*_tld
-- Fixed stats bug reported by RaYmAn
-- Added a patch by McSkaf that will hopefully fix the win32 resolver crashes
-- Converted badword to conf3
-- Fixed some win32 problems with conf3
-- Fixed a problem in config testing with conf3
-- Modified the main conf3 searching routine to use a binary search, this should speed up
-  config processing somewhat
-- Converted the config flag parsing systems to use a binary search
-- Conf3 cleanups
-- Converted help and log to conf3
-- Fixed a configure script bug involving gcc3 (#0000398, #0000412, #0000433) found and 
-  fixed by mister
-- Fixed alphabeticalising of named oper flags, added _conf/test_link
-- Finished up conf3, still needing some directives added but it sortof works. Rehash doesn't yet. 
--  Fixed some idiotic lack of src/modules/Makefile.in changes for the sake of commands.so when 
-  /zline /kline etc was moved to a module
-- Converted _conf_alias to conf3, in the process changed the format to be slightly more
-  stable. See aliases/aliases.conf for the format changes
-- Numerous Sts-coded-conf3-while-sick bugs
-- Added SVSLUSERS, allows changing of local/global max users. This is designed so services
-  can make sure all servers report the same global max and that a local max can be adjusted
-  if for example a clone flood occurs. It is NOT designed to make the max count higher than
-  you actually have.
-- Fixed a bug in the win32 debugger where the contents of the core file were not written
-  until ok was clicked. Reported by Simon Bell.
-- Added an operflag can_override (v) only opers with this flag are allowed to use
-  oper-override.
-- Fixed a bug in SVSO where the t and Z flags could not be removed.
-- Updated .RELEASE.NOTES to include can_override
-- Fixed a bug where if set::help-channel was missing it was reported twice.
-- Made modules able to have configuration directives in conf3. The system to do this is 
-  completely new and works differently. All remnants of the old system have been removed.
-- Changed the module config system slightly to be able to detect more errors.
-- /rehash for conf3 (that works) :)
-- Fixed win32 compile error with default: ;
-- Fixed several conf3 errors
-- Converted deny {} to conf3, in the process added some extra crule functions to help
-  report errors better
-- Fixed sendto_ routines to use slot number as index into sentalong array
-- Fixed a conf3 bug
-- Made alias {}'s get rehashed
-- Made modules correctly rehash, this involves adding a Mod_Test function to modules that
-  need to perform configuration tests. This is currently only implimented for dynamic linking
-- Made the same system work under static linking. This (barring any bugs) should be the
-  completion of conf3. :)
-- Fixed a bug where chmode +q users could not kick chmode +a users. (#0000459) reported by
-  jollino.
-- Fixed serious bug in /who that caused the server to lock up (there's a ID
-  for this, could someone find it). Beta13 SHOULD be a LOT nearer now
-- Small typo in config validation found by ins4ne
-- Changed the way return values work in conf3 to better report the number of errors that
-  occurred.
-- Cleaned up some module code, also removed /module load|unload (just use /rehash)
-- Removed makeconf
-- Fixed errors in doc/example.conf and makenet
-- Fixed set::scan::bind-ip and set::scan::ban-time typos in unreal32docs.html
-- Changed set::scan:ban-time to set::scan::bantime and added set::scan::timeout in 
-  unreal32docs.html
-- Fixed some logical module rehash issues
-- Made config actually add listeners when rehashing (...) also you can now
-  change listener flags using /rehash
-- Changed .SICI to point to cacert.org instead (patch by evilbunny)
-- Fixed an oper count bug with SVS2MODE reported by confused (#0000490)
-- Removed m_kline.c and m_zline.c these are now implimented as part of m_tkl.c
-- Implemented a patch by poisoner to log vhosts in connect/disconnect logging (#0000487)
-- Made some changes to the thread API to fix some win32 crashes
-- Changed resolver code to use IRCMutex macros.
-- Documentation updates (some reported by poisoner) (#0000493)
-- Fixed some problems with /kline when removing a K:line
-- Updated docs some more
-- Fixed a makefile.win32.ssl problem reported by WeeD
-- Changed version to beta13, updated docs
-- Check for connect() success/failure in scanners on all OSs.
-- Documentation updates
-- Added back the commands check that didn't get added in conf3 (lamers
-  beware)
-- Fixed a typo in the module system
-- Fixed exception in scanner on Windows
-- Changed base version name to Unreal3.2, instead of Unreal3.2-Selene
-- Made McSkaf part of core coder team
-*** beta13 released ***
-- Added set::htm to set HTM options via the config. set::htm is only valid if either
-  commands.so or m_htm.so is loaded.
-- Recoded some of +G to work MUCH faster. A compiled copy of the regex is now stored 
-  in memory rather than compiling the regex each time the swear stripping was trigged. 
-  This uses slightly more memory, but saves a signifigant amount of execution time.
-  Idea inspired by a suggestion from CaliMonk
-- Fixed a bug where makeconf was still included in make install 
-- Fixed a bug reported by |Zerwas| where tsctl required all lowercase params (#0000537)
-- Fixed a bug reported by |Zerwas| where forgetting to have an oper::flags would cause a 
-  crash (#0000543)
-- Added a max of 500:500 to +f (higher than this is just stupid), this fixes
-  (#0000542) reported by BiGi
-- Fixed a bug where included files were not added to the file list in the Config menu under
-  win32. Reported by PoisonDart316 (#0000535)
-- Added chmode +u to help.conf, reported by Jaw959 (#0000544)
-- Fixed a docs typo 'channes' instead of 'channels' and a typo that said +I is limited to
-  netadmins, reported by PoisonDart316 (#0000547), also removed /unkline and /unzline from
-  the docs (replaced with /kline - and /zline -, also reported by PoisonDart316 (#0000548)
-- Fixed bug with INET6 and find_tkline_zap (..)
-- Fixed include bug
-- Created StripControlCodes() and call it from stripbadwords() to fix bug 552
-- Made 3 param TKL funcs Perm with reason instead of timed with no reason
-- Added set::snomask-on-oper to set the default snomask when users /oper (oper::snomask
-  overrides this)
-- Fixed a bug reported by AngryWolf where setting umode -o didn't remove umode
-  h. (#0000556)
-- Added a pretty_time_val function, this converts a number such as 86400 to "1 day"
-  to make it easier to read.
-- Fixed a bug in the binary search functions that could cause crashes when unknown config
-  directives were added. Reported by 1of10 (#0000587)
-- Fixed a bug at synch time that could cause more parameters to be sent than should be
-- Fixed a TKL bug where leaving out the reason caused a crash (reported by Ravage)
-- Added the ability to specify port ranges, for example listen *:6660-6669; listens
-  on ports 6660, 6661, ... 6669. Suggested by Krisztian Romek
-- Removed USE_LONGMODE, if it was #undef'ed problems could occur, so there is no reason to
-  have it if it doesn't to anything.
-- Fixed a bug where leaving out a value for certain config directives would cause a crash,
-  reported by AngryWolf (#0000596)
-- Fixed whole bunch of users in empty channel bug (probably)
-- Added a patch by Syzop to increase the "randomness" of well... the random numbers
-- Fixed a bug in the empty channel fix
-- Fixed a bug in the random patch under win32
-- Added a suggestion by AngryWolf to generate an error if a link::password-connect
-  is specified as encrypted. (#0000597)
-- Fixed bug #0000601 reported by cate where specifying just a :port number for set::scan::endpoint 
-  caused a seg fault.
-- Added some patches by Syzop to fix a variety of different bugs
-- Added some bugfixes for IPv6 and others by Syzop
-- Fixed a bug where leaving out the parameter to a password config entry would cause a
-  crash, reported by AngryWolf (#0000623)
-- Adding throttling, read config.h for more info. For the uneducated,
-  throttling is to reconnect way too fast repeatedly. Thanks to [Real] for
-  the idea
-- Fixed bug #000613 reported by AngryWolf where we were writing a null to the log file when 
-  we reached max size.
-- Fixed a bug where helpop would pass on a null pointer
-- One more fix to the above
-- Patch by Syzop to fix a bug in the resolver
-- Preperations for beta14. Will be a recommended upgrade
-- Compile fixes regarding throttling
-- Fix when you use another make than make
-- Fixed so crypt() works on !HAVE_CRYPT systems with openssl 0.9.7+ too
-  (yes, this makes us able to compile win32-ssl)
-** beta14 released **
-- Fixed example.conf set::dns::retries, 2s -> 2
-- Updated help.conf: added access level required for channel modes, added chanmode +G, etc.
-- Fix for missing mode 'S' in 005 CHANMODES= message
-- Added message if '/helpop' is used without parameters by helpops.
-- Fixed compile error in makefile.win32.ssl (added src/random.c).
-- Fixed compile error in src/random.c at win32.
-- Added end of stats message to /kline, /gline, etc.
-- Fixed some of the FreeBSD warnings, like 'Cannot accept connections' and 'getsockopt(IP_OPTIONS)'
-  (#0000616) and also changed report_error() to give additional error info.
-- Fixed /shun: ADMIN and PONG allowed if shunned (as documented) and removing a shun now also
-  affects connected clients immediately. (#0000593)
-- Fixed SVSMODE bug in handling of non-qaohvbe modes. (#0000631)
-- Fixed time calculation bug. (#0000634)
-- Made netadmins able to see users in all chans by using /who #chan or /names #chan.
-- Fixed crash when +x is in modes-on-oper, user has -x and then /oper's. (#0000578/#0000624/0000637)
-- Removed ircdreg, bug (#0000614), outdated
-- Fixed win32 compile error because of report_error patch (oops..)
-- Minor documentation fixes reported by Jollino (LUSERS, OFLAGS mode h).
-- Fixed bug in non-working channel mode +H. (#0000572)
-- Fixed bug in channel mode +L #aaaaaaaa<etc>
-- Added win32 compile instructions in doc/compiling_win32.txt.
-- Fixed major (?) bug in resolver (affects ipv4 only), could cause long stalls / crashes.
-- Added much better checking for weird characters in hostnames.
-- Fixed SSL session cache bug, symptoms were: stunnel can only connect the 1st time, reconnecting
-  etc fails with (in stunnel log) "SSL_connect: Peer suddenly disconnected". This happends with
-  OpenSSL 0.9.7.
-- Fixed some formatting issues.
-- Cleanup of m_userhost
-- Added a much faster (>100x) badwords replace routine, currently disabled until it's
-  100% finished and more testing has been done.
-- Cleanups in badwords.c.
-- Fixed minor bug in resolving of IPv4 names if IPv6 is enabled (#0000659).
-- Temporarely added user-already-in-chan check in m_sjoin to help tracing user-twice-in-chan bug
-  which has been reported by two users (#0000594).
-- Fixed halfop bug, ex: /mode -o+b user *!*@blah.com will get +b user!*@*. (#0000653)
-- Blah... forgot to remove some debugging code in badwords.c (new fast replace system).
-- Fixed yet another bug in new badwords replace system (should be almost finished now! ;P).
-- Optimization: channel msg routine now 10-30% faster.
-- Fixed 2-bans-needed-trick. (#0000626)
-- Minor documentation update for SVSNLINE. (#0000651)
-- Tweaked fix for 2-bans-needed-trick a bit.
-- Fixed crash when link::leaf was empty. (#0000610)
-- Fixed a bug where HCN would mean client exiting notices were displayed twice. As are result
-  of the fix, sendto_conn_hcn has also been removed. Reported by AngryWolf (#0000672)
-- Added some missing oflags for SVSO. Reported by auspice (#0000671)
-- Possibly fixed the throttling bug reported by Jaw959 (#0000644)
-- Fixed triple WATCH reply bug (#0000632)
-- Added ZIP_LINKS support, no check in ./Config & configure yet.. you currently need to
-  add -lz to IRCDLIBS in Makefile and enable it in include/config.h (and ofcourse set
-  link::options::zip on both sides) -- Syzop.
-- Removed unnecessary #ifdef blocks added by previous ZIP_LINKS patch
-- Fixed some minor sending-1-byte-too-much bugs
-- Made a STRIPBADWORDS_CHAN_ALWAYS option in include/config.h, if you define it badwords will
-  always be stripped from all channels (regardless whether +G has been set or not) [default=disabled].
-- Fix for error msgs flood at (at least) Linux 2.4.x and FreeBSD ("Transport endpoint is not connected"
-  and "Socket is not connected"). (#0000677)
-- Added makefiles to compile with zip links @ windows (zlib needed).
-- Added '/stats zip' (Oper only, only usefull if ZIP_LINKS is defined).
-- Fixed missing 's' flag in oper::snomask causing not receiving any server notices.
-- Fixed a bug with channel mode +A that could prevent admins from joining. Reported 
-  by Maxsus (#0000678)
-- Added some missing stuff to the documentation. Reported by AngryWolf (#0000611)
-- Started work on set::allow-userhost-change
-- Fixed some typos in aliases/operstats.conf (#0000684) and added an aliases/cygnus.conf
-  (#0000686), both reported by katsklaw
-- Added better error messages support instead of just "Dead socket".
-- Ahem... Fix for patch above (memleak).
-- Fixed bug which made opers unable to do -a/-q (#0000654).
-- Fixed bug in +q/+a list (/mode #chan q)
-- Added set::snomask-on-connect
-- Some tiny text fixes
-- Fast badword replace is now enabled by default
-- Added (optional) class::recvq so you can dynamically/per class set the recvq (flood control).
-  CLIENT_FLOOD in config.h is used as a default value if recvq is not specified.
-- Bugfix for crash with STRIPBADWORDS_CHAN_ALWAYS.
-- Fixed bug in ipv6 + unknown connection flood.
-- Don't encrypt SSL certificate by default @ win32.
-- Fixed /topic for opers when not in +s-channel.
-- Improved unreal32docs.html readability/layout/text.
-- Minor doc updates (example.conf).
-- Added better (specific) link error messages (only on the "incomming" side) so you can easily
-  see whether servername, hostname/ip or username is wrong.
-- Added recvq column to /stats y reply.
-- Fixed a throttling bug reported by Ely (#0000704)
-- Fixed a resolver bug where cache entries didn't timeout correctly.
-- Made async resolve-and-connect work
-- Added link::options::nodnscache which means Unreal will not cache the host forever for
-  outgoing server connections, you could for example enable this if you are linking two servers
-  with an often changing host (like dyndns.org).
-- Documentation updates for nodnscache.
-- Fixed minor memleak with zip links.
-- Code cleanup in m_umode
-- Fixed bug in ISON
-- Code cleanup
-- Fixed a bug in m_part
-- Fixed a bug where compiling with ZIP_LINKS and SSL wouldn't work (#0000707) reported by 
-  Ravage.
-- Added the ability to enable ziplinks via ./Config as well as specify a directory zlib is
-  in. Also added the ability to specify a directory for OpenSSL.
-- ZIP_LINKS fixes/debugging.
-- Code (comments) cleanup
-- Fixed an ident bug, maybe it actually works now.. (#0000709) reported by marviiin.
-- Added config error if link::options::zip was enabled at a non-zip compiled server.
-- Fixed a bug with ZIP_LINKS + show-connect-info, also added fallback to uncompressed link.
-- Updated protoctl.txt (added ZIP).
-- Added USE_ZIP stuff to win32 installer script.
-- Fixed a bug with except ban {} reported by Gargo (#0000604). As a result except tkl {} of
-  type tkline and tzline have been removed since they are now handled by except ban {}
-- Updated docs.
-- Added set::restrict-usermodes so you can restrict which usermodes users can (un)set,
-  for example you can force users to be all +G by setting G in modes-on-connect and
-  also in restrict-usermodes. Ofcourse these restrictions do not apply to ircops.
-  Feature suggested Gargo (#0000603).
-- Fixed a bug in coadmin: global flags were not added (#0000716).
-- Made ".. did a /whois on you" always show the real host (#0000705).
-- Removed usermode +I (invisibility)
-- Fixed link::port bug reported by AngryWolf: was signed so ports >32767 had problems
-- Fixed a win32 bug that could cause crashes when editting files. Reported by camje_lemon
-  (#0000717)
-- Removed channel mode +H (not needed without umode +I)
-- Allow coadmins to use /rehash -flags. Suggested by kyotou
-- Added channel mode +M. Can't talk unless you are using a registered nick. Suggested by 
-  CaliMonk
-- Fixed compile warning in ssl.c.
-- Updated docs, removed umode +I and cmode +H and added cmode +M
-- Removed some left over +I code
-- Added set::restrict-usermodes to /stats S (reported by AngryWolf)
-- Zip links: Added link::compression-level so you can set the compression level per link.
-- set::services-server is now required to be set (#0000730).
-- Fixed /list memory leak.
-- Fixed MyConnect()/MyClient() bug causing memory leak.
-- Fixed a bug with TKL and rehash
-- Recoded aliases (regex style) to be much faster.
-- Removed some leftover +I code
-- Fixed a bug in /who where +s was case sensitive. Reported by jollino (#0000736)
-- Removed some debugging messages
-- Fixed an alias bug reported by darko`` where alias::format::type of "normal" produced
-  an error.
-- Fixed some case insensitive checks in configfile parsing, fixed to be case sensitive.
-- Module changes: added two hooks: HOOKTYPE_USERMSG and HOOKTYPE_CHANMSG, changed umode_get.
-- Fixed bug with chmode +u: Quits/nick changes of other users were shown.
-- Added /who *.host.com support (ircop only), this was already possible via /who -h <host>
-  but most ppl expect it to work this way too.
-- Updated win32 compile instructions
-- Fixed set::dns error messages
-- Fixed win32 compile error
-- Fixed chmode +u again.
-- Fixed a bug reported by mQ where it was possible to include spaces in a TKL host
-- Documentation updates (added a section about features).
-- Fixed remote /rehash bug (#0000600).
-- Documentation updates (unreal32docs.html, example.conf).
-- Added a new badword type, quit. This replaces the old CENSOR_QUIT. If you want to censor
-  quit messages you create a badword quit {}. Additionally loading badwords.quit.conf will
-  censor several badwords by default. Based on suggestions by Gargo
-- Fixed two ident bugs (multihomed&connect), both resulted in ident not working.
-- Added set::options::dont-resolve (=hostnames of incomming clients won't be resolved).
-- Code cleanup (gcc 3.2 warnings with -Wall).
-- Removed/updated some NS stuff
-- Added EventMarkDel which marks an event for deletion for the (next) DoEvents() call.
-- Fixed /rehash stall caused by delayed unloading of the scan module (deadlock).
-- Added feature that if the chan is +m AND +u (so both!) and you ban IRC!*@* then ops
-  will no longer see the "relayed" message from IRC.
-- Made set::allow-userhost-change force-rejoin work.
-- Fixed chmode +u bug when chanop was parting but wasn't sent to normal users.
-- Added allow-userhost-change checks to /vhost.
-- Added SVSWATCH: allows U-lined server to modify the watch list of a user.
-- Added SVSSILENCE: allows U-lined server to modify the silence list of a user.
-- Documentation/text updates.
-- WebTV fixes
-- Added except throttle {}, only working when #define THROTTLE
-- Doc/text updates
-- Changed version to beta15
-- Fixed /setident bug
-*** beta15 release **
-- Fixed a problem with modules not loading when #undef STRIPBADWORDS
-- Doc updates (SSL/stunnel example was wrong)
-- Fixed a buffer overflow that could be used against setuid setups, 
-  found by rave@dtors.net, reported by kokanin
-- Disabled CMDLINE_CONFIG(-f) by default
-- Fixed a bug in /list where opers could not see +s channels when doing /list #channel. 
-  Reported by _SciFi_ (#0000762)
-- Fixed a /who big which could make the server crash (oper only).
-- Fixed a match() bug
-- Fixed a /version bug
-- Improved fake lag stuff
-- Improved previous /version bugfix
-- Fixed some missing /helpop info reported by Jaw959 (#0000782)
-- Added set::throttle::period to allow you to change the throttling period 
-  (requires THROTTLING)
-- Updated some documentation
-- Fixed "proxyscan on quit" bug (#0000788)
-- Moved the "flood from unknown connection" notices to snomask +f
-- Fixed compile error
-- Fixed a restrict-usermodes bug reported by Rocko (#0000796)
-- Minor /die and /restart code cleanups
-- Added channel mode +M to 005 (#0000803) reported by jollino
-- Fixed a bug where +x would make hosts lowercase (#0000810) reported by rayman
-- Implemented a ban version {} (bans users based on CTCP VERSION). It works by sending out
-  a CTCP VERSION when a user connects then checking the reply. If you don't use any 
-  ban version{}'s then no version request is sent so users are not inconvenienced.
-- Rewrote the "flood from unknown connection" system to kill all matching users immediately
-  and also added set::anti-flood::unknown-flood-bantime and 
-  set::anti-flood::unknown-flood-amount to set the length of time an unknown connection
-  flooder is banned for and how much data (in KB) the user must send before being banned.
-  This should fix (#0000767) reported by ora.
-- Updated some documentation
-- (Hopefully) fixed some Ziplinks problems
-- Added missing except tkl {} documentation
-- Documentation update and cleanup
-- Added umode +p (hide channels in whois). For opers, channels are shown as "!#chan" to indicate
-  that the user is +p and the channel is only shown because you are an oper.
-- Fixed a typo in the docs for except throttle (#0000830) reported by CoNfOuNd
-- Added set::modes-on-join to set channel modes that are set when a new channel is created.
-- Fixed a typo in the HTM docs (#0000832) reported by CoNfOuNd
-- Added anti-away-flood code, based on Bahamut. This prevents users from repeatedly using /away.
-  This feature is disabled by default (see NO_FLOOD_AWAY in config.h). 
-- Added set::anti-flood::away-count and set::anti-flood::away-period to control the away flood
-  system.
-- Moved the "missing user in SJOIN" notice to snomask +j
-- Rewrote some of the set::allow-userhost-change code. Fixes (#000843) and (#0000791) reported
-  by |VIO|Maverick and Rocko
-- Made throttling use DelListItem and fixed some confusing regarding
-  undeffing of THROTTLING
-- Fixed a set::modes-on-join bug and fixed an oob read in config parser.
-- Fixed an oper bug with /names on a +s channel (#0000816).
-- Fixed 2 other oob reads in config parser (parsing of size and time).
-- Fixed yet another oob read in config parser (ie: #0000841).
-- Fixed a typo in the docs (#0000867) reported by tc
-- Fixed a fast badword replace crash (#0000834) reported by orga
-- Fixed a ban version {} bug with NOSPOOF (#0000872) reported by poisoner
-- Made gline/zline/kline take precedence over a shun in TKL (#0000870) reported by KnuX`
-- Fixed a long standing typo where doc/example.conf still mentioned oflag e (#0000638)
-  reported by twigboy.
-- Possibly fixed an SSL crash bug (#0000871 and #000784) reported by shotgun and comrade
-- Fixed opermode bug which could cause the ircd to crash a while later (#0000823).
-- Changed throttling errormsg so mIRC recognizes it and waits a while.
-- Added SSL quit error messages
-- Fixed an SQLINE bug with sqlines without a reason
-- Fixed a bug effecting additions/deletions of SQLINES and deletions of SVSNLINES (may be
-  the cause of #0000866)
-- Fixed MAJOR "messages are lost" bug which can cause various problems: ziplink corruption,
-  duplicate user entry in sjoin, etc etc. This would happen if BUFFERPOOL was set too low (like
-  the default) and you got a lot of traffic. It's now handled a bit better and you'll get
-  a nice warning, additionally the default BUFFERPOOL is now set to MAXSENDQLENGTH*18 instead of
-  *9. Thanks to ora and others which helped me tracing this down.
-- Added tld::options::ssl so you can have different motd/rules files if the user is using SSL.
-- Fixed cloaking bug reported by Rocko (#0000869).
-- Added set::restrict-channelmodes, works exactly the same as restrict-usermodes, you can for
-  example disallow using of channelmode u and L. Suggested by poisoner and others (#0000838).
-- Added allow::options::ssl and allow::options::nopasscont, requested by iguy and Scytale.
-- Removed usermode +b from docs (been gone for a long time) (#0000798) reported by Rocko
-- Fixed an SQLINE bug
-- code cleanup / misc minor bugfixes (MyMalloc, oper msgs)
-- Fixed a throttling bug where it could return negative numbers.
-- Improved IPv6 throttle hashing
-- Make the above actually work
-- Improved throttle hashing (both IPv4 and IPv6).
-- Changed throttling so it now bans after M connects in N seconds rather than 2 connects in N 
-  seconds. (set::throttle::connections).
-- Updated channelmode +f "algorithm", much better now. Reported by JimmyZ, Rocko, and others.
-- Added badword::action <replace|block>. (replace is default). If you specify block, instead
-  of replacing the word with "<censored>" it will block the message from ever being sent. 
-  (#0000557) suggested by paranomix
-- Made /stats b output badword quit {} (#0000883) reported by AngryWolf
-- Made except ban {} override ban ip {} (suggested by Lithium).
-- Removed some old defines for the old password encryption system (#0000765) reported by
-  AngryWolf
-- Made it so you can use a ~ as the first character of an ident with /chgident (#0000765)
-  reported by AngryWolf
-- badword::action::block should now be ok
-- Added some missing /stats flags to help.conf and the /stats ? output (#0000886) reported
-  by Rocko
-- Fix for set::restrict-channelmodes (eating parameters).
-- Made it so if someone /who's you and you are +p it doesn't show the channel you are on
-- Fixed a ban version {} bug where it would version remote clients
-- Added aliases/anope.conf (For Anope IRC Services)
-- Updated some documentation
-- Minor error msg improvements
-- Fixed a bug with wrong hub/leaf settings ("non-hub introduced leaf") causing a crash 
-  (#0000732).
-- Fixed a bug where an unknown set::dns directive wasn't reported as an error (#0000898)
-  reported by AngryWolf
-- Made it so /msg nick@server and /notice nick@server use tokens if the server supports it
-  (#0000895) reported by Troco
-- Added some information to the docs listing the file names for motd, rules, etc. (#0000519)
-  suggested a LONG time ago by Jaw959
-- Fixed a compile error with openssl enabled at redhat 9.
-- Added some temporarely SQLINE debugging/trace code
-- Fixed a PRIVMSG channelprefix bug reported by aragon (#0000902)
-- Fixed far connect (+s +F): connects from U-lined servers are now hidden again.
-- Added IP bans like *!*@194.109.* (#0000474).
-- Fixed usermode +S: was accidently a local usermode (#0000909) reported by DukePyrolator.
-- Enabled throttling support by default, you need to have a (correct) set::throttle block
-  to make it work, otherwise it's just turned off.
-- Some code cleanups (s_conf.c, now has a config_setdefaultsettings()).
-- Fixed minor badwords /rehash memleak.
-- Added link::options::nohostcheck which makes Unreal not to validate the incomming host/IP
-  against the link::hostname field, useful for dynamic DNS hosts.
-- Some documentation improvements regarding link::hostname.
-- Changed the module umode adding function to allow an 'is_allowed' function. This fuction
-  defines who may set the specified usermode.
-- Made it so Ulined servers can use a TS that is in the past for topics (#0000448) reported 
-  by thilo
-- Fixed a bug with ban version {} where some clients didn't like the request we were sending.
-- Usermode +q can now be set by services admins, as stated in docs (#0000923).
-- Preparing beta16: release notes ready, version updated in docs/text (except version.h).
-- Changed version to beta16
-- Various docs typo fixes, some reported by AngryWolf (#0000913)
-- Mm, let's see what this checkin brings: 
-  * Removed thread questions from Config, and autoconf code from
-    configure.in, leaving in the old macros though, but inactive
-    --enable-standardthreads is dead as of now
-  * Undefined HOOKTYPE_SCAN_INFO
-  * Removed CONF_EXCEPT_SCAN
-  * Removed locking in events, Lock/UnlockEventSystem still active for other
-    possible uses.
-  * Removed scanners, web server module
-  * Removed except scan {}
-  * Removed SCAN_API stuff from l_commands.c, win32 makefiles, etc
-  * Removed basically any mentions of threads in source tree, excepting
-    threads.h which Resolver uses on win32
-  * Documentation changes not done yet
-- Updated docs [unreal32docs/example.conf] (maybe not all yet), win zip makefile fixed
-- Module coders: I've changed HOOKTYPE_PRE_LOCAL_CONNECT, you must now return '0' to let
-  the client pass and anything else is threated like a return, so you must return
-  FLUSH_BUFFER if you just called exit_client, this fixes a read-already-freed-mem bug.
-- Added warning message if set::scan exists
-- Made SVSNOOP work. Reported by Lx (#0000933).
-- Removed some more html files.
-- Removed CREDITS.POTENTIAL
-- Removed 'bugreport'
-*** beta16 release ***
-- Fixed a bug where opers without can_override could still operoverride with /topic,
-  (#0000942) reported by Rocko
-- Added verification that a vhost::vhost is valid (#0000924) reported by AngryWolf and ChRiS
-- Fixed "make install" error caused by bugreport file removal.
-- Removed some leftover +I code (can_stealth/^).
-- Fixed a badword::action block bug with regex (non-fast) badwords, could cause a crash,
-  reported by auspice (#0000946).
-- Fixed unprecise RPING output at windoze, reported by pak (#0000945).
-- Fixed a bug where operoverride notices were not send when overriding chmodes +aq (#0000831)
-  reported by _SciFi_
-- Fixed a bug in SVSMODE with setting -b on a user in a channel
-- Recoded the "version flag" system, it is now safe to have multiple modules that use the 
-  same flag, new functions are VersionflagAdd and VersionflagDel they replace flag_add and
-  flag_del
-- Fixed a local /kill bug during connection phase, reported by Gilou (#0000952).
-- Fixed ripemd-160 vs ripemd160 confusion, reported by thelight (#0000949).
-- Little find_client() audit.
-- Removed some leftover TECHAT references (#0000953).
-- Added a CommandExists function to be used by module coders to determine if a command already
-  exists.
-- Renamed channel mode +a to "channel admin" it fits better, and it makes us more consistent 
-  with other IRCds.
-- Made the command parsing loop slightly faster by validating command parameters when a command
-  is created rather than when a command is used.
-- Made ban version {} also listen for CTCP SCRIPT replies. Some scripts apparently use this to
-  report their version info.
-- Made it so NETINFO won't report a different cloak key error if the server specifies * for the
-  cloak keys. Useful for services that rely on VHP.
-- Misc /whois and webtv whois fixes
-- Added CASEMAPPING=ascii as per request
-- /WHO code cleanup + partial recode + bugfixes
-- Updated example.conf about U-lines since many people set them wrong.
-- Fixed numeric checking.
-- Moved /stats zip from NOTICE to RPL_TEXT, updated stats documentation.
-- Made it so it is no longer necessary to copy the ModuleInfo structure passed to Mod_Test
-  and Mod_Init. Unreal now does this internally.
-- Code cleanup/merge m_join/channel_link: fixed multiple channelmode +L problems.
-- And another minor +L fix.
-- Minor channelmode +f fix.
-- IPv6: Fixed unable-to-resolve-bug if both a A/AAAA record and NS/MX/etc records were present
-  for the same hostname, reported by Byte (#0000972).
-- Updated flags in /version (and greeting), added 'Z' for zip links support, updated tech doc.
-- Added set::ident::connect-timeout (default 10s) and set::ident::read-timeout (default 30s) to
-  have much more control over ident timeouts, this should also fix connection timeout problems
-  during connecting.
-- Updated example.conf (added throttle block).
-- Made some fixes to the resolver code under Win32
-- Fixed a bug in del_throttling_bucket 
-- Code cleanup (sys_errlist[])
-- Fixed a crash in SVSMOTD that could occur if invalid parameters were used. Reported by 
-  emigrant
-- Committed little de-Fizzer module to extras/
-- Check in autoconf for MacOS X that will make compiling and running on it 
-  to work
-- Possibly fixed a compile problem on Solaris/SunOS (#0000984) reported by Dom
-- Added deny channel::redirect, which allows you to forward a client to another channel
-  if the one he/she joined is not allowed. can also be used for channel "aliases" like
-  #operhelp sends people to #help
-- Made it so Unreal always uses extended regex support
-- Fixed the compile problem on Solaris/SunOS (#0000984) reported by Dom
-- Updated src/win32/unrealinst.iss a bit
-- Changed /who flag '&' to '?'
-- Fixed regex detection problem (introduced by a change 2 days ago).
-- Added set::options::mkpasswd-for-everyone to let normal users use /mkpasswd, requested
-  by Evats.
-- Added error messages if not oper for: sdesc, mkpasswd, htm, rping, opermotd (#0000988).
-- Removed the old TSP stuff from the extras directory, this is no longer used and it just
-  wastes space.
-- Made /whois work slightly faster
-- Probably fixed server-notices bug (duplicates, to non-opers) caused by a few SVS* cmds,
-  reported by _loco_ (#0000991).
-- Fixed a bug in the win32 editor reported by ChAoS^TiGeR
-- Fixed /map bug that permitted trivial finding of U-lined servers
-- Fixed bug in HOOKTYPE_LOCAL_JOIN which could cause 0-member-channels if a hook returned
-  1 and the channel was new.
-- Made it so a permanent /kline no longer says "Permanent Timed K:line" which can be confusing
-  (#0000997) reported by AngryWolf
-- Module coders: new hooks: part, kick, chanmode, topic. changed: quit (added 'comment' param).
-- Enlarged REPORT_* vars a bit.
-- IPv6: UnrealIRCd can now lookup ip6.arpa addresses too (original IRCnet patch modified for
-  UnrealIRCd by Onliner).
-- Doc updates
-- Removed "Duplicate user entry in SJOIN" notice because the problem has been traced down.
-- Fixed some ./Config problems on Solaris with IPv6, SSL, and some other misc. things 
-  (#0001004) reported by lion.
-- Changed the /whois "secret channel" flag from '~' to '?'
-- Fixed some MOTD problems: remote MOTD gone after rehash (#0001007) and motd time, etc...
-- Fixed _some_ gcc3.3 + -Wall warnings.
-- Fixed a bug where the win32 config editor could crash if the file contained color codes.
-- Resolver fix nr #1 (prolly not "the real problem").
-- Minor oob fix for parse_v4_netmask
-- Fixed another serious bug in the win32 resolver.
-- Removed mutex stuff from rem_request, no longer needed, should make the resolver much
-  faster.
-- Implemented short motds (ircd.smotd). If you don't know what short motds are, read on:
-   short motds are a method of conserving bandwidth. When a user connects ircd.smotd
-   is displayed (or a tld::shortmotd). This file contains brief text. Alternatively,
-   ircd.motd (or tld::motd) is displayed when a user types /motd. The idea behind this is
-   instead of displaying huge ASCII art, and tons of text to every user when they connect
-   (since most users will ignore it anyway) you only show that stuff to users who specifically
-   request it. Also, if you choose not to use short motds, everything will function as it used
-   to the ircd.motd (or tld::motd) will be displayed both when users connect and /motd.
-- Changed a few messages so that they use PRIVMSG when being sent to a WebTV user rather than
-  using NOTICE.
-- Added the TRE regex library to extras/tre (minor modifications to reduce source size)
-- Made ./Config configure, compile, and install TRE
-- Implemented +a/+q prefixes (#define PREFIX_AQ in config.h) read the comment above PREFIX_AQ
-  in include/config.h for more information.
-- Fixed PRIVMSG bug with multiple targets.
-- Yet another resolver fix
-- Fixed a bug with using crontab
-- Docs update
-- Temporarily disabled compiling TRE 
-*** Unreal3.2-beta17 release *** (god save us)
+
+[ Unreal3.1.3 ]
+-----------------------------------------------------------
+Initial release, based on 3.1.1 code and lots of 3.2-beta
+functions that are actually sane
+-----------------------------------------------------------
+resolv.h line 76
+#if ((__GNU_LIBRARY__ == 6) && (__GLIBC__ >=2) && (__GLIBC_MINOR__ >= 2))
+#define res_init __res_init
+#endif
+Fixes compile error w/ later glibc
+--Luke
+===================================
+
+parse.c line 404
+removed if (lifesux)
+--Luke
+===================================
+
+s_bsd.c
+first instance of HighscoreFD
+removed the define
+removed rhighest_fd as well
+removed all instances of HighscoreFD()
+changed rhighest_fd + 1 to MAXCONNECTION
+(100% cpu fix from 3.1.1)
+--Luke
+===================================
+
+channel.c
+Took m_sjoin from 3.2
+removed lp2
+changed Member *lp to Link *lp;
+Changed other stuff (document later?)
+--Luke
+===================================
+
+s_serv.c
+replaced m_server_estab with one from u32june12
+--Luke
+===================================
+
+Fixed missing : on line 419 s_err.c (numeric 379)
+--Luke
+===================================
+
+stole all m_chg* and m_set* functions from u32june12
+in s_unreal.c
+--Luke
+===================================
+
+stole sdesc from latest beta in s_unreal.c
+--Luke
+===================================
+
+line 1683 in s_serv.c
+added me to /info
+--Luke
+===================================
+
+line 1342 res.c
+added line sts foolishly deleted that broke win32 resolver
+--Luke
+===================================
+
+line 2161 in channel.c
+fixed mode segfault bug
+--Luke
+===================================
+
+line 152, fixed #endif error
+aln.c
+--Luke
+===================================
+
+-------------------------------------------------------------
+Beta2ish
+-------------------------------------------------------------
+line 341 ircd.c
+win32 hates SIGQUIT, #ifndef it out.
+--Zogg
+===================================
+
+line 1298 s_bsd.c
+set_blocking() won't compile under msvc.  
+Not important, #ifndef'd out for win32
+--Zogg
+===================================
+
+line 234 in Makefile.dist
+fixed perms on ssl certs
+--Luke
+===================================
+
+Added Zogg's win32 makefile that actually works.
+--Luke
+===================================
+
+------------------------------------------------------------
+Beta3ish
+------------------------------------------------------------
+Changed line 179 in ssl.c to
+set_blocking(cptr->fd, NULL);
+otherwise random segfaults on ssl connect occur
+--Luke
+===================================
+
+Changed line 223 in ssl.c to
+strcat(buf, (char *) my_itoa(bits));
+otherwise got warning on compile in bsd
+--Luke
+===================================
+
+Put in rest of patch for mode propagation bug
+*whack*
+--Luke
+===================================
+
+--------------------------------------------------------------
+Beta4
+--------------------------------------------------------------
+
+Stole StripColors from 3.2-beta, resolves memory
+leak in 3.1.3
+--Luke
+===================================
+
+Rearranged doc/ slightly (moved some more stuff to
+History
+--Luke
+===================================
+
+s_user.c line 1946 - (char *)StripColors as per
+new StripColors function from 3.2-beta
+--Luke
+===================================
+
+stole add_exbanid and add_banid from devel
+(other stuff was just weird)
+--Luke
+===================================
+
+line 4748 in s_user.c for cases i and o added fix (svsmode)
+line 4651 too (svs2mode)
+for svsmode bug (thanks codemastr)
+--Luke
+===================================
+
+line 829, 1035 in s_kline.c gline bug resolved
+(again codemastr)
+--Luke
+===================================
+
+line 1583 res.c fixed dns l, only opers!
+(again codemastr)
+--Luke
+===================================
+
+Modified ./Config to play nice with BSD
+(and yes, God forbid, SunOS 5.x *shudder*)
+--Luke
+===================================
+
+added -lsocket when compiling fdmaxcounter
+in sunos 5.x, may produce crack induced result
+but at least it compiles now
+--Luke
+===================================
+
+145, list.c added passwd fix
+deled cptr->passwd; above (line 135ish)
+--Luke
+===================================
+
+*** 3.1.3 Released ***
+
+[ Unreal 3.1.4 ]
+--------------------------------------------------
+The fixes and backports continue. Strange how much
+time maintaining Unreal can eat up...
+
+Beta1
+--------------------------------------------------
+
+Removed tech admin.
+This feature is useless bloat. If you want it back
+do NOT complain to any of the Unreal coders, feel
+free to reimplement it yourself. Do note, however,
+that if you modify the code in any way, shape, or
+form you immediately give up your ability to
+receive any type of support from us.
+--Luke
+===================================
+
+Line 703 in ircd.c fixed...breaks
+gcc3 compatibility (thanks to shellz.net's
+NuC for reporting)
+--Luke
+===================================
+
+Fixed issue in s_user.c where +H opers
+could be identified by normal users in
+a trivial manner (thanks to Magnet from
+epiknet)
+--Luke
+===================================
+
+s_user.c fixes
+basically, /whois doesn't display snotice
+if you're +W and do it to yourself
+/who the same
+and "is a secure connection" is no longer
+bold (it was lame)
+--Luke
+===================================
+
+s_serv.c fixes
+fixed map bug that allowed you to trivially
+find a hidden U lined server (hopefully)
+--Luke
+===================================
+
+rmed zip.c (not used at all.)
+and zip.h and anything related to zip
+--Luke
+===================================
+
+E lines now match glines, zlines, shuns
+(if you say yes in config)
+--Luke
+===================================
+
+map bug still exists (earlier fix made it
+worse)...removed.
+--Luke
+===================================
+
+/adchat bug that sends it to coadmins twice
+(coadmins are actually server admins as far
+as the ircd is concerned for most purposes, no
+need to send to both UMODES)
+--Luke
+===================================
+
+rewrote m_kick almost entirely (it sucked)
+--Luke
+===================================
+
+newdns.c removed - another useless file
+--Luke
+===================================
+
+------------------------------------------------
+Beta2 Released
+------------------------------------------------
+
+ripped cloak.c from 3.2, and added Config
+options as needed.
+--Luke
+===================================
+
+Fixed 3 svsnoops bugs, so it appears to be
+actually working now...
+--Luke
+===================================
+
++S users no longer show channels in /whois
+--Luke
+===================================
+
+Added a gzline command. I use it with bopm on
+my network all the time, and am getting
+sick of readding it after each new release.
+Additionally, I think it's a useful command
+for anyone to have.
+--Luke
+===================================
+
+Revamped operoverride stuff so it's consistent
+and somewhat sane. (also made NetAdmin.Chat
+NetAdminChat to keep with other forms)
+--Luke
+===================================
+
+Fixed m_kick more
+--Luke
+===================================
+
+Made "is a bot.." not bold
+--Luke
+===================================
+
+Fixed a bug with \r\n being mistakenly parsed
+wrong. Thanks to John_z
+--Luke
+===================================
+
+Added temp patch to m_kline to stop segfault
+--Luke
+===================================
+
+------------------------------------------------
+Beta3 Released
+------------------------------------------------
+
+Backported check_pings with loop.do_ban_check from 3.2
+--Stskeeps
+===================================
+
+Added nice fix to HCN so that BOPM works natively
+(it would still be wise to mod bopm yourself
+and have it scan all clients by using +F, as I've
+done, but whatever.)
+--Luke
+===================================
+
+Moved cloak key definitions to .network file
+--Luke
+===================================
+
+omfg, a patch that resolved some really interesting
+problems with really long parameter modes has been
+applied. (this in itself is a great reason to
+upgrade)
+--Luke
+===================================
+
+Moved exempt_all option to unrealircd.conf, no longer
+a #define in settings.h & ./Config option.
+--Luke
+===================================
+
+Made stop code error more stupid-people friendly
+--Luke
+===================================
+
+Added code that shows nick changes on entire net
+when umode +j (JUNK). Also, went through channel.c
+and made all snotices look "nicer"
+--Luke
+===================================
+
+Moved cloak keys to unrealircd.conf, since the
+.network files are public domain (in general).
+Go lynch Stskeeps if you don't like it.
+--Luke
+===================================
+
+Actually added sample lines to unrealircd.conf
+for EXEMPT_ALL and CLOAK_KEY_n. Also, changed
+version number on both that and the .network
+file, as both have changed since 3.1.3.
+--Luke
+===================================
+
+Useful /who patch incorporated, thanks to
+larne
+--Luke
+===================================
+
+Rewrote all of /who, screw everyone's patches
+mine are better!
+--Luke
+===================================
+
+More /who madness! I've added an h flag, similar
+to the o flag that you can append on the end
+for opers, so for instance say you /who *bob* h
+it will display real hosts instead of masked ones
+in the replies.
+--Luke
+===================================
+
+Oper invisibility is no longer enabled by default
+but is a provided option in ./Config
+--Luke
+===================================
+
+Changed information flag shown in /version. R now
+appears if invisibility is compiled in (even if
+disabled in unrealircd.conf)
+--Luke
+===================================
+
+rmed Config.c (broken, severely) and networks.ndx
+--Luke
+===================================
+
+Added win32-compile-guide in doc/ for people wanting
+to compile their own version for windows.
+--Luke
+===================================
+
+Once again we global when anyone that's not a local
+oper opers. I like this, if you don't email me and
+maybe I'll add a conf option for it.
+--Luke
+===================================
+
+Deprecated /akill and /rakill. Please stop using
+these commands. They're old and will be removed in
+future releases. For now they simply add/remove a
+permanent gline, which is essentially what an akill
+is anyway (yes, I know they disappear when you rehash)
+--Luke
+===================================
+
+Rewrote m_oper, massive mods to most set* and chg* functions
+--Luke
+===================================
+
+Reintroduced original patch in channel.c with mode overflow
+(saves char * for each function call)
+-- Luke
+===================================
+
+Fixed a seriously stupid bug introduced by myself with SAMODE
+globops. (Thanks to Zerwas)
+--Luke
+===================================
+
+Added additional operoverride capabilities (namely
+ability to view banlists, exemptlists, etc.)
+--Luke
+===================================
+
+Played with I line password bug for a while
+--Luke
+===================================
+
+Fixed (maybe?) an implementation with MAXBANLENGTH
+--Luke
+===================================
+
+Thanks a TON to JK, applied patch he developed to
+resolve desynch problem with mode +,-p/s.
+--Luke
+===================================
+
+Fixed I line segfault bug...lots of fun. Thanks again
+to JK for helping :)
+--Luke
+===================================
+
+---------------------------------------------
+Beta4 Released
+---------------------------------------------
+
+Incorporated STATS_ONLY_OPER patch thanks to
+psycho
+--Luke
+===================================
+
+Added JK /map patch to resolve hidden U lines
+being trivially found.
+--Luke
+===================================
+
+Fixed clients able to connect on server-only port
+bug. (thanks to worf for reporting)
+--Luke
+===================================
+
+Resolved halfops + operoverride issues
+--Luke
+===================================
+
+Fixed problem where normal users could view topics of
++s/+p channels. (removed /topic functionality for
+non channel members altogether. Channel topics can
+still be obtained via /list)
+--Luke
+===================================
+
+Finally fixed *all* mode problems that are known
+at this time. Long parameters no longer create
+desynchs, everything is happy! Fear.
+--Luke
+===================================
+
+Thanks to Zerwas, added numeric 489 for SECUREONLYCHAN
+so +z channels no longer respond with you're banned.
+--Luke
+===================================
+
+Revamped operoverride again to better handle mode walks
+--Luke
+===================================
+
+Fixed a SERIOUS security problem with c/n line passwords
+Thanks a bunch to node357 for reporting!
+--Luke
+===================================
+
+----------------------------------------------
+Beta5 Released
+----------------------------------------------
+
+Fixed bug with mirc where +a/+q were misinterpreted as modes
+without nick parameters.
+--Luke
+===================================
+
+Implemented actual prefixes for +q and +a (~ and &)
+--Luke
+===================================
+
+Modified is_chan_op and is_chanprot functions to better
+respect hierarchy (chanowner is chanprot as well as chanop)
+chanprot is chanop.
+--Luke
+===================================
+
+Fixed m_gline and m_gzline bugs. (Thanks to nighthawk for
+noticing)
+--Luke
+===================================
+
+Fixed sjoin bug with ban propagation
+--Luke
+===================================
+
+Fixed m_who bug with normal users using masks
+--Luke
+===================================
+
+Rearranged structs in struct.h to be more memory efficient
+(saved 4 bytes in User, in preparation for new operoverride
+system.)
+--Luke
+===================================
+
+Decided channel owners can deown themsleves, implemented
+as such
+--Luke
+===================================
+
+Revised operoverride system further, now default prompting
+before permitting opers to walk channel modes.
+--Luke
+===================================
+
+Scratch previous revision, redid override system altogether.
+Now done via /invite. Sts' response to those of you that
+don't like it: "fuck them"
+--Luke
+===================================
+
+Fixed lowercase host errors with cloaking (sts' patch)
+--Luke
+===================================
+
+do_mode_char fixes (mostly from sts)
+--Luke
+===================================
+
+SJ3 fixes from codemastr for possible desynch
+--Luke
+===================================
+
+Fixed prefix problem as per nighthawk
+--Luke
+===================================
+
+Temp removed +q/+a prefixes to give client coders
+chance to implement PREFIX= sanely
+--Luke
+===================================
+
+Added a nice little win32 fix to cloak.c to stop snprintf
+from breaking things all over the place
+--Luke
+===================================
+
+Fixed win32 settings.h for the few who actually recompile
+their own win32 version.
+--Luke
+===================================
+
+Minor issue with +I and new invite system resolved.
+We should remove +I altogether...
+--Luke
+===================================
+
+Rmed a bunch of files in doc/ redid some other documentation.
+--Luke
+===================================
+
+Finally redid /credits thanks to sts :P
+--Luke
+===================================
+
+Fixed OPEROVERRIDE_VERIFY Bug
+--Luke
+===================================
+
+*** Unreal3.1.4 Released ***
+
+[ Unreal 3.1.5 ]
+
+------------------------------------------
+We begin this release with a stupid
+bug fix. Yes, I severely broke userhost.
+I'm sorry.
+------------------------------------------
+
+Beta1
+----------------------------
+
+Fixed userhost displaying * all the time
+--Luke
+===================================
+
+Fixed broken m_invite, thanks to codemastr
+--Luke
+===================================
+
+Fixed halfop kick priv bug thanks to JK
+--Luke
+===================================
+
+Added Oo flags in version response if
+OPEROVERRIDE is enabled, and OPEROVERRIDE_VERIFY
+enabled.
+--Luke
+===================================
+
+Removed LEAST_IDLE, served no useful purpose
+really.
+--Luke
+===================================
+
+Fixed grammatical error thanks to MorPheus
+--Luke
+===================================
+
+Fixed m_invite, really. I tested it this time :)
+--Luke
+===================================
+
+Changed +A/+O bans to act more sanely
+--Luke
+===================================
+
+Fixed cloaking fun for hosts w/out . (from codemastr)
+--Luke
+===================================
+
+Copied fixes to /helpop from 3.2 reported by FrostByghte
+--Luke
+===================================
+
+Applied weird sts patch for dynamic allocation of nick
+field in topics
+--Luke
+===================================
+
+Fixed broken /who
+--Luke
+===================================
+
+Fixed bug with /whois and +I
+--Luke
+===================================
+
+Fixed exempt propagation bug
+--Luke
+===================================
+
+------------------------------------------------------
+Beta2 Released
+------------------------------------------------------
+
+Fixed m_who bug displaying channels
+when it isn't supposed to, thanks to frozen
+--Luke
+===================================
+
+Fixed issue with server IP addresses being
+shown to normal +s lusers (thanks to MrAllthat)
+--Luke
+===================================
+
+Added prefixes for channel owner/protected to
+/who and /whois (& and ~). They probably should never
+have been removed. Still to be implemented
+are actual prefixes in /names.
+--Luke
+===================================
+
+Small m_who bug with opers fixed.
+--Luke
+===================================
+
+Implemented awesome new feature for operoverride, per
+codemastr. You now need the letter "v" in your O line
+in order to be able to override!
+--Luke
+===================================
+
+------------------------------------------------------
+Beta3 Released
+------------------------------------------------------
+
+Fixed problem with topics screwing up services
+--Luke
+===================================
+
+Fixed semantics with operoverride_verify and +s/+p
+channels.
+--Luke
+===================================
+
+Kill me. Really. Still trying to fix services fun...
+--Luke
+===================================
+
+Given up for now on fixing the services "problem."
+(it isn't really a problem, afaik, it's just annoying.)
+Anyone that has ideas about what causes it, or how
+it can be fixed email luke@unrealircd.com.
+The problem is that IRC Services 5 starts sending out
+notices about being "unable to set modes for #channel"
+blah blah. There isn't any indication of anything actually
+being bounced, so we're not sure why it happens.
+--Luke
+===================================
+
+*** Unreal 3.1.5 Released ***
+
+[ Unreal 3.1.5.1 ]
+--------------------------------------------------
+Had I only known what I was getting myself into...
+--------------------------------------------------
+
+Fixed a "bug" too stupid to be listed here. No, I
+didn't introduce it, and apparently it has existed
+since pre-3.0. *shudder*
+--Luke
+===================================
+
+Fixed bug with "empty" channels showing up in list with
+60 something odd thousand users in it. (found by codemastr)
+--Luke
+===================================
+
+Fixed compilation error when NO_OPEROVERRIDE is defined,
+reported by Joe.
+--Luke
+===================================
+
+Ummm, yea, you want to upgrade. There's a, um, bug that
+probably isn't a good thing
+--Luke
+===================================
+
+*** Unreal 3.1.5.1 Released ***
+
+[ Unreal 3.1.6 ]
+--------------------------------------------------
+No comment.
+--------------------------------------------------
+
+Initial release prep, changing version numbers in cvs
+(again).
+===================================
+
+Fixed /botserv bug, reported by SciFi
+--Luke
+===================================
+
+Unbroke +A channels and bans. :-/
+--Luke
+===================================
+
+Removed +I. Don't you dare even think about whining.
+--Luke
+===================================
+
+Added chmode +R, requires umode +r to speak.
+--Luke
+===================================
+
+Deleted extra, unused oflag...wmaster.
+--Luke
+===================================
+
+Added a max of 500:500 to +f
+--Luke
+===================================
+
+Removed USE_LONGMODE.
+--Luke
+===================================
+
+Added modes S, M to common.h.
+--Luke
+===================================
+
+Added end of stats messages in /gline, /gzline, /shun
+--Luke
+===================================
+
+Fixed bug in channel mode +L
+--Luke
+===================================
+
+Fixed -o+b user *!*@blah.com halfop stuff.
+--Luke
+===================================
+
+Fixed bug where HCN would display exit client notices twice.
+--Luke
+===================================
+
+Modified it so people with override flag in O line can
+dechanown, dechanprot people.
+--Luke
+===================================
+
+Small m_topic bug resolved
+--Luke
+===================================
+
+Backported m_message fix from 3.2, fixed by Syzop, reported by Ashkrynt
+-Stskeeps
+===================================
+
+** Unreal3.1.6 released **

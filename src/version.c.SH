@@ -1,10 +1,16 @@
 # $Id$
+case $CONFIG in
+'')	 if test -r ../config.sh
+	 then 
+	    . ../config.sh ;
+	 else 
+	    spitshell=cat
+	    package=IRC
+	 fi
+	 ;;
+esac
 
 echo "Extracting src/version.c..."
-
-id=`grep '$Id: Changes,v' ../Changes`
-id=`echo $id |sed 's/.* Changes\,v \(.*\) .* Exp .*/\1/'`
-echo "$id"
 
 if test -r version.c
 then
@@ -21,7 +27,7 @@ awk '{if (NF == 6) \
 else \
          { print $1 " "  $2 " " $3 " " $7 " at " $4 " " $5 " " $6 }}'`
 
-cat >version.c <<!SUB!THIS!
+$spitshell >version.c <<!SUB!THIS!
 /*
  *   IRC - Internet Relay Chat, ircd/version.c
  *   Copyright (C) 1990 Chelsea Ashley Dyerman
@@ -55,7 +61,7 @@ char *generation = "$generation";
 char *creation = "$creation";
 #define IRCDTOTALVERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
 char *version = IRCDTOTALVERSION;
-char *buildid = "$id";
+
 /* moved to s_serv.c */
 char *infotext[] = 
 { 0 };
@@ -69,8 +75,8 @@ char *unrealcredits[] =
 	"http://unrealircd.com/credits.html - and not forgotten",
 	"-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=",
 "	The UnrealIRCd Team would like to thank:",
-""
-"Nutcais - Phil Hawkins",
+"",
+"Nutcais (Phil Hawkins)",
 "- the original shell for Unreal development, useful comments,",
 "  and supporting the project all through its life. Thanks for",
 "  helping to get this project to take off.",
@@ -85,16 +91,10 @@ char *unrealcredits[] =
 "Interlink Access Corp, Jan Knutar, ThePlayer, Headbang",
 "noriko, powerstorm.net",
 "- Hardware, software, or financial donations - Thank you",
-"  for the support. ",
+"  for the support.",
 "",
 "Phil Veale - email@phillipveale.com - http://www.flame.tiefighter.org",
 "- Donating webhosting for the project amongst other things",
-"",
-"cknight^",
-"- Donating a FreeBSD box to the Unreal project to host some stuff",
-"",
-"KIREnet.com - http://www.kirenet.com",
-"- Donating hosting for the above box on their line :)",
 "",
 "Thanks to the supporter staff:",
 "apt, TheEggMan, nemesis, Ron885, iDw-badSol, SciFi",
@@ -104,14 +104,14 @@ char *unrealcredits[] =
 "without officially joining the staff.",
 "",
 "Thanks go to all current mirror & DNS hosters. We really",
-"value your donations. ",
+"value your donations.",
 "",
 "Stskeeps would primarily like to thank Julie for her",
-"support through the years.  See the page for a more extensive",
-"list of all the coders' credits. ",
+"support through the years. See the page for a more extensive",
+"list of all the coders' credits.",
 "",
-"This IRCd is dedicated to those who have kept us rocking and", 
-"in good mood all through the years we've struggled with this"
+"This IRCd is dedicated to those who have kept us rocking and",
+"in a good mood all through the years we've struggled with this",
 "project. Unreal3.0 and up is dedicated to Morrigan.",
 	0
 };
@@ -147,8 +147,7 @@ char unreallogo[] =
 92,95,95,95,124,92,95,95,44,95,124,
 95,124,92,95,95,95,47,92,95,124,32,
 92,95,124,32,92,95,95,95,95,47,92,
-95,95,44,95,124,10,0,85,110,114,
-101,97,108,0};
+95,95,44,95,124,10,0};
 
 char *dalinfotext[] =
     {

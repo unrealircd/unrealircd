@@ -6,7 +6,6 @@
 #include "sys.h"
 #include "numeric.h"
 #include "h.h"
-#include "proto.h"
 #include <string.h>
 
 static int hash(char *);	/*

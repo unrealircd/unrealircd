@@ -22,12 +22,11 @@
  * Changed the order of defines...
  */
 
-#ifndef CLEAN_COMPILE
+#ifndef lint
 static char sccsid[] =
     "@(#)parse.c	2.33 1/30/94 (C) 1988 University of Oulu, \
 Computing Center and Jarkko Oikarinen";
 #endif
-#include <string.h>
 #include "struct.h"
 #include "common.h"
 
@@ -44,7 +43,7 @@ char backupbuf[8192];
 #include "sys.h"
 #include "numeric.h"
 #include "h.h"
-#include "proto.h"
+
 
 /*
  * NOTE: parse() should not be called recursively by other functions!
@@ -53,8 +52,9 @@ extern int lifesux;
 static char *para[MAXPARA + 1];
 
 static char sender[HOSTLEN + 1];
-static int cancel_clients(aClient *, aClient *, char *);
-static void remove_unknown(aClient *, char *);
+static int cancel_clients PROTO((aClient *, aClient *, char *));
+static void remove_unknown PROTO((aClient *, char *));
+static char unknownserver[] = "Unknown.Server";
 static char nsprefix = 0;
 /*
 **  Find a client (server or user) by name.
@@ -64,7 +64,9 @@ static char nsprefix = 0;
 **	the old. 'name' is now assumed to be a null terminated
 **	string and the search is the for server and user.
 */
-aClient inline *find_client(char *name, aClient *cptr)
+aClient inline *find_client(name, cptr)
+	char *name;
+	aClient *cptr;
 {
 
 	if (name)
@@ -74,7 +76,9 @@ aClient inline *find_client(char *name, aClient *cptr)
 	return cptr;
 }
 
-aClient inline *find_nickserv(char *name, aClient *cptr)
+aClient inline *find_nickserv(name, cptr)
+	char *name;
+	aClient *cptr;
 {
 	if (name)
 		cptr = hash_find_nickserver(name, cptr);
@@ -96,7 +100,9 @@ aClient inline *find_nickserv(char *name, aClient *cptr)
 **	the old. 'name' is now assumed to be a null terminated
 **	string.
 */
-aClient inline *find_server(char *name, aClient *cptr)
+aClient inline *find_server(name, cptr)
+	char *name;
+	aClient *cptr;
 {
 	if (name)
 	{
@@ -106,7 +112,9 @@ aClient inline *find_server(char *name, aClient *cptr)
 }
 
 
-aClient inline *find_name(char *name, aClient *cptr)
+aClient inline *find_name(name, cptr)
+	char *name;
+	aClient *cptr;
 {
 	aClient *c2ptr = cptr;
 
@@ -133,7 +141,9 @@ aClient inline *find_name(char *name, aClient *cptr)
 /*
 **  Find person by (nick)name.
 */
-aClient *find_person(char *name, aClient *cptr)
+aClient *find_person(name, cptr)
+	char *name;
+	aClient *cptr;
 {
 	aClient *c2ptr = cptr;
 
@@ -148,8 +158,6 @@ aClient *find_person(char *name, aClient *cptr)
 
 void ban_flooder(aClient *cptr)
 {
-	int i;
-	aClient *acptr;
 	char hostip[128], mo[100], mo2[100];
 	char *tkllayer[9] = {
 		me.name,	/*0  server.name */
@@ -163,48 +171,18 @@ void ban_flooder(aClient *cptr)
 		NULL		/*8  reason */
 	};
 
-	strlcpy(hostip, Inet_ia2p(&cptr->ip), sizeof(hostip));
+	strcpy(hostip, (char *)inetntoa((char *)&cptr->ip));
+/*	exit_client(cptr, cptr, &me, "Flooding"); */
 
 	tkllayer[4] = hostip;
 	tkllayer[5] = me.name;
-	ircsprintf(mo, "%li", UNKNOWN_FLOOD_BANTIME + TStime());
+	ircsprintf(mo, "%li", 600 + TStime());
 	ircsprintf(mo2, "%li", TStime());
 	tkllayer[6] = mo;
 	tkllayer[7] = mo2;
 	tkllayer[8] = "Flood from unknown connection";
-	/* This removes all unknown clients from the specified IP, it should prevent
- 	 * duplicate notices about the flood */
-	for (i = 0; i <= LastSlot; i++)
-	{
-		if (!(acptr = local[i]))
-			continue;
-		if (!IsUnknown(acptr))
-			continue;
-#ifndef INET6
-		if (acptr->ip.S_ADDR == cptr->ip.S_ADDR)
-#else
-		if (!bcmp(acptr->ip.S_ADDR, cptr->ip.S_ADDR, sizeof(cptr->ip.S_ADDR)))
-#endif
-			exit_client(acptr, acptr, acptr, "Flood from unknown connection");
-	}
 	m_tkl(&me, &me, 9, tkllayer);
 	return;
-}
-
-/*
- * This routine adds fake lag if needed.
- */
-inline void parse_addlag(aClient *cptr, int cmdbytes)
-{
-	if (!IsServer(cptr) && 
-#ifdef FAKE_LAG_FOR_LOCOPS	
-	!IsAnOper(cptr))
-#else
-	!IsOper(cptr))
-#endif		
-	{
-		cptr->since += (1 + cmdbytes/90);
-	}		
 }
 
 /*
@@ -212,28 +190,34 @@ inline void parse_addlag(aClient *cptr, int cmdbytes)
  *
  * NOTE: parse() should not be called recusively by any other fucntions!
  */
-int  parse(aClient *cptr, char *buffer, char *bufend)
+int  parse(cptr, buffer, bufend, mptr)
+	aClient *cptr;
+	char *buffer, *bufend;
+	struct Message *mptr;
 {
 	aClient *from = cptr;
 	char *ch, *s;
-	int  len, i, numeric = 0, paramcount, noprefix = 0;
+	int  len, i, numeric, paramcount, noprefix = 0;
+	int  token, mfound;
 #ifdef DEBUGMODE
 	time_t then, ticks;
 	int  retval;
 #endif
-	aCommand *cmptr = NULL;
+	struct Message *bmptr;
 
 	Debug((DEBUG_ERROR, "Parsing: %s (from %s)", buffer,
 	    (*cptr->name ? cptr->name : "*")));
 	if (IsDead(cptr))
 		return 0;
 
-	if ((cptr->receiveK >= UNKNOWN_FLOOD_AMOUNT) && IsUnknown(cptr))
+/*	sendto_realops("Debug: parse(): %s", buffer); */
+
+	if ((cptr->receiveK >= 4) && IsUnknown(cptr))
 	{
-		sendto_snomask(SNO_FLOOD, "Flood from unknown connection %s detected",
-			cptr->sockhost);
+		sendto_realops("Flood from unknown connection %s detected",
+		    cptr->sockhost);
 		ban_flooder(cptr);
-		return FLUSH_BUFFER;
+		return 0;
 	}
 
 	/* this call is a bit obsolete? - takes up CPU */
@@ -336,7 +320,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 	if (len == 3 &&
 	    isdigit(*ch) && isdigit(*(ch + 1)) && isdigit(*(ch + 2)))
 	{
-		cmptr = NULL;
+		mptr = NULL;
 		numeric = (*ch - '0') * 100 + (*(ch + 1) - '0') * 10
 		    + (*(ch + 2) - '0');
 		paramcount = MAXPARA;
@@ -344,20 +328,45 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 	}
 	else
 	{
-		int flags = 0;
-		int bytes = bufend - ch;
 		if (s)
 			*s++ = '\0';
-		if (!IsRegistered(from))
-			flags |= M_UNREGISTERED;
-		if (IsPerson(from))
-			flags |= M_USER;
-		if (IsServer(from))
-			flags |= M_SERVER;
-		if (IsShunned(from))
-			flags |= M_SHUN;
-		cmptr = find_Command(ch, IsServer(cptr) ? 1 : 0, flags);
-		if (!cmptr)
+
+		/* xx or x = token :P */
+		if ((strlen(ch) < 3) && IsServer(cptr))
+		{
+			token = 1;
+		}
+		else
+		{
+			token = 0;
+		}
+		bmptr = mptr;
+
+		/* run a fast token search through if token */
+		mfound = 0;
+		if (token == 1)
+		{
+			for (; mptr->cmd; mptr++)
+			{
+				if (strcmp(mptr->token, ch) == 0)
+				{
+					mfound = 1;
+					break;
+				}
+			}
+		}
+
+		/* no token match .. grr :P */
+		if (mfound == 0)
+		{
+			mptr = bmptr;
+			for (; mptr->cmd; mptr++)
+			{
+				if (mycmp(mptr->cmd, ch) == 0)
+					break;
+			}
+		}
+		if (!mptr->cmd)
 		{
 			/*
 			   ** Note: Give error message *only* to recognized
@@ -369,18 +378,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 			   ** should never be generated, though...  --msa
 			   ** Hm, when is the buffer empty -- if a command
 			   ** code has been found ?? -Armin
-			   ** This error should indeed not be sent in case
-			   ** of notices -- Syzop.
 			 */
-			if (!IsRegistered(cptr) && stricmp(ch, "NOTICE")) {
-				sendto_one(from, ":%s %d %s :You have not registered",
-				    me.name, ERR_NOTREGISTERED, ch);
-				parse_addlag(cptr, bytes);
-				return -1;
-			}
-			if (IsShunned(cptr))
-				return -1;
-				
 			if (buffer[0] != '\0')
 			{
 				if (IsPerson(from))
@@ -390,25 +388,21 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 					    from->name, ch);
 				Debug((DEBUG_ERROR, "Unknown (%s) from %s",
 				    ch, get_client_name(cptr, TRUE)));
-				parse_addlag(cptr, bytes);
 			}
 			ircstp->is_unco++;
 			return (-1);
 		}
-		if (cmptr->flags != 0) { /* temporary until all commands are updated */
-		if ((flags & M_USER) && !(cmptr->flags & M_USER))
+		paramcount = mptr->parameters;
+		i = bufend - ch;	/* Is this right? -Donwulff */
+		mptr->bytes += i;
+		/* Changed this whole lag generating crap .. 
+		 * We only generate fake lag in HTM ..
+		 * --Stskeeps
+		*/
+		if (!IsServer(cptr) && !IsOper(cptr))
 		{
-			sendto_one(cptr, rpl_str(ERR_NOTFORUSERS), me.name,
-					from->name, cmptr->cmd);
-			return -1;
-		}
-		if ((flags & M_SERVER) && !(cmptr->flags & M_SERVER))
-			return -1;
-		}
-		paramcount = cmptr->parameters;
-		cmptr->bytes += bytes;
-		if (!(cmptr->flags & M_NOLAG))
-			parse_addlag(cptr, bytes);
+			cptr->since += (2 + i / 90);
+		}		
 	}
 	/*
 	   ** Must the following loop really be so devious? On
@@ -423,13 +417,8 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 	i = 0;
 	if (s)
 	{
-		/*
 		if (paramcount > MAXPARA)
 			paramcount = MAXPARA;
-		We now use functions to create commands, so we can just check this 
-		once when the command is created rather than each time the command
-		is used -- codemastr
-		*/
 		for (;;)
 		{
 			/*
@@ -458,30 +447,46 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 		}
 	}
 	para[++i] = NULL;
-	if (cmptr == NULL)
+	if (mptr == NULL)
 		return (do_numeric(numeric, cptr, from, i, para));
-	cmptr->count++;
-	if (IsRegisteredUser(cptr) && (cmptr->flags & M_RESETIDLE))
-		cptr->last = TStime();
+	/* now, lets make sure they use a legit commnd... -nikb */
+	/* There is code in s_serv.c for ADMIN and VERSION and
+	 * in s_user.c for NOTICE to limit commands by 
+	 * unregistered users. -Studded */
+	if (IsShunned(cptr) && IsRegistered(cptr))
+		if ((mptr->func != m_admin) && (mptr->func != m_quit)
+		    && (mptr->func != m_pong))
+			return -4;
+
+	if ((!IsRegistered(cptr)) &&
+	    (((mptr->func != m_user) && (mptr->func != m_nick) &&
+	    (mptr->func != m_server) && (mptr->func != m_pong) &&
+	    (mptr->func != m_pass) && (mptr->func != m_quit) &&
+	    (mptr->func != m_protoctl) && (mptr->func != m_error) &&
+	    (mptr->func != m_admin) && (mptr->func != m_version)
+	    )))
+	{
+		sendto_one(from, ":%s %d %s :You have not registered",
+		    me.name, ERR_NOTREGISTERED, ch);
+		return -1;
+	}
+
+	mptr->count++;
+	if (IsRegisteredUser(cptr) && mptr->func == m_private)
+		from->user->last = TStime();
 
 #ifndef DEBUGMODE
-	if (cmptr->flags & M_ALIAS)
-		return (*cmptr->func) (cptr, from, i, para, cmptr->cmd);
-	else
-		return (*cmptr->func) (cptr, from, i, para);
+	return (*mptr->func) (cptr, from, i, para);
 #else
 	then = clock();
-	if (cmptr->flags & M_ALIAS)
-		retval = (*cmptr->func) (cptr, from, i, para, cmptr->cmd);
-	else 
-		retval = (*cmptr->func) (cptr, from, i, para);
+	retval = (*mptr->func) (cptr, from, i, para);
 	if (retval != FLUSH_BUFFER)
 	{
 		ticks = (clock() - then);
 		if (IsServer(cptr))
-			cmptr->rticks += ticks;
+			mptr->rticks += ticks;
 		else
-			cmptr->lticks += ticks;
+			mptr->lticks += ticks;
 		cptr->cputime += ticks;
 	}
 
@@ -489,7 +494,56 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 #endif
 }
 
-static int cancel_clients(aClient *cptr, aClient *sptr, char *cmd)
+/*
+ * field breakup for ircd.conf file.
+ */
+char *getfield(newline)
+	char *newline;
+{
+	static char *line = NULL;
+	char *end, *field, *x;
+
+	if (newline)
+		line = newline;
+	if (line == NULL)
+		return (NULL);
+
+	field = line;
+	if (*field == '"')
+	{
+		field++;
+		x = index(field, '"');
+		if (!x)
+		{
+			sendto_ops("FATAL: Misplaced \" in ircd.conf line!");
+			s_die();
+		}
+		*x = '\0';
+		x++;
+		if (*x == '\n')
+			line = NULL;
+		else
+			line = x;
+		end = x;
+		line++;
+		goto end1;
+	}
+	if ((end = (char *)index(line, ':')) == NULL)
+	{
+		line = NULL;
+		if ((end = (char *)index(field, '\n')) == NULL)
+			end = field + strlen(field);
+	}
+	else
+		line = end + 1;
+      end1:
+	*end = '\0';
+	return (field);
+}
+
+static int cancel_clients(cptr, sptr, cmd)
+	aClient *cptr, *sptr;
+	char *cmd;
 {
 	/*
 	 * kill all possible points that are causing confusion here,
@@ -598,7 +652,9 @@ static int cancel_clients(aClient *cptr, aClient *sptr, char *cmd)
 	return exit_client(cptr, cptr, &me, "Fake prefix");
 }
 
-static void remove_unknown(aClient *cptr, char *sender)
+static void remove_unknown(cptr, sender)
+	aClient *cptr;
+	char *sender;
 {
 	if (!IsRegistered(cptr) || IsClient(cptr))
 		return;
