@@ -525,3 +525,4 @@
 - Made find_server_quick a prototype, and made some work more quicker as
   well
 - Removed the : in :nick NICK newnick :timestamp
+- Added script ./update to help update, uses pull technology (wget, cvs)
