@@ -168,5 +168,18 @@ long	umode_get(char ch)
 
 int	umode_delete(char ch, long val)
 {
+	int i = 0;
+	Debug((DEBUG_DEBUG, "umode_delete %c, %li",
+		ch, val));	
 	
-} 
+	while (i < UMODETABLESZ)
+	{
+		if ((Usermode_Table[i].flag == ch) && (Usermode_Table[i].mode == val))
+		{
+			Usermode_Table[i].flag = '\0';
+			return 1;
+		}	
+		i++;
+	}
+	return -1;
+}
