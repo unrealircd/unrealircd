@@ -591,8 +591,7 @@ static void remove_unknown(aClient *cptr, char *sender)
 	 */
 	if (!index(sender, '.') && !nsprefix)
 		sendto_one(cptr, ":%s KILL %s :%s (%s(?) <- %s)",
-		    me.name, sender, me.name, sender,
-		    get_client_name(cptr, FALSE));
+		    me.name, sender, me.name, sender, cptr->name);
 	else
 		sendto_one(cptr, ":%s SQUIT %s :(Unknown from %s)",
 		    me.name, sender, get_client_name(cptr, FALSE));
