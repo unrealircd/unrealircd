@@ -690,4 +690,4 @@
   RPL_STATSDLINE (which we are already using for >5 years).
   If you wonder why we didn't use the RPL_WHOISSECURE numeric as-is (even though I haven't
   seen it in use anywhere), then that's because we wanted to minimize display problems in
-  the transition period.
+  the transition period and the extra parameter would not be used by us anyway.
