@@ -130,7 +130,11 @@
  *   channels, preventing them from "accidentally" joining random
  *   channels
  */
+#ifndef NO_OPEROVERRIDE
+#define OPEROVERRIDE_VERIFY 1
+#else
 #undef OPEROVERRIDE_VERIFY
+#endif
 
 /*
  * Disable /sethost, /setident, /chgname, /chghost, /chgident 
@@ -614,8 +618,6 @@ extern void debug();
 #	define LOGFILE "/dev/null"
 # endif
 #endif
-
-#  undef LEAST_IDLE
 
 #if defined(mips) || defined(PCS)
 #undef SYSV

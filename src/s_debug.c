@@ -54,9 +54,6 @@ char serveropts[] = {
 #ifndef	NO_DEFAULT_INVISIBLE
 	'I',
 #endif
-#ifdef	LEAST_IDLE
-	'L',
-#endif
 #ifdef	CRYPT_OPER_PASSWORD
 	'p',
 #endif
@@ -86,6 +83,12 @@ char serveropts[] = {
 #endif
 #ifdef ENABLE_INVISOPER
 	'R',
+#endif
+#ifndef NO_OPEROVERRIDE
+	'O',
+#endif
+#ifdef OPEROVERRIDE_VERIFY
+	'o',
 #endif
 #ifdef NO_IDENT_CHECKING
 	'K',

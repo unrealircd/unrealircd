@@ -3436,6 +3436,18 @@ int  m_kick(cptr, sptr, parc, parv)
 					    me.name, sptr->name, chptr->chname);
 					goto deny;
 				}
+
+				/* I pondered adding && !is_chan_op(who,chptr) in with is_half_op, but that's redundant
+				 * since the previous check would already have sent you to deny.
+				 */
+				if (is_half_op(who,chptr) && is_halfop(sptr,chptr)
+				    && !is_chan_op(sptr,chptr))
+				{
+					sendto_one(sptr,
+					    ":%s NOTICE %s :*** You cannot kick halfops on %s if you are only a halfop",
+		    			    me.name, sptr->name, chptr->chname);
+	    				goto deny;
+				}
 				
 				/* Protected users, Owners, and Services can't get nailed unless they're nailing themselves
 				 * However, owners CAN nail protected users, as they're higher.
@@ -3829,37 +3841,42 @@ int  m_invite(cptr, sptr, parc, parv)
 	if (over) {
 		if (is_banned(acptr, sptr, chptr))
 		{
-				sendto_umode(UMODE_EYES,
-				  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +b).",
-				  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+			sendto_umode(UMODE_EYES,
+			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +b).",
+			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
 		}
 		else if (chptr->mode.mode & MODE_INVITEONLY)
 		{
-				sendto_umode(UMODE_EYES,
-				  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +i).",
-				  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+			sendto_umode(UMODE_EYES,
+			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +i).",
+			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
 		}
 		else if (chptr->mode.limit)
 		{
-				sendto_umode(UMODE_EYES,
-				  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +l).",
-				  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+			sendto_umode(UMODE_EYES,
+			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +l).",
+			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
 		}
 		else if (chptr->mode.mode & MODE_RGSTRONLY)
 		{
-				sendto_umode(UMODE_EYES,
-				  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +R).",
-				  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+			sendto_umode(UMODE_EYES,
+			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +R).",
+			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
 		}
 		else if (*chptr->mode.key)
 		{
-				sendto_umode(UMODE_EYES,
-				  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +k).",
-				  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+			sendto_umode(UMODE_EYES,
+			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +k).",
+			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
 		}
 #ifdef OPEROVERRIDE_VERIFY
 		else if (chptr->mode.mode & MODE_SECRET || chptr->mode.mode & MODE_PRIVATE)
-		       over = -1;	
+		{
+			sendto_umode(UMODE_EYES,
+			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (potentially overriding +s or +p).",
+			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+ 			over = -1;
+		}
 #endif
 		else
 			return 0;
