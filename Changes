@@ -753,3 +753,4 @@
 - Added doc/help.de.conf and doc/example.hu.conf
 - Fixed +s/+p and +c/+S desynch issue during netmerge, reported by Ron2K (#0002391).
 - Fixed a bug where an unknown operflag would cause a crash.
+- Windows versions will now be compiled with zlib 1.2.2 and curl 7.13.1.
