@@ -1673,3 +1673,4 @@ seen. gmtime warning still there
 - Changed the module config system slightly to be able to detect more errors.
 - /rehash for conf3 (that works) :)
 - Fixed win32 compile error with default: ;
+- Fixed several conf3 errors

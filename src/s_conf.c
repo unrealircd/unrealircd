@@ -2173,13 +2173,7 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else
 	{
-		if (!cep->ce_vardata)
-		{
-			config_error("%s:%i: me::name without contents",
-				cep->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			errors++;
-		}
-		else
+		if (cep->ce_vardata)
 		{
 			if (!strchr(cep->ce_vardata, '.'))
 			{	
@@ -2197,19 +2191,16 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else
 	{
-		if (!cep->ce_vardata)
+
+		if (cep->ce_vardata)
 		{
-			config_error("%s:%i: me::info without contents",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			errors++;
-		}
-		else
-		if (strlen(cep->ce_vardata) > (REALLEN-1))
-		{
-			config_error("%s:%i: too long me::info, must be max. %i characters",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, REALLEN-1);
-			errors++;
+			if (strlen(cep->ce_vardata) > (REALLEN-1))
+			{
+				config_error("%s:%i: too long me::info, must be max. %i characters",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum, REALLEN-1);
+				errors++;
 		
+			}
 		}
 	}
 	if (!(cep = config_find_entry(ce->ce_entries, "numeric")))
@@ -2220,13 +2211,7 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else
 	{
-		if (!cep->ce_vardata)
-		{
-			config_error("%s:%i: me::name without contents",
-				cep->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			errors++;
-		}
-		else
+		if (cep->ce_vardata)
 		{
 			l = atol(cep->ce_vardata);
 			if ((l < 0) && (l > 254))
@@ -3003,16 +2988,16 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			errors++; continue;
 		}
-		if (!cep->ce_vardata && !cep->ce_entries)
-		{
-			config_error("%s:%i: listen::%s without parameter",
-				cep->ce_fileptr->cf_filename,
-				cep->ce_varlinenum,
-				cep->ce_varname);
-			errors++; continue;
-		}
 		if (!strcmp(cep->ce_varname, "options"))
 		{
+			if (!cep->ce_entries)
+			{
+				config_error("%s:%i: listen::%s without parameter",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum,
+					cep->ce_varname);
+				errors++;
+			}
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
 				if (!cepp->ce_varname)
@@ -3158,6 +3143,7 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 				return -1;
 			}
+			return (errors ? -1 : 1);
 		}
 	}
 
@@ -3171,23 +3157,79 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 		if (!strcmp(cep->ce_varname, "ip"))
 		{
+			if (!cep->ce_vardata)
+			{
+				config_error("%s:%i: allow::%s without contents",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum,
+					cep->ce_varname);
+				errors++; continue;
+			}
 		} else
 		if (!strcmp(cep->ce_varname, "maxperip"))
 		{
+			if (!cep->ce_vardata)
+			{
+				config_error("%s:%i: allow::%s without contents",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum,
+					cep->ce_varname);
+				errors++; continue;
+			}
 		} else
 		if (!strcmp(cep->ce_varname, "hostname"))
 		{
+			if (!cep->ce_vardata)
+			{
+				config_error("%s:%i: allow::%s without contents",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum,
+					cep->ce_varname);
+				errors++; continue;
+			}
 		} else
 		if (!strcmp(cep->ce_varname, "password"))
 		{
+			if (!cep->ce_vardata)
+			{
+				config_error("%s:%i: allow::%s without contents",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum,
+					cep->ce_varname);
+				errors++; continue;
+			}
 		} else
 		if (!strcmp(cep->ce_varname, "class"))
 		{
+			if (!cep->ce_vardata)
+			{
+				config_error("%s:%i: allow::%s without contents",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum,
+					cep->ce_varname);
+				errors++; continue;
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "redirect-server"))
 		{
+			if (!cep->ce_vardata)
+			{
+				config_error("%s:%i: allow::%s without contents",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum,
+					cep->ce_varname);
+				errors++; continue;
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "redirect-port")) {
+			if (!cep->ce_vardata)
+			{
+				config_error("%s:%i: allow::%s without contents",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum,
+					cep->ce_varname);
+				errors++; continue;
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "options")) {
 		}
@@ -3248,6 +3290,14 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 	*/
 	if ((cep = config_find_entry(ce->ce_entries, "options")))
 	{
+		if (!cep->ce_entries)
+		{
+			config_error("%s:%i: allow::%s without parameter",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum,
+				cep->ce_varname);
+			errors++;
+		}
 		for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 			if (!strcmp(cepp->ce_varname, "noident"))
 			{}
@@ -3496,7 +3546,7 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 			return -1;
 
 		}
-		return 1;
+		return (errors ? -1 : 1);
 	}
 	else {
 		int used = 0;
@@ -3531,7 +3581,7 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 			return -1;
 		}
 	}
-	return 1;
+	return (errors ? -1 : 1);
 }
 
 /*
@@ -3926,7 +3976,8 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 			errors++; continue;
 		}
 		if (!strcmp(cep->ce_varname, "flags")) {}
-		else if (!strcmp(cep->ce_varname, "maxsize")) {}
+		else if (!strcmp(cep->ce_varname, "maxsize")) {
+		}
 		else {
 			config_error("%s:%i: unknown directive log::%s",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
@@ -4245,6 +4296,7 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 				ce->ce_vardata);
 			return -1;
 		}
+		return (errors ? -1 : 1);
 	}
 	
 	if (!(cep = config_find_entry(ce->ce_entries, "mask")))
@@ -4253,11 +4305,32 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
 		errors++;
 	}
+	else {
+		if (!cep->ce_vardata)
+		{
+			config_error("%s:%i: ban::%s without contents",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum,
+				cep->ce_varname);
+			errors++;
+		}
+	}
+
 	if (!(cep = config_find_entry(ce->ce_entries, "reason")))
 	{
 		config_error("%s:%i: ban %s::reason missing",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
 		errors++;
+	}
+	else {
+		if (!cep->ce_vardata)
+		{
+			config_error("%s:%i: ban::%s without contents",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum,
+				cep->ce_varname);
+			errors++;
+		}
 	}
 	return (errors > 0 ? -1 : 1);	
 }
