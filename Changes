@@ -1790,3 +1790,5 @@ seen. gmtime warning still there
 - Fixed compile error in makefile.win32.ssl (added src/random.c).
 - Fixed compile error in src/random.c at win32.
 - Added end of stats message to /kline, /gline, etc.
+- Fixed some of the FreeBSD warnings, like 'Cannot accept connections' and 'getsockopt(IP_OPTIONS)'
+  (#0000616) and also changed report_error() to give additional error info.

@@ -265,11 +265,10 @@ void add_local_domain(char *hname, int size)
 */
 void report_error(char *text, aClient *cptr)
 {
-	int errtmp = ERRNO;
-	char *host;
-	int  err, len = sizeof(err);
+	int errtmp = ERRNO, origerr = ERRNO;
+	char *host, xbuf[256];
+	int  err, len = sizeof(err), n;
 	
-
 	host = (cptr) ? get_client_name(cptr, FALSE) : "";
 
 	Debug((DEBUG_ERROR, text, host, strerror(errtmp)));
@@ -286,8 +285,20 @@ void report_error(char *text, aClient *cptr)
 			if (err)
 				errtmp = err;
 #endif
-	sendto_snomask(SNO_JUNK, text, host, strerror(errtmp));
-	ircd_log(LOG_ERROR, text,host,strerror(errtmp));
+	if (origerr != errtmp) {
+		/* Socket error is different than original error,
+		 * some tricks are needed because of 2x strerror() (or at least
+		 * according to the man page) -- Syzop.
+		 */
+		snprintf(xbuf, 200, "[syserr='%s'", strerror(origerr));
+		n = strlen(xbuf);
+		snprintf(xbuf+n, 256-n, ", sockerr='%s']", strerror(errtmp));
+		sendto_snomask(SNO_JUNK, text, host, xbuf);
+		ircd_log(LOG_ERROR, text, host, xbuf);
+	} else {
+		sendto_snomask(SNO_JUNK, text, host, strerror(errtmp));
+		ircd_log(LOG_ERROR, text,host,strerror(errtmp));
+	}
 	return;
 }
 
@@ -1022,7 +1033,8 @@ void set_sock_opts(int fd, aClient *cptr)
 		opt = sizeof(readbuf) / 8;
 		if (getsockopt(fd, IPPROTO_IP, IP_OPTIONS, (OPT_TYPE *)t,
 		    &opt) < 0)
-			report_error("getsockopt(IP_OPTIONS) %s:%s", cptr);
+		    if (ERRNO != ECONNRESET) /* FreeBSD can generate this -- Syzop */
+		        report_error("getsockopt(IP_OPTIONS) %s:%s", cptr);
 		else if (opt > 0 && opt != sizeof(readbuf) / 8)
 		{
 			for (*readbuf = '\0'; opt > 0; opt--, s += 3)
@@ -1033,7 +1045,8 @@ void set_sock_opts(int fd, aClient *cptr)
 		}
 		if (setsockopt(fd, IPPROTO_IP, IP_OPTIONS, (OPT_TYPE *)NULL,
 		    0) < 0)
-			report_error("setsockopt(IP_OPTIONS) %s:%s", cptr);
+		    if (ERRNO != ECONNRESET) /* FreeBSD can generate this -- Syzop */
+			    report_error("setsockopt(IP_OPTIONS) %s:%s", cptr);
 	}
 #endif
 }
@@ -1783,7 +1796,7 @@ int  read_message(time_t delay, fdlist *listp)
 			 */
 			if ((fd = accept(cptr->fd, NULL, NULL)) < 0)
 			{
-		        if (ERRNO != P_EWOULDBLOCK)
+		        if ((ERRNO != P_EWOULDBLOCK) && (ERRNO != ECONNABORTED))
 					report_error("Cannot accept connections %s:%s", cptr);
 				break;
 			}
