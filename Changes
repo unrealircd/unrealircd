@@ -2736,3 +2736,4 @@ seen. gmtime warning still there
 - Updated some /stats docs, reported by AngryWolf (#0001283)
 - Added set::silence-limit to allow specifying how many entries may be in the SILENCE list
   also upped the default value to 15. Suggested by tabrisnet (#0001486)
+- Updated the docs to reflect that /module can now be used by users. Reported by fez (#0001434)
