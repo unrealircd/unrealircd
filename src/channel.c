@@ -3704,16 +3704,17 @@ void send_list(aClient *cptr, int numsend)
 				    && !IsMember(cptr, chptr)
 				    && !IsAnOper(cptr))
 					continue;
+					
 				if ((!lopt->showall) 
 	&& ((chptr->users < lopt->usermin) || ((lopt->usermax >= 0)
 				    && (chptr->users > lopt->usermax))
 				    || ((chptr->creationtime) <= lopt->chantimemin)
-				    || (chptr->topic_time <
+				   /* || (chptr->topic_time <
 				    lopt->topictimemin)
 				    || (chptr->creationtime >=
 				    lopt->chantimemax)
 				    || (chptr->topic_time >
-				    lopt->topictimemax)))
+				    lopt->topictimemax) */))
 					continue;
 
 				if (lopt->nolist &&
