@@ -270,14 +270,16 @@ extern void sendto_channels_inviso_part(aClient *user);
 extern void sendto_channels_inviso_join(aClient *user);
 extern void    sendto_message_one(aClient *to, aClient *from, char *sender,
     char *cmd, char *nick, char *msg);
+#define PREFIX_ALL		0
+#define PREFIX_HALFOP	0x1
+#define PREFIX_VOICE	0x2
+#define PREFIX_OP		0x4
+extern void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
+    int prefix, char *pattern, ...);
 extern void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chptr,
     int prefix, char *cmd, char *tok, char *nick, char *text);
 extern void sendto_channel_butone(aClient *, aClient *, aChannel *, char *,
     ...);
-extern void sendto_channelops_butone(aClient *, aClient *, aChannel *,
-    char *, ...);
-extern void sendto_channelvoice_butone(aClient *, aClient *, aChannel *,
-    char *, ...);
 extern void sendto_serv_butone(aClient *, char *, ...);
 extern void sendto_serv_butone_quit(aClient *, char *, ...);
 extern void sendto_serv_butone_sjoin(aClient *, char *, ...);

@@ -136,10 +136,6 @@ int	m_message_Unload(int module_unload)
 ** rev argv 6/91
 **
 */
-#define PREFIX_HALFOP	0x1
-#define PREFIX_VOICE	0x2
-#define PREFIX_OP	0x4
-
 DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice)
 {
 	aClient *acptr;
