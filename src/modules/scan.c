@@ -412,6 +412,8 @@ DLLFUNC int h_scan_info(aClient *sptr)
 
 DLLFUNC int m_scan(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
+	if (!IsOper(sptr))
+		return 0;
 	HS_Cleanup(NULL);
 	RunHook(HOOKTYPE_SCAN_INFO, sptr);
 	return 0;

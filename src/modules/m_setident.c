@@ -54,7 +54,7 @@ ModuleInfo m_setident_info
 ModuleInfo mod_header
 #endif
   = {
-  	1,
+  	2,
 	"setident",	/* Name of module */
 	"$Id$", /* Version */
 	"/setident", /* Short description of module */

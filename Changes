@@ -655,3 +655,4 @@ seen. gmtime warning still there
 - Actually added m_svsnline.c
 - Removed a bunch of unused coding
 - Win32 fixes
+- Made a /scan fix, and fixed some version numbers found by Morbid
