@@ -2858,3 +2858,5 @@ seen. gmtime warning still there
 - Ouch!! Fixed a severe bug which caused opers not being recognized on remote
   servers causing various problems... This was caused by a change 1-2 days ago.
   Reported by Rocko (#0001537).
+- Fixed fdlist bug/warning if a local operator /oper'd up twice. Reported by
+  DukePyrolator (#0001539).

@@ -152,7 +152,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		return 0;
 	}
 
-	if (IsOper(sptr)) {
+	if (IsAnOper(sptr)) {
 		sendto_one(sptr, rpl_str(RPL_YOUREOPER),
 		    me.name, parv[0]);
 		return 0;
