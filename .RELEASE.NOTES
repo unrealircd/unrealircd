@@ -74,6 +74,7 @@ Unreal3.2.3-pre1 Release Notes
 
 ==[ MAJOR BUGS FIXED ]==
 - Serious crashbug [this is the same fix that was fixed by the hotfix/3.2.2b]
+- TRE mem corruption- & crash-bugs (eg: in backreferences).
 
 ==[ MINOR BUGS FIXED ]==
 - Made kline/shun/zline/gzline without parameters report the correct stats(flag).
