@@ -10552,8 +10552,11 @@ else
 echo "$as_me: failed program was:" >&5
 cat conftest.$ac_ext >&5
 ( exit $ac_status )
-FD_SETSIZE="-DFD_SETSIZE=$ac_fd" echo "$as_me:$LINENO: result: no" >&5
+
+FD_SETSIZE="-DFD_SETSIZE=$ac_fd"
+echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
+
 fi
 rm -f core core.* *.core conftest$ac_exeext conftest.$ac_objext conftest.$ac_ext
 fi

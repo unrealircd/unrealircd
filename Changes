@@ -1457,3 +1457,5 @@ seen. gmtime warning still there
 - Removed src/s_unreal.c contained 2 functions, 1 never used, 1 used once
 - Removed /hash (did nothing), removed /post (replaced by scan_http)
 - Modulized /vhost, /cycle, /svsjoin, /svspart
+- Fixed a autoconf problem where FD_SETSIZE was NOT replaced when it wasn't big enough
+  (abort() problem on some installs.)

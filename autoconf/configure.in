@@ -371,7 +371,10 @@ if (FD_SETSIZE >= $ac_fd)
 exit(0);
 exit(1);
 }
-], AC_MSG_RESULT(yes), FD_SETSIZE="-DFD_SETSIZE=$ac_fd" AC_MSG_RESULT(no))
+], AC_MSG_RESULT(yes), [
+FD_SETSIZE="-DFD_SETSIZE=$ac_fd"
+AC_MSG_RESULT(no)
+])
 AC_SUBST(FD_SETSIZE)
 case "${host_cpu}-${host_os}" in
 SunOS*5.*)
