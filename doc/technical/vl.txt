@@ -1,0 +1,32 @@
+VL Information (c) 2002 codemastr (Dominick Meglio) [codemastr@unrealircd.com]
+(As of Unreal3.2-beta11)
+
+Protocol       Version
+------------------------------------------------------------------------------------------------
+2303           3.2-Selene
+2302           3.1.1-Darkshades, 3.1.2-Darkshades, 3.1.3-Komara, 3.1.4-Meadows
+2301           3.1-Silverheart
+2300           3.0-Morrigana
+
+Flag           Description
+------------------------------------------------------------------------------------------------
+c              Server is chrooted
+C              command line config enabled
+D              Server is in debugmode
+F              Using file descriptor lists
+h              Compiled as a hub
+i              Shows invisible users in /trace
+n              NOSPOOF enabled
+V              Uses valloc()
+W              Windows version
+Y              Syslog logging enabled
+K              No ident checking (?)
+6              IPv6 supported
+X              STRIPBADWORDS enabled (chmode/umode +G)
+P              Uses poll()
+e              SSL supported
+O              OperOverride enabled
+o              OperOverride without verify
+Z              Zip links supported
+3              3rd party modules (were) loaded
+E              Extended channel modes supported

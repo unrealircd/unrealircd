@@ -1,0 +1,102 @@
+Numeric 005 Documentation (c) 2002 codemastr (Dominick Meglio) [codemastr@unrealircd.com]
+(As of Unreal3.2-beta11)
+
+Numeric 005 allows the server to inform the client of any protocol specific features in the
+IRCd.  The numeric is sent at connection time immediately after numeric 004. Additionally
+the numeric is sent when a /version request is made by a local user, for remote users
+numeric 105 is used but contains the same information.
+
+Due to the limit imposed by RFC1459 on both the buffer size (512) and the amount of
+parameters that can be sent in a single command (15) a total of 13 parameters may be
+specified in each 005. Because of this, a client must be able to accept multiple 005s
+consecutively. The format for the 005 message is as follows:
+
+":" <servername> "005" SPACE <nickname> SPACE <token[=value]> SPACE ... ":are supported
+by this server"
+
+Currently UnrealIRCd supports several tokens that are included in numeric 005. A list of
+all tokens, their respective value and a brief description are listed below.
+
+Token         Value           Default Value                Description
+------------------------------------------------------------------------------------------------
+MAP           none            none                         Informs the client that the /map 
+                                                           command is present.
+
+KNOCK         none            none                         Informs the client that the /knock
+                                                           command is present.
+
+SAFELIST      none            none                         The LIST command is sent in 
+                                                           multiple iterations so that the
+                                                           client's queue does not get filled
+                                                           causing the user to be killed.
+
+HCN           none            none                         The server supports the HCN
+                                                           (Hybrid Connect Notice) protocol.
+
+MAXCHANNELS   number          10                           The maximum number of channels a
+                                                           user may join.
+
+MAXBANS       number          60                           The maximum number of bans that
+                                                           may be placed for a channel.
+
+NICKLEN       number          30                           Maximum length of a user's
+                                                           nickname.
+
+TOPICLEN      number          307                          Maximum length of a channel's
+                                                           topic.
+
+KICKLEN       number          307                          Maximum length of a kick reason.
+
+MAXTARGETS    number          20                           Maximum targets for the PRIVMSG
+                                                           command.
+
+AWAYLEN       number          307                          Maximum length of an away message.
+
+WALLCHOPS     none            none                         Indicates that you may use
+                                                           NOTICE/PRIVMSG to send to +ohv by
+                                                           using PRIVMSG/NOTICE [@|%|+]#channel.
+ 
+WATCH         number          128                          Indicates the presence of the
+                                                           WATCH command and specifies the
+                                                           maximum number of watch entries.
+
+SILENCE       number          15                           Indicates the maximum number of
+                                                           entries on the silence list.
+
+MODES         number          13                           Indicates the number of channel
+                                                           modes with parameters that may be
+                                                           sent at one time.
+
+CHANTYPES     chars           #                            Indicates the prefixes available
+                                                           for channels.
+ 
+PREFIX        (modes)prefixes (qaohv)~&@%+                 Indicates the modes on a channel
+                                                           that corespond to the given
+                                                           nickname prefixes.
+
+CHANMODES     A,B,C,D         be,k,lfL,                    Specifies how each channel mode is
+                              psmntirRcOAQKVHGCuzN         set/unset. The A section specifies
+                                                           modes that add a nick/mask to a
+                                                           list. The B section specifies
+                                                           modes that require a parameter
+                                                           to be both set and unset. The C
+                                                           section specifies modes that
+                                                           only require a parameter to be
+                                                           set, and the D section
+                                                           specifies modes that require no
+                                                           parameters.
+
+NETWORK       string          no default value             Specifies the name of the
+                                                           network that the server is
+                                                           connected to.
+
+CASEMAPPING   string          ascii                        Specifies what definition the
+                                                           server uses when determining if
+                                                           characters are upper/lowercase
+                                                           of eachother.
+
+EXTBAN        prefix,types    ~,cqr                        Specifies what extbans are
+                                                           supported by the server. The prefix
+                                                           defines which character indicates
+                                                           an extban and the types defines
+                                                           which extbans the server supports.
