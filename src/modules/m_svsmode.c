@@ -130,9 +130,59 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			case '-':
 				what = MODE_DEL;
 				break;
-			case 'b': 
-				if (acptr) {
-					Ban *ban, *bnext;
+			case 'q': {
+				Member *cm;
+				for (cm = chptr->members; cm; cm = cm->next) {
+					if (cm->flags & CHFL_CHANOWNER) {
+						add_send_mode_param(chptr, sptr, '-', 'q', cm->cptr->name);
+						cm->flags &= ~CHFL_CHANOWNER;
+					}
+				}
+			}
+			break;
+			case 'a': {
+				Member *cm;
+				for (cm = chptr->members; cm; cm = cm->next) {
+					if (cm->flags & CHFL_CHANPROT) {
+						add_send_mode_param(chptr, sptr, '-', 'a', cm->cptr->name);
+						cm->flags &= ~CHFL_CHANPROT;
+					}
+				}
+			}
+			break;
+			case 'o': {
+				Member *cm;
+				for (cm = chptr->members; cm; cm = cm->next) {
+					if (cm->flags & CHFL_CHANOP) {
+						add_send_mode_param(chptr, sptr, '-', 'o', cm->cptr->name);
+						cm->flags &= ~CHFL_CHANOP;
+					}
+				}
+			}
+			break;
+			case 'h': {
+				Member *cm;
+				for (cm = chptr->members; cm; cm = cm->next) {
+					if (cm->flags & CHFL_HALFOP) {
+						add_send_mode_param(chptr, sptr, '-', 'h', cm->cptr->name);
+						cm->flags &= ~CHFL_HALFOP;
+					}
+				}
+			}
+			break;
+			case 'v': {
+				Member *cm;
+				for (cm = chptr->members; cm; cm = cm->next) {
+					if (cm->flags & CHFL_VOICE) {
+						add_send_mode_param(chptr, sptr, '-', 'v', cm->cptr->name);
+						cm->flags &= ~CHFL_VOICE;
+					}
+				}
+			}
+			break;
+			case 'b': {
+				Ban *ban, *bnext;
+				if (acptr && parc >= 4) {
 					char uhost[NICKLEN+USERLEN+HOSTLEN+6], vhost[NICKLEN+USERLEN+HOSTLEN+6];
 					strcpy(uhost, make_nick_user_host(acptr->name, 
 						acptr->user->username, acptr->user->realhost));
@@ -149,6 +199,17 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						ban = bnext;
 					}
 				}
+				else {
+					ban = chptr->banlist;
+					while (ban) {
+						bnext = ban->next;
+						add_send_mode_param(chptr, sptr, '-',  'b', ban->banstr);
+						del_banid(chptr, ban->banstr);
+						ban = bnext;
+					}
+				}
+			}
+			break;
 		}
 	}
 	if (*parabuf) {
@@ -295,6 +356,9 @@ int  m_svs2mode(cptr, sptr, parc, parv)
 
         if (parc < 3)
                 return 0;
+
+	if (parv[1][0] == '#') 
+		return channel_svsmode(cptr, sptr, parc, parv);
 
         if (!(acptr = find_person(parv[1], NULL)))
                 return 0;

@@ -731,3 +731,6 @@ seen. gmtime warning still there
 - Win32 code cleanup
 - Made my_itoa use _itoa on win32
 - Implimented SVSMODE #channel -b nick to remove all matching bans against a nick, idea from bahamut
+- Added SVSMODE #channel -b to remove all bans
+- Added SVSMODE #channel -qaohv to remove all users of that respective level, and made all the # SVSMODE 
+  flags work in SVS2MODE

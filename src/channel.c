@@ -5488,15 +5488,21 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 }
 
 void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, char *param) {
-	static char *modes = modebuf;
+	static char *modes = modebuf, lastwhat;
 	static short count = 0;
 	short send = 0;
 	if (!modebuf[0]) {
 		modes = modebuf;
 		*modes++ = what;
 		*modes = 0;
+		lastwhat = what;
 		*parabuf = 0;
 		count = 0;
+	}
+	if (lastwhat != what) {
+		*modes++ = what;
+		*modes = 0;
+		lastwhat = what;
 	}
 	if (strlen(parabuf) + strlen(param) + 11 < MODEBUFLEN) {
 		if (*parabuf) 
@@ -5520,6 +5526,7 @@ void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, c
 		*parabuf = 0;
 		modes = modebuf;
 		*modes++ = what;
+		lastwhat = what;
 		if (count != MAXMODEPARAMS) {
 			strcpy(parabuf, param);
 			*modes++ = mode;
