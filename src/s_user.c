@@ -2511,7 +2511,20 @@ static void do_who(sptr, acptr, repchan)
                     !ShowChannel(sptr,repchan))
                         status[i++] = '!';
 #endif
-
+	else
+#ifdef ENABLE_INVISOPER
+		if (channelwho && IsHiding(acptr) && IsNetAdmin(sptr) ||
+                    IsInvisible(acptr) && !IsMember(sptr,repchan) ||
+                    IsAuditorium(repchan) && !is_chan_op(acptr,repchan) ||
+                    !ShowChannel(sptr,repchan))
+			return;
+#else
+		if (
+		    IsInvisible(acptr) && !IsMember(sptr,repchan) ||
+                    IsAuditorium(repchan) && !is_chan_op(acptr,repchan) ||
+                    !ShowChannel(sptr,repchan))
+                    	return;
+#endif
 	
 	/* Channel owner */
 /*	if (repchan && is_chanowner(acptr, repchan))

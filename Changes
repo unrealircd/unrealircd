@@ -679,3 +679,7 @@ Applied weird sts patch for dynamic allocation of nick
 field in topics
 --Luke
 ===================================
+
+Fixed broken /who
+--Luke
+===================================
