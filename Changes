@@ -3325,5 +3325,6 @@ This is the 3.2 fixes branch.
 ** internal 3.2.1-pre1 release **
 - Various (>15) small fixes for unreal32docs.html, reported by AngryWolf (#0001906).
 - Added spanish docs, translated by Trocotronic.
-- Fixed serious crashbug due to quick-rehashing bug! Basically if you did a /REHASH and
+- Fixed serious crashbug due to quick-rehashing bugfix! Basically if you did a /REHASH and
   the clientcount for a class reached 0 (due to quits) it would crash.
+** internal 3.2.1-pre2 release **
