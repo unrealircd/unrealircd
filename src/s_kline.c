@@ -1505,6 +1505,7 @@ char *str;
 			sendto_snomask(SNO_SPAMF, "%s", buf);
 			sendto_serv_butone_token(NULL, me.name, MSG_SENDSNO, TOK_SENDSNO, "S :%s", buf);
 			ircd_log(LOG_SPAMFILTER, "%s", buf);
+			RunHook6(HOOKTYPE_LOCAL_SPAMFILTER, sptr, str, str_in, type, target, tk);
 
 			if (tk->ptr.spamf->action == BAN_ACT_BLOCK)
 			{

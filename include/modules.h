@@ -628,6 +628,7 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_REMOTE_JOIN 43
 #define HOOKTYPE_REMOTE_PART 44
 #define HOOKTYPE_REMOTE_KICK 45
+#define HOOKTYPE_LOCAL_SPAMFILTER 46
 
 /* Hook return values */
 #define HOOK_CONTINUE 0
