@@ -1268,7 +1268,7 @@ int  m_server_estab(cptr)
 					(numeric ? base64enc(numeric) : acptr->serv->up),
 					IsToken(cptr) ? TOK_SERVER : MSG_SERVER,
 					acptr->name, acptr->hopcount + 1,
-					acptr->serv->numeric, acptr->name);
+					acptr->serv->numeric, acptr->info);
 			}
 			else
 				sendto_one(cptr, ":%s %s %s %d :%s",
@@ -1301,7 +1301,11 @@ int  m_server_estab(cptr)
 				    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 				    acptr->name, acptr->hopcount + 1,
 				    acptr->lastnick, acptr->user->username,
-				    acptr->user->realhost, acptr->user->server,
+				    acptr->user->realhost,
+				    (SupportNS(cptr) ?
+				     (acptr->srvptr->serv->numeric ?		    
+				     base64enc(acptr->srvptr->serv->numeric) : 
+				     acptr->user->server) : acptr->user->server),
 				    acptr->user->servicestamp, acptr->info);
 				send_umode(cptr, acptr, 0, SEND_UMODES, buf);
 				if (IsHidden(acptr) && acptr->user->virthost)
@@ -1323,7 +1327,10 @@ int  m_server_estab(cptr)
 					    acptr->lastnick,
 					    acptr->user->username,
 					    acptr->user->realhost,
-					    acptr->user->server,
+					    (SupportNS(cptr) ?
+					     (acptr->srvptr->serv->numeric ?		    
+					     base64enc(acptr->srvptr->serv->numeric) : 
+					     acptr->user->server) : acptr->user->server),
 					    acptr->user->servicestamp, (!buf
 					    || *buf == '\0' ? "+" : buf),
 					    ((IsHidden(acptr)
@@ -1339,7 +1346,10 @@ int  m_server_estab(cptr)
 					    acptr->lastnick,
 					    acptr->user->username,
 					    acptr->user->realhost,
-					    acptr->user->server,
+					    (SupportNS(cptr) ?
+					     (acptr->srvptr->serv->numeric ?		    
+					     base64enc(acptr->srvptr->serv->numeric) : 
+					     acptr->user->server) : acptr->user->server),
 					    acptr->user->servicestamp, (!buf
 					    || *buf == '\0' ? "+" : buf),
 					    IsHidden(acptr) ? acptr->user->
@@ -1396,6 +1406,7 @@ int  m_server_estab(cptr)
 	{
 		aSqlineItem *tmp;
 
+		
 		for (tmp = sqline; tmp; tmp = tmp->next)
 		{
 			if (tmp->status != CONF_ILLEGAL)
