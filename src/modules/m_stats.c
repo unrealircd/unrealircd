@@ -292,9 +292,9 @@ inline void stats_help(aClient *sptr)
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"P - port - Send information about ports");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"q - sqline - Send the SQLINE list");
+		"q - bannick - Send the ban nick block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"Q - bannick - Send the ban nick block list");
+		"Q - sqline - Send the global qline list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"r - chanrestrict - Send the channel deny/allow block list");
 #ifdef DEBUGMODE

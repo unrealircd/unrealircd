@@ -3077,3 +3077,5 @@ seen. gmtime warning still there
 - Updated credits
 - German doc updates (spelling+synch).
 - Updated /credits a bit more
+- Updated the /stats ? output to say Q is sqline and q is ban nick (#0001689) reported
+  by Alzirr
