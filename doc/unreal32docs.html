@@ -1760,6 +1760,7 @@ link &lt;server-name&gt; {
 	leaf &lt;leaf-mask&gt;;
 	leafdepth &lt;depth&gt;;
 	class &lt;class-name&gt;;
+	ciphers &lt;ssl-ciphers&gt;;
 	options {
 		&lt;option&gt;;
 		&lt;option&gt;;
@@ -1818,6 +1819,10 @@ link &lt;server-name&gt; {
 </p>
 <p><b>compression-level</b> (optional)<br>
   Specifies the compression level (1-9) for this link. Only used if link::options::zip is set.
+</p>
+<p><b>ciphers</b> (optional)<br>
+  Specifies the SSL ciphers to use for this link. To obtain a list of available ciphers, use
+  the `openssl ciphers` command. Ciphers should be specified as a : separated list.
 </p>
 <p><b>options block</b><br>
   One or more options used for connecting to the server. Sometimes not needed.<br>

@@ -335,3 +335,4 @@
   (#0002049) reported by Rocko.
 - Fixed a problem where a local TKL could be sent to remote servers when it is being changed
   (#0002048) reported by AngryWolf.
+- Added documentation for link::ciphers to unreal32docs.html (#0002019) reported by Bugz.
