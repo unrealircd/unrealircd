@@ -140,7 +140,7 @@ aClient *find_server_quick(char *name)
 	Link *lp;
 
 	for (lp = servers; lp; lp = lp->next)
-		if (!strcmp(lp->value.cptr->name, name))
+		if (!match(name, lp->value.cptr->name))
 			return (lp->value.cptr);
 	return NULL;
 }

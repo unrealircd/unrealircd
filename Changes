@@ -476,3 +476,4 @@
 - Added NS, new generation ALN.
 - Added llthangel's whoisfix.patch, Makes sure +hv users show up as
   %#channel instead of +#channel. Bug report by ^Fanta.
+- Changed find_server_quick to work with masks too ..
