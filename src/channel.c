@@ -698,7 +698,11 @@ int is_skochanop(aClient *cptr, aChannel *chptr) {
 		return 1;
 	if (chptr)
 		if ((lp = find_membership_link(cptr->user->channel, chptr)))
+#ifdef PREFIX_AQ
 			if (lp->flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP|CHFL_HALFOP))
+#else
+			if (lp->flags & (CHFL_CHANOP|CHFL_HALFOP))
+#endif
 				return 1;
 	return 0;
 }
@@ -1693,7 +1697,7 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 		return 0;
 	if (IsOper(sptr) || IsULine(sptr))
 		return 0;
-	if (is_chan_op(sptr, chptr))
+	if (is_skochanop(sptr, chptr))
 		return 0;
 
 	if (!(lp = find_membership_link(sptr->user->channel, chptr)))

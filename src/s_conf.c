@@ -6931,7 +6931,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "allowed-nickchars")) {
 			if (cep->ce_vardata)
 			{
-				config_error("%s:%i: set::allow-nickchars: please use 'allowed-nickchars { name; };' "
+				config_error("%s:%i: set::allowed-nickchars: please use 'allowed-nickchars { name; };' "
 				             "and not 'allowed-nickchars name;'",
 				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
@@ -6941,7 +6941,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			{
 				if (!charsys_test_language(cepp->ce_varname))
 				{
-					config_error("%s:%i: set::allow-nickchars: Unknown (sub)language '%s'",
+					config_error("%s:%i: set::allowed-nickchars: Unknown (sub)language '%s'",
 						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cepp->ce_varname);
 					errors++;
 				}

@@ -662,3 +662,9 @@
   reported by vonitsanet.
 - Fixed a bug in mode-skipping (eg '+qk a b' if not +q) and error msgs, reported by brain2
   (#0002372).
+- Fixed bug where chanmode +f #t (per-user text kick[ban]) was also affecting halfops,
+  reported by seneces (#0002333).
+- Fixed doc bug reported by Dukat (#0002374). Also fixed 2 error msgs related to
+  the nickchars system printing out incorrect set:: directives.
+- spamfilter.conf and dccallow.conf are now also copied upon make install, reported by
+  TommyTheKid (#0002313).
