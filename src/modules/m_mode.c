@@ -2216,6 +2216,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 		ClearHideOper(sptr);
 		ClearCoAdmin(sptr);
 		ClearHelpOp(sptr);
+		ClearFailops(sptr);
 	}
 
 	/*
@@ -2241,12 +2242,15 @@ DLLFUNC CMD_FUNC(_m_umode)
 	   This is to remooove the kix bug.. and to protect some stuffie
 	   -techie
 	 */
-		if (MyClient(sptr) && (sptr->umodes & UMODE_KIX) && (!OPCanUmodeq(sptr) || !IsAnOper(sptr)))
-			sptr->umodes &= ~UMODE_KIX;
-		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE) && !IsSecure(sptr))
-			sptr->umodes &= ~UMODE_SECURE;
-		if (MyClient(sptr) && !(sptr->umodes & UMODE_SECURE) && IsSecure(sptr))
-			sptr->umodes |= UMODE_SECURE;
+		if (MyClient(sptr))
+		{
+			if ((sptr->umodes & UMODE_KIX) && (!OPCanUmodeq(sptr) || !IsAnOper(sptr)))
+				sptr->umodes &= ~UMODE_KIX;
+			if ((sptr->umodes & UMODE_SECURE) && !IsSecure(sptr))
+				sptr->umodes &= ~UMODE_SECURE;
+			if (!(sptr->umodes & UMODE_SECURE) && IsSecure(sptr))
+				sptr->umodes |= UMODE_SECURE;
+		}
 	}
 	/*
 	 * For Services Protection...

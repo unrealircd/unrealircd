@@ -757,3 +757,4 @@
 - Made windows installer also install doc\technical\*
 - Removed oldcloak cloaking module, everyone should be using the new cloak one by now.
 - Updated release notes (translated docs, zlib, doc\technical, sp/cS desynch).
+- Made +g get removed when an oper sets -o (#0002399) reported by Ron2K.
