@@ -123,6 +123,8 @@ int  noisy_htm = 1;
 
 TS   check_fdlists();
 #endif
+
+
 void server_reboot(char *);
 void restart PROTO((char *));
 static void open_debugfile(), setup_signals();
@@ -1510,10 +1512,11 @@ static void setup_signals()
 	(void)sigaddset(&act.sa_mask, SIGTERM);
 	(void)sigaction(SIGTERM, &act, NULL);
 /* handling of SIGSEGV as well -sts */
+#ifndef PROPER_COREDUMP
 	act.sa_handler = s_segv;
 	(void)sigaddset(&act.sa_mask, SIGSEGV);
 	(void)sigaction(SIGSEGV, &act, NULL);
-
+#endif
 #else
 # ifndef	HAVE_RELIABLE_SIGNALS
 	(void)signal(SIGPIPE, dummy);

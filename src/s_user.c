@@ -4429,9 +4429,10 @@ int  m_umode(cptr, sptr, parc, parv)
 	if ((setflags & UMODE_OPER) && !IsOper(sptr))
 	{
 		IRCstats.operators--;
+#ifndef NO_FDLIST
 		if (MyConnect(sptr))
 			delfrom_fdlist(sptr->fd, &oper_fdlist);
-		                         
+#endif		                         
 	}
 	if (!(setflags & UMODE_INVISIBLE) && IsInvisible(sptr))
 	{

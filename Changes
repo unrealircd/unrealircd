@@ -575,3 +575,7 @@
 [ this is 4.0 ]
 - Fixed /userhost showing "unknown" as username for a lot of people
 - Fixed ./update error
+- Fixed a NO_FDLIST define problem in send.c and channel.c
+- Added define PROPER_COREDUMP, will not launch s_segv when done and make
+  proper coredumps
+
