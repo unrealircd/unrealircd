@@ -1019,9 +1019,6 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 	else
 	{
 		isnew = 0;
-		config_status("%s:%i: warning: redefining a record in class %s",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			ce->ce_vardata);
 	}
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -1222,9 +1219,6 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 	else
 	{
 		isnew = 0;
-		config_status("%s:%i: warning: redefining a record in oper %s",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			ce->ce_vardata);
 	}
 
 
@@ -1531,11 +1525,6 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	else
 	{
 		isnew = 0;
-		/*
-		  config_status("%s:%i: warning: redefining a record in listen %s",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			ce->ce_vardata);
-		*/
 	}
 
 

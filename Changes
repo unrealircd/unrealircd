@@ -682,3 +682,4 @@ seen. gmtime warning still there
 - Fixed some possible points of confusion with hash.c regarding unsigned int
   & signed int
 - Fixed u_intXX_t problem
+- Removed the redefining stuff in s_conf.c
