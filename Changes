@@ -423,3 +423,4 @@
 - Final res.c fixes 
 - Added /rehash -all patch by NiQuiL
 - res.c: fixed ircsprintf problems
+- Fixed ircd_log to work in windows
