@@ -476,4 +476,18 @@ int CommandExists(char *name);
 #define CONFIG_DENY 5
 #define CONFIG_ALLOW 6
 
+#ifdef DYNAMIC_LINKING
+#define MOD_HEADER(name) Mod_Header
+#define MOD_TEST(name) Mod_Test
+#define MOD_INIT(name) Mod_Init
+#define MOD_LOAD(name) Mod_Load
+#define MOD_UNLOAD(name) Mod_Unload
+#else
+#define MOD_HEADER(name) name##_Header
+#define MOD_TEST(name) name##_Test
+#define MOD_INIT(name) name##_Init
+#define MOD_LOAD(name) name##_Load
+#define MOD_UNLOAD(name) name##_Unload
+#endif
+
 #endif
