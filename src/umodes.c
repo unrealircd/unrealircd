@@ -175,7 +175,7 @@ void make_umodestr(void)
  * Add a usermode with character 'ch', if global is set to 1 the usermode is global
  * (sent to other servers) otherwise it's a local usermode
  */
-Umode *UmodeAdd(Module *module, char ch, int global, int (*allowed)(aClient *sptr), long *mode)
+Umode *UmodeAdd(Module *module, char ch, int global, int (*allowed)(aClient *sptr, int what), long *mode)
 {
 	short	 i = 0;
 	short	 j = 0;
@@ -275,7 +275,7 @@ void UmodeDel(Umode *umode)
 	return;
 }
 
-Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr), long *mode)
+Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr, int what), long *mode)
 {
 	short	 i = 0;
 	short	 j = 0;
@@ -368,12 +368,12 @@ void SnomaskDel(Snomask *sno)
 	return;
 }
 
-int umode_allow_all(aClient *sptr)
+int umode_allow_all(aClient *sptr, int what)
 {
 	return 1;
 }
 
-int umode_allow_opers(aClient *sptr)
+int umode_allow_opers(aClient *sptr, int what)
 {
 	return IsAnOper(sptr) ? 1 : 0;
 }
@@ -444,7 +444,7 @@ void unload_all_unused_snomasks()
 	}
 }
 
-long umode_get(char ch, int options, int (*allowed)(aClient *sptr))
+long umode_get(char ch, int options, int (*allowed)(aClient *sptr, int what))
 {
 	long flag;
 	if (UmodeAdd(NULL, ch, options, allowed, &flag))

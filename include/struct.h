@@ -759,10 +759,10 @@ extern Cmode *Channelmode_Table;
 extern unsigned short Channelmode_highest;
 #endif
 
-extern Umode *UmodeAdd(Module *module, char ch, int options, int (*allowed)(aClient *sptr), long *mode);
+extern Umode *UmodeAdd(Module *module, char ch, int options, int (*allowed)(aClient *sptr, int what), long *mode);
 extern void UmodeDel(Umode *umode);
 
-extern Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr), long *mode);
+extern Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr, int what), long *mode);
 extern void SnomaskDel(Snomask *sno);
 
 #ifdef EXTCMODE

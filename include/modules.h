@@ -101,7 +101,7 @@ typedef struct {
 typedef struct {
         long mode;
         char flag;
-        int (*allowed)(aClient *sptr);
+        int (*allowed)(aClient *sptr, int what);
         char unloaded;
         Module *owner;
 } Umode;
@@ -109,7 +109,7 @@ typedef struct {
 typedef struct {
         long mode;
         char flag;
-        int (*allowed)(aClient *sptr);
+        int (*allowed)(aClient *sptr, int what);
         char unloaded;
         Module *owner;
 } Snomask;

@@ -802,7 +802,9 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 	cptr->last = TStime();
 	parv[0] = sptr->name;
 	parv[1] = parv[2] = NULL;
-
+	nick = sptr->name; /* <- The data is always the same, but the pointer is sometimes not,
+	                    *    I need this for one of my modules, so do not remove! ;) -- Syzop */
+	
 	if (MyConnect(sptr))
 	{
 		if ((i = check_client(sptr))) {
@@ -1788,6 +1790,7 @@ CMD_FUNC(m_nick)
 			if (register_user(cptr, sptr, nick,
 			    sptr->user->username, NULL, NULL) == FLUSH_BUFFER)
 				return FLUSH_BUFFER;
+			strcpy(nick, sptr->name); /* don't ask, but I need this. do not remove! -- Syzop */
 			update_watch = 0;
 			newusr = 1;
 		}
@@ -2193,7 +2196,7 @@ CMD_FUNC(m_ison)
 }
 
 void set_snomask(aClient *sptr, char *snomask) {
-	int what = MODE_ADD;
+	int what = MODE_ADD; /* keep this an int. -- Syzop */
 	char *p;
 	int i;
 	if (snomask == NULL) {
@@ -2216,7 +2219,7 @@ void set_snomask(aClient *sptr, char *snomask) {
 		 	 		continue;
 		 	 	if (*p == Snomask_Table[i].flag)
 		 	 	{
-					if (Snomask_Table[i].allowed && !Snomask_Table[i].allowed(sptr))
+					if (Snomask_Table[i].allowed && !Snomask_Table[i].allowed(sptr,what))
 						continue;
 		 	 		if (what == MODE_ADD)
 			 	 		sptr->user->snomask |= Snomask_Table[i].mode;
@@ -2229,7 +2232,7 @@ void set_snomask(aClient *sptr, char *snomask) {
 }
 
 void create_snomask(aClient *sptr, anUser *user, char *snomask) {
-	int what = MODE_ADD;
+	int what = MODE_ADD; /* keep this an int. -- Syzop */
 	char *p;
 	int i;
 	if (snomask == NULL) {
@@ -2252,7 +2255,7 @@ void create_snomask(aClient *sptr, anUser *user, char *snomask) {
 		 	 		continue;
 		 	 	if (*p == Snomask_Table[i].flag)
 		 	 	{
-					if (Snomask_Table[i].allowed && !Snomask_Table[i].allowed(sptr))
+					if (Snomask_Table[i].allowed && !Snomask_Table[i].allowed(sptr,what))
 						continue;
 		 	 		if (what == MODE_ADD)
 			 	 		user->snomask |= Snomask_Table[i].mode;
@@ -2276,6 +2279,7 @@ CMD_FUNC(m_umode)
 	char **p, *m;
 	aClient *acptr;
 	int  what, setflags, setsnomask = 0;
+	/* (small note: keep 'what' as an int. -- Syzop). */
 	short rpterror = 0, umode_restrict_err = 0, chk_restrict = 0, modex_err = 0;
 
 	what = MODE_ADD;
@@ -2416,13 +2420,11 @@ CMD_FUNC(m_umode)
 			  {
 				  if (*m == Usermode_Table[i].flag)
 				  {
+					  if (Usermode_Table[i].allowed)
+						if (!Usermode_Table[i].allowed(sptr,what))
+							break;
 					  if (what == MODE_ADD)
-					  {
-						  if (Usermode_Table[i].allowed)
-							if (!Usermode_Table[i].allowed(sptr))
-								break;
 						  sptr->umodes |= Usermode_Table[i].mode;
-					  }
 					  else
 						  sptr->umodes &= ~Usermode_Table[i].mode;
 					  break;

@@ -2494,3 +2494,8 @@ seen. gmtime warning still there
 - Fix for +L without +l desynch on serverlinking.
 - Fixed a problem regarding module hooks, if a hook was called within a hook it could cause
   problems (like pre connect hook -> exit_client -> quit hook).
+- Changed some useless stuff.
+- Enabled EXTCMODE by default, I presume it's stable but can't promise anything.
+- Module coders: changed 'allowed' callback function for umodes&snomasks,
+  from 'aClient *sptr' to 'aClient *sptr, int what'.
+  'what' will be MODE_ADD if trying to add and MODE_DEL if trying to remove.

@@ -496,9 +496,8 @@
 /*
  * Extended channel modes. This extends the channel modes with yet another
  * 32 possible modes which can also be used in modules.
- * This is currently considered experimental however.
  */
-#undef EXTCMODE
+#define EXTCMODE
 
 /*
  * New channelmode +f system which allows flood control for:
