@@ -526,3 +526,4 @@
 - Fixed 'make install' error due to example.settings remove.
 - Fixed a minor typo in the "now an oper" announcement (#0002284) reported by Rocko.
 - Made SVSMODE -b and -e remove bans/excepts placed on IPs (#0002270) reported by Snake.
+- Fixed a couple of problems introduced with the ./Config -advanced changed (#0002239).
