@@ -348,3 +348,4 @@
   vhost" thing, (was a dumb bug, mising ircsprintf)
 - Fixed the *** NickServ sets mode +creep SVS2MODE bug..
 - sendto_serv_butone_token_opt ()..
+- Small testing stuff

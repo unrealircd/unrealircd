@@ -44,6 +44,9 @@
 #define BASE_VERSION "UnrealIRCd/32 v"
 #endif
 
+/* release header */
+#define Rh BASE_VERSION
+
 #define VERSIONONLY		PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7
 
 #endif /* __versioninclude */ 

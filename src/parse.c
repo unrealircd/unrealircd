@@ -151,7 +151,7 @@ aClient *find_serveraln(name, cptr)
 		}
 		cptr = hash_find_client(name, cptr);
 #ifdef DEVELOP
-//              if (cptr) sendto_ops("Found it ! (%s)", cptr->name);
+//             (cptr) sendto_ops("Found it ! (%s)", cptr->name);
 #endif
 	}
 	return cptr;
@@ -230,6 +230,8 @@ void	ban_flooder(aClient *cptr)
 	m_tkl(&me, &me, 9, tkllayer);
 	return;
 }
+
+int	Rha;
 
 /*
  * parse a buffer.
@@ -321,6 +323,10 @@ int  parse(cptr, buffer, bufend, mptr)
 			 * (old IRC just let it through as if the
 			 * prefix just wasn't there...) --msa
 			 */
+			 
+			/* debugging tool */
+			if (Rha)
+				from = NULL;
 			if (!from)
 			{
 				Debug((DEBUG_ERROR,
