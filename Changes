@@ -1515,4 +1515,5 @@ seen. gmtime warning still there
 - Added set::ssl::certificate and set::ssl::key to point to where we got the certificate
   PEM and the private key PEM
 - Fixed a /invite bug where remote clients couldn't be invited, reported by Alzirr (#0000275)
-
+- Fixed a bug where if the hostname didn't have a dot (ie. localhost) host cloaking broke
+  reported by Ron885
