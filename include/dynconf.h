@@ -79,6 +79,7 @@ struct zConfiguration {
 	unsigned dont_resolve:1;
 	unsigned use_ban_version:1;
 	unsigned mkpasswd_for_everyone:1;
+	unsigned allow_part_if_shunned:1;
 	unsigned use_egd;
 	long host_timeout;
 	int  host_retries;
@@ -215,3 +216,5 @@ extern aConfiguration iConf;
 #define MODEF_DEFAULT_UNSETTIME	iConf.modef_default_unsettime
 #define MODEF_MAX_UNSETTIME		iConf.modef_max_unsettime
 #endif
+
+#define ALLOW_PART_IF_SHUNNED	iConf.allow_part_if_shunned

@@ -2503,4 +2503,12 @@ seen. gmtime warning still there
 - Fixed a bug regarding +f and bounce modes, would cause a crash, reported by Rocko.
 - Made it so the dccdeny system can now check files that contain spaces (suggested by
   Lamego)
-
+- Added set::options::allow-part-if-shunned. Sometimes shunned users close a channel
+  window, most irc clients just close the window immediately and send a part msg..
+  they don't wait for the server to confirm the part and thus the user thinks he has left
+  the channel while in fact he has not... this can be annoying if you are temporarely
+  shunning n00bs for a few minutes, they won't understand why they get a 'You are already
+  on that channel' error msg when they try to join that chan again.
+  This is however disabled by default because the idea of shun is to totally shun a user
+  so (s)he can't do anything except /admin (and thus not causing "any" [server]traffic).
+  Suggested by brentos. Note that we won't support /quit, or any other command, just this.

@@ -1338,6 +1338,22 @@ void config_setdefaultsettings(aConfiguration *i)
 #endif
 }
 
+/* needed for set::options::allow-part-if-shunned,
+ * we can't just make it M_SHUN and do a ALLOW_PART_IF_SHUNNED in
+ * m_part itself because that will also block internal calls (like sapart). -- Syzop
+ */
+static void do_weird_shun_stuff()
+{
+aCommand *cmptr = find_Command_simple("PART");
+
+	if (!cmptr) /* Huh? */
+		return;
+	if (ALLOW_PART_IF_SHUNNED)
+		cmptr->flags |= M_SHUN;
+	else
+		cmptr->flags &= ~M_SHUN;
+}
+
 int	init_conf(char *rootconf, int rehash)
 {
 	ConfigItem_include *inc, *next;
@@ -1451,6 +1467,7 @@ int	init_conf(char *rootconf, int rehash)
 	if (rehash)
 		module_loadall(0);
 #endif
+	do_weird_shun_stuff();
 	config_status("Configuration loaded without any problems ..");
 	return 0;
 }
@@ -5336,6 +5353,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "mkpasswd-for-everyone")) {
 					tempiConf.mkpasswd_for_everyone = 1;
 				}
+				else if (!strcmp(cepp->ce_varname, "allow-part-if-shunned")) {
+					tempiConf.allow_part_if_shunned = 1;
+				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "hosts")) {
@@ -5825,6 +5845,8 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "dont-resolve")) {
 				}
 				else if (!strcmp(cepp->ce_varname, "mkpasswd-for-everyone")) {
+				}
+				else if (!strcmp(cepp->ce_varname, "allow-part-if-shunned")) {
 				}
 				else
 				{

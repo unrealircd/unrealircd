@@ -3782,6 +3782,9 @@ CMD_FUNC(m_part)
 		return 0;
 	}
 
+	if (MyClient(sptr) && IsShunned(sptr))
+		comment = NULL;
+
 	for (; (name = strtoken(&p, parv[1], ",")); parv[1] = NULL)
 	{
 		chptr = get_channel(sptr, name, 0);
@@ -3791,7 +3794,7 @@ CMD_FUNC(m_part)
 			    me.name, parv[0], name);
 			continue;
 		}
-		if (parv[2] && !comment) {
+		if (parv[2] && !comment && !(MyClient(sptr) && IsShunned(sptr))) {
 			comment = parv[2];
 			parc = 3;
 		}
