@@ -69,7 +69,7 @@ DLLFUNC int htm_config_test(ConfigFile *, ConfigEntry *, int, int *);
 DLLFUNC int htm_config_run(ConfigFile *, ConfigEntry *, int);
 DLLFUNC int htm_stats(aClient *, char *); 
 
-ModuleInfo HtmModInfo;
+ModuleInfo *HtmModInfo;
 static Hook *ConfTest, *ConfRun, *ServerStats;
 #ifndef DYNAMIC_LINKING
 ModuleHeader m_htm_Header
@@ -99,8 +99,8 @@ int    m_htm_Test(ModuleInfo *modinfo)
 	/*
 	 * We call our add_Command crap here
 	*/
-	bcopy(modinfo,&HtmModInfo,modinfo->size);
-	ConfTest = HookAddEx(HtmModInfo.handle, HOOKTYPE_CONFIGTEST, htm_config_test);
+	HtmModInfo = modinfo;
+	ConfTest = HookAddEx(HtmModInfo->handle, HOOKTYPE_CONFIGTEST, htm_config_test);
 	return MOD_SUCCESS;
 }
 
@@ -116,12 +116,12 @@ int    m_htm_Init(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_HTM, TOK_HTM, m_htm, MAXPARA);
-	ConfRun = HookAddEx(HtmModInfo.handle, HOOKTYPE_CONFIGRUN, htm_config_run);
-	ServerStats = HookAddEx(HtmModInfo.handle, HOOKTYPE_STATS, htm_stats);
+	ConfRun = HookAddEx(HtmModInfo->handle, HOOKTYPE_CONFIGRUN, htm_config_run);
+	ServerStats = HookAddEx(HtmModInfo->handle, HOOKTYPE_STATS, htm_stats);
 #ifndef NO_FDLIST
 	LockEventSystem();
-	e_lcf = EventAddEx(HtmModInfo.handle, "lcf", LCF, 0, lcf_check, NULL);
-	e_htmcalc = EventAddEx(HtmModInfo.handle, "htmcalc", 1, 0, htm_calc, NULL);
+	e_lcf = EventAddEx(HtmModInfo->handle, "lcf", LCF, 0, lcf_check, NULL);
+	e_htmcalc = EventAddEx(HtmModInfo->handle, "htmcalc", 1, 0, htm_calc, NULL);
 	UnlockEventSystem();
 #endif
 	return MOD_SUCCESS;

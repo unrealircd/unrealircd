@@ -121,7 +121,6 @@ char  *Module_Create(char *path_)
 	int		ret = 0;
 	Module          *mod = NULL, **Mod_Handle = NULL;
 	int betaversion,tag;
-	ModuleInfo modinfo;
 	Debug((DEBUG_DEBUG, "Attempting to load module from %s",
 	       path_));
 	path = path_;
@@ -197,10 +196,7 @@ char  *Module_Create(char *path_)
 		if (Mod_Test)
 		{
 			if (betaversion >= 8) {
-				modinfo.size = sizeof(ModuleInfo);
-				modinfo.module_load = 0;
-				modinfo.handle = mod;
-				if ((ret = (*Mod_Test)(&modinfo)) < MOD_SUCCESS) {
+				if ((ret = (*Mod_Test)(&mod->modinfo)) < MOD_SUCCESS) {
 					ircsprintf(errorbuf, "Mod_Test returned %i",
 						   ret);
 					/* We EXPECT the module to have cleaned up it's mess */
@@ -263,6 +259,9 @@ Module *Module_make(ModuleHeader *header,
 	modp->dll = mod;
 	modp->flags = MODFLAG_NONE;
 	modp->children = NULL;
+	modp->modinfo.size = sizeof(ModuleInfo);
+	modp->modinfo.module_load = 0;
+	modp->modinfo.handle = modp;
 	return (modp);
 }
 
@@ -272,7 +271,6 @@ void Init_all_testing_modules(void)
 	Module *mi, *next;
 	int betaversion, tag, ret;
 	iFP Mod_Init;
-	ModuleInfo modinfo;
 	for (mi = Modules; mi; mi = next)
 	{
 		next = mi->next;
@@ -281,10 +279,7 @@ void Init_all_testing_modules(void)
 		irc_dlsym(mi->dll, "Mod_Init", Mod_Init);
 		sscanf(mi->header->modversion, "3.2-b%d-%d", &betaversion, &tag);
 		if (betaversion >= 8) {
-			modinfo.size = sizeof(ModuleInfo);
-			modinfo.module_load = 0;
-			modinfo.handle = mi;
-			if ((ret = (*Mod_Init)(&modinfo)) < MOD_SUCCESS) {
+			if ((ret = (*Mod_Init)(&mi->modinfo)) < MOD_SUCCESS) {
 				config_error("Error loading %s: Mod_Init returned %i",
 					mi->header->name, ret);
 		        	Module_free(mi);

@@ -152,6 +152,7 @@ struct _Module
 	unsigned char flags;    /* 8-bits for flags .. */
 	ModuleChild *children;
 	ModuleObject *objects;
+	ModuleInfo modinfo; /* Used to store handle info for module */
 };
 /*
  * Symbol table

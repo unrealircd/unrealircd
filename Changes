@@ -2149,3 +2149,5 @@ seen. gmtime warning still there
 - Updated example.conf about U-lines since many people set them wrong.
 - Fixed numeric checking.
 - Moved /stats zip from NOTICE to RPL_TEXT, updated stats documentation.
+- Made it so it is no longer necessary to copy the ModuleInfo structure passed to Mod_Test
+  and Mod_Init. Unreal now does this internally.
