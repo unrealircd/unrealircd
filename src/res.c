@@ -391,7 +391,7 @@ static int send_res_msg(msg, len, rcount)
 		Debug((DEBUG_DNS, "Sending to nameserver %i",
 			i));
 		Debug((DEBUG_DNS, "IP: %s",
-		 inet_ntoa((char *)&ircd_res.nsaddr_list[0].sin_addr.s_addr)));
+		 inet_ntoa(ircd_res.nsaddr_list[0].s_addr)));
 #ifdef INET6
 		/* still IPv4 */
 		ircd_res.nsaddr_list[i].sin_family = AF_INET;
@@ -1005,10 +1005,10 @@ struct hostent *get_res(lp,id)
 	if (a == -1)
 	{
 		sendto_ops("Bad hostname returned from %s for %s",
-		    inet_ntoa((struct IN_ADDR *)&sin.sin_addr),
+		    inet_ntoa(sin.sin_addr),
 		    Inet_ia2p((struct IN_ADDR *)&rptr->he.h_addr));
 		Debug((DEBUG_DNS, "Bad hostname returned from %s for %s",
-		    inet_ntoa((struct IN_ADDR *)&sin.sin_addr),
+		    inet_ntoa(sin.sin_addr),
 		    Inet_ia2p((struct IN_ADDR *)&rptr->he.h_addr)));
 	}
 #ifdef DEBUGMODE

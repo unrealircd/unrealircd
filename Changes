@@ -1100,3 +1100,4 @@ seen. gmtime warning still there
 - Fixed exit_client to do NOQUIT type thing for SQUITs
 - Moved around a lot of aClient/anUser members, hopefully wont cause
   segfaults
+- Fixed res.c not managing to pass the proper type of parameter to inet_ntoa ONCE
