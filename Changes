@@ -317,3 +317,5 @@
 - Reintroduced "fake lag". Flood algoritm works this way:
    Make next check for parsing be 
    (1 + (length of command+parameters / 60)
+- Started on commands.so making, works good atm -on req of codemastr,
+  both as m_module.so and commands.so :) - long live dynamiclinking

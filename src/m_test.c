@@ -28,8 +28,11 @@
 #endif
 
 /* Place includes here */
-/* replace this with a common name of your module */
-#define modulename dummy
+/*
+ * Run a search and replace on modulename to a unique name of your module,
+ * like dummy
+ * -link will fail else
+*/
 #define MSG_DUMMY "DUMMY"
 #define TOK_DUMMY "DU"
 
@@ -71,13 +74,13 @@ void    modulename_init(void)
 #ifdef DYNAMIC_LINKING
 DLLFUNC void	mod_unload(void)
 #else
-void	_modulename_unload(void)
+void	modulename_unload(void)
 #endif
 {
 	if (del_Command(MSG_DUMMY, TOK_DUMMY, m_dummy) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				modulename);
+				modulename_info.name);
 	}
 	/* do etc stuff here */
 	sendto_ops("Unloaded");

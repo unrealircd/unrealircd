@@ -31,7 +31,7 @@ OBJS=agent.o aln.o badwords.o bsd.o channel.o cloak.o crule.o dbuf.o \
 	s_user.o scache.o send.o support.o userload.o version.o webtv.o \
 	whowas.o zip.o
 
-MODULES=libdummy.so
+MODULES=libdummy.so commands.so
 
 SRC=$(OBJS:%.o=%.c)
 
@@ -75,6 +75,11 @@ libdummy.so: m_test.c $(INCLUDES)
 	$(CC) $(CFLAGS) -DDYNAMIC_LINKING \
         -fPIC -DPIC -shared -o libdummy.so m_test.c 
 
+commands.so: l_commands.c m_test.c $(INCLUDES)
+	$(CC) $(CFLAGS) -fPIC -DPIC -shared -o commands.so  l_commands.c m_test.c
+
+
+	
 parse.o: parse.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c parse.c
 

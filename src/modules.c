@@ -61,7 +61,7 @@ int  load_module(char *module)
 	void (*mod_unload) ();
 	int  i;
 	module_buffer = NULL;
-	if (Mod = irc_dlopen(module, RTLD_LAZY))
+	if (Mod = irc_dlopen(module, RTLD_NOW))
 	{
 		/* Succeed loading module */
 		/* Locate mod_init function */
