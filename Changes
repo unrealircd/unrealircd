@@ -883,3 +883,4 @@ seen. gmtime warning still there
 - Made umode_delete(flag, mode);
 - made the umodestring variable smaller to conserve memory
 - Added M_RESETIDLE to fix a /privmsg bug
+- Fixed a bug with nickserv passwords found and fixed by Mathieu

@@ -1577,7 +1577,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		/* Copy password to the passwd field if it's given after NICK
 		 * - originally by taz, modified by Wizzu
 		 */
-		if ((parc > 2) && (strlen(parv[2]) < sizeof(sptr->passwd)))
+		if ((parc > 2) && (strlen(parv[2]) <= PASSWDLEN))
 		{
 			if (sptr->passwd)
 				MyFree(sptr->passwd);
