@@ -444,3 +444,4 @@
 - Fixed minor problem with mod_load code
 - Fixed possible crash with /quote dns l
 - Removed newdns
+- Fixed a memory bug in win32 code found and fixed by McSkaf, and fixed a typo

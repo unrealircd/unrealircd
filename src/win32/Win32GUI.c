@@ -475,9 +475,9 @@ LRESULT CALLBACK ConfigDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 			fd = open(CPATH, _O_RDONLY|_O_BINARY);
 			fstat(fd,&sb);
 			/* Only allocate the amount we need */
-			buffer = (char *)malloc(sb.st_size);
+			buffer = (char *)malloc(sb.st_size+1);
 			buffer[0] = 0;
-			len = read(fd, buffer, sb.st_size+1);
+			len = read(fd, buffer, sb.st_size);
 			buffer[len] = 0;
 			SetDlgItemText(hDlg, IDC_TEXT, buffer);
 			close(fd);
@@ -524,9 +524,9 @@ LRESULT CALLBACK MotdDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
 			fd = open(MPATH, _O_RDONLY|_O_BINARY);
 			fstat(fd,&sb);
 			/* Only allocate the amount we need */
-			buffer = (char *)malloc(sb.st_size);
+			buffer = (char *)malloc(sb.st_size+1);
 			buffer[0] = 0;
-			len = read(fd, buffer, sb.st_size+1);
+			len = read(fd, buffer, sb.st_size);
 			buffer[len] = 0;
 			SetDlgItemText(hDlg, IDC_TEXT, buffer);
 			close(fd);
@@ -569,9 +569,9 @@ LRESULT CALLBACK OperMotdDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			fd = open(OPATH, _O_RDONLY|_O_BINARY);
 			fstat(fd,&sb);
 			/* Only allocate the amount we need */
-			buffer = (char *)malloc(sb.st_size);
+			buffer = (char *)malloc(sb.st_size+1);
 			buffer[0] = 0;
-			len = read(fd, buffer, sb.st_size+1);
+			len = read(fd, buffer, sb.st_size);
 			buffer[len] = 0;
 			SetDlgItemText(hDlg, IDC_TEXT, buffer);
 			close(fd);
@@ -614,9 +614,9 @@ LRESULT CALLBACK BotMotdDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			fd = open(BPATH, _O_RDONLY|_O_BINARY);
 			fstat(fd,&sb);
 			/* Only allocate the amount we need */
-			buffer = (char *)malloc(sb.st_size);
+			buffer = (char *)malloc(sb.st_size+1);
 			buffer[0] = 0;
-			len = read(fd, buffer, sb.st_size+1);
+			len = read(fd, buffer, sb.st_size);
 			buffer[len] = 0;
 			SetDlgItemText(hDlg, IDC_TEXT, buffer);
 			close(fd);
@@ -655,13 +655,13 @@ LRESULT CALLBACK RulesDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		case WM_INITDIALOG: {
 			int fd,len;
 			char *buffer = '\0';
-			SetWindowText(hDlg, "UnrealIRCd MOTD File");
+			SetWindowText(hDlg, "UnrealIRCd Rules File");
 			fd = open(RPATH, _O_RDONLY|_O_BINARY);
 			fstat(fd,&sb);
 			/* Only allocate the amount we need */
-			buffer = (char *)malloc(sb.st_size);
+			buffer = (char *)malloc(sb.st_size+1);
 			buffer[0] = 0;
-			len = read(fd, buffer, sb.st_size+1);
+			len = read(fd, buffer, sb.st_size);
 			buffer[len] = 0;
 			SetDlgItemText(hDlg, IDC_TEXT, buffer);
 			close(fd);
