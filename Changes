@@ -421,3 +421,11 @@ oper opers. I like this, if you don't email me and
 maybe I'll add a conf option for it.
 --Luke
 ===================================
+
+Deprecated /akill and /rakill. Please stop using
+these commands. They're old and will be removed in
+future releases. For now they simply add/remove a
+permanent gline, which is essentially what an akill
+is anyway (yes, I know they disappear when you rehash)
+--Luke
+===================================
