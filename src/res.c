@@ -995,6 +995,7 @@ struct hostent *get_res(char *lp,long id)
 	 * response for an id which we have already received an answer for
 	 * just ignore this response.
 	 */
+	lock_request();
 #ifndef _WIN32
 	rptr = find_id(hptr->id);
 #else
@@ -1206,11 +1207,13 @@ struct hostent *get_res(char *lp,long id)
  # endif
          rptr->locked = 0;
          rem_request(rptr);
+	 unlock_request();
          return cp ? (struct hostent *)cp->he : NULL;
 
  getres_err:
          if (lp && rptr)
                  bcopy((char *)&rptr->cinfo, lp, sizeof(Link));
+	 unlock_request();
 
 #endif
 	return (struct hostent *)NULL;
