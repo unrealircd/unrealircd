@@ -582,12 +582,14 @@ extern time_t rfc2time(char *s);
 extern char *rfctime(time_t t, char *buf);
 extern void *MyMallocEx(size_t size);
 #ifdef USE_SSL
-char  *ssl_get_cipher(SSL *ssl);
+extern char  *ssl_get_cipher(SSL *ssl);
 #endif
-long config_checkval(char *value, unsigned short flags);
-void config_status(char *format, ...) __attribute__((format(printf,1,2)));
-void init_random();
-u_int32_t getrandom32();
+extern long config_checkval(char *value, unsigned short flags);
+extern void config_status(char *format, ...) __attribute__((format(printf,1,2)));
+extern void init_random();
+extern u_char getrandom8();
+extern u_int16_t getrandom16();
+extern u_int32_t getrandom32();
 extern char trouble_info[1024];
 #define EVENT_DRUGS BASE_VERSION
 extern void rejoin_doparts(aClient *sptr);

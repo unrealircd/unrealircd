@@ -2739,3 +2739,7 @@ seen. gmtime warning still there
 - Updated the docs to reflect that /module can now be used by users. Reported by fez (#0001434)
 - Made it so the configure script doesn't add include/library paths if they would be the 
   default path. Reported by LoVeR (#0001307)
+- Changed random number generator to use arc4random-alike routines so we can get "secure"
+  random numbers. We will also no longer be using rand()/random() anywhere.
+  Thanks to dek\ for pointing out this is potentionally dangerous, especially on
+  win32 with NOSPOOF enabled.

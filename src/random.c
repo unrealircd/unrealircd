@@ -1,6 +1,6 @@
 /************************************************************************
  *   IRC - Internet Relay Chat, random.c
- *   (C) 2003 Bram Matthys (Syzop) <syz@dds.nl>
+ *   (C) 2004 Bram Matthys (Syzop) and the UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers. 
@@ -42,136 +42,178 @@
 #include <fcntl.h>
 #include "h.h"
 
-#ifdef NOSPOOF
-/* 
- * getrandom32, written by Syzop.
- * This function returns a random 32bit value
+/*
+ * Based on Arc4 random number generator for FreeBSD/OpenBSD.
+ * Copyright 1996 David Mazieres <dm@lcs.mit.edu>.
+ *
+ * Modification and redistribution in source and binary forms is
+ * permitted provided that due credit is given to the author and the
+ * OpenBSD project (for instance by leaving this copyright notice
+ * intact).
+ *
+ * This code is derived from section 17.1 of Applied Cryptography, second edition.
+ *
+ * *BSD code modified by Syzop to suit our needs (unreal'ized, windows, etc)
  */
+
+struct arc4_stream {
+	u_char i;
+	u_char j;
+	u_char s[256];
+};
+
+static int rs_initialized;
+static struct arc4_stream rs;
+
+static void arc4_init(void)
+{
+int n;
+
+	for (n = 0; n < 256; n++)
+		rs.s[n] = n;
+	rs.i = 0;
+	rs.j = 0;
+}
+
+static inline void arc4_doaddrandom(u_char *dat, int datlen)
+{
+int n;
+u_char si;
+#ifdef DEBUGMODE
+int i;
+char outbuf[512], *p = outbuf;
+	*p = '\0';
+	for (i=0; i < datlen; i++)
+	{
+		sprintf(p, "%.2X/", dat[i]);
+		p += 3;
+		if (p > outbuf + 500)
+		{
+			strcpy(p, "....");
+			break;
+		}
+	}
+	if (strlen(outbuf) > 0)
+		outbuf[strlen(outbuf)-1] = '\0';
+	Debug((DEBUG_DEBUG, "arc4_addrandom() called, datlen=%d, data dump: %s", datlen, outbuf));
+#endif
+
+	rs.i--;
+	for (n = 0; n < 256; n++) {
+		rs.i = (rs.i + 1);
+		si = rs.s[rs.i];
+		rs.j = (rs.j + si + dat[n % datlen]);
+		rs.s[rs.i] = rs.s[rs.j];
+		rs.s[rs.j] = si;
+	}
+}
+
+static inline void arc4_addrandom(void *dat, int datlen)
+{
+	arc4_doaddrandom((unsigned char *)dat, datlen);
+	return;
+}
+
+
+u_char getrandom8()
+{
+u_char si, sj;
+
+	rs.i = (rs.i + 1);
+	si = rs.s[rs.i];
+	rs.j = (rs.j + si);
+	sj = rs.s[rs.j];
+	rs.s[rs.i] = sj;
+	rs.s[rs.j] = si;
+	return (rs.s[(si + sj) & 0xff]);
+}
+
+u_int16_t getrandom16()
+{
+u_int16_t val;
+	val = getrandom8(rs) << 8;
+	val |= getrandom8(rs);
+	return val;
+}
+
 u_int32_t getrandom32()
 {
-u_int32_t result;
-#ifdef USE_SSL
-int n;
-#endif
-#ifndef _WIN32
-static struct timeval prevt;
-struct timeval nowt;
-#else
-static struct _timeb prevt;
-struct _timeb nowt;
-#endif
-#ifdef USE_SSL
- #if OPENSSL_VERSION_NUMBER >= 0x000907000
-	if (EGD_PATH) {
-		n = RAND_query_egd_bytes(EGD_PATH, (unsigned char *)&result, sizeof(result));
-		if (n == sizeof(result))
-			return result;
-	}
- #endif
-#endif
+u_int32_t val;
 
-#ifndef _WIN32
-	gettimeofday(&nowt, NULL);
-
-	/* [random() may return <31 random bits, I assume it will be at least 16 bits]
-	 * 31bits (low) ^ 16bits (high) ^ 19bits (low) ^ 19bits (high) */
-	result = random() ^ (random() << 16) ^ nowt.tv_usec ^ (prevt.tv_usec << 13);
-#else
-	_ftime(&nowt);
-
-	/* 15bits (0..14) ^ 15 bits (10..24) ^ 12 bits (20..31) ^
-	 * 10bits (10..19) ^ 10 bits (20..29)
-	 */
-	result = rand() ^ (rand() << 10) ^ (rand() << 20) ^
-	         (nowt.millitm << 10) ^ (prevt.millitm << 20);
-#endif
-
-	prevt = nowt;
-	return result;
+	val = getrandom8(rs) << 24;
+	val |= getrandom8(rs) << 16;
+	val |= getrandom8(rs) << 8;
+	val |= getrandom8(rs);
+	return val;
 }
-#endif
-
-static unsigned int entropy_cfgcrc = 0, entropy_cfgsize = 0;
-static time_t entropy_cfgmtime = 0;
 
 void add_entropy_configfile(struct stat st, char *buf)
 {
-	entropy_cfgsize = (entropy_cfgsize << 4) ^ st.st_size;
-	entropy_cfgmtime = (entropy_cfgmtime << 4) ^ st.st_mtime;
-	entropy_cfgcrc = entropy_cfgcrc ^ (unsigned int)our_crc32(buf, strlen(buf));
-	Debug((DEBUG_INFO, "add_entropy_configfile: cfgsize: %u", entropy_cfgsize));
-	Debug((DEBUG_INFO, "add_entropy_configfile: cfgmtime: %u",
-		(unsigned int)entropy_cfgmtime));
-	Debug((DEBUG_INFO, "add_entropy_configfile: cfgcrc: %u", entropy_cfgcrc));
+unsigned int i;
+	arc4_addrandom(&st.st_size, sizeof(st.st_size));
+	arc4_addrandom(&st.st_mtime, sizeof(st.st_mtime));
+	i = our_crc32(buf, strlen(buf));
+	arc4_addrandom(&i, sizeof(i));
 }
 
 /*
- * init_random, written by Syzop
- * This function (hopefully) intialises the random generator securely
+ * init_random, written by Syzop.
+ * This function tries to initialize the arc4 random number generator securely.
  */
 void init_random()
 {
-unsigned int seed, egd = 0;
-time_t now = TStime();
+struct {
 #ifdef USE_SSL
-int n;
+	char egd[32];			/* from EGD */
 #endif
 #ifndef _WIN32
+	struct timeval nowt;	/* time */
+	char rnd[32];			/* /dev/urandom */
+#else
+	MEMORYSTATUS mstat;		/* memory status */
+	struct _timeb nowt;		/* time */
+#endif
+} rdat;
+
+unsigned int seed, egd = 0;
+time_t now = TStime();
+int n;
+
+#ifndef _WIN32
 struct timeval nowt;
-unsigned int xrnd = 0;
 int fd;
 #else
 MEMORYSTATUS mstat;
 struct _timeb nowt;
 #endif
 
+	arc4_init();
+
+	/* Grab non-OS specific "random" data */
 #ifdef USE_SSL
  #if OPENSSL_VERSION_NUMBER >= 0x000907000
 	if (EGD_PATH) {
-		n = RAND_query_egd_bytes(EGD_PATH, (unsigned char *)&egd, sizeof(egd));
-		Debug((DEBUG_INFO, 
-			"init_random: RAND_query_egd_bytes() ret=%d, val=%.8x", n, egd));
+		n = RAND_query_egd_bytes(EGD_PATH, rdat.egd, sizeof(rdat.egd));
 	}
  #endif
 #endif
 
-	/* Grab non-OS specific "random" data */
-	
 	/* Grab OS specific "random" data */
 #ifndef _WIN32
-	gettimeofday(&nowt, NULL);
+	gettimeofday(&rdat.nowt, NULL);
 	fd = open("/dev/urandom", O_RDONLY);
 	if (fd) {
-		(void)read(fd, &xrnd, sizeof(int));
-		Debug((DEBUG_INFO, "init_random: read from /dev/urandom: 0x%.8x", xrnd));
+		n = read(fd, &rdat.rnd, sizeof(rdat.rnd));
+		Debug((DEBUG_INFO, "init_random: read from /dev/urandom returned %d", n));
 		close(fd);
 	}
+	/* TODO: more!?? */
 #else
-	_ftime(&nowt);
-	GlobalMemoryStatus (&mstat);
- #ifdef DEBUGMODE
-    Debug((DEBUG_INFO, "init_random: mstat.dwAvailPhys=%u, mstat.dwAvailPageFile=%u\n",
-    	mstat.dwAvailPhys, mstat.dwAvailPageFile));
- #endif
+	_ftime(&rdat.nowt);
+	GlobalMemoryStatus (&rdat.mstat);
 #endif	
 
-	/* Build the seed (OS specific again) */
-#ifndef _WIN32
-	seed = now ^ nowt.tv_usec ^ getpid() ^ (entropy_cfgsize << 24) ^ 
-	       (entropy_cfgmtime << 16) ^ entropy_cfgcrc ^ CLOAK_KEY1 ^ xrnd ^ egd;
-#else
-	seed = now ^ nowt.millitm ^ getpid() ^ mstat.dwAvailPhys ^ 
-	       (mstat.dwAvailPageFile << 16) ^ (entropy_cfgsize << 8) ^
-	       (entropy_cfgmtime << 24) ^ entropy_cfgcrc ^ CLOAK_KEY1 ^ egd;
-#endif	
+	arc4_addrandom(&rdat, sizeof(rdat));
 
-	Debug((DEBUG_INFO, "init_random: seeding to 0x%.8x (%u)", seed, seed));
-	srand(seed);
-#ifdef LRAND48
-	srand48(seed);
-#endif
-#ifndef _WIN32
-	srandom(seed);
-#endif
+	/* NOTE: addtional entropy is added by add_entropy_* function(s) */
 }
-

@@ -872,6 +872,7 @@ int InitwIRCD(int argc, char *argv[])
 	extcmode_init();
 #endif
 	extban_init();
+	init_random(); /* needs to be done very early!! */
 	clear_scache_hash_table();
 #ifdef FORCE_CORE
 	corelim.rlim_cur = corelim.rlim_max = RLIM_INFINITY;
@@ -1262,7 +1263,6 @@ int InitwIRCD(int argc, char *argv[])
 		}
 	}
 #endif
-	init_random();
 	Debug((DEBUG_NOTICE, "Server ready..."));
 	SetupEvents();
 #ifdef THROTTLING

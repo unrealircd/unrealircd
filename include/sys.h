@@ -134,6 +134,9 @@ extern char OSName[256];
 //#define ircvsprintf vsprintf
 #endif
 
+#ifdef _WIN32
+typedef unsigned short u_int16_t;
+#endif
 
 /*
  *  IPv4 or IPv6 structures?

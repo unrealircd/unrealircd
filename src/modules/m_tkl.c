@@ -492,6 +492,9 @@ char targetbuf[64], actionbuf[2];
 	tkllayer[4] = actionbuf;
 	tkllayer[5] = make_nick_user_host(sptr->name, sptr->user->username, GetHost(sptr));
 	tkllayer[8] = parv[4];
+	
+	/* XXXX TODO!!: get rid of 'secs' and all temporarely spamfilter crap! everywhere! -- Syzop */
+	
 	if (whattodo == 0)
 	{
 		if (secs == 0)

@@ -92,17 +92,14 @@ DLLFUNC int MOD_UNLOAD(m_guest)(int module_unload)
 
 DLLFUNC int m_guest(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	int randnum;
 	char guestnick[NICKLEN];
 	char *param[2];
 
-	randnum = 1+(int) (99999.0*rand()/(RAND_MAX+10000.0));
-	snprintf(guestnick, NICKLEN, "Guest%d", randnum);
+	snprintf(guestnick, NICKLEN, "Guest%d", getrandom32());
 
 	while(find_client(guestnick, (aClient *)NULL))
 	{ 
-		randnum = 1+(int) (99999.0*rand()/(RAND_MAX+10000.0));
-		snprintf(guestnick, NICKLEN, "Guest%d", randnum);
+		snprintf(guestnick, NICKLEN, "Guest%d", getrandom32());
 	}
 	param[0] = sptr->name;
 	param[1] = guestnick;

@@ -393,7 +393,7 @@ char	*Auth_Make(short type, char *para)
 			/* If our data is like 1 or none, we just let em through .. */
 			if (!(para[0] && para[1]))
 				return NULL;
-			sprintf(salt, "%02X", (rand() >> 24) & 0xFF);
+			sprintf(salt, "%02X", (unsigned int)getrandom8());
 			return(crypt(para, salt));
 			break;
 #endif

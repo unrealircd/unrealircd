@@ -1697,7 +1697,7 @@ char *unreal_mktemp(char *dir, char *suffix)
 
 	for (i = 500; i > 0; i--)
 	{
-		snprintf(tempbuf, PATH_MAX, "%s/%X.%s", dir, rand(), suffix);
+		snprintf(tempbuf, PATH_MAX, "%s/%X.%s", dir, getrandom32(), suffix);
 		fd = fopen(tempbuf, "r");
 		if (!fd)
 			return tempbuf;
