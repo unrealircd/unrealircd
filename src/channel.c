@@ -175,6 +175,19 @@ aCtab cFlagTab[] = {
 
 char cmodestring[512];
 
+inline int op_can_override(aClient *sptr)
+{
+#ifndef NO_OPEROVERRIDE
+	if (!IsOper(sptr))
+		return 0;
+	if (MyClient(sptr) && !OPCanOverride(sptr))
+		return 0;
+	return 1;
+#else
+	return 0;
+#endif
+}
+
 void make_cmodestr(void)
 {
 	char *p = &cmodestring[0];
@@ -1833,7 +1846,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	int  notsecure;
 	chasing = 0;
 	if (is_half_op(cptr, chptr) && !is_chan_op(cptr, chptr) && !IsULine(cptr)
-	    && !IsOper(cptr))
+	    && !op_can_override(cptr))
 	{
 		/* Ugly halfop hack --sts 
 		   - this allows halfops to do +b +e +v and so on */
@@ -4091,6 +4104,13 @@ CMD_FUNC(m_part)
 **	parv[2] = client to kick
 **	parv[3] = kick comment
 */
+
+#ifdef PREFIX_AQ
+#define CHFL_ISOP (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP)
+#else
+#define CHFL_ISOP (CHFL_CHANOP)
+#endif
+
 CMD_FUNC(m_kick)
 {
 	aClient *who;
@@ -4107,6 +4127,7 @@ CMD_FUNC(m_kick)
 	}
 
 	comment = (BadPtr(parv[3])) ? parv[0] : parv[3];
+
 	if (strlen(comment) > (size_t)TOPICLEN)
 		comment[TOPICLEN] = '\0';
 
@@ -4114,6 +4135,7 @@ CMD_FUNC(m_kick)
 
 	for (; (name = strtoken(&p, parv[1], ",")); parv[1] = NULL)
 	{
+		long sptr_flags;
 		chptr = get_channel(sptr, name, !CREATE);
 		if (!chptr)
 		{
@@ -4123,12 +4145,10 @@ CMD_FUNC(m_kick)
 		}
 		if (check_channelmask(sptr, cptr, name))
 			continue;
-		if (!IsServer(cptr)
-#ifndef NO_OPEROVERRIDE
-		    && (!IsOper(sptr) || !(MyClient(sptr) && OPCanOverride(sptr)))
-#endif
-		    && !IsULine(sptr) && !is_chan_op(sptr, chptr)
-		    && !is_halfop(sptr, chptr))
+		/* Store "sptr" access flags */
+		sptr_flags = get_access(sptr, chptr);
+		if (!IsServer(cptr) && !IsULine(sptr) && !op_can_override(sptr)
+		    && !(sptr_flags & CHFL_ISOP) && !(sptr_flags & CHFL_HALFOP))
 		{
 			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
 			    me.name, parv[0], chptr->chname);
@@ -4137,15 +4157,14 @@ CMD_FUNC(m_kick)
 
 		for (; (user = strtoken(&p2, parv[2], ",")); parv[2] = NULL)
 		{
+			long who_flags;
 			if (!(who = find_chasing(sptr, user, &chasing)))
 				continue;	/* No such user left! */
 			if (!who->user)
 				continue;
 			if ((lp = find_membership_link(who->user->channel, chptr)))
 			{
-				if (IsULine(sptr))
-					goto attack;
-				if (IsServer(sptr))
+				if (IsULine(sptr) || IsServer(sptr))
 					goto attack;
 
 				/* Note for coders regarding oper override:
@@ -4156,29 +4175,31 @@ CMD_FUNC(m_kick)
 				 */
 				if (chptr->mode.mode & MODE_NOKICKS)
 				{
-					if (MyClient(sptr) && !(IsOper(sptr) && OPCanOverride(sptr)))
+					if (!op_can_override(sptr))
 					{
 						sendto_one(sptr,
 						    ":%s %s %s :*** You cannot kick people on %s",
-						    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, chptr->chname);
+						    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, 
+						    chptr->chname);
 						goto deny;
 					}
-					if (IsOper(sptr))
-						sendto_snomask(SNO_EYES,
-							"*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
-							sptr->name, sptr->user->username, sptr->user->realhost,
-							chptr->chname, who->name, comment);
+					sendto_snomask(SNO_EYES,
+						"*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
+						sptr->name, sptr->user->username, sptr->user->realhost,
+						chptr->chname, who->name, comment);
 					goto attack; /* No reason to continue.. */
 				}
-
+				/* Store "who" access flags */
+				who_flags = get_access(who, chptr);
 				/* we are neither +o nor +h, OR..
 				 * we are +h but victim is +o, OR...
 				 * we are +h and victim is +h
 				 */
-				if (IsOper(sptr))
-					if ((!is_chan_op(sptr, chptr) && !is_halfop(sptr, chptr)) ||
-					    (is_halfop(sptr, chptr) && is_chan_op(who, chptr)) ||
-					    (is_halfop(sptr, chptr) && is_halfop(who, chptr)))
+				if (op_can_override(sptr))
+				{
+					if ((!(sptr_flags & CHFL_ISOP) && !(sptr_flags & CHFL_HALFOP)) ||
+					    ((sptr_flags & CHFL_HALFOP) && (who_flags & CHFL_ISOP)) ||
+					    ((sptr_flags & CHFL_HALFOP) && (who_flags & CHFL_HALFOP)))
 					{
 						sendto_snomask(SNO_EYES,
 						    "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
@@ -4186,12 +4207,12 @@ CMD_FUNC(m_kick)
 						    chptr->chname, who->name, comment);
 						goto attack;
 					}	/* is_chan_op */
-				
+
+				}				
 				/* victim is +a or +q, we are not +q */
-				if ((is_chanprot(who, chptr)
-				    || is_chanowner(who, chptr)
-				    || IsServices(who)) && !is_chanowner(sptr, chptr)) {
-					if (IsOper(sptr)) /* (and f*ck local ops) */
+				if ((who_flags & (CHFL_CHANOWNER|CHFL_CHANPROT) || IsServices(who))
+					 && !(sptr_flags & CHFL_CHANOWNER)) {
+					if (op_can_override(sptr)) /* (and f*ck local ops) */
 					{	/* IRCop kicking owner/prot */
 						sendto_snomask(SNO_EYES,
 						    "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
@@ -4211,10 +4232,8 @@ CMD_FUNC(m_kick)
 				}
 				
 				/* victim is +o, we are +h [operoverride is already taken care of 2 blocks above] */
-				if (is_chan_op(who, chptr)
-				    && is_halfop(sptr, chptr)
-				    && !is_chan_op(sptr, chptr)
-				    && !IsULine(sptr) && MyClient(sptr))
+				if ((who_flags & CHFL_ISOP) && (sptr_flags & CHFL_HALFOP)
+				    && !(sptr_flags & CHFL_ISOP) && !IsULine(sptr) && MyClient(sptr))
 				{
 					sendto_one(sptr,
 					    ":%s %s %s :*** You cannot kick channel operators on %s if you only are halfop",
@@ -4223,9 +4242,8 @@ CMD_FUNC(m_kick)
 				}
 
 				/* victim is +h, we are +h [operoverride is already taken care of 3 blocks above] */
-				if (is_halfop(who, chptr)
-				    && is_halfop(sptr,chptr)
-				    && !is_chan_op(sptr, chptr) && MyClient(sptr))
+				if ((who_flags & CHFL_HALFOP) && (sptr_flags & CHFL_HALFOP)
+				    && !(sptr_flags & CHFL_ISOP) && MyClient(sptr))
 				{
 					sendto_one(sptr,
 					    ":%s %s %s :*** You cannot kick channel halfops on %s if you only are halfop",
@@ -4315,7 +4333,6 @@ CMD_FUNC(m_kick)
 
 	return 0;
 }
-
 
 /*
 ** m_topic

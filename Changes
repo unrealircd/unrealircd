@@ -2692,3 +2692,5 @@ seen. gmtime warning still there
 - Updated the win32 TRE lib/dll to 0.6.4
 - Updated the TRE library source to 0.6.4 (yup, a release right after I do the last upgrade!)
 - Removed all the FLAGS_TS8 stuff (no longer used)
+- Fixed some operoverride bugs regarding halfops found by Sinus (#0001465)
+- Cleaned up the /kick code to make it a bit faster
