@@ -618,7 +618,6 @@ static int do_query_number(Link *lp, struct IN_ADDR *numb, ResRQ *rptr)
  */
 static int query_name(char *name, int class, int type, ResRQ *rptr)
 {
-	struct timeval tv;
 	char buf[MAXPACKET];
 	int  r, s;
 	HEADER *hptr;

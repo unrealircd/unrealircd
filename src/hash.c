@@ -790,7 +790,7 @@ EVENT(e_clean_out_throttling_buckets)
 {
 	struct ThrottlingBucket *n;
 	int	i;
-	struct ThrottlingBucket z = { NULL, NULL, 0};
+	struct ThrottlingBucket z = { NULL, NULL, {0}, 0, 0};
 	static time_t t = 0;
 		
 	for (i = 0; i < THROTTLING_HASH_SIZE; i++)
@@ -804,7 +804,6 @@ EVENT(e_clean_out_throttling_buckets)
 
 	if (!t || (TStime() - t > 30))
 	{
-		int i;
 		extern char serveropts[];
 		extern Module *Modules;
 		char *p = serveropts + strlen(serveropts);

@@ -93,7 +93,7 @@ DLLFUNC int MOD_UNLOAD(m_sethost)(int module_unload)
 */
 DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	char *vhost, *s;
+	char *vhost;
 #ifndef DISABLE_USERMOD
 	int  permit = 0;	/* 0 = opers(glob/locop) 1 = global oper 2 = not MY clients.. */
 #else

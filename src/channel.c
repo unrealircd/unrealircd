@@ -567,7 +567,7 @@ char *ban_realhost = NULL, *ban_virthost = NULL, *ban_ip = NULL;
 Ban *is_banned(aClient *sptr, aChannel *chptr, int type)
 {
 	Ban *tmp, *tmp2;
-	char *s, *p;
+	char *s;
 	static char realhost[NICKLEN + USERLEN + HOSTLEN + 6];
 	static char virthost[NICKLEN + USERLEN + HOSTLEN + 6];
 	static char     nuip[NICKLEN + USERLEN + HOSTLEN + 6];
@@ -2572,7 +2572,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				} else {
 					/* NEW +F */
 					char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
-					int v, i;
+					int v;
 					unsigned short warnings = 0, breakit;
 					unsigned char r;
 
@@ -5038,7 +5038,7 @@ RemoveFld *e;
  */
 void chanfloodtimer_add(aChannel *chptr, char mflag, long mbit, time_t when)
 {
-RemoveFld *e;
+RemoveFld *e = NULL;
 unsigned char add=1;
 
 	if (chptr->mode.floodprot->timer_flags & mbit)

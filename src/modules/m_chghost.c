@@ -102,7 +102,6 @@ DLLFUNC int MOD_UNLOAD(m_chghost)(int module_unload)
 DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
-	char *s;
 
 #ifdef DISABLE_USERMOD
 	if (MyClient(sptr))

@@ -824,7 +824,7 @@ static int check_dcc_soft(aClient *from, aClient *to, char *text)
 char *ctcp;
 ConfigItem_deny_dcc *fl;
 char *end, realfile[BUFSIZE];
-int size_string, ret;
+int size_string;
 
 	if ((*text != 1) || IsOper(from) || IsOper(to))
 		return 1;

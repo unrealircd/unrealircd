@@ -2920,7 +2920,6 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 {
 	char has_name = 0, has_info = 0, has_numeric = 0;
 	ConfigEntry *cep;
-	long	    l;
 	int	    errors = 0;
 
 	if (requiredstuff.conf_me)
@@ -2963,7 +2962,7 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "info"))
 		{
 			char *p;
-			char valid;
+			char valid = 0;
 			if (has_info)
 			{
 				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
@@ -3230,7 +3229,7 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 				l = atoi(cep->ce_vardata);
 				if ((l < 0) || (l > 5000))
 				{
-					config_error("%s:%i: oper::maxlogins: value out of range (%ld) should be 0-5000",
+					config_error("%s:%i: oper::maxlogins: value out of range (%d) should be 0-5000",
 						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, l);
 					errors++; 
 					continue;
@@ -3393,7 +3392,6 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry 	*cep;
-	long		l;
 	int		errors = 0;
 	char has_pingfreq = 0, has_connfreq = 0, has_maxclients = 0, has_sendq = 0;
 	char has_recvq = 0;
@@ -3871,7 +3869,6 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	char	    *port;
 	int	    start, end, iport;
 	int tmpflags =0;
-	unsigned char	isnew = 0;
 
 	strcpy(copy, ce->ce_vardata);
 	/* Seriously cheap hack to make listen <port> work -Stskeeps */
@@ -4491,7 +4488,7 @@ void create_tkl_except(char *mask, char *type)
 int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 {
 
-	ConfigEntry *cep, *cep2, *cep3;
+	ConfigEntry *cep;
 	ConfigItem_except *ca;
 	Hook *h;
 	struct irc_netmask tmp;
@@ -4538,7 +4535,7 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 	}
 #endif
 	else if (!strcmp(ce->ce_vardata, "tkl")) {
-		ConfigEntry *mask, *type;
+		ConfigEntry *mask = NULL, *type = NULL;
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 		{
 			if (!strcmp(cep->ce_varname, "mask"))
@@ -4569,7 +4566,7 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 
 int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 {
-	ConfigEntry *cep, *cep3;
+	ConfigEntry *cep;
 	int	    errors = 0;
 	Hook *h;
 	char has_mask = 0;
@@ -4691,7 +4688,6 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 				}					
 				if (cep->ce_vardata)
 				{
-					OperFlag *opf;
 					if (!strcmp(cep->ce_vardata, "tkline") || 
 					    !strcmp(cep->ce_vardata, "tzline"))
 					{
@@ -4718,7 +4714,6 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 					ConfigEntry *cepp;
 					for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 					{
-						OperFlag *opf;
 						if (!strcmp(cepp->ce_varname, "tkline") || 
 						    !strcmp(cepp->ce_varname, "tzline"))
 						{
@@ -5060,7 +5055,7 @@ static ConfigItem_badword *copy_badword_struct(ConfigItem_badword *ca, int regex
 
 int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 {
-	ConfigEntry *cep, *word;
+	ConfigEntry *cep, *word = NULL;
 	ConfigItem_badword *ca;
 	char *tmp;
 	short regex = 0;
@@ -5173,8 +5168,7 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 int _test_badword(ConfigFile *conf, ConfigEntry *ce) 
 { 
 	int errors = 0;
-	ConfigEntry *word, *replace, *cep;
-	regex_t expr;
+	ConfigEntry *cep;
 	char has_word = 0, has_replace = 0, has_action = 0, action = 'r';
 
 	if (!ce->ce_vardata)
@@ -5279,8 +5273,8 @@ int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
 	aTKline *nl = MyMallocEx(sizeof(aTKline));
-	char *word, *reason, *bantime;
-	int action, target;
+	char *word = NULL, *reason = NULL, *bantime = NULL;
+	int action = 0, target = 0;
 	char has_reason = 0, has_bantime = 0;
 	
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -5346,7 +5340,6 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp;
 	int errors = 0;
-	int got = 0;
 	char *regex = NULL, *reason = NULL;
 	char has_target = 0, has_regex = 0, has_action = 0, has_reason = 0, has_bantime = 0;
 	
@@ -5414,8 +5407,16 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 			continue;
 		}
 		if (!strcmp(cep->ce_varname, "reason"))
+		{
+			if (has_reason)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "spamfilter::reason");
+				continue;
+			}
+			has_reason = 1;
 			reason = cep->ce_vardata;
-		
+		}
 		else if (!strcmp(cep->ce_varname, "regex"))
 		{
 			char *errbuf;
@@ -5582,7 +5583,7 @@ int     _conf_log(ConfigFile *conf, ConfigEntry *ce)
 
 int _test_log(ConfigFile *conf, ConfigEntry *ce) { 
 	int errors = 0;
-	ConfigEntry *cep, *flags, *maxsize, *cepp;
+	ConfigEntry *cep, *cepp;
 	char has_flags = 0, has_maxsize = 0;
 
 	if (!ce->ce_vardata)
@@ -6242,7 +6243,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp, *ceppp;
 	OperFlag 	*ofl = NULL;
-	char	    temp[512];
 	Hook *h;
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -6635,9 +6635,8 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp, *ceppp;
 	OperFlag 	*ofl = NULL;
-	long		templong, l1, l2,l3;
+	long		templong;
 	int		tempi;
-	int	    i;
 	int	    errors = 0;
 	Hook	*h;
 #define CheckNull(x) if ((!(x)->ce_vardata) || (!(*((x)->ce_vardata)))) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }

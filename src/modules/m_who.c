@@ -577,7 +577,6 @@ char has_common_chan = 0;
 static void do_channel_who(aClient *sptr, aChannel *channel, char *mask)
 {
 	Member *cm = channel->members;
-  	int i = 0;
 	if (IsMember(sptr, channel) || IsNetAdmin(sptr))
 		who_flags |= WF_ONCHANNEL;
 

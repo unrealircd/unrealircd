@@ -1071,7 +1071,7 @@ CMD_FUNC(m_restart)
  */
 int short_motd(aClient *sptr) {
 	ConfigItem_tld *ptr;
-	aMotd *temp, *temp2;
+	aMotd *temp;
 	struct tm *tm = &smotd_tm;
 	char userhost[HOSTLEN + USERLEN + 6];
 	char is_short = 1;

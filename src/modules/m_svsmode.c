@@ -300,7 +300,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 int  do_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_change)
 {
 int i;
-char **p, *m;
+char *m;
 aClient *acptr;
 int  what, setflags;
 char *xmsg = show_change ? MSG_SVS2MODE : MSG_SVSMODE;

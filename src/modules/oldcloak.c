@@ -173,7 +173,6 @@ int errors = 0;
 
 DLLFUNC int oldcloak_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
-ConfigEntry *cep;
 unsigned long r;
 char temp[128];
 
@@ -201,7 +200,7 @@ DLLFUNC char *hidehost(char *host)
 	static char	h3[300];
 	unsigned long		l[8];
 	int		i;
-	char		*p, *q;
+	char		*p;
 
 	/* Find out what kind of host we're dealing with here */
 	/* IPv6 ? */	

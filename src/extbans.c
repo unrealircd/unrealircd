@@ -74,7 +74,6 @@ int i;
 
 Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 {
-Extban *tmp;
 int slot;
 char tmpbuf[512];
 

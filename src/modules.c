@@ -192,7 +192,6 @@ char  *Module_Create(char *path_)
 	ModuleHeader    *mod_header;
 	int		ret = 0;
 	Module          *mod = NULL, **Mod_Handle = NULL;
-	int *x;
 	int betaversion,tag;
 	char *expectedmodversion = our_mod_version();
 	Debug((DEBUG_DEBUG, "Attempting to load module from %s",
@@ -739,7 +738,7 @@ vFP Module_SymX(char *name, Module **mptr)
 void	module_loadall(int module_load)
 {
 #ifndef STATIC_LINKING
-	iFP	fp, fpp;
+	iFP	fp;
 	Module *mi, *next;
 	
 	if (!loop.ircd_booted)

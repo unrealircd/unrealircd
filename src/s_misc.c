@@ -432,7 +432,6 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 #ifdef FDLIST_DEBUG
 		{
 			int i;
-			int cnt = 0;
 			
 			if (!IsAnOper(sptr))
 			{
@@ -1004,7 +1003,6 @@ int flags = 0;
 
 int spamfilter_getconftargets(char *s)
 {
-int flags = 0;
 	if (!strcmp(s, "channel"))
 		return SPAMF_CHANMSG;
 	if (!strcmp(s, "private"))

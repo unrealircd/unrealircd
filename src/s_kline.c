@@ -951,7 +951,6 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	char gmt[256], gmt2[256];
 	char txt[256];
 	TS   expiry_1, setat_1, spamf_tklduration = 0;
-	int index;
 	char *reason = NULL;
 
 	if (!IsServer(sptr) && !IsOper(sptr) && !IsMe(sptr))
@@ -1463,7 +1462,6 @@ SpamExcept *e;
 int dospamfilter(aClient *sptr, char *str_in, int type, char *target)
 {
 aTKline *tk;
-int n;
 char *str;
 
 	if (type == SPAMF_USER)

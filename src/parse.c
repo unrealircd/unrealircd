@@ -148,9 +148,6 @@ aClient *find_person(char *name, aClient *cptr)
 
 void ban_flooder(aClient *cptr)
 {
-	int i;
-	aClient *acptr;
-
 	/* place_host_ban also takes care of removing any other clients with same host/ip */
 	place_host_ban(cptr, BAN_ACT_ZLINE, "Flood from unknown connection", UNKNOWN_FLOOD_BANTIME);
 	return;

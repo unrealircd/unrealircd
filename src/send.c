@@ -84,7 +84,6 @@ MODVAR int  sendanyways = 0;
 */
 static int dead_link(aClient *to, char *notice)
 {
-	char	*error = NULL;
 	
 	to->flags |= FLAGS_DEADSOCKET;
 	/*

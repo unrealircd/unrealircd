@@ -184,7 +184,10 @@ CMD_FUNC(m_sjoin)
 	unsigned short removetheirs;
 	unsigned short merge;	/* same timestamp */
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
-	char paraback[1024], modeback[1024];
+	char paraback[1024];
+#ifndef NEWCHFLOODPROT
+	char modeback[1024];
+#endif
 	char banbuf[1024];
 	char exbuf[1024];
 	char cbuf[1024];

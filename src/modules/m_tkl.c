@@ -486,11 +486,8 @@ int spamfilter_usage(aClient *sptr)
 DLLFUNC int m_spamfilter(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 int  whattodo = 0;	/* 0 = add  1 = del */
-int  i;
-aClient *acptr = NULL;
-char *mask = NULL;
 char mo[32], mo2[32];
-char *p, *usermask, *hostmask;
+char *p;
 char *tkllayer[11] = {
 	me.name,	/*  0 server.name */
 	NULL,		/*  1 +|- */
@@ -504,7 +501,6 @@ char *tkllayer[11] = {
 	"",			/*  9 tkl reason */
 	""			/* 10 regex */
 };
-struct tm *t;
 int targets = 0, action = 0;
 char targetbuf[64], actionbuf[2];
 char reason[512]; 
