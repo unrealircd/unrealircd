@@ -1482,3 +1482,5 @@ seen. gmtime warning still there
 - Removed GNU malloc totally from the FSU pthreads distribution
 - Added some somewhat path specifics to unrealinstssl.iss
 - Fixed some installer problems wrt SSL compile, and added makefile.win32.ssl
+- Removed /doc/faq included in new doc set
+
