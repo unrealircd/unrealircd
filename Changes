@@ -411,3 +411,5 @@
 - Forgot to mention away spamfilter target in helpop, reported by Rocko.
 - Changed version to 3.2.2
 ** 3.2.2 release **
+- Fixed Jan-15-2005 crashbug (see .RELEASE.NOTES)
+** 3.2.2b release **

@@ -1,6 +1,10 @@
 
-Unreal3.2.2 Release Notes
-==========================
+Unreal3.2.2b Release Notes
+===========================
+
+** NOTE: This 'b' release of 3.2.2 includes the fix for the crashbug
+   reported on January 15 2005. That's also all it adds when compared
+   to 3.2.2, no other fixes/new features/etc **
 
 ==[ GENERAL INFORMATION ]==
 - If you are upgrading on *NIX, make sure you run 'make clean' and './Config'
