@@ -87,8 +87,8 @@ extern int m_lag_Init(ModuleInfo *modinfo), m_rping_Init(ModuleInfo *modinfo), m
 extern int m_tsctl_Init(ModuleInfo *modinfo), m_htm_Init(ModuleInfo *modinfo), m_chgname_Init(ModuleInfo *modinfo);
 extern int m_message_Init(ModuleInfo *modinfo), m_whois_Init(ModuleInfo *modinfo), m_quit_Init(ModuleInfo *modinfo);
 extern int m_kill_Init(ModuleInfo *modinfo), m_pingpong_Init(ModuleInfo *modinfo), m_oper_Init(ModuleInfo *modinfo);
-extern int m_akill_Init(ModuleInfo *modinfo), m_rakill_Init(ModuleInfo *modinfo), m_zline_Init(ModuleInfo *modinfo);
-extern int m_unzline_Init(ModuleInfo *modinfo), m_kline_Init(ModuleInfo *modinfo), m_unkline_Init(ModuleInfo *modinfo);
+extern int m_akill_Init(ModuleInfo *modinfo), m_rakill_Init(ModuleInfo *modinfo);
+extern int m_unzline_Init(ModuleInfo *modinfo), m_unkline_Init(ModuleInfo *modinfo);
 extern int m_sqline_Init(ModuleInfo *modinfo), m_unsqline_Init(ModuleInfo *modinfo), m_tkl_Init(ModuleInfo *modinfo);
 extern int m_vhost_Init(ModuleInfo *modinfo), m_cycle_Init(ModuleInfo *modinfo), m_svsjoin_Init(ModuleInfo *modinfo);
 extern int m_svspart_Init(ModuleInfo *modinfo), m_svslusers_Init(ModuleInfo *modinfo);
@@ -112,8 +112,8 @@ extern int m_lag_Load(int module_load), m_rping_Load(int module_load), m_sendumo
 extern int m_tsctl_Load(int module_load), m_htm_Load(int module_load), m_chgname_Load(int module_load);
 extern int m_message_Load(int module_load), m_whois_Load(int module_load), m_quit_Load(int module_load);
 extern int m_kill_Load(int module_load), m_pingpong_Load(int module_load), m_oper_Load(int module_load);
-extern int m_akill_Load(int module_load), m_rakill_Load(int module_load), m_zline_Load(int module_load);
-extern int m_unzline_Load(int module_load), m_kline_Load(int module_load), m_unkline_Load(int module_load);
+extern int m_akill_Load(int module_load), m_rakill_Load(int module_load);
+extern int m_unzline_Load(int module_load), m_unkline_Load(int module_load);
 extern int m_sqline_Load(int module_load), m_unsqline_Load(int module_load), m_tkl_Load(int module_load);
 extern int m_vhost_Load(int module_load), m_cycle_Load(int module_load), m_svsjoin_Load(int module_load);
 extern int m_svspart_Load(int module_load), m_svslusers_Load(int module_load);
@@ -135,7 +135,7 @@ extern int m_adminchat_Unload(), m_nachat_Unload(), m_lag_Unload(), m_rping_Unlo
 extern int m_sendumode_Unload(), m_tsctl_Unload(), m_htm_Unload(), m_chgname_Unload();
 extern int m_message_Unload(), m_whois_Unload(), m_quit_Unload(), m_kill_Unload();
 extern int m_pingpong_Unload(), m_oper_Unload(), m_akill_Unload(), m_rakill_Unload();
-extern int m_zline_Unload(), m_unzline_Unload(), m_kline_Unload(), m_unkline_Unload();
+extern int m_unzline_Unload(), m_unkline_Unload();
 extern int m_sqline_Unload(), m_unsqline_Unload(), m_tkl_Unload(), m_vhost_Unload();
 extern int m_cycle_Unload(), m_svsjoin_Unload(), m_svspart_Unload(), m_svslusers_Unload();
 #ifdef GUEST
@@ -214,9 +214,7 @@ int    l_commands_Init(ModuleInfo *modinfo)
 	m_oper_Init(&ModCmdsInfo);
 	m_akill_Init(&ModCmdsInfo);
 	m_rakill_Init(&ModCmdsInfo);
-	m_zline_Init(&ModCmdsInfo);
 	m_unzline_Init(&ModCmdsInfo);
-	m_kline_Init(&ModCmdsInfo);
 	m_unkline_Init(&ModCmdsInfo);
 	m_sqline_Init(&ModCmdsInfo);
 	m_unsqline_Init(&ModCmdsInfo);
@@ -277,9 +275,7 @@ int    l_commands_Load(int module_load)
 	m_oper_Load(module_load);
 	m_akill_Load(module_load);
 	m_rakill_Load(module_load);
-	m_zline_Load(module_load);
 	m_unzline_Load(module_load);
-	m_kline_Load(module_load);
 	m_unkline_Load(module_load);
 	m_tkl_Load(module_load);
 	m_sqline_Load(module_load);
@@ -341,9 +337,7 @@ int	l_commands_Unload(int module_unload)
 	m_oper_Unload();
 	m_akill_Unload();
 	m_rakill_Unload();
-	m_zline_Unload();
 	m_unzline_Unload();
-	m_kline_Unload();
 	m_unkline_Unload();
 	m_sqline_Unload();
 	m_unsqline_Unload();
