@@ -1141,3 +1141,11 @@ v- Fixed some bugreport stuff
 - Added except tkl to allow exceptions from tklines, tzlines, shuns, glines, and gzlines, suggested by
   funraiser [still need to design a way to report in /stats] (#0000044)
 - Documented link::cipher and except tkl in doc/conf.doc
+- Changed umode +I behavoiur to you have to be loading invisibility.so to have
+  the +I functionality. Code is still in IRCd, but isn't used until module
+  is loaded. Loading of this will cause an "R" to be added to /version
+  flags. Hopefully this will satisify some people's thoughts about a so 
+  called spy tool being enabled by default. Also added flag_add(char *) 
+  and flag_del(char) for modules to add to flags string. -Sts
+- Removed -win32 postfix for wircds, look in /version for "W" instead
+- Removed ircnetwork part of /version

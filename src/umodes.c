@@ -108,7 +108,6 @@ void	umode_init(void)
 	UMODE_KIX = umode_get('q');       /* 0x200000	 usermode +q */
 	UMODE_BOT = umode_get('B');       /* 0x400000	 User is a bot */
 	UMODE_SECURE = umode_get('z');    /*	0x800000	 User is a secure connect */
-	UMODE_HIDING = umode_get('I');    /* 0x2000000	 Totally invisible .. */
 	UMODE_VICTIM = umode_get('v');    /* 0x8000000	 Intentional Victim */
 	UMODE_DEAF = umode_get('d');      /* 0x10000000       Deaf */
 	UMODE_HIDEOPER = umode_get('H');  /* 0x20000000	 Hide oper mode */

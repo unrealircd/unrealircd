@@ -959,7 +959,13 @@ int  InitwIRCD(argc, argv)
 			struct IN_ADDR bah;
 			int bit;
 			parse_netmask("255.255.255.255/8", &bah, &bit);
-			printf("%s - %d",Inet_ia2p(&bah), bit);
+			printf("%s - %d\n",Inet_ia2p(&bah), bit);
+			flag_add("m");
+			flag_del('m');
+			flag_add("n");
+			flag_add("m");
+			flag_del('m');
+			printf("%s\n", extraflags);
 			exit(0);
 		}
 		  case 'C':

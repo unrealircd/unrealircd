@@ -28,6 +28,7 @@
 #ifndef NO_FDLIST
 #include "fdlist.h"
 #endif
+extern char *extraflags;
 
 /* for the new s_err.c */
 extern char *getreply(int);

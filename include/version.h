@@ -36,11 +36,7 @@
 #define PATCH6  		""
 #define PATCH7  		""
 #define PATCH8  		COMPILEINFO
-#ifdef _WIN32
-#define PATCH9  		"+win32"
-#else
 #define PATCH9  		""
-#endif
 /* release header */
 #define Rh BASE_VERSION
 #define VERSIONONLY		PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7

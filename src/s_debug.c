@@ -69,9 +69,6 @@ char serveropts[] = {
 #ifdef	VALLOC
 	'V',
 #endif
-#ifdef REMOVE_ADVERTISING
-	'R',
-#endif
 #ifdef	_WIN32
 	'W',
 #endif
@@ -96,11 +93,10 @@ char serveropts[] = {
 #ifdef USE_SSL
 	'e',
 #endif
-/* we are a stable ircd */
-	'S',
-	's',
 	'\0'
 };
+
+char *extraflags = NULL;
 
 #include "numeric.h"
 #include "common.h"
@@ -145,6 +141,41 @@ char serveropts[] = {
 #ifndef ssize_t
 #define ssize_t unsigned int
 #endif
+
+void	flag_add(char *ch)
+{
+	char *newextra;
+	if (extraflags)
+	{
+		newextra = (char *)MyMalloc(strlen(extraflags) + 1 + strlen(ch));
+		strcpy(newextra, extraflags);
+		strcat(newextra, ch);
+		MyFree(extraflags);
+		extraflags = newextra;
+	}
+	else
+		extraflags = strdup(ch);
+}
+
+void	flag_del(char ch)
+{
+	int newsz;
+	char *p, *op;
+	char *newflags;
+	newsz = 0;	
+	p = extraflags;
+	for (newsz = 0, p = extraflags; *p; p++)
+		if (*p != ch)
+			newsz++;
+	newflags = MyMalloc(newsz + 1);
+	for (p = newflags, op = extraflags; (*op) && (newsz); newsz--, op++)
+		if (*op != ch)
+			*p++ = *op;
+	*p = '\0';
+	MyFree(extraflags);
+	extraflags = newflags;
+}
+
 
 
 #ifdef DEBUGMODE
