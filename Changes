@@ -490,3 +490,5 @@
   Bugz.
 - Added missing documentation for spamfilter away target (#0002205) reported by Dukat.
 - Fixed dcc spamfilter problem reported by TimeFX and Deadalus (#2177, #2204).
+- Fixed Oper Override not giving a 'special join notice' if +z is set along with another mode
+  (eg: +i/+k), reported by tabrisnet (#0001487).
