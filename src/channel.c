@@ -3227,7 +3227,8 @@ int  m_kick(cptr, sptr, parc, parv)
 				}
 
 				if (IsOper(sptr))
-					if (!is_chan_op(sptr, chptr))
+					if (!is_chan_op(sptr, chptr) && !is_halfop(sptr, chptr)
+					   || (is_halfop(sptr, chptr) && is_chan_op(who, chptr)))
 					{
 						sendto_umode(UMODE_EYES,
 						    "*** OperKick [%s @ %s -> %s (%s)]",
