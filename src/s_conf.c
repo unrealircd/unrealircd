@@ -470,8 +470,6 @@ long config_checkval(char *orig, unsigned short flags) {
 		int mfactor = 1;
 		char *sz;
 		for (text = value; *text; text++) {
-			if (!isalpha(*text))
-				text++;
 			if (isalpha(*text)) {
 				if (tolower(*text) == 'k') 
 					mfactor = 1024;
@@ -493,7 +491,10 @@ long config_checkval(char *orig, unsigned short flags) {
 						break;
 				}
 				ret += atoi(sz+1)*mfactor;
-				
+				if (*text == '\0') {
+					text++;
+					break;
+				}
 			}
 		}
 		mfactor = 1;
@@ -511,8 +512,6 @@ long config_checkval(char *orig, unsigned short flags) {
 		int mfactor = 1;
 		char *sz;
 		for (text = value; *text; text++) {
-			if (!isalpha(*text))
-				text++;
 			if (isalpha(*text)) {
 				if (tolower(*text) == 'w')
 					mfactor = 604800;	
