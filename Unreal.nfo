@@ -1,5 +1,5 @@
 ===============================================
-=            UnrealIRCd v3.2 (pre1)           =
+=               UnrealIRCd v3.2               =
 ===============================================
  Was brought to you by:
 
@@ -35,9 +35,6 @@
 
  press enter when asked for password
  Then, choose the appropiate branch you want:
-
- [NOTE: The following information is only valid after 3.2 release, till then the
-  branches are 'beta' for 3.2* releases and 'devel' for 3.2 development]
 
  latest 3.2 release ("stable"):
  "cvs -d :pserver:anonymous@cvs.ircsystems.net:/home/cmunk/ircsystems/cvsroot checkout -r stable -d Unreal-stable unreal"

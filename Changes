@@ -3106,3 +3106,5 @@ seen. gmtime warning still there
 - German doc updates (from April 18) + gzline docs tweak.
 - Fixed some remote includes issues and added a connect/transfer timeout, server should
   now no longer be frozen if the site is unreachable. Reported by Ron2K (#0001751).
+- Changed version to 3.2 already
+** internal pre2 release **

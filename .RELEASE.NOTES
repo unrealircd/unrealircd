@@ -1,6 +1,6 @@
 
-Unreal3.2-pre1 Release Notes
-=============================
+Unreal3.2 Release Notes
+========================
 
 ==[ GENERAL INFORMATION ]==
 * If you are upgrading, make sure you run make clean and ./Config before doing make
@@ -19,6 +19,7 @@ Unreal3.2-pre1 Release Notes
 - '/spamfiltere remove' was often removing the wrong entry (RC2 bug)
 - The TRE regex library was sometimes matching too much if [range].+
   was used multiple times.
+- Fixed a remote include issue and added timeouts in case a connection/transfer fails
 
 ==[ MINOR BUGS FIXED ]==
 - Sometimes hosts were not resolved on Windows due to a resolver bug
