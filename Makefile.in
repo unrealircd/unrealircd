@@ -34,7 +34,7 @@ FROMDOS=/home/cmunk/bin/4dos
 #
 
 #XCFLAGS=-O -g -export-dynamic
-IRCDLIBS=@IRCDLIBS@
+IRCDLIBS=@IRCDLIBS@ -L../extras/regexp/lib -ltre
 CRYPTOLIB=@CRYPTOLIB@
 OPENSSLINCLUDES=
 
@@ -95,12 +95,6 @@ IRCDMODE = 711
 IRCDDIR=@IRCDDIR@
 
 
-#
-# If your system is lacking regex, uncomment this line
-#
-#REGEX=../extras/regex/regex.o
-REGEX=@REGEX@
-
 URL=@URL@
 
 # [CHANGEME]
@@ -136,7 +130,7 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 		'INCLUDEDIR=${INCLUDEDIR}' 'IRCDDIR=${IRCDDIR}' \
 		'RM=${RM}' 'CP=${CP}' 'TOUCH=${TOUCH}' \
 		'SHELL=${SHELL}' 'STRTOUL=${STRTOUL}' \
-		'CRYPTOLIB=${CRYPTOLIB}' 'REGEX=${REGEX}' \
+		'CRYPTOLIB=${CRYPTOLIB}' \
 		'CRYPTOINCLUDES=${CRYPTOINCLUDES}' 'URL=${URL}'
 
 custommodule:

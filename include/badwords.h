@@ -5,11 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef HAVE_REGEX
-#include <regex.h>
-#else
-#include "../extras/regex/regex.h"
-#endif
+#include "../extras/regexp/include/tre/regex.h"
 
 #define MAX_MATCH       1
 #define MAX_WORDLEN	64

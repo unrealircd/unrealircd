@@ -2695,3 +2695,4 @@ seen. gmtime warning still there
 - Fixed some operoverride bugs regarding halfops found by Sinus (#0001465)
 - Cleaned up the /kick code to make it a bit faster
 - Reactivated TRE compile
+- Finally made Unreal use TRE under *nix

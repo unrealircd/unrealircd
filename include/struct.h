@@ -61,11 +61,7 @@
 #include "zip.h"
 #endif
 #include "auth.h" 
-#ifdef HAVE_REGEX
-#include <regex.h>
-#else
-#include "../extras/regex/regex.h"
-#endif
+#include "../extras/regexp/include/tre/regex.h"
 extern int sendanyways;
 
 
