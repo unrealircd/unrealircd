@@ -1060,6 +1060,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				stream->buffer = &RTFBuf;
 				edit.dwCookie = (UINT)stream;
 				edit.pfnCallback = SplitIt;
+				SendMessage(hWnd, EM_EXLIMITTEXT, 0, (LPARAM)0x7FFFFFFF);
 				SendMessage(hWnd, EM_STREAMIN, (WPARAM)SF_RTF|SFF_PLAINRTF, (LPARAM)&edit);
 				SendMessage(hWnd, EM_SETMODIFY, (WPARAM)FALSE, 0);
 				SendMessage(hWnd, EM_EMPTYUNDOBUFFER, 0, 0);
