@@ -202,3 +202,4 @@
 - Updated doc/conf.doc and doc/example.conf
 - Fixed a bug where /map showed U:lines while HIDE_ULINES was set
 - Removed "on network" in /whois oper
+- Added code to makenet to stop fake submissions
