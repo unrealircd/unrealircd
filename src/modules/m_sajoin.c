@@ -91,6 +91,8 @@ DLLFUNC int MOD_UNLOAD(m_sajoin)(int module_unload)
 DLLFUNC CMD_FUNC(m_sajoin)
 {
 	aClient *acptr;
+	char jbuf[BUFSIZE];
+
 	if (!IsSAdmin(sptr) && !IsULine(sptr))
 	{
 	 sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
@@ -108,46 +110,107 @@ DLLFUNC CMD_FUNC(m_sajoin)
 		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0], parv[1]);
 		return 0;
 	}
-
 	if (MyClient(acptr))
 	{
-		int flags;
-		aChannel *chptr;
-		Membership *lp;
-		if (strlen(parv[2]) > CHANNELLEN)
-			parv[2][CHANNELLEN] = 0;
-		clean_channelname(parv[2]);
-		if (check_channelmask(sptr, cptr, parv[2]) == -1 || *parv[2] == '0' ||
-		    !IsChannelName(parv[2]))
+		char *name, *p = NULL;
+		int i, parted = 0;
+	
+		*jbuf = 0;
+
+		/* Now works like m_join */
+		for (i = 0, name = strtoken(&p, parv[2], ","); name; name = strtoken(&p,
+		     NULL, ","))
 		{
-			sendto_one(sptr,
-			    err_str(ERR_NOSUCHCHANNEL), me.name,
-			    parv[0], parv[2]);
-			return 0;
+			aChannel *chptr;
+			Membership *lp;
+
+			if (strlen(name) > CHANNELLEN)
+				name[CHANNELLEN] = 0;
+			clean_channelname(name);
+			if (*name == '0' && !atoi(name))
+			{
+				(void)strcpy(jbuf, "0");
+				i = 1;
+				parted = 1;
+				continue;
+			}
+			if (check_channelmask(sptr, cptr, name) == -1 || *name == '0' ||
+			    !IsChannelName(name))
+			{
+				sendto_one(sptr,
+				    err_str(ERR_NOSUCHCHANNEL), me.name,
+				    parv[0], name);
+				continue;
+			}
+
+			chptr = get_channel(acptr, name, 0);
+			if (!parted && chptr && (lp = find_membership_link(acptr->user->channel, chptr)))
+			{
+				sendto_one(sptr, err_str(ERR_USERONCHANNEL), me.name, parv[0], 
+					   parv[1], name);
+				continue;
+			}
+			if (*jbuf)
+				(void)strlcat(jbuf, ",", sizeof jbuf);
+			(void)strlncat(jbuf, name, sizeof jbuf, sizeof(jbuf) - i - 1);
+			i += strlen(name) + 1;
 		}
-		flags = (ChannelExists(parv[2])) ? CHFL_DEOPPED : CHFL_CHANOP;
-		chptr = get_channel(sptr, parv[2], CREATE);
-		if (chptr && (lp = find_membership_link(acptr->user->channel, chptr)))
+		if (!*jbuf)
+			return -1;
+		i = 0;
+		strcpy(parv[2], jbuf);
+		for (name = strtoken(&p, parv[2], ","); name; name = strtoken(&p, NULL, ","))
 		{
-			sendto_one(sptr, err_str(ERR_USERONCHANNEL), me.name, parv[0], 
-				   parv[1], parv[2]);
-			return 0;
+			int flags;
+			aChannel *chptr;
+			Membership *lp;
+
+			if (*name == '0' && !atoi(name))
+			{
+				while ((lp = acptr->user->channel))
+				{
+					chptr = lp->chptr;
+					sendto_channel_butserv(chptr, acptr,
+					    ":%s PART %s :%s", parv[0], chptr->chname,
+					    "Left all channels");
+					if (MyConnect(acptr))
+						RunHook4(HOOKTYPE_LOCAL_PART, acptr, acptr, chptr,
+							 "Left all channels");
+					remove_user_from_channel(acptr, chptr);
+				}
+				sendto_serv_butone_token(acptr, parv[0],
+				    MSG_JOIN, TOK_JOIN, "0");
+				strcpy(jbuf, "0");
+				i = 1;
+				continue;
+			}
+			flags = (ChannelExists(name)) ? CHFL_DEOPPED : CHFL_CHANOP;
+			chptr = get_channel(acptr, name, CREATE);
+			if (chptr && (lp = find_membership_link(acptr->user->channel, chptr)))
+				continue;
+
+			join_channel(chptr, acptr, acptr, flags);
+			if (*jbuf)
+				(void)strlcat(jbuf, ",", sizeof jbuf);
+			(void)strlncat(jbuf, name, sizeof jbuf, sizeof(jbuf) - i - 1);
+			i += strlen(name) + 1;
 		}
-		sendto_one(acptr,
-		    ":%s %s %s :*** You were forced to join %s", me.name,
-		    IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, parv[2]);
-		join_channel(chptr, acptr, acptr, flags);
 	}
 	else
 		sendto_one(acptr, ":%s SAJOIN %s %s", parv[0],
 		    parv[1], parv[2]);
 
+	sendnotice(acptr, "*** You were forced to join %s", jbuf);
+
+
 	sendto_realops("%s used SAJOIN to make %s join %s", sptr->name, parv[1],
-	    parv[2]);
+	    jbuf);
 
 	/* Logging function added by XeRXeS */
 	ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
-		sptr->name, parv[1], parv[2]);
+		sptr->name, parv[1], jbuf);
 
 	return 0;
 }
+
+

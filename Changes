@@ -529,3 +529,4 @@
 - Fixed a couple of problems introduced with the ./Config -advanced changed (#0002239).
 - Made the win32 installer include the dccallow.conf (#0002269) reported by Ron2K.
 - Made the win32 installer work with the latest version of Inno Setup (5.0.6).
+- Made /sajoin support multiple channels and using 0 (#0002231) suggested by acemi.
