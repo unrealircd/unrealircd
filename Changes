@@ -739,3 +739,4 @@ seen. gmtime warning still there
 - Fixed SQLINE bug, FINALLY. (forgot to set type ..oops..)
 - Added more network files...
 - Fixed a bug affecting /oper and /vhost caused by IP checking
+- Added wildcard support to include and loadmodule in win32

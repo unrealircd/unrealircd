@@ -45,6 +45,9 @@
 #include "badwords.h"
 #endif
 #include "h.h"
+#ifdef _WIN32
+#undef GLOBH
+#endif
 
 extern char *my_itoa(long i);
 /*
@@ -914,6 +917,9 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 #ifdef GLOBH
 	glob_t files;
 	int i;
+#elif defined(_WIN32)
+	HANDLE hFind;
+	WIN32_FIND_DATA FindData;
 #endif
 	if (!ce->ce_vardata)
 	{
@@ -933,7 +939,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 #endif
 	if (!files.gl_pathc) {
 		globfree(&files);
-		config_error("%s:%i: include %s: invalid file given",
+		config_status("%s:%i: include %s: invalid file given",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			ce->ce_vardata);
 		return -1;
@@ -942,6 +948,20 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 		init_conf2(files.gl_pathv[i]);
 	}
 	globfree(&files);
+#elif defined(_WIN32)
+	hFind = FindFirstFile(ce->ce_vardata, &FindData);
+	if (!FindData.cFileName) {
+		config_status("%s:%i: include %s: invalid file given",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			ce->ce_vardata);
+		FindClose(hFind);
+		return -1;
+	}
+	init_conf2(FindData.cFileName);
+	while (FindNextFile(hFind, &FindData) != 0) 
+		init_conf2(FindData.cFileName);
+
+	FindClose(hFind);
 #else
 	return (init_conf2(ce->ce_vardata));
 #endif
@@ -1162,6 +1182,9 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 #ifdef GLOBH
 	glob_t files;
 	int i;
+#elif defined(_WIN32)
+	HANDLE hFind;
+	WIN32_FIND_DATA FindData;
 #endif
 
 	if (!ce->ce_vardata)
@@ -1191,6 +1214,27 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 	globfree(&files);
+#elif defined(_WIN32)
+	hFind = FindFirstFile(ce->ce_vardata, &FindData);
+	if (!FindData.cFileName) {
+		config_status("%s:%i: loadmodule %s: failed to load",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			ce->ce_vardata);
+		FindClose(hFind);
+		return -1;
+	}
+	if (load_module(FindData.cFileName,0) != 1) {
+			config_status("%s:%i: loadmodule %s: failed to load",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+				FindData.cFileName);
+	}
+	while (FindNextFile(hFind, &FindData) != 0) {
+		if (load_module(FindData.cFileName,0) != 1) 
+			config_status("%s:%i: loadmodule %s: failed to load",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+				FindData.cFileName);
+	}
+	FindClose(hFind);
 #else
 	if (load_module(ce->ce_vardata,0) != 1) {
 			config_status("%s:%i: loadmodule %s: failed to load",
