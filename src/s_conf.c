@@ -2713,7 +2713,7 @@ int	_test_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else
 		{
-			config_error("%s:%i: allow channel item with unknown type '%s'",
+			config_error("%s:%i: unknown allow channel directive %s",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, 
 				cep->ce_varname);
 			errors++;
@@ -2816,7 +2816,7 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 			}
 			else
 			{
-				config_error("%s:%i: unknown except ban item %s",
+				config_error("%s:%i: unknown except ban directive %s",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
 				errors++;
 				continue;
@@ -2845,7 +2845,7 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 			}
 			else
 			{
-				config_error("%s:%i: unknown except scan item %s",
+				config_error("%s:%i: unknown except scan directive %s",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
 				errors++;
 				continue;
@@ -2854,7 +2854,7 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 		return (errors > 0 ? -1 : 1);
 	}
 	else if (!strcmp(ce->ce_vardata, "tkl")) {
-		if (!(cep2 = config_find_entry(ce->ce_entries, "mask")))
+		if (!config_find_entry(ce->ce_entries, "mask"))
 		{
 			config_error("%s:%i: except tkl without mask item",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
@@ -2866,17 +2866,26 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 			return -1;
 		}
-		if (!cep2->ce_vardata)
+		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 		{
-			config_error("%s:%i: except tkl::mask without contents",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			return -1;
-		}
-		if (!cep3->ce_vardata)
-		{
-			config_error("%s:%i: except tkl::type without contents",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			return -1;
+			if (!cep->ce_vardata)
+			{
+				config_error("%s:%i: except tkl item without contents",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+				continue;
+			}
+			if (!strcmp(cep->ce_varname, "mask"))
+			{
+			}
+			else if (!strcmp(cep->ce_varname, "type")) {}
+			else
+			{
+				config_error("%s:%i: unknown except scan directive %s",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+				errors++;
+				continue;
+			}
 		}
 		if (!strcmp(cep3->ce_vardata, "gline")) {}
 		else if (!strcmp(cep3->ce_vardata, "gzline")){}
@@ -3056,6 +3065,28 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 			errors++;
 		}
 	}
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname || !cep->ce_vardata)
+		{
+			config_error("%s:%i: vhost item without contents",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++; continue;
+		}
+		if (!stricmp(cep->ce_varname, "vhost")) {}
+		else if (!strcmp(cep->ce_varname, "login")) {}
+		else if (!strcmp(cep->ce_varname, "password")) {}
+		else if (!strcmp(cep->ce_varname, "from")) {}
+		else if (!strcmp(cep->ce_varname, "swhois")) {}
+		else
+		{
+			config_error("%s:%i: unknown directive vhost::%s",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, 
+				cep->ce_varname);
+			errors++;
+		}
+	}
+
 	if (errors > 0)
 		return -1;
 	return 1;
@@ -3098,7 +3129,7 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 
 int _test_badword(ConfigFile *conf, ConfigEntry *ce) { 
 	int errors = 0;
-	ConfigEntry *word, *replace;
+	ConfigEntry *word, *replace, *cep;
 	if (!ce->ce_entries)
 	{
 		config_error("%s:%i: empty badword block", 
@@ -3139,7 +3170,27 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 				replace->ce_fileptr->cf_filename, replace->ce_varlinenum);
 			errors++;
 		}
-	}	
+	}
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname || !cep->ce_vardata)
+		{
+			config_error("%s:%i: badword item without contents",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++; continue;
+		}
+		if (!stricmp(cep->ce_varname, "word")) {}
+		else if (!strcmp(cep->ce_varname, "replace")) {}
+		else
+		{
+			config_error("%s:%i: unknown directive badword::%s",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, 
+				cep->ce_varname);
+			errors++;
+		}
+	}
+
+	
 	return (errors > 0 ? -1 : 1); 
 }
 #endif

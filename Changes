@@ -1646,3 +1646,4 @@ seen. gmtime warning still there
 - Modified the main conf3 searching routine to use a binary search, this should speed up
   config processing somewhat
 - Converted the config flag parsing systems to use a binary search
+- Conf3 cleanups
