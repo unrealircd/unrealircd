@@ -1222,3 +1222,4 @@ seen. gmtime warning still there
 - Changed to beta7
 - Fixed a IPv6 problem reported by Zerwas
 - Fixed -Wall warnings for TStime
+- Compile fix for TS2ts 

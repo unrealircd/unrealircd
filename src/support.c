@@ -40,7 +40,7 @@ extern void outofmemory();
 
 #define is_enabled match
 
-long	TS2ts(char *s)
+TS	TS2ts(char *s)
 {
 	if (*s == '!')
 		return (xbase64dec(s + 1));
