@@ -1757,3 +1757,4 @@ seen. gmtime warning still there
   have it if it doesn't to anything.
 - Fixed a bug where leaving out a value for certain config directives would cause a crash,
   reported by AngryWolf (#0000596)
+- Fixed whole bunch of users in empty channel bug (probably)

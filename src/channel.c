@@ -2620,7 +2620,11 @@ static void sub1_from_channel(aChannel *chptr)
 	Ban *ban;
 	Link *lp;
 
-	if (--chptr->users <= 0)
+        /* Bad. Bad. Bad. chptr->users is unsigned
+	 * someone doesn't remember what -- does when
+	 * preceding a variable.
+        if (--chptr->users <= 0) */
+        if (chptr->users-- == 0)
 	{
 		/*
 		 * Now, find all invite links from channel structure
