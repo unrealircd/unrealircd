@@ -581,3 +581,5 @@
 - Added spamfilter topic support ('t' in /spamfilter, or 'topic' in conf), suggested
   by Z3l3zT (#0001929).
 - Updated makefile to fix compile problem, reported by vonitsanet (#0002317) [?].
+  Also made loading m_*.so work again.
+

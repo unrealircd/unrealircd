@@ -73,6 +73,7 @@ ModuleHeader MOD_HEADER(m_join)
 
 DLLFUNC int MOD_TEST(m_join)(ModuleInfo *modinfo)
 {
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_JOIN_CHANNEL, _join_channel);
 	EfunctionAdd(modinfo->handle, EFUNC_DO_JOIN, _do_join);
 	EfunctionAdd(modinfo->handle, EFUNC_CAN_JOIN, _can_join);

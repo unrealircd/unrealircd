@@ -82,6 +82,7 @@ ModuleHeader MOD_HEADER(m_mode)
 
 DLLFUNC int MOD_TEST(m_mode)(ModuleInfo *modinfo)
 {
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_DO_MODE, _do_mode);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SET_MODE, _set_mode);
 	EfunctionAdd(modinfo->handle, EFUNC_M_UMODE, _m_umode);
