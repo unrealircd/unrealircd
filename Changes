@@ -558,3 +558,4 @@
 - Added invite exceptions (+I). This prevents users from needing a /invite in for a +i
   channel (#0002044) suggested by medice.
 - Updated help.conf's +f documentation for the new syntax
+- Fixed some problems with the /stats help and documentation (#0002299) reported by Rocko.

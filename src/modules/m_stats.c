@@ -130,11 +130,6 @@ struct statstab {
 	int options;
 };
 
-//TODO:
-// module help
-// update docs
-// update module docs 
-
 /* Must be listed lexicographically */
 /* Long flags must be lowercase */
 struct statstab StatsTable[] = {
@@ -170,6 +165,7 @@ struct statstab StatsTable[] = {
 	{ 'j', "officialchans", stats_officialchannels, 0 		},
 	{ 'k', "kline",		stats_kline,		0 		},
 	{ 'l', "linkinfo",	stats_linkinfo,		SERVER_AS_PARA 	},
+	{ 'm', "command",	stats_command,		0 		},
 	{ 'n', "banrealname",	stats_banrealname,	0 		},
 	{ 'o', "oper",		stats_oper,		0 		},
 	{ 'q', "bannick",	stats_bannick,		FLAGS_AS_PARA	},
@@ -246,13 +242,13 @@ inline void stats_help(aClient *sptr)
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"e - exceptthrottle - Send the except trottle block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"E - exceptban - Send the except ban block list");
+		"E - exceptban - Send the except ban and except tkl block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"f - spamfilter - Send the spamfilter list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"F - denydcc - Send the deny dcc and allow dcc block lists");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"G - gline - Send the gline list");
+		"G - gline - Send the gline and gzline list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"  Extended flags: [+/-mrs] [mask] [reason] [setby]");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
@@ -278,18 +274,6 @@ inline void stats_help(aClient *sptr)
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"O - oper - Send the oper block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"S - set - Send the set block list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"s - shun - Send the shun list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"  Extended flags: [+/-mrs] [mask] [reason] [setby]");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"   m Return shuns matching/not matching the specified mask");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"   r Return shuns with a reason matching/not matching the specified reason");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"   s Return shuns set by/not set by clients matching the specified name");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"P - port - Send information about ports");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"q - bannick - Send the ban nick block list");
@@ -301,6 +285,18 @@ inline void stats_help(aClient *sptr)
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"R - usage - Send usage information");
 #endif
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+		"S - set - Send the set block list");
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+		"s - shun - Send the shun list");
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+		"  Extended flags: [+/-mrs] [mask] [reason] [setby]");
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+		"   m Return shuns matching/not matching the specified mask");
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+		"   r Return shuns with a reason matching/not matching the specified reason");
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+		"   s Return shuns set by/not set by clients matching the specified name");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"t - tld - Send the tld block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,

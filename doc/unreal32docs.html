@@ -27,7 +27,7 @@ English | <a href="unreal32docs.de.html">German</a> |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2.2-CVS</font><br>
-  <b>Last doc update:</b> 2004-12-01</div>
+  <b>Last doc update:</b> 2005-01-29</div>
 <br>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -3080,10 +3080,10 @@ to get more information on a command.</p>
 	d - denylinkauto - Send the deny link (auto) block list<br>
 	D - denylinkall - Send the deny link (all) block list<br>
 	e - exceptthrottle - Send the except trottle block list<br>
-	E - exceptban - Send the except ban block list<br>
+	E - exceptban - Send the except ban and except tkl block list<br>
 	f - spamfilter - Send the spamfilter list<br>
 	F - denydcc - Send the deny dcc block list<br>
-	G - gline - Send the gline list<br>
+	G - gline - Send the gline and gzline list<br>
 	&nbsp;&nbsp;Extended flags: [+/-mrs] [mask] [reason] [setby]<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;m Return glines matching/not matching the specified mask<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;r Return glines with a reason matching/not matching the specified reason<br>
@@ -3096,17 +3096,17 @@ to get more information on a command.</p>
 	M - command - Send list of how many times each command was used<br>
 	n - banrealname - Send the ban realname block list<br>
 	O - oper - Send the oper block list<br>
+	P - port - Send information about ports<br>
+	q - sqline - Send the SQLINE list<br>
+	Q - bannick - Send the ban nick block list<br>
+	r - chanrestrict - Send the channel deny/allow block list<br>
+	R - usage - Send usage information<br>
 	S - set - Send the set block list<br>
 	s - shun - Send the shun list<br>
   	&nbsp;&nbsp;Extended flags: [+/-mrs] [mask] [reason] [setby]<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;m Return shuns matching/not matching the specified mask<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;r Return shuns with a reason matching/not matching the specified reason<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;s Return shuns set by/not set by clients matching the specified name<br>
-	P - port - Send information about ports<br>
-	q - sqline - Send the SQLINE list<br>
-	Q - bannick - Send the ban nick block list<br>
-	r - chanrestrict - Send the channel deny/allow block list<br>
-	R - usage - Send usage information<br>
 	t - tld - Send the tld block list<br>
 	T - traffic - Send traffic information<br>
 	u - uptime - Send the server uptime and connection count<br>
