@@ -392,7 +392,7 @@ static int add_exbanid(aClient *cptr, aChannel *chptr, char *banid)
 			}
 			else
 			{
-#ifdef ANNOYING_BAN_THING
+#ifdef NAZIISH_CHBAN_HANDLING
 				if (!match(ban->banstr, banid) ||
 				    !match(banid, ban->banstr))
 #else
@@ -465,7 +465,7 @@ static int add_banid(aClient *cptr, aChannel *chptr, char *banid)
 			}
 			else
 			{
-#ifdef ANNOYING_BAN_THING /* why does it do this?? */
+#ifdef NAZIISH_CHBAN_HANDLING /* why does it do this?? */
 				if (!match(ban->banstr, banid) ||
 				    !match(banid, ban->banstr))
 #else
