@@ -229,6 +229,16 @@ static OperFlag _LogFlags[] = {
 	{ 0L, NULL }
 };
 
+#ifdef USE_SSL
+
+static OperFlag _SSLFlags[] = {
+	{ SSLFLAG_FAILIFNOCERT, "fail-if-no-clientcert" },
+	{ SSLFLAG_VERIFYCERT, "verify-certificate" },
+	{ SSLFLAG_DONOTACCEPTSELFSIGNED, "no-self-signed" },
+	{ 0L, NULL }	
+};
+
+#endif
 /*
  * Some prototypes
  */
@@ -1733,6 +1743,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 		}
 		if (!strcmp(cep->ce_varname, "options"))
 		{
+			listen->options = 0;
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
 				if (!cepp->ce_varname)
@@ -1758,6 +1769,15 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 					continue;
 				}
 			}
+#ifndef USE_SSL
+			if (listen->options & LISTENER_SSL)
+			{
+				config_status("%s:%i: listen with SSL flag enabled on a non SSL compile",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+						cep->ce_varname);
+				listen->options &= ~LISTENER_SSL;
+			}
+#endif
 		}
 		else
 		{
@@ -2230,6 +2250,14 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 					continue;
 				}
 			}
+#ifndef USE_SSL
+			if (link->options & CONNECT_SSL)
+			{
+				config_status("%s:%i: link %s with SSL option enabled on a non-SSL compile",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, ce->ce_vardata);
+				link->options &= ~CONNECT_SSL;
+			}
+#endif
 		} else
 		if (!strcmp(cep->ce_varname, "username"))
 		{
@@ -2300,8 +2328,8 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 }
 int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 {
-	ConfigEntry *cep;
-	ConfigEntry *cepp;
+	ConfigEntry *cep, *cepp, *ceppp;
+	OperFlag 	*ofl = NULL;
 	char	    temp[512];
 	int	    i;
 #define CheckNull(x) if (!(x)->ce_vardata) { config_status("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); continue; }
@@ -2484,8 +2512,8 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				CLOAK_KEY2, CLOAK_KEY3);
 			CLOAK_KEYCRC = (long) crc32(temp, strlen(temp));
 		}
-#ifdef USE_SSL
 		else if (!strcmp(cep->ce_varname, "ssl")) {
+#ifdef USE_SSL
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				if (!strcmp(cepp->ce_varname, "egd")) {
 					USE_EGD = 1;
@@ -2504,9 +2532,40 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 						continue;
 					ircstrdup(iConf.x_server_key_pem, cepp->ce_vardata);	
 				}
+				else if (!strcmp(cepp->ce_varname, "trusted-ca-file"))
+				{
+					if (!cepp->ce_vardata)
+						continue;
+					ircstrdup(iConf.trusted_ca_file, cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "options"))
+				{
+					iConf.ssl_options = 0;
+					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+					{
+						for (ofl = _SSLFlags; ofl->name; ofl++)
+						{
+							if (!strcmp(ceppp->ce_varname, ofl->name))
+							{	
+								iConf.ssl_options |= ofl->flag;
+								break;
+							}
+						}
+					}
+					if (!ofl->name)
+					{
+						config_status("%s:%i: unknown SSL flag '%s'",
+							ceppp->ce_fileptr->cf_filename, 
+							ceppp->ce_varlinenum, ceppp->ce_varname);
+					}
+					if (iConf.ssl_options & SSLFLAG_DONOTACCEPTSELFSIGNED)
+						if (!iConf.ssl_options & SSLFLAG_VERIFYCERT)
+							iConf.ssl_options |= SSLFLAG_VERIFYCERT;
+				}	
+				
 			}
-		}
 #endif
+		}
 		else
 		{
 			ConfigItem_unknown_ext *ca2 = MyMalloc(sizeof(ConfigItem_unknown_ext));
@@ -3809,6 +3868,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 #ifdef USE_SSL
 	ircfree(iConf.x_server_cert_pem);
 	ircfree(iConf.x_server_key_pem);
+	ircfree(iConf.trusted_ca_file);
 #endif
 	bzero(&iConf, sizeof(iConf));
 
@@ -4202,6 +4262,11 @@ void report_dynconf(aClient *sptr)
 		sptr->name, SSL_SERVER_CERT_PEM);
 	sendto_one(sptr, ":%s %i %s :ssl::key: %s", me.name, RPL_TEXT,
 		sptr->name, SSL_SERVER_KEY_PEM);
+	sendto_one(sptr, ":%s %i %s :ssl::trusted-ca-file: %s", iConf.trusted_ca_file ? iConf.trusted_ca_file : "<none>");
+	sendto_one(sptr, ":%s %i %s :ssl::options: %s %s %s",
+		iConf.ssl_options & SSLFLAG_FAILIFNOCERT ? "FAILIFNOCERT" : "",
+		iConf.ssl_options & SSLFLAG_VERIFYCERT ? "VERIFYCERT" : "",
+		iConf.ssl_options & SSLFLAG_DONOTACCEPTSELFSIGNED ? "DONOTACCEPTSELFSIGNED" : "");
 #endif
 
 	sendto_one(sptr, ":%s %i %s :options::show-opermotd: %d", me.name, RPL_TEXT,

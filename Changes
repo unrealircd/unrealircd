@@ -1589,3 +1589,13 @@ seen. gmtime warning still there
 - Fixed a bug with /who -h in some cases, found by Zer0, fixed by butter (#0000361)
 - Changed auth method sslpubkey into sslclientcert, which means it will check the X509 certificate of the
   user using X509_cmp. Also needing is some policy/conf setting to adjust if to reject invalid client certificates or whatever..
+- Added set::ssl::options, with three options:
+    fail-if-no-clientcert   - If SSL client connects and doesn't provide a client certificate, abort connection immediately
+    verify-certificate      - Check the certificate's validity using X509 methods, check if we trust CA's, etc. 
+                              It however does slip self signed certificates through UNLESS
+    no-self-signed          - Don't allow self-signed certificates through (requires verify-certificate)
+- Made conf parser mention if we make a link->options with CONNECT_SSL if we don't support SSL (and remove the CONNECT_SSL flag)
+- Made conf parser mention if we make a SSL listener and we don't support SSL
+- Added set::ssl::trusted-ca-file, if enabled, it will point the SSL stuff to use that file as trusted CA's (for verify-certificate)
+- Made conf _not_ bitch that it doesn't know set::ssl
+- Removed some leftover client certificate stuff

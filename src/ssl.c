@@ -149,7 +149,23 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 
 static int ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 {
-	return 1;
+	int verify_err = 0;
+
+	verify_err = X509_STORE_CTX_get_error(ctx);
+	ircd_log(LOG_ERROR, "%i", verify_err);	
+	if (preverify_ok)
+		return 1;
+	if (iConf.ssl_options & SSLFLAG_VERIFYCERT)
+	{
+		if (verify_err == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT)
+			if (!(iConf.ssl_options & SSLFLAG_DONOTACCEPTSELFSIGNED))
+			{
+				return 1;
+			}
+		return preverify_ok;
+	}
+	else
+		return 1;
 }
 
 
@@ -163,7 +179,8 @@ void init_ctx_server(void)
 	}
 	SSL_CTX_set_default_passwd_cb(ctx_server, ssl_pem_passwd_cb);
 	SSL_CTX_set_options(ctx_server, SSL_OP_NO_SSLv2);
-	SSL_CTX_set_verify(ctx_server, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, ssl_verify_callback);
+	SSL_CTX_set_verify(ctx_server, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE
+			| (iConf.ssl_options & SSLFLAG_FAILIFNOCERT ? SSL_VERIFY_FAIL_IF_NO_PEER_CERT : 0), ssl_verify_callback);
 
 	if (SSL_CTX_use_certificate_file(ctx_server, SSL_SERVER_CERT_PEM, SSL_FILETYPE_PEM) <= 0)
 	{
@@ -180,6 +197,14 @@ void init_ctx_server(void)
 	{
 		ircd_log(LOG_ERROR, "Failed to check SSL private key");
 		exit(5);
+	}
+	if (iConf.trusted_ca_file)
+	{
+		if (!SSL_CTX_load_verify_locations(ctx_server, iConf.trusted_ca_file, NULL))
+		{
+			ircd_log(LOG_ERROR, "Failed to load Trusted CA's from %s", iConf.trusted_ca_file);
+			exit(6);
+		}
 	}
 }
 
@@ -262,44 +287,6 @@ int  ssl_handshake(aClient *cptr)
 		cptr->ssl = NULL;
 		return -1;
 	}
-
-	/* Get client's certificate (note: beware of dynamic
-	 * allocation) - opt */
-        /* We do not do this -Stskeeps */
-
-#ifdef NO_CERTCHECKING
-	cptr->client_cert =
-	    (struct X509 *)SSL_get_peer_certificate((SSL *) cptr->ssl);
-
-	if (cptr->client_cert != NULL)
-	{
-		// log (L_DEBUG,"Client certificate:\n");
-
-		str =
-		    X509_NAME_oneline(X509_get_subject_name((X509 *) cptr->
-		    client_cert), 0, 0);
-		CHK_NULL(str);
-		// log (L_DEBUG, "\t subject: %s\n", str);
-		free(str);
-
-		str =
-		    X509_NAME_oneline(X509_get_issuer_name((X509 *) cptr->
-		    client_cert), 0, 0);
-		CHK_NULL(str);
-		// log (L_DEBUG, "\t issuer: %s\n", str);
-		free(str);
-
-		/* We could do all sorts of certificate
-		 * verification stuff here before
-		 *        deallocating the certificate. */
-
-		X509_free((X509 *) cptr->client_cert);
-	}
-	else
-	{
-		// log (L_DEBUG, "Client does not have certificate.\n");
-	}
-#endif
 	return 0;
 
 }

@@ -733,6 +733,9 @@ extern short	 Usermode_highest;
 #define CONNECT_AUTO		0x000004
 #define CONNECT_QUARANTINE	0x000008
 
+#define SSLFLAG_FAILIFNOCERT 	0x1
+#define SSLFLAG_VERIFYCERT 	0x2
+#define SSLFLAG_DONOTACCEPTSELFSIGNED 0x4
 struct Client {
 	struct Client *next, *prev, *hnext;
 	anUser *user;		/* ...defined, if this is a User */
