@@ -1402,7 +1402,10 @@ struct liststruct {
 
 #define	isvalid(c) (((c) >= 'A' && (c) <= '~') || isdigit(c) || (c) == '-')
 
-#define	MyConnect(x)			((x)->fd >= 0)
+/* remote fds are set to -256, else its a local fd (a local fd
+ * can get -1 or -2 in case it has been closed). -- Syzop
+ */
+#define	MyConnect(x)			((x)->fd != -256)
 #define	MyClient(x)			(MyConnect(x) && IsClient(x))
 #define	MyOper(x)			(MyConnect(x) && IsOper(x))
 

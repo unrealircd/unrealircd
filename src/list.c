@@ -131,7 +131,6 @@ aClient *make_client(aClient *from, aClient *servr)
 	cptr->serv = NULL;
 	cptr->srvptr = servr;
 	cptr->status = STAT_UNKNOWN;
-	cptr->fd = -1;
 	
 	(void)strcpy(cptr->username, "unknown");
 	if (size == CLIENT_LOCAL_SIZE)
@@ -143,6 +142,9 @@ aClient *make_client(aClient *from, aClient *servr)
 		cptr->sockhost[0] = '\0';
 		cptr->buffer[0] = '\0';
 		cptr->authfd = -1;
+		cptr->fd = -1;
+	} else {
+		cptr->fd = -256;
 	}
 	return (cptr);
 }
