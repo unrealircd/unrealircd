@@ -2559,8 +2559,8 @@ int  m_who(cptr, sptr, parc, parv)
 	
 	if (show_opers)
 	{
-		sendto_umode(UMODE_HELPOP, "*** HelpOp -- from %s: Did a /who %s o", parv[0], parv[1]);		
-		sendto_serv_butone(&me, ":%s HELP :Did a /who %s o", parv[0], parv[1]);
+		sendto_umode(UMODE_HELPOP, "*** HelpOp -- from %s: Executed /who %s o", parv[0], parv[1]);		
+		sendto_serv_butone(&me, ":%s HELP :Executed /who %s o", parv[0], parv[1]);
 	}
 	
 	/*
