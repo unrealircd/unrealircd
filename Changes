@@ -1580,3 +1580,5 @@ seen. gmtime warning still there
 - Fixed a bug where /who +c #chan would let you see users in a +s channel
 - Added Nugget's setuid patch
 - Made the IRC_UID stuff more proper..
+- Removed some old debug code from the win32 debugger
+

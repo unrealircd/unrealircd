@@ -215,7 +215,4 @@ void InitDebug(void) {
 	SetUnhandledExceptionFilter(&ExceptionFilter);
 }
 
-void Crash() {
-	int o = 0;
-	o = 1/o;
-}
+
