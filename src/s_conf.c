@@ -4477,6 +4477,12 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 				cep->ce_varname);
 			errors++;
+		} else
+		if (!cep->ce_vardata) {
+			config_error("%s:%i: link::%s without contents",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum, cep->ce_varname);
+			errors++;
 		}
 	}
 	return errors;

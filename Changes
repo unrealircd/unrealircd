@@ -1824,3 +1824,4 @@ seen. gmtime warning still there
 - Fixed 2-bans-needed-trick. (#0000626)
 - Minor documentation update for SVSNLINE. (#0000651)
 - Tweaked fix for 2-bans-needed-trick a bit.
+- Fixed crash when link::leaf was empty. (#0000610)
