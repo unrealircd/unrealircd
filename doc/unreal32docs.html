@@ -55,8 +55,9 @@
   -- 3.9. <a href="#feature_ssl">SSL</a><br>
   -- 3.10. <a href="#feature_ipv6">IPv6</a><br>
   -- 3.11. <a href="#feature_ziplinks">Zip links</a><br>
-  -- 3.12. <a href="#feature_throttling">Throttling</a><br>
-  -- 3.13. <a href="#feature_other">Other features</a><br>
+  -- 3.12. <a href="#feature_dyndns">Dynamic DNS/IP linking support</a><br>
+  -- 3.13. <a href="#feature_throttling">Throttling</a><br>
+  -- 3.14. <a href="#feature_other">Other features</a><br>
   4. <a href="#configuringyourunrealircdconf">Configuring your unrealircd.conf 
   file</a><br>
   ---4.1. <a href="#configurationfileexplained">Configuration file explained</a><br>
@@ -298,12 +299,16 @@ Windows:<br>
    many users, it can help a lot when you are linking since a lot of data is sent about every user/channel/etc.</p>
 <p>To compile with zip links support, you need to answer Yes to the zlib question in ./Config and set it in link::options::zip</p></div>
 
-<p><font size="+2"><b>3.12 - Throttling</b></font><a name="feature_throttling"></a></p><div class="desc">
-<p>Throttling is still considered to be experimental, but it has come a long way. Throttling is a method that allows
-you to limit how fast a user can disconnect and then reconnect to your server. Throttling is not enabled by default in 
-UnrealIRCd, you must open include/config.h and change the #undef THROTTLING to #define THROTTLING.</p></div>
+<p><font size="+2"><b>3.12 - Dynamic DNS/IP linking support</b></font><a name="feature_dyndns"></a></p><div class="desc">
+<p>UnrealIRCd has some (new) nice features which helps dynamic IP users using dynamic DNS (like blah.dyndns.org).
+   If you are linking two dynamic DNS hosts, then set link::options::nodnscache and link::options::nohostcheck. 
+</p></div>
 
-<p><font size="+2"><b>3.13 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
+<p><font size="+2"><b>3.13 - Throttling</b></font><a name="feature_throttling"></a></p><div class="desc">
+<p>Throttling is a method that allows you to limit how fast a user can disconnect and then reconnect to your server. 
+   You can config it in your set::throttle block to allow X connections in YY seconds from the same IP.</p></div>
+
+<p><font size="+2"><b>3.14 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
 <p>UnrealIRCd has a lot of features so not everything is covered here... You'll find that out by yourself.</p></div>
 
 <p> </p>
@@ -1472,12 +1477,17 @@ link &lt;server-name&gt; {
 </p>
 <p><b>options block</b><br>
   One or more options used for connecting to the server. Sometimes not needed.<br>
-&nbsp;&nbsp;&nbsp;<b>ssl</b> if you are connecting to a SSL port.<br>
-&nbsp;&nbsp;&nbsp;<b>autoconnect</b> server will try to autoconnect, time specified in your class::connfreq 
- (it's best to enable this only from one side, like leaf-&gt;hub)<br>
-&nbsp;&nbsp;&nbsp;<b>zip</b> if you want compressed links, needs to be compiled in + set at both ends<br>
-&nbsp;&nbsp;&nbsp;<b>nodnscache</b> don't cache IP for outgoing server connection, use this if it's an often chaning host (like dyndns.org)<br>
-&nbsp;&nbsp;&nbsp;<b>quarantine</b> opers on this server will maintain locop status<br>
+<table border="0">
+<tr><td><b>ssl</b></td><td> if you are connecting to a SSL port.</td></tr>
+<tr><td><b>autoconnect</b></td><td> server will try to autoconnect, time specified in your class::connfreq 
+ (it's best to enable this only from one side, like leaf-&gt;hub)</td></tr>
+<tr><td><b>zip</b></td><td> if you want compressed links, needs to be compiled in + set at both ends</td></tr>
+<tr><td><b>nodnscache</b></td><td> don't cache IP for outgoing server connection, use this if it's an often 
+ changing host (like dyndns.org)</td></tr>
+<tr><td><b>nohostcheck</b></td><td> don't validate the remote host (link::host), use this if it's an often
+ changing host (like dyndns.org)</td></tr>
+<tr><td><b>quarantine</b></td><td> opers on this server will maintain locop status</td></tr>
+</table>
 </p>
 <p>Example:</p>
 <pre>

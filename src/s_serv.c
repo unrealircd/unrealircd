@@ -664,8 +664,14 @@ CMD_FUNC(m_server)
 			 */
 			goto errlink;
 		}
-		/* For now, we don't check based on DNS, it is slow, and IPs
-		   are better */
+		/* For now, we don't check based on DNS, it is slow, and IPs are better.
+		 * We also skip checking if link::options::nohostcheck is set.
+		 */
+		if (link->options & CONNECT_NOHOSTCHECK)
+		{
+			aconf = link;
+			goto nohostcheck;
+		}
 		aconf = Find_link(cptr->username, cptr->sockhost, cptr->sockhost,
 		    servername);
 		
@@ -696,6 +702,7 @@ errlink:
 			return exit_client(cptr, sptr, &me,
 			    "Link denied (No matching link configuration)");
 		}
+nohostcheck:
 		/* Now for checking passwords */
 		if (Auth_Check(cptr, aconf->recvauth, cptr->passwd) == -1)
 		{
@@ -2232,14 +2239,16 @@ CMD_FUNC(m_stats)
 	  case 'h':
 		  for (link_p = conf_link; link_p; link_p = (ConfigItem_link *) link_p->next)
 		  {
-			sendto_one(sptr, ":%s 213 %s C %s@%s * %s %i %s %s%s%s",
+			sendto_one(sptr, ":%s 213 %s C %s@%s * %s %i %s %s%s%s%s%s",
 				me.name, sptr->name, IsOper(sptr) ? link_p->username : "*",
 				IsOper(sptr) ? link_p->hostname : "*", link_p->servername,
 				link_p->port,
 				link_p->class->name,
 				(link_p->options & CONNECT_AUTO) ? "a" : "",
 				(link_p->options & CONNECT_SSL) ? "S" : "",
-				(link_p->options & CONNECT_ZIP) ? "z" : "");
+				(link_p->options & CONNECT_ZIP) ? "z" : "",
+				(link_p->options & CONNECT_NODNSCACHE) ? "d" : "",
+				(link_p->options & CONNECT_NOHOSTCHECK) ? "h" : "");
 			if (link_p->hubmask)
 			{
 				sendto_one(sptr, ":%s 244 %s H %s * %s",

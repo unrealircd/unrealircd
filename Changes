@@ -2079,3 +2079,5 @@ seen. gmtime warning still there
   to make it work, otherwise it's just turned off.
 - Some code cleanups (s_conf.c, now has a config_setdefaultsettings()).
 - Fixed minor badwords /rehash memleak.
+- Added link::options::nohostcheck which makes Unreal not to validate the incomming host/IP
+  against the link::host field, usefull for dynamic DNS hosts.
