@@ -436,3 +436,4 @@
 - Added VHP protoctl, (not in use in the synch). This makes virthost field
   in NICKv2 use the real virthost even if its +t. (Thanks to SL7)
 - Added support for the CR Java Chat auto join feature
+- Fixed a msg.h location problem ..
