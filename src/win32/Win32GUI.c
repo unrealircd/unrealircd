@@ -44,6 +44,14 @@
 
 #define MIRC_COLORS "{\\colortbl ;\\red255\\green255\\blue255;\\red0\\green0\\blue127;\\red0\\green147\\blue0;\\red255\\green0\\blue0;\\red147\\green0\\blue0;\\red128\\green0\\blue128;\\red255\\green128\\blue0;\\red255\\green255\\blue0;\\red0\\green255\\blue0;\\red0\\green128\\blue128;\\red0\\green255\\blue255;\\red0\\green0\\blue252;\\red255\\green0\\blue255;\\red128\\green128\\blue128;\\red192\\green192\\blue192;\\red0\\green0\\blue0;}"
 
+/* Lazy macro */
+#define ShowDialog(handle, inst, template, parent, proc) {\
+	if (!IsWindow(handle)) { \
+		handle = CreateDialog(inst, template, parent, (DLGPROC)proc); ShowWindow(handle, SW_SHOW); \
+	}\
+	else\
+		SetForegroundWindow(handle);\
+}
 /* Comments:
  * 
  * DrBin did a great job with the original GUI, but he has been gone a long time
@@ -90,6 +98,7 @@ void CleanUpSegv(int sig)
 {
 	Shell_NotifyIcon(NIM_DELETE ,&SysTray);
 }
+HWND hStatusWnd;
 HWND hwIRCDWnd=NULL;
 HWND hwTreeView;
 HWND hWndMod;
@@ -512,7 +521,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	hMainThread = (HANDLE)_beginthread(SocketLoop, 0, NULL);
 	while (GetMessage(&msg, NULL, 0, 0))
     {
-		if (hWndMod == NULL || !IsDialogMessage(hWndMod, &msg)) {
+		if (!IsWindow(hStatusWnd) || !IsDialogMessage(hStatusWnd, &msg)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
@@ -621,8 +630,8 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 				return 0;
 			 }
 			 else if ((p.x >= 85) && (p.x <= 132) && (p.y >= 178) && (p.y <= 190))  {
-				 DialogBox(hInst, "Status", hDlg, (DLGPROC)StatusDLG);
-				 return 0;
+				ShowDialog(hStatusWnd, hInst, "Status", hDlg, StatusDLG);
+				return 0;
 			 }
 			 else if ((p.x >= 140) && (p.x <= 186) && (p.y >= 178) && (p.y <= 190))  {
 				unsigned long i = 60000;
@@ -703,7 +712,7 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 				switch(LOWORD(wParam)) {
 
 					case IDM_STATUS:
-						DialogBox(hInst, "Status", hDlg, (DLGPROC)StatusDLG);
+						ShowDialog(hStatusWnd, hInst, "Status", hDlg, StatusDLG);
 						break;
 					case IDM_SHUTDOWN:
 						if (MessageBox(hDlg, "Close UnrealIRCd?", "Are you sure?", MB_YESNO|MB_ICONQUESTION) == IDNO)
@@ -1477,8 +1486,8 @@ LRESULT CALLBACK StatusDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 				return (TRUE);
 			}
 		case WM_CLOSE:
-			EndDialog(hDlg, TRUE);
-			break;
+			DestroyWindow(hDlg);
+			return TRUE;
 		case WM_TIMER:
 				TreeView_DeleteAllItems(hwTreeView);
 				win_map(&me, hwTreeView, 1);
@@ -1500,8 +1509,10 @@ LRESULT CALLBACK StatusDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 				SetTimer(hDlg, 1, 5000, NULL);
 				return (TRUE);
 		case WM_COMMAND:
-			if (LOWORD(wParam) == IDOK)
-				EndDialog(hDlg, TRUE);
+			if (LOWORD(wParam) == IDOK) {
+				DestroyWindow(hDlg);
+				return TRUE;
+			}
 			break;
 
 		}
