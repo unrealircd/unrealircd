@@ -748,5 +748,4 @@ seen. gmtime warning still there
    * setgid has to be called before setuid... cos if you change to a non-priv
       uid first then you are not allowed to setgid!
 - Added more network files
-
-   
+- Fixed a possible restart/die bug
