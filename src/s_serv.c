@@ -463,18 +463,18 @@ int  m_protoctl(cptr, sptr, parc, parv)
 			    proto, cptr->name));
 			SetUMODE2(cptr);
 		}
-		else if (strcmp(s, "ALN") == 0)
+		else if (strcmp(s, "NS") == 0)
 		{
 #ifdef PROTOCTL_MADNESS
 			if (remove) {
-				ClearALN(cptr);
+				ClearNS(cptr);
 				continue;
 			}
 #endif
 			Debug((DEBUG_ERROR,
 			    "Chose protocol %s for link %s",
 			    proto, cptr->name));
-			SetALN(cptr);
+			SetNS(cptr);
 		}
 		else if (strcmp(s, "VL") == 0)
 		{
@@ -548,7 +548,7 @@ int  m_server(cptr, sptr, parc, parv)
 	aClient *acptr, *bcptr;
 	aConfItem *aconf, *cconf;
 	int  hop, ts = 0;
-	char *parvaln, *flags, *protocol, *inf;
+	char *flags, *protocol, *inf;
 
 	info[0] = '\0';
 	inpath = get_client_name(cptr, FALSE);
@@ -666,14 +666,6 @@ int  m_server(cptr, sptr, parc, parv)
 			return exit_client(cptr, cptr, cptr, "Bad Password");
 		}
 		/* bzero(cptr->passwd, sizeof(cptr->passwd)); */
-	}
-	f = (char *) does_servername_collide(parv[1]);
-	if (f)
-	{
-		ircsprintf(pp, "Servername %s collides with servername %s (similar hash). Change servername in some way (maybe change case)",
-			parv[1], f);		
-		sendto_realops("Link %s cancelled - %s", inpath, pp);
-		return exit_client(cptr, cptr, cptr, pp);
 	}
 	if ((acptr = find_name(host, NULL)))
 	{
@@ -807,7 +799,6 @@ int  m_server(cptr, sptr, parc, parv)
 		   ** need to send different names to different servers
 		   ** (domain name matching)
 		 */
-		parvaln = (char *)find_server_aln(parv[0]);
 		for (i = 0; i <= highest_fd; i++)
 		{
 			if (!(bcptr = local[i]) || !IsServer(bcptr) ||
@@ -824,15 +815,13 @@ int  m_server(cptr, sptr, parc, parv)
 			    acptr->name) == 0)
 				continue;
 			if (ts)
-				sendto_one(bcptr, "%c%s %s %s %d %d :%s",
-				    SupportALN(bcptr) ? '@' : ':',
-				    SupportALN(bcptr) ? parvaln : parv[0],
+				sendto_one(bcptr, ":%s %s %s %d %d :%s",
+				    parv[0],
 				    IsToken(bcptr) ? TOK_SERVER : MSG_SERVER,
 				    acptr->name, hop + 1, ts, acptr->info);
 			else
-				sendto_one(bcptr, "%c%s %s %s %d :%s",
-				    SupportALN(bcptr) ? '@' : ':',
-				    SupportALN(bcptr) ? parvaln : parv[0],
+				sendto_one(bcptr, ":%s %s %s %d :%s",
+					parv[0],
 				    IsToken(bcptr) ? TOK_SERVER : MSG_SERVER,
 				    acptr->name, hop + 1, acptr->info);
 		}
@@ -995,7 +984,6 @@ int  m_server_estab(cptr)
 	aConfItem *aconf, *bconf;
 	char *inpath, *host, *s, *encr;
 	int  split, i;
-	char *myaln = find_server_aln(me.name);
 	extern	char	serveropts[];	
 
 	inpath = get_client_name(cptr, TRUE);	/* "refresh" inpath with host */
@@ -1144,15 +1132,13 @@ int  m_server_estab(cptr)
 		    !match(my_name_for_link(me.name, aconf), cptr->name))
 			continue;
 		if (split)
-			sendto_one(acptr, "%c%s %s %s 2 :%s",
-			    (SupportALN(acptr) ? '@' : ':'),
-			    (SupportALN(acptr) ? myaln : me.name),
+			sendto_one(acptr, ":%s %s %s 2 :%s",
+				me.name,
 			    (IsToken(acptr) ? TOK_SERVER : MSG_SERVER),
 			    cptr->name, cptr->info);
 		else
-			sendto_one(acptr, "%c%s %s %s 2 :%s",
-			    (SupportALN(acptr) ? '@' : ':'),
-			    (SupportALN(acptr) ? myaln : me.name),
+			sendto_one(acptr, ":%s %s %s 2 :%s",
+				me.name,
 			    (IsToken(cptr) ? TOK_SERVER : MSG_SERVER),
 			    cptr->name, cptr->info);
 	}
@@ -1190,20 +1176,14 @@ int  m_server_estab(cptr)
 			split = (MyConnect(acptr) &&
 			    mycmp(acptr->name, acptr->sockhost));
 			if (split)
-				sendto_one(cptr, "%c%s %s %s %d :%s",
-				    (SupportALN(cptr) ? '@' : ':'),
-				    (SupportALN(cptr) ?
-				    find_server_aln(acptr->serv->up) : acptr->
-				    serv->up),
+				sendto_one(cptr, ":%s %s %s %d :%s",
+					acptr->serv->up,
 				    (IsToken(cptr) ? TOK_SERVER : MSG_SERVER),
 				    acptr->name, acptr->hopcount + 1,
 				    acptr->info);
 			else
-				sendto_one(cptr, "%c%s %s %s %d :%s",
-				    (SupportALN(cptr) ? '@' : ':'),
-				    (SupportALN(cptr) ?
-				    find_server_aln(acptr->serv->up) : acptr->
-				    serv->up),
+				sendto_one(cptr, ":%s %s %s %d :%s",
+				    acptr->serv->up,
 				    (IsToken(cptr) ? TOK_SERVER : MSG_SERVER),
 				    acptr->name, acptr->hopcount + 1,
 				    acptr->info);
@@ -1252,9 +1232,7 @@ int  m_server_estab(cptr)
 					    acptr->name, acptr->hopcount + 1,
 					    acptr->lastnick, acptr->user->username,
 					    acptr->user->realhost,
-					    (SupportALN(cptr) ?
-					    find_server_aln(acptr->user->
-					    server) : acptr->user->server),
+					    acptr->user->server,
 					    acptr->user->servicestamp, (!buf
 					    || *buf == '\0' ? "+" : buf),
 					    ((IsHidden(acptr)
@@ -1267,9 +1245,7 @@ int  m_server_estab(cptr)
 					    acptr->name, acptr->hopcount + 1,
 					    acptr->lastnick, acptr->user->username,
 					    acptr->user->realhost,
-					    (SupportALN(cptr) ?
-					    find_server_aln(acptr->user->
-					    server) : acptr->user->server),
+					    acptr->user->server,
 					    acptr->user->servicestamp, (!buf
 					    || *buf == '\0' ? "+" : buf),
 					    IsHidden(acptr) ? acptr->user->virthost 
@@ -1330,9 +1306,8 @@ int  m_server_estab(cptr)
 		{
 			if (tmp->status != CONF_ILLEGAL)
 				if (tmp->reason)
-					sendto_one(cptr, "%c%s %s %s :%s",
-					    SupportALN(cptr) ? '@' : ':',
-					    SupportALN(cptr) ? myaln : me.name,
+					sendto_one(cptr, ":%s %s %s :%s",
+						me.name,
 					    (IsToken(cptr) ? TOK_SQLINE :
 					    MSG_SQLINE), tmp->sqline,
 					    tmp->reason);

@@ -466,3 +466,5 @@
 - SJ3 fixes. Let's hope this works (f*cken hell..)
 - Fixed a V:line bug
 - Added /infoserv (you can stop bugging us now skold ;P)
+- Removed ALN, and the ALN system.
+- Added base64 encoding instead, for ALN v2 (NS)

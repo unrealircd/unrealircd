@@ -564,9 +564,6 @@ void sendto_serv_butone_token(aClient *one, char *prefix, char *command,
 	va_start(vl, pattern);
 
 	pref[0] = '\0';
-	if (strchr(prefix, '.'))
-		ircsprintf(pref, "@%s", find_server_aln(prefix));
-
 	strcpy(tcmd, token);
 	strcpy(ccmd, command);
 	strcat(tcmd, " ");
@@ -589,18 +586,11 @@ void sendto_serv_butone_token(aClient *one, char *prefix, char *command,
 #endif
 			if (IsToken(cptr))
 			{
-				if ((pref[0] != '\0') && SupportALN(cptr))
-					sendto_one(cptr, "%s %s", pref, tcmd);
-				else
-					sendto_one(cptr, ":%s %s", prefix,
-					    tcmd);
+				sendto_one(cptr, ":%s %s", prefix, tcmd);
 			}
 			else
 			{
-				if ((pref[0] != '\0') && SupportALN(cptr))
-					sendto_one(cptr, "%s %s", pref, ccmd);
-				else
-					sendto_one(cptr, ":%s %s", prefix,
+				sendto_one(cptr, ":%s %s", prefix,
 					    ccmd);
 			}
 	}
@@ -633,8 +623,6 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 	va_start(vl, pattern);
 	
 	pref[0] = '\0';
-	if (strchr(prefix, '.'))
-		ircsprintf(pref, "@%s", find_server_aln(prefix));
 
 	strcpy(tcmd, token);
 	strcpy(ccmd, command);
@@ -679,17 +667,11 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 			continue;
 		if (IsToken(cptr))
 			{
-				if ((pref[0] != '\0') && SupportALN(cptr))
-					sendto_one(cptr, "%s %s", pref, tcmd);
-				else
 					sendto_one(cptr, ":%s %s", prefix,
 					    tcmd);
 			}
 			else
 			{
-				if ((pref[0] != '\0') && SupportALN(cptr))
-					sendto_one(cptr, "%s %s", pref, ccmd);
-				else
 					sendto_one(cptr, ":%s %s", prefix,
 					    ccmd);
 			}
@@ -1628,8 +1610,7 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 				    "%s %s %d %d %s %s %s %lu %s %s :%s",
 				    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
 				    hopcount, lastnick, username, realhost,
-				    (SupportALN(cptr) ? find_server_aln(server)
-				    : server), servicestamp, umodes, 
+				    server, servicestamp, umodes, 
 					  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : virthost),
 					    info);
 			}
@@ -1639,8 +1620,7 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 				    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 				    nick, hopcount, lastnick, username,
 				    realhost,
-				    (SupportALN(cptr) ? find_server_aln(server)
-				    : server), servicestamp, info);
+				    server, servicestamp, info);
 				if (strcmp(umodes, "+"))
 				{
 					sendto_one(cptr, ":%s %s %s :%s",

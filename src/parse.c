@@ -70,13 +70,13 @@ aClient *find_client(name, cptr)
 
 	if (name)
 	{
-		if (*name == '@')
+/*		if (*name == '@')
 		{
 			newname = name;
-			name = find_by_aln(name + 1);
 			if (!name)
 				name = newname;
 		}
+*/
 		cptr = hash_find_client(name, cptr);
 	}
 	return cptr;
@@ -113,49 +113,19 @@ aClient *find_server(name, cptr)
 	char *newname;
 	if (name)
 	{
-		if (*name == '@')
+/*		if (*name == '@')
 		{
 			newname = name;
 			name = find_by_aln(name + 1);
 			if (!name)
 				name = newname;
 		}
+*/
 		cptr = hash_find_server(name, cptr);
 	}
 	return cptr;
 }
 
-aClient *find_serveraln(name, cptr)
-	char *name;
-	aClient *cptr;
-{
-	char *newname;
-	if (name)
-	{
-		if (*name == '@')
-		{
-			newname = name;
-			name = find_by_aln(name + 1);
-			if (!name)
-				name = newname;
-		}
-		if (strlen(name) < 3)
-		{
-			newname = name;
-#ifdef DEVELOP
-//                      sendto_ops("Trying to find %s", name);
-#endif
-			name = find_by_aln(name);
-			if (!name)
-				name = newname;
-		}
-		cptr = hash_find_client(name, cptr);
-#ifdef DEVELOP
-//             (cptr) sendto_ops("Found it ! (%s)", cptr->name);
-#endif
-	}
-	return cptr;
-}
 
 aClient *find_name(name, cptr)
 	char *name;
@@ -200,7 +170,6 @@ aClient *find_person(name, cptr)
 		return cptr;
 }
 
-int  alnprefix = 0;
 
 void	ban_flooder(aClient *cptr)
 {
@@ -274,14 +243,11 @@ int  parse(cptr, buffer, bufend, mptr)
 	strcpy(backupbuf, buffer);
 	s = sender;
 	*s = '\0';
-	alnprefix = 0;
 	for (ch = buffer; *ch == ' '; ch++)
 		;
 	para[0] = from->name;
 	if (*ch == ':' || *ch == '@')
 	{
-		if (*ch == '@')
-			alnprefix = 1;
 		/*
 		   ** Copy the prefix to 'sender' assuming it terminates
 		   ** with SPACE (or NULL, which is an error, though).
@@ -303,12 +269,6 @@ int  parse(cptr, buffer, bufend, mptr)
 		 */
 		if (*sender && IsServer(cptr))
 		{
-			if ((strlen(sender) < 3) && alnprefix)
-			{
-				p = find_by_aln(sender);
-				if (p)
-					strcpy(sender, p);
-			}
 			from = find_client(sender, (aClient *)NULL);
 			if (!from || match(from->name, sender))
 				from = find_server(sender, (aClient *)NULL);
@@ -734,12 +694,12 @@ static void remove_unknown(cptr, sender)
 	 * Do kill if it came from a server because it means there is a ghost
 	 * user on the other server which needs to be removed. -avalon
 	 */
-	if (!index(sender, '.') && !alnprefix)
+	if (!index(sender, '.'))
 		sendto_one(cptr, ":%s KILL %s :%s (%s(?) <- %s)",
 		    me.name, sender, me.name, sender,
 		    get_client_name(cptr, FALSE));
 	else
-		sendto_one(cptr, ":%s SQUIT %s%s :(Unknown from %s)",
-		    me.name, (alnprefix ? "@" : ""), sender,
+		sendto_one(cptr, ":%s SQUIT %s :(Unknown from %s)",
+		    me.name, sender,
 		    get_client_name(cptr, FALSE));
 }

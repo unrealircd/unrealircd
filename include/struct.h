@@ -267,7 +267,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define PROTO_NICKv2	0x8	/* Negotiated NICKv2 protocol */
 #define PROTO_SJOIN2	0x10	/* Negotiated SJOIN2 protocol */
 #define PROTO_UMODE2	0x20	/* Negotiated UMODE2 protocol */
-#define PROTO_ALN	0x40	/* Negotiated ALN protocol */
+#define PROTO_NS	0x40	/* Negotiated NS protocol */
 #define PROTO_ZIP	0x80	/* Negotiated ZIP protocol */
 #define PROTO_VL	0x100	/* Negotiated VL protocol */
 #define PROTO_SJ3	0x200	/* Negotiated SJ3 protocol */
@@ -405,7 +405,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SupportNICKv2(x)	((x)->proto & PROTO_NICKv2)
 #define SupportSJOIN2(x)	((x)->proto & PROTO_SJOIN2)
 #define SupportUMODE2(x)	((x)->proto & PROTO_UMODE2)
-#define SupportALN(x)		((x)->proto & PROTO_ALN)
+#define SupportNS(x)		((x)->proto & PROTO_NS)
 #define SupportVL(x)		((x)->proto & PROTO_VL)
 #define SupportSJ3(x)		((x)->proto & PROTO_SJ3)
 #define SupportVHP(x)		((x)->proto & PROTO_VHP)
@@ -416,7 +416,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SetNICKv2(x)		((x)->proto |= PROTO_NICKv2)
 #define SetSJOIN2(x)		((x)->proto |= PROTO_SJOIN2)
 #define SetUMODE2(x)		((x)->proto |= PROTO_UMODE2)
-#define SetALN(x)		((x)->proto |= PROTO_ALN)
+#define SetNS(x)		((x)->proto |= PROTO_NS)
 #define SetVL(x)		((x)->proto |= PROTO_VL)
 #define SetSJ3(x)		((x)->proto |= PROTO_SJ3)
 #define SetVHP(x)		((x)->proto |= PROTO_VHP)
@@ -705,6 +705,7 @@ struct Server {
 	char by[NICKLEN + 1];
 	aConfItem *nline;	/* N-line pointer for this server */
 	time_t timestamp;	/* Remotely determined connect try time */
+	unsigned short numeric; /* NS numeric, 0 if none */
 #ifdef	LIST_DEBUG
 	aClient *bcptr;
 #endif

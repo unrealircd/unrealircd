@@ -1129,9 +1129,8 @@ int  m_nick(cptr, sptr, parc, parv)
 	   ** We should really only deal with this for msgs from servers.
 	   ** -- Aeto
 	 */
-	/* Fixed up to work with ALN too .. --Stskeeps */
 	if (IsServer(cptr) &&
-	    (parc > 7 && (!(serv = (aClient *)find_serveraln(parv[6], NULL)) ||
+	    (parc > 7 && (!(serv = (aClient *)find_server(parv[6], NULL)) ||
 	    serv->from != cptr->from)))
 		return 0;
 
@@ -1169,13 +1168,14 @@ int  m_nick(cptr, sptr, parc, parv)
 	    && ((aconf = find_conf_name(nick, CONF_QUARANTINED_NICK))
 	    || (asqline = find_sqline_match(nick))))
 	{
-		sendto_realops("Q-lined nick %s from %s on %s.", nick,
-		    (*sptr->name != 0 && !IsServer(sptr)) ? sptr->name :
-		    "<unregistered>",
-		    (sptr->user ==
-		    NULL) ? ((IsServer(sptr)) ? (strlen(parv[6]) <
-		    3 ? find_by_aln(parv[6]) : parv[6]) : me.name) : sptr->
-		    user->server);
+		sendto_realops("Q:lined nick %s from %s on %s.", nick,
+			(*sptr->name != 0 && !IsServer(sptr)) ? sptr->name :
+			"<unregistered>"),
+			((sptr->user == NULL) ? 
+			(IsServer(sptr) ? parv[6] : me.name) :
+				sptr->user->server);
+			
+
 		if ((!IsServer(cptr)) && (!IsOper(cptr)))
 		{
 
@@ -2848,24 +2848,7 @@ int  m_user(cptr, sptr, parc, parv)
 		if (sptr->srvptr == NULL)
 			sendto_ops("WARNING, User %s introduced as being "
 			    "on non-existant server %s.", sptr->name, server);
-		if (SupportALN(cptr))
-		{
-			if (strlen(server) < 3)
-			{
-				user->server = find_by_aln(server);
-				if (!user->server)
-					user->server =
-					    find_or_add("unknownserver");
-			}
-			else
-			{
-				user->server = find_or_add(server);
-			}
-		}
-		else
-		{
-			user->server = find_or_add(server);
-		}
+		user->server = find_or_add(server);
 		strncpyzt(user->realhost, host, sizeof(user->realhost));
 		goto user_finish;
 	}
