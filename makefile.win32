@@ -211,7 +211,7 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/M_WATCH.DLL SRC/MODULES/M_PART.DLL SRC/MODULES/M_JOIN.DLL \
  SRC/MODULES/M_MOTD.DLL SRC/MODULES/M_OPERMOTD.DLL SRC/MODULES/M_BOTMOTD.DLL \
  SRC/MODULES/M_LUSERS.DLL \
- SRC/MODULES/CLOAK.DLL SRC/MODULES/OLDCLOAK.DLL
+ SRC/MODULES/CLOAK.DLL
 
 
 ALL: CONF UNREAL.EXE WIRCD.EXE src/modules/commands.dll MODULES 
@@ -776,9 +776,6 @@ src/modules/m_lusers.dll: src/modules/m_lusers.c $(INCLUDES)
 
 src/modules/cloak.dll: src/modules/cloak.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/cloak.c $(MODLFLAGS)
-
-src/modules/oldcloak.dll: src/modules/oldcloak.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/oldcloak.c $(MODLFLAGS)
 
 dummy:
 

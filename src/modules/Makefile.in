@@ -25,8 +25,8 @@ INCLUDES = ../include/struct.h ../include/config.h \
 	../include/h.h ../include/numeric.h ../include/msg.h \
 	../include/dynconf.h ../include/modules.h ../include/setup.h
 
-#just changing this to cloak.so oldcloak.so could be a ./Config option...
-#R_MODULES=cloak.so oldcloak.so
+#just changing this to cloak.so could be a ./Config option...
+#R_MODULES=cloak.so
 R_MODULES= \
 	 m_sethost.so m_chghost.so m_chgident.so m_setname.so \
 	 m_setident.so m_sdesc.so m_svsmode.so m_swhois.so\
@@ -48,7 +48,7 @@ R_MODULES= \
 	 m_svsfline.so m_dccdeny.so m_undccdeny.so m_whowas.so \
 	 m_connect.so m_dccallow.so m_userip.so m_nick.so m_user.so \
 	 m_mode.so m_watch.so m_part.so m_join.so m_motd.so m_opermotd.so \
-	 m_botmotd.so m_lusers.so cloak.so oldcloak.so 
+	 m_botmotd.so m_lusers.so cloak.so 
 
 #note change of .c to .o
 COMMANDS=m_sethost.o m_chghost.o m_chgident.o m_setname.o m_setident.o \
@@ -803,10 +803,6 @@ m_lusers.so: m_lusers.c $(INCLUDES)
 cloak.so: cloak.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o cloak.so cloak.c
-
-oldcloak.so: oldcloak.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o oldcloak.so oldcloak.c
 
 clean:
 	$(RM) -f *.o *.so *~ core

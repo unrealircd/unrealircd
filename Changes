@@ -755,3 +755,4 @@
 - Fixed a bug where an unknown operflag would cause a crash.
 - Windows versions will now be compiled with zlib 1.2.2 and curl 7.13.1.
 - Made windows installer also install doc\technical\*
+- Removed oldcloak cloaking module, everyone should be using the new cloak one by now.
