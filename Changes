@@ -203,3 +203,4 @@
 - Fixed a bug where /map showed U:lines while HIDE_ULINES was set
 - Removed "on network" in /whois oper
 - Added code to makenet to stop fake submissions
+- Fixed some /whois channels code, which may break +I /whois
