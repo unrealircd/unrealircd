@@ -155,7 +155,9 @@ aTKline *tkl_add_line(int type, char *usermask, char *hostmask, char *reason, ch
 			nl->ptr.spamf->tkl_reason = strdup(spamf_tkl_reason); /* already encoded */
 		}
 		if (nl->subtype & SPAMF_USER)
-			loop.do_bancheck_spamf = 1;
+			loop.do_bancheck_spamf_user = 1;
+		if (nl->subtype & SPAMF_AWAY)
+			loop.do_bancheck_spamf_away = 1;
 	}
 	else if (type & TKL_KILL || type & TKL_ZAP || type & TKL_SHUN)
 	{
@@ -1522,6 +1524,16 @@ char *str;
 					case SPAMF_DCC:
 						sendnotice(sptr, "DCC to %s blocked: %s",
 							target, unreal_decodespace(tk->ptr.spamf->tkl_reason));
+						break;
+					case SPAMF_AWAY:
+						/* hack to deal with 'after-away-was-set-filters' */
+						if (sptr->user->away && !strcmp(str_in, sptr->user->away))
+						{
+							/* free away & broadcast the unset */
+							MyFree(sptr->user->away);
+							sptr->user->away = NULL;
+							sendto_serv_butone_token(sptr, sptr->name, MSG_AWAY, TOK_AWAY, "");
+						}
 						break;
 					default:
 						break;

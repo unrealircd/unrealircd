@@ -605,9 +605,14 @@ extern TS check_pings(TS currenttime)
 
 		}
 		/* Do spamfilter 'user' banchecks.. */
-		if (loop.do_bancheck_spamf && IsPerson(cptr))
+		if (loop.do_bancheck_spamf_user && IsPerson(cptr))
 		{
 			if (find_spamfilter_user(cptr) == FLUSH_BUFFER)
+				continue;
+		}
+		if (loop.do_bancheck_spamf_away && IsPerson(cptr) && cptr->user->away)
+		{
+			if (dospamfilter(cptr, cptr->user->away, SPAMF_AWAY, NULL) == FLUSH_BUFFER)
 				continue;
 		}
 		/*
@@ -731,7 +736,7 @@ extern TS check_pings(TS currenttime)
 	 * * - lucas
 	 * *
 	 */
-	loop.do_bancheck = loop.do_bancheck_spamf = 0;
+	loop.do_bancheck = loop.do_bancheck_spamf_user = loop.do_bancheck_spamf_away = 0;
 	Debug((DEBUG_NOTICE, "Next check_ping() call at: %s, %d %d %d",
 	    myctime(currenttime+9), ping, currenttime+9, currenttime));
 

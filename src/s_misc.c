@@ -988,6 +988,7 @@ int flags = 0;
 			case 'q': flags |= SPAMF_QUIT; break;
 			case 'd': flags |= SPAMF_DCC; break;
 			case 'u': flags |= SPAMF_USER; break;
+			case 'a': flags |= SPAMF_AWAY; break;
 			default:
 				if (sptr)
 				{
@@ -1020,6 +1021,8 @@ int flags = 0;
 		return SPAMF_DCC;
 	if (!strcmp(s, "user"))
 		return SPAMF_USER;
+	if (!strcmp(s, "away"))
+		return SPAMF_AWAY;
 	return 0;
 }
 
@@ -1044,6 +1047,8 @@ char *p = buf;
 		*p++ = 'd';
 	if (v & SPAMF_USER)
 		*p++ = 'u';
+	if (v & SPAMF_AWAY)
+		*p++ = 'a';
 	*p = '\0';
 	return buf;
 }
@@ -1067,6 +1072,8 @@ char *spamfilter_inttostring_long(int v)
 			return "DCC";
 		case SPAMF_USER:
 			return "user";
+		case SPAMF_AWAY:
+			return "AWAY";
 		default:
 			return "UNKNOWN";
 	}

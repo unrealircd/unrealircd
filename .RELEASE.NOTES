@@ -32,6 +32,7 @@ Unreal3.2.1-almost-3.2.2-but-not-yet-!!!!!! Release Notes
   Ex: /spamfilter add u gzline 86400 Drone[0-9]+!.+@.+:Drone[0-9]
   This would gzline any users that have both a nick and realname with 'Drone'
   followed by digits.
+- Added spamfilter 'away' ('a') target.
 - Oper-up notices moved to a new snomask 'o'
 - French docs
 - Module coders: HOOKTYPE_REMOTE_JOIN, HOOKTYPE_REMOTE_PART, HOOKTYPE_REMOTE_KICK
@@ -47,7 +48,7 @@ Unreal3.2.1-almost-3.2.2-but-not-yet-!!!!!! Release Notes
   mainly affected non-BIND nameservers).
 - new TRE version v0.7.0 fixes (invalid) regex crash
 - Too broad regex in badword::word caused the ircd to hang
-- __REMOTE__INCLUDE__BUGS__OR__IN__MINOR__??__
+- Win32: remote include bug could cause a crash [*]
 
 ==[ MINOR BUGS FIXED ]==
 - Win32: error msg producing garbage upon a module load error [*]
@@ -80,6 +81,7 @@ Unreal3.2.1-almost-3.2.2-but-not-yet-!!!!!! Release Notes
 - Win32: Now using the release library msvcr70.dll [*]
 - Module coders: HOOKTYPE_REMOTE_CONNECT now also gets called upon netsynch.
 - Slowed down qline floods
+- You can now specify multiple types in an except tkl { } block
 
  [*]: fix was also in the 3.2.1b win32 release
 

@@ -393,3 +393,4 @@
 - Added release notes (unfinished).
 - Added file: include/macros.h and a new macro, ARRAY_SIZEOF.
 - Added the ability to specify multiple types in a tkl except, suggested by Bugz (#0002085).
+- Added spamfilter 'away' ('a') target (#0002057).

@@ -687,7 +687,8 @@ struct aloopStruct {
 	unsigned do_garbage_collect : 1;
 	unsigned ircd_booted : 1;
 	unsigned do_bancheck : 1; /* perform *line bancheck? */
-	unsigned do_bancheck_spamf : 1; /* perform 'user' spamfilter bancheck? */
+	unsigned do_bancheck_spamf_user : 1; /* perform 'user' spamfilter bancheck */
+	unsigned do_bancheck_spamf_away : 1; /* perform 'away' spamfilter bancheck */
 	unsigned ircd_rehashing : 1;
 	unsigned tainted : 1;
 	aClient *rehash_save_cptr, *rehash_save_sptr;
@@ -796,6 +797,7 @@ struct Server {
 #define SPAMF_QUIT			0x0020 /* q */
 #define SPAMF_DCC			0x0040 /* d */
 #define SPAMF_USER			0x0080 /* u */
+#define SPAMF_AWAY			0x0100 /* a */
 
 struct _spamfilter {
 	unsigned short action; /* see BAN_ACT* */
