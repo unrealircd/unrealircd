@@ -3281,3 +3281,5 @@ This is the 3.2 fixes branch.
 - Fixed find_qline crashes regarding except tkl 'type qline', reported by Gilou (#0001882).
 - Fixed some CIDR bugs causing things not to match.
 - Fixed a CIDR bug when compiled without IPv6 support
+- Fixed an SVSNICK bug that could lead to duplicate users in very rare circumstances
+  (#0001874) reported by Jiuka.
