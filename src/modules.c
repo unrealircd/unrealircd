@@ -61,6 +61,7 @@ Callback	*Callbacks[MAXCALLBACKS];	/* Callback objects for modules, used for reh
 Callback	*RCallbacks[MAXCALLBACKS];	/* 'Real' callback function, used for callback function calls */
 MODVAR Module          *Modules = NULL;
 MODVAR Versionflag     *Versionflags = NULL;
+
 int     Module_Depend_Resolve(Module *p);
 Module *Module_make(ModuleHeader *header, 
 #ifdef _WIN32
@@ -459,6 +460,9 @@ void Unload_all_loaded_modules(void)
 			else if (objs->type == MOBJ_CALLBACK) {
 				CallbackDel(objs->object.callback);
 			}
+			else if (objs->type == MOBJ_ISUPPORT) {
+				IsupportDel(objs->object.isupport);
+			}
 		}
 		for (child = mi->children; child; child = childnext)
 		{
@@ -518,6 +522,9 @@ void Unload_all_testing_modules(void)
 			}
 			else if (objs->type == MOBJ_CALLBACK) {
 				CallbackDel(objs->object.callback);
+			}
+			else if (objs->type == MOBJ_ISUPPORT) {
+				IsupportDel(objs->object.isupport);
 			}
 		}
 		for (child = mi->children; child; child = childnext)
@@ -585,6 +592,10 @@ int    Module_free(Module *mod)
 		else if (objs->type == MOBJ_CALLBACK) {
 			CallbackDel(objs->object.callback);
 		}
+		else if (objs->type == MOBJ_ISUPPORT) {
+			IsupportDel(objs->object.isupport);
+		}
+
 	}
 	for (p = Modules; p; p = p->next)
 	{

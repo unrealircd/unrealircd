@@ -317,3 +317,14 @@
 - Made /whois show the user's modes to opers regardless of +e
 - Added snomask to the /whois umode output
 - Added a patch by rocafella to fix a crash when installing Unreal on Win2003 (#0001949).
+- Moved the Command API functions to a separate file.
+- Redesigned the 005 token:
+  - Now renamed to RPL_ISUPPORT.
+  - Replaced KNOCK and MAP tokens with new CMDS token (see doc/technical/005.txt)
+  - Implemented most tokens from the isupport draft (STATUSMSG, EXCEPTS, CHANLIMIT,
+    CHANNELLEN, MAXLIST).
+  - Removed MAXBANS.
+  - Made the isupport system dynamic and provide an API for modules to add tokens, may need
+    testing.
+  - Added an M_ANNOUNCE flag for CommandAdd to add the command to the CMDS token, may need
+    testing.

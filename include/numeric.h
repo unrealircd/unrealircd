@@ -33,11 +33,11 @@
 #define	RPL_YOURHOST         002
 #define	RPL_CREATED          003
 #define	RPL_MYINFO           004
-#define RPL_PROTOCTL	     005
+#define RPL_ISUPPORT	     005
 
 #define RPL_REDIR	     10
 
-#define RPL_REMOTEPROTOCTL 105
+#define RPL_REMOTEISUPPORT 105
 
 /*
  * Errors are in the range from 400-599 currently and are grouped by what

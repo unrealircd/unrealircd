@@ -29,7 +29,7 @@ OBJS=auth.o aln.o badwords.o channel.o cloak.o crule.o dbuf.o \
 	s_misc.o s_numeric.o s_serv.o s_svs.o $(STRTOUL) socket.o \
 	ssl.o s_user.o scache.o send.o support.o umodes.o \
 	version.o webtv.o whowas.o zip.o cidr.o random.o extcmodes.o \
-	extbans.o md5.o $(URL)
+	extbans.o md5.o api-isupport.o api-command.o $(URL)
 
 SRC=$(OBJS:%.o=%.c)
 
@@ -249,6 +249,12 @@ extbans.o: extbans.c $(INCLUDES)
 
 md5.o: md5.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c md5.c
+
+api-command.o: api-command.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c api-command.c
+
+api-isupport.o: api-isupport.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c api-isupport.c
 
 url.o: url.c $(INCLUDES) ../include/url.h
 	$(CC) $(CFLAGS) -c url.c

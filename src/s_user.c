@@ -1007,9 +1007,12 @@ int register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char
 			sendto_one(sptr, ":%s 004 %s %s CR1.8.03-%s %s %s",
 				    me.name, parv[0],
 				    me.name, version, umodestring, cmodestring);
-			
-		sendto_one(sptr, ":%s 005 %s " PROTOCTL_CLIENT_1, me.name, nick, PROTOCTL_PARAMETERS_1);
-		sendto_one(sptr, ":%s 005 %s " PROTOCTL_CLIENT_2, me.name, nick, PROTOCTL_PARAMETERS_2);
+		{
+			extern char *IsupportStrings[];
+			int i;
+			for (i = 0; IsupportStrings[i]; i++)
+				sendto_one(sptr, rpl_str(RPL_ISUPPORT), me.name, nick, IsupportStrings[i]);
+		}
 #ifdef USE_SSL
 		if (sptr->flags & FLAGS_SSL)
 			if (sptr->ssl)

@@ -115,6 +115,7 @@ void	extcmode_init(void)
 Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode)
 {
 	short i = 0, j = 0;
+	char tmpbuf[512];
 
 	while (i < EXTCMODETABLESZ)
 	{
@@ -150,21 +151,31 @@ Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode)
 		if (Channelmode_Table[j].flag)
 			if (j > Channelmode_highest)
 				Channelmode_highest = j;
-	make_cmodestr();
-	make_extcmodestr();
 	if (reserved)
 		reserved->errorcode = MODERR_NOERROR;
+	if (loop.ircd_booted)
+	{
+		make_cmodestr();
+		make_extcmodestr();
+		ircsprintf(tmpbuf, CHPAR1 "%s," CHPAR2 "%s," CHPAR3 "%s," CHPAR4 "%s",
+			EXPAR1, EXPAR2, EXPAR3, EXPAR4);
+		IsupportSetValue(IsupportFind("CHANMODES"), tmpbuf);
+	}
 	return &(Channelmode_Table[i]);
 }
 
 void CmodeDel(Cmode *cmode)
 {
+	char tmpbuf[512];
 	/* TODO: remove from all channel */
 	if (cmode)
 		cmode->flag = '\0';
 	make_cmodestr();
 	make_extcmodestr();
 	/* Not unloadable, so module object support is not needed (yet) */
+	ircsprintf(tmpbuf, CHPAR1 "%s," CHPAR2 "%s," CHPAR3 "%s," CHPAR4 "%s",
+			EXPAR1, EXPAR2, EXPAR3, EXPAR4);
+	IsupportSetValue(IsupportFind("CHANMODES"), tmpbuf);
 }
 
 /** searches in chptr extmode parameters and returns entry or NULL. */

@@ -1253,6 +1253,8 @@ int InitwIRCD(int argc, char *argv[])
 #ifdef EXTCMODE
 	make_extcmodestr();
 #endif
+	make_extbanstr();
+	isupport_init();
 	if (!find_Command_simple("AWAY") /*|| !find_Command_simple("KILL") ||
 		!find_Command_simple("OPER") || !find_Command_simple("PING")*/)
 	{ 

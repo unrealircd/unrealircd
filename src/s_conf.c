@@ -5750,6 +5750,8 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "silence-limit")) {
 			tempiConf.silence_limit = atol(cep->ce_vardata);
+			if (loop.ircd_booted)
+				IsupportSetValue(IsupportFind("SILENCE"), cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "auto-join")) {
 			ircstrdup(tempiConf.auto_join_chans, cep->ce_vardata);
@@ -5817,6 +5819,13 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "maxchannelsperuser")) {
 			tempiConf.maxchannelsperuser = atoi(cep->ce_vardata);
+			if (loop.ircd_booted)
+			{
+				char tmpbuf[512];
+				IsupportSetValue(IsupportFind("MAXCHANNELS"), cep->ce_vardata);
+				ircsprintf(tmpbuf, "#:%s", cep->ce_vardata);
+				IsupportSetValue(IsupportFind("CHANLIMIT"), tmpbuf);
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "maxdccallow")) {
 			tempiConf.maxdccallow = atoi(cep->ce_vardata);
@@ -5829,6 +5838,8 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					*cep->ce_vardata='-';
 			}
 			ircstrdup(tempiConf.network.x_ircnet005, tmp);
+			if (loop.ircd_booted)
+				IsupportSetValue(IsupportFind("NETWORK"), tmp);
 			cep->ce_vardata = tmp;
 		}
 		else if (!strcmp(cep->ce_varname, "default-server")) {
