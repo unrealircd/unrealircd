@@ -416,3 +416,4 @@
 - Added unitedirc.network -NiQuiL
 - Removed a , in NiQuiL's banwalk message
 - Fixed DEBUGMODE problem, found by someone ..
+- Don't know why but m_file.so was in the modules makefile, removed
