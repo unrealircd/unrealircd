@@ -35,7 +35,7 @@ typedef struct
 {
 	vFP callback;
 	FILE *fd;
-	char filename[PATH_MAX];
+	char filename[MAX_PATH];
 	char errorbuf[CURL_ERROR_SIZE];
 } FileHandle;
 
@@ -123,8 +123,8 @@ char *download_file(char *url, char **error)
 	{
 		FILE *fd = fopen(tmp, "wb");
 		curl_easy_setopt(curl, CURLOPT_URL, url);
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, fd);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download);
 		curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
 		bzero(errorbuf, CURL_ERROR_SIZE);
 		curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorbuf);

@@ -2664,3 +2664,4 @@ seen. gmtime warning still there
   confusing (and thus causing bad code/bugs) and was never used anyway.
 - Added a function join_channel which will make it easier for module coders to force users
   to join a channel
+- Made it possible to compile the win32 version with libcurl support

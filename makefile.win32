@@ -7,6 +7,22 @@ RC=rc
 
 ############################ USER CONFIGURATION ############################
 
+##### REMOTE INCLUDES ####
+#To enable remote include support you must have libcurl installed on your
+#system and it must have ares support enabled.
+#
+#
+#To enable remote includes uncomment the next line:
+#USE_REMOTEINC=1
+#
+#If your libcurl library and include files are not in your compiler's
+#default locations, specify the locations here:
+#LIBCURL_INC_DIR="c:\dev\curl\include"
+#LIBCURL_LIB_DIR="c:\dev\curl\lib"
+#
+#
+### END REMOTE INCLUDES ##
+
 #### ZIPLINKS SUPPORT ####
 #To enable ziplinks support you must have zlib installed on your system
 #you can get a pre-built zlib library from http://www.winimage.com/zLibDll/
@@ -49,6 +65,18 @@ DEBUG=1
 
 ############################# END CONFIGURATION ############################
 
+!IFDEF USE_REMOTEINC
+CURLCFLAGS=/D USE_LIBCURL
+CURLOBJ=SRC/URL.OBJ
+CURLLIB=libcurl.lib
+!IFDEF LIBCURL_INC_DIR
+LIBCURL_INC=/I "$(LIBCURL_INC_DIR)"
+!ENDIF
+!IFDEF LIBCURL_LIB_DIR
+LIBCURL_LIB=/LIBPATH:"$(LIBCURL_LIB_DIR)"
+!ENDIF
+!ENDIF
+
 !IFDEF USE_ZIPLINKS
 ZIPCFLAGS=/D ZIP_LINKS /D ZLIB_DLL
 ZIPOBJ=SRC/ZIP.OBJ
@@ -80,11 +108,13 @@ DBGCFLAG=/MT /O2 /G5
 !ENDIF 
 
 FD_SETSIZE=/D FD_SETSIZE=16384
-CFLAGS=$(DBGCFLAG) $(ZLIB_INC) $(OPENSSL_INC) /I ./INCLUDE /Fosrc/ /nologo $(ZIPCFLAGS) \
- $(FD_SETSIZE) $(SSLCFLAGS) $(NS_ADDRESS) /D STATIC_LINKING /D NOSPOOF=1 /c 
-LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib dbghelp.lib \
- oldnames.lib libcmt.lib comctl32.lib comdlg32.lib $(ZLIB_LIB) $(ZIPLIB) $(OPENSSL_LIB) \
- $(SSLLIBS) /nodefaultlib /nologo $(DBGLFLAG) /out:WIRCD.EXE
+CFLAGS=$(DBGCFLAG) $(LIBCURL_INC)  $(ZLIB_INC) $(OPENSSL_INC) /I ./INCLUDE /Fosrc/ /nologo \
+ $(ZIPCFLAGS) $(CURLCFLAGS) $(FD_SETSIZE) $(SSLCFLAGS) $(NS_ADDRESS) /D STATIC_LINKING \
+ /D NOSPOOF=1 /c 
+LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib \
+ dbghelp.lib oldnames.lib libcmt.lib comctl32.lib comdlg32.lib $(ZLIB_LIB) $(ZIPLIB) \
+ $(OPENSSL_LIB) $(SSLLIBS) $(LIBCURL_LIB) $(CURLLIB) /nodefaultlib /nologo $(DBGLFLAG) \
+ /out:WIRCD.EXE
 
 INCLUDES=./include/struct.h ./include/config.h ./include/sys.h \
  ./include/common.h ./include/version.h ./include/h.h ./include/numeric.h \
@@ -103,7 +133,7 @@ OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ \
  SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ \
  SRC/SERVICE.OBJ SRC/DEBUG.OBJ SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/S_STATS.OBJ \
- SRC/EXTBANS.OBJ $(ZIPOBJ)
+ SRC/EXTBANS.OBJ $(ZIPOBJ) $(CURLOBJ)
 
 MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OBJ \
  SRC/M_SETNAME.OBJ SRC/M_SETHOST.OBJ SRC/M_CHGIDENT.OBJ SRC/M_SVSMOTD.OBJ \
@@ -310,6 +340,9 @@ src/random.obj: src/random.c $(INCLUDES)
 
 src/extcmodes.obj: src/extcmodes.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/extcmodes.c
+
+src/url.obj: src/url.c $(INCLUDES) ./include/url.h
+	$(CC) $(CFLAGS) src/url.c
 
 src/extbans.obj: src/extbans.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/extbans.c

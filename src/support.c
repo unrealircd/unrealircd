@@ -1691,14 +1691,13 @@ void	*MyMallocEx(size_t size)
  */
 char *unreal_mktemp(char *dir, char *suffix)
 {
-#ifndef _WIN32
-FILE *fd;
-unsigned int i;
-static char tempbuf[PATH_MAX+1];
+	FILE *fd;
+	unsigned int i;
+	static char tempbuf[MAX_PATH+1];
 
 	for (i = 500; i > 0; i--)
 	{
-		snprintf(tempbuf, PATH_MAX, "%s/%X.%s", dir, rand(), suffix);
+		snprintf(tempbuf, MAX_PATH, "%s/%X.%s", dir, rand(), suffix);
 		fd = fopen(tempbuf, "r");
 		if (!fd)
 			return tempbuf;
@@ -1706,10 +1705,7 @@ static char tempbuf[PATH_MAX+1];
 	}
 	config_error("Unable to create temporary file in directory '%s': %s",
 		dir, strerror(ERRNO)); /* eg: permission denied :p */
-	return NULL;
-#else
-	return NULL;
-#endif
+	return NULL; 
 }
 
 /* Returns the filename portion of the given path
