@@ -97,7 +97,7 @@ char *unrealcredits[] =
 	"Devin Reams, Cleggo - irc.ugcentral.net, Tillo - irc.OSirc.net,",
 	"Matthew Burdine - irc.owns.us, Philip Veale - flame.tiefighter.org,",
 	"Latinus - irc.lokanova.com, Vincent Guesnard - irc.rs2i.net,",
-	"Windfyre IRC Network - irc.windfyre.net",
+	"Windfyre IRC Network - irc.windfyre.net, SetNine - www.setnine.com",
 	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-[Hosting]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=",
 	"Phil Veale - email@phillipveale.com - http://www.tiefighter.org",
 	"- Donating webhosting for the project amongst other things",

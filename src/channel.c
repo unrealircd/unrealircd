@@ -1818,7 +1818,6 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	char tc = ' ';		/* */
 	int  chasing, x;
 	int xxi, xyi, xzi, hascolon;
-	char *xxx;
 	char *xp;
 	int  notsecure;
 	chasing = 0;
@@ -1853,10 +1852,9 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  goto auditorium_ok;
 		  if (!IsNetAdmin(cptr) && !is_chanowner(cptr, chptr))
 		  {
-			  sendto_one(cptr,
-			      ":%s %s %s :*** Auditorium mode (+u) can only be set by the channel owner.",
-			      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
-			  break;
+			sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name,
+				   chptr->chname);
+			break;
 		  }
 
 		auditorium_ok:
@@ -1865,29 +1863,24 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  if (!IsAnOper(cptr) && !IsServer(cptr)
 		      && !IsULine(cptr))
 		  {
-			  sendto_one(cptr,
-			      ":%s %s %s :*** Opers Only mode (+O) can only be set by IRC Operators.",
-			      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
-			  break;
+			sendto_one(cptr, err_str(ERR_NOPRIVILEGES), me.name, cptr->name);
+			break;
 		  }
 		  goto setthephuckingmode;
 	  case MODE_ADMONLY:
 		  if (!IsSkoAdmin(cptr) && !IsServer(cptr)
 		      && !IsULine(cptr))
 		  {
-			  sendto_one(cptr,
-			      ":%s %s %s :*** Admins Only mode (+A) can only be set by Administrators.",
-			      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
-			  break;
+			sendto_one(cptr, err_str(ERR_NOPRIVILEGES), me.name, cptr->name);
+			break;
 		  }
 		  goto setthephuckingmode;
 	  case MODE_RGSTR:
 		  if (!IsServer(cptr) && !IsULine(cptr))
 		  {
-			  sendto_one(cptr,
-			      ":%s %s %s :*** Registered mode (+r) can only be set by Services.",
-			      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
-			  break;
+			sendto_one(cptr, err_str(ERR_ONLYSERVERSCANCHANGE), me.name, cptr->name,
+				   chptr->chname);
+			break;
 		  }
 		  goto setthephuckingmode;
 	  case MODE_SECRET:
@@ -1901,6 +1894,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	  case MODE_NOKICKS:
 	  case MODE_STRIP:
 	  	goto setthephuckingmode;
+
 	  case MODE_INVITEONLY:
 		if (what == MODE_DEL && modetype == MODE_INVITEONLY && (chptr->mode.mode & MODE_NOKNOCK))
 			chptr->mode.mode &= ~MODE_NOKNOCK;
@@ -1908,9 +1902,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	  case MODE_NOKNOCK:
 		if (what == MODE_ADD && modetype == MODE_NOKNOCK && !(chptr->mode.mode & MODE_INVITEONLY))
 		{
-			sendto_one(cptr,
-			    ":%s %s %s :*** No Knocks mode (+K) can only be set when the channel is invite only (+i)",
-			    me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
+			sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), 
+				me.name, cptr->name, 'K', "+i must be set");
 			break;
 		}
 		goto setthephuckingmode;
@@ -1922,11 +1915,11 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  {
 		    if (!IsSecureConnect(member->cptr) && !IsULine(member->cptr))
 		    {
-		      sendto_one(cptr,
-			":%s %s %s :*** Secure Mode (+z) can only be set when all members of the channel are connected via SSL.",
-			me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
-		      notsecure = 1;
-		      break;
+			sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), 
+				   me.name, cptr->name, 'z', 
+				   "all members must be connected via SSL");
+			notsecure = 1;
+			break;
 		    }
 		  }
 		  member = NULL;
@@ -2017,7 +2010,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  }
 			  else if (MyClient(cptr))
 			  {
-				  sendto_one(cptr, err_str(ERR_ONLYSERVERSCANCHANGE),
+				  sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED),
 				      me.name, cptr->name, chptr->chname);
 				  break;
 			  }
@@ -2033,10 +2026,9 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  }
 			  else if (MyClient(cptr))
 			  {
-				  sendto_one(cptr,
-				      ":%s %s %s :*** Channel admins (+a) can only be set by the channel owner",
-				      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
-				  break;
+				sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name,
+					   chptr->chname);
+				break;
 			  }
 		  }
 		 
@@ -2044,26 +2036,6 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	  case MODE_HALFOP:
 	  case MODE_CHANOP:
 	  case MODE_VOICE:
-		  switch (modetype)
-		  {
-		    case MODE_CHANOWNER:
-			    xxx = "dechannelown";
-			    break;
-		    case MODE_CHANPROT:
-			    xxx = "deadmin";
-			    break;
-		    case MODE_HALFOP:
-			    xxx = "dehalfop";
-			    break;
-		    case MODE_CHANOP:
-			    xxx = "deop";
-			    break;
-		    case MODE_VOICE:
-			    xxx = "devoice";
-			    break;
-		    default:
-			    xxx = "whatthefuckisthatmode?";
-		  }
 		  if (!param || *pcount >= MAXMODEPARAMS)
 		  {
 			  retval = 0;
@@ -2096,10 +2068,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  /* Services are special! */
 		  if (IsServices(member->cptr) && MyClient(cptr) && !IsNetAdmin(cptr) && (what == MODE_DEL))
 		  {
-			sendto_one(cptr,
-				":%s %s %s :*** You cannot %s %s in %s, it is a network service",
-				me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE",
-				cptr->name, xxx, member->cptr->name, chptr->chname);
+			sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), me.name, cptr->name,
+				   modechar, "user is a network service");
 			break;
 		  }
 
@@ -2110,11 +2080,9 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  {
 			  if (MyClient(cptr))
 			  {
-				  sendto_one(cptr,
-				      ":%s %s %s :*** You cannot %s %s in %s, (s)he is the channel owner (+q).",
-				      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name, xxx,
-				      member->cptr->name, chptr->chname);
-				  break;
+				sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), me.name, cptr->name,
+				   modechar, "user is a channel owner");
+				break;
 			  } else
 			  if (IsOper(cptr))
 			      opermode = 1;
@@ -2126,11 +2094,9 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  {
 			  if (MyClient(cptr))
 			  {
-				  sendto_one(cptr,
-				      ":%s %s %s :*** You cannot %s %s in %s, (s)he is a channel admin (+a).",
-				      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name, xxx,
-				      member->cptr->name, chptr->chname);
-				  break;
+				sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), me.name, cptr->name,
+				   modechar, "user is a channel admin");
+				break;
 			  } else
 			  if (IsOper(cptr))
 			      opermode = 1;
@@ -2332,18 +2298,16 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 
 		  if (!IsNetAdmin(cptr) && !is_chanowner(cptr, chptr))
 		  {
-			  sendto_one(cptr,
-			      ":%s %s %s :*** Channel Linking (+L) can only be set by the channel owner.",
-			      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
-			  break;
+			sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name,
+				   chptr->chname);
+			break;
 		  }
 
 		  if (!chptr->mode.limit && what == MODE_ADD)
 		  {
-			  sendto_one(cptr,
-			      ":%s %s %s :*** A Channel Limit (+l <max>) is required for +L to be set.",
-			      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
-			  break;
+			sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), 
+				   me.name, cptr->name, 'L', "+l must be set");
+			break;
 		  }
 		linkok:
 		  retval = 1;
@@ -2367,13 +2331,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				  break;
 			  }
 			  if (strchr(param, ','))
-			  {
-				  if (MyClient(cptr))
-					  sendto_one(cptr,
-					      ":%s %s %s :*** Only one channel may be specified for linking.",
-					      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
 				  break;
-			  }
 			  if (!IsChannelName(param))
 			  {
 				  if (MyClient(cptr))
@@ -2396,12 +2354,11 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				break;
 			  if (!stricmp(tmpbuf, chptr->chname))
 			  {
-				  if (MyClient(cptr))
-					  sendto_one(cptr,
-					      ":%s %s %s :*** %s cannot be linked to itself.",
-					      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name,
-					      chptr->chname);
-				  break;
+				if (MyClient(cptr))
+					sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), 
+						   me.name, cptr->name, 'L', 
+					    	   "a channel cannot be linked to itself");
+				break;
 			  }
 			  if (!bounce)	/* don't do the mode at all. */
 			  {
@@ -2618,18 +2575,10 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 					strlcpy(xbuf, param, sizeof(xbuf));
 					p2 = strchr(xbuf+1, ']');
 					if (!p2)
-					{
-						if (MyClient(cptr))
-							sendto_one(cptr, ":%s NOTICE %s :bad syntax for channelmode +f", me.name, cptr->name);
 						break;
-					}
 					*p2 = '\0';
 					if (*(p2+1) != ':')
-					{
-						if (MyClient(cptr))
-							sendto_one(cptr, ":%s NOTICE %s :bad syntax for channelmode +f", me.name, cptr->name);
 						break;
-					}
 					breakit = 0;
 					for (x = strtok(xbuf+1, ","); x; x = strtok(NULL, ","))
 					{
@@ -2652,8 +2601,9 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 						{
 							if (MyClient(cptr))
 							{
-								sendto_one(cptr, ":%s NOTICE %s :channelmode +f: floodtype '%c', value should be 1-999",
-									me.name, cptr->name, c);
+								sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE),
+									   me.name, cptr->name, 
+									   'f', "value should be from 1-999");
 								breakit = 1;
 								break;
 							} else
@@ -2736,24 +2686,17 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 					/* parse 'per' */
 					p2++;
 					if (*p2 != ':')
-					{
-						if (MyClient(cptr))
-							sendto_one(cptr, ":%s NOTICE %s :bad syntax for channelmode +f", me.name, cptr->name);
 						break;
-					}
 					p2++;
 					if (!*p2)
-					{
-						if (MyClient(cptr))
-							sendto_one(cptr, ":%s NOTICE %s :bad syntax for channelmode +f", me.name, cptr->name);
 						break;
-					}
 					v = atoi(p2);
 					if ((v < 1) || (v > 999)) /* 'per' out of range */
 					{
 						if (MyClient(cptr))
-							sendto_one(cptr, ":%s NOTICE %s :error: channelmode +f: time range should be 1-999",
-								me.name, cptr->name);
+							sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), 
+								   me.name, cptr->name, 'f', 
+								   "time range should be 1-999");
 						break;
 					}
 					newf.per = v;

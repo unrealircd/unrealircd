@@ -3299,3 +3299,6 @@ This is the 3.2 fixes branch.
 - Added HOOKTYPE_LOG [int type, char *timebuf, char *logbuf]
 - Updated the release notes.
 - Fixed a CIDR bug reported by poisoner (#0001892)
+- Documented numerics in use by other IRCds
+- Converted several notices to numerics (#0001599) suggested by olene
+- Added a donator to /credits
