@@ -159,6 +159,7 @@ DLLFUNC CMD_FUNC(m_sajoin)
 			return -1;
 		i = 0;
 		strcpy(parv[2], jbuf);
+		*jbuf = 0;
 		for (name = strtoken(&p, parv[2], ","); name; name = strtoken(&p, NULL, ","))
 		{
 			int flags;

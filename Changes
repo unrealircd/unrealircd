@@ -658,3 +658,5 @@
   (#0002366) reported by vonitsanet.
 - Fixed a bug causing SVSNICK not to send out a snomask +n notice (#0002359) reported by
   Rob_.
+- Fixed a bug where SAJOIN would list channels multiple times in the notices (#0002325)
+  reported by vonitsanet.
