@@ -3302,3 +3302,4 @@ This is the 3.2 fixes branch.
 - Documented numerics in use by other IRCds
 - Converted several notices to numerics (#0001599) suggested by olene
 - Added a donator to /credits
+- Fixed '/stats P' negative usercount bug (#0001691).

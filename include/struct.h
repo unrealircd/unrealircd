@@ -287,7 +287,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	FLAGS_DEADSOCKET 0x0002	/* Local socket is dead--Exiting soon */
 #define	FLAGS_KILLED     0x0004	/* Prevents "QUIT" from being sent for this */
 #define	FLAGS_BLOCKED    0x0008	/* socket is in a blocked condition */
-#define FLAGS_UNOCCUP1   0x0010 /* [FREE] */
+#define FLAGS_OUTGOING   0x0010 /* outgoing connection, do not touch cptr->listener->clients */
 #define	FLAGS_CLOSING    0x0020	/* set when closing to suppress errors */
 #define	FLAGS_LISTEN     0x0040	/* used to mark clients which we listen() on */
 #define	FLAGS_CHKACCESS  0x0080	/* ok to check clients access if set */
@@ -393,6 +393,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	IsDead(x)		((x)->flags & FLAGS_DEADSOCKET)
 #define GotProtoctl(x)		((x)->flags & FLAGS_PROTOCTL)
 #define IsBlocked(x)		((x)->flags & FLAGS_BLOCKED)
+#define IsOutgoing(x)		((x)->flags & FLAGS_OUTGOING)
 #define GotNetInfo(x) 		((x)->flags & FLAGS_NETINFO)
 #define SetNetInfo(x)		((x)->flags |= FLAGS_NETINFO)
 
@@ -451,6 +452,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	DoingDNS(x)		((x)->flags & FLAGS_DOINGDNS)
 #define	SetAccess(x)		((x)->flags |= FLAGS_CHKACCESS); Debug((DEBUG_DEBUG, "SetAccess(%s)", (x)->name))
 #define SetBlocked(x)		((x)->flags |= FLAGS_BLOCKED)
+#define SetOutgoing(x)		do { x->flags |= FLAGS_OUTGOING; } while(0)
 #define	DoingAuth(x)		((x)->flags & FLAGS_AUTH)
 #define	NoNewLine(x)		((x)->flags & FLAGS_NONL)
 #define IsDCCNotice(x)		((x)->flags & FLAGS_DCCNOTICE)

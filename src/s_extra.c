@@ -283,10 +283,9 @@ void ircd_log(int flags, char *format, ...)
 
 	va_start(ap, format);
 	ircvsprintf(buf, format, ap);	
-	strlcat(buf, "\n", sizeof buf);
 	snprintf(timebuf, sizeof timebuf, "[%s] - ", myctime(TStime()));
-
 	RunHook3(HOOKTYPE_LOG, flags, timebuf, buf);
+	strlcat(buf, "\n", sizeof buf);
 
 	for (logs = conf_log; logs; logs = (ConfigItem_log *) logs->next) {
 #ifdef HAVE_SYSLOG

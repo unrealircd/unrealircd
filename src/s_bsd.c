@@ -2464,6 +2464,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
     add_local_client(cptr);
 	cptr->listener = &me;
 	SetConnecting(cptr);
+	SetOutgoing(cptr);
 	IRCstats.unknown++;
 	get_sockhost(cptr, aconf->hostname);
 	add_client_to_list(cptr);

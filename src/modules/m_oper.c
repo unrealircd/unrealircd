@@ -181,14 +181,16 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		return 0;
 	}
 
-	name = parc > 1 ? parv[1] : NULL;
-	password = parc > 2 ? parv[2] : NULL;
+	name = parv[1];
+	password = parv[2];
 
 	if (!(aconf = Find_oper(name))) {
 		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);
 		sendto_realops
 		    ("Failed OPER attempt by %s (%s@%s) [unknown oper]",
 		    parv[0], sptr->user->username, sptr->sockhost);
+		ircd_log(LOG_OPER, "OPER UNKNOWNOPER (%s) by (%s!%s@%s)", name, parv[0],
+			sptr->user->username, sptr->sockhost);
 		sptr->since += 7;
 		return 0;
 	}

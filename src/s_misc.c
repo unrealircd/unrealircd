@@ -476,7 +476,7 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 		}
 
 		if (sptr->listener)
-			if (sptr->listener->class)
+			if (sptr->listener->class && !IsOutgoing(sptr))
 			{
 				listen_conf = (ConfigItem_listen *) sptr->listener->class;
 				listen_conf->clients--;
