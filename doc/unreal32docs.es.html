@@ -29,7 +29,7 @@ Spanish |
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Versi&oacute;n: 3.2.1</font><br>
   <b>Versi&oacute;n actual :</b> 3.2.1<br>
-  <b>&Uacute;ltima actualizaci&oacute;n del documento:</b> 2004-07-03</div>
+  <b>&Uacute;ltima actualizaci&oacute;n del documento:</b> 2004-10-11</div>
 <br>
   <b>Programadores:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contribuciones:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -1464,9 +1464,15 @@ except ban {
 except tkl {
 	mask &lt;hostmask&gt;;
 	type &lt;tipo&gt;;
+	type {
+		&lt;type&gt;;
+		&lt;type&gt;;
+		...
+	};
 };</pre>
 </p>
-<p>Este bloque permite a un usuario saltarse los bloqueos tkl puestos a su host. Es muy &uacute;til cuando se banea a todo un proveedor o ISP y quiere permitir a alguien en concreto. La directriz <b>except::mask</b> especifica la m&aacute;scara user@host a permitir. <b>except::type </b>especifica el tipo de ban a saltarse. Tipos v&aacute;lidos: gline, gzline, qline, gqline y shun, para Glines, Global Zlines, Qlines, Global Qlines y shuns, respectivamente.</p>
+<p>Este bloque permite a un usuario saltarse los bloqueos tkl puestos a su host. Es muy &uacute;til cuando se banea a todo un proveedor o ISP y quiere permitir a alguien en concreto. La directriz <b>except::mask</b> especifica la m&aacute;scara user@host a permitir. <b>except::type </b>especifica el tipo de ban a saltarse. Tipos v&aacute;lidos: gline, gzline, qline, gqline y shun, para Glines, Global Zlines, Qlines, Global Qlines y shuns, respectivamente. 
+Si se usa el formato type { }, se pueden especificar varios tipos a la vez.</p>
 <p>Ejemplo:<br>
 <pre>
 except tkl {
