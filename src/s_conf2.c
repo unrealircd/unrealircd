@@ -1356,10 +1356,10 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 */
 int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 {
-	ConfigEntry *cep;
+	ConfigEntry *cep, *cepp;
 	ConfigItem_vhost *vhost;
 	unsigned char isnew = 0;
-	
+	ConfigItem_oper_from *from;	
 	vhost = (ConfigItem_vhost *) MyMallocEx(sizeof(ConfigItem_vhost));
 	isnew = 1;
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -1379,11 +1379,42 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->ce_varname, "vhost"))
 		{
 			vhost->virthost = strdup(cep->ce_vardata);
-		} else
-		if (!strcmp(cep->ce_varname, "userhost"))
-		{
-			vhost->userhost = strdup(cep->ce_vardata);
-		} else
+		} 
+		else if (!strcmp(cep->ce_varname, "from"))
+		{	
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				{
+					if (!cepp->ce_varname)
+					{
+						config_error("%s:%i: vhost::from item without variable name",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+						continue;
+					}
+					if (!cepp->ce_vardata)
+					{
+						config_error("%s:%i: vhost::from::%s without parameter",
+							cepp->ce_fileptr->cf_filename,
+							cepp->ce_varlinenum,
+							cepp->ce_varname);
+						continue;
+					}
+					if (!strcmp(cepp->ce_varname, "userhost"))
+					{
+						from = (ConfigItem_oper_from *)MyMallocEx(sizeof(ConfigItem_oper_from));
+						ircstrdup(from->name, cepp->ce_vardata);
+						add_ConfigItem((ConfigItem *) from, (ConfigItem **)&vhost->from);
+					}
+					else
+					{
+						config_error("%s:%i: unknown directive vhost::from::%s",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
+							cepp->ce_varname);
+						continue;		
+					}			
+				}	
+				continue;
+			}
+		 else
 		if (!strcmp(cep->ce_varname, "login"))
 		{
 			vhost->login = strdup(cep->ce_vardata);

@@ -1051,7 +1051,7 @@ struct _configitem_vhost {
 	ConfigFlag 	flag;
 	ConfigItem 	*prev;
 	ConfigItem	*next;
-	char		*userhost;
+	ConfigItem       *from;
 	char		*login;
 	char		*password;
 	char		*virthost;

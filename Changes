@@ -110,3 +110,4 @@
 - Fixed a #undef USE_SSL problem found by codemastr.. caused by
   Sts(TM)coding
 - Added set {} (unrealircd.conf/network file replacement)
+- Made vhost {} use from {} for hosts
