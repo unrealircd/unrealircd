@@ -3183,3 +3183,6 @@ This is the 3.2 fixes branch.
   as the 'compiled for' (header) version. If they mismatch, UnrealIRCd could crash,
   so a big warning is posted if it happends.
 - Improved the above: made it work on windows and also added a check for curl.
+- spamfilter.conf: Added yet another sig for a site that causes Backdoor.Delf.lq
+  infection (reported by nexus), also changed LOI trojan and Bloodhound.Exploit.6
+  action to gline.
