@@ -15,6 +15,7 @@
  * and avoid compile-time configuration.
  */
 
+#include "config.h"
 #if !defined(USE_SSL)
 
 #include <string.h>
