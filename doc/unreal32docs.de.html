@@ -22,8 +22,8 @@
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
-  <b>Aktuelle Version:</b> 3.2<br>
-  <b>Letztes Dokumentation Update:</b>    2004-04-24 </div>
+  <b>Aktuelle Version:</b> 3.2 *CVS*<br>
+  <b>Letztes Dokumentation Update:</b>    2004-05-18 </div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
 <b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
@@ -234,30 +234,45 @@ vor oder nach der Installation zu lesen.</p></div>
 Wenn z.B. der echte Host <i>d5142341.cable.wanadoo.nl </i>lautet, wird er (in
 join, part, whois, etc)
 als <i>rox-2DCA3201.cable.wanadoo.nl </i>angezeigt. Das ist hilfreich, um sich
-davor zu schützen, dass User flooden, da sie die echte Host/IP nicht erkennen
+davor zu schützen, dass User sich gegenseitig flooden, da sie die echte Host/IP nicht erkennen
 können.</p>
 <p>Eingestellt wird dies durch den Usermode +x (also: /mode yournick +x), Admins
 können +x auch als Default erzwingen oder so einstellen, dass User kein -x
 einstellen können.</p>
-<p>Ein durch Cloaking geschützter Host wird durch&nbsp; 3 &quot;cloak keys&quot;
-erzeugt. Diese 3 Keys müssen in der unrealircd.conf gesetzt werden, indem man
-drei zufällige Zahlen zwischen 10,000 and 4,294,967,295 einträgt. Wenn jemand
-diese drei keys kennt, kann er den geschützten Host erkennen und den realen
-Host ermitteln. Aus diesem Grund sollten die Keys geheimgehalten werden. <u> Die
-Keys müssen auf allen Servern des Netzwerks identisch sein.</u></p>
+<p>Ein durch Cloaking geschützter Host wird durch ein Cloaking Modul
+(wenigstens eines muss geladen sein) erzeugt. Momentan sind 2 solche offizielle
+Module verfügbar:<br>
+<b>cloak:</b><br>
+Hierbei handelt es sich um das neue offizielle Cloaking Modul, welches viel
+sicherer, als das alte ist. Es verwendet intern md5 und erfordert, dass 3 <b>::cloak-keys::</b>
+gesetzt sind, die gemischt Kleinbuchstaben (a-z), Großbuchstaben (A-Z) und
+Ziffern (0-9) enthalten [z.B. "AopAS6WQH2Os6hfosh4SFJHs"] . Siehe auch
+example.conf für ein Beispiel.&nbsp;<br>
+<b>oldcloak:</b><br>
+Hierbei handelt es sich um den alten Cloaking Algorithmus, wie er in Unreal3.2
+und früher benutzt wurde. Es gibt ihn nur, um beim Upgrade Prozess zu helfen.
+Diese Methode ist nicht länger sicher (es wird eine Warnung angezeigt, wenn man
+sie benutzt) und sollte beim nächten Upgrade der Server umgehend durch die neue
+Methode 'cloak' ersetzt werden.</p>
+<p>Die Keys MÜSSEN identisch auf ALLEN SERVERN im Netzwerk sein und sie sollten
+GEHEIM gehalten werden. Wenn jemand
+diese drei Keys kennt, kann er den geschützten Host erkennen und den realen
+Host ermitteln (was dem Usermodus +x sinnlos macht).</p>
 </div>
 <p><font size="+2"><b><a name="feature_modules">3.2 - Module</a></b></font></p><div class="desc">
 <p>UnrealIRCd unterstützt Module, was sehr nützlich
 ist, weil:<br>
-   - Module können durch /rehash geladen und entladen werden, wodurch Bugs
-behoben werden können, ohne dass ein Neustart erforderlich ist.<br>
+   - Module können bei laufendem ircd geladen/ersetzt/gelöscht werden (durch /rehash). Dadurch können verschiedene Bugs gefixt
+oder neue Module hinzugefügt werden, ohne dass ein Neustart erforderlich ist!<br>
    - Andere Entwickler können weitere Module mit neuen Befehlen oder anderen
 Usermodi erstellen.<br>
    UnrealIRCd selbst enthält nur wenige Module. Durch eine Suche auf <a href="http://www.unrealircd.com"> www.unrealircd.com</a>
- (modules) oder per Google können weitere 3rd party Module gefunden werden.<br>
-Momentan werden Module in Windows nicht unterstützt, in einer späteren 
-Version kann jedoch damit gerechnet werden.</p>
-<p>Achtung: Minimal muss das commands Modul geladen sein!</p></div>
+ (modules) oder per Google können weitere 3rd party Module gefunden werden.</p>
+<p>Achtung: Minimal müssen zwei Module geladen sein, oder der ircd wird nicht
+starten!<br>
+- das commands Modul: commands.so (oder commands.dll bei Windows)<br>
+- das cloaking Modul: üblicherweise cloak.so (oder cloak.dll bei Windows)</p>
+</div>
 
 <p><font size="+2"><b><a name="feature_snomasks">3.3 - Snomasks</a></b></font></p><div class="desc">
 <p>Bei Snomasks handelt es sich um <b>S</b>erver <b>no</b>tice <b>masks</b>, eine spezielle Form
@@ -1560,14 +1575,22 @@ meisten Services enthalten.:<br>
 Anweisung</a></font> <font class="block_required">ERFORDERLICH</font><div class="desc">
 <p>Syntax:<br>
   loadmodule &lt;file-name&gt;;</p>
-<p>UnrealIRCd unterstützt nun für *NIX Systeme die Verwendung von Modulen.
-Dadurch ist es leichter möglich, Erweiterungen zum ircd zu schreiben und man
-kann sie sowohl laden als auch entfernen, während der ircd läuft.</p>
+<p>Warum Module hilfreich sind, kann <a href="#feature_modules">hier</a>
+nachgelesen werden.</p>
 <p>Folgende Module werden standardmäßig bei Unreal3.2 mitgeliefert:</p>
-<p>commands.so - Enthält sämtliche&nbsp; / Befehle (noch nicht wirklich alle,
-aber sicher in einer der nächsten Versionen) <font color="red">ERFORDERLICH</font></p>
-<p>Es ist sicherzustellen, dass dieses Modul in jedem Fall geladen wird:</p>
-<pre>loadmodule &quot;src/modules/commands.so&quot;;
+<p>commands.so /commands.dll - Enthält sämtliche&nbsp; / Befehle (noch nicht wirklich alle,
+aber sicher in einer der nächsten Versionen) <font color="red">ERFORDERLICH<br>
+</font>cloak.so / cloak.dll - Cloaking Modul (oder irgend ein anderes Cloaking
+Modul - dient der Unterdrückung echter Hosts) <font color="#FF0000">ERFORDERLICH</font></p>
+<p>Es ist sicherzustellen, dass diese Module in jedem Fall geladen werden:</p>
+<p>loadmodule &quot;src/modules/commands.so&quot;;<br>
+loadmodule &quot;src/modules/cloak.so&quot;;
+</p>
+<p>oder unter Windows:
+</p>
+<pre>loadmodule &quot;modules/commands.dll&quot;;
+loadmodule &quot;modules/cloak.dll&quot;;</pre>
+<pre>
 </pre></div>
 <p><font class="block_section"><a name="logblock">4.11 - </a> </font><a name="logblock"><font class="block_name">Log Block</font>
 </a>
@@ -2664,11 +2687,14 @@ Stellt den Namen des Servers ein, auf dem die Stats laufen. Die Angabe kann
 ausgelassen werden, wenn man keine Stats laufen hat.</p>
 <p><font class="set">set::help-channel &lt;network-help-channel&gt;;</font><br>
 Legt den Namen des Hilfe Channels in diesem Netzwerk fest.</p>
-<p><font class="set">set::cloak-keys { &lt;value&gt;; &lt;value&gt;; &lt;value&gt;; };</font><br>
+<p><font class="set">set::cloak-keys { &lt;&quot;key1&quot;&gt;; &lt;&quot;key2&quot;&gt;; &lt;&quot;key3&quot;&gt;; };</font><br>
 Stellt die Verschlüsselungs Keys ein, die für die Erstellung eines +x Host
 erforderlich sind. Diese Einstellung muss auf allen Servern identisch sein,
-ansonsten linken die Server nicht. Jeder Wert in 'set::cloak-keys::' muß ein
-numerischer Wert &gt; 10000 sein. Es müssen exakt 3 Werte angegeben werden.</p>
+ansonsten linken die Server nicht. Jeder Wert in 'set::cloak-keys::' muss ein
+String zwischen 5 bis 100 Zeichen sein (10-20 ist gut), der gemisch
+Großbuchstaben (A-Z), Kleinbuchstaben (a-z) und Ziffern (0-9) enthält. Diese
+Regeln gelten für cloak.so/cloak.dll, bei anderen Cloaking Modulen können
+andere Zeichen erlaubt/erforderlich sein. Es müssen exakt 3 Werte angegeben werden.</p>
 <p><font class="set">set::hiddenhost-prefix &lt;prefix-value&gt;;</font><br>
 Legt die ersten Zeichen eines verdeckten Hosts (+x) fest. Üblicherweise nimmt
 man hier 3 oder 4 Buchstaben, die den Netzwerksnamen bezeichnen.</p>
@@ -3383,7 +3409,8 @@ Befehlsliste</a></b></font></p><div class="desc">
     <td height="76" width="267">zline [+-]&lt;*@ip&gt; [&lt;time to ban&gt; &lt;reason&gt;]</td>
     <td width="486" height="76">Bannt eine IP Adresse vom lokalen Server, auf dem die
       Line gesetzt wurde (nicht global).&nbsp; Siehe bei kline für genauere
-      Informationen zur Syntax. Zum Löschen benutzt man /zline -*@ip.</td>
+      Informationen zur Syntax. Zum Löschen benutzt man /zline -*@ip. Gibt man
+      bei zline statt einer IP einen Host an, so wirkt sie wie eine kline.</td>
     <td width="93" height="76">IRCop</td>
   </tr>
   <tr> 
@@ -3407,7 +3434,8 @@ Befehlsliste</a></b></font></p><div class="desc">
     <td height="57" width="267">gzline [+-]&lt;ip&gt; &lt;time to ban&gt; :&lt;reason&gt;</td>
     <td width="486" height="57">Setzt eine globale zline (Bann auf IP). Siehe
       bei kline für genauere Informationen zur Syntax. Zum Löschen benutzt man
-      /gzline -*@ip.</td>
+      /gzline -*@ip. Gibt man bei gzline statt einer IP einen Host an, so wirkt
+      sie wie eine gline.</td>
     <td width="93" height="57">IRCop</td>
   </tr>
   <tr> 
@@ -3476,7 +3504,7 @@ Befehlsliste</a></b></font></p><div class="desc">
     <td width="93" height="38">IRCop</td>
   </tr>
   <tr> 
-    <td height="38" width="267">squit &lt;sever&gt;</td>
+    <td height="38" width="267">squit &lt;server&gt;</td>
     <td width="486" height="38">Entfernt einen Server aus dem Netzwerk.</td>
     <td width="93" height="38">IRCop</td>
   </tr>

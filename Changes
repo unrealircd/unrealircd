@@ -3176,3 +3176,4 @@ This is the 3.2 fixes branch.
   normal joins to the virus-help-channel. This way you could prevent users into
   accidental (or tricked) joining of the virus-help-channel and becomming infected.
   This feature is disabled by default. Requested by bleepy (#0001811).
+- German doc updates (week 20).
