@@ -37,6 +37,8 @@
 #include <openssl/err.h>    
 #include <openssl/evp.h>
 #include <openssl/rand.h>
+#include <openssl/md5.h>
+#include <openssl/ripemd.h>
 #endif
 #include "common.h"
 #include "sys.h"

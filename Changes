@@ -3123,3 +3123,5 @@ This is the 3.2 fixes branch.
 - Changed int_to_base64() warning so it has less false positives (#0001797).
 - Fixed a bug where if set::ssl::options was empty, a crash could occur. Reported by
   spider312 (#0001799)
+- Include openssl/md5.h and openssl/ripemd.h if compiled w/SSL, this seems how it
+  should be done and also makes unreal w/SSL able to compile on OpenBSD (3.5).
