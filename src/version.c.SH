@@ -121,6 +121,8 @@ char *unrealcredits[] =
 	" - donation to the UnrealIRCd development",
 	"Jan Knutar (JK@IRC)",
 	" - RAM donation, Shell donations :D, and a hell lot of other stuff",
+	"ThePlayer",
+	" - Donation to re-buy tspre.org",
 	"Thanks to Headbang and WonderWal too for hardware+software",
 	"donations",
 	"powerstorm.net",
