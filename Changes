@@ -566,3 +566,4 @@
   and dynconf, chrestrict
 - Made vhost strip too long vhosts
 - Removed INV_TRACK
+- Fixed a typo in /vhost

@@ -800,7 +800,7 @@ int  m_vhost(cptr, sptr, parc, parv)
 					    sptr->user->username,
 					    sptr->user->realhost);
 					sendto_one(sptr,
-					    ":%s NOTICE %s :*** [\2vhost\2] Login for %s faied - password incorrect",
+					    ":%s NOTICE %s :*** [\2vhost\2] Login for %s failed - password incorrect",
 					    me.name, sptr->name, user);
 					return 0;
 				}
