@@ -45,11 +45,12 @@
 #include "badwords.h"
 #endif
 #include "h.h"
+#include "inet.h"
+#include "proto.h"
 #ifdef _WIN32
 #undef GLOBH
 #endif
 
-extern char *my_itoa(long i);
 /*
  * TODO:
  *  - deny version {} (V:lines)
@@ -343,13 +344,12 @@ int conf_yesno(char *value) {
 long conf_size(char *value) {
 	char *numbuf;
 	char *buf = value;
-	int i;
 	long num = 0;
+	int i;
 	if (!buf)
 		return 0;
 
 	numbuf = malloc(strlen(value));
-
 	for (i = 0;*buf; *buf++) {
 		if (isdigit(*buf)) {
 			numbuf[i++] = *buf;
@@ -857,7 +857,7 @@ int	init_conf2(char *filename)
 
 
 	config_progress("Opening config file %s .. ", filename);
-	if (cfptr = config_load(filename))
+	if ((cfptr = config_load(filename)))
 	{
 		ConfigItem_include *includes;
 		config_progress("Config file %s loaded without problems",
@@ -929,6 +929,7 @@ int	ConfigCmd(ConfigFile *cf, ConfigEntry *ce, ConfigCommand *cc)
 			DelListItem(ca, conf_unknown);
 		}
 	}
+	return 0;
 }
 
 /* This simply starts the parsing of a config file from top level
@@ -936,9 +937,8 @@ int	ConfigCmd(ConfigFile *cf, ConfigEntry *ce, ConfigCommand *cc)
 */
 int	ConfigParse(ConfigFile *cfptr)
 {
-	ConfigEntry	*ce = NULL;
-
 	ConfigCmd(cfptr, cfptr->cf_entries, _ConfigCommands);
+	return 0;
 }
 
 /* Here is the command parsing instructions */
@@ -1023,6 +1023,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 #else
 	return (init_conf2(ce->ce_vardata));
 #endif
+	return 0;
 }
 /*
  * The admin {} block parser
@@ -1047,6 +1048,7 @@ int	_conf_admin(ConfigFile *conf, ConfigEntry *ce)
 		ircstrdup(ca->line, cep->ce_varname);
 		AddListItem(ca, conf_admin);
 	}
+	return 0;
 }
 
 /*
@@ -1070,6 +1072,7 @@ int	_conf_ulines(ConfigFile *conf, ConfigEntry *ce)
 		ircstrdup(ca->servername, cep->ce_varname);
 		AddListItem(ca, conf_ulines);
 	}
+	return 0;
 }
 
 /*
@@ -1163,6 +1166,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if (isnew)
 		AddListItem(class, conf_class);
+	return 0;
 }
 
 /*
@@ -1233,6 +1237,7 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_varname);
 		}
 	}
+	return 0;
 }
 
 int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
@@ -1477,6 +1482,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if (isnew)
 		AddListItem(oper, conf_oper);
+	return 0;
 }
 
 
@@ -1522,6 +1528,7 @@ int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
 				 cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 				 cep->ce_varname);
 	}
+	return 0;
 }
 
 int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
@@ -1576,6 +1583,7 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 	AddListItem(ca, conf_tld);
+	return 0;
 }
 
 /*
@@ -1588,7 +1596,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_listen *listen = NULL;
 	OperFlag    *ofp;
 	char	    copy[256];
-	char	    *ip, *p;
+	char	    *ip;
 	char	    *port;
 	int	    iport;
 	unsigned char	isnew = 0;
@@ -1626,7 +1634,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_status("%s:%i: listen: illegal port (must be 0..65536)",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return;
+		return -1;
 	}
 	if (!(listen = Find_listen(ip, iport)))
 	{
@@ -1697,6 +1705,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	if (isnew)
 		AddListItem(listen, conf_listen);
 	listen->flag.temporary = 0;
+	return 0;
 }
 
 /*
@@ -1785,6 +1794,7 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if (isnew)
 		AddListItem(allow, conf_allow);
+	return 0;
 }
 
 int	_conf_allow_channel(ConfigFile *conf, ConfigEntry *ce)
@@ -1827,6 +1837,7 @@ int	_conf_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 		AddListItem(allow, conf_allow_channel);
 		return 0;
 	}
+	return 0;
 }
 
 
@@ -1922,6 +1933,7 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if (isnew)
 		AddListItem(vhost, conf_vhost);
+	return 0;
 }
 
 int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
@@ -2008,6 +2020,7 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 		ca2->ce = ce;
 		AddListItem(ca2, conf_unknown);
 	}
+	return 0;
 }
 
 int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
@@ -2070,6 +2083,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 	AddListItem(ca, conf_ban);
+	return 0;
 }
 
 int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
@@ -2210,6 +2224,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if (isnew)
 		AddListItem(link, conf_link);
+	return 0;
 }
 int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 {
@@ -2407,6 +2422,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_varname); */
 		}
 	}
+	return 0;
 }
 #ifdef STRIPBADWORDS
 int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
@@ -2470,7 +2486,7 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 		AddListItem(ca, conf_badword_channel);
 	else if (!strcmp(ce->ce_vardata, "message"))
 		AddListItem(ca, conf_badword_message);
-
+	return 0;
 
 }
 #endif
@@ -2499,7 +2515,7 @@ int	_conf_deny(ConfigFile *conf, ConfigEntry *ce)
 		AddListItem(ca2, conf_unknown);
 		return -1;
 	}
-	return -1;
+	return 0;
 }
 
 int	_conf_deny_dcc(ConfigFile *conf, ConfigEntry *ce)
@@ -2547,6 +2563,7 @@ int	_conf_deny_dcc(ConfigFile *conf, ConfigEntry *ce)
 		AddListItem(deny, conf_deny_dcc);
 		return 0;
 	}
+	return 0;
 }
 
 int	_conf_deny_channel(ConfigFile *conf, ConfigEntry *ce)
@@ -2594,6 +2611,7 @@ int	_conf_deny_channel(ConfigFile *conf, ConfigEntry *ce)
 		AddListItem(deny, conf_deny_channel);
 		return 0;
 	}
+	return 0;
 }
 int	_conf_deny_link(ConfigFile *conf, ConfigEntry *ce)
 {
@@ -2657,6 +2675,7 @@ int	_conf_deny_link(ConfigFile *conf, ConfigEntry *ce)
 		AddListItem(deny, conf_deny_link);
 		return 0;
 	}
+	return 0;
 }
 
 int	_conf_deny_version(ConfigFile *conf, ConfigEntry *ce)
@@ -2709,6 +2728,7 @@ int	_conf_deny_version(ConfigFile *conf, ConfigEntry *ce)
 		AddListItem(deny, conf_deny_version);
 		return 0;
 	}
+	return 0;
 }
 
 int	_conf_log(ConfigFile *conf, ConfigEntry *ce)
@@ -2766,6 +2786,7 @@ int	_conf_log(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 	AddListItem(log, conf_log);
+	return 0;
 }
 
 int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
@@ -2840,28 +2861,29 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 		}
 			
 	}
-		if (BadPtr(alias->nick) && alias->type != ALIAS_COMMAND) {
-			ircstrdup(alias->nick, alias->alias); 
-		}
-		add_CommandX(alias->alias, NULL, m_alias, 1, M_USER|M_ALIAS);
-		AddListItem(alias, conf_alias);
+	if (BadPtr(alias->nick) && alias->type != ALIAS_COMMAND) {
+		ircstrdup(alias->nick, alias->alias); 
+	}
+	add_CommandX(alias->alias, NULL, m_alias, 1, M_USER|M_ALIAS);
+	AddListItem(alias, conf_alias);
+	return 0;
 }
 
 int	_conf_help(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigItem_help *help = NULL;
 	ConfigEntry 	    	*cep;
-	aMotd *last, *temp;
+	aMotd *last = NULL, *temp;
 
 	if (!ce->ce_entries) {
 		config_status("%s:%i: help entry without text",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return 0;
+		return -1;
 	}
 	if (Find_Help(ce->ce_vardata)) {
 		config_status("%s:%i: help for %s already exists",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata ? ce->ce_vardata : "index");
-		return 0;
+		return -1;
 	}
 	help = MyMalloc(sizeof(ConfigItem_help));
 	if (!ce->ce_vardata)
@@ -2882,6 +2904,7 @@ int	_conf_help(ConfigFile *conf, ConfigEntry *ce)
 		last = temp;
 	}
 	AddListItem(help, conf_help);
+	return 0;
 }
 
 
@@ -2990,7 +3013,7 @@ void	validate_configuration(void)
 	if (!KLINE_ADDRESS || (*KLINE_ADDRESS == '\0'))
 		Error("set::kline-address is missing");
 #ifndef DEVELOP
-	if (KLINE_ADDRESS) 
+	if (KLINE_ADDRESS) {
 		if (!strchr(KLINE_ADDRESS, '@') && !strchr(KLINE_ADDRESS, ':'))
 		{
 			Error(
@@ -2999,7 +3022,7 @@ void	validate_configuration(void)
 		else if (!match("*@unrealircd.com", KLINE_ADDRESS) || !match("*@unrealircd.org",KLINE_ADDRESS) || !match("unreal-*@lists.sourceforge.net",KLINE_ADDRESS)) 
 			Error(
 			   "set::kline-address may not be an UnrealIRCd Team address");
-	
+	}
 #endif
 	if ((MAXCHANNELSPERUSER < 1)) {
 		MAXCHANNELSPERUSER = 10;
@@ -3673,6 +3696,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	run_configuration();
 	check_pings(TStime(), 1);
 	sendto_realops("Completed rehash");
+	return 0;
 }
 
 

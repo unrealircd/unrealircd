@@ -30,6 +30,7 @@ Computing Center and Jarkko Oikarinen";
 #include "sys.h"
 #include "numeric.h"
 #include "h.h"
+#include "proto.h"
 #include <string.h>
 
 extern char backupbuf[];

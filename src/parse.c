@@ -43,7 +43,7 @@ char backupbuf[8192];
 #include "sys.h"
 #include "numeric.h"
 #include "h.h"
-
+#include "proto.h"
 
 /*
  * NOTE: parse() should not be called recursively by other functions!
@@ -54,7 +54,6 @@ static char *para[MAXPARA + 1];
 static char sender[HOSTLEN + 1];
 static int cancel_clients PROTO((aClient *, aClient *, char *));
 static void remove_unknown PROTO((aClient *, char *));
-static char unknownserver[] = "Unknown.Server";
 static char nsprefix = 0;
 /*
 **  Find a client (server or user) by name.
@@ -183,8 +182,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 {
 	aClient *from = cptr;
 	char *ch, *s;
-	int  len, i, numeric, paramcount, noprefix = 0;
-	int  token, mfound;
+	int  len, i, numeric = 0, paramcount, noprefix = 0;
 #ifdef DEBUGMODE
 	time_t then, ticks;
 	int  retval;
@@ -455,52 +453,6 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 #endif
 }
 
-/*
- * field breakup for ircd.conf file.
- */
-char *getfield(char *newline)
-{
-	static char *line = NULL;
-	char *end, *field, *x;
-
-	if (newline)
-		line = newline;
-	if (line == NULL)
-		return (NULL);
-
-	field = line;
-	if (*field == '"')
-	{
-		field++;
-		x = index(field, '"');
-		if (!x)
-		{
-			sendto_ops("FATAL: Misplaced \" in ircd.conf line!");
-			s_die();
-		}
-		*x = '\0';
-		x++;
-		if (*x == '\n')
-			line = NULL;
-		else
-			line = x;
-		end = x;
-		line++;
-		goto end1;
-	}
-	if ((end = (char *)index(line, ':')) == NULL)
-	{
-		line = NULL;
-		if ((end = (char *)index(field, '\n')) == NULL)
-			end = field + strlen(field);
-	}
-	else
-		line = end + 1;
-      end1:
-	*end = '\0';
-	return (field);
-}
-
 static int cancel_clients(aClient *cptr, aClient *sptr, char *cmd)
 {
 	/*
@@ -580,7 +532,6 @@ static int cancel_clients(aClient *cptr, aClient *sptr, char *cmd)
 		 (cptr->name!=NULL)?cptr->name:"<unknown>",
 		 (fromname!=NULL)?fromname:"<unknown>");
 
-		 /*
 		 * We don't drop the server anymore.  Just ignore
 		 * the message and go about your business.  And hope
 		 * we don't get flooded. :-)  -Cabal95

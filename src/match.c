@@ -74,6 +74,7 @@ static inline match2(char *mask, char *name)
 	}
 	cm = lc(*m);
 	wsm = (char *)NULL;
+	wsn = (char *)NULL;
 	while (1)
 	{
 		if (cm == '*')	/* found the * wildcard */

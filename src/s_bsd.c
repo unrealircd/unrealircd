@@ -535,7 +535,7 @@ void init_sys(void)
 		if (limit.rlim_max < MAXCONNECTIONS)
 		{
 			(void)fprintf(stderr, "ircd fd table too big\n");
-			(void)fprintf(stderr, "Hard Limit: %d IRC max: %d\n",
+			(void)fprintf(stderr, "Hard Limit: %ld IRC max: %d\n",
 			    limit.rlim_max, MAXCONNECTIONS);
 			(void)fprintf(stderr, "Fix MAXCONNECTIONS\n");
 			exit(-1);
@@ -814,8 +814,10 @@ static int completed_connection(aClient *cptr)
 void close_connection(aClient *cptr)
 {
 	ConfigItem_link *aconf;
+#ifdef DO_REMAPPING
 	int  i, j;
 	int  empty = cptr->fd;
+#endif
 
 	if (IsServer(cptr))
 	{
@@ -1065,7 +1067,10 @@ int  get_sockerr(aClient *cptr)
  */
 int set_blocking(int fd)
 {
-   int flags, nonb;
+   int flags;
+#ifdef _WIN32
+   int nonb;
+#endif
 
 #ifndef _WIN32
     if ((flags = fcntl(fd, F_GETFL, 0)) < 0
@@ -1212,19 +1217,20 @@ add_con_refuse:
 			}
 		}
 
-		if ((bconf = Find_ban(acptr->sockhost, CONF_BAN_IP))) 
-		if (bconf)
-		{
-			ircsprintf(zlinebuf,
-				"ERROR :Closing Link: [%s] (You are not welcome on "
-				"this server: %s. Email %s for more information.)\r\n",
-				inetntoa((char *)&acptr->ip),
-				bconf->reason ? bconf->reason : "no reason",
-				KLINE_ADDRESS);
-			set_non_blocking(fd, acptr);
-			set_sock_opts(fd, acptr);
-			send(fd, zlinebuf, strlen(zlinebuf), 0);
-			goto add_con_refuse;
+		if ((bconf = Find_ban(acptr->sockhost, CONF_BAN_IP))) {
+			if (bconf)
+			{
+				ircsprintf(zlinebuf,
+					"ERROR :Closing Link: [%s] (You are not welcome on "
+					"this server: %s. Email %s for more information.)\r\n",
+					inetntoa((char *)&acptr->ip),
+					bconf->reason ? bconf->reason : "no reason",
+					KLINE_ADDRESS);
+				set_non_blocking(fd, acptr);
+				set_sock_opts(fd, acptr);
+				send(fd, zlinebuf, strlen(zlinebuf), 0);
+				goto add_con_refuse;
+			}
 		}
 		else if (find_tkline_match_zap(acptr) != -1)
 		{
@@ -1558,7 +1564,6 @@ int  read_message(time_t delay, fdlist *listp)
 #endif
 	int  j;
 	time_t delay2 = delay, now;
-	u_long usec = 0;
 	int  res, length, fd, i;
 	int  auth = 0;
 
@@ -2207,7 +2212,7 @@ int  read_message(time_t delay, fdlist *listp)
 int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 {
 	struct SOCKADDR *svp;
-	aClient *cptr, *c2ptr;
+	aClient *cptr;
 	char *s;
 	int  errtmp, len;
 

@@ -38,6 +38,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 
 
 aTKline *tklines = NULL;
@@ -74,6 +75,7 @@ int  tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *
 	AllocCpy(nl->reason, reason);
 	AllocCpy(nl->setby, setby);
 	AddListItem(nl, tklines);
+	return 0;
 }
 
 aTKline *tkl_del_line(aTKline *tkl)
@@ -163,7 +165,7 @@ aTKline *tkl_expire(aTKline * tmp)
 			*/
 			for (i = 0; i <= LastSlot; ++i)
 			{
-				if (acptr = local[i])
+				if ((acptr = local[i]))
 					if (MyClient(acptr) && IsShunned(acptr))
 					{
 						chost = acptr->sockhost;
@@ -234,9 +236,7 @@ int  find_tkline_match(aClient *cptr, int xx)
 	aTKline *lp;
 	char *chost, *cname, *cip;
 	TS   nowtime;
-	int  is_ip;
 	char msge[1024];
-	char gmt2[256];
 	int	points = 0;
 	ConfigItem_except *excepts;
 	char host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
@@ -381,7 +381,7 @@ int  tkl_sweep(void)
 	tkl_check_expire(NULL);
 	for (i = 0; i <= (MAXCONNECTIONS - 1); i++)
 	{
-		if (acptr = local[i])
+		if ((acptr = local[i]))
 			find_tkline_match(acptr, 0);
 	}
 	return 1;
@@ -454,7 +454,7 @@ void tkl_stats(aClient *cptr)
 void tkl_synch(aClient *sptr)
 {
 	aTKline *tk;
-	char typ;
+	char typ = 0;
 
 	for (tk = tklines; tk; tk = tk->next)
 	{
@@ -678,5 +678,6 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  if (IsAnOper(sptr))
 			  tkl_stats(sptr);
 	}
+	return 0;
 }
 

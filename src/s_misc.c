@@ -51,6 +51,7 @@ Computing Center and Jarkko Oikarinen";
 # include <io.h>
 #endif
 #include "h.h"
+#include "proto.h"
 #include "channel.h"
 #include <string.h>
 
@@ -64,7 +65,7 @@ extern ircstats IRCstats;
 extern char	*me_hash;
 
 static void exit_one_client PROTO((aClient *, aClient *, aClient *, char *, int));
-static void exit_one_client_in_split PROTO((aClient *, aClient *, aClient *,
+extern void exit_one_client_in_split PROTO((aClient *, aClient *, aClient *,
     char *));
 
 static char *months[] = {
@@ -631,7 +632,6 @@ static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from, char *c
 		 */
 		for (i = 0; i <= LastSlot; i++)
 		{
-			aConfItem *aconf;
 
 			if (!(acptr = local[i]) || !IsServer(acptr) || acptr == cptr || IsMe(acptr)
 			    || (DontSendQuit(acptr) && split))

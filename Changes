@@ -1173,3 +1173,4 @@ v- Fixed some bugreport stuff
 - BEFORE you use event functions, LockEventSystem(), after,
   UnlockEventSystem(). In EVENT() functions, the system _is_ locked.
   This might fix the double recursion mutex problem we got.
+- More -Wall cleanups

@@ -24,7 +24,7 @@
 #include "sys.h"
 #include "msg.h"
 #include "h.h"
-
+#include <string.h>
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
 ID_Notes("2.12 1/30/94");
@@ -126,8 +126,8 @@ void	init_CommandHash(void)
 #ifdef DEVELOP_DEBUG
 	aCommand	 *p;
 	int		 i;
-#endif
 	long		chainlength;
+#endif
 	
 	bzero(CommandHash, sizeof(CommandHash));
 	add_Command(MSG_MODE, TOK_MODE, m_mode, MAXPARA);

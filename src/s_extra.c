@@ -37,6 +37,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 
 ID_Copyright("(C) Carsten Munk 1999");
 
@@ -95,7 +96,7 @@ void report_flines(aClient *sptr)
 {
 	ConfigItem_deny_dcc *tmp;
 	char *filemask, *reason;
-	char a;
+	char a = 0;
 
 	for (tmp = conf_deny_dcc; tmp; tmp = (ConfigItem_deny_dcc *) tmp->next)
 	{
@@ -143,7 +144,6 @@ void	DCCdeny_del(ConfigItem_deny_dcc *deny)
 
 int m_dccdeny(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	ConfigItem_deny_dcc	*deny;
 	if (!MyClient(sptr))
 		return 0;
 
@@ -176,6 +176,7 @@ int m_dccdeny(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	else
 		sendto_one(sptr, "NOTICE %s :*** %s already has a dccdeny", parv[0],
 		    parv[1]);
+	return 0;
 }
 
 /* Remove a temporary dccdeny line
@@ -227,6 +228,7 @@ int m_undccdeny(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr,
 		    "NOTICE %s :*** Unable to find a temp dccdeny matching %s",
 		    parv[0], parv[1]);
+	return 0;
 
 }
 
@@ -303,6 +305,7 @@ int  m_svsfline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	  }
 
 	}
+	return 0;
 }
 
 /* restrict channel stuff */

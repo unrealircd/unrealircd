@@ -1205,7 +1205,7 @@ int  InitwIRCD(int argc, char *argv[])
 	PS_STRINGS->ps_nargvstr = 1;
 	PS_STRINGS->ps_argvstr = me.name;
 #endif
-	module_loadall();
+	module_loadall(0);
 #ifdef STATIC_LINKING
         l_commands_Load(0);
 #endif

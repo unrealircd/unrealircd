@@ -43,7 +43,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
-
+#include "proto.h"
 #ifndef RTLD_NOW
 #define RTLD_NOW RTLD_LAZY
 #endif
@@ -51,7 +51,7 @@
 Hook	   	*Hooks[MAXHOOKTYPES];
 Hook 	   	*global_i = NULL;
 Module          *Modules = NULL;
-
+int     Module_Depend_Resolve(Module *p);
 Module *Module_make(ModuleHeader *header, 
 #ifdef _WIN32
        HMODULE mod
@@ -336,7 +336,6 @@ vFP Module_SymEx(
 #ifndef STATIC_LINKING
 	vFP	fp;
 	char	buf[512];
-	int	i;
 
 	if (!name)
 		return NULL;
@@ -360,7 +359,6 @@ vFP Module_Sym(char *name)
 #ifndef STATIC_LINKING
 	vFP	fp;
 	char	buf[512];
-	int	i;
 	Module *mi;
 	
 	if (!name)
@@ -387,7 +385,6 @@ vFP Module_SymX(char *name, Module **mptr)
 #ifndef STATIC_LINKING
 	vFP	fp;
 	char	buf[512];
-	int	i;
 	Module *mi;
 	
 	if (!name)
@@ -423,7 +420,6 @@ void	module_loadall(int module_load)
 {
 #ifndef STATIC_LINKING
 	iFP	fp, fpp;
-	int	i;
 	Module *mi;
 	
 	if (!loop.ircd_booted)
@@ -553,7 +549,7 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (!(ret = Module_Load(parv[2], 1)))
 		{
 			sendto_realops("Loaded module %s", parv[2]);
-			return;
+			return 0;
 		}
 		else
 		{

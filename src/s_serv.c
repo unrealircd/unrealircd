@@ -41,8 +41,9 @@ static char sccsid[] =
 #endif
 #include <time.h>
 #include "h.h"
+#include "proto.h"
 #include <string.h>
-
+extern VOIDSIG s_die();
 
 static char buf[BUFSIZE];
 
@@ -159,7 +160,6 @@ CMD_FUNC(m_version)
 */
 CMD_FUNC(m_squit)
 {
-	aConfItem *aconf;
 	char *server;
 	aClient *acptr;
 	char *comment = (parc > 2 && parv[parc - 1]) ?
@@ -675,7 +675,7 @@ CMD_FUNC(m_server)
 			return exit_client(acptr, acptr, acptr,
 			    "Server Exists");
 		}
-		if (bconf = Find_ban(servername, CONF_BAN_SERVER))
+		if ((bconf = Find_ban(servername, CONF_BAN_SERVER)))
 		{
 			sendto_realops
 				("Cancelling link %s, banned server",
@@ -828,6 +828,7 @@ CMD_FUNC(m_server)
 		m_server_remote(cptr, sptr, parc, parv);
 		return 0;
 	}
+	return 0;
 }
 
 CMD_FUNC(m_server_remote)
@@ -860,7 +861,7 @@ CMD_FUNC(m_server_remote)
 		return exit_client(acptr, acptr, acptr,
 		    "Server Exists");
 	}
-	if (bconf = Find_ban(servername, CONF_BAN_SERVER))
+	if ((bconf = Find_ban(servername, CONF_BAN_SERVER)))
 	{
 		sendto_realops
 			("Cancelling link %s, banned server %s",
@@ -970,11 +971,9 @@ CMD_FUNC(m_server_remote)
 
 int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 {
-	char		*servername = cptr->name;
 	char		*inpath = get_client_name(cptr, TRUE);
 	extern char 	serveropts[];
 	aClient		*acptr;
-	aChannel	*chptr;
 	int		i;
 
 
@@ -1255,8 +1254,8 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 
 		for (bconf = conf_ban; bconf; bconf = (ConfigItem_ban *) bconf->next)
 		{
-			if (bconf->flag.type == CONF_BAN_NICK)
-				if (bconf->flag.type2 == CONF_BAN_TYPE_AKILL)
+			if (bconf->flag.type == CONF_BAN_NICK) {
+				if (bconf->flag.type2 == CONF_BAN_TYPE_AKILL) {
 					if (bconf->reason)
 						sendto_one(cptr, "%s%s %s %s :%s",
 						    ns ? "@" : ":",
@@ -1271,6 +1270,8 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 						    me.name,
 						    (IsToken(cptr) ? TOK_SQLINE :
 						    MSG_SQLINE), bconf->mask);
+				}
+			}
 		}
 	}
 
@@ -1418,6 +1419,7 @@ CMD_FUNC(m_netinfo)
 				cptr->name, parv[4], buf);
 	}
 	SetNetInfo(cptr);
+	return 0;
 }
 
 #ifndef IRCDTOTALVERSION
@@ -2694,7 +2696,7 @@ EVENT(save_tunefile)
 		return;
 	}
 	fprintf(tunefile, "%li\n", TSoffset);
-	fprintf(tunefile, "%li\n", IRCstats.me_max);
+	fprintf(tunefile, "%d\n", IRCstats.me_max);
 	fclose(tunefile);
 }
 
@@ -2948,7 +2950,7 @@ CMD_FUNC(m_addline)
 		else
 			fprintf (conf,"%s\n",parv[i]);
 	}
-	/* I dunno what Potvin was smoking when he made this code, but it plain SUX
+	 * I dunno what Potvin was smoking when he made this code, but it plain SUX
 	 * this should work just as good, and no need for a loop -- codemastr */
 	fprintf(conf, "%s\n", text);
 
@@ -3228,7 +3230,7 @@ CMD_FUNC(m_admin)
 	ConfigItem_admin *admin;
 	/* Users may want to get the address in case k-lined, etc. -- Barubary
 
-	   /* Only allow remote ADMINs if registered -- Barubary */
+	   * Only allow remote ADMINs if registered -- Barubary */
 	if (IsPerson(sptr) || IsServer(cptr))
 		if (hunt_server_token(cptr, sptr, MSG_ADMIN, TOK_ADMIN, ":%s", 1, parc,
 		    parv) != HUNTED_ISME)
@@ -3453,12 +3455,7 @@ CMD_FUNC(m_rehash)
 */
 CMD_FUNC(m_restart)
 {
-	char *pass = NULL, *encr;
 	int  x;
-#ifdef CRYPT_XLINE_PASSWORD
-	char salt[3];
-	extern char *crypt();
-#endif
 	if (MyClient(sptr) && !OPCanRestart(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
@@ -3594,7 +3591,7 @@ CMD_FUNC(m_trace)
 		link_s[i] = 0, link_u[i] = 0;
 
 
-	if (doall)
+	if (doall) {
 		for (acptr = client; acptr; acptr = acptr->next)
 #ifdef	SHOW_INVISIBLE_LUSERS
 			if (IsPerson(acptr))
@@ -3606,6 +3603,7 @@ CMD_FUNC(m_trace)
 #endif
 			else if (IsServer(acptr))
 				link_s[acptr->from->slot]++;
+	}
 
 	/* report all direct connections */
 
@@ -4123,7 +4121,6 @@ CMD_FUNC(m_die)
 {
 	aClient *acptr;
 	int  i;
-	char *pass = NULL;
 	if (!MyClient(sptr) || !OPCanDie(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
