@@ -3659,6 +3659,13 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 			return 1;
 		}
+		if (end - start > 100)
+		{
+			config_error("%s:%i: listen: you requested port %d-%d, that's %d ports "
+				"(and thus consumes %d sockets) this is probably not what you want.",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, start, end, end - start, end - start);
+			return 1;
+		}
 		if ((start < 0) || (start > 65535) || (end < 0) || (end > 65535))
 		{
 			config_error("%s:%i: listen: illegal port range values must be between 0 and 65535",

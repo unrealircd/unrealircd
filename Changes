@@ -2962,3 +2962,5 @@ seen. gmtime warning still there
 - Added class::pingfreq checking, should be 30-600 now.. else you might
   get mysterious (mass) disconnect issues.
 - Lol, I made /connect dissapear during modulizing ;).
+- Added a warning if your listen portrange affects >100 ports
+  (eg for idiots doing 6667-7000 which uses 333 sockets).
