@@ -2479,9 +2479,10 @@ CMD_FUNC(m_umode)
 		if ((sptr->umodes & (UMODE_KIX)) && !IsNetAdmin(sptr) && !IsSAdmin(sptr))
 			sptr->umodes &= ~UMODE_KIX;
 
-		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
-		    && !IsSecure(sptr))
+		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE) && !IsSecure(sptr))
 			sptr->umodes &= ~UMODE_SECURE;
+		if (MyClient(sptr) && !(sptr->umodes & UMODE_SECURE) && IsSecure(sptr))
+			sptr->umodes |= UMODE_SECURE;
 	}
 	/*
 	 * For Services Protection...
