@@ -305,4 +305,4 @@
 - Windows: the 'notice' parameter in the usermsg callback was always 0 due some windows/vc
   weirdness, this also affected spamfilter (so any spamfilters added only at notice
   and not at msg on windows would not work). Now using the real 'notice' parameter.
-- Oops.. made spamfilter for msgs/notices not working ;p.. fixed.
+- unbroke spamfilter not working for msgs/notices (oops..).
