@@ -1450,7 +1450,7 @@ void make_mode_str(chptr, oldm, oldl, pcount, pvar, mode_buf, parabuf, bounce)
 			*x++ = 'l';
 			if (bounce)
 				chptr->mode.limit = oldl;	/* set it back */
-			ircsprintf(parabuf, "%s%d", parabuf, chptr->mode.limit);
+			ircsprintf(parabuf, "%s%d ", parabuf, chptr->mode.limit);
 		}
 	}
 	/* reconstruct bkov chain */
