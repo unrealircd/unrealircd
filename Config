@@ -599,6 +599,5 @@ cat << __EOF__
 |                                                                       |
 | * Stskeeps  stskeeps@unrealircd.com                                   |
 | * codemastr codemastr@unrealircd.com                                  |
-| * DrBin     drbin@unrealircd.com                                      |
 |_______________________________________________________________________|
 __EOF__
