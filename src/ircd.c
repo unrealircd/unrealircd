@@ -786,6 +786,9 @@ int  InitwIRCD(argc, argv)
 #endif
 			  dpath = p;
 			  break;
+		  case 'F':
+		  		bootopt |= BOOT_NOFORK;
+		  		break;
 #ifndef _WIN32
 #ifdef CMDLINE_CONFIG
 		  case 'f':
@@ -1065,8 +1068,9 @@ int  InitwIRCD(argc, argv)
 	me.lasttime = me.since = me.firsttime = TStime();
 	(void)add_to_client_hash_table(me.name, &me);
 #if !defined(_AMIGA) && !defined(_WIN32) && !defined(NO_FORKING)
-	if (fork())
-		exit(0);
+	if (!(bootopt & BOOT_NOFORK))
+		if (fork())
+			exit(0);
 
 #endif
 

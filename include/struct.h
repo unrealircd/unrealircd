@@ -140,6 +140,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	BOOT_TTY	16
 #define	BOOT_OPER	32
 #define	BOOT_AUTODIE	64
+#define BOOT_NOFORK     128
 
 #define	STAT_LOG	-6	/* logfile for -x */
 #define	STAT_CONNECTING	-4
