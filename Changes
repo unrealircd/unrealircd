@@ -496,3 +496,4 @@ seen. gmtime warning still there
 - Removed ce_vardatanum (wasted CPU and memory)
 - Added code to make the config parser try and stay alive when an error is encountered
 - Added events code and converted some stuff to events
+- Converted htmcalc/lcf to events

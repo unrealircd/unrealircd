@@ -161,7 +161,9 @@ void	SetupEvents(void)
 	EventAdd("tunefile", 300, 0, save_tunefile, NULL);
 	EventAdd("garbage", GARBAGE_COLLECT_EVERY, 0, garbage_collect, NULL);
 	EventAdd("loop", 0, 0, loop_event, NULL);
-#ifndef NO_FDLISTS
+#ifndef NO_FDLIST
 	EventAdd("fdlistcheck", 1, 0, e_check_fdlists, NULL);
+	EventAdd("lcf", LCF, 0, lcf_check, NULL);
+	EventAdd("htmcalc", 1, 0, htm_calc, NULL);
 #endif
 }

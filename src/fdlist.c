@@ -84,3 +84,65 @@ void init_fdlist(fdlist * listp)
 	memset((char *)listp->entry, '\0', sizeof(listp->entry));
 	return;
 }
+
+EVENT(lcf_check)
+{
+	static int lrv;
+
+	lrv = LRV * LCF;
+	if ((me.receiveK - lrv >= lastrecvK) || HTMLOCK == 1)
+	{
+		if (!lifesux)
+		{
+
+			lifesux = 1;
+			if (noisy_htm)
+				sendto_realops
+					    ("Entering high-traffic mode (incoming = %0.2f kb/s (LRV = %dk/s, outgoing = %0.2f kb/s currently)",
+					    currentrate, LRV,
+						   currentrate2);}
+			else
+			{
+				lifesux++;	/* Ok, life really sucks! */
+				LCF += 2;	/* wait even longer */
+				EventModEvery("lcf", LCF);
+				if (noisy_htm)
+					sendto_realops
+					    ("Still high-traffic mode %d%s (%d delay): %0.2f kb/s",
+					    lifesux,
+					    (lifesux >
+					    9) ? " (TURBO)" :
+					    "", (int)LCF, currentrate);
+				/* Reset htm here, because its been on a little too long.
+				 * Bad Things(tm) tend to happen with HTM on too long -epi */
+				if (lifesux > 15)
+				{
+					if (noisy_htm)
+						sendto_realops
+						    ("Resetting HTM and raising limit to: %dk/s\n",
+						    LRV + 5);
+					LCF = LOADCFREQ;
+					EventModEvery("lcf", LCF);
+					lifesux = 0;
+					LRV += 5;
+				}
+			}
+		}
+		else
+		{
+			LCF = LOADCFREQ;
+			EventModEvery("lcf", LCF);
+			if (lifesux)
+			{
+				lifesux = 0;
+				if (noisy_htm)
+					sendto_realops
+					    ("Resuming standard operation (incoming = %0.2f kb/s, outgoing = %0.2f kb/s now)",
+					    currentrate, currentrate2);
+			}
+		}
+}
+
+EVENT(htm_calc)
+{
+}

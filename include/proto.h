@@ -43,6 +43,9 @@ void sendto_serv_butone_token(aClient *one, char *prefix, char *command, char *t
 void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *command, char *token, char *pattern, ...);
 void sendto_channel_ntadmins(aClient *from, aChannel *chptr, char *pattern, ...); 
 
+/* fdlist.c */
+EVENT(lcf_check);
+EVENT(htm_calc);
 /* ircd.c */
 EVENT(e_check_fdlists);
 EVENT(garbage_collect);

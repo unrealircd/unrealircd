@@ -720,11 +720,13 @@ int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    parv[0], sptr->user->username,
 			    sptr->user->realhost);
 			LCF = 60;	/* 60 seconds */
+			EventModEvery("lcf", LCF);
 		}
 		else if (!stricmp(command, "OFF"))
 		{
 			lifesux = 0;
 			LCF = LOADCFREQ;
+			EventModEvery("lcf", LCF);
 			sendto_one(sptr,
 			    ":%s NOTICE %s :High traffic mode is now OFF.",
 			    me.name, parv[0]);

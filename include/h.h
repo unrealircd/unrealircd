@@ -51,6 +51,20 @@ extern time_t timeofday;
 #define get_sendq(x) ((x)->class ? (x)->class->sendq : MAXSENDQLENGTH) 
 
 
+#ifndef NO_FDLIST
+extern float currentrate;
+extern float currentrate2;		/* outgoing */
+extern float highest_rate;
+extern float highest_rate2;
+extern int  lifesux;
+extern int  LRV;
+extern TS   LCF;
+extern int  currlife;
+extern int  HTMLOCK;
+extern int  noisy_htm;
+extern long lastsendK, lastrecvK;
+#endif
+
 /*
  * Configuration linked lists
 */

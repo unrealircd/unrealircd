@@ -21,9 +21,6 @@
 
 #define EVENT(x) void (x) (void *data)
 
-void	EventAdd(char *name, long every, long howmany,
-		  vFP event, void *data);
-
 typedef struct _event Event;
 
 struct _event {
@@ -35,3 +32,17 @@ struct _event {
 	void	*data;
 	time_t	last;
 };
+
+void	EventAdd(char *name, long every, long howmany,
+		  vFP event, void *data);
+Event	*EventDel(char *name);
+
+Event	*EventFind(char *name);
+
+void	EventModEvery(char *name, int every);
+
+void	DoEvents(void);
+
+void	EventStatus(aClient *sptr);
+
+void	SetupEvents(void);
