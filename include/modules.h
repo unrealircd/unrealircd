@@ -531,6 +531,7 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_TKL_EXCEPT 35
 #define HOOKTYPE_UMODE_CHANGE 36
 #define HOOKTYPE_TOPIC 37
+#define HOOKTYPE_REHASH_COMPLETE 38
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000

@@ -2878,3 +2878,6 @@ seen. gmtime warning still there
   (#0001545) reported by MagicalTux2
 - Added [OLD?] flag in /module so you can easily spot old beta* modules.
 - Modulized: samode, sajoin, sapart, kick, topic, invite, list
+- Added HOOKTYPE_REHASH_COMPLETE to allow permanent modules to reload
+  command overrides. (#0001553) reported by AngryWolf
+

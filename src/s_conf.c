@@ -1474,10 +1474,13 @@ int	init_conf(char *rootconf, int rehash)
 	}
 	config_free(conf);
 	conf = NULL;
-#ifndef STATIC_LINKING
 	if (rehash)
+	{
+#ifndef STATIC_LINKING
 		module_loadall(0);
 #endif
+		RunHook0(HOOKTYPE_REHASH_COMPLETE);
+	}
 	do_weird_shun_stuff();
 	nextconnect = TStime() + 1; /* check for autoconnects */
 	config_status("Configuration loaded without any problems ..");
