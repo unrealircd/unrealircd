@@ -673,3 +673,4 @@
   by Ron2K (#Ron2K).
 - Module coders: using extcmode_default_requirechop is now depricated, check src/extcmodes.c
   ctrl+f extcmode_default_requirechop for more details (solution: copy+paste & fill in modechar).
+- Nicks with ~ are now also not cutoff anymore but rejected like any other illegal char (#0002074).

@@ -122,9 +122,6 @@ DLLFUNC CMD_FUNC(m_nick)
 		return 0;
 	}
 
-	if (MyConnect(sptr) && (s = (char *)index(parv[1], '~')))
-		*s = '\0';
-
 	strncpyzt(nick, parv[1], NICKLEN + 1);
 
 	if (MyConnect(sptr) && sptr->user && !IsAnOper(sptr))
