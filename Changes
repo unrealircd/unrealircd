@@ -40,3 +40,4 @@
 - Fixed a bug where you would receive a double notice when someone does a /who 0 o
 - Added first part of the new config parser, s_conf2.c
 - Added the next part of the new config parser, and some even more
+- Added some a bit functional _conf_class code

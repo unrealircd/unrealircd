@@ -51,11 +51,13 @@ struct	_confcommand
 int	_conf_admin(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_me(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_oper(ConfigFile *conf, ConfigEntry *ce);
+int	_conf_class(ConfigFile *conf, ConfigEntry *ce);
 
 static ConfigCommand _ConfigCommands[] = {
 	{ "admin", _conf_admin },
 	{ "me", _conf_me },
 	{ "oper", _conf_oper },
+	{ "class", _conf_class },
 	{ NULL, NULL  }
 };
 
@@ -68,6 +70,7 @@ static void config_entry_free(ConfigEntry *ceptr);
 int	ConfigParse(ConfigFile *cfptr);
 
 ConfigItem_me	*conf_me = NULL;
+ConfigItem_class *conf_class = NULL;
 
 void	*MyMallocEx(size_t size)
 {
@@ -585,7 +588,45 @@ int	_conf_admin(ConfigFile *conf, ConfigEntry *ce)
 		}
 		config_status("[admin] we got line: %s",
 				cep->ce_varname);
+		
 	} 
+}
+
+int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	ConfigItem_class *class;
+	
+	if (!ce->ce_vardata)
+	{
+		config_error("class without name!");
+		return -1;
+	}
+	class = (ConfigItem_class *) MyMallocEx(sizeof(ConfigItem_class));
+	config_status("Adding class %s", ce->ce_vardata);
+	class->name = strdup(ce->ce_vardata);
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+		{
+			config_error("Blank class line");
+			continue;	
+		}
+		if (!strcmp(cep->ce_varname, "pingfreq"))
+		{
+			class->pingfreq = atol(ce->ce_vardata);
+		} else
+		if (!strcmp(cep->ce_varname, "maxclients"))
+		{
+			class->maxclients = atol(ce->ce_vardata);
+		} else
+		if (!strcmp(cep->ce_varname, "sendq"))
+		{
+			class->sendq = atol(ce->ce_vardata);
+		}
+		config_status("Set class %s->%s as %s",
+				class->name, cep->ce_varname, cep->ce_vardata);
+	}	
 }
 
 int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
