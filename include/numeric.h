@@ -143,7 +143,7 @@
 #define RPL_WHOISREGNICK     307
 #define RPL_RULESSTART       308
 #define RPL_ENDOFRULES       309
-#define RPL_WHOISHELPOP      310 /* -Donwulff */
+#define RPL_WHOISHELPOP      310	/* -Donwulff */
 
 #define RPL_WHOISUSER        311
 #define RPL_WHOISSERVER      312
@@ -153,7 +153,7 @@
 /* rpl_endofwho below (315) */
 #define	RPL_ENDOFWHOWAS      369
 
-#define RPL_WHOISCHANOP      316 /* redundant and not needed but reserved */
+#define RPL_WHOISCHANOP      316	/* redundant and not needed but reserved */
 #define RPL_WHOISIDLE        317
 
 #define RPL_ENDOFWHOIS       318
@@ -263,7 +263,7 @@
 #define	RPL_STATSHLINE       244
 #define	RPL_STATSSLINE       245
 #define RPL_STATSXLINE	     247
-#define RPL_STATSULINE       248	
+#define RPL_STATSULINE       248
 #define	RPL_STATSDEBUG	     249
 #define RPL_STATSCONN        250
 

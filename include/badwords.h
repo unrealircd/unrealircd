@@ -18,8 +18,8 @@
 #define PATTERN		"\\w*%s\\w*"
 #define REPLACEWORD	"<censored>"
 
-char 	*stripbadwords(char *, int);
-int	 loadbadwords(char *, int);
-void	 freebadwords(void);
+char *stripbadwords(char *, int);
+int  loadbadwords(char *, int);
+void freebadwords(void);
 
 #endif

@@ -21,32 +21,31 @@
  */
 
 
-typedef struct  SynchList aSynchList;
+typedef struct SynchList aSynchList;
 
 /* SJOIN synch structure */
 struct SynchList {
-	aClient		*cptr;
-	long		setflags;
-        aSynchList      *next, *prev;
+	aClient *cptr;
+	long setflags;
+	aSynchList *next, *prev;
 };
 
 aSynchList *SJSynchList = NULL;
 
 aSynchList *make_synchlist()
 {
-    Reg1 aSynchList *synchptr;
+	Reg1 aSynchList *synchptr;
 
-    synchptr = (aSynchList *) MyMalloc(sizeof(aSynchList));
-    synchptr->cptr = NULL;
-    synchptr->setflags = 0;
-    synchptr->prev = synchptr->next = NULL;
+	synchptr = (aSynchList *) MyMalloc(sizeof(aSynchList));
+	synchptr->cptr = NULL;
+	synchptr->setflags = 0;
+	synchptr->prev = synchptr->next = NULL;
 
-    return synchptr;
+	return synchptr;
 }
 
 void free_synchlist(synchptr)
-    aSynchList *synchptr;
+	aSynchList *synchptr;
 {
-    MyFree((char *) synchptr);
+	MyFree((char *)synchptr);
 }
-

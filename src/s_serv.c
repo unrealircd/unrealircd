@@ -502,6 +502,19 @@ int  m_protoctl(cptr, sptr, parc, parv)
 			    proto, cptr->name));
 			SetVHP(cptr);
 		}
+		else if (strcmp(s, "SJ3") == 0)
+		{
+#ifndef PROTOCTL_MADNESS
+			if (remove) {
+				ClearSJ3(cptr);
+				continue;
+			}
+#endif
+			Debug((DEBUG_ERROR,
+			    "Chose protocol %s for link %s",
+			    proto, cptr->name));
+			SetSJ3(cptr);
+		}
 		/*
 		 * Add other protocol extensions here, with proto
 		 * containing the base option, and options containing

@@ -79,27 +79,27 @@
 
 #if 0
 #ifndef	MALLOCH
-char	*malloc(), *calloc();
-void	free();
+char *malloc(), *calloc();
+void free();
 #else
 #include MALLOCH
 #endif
 #endif
 
 
-extern	int	match PROTO((char *, char *));
+extern int match PROTO((char *, char *));
 #define mycmp(a,b) \
  ( (toupper((a)[0])!=toupper((b)[0])) || smycmp((a)+1,(b)+1) )
-extern  int     smycmp PROTO((char *, char *));
+extern int smycmp PROTO((char *, char *));
 #ifndef GLIBC2_x
-extern	int	myncmp PROTO((char *, char *, int));
-#endif 
+extern int myncmp PROTO((char *, char *, int));
+#endif
 
 #ifdef NEED_STRTOK
-extern	char	*strtok2 PROTO((char *, char *));
+extern char *strtok2 PROTO((char *, char *));
 #endif
 #ifdef NEED_STRTOKEN
-extern	char	*strtoken PROTO((char **, char *, char *));
+extern char *strtoken PROTO((char **, char *, char *));
 #endif
 #ifdef NEED_INET_ADDR
 extern unsigned long inet_addr PROTO((char *));
@@ -116,7 +116,7 @@ extern char *inet_ntoa PROTO((struct IN_ADDR));
 extern int inet_netof PROTO((struct IN_ADDR));
 #endif
 
-int global_count, max_global_count;
+int  global_count, max_global_count;
 extern char *myctime PROTO((time_t));
 extern char *strtoken PROTO((char **, char *, char *));
 
@@ -195,7 +195,7 @@ extern char *MyMalloc();
 // #define MyFree free
 // #endif
 extern void flush_connections();
-extern struct SLink *find_user_link(/* struct SLink *, struct Client * */);
+extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 
 /*
  * Protocol support text.  DO NO CHANGE THIS unless you know what
@@ -216,7 +216,7 @@ extern struct SLink *find_user_link(/* struct SLink *, struct Client * */);
  * Used to display a string to the GUI interface.
  * Windows' internal strerror() function doesn't work with socket errors.
  */
-extern	int	DisplayString(HWND hWnd, char *InBuf, ...);
+extern int DisplayString(HWND hWnd, char *InBuf, ...);
 #undef	strerror
 #endif
 
@@ -224,10 +224,10 @@ extern	int	DisplayString(HWND hWnd, char *InBuf, ...);
 extern char *malloc_options;
 #endif
 
-extern int lu_noninv, lu_inv, lu_serv, lu_oper, 
-           lu_unknown, lu_channel, lu_lu, lu_lulocal, lu_lserv, 
-           lu_clu, lu_mlu, lu_cglobalu, lu_mglobalu;
-           
-time_t	now;
+extern int lu_noninv, lu_inv, lu_serv, lu_oper,
+    lu_unknown, lu_channel, lu_lu, lu_lulocal, lu_lserv,
+    lu_clu, lu_mlu, lu_cglobalu, lu_mglobalu;
+
+time_t now;
 
 #endif /* __common_include__ */

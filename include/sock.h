@@ -1,3 +1,4 @@
+
 /************************************************************************
  *   Unreal Internet Relay Chat Daemon, include/sock.h
  *   Copyright (C) 1990 Jarkko Oikarinen and
@@ -22,6 +23,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.1.1.1.6.1  2000/05/28 08:55:24  cmunk
+ * Import of Unreal3.1-beta3
+ *
  * Revision 1.2  2000/03/02 21:22:37  stskeeps
  * ...........
  *
@@ -73,6 +77,5 @@
 #endif
 
 #ifdef RCVTIMEO
-#define SO_RCVTIMEO     0x1006          /* receive timeout */
+#define SO_RCVTIMEO     0x1006	/* receive timeout */
 #endif
-

@@ -23,9 +23,9 @@
 #define __hash_include__
 
 typedef struct hashentry {
-   int         hits;
-   int         links;
-   void       *list;
+	int  hits;
+	int  links;
+	void *list;
 } aHashEntry;
 
 /* Taner had BITS_PER_COL 4 BITS_PER_COL_MASK 0xF - Dianora */
@@ -58,9 +58,9 @@ typedef struct hashentry {
 #define WW_MAX_INITIAL_MASK (WW_MAX_INITIAL-1)
 #define WW_MAX (WW_MAX_INITIAL*MAX_SUB)
 
-#define NOTIFYHASHSIZE  10007   /* prime number  */
+#define NOTIFYHASHSIZE  10007	/* prime number  */
 
 #define NullChn ((aChannel *)0)
 
 #define find_channel hash_find_channel
-#endif	/* __hash_include__ */
+#endif /* __hash_include__ */

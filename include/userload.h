@@ -30,25 +30,25 @@
 #endif
 
 struct current_load_struct {
-  u_short client_count, local_count, conn_count;
-  u_long  entries;
-};  
+	u_short client_count, local_count, conn_count;
+	u_long entries;
+};
 
 extern struct current_load_struct current_load_data;
 
 struct load_entry {
-  struct  load_entry *prev;
-  u_short client_count, local_count, conn_count;
+	struct load_entry *prev;
+	u_short client_count, local_count, conn_count;
 #ifdef DEBUGMODE
-  u_short cpu_usage;
+	u_short cpu_usage;
 #endif
-  long    time_incr;
+	long time_incr;
 };
 
 extern struct load_entry *load_list_head, *load_list_tail,
-                         *load_free_head, *load_free_tail;
+    *load_free_head, *load_free_tail;
 
 
-extern void initload PROTO ((void));
-extern void update_load PROTO ((void));
-extern void calc_load PROTO ((aClient *, char *));
+extern void initload PROTO((void));
+extern void update_load PROTO((void));
+extern void calc_load PROTO((aClient *, char *));

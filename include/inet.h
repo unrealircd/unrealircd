@@ -22,7 +22,7 @@
  */
 
 /* External definitions for functions in inet(3) */
-#include "config.h" /* for system definitions */
+#include "config.h"		/* for system definitions */
 
 #ifdef	__alpha
 #define	__u_l	unsigned int
@@ -35,7 +35,7 @@
 extern __u_l inet_addr(char *);
 extern char *inet_ntoa(char *);
 # endif
-extern __u_l inet_makeaddr(int , int);
+extern __u_l inet_makeaddr(int, int);
 extern __u_l inet_network(char *);
 extern __u_l inet_lnaof(struct in_addr);
 #else

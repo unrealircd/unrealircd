@@ -24,7 +24,7 @@
  */
 #ifndef INCLUDED_s_zip_h
 #define INCLUDED_s_zip_h
-#include <zlib.h>         /* z_stream */
+#include <zlib.h>		/* z_stream */
 #endif
 
 struct Client;
@@ -34,23 +34,21 @@ struct Client;
 #define ZIP_MINIMUM     4096
 
 /* the maximum amount of data to be compressed (can actually be a bit more) */
-#define ZIP_MAXIMUM     8192    /* WARNING: *DON'T* CHANGE THIS!!!! */
+#define ZIP_MAXIMUM     8192	/* WARNING: *DON'T* CHANGE THIS!!!! */
 
 struct Zdata {
-  z_stream*   in;            /* input zip stream data */
-  z_stream*   out;           /* output zip stream data */
-  char        inbuf[ZIP_MAXIMUM]; /* incoming zipped buffer */
-  char        outbuf[ZIP_MAXIMUM]; /* outgoing (unzipped) buffer */
-  int         incount;        /* size of inbuf content */
-  int         outcount;       /* size of outbuf content */
+	z_stream *in;		/* input zip stream data */
+	z_stream *out;		/* output zip stream data */
+	char inbuf[ZIP_MAXIMUM];	/* incoming zipped buffer */
+	char outbuf[ZIP_MAXIMUM];	/* outgoing (unzipped) buffer */
+	int  incount;		/* size of inbuf content */
+	int  outcount;		/* size of outbuf content */
 };
 
 #endif /* ZIP_LINKS */
 
 
-extern int     zip_init (struct Client *);
-extern void    zip_free (struct Client *);
-extern char*   unzip_packet (struct Client *, char *, int *);
-extern char*   zip_buffer (struct Client *, char *, int *, int);
-
-#endif /* INCLUDED_s_zip_h */
+extern int zip_init(struct Client *);
+extern void zip_free(struct Client *);
+extern char *unzip_packet(struct Client *, char *, int *);
+extern char *zip_buffer(struct Client *, char *, int *, int);
