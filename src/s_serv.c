@@ -539,11 +539,11 @@ int  m_server(cptr, sptr, parc, parv)
 		aconf = find_conf_servern(host);
 		if (!aconf)
 		{
-			sendto_one(cptr,"ERROR :No Access (No N line) %s",
+			sendto_one(cptr,"ERROR :No Access (No matching N:line) %s",
 			    inpath);
-			sendto_locfailops("Access denied (No N line) %s",
+			sendto_locfailops("Access denied (No matching N:line) %s",
 			    inpath);
-			return exit_client(cptr, cptr, cptr, "No N line");
+			return exit_client(cptr, cptr, cptr, "No matching N:line");
 		}
 #ifdef CRYPT_LINK_PASSWORD
 		/* use first two chars of the password they send in as salt */
@@ -912,8 +912,8 @@ int  m_server_estab(cptr)
 	{
 		ircstp->is_ref++;
 		sendto_one(cptr,
-		    "ERROR :Access denied. No N line for server %s", inpath);
-		sendto_ops("Access denied. No N line for server %s", inpath);
+		    "ERROR :Access denied. No N:line for server %s", inpath);
+		sendto_ops("Access denied. No N:line for server %s", inpath);
 		return exit_client(cptr, cptr, cptr, "No N line for server");
 	}
 	if (!(bconf = find_conf(cptr->confs, host, CONF_CONNECT_SERVER)))

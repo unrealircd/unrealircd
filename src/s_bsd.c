@@ -215,7 +215,7 @@ void report_error(text, cptr)
 			if (err)
 				errtmp = err;
 #endif
-	sendto_ops(text, host, strerror(errtmp));
+	sendto_realops(text, host, strerror(errtmp));
 	ircd_log(text,host,strerror(errtmp));
 #ifdef USE_SYSLOG
 	syslog(LOG_WARNING, text, host, strerror(errtmp));

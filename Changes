@@ -426,3 +426,5 @@
 - Fully added V:lines (doesn't really do much till the next version, since old versions don't support it)
 - Added /stats v to list V:lines (/stats V still does vhost.conf)
 - Added OpenBSD 2.x support, thanks to noriko for donating the development shell
+- Added so stuff like Lost connection to, (report_error) only goes to realops
+- Added some more descriptive error messages
