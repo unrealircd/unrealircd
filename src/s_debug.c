@@ -168,20 +168,17 @@ void debug(level, form, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10)
 	int  err = WSAGetLastError();
 # endif
 #else
-void debug(level, form, va_alist)
-	int  level;
-	char *form;
-	va_dcl
-{
-	va_list vl;
 # ifndef _WIN32
-	int  err = errno;
-# else
-	int  err = WSAGetLastError();
-# endif
-
-	va_start(vl);
+void debug(int level, char *form, ...)
+#else
+void debug(int level, char *form, ...)
 #endif
+#endif
+{
+# ifndef _WIN32
+	va_list vl;
+	int  err = errno;
+	va_start(vl, form);
 
 	if ((debuglevel >= 0) && (level <= debuglevel))
 	{
@@ -210,6 +207,18 @@ void debug(level, form, va_alist)
 	}
 	WSASetLastError(err);
 #endif
+# else
+	va_list vlArgs;
+	char buf[1024];
+	int  err = WSAGetLastError();
+
+	va_start(vlArgs, form);
+	vsprintf(buf, form, vlArgs);
+	va_end(vlArgs);
+	strcat(buf,"\r\n");
+	OutputDebugString(buf);
+	WSASetLastError(err);
+# endif
 }
 
 /*
@@ -498,6 +507,7 @@ void count_memory(cptr, nick)
 	    flinks, flinks * sizeof(Link));
 
 	rm = cres_mem(cptr,cptr->name);
+
 	tot = totww + totch + totcl + com + cl * sizeof(aClass) + db + rm;
 	tot += fl * sizeof(Link);
 	tot += sizeof(aHashEntry) * U_MAX;

@@ -328,7 +328,7 @@ extern atime(char *xtime);
 
 extern int dopacket(aClient *, char *, int);
 
-extern void debug();
+extern void debug(int, char *, ...);
 #if defined(DEBUGMODE)
 extern void send_usage(aClient *, char *);
 extern void send_listinfo(aClient *, char *);

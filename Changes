@@ -450,3 +450,5 @@
 - Made the IRCd delete its tray icon in win32 on SIGSEGV
 - Brought 005 up-to-date with spefication - added CHANMODES= support
 - Applied res.c.patch from McSkaf, fixes win32 GPF, but fixed mising HE(ocp)
+- Applied s_debug.c/config.h patch from McSkaf, makes DEBUGMODE under
+  win32 working again - fixed some errors in the unix part of it.
