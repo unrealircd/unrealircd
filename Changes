@@ -2135,3 +2135,5 @@ seen. gmtime warning still there
 - Removed some leftover TECHAT references (#0000953).
 - Added a CommandExists function to be used by module coders to determine if a command already
   exists.
+- Renamed channel mode +a to "channel admin" it fits better, and it makes us more consistent 
+  with other IRCds.

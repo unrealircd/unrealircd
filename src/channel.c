@@ -1747,7 +1747,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  else
 			  {
 				  sendto_one(cptr,
-				      ":%s %s %s :*** Protected User mode (+a) can only be set by the channel owner",
+				      ":%s %s %s :*** Channel admins (+a) can only be set by the channel owner",
 				      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
 				  break;
 			  }
@@ -1763,7 +1763,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			    xxx = "dechannelown";
 			    break;
 		    case MODE_CHANPROT:
-			    xxx = "deprotect";
+			    xxx = "deadmin";
 			    break;
 		    case MODE_HALFOP:
 			    xxx = "dehalfop";
@@ -1828,7 +1828,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  if (MyClient(cptr))
 			  {
 				  sendto_one(cptr,
-				      ":%s %s %s :*** You cannot %s %s in %s, (s)he is a protected user (+a).",
+				      ":%s %s %s :*** You cannot %s %s in %s, (s)he is a channel admin (+a).",
 				      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name, xxx,
 				      member->cptr->name, chptr->chname);
 			  }
@@ -3440,7 +3440,7 @@ CMD_FUNC(m_kick)
 					    && who != sptr)
 					{
 						sendto_one(sptr,
-						    ":%s %s %s :*** You cannot kick %s from %s because %s is channel protected",
+						    ":%s %s %s :*** You cannot kick %s from %s because %s is channel admin",
 						    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name,
 						    who->name, chptr->chname, who->name);
 						goto deny;
