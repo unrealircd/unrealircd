@@ -876,3 +876,5 @@ seen. gmtime warning still there
 - Removed the tokens for /users, /summon, and /samode (these never come from a server so they don't need
   it)
 - Added a utility to auto create version.c for win32. It's the worst coding I've ever done, but it works :P
+- Added a hell lot of DNS debugging code, and fixed the BIGENDIAN problem
+  with resolver. Thanks to dawn and Trash.net for shell on a sparc

@@ -99,10 +99,10 @@ ircd_res_mkquery(op, dname, class, type, data, datalen, newrr_in, buf, buflen)
 		h_errno = NETDB_INTERNAL;
 		return (-1);
 	}
-#ifdef DEBUG
-	if (ircd_res.options & RES_DEBUG)
-		printf(";; res_mkquery(%d, %s, %d, %d)\n",
-		    op, dname, class, type);
+#ifdef DEBUGMODE
+	Debug((DEBUG_DNS,
+		";; res_mkquery(%d, %s, %d, %d)",
+		    op, dname, class, type));
 #endif
 	/*
 	 * Initialize header fields.

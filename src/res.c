@@ -111,6 +111,8 @@ int init_resolver(op)
 		if (!ircd_res.nscount)
 		{
 			ircd_res.nscount = 1;
+			Debug((DEBUG_DNS, "Setting nameserver to be %s",
+				NAME_SERVER));
 #ifdef INET6
 			/* still IPv4 */
 			ircd_res.nsaddr_list[0].sin_addr.s_addr =
@@ -137,7 +139,7 @@ int init_resolver(op)
 		(void)setsockopt(ret, SOL_SOCKET, SO_BROADCAST, &on, on);
 #endif
 	}
-#ifdef DEBUG
+#ifdef DEBUGMODE
 	if (op & RES_INITDEBG);
 	ircd_res.options |= RES_DEBUG;
 #endif
@@ -193,7 +195,7 @@ static void rem_request(old)
 				last = r2ptr;
 			break;
 		}
-#ifdef	DEBUG
+#ifdef	DEBUGMODE
 	Debug((DEBUG_INFO, "rem_request:Remove %#x at %#x %#x",
 	    old, *rptr, r2ptr));
 #endif
@@ -272,7 +274,7 @@ time_t timeout_query_list(now)
 #endif
 			if (--rptr->retries <= 0)
 			{
-#ifdef DEBUG
+#ifdef DEBUGMODE
 				Debug((DEBUG_ERROR, "timeout %x now %d cptr %x",
 				    rptr, now, rptr->cinfo.value.cptr));
 #endif
@@ -303,7 +305,7 @@ time_t timeout_query_list(now)
 				resend_query(rptr);
 #endif
 				tout = now + rptr->timeout;
-#ifdef DEBUG
+#ifdef DEBUGMODE
 				Debug((DEBUG_INFO, "r %x now %d retry %d c %x",
 				    rptr, now, rptr->retries,
 				    rptr->cinfo.value.cptr));
@@ -344,6 +346,11 @@ static int send_res_msg(msg, len, rcount)
 	char *msg;
 	int len, rcount;
 {
+#ifdef DEBUGMODE
+	char debbuffer[50];
+	int j;
+#endif
+
 	int  i;
 	int  sent = 0, max;
 
@@ -356,14 +363,44 @@ static int send_res_msg(msg, len, rcount)
 	if (!max)
 		max = 1;
 
+#ifdef DEBUGMODE
+	Debug((DEBUG_DNS, "send_res_msg: Dumping packet contents"));
+	*debbuffer = '\0';
+	j = 0;
+	for (i = 0; i < len; i++)
+	{
+		debbuffer[j] = msg[i] > 32 ? msg[i] : '.';
+		j++;
+		if (j == 32)
+		{
+			debbuffer[j] = '\0';
+			Debug((DEBUG_DNS, "- %s", debbuffer));
+			j = 0;				
+		}
+	}
+	if (j > 0)
+	{
+		debbuffer[j] = '\0';
+		Debug((DEBUG_DNS, "- %s", debbuffer));
+	}
+#endif
+
+
 	for (i = 0; i < max; i++)
 	{
+		Debug((DEBUG_DNS, "Sending to nameserver %i",
+			i));
+#ifndef INET6
+		Debug((DEBUG_DNS, "IP: %s",
+		 inet_ntoa(ircd_res.nsaddr_list[i].sin_addr)));
+#endif
 #ifdef INET6
 		/* still IPv4 */
 		ircd_res.nsaddr_list[i].sin_family = AF_INET;
 #else
 		ircd_res.nsaddr_list[i].sin_family = AF_INET;
 #endif
+		ERRNO = 0;
 #ifdef INET6
 		if (sendto(resfd, msg, len, 0,
 		    (struct sockaddr *)&(ircd_res.nsaddr_list[i]),
@@ -375,6 +412,7 @@ static int send_res_msg(msg, len, rcount)
 #endif
 
 		{
+			Debug((DEBUG_DNS, "send_res_msg, errno = %s",strerror(ERRNO)));
 			reinfo.re_sent++;
 			sent++;
 		}
@@ -541,6 +579,8 @@ static int do_query_number(lp, numb, rptr)
 	    (u_int)(cp[3]), (u_int)(cp[2]), (u_int)(cp[1]), (u_int)(cp[0]));
 #endif
 #endif
+	Debug((DEBUG_DNS, "do_query_number: built %s rptr = %lx",
+		ipbuf, rptr));
 
 	if (!rptr)
 	{
@@ -596,6 +636,7 @@ static int query_name(name, class, type, rptr)
 	    (u_char *)buf, sizeof(buf));
 	if (r <= 0)
 	{
+		Debug((DEBUG_DNS, "query_name: NO_RECOVERY"));
 		h_errno = NO_RECOVERY;
 		return r;
 	}
@@ -622,6 +663,7 @@ static int query_name(name, class, type, rptr)
 	s = send_res_msg(buf, r, rptr->sends);
 	if (s == -1)
 	{
+		Debug((DEBUG_DNS, "query_name: TRY_AGAIN"));
 		h_errno = TRY_AGAIN;
 		return -1;
 	}
@@ -819,7 +861,7 @@ static int proc_answer(rptr, hptr, buf, eob)
 			  ans++;
 			  break;
 		  default:
-#ifdef DEBUG
+#ifdef DEBUGMODE
 			  Debug((DEBUG_INFO, "proc_answer: type:%d for:%s",
 			      type, hostbuf));
 #endif
@@ -880,7 +922,7 @@ struct hostent *get_res(lp,id)
 	hptr->qdcount = ntohs(hptr->qdcount);
 	hptr->nscount = ntohs(hptr->nscount);
 	hptr->arcount = ntohs(hptr->arcount);
-#ifdef	DEBUG
+#ifdef	DEBUGMODE
 	Debug((DEBUG_NOTICE, "get_res:id = %d rcode = %d ancount = %d",
 	    hptr->id, hptr->rcode, hptr->ancount));
 #endif
@@ -982,7 +1024,7 @@ struct hostent *get_res(lp,id)
 		    inetntoa((char *)&rptr->he.h_addr)));
 #endif
 	}
-#ifdef DEBUG
+#ifdef DEBUGMODE
 	Debug((DEBUG_INFO, "get_res:Proc answer = %d", a));
 #endif
 	if (a > 0 && rptr->type == T_PTR)
@@ -1032,7 +1074,7 @@ struct hostent *get_res(lp,id)
 		if (lp)
 			bcopy((char *)&rptr->cinfo, lp, sizeof(Link));
 		cp = make_cache(rptr);
-#ifdef	DEBUG
+#ifdef	DEBUGMODE
 		Debug((DEBUG_INFO, "get_res:cp=%#x rptr=%#x (made)", cp, rptr));
 #endif
 
@@ -1177,7 +1219,7 @@ static aCache *add_to_cache(ocp)
 	aCache *cp = NULL;
 	int  hashv;
 
-#ifdef DEBUG
+#ifdef DEBUGMODE
 	Debug((DEBUG_INFO,
 	    "add_to_cache:ocp %#x he %#x name %#x addrl %#x 0 %#x",
 	    ocp, HE(ocp), HE(ocp)->h_name, HE(ocp)->h_addr_list,
@@ -1194,7 +1236,7 @@ static aCache *add_to_cache(ocp)
 	ocp->hnum_next = hashtable[hashv].num_list;
 	hashtable[hashv].num_list = ocp;
 
-#ifdef	DEBUG
+#ifdef	DEBUGMODE
 #ifdef INET6
 	Debug((DEBUG_INFO, "add_to_cache:added %s[%08x%08x%08x%08x] cache %#x.",
 	    ocp->he.h_name,
@@ -1258,9 +1300,9 @@ static void update_list(rptr, cachep)
 	if (!rptr)
 		return;
 
-#ifdef	DEBUG
+#ifdef	DEBUGMODE
 	Debug((DEBUG_DEBUG, "u_l:cp %#x na %#x al %#x ad %#x",
-	    cp, HE(cp)->h_name, HE(cp)->h_aliases, HE(cp)->he.h_addr));
+	    cp, HE(cp)->h_name, HE(cp)->h_aliases, HE(cp)->h_addr));
 	Debug((DEBUG_DEBUG, "u_l:rptr %#x h_n %#x", rptr, HE(rptr)->h_name));
 #endif
 	/*
@@ -1285,9 +1327,9 @@ static void update_list(rptr, cachep)
 			base = (char **)MyRealloc((char *)base,
 			    sizeof(char *) * (addrcount + 1));
 			HE(cp)->h_aliases = base;
-#ifdef	DEBUG
+#ifdef	DEBUGMODE
 			Debug((DEBUG_DNS, "u_l:add name %s hal %x ac %d",
-			    s, HE(CP)->h_aliases, addrcount));
+			    s, HE(cp)->h_aliases, addrcount));
 #endif
 			base[addrcount - 1] = strdup(s);
 			base[addrcount] = NULL;
@@ -1340,7 +1382,7 @@ static void update_list(rptr, cachep)
 			base = (char **)MyRealloc((char *)ab,
 			    (addrcount + 1) * sizeof(*ab));
 			HE(cp)->h_addr_list = base;
-#ifdef	DEBUG
+#ifdef	DEBUGMODE
 			Debug((DEBUG_DNS, "u_l:add IP %x hal %x ac %d",
 			    ntohl(((struct IN_ADDR *)s)->S_ADDR),
 			    HE(cp)->h_addr_list, addrcount));
@@ -1368,7 +1410,7 @@ static aCache *find_cache_name(name)
 	hashv = hash_name(name);
 
 	cp = hashtable[hashv].name_list;
-#ifdef	DEBUG
+#ifdef	DEBUGMODE
 	Debug((DEBUG_DNS, "find_cache_name:find %s : hashv = %d", name, hashv));
 #endif
 
@@ -1411,14 +1453,14 @@ static aCache *find_cache_number(rptr, numb)
 {
 	aCache *cp;
 	int  hashv, i;
-#ifdef	DEBUG
+#ifdef	DEBUGMODE
 	struct IN_ADDR *ip = (struct IN_ADDR *)numb;
 #endif
 
 	hashv = hash_number((u_char *)numb);
 
 	cp = hashtable[hashv].num_list;
-#ifdef DEBUG
+#ifdef DEBUGMODE
 #ifdef INET6
 	Debug((DEBUG_DNS,
 	    "find_cache_number:find %s[%08x%08x%08x%08x]: hashv = %d",
@@ -1583,7 +1625,7 @@ static aCache *make_cache(rptr)
 		cp->ttl = rptr->ttl;
 	cp->expireat = TStime() + cp->ttl;
 	HE(rptr)->h_name = NULL;
-#ifdef DEBUG
+#ifdef DEBUGMODE
 	Debug((DEBUG_INFO, "make_cache:made cache %#x", cp));
 #endif
 	return add_to_cache(cp);
@@ -1628,7 +1670,7 @@ static void rem_cache(ocp)
 	int  hashv;
 	aClient *cptr;
 
-#ifdef	DEBUG
+#ifdef	DEBUGMODE
 	Debug((DEBUG_DNS, "rem_cache: ocp %#x hp %#x l_n %#x aliases %#x",
 	    ocp, hp, ocp->list_next, hp->h_aliases));
 #endif
@@ -1652,7 +1694,7 @@ static void rem_cache(ocp)
 	 * remove cache entry from hashed name lists
 	 */
 	hashv = hash_name(hp->h_name);
-#ifdef	DEBUG
+#ifdef	DEBUGMODE
 	Debug((DEBUG_DEBUG, "rem_cache: h_name %s hashv %d next %#x first %#x",
 	    hp->h_name, hashv, ocp->hname_next, hashtable[hashv].name_list));
 #endif
@@ -1666,7 +1708,7 @@ static void rem_cache(ocp)
 	 * remove cache entry from hashed number list
 	 */
 	hashv = hash_number((u_char *)hp->h_addr);
-#ifdef	DEBUG
+#ifdef	DEBUGMODE
 # ifdef INET6
 	Debug((DEBUG_DEBUG, "rem_cache: h_addr %s hashv %d next %#x first %#x",
 	    inet_ntop(AF_INET6, hp->h_addr, mydummy, MYDUMMY_SIZE),

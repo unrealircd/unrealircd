@@ -243,8 +243,8 @@ void send_usage(cptr, nick)
 
 	if (getrusage(RUSAGE_SELF, &rus) == -1)
 	{
-#if !defined(__FreeBSD__) && !defined(__NetBSD__) && !defined(__APPLE__)
-/*		extern char *sys_errlist[]; */
+#ifdef _SOLARIS
+		extern char *sys_errlist[];
 #endif
 		sendto_one(cptr, ":%s NOTICE %s :Getruseage error: %s.",
 		    me.name, nick, sys_errlist[errno]);
