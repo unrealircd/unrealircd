@@ -3061,23 +3061,8 @@ CMD_FUNC(m_restart)
 	}
 	else if (parc == 2)
 	{
-		int ret;
-		ret = hunt_server_token_quiet(cptr, sptr, MSG_RESTART, TOK_RESTART,
-					      "%s", 1, parc, parv);
-		/* Syntax: /rehash <server> */
-		if (ret == HUNTED_PASS)
-			return 0;
-		else if (ret == HUNTED_ISME)
-		{
-			if (conf_drpass)
-			{
-				sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name,
-                           	           parv[0], "RESTART");
-                        	return 0;
-			}
-		}
 		/* Syntax: /restart <pass> */
-		else if (conf_drpass)
+		if (conf_drpass)
 		{
 			int ret;
 			ret = Auth_Check(cptr, conf_drpass->restartauth, parv[1]);
@@ -3096,86 +3081,24 @@ CMD_FUNC(m_restart)
 	}
 	else if (parc == 3)
 	{
-		int ret;
-		/* Syntax: /restart <server> <pass> & /restart <server> <reason> */
-		ret = hunt_server_token_quiet(cptr, sptr, MSG_RESTART, TOK_RESTART,
-		    			      "%s :%s", 1, parc, parv);
-		if (ret == HUNTED_PASS)
-			return 0;
-		else if (ret == HUNTED_ISME)
-		{
-			if (conf_drpass)
-			{
-				int ret;
-				ret = Auth_Check(cptr, conf_drpass->restartauth, parv[2]);
-				if (ret == -1)
-				{
-					sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name,
-						   parv[0]);
-					return 0;
-				}
-				if (ret < 1)
-					return 0;
-			}
-			else
-				reason = parv[2];
-		}
 		/* Syntax: /restart <pass> <reason> */
-		else
+		if (conf_drpass)
 		{
-			if (conf_drpass)
+			int ret;
+			ret = Auth_Check(cptr, conf_drpass->restartauth, parv[1]);
+			if (ret == -1)
 			{
-				int ret;
-				ret = Auth_Check(cptr, conf_drpass->restartauth, parv[1]);
-				if (ret == -1)
-				{
-					sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name,
-						   parv[0]);
-					return 0;
-				}
-				if (ret < 1)
-					return 0;
+				sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name,
+					   parv[0]);
+				return 0;
 			}
-			reason = parv[2];
+			if (ret < 1)
+				return 0;
 		}
+		reason = parv[2];
 	}
-	else
-	{
-		if (hunt_server_token(cptr, sptr, MSG_RESTART, TOK_RESTART, "%s %s :%s", 1,
-		                      parc, parv) != HUNTED_ISME)
-			return 0;
-		else
-		{
-			if (conf_drpass)
-			{
-				int ret;
-				ret = Auth_Check(cptr, conf_drpass->restartauth, parv[2]);
-				if (ret == -1)
-				{
-					sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name,
-						   parv[0]);
-					return 0;
-				}
-				if (ret < 1)
-					return 0;
-			}
-			reason = parv[3];
-		}
-	}
-
-	if (cptr != sptr)
-	{
-		sendto_serv_butone(&me,
-		    ":%s GLOBOPS :%s is remotely restarting server (%s)",
-		    me.name, sptr->name, reason ? reason : "No reason");
-		sendto_ops("%s is remotely restarting IRCd (%s)", parv[0],
-		    reason ? reason : "No reason");
-
-	}
-	else
-		sendto_ops("Server is Restarting by request of %s", parv[0]);
-	sendto_ops("REASON: %s", reason ? reason : "No reason");
-//	server_reboot(reason ? reason : "No reason");
+	sendto_ops("Server is Restarting by request of %s", parv[0]);
+	server_reboot(reason ? reason : "No reason");
 	return 0;
 }
 

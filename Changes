@@ -2843,3 +2843,5 @@ seen. gmtime warning still there
 - Fixed a snomask bug reported by Cat / HERZ (#0001531).
 - Started using the umode->allowed stuff a bit ourselves, just to be sure.
 - Fixed a problem with module reloading (#0001533) reported by penna.
+- Removed remote /restart support. There are too many security issues that
+  can not be overcome. 
