@@ -4154,7 +4154,7 @@ int  m_umode(cptr, sptr, parc, parv)
 	if (!(acptr = find_person(parv[1], NULL)))
 	{
 		if (MyConnect(sptr))
-			sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL),
+			sendto_one(sptr, err_str(ERR_NOSUCHNICK),
 			    me.name, parv[0], parv[1]);
 		return 0;
 	}
