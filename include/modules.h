@@ -86,11 +86,18 @@ int  	load_module(char *module, int module_load);
 int	unload_module(char *name);
 vFP	module_sym(char *name);
 
-#define add_Hook(hooktype, func) add_HookX(hooktype, func, NULL)
-#define del_Hook(hooktype, func) del_HookX(hooktype, func, NULL)
 
-void	add_HookX(int hooktype, int (*intfunc)(), void (*voidfunc)());
-void	del_HookX(int hooktype, int (*intfunc)(), void (*voidfunc)());
+
+#define add_Hook(hooktype, func) HookAddEx(hooktype, func, NULL)
+#define del_Hook(hooktype, func) HookDelEx(hooktype, func, NULL)
+#define HookAdd(hooktype, func) HookAddEx(hooktype, func, NULL)
+#define HookDel(hooktype, func) HookDelEx(hooktype, func, NULL)
+
+#define add_HookX(hooktype, func1, func2) HookAddEx(hooktype, func1, func2)
+#define del_HookX(hooktype, func1, func2) HookDelEx(hooktype, func1, func2)
+
+void	HookAddEx(int hooktype, int (*intfunc)(), void (*voidfunc)());
+void	HookDelEx(int hooktype, int (*intfunc)(), void (*voidfunc)());
 
 #define RunHook0(hooktype) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next)(*(global_i->func.intfunc))()
 #define RunHook(hooktype,x) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(x)

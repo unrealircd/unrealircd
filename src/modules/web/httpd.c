@@ -96,9 +96,9 @@ DLLFUNC int	mod_init(int module_load)
 int    httpd_init(int module_load)
 #endif
 {
-	add_HookX(HOOKTYPE_HTTPD_URL, h_u_stats, NULL);
-	add_HookX(HOOKTYPE_HTTPD_URL, h_u_vfs, NULL);
-	add_HookX(HOOKTYPE_HTTPD_URL, h_u_phtml, NULL);
+	HookAddEx(HOOKTYPE_HTTPD_URL, h_u_stats, NULL);
+	HookAddEx(HOOKTYPE_HTTPD_URL, h_u_vfs, NULL);
+	HookAddEx(HOOKTYPE_HTTPD_URL, h_u_phtml, NULL);
 	return 1;
 }
 
@@ -148,9 +148,9 @@ DLLFUNC void	mod_unload(void)
 void	httpd_unload(void)
 #endif
 {
-	del_HookX(HOOKTYPE_HTTPD_URL, h_u_stats, NULL);
-	del_HookX(HOOKTYPE_HTTPD_URL, h_u_vfs, NULL);
-	del_HookX(HOOKTYPE_HTTPD_URL, h_u_phtml, NULL);
+	HookDelEx(HOOKTYPE_HTTPD_URL, h_u_stats, NULL);
+	HookDelEx(HOOKTYPE_HTTPD_URL, h_u_vfs, NULL);
+	HookDelEx(HOOKTYPE_HTTPD_URL, h_u_phtml, NULL);
 }
 
 

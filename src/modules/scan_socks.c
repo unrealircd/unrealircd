@@ -109,7 +109,7 @@ int    scan_socks_init(int module_load)
 	/*
 	 * Add scanning hooks
 	*/
-	add_HookX(HOOKTYPE_SCAN_HOST, NULL, scan_socks_scan); 
+	HookAddEx(HOOKTYPE_SCAN_HOST, NULL, scan_socks_scan); 
 }
 
 /* Is first run when server is 100% ready */
@@ -129,7 +129,7 @@ DLLFUNC void	mod_unload(void)
 void	scan_socks_unload(void)
 #endif
 {
-	del_HookX(HOOKTYPE_SCAN_HOST, NULL, scan_socks_scan);
+	HookDelEx(HOOKTYPE_SCAN_HOST, NULL, scan_socks_scan);
 }
 
 #define HICHAR(s)	(((unsigned short) s) >> 8)

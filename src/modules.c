@@ -477,7 +477,7 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return 1;
 }
 
-void	add_HookX(int hooktype, int (*func)(), void (*vfunc)())
+void	HookAddEx(int hooktype, int (*func)(), void (*vfunc)())
 {
 	Hook *p;
 	
@@ -489,7 +489,7 @@ void	add_HookX(int hooktype, int (*func)(), void (*vfunc)())
 	add_ConfigItem((ConfigItem *) p, (ConfigItem **) &Hooks[hooktype]);
 }
 
-void	del_HookX(int hooktype, int (*func)(), void (*vfunc)())
+void	HookDelEx(int hooktype, int (*func)(), void (*vfunc)())
 {
 	Hook *p;
 	

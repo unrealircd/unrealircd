@@ -39,7 +39,7 @@ Event	*EventDel(Event *event);
 
 Event	*EventFind(char *name);
 
-void	EventModEvery(Event *event, int every);
+void	EventModEvery(Event *event, long every);
 
 void	DoEvents(void);
 
