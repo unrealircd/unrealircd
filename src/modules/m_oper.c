@@ -69,8 +69,6 @@ static oper_oflag_t oper_oflags[] = {
 		"is now a co administrator (C)" },
 	{ OFLAG_ISGLOBAL,	&UMODE_OPER,		&oper_host,
 		"is now an operator (O)" },
-/*	{ 0xFFFFFFFF,		&UMODE_LOCOP,		&locop_host,
-		"is now a local operator (o)" }, */
 	{ OFLAG_HELPOP,		&UMODE_HELPOP,		0 ,
 		0 },
 	{ OFLAG_GLOBOP,		&UMODE_FAILOP,		0 ,
@@ -78,8 +76,6 @@ static oper_oflag_t oper_oflags[] = {
 	{ OFLAG_WALLOP,		&UMODE_WALLOP,	0 ,
 		0 },
 	{ OFLAG_WHOIS,		&UMODE_WHOIS,	0 , 		
-		0 },
-	{ OFLAG_HIDE,		&UMODE_HIDE,	0 ,
 		0 },
 	{ 0,			0,	0 ,
 		0 },
@@ -192,8 +188,8 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		sptr->since += 7;
 		return 0;
 	}
-	strcpy(nuhhost, make_user_host(sptr->user->username, sptr->user->realhost));
-	strcpy(nuhhost2, make_user_host(sptr->user->username, Inet_ia2p(&sptr->ip)));
+	strlcpy(nuhhost, make_user_host(sptr->user->username, sptr->user->realhost), sizeof(nuhhost));
+	strlcpy(nuhhost2, make_user_host(sptr->user->username, Inet_ia2p(&sptr->ip)), sizeof(nuhhost2));
 	for (oper_from = (ConfigItem_oper_from *) aconf->from;
 	    oper_from; oper_from = (ConfigItem_oper_from *) oper_from->next)
 		if (!match(oper_from->name, nuhhost) || !match(oper_from->name, nuhhost2))
@@ -256,6 +252,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 
 		if ((aconf->oflags & OFLAG_HIDE) && iNAH && !BadPtr(host)) {
 			iNAH_host(sptr, host);
+			SetHidden(sptr);
 		}
 
 		if (!IsOper(sptr))

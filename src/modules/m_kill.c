@@ -151,7 +151,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	user = parv[1];
 	path = parv[2];		/* Either defined or NULL (parc >= 2!!) */
 
-	strcpy(inpath, oinpath);
+	strlcpy(inpath, oinpath, sizeof inpath);
 
 #ifndef ROXnet
 	if (IsServer(cptr) && (s = (char *)index(inpath, '.')) != NULL)
@@ -245,9 +245,9 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			   **   ...!operhost!oper
 			   **   ...!operhost!oper (comment)
 			 */
-			strcpy(inpath,
+			strlcpy(inpath,
 			    IsHidden(cptr) ? cptr->user->virthost : cptr->user->
-			    realhost);
+			    realhost, sizeof inpath);
 			if (kcount < 2) {	/* Only check the path the first time
 					   around, or it gets appended to itself. */
 				if (!BadPtr(path))

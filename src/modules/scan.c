@@ -111,12 +111,25 @@ int    m_scan_Load(int module_load)
 	if (Scan_endpoint.SIN_PORT == 0)
 	{
 		
+		if (*conf_listen->ip == '*') {
+			ircd_log(LOG_ERROR, "Scan.so failed to load: set::scan::endpoint is missing");
+			HooktypeDel(ScanHost,ScanModInfo.handle);
+			HookDel(LocConnect);
+			HookDel(ConfUnknown);
+			HookDel(ServerStats);
+			LockEventSystem();
+			EventDel(Scannings_clean);
+			UnlockEventSystem();
+			IRCMutexDestroy(Scannings_lock);
+			return MOD_FAILED;
+		}
+
 #ifndef INET6
-		Scan_endpoint.SIN_ADDR.S_ADDR = inet_addr("127.0.0.1");
+		Scan_endpoint.SIN_ADDR.S_ADDR = inet_addr(conf_listen->ip);
 #else
-	        inet_pton(AFINET, "127.0.0.1", Scan_endpoint.SIN_ADDR.S_ADDR);
+	        inet_pton(AFINET, conf_listen->ip, Scan_endpoint.SIN_ADDR.S_ADDR);
 #endif
-		Scan_endpoint.SIN_PORT = htons(2121);
+		Scan_endpoint.SIN_PORT = htons(conf_listen->port);
 		Scan_endpoint.SIN_FAMILY = AFINET;
 	}
 	if (Scan_BanTime == 0)
@@ -159,9 +172,11 @@ int	m_scan_Unload(void)
 		HooktypeDel(ScanHost,ScanModInfo.handle);
 		HookDel(LocConnect);
 		HookDel(ConfUnknown);
+		HookDel(ServerStats);
 		LockEventSystem();
 		EventDel(Scannings_clean);
 		UnlockEventSystem();
+		IRCMutexDestroy(Scannings_lock);
 	}
 	return ret;
 }
@@ -249,7 +264,7 @@ EVENT(e_scan_ban)
 	if (!sr)
 		return;
 	
-	strcpy(hostip, Inet_ia2p(&sr->in));
+	strlcpy(hostip, Inet_ia2p(&sr->in), sizeof hostip);
 	tkllayer[4] = hostip;
 	tkllayer[5] = me.name;
 	ircsprintf(mo, "%li", Scan_BanTime + TStime());
@@ -266,7 +281,7 @@ void	Eadd_scan(struct IN_ADDR *in, char *reason)
 {
 	Scan_Result *sr = (Scan_Result *) MyMalloc(sizeof(Scan_Result));
 	sr->in = *in;
-	strcpy(sr->reason, reason);
+	strlcpy(sr->reason, reason, sizeof sr->reason);
 	LockEventSystem();
 	EventAddEx(ScanModInfo.handle, "scan_ban", 0, 1, e_scan_ban, (void *)sr);
 	UnlockEventSystem();
@@ -286,7 +301,6 @@ DLLFUNC int h_scan_connect(aClient *sptr)
 	Scan_AddrStruct *sr = NULL;
 	Hook		*hook = NULL;
 	THREAD		thread;
-	THREAD_ATTR	thread_attr;
 	
 	if (Find_except(Inet_ia2p(&sptr->ip), 0))
 		return 0;
@@ -307,7 +321,7 @@ DLLFUNC int h_scan_connect(aClient *sptr)
 	{
 		IRCMutexLock(sr->lock);
 		sr->refcnt++;
-		IRCCreateThread(thread, thread_attr, (hook->func.voidfunc), sr);
+		IRCCreateThread(thread, (hook->func.voidfunc), sr);
 		IRCMutexUnlock(sr->lock);
 	}
 	return 1;

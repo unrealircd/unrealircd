@@ -148,11 +148,9 @@ DLLFUNC int m_kline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		*hosttemp = 0;
 		hosttemp++;
-		bzero(name, sizeof(name));
-		bzero(uhost, sizeof(uhost));
+		strlcpy(name, parv[1], sizeof name);
+		strlcpy(uhost, hosttemp, sizeof uhost);
 		
-		strncpy(name, parv[1], sizeof(name) - 1);
-		strncpy(uhost, hosttemp, sizeof(uhost) - 1);
 		
 		if (name[0] == '\0' || uhost[0] == '\0')
 		{
@@ -200,7 +198,7 @@ DLLFUNC int m_kline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (!acptr->user)
 			return 0;
 
-		strcpy(name, acptr->user->username);
+		strlcpy(name, acptr->user->username, sizeof name);
 		if (MyClient(acptr))
 			host = acptr->sockhost;
 		else
@@ -217,8 +215,14 @@ DLLFUNC int m_kline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 		/* Add some wildcards */
 
+		/*
+		 * sscanf is bad :/ at least make host < uhost
+		 */
+		if (strlen(host) > sizeof uhost)
+			host[sizeof uhost - 1] = '\0';
 
-		strcpy(uhost, host);
+		strlcpy(uhost, host, sizeof uhost);
+
 		if (isdigit(host[strlen(host) - 1]))
 		{
 			if (sscanf(host, "%d.%d.%d.%*d", &ip1, &ip2, &ip3))
@@ -242,6 +246,6 @@ DLLFUNC int m_kline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	bconf->reason = parv[2] ? strdup(parv[2]) : NULL;
 	bconf->flag.type2 = CONF_BAN_TYPE_TEMPORARY;
 	AddListItem(bconf, conf_ban);
-	check_pings(TStime(), 1);
+	loop.do_bancheck = 1;
 	return 0;
 }

@@ -300,20 +300,20 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			{
 				buf[0] = '\0';
 				if (IsNetAdmin(acptr))
-					strcat(buf, "a Network Administrator");
+					strlcat(buf, "a Network Administrator", sizeof buf);
 				else if (IsSAdmin(acptr))
-					strcat(buf, "a Services Operator");
+					strlcat(buf, "a Services Operator", sizeof buf);
 				else if (IsAdmin(acptr) && !IsCoAdmin(acptr))
-					strcat(buf, "a Server Administrator");
+					strlcat(buf, "a Server Administrator", sizeof buf);
 				else if (IsCoAdmin(acptr))
-					strcat(buf, "a Co Administrator");
+					strlcat(buf, "a Co Administrator", sizeof buf);
 				else if (IsServices(acptr))
-					strcat(buf, "a Network Service");
+					strlcat(buf, "a Network Service", sizeof buf);
 				else if (IsOper(acptr))
-					strcat(buf, "an IRC Operator");
+					strlcat(buf, "an IRC Operator", sizeof buf);
 
 				else
-					strcat(buf, "a Local IRC Operator");
+					strlcat(buf, "a Local IRC Operator", sizeof buf);
 				if (buf[0])
 					sendto_one(sptr,
 					    rpl_str(RPL_WHOISOPERATOR), me.name,

@@ -187,7 +187,7 @@ static void rem_request(ResRQ *old)
 #ifdef _WIN32
          while (old->locked)
                  Sleep(0);
- #endif
+#endif
 	for (rptr = &first; *rptr; r2ptr = *rptr, rptr = &(*rptr)->next)
 		if (*rptr == old)
 		{
@@ -203,7 +203,7 @@ static void rem_request(ResRQ *old)
 	r2ptr = old;
 #ifndef _WIN32
 	if (r2ptr->he.h_name)
-		MyFree((char *)r2ptr->he.h_name);
+		MyFree(r2ptr->he.h_name);
 	for (i = 0; i < MAXALIASES; i++)
 		if ((s = r2ptr->he.h_aliases[i]))
 			MyFree(s);
@@ -213,7 +213,7 @@ static void rem_request(ResRQ *old)
 #endif
 	if (r2ptr->name)
 		MyFree(r2ptr->name);
-	MyFree((char *)r2ptr);
+	MyFree(r2ptr);
 
 	return;
 }
@@ -731,7 +731,7 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 		/* name server never returns with trailing '.' */
 		if (!index(hostbuf, '.') && (ircd_res.options & RES_DEFNAMES))
 		{
-			(void)strcat(hostbuf, dot);
+			(void)strlcat(hostbuf, dot, sizeof hostbuf);
 			len++;
 			(void)strncat(hostbuf, ircd_res.defdname,
 			    sizeof(hostbuf) - 1 - len);
@@ -789,7 +789,7 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 			if (!hp->h_name && len < HOSTLEN)
 			    {
 				hp->h_name =(char *)MyMalloc(len+1);
-				(void)strcpy(hp->h_name, hostbuf);
+				(void)strlcpy(hp->h_name, hostbuf, len+1);
 			    }
 			  ans++;
 			  adr++;
@@ -820,7 +820,7 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 			  else
 			  {
 				  hp->h_name = (char *)MyMalloc(len + 1);
-				  (void)strcpy(hp->h_name, hostbuf);
+				  (void)strlcpy(hp->h_name, hostbuf, len +1);
 			  }
 			  ans++;
 			  break;
@@ -832,7 +832,7 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 			  if (alias >= &(hp->h_aliases[MAXALIASES - 1]))
 				  break;
 			  *alias = (char *)MyMalloc(len + 1);
-			  (void)strcpy(*alias++, hostbuf);
+			  (void)strlcpy(*alias++, hostbuf, len+1);
 			  *alias = NULL;
 			  ans++;
 			  break;
@@ -1096,7 +1096,7 @@ struct hostent *get_res(char *lp,long id)
                  long        amt;
                  struct        hostent        *hp, *he = rptr->he;
 
-                 strcpy(tempname, he->h_name);
+                 strlcpy(tempname, he->h_name, sizeof tempname);
                  hp = gethostbyname(tempname);
                  if (hp && !bcmp(hp->h_addr, he->h_addr, sizeof(struct IN_ADDR)))
                      {
@@ -1590,7 +1590,7 @@ static aCache *rem_list(aCache *cp)
 		if (*cpp == cp)
 		{
 			*cpp = cp->list_next;
-			MyFree((char *)cp);
+			MyFree(cp);
 			break;
 		}
 	return cr;
@@ -1669,7 +1669,7 @@ static void rem_cache(aCache *ocp)
 			break;
 		}
 #ifdef _WIN32
-         MyFree((char *)hp);
+         MyFree(hp);
 #else
 	/*
 	 * free memory used to hold the various host names and the array
@@ -1681,7 +1681,7 @@ static void rem_cache(aCache *ocp)
 	{
 		for (hashv = 0; hp->h_aliases[hashv]; hashv++)
 			MyFree(hp->h_aliases[hashv]);
-		MyFree((char *)hp->h_aliases);
+		MyFree(hp->h_aliases);
 	}
 
 	/*
@@ -1690,11 +1690,11 @@ static void rem_cache(aCache *ocp)
 	if (hp->h_addr_list)
 	{
 		if (*hp->h_addr_list)
-			MyFree((char *)*hp->h_addr_list);
-		MyFree((char *)hp->h_addr_list);
+			MyFree(*hp->h_addr_list);
+		MyFree(hp->h_addr_list);
 	}
 #endif
-	MyFree((char *)ocp);
+	MyFree(ocp);
 
 	incache--;
 	cainfo.ca_dels++;
@@ -1911,6 +1911,9 @@ int	res_copyhostent(struct hostent *from, struct hostent *to)
 	 */
 	amt = (long)to + sizeof(struct hostent);
 	to->h_name = (char *)amt;
+	/*
+	 * WIN32: FIXME: THIS LOOKS BAD
+	*/
 	strcpy(to->h_name, from->h_name);
 	amt += strlen(to->h_name)+1;
 	/* Setup tto alias list */

@@ -692,9 +692,9 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					if (curce)
 						config_error("%s: Unexpected EOF for variable starting at %i\n",
 							filename, curce->ce_varlinenum);
-					else if (cursection)
+					else if (cursection) 
 						config_error("%s: Unexpected EOF for section starting at %i\n",
-							filename, curce->ce_sectlinenum);
+							filename, cursection->ce_sectlinenum);
 					else
 						config_error("%s: Unexpected EOF.\n", filename);
 					config_entry_free(curce);
@@ -3695,7 +3695,8 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	listen_cleanup();
 	close_listeners();
 	run_configuration();
-	check_pings(TStime(), 1);
+	loop.do_bancheck = 1;
+	/* Check pings is done AFTERWARDS return anyhow, fuckheads. */
 	sendto_realops("Completed rehash");
 	return 0;
 }
@@ -3857,7 +3858,7 @@ ConfigItem_ban 	*Find_ban(char *host, short type)
 		if (ban->flag.type == type)
 			if (!match(ban->mask, host)) {
 				/* Person got a exception */
-				if (Find_except(host, type))
+				if (type == CONF_BAN_USER && Find_except(host, CONF_EXCEPT_BAN))
 					return NULL;
 				return ban;
 			}
@@ -3925,11 +3926,21 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 				    sockhost, fullname));
 				if (index(aconf->hostname, '@'))
 				{
+					/*
+					 * Doing strlcpy / strlcat here
+					 * would simply be a waste. We are
+					 * ALREADY sure that it is proper 
+					 * lengths
+					*/
 					(void)strcpy(uhost, cptr->username);
 					(void)strcat(uhost, "@");
 				}
 				else
 					*uhost = '\0';
+				/* 
+				 * Same here as above
+				 * -Stskeeps 
+				*/
 				(void)strncat(uhost, fullname,
 				    sizeof(uhost) - strlen(uhost));
 				if (!match(aconf->hostname, uhost))

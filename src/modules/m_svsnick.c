@@ -140,7 +140,7 @@ int  m_svsnick(aClient *cptr, aClient *sptr, int parc, char *parv[])
                         {
                                 RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, acptr, parv[2]);
                         }
-                        (void)strcpy(acptr->name, parv[2]);
+                        (void)strlcpy(acptr->name, parv[2], sizeof acptr->name);
                         (void)add_to_client_hash_table(parv[2], acptr);
                         if (IsPerson(acptr))
                                 hash_check_watch(acptr, RPL_LOGON);

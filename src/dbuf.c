@@ -297,7 +297,7 @@ int  dbuf_getmsg(dbuf *dyn, char *buf, int length)
 	while (length > 0 && dlen > 0)
 	{
 		dlen--;
-		if (*s == '\n' /* || *s == '\r' */ )	/*let stop at \n now .. */
+		if (*s == '\n' || *s == '\r' )
 		{
 			copy = dyn->length - dlen;
 			/*

@@ -56,7 +56,6 @@ char *my_itoa(int i);
 /* s_kline.c */
 int  find_tkline_match(aClient *cptr, int xx);
 extern EVENT(tkl_check_expire);
-int  tkl_sweep(void);
 
 /* s_serv.c */
 void load_tunefile(void);

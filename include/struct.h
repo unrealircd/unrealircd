@@ -82,6 +82,7 @@ typedef struct _configitem_listen ConfigItem_listen;
 typedef struct _configitem_allow ConfigItem_allow;
 typedef struct _configitem_allow_channel ConfigItem_allow_channel;
 typedef struct _configitem_vhost ConfigItem_vhost;
+typedef struct _configitem_ssl ConfigItem_ssl;
 typedef struct _configitem_except ConfigItem_except;
 typedef struct _configitem_link	ConfigItem_link;
 typedef struct _configitem_ban ConfigItem_ban;
@@ -344,7 +345,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	SendWallops(x)		(!IsMe(x) && ((x)->umodes & UMODE_WALLOP))
 #define	SendServNotice(x)	(((x)->user) && ((x)->user->snomask & SNO_SNOTICE))
 #define	IsListening(x)		((x)->flags & FLAGS_LISTEN)
-#define	DoAccess(x)		((x)->flags & FLAGS_CHKACCESS)
+// #define	DoAccess(x)		((x)->flags & FLAGS_CHKACCESS)
 #define	IsLocal(x)		((x)->flags & FLAGS_LOCAL)
 #define	IsDead(x)		((x)->flags & FLAGS_DEADSOCKET)
 #define GotProtoctl(x)		((x)->flags & FLAGS_PROTOCTL)
@@ -389,7 +390,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	SetWallops(x)  		((x)->umodes |= UMODE_WALLOP)
 #define	SetDNS(x)		((x)->flags |= FLAGS_DOINGDNS)
 #define	DoingDNS(x)		((x)->flags & FLAGS_DOINGDNS)
-#define	SetAccess(x)		((x)->flags |= FLAGS_CHKACCESS)
+#define	SetAccess(x)		((x)->flags |= FLAGS_CHKACCESS); Debug((DEBUG_DEBUG, "SetAccess(%s)", (x)->name))
 #define SetBlocked(x)		((x)->flags |= FLAGS_BLOCKED)
 #define	DoingAuth(x)		((x)->flags & FLAGS_AUTH)
 #define	NoNewLine(x)		((x)->flags & FLAGS_NONL)
@@ -588,8 +589,8 @@ struct MotdItem {
 
 struct aloopStruct {
 	unsigned do_garbage_collect : 1;
-	unsigned do_tkl_sweep : 1;
 	unsigned ircd_booted : 1;
+	unsigned do_bancheck : 1;
 };
 
 typedef struct Whowas {
@@ -935,6 +936,14 @@ struct _configitem_listen {
 	char		*ip;
 	int		port;
 	long		options, clients;
+	ConfigItem_ssl  *ssl;
+};
+
+struct _configitem_ssl {
+	char		*cert;
+	char		*key;
+	char		*ca;
+	char		*cipher;
 };
 
 struct _configitem_vhost {

@@ -203,7 +203,8 @@ char *hidehost(char *host)
 #else
 			l[i] = ((l[i] + KEY2) ^ KEY) + KEY3;
 #endif
-		        l[i] <<= 2; l[i] >>= 2;
+
+			l[i] &= 0x3FFFFFFF;
 	        }
 		ircsprintf(cloaked, "%lx:%lx:%lx:IP",
 			l[2], l[1], l[0]);
@@ -220,7 +221,7 @@ char *hidehost(char *host)
 	if (!(*p))
 	{	
 		/* Do IPv4 cloaking here */
-		strcpy(h1, host);
+		strlcpy(h1, host, sizeof h1);
 		i = 0;
 		for (i = 0, p = strtok(h1, "."); p && (i <= 3); p = strtok(NULL, "."), i++)
 		{
@@ -241,9 +242,10 @@ char *hidehost(char *host)
 		l[4] = crc32(host, strlen(host));
 		l[2] = ((l[4] + KEY) ^ KEY3)^ KEY2;
 #endif
-		l[2] <<= 2; l[2] >>= 2;
-		l[0] <<= 1; l[0] >>= 1;
-		ircsprintf(cloaked, "%lX.%lX.%lX.IP", l[2], l[1], l[0]);
+		l[2] &= 0x3FFFFFFF;
+		l[0] &= 0x7FFFFFFF;
+		l[1] &= 0xFFFFFFFF;
+		snprintf(cloaked, sizeof cloaked, "%lX.%lX.%lX.IP", l[2], l[1], l[0]);
 		return cloaked;
 	}
 	else
@@ -265,14 +267,13 @@ char *hidehost(char *host)
 #else
 		l[0] = ((crc32(host, strlen(host)) ^ KEY2) + KEY) ^ KEY3;
 #endif
-		l[0] <<= 2; 
-		l[0] >>= 2; 
+		l[0] &= 0x3FFFFFFF;
 		p++;
 		if (*p)
-			sprintf(cloaked, "%s-%lX.%s", hidden_host,
+			snprintf(cloaked, sizeof cloaked, "%s-%lX.%s", hidden_host,
 				l[0], p);
 		else
-			sprintf(cloaked, "%s-%lX", hidden_host, l[0]);
+			snprintf(cloaked, sizeof cloaked, "%s-%lX", hidden_host, l[0]);
 			
 		return cloaked;
 	}

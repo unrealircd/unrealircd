@@ -50,12 +50,15 @@ char *stripbadwords_channel(char *str)
 	char *ptr;
 	int  errorcode, matchlen, stringlen;
 	ConfigItem_badword *this_word;
-
+	size_t n;
 	if (!conf_badword_channel)
 		return str;
-	strncpy(cleanstr, str, sizeof(cleanstr) - 1);	/* Let's work on a backup */
-	memset(&pmatch, 0, sizeof(pmatch));
-	stringlen = strlen(cleanstr);
+
+	/*
+	 * work on a copy
+	 */
+	stringlen = strlcpy(cleanstr, str, sizeof cleanstr);
+	memset(&pmatch, 0, sizeof pmatch);
 	matchlen = 0;
 	buf[0] = '\0';
 
@@ -68,23 +71,28 @@ char *stripbadwords_channel(char *str)
 			return cleanstr;
 		}
 
-		ptr = cleanstr;	/* Set pointer to start of string */
+		/*
+		 * Set pointer to start of string
+		 */
+		ptr = cleanstr;
+
 		while (regexec(&pcomp, ptr, MAX_MATCH, pmatch,
 		    0) != REG_NOMATCH)
 		{
 			if (pmatch[0].rm_so == -1)
 				break;
 			matchlen += pmatch[0].rm_eo - pmatch[0].rm_so;
-			strncat(buf, ptr, pmatch[0].rm_so);
+			strlncat(buf, ptr, sizeof buf, pmatch[0].rm_so);
 			if (this_word->replace)
-				strcat(buf, this_word->replace); 
+				strlcat(buf, this_word->replace, sizeof buf); 
 			else
-				strcat(buf, REPLACEWORD);
+				strlcat(buf, REPLACEWORD, sizeof buf);
 			ptr += pmatch[0].rm_eo;	/* Set pointer after the match pos */
 			memset(&pmatch, 0, sizeof(pmatch));
 		}
-		strcat(buf, ptr);	/* All the better to eat you with! */
-		strncpy(cleanstr, buf, sizeof(cleanstr));
+		/* All the better to eat you with! */
+		strlcat(buf, ptr, sizeof buf);	
+		memcpy(cleanstr, buf, sizeof cleanstr);
 		memset(buf, 0, sizeof(buf));
 		regfree(&pcomp);
 		if (matchlen == stringlen)
@@ -101,18 +109,21 @@ char *stripbadwords_message(char *str)
 	static char cleanstr[4096];
 	char buf[4096];
 	char *ptr;
-	ConfigItem_badword *this_word;
 	int  errorcode, matchlen, stringlen;
-
+	ConfigItem_badword *this_word;
+	size_t n;
 	if (!conf_badword_message)
 		return str;
-	strncpy(cleanstr, str, sizeof(cleanstr) - 1);	/* Let's work on a backup */
-	memset(&pmatch, 0, sizeof(pmatch));
-	stringlen = strlen(cleanstr);
+
+	/*
+	 * work on a copy
+	 */
+	stringlen = strlcpy(cleanstr, str, sizeof cleanstr);
+	memset(&pmatch, 0, sizeof pmatch);
 	matchlen = 0;
 	buf[0] = '\0';
 
-	for (this_word = conf_badword_message; this_word; this_word = (ConfigItem_badword *)this_word->next) 
+	for (this_word = conf_badword_message; this_word; this_word = (ConfigItem_badword *)this_word->next)
 	{
 		if ((errorcode =
 		    regcomp(&pcomp, this_word->word, REG_ICASE)) > 0)
@@ -121,23 +132,28 @@ char *stripbadwords_message(char *str)
 			return cleanstr;
 		}
 
-		ptr = cleanstr;	/* Set pointer to start of string */
+		/*
+		 * Set pointer to start of string
+		 */
+		ptr = cleanstr;
+
 		while (regexec(&pcomp, ptr, MAX_MATCH, pmatch,
 		    0) != REG_NOMATCH)
 		{
 			if (pmatch[0].rm_so == -1)
 				break;
 			matchlen += pmatch[0].rm_eo - pmatch[0].rm_so;
-			strncat(buf, ptr, pmatch[0].rm_so);
+			strlncat(buf, ptr, sizeof buf, pmatch[0].rm_so);
 			if (this_word->replace)
-				strcat(buf, this_word->replace);
+				strlcat(buf, this_word->replace, sizeof buf); 
 			else
-				strcat(buf, REPLACEWORD);
+				strlcat(buf, REPLACEWORD, sizeof buf);
 			ptr += pmatch[0].rm_eo;	/* Set pointer after the match pos */
 			memset(&pmatch, 0, sizeof(pmatch));
 		}
-		strcat(buf, ptr);	/* All the better to eat you with! */
-		strncpy(cleanstr, buf, sizeof(cleanstr));
+		/* All the better to eat you with! */
+		strlcat(buf, ptr, sizeof buf);	
+		memcpy(cleanstr, buf, sizeof cleanstr);
 		memset(buf, 0, sizeof(buf));
 		regfree(&pcomp);
 		if (matchlen == stringlen)

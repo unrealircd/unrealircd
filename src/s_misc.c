@@ -222,7 +222,7 @@ char *myctime(time_t value)
 	static char buf[28];
 	char *p;
 
-	(void)strcpy(buf, ctime(&value));
+	(void)strlcpy(buf, ctime(&value), sizeof buf);
 	if ((p = (char *)index(buf, '\n')) != NULL)
 		*p = '\0';
 
@@ -431,7 +431,7 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 			sendto_conn_hcn
 			    ("*** Notice -- Client exiting: %s (%s@%s) [%s] [%s]",
 			    sptr->name, sptr->user->username,
-			    sptr->user->realhost, comment, sptr->sockhost);
+			    sptr->user->realhost, comment, inet_ntoa(sptr->ip));
 
 			/* Clean out list and watch structures -Donwulff */
 			hash_del_watch_list(sptr);
@@ -490,6 +490,11 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 		 */
 		if (cptr && !recurse)
 		{
+			/*
+			 * We are sure as we RELY on sptr->srvptr->name and 
+			 * sptr->name to be less or equal to HOSTLEN
+			 * Waste of strlcpy/strlcat here
+			*/
 			(void)strcpy(comment1, sptr->srvptr->name);
 			(void)strcat(comment1, " ");
 			(void)strcat(comment1, sptr->name);

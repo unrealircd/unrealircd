@@ -143,18 +143,18 @@ int	scan_socks_Unload(int module_unload)
 void scan_socks_scan(Scan_AddrStruct *h)
 {
 	THREAD thread[2];
-	THREAD_ATTR thread_attr;
 	IRCMutexLock((h->lock));
 	h->refcnt++;
-	IRCCreateThread(thread[0], thread_attr, scan_socks4_scan, h);
+	IRCCreateThread(thread[0], scan_socks4_scan, h);
 	h->refcnt++;
-	IRCCreateThread(thread[1], thread_attr, scan_socks5_scan, h);
+	IRCCreateThread(thread[1], scan_socks5_scan, h);
 	IRCMutexUnlock((h->lock));
 	IRCJoinThread(thread[0], NULL);
 	IRCJoinThread(thread[1], NULL);
 	IRCMutexLock((h->lock));
 	h->refcnt--;
 	IRCMutexUnlock((h->lock));
+	IRCDetachThread(IRCThreadSelf());
 	IRCExitThread(NULL);
 	return;
 }
@@ -186,6 +186,13 @@ void	scan_socks4_scan(Scan_AddrStruct *h)
 	IRCMutexUnlock((h->lock));
 	/* IPv6 ?*/
 #ifdef INET6
+	IRCMutexLock((h->lock));
+#ifndef INET6
+	sin.SIN_ADDR.S_ADDR = h->in.S_ADDR;
+#else
+	bcopy(sin.SIN_ADDR.S_ADDR, h->in.S_ADDR, sizeof(h->in.S_ADDR));
+#endif
+	IRCMutexUnlock((h->lock));
 	/* ::ffff:ip hack */
 	cp = (u_char *)&h->in.s6_addr;
 	if (!(cp[0] == 0 && cp[1] == 0 && cp[2] == 0 && cp[3] == 0 && cp[4] == 0
@@ -200,7 +207,6 @@ void	scan_socks4_scan(Scan_AddrStruct *h)
 		goto exituniverse;
 		return;
 	}
-
 	sin.SIN_PORT = htons((unsigned short)SCAN_ON_PORT);
 	sin.SIN_FAMILY = AFINET;
 	/* We do this non-blocking to prevent a hang of the entire ircd with newer
@@ -222,14 +228,14 @@ void	scan_socks4_scan(Scan_AddrStruct *h)
 	 */
 	set_non_blocking(fd, NULL);
 	if ((retval = connect(fd, (struct sockaddr *)&sin,
-                sizeof(sin))) == -1 && !((ERRNO == P_EWOULDBLOCK)
-		 || (ERRNO == P_EINPROGRESS)))
+                sizeof(sin))) == -1 && !(ERRNO == P_EINPROGRESS))
 	{
 		/* we have no socks server! */
 		CLOSE_SOCK(fd);	
 		goto exituniverse;
 		return;
 	}
+ircd_log(LOG_ERROR, "%s:%d - (Connection Established)", Inet_ia2p(&h->in), SCAN_ON_PORT);
 	
 	/* We wait for write-ready */
 	tv.tv_sec = xScan_TimeOut;
@@ -293,6 +299,7 @@ exituniverse:
 	IRCMutexLock((h->lock));
 	h->refcnt--;
 	IRCMutexUnlock((h->lock));
+	/* We get joined, we need no steekin Detach */
 	IRCExitThread(NULL);
 	return;
 }
@@ -359,8 +366,7 @@ void	scan_socks5_scan(Scan_AddrStruct *h)
 	set_non_blocking(fd, NULL);
 	if ((retval = connect(fd, (struct sockaddr *)&sin,
                 sizeof(sin))) == -1 && 
-                !((ERRNO == P_EWOULDBLOCK)
-		 || (ERRNO == P_EINPROGRESS)))
+		 !(ERRNO == P_EINPROGRESS))
 	{
 		/* we have no socks server! */
 		CLOSE_SOCK(fd);	
@@ -456,6 +462,7 @@ exituniverse:
 	IRCMutexLock(h->lock);
 	h->refcnt--;
 	IRCMutexUnlock(h->lock);
+	/* We need no steekin detach */
 	IRCExitThread(NULL);
 	return;
 }

@@ -613,14 +613,14 @@ int  crule_parsearglist(crule_treeptr argrootp, int *next_tokp, char **ruleptr)
 			  {
 				  if ((arglen + wordlen) < (CR_MAXARGLEN - 1))
 				  {
-					  strcat(currarg, " ");
-					  strcat(currarg, word);
+					  strlcat(currarg, " ", sizeof currarg);
+					  strlcat(currarg, word, sizeof currarg);
 					  arglen += wordlen + 1;
 				  }
 			  }
 			  else
 			  {
-				  strcpy(currarg, word);
+				  strlcpy(currarg, word, sizeof currarg);
 				  arglen = wordlen;
 			  }
 			  errcode = crule_gettoken(next_tokp, ruleptr);

@@ -106,7 +106,7 @@ static struct SOCKADDR_IN mysk;
 
 static struct SOCKADDR *connect_inet(ConfigItem_link *, aClient *, int *);
 static int completed_connection(aClient *);
-static int check_init(aClient *, char *);
+static int check_init(aClient *, char *, size_t);
 #ifndef _WIN32
 static void do_dns_async();
 void set_sock_opts(int, aClient *);
@@ -354,7 +354,7 @@ int  inetport(aClient *cptr, char *name, int port)
 	{
 		(void)ircsprintf(cptr->sockhost, "%-.42s.%.u",
 		    name, (unsigned int)port);
-		(void)strcpy(cptr->name, me.name);
+		(void)strlcpy(cptr->name, me.name, sizeof cptr->name);
 	}
 	/*
 	 * At first, open a new socket
@@ -407,7 +407,7 @@ int  inetport(aClient *cptr, char *name, int port)
 		{
 			ircsprintf(backupbuf, "Error binding stream socket to IP %s port %i",
 				ipname, port);
-			strcat(backupbuf, "- %s:%s");
+			strlcat(backupbuf, "- %s:%s", sizeof backupbuf);
 			report_error(backupbuf, cptr);
 			CLOSE_SOCK(cptr->fd);
 			cptr->fd = -1;
@@ -647,7 +647,7 @@ void write_pidfile(void)
  * from either the server's sockhost (if client fd is a tty or localhost)
  * or from the ip# converted into a string. 0 = success, -1 = fail.
  */
-static int check_init(aClient *cptr, char *sockn)
+static int check_init(aClient *cptr, char *sockn, size_t size)
 {
 	struct SOCKADDR_IN sk;
 	int  len = sizeof(struct SOCKADDR_IN);
@@ -668,7 +668,7 @@ static int check_init(aClient *cptr, char *sockn)
 		report_error("connect failure: %s %s", cptr);
 		return -1;
 	}
-	(void)strcpy(sockn, (char *)Inet_si2p(&sk));
+	(void)strlcpy(sockn, (char *)Inet_si2p(&sk), size);
 
 #ifdef INET6
 	if (IN6_IS_ADDR_LOOPBACK(&sk.SIN_ADDR))
@@ -703,7 +703,7 @@ int  check_client(aClient *cptr)
 	Debug((DEBUG_DNS, "ch_cl: check access for %s[%s]",
 	    cptr->name, inetntoa((char *)&cptr->ip)));
 
-	if (check_init(cptr, sockname))
+	if (check_init(cptr, sockname, sizeof(sockname)))
 		return -2;
 
 	hp = cptr->hostp;
@@ -2295,7 +2295,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	cptr->serv->conf = aconf;
 	if (by && IsPerson(by))
 	{
-		(void)strcpy(cptr->serv->by, by->name);
+		(void)strlcpy(cptr->serv->by, by->name, sizeof cptr->serv->by);
 		if (cptr->serv->user)
 			free_user(cptr->serv->user, NULL);
 		cptr->serv->user = by->user;
@@ -2303,7 +2303,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	}
 	else
 	{
-		(void)strcpy(cptr->serv->by, "AutoConn.");
+		(void)strlcpy(cptr->serv->by, "AutoConn.", sizeof cptr->serv->by);
 		if (cptr->serv->user)
 			free_user(cptr->serv->user, NULL);
 		cptr->serv->user = NULL;

@@ -1729,7 +1729,7 @@ CMD_FUNC(m_watch)
 				continue;
 			}
 			*buf = '\0';
-			strcpy(buf, lp->value.wptr->nick);
+			strlcpy(buf, lp->value.wptr->nick, sizeof buf);
 			count =
 			    strlen(parv[0]) + strlen(me.name) + 10 +
 			    strlen(buf);
@@ -1851,6 +1851,11 @@ char *get_client_name2(aClient *acptr, int showports)
 		return pointer;
 	if (!strrchr(pointer, '.'))
 		return NULL;
+	/*
+	 * This may seem like wack but remind this is only used 
+	 * in rows of get_client_name2's, so it's perfectly fair
+	 * 
+	*/
 	strcpy((char *)strrchr((char *)pointer, '.'), ".0]");
 
 	return pointer;
@@ -2243,7 +2248,7 @@ CMD_FUNC(m_stats)
 		  for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) {
 			  if (bans->flag.type == CONF_BAN_NICK && (bans->flag.type2 == CONF_BAN_TYPE_AKILL))
 				sendto_one(sptr, rpl_str(RPL_SQLINE_NICK),
-				    me.name, parv[0], bans->mask, bans->reason);
+				    me.name, parv[0], bans->mask, bans->reason ? bans->reason : "No Reason");
 		  }
 		  break;
 	  }
@@ -2443,9 +2448,9 @@ CMD_FUNC(m_stats)
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "S - Send the dynamic configuration list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "T - Send the tld block list");
+		      "t - Send the tld block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "t - Send connection information");
+		      "T - Send connection information");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "u - Send server uptime and connection count");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
@@ -3733,7 +3738,7 @@ HUNTED_ISME)
 		goto playmotd;
 	}
 #endif
-	strcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost));
+	strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost), sizeof userhost);
 	for (ptr = conf_tld; ptr; ptr = (ConfigItem_tld *) ptr->next)
 	{
 		if (!match(ptr->mask, userhost))
@@ -4025,7 +4030,7 @@ CMD_FUNC(m_rules)
 		goto playrules;
 	}
 #endif
-	strcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost));
+	strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost), sizeof userhost);
 	for (ptr = conf_tld; ptr; ptr = (ConfigItem_tld *) ptr->next)
 	{
 		if (!match(ptr->mask, userhost))

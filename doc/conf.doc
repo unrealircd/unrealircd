@@ -973,6 +973,9 @@ If set to no, the user must set +x manually to receive the oper host.
 
 set::scan::endpoint <ip:port>;
 Specifies the IP and port that the server will tell an incomming open proxy to connect to.
+This must be a valid IP and port, in addition the port on the specified IP must be open and
+able to accept connections. Therefore it is a good idea to specify the IP of your server
+and a port you know is open.
 
 set::scan::bantime <timevalue>;
 A time value that defines the length of time that a user caught by the scanner will be

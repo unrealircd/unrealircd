@@ -394,7 +394,7 @@ int  hunt_server_token(aClient *cptr, aClient *sptr, char *command, char *token,
 		}
 	if (acptr)
 	{
-		char buff[512];
+		char buff[1024];
 		if (IsMe(acptr) || MyClient(acptr))
 			return HUNTED_ISME;
 		if (match(acptr->name, parv[server]))
@@ -887,7 +887,7 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 			    "Your GECOS (real name) is banned from this server");
 		}
 		tkl_check_expire(NULL);
-		if ((xx = find_tkline_match(sptr, 0)) != -1)
+		if ((xx = find_tkline_match(sptr, 0)) < 0)
 		{
 			ircstp->is_ref++;
 			return xx;
@@ -2398,6 +2398,11 @@ CMD_FUNC(m_umode)
 		IRCstats.operators++;
 	if ((setflags & UMODE_OPER) && !IsOper(sptr))
 		IRCstats.operators--;
+	/* FIXME: This breaks something */
+	if (!(setflags & UMODE_HIDEOPER) && IsHideOper(sptr))
+		IRCstats.operators--;
+	if ((setflags & UMODE_HIDEOPER) && !IsHideOper(sptr))
+		IRCstats.operators++;
 	if (!(setflags & UMODE_INVISIBLE) && IsInvisible(sptr))
 		IRCstats.invisible++;
 	if ((setflags & UMODE_INVISIBLE) && !IsInvisible(sptr))

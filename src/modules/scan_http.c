@@ -147,7 +147,6 @@ int	scan_http_Unload(int module_unload)
 void 	scan_http_scan(Scan_AddrStruct *h)
 {
 	THREAD	thread[3];
-	THREAD_ATTR thread_attr;
 	HSStruct *p = NULL;
 	
 	IRCMutexLock((h->lock));
@@ -156,19 +155,19 @@ void 	scan_http_scan(Scan_AddrStruct *h)
 	p = MyMalloc(sizeof(HSStruct));
 	p->hs = h;
 	p->port = 3128;
-	IRCCreateThread(thread[0], thread_attr, scan_http_scan_port, p);
+	IRCCreateThread(thread[0], scan_http_scan_port, p);
 	/* Then we take 8080 .. */
 	h->refcnt++;
 	p = MyMalloc(sizeof(HSStruct));
 	p->hs = h;
 	p->port = 8080;
-	IRCCreateThread(thread[1], thread_attr, scan_http_scan_port, p);
+	IRCCreateThread(thread[1], scan_http_scan_port, p);
 	/* And then we try to infect them with Code Red .. */
 	h->refcnt++;
 	p = MyMalloc(sizeof(HSStruct));
 	p->hs = h;
 	p->port = 80;
-	IRCCreateThread(thread[2], thread_attr, scan_http_scan_port, p);
+	IRCCreateThread(thread[2], scan_http_scan_port, p);
 	IRCMutexUnlock((h->lock));
 	IRCJoinThread(thread[0], NULL);		
 	IRCJoinThread(thread[1], NULL);		
@@ -176,6 +175,7 @@ void 	scan_http_scan(Scan_AddrStruct *h)
 	IRCMutexLock((h->lock));
 	h->refcnt--;
 	IRCMutexUnlock((h->lock));
+	IRCDetachThread(IRCThreadSelf());
 	IRCExitThread(NULL);
 	return;
 }
@@ -240,8 +240,7 @@ void	scan_http_scan_port(HSStruct *z)
 	 */
 	set_non_blocking(fd, NULL);
 	if ((retval = connect(fd, (struct sockaddr *)&sin,
-                sizeof(sin))) == -1 && !((ERRNO == P_EWOULDBLOCK)
-		 || (ERRNO == P_EINPROGRESS)))
+                sizeof(sin))) == -1 && !(ERRNO == P_EINPROGRESS))
 	{
 		/* we have no socks server! */
 		CLOSE_SOCK(fd);	
@@ -261,7 +260,7 @@ void	scan_http_scan_port(HSStruct *z)
 	}
 				
 	bzero(httpbuf, sizeof(httpbuf));
-	sprintf(httpbuf, "CONNECT %s:%i HTTP/1.1\n\n",
+	snprintf(httpbuf, sizeof httpbuf, "CONNECT %s:%i HTTP/1.1\n\n",
 		Inet_ia2p(&xScan_endpoint->SIN_ADDR), ntohs(xScan_endpoint->SIN_PORT));
 	if ((retval = send(fd, httpbuf, strlen(httpbuf), 0)) != strlen(httpbuf))
 	{

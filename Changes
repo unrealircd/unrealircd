@@ -1257,3 +1257,43 @@ seen. gmtime warning still there
 - Added EXLIBS= to make custommodule so a module can specify additional libraries it needs
 - Changed version to beta9 and updated documentation
 - Made +I once again work in win32
+*** beta9 released ***
+- Fixed a stupid m_oper bug
+- Fixed a win32 editor bug causing a crash when you click save multiple times
+- Fixed a /stats q bug where it would crash if there was an sqline with no reason, reported by toji (#0000120)
+- Fixed a bug that caused locops to see client exiting but not client connecting notices while +s +c,
+  reported and fixed by cmx (#0000123)
+- Fixed a bug reported by dimplesx where +H did not decrease the oper count (#0000129)
+- Documentation bug #0000152 reported by Tony at sexnet.org fixed regarding
+  example.conf being wrong about set::socks
+- First part of skyper's security audit patch
+- Some more of skyper's security audit patch. Some of them were simply
+  unfair in regards to performance or blindly added strlcats/strlcpy
+- Fixed some problems with skyper's patch (typos)
+- Fixed a cloak problem on OSes with 64bit integers (reported by wolven)
+- Updated credits
+- Memory leak fixes with scanners
+- Some fixes with connect(). Knowing my luck this will fuck up to hell
+- Fixed another memory leak with the scanners
+- Fixed some helpop typos reported by BiGi (#0000144)
+- Fixed a typo in /stats ? where T/t were reversed, reported by Zer0
+- Fixed a typo displaying a message to edit config.h after compiling reported by dimplesx
+  (#0000133)
+- Fixed a bug where except ban didn't work (reported by Hercules)
+- Fixed a scanner memory leak, and made some changes to make the HTTP scanner work
+- Fixed a bug in the socks scanner causing it to fail
+- Removed some typecasts from free calls, *hopefully* it will fix some problems
+- Fixed a bug with \r\n being mistakenly parsed wrong. Thanks to John_z
+- Fixed a config parser bug that would cause a crash under certain conditions. Reported by 
+  roskecr (#0000173)
+- Rewrote check_pings and the whole way banning people are handled. Do loop.do_bancheck = 1
+   to provoke a bans check. This possibly fixes #00001702, #0000137 and other
+  funny bugs.
+- Fixed a number of bugs in the upper patch. 
+- Fixed an OpenBSD bug reported by RaYmAn, k0adh, and numerous others (#0000104)
+- Credits changes
+- Fixed problem in dopm (short and char should NEVER be passed to va_arg)
+- Fixed HCN so it uses IP instead of sockhost.
+- Changed version to beta10 and updated documentation
+- Removed obsolete network files
+- Added some new network files (hopefully I'll be able to get all the submissions added soon)

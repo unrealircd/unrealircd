@@ -1659,12 +1659,12 @@ void sendto_connectnotice(char *nick, anUser *user, aClient *sptr)
 #endif
 	ircsprintf(connecth,
 	    "*** Notice -- Client connecting: %s (%s@%s) [%s] {%s}", nick,
-	    user->username, user->realhost, sptr->sockhost,
+	    user->username, user->realhost, inet_ntoa(sptr->ip),
 	    sptr->class ? sptr->class->name : "0");
 
 	for (i = 0; i <= LastSlot; i++)
 		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-		    IsOper(cptr) && (cptr->user->snomask & SNO_CLIENT))
+		    IsAnOper(cptr) && (cptr->user->snomask & SNO_CLIENT))
 		{
 			if (IsHybNotice(cptr))
 				sendto_one(cptr, ":%s NOTICE %s :%s", me.name,

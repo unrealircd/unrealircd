@@ -153,8 +153,8 @@ build:
 	done
 	@echo ' __________________________________________________ '
 	@echo '| Compile is now complete.                         |'
-	@echo '| You might want to see include/config.h to adjust |'
-	@echo '| some settings                                    |'
+	@echo '| You should now read the documentation and learn  |'
+	@echo '| how to configure your IRCd.                      |'
 	@echo '|                                                  |'
 	@echo '| If you really like UnrealIRCd, and would like to |'
 	@echo '| make a donation, please read the Donation file in|'

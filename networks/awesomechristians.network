@@ -1,0 +1,28 @@
+/*
+ * AwesomeChristians Chat Network (irc.awesomechristians.com) Network Configuration File
+ * --------------------------------------------------
+ *  Added-at:     31 December 2001 15:25
+ *  Author: ChildLikeFaith
+ *  Email: childlikefaith@awesomechristians.com
+ * -----------------------------------------
+ */
+
+set {
+        network-name            "AwesomeChristians Chat Network";
+        default-server          "irc.awesomechristians.com";
+        services-server         "services.awesomechristians.com";
+        stats-server            "services.awesomechristians.com";
+        help-channel            "#operhelp";
+        hiddenhost-prefix       "awesome";
+        prefix-quit             "Quit:";
+        hosts {
+                local           "ircop.awesomechristians.net";
+                global          "ircop.awesomechristians.net";
+                coadmin         "co.admin.awesomechristians.net";
+                admin           "admin.awesomechristians.net";
+                servicesadmin   "services.admin.awesomechristians.net";
+                netadmin	"network.admin.awesomechristians.net";
+                host-on-oper-up "on";
+        };
+};
+

@@ -1,0 +1,26 @@
+*
+ * Outsiderz.com (irc.Outsiderz.com) Network Configuration File
+ *
+ * Added-at:     29 January 2002 07:35
+ * Author: DrDeath
+ * Email: DrDeath@hotmail.com
+ */
+
+set {
+	network-name "Outsiderz.com";
+	default-server "irc.Outsiderz.com"; 
+	services-server "services.outsiderz.com";
+	stats-server "stats.outsiderz.com";
+	help-channel "#Outsiderz";
+	hiddenhost-prefix "Outsiderz";
+	hosts {
+		local "LocOP.Outsiderz.com";
+		global "IrcOP.Outsiderz.com";
+		coadmin "CoAdmin.Outsiderz.com";
+		admin "Admin.Outsiderz.com";
+		servicesadmin "CsOP.Outsiderz.com";
+		netadmin "NetAdmin.Outsiderz.com";
+		host-on-oper-up yes;
+	};
+};
+

@@ -168,7 +168,7 @@ DLLFUNC int m_zline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if ((acptr = find_client(parv[1], NULL)))
 	{
-		strcpy(userhost, inetntoa((char *)&acptr->ip));
+		strlcpy(userhost, inetntoa((char *)&acptr->ip), sizeof userhost);
 		person = &acptr->name[0];
 		acptr = NULL;
 	}
@@ -176,7 +176,7 @@ DLLFUNC int m_zline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	   work with ip addresses and nicks */
 	else if ((in = index(parv[1], '@')) && (*(in + 1) != '\0'))
 	{
-		strcpy(userhost, in + 1);
+		strlcpy(userhost, in + 1, sizeof userhost);
 		in = &userhost[0];
 		while (*in)
 		{
@@ -200,7 +200,7 @@ DLLFUNC int m_zline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	else
 	{
-		strcpy(userhost, parv[1]);
+		strlcpy(userhost, parv[1], sizeof userhost);
 		in = &userhost[0];
 		while (*in)
 		{
@@ -260,22 +260,13 @@ DLLFUNC int m_zline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		goto propo_label;
 	}
-	if (!match(mask, inetntoa((char *)&cptr->ip)))
-	{
-		sendto_realops("Tried to zap cptr, from %s",
-			parv[0]);
-		MyFree(bconf);	
-	}
-	else
-	{
-		AddListItem(bconf, conf_ban);
-	}
+	AddListItem(bconf, conf_ban);
 propo_label:
 	if (propo == 1)		/* propo is if a ulined server is propagating a z-line
 				   this should go after the above check */
 		sendto_serv_butone(cptr, ":%s ZLINE %s :%s", parv[0], parv[1],
 		    reason ? reason : "");
 
-	check_pings(TStime(), 1);
+	loop.do_bancheck = 1;
 	return 0;
 }
