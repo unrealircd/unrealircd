@@ -100,11 +100,12 @@ int    scan_socks_Init(int module_load)
 	 * Add scanning hooks
 	*/
 	HookAddEx(HOOKTYPE_SCAN_HOST, NULL, scan_socks_scan); 
+	return MOD_SUCCESS;
 }
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_Load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
 int    scan_socks_Load(int module_load)
 #endif
@@ -114,9 +115,9 @@ int    scan_socks_Load(int module_load)
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_unload(int module_unload)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-int	scan_socks_unload(int module_unload)
+int	scan_socks_Unload(int module_unload)
 #endif
 {
 	HookDelEx(HOOKTYPE_SCAN_HOST, NULL, scan_socks_scan);

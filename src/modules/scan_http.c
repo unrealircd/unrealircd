@@ -102,6 +102,7 @@ int    scan_http_Init(int module_load)
 	 * Add scanning hooks
 	*/
 	HookAddEx(HOOKTYPE_SCAN_HOST, NULL, scan_http_scan); 
+	return MOD_SUCCESS;
 }
 
 /* Is first run when server is 100% ready */
