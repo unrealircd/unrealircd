@@ -47,17 +47,19 @@ MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OB
  SRC/SCAN.OBJ SRC/SCAN_SOCKS.OBJ SRC/SCAN_HTTP.OBJ
 
 
-ALL: WIRCD.EXE
+ALL: CONF WIRCD.EXE
 
 CLEAN:
-        -@erase src\*.exe 2>NUL
-        -@erase src\*.obj 2>NUL
-        -@erase src\win32.res 2>NUL
-        -@erase src\version.c 2>NUL
-        -@erase src\win32\*.obj 2>NUL
-        -@erase .\*.exe 2>NUL
+        -@erase src\*.obj >NUL
+        -@erase src\win32.res >NUL
+        -@erase src\version.c >NUL
+        -@erase src\win32\*.obj >NUL
+        -@erase .\*.exe >NUL
 
-
+CONF:
+	-@copy include\win32\setup.h include\setup.h >NUL
+	$(CC) src/win32/config.c
+	-@config.exe
 
 ./WIRCD.EXE: $(OBJ_FILES) $(MOD_FILES) SRC/win32/WIN32.RES
         $(LINK) $(LFLAGS) $(OBJ_FILES) $(MOD_FILES) SRC/win32/WIN32.RES SRC/WIN32/GNU_REGEX.LIB SRC/WIN32/DEBUG/STACKTRACE.LIB /MAPINFO:LINES /MAP

@@ -875,3 +875,4 @@ seen. gmtime warning still there
 - Fixed the Z:line bug (caused by stskeeps-on-crack coding) reported by Power2All
 - Removed the tokens for /users, /summon, and /samode (these never come from a server so they don't need
   it)
+- Added a utility to auto create version.c for win32. It's the worst coding I've ever done, but it works :P
