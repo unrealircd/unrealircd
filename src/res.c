@@ -338,7 +338,7 @@ void del_queries(cp)
  * sends msg to all nameservers found in the "ircd_res" structure.
  * This should reflect /etc/resolv.conf. We will get responses
  * which arent needed but is easier than checking to see if nameserver
- * isnt present. Returns number of messages successfully sent to 
+ * isnt present. Returns number of messages successfully sent to
  * nameservers or -1 if no successful sends.
  */
 #ifndef _WIN32
@@ -418,8 +418,12 @@ struct hostent *gethost_byname(name, lp)
 #endif
 	if (!lp)
 		return NULL;
+#ifndef _WIN32
 	(void)do_query_name(lp, name, NULL);
 	return NULL;
+#else
+	return gethostbyname(name);
+#endif
 }
 
 struct hostent *gethost_byaddr(addr, lp)
@@ -446,7 +450,7 @@ static int do_query_name(lp, name, rptr)
 	char *name;
 	ResRQ *rptr;
 {
-#ifndef _WIN32
+//#ifndef _WIN32
 	char hname[HOSTLEN + 1];
 	int  len;
 
@@ -477,6 +481,7 @@ static int do_query_name(lp, name, rptr)
 		(void)strcpy(rptr->name, name);
 	}
 	Debug((DEBUG_DNS, "do_query_name(): %s ", hname));
+#ifndef _WIN32
 #ifdef INET6
 	return (query_name(hname, C_IN, T_AAAA, rptr));
 #else
@@ -1096,20 +1101,20 @@ struct hostent *get_res(lp,id)
                  int        i;
                  long        amt;
                  struct        hostent        *hp, *he = rptr->he;
-                                                     
+
                  strcpy(tempname, he->h_name);
                  hp = gethostbyname(tempname);
                  if (hp && !bcmp(hp->h_addr, he->h_addr, sizeof(struct IN_ADDR)))
                      {
                      }
-                                                     
+
                  else
                          rptr->he->h_name = NULL;
              }
-                                                     
+
          if (lp)
                  bcopy((char *)&rptr->cinfo, lp, sizeof(Link));
-                                                     
+
          cp = make_cache(rptr);
  # ifdef DEBUG
          Debug((DEBUG_INFO,"get_res:cp=%#x rptr=%#x (made)", cp, rptr));
@@ -1117,11 +1122,11 @@ struct hostent *get_res(lp,id)
          rptr->locked = 0;
          rem_request(rptr);
          return cp ? (struct hostent *)cp->he : NULL;
-                                                     
+
  getres_err:
          if (lp && rptr)
                  bcopy((char *)&rptr->cinfo, lp, sizeof(Link));
-                                                     
+
 #endif
 	return (struct hostent *)NULL;
 }
@@ -1177,8 +1182,8 @@ static aCache *add_to_cache(ocp)
 #ifdef DEBUG
 	Debug((DEBUG_INFO,
 	    "add_to_cache:ocp %#x he %#x name %#x addrl %#x 0 %#x",
-	    ocp, &ocp->he, ocp->he.h_name, ocp->he.h_addr_list,
-	    ocp->he.h_addr_list[0]));
+	    ocp, HE(ocp), HE(ocp)->h_name, HE(ocp)->h_addr_list,
+	    HE(ocp)->h_addr_list[0]));
 #endif
 	ocp->list_next = cachetop;
 	cachetop = ocp;
@@ -1519,7 +1524,7 @@ static aCache *make_cache(rptr)
 				(char *)&((struct IN_ADDR *)rptr->he->h_addr_list[i])->S_ADDR)))
 			return cp;
 #endif
-		    
+
 
 
 	/*
@@ -1935,7 +1940,7 @@ int	res_copyhostent(struct hostent *from, struct hostent *to)
 	amt += strlen(to->h_name)+1;
 	/* Setup tto alias list */
 	if (amt&0x3)
-		amt = (amt&0xFFFFFFFC)+4;	
+		amt = (amt&0xFFFFFFFC)+4;
 	to->h_aliases = (char **)amt;
 	for (x = 0; from->h_aliases[x]; x++)
 		;
@@ -1947,7 +1952,7 @@ int	res_copyhostent(struct hostent *from, struct hostent *to)
 		strcpy(to->h_aliases[i], from->h_aliases[i]);
 		amt += strlen(to->h_aliases[i])+1;
 		if (amt&0x3)
-			amt = (amt&0xFFFFFFFC)+4;	
+			amt = (amt&0xFFFFFFFC)+4;
 	    }
 	to->h_aliases[i] = NULL;
 	/* Setup tto IP address list */

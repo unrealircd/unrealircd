@@ -449,3 +449,4 @@
 - Fixed a bunch of Win32 bugs reported and fixed by McSkaf
 - Made the IRCd delete its tray icon in win32 on SIGSEGV
 - Brought 005 up-to-date with spefication - added CHANMODES= support
+- Applied res.c.patch from McSkaf, fixes win32 GPF, but fixed mising HE(ocp)
