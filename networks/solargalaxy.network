@@ -19,8 +19,6 @@ Set netadmin_host .: NetAdmin.SolarGalaxy.Net
 
 Set coadmin_host ..: CoAdmin.SolarGalaxy.Net
 
-Set techadmin_host : TechAdmin.SolarGalaxy.Net
-
 Set hidden_host ...: solargalaxy
 
 Set netdomain .....: SolarGalaxy.Net

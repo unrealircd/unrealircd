@@ -38,7 +38,6 @@ struct zNetwork {
 	char *x_sadmin_host;
 	char *x_netadmin_host;
 	char *x_coadmin_host;
-	char *x_techadmin_host;
 	char *x_hidden_host;
 	char *x_netdomain;
 	char *x_helpchan;
@@ -109,7 +108,6 @@ extern aConfiguration iConf;
 #define sadmin_host			iConf.network.x_sadmin_host
 #define netadmin_host		iConf.network.x_netadmin_host
 #define coadmin_host		iConf.network.x_coadmin_host
-#define techadmin_host		iConf.network.x_techadmin_host
 #define hidden_host			iConf.network.x_hidden_host
 #define netdomain			iConf.network.x_netdomain
 #define helpchan			iConf.network.x_helpchan

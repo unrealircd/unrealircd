@@ -18,7 +18,6 @@ Set locop_host ....: Locop.Subtrex.Net
 Set sadmin_host ...: Csop.Subtrex.Net
 Set netadmin_host .: Netadmin.Subtrex.Net
 Set coadmin_host ..: Coadmin.Subtrex.Net
-Set techadmin_host : Techadmin.Subtrex.NEt
 Set hidden_host ...: Subtrex
 Set netdomain .....: Subtrex.Net
 Set helpchan ......: #subtrex

@@ -19,7 +19,6 @@ Set locop_host ....: locop.interturk.net
 Set sadmin_host ...: csops.interturk.net
 Set netadmin_host .: netadmin.interturk.net
 Set coadmin_host ..: coadmin.interturk.net
-Set techadmin_host : techadmin.interturk.net
 Set hidden_host ...: InterTurk
 Set netdomain .....: interturk.net
 Set helpchan ......: #Help

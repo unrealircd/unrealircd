@@ -18,7 +18,6 @@ Set locop_host ....: LocalOper.SpinEmpire.com
 Set sadmin_host ...: ServicesOper.SpinEmpire.com
 Set netadmin_host .: NetAdmin.SpinEmpire.com
 Set coadmin_host ..: CoAdmin.SpinEmpire.com
-Set techadmin_host : TechAdmin.SpinEmpire.com
 Set hidden_host ...: Spin
 Set netdomain .....: SpinEmpire.com
 Set helpchan ......: #Lobby

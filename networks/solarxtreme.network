@@ -47,10 +47,6 @@ Set netadmin_host .: NetAdmin.SolarXTreme.Net
 Set coadmin_host ..: CoAdmin.SolarXTreme.Net
 
 
-# This is the virtual hostname TechAdmins will get
-# if iNAH option is enabled on oper up
-Set techadmin_host : TechAdmin.SolarXTreme.Net
-
 # This is the prefix of the hidden host (cloaking) hostname
 Set hidden_host ...: solar
 # This is the domain of the IRC network

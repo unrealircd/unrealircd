@@ -19,7 +19,6 @@ Set locop_host ....: locop.global-irc.net
 Set sadmin_host ...: serviceop.global-irc.net
 Set netadmin_host .: netadmin.global-irc.net
 Set coadmin_host ..: coadmin.global-irc.net
-Set techadmin_host : techadmin.global-irc.net
 Set hidden_host ...: global
 Set netdomain .....: global-irc.net
 Set helpchan ......: #Global

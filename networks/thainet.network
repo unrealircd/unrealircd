@@ -24,7 +24,6 @@ Set locop_host ....: locop.thai.com
 Set sadmin_host ...: serviceop.thai.com
 Set netadmin_host .: netadmin.thai.com
 Set coadmin_host ..: coadmin.thai.com
-Set techadmin_host : techadmin.thai.com
 Set hidden_host ...: ThaiNet
 Set netdomain .....: irc.thai.com
 Set helpchan ......: #Services

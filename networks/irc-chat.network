@@ -18,7 +18,6 @@ Set locop_host ....: locop.irc-chat.net
 Set sadmin_host ...: csop.irc-chat.net
 Set netadmin_host .: netadmin.irc-chat.net
 Set coadmin_host ..: coadmin.irc-chat.net
-Set techadmin_host : techadmin.irc-chat.net
 Set hidden_host ...: irc
 Set netdomain .....: irc-chat.net
 Set helpchan ......: #irc-chat

@@ -93,7 +93,7 @@ static int openconf()
 }
 
 #define STAR1 OFLAG_SADMIN|OFLAG_ADMIN|OFLAG_NETADMIN|OFLAG_COADMIN
-#define STAR2 OFLAG_TECHADMIN|OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
+#define STAR2 OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
 static int oper_access[] = {
 	~(STAR1 | STAR2), '*',
 	OFLAG_LOCAL, 'o',
@@ -118,7 +118,6 @@ static int oper_access[] = {
 	OFLAG_SADMIN, 'a',
 	OFLAG_NETADMIN, 'N',
 	OFLAG_COADMIN, 'C',
-	OFLAG_TECHADMIN, 'T',
 	OFLAG_UMODEC, 'u',
 	OFLAG_UMODEF, 'f',
 	OFLAG_ZLINE, 'z',

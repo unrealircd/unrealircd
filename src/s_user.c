@@ -78,7 +78,6 @@ static int user_modes[] = { UMODE_OPER, 'o',
 	UMODE_HIDEOPER, 'H',
 	UMODE_ADMIN, 'A',
 	UMODE_NETADMIN, 'N',
-	UMODE_TECHADMIN, 'T',
 	UMODE_CLIENT, 'c',
 	UMODE_COADMIN, 'C',
 	UMODE_FLOOD, 'f',
@@ -2434,13 +2433,13 @@ static void do_who(sptr, acptr, repchan)
 	else if (repchan && has_voice(acptr, repchan))
 		status[i++] = '+';
 	status[i] = '\0';
-	if (IsWhois(acptr) && channelwho == 0)
+	if (IsWhois(acptr) && channelwho == 0 && (acptr != sptr))
 	{
 		sendto_one(acptr,
 		    ":%s NOTICE %s :*** %s either did a /who or a specific /who on you",
 		    me.name, acptr->name, sptr->name);
 	}
-	if (IsHiding(acptr) && sptr != acptr && !IsNetAdmin(sptr) && !IsTechAdmin(sptr))
+	if (IsHiding(acptr) && sptr != acptr && !IsNetAdmin(sptr))
 	repchan = NULL;
 	sendto_one(sptr, rpl_str(RPL_WHOREPLY), me.name, sptr->name,
 	    (repchan) ? (repchan->chname) : "*", acptr->user->username,
@@ -2751,7 +2750,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			if (!IsPerson(acptr))
 				continue;
 
-			if (IsWhois(acptr))
+			if (IsWhois(acptr) && (acptr != sptr))
 			{
 				sendto_one(acptr,
 				    ":%s NOTICE %s :*** %s (%s@%s) did a /whois on you.",
@@ -2807,7 +2806,7 @@ int  m_whois(cptr, sptr, parc, parv)
 #ifdef SHOW_SECRET
 					if (!(acptr == sptr) && IsAnOper(sptr)
 #else
-					if (!(acptr == sptr) && (IsNetAdmin(sptr) || IsTechAdmin(sptr))
+					if (!(acptr == sptr) && (IsNetAdmin(sptr))
 #endif
 					&& (showsecret == 1) && SecretChannel(chptr))
 						*(buf + len++) = '~';
@@ -2850,9 +2849,6 @@ int  m_whois(cptr, sptr, parc, parv)
 				buf[0] = '\0';
 				if (IsNetAdmin(acptr))
 					strcat(buf, "a Network Administrator");
-				else if (IsTechAdmin(acptr))
-					strcat(buf,
-					    "a Technical Administrator");
 				else if (IsSAdmin(acptr))
 					strcat(buf, "a Services Operator");
 				else if (IsAdmin(acptr) && !IsCoAdmin(acptr))
@@ -2887,7 +2883,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			{
 				sendto_one(sptr, ":%s %d %s %s :%s",me.name, 
 				RPL_WHOISSPECIAL,
-				parv[0], name, "is a \2Secure Connection\2");
+				parv[0], name, "is a Secure Connection");
 			}
 			if (user->swhois && !IsHideOper(acptr))
 			{
@@ -3196,14 +3192,14 @@ int  m_kill(cptr, sptr, parc, parv)
 			continue;
 		}
 
-		if (IsServices(acptr) && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)
+		if (IsServices(acptr) && !(IsNetAdmin(sptr)
 		    || IsULine(sptr)))
 		{
 			sendto_one(sptr, err_str(ERR_KILLDENY), me.name,
 			    parv[0], parv[1]);
 			return 0;
 		}
-/*        if (IsULine(sptr) || (IsSAdmin(sptr) && !IsSAdmin(acptr)) || (IsNetAdmin(sptr)) || (IsTechAdmin(sptr) || (IsCoAdmin(sptr)))) {
+/*        if (IsULine(sptr) || (IsSAdmin(sptr) && !IsSAdmin(acptr)) || (IsNetAdmin(sptr)) || (IsCoAdmin(sptr)))) {
         goto aftermath;
         } else if (IsULine(acptr)) {
                 goto error;
@@ -3780,28 +3776,6 @@ int  m_oper(cptr, sptr, parc, parv)
 
 			}
 		}
-		else if (aconf->port & OFLAG_TECHADMIN)
-		{
-			if (aconf->port & OFLAG_SADMIN)
-			{
-				sptr->umodes |=
-				    (UMODE_TECHADMIN | UMODE_ADMIN |
-				    UMODE_SADMIN);
-				SetTechAdmin(sptr);
-				SetSAdmin(sptr);
-				SetAdmin(sptr);
-				SetOper(sptr);
-
-			}
-			else
-			{
-				sptr->umodes |= (UMODE_TECHADMIN | UMODE_ADMIN);
-				SetTechAdmin(sptr);
-				SetAdmin(sptr);
-				SetOper(sptr);
-
-			}
-		}
 		else
 		    if (aconf->port & OFLAG_ADMIN && aconf->port & OFLAG_SADMIN)
 		{
@@ -3920,24 +3894,6 @@ int  m_oper(cptr, sptr, parc, parv)
 			}
 			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
 				iNAH_host(sptr, coadmin_host);
-		}
-		else if (aconf->port & OFLAG_TECHADMIN)
-		{
-			sendto_ops
-			    ("%s (%s@%s) is now a technical administrator (T)",
-			    parv[0], sptr->user->username,
-			    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
-			    realhost);
-			if (MyClient(sptr))
-			{
-				sendto_serv_butone(&me,
-				    ":%s GLOBOPS :%s (%s@%s) is now a technical administrator (T)",
-				    me.name, parv[0], sptr->user->username,
-				    IsHidden(sptr) ? sptr->user->
-				    virthost : sptr->user->realhost);
-			}
-			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
-				iNAH_host(sptr, techadmin_host);
 		}
 		else if (aconf->port & OFLAG_SADMIN)
 		{
@@ -4159,7 +4115,8 @@ int  m_userhost(cptr, sptr, parc, parv)
         {
           ircsprintf(response[i], "%s%s=%c%s@%s",
                      acptr->name,
-                     IsAnOper(acptr) ? "*" : "",
+                     (IsAnOper(acptr) && (((acptr != sptr) && IsOper(sptr) && IsHideOper(acptr)))
+		          || (!IsHideOper(acptr)) || (acptr == sptr)) ? "*" : "",
                      (acptr->user->away) ? '-' : '+',
                      acptr->user->username,
    			((acptr != sptr) && !IsOper(sptr) 
@@ -4403,8 +4360,6 @@ int  m_umode(cptr, sptr, parc, parv)
 			ClearHideOper(sptr);
 		if (IsCoAdmin(sptr))
 			ClearCoAdmin(sptr);
-		if (IsTechAdmin(sptr))
-			ClearTechAdmin(sptr);
 		if (IsEyes(sptr))
 			ClearEyes(sptr);
 	}
@@ -4428,8 +4383,6 @@ int  m_umode(cptr, sptr, parc, parv)
 			ClearNetAdmin(sptr);
 		if (IsCoAdmin(sptr) && !OPIsCoAdmin(sptr))
 			ClearCoAdmin(sptr);
-		if (IsTechAdmin(sptr) && !OPIsTechAdmin(sptr))
-			ClearTechAdmin(sptr);
 		if ((sptr->umodes & UMODE_HIDING)
 		    && !(sptr->oflag & OFLAG_INVISIBLE))
 			sptr->umodes &= ~UMODE_HIDING;
@@ -4468,7 +4421,7 @@ int  m_umode(cptr, sptr, parc, parv)
 	if (MyConnect(sptr))
 	{
 		if ((sptr->umodes & (UMODE_KIX)) && !(IsNetAdmin(sptr)
-		    || IsTechAdmin(sptr)))
+		    ))
 			sptr->umodes &= ~UMODE_KIX;
 		if ((sptr->umodes & (UMODE_FCLIENT)) && !IsOper(sptr))
 			sptr->umodes &= ~UMODE_FCLIENT;

@@ -19,7 +19,6 @@ Set locop_host ....: locop.mp3fans.net
 Set sadmin_host ...: serviceop.mp3fans.net
 Set netadmin_host .: netadmin.mp3fans.net
 Set coadmin_host ..: coadmin.mp3fans.net
-Set techadmin_host : techadmin.mp3fans.net
 Set hidden_host ...: mpx
 Set netdomain .....: mp3fans.net
 Set helpchan ......: #Mp3Fans

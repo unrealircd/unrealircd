@@ -482,10 +482,6 @@ int  load_conf3(FILE * conf, char *filename, int type)
 			{
 				AllocCpy(netadmin_host, setto);
 			}
-			else if (strcmp(var, "techadmin_host") == 0)
-			{
-				AllocCpy(techadmin_host, setto);
-			}
 			else if (strcmp(var, "coadmin_host") == 0)
 			{
 				AllocCpy(coadmin_host, setto);
@@ -567,8 +563,6 @@ void doneconf(int type)
 		strcat(errormsg, "- Missing netadmin_host field\n");
 	if (Missing(coadmin_host))
 		strcat(errormsg, "- Missing coadmin_host field\n");
-	if (Missing(techadmin_host))
-		strcat(errormsg, "- Missing techadmin_host field\n");
 	if (Missing(hidden_host))
 		strcat(errormsg, "- Missing hidden_host field\n");
 	if (Missing(netdomain))
@@ -669,8 +663,6 @@ void report_network(aClient *sptr)
 	    sptr->name, netadmin_host);
 	sendto_one(sptr, ":%s %i %s :COADMIN_HOST: %s", me.name, RPL_TEXT,
 	    sptr->name, coadmin_host);
-	sendto_one(sptr, ":%s %i %s :TECHADMIN_HOST: %s", me.name, RPL_TEXT,
-	    sptr->name, techadmin_host);
 	sendto_one(sptr, ":%s %i %s :HIDDEN_HOST: %s", me.name, RPL_TEXT,
 	    sptr->name, hidden_host);
 	sendto_one(sptr, ":%s %i %s :NETDOMAIN: %s", me.name, RPL_TEXT,

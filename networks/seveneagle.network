@@ -19,7 +19,6 @@ Set locop_host ....: Locop.SevenEagle.Com
 Set sadmin_host ...: ServiceOp.SevenEagle.Com
 Set netadmin_host .: NetAdmin.SevenEagle.Com
 Set coadmin_host ..: CoAdmin.SevenEagle.Com
-Set techadmin_host : TechAdmin.SevenEagle.Com
 Set hidden_host ...: SevenEagle.Com
 Set netdomain .....: SevenEagle.Com
 Set helpchan ......: #Help

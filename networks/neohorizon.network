@@ -49,10 +49,6 @@ Set netadmin_host .: NetAdmin.nhn.net
 Set coadmin_host ..: Co-Admin.nhn.net
 
 
-# This is the virtual hostname TechAdmins will get
-# if iNAH option is enabled on oper up
-Set techadmin_host : techadmin.nhn.net
-
 # This is the prefix of the hidden host (cloaking) hostname
 Set hidden_host ...: Neo
 # This is the domain of the IRC network

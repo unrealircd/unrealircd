@@ -300,7 +300,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			}
 
 			if (buf[0] != '\0' && !IsULine(acptr) && (!IsHiding(acptr) ||
-				IsNetAdmin(sptr) || IsTechAdmin(sptr) || sptr == acptr))
+				IsNetAdmin(sptr) || sptr == acptr))
 				sendto_one(sptr, 
 					":IRC PRIVMSG %s :%s is on %s",
 						sptr->name, name, buf);
@@ -321,9 +321,6 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				buf[0] = '\0';
 				if (IsNetAdmin(acptr))
 					strcat(buf, "a Network Administrator");
-				else if (IsTechAdmin(acptr))
-					strcat(buf,
-					    "a Technical Administrator");
 				else if (IsSAdmin(acptr))
 					strcat(buf, "a Services Operator");
 				else if (IsAdmin(acptr) && !IsCoAdmin(acptr))

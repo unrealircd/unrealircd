@@ -50,10 +50,6 @@ Set netadmin_host .: netadmin.972-Scripterz.org
 Set coadmin_host ..: coadmin.972-Scripterz.org
 
 
-# This is the virtual hostname TechAdmins will get
-# if iNAH option is enabled on oper up
-Set techadmin_host : techadmin.972-Scripterz.org
-
 # This is the prefix of the hidden host (cloaking) hostname
 Set hidden_host ...: sz
 # This is the domain of the IRC network

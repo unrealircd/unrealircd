@@ -49,10 +49,6 @@ Set netadmin_host .: netadmin.digital-irc.net
 # if iNAH option is enabled on oper up
 Set coadmin_host ..: coadmin.digital-irc.net
 
-# This is the virtual hostname TechAdmins will get
-# if iNAH option is enabled on oper up
-Set techadmin_host : techadmin.digital-irc.net
-
 # This is the prefix of the hidden host (cloaking) hostname
 Set hidden_host ...: digital-irc
 # This is the domain of the IRC network

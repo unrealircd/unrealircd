@@ -50,10 +50,6 @@ Set netadmin_host .: netadmin.qkaka.com
 Set coadmin_host ..: coadmin.qkaka.com
 
 
-# This is the virtual hostname TechAdmins will get
-# if iNAH option is enabled on oper up
-Set techadmin_host : techadmin.qkaka.com
-
 # This is the prefix of the hidden host (cloaking) hostname
 Set hidden_host ...: dn
 # This is the domain of the IRC network

@@ -874,7 +874,7 @@ int  m_svsnoop(cptr, sptr, parc, parv)
 					    ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP | UMODE_SERVICES |
 					    UMODE_SADMIN | UMODE_ADMIN);
 					acptr->umodes &=
-		    				~(UMODE_NETADMIN | UMODE_TECHADMIN | UMODE_CLIENT |
+		    				~(UMODE_NETADMIN | UMODE_CLIENT |
 		 			   UMODE_FLOOD | UMODE_EYES | UMODE_WHOIS);
 					acptr->umodes &=
 					    ~(UMODE_KIX | UMODE_FCLIENT | UMODE_HIDING |
@@ -1027,7 +1027,7 @@ int  openconf()
 extern char *getfield();
 
 #define STAR1 OFLAG_SADMIN|OFLAG_ADMIN|OFLAG_NETADMIN|OFLAG_COADMIN
-#define STAR2 OFLAG_TECHADMIN|OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
+#define STAR2 OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
 #define STAR3 OFLAG_INVISIBLE
 static int oper_access[] = {
 	~(STAR1 | STAR2 | STAR3), '*',
@@ -1053,7 +1053,6 @@ static int oper_access[] = {
 	OFLAG_SADMIN, 'a',
 	OFLAG_NETADMIN, 'N',
 	OFLAG_COADMIN, 'C',
-	OFLAG_TECHADMIN, 'T',
 	OFLAG_UMODEC, 'u',
 	OFLAG_UMODEF, 'f',
 	OFLAG_ZLINE, 'z',
@@ -2845,7 +2844,7 @@ int  m_svso(cptr, sptr, parc, parv)
 		    ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP | UMODE_SERVICES |
 		    UMODE_SADMIN | UMODE_ADMIN);
 		acptr->umodes &=
-		    ~(UMODE_NETADMIN | UMODE_TECHADMIN | UMODE_CLIENT |
+		    ~(UMODE_NETADMIN | UMODE_CLIENT |
 		    UMODE_FLOOD | UMODE_EYES | UMODE_WHOIS);
 		acptr->umodes &=
 		    ~(UMODE_KIX | UMODE_FCLIENT | UMODE_HIDING |

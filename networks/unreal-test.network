@@ -19,7 +19,6 @@ Set locop_host ....: locop.testnet.ircsystems.net
 Set sadmin_host ...: csops.testnet.ircsystems.net
 Set netadmin_host .: netadmin.testnet.ircsystems.net
 Set coadmin_host ..: coadmin.testnet.ircsystems.net
-Set techadmin_host : techadmin.testnet.ircsystems.net
 Set hidden_host ...: unreal
 Set netdomain .....: testnet.ircsystems.net
 Set helpchan ......: #testnet

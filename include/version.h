@@ -30,9 +30,9 @@
 #define UnrealProtocol 		2302
 #define PATCH1  		"3"
 #define PATCH2  		".1"
-#define PATCH3  		".3"
-#define PATCH4  		"-Komara"
-#define PATCH5  		""
+#define PATCH3  		".4"
+#define PATCH4  		"-Meadows"
+#define PATCH5  		"[beta1]"
 #define PATCH6  		""
 #define PATCH7  		""
 #define PATCH8  		COMPILEINFO

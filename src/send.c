@@ -1764,7 +1764,7 @@ void sendto_channels_inviso_join(aClient *user)
                         for (users = channels->value.chptr->members; users; users = users->next)
 			{
                                 cptr = users->value.cptr;
-                                if (!MyConnect(cptr) || IsTechAdmin(cptr) || IsNetAdmin(cptr) || sentalong[cptr->fd] || cptr == user)
+                                if (!MyConnect(cptr) || IsNetAdmin(cptr) || sentalong[cptr->fd] || cptr == user)
                                         continue;
                                 sentalong[cptr->fd]++;
                                 sendto_one(cptr, ":%s!%s@%s JOIN :%s", user->name, user->user->username,
@@ -1787,7 +1787,7 @@ void sendto_channels_inviso_part(aClient *user)
                         for (users = channels->value.chptr->members; users; users = users->next)
 			{
                                 cptr = users->value.cptr;
-                                if (!MyConnect(cptr) || IsTechAdmin(cptr) || IsNetAdmin(cptr) || sentalong[cptr->fd] || cptr == user)
+                                if (!MyConnect(cptr) || IsNetAdmin(cptr) || sentalong[cptr->fd] || cptr == user)
                                         continue;
                                 sentalong[cptr->fd]++;
                 		sendto_one(cptr, ":%s!%s@%s PART :%s", user->name, user->user->username, (IsHidden(user) ? user->user->virthost : user->user->realhost), channels->value.chptr->chname);
@@ -1807,7 +1807,7 @@ void sendto_channel_ntadmins(aClient *from, aChannel *chptr, char *pattern, ...)
         for (lp = chptr->members; lp; lp = lp->next)
 	{
                 acptr = lp->value.cptr;
-                if (acptr->from == from || !(IsNetAdmin(acptr) || IsTechAdmin(acptr)) || (IsDeaf(acptr) && !(sendanyways == 1)))
+                if (acptr->from == from || !IsNetAdmin(acptr) || (IsDeaf(acptr) && !(sendanyways == 1)))
                         continue;
                 if (MyConnect(acptr))   /* (It is always a client) */
                         vsendto_prefix_one(acptr, from, pattern, vl);

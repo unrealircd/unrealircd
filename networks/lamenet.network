@@ -18,7 +18,6 @@ Set locop_host ....: biglamer.lamenet.net
 Set sadmin_host ...: csop.lamenet.net
 Set netadmin_host .: netadmin.lamenet.net
 Set coadmin_host ..: coadmin
-Set techadmin_host : techadmin.lamenet.net
 Set hidden_host ...: hiddenhost
 Set netdomain .....: lamenet.net
 Set helpchan ......: #Services

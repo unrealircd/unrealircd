@@ -60,7 +60,6 @@ modified for UnrealIRCD3.1 by codemastr
 	 8.8) .......................... Set sadmin_host Line
 	 8.9) .......................... Set netadmin_host Line
 	 8.10) ......................... Set coadmin_host Line
-	 8.11) ......................... Set techadmin_host Line
 	 8.12) ......................... Set hidden_host Line
 	 8.13) ......................... Set netdomain Line
 	 8.14) ......................... Set helpchan Line
@@ -458,7 +457,6 @@ o = local oper, flags included: rhgwlckbBnuf
 O = global oper, flags included: oRDCK
 a = services admin, access to /samode
 C = co admin
-T = tech admin
 A = admin
 N = network admin access to remote /rehash and remote /restart and a bunch more
 * = flags included: AaNCTzSHW^
@@ -1632,25 +1630,6 @@ Set coadmin_host ..: coadminhost
 Set coadmin_host ..: coadmin.starspace.net
  This will make a CoAdmin's host change to coadmin.starspace.net when they /oper 
  up if iNAH is enabled.
-
---------------------
-
-8.11) Set techadmin_host Line:
-
- This allows you to specify a host that TechAdmins will receive when they 
- /oper, this only works if iNAH (See section 8.17) is enabled. If this is left 
- blank it can cause some problems in your IRCd so it is recommended that you 
- fill in a value.
-
- Syntax: 
-Set techadmin_host : techadminhost
- This tells the server to switch the host of the TechAdmin to techadminhost when 
- they /oper.
-
- Examples:
-Set techadmin_host : techadmin.starspace.net
- This will make a TechAdmin's host change to techadmin.starspace.net when they 
- /oper up if iNAH is enabled.
 
 --------------------
 

@@ -441,7 +441,6 @@
 		a = Is a Services Administrator
 		A = Is a Server Administrator
 		N = Is a Network Administrator
-		T = Is a Tech Admininistator
 		C = Is a Co Administrator
 		c = See's all Connects/Disconnects on local server
 		f = Listen to flood alerts from server
@@ -571,20 +570,12 @@
   
       *** NACHAT Command ***
 
-      This command sends to all NetAdmins & TechAdmins online
-      Only for Net/Techadmins. This is a ChatOps style command
+      This command sends to all NetAdmins online
+      Only for Netadmins. This is a ChatOps style command
 
       Syntax:  NACHAT <text>
       Example: NACHAT Hey guys!
    	
-      *** TECHAT Command ***
-
-      This command sends to all TechAdmins online
-      Only for Net/Techadmins. This is a ChatOps style command
-
-      Syntax:  TECHAT <text>
-      Example: TECHAT Hey guys!
-
       *** KILL Command ***
 
       Forcefully Disconnects a user from an IRC Server.
@@ -683,7 +674,7 @@
       If servername and flags are not specified this rehashes the ircd.conf , removing
       any temporary k:lines.
       If servername is specified, this is used to rehash config files on servername
-      Only TechAdmins and NetAdmins may specify a server name
+      Only NetAdmins may specify a server name
       
       The flags are used to rehash other config files, valid flags are: 
             -dccdeny   - Rehashes dccdeny.conf
@@ -762,7 +753,7 @@
       IRC Operators only.
       
       Syntax:  CHGNAME <nick> <name>
-      Example: CHGNAME hAtbLaDe TechAdmin on SomeNet
+      Example: CHGNAME hAtbLaDe NetAdmin on SomeNet
 
       *** SQUIT Command ***
 
@@ -1060,7 +1051,6 @@
 		 A = Gets +A on oper up. Server Administrator
 		 a = Gets +a on oper up. Services Administrator
 		 N = Gets +N on oper up. Network Administrator
-		 T = Gets +T on oper up. Technical Administator
 		 C = Gets +C on oper up. Co Administrator
 		 Y = Access to do remote /squits and /connects
 		 z = Can add /zlines

@@ -50,10 +50,6 @@ Set netadmin_host .: NetAdmin.Stormdancing.Net
 Set coadmin_host ..: CoAdmin.Stormdancing.Net
 
 
-# This is the virtual hostname TechAdmins will get
-# if iNAH option is enabled on oper up
-Set techadmin_host : TechAdmin.Stormdancing.Net
-
 # This is the prefix of the hidden host (cloaking) hostname
 Set hidden_host ...: Stormdancing
 # This is the domain of the IRC network

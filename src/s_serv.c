@@ -3594,7 +3594,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	if (!MyClient(sptr) && !(IsTechAdmin(sptr) || IsNetAdmin(sptr))
+	if (!MyClient(sptr) && !(IsNetAdmin(sptr))
 	    && !IsULine(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
@@ -3698,7 +3698,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 			}
 #endif
 		}
-		if (MyClient(sptr) && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
+		if (MyClient(sptr) && !(IsNetAdmin(sptr)))
 		{
 			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 			    parv[0]);
@@ -3886,7 +3886,7 @@ int  m_restart(cptr, sptr, parc, parv)
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	if (!MyClient(sptr) && !(IsTechAdmin(sptr) || IsNetAdmin(sptr))
+	if (!MyClient(sptr) && !(IsNetAdmin(sptr))
 	    && !IsULine(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
@@ -3895,7 +3895,7 @@ int  m_restart(cptr, sptr, parc, parv)
 	if (parc > 3)
 	{
 		/* Remote restart. */
-		if (MyClient(sptr) && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
+		if (MyClient(sptr) && !(IsNetAdmin(sptr)))
 		{
 			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 			    parv[0]);
@@ -4827,14 +4827,14 @@ void dump_map(cptr, server, mask, prompt_length, length)
 	for (lp = (Link *) return_servers(); lp; lp = lp->next)
 	{
 		acptr = lp->value.cptr;
+		if (--cnt == 0)
+			*p = '`';
 		if (IsULine(acptr) && HIDE_ULINES && !IsAnOper(cptr))
 			continue;		
 		if (acptr->srvptr != server)
 			continue;
 		if (!acptr->flags & FLAGS_MAP)
 			continue;
-		if (--cnt == 0)
-			*p = '`';
 		dump_map(cptr, acptr, mask, prompt_length + 2, length - 2);
 		
 	}

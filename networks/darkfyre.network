@@ -29,7 +29,6 @@ Set locop_host ....: LocalOp.Darkfyre.Net
 Set sadmin_host ...: CSop.Darkfyre.Net
 Set netadmin_host .: NetAdmin.Darkfyre.Net
 Set coadmin_host ..: CoAdmin.Darkfyre.Net
-Set techadmin_host : TechAdmin.Darkfyre.Net
 Set hidden_host ...: darkfyre
 Set netdomain .....: Darkfyre.net
 Set helpchan ......: #help

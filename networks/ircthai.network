@@ -19,7 +19,6 @@ Set locop_host ....: LOCop.ircthai.com
 Set sadmin_host ...: ServiceAdmin.ircthai.com
 Set netadmin_host .: NetAdmin.ircthai.com
 Set coadmin_host ..: CoAdmin.ircthai.com
-Set techadmin_host : TechAdmin.ircthai.com
 Set hidden_host ...: IRCThai
 Set netdomain .....: ircthai.com
 Set helpchan ......: #ThaiHelp

@@ -19,7 +19,6 @@ Set locop_host ....: LOCop.Infinity-IRC.org
 Set sadmin_host ...: IRCop-ServiceAdmin.Infinity-IRC.org
 Set netadmin_host .: IRCop-NetAdmin.Infinity-IRC.org
 Set coadmin_host ..: IRCop-CoAdmin.Infinity-IRC.org
-Set techadmin_host : IRCop-TechAdmin.Infinity-IRC.org
 Set hidden_host ...: Infinity
 Set netdomain .....: Infinity-IRC.org
 Set helpchan ......: #Infinity

@@ -19,7 +19,6 @@ Set locop_host ....: Oper.Kissland.Com
 Set sadmin_host ...: Services.Admin.Kissland.Com
 Set netadmin_host .: Network.Admin.Kissland.Com
 Set coadmin_host ..: Co.Admin.Kissland.Com
-Set techadmin_host : Technical.Admin.Kissland.Com
 Set hidden_host ...: Kiss
 Set netdomain .....: Kissland.Com
 Set helpchan ......: #Services

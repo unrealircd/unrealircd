@@ -18,7 +18,6 @@ Set locop_host ....: LocalOper.SpyNet.Org
 Set sadmin_host ...: Sops.SpyNet.Org
 Set netadmin_host .: NetAdmin.SpyNet.Org
 Set coadmin_host ..: CoAdmin.SpyNet.Org
-Set techadmin_host : TechAdmin.SpyNet.Org
 Set hidden_host ...: Spy
 Set netdomain .....: SpyNet.Org
 Set helpchan ......: #SpyNet

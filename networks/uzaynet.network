@@ -51,10 +51,6 @@ Set netadmin_host .: netadmin.uzaynet.com
 Set coadmin_host ..: coadmin.uzaynet.com
 
 
-# This is the virtual hostname TechAdmins will get
-# if iNAH option is enabled on oper up
-Set techadmin_host : techadmin.uzaynet.com
-
 # This is the prefix of the hidden host (cloaking) hostname
 Set hidden_host ...: UzayNet
 # This is the domain of the IRC network

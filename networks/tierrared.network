@@ -18,7 +18,6 @@ Set locop_host ....: LocalOP.tierrared.com
 Set sadmin_host ...: Cservice.tierrared.com
 Set netadmin_host .: NetADMIN.tierrared.com
 Set coadmin_host ..: CoADMIN.tierrared.com
-Set techadmin_host : TechAdm.tierrared.com
 Set hidden_host ...: hide
 Set netdomain .....: tierrared.com
 Set helpchan ......: #opers_help

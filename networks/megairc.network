@@ -19,7 +19,6 @@ Set locop_host ....: Local-Ircop.MegaIRC.Net
 Set sadmin_host ...: SOP.MegaIRC.Net
 Set netadmin_host .: NetAdmin.MegaIRC.Net
 Set coadmin_host ..: Server-CoAdmin.MegaIRC.Net
-Set techadmin_host : TechAdmin.MegaIRC.Net
 Set hidden_host ...: mega
 Set netdomain .....: MegaIRC.Net
 Set helpchan ......: #helpdesk

@@ -680,47 +680,6 @@ int  m_admins(cptr, sptr, parc, parv)
 	return 0;
 }
 /*
-** m_techat (Techadmin chat only) -Potvin (cloned by --sts)
-**      parv[0] = sender prefix
-**      parv[1] = message text
-*/
-int  m_techat(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
-{
-	char *message;
-
-
-	message = parc > 1 ? parv[1] : NULL;
-
-	if (BadPtr(message))
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "TECHAT");
-		return 0;
-	}
-#ifdef ADMINCHAT
-	if (MyClient(sptr))
-		if (!(IsTechAdmin(sptr) || IsNetAdmin(sptr)))
-#else
-	if (MyClient(sptr))
-#endif
-	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-		return 0;
-	}
-	sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL, parv[0],
-	   MSG_TECHAT, TOK_TECHAT, ":%s", message);
-#ifdef ADMINCHAT
-	sendto_umode(UMODE_TECHADMIN, "*** Te-chat -- from %s: %s",
-	    parv[0], message);
-/*        sendto_techat("from %s: %s", parv[0], message); */
-/*              sendto_achat(1,"from %s: %s", parv[0], message); */
-#endif
-	return 0;
-}
-/*
 ** m_nachat (netAdmin chat only) -Potvin - another sts cloning
 **      parv[0] = sender prefix
 **      parv[1] = message text
@@ -743,7 +702,7 @@ int  m_nachat(cptr, sptr, parc, parv)
 	}
 #ifdef ADMINCHAT
 	if (MyClient(sptr))
-		if (!(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
+		if (!(IsNetAdmin(sptr)))
 #else
 	if (MyClient(sptr))
 #endif
@@ -756,8 +715,6 @@ int  m_nachat(cptr, sptr, parc, parv)
 	   MSG_NACHAT, TOK_NACHAT, ":%s", message);
 #ifdef ADMINCHAT
 	sendto_umode(UMODE_NETADMIN, "*** NetAdmin.Chat -- from %s: %s",
-	    parv[0], message);
-	sendto_umode(UMODE_TECHADMIN, "*** NetAdmin.Chat -- from %s: %s",
 	    parv[0], message);
 #endif
 	return 0;
@@ -1091,7 +1048,7 @@ int  m_sendumode(cptr, sptr, parc, parv)
 			  sendto_umode(UMODE_HELPOP, "%s", parv[2]);
 			  break;
 		  case 'N':
-			  sendto_umode(UMODE_NETADMIN | UMODE_TECHADMIN, "%s",
+			  sendto_umode(UMODE_NETADMIN, "%s",
 			      parv[2]);
 			  break;
 		  case 'A':
@@ -1109,9 +1066,6 @@ int  m_sendumode(cptr, sptr, parc, parv)
 			  break;
 		  case 's':
 			  sendto_umode(UMODE_SERVNOTICE, "%s", parv[2]);
-			  break;
-		  case 'T':
-			  sendto_umode(UMODE_TECHADMIN, "%s", parv[2]);
 			  break;
 		  case '*':
 		  	  sendto_all_butone(NULL, &me, ":%s NOTICE :%s", 

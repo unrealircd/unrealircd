@@ -14,7 +14,6 @@ Set locop_host ....: locop.axenet.org
 Set sadmin_host ...: csop.axenet.org
 Set netadmin_host .: netadmin.axenet.org
 Set coadmin_host ..: coadmin.axenet.org
-Set techadmin_host : techadmin.axenet.org
 Set hidden_host ...: axe
 Set netdomain .....: axenet.org
 Set helpchan ......: #axenethelp

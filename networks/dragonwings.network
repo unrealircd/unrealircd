@@ -19,7 +19,6 @@ Set locop_host ....: locop.dragonwings.org
 Set sadmin_host ...: serviceop.dragonwings.org
 Set netadmin_host .: netadmin.dragonwings.org
 Set coadmin_host ..: coadmin.dragonwings.org
-Set techadmin_host : techadmin.dragonwings.org
 Set hidden_host ...: dw
 Set netdomain .....: dragonwings.org
 Set helpchan ......: #DragonWings

@@ -18,7 +18,6 @@ Set locop_host ....: locop.darkwar.net
 Set sadmin_host ...: csop.darkwar.net
 Set netadmin_host .: netadmin.darkwar.net
 Set coadmin_host ..: coadmin.darkwar.net
-Set techadmin_host : techadmin.darkwar.net
 Set hidden_host ...: hide
 Set netdomain .....: darkwar.net
 Set helpchan ......: #darkwar

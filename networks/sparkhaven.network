@@ -18,7 +18,6 @@ Set locop_host ....: locop.akersberga.se.sparkhaven.com
 Set sadmin_host ...: csop..akersberga.se.sparkhaven.com
 Set netadmin_host .: netadmin.sparkhaven.com
 Set coadmin_host ..: coadmin.akersberga.se.sparkhaven.com
-Set techadmin_host : techadmin.akersberga.se.sparkhaven.com
 Set hidden_host ...: user
 Set netdomain .....: sparkhaven.com
 Set helpchan ......: #services

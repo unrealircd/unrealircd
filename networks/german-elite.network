@@ -14,7 +14,6 @@ Set locop_host ....: locop.german-elite.net
 Set sadmin_host ...: csop.german-elite.net
 Set netadmin_host .: netadmin.german-elite.net
 Set coadmin_host ..: coadmin.german-elite.net
-Set techadmin_host : techadmin.german-elite.net
 Set hidden_host ...: GE
 Set netdomain .....: german-elite.net
 Set helpchan ......: #german-elite

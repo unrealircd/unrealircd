@@ -18,7 +18,6 @@ Set locop_host ....: locop.rapta.net
 Set sadmin_host ...: csop.rapta.net
 Set netadmin_host .: netadmin.rapta.net
 Set coadmin_host ..: coadmin.rapta.net
-Set techadmin_host : techadmin.rapta.net
 Set hidden_host ...: rapta
 Set netdomain .....: rapta.net
 Set helpchan ......: #services

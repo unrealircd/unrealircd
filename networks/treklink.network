@@ -19,7 +19,6 @@ Set locop_host ....: locop.treklink.net
 Set sadmin_host ...: serviceop.treklink.net
 Set netadmin_host .: netadmin.treklink.net
 Set coadmin_host ..: coadmin.treklink.net
-Set techadmin_host : techadmin.treklink.net
 Set hidden_host ...: TL
 Set netdomain .....: treklink.net
 Set helpchan ......: #uip

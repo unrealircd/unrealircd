@@ -9,7 +9,6 @@ Set locop_host ....: TrainingOp.LinuxSquare.Net
 Set sadmin_host ...: ServicesAdmin.LinuxSquare.Net
 Set netadmin_host .: NetAdmin.LinuxSquare.Net
 Set coadmin_host ..: CoAdmin.LinuxSquare.Net
-Set techadmin_host : TechAdmin.LinuxSquare.Net
 Set hidden_host ...: LinuxSquare
 Set netdomain .....: LinuxSquare.Net
 Set helpchan ......: #HelpDesk

@@ -19,7 +19,6 @@ Set locop_host ....: local.bunker7.net
 Set sadmin_host ...: sadm.bunker7.net
 Set netadmin_host .: netadmin.bunker7.net
 Set coadmin_host ..: coadmin.bunker7.net
-Set techadmin_host : techadmin.bunker7.net
 Set hidden_host ...: bunker7
 Set netdomain .....: bunker7.net
 Set helpchan ......: #bunker7

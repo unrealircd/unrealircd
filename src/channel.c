@@ -160,7 +160,7 @@ aCtab cFlagTab[] = {
 #define	BADOP_OVERRIDE	4
 
 /* is some kind of admin */
-#define IsSkoAdmin(sptr) (IsAdmin(sptr) || IsNetAdmin(sptr) || IsTechAdmin(sptr) || IsSAdmin(sptr))
+#define IsSkoAdmin(sptr) (IsAdmin(sptr) || IsNetAdmin(sptr) || IsSAdmin(sptr))
 
 char cmodestring[512];
 
@@ -1534,7 +1534,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 	  case MODE_AUDITORIUM:
 		  if (IsULine(cptr) || IsServer(cptr))
 			  goto auditorium_ok;
-		  if (!IsNetAdmin(cptr) && !IsTechAdmin(cptr)
+		  if (!IsNetAdmin(cptr)
 		      && !is_chanowner(cptr, chptr))
 		  {
 			  sendto_one(cptr,
@@ -1625,7 +1625,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 /* do pro-opping here (popping) */
 	  case MODE_CHANOWNER:
 		  if (!IsULine(cptr) && !IsServer(cptr)
-		      && !IsNetAdmin(cptr) && !IsTechAdmin(cptr)
+		      && !IsNetAdmin(cptr)
 		      && !is_chanowner(cptr, chptr))
 		  {
 			  sendto_one(cptr, err_str(ERR_ONLYSERVERSCANCHANGE),
@@ -1634,7 +1634,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		  }
 	  case MODE_CHANPROT:
 		  if (!IsULine(cptr) && !IsServer(cptr)
-		      && !IsNetAdmin(cptr) && !IsTechAdmin(cptr)
+		      && !IsNetAdmin(cptr)
 		      && !is_chanowner(cptr, chptr))
 		  {
 			  sendto_one(cptr,
@@ -1849,7 +1849,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 			  goto linkok;
 		  }
 
-		  if (!IsNetAdmin(cptr) && !IsTechAdmin(cptr)
+		  if (!IsNetAdmin(cptr)
 		      && !is_chanowner(cptr, chptr))
 		  {
 			  sendto_one(cptr,
@@ -2241,7 +2241,7 @@ static int can_join(cptr, sptr, chptr, key, link, parv)
 #endif
 
 
-	/* 0 = noone 1 = IRCops 2 = Net Admins 3 =Net/Tech admins  (override) */
+	/* 0 = noone 1 = IRCops 2 = Net Admins 3 =Net admins  (override) */
 
 	if ((chptr->mode.limit && chptr->users >= chptr->mode.limit))
 	{
@@ -2317,7 +2317,7 @@ static int can_join(cptr, sptr, chptr, key, link, parv)
 		  }
 		  break;
 	  case 3:
-		  if (IsNetAdmin(sptr) || IsTechAdmin(sptr))
+		  if (IsNetAdmin(sptr))
 			  return 0;
 		  break;
 	  default:
@@ -2738,7 +2738,7 @@ int  channel_link(cptr, sptr, parc, parv)
 				    (IsHidden(sptr) ? sptr->
 				    user->virthost : sptr->user->realhost),
 				    name);
-			sendto_umode(UMODE_NETADMIN | UMODE_TECHADMIN,
+			sendto_umode(UMODE_NETADMIN,
 			    "*** Invisible(+I) user %s joined %s", sptr->name,
 			    chptr->chname);
 		}
@@ -3337,7 +3337,7 @@ int  m_kick(cptr, sptr, parc, parv)
 				    || is_chanowner(who, chptr)
 				    || IsServices(who))
 					if (IsNetAdmin
-						(sptr) || IsTechAdmin(sptr))
+						(sptr))
 					{	/* IRCop kicking owner/prot */
 						sendto_umode(UMODE_EYES,
 						    "*** OperKick [%s @ %s -> %s (%s)]",
@@ -3371,7 +3371,7 @@ int  m_kick(cptr, sptr, parc, parv)
 				if (IsKix(who) && !IsULine(sptr))
 				{
 					if (!(IsNetAdmin(sptr)
-					    || IsTechAdmin(sptr)))
+					    ))
 					{
 						sendto_one(sptr,
 						    ":%s NOTICE %s :*** Cannot kick %s from channel %s (usermode +q)",
@@ -4252,7 +4252,7 @@ int  m_names(cptr, sptr, parc, parv)
 		acptr = cm->value.cptr;
 		if (IsInvisible(acptr) && !member)
 			continue;
-		if (IsHiding(acptr) && acptr != sptr && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
+		if (IsHiding(acptr) && acptr != sptr && !(IsNetAdmin(sptr)))
 			continue;
 		if (chptr->mode.mode & MODE_AUDITORIUM)
 			if (!is_chan_op(sptr, chptr)

@@ -244,7 +244,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define UMODE_HIDE	 0x8000	/* Hide from Nukes */
 #define UMODE_NETADMIN  0x10000	/* Network Admin */
 #define UMODE_EYES      0x20000	/* Mode to see server stuff */
-#define UMODE_TECHADMIN 0x40000	/* Tech Admin */
 #define UMODE_COADMIN   0x80000	/* Co Admin */
 #define UMODE_WHOIS    0x100000	/* gets notice on /whois */
 #define UMODE_KIX      0x200000	/* usermode +q */
@@ -258,7 +257,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define UMODE_SETHOST  0x40000000	/* used sethost */
 #define UMODE_STRIPBADWORDS 0x80000000	/* */
 
-#define	SEND_UMODES	(UMODE_INVISIBLE|UMODE_OPER|UMODE_WALLOP|UMODE_FAILOP|UMODE_HELPOP|UMODE_REGNICK|UMODE_SADMIN|UMODE_NETADMIN|UMODE_TECHADMIN|UMODE_COADMIN|UMODE_ADMIN|UMODE_SERVICES|UMODE_HIDE|UMODE_EYES|UMODE_WHOIS|UMODE_KIX|UMODE_BOT|UMODE_SECURE|UMODE_FCLIENT|UMODE_HIDING|UMODE_DEAF|UMODE_VICTIM|UMODE_HIDEOPER|UMODE_SETHOST|UMODE_STRIPBADWORDS|UMODE_JUNK)
+#define	SEND_UMODES	(UMODE_INVISIBLE|UMODE_OPER|UMODE_WALLOP|UMODE_FAILOP|UMODE_HELPOP|UMODE_REGNICK|UMODE_SADMIN|UMODE_NETADMIN|UMODE_COADMIN|UMODE_ADMIN|UMODE_SERVICES|UMODE_HIDE|UMODE_EYES|UMODE_WHOIS|UMODE_KIX|UMODE_BOT|UMODE_SECURE|UMODE_FCLIENT|UMODE_HIDING|UMODE_DEAF|UMODE_VICTIM|UMODE_HIDEOPER|UMODE_SETHOST|UMODE_STRIPBADWORDS|UMODE_JUNK)
 #define	ALL_UMODES (SEND_UMODES|UMODE_SERVNOTICE|UMODE_LOCOP|UMODE_KILLS|UMODE_CLIENT|UMODE_FLOOD|UMODE_SERVICES|UMODE_EYES)
 #define	FLAGS_ID	(FLAGS_DOID|FLAGS_GOTID)
 
@@ -295,7 +294,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #endif
 
 #define IsNetAdmin(x)		((x)->umodes & UMODE_NETADMIN)
-#define IsTechAdmin(x)		((x)->umodes & UMODE_TECHADMIN)
 #define IsCoAdmin(x)		((x)->umodes & UMODE_COADMIN)
 #define IsSAdmin(x)		((x)->umodes & UMODE_SADMIN)
 #define SendFailops(x)		((x)->umodes & UMODE_FAILOP)
@@ -350,7 +348,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SetAdmin(x)		((x)->umodes |= UMODE_ADMIN)
 #define SetSAdmin(x)		((x)->umodes |= UMODE_SADMIN)
 #define SetNetAdmin(x)		((x)->umodes |= UMODE_NETADMIN)
-#define SetTechAdmin(x)		((x)->umodes |= UMODE_TECHADMIN)
 #define SetCoAdmin(x)		((x)->umodes |= UMODE_COADMIN)
 #define	SetInvisible(x)		((x)->umodes |= UMODE_INVISIBLE)
 #define SetEyes(x)		((x)->umodes |= UMODE_EYES)
@@ -370,7 +367,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 
 #define ClearAdmin(x)		((x)->umodes &= ~UMODE_ADMIN)
 #define ClearNetAdmin(x)	((x)->umodes &= ~UMODE_NETADMIN)
-#define ClearTechAdmin(x)	((x)->umodes &= ~UMODE_TECHADMIN)
 #define ClearCoAdmin(x)		((x)->umodes &= ~UMODE_COADMIN)
 #define ClearSAdmin(x)		((x)->umodes &= ~UMODE_SADMIN)
 #define ClearKillsF(x)		((x)->umodes &= ~UMODE_KILLS)
@@ -452,7 +448,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OFLAG_ZLINE	0x00080000	/* Oper can use /zline and /unzline */
 #define OFLAG_EYES      0x00100000	/* Oper auto gets +e */
 #define OFLAG_NETADMIN  0x00200000	/* netadmin gets +N */
-#define OFLAG_TECHADMIN 0x00400000	/* tech admin gets +T */
 #define OFLAG_COADMIN	0x00800000	/* co admin gets +C */
 #define OFLAG_SADMIN	0x01000000	/* services admin gets +a */
 #define OFLAG_WHOIS     0x02000000	/* gets auto +W on oper up */
@@ -485,7 +480,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPIsAdmin(x)	((x)->oflag & OFLAG_ADMIN)
 #define OPIsSAdmin(x)	((x)->oflag & OFLAG_SADMIN)
 #define OPIsNetAdmin(x) ((x)->oflag & OFLAG_NETADMIN)
-#define OPIsTechAdmin(x) ((x)->oflag & OFLAG_TECHADMIN)
 #define OPIsCoAdmin(x)	((x)->oflag & OFLAG_COADMIN)
 #define OPCanUModeC(x)	((x)->oflag & OFLAG_UMODEC)
 #define OPCanUModeF(x)	((x)->oflag & OFLAG_UMODEF)
@@ -510,7 +504,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPSSetAdmin(x)	((x)->oflag |= OFLAG_ADMIN)
 #define OPSSetSAdmin(x)	((x)->oflag |= OFLAG_SADMIN)
 #define OPSSetNetAdmin(x) ((x)-> oflag |= OFLAG_NETADMIN)
-#define OPSSetTechAdmin(x) ((x)-> oflag |= OFLAG_TECHADMIN)
 #define OPSSetCoAdmin(x) ((x)->oflag |= OFLAG_COADMIN)
 #define OPSetUModeC(x)	((x)->oflag |= OFLAG_UMODEC)
 #define OPSetUModeF(x)	((x)->oflag |= OFLAG_UMODEF)
@@ -535,7 +528,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPClearAdmin(x)		((x)->oflag &= ~OFLAG_ADMIN)
 #define OPClearSAdmin(x)	((x)->oflag &= ~OFLAG_SADMIN)
 #define OPClearNetAdmin(x)	((x)->oflag &= ~OFLAG_NETADMIN)
-#define OPClearTechAdmin(x)	((x)->oflag &= ~OFLAG_TECHADMIN)
 #define OPClearCoAdmin(x)	((x)->oflag &= ~OFLAG_COADMIN)
 #define OPClearUModeC(x)	((x)->oflag &= ~OFLAG_UMODEC)
 #define OPClearUModeF(x)	((x)->oflag &= ~OFLAG_UMODEF)

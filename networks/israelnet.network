@@ -18,7 +18,6 @@ Set locop_host ....: LocOP.Israel.Net
 Set sadmin_host ...: CSop.Israel.Net
 Set netadmin_host .: NetAdmin.Israel.Net
 Set coadmin_host ..: CoAdmin.Israel.Net
-Set techadmin_host : TechAdmin.Israel.Net
 Set hidden_host ...: israel
 Set netdomain .....: irc.israel.net
 Set helpchan ......: #OperHelp

@@ -83,7 +83,7 @@
 
 /*
  * Defining this will allow all ircops to see people in +s channels
- * By default, only net/tech admins can see this
+ * By default, only net admins can see this
  */
 #undef SEE_SECRET
 

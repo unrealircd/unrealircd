@@ -18,7 +18,6 @@ Set locop_host ....: oper.root.net
 Set sadmin_host ...: oper.root.net
 Set netadmin_host .: oper.god.net
 Set coadmin_host ..: oper.root.net
-Set techadmin_host : oper.root.net
 Set hidden_host ...: ownedbyj00
 Set netdomain .....: data-storm.net
 Set helpchan ......: #help

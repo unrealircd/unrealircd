@@ -19,7 +19,6 @@ Set locop_host ....: locop.chatplace.net
 Set sadmin_host ...: csop.chatplace.net
 Set netadmin_host .: netadmin.chatplace.net
 Set coadmin_host ..: coadmin.chatplace.net
-Set techadmin_host : techadmin.chatplace.net
 Set hidden_host ...: cp
 Set netdomain .....: chatplace.net
 Set helpchan ......: #HelpDesk

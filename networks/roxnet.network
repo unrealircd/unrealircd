@@ -19,7 +19,6 @@ Set locop_host ....: locop.roxnet.org
 Set sadmin_host ...: csops.roxnet.org
 Set netadmin_host .: netadmin.roxnet.org
 Set coadmin_host ..: coadmin.roxnet.org
-Set techadmin_host : techadmin.roxnet.org
 Set hidden_host ...: rox
 Set netdomain .....: roxnet.org
 Set helpchan ......: #ROXnet

@@ -20,7 +20,6 @@ Set locop_host ....: localOP.FireIRC.Net
 Set sadmin_host ...: serviceOP.FireIRC.Net
 Set netadmin_host .: NetADMIN.FireIRC.Net
 Set coadmin_host ..: CoADMIN.FireIRC.Net
-Set techadmin_host : TechAdmin.FireIRC.Net
 Set hidden_host ...: FireIRC
 Set netdomain .....: FireIRC.Net
 Set helpchan ......: #Services

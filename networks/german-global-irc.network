@@ -50,10 +50,6 @@ Set netadmin_host .: NetworkAdmin.Global-IRC.de
 Set coadmin_host ..: CoAdmin.Global-IRC.de
 
 
-# This is the virtual hostname TechAdmins will get
-# if iNAH option is enabled on oper up
-Set techadmin_host : TechAdmin.Global-IRC.de
-
 # This is the prefix of the hidden host (cloaking) hostname
 Set hidden_host ...: GL-IRC
 # This is the domain of the IRC network

@@ -10,7 +10,6 @@ Set locop_host ....: locop.linuxactive.net
 Set sadmin_host ...: csops.linuxactive.net
 Set netadmin_host .: netadmin.linuxactive.net
 Set coadmin_host ..: coadmin.linuxactive.net
-Set techadmin_host : techadmin.linuxactive.net
 Set hidden_host ...: LinuxActive
 Set netdomain .....: linuxactive.net
 Set helpchan ......: #Linux

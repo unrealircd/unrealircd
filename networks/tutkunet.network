@@ -18,7 +18,6 @@ Set locop_host ....: LoCoP.TuTKu.NeT
 Set sadmin_host ...: Csop.TuTKu.Net
 Set netadmin_host .: NetAdmiN.TuTKu.NeT
 Set coadmin_host ..: CoAdmiN.TuTKu.NeT
-Set techadmin_host : TecHAdmiN.TuTKu.NeT
 Set hidden_host ...: TuTKu
 Set netdomain .....: TuTKu.Net
 Set helpchan ......: #HeLp

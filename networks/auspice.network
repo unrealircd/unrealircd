@@ -18,7 +18,6 @@ Set locop_host ....: locop.auspice.org
 Set sadmin_host ...: csop.auspice.org
 Set netadmin_host .: netadmin.auspice.org
 Set coadmin_host ..: coadmin.auspice.org
-Set techadmin_host : techadmin.auspice.org
 Set hidden_host ...: khmer
 Set netdomain .....: auspice.org
 Set helpchan ......: #services

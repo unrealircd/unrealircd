@@ -50,10 +50,6 @@ Set netadmin_host .: netadmin.kammtech.dhs.org
 Set coadmin_host ..: coadmin.kammtech.dhs.org
 
 
-# This is the virtual hostname TechAdmins will get
-# if iNAH option is enabled on oper up
-Set techadmin_host : techadmin.kammtech.dhs.org
-
 # This is the prefix of the hidden host (cloaking) hostname
 Set hidden_host ...: kammtech
 # This is the domain of the IRC network

@@ -19,7 +19,6 @@ Set locop_host ....: Locop.Chatstation.Net
 Set sadmin_host ...: CSops.Chatstation.Net
 Set netadmin_host .: NetAdmin.Chatstation.Net
 Set coadmin_host ..: Coadmin.Chatstation.Net
-Set techadmin_host : TechAdmin.Chatstation.Net
 Set hidden_host ...: Chatstation
 Set netdomain .....: chatstation.net
 Set helpchan ......: #Help

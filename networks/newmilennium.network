@@ -16,7 +16,6 @@ Set locop_host ....: locop.newmilennium.net
 Set sadmin_host ...: serviceop.newmilennium.net
 Set netadmin_host .: netadmin.newmilennium.net
 Set coadmin_host ..: coadmin.newmilennium.net
-Set techadmin_host : techadmin.newmilennium.net
 Set hidden_host ...: newmilennium
 Set netdomain .....: newmilennium.net
 Set helpchan ......: #newmilennium

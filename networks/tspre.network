@@ -50,10 +50,6 @@ Set netadmin_host .: netadmin.tspre.org
 Set coadmin_host ..: coadmin.tspre.org
 
 
-# This is the virtual hostname TechAdmins will get
-# if iNAH option is enabled on oper up
-Set techadmin_host : techadmin.tspre.org
-
 # This is the prefix of the hidden host (cloaking) hostname
 Set hidden_host ...: ts
 # This is the domain of the IRC network

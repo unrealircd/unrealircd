@@ -230,8 +230,6 @@
 #define TOK_SJOIN	"~"
 #define MSG_SETHOST 	"SETHOST"	/* sethost */
 #define TOK_SETHOST 	"AA"	/* 127 4ever !;) */
-#define MSG_TECHAT 	"TECHAT"	/* techadmin chat */
-#define TOK_TECHAT  	"AB"	/* questionmark? */
 #define MSG_NACHAT  	"NACHAT"	/* netadmin chat */
 #define TOK_NACHAT  	"AC"	/* *beep* */
 #define MSG_SETIDENT 	"SETIDENT"	/* set ident */
@@ -349,7 +347,7 @@ extern int m_rehash(), m_restart(), m_die(), m_dns(), m_hash();
 extern int m_gline(), m_remgline(), m_map(), m_svs2mode(), m_admins(),
 m_dalinfo();
 extern int m_addline(), m_rules(), m_mkpasswd();
-extern int m_sethost(), m_nachat(), m_techat(), m_setident(), m_setname();
+extern int m_sethost(), m_nachat(), m_setident(), m_setname();
 extern int m_lag(), m_sdesc(), m_knock(), m_credits();
 extern int m_license(), m_chghost(), m_rping(), m_rpong();
 extern int m_netinfo(), m_sendumode(), m_addmotd(), m_addomotd();
@@ -459,7 +457,6 @@ struct Message msgtab[] = {
 	{MSG_ADDLINE, m_addline, 0, 1, TOK_ADDLINE, 0L},
 	{MSG_ADMINCHAT, m_admins, 0, 1, TOK_ADMINCHAT, 0L},
 	{MSG_SETHOST, m_sethost, 0, MAXPARA, TOK_SETHOST, 0L},
-	{MSG_TECHAT, m_techat, 0, 1, TOK_TECHAT, 0L},
 	{MSG_NACHAT, m_nachat, 0, 1, TOK_NACHAT, 0L},
 	{MSG_SETIDENT, m_setident, 0, MAXPARA, TOK_SETIDENT, 0L},
 	{MSG_SETNAME, m_setname, 0, 1, TOK_SETNAME, 0L},

@@ -259,13 +259,8 @@ ADDLINE
  Syntax: ADDLINE <line>
  Example: ADDLINE C:127.0.0.1:server.dal.net:linking:7325:50
 
-TECHAT
- - Similar to CHATOPS, but only Technical Admins are able to send/receive messages on this    "channel".
- Syntax: TECHAT <message>
- Example: TECHAT What do you think of the new routing map?
-
 NACHAT
- - Similar to CHATOPS (and TECHAT), but only Network Admins are able to send/recieve messages.
+ - Similar to CHATOPS, but only Network Admins are able to send/recieve messages.
  Syntax: NACHAT <message>
  Example: NACHAT Linking a new server in a couple minutes...
 
