@@ -46,7 +46,7 @@ aTKline *tklines = NULL;
 #define AllocCpy(x,y) x = (char *) MyMalloc(strlen(y) + 1); strcpy(x,y)
 #define GFreeStr(x) MyFree((char *) x)
 #define GFreeGline(x) MyFree((aGline *) x)
-extern char zlinebuf[];
+extern char zlinebuf[BUFSIZE];
 
 /*
 

@@ -4030,7 +4030,7 @@ CMD_FUNC(m_rules)
 		goto playrules;
 	}
 #endif
-	strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost, sizeof userhost));
+	strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost), sizeof userhost);
 	for (ptr = conf_tld; ptr; ptr = (ConfigItem_tld *) ptr->next)
 	{
 		if (!match(ptr->mask, userhost))

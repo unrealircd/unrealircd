@@ -1270,4 +1270,4 @@ seen. gmtime warning still there
 - First part of skyper's security audit patch
 - Some more of skyper's security audit patch. Some of them were simply
   unfair in regards to performance or blindly added strlcats/strlcpy
-
+- Fixed some problems with skyper's patch (typos)

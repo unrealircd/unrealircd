@@ -207,8 +207,10 @@ extern int dgets(int, char *, int);
 extern char *inetntoa(char *);
 
 #if !defined(HAVE_SNPRINT) || !defined(HAVE_VSNPRINTF)
+#ifndef _WIN32
 extern int snprintf (char *str, size_t count, const char *fmt, ...);
 extern int vsnprintf (char *str, size_t count, const char *fmt, va_list arg);
+#endif
 #endif
 
 #ifdef _WIN32
