@@ -45,9 +45,6 @@ extern TS check_pings(TS now, int check_kills);
 
 /* Remmed out for win32 compatibility.. as stated of 467leaf win32 port.. */
 
-#ifdef _WIN32
-// extern       void    *hCio;
-#endif
 extern LoopStruct loop;
 
 #ifdef SHOWCONNECTINFO

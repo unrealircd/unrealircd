@@ -492,8 +492,11 @@ void count_memory(cptr, nick)
 	    me.name, RPL_STATSDEBUG, nick, fl, fl * sizeof(Link),
 	    flinks, flinks * sizeof(Link));
 
+#ifndef NEWDNS
 	rm = cres_mem(cptr);
-
+#else /*NEWDNS*/
+	rm = 0;
+#endif /*NEWDNS*/
 	tot = totww + totch + totcl + com + cl * sizeof(aClass) + db + rm;
 	tot += fl * sizeof(Link);
 	tot += sizeof(aHashEntry) * U_MAX;

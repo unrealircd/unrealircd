@@ -2,23 +2,36 @@
 # Win32Gui Config File .. By DrBin
 #
 CC=cl
+COMPILERHELP=compilerhelp.exe
 # Here you put your settings
 FD_SETSIZE=/D FD_SETSIZE=16384
 NS_ADDRESS=/D NS_ADDRESS="\"nospoof@dal.net\""
 
 !IFNDEF DEBUG
 
-CFLAGS=/MT /O2 /G5 /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D _WIN32GUI /D NOSPOOF=1 /c
+!IFNDEF DISTDEBUG
+CFLAGS=/MT /O2 /G5 /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D _WIN32GUI /D USENEWDNS /D NOSPOOF=1 /c
 
-LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib \
+LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib \
  oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /out:WIRCD2.EXE
 
 !ELSE
 
-CFLAGS=/MTd /G5 /Od /ZI /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D DEBUG /D DEBUGMODE /D _DEBUG /D _WIN32GUI /D NOSPOOF=1 /c
-
+CFLAGS=  /MTd /Zi /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D USENEWDNS /D _WIN32GUI /D NOSPOOF=1 /c
+#/Od /Yd /G5
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib \
- oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /debug /OUT:WIRCD.EXE
+ oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /debug /debugtype:BOTH /OUT:WIRCD.EXE
+
+
+!ENDIF
+
+
+!ELSE
+
+CFLAGS=  /MTd /Zi /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D DEBUG /D DEBUGMODE /D USENEWDNS /D _DEBUG /D _WIN32GUI /D NOSPOOF=1 /c
+#/Od /Yd /G5
+LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib \
+ oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /debug /debugtype:BOTH /OUT:WIRCD.EXE
 
 !ENDIF
 
@@ -27,188 +40,204 @@ INCLUDES=./include/struct.h ./include/config.h ./include/sys.h \
  ./include/common.h ./include/version.h ./include/h.h ./include/numeric.h \
  ./include/msg.h ./include/setup.h ./include/dynconf.h
 LINK=link.exe
-
+# SRC/RES.OBJ SRC/RES_INIT.OBJ SRC/RES_COMP.OBJ
 OBJ_FILES=SRC/CHANNEL.OBJ SRC/USERLOAD.OBJ SRC/SEND.OBJ SRC/BSD.OBJ \
- SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ SRC/RES.OBJ \
+ SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ  \
  SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ \
- SRC/S_NUMERIC.OBJ SRC/WHOWAS.OBJ SRC/RES_COMP.OBJ SRC/S_AUTH.OBJ \
+ SRC/S_NUMERIC.OBJ SRC/WHOWAS.OBJ  SRC/S_AUTH.OBJ \
  SRC/HELP.OBJ SRC/S_MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ \
- SRC/S_DEBUG.OBJ SRC/RES_INIT.OBJ SRC/SUPPORT.OBJ SRC/LIST.OBJ \
+ SRC/S_DEBUG.OBJ  SRC/SUPPORT.OBJ SRC/LIST.OBJ \
  SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/CLASS.OBJ SRC/S_BSD.OBJ \
  SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/WIN32GUI.OBJ \
- SRC/VERSION.OBJ SRC/win32/WIN32.RES SRC/S_UNREAL.OBJ SRC/DYNCONF.OBJ \
+ SRC/VERSION.OBJ SRC/S_UNREAL.OBJ SRC/DYNCONF.OBJ \
  SRC/S_SOCKS.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ \
- SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ
+ SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/NEWDNS.OBJ src/version.obj
 RC=rc.exe
 
-ALL: WIRCD.EXE
+ALL: COMPILERHELP.EXE WIRCD.EXE
 
 CLEAN:
-	-@erase src\*.exe 2>NUL
-	-@erase src\*.obj 2>NUL
-	-@erase src\win32.res 2>NUL
-	-@erase src\version.c 2>NUL
-	-@erase src\win32\*.obj 2>NUL
-	-@erase .\*.exe 2>NUL
+        -@erase src\*.exe 2>NUL
+        -@erase src\*.obj 2>NUL
+        -@erase src\win32.res 2>NUL
+        -@erase src\version.c 2>NUL
+        -@erase src\win32\*.obj 2>NUL
+        -@erase .\*.exe 2>NUL
 
 #include/setup.h:
-#	@echo Hmm...doesn't look like you've run Config...
-#	@echo Doing so now.
-#	@config.exe
+#        @echo Hmm...doesn't look like you've run Config...
+#        @echo Doing so now.
+#        @config.exe
 
 #src/version.c: dummy
-#	@config.exe -v
+#        @config.exe -v
 
-src/version.obj: src/win32/version.c
-	$(CC) $(CFLAGS) src/win32/version.c
+./COMPILERHELP.EXE:
+	cl src/win32/compilerhelp.c /link /out:compilerhelp.exe
 
-./WIRCD.EXE: $(OBJ_FILES) src/win32/version.obj
-	$(LINK) $(LFLAGS) $(OBJ_FILES) SRC/WIN32/GNU_REGEX.LIB SRC/WIN32/DEBUG/STACKTRACE.LIB /MAPINFO:LINES /MAP
+./WIRCD.EXE: $(OBJ_FILES) SRC/win32/WIN32.RES
+        $(LINK) $(LFLAGS) $(OBJ_FILES) SRC/win32/WIN32.RES SRC/WIN32/GNU_REGEX.LIB SRC/WIN32/DEBUG/STACKTRACE.LIB /MAPINFO:LINES /MAP
+	-@erase src\win32\win32.res
 !IFNDEF DEBUG
+!IFNDEF DISTDEBUG
  @echo Non Debug version built 
+!ELSE
+ @echo Distribution DEBUG Version Built
+!ENDIF
 !ELSE
  @echo Debug version built ... 
 !ENDIF
 
 ./CHKCONF.EXE: ./include/struct.h ./include/config.h ./include/sys.h \
-		 ./include/common.h ./src/crule.c ./src/match.c ./src/chkconf.c
-	$(CC) /nologo /I ./include /D CR_CHKCONF /Fosrc/chkcrule.obj /c src/crule.c
-	$(CC) /nologo /I ./include /D CR_CHKCONF /Fosrc/chkmatch.obj /c src/match.c
-	$(CC) /nologo /I ./include /D CR_CHKCONF /Fosrc/chkconf.obj /c src/chkconf.c
-	$(LINK) /nologo /out:./chkconf.exe src/chkconf.obj src/chkmatch.obj \
-		src/chkcrule.obj
+                 ./include/common.h ./src/crule.c ./src/match.c ./src/chkconf.c
+        $(CC) /nologo /I ./include /D CR_CHKCONF /Fosrc/chkcrule.obj /c src/crule.c
+        $(CC) /nologo /I ./include /D CR_CHKCONF /Fosrc/chkmatch.obj /c src/match.c
+        $(CC) /nologo /I ./include /D CR_CHKCONF /Fosrc/chkconf.obj /c src/chkconf.c
+        $(LINK) /nologo /out:./chkconf.exe src/chkconf.obj src/chkmatch.obj \
+                src/chkcrule.obj
+
+src/newdns.obj: src/newdns.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/newdns.c
+
+src/version.obj: src/win32/version.c
+        $(CC) $(CFLAGS) src/win32/version.c
 
 src/parse.obj: src/parse.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/parse.c
+        $(CC) $(CFLAGS) src/parse.c
 
 src/badwords.obj: src/badwords.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/badwords.c
+        $(CC) $(CFLAGS) src/badwords.c
 
 src/webtv.obj: src/webtv.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/webtv.c
+        $(CC) $(CFLAGS) src/webtv.c
 
 src/bsd.obj: src/bsd.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/bsd.c
+        $(CC) $(CFLAGS) src/bsd.c
 
 src/dbuf.obj: src/dbuf.c $(INCLUDES) ./include/dbuf.h
-	$(CC) $(CFLAGS) src/dbuf.c
+        $(CC) $(CFLAGS) src/dbuf.c
 
 src/ircsprintf.obj: src/ircsprintf.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/ircsprintf.c
 
 src/packet.obj: src/packet.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/packet.c
+        $(CC) $(CFLAGS) src/packet.c
 
 src/fdlist.obj: src/fdlist.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/fdlist.c
+        $(CC) $(CFLAGS) src/fdlist.c
 
 src/dynconf.obj: src/dynconf.c $(INCLUDES) ./include/dbuf.h \
-		./include/channel.h ./include/whowas.h
-	$(CC) $(CFLAGS) src/dynconf.c
+                ./include/channel.h ./include/whowas.h
+        $(CC) $(CFLAGS) src/dynconf.c
 
 src/send.obj: src/send.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/send.c
+        $(CC) $(CFLAGS) src/send.c
 
 src/match.obj: src/match.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/match.c
+        $(CC) $(CFLAGS) src/match.c
 
 src/support.obj: src/support.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/support.c
+        $(CC) $(CFLAGS) src/support.c
 
 src/channel.obj: src/channel.c $(INCLUDES) ./include/channel.h
-	$(CC) $(CFLAGS) src/channel.c
+        $(CC) $(CFLAGS) src/channel.c
 
 src/class.obj: src/class.c $(INCLUDES) ./include/class.h
-	$(CC) $(CFLAGS) src/class.c
+        $(CC) $(CFLAGS) src/class.c
 
 src/lusers.obj: src/lusers.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/lusers.c
+        $(CC) $(CFLAGS) src/lusers.c
 
 src/aln.obj: src/aln.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/aln.c
 
 src/ircd.obj: src/ircd.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/ircd.c
+        $(CC) $(CFLAGS) src/ircd.c
 
 src/list.obj: src/list.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/list.c
+        $(CC) $(CFLAGS) src/list.c
 
 src/res.obj: src/res.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/res.c
+        $(CC) $(CFLAGS) src/res.c
 
 src/s_bsd.obj: src/s_bsd.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/s_bsd.c
+        $(CC) $(CFLAGS) src/s_bsd.c
 
 src/s_auth.obj: src/s_auth.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/s_auth.c
+        $(CC) $(CFLAGS) src/s_auth.c
 
 src/s_conf.obj: src/s_conf.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/s_conf.c
+        $(CC) $(CFLAGS) src/s_conf.c
 
 src/s_debug.obj: src/s_debug.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/s_debug.c
+        $(CC) $(CFLAGS) src/s_debug.c
 
 src/s_err.obj: src/s_err.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/s_err.c
+        $(CC) $(CFLAGS) src/s_err.c
 
 src/s_kline.obj: src/s_kline.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/s_kline.c
+        $(CC) $(CFLAGS) src/s_kline.c
 
 src/s_misc.obj: src/s_misc.c $(INCLUDES) ./include/dbuf.h
-	$(CC) $(CFLAGS) src/s_misc.c
+        $(CC) $(CFLAGS) src/s_misc.c
 
 src/scache.obj: src/scache.c $(INCLUDES) ./include/dbuf.h
-	$(CC) $(CFLAGS) src/scache.c
+        $(CC) $(CFLAGS) src/scache.c
 
 src/s_socks.obj: src/s_socks.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/s_socks.c
+        $(CC) $(CFLAGS) src/s_socks.c
 
 src/s_user.obj: src/s_user.c $(INCLUDES) ./include/dbuf.h \
-		./include/channel.h ./include/whowas.h
-	$(CC) $(CFLAGS) src/s_user.c
+                ./include/channel.h ./include/whowas.h
+        $(CC) $(CFLAGS) src/s_user.c
 
 src/s_extra.obj: src/s_extra.c $(INCLUDES) ./include/dbuf.h \
-		./include/channel.h ./include/whowas.h
-	$(CC) $(CFLAGS) src/s_extra.c
+                ./include/channel.h ./include/whowas.h
+        $(CC) $(CFLAGS) src/s_extra.c
 
 src/s_unreal.obj: src/s_unreal.c $(INCLUDES) ./include/dbuf.h \
-		./include/channel.h ./include/whowas.h
-	$(CC) $(CFLAGS) src/s_unreal.c
+                ./include/channel.h ./include/whowas.h
+        $(CC) $(CFLAGS) src/s_unreal.c
 
 src/s_serv.obj: src/s_serv.c $(INCLUDES) ./include/dbuf.h ./include/whowas.h
-	$(CC) $(CFLAGS) src/s_serv.c
+        $(CC) $(CFLAGS) src/s_serv.c
 
 src/s_numeric.obj: src/s_numeric.c $(INCLUDES) ./include/dbuf.h
-	$(CC) $(CFLAGS) src/s_numeric.c
+        $(CC) $(CFLAGS) src/s_numeric.c
 
 src/whowas.obj: src/whowas.c $(INCLUDES) ./include/dbuf.h ./include/whowas.h
-	$(CC) $(CFLAGS) src/whowas.c
+        $(CC) $(CFLAGS) src/whowas.c
 
 src/hash.obj: src/hash.c $(INCLUDES) ./include/hash.h
-	$(CC) $(CFLAGS) src/hash.c
+        $(CC) $(CFLAGS) src/hash.c
 
 src/crule.obj: src/crule.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/crule.c
+        $(CC) $(CFLAGS) src/crule.c
 
 src/win32gui.obj: src/win32/win32gui.c $(INCLUDES) ./src/win32/resource.h
 #./include/resource.h
-	$(CC) $(CFLAGS) src/win32/win32gui.c
+        $(CC) $(CFLAGS) src/win32/win32gui.c
 
 src/res_comp.obj: src/res_comp.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/res_comp.c
+        $(CC) $(CFLAGS) src/res_comp.c
 
 src/res_init.obj: src/res_init.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/res_init.c
+        $(CC) $(CFLAGS) src/res_init.c
 
 src/help.obj: src/help.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/help.c
+        $(CC) $(CFLAGS) src/help.c
 
 src/md5.obj: src/md5.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/md5.c
+        $(CC) $(CFLAGS) src/md5.c
 
 src/win32/win32.res: src/win32/win32gui.rc
-	$(RC) /l 0x409 /fosrc/win32/win32.res /i ./include /i ./src \
-	      /d NDEBUG src/win32/win32gui.rc
+!IFNDEF DISTDEBUG
+	$(COMPILERHELP) src/win32/leavealone.h
+!ELSE
+	$(COMPILERHELP) src/win32/leavealone.h 0
+!ENDIF
+        $(RC) /l 0x409 /fosrc/win32/win32.res /i ./include /i ./src \
+              /d NDEBUG src/win32/win32gui.rc
 
 dummy:
 

@@ -562,7 +562,11 @@ extern TS check_pings(TS currenttime, int check_kills)
 					Debug((DEBUG_NOTICE,
 					    "DNS/AUTH timeout %s",
 					    get_client_name(cptr, TRUE)));
+#ifndef NEWDNS
 					del_queries((char *)cptr);
+#else /*NEWDNS*/
+					/*We dont do anything (yet)*/
+#endif /*NEWDNS*/	
 					ClearAuth(cptr);
 					ClearDNS(cptr);
 #ifdef SOCKSPORT
@@ -1304,10 +1308,14 @@ void SocketLoop(void *dummy)
 		/*
 		   ** DNS checks. One to timeout queries, one for cache expiries.
 		 */
+
+		/*TODO: Add FULL Caching*/
+#ifndef NEWDNS
 		if (now >= nextdnscheck)
 			nextdnscheck = timeout_query_list(now);
 		if (now >= nextexpire)
 			nextexpire = expire_cache(now);
+#endif /*NEWDNS*/
 		/*
 		   ** take the smaller of the two 'timed' event times as
 		   ** the time of next event (stops us being late :) - avalon

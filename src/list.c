@@ -562,7 +562,9 @@ void delist_conf(aconf)
 void free_sqline(asqline)
 	aSqlineItem *asqline;
 {
+#ifndef NEWDNS
 	del_queries((char *)asqline);
+#endif /*NEWDNS*/
 	MyFree(asqline->sqline);
 	MyFree(asqline->reason);
 	MyFree((char *)asqline);
@@ -572,7 +574,9 @@ void free_sqline(asqline)
 void free_conf(aconf)
 	aConfItem *aconf;
 {
+#ifndef NEWDNS
 	del_queries((char *)aconf);
+#endif /*NEWDNS*/
 	MyFree(aconf->host);
 	if (aconf->passwd)
 		bzero(aconf->passwd, strlen(aconf->passwd));

@@ -90,9 +90,6 @@ int  rr;
 #define INADDRSZ sizeof(struct IN_ADDR)
 #define IN6ADDRSZ sizeof(struct IN_ADDR)
 
-#ifdef _WIN32
-extern HWND hwIRCDWnd;
-#endif
 extern char backupbuf[8192];
 aClient *local[MAXCONNECTIONS];
 int  highest_fd = 0, readcalls = 0, resfd = -1;
@@ -119,6 +116,10 @@ extern fdlist oper_fdlist;
 extern fdlist socks_fdlist;
 #endif
 
+
+#ifdef NEWDNS
+void newdns_lookupfromip( aClient *);
+#endif /*NEWDNS*/
 /*
  * Try and find the correct name to use with getrlimit() for setting the max.
  * number of files allowed to be open by this process.
@@ -543,8 +544,9 @@ if ((bootopt & BOOT_CONSOLE) || isatty(0))
 }
 init_dgram:
 #endif /*_WIN32*/
+#ifdef NEWDNS
 resfd = init_resolver(0x1f);
-
+#endif /*NEWDNS*/
 return;
 }
 
@@ -788,7 +790,11 @@ int  check_server_init(cptr)
 			else
 				s = aconf->host;
 			Debug((DEBUG_DNS, "sv_ci:cache lookup (%s)", s));
+#ifndef NEWDNS
 			hp = gethost_byname(s, &lin);
+#else /*NEWDNS*/
+			hp = newdns_checkcachename(s);
+#endif /*NEWDNS*/
 		}
 	}
 	return check_server(cptr, hp, c_conf, n_conf, 0);
@@ -1027,7 +1033,9 @@ void close_connection(cptr)
 	/*
 	 * remove outstanding DNS queries.
 	 */
+#ifndef NEWDNS	
 	del_queries((char *)cptr);
+#endif /*NEWDNS*/
 	/*
 	 * If the connection has been up for a long amount of time, schedule
 	 * a 'quick' reconnect, else reset the next-connect cycle.
@@ -1382,29 +1390,59 @@ aClient *add_connection(cptr, fd)
 			goto add_con_refuse;
 #endif
 #ifdef SHOWCONNECTINFO
+		/* Start of the very first DNS check */
 #ifndef _WIN32
 		write(fd, REPORT_DO_DNS, R_do_dns);
 #else
 		send(fd, REPORT_DO_DNS, R_do_dns, 0);
 #endif
 #endif
-		lin.flags = ASYNC_CLIENT;
+
+#ifndef USENEWDNS
+		lin.flags = ASYNC_CLIENT;  //newdns
 		lin.value.cptr = acptr;
 		Debug((DEBUG_DNS, "lookup %s",
-		    inetntoa((char *)&addr.SIN_ADDR)));
+		inetntoa((char *)&addr.SIN_ADDR)));
+
+
 		acptr->hostp = gethost_byaddr((char *)&acptr->ip, &lin);
+
+
+
+		acptr->hostp = newdns_lookupfromip(&acptr->ip);
 		if (!acptr->hostp)
 			SetDNS(acptr);
 #ifdef SHOWCONNECTINFO
 		else
 #ifndef _WIN32
 			write(fd, REPORT_FIN_DNSC, R_fin_dnsc);
-#else
+#else /*_WIN32*/
 			send(fd, REPORT_FIN_DNSC, R_fin_dnsc, 0);
-#endif
+#endif /*_WIN32*/
 
-#endif
+#endif /*SHOWCONNECTINFO*/
 		nextdnscheck = 1;
+
+
+#else /*USENEWDNS*/
+
+		Debug((DEBUG_DNS, "lookup %s",
+		inetntoa((char *)&addr.SIN_ADDR)));
+
+
+		if (acptr->hostp = newdns_checkcacheip(acptr))
+
+#ifdef SHOWCONNECTINFO
+
+#ifndef _WIN32
+			write(fd, REPORT_FIN_DNSC, R_fin_dnsc);
+#else /*_WIN32*/
+			send(fd, REPORT_FIN_DNSC, R_fin_dnsc, 0);
+#endif /*_WIN32*/
+
+#endif /*SHOWCONNECTINFO*/
+
+#endif /*USENEWDNS*/
 	}
 
 	if (aconf)
@@ -2541,7 +2579,11 @@ int  connect_server(aconf, by, hp)
 #else
 			aconf->ipnum.S_ADDR = 0;
 #endif
+#ifndef NEWDNS
 			hp = gethost_byname(s, &lin);
+#else  /*NEWDNS*/
+			hp = newdns_checkcachename(s);
+#endif /*NEWDNS*/
 			Debug((DEBUG_NOTICE, "co_sv: hp %x ac %x na %s ho %s",
 			    hp, aconf, aconf->name, s));
 			if (!hp)
@@ -2832,6 +2874,8 @@ void get_my_name(cptr, name, len)
  * Called when the fd returned from init_resolver() has been selected for
  * reading.
  */
+
+#ifndef NEWDNS
 #ifndef _WIN32
 static void do_dns_async()
 #else
@@ -2919,3 +2963,4 @@ void do_dns_async(id)
 #endif
 	}			/* while (hp != NULL) */
 }
+#endif /*NEWDNS*/

@@ -971,9 +971,11 @@ int  rehash(cptr, sptr, sig)
 	 */
 	for (cltmp = NextClass(FirstClass()); cltmp; cltmp = NextClass(cltmp))
 		MaxLinks(cltmp) = -1;
+#ifndef NEWDNS
 	if (sig != 2)
 		flush_cache();
-
+#endif /*NEWDNS*/
+	
 	(void)initconf(0);
 	close_listeners();
 	/*
@@ -1611,10 +1613,18 @@ static int lookup_confhost(aconf)
 #else
 		aconf->ipnum.S_ADDR = inet_addr(s);
 #endif
+
+#ifndef NEWDNS
 	else if ((hp = gethost_byname(s, &ln)))
 		bcopy(hp->h_addr, (char *)&(aconf->ipnum),
 		    sizeof(struct IN_ADDR));
-
+#else /*NEWDNS*/
+	else if (hp = newdns_checkcachename(s))
+		bcopy(hp->h_addr, (char *)&(aconf->ipnum),
+		    sizeof(struct IN_ADDR));
+#endif /*NEWDNS*/
+	
+	
 #ifdef INET6
 	if (AND16(aconf->ipnum.s6_addr) == 255)
 #else
