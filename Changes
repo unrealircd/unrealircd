@@ -2873,3 +2873,4 @@ seen. gmtime warning still there
 - Added HOOKTYPE_UMODE_CHANGE (sptr, oldflags, newflags) - this may 
   not be accurate as umode changes are done manually many places.
 - Added HOOKTYPE_TOPIC (catches both remote and local TOPIC sets).
+- Added a missing ; in the docs oper {} example, reported by Certus
