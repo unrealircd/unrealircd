@@ -371,7 +371,30 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 	return;
 }
 
+/*
+   sendto_chanops_butone -Stskeeps
+*/
 
+void sendto_chanops_butone(aClient *one, aChannel *chptr, char *pattern, ...)
+{
+	va_list vl;
+	Link *lp;
+	aClient *acptr;
+
+	va_start(vl, pattern);
+	for (lp = chptr->members; lp; lp = lp->next)
+	{
+		acptr = lp->value.cptr;
+		if (acptr == one || !(lp->flags & CHFL_CHANOP))
+			continue;	/* ...was the one I should skip
+					   or user not not a channel op */
+		if (MyConnect(acptr) && IsRegisteredUser(acptr))
+		{
+			vsendto_one(acptr, pattern, vl);
+		}
+	}
+
+}
 
 /*
  * sendto_channelops_butone Added 1 Sep 1996 by Cabal95.

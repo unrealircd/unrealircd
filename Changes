@@ -493,3 +493,4 @@
 - Fixed SVS2MODE bug with illegal modes
 - Fixed /notice @%+ bug, where it didnt work at all
 - Fixed a small chmode +u bug
+- Added sendto_chanops_butone because of codemastr's laziness
