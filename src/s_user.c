@@ -1152,6 +1152,12 @@ int  m_nick(cptr, sptr, parc, parv)
 	{
 		if (MyConnect(sptr))
 		{
+#ifdef GUEST
+			if (IsUnknown(sptr)) {
+				m_guest(cptr, sptr, parc, parv);
+				return 0;
+    			}
+#endif
 			sendto_one(sptr, err_str(ERR_NICKNAMEINUSE), me.name,
 			    BadPtr(parv[0]) ? "*" : parv[0], nick);
 			return 0;	/* NICK message ignored */
@@ -1313,6 +1319,12 @@ int  m_nick(cptr, sptr, parc, parv)
 		   ** NICK is coming from local client connection. Just
 		   ** send error reply and ignore the command.
 		 */
+#ifdef GUEST
+		if (IsUnknown(sptr)) {
+			m_guest(cptr, sptr, parc, parv);
+			return 0;
+		}
+#endif
 		sendto_one(sptr, err_str(ERR_NICKNAMEINUSE),
 		    /* parv[0] is empty when connecting */
 		    me.name, BadPtr(parv[0]) ? "*" : parv[0], nick);

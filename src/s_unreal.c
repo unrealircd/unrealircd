@@ -1307,6 +1307,29 @@ int  m_svso(cptr, sptr, parc, parv)
 	}
 }
 
+#ifdef GUEST
+int m_guest (cptr, sptr, parc, parv)
+aClient *cptr, *sptr;
+int parc;
+char *parv[];
+{
+int randnum;
+char guestnick[NICKLEN];
+char *param[2];
+
+randnum = 1+(int) (99999.0*rand()/(RAND_MAX+10000.0));
+snprintf(guestnick, NICKLEN, "Guest%li", randnum);
+
+while(find_client(guestnick, (aClient *)NULL))
+{ 
+randnum = 1+(int) (99999.0*rand()/(RAND_MAX+10000.0));
+snprintf(guestnick, NICKLEN, "Guest%li", randnum);
+}
+param[0] = sptr->name;
+param[1] = guestnick;
+m_nick(sptr,cptr,2,param);
+}
+#endif
 
 int  m_htm(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;
