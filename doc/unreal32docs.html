@@ -627,7 +627,7 @@
   <tr> 
     <td><div align="center">B</div></td>
     <td><div align="center">can_unkline</div></td>
-    <td>Can use /unkline</td>
+    <td>Can use /kline -u@h</td>
   </tr>
   <tr> 
     <td><div align="center">t</div></td>
@@ -1738,8 +1738,7 @@
   </tr>
   <tr> 
     <td><div align="center">I</div></td>
-    <td>Invisible Join/Part's. Makes you hidden in channes (For Network Admins 
-      only, and MUST be enabled) (Set In Oper Block)</td>
+    <td>Invisible Join/Part's. Makes you hidden in channels (requires the can_stealth/I flag, and  +I must also be enabled on the particular server.) (Set In Oper Block)</td>
   </tr>
   <tr> 
     <td><div align="center">t</div></td>
@@ -2045,72 +2044,40 @@
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">kline &lt;hostmask&gt; &lt;reason&gt;</td>
+    <td height="39">kline +-&lt;hostmask&gt; &lt;time to ban&gt; &lt;reason&gt;</td>
     <td>Bans the hostmask from the server it is issued on. It is not a global 
-      ban. </td>
+      ban. Time to ban is in seconds, or you can use 1d for 1 days. If the hostmask is prefixed with a -, the kline is removed</td>
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">unkline &lt;hostmask&gt;</td>
-    <td>Removes a kline</td>
+    <td height="39">zline +-&lt;ip&gt; &lt;time to ban&gt; &lt;reason&gt;</td>
+    <td>Bans an IP Address from the local server it is issued on. Time to ban is in seconds, or you can use 1d for 1 days. If the ip is prefixed with a - then the zline is removed.<br></td>
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">zline &lt;ip&gt; :&lt;reason&gt;</td>
-    <td>Bans an IP Address from the local server it is issued on<br></td>
-    <td>IRCop</td>
-  </tr>
-  <tr> 
-    <td height="39">unzline &lt;ip&gt;</td>
-    <td>Removes a zline</td>
-    <td>IRCop</td>
-  </tr>
-  <tr> 
-    <td height="39">gline &lt;user@host&gt; &lt;time to ban&gt; :&lt;reason&gt;<br></td>
+    <td height="39">gline +-&lt;user@host&gt; &lt;time to ban&gt; :&lt;reason&gt;<br></td>
     <td>Adds a global ban to anyone that matches. Time to ban is in seconds, or 
-      u can use 1d for 1 days. To remove a gline, put a &#8211;user@host<br></td>
+      you can use 1d for 1 days. To remove a gline, put a &#8211;user@host<br></td>
     <td>IRCop</td>
   </tr>
   <tr> 
     <td height="39">shun +-&lt;user@host&gt; &lt;time to shun&gt; :&lt;reason&gt;<br></td>
     <td>Prevents a user from executing ANY commands on the server, and prevents 
-      them from speaking. Time to ban is in seconds, or u can use 1d for 1 days. 
+      them from speaking. Time to shun is in seconds, or you can use 1d for 1 days. 
       To remove a shun, put a &#8211;user@host. Setting time to 0 makes it permanent. 
       <br></td>
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">gzline &lt;ip&gt; &lt;time to ban&gt; :&lt;reason&gt;<br></td>
-    <td>Adds a global zline. Time to ban is in seconds, or u can use 1d for 1 
+    <td height="39">gzline +-&lt;ip&gt; &lt;time to ban&gt; :&lt;reason&gt;<br></td>
+    <td>Adds a global zline. Time to ban is in seconds, or you can use 1d for 1 
       days. To remove a gzline, put a &#8211;user@host. Setting time to 0 makes 
       it permanent.<br></td>
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">tkline &lt;user@host&gt; &lt;time to ban&gt; :&lt;reason&gt;<br></td>
-    <td>Timed Kline. . Time to ban is in seconds, or u can use 1d for 1 days. 
-      To remove a tkline, put a &#8211;user@host. Setting time to 0 makes it permanent.<br></td>
-    <td>IRCop</td>
-  </tr>
-  <tr> 
-    <td height="39">tzline &lt;ip&gt; &lt;time to ban&gt; :&lt;reason&gt;<br></td>
-    <td>Timed Zline. . Time to ban is in seconds, or u can use 1d for 1 days. 
-      To remove a tzline, put a &#8211;user@host. Setting time to 0 makes it permanent</td>
-    <td>IRCop</td>
-  </tr>
-  <tr> 
-    <td height="39">akill &lt;user@host&gt; :&lt;reason&gt;<br></td>
-    <td>Adds an akill (Services Admins &amp; Network Admins ONLY)<br></td>
-    <td>IRCop</td>
-  </tr>
-  <tr> 
-    <td height="39">rakill &lt;user@host&gt;<br></td>
-    <td>Removes an akill<br></td>
-    <td>IRCop</td>
-  </tr>
-  <tr> 
     <td height="39">rehash &lt;server&gt; &#8211;&lt;flags&gt;</td>
-    <td>Rehashes the servers config file. Incluidng a server name allows you to 
+    <td>Rehashes the servers config file. Including a server name allows you to 
       rehash a remote servers config file. Several flags are also available. They 
       Include <br>
       -dccdeny - Rehashes dccdeny.conf<br>

@@ -1734,3 +1734,6 @@ seen. gmtime warning still there
 - Fixed a bug where included files were not added to the file list in the Config menu under
   win32. Reported by PoisonDart316 (#0000535)
 - Added chmode +u to help.conf, reported by Jaw959 (#0000544)
+- Fixed a docs typo 'channes' instead of 'channels' and a typo that said +I is limited to
+  netadmins, reported by PoisonDart316 (#0000547), also removed /unkline and /unzline from
+  the docs (replaced with /kline - and /zline -, also reported by PoisonDart316 (#0000548)
