@@ -89,8 +89,8 @@ int     zip_init(aClient *cptr)
   bzero(cptr->zip->in, sizeof(z_stream)); /* Just to be sure -- Syzop */
   cptr->zip->in->total_in = 0;
   cptr->zip->in->total_out = 0;
-  cptr->zip->in->zalloc = (alloc_func)0;
-  cptr->zip->in->zfree = (free_func)0;
+  cptr->zip->in->zalloc = NULL;
+  cptr->zip->in->zfree = NULL;
   cptr->zip->in->data_type = Z_ASCII;
   if (inflateInit(cptr->zip->in) != Z_OK)
     {
@@ -102,8 +102,8 @@ int     zip_init(aClient *cptr)
   bzero(cptr->zip->out, sizeof(z_stream)); /* Just to be sure -- Syzop */
   cptr->zip->out->total_in = 0;
   cptr->zip->out->total_out = 0;
-  cptr->zip->out->zalloc = (alloc_func)0;
-  cptr->zip->out->zfree = (free_func)0;
+  cptr->zip->out->zalloc = NULL;
+  cptr->zip->out->zfree = NULL;
   cptr->zip->out->data_type = Z_ASCII;
   if (deflateInit(cptr->zip->out, ZIP_LEVEL) != Z_OK)
     return -1;

@@ -208,8 +208,7 @@ int m_chgident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sendto_snomask(SNO_EYES,
 			    "%s changed the virtual ident of %s (%s@%s) to be %s",
 			    sptr->name, acptr->name, acptr->user->username,
-			    (acptr->umodes & UMODE_HIDE ? acptr->
-			    user->realhost : acptr->user->realhost), parv[2]);
+			    GetHost(acptr), parv[2]);
 		}
 		sendto_serv_butone_token(cptr, sptr->name,
 		    MSG_CHGIDENT,

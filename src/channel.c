@@ -3184,7 +3184,7 @@ CMD_FUNC(m_part)
 		/*
 		   **  Remove user from the old channel (if any)
 		 */
-		if (parc < 3)
+		if (!comment)
 			sendto_serv_butone_token(cptr, parv[0],
 			    MSG_PART, TOK_PART, "%s", chptr->chname);
 		else
@@ -3238,7 +3238,7 @@ CMD_FUNC(m_part)
 					    me.name, MSG_SMO, TOK_SMO,
 					    "A :[+I] %s invisible parted %s",
 					    sptr->name, chptr->chname);
-					if (parc < 3)
+					if (!comment)
 						sendto_channel_ntadmins(sptr, chptr, ":%s PART %s",
 						    sptr->name, chptr->chname);
 					else
@@ -3247,7 +3247,7 @@ CMD_FUNC(m_part)
 				}
 				if (MyClient(sptr)) {
 					/* awful hack .. */
-					if (parc < 3)
+					if (!comment)
 						sendto_one(sptr,
 						    ":%s!%s@%s PART %s",
 						    sptr->name,
@@ -3267,7 +3267,7 @@ CMD_FUNC(m_part)
 			{
 				if (MyClient(sptr))
 				{
-					if (parc < 3)
+					if (!comment)
 					{
 						sendto_chanops_butone(NULL,
 						    chptr, ":%s!%s@%s PART %s",
@@ -3309,7 +3309,7 @@ CMD_FUNC(m_part)
 			{
 
 
-				if (parc < 3)
+				if (!comment)
 
 					sendto_channel_butserv(chptr,
 					    sptr, PartFmt, parv[0],
