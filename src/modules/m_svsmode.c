@@ -234,6 +234,10 @@ int  m_svs2mode(cptr, sptr, parc, parv)
 
         if (parc < 3)
                 return 0;
+
+        if (!(acptr = find_person(parv[1], NULL)))
+                return 0;
+
         setflags = 0;
         for (s = user_modes; (flag = *s); s += 2)
                 if (acptr->umodes & flag)

@@ -26,19 +26,24 @@
 #ifndef _INCLUDE_THREADS_H
 #define _INCLUDE_THREADS_H
 /* Allow it to work on Windows and linux easily -- codemastr */
+#ifndef THREAD_DEBUGGING
+#define TDebug(x) 
+#else
+#define TDebug(x) ircd_log(LOG_ERROR, "%s:%i: %s", __FILE__, __LINE__, #x)
+#endif
 #if !defined(_WIN32) || defined(USE_PTHREADS)
 #include <pthread.h>
 typedef pthread_attr_t THREAD_ATTR;
 typedef pthread_t THREAD;
 typedef pthread_mutex_t MUTEX;
-#define IRCCreateThread(thread, attr, start, arg) pthread_attr_init(&attr); pthread_create(&thread, &attr, (void*)start, arg)
-#define IRCMutexLock(mutex) pthread_mutex_lock(&mutex)
-#define IRCMutexTryLock(mutex) pthread_mutex_trylock(&mutex);
-#define IRCMutexUnlock(mutex) pthread_mutex_unlock(&mutex)
-#define IRCCreateMutex(mutex) pthread_mutex_init(&mutex, NULL)
-#define IRCMutexDestroy(mutex) pthread_mutex_destroy(&mutex)
-#define IRCJoinThread(thread,return) pthread_join(thread, return)
-#define IRCExitThread(value) pthread_exit(value)
+#define IRCCreateThread(thread, attr, start, arg) TDebug(CreateThread); pthread_attr_init(&attr); pthread_create(&thread, &attr, (void*)start, arg)
+#define IRCMutexLock(mutex) TDebug(MutexLock); pthread_mutex_lock(&mutex)
+#define IRCMutexTryLock(mutex) TDebug(MutexTryLock); pthread_mutex_trylock(&mutex);
+#define IRCMutexUnlock(mutex) TDebug(MutexUnlcok); pthread_mutex_unlock(&mutex)
+#define IRCCreateMutex(mutex) TDebug(CreateMutex); pthread_mutex_init(&mutex, NULL)
+#define IRCMutexDestroy(mutex) TDebug(MutexDestroy); pthread_mutex_destroy(&mutex)
+#define IRCJoinThread(thread,return) TDebug(JoinThread); pthread_join(thread, return)
+#define IRCExitThread(value) TDebug(ExitThread); pthread_exit(value)
 #define IRCTerminateThread(thread, value) pthread_cancel(&thread)
 #define IRCThreadSelf() pthread_self()
 #define IRCThreadEqual(thread1, thread2) pthread_equal(thread1,thread2)

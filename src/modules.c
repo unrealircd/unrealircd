@@ -76,13 +76,19 @@ int  load_module(char *module, int module_load)
 	ModuleInfo *mod_header;
 	int  i;
 
+	Debug((DEBUG_DEBUG, "Attemping to load %s",
+		module));
+
 	if (Mod = irc_dlopen(module, RTLD_NOW))
 	{
 		/* Succeed loading module */
 		/* We check header */
 		mod_header = irc_dlsym(Mod, "mod_header");
 		if (!mod_header) 
+		{
+			Debug((DEBUG_DEBUG, "Didn't find mod_header, trying _mod_header"));
 			mod_header = irc_dlsym(Mod, "_mod_header");
+		}
 		if (!mod_header)
 		{
 			config_progress("%s: cannot load, no module header",
@@ -110,6 +116,7 @@ int  load_module(char *module, int module_load)
 		for (i = 0; i < MAXMODULES; i++)
 			if (Modules[i] && !strcmp(Modules[i]->name, mod_header->name))
 			{
+				Debug((DEBUG_DEBUG, "Module already loaded, duplicate"));
 				/* We will unload it without notice, its a duplicate */
 				irc_dlclose(Mod);
 				return 1;
