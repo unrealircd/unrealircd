@@ -1968,3 +1968,4 @@ seen. gmtime warning still there
 - Fixed a match() bug
 - Fixed a /version bug
 - Improved fake lag stuff
+- Improved previous /version bugfix

@@ -136,7 +136,7 @@ CMD_FUNC(m_version)
 	extern char serveropts[];
 
 	/* Only allow remote VERSIONs if registered -- Syzop */
-	if (MyClient(sptr) && (!IsPerson(sptr) && !IsServer(cptr)))
+	if (!IsPerson(sptr) && !IsServer(cptr))
 		goto normal;
 
 	if (hunt_server_token(cptr, sptr, MSG_VERSION, TOK_VERSION, ":%s", 1, parc,
