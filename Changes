@@ -504,3 +504,4 @@ seen. gmtime warning still there
   solution. Broken code, do not use devel right now
 - Fixed to winlocal by McSkaf
 - More fixes
+- Made /die not show admins IP (fixed by Stskeeps after his users nuked him..)

@@ -4780,7 +4780,7 @@ int  m_die(cptr, sptr, parc, parv)
 		if (IsClient(acptr))
 			sendto_one(acptr,
 			    ":%s NOTICE %s :Server Terminating. %s",
-			    me.name, acptr->name, get_client_name(sptr, TRUE));
+			    me.name, acptr->name, sptr->name);
 		else if (IsServer(acptr))
 			sendto_one(acptr, ":%s ERROR :Terminated by %s",
 			    me.name, get_client_name(sptr, TRUE));
