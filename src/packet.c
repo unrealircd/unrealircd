@@ -191,13 +191,11 @@ void	init_CommandHash(void)
 	add_Command(MSG_NETINFO, TOK_NETINFO, m_netinfo, MAXPARA);
 	add_Command(MSG_ADDMOTD, TOK_ADDMOTD, m_addmotd, 1);
 	add_Command(MSG_ADDOMOTD, TOK_ADDOMOTD, m_addomotd, 1);
-	add_Command(MSG_OPERMOTD, TOK_OPERMOTD, m_opermotd, MAXPARA);
 	add_Command(MSG_SVSJOIN, TOK_SVSJOIN, m_svsjoin, MAXPARA);
 	add_Command(MSG_SAJOIN, TOK_SAJOIN, m_sajoin, MAXPARA);
 	add_Command(MSG_SVSPART, TOK_SVSPART, m_svspart, MAXPARA);
 	add_Command(MSG_SAPART, TOK_SAPART, m_sapart, MAXPARA);
 	add_Command(MSG_SVSFLINE, TOK_SVSFLINE, m_svsfline, MAXPARA);
-	add_Command(MSG_TKL, TOK_TKL, m_tkl, MAXPARA);
 	add_Command(MSG_VHOST, TOK_VHOST, m_vhost, MAXPARA);
 	add_Command(MSG_BOTMOTD, TOK_BOTMOTD, m_botmotd, MAXPARA);
 	add_Command(MSG_SJOIN, TOK_SJOIN, m_sjoin, MAXPARA);

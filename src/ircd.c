@@ -1085,7 +1085,7 @@ int  InitwIRCD(argc, argv)
 #endif
 	init_dynconf();
 #ifdef STATIC_LINKING	
-	l_commands_init();
+        l_commands_Init();
 #endif
 	/* Add default class */
 	default_class = (ConfigItem_class *) MyMallocEx(sizeof(ConfigItem_class));
@@ -1208,7 +1208,7 @@ int  InitwIRCD(argc, argv)
 #endif
 	module_loadall();
 #ifdef STATIC_LINKING
-	l_commands_load(0);
+        l_commands_Load(0);
 #endif
 
 #ifndef NO_FDLIST

@@ -44,7 +44,7 @@ MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OB
  SRC/M_PINGPONG.OBJ SRC/M_QUIT.OBJ SRC/M_RAKILL.OBJ SRC/M_RPING.OBJ SRC/M_SENDUMODE.OBJ \
  SRC/M_SQLINE.OBJ SRC/M_KILL.OBJ SRC/M_TSCTL.OBJ SRC/M_UNKLINE.OBJ \
  SRC/M_UNSQLINE.OBJ SRC/M_UNZLINE.OBJ SRC/M_WHOIS.OBJ SRC/M_ZLINE.OBJ \
- SRC/SCAN.OBJ SRC/SCAN_SOCKS.OBJ SRC/SCAN_HTTP.OBJ
+ SRC/SCAN.OBJ SRC/SCAN_SOCKS.OBJ SRC/SCAN_HTTP.OBJ SRC/M_TKL.OBJ
 
 
 ALL: CONF WIRCD.EXE
@@ -244,6 +244,10 @@ src/m_svsmotd.obj: src/modules/m_svsmotd.c $(INCLUDES)
 
 src/m_svsmode.obj: src/modules/m_svsmode.c $(INCLUDES)
         $(CC) $(CFLAGS) src/modules/m_svsmode.c
+
+src/m_tkl.obj: src/modules/m_tkl.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_tkl.c
+
 
 src/m_swhois.obj: src/modules/m_swhois.c $(INCLUDES)
         $(CC) $(CFLAGS) src/modules/m_swhois.c

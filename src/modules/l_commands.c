@@ -82,7 +82,9 @@ int    l_commands_Init(int module_load)
 	/*
 	 * We call our add_Command crap here
 	*/
-	
+#ifdef SCAN_API
+        Module p;
+#endif
 	m_sethost_Init(module_load);
 	m_setname_Init(module_load);
 	m_chghost_Init(module_load);
@@ -126,8 +128,10 @@ int    l_commands_Init(int module_load)
 	m_guest_Init(module_load);
 #endif
 #ifdef SCAN_API
-	module_depend_resolve(scan_socks_Header.symdep);
-	module_depend_resolve(scan_http_Header.symdep);
+        p.header = &scan_socks_Header;
+        Module_Depend_Resolve(&p);
+        p.header = &scan_http_Header;
+        Module_Depend_Resolve(&p);
 	m_scan_Init(module_load);
 	scan_socks_Init(module_load);
 	scan_http_Init(module_load);

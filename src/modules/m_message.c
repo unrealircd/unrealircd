@@ -44,7 +44,7 @@
 
 static is_silenced PROTO((aClient *, aClient *));
 
-DLLFUNC static int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice);
+DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice);
 DLLFUNC int  m_notice(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int  m_private(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
@@ -134,7 +134,7 @@ int	m_message_Unload(int module_unload)
 #define PREFIX_VOICE	0x2
 #define PREFIX_OP	0x4
 
-DLLFUNC static int m_message(cptr, sptr, parc, parv, notice)
+DLLFUNC int m_message(cptr, sptr, parc, parv, notice)
 	aClient *cptr, *sptr;
 	int  parc;
 	char *parv[];

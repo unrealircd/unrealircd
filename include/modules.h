@@ -23,7 +23,7 @@
 #define MOD_WE_SUPPORT  "3.2-b5*"
 #define MAXHOOKTYPES	20
 
-#if defined(_WIN32) && !defined(STATIC_LINKING)
+#if defined(_WIN32)
 #define DLLFUNC	_declspec(dllexport)
 #define irc_dlopen(x,y) LoadLibrary(x)
 #define irc_dlclose FreeLibrary
