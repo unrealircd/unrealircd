@@ -124,6 +124,13 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 #define	elementsof(x) (sizeof(x)/sizeof(x[0]))
 
 /*
+** Flags for encryption
+*/
+#ifdef CRYPTOIRCD
+#define METHOD_BLOWFISH	1
+#endif
+
+/*
 ** flags for bootup options (command line flags)
 */
 #define	BOOT_CONSOLE	1
@@ -578,6 +585,13 @@ typedef struct Whowas
   struct Whowas *cprev; /* for client struct linked list */
 }aWhowas;
 
+#ifdef CRYPTOIRCD
+typedef struct CryptInfo
+{
+	short	method;
+	void	*key;
+} aCryptInfo;
+#endif
 
 struct  SqlineItem	{
 	unsigned int	status;
@@ -804,7 +818,7 @@ struct Client	{
 	struct Zdata *zip;        /* zip data */
 #endif
 #ifdef CRYPTOIRCD
-	BF_KEY	key;
+	aCryptInfo	*cryptinfo;		/* crypt */
 #endif
 #ifndef NO_FDLIST
         long    lastrecvM;         /* to check for activity --Mika */

@@ -1474,12 +1474,16 @@ static int read_packet(cptr, rfd)
 		if (length <= 0)
 			return length;
 	}
-
+	Debug((DEBUG_ERROR, "Block: %s", readbuf));
 	/*
 	   ** For server connections, we process as many as we can without
 	   ** worrying about the time of day or anything :)
 	 */
-	if (IsServer(cptr) || IsConnecting(cptr) || IsHandshake(cptr))
+	if (IsServer(cptr) || IsConnecting(cptr) || IsHandshake(cptr) 
+#ifdef CRYPTOIRCD
+		|| IsSecure(cptr)
+#endif	
+		)
 	{
 		if (length > 0)
 			if ((done = dopacket(cptr, readbuf, length)))
@@ -1513,7 +1517,11 @@ static int read_packet(cptr, rfd)
 			   ** If it has become registered as a Service or Server
 			   ** then skip the per-message parsing below.
 			 */
-			if (IsServer(cptr))
+			if (IsServer(cptr) 
+#ifdef CRYPTOIRCD
+				|| IsSecure(cptr)
+#endif
+				) 
 			{
 				dolen = dbuf_get(&cptr->recvQ, readbuf,
 				    sizeof(readbuf));

@@ -72,8 +72,10 @@ int  dopacket(cptr, buffer, length)
 	aClient *acpt = cptr->acpt;
 #ifdef CRYPTOIRCD
 	int  lengthweneed, num;
-	char cryptbuffer[4096];
+	char cryptbuffer[4096], bah[4096];
 	char ivec[9];
+	int	lengthbackup,i;
+	char *s;
 #endif
 
 	me.receiveB += length;	/* Update bytes received */
@@ -99,39 +101,6 @@ int  dopacket(cptr, buffer, length)
 	}
 	ch1 = cptr->buffer + cptr->count;
 	ch2 = buffer;
-#ifdef CRYPTOIRCD
-	if (IsSecure(cptr))
-		while (--length >= 0)
-		{
-			if (cptr->count > 2)
-			{
-				lengthweneed = ((short) *buffer * 256)
-						+ ((short) *(buffer + 1));
-				if ((lengthweneed + 2) == cptr->count)
-				{
-					bzero(ivec, sizeof(ivec));
-					num = 0;
-					BF_cfb64_encrypt(cptr->buffer + 2, cryptbuffer, cptr->count - 2, &cptr->key, ivec, &num, BF_DECRYPT);
-					me.receiveM += 1;
-					cptr->receiveM += 1;
-					if (cptr->acpt != &me)
-						cptr->acpt->receiveM += 1;
-					if (parse(cptr, cryptbuffer, cryptbuffer + (cptr->count - 2), msgtab) ==
-						FLUSH_BUFFER)
-						return FLUSH_BUFFER;
-					if (cptr->flags & FLAGS_DEADSOCKET)
-						return exit_client(cptr, cptr, &me,
-							"Dead socket");
-					ch1 = cptr->buffer;
-				}
-					else
-				if (ch1 < cptr->buffer + (sizeof(cptr->buffer) - 1))
-					ch1++;
-					
-			}
-		}
-	else
-#endif	
 		while (--length >= 0)
 		{
 			char g = (*ch1 = *ch2++);

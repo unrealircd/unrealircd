@@ -399,3 +399,4 @@
 - Added Blowfish encryption ability (SetSecure()), will extend to more
   better encryption
 - Fixed a typo in /stats z
+- Some more crypto stuff, will work on the new engine tommorow

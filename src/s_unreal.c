@@ -1506,19 +1506,37 @@ int  m_chgname(cptr, sptr, parc, parv)
 }
 
 #ifdef CRYPTOIRCD
+/*
+ *  parv[0] = sender
+ *  parv[1] = algoritm (BLOWFISH, DES, RC5, etc)
+ *  parv[2] = keyfile
+ *  parv[3] = parameters, * if none
+*/
 int  m_crypto(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;
 	int  parc;
 	char *parv[];
 {
 	aClient *acptr;
-
-	if (parc < 2)
+	int method;
+	if (parc < 4)
 		return 0;
-	sendto_one(sptr, ":%s NOTICE %s :Before ..", me.name, cptr->name);
-	BF_set_key(&cptr->key, strlen(parv[1]), parv[1]);
-	SetSecure(sptr);
-	sendto_one(sptr, ":%s NOTICE %s :After ..", me.name, cptr->name);
-		
+
+	if (!strcmp(parv[1], "BLOWFISH"))
+	{
+		method = METHOD_BLOWFISH;
+	}
+	
+	if (method == METHOD_BLOWFISH)
+	{
+		cptr->cryptinfo = (aCryptInfo *) MyMalloc(sizeof(aCryptInfo));
+		cptr->cryptinfo->method = method;
+		cptr->cryptinfo->key = (void *) MyMalloc(sizeof(BF_KEY));
+		BF_set_key(cptr->cryptinfo->key, strlen(parv[2]), parv[2]);
+		sendto_one(sptr, "CRYPTO ON BLOWFISH");
+		SetSecure(sptr);
+		return 0;
+	}
+	sendto_one(sptr, "CRYPTO ERROR :No such method %s", parv[1]);
 }
 #endif

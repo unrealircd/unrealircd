@@ -52,10 +52,6 @@ extern fdlist oper_fdlist;
 
 static char sendbuf[2048];
 
-#ifdef CRYPTOIRCD
-static char cryptobuffer[2048];
-#endif
-
 static int send_message PROTO((aClient *, char *, int));
 
 static int sentalong[MAXCONNECTIONS];
@@ -203,6 +199,7 @@ void vsendto_one(aClient *to, char *pattern, va_list vl)
 	sendbufto_one(to);
 }
 
+
 void sendbufto_one(aClient *to)
 {
 	int  len;
@@ -255,23 +252,6 @@ void sendbufto_one(aClient *to)
 		dead_link(to, "Max SendQ exceeded");
 		return;
 	}
-#ifdef CRYPTOIRCD
-	if (IsSecure(to))
-	{
-		char	ivec[9];
-		int	num;
-		
-		sendbuf[len - 2] = '\0';
-		len = strlen(sendbuf);
-		len++;
-		cryptobuffer[0] = len / 256;
-		cryptobuffer[1] = len - ((len/256) * 256);
-		
-		bzero(ivec, sizeof(ivec));
-		num = 0;
-		BF_cfb64_encrypt(cryptobuffer, sendbuf, len, &to->key, ivec, &num, BF_ENCRYPT);
-	}	
-#endif
 
 	if (!dbuf_put(&to->sendQ, sendbuf, len))
 	{
