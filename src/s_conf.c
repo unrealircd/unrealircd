@@ -1391,8 +1391,9 @@ void report_dynconf(aClient *sptr)
 		sptr->name, SSL_SERVER_CERT_PEM);
 	sendto_one(sptr, ":%s %i %s :ssl::key: %s", me.name, RPL_TEXT,
 		sptr->name, SSL_SERVER_KEY_PEM);
-	sendto_one(sptr, ":%s %i %s :ssl::trusted-ca-file: %s", iConf.trusted_ca_file ? iConf.trusted_ca_file : "<none>");
-	sendto_one(sptr, ":%s %i %s :ssl::options: %s %s %s",
+	sendto_one(sptr, ":%s %i %s :ssl::trusted-ca-file: %s", me.name, RPL_TEXT, sptr->name,
+	 iConf.trusted_ca_file ? iConf.trusted_ca_file : "<none>");
+	sendto_one(sptr, ":%s %i %s :ssl::options: %s %s %s", me.name, RPL_TEXT, sptr->name,
 		iConf.ssl_options & SSLFLAG_FAILIFNOCERT ? "FAILIFNOCERT" : "",
 		iConf.ssl_options & SSLFLAG_VERIFYCERT ? "VERIFYCERT" : "",
 		iConf.ssl_options & SSLFLAG_DONOTACCEPTSELFSIGNED ? "DONOTACCEPTSELFSIGNED" : "");
@@ -2537,7 +2538,6 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp;
 	ConfigItem_allow *allow;
-	unsigned char isnew = 0;
 
 	if (ce->ce_vardata)
 	{
@@ -2554,56 +2554,46 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 
-	allow =  MyMallocEx(sizeof(ConfigItem_allow));
-	isnew = 1;
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	allow = MyMallocEx(sizeof(ConfigItem_allow));
+	cep = config_find_entry(ce->ce_entries, "ip");
+	allow->ip = strdup(cep->ce_vardata);
+	cep = config_find_entry(ce->ce_entries, "hostname");
+	allow->hostname = strdup(cep->ce_vardata);
+	cep = config_find_entry(ce->ce_entries, "password");
+	allow->auth = Auth_ConvertConf2AuthStruct(cep);
+	cep = config_find_entry(ce->ce_entries, "class");
+	allow->class = Find_class(cep->ce_vardata);
+	if (!allow->class)
 	{
-		if (!strcmp(cep->ce_varname, "ip"))
-		{
-			allow->ip = strdup(cep->ce_vardata);
-		} else
-		if (!strcmp(cep->ce_varname, "maxperip"))
-		{
-			allow->maxperip = atoi(cep->ce_vardata);
-		} else
-		if (!strcmp(cep->ce_varname, "hostname"))
-		{
-			allow->hostname = strdup(cep->ce_vardata);
-		} else
-		if (!strcmp(cep->ce_varname, "password"))
-		{
-			allow->auth = Auth_ConvertConf2AuthStruct(cep);
-		} else
-		if (!strcmp(cep->ce_varname, "class"))
-		{
-			allow->class = Find_class(cep->ce_vardata);
-			if (!allow->class)
-			{
-				config_status("%s:%i: illegal allow::class, unknown class '%s' using default of class 'default'",
-					cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum,
-					cep->ce_vardata);
-				allow->class = default_class;
-			}
-		}
-		else if (!strcmp(cep->ce_varname, "redirect-server"))
-		{
-			allow->server = strdup(cep->ce_vardata);
-		}
-		else if (!strcmp(cep->ce_varname, "redirect-port")) {
-			allow->port = atoi(cep->ce_vardata);
-		}
-		else if (!strcmp(cep->ce_varname, "options")) {
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
-				if (!strcmp(cepp->ce_varname, "noident"))
-					allow->flags.noident = 1;
-				else if (!strcmp(cepp->ce_varname, "useip")) 
-					allow->flags.useip = 1;
-			}
-		}
+		config_status("%s:%i: illegal allow::class, unknown class '%s' using default of class 'default'",
+			cep->ce_fileptr->cf_filename,
+			cep->ce_varlinenum,
+			cep->ce_vardata);
+			allow->class = default_class;
 	}
-	if (isnew)
-		AddListItem(allow, conf_allow);
+	if ((cep = config_find_entry(ce->ce_entries, "maxperip")))
+	{
+		allow->maxperip = atoi(cep->ce_vardata);
+	}
+	if ((cep = config_find_entry(ce->ce_entries, "redirect-server")))
+	{
+		allow->server = strdup(cep->ce_vardata);
+	}
+	if ((cep = config_find_entry(ce->ce_entries, "redirect-port")))
+	{
+		allow->port = atoi(cep->ce_vardata);
+	}
+	if ((cep = config_find_entry(ce->ce_entries, "options")))
+	{
+		for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+			if (!strcmp(cepp->ce_varname, "noident"))
+				allow->flags.noident = 1;
+			else if (!strcmp(cepp->ce_varname, "useip")) 
+				allow->flags.useip = 1;
+		}
+	
+	}
+	AddListItem(allow, conf_allow);
 	return 1;
 }
 
@@ -2621,7 +2611,7 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else
 		{
-			config_error("%s:%i: allow item without type",
+			config_error("%s:%i: allow item with unknown type",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 			return -1;
 		}
@@ -2665,6 +2655,7 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 			errors++; continue;
 		}
 	}
+	
 	return (errors > 0 ? -1 : 1);
 }
 
