@@ -26,11 +26,11 @@ INCLUDES = ../include/struct.h ../include/config.h \
 
 R_MODULES=m_sethost.so m_chghost.so m_chgident.so m_setname.so \
 		m_setident.so m_sdesc.so m_svsmode.so m_swhois.so\
-		m_svsmotd.so \
+		m_svsmotd.so m_svsnline.so \
 		scan.so scan_socks.so
 
 COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
-         m_sdesc.c m_svsmode.c m_swhois.c m_svsmotd.c
+         m_sdesc.c m_svsmode.c m_swhois.c m_svsmotd.c m_svsnline.c
 
 MODULES=commands.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -78,6 +78,10 @@ m_swhois.so: m_swhois.c $(INCLUDES)
 m_svsmotd.so: m_svsmotd.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		 -o m_svsmotd.so m_svsmotd.c
+
+m_svsnline.so: m_svsnline.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		 -o m_svsnline.so m_svsnline.c
 
 scan.so: scan.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \

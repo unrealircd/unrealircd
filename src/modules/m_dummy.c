@@ -33,10 +33,11 @@ DLLFUNC int m_dummy(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_DUMMY 	"DUMMY"	/* dummy */
 #define TOK_DUMMY 	"DU"	/* 127 4ever !;) */
 
-#ifndef STATIC_LINKING
-ModuleInfo mod_header
-#else
+#ifndef DYNAMIC_LINKING
 ModuleInfo m_dummy_info
+#else
+#define m_dummy_info mod_header
+ModuleInfo mod_header
 #endif
   = {
   	2,

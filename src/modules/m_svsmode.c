@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/scan.c
+ *   IRC - Internet Relay Chat, src/modules/m_svsmode.c
  *   (C) 2001 The UnrealIRCd Team
  *
  *   SVSMODE and SVS2MODE commands

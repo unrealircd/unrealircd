@@ -645,3 +645,11 @@ seen. gmtime warning still there
 - Updated the stats help list for newconf
 - Removed include/userload.h (not used)
 - Removed a few missed userload.h references
+- Minor cosmetic fixes, and SVSNLINE (ban realname).
+   SVSNLINE + reason_why_moo :realname mask - Add global ban realname
+    ('_' is converted into spaces)
+   SVSNLINE - :realname mask             - Remove global ban realname
+   SVSNLINE *                            - Wipes all global ban realname
+- Fixed FIXME dcc_deny_wipe_services
+
+   

@@ -230,6 +230,26 @@ int m_undccdeny(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 }
 
+void dcc_wipe_services(void)
+{
+	ConfigItem_deny_dcc *dconf, t;
+	
+	for (dconf = conf_deny_dcc; dconf; dconf = (ConfigItem_deny_dcc *) dconf->next)
+	{
+		if ((dconf->flag.type2 == CONF_BAN_TYPE_AKILL))
+		{
+			t.next = (ConfigItem *)del_ConfigItem((ConfigItem *)dconf, (ConfigItem **)&conf_deny_dcc);
+			if (dconf->filename)
+				MyFree(dconf->filename);
+			if (dconf->reason)
+				MyFree(dconf->reason);
+			MyFree(dconf);
+			dconf = &t;
+		}
+	}
+
+}
+
 int  m_svsfline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	if (!IsServer(sptr))
@@ -272,9 +292,7 @@ int  m_svsfline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	  {
 		  if (!IsULine(sptr))
 			  return 0;
-		  /* FIXME
 		  dcc_wipe_services();
-		  */
 		  sendto_serv_butone(cptr, ":%s %s *", sptr->name,
 		      (IsToken(cptr) ? TOK_SVSFLINE : MSG_SVSFLINE));
 		  break;
