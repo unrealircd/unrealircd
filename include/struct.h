@@ -89,7 +89,7 @@ typedef struct _configitem_log ConfigItem_log;
 typedef struct _configitem_unknown ConfigItem_unknown;
 typedef struct _configitem_unknown_ext ConfigItem_unknown_ext;
 
-typedef struct Notify aNotify;
+typedef struct Watch aWatch;
 typedef struct Client aClient;
 typedef struct Channel aChannel;
 typedef struct User anUser;
@@ -272,14 +272,9 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define UMODE_ADMIN	 0x0080	/* Admin */
 #define	UMODE_SERVNOTICE 0x0100	/* server notices such as kill */
 #define	UMODE_LOCOP      0x0200	/* Local operator -- SRB */
-#define UMODE_KILLS	 0x0400	/* Show server-kills... */
-#define UMODE_CLIENT	 0x0800	/* Show client information */
-#define UMODE_FLOOD	 0x1000	/* Receive flood warnings */
-#define UMODE_JUNK	 0x2000	/* can junk */
 #define UMODE_SERVICES   0x4000	/* services */
 #define UMODE_HIDE	 0x8000	/* Hide from Nukes */
 #define UMODE_NETADMIN  0x10000	/* Network Admin */
-#define UMODE_EYES      0x20000	/* Mode to see server stuff */
 #define UMODE_TECHADMIN 0x40000	/* Tech Admin */
 #define UMODE_COADMIN   0x80000	/* Co Admin */
 #define UMODE_WHOIS    0x100000	/* gets notice on /whois */
@@ -294,8 +289,20 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define UMODE_SETHOST  0x40000000	/* used sethost */
 #define UMODE_STRIPBADWORDS 0x80000000	/* */
 
-#define	SEND_UMODES	(UMODE_INVISIBLE|UMODE_OPER|UMODE_WALLOP|UMODE_FAILOP|UMODE_HELPOP|UMODE_REGNICK|UMODE_SADMIN|UMODE_NETADMIN|UMODE_TECHADMIN|UMODE_COADMIN|UMODE_ADMIN|UMODE_SERVICES|UMODE_HIDE|UMODE_EYES|UMODE_WHOIS|UMODE_KIX|UMODE_BOT|UMODE_SECURE|UMODE_FCLIENT|UMODE_HIDING|UMODE_DEAF|UMODE_VICTIM|UMODE_HIDEOPER|UMODE_SETHOST|UMODE_STRIPBADWORDS|UMODE_JUNK)
-#define	ALL_UMODES (SEND_UMODES|UMODE_SERVNOTICE|UMODE_LOCOP|UMODE_KILLS|UMODE_CLIENT|UMODE_FLOOD|UMODE_SERVICES|UMODE_EYES)
+#define SNO_KILLS   0x0001
+#define SNO_CLIENT  0x0002
+#define SNO_FLOOD   0x0004
+#define SNO_FCLIENT 0x0008
+#define SNO_JUNK    0x0010
+#define SNO_VHOST   0x0020
+#define SNO_EYES    0x0040
+#define SNO_TKL     0x0080
+
+#define SNO_DEFOPER "+kcfvG"
+#define SNO_DEFUSER "+k"
+
+#define	SEND_UMODES	(UMODE_INVISIBLE|UMODE_OPER|UMODE_WALLOP|UMODE_FAILOP|UMODE_HELPOP|UMODE_REGNICK|UMODE_SADMIN|UMODE_NETADMIN|UMODE_TECHADMIN|UMODE_COADMIN|UMODE_ADMIN|UMODE_SERVICES|UMODE_HIDE|UMODE_WHOIS|UMODE_KIX|UMODE_BOT|UMODE_SECURE|UMODE_FCLIENT|UMODE_HIDING|UMODE_DEAF|UMODE_VICTIM|UMODE_HIDEOPER|UMODE_SETHOST|UMODE_STRIPBADWORDS)
+#define	ALL_UMODES (SEND_UMODES|UMODE_SERVNOTICE|UMODE_LOCOP|UMODE_SERVICES)
 #define	FLAGS_ID	(FLAGS_DOID|FLAGS_GOTID)
 
 #define PROTO_NOQUIT	0x1	/* Negotiated NOQUIT protocol */
@@ -316,10 +323,10 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
  */
 #define IsVictim(x)             ((x)->umodes & UMODE_VICTIM)
 #define IsDeaf(x)               ((x)->umodes & UMODE_DEAF)
-#define IsKillsF(x)		((x)->umodes & UMODE_KILLS)
-#define IsClientF(x)		((x)->umodes & UMODE_CLIENT)
-#define IsFloodF(x)		((x)->umodes & UMODE_FLOOD)
-#define IsEyes(x)		((x)->umodes & UMODE_EYES)
+#define IsKillsF(x)		((x)->user->snomask & SNO_KILLS)
+#define IsClientF(x)		((x)->user->snomask & SNO_CLIENT)
+#define IsFloodF(x)		((x)->user->snomask & SNO_FLOOD)
+#define IsEyes(x)		((x)->user->snomask & SNO_EYES)
 #define IsWhois(x)	        ((x)->umodes & UMODE_WHOIS)
 #define IsKix(x)		((x)->umodes & UMODE_KIX)
 #define IsHelpOp(x)		((x)->umodes & UMODE_HELPOP)
@@ -344,7 +351,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsRegNick(x)		((x)->umodes & UMODE_REGNICK)
 #define	IsPerson(x)		((x)->user && IsClient(x))
 #define	IsPrivileged(x)		(IsAnOper(x) || IsServer(x))
-#define	SendWallops(x)		((x)->umodes & UMODE_WALLOP)
+#define	SendWallops(x)		(!IsMe(x) && ((x)->umodes & UMODE_WALLOP))
 #define	SendServNotice(x)	((x)->umodes & UMODE_SERVNOTICE)
 #define	IsListening(x)		((x)->flags & FLAGS_LISTEN)
 #define	DoAccess(x)		((x)->flags & FLAGS_CHKACCESS)
@@ -377,9 +384,9 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsNotSpoof(x)           (1)
 #endif
 
-#define SetKillsF(x)		((x)->umodes |= UMODE_KILLS)
-#define SetClientF(x)		((x)->umodes |= UMODE_CLIENT)
-#define SetFloodF(x)		((x)->umodes |= UMODE_FLOOD)
+#define SetKillsF(x)		((x)->user->snomask |= SNO_KILLS)
+#define SetClientF(x)		((x)->user->snomask |= SNO_CLIENT)
+#define SetFloodF(x)		((x)->user->snomask |= SNO_FLOOD)
 #define SetHelpOp(x)		((x)->umodes |= UMODE_HELPOP)
 #define	SetOper(x)		((x)->umodes |= UMODE_OPER)
 #define	SetLocOp(x)    		((x)->umodes |= UMODE_LOCOP)
@@ -389,7 +396,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SetTechAdmin(x)		((x)->umodes |= UMODE_TECHADMIN)
 #define SetCoAdmin(x)		((x)->umodes |= UMODE_COADMIN)
 #define	SetInvisible(x)		((x)->umodes |= UMODE_INVISIBLE)
-#define SetEyes(x)		((x)->umodes |= UMODE_EYES)
+#define SetEyes(x)		((x)->user->snomask |= SNO_EYES)
 #define	SetWallops(x)  		((x)->umodes |= UMODE_WALLOP)
 #define	SetDNS(x)		((x)->flags |= FLAGS_DOINGDNS)
 #define	DoingDNS(x)		((x)->flags & FLAGS_DOINGDNS)
@@ -406,10 +413,10 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define ClearTechAdmin(x)	((x)->umodes &= ~UMODE_TECHADMIN)
 #define ClearCoAdmin(x)		((x)->umodes &= ~UMODE_COADMIN)
 #define ClearSAdmin(x)		((x)->umodes &= ~UMODE_SADMIN)
-#define ClearKillsF(x)		((x)->umodes &= ~UMODE_KILLS)
-#define ClearClientF(x)		((x)->umodes &= ~UMODE_CLIENT)
-#define ClearFloodF(x)		((x)->umodes &= ~UMODE_FLOOD)
-#define ClearEyes(x)		((x)->umodes &= ~UMODE_EYES)
+#define ClearKillsF(x)		((x)->user->snomask &= ~SNO_KILLS)
+#define ClearClientF(x)		((x)->user->snomask &= ~SNO_CLIENT)
+#define ClearFloodF(x)		((x)->user->snomask &= ~SNO_FLOOD)
+#define ClearEyes(x)		((x)->user->snomask &= ~SNO_EYES)
 #define ClearHelpOp(x)		((x)->umodes &= ~UMODE_HELPOP)
 #define ClearFailops(x)		((x)->umodes &= ~UMODE_FAILOP)
 #define	ClearOper(x)		((x)->umodes &= ~UMODE_OPER)
@@ -647,6 +654,7 @@ struct User {
 	aClient *serv;
 	LOpts *lopt;            /* Saved /list options */
 	aWhowas *whowas;
+	int snomask;
 #ifdef	LIST_DEBUG
 	aClient *bcptr;
 #endif
@@ -795,8 +803,8 @@ struct Client {
 	struct IN_ADDR ip;	/* keep real ip# too */
 	u_short port;		/* and the remote port# too :-) */
 	struct hostent *hostp;
-	u_short notifies;	/* Keep track of count of notifies */
-	Link *notify;		/* Links to clients notify-structures */
+	u_short watches;	/* Keep track of count of notifies */
+	Link *watch;		/* Links to clients notify-structures */
 	char sockhost[HOSTLEN + 1];	/* This is the host name from the socket
 					   ** and after which the connection was
 					   ** accepted.
@@ -835,6 +843,7 @@ struct _configentry
 struct _configflag 
 {
 	unsigned	temporary : 1;
+	unsigned	permanent : 1;
 };
 
 /* configflag specialized for except socks/ban -Stskeeps */
@@ -1022,6 +1031,7 @@ struct _configitem_log {
 	ConfigFlag flag;
 	ConfigItem *prev, *next;
 	char *file;
+	long maxsize;
 	int  flags;
 };
 
@@ -1114,10 +1124,10 @@ struct SMode {
 
 /* Used for notify-hash buckets... -Donwulff */
 
-struct Notify {
-	aNotify *hnext;
+struct Watch {
+	aWatch *hnext;
 	TS   lasttime;
-	Link *notify;
+	Link *watch;
 	char nick[1];
 };
 
@@ -1130,7 +1140,7 @@ struct SLink {
 		aClient *cptr;
 		aChannel *chptr;
 		ConfigItem *aconf;
-		aNotify *nptr;
+		aWatch *wptr;
 		aName *whowas;
 		char *cp;
 		struct {

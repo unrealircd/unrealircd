@@ -60,7 +60,7 @@ struct tm *motd_tm;
 aMotd *read_file(char *filename, aMotd **list);
 aMotd *read_motd(char *filename);
 aMotd *read_rules(char *filename);
-
+extern aMotd *Find_file(char *, short);
 /*
 ** m_functions execute protocol messages on this server:
 **
@@ -132,12 +132,6 @@ int  m_version(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	extern char serveropts[];
-	char *x;
-
-	if (TRUEHUB == 1)
-		x = "(H)";
-	else
-		x = "";
 
 	if (hunt_server(cptr, sptr, ":%s VERSION :%s", 1, parc,
 	    parv) == HUNTED_ISME)
@@ -145,7 +139,7 @@ int  m_version(cptr, sptr, parc, parv)
 		sendto_one(sptr, rpl_str(RPL_VERSION), me.name,
 		    parv[0], version, ircnetwork, debugmode, me.name,
 		    serveropts,
-		    (IsAnOper(sptr) ? MYOSNAME : "*"), UnrealProtocol, x);
+		    (IsAnOper(sptr) ? MYOSNAME : "*"), UnrealProtocol);
 		if (MyClient(sptr))
 			sendto_one(sptr, rpl_str(RPL_PROTOCTL), me.name,
 			    sptr->name, PROTOCTL_PARAMETERS);
@@ -629,8 +623,8 @@ int  m_server(cptr, sptr, parc, parv)
 	{
 		sendto_one(sptr, "ERROR :Bogus server name (%s)",
 		    sptr->name, servername);
-		sendto_umode
-		    (UMODE_JUNK,
+		sendto_snomask
+		    (SNO_JUNK,
 		    "WARNING: Bogus server name (%s) from %s (maybe just a fishy client)",
 		    servername, get_client_name(cptr, TRUE));
 
@@ -1855,17 +1849,6 @@ int  m_netinfo(cptr, sptr, parc, parv)
 		sendto_realops
 		    ("Link %s is using a too old UnProtocol - (parc < 3)",
 		    cptr->name);
-		if (KILLDIFF == 1)
-		{
-			sendto_realops
-			    ("Dropped link %s - unProtocol 2090 is not compatible with unProtocol %li",
-			    cptr->name, UnrealProtocol);
-			sendto_one(cptr,
-			    "ERROR :unProtocol 2090 is not compatible with unProtocol %li",
-			    UnrealProtocol);
-			return exit_client(cptr, cptr, cptr,
-			    "Link using unProtocol 2090");
-		}
 		return 0;
 	}
 	if (parc < 9)
@@ -2194,7 +2177,7 @@ int  m_watch(cptr, sptr, parc, parv)
 		{
 			if (do_nick_name(s + 1))
 			{
-				if (sptr->notifies >= MAXWATCH)
+				if (sptr->watches >= MAXWATCH)
 				{
 					sendto_one(sptr,
 					    err_str(ERR_TOOMANYWATCH), me.name,
@@ -2203,7 +2186,7 @@ int  m_watch(cptr, sptr, parc, parv)
 					continue;
 				}
 
-				add_to_notify_hash_table(s + 1, sptr);
+				add_to_watch_hash_table(s + 1, sptr);
 			}
 
 			show_watch(sptr, s + 1, RPL_NOWON, RPL_NOWOFF);
@@ -2216,7 +2199,7 @@ int  m_watch(cptr, sptr, parc, parv)
 		 */
 		if (*s == '-')
 		{
-			del_from_notify_hash_table(s + 1, sptr);
+			del_from_watch_hash_table(s + 1, sptr);
 			show_watch(sptr, s + 1, RPL_WATCHOFF, RPL_WATCHOFF);
 
 			continue;
@@ -2228,7 +2211,7 @@ int  m_watch(cptr, sptr, parc, parv)
 		 */
 		if (*s == 'C' || *s == 'c')
 		{
-			hash_del_notify_list(sptr);
+			hash_del_watch_list(sptr);
 
 			continue;
 		}
@@ -2241,39 +2224,39 @@ int  m_watch(cptr, sptr, parc, parv)
 		if (*s == 'S' || *s == 's')
 		{
 			Link *lp;
-			aNotify *anptr;
+			aWatch *anptr;
 			int  count = 0;
 
 			/*
 			 * Send a list of how many users they have on their WATCH list
 			 * and how many WATCH lists they are on.
 			 */
-			anptr = hash_get_notify(sptr->name);
+			anptr = hash_get_watch(sptr->name);
 			if (anptr)
-				for (lp = anptr->notify, count = 1;
+				for (lp = anptr->watch, count = 1;
 				    (lp = lp->next); count++)
 					;
 			sendto_one(sptr, rpl_str(RPL_WATCHSTAT), me.name,
-			    parv[0], sptr->notifies, count);
+			    parv[0], sptr->watches, count);
 
 			/*
 			 * Send a list of everybody in their WATCH list. Be careful
 			 * not to buffer overflow.
 			 */
-			if ((lp = sptr->notify) == NULL)
+			if ((lp = sptr->watch) == NULL)
 			{
 				sendto_one(sptr, rpl_str(RPL_ENDOFWATCHLIST),
 				    me.name, parv[0], *s);
 				continue;
 			}
 			*buf = '\0';
-			strcpy(buf, lp->value.nptr->nick);
+			strcpy(buf, lp->value.wptr->nick);
 			count =
 			    strlen(parv[0]) + strlen(me.name) + 10 +
 			    strlen(buf);
 			while ((lp = lp->next))
 			{
-				if (count + strlen(lp->value.nptr->nick) + 1 >
+				if (count + strlen(lp->value.wptr->nick) + 1 >
 				    BUFSIZE - 2)
 				{
 					sendto_one(sptr, rpl_str(RPL_WATCHLIST),
@@ -2284,8 +2267,8 @@ int  m_watch(cptr, sptr, parc, parv)
 					    10;
 				}
 				strcat(buf, " ");
-				strcat(buf, lp->value.nptr->nick);
-				count += (strlen(lp->value.nptr->nick) + 1);
+				strcat(buf, lp->value.wptr->nick);
+				count += (strlen(lp->value.wptr->nick) + 1);
 			}
 			sendto_one(sptr, rpl_str(RPL_WATCHLIST), me.name,
 			    parv[0], buf);
@@ -2302,12 +2285,12 @@ int  m_watch(cptr, sptr, parc, parv)
 		 */
 		if (*s == 'L' || *s == 'l')
 		{
-			Link *lp = sptr->notify;
+			Link *lp = sptr->watch;
 
 			while (lp)
 			{
 				if ((acptr =
-				    find_person(lp->value.nptr->nick, NULL)))
+				    find_person(lp->value.wptr->nick, NULL)))
 				{
 					sendto_one(sptr, rpl_str(RPL_NOWON),
 					    me.name, parv[0], acptr->name,
@@ -2323,8 +2306,8 @@ int  m_watch(cptr, sptr, parc, parv)
 				else if (isupper(*s))
 					sendto_one(sptr, rpl_str(RPL_NOWOFF),
 					    me.name, parv[0],
-					    lp->value.nptr->nick, "*", "*",
-					    lp->value.nptr->lasttime);
+					    lp->value.wptr->nick, "*", "*",
+					    lp->value.wptr->lasttime);
 				lp = lp->next;
 			}
 
@@ -2427,6 +2410,7 @@ int  m_stats(cptr, sptr, parc, parv)
 	aCommand *mptr;
 	aClient *acptr;
 	char stat = parc > 1 ? parv[1][0] : '\0';
+	char stat2;
 	int  i;
 	int  doall = 0, wilds = 0, showports = IsAnOper(sptr), remote = 0;
 	char *name;
@@ -2434,17 +2418,39 @@ int  m_stats(cptr, sptr, parc, parv)
 	if (hunt_server(cptr, sptr, ":%s STATS %s :%s", 2, parc,
 	    parv) != HUNTED_ISME)
 		return 0;
-
-#ifdef STATS_ONLYOPER
-	if (!IsAnOper(sptr))
-	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-		return 0;
+	if (OPER_ONLY_STATS) {
+		if (!IsAnOper(sptr) && strchr(OPER_ONLY_STATS, '*'))
+		{
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+			return 0;
+		}
+		stat2 = tolower(stat);
+		if (!IsAnOper(sptr) && (stat2 == 'c' || stat2 == 'f' || stat2 == 'i' ||  stat2 == 'h' || 
+			stat2 == 'y' || stat2 == 'x' || stat2 == 'g' || stat2 == 'k' || stat2 == 'o' || 
+			stat2 == 'z' || stat2 == 'l')) {
+			if (strchr(OPER_ONLY_STATS, toupper(stat)) || strchr(OPER_ONLY_STATS, stat2)) {
+				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+				return 0;
+			}
+			if (stat2 == 'c') {
+				if (strchr(OPER_ONLY_STATS, 'h') || strchr(OPER_ONLY_STATS, 'H')) {
+					sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+					return 0;
+				}
+			}
+			if (stat2 == 'h') {
+				if (strchr(OPER_ONLY_STATS, 'c') || strchr(OPER_ONLY_STATS, 'C')) {
+					sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+					return 0;
+				}
+			}
+		}
+		if (!IsAnOper(sptr) && strchr(OPER_ONLY_STATS, stat))
+		{
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+			return 0;
+		}
 	}
-
-#endif
-
-
 	if (parc > 2)
 	{
 		name = parv[2];
@@ -2706,10 +2712,6 @@ int  m_stats(cptr, sptr, parc, parv)
 		  break;
 	  case 'o':
 	  case 'O':
-		  if (SHOWOPERS == 0 && (!IsOper(sptr)))
-		  {
-			  break;
-		  }
 		  for (oper_p = conf_oper; oper_p; oper_p = (ConfigItem_oper *) oper_p->next)
 		  {
 		  	if (!oper_p->from)
@@ -2750,7 +2752,7 @@ int  m_stats(cptr, sptr, parc, parv)
 		  ConfigItem_ban *bans;
 
 		  for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) {
-			  if (bans->flag.type == CONF_BAN_NICK && bans->flag.type2 != CONF_BAN_TYPE_AKILL)
+			  if (bans->flag.type == CONF_BAN_NICK && (bans->flag.type2 != CONF_BAN_TYPE_AKILL))
 				sendto_one(sptr, rpl_str(RPL_STATSQLINE),
 				    me.name, parv[0],  bans->reason, bans->mask);
 		  }
@@ -2761,7 +2763,7 @@ int  m_stats(cptr, sptr, parc, parv)
 		  ConfigItem_ban *bans;
 
 		  for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) {
-			  if (bans->flag.type == CONF_BAN_NICK && bans->flag.type2 == CONF_BAN_TYPE_AKILL)
+			  if (bans->flag.type == CONF_BAN_NICK && (bans->flag.type2 == CONF_BAN_TYPE_AKILL))
 				sendto_one(sptr, rpl_str(RPL_SQLINE_NICK),
 				    me.name, parv[0], bans->mask, bans->reason);
 		  }
@@ -2925,7 +2927,7 @@ int  m_stats(cptr, sptr, parc, parv)
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "E - Send the except ban block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "F - Send the deny dcc block list list");
+		      "F - Send the deny dcc block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "G - Report TKL information (G:lines/Shuns)");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
@@ -2950,6 +2952,8 @@ int  m_stats(cptr, sptr, parc, parv)
 		      "q - Send the SQLINE list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "Q - Send the ban nick block list");
+		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
+		      "r - Send the channel deny/allow block list");
 #ifdef DEBUGMODE
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "R - Send the usage list");
@@ -2981,7 +2985,7 @@ int  m_stats(cptr, sptr, parc, parv)
 
 
 	if (stat != '*')
-		sendto_umode(UMODE_EYES, "Stats \'%c\' requested by %s (%s@%s)",
+		sendto_snomask(SNO_EYES, "Stats \'%c\' requested by %s (%s@%s)",
 		    stat, sptr->name, sptr->user->username,
 		    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
 		    realhost);
@@ -3667,34 +3671,12 @@ int  m_chatops(cptr, sptr, parc, parv)
 		    me.name, parv[0], "CHATOPS");
 		return 0;
 	}
-	if (ALLOW_CHATOPS == 1)
-	{
-		if (MyClient(sptr) && !IsAnOper(sptr))
-		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			    parv[0]);
-			return 0;
-		}
-	}
-	else
-	{
-		if (MyClient(sptr))
-		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			    parv[0]);
-			return 0;
-		}
-	}
 	sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL,
 	    parv[0], MSG_CHATOPS, TOK_CHATOPS, ":%s", message);
-	if (ALLOW_CHATOPS == 1)
-	{
 		sendto_umode(UMODE_OPER, "*** ChatOps -- from %s: %s",
 		    parv[0], message);
 		sendto_umode(UMODE_LOCOP, "*** ChatOps -- from %s: %s",
 		    parv[0], message);
-	}
-
 	return 0;
 }
 
@@ -3921,22 +3903,10 @@ int  m_rehash(cptr, sptr, parc, parv)
 				aMotd *amotd;
 				sendto_ops("%sRehashing everything on the request of %s",
 					cptr != sptr ? "Remotely " : "",sptr->name);
-#ifdef DEBUGMODE
-				sendto_ops("Rehashing opermotd [1/4]");
-#endif
 				opermotd = (aMotd *) read_file(OPATH, &opermotd);
-#ifdef DEBUGMODE
-				sendto_ops("Rehashing botmotd [2/4]");
-#endif
 				botmotd = (aMotd *) read_file(BPATH, &botmotd);
-#ifdef DEBUGMODE
-				sendto_ops("Rehashing motd [3/4]");
-#endif
 				motd = (aMotd *) read_motd(MPATH);
 				rules = (aMotd *) read_rules(RPATH);
-#ifdef DEBUGMODE
-				sendto_ops("Rehashing rules [4/4]");
-#endif
                                 for (tlds = conf_tld; tlds;
                                     tlds = (ConfigItem_tld *) tlds->next)
                                 {
@@ -3998,26 +3968,27 @@ int  m_rehash(cptr, sptr, parc, parv)
 				for (tlds = conf_tld; tlds;
 				    tlds = (ConfigItem_tld *) tlds->next)
 				{
-					while (tlds->motd)
-					{
-						amotd = tlds->motd->next;
-						MyFree(tlds->motd->line);
-						MyFree(tlds->motd);
-						tlds->motd = amotd;
+					if (!tlds->flag.motdptr) {
+						while (tlds->motd)
+						{
+							amotd = tlds->motd->next;
+							MyFree(tlds->motd->line);
+							MyFree(tlds->motd);
+							tlds->motd = amotd;
+						}
 					}
 					tlds->motd = read_motd(tlds->motd_file);
-					while (tlds->rules)
-					{
-						amotd = tlds->rules->next;
-						MyFree(tlds->rules->line);
-						MyFree(tlds->rules);
-						tlds->rules = amotd;
+					if (!tlds->flag.rulesptr) {
+						while (tlds->rules)
+						{
+							amotd = tlds->rules->next;
+							MyFree(tlds->rules->line);
+							MyFree(tlds->rules);
+							tlds->rules = amotd;
+						}
 					}
-					tlds->rules =
-					    read_rules(tlds->rules_file);
+					tlds->rules = read_rules(tlds->rules_file);
 				}
-
-
 				return 0;
 			}
 		}
@@ -4089,7 +4060,7 @@ int  m_restart(cptr, sptr, parc, parv)
 
 	}
 
-	if ((pass = conf_drpass->restart))
+	if (conf_drpass && (pass = conf_drpass->restart))
 	{
 		if (parc < 2)
 		{
@@ -4736,7 +4707,7 @@ int  m_die(cptr, sptr, parc, parv)
 		return 0;
 	}
 
-	if ((pass = conf_drpass->die))	/* See if we have and DIE/RESTART password */
+	if (conf_drpass && (pass = conf_drpass->die))	/* See if we have and DIE/RESTART password */
 	{
 		if (parc < 2)	/* And if so, require a password :) */
 		{

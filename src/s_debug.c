@@ -484,8 +484,8 @@ void count_memory(cptr, nick)
 	sendto_one(cptr,
 	    ":%s %d %s :Hash: client %d(%d) chan %d(%d) watch %d(%d)", me.name,
 	    RPL_STATSDEBUG, nick, U_MAX, sizeof(aHashEntry) * U_MAX, CH_MAX,
-	    sizeof(aHashEntry) * CH_MAX, NOTIFYHASHSIZE,
-	    sizeof(aNotify *) * NOTIFYHASHSIZE);
+	    sizeof(aHashEntry) * CH_MAX, WATCHHASHSIZE,
+	    sizeof(aWatch *) * WATCHHASHSIZE);
 	db = dbufblocks * sizeof(dbufbuf);
 	sendto_one(cptr, ":%s %d %s :Dbuf blocks %d(%d)",
 	    me.name, RPL_STATSDEBUG, nick, dbufblocks, db);
@@ -504,7 +504,7 @@ void count_memory(cptr, nick)
 	tot += fl * sizeof(Link);
 	tot += sizeof(aHashEntry) * U_MAX;
 	tot += sizeof(aHashEntry) * CH_MAX;
-	tot += sizeof(aNotify *) * NOTIFYHASHSIZE;
+	tot += sizeof(aWatch *) * WATCHHASHSIZE;
 
 	sendto_one(cptr, ":%s %d %s :Total: ww %d ch %d cl %d co %d db %d",
 	    me.name, RPL_STATSDEBUG, nick, totww, totch, totcl, com, db);

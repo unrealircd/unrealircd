@@ -158,8 +158,7 @@ struct link {
 	short 	type;
 	int  	port;
 	char	*flags;
-	char 	*connclass;
-	char 	*recclass;
+	char 	*class;
 	char 	*connpass;
 	char 	*recpass;
 	int  	leafdepth;
@@ -545,8 +544,6 @@ int main(int argc, char *argv[]) {
 					lk = add_server(tmp);
 				AllocCpy(lk->recpass,pass);
 				getfield(NULL);
-				tmp = getfield(NULL);
-				AllocCpy(lk->recclass,tmp);
 				break;
 			}			
 			case 'C':
@@ -566,7 +563,7 @@ int main(int argc, char *argv[]) {
 				else
 					lk->port = 0;
 				tmp = getfield(NULL);
-				AllocCpy(lk->connclass, tmp);
+				AllocCpy(lk->class, tmp);
 				tmp = getfield(NULL);
 				if (!BadPtr(tmp)) {
 					AllocCpy(lk->flags, tmp);
@@ -627,7 +624,7 @@ int main(int argc, char *argv[]) {
 				reason = getfield(NULL);
 				user = getfield(NULL);
 				fprintf(fd2, "ban user {\n");
-				fprintf(fd2, "\tmask %s@%s;\n", user, host);
+				fprintf(fd2, "\tmask %s@%s;\n", BadPtr(user) ? "*" : user, host);
 				if (!BadPtr(reason))
 					fprintf(fd2, "\treason \"%s\";\n", reason);
 				fprintf(fd2, "};\n\n");
@@ -747,8 +744,7 @@ int main(int argc, char *argv[]) {
 		}
 		fprintf(fd2, "\tpassword-connect %s;\n", lk->connpass);
 		fprintf(fd2, "\tpassword-receive %s;\n", lk->recpass);
-		fprintf(fd2, "\treceive-class %s;\n", lk->recclass);
-		fprintf(fd2, "\tconnect-class %s;\n", lk->connclass);
+		fprintf(fd2, "\tconnect-class %s;\n", lk->class);
 		if (lk->flags != NULL || lk->port) 
 			fprintf(fd2, "\toptions {\n");
 		if (lk->flags != NULL) {

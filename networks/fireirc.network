@@ -1,30 +1,19 @@
-
-#
-# FireIRC Network Configuration File
-# -----------------------------------------
-#  Added-at:     14 July 1999 00:00 GMT
-#  Author:       MasterSatan (Erik Kerr)
-#  E-Mail:       Kerrfarm@bright.net
-#
-# -----------------------------------------
-#     
-
-
-Network >..........: FireIRC
-Set ircnetwork ....: FireIRC
-Set defserv .......: irc.FireIRC.Net
-Set SERVICES_NAME .: services.FireIRC.Net
-Set oper_host .....: ircOP.FireIRC.Net
-Set admin_host ....: Admin.FireIRC.Net
-Set locop_host ....: localOP.FireIRC.Net
-Set sadmin_host ...: serviceOP.FireIRC.Net
-Set netadmin_host .: NetADMIN.FireIRC.Net
-Set coadmin_host ..: CoADMIN.FireIRC.Net
-Set techadmin_host : TechAdmin.FireIRC.Net
-Set hidden_host ...: FireIRC
-Set netdomain .....: FireIRC.Net
-Set helpchan ......: #Services
-Set STATS_SERVER ..: stats.FireIRC.Net
-Set HUB ...........: 1
-Set iNAH ..........: 0
-Set net_quit ......: FI    
+set {
+	network-name		"FireIRC";
+	default-server		"irc.FireIRC.Net";
+	services-server		"services.FireIRC.Net";
+	stats-server		"stats.FireIRC.Net";
+	help-channel		"#Services";
+	hiddenhost-prefix	"FireIRC";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"localOP.FireIRC.Net";
+		global		"ircOP.FireIRC.Net";
+		coadmin		"CoADMIN.FireIRC.Net";
+		admin		"Admin.FireIRC.Net";
+		servicesadmin	"serviceOP.FireIRC.Net";
+		techadmin	"TechAdmin.FireIRC.Net";
+		netadmin	"NetADMIN.FireIRC.Net";
+		host-on-oper-up	"off";
+	};
+};

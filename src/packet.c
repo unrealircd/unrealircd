@@ -29,28 +29,7 @@ ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
 ID_Notes("2.12 1/30/94");
 
-/*
- * inittoken
- * Cheat here, blah. Build the lookup tables from msgtab's,
- * call them msgmap's. Called in main() with other inits.
- * Yes, I know this is not the right module, but I said I cheat ;)
- */
-void inittoken(void)
-{
-	int  loopy;
-	int  final;
-	aCommand	*CommandHash[256]; 
-
-	/* Find the zero-entry */
-	for (final = 0; msgtab[final].cmd; final++)
-		;
-	/* Point all entries to it */
-	for (loopy = 0; loopy < 256; loopy++)
-		msgmap[loopy] = &msgtab[final];
-	/* Build references to existing commands */
-	for (loopy = 0; msgtab[loopy].cmd; loopy++)
-		msgmap[msgtab[loopy].token[0]] = &msgtab[loopy];
-}
+aCommand	*CommandHash[256]; 
 
 /*
 ** dopacket
@@ -182,7 +161,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_AWAY, TOK_AWAY, m_away, MAXPARA);
 	add_CommandX(MSG_SERVER, TOK_SERVER, m_server, MAXPARA, M_UNREGISTERED|M_SERVER);
 	add_Command(MSG_SQUIT, TOK_SQUIT, m_squit, MAXPARA);
-	add_Command(MSG_WHO, TOK_WHO, m_who, MAXPARA);
 	add_Command(MSG_WHOWAS, TOK_WHOWAS, m_whowas, MAXPARA);
 	add_Command(MSG_LIST, TOK_LIST, m_list, MAXPARA);
 	add_Command(MSG_NAMES, TOK_NAMES, m_names, MAXPARA);

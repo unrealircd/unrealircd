@@ -1,3 +1,13 @@
+/*
+ * Global-IRC.net Network Configuration File
+ * -----------------------------------------
+ *  Added-at:     14 July 1999 00:00 GMT
+ *  Author:       Stskeeps (Carsten Munk)
+ *  E-Mail:       stskeeps@global-irc.net
+ *  $Id$
+ * -----------------------------------------
+ */
+
 set {
 	network-name		"Global-IRC";
 	default-server		"irc.global-irc.net";

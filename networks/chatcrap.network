@@ -1,0 +1,26 @@
+/*
+ *  Added-at:     25 november 2000 17:35 GMT
+ *  Author:       Highlander (J.S. Morrison)
+ *  E-Mail:       highlander@chatcrap.com
+ *  $Id$
+ */
+
+set {
+        network-name            "ChatCrap";
+        default-server          "irc.chatcrap.com";
+        services-server         "services.cabonet.org";
+        stats-server            "stats.chatcrap.com";
+        help-channel            "#operhelp";
+        hiddenhost-prefix       "chatcrap";
+        prefix-quit             "Quit:";
+        hosts {
+                local           "locop.chatcrap.com";
+                global          "ircop.chatcrap.com";
+                coadmin         "coadmin.chatcrap.com";
+                admin           "admin.chatcrap.com";
+                servicesadmin   "serviceop.chatcrap.com";
+                techadmin       "techadmin.chatcrap.com";
+                netadmin        "netadmin.chatcrap.com";
+                host-on-oper-up "on";
+        };
+};

@@ -472,7 +472,7 @@ int  exit_client(cptr, sptr, from, comment)
 		if (IsPerson(sptr))
 		{
 			RunHook(HOOKTYPE_LOCAL_QUIT, sptr);
-			sendto_umode(UMODE_OPER | UMODE_CLIENT,
+			sendto_snomask(SNO_CLIENT,
 			    "*** Notice -- Client exiting: %s (%s@%s) [%s]",
 			    sptr->name, sptr->user->username,
 			    sptr->user->realhost, comment);
@@ -488,7 +488,7 @@ int  exit_client(cptr, sptr, from, comment)
 			mydom_mask[0] = '\0';
 			strncpy(&mydom_mask[1], DOMAINNAME, HOSTLEN - 1);
 			/* Clean out list and watch structures -Donwulff */
-			hash_del_notify_list(sptr);
+			hash_del_watch_list(sptr);
 			if (sptr->user && sptr->user->lopt)
 			{
 				free_str_list(sptr->user->lopt->yeslist);
@@ -722,7 +722,7 @@ static void exit_one_client_backend(cptr, sptr, from, comment, split)
 
 			if (!IsULine(sptr) && !split)
 				if (sptr->user->server != me_hash)
-					sendto_umode(UMODE_FCLIENT,
+					sendto_snomask(SNO_FCLIENT,
 					    "*** Notice -- Client exiting at %s: %s!%s@%s (%s)",
 					    sptr->user->server, sptr->name,
 					    sptr->user->username,
@@ -749,7 +749,7 @@ static void exit_one_client_backend(cptr, sptr, from, comment, split)
 		    sptr->from, sptr->next, sptr->prev, sptr->fd,
 		    sptr->status, sptr->user));
 	if (IsRegisteredUser(sptr))
-		hash_check_notify(sptr, RPL_LOGOFF);
+		hash_check_watch(sptr, RPL_LOGOFF);
 	remove_client_from_list(sptr);
 	return;
 }

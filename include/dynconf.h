@@ -45,9 +45,6 @@ struct zNetwork {
 	char *x_coadmin_host;
 	char *x_techadmin_host;
 	char *x_hidden_host;
-	char *x_netdomain;
-	char *x_www_site;
-	char *x_ftp_site;
 	char *x_prefix_quit;
 	char *x_helpchan;
 	char *x_stats_server;
@@ -56,13 +53,6 @@ struct zNetwork {
 typedef struct zConfiguration aConfiguration;
 struct zConfiguration {
 	unsigned som:1;
-	unsigned mode_x:1;
-	unsigned mode_i:1;
-	unsigned mode_stripbadwords:1;
-	unsigned truehub:1;
-	unsigned stop:1;
-	unsigned showopers:1;
-	unsigned killdiff:1;
 	unsigned hide_ulines:1;
 	unsigned allow_chatops:1;
 	unsigned webtv_support:1;
@@ -73,13 +63,12 @@ struct zConfiguration {
 	char *name_server;
 	char *kline_address;
 	long conn_modes;
-	char *include;
-	char *domainname;
-	char *domainmask;	/* '*' + domainname */
 	char *auto_join_chans;
 	char *oper_auto_join_chans;
+	char *oper_only_stats;
 	int  socksbantime;
 	int  maxchannelsperuser;
+	int  anti_spam_quit_message_time;
 	char *socksbanmessage;
 	char *socksquitmessage;
 	aNetwork network;
@@ -90,15 +79,7 @@ extern aConfiguration iConf;
 #endif
 
 #define KLINE_ADDRESS		iConf.kline_address
-#define INCLUDE				iConf.include
-#define DOMAINNAMEMASK		"*" DOMAINNAME
-#define MODE_X				iConf.mode_x
-#define MODE_I				iConf.mode_i
-#define MODE_STRIPWORDS			iConf.mode_stripbadwords
 #define CONN_MODES			iConf.conn_modes
-#define TRUEHUB				iConf.truehub
-#define SHOWOPERS			iConf.showopers
-#define KILLDIFF			iConf.killdiff
 #define SHOWOPERMOTD			iConf.som
 #define HIDE_ULINES			iConf.hide_ulines
 #define ALLOW_CHATOPS			iConf.allow_chatops
@@ -114,7 +95,8 @@ extern aConfiguration iConf;
 #define SOCKSBANTIME			iConf.socksbantime
 #define NAME_SERVER			iConf.name_server
 #define IDENT_CHECK			iConf.ident_check
-
+#define OPER_ONLY_STATS			iConf.oper_only_stats
+#define ANTI_SPAM_QUIT_MSG_TIME		iConf.anti_spam_quit_message_time
 
 #define ircnetwork			iConf.network.x_ircnetwork
 #define ircnet005			iConf.network.x_ircnet005
@@ -128,15 +110,10 @@ extern aConfiguration iConf;
 #define coadmin_host		iConf.network.x_coadmin_host
 #define techadmin_host		iConf.network.x_techadmin_host
 #define hidden_host			iConf.network.x_hidden_host
-#define netdomain			iConf.network.x_netdomain
-#define www_site			iConf.network.x_www_site
-#define ftp_site			iConf.network.x_ftp_site
 #define helpchan			iConf.network.x_helpchan
 #define STATS_SERVER		iConf.network.x_stats_server
 #define iNAH				iConf.network.x_inah
 #define prefix_quit			iConf.network.x_prefix_quit
-#define STOPSE				iConf.network.x_se
-
 
 #define CLOAK_KEY1			iConf.network.key
 #define CLOAK_KEY2			iConf.network.key2

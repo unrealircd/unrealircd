@@ -292,11 +292,28 @@ if test "$ac_cv_thread_multi" = "yes"; then
 AC_MSG_RESULT(Ok we'll install FSU Pthreads)
 cd extras
 if [[ -f "pthreads.tar.gz" ]] ; then 
-	gunzip -d pthreads.tar.gz
+	gunzip -fd pthreads.tar.gz
 fi
 tar xf pthreads.tar
 cd threads/src
+rm -f Makefile
+case "${host_cpu}-${host_os}" in
+*-freebsd*)
+cp Makefile.FreeBSD Makefile
+make
+;;
+*-linux*)
+cp Makefile.Linux Makefile
+make
+;;
+*-solaris2*)
+cp Makefile.Solaris Makefile
+make
+;;
+*)
 ./configure
+;;
+esac
 cd ../../../
 if test "$ac_cv_pthreadspecial" != no; then
 PTHREAD_CFLAGS="-I=../extras/threads/include $ac_cv_pthreadspecial"
@@ -321,4 +338,5 @@ else
 fi
 
 ])dnl ACX_PTHREAD
+
 

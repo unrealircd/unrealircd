@@ -137,38 +137,53 @@ void	scan_socks_scan(HStruct *h)
 {
 	int			retval;
 	char			host[SCAN_HOSTLENGTH];
-	struct			SOCKADDR_IN sin;
+	struct			sockaddr_in sin;
 	SOCKET				fd;
-	int				sinlen = sizeof(struct SOCKADDR_IN);
+	int				sinlen = sizeof(struct sockaddr_in);
 	unsigned short	sport = blackh_conf->port;
 	unsigned char   socksbuf[12];
 	unsigned long   theip;
 	fd_set			rfds;
-	struct timeval  tv;
+	struct timeval  	tv;
 	int				len;
 	/* Get host */
 	IRCMutexLock((*xHSlock));
 	strcpy(host, h->host);
 	IRCMutexUnlock((*xHSlock));
-	
-#ifndef INET6
-	sin.SIN_ADDR.S_ADDR = inet_addr(host);
-#else
-	inet_pton(AF_INET6, host, sin.SIN_ADDR.S_ADDR);
-#endif 
+	/* IPv6 ?*/
+	if (strchr(host, ':'))
+		goto exituniverse;
+		
+	sin.sin_addr.s_addr = inet_addr(host);
 	if ((fd = socket(AFINET, SOCK_STREAM, 0)) < 0)
 	{
 		goto exituniverse;
 		return;
 	}
 
-	sin.SIN_PORT = htons(SCAN_ON_PORT);
-	sin.SIN_FAMILY = AFINET;
-	/* We do this blocking. */
+	sin.sin_port = htons(SCAN_ON_PORT);
+	sin.sin_family = AF_INET;
+	/* We do this non-blocking to prevent a hang of the entire ircd with newer
+	 * versions of glibc.  Don't you just love new "features?"
+	 * Passing null to this is probably bad, a better method is needed. 
+	 * Maybe a version of set_non_blocking that doesn't send error messages? 
+	 * -Zogg
+	 * 
+	 * set_non_blocking(fd,cptr)
+	 * when cptr == NULL, it doesnt error - changed some months ago
+	 * also, don't we need a select loop to make this better?
+         * -Stskeeps
+         * I just gave a select loop a shot (select in a while(), waiting for
+         * the thing to either set the writable flags or return a -# and set 
+         * errno to EINTR.  Could be my ignorance, or my glibc, but select()
+         * NEVER returned a negative number, and if I passed it a timeout (ie, tv)
+         * then the loops never ended, either. 
+         * -Zogg
+	 */
+	set_non_blocking(fd, NULL);
 	if ((retval = connect(fd, (struct sockaddr *)&sin,
-		sizeof(sin))) == -1)
+                sizeof(sin))) == -1 && ERRNO != P_EINPROGRESS)
 	{
-		printf("%i", ERRNO);
 		/* we have no socks server! */
 		CLOSE_SOCK(fd);	
 		goto exituniverse;
@@ -176,7 +191,7 @@ void	scan_socks_scan(HStruct *h)
 	}
 	
 	/* We wait for write-ready */
-	tv.tv_sec = 10;
+	tv.tv_sec = 40;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
@@ -186,8 +201,8 @@ void	scan_socks_scan(HStruct *h)
 		goto exituniverse;
 	}
 				
-	sin.SIN_ADDR.S_ADDR = inet_addr(blackh_conf->outip ? blackh_conf->outip : blackh_conf->ip);
-	theip = htonl(sin.SIN_ADDR.S_ADDR);
+	sin.sin_addr.s_addr = inet_addr(blackh_conf->outip ? blackh_conf->outip : blackh_conf->ip);
+	theip = htonl(sin.sin_addr.s_addr);
 	bzero(socksbuf, sizeof(socksbuf));
 	socksbuf[0] = 4;
 	socksbuf[1] = 1;
@@ -203,7 +218,7 @@ void	scan_socks_scan(HStruct *h)
 		CLOSE_SOCK(fd);
 		goto exituniverse;
 	}
-	/* Now we wait for data. 30 secs ought to be enough  */
+	/* Now we wait for data. 10 secs ought to be enough  */
 	tv.tv_sec = 10;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);

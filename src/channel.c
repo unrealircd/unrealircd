@@ -79,7 +79,7 @@ static int can_join PROTO((aClient *, aClient *, aChannel *, char *, char *,
 static int channel_link PROTO((aClient *, aClient *, int, char **));
 static void channel_modes PROTO((aClient *, char *, char *, aChannel *));
 static int check_channelmask PROTO((aClient *, aClient *, char *));
-static int del_banid PROTO((aChannel *, char *));
+int del_banid PROTO((aChannel *, char *));
 static void set_mode PROTO((aChannel *, aClient *, int, char **, u_int *,
     char[MAXMODEPARAMS][MODEBUFLEN + 3], int));
 static void make_mode_str PROTO((aChannel *, long, long, int,
@@ -101,7 +101,7 @@ static char *PartFmt2 = ":%s PART %s :%s";
  * some buffers for rebuilding channel/nick lists with ,'s
  */
 static char nickbuf[BUFSIZE], buf[BUFSIZE];
-static char modebuf[MODEBUFLEN], parabuf[MODEBUFLEN];
+char modebuf[MODEBUFLEN], parabuf[MODEBUFLEN];
 #include "sjoin.h"
 
 #ifdef USE_LONGMODE
@@ -415,7 +415,7 @@ static int add_exbanid(aClient *cptr, aChannel *chptr, char *banid)
 /*
  * del_exbanid - delete an id belonging to cptr
  */
-static int del_exbanid(aChannel *chptr, char *banid)
+int del_exbanid(aChannel *chptr, char *banid)
 {
 	Ban **ban;
 	Ban *tmp;
@@ -484,7 +484,7 @@ static int add_banid(aClient *cptr, aChannel *chptr, char *banid)
 /*
  * del_banid - delete an id belonging to cptr
  */
-static int del_banid(aChannel *chptr, char *banid)
+int del_banid(aChannel *chptr, char *banid)
 {
 	Ban **ban;
 	Ban *tmp;
@@ -1249,7 +1249,7 @@ int m_mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (!(*parv[2] == '&'))	/* & denotes a bounce */
 		{
 			/* !!! */
-			sendto_umode(UMODE_EYES,
+			sendto_snomask(SNO_EYES,
 			    "*** TS bounce for %s - %lu(ours) %lu(theirs)",
 			    chptr->chname, chptr->creationtime, sendts);
 			bounce_mode(chptr, cptr, parc - 2, parv + 2);
@@ -1266,7 +1266,7 @@ int m_mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 /*	if (IsPerson(sptr) && IsOper(sptr)) {
 		if (!is_chan_op(sptr, chptr)) {
 			if (MyClient(sptr) && !IsULine(cptr) && mode_buf[1])
-				sendto_umode(UMODE_EYES, "*** OperMode [IRCop: %s] - [Channel: %s] - [Mode: %s %s]",
+				sendto_snomask(SNO_EYES, "*** OperMode [IRCop: %s] - [Channel: %s] - [Mode: %s %s]",
         	 		   sptr->name, chptr->chname, mode_buf, parabuf);
 			sendts = 0;
 		}
@@ -1338,7 +1338,7 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
 				tschange = 1;
 /*
 				if (chptr->creationtime != 0)
-					sendto_umode(UMODE_EYES, "*** TS fix for %s - %lu(ours) %lu(theirs)",
+					sendto_snomask(SNO_EYES, "*** TS fix for %s - %lu(ours) %lu(theirs)",
 					chptr->chname, chptr->creationtime, sendts);			
 					*/
 				chptr->creationtime = sendts;
@@ -1378,7 +1378,7 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
 	if (opermode == 1)
 	{
 		if (MyClient(sptr) && mode_buf[1])
-			sendto_umode(UMODE_EYES,
+			sendto_snomask(SNO_EYES,
 			    "*** OperMode [IRCop: %s] - [Channel: %s] - [Mode: %s %s]",
 			    sptr->name, chptr->chname, mode_buf, parabuf);
 		sendts = 0;
@@ -1857,6 +1857,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 				  char *tmp;
 				  if ((tmp = strchr(param, ' ')))
 					*tmp = '\0';
+				  if ((tmp = strchr(param, ':')))
+					*tmp = '\0';
 				  strncpyzt(chptr->mode.key, param,
 				      sizeof(chptr->mode.key));
 			  }
@@ -1989,6 +1991,9 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 				  char *tmp; 
 				  if ((tmp = strchr(param, ' ')))
 					*tmp = '\0';
+				  if ((tmp = strchr(param, ':')))
+					*tmp = '\0';
+
 
 				  strncpyzt(chptr->mode.link, param,
 				      sizeof(chptr->mode.link));
@@ -2401,12 +2406,12 @@ void over_notice(aClient *cptr, aClient *sptr, aChannel *chptr, char *key)
 
 	if (is_banned(cptr, sptr, chptr) && IsOper(sptr) && !IsULine(sptr))
 	{
-		sendto_umode(UMODE_EYES, "*** Banwalk [IRCop: %s] [Channel: %s]",sptr->name,chptr->chname);
+		sendto_snomask(SNO_EYES, "*** Banwalk [IRCop: %s] [Channel: %s]",sptr->name,chptr->chname);
 	} else if (IsOper(sptr) && !IsULine(sptr) && *chptr->mode.key && (BadPtr(key) || 
             mycmp(chptr->mode.key, key))) {
-		sendto_umode(UMODE_EYES, "*** Keywalk [IRCop: %s] [Channel: %s]",sptr->name,chptr->chname);
+		sendto_snomask(SNO_EYES, "*** Keywalk [IRCop: %s] [Channel: %s]",sptr->name,chptr->chname);
 	} else if (IsOper(sptr) && !IsULine(sptr) && (chptr->mode.mode & MODE_INVITEONLY) && !lp) {
-		sendto_umode(UMODE_EYES, "*** Invitewalk [IRCop: %s] [Channel: %s]",sptr->name,chptr->chname);
+		sendto_snomask(SNO_EYES, "*** Invitewalk [IRCop: %s] [Channel: %s]",sptr->name,chptr->chname);
 	}
 
 }
@@ -3411,7 +3416,7 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					    || (is_halfop(sptr, chptr)
 					    && is_chan_op(who, chptr)))
 					{
-						sendto_umode(UMODE_EYES,
+						sendto_snomask(SNO_EYES,
 						    "*** OperKick [%s @ %s -> %s (%s)]",
 						    sptr->name,
 						    chptr->chname,
@@ -3424,7 +3429,7 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					if (IsNetAdmin
 						(sptr) || IsTechAdmin(sptr))
 					{	/* IRCop kicking owner/prot */
-						sendto_umode(UMODE_EYES,
+						sendto_snomask(SNO_EYES,
 						    "*** OperKick [%s @ %s -> %s (%s)]",
 						    sptr->name,
 						    chptr->chname,
@@ -3542,8 +3547,8 @@ int m_topic(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			if (!MyClient(sptr) && !IsULine(sptr))
 			{
-				sendto_umode
-				    (UMODE_JUNK,"Remote TOPIC for unknown channel %s (%s)",
+				sendto_snomask
+				    (SNO_JUNK,"Remote TOPIC for unknown channel %s (%s)",
 				    parv[1], backupbuf);
 			}
 			sendto_one(sptr, rpl_str(ERR_NOSUCHCHANNEL),
@@ -3644,7 +3649,7 @@ int m_topic(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifdef NO_OPEROVERRIDE
 				return 0;
 #endif
-				sendto_umode(UMODE_EYES,
+				sendto_snomask(SNO_EYES,
 				    "*** OperTopic [IRCop: %s] - [Channel: %s] - [Topic: %s]",
 				    sptr->name, chptr->chname, topic);
 			}
@@ -4579,21 +4584,38 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
  */
 
 /* Some ugly macros, but useful */
-#define Addit(x,y) modebuf[b] = x; strcat(parabuf, y); \
-  strcat(parabuf, " "); \
-  if (b >= MODEPARAMS) \
-  { modebuf[b + 1] = '\0'; sendto_serv_butone_sjoin(cptr, \
-  	":%s MODE %s %s %s %lu", sptr->name, chptr->chname,  \
-  	modebuf, parabuf, chptr->creationtime); \
-  	sendto_channel_butserv(chptr, sptr, \
-  	":%s MODE %s %s %s", sptr->name, chptr->chname, \
-  	modebuf, parabuf); \
-  	parabuf[0] = '\0'; \
-  	b = 1; \
-  	} else b++
-
-
-
+#define Addit(mode,param) if (strlen(parabuf) + strlen(param) + 11 < MODEBUFLEN) { \
+	if (*parabuf) \
+		strcat(parabuf, " ");\
+	strcat(parabuf, param);\
+	modebuf[b++] = mode;\
+	modebuf[b] = 0;\
+}\
+else if (*parabuf) {\
+	sendto_serv_butone_sjoin(cptr, ":%s MODE %s %s %s %lu", sptr->name, chptr->chname,\
+		modebuf, parabuf, chptr->creationtime); \
+        sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", sptr->name, chptr->chname,\
+        	modebuf, parabuf);\
+	strcpy(parabuf,param);\
+	modebuf[1] = mode;\
+	modebuf[2] = 0;\
+	sendto_serv_butone_sjoin(cptr, ":%s MODE %s %s %s %lu", sptr->name, chptr->chname,\
+		modebuf, parabuf, chptr->creationtime); \
+        sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", sptr->name, chptr->chname,\
+        	modebuf, parabuf); \
+	modebuf[1] = 0;\
+	parabuf[0] = 0;\
+	b = 1;\
+}\
+else if (b == MAXMODEPARAMS) {\
+	sendto_serv_butone_sjoin(cptr, ":%s MODE %s %s %s %lu", sptr->name, chptr->chname,\
+		modebuf, parabuf, chptr->creationtime); \
+        sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", sptr->name, chptr->chname,\
+        	modebuf, parabuf);\
+	parabuf[0] = 0;\
+	modebuf[1] = 0;\
+	b = 1;\
+}
 #define Addsingle(x) modebuf[b] = x; b++
 #define CheckStatus(x,y) if (modeflags & (y)) { Addit((x), nick); }
 #define AddBan(x) strcat(banbuf, x); strcat(banbuf, " ");
@@ -4851,7 +4873,7 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				    ":%s KICK %s %s :Fake direction",
 				    me.name, chptr->chname,
 				    acptr->name);
-				sendto_ops
+				sendto_realops
 				    ("Fake direction from user %s in SJOIN from %s(%s) at %s",
 				    nick, sptr->srvptr->name,
 				    sptr->name, chptr->chname);
@@ -5481,3 +5503,57 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 		sendto_one(cptr, "%s", buf);
 	}
 }
+
+void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, char *param) {
+	static char *modes = modebuf, lastwhat;
+	static short count = 0;
+	short send = 0;
+	if (!modebuf[0]) {
+		modes = modebuf;
+		*modes++ = what;
+		*modes = 0;
+		lastwhat = what;
+		*parabuf = 0;
+		count = 0;
+	}
+	if (lastwhat != what) {
+		*modes++ = what;
+		*modes = 0;
+		lastwhat = what;
+	}
+	if (strlen(parabuf) + strlen(param) + 11 < MODEBUFLEN) {
+		if (*parabuf) 
+			strcat(parabuf, " ");
+		strcat(parabuf, param);
+		*modes++ = mode;
+		*modes = 0;
+		count++;
+	}
+	else if (*parabuf) 
+		send = 1;
+
+	if (count == MAXMODEPARAMS)
+		send = 1;
+
+	if (send) {
+		sendto_channel_butserv(chptr, from, ":%s MODE %s %s %s",
+			from->name, chptr->chname, modebuf, parabuf);
+		sendto_serv_butone(NULL, ":%s MODE %s %s %s", from->name, chptr->chname, modebuf, parabuf);
+		send = 0;
+		*parabuf = 0;
+		modes = modebuf;
+		*modes++ = what;
+		lastwhat = what;
+		if (count != MAXMODEPARAMS) {
+			strcpy(parabuf, param);
+			*modes++ = mode;
+			count = 1;
+		}
+		else 
+			count = 0;
+		*modes = 0;
+	}
+}
+		
+	
+	

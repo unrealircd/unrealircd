@@ -9,11 +9,11 @@ FD_SETSIZE=/D SCAN_API=1 /D FD_SETSIZE=16384
 !IFNDEF DEBUG 
 CFLAGS=/MT /O2 /G5 /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D STATIC_LINKING /D _WIN32GUI /D NOSPOOF=1 /c
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib \
- oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /out:WIRCD.EXE
+ oldnames.lib libcmt.lib comctl32.lib comdlg32.lib /nodefaultlib /nologo /out:WIRCD.EXE
 !ELSE
 CFLAGS=  /MTd /Zi /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D STATIC_LINKING /D _WIN32GUI /D NOSPOOF=1 /c
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib \
- oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /debug /debugtype:BOTH /OUT:WIRCD.EXE
+ oldnames.lib libcmt.lib comctl32.lib comdlg32.lib /nodefaultlib /nologo /debug /debugtype:BOTH /OUT:WIRCD.EXE
 !ENDIF
 
 

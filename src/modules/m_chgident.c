@@ -183,7 +183,7 @@ int m_chgident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		if (!IsULine(sptr))
 		{
-			sendto_umode(UMODE_EYES,
+			sendto_snomask(SNO_EYES,
 			    "%s changed the virtual ident of %s (%s@%s) to be %s",
 			    sptr->name, acptr->name, acptr->user->username,
 			    (acptr->umodes & UMODE_HIDE ? acptr->

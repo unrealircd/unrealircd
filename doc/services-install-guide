@@ -56,7 +56,6 @@ link   services.yournetwork.net  {
 	password-receive "passwordreceive"; 	/* Password To Receive From 
 						Server Connecting */ 
 	class	servers; 
-	options { autoconnect; }; 
 };
 
 Make sure  you then  add a  u:line entry  for services.  All the servers on your

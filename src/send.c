@@ -1289,11 +1289,33 @@ void sendto_umode(int umodes, char *pattern, ...)
 	char nbuf[1024];
 	int  w;
 	va_start(vl, pattern);
-	w = (umodes == UMODE_OPER | UMODE_CLIENT ? 1 : 0);
 	for (i = 0; i <= LastSlot; i++)
-		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-		    (cptr->umodes & umodes) == umodes && ((w == 1)
-		    && !IsHybNotice(cptr)))
+		if ((cptr = local[i]) && IsPerson(cptr) && (cptr->umodes & umodes) == umodes)
+		{
+			(void)ircsprintf(nbuf, ":%s NOTICE %s :",
+			    me.name, cptr->name);
+			(void)strncat(nbuf, pattern,
+			    sizeof(nbuf) - strlen(nbuf));
+			vsendto_one(cptr, nbuf, vl);
+		}
+	va_end(vl);
+	return;
+}
+/*
+ * sendto_umode
+ *
+ *  Send to specified umode
+ */
+void sendto_snomask(int snomask, char *pattern, ...)
+{
+	va_list vl;
+	aClient *cptr;
+	int  i;
+	char nbuf[1024];
+	int  w;
+	va_start(vl, pattern);
+	for (i = 0; i <= LastSlot; i++)
+		if ((cptr = local[i]) && IsPerson(cptr) && (cptr->user->snomask & snomask))
 		{
 			(void)ircsprintf(nbuf, ":%s NOTICE %s :",
 			    me.name, cptr->name);
@@ -1320,7 +1342,8 @@ void sendto_conn_hcn(char *pattern, ...)
 	va_start(vl, pattern);
 	for (i = 0; i <= LastSlot; i++)
 		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-		    (cptr->umodes & UMODE_CLIENT) && IsHybNotice(cptr))
+		    IsPerson(cptr) && 
+		    (cptr->user->snomask & SNO_CLIENT) && IsHybNotice(cptr))
 		{
 			(void)ircsprintf(nbuf, ":%s NOTICE %s :",
 			    me.name, cptr->name);
@@ -1639,7 +1662,7 @@ void sendto_connectnotice(nick, user, sptr)
 
 	for (i = 0; i <= LastSlot; i++)
 		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-		    IsOper(cptr) && (cptr->umodes & UMODE_CLIENT))
+		    IsOper(cptr) && (cptr->user->snomask & SNO_CLIENT))
 		{
 			if (IsHybNotice(cptr))
 				sendto_one(cptr, ":%s NOTICE %s :%s", me.name,

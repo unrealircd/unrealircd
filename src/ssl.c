@@ -94,7 +94,7 @@ void init_ssl()
 }
 
 #define CHK_NULL(x) if ((x)==NULL) {\
-        sendto_umode(UMODE_JUNK, "Lost connection to %s:Error in SSL", \
+        sendto_snomask(SNO_JUNK, "Lost connection to %s:Error in SSL", \
                      get_client_name(cptr, TRUE)); \
 	return 0;\
 	}

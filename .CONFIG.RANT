@@ -17,7 +17,7 @@ shell, or to unzip a file. If you don't know/can do these things, I suggest
 you stop trying to set this up, and go read on some UNIX tutorials, and IRC
 tutorials. It takes a LOT of work to run a IRC server good. 
 
-I mean. I sit on the #unrealircd support channel each day, and I see
+I mean. I sit on the #unreal-support support channel each day, and I see
 countless questions about stuff that IS IN the documentation. Numerous
 people don't even bother to look at the config files (CONFIG_FILE_STOP
 problem). 

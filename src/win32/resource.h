@@ -11,6 +11,7 @@
 #define MENU_CONFIG                     141
 #define MENU_REHASH                     144
 #define MENU_SYSTRAY                    145
+#define MENU_CONTEXT                    146
 #define IDC_BAR                         1103
 #define IDC_TEXT                        1107
 #define IDC_EMAIL                       1108
@@ -28,6 +29,32 @@
 #define IDC_LMAXCLIENTS                 1124
 #define IDC_UPTIME                      1125
 #define IDC_CONFIGERROR                 1126
+#define IDC_BOLD                        1130
+#define IDC_UNDERLINE                   1131
+#define IDC_FIND                        1132
+#define IDFIND                          1133
+#define IDC_FINDTEXT                    1135
+#define IDC_MATCHWHOLE                  1137
+#define IDC_MATCHCASE                   1138
+#define IDC_DIRUP                       1139
+#define IDC_DIRDOWN                     1140
+#define IDC_COLOR                       1141
+#define IDC_WHITE                       1163
+#define IDC_BLACK                       1164
+#define IDC_DARKBLUE                    1165
+#define IDC_DARKGREEN                   1166
+#define IDC_RED                         1167
+#define IDC_DARKRED                     1168
+#define IDC_PURPLE                      1169
+#define IDC_ORANGE                      1170
+#define IDC_YELLOW                      1171
+#define IDC_GREEN                       1172
+#define IDC_VDARKGREEN                  1173
+#define IDC_LIGHTBLUE                   1174
+#define IDC_BLUE                        1175
+#define IDC_PINK                        1176
+#define IDC_DARKGRAY                    1177
+#define IDC_GRAY                        1178
 #define IDM_CREDITS                     40027
 #define IDM_DAL                         40028
 #define IDM_LICENSE                     40029
@@ -48,6 +75,12 @@
 #define IDM_CONFIG                      40051
 #define IDM_ABOUT                       40052
 #define IDM_SHUTDOWN                    40053
+#define IDM_UNDO                        40054
+#define IDM_CUT                         40055
+#define IDM_COPY                        40056
+#define IDM_PASTE                       40057
+#define IDM_DELETE                      40058
+#define IDM_SELECTALL                   40059
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -55,9 +88,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        146
-#define _APS_NEXT_COMMAND_VALUE         40054
-#define _APS_NEXT_CONTROL_VALUE         1129
+#define _APS_NEXT_RESOURCE_VALUE        149
+#define _APS_NEXT_COMMAND_VALUE         40060
+#define _APS_NEXT_CONTROL_VALUE         1164
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

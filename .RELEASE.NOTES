@@ -1,13 +1,13 @@
 
-Unreal3.2-Selene (BETA1) RELEASE NOTES
+Unreal3.2-Selene (BETA2) RELEASE NOTES
 ======================================
     
      I M P O R T A N T   R E A D I N G
 
 
 * Unreal3.2-Selene is a lot different than Unreal3.1.1. Forget all you have
-  learnt about setting up Unreal3.1.1 - this is a lot different. We have got
-  a new configuration format that intregrates all the former config files,
+  learned about setting up Unreal3.1.1 - this is a lot different. We have got
+  a new configuration format that integrates all the former config files,
   ircd.conf, vhost.conf, chrestrict.conf, unrealircd.conf, into to one new
   unrealircd.conf (what the ircd.conf is called now). See doc/ for more
   information on the configuration format
@@ -16,7 +16,7 @@ Unreal3.2-Selene (BETA1) RELEASE NOTES
   incompatible with Unreal3.1.1 - these can however still link, but the
   hostname will look different. This is made of three big numbers,
   configured in the config file - and these MUST be the same on all servers
-  on the network. Keep these numbers secret, and the cloaking algoritm is
+  on the network. Keep these numbers secret, and the cloaking algorithm is
   uncrackable (within 55 years, that is)
 
 * We use autoconf to help with compiliation, and this should make us able
@@ -35,9 +35,34 @@ Unreal3.2-Selene (BETA1) RELEASE NOTES
   If you would like to code a module, doc/ will contain a module guide,
   and we got an example module in src/modules/m_dummy.c.
 
-* We got limited IPv6 support, and there are some minor bugs in it. 
+* We have limited IPv6 support, and there are some minor bugs in it. 
 
 * The documentation is NOT yet 100% complete
+
+* We have added snomask (similar to ircu), basically this allowed us to remove several modes. Modes +cfFkje 
+  are gone, but don't worry, you can still use them. They are now added like this:
+ 
+  /mode yournick +s +cF
+
+  You set the flags in the second parameter of the mode command for a mode change +s, setting -s with no 
+  parameters removes all your snomask. You can remove a specific snomask by doing:
+
+  /mode yournick -s -c
+
+  The current snomasks are:
+
+  c - local connects
+  F - far connects
+  f - flood notices
+  k - kill notices
+  e - 'eyes' notices
+  j - 'junk' notices
+  v - vhost notices
+  G - gline/shun notices
+
+  It shouldn't be too ahrd to figure out, just play around with it a bit :)
+
+* /who needs testing it was recoded and may contain bugs
 
 * THIS IS A BETA VERSION. THINGS MAY NOT WORK. REPORT ANY BUGS TO THESE 
   ADDRESSES:

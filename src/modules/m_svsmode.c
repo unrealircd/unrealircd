@@ -100,6 +100,180 @@ void	m_svsmode_unload(void)
 				m_svsmode_info.name);
 	}
 }
+
+extern void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, char *param);
+extern char modebuf[MODEBUFLEN], parabuf[MODEBUFLEN];
+int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[]) 
+{
+	aChannel *chptr;
+	time_t ts;
+	aClient *acptr;
+	char *m;
+	int what;
+	
+	int i = 4;
+
+
+	modebuf[0] = 0;
+	if(!(chptr = find_channel(parv[1], NULL)))
+		return 0;
+/*	if (parc >= 4) {
+			return 0;
+		if (parc > 4) {
+			ts = TS2ts(parv[4]);
+			if (acptr->since != ts)
+				return 0;
+		}
+	}*/
+	ts = TS2ts(parv[parc-1]);
+	for(m = parv[2]; *m; m++) {
+		switch (*m) {
+			case '+':
+				what = MODE_ADD;
+				break;
+			case '-':
+				what = MODE_DEL;
+				break;
+			case 'q': {
+				Member *cm;
+				for (cm = chptr->members; cm; cm = cm->next) {
+					if (cm->flags & CHFL_CHANOWNER) {
+						add_send_mode_param(chptr, sptr, '-', 'q', cm->cptr->name);
+						cm->flags &= ~CHFL_CHANOWNER;
+					}
+				}
+			}
+			break;
+			case 'a': {
+				Member *cm;
+				for (cm = chptr->members; cm; cm = cm->next) {
+					if (cm->flags & CHFL_CHANPROT) {
+						add_send_mode_param(chptr, sptr, '-', 'a', cm->cptr->name);
+						cm->flags &= ~CHFL_CHANPROT;
+					}
+				}
+			}
+			break;
+			case 'o': {
+				Member *cm;
+				for (cm = chptr->members; cm; cm = cm->next) {
+					if (cm->flags & CHFL_CHANOP) {
+						add_send_mode_param(chptr, sptr, '-', 'o', cm->cptr->name);
+						cm->flags &= ~CHFL_CHANOP;
+					}
+				}
+			}
+			break;
+			case 'h': {
+				Member *cm;
+				for (cm = chptr->members; cm; cm = cm->next) {
+					if (cm->flags & CHFL_HALFOP) {
+						add_send_mode_param(chptr, sptr, '-', 'h', cm->cptr->name);
+						cm->flags &= ~CHFL_HALFOP;
+					}
+				}
+			}
+			break;
+			case 'v': {
+				Member *cm;
+				for (cm = chptr->members; cm; cm = cm->next) {
+					if (cm->flags & CHFL_VOICE) {
+						add_send_mode_param(chptr, sptr, '-', 'v', cm->cptr->name);
+						cm->flags &= ~CHFL_VOICE;
+					}
+				}
+			}
+			break;
+			case 'b': {
+				Ban *ban, *bnext;
+				if (parc >= i) {
+					char uhost[NICKLEN+USERLEN+HOSTLEN+6], vhost[NICKLEN+USERLEN+HOSTLEN+6];
+					if (!(acptr = find_person(parv[i-1], NULL))) {
+						i++;
+						break;
+					}
+					if (ts && ts != acptr->since) {
+						i++;
+						break;
+					}
+					i++;
+
+					strcpy(uhost, make_nick_user_host(acptr->name, 
+						acptr->user->username, acptr->user->realhost));
+					strcpy(vhost, make_nick_user_host(acptr->name,
+						acptr->user->username, acptr->user->virthost));
+					ban = chptr->banlist;
+					while (ban) {
+						bnext = ban->next;
+						if (!match(ban->banstr, uhost) || !match(ban->banstr, vhost)) {
+							add_send_mode_param(chptr, sptr, '-',  'b', 
+								ban->banstr);
+							del_banid(chptr, ban->banstr);
+						}
+						ban = bnext;
+					}
+				}
+				else {
+					ban = chptr->banlist;
+					while (ban) {
+						bnext = ban->next;
+						add_send_mode_param(chptr, sptr, '-',  'b', ban->banstr);
+						del_banid(chptr, ban->banstr);
+						ban = bnext;
+					}
+				}
+			}
+			break;
+			case 'e': {
+				Ban *ban, *bnext;
+				if (parc >= i) {
+					char uhost[NICKLEN+USERLEN+HOSTLEN+6], vhost[NICKLEN+USERLEN+HOSTLEN+6];
+					if (!(acptr = find_person(parv[i-1], NULL))) {
+						i++;
+						break;
+					}
+					if (ts && ts != acptr->since) {
+						i++;
+						break;
+					}
+					i++;
+
+					strcpy(uhost, make_nick_user_host(acptr->name, 
+						acptr->user->username, acptr->user->realhost));
+					strcpy(vhost, make_nick_user_host(acptr->name,
+						acptr->user->username, acptr->user->virthost));
+					ban = chptr->exlist;
+					while (ban) {
+						bnext = ban->next;
+						if (!match(ban->banstr, uhost) || !match(ban->banstr, vhost)) {
+							add_send_mode_param(chptr, sptr, '-',  'e', 
+								ban->banstr);
+							del_exbanid(chptr, ban->banstr);
+						}
+						ban = bnext;
+					}
+				}
+				else {
+					ban = chptr->exlist;
+					while (ban) {
+						bnext = ban->next;
+						add_send_mode_param(chptr, sptr, '-',  'e', ban->banstr);
+						del_exbanid(chptr, ban->banstr);
+						ban = bnext;
+					}
+				}
+			}
+			break;
+		}
+	}
+	if (*parabuf) {
+		sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", sptr->name, chptr->chname, 
+			modebuf, parabuf);
+		sendto_serv_butone(NULL, ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf);
+		*parabuf = 0;
+	}
+}
+
 /*
  * m_svsmode() added by taz
  * parv[0] - sender
@@ -125,6 +299,9 @@ int  m_svsmode(cptr, sptr, parc, parv)
 
         if (parc < 3)
                 return 0;
+
+	if (parv[1][0] == '#') 
+		return channel_svsmode(cptr, sptr, parc, parv);
 
         if (!(acptr = find_person(parv[1], NULL)))
                 return 0;
@@ -233,6 +410,9 @@ int  m_svs2mode(cptr, sptr, parc, parv)
 
         if (parc < 3)
                 return 0;
+
+	if (parv[1][0] == '#') 
+		return channel_svsmode(cptr, sptr, parc, parv);
 
         if (!(acptr = find_person(parv[1], NULL)))
                 return 0;

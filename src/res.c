@@ -1163,11 +1163,6 @@ static int hash_name(name)
 {
 	u_int hashv = 0;
 
-	if (name == NULL) {
-		sendto_realops ("Caught NULL pointer in hash_name().  (Bad thing -- tell rwg.)");
-		return (0);
-	}
-
 	for (; *name && *name != '.'; name++)
 		hashv += *name;
 	hashv %= ARES_CACSIZE;

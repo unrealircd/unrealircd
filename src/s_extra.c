@@ -333,8 +333,8 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	ConfigItem_vhost *vhost;
 	ConfigItem_oper_from *from;
-	char *user, *pwd, *host;
-
+	char *user, *pwd, host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
+	int	len, length;
 	if (parc < 3)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
@@ -349,7 +349,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	pwd = parv[2];
 
 	if (!(vhost = Find_vhost(user))) {
-		sendto_umode(UMODE_EYES,
+		sendto_snomask(SNO_VHOST,
 		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - incorrect password",
 		    user, sptr->name,
 		    sptr->user->username,
@@ -359,13 +359,14 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    me.name, sptr->name, user);
 		return 0;
 	}
-	host = make_user_host(sptr->user->username, sptr->user->realhost);
+	strcpy(host, make_user_host(sptr->user->username, sptr->user->realhost));
+	strcpy(host2, make_user_host(sptr->user->username, (char *)inet_ntoa(sptr->ip)));
 	for (from = (ConfigItem_oper_from *)vhost->from; from; from = (ConfigItem_oper_from *)from->next) {
-		if (!match(from->name, host))
+		if (!match(from->name, host) || !match(from->name, host2))
 			break;
 	}
 	if (!from) {
-		sendto_umode(UMODE_EYES,
+		sendto_snomask(SNO_VHOST,
 		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - host does not match",
 		    user, sptr->name, sptr->user->username, sptr->user->realhost);
 		sendto_one(sptr,
@@ -377,8 +378,10 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		char olduser[USERLEN+1];
 		if (sptr->user->virthost)
 			MyFree(sptr->user->virthost);
-		sptr->user->virthost = MyMalloc(strlen(vhost->virthost) + 1);
-		strncpy(sptr->user->virthost, vhost->virthost, HOSTLEN);
+		len = strlen(vhost->virthost);
+		length =  len > HOSTLEN ? HOSTLEN : len;
+		sptr->user->virthost = MyMalloc(length + 1);
+		strncpy(sptr->user->virthost, vhost->virthost, length + 1);
 		if (vhost->virtuser) {
 			strcpy(olduser, sptr->user->username);
 			strncpy(sptr->user->username, vhost->virtuser, USERLEN);
@@ -394,7 +397,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    ":%s NOTICE %s :*** Your vhost is now %s%s%s",
 		    me.name, sptr->name, vhost->virtuser ? vhost->virtuser : "", 
 			vhost->virtuser ? "@" : "", vhost->virthost);
-		sendto_umode(UMODE_EYES,
+		sendto_snomask(SNO_VHOST,
 		    "[\2vhost\2] %s (%s!%s@%s) is now using vhost %s%s%s",
 		    user, sptr->name,
 		    vhost->virtuser ? olduser : sptr->user->username,
@@ -403,7 +406,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 	else {
-		sendto_umode(UMODE_EYES,
+		sendto_snomask(SNO_VHOST,
 		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - incorrect password",
 		    user, sptr->name,
 		    sptr->user->username,
@@ -423,12 +426,25 @@ void ircd_log(int flags, char *format, ...)
 	ConfigItem_log *logs;
 	char buf[2048], timebuf[128];
 	int fd;
+	struct stat fstats;
 	va_start(ap, format);
 	ircvsprintf(buf, format, ap);	
 	strcat(buf, "\n");
 	sprintf(timebuf, "[%s] - ", myctime(TStime()));
 	for (logs = conf_log; logs; logs = (ConfigItem_log *) logs->next) {
 		if (logs->flags & flags) {
+			stat(logs->file, &fstats);
+			if (logs->maxsize && fstats.st_size >= logs->maxsize) {
+#ifndef _WIN32
+				fd = open(logs->file, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR);
+#else
+				fd = open(logs->file, O_CREAT|O_WRONLY|O_TRUNC);
+#endif
+				if (fd == -1)
+					continue;
+				write(fd, "Max file size reached, starting new log file\n", 46);
+			}
+			else {
 #ifndef _WIN32
 			fd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY, S_IRUSR|S_IWUSR);
 #else
@@ -436,6 +452,7 @@ void ircd_log(int flags, char *format, ...)
 #endif
 			if (fd == -1)
 				continue;
+			}	
 			write(fd, timebuf, strlen(timebuf));
 			write(fd, buf, strlen(buf));
 			close(fd);

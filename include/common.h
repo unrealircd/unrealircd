@@ -37,7 +37,7 @@
 #ifdef	PARAMH
 #include <sys/param.h>
 #endif
-#if defined(__OpenBSD__) || defined(_SOLARIS)
+#if !defined(IN_ADDR)
 #include "sys.h"
 #endif
 
@@ -140,6 +140,10 @@ extern char *strtoken PROTO((char **, char *, char *));
 #define DupString(x,y) do{x=MyMalloc(strlen(y)+1);(void)strcpy(x,y);}while(0)
 
 extern u_char tolowertab[], touppertab[];
+
+#if defined(CHINESE_NICK) || defined(JAPANESE_NICK)
+#define USE_LOCALE
+#endif
 
 #ifndef USE_LOCALE
 #undef tolower

@@ -201,14 +201,22 @@ VOIDSIG s_monitor()
 
 VOIDSIG s_die()
 {
+#ifdef _WIN32
+	int i;
+	aClient *cptr;
+#endif
 #ifdef	USE_SYSLOG
 	(void)syslog(LOG_CRIT, "Server Killed By SIGTERM");
 #endif
 	unload_all_modules();
-	flush_connections(&me);
 #ifndef _WIN32
-	exit(-1);
+	flush_connections(&me);
+#else
+	for (i = LastSlot; i >= 0; i--)
+		if ((cptr = local[i]) && DBufLength(&cptr->sendQ) > 0)
+			(void)send_queued(cptr);
 #endif
+	exit(-1);
 }
 
 #ifndef _WIN32
@@ -342,10 +350,18 @@ void server_reboot(mesg)
 	char *mesg;
 {
 	int  i;
-
+#ifdef _WIN32
+	aClient *cptr;
+#endif
 	sendto_realops("Aieeeee!!!  Restarting server... %s", mesg);
 	Debug((DEBUG_NOTICE, "Restarting server... %s", mesg));
+#ifndef _WIN32
 	flush_connections(&me);
+#else
+	for (i = LastSlot; i >= 0; i--)
+		if ((cptr = local[i]) && DBufLength(&cptr->sendQ) > 0)
+			(void)send_queued(cptr);
+#endif
 	/*
 	   ** fd 0 must be 'preserved' if either the -d or -i options have
 	   ** been passed to us before restarting.
@@ -364,6 +380,7 @@ void server_reboot(mesg)
 	(void)execv(MYNAME, myargv);
 #else
 	close_connections();
+	CleanUp();
 	(void)execv(myargv[0], myargv);
 #endif
 #ifdef USE_SYSLOG
@@ -379,6 +396,7 @@ void server_reboot(mesg)
 	Debug((DEBUG_FATAL, "Couldn't restart server: %s",
 	    strerror(GetLastError())));
 #endif
+	unload_all_modules();
 	exit(-1);
 }
 
@@ -718,15 +736,13 @@ extern TS check_pings(TS currenttime, int check_kills)
 static int bad_command()
 {
 #ifndef _WIN32
-
-	(void)printf
-	    ("Usage: ircd %s[-h servername] [-p portnumber] [-x loglevel] [-t] [-H]\n",
 #ifdef CMDLINE_CONFIG
-	    "[-f config] "
+#define CMDLINE_CFG "[-f config] "
 #else
-	    ""
+#define CMDLINE_CFG ""
 #endif
-	    );
+	(void)printf
+	    ("Usage: ircd %s[-h servername] [-p portnumber] [-x loglevel] [-t] [-H]\n",CMDLINE_CFG);
 	(void)printf("Server not started\n\n");
 #else
 	MessageBox(NULL,
@@ -1016,13 +1032,11 @@ int  InitwIRCD(argc, argv)
 		{
 			/* run as a specified user */
 
-			(void)fprintf(stderr,
-			    "WARNING: ircd invloked as root\n         changing to uid = %d\n",
-			    IRC_UID);
-			(void)fprintf(stderr,
-			    "         changing to gid %d.\n",
-			    IRC_GID); (void)setuid(IRC_UID);
+			(void)fprintf(stderr, "WARNING: ircd invoked as root\n");
+                        (void)fprintf(stderr, "         changing to uid %d\n", IRC_UID);
+			(void)fprintf(stderr, "         changing to gid %d\n", IRC_GID);
 			(void)setgid(IRC_GID);
+                        (void)setuid(IRC_UID);
 		}
 #else
 		/* check for setuid root as usual */
@@ -1053,7 +1067,7 @@ int  InitwIRCD(argc, argv)
 	fprintf(stderr, "                           v%s\n\n", VERSIONONLY);
 	clear_client_hash_table();
 	clear_channel_hash_table();
-	clear_notify_hash_table();
+	clear_watch_hash_table();
 	bzero(&loop, sizeof(loop));
 	init_CommandHash();
 	initlists();
@@ -1068,6 +1082,14 @@ int  InitwIRCD(argc, argv)
 #ifdef STATIC_LINKING	
 	l_commands_init();
 #endif
+	/* Add default class */
+	default_class = (ConfigItem_class *) MyMallocEx(sizeof(ConfigItem_class));
+	default_class->flag.permanent = 1;
+	default_class->pingfreq = PINGFREQUENCY;
+	default_class->maxclients = 100;
+	default_class->sendq = MAXSENDQLENGTH;
+	default_class->name = "default";
+	add_ConfigItem((ConfigItem *) default_class, (ConfigItem **) &conf_class);
 	init_conf2(configfile);
 	validate_configuration();
 	booted = TRUE;
@@ -1448,4 +1470,3 @@ static void setup_signals()
 	(void)signal(SIGSEGV,CleanUpSegv);
 #endif
 }
-

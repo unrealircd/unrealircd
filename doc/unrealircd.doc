@@ -19,14 +19,6 @@
       time , this manual will be ever changing :-)
 
 
-           This Manual is written at the time when I am running Unreal-3.1.1-Darkshades (Not public release).
-      However most of these commands will also work on Unreal3.1+sf-Silverheart. In case of any problems ,
-      please visit #UnrealIRCd on irc.fyremoon.net (Official Help Channel) & Bugs can be emailed to
-      unreal-dev@lists.sourceforge.net. 	
-      Some modes only apply to Unreal-SSL or Unreal-3.1.1 because they require SSL (Secure Sockets Layer)
-      support.
-
-
            Here is the command list :      
 
 

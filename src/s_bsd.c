@@ -286,7 +286,7 @@ void report_error(text, cptr)
 			if (err)
 				errtmp = err;
 #endif
-	sendto_umode(UMODE_JUNK, text, host, strerror(errtmp));
+	sendto_snomask(SNO_JUNK, text, host, strerror(errtmp));
 	ircd_log(LOG_ERROR, text,host,strerror(errtmp));
 #ifdef USE_SYSLOG
 	syslog(LOG_WARNING, text, host, strerror(errtmp));
@@ -757,7 +757,7 @@ int  check_client(cptr)
 				break;
 		if (!hp->h_addr_list[i])
 		{
-			sendto_umode(UMODE_JUNK, "IP# Mismatch: %s != %s[%08x]",
+			sendto_snomask(SNO_JUNK, "IP# Mismatch: %s != %s[%08x]",
 			    inetntoa((char *)&cptr->ip), hp->h_name,
 			    *((unsigned long *)hp->h_addr));
 			hp = NULL;
@@ -922,16 +922,6 @@ void close_connection(cptr)
 		if (nextconnect > aconf->hold)
 			nextconnect = aconf->hold;
 	}
-#ifdef USE_SSL
-	if (cptr->flags & FLAGS_SSL)
-	{
-		if (cptr->ssl)
-		{
-			SSL_shutdown((SSL *)cptr->ssl);
-			SSL_free((SSL *)cptr->ssl);
-		}
-	}
-#endif
 
 	if (cptr->authfd >= 0)
 	{
@@ -953,6 +943,16 @@ void close_connection(cptr)
 	}
 
 	cptr->from = NULL;	/* ...this should catch them! >:) --msa */
+#ifdef USE_SSL
+	if (cptr->flags & FLAGS_SSL)
+	{
+		if (cptr->ssl)
+		{
+			SSL_shutdown((SSL *)cptr->ssl);
+			SSL_free((SSL *)cptr->ssl);
+		}
+	}
+#endif
 
 	/*
 	 * fd remap to keep local[i] filled at the bottom.
@@ -1395,7 +1395,7 @@ static int read_packet(cptr, rfd)
 
 		if (IsPerson(cptr) && DBufLength(&cptr->recvQ) > CLIENT_FLOOD)
 		{
-			sendto_umode(UMODE_FLOOD | UMODE_OPER,
+			sendto_snomask(SNO_FLOOD,
 			    "*** Flood -- %s!%s@%s (%d) exceeds %d recvQ",
 			    cptr->name[0] ? cptr->name : "*",
 			    cptr->user ? cptr->user->username : "*",
@@ -1565,7 +1565,7 @@ static int read_packet(aClient *cptr)
 #endif
 		    DBufLength(&cptr->recvQ) > CLIENT_FLOOD)
 		{
-			sendto_umode(UMODE_FLOOD,
+			sendto_snomask(SNO_FLOOD,
 			    "Flood -- %s!%s@%s (%d) Exceeds %d RecvQ",
 			    cptr->name[0] ? cptr->name : "*",
 			    cptr->user ? cptr->user->username : "*",
@@ -2414,28 +2414,23 @@ static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
 	bzero((char *)&server, sizeof(server));
 	server.SIN_FAMILY = AFINET;
 	get_sockhost(cptr, aconf->hostname);
-
-	get_sockhost(cptr, aconf->hostname);
+	
 	server.SIN_PORT = 0;
 	server.SIN_ADDR = me.ip;
 	server.SIN_FAMILY = AFINET;
-	/*
-	   ** Bind to a local IP# (with unknown port - let unix decide) so
-	   ** we have some chance of knowing the IP# that gets used for a host
-	   ** with more than one IP#.
-	 */
-	/* No we don't bind it, not all OS's can handle connecting with
-	   ** an already bound socket, different ip# might occur anyway
-	   ** leading to a freezing select() on this side for some time.
-	   ** I had this on my Linux 1.1.88 --Run
-	 */
-	/* We do now.  Virtual interface stuff --ns */
-	if (me.ip.S_ADDR != INADDR_ANY)
-		if (bind(cptr->fd, (struct SOCKADDR *)&server, sizeof(server)) == -1)
-		{
-			report_error("error binding to local port for %s:%s", cptr);
-			return NULL;
-		}
+	if (aconf->bindip && strcmp("*", aconf->bindip))
+	{
+#ifndef INET6
+		server.SIN_ADDR.S_ADDR = inet_addr(aconf->bindip);	
+#else
+		inet_pton(AFINET, aconf->bindip, server.SIN_ADDR.S_ADDR);
+#endif
+	}
+	if (bind(cptr->fd, (struct SOCKADDR *)&server, sizeof(server)) == -1)
+	{
+		report_error("error binding to local port for %s:%s", cptr);
+		return NULL;
+	}
 	bzero((char *)&server, sizeof(server));
 	server.SIN_FAMILY = AFINET;
 	/*

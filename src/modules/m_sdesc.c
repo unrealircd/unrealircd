@@ -78,7 +78,7 @@ int    m_sdesc_init(int module_load)
 	/*
 	 * We call our add_Command crap here
 	*/
-	add_Command(MSG_SDESC, TOK_SDESC, m_sdesc, MAXPARA);
+	add_Command(MSG_SDESC, TOK_SDESC, m_sdesc, 1);
 }
 
 #ifdef DYNAMIC_LINKING

@@ -687,3 +687,108 @@ seen. gmtime warning still there
 - Documentation bug fix
 - Changed version to -beta1
 - Various preparitions for beta1
+- Commited the web server prototype made by Stskeeps, web design by WildChild
+- Ripped out the old DF watch system, using bahamut's now
+- Fixed some CHINESE_NICK stuff
+- Fixed an sdesc bug reported by Alzirr
+- Fixed a little gcc 3.0 bug with Unreal
+- Fixed *** nick has quit (no Days come, days go), by defaulting to "Quit: "
+- Fixed -nexus.nexusirc.org- *** Notice -- Trying to send [:Alzirr WALLOPS
+  :test bug, found by Alzirr 
+- Fixed struct IN_ADDR problems on some OS'es
+- Fixed some more gcc 3.0 problems and made FSU pthreads a bit easier to install
+- Fixed some updconf bugs reported by Joe
+- Fixed a bug where 'fake direction' messages were sent to non-ops reported by Janos
+- Made it so unreal searches harder for SSL headers and libraries
+- Fixed possible bug with allowing :'s in +k/+L .. 
+- Added a credit
+- Fixed a typo in /stats and a /chatops bug found by Cas 
+- Made oper {} (and vhost {}) allow you to enter an IP even if your host resolves by request of Cas
+- Added set::options:show-klines and set::options::show-tkl to make /stats G and /stats K oper only
+- Added a patch by Zogg to fix a socks scanner problem
+- Fixed a /sapart bug found by SubZero
+- Minor bugfix in scan_socks, + some comments
+- Fixed some flaws in httpd, that made it break unmercifully
+- Added correct uptime to web interface
+- Patched in zogg's scan_socks patch, second edition
+- Added in Ossie's example.conf v2
+- Major changes to the win32 editor
+- Fixed a bug in the new editor, hopefully now it works flawlessly (?)
+- Fixed a bug in the win32 status dialog causing it to get screwed up, found by Auspice
+- Fixed a scan_socks problem under win32
+- Added a 3d border to the color selector in the win32 editor
+- Fixed a win32 bug dealing with the new RTF parser
+- Fixed a scan_socks problem under win32
+- Fixed a MOTD rehash bug found by fryo
+- Made CR compatilbity actually work, it autojoins now :)
+- Started updating network files (remove all the obsolete ones)
+- Fixed SQLINE problem 
+- Added doc/coding-guidelines
+- Readded header info to network files which was lost in the update
+- Updated a few network files that managed to slip by the update process
+- Updated networks/networks.ndx and alphabetized it and added all network files submitted in 3.2 format
+  (didn't feel like converting right now ;P)
+- Win32 code cleanup
+- Made my_itoa use _itoa on win32
+- Implimented SVSMODE #channel -b nick to remove all matching bans against a nick, idea from bahamut
+- Added SVSMODE #channel -b to remove all bans
+- Added SVSMODE #channel -qaohv to remove all users of that respective level, and made all the # SVSMODE 
+  flags work in SVS2MODE
+- Made a bunch of config errors non fatal
+- Added 2 more network files (yea, I'm slow)
+- Fixed SQLINE bug, FINALLY. (forgot to set type ..oops..)
+- Added more network files...
+- Fixed a bug affecting /oper and /vhost caused by IP checking
+- Added wildcard support to include and loadmodule in win32
+- Added SVSMODE # -e to work just like -b
+- Fixed SVSMODE compile error
+- Added tgf's patches for these bugs:
+   * if you dont have a rules file and do "rehash -motd" then the server 
+   segfaults.
+   * setgid has to be called before setuid... cos if you change to a non-priv
+      uid first then you are not allowed to setgid!
+- Added more network files
+- Fixed a possible restart/die bug
+- Fixed a bug where /die didn't do anything on win32 reported by Gilou
+- Fixed a bug where /restart didn't send out notices on win32
+- Made /restart call mod_unload for all modules
+- Fixed a typo in the win32 makefile
+- Rewrote Addit, hopefully it fixes the SJOIN problems?
+- Fixed fence post marker overwrite in /vhost, found and fixed by tgf
+- Made the Win32 version report the actual OS to opers in /version rather than just say 'Win32'
+- Removed some obsolete code
+- Added set::oper-only-stats which allows you to set any/all stats as oper only (* = all). Code is kind of 
+  ugly since some flags are case insensitive and C == H but it works and seems pretty fast.
+- Added set::anti-spam-quit-message-time idea from hybrid7
+- Made the config smarter, for yes/no options yes/true/on/1 = yes no/false/off/0 = no
+- Made Unreal be able to recover from a bunch of config errors
+- Added stats flag r to the stats help list
+- Fixed bindip problem with it not being made
+- Made even more config errors recoverable
+- Added more network files
+- Fixed some typos in s_conf.c
+- Fixed a win32 bug where /restart didn't remove the tray icon, reported by PHANTOm and Gilou
+- Fixed Osiris's example.conf
+- Fixed IPv6 bindip error found by Madkiss
+- Added log::maxsize, when this size is reached the log is cleared and started over again
+- Fixed a codemastr-on-crack /version bug, and fixed some IPv6 stuff in
+  scan*
+- Fixed some more IPv6 stuff in httpd
+- Implimented snomask (similar to IRCu) and moved several usermodes to it
+- Added a config check to detect what order we should specify the SSL libraries in
+- Fixed bug with SSL, detected properly and fixed by Chawmp
+- Fixed an oper-only-stats bug
+- Updated some documentation to prepar for release
+- Docs prepare
+- Fixed a major snomask bug found by narf
+- Using bahamut /who now, this needs some testing.
+- HCN fix
+- /who fix .. removed nick matching functionality..
+- Fixed a SNOMASK problem found by Arantis
+- Fixed a umode2 bug that crashed the server
+- Fixed vhost bug that forgot to add a \0 in the end of the string
+- /who fix
+- Another /who fix, what crashed it I assume - helped by narf to find this
+- Fixed a bug were operflag eyes didn't work
+- /who fixes regarding +I +H and crap
+- Preparation for beta2
