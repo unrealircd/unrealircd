@@ -1486,3 +1486,13 @@ seen. gmtime warning still there
 - Added set::ssl::egd for Entropy Gathering Daemon support see doc/conf.doc or
   doc/example.conf for more information.
 - Updated credits
+- Removed ./Setup - No longer supported (read the docs!)
+- Removed .NEW_CONFIG - No longer needed
+- Removed INSTALL - Refer to NEW docs Unreal32docs.html
+- Removed doc/commands.txt - Refer to NEW docs Unreal32docs.html
+- Removed doc/faq - Refer to NEW docs Unreal32docs.html
+- Removed doc/conf.doc - Refer to NEW Docs Unreal32docs.html
+- Removed doc/unrealircd.doc - Refer to NEW docs Unreal32docs.html
+- Removed doc/Elite.Changes - Out Dated
+- Removed doc/services-install-guide - Refer to NEW docs Unreal32docs.html
+- Modfied Unreal.nfo to include ref. to new docs

@@ -22,6 +22,10 @@
   * DrBin     <drbin@unrealircd.com>
   * llthangel <llthangel@unrealircd.org>
   
+  Documentation:
+  ==============
+  * CKnight^ <cknight@unrealircd.com>
+
  Precenses on the Internet:
   * http://www.unrealircd.com
  
@@ -49,7 +53,8 @@ latest devel:
              base so we are volunteeringly helping you, but we are humans
              like you, and we got to have peace at times as well.]
     * Mailing list: supporters@lists.unrealircd.org (for support)
-    * READ doc/faq BEFORE ASKING QUESTIONS!
+    * READ THE DOCS BEFORE ASKING QUESTIONS! doc/unreal32docs.html 
+             or on the web http://www.unrealircd.com/unreal32docs.html
     * READ http://support.unrealircd.org
 
   * Want to discuss, chat, etc?
