@@ -2393,3 +2393,4 @@ seen. gmtime warning still there
 - Made anti away flood system work just like anti nick flood (#0001205).
   NO_FLOOD_AWAY is now enabled and away-flood is set to 4 per 120s by default.
 - Fixed a double OperOverride notice bug reported by DukePyrolator (#0001180).
+- Doc fixes/updates reported by Angrywolf (#0001163, #0001176).

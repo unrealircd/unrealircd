@@ -2399,8 +2399,8 @@ to get more information on a command.</p>
   </tr>
   <tr> 
     <td height="39">shun +-&lt;user@host&gt; &lt;time to shun&gt; :&lt;reason&gt;<br></td>
-    <td>Prevents a user from executing ANY commands on the server, and prevents 
-      them from speaking. Time to shun is in seconds, or you can use 1d for 1 days. 
+    <td>Prevents a user from executing ANY commands and prevents them from speaking. 
+      Shuns are global (like glines). Time to shun is in seconds, or you can use 1d for 1 days. 
       To remove a shun, put a &#8211;user@host. Setting time to 0 makes it permanent. 
       <br></td>
     <td>IRCop</td>
@@ -2610,7 +2610,6 @@ to get more information on a command.</p>
 	O - oper - Send the oper block list<br>
 	S - set - Send the set block list<br>
 	s - shun - Send the shun list<br>
-	S - set - Send the set block list<br>
   	&nbsp;&nbsp;Extended flags: [+/-mrs] [mask] [reason] [setby]<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;m Return shuns matching/not matching the specified mask<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;r Return shuns with a reason matching/not matching the specified reason<br>
@@ -2619,6 +2618,7 @@ to get more information on a command.</p>
 	q - sqline - Send the SQLINE list<br>
 	Q - bannick - Send the ban nick block list<br>
 	r - chanrestrict - Send the channel deny/allow block list<br>
+	R - usage - Send usage information<br>
 	t - tld - Send the tld block list<br>
 	T - traffic - Send traffic information<br>
 	u - uptime - Send the server uptime and connection count<br>
@@ -2627,6 +2627,7 @@ to get more information on a command.</p>
 	V - Send the vhost block list<br>
 	X - notlink - Send the list of servers that are not current linked<br>
 	Y - class - Send the class block list<br>
+	z - zip - Send compression information about ziplinked servers (if compiled with ziplinks support)<br>
 	Z - mem - Send memory usage information<br>
 	</td>
     <td>All</td>
