@@ -516,10 +516,9 @@
 #define KILLCHASETIMELIMIT 90	/* Recommended value: 90 */
 
 /*
- * Use much faster badwords replace routine?
- * Change #undef to #define to enable
+ * Use much faster badwords replace routine (>100 times faster).
  */
-#undef FAST_BADWORD_REPLACE
+#define FAST_BADWORD_REPLACE
 
 /*
  * Enable zipped links? [EXPERIMENTAL]

@@ -1854,3 +1854,4 @@ seen. gmtime warning still there
 - Fixed bug in +q/+a list (/mode #chan q)
 - Added set::snomask-on-connect
 - Some tiny text fixes
+- Fast badword replace is now enabled by default
