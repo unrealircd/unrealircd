@@ -38,7 +38,8 @@ Unreal3.2.3-pre2 Release Notes
 - Spamfilter topic support ('t' in spamfilter, 'topic' in conf).
 - Added a feature to +b/+e ~c: ~c:[prefix]<#channel>. This can be used if you for
   example trust all ops of #leet: mode #x +e ~c:@#leet.
-- Greek docs, and a French help.fr.conf & example.fr.conf.
+- Various translated documents in doc/: unreal32docs.gr.html (Greek), help.fr.conf
+  and example.fr.conf (French), help.de.conf (German), example.hu.conf (Hungarian).
 
 ==[ CHANGED ]==
 - Updated auspice.conf
@@ -100,9 +101,14 @@ Unreal3.2.3-pre2 Release Notes
 - Fixed several /SAMODE bugs as well, regarding non-netadmins, being halfop'ed, etc.
 - /GZLINE [nick] was placing a *line on *@host instead of *@IP, fixed.
 - alias::format in combination with ::type 'command' caused a crash
+- zlib upgraded to 1.2.2, curl upgraded to 7.13.1, both fix various issues.
+- Win32 installer now also installs doc\technical\*.*
+- Desynch issues regarding +s/+p and +c/+S
 
 ==[ REMOVED ]==
 - NAZIISH_CHBAN_HANDLING (did not work at all)
+- The 'oldcloak' cloaking module is now removed, since this old algorithm got broken
+  8 months ago, nobody should be using it anymore.
 
 ==[ ADDITIONAL INFO ]==
 * See Changelog for more details
