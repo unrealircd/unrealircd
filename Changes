@@ -586,3 +586,8 @@ SJ3 fixes from codemastr for possible desynch
 Fixed prefix problem as per nighthawk
 --Luke
 ===================================
+
+Temp removed +q/+a prefixes to give client coders
+chance to implement PREFIX= sanely
+--Luke
+===================================

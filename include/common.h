@@ -238,7 +238,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                             TOPICLEN, \
                             TOPICLEN, \
                             "#",      \
-                            "(qaohv)~&@%+", \
+                            "(ohv)@%+", \
 			    "ohvbeqa", \
 			    "kfL", \
 			    "l", \
