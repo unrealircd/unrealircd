@@ -1914,8 +1914,8 @@ cat << __EOF__
 |_____________________________________________________________________|
 |_____________________________________________________________________|
 | - The UnrealIRCd Team -                                             |
-| * Stskeeps  stskeeps@tspre.org                                      |
-| * codemastr codemastr@tspre.org                                     |
-| * DrBin     drbin@tspre.org                                         |
+| * Stskeeps  stskeeps@unrealircd.com                                 |
+| * codemastr codemastr@unrealircd.com                                |
+| * DrBin     drbin@unrealircd.com                                    |
 |_____________________________________________________________________|
 __EOF__
