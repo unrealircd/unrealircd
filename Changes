@@ -2972,3 +2972,8 @@ seen. gmtime warning still there
 - '0' tkltime in spamfilter now really means 'perm', not '*line for
   0 seconds' or something. Reported by Certus.
 - Fixed a bug in individual m_*.so loading, 39 new modules were affected.
+- Fixed an issue where chanmode +f was often set by the server again
+  in a netjoin when there was no need to (nothing to synch).
+- Added spamfilter::except which allows you to specify targets
+  (eg: channels) where spamfilter should not take action. Requested by Fury
+  (#0001586). Ex: set { spamfilter { except "#spamreport,#help"; }; };

@@ -107,6 +107,21 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
 	return (&pparv);
 }
 
+/* Checks if 2 ChanFloodProt modes (chmode +f) are different.
+ * This is a bit more complicated than 1 simple memcmp(a,b,..) because
+ * counters are also stored in this struct so we have to do
+ * it manually :( -- Syzop.
+ */
+static int compare_floodprot_modes(ChanFloodProt *a, ChanFloodProt *b)
+{
+	if (memcmp(a->l, b->l, sizeof(a->l)) ||
+	    memcmp(a->a, b->a, sizeof(a->a)) ||
+	    memcmp(a->r, b->r, sizeof(a->r)))
+		return 1;
+	else
+		return 0;
+}
+
 /*
    **      m_sjoin  
    **
@@ -761,7 +776,7 @@ CMD_FUNC(m_sjoin)
 			char *x;
 			int i;
 
-			if (memcmp(chptr->mode.floodprot, oldmode.floodprot, sizeof(ChanFloodProt)))
+			if (compare_floodprot_modes(chptr->mode.floodprot, oldmode.floodprot))
 			{
 				chptr->mode.floodprot->per = MAX(chptr->mode.floodprot->per, oldmode.floodprot->per);
 				for (i=0; i < NUMFLD; i++)

@@ -1319,6 +1319,21 @@ int place_host_ban(aClient *sptr, int action, char *reason, long duration)
 	return -1;
 }
 
+/** Checks if 'target' is on the spamfilter exception list.
+ * RETURNS 1 if found in list, 0 if not.
+ */
+int target_is_spamexcept(char *target)
+{
+SpamExcept *e;
+
+	for (e = iConf.spamexcept; e; e = e->next)
+	{
+		if (!match(e->name, target))
+			return 1;
+	}
+	return 0;
+}
+
 /** dospamfilter: executes the spamfilter onto the string.
  * str:		the text (eg msg text, notice text, part text, quit text, etc
  * type:	the spamfilter type (SPAMF_*)
@@ -1352,6 +1367,11 @@ char *str = (char *)StripControlCodes(str_in);
 				strlcpy(targetbuf+1, target, sizeof(targetbuf)-1); /* cut it off */
 			} else
 				targetbuf[0] = '\0';
+
+			/* Hold on.. perhaps it's on the exceptions list... */
+			if (target && target_is_spamexcept(target))
+				return 0; /* No problem! */
+
 			ircsprintf(buf, "[Spamfilter] %s!%s@%s matches filter '%s': [%s%s: '%s'] [%s]",
 				sptr->name, sptr->user->username, sptr->user->realhost,
 				tk->reason,

@@ -77,6 +77,7 @@ typedef struct aloopStruct LoopStruct;
 typedef struct ConfItem aConfItem;
 typedef struct t_kline aTKline;
 typedef struct _spamfilter Spamfilter;
+typedef struct _spamexcept SpamExcept;
 /* New Config Stuff */
 typedef struct _configentry ConfigEntry;
 typedef struct _configfile ConfigFile;
@@ -773,6 +774,11 @@ struct t_kline {
 	char usermask[USERLEN + 3];
 	char *hostmask, *reason, *setby;
 	TS expire_at, set_at;
+};
+
+struct _spamexcept {
+	SpamExcept *prev, *next;
+	char name[1];
 };
 
 typedef struct ircstatsx {

@@ -1339,6 +1339,7 @@ void	free_iConf(aConfiguration *i)
 	ircfree(i->network.x_stats_server);
 	ircfree(i->spamfilter_ban_reason);
 	ircfree(i->spamfilter_virus_help_channel);
+	ircfree(i->spamexcept_line);
 }
 
 int	config_test();
@@ -1591,6 +1592,7 @@ void	config_rehash()
 	OperStat 			*os_ptr;
 	ListStruct 	*next, *next2;
 	aTKline *tk, *tk_next;
+	SpamExcept *spamex_ptr;
 
 	USE_BAN_VERSION = 0;
 	/* clean out stuff that we don't use */	
@@ -1892,6 +1894,12 @@ void	config_rehash()
 		MyFree(os_ptr);
 	}
 	iConf.oper_only_stats_ext = NULL;
+	for (spamex_ptr = iConf.spamexcept; spamex_ptr; spamex_ptr = (SpamExcept *)next)
+	{
+		next = (ListStruct *)spamex_ptr->next;
+		MyFree(spamex_ptr);
+	}
+	iConf.spamexcept = NULL;
 	for (of_ptr = conf_offchans; of_ptr; of_ptr = (ConfigItem_offchans *)next)
 	{
 		next = (ListStruct *)of_ptr->next;
@@ -5543,7 +5551,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			{
 				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 				{
-					OperStat *os = MyMalloc(sizeof(OperStat));
+					OperStat *os = MyMallocEx(sizeof(OperStat));
 					ircstrdup(os->flag, cepp->ce_varname);
 					AddListItem(os, tempiConf.oper_only_stats_ext);
 				}
@@ -5726,6 +5734,23 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					ircstrdup(tempiConf.spamfilter_ban_reason, cepp->ce_vardata);
 				if (!strcmp(cepp->ce_varname, "virus-help-channel"))
 					ircstrdup(tempiConf.spamfilter_virus_help_channel, cepp->ce_vardata);
+				if (!strcmp(cepp->ce_varname, "except"))
+				{
+					char *name, *p;
+					SpamExcept *e;
+					ircstrdup(tempiConf.spamexcept_line, cepp->ce_vardata);
+					for (name = strtoken(&p, cepp->ce_vardata, ","); name; name = strtoken(&p, NULL, ","))
+					{
+						if (*name == ' ')
+							name++;
+						if (*name)
+						{
+							e = MyMallocEx(sizeof(SpamExcept) + strlen(name));
+							strcpy(e->name, name);
+							AddListItem(e, tempiConf.spamexcept);
+						}
+					}
+				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "default-bantime"))
@@ -6344,7 +6369,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						errors++;
 						continue;
 					}
-				} else {
+				} else 
+				if (!strcmp(cepp->ce_varname, "except"))
+				{ } else
+				{
 					config_error("%s:%i: unknown directive set::spamfilter::%s",
 						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname);
 					errors++;
