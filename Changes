@@ -1301,3 +1301,4 @@ seen. gmtime warning still there
 - Added a config check to see which (if any) gethostbyname_r exists (based on a macro by Caolan McNamara)
 - Removed some SOCKS scanner debug code that was forgotten
 - Finally REALLY fixed the scanner (note to Stskeeps: bcmp returns 0 when there IS a match)
+- Added OpenIRC-CA in .SICI
