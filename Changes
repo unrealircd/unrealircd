@@ -381,3 +381,4 @@
   when a user connects. This makes it easy to ban drones with simple patterns.
   For example: '/spamfilter add u gzline 86400 Drone[0-9]+!.+@.+:Drone[0-9]'
   would kill any drones that have both a nick and realname with 'Drone' followed by digits.
+- If a nick is qlined, the user is now lagged up to limit qline floods a bit (#0001335).

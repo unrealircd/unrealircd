@@ -1362,6 +1362,7 @@ CMD_FUNC(m_nick)
 				    nick, tklban->reason);
 				return 0;
 			}
+			sptr->since += 4; /* lag them up */
 			if (!IsOper(cptr))
 			{
 				sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
