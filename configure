@@ -3595,7 +3595,7 @@ else
 fi
 
 cat >> confdefs.h <<EOF
-#define MAXCONNECTIONS $withval
+#define MAXCONNECTIONS $ac_fd
 EOF
 
 # Check whether --with-spath or --without-spath was given.

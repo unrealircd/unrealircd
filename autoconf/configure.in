@@ -292,7 +292,7 @@ AC_ARG_WITH(dpath, [ --with-dpath=path     Specify the path where configuration 
 AC_DEFINE_UNQUOTED(DPATH, "$withval"), AC_DEFINE_UNQUOTED(DPATH, "`pwd`"))
 AC_ARG_WITH(fd-setsize, [ --with-fd-setsize=size     Specify the max file descriptors to use],
 ac_fd=$withval, ac_fd=1024)
-AC_DEFINE_UNQUOTED(MAXCONNECTIONS, $withval)
+AC_DEFINE_UNQUOTED(MAXCONNECTIONS, $ac_fd)
 AC_ARG_WITH(spath, [ --with-spath     Specify the location of the executable],
 AC_DEFINE_UNQUOTED(SPATH,"$withval"),AC_DEFINE_UNQUOTED(SPATH,"`pwd`/src/ircd"))
 AC_ARG_ENABLE(nospoof, [ --enable-nospoof     Enable spoofing protection], AC_DEFINE(NOSPOOF))
