@@ -4167,8 +4167,6 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			   * but they shouldnt be in default
 			   */
 		  case ' ':
-		  case '\n':
-		  case '\r':
 		  case '\t':
 			  break;
 		  case 'r':
@@ -4212,14 +4210,10 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				  if (*m == (char)(*(s + 1)))
 				  {
 					  if (what == MODE_ADD)
-					  {
 						  sptr->umodes |= flag;
-					  }
 					  else
-					  {
 						  sptr->umodes &= ~flag;
-					  }
-						  break;
+					  break;
 				  }
 				  if (flag == 0 && MyConnect(sptr) && !rpterror)
 				  {
@@ -4230,7 +4224,7 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				  }
 			  break;
 		}
-/*
+	/*
 	 * stop users making themselves operators too easily
 	 */
 
@@ -4274,63 +4268,41 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	 * themselves IF they have access to set that specific mode in their
 	 * O:Line.
 	 */
-	if (MyClient(sptr) && IsAnOper(sptr))
-	{
-		if (IsClientF(sptr) && !OPCanUModeC(sptr))
-			ClearClientF(sptr);
-		if (IsFloodF(sptr) && !OPCanUModeF(sptr))
-			ClearFloodF(sptr);
-		if (IsAdmin(sptr) && !OPIsAdmin(sptr))
-			ClearAdmin(sptr);
-		if (IsSAdmin(sptr) && !OPIsSAdmin(sptr))
-			ClearSAdmin(sptr);
-		if (IsNetAdmin(sptr) && !OPIsNetAdmin(sptr))
-			ClearNetAdmin(sptr);
-		if (IsCoAdmin(sptr) && !OPIsCoAdmin(sptr))
-			ClearCoAdmin(sptr);
-		if (IsTechAdmin(sptr) && !OPIsTechAdmin(sptr))
-			ClearTechAdmin(sptr);
-		if ((sptr->umodes & UMODE_HIDING)
-		    && !(sptr->oflag & OFLAG_INVISIBLE))
-			sptr->umodes &= ~UMODE_HIDING;
-		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
-		    && !IsSecure(sptr))
-			sptr->umodes &= ~UMODE_SECURE;
-		if (IsTechAdmin(sptr) && IsNetAdmin(sptr))
-			ClearTechAdmin(sptr);
-	}
-
-	/*
-	 * For Services Protection...
-	 */
-	if (!IsServer(cptr) && !IsULine(sptr))
-	{
-		if (IsServices(sptr))
-			ClearServices(sptr);
-	}
-	if ((setflags & UMODE_HIDE) && !IsHidden(sptr))
-		sptr->umodes &= ~UMODE_SETHOST;
-
-	if (IsHidden(sptr) && !(setflags & UMODE_HIDE))
-	{
-		sptr->user->virthost =
-		    (char *)make_virthost(sptr->user->realhost,
-		    sptr->user->virthost, 1);
-	}
-
+	if (MyClient(sptr)) {
+		if (IsAnOper(sptr)) {
+			if (IsClientF(sptr) && !OPCanUModeC(sptr))
+				ClearClientF(sptr);
+			if (IsFloodF(sptr) && !OPCanUModeF(sptr))
+				ClearFloodF(sptr);
+			if (IsAdmin(sptr) && !OPIsAdmin(sptr))
+				ClearAdmin(sptr);
+			if (IsSAdmin(sptr) && !OPIsSAdmin(sptr))
+				ClearSAdmin(sptr);
+			if (IsNetAdmin(sptr) && !OPIsNetAdmin(sptr))
+				ClearNetAdmin(sptr);
+			if (IsCoAdmin(sptr) && !OPIsCoAdmin(sptr))
+				ClearCoAdmin(sptr);
+			if (IsTechAdmin(sptr) && !OPIsTechAdmin(sptr))
+				ClearTechAdmin(sptr);
+			if ((sptr->umodes & UMODE_HIDING)
+			    && !(sptr->oflag & OFLAG_INVISIBLE))
+				sptr->umodes &= ~UMODE_HIDING;
+			if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
+			    && !IsSecure(sptr))
+				sptr->umodes &= ~UMODE_SECURE;
+			if (IsTechAdmin(sptr) && IsNetAdmin(sptr))
+				ClearTechAdmin(sptr);
+		}
 	/*
 	   This is to remooove the kix bug.. and to protect some stuffie
 	   -techie
 	 */
-	if (MyConnect(sptr))
-	{
 		if ((sptr->umodes & (UMODE_KIX)) && !(IsNetAdmin(sptr)
 		    || IsTechAdmin(sptr)))
 			sptr->umodes &= ~UMODE_KIX;
 
 		if ((sptr->umodes & UMODE_HIDING) && !IsAnOper(sptr))
 			sptr->umodes &= ~UMODE_HIDING;
-
 
 		if ((sptr->umodes & UMODE_HIDING)
 		    && !(sptr->oflag & OFLAG_INVISIBLE))
@@ -4365,6 +4337,24 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 			}
 		}
+
+	}
+	/*
+	 * For Services Protection...
+	 */
+	if (!IsServer(cptr) && !IsULine(sptr))
+	{
+		if (IsServices(sptr))
+			ClearServices(sptr);
+	}
+	if ((setflags & UMODE_HIDE) && !IsHidden(sptr))
+		sptr->umodes &= ~UMODE_SETHOST;
+
+	if (IsHidden(sptr) && !(setflags & UMODE_HIDE))
+	{
+		sptr->user->virthost =
+		    (char *)make_virthost(sptr->user->realhost,
+		    sptr->user->virthost, 1);
 	}
 	/*
 	 * If I understand what this code is doing correctly...
@@ -4400,21 +4390,11 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (!(setflags & UMODE_OPER) && IsOper(sptr))
 		IRCstats.operators++;
 	if ((setflags & UMODE_OPER) && !IsOper(sptr))
-	{
 		IRCstats.operators--;
-#ifndef NO_FDLIST
-		if (MyConnect(sptr))
-			delfrom_fdlist(sptr->slot, &oper_fdlist);
-#endif
-	}
 	if (!(setflags & UMODE_INVISIBLE) && IsInvisible(sptr))
-	{
 		IRCstats.invisible++;
-	}
 	if ((setflags & UMODE_INVISIBLE) && !IsInvisible(sptr))
-	{
 		IRCstats.invisible--;
-	}
 	/*
 	 * compare new flags with old flags and send string which
 	 * will cause servers to update correctly.

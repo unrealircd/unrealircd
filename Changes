@@ -801,3 +801,4 @@ seen. gmtime warning still there
 - Fixed a /gline crash bug found by DemOnBaBy
 - Http proxy scanner cleanup
 - Added SOCKS5 detection based on code in Epona
+- Cleaned up /mode a bit
