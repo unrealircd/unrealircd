@@ -71,8 +71,7 @@
 
 #include "channel.h"
 
-
-extern int sendanyways;
+extern MODVAR int sendanyways;
 
 
 typedef struct aloopStruct LoopStruct;
@@ -796,19 +795,19 @@ typedef struct ircstatsx {
 	int  global_max;	/* global max */
 } ircstats;
 
-extern ircstats IRCstats;
+extern MODVAR ircstats IRCstats;
 
 #include "modules.h"
 
-extern Umode *Usermode_Table;
-extern short	 Usermode_highest;
+extern MODVAR Umode *Usermode_Table;
+extern MODVAR short	 Usermode_highest;
 
-extern Snomask *Snomask_Table;
-extern short Snomask_highest;
+extern MODVAR Snomask *Snomask_Table;
+extern MODVAR short Snomask_highest;
 
 #ifdef EXTCMODE
-extern Cmode *Channelmode_Table;
-extern unsigned short Channelmode_highest;
+extern MODVAR Cmode *Channelmode_Table;
+extern MODVAR unsigned short Channelmode_highest;
 #endif
 
 extern Umode *UmodeAdd(Module *module, char ch, int options, int (*allowed)(aClient *sptr, int what), long *mode);
@@ -1609,9 +1608,9 @@ struct liststruct {
 
 /* misc variable externs */
 
-extern char *version, *infotext[], *dalinfotext[], *unrealcredits[];
-extern char *generation, *creation;
-extern char *gnulicense[];
+extern MODVAR char *version, *infotext[], *dalinfotext[], *unrealcredits[];
+extern MODVAR char *generation, *creation;
+extern MODVAR char *gnulicense[];
 /* misc defines */
 
 #define	FLUSH_BUFFER	-2

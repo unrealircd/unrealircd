@@ -42,7 +42,7 @@
 
 aTKline *tklines[TKLISTLEN];
 
-extern char zlinebuf[BUFSIZE];
+extern MODVAR char zlinebuf[BUFSIZE];
 
 /** tkl hash method.
  * NOTE1: the input value 'c' is assumed to be in range a-z or A-Z!

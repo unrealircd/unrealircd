@@ -26,26 +26,26 @@
 #define MAXCUSTOMHOOKS  30
 #define MAXHOOKTYPES	70
 #if defined(_WIN32)
-#define DLLFUNC	_declspec(dllexport)
-#define irc_dlopen(x,y) LoadLibrary(x)
-#define irc_dlclose FreeLibrary
-#define irc_dlsym(x,y,z) z = (void *)GetProcAddress(x,y)
-#undef irc_dlerror
+ #define DLLFUNC	_declspec(dllexport)
+ #define irc_dlopen(x,y) LoadLibrary(x)
+ #define irc_dlclose FreeLibrary
+ #define irc_dlsym(x,y,z) z = (void *)GetProcAddress(x,y)
+ #define irc_dlerror our_dlerror
 #elif defined(HPUX)
-#define irc_dlopen(x,y) shl_load(x,y,0L)
-#define irc_dlsym(x,y,z) shl_findsym(x,y,z)
-#define irc_dlclose shl_unload
-#define irc_dlerror() strerror(errno)
+ #define irc_dlopen(x,y) shl_load(x,y,0L)
+ #define irc_dlsym(x,y,z) shl_findsym(x,y,z)
+ #define irc_dlclose shl_unload
+ #define irc_dlerror() strerror(errno)
 #else
-#define irc_dlopen dlopen
-#define irc_dlclose dlclose
-#if defined(UNDERSCORE)
-#define irc_dlsym(x,y,z) z = obsd_dlsym(x,y)
-#else
-#define irc_dlsym(x,y,z) z = dlsym(x,y)
-#endif
-#define irc_dlerror dlerror
-#define DLLFUNC 
+ #define irc_dlopen dlopen
+ #define irc_dlclose dlclose
+ #if defined(UNDERSCORE)
+  #define irc_dlsym(x,y,z) z = obsd_dlsym(x,y)
+ #else
+  #define irc_dlsym(x,y,z) z = dlsym(x,y)
+ #endif
+ #define irc_dlerror dlerror
+ #define DLLFUNC 
 #endif
 
 #define EVENT(x) void (x) (void *data)
@@ -425,8 +425,8 @@ void    EventStatus(aClient *sptr);
 void    SetupEvents(void);
 void	LockEventSystem(void);
 void	UnlockEventSystem(void);
-extern Hook		*Hooks[MAXHOOKTYPES];
-extern Hooktype		Hooktypes[MAXCUSTOMHOOKS];
+extern MODVAR Hook		*Hooks[MAXHOOKTYPES];
+extern MODVAR Hooktype		Hooktypes[MAXCUSTOMHOOKS];
 
 void    Module_Init(void);
 char    *Module_Create(char *path);
@@ -565,23 +565,25 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define CONFIG_ALLOW 6
 
 #ifdef DYNAMIC_LINKING
-#define MOD_HEADER(name) Mod_Header
-#define MOD_TEST(name) Mod_Test
-#define MOD_INIT(name) Mod_Init
-#define MOD_LOAD(name) Mod_Load
-#define MOD_UNLOAD(name) Mod_Unload
+ #define MOD_HEADER(name) Mod_Header
+ #define MOD_TEST(name) Mod_Test
+ #define MOD_INIT(name) Mod_Init
+ #define MOD_LOAD(name) Mod_Load
+ #define MOD_UNLOAD(name) Mod_Unload
 #else
-#define MOD_HEADER(name) name##_Header
-#define MOD_TEST(name) name##_Test
-#define MOD_INIT(name) name##_Init
-#define MOD_LOAD(name) name##_Load
-#define MOD_UNLOAD(name) name##_Unload
+ #define MOD_HEADER(name) name##_Header
+ #define MOD_TEST(name) name##_Test
+ #define MOD_INIT(name) name##_Init
+ #define MOD_LOAD(name) name##_Load
+ #define MOD_UNLOAD(name) name##_Unload
 #endif
 
 #ifdef DYNAMIC_LINKING
 /* ugly alert!!!! */
 #include "version.h"
 char Mod_Version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9;
-#endif
+#endif /* DYNAMIC_LINKING */
+
 
 #endif
+

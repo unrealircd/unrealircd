@@ -3125,3 +3125,20 @@ This is the 3.2 fixes branch.
   spider312 (#0001799)
 - Include openssl/md5.h and openssl/ripemd.h if compiled w/SSL, this seems how it
   should be done and also makes unreal w/SSL able to compile on OpenBSD (3.5).
+- Added module support for Windows!
+  To module coders: 
+  -Building your module on Windows is almost exactly the same as on *nix
+  nmake -f makefile.win32 custommodule MODULEFILE=thefile
+
+  -Also, as I'm sure most module developers will begin distributing .dll files for their
+  modules, it is important to note that just like the modules on *nix, the dlls will need
+  to be recompiled each time a new version of Unreal is released. This is simply due to
+  the potential for binary incompatibility which at this point can not be avoided.
+
+  -Most modules already do this, but it is now a requirement for Windows support. At the
+  very minimum, the Mod_Test function must have the DLLFUNC specifier in order to work
+  Unreal will automatically add DLLFUNC to the other functions, but it does not hurt if
+  you use it for all of them.
+
+  NOTE: It is expected that there will probably be a few bugs to work out with this, so
+  please consider testing it! And module coders, please report any problems you experience!

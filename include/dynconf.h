@@ -144,7 +144,7 @@ struct zConfiguration {
 };
 
 #ifndef DYNCONF_C
-extern aConfiguration iConf;
+extern MODVAR aConfiguration iConf;
 #endif
 
 #define KLINE_ADDRESS		iConf.kline_address

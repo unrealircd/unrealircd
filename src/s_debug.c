@@ -31,7 +31,7 @@ Computing Center and Jarkko Oikarinen";
 /*
  * Option string.  Must be before #ifdef DEBUGMODE.
  */
-char serveropts[] = {
+MODVAR char serveropts[] = {
 #ifdef	CHROOTDIR
 	'c',
 #endif

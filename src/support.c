@@ -1746,7 +1746,7 @@ int unreal_copyfile(char *src, char *dest)
 #ifndef _WIN32
 	int srcfd = open(src, O_RDONLY);
 #else
-	int srcfd = open(src, _O_RDONLY);
+	int srcfd = open(src, _O_RDONLY|_O_BINARY);
 #endif
 	int destfd;
 	int len;
@@ -1757,7 +1757,7 @@ int unreal_copyfile(char *src, char *dest)
 #ifndef _WIN32
 	destfd  = open(dest, O_WRONLY|O_CREAT, DEFAULT_PERMISSIONS);
 #else
-	destfd = open(dest, _O_WRONLY|_O_CREAT, _S_IWRITE);
+	destfd = open(dest, _O_BINARY|_O_WRONLY|_O_CREAT, _S_IWRITE);
 #endif
 	if (destfd < 0)
 	{

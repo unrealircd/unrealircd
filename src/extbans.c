@@ -42,10 +42,10 @@
 #include <fcntl.h>
 #include "h.h"
 
-Extban ExtBan_Table[EXTBANTABLESZ]; /* this should be fastest */
-unsigned short ExtBan_highest = 0;
+Extban MODVAR ExtBan_Table[EXTBANTABLESZ]; /* this should be fastest */
+unsigned MODVAR short ExtBan_highest = 0;
 
-char extbanstr[EXTBANTABLESZ+1];
+char MODVAR extbanstr[EXTBANTABLESZ+1];
 
 void make_extbanstr(void)
 {

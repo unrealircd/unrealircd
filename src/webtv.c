@@ -54,7 +54,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[]);
  */
 int	ban_version(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
-aMessage	webtv_cmds[] = 
+MODVAR aMessage	webtv_cmds[] = 
 {
 	{"WHOIS", w_whois, 15},
 	{"\1VERSION", ban_version, 1},

@@ -169,7 +169,6 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				    me.name, IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, sptr->name,
 				    sptr->user->username, sptr->user->realhost);
 			}
-
 			sendto_one(sptr, rpl_str(RPL_WHOISUSER), me.name,
 			    parv[0], name,
 			    user->username,
@@ -266,7 +265,8 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			}
 
 			if (buf[0] != '\0')
-				sendto_one(sptr, rpl_str(RPL_WHOISCHANNELS), me.name, parv[0], name, buf);
+				sendto_one(sptr, rpl_str(RPL_WHOISCHANNELS), me.name, parv[0], name, buf); 
+
                         if (!(IsULine(acptr) && !IsOper(sptr) && HIDE_ULINES))
 				sendto_one(sptr, rpl_str(RPL_WHOISSERVER),
 				    me.name, parv[0], name, user->server,
@@ -278,6 +278,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			/* makesure they aren't +H (we'll also check
 			   before we display a helpop or IRCD Coder msg)
 			   -- codemastr */
+
 			if ((IsAnOper(acptr) || IsServices(acptr)) && !hideoper)
 			{
 				buf[0] = '\0';

@@ -59,8 +59,8 @@ struct CHLink {
 
 static int bouncedtimes = 0;
 
-struct CHLink chlbounce[MAXBOUNCE];
-int  chbounce = 0;
+struct MODVAR CHLink chlbounce[MAXBOUNCE];
+int  MODVAR chbounce = 0;
 long opermode = 0;
 aChannel *channel = NullChn;
 extern char backupbuf[];
@@ -5009,7 +5009,7 @@ char flagbuf[8]; /* For holding "qohva" and "*~@%+" */
 }
 
 #ifdef NEWCHFLOODPROT
-RemoveFld *removefld_list = NULL;
+MODVAR RemoveFld *removefld_list = NULL;
 
 RemoveFld *chanfloodtimer_find(aChannel *chptr, char mflag)
 {

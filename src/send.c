@@ -70,8 +70,8 @@ static int sentalong[MAXCONNECTIONS];
 void vsendto_prefix_one(struct Client *to, struct Client *from,
     const char *pattern, va_list vl);
 
-int  sentalong_marker;
-int  sendanyways = 0;
+MODVAR int  sentalong_marker;
+MODVAR int  sendanyways = 0;
 /*
 ** dead_link
 **	An error has been detected. The link *must* be closed,

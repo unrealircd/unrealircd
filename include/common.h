@@ -36,7 +36,7 @@
 #include <process.h>
 #include <io.h>
 #endif
-//#include "dynconf.h"
+#include "types.h"
 #include "config.h"
 #ifdef	PARAMH
 #include <sys/param.h>
@@ -125,7 +125,7 @@ extern char *inet_ntoa(struct IN_ADDR);
 extern int inet_netof(struct IN_ADDR);
 #endif
 
-int  global_count, max_global_count;
+MODVAR int  global_count, max_global_count;
 extern char *myctime(time_t);
 extern char *strtoken(char **, char *, char *);
 
@@ -166,7 +166,7 @@ extern u_char tolowertab[], touppertab[];
 #undef isspace
 #undef iscntrl
 #endif
-extern unsigned char char_atribs[];
+extern MODVAR unsigned char char_atribs[];
 
 #define PRINT 1
 #define CNTRL 2
@@ -336,7 +336,7 @@ extern int lu_noninv, lu_inv, lu_serv, lu_oper,
     lu_unknown, lu_channel, lu_lu, lu_lulocal, lu_lserv,
     lu_clu, lu_mlu, lu_cglobalu, lu_mglobalu;
 
-TS   now;
+MODVAR TS   now;
 
 #if defined(__STDC__)
 #define __const         const

@@ -736,7 +736,7 @@ int   hash_del_watch_list(aClient *cptr)
 
 #ifdef THROTTLING
 
-struct	ThrottlingBucket	*ThrottlingHash[THROTTLING_HASH_SIZE+1];
+struct	MODVAR ThrottlingBucket	*ThrottlingHash[THROTTLING_HASH_SIZE+1];
 
 void	init_throttling_hash()
 {

@@ -85,8 +85,6 @@ static int oper_access[] = {
         0, 0
 };
 
-extern ircstats IRCstats;
-
 ModuleHeader MOD_HEADER(m_svso)
   = {
 	"m_svso",

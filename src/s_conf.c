@@ -388,10 +388,10 @@ ConfigItem_badword	*conf_badword_quit = NULL;
 ConfigItem_offchans	*conf_offchans = NULL;
 
 aConfiguration		iConf;
-aConfiguration		tempiConf;
-ConfigFile		*conf = NULL;
+MODVAR aConfiguration		tempiConf;
+MODVAR ConfigFile		*conf = NULL;
 
-int			config_error_flag = 0;
+MODVAR int			config_error_flag = 0;
 int			config_verbose = 0;
 
 void add_include(char *);
@@ -1610,7 +1610,6 @@ int	load_conf(char *filename)
 		for (cfptr3 = &conf, cfptr2 = conf; cfptr2; cfptr2 = cfptr2->cf_next)
 			cfptr3 = &cfptr2->cf_next;
 		*cfptr3 = cfptr;
-#ifndef _WIN32
 		if (config_verbose > 1)
 			config_status("Loading modules in %s", filename);
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
@@ -1620,7 +1619,6 @@ int	load_conf(char *filename)
 				 if (ret < 0) 
 					 	return ret;
 			}
-#endif
 		if (config_verbose > 1)
 			config_status("Searching through %s for include files..", filename);
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
@@ -6593,6 +6591,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 #elif defined(_WIN32)
 	HANDLE hFind;
 	WIN32_FIND_DATA FindData;
+	char cPath[MAX_PATH], *cSlash = NULL, *path;
 #endif
 	char *ret;
 	if (!ce->ce_vardata)
@@ -6624,6 +6623,14 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 	}
 	globfree(&files);
 #elif defined(_WIN32)
+	bzero(cPath,MAX_PATH);
+	if (strchr(ce->ce_vardata, '/') || strchr(ce->ce_vardata, '\\')) {
+		strncpyzt(cPath,ce->ce_vardata,MAX_PATH);
+		cSlash=cPath+strlen(cPath);
+		while(*cSlash != '\\' && *cSlash != '/' && cSlash > cPath)
+			cSlash--; 
+		*(cSlash+1)=0;
+	}
 	hFind = FindFirstFile(ce->ce_vardata, &FindData);
 	if (!FindData.cFileName) {
 		config_status("%s:%i: loadmodule %s: failed to load",
@@ -6632,19 +6639,51 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 		FindClose(hFind);
 		return -1;
 	}
-	if ((ret = Module_Create(FindData.cFileName))) {
-		config_status("%s:%i: loadmodule %s: failed to load: %s",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			FindData.cFileName, ret);
-		return -1;
-	}
-	while (FindNextFile(hFind, &FindData) != 0) {
-		if ((ret = Module_Create(FindData.cFileName)))
-		{
+/* TODO FIX MEM LEAK */
+	if (cPath) {
+		path = MyMalloc(strlen(cPath) + strlen(FindData.cFileName)+1);
+		strcpy(path,cPath);
+		strcat(path,FindData.cFileName);
+		if ((ret = Module_Create(path))) {
 			config_status("%s:%i: loadmodule %s: failed to load: %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				FindData.cFileName, ret);
 			return -1;
+		}
+		free(path);
+	}
+	else
+	{
+		if ((ret = Module_Create(FindData.cFileName))) {
+			config_status("%s:%i: loadmodule %s: failed to load: %s",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+				FindData.cFileName, ret);
+			return -1;
+		}
+	}
+	while (FindNextFile(hFind, &FindData) != 0) {
+		if (cPath) {
+			path = MyMalloc(strlen(cPath) + strlen(FindData.cFileName)+1);
+			strcpy(path,cPath);
+			strcat(path,FindData.cFileName);		
+			if ((ret = Module_Create(path)))
+			{
+				config_status("%s:%i: loadmodule %s: failed to load: %s",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+					FindData.cFileName, ret);
+				return -1;
+			}
+			free(path);
+		}
+		else
+		{
+			if ((ret = Module_Create(FindData.cFileName)))
+			{
+				config_status("%s:%i: loadmodule %s: failed to load: %s",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+					FindData.cFileName, ret);
+				return -1;
+			}
 		}
 	}
 	FindClose(hFind);

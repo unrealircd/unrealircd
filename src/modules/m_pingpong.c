@@ -64,7 +64,6 @@ ModuleHeader MOD_HEADER(m_pingpong)
 	"3.2-b8-1",
 	NULL 
     };
-
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_pingpong)(ModuleInfo *modinfo)
 {
@@ -72,7 +71,6 @@ DLLFUNC int MOD_INIT(m_pingpong)(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	Debug((DEBUG_NOTICE, "INIT"));
-
 	add_Command(MSG_PING, TOK_PING, m_ping, MAXPARA);
 	add_CommandX(MSG_PONG, TOK_PONG, m_pong, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER|M_SHUN|M_VIRUS);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -209,7 +207,6 @@ DLLFUNC int m_pong(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 	char *origin, *destination;
-
 
 #ifdef NOSPOOF
 	if (!IsRegistered(cptr))

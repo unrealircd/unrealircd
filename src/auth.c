@@ -39,7 +39,7 @@
 #include <fcntl.h>
 #include "h.h"
 
-anAuthStruct AuthTypes[] = {
+anAuthStruct MODVAR AuthTypes[] = {
 	{"plain",	AUTHTYPE_PLAINTEXT},
 	{"plaintext",   AUTHTYPE_PLAINTEXT},
 #ifdef AUTHENABLE_UNIXCRYPT

@@ -60,7 +60,7 @@ void create_snomask(aClient *, anUser *, char *);
 extern int short_motd(aClient *sptr);
 extern aChannel *get_channel(aClient *cptr, char *chname, int flag);
 /* static  Link    *is_banned(aClient *, aChannel *); */
-int  dontspread = 0;
+MODVAR int  dontspread = 0;
 extern char *me_hash;
 extern char backupbuf[];
 static char buf[BUFSIZE];
@@ -265,7 +265,7 @@ const char *StripControlCodes(unsigned char *text)
 	return new_str;
 }
 
-char umodestring[UMODETABLESZ+1];
+MODVAR char umodestring[UMODETABLESZ+1];
 
 /*
 ** next_client
@@ -749,7 +749,7 @@ extern char *canonize(char *buffer)
 }
 
 
-extern char cmodestring[512];
+extern MODVAR char cmodestring[512];
 
 /*
 ** register_user
@@ -772,7 +772,7 @@ extern char cmodestring[512];
 **	   this is not fair. It should actually request another
 **	   nick from local user or kill him/her...
 */
-extern aTKline *tklines;
+extern MODVAR aTKline *tklines;
 extern int badclass;
 
 extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost)

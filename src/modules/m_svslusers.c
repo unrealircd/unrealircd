@@ -45,7 +45,6 @@
 #ifdef _WIN32
 #include "version.h"
 #endif
-extern ircstats IRCstats;
 DLLFUNC int m_svslusers(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_SVSLUSERS 	"SVSLUSERS"	

@@ -63,13 +63,13 @@ static struct liststats {
 
 void outofmemory();
 
-int  flinks = 0;
-int  freelinks = 0;
-Link *freelink = NULL;
-Member *freemember = NULL;
-Membership *freemembership = NULL;
-MembershipL *freemembershipL = NULL;
-int  numclients = 0;
+MODVAR int  flinks = 0;
+MODVAR int  freelinks = 0;
+MODVAR Link *freelink = NULL;
+MODVAR Member *freemember = NULL;
+MODVAR Membership *freemembership = NULL;
+MODVAR MembershipL *freemembershipL = NULL;
+MODVAR int  numclients = 0;
 
 void initlists(void)
 {

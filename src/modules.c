@@ -36,6 +36,7 @@
 #ifdef _WIN32
 #include <io.h>
 #define RTLD_NOW 0
+const char *our_dlerror(void);
 #elif defined(HPUX)
 #include <dl.h>
 #define RTLD_NOW BIND_IMMEDIATE
@@ -54,8 +55,8 @@
 
 Hook	   	*Hooks[MAXHOOKTYPES];
 Hooktype	Hooktypes[MAXCUSTOMHOOKS];
-Module          *Modules = NULL;
-Versionflag     *Versionflags = NULL;
+MODVAR Module          *Modules = NULL;
+MODVAR Versionflag     *Versionflags = NULL;
 int     Module_Depend_Resolve(Module *p);
 Module *Module_make(ModuleHeader *header, 
 #ifdef _WIN32
@@ -710,14 +711,6 @@ void	module_loadall(int module_load)
 		if (mi->flags & MODFLAG_LOADED)
 			continue;
 		irc_dlsym(mi->dll, "Mod_Load", fp);
-		irc_dlsym(mi->dll, "_Mod_Load", fpp);
-		if (fp);
-		else if (fpp) { fp = fpp; }
-		else
-		{
-			/* else, we didn't find it */
-			continue;
-		}
 		/* Call the module_load */
 		if ((*fp)(module_load) != MOD_SUCCESS)
 		{
@@ -726,7 +719,6 @@ void	module_loadall(int module_load)
 		}
 		else
 			mi->flags = MODFLAG_LOADED;
-		
 	}
 #endif
 }
@@ -1244,3 +1236,12 @@ const char *ModuleGetErrorStr(Module *module)
 	return module_error_str[module->errorcode];
 }
 
+#ifdef _WIN32
+const char *our_dlerror(void)
+{
+	static char errbuf[513];
+	DWORD err = GetLastError();
+	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, err, 0, errbuf, 512, NULL);
+	return errbuf;
+}
+#endif
