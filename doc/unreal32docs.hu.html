@@ -28,7 +28,7 @@ Hungarian |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
   <font size="4">Verzió: 3.2.2-CVS</font><br>
-  <b>Utolsó dokumentáció módosítás:</b> 2004-12-01</div>
+  <b>Utolsó dokumentáció módosítás:</b> 2005-01-29</div>
 <br>
   <b>Fõ fejlesztõk:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Munkatársak:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -493,6 +493,7 @@ A modulok bõvíthetik is más típusokkal a kiterjesztett ban típusokat.<br>
    <tr><td>q</td><td>quit</td><td>Kilépési indok</td></tr>
    <tr><td>d</td><td>dcc</td><td>DCC fájlnév</td></tr>
    <tr><td>a</td><td>away</td><td>Távolléti üzenet</td></tr>
+   <tr><td>t</td><td>topic</td><td>Témabeállítás</td></tr>
    <tr><td>u</td><td>user</td><td>Felhasználó kitiltása, nick!user@host:valósnév alakú illeszkedési maszk</td></tr>
    </table>
    Egyszerre több célpontot is megadhatsz, például így: cpNn</td></tr>
@@ -623,7 +624,7 @@ me {
 </pre></p>
 <p>Ezek az értékek meglehetõsen egyértelmûek. A <b>name</b> beállítja a szerver nevét,
   az <b>info</b> a szerver info sorának (rövid leírásának) megadására szolgál, a <b>numeric</b> meghatározza a szerver
-  azonosítószámát. Ez utóbbi szám legyen 1 és 255 között, és minden szerveren EGYEDINEK kell
+  azonosítószámát. Ez utóbbi szám legyen 0 és 254 között, és minden szerveren EGYEDINEK kell
   lennie, vagyis ugyanazon a hálózaton SEMELYIK más szervernek nem lehet ugyanaz az azonosítószáma.</p>
 <p>Példa:<br>
 <pre>
@@ -3083,10 +3084,10 @@ további információt kapj.</p>
 	d - denylinkauto - Elküldi a deny link (auto) blokkok listáját<br>
 	D - denylinkall - Elküldi a deny link (all) blokkok listáját<br>
 	e - exceptthrottle - Elküldi az except throttle blokkok listáját<br>
-	E - exceptban - Elküldi az except ban blokkok listáját<br>
+	E - exceptban - Elküldi az except ban és except tkl blokkok listáját<br>
 	f - spamfilter - Elküldi a spamszûrõk listáját<br>
 	F - denydcc - Elküldi a deny dcc blokkok listáját<br>
-	G - gline - Elküldi a gline listát<br>
+	G - gline - Elküldi a gline és gzline listát<br>
 	&nbsp;&nbsp;Kiterjesztett flagek: [+/-mrs] [maszk] [indok] [beállító]<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;m&nbsp;&nbsp;Visszaadja azon gline-okat, amelyek illenek/nem illenek a megadott maszkra<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;r&nbsp;&nbsp;Visszaadja azon gline-okat, amelyek indokszövege illik/nem illik a megadott indokra<br>
@@ -3099,17 +3100,17 @@ további információt kapj.</p>
 	M - command - Listát küld arról, hányszor használtak minden parancsot<br>
 	n - banrealname - Elküldi a ban realname blokkok listáját<br>
 	O - oper - Elküldi az oper blokkok listáját<br>
+	P - port - Információt küld a portokról<br>
+	q - sqline - Elküldi az SQLINE listát<br>
+	Q - bannick - Elküldi a ban nick blokkok listáját<br>
+	r - chanrestrict - Elküldi a deny/allow channel blokkok listáját<br>
+	R - usage - Információt küld a szerver erõforrás-használatáról<br>
 	S - set - Elküldi a set blokkok listáját<br>
 	s - shun - Elküldi a shun listát<br>
 	&nbsp;&nbsp;Kiterjesztett flagek: [+/-mrs] [maszk] [indok] [beállító]<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;m&nbsp;&nbsp;Visszaadja azon shunokat, amelyek illenek/nem illenek a megadott maszkra<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;r&nbsp;&nbsp;Visszaadja azon shunokat, amelyek indokszövege illik/nem illik a megadott indokra<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;s&nbsp;&nbsp;Visszaadja azon shunokat, amelyek beállítóinak neve illik/nem illik a megadott névre<br>
-	P - port - Információt küld a portokról<br>
-	q - sqline - Elküldi az SQLINE listát<br>
-	Q - bannick - Elküldi a ban nick blokkok listáját<br>
-	r - chanrestrict - Elküldi a deny/allow channel blokkok listáját<br>
-	R - usage - Információt küld a szerver erõforrás-használatáról<br>
 	t - tld - Elküldi a tld blokkok listáját<br>
 	T - traffic - Információt küld a forgalomról<br>
 	u - uptime - Megjeleníti a szerver fennlétének idejét és a kapcsolatok legmagasabb számát<br>
