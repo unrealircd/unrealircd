@@ -66,7 +66,9 @@ typedef struct	cachetable {
 #define ARES_CACSIZE	101
 
 #define	MAXCACHED	81
-
+#ifdef _WIN32
+typedef unsigned short u_int16_t;
+#endif
 extern struct __res_state ircd_res;
 extern int ircd_res_init();
 extern u_int ircd_res_randomid();

@@ -1216,3 +1216,5 @@ seen. gmtime warning still there
 - REALLY clean compile with -Wall (except for wierd TStime stuff)
 - Removed all remnants of PROTO()
 - Removed src/cio_main.c, src/cio_init.c, include/cio.h, include/ciofunc.h extremely old unused code
+- Win32 fix with u_int16_t
+
