@@ -1585,3 +1585,4 @@ seen. gmtime warning still there
 - Made the win32 version default to unsigned chars, and the linux version do the same under gcc
 - Added Syzop's various zero-terminate patches and fixes for crashes when
   you send commands like JOIN from a server directly
+- Made channel keys be case sensitive

@@ -2416,7 +2416,7 @@ static int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, ch
         if ((chptr->mode.mode & MODE_RGSTRONLY) && !IsARegNick(sptr))
                 return (ERR_NEEDREGGEDNICK);
 
-        if (*chptr->mode.key && (BadPtr(key) || mycmp(chptr->mode.key, key)))
+        if (*chptr->mode.key && (BadPtr(key) || strcmp(chptr->mode.key, key)))
                 return (ERR_BADCHANNELKEY);
 
         if ((chptr->mode.mode & MODE_INVITEONLY))
