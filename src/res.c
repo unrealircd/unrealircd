@@ -167,8 +167,8 @@ int init_resolver(int op)
 #endif
 	}
 #ifdef DEBUGMODE
-	if (op & RES_INITDEBG);
-	ircd_res.options |= RES_DEBUG;
+	if (op & RES_INITDEBG)
+		ircd_res.options |= RES_DEBUG;
 #endif
 	if (op & RES_INITCACH)
 	{
@@ -551,6 +551,7 @@ struct hostent *gethost_byaddr(char *addr, Link *lp)
 
 static int do_query_name(Link *lp, char *name, ResRQ *rptr)
 {
+#ifndef _WIN32
 	char hname[HOSTLEN + 1];
 	int  len;
 
@@ -564,6 +565,7 @@ static int do_query_name(Link *lp, char *name, ResRQ *rptr)
 		(void)strncat(hname, ircd_res.defdname,
 		    sizeof(hname) - len - 1);
 	}
+#endif
 
 	/*
 	 * Store the name passed as the one to lookup and generate other host

@@ -2161,3 +2161,4 @@ seen. gmtime warning still there
   have much more control over ident timeouts, this should also fix connection timeout problems
   during connecting.
 - Updated example.conf (added throttle block).
+- Made some fixes to the resolver code under Win32
