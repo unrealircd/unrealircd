@@ -360,7 +360,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 	strcpy(host, make_user_host(sptr->user->username, sptr->user->realhost));
-	strcpy(host2, make_user_host(sptr->user->username, (char *)inet_ntoa(sptr->ip)));
+	strcpy(host2, make_user_host(sptr->user->username, (char *)Inet_ia2p(&sptr->ip)));
 	for (from = (ConfigItem_oper_from *)vhost->from; from; from = (ConfigItem_oper_from *)from->next) {
 		if (!match(from->name, host) || !match(from->name, host2))
 			break;
