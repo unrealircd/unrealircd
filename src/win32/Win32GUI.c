@@ -206,7 +206,10 @@ void AddColor(unsigned char *color) {
 }
 
 ColorList *DelNewestColor() {
-	ColorList *p = TextColors, *q = TextColors->next;
+	ColorList *p = TextColors, *q;
+	if (!p)
+		return NULL;
+	q = TextColors->next;
 	MyFree(p->color);
 
 	TextColors = p->next;

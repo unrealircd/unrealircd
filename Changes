@@ -2186,3 +2186,4 @@ seen. gmtime warning still there
 - Made /whois work slightly faster
 - Probably fixed server-notices bug (duplicates, to non-opers) caused by a few SVS* cmds,
   reported by _loco_ (#0000991).
+- Fixed a bug in the win32 editor reported by ChAoS^TiGeR
