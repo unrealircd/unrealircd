@@ -1092,3 +1092,4 @@ seen. gmtime warning still there
 - Added the ability to go to a specific line in the win32 editor
   by clicking the current line number in the status bar
 - Converted all calls to hunt_server to hunt_server_token
+- Preparation for release
