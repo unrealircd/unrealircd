@@ -2129,7 +2129,7 @@ CMD_FUNC(m_ison)
 			{
 				strcpy(namebuf, acptr->user->username);
 				strcat(namebuf, "@");
-				strcat(namebuf, acptr->user->realhost);
+				strcat(namebuf, IsHidden(acptr) ? acptr->user->virhost : acptr->user->realhost);
 				if (match(user, namebuf))
 					continue;
 				*--user = '!';

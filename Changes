@@ -1875,3 +1875,4 @@ seen. gmtime warning still there
 - Documentation updates for nodnscache.
 - Fixed minor memleak with zip links.
 - Code cleanup in m_umode
+- Fixed bug in ISON
