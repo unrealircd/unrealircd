@@ -3029,3 +3029,5 @@ seen. gmtime warning still there
   also updated INSTALL.REMOTEINC
 - Fixed a typo in the /credits
 - Made it so curlinstall doesn't use cp -f since it is nonportable
+- Hide server IP in /stats z
+- First Opteron crash bugfix. Thanks to Liverbugg for helping us trace this issue.

@@ -1415,7 +1415,8 @@ int stats_zip(aClient *sptr, char *para)
 		{
 			sendto_one(sptr,
 				":%s %i %s :Zipstats for link to %s (compresslevel %d): decompressed (in): %01lu=>%01lu (%3.1f%%), compressed (out): %01lu=>%01lu (%3.1f%%)",
-				me.name, RPL_TEXT, sptr->name, get_client_name(acptr, TRUE),
+				me.name, RPL_TEXT, sptr->name,
+				IsAnOper(sptr) ? get_client_name(acptr, TRUE) : acptr->name,
 				acptr->serv->conf->compression_level ? 
 				acptr->serv->conf->compression_level : ZIP_DEFAULT_LEVEL,
 				acptr->zip->in->total_in, acptr->zip->in->total_out,

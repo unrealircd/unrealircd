@@ -1815,7 +1815,7 @@ void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnec
  */
 void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 			char *nick, int hopcount,
-    int lastnick, char *username, char *realhost, char *server,
+    long lastnick, char *username, char *realhost, char *server,
     long servicestamp, char *info, char *umodes, char *virthost)
 {
 	int  i;
