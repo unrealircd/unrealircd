@@ -1012,3 +1012,4 @@ seen. gmtime warning still there
 - Changed SERVICES-NAME warning to error
 - Auth_Make fix for crypt method
 - Fixed a /time GMT offset bug under Win32 reported by Dave337
+- Documentation updates
