@@ -187,7 +187,7 @@ static void rem_request(ResRQ *old)
 #ifdef _WIN32
          while (old->locked)
                  Sleep(0);
- #endif
+#endif
 	for (rptr = &first; *rptr; r2ptr = *rptr, rptr = &(*rptr)->next)
 		if (*rptr == old)
 		{
@@ -203,7 +203,7 @@ static void rem_request(ResRQ *old)
 	r2ptr = old;
 #ifndef _WIN32
 	if (r2ptr->he.h_name)
-		MyFree((char *)r2ptr->he.h_name);
+		MyFree(r2ptr->he.h_name);
 	for (i = 0; i < MAXALIASES; i++)
 		if ((s = r2ptr->he.h_aliases[i]))
 			MyFree(s);
@@ -213,7 +213,7 @@ static void rem_request(ResRQ *old)
 #endif
 	if (r2ptr->name)
 		MyFree(r2ptr->name);
-	MyFree((char *)r2ptr);
+	MyFree(r2ptr);
 
 	return;
 }
@@ -1590,7 +1590,7 @@ static aCache *rem_list(aCache *cp)
 		if (*cpp == cp)
 		{
 			*cpp = cp->list_next;
-			MyFree((char *)cp);
+			MyFree(cp);
 			break;
 		}
 	return cr;
@@ -1669,7 +1669,7 @@ static void rem_cache(aCache *ocp)
 			break;
 		}
 #ifdef _WIN32
-         MyFree((char *)hp);
+         MyFree(hp);
 #else
 	/*
 	 * free memory used to hold the various host names and the array
@@ -1681,7 +1681,7 @@ static void rem_cache(aCache *ocp)
 	{
 		for (hashv = 0; hp->h_aliases[hashv]; hashv++)
 			MyFree(hp->h_aliases[hashv]);
-		MyFree((char *)hp->h_aliases);
+		MyFree(hp->h_aliases);
 	}
 
 	/*
@@ -1690,11 +1690,11 @@ static void rem_cache(aCache *ocp)
 	if (hp->h_addr_list)
 	{
 		if (*hp->h_addr_list)
-			MyFree((char *)*hp->h_addr_list);
-		MyFree((char *)hp->h_addr_list);
+			MyFree(*hp->h_addr_list);
+		MyFree(hp->h_addr_list);
 	}
 #endif
-	MyFree((char *)ocp);
+	MyFree(ocp);
 
 	incache--;
 	cainfo.ca_dels++;
