@@ -464,3 +464,6 @@
   sent to report_baderror() are now logged.
 - Win32 installer: Apparently 'install as a service' was still not the default, reported
   by fez (#0002191, #0002189).
+- Fixed the crule parser to treat - and : as valid 'word' characters rather than separators
+  (#0002188) reported by diskman1.
+
