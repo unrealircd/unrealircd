@@ -3714,7 +3714,7 @@ int  m_oper(cptr, sptr, parc, parv)
 #endif /* CRYPT_OPER_PASSWORD */
 
 	if ((aconf->status & CONF_OPS) && StrEq(encr, aconf->passwd)
-	    && ((!attach_conf(sptr, aconf)) || (attach_conf(sptr, aconf) == 0)))
+	    && ((!attach_conf(sptr, aconf)) || (attach_conf(sptr, aconf) == 1)))
 	{
 		int  old = (sptr->umodes & ALL_UMODES);
 		char *s;
