@@ -589,7 +589,7 @@ CMD_FUNC(m_server_remote)
 int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 {
 	char		*inpath = get_client_name(cptr, TRUE);
-	extern char 	serveropts[];
+	extern MODVAR char 	serveropts[];
 	aClient		*acptr;
 	int		i;
 	char buf[BUFSIZE];
