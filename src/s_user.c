@@ -2309,19 +2309,16 @@ int  m_notice(cptr, sptr, parc, parv)
 	{
 		if (BadPtr(parv[1]))
 			return 0;
-#ifdef NOSPOOF
-		if (strtoul(parv[1], NULL, 16) != cptr->nospoof)
-			goto temp;
-		sptr->nospoof = 0;
-#endif
 		if (sptr->user && sptr->name[0])
 			return register_user(cptr, sptr, sptr->name,
 			    sptr->user->username, NULL, NULL);
 		return 0;
 	}
-      temp:
+        else
 	if (sptr->name[0])
+	{
 		return m_message(cptr, sptr, parc, parv, 1);
+	}
 }
 
 int  channelwho = 0;
