@@ -1399,3 +1399,4 @@ seen. gmtime warning still there
 - Added some release notes with regards to scanners
 - Removed s_segv handler
 - Changed ./update to use update.unrealircd.com
+- Made ./configure check if it has parameters, and error if it don't.
