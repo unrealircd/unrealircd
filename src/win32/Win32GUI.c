@@ -74,7 +74,7 @@ HTREEITEM AddItemToTree(HWND, LPSTR, int, short);
 void win_map(aClient *, HWND, short);
 extern Link *Servers;
 extern ircstats IRCstats;
-char *errors;
+char *errors, *RTFBuf;
 void CleanUp(void)
 {
 	Shell_NotifyIcon(NIM_DELETE ,&SysTray);
