@@ -27,7 +27,7 @@ French |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2.2-CVS</font><br>
-  <b>Derni&egrave;re mise &agrave; jour de la documentation:</b> 2004-01-29</div>
+  <b>Derni&egrave;re mise &agrave; jour de la documentation:</b> 2005-02-13</div>
 <br>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -69,7 +69,8 @@ French |
   -- 3.13. <a href="#feature_bantypes">Types de ban</a><br>
   -- 3.14. <a href="#feature_spamfilter">Spamfilter</a><br>
   -- 3.15. <a href="#feature_cidr">CIDR</a><br>
-  -- 3.16. <a href="#feature_other">Autres particularit&eacute;s</a><br>
+  -- 3.16. <a href="#feature_nickchars">Charact&egrave;res admis dans les pseudos</a><br>
+  -- 3.17. <a href="#feature_other">Autres particularit&eacute;s</a><br>
   4. <a href="#configuringyourunrealircdconf">Configurer votre fichier unrealircd.conf 
   </a><br>
   ---4.1. <a href="#configurationfileexplained">Explication du fichier de configuration</a><br>
@@ -362,7 +363,7 @@ Le Throttling est une m&eacute;thode qui vous permet de d&eacute;terminer le tem
 Vous pouvez configurer cela dans votre set::throttle block pour autoriser X connexions toutes les YY secondes depuis la même IP.<br>
 <b>Modes des salons</b><br>
 Certains modes channels sont tr&egrave;s efficaces contre le flood. En voici quelque uns:<br>
-<b>K</b> = /knock interdit, <b>N</b> = changements de pseudo interdits, <b>C</b> = CTCPs interdits, <b>M</b> = seul les utilisateurs enregistr&eacute;s peuvent parler.<br>
+<b>K</b> = /knock interdit, <b>N</b> = changements de pseudo interdits, <b>C</b> = CTCPs interdits, <b>M</b> = seul les utilisateurs enregistr&eacute;s peuvent parler, <b>j</b> = join throttling (base par utilisateur).<br>
 Depuis la beta18, il y a un mode channel beaucoup plus avanc&eacute; +f...<br>
 <b>Mode salon f</b><br>
 A la place d'utiliser des scripts ou des bots pour vous prot&eacute;ger du flood, cela est maintenant possible dans l'ircd.<br>
@@ -518,9 +519,9 @@ Certains modules peuvent ajouter d'autres types de ban &eacute;tendus.<br>
 <tr valign="top"><td>viruschan</td><td>part tous les salons, rejoint le set::spamfilter::virus-help-channel, d&eacute;sactive toutes les commandes 
  except&eacute; PONG, ADMIN, et msg/notices vers le set::spamfilter::virus-help-channel</td></tr>
 </tbody></table></td></tr>
-   <tr valign="top"><td><b>[tkltime]</b></td><td> Dur&eacute;e de la *line ajout&eacute;e par le filre, utilisez '-' pour mettre la valeur par d&eacute;faut ou pour passer outre 
+   <tr valign="top"><td><b>[tkltime]</b></td><td> Dur&eacute;e de la *line/shun ajout&eacute;e par le filre, utilisez '-' pour mettre la valeur par d&eacute;faut ou pour passer outre 
    (ex: si action = 'block')</td></tr>
-   <tr valign="top"><td><b>[reason]</b></td><td> Raison du Block ou de la *line... Vous NE POUVEZ PAS, mais des underscores ('_') seront traduits
+   <tr valign="top"><td><b>[reason]</b></td><td> Raison du Block, de la *line ou du shun... Vous NE POUVEZ PAS, mais des underscores ('_') seront traduits
    par des espaces lors de l'utilisation. Et un double underscore ('__') donne un underscore ('_'). Encore une fois, utilisez '-' pour utiliser la valeur par d&eacute;faut.</td></tr>
    <tr valign="top"><td><b>[regex]</b></td><td> Ceci est le vrai regex ou "bad word" correspondant au terme qui doit bloquer le message et lancer l'action.</td></tr>
    </tbody></table>
@@ -550,7 +551,7 @@ Certains modules peuvent ajouter d'autres types de ban &eacute;tendus.<br>
 };</pre><p></p>
 
 <p><b>set::spamfilter::ban-time</b> vous autorise &agrave; modifier le ban time par d&eacute;faut pour les *lines ajout&eacute;es par le spamfilter (d&eacute;faut: 1 jour)<br>
-   <b>set::spamfilter::ban-reason</b> vous autorise &agrave; sp&eacute;cifier une raison par d&eacute;faut pour les *lines (d&eacute;faut: 'Spam/advertising')<br>
+   <b>set::spamfilter::ban-reason</b> vous autorise &agrave; sp&eacute;cifier une raison par d&eacute;faut (d&eacute;faut: 'Spam/advertising')<br>
    <b>set::spamfilter::virus-help-channel</b> vous autorise &agrave; sp&eacute;cifier le salon &agrave; joindre pour l'action 'viruschan' (d&eacute;faut: #help)<br>
    <b>set::spamfilter::virus-help-channel-deny</b> vous autorise &agrave; bloquer tout join normal au virus-help-channel (d&eacute;faut: no)<br>
 </p></div>
@@ -565,7 +566,45 @@ Certains modules peuvent ajouter d'autres types de ban &eacute;tendus.<br>
    utilise la syntaxe standard d'IP/bits, 127.0.0.0/8 (correspond &agrave; 127.0.0.0 - 127.255.255.255), 
    et fe80:0:0:123::/64 (correspond &agrave; fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p></div>
 
-<p><font size="+2"><b>3.16 - Autres particularit&eacute;s</b></font><a name="feature_other"></a></p><div class="desc">
+<p><font size="+2"><b>3.16 - Charact&egrave;res admis dans les pseudos</b></font><a name="feature_nickchars"></a></p><div class="desc">
+  <p>UnrealIRCd a maintenant la capacit&eacute; de sp&eacute;cifier quel charsets/langages doivent &ecirc;tre
+  autoris&eacute;s dans les pseudos. Vous appliquez cela avec <b>set::allowed-nickchars</b>.<br>
+  Un tableau de tous les choix possibles :<br>
+  <table border="1">
+  <tr><td><b>Nom:</b></td><td><b>Description:</b></td><td><b>Jeu de caract&egrave;res /encodage:</b></td></tr>
+  <tr><td>catalan</td><td>Caract&egrave;res catalans</td><td>iso8859-1 (latin1)</td></tr>
+  <tr><td>dutch</td><td>Caract&egrave;res n&eacute;erlandais</td><td>iso8859-1 (latin1)</td></tr>
+  <tr><td>french</td><td>Caract&egrave;res fran&ccedil;ais</td><td>iso8859-1 (latin1)</td></tr>
+  <tr><td>german</td><td>Caract&egrave;res allemands</td><td>iso8859-1 (latin1)</td></tr>
+  <tr><td>italian</td><td>Caract&egrave;res italiens</td><td>iso8859-1 (latin1)</td></tr>
+  <tr><td>spanish</td><td>Caract&egrave;res espagnols</td><td>iso8859-1 (latin1)</td></tr>
+  <tr><td>swedish</td><td>Caract&egrave;res su&eacute;dois</td><td>iso8859-1 (latin1)</td></tr>
+  <tr><td><b>latin1</b></td><td>N&eacute;erlandais, fran&ccedil;ais, allemand, espagnol, 
+  italien, su&eacute;dois</td><td>iso8859-1 (latin1)</td></tr>
+  <tr><td>hungarian</td><td>Caract&egrave;res hongrois</td><td>iso8859-2 (latin2)</td></tr>
+  <tr><td><b>latin2</b></td><td>Hongrois</td><td>iso8859-2 (latin2)</td></tr>
+  <tr><td>greek</td><td>Caract&egrave;res grecques</td><td>iso8859-7</td></tr>
+  <tr><td><b>latin7</b></td><td>Grecque</td><td>iso8859-7</td></tr>
+  <tr><td>chinese-simp</td><td>Chinois simplifi&eacute;</td><td>Multibyte: GBK/GB2312</td></tr>
+  <tr><td>chinese-trad</td><td>Chinois traditionnel</td><td>Multibyte: GBK</td></tr>
+  <tr><td>chinese-ja</td><td>Japonnais Hiragana/Pinyin</td><td>Multibyte: GBK</td></tr>
+  <tr><td><b>chinese</b></td><td>Chinois-*</td><td>Multibyte: GBK</td></tr>
+  <tr><td><b>gbk</b></td><td>Chinois-*</td><td>Multibyte: GBK</td></tr>
+  </table>
+  Notez s'il vous pla&icirc;t que certaines combinaisons peuvent poser des probl&egrave;mes.
+  Par exemple, combiner latin* et chinese-* ne pourra &ecirc;tre support&eacute; par l'IRCd et
+  UnrealIRCd affichera une erreur.
+  Mixer d'autres charsets pourra poser des probl&egrave;mes d'affichage, donc Unreal affichera un 
+  message d'avertissement si vous essayez de mixer latin1/latin2/latin7.<br><br>
+  	 
+  Exemple 1, pour les personnes d'Europe de l'ouest:<br>
+  <pre>set { allowed-nickchars {  latin1; }; };</pre>
+  Exemple 2, si vous avez principalement des utilisateurs chinois et voulez autoriser les 
+  caract&egrave;res chinois "normaux" :<br>
+  <pre>set { allowed-nickchars { chinese-simp; chinese-trad; }; };</pre>
+  </p></div>   
+   
+<p><font size="+2"><b>3.17 - Autres particularit&eacute;s</b></font><a name="feature_other"></a></p><div class="desc">
 <p>UnrealIRCd a &eacute;norm&eacute;ment de particularit&eacute;s donc tout n'est pas expos&eacute; ici... Vous d&eacute;couvrirez tout cela par vous même.</p></div>
 
 <p> </p>
@@ -1947,7 +1986,7 @@ Voir <a href="#feature_spamfilter">Features - Spamfilter</a> pour plus d'informa
    <b>target</b> sp&eacute;cifie les cibles, reportez-vous <a href="#feature_spamfilter">ici</a> pour obtenir la liste des types disponibles (ex: 'channel').<br>
    <b>action</b> sp&eacute;cifie l'action &agrave; effectuer, reportez-vous <a href="#feature_spamfilter">ici</a> pour obtenir la liste des types disponibles (ex: 'gline')<br>
    <b>reason</b> optionnel : sp&eacute;cifie la raison du ban ou du blocage, sinon la raison par d&eacute;faut est utilis&eacute;e.<br>
-   <b>ban-time</b> optionnel : sp&eacute;cifie la dur&eacute;e d'un ban *line, sinon la valeur par d&eacute;faut est utilis&eacute;e (1 jour).<br>
+   <b>ban-time</b> optionnel : sp&eacute;cifie la dur&eacute;e d'un ban *line ou d'un shun, sinon la valeur par d&eacute;faut est utilis&eacute;e (1 jour).<br>
 </p>
 
 <p>Exemples:<br>
@@ -2089,8 +2128,12 @@ spamfilter {
   Sp&eacute;cifie le nombre maximum d'entr&eacute;es qu'un utilisateur peut avoir dans son / sa list DCCALLOW.</p>
 <p><font class="set">set::channel-command-prefix &lt;command-prefixes&gt;;</font><br>
   Sp&eacute;cifie le caract&egrave;re de pr&eacute;fixe pour les services dans les "commandes de salons". 
-  Les messages commen&ccedil;ant par le caract&egrave;re sp&eacute;cifi&eacute; seront envoy&eacute; même si le client est en +d. 
+  Les messages commen&ccedil;ant par le caract&egrave;re sp&eacute;cifi&eacute; seront envoy&eacute; même si le
+  client est en +d. 
   La valeur par d&eacute;faut est "`".</p>
+<p><font class="set">set::allowed-nickchars { &lt;list&gt; };</font><br>
+  Jeux de caract&egrave;res / langages autoris&eacute;s dans les pseudos, voir <a href="#feature_nickchars">
+  Caract&egrave;res admis dans les pseudos</a>.</p>
 <p><font class="set">set::allow-userhost-change [never|always|not-on-channels|force-rejoin]</font><br>
   Sp&eacute;cifie ce qu'il arrive quand un user@host change (+x/-x/chghost/chgident/setident/vhost/etc).<br>
   <i>never</i> supprime toutes les commandes, <i>always</i> le permet toujours même si 
@@ -2149,6 +2192,9 @@ spamfilter {
   statistique n'est lanc&eacute;, cette valeur peut être ignor&eacute;.</p>
 <p><font class="set">set::help-channel &lt;network-help-channel&gt;;</font><br>
   Sp&eacute;cifie le nom du channel d'aide du r&eacute;seau.</p>
+<p><font class="set">set::allowed-characters { &lt;list&gt;; };</font><br>
+  Liste de charact&egrave;res (langages!) &agrave; accepter dans les pseudos. Sont actuellement disponibles :
+  <i>german</i>, <i>french</i>, <i>dutch</i>, <i>spanish</i>.</p>  
 <p><font class="set">set::cloak-keys { "key1"; "key2"; "key3"; };</font><br>
   Sp&eacute;cifie les cl&eacute;s qui seront utilis&eacute;s pour g&eacute;n&eacute;rer les +x hosts. 
   Cette valeur doit être la même sur tous les serveurs d'un r&eacute;seau. 
@@ -2237,9 +2283,9 @@ spamfilter {
   Si vous sp&eacute;cifiez une 'action' like zline/gline/etc dans les ban version, alors vous pouvez 
   sp&eacute;cifier ici combien de temps l'ip va être bannie, par d&eacute;faut, ceci est &eacute;tabli &agrave; 86400 (1 jour).</p>
  <p><font class="set">set::spamfilter::ban-time &lt;value&gt;</font><br>
-  Même chose qu'au dessus mais pour les *lines ajout&eacute;s par le spamfilter</p>
+  Même chose qu'au dessus mais pour les *lines/shuns ajout&eacute;s par le spamfilter</p>
  <p><font class="set">set::spamfilter::ban-reason &lt;reason&gt;</font><br>
-  La raison utilis&eacute;e pour l'ajout de *lines par le spamfilter</p>
+  La raison utilis&eacute;e pour l'ajout d'entr&eacute;es par le spamfilter</p>
  <p><font class="set">set::spamfilter::virus-help-channel &lt;channel&gt;</font><br>
   Le salon a utiliser pour l'action 'viruschan' dans le spamfilter</p>
  <p><font class="set">set::spamfilter::virus-help-channel-deny &lt;yes|no&gt;</font><br>
@@ -2311,22 +2357,14 @@ spamfilter {
       si il en est banni</td>
   </tr>
   <tr> 
-    <td><div align="center">f * &lt;lines:seconds&gt;</div></td>
-    <td>Flood protection, Si le * est sp&eacute;cifi&eacute;, un utilisateur sera kickban 
-      si il envoie &lt;lines:seconds&gt; si le * n'est pas sp&eacute;cifi&eacute;, il sera juste kick&eacute;</td>
+    <td><div align="center">f [&lt;number&gt;&lt;type&gt;]:&lt;seconds&gt;</div></td>
+    <td>Protection des salons contre le flood. Voir <a href="#feature_antiflood">section 3.12</a>
+    au-dessus pour une description étendue.</td>
   </tr>
   <tr> 
     <td><div align="center">G</div></td>
     <td>Contrôle les mots list&eacute;s dans les Badword Blocks 
       et les remplace par les mots sp&eacute;cifi&eacute;s. </td>
-  </tr>
-  <tr>
-    <td><div align="center">j &lt;joins:secondes&gt;</div></td>
-    <td>Limite les joins par utilisateur &agrave; <i>joins</i> par <i>secondes</i> secondes</td>
-  </tr> 
-  <tr> 
-    <td><div align="center">M</div></td>
-    <td>Seul les utilisateurs dont le pseudo est enregistr&eacute; (+r) peuvent parler sur le salon</td>
   </tr>
   <tr> 
     <td><div align="center">h &lt;nick&gt;</div></td>
@@ -2336,6 +2374,14 @@ spamfilter {
     <td><div align="center">i</div></td>
     <td>Le salon ne peut être rejoint que sous invitation</td>
   </tr>
+    <td><div align="center">I &lt;nick!user@host&gt;<br></div></td>
+    <td>Invite exceptions ("invex") - Si quelqu'un correspond &agrave; ceci, il pourra outrepasser
+    le +i pour entrer sur le salon.</td>
+  </tr>  
+  <tr>
+    <td><div align="center">j &lt;joins:secondes&gt;</div></td>
+    <td>Limite les joins par utilisateur &agrave; <i>joins</i> par <i>secondes</i> secondes</td>
+  </tr>   
   <tr> 
     <td><div align="center">K</div></td>
     <td>/knock n'est pas autoris&eacute;</td>
@@ -2352,6 +2398,10 @@ spamfilter {
     <td><div align="center">L &lt;Chan&gt;</div></td>
     <td>Si le maximum sp&eacute;cifi&eacute; par +l est atteint, les utilisateurs seront redirig&eacute;s vers ce salon</td>
   </tr>
+  <tr> 
+    <td><div align="center">M</div></td>
+    <td>Seul les utilisateurs dont le pseudo est enregistr&eacute; (+r) peuvent parler sur le salon</td>
+  </tr>  
   <tr> 
     <td><div align="center">m</div></td>
     <td>Salon mod&eacute;r&eacute;. Seuls les utilisateurs +v/h/o peuvent parler</td>
@@ -2432,64 +2482,16 @@ spamfilter {
     <td colspan="2"><div align="center"><b>Modes des utilisateurs</b></div></td>
   </tr>
   <tr> 
-    <td><div align="center">r</div></td>
-    <td>Identifie le pseudo comme &eacute;tant enregistr&eacute;</td>
-  </tr>
-  <tr> 
-    <td><div align="center">s</div></td>
-    <td>Peut lire les server notices</td>
-  </tr>
-  <tr> 
-    <td><div align="center">v</div></td>
-    <td>Re&ccedil;oit les notices de refus de DCC infect&eacute;s</td>
-  </tr>
-  <tr> 
-    <td><div align="center">o</div></td>
-    <td>Global IRC Operator (d&eacute;fini par Oper Block)</td>
-  </tr>
-  <tr> 
-    <td><div align="center">O</div></td>
-    <td>Local IRC Operator (d&eacute;fini par Oper Block)</td>
-  </tr>
-  <tr> 
-    <td><div align="center">B</div></td>
-    <td>Vous renseigne comme &eacute;tant un bot</td>
-  </tr>
-  <tr> 
-    <td><div align="center">i</div></td>
-    <td>Invisible (n'est pas montr&eacute; dans un /who)</td>
-  </tr>
-  <tr> 
     <td><div align="center">A</div></td>
     <td>Server Admin (d&eacute;fini dans Oper Block)</td>
-  </tr>
-  <tr> 
-    <td><div align="center">x</div></td>
-    <td>Donne &agrave; l'utilisateur un hostname cach&eacute;</td>
-  </tr>
-  <tr> 
-    <td><div align="center">q</div></td>
-    <td>Seul les U:Lines peuvent vous kicker (Services Admin uniquement)</td>
   </tr>
   <tr> 
     <td><div align="center">a</div></td>
     <td>Services Admin (d&eacute;fini dans Oper Block)</td>
   </tr>
   <tr> 
-    <td><div align="center">g</div></td>
-    <td>Peut envoyer et lire les globops et locops</td>
-  </tr>
-  <tr> 
-    <td><div align="center">H</div></td>
-    <td>Cache le status d'IRCop (IRCop uniquement)</td>
-  </tr>
-  <tr> 
-    <td><div align="center">S</div></td>
-    <td>Utilis&eacute; pour prot&eacute;ger les Services Daemons</td>
-  </tr>
-  <tr> 
-    <td><div align="center">t</div></td>
-    <td>Dis que vous utilis&eacute; un /vhost</td>
+    <td><div align="center">B</div></td>
+    <td>Vous renseigne comme &eacute;tant un bot</td>
   </tr>
   <tr> 
     <td><div align="center">C</div></td>
@@ -2500,44 +2502,92 @@ spamfilter {
     <td>Fait en sorte que vous ne puissiez pas recevoir de message provenant des channels</td>
   </tr>
   <tr> 
-    <td><div align="center">N</div></td>
-    <td>Network Administrator (d&eacute;fini dans Oper Block)</td>
+    <td><div align="center">G</div></td>
+    <td>Filtre tous les bad words d&eacute;finis par configuration</td>
   </tr>
   <tr> 
-    <td><div align="center">w</div></td>
-    <td>Peut lire les wallops</td>
+    <td><div align="center">g</div></td>
+    <td>Peut envoyer et lire les globops et locops</td>
+  </tr>
+  <tr> 
+    <td><div align="center">H</div></td>
+    <td>Cache le status d'IRCop (IRCop uniquement)</td>
   </tr>
   <tr> 
     <td><div align="center">h</div></td>
     <td>Disponible pour aide (HelpOp) (d&eacute;fini dans Oper Block)</td>
   </tr>
   <tr> 
-    <td><div align="center">G</div></td>
-    <td>Filtre tous les bad words d&eacute;finis par configuration</td>
+    <td><div align="center">i</div></td>
+    <td>Invisible (n'est pas montr&eacute; dans un /who)</td>
   </tr>
   <tr> 
-    <td><div align="center">W</div></td>
-    <td>Vous laisse voir quand quelqu'un vous /whois (IRCop uniquement)</td>
+    <td><div align="center">N</div></td>
+    <td>Network Administrator (d&eacute;fini dans Oper Block)</td>
+  </tr>
+  <tr>
+    <td><div align="center">O</div></td>
+    <td>Local IRC Operator (d&eacute;fini par Oper Block)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">o</div></td>
+    <td>Global IRC Operator (d&eacute;fini par Oper Block)</td>
   </tr>
   <tr> 
     <td><div align="center">p</div></td>
     <td>Cache les canaux sur lesquels vous êtes dans les /whois</td>
   </tr>
   <tr> 
+    <td><div align="center">q</div></td>
+    <td>Seul les U:Lines peuvent vous kicker (Services Admin uniquement)</td>
+  </tr>
+  <tr> 
     <td><div align="center">R</div></td>
     <td>Vous permet de ne recevoir de messages priv&eacute;s et de notices que d'utilisateurs enregistr&eacute;s (+r)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">r</div></td>
+    <td>Identifie le pseudo comme &eacute;tant enregistr&eacute;</td>
+  </tr>
+  <tr> 
+    <td><div align="center">S</div></td>
+    <td>Utilis&eacute; pour prot&eacute;ger les Services Daemons</td>
+  </tr>
+  <tr> 
+    <td><div align="center">s</div></td>
+    <td>Peut lire les server notices</td>
+  </tr>
+  <tr>
+    <td><div align="center">T</div></td>
+    <td>Vous empêche de recevoir des CTCPs</td>
+  </tr>
+  <tr> 
+    <td><div align="center">t</div></td>
+    <td>Dis que vous utilis&eacute; un /vhost</td>
   </tr>
   <tr> 
     <td><div align="center">V</div></td>
     <td>Vous marque comme un utilisateur de WebTV</td>
   </tr>
+  <tr> 
+    <td><div align="center">v</div></td>
+    <td>Re&ccedil;oit les notices de refus de DCC infect&eacute;s</td>
+  </tr>
+  <tr> 
+    <td><div align="center">W</div></td>
+    <td>Vous laisse voir quand quelqu'un vous /whois (IRCop uniquement)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">w</div></td>
+    <td>Peut lire les wallops</td>
+  </tr>
+  <tr> 
+    <td><div align="center">x</div></td>
+    <td>Donne &agrave; l'utilisateur un hostname cach&eacute;</td>
+  </tr>
   <tr>
     <td><div align="center">z</div></td>
     <td>Indique que vous êtes un client SSL</td>
-  </tr>
-  <tr>
-    <td><div align="center">T</div></td>
-    <td>Vous empêche de recevoir des CTCPs</td>
   </tr>
 </tbody></table>
 <p></p></div>
@@ -2773,6 +2823,11 @@ spamfilter {
       Notez que depuis, certains clients ont leur propre commande DNS, vous pourrez 
       alors utiliser /raw DNS. Les Op&eacute;rateurs peuvent sp&eacute;cifier un "l" comme premier 
       param&egrave;tre dans la commande pour recevoir une liste d'entr&eacute;e dans le DNS cache.</td>
+    <td>Tous</td>
+  </tr>
+  <tr>
+    <td height="39">userip &lt;nick&gt;<br></td>
+    <td>Returne l'adresse IP de l'utilisateur en question.</td>
     <td>Tous</td>
   </tr>
   <tr> 
