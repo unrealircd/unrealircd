@@ -2682,10 +2682,10 @@ int  m_whois(cptr, sptr, parc, parv)
 						*(buf + len++) = '^';
 					else if (is_chan_op(acptr, chptr))
 						*(buf + len++) = '@';
-					else if (has_voice(acptr, chptr))
-						*(buf + len++) = '+';
 					else if (is_half_op(acptr, chptr))
 						*(buf + len++) = '%';
+					else if (has_voice(acptr, chptr))
+						*(buf + len++) = '+';
 					if (len)
 						*(buf + len) = '\0';
 					(void)strcpy(buf + len, chptr->chname);

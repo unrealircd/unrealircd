@@ -474,3 +474,5 @@
 - Fixed a SJ3 Fake Direction loopbug (kills on nick collisions)
 - SJ3 fixes, loop fix
 - Added NS, new generation ALN.
+- Added llthangel's whoisfix.patch, Makes sure +hv users show up as
+  %#channel instead of +#channel. Bug report by ^Fanta.
