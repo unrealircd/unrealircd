@@ -337,8 +337,6 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 			return 0;
 		}
 	}
-	usermask = strtok(mask, "@");
-	hostmask = strtok(NULL, "");
 
 	tkl_check_expire(NULL);
 
