@@ -2747,3 +2747,4 @@ seen. gmtime warning still there
   "blind proxies" (like HTTP POST proxies).
 - WebTV updates: made it so (user generated) channel notices are now displayed as
   privmsgs in the channel. Also made the /knock channelnotice a privmsg for webtv.
+- Module coders: added HOOKTYPE_REMOTE_CHANMODE
