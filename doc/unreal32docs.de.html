@@ -23,7 +23,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2 </font><br>
   <b>Aktuelle Version:</b> 3.2 *CVS*<br>
-  <b>Letztes Dokumentation Update:</b>    2004-06-17</div>
+  <b>Letztes Dokumentation Update:</b>     2004-06-25</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
 <b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
@@ -1636,24 +1636,24 @@ loadmodule &quot;modules/cloak.dll&quot;;</pre>
 };
 </pre>
 <p>Mit dem Log Block kann man verschiedene Logfiles zu den unterschiedlichsten
-Zwecken erstellen lassen.&nbsp;<br>
-<b>log::</b> ist der Name der Logdatei.<br>
+Zwecken erstellen lassen.&nbsp;Dabei bezeichnet <b>log::</b> den Namen der Logdatei.<br>
 <b>log::maxsize</b> ist eine optionale Anweisung, um eine Größe
 anzugeben, ab der die Datei gelöscht und neu begonnen wird. Die Zahlenangabe
 dahinter kann gefolgt sein von&nbsp; MB für Megabytes, KB für Kilobytes oder
-GB&nbsp; für Gigabytes.<br>
+GB&nbsp; für Gigabytes.
 Bei <b>log::flags</b> wird angegeben, welche Art von Informationen in der
 Log Datei gespeichert werden sollen. Angegeben werden kann hier einer oder
-mehrere der unten aufgelisteten Flags.</p>
+mehrere der unten aufgelisteten Flags. Siehe hierzu die nachfolgende Liste
+möglicher Flags.</p>
 <p>Es können auch mehrere Log Blocks definiert sein, um unterschiedliche Dinge
 in verschiedenen Dateien zu loggen.</p>
 <p>Gültige Flags:</p>
-<table border="1" width="580">
+<table border="1" width="613">
   <tr>
     <td width="113">
 <p><b>Flag</b></p>
     </td>
-    <td width="451">
+    <td width="484">
 <p><b>Bedeutung</b></p>
     </td>
   </tr>
@@ -1661,7 +1661,7 @@ in verschiedenen Dateien zu loggen.</p>
     <td width="113">
 <p>errors</p>
     </td>
-    <td width="451"><p>selbsterklärend</p>
+    <td width="484"><p>selbsterklärend</p>
     </td>
   </tr>
   <tr>
@@ -1669,7 +1669,7 @@ in verschiedenen Dateien zu loggen.</p>
 <p>
   kills</p>
     </td>
-    <td width="451"><p>zeichnet /kill Meldungen auf</p>
+    <td width="484"><p>zeichnet /kill Meldungen auf</p>
     </td>
   </tr>
   <tr>
@@ -1677,8 +1677,9 @@ in verschiedenen Dateien zu loggen.</p>
 <p>
   tkl</p>
     </td>
-    <td width="451">
-<p>zeichnet Infos auf über glines, shuns, tklines, tzlines, gzlines</p>
+    <td width="484">
+<p>zeichnet Infos auf über *lines, shuns und Spamfilter (setzen, löschen,
+Ablauf)</p>
     </td>
   </tr>
   <tr>
@@ -1686,7 +1687,7 @@ in verschiedenen Dateien zu loggen.</p>
 <p>
   connects</p>
     </td>
-    <td width="451"><p>Zeichnet connects/quits der User auf</p>
+    <td width="484"><p>Zeichnet connects/quits der User auf</p>
     </td>
   </tr>
   <tr>
@@ -1694,7 +1695,7 @@ in verschiedenen Dateien zu loggen.</p>
 <p>
   server-connects</p>
     </td>
-    <td width="451">
+    <td width="484">
 <p>Zeichnet connects/squits der Server auf</p>
     </td>
   </tr>
@@ -1703,7 +1704,7 @@ in verschiedenen Dateien zu loggen.</p>
 <p>
   kline</p>
     </td>
-    <td width="451"><p>Zeichnet Infos über kline und unkline auf</p>
+    <td width="484"><p>Zeichnet Infos /kline auf</p>
     </td>
   </tr>
   <tr>
@@ -1711,7 +1712,7 @@ in verschiedenen Dateien zu loggen.</p>
 <p>
   oper</p>
     </td>
-    <td width="451"><p>Zeichnet Oper Zugriffe auf (sowohl fehlgeschlagene als
+    <td width="484"><p>Zeichnet Oper Zugriffe auf (sowohl fehlgeschlagene als
       auch erfolgreiche)</p>
     </td>
   </tr>
@@ -1719,14 +1720,14 @@ in verschiedenen Dateien zu loggen.</p>
     <td width="113">
 sadmin-commands
     </td>
-    <td width="451">Zeichnet die Verwendung von /sa* (samode, sajoin etc.) auf
+    <td width="484">Zeichnet die Verwendung von /sa* (samode, sajoin, sapart etc.) auf
     </td>
   </tr>
   <tr>
     <td width="113">
 chg-commands
     </td>
-    <td width="451">Zeichnet die Verwendung von /chg* (chghost, chgname,
+    <td width="484">Zeichnet die Verwendung von /chg* (chghost, chgname,
       chgident, etc.) auf
     </td>
   </tr>
@@ -1734,7 +1735,14 @@ chg-commands
     <td width="113">
 oper-override
     </td>
-    <td width="451">Zeichnet die Verwendung von Operoverrides auf
+    <td width="484">Zeichnet die Verwendung von Operoverrides auf
+    </td>
+  </tr>
+  <tr>
+    <td width="113">
+spamfilter
+    </td>
+    <td width="484">Zeichnet Übereinstimmungen zu Spamfiltern auf
     </td>
   </tr>
 </table>
