@@ -2851,9 +2851,11 @@ void	validate_configuration(void)
 		HOST_RETRIES = 2;
 		Warning("set::dns::retries is invalid. Using default of 2");
 	}
-#define Missing(x) !(x) || (*(x) == '\0')
+#define Missing(x) !x || (*(x) == '\0')
 	if (Missing(defserv))
 		Error("set::default-server is missing");
+	if (Missing(ircnetwork))
+		Error("set::network-name is missing");
 	if (Missing(SERVICES_NAME))
 		Warning("set::services-server is missing. All services commands are being disabled");
 	if (Missing(oper_host)) {

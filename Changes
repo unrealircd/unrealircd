@@ -676,3 +676,5 @@ seen. gmtime warning still there
 - Added possiblity to add parameters to configure in Config
 - Minor SJOIN fix .. 
 - Fixed a ban {} bug where temporary bans were not cleared on rehash
+- Fixed a validate_conf problem found by Janos
+- Fixed some minor invalid numeric stuff

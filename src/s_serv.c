@@ -602,12 +602,13 @@ int  m_server(cptr, sptr, parc, parv)
 	if (parc < 4 || (!*parv[3]))
 	{
 		sendto_one(sptr, "ERROR :Not enough SERVER parameters");
-		return 0;
+		return exit_client(cptr, sptr, &me, 
+			"Not enough parameters");		
 	}
 
 	if (IsUnknown(cptr) && (cptr->listener->umodes & LISTENER_CLIENTSONLY))
 	{
-		return exit_client(cptr, sptr, sptr,
+		return exit_client(cptr, sptr, &me,
 		    "This port is for clients only");
 	}
 
@@ -633,13 +634,13 @@ int  m_server(cptr, sptr, parc, parv)
 		    "WARNING: Bogus server name (%s) from %s (maybe just a fishy client)",
 		    servername, get_client_name(cptr, TRUE));
 
-		return exit_client(cptr, sptr, sptr, "Bogus server name");
+		return exit_client(cptr, sptr, &me, "Bogus server name");
 	}
 
 	if ((IsUnknown(cptr) || IsHandshake(cptr)) && !cptr->passwd)
 	{
 		sendto_one(sptr, "ERROR :Missing password");
-		return exit_client(cptr, sptr, sptr, "Missing password");
+		return exit_client(cptr, sptr, &me, "Missing password");
 	}
 
 	/*
@@ -659,7 +660,7 @@ int  m_server(cptr, sptr, parc, parv)
 			sendto_locfailops
 			    ("Link denied (No matching link configuration) %s",
 			    inpath);
-			return exit_client(cptr, cptr, cptr,
+			return exit_client(cptr, sptr, &me,
 			    "Link denied (No matching link configuration)");
 		}
 		/* Now for checking passwords */
@@ -690,7 +691,7 @@ int  m_server(cptr, sptr, parc, parv)
 			    inpath);
 			sendto_locfailops
 			    ("Link denied (Passwords don't match) %s", inpath);
-			return exit_client(cptr, cptr, cptr,
+			return exit_client(cptr, sptr, &me,
 			    "Link denied (Passwords don't match)");
 		}
 
