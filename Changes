@@ -3074,3 +3074,4 @@ seen. gmtime warning still there
 - Fixed a problem with vhost::swhois not being displayed remotely (#0001702) reported by 
   medice.
 - Windows: Updated makefile/unrealinst.iss/zip.h to use zlib 1.2.1.
+- Updated credits
