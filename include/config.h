@@ -191,6 +191,11 @@
 #undef TOPIC_NICK_IS_NUHOST
 
 /*
+ * Use JOIN instead of SJOIN on every remotely sent JOIN
+*/
+#undef JOIN_INSTEAD_OF_SJOIN_ON_REMOTEJOIN
+
+/*
 ** Freelinks garbage collector -Stskeeps
 **
 ** GARBAGE_COLLECT_EVERY - how many seconds between every garbage collect

@@ -3087,29 +3087,30 @@ CMD_FUNC(m_join)
 		sendto_serv_butone_token_opt(cptr, OPT_NOT_SJ3, parv[0], MSG_JOIN,
 			    TOK_JOIN, "%s", chptr->chname);
 
+#ifdef JOIN_INSTEAD_OF_SJOIN_ON_REMOTEJOIN
 		if ((MyClient(sptr) && !(flags & CHFL_CHANOP)) || !MyClient(sptr))
 			sendto_serv_butone_token_opt(cptr, OPT_SJ3, parv[0], MSG_JOIN,
 			    TOK_JOIN, "%s", chptr->chname);
-				
+		if (flags & CHFL_CHANOP)
+		{
+#endif
+			/* I _know_ that the "@%s " look a bit wierd
+			   with the space and all .. but its to get around
+			   a SJOIN bug --stskeeps */
+			sendto_serv_butone_token_opt(cptr, OPT_SJ3|OPT_SJB64,
+				me.name, MSG_SJOIN, TOK_SJOIN,
+				"%B %s :%s%s ", chptr->creationtime, 
+				chptr->chname, flags & CHFL_CHANOP ? "@" : "", sptr->name);
+			sendto_serv_butone_token_opt(cptr, OPT_SJ3|OPT_NOT_SJB64,
+				me.name, MSG_SJOIN, TOK_SJOIN,
+				"%li %s :%s%s ", chptr->creationtime, 
+				chptr->chname, flags & CHFL_CHANOP ? "@" : "", sptr->name);
+#ifdef JOIN_INSTEAD_OF_SJOIN_ON_REMOTEJOIN
+		}
+#endif		
 
 		if (MyClient(sptr))
 		{
-			
-			/* Send out SJOIN stuff */
-			if (flags & CHFL_CHANOP)
-			{
-				/* I _know_ that the "@%s " look a bit wierd
-				   with the space and all .. but its to get around
-				   a SJOIN bug --stskeeps */
-				sendto_serv_butone_token_opt(cptr, OPT_SJ3|OPT_SJB64,
-					me.name, MSG_SJOIN, TOK_SJOIN,
-					"%B %s :@%s ", chptr->creationtime, 
-					chptr->chname, sptr->name);
-				sendto_serv_butone_token_opt(cptr, OPT_SJ3|OPT_NOT_SJB64,
-					me.name, MSG_SJOIN, TOK_SJOIN,
-					"%li %s :@%s ", chptr->creationtime, 
-					chptr->chname, sptr->name);
-			}
 			/*
 			   ** Make a (temporal) creationtime, if someone joins
 			   ** during a net.reconnect : between remote join and
@@ -3695,15 +3696,15 @@ CMD_FUNC(m_topic)
 #else
 			tnick = make_nick_user_host(sptr->name, sptr->user->username, 
 				IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost);
-			nicKLen = strlen(tnick);
+			nicKlen = strlen(tnick);
 #endif
 			if (chptr->topic)
 				MyFree(chptr->topic);
 
 			if (topiClen > (TOPICLEN))
 				topiClen = TOPICLEN;
-			if (nicKLen > (NICKLEN+USERLEN+HOSTLEN+5))
-				nicKLen = NICKLEN+USERLEN+HOSTLEN+5;
+			if (nicKlen > (NICKLEN+USERLEN+HOSTLEN+5))
+				nicKlen = NICKLEN+USERLEN+HOSTLEN+5;
 			chptr->topic = MyMalloc(topiClen + 1);
 			strncpyzt(chptr->topic, topic, topiClen + 1);
 
@@ -3711,13 +3712,11 @@ CMD_FUNC(m_topic)
 				MyFree(chptr->topic_nick);
 
 			chptr->topic_nick = MyMalloc(nicKlen + 1);
-			strncpyzt(chptr->topic_nick, 
 #ifndef TOPIC_NICK_IS_NUHOST
-			sptr->name, 
+			strncpyzt(chptr->topic_nick, sptr->name, nicKlen + 1);
 #else
-			tnick,
+			strncpyzt(chptr->topic_nick, tnick, nicKlen + 1);
 #endif
-			nicKlen + 1);
 			if (ttime && IsServer(cptr))
 				chptr->topic_time = ttime;
 			else
