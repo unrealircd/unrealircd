@@ -3339,6 +3339,12 @@ int  m_kick(cptr, sptr, parc, parv)
 					break;
 				}
 
+				/* If you're kicking yourself, it really shouldn't matter what modes you have set
+				 * unless the channel is +Q
+				 */
+				if ((sptr == who) && !(chptr->mode.mode & MODE_NOKICKS))
+					goto attack;
+
 				/* If you're +q, only netadmin can kick you. */
 #ifndef NO_OPEROVERRIDE
 				if (IsKix(who) && !IsNetAdmin(sptr))
@@ -3432,7 +3438,7 @@ int  m_kick(cptr, sptr, parc, parv)
 				/* Protected users, Owners, and Services can't get nailed unless they're nailing themselves
 				 * However, owners CAN nail protected users, as they're higher.
 				 */
-				if ((is_chanprot(who, chptr) || is_chanowner(who, chptr) || IsServices(who)) && (who != sptr))
+				if ((is_chanprot(who, chptr) || is_chanowner(who, chptr) || IsServices(who)))
 				{
 					if (is_chanowner(sptr, chptr) && (is_chanprot(who,chptr) && !is_chanowner(who,chptr)))
 					{
