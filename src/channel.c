@@ -1680,22 +1680,23 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	  case MODE_NONICKCHANGE:
 	  case MODE_NOINVITE:
 		setthephuckingmode:
-		  /* +sp bugfix.. */
-		  if (modetype == MODE_SECRET
-		      && (chptr->mode.mode & MODE_PRIVATE))
-			  chptr->mode.mode &= ~MODE_PRIVATE;
-		  if (modetype == MODE_PRIVATE
-		      && (chptr->mode.mode & MODE_SECRET))
-			  chptr->mode.mode &= ~MODE_SECRET;
-		  if (modetype == MODE_NOCOLOR
-		      && (chptr->mode.mode & MODE_STRIP))
-			  chptr->mode.mode &= ~MODE_STRIP;
-		  if (modetype == MODE_STRIP
-		      && (chptr->mode.mode & MODE_NOCOLOR))
-			  chptr->mode.mode &= ~MODE_NOCOLOR;
 		  retval = 0;
-		  if (what == MODE_ADD)
+		  if (what == MODE_ADD) {
+			  /* +sp bugfix.. (by JK/Luke)*/
+		 	 if (modetype == MODE_SECRET
+			      && (chptr->mode.mode & MODE_PRIVATE))
+				  chptr->mode.mode &= ~MODE_PRIVATE;
+			  if (modetype == MODE_PRIVATE
+			      && (chptr->mode.mode & MODE_SECRET))
+				  chptr->mode.mode &= ~MODE_SECRET;
+			  if (modetype == MODE_NOCOLOR
+			      && (chptr->mode.mode & MODE_STRIP))
+				  chptr->mode.mode &= ~MODE_STRIP;
+			  if (modetype == MODE_STRIP
+			      && (chptr->mode.mode & MODE_NOCOLOR))
+				  chptr->mode.mode &= ~MODE_NOCOLOR;
 			  chptr->mode.mode |= modetype;
+		  }
 		  else
 			  chptr->mode.mode &= ~modetype;
 		  break;
