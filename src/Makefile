@@ -25,7 +25,7 @@ LINTFLAGS=-hba
 
 OBJS=agent.o aln.o badwords.o bsd.o channel.o class.o cloak.o crule.o dbuf.o dynconf.o \
 	fdlist.o hash.o help.o ircd.o ircsprintf.o list.o lusers.o \
-	match.o packet.o parse.o res.o $(RES) s_auth.o \
+	match.o packet.o parse.o $(REGEX) res.o $(RES) s_auth.o \
 	s_bsd.o s_conf.o s_debug.o s_err.o s_extra.o s_kline.o \
 	s_misc.o s_numeric.o s_serv.o s_socks.o $(STRTOUL) s_unreal.o \
 	s_user.o scache.o send.o support.o userload.o version.o whowas.o \

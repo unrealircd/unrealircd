@@ -97,6 +97,12 @@ IRCDDIR=/usr/local/lib/ircd
 # The rest are perfectly content with this.
 RES=
 
+#
+# If your system is lacking regex, uncomment this line
+#
+#REGEX=../extras/regex/regex.o
+REGEX=
+
 # [CHANGEME]
 # If you get a compile-time error dealing with u_int32_t, comment out
 # this line.
@@ -133,7 +139,8 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 		'BINDIR=${BINDIR}' 'INSTALL=${INSTALL}' \
 		'INCLUDEDIR=${INCLUDEDIR}' 'IRCDDIR=${IRCDDIR}' \
 		'MANDIR=${MANDIR}' 'RM=${RM}' 'CP=${CP}' 'TOUCH=${TOUCH}' \
-		'RES=${RES}' 'SHELL=${SHELL}' 'STRTOUL=${STRTOUL}'
+		'RES=${RES}' 'SHELL=${SHELL}' 'STRTOUL=${STRTOUL}' \
+		'CRYPTOLIB=${CRYPTOLIB}' 'REGEX=${REGEX}'
 
 server:
 build:

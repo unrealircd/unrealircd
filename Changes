@@ -438,3 +438,4 @@
 - Added support for the CR Java Chat auto join feature
 - Fixed a msg.h location problem ..
 - Added secure connections and openssl tracing to Config
+- Added regex portablity and checks in Config

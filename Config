@@ -43,6 +43,7 @@ GETTIMEOFDAY=undef
 LRAND48=undef
 STRTOUL=undef
 OPENSSL=""
+REGEXP=""
 NEEDSKIPNAME=""
 CRYPTOLIB=""
 CRYPTOIRCD=""
@@ -485,6 +486,19 @@ if [ -r /usr/include/openssl/blowfish.h ] ; then
 	echo 'found!'
 else
 	echo 'not found (you will not be able to do secure connections)'
+fi
+
+echo $n "...Looking for /usr/include/regex.h...$c"
+if [ -r /usr/include/regex.h ] ; then
+	REGEX=define
+	echo 'found!'
+else
+	echo 'not found :('
+	echo $n '*** configuring regex package ***' $n
+	cd extras/regex
+	./configure
+	make
+	cd ../..
 fi
 
 #
@@ -1638,6 +1652,18 @@ else
 	
 fi
 
+if [ -n "$REGEX" ] ; then
+    $RM -f Makefile.tmp
+    sed -e "s@^REGEX=\(.*\)@REGEX=@" Makefile > Makefile.tmp
+    cp Makefile.tmp Makefile
+    $RM -f Makefile.tmp
+else
+	$RM -f Makefile.tmp
+	sed -e "s@^REGEX=\(.*\)@REGEX=../extras/regex/regex.o@" Makefile > Makefile.tmp
+	cp Makefile.tmp Makefile
+	$RM -f Makefile.tmp
+fi	
+
 $RM -f $EXEC $TMP
 
 $RM -f ./core
@@ -1696,6 +1722,12 @@ if [ -n "$HUB" ] ; then
     echo "#define HUB 1" >> $OPTIONS_H
 else
     echo "#undef HUB" >> $OPTIONS_H
+fi
+
+if [ -n "$REGEX" ] ; then
+	echo "#define HAVE_REGEX 1" >> $OPTIONS_H
+else
+	echo "#undef HAVE_REGEX" >> $OPTIONS_H
 fi
 
 if [ -n "$NOSPOOF" ] ; then
