@@ -1872,3 +1872,4 @@ seen. gmtime warning still there
 - Added link::options::nodnscache which means Unreal will not cache the host forever for
   outgoing server connections, you could for example enable this if you are linking two servers
   with an often changing host (like dyndns.org).
+- Documentation updates for nodnscache.
