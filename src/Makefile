@@ -19,62 +19,67 @@
 #*   $Id$
 #*/
 
-CC=danger will robinson
+CC = danger will robinson
 
-LINTFLAGS=-hba
-
-OBJS=agent.o aln.o badwords.o bsd.o channel.o class.o cloak.o crule.o dbuf.o dynconf.o \
-	fdlist.o hash.o help.o ircd.o ircsprintf.o list.o lusers.o \
-	match.o packet.o parse.o $(REGEX) res.o $(RES) s_auth.o \
+OBJS=aln.o badwords.o bsd.o channel.o cloak.o crule.o dbuf.o \
+	events.o fdlist.o hash.o help.o ircd.o ircsprintf.o list.o lusers.o \
+	match.o modules.o packet.o parse.o $(REGEX) res.o \
+	res_init.o res_comp.o res_mkquery.o res_skipname.o s_auth.o \
 	s_bsd.o s_conf.o s_debug.o s_err.o s_extra.o s_kline.o \
-	s_misc.o s_numeric.o s_serv.o s_socks.o $(STRTOUL) ssl.o s_unreal.o \
-	s_user.o scache.o send.o support.o userload.o version.o webtv.o \
+	s_misc.o s_numeric.o s_serv.o s_svs.o $(STRTOUL) ssl.o s_unreal.o \
+	s_user.o scache.o send.o support.o version.o webtv.o \
 	whowas.o zip.o
-
-# OBJS=bsd.o dbuf.o packet.o send.o match.o parse.o support.o channel.o \
-#	class.o hash.o ircd.o list.o res.o cloak.o s_auth.o s_bsd.o s_conf.o \
-#	s_debug.o s_err.o s_extra.o s_misc.o s_numeric.o s_serv.o s_user.o s_unreal.o \
-#	whowas.o userload.o crule.o help.o md5.o dynconf.o \
-#        s_socks.o s_kline.o fdlist.o ircsprintf.o agent.o lusers.o version.o \
-#	$(RES) $(STRTOUL)
 
 SRC=$(OBJS:%.o=%.c)
 
-MAKE = make 'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
-	    'LDFLAGS=${LDFLAGS}' 'IRCDMODE=${IRCDMODE}'
+MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
+		'LDFLAGS=${LDFLAGS}' 'IRCDMODE=${IRCDMODE}' \
+		'BINDIR=${BINDIR}' 'INSTALL=${INSTALL}' \
+		'INCLUDEDIR=${INCLUDEDIR}' 'IRCDDIR=${IRCDDIR}' \
+		'MANDIR=${MANDIR}' 'RM=${RM}' 'CP=${CP}' 'TOUCH=${TOUCH}' \
+		'RES=${RES}' 'SHELL=${SHELL}' 'STRTOUL=${STRTOUL}' \
+		'CRYPTOLIB=${CRYPTOLIB}' 'REGEX=${REGEX}' \
+		'CRYPTOINCLUDES=${CRYPTOINCLUDES}'
 
-INCLUDES = ../include/struct.h ../include/config.h ../include/settings.h \
+MAKE = make $(MAKEARGS)
+
+INCLUDES = ../include/struct.h ../include/config.h \
 	../include/sys.h ../include/common.h ../include/version.h \
 	../include/h.h ../include/numeric.h ../include/msg.h \
-	../include/dynconf.h
+	../include/dynconf.h ../include/modules.h ../include/setup.h
 
 all: build
 
-build: ircd chkconf
+build: ircd mods
 
-version.c: version.c.SH
+ircd: $(OBJS)
+	$(CC) $(CFLAGS) $(CRYPTOLIB) -o ircd $(OBJS) $(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
+
+staticircd: $(OBJS)
+	$(CC) $(CFLAGS) $(CRYPTOLIB) -DSTATIC_LINKING -o ircd.static $(OBJS) \
+	modules/l_commands.c \
+	modules/m_sethost.c \
+	modules/m_chghost.c \
+	modules/m_chgident.c \
+	modules/m_setname.c \
+	modules/m_setident.c \
+	modules/m_sdesc.c \
+	$(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
+
+mods:
+	@if [ ! -r include ] ; then \
+		ln -s ../include include; \
+	fi
+	@if [ ! -r modules ] ; then \
+		echo "You havent done cvs update -P -d"; \
+	fi
+	cd modules; make $(MAKEARGS) all
+
+version.c: version.c.SH ../Changes
 	$(SHELL) version.c.SH
 
 version.o: version.c ../include/version.h
 	$(CC) $(CFLAGS) -c version.c
-
-ircd: $(OBJS) 
-#	$(CC) $(CFLAGS) $(CRYPTOLIB) -o ircd $(OBJS) $(LDFLAGS) $(IRCDLIBS) -lssl
-	$(CC) $(CFLAGS) $(CRYPTOINCLUDES) -o ircd $(CRYPTOLIB) $(OBJS) $(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
-	chmod $(IRCDMODE) ircd
-
-chkconf: ../include/struct.h ../include/config.h ../include/settings.h ../include/sys.h \
-	 ../include/common.h crule.c chkconf.c
-	$(CC) $(CFLAGS) -DCR_CHKCONF -o chkcrule.o -c crule.c
-	$(CC) $(CFLAGS) -DCR_CHKCONF -o chkmatch.o -c match.c
-	$(CC) $(CFLAGS) chkconf.c chkmatch.o chkcrule.o \
-	$(LDFLAGS) $(IRCDLIBS) -o chkconf
-
-saber: $(SRC)
-	#load -I../include $(SRC) version.c $(IRCDLIBS)
-
-lint:
-	lint $(LINTFLAGS) -I../include $(SRC) | egrep -v 'sendto_|debug'
 
 parse.o: parse.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c parse.c
@@ -115,6 +120,11 @@ support.o: support.c $(INCLUDES)
 userload.o: userload.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c userload.c
 
+s_svs.o: s_svs.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c s_svs.c
+events.o: events.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c events.c
+
 help.o: help.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c help.c
 
@@ -132,7 +142,8 @@ help.o: help.c $(INCLUDES)
 #	./buildm4 ${IRCDDIR}
 
 clean:
-	$(RM) -f *.o *~ core ircd version.c chkconf
+	$(RM) -f *.o *.so *~ core ircd version.c chkconf; \
+	cd modules; make clean
 
 cleandir: clean
 
@@ -141,9 +152,6 @@ depend:
 
 channel.o: channel.c $(INCLUDES) ../include/channel.h
 	$(CC) $(CFLAGS) -c channel.c
-
-class.o: class.c $(INCLUDES) ../include/class.h
-	$(CC) $(CFLAGS) -c class.c
 
 ircd.o: ircd.c ../include/dbuf.h $(INCLUDES)
 	$(CC) $(CFLAGS) -c ircd.c
@@ -169,9 +177,6 @@ s_bsd.o: s_bsd.c ../include/dbuf.h $(INCLUDES)
 s_auth.o: s_auth.c ../include/dbuf.h $(INCLUDES)
 	$(CC) $(CFLAGS) -c s_auth.c
 
-s_socks.o: s_socks.c ../include/dbuf.h $(INCLUDES)
-	$(CC) $(CFLAGS) -c s_socks.c
-
 s_conf.o: s_conf.c ../include/dbuf.h $(INCLUDES)
 	$(CC) $(CFLAGS) -c s_conf.c
 
@@ -189,9 +194,6 @@ scache.o: scache.c ../include/dbuf.h $(INCLUDES)
 
 ircsprintf.o: ircsprintf.c ../include/dbuf.h $(INCLUDES)
 	$(CC) $(CFLAGS) -c ircsprintf.c
-
-agent.o: agent.c ../include/dbuf.h $(INCLUDES)
-	$(CC) $(CFLAGS) -c agent.c
 
 s_user.o: s_user.c $(INCLUDES) \
 	  ../include/dbuf.h ../include/channel.h ../include/whowas.h
@@ -225,8 +227,5 @@ hash.o: hash.c ../include/hash.h $(INCLUDES)
 crule.o: crule.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c crule.c
 
-dynconf.o: dynconf.c $(INCLUDES) \
-	  s_numeric.c ../include/dbuf.h ../include/channel.h ../include/whowas.h ../include/dynconf.h
-	$(CC) $(CFLAGS) -c dynconf.c
-
 # DO NOT DELETE THIS LINE -- make depend depends on it.
+

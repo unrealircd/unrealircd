@@ -34,24 +34,24 @@ void init_ctx_server(void)
 	ctx_server = SSL_CTX_new(SSLv23_server_method());
 	if (!ctx_server)
 	{
-		ircd_log("Failed to do SSL CTX new");
+		ircd_log(LOG_ERROR, "Failed to do SSL CTX new");
 		exit(2);
 	}
 
 	if (SSL_CTX_use_certificate_file(ctx_server, CERTF, SSL_FILETYPE_PEM) <= 0)
 	{
-		ircd_log("Failed to load SSL certificate %s", CERTF);
+		ircd_log(LOG_ERROR, "Failed to load SSL certificate %s", CERTF);
 		exit(3);
 	}
 	if (SSL_CTX_use_PrivateKey_file(ctx_server, KEYF, SSL_FILETYPE_PEM) <= 0)
 	{
-		ircd_log("Failed to load SSL private key %s", KEYF);
+		ircd_log(LOG_ERROR, "Failed to load SSL private key %s", KEYF);
 		exit(4);
 	}
 
 	if (!SSL_CTX_check_private_key(ctx_server))
 	{
-		ircd_log("Failed to check SSL private key");
+		ircd_log(LOG_ERROR, "Failed to check SSL private key");
 		exit(5);
 	}
 }
@@ -61,24 +61,24 @@ void init_ctx_client(void)
 	ctx_client = SSL_CTX_new(SSLv3_client_method());
 	if (!ctx_client)
 	{
-		ircd_log("Failed to do SSL CTX new client");
+		ircd_log(LOG_ERROR, "Failed to do SSL CTX new client");
 		exit(2);
 	}
 
 	if (SSL_CTX_use_certificate_file(ctx_client, CERTF, SSL_FILETYPE_PEM) <= 0)
 	{
-		ircd_log("Failed to load SSL certificate %s (client)", CERTF);
+		ircd_log(LOG_ERROR, "Failed to load SSL certificate %s (client)", CERTF);
 		exit(3);
 	}
 	if (SSL_CTX_use_PrivateKey_file(ctx_client, KEYF, SSL_FILETYPE_PEM) <= 0)
 	{
-		ircd_log("Failed to load SSL private key %s (client)", KEYF);
+		ircd_log(LOG_ERROR, "Failed to load SSL private key %s (client)", KEYF);
 		exit(4);
 	}
 
 	if (!SSL_CTX_check_private_key(ctx_client))
 	{
-		ircd_log("Failed to check SSL private key (client)");
+		ircd_log(LOG_ERROR, "Failed to check SSL private key (client)");
 		exit(5);
 	}
 }
@@ -108,12 +108,18 @@ int  ssl_handshake(aClient *cptr)
 	CHK_NULL(cptr->ssl);
 	SSL_set_fd((SSL *) cptr->ssl, cptr->fd);
 	set_non_blocking(cptr->fd, cptr);
+	/* 
+	 *  if necessary, SSL_write() will negotiate a TLS/SSL session, if not already explicitly
+	 *  performed by SSL_connect() or SSL_accept(). If the peer requests a
+	 *  re-negotiation, it will be performed transparently during the SSL_write() operation.
+	 *    The behaviour of SSL_write() depends on the underlying BIO. 
+	 *   
+	 */
 	err = SSL_accept((SSL *) cptr->ssl);
-	if ((err) == -1)
-	{
-		sendto_umode(UMODE_JUNK, "Lost connection to %s:Error in SSL_accept()",			
-			    get_client_name(cptr, TRUE));
-		return 0;
+	if (err == -1)
+	{	
+		/* wtf. it works, so ? */
+		return -1;
 	}
 
 	/* Get client's certificate (note: beware of dynamic
@@ -184,7 +190,7 @@ int  ssl_client_handshake(aClient *cptr)
 		sendto_realops("Couldn't SSL_connect");
 		return -2;
 	}
-	set_non_blocking(cptr);
+	set_non_blocking(cptr->fd, cptr);
 	cptr->flags |= FLAGS_SSL;
 	return 1;
 }
@@ -220,7 +226,7 @@ char	*ssl_get_cipher(SSL *ssl)
 	c = SSL_get_current_cipher(ssl);
 	SSL_CIPHER_get_bits(c, &bits);
 	strcat(buf, "-");
-	strcat(buf, my_itoa(bits));
+	strcat(buf, (char *)my_itoa(bits));
 	strcat(buf, "bits");
 	return (buf);
 }

@@ -41,13 +41,12 @@ u_char touppertab[], tolowertab[];
  * match()
  *  written by binary
  */
-int  match(mask, name)
+static inline match2(mask, name)
 	char *mask, *name;
 {
-	u_char *m;		/* why didn't the old one use registers ?!??!?!?! */
-	u_char *n;
+	u_char *m;		/* why didn't the old one use registers */
+	u_char *n;		/* because registers suck -- codemastr */
 	u_char cm;
-	u_char *mylowertab;
 	u_char *wsn;
 	u_char *wsm;
 
@@ -56,9 +55,8 @@ int  match(mask, name)
 	cm = *m;
 
 #ifndef USE_LOCALE
-	mylowertab = tolowertab2;
-#define lc(x) mylowertab[x]	/* use mylowertab, because registers are FASTER */
-#else
+#define lc(x) tolowertab2[x]	/* use mylowertab, because registers are FASTER */
+#else				/* maybe in the old 4mb hard drive days but not anymore -- codemastr */
 #define lc(x) tolower(x)
 #endif
 
@@ -393,3 +391,31 @@ u_char char_atribs[] = {
 /* e0-ef */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 /* f0-ff */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
+
+/* Old match() */
+int _match(char *mask, char *name) {
+	return match2(mask,name);
+}
+
+
+/* Old match() plus some optimizations from bahamut */
+int match(char *mask, char *name) {
+	if (mask[0] == '*' && mask[1] == '!') {
+		mask += 2;
+		while (*name != '!' && *name)
+			name++;
+		if (!*name)
+			return 1;
+		name++;
+	}
+		
+	if (mask[0] == '*' && mask[1] == '@') {
+		mask += 2;
+		while (*name != '@' && *name)
+			name++;
+		if (!*name)
+			return 1;
+		name++;
+	}
+	return match2(mask,name);
+}

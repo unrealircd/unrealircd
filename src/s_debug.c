@@ -99,8 +99,12 @@ char serveropts[] = {
 #ifdef USE_POLL
 	'P',
 #endif
+#ifdef USE_SSL
+	'e',
+#endif
 /* we are a stable ircd */
 	'S',
+	's',
 	'\0'
 };
 
@@ -150,6 +154,12 @@ char serveropts[] = {
 
 
 #ifdef DEBUGMODE
+#ifndef _WIN32
+#define SET_ERRNO(x) errno = x
+#else
+#define SET_ERRNO(x) WSASetLastError(x)
+#endif /* _WIN32 */
+
 static char debugbuf[1024];
 
 #ifndef	USE_VARARGS
@@ -158,54 +168,49 @@ void debug(level, form, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10)
 	int  level;
 	char *form, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8, *p9, *p10;
 {
-# ifndef _WIN32
-	int  err = errno;
-# else
-	int  err = WSAGetLastError();
-# endif
 #else
-void debug(level, form, va_alist)
-	int  level;
-	char *form;
-	va_dcl
-{
-	va_list vl;
-# ifndef _WIN32
-	int  err = errno;
-# else
-	int  err = WSAGetLastError();
-# endif
-
-	va_start(vl);
+void debug(int level, char *form, ...)
 #endif
+{
+	int err = ERRNO;
+
+	va_list vl;
+	va_start(vl, form);
 
 	if ((debuglevel >= 0) && (level <= debuglevel))
 	{
-#ifndef	USE_VARARGS
-		(void)ircsprintf(debugbuf, form,
-		    p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
+#ifndef USE_VARARGS
+		(void)ircsprintf(debugbuf, form, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
 #else
 		(void)ircvsprintf(debugbuf, form, vl);
+#if 0
+# ifdef _WIN32
+		strcat(debugbuf,"\r\n");
+# endif
+#endif
 #endif
 
-#ifndef _WIN32
+#if 0
 		if (local[2])
 		{
 			local[2]->sendM++;
 			local[2]->sendB += strlen(debugbuf);
 		}
+#endif
+#ifndef _WIN32
 		(void)fprintf(stderr, "%s", debugbuf);
 		(void)fputc('\n', stderr);
-	}
-	errno = err;
 #else
-		strcat(debugbuf, "\r");
-#ifndef _WIN32GUI
+# ifndef _WIN32GUI
 		Cio_Puts(hCio, debugbuf, strlen(debugbuf));
+# else
+		strcat(debugbuf, "\r\n");
+		OutputDebugString(debugbuf);
+# endif
 #endif
 	}
-	WSASetLastError(err);
-#endif
+	va_end(vl);
+	SET_ERRNO(err);
 }
 
 /*
@@ -246,7 +251,7 @@ void send_usage(cptr, nick)
 		return;
 	}
 	secs = rus.ru_utime.tv_sec + rus.ru_stime.tv_sec;
-	rup = time(NULL) - me.since;
+	rup = TStime() - me.since;
 	if (secs == 0)
 		secs = 1;
 
@@ -380,21 +385,23 @@ void count_memory(cptr, nick)
 	{
 		if (MyConnect(acptr))
 		{
-			lc++;
+/*			lc++;
 			for (link = acptr->confs; link; link = link->next)
 				lcc++;
 			wle += acptr->notifies;
+			*/
 		}
 		else
 			rc++;
 		if (acptr->user)
 		{
+			Membership *mb;
 			us++;
 			for (link = acptr->user->invited; link;
 			    link = link->next)
 				usi++;
-			for (link = acptr->user->channel; link;
-			    link = link->next)
+			for (mb = acptr->user->channel; mb;
+			    mb = mb->next)
 				usc++;
 			if (acptr->user->away)
 			{
@@ -408,9 +415,11 @@ void count_memory(cptr, nick)
 
 	for (chptr = channel; chptr; chptr = chptr->nextch)
 	{
+		Member *member;
+		
 		ch++;
 		chm += (strlen(chptr->chname) + sizeof(aChannel));
-		for (link = chptr->members; link; link = link->next)
+		for (member = chptr->members; member; member = member->next)
 			chu++;
 		for (link = chptr->invites; link; link = link->next)
 			chi++;
@@ -422,7 +431,7 @@ void count_memory(cptr, nick)
 		}
 	}
 
-	for (aconf = conf; aconf; aconf = aconf->next)
+/*	for (aconf = conf; aconf; aconf = aconf->next)
 	{
 		co++;
 		com += aconf->host ? strlen(aconf->host) + 1 : 0;
@@ -433,7 +442,7 @@ void count_memory(cptr, nick)
 
 	for (cltmp = classes; cltmp; cltmp = cltmp->next)
 		cl++;
-
+*/
 	sendto_one(cptr, ":%s %d %s :Client Local %d(%d) Remote %d(%d)",
 	    me.name, RPL_STATSDEBUG, nick, lc, lcm, rc, rcm);
 	sendto_one(cptr, ":%s %d %s :Users %d(%d) Invites %d(%d)",
@@ -489,11 +498,8 @@ void count_memory(cptr, nick)
 	    me.name, RPL_STATSDEBUG, nick, fl, fl * sizeof(Link),
 	    flinks, flinks * sizeof(Link));
 
-#ifndef NEWDNS
-	rm = cres_mem(cptr);
-#else /*NEWDNS*/
-	rm = 0;
-#endif /*NEWDNS*/
+	rm = cres_mem(cptr,cptr->name);
+
 	tot = totww + totch + totcl + com + cl * sizeof(aClass) + db + rm;
 	tot += fl * sizeof(Link);
 	tot += sizeof(aHashEntry) * U_MAX;

@@ -1,16 +1,10 @@
 # $Id$
-case $CONFIG in
-'')	 if test -r ../config.sh
-	 then 
-	    . ../config.sh ;
-	 else 
-	    spitshell=cat
-	    package=IRC
-	 fi
-	 ;;
-esac
 
 echo "Extracting src/version.c..."
+
+id=`grep '$Id: Changes,v' ../Changes`
+id=`echo $id |sed 's/.* Changes\,v \(.*\) .* Exp .*/\1/'`
+echo "$id"
 
 if test -r version.c
 then
@@ -27,7 +21,7 @@ awk '{if (NF == 6) \
 else \
          { print $1 " "  $2 " " $3 " " $7 " at " $4 " " $5 " " $6 }}'`
 
-$spitshell >version.c <<!SUB!THIS!
+cat >version.c <<!SUB!THIS!
 /*
  *   IRC - Internet Relay Chat, ircd/version.c
  *   Copyright (C) 1990 Chelsea Ashley Dyerman
@@ -61,7 +55,7 @@ char *generation = "$generation";
 char *creation = "$creation";
 #define IRCDTOTALVERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
 char *version = IRCDTOTALVERSION;
-
+char *buildid = "$id";
 /* moved to s_serv.c */
 char *infotext[] = 
 { 0 };
@@ -100,9 +94,14 @@ char *unrealcredits[] =
 	"CC2IS Internet Services (http://www.cc2is.com)",
 	"- Hosting development shells and unrealircd.com, .org  - thanks for",
 	"  supporting the UnrealIRCd project",
+	"RaYmAn (Jens Andersen)",
+	"- Supporting with hardware, software, movies, etc, and for",
+	"  a great friendship, and spending a lot of time with sts",
 	"",
-	"noriko noriko@linuxsquare.net",
+	"noriko             noriko@linuxsquare.net",
 	"- Giving us an OpenBSD shell to develop on :)",
+	"Anonymos           Anonymos@secretservices.net",
+	"- Shell provider, mirror, support, bugfinds",
 	"llthangel",
 	"- A good job helping with bugs/especially SJ3",
 	"",
@@ -111,17 +110,23 @@ char *unrealcredits[] =
 	" - the first UnrealIRCd donation :)",
 	"[Real] from ChatFIRST.com",
 	" - donation to UnrealIRCd project :)",
+	"Jameno123 & ByteHosting Internet Services",
+	"- Hardware donations (diskspace!)",
+	"Anonymos",
+	"- Shell donation for tspre.org",
+	"Interlink Access Corp",
+	" - donation to the UnrealIRCd development",
 	"Thanks to Headbang and WonderWal too for hardware+software",
 	"donations",
 	"   (yes your name can be here too;)",
 	"",
-	"              \37These people have helped alpha/betatesting\37",
+	"         \37These people have helped alpha/betatesting/fixing bugs\37",
 	"zshack, Headbang, Mick, Sp^, WonderWal, bomb, BullFrog, JacobD,",
 	"SirDeath, l33, EiniD, uo, RevPsych and the subgenius.net network,",
 	"^RavenX^, Mich[a]el, {X}, Fish, Shmad, Killer, BrainSCAN, RevNull,",
 	"GoNiS, Mikey, DrBin, rapta, crow, SevenEagle, Curt|s, Scooter,",
 	"auspice, RaYmAn, Taz, HERZ, Pique, ROXnet, trinity, script0r",
-	"BiGi, [ins4ne]",
+	"BiGi, [ins4ne], Zogg",
 	"",
         "                   \2\37Stskeeps would like to thank:\2\37", 
 	"Morrigan             Julie Frederiksen",
@@ -149,6 +154,8 @@ char *unrealcredits[] =
         "   thingies, being a general wierdoe etc. ",
 	"Dark-Prince",
 	" - Systray code, sharing ideas, code, bugs, and a lot of stuff",
+	"Bleep",
+	" - The brilliant ircu win32 port",
 	"Sporty_McFly  Cedric",
 	" - Comments, helping me when I got problems with my life and so on",
         "   *toh* to him - Thanks!",
@@ -157,6 +164,10 @@ char *unrealcredits[] =
 	"   No. I saw 2 moos. - Well having to input in seconds",
 	"   is fine if you're real quick at maths - but if not - it's a PAIN",
 	"   - Comments, bugfixes, moral support etc.;)",
+	"evilgoat",
+	" - When asked to clone flood development server with 200 clones",
+	"   in exchange for /credits item, he flooded #unrealircd by",
+	"   accident (or?)", 
 	"Skywalker     Chris Morley            skywalker@irc.ru.ac.za",
 	" - Helping me start up ROXnet at first (which brought me",
 	"   into IRCd business.. + Numerous kicks /Kills akills and alike;)",
@@ -175,6 +186,9 @@ char *unrealcredits[] =
 	"[FBI]         Corey Lang              fbi@dal.net",
 	" - Being a good IRC friend and getting me started with",
 	"   IRC through our old little wIRCd net :)",
+	"The +x 2.0 team: RaYmAn, NiQuiL, narf, Griever (great thinking)",
+	"                 eternal, bball, JK. Thanks for makin a",
+	"                 drop dead gorgeous algoritm.",
 	"",                     
 	"                            \2\37Also thanks to:\2\37",
 	"Enforcer, Andy Church, Mick, Sp^, ShadowMastr, Almaris",
@@ -223,7 +237,8 @@ char unreallogo[] =
 92,95,95,95,124,92,95,95,44,95,124,
 95,124,92,95,95,95,47,92,95,124,32,
 92,95,124,32,92,95,95,95,95,47,92,
-95,95,44,95,124,10,0};
+95,95,44,95,124,10,0,85,110,114,
+101,97,108,0};
 
 char *dalinfotext[] =
     {

@@ -43,7 +43,9 @@
 #undef  POSIX_SIGNALS
 #undef  TIMES_2
 #undef  GETRUSAGE_2
-
+#define SPATH "."
+#define DPAT "."
+#define DOMAINNAME "irc.net"
 #define NO_U_TYPES
 #define NEED_U_INT32_T
 #endif

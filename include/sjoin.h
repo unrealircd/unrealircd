@@ -34,7 +34,7 @@ aSynchList *SJSynchList = NULL;
 
 aSynchList *make_synchlist()
 {
-	Reg1 aSynchList *synchptr;
+	register aSynchList *synchptr;
 
 	synchptr = (aSynchList *) MyMalloc(sizeof(aSynchList));
 	synchptr->cptr = NULL;

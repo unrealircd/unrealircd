@@ -1,5 +1,4 @@
-
-/************************************************************************
+ /************************************************************************
  *   Unreal Internet Relay Chat Daemon, include/struct.h
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
@@ -55,15 +54,41 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>    
 #endif
-typedef struct t_fline aFline;
-typedef struct t_crline aCRline;
-typedef struct t_vhline aVHline;
-typedef struct t_kline aTKline;
-typedef struct t_vhost aVhost;
-
-typedef struct SqlineItem aSqlineItem;
 typedef struct aloopStruct LoopStruct;
 typedef struct ConfItem aConfItem;
+typedef struct t_kline aTKline;
+/* New Config Stuff */
+typedef struct _configentry ConfigEntry;
+typedef struct _configfile ConfigFile;
+typedef struct _configflag ConfigFlag;
+typedef struct _configflag_except ConfigFlag_except;
+typedef struct _configflag_ban ConfigFlag_ban;
+typedef struct _configflag_tld ConfigFlag_tld;
+typedef struct _configitem ConfigItem;
+typedef struct _configitem_me ConfigItem_me;
+typedef struct _configitem_admin ConfigItem_admin;
+typedef struct _configitem_class ConfigItem_class;
+typedef struct _configitem_oper ConfigItem_oper;
+typedef struct _configitem_oper_from ConfigItem_oper_from;
+typedef struct _configitem_drpass ConfigItem_drpass;
+typedef struct _configitem_ulines ConfigItem_ulines;
+typedef struct _configitem_tld ConfigItem_tld;
+typedef struct _configitem_listen ConfigItem_listen;
+typedef struct _configitem_allow ConfigItem_allow;
+typedef struct _configitem_allow_channel ConfigItem_allow_channel;
+typedef struct _configitem_vhost ConfigItem_vhost;
+typedef struct _configitem_except ConfigItem_except;
+typedef struct _configitem_link	ConfigItem_link;
+typedef struct _configitem_ban ConfigItem_ban;
+typedef struct _configitem_badword ConfigItem_badword;
+typedef struct _configitem_deny_dcc ConfigItem_deny_dcc;
+typedef struct _configitem_deny_link ConfigItem_deny_link;
+typedef struct _configitem_deny_channel ConfigItem_deny_channel;
+typedef struct _configitem_deny_version ConfigItem_deny_version;
+typedef struct _configitem_log ConfigItem_log;
+typedef struct _configitem_unknown ConfigItem_unknown;
+typedef struct _configitem_unknown_ext ConfigItem_unknown_ext;
+
 typedef struct Notify aNotify;
 typedef struct Client aClient;
 typedef struct Channel aChannel;
@@ -74,9 +99,13 @@ typedef struct SBan Ban;
 typedef struct SMode Mode;
 typedef struct ListOptions LOpts;
 typedef struct FloodOpt aFloodOpt;
-typedef struct ircstatsx ircstats;
 typedef struct MotdItem aMotd;
 typedef struct trecord aTrecord;
+typedef struct Command aCommand;
+typedef struct SMember Member;
+typedef struct SMembership Membership;
+typedef struct SMembershipL MembershipL;
+typedef struct _irchook Hook;
 
 #ifdef NEED_U_INT32_T
 typedef unsigned int u_int32_t;	/* XXX Hope this works! */
@@ -115,6 +144,15 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 
 /* NOTE: this must be down here so the stuff from struct.h IT uses works */
 #include "whowas.h"
+
+/* Loggin types */
+#define LOG_ERROR 0x0001
+#define LOG_KILL  0x0002
+#define LOG_TKL   0x0004
+#define LOG_KLINE 0x0008
+#define LOG_CLIENT 0x0010
+#define LOG_SERVER 0x0020
+#define LOG_OPER   0x0040
 
 
 /*
@@ -207,17 +245,15 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define FLAGS_ASKEDPING 0x100000
 #define FLAGS_NETINFO   0x200000
 #define FLAGS_HYBNOTICE 0x400000
-#ifdef SOCKSPORT
-#define FLAGS_SOCKS     0x800000
-#define FLAGS_WRSOCKS   0x1000000
-#define FLAGS_GOTSOCKS  0x2000000
-#endif
+#define FLAGS_QUARANTINE     0x800000
+#define FLAGS_UNOCCUP2   0x1000000
+#define FLAGS_UNOCCUP3   0x2000000
 #define FLAGS_SHUNNED    0x4000000
 #ifdef USE_SSL
 #define FLAGS_SSL	 0x10000000
 #define FLAGS_SSL_HSHAKE 0x20000000
 #endif
-
+#define FLAGS_DCCBLOCK	0x40000000
 #define FLAGS_MAP       0x80000000	/* Show this entry in /map */
 /* Dec 26th, 1997 - added flags2 when I ran out of room in flags -DuffJ */
 
@@ -360,9 +396,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	SetAccess(x)		((x)->flags |= FLAGS_CHKACCESS)
 #define SetBlocked(x)		((x)->flags |= FLAGS_BLOCKED)
 #define	DoingAuth(x)		((x)->flags & FLAGS_AUTH)
-#ifdef SOCKSPORT
-#define DoingSocks(x)           ((x)->flags & FLAGS_SOCKS)
-#endif
 #define	NoNewLine(x)		((x)->flags & FLAGS_NONL)
 #define SetRegNick(x)		((x)->umodes & UMODE_REGNICK)
 #define SetHidden(x)            ((x)->umodes |= UMODE_HIDE)
@@ -390,9 +423,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define ClearHidden(x)          ((x)->umodes &= ~UMODE_HIDE)
 #define ClearHideOper(x)    ((x)->umodes &= ~UMODE_HIDEOPER)
 
-#ifdef SOCKSPORT
-#define ClearSocks(x) ((x)->flags &= ~FLAGS_SOCKS)
-#endif
 
 /*
  * ProtoCtl options
@@ -563,23 +593,20 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	CURSES_TERM	1
 #define	TERMCAP_TERM	2
 
+struct FloodOpt {
+	unsigned short nmsg;
+	TS   lastmsg;
+};
+
 struct MotdItem {
 	char *line;
 	struct MotdItem *next;
 };
 
-/* Hack for T:lines and cached MOTDs */
-struct trecord {
-	char *hostmask;
-	struct MotdItem *tmotd;
-	struct MotdItem *trules;
-	struct tm *tmotd_tm;
-	struct trecord *next;
-};
-
 struct aloopStruct {
 	unsigned do_garbage_collect : 1;
 	unsigned do_tkl_sweep : 1;
+	unsigned ircd_booted : 1;
 };
 
 typedef struct Whowas {
@@ -599,80 +626,12 @@ typedef struct Whowas {
 	struct Whowas *cprev;	/* for client struct linked list */
 } aWhowas;
 
-
-struct SqlineItem {
-	unsigned int status;
-	char *sqline;
-	char *reason;
-	struct SqlineItem *next;
-};
-
-struct ConfItem {
-	unsigned int status;	/* If CONF_ILLEGAL, delete when no clients */
-	int  clients;		/* Number of *LOCAL* clients using this */
-	struct IN_ADDR ipnum;	/* ip number of host field */
-	char *host;
-	char *passwd;
-	char *name;
-	int  port;
-	TS   hold;		/* Hold action until this time (calendar time) */
-	int  tmpconf;
-#ifndef VMSP
-	aClass *class;		/* Class of connection */
-#endif
-	short options;
-	struct ConfItem *next;
-};
-
-#define	CONF_ILLEGAL		0x80000000
-#define	CONF_MATCH		0x40000000
-#define	CONF_QUARANTINED_SERVER	0x0001
-#define	CONF_CLIENT		0x0002
-#define	CONF_CONNECT_SERVER	0x0004
-#define	CONF_NOCONNECT_SERVER	0x0008
-#define	CONF_LOCOP		0x0010
-#define	CONF_OPERATOR		0x0020
-#define	CONF_ME			0x0040
-#define	CONF_KILL		0x0080
-#define	CONF_ADMIN		0x0100
-#ifdef 	R_LINES
-#define	CONF_RESTRICT		0x0200
-#endif
-#define	CONF_CLASS		0x0400
-#define	CONF_SERVICE		0x0800
-#define	CONF_LEAF		0x1000
-#define	CONF_LISTEN_PORT	0x2000
-#define	CONF_HUB		0x4000
-#define	CONF_UWORLD		0x8000
-#define CONF_QUARANTINED_NICK	0x10000
-#define CONF_ZAP		0x20000
-#define CONF_CONFIG             0x100000
-#define CONF_CRULEALL           0x200000
-#define CONF_CRULEAUTO          0x400000
-#define CONF_MISSING		0x800000
-#define CONF_SADMIN		0x1000000
-#define CONF_DRPASS		0x2000000	/* DIE/RESTART pass - NikB */
-#define CONF_EXCEPT     	0x4000000	/* K:Line exception */
-#define CONF_TLINE		0x8000000	/* T:Line */
-#define CONF_SOCKSEXCEPT	0x10000000
-#define CONF_NLINE		0x20000000
-#define CONF_VERSION		0x40000000
-#define	CONF_OPS		(CONF_OPERATOR | CONF_LOCOP)
-#define	CONF_SERVER_MASK	(CONF_CONNECT_SERVER | CONF_NOCONNECT_SERVER)
-#define	CONF_CLIENT_MASK	(CONF_CLIENT | CONF_SERVICE | CONF_OPS | \
-				 CONF_SERVER_MASK)
-#define CONF_CRULE              (CONF_CRULEALL | CONF_CRULEAUTO)
-#define CONF_QUARANTINE		(CONF_QUARANTINED_SERVER|CONF_QUARANTINED_NICK)
-
-#define	IsIllegal(x)	((x)->status & CONF_ILLEGAL)
-#define IsTemp(x)	((x)->tmpconf)
-
 /*
  * Client structures
  */
 struct User {
 	struct User *nextu;
-	Link *channel;		/* chain of channel pointer blocks */
+	Membership *channel;		/* chain of channel pointer blocks */
 	Link *invited;		/* chain of invite pointer blocks */
 	Link *silence;		/* chain of silence pointer blocks */
 	char *away;		/* pointer to away message */
@@ -694,28 +653,40 @@ struct User {
 };
 
 struct Server {
-	struct Server *nexts;
-	anUser *user;		/* who activated this connection */
-	char *up;		/* uplink for this server */
-	char by[NICKLEN + 1];
-	aConfItem *nline;	/* N-line pointer for this server */
-	TS   timestamp;		/* Remotely determined connect try time */
-	unsigned short numeric;	/* NS numeric, 0 if none */
-	long users;
+	struct Server 	*nexts;
+	anUser 		*user;		/* who activated this connection */
+	char 		*up;		/* uplink for this server */
+	char 		by[NICKLEN + 1];
+	ConfigItem_link *conf;
+	TS   		timestamp;		/* Remotely determined connect try time */
+	unsigned short  numeric;	/* NS numeric, 0 if none */
+	long		 users;
 #ifdef	LIST_DEBUG
 	aClient *bcptr;
 #endif
 };
 
-struct t_vhost {
-	char *usermask;
-	char *hostmask;
-	char *login;
-	char *password;
-	char *virthost;
-	aVhost *next;
-	aVhost *prev;
+#define M_UNREGISTERED 0x0001
+#define M_USER 0x0002
+#define M_SERVER 0x0004
+#define M_SHUN 0x0008
+#define M_NOLAG 0x0010
+struct Command {
+	aCommand		*next;
+	aCommand		*prev;
+	char 			*cmd;
+	int			(*func) ();
+	int			flags;
+	unsigned int    	count;
+	unsigned		parameters : 5;
+	unsigned		token : 1;
+	unsigned long   	bytes;
+#ifdef DEBUGMODE
+	unsigned long 		lticks;
+	unsigned long 		rticks;
+#endif
 };
+
 
 /* tkl:
  *   TKL_KILL|TKL_GLOBAL 	= Global K:Line (G:Line)
@@ -731,17 +702,12 @@ struct t_vhost {
 
 struct t_kline {
 	int  type;
-	char *usermask;
-	char *hostmask;
-	char *reason;
-	char *setby;
-	TS   expire_at;
-	TS   set_at;
-	aTKline *next;
-	aTKline *prev;
+	char *usermask, *hostmask, *reason, *setby;
+	TS expire_at, set_at;
+	aTKline *prev, *next;
 };
 
-struct ircstatsx {
+typedef struct ircstatsx {
 	int  clients;		/* total */
 	int  invisible;		/* invisible */
 	unsigned short  servers;		/* servers */
@@ -752,29 +718,7 @@ struct ircstatsx {
 	unsigned short  me_servers;	/* my servers */
 	int  me_max;		/* local max */
 	int  global_max;	/* global max */
-};
-
-struct t_fline {
-	char *mask;
-	char *reason;
-	int  type;
-	aFline *next;
-	aFline *prev;
-};
-
-struct t_crline {
-	char *channel;
-	int  type;
-	aCRline *next, *prev;
-};
-
-struct t_vhline {
-	char *login;
-	char *password;
-	char *vhost;
-	int  type;
-	aVHline *next, *prev;
-};
+} ircstats;
 
 #define LISTENER_NORMAL		0x000001
 #define LISTENER_CLIENTSONLY	0x000002
@@ -783,10 +727,12 @@ struct t_vhline {
 #define LISTENER_JAVACLIENT	0x000010
 #define LISTENER_MASK		0x000020
 #define LISTENER_SSL		0x000040
+#define LISTENER_BOUND		0x000080
 
 #define CONNECT_SSL		0x000001
 #define CONNECT_ZIP		0x000002 
-
+#define CONNECT_AUTO		0x000004
+#define CONNECT_QUARANTINE	0x000008
 
 struct Client {
 	struct Client *next, *prev, *hnext;
@@ -834,7 +780,6 @@ struct Client {
 #endif
 #ifdef USE_SSL
 	struct	SSL	*ssl;
-	struct X509	*client_cert;	
 #endif
 #ifndef NO_FDLIST
 	long lastrecvM;		/* to check for activity --Mika */
@@ -843,12 +788,10 @@ struct Client {
 	long receiveK;		/* Statistics: total k-bytes received */
 	u_short sendB;		/* counters to count upto 1-k lots of bytes */
 	u_short receiveB;	/* sent and received. */
-	aClient *acpt;		/* listening client which we accepted from */
-	Link *confs;		/* Configuration record associated */
-	int  authfd;		/* fd for rfc931 authentication */
-#ifdef SOCKSPORT
-	int  socksfd;
-#endif
+	aClient *listener;
+	ConfigItem_class *class;		/* Configuration record associated */
+	int authfd;		/* fd for rfc931 authentication */
+        short slot;         /* my offset in the local fd table */
 	struct IN_ADDR ip;	/* keep real ip# too */
 	u_short port;		/* and the remote port# too :-) */
 	struct hostent *hostp;
@@ -864,8 +807,248 @@ struct Client {
 #endif
 };
 
+
 #define	CLIENT_LOCAL_SIZE sizeof(aClient)
 #define	CLIENT_REMOTE_SIZE offsetof(aClient,count)
+
+/*
+ * conf2 stuff -stskeeps
+*/
+
+/* Config flags */
+ 
+struct _configfile
+{
+        char            *cf_filename;
+        ConfigEntry     *cf_entries;
+        ConfigFile     *cf_next;
+};
+
+struct _configentry
+{
+        ConfigFile	*ce_fileptr;
+        int 	 	ce_varlinenum, ce_fileposstart, ce_fileposend, ce_sectlinenum;
+        char 		*ce_varname, *ce_vardata;
+        ConfigEntry     *ce_entries, *ce_prevlevel, *ce_next;
+};
+
+struct _configflag 
+{
+	unsigned	temporary : 1;
+};
+
+/* configflag specialized for except socks/ban -Stskeeps */
+
+struct _configflag_except
+{
+	unsigned	temporary : 1;
+	unsigned	type	  : 1;
+};
+
+struct _configflag_ban
+{
+	unsigned	temporary : 1;
+	unsigned	type	  : 4;
+	unsigned	type2	  : 2;
+};
+
+struct _configflag_tld
+{
+	unsigned	temporary : 1;
+	unsigned	motdptr   : 1;
+	unsigned	rulesptr  : 1;
+};
+
+#define CONF_BAN_NICK		1
+#define CONF_BAN_IP		2
+#define CONF_BAN_SERVER		3
+#define CONF_BAN_USER   	4
+#define CONF_BAN_REALNAME 	5
+
+#define CONF_BAN_TYPE_CONF	0
+#define CONF_BAN_TYPE_AKILL	1
+#define CONF_BAN_TYPE_TEMPORARY 2
+
+#define CRULE_ALL		0
+#define CRULE_AUTO		1
+
+
+
+struct _configitem {
+	ConfigFlag flag;
+	ConfigItem *prev, *next;
+};
+
+struct _configitem_me {
+	ConfigFlag flag;
+	ConfigItem *prev, *next;
+	char	   *name, *info;
+	short	   numeric;
+};
+
+struct _configitem_admin {
+	ConfigFlag flag;
+	ConfigItem *prev, *next;
+	char	   *line; 
+};
+
+struct _configitem_class {
+	ConfigFlag flag;
+	ConfigItem *prev, *next;
+	char	   *name;
+	int	   pingfreq, connfreq, maxclients, sendq, clients;
+};
+
+struct _configitem_allow {
+	ConfigFlag 	 flag;
+	ConfigItem       *prev, *next;
+	char	         *ip, *hostname, *password, *server;
+	short		 maxperip;
+	int		 port;
+	ConfigItem_class *class;
+};
+
+struct _configitem_oper {
+	ConfigFlag 	 flag;
+	ConfigItem       *prev, *next;
+	char		 *name, *password, *swhois;
+	ConfigItem_class *class;
+	ConfigItem	 *from;
+	long		 oflags;
+};
+
+struct _configitem_oper_from {
+	ConfigFlag 	 flag;
+	ConfigItem       *prev, *next;
+	char		 *name;
+};
+
+struct _configitem_drpass {
+	ConfigFlag 	 flag;
+	ConfigItem       *prev, *next;
+	char 		 *restart, *die;
+};
+
+struct _configitem_ulines {
+	ConfigFlag 	 flag;
+	ConfigItem       *prev, *next;
+	char 		 *servername;
+};
+
+struct _configitem_tld {
+	ConfigFlag_tld 	flag;
+	ConfigItem 	*prev, *next;
+	char 		*mask, *motd_file, *rules_file, *channel;
+	struct tm	*motd_tm;
+	aMotd		*rules, *motd;
+};
+
+struct _configitem_listen {
+	ConfigFlag 	flag;
+	ConfigItem 	*prev, *next;
+	char		*ip;
+	int		port;
+	long		options, clients;
+};
+
+struct _configitem_vhost {
+	ConfigFlag 	flag;
+	ConfigItem 	*prev, *next;
+	ConfigItem       *from;
+	char		*login, *password, *virthost, *virtuser;
+};
+
+struct _configitem_link {
+	ConfigFlag	flag;
+	ConfigItem	*prev, *next;
+	char		*servername, *username, *hostname, *bindip, *hubmask, *leafmask, *connpwd, *recvpwd;
+	short		port, options;
+	unsigned char 	leafdepth;
+	int		refcount;
+	ConfigItem_class	*class;
+	struct IN_ADDR 		ipnum;
+	time_t			hold;
+};
+
+struct _configitem_except {
+	ConfigFlag_except      flag;
+	ConfigItem      *prev, *next;
+	char		*mask;
+};
+
+struct _configitem_ban {
+	ConfigFlag_ban	flag;
+	ConfigItem		*prev, *next;
+	char			*mask, *reason;
+};
+
+struct _configitem_badword {
+	ConfigFlag	flag;
+	ConfigItem      *prev, *next;
+	char		*word, *replace;
+};
+
+struct _configitem_deny_dcc {
+	ConfigFlag_ban		flag;
+	ConfigItem		*prev, *next;
+	char			*filename, *reason;
+};
+
+struct _configitem_deny_link {
+	ConfigFlag_except       flag;
+	ConfigItem              *prev, *next;
+	char			*mask, *rule, *prettyrule;
+};
+
+struct _configitem_deny_version {
+	ConfigFlag		flag;
+	ConfigItem		*prev, *next;
+	char 			*mask, *version, *flags;
+};
+
+struct _configitem_deny_channel {
+	ConfigFlag		flag;
+	ConfigItem		*prev, *next;
+	char			*channel, *reason;
+};
+
+struct _configitem_allow_channel {
+	ConfigFlag		flag;
+	ConfigItem		*prev, *next;
+	char			*channel;
+};
+
+struct _configitem_log {
+	ConfigFlag flag;
+	ConfigItem *prev, *next;
+	char *file;
+	int  flags;
+};
+
+struct _configitem_unknown {
+	ConfigFlag flag;
+	ConfigItem *prev, *next;
+	ConfigEntry *ce;
+};
+
+struct _configitem_unknown_ext {
+	ConfigFlag flag;
+	ConfigItem *prev, *next;
+	char *ce_varname, *ce_vardata;
+	ConfigFile      *ce_fileptr;
+	int             ce_varlinenum;
+	ConfigEntry     *ce_entries;
+};
+
+struct _irchook {
+	ConfigFlag flag;
+	Hook *prev, *next;
+	union
+	{
+		int (*intfunc)();
+		void (*voidfunc)();
+	} func;
+};
 
 /*
  * statistics structures
@@ -929,21 +1112,6 @@ struct SMode {
 	unsigned char	 kmode;	/* mode  0 = kick  1 = ban */
 };
 
-/* Message table structure */
-
-struct Message {
-	char *cmd;
-	int  (*func) ();
-	unsigned int count;
-	unsigned parameters : 5;
-	u_char token[3];	/* Cheat for tokenized value */
-	unsigned long bytes;
-#ifdef DEBUGMODE
-	unsigned long lticks;
-	unsigned long rticks;
-#endif
-};
-
 /* Used for notify-hash buckets... -Donwulff */
 
 struct Notify {
@@ -958,11 +1126,10 @@ struct Notify {
 struct SLink {
 	struct SLink *next;
 	int  flags;
-	aFloodOpt *flood;
 	union {
 		aClient *cptr;
 		aChannel *chptr;
-		aConfItem *aconf;
+		ConfigItem *aconf;
 		aNotify *nptr;
 		aName *whowas;
 		char *cp;
@@ -972,6 +1139,43 @@ struct SLink {
 			TS   when;
 		} ban;
 	} value;
+};
+
+struct SMember
+{
+	struct SMember *next;
+	aClient	      *cptr;
+	int		flags;
+};
+
+struct Channel {
+	struct Channel *nextch, *prevch, *hnextch;
+	Mode mode;
+	TS   creationtime;
+	char *topic;
+	char *topic_nick;
+	TS   topic_time;
+	unsigned short users;
+	Member *members;
+	Link *invites;
+	Ban *banlist;
+	Ban *exlist;		/* exceptions */
+	char chname[1];
+};
+
+struct SMembershipL
+{
+	struct SMembership 	*next;
+	struct Channel		*chptr;
+	int			flags;
+	aFloodOpt		flood;		
+};
+
+struct SMembership
+{
+	struct SMembership 	*next;
+	struct Channel		*chptr;
+	int			flags;
 };
 
 struct SBan {
@@ -987,27 +1191,13 @@ struct DSlink {
 	union {
 		aClient *cptr;
 		aChannel *chptr;
-		aConfItem *aconf;
+		ConfigItem *aconf;
 		char *cp;
 	} value;
 };
 
 /* channel structure */
 
-struct Channel {
-	struct Channel *nextch, *prevch, *hnextch;
-	Mode mode;
-	TS   creationtime;
-	char *topic;
-	char *topic_nick;
-	TS   topic_time;
-	unsigned short users;
-	Link *members;
-	Link *invites;
-	Ban *banlist;
-	Ban *exlist;		/* exceptions */
-	char chname[1];
-};
 
 /*
 ** Channel Related macros follow
@@ -1092,12 +1282,8 @@ struct Channel {
 #define	IsChannelName(name) ((name) && (*(name) == '#'))
 
 #define IsMember(blah,chan) ((blah && blah->user && \
-                find_channel_link((blah->user)->channel, chan)) ? 1 : 0)
+                find_membership_link((blah->user)->channel, chan)) ? 1 : 0)
 
-struct FloodOpt {
-	unsigned short nmsg;
-	TS   lastmsg;
-};
 
 /* Misc macros */
 
@@ -1109,7 +1295,7 @@ struct FloodOpt {
 #define	MyClient(x)			(MyConnect(x) && IsClient(x))
 #define	MyOper(x)			(MyConnect(x) && IsOper(x))
 
-#define TStime() (time(NULL)+TSoffset)
+#define TStime() (timeofday == 0 ? (timeofday = time(NULL) + TSoffset) : timeofday)
 
 /* Lifted somewhat from Undernet code --Rak */
 
@@ -1157,8 +1343,12 @@ extern char *gnulicense[];
 
 #define	FLUSH_BUFFER	-2
 #define	COMMA		","
+
 #ifdef USE_SSL
 #include "ssl.h"
 #endif
-
+#define EVENT_HASHES EVENT_DRUGS
+#include "modules.h"
+#include "events.h"
 #endif /* __struct_include__ */
+

@@ -35,7 +35,6 @@ Computing Center and Jarkko Oikarinen";
 #include "common.h"
 #include "sys.h"
 #include "numeric.h"
-#include "userload.h"
 #include <sys/stat.h>
 #include <fcntl.h>
 #if !defined(ULTRIX) && !defined(SGI) && \
@@ -125,7 +124,7 @@ char *convert_time (time_t ltime)
 	unsigned long days = 0,hours = 0,minutes = 0,seconds = 0;
 	static char buffer[40];
 
-	
+
 	*buffer = '\0';
 	seconds = ltime % 60;
 	ltime = (ltime - seconds) / 60;
@@ -161,6 +160,25 @@ char *check_string(s)
 
 	return (BadPtr(str)) ? star : str;
 }
+
+char *make_user_host(name, host)
+	char *name, *host;
+{
+	static char namebuf[USERLEN + HOSTLEN + 6];
+	char *s = namebuf;
+
+	bzero(namebuf, sizeof(namebuf));
+	name = check_string(name);
+	strncpyzt(s, name, USERLEN + 1);
+	s += strlen(s);
+	*s++ = '@';
+	host = check_string(host);
+	strncpyzt(s, host, HOSTLEN + 1);
+	s += strlen(s);
+	*s = '\0';
+	return (namebuf);
+}
+
 
 /*
  * create a string of form "foo!bar@fubar" given foo, bar and fubar
@@ -347,6 +365,7 @@ void get_sockhost(cptr, host)
  * Return wildcard name of my server name according to given config entry
  * --Jto
  */
+/*
 char *my_name_for_link(name, aconf)
 	char *name;
 	aConfItem *aconf;
@@ -372,7 +391,7 @@ char *my_name_for_link(name, aconf)
 
 	return namebuf;
 }
-
+*/
 /*
 ** exit_client
 **	This is old "m_bye". Name  changed, because this is not a
@@ -406,9 +425,8 @@ int  exit_client(cptr, sptr, from, comment)
 {
 	aClient *acptr;
 	aClient *next;
-#ifdef	FNAME_USERLOG
 	time_t on_for;
-#endif
+	ConfigItem_listen *listen_conf;
 	static char comment1[HOSTLEN + HOSTLEN + 2];
 	static int recurse = 0;
 
@@ -416,18 +434,44 @@ int  exit_client(cptr, sptr, from, comment)
 	{
 #ifndef NO_FDLIST
 		if (IsAnOper(sptr))
-			delfrom_fdlist(sptr->fd, &oper_fdlist);
+			delfrom_fdlist(sptr->slot, &oper_fdlist);
 		if (IsServer(sptr))
-			delfrom_fdlist(sptr->fd, &serv_fdlist);
+			delfrom_fdlist(sptr->slot, &serv_fdlist);
 #endif
+		if (sptr->class)
+			sptr->class->clients--;
 		if (IsClient(sptr))
 			IRCstats.me_clients--;
 		if (IsServer(sptr))
+		{
 			IRCstats.me_servers--;
-		
+			sptr->serv->conf->refcount--;
+			if (!sptr->serv->conf->refcount
+			  && sptr->serv->conf->flag.temporary)
+			{
+				/* Due for deletion */
+				del_ConfigItem((ConfigItem *) sptr->serv->conf, (ConfigItem **)&conf_link);
+				link_cleanup(sptr->serv->conf);
+				MyFree(sptr->serv->conf);
+			}
+		}
+
+		if (sptr->listener)
+			if (sptr->listener->class)
+			{
+				listen_conf = (ConfigItem_listen *) sptr->listener->class;
+				listen_conf->clients--;
+				if (listen_conf->flag.temporary
+				    && (listen_conf->clients == 0))
+				{
+					/* Call listen cleanup */
+					listen_cleanup();
+				}
+			}
 		sptr->flags |= FLAGS_CLOSING;
 		if (IsPerson(sptr))
 		{
+			RunHook(HOOKTYPE_LOCAL_QUIT, sptr);
 			sendto_umode(UMODE_OPER | UMODE_CLIENT,
 			    "*** Notice -- Client exiting: %s (%s@%s) [%s]",
 			    sptr->name, sptr->user->username,
@@ -438,15 +482,11 @@ int  exit_client(cptr, sptr, from, comment)
 			    sptr->user->realhost, comment, sptr->sockhost);
 
 		}
-		current_load_data.conn_count--;
 		if (IsPerson(sptr))
 		{
 			char mydom_mask[HOSTLEN + 1];
 			mydom_mask[0] = '\0';
 			strncpy(&mydom_mask[1], DOMAINNAME, HOSTLEN - 1);
-			current_load_data.client_count--;
-			if (match(mydom_mask, sptr->sockhost) == 0)
-				current_load_data.local_count--;
 			/* Clean out list and watch structures -Donwulff */
 			hash_del_notify_list(sptr);
 			if (sptr->user && sptr->user->lopt)
@@ -456,8 +496,6 @@ int  exit_client(cptr, sptr, from, comment)
 				MyFree(sptr->user->lopt);
 			}
 		}
-		update_load();
-#ifdef FNAME_USERLOG
 		on_for = TStime() - sptr->firsttime;
 # if defined(USE_SYSLOG) && defined(SYSLOG_USERS)
 		if (IsPerson(sptr))
@@ -466,37 +504,12 @@ int  exit_client(cptr, sptr, from, comment)
 			    on_for / 3600, (on_for % 3600) / 60,
 			    on_for % 60, sptr->user->username,
 			    sptr->sockhost, sptr->name);
-# else
-		{
-			char linebuf[160];
-			int  logfile;
-
-			/*
-			 * This conditional makes the logfile active only after
-			 * it's been created - thus logging can be turned off by
-			 * removing the file.
-			 *
-			 * stop NFS hangs...most systems should be able to open a
-			 * file in 3 seconds. -avalon (curtesy of wumpus)
-			 */
-			if (IsPerson(sptr) &&
-			    (logfile =
-			    open(FNAME_USERLOG, O_WRONLY | O_APPEND)) != -1)
-			{
-				(void)ircsprintf(linebuf,
-				    "%s (%3d:%02d:%02d): %s@%s [%s]\n",
-				    myctime(sptr->firsttime),
-				    on_for / 3600, (on_for % 3600) / 60,
-				    on_for % 60,
-				    sptr->user->username, sptr->user->realhost,
-				    sptr->username);
-				(void)write(logfile, linebuf, strlen(linebuf));
-				(void)close(logfile);
-			}
-			/* Modification by stealth@caen.engin.umich.edu */
-		}
-# endif
 #endif
+			if (IsPerson(sptr))
+				ircd_log(LOG_CLIENT, "Disconnect - (%d:%d:%d) %s!%s@%s",
+					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
+					sptr->name, sptr->user->username, sptr->user->realhost);
+
 		if (sptr->fd >= 0 && !IsConnecting(sptr))
 		{
 			if (cptr != NULL && sptr != cptr)
@@ -604,7 +617,7 @@ int  exit_client(cptr, sptr, from, comment)
 		}
 		recurse--;
 	}
-	
+
 
 	/*
 	 * Finally, clear out the server we lost itself
@@ -629,7 +642,7 @@ static void exit_one_client_backend(cptr, sptr, from, comment, split)
 	aClient *acptr;
 	int  i;
 	Link *lp;
-
+	Membership *mp;
 	/*
 	   **  For a server or user quitting, propagage the information to
 	   **  other servers (except to the one where is came from (cptr))
@@ -646,16 +659,11 @@ static void exit_one_client_backend(cptr, sptr, from, comment, split)
 		   ** need to send different names to different servers
 		   ** (domain name matching)
 		 */
-		for (i = 0; i <= highest_fd; i++)
+		for (i = 0; i <= LastSlot; i++)
 		{
 			aConfItem *aconf;
 
-			if (!(acptr = local[i]) || !IsServer(acptr) ||
-			    acptr == cptr || IsMe(acptr))
-				continue;
-			if ((aconf = acptr->serv->nline) &&
-			    (match(my_name_for_link(me.name, aconf),
-			    sptr->name) == 0))
+			if (!(acptr = local[i]) || !IsServer(acptr) || acptr == cptr || IsMe(acptr))
 				continue;
 			/*
 			   ** SQUIT going "upstream". This is the remote
@@ -666,13 +674,11 @@ static void exit_one_client_backend(cptr, sptr, from, comment, split)
 			 */
 			if (sptr->from == acptr)
 			{
-				sendto_one(acptr, ":%s SQUIT %s :%s",
-				    from->name, sptr->name, comment);
+				sendto_one(acptr, ":%s SQUIT %s :%s", from->name, sptr->name, comment);
 			}
 			else
 			{
-				sendto_one(acptr, "SQUIT %s :%s",
-				    sptr->name, comment);
+				sendto_one(acptr, "SQUIT %s :%s", sptr->name, comment);
 			}
 		}
 	}
@@ -721,8 +727,8 @@ static void exit_one_client_backend(cptr, sptr, from, comment, split)
 					    sptr->user->server, sptr->name,
 					    sptr->user->username,
 					    sptr->user->realhost, comment);
-			while ((lp = sptr->user->channel))
-				remove_user_from_channel(sptr, lp->value.chptr);
+			while ((mp = sptr->user->channel))
+				remove_user_from_channel(sptr, mp->chptr);
 
 			/* Clean up invitefield */
 			while ((lp = sptr->user->invited))
@@ -770,7 +776,7 @@ void checklist()
 
 	if (!(bootopt & BOOT_AUTODIE))
 		return;
-	for (j = i = 0; i <= highest_fd; i++)
+	for (j = i = 0; i <= LastSlot; i++)
 		if (!(acptr = local[i]))
 			continue;
 		else if (IsClient(acptr))
@@ -802,11 +808,7 @@ void tstats(cptr, name)
 
 	sp = &tmp;
 	bcopy((char *)ircstp, (char *)sp, sizeof(*sp));
-#ifndef _WIN32
-	for (i = 0; i < MAXCONNECTIONS; i++)
-#else
-	for (i = 0; i < highest_fd; i++)
-#endif
+	for (i = 0; i <= LastSlot; i++)
 	{
 		if (!(acptr = local[i]))
 			continue;

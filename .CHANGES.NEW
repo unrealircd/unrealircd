@@ -1,18 +1,19 @@
-Welcome to the UnrealIRCd configuration program. This program
-will help you to compile your IRC server, and ask you questions
+
+ _   _                      _ ___________  _____     _
+| | | |                    | |_   _| ___ \/  __ \   | |
+| | | |_ __  _ __ ___  __ _| | | | | |_/ /| /  \/ __| |
+| | | | '_ \| '__/ _ \/  _ | | | | |    / | |    /  _ |
+| |_| | | | | | |  __/ (_| | |_| |_| |\ \ | \__/\ (_| |
+ \___/|_| |_|_|  \___|\__,_|_|\___/\_| \_| \____/\__,_|
+
+                               Configuration Program
+                             for Unreal3.2-Selene(beta1)
+                                    
+This program will help you to compile your IRC server, and ask you
+questions regarding the compile-time settings of it during the process. 
 regarding the setup of it, during the process.
 
-If you need help to set the IRCd up, mail
-unreal-support@lists.sourceforge.net or ask at IRC:
-/server irc.ircsystems.net, /join #unrealircd
+If you have problems regarding the setup & compile, read Unreal.nfo to get
+more information on where to get help. Please, before running this setup,
+read the documentation in the "doc" folder. 
 
-For any sake, read Unreal.nfo and read doc/faq before asking questions
- 
-NOTE: If the code is changed in any way, or the version string is changed, 
-      we do _NOT_ support the product, except if you got explicit permission
-      from one of the UnrealIRCd coders. If it fails and you messed with it, 
-      you can't blame noone but yourself. Also, non-official UnrealIRCd/32 
-      builds (if it doesn't say "geniune" in the display) are _NOT_
-      supported.
-
--Stskeeps (Head coder of UnrealIRCd)

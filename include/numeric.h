@@ -35,6 +35,10 @@
 #define	RPL_MYINFO           004
 #define RPL_PROTOCTL	     005
 
+#define RPL_REDIR	     10
+
+#define RPL_REMOTEPROTOCTL 105
+
 /*
  * Errors are in the range from 400-599 currently and are grouped by what
  * commands they come from.
@@ -112,6 +116,7 @@
 #define ERR_KILLDENY	     485
 
 #define ERR_HTMDISABLED		 486
+#define ERR_NOTFORUSERS	    487
 
 #define ERR_NOOPERHOST       491
 #define ERR_NOSERVICEHOST    492
@@ -230,6 +235,7 @@
 #define RPL_TRACENEWTYPE     208
 #define RPL_TRACECLASS       209
 
+#define RPL_STATSHELP	     210
 #define RPL_STATSLINKINFO    211
 #define RPL_STATSCOMMANDS    212
 #define RPL_STATSCLINE       213

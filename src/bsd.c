@@ -95,13 +95,10 @@ VOIDSIG dummy()
 **	*NOTE*	I nuked 'em.  At the load of current ircd servers
 **		you can't run with stuff that blocks. And we don't.
 */
-int  deliver_it(cptr, str, len)
-	aClient *cptr;
-	int  len;
-	char *str;
+int  deliver_it(aClient *cptr, char *str, int len)
 {
 	int  retval;
-	aClient *acpt = cptr->acpt;
+	aClient *acpt = cptr->listener;
 
 #ifdef	DEBUGMODE
 	writecalls++;
@@ -161,11 +158,9 @@ int  deliver_it(cptr, str, len)
 	{
 		writeb[0]++;
 # ifndef _WIN32
-		Debug((DEBUG_ERROR, "write error (%s) to %s",
-		    sys_errlist[errno], cptr->name));
+		Debug((DEBUG_ERROR, "write error (%s) to %s", sys_errlist[errno], cptr->name));
 # else
-		Debug((DEBUG_ERROR, "write error (%s) to %s",
-		    sys_errlist[WSAGetLastError()], cptr->name));
+                Debug((DEBUG_ERROR, "write error (%s) to %s", "", cptr->name));
 # endif
 
 	}

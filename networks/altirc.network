@@ -1,71 +1,19 @@
-ver^2.2
-#
-# Network Configuration File Template
-# -----------------------------------------
-#  Added-at:     <11> <09> <1999> <14:32> GMT
-#  Author:       <Kerjin> Steve>)
-#  E-Mail:       <kerjin@alternativenet.org>
-#  $Id$
-# -----------------------------------------
-# This is a template so you can create your own network configuration files
-# Just follow the instructions and it will prolly work ;)
-# 0 = No   1 = Yes
-# -------------------------------------------------------
-#
-# These two specify the name of the IRC network, set the same in both fields
-Network >..........: AltNet IRC
-Set ircnetwork ....: AltNet IRC
-
-# This is where your DNS pool is (like irc.dal.net)
-Set defserv .......: irc.alternativenet.org
-
-# This is the name of your Services Server
-Set SERVICES_NAME .: services.alternativenet.org
-
-# This is the virtual hostname IRCops will get if iNAH option is enabled
-# on oper up
-Set oper_host .....: ircop.alternativenet.org
-
-# This is the virtual hostname Server Admins will get if iNAH option is enabled
-# on oper up
-Set admin_host ....: admin.alternativenet.org
-
-# This is the virtual hostname Local IRCops will get if iNAH option is enabled
-# on oper up
-
-Set locop_host ....: locop.alternativenet.org
-
-# This is the virtual hostname Services Operators/Admins will get
-# if iNAH option is enabled on oper up
-
-Set sadmin_host ...: serviceop.alternativenet.org
-
-# This is the virtual hostname NetAdmins will get
-# if iNAH option is enabled on oper up
-
-Set netadmin_host .: netadmin.alternativenet.org
-
-# This is the virtual hostname CoAdmins will get
-# if iNAH option is enabled on oper up
-Set coadmin_host ..: coadmin.alternativenet.org
-
-
-# This is the virtual hostname TechAdmins will get
-# if iNAH option is enabled on oper up
-Set techadmin_host : techadmin.alternativenet.org
-
-# This is the prefix of the hidden host (cloaking) hostname
-Set hidden_host ...: altirc
-# This is the domain of the IRC network
-Set netdomain .....: alternativenet.org
-# This is where people can go for help
-Set helpchan ......: #AltNetHelp
-# This is the name of the stats server
-Set STATS_SERVER ..: statistics.alternativenet.org
-# -- Not in use--
-Set HUB ...........: 1
-# This enables the auto-setting of f.x @netadmin.network.net 
-# on oper up
-Set iNAH ..........: 1
-# -- Not in use but still here --
-Set net_quit ......: alt
+set {
+	network-name		"AltNet IRC";
+	default-server		"irc.alternativenet.org";
+	services-server		"services.alternativenet.org";
+	stats-server		"statistics.alternativenet.org";
+	help-channel		"#AltNetHelp";
+	hiddenhost-prefix	"altirc";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"locop.alternativenet.org";
+		global		"ircop.alternativenet.org";
+		coadmin		"coadmin.alternativenet.org";
+		admin		"admin.alternativenet.org";
+		servicesadmin	"serviceop.alternativenet.org";
+		techadmin	"techadmin.alternativenet.org";
+		netadmin	"netadmin.alternativenet.org";
+		host-on-oper-up	"on";
+	};
+};

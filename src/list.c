@@ -64,8 +64,9 @@ void outofmemory();
 int  flinks = 0;
 int  freelinks = 0;
 Link *freelink = NULL;
-
-
+Member *freemember = NULL;
+Membership *freemembership = NULL;
+MembershipL *freemembershipL = NULL;
 int  numclients = 0;
 
 void initlists()
@@ -77,7 +78,6 @@ void initlists()
 	bzero((char *)&servs, sizeof(servs));
 	bzero((char *)&links, sizeof(links));
 	bzero((char *)&classs, sizeof(classs));
-	bzero((char *)&aconfs, sizeof(aconfs));
 #endif
 }
 
@@ -138,13 +138,10 @@ aClient *make_client(from, servr)
 	{
 		cptr->since = cptr->lasttime =
 		    cptr->lastnick = cptr->firsttime = TStime();
-		cptr->confs = NULL;
+		cptr->class = NULL;
 		cptr->sockhost[0] = '\0';
 		cptr->buffer[0] = '\0';
 		cptr->authfd = -1;
-#ifdef SOCKSPORT
-		cptr->socksfd = -1;
-#endif
 	}
 	return (cptr);
 }
@@ -235,19 +232,11 @@ void free_user(user, cptr)
 		 */
 		if (user->joined || user->refcnt < 0 ||
 		    user->invited || user->channel)
-#ifdef DEBUGMODE
-			dumpcore("%#x user (%s!%s@%s) %#x %#x %#x %d %d",
-			    cptr, cptr ? cptr->name : "<noname>",
-			    user->username, user->realhost, user,
-			    user->invited, user->channel, user->joined,
-			    user->refcnt);
-#else
 			sendto_ops("* %#x user (%s!%s@%s) %#x %#x %#x %d %d *",
 			    cptr, cptr ? cptr->name : "<noname>",
 			    user->username, user->realhost, user,
 			    user->invited, user->channel, user->joined,
 			    user->refcnt);
-#endif
 		MyFree((char *)user);
 #ifdef	DEBUGMODE
 		users.inuse--;
@@ -297,6 +286,7 @@ void remove_client_from_list(cptr)
 		add_history(cptr, 0);
 		off_history(cptr);	/* Remove all pointers to cptr */
 	}
+	
 	if (cptr->user)
 		(void)free_user(cptr->user, cptr);
 	if (cptr->serv)
@@ -350,20 +340,6 @@ Link *find_user_link(lp, ptr)
 		while (lp)
 		{
 			if (lp->value.cptr == ptr)
-				return (lp);
-			lp = lp->next;
-		}
-	return NULL;
-}
-
-Link *find_channel_link(lp, ptr)
-	Link *lp;
-	aChannel *ptr;
-{
-	if (ptr)
-		while (lp)
-		{
-			if (lp->value.chptr == ptr)
 				return (lp);
 			lp = lp->next;
 		}
@@ -492,83 +468,6 @@ void free_class(tmp)
 #endif
 }
 
-aSqlineItem *make_sqline()
-{
-	aSqlineItem *asqline;
-
-	asqline = (struct SqlineItem *)MyMalloc(sizeof(aSqlineItem));
-	asqline->next = NULL;
-	asqline->sqline = asqline->reason = NULL;
-
-	return (asqline);
-}
-
-aConfItem *make_conf()
-{
-	aConfItem *aconf;
-
-	aconf = (struct ConfItem *)MyMalloc(sizeof(aConfItem));
-#ifdef	DEBUGMODE
-	aconfs.inuse++;
-#endif
-	bzero((char *)&aconf->ipnum, sizeof(struct IN_ADDR));
-	aconf->next = NULL;
-	aconf->host = aconf->passwd = aconf->name = NULL;
-	aconf->status = CONF_ILLEGAL;
-	aconf->clients = 0;
-	aconf->port = 0;
-	aconf->hold = 0;
-	aconf->options = 0;
-	Class(aconf) = 0;
-	return (aconf);
-}
-
-void delist_conf(aconf)
-	aConfItem *aconf;
-{
-	if (aconf == conf)
-		conf = conf->next;
-	else
-	{
-		aConfItem *bconf;
-
-		for (bconf = conf; aconf != bconf->next; bconf = bconf->next)
-			;
-		bconf->next = aconf->next;
-	}
-	aconf->next = NULL;
-}
-
-void free_sqline(asqline)
-	aSqlineItem *asqline;
-{
-#ifndef NEWDNS
-	del_queries((char *)asqline);
-#endif /*NEWDNS*/
-	MyFree(asqline->sqline);
-	MyFree(asqline->reason);
-	MyFree((char *)asqline);
-	return;
-}
-
-void free_conf(aconf)
-	aConfItem *aconf;
-{
-#ifndef NEWDNS
-	del_queries((char *)aconf);
-#endif /*NEWDNS*/
-	MyFree(aconf->host);
-	if (aconf->passwd)
-		bzero(aconf->passwd, strlen(aconf->passwd));
-	MyFree(aconf->passwd);
-	MyFree(aconf->name);
-	MyFree((char *)aconf);
-#ifdef	DEBUGMODE
-	aconfs.inuse--;
-#endif
-	return;
-}
-
 #ifdef	DEBUGMODE
 void send_listinfo(cptr, name)
 	aClient *cptr;
@@ -603,11 +502,6 @@ void send_listinfo(cptr, name)
 	    sendto_one(cptr, ":%s %d %s :Classes: inuse: %d(%d)",
 	    me.name, RPL_STATSDEBUG, name, classs.inuse,
 	    tmp = classs.inuse * sizeof(aClass));
-	mem += tmp;
-	inuse += classs.inuse,
-	    sendto_one(cptr, ":%s %d %s :Confs: inuse: %d(%d)",
-	    me.name, RPL_STATSDEBUG, name, aconfs.inuse,
-	    tmp = aconfs.inuse * sizeof(aConfItem));
 	mem += tmp;
 	inuse += aconfs.inuse,
 	    sendto_one(cptr, ":%s %d %s :Totals: inuse %d %d",

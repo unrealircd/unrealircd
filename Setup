@@ -17,7 +17,7 @@ fi
 echo "Press enter to proceed to compiling..."
 read cc
 make
-echo "Press enter to proceed to ircd.conf making..."
+echo "Press enter to proceed to unrealircd.conf making..."
 read cc
 ./makeconf
 echo "Press enter to proceed to network configuration..."
@@ -31,7 +31,5 @@ read cc
 if [ "$cc" == "no" ] ; then
 	./makenet
 fi
-echo "Press enter to proceed to dynamic ircd configuration..."
-read cc
-pico unrealircd.conf
-echo "You should be able to run UnrealIRCd using ./ircd now".
+echo "Now just edit your unrealircd.conf and you should be ready to run"
+echo "UnrealIRCd with ./ircd"

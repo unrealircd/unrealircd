@@ -19,7 +19,7 @@
 # change this to the mail address to mail output to:
 MAIL=me
 # change this to the directory you run your ircd from:
-dir="../"
+dir="../src"
 
 # change this to the name of your ircd's file in that directory:
 ircdexe="ircd"

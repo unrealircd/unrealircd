@@ -28,8 +28,13 @@
 
 typedef struct zNetwork aNetwork;
 struct zNetwork {
+	long	key;
+	long	key2;
+	long	key3;
+	long	keycrc;
 	unsigned x_inah:1;
 	char *x_ircnetwork;
+	char *x_ircnet005;
 	char *x_defserv;
 	char *x_services_name;
 	char *x_oper_host;
@@ -41,6 +46,9 @@ struct zNetwork {
 	char *x_techadmin_host;
 	char *x_hidden_host;
 	char *x_netdomain;
+	char *x_www_site;
+	char *x_ftp_site;
+	char *x_prefix_quit;
 	char *x_helpchan;
 	char *x_stats_server;
 };
@@ -59,11 +67,12 @@ struct zConfiguration {
 	unsigned allow_chatops:1;
 	unsigned webtv_support:1;
 	unsigned no_oper_hiding:1;
-/*	long		nospoof_seed01;
-	long		nospoof_seed02; */
+	unsigned ident_check:1;
 	long host_timeout;
 	int  host_retries;
+	char *name_server;
 	char *kline_address;
+	long conn_modes;
 	char *include;
 	char *domainname;
 	char *domainmask;	/* '*' + domainname */
@@ -86,6 +95,7 @@ extern aConfiguration iConf;
 #define MODE_X				iConf.mode_x
 #define MODE_I				iConf.mode_i
 #define MODE_STRIPWORDS			iConf.mode_stripbadwords
+#define CONN_MODES			iConf.conn_modes
 #define TRUEHUB				iConf.truehub
 #define SHOWOPERS			iConf.showopers
 #define KILLDIFF			iConf.killdiff
@@ -99,8 +109,15 @@ extern aConfiguration iConf;
 #define OPER_AUTO_JOIN_CHANS		iConf.oper_auto_join_chans
 #define HOST_TIMEOUT			iConf.host_timeout
 #define HOST_RETRIES			iConf.host_retries
+#define SOCKSBANMSG			iConf.socksbanmessage
+#define SOCKSQUITMSG			iConf.socksquitmessage
+#define SOCKSBANTIME			iConf.socksbantime
+#define NAME_SERVER			iConf.name_server
+#define IDENT_CHECK			iConf.ident_check
+
 
 #define ircnetwork			iConf.network.x_ircnetwork
+#define ircnet005			iConf.network.x_ircnet005
 #define defserv				iConf.network.x_defserv
 #define SERVICES_NAME		iConf.network.x_services_name
 #define oper_host			iConf.network.x_oper_host
@@ -112,8 +129,16 @@ extern aConfiguration iConf;
 #define techadmin_host		iConf.network.x_techadmin_host
 #define hidden_host			iConf.network.x_hidden_host
 #define netdomain			iConf.network.x_netdomain
+#define www_site			iConf.network.x_www_site
+#define ftp_site			iConf.network.x_ftp_site
 #define helpchan			iConf.network.x_helpchan
 #define STATS_SERVER		iConf.network.x_stats_server
 #define iNAH				iConf.network.x_inah
-#define net_quit			iConf.network.x_net_quit
+#define prefix_quit			iConf.network.x_prefix_quit
 #define STOPSE				iConf.network.x_se
+
+
+#define CLOAK_KEY1			iConf.network.key
+#define CLOAK_KEY2			iConf.network.key2
+#define CLOAK_KEY3			iConf.network.key3
+#define CLOAK_KEYCRC			iConf.network.keycrc

@@ -172,7 +172,6 @@ void ban_flooder(aClient *cptr)
 	};
 
 	strcpy(hostip, (char *)inetntoa((char *)&cptr->ip));
-//	exit_client(cptr, cptr, &me, "Flooding");
 
 	tkllayer[4] = hostip;
 	tkllayer[5] = me.name;
@@ -190,10 +189,9 @@ void ban_flooder(aClient *cptr)
  *
  * NOTE: parse() should not be called recusively by any other fucntions!
  */
-int  parse(cptr, buffer, bufend, mptr)
+int  parse(cptr, buffer, bufend)
 	aClient *cptr;
 	char *buffer, *bufend;
-	struct Message *mptr;
 {
 	aClient *from = cptr;
 	char *ch, *s;
@@ -203,14 +201,12 @@ int  parse(cptr, buffer, bufend, mptr)
 	time_t then, ticks;
 	int  retval;
 #endif
-	struct Message *bmptr;
+	aCommand *cmptr = NULL;
 
 	Debug((DEBUG_ERROR, "Parsing: %s (from %s)", buffer,
 	    (*cptr->name ? cptr->name : "*")));
 	if (IsDead(cptr))
 		return 0;
-
-//	sendto_realops("Debug: parse(): %s", buffer);
 
 	if ((cptr->receiveK >= 4) && IsUnknown(cptr))
 	{
@@ -320,7 +316,7 @@ int  parse(cptr, buffer, bufend, mptr)
 	if (len == 3 &&
 	    isdigit(*ch) && isdigit(*(ch + 1)) && isdigit(*(ch + 2)))
 	{
-		mptr = NULL;
+		cmptr = NULL;
 		numeric = (*ch - '0') * 100 + (*(ch + 1) - '0') * 10
 		    + (*(ch + 2) - '0');
 		paramcount = MAXPARA;
@@ -328,45 +324,20 @@ int  parse(cptr, buffer, bufend, mptr)
 	}
 	else
 	{
+		int flags = 0;
 		if (s)
 			*s++ = '\0';
+		if (!IsRegistered(from))
+			flags |= M_UNREGISTERED;
+		if (IsPerson(from))
+			flags |= M_USER;
+		if (IsServer(from))
+			flags |= M_SERVER;
+		if (IsShunned(from))
+			flags |= M_SHUN;
+		cmptr = find_Command(ch, IsServer(cptr) ? 1 : 0, flags);
 
-		/* xx or x = token :P */
-		if ((strlen(ch) < 3) && IsServer(cptr))
-		{
-			token = 1;
-		}
-		else
-		{
-			token = 0;
-		}
-		bmptr = mptr;
-
-		/* run a fast token search through if token */
-		mfound = 0;
-		if (token == 1)
-		{
-			for (; mptr->cmd; mptr++)
-			{
-				if (strcmp(mptr->token, ch) == 0)
-				{
-					mfound = 1;
-					break;
-				}
-			}
-		}
-
-		/* no token match .. grr :P */
-		if (mfound == 0)
-		{
-			mptr = bmptr;
-			for (; mptr->cmd; mptr++)
-			{
-				if (mycmp(mptr->cmd, ch) == 0)
-					break;
-			}
-		}
-		if (!mptr->cmd)
+		if (!cmptr)
 		{
 			/*
 			   ** Note: Give error message *only* to recognized
@@ -379,6 +350,14 @@ int  parse(cptr, buffer, bufend, mptr)
 			   ** Hm, when is the buffer empty -- if a command
 			   ** code has been found ?? -Armin
 			 */
+			if (!IsRegistered(cptr)) {
+				sendto_one(from, ":%s %d %s :You have not registered",
+				    me.name, ERR_NOTREGISTERED, ch);
+				return -1;
+			}
+			if (IsShunned(cptr))
+				return -1;
+				
 			if (buffer[0] != '\0')
 			{
 				if (IsPerson(from))
@@ -392,17 +371,27 @@ int  parse(cptr, buffer, bufend, mptr)
 			ircstp->is_unco++;
 			return (-1);
 		}
-		paramcount = mptr->parameters;
+		if (cmptr->flags != 0) { /* temporary until all commands are updated */
+		if ((flags & M_USER) && !(cmptr->flags & M_USER))
+		{
+			sendto_one(cptr, rpl_str(ERR_NOTFORUSERS), me.name,
+					from->name, cmptr->cmd);
+			return -1;
+		}
+		if ((flags & M_SERVER) && !(cmptr->flags & M_SERVER))
+			return -1;
+		}
+		paramcount = cmptr->parameters;
 		i = bufend - ch;	/* Is this right? -Donwulff */
-		mptr->bytes += i;
+		cmptr->bytes += i;
 		/* Changed this whole lag generating crap .. 
 		 * We only generate fake lag in HTM ..
 		 * --Stskeeps
 		*/
-		if (!IsServer(cptr) && !IsOper(cptr))
+		if (!IsServer(cptr) && !IsOper(cptr) && !(cmptr->flags & M_NOLAG))
 		{
-			if (lifesux)
-				cptr->since += (2 + i / 90);
+			cptr->since += (1 + i /90);
+			
 		}		
 	}
 	/*
@@ -448,46 +437,24 @@ int  parse(cptr, buffer, bufend, mptr)
 		}
 	}
 	para[++i] = NULL;
-	if (mptr == NULL)
+	if (cmptr == NULL)
 		return (do_numeric(numeric, cptr, from, i, para));
-	/* now, lets make sure they use a legit commnd... -nikb */
-	/* There is code in s_serv.c for ADMIN and VERSION and
-	 * in s_user.c for NOTICE to limit commands by 
-	 * unregistered users. -Studded */
-	if (IsShunned(cptr) && IsRegistered(cptr))
-		if ((mptr->func != m_admin) && (mptr->func != m_quit)
-		    && (mptr->func != m_pong))
-			return -4;
-
-	if ((!IsRegistered(cptr)) &&
-	    (((mptr->func != m_user) && (mptr->func != m_nick) &&
-	    (mptr->func != m_server) && (mptr->func != m_pong) &&
-	    (mptr->func != m_pass) && (mptr->func != m_quit) &&
-	    (mptr->func != m_protoctl) && (mptr->func != m_error) &&
-	    (mptr->func != m_admin) && (mptr->func != m_version)
-	    )))
-	{
-		sendto_one(from, ":%s %d %s :You have not registered",
-		    me.name, ERR_NOTREGISTERED, ch);
-		return -1;
-	}
-
-	mptr->count++;
-	if (IsRegisteredUser(cptr) && mptr->func == m_private)
+	cmptr->count++;
+	if (IsRegisteredUser(cptr) && cmptr->func == m_private)
 		from->user->last = TStime();
 
 #ifndef DEBUGMODE
-	return (*mptr->func) (cptr, from, i, para);
+	return (*cmptr->func) (cptr, from, i, para);
 #else
 	then = clock();
-	retval = (*mptr->func) (cptr, from, i, para);
+	retval = (*cmptr->func) (cptr, from, i, para);
 	if (retval != FLUSH_BUFFER)
 	{
 		ticks = (clock() - then);
 		if (IsServer(cptr))
-			mptr->rticks += ticks;
+			cmptr->rticks += ticks;
 		else
-			mptr->lticks += ticks;
+			cmptr->lticks += ticks;
 		cptr->cputime += ticks;
 	}
 

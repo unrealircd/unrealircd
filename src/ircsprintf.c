@@ -237,7 +237,7 @@ const char atoi_tab[4000] = {
 /* *INDENT-ON* */
 
 static char scratch_buffer[32];
-#ifndef DEBUGMODE
+
 /*
  * sprintf_irc
  *
@@ -472,5 +472,3 @@ char *ircsprintf(char *str, const char *format, ...)
 	va_end(vl);
 	return ret;
 }
-
-#endif

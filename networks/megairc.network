@@ -1,31 +1,19 @@
-ver^2.2
-#
-# MegaIRC.net Network Configuration File
-# -----------------------------------------
-#  Added-at:     1 August 1999 00:00 GMT
-#  Author:       NonMortal (Luke Slotwinski)
-#  E-Mail:       NonMortal@MegaIRC.Com
-#  $Id$
-# -----------------------------------------
-#
-
-Network >..........: MegaIRC
-Set ircnetwork ....: MegaIRC
-Set defserv .......: irc.MegaIRC.Net
-Set SERVICES_NAME .: Services.MegaIRC.Net
-Set oper_host .....: Ircop.MegaIRC.Net
-Set admin_host ....: Server-Admin.MegaIRC.Net
-Set locop_host ....: Local-Ircop.MegaIRC.Net
-Set sadmin_host ...: SOP.MegaIRC.Net
-Set netadmin_host .: NetAdmin.MegaIRC.Net
-Set coadmin_host ..: Server-CoAdmin.MegaIRC.Net
-Set techadmin_host : TechAdmin.MegaIRC.Net
-Set hidden_host ...: mega
-Set netdomain .....: MegaIRC.Net
-Set helpchan ......: #helpdesk
-Set STATS_SERVER ..: Stats.MegaIRC.Net
-Set HUB ...........: 1
-Set iNAH ..........: 1
-Set net_quit ......: MI
-# To protect people from using normal edition Unreal to link to MegaIRC
-Set STOPSE ........: 1
+set {
+	network-name		"MegaIRC";
+	default-server		"irc.MegaIRC.Net";
+	services-server		"Services.MegaIRC.Net";
+	stats-server		"Stats.MegaIRC.Net";
+	help-channel		"#helpdesk";
+	hiddenhost-prefix	"mega";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"Local-Ircop.MegaIRC.Net";
+		global		"Ircop.MegaIRC.Net";
+		coadmin		"Server-CoAdmin.MegaIRC.Net";
+		admin		"Server-Admin.MegaIRC.Net";
+		servicesadmin	"SOP.MegaIRC.Net";
+		techadmin	"TechAdmin.MegaIRC.Net";
+		netadmin	"NetAdmin.MegaIRC.Net";
+		host-on-oper-up	"on";
+	};
+};

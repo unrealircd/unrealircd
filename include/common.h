@@ -37,6 +37,9 @@
 #ifdef	PARAMH
 #include <sys/param.h>
 #endif
+#if defined(__OpenBSD__) || defined(_SOLARIS)
+#include "sys.h"
+#endif
 
 #ifndef PROTO
 #if __STDC__
@@ -90,7 +93,6 @@ void free();
 #endif
 #endif
 
-
 #define TS time_t
 
 extern int match PROTO((char *, char *));
@@ -123,7 +125,7 @@ extern int inet_netof PROTO((struct IN_ADDR));
 #endif
 
 int  global_count, max_global_count;
-extern char *myctime PROTO((TS));
+extern char *myctime PROTO((time_t));
 extern char *strtoken PROTO((char **, char *, char *));
 
 #define PRECISE_CHECK
@@ -193,16 +195,30 @@ extern unsigned char char_atribs[];
 #define ispunct(c) (!(char_atribs[(u_char)(c)]&(CNTRL|ALPHA|DIGIT)))
 #endif
 
-#ifndef DMALLOC
-extern char *MyMalloc();
-#else
+#ifndef MALLOCD
+#define MyFree free
 #define MyMalloc malloc
 #define MyRealloc realloc
-#define MyFree free
+#else
+#define MyFree(x) ircd_log("%s:%i: free %02x", __FILE__, __LINE__, x); free(x)
+#define MyMalloc(x) StsMalloc(x, __FILE__, __LINE__)
+#define MyRealloc realloc
+static char *StsMalloc(size_t size, char *file, long line)
+{
+	void *x;
+	
+	x = malloc(size);
+	ircd_log("%s:%i: malloc %02x", file, line, x);	
+	return x;
+}
+
 #endif
-extern void flush_connections();
+
 extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 
+#define EVENT_HASHVALUE 337
+#define EVENT_CHECKIT match
+#define EVENT_CRC unreallogo
 /*
  * Protocol support text.  DO NO CHANGE THIS unless you know what
  * you are doing.
@@ -217,11 +233,11 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 /* IRCu/Hybrid/Unreal way now :) -Stskeeps */
 
 #define PROTOCTL_CLIENT           \
-		":%s 005 %s"      \
 		" MAP"            \
 		" KNOCK"          \
 		" SAFELIST"       \
 		" HCN"	          \
+		" WALLCHOPS"	  \
 		" WATCH=%i"       \
 		" SILENCE=%i"     \
 		" MODES=%i"       \
@@ -232,6 +248,8 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 		" KICKLEN=%i"     \
 		" CHANTYPES=%s"    \
 		" PREFIX=%s"     \
+		" CHANMODES=%s,%s,%s,%s" \
+		" NETWORK=%s" \
 		" :are supported by this server"
 
 #define PROTOCTL_PARAMETERS MAXWATCH, \
@@ -243,8 +261,13 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                             TOPICLEN, \
                             TOPICLEN, \
                             "#",      \
-                            "(ohv)@%+"
-
+                            "(ohv)@%+", \
+                            "ohvbeqa", \
+                            "k", \
+			    "lfL", \
+			    "psmntirRcOAQKVHGCuzN", \
+			    ircnet005
+			    
 /* Server-Server PROTOCTL -Stskeeps */
 #define PROTOCTL_SERVER "NOQUIT" \
                         " TOKEN" \
@@ -265,6 +288,11 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
  */
 extern int DisplayString(HWND hWnd, char *InBuf, ...);
 #undef	strerror
+// winlocal
+#else
+typedef int SOCKET;
+#define INVALID_SOCKET -1
+// winlocal
 #endif
 
 #if defined(__FreeBSD__) || defined(__APPLE__)

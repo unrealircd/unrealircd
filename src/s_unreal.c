@@ -1,5 +1,4 @@
 /************************************************************************
-/************************************************************************
  *   IRC - Internet Relay Chat, s_unreal.c
  *   (C) 1999-2000 Carsten Munk (Techie/Stskeeps) <stskeeps@tspre.org>
  *
@@ -27,9 +26,11 @@
 #include "numeric.h"
 #include "msg.h"
 #include "channel.h"
-#include "userload.h"
 #include "version.h"
 #include <time.h>
+#ifdef _WIN32
+#include <sys/timeb.h>
+#endif
 #include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,608 +53,16 @@ extern float highest_rate;
 extern float highest_rate2;
 extern int lifesux;
 extern int noisy_htm;
-extern int LCF;
+extern time_t LCF;
 extern int LRV;
 #endif
-/*
-   m_sethost() added by Stskeeps (30/04/1999)
-               (modified at 15/05/1999) by Stskeeps | Potvin
-   :prefix SETHOST newhost
-   parv[0] - sender
-   parv[1] - newhost
-   D: this performs a mode +x function to set hostname
-      to whatever you want to (if you are IRCop) **efg**
-      Very experimental currently
-   A: Remember to see server_etabl ;)))))
-      *evil fucking grin*
-*/
-int  m_sethost(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
-{
-	char *vhost, *s;
-#ifndef DISABLE_USERMOD
-	int  permit = 0;	// 0 = opers(glob/locop) 1 = global oper 2 = not MY clients.. 
-#else
-	int  permit = 2;
-#endif
-	int  legalhost = 1;	/* is legal characters? */
-
-
-	if (!MyConnect(sptr))
-		goto have_permit1;
-	switch (permit)
-	{
-	  case 0:
-		  if (!IsAnOper(sptr))
-		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			      parv[0]);
-			  return 0;
-		  }
-		  break;
-	  case 1:
-		  if (!IsOper(sptr))
-		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			      parv[0]);
-			  return 0;
-		  }
-		  break;
-	  case 2:
-		  if (MyConnect(sptr))
-		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			      parv[0]);
-			  return 0;
-		  }
-	  default:
-		  sendto_ops_butone(IsServer(cptr) ? cptr : NULL, sptr,
-		      ":%s WALLOPS :[SETHOST] Somebody fixing this corrupted server? !(0|1) !!!",
-		      me.name);
-		  break;
-	}
-
-      have_permit1:
-	if (parc < 2)
-		vhost = NULL;
-	else
-		vhost = parv[1];
-
-	/* bad bad bad boys .. ;p */
-	if (vhost == NULL)
-	{
-		if (MyConnect(sptr))
-		{
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** Syntax: /SetHost <new host>",
-			    me.name, parv[0]);
-		}
-		return;
-	}
-	/* uh uh .. too small */
-	if (strlen(parv[1]) < 1)
-	{
-		if (MyConnect(sptr))
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** /SetHost Error: Atleast write SOMETHING that makes sense (':' string)",
-			    me.name, sptr->name);
-	}
-	/* too large huh? */
-	if (strlen(parv[1]) > (HOSTLEN - 1))
-	{
-		/* ignore us as well if we're not a child of 3k */
-		if (MyConnect(sptr))
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** /SetHost Error: Hostnames are limited to %i characters.",
-			    me.name, sptr->name, HOSTLEN);
-		return;
-	}
-
-	/* illegal?! */
-	for (s = vhost; *s; s++)
-	{
-		if (!isallowed(*s))
-		{
-			legalhost = 0;
-		}
-	}
-
-	if (legalhost == 0)
-	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** /SetHost Error: A hostname may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them",
-		    me.name, parv[0]);
-		return 0;
-	}
-
-	/* hide it */
-	sptr->umodes |= UMODE_HIDE;
-	sptr->umodes |= UMODE_SETHOST;
-	/* get it in */
-	if (sptr->user->virthost)
-		MyFree(sptr->user->virthost);
-	sptr->user->virthost = MyMalloc(strlen(vhost) + 1);
-	ircsprintf(sptr->user->virthost, "%s", vhost);
-	/* spread it out */
-	sendto_serv_butone_token(cptr, sptr->name, MSG_SETHOST, TOK_SETHOST,
-	    "%s", parv[1]);
-
-	if (MyConnect(sptr))
-	{
-		sendto_one(sptr, ":%s MODE %s :+xt", sptr->name, sptr->name);
-		sendto_one(sptr,
-		    ":%s NOTICE %s :Your nick!user@host-mask is now (%s!%s@%s) - To disable it type /mode %s -x",
-		    me.name, parv[0], parv[0], sptr->user->username, vhost,
-		    parv[0]);
-	}
-	return 0;
-}
-
-/* 
- * m_chghost - 12/07/1999 (two months after I made SETIDENT) - Stskeeps
- * :prefix CHGHOST <nick> <new hostname>
- * parv[0] - sender
- * parv[1] - nickname
- * parv[2] - hostname
- *
-*/
-
-int  m_chghost(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
-{
-	aClient *acptr;
-	char *s;
-	int  legalhost = 1;
-
-#ifdef DISABLE_USERMOD
-	if (MyClient(sptr))
-	{
-		sendto_one(sptr, ":%s NOTICE %s :*** The /chghost command is disabled on this server", me.name, sptr->name);
-		return 0;
-	}
-#endif
-
-	if (MyClient(sptr))
-		if (!IsAnOper(sptr))
-		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			    parv[0]);
-			return 0;
-
-		}
-
-	if (parc < 3)
-	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** /ChgHost syntax is /ChgHost <nick> <newhost>",
-		    me.name, sptr->name);
-		return 0;
-	}
-
-	if (strlen(parv[2]) < 1)
-	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** Write atleast something to change the host to!",
-		    me.name, sptr->name);
-		return 0;
-	}
-
-	if (strlen(parv[2]) > (HOSTLEN - 1))
-	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** ChgHost Error: Too long hostname!!",
-		    me.name, sptr->name);
-		return 0;
-	}
-
-	/* illegal?! */
-	for (s = parv[2]; *s; s++)
-	{
-		if (!isallowed(*s))
-		{
-			legalhost = 0;
-		}
-	}
-
-	if (legalhost == 0)
-	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** /ChgHost Error: A hostname may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them",
-		    me.name, parv[0]);
-		return 0;
-	}
-
-	if ((acptr = find_person(parv[1], NULL)))
-	{
-		if (!IsULine(sptr))
-		{
-			sendto_umode(UMODE_EYES,
-			    "%s changed the virtual hostname of %s (%s@%s) to be %s",
-			    sptr->name, acptr->name, acptr->user->username,
-			    acptr->user->realhost, parv[2]);
-		}
-		acptr->umodes |= UMODE_HIDE;
-		acptr->umodes |= UMODE_SETHOST;
-		sendto_serv_butone_token(cptr, sptr->name,
-		    MSG_CHGHOST, TOK_CHGHOST, "%s %s", acptr->name, parv[2]);
-		if (acptr->user->virthost)
-			MyFree(acptr->user->virthost);
-		acptr->user->virthost = MyMalloc(strlen(parv[2]) + 1);
-		ircsprintf(acptr->user->virthost, "%s", parv[2]);
-		return 0;
-	}
-	else
-	{
-		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name,
-		    parv[1]);
-		return 0;
-	}
-	return 0;
-}
-
-/* 
- * m_chgident - 12/07/1999 (two months after I made SETIDENT) - Stskeeps
- * :prefix CHGHOST <nick> <new identname>
- * parv[0] - sender
- * parv[1] - nickname
- * parv[2] - identname
- *
-*/
-
-int  m_chgident(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
-{
-	aClient *acptr;
-	char *s;
-	int  legalident = 1;
-
-#ifdef DISABLE_USERMOD
-	if (MyClient(sptr))
-	{
-		sendto_one(sptr, ":%s NOTICE %s :*** The /chgident command is disabled on this server", me.name, sptr->name);
-		return 0;
-	}
-#endif
-
-	if (MyClient(sptr))
-		if (!IsAnOper(sptr))
-		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			    parv[0]);
-			return 0;
-
-		}
-
-	if (parc < 3)
-	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** /ChgIdent syntax is /ChgIdent <nick> <newident>",
-		    me.name, sptr->name);
-		return 0;
-	}
-
-	if (strlen(parv[2]) < 1)
-	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** Write atleast something to change the ident to!",
-		    me.name, sptr->name);
-		return 0;
-	}
-
-	if (strlen(parv[2]) > (USERLEN - 1))
-	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** ChgIdent Error: Too long ident!!",
-		    me.name, sptr->name);
-		return 0;
-	}
-
-	/* illegal?! */
-	for (s = parv[2]; *s; s++)
-	{
-		if (!isallowed(*s))
-		{
-			legalident = 0;
-		}
-	}
-
-	if (legalident == 0)
-	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** /ChgIdent Error: A ident may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them",
-		    me.name, parv[0]);
-		return 0;
-	}
-
-	if ((acptr = find_person(parv[1], NULL)))
-	{
-		if (!IsULine(sptr))
-		{
-			sendto_umode(UMODE_EYES,
-			    "%s changed the virtual ident of %s (%s@%s) to be %s",
-			    sptr->name, acptr->name, acptr->user->username,
-			    (acptr->umodes & UMODE_HIDE ? acptr->
-			    user->realhost : acptr->user->realhost), parv[2]);
-		}
-		sendto_serv_butone_token(cptr, sptr->name,
-		    MSG_CHGIDENT,
-		    TOK_CHGIDENT, "%s %s", acptr->name, parv[2]);
-		ircsprintf(acptr->user->username, "%s", parv[2]);
-		return 0;
-	}
-	else
-	{
-		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name,
-		    parv[1]);
-		return 0;
-	}
-	return 0;
-}
-
-/* m_setident - 12/05/1999 - Stskeeps
- *  :prefix SETIDENT newident
- *  parv[0] - sender
- *  parv[1] - newident
- *  D: This will set your username to be <x> (like (/setident Root))
- *     (if you are IRCop) **efg*
- *     Very experimental currently
- * 	   Cloning of m_sethost at some points - so same authors ;P
-*/
-
-int  m_setident(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
-{
-
-	char *vident, *s;
-#ifndef DISABLE_USERMOD
-	int  permit = 0;	/* 0 = opers(glob/locop) 1 = global oper */
-#else
-	int  permit = 2;
-#endif
-	int  legalident = 1;	/* is legal characters? */
-	if (!MyConnect(sptr))
-		goto permit_2;
-	switch (permit)
-	{
-	  case 0:
-		  if (!IsAnOper(sptr))
-		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			      parv[0]);
-			  return 0;
-		  }
-		  break;
-	  case 1:
-		  if (!IsOper(sptr))
-		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			      parv[0]);
-			  return 0;
-		  }
-		  break;
-	  case 2:
-		  if (MyConnect(sptr))
-		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			      parv[0]);
-			  return 0;
-		  }
-		  break;
-	  default:
-		  sendto_ops_butone(IsServer(cptr) ? cptr : NULL, sptr,
-		      ":%s WALLOPS :[SETIDENT] Somebody fixing this corrupted server? !(0|1) !!!",
-		      me.name);
-		  break;
-	}
-      permit_2:
-	if (parc < 2)
-		vident = NULL;
-	else
-		vident = parv[1];
-
-	/* bad bad bad boys .. ;p */
-	if (vident == NULL)
-	{
-		if (MyConnect(sptr))
-		{
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** Syntax: /SetIdent <new host>",
-			    me.name, parv[0]);
-		}
-		return;
-	}
-	if (strlen(parv[1]) < 1)
-	{
-		if (MyConnect(sptr))
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** /SetIdent Error: Atleast write SOMETHING that makes sense (':' string)",
-			    me.name, sptr->name);
-	}
-
-	/* too large huh? */
-	if (strlen(vident) > (USERLEN - 1))
-	{
-		/* ignore us as well if we're not a child of 3k */
-		if (MyConnect(sptr))
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** /SetIdent Error: Usernames are limited to %i characters.",
-			    me.name, sptr->name, USERLEN);
-		return;
-	}
-
-	/* illegal?! */
-	for (s = vident; *s; s++)
-	{
-		if (!isallowed(*s))
-		{
-			legalident = 0;
-		}
-		if (*s == '~')
-			legalident = 1;
-
-	}
-
-	if (legalident == 0)
-	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** /SetIdent Error: A username may contain a-z, A-Z, 0-9, '-', '~' & '.' - Please only use them",
-		    me.name, parv[0]);
-		return 0;
-	}
-
-	/* get it in */
-	ircsprintf(sptr->user->username, "%s", vident);
-	/* spread it out */
-	sendto_serv_butone_token(cptr, sptr->name,
-	    MSG_SETIDENT, TOK_SETIDENT, "%s", parv[1]);
-
-	if (MyConnect(sptr))
-	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :Your nick!user@host-mask is now (%s!%s@%s) - To disable ident set change it manually by /setident'ing again",
-		    me.name, parv[0], parv[0], sptr->user->username,
-		    IsHidden(sptr) ? sptr->user->virthost : sptr->
-		    user->realhost);
-	}
-	return;
-}
-/* m_setname - 12/05/1999 - Stskeeps
- *  :prefix SETNAME :gecos
- *  parv[0] - sender
- *  parv[1] - gecos
- *  D: This will set your gecos to be <x> (like (/setname :The lonely wanderer))
-   yes it is experimental but anyways ;P
-    FREEDOM TO THE USERS! ;)
-*/
-
-int  m_setname(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
-{
-	if (parc < 2)
-		return;
-	if (strlen(parv[1]) > (REALLEN - 2))
-	{
-		if (MyConnect(sptr))
-		{
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** /SetName Error: \"Real names\" may maximum be %i characters of length",
-			    me.name, sptr->name, REALLEN);
-		}
-		return 0;
-	}
-
-	if (strlen(parv[1]) < 1)
-	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :Couldn't change realname - Nothing in parameter",
-		    me.name, sptr->name);
-		return 0;
-	}
-
-	/* set the new name before we check, but don't send to servers unless it is ok */
-	else
-		ircsprintf(sptr->info, "%s", parv[1]);
-
-	/* Check for n:lines here too */
-	if (!IsAnOper(sptr) && find_nline(sptr))
-	{
-		int  xx;
-		xx =
-		    exit_client(cptr, sptr, &me,
-		    "Your GECOS (real name) is banned from this server");
-		return xx;
-	}
-
-	sendto_serv_butone_token(cptr, sptr->name, MSG_SETNAME, TOK_SETNAME,
-	    ":%s", parv[1]);
-	if (MyConnect(sptr))
-		sendto_one(sptr,
-		    ":%s NOTICE %s :Your \"real name\" is now set to be %s - you have to set it manually to undo it",
-		    me.name, parv[0], parv[1]);
-
-	return 0;
-
-//      sendto_serv_butone(cptr, ":%s SETNAME %s", parv[0], parv[1]);
-	return 0;
-}
-
-/* m_sdesc - 15/05/1999 - Stskeeps
- *  :prefix SDESC
- *  parv[0] - sender
- *  parv[1] - description
- *  D: Sets server info if you are Server Admin (ONLINE)
-*/
-
-int  m_sdesc(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
-{
-	if (IsCoAdmin(sptr))
-		goto sdescok;
-	/* ignoring */
-	if (!IsAdmin(sptr))
-		return;
-      sdescok:
-
-	if (parc < 2)
-		return;
-
-	if (strlen(parv[1]) < 1)
-		if (MyConnect(sptr))
-		{
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** Nothing to change to (SDESC)",
-			    me.name, sptr->name);
-			return 0;
-		}
-	if (strlen(parv[1]) > (REALLEN - 1))
-	{
-		if (MyConnect(sptr))
-		{
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** /SDESC Error: \"Server info\" may maximum be %i characters of length",
-			    me.name, sptr->name, REALLEN);
-		}
-		return 0;
-	}
-
-	ircsprintf(sptr->srvptr->info, "%s", parv[1]);
-
-	sendto_serv_butone_token(cptr, sptr->name, MSG_SDESC, TOK_SDESC, ":%s",
-	    parv[1]);
-
-	if (MyConnect(sptr))
-	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :Your \"server description\" is now set to be %s - you have to set it manually to undo it",
-		    me.name, parv[0], parv[1]);
-		return 0;
-	}
-	sendto_ops("Server description for %s is now '%s' changed by %s",
-	    sptr->srvptr->name, sptr->srvptr->info, parv[0]);
-}
-
 
 /*
 ** m_admins (Admin chat only) -Potvin
 **      parv[0] = sender prefix
 **      parv[1] = message text
 */
-int  m_admins(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_admins(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *message;
 
@@ -690,10 +99,7 @@ int  m_admins(cptr, sptr, parc, parv)
 **      parv[0] = sender prefix
 **      parv[1] = message text
 */
-int  m_techat(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_techat(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *message;
 
@@ -721,8 +127,6 @@ int  m_techat(cptr, sptr, parc, parv)
 #ifdef ADMINCHAT
 	sendto_umode(UMODE_TECHADMIN, "*** Te-chat -- from %s: %s",
 	    parv[0], message);
-//        sendto_techat("from %s: %s", parv[0], message);
-//              sendto_achat(1,"from %s: %s", parv[0], message);
 #endif
 	return 0;
 }
@@ -731,10 +135,7 @@ int  m_techat(cptr, sptr, parc, parv)
 **      parv[0] = sender prefix
 **      parv[1] = message text
 */
-int  m_nachat(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_nachat(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *message;
 
@@ -774,10 +175,7 @@ int  m_nachat(cptr, sptr, parc, parv)
  * parv[1] = server to query
 */
 
-int  m_lag(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_lag(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 
 	if (MyClient(sptr))
@@ -847,22 +245,31 @@ void unrealmanual(void)
 
 static char *militime(char *sec, char *usec)
 {
+/* Now just as accurate on win as on linux -- codemastr */
+#ifndef _WIN32
 	struct timeval tv;
+#else
+	struct _timeb tv;
+#endif
 	static char timebuf[18];
 #ifndef _WIN32
 	gettimeofday(&tv, NULL);
 #else
-	/* win32 unreal cannot fix gettimeofday - therefore only 90% precise */
-	tv.tv_sec = TStime();
-	tv.tv_usec = 0;
+	_ftime(&tv);
 #endif
 	if (sec && usec)
 		ircsprintf(timebuf, "%ld",
-		    (tv.tv_sec - atoi(sec)) * 1000 + (tv.tv_usec -
-		    atoi(usec)) / 1000);
+#ifndef _WIN32
+		    (tv.tv_sec - atoi(sec)) * 1000 + (tv.tv_usec - atoi(usec)) / 1000);
+#else
+		    (tv.time - atoi(sec)) * 1000 + (tv.millitm - atoi(usec)) / 1000);
+#endif
 	else
+#ifndef _WIN32
 		ircsprintf(timebuf, "%ld %ld", tv.tv_sec, tv.tv_usec);
-
+#else
+		ircsprintf(timebuf, "%ld %ld", tv.time, tv.millitm);
+#endif
 	return timebuf;
 }
 
@@ -1007,37 +414,6 @@ int  m_rpong(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return 0;
 }
 /*
- * m_swhois
- * parv[1] = nickname
- * parv[2] = new swhois
- *
-*/
-
-int  m_swhois(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
-{
-	aClient *acptr;
-
-	if (!IsServer(sptr) && !IsULine(sptr))
-		return 0;
-	if (parc < 3)
-		return 0;
-
-	acptr = find_person(parv[1], (aClient *)NULL);
-	if (!acptr)
-		return 0;
-
-	if (acptr->user->swhois)
-		MyFree(acptr->user->swhois);
-	acptr->user->swhois = MyMalloc(strlen(parv[2]) + 1);
-	ircsprintf(acptr->user->swhois, "%s", parv[2]);
-	sendto_serv_butone_token(cptr, sptr->name,
-	   MSG_SWHOIS, TOK_SWHOIS, "%s :%s", parv[1], parv[2]);
-	return 0;
-}
-/*
 ** m_sendumode - Stskeeps
 **      parv[0] = sender prefix
 **      parv[1] = target
@@ -1047,10 +423,7 @@ int  m_swhois(cptr, sptr, parc, parv)
 **   :server.unreal.net SENDUMODE F :Client connecting at server server.unreal.net port 4141 usw..
 ** or for sending msgs to locops.. :P
 */
-int  m_sendumode(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *message;
 	char *p;
@@ -1137,10 +510,7 @@ int  m_sendumode(cptr, sptr, parc, parv)
 **      parv[2] = options
 */
 
-int  m_tsctl(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	time_t timediff;
 
@@ -1258,10 +628,7 @@ int  m_tsctl(cptr, sptr, parc, parv)
 
 
 #ifdef GUEST
-int m_guest (cptr, sptr, parc, parv)
-aClient *cptr, *sptr;
-int parc;
-char *parv[];
+int m_guest(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 int randnum;
 char guestnick[NICKLEN];
@@ -1281,18 +648,43 @@ m_nick(sptr,cptr,2,param);
 }
 #endif
 
-int  m_htm(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	int  x;
+	int  x = HUNTED_NOSUCH;
+	char *command, *param;
 	if (!IsOper(sptr))
 		return 0;
 
 #ifndef NO_FDLIST
 
-	if (!parv[1] || !MyClient(sptr))
+	switch(parc) {
+		case 1:
+			break;
+		case 2:
+			x = hunt_server(cptr, sptr, ":%s HTM %s", 1, parc, parv);
+			break;
+		case 3:
+			x = hunt_server(cptr, sptr, ":%s HTM %s %s", 1, parc, parv);
+			break;
+		default:
+			x = hunt_server(cptr, sptr, ":%s HTM %s %s %s", 1, parc, parv);
+	}
+
+	switch (x) {
+		case HUNTED_NOSUCH:
+			command = (parv[1]);
+			param = (parv[2]);
+			break;
+		case HUNTED_ISME:
+			command = (parv[2]);
+			param = (parv[3]);
+			break;
+		default:
+			return 0;
+	}
+
+
+	if (!command)
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** Current incoming rate: %0.2f kb/s",
@@ -1319,6 +711,7 @@ int  m_htm(cptr, sptr, parc, parv)
 
 	else
 	{
+#if 0
 		char *command = parv[1];
 
 		if (strchr(command, '.'))
@@ -1328,6 +721,7 @@ int  m_htm(cptr, sptr, parc, parv)
 			    parv)) != HUNTED_ISME)
 				return 0;
 		}
+#endif
 		if (!stricmp(command, "ON"))
 		{
 			lifesux = 1;
@@ -1339,11 +733,13 @@ int  m_htm(cptr, sptr, parc, parv)
 			    parv[0], sptr->user->username,
 			    sptr->user->realhost);
 			LCF = 60;	/* 60 seconds */
+			EventModEvery("lcf", LCF);
 		}
 		else if (!stricmp(command, "OFF"))
 		{
 			lifesux = 0;
 			LCF = LOADCFREQ;
+			EventModEvery("lcf", LCF);
 			sendto_one(sptr,
 			    ":%s NOTICE %s :High traffic mode is now OFF.",
 			    me.name, parv[0]);
@@ -1354,13 +750,13 @@ int  m_htm(cptr, sptr, parc, parv)
 		}
 		else if (!stricmp(command, "TO"))
 		{
-			if (!parv[2])
+			if (!param)
 				sendto_one(sptr,
 				    ":%s NOTICE %s :You must specify an integer value",
 				    me.name, parv[0]);
 			else
 			{
-				int  new_val = atoi(parv[2]);
+				int  new_val = atoi(param);
 				if (new_val < 10)
 					sendto_one(sptr,
 					    ":%s NOTICE %s :New value must be > 10",
@@ -1423,10 +819,7 @@ int  m_htm(cptr, sptr, parc, parv)
  *
 */
 
-int  m_chgname(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 
@@ -1464,7 +857,7 @@ int  m_chgname(cptr, sptr, parc, parv)
 		return 0;
 	}
 
-	if (strlen(parv[2]) > (REALLEN - 1))
+	if (strlen(parv[2]) > (REALLEN))
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** ChgName Error: Too long !!", me.name,
@@ -1477,7 +870,7 @@ int  m_chgname(cptr, sptr, parc, parv)
 		/* set the realname first to make n:line checking work */
 		ircsprintf(acptr->info, "%s", parv[2]);
 		/* only check for n:lines if the person who's name is being changed is not an oper */
-		if (!IsAnOper(acptr) && find_nline(acptr)) {
+		if (!IsAnOper(acptr) && Find_ban(acptr->info, CONF_BAN_REALNAME)) {
 			int xx;
 			xx =
 			   exit_client(cptr, sptr, &me,

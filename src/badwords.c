@@ -25,10 +25,11 @@
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 
-static char *channelword[MAX_WORDS];
-static char *messageword[MAX_WORDS];
-static int channel_wordlist;
-static int message_wordlist;
+/* This was modified a bit in order to use newconf. The loading functions
+ * have been trashed and integrated into the config parser. The striping
+ * function now only uses REPLACEWORD if no word is specifically defined
+ * for the word found. Also the freeing function has been ditched. -- codemastr
+ */
 
 /*
  * Returns a string, which has been filtered by the words loaded via
@@ -47,9 +48,10 @@ char *stripbadwords_channel(char *str)
 	static char cleanstr[4096];
 	char buf[4096];
 	char *ptr;
-	int  errorcode, matchlen, stringlen, this_word;
+	int  errorcode, matchlen, stringlen;
+	ConfigItem_badword *this_word;
 
-	if (!channel_wordlist)
+	if (!conf_badword_channel)
 		return str;
 	strncpy(cleanstr, str, sizeof(cleanstr) - 1);	/* Let's work on a backup */
 	memset(&pmatch, 0, sizeof(pmatch));
@@ -57,10 +59,10 @@ char *stripbadwords_channel(char *str)
 	matchlen = 0;
 	buf[0] = '\0';
 
-	for (this_word = 0; channelword[this_word] != NULL; this_word++)
+	for (this_word = conf_badword_channel; this_word; this_word = (ConfigItem_badword *)this_word->next)
 	{
 		if ((errorcode =
-		    regcomp(&pcomp, channelword[this_word], REG_ICASE)) > 0)
+		    regcomp(&pcomp, this_word->word, REG_ICASE)) > 0)
 		{
 			regfree(&pcomp);
 			return cleanstr;
@@ -74,7 +76,10 @@ char *stripbadwords_channel(char *str)
 				break;
 			matchlen += pmatch[0].rm_eo - pmatch[0].rm_so;
 			strncat(buf, ptr, pmatch[0].rm_so);
-			strcat(buf, REPLACEWORD);	/* Who's afraid of the big bad buffer overflow? */
+			if (this_word->replace)
+				strcat(buf, this_word->replace); 
+			else
+				strcat(buf, REPLACEWORD);
 			ptr += pmatch[0].rm_eo;	/* Set pointer after the match pos */
 			memset(&pmatch, 0, sizeof(pmatch));
 		}
@@ -96,9 +101,10 @@ char *stripbadwords_message(char *str)
 	static char cleanstr[4096];
 	char buf[4096];
 	char *ptr;
-	int  errorcode, matchlen, stringlen, this_word;
+	ConfigItem_badword *this_word;
+	int  errorcode, matchlen, stringlen;
 
-	if (!message_wordlist)
+	if (!conf_badword_message)
 		return str;
 	strncpy(cleanstr, str, sizeof(cleanstr) - 1);	/* Let's work on a backup */
 	memset(&pmatch, 0, sizeof(pmatch));
@@ -106,10 +112,10 @@ char *stripbadwords_message(char *str)
 	matchlen = 0;
 	buf[0] = '\0';
 
-	for (this_word = 0; messageword[this_word] != NULL; this_word++)
+	for (this_word = conf_badword_message; this_word; this_word = (ConfigItem_badword *)this_word->next) 
 	{
 		if ((errorcode =
-		    regcomp(&pcomp, messageword[this_word], REG_ICASE)) > 0)
+		    regcomp(&pcomp, this_word->word, REG_ICASE)) > 0)
 		{
 			regfree(&pcomp);
 			return cleanstr;
@@ -123,7 +129,10 @@ char *stripbadwords_message(char *str)
 				break;
 			matchlen += pmatch[0].rm_eo - pmatch[0].rm_so;
 			strncat(buf, ptr, pmatch[0].rm_so);
-			strcat(buf, REPLACEWORD);	/* Who's afraid of the big bad buffer overflow? */
+			if (this_word->replace)
+				strcat(buf, this_word->replace);
+			else
+				strcat(buf, REPLACEWORD);
 			ptr += pmatch[0].rm_eo;	/* Set pointer after the match pos */
 			memset(&pmatch, 0, sizeof(pmatch));
 		}
@@ -138,147 +147,4 @@ char *stripbadwords_message(char *str)
 	return (cleanstr);
 }
 
-/*
- * Loads bad words from a file, into a char array. This puts a limitation on 
- * how many words may be slurped (which is probably a good thing).  The words
- * are then called by stripbadwords, to filter unwanted (swear) words.
- */
-int  loadbadwords_channel(char *wordfile)
-{
-	FILE *fin;
-	char buf[MAX_WORDLEN];
-	char *ptr;
-	int  i, j, isregex;
-
-	channel_wordlist = 0;
-	memset(channelword, 0, sizeof(messageword));
-
-	if ((fin = fopen(wordfile, "r")) == NULL)
-		return 0;
-
-	for (i = 0; i < MAX_WORDS; i++)
-	{
-		if (fgets(buf, MAX_WORDLEN, fin) == NULL)
-			break;
-		if ((ptr = strchr(buf, '\r')) != NULL
-		    || (ptr = strchr(buf, '\n')) != NULL)
-			*ptr = '\0';
-		if (buf[0] == '\0')
-		{
-			i--;
-			continue;
-		}
-		if (buf[0] == '#')
-		{
-			i--;
-			continue;
-		}
-		for (j = 0, isregex = 0; j < strlen(buf); j++)
-		{
-			if ((int)buf[j] < 65 || (int)buf[j] > 123)
-			{
-				isregex++;	/* Probably is */
-				break;
-			}
-		}
-
-		if (isregex)
-		{
-			/* We don't have to apply a pattern to the word because
-			 * it already *is* a pattern.
-			 */
-			channelword[i] = (char *)MyMalloc(strlen(buf) + 1);
-			strncpy(channelword[i], buf, strlen(buf) + 1);
-		}
-		else
-		{
-			/* PATTERN contains the %s format specifier so we must
-			 * remove 2 chars, and 1 for the \0, which gives us -1
-			 */
-			channelword[i] =
-			    (char *)MyMalloc(strlen(buf) + strlen(PATTERN) - 1);
-			ircsprintf(channelword[i], PATTERN, buf);
-		}
-		channel_wordlist++;
-	}
-	fclose(fin);
-
-	return i;
-}
-
-int  loadbadwords_message(char *wordfile)
-{
-	FILE *fin;
-	char buf[MAX_WORDLEN];
-	char *ptr;
-	int  i, j, isregex;
-
-	message_wordlist = 0;
-	memset(messageword, 0, sizeof(messageword));
-
-	if ((fin = fopen(wordfile, "r")) == NULL)
-		return 0;
-
-	for (i = 0; i < MAX_WORDS; i++)
-	{
-		if (fgets(buf, MAX_WORDLEN, fin) == NULL)
-			break;
-		if ((ptr = strchr(buf, '\r')) != NULL
-		    || (ptr = strchr(buf, '\n')) != NULL)
-			*ptr = '\0';
-		if (buf[0] == '\0')
-		{
-			i--;
-			continue;
-		}
-		if (buf[0] == '#')
-		{
-			i--;
-			continue;
-		}
-
-		for (j = 0, isregex = 0; j < strlen(buf); j++)
-		{
-			if ((int)buf[j] < 65 || (int)buf[j] > 123)
-			{
-				isregex++;	/* Probably is */
-				break;
-			}
-		}
-
-		if (isregex)
-		{
-			/* We don't have to apply a pattern to the word because
-			 * it already *is* a pattern.
-			 */
-			messageword[i] = (char *)MyMalloc(strlen(buf) + 1);
-			strncpy(messageword[i], buf, strlen(buf) + 1);
-		}
-		else
-		{
-			/* PATTERN contains the %s format specifier so we must
-			 * remove 2 chars, and 1 for the \0, which gives us -1
-			 */
-			messageword[i] =
-			    (char *)MyMalloc(strlen(buf) + strlen(PATTERN) - 1);
-			ircsprintf(messageword[i], PATTERN, buf);
-		}
-		message_wordlist++;
-	}
-	fclose(fin);
-
-	return i;
-}
-
-
-void freebadwords(void)
-{
-	int  i;
-
-	for (i = 0; channelword[i] != NULL && i < MAX_WORDS; i++)
-		free(channelword[i]);
-	for (i = 0; messageword[i] != NULL && i < MAX_WORDS; i++)
-		free(messageword[i]);
-	return;
-}
 #endif

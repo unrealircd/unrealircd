@@ -5,7 +5,7 @@
  *
  *
  *   See file AUTHORS in IRC package for additional names of
- *   the programmers. 
+ *   the programmers.
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@
 #include "numeric.h"
 #include "msg.h"
 #include "channel.h"
-#include "userload.h"
 #include <time.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -51,17 +50,14 @@ extern char zlinebuf[];
 /*
 
  *     type =  TKL_*
- *	usermask@hostmask 
+ *	usermask@hostmask
  *	reason
  *	setby = whom set it
  *	expire_at = when to expire - 0 if not to expire
  *	set_at    = was set at
 */
 
-int  tkl_add_line(type, usermask, hostmask, reason, setby, expire_at, set_at)
-	int  type;
-	char *usermask, *hostmask, *reason, *setby;
-	TS   expire_at, set_at;
+int  tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *setby, TS expire_at, TS set_at)
 {
 	aTKline *nl;
 
@@ -84,8 +80,7 @@ int  tkl_add_line(type, usermask, hostmask, reason, setby, expire_at, set_at)
 	tklines = nl;
 }
 
-aTKline *tkl_del_line(tkl)
-	aTKline *tkl;
+aTKline *tkl_del_line(aTKline *tkl)
 {
 	aTKline *p, *q;
 
@@ -171,7 +166,7 @@ aTKline *tkl_expire(aTKline * tmp)
 	    TStime() - tmp->set_at);
 
 	ircd_log
-	    ("Expiring %s (%s@%s) made by %s (Reason: %s) set %li seconds ago",
+	    (LOG_TKL, "Expiring %s (%s@%s) made by %s (Reason: %s) set %li seconds ago",
 	    whattype, tmp->usermask, tmp->hostmask, tmp->setby, tmp->reason,
 	    TStime() - tmp->set_at);
 
@@ -179,7 +174,10 @@ aTKline *tkl_expire(aTKline * tmp)
 	{
 		for (i1 = 0; i1 <= 5; i1++)
 		{
+			/* winlocal
 			for (i = 0; i <= (MAXCONNECTIONS - 1); i++)
+			*/
+			for (i = 0; i <= LastSlot; ++i)
 			{
 				if (acptr = local[i])
 					if (MyClient(acptr) && IsShunned(acptr))
@@ -187,13 +185,9 @@ aTKline *tkl_expire(aTKline * tmp)
 						chost = acptr->sockhost;
 						cname = acptr->user->username;
 
-						cip =
-						    (char *)inet_ntoa(acptr->
-						    ip);
+						cip = (char *)inet_ntoa(acptr->ip);
 
-
-						if (!(*tmp->hostmask < '0')
-						    && (*tmp->hostmask > '9'))
+						if (!(*tmp->hostmask < '0') && (*tmp->hostmask > '9'))
 							is_ip = 1;
 						else
 							is_ip = 0;
@@ -226,7 +220,7 @@ aTKline *tkl_expire(aTKline * tmp)
 	return (tkl_del_line(tmp));
 }
 
-void tkl_check_expire(void)
+EVENT(tkl_check_expire)
 {
 	aTKline *gp, t;
 	TS   nowtime;
@@ -250,9 +244,7 @@ void tkl_check_expire(void)
 	returns >= 0 if client exits
 */
 
-int  find_tkline_match(cptr, xx)
-	aClient *cptr;
-	int  xx;
+int  find_tkline_match(aClient *cptr, int xx)
 {
 	aTKline *lp;
 	char *chost, *cname, *cip;
@@ -274,7 +266,7 @@ int  find_tkline_match(cptr, xx)
 	for (lp = tklines; lp; lp = lp->next)
 	{
 		points = 0;
-		
+
 		if (!match(lp->usermask, cname) && !match(lp->hostmask, chost))
 			points = 1;
 		if (!match(lp->usermask, cname) && !match(lp->hostmask, cip))
@@ -286,8 +278,8 @@ int  find_tkline_match(cptr, xx)
 	}
 
 	if (points != 1)
-		return -1;	
-	
+		return -1;
+
 	if ((lp->type & TKL_KILL) && (xx != 2))
 	{
 		if (lp->type & TKL_GLOBAL)
@@ -295,7 +287,7 @@ int  find_tkline_match(cptr, xx)
 			ircstp->is_ref++;
 			sendto_one(cptr,
 				":%s NOTICE %s :*** You are %s from %s (%s)",
-					me.name, cptr->name, 
+					me.name, cptr->name,
 					(lp->expire_at ? "banned" : "permanently banned"),
 					ircnetwork, lp->reason);
 			ircsprintf(msge, "User has been %s from %s (%s)",
@@ -309,7 +301,7 @@ int  find_tkline_match(cptr, xx)
 			ircstp->is_ref++;
 			sendto_one(cptr,
 				":%s NOTICE %s :*** You are %s from %s (%s)",
-					me.name, cptr->name, 
+					me.name, cptr->name,
 					(lp->expire_at ? "banned" : "permanently banned"),
 				me.name, lp->reason);
 			ircsprintf(msge, "User is %s (%s)",
@@ -317,7 +309,7 @@ int  find_tkline_match(cptr, xx)
 				lp->reason);
 			return (exit_client(cptr, cptr, &me,
 				msge));
-			
+
 		}
 	}
 	if (lp->type & TKL_ZAP)
@@ -340,8 +332,7 @@ int  find_tkline_match(cptr, xx)
 	return -1;
 }
 
-int  find_tkline_match_zap(cptr)
-	aClient *cptr;
+int  find_tkline_match_zap(aClient *cptr)
 {
 	aTKline *lp;
 	char *cip;
@@ -385,7 +376,7 @@ int  tkl_sweep()
 	aClient *acptr;
 	long i;
 
-	tkl_check_expire();
+	tkl_check_expire(NULL);
 	for (i = 0; i <= (MAXCONNECTIONS - 1); i++)
 	{
 		if (acptr = local[i])
@@ -395,8 +386,7 @@ int  tkl_sweep()
 }
 
 
-void tkl_stats(cptr)
-	aClient *cptr;
+void tkl_stats(aClient *cptr)
 {
 	aTKline *tk;
 	TS   curtime;
@@ -405,9 +395,9 @@ void tkl_stats(cptr)
 	   We output in this row:
 	   Glines,GZlines,KLine, ZLIne
 	   Character:
-	   G, Z, K, z                                    
+	   G, Z, K, z
 	 */
-	tkl_check_expire();
+	tkl_check_expire(NULL);
 	curtime = TStime();
 	for (tk = tklines; tk; tk = tk->next)
 	{
@@ -482,20 +472,17 @@ void tkl_synch(aClient *sptr)
 
 /*
   Service function for timed *:lines
-  
+
   add:  TKL + type user host setby expire_at set_at reason
   del:  TKL - type user host removedby
   list: TKL ?
 
   only global lines are spread out this way.
      type= G = G:Line
-           Z = Z:Line	
+           Z = Z:Line
 */
 
-int  m_tkl(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aTKline *tk;
 	int  type;
@@ -510,7 +497,7 @@ int  m_tkl(cptr, sptr, parc, parv)
 	if (parc < 2)
 		return 0;
 
-	tkl_check_expire();
+	tkl_check_expire(NULL);
 
 	switch (*parv[1])
 	{
@@ -559,19 +546,8 @@ int  m_tkl(cptr, sptr, parc, parv)
 		  tkl_add_line(type, parv[3], parv[4], parv[8], parv[5],
 		      expiry_1, setat_1);
 
-#ifndef __OpenBSD__
-		  strncpy(gmt, asctime(gmtime((clock_t *) & setat_1)),
-		      sizeof(gmt));
-#else
 		  strncpy(gmt, asctime(gmtime((TS *)&setat_1)), sizeof(gmt));
-#endif
-
-#ifndef __OpenBSD__
-		  strncpy(gmt2, asctime(gmtime((clock_t *) & expiry_1)),
-		      sizeof(gmt2));
-#else
 		  strncpy(gmt2, asctime(gmtime((TS *)&expiry_1)), sizeof(gmt2));
-#endif
 		  gmt[strlen(gmt) - 1] = '\0';
 		  gmt2[strlen(gmt2) - 1] = '\0';
 
@@ -602,7 +578,7 @@ int  m_tkl(cptr, sptr, parc, parv)
 			      txt, parv[3], parv[4], gmt, parv[5], gmt2,
 			      parv[8]);
 			  ircd_log
-			      ("%s added for %s@%s on %s GMT (from %s to expire at %s GMT: %s)",
+			      (LOG_TKL, "%s added for %s@%s on %s GMT (from %s to expire at %s GMT: %s)",
 			      txt, parv[3], parv[4], gmt, parv[5], gmt2,
 			      parv[8]);
 		  }
@@ -612,7 +588,7 @@ int  m_tkl(cptr, sptr, parc, parv)
 			      "*** Permanent %s added for %s@%s on %s GMT (from %s: %s)",
 			      txt, parv[3], parv[4], gmt, parv[5], parv[8]);
 			  ircd_log
-			      ("Permanent %s added for %s@%s on %s GMT (from %s: %s)",
+			      (LOG_TKL, "Permanent %s added for %s@%s on %s GMT (from %s: %s)",
 			      txt, parv[3], parv[4], gmt, parv[5], parv[8]);
 		  }
 		  loop.do_tkl_sweep = 1;
@@ -670,15 +646,9 @@ int  m_tkl(cptr, sptr, parc, parv)
 				  if (!strcmp(tk->hostmask, parv[4])
 				      && !strcmp(tk->usermask, parv[3]))
 				  {
-#ifndef __OpenBSD__
-					  strncpy(gmt,
-					      asctime(gmtime((clock_t *) &
-					      tk->set_at)), sizeof(gmt));
-#else
 					  strncpy(gmt,
 					      asctime(gmtime((TS *)&tk->
 					      set_at)), sizeof(gmt));
-#endif
 					  gmt[strlen(gmt) - 1] = '\0';
 					  sendto_umode(UMODE_EYES,
 					      "%s removed %s %s@%s (set at %s - reason: %s)",
@@ -826,8 +796,8 @@ int  m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
       nochecks:
 	usermask = strtok(mask, "@");
-	hostmask = strtok(NULL, "@");
-	tkl_check_expire();
+	hostmask = strtok(NULL, "");
+	tkl_check_expire(NULL);
 
 	for (tk = tklines; tk; tk = tk->next)
 	{
@@ -1032,8 +1002,8 @@ int  m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
       nochecks:
 	usermask = strtok(mask, "@");
-	hostmask = strtok(NULL, "@");
-	tkl_check_expire();
+	hostmask = strtok(NULL, "");
+	tkl_check_expire(NULL);
 
 	for (tk = tklines; tk; tk = tk->next)
 	{

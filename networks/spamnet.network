@@ -1,0 +1,19 @@
+set {
+	network-name		"SpamNet";
+	default-server		"irc.spamnet.org";
+	services-server		"services.spamnet.org";
+	stats-server		"services.spamnet.org";
+	help-channel		"#SpamNet";
+	hiddenhost-prefix	"SpamNet";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"locop.spamnet.org";
+		global		"ircop.spamnet.org";
+		coadmin		"coadmin.spamnet.org";
+		admin		"admin.spamnet.org";
+		servicesadmin	"csops.spamnet.org";
+		techadmin	"techadmin.spamnet.org";
+		netadmin	"netadmin.spamnet.org";
+		host-on-oper-up	"on";
+	};
+};

@@ -56,6 +56,10 @@
 #ifdef SSL
 #include <openssl/ssl.h>
 #endif
+#ifdef INET6
+#include <netinet/in.h>
+#include <sys/socket.h>
+#endif
 #ifndef GOT_STRCASECMP
 #define	strcasecmp	mycmp
 #define	strncasecmp	myncmp
@@ -85,17 +89,6 @@ extern	char	*rindex PROTO((char *, char));
 #endif
 #else
 #include <sys/time.h>
-#endif
-#ifndef DMALLOC
-#if !defined(DEBUGMODE)
-# ifndef _WIN32
-#  define MyFree(x)	if ((x) != NULL) free(x)
-# else
-#  define MyFree(x)       if ((x) != NULL) GlobalFree(x)
-# endif
-#else
-#define	free(x)		MyFree(x)
-#endif
 #endif
 #ifdef NEXT
 #define VOIDSIG int		/* whether signal() returns int of void */
@@ -159,9 +152,9 @@ static unsigned char minus_one[] =
 # define	S_ADDR		s6_addr
 # define	IN_ADDR		in6_addr
 
-# ifndef uint32_t
-#  define uint32_t __u32
-# endif
+// # ifndef uint32_t
+//#  define uint32_t __u32
+// # endif
 
 # define MYDUMMY_SIZE 128
 char mydummy[MYDUMMY_SIZE];
@@ -194,6 +187,49 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 # define WHOSTENTP(x) (x)
 # define IRCDCONF_DELIMITER ':'
+#endif
+
+/*
+ * Socket, File, and Error portability macros
+ */
+#ifndef _WIN32
+
+#define READ_SOCK(fd, buf, len) read((fd), (buf), (len))
+#define WRITE_SOCK(fd, buf, len) write((fd), (buf), (len))
+#define CLOSE_SOCK(fd) close(fd)
+#define IOCTL(x, y, z) ioctl((x), (y), (z))
+#define ERRNO errno
+#define STRERROR(x) strerror(x)
+
+/* error constant portability */
+#define P_EMFILE        EMFILE
+#define P_ENOBUFS       ENOBUFS
+#define P_EWOULDBLOCK   EWOULDBLOCK
+#define P_EAGAIN        EAGAIN
+#define P_EINPROGRESS   EINPROGRESS
+#define P_EINTR         EINTR
+#define P_ETIMEDOUT     ETIMEDOUT
+#define P_ENOTSOCK	ENOTSOCK
+
+#else
+
+/* IO and Error portability macros */
+#define READ_SOCK(fd, buf, len) recv((fd), (buf), (len), 0)
+#define WRITE_SOCK(fd, buf, len) send((fd), (buf), (len), 0)
+#define CLOSE_SOCK(fd) closesocket(fd)
+#define IOCTL(x, y, z) ioctlsocket((x), (y), (z))
+#define ERRNO WSAGetLastError()
+#define STRERROR(x) nt_strerror(x)
+
+/* Error constant portability */
+#define P_EMFILE        WSAEMFILE
+#define P_ENOBUFS       WSAENOBUFS
+#define P_EWOULDBLOCK   WSAEWOULDBLOCK
+#define P_EAGAIN        WSAEWOULDBLOCK
+#define P_EINPROGRESS   WSAEINPROGRESS
+#define P_EINTR         WSAEINTR
+#define P_ETIMEDOUT     WSAETIMEDOUT
+#define P_ENOTSOCK	WSAENOTSOCK
 #endif
 
 #endif /* __sys_include__ */

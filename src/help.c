@@ -54,7 +54,6 @@ void xx(sptr, str, num)
 #define FTR(str) xx(sptr, str, 292)
 #define HLP(str) xx(sptr, str, 293)
 
-extern struct Message msgtab[];
 int  parse_help(sptr, name, help)
 	aClient *sptr;
 	char *name;
@@ -166,7 +165,6 @@ int  parse_help(sptr, name, help)
      SND(" N = Is a Network Administrator");
      SND(" T = Is a Technical Administrator");
      SND(" C = Is a Co Administrator");
-//   SND(" 1 = Is a coder");  Taken out
      SND(" c = See's all Connects/Disconnects on local server");
      SND(" f = Listen to Flood Alerts from server");
      SND(" r = Identifies the nick as being Registered");
@@ -1488,7 +1486,7 @@ int  parse_help(sptr, name, help)
       SND(" TO <value> - Tell HTM at what incoming rate to activate HTM");
       SND(" -");
    }
-   else if (!myncmp(help, "REMGLINE", 8))  // Obsolete .. 
+   else if (!myncmp(help, "REMGLINE", 8))  /* Obsolete .. */
    {
       SND(" -");
       HDR(" *** REMGLINE Command ***");
@@ -1671,33 +1669,11 @@ int  parse_help(sptr, name, help)
 	else if (!myncmp(help, "COMMANDS", 8))
 	{
 		HDR("***** Full Command List *****");
-		SND("Full command list, in the format: Command Token");
-		/* Send the command list (with tokens)
-		   * -Wizzu
-		 */
-		for (i = 0; msgtab[i].cmd; i++)
-			/* The following command is (almost) the same as the SND
-			 * macro, but includes variables.  -Wizzu
-			 */
-			if (sptr != NULL)
-				sendto_one(sptr, ":%s 291 %s :%s %s",
-				    me.name, name, msgtab[i].cmd,
-				    msgtab[i].token);
-			else
-				printf("%s %s\n", msgtab[i].cmd,
-				    msgtab[i].token);
-
-		if (sptr != NULL)
-			sendto_one(sptr,
-			    ":%s 291 %s :End of Command list - %i commands shown",
-			    me.name, name, (i - 1));
-		else
-			printf("End of Command list - %i commands shown\n",
-			    (i - 1));
-
+		HLP("Use /stats M for this");
+		
 	}
 
-	else          // When no argument is specified .. - hAtbLaDe
+	else          /* When no argument is specified .. - hAtbLaDe */
 	{
       HLP(" -");
 	  HLP(" For help with the Services :");

@@ -95,7 +95,7 @@ static int dead_link(to, notice)
 #else
 		strerror(WSAGetLastError()));
 #endif
-		
+
 	Debug((DEBUG_ERROR, notice, get_client_name(to, FALSE)));
 	return -1;
 }
@@ -109,20 +109,19 @@ static int dead_link(to, notice)
 **	client and try to send it. if we cant send it, it goes into the sendQ
 **	-avalon
 */
-void flush_connections(fd)
-	int  fd;
+void flush_connections(aClient* cptr)
 {
 	int  i;
-	aClient *cptr;
+	aClient *acptr;
 
-	if (fd == me.fd)
+	if (&me == cptr)
 	{
-		for (i = highest_fd; i >= 0; i--)
-			if ((cptr = local[i]) && !(cptr->flags & FLAGS_BLOCKED)
+		for (i = LastSlot; i >= 0; i--)
+			if ((acptr = local[i]) && !(acptr->flags & FLAGS_BLOCKED)
 			    && DBufLength(&cptr->sendQ) > 0)
 				send_queued(cptr);
 	}
-	else if (fd >= 0 && (cptr = local[fd]) && !(cptr->flags & FLAGS_BLOCKED)
+	else if (cptr->fd >= 0 && !(cptr->flags & FLAGS_BLOCKED)
 	    && DBufLength(&cptr->sendQ) > 0)
 		send_queued(cptr);
 
@@ -272,8 +271,8 @@ void sendbufto_one(aClient *to)
 	 */
 	to->sendM += 1;
 	me.sendM += 1;
-	if (to->acpt != &me)
-		to->acpt->sendM += 1;
+	if (to->listener != &me)
+		to->listener->sendM += 1;
 	/*
 	 * This little bit is to stop the sendQ from growing too large when
 	 * there is no need for it to. Thus we call send_queued() every time
@@ -290,7 +289,7 @@ void sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
     char *pattern, ...)
 {
 	va_list vl;
-	Link *lp;
+	Member *lp;
 	aClient *acptr;
 	int  i;
 
@@ -299,7 +298,7 @@ void sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
 	++sentalong_marker;
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
-		acptr = lp->value.cptr;
+		acptr = lp->cptr;
 		/* ...was the one I should skip */
 		if (acptr->from == one || (IsDeaf(acptr)
 		    && !(sendanyways == 1)))
@@ -323,7 +322,7 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
     char *pattern, ...)
 {
 	va_list vl;
-	Link *lp;
+	Member *lp;
 	aClient *acptr;
 	int  i;
 
@@ -332,7 +331,7 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 		sentalong[i] = 0;
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
-		acptr = lp->value.cptr;
+		acptr = lp->cptr;
 		if (acptr->from == one)
 			continue;	/* ...was the one I should skip
 					   or user not not a channel op */
@@ -345,7 +344,7 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 		bad:
 			continue;
 		good:
-		
+
 		i = acptr->from->fd;
 		if (MyConnect(acptr) && IsRegisteredUser(acptr))
 		{
@@ -371,17 +370,17 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 	int	prefix,
     char *cmd, char *tok, char *nick, char *text)
 {
-	Link *lp;
+	Member *lp;
 	aClient *acptr;
 	int  i;
-	
+
 	sprintf(tcmd, ":%s %s %s :%s", from->name, tok, nick, text);
 	sprintf(ccmd, ":%s %s %s :%s", from->name, cmd, nick, text);
 	for (i = 0; i < MAXCONNECTIONS; i++)
 		sentalong[i] = 0;
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
-		acptr = lp->value.cptr;
+		acptr = lp->cptr;
 		if (acptr->from == one)
 			continue;	/* ...was the one I should skip
 					   or user not not a channel op */
@@ -396,22 +395,28 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 		bad:
 			continue;
 		good:
-		
+
 		i = acptr->from->fd;
 
-		if (MyConnect(acptr) && IsRegisteredUser(acptr) && !(IsDeaf(acptr) 
-			&& !(sendanyways == 1)))
+		if (MyConnect(acptr) && IsRegisteredUser(acptr))
 		{
+			if (IsDeaf(acptr))
+				if (!sendanyways)
+					continue;
 			sendto_prefix_one(acptr, from, ":%s %s %s :%s",
 				from->name, cmd, nick, text);
 			sentalong[i] = 1;
 		}
 		else
 		{
+			if (IsDeaf(acptr))
+				if (!sendanyways)
+					continue;
 			/* Now check whether a message has been sent to this
 			 * remote link already */
-			if ((sentalong[i] == 0) && ((!IsDeaf(acptr) && !(sendanyways == 1))))
+			if (sentalong[i] == 0)
 			{
+
 				if (IsToken(acptr->from))
 					sendto_one(acptr, "%s", tcmd);
 				else
@@ -431,13 +436,13 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 void sendto_chanops_butone(aClient *one, aChannel *chptr, char *pattern, ...)
 {
 	va_list vl;
-	Link *lp;
+	Member *lp;
 	aClient *acptr;
 
 	va_start(vl, pattern);
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
-		acptr = lp->value.cptr;
+		acptr = lp->cptr;
 		if (acptr == one || !(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
 			continue;	/* ...was the one I should skip
 					   or user not not a channel op */
@@ -462,7 +467,7 @@ void sendto_channelops_butone(aClient *one, aClient *from, aChannel *chptr,
     char *pattern, ...)
 {
 	va_list vl;
-	Link *lp;
+	Member *lp;
 	aClient *acptr;
 	int  i;
 
@@ -471,7 +476,7 @@ void sendto_channelops_butone(aClient *one, aClient *from, aChannel *chptr,
 		sentalong[i] = 0;
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
-		acptr = lp->value.cptr;
+		acptr = lp->cptr;
 		if (acptr->from == one || !(lp->flags & CHFL_CHANOP))
 			continue;	/* ...was the one I should skip
 					   or user not not a channel op */
@@ -509,7 +514,7 @@ void sendto_channelvoice_butone(aClient *one, aClient *from, aChannel *chptr,
     char *pattern, ...)
 {
 	va_list vl;
-	Link *lp;
+	Member *lp;
 	aClient *acptr;
 	int  i;
 
@@ -518,7 +523,7 @@ void sendto_channelvoice_butone(aClient *one, aClient *from, aChannel *chptr,
 		sentalong[i] = 0;
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
-		acptr = lp->value.cptr;
+		acptr = lp->cptr;
 		if (acptr->from == one || !(lp->flags & CHFL_VOICE))
 			continue;	/* ...was the one I should skip
 					   or user not (a channel voice or op) */
@@ -556,7 +561,7 @@ void sendto_channelhalfop_butone(aClient *one, aClient *from, aChannel *chptr,
     char *pattern, ...)
 {
 	va_list vl;
-	Link *lp;
+	Member *lp;
 	aClient *acptr;
 	int  i;
 
@@ -565,7 +570,7 @@ void sendto_channelhalfop_butone(aClient *one, aClient *from, aChannel *chptr,
 		sentalong[i] = 0;
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
-		acptr = lp->value.cptr;
+		acptr = lp->cptr;
 		if (acptr->from == one || !(lp->flags & CHFL_HALFOP))
 			continue;	/* ...was the one I should skip
 					   or user not (a channel halfop or op) */
@@ -606,10 +611,9 @@ void sendto_serv_butone(aClient *one, char *pattern, ...)
 
 	va_start(vl, pattern);
 #ifdef NO_FDLIST
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 #else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry;
-	    i = serv_fdlist.entry[++j])
+	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
 #endif
 	{
 		if (!(cptr = local[i]) || (one && cptr == one->from))
@@ -662,10 +666,9 @@ void sendto_serv_butone_token(aClient *one, char *prefix, char *command,
 	strcat(ccmd, buff);
 
 #ifdef NO_FDLIST
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 #else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry;
-	    i = serv_fdlist.entry[++j])
+	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
 #endif
 	{
 		if (!(cptr = local[i]) || (one && cptr == one->from))
@@ -677,12 +680,12 @@ void sendto_serv_butone_token(aClient *one, char *prefix, char *command,
 			{
 				if (SupportNS(cptr) && pref[0])
 				{
-					sendto_one(cptr, "@%s %s",	
+					sendto_one(cptr, "@%s %s",
 						pref, tcmd);
 				}
 					else
 				{
-					sendto_one(cptr, ":%s %s", 
+					sendto_one(cptr, ":%s %s",
 						prefix, tcmd);
 				}
 			}
@@ -727,15 +730,16 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 	static char pref[100];
 
 	va_start(vl, pattern);
-	
+
 	pref[0] = '\0';
 	if (strchr(prefix, '.'))
 	{
 		acptr = (aClient *) find_server_quick(prefix);
-		if (acptr->serv->numeric)
-		{
-			strcpy(pref, base64enc(acptr->serv->numeric));
-		}
+		if (acptr && acptr->serv)
+			if (acptr->serv->numeric)
+			{
+				strcpy(pref, base64enc(acptr->serv->numeric));
+			}
 	}
 
 	strcpy(tcmd, token);
@@ -747,10 +751,9 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 	strcat(ccmd, buff);
 
 #ifdef NO_FDLIST
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 #else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry;
-	    i = serv_fdlist.entry[++j])
+	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
 #endif
 	{
 		if (!(cptr = local[i]) || (one && cptr == one->from))
@@ -758,7 +761,7 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 #ifdef NO_FDLIST
 		if (IsServer(cptr))
 #endif
-		
+
 		if ((opt & OPT_NOT_SJOIN) && SupportSJOIN(cptr))
 			continue;
 		if ((opt & OPT_NOT_NICKv2) && SupportNICKv2(cptr))
@@ -783,17 +786,17 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 			continue;
 		if ((opt & OPT_NOT_SJB64) && (cptr->proto & PROTO_SJB64))
 			continue;
-		
+
 		if (IsToken(cptr))
 		{
 			if (SupportNS(cptr) && pref[0])
 			{
-				sendto_one(cptr, "@%s %s",	
+				sendto_one(cptr, "@%s %s",
 					pref, tcmd);
 			}
 				else
 			{
-				sendto_one(cptr, ":%s %s", 
+				sendto_one(cptr, ":%s %s",
 					prefix, tcmd);
 			}
 		}
@@ -832,10 +835,9 @@ void sendto_serv_butone_quit(aClient *one, char *pattern, ...)
 	va_start(vl, pattern);
 
 #ifdef NO_FDLIST
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 #else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry;
-	    i = serv_fdlist.entry[++j])
+	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
 #endif
 	{
 		if (!(cptr = local[i]) || (one && cptr == one->from))
@@ -867,10 +869,9 @@ void sendto_serv_butone_sjoin(aClient *one, char *pattern, ...)
 #endif
 	va_start(vl, pattern);
 #ifdef NO_FDLIST
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 #else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry;
-	    i = serv_fdlist.entry[++j])
+	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
 #endif
 	{
 		if (!(cptr = local[i]) || (one && cptr == one->from))
@@ -903,10 +904,9 @@ void sendto_serv_sjoin(aClient *one, char *pattern, ...)
 	va_start(vl, pattern);
 
 #ifdef NO_FDLIST
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 #else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry;
-	    i = serv_fdlist.entry[++j])
+	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
 #endif
 	{
 		if (!(cptr = local[i]) || (one && cptr == one->from))
@@ -939,10 +939,9 @@ void sendto_serv_butone_nickv2(aClient *one, char *pattern, ...)
 	va_start(vl, pattern);
 
 #ifdef NO_FDLIST
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 #else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry;
-	    i = serv_fdlist.entry[++j])
+	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
 #endif
 	{
 		if (!(cptr = local[i]) || (one && cptr == one->from))
@@ -975,10 +974,9 @@ void sendto_serv_nickv2(aClient *one, char *pattern, ...)
 	va_start(vl, pattern);
 
 #ifdef NO_FDLIST
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 #else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry;
-	    i = serv_fdlist.entry[++j])
+	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
 #endif
 	{
 		if (!(cptr = local[i]) || (one && cptr == one->from))
@@ -1013,10 +1011,9 @@ void sendto_serv_nickv2_token(aClient *one, char *pattern, char *tokpattern,
 	va_start(vl, tokpattern);
 
 #ifdef NO_FDLIST
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 #else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry;
-	    i = serv_fdlist.entry[++j])
+	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
 #endif
 	{
 		if (!(cptr = local[i]) || (one && cptr == one->from))
@@ -1041,7 +1038,7 @@ void sendto_serv_nickv2_token(aClient *one, char *pattern, char *tokpattern,
 
 /*
  * sendto_common_channels()
- * 
+ *
  * Sends a message to all people (inclusing user) on local server who are
  * in same channel with user.
  */
@@ -1049,8 +1046,8 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
 {
 	va_list vl;
 
-	Link *channels;
-	Link *users;
+	Membership *channels;
+	Member *users;
 	aClient *cptr;
 
 	va_start(vl, pattern);
@@ -1060,10 +1057,10 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
 	if (user->user)
 		for (channels = user->user->channel; channels;
 		    channels = channels->next)
-			for (users = channels->value.chptr->members; users;
+			for (users = channels->chptr->members; users;
 			    users = users->next)
 			{
-				cptr = users->value.cptr;
+				cptr = users->cptr;
 				if (!MyConnect(cptr) || sentalong[cptr->fd])
 					continue;
 				sentalong[cptr->fd]++;
@@ -1083,11 +1080,11 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
 void sendto_channel_butserv(aChannel *chptr, aClient *from, char *pattern, ...)
 {
 	va_list vl;
-	Link *lp;
+	Member *lp;
 	aClient *acptr;
 
 	for (va_start(vl, pattern), lp = chptr->members; lp; lp = lp->next)
-		if (MyConnect(acptr = lp->value.cptr))
+		if (MyConnect(acptr = lp->cptr))
 			vsendto_prefix_one(acptr, from, pattern, vl);
 	va_end(vl);
 	return;
@@ -1140,7 +1137,7 @@ void sendto_match_servs(aChannel *chptr, aClient *from, char *format, ...)
 	else
 		mask = (char *)NULL;
 
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 	{
 		if (!(cptr = local[i]))
 			continue;
@@ -1176,7 +1173,7 @@ void sendto_match_butone(aClient *one, aClient *from, char *mask, int what,
 	else
 		cansendlocal = cansendglobal = 1;
 
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 	{
 		if (!(cptr = local[i]))
 			continue;	/* that clients are not mine */
@@ -1221,7 +1218,7 @@ void sendto_all_butone(aClient *one, aClient *from, char *pattern, ...)
 	int  i;
 	aClient *cptr;
 
-	for (va_start(vl, pattern), i = 0; i <= highest_fd; i++)
+	for (va_start(vl, pattern), i = 0; i <= LastSlot; i++)
 		if ((cptr = local[i]) && !IsMe(cptr) && one != cptr)
 			vsendto_prefix_one(cptr, from, pattern, vl);
 	va_end(vl);
@@ -1241,14 +1238,11 @@ void sendto_ops(char *pattern, ...)
 	char nbuf[1024];
 
 	va_start(vl, pattern);
-	for (i = 0; i <= highest_fd; i++)
-		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-		    SendServNotice(cptr))
+	for (i = 0; i <= LastSlot; i++)
+		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) && SendServNotice(cptr))
 		{
-			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
-			    me.name, cptr->name);
-			(void)strncat(nbuf, pattern,
-			    sizeof(nbuf) - strlen(nbuf));
+			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ", me.name, cptr->name);
+			(void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
 			vsendto_one(cptr, nbuf, vl);
 		}
 	va_end(vl);
@@ -1268,7 +1262,7 @@ void sendto_failops(char *pattern, ...)
 	char nbuf[1024];
 
 	va_start(vl, pattern);
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
 		    SendFailops(cptr))
 		{
@@ -1296,7 +1290,7 @@ void sendto_umode(int umodes, char *pattern, ...)
 	int  w;
 	va_start(vl, pattern);
 	w = (umodes == UMODE_OPER | UMODE_CLIENT ? 1 : 0);
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
 		    (cptr->umodes & umodes) == umodes && ((w == 1)
 		    && !IsHybNotice(cptr)))
@@ -1324,7 +1318,7 @@ void sendto_conn_hcn(char *pattern, ...)
 	char nbuf[1024];
 
 	va_start(vl, pattern);
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
 		    (cptr->umodes & UMODE_CLIENT) && IsHybNotice(cptr))
 		{
@@ -1351,7 +1345,7 @@ void sendto_failops_whoare_opers(char *pattern, ...)
 	char nbuf[1024];
 
 	va_start(vl, pattern);
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
 		    SendFailops(cptr) && IsAnOper(cptr))
 		{
@@ -1377,7 +1371,7 @@ void sendto_locfailops(char *pattern, ...)
 	char nbuf[1024];
 
 	va_start(vl, pattern);
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
 		    SendFailops(cptr) && IsAnOper(cptr))
 		{
@@ -1403,7 +1397,7 @@ void sendto_opers(char *pattern, ...)
 	char nbuf[1024];
 
 	va_start(vl, pattern);
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
 		    IsAnOper(cptr))
 		{
@@ -1429,13 +1423,13 @@ void sendto_ops_butone(aClient *one, aClient *from, char *pattern, ...)
 	aClient *cptr;
 
 	va_start(vl, pattern);
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 		sentalong[i] = 0;
 	for (cptr = client; cptr; cptr = cptr->next)
 	{
 		if (!SendWallops(cptr))
 			continue;
-		i = cptr->from->fd;	/* find connection oper is on */
+		i = cptr->from->slot;	/* find connection oper is on */
 		if (sentalong[i])	/* sent message along it already ? */
 			continue;
 		if (cptr->from == one)
@@ -1449,8 +1443,8 @@ void sendto_ops_butone(aClient *one, aClient *from, char *pattern, ...)
 
 /*
 ** sendto_ops_butone
-**	Send message to all operators regardless of whether they are +w or 
-**	not.. 
+**	Send message to all operators regardless of whether they are +w or
+**	not..
 ** one - client not to send message to
 ** from- client which message is from *NEVER* NULL!!
 */
@@ -1461,13 +1455,13 @@ void sendto_opers_butone(aClient *one, aClient *from, char *pattern, ...)
 	aClient *cptr;
 
 	va_start(vl, pattern);
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 		sentalong[i] = 0;
 	for (cptr = client; cptr; cptr = cptr->next)
 	{
 		if (!IsAnOper(cptr))
 			continue;
-		i = cptr->from->fd;	/* find connection oper is on */
+		i = cptr->from->slot;	/* find connection oper is on */
 		if (sentalong[i])	/* sent message along it already ? */
 			continue;
 		if (cptr->from == one)
@@ -1490,13 +1484,13 @@ void sendto_ops_butme(aClient *from, char *pattern, ...)
 	aClient *cptr;
 
 	va_start(vl, pattern);
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 		sentalong[i] = 0;
 	for (cptr = client; cptr; cptr = cptr->next)
 	{
 		if (!SendWallops(cptr))
 			continue;
-		i = cptr->from->fd;	/* find connection oper is on */
+		i = cptr->from->slot;	/* find connection oper is on */
 		if (sentalong[i])	/* sent message along it already ? */
 			continue;
 		if (!strcmp(cptr->user->server, me.name))	/* a locop */
@@ -1531,7 +1525,7 @@ void vsendto_prefix_one(struct Client *to, struct Client *from,
 			    && !MyConnect(from))
 			{
 				strcat(sender, "@");
-				
+
 				    (void)strcat(sender,
 				    (!IsHidden(from) ? user->realhost : user->
 				    virthost));
@@ -1595,10 +1589,9 @@ void sendto_realops(char *pattern, ...)
 
 	va_start(vl, pattern);
 #ifdef NO_FDLIST
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 #else
-	for (i = oper_fdlist.entry[j = 1]; j <= oper_fdlist.last_entry;
-	    i = oper_fdlist.entry[++j])
+	for (i = oper_fdlist.entry[j = 1]; j <= oper_fdlist.last_entry; i = oper_fdlist.entry[++j])
 #endif
 #ifdef NO_FDLIST
 		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
@@ -1626,22 +1619,25 @@ void sendto_connectnotice(nick, user, sptr)
 	int  i;
 	char connectd[1024];
 	char connecth[1024];
+
+	RunHook(HOOKTYPE_LOCAL_CONNECT, sptr);
 	ircsprintf(connectd,
-	    "*** Notice -- Client connecting on port %d: %s (%s@%s) %s%s%s",
-	    sptr->acpt->port, nick, user->username, user->realhost,
+	    "*** Notice -- Client connecting on port %d: %s (%s@%s) [%s] %s%s%s",
+	    sptr->listener->port, nick, user->username, user->realhost,
+	    sptr->class ? sptr->class->name : "",
 #ifdef USE_SSL
-	IsSecure(sptr) ? "[secure " : "", 
+	IsSecure(sptr) ? "[secure " : "",
 	IsSecure(sptr) ? SSL_get_cipher((SSL *)sptr->ssl) : "",
 	IsSecure(sptr) ? "]" : "");
 #else
 	"", "", "");
 #endif
 	ircsprintf(connecth,
-	    "*** Notice -- Client connecting: %s (%s@%s) [%s] {%d}", nick,
+	    "*** Notice -- Client connecting: %s (%s@%s) [%s] {%s}", nick,
 	    user->username, user->realhost, sptr->sockhost,
-	    get_client_class(sptr));
+	    sptr->class ? sptr->class->name : "0");
 
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
 		    IsOper(cptr) && (cptr->umodes & UMODE_CLIENT))
 		{
@@ -1672,10 +1668,9 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 #endif
 
 #ifdef NO_FDLIST
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 #else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry;
-	    i = serv_fdlist.entry[++j])
+	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
 #endif
 	{
 		if (!(cptr = local[i]) || (one && cptr == one->from))
@@ -1688,7 +1683,7 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 			{
 				if (sptr->srvptr->serv->numeric && SupportNS(cptr))
 					sendto_one(cptr,
-						(cptr->proto & PROTO_SJB64) ? 
+						(cptr->proto & PROTO_SJB64) ?
 					    "%s %s %d %B %s %s %b %lu %s %s :%s"
 					    :
 					    "%s %s %d %d %s %s %b %lu %s %s :%s"
@@ -1696,7 +1691,7 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 					    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
 					    hopcount, lastnick, username, realhost,
 					    sptr->srvptr->serv->numeric,
-					    servicestamp, umodes, 
+					    servicestamp, umodes,
 						  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : virthost),
 						    info);
 				else
@@ -1705,10 +1700,10 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 					    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
 					    hopcount, lastnick, username, realhost,
 					    SupportNS(cptr) && sptr->srvptr->serv->numeric ? base64enc(sptr->srvptr->serv->numeric) : server,
-					    servicestamp, umodes, 
+					    servicestamp, umodes,
 						  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : virthost),
 						    info);
-				
+
 			}
 			else
 			{
@@ -1752,8 +1747,8 @@ void	sendto_message_one(aClient *to, aClient *from, char *sender,
 
 void sendto_channels_inviso_join(aClient *user)
 {
-        Link *channels;
-        Link *users;
+        Membership *channels;
+       	Member *users;
         aClient *cptr;
 
         memset((char *)sentalong, '\0', sizeof(sentalong));
@@ -1761,22 +1756,22 @@ void sendto_channels_inviso_join(aClient *user)
                 sentalong[user->fd] = 1;
         if (user->user)
                 for (channels = user->user->channel; channels; channels = channels->next)
-                        for (users = channels->value.chptr->members; users; users = users->next)
+                        for (users = channels->chptr->members; users; users = users->next)
 			{
-                                cptr = users->value.cptr;
+                                cptr = users->cptr;
                                 if (!MyConnect(cptr) || IsTechAdmin(cptr) || IsNetAdmin(cptr) || sentalong[cptr->fd] || cptr == user)
                                         continue;
                                 sentalong[cptr->fd]++;
                                 sendto_one(cptr, ":%s!%s@%s JOIN :%s", user->name, user->user->username,
-				(IsHidden(user) ? user->user->virthost : user->user->realhost), channels->value.chptr->chname); 
+				(IsHidden(user) ? user->user->virthost : user->user->realhost), channels->chptr->chname);
 			}
 	return;
 }
 
 void sendto_channels_inviso_part(aClient *user)
 {
-        Link *channels;
-        Link *users;
+        Membership *channels;
+        Member *users;
         aClient *cptr;
 
         memset((char *)sentalong, '\0', sizeof(sentalong));
@@ -1784,13 +1779,13 @@ void sendto_channels_inviso_part(aClient *user)
                 sentalong[user->fd] = 1;
         if (user->user)
                 for (channels = user->user->channel; channels; channels = channels->next)
-                        for (users = channels->value.chptr->members; users; users = users->next)
+                        for (users = channels->chptr->members; users; users = users->next)
 			{
-                                cptr = users->value.cptr;
+                                cptr = users->cptr;
                                 if (!MyConnect(cptr) || IsTechAdmin(cptr) || IsNetAdmin(cptr) || sentalong[cptr->fd] || cptr == user)
                                         continue;
                                 sentalong[cptr->fd]++;
-                		sendto_one(cptr, ":%s!%s@%s PART :%s", user->name, user->user->username, (IsHidden(user) ? user->user->virthost : user->user->realhost), channels->value.chptr->chname);
+                		sendto_one(cptr, ":%s!%s@%s PART :%s", user->name, user->user->username, (IsHidden(user) ? user->user->virthost : user->user->realhost), channels->chptr->chname);
 			}
 	return;
 }
@@ -1798,7 +1793,7 @@ void sendto_channels_inviso_part(aClient *user)
 void sendto_channel_ntadmins(aClient *from, aChannel *chptr, char *pattern, ...)
 {
         va_list vl;
-        Link *lp;
+        Member *lp;
         aClient *acptr;
         int  i;
 
@@ -1806,7 +1801,7 @@ void sendto_channel_ntadmins(aClient *from, aChannel *chptr, char *pattern, ...)
         ++sentalong_marker;
         for (lp = chptr->members; lp; lp = lp->next)
 	{
-                acptr = lp->value.cptr;
+                acptr = lp->cptr;
                 if (acptr->from == from || !(IsNetAdmin(acptr) || IsTechAdmin(acptr)) || (IsDeaf(acptr) && !(sendanyways == 1)))
                         continue;
                 if (MyConnect(acptr))   /* (It is always a client) */

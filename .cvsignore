@@ -1,0 +1,3 @@
+ircdcron/ircd.cron
+ircdcron/ircdchk
+src/modules/Makefile

@@ -155,12 +155,12 @@ int  crule_connected(numargs, crulearg)
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	aClient *acptr;
+	Link *lp;
 
 	/* taken from m_links */
-	for (acptr = client; acptr; acptr = acptr->next)
-	{
-		if (!IsServer(acptr) && !IsMe(acptr))
-			continue;
+	/* Faster this way -- codemastr*/
+	for (lp = Servers; lp; lp = lp->next) {
+		acptr = lp->value.cptr;
 		if (match((char *)crulearg[0], acptr->name))
 			continue;
 		return (1);
@@ -178,7 +178,7 @@ int  crule_directcon(numargs, crulearg)
 	aClient *acptr;
 
 	/* adapted from m_trace and exit_one_client */
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 	{
 		if (!(acptr = local[i]) || !IsServer(acptr))
 			continue;
@@ -196,15 +196,15 @@ int  crule_via(numargs, crulearg)
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	aClient *acptr;
+	Link *lp;
 
 	/* adapted from m_links */
-	for (acptr = client; acptr; acptr = acptr->next)
-	{
-		if (!IsServer(acptr) && !IsMe(acptr))
-			continue;
+	/* Faster this way -- codemastr */
+	for (lp = Servers; lp; lp = lp->next) {
+		acptr = lp->value.cptr;
 		if (match((char *)crulearg[1], acptr->name))
 			continue;
-		if (match((char *)crulearg[0], (local[acptr->fd])->name))
+		if (match((char *)crulearg[0], (local[acptr->slot])->name))
 			continue;
 		return (1);
 	}
@@ -221,7 +221,7 @@ int  crule_directop(numargs, crulearg)
 	aClient *acptr;
 
 	/* adapted from m_trace */
-	for (i = 0; i <= highest_fd; i++)
+	for (i = 0; i <= LastSlot; i++)
 	{
 		if (!(acptr = local[i]) || !IsAnOper(acptr))
 			continue;

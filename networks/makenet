@@ -96,7 +96,7 @@ echo ""
 echo "What is the name of your IRC network?"
 echo $n "[$NETWORK] -> $c"
 read cc
-if [ ! -z $cc ]; then
+if [ ! -z "$cc" ]; then
 	NETWORK="$cc"
 fi
 
@@ -216,34 +216,38 @@ fi
 # write the actual conf
 
 cat > $FILE << __EOF__
-ver^$VERSION
-#
-# $NETWORK ($DEFSERV) Network Configuration File
-# --------------------------------------------------
-#  Added-at:     $DATE
-#  Author:	 $NICK
-#  Email:	 $EMAIL
-# -----------------------------------------
-#
+/*
+ * $NETWORK ($DEFSERV) Network Configuration File
+ *
+ * Added-at:     $DATE
+ * Author:	 $NICK
+ * Email:	 $EMAIL
+ */
 
-Network >..........: $NETWORK
-Set ircnetwork ....: $NETWORK
-Set defserv .......: $DEFSERV
-Set SERVICES_NAME .: $SERVICES_NAME
-Set oper_host .....: $OPER_HOST
-Set admin_host ....: $ADMIN_HOST
-Set locop_host ....: $LOCOP_HOST
-Set sadmin_host ...: $CSOP_HOST
-Set netadmin_host .: $NETADMIN_HOST
-Set coadmin_host ..: $COADMIN_HOST
-Set techadmin_host : $TECHADMIN_HOST
-Set hidden_host ...: $HIDDEN_HOST
-Set netdomain .....: $NETDOMAIN
-Set helpchan ......: $HELPCHAN
-Set STATS_SERVER ..: $STATS_SERVER
-Set HUB ...........: not_in_use
-Set iNAH ..........: $INAH
-Set net_quit ......: not_in_use
+set {
+	network-name 		"$NETWORK";
+	default-server 		"$DEFSERV";	
+	services-server 	"$SERVICES_NAME";
+	stats-server 		"$STATS_SERVER";
+	help-channel 		"$HELPCHAN";
+	hiddenhost-prefix	"$HIDDEN_HOST";
+	hosts {
+		local		"$LOCOP_HOST";
+		global		"$OPER_HOST";
+		coadmin		"$COADMIN_HOST";
+		admin		"$ADMIN_HOST";
+		servicesadmin	"$CSOP_HOST";
+		techadmin	"$TECHADMIN_HOST";
+		netadmin	"$NETADMIN_HOST";
+__EOF__
+if [ "$INAH" = "1" ]; then
+	echo "		host-on-oper	yes;" >> $FILE
+fi
+if [ "$INAH" = "0" ]; then
+	echo "          host-on-oper	no;" >> $FILE
+fi
+echo "	};" >> $FILE		
+echo "};" >> $FILE
 __EOF__
 
 echo ""
@@ -255,10 +259,13 @@ if [ ! -z $cc ]; then
 fi
 case "$SUBMIT" in
 	[Nn]*)
-		echo "Ok all done, all you have to do is,"
-		echo "Change the Include line in unrealircd.conf to:"
-		echo "Include .................: networks/$FILE"
-		echo "Thank your for choosing UnrealIRCd"
+		echo ""
+		echo "" >> ../unrealircd.conf
+		echo "// Added by makenet $DATE" >> ../unrealircd.conf
+		echo "include \"networks/$FILE\";" >> ../unrealircd.conf
+		echo "All done. I have added \"include \"networks/$FILE\ to your unrealircd.conf"
+		echo "You might want to edit it if you have done makenet before"
+		echo "Thank you for choosing UnrealIRCd"
 		exit
 		;;
 	*)
@@ -280,8 +287,10 @@ Subject: Network file submission for $NETWORK
 .
 __EOF__
 echo ""
-echo "Ok all done, all you have to do is,"
-echo "Change the Include line in unrealircd.conf to:"
-echo "Include .................: networks/$FILE"
-echo "Thank your for choosing UnrealIRCd"
+echo "" >> ../unrealircd.conf
+echo "// Added by makenet $DATE" >> ../unrealircd.conf
+echo "include \"networks/$FILE\";" >> ../unrealircd.conf
+echo "All done. I have added \"include \"networks/$FILE\"; to your unrealircd.conf"
+echo "You might want to edit it if you have done makenet before"
+echo "Thank you for choosing UnrealIRCd"
 exit

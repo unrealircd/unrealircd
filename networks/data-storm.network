@@ -1,31 +1,19 @@
-ver^2.2
-#
-# Data-Storm (irc.data-storm.net) Network Configuration File
-# --------------------------------------------------
-# Added-at: 05 November 2000 13:42
-# Author: data-genius
-# Email: dg@data-storm.net
-# -----------------------------------------
-#
-
-Network >..........: Data-Storm
-Set ircnetwork ....: Data-Storm
-Set defserv .......: irc.data-storm.net
-Set SERVICES_NAME .: services.data-storm.net
-Set oper_host .....: oper.root.net
-Set admin_host ....: oper.root.net
-Set locop_host ....: oper.root.net
-Set sadmin_host ...: oper.root.net
-Set netadmin_host .: oper.god.net
-Set coadmin_host ..: oper.root.net
-Set techadmin_host : oper.root.net
-Set hidden_host ...: ownedbyj00
-Set netdomain .....: data-storm.net
-Set helpchan ......: #help
-Set STATS_SERVER ..: stats.data-storm.net
-Set HUB ...........: not_in_use
-Set iNAH ..........: 0
-Set net_quit ......: not_in_use
-
-
-
+set {
+	network-name		"Data-Storm";
+	default-server		"irc.data-storm.net";
+	services-server		"services.data-storm.net";
+	stats-server		"stats.data-storm.net";
+	help-channel		"#help";
+	hiddenhost-prefix	"ownedbyj00";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"oper.root.net";
+		global		"oper.root.net";
+		coadmin		"oper.root.net";
+		admin		"oper.root.net";
+		servicesadmin	"oper.root.net";
+		techadmin	"oper.root.net";
+		netadmin	"oper.god.net";
+		host-on-oper-up	"off";
+	};
+};

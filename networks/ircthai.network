@@ -1,29 +1,19 @@
-ver^2.2
-#
-# Global-IRC.net Network Configuration File
-# -----------------------------------------
-#  Added-at:     14 July 1999 00:00 GMT
-#  Author:       Stskeeps (Carsten Munk)
-#  E-Mail:       stskeeps@global-irc.net
-#  $Id$
-# -----------------------------------------
-#
-
-Network >..........: IRCThai.com
-Set ircnetwork ....: IRCThai.com
-Set defserv .......: irc.ircthai.com
-Set SERVICES_NAME .: services.ircthai.com
-Set oper_host .....: IRCop.ircthai.com
-Set admin_host ....: Admin.ircthai.com
-Set locop_host ....: LOCop.ircthai.com
-Set sadmin_host ...: ServiceAdmin.ircthai.com
-Set netadmin_host .: NetAdmin.ircthai.com
-Set coadmin_host ..: CoAdmin.ircthai.com
-Set techadmin_host : TechAdmin.ircthai.com
-Set hidden_host ...: IRCThai
-Set netdomain .....: ircthai.com
-Set helpchan ......: #ThaiHelp
-Set STATS_SERVER ..: stats.ircthai.com
-Set HUB ...........: 1
-Set iNAH ..........: 1
-Set net_quit ......: IT
+set {
+	network-name		"IRCThai.com";
+	default-server		"irc.ircthai.com";
+	services-server		"services.ircthai.com";
+	stats-server		"stats.ircthai.com";
+	help-channel		"#ThaiHelp";
+	hiddenhost-prefix	"IRCThai";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"LOCop.ircthai.com";
+		global		"IRCop.ircthai.com";
+		coadmin		"CoAdmin.ircthai.com";
+		admin		"Admin.ircthai.com";
+		servicesadmin	"ServiceAdmin.ircthai.com";
+		techadmin	"TechAdmin.ircthai.com";
+		netadmin	"NetAdmin.ircthai.com";
+		host-on-oper-up	"on";
+	};
+};

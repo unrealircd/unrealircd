@@ -1,5 +1,235 @@
 OLD CHANGES:
 
+[Unreal3.1.1-Darkshades]
+- Fixed /userhost showing "unknown" as username for a lot of people
+- Fixed ./update error
+- Fixed a NO_FDLIST define problem in send.c and channel.c
+- Added define PROPER_COREDUMP, will not launch s_segv when done and make
+  proper coredumps
+- Fixed the G:line bugs, i hope - moved tkl_sweep into a loopstruct
+- Removed the ERR_NOTONCHANNEL message =P
+- Made some memory cleanups on the command list (saved 268 bytes)
+- More memory cleanups, changed aClient->refcnt to a signed char,
+  aClient->hopcount to unsigned char
+- Changed aChannel->mode.msgs & .per to unsigned short, and changed
+  .kmode to unsigned char
+- Changed aChannel->users to unsigned short (max 65536 users per channel)
+  and FloodOpt->nmsg to an unsigned short
+- Removed SUMMON totally
+- Fixed another SJOIN problem, but not the exact one i was looking for
+- Added IRCd bot (raw commands) and the IRC bot, webtv.c
+  - Added WHOIS command (working) to IRCbot-
+- Fixed a fun doublechar token problem (the AA unknown command)
+- Removed _alot_ of unused variables
+- Fixed *some* -Wall warnings (still alot left to fix)
+- Fixed some more -Wall warnings
+- ./update now checks when you specify wget if it exists, if not it tries lynx
+- Cached MOTDs are now dynamically allocated (saves alot of memory)
+- Made aClient->passwd dynamically allocated (saves 32bytes per user/server)
+- Fixed a NOTICE crash bug, reported by EJ
+- Removed a excessive va_end in send.c
+- Fixed a bug when running the ircd with -h
+- Readded /summon to return ERR_SUMMONDISABLED (required by RFC1459)
+- Made /users return ERR_USERSDISABLED (required by RFC1459)
+- Removed all utmp calls
+- Fixed Something ... cant remember what ... oh yes, fixed if (sptr->passwd[0]) to if (sptr->passwd)
+  it stopped the server crashing !
+- Made Code revisions so that we can compile on Win32, and fixed some of sts's late nite 
+  coding sessions(dbin)
+- Fixed some REAL dumb find_server_quick bugs
+- Fixed a wierd NOTICE bug
+- Modified and fixed the NOTICE bug totally, with some waste of the nospoof
+  system
+- Fixed a bug where +K could be set when +i was not (reported by rapta)
+- Made it so if you set -i on a channel that is +K it sets -iK
+- Fixed whowas so it no longer reports away messages
+- Made major changes to +I (may need debugging)
+  - When you set +I while on a chan it sends a PART to the rest of the channel
+  - When you set -I which on a chan it sends a JOIN to the rest of the channel
+  - Net/TechAdmins now receive a JOIN/PART when you JOIN/PART a channel  - Net/TechAdmins can now see +I users in /names
+- Fixed a typo in s_err.c reported by TRON
+- Fixed more -Wall warnings
+- Added #define LIST_SHOW_MODES to show channel modes in a /list (NOTE: only shows modes, not params)
+- Fixed /mode # + bug reported by PhatNet/Mind
+- Possible fixed the SJOIN kick bug (mode +Q), servers can now always kick
+- Added NEW DNS resolver (Win32 Only atm)  ... use by defining NEWDNS
+- FIXED "BUG" caused by NEWDNS *shrug*
+- Fixed the passwd NICK problem
+- Fixed the problem with NewDNS (ive always known about it but never known how it happens) [a pointer prob]
+- Redhat 7 (broken string.h problem), ./Config
+- Added SSL connections, open ports with P:ip:s:*:port to make them SSL
+  ports, made after hq.alert.sk's implementation
+- Added P:line flags C - client only, S - server only, J - java clients (replaces CONFROOM_JAVA_PORT)
+- Fixed up a few various things
+- Made SHOWCONNECTNOTICES work properly again, also with SSL
+- Changed ./Config to detect SSL better, and generate certificates properly
+- Removed some annoying logging in ssl.c
+- Merged in changes from TEMPcvs branch
+- Fixed a /UNSQLINE para problem, found by Joe
+- #define SHOW_SECRET now allows all ircops to see +s channels in /whois.  If not defined, only net/tech admins can.
+- Added #define CENSOR_QUIT, for WaveRide
+- Fixed hashing bug that caused the server to crash on exit
+- Made find_server_b64_or_real be a little faster, possible fixing bug
+- Made /stats s checking check for sanity or insanity (ignore them for 0
+  numerics)
+- Fixed SJOIN (mp2parv) bug, that caused insane desynchs
+- Changed Cannot find server message to be to sendto_realops
+- Fixed a warning in CENSOR_QUIT
+- Fixed the G:Line user wrongly matching (ip-alike addys didnt check user)
+- Added protoctl SJB64, which adds B64-9 timestamps to many timestamping
+  operations
+- Added ircsprintf %B (base64-9^10) with ! as prefix, and %b (no prefix)
+- Fixed a few places where for some reason sprintf() was used rather than ircsprintf()
+- Tokenized ADCHAT, TECHAT, NACHAT, SWHOIS, and SVSKILL
+- Fixed a bug in opermode that would make it display a notice on invalid modes
+- Fixed a bug where the Found your hostname (cached) message was messed up
+- Fixed a memory leak in the new password code
+- Fixed a sptr->passwd bug
+- Removed the unnecessary param from IsULine() it is now just IsULine(sptr)
+- ircsprintf() is now used everywhere
+- Fixed the SJB64 bugs that misplaced users
+- Removed sendto_helpops and replaced it with sendto_umode
+- Added is_chanownprotop() checks if +q +a or +o with 1 loop
+- Added chmode +N (no nick changes) (opers, ulines, +o +q or +a can override)
+- Added some fixes on the SJB64 crashing bug, and added tokenization in 
+  channel messsages (yahooooo!)
+- Fixed the /list bug, reported by many people
+- Fixed a linking bug (where did that come from)
+- Fixed bug where duplicate numerics could occur
+- Fixed the hashing bug (thank you ROXnet ...)
+- Fixed a wierd channel message bug ||
+- Fixed a bug where non-NS servers would crash when linking
+- Added TS2ts (supporting the SJB64 stuff), and fixed the !0 timestamp bug
+- Fixed the /list only showing 64 channels bug! Also sped /list up in the process
+- Probably fixed the hash bug, again.
+- Possible fixed some b64 bugs
+- Autodetects /usr/sbin/openssl now, thanks trinity
+- Tokenized PING and PONG
+- Fixes a missing : in SJOIN
+- Possible fixed a internal server list bug
+- When IRC WebTV bot cannot find a command, it sends it to parse() instead,
+  thanks [Real]
+- Added burst.c in extras/
+- Moved lopt and whowas to anUser (saves 8 bytes for every server)
+- Removed aClient->history, not used (saves 4 bytes for every user/server)
+- Fixed compile error with SSL
+- Fixed a /list and /quit bug
+- Fixed the masskill bug with replacing "Server Exists" code.. i removed it
+  accidentialy last time
+- Added /botserv /bs command, patch by ATHnet.de
+- /who's now show +i users for opers in channels, idea by  Strider@ChatCircuit
+- Fixed NO_OPEROVERRIDE bug reported by otherguy
+- #define STATSWRITING will make ircd write ircd.stats every 4 seconds,
+  idea/sortof by WaveRide
+    Format of ircd.stats:
+       <global users>
+       <global invisible users>
+       <global servers>
+       <irc operators>
+       <unknown connections>
+       <local clients>
+       <local servers>
+       <local max clients>
+       <global max clients>
+- Fixed +d (deaf) so it works again
+- Removed some leftovers from the &channel code (which fixed a minor bug as well)
+- Fixed a SJOIN3<->services problem
+- Fixed a typo where it still said +I instead of +V in an error message
+- Fixed the "Bad file descriptor" bug in SSL. This bugfix may be a bit risky
+  as it is manipulating BIO fds. The reason openssl freaked at this, was
+  that when a fd is closed, we change fds from 4 to 3 etc, in other words,
+  we renumber fds. SSL didn't know this and if you would call SSL_set_fd it
+  would close the connection/crash. Added SSL_change_fd() to change the FD
+  directly through BIO_set_fd. 
+- Fixed the masskill bug, hopefully. Was a delimiter/number array bug in
+  find_server_b64_or_real, causing negative base64 to be accepted (bad).
+  value 1-256 will never be able to be in two letters (a server name)
+- Fixed \r\n bug, hopefully
+- made SSL use same cert client/server
+- Fixed help.c bug reported by Curt|s
+- Different fixes, unreal.tspre.org -> unrealircd.com
+- Fixed-fixed-fixed the \r\n bug and removed some useless cpu wasting code
+- Removed remapping fds, and did a severe select() speedup, suggested by
+  Demiurgus. Should speed CPU a lot
+- Updated some messages
+- Fixed-fixed-fixed the U:line branching thing made by codemastr
+- Fixed a G: line-turn-into Z:line problem, reported by eYe-Man
+- Added SJOIN (SJ3 only) instead of JOIN/MODE in /join and discovered a bug in 
+  SJOIN code, that if the line doesnt have a " " appeneded, it wont take the
+  last users or first for that sake. Hopefully patched SJ3 code for it
+- Added OPT target OPT_SJB64 and OPT_NOT_SJB64
+- Made SSL server<->server work, using __blocking__ sockets (this is only
+  in connect moment thou) -stskeeps
+- Removed 1.0 msg/s when not in HTM
+- Fixed cutoff server infos in synch
+- Added so /gline and /shun accepts time periods in 1d2h3s etc. a recode of
+  some potvin stuff
+- Added so blocking is only effective when SSL_connect()'ing
+- Fixed a couple of SJOIN/Link problems detected by Curt|s
+- Changed some stuff with SSL, you may want to seperate server.pem into
+  server.key.pem and server.cert.pem (or "rm Makefile" and "./Config")
+- Fixed a couple of SJOIN/Link problems detected by Curt|s
+- Made /stats C show SSL/Zip flags
+- Fixed the Stskeeps "mass G:line on /rehash" (tm) bug
+- Removed last point of confusion in ALN/NS
+- Removed CRYPTOIRCD (replaced by SSL)
+- Added support for some more SJB64 stuff
+- Added some more support for some even more SJB64 stuff
+- Added some network files and even more network files
+- Fixed some copyright stuff in ssl.c
+- Fixed a /map problem
+- Updated doc/conf.doc and doc/example.conf
+- Fixed a bug where /map showed U:lines while HIDE_ULINES was set
+- Removed "on network" in /whois oper
+- Added code to makenet to stop fake submissions
+- Fixed some /whois channels code, which may break +I /whois
+- Fixed overflow in SJOIN
+- Added SMO *, all users
+- If a +r user is /who'ed, it shows a "r" in flags field. Suggested by
+  Mirar.
+- Fixed a typo in ssl.c
+- Added SICI information, Donation information, fixed a ./Config problem
+  overwriting certs ..
+- Added hatblade's files
+- Added some credits
+- Fixed a real bad  /whois bug, reported by BiGi
+- Fixed a problem with /sajoin .. atleast possible
+- Added infofield in /stats L for clients/listeners
+- Fixed a blocking socket thing
+- Fixed up /stats L bug
+- Changed CONNECTTIMEOUT to 30sec
+- Changed some _more_ credits
+- Fixed compile error found by Headbang
+- #define CHINESE_NICK will make you able to use chinese nicks
+  thanks to RexHsu and Aim
+- Fixed up CHINESE_NICK and JAPANESE_NICK, suggested by Aim, see
+  include/config.h
+- Config change in SSL.h detection part
+- SSL error change to sendto_umode(UMODE_JUNK)
+- Fixed a hash error, topic problem
+
+[fixes]
+- Fixed a +d bug (it didnt send ` prefixes)
+- Fixed a SJOIN bug, i think, thanks to Web
+- Fixed a chinese nick thing, thanks to miCro and RexHsu
+- Fixed a typo in config.h
+- Fixed a bug in sendto_channel_prefix_tok reported by Strider@ChatCircuit
+- Fixed P:line bug, caused by codemastr(tm) coding, (masskills), reported by
+  sidv@sid-kitty-land.org
+- Some few fixes from CodeM and Barubary:
+  - Fixed /whois to show users for opers when not in the channel. 
+  - Fixed /whois to allow only global eyes opers to see user modes.  
+  - Fixed /whois to not show idle times of global opers to anyone except
+    another global oper or services.
+  - Fixed /who to show users for opers when not in the channel. 
+- Fixed restart bug, reported by RaYmAn
+- Fix-fixed " Fixed /whois to not show idle times of global opers to
+     anyone" patch
+- Fixed a recently found exploit involving reverse DNS (fix from bahamut)
+- Made more openssl binary detection using 'which'
+- Added message when trying to join a +z channel
+- New segmentation fault code by Kanzen_Greiver
+
 *** Unreal3.1 *** (final)       
 - Moved REMOVE_ADVERTISE a little
 - Fixed bug where you could /mode #test +L #test (link a channel to

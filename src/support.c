@@ -202,215 +202,7 @@ int  inet_netof(in)
 
 #endif /* NEED_INET_NETOF */
 
-#ifndef DMALLOC
-#if defined(DEBUGMODE)
-void dumpcore(msg, p1, p2, p3, p4, p5, p6, p7, p8, p9)
-	char *msg, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8, *p9;
-{
-	static time_t lastd = 0;
-	static int dumps = 0;
-	char corename[12];
-	time_t now;
-	int  p;
-
-	now = time(NULL);
-
-	if (!lastd)
-		lastd = now;
-	else if (now - lastd < 60 && dumps > 2)
-		(void)s_die();
-	if (now - lastd > 60)
-	{
-		lastd = now;
-		dumps = 1;
-	}
-	else
-		dumps++;
-#if !defined(_WIN32) && !defined(_AMIGA)
-	p = getpid();
-	if (fork() > 0)
-	{
-		kill(p, 3);
-		kill(p, 9);
-	}
-	write_pidfile();
-	(void)ircsprintf(corename, "core.%d", p);
-	(void)rename("core", corename);
-	Debug((DEBUG_FATAL, "Dumped core : core.%d", p));
-	sendto_ops("Dumped core : core.%d", p);
-#endif
-	Debug((DEBUG_FATAL, msg, p1, p2, p3, p4, p5, p6, p7, p8, p9));
-	sendto_ops(msg, p1, p2, p3, p4, p5, p6, p7, p8, p9);
-	(void)s_die();
-}
-
-static char *marray[20000];
-static int mindex = 0;
-
-#define	SZ_EX	(sizeof(char *) + sizeof(size_t) + 4)
-#define	SZ_CHST	(sizeof(char *) + sizeof(size_t))
-#define	SZ_CH	(sizeof(char *))
-#define	SZ_ST	(sizeof(size_t))
-char *MyMalloc(x)
-	size_t x;
-{
-	int  i;
-	char **s;
-	char *ret;
-
-#ifndef _WIN32
-	ret = (char *)malloc(x + (size_t)SZ_EX);
-#else
-	ret = (char *)GlobalAlloc(GPTR, x + (size_t)SZ_EX);
-#endif
-
-	if (!ret)
-	{
-		outofmemory();
-	}
-	bzero(ret, (int)x + SZ_EX);
-	bcopy((char *)&ret, ret, SZ_CH);
-	bcopy((char *)&x, ret + SZ_CH, SZ_ST);
-	bcopy("VAVA", ret + SZ_CHST + (int)x, 4);
-	Debug((DEBUG_MALLOC, "MyMalloc(%ld) = %#x", x, ret + 8));
-	for (i = 0, s = marray; *s && i < mindex; i++, s++)
-		;
-	if (i < 20000)
-	{
-		*s = ret;
-		if (i == mindex)
-			mindex++;
-	}
-	return ret + SZ_CHST;
-}
-
-char *MyRealloc(x, y)
-	char *x;
-	size_t y;
-
-{
-	int  l;
-	char **s;
-	char *ret, *cp;
-	size_t i;
-	int  k;
-
-	x -= SZ_CHST;
-	bcopy(x, (char *)&cp, SZ_CH);
-	bcopy(x + SZ_CH, (char *)&i, SZ_ST);
-	bcopy(x + (int)i + SZ_CHST, (char *)&k, 4);
-	if (bcmp((char *)&k, "VAVA", 4) || (x != cp))
-		dumpcore("MyRealloc %#x %d %d %#x %#x", x, y, i, cp, k);
-#ifndef _WIN32
-	ret = (char *)realloc(x, y + (size_t)SZ_EX);
-#else
-	ret =
-	    (char *)GlobalReAlloc(x, y + (size_t)SZ_EX,
-	    GMEM_MOVEABLE | GMEM_ZEROINIT);
-#endif
-
-	if (!ret)
-	{
-		outofmemory();
-	}
-	bcopy((char *)&ret, ret, SZ_CH);
-	bcopy((char *)&y, ret + SZ_CH, SZ_ST);
-	bcopy("VAVA", ret + SZ_CHST + (int)y, 4);
-	Debug((DEBUG_NOTICE, "MyRealloc(%#x,%ld) = %#x", x, y, ret + SZ_CHST));
-	for (l = 0, s = marray; *s != x && l < mindex; l++, s++)
-		;
-	if (l < mindex)
-		*s = NULL;
-	else if (l == mindex)
-		Debug((DEBUG_MALLOC, "%#x !found", x));
-	for (l = 0, s = marray; *s && l < mindex; l++, s++)
-		;
-	if (l < 20000)
-	{
-		*s = ret;
-		if (l == mindex)
-			mindex++;
-	}
-	return ret + SZ_CHST;
-}
-
-void MyFree(x)
-	char *x;
-{
-	size_t i;
-	char *j;
-	u_char k[4];
-	int  l;
-	char **s;
-
-	if (!x)
-		return;
-	x -= SZ_CHST;
-
-	bcopy(x, (char *)&j, SZ_CH);
-	bcopy(x + SZ_CH, (char *)&i, SZ_ST);
-	bcopy(x + SZ_CHST + (int)i, (char *)k, 4);
-
-	if (bcmp((char *)k, "VAVA", 4) || (j != x))
-		dumpcore("MyFree %#x %ld %#x %#x", x, i, j,
-		    (k[3] << 24) | (k[2] << 16) | (k[1] << 8) | k[0]);
-
-#undef	free
-#ifndef _WIN32
-	(void)free(x);
-#else
-	(void)GlobalFree(x);
-#endif
-#define	free(x)	MyFree(x)
-	Debug((DEBUG_MALLOC, "MyFree(%#x)", x + SZ_CHST));
-
-	for (l = 0, s = marray; *s != x && l < mindex; l++, s++)
-		;
-	if (l < mindex)
-		*s = NULL;
-	else if (l == mindex)
-		Debug((DEBUG_MALLOC, "%#x !found", x));
-}
-
-#else
-char *MyMalloc(x)
-	size_t x;
-{
-#ifndef _WIN32
-	char *ret = (char *)malloc(x);
-#else
-	char *ret = (char *)GlobalAlloc(GPTR, x);
-#endif
-
-	if (!ret)
-	{
-		outofmemory();
-	}
-	return ret;
-}
-
-char *MyRealloc(x, y)
-	char *x;
-	size_t y;
-{
-#ifndef _WIN32
-	char *ret = (char *)realloc(x, y);
-#else
-	char *ret = (char *)GlobalReAlloc(x, y, GMEM_MOVEABLE | GMEM_ZEROINIT);
-#endif
-
-	if (!ret)
-	{
-		outofmemory();
-	}
-	return ret;
-}
-#endif
-#endif
 /*
- * * read a string terminated by \r or \n in from a fd *
- * 
- * Created: Sat Dec 12 06:29:58 EST 1992 by avalon * Returns: * 0 - EOF *
  * -1 - error on read *     >0 - number of bytes returned (<=num) *
  * After opening a fd, it is necessary to init dgets() by calling it as *
  * dgets(x,y,0); * to mark the buffer as being empty.
@@ -639,4 +431,162 @@ time_t	atime(char *xtime)
 	Xtract(s, S);
 
 	return ((D * 86400) + (H * 3600) + (M * 60) + S);		
+}
+
+void iCstrip(char *line)
+{
+	char *c;
+
+	if ((c = strchr(line, '\n')))
+		*c = '\0';
+	if ((c = strchr(line, '\r')))
+		*c = '\0';
+}
+
+/*
+ * Copyright 1996, 1997, 1998, 1999, 2000 Michiel Boland.
+ * Under the BSD license (without advertising clause)
+ * From mathopd
+*/
+char *rfctime(time_t t, char *buf)
+{
+        struct tm *tp;
+
+        tp = gmtime(&t);
+        if (tp == 0) {
+                return 0;
+        }
+        strftime(buf, 31, "%a, %d %b %Y %H:%M:%S GMT", tp);
+        return buf;
+}
+
+time_t rfc2time(char *s)
+{
+	static const int daytab[2][12] = {
+		{0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 },
+		{0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335 }
+	};
+	unsigned sec, min, hour, day, mon, year;
+	char month[3];
+	register char c;
+	register unsigned n;
+	register char flag;
+	register char state;
+	register char isctime;
+	enum { D_START, D_END, D_MON, D_DAY, D_YEAR, D_HOUR, D_MIN, D_SEC };
+
+	sec = 60;
+	min = 60;
+	hour = 24;
+	day = 32;
+	year = 1969;
+	isctime = 0;
+	month[0] = 0;
+	state = D_START;
+	n = 0;
+	flag = 1;
+	do {
+		c = *s++;
+		switch (state) {
+		case D_START:
+			if (c == ' ') {
+				state = D_MON;
+				isctime = 1;
+			} else if (c == ',') state = D_DAY;
+			break;
+		case D_MON:
+			if (isalpha(c)) {
+				if (n < 3) month[n++] = c;
+			} else {
+				if (n < 3) return -1;
+				n = 0;
+				state = isctime ? D_DAY : D_YEAR;
+			}
+			break;
+		case D_DAY:
+			if (c == ' ' && flag)
+				;
+			else if (isdigit(c)) {
+				flag = 0;
+				n = 10 * n + (c - '0');
+			} else {
+				day = n;
+				n = 0;
+				state = isctime ? D_HOUR : D_MON;
+			}
+			break;
+		case D_YEAR:
+			if (isdigit(c))
+				n = 10 * n + (c - '0');
+			else {
+				year = n;
+				n = 0;
+				state = isctime ? D_END : D_HOUR;
+			}
+			break;
+		case D_HOUR:
+			if (isdigit(c))
+				n = 10 * n + (c - '0');
+			else {
+				hour = n;
+				n = 0;
+				state = D_MIN;
+			}
+			break;
+		case D_MIN:
+			if (isdigit(c))
+				n = 10 * n + (c - '0');
+			else {
+				min = n;
+				n = 0;
+				state = D_SEC;
+			}
+			break;
+		case D_SEC:
+			if (isdigit(c))
+				n = 10 * n + (c - '0');
+			else {
+				sec = n;
+				n = 0;
+				state = isctime ? D_YEAR : D_END;
+			}
+			break;
+		}
+	} while (state != D_END && c);
+	switch (month[0]) {
+	case 'A':
+		mon = (month[1] == 'p') ? 4 : 8;
+		break;
+	case 'D':
+		mon = 12;
+		break;
+	case 'F':
+		mon = 2;
+		break;
+	case 'J':
+		mon = (month[1] == 'a') ? 1 : ((month[2] == 'l') ? 7 : 6);
+		break;
+	case 'M':
+		mon = (month[2] == 'r') ? 3 : 5;
+		break;
+	case 'N':
+		mon = 11;
+		break;
+	case 'O':
+		mon = 10;
+		break;
+	case 'S':
+		mon = 9;
+		break;
+	default:
+		return -1;
+	}
+	if (year <= 100)
+		year += (year < 70) ? 2000 : 1900;
+	--mon;
+	--day;
+	if (sec >= 60 || min >= 60 || hour >= 60 || day >= 31 || year < 1970)
+		return -1;
+	return sec + 60L * (min + 60L * (hour + 24L * (
+		day + daytab[year % 4 == 0][mon] + 365L * (year - 1970L) + ((year - 1969L) >> 2))));
 }

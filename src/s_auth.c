@@ -60,12 +60,12 @@ void start_auth(cptr)
 	struct SOCKADDR_IN sock;
 	int  addrlen = sizeof(struct SOCKADDR_IN);
 
-#ifdef NO_IDENT_CHECKING
-	cptr->flags &= ~(FLAGS_WRAUTH | FLAGS_AUTH);
-	return;
-#endif
-	Debug((DEBUG_NOTICE, "start_auth(%x) fd %d status %d",
-	    cptr, cptr->fd, cptr->status));
+	if (IDENT_CHECK == 0) {
+		cptr->flags &= ~(FLAGS_WRAUTH | FLAGS_AUTH);
+		return;
+	}
+	Debug((DEBUG_NOTICE, "start_auth(%x) slot=%d, fd=%d, status=%d",
+	    cptr, cptr->slot, cptr->fd, cptr->status));
 	if ((cptr->authfd = socket(AFINET, SOCK_STREAM, 0)) == -1)
 	{
 #ifdef	USE_SYSLOG
@@ -79,15 +79,14 @@ void start_auth(cptr)
 		ircstp->is_abad++;
 		return;
 	}
-#ifndef _WIN32
-	if (cptr->authfd >= (MAXCONNECTIONS - 3))
+    if (++OpenFiles >= (MAXCONNECTIONS - 2))
 	{
-		sendto_ops("Can't allocate fd for auth on %s",
-		    get_client_name(cptr, TRUE));
-		(void)close(cptr->authfd);
+		sendto_ops("Can't allocate fd for auth on %s, too many connections.", get_client_name(cptr, TRUE));
+		CLOSE_SOCK(cptr->authfd);
+		--OpenFiles;
+		cptr->authfd = -1;
 		return;
 	}
-#endif
 
 #ifdef SHOWCONNECTINFO
 	sendto_one(cptr, REPORT_DO_ID);
@@ -106,23 +105,16 @@ void start_auth(cptr)
 	sock.SIN_PORT = htons(113);
 	sock.SIN_FAMILY = AFINET;
 
-	if (connect(cptr->authfd, (struct SOCKADDR *)&sock,
-#ifndef _WIN32
-	    sizeof(sock)) == -1 && errno != EINPROGRESS)
-#else
-	    sizeof(sock)) == -1 && (WSAGetLastError() !=
-	    WSAEINPROGRESS && WSAGetLastError() != WSAEWOULDBLOCK))
-#endif
+	if (connect(cptr->authfd, (struct sockaddr *)&sock,
+		sizeof(sock)) == -1 && !((ERRNO == P_EWOULDBLOCK)
+		 || (ERRNO == P_EINPROGRESS)))
 	{
 		ircstp->is_abad++;
 		/*
 		 * No error report from this...
 		 */
-#ifndef _WIN32
-		(void)close(cptr->authfd);
-#else
-		(void)closesocket(cptr->authfd);
-#endif
+		CLOSE_SOCK(cptr->authfd);
+		--OpenFiles;
 		cptr->authfd = -1;
 		if (!DoingDNS(cptr))
 			SetAccess(cptr);
@@ -132,8 +124,6 @@ void start_auth(cptr)
 		return;
 	}
 	cptr->flags |= (FLAGS_WRAUTH | FLAGS_AUTH);
-	if (cptr->authfd > highest_fd)
-		highest_fd = cptr->authfd;
 	return;
 }
 
@@ -172,23 +162,12 @@ void send_authports(cptr)
 
 	Debug((DEBUG_SEND, "sending [%s] to auth port %s.113",
 	    authbuf, inetntoa((char *)&them.SIN_ADDR)));
-#ifndef _WIN32
-	if (write(cptr->authfd, authbuf, strlen(authbuf)) != strlen(authbuf))
-#else
-	if (send(cptr->authfd, authbuf, strlen(authbuf),
-	    0) != (int)strlen(authbuf))
-#endif
+	if (WRITE_SOCK(cptr->authfd, authbuf, strlen(authbuf)) != strlen(authbuf))
 	{
-	      authsenderr:
+authsenderr:
 		ircstp->is_abad++;
-#ifndef _WIN32
-		(void)close(cptr->authfd);
-#else
-		(void)closesocket(cptr->authfd);
-#endif
-		if (cptr->authfd == highest_fd)
-			while (!local[highest_fd])
-				highest_fd--;
+		CLOSE_SOCK(cptr->authfd);
+		--OpenFiles;
 		cptr->authfd = -1;
 		cptr->flags &= ~FLAGS_AUTH;
 #ifdef SHOWCONNECTINFO
@@ -226,13 +205,8 @@ void read_authports(cptr)
 	 * Oh. this is needed because an authd reply may come back in more
 	 * than 1 read! -avalon
 	 */
-#ifndef _WIN32
-	if ((len = read(cptr->authfd, cptr->buffer + cptr->count,
-	    sizeof(cptr->buffer) - 1 - cptr->count)) >= 0)
-#else
-	if ((len = recv(cptr->authfd, cptr->buffer + cptr->count,
-	    sizeof(cptr->buffer) - 1 - cptr->count, 0)) >= 0)
-#endif
+	  if ((len = READ_SOCK(cptr->authfd, cptr->buffer + cptr->count,
+		  sizeof(cptr->buffer) - 1 - cptr->count)) >= 0)
 	{
 		cptr->count += len;
 		cptr->buffer[cptr->count] = '\0';
@@ -264,16 +238,10 @@ void read_authports(cptr)
 		Debug((DEBUG_ERROR, "bad auth reply in [%s]", cptr->buffer));
 		*ruser = '\0';
 	}
-#ifndef _WIN32
-	(void)close(cptr->authfd);
-#else
-	(void)closesocket(cptr->authfd);
-#endif
-	if (cptr->authfd == highest_fd)
-		while (!local[highest_fd])
-			highest_fd--;
+    CLOSE_SOCK(cptr->authfd);
+    --OpenFiles;
+    cptr->authfd = -1;
 	cptr->count = 0;
-	cptr->authfd = -1;
 	ClearAuth(cptr);
 	if (!DoingDNS(cptr))
 		SetAccess(cptr);

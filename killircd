@@ -9,12 +9,8 @@ IRCDPID="ircd.pid"
 
 if [ ! -r $IRCDPID ]; then
 clear
-echo "|--------------------------------------------|"
-echo "|              **** ERROR ****               |"
-echo "|             Possible problems:             |"
-echo "| (1) $IRCDPID not found                     |"
-echo "| (2) The IRCd is not running                |"
-echo "|--------------------------------------------|"
+echo "Could not shut down UnrealIRCd - not running?"
+echo ""
 else
 PID=`cat $IRCDPID`
 kill -9 $PID >/dev/null 2>&1

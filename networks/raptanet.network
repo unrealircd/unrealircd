@@ -1,35 +1,19 @@
-ver^2.2
-#
-# RaptaNet (irc.rapta.net) Network Configuration File
-# --------------------------------------------------
-# Added-at: 29 October 2000 11:03
-# Author: EquinoX
-# Email: jacob@conwaycorp.net
-# -----------------------------------------
-#
-
-Network >..........: RaptaNet
-Set ircnetwork ....: RaptaNet
-Set defserv .......: irc.rapta.net
-Set SERVICES_NAME .: services.rapta.net
-Set oper_host .....: oper.rapta.net
-Set admin_host ....: admin.rapta.net
-Set locop_host ....: locop.rapta.net
-Set sadmin_host ...: csop.rapta.net
-Set netadmin_host .: netadmin.rapta.net
-Set coadmin_host ..: coadmin.rapta.net
-Set techadmin_host : techadmin.rapta.net
-Set hidden_host ...: rapta
-Set netdomain .....: rapta.net
-Set helpchan ......: #services
-Set STATS_SERVER ..: stats.rapta.net
-Set HUB ...........: not_in_use
-Set iNAH ..........: 0
-Set net_quit ......: not_in_use
-
-
-
-
-
-
-
+set {
+	network-name		"RaptaNet";
+	default-server		"irc.rapta.net";
+	services-server		"services.rapta.net";
+	stats-server		"stats.rapta.net";
+	help-channel		"#services";
+	hiddenhost-prefix	"rapta";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"locop.rapta.net";
+		global		"oper.rapta.net";
+		coadmin		"coadmin.rapta.net";
+		admin		"admin.rapta.net";
+		servicesadmin	"csop.rapta.net";
+		techadmin	"techadmin.rapta.net";
+		netadmin	"netadmin.rapta.net";
+		host-on-oper-up	"off";
+	};
+};

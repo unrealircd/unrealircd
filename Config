@@ -1,1210 +1,170 @@
 #!/bin/sh
 #
-# Based off Config by Michael Graff (explorer@flame.org)
-# Copyright 1996, 1997
+# Config script for UnrealIRCd
+# (C) 2001 The UnrealIRCd Team
 #
-# (original that is =P)
-# UnrealIRCd - by Techie
+# This configure script is free software; the UnrealIRCd Team gives 
+# unlimited permission to copy, distribute and modify as long as the
+# copyright headers stay intact
 #
-# You may distribute this file without changes freely providing this notice
-# remains intact.  This file may not be redistributed or made available for
-# distribution without the author's prior consent.
 #
-# $Id$
-IRCD_VERSION="Unreal3.1.1-Darkshades"
-CONF_DATE=`date`
-LAST_VERSION="very very old"
-#
-trap "" 13 14 15
-MV=mv
-RM=rm
-SETUP=include/setup.h
-OPTIONS_H=include/settings.h
-OPTIONS=Settings
-AUTO_CONFIG=""
-#
-STDLIBH=undef
-STDDEFH=undef
-SYSSYSLOGH=undef
-MALLOCH=undef
-PARAMH=undef
-UNISTDH=undef
-STRINGH=undef
-STRINGSH=undef
-RUSAGEH=undef
-NOINDEX=undef
-FORCECORE=define
-NSTRERROR=undef
-NSTRTOKEN=undef
-NSTRTOK=undef
-NINETADDR=undef
-NINETNTOA=undef
-NINETNETOF=undef
-GETTIMEOFDAY=undef
-LRAND48=undef
-STRTOUL=undef
-OPENSSL=""
-OPENSSL_OTHERPLACE=""
-REGEXP=""
-NEEDSKIPNAME=""
-CRYPTOLIB=""
+# Rewritten completely to be an interface to autoconf by codemastr
+# This was inspired by the config by Michael Graff (explorer@flame.org)
+# but was written from scratch
+
+# In order to be faster than the old Config, this assumes that all information
+# in the cache file is valid and therefore doesn't check it, so if you messed with
+# default values thats your problem :P
+
+
+RUN_CONFIGURE () {
+ARG=""
+if [ "$NOSPOOF" = "1" ] ; then
+ARG="$ARG--enable-nospoof "
+fi
+if [ -n "$HUB" ] ; then
+ARG="$ARG--enable-hub "
+fi
+if [  "$CRYPTOIRCD" = "1" ] ; then
+ARG="$ARG--enable-ssl "
+fi
+if [ "$CRYPT_OPER_PASSWORD" = "1" ] ; then
+ARG="$ARG--with-crypt-oper "
+fi
+if [ "$CRYPT_LINK_PASSWORD" = "1" ] ; then
+ARG="$ARG--with-crypt-link "
+fi
+if [ "$CRYPT_XLINE_PASSWORD" = "1" ] ; then
+ARG="$ARG--with-crypt-xline "
+fi
+if [ "$CRYPT_ILINE_PASSWORD" = "1" ] ; then
+ARG="$ARG--with-crypt-iline "
+fi
+if [ "$INET6" = "1" ] ; then
+ARG="$ARG--enable-inet6 "
+fi
+ARG="$ARG--with-listen=$LISTEN_SIZE "
+ARG="$ARG--with-dpath=$DPATH "
+ARG="$ARG--with-spath=$SPATH "
+ARG="$ARG--with-nick-history=$NICKNAMEHISTORYLENGTH "
+ARG="$ARG--with-sendq=$MAXSENDQLENGTH "
+ARG="$ARG--with-bufferpool=$BUFFERPOOL "
+ARG="$ARG--with-hostname=$DOMAINNAME "
+ARG="$ARG--with-permissions=$DEFPERM "
+ARG="$ARG--with-fd-setsize=$MAXCONNECTIONS "
+ARG="$ARG--enable-dynamic-linking "
+ARG="$ARG $EXTRAPARA "
+CONF="./configure $ARG"
+echo $CONF
+$CONF
+if [  "$CRYPTOIRCD" = "1" ] ; then
+if [ ! -f server.req.pem ]; then
+export OPENSSLPATH
+make pem
+cat .SICI
+read cc
+else
+echo "SSL certificate already existing, no need to regenerate"
+fi
+fi
+}
+
+c=""
+n=""
+NOSPOOF=""
+DPATH="`pwd`"
+SPATH="`pwd`/src/ircd"
+HUB="1"
+DOMAINNAME=`hostname`
+DEFPERM="0600"
 CRYPTOIRCD=""
-OPENSSLPATH=""
-CCPATH=''
-STRCASECMP=undef
-SIGNAL=''
-BLOCKING=''
-TMP=/tmp/.Configtmp$$.c
-EXEC=/tmp/.Configtmp$$
-PLATE=/tmp/.ConPlate$$
-c=''
-n=''
-#
-DIR=`pwd`
-#
-# Some reasonable defaults
-#
-DEFOPT="-O -g"
-DEFCFLAGS="$DEFOPT"
-DEFLIBS="none"
-MKPASSWDLIBS="-lcrypt"
-OSNAME="an unrecgonized operating system"
-#
-IRCNET=""
-NOSPOOF="1"
-KLINE_ADDRESS=""
-DPATH="$DIR"
-SPATH="$DIR/src/ircd"
-MODE_X=""
-TRUEHUB=""
 CRYPT_OPER_PASSWORD=""
 CRYPT_LINK_PASSWORD=""
 CRYPT_ILINE_PASSWORD=""
 CRYPT_XLINE_PASSWORD=""
 LISTEN_SIZE="5"
-MAXSENDQLENGTH="3000000"
-BUFFERPOOL="(9 * MAXSENDQLENGTH)"
 NICKNAMEHISTORYLENGTH="2000"
+MAXSENDQLENGTH="3000000"
+BUFFERPOOL="9"
 MAXCONNECTIONS="1024"
-SHOWOPERS="Yes"
-
-#
-# load $OPTIONS if present
-#
-if [ -r "$OPTIONS" ] ; then
-    . $OPTIONS
+INET6=""
+EXTRAPARA=""
+if [ "`eval echo -n 'a'`" = "-n a" ] ; then
+        c="\c"
+else
+        n="-n"
 fi
 
-#
-2>/dev/null
-if [ "`eval echo -n 'a'`" = "-n a" ] ; then
-        c='\c'
-else
-        n='-n'
+
+#parse arguments
+NOCACHE=""
+NOINTRO=""
+if [ "$1" = "--help" ] ; then
+	echo "Config utility for UnrealIRCd"
+	echo "-----------------------------"
+	echo "Syntax: ./Config [options]"
+	echo "-nocache     Ignore settings saved in config.settings"
+	echo "-nointro     Skip intro (release notes, etc)"
+	echo "-quick       Skip questions, go straight to configure"
+	echo "-C           Clean ./configure cache"
+	exit 0
+fi
+if [ "$1" = "-nocache" -o "$2" = "-nocache" ] ; then
+    NOCACHE="1"
+fi
+if [ "$1" = "-nointro" -o "$2" = "-nointro" ] ; then
+    NOINTRO="1"
+fi
+
+if [ -f "config.settings" -a -z "$NOCACHE" ] ; then
+    . config.settings
+fi
+
+if [ "$1" = "-C" -o "$2" = "-C" ] ; then
+	rm -f config.cache
+fi
+
+if [ "$1" = "-quick" -o "$1" = "-q" -o "$2" = "-quick" ] ; then
+	echo "running quick config"
+	RUN_CONFIGURE
+	exit 0
 fi
 
 clear
 
-    if [ -r .CHANGES.NEW ] ; then
+    if [ -f ".CHANGES.NEW" -a -z "$NOINTRO" ] ; then
         more .CHANGES.NEW
-        echo $n "[Enter to begin]"
+        echo $n "[Enter to continue]"
         read cc
         clear
     fi
-    if [ -r .RELEASE.NOTES ] ; then
+    if [ -f ".RELEASE.NOTES" -a -z "$NOINTRO" ] ; then
         more .RELEASE.NOTES
-        echo $n "[Enter to begin]"
+        echo $n "[Enter to continue]"
         read cc
         clear
     fi
 
-if [ "$1" = "-n" ] ; then
-    if [ "$LAST_VERSION" != "$IRCD_VERSION" ] ; then
-        echo "You specified the no-questions-asked configure, but the version"
-        echo "of Config which created your Settings file was $LAST_VERSION,"
-        echo "And the current version is $IRCD_VERSION."
-        echo " "
-        echo "Please read the prompts carefully since some of them may have"
-        echo "changed."
-        echo " "
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$NOSPOOF" = "1" ] ; then
+	TEST="Yes"
     else
-        AUTO_CONFIG=Yes
-    fi
-fi
-
-#
-# Take a wild stab at the OS, and take reasonable defaults for each
-#
-OS=`uname -a`
-case "$OS" in
-    *NetBSD*)
-        DEFCFLAGS="$DEFOPT"
-        DEFLIBS="-lcrypt"
-        OSNAME="NetBSD"
-        ;;
-    *FreeBSD*2.2.*)
-        DEFCFLAGS="$DEFOPT"
-        DEFLIBS="-lcrypt"
-        OSNAME="FreeBSD 2.2.x"
-        CRYPT_OPER_PASSWORD=""
-        CRYPT_LINK_PASSWORD=""
-	CRYPT_ILINE_PASSWORD=""
-	CRYPT_XLINE_PASSWORD=""
-       echo "You are using FreeBSD 2.2.x; do NOT crypt passwords at this time"
-        ;;
-    *FreeBSD*2.2*)
-        DEFCFLAGS="$DEFOPT"
-        DEFLIBS="none"
-        OSNAME="FreeBSD 2.2"
-        CRYPT_OPER_PASSWORD=""
-        CRYPT_LINK_PASSWORD=""
-        CRYPT_ILINE_PASSWORD=""
-	CRYPT_XLINE_PASSWORD=""
-	echo "You are using FreeBSD 2.2; do NOT crypt passwords at this time"
-        ;;
-    *FreeBSD*4.0*)
-        DEFCFLAGS="$DEFOPT"
-        DEFLIBS="-lcrypt"
-        OSNAME="FreeBSD 4.0"
-        CRYPT_OPER_PASSWORD=""
-        CRYPT_LINK_PASSWORD=""
-	CRYPT_ILINE_PASSWORD=""
-	CRYPT_XLINE_PASSWORD=""
-        echo "You are using FreeBSD 4.0; You can use encrypted passwords now."
-        ;;
-    *FreeBSD*3*)
-        DEFCFLAGS="$DEFOPT"
-        DEFLIBS="-lcrypt"
-        OSNAME="FreeBSD 3.x"
-        CRYPT_OPER_PASSWORD=""
-        CRYPT_LINK_PASSWORD=""
-	CRYPT_ILINE_PASSWORD=""
-	CRYPT_XLINE_PASSWORD=""
-        echo "You are using FreeBSD 3.x; You can use encrypted passwords now."
-        ;;
-    *FreeBSD*)
-        DEFCFLAGS="$DEFOPT"
-        DEFLIBS="none"
-        OSNAME="FreeBSD"
-        CRYPT_OPER_PASSWORD=""
-        CRYPT_LINK_PASSWORD=""
-	CRYPT_ILINE_PASSWORD=""
-	CRYPT_XLINE_PASSWORD=""
-        echo "You are using FreeBSD ; do NOT crypt passwords at this time"
-        ;;
-    *OpenBSD*2*)
-	DEFCFLAGS="$DEFOPT"
-	DEFLIBS="none"
-	MKPASSWDLIBS=""
-	OSNAME="OpenBSD 2.x"
-	CRYPT_OPER_PASSWORD=""
-	CRYPT_LINK_PASSWORD=""
-	CRYPT_ILINE_PASSWORD=""
-	CRYPT_XLINE_PASSWORD=""
-	;;
-    *SCO_SV*)
-        DEFCFLAGS="$DEFOPT -DSCOUNIX"
-        DEFLIBS="-lsocket"
-        OSNAME="SCO Openserver"
-        NEEDSKIPNAME="Yep"
-        echo "You're using SCO Unix. For more support, stskeeps@tspre.org"
-        ;;
-    *Apple*)
-    	DEFCFLAGS="$DEFOPT"
-    	DEFLIBS="none"
-    	OSNAME="MacOS X"
-    ;;
-
-    *OSF1*alpha*)
-        DEFCFLAGS="$DEFOPT"
-        DEFLIBS="none"
-        OSNAME="OSF/1 or Digital Unix"
-        ;;
-    *AmigaOS*68020*)
-        DEFCFLAGS="$DEFOPT -D_AMIGA -m68020"
-        DEFLIBS=""
-        OSNAME="AmigaOS (68020)"
-        ;;
-    *AmigaOS*68030*)
-        DEFCFLAGS="$DEFOPT -D_AMIGA -m68030"
-        DEFLIBS=""
-        OSNAME="AmigaOS (68030)"
-        ;;
-    *AmigaOS*68040*)
-        DEFCFLAGS="$DEFOPT -D_AMIGA -m68040"
-        DEFLIBS=""
-        OSNAME="AmigaOS (68040)"
-        ;;
-    *AmigaOS*68060*)
-        DEFCFLAGS="$DEFOPT -D_AMIGA -m68060"
-        DEFLIBS=""
-        OSNAME="AmigaOS (68060)"
-        ;;
-    *SunOS*4.*)
-        DEFCFLAGS="$DEFOPT"
-        DEFLIBS="none"
-        OSNAME="SunOS 4.x"
-        ;;
-    *SunOS*5.*)
-        DEFCFLAGS="$DEFOPT -DSOL20"
-        DEFLIBS="-lsocket -lnsl -lresolv"
-        OSNAME="Solaris 2.x (or SunOS 5.x)"
-        ;;
-    *IRIX*)
-	DEFCFLAGS="$DEFOPT -D_USE_BSD"
-	DEFLIBS="-lbsd"
-	OSNAME="IRIX"
-	;;
-    *Linux*)
-       cat > $TMP << __EOF__
-#include <stdio.h>
-main()
-{
-       printf("%d\n",
-#ifndef __GLIBC__
-0);
-#else
-__GLIBC__);
-#endif
-exit(0);
-}
-__EOF__
-        cc $TMP -o $EXEC >/dev/null 2>&1
-        GLIBCVERS=`$EXEC`
-        if [ -n "$GLIBCVERS" -a "$GLIBCVERS" -ge 2 ];then
-                OSNAME="Linux (with GLIBC 2.x or greater)"
-                DEFLIBS="-lcrypt -lresolv"
-        else
-                OSNAME="Linux"
-                DEFLIBS=""
-        fi
-        DEFCFLAGS="$DEFOPT"
-        ;;
-    *HP-UX*.09.*)
-        DEFCFLAGS="$DEFOPT"
-        DEFLIBS=""
-        OSNAME="HPUX 9.x"
-        ;;
-    *HP-UX*.10.*)
-        DEFCFLAGS="$DEFOPT"
-        DEFLIBS=""
-        OSNAME="HPUX 10.x"
-        ;;
-esac
-
-echo " "
-echo You are running $OSNAME...
-echo " "
-
-# Create Makefile if it doesn't exist...
-if [ ! -f Makefile ] ; then
-  cp Makefile.dist Makefile
-fi
-cat << __EOF__
-Welcome to the configuration for the Unreal IRCD.
-This UnrealIRCD version is: $IRCD_VERSION, Good Luck.
-
-Config will generate a system-specific $SETUP file, a top
-level Makefile, $OPTIONS_H, and a persistant options file named
-$OPTIONS
-
-Enter "none" at any prompt to effect a null entry.
-
-__EOF__
-runonce=""
-FOO=`egrep "^CC=" Makefile 2>/dev/null | sed -e 's/^[^=]*[ ]*=\(.*\)/\1/'`
-while [ -z "$CCPATH" ] ; do
-        MYP=`echo "$PATH" | sed -e 's/:/ /g'`
-        echo "Which compiler do you use, gcc or cc or...?"
-        echo $n "[$FOO] -> $c"
-        if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
-            read cc
-        else
-            cc=""
-        fi
-        if [ -z "$cc" ] ; then
-                cc=$FOO
-                CCPATH=$FOO
-        elif [ -f $cc ] ; then
-                CCPATH=$cc
-        else
-                for i in $MYP; do
-                        if [ -f $i/$cc -a -z "$CCPATH" ] ; then
-                                CCPATH=$i/$cc
-                        fi
-                done
-        fi
-        if [ -z "$CCPATH" ]; then runonce="Yes"; fi
-done
-if [ "$FOO" != "$cc" ] ; then
-        MYP=`echo "$CCPATH" | sed -e 's@/@ @g'`
-        set $MYP
-        if [ $2 ] ; then
-                while [ $2 ] ; do
-                        shift
-                done
-        fi
-        if [ $1 = "gcc" ] ; then
-                CCPATH="$CCPATH"
-        fi
-fi
-echo "Compiler selected: $CCPATH"
-echo " "
-# Check it out
-cat > $TMP <<__EOF__
-main() {}
-__EOF__
-$CCPATH $TMP -o $EXEC >/dev/null 2>&1
-if [ ! -f $EXEC ] ; then
-        echo "You don't have $CCPATH or it's broken!"
-        exit 1
-fi
-# Fix Makefile
-#
-$RM -f Makefile.tmp
-sed -e "s@^CC=\(.*\)@CC=$CCPATH@" Makefile > Makefile.tmp
-cp Makefile.tmp Makefile
-$RM -f Makefile.tmp
-#
-echo "Enter additional flags to give to $CCPATH"
-FOO=`egrep "^XCFLAGS=" Makefile 2>/dev/null | sed -e 's/^[^=]*=[ ]*\(.*\)/\1/'`
-if [ -z "$FOO" ] ; then
-    echo "I recommend $DEFCFLAGS"
-    FOO="$DEFCFLAGS"
-fi
-echo $n "[$FOO] -> $c"
-if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
-    read cc
-else
-    cc=""
-fi
-if [ -z "$cc" ] ; then
-        cc="$FOO"
-fi
-if [ "$cc" = "none" ] ; then
-        cc=''
-fi
-XCFLAGS=$cc
-# Fix Makefile
-#
-$RM -f Makefile.tmp
-sed -e "s@^XCFLAGS=\(.*\)@XCFLAGS=$XCFLAGS@" Makefile > Makefile.tmp
-cp Makefile.tmp Makefile
-$RM -f Makefile.tmp
-#
-
-# Fix mkpasswd Makefile
-#
-$RM -f crypt/Makefile.tmp
-sed -e "s@^LIBS=\(.*\)@LIBS=$MKPASSWDLIBS@" crypt/Makefile > crypt/Makefile.tmp
-cp crypt/Makefile.tmp crypt/Makefile
-$RM -f crypt/Makefile.tmp
-
-cat <<__EOF__
-
-If you need to use any extra libraries when compiling the server,
-please tell me now (might need to look at the Makefiles) and please
-include all the -l and -L flags.
-
-You should use the recommended value unless you have a compelling reason
-not to...
-__EOF__
-LIBS=`egrep "^IRCDLIBS=" Makefile 2>/dev/null | sed -e 's/^[^=]*=\(.*\)/\1/' | tr -d "\012"`
-if [ -z "$LIBS" ] ; then
-    echo "I suggest: $DEFLIBS"
-    LIBS="$DEFLIBS"
-fi
-echo $n "[$LIBS] -> $c"
-if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
-    read cc
-else
-    cc=""
-fi
-if [ -z "$cc" ] ; then
-        cc="$LIBS"
-fi
-if [ "$cc" = "none" ] ; then
-        cc=''
-fi
-LIBS=$cc
-# Fix Makefile
-#
-$RM -f Makefile.tmp
-sed -e "s@^IRCDLIBS=\(.*\)@IRCDLIBS=$LIBS@" Makefile > Makefile.tmp
-cp Makefile.tmp Makefile
-$RM -f Makefile.tmp
-#
-COMP="$CCPATH $XCFLAGS $TMP -o $EXEC $LIBS"
-#
-echo 'Checking out /usr/include'
-echo $n "...Looking for /usr/include/stdlib.h...$c"
-if [ -r /usr/include/stdlib.h ] ; then
-        STDLIBH=define
-        echo  'found!'
-else
-        echo 'not found :('
-fi
-echo $n "...Looking for /usr/include/stddef.h...$c"
-if [ -r /usr/include/stddef.h ] ; then
-        STDDEFH=define
-        echo  'found!'
-else
-        echo 'not found :('
-fi
-echo $n "...Looking for /usr/include/sys/syslog.h...$c"
-if [ -r /usr/include/sys/syslog.h ] ; then
-        SYSSYSLOGH=define
-        echo  'found!'
-else
-        echo 'not found :('
-fi
-#echo $n "...Looking for malloc.h...$c"
-#if [ -r /usr/include/malloc.h ] ; then
-#       MALLOCH=malloc.h
-#       echo  'found!'
-#elif [ -r /usr/include/sys/malloc.h ] ; then
-#       MALLOCH=sys/malloc.h
-#       echo  'found!'
-#else
-#       echo 'not found :('
-#       MALLOCH=undef
-#fi
-echo $n "...Looking for /usr/include/sys/param.h...$c"
-if [ -r /usr/include/sys/param.h ] ; then
-
-	PARAMH=define
-	echo  'found!'
-else
-	echo 'not found :('
-fi
-echo $n "...Looking for /usr/include/unistd.h...$c"
-if [ -r /usr/include/unistd.h ] ; then
-	UNISTDH=define
-	echo  'found!'
-else
-	echo 'not found :('
-fi
-echo $n "...Looking for /usr/include/string.h...$c"
-if [ -r /usr/include/string.h ] ; then
-	STRINGH=define
-	echo  'found!'
-else
-	echo 'not found :('
-fi
-echo $n "...Looking for /usr/include/strings.h...$c"
-if [ -r /usr/include/strings.h ] ; then
-	STRINGSH=define
-	echo  'found!'
-else
-	echo 'not found :('
-fi
-echo $n "...Looking for /usr/include/sys/rusage.h...$c"
-if [ -r /usr/include/sys/rusage.h ] ; then
-	RUSAGEH=define
-	echo  'found!'
-else
-	echo 'not found (good!)'
-fi
-
-echo $n "...Looking for /usr/include/openssl/ssl.h...$c"
-if [ -r /usr/include/openssl/ssl.h ] ; then
-	OPENSSL=define
-	echo 'found!'
-else
-	echo 'not found (you will not be able to do secure connections'
-	echo 'If you do have it, please type in ln -s <openssl include dir> /usr/include/openssl'
-fi
-
-echo $n "...Looking for /usr/include/regex.h...$c"
-if [ -r /usr/include/regex.h ] ; then
-	REGEX=define
-	echo 'found!'
-else
-	echo 'not found :('
-	echo $n '*** configuring regex package ***' $n
-	cd extras/regex
-	./configure
-	make
-	cd ../..
-fi
-
-if [ -r /usr/include/openssl/ssl.h ] ; then
-       echo $n "...Looking where you got the openssl binary...$c"
-       if [ -r /bin/openssl ] ; then
-               OPENSSLPATH=/bin/openssl
-               echo $OPENSSLPATH
-       elif [ -r /usr/bin/openssl ] ; then
-               OPENSSLPATH=/usr/bin/openssl
-               echo $OPENSSLPATH
-       elif [ -r /usr/sbin/openssl ] ; then
-               OPENSSLPATH=/usr/sbin/openssl
-               echo $OPENSSLPATH
-       elif [ -r /usr/local/bin/openssl ] ; then
-               OPENSSLPATH=/usr/local/bin/openssl
-               echo $OPENSSLPATH
-       elif [ -r /usr/local/ssl/bin/openssl ] ; then
-               OPENSSLPATH=/usr/local/ssl/bin/openssl
-               echo $OPENSSLPATH
-       elif [ -r `which openssl` ] ; then
-		OPENSSLPATH=`which openssl`
-		echo $OPENSSLPATH
-       else
-               echo "Couldn't find it! (bad)"
-               OPENSSLPATH=/bin/false
-               OPENSSLPATH=/bin/false
-       fi
-fi
-
-#
-# to b or not to b
-#
-echo " "
-echo $n "To be or not to be...$c"
-cat > $TMP <<__EOF__
-main()
-{
-	char	a[3], b[3];
-	bzero(b,3);
-	bcopy(a,b,3);
-	(void)bcmp(a,b,3);
-	exit(0);
-}
-__EOF__
-$COMP >/dev/null 2>&1
-if [ $? -eq 0 ] ; then
-	echo "and so it shall be! bcopy/bzero/bcmp are about!"
-	BZERO=bzero
-else
-	echo "and it wasn't.  No bcopy/bzero/bcmp...hmpf"
-	BZERO=memset
-fi
-echo " "
-echo $n "Which one, gettimeofday, or lrand48..$c"
-cat > $TMP <<__EOF__
-#include <stdio.h>
-#include <sys/time.h>
-main()
- {
-   struct timeval tv;
-   (void) gettimeofday(&tv, NULL);
- }
-__EOF__
-$COMP >/dev/null 2>&1
-if [ $? -eq 0 ] ; then
-	echo "We have a winner! gettimeofday found."
-	GETTIMEOFDAY=define
-else
-	echo "No gettimeofday. Lets try lrand48."
-cat > $TMP <<__EOF__
-main()
-{
-   int a;
-   a=lrand48();
-}
-__EOF__
-	$COMP >/dev/null 2>&1
-	if [ $? -eq 0 ] ; then
- 		echo "Bingo! lrand48!"
-		LRAND48=define
-	fi
-fi
-#
-# check for non-blocking fd style available..
-#
-echo " "
-echo 'Checking for POSIX/BSD/SYSV non-blocking stuff'
-if [ -f $TMP -o -d $TMP ] ; then
-	$RM -f $TMP
-fi
-cat > $PLATE <<__EOF__
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <sys/file.h>
-#include <signal.h>
-alarmed()
-{
-	exit(1);
-}
-main()
-{
-	char b[12], x[32];
-	int f, l = sizeof(x);
-	f = socket(AF_INET, SOCK_DGRAM, 0);
-	if (f >= 0 && !(fcntl(f, F_SETFL, BLOCKING))) {
-		signal(SIGALRM, alarmed);
-		alarm(3);
-		recvfrom(f, b, 12, 0, x, &l);
-		alarm(0);
-		exit(0);
-	}
-	exit(1);
-}
-__EOF__
-sed -e 's/BLOCKING/O_NONBLOCK/' $PLATE > $TMP
-$COMP >/dev/null 2>&1
-if [ 0 -eq $? ] ; then
-	$EXEC
-fi
-if [ 0 -eq $? ] ; then
-	BLOCK=O_NONBLOCK
-else
-	echo 'O_NONBLOCK not present/working in fcntl.h or sys/ioctl.h'
-	if [ -f $TMP -o -d $TMP ] ; then
-		$RM -f $TMP $EXEC;
-	fi
-	sed -e 's/BLOCKING/O_NDELAY/' $PLATE > $TMP
-	$COMP >/dev/null 2>&1
-	if [ 0 -eq $? ] ; then
-		$EXEC
-	fi
-	if [ 0 -eq $? ] ; then
-		BLOCK=O_NDELAY
-	else
-		echo 'O_NDELAY not present/working in fcntl.h or sys/ioctl.h'
-		if [ -f $TMP -o -d $TMP ] ; then
-			$RM -f $TMP $EXEC;
-		fi
-		sed -e 's/BLOCKING/FIONBIO/' $PLATE > $TMP
-		$COMP >/dev/null 2>&1
-		if [ 0 -eq $? ] ; then
-			echo 'FIONBIO not found!  No option found!'
-			BLOCK=none
-		else
-			BLOCK=FIONBIO
-		fi
-	fi
-fi
-$RM -f $TMP $PLATE $EXEC
-echo "Blocking selected: $BLOCK";
-#
-# reliable signals ?
-#
-echo 'Looking for reliable signals...'
-echo "Hmmm...wonder if you have 'action from POSIX..."
-cat > $TMP <<__EOF__
-#include <signal.h>
-
-main()
-{	/* poor replacement for NULL but who cares here ? */
-	sigaction(SIGTERM, (struct sigaction *)0L, (struct sigaction *)0L);
-}
-__EOF__
-$COMP >/dev/null 2>&1
-if [ $? -eq 0 ] ; then
-	echo "Ooooh, you are a lucky one! 'action from POSIX!"
-	SIGNAL=posix
-else
-	$RM -f $EXEC $TMP
-	cat > $TMP <<__EOF__
-#include <signal.h>
-int	calls = 0;
-void	handler()
-{
-	if (calls)
-		return;
-	calls++;
-	kill(getpid(), SIGTERM);
-	sleep(1);
-}
-main()
-{
-	signal(SIGTERM, handler);
-	kill(getpid(), SIGTERM);
-	exit (0);
-}
-__EOF__
-	echo $n "Nope, but you have...$c"
-	$COMP >/dev/null 2>&1
-	$EXEC
-	if [ $? -eq 0 ] ; then
-		echo 'reliable signals! Cheers BSD!'
-		SIGNAL=bsd
-	else
-		echo "yucky, unreliable SYSV!"
-		SIGNAL=sysv
-	fi
-fi
-$RM -f $EXEC $TMP
-#
-echo 'Now those strings libraries...hmm...which one is it...'
-cat > $TMP <<__EOF__
-#$STRINGH STRINGH
-#$STRINGSH STRINGSH
-#ifdef STRINGH
-#include <string.h>
-#endif
-#ifdef STRINGSH
-#include <strings.h>
-#endif
-main()
-{
-	char *s = index("foo", 'o');
-	exit(0);
-}
-__EOF__
-$COMP >/dev/null 2>&1
-if [ $? -eq 0 ] ; then
-	echo "Cool...you have index()!"
-else
-	NOINDEX=define
-	echo "Grmpf...I guess there is a strchr() out there somewhere..."
-fi
-$RM -f $EXEC $TMP
-#
-# getrusage or times ?
-#
-echo $n "One for debugging, mainly, getrusage(2) or times(2)...$c"
-cat > $TMP <<__EOF__
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-main()
-{
-	struct	rusage	rus;
-	(void)getrusage(RUSAGE_SELF, &rus);
-}
-__EOF__
-$COMP >/dev/null 2>&1
-if [ $? -eq 0 ] ; then
-	TIMES=getrusage
-	echo "getrusage()"
-else
-	$RM -f $EXEC $TMP
-	cat > $TMP <<__EOF__
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/times.h>
-main()
-{
-	struct	tms	tmsbuf;
-	(void)times(&tmsbuf);
-}
-__EOF__
-	$COMP >/dev/null 2>&1
-	if [ $? -eq 0 ] ; then
-		TIMES=times
-		echo "times()"
-	else
-		echo "couldn't get either ?!"
-		TIMES=none
-	fi
-fi
-#
-# Can we set the core size to unlimited
-#
-
-echo $n "Can we set the core size to unlimited...$c"
-cat > $TMP <<__EOF__
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-main() {
-	struct rlimit corelim;
-	corelim.rlim_cur = corelim.rlim_max = RLIM_INFINITY;
-        	if (setrlimit(RLIMIT_CORE, &corelim))
-			exit(1);
-	exit(0);
-}
-__EOF__
-
-$COMP >/dev/null 2>&1
-if [ $? -ne 0 ] ; then
-	echo " no"
-	FORCECORE=undef
-else
-	$EXEC
-	if [ $? -ne 1 ] ; then
-		echo " yes"
-	else
-		echo " no"
-		FORCECORE=undef
-	fi
-fi
-$RM -f $EXEC $TMP
-#
-# what do we need that isn't here already ?
-#
-echo "What else do I need that you don't have..."
-echo $n "Lets see...$c"
-cat > $TMP <<__EOF__
-main()
-{
-	unsigned long foo;
-
-	char  *s = strtoul("0x12345", &foo, 16);
-	exit(0);
-}
-__EOF__
-$COMP >/dev/null 2>&1
-if [ $? -ne 0 ] ; then
-    echo $n " strtoul$c"
-    $RM -f Makefile.tmp
-    sed -e "s@^STRTOUL=\(.*\)@STRTOUL=strtoul.o@" Makefile > Makefile.tmp
-    cp Makefile.tmp Makefile
-    $RM -f Makefile.tmp
-else
-    $RM -f Makefile.tmp
-    sed -e "s@^STRTOUL=\(.*\)@STRTOUL=@" Makefile > Makefile.tmp
-    cp Makefile.tmp Makefile
-    $RM -f Makefile.tmp
-fi
-$RM -f $EXEC $TMP
-cat > $TMP <<__EOF__
-main()
-{
-	char  *s = strerror(0);
-	exit(0);
-}
-__EOF__
-$COMP >/dev/null 2>&1
-if [ $? -ne 0 ] ; then
-	echo $n " strerror$c"
-	NSTRERROR=define
-fi
-$RM -f $EXEC $TMP
-cat > $TMP <<__EOF__
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <arpa/nameser.h>
-#include <resolv.h>
-
-main()
-{
-	dn_skipname("","");
-	exit(0);
-}
-__EOF__
-$COMP >/dev/null 2>&1
-if [ $? -ne 0 -o "$OSNAME" = "Linux RedHat 5.0" -o -n "$NEEDSKIPNAME" ] ; then
-    echo $n " dn_skipname$c"
-    $RM -f Makefile.tmp
-    sed -e "s@^RES=\(.*\)@RES=res_skipname.o@" Makefile > Makefile.tmp
-    cp Makefile.tmp Makefile
-    $RM -f Makefile.tmp
-else if [ $? -ne 0 -o "$OSNAME" = "Linux RedHat 5.1" -o -n "$NEEDSKIPNAME" ] ; then
-    echo $n " dn_skipname$c"
-    $RM -f Makefile.tmp
-    sed -e "s@^RES=\(.*\)@RES=res_skipname.o@" Makefile > Makefile.tmp
-    cp Makefile.tmp Makefile
-    $RM -f Makefile.tmp
-else
-    $RM -f Makefile.tmp
-    sed -e "s@^RES=\(.*\)@RES=@" Makefile > Makefile.tmp
-    cp Makefile.tmp Makefile
-    $RM -f Makefile.tmp
-fi
-fi
-$RM -f $EXEC $TMP
-cat > $TMP <<__EOF__
-#include <sys/types.h>
-main()
-{
-    u_int32_t foo;
-    exit(0);
-}
-__EOF__
-$COMP >/dev/null 2>&1
-if [ $? -ne 0 ] ; then
-    echo $n " u_int32_t$c"
-    $RM -f Makefile.tmp
-    sed -e "s@^NEED_U_INT32_T=\(.*\)@NEED_U_INT32_T=-DNEED_U_INT32_T@" Makefile > Makefile.tmp
-    cp Makefile.tmp Makefile
-    $RM -f Makefile.tmp
-else
-    $RM -f Makefile.tmp
-    sed -e "s@^NEED_U_INT32_T=\(.*\)@NEED_U_INT32_T=@" Makefile > Makefile.tmp
-    cp Makefile.tmp Makefile
-    $RM -f Makefile.tmp
-fi
-$RM -f $EXEC $TMP
-cat > $TMP <<__EOF__
-#$STRINGH STRINGH
-#$STRINGSH STRINGSH
-#ifdef STRINGH
-#include <string.h>
-#endif
-#ifdef STRINGSH
-#include <strings.h>
-#endif
-main()
-{
-	char  *t = "a", **p = NULL, *s = strtoken(&p, t, ",");
-	if (!strcmp(t, s))
-		exit(0);
-	exit(1);
-}
-__EOF__
-$COMP >/dev/null 2>&1
-if [ $? -ne 0 ] ; then
-	echo $n " strtoken$c"
-	NSTRTOKEN=define
-else
-	$EXEC
-	if [ $? -ne 0 ] ; then
-		echo $n " strtoken$c"
-		NSTRTOKEN=define
-	fi
-fi
-$RM -f $EXEC $TMP
-cat > $TMP <<__EOF__
-#$STRINGH STRINGH
-#$STRINGSH STRINGSH
-#ifdef STRINGH
-#include <string.h>
-#endif
-#ifdef STRINGSH
-#include <strings.h>
-#endif
-main()
-{
-	char  t[] = "a\0", *s;
-	s = strtok(t, ",");
-	if (!strcmp(t, s))
-		exit(0);
-	exit(1);
-}
-__EOF__
-$COMP >/dev/null 2>&1
-if [ $? -ne 0 ] ; then
-	echo $n " strtok$c"
-	NSTRTOK=define
-else
-	$EXEC
-	if [ $? -ne 0 ] ; then
-		echo $n " strtok$c"
-		NSTRTOK=define
-	fi
-fi
-$RM -f $EXEC $TMP
-cat > $TMP << __EOF__
-#include <sys/types.h>
-#include <netinet/in.h>
-main()
-{
-	struct	in_addr in;
-	(void)inet_addr("1.2.3.4");
-}
-__EOF__
-$COMP >/dev/null 2>&1
-if [ $? -ne 0 ] ; then
-	echo $n " inet_addr$c"
-	NINETADDR=define
-fi
-$RM -f $EXEC $TMP
-cat > $TMP << __EOF__
-#include <sys/types.h>
-#include <netinet/in.h>
-main()
-{
-	struct	in_addr	in;
-	in.s_addr = 0x12345678;
-	(void)inet_ntoa(in);
-}
-__EOF__
-$COMP >/dev/null 2>&1
-if [ $? -ne 0 ] ; then
-	echo $n " inet_ntoa$c"
-fi
-$RM -f $EXEC $TMP
-cat > $TMP << __EOF__
-#include <sys/types.h>
-#include <netinet/in.h>
-main()
-{
-	struct	in_addr	in;
-	in.s_addr = 0x87654321;
-	(void)inet_netof(in);
-}
-__EOF__
-$COMP >/dev/null 2>&1
-if [ $? -ne 0 ] ; then
-	echo $n " inet_netof$c"
-	NINETNETOF=define
-fi
-echo " "
-$RM -f $EXEC $TMP
-cat > $TMP << __EOF__
-#include <string.h>
-main()
-{
-	strcasecmp("moo", "moo");
-}
-__EOF__
-$COMP 
-# >/dev/null 2>&1
-if [ $? -ne 0 ] ; then
-	echo $n " strcasecmp $c "
-	STRCASECMP=undef
-else
-	STRCASECMP=define
-fi
-$RM -f $EXEC $TMP
-
-#
-#
-#
-echo " "
-echo "Ok, here's your chance...I think you should use $BLOCK, you want"
-echo "which of these ? O_NONBLOCK (POSIX) O_NDELAY (BSD) FIONBIO (SYSV)"
-echo $n "[$BLOCK] -> $c"
-if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
-    read cc
-else
-    cc=""
-fi
-if [ "$cc" = "none" ] ; then
-	cc=''
-elif [ -z "$cc" ] ; then
-	cc=$BLOCK
-fi
-BLOCK=$cc
-echo "I found $SIGNAL signals."
-if [ "$cc" = "none" ] ; then
-	cc=''
-elif [ "$SIGNAL" = "posix" ] ; then
-	echo "Hmmm...I'm not sure if signal() is reliable or not either..."
-fi
-echo "You can choose between posix, bsd and sysv.  What'll it be ?"
-echo $n "[$SIGNAL] -> $c"
-if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
-    read cc
-else
-    cc=""
-fi
-if [ "$cc" = "none" ] ; then
-	cc=''
-elif [ -z "$cc" ] ; then
-	cc=$SIGNAL
-fi
-SIGNAL=$cc
-if [ "$TIMES" = "none" ] ; then
-	echo "I didn't find either getrusage or times earlier...If you do have"
-	echo "either of these, please tell me now."
-else
-	echo "I found $TIMES, out of getrusage and times.  getrusage is"
-	echo "more informative.  If you wish to swap your choice, please"
-	echo "do so now."
-fi
-echo $n "[$TIMES] -> $c"
-if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
-    read cc
-else
-    cc=""
-fi
-if [ "$cc" = "none" ] ; then
-	cc=''
-elif [ -z "$cc" ] ; then
-	cc=$TIMES
-fi
-TIMES=$cc
-
-$RM -f $EXEC $TMP $PLATE
-cat > $SETUP  <<__EOF__
-#ifndef __setup_include__
-#define __setup_include__
-#$PARAMH	PARAMH
-#$UNISTDH	UNISTDH
-#$STRINGH	STRINGH
-#$STRINGSH	STRINGSH
-#$STDLIBH	STDLIBH
-#$STDDEFH	STDDEFH
-#$SYSSYSLOGH	SYSSYSLOGH
-#$NOINDEX	NOINDEX
-#$FORCECORE	FORCE_CORE
-#$NSTRERROR	NEED_STRERROR
-#$NSTRTOKEN	NEED_STRTOKEN
-#$NSTRTOK	NEED_STRTOK
-#$NINETADDR	NEED_INET_ADDR
-#$NINETNTOA	NEED_INET_NTOA
-#$NINETNETOF	NEED_INET_NETOF
-#$GETTIMEOFDAY	GETTIMEOFDAY
-#$LRAND48	LRAND48
-#$STRCASECMP GOT_STRCASECMP
-__EOF__
-if [ "$MALLOCH" = "undef" ] ; then
-	echo "#undef	MALLOCH" >> $SETUP
-else
-	echo "#define	MALLOCH	<$MALLOCH>" >> $SETUP
-fi
-if [ "$BZERO" = "memset" ] ; then
-	cat >> $SETUP <<__EOF__
-#define	bzero(a,b)	memset(a,0,b)
-#define	bcopy(a,b,c)	memcpy(b,a,c)
-#define	bcmp	memcmp
-__EOF__
-fi
-if [ "$BLOCK" = "O_NONBLOCK" ] ; then
-	echo "#define	NBLOCK_POSIX" >> $SETUP
-elif [ "$BLOCK" = "O_NDELAY" ] ; then
-	echo "#define	NBLOCK_BSD" >> $SETUP
-else
-	echo "#define	NBLOCK_SYSV" >> $SETUP
-fi
-if [ "$SIGNAL" = "posix" ] ; then
-	echo "#define	POSIX_SIGNALS" >> $SETUP
-elif [ "$SIGNAL" = "bsd" ] ; then
-	echo "#define	BSD_RELIABLE_SIGNALS" >> $SETUP
-else
-	echo "#define	SYSV_UNRELIABLE_SIGNALS" >> $SETUP
-fi
-if [ "$TIMES" = "times" ] ; then
-	echo "#define	TIMES_2" >> $SETUP
-	echo "#undef	GETRUSAGE_2" >> $SETUP
-elif [ "$TIMES" = "getrusage" ] ; then
-	echo "#undef	TIMES_2" >> $SETUP
-	echo "#define	GETRUSAGE_2" >> $SETUP
-else
-	echo "#undef	TIMES_2" >> $SETUP
-	echo "#undef	GETRUSAGE_2" >> $SETUP
-fi
-echo "#endif" >> $SETUP
-
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    if [ -n "$NOSPOOF" ] ; then
-	FOO="Yes"
-    else
-	FOO="No"
+	TEST="No"
     fi
     echo ""
-    echo "Many operating systems are running with insecure TCP stacks."
-    echo "This allows IP spoofing attacks, which are very difficult for"
-    echo "operators to track down and ban."
+    echo "Many older operating systems have an insecure TCP/IP stack"
+    echo "which may be vulnerable to IP spoofing attacks, if you run"
+    echo "an operating system that is vulnerable to such attacks"
+    echo "enable this option. If you aren't sure if your OS is vulnerable"
+    echo "you should still enable it."
     echo ""
-    echo "If you are CERTAIN your operating system has secure TCP stacks"
-    echo "you do not need to define this.  If you are not certain, define"
-    echo "this and find out if you need it later or not.  You can mail the"
-    echo "source mailing list later; someone there can help you determine"
-    echo "if your OS is secure or not."
-    echo ""
-
-        if [ "$OSNAME" = "FreeBSD 2.2" ]; then
-        echo "Your version of FreeBSD is 2.2-Release or later, so you do not"
-        echo "need to run nospoof."
-        echo ""
-        FOO=No
-        fi
-
-        if [ "$OSNAME" = "FreeBSD" ]; then
-        echo "If your version of FreeBSD is 2.2-Release or later, you do not"
-        echo "need to run nospoof."
-        echo ""
-        fi
-
     echo "Do you have an insecure operating system and therefore want to"
     echo "use the server anti-spoof protection?"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	cc=$TEST
     fi
     case "$cc" in
 	[Yy]*)
@@ -1215,73 +175,49 @@ while [ -z "$FOO" ] ; do
 	    ;;
 	*)
 	    echo ""
-	    echo "You need to enter either Yes or No here..."
-	    echo ""
-	    FOO=""
+	    echo "You must enter either Yes or No"
+	    TEST=""
 	    ;;
     esac
 done
 
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    FOO="$DPATH"
-    echo ""
-    echo "What directory are all the server configuration files in?"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
-	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
-    if [ -z "$cc" ] ; then
-	cc=$FOO
-    fi
-done
-DPATH=$cc
+TEST="$DPATH"
+echo ""
+echo "What directory are all the server configuration files in?"
+echo $n "[$TEST] -> $c"
+read cc
+if [ -z "$cc" ] ; then
+   DPATH=$TEST
+else
+   DPATH=$cc
+fi
 
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    FOO="$SPATH"
-    echo ""
-    echo "What is the explicit path to where the ircd binary will be"
-    echo "installed?  This should point to a file, not a directory"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
-	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
-    if [ -z "$cc" ] ; then
-	cc=$FOO
-    fi
-done
-SPATH=$cc
 
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    if [ -n "$HUB" ] ; then
-	FOO="Hub"
+TEST="$SPATH"
+echo ""
+echo "What is the path to the ircd binary including the name of the binary?"
+echo $n "[$TEST] -> $c"
+    read cc
+if [ -z "$cc" ] ; then
+    SPATH=$TEST
+else 
+    SPATH=$cc
+fi
+
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$HUB" = "1" ] ; then
+	TEST="Hub"
     else
-	FOO="Hub"
+	TEST="Leaf"
     fi
     echo ""
-    echo "Would you like to compile as a Halfhub or as a leaf?"
-    echo "The halfhub will be a real hub if set so in unrealircd.conf"
-    echo "Type Hub for selecting hub and Leaf for a leaf.."
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo "Would you like to compile as a hub or as a leaf?"
+    echo "Type Hub to select hub and Leaf to select leaf."
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	cc=$TEST
     fi
     case "$cc" in
 	[Hh]*)
@@ -1292,91 +228,91 @@ while [ -z "$FOO" ] ; do
 	    ;;
 	*)
 	    echo ""
-	    echo "You need to enter either Hub or Leaf here..."
-	    echo ""
-	    FOO=""
+	    echo "You must enter either Hub or Leaf"
+	    TEST=""
 	    ;;
     esac
 done
 
-DOMAINNAME=`hostname`
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    FOO="$DOMAINNAME"
-    echo ""
-    echo "What is your box hostname?"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
-	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
-    if [ -z "$cc" ] ; then
-	cc=$FOO
-    fi
-done
+TEST="$DOMAINNAME"
+echo ""
+echo "What is the hostname of the server running your IRCd?"
+echo $n "[$TEST] -> $c"
+    read cc
+if [ -z "$cc" ] ; then
+    DOMAINNAME=$TEST
+else
 DOMAINNAME=$cc
+fi
 
-if [ -n "$OPENSSL" ] ; then
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    if [ -n "$CRYPTOIRCD" ] ; then
-	FOO="Yes"
+TEST=""
+while [ -z "$TEST" ] ; do
+    TEST="$DEFPERM"
+    echo ""
+    echo "What should the default permissions for your configuration files be? (Set this to 0 to disable)"
+    echo "It is strongly recommended that you use 0600 to prevent unwanted reading of the file"
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	DEFPERM=$TEST
+	break
+    fi
+    case "$cc" in
+	[0-9]*)
+	    DEFPERM="$cc"
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter a number"
+	    TEST=""
+	    ;;
+    esac
+
+done
+
+
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$CRYPTOIRCD" = "1" ] ; then
+	TEST="Yes"
     else
-	FOO="No"
+	TEST="No"
     fi
     echo ""
-    echo "Do you want to support SSL (Secure Sockets Layer) connections"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo "Do you want to support SSL (Secure Sockets Layer) connections?"
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	cc=$TEST
     fi
     case "$cc" in
 	[Yy]*)
 	    CRYPTOIRCD="1"
-	    CRYPTOLIB="-lssl -lcrypto"
 	    ;;
 	[Nn]*)
 	    CRYPTOIRCD=""
 	    ;;
 	*)
 	    echo ""
-	    echo "You need to enter either Yes or No here..."
-	    echo ""
-	    FOO=""
+	    echo "You must enter either Yes or No"
+	    TEST=""
 	    ;;
     esac
 done
-fi
 
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    if [ -n "$CRYPT_OPER_PASSWORD" ] ; then
-	FOO="Yes"
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$CRYPT_OPER_PASSWORD" = "1" ] ; then
+	TEST="Yes"
     else
-	FOO="No"
+	TEST="No"
     fi
     echo ""
-    echo "Do you use encrypted operator passwords?"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo "Do you want use encrypted oper {} passwords?"
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	cc=$TEST
     fi
     case "$cc" in
 	[Yy]*)
@@ -1387,33 +323,25 @@ while [ -z "$FOO" ] ; do
 	    ;;
 	*)
 	    echo ""
-	    echo "You need to enter either Yes or No here..."
-	    echo ""
-	    FOO=""
+	    echo "You must enter either Yes or No"
+	    TEST=""
 	    ;;
     esac
 done
 
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    if [ -n "$CRYPT_LINK_PASSWORD" ] ; then
-	FOO="Yes"
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$CRYPT_LINK_PASSWORD" = "1" ] ; then
+	TEST="Yes"
     else
-	FOO="No"
+	TEST="No"
     fi
     echo ""
-    echo "Do you use encrypted incoming link passwords? (N lines only,"
-    echo "C lines must remain unencrypted always)"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo "Do you want use encrypted incoming link {} passwords?"
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	cc=$TEST
     fi
     case "$cc" in
 	[Yy]*)
@@ -1424,33 +352,26 @@ while [ -z "$FOO" ] ; do
 	    ;;
 	*)
 	    echo ""
-	    echo "You need to enter either Yes or No here..."
-	    echo ""
-	    FOO=""
+	    echo "You must enter either Yes or No"
+	    TEST=""
 	    ;;
     esac
 done
 
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-if [ -n "$CRYPT_XLINE_PASSWORD" ] ; then
-	FOO="yes"
+TEST=""
+while [ -z "$TEST" ] ; do
+if [ "$CRYPT_XLINE_PASSWORD" = "1" ] ; then
+	TEST="yes"
 else 
-	FOO="No"
+	TEST="No"
 fi
 echo ""
-echo "Do you want to use encrypted Restart/Die passwords?"
-echo $n "[$FOO] -> $c"
-if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+echo "Do you want to use encrypted drpass {} passwords?"
+echo $n "[$TEST] -> $c"
 	read cc
-else
-	cc=""
-runonce=Yes
-fi
-if [ -z "$cc" ] ; then
-	cc=$FOO
-fi
+	if [ -z "$cc" ] ; then
+		cc=$TEST
+	fi
 	case "$cc" in
 		[Yy]*)
 			CRYPT_XLINE_PASSWORD="1"
@@ -1460,31 +381,24 @@ fi
 			;;
 		*)
 			echo ""
-			echo "You need to enter either Yes or No here..."
-			echo ""
-			FOO=""
+	                echo "You must enter either Yes or No"
+			TEST=""
 			;;
 		esac
 done
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-if [ -n "$CRYPT_ILINE_PASSWORD" ] ; then
-	FOO="Yes"
+TEST=""
+while [ -z "$TEST" ] ; do
+if [ "$CRYPT_ILINE_PASSWORD" = "1" ] ; then
+	TEST="Yes"
 else
-	FOO="No"
+	TEST="No"
 fi
 echo ""
-echo "Do you want to use encrypted I:line passwords?"
-echo $n "[$FOO] -> $c"
-if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+echo "Do you want to use encrypted allow {} passwords?"
+echo $n "[$TEST] -> $c"
 	read cc
-else
-	cc=""
-	runonce=Yes
-fi
 if [ -z "$cc" ] ; then
-	cc=$FOO
+	cc=$TEST
 fi
 	case "$cc" in
 		[Yy]*)
@@ -1495,30 +409,52 @@ fi
 			;;
 		*)
 			echo ""
-			echo "You need to enter either Yes or No here..."
-			echo ""
-			FOO=""
+	                echo "You must enter either Yes or No"
+			TEST=""
 			;;
 		esac
 done		
 
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    FOO="$LISTEN_SIZE"
-    echo ""
-    echo "What listen() backlog value do you wish to use?  Some servers"
-    echo "have problems with more than 5, others work fine with many, many"
-    echo "more."
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
-	read cc
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$INET6" = "1" ] ; then
+	TEST="Yes"
     else
-	cc=""
-	runonce=Yes
+	TEST="No"
     fi
+    echo ""
+    echo "Do you want to enable IPv6 support?"
+    echo $n "[$TEST] -> $c"
+	read cc
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	cc=$TEST
+    fi
+    case "$cc" in
+	[Yy]*)
+	    INET6="1"
+	    ;;
+	[Nn]*)
+	    INET6=""
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter either Yes or No"
+	    TEST=""
+	    ;;
+    esac
+done
+
+TEST=""
+while [ -z "$TEST" ] ; do
+    TEST="$LISTEN_SIZE"
+    echo ""
+    echo "What listen() backlog value do you wish to use?  Some older servers"
+    echo "have problems with more than 5, others work fine with many more."
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	LISTEN_SIZE=$TEST
+	break
     fi
     case "$cc" in
 	[1-9]*)
@@ -1526,28 +462,22 @@ while [ -z "$FOO" ] ; do
 	    ;;
 	*)
 	    echo ""
-	    echo "You need to enter a number here."
-	    echo ""
-	    FOO=""
+	    echo "You must enter a number"
+	    TEST=""
 	    ;;
     esac
 done
 
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    FOO="$NICKNAMEHISTORYLENGTH"
+TEST=""
+while [ -z "$TEST" ] ; do
+    TEST="$NICKNAMEHISTORYLENGTH"
     echo ""
     echo "How far back do you want to keep the nickname history?"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	NICKNAMEHISTORYLENGTH=$TEST
+	break
     fi
     case "$cc" in
 	[1-9]*)
@@ -1555,100 +485,71 @@ while [ -z "$FOO" ] ; do
 	    ;;
 	*)
 	    echo ""
-	    echo "You need to enter a number here."
-	    echo ""
-	    FOO=""
+	    echo "You must enter a number"
+	    TEST=""
 	    ;;
     esac
 done
 
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    FOO="$MAXSENDQLENGTH"
+TEST=""
+while [ -z "$TEST" ] ; do
+    TEST="$MAXSENDQLENGTH"
     echo ""
-    echo "What sendq length do you wish to have?"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo "What is the maximum sendq length you wish to have?"
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	MAXSENDQLENGTH=$TEST
+	break
     fi
     case "$cc" in
-	[1-9]*)
+	[1-9][0-9][0-9][0-9]*)
 	    MAXSENDQLENGTH="$cc"
 	    ;;
 	*)
 	    echo ""
-	    echo "You need to enter a number here."
-	    echo ""
-	    FOO=""
+	    echo "You must enter a number greater than or equal to 1000"
+	    TEST=""
 	    ;;
     esac
 done
 
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    FOO="$BUFFERPOOL"
+TEST=""
+while [ -z "$TEST" ] ; do
+    TEST="$BUFFERPOOL"
     echo ""
-    echo "What size of a bufferpool (total of ALL sendq's in use) do you"
-    echo "do you wish to have?"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo "How many buffer pools would you like?"
+    echo "This number will be multiplied by MAXSENDQLENGTH."
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	BUFFERPOOL=$TEST
+	break
     fi
     case "$cc" in
-	\([1-9]*\))
+	[1-9]*)
 	    BUFFERPOOL="$cc"
 	    ;;
 	*)
 	    echo ""
-	    echo "You need to enter a number here, either based on"
-	    echo "MAXSENDQLENGTH or a literal value.  Also, this value"
-	    echo "MUST be enclosed in parens -- (9*MAXSENDQLENGTH), for example."
-	    echo ""
-	    FOO=""
+	    echo "You must enter a number"
+	    TEST=""
 	    ;;
     esac
+
 done
+
 echo ""
-echo ""
-$CCPATH -o src/fdmaxcounter src/fdmaxcounter.c
-src/fdmaxcounter
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-if [ "$OSNAME" = "Linux" ] ; then
-    FOO="256"
-elif [ "$OSNAME" = "Linux (with GLIBC 2.x or greater)" ] ; then
-    FOO="256"
-else
-    FOO="$MAXCONNECTIONS"
-fi
+TEST=""
+while [ -z "$TEST" ] ; do
+    TEST="$MAXCONNECTIONS"
     echo ""
-    echo "How many file descriptors (or sockets) can the irc server use?"
-    echo "(The result above, if any - shows how many sockets that the ircd can use",
-    echo " and can be used as an answer here)"
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+    echo "How many file descriptors (or sockets) can the IRCd use?"
+    echo $n "[$TEST] -> $c"
 	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
     if [ -z "$cc" ] ; then
-	cc=$FOO
+	MAXCONNECTIONS=$TEST
+	break
     fi
     case "$cc" in
 	[1-9][0-9][0-9]*)
@@ -1656,235 +557,21 @@ fi
 	    ;;
 	*)
 	    echo ""
-	    echo "You need to enter a number here, greater or equal to 100."
-	    echo ""
-	    FOO=""
+	    echo "You must to enter a number greater than or equal to 100"
+	    TEST=""
 	    ;;
     esac
 done
 
+echo ""
+echo "Would you like any more parameters to configure?"
+echo "Write them here:"
+echo $n "[]-> $c"
+read EXTRAPARA
+
+rm -f config.settings
+cat > config.settings << __EOF__
 #
-# check FD_SETSIZE and override if needed.
-#
-
-cat > $TMP <<__EOF__
-#include <stdio.h>
-#include <sys/types.h>
-
-#ifndef FD_SETSIZE
-#define FD_SETSIZE -1
-#endif
-
-/*
- * Prints "notdef" if FD_SETSIZE is undefined,
- *        "ok"     if FD_SETSIZE is at least as large as provided on the
- *                 compile command line (-DMAXCONNECTIONS=1234)
- *        "###"    if it is less.  (### is the FD_SETSIZE value)
- */
-int
-main(int argc, char *argv[])
-{
-	if (FD_SETSIZE == -1)
-		printf("notdef\n");
-	else if (FD_SETSIZE >= MAXCONNECTIONS)
-		printf("ok\n");
-	else
-		printf("%d\n", FD_SETSIZE);
-
-	return 0;
-}
-__EOF__
-$COMP "-DMAXCONNECTIONS=$MAXCONNECTIONS" >/dev/null 2>&1
-if [ $? -ne 0 ] ; then
-    echo " "
-    echo "I could not derrive what your system allows for the maximum number"
-    echo "of connections becuase the test program did not compile."
-    echo " "
-    FD_SETSIZE=""
-else
-    fd_setsize_ok=`$EXEC`
-    case $fd_setsize_ok in
-	notdef)
-	    echo " "
-	    echo "I could not derrive what your system allows for the maximum"
-	    echo "number of connections because the test program did not find"
-	    echo "a system-supplied value for FD_SETSIZE.  Assuming it is"
-	    echo "defined correctly but the test program cannot find it."
-	    echo " "
-	    FD_SETSIZE=""
-	    ;;
-	ok)
-	    echo " "
-	    echo "Your system-supplied value for FD_SETSIZE is large enough"
-	    echo "for ircd to leave it untouched."
-	    echo " "
-	    FD_SETSIZE=""
-	    ;;
-	*)
-	    echo " "
-	    echo "Your system-supplied value for FD_SETSIZE is $fd_setsize_ok"
-	    echo "but you requested $MAXCONNECTIONS for ircd.  FD_SETSIZE will"
-	    echo "be overridden using -DFD_SETSIZE=$MAXCONNECTIONS when"
-	    echo "compiling ircd."
-	    echo " "
-	    FD_SETSIZE=$MAXCONNECTIONS
-	    ;;
-    esac
-fi
-
-if [ -n "$FD_SETSIZE" ] ; then
-    $RM -f Makefile.tmp
-    sed -e "s@^FD_SETSIZE=\(.*\)@FD_SETSIZE=-DFD_SETSIZE=$FD_SETSIZE@" Makefile > Makefile.tmp
-    cp Makefile.tmp Makefile
-    $RM -f Makefile.tmp
-else
-    $RM -f Makefile.tmp
-    sed -e "s@^FD_SETSIZE=\(.*\)@FD_SETSIZE=@" Makefile > Makefile.tmp
-    cp Makefile.tmp Makefile
-    $RM -f Makefile.tmp
-fi
-
-if [ -n "$CRYPTOLIB" ] ; then
-	$RM -f Makefile.tmp
-	sed -e "s@^CRYPTOLIB=\(.*\)@CRYPTOLIB=$CRYPTOLIB@" Makefile > Makefile.tmp
-	cp Makefile.tmp Makefile
-	$RM -f Makefile.tmp
-else
-    $RM -f Makefile.tmp
-    sed -e "s@^CRYPTOLIB=\(.*\)@CRYPTOLIB=@" Makefile > Makefile.tmp
-    cp Makefile.tmp Makefile
-    $RM -f Makefile.tmp
-	
-fi
-
-if [ -n "$CRYPTOIRCD" ] ; then
-       $RM -f Makefile.tmp
-       sed -e "s@^OPENSSLPATH=\(.*\)@OPENSSLPATH=$OPENSSLPATH@" Makefile > Makefile.tmp
-       cp Makefile.tmp Makefile
-       $RM -f Makefile.tmp
-else
-    $RM -f Makefile.tmp
-    sed -e "s@^OPENSSLPATH=\(.*\)@OPENSSLPATH=@" Makefile > Makefile.tmp
-    cp Makefile.tmp Makefile
-    $RM -f Makefile.tmp
-fi
-
-if [ -n "$OPENSSL_OTHERPLACE" ] ; then
-       $RM -f Makefile.tmp
-       sed -e "s@^OPENSSLINCLUDE=\(.*\)@OPENSSLINCLUDES=-I/usr/local/ssl/include/openssl@" Makefile > Makefile.tmp
-       cp Makefile.tmp Makefile
-       $RM -f Makefile.tmp
-else
-    $RM -f Makefile.tmp
-    sed -e "s@^OPENSSLINCLUDE=\(.*\)@OPENSSLINCLUDES=@" Makefile > Makefile.tmp
-    cp Makefile.tmp Makefile
-    $RM -f Makefile.tmp
-fi
-
-if [ -n "$REGEX" ] ; then
-    $RM -f Makefile.tmp
-    sed -e "s@^REGEX=\(.*\)@REGEX=@" Makefile > Makefile.tmp
-    cp Makefile.tmp Makefile
-    $RM -f Makefile.tmp
-else
-	$RM -f Makefile.tmp
-	sed -e "s@^REGEX=\(.*\)@REGEX=../extras/regex/regex.o@" Makefile > Makefile.tmp
-	cp Makefile.tmp Makefile
-	$RM -f Makefile.tmp
-fi	
-
-$RM -f $EXEC $TMP
-
-$RM -f ./core
-#
-# create the $OPTIONS_H file
-#
-rm -f $OPTIONS_H
-cat > $OPTIONS_H << __EOF__
-
-/*
- * VERSION: $IRCD_VERSION
- * DATE:    $CONF_DATE
- * OS:      $OSNAME
- *
- * You shouldn't have to edit this file, if you really need to change
- * something, i'd suggest running Config again.
- */
-
-#define MYOSNAME "$OS"
-#define DPATH "$DPATH"
-#define SPATH "$SPATH"
-#define DOMAINNAME "$DOMAINNAME"
-#define LISTEN_SIZE $LISTEN_SIZE
-#define MAXSENDQLENGTH $MAXSENDQLENGTH
-#define BUFFERPOOL $BUFFERPOOL
-#define MAXCONNECTIONS $MAXCONNECTIONS
-#define NICKNAMEHISTORYLENGTH $NICKNAMEHISTORYLENGTH
-__EOF__
-
-if [ -n "$CRYPT_OPER_PASSWORD" ] ; then
-    echo "#define CRYPT_OPER_PASSWORD 1" >> $OPTIONS_H
-else
-    echo "#undef CRYPT_OPER_PASSWORD" >> $OPTIONS_H
-fi
-if [ -n "$CRYPTOIRCD" ] ; then
-    echo "#define USE_SSL 1" >> $OPTIONS_H
-else
-    echo "#undef USE_SSL" >> $OPTIONS_H
-fi
-if [ -n "$CRYPT_LINK_PASSWORD" ] ; then
-    echo "#define CRYPT_LINK_PASSWORD 1" >> $OPTIONS_H
-else
-    echo "#undef CRYPT_LINK_PASSWORD" >> $OPTIONS_H
-fi
-if [ -n "$CRYPT_ILINE_PASSWORD" ] ; then
-    echo "#define CRYPT_ILINE_PASSWORD 1" >> $OPTIONS_H
-else
-    echo "#undef CRYPT_ILINE_PASSWORD" >> $OPTIONS_H
-fi
-if [ -n "$CRYPT_XLINE_PASSWORD" ] ; then
-    echo "#define CRYPT_XLINE_PASSWORD 1" >> $OPTIONS_H
-else
-    echo "#undef CRYPT_XLINE_PASSWORD" >> $OPTIONS_H
-fi
-if [ -n "$HUB" ] ; then
-    echo "#define HUB 1" >> $OPTIONS_H
-else
-    echo "#undef HUB" >> $OPTIONS_H
-fi
-
-if [ -n "$REGEX" ] ; then
-	echo "#define HAVE_REGEX 1" >> $OPTIONS_H
-else
-	echo "#undef HAVE_REGEX" >> $OPTIONS_H
-fi
-
-if [ -n "$NOSPOOF" ] ; then
-    echo "#define NOSPOOF 1" >> $OPTIONS_H
-else
-    echo "#undef NOSPOOF" >> $OPTIONS_H
-fi
-
-if [ "$OSNAME" = "Linux (with GLIBC 2.x or greater)" ]; then
-    echo "#define GLIBC2_x" >> $OPTIONS_H
-fi
-
-#
-# create the persistant file
-#
-rm -f $OPTIONS
-cat > $OPTIONS << __EOF__
-#
-# VERSION: $IRCD_VERSION
-# DATE:    $CONF_DATE
-# OS:      $OSNAME
-#
-# You shouldn't have to edit this file, if you really need to change
-# something, i'd suggest running Config again.
-#
-#
-IRCNET="$IRCNET"
-LAST_VERSION="$IRCD_VERSION"
 NOSPOOF="$NOSPOOF"
 DPATH="$DPATH"
 SPATH="$SPATH"
@@ -1892,6 +579,7 @@ CRYPT_OPER_PASSWORD="$CRYPT_OPER_PASSWORD"
 CRYPT_LINK_PASSWORD="$CRYPT_LINK_PASSWORD"
 CRYPT_ILINE_PASSWORD="$CRYPT_ILINE_PASSWORD"
 CRYPT_XLINE_PASSWORD="$CRYPT_XLINE_PASSWORD"
+INET6="$INET6"
 LISTEN_SIZE="$LISTEN_SIZE"
 MAXSENDQLENGTH="$MAXSENDQLENGTH"
 BUFFERPOOL="$BUFFERPOOL"
@@ -1899,43 +587,27 @@ MAXCONNECTIONS="$MAXCONNECTIONS"
 NICKNAMEHISTORYLENGTH="$NICKNAMEHISTORYLENGTH"
 HUB="$HUB"
 DOMAINNAME="$DOMAINNAME"
+DEFPERM="$DEFPERM"
+CRYPTOIRCD="$CRYPTOIRCD"
+EXTRAPARA="$EXTRAPARA"
 __EOF__
-
-if [ "$OSNAME" = "Linux (with GLIBC 2.x or greater)" ]; then
-   echo "GLIBC2_x="YES"" >> $OPTIONS
-   echo ""
-fi
-
-if [ -n "$CRYPTOIRCD" ] ; then
-    if [ ! -f server.req.pem ]; then
-	    echo "Using openssl in $OPENSSLPATH .."
-	    export OPENSSLPATH
-    	    make pem
-            cat .SICI
-            read cc
-    fi
-fi
-
+RUN_CONFIGURE
 cat << __EOF__
 
- _____________________________________________________________________
-|                                                                     |
-|                    UnrealIRCd Compile-Time Config                   |
-|                                                                     |
-| The file "$OPTIONS" was either created or rewritten to contain your |
-| answers to the above questions.                                     |
-|                                                                     |
-|_____________________________________________________________________|
-|_____________________________________________________________________|
-|                                                                     |
-| Now all you have todo is type 'make' and let it compile. When thats |
-| done, you will receive other instructions on what todo next.        |
-|                                                                     |
-|_____________________________________________________________________|
-|_____________________________________________________________________|
-| - The UnrealIRCd Team -                                             |
-| * Stskeeps  stskeeps@unrealircd.com                                 |
-| * codemastr codemastr@unrealircd.com                                |
-| * DrBin     drbin@unrealircd.com                                    |
-|_____________________________________________________________________|
+ _______________________________________________________________________
+|                                                                       |
+|                    UnrealIRCd Compile-Time Config                     |
+|_______________________________________________________________________|
+|_______________________________________________________________________|
+|                                                                       |
+| Now all you have to do is type 'make' and let it compile. When that's |
+| done, you will receive other instructions on what to do next.         |
+|                                                                       |
+|_______________________________________________________________________|
+|_______________________________________________________________________|
+|                        - The UnrealIRCd Team -                        |
+|                                                                       |
+| * Stskeeps  stskeeps@unrealircd.com                                   |
+| * codemastr codemastr@unrealircd.com                                  |
+|_______________________________________________________________________|
 __EOF__

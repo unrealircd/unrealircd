@@ -3,7 +3,7 @@
  *   Copyright (C) 1990 Jarkko Oikarinen
  *
  *   $Id$
- * 
+ *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
  *   the Free Software Foundation; either version 1, or (at your option)
@@ -23,7 +23,7 @@
 #define	__config_include__
 
 #include "setup.h"
-#include "settings.h"
+
 /*
  *
  *   NOTICE
@@ -44,14 +44,15 @@
 #undef WIN32_SPECIFY
 
 #ifdef WIN32_SPECIFY
-#define WIN32_PORTER ""
+#define WIN32_PORTER "McSkaf"
 #define WIN32_URL ""
 #endif
 
  /*
     * Define this if you're testing/debugging/programming.
-  */
 #undef DEBUG
+  */
+
 /* Type of host. These should be made redundant somehow. -avalon */
 
 /*	BSD			Nothing Needed 4.{2,3} BSD, SunOS 3.x, 4.x */
@@ -97,8 +98,14 @@
  */
 #define ADMINCHAT 1
 
+
 /*
-  If you want SHUN_NOTICES, define this 
+ * Kill logging -otherguy
+*/
+#undef KILL_LOGGING
+
+/*
+  If you want SHUN_NOTICES, define this
 */
 #undef SHUN_NOTICES
 
@@ -125,11 +132,11 @@
 #undef NO_OPEROVERRIDE
 
 /*
- * Disable /sethost, /setident, /chgname, /chghost, /chgident 
+ * Disable /sethost, /setident, /chgname, /chghost, /chgident
 */
 #undef DISABLE_USERMOD
 
-/* 
+/*
   Ident checking
   #define this to disable ident checking
 */
@@ -176,6 +183,11 @@
  */
 #undef	COMMENT_IS_FILE
 
+/*
+ * MAXUNKNOWNCONNECTIONSPERIP
+*/
+#define MAXUNKNOWNCONNECTIONSPERIP 3
+
 
 /* Do these work? I dunno... */
 
@@ -201,9 +213,10 @@
  * If your host supports varargs and has vsprintf(), vprintf() and vscanf()
  * C calls in its library, then you can define USE_VARARGS to use varargs
  * instead of imitation variable arg passing.
+*/
 #define	USE_VARARGS
 
- * NOTE: with current server code, varargs doesn't survive because it can't
+/* NOTE: with current server code, varargs doesn't survive because it can't
  *       be used in a chain of 3 or more funtions which all have a variable
  *       number of params.  If anyone has a solution to this, please notify
  *       the maintainer.
@@ -223,7 +236,7 @@
  * these are only the recommened names and paths. Change as needed.
  * You must define these to something, even if you don't really want them.
  */
-#define	CPATH		"ircd.conf"	/* server configuration file */
+#define	CPATH		"unrealircd.conf"	/* server configuration file */
 #define	MPATH		"ircd.motd"	/* server MOTD file */
 #define RPATH   	"ircd.rules"	/* server rules file */
 #define ZPATH		"ircd.notes"	/* server notes */
@@ -235,16 +248,6 @@
 #define VPATH		"ircd.svsmotd"	/* Services MOTD append. */
 #define BPATH		"bot.motd"	/* Bot MOTD */
 #define IRCDTUNE 	"ircd.tune"	/* tuning .. */
-
-/*
- * Define this filename to maintain a list of persons who log
- * into this server. Logging will stop when the file does not exist.
- * Logging will be disable also if you do not define this.
- * FNAME_USERLOG just logs user connections, FNAME_OPERLOG logs every
- * successful use of /oper.  These are either full paths or files within DPATH.
- */
-#define FNAME_USERLOG "users.log"
-#define FNAME_OPERLOG "opers.log"
 
 /* FAILOPER_WARN
  *
@@ -344,7 +347,7 @@
 #define LOG_FACILITY LOG_DAEMON
 #endif /* USE_SYSLOG */
 
-/* 
+/*
  * Size of the LISTEN request.  Some machines handle this large
  * without problem, but not all.  It defaults to 5, but can be
  * raised if you know your machine handles it.
@@ -377,7 +380,7 @@
 
 /*
  * Ok this one is being changed. it is advisable never to run anything that
- * uses sockets etc. and has the potential for the outside world to connect to it 
+ * uses sockets etc. and has the potential for the outside world to connect to it
  * to run as root... Hackers do things like buffer overruns, and get dumped on
  * a shell with root access effectivley ... so DONT do it.. if a program uses a
  * port <1024 it will run as root, once the program has binded to the socket it
@@ -405,7 +408,7 @@
  */
 #define	CLIENT_FLOOD	8000
 
-/* 
+/*
  * Define your network service names here.
  */
 #define ChanServ "ChanServ"
@@ -429,29 +432,11 @@
 #define MAXTARGETS		20
 #define TARGET_DELAY		120
 
-/* 
+/*
  * Would you like all clients to see the progress of their connections?
  */
 
 #define SHOWCONNECTINFO
-
-/*
- * SOCKS proxy checker
- *
- * At the moment this isn't an ideal solution, however it's better
- * than nothing. Smaller servers shouldn't notice much of a performance
- * hit, larger servers might have to reduce their Y-lines. In either
- * case it's advisable to increase the number of FD's you define by
- * about 10%.
- *
- * This determines the port on the local ircd machine that the open
- * SOCKS server test attempts to connect back to. The default should
- * be fine except for those unusual situations where the default
- * port is in use for some reason.
- *
- * Undefining this will eliminate the checker from ircd.
- */
-#define SOCKSPORT 6013
 
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
 
@@ -474,7 +459,7 @@
  * 1 server = 1 connection, 1 user = 1 connection.
  * This should be at *least* 3: 1 listen port, 1 dns port + 1 client
  *
- * Note: this figure will be too high for most systems. If you get an 
+ * Note: this figure will be too high for most systems. If you get an
  * fd-related error on compile, change this to 256.
  *
  * Windows users: This should be a fairly high number.  Some operations
@@ -507,7 +492,7 @@
 
 /*
  * Time interval to wait and if no messages have been received, then check for
- * PINGFREQUENCY and CONNECTFREQUENCY 
+ * PINGFREQUENCY and CONNECTFREQUENCY
  */
 #define TIMESEC  60		/* Recommended value: 60 */
 
@@ -520,7 +505,7 @@
 #define PINGFREQUENCY    120	/* Recommended value: 120 */
 
 /*
- * If the connection to to uphost is down, then attempt to reconnect every 
+ * If the connection to to uphost is down, then attempt to reconnect every
  * CONNECTFREQUENCY  seconds.
  */
 #define CONNECTFREQUENCY 600	/* Recommended value: 600 */
@@ -595,19 +580,24 @@
 #endif
 
 #ifdef DEBUGMODE
-extern void debug();
-# define Debug(x) debug x
-# define LOGFILE LPATH
+#ifndef _WIN32
+		extern void debug(int, char *, ...);
+#define Debug(x) debug x
 #else
-# define Debug(x) ;
-# if VMS
-#	define LOGFILE "NLA0:"
-# else
-#	define LOGFILE "/dev/null"
-# endif
+		extern void debug(int, char *, ...);
+#define Debug(x) debug x
+#endif
+#define LOGFILE LPATH
+#else
+#define Debug(x) ;
+#if VMS
+#define LOGFILE "NLA0:"
+#else
+#define LOGFILE "/dev/null"
+#endif
 #endif
 
-#  undef LEAST_IDLE
+#undef LEAST_IDLE
 
 #if defined(mips) || defined(PCS)
 #undef SYSV
@@ -683,7 +673,7 @@ error You stuffed up config.h signals
 # define BSD_INCLUDES
 #endif
 /*
- * This is just to make Solaris porting easier -- codemastr 
+ * This is just to make Solaris porting easier -- codemastr
  */
 #if defined(SOL20) || defined(SOL25) || defined(SOL26) || defined(SOL27)
 #define _SOLARIS
@@ -696,14 +686,20 @@ error You stuffed up config.h signals
 #endif
 /* use cflag longmodes */
 #define USE_LONGMODE
-#define Reg1 register
-#define Reg2 register
-#define Reg3 register
-#define Reg4 register
-#define Reg5 register
-#define Reg6 register
-#define Reg7 register
-#define Reg8 register
-#define Reg9 register
-#define Reg10 register
+#ifdef NEED_BCMP
+#define bcmp memcmp
+#endif
+#ifdef NEED_BCOPY
+#define bcopy(a,b,c) memcpy(b,a,c)
+#endif
+#ifdef NEED_BZERO
+#define bzero(a,b) memset(a,0,b)
+#endif
+#if defined(AIX) && defined(_XOPEN_SOURCE_EXTENDED) && _XOPEN_SOURCE_EXTENDED
+# define SOCK_LEN_TYPE size_t
+#else
+# define SOCK_LEN_TYPE int
+#endif
+
 #endif				/* __config_include__ */
+
