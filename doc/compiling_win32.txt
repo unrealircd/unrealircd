@@ -73,6 +73,9 @@ just takes like 5-10 minutes to have a zlib+ssl+curl Unreal version.
 But if you want to compile each of these libs manually then it will
 probably take an hour or so.
 
+** THE INFORMATION BELOW IS OUTDATED, WE GOT RID OF MDd, USE MD INSTEAD
+   AND DONT COMPILE OPENSSL W/DEBUG ***
+
 == ZIP LINKS (zlib) ==
 [NOTE: precompiled dlls should NOT be used because they will cause a crash
        (this is due to different compile parameters / api call systems]
