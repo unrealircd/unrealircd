@@ -1635,3 +1635,4 @@ seen. gmtime warning still there
 - /kline and /zline now use TKL
 - Removed src/win32/unrealinstssl.iss and merged it into unrealinst.iss, add #define
   USE_SSL to the file to build an SSL package
+- Added additional NT Service options to the win32 installer
