@@ -111,17 +111,18 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	char *m;
 	int what;
 	modebuf[0] = 0;
+	int i = 4;
 	if(!(chptr = find_channel(parv[1], NULL)))
 		return 0;
-	if (parc >= 4) {
-		if (!(acptr = find_person(parv[3], NULL)))
+/*	if (parc >= 4) {
 			return 0;
 		if (parc > 4) {
 			ts = TS2ts(parv[4]);
 			if (acptr->since != ts)
 				return 0;
 		}
-	}
+	}*/
+	ts = TS2ts(parv[parc-1]);
 	for(m = parv[2]; *m; m++) {
 		switch (*m) {
 			case '+':
@@ -182,8 +183,18 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			break;
 			case 'b': {
 				Ban *ban, *bnext;
-				if (acptr && parc >= 4) {
+				if (parc >= i) {
 					char uhost[NICKLEN+USERLEN+HOSTLEN+6], vhost[NICKLEN+USERLEN+HOSTLEN+6];
+					if (!(acptr = find_person(parv[i-1], NULL))) {
+						i++;
+						break;
+					}
+					if (ts && ts != acptr->since) {
+						i++;
+						break;
+					}
+					i++;
+
 					strcpy(uhost, make_nick_user_host(acptr->name, 
 						acptr->user->username, acptr->user->realhost));
 					strcpy(vhost, make_nick_user_host(acptr->name,
@@ -205,6 +216,46 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						bnext = ban->next;
 						add_send_mode_param(chptr, sptr, '-',  'b', ban->banstr);
 						del_banid(chptr, ban->banstr);
+						ban = bnext;
+					}
+				}
+			}
+			break;
+			case 'e': {
+				Ban *ban, *bnext;
+				if (parc >= i) {
+					char uhost[NICKLEN+USERLEN+HOSTLEN+6], vhost[NICKLEN+USERLEN+HOSTLEN+6];
+					if (!(acptr = find_person(parv[i-1], NULL))) {
+						i++;
+						break;
+					}
+					if (ts && ts != acptr->since) {
+						i++;
+						break;
+					}
+					i++;
+
+					strcpy(uhost, make_nick_user_host(acptr->name, 
+						acptr->user->username, acptr->user->realhost));
+					strcpy(vhost, make_nick_user_host(acptr->name,
+						acptr->user->username, acptr->user->virthost));
+					ban = chptr->exlist;
+					while (ban) {
+						bnext = ban->next;
+						if (!match(ban->banstr, uhost) || !match(ban->banstr, vhost)) {
+							add_send_mode_param(chptr, sptr, '-',  'e', 
+								ban->banstr);
+							del_exbanid(chptr, ban->banstr);
+						}
+						ban = bnext;
+					}
+				}
+				else {
+					ban = chptr->exlist;
+					while (ban) {
+						bnext = ban->next;
+						add_send_mode_param(chptr, sptr, '-',  'e', ban->banstr);
+						del_exbanid(chptr, ban->banstr);
 						ban = bnext;
 					}
 				}

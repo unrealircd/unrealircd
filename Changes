@@ -740,3 +740,4 @@ seen. gmtime warning still there
 - Added more network files...
 - Fixed a bug affecting /oper and /vhost caused by IP checking
 - Added wildcard support to include and loadmodule in win32
+- Added SVSMODE # -e to work just like -b

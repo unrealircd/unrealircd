@@ -415,7 +415,7 @@ static int add_exbanid(aClient *cptr, aChannel *chptr, char *banid)
 /*
  * del_exbanid - delete an id belonging to cptr
  */
-static int del_exbanid(aChannel *chptr, char *banid)
+int del_exbanid(aChannel *chptr, char *banid)
 {
 	Ban **ban;
 	Ban *tmp;
