@@ -248,7 +248,7 @@ void CommandDel(Command *command);
 #define HOOKTYPE_LOCAL_NICKCHANGE 2
 #define HOOKTYPE_LOCAL_CONNECT 3
 #define HOOKTYPE_SCAN_INFO 5    /* Taken care of in scan.c */
-#define HOOKTYPE_CONFIG_UNKNOWN 6
+#define HOOKTYPE_CONFIGPOSTTEST 6
 #define HOOKTYPE_REHASH 7
 #define HOOKTYPE_PRE_LOCAL_CONNECT 8
 #define HOOKTYPE_HTTPD_URL 9

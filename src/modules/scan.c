@@ -64,7 +64,17 @@ extern ConfigEntry		*config_find_entry(ConfigEntry *ce, char *name);
 DLLFUNC int h_scan_connect(aClient *sptr);
 DLLFUNC int h_config_test(ConfigFile *, ConfigEntry *, int);
 DLLFUNC int h_config_run(ConfigFile *, ConfigEntry *, int);
+DLLFUNC int h_config_posttest();
 DLLFUNC int h_stats_scan(aClient *sptr, char *stats);
+
+struct requiredconfig {
+	int endpoint :1;
+	int timeout :1;
+	int bantime :1;
+	int bindip :1;
+};
+
+struct requiredconfig ReqConf;
 
 #ifndef DYNAMIC_LINKING
 ModuleHeader m_scan_Header
@@ -84,6 +94,7 @@ EVENT(e_scannings_clean);
 
 static Event	*Scannings_clean = NULL;
 static Hook 	*LocConnect = NULL, *ConfTest = NULL, *ConfRun = NULL, *ServerStats = NULL;
+static Hook	*ConfPostTest = NULL;
 static Hooktype *ScanHost = NULL;
 static int HOOKTYPE_SCAN_HOST;
 ModuleInfo ScanModInfo;
@@ -96,10 +107,12 @@ int    m_scan_Init(ModuleInfo *modinfo)
 {
 	scan_message = NULL;
 	bcopy(modinfo,&ScanModInfo,modinfo->size);
+	bzero(&ReqConf, sizeof(ReqConf));
 	ScanHost = (Hooktype *)HooktypeAdd(modinfo->handle, "HOOKTYPE_SCAN_HOST", &HOOKTYPE_SCAN_HOST);
 	LocConnect = HookAddEx(ScanModInfo.handle, HOOKTYPE_LOCAL_CONNECT, h_scan_connect);
 	ConfTest = HookAddEx(ScanModInfo.handle, HOOKTYPE_CONFIGTEST, h_config_test);
 	ConfRun = HookAddEx(ScanModInfo.handle, HOOKTYPE_CONFIGRUN, h_config_run);
+	ConfPostTest = HookAddEx(ScanModInfo.handle, HOOKTYPE_CONFIGPOSTTEST, h_config_posttest);
 	ServerStats = HookAddEx(ScanModInfo.handle, HOOKTYPE_STATS, h_stats_scan);
 	bzero(&Scan_bind, sizeof(Scan_bind));
 	IRCCreateMutex(Scannings_lock);
@@ -148,6 +161,7 @@ int	m_scan_Unload(void)
 		HookDel(LocConnect);
 		HookDel(ConfTest);
 		HookDel(ConfRun);
+		HookDel(ConfPostTest);
 		HookDel(ServerStats);
 		LockEventSystem();
 		EventDel(Scannings_clean);
@@ -329,30 +343,6 @@ DLLFUNC h_config_test(ConfigFile *cf, ConfigEntry *ce, int type) {
 
 	if (!strcmp(ce->ce_varname, "scan"))
 	{
-		if (!config_find_entry(ce->ce_entries, "endpoint"))
-		{
-			config_error("%s:%i: set::scan::endpoint missing", ce->ce_fileptr->cf_filename,
-				ce->ce_varlinenum);
-			errors++;
-		}
-		if (!config_find_entry(ce->ce_entries, "bantime"))
-		{
-			config_error("%s:%i: set::scan::bantime missing", ce->ce_fileptr->cf_filename,
-				ce->ce_varlinenum);
-			errors++;
-		}
-		if (!config_find_entry(ce->ce_entries, "timeout"))
-		{
-			config_error("%s:%i: set::scan::timeout missing", ce->ce_fileptr->cf_filename,
-				ce->ce_varlinenum);
-			errors++;
-		}
-		if (!config_find_entry(ce->ce_entries, "bind-ip"))
-		{
-			config_error("%s:%i: set::scan::bind-ip missing", ce->ce_fileptr->cf_filename,
-				ce->ce_varlinenum);
-			errors++;
-		}
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 		{
 			if (!cep->ce_varname)
@@ -403,6 +393,7 @@ DLLFUNC h_config_test(ConfigFile *cf, ConfigEntry *ce, int type) {
 						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 					return -1;
 				}
+				ReqConf.endpoint = 1;
 			}
 			else if (!strcmp(cep->ce_varname, "bind-ip"))
 			{
@@ -412,10 +403,13 @@ DLLFUNC h_config_test(ConfigFile *cf, ConfigEntry *ce, int type) {
 						ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 					return -1;
 				}
+				ReqConf.bindip = 1;
 			}
 			else if (!strcmp(cep->ce_varname, "message"));
-			else if (!strcmp(cep->ce_varname, "bantime"));
-			else if (!strcmp(cep->ce_varname, "timeout"));
+			else if (!strcmp(cep->ce_varname, "bantime"))
+				ReqConf.bantime = 1;
+			else if (!strcmp(cep->ce_varname, "timeout"))
+				ReqConf.timeout = 1;
 			else 
 			{
 				config_error("%s:%i: unknown directive set::scan::%s",
@@ -439,35 +433,67 @@ DLLFUNC h_config_run(ConfigFile *cf, ConfigEntry *ce, int type) {
 		return 0;
 	if (!strcmp(ce->ce_varname, "scan"))
 	{
-		char copy[256];
-		char *ip, *port;
-		int iport;
-		cep = config_find_entry(ce->ce_entries, "endpoint");
-		strcpy(copy, cep->ce_vardata);
-		ipport_seperate(copy, &ip, &port);
+		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+		{
+			if (!strcmp(cep->ce_varname, "endpoint"))
+			{
+				char copy[256];
+				char *ip, *port;
+				int iport;
+				strcpy(copy, cep->ce_vardata);
+				ipport_seperate(copy, &ip, &port);
 #ifndef INET6
-		Scan_endpoint.SIN_ADDR.S_ADDR = inet_addr(ip);
+				Scan_endpoint.SIN_ADDR.S_ADDR = inet_addr(ip);
 #else
-	        inet_pton(AFINET, ip, Scan_endpoint.SIN_ADDR.S_ADDR);
+	        		inet_pton(AFINET, ip, Scan_endpoint.SIN_ADDR.S_ADDR);
 #endif
-		iport = atol(port);
-		Scan_endpoint.SIN_PORT = htons(iport);
-		Scan_endpoint.SIN_FAMILY = AFINET;		
-		cep = config_find_entry(ce->ce_entries, "bantime");
-		Scan_BanTime = config_checkval(cep->ce_vardata,CFG_TIME);
-		cep = config_find_entry(ce->ce_entries, "timeout");
-		Scan_TimeOut = config_checkval(cep->ce_vardata,CFG_TIME);
-		cep = config_find_entry(ce->ce_entries, "bind-ip");
+				iport = atol(port);
+				Scan_endpoint.SIN_PORT = htons(iport);
+				Scan_endpoint.SIN_FAMILY = AFINET;		
+			}
+			else if (!strcmp(cep->ce_varname, "bantime"))
+				Scan_BanTime = config_checkval(cep->ce_vardata,CFG_TIME);
+			else if (!strcmp(cep->ce_varname, "timeout"))
+				Scan_TimeOut = config_checkval(cep->ce_vardata,CFG_TIME);
+			else if (!strcmp(cep->ce_varname, "bind-ip"))
+			{
 #ifndef INET6
-		Scan_bind.S_ADDR = inet_addr(cep->ce_vardata);
-#else
-		inet_pton(AFINET, cep->ce_vardata, Scan_bind.S_ADDR);
+				Scan_bind.S_ADDR = inet_addr(cep->ce_vardata);
+#else	
+				inet_pton(AFINET, cep->ce_vardata, Scan_bind.S_ADDR);
 #endif
-		if ((cep = config_find_entry(ce->ce_entries, "message")))
-			scan_message = strdup(cep->ce_vardata);
+			}
+			if (!strcmp(cep->ce_varname, "message"))
+				scan_message = strdup(cep->ce_vardata);
+		}
 		return 1;		
 	}
 	return 0;
+}
+
+DLLFUNC int h_config_posttest() {
+	int errors = 0;
+	if (!ReqConf.endpoint)
+	{
+		config_error("set::scan::endpoint missing");
+		errors++;
+	}
+	if (!ReqConf.bantime)
+	{
+		config_error("set::scan::bantime missing");
+		errors++;
+	}
+	if (!ReqConf.timeout)
+	{
+		config_error("set::scan::timeout missing");
+		errors++;
+	}
+	if (!ReqConf.bindip)
+	{
+		config_error("set::scan::bind-ip missing");
+		errors++;
+	}
+	return errors ? -1 : 1;	
 }
 
 DLLFUNC int h_stats_scan(aClient *sptr, char *stats) {

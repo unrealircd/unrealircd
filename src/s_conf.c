@@ -1130,6 +1130,19 @@ int	config_post_test()
 		Error("set::help-channel missing");
 	if (!requiredstuff.settings.hidhost)
 		Error("set::hiddenhost-prefix missing");
+	for (global_i = Hooks[HOOKTYPE_CONFIGPOSTTEST]; global_i; 
+		global_i = global_i->next) 
+	{
+		int value;
+		value = (*(global_i->func.intfunc))();
+		if (value == -1)
+		{
+			errors++;
+			break;
+		}
+		if (value == -2)
+			errors++;
+	}
 	return (errors > 0 ? -1 : 1);	
 }
 
@@ -1235,6 +1248,12 @@ int	config_test()
 						errors++;
 						break;
 					}
+					if (value == -2) 
+					{
+						used = 1;
+						errors++;
+					}
+						
 				}
 				if (!used)
 					config_status("%s:%i: unknown directive %s", 
@@ -2829,6 +2848,11 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 					errors++;
 					break;
 				}
+				if (value == -2)
+				{
+					used = 1;
+					errors++;
+				}
 			}
 			if (!used) {
 				config_error("%s:%i: allow item with unknown type",
@@ -3192,6 +3216,11 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 				used = 1;
 				errors++;
 				break;
+			}
+			if (value == -2)
+			{
+				used = 1;
+				errors++;
 			}
 		}
 		if (!used) {
@@ -3902,6 +3931,11 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 				break;
 			}
+			if (value == -2)
+			{
+				used = 1;
+				errors++;
+			}
 		}
 		if (!used) {
 			config_error("%s:%i: unknown ban type %s",
@@ -4417,6 +4451,11 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					used = 1;
 					errors++;
 					break;
+				}
+				if (value == -2)
+				{
+					used = 1;
+					errors++;
 				}
 			}
 			if (!used) {
