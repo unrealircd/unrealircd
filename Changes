@@ -1772,4 +1772,6 @@ seen. gmtime warning still there
 - Adding throttling, read config.h for more info. For the uneducated,
   throttling is to reconnect way too fast repeatedly. Thanks to [Real] for
   the idea
+- Fixed bug #000613 reported by AngryWolf where we were writing a null to the log file when 
+  we reached max size.
  
