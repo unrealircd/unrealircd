@@ -958,4 +958,4 @@ seen. gmtime warning still there
 - Auth/SSL fixes, list.c fix, code: could you add auth.c and ssl.c to
   makefile.win32?. If SSL is enabled, we can use MD5, SHA1, and crypt()
   even on win32
-
+- Added ssl.c and cidr.c to the win32 makefile
