@@ -9808,7 +9808,7 @@ fi
 echo "$as_me:$LINENO: result: $ac_cv_lib_dl_dlopen" >&5
 echo "${ECHO_T}$ac_cv_lib_dl_dlopen" >&6
 if test $ac_cv_lib_dl_dlopen = yes; then
-  IRCDLIBS="$IRCDLIBS-ldl"
+  IRCDLIBS="$IRCDLIBS -ldl"
 else
 
 { echo "$as_me:$LINENO: WARNING: Dynamic linking is not enabled because dlopen was not found" >&5
