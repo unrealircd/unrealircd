@@ -602,8 +602,8 @@ fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p></div>
   ebben az esetben &lt;blokkérték&gt;-et jelent, vagy lehet egy alblokk
   névtelen bejegyzése is.</p>
 <p>Háromféle megjegyzéstípus támogatott:</p>
-<p> # Egy soros megjegyzés<br>
-    // Egy soros megjegyzés<br>
+<p> # Egysoros megjegyzés<br>
+    // Egysoros megjegyzés<br>
     /* Többsoros<br>
        &nbsp;&nbsp;&nbsp;&nbsp;megjegyzés */<br>
  </p>
@@ -619,7 +619,7 @@ fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p></div>
 me {
 	name &lt;szerver-neve&gt;;
 	info &lt;szerver-leírása&gt;;
-	numeric &lt;szerver-numericja&gt;;
+	numeric &lt;szerver-azonosítószáma&gt;;
 };
 </pre></p>
 <p>Ezek az értékek meglehetõsen egyértelmûek. A <b>name</b> beállítja a szerver nevét,
@@ -629,8 +629,8 @@ me {
 <p>Példa:<br>
 <pre>
 me {
-	name "irc.foonet.com";
-	info "FooNet Server";
+	name "irc.valaminet.com";
+	info "ValamiNet Szerver";
 	numeric 1;
 };
 </pre></p></div>
@@ -674,7 +674,7 @@ class &lt;name&gt; {
 };
 </pre></p>
 <p> </p>
-<p>Class blokkok azok az osztályok, amelyekben a kapcsolatok elhelyezõdnek (például az allow blokkokból
+<p>A class blokkok olyan osztályok, amelyekben a kapcsolatok elhelyezõdnek (például az allow blokkokból
    vagy szerverek a link blokkokból); általában több class blokkot szokás beállítani (pl. egy-egy a szervereknek, klienseknek és az opereknek).</p>
 <p>A <b>name</b> egy leíró név, például "clients" (kliensek) vagy "servers" (szerverek), erre az osztálynévre hivatkoznak
    az allow, link, oper stb. blokkok.</p>
@@ -764,7 +764,7 @@ allow {
 
 allow {
 	ip *@*;
-	hostname *@*.jelszavas.csunya.emberek;
+	hostname *@*.jelszavas.csunya.emberkek;
 	class clients;
 	password "V4lami";
 	maxperip 1;
@@ -2377,6 +2377,10 @@ set {
     <td><div align="center">G</div></td>
     <td>G-osztályúvá teszi a csatornát. Ellenõrzi a badword blokkokban felsorolt szavakat, 
       és kicseréli õket a megadott szavakkal</td>
+  </tr>
+  <tr> 
+    <td><div align="center">j &lt;belépés:mp&gt;</div></td>
+    <td>Leszabályozza a felhasználónkénti belépéseket legfeljebb <i>belépés</i> számú belépésre <i>mp</i> másodpercenként</td>
   </tr>
   <tr> 
     <td><div align="center">M</div></td>
