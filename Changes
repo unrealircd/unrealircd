@@ -553,3 +553,4 @@
 - Added #undef SHUN_NOTICES, to add notices for users who are shunned
 - Fixed bug with U:Lines should be able to privmsg/notice and recieve
   badwords :P, does not work in channels
+- Removed the old GLINE system, TKL is now standard.

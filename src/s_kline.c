@@ -458,26 +458,18 @@ void tkl_synch(aClient *sptr)
 	{
 		if (tk->type & TKL_GLOBAL)
 		{
-			if ((tk->type & TKL_KILL) && !SupportSJOIN(sptr))
-				sendto_one(sptr,
-				    ":%s GLINE %s@%s %li %li %s :%s", me.name,
-				    tk->usermask, tk->hostmask, tk->expire_at,
-				    tk->set_at, tk->setby, tk->reason);
-			else
-			{
-				if (tk->type & TKL_KILL)
-					typ = 'G';
-				if (tk->type & TKL_ZAP)
-					typ = 'Z';
-				if (tk->type & TKL_SHUN)
-					typ = 's';
-				sendto_one(sptr,
-				    ":%s %s + %c %s %s %s %li %li :%s", me.name,
-				    IsToken(sptr) ? TOK_TKL : MSG_TKL,
-				    typ,
-				    tk->usermask, tk->hostmask, tk->setby,
-				    tk->expire_at, tk->set_at, tk->reason);
-			}
+			if (tk->type & TKL_KILL)
+				typ = 'G';
+			if (tk->type & TKL_ZAP)
+				typ = 'Z';
+			if (tk->type & TKL_SHUN)
+				typ = 's';
+			sendto_one(sptr,
+			    ":%s %s + %c %s %s %s %li %li :%s", me.name,
+			    IsToken(sptr) ? TOK_TKL : MSG_TKL,
+			    typ,
+			    tk->usermask, tk->hostmask, tk->setby,
+			    tk->expire_at, tk->set_at, tk->reason);
 		}
 	}
 }
@@ -620,15 +612,10 @@ int  m_tkl(cptr, sptr, parc, parv)
 		  tkl_sweep();
 		  if (type & TKL_GLOBAL)
 		  {
-			  sendto_serv_sjoin(cptr,
+			  sendto_serv_butone(cptr,
 			      ":%s TKL %s %s %s %s %s %s %s :%s", sptr->name,
 			      parv[1], parv[2], parv[3], parv[4], parv[5],
 			      parv[6], parv[7], parv[8]);
-			  if (type & TKL_KILL)
-				  sendto_serv_butone_sjoin(cptr,
-				      ":%s GLINE %s@%s %s %s %s :%s", me.name,
-				      parv[3], parv[4], parv[6], parv[7],
-				      parv[5], parv[8]);
 		  }
 		  return 0;
 	  }
@@ -693,16 +680,11 @@ int  m_tkl(cptr, sptr, parc, parv)
 					      tk->hostmask, gmt, tk->reason);
 					  tkl_del_line(tk);
 					  if (type & TKL_GLOBAL)
-						  sendto_serv_sjoin(cptr,
+						  sendto_serv_butone(cptr,
 						      ":%s TKL %s %s %s %s %s",
 						      sptr->name, parv[1],
 						      parv[2], parv[3], parv[4],
 						      parv[5]);
-					  if (type & (TKL_GLOBAL | TKL_KILL))
-						  sendto_serv_butone_sjoin(cptr,
-						      ":%s REMGLINE %s@%s",
-						      me.name, parv[3],
-						      parv[4]);
 					  break;
 				  }
 			  }
@@ -756,15 +738,6 @@ int  m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (IsServer(sptr))
 	{
-		tkllayer[1] = "+";
-		tkllayer[2] = "G";
-		tkllayer[3] = strtok(parv[1], "@");
-		tkllayer[4] = strtok(NULL, "@");
-		tkllayer[5] = parv[4];
-		tkllayer[6] = parv[2];
-		tkllayer[7] = parv[3];
-		tkllayer[8] = parv[5];
-		m_tkl(&me, &me, 9, tkllayer);
 		return;
 	}
 	if (!IsOper(sptr))
