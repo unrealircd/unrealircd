@@ -601,3 +601,5 @@
 - Docs: log { } from 'optional' -> 'recomended'
 - If no log { } block is present a warning will be printed out and we will fallback
   to a default of logging errors to ircd.log. Suggested by w00t (#0002327).
+- Fixed shuns not working as target in spamfilter and ban version { }, reported by Bugz
+  (#0002223).

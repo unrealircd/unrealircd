@@ -1416,7 +1416,7 @@ int place_host_ban(aClient *sptr, int action, char *reason, long duration)
 			else if (action == BAN_ACT_GLINE)
 				tkllayer[2] = "G";
 			else if (action == BAN_ACT_SHUN)
-				tkllayer[2] = "S";
+				tkllayer[2] = "s";
 			tkllayer[4] = hostip;
 			tkllayer[5] = me.name;
 			if (!duration)
@@ -1428,7 +1428,12 @@ int place_host_ban(aClient *sptr, int action, char *reason, long duration)
 			tkllayer[7] = mo2;
 			tkllayer[8] = reason;
 			m_tkl(&me, &me, 9, tkllayer);
-			return find_tkline_match(sptr, 0);
+			if (action == BAN_ACT_SHUN)
+			{
+				find_shun(sptr);
+				return -1;
+			} else
+				return find_tkline_match(sptr, 0);
 		}
 		case BAN_ACT_KILL:
 		default:
