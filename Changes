@@ -847,3 +847,4 @@ seen. gmtime warning still there
   fixes, fixed a lot of IPv6 bugs, hopefully - thanks to JK for borrowing
   his box
 - Fixed a #undef INET6 bug
+- Made Link denied error a little more descriptive

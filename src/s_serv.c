@@ -652,8 +652,8 @@ int  m_server(cptr, sptr, parc, parv)
 			    "ERROR :Link denied (No matching link configuration) %s",
 			    inpath);
 			sendto_locfailops
-			    ("Link denied (No matching link configuration) %s",
-			    inpath);
+			    ("Link denied for %s(%s@%s) (No matching link configuration) %s",
+			    servername, cptr->username, cptr->sockhost, inpath);
 			return exit_client(cptr, sptr, &me,
 			    "Link denied (No matching link configuration)");
 		}
