@@ -182,10 +182,8 @@ void debug(int level, char *form, ...)
 #ifndef USE_VARARGS
 		(void)ircsprintf(debugbuf, form, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
 #else
-# ifndef _WIN32
 		(void)ircvsprintf(debugbuf, form, vl);
-# else
-		vsprintf(debugbuf, form, vl);
+# ifdef _WIN32
 		strcat(debugbuf,"\r\n");
 # endif
 #endif
