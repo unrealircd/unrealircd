@@ -513,6 +513,43 @@ int  m_remgline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 extern char cmodestring[512];
 
+int	m_post(aClient *cptr, aClient *sptr, int parc, char *parv[])
+{
+	char *tkllayer[9] = {
+		me.name,	/*0  server.name */
+		"+",		/*1  +|- */
+		"z",		/*2  G   */
+		"*",		/*3  user */
+		NULL,		/*4  host */
+		NULL,
+		NULL,		/*6  expire_at */
+		NULL,		/*7  set_at */
+		NULL		/*8  reason */
+	};
+	char	hostip[128], mo[128], mo2[128];
+
+	if (!MyClient(sptr))
+		return 0;
+		
+	if (IsRegistered(sptr))
+		return 0;
+
+	strcpy(hostip, (char *)inetntoa((char *)&sptr->ip));
+		
+	sendto_one(sptr, ":%s NOTICE AUTH :*** Proxy connection detected (bad!)", me.name);
+	sendto_umode(UMODE_EYES, "Attempted WWW Proxy connect from client %s", get_client_host(sptr));
+	exit_client(cptr, sptr, &me, "HTTP proxy connection");
+	
+	tkllayer[4] = hostip;
+	tkllayer[5] = me.name;
+	ircsprintf(mo, "%li", iConf.socksbantime + TStime());
+	ircsprintf(mo2, "%li", TStime());
+	tkllayer[6] = mo;
+	tkllayer[7] = mo2;
+	tkllayer[8] = "HTTP Proxy";
+	return m_tkl(&me,&me, 9,tkllayer);
+}
+
 /*
 ** register_user
 **	This function is called when both NICK and USER messages

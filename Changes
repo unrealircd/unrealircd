@@ -448,3 +448,4 @@
 - Tokenized nick->nick PRIVMSG and NOTICE
 - Made it so you can remove a protoctl by putting a - in front
 - Fixed a bug in summon
+- Added protection against webproxies

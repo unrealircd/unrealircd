@@ -314,6 +314,8 @@
 #endif
 #define MSG_NEWJOIN 	"NEWJOIN" /* For CR Java Chat */
 
+#define MSG_POST	"POST"
+#define TOK_POST	"BN"
 #define MAXPARA    	15 
 
 extern int m_private(), m_topic(), m_join(), m_part(), m_mode(), m_svsmode();
@@ -350,7 +352,7 @@ extern int m_svsjoin(), m_sajoin(), m_svspart(), m_sapart();
 extern int m_chgident(), m_swhois(), m_svso(), m_svsfline();
 extern int m_tkl(), m_vhost(), m_botmotd(), m_sjoin(), m_htm();
 extern int m_umode2(), m_dccdeny(), m_undccdeny();
-extern int m_chgname(), m_shun();
+extern int m_chgname(), m_shun(), m_post();
 #ifdef CRYPTOIRCD
 extern int m_crypto();
 #endif

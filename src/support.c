@@ -40,6 +40,14 @@ extern void outofmemory();
 
 #define is_enabled match
 
+char	*my_itoa(int i)
+{
+	static char buf[128];
+	
+	ircsprintf(buf, "%i", i);
+	return (buf);
+}
+
 #ifdef NEED_STRTOKEN
 /*
 ** 	strtoken.c --  	walk through a string of tokens, using a set
