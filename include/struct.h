@@ -1,5 +1,4 @@
-
-/************************************************************************
+ /************************************************************************
  *   Unreal Internet Relay Chat Daemon, include/struct.h
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
@@ -55,15 +54,9 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>    
 #endif
-typedef struct t_fline aFline;
-typedef struct t_crline aCRline;
-typedef struct t_vhline aVHline;
-typedef struct t_kline aTKline;
-typedef struct t_vhost aVhost;
-
 typedef struct aloopStruct LoopStruct;
 typedef struct ConfItem aConfItem;
-
+typedef struct t_kline aTKline;
 /* New Config Stuff */
 typedef struct _configentry ConfigEntry;
 typedef struct _configfile ConfigFile;
@@ -102,7 +95,6 @@ typedef struct SBan Ban;
 typedef struct SMode Mode;
 typedef struct ListOptions LOpts;
 typedef struct FloodOpt aFloodOpt;
-typedef struct ircstatsx ircstats;
 typedef struct MotdItem aMotd;
 typedef struct trecord aTrecord;
 typedef struct Command aCommand;
@@ -604,15 +596,6 @@ struct MotdItem {
 	struct MotdItem *next;
 };
 
-/* Hack for T:lines and cached MOTDs */
-struct trecord {
-	char *hostmask;
-	struct MotdItem *tmotd;
-	struct MotdItem *trules;
-	struct tm *tmotd_tm;
-	struct trecord *next;
-};
-
 struct aloopStruct {
 	unsigned do_garbage_collect : 1;
 	unsigned do_tkl_sweep : 1;
@@ -753,15 +736,6 @@ struct Command {
 #endif
 };
 
-struct t_vhost {
-	char *usermask;
-	char *hostmask;
-	char *login;
-	char *password;
-	char *virthost;
-	aVhost *next;
-	aVhost *prev;
-};
 
 /* tkl:
  *   TKL_KILL|TKL_GLOBAL 	= Global K:Line (G:Line)
@@ -777,17 +751,12 @@ struct t_vhost {
 
 struct t_kline {
 	int  type;
-	char *usermask;
-	char *hostmask;
-	char *reason;
-	char *setby;
-	TS   expire_at;
-	TS   set_at;
-	aTKline *next;
-	aTKline *prev;
+	char *usermask, *hostmask, *reason, *setby;
+	TS expire_at, set_at;
+	aTKline *prev, *next;
 };
 
-struct ircstatsx {
+typedef struct ircstatsx {
 	int  clients;		/* total */
 	int  invisible;		/* invisible */
 	unsigned short  servers;		/* servers */
@@ -798,29 +767,7 @@ struct ircstatsx {
 	unsigned short  me_servers;	/* my servers */
 	int  me_max;		/* local max */
 	int  global_max;	/* global max */
-};
-
-struct t_fline {
-	char *mask;
-	char *reason;
-	int  type;
-	aFline *next;
-	aFline *prev;
-};
-
-struct t_crline {
-	char *channel;
-	int  type;
-	aCRline *next, *prev;
-};
-
-struct t_vhline {
-	char *login;
-	char *password;
-	char *vhost;
-	int  type;
-	aVHline *next, *prev;
-};
+} ircstats;
 
 #define LISTENER_NORMAL		0x000001
 #define LISTENER_CLIENTSONLY	0x000002
@@ -929,21 +876,10 @@ struct _configfile
 
 struct _configentry
 {
-        ConfigFile     *ce_fileptr;
-
-        int                     ce_varlinenum;
-        char            *ce_varname;
-        char            *ce_vardata;
-        int                     ce_vardatanum;
-        int                     ce_fileposstart;
-        int                     ce_fileposend;
-
-        int                     ce_sectlinenum;
-        ConfigEntry     *ce_entries;
-
-        ConfigEntry     *ce_prevlevel;
-
-        ConfigEntry     *ce_next;
+        ConfigFile	*ce_fileptr;
+        int 	 	ce_varlinenum, ce_vardatanum, ce_fileposstart, ce_fileposend, ce_sectlinenum;
+        char 		*ce_varname, *ce_vardata;
+        ConfigEntry     *ce_entries, *ce_prevlevel, *ce_next;
 };
 
 struct _configflag 
@@ -983,198 +919,144 @@ struct _configflag_ban
 
 struct _configitem {
 	ConfigFlag flag;
-	ConfigItem *prev;
-	ConfigItem *next;
+	ConfigItem *prev, *next;
 };
 
 struct _configitem_me {
 	ConfigFlag flag;
-	ConfigItem *prev;
-	ConfigItem *next;
-
-	char	   *name;
-	char	   *info;
+	ConfigItem *prev, *next;
+	char	   *name, *info;
 	short	   numeric;
 };
 
 struct _configitem_admin {
 	ConfigFlag flag;
-	ConfigItem *prev;
-	ConfigItem *next;
+	ConfigItem *prev, *next;
 	char	   *line; 
 };
 
 struct _configitem_class {
 	ConfigFlag flag;
-	ConfigItem *prev;
-	ConfigItem *next;
+	ConfigItem *prev, *next;
 	char	   *name;
-	int	   pingfreq;
-	int	   maxclients;
-	int	   sendq;
-	int	   connfreq;
-	
-	int	   clients;
+	int	   pingfreq, connfreq, maxclients, sendq, clients;
 };
 
 struct _configitem_allow {
 	ConfigFlag 	 flag;
-	ConfigItem       *prev;
-	ConfigItem       *next;
-	char	         *ip;
-	char	   	 *hostname;
-	char		 *password;
+	ConfigItem       *prev, *next;
+	char	         *ip, *hostname, *password;
 	short		 maxperip;
 	ConfigItem_class *class;
 };
 
 struct _configitem_oper {
 	ConfigFlag 	 flag;
-	ConfigItem       *prev;
-	ConfigItem       *next;
-	char		 *name;
+	ConfigItem       *prev, *next;
+	char		 *name, *password;
 	ConfigItem_class *class;
 	ConfigItem	 *from;
 	long		 oflags;
-	char		 *password;
 };
 
 struct _configitem_oper_from {
 	ConfigFlag 	 flag;
-	ConfigItem       *prev;
-	ConfigItem       *next;
+	ConfigItem       *prev, *next;
 	char		 *name;
 };
 
 struct _configitem_drpass {
 	ConfigFlag 	 flag;
-	ConfigItem       *prev;
-	ConfigItem       *next;
-	char 		 *restart;
-	char		 *die;
+	ConfigItem       *prev, *next;
+	char 		 *restart, *die;
 };
 
 struct _configitem_ulines {
 	ConfigFlag 	 flag;
-	ConfigItem       *prev;
-	ConfigItem       *next;
+	ConfigItem       *prev, *next;
 	char 		 *servername;
 };
 
 struct _configitem_tld {
 	ConfigFlag 	flag;
-	ConfigItem 	*prev;
-	ConfigItem	*next;
-	char 		*mask;
-	char 		*motd_file;
-	char		*rules_file;
+	ConfigItem 	*prev, *next;
+	char 		*mask, *motd_file, *rules_file;
 	struct tm	*motd_tm;
-	aMotd		*rules;
-	aMotd 		*motd;
+	aMotd		*rules, *motd;
 };
 
 struct _configitem_listen {
 	ConfigFlag 	flag;
-	ConfigItem 	*prev;
-	ConfigItem	*next;
+	ConfigItem 	*prev, *next;
 	char		*ip;
 	int		port;
-	long		options;
-	long		clients;
+	long		options, clients;
 };
 
 struct _configitem_vhost {
 	ConfigFlag 	flag;
-	ConfigItem 	*prev;
-	ConfigItem	*next;
+	ConfigItem 	*prev, *next;
 	ConfigItem       *from;
-	char		*login;
-	char		*password;
-	char		*virthost;
+	char		*login, *password, *virthost;
 };
 
 struct _configitem_link {
-	ConfigFlag 		flag;
-	ConfigItem 		*prev;
-	ConfigItem		*next;
-	char			*servername;
-	char			*username;
-	char			*hostname;
-	char			*bindip;
-	short			port;
-	char			*hubmask;
-	char			*leafmask;
-	unsigned char 		leafdepth;
-	char			*connpwd;
-	char			*recvpwd;
-	int			refcount;
-	ConfigItem_class 	*class;
-	short			options;
+	ConfigFlag	flag;
+	ConfigItem	*prev, *next;
+	char		*servername, *username, *hostname, *bindip, *hubmask, *leafmask, *connpwd, *recvpwd;
+	short		port, options;
+	unsigned char 	leafdepth;
+	int		refcount;
+	ConfigItem_class	*class;
 	struct IN_ADDR 		ipnum;
 	time_t			hold;
 };
 
 struct _configitem_except {
 	ConfigFlag_except      flag;
-	ConfigItem      *prev;
-	ConfigItem      *next;
+	ConfigItem      *prev, *next;
 	char		*mask;
 };
 
 struct _configitem_ban {
 	ConfigFlag_ban	flag;
-	ConfigItem		*prev;
-	ConfigItem		*next;
-	char			*mask;
-	char			*reason;
+	ConfigItem		*prev, *next;
+	char			*mask, *reason;
 };
 
 struct _configitem_badword {
 	ConfigFlag	flag;
-	ConfigItem      *prev;
-	ConfigItem      *next;
-	char		*word;
-	char 		*replace;
+	ConfigItem      *prev, *next;
+	char		*word, *replace;
 };
 
 struct _configitem_deny_dcc {
 	ConfigFlag_ban		flag;
-	ConfigItem		*prev;
-	ConfigItem		*next;
-	char			*filename;
-	char			*reason;
+	ConfigItem		*prev, *next;
+	char			*filename, *reason;
 };
 
 struct _configitem_deny_link {
 	ConfigFlag_except       flag;
-	ConfigItem              *prev;
-	ConfigItem              *next;
-	char			*mask;
-	char			*rule;
-	char			*prettyrule;
+	ConfigItem              *prev, *next;
+	char			*mask, *rule, *prettyrule;
 };
 
 struct _configitem_deny_version {
 	ConfigFlag		flag;
-	ConfigItem		*prev;
-	ConfigItem		*next;
-	char 			*mask;
-	char			*version;
-	char			*flags;
+	ConfigItem		*prev, *next;
+	char 			*mask, *version, *flags;
 };
 
 struct _configitem_deny_channel {
 	ConfigFlag		flag;
-	ConfigItem		*prev;
-	ConfigItem		*next;
-	char			*channel;
-	char			*reason;
+	ConfigItem		*prev, *next;
+	char			*channel, *reason;
 };
 
 struct _configitem_allow_channel {
 	ConfigFlag		flag;
-	ConfigItem		*prev;
-	ConfigItem		*next;
+	ConfigItem		*prev, *next;
 	char			*channel;
 };
 

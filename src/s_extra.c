@@ -49,13 +49,6 @@ ID_Copyright("(C) Carsten Munk 1999");
 */
 
 #define AllocCpy(x,y) x = (char *) MyMalloc(strlen(y) + 1); strcpy(x,y)
-#define IRCD_DCCDENY  "dccdeny.conf"
-#define IRCD_RESTRICT "chrestrict.conf"
-
-aFline *flines = NULL;
-aCRline *crlines = NULL;
-
-char *cannotjoin_msg = NULL;
 
 /* ircd.dcc configuration */
 

@@ -64,8 +64,6 @@ int  chbounce = 0;
 static long opermode = 0;
 aChannel *channel = NullChn;
 extern char backupbuf[];
-extern aCRline *crlines;
-extern char *cannotjoin_msg;
 extern ircstats IRCstats;
 extern char *StripColors(char *);
 
@@ -2907,14 +2905,7 @@ int m_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			if (conf_deny_channel)
 			{
 				if (channel_canjoin(sptr, name) != 1)
-				{
-					if (cannotjoin_msg)
-						sendto_one(sptr,
-						    ":%s NOTICE %s :%s",
-						    me.name, sptr->name,
-						    cannotjoin_msg);
 					return 0;
-				}
 			}
 		}
 
