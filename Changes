@@ -2748,3 +2748,5 @@ seen. gmtime warning still there
 - WebTV updates: made it so (user generated) channel notices are now displayed as
   privmsgs in the channel. Also made the /knock channelnotice a privmsg for webtv.
 - Module coders: added HOOKTYPE_REMOTE_CHANMODE
+- Fixed a bug with HOOKTYPE_CONFIGTEST not being called for permanent modules, found by
+  AngryWolf
