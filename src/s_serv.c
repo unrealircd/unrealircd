@@ -2298,24 +2298,6 @@ int  m_watch(cptr, sptr, parc, parv)
 	return 0;
 }
 
-
-
-
-
-/*
-** m_stats
-**	parv[0] = sender prefix
-**	parv[1] = statistics selector (defaults to Message frequency)
-**	parv[2] = server name (current server defaulted, if omitted)
-**
-*/
-/*
-**    Note:   The info is reported in the order the server uses
-**            it--not reversed as in ircd.conf!
-*/
-
-
-
 char *get_cptr_status(aClient *acptr)
 {
 	static char buf[10];
@@ -2367,6 +2349,19 @@ char *get_client_name2(aClient *acptr, int showports)
 
 	return pointer;
 }
+
+/*
+** m_stats
+**	parv[0] = sender prefix
+**	parv[1] = statistics selector (defaults to Message frequency)
+**	parv[2] = server name (current server defaulted, if omitted)
+**
+*/
+/*
+**    Note:   The info is reported in the order the server uses
+**            it--not reversed as in ircd.conf!
+*/
+
 int  m_stats(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;
 	int  parc;
@@ -2420,9 +2415,18 @@ int  m_stats(cptr, sptr, parc, parv)
 	switch (stat)
 	{
 #ifdef STRIPBADWORDS
-	  case 'b':
-		  badwords_stats();
+	  case 'b': 
+	  {
+		  ConfigItem_badword *words;
+
+		  for (words = conf_badword_channel; words; words = (ConfigItem_badword *) words->next) {
+			  sendto_one(sptr, ":%s %i %s :c %s %s", me.name, RPL_TEXT, sptr->name,  words->word, words->replace ? words->replace : "<censored>");
+		  }
+		  for (words = conf_badword_message; words; words = (ConfigItem_badword *) words->next) {
+			  sendto_one(sptr, ":%s %i %s :m %s %s", me.name, RPL_TEXT, sptr->name, words->word, words->replace ? words->replace : "<censored>");		
+		  }
 		  break;
+	  }
 #endif
 	  case 'L':
 	  case 'l':
@@ -2549,7 +2553,14 @@ int  m_stats(cptr, sptr, parc, parv)
 		  break;
 	  case 'I':
 	  case 'i':
+	  {
+		  ConfigItem_allow *allows;
+		  for (allows = conf_allow; allows; allows = (ConfigItem_allow *) allows->next) {
+			  sendto_one(sptr, rpl_str(RPL_STATSILINE), me.name,
+				  parv[0], allows->ip, allows->hostname, allows->maxperip, allows->class->name);
+		  }		  	
 		  break;
+	  }
 	  case 'E':
 	  {
 		  ConfigItem_except *excepts;
@@ -2713,9 +2724,27 @@ int  m_stats(cptr, sptr, parc, parv)
 			  report_dynconf(sptr);
 		  break;
 	  case 'D':
+	  {
+		  ConfigItem_deny_link *links;
+
+		  for (links = conf_deny_link; links; links = (ConfigItem_deny_link *) links->next) {
+			  if (links->flag.type == CRULE_ALL)
+				  sendto_one(sptr, rpl_str(RPL_STATSDLINE), me.name, sptr->name,
+					  "D", links->mask, links->prettyrule);
+		  }
 		  break;
+	  }
 	  case 'd':
+	  {
+		  ConfigItem_deny_link *links;
+
+		  for (links = conf_deny_link; links; links = (ConfigItem_deny_link *) links->next) {
+			  if (links->flag.type == CRULE_AUTO)
+				  sendto_one(sptr, rpl_str(RPL_STATSDLINE), me.name, sptr->name,
+					  "d", links->mask, links->prettyrule);
+		  }
 		  break;
+	  }
 	  case 'r':
 
 			/* FIXME:	  cr_report(sptr); */
@@ -2758,7 +2787,15 @@ int  m_stats(cptr, sptr, parc, parv)
 		  break;
 	  }
 	  case 'v':
+	  {
+		  ConfigItem_deny_version *versions;
+
+		  for (versions = conf_deny_version; versions; versions = (ConfigItem_deny_version *) versions->next) {
+			  sendto_one(sptr, rpl_str(RPL_STATSVLINE), me.name, sptr->name, 
+				  versions->version, versions->flags, versions->mask);
+		  }
 		  break;
+	  }
 	  case 'V':
 		  break;
 	  case 'W':
@@ -2779,7 +2816,15 @@ int  m_stats(cptr, sptr, parc, parv)
 		  break;
 	  case 'Y':
 	  case 'y':
+	  {
+		  ConfigItem_class *classes;
+		  for (classes = conf_class; classes; classes = (ConfigItem_class *) classes->next) {
+			  sendto_one(sptr, rpl_str(RPL_STATSYLINE),
+				me.name, sptr->name, classes->name, classes->pingfreq, classes->connfreq,
+				classes->maxclients, classes->sendq);
+		  }
 		  break;
+	  }
 	  case 'Z':
 	  case 'z':
 		  if (IsAnOper(sptr))
