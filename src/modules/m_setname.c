@@ -90,7 +90,7 @@ int    m_setname_Load(int module_load)
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Unload(int module_unload)
 #else
-int	m_setname_unload(int module_unload)
+int	m_setname_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_SETNAME, TOK_SETNAME, m_setname) < 0)

@@ -88,7 +88,7 @@ int	m_setident_Load(int module_load)
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Unload(int module_unload)
 #else
-int	m_setident_unload(int module_unload)
+int	m_setident_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_SETIDENT, TOK_SETIDENT, m_setident) < 0)

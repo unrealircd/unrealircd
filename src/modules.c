@@ -134,6 +134,11 @@ char  *Module_Load (char *path, int load)
 			Module_free(mod);
 			return ("Unable to locate Mod_Init");
 		}
+		if (!(Mod_Unload = irc_dlsym(Mod, "Mod_Unload")))
+		{
+			Module_free(mod);
+			return ("Unable to locate Mod_Unload");
+		}
 		if ((ret = (*Mod_Init)(load)) < MOD_SUCCESS)
 		{
 			ircsprintf(errorbuf, "Mod_Init returned %i",
@@ -141,11 +146,6 @@ char  *Module_Load (char *path, int load)
 			/* We EXPECT the module to have cleaned up it's mess */
 		        Module_free(mod);
 			return (errorbuf);
-		}
-		if (!(Mod_Unload = irc_dlsym(Mod, "Mod_Unload")))
-		{
-			Module_free(mod);
-			return ("Unable to locate Mod_Unload");
 		}
 		
 		if (load)
@@ -165,15 +165,15 @@ char  *Module_Load (char *path, int load)
 				Module_free(mod);
 				return (errorbuf);
 			}
-	        }
-		if (load)
 			mod->flags |= MODFLAG_LOADED;
+		}
 		AddListItem(mod, Modules);
+		return NULL;
 	}
 	else
 	{
 		/* Return the error .. */
-		return (strerror(ERRNO));
+		return (irc_dlerror());
 	}
 					     
 	

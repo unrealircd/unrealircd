@@ -90,7 +90,7 @@ int    m_sethost_Load(int module_load)
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Unload(int module_unload)
 #else
-int	m_sethost_unload(int module_unload)
+int	m_sethost_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_SETHOST, TOK_SETHOST, m_sethost) < 0)

@@ -91,7 +91,7 @@ int    m_sdesc_Load(int module_load)
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Unload(int module_unload)
 #else
-int	m_sdesc_unload(int module_unload)
+int	m_sdesc_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_SDESC, TOK_SDESC, m_sdesc) < 0)

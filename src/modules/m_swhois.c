@@ -84,7 +84,7 @@ int    m_swhois_Load(int module_load)
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Unload(int module_unload)
 #else
-int	m_swhois_unload(int module_unload)
+int	m_swhois_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_SWHOIS, TOK_SWHOIS, m_swhois) < 0)

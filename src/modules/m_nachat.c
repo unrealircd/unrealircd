@@ -94,7 +94,7 @@ int    m_nachat_Load(int module_load)
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Unload(int module_unload)
 #else
-int m__nachat_Unload(int module_unload)
+int m_nachat_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_NACHAT, TOK_NACHAT, m_nachat) < 0)
