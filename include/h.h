@@ -89,6 +89,7 @@ int			AllowClient(aClient *cptr, struct hostent *hp, char *sockhost);
 aMotd *read_motd(char *filename);
 aMotd *read_rules(char *filename);
 extern struct tm *motd_tm;
+extern Link	*Servers;
 
 /* Remmed out for win32 compatibility.. as stated of 467leaf win32 port.. */
 

@@ -54,12 +54,7 @@ static inline char *int_to_base64(long);
 static inline long base64_to_int(char *);
 
 
-static Link *servers = NULL;
-
-Link *return_servers(void) 
-{
-	return(servers);
-}
+Link *Servers = NULL;
 
 char *base64enc(long i)
 {
@@ -102,7 +97,7 @@ int  numeric_collides(long numeric)
 	if (!numeric)
 		return 0;
 
-	for (lp = servers; lp; lp = lp->next)
+	for (lp = Servers; lp; lp = lp->next)
 		if (numeric == lp->value.cptr->serv->numeric)
 			return 1;
 	return 0;
@@ -118,8 +113,8 @@ void add_server_to_table(aClient *what)
 		ptr->value.cptr = what;
 		ptr->flags = what->serv->numeric;
 		ptr->flood = NULL;
-		ptr->next = servers;
-		servers = ptr;
+		ptr->next = Servers;
+		Servers = ptr;
 	}
 }
 
@@ -127,12 +122,12 @@ void remove_server_from_table(aClient *what)
 {
 	Link **curr;
 	Link *tmp;
-	Link *lp = servers;
+	Link *lp = Servers;
 
 	for (; lp && (lp->value.cptr == what); lp = lp->next);
 	for (;;)
 	{
-		for (curr = &servers; (tmp = *curr); curr = &tmp->next)
+		for (curr = &Servers; (tmp = *curr); curr = &tmp->next)
 			if (tmp->value.cptr == what)
 			{
 				*curr = tmp->next;
@@ -148,7 +143,7 @@ aClient *find_server_by_numeric(long value)
 {
 	Link *lp;
 
-	for (lp = servers; lp; lp = lp->next)
+	for (lp = Servers; lp; lp = lp->next)
 		if (lp->value.cptr->serv->numeric == value)
 			return (lp->value.cptr);
 #ifdef PIPEDEBUG
@@ -179,7 +174,7 @@ aClient *find_server_quick_search(char *name)
 {
 	Link *lp;
 
-	for (lp = servers; lp; lp = lp->next)
+	for (lp = Servers; lp; lp = lp->next)
 		if (!match(name, lp->value.cptr->name))
 			return (lp->value.cptr);
 #ifdef PIPEDEBUG
@@ -193,7 +188,7 @@ aClient *find_server_quick_straight(char *name)
 {
 	Link *lp;
 
-	for (lp = servers; lp; lp = lp->next)
+	for (lp = Servers; lp; lp = lp->next)
 		if (!strcmp(name, lp->value.cptr->name))
 			return (lp->value.cptr);
 #ifdef PIPEDEBUG
@@ -225,7 +220,7 @@ aClient *find_server_b64_or_real(char *name)
 	if (strlen(name) < 3)
 	{
 		namebase64 = base64dec(name);	
-		for (lp = servers; lp; lp = lp->next)
+		for (lp = Servers; lp; lp = lp->next)
 			if (lp->value.cptr->serv->numeric == namebase64)
 				return (lp->value.cptr);
 	}
@@ -312,7 +307,7 @@ void ns_stats(aClient *cptr)
 {
 	Link *lp;
 	aClient *sptr;
-	for (lp = servers; lp; lp = lp->next)
+	for (lp = Servers; lp; lp = lp->next)
 	{
 		sptr = lp->value.cptr;
 		sendto_one(cptr,

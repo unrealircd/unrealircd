@@ -251,3 +251,6 @@
 - Got /stats x to work again
 - Recoded check_pings, with bits used from bahamut-ircd/hybrid-ircd, credits
   to lucas.
+- Removed return_servers() and made servers be called Servers, and be a
+  global variable. Done on request on Great Master codemastr.
+

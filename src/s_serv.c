@@ -1715,7 +1715,7 @@ int  m_links(cptr, sptr, parc, parv)
 	Link *lp;
 	aClient *acptr;
 
-	for (lp = (Link *)return_servers(); lp; lp = lp->next)
+	for (lp = Servers; lp; lp = lp->next)
 	{
 		acptr = lp->value.cptr;
 
@@ -4697,7 +4697,7 @@ void dump_map(cptr, server, mask, prompt_length, length)
 	strcpy(p, "|-");
 
 
-	for (lp = (Link *)return_servers(); lp; lp = lp->next)
+	for (lp = Servers; lp; lp = lp->next)
 	{
 		acptr = lp->value.cptr;
 		if (acptr->srvptr != server)
@@ -4706,7 +4706,7 @@ void dump_map(cptr, server, mask, prompt_length, length)
 		cnt++;
 	}
 
-	for (lp = (Link *)return_servers(); lp; lp = lp->next)
+	for (lp = Servers; lp; lp = lp->next)
 	{
 		acptr = lp->value.cptr;
 		if (IsULine(acptr) && HIDE_ULINES && !IsAnOper(cptr))
@@ -4744,7 +4744,7 @@ int  m_map(cptr, sptr, parc, parv)
 
 	if (parc < 2)
 		parv[1] = "*";
-	for (lp = (Link *)return_servers(); lp; lp = lp->next)
+	for (lp = Servers; lp; lp = lp->next)
 	{
 		acptr = lp->value.cptr;
 		if ((strlen(acptr->name) + acptr->hopcount * 2) > longest)
