@@ -1470,6 +1470,7 @@ int	init_conf(char *rootconf, int rehash)
 		module_loadall(0);
 #endif
 	do_weird_shun_stuff();
+	nextconnect = TStime() + 1; /* check for autoconnects */
 	config_status("Configuration loaded without any problems ..");
 	return 0;
 }

@@ -2548,3 +2548,6 @@ seen. gmtime warning still there
 - Possibly fixed an issue with set::modes-on-join and mode +f, it could have
   set random remove-chanmode times in the default chanmode line.
 - Fixed some other weird remote PING/PONG stuff as well.
+- Fixed a bug where link::options::autoconnect wasn't working after rehash, ircd
+  had to be restarted to make it work. Will now try to connect on /rehash to
+  servers with autoconnect enabled. Bug was reported by Rocko (#0001321).
