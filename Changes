@@ -2414,3 +2414,4 @@ seen. gmtime warning still there
 - Fixed a SVSMOTD crashbug (removing of motd).
 - Fix-for-fix-for-+mu-fix (it was still crashing)... don't ask.
 - Minor +f code tweaks.
+- Added checks for ipv4 listen lines on ipv6 compile.

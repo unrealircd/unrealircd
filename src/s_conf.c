@@ -3451,6 +3451,15 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return 1;
 	}
+#ifdef INET6
+	if ((strlen(ip) > 6) && !strchr(ip, ':') && isdigit(ip[strlen(ip)-1]))
+	{
+		config_error("%s:%i: listen: ip set to '%s' (ipv4) on an IPv6 compile, "
+		              "use the ::ffff:1.2.3.4 form instead",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ip);
+		return 1;
+	}
+#endif
 	port_range(port, &start, &end);
 	if (start == end)
 	{
@@ -4847,10 +4856,11 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 		if (cep->ce_vardata && (strlen(cep->ce_vardata) > 6) && !strchr(cep->ce_vardata, ':') &&
 		    isdigit(cep->ce_vardata[strlen(cep->ce_vardata)-1]))
 		{
-			config_status("%s:%i: link %s has link::hostname set to '%s' which probably is IPv4, "
+			config_error("%s:%i: link %s has link::hostname set to '%s' (IPv4) on a IPv6 compile, "
 			              "use the ::ffff:1.2.3.4 form instead",
 						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, ce->ce_vardata,
 						cep->ce_vardata);
+			errors++;
 		}
 	}
 #endif
