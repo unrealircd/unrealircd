@@ -1523,7 +1523,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 	char *xp;
 
 	chasing = 0;
-	if (opermode == 2 && !is_chan_op(cptr, chptr))
+	if (opermode == 2 && !is_chan_op(cptr, chptr) && !IsULine(cptr,cptr))
 	{
 		/* Ugly halfop hack --sts 
 		   - this allows halfops to do +b +e +v and so on */

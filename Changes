@@ -556,3 +556,4 @@
 - Removed the old GLINE system, TKL is now standard.
 - Added INV_TRACK define, we want people testing this.
 - Fixed the -1 usercount bug, found by codemastr, fixed by Stskeeps
+- Fixed a +h bug reported by Dukemaster
