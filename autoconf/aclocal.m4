@@ -259,7 +259,7 @@ if test "$USESTDTHREAD" != "1"; then
 if test "$ac_cv_thread_multi" = "yes"; then
 AC_MSG_RESULT(Ok we'll install FSU Pthreads)
 cd extras
-if [ -f "pthreads.tar.gz" ] ; then 
+if [[ -f "pthreads.tar.gz" ]] ; then 
 	gunzip -d pthreads.tar.gz
 fi
 tar xf pthreads.tar
