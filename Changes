@@ -911,3 +911,4 @@ seen. gmtime warning still there
 - More IPv6 fixes, DNS resolving actually works now too.. (crackhead IRCnet
   coding)
 - Webserver caching fix
+- A little bug fix that prevented the G:line hostmask checker from checking ?

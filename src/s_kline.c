@@ -786,7 +786,7 @@ int  m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		i = 0;
 		while (*p)
 		{
-			if (*p != '*' && *p != '.')
+			if (*p != '*' && *p != '.' && *p != '?')
 				i++;
 			p++;
 		}
