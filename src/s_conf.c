@@ -1357,7 +1357,13 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else
 	{
-		ip = strtok(copy, ":");
+		if (*copy == '[')
+		{
+			ip = strtok(copy, "]");
+		}
+		else
+			ip = strtok(copy, ":");
+			
 		if (!ip)
 		{
 			config_error("%s:%i: listen: illegal ip:port mask",

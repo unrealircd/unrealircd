@@ -476,3 +476,5 @@ seen. gmtime warning still there
 - Made chghost/chgident able to do :'s
 - Finished up IPv6 - Kudos to bball/NiQuiL (shells), perian/bunda/larne 
   (testing)
+- Made listen format able to do:
+     listen [ip]:port, for IPv6 - listen [3fff:ff::1]:6667
