@@ -520,3 +520,8 @@ Thanks a bunch to node357 for reporting!
 ----------------------------------------------
 Beta5 Released
 ----------------------------------------------
+
+Fixed bug with mirc where +a/+q were misinterpreted as modes
+without nick parameters.
+--Luke
+===================================
