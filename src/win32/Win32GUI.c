@@ -1179,6 +1179,8 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				else
 					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_PASTE, (LPARAM)MAKELONG(FALSE,0));
 				SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_UNDO, (LPARAM)MAKELONG(FALSE,0));
+				wsprintf(szText, "Line: 1");
+				SetWindowText(hStatus, szText);
 			}
 			return (TRUE);
 			}

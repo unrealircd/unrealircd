@@ -1224,3 +1224,5 @@ seen. gmtime warning still there
 - Fixed -Wall warnings for TStime
 - Compile fix for TS2ts 
 - Small release tricks
+- Fixed a win32 editor bug where the line count didn't display right away (reported by
+  iDW-badSol)
