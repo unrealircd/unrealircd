@@ -638,7 +638,7 @@ int  m_server(cptr, sptr, parc, parv)
 		return exit_client(cptr, sptr, sptr, "Bogus server name");
 	}
 
-	if (IsUnknown(cptr) && !cptr->passwd)
+	if ((IsUnknown(cptr) || IsHandshake(cptr)) && !cptr->passwd)
 	{
 		sendto_one(sptr, "ERROR :Missing password");
 		return exit_client(cptr, sptr, sptr, "Missing password");
@@ -647,7 +647,7 @@ int  m_server(cptr, sptr, parc, parv)
 	/*
 	 * Now, we can take a look at it all
 	 */
-	if (IsUnknown(cptr))
+	if (IsUnknown(cptr) || IsHandshake(cptr))
 	{
 		/* For now, we don't check based on DNS, it is slow, and IPs
 		   are better */
@@ -727,7 +727,6 @@ int  m_server(cptr, sptr, parc, parv)
 		cptr->hopcount = hop;
 		/* Add ban server stuff */
 		/* Check on V:line stuff now -FIXME: newconf */
-#ifdef OLD
 		if (SupportVL(cptr))
 		{
 			/* we also have a fail safe incase they say they are sending
@@ -745,142 +744,10 @@ int  m_server(cptr, sptr, parc, parv)
 				num = (char *)strtok((char *)NULL, " ");
 			if (num)
 				inf = (char *)strtok((char *)NULL, "");
-			if (inf)
-			{
-				strncpyzt(cptr->info, *inf ? inf : me.name,
-				    sizeof(cptr->info));
-				for (vlines = conf; vlines;
-				    vlines = vlines->next)
-				{
-					if ((vlines->status & CONF_VERSION)
-					    && !match(vlines->name, cptr->name))
-						break;
-				}
-				
-				
-				if (vlines)
-				{
-					char *proto = vlines->host;
-					char *vflags = vlines->passwd;
-					int  result = 0;
-					int  i;
-					protocol++;
-					/* check the protocol */
-					switch (*proto)
-					{
-					  case '<':
-						  proto++;
-						  if (atoi(protocol) <
-						      atoi(proto))
-							  result = 1;
-						  else
-							  result = 0;
-						  break;
-					  case '>':
-						  proto++;
-						  if (atoi(protocol) >
-						      atoi(proto))
-							  result = 1;
-						  else
-							  result = 0;
-						  break;
-					  case '=':
-						  proto++;
-						  if (atoi(protocol) ==
-						      atoi(proto))
-							  result = 1;
-						  else
-							  result = 0;
-						  break;
-					  case '!':
-						  proto++;
-						  if (atoi(protocol) !=
-						      atoi(proto))
-							  result = 1;
-						  else
-							  result = 0;
-						  break;
-						  /* default to = if anything else */
-					  default:
-						  if (atoi(protocol) ==
-						      atoi(proto))
-							  result = 1;
-						  else
-							  result = 0;
-						  break;
-					}	/* switch(*proto) */
-					/* For Services */
-					if (atoi(protocol) == 0)
-						result = 0;
-					/* if the proto in the V:line is * let it pass */
-					if (*proto == '*')
-						result = 0;
-
-
-					if (result)
-					{
-						sendto_locfailops("Link %s cancelled, denied by V:line",
-							get_client_name(cptr, TRUE));
-						return exit_client(cptr, cptr,
-						    cptr, "Denied by V:line");
-					}
-
-					/* If it passed the protocol check, check the flags */
-
-					for (i = 0; vflags[i]; i++)
-					{
-						if (vflags[i] == '!')
-						{
-							i++;
-							if (strchr(flags,
-							    (int)vflags[i]))
-							{
-								result = 1;
-								break;
-							}
-						}
-						if (!strchr(flags,
-						    (int)vflags[i]))
-						{
-							result = 1;
-							break;
-						}
-					}	/* for(i = 0; vflags[i]; i++) */
-					if (*vflags == '*')
-						result = 0;
-					/* for services */
-					if (!strcmp(flags, "0"))
-						result = 0;
-					if (result)
-					{
-						sendto_locfailops("Link %s cancelled, denied by V:line",
-							get_client_name(cptr, TRUE));
-
-						return exit_client(cptr, cptr,
-						    cptr, "Denied by V:line");
-					}
-				}	/* if (vlines) */
-			}	/* if (flags) */
-			else
-				strncpyzt(cptr->info, info[0] ? info : me.name,
-				    sizeof(cptr->info));
 		}
 		else
-#endif
 			strncpyzt(cptr->info, info[0] ? info : me.name,
 			    sizeof(cptr->info));
-/*		for (cconf = conf; cconf; cconf = cconf->next)
-			if ((cconf->status == CONF_CRULEALL) &&
-			    (match(cconf->host, servername) == 0))
-				if (crule_eval(cconf->passwd))
-				{
-					ircstp->is_ref++;
-					sendto_ops("Refused connection from %s.",
-					    get_client_host(cptr));
-					return exit_client(cptr, cptr, cptr,
-					    "Disallowed by connection rule");
-				}
-*/
 		/* Numerics .. */
 		numeric = num ? atol(num) : numeric;
 		if (numeric)
@@ -3325,9 +3192,10 @@ void load_tunefile(void)
 	int  parc;
 	char *parv[];
 {
-#ifdef OLD
 	int  port, tmpport, retval;
+#ifdef OLD
 	aConfItem *cconf;
+#endif
 	ConfigItem_link	*aconf;
 	aClient *acptr;
 
@@ -3369,7 +3237,7 @@ void load_tunefile(void)
 	}
 
 	for (aconf = conf_link; aconf; aconf = (ConfigItem_link *) aconf->next)
-		if (match(parv[1], aconf->servername))
+		if (!match(parv[1], aconf->servername))
 			break;
 
 	/* Checked first servernames, then try hostnames. */
@@ -3409,7 +3277,7 @@ void load_tunefile(void)
 	   ** are ored together.  Oper connects are effected only by D
 	   ** lines (CRULEALL) not d lines (CRULEAUTO).
 	 */
-	for (cconf = conf; cconf; cconf = cconf->next)
+/*	for (cconf = conf; cconf; cconf = cconf->next)
 		if ((cconf->status == CONF_CRULEALL) &&
 		    (match(cconf->host, aconf->servername) == 0))
 			if (crule_eval(cconf->passwd))
@@ -3418,7 +3286,7 @@ void load_tunefile(void)
 				    "NOTICE %s :Connect: Disallowed by rule: %s",
 				    parv[0], cconf->name);
 				return 0;
-			}
+			} */
 
 	/*
 	   ** Notify all operators about remote connect requests
@@ -3436,12 +3304,12 @@ void load_tunefile(void)
 	}
 	/* Interesting */
 	aconf->port = port;
-/*	switch (retval = connect_server(aconf, sptr, NULL))
+	switch (retval = connect_server(aconf, sptr, NULL))
 	{
 	  case 0:
 		  sendto_one(sptr,
 		      ":%s NOTICE %s :*** Connecting to %s[%s].",
-		      me.name, parv[0], aconf->servername, aconf->ip);
+		      me.name, parv[0], aconf->servername, aconf->hostname);
 		  break;
 	  case -1:
 		  sendto_one(sptr, ":%s NOTICE %s :*** Couldn't connect to %s.",
@@ -3456,10 +3324,8 @@ void load_tunefile(void)
 		      ":%s NOTICE %s :*** Connection to %s failed: %s",
 		      me.name, parv[0], aconf->servername, strerror(retval));
 	}
-*/
 	aconf->port = tmpport;
 	return 0;
-#endif
 }
 
 /*

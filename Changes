@@ -149,3 +149,11 @@
 - Removed old vhost.conf code 
 - Fixed check_pings (check_kills) code, so G:lines & ban nick/ip/realname
   works again
+- /connect works now :), TODO: D:d lines, V:line needs fixing, badly
+  says "Unknown location" atm on uplink
+- Took out MyMalloc & co, direct to malloc/realloc/free now. Crashed in
+  DEBUGMODE
+- Added ConfigItem_link->ipnum
+- Fixed a compile bug with DEBUGMODE
+- Changed a load of old aConfItem crap .., FIX: ConfigItem_link->options
+- Fixed a /connect bug

@@ -1075,6 +1075,7 @@ struct _configitem_link {
 	int			refcount;
 	ConfigItem_class 	*class;
 	short			options;
+	struct IN_ADDR 		ipnum;
 };
 
 struct _configitem_except {

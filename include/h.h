@@ -176,9 +176,6 @@ extern void inittoken PROTO(());
 extern void reset_help PROTO(());
 extern int find_exception(char *);	/* hidden host */
 
-#ifndef DMALLOC
-extern char *MyMalloc PROTO((int)), *MyRealloc PROTO((char *, int));
-#endif
 extern char *debugmode, *configfile, *sbrk0;
 extern char *getfield PROTO((char *));
 extern void get_sockhost PROTO((aClient *, char *));
@@ -202,7 +199,7 @@ extern int check_server PROTO((aClient *, struct hostent *, aConfItem *,
 extern int check_server_init PROTO((aClient *));
 extern void close_connection PROTO((aClient *));
 extern void close_listeners PROTO(());
-extern int connect_server PROTO((aConfItem *, aClient *, struct hostent *));
+extern int connect_server PROTO((ConfigItem_link *, aClient *, struct hostent *));
 extern void get_my_name PROTO((aClient *, char *, int));
 extern int get_sockerr PROTO((aClient *));
 extern int inetport PROTO((aClient *, char *, int));

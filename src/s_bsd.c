@@ -95,7 +95,7 @@ aClient *local[MAXCONNECTIONS];
 int  highest_fd = 0, readcalls = 0, resfd = -1;
 static struct SOCKADDR_IN mysk;
 
-static struct SOCKADDR *connect_inet PROTO((aConfItem *, aClient *, int *));
+static struct SOCKADDR *connect_inet PROTO((ConfigItem_link *, aClient *, int *));
 static int completed_connection PROTO((aClient *));
 static int check_init PROTO((aClient *, char *));
 #ifndef _WIN32
@@ -1026,20 +1026,17 @@ int  check_server(cptr, hp, c_conf, n_conf, estab)
 static int completed_connection(cptr)
 	aClient *cptr;
 {
-#ifdef OLD
-	aConfItem *aconf, *cline;
+	ConfigItem_link *aconf = cptr->serv ? cptr->serv->conf : NULL;
 	extern char serveropts[];
 	SetHandshake(cptr);
 
-	aconf = find_conf(cptr->confs, cptr->name, CONF_CONNECT_SERVER);
-	cline = aconf;
 	if (!aconf)
 	{
-		sendto_ops("Lost C-Line for %s", get_client_name(cptr, FALSE));
+		sendto_ops("Lost configuration for %s", get_client_name(cptr, FALSE));
 		return -1;
 	}
 #ifdef USE_SSL
-	if ((cline->options & CONNECT_SSL))
+	if ((aconf->options & CONNECT_SSL))
 		if (ssl_client_handshake(cptr) == -2)
 		{
 			sendto_realops("Could not handshake SSL with %s", get_client_name(cptr, FALSE));
@@ -1052,24 +1049,17 @@ static int completed_connection(cptr)
 			cptr->flags |= FLAGS_SSL;
 		}
 #endif	
-	if (!BadPtr(aconf->passwd))
-		sendto_one(cptr, "PASS :%s", aconf->passwd);
+	if (!BadPtr(aconf->connpwd))
+		sendto_one(cptr, "PASS :%s", aconf->connpwd);
 
-	aconf = find_conf(cptr->confs, cptr->name, CONF_NOCONNECT_SERVER);
-	if (!aconf)
-	{
-		sendto_ops("Lost N-Line for %s", get_client_name(cptr, FALSE));
-		return -1;
-	}
 	sendto_one(cptr, "PROTOCTL %s", PROTOCTL_SERVER);
 	sendto_one(cptr, "SERVER %s 1 :U%d-%s-%i %s",
-	    my_name_for_link(me.name, aconf), UnrealProtocol, serveropts, me.serv->numeric,
+	    me.name, UnrealProtocol, serveropts, me.serv->numeric,
 	    me.info);
 	if (!IsDead(cptr))
 		start_auth(cptr);
 
 	return (IsDead(cptr)) ? -1 : 0;
-#endif
 }
 
 /*
@@ -2668,11 +2658,10 @@ int  read_message(delay, listp)
  * connect_server
  */
 int  connect_server(aconf, by, hp)
-	aConfItem *aconf;
+	ConfigItem_link *aconf;
 	aClient *by;
 	struct hostent *hp;
 {
-#ifdef OLD
 	struct SOCKADDR *svp;
 	aClient *cptr, *c2ptr;
 	char *s;
@@ -2682,15 +2671,14 @@ int  connect_server(aconf, by, hp)
 	 * If we dont know the IP# for this host and itis a hostname and
 	 * not a ip# string, then try and find the appropriate host record.
 	 */
-	if ((!aconf->ipnum.S_ADDR))
-	{
+	 if ((!aconf->ipnum.S_ADDR))
+	 {
 		Link lin;
 
 		lin.flags = ASYNC_CONNECT;
-		lin.value.aconf = aconf;
+		lin.value.aconf = (ConfigItem *) aconf;
 		nextdnscheck = 1;
-		s = (char *)index(aconf->host, '@');
-		s++;		/* should NEVER be NULL */
+		s = aconf->hostname;
 #ifndef INET6
 		if ((aconf->ipnum.S_ADDR = inet_addr(s)) == -1)
 #else
@@ -2707,8 +2695,6 @@ int  connect_server(aconf, by, hp)
 #else  /*NEWDNS*/
 			hp = newdns_checkcachename(s);
 #endif /*NEWDNS*/
-			Debug((DEBUG_NOTICE, "co_sv: hp %x ac %x na %s ho %s",
-			    hp, aconf, aconf->name, s));
 			if (!hp)
 				return 0;
 			bcopy(hp->h_addr, (char *)&aconf->ipnum,
@@ -2720,8 +2706,8 @@ int  connect_server(aconf, by, hp)
 	/*
 	 * Copy these in so we have something for error detection.
 	 */
-	strncpyzt(cptr->name, aconf->name, sizeof(cptr->name));
-	strncpyzt(cptr->sockhost, aconf->host, HOSTLEN + 1);
+	strncpyzt(cptr->name, aconf->servername, sizeof(cptr->name));
+	strncpyzt(cptr->sockhost, aconf->hostname, HOSTLEN + 1);
 
 	svp = connect_inet(aconf, cptr, &len);
 
@@ -2755,7 +2741,7 @@ int  connect_server(aconf, by, hp)
 		report_error("Connect to host %s failed: %s", cptr);
 		if (by && IsPerson(by) && !MyClient(by))
 			sendto_one(by,
-			    ":%s NOTICE %s :Connect to host %s failed.",
+			    ":%s NOTICE %s :*** Connect to host %s failed.",
 			    me.name, by->name, cptr);
 #ifndef _WIN32
 		(void)close(cptr->fd);
@@ -2776,39 +2762,11 @@ int  connect_server(aconf, by, hp)
 		return -1;
 	}
 
-	/* Attach config entries to client here rather than in
-	 * completed_connection. This to avoid null pointer references
-	 * when name returned by gethostbyaddr matches no C lines
-	 * (could happen in 2.6.1a when host and servername differ).
-	 * No need to check access and do gethostbyaddr calls.
-	 * There must at least be one as we got here C line...  meLazy
-	 */
-	(void)attach_confs_host(cptr, aconf->host,
-	    CONF_NOCONNECT_SERVER | CONF_CONNECT_SERVER);
-
-	if (!find_conf_host(cptr->confs, aconf->host, CONF_NOCONNECT_SERVER) ||
-	    !find_conf_host(cptr->confs, aconf->host, CONF_CONNECT_SERVER))
-	{
-		sendto_ops("Host %s is not enabled for connecting:no C/N-line",
-		    aconf->host);
-		if (by && IsPerson(by) && !MyClient(by))
-			sendto_one(by,
-			    ":%s NOTICE %s :Connect to host %s failed.",
-			    me.name, by->name, cptr);
-		det_confs_butmask(cptr, 0);
-#ifndef _WIN32
-		(void)close(cptr->fd);
-#else
-		(void)closesocket(cptr->fd);
-#endif
-		cptr->fd = -2;
-		free_client(cptr);
-		return (-1);
-	}
 	/*
 	   ** The socket has been connected or connect is in progress.
 	 */
 	(void)make_server(cptr);
+	cptr->serv->conf = aconf;
 	if (by && IsPerson(by))
 	{
 		(void)strcpy(cptr->serv->by, by->name);
@@ -2831,19 +2789,17 @@ int  connect_server(aconf, by, hp)
 	cptr->listener = &me;
 	SetConnecting(cptr);
 	IRCstats.unknown++;
-	get_sockhost(cptr, aconf->host);
+	get_sockhost(cptr, aconf->hostname);
 	add_client_to_list(cptr);
 	nextping = TStime();
-#endif
 	return 0;
 }
 
 static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
-	aConfItem *aconf;
+	ConfigItem_link *aconf;
 	aClient *cptr;
 	int *lenp;
 {
-#ifdef OLD
 	static struct SOCKADDR_IN server;
 	struct hostent *hp;
 
@@ -2854,20 +2810,20 @@ static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
 	cptr->fd = socket(AFINET, SOCK_STREAM, 0);
 	if (cptr->fd >= MAXCLIENTS)
 	{
-		sendto_ops("No more connections allowed (%s)", cptr->name);
+		sendto_realops("No more connections allowed (%s)", cptr->name);
 		return NULL;
 	}
 	mysk.SIN_PORT = 0;
 	bzero((char *)&server, sizeof(server));
 	server.SIN_FAMILY = AFINET;
-	get_sockhost(cptr, aconf->host);
+	get_sockhost(cptr, aconf->hostname);
 
 	if (cptr->fd == -1)
 	{
 		report_error("opening stream socket to server %s:%s", cptr);
 		return NULL;
 	}
-	get_sockhost(cptr, aconf->host);
+	get_sockhost(cptr, aconf->hostname);
 	server.SIN_PORT = 0;
 	server.SIN_ADDR = me.ip;
 	server.SIN_FAMILY = AFINET;
@@ -2898,20 +2854,20 @@ static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
 	 * being present instead. If we dont know it, then the connect fails.
 	 */
 #ifdef INET6
-	if (isdigit(*aconf->host) && (AND16(aconf->ipnum.s6_addr) == 255))
-		if (!inet_pton(AF_INET6, aconf->host, aconf->ipnum.s6_addr))
+	if (isdigit(*aconf->hostname) && (AND16(aconf->ipnum.s6_addr) == 255))
+		if (!inet_pton(AF_INET6, aconf->hostname, aconf->ipnum.s6_addr))
 			bcopy(minus_one, aconf->ipnum.s6_addr, IN6ADDRSZ);
 	if (AND16(aconf->ipnum.s6_addr) == 255)
 #else
-	if (isdigit(*aconf->host) && (aconf->ipnum.S_ADDR == -1))
-		aconf->ipnum.S_ADDR = inet_addr(aconf->host);
+	if (isdigit(*aconf->hostname) && (aconf->ipnum.S_ADDR == -1))
+		aconf->ipnum.S_ADDR = inet_addr(aconf->hostname);
 	if (aconf->ipnum.S_ADDR == -1)
 #endif
 	{
 		hp = cptr->hostp;
 		if (!hp)
 		{
-			Debug((DEBUG_FATAL, "%s: unknown host", aconf->host));
+			Debug((DEBUG_FATAL, "%s: unknown host", aconf->hostname));
 			return NULL;
 		}
 		bcopy(hp->h_addr, (char *)&aconf->ipnum,
@@ -2923,7 +2879,6 @@ static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
 	server.SIN_PORT = htons(((aconf->port > 0) ? aconf->port : portnum));
 	*lenp = sizeof(server);
 	return (struct SOCKADDR *)&server;
-#endif
 }
 
 
@@ -3010,7 +2965,7 @@ void do_dns_async(id)
 {
 	static Link ln;
 	aClient *cptr;
-	aConfItem *aconf;
+	ConfigItem_link *aconf;
 	struct hostent *hp;
 
 	ln.flags = -1;
@@ -3045,8 +3000,8 @@ void do_dns_async(id)
 				  cptr->hostp = hp;
 			  }
 			  break;
-/*		  case ASYNC_CONNECT:
-			  aconf = ln.value.aconf;
+		  case ASYNC_CONNECT:
+			  aconf = (ConfigItem_link *) ln.value.aconf;
 			  if (hp && aconf)
 			  {
 				  bcopy(hp->h_addr, (char *)&aconf->ipnum,
@@ -3056,24 +3011,23 @@ void do_dns_async(id)
 			  else
 				  sendto_ops
 				      ("Connect to %s failed: host lookup",
-				      (aconf) ? aconf->host : "unknown");
+				      (aconf) ? aconf->hostname : "unknown");
 			  break;
 		  case ASYNC_CONF:
-			  aconf = ln.value.aconf;
+			  aconf = (ConfigItem_link *) ln.value.aconf;
 			  if (hp && aconf)
 				  bcopy(hp->h_addr, (char *)&aconf->ipnum,
 				      sizeof(struct IN_ADDR));
 			  break;
-			  */
-		  case ASYNC_SERVER:
+/*		  case ASYNC_SERVER:
 			  cptr = ln.value.cptr;
 			  del_queries((char *)cptr);
 			  ClearDNS(cptr);
-/*			  if (check_server(cptr, hp, NULL, NULL, 1))
+			  if (check_server(cptr, hp, NULL, NULL, 1))
 				  (void)exit_client(cptr, cptr, &me,
 				      "No Authorization");
-				      */
-			  break;
+				      
+			  break;*/
 		  default:
 			  break;
 		}

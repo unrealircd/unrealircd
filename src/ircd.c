@@ -1523,7 +1523,7 @@ static void open_debugfile()
 		SetLog(cptr);
 		cptr->port = debuglevel;
 		cptr->flags = 0;
-		cptr->acpt = cptr;
+		cptr->listener = cptr;
 		local[2] = cptr;
 		(void)strcpy(cptr->sockhost, me.sockhost);
 # ifndef _WIN32

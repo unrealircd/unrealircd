@@ -235,19 +235,11 @@ void free_user(user, cptr)
 		 */
 		if (user->joined || user->refcnt < 0 ||
 		    user->invited || user->channel)
-#ifdef DEBUGMODE
-			dumpcore("%#x user (%s!%s@%s) %#x %#x %#x %d %d",
-			    cptr, cptr ? cptr->name : "<noname>",
-			    user->username, user->realhost, user,
-			    user->invited, user->channel, user->joined,
-			    user->refcnt);
-#else
 			sendto_ops("* %#x user (%s!%s@%s) %#x %#x %#x %d %d *",
 			    cptr, cptr ? cptr->name : "<noname>",
 			    user->username, user->realhost, user,
 			    user->invited, user->channel, user->joined,
 			    user->refcnt);
-#endif
 		MyFree((char *)user);
 #ifdef	DEBUGMODE
 		users.inuse--;
@@ -549,11 +541,6 @@ void send_listinfo(cptr, name)
 	    sendto_one(cptr, ":%s %d %s :Classes: inuse: %d(%d)",
 	    me.name, RPL_STATSDEBUG, name, classs.inuse,
 	    tmp = classs.inuse * sizeof(aClass));
-	mem += tmp;
-	inuse += classs.inuse,
-	    sendto_one(cptr, ":%s %d %s :Confs: inuse: %d(%d)",
-	    me.name, RPL_STATSDEBUG, name, aconfs.inuse,
-	    tmp = aconfs.inuse * sizeof(aConfItem));
 	mem += tmp;
 	inuse += aconfs.inuse,
 	    sendto_one(cptr, ":%s %d %s :Totals: inuse %d %d",
