@@ -275,3 +275,4 @@
 - Made DNS cache list show a notice to other ops
 - Made /stats C show flags correctly
 - Removed class.c, from the old conf
+- Removed dynconf.c, from the old dynconf
