@@ -840,28 +840,53 @@ aSqlineItem *find_sqline_match(nickname)
 **      parv[2] = +/-
 **
 */
+
+int SVSNOOP = 0;
+
 int  m_svsnoop(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;
 	int  parc;
 	char *parv[];
 {
 	aConfItem *aconf;
+	aClient *acptr;
 
 	if (!(check_registered(sptr) && IsULine(cptr, sptr) && parc > 2))
 		return 0;
-/* svsnoop bugfix --binary */
+	/* svsnoop bugfix --binary */
 	if (hunt_server(cptr, sptr, ":%s SVSNOOP %s :%s", 1, parc,
 	    parv) == HUNTED_ISME)
 	{
 		if (parv[2][0] == '+')
-			for (aconf = conf; aconf; aconf = aconf->next)
+		{
+			SVSNOOP = 1;
+			sendto_ops("This server has been placed in NOOP mode");
+			for (acptr = &me; acptr; acptr = acptr->prev)
 			{
-				if (aconf->status & CONF_OPERATOR
-				    || aconf->status & CONF_LOCOP)
-					aconf->status = CONF_ILLEGAL;
+				if (MyClient(acptr) && IsAnOper(acptr))
+				{
+					if (IsOper(acptr))
+						IRCstats.operators--;
+					acptr->umodes &=
+					    ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP | UMODE_SERVICES |
+					    UMODE_SADMIN | UMODE_ADMIN);
+					acptr->umodes &=
+		    				~(UMODE_NETADMIN | UMODE_TECHADMIN | UMODE_CLIENT |
+		 			   UMODE_FLOOD | UMODE_EYES | UMODE_CHATOP | UMODE_WHOIS);
+					acptr->umodes &=
+					    ~(UMODE_KIX | UMODE_FCLIENT | UMODE_HIDING | UMODE_CODER |
+					    UMODE_DEAF | UMODE_HIDEOPER);
+					acptr->oflag = 0;
+				
+				}
 			}
+
+		}
 		else
-			(void)rehash(&me, &me, 2);
+		{
+			SVSNOOP = 0;
+			sendto_ops("This server is no longer in NOOP mode");
+		}
 	}
 }
 

@@ -3496,6 +3496,8 @@ int  m_mkpasswd(cptr, sptr, parc, parv)
 **	parv[1] = oper name
 **	parv[2] = oper password
 */
+extern int SVSNOOP;
+
 int  m_oper(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;
 	int  parc;
@@ -3518,6 +3520,13 @@ int  m_oper(cptr, sptr, parc, parv)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
 		    me.name, parv[0], "OPER");
+		return 0;
+	}
+
+	if (SVSNOOP)
+	{
+		sendto_one(sptr, ":%s NOTICE %s :*** This server is in NOOP mode, you cannot /oper",
+			me.name, sptr->name);
 		return 0;
 	}
 
