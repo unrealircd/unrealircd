@@ -1964,8 +1964,12 @@ int     rehash(cptr, sptr, sig)
 	ConfigItem_class *class_ptr;
 	ConfigItem_ulines *uline_ptr;
 	ConfigItem_allow *allow_ptr;
-	
+	ConfigItem_except *except_ptr;
+	ConfigItem_ban *ban_ptr;
+	ConfigItem_link *link_ptr;
 	ConfigItem 	t;
+
+	/* wipe the fckers out ..*/
 	for (oper_ptr = conf_oper; oper_ptr; oper_ptr = (ConfigItem_oper *) oper_ptr->next)
 	{	
 		ConfigItem_oper_from *oper_from;
@@ -2011,6 +2015,45 @@ int     rehash(cptr, sptr, sig)
 		t.next = del_ConfigItem((ConfigItem *) allow_ptr, (ConfigItem **)conf_allow);
 		MyFree(allow_ptr);
 		allow_ptr = (ConfigItem_allow *) &t;			
+	}
+	for (except_ptr = conf_except; except_ptr; except_ptr = (ConfigItem_except *) except_ptr->next)
+	{
+		ircfree(except_ptr->mask);
+		t.next = del_ConfigItem((ConfigItem *) except_ptr, (ConfigItem **)conf_except);
+		MyFree(except_ptr);
+		except_ptr = (ConfigItem_except *) &t;			
+	}
+	for (ban_ptr = conf_ban; ban_ptr; ban_ptr = (ConfigItem_ban *) ban_ptr->next)
+	{
+		if (ban_ptr->flag.type2 == CONF_BAN_TYPE_CONF)
+		{
+			ircfree(ban_ptr->mask);
+			ircfree(ban_ptr->reason);
+			t.next = del_ConfigItem((ConfigItem *) ban_ptr, (ConfigItem **)conf_ban);
+			MyFree(ban_ptr);
+			ban_ptr = (ConfigItem_ban *) &t;
+		}
+	}
+	for (link_ptr = conf_link; link_ptr; link_ptr = (ConfigItem_link *) link_ptr->next)
+	{
+		if (link_ptr->refcount == 0)
+		{
+			ircfree(link_ptr->servername);
+			ircfree(link_ptr->username);
+			ircfree(link_ptr->bindip);
+			ircfree(link_ptr->hostname);
+			ircfree(link_ptr->hubmask);
+			ircfree(link_ptr->leafmask);
+			ircfree(link_ptr->connpwd);
+			ircfree(link_ptr->recvpwd);
+			t.next = del_ConfigItem((ConfigItem *) link_ptr, (ConfigItem **)conf_link);
+			MyFree(link_ptr);
+			link_ptr = (ConfigItem_link *) &t;
+		}
+		else
+		{
+			link_ptr->flag.temporary = 1;
+		}
 	}
 	
 }
