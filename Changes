@@ -2084,4 +2084,5 @@ seen. gmtime warning still there
 - Some documentation improvements regarding link::hostname.
 - Changed the module umode adding function to allow an 'is_allowed' function. This fuction
   defines who may set the specified usermode.
-- Made it so Ulined servers can use a TS that is in the past (#0000448) reported by thilo
+- Made it so Ulined servers can use a TS that is in the past for topics (#0000448) reported 
+  by thilo
