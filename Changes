@@ -2943,3 +2943,4 @@ seen. gmtime warning still there
 - Removed: gnotice, goper
 - Modulized: netinfo, links, help, rules, close, map, eos
 - Made it compile on win32 again
+- Modulized: server, stats

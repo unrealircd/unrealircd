@@ -305,7 +305,7 @@ extern int m_nick(), m_error();
 extern int m_dns();
 extern int m_tkl();
 extern int m_motd(), m_user();
-extern int m_server(), m_info(), m_summon(), m_stats();
+extern int m_info(), m_summon(), m_stats();
 extern int m_users(), m_version();
 extern int m_connect();
 extern int m_names();

@@ -1,19 +1,84 @@
+/*
+ *   IRC - Internet Relay Chat, src/modules/out.c
+ *   (C) 2004 The UnrealIRCd Team
+ *
+ *   See file AUTHORS in IRC package for additional names of
+ *   the programmers.
+ *
+ *   This program is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 1, or (at your option)
+ *   any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program; if not, write to the Free Software
+ *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+#include "config.h"
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
 #include "numeric.h"
 #include "msg.h"
+#include "proto.h"
 #include "channel.h"
-#include "version.h"
+#include <time.h>
 #include <sys/stat.h>
-#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #ifdef _WIN32
 #include <io.h>
 #endif
-#include <time.h>
+#include <fcntl.h>
 #include "h.h"
-#include "proto.h"
-#include <string.h>
+#ifdef STRIPBADWORDS
+#include "badwords.h"
+#endif
+#ifdef _WIN32
+#include "version.h"
+#endif
+
+DLLFUNC int m_stats(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+
+#define MSG_STATS 	"STATS"	
+#define TOK_STATS 	"2"	
+
+ModuleHeader MOD_HEADER(m_stats)
+  = {
+	"m_stats",
+	"$Id$",
+	"command /stats", 
+	NULL,
+	NULL 
+    };
+
+DLLFUNC int MOD_INIT(m_stats)(ModuleInfo *modinfo)
+{
+	add_Command(MSG_STATS, TOK_STATS, m_stats, 3);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	return MOD_SUCCESS;
+}
+
+DLLFUNC int MOD_LOAD(m_stats)(int module_load)
+{
+	return MOD_SUCCESS;
+}
+
+DLLFUNC int MOD_UNLOAD(m_stats)(int module_unload)
+{
+	if (del_Command(MSG_STATS, TOK_STATS, m_stats) < 0)
+	{
+		sendto_realops("Failed to delete commands when unloading %s",
+			MOD_HEADER(m_stats).name);
+	}
+	return MOD_SUCCESS;
+}
 
 extern int  max_connection_count;
 extern char *get_client_name2(aClient *, int);
@@ -319,7 +384,7 @@ inline char *stats_operonly_long_to_short()
 	return buffer;
 }
 
-CMD_FUNC(m_stats)
+DLLFUNC CMD_FUNC(m_stats)
 {
 	struct statstab *stat;
 

@@ -679,3 +679,4 @@ extern char *unreal_encodespace(char *s);
 extern char *unreal_decodespace(char *s);
 extern Link *helpign;
 extern aMotd *rules;
+extern fdlist default_fdlist, busycli_fdlist, serv_fdlist, oper_fdlist;

@@ -108,6 +108,7 @@ extern int m_trace_Init(ModuleInfo *modinfo), m_netinfo_Init(ModuleInfo *modinfo
 extern int m_links_Init(ModuleInfo *modinfo), m_help_Init(ModuleInfo *modinfo);
 extern int m_rules_Init(ModuleInfo *modinfo), m_close_Init(ModuleInfo *modinfo);
 extern int m_map_Init(ModuleInfo *modinfo), m_eos_Init(ModuleInfo *modinfo);
+extern int m_server_Init(ModuleInfo *modinfo), m_stats_Init(ModuleInfo *modinfo);
 #ifdef GUEST
 extern int m_guest_Init(ModuleInfo *modinfo);
 #endif
@@ -146,6 +147,7 @@ extern int m_trace_Load(int module_load), m_netinfo_Load(int module_load);
 extern int m_links_Load(int module_load), m_help_Load(int module_load);
 extern int m_rules_Load(int module_load), m_close_Load(int module_load);
 extern int m_map_Load(int module_load), m_eos_Load(int module_load);
+extern int m_server_Load(int module_load), m_stats_Load(int module_load);
 #ifdef GUEST
 extern int m_guest_Load(int module_load);
 #endif
@@ -174,7 +176,7 @@ extern int m_wallops_Unload(), m_admin_Unload(), m_globops_Unload();
 extern int m_locops_Unload(), m_chatops_Unload(), m_trace_Unload();
 extern int m_netinfo_Unload(), m_links_Unload(), m_help_Unload();
 extern int m_rules_Unload(), m_close_Unload(), m_map_Unload();
-extern int m_eos_Unload();
+extern int m_eos_Unload(), m_server_Unload(), m_stats_Unload();
 #ifdef GUEST
 extern int m_guest_Unload();
 #endif
@@ -288,6 +290,8 @@ int    l_commands_Init(ModuleInfo *modinfo)
 	m_close_Init(ModCmdsInfo);
 	m_map_Init(ModCmdsInfo);
 	m_eos_Init(ModCmdsInfo);
+	m_server_Init(ModCmdsInfo);
+	m_stats_Init(ModCmdsInfo);
 #ifdef GUEST
 	m_guest_Init(ModCmdsInfo);
 #endif
@@ -380,6 +384,8 @@ int    l_commands_Load(int module_load)
 	m_close_Load(module_load);
 	m_map_Load(module_load);
 	m_eos_Load(module_load);
+	m_server_Load(module_load);
+	m_stats_Load(module_load);
 #ifdef GUEST
 	m_guest_Load(module_load);
 #endif
@@ -472,6 +478,8 @@ int	l_commands_Unload(int module_unload)
 	m_close_Unload();
 	m_map_Unload();
 	m_eos_Unload();
+	m_server_Unload();
+	m_stats_Unload();
 #ifdef GUEST
 	m_guest_Unload();
 #endif
