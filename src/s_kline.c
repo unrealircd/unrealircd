@@ -212,10 +212,12 @@ aTKline *tkl_expire(aTKline * tmp)
 						    cname))
 						{
 							ClearShunned(acptr);
+#ifdef SHUN_NOTICES
 							sendto_one(acptr,
 							    ":%s NOTICE %s :*** You are no longer shunned",
 							    me.name,
 							    acptr->name);
+#endif
 						}
 					}
 			}
@@ -347,6 +349,7 @@ int  find_tkline_match(cptr, xx)
 
 #endif
 				gmt2[strlen(gmt2) - 1] = '\0';
+#ifdef SHUN_NOTICES
 				if (lp->expire_at)
 					sendto_one(cptr,
 					    ":%s NOTICE %s :*** You have been shunned by %s until %s (Reason: %s)",
@@ -357,7 +360,7 @@ int  find_tkline_match(cptr, xx)
 					    ":%s NOTICE %s :*** You have been shunned permanently by %s (Reason: %s)",
 					    me.name, cptr->name, lp->setby,
 					    lp->reason);
-
+#endif
 				return -1;
 			}
 		}

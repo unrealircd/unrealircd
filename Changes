@@ -550,3 +550,6 @@
 - Fixed a bug with mkpasswd on OpenBSD
 - Added desynch +e warning, and updated ./update enough ...
 - Updated update to work better, and that you can use lynx instead of wget
+- Added #undef SHUN_NOTICES, to add notices for users who are shunned
+- Fixed bug with U:Lines should be able to privmsg/notice and recieve
+  badwords :P, does not work in channels

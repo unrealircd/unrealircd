@@ -1805,10 +1805,11 @@ static int m_message(cptr, sptr, parc, parv, notice)
 					    me.name, parv[0], acptr->name,
 					    acptr->user->away);
 #ifdef STRIPBADWORDS
-				if (IsFilteringWords(acptr))
-					sendto_prefix_one(acptr, sptr,
-					    ":%s %s %s :%s", parv[0], cmd, nick,
-					    stripbadwords_message(parv[2]));
+				if (!(IsULine(acptr, acptr) || IsULine(cptr, sptr)) && 
+					IsFilteringWords(acptr))
+						sendto_prefix_one(acptr, sptr,
+						    ":%s %s %s :%s", parv[0], cmd, nick,
+							    stripbadwords_message(parv[2]));
 				else
 #endif
 					sendto_message_one(acptr,
