@@ -247,6 +247,11 @@ case "$OS" in
         DEFLIBS="-lsocket -lnsl -lresolv"
         OSNAME="Solaris 2.x (or SunOS 5.x)"
         ;;
+    *IRIX*)
+	DEFCFLAGS="$DEFOPT -D_USE_BSD"
+	DEFLIBS="-lbsd"
+	OSNAME="IRIX"
+	;;
     *Linux*)
        cat > $TMP << __EOF__
 #include <stdio.h>
