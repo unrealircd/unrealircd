@@ -2373,6 +2373,8 @@ CMD_FUNC(m_umode)
 			ClearHideOper(sptr);
 		if (IsCoAdmin(sptr))
 			ClearCoAdmin(sptr);
+		if (IsHelpOp(sptr))
+			ClearHelpOp(sptr);
 		if (sptr->user->snomask & SNO_CLIENT)
 			sptr->user->snomask &= ~SNO_CLIENT;
 		if (sptr->user->snomask & SNO_FCLIENT)

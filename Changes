@@ -1743,3 +1743,5 @@ seen. gmtime warning still there
 - Made 3 param TKL funcs Perm with reason instead of timed with no reason
 - Added set::snomask-on-oper to set the default snomask when users /oper (oper::snomask
   overrides this)
+- Fixed a bug reported by AngryWolf where setting umode -o didn't remove umode
+  h. (#0000556)
