@@ -666,3 +666,16 @@ Fixed m_invite, really. I tested it this time :)
 Changed +A/+O bans to act more sanely
 --Luke
 ===================================
+
+Fixed cloaking fun for hosts w/out . (from codemastr)
+--Luke
+===================================
+
+Copied fixes to /helpop from 3.2 reported by FrostByghte
+--Luke
+===================================
+
+Applied weird sts patch for dynamic allocation of nick
+field in topics
+--Luke
+===================================

@@ -3619,8 +3619,8 @@ int  m_topic(cptr, sptr, parc, parv)
 				if (topiClen > (TOPICLEN))
 					topiClen = TOPICLEN;
 
-				if (nicKlen > (NICKLEN))
-					nicKlen = NICKLEN;
+				if (nicKlen > (NICKLEN+USERLEN+HOSTLEN+4))
+					nicKlen = NICKLEN+USERLEN+HOSTLEN+4;
 
 				chptr->topic = MyMalloc(topiClen + 1);
 				strncpyzt(chptr->topic, topic, topiClen + 1);
