@@ -568,6 +568,7 @@ struct trecord {
 struct aloopStruct {
 	unsigned do_garbage_collect : 1;
 	unsigned do_tkl_sweep : 1;
+	unsigned do_ban_check : 1;
 };
 
 typedef struct Whowas {

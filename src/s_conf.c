@@ -1006,7 +1006,7 @@ int  rehash(cptr, sptr, sig)
 				free_conf(tmp2);
 		}
 	/* Added to make sure K-lines are checked -- Barubary */
-	check_pings(TStime(), 1);
+	loop.do_ban_check = 1;
 	/* Recheck all U-lines -- Barubary */
 	for (i = 0; i < highest_fd; i++)
 		if ((acptr = local[i]) && !IsMe(acptr))
@@ -1951,7 +1951,7 @@ int  m_rakill(cptr, sptr, parc, parv)
 	sendto_serv_butone(cptr, ":%s RAKILL %s %s",
 	    IsServer(cptr) ? parv[0] : me.name, hostmask, usermask);
 
-	check_pings(TStime(), 1);
+	loop.do_ban_check = 1;
 }
 
 /* ** m_akill;
@@ -2058,7 +2058,7 @@ int  m_akill(cptr, sptr, parc, parv)
 		    IsServer(cptr) ? parv[0] : me.name, hostmask, usermask);
 
 
-	check_pings(TStime(), 1);
+	loop.do_ban_check = 1;
 
 }
 
@@ -2247,19 +2247,8 @@ int  m_kline(cptr, sptr, parc, parv)
 	}
 
 	add_temp_conf(CONF_KILL, uhost, parv[2], name, 0, 0, 1);
-
-        if (find_kill(cptr) || find_kill(sptr))
-	{
-		sendto_failops_whoare_opers("k:line error: mask=%s parsed=%s I tried to kill cptr",
-		mask, userhost);
-		sendto_serv_butone(NULL,
-		":%s GLOBOPS :k:line error: mask=%s parsed=%s I tried to kill cptr",
-		me.name, mask, userhost);
-		flush_connections(me.fd);
-		(void)rehash(&me, &me, 0);
-		return;
-	}
-	check_pings(TStime(), 1);
+	/* We do not care if we kill cptr or sptr */
+	loop.do_ban_check = 1;
 }
 
 
@@ -2346,7 +2335,7 @@ int  m_unkline(cptr, sptr, parc, parv)
 		}
 	}
 	/* This wasn't here before -- Barubary */
-	check_pings(TStime(), 1);
+	loop.do_ban_check = 1;
 }
 
 /*
@@ -2549,7 +2538,7 @@ int  m_zline(cptr, sptr, parc, parv)
 		sendto_serv_butone(cptr, ":%s ZLINE %s :%s", parv[0], parv[1],
 		    reason ? reason : "");
 
-	check_pings(TStime(), 1);
+	loop.do_ban_check = 1;
 
 }
 

@@ -323,3 +323,6 @@ wrong. Thanks to John_z
 Added temp patch to m_kline to stop segfault
 --Luke
 ===================================
+
+Backported check_pings with loop.do_ban_check from 3.2
+--Stskeeps

@@ -490,10 +490,13 @@ extern char *areason;
 
 /* Now find_kill is only called when a kline-related command is used:
    AKILL/RAKILL/KLINE/UNKLINE/REHASH.  Very significant CPU usage decrease.
-   I made changes to evm_lusers
-ery check_pings call to add new parameter.
-   -- Barubary */
-extern TS check_pings(TS currenttime, int check_kills)
+   -- Barubary
+   
+   DUDE! THAT IS _NOT_ COOL!
+   -Stskeeps
+   
+   */
+extern TS check_pings(TS currenttime)
 {
 	aClient *cptr;
 	int  killflag;
@@ -517,11 +520,11 @@ extern TS check_pings(TS currenttime, int check_kills)
 				continue;
 			}
 			areason = NULL;
-			if (check_kills)
+			if (loop.do_ban_check)
 				killflag = IsPerson(cptr) ? find_kill(cptr) : 0;
 			else
 				killflag = 0;
-			if (check_kills && !killflag && IsPerson(cptr))
+			if (loop.do_ban_check && !killflag && IsPerson(cptr))
 				if (find_zap(cptr, 1)
 				    || find_tkline_match(cptr, 0) > -1 ||
 				    (!IsAnOper(cptr) && find_nline(cptr)))
@@ -685,7 +688,8 @@ extern TS check_pings(TS currenttime, int check_kills)
 		oldest = currenttime + PINGFREQUENCY;
 	Debug((DEBUG_NOTICE, "Next check_ping() call at: %s, %d %d %d",
 	    myctime(oldest), ping, oldest, currenttime));
-
+	if (loop.do_ban_check)
+		loop.do_ban_check = 1;
 	return (oldest);
 }
 
@@ -1408,11 +1412,11 @@ void SocketLoop(void *dummy)
 		   ** ping times) --msa
 		 */
 #ifdef NO_FDLIST
-		if (now >= nextping)
+		if ((now >= nextping) || loop.do_ban_check)
 #else
-		if (now >= nextping && !lifesux)
+		if ((now >= nextping && !lifesux) || loop.do_ban_check)
 #endif
-			nextping = check_pings(now, 0);
+			nextping = check_pings(now);
 
 		if (dorehash)
 		{

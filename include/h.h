@@ -41,7 +41,7 @@ extern struct stats *ircstp;
 extern int bootopt;
 extern TS TSoffset;
 /* Prototype added to force errors -- Barubary */
-extern TS check_pings(TS now, int check_kills);
+extern TS check_pings(TS now);
 extern TS TS2ts(char *s);
 
 /* Remmed out for win32 compatibility.. as stated of 467leaf win32 port.. */
