@@ -754,8 +754,9 @@ int	hash_throttling(struct IN_ADDR *in)
 #ifndef INET6
 	return ((unsigned int)in->s_addr % THROTTLING_HASH_SIZE); 
 #else
-	memcpy(&alpha, &cp[8], sizeof(alpha));
-	memcpy(&beta, &cp[12], sizeof(beta));
+	cp = (u_char *) &in->s6_addr;
+	memcpy(&alpha, cp + 7, sizeof(alpha));
+	memcpy(&beta, cp + 11, sizeof(beta));
 	return ((alpha ^ beta) % THROTTLING_HASH_SIZE);
 #endif
 }
