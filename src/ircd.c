@@ -1177,8 +1177,8 @@ int InitwIRCD(int argc, char *argv[])
 	}
 #endif
 
-	if ((int)getuid() == 0) {
 #if defined(IRC_UID) && defined(IRC_GID)
+	if ((int)getuid() == 0) {
 		if ((IRC_UID == 0) || (IRC_GID == 0)) {
 			(void)fprintf(stderr,
 			    "ERROR: SETUID and SETGID have not been set properly"
