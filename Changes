@@ -767,3 +767,4 @@ seen. gmtime warning still there
 - Made even more config errors recoverable
 - Added more network files
 - Fixed some typos in s_conf.c
+- Fixed a win32 bug where /restart didn't remove the tray icon, reported by PHANTOm and Gilou

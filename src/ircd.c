@@ -380,6 +380,7 @@ void server_reboot(mesg)
 	(void)execv(MYNAME, myargv);
 #else
 	close_connections();
+	CleanUp();
 	(void)execv(myargv[0], myargv);
 #endif
 #ifdef USE_SYSLOG
