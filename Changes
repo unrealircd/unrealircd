@@ -1780,4 +1780,6 @@ seen. gmtime warning still there
 - Preperations for beta14. Will be a recommended upgrade
 - Compile fixes regarding throttling
 - Fix when you use another make than make
+- Fixed so crypt() works on !HAVE_CRYPT systems with openssl 0.9.7+ too
+  (yes, this makes us able to compile win32-ssl)
 ** beta14 released **
