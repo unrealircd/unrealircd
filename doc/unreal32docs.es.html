@@ -119,6 +119,16 @@ Spanish |
   ---8.8. <a href="#secantiexploit">Protecci&oacute;n contra agujeros explotables</a><br>
   ---8.9. <a href="#secsummary">Sumario</a><br>
   9. <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">Dudas m&aacute;s comunes (FAQ)</a><br> 
+    A. <a href="#regex">Expresiones Regulares</a><br>
+  ---A.1. <a href="#regexlit">Literales</a><br>
+  ---A.2. <a href="#regexdot">Operador punto</a><br>
+  ---A.3. <a href="#regexrep">Operadores de repetición</a><br>
+  ---A.4. <a href="#regexbracket">Expresiones de corchete</a><br>
+  ---A.5. <a href="#regexassert">Aserciones</a><br>
+  ---A.6. <a href="#regexalt">Alternanza</a><br>
+  ---A.7. <a href="#regexsub">Subexpresiones</a><br>
+  ---A.8. <a href="#regexbackref">Referencias anteriores</a><br>
+  ---A.9. <a href="#regexcase">Sensibilidad mayúsculas/minúsculas</a><br>
 </p>
 <p><b><font size="+2">1.0 &#8211; Introducci&oacute;n y notas <a name="IntroductionNotes"></a></font></b><br>
 </p><div class="desc">
@@ -2987,5 +2997,89 @@ Tal y como podr&aacute; entender, nunca se puede estar 100% seguro. Sin embargo,
   <p>Tiene una FAQ disponible en este <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">enlace</a></p>
 </div>
 <p></p>
-</body>
+
+<p><font size="+2"><b>A Expresiones Regulares<a name="regex"></a></b></font></p>
+<div class="desc">
+  <p>Las expresiones regulares se usan en muchos sitios del Unreal, incluyendo badwords, el filtro de spam y aliases. Es una utilidad bastante compleja que sirve para relacionar coincidencias siguiendo un patr&oacute;n. A veces se les llama &quot;regexp&quot; o &quot;regex&quot;. Unreal usa la biblioteca TRE para estas regex. Soporta complejas y avanzadas expresiones que pueden ser confusas. La informaci&oacute;n que hay a continuaci&oacute;n le ayudar&aacute; a conocer c&oacute;mo funcionan estas expresiones. Si est&aacute; interesado en una informaci&oacute;n m&aacute;s detallada y t&eacute;cnica, puede visitar <a href="http://www.laurikari.net/tre/syntax.html" target="_new">TRE homepage</a>.</p>
+</div>
+
+<p><font size="+2"><b>A.1 Literales<a name="regexlit"></a></b></font></p>
+<div class="desc">
+  <p>Los literales son los componentes m&aacute;s b&aacute;sicos de las regexp. B&aacute;sciamente son los caracteres tratados como texto plano. Por ejemplo, el patr&oacute;n &quot;test&quot; consiste en cuatro literales: &quot;t&quot;, &quot;e&quot;, &quot;s&quot; y &quot;t&quot;. En el Unreal, los literales son tratados sin sensibilidad de may&uacute;sculas/min&uacute;sculas; as&iacute;, el texto anterior coincidir&iacute;a con &quot;test&quot; y &quot;TEST&quot;. Cualquier caracter que no es un marcador es tratado como literal. Puede especificar un marcador como literal anteponiendo la barra invertida (\). Por ejemplo, el punto (.) es un marcador. Si quiere usarlo como literal, deber&aacute; poner \. y el Unreal lo tratar&aacute; como tal. Puede darse el caso que desee usar un caracter que no est&aacute; en el teclado, por ejemplo el de color (en ASCII el 3, color). Para eso puede usar la secuencia \x. Si usa \x3 entonces es interpretado como un caracter ASCII, el 3. El n&uacute;mero que sigue a \x est&aacute; notado como hexadecimal y debe estar entre el rango \x0 y \xFF.</p>
+</div>
+
+<p><font size="+2"><b>A.2 Operador punto<a name="regexdot"></a></b></font></p>
+<div class="desc">
+  <p>El operador punto (.) se usa para relacionar &quot;cualquier caracter&quot;. Relaciona cualquier caracter simple que contenga cualquier valor. Por ejemplo, la regex &quot;a.c&quot; relacionar&iacute;a con &quot;abc&quot;, &quot;adc&quot;, etc. Sin embargo, no lo har&iacute;a con &quot;abd&quot; porque &quot;a&quot; y &quot;c&quot; son literales que deben coincidir exactamente.</p>
+</div>
+
+<p><font size="+2"><b>A.3 Operadores de repetici&oacute;n<a name="regexrep"></a></b></font></p>
+<div class="desc">
+  <p>Un error de los m&aacute;s usuales que se cometen es hacer que regex act&uacute;e como lo hacen los comodines. En otras palabras, el * y el ? s&oacute;lo se relacionan con los comodines. En las regex no tienen el mismo sentido. Adem&aacute;s, las expresiones regulares soportan muchos m&aacute;s m&eacute;todos avanzados de repetici&oacute;n.
+  <p>
+El operador de repetici&oacute;n m&aacute;s b&aacute;sico es el ?. Este operador relaciona 0 o 1 vez el caracter que le precede. Por ejemplo, en el caso &quot;a?c&quot; se relacionar&iacute;a con cualquier palabra que tuviera la &quot;a&quot; repetida 0 o 1 vez seguida de la letra &quot;c&quot;. Como se ve, el sentido es diferente que en los comodines. Si se usara &quot;a.?c&quot; entonces s&iacute; que el sentido ser&iacute;a el mismo de los comodines, puesto que significar&iacute;a una &quot;a&quot; seguida de cualquier caracter repetido 0 o 1 vez seguido de una &quot;c&quot;.
+  <p>
+El siguiente operador es el *. Asimismo, es distinto al de los comodines. Se relaciona si el caracter que le precede se repite 0 o m&aacute;s veces. Por ejemplo, &quot;a*c&quot; relaciona 0 o m&aacute;s de una &quot;a&quot; seguida de una &quot;c&quot;. La palabra &quot;aaaac&quot; relacionar&iacute;a. Asimismo, &quot;a.*c&quot; significar&iacute;a que se relaciona con una &quot;a&quot; seguida de cualquier caracter repetido 0 o m&aacute;s veces seguido de una &quot;c&quot;, lo mismo que &quot;a*c&quot; en los comodines.
+  <p>
+El operador + es similar al *. Sin embargo, en vez de hacerlo en 0 o m&aacute;s veces, lo hace con 1 o m&aacute;s veces. Por ejemplo, &quot;a+c&quot; significar&iacute;a que la &quot;a&quot; debe estar &quot;almenos&quot; 1 vez. Por ejemplo, la palabra &quot;c&quot; relacionar&iacute;a con &quot;a*c&quot; (puesto que la &quot;a&quot; est&aacute; 0 o m&aacute;s veces) pero no lo har&iacute;a con &quot;a+c&quot; (porque la &quot;a&quot; debe estar almenos 1 vez). En cambio &quot;ac&quot; o &quot;aaaac&quot; s&iacute; que lo har&iacute;an con &quot;a+c&quot; (y por supuesto &quot;a*c&quot;).
+  <p>
+El operador de repetici&oacute;n m&aacute;s usual son las llaves. Te permiten especificar exactamente cu&aacute;ntas veces debe repetirse. Su formato es {M,N}, donde M es el m&iacute;nimo y N el m&aacute;ximo de repeticiones. Por ejemplo, si quiere que la &quot;a&quot; se repita de 3 a 5 veces deber&aacute; usar &quot;a{3,5}&quot;. Si usa &quot;a{8}&quot; significar&aacute; que la &quot;a&quot; debe estar repetida 8 veces exactamente. Asimismo, usar &quot;aaaaaaaa&quot; es lo mismo que &quot;a{8}&quot;. Para especificar un &quot;almenos&quot; deber&aacute; especificar el m&iacute;nimo de repeticiones. Por ejemplo, si quiere que la &quot;a&quot; se repita &quot;almenos&quot; 8 veces, use &quot;a{8,}&quot;.
+  <p>
+Por defecto, los operadores de repetici&oacute;n tienden a coger la porci&oacute;n m&aacute;s larga de texto que se relacione, tantos como pueda. Por ejemplo, se tiene el texto &quot;CARRO&quot; y la expresi&oacute;n &quot;.+R&quot;. Podr&iacute;a pensarse que relacionar&iacute;a con &quot;CA&quot;. Pero esto es err&oacute;neo. Puesto que tiende a coger el m&aacute;ximo de caracteres posible, lo har&iacute;a con &quot;CAR&quot;. Sin embargo, puede no quere este efecto. Esto puede hacerse a&ntilde;adiendo &quot;?&quot; despu&eacute;s del operador de repetici&oacute;n. En el caso planteado, &quot;.+?R&quot;, el .+? modifica el operador + para que no coja el m&aacute;ximo de caracteres posible. As&iacute; pues, si se usa &quot;.+?R&quot;, relacionar&iacute;a con &quot;CA&quot; en vez de con &quot;CAR&quot;. El &quot;?&quot; puede usarse con este sentido despu&eacute;s de cada operador de repetici&oacute;n: ??, *?, +?, {M,n}?.
+</div>
+
+<p><font size="+2"><b>A.4 Expresiones de corchete </b></font></p>
+<div class="desc">Las expresiones de corchete aportan una manera de hacer un operador &quot;or&quot;. Por ejemplo, si se quiere que se relacione con una &quot;a&quot; o con una &quot;b&quot;, este operador se lo permitir&aacute; ([]). Por ejemplo, si se usa &quot;[abc]&quot; se relacionar&aacute; con &quot;a&quot;, &quot;b&quot; o &quot;c&quot;. Asimismo, la expresi&oacute;n &quot;a[bc]d&quot; relacionar&iacute;a con &quot;abc&quot; o &quot;acd&quot;, pero no con &quot;acc&quot;.  
+  <p>
+Un aspecto muy usual es hacerlo con un rango de letras o d&iacute;gitos. Por ejemplo, &quot;[012456789]&quot; ser&iacute;a lo mismo que usar &quot;[0-9]&quot;, puesto que el &quot;-&quot; indica un rango. Puesto que Unreal no contempla may&uacute;sculas/min&uacute;sculas, el uso de &quot;[a-z]&quot; seria lo mismo que &quot;[A-Z]&quot;. Tambi&eacute;n puede incluir varios rangos en la misma expresi&oacute;n. Para relacionar con una letra o un d&iacute;gito puede usar &quot;[0-9a-z]&quot;. Para usar el caracter &quot;-&quot; como literal deber&aacute; ponerlo al final o al principio de los corchetes. Por ejemplo, &quot;[0-9-]&quot; relacionar&iacute;a con un d&iacute;gito o con -.
+  <p>
+Para simplificar tareas, existen unos cuantas &quot;clases de caracteres&quot; que pueden usarse entre los corchetes. Esta clase de caracteres suprimen la necesidad de definir varios rangos. Las clases de caracteres se notan encerrando su nombre entre dos puntos :. Por ejemplo, &quot;[0-9]&quot; es lo mismo que &quot;[:isdigit:]&quot;. Aqu&iacute; tiene una lista de las clases de caracteres disponibles y su uso:
+    <ul>
+<li><tt>alnum</tt> - caracteres alfanum&eacute;ricos</li>
+<li><tt>alpha</tt> - caracteres alfab&eacute;ticos</li>
+<li><tt>blank</tt> - caracteres blancos</li>
+<li><tt>cntrl</tt> - caracteres de control (color por ej.)</li>
+<li><tt>digit</tt> - d&iacute;gitos en decimal (de 0 a 9)</li>
+<li><tt>graph</tt> - caracteres imprimibles, excepto el espacio</li>
+<li><tt>lower</tt> - caracteres min&uacute;sculos</li>
+<li><tt>print</tt> - caracteres imprimibles, incluyendo el espacio</li>
+<li><tt>punct</tt> - caracteres imprimibles, excepto el espacio y los alfanum&eacute;ricos</li>
+<li><tt>space</tt> - caracteres de espacio blanco</li>
+<li><tt>upper</tt> - caracteres may&uacute;sculos</li>
+<li><tt>xdigit</tt> - d&iacute;gitos en hexadecimal</li>
+</ul>
+Cabe remarcar que estas clases de caracteres s&oacute;lo pueden usarse y deben estar SOLOS entre los corchetes. Por ejemplo, &quot;[:isdigit:-]&quot; no ser&iacute;a legal. En vez de esto, puede anidar varios corchetes entre s&iacute;. Por ejemplo, en este caso se usar&iacute;a &quot;[[:isdigit:]-]&quot;.
+<p>
+La &uacute;ltima caracter&iacute;stica de los corchetes es la negaci&oacute;n. Algunas veces es &uacute;til imponer cualquier caracter excepto unos concretos. Por ejemplo, si quiere comprobar que no es una letra, es m&aacute;s c&oacute;modo especificar a-z y notar que no es uno de estos. Para ello anteponga &quot;^&quot; como primer caracter. Por ejemplo, &quot;[^a-z]&quot; relacionar&iacute;a con lo que no fuera una letra. Tal y como ocurr&iacute;a con el -, para usar el ^ literalmente, &uacute;selo al final de la expresi&oacute;n, &quot;[a-z^]&quot;. A su vez, para negar una clase de caracteres, puede hacerlo con &quot;[^[:isdigit:]]&quot;. Recuerde que las clases de caracteres, [:blank:] por ejemplo, funcionan como una sola unidad.</p>
+</div>
+<p><font size="+2"><b>A.5 Aserciones<a name="regexassert"></a></b></font></p>
+<div class="desc">Las aserciones le permiten comprobar ciertas condiciones que no se pueden representar con cadenas de caracteres.
+  <p>
+El caracter ^ se refiere al &quot;ancho izquierdo&quot;. Este caracter relaciona con el principio de una cadena. Por ejemplo, si tan s&oacute;lo usa la expresi&oacute;n &quot;test&quot; relacionar&iacute;a con &quot;esto es un test&quot; puesto que contiene la expresi&oacute;n &quot;test&quot;. En cambio, la expresi&oacute;n &quot;^test&quot; no lo har&iacute;a, puesto que indicar&iacute;a que DEBE empezar por &quot;test&quot;. An&aacute;logamente, el caracter $ le indicar&aacute; el ancho derecho, que debe terminar con esto. Por ejemplo, &quot;test$&quot; relacionar&iacute;a con cualquier palabra que acabara en &quot;test&quot;. Asimismo puede combinarlos. Por ejemplo, &quot;^test$&quot; relacionar&iacute;a con las palabras que fueran &quot;test&quot; exactamente.
+    <p>
+Existen varias aserciones para palabras. Todas las dem&aacute;s se especifican usando \ seguida del caracter en cuesti&oacute;n. Por ejemplo, para probar el inicio y final de una palabra, puede usar \&lt; y \&gt; respectivamente.
+      <p>
+El resto de aserciones se definen de dos formas: positivas y negativas. Estas son:
+        <ul>
+<li><tt>\b</tt> - Palabra l&iacute;mite
+<li><tt>\B</tt> - No palabra l&iacute;mite
+<li><tt>\d</tt> - D&iacute;gito (equivalente a <tt>[[:digit:]]</tt>)</li>
+<li><tt>\D</tt> - No d&iacute;gito (equivalente a <tt>[^[:digit:]]</tt>)</li>
+<li><tt>\s</tt> - Espacio (equivalente a<tt>[[:space:]]</tt>)</li>
+<li><tt>\S</tt> - No espacio (equivalente a <tt>[^[:space:]]</tt>)</li>
+<li><tt>\w</tt> - Palabra (equivalente a <tt>[[:alnum:]_]</tt>)</li>
+<li><tt>\W</tt> - No palabra (equivalente a <tt>[^[:alnum:]_]</tt>)</li>
+</ul>
+</div>
+<p><font size="+2"><b>A.6 Alternanza<a name="regexalt"></a></b></font></p>
+<div class="desc">La alternanza es un m&eacute;todo para especificar un &quot;or&quot;. El operador de alternanza es la barra vertical |. Por ejemplo, si quiere relacionar con &quot;a&quot; o &quot;b&quot; puede hacerlo con &quot;a|b&quot;. Para letras normales puede reemplazarse por corchetes, pero se puede usar tambi&eacute;n para subexpresiones (a continuaci&oacute;n).</div>
+<p><font size="+2"><b>A.7 Subexpresiones<a name="regexsub"></a></b></font></p>
+<div class="desc">Las subexpresiones son una parte de las regex que se tratan como una sola unidad. Existen dos formas de crear una subexpresi&oacute;n. Los dos m&eacute;todos difieren en las &quot;referencias anteriores&quot;, detalladas en el siguiente apartado. Para declarar una subexpresi&oacute;n que usa referencias anteriores simplemente engl&oacute;bela entre par&eacute;ntesis (). Para el caso contrario, reemplace el par&eacute;ntesis aberito con &quot;(?:&quot;. Por ejemplo, &quot;([a-z])&quot; y &quot;(?:[a-z])&quot;. Es muy &uacute;til porque permiten tomar lo que engloban como unidades y aplicarles operadores a esta nueva expresi&oacute;n. Por ejemplo, si se les aplica los operadores de repetici&oacute;n, la repetici&oacute;n ser&iacute;a de toda la unidad, no del caracter que les precede. En el caso que tuviera que ver que un n&uacute;mero o una letra se repite 0 o 1 vez, podr&iacute;a usar &quot;([0-9a-z])?&quot;. Asimismo, imagine que tiene una secuencia de d&iacute;gito-letra-d&iacute;gito y quiere comprobar que se repita dos veces. Podr&iacute;a usar "[0-9][a-z][0-9][0-9][a-z][0-9]". Con las subexpresiones basta con "([0-9][a-z][0-9]){2}".</div>
+<p><font size="+2"><b>A.8 Referencias anteriores <a name="regexbackref"></a></b></font></p>
+<div class="desc">Las referencias anteriores le permiten referirse a una cadena que ha sido relacionada anteriormente con una de las subexpresiones de la regexp. Debe hacerlo especificando una barra invertida (\) seguida de un n&uacute;mero, 0-9, por ejemplo\1. El uso de \0 es especial puesto que se refiere a la expresi&oacute;n entera y no a la subexpresi&oacute;n. Las referencias anteriores son &uacute;tiles si quiere relacionar algo que contiene la misma cadena dos veces. Pongamos por ejemplo el caso nick!user@host y sabe que algunos troyanos que le atacan usan en su nick y user una secuencia que se relaciona con &quot;[0-9][a-z]{5}&quot;, y que el nick y el user son los mismos. Usando "[0-9][a-z]{5}![0-9][a-z]{5}@.+" no funcionar&iacute;a porque tambi&eacute;n relacionar&iacute;a en caso que el nick y el user fueran distintos entre s&iacute;. Las referencias anteriores imponen esta condici&oacute;n. Usando "([0-9][a-z]{5})!\1@.+" funcionar&aacute; exactamente como se espera. Buscar&iacute;a en el nick que se relacionara con la subexpresi&oacute;n, entonces usar&iacute;a esta referencia para especificar que el user es el mismo.
+  <p>
+Puesto que s&oacute;lo puede haber 9 referencias anteriores, esta es la raz&oacute;n de porque la notaci&oacute;n &quot;?:&quot; es &uacute;til, puesto que le permite crear subexpresiones sin gastar una referencia anterior. Adicionalmente, debido a que la informaci&oacute;n de la referencia anterior no es necesario que sea gurdada, es m&aacute;s r&aacute;pida. Gracias a esto, las subexpresiones de no-referencias anteriores deben usarse siempre que no se usen como referencia anterior.
+</div>
+<p><font size="+2"><b>A.9 Sensibilidad may&uacute;sculas/min&uacute;sculas<a name="regexcase"></a></b></font></p>
+Tal y como se ha mencionado, Unreal no contempla las may&uacute;sculas/min&uacute;sculas por defecto. La principal raz&oacute;n es que el mayor uso de las expresiones regulares es sin esta caracter&iacute;stica. Por ejemplo, si quiere bloquear el texto &quot;www.test.com&quot;, seguramente tambi&eacute;n lo querr&aacute; con &quot;WWW.TEST.COM&quot;. Sin embargo, puede darse el caso en el que no quiera este efecto, por ejemplo para relacionar con ciertos troyanos. Por este motivo, hay un m&eacute;todo para activar o desactivar la insensibilidad de may&uacute;sculas/min&uacute;sculas din&aacute;micamente. Para desactivarla, use &quot;(?-i)&quot; y para activarla, &quot;(?i)&quot;. Por ejemplo, &quot;(?-i)[a-z](?i)[a-z]&quot; relacionar&iacute;a con letras min&uacute;sculas (insensibilidad desactivada) seguidas de letras may&uacute;sculas/min&uacute;sculas (insensibilidad activada). Adem&aacute;s, en vez de tener que recordar activarla cuando ha terminado, puede usarlo dentro de la subexpresi&oacute;n para que s&oacute;lo le afecte a esta, y no a las que vengan a continuaci&oacute;n. Por ejemplo,  "(?-i:[a-z])[a-z]" es equivalente al ejemplo anterior, puesto que el &quot;-i&quot; s&oacute;lo se aplica a la subexpresi&oacute;n en la que est&aacute; dentro.</body>
 </html>
