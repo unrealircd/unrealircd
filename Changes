@@ -301,3 +301,8 @@
 - Made /whois not return channels for services
 - Made makeconf use "ban nick" instead of "ban nickname"
 - Fixed ssl_client_handshake bug reported by IpAddress
+- Made ./Setup not do dynamic configuration any more
+- Changed reference in Setup from ircd.conf to unrealircd.conf (cosmetic)
+- Changed output of updconf from ircd.conf.new to unrealircd.conf.new
+- Changed the output of makeconf from ircd.conf to unrealircd.conf
+- Renamed hostmask to hostname like it should be in makeconf - IpAddress

@@ -4,7 +4,7 @@
 #
 TIME=`date +"%H:%M:%S %Z"`
 DATE=`date +"%a, %b %e %Y"`
-IRCDCONF="ircd.conf"
+IRCDCONF="unrealircd.conf"
 SERVNAME="Server.IRC.net"
 COMMENT="IRC server!"
 ADMIN="Admin-name"
@@ -358,7 +358,7 @@ class servers {
 /* Allow info */
 allow {
 	ip "*@*";
-	hostmask "*@*";
+	hostname "*@*";
 	class clients;
 };
 

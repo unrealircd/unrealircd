@@ -330,7 +330,7 @@ int main (int argc, char *argv[]) {
 	struct flags *_flags;
 	struct allow *al;
 	fd = fopen("ircd.conf", "r");
-	fd2 = fopen("ircd.conf.new", "w");
+	fd2 = fopen("unrealircd.conf.new", "w");
 	for (i=1; i < argc; i++) {
 		param = argv[i];
 		if (*param == '-') {
