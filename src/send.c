@@ -1610,3 +1610,14 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 	va_end(vl);
 	return;
 }
+
+void	sendto_message_one(aClient *to, aClient *from, char *sender,
+			char *cmd, char *nick, char *msg)
+{
+        if(IsServer(to->from) && IsToken(to->from)) {
+          if(*cmd == 'P') cmd = TOK_PRIVATE;
+          if(*cmd == 'N') cmd = TOK_NOTICE;
+        }
+        sendto_prefix_one(to, from, ":%s %s %s :%s",
+                         sender, cmd, nick, msg);
+}

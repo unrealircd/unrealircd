@@ -445,3 +445,4 @@
 - Added networks/makenet (generates a network configuration file)
 - Added networks/staticedge.network
 - Fixed some host revealing nick collision stuff
+- Tokenized nick->nick PRIVMSG and NOTICE
