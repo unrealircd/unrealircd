@@ -255,7 +255,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		sptr->oflag = aconf->oflags;
 
 		if ((aconf->oflags & OFLAG_HIDE) && iNAH && !BadPtr(host)) {
-			iNAH_host(sptr, (host != NULL) ? host : "eek.host.is.null.pointer");
+			iNAH_host(sptr, host);
 		}
 
 		if (announce != NULL) {

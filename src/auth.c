@@ -176,10 +176,7 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 			/* If our data is like 1 or none, we just let em through .. */
 			if (!(as->data[0] && as->data[1]))
 				return 1;
-			salt[0] = as->data[0];
-			salt[1] = as->data[1];
-			salt[2] = '\0';
-			if (!strcmp(crypt(para, salt), as->data))
+			if (!strcmp(crypt(para, as->data), as->data))
 				return 2;
 			else
 				return -1;
@@ -292,9 +289,7 @@ char	*Auth_Make(short type, char *para)
 			/* If our data is like 1 or none, we just let em through .. */
 			if (!(para[0] && para[1]))
 				return NULL;
-			salt[0] = para[0];
-			salt[1] = para[1];
-			salt[2] = '\0';
+			sprintf(salt, "%02X", (rand() >> 24) & 0xFF);
 			return(crypt(para, salt));
 			break;
 #endif
