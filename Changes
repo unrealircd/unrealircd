@@ -1631,3 +1631,4 @@ seen. gmtime warning still there
 - Documentation - Corrected several HTML formating problems
 - Commited first 20% of conf3, if anyone runs devel, DO NOT, it is BROKEN and will most likely NOT FUNCTION
   and it WILL burn, DIE, and WILL NOT WORK
+- Fixed conf3 bug with _conf_except tkl

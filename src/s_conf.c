@@ -2669,7 +2669,7 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else if (!strcmp(ce->ce_vardata, "tkl")) {
 		cep2 = config_find_entry(ce->ce_entries, "mask");
-		cep3 = config_find_entry(ce->ce_entries, "mask");
+		cep3 = config_find_entry(ce->ce_entries, "type");
 		ca = MyMallocEx(sizeof(ConfigItem_except));
 		ca->mask = strdup(cep2->ce_vardata);
 		if (!strcmp(cep3->ce_vardata, "gline"))
