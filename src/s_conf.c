@@ -2476,6 +2476,17 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				CLOAK_KEY2, CLOAK_KEY3);
 			CLOAK_KEYCRC = (long) crc32(temp, strlen(temp));
 		}
+#ifdef USE_SSL
+		else if (!strcmp(cep->ce_varname, "ssl")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				if (!strcmp(cepp->ce_varname, "egd")) {
+					USE_EGD = 1;
+					if (cepp->ce_vardata)
+						EGD_PATH = strdup(cepp->ce_vardata);
+				}
+			}
+		}
+#endif
 		else
 		{
 			ConfigItem_unknown_ext *ca2 = MyMalloc(sizeof(ConfigItem_unknown_ext));
@@ -4139,6 +4150,10 @@ void report_dynconf(aClient *sptr)
 			sptr->name, OPER_ONLY_STATS);
 	sendto_one(sptr, ":%s %i %s :anti-spam-quit-message-time: %d", me.name, RPL_TEXT,
 		sptr->name, ANTI_SPAM_QUIT_MSG_TIME);
+#ifdef USE_SSL
+	sendto_one(sptr, ":%s %i %s :ssl::egd: %s", me.name, RPL_TEXT,
+		sptr->name, EGD_PATH ? EGD_PATH : (USE_EGD ? "1" : "0"));
+#endif
 	sendto_one(sptr, ":%s %i %s :options::show-opermotd: %d", me.name, RPL_TEXT,
 	    sptr->name, SHOWOPERMOTD);
 	sendto_one(sptr, ":%s %i %s :options::hide-ulines: %d", me.name, RPL_TEXT,

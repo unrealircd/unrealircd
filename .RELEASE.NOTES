@@ -175,5 +175,12 @@ Unreal3.2-Selene (BETA11) RELEASE NOTES
 * Added technical documentation in doc/technical. This directory will contain information
   about the protocol used by Unreal.
 
+* Added EGD support for SSL. EGD allows entropy to be gathered on systems that do not
+  have a random device (/dev/random or /dev/urandom) or have an unreliable random device.
+  Unreal has been tested using EGADS (http://www.securesoftware.com/egads.php) [With EGD 
+  support enabled], PRNGD 
+  (http://www.aet.tu-cottbus.de/personen/jaenicke/postfix_tls/prngd.html), and EGD
+  (http://egd.sourceforge.net). Other EGD compatible programs should work as well.
+
 * MAKE SURE YOU RERUN ./Config AND RUN make clean BEFORE USING THIS VERSION!!!
 

@@ -176,6 +176,17 @@ void init_ssl(void)
 
 	SSL_load_error_strings();
 	SSLeay_add_ssl_algorithms();
+	if (USE_EGD) {
+#if OPENSSL_VERSION_NUMBER >= 0x000907000
+		if (!EGD_PATH)
+			RAND_status();
+		else
+
+#else
+		if (EGD_PATH) 
+#endif
+			RAND_egd(EGD_PATH);		
+	}
 	init_ctx_server();
 	init_ctx_client();
 }

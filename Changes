@@ -1483,4 +1483,6 @@ seen. gmtime warning still there
 - Added some somewhat path specifics to unrealinstssl.iss
 - Fixed some installer problems wrt SSL compile, and added makefile.win32.ssl
 - Removed /doc/faq included in new doc set
-
+- Added set::ssl::egd for Entropy Gathering Daemon support see doc/conf.doc or
+  doc/example.conf for more information.
+- Updated credits

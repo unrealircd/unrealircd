@@ -1028,6 +1028,14 @@ set::scan::message <message>;
 Specifies a notice that will be sent to the user when scanning begins alerting them to the
 fact that it is a routine scan and not a hacking attempt.
 
+set::ssl::egd <filename>;
+Specifies that EGD (Entropy Gathering Daemon) support should be enabled. If you run
+OpenSSL 0.9.7 or higher, then /var/run/egd-pool, /dev/egd-pool, /etc/egd-pool, and
+/etc/entropy will be searched by default so no filename is necessary, you may simply
+specify set::ssl::egd with no value. If you are using a version of OpenSSL prior to 0.9.7
+or you want to use a EGD socket located somewhere other than the above listed locations
+you may specify the filename of the UNIX Domain Socket that an EGD is listening on.
+
 24.0 Conclusion
 Well hopefully that cleared up some of the issues you had with the new config file format. 
 There are some additional documents that may help you with other problems such as 

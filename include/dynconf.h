@@ -59,6 +59,7 @@ struct zConfiguration {
 	unsigned ident_check:1;
 	unsigned fail_oper_warn:1;
 	unsigned show_connect_info:1;
+	unsigned use_egd;
 	long host_timeout;
 	int  host_retries;
 	char *name_server;
@@ -70,6 +71,7 @@ struct zConfiguration {
 	char *oper_only_stats;
 	int  maxchannelsperuser;
 	int  anti_spam_quit_message_time;
+	char *egd_path;
 	aNetwork network;
 };
 
@@ -96,6 +98,8 @@ extern aConfiguration iConf;
 #define SHOWCONNECTINFO			iConf.show_connect_info
 #define OPER_ONLY_STATS			iConf.oper_only_stats
 #define ANTI_SPAM_QUIT_MSG_TIME		iConf.anti_spam_quit_message_time
+#define USE_EGD				iConf.use_egd
+#define EGD_PATH			iConf.egd_path
 
 #define ircnetwork			iConf.network.x_ircnetwork
 #define ircnet005			iConf.network.x_ircnet005
