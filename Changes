@@ -536,3 +536,5 @@
 - Hopefully fixed the last of the alloca warnings (#0002202) reported by Stoebi.
 - Fixed a problem with set::htm::incoming-rate being interpreted incorrectly (#0002266)
   reported by tabrisnet.
+- Fixed a resolver cache bug regarding CNAME's, this needs some more testing.
+  [this description will be updated after knowing if this indeed fixes #2229/#1236]

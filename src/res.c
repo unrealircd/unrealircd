@@ -763,6 +763,29 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 				cp += dlen;
 				break;
 			}
+			/* make sure the A/AAAA record we get belongs
+			 * to the name we are actually processing.
+			 * This is needed against crazy servers that return:
+			 * requestedname CNAME somename
+			 * requestedname A 1.2.3.4
+			 * somename A 1.1.1.1
+			 * Which would screw our cache up.
+			 * We store 'somename' as soon as we get a CNAME,
+			 * and then we make sure our A/AAAA records belong to this
+			 * stored name. I hope that's correct. -- Syzop
+			 */
+			if (hp->h_name && strcasecmp(hp->h_name, hostbuf))
+			{
+				Debug((DEBUG_DNS, "Expected A record for '%s', got one for '%s' -- ignored",
+					hp->h_name, hostbuf));
+#ifdef DEBUGMODE
+				ircd_log(LOG_ERROR, "[DNS/Syzop] Expected A record for '%s', got one for '%s' -- ignored",
+					hp->h_name, hostbuf);
+#endif
+				cp += dlen;
+				break;
+			}
+			
 			  hp->h_length = dlen;
 			  if (ans == 1)
 				  hp->h_addrtype = (class == C_IN) ?
@@ -838,9 +861,40 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 				  return -1;	/* a break would be enough here */
 			  if (alias >= &(hp->h_aliases[MAXALIASES - 1]))
 				  break;
-			  *alias = (char *)MyMalloc(len + 1);
-			  (void)strlcpy(*alias++, hostbuf, len+1);
-			  *alias = NULL;
+			  if (len < HOSTLEN)
+			  {
+			      *alias = (char *)MyMalloc(len + 1);
+			      (void)strlcpy(*alias++, hostbuf, len+1);
+			      *alias = NULL;
+			  } else {
+			      Debug((DEBUG_INFO, "CNAME '%s' too long %d >= %d",
+			            hostbuf, len, HOSTLEN));
+			  }
+			  if (!hp->h_name)
+			  {
+			      char cname_dest[HOSTLEN];
+				  /* If we got a CNAME, so: orig CNAME dest, then our
+				   * request got changed to 'dest', so we have to set h_name
+				   * here to that.. -- Syzop
+				   */
+				  /* need to expand 'dest' here... will use 'cname_dest' for storage.. */
+				  cp -= dlen;
+				  if ((n = ircd_dn_expand((u_char *)buf, (u_char *)eob,
+				      (u_char *)cp, cname_dest, sizeof(cname_dest))) < 0)
+				  {
+				      /* hmm.. this is not really friendly, is this ok? */
+					  Debug((DEBUG_INFO, "Expanding of CNAME failed!"));
+					  cp = NULL;
+					  break;
+				  }
+				  cp += dlen;
+				  /* no length check needed, assured by ircd_dn_expand() to
+				   * be sizeof(cname_dest) which is HOSTLEN, thus the name
+				   * will be at max HOSTLEN-1.
+				   */
+				  hp->h_name = strdup(cname_dest);
+				  Debug((DEBUG_INFO, "Our request got changed to '%s'", cname_dest));
+			  }
 			  ans++;
 			  break;
 		  default:
