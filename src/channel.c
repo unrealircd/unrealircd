@@ -4888,8 +4888,8 @@ CMD_FUNC(m_sjoin)
 		{
 			if (!(acptr = find_person(nick, NULL)))
 			{
-				sendto_realops
-				    ("Missing user %s in SJOIN for %s from %s (%s)",
+				sendto_snomask
+				    (SNO_JUNK, "Missing user %s in SJOIN for %s from %s (%s)",
 				    nick, chptr->chname, sptr->name,
 				    backupbuf);
 				continue;
