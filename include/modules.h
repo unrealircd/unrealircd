@@ -372,7 +372,6 @@ struct _Module
 	unsigned char options;
 	unsigned char errorcode;
 	char *tmp_file;
-	unsigned char compilecheck; /* feel free to rename this mess, but mod->flags sucks :[. */
 };
 /*
  * Symbol table
@@ -569,7 +568,7 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_TKL_ADD 39
 #define HOOKTYPE_TKL_DEL 40
 #define HOOKTYPE_LOCAL_KILL 41
-
+#define HOOKTYPE_LOG 42
 
 /* Hook return values */
 #define HOOK_CONTINUE 0

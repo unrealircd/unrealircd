@@ -222,6 +222,14 @@ char  *Module_Create(char *path_)
 			remove(tmppath);
 			return errorbuf;
 		}
+		if (!Mod_Version)
+		{
+			snprintf(errorbuf, sizeof(errorbuf),
+				"Module is lacking Mod_Version. Perhaps a very old one you forgot to recompile?");
+			irc_dlclose(Mod);
+			remove(tmppath);
+			return errorbuf;
+		}
 		irc_dlsym(Mod, "Mod_Header", mod_header);
 		if (!mod_header)
 		{
@@ -259,8 +267,6 @@ char  *Module_Create(char *path_)
 		}
 		mod = (Module *)Module_make(mod_header, Mod);
 		mod->tmp_file = strdup(tmppath);
-		if (Mod_Version)
-			mod->compilecheck = 1;
 		irc_dlsym(Mod, "Mod_Init", Mod_Init);
 		if (!Mod_Init)
 		{
@@ -849,8 +855,6 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			strcat(tmp, "[PERM] ");
 		if (!(mi->options & MOD_OPT_OFFICIAL))
 			strcat(tmp, "[3RD] ");
-		if (!mi->compilecheck)
-			strcat(tmp, "[OLD?] ");
 		if (!IsOper(sptr))
 			sendto_one(sptr, ":%s NOTICE %s :*** %s (%s)%s", me.name, sptr->name,
 				mi->header->name, mi->header->description,

@@ -3295,4 +3295,6 @@ This is the 3.2 fixes branch.
     NOTE: 'NULL, NULL, tk' is used for *lines that are removed due to expiring
   - HOOKTYPE_LOCAL_KILL [aClient *sptr, aClient *target, char *comment]
 - Added support for the ELIST 005 token with MNUCT options
-
+- Made Mod_Version required (this should be no problem since it's done automatically).
+- Added HOOKTYPE_LOG [int type, char *timebuf, char *logbuf]
+- Updated the release notes.

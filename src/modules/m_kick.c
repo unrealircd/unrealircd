@@ -208,7 +208,7 @@ CMD_FUNC(m_kick)
 						    chptr->chname, who->name, comment);
 
 						/* Logging Implementation added by XeRXeS */
-						ircd_log(LOG_OVERRIDE,"OVERRIDE %s (%s@%s) KICK %s %s (%s)",
+						ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) KICK %s %s (%s)",
 							sptr->name, sptr->user->username, sptr->user->realhost,
 							chptr->chname, who->name, comment);
 
