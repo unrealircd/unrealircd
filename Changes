@@ -406,3 +406,7 @@ appears if invisibility is compiled in (even if
 disabled in unrealircd.conf)
 --Luke
 ===================================
+
+rmed Config.c (broken, severely) and networks.ndx
+--Luke
+===================================
