@@ -129,25 +129,15 @@ DLLFUNC int h_u_vfs(HTTPd_Request *r)
 					MyFree(p->cache);
 					p->cache = NULL;
 				}
-				p->cache = MyMalloc(statf.st_size);
-				fd = open(p->filename, O_RDONLY);
-				i = 0;
-				while (i != statf.st_size)
+				p->cache = MyMalloc(statf.st_size + 1);
+				fd = open(p->realfile, O_RDONLY);
+				j = read(fd, p->cache, statf.st_size);
+				if (j != statf.st_size)
 				{
-					j = read(fd, &p->cache[i], statf.st_size - i);
-					if (j == -1)
-					{
-						ircd_log(LOG_ERROR, "j == -1, %s", strerror(errno));
-						return 1;
-					}
-					if (j == 0)
-					{
-						ircd_log(LOG_ERROR, "%i", i);
-						return 1;
-					}
-					ircd_log(LOG_ERROR, "%i %i", i, j);
-					i = i + j;	
+					httpd_500_header(r, j == -1 ? strerror(ERRNO) : strerror(EFAULT));
+					return 1;
 				}
+				p->cache[j + 1] = '\0';
 				close(fd);
 				p->cachesize = statf.st_size;
 			}
@@ -159,13 +149,20 @@ DLLFUNC int h_u_vfs(HTTPd_Request *r)
 			soprintf(r, "");
 			i = 0;
 			j = 0;
-			while (i != (p->cachesize + 1))
+			set_blocking(r->fd, NULL);
+			while (i != p->cachesize)
 			{
-				j = send(r->fd, &p->cache[i], (p->cachesize - 1) - i, 0);
+				j = send(r->fd, &p->cache[i], p->cachesize - i, 0);
 				if (j == -1)
+				{
+					ircd_log(LOG_ERROR, "send() error: %s",
+						strerror(ERRNO));
+					set_non_blocking(r->fd, NULL);
 					return 1;
+				}
 				i += j;
 			}
+			set_non_blocking(r->fd, NULL);
 			return 1;
 		}
 		p++;

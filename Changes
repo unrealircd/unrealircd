@@ -832,4 +832,4 @@ seen. gmtime warning still there
 - Win32 cleanup
 - Made except socks become except scan, and made it actually WORK, and some
   bugreport fixes
-
+- HTTPd VFS fixes
