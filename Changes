@@ -710,3 +710,4 @@ seen. gmtime warning still there
 - Minor bugfix in scan_socks, + some comments
 - Fixed some flaws in httpd, that made it break unmercifully
 - Added correct uptime to web interface
+- Patched in zogg's scan_socks patch, second edition

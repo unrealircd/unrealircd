@@ -173,6 +173,13 @@ void	scan_socks_scan(HStruct *h)
 	 * set_non_blocking(fd,cptr)
 	 * when cptr == NULL, it doesnt error - changed some months ago
 	 * also, don't we need a select loop to make this better?
+         * -Stskeeps
+         * I just gave a select loop a shot (select in a while(), waiting for
+         * the thing to either set the writable flags or return a -# and set 
+         * errno to EINTR.  Could be my ignorance, or my glibc, but select()
+         * NEVER returned a negative number, and if I passed it a timeout (ie, tv)
+         * then the loops never ended, either. 
+         * -Zogg
 	 */
 	set_non_blocking(fd, NULL);
 	if ((retval = connect(fd, (struct sockaddr *)&sin,
@@ -185,7 +192,7 @@ void	scan_socks_scan(HStruct *h)
 	}
 	
 	/* We wait for write-ready */
-	tv.tv_sec = 10;
+	tv.tv_sec = 40;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
@@ -212,7 +219,7 @@ void	scan_socks_scan(HStruct *h)
 		CLOSE_SOCK(fd);
 		goto exituniverse;
 	}
-	/* Now we wait for data. 30 secs ought to be enough  */
+	/* Now we wait for data. 10 secs ought to be enough  */
 	tv.tv_sec = 10;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
