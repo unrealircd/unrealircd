@@ -734,7 +734,8 @@ int  m_server(cptr, sptr, parc, parv)
                 sendto_one(acptr,"ERROR :Server %s already exists from %s",
                            host,
                            (ocptr->from ? ocptr->from->name : "<nobody>"));
-                sendto_ops("Link %s cancelled, server %s already exists from %s$                           get_client_name(acptr, TRUE), host,
+                sendto_ops("Link %s cancelled, server %s already exists from %s",
+                	get_client_name(acptr, TRUE), host,
                            (ocptr->from ? ocptr->from->name : "<nobody>"));
                 return exit_client(acptr, acptr, acptr, "Server Exists");       
 	}
