@@ -4041,9 +4041,11 @@ int  m_userhost(cptr, sptr, parc, parv)
 				    virthost : acptr->user->realhost)));
 				if (IsWhois(acptr) && IsOper(sptr))
 				{
+/*
 					sendto_one(acptr,
 					    ":%s NOTICE %s :*** %s did a /userhost on you.",
 					    me.name, sptr->name, sptr->name);
+*/
 				}
 				resid -= catsize;
 			}

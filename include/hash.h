@@ -38,7 +38,7 @@ typedef struct hashentry {
  * used in hash.c 
  */
 
-#define U_MAX_INITIAL  8192
+#define U_MAX_INITIAL 2048
 #define U_MAX_INITIAL_MASK (U_MAX_INITIAL-1)
 #define U_MAX (U_MAX_INITIAL*MAX_SUB)
 
