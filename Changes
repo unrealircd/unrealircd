@@ -524,3 +524,4 @@
   version called 3.2.2b (which is just 3.2.2+patch+version change to '3.2.2b',
   nothing else).
 - Fixed 'make install' error due to example.settings remove.
+- Fixed a minor typo in the "now an oper" announcement (#0002284) reported by Rocko.

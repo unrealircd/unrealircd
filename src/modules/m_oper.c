@@ -73,7 +73,7 @@ static void init_operflags()
 	oper_oflags[2].oflag = OFLAG_ADMIN;
 	oper_oflags[2].umode = &UMODE_ADMIN;
 	oper_oflags[2].host = &admin_host;
-	oper_oflags[2].announce = "is now an server admin (A)";
+	oper_oflags[2].announce = "is now a server admin (A)";
 	oper_oflags[3].oflag = OFLAG_COADMIN;
 	oper_oflags[3].umode = &UMODE_COADMIN;
 	oper_oflags[3].host = &coadmin_host;
