@@ -641,3 +641,8 @@
   - Removed e' accent from German (used in borrow-words only), reported by Dukat.
   - Added 'swiss-german', which is just German without es-zett, reported by Dukat.
   - Added 'turkish', supplied by Ayberk Yancatoral.
+  - Build in some additional checks (especially for Chinese).
+  - Fixed a bug in chinese character range (affecting 3.2*)
+  - Relaxed nick character checking from remote servers (rely on NICKCHARS= PROTOCTL
+    to deal with problems). This is useful to prevent any kills in case we slightly
+    change the characters that are allowed in a language.

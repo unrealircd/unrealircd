@@ -119,6 +119,20 @@ ILangList *ilanglist = NULL;
 static int do_nick_name_multibyte(char *nick);
 static int do_nick_name_standard(char *nick);
 
+/* These characters are ALWAYS disallowed... from remote, in
+ * multibyte, etc.. even though this might mean a certain
+ * (legit) character cannot be used (eg: in chinese GBK).
+ * - no breaking space
+ * - ! (nick!user seperator)
+ * - prefix chars: +, %, @, &, ~
+ * - channel chars: #
+ * - scary chars: $, :, ', ", ?, *, ',', '.'
+ * NOTE: the caller should also check for ascii <= 32.
+ * [CHANGING THIS WILL CAUSE SECURITY/SYNCH PROBLEMS AND WILL
+ *  VIOLATE YOUR ""RIGHT"" ON SUPPORT IMMEDIATELY]
+ */
+const char *illegalnickchars = "\xA0!+%@&~#$:'\"?*,.";
+
 /** Called on boot and just before config run */
 void charsys_reset(void)
 {
@@ -232,7 +246,16 @@ MBList *m = MyMallocEx(sizeof(m));
 void charsys_addallowed(char *s)
 {
 	for (; *s; s++)
+	{
+		if ((*s <= 32) || strchr(illegalnickchars, *s))
+		{
+			config_error("INTERNAL ERROR: charsys_addallowed() called for illegal characters: %s", s);
+#ifdef DEBUGMODE
+			abort();
+#endif
+		}
 		char_atribs[(unsigned int)*s] |= ALLOWN;
+	}
 }
 
 int do_nick_name(char *nick)
@@ -287,6 +310,9 @@ int firstmbchar = 0;
 
 	for (ch=nick,len=0; *ch && len <= NICKLEN; ch++, len++)
 	{
+		/* Some characters are ALWAYS illegal, so they have to be disallowed here */
+		if ((*ch <= 32) || strchr(illegalnickchars, *ch))
+			return 0;
 		if (firstmbchar)
 		{
 			if (!isvalidmbyte(ch[-1], *ch))
@@ -301,6 +327,23 @@ int firstmbchar = 0;
 		ch--;
 	*ch = '\0';
 	return len;
+}
+
+/** Does some very basic checking on remote nickname.
+ * It's only purpose is not to cause the whole network
+ * to fall down in pieces, that's all. Display problems
+ * are not really handled here. They are assumed to have been
+ * checked by PROTOCTL NICKCHARS= -- Syzop.
+ */
+int do_remote_nick_name(char *nick)
+{
+char *c;
+
+	for (c=nick; *c; c++)
+		if ((*c <= 32) || strchr(illegalnickchars, *c))
+			return 0;
+
+	return (c - nick);
 }
 
 /** Check if the specified charsets during the TESTING phase can be
@@ -523,7 +566,9 @@ char latin1=0, latin2=0, chinese=0;
 	}
 	if (chinese || !strcmp(name, "chinese-trad"))
 	{
-		charsys_addmultibyterange(0x81, 0xa0, 0x40, 0xfe); /* GBK/3 */
-		charsys_addmultibyterange(0xaa, 0xfe, 0x40, 0xa0); /* GBK/4 */
+		charsys_addmultibyterange(0x81, 0xa0, 0x40, 0x7e); /* GBK/3 - lower half */
+		charsys_addmultibyterange(0x81, 0xa0, 0x80, 0xfe); /* GBK/3 - upper half */
+		charsys_addmultibyterange(0xaa, 0xfe, 0x40, 0x7e); /* GBK/4 - lower half */
+		charsys_addmultibyterange(0xaa, 0xfe, 0x80, 0xa0); /* GBK/4 - upper half */
 	}
 }

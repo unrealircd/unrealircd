@@ -139,14 +139,13 @@ DLLFUNC CMD_FUNC(m_nick)
 		}
 	}
 
-	/*
-	 * if do_nick_name() returns a null name OR if the server sent a nick
-	 * name and do_nick_name() changed it in some way (due to rules of nick
-	 * creation) then reject it. If from a server and we reject it,
-	 * and KILL it. -avalon 4/4/92
+	/* For a local clients, do proper nickname checking via do_nick_name()
+	 * and reject the nick if it returns false.
+	 * For remote clients, do a quick check by using do_remote_nick_name(),
+	 * if this returned false then reject and kill it. -- Syzop
 	 */
-	if (do_nick_name(nick) == 0 ||
-	    (IsServer(cptr) && strcmp(nick, parv[1])))
+	if ((IsServer(cptr) && !do_remote_nick_name(nick)) ||
+	    (!IsServer(cptr) && !do_nick_name(nick)))
 	{
 		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
 		    me.name, parv[0], parv[1], "Illegal characters");
