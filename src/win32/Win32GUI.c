@@ -97,9 +97,7 @@ FARPROC lpfnOldWndProc;
 HMENU hContext;
 
 void TaskBarCreated() {
-	HICON hIcon;
-
-	hIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(ICO_MAIN), IMAGE_ICON,16, 16, 0);
+	HICON hIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(ICO_MAIN), IMAGE_ICON,16, 16, 0);
 	SysTray.cbSize = sizeof(NOTIFYICONDATA);
 	SysTray.hIcon = hIcon;
 	SysTray.hWnd = hwIRCDWnd;
@@ -161,18 +159,57 @@ LRESULT RESubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
 /* Somewhat respectable RTF to IRC parser
  * (c) 2001 codemastr
  */
+typedef struct colorlist {
+	char *color;
+	struct colorlist *next, *prev;
+} ColorList;
 
+ColorList *TextColors = NULL;
+void AddColor(char *color) {
+	ColorList *clist;
+
+	clist = MyMalloc(sizeof(ColorList));
+	if (!clist)
+		return;
+	clist->color = strdup(color);
+	clist->prev = NULL;
+	clist->next = TextColors;
+	if (TextColors)
+		TextColors->prev = clist;
+	TextColors = clist;
+}
+
+ColorList *DelNewestColor() {
+	ColorList *p = TextColors, *q = TextColors->next;
+	MyFree(p->color);
+
+	TextColors = p->next;
+
+	if (p->next)
+		p->next->prev = NULL;
+	MyFree(p);
+	return q;
+}
+
+void WipeColors() {
+	ColorList *clist, q;
+
+	for (clist = TextColors; clist; clist = clist->next)
+	{
+			q.next = clist->next;
+			MyFree(clist->color);
+			MyFree(clist);
+			clist = &q;
+	}
+
+}
 DWORD CALLBACK RTFToIRC(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) {
 	int fd = (int)dwCookie;
-	int fd2;
 	char *buffer = (char *)malloc(cb);
 	int i = 0, j = 0, k = 0, start = 0, end = 0;
 	int incolor = 0, bold = 0, uline = 0;
 	char cmd[15], value[500], color[25], colorbuf[4];
 	char colors[16];
-	fd2 = open("temp.txt", _O_TRUNC|_O_CREAT|_O_WRONLY|_O_BINARY,_S_IWRITE);
-	write(fd2, pbBuff, cb);
-	close(fd2);
 	pbBuff++;
 	bzero(buffer, cb);
 	for (; *pbBuff; pbBuff++) {
@@ -244,8 +281,9 @@ DWORD CALLBACK RTFToIRC(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) {
 					if (uline)
 						buffer[i++] = '\37';
 					if (incolor) {
-						strcat(buffer, colorbuf);
-						i += strlen(colorbuf);
+						buffer[i++] = '\3';
+						strcat(buffer, TextColors->color);
+						i += strlen(TextColors->color);
 					}
 				}
 				else if (!strcmp(cmd, "tab"))
@@ -324,7 +362,7 @@ DWORD CALLBACK RTFToIRC(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) {
 				else if (!strcmp(cmd, "cf0")) {
 					incolor = 0;
 					buffer[i++] = '\3';
-					colorbuf[0] = 0;
+					DelNewestColor();
 				}
 				else if (!strncmp(cmd, "cf", 2)) {
 					char number[3];
@@ -334,7 +372,7 @@ DWORD CALLBACK RTFToIRC(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) {
 					num = atoi(number);
 					buffer[i++] = '\3';
 					sprintf(number, "%d", colors[num]);
-					sprintf(colorbuf, "\3%s", number);
+					AddColor(number);
 					strcat(buffer, number);
 					i += strlen(number);
 				}
@@ -348,7 +386,7 @@ DWORD CALLBACK RTFToIRC(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) {
 	}
 	write(fd, buffer, i);
 	close(fd);
-
+	WipeColors();
 	return 0;
 }
 
