@@ -421,4 +421,5 @@
   Still some fixes to be done
 - More res.c fixes ..
 - Final res.c fixes 
+- Added /rehash -all patch by NiQuiL
 - res.c: fixed ircsprintf problems

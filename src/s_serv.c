@@ -3841,6 +3841,7 @@ int  m_admin(cptr, sptr, parc, parv)
 ** remote rehash by binary
 ** now allows the -flags in remote rehash
 ** ugly code but it seems to work :) -- codemastr
+** added -all and fixed up a few lines -- niquil (niquil@programmer.net)
 */
 int  m_rehash(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;
@@ -3904,19 +3905,68 @@ int  m_rehash(cptr, sptr, parc, parv)
 	}
 	if (!BadPtr(parv[1]))
 	{
+
+		if (!IsAdmin(sptr))
+		{
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+			return 0;
+		}
+
 		if (*parv[1] == '-')
 		{
+			if (!_match("-all", parv[1]))
+			{
+				ConfigItem_tld *tlds;
+				aMotd *amotd;
+				sendto_ops("%sRehashing everything on the request of %s",
+					cptr != sptr ? "Remotely " : "",sptr->name);
+#ifdef DEBUGMODE
+				sendto_ops("Rehashing opermotd [1/4]");
+#endif
+				opermotd = (aMotd *) read_file(OPATH, &opermotd);
+#ifdef DEBUGMODE
+				sendto_ops("Rehashing botmotd [2/4]");
+#endif
+				botmotd = (aMotd *) read_file(BPATH, &botmotd);
+#ifdef DEBUGMODE
+				sendto_ops("Rehashing motd [3/4]");
+#endif
+				motd = (aMotd *) read_motd(MPATH);
+				rules = (aMotd *) read_rules(RPATH);
+#ifdef DEBUGMODE
+				sendto_ops("Rehashing rules [4/4]");
+#endif
+                                for (tlds = conf_tld; tlds;
+                                    tlds = (ConfigItem_tld *) tlds->next)
+                                {
+                                        while (tlds->motd)
+                                        {
+                                                amotd = tlds->motd->next;
+                                                MyFree(tlds->motd->line);
+                                                MyFree(tlds->motd);
+                                                tlds->motd = amotd;
+                                        }
+                                        tlds->motd = read_motd(tlds->motd_file);
+                                        while (tlds->rules)
+                                        {
+                                                amotd = tlds->rules->next;
+                                                MyFree(tlds->rules->line);
+                                                MyFree(tlds->rules);
+                                                tlds->rules = amotd;
+                                        }
+                                        tlds->rules =
+                                            read_rules(tlds->rules_file);
+                                }
+
+				return 0;
+			}
 			if (!strnicmp("-gar", parv[1], 4))
 			{
-				if (!IsAdmin(sptr))
-					return 0;
 				loop.do_garbage_collect = 1;
 				return 0;
 			}
 			if (!_match("-o*motd", parv[1]))
 			{
-				if (!IsAdmin(sptr))
-					return 0;
 				sendto_ops
 				    ("%sRehashing OperMOTD on request of %s",
 				    cptr != sptr ? "Remotely " : "",
@@ -3926,8 +3976,6 @@ int  m_rehash(cptr, sptr, parc, parv)
 			}
 			if (!_match("-b*motd", parv[1]))
 			{
-				if (!IsAdmin(sptr))
-					return 0;
 				sendto_ops
 				    ("%sRehashing BotMOTD on request of %s",
 				    cptr != sptr ? "Remotely " : "",
@@ -3940,8 +3988,6 @@ int  m_rehash(cptr, sptr, parc, parv)
 			{
 				ConfigItem_tld *tlds;
 				aMotd *amotd;
-				if (!IsAdmin(sptr))
-					return 0;
 				sendto_ops
 				    ("%sRehashing all MOTDs and RULES on request of %s",
 				    cptr != sptr ? "Remotely " : "",
