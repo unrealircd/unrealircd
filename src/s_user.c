@@ -2440,6 +2440,7 @@ int  m_notice(cptr, sptr, parc, parv)
 }
 
 int  channelwho = 0;
+int  show_hosts = 0;
 
 static void do_who(sptr, acptr, repchan)
 	aClient *sptr, *acptr;
@@ -2448,15 +2449,23 @@ static void do_who(sptr, acptr, repchan)
 	char status[9];
 	int  i = 0;
 
-	/* Invisible opers can only be seen by other opers */
-	if (IsHiding(acptr) && !IsOper(sptr))
-		return;
+	/* checks for channel /who's and nonopers */
+	if (channelwho && !IsOper(sptr) && sptr != acptr)
+	{
+		if IsHiding(acptr)
+			return;
+		if (IsAuditorium(repchan) && !is_chan_op(acptr,repchan)
+		    && !is_chan_op(sptr,repchan))
+			return;
+		if (!ShowChannel(sptr,repchan))
+			return;
+		if (IsInvisible(acptr) && !IsMember(sptr,repchan))
+			return;
+	}
 	
-	/* auditoriums only show @'s to non opers */
-	if (repchan && (repchan->mode.mode & MODE_AUDITORIUM) &&
-	    !is_chan_op(acptr, repchan) && !IsOper(sptr))
+	if (channelwho && IsHiding(acptr) && !IsNetAdmin(sptr))
 		return;
-		
+
 	if (acptr->user->away)
 		status[i++] = 'G';
 	else
@@ -2471,27 +2480,15 @@ static void do_who(sptr, acptr, repchan)
 	if (IsAnOper(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
 		status[i++] = '*';
 
-	/* They're an oper, +H, and sptr is an oper */
-	if (IsAnOper(acptr) && (IsHideOper(acptr) && IsAnOper(sptr)))
-		status[i++] = '!';
-
-	/* Fun check...either acptr
-	 * is invisible (+i)
-	 * The channel is +s or +p
-	 * is +I (total invisibility) AND sptr is netadmin
-	 * or not an op in an auditorium
-	 * 
-	 * AND
-	 * they aren't /whoing themselves
-	 * AND
-	 * sptr is an oper
+	/* Whackassed conditionals to indicate to an oper that they're seeing this person
+	 * simply because they are an oper. (adds ! to the who "flags")
 	 */
-	if ((IsInvisible(acptr) || repchan &&
-	    ((repchan->mode.mode & MODE_PRIVATE) || (repchan->mode.mode & MODE_SECRET))
-	    || (IsHiding(acptr) && IsNetAdmin(sptr)) || 
-	    repchan && ((repchan->mode.mode & MODE_AUDITORIUM) &&
-	    !is_chan_op(acptr,repchan))) && (sptr != acptr) && IsAnOper(sptr))
-		status[i++] = '&';
+	if (IsAnOper(sptr) && sptr != acptr)
+		if (channelwho && IsHiding(acptr) && IsNetAdmin(sptr) ||
+		    IsInvisible(acptr) ||
+		    IsAuditorium(repchan) && !is_chan_op(acptr,repchan) ||
+		    !ShowChannel(sptr,repchan)) 
+			status[i++] = '!';
 
 	/* Channel operator */
 	if (repchan && is_chan_op(acptr, repchan))
@@ -2514,10 +2511,10 @@ static void do_who(sptr, acptr, repchan)
 	}
 	if (IsHiding(acptr) && sptr != acptr && !IsNetAdmin(sptr))
 		repchan = NULL;
-	
+
 	sendto_one(sptr, rpl_str(RPL_WHOREPLY), me.name, sptr->name,
 	    (repchan) ? (repchan->chname) : "*", acptr->user->username,
-	    IsHidden(acptr) ? acptr->user->virthost : acptr->user->realhost,
+	    (show_hosts) ? acptr->user->realhost : (IsHidden(acptr) ? acptr->user->virthost : acptr->user->realhost),
 	    acptr->user->server, acptr->name, status, acptr->hopcount,
 	    acptr->info);
 
@@ -2539,12 +2536,15 @@ int  m_who(cptr, sptr, parc, parv)
 	char *mask = parc > 1 ? parv[1] : NULL;
 	Link *lp;
 	aChannel *chptr;
-	aChannel *mychannel;
 	char *channame = NULL, *s;
-	int  oper = parc > 2 ? (*parv[2] == 'o') : 0;	/* Show OPERS only */
+	int  show_opers = parc > 2 ? (*parv[2] == 'o') : 0;	/* Show OPERS only */
 	int  member;
 
+	show_hosts = 0;
 
+	if IsOper(sptr)
+		show_hosts = parc > 2 ? (*parv[2] == 'h') : 0;
+	
 	if (!BadPtr(mask))
 	{
 		if ((s = (char *)index(mask, ',')))
@@ -2554,20 +2554,15 @@ int  m_who(cptr, sptr, parc, parv)
 		}
 		clean_channelname(mask);
 	}
+	
 	channelwho = 0;
-	mychannel = NullChn;
-	if (oper)
+	
+	if (show_opers)
 	{
-		sendto_umode(UMODE_HELPOP, "*** HelpOp -- from %s: [Did a /who 0 o]", parv[0]);		
-		sendto_serv_butone(&me, ":%s HELP :[Did a /who 0 o]", parv[0]);
+		sendto_umode(UMODE_HELPOP, "*** HelpOp -- from %s: Did a /who %s o", parv[0], parv[1]);		
+		sendto_serv_butone(&me, ":%s HELP :Did a /who %s o", parv[0], parv[1]);
 	}
-	if (sptr->user)
-		if ((lp = sptr->user->channel))
-			mychannel = lp->value.chptr;
-
-	/* Allow use of m_who without registering */
-
-
+	
 	/*
 	   **  Following code is some ugly hacking to preserve the
 	   **  functions of the old implementation. (Also, people
@@ -2577,16 +2572,14 @@ int  m_who(cptr, sptr, parc, parv)
 	if (!mask || *mask == '\0')
 		mask = NULL;
 	else if (mask[1] == '\0' && mask[0] == '*')
-	{
 		mask = NULL;
-		if (mychannel)
-			channame = mychannel->chname;
-	}
 	else if (mask[1] == '\0' && mask[0] == '0')	/* "WHO 0" for irc.el */
 		mask = NULL;
 	else
 		channame = mask;
+	
 	(void)collapse(mask);
+	
 	/* Don't allow masks for non opers */
 	if (!IsOper(sptr) && mask && (strchr(mask, '*') || strchr(mask, '?')))
 	{
@@ -2594,29 +2587,20 @@ int  m_who(cptr, sptr, parc, parv)
 		sendto_one(sptr, rpl_str(RPL_ENDOFWHO), me.name, parv[0],
 		    BadPtr(mask) ? "*" : mask);
 	}
+	
+	/* List all users on a given channel */
 	if (IsChannelName(channame))
 	{
-		/*
-		 * List all users on a given channel
-		 */
 		chptr = find_channel(channame, NULL);
 		if (chptr)
 		{
-			if (IsMember(sptr,chptr) || IsOper(sptr) ||
-			    (!SecretChannel(chptr) && !HiddenChannel(chptr)))
+			if (ShowChannel(sptr,chptr) || IsOper(sptr))
 				for (lp = chptr->members; lp; lp = lp->next)
 				{
-					if (!IsOper(sptr) && IsHiding(lp->value.cptr))
+					if (show_opers && (!IsOper(lp->value.cptr)))
 						continue;
-					if (oper && (!IsAnOper(lp->value.cptr)))
-						continue;
-					if (oper && IsHideOper(lp->value.cptr) &&
+					if (show_opers && IsHideOper(lp->value.cptr) &&
 					    !IsOper(sptr))
-						continue;
-					if ((lp->value.cptr != sptr)
-					    && IsInvisible(lp->value.cptr)
-					    && !IsMember(sptr,chptr)
-					    && !IsOper(sptr))
 						continue;
 					channelwho = 1;
 					do_who(sptr, lp->value.cptr, chptr);
@@ -2624,53 +2608,26 @@ int  m_who(cptr, sptr, parc, parv)
 		}
 	}
 	else
+		/* Mask/other who */
 		for (acptr = client; acptr; acptr = acptr->next)
 		{
 			aChannel *ch2ptr = NULL;
-			int  showsecret, showperson, isinvis;
-
+			
 			if (!IsPerson(acptr))
 				continue;
-			if (oper && (!IsAnOper(acptr) || (IsHideOper(acptr) && sptr != acptr && !IsAnOper(sptr))))
+
+			if (show_opers && (!IsOper(acptr) || (IsHideOper(acptr) && sptr != acptr
+			    && !IsOper(sptr))))
 				continue;
-			showperson = 0;
-			showsecret = 0;
-			/*
-			 * Show user if they are on the same channel, or not
-			 * invisible and on a non secret channel (if any).
-			 * Do this before brute force match on all relevant fields
-			 * since these are less cpu intensive (I hope :-) and should
-			 * provide better/more shortcuts - avalon
+			
+			/* The other method my have been slightly more efficient,
+			 * but I honestly doubt it. The readability of that code was
+			 * well, insane. --Luke
 			 */
-			isinvis = acptr != sptr && IsInvisible(acptr)
-			    && !IsAnOper(sptr);
-			for (lp = acptr->user->channel; lp; lp = lp->next)
-			{
-				chptr = lp->value.chptr;
-				member = IsMember(sptr, chptr) || IsOper(sptr);
-				if (isinvis && !member)
-					continue;
-				if (IsAnOper(sptr))
-					showperson = 1;
-				if (member || (!isinvis &&
-				    ShowChannel(sptr, chptr)))
-				{
-					ch2ptr = chptr;
-					showperson = 1;
-					break;
-				}
-				if (HiddenChannel(chptr)
-				    && !SecretChannel(chptr) && !isinvis)
-					showperson = 1;
-			}
-			if (!acptr->user->channel && !isinvis)
-				showperson = 1;
-			/*
-			   ** This is brute force solution, not efficient...? ;( 
-			   ** Show entry, if no mask or any of the fields match
-			   ** the mask. --msa
-			 */
-			if (showperson &&
+			if (acptr->user->channel)
+				ch2ptr = acptr->user->channel->value.chptr;
+
+			if (
 			    (!mask ||
 			    match(mask, acptr->name) == 0 ||
 			    match(mask, acptr->user->username) == 0 ||
@@ -2683,6 +2640,7 @@ int  m_who(cptr, sptr, parc, parv)
 			    || match(mask, acptr->user->server) == 0
 			    || match(mask, acptr->info) == 0))
 				do_who(sptr, acptr, ch2ptr);
+
 		}
 	sendto_one(sptr, rpl_str(RPL_ENDOFWHO), me.name, parv[0],
 	    BadPtr(mask) ? "*" : mask);

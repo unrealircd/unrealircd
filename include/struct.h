@@ -1073,7 +1073,10 @@ struct Channel {
 #define	ShowChannel(v,c)	(PubChannel(c) || IsMember((v),(c)))
 #define	PubChannel(x)		((!x) || ((x)->mode.mode &\
 				 (MODE_PRIVATE | MODE_SECRET)) == 0)
+/* auditorium */
+#define IsAuditorium(x)		((x) && ((x)->mode.mode & MODE_AUDITORIUM))
 
+	
 #define	IsChannelName(name) ((name) && (*(name) == '#'))
 
 #define IsMember(blah,chan) ((blah && blah->user && \

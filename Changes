@@ -383,6 +383,15 @@ larne
 --Luke
 ===================================
 
-More /who crackness.
+Rewrote all of /who, fuck everyone's patches
+mine are better!
+--Luke
+===================================
+
+More /who madness! I've added an h flag, similar
+to the o flag that you can append on the end
+for opers, so for instance say you /who *bob* h
+it will display real hosts instead of masked ones
+in the replies.
 --Luke
 ===================================
