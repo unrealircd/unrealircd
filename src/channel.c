@@ -2263,7 +2263,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  if ((tmpstr[0] == '~') && MyClient(cptr) && !bounce)
 		  {
 		      /* extban: check access if needed */
-		      ExtbanInfo *p = findmod_by_bantype(tmpstr[1]);
+		      Extban *p = findmod_by_bantype(tmpstr[1]);
 		      if (p && p->is_ok && !p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_BAN))
 		      {
 		          if (IsAnOper(cptr))
@@ -2299,7 +2299,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  if ((tmpstr[0] == '~') && MyClient(cptr) && !bounce)
 		  {
 		      /* extban: check access if needed */
-		      ExtbanInfo *p = findmod_by_bantype(tmpstr[1]);
+		      Extban *p = findmod_by_bantype(tmpstr[1]);
 		      if (p && p->is_ok && !p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_EXCEPT))
 		      {
 		          if (IsAnOper(cptr))
@@ -3169,7 +3169,7 @@ char *clean_ban_mask(char *mask, int what)
 	char *cp;
 	char *user;
 	char *host;
-	ExtbanInfo *p;
+	Extban *p;
 
 	cp = index(mask, ' ');
 	if (cp)

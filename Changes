@@ -2702,4 +2702,4 @@ seen. gmtime warning still there
 - Made CmodeAdd return MODERR_EXISTS if the mode already exists
 - Fixes for TRE under win32
 - Made Extbans use the module object system
-
+- Fixed a problem caused by the previous change
