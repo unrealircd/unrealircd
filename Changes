@@ -2437,3 +2437,4 @@ seen. gmtime warning still there
 - Fixed a win32 resolver lockup bug
 - Fixed hunt_server* bug
 - Very Very small change to doc/example.conf
+- Updated .CHANGES.NEW to read Beta18
