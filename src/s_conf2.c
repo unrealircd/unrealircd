@@ -703,7 +703,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 			if (!class->pingfreq)
 			{
 				config_error("%s:%i: class::pingfreq with illegal value",
-					ce->ce_fileptr->cf_filename, ce->ce_varlineum);
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 			}
 		} else
 		if (!strcmp(cep->ce_varname, "maxclients"))
@@ -716,7 +716,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 			if (!class->sendq)
 			{
 				config_error("%s:%i: class:sendq with illegal value",
-					ce->ce_fileptr->cf_filename, ce->ce_varlineum);
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 			}
 		}
 	}
