@@ -2276,6 +2276,39 @@ static void report_configured_links(sptr, mask)
 }
 
 
+char *get_cptr_status(aClient *acptr)
+{
+	static char buf[10];
+	char *p = buf;
+	
+	*p = '\0';
+	*p++ = '[';
+	if (acptr->flags & FLAGS_LISTEN)
+	{
+		if (acptr->umodes & LISTENER_NORMAL)
+			*p++ = '*';
+		if (acptr->umodes & LISTENER_SERVERSONLY)
+			*p++ = 'S';
+		if (acptr->umodes & LISTENER_CLIENTSONLY)
+			*p++ = 'C';
+#ifdef USE_SSL
+		if (acptr->umodes & LISTENER_SSL)
+			*p++ = 's';
+#endif
+		if (acptr->umodes & LISTENER_REMOTEADMIN)
+			*p++ = 'R';
+		if (acptr->umodes & LISTENER_JAVACLIENT)
+			*p++ = 'J';
+	}
+	else
+	{
+		if (acptr->flags & FLAGS_SSL)
+			*p++ = 's';
+	}
+	*p++ = ']';
+	*p++ = '\0';
+	return (buf);
+}
 
 /* Used to blank out ports -- Barubary */
 char *get_client_name2(aClient *acptr, int showports)
@@ -2301,11 +2334,11 @@ int  m_stats(cptr, sptr, parc, parv)
 #ifndef DEBUGMODE
 	static char Sformat[] =
 	    ":%s %d %s SendQ SendM SendBytes RcveM RcveBytes Open_since :Idle";
-	static char Lformat[] = ":%s %d %s %s %u %u %u %u %u %u :%u";
+	static char Lformat[] = ":%s %d %s %s%s %u %u %u %u %u %u :%u";
 #else
 	static char Sformat[] =
 	    ":%s %d %s SendQ SendM SendBytes RcveM RcveBytes Open_since CPU :Idle";
-	static char Lformat[] = ":%s %d %s %s %u %u %u %u %u %u %s";
+	static char Lformat[] = ":%s %d %s %s%s %u %u %u %u %u %u %s";
 	char pbuf[96];		/* Should be enough for to ints */
 #endif
 	struct Message *mptr;
@@ -2388,9 +2421,10 @@ int  m_stats(cptr, sptr, parc, parv)
 				  continue;
 			  if (!doall && wilds && match(name, acptr->name))
 				  continue;
-			  if (!(parc == 2 && IsServer(acptr)) &&
+/*			  if (!(parc == 2 && IsServer(acptr)) &&
 			      !(doall || wilds) && mycmp(name, acptr->name))
 				  continue;
+*/
 #ifdef DEBUGMODE
 			  ircsprintf(pbuf, "%d :%d", acptr->cputime,
 			      (acptr->user && MyConnect(acptr)) ?
@@ -2403,6 +2437,7 @@ int  m_stats(cptr, sptr, parc, parv)
 				      (isupper(stat)) ?
 				      get_client_name2(acptr, showports) :
 				      get_client_name(acptr, FALSE),
+				      get_cptr_status(acptr),
 				      (int)DBufLength(&acptr->sendQ),
 				      (int)acptr->sendM, (int)acptr->sendK,
 				      (int)acptr->receiveM,
@@ -2426,6 +2461,7 @@ int  m_stats(cptr, sptr, parc, parv)
 				      (isupper(stat)) ?	/* Potvin - PreZ */
 				      get_client_name2(acptr, showports) :
 				      get_client_name(acptr, FALSE),
+				      get_cptr_status(acptr),
 				      (int)DBufLength(&acptr->sendQ),
 				      (int)acptr->sendM, (int)acptr->sendK,
 				      (int)acptr->receiveM,
