@@ -148,6 +148,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "except",		_conf_except,		_test_except	},
 	{ "help",		_conf_help,		_test_help	},
 	{ "include",		NULL,	  		_test_include	},
+	{ "link", 		_conf_link,		_test_link	},
 	{ "listen", 		_conf_listen,		_test_listen	},
 	{ "log",		_conf_log,		_test_log	},
 	{ "me", 		_conf_me,		_test_me	},
@@ -155,9 +156,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "tld",		_conf_tld,		_test_tld	},
 	{ "ulines",		_conf_ulines,		_test_ulines	},
 	{ "vhost", 		_conf_vhost,		_test_vhost	},
-
 /*
-	{ "link", 		_conf_link,		_test_link	},
 	{ "ban", 		_conf_ban,		_test_ban	},
 	{ "set",		_conf_set,		_test_set	},
 	{ "deny",		_conf_deny,		_test_deny	},
@@ -223,8 +222,8 @@ static OperFlag _OperFlags[] = {
 	{ OFLAG_HELPOP,         "helpop" },
 	{ OFLAG_LOCAL,		"local" },
 	{ OFLAG_LOCOP,		"locop"},
-	{ OFLAG_SADMIN_,	"services-admin"},
 	{ OFLAG_NADMIN,		"netadmin"},
+	{ OFLAG_SADMIN_,	"services-admin"},
 };
 
 /* This MUST be alphabetized */
@@ -2285,9 +2284,7 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 	ca->rules_file = strdup(cep->ce_vardata);
 	
 	if ((cep = config_find_entry(ce->ce_entries, "channel")))
-	{
 		ca->channel = strdup(cep->ce_vardata);
-	}	
 	AddListItem(ca, conf_tld);
 	return 1;
 }
@@ -2578,8 +2575,10 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 	allow->ip = strdup(cep->ce_vardata);
 	cep = config_find_entry(ce->ce_entries, "hostname");
 	allow->hostname = strdup(cep->ce_vardata);
-	cep = config_find_entry(ce->ce_entries, "password");
-	allow->auth = Auth_ConvertConf2AuthStruct(cep);
+	if ((cep = config_find_entry(ce->ce_entries, "password")))
+	{
+		allow->auth = Auth_ConvertConf2AuthStruct(cep);
+	}
 	cep = config_find_entry(ce->ce_entries, "class");
 	allow->class = Find_class(cep->ce_vardata);
 	if (!allow->class)
@@ -2674,7 +2673,68 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 			errors++; continue;
 		}
 	}
+	if (!(cep = config_find_entry(ce->ce_entries, "ip")))
+	{
+		config_error("%s:%i: allow::ip missing",
+			ce->ce_fileptr->cf_filename,
+			ce->ce_varlinenum);
+		errors++;
+	}
+	if (!(cep = config_find_entry(ce->ce_entries, "hostname")))
+	{
+		config_error("%s:%i: allow::hostname missing",
+			ce->ce_fileptr->cf_filename,
+			ce->ce_varlinenum);
+		errors++;
+	}
+	if ((cep = config_find_entry(ce->ce_entries, "password")))
+	{
+		/* some auth check stuff? */
+	}
+	if ((cep = config_find_entry(ce->ce_entries, "class")))
+	{
+	}
+	else
+	{
+		config_error("%s:%i: allow::class missing",
+			ce->ce_fileptr->cf_filename,
+			ce->ce_varlinenum);
+		errors++;
+	}
+	if ((cep = config_find_entry(ce->ce_entries, "maxperip")))
+	{
+		if (atoi(cep->ce_vardata) <= 0)
+		{
+			config_error("%s:%i: allow::maxperip with illegal value (must be >0)",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++;
+		}
+	}
+	/* NOT REQUIRED
+	if ((cep = config_find_entry(ce->ce_entries, "redirect-server")))
+	{
+	}
+	if ((cep = config_find_entry(ce->ce_entries, "redirect-port")))
+	{
+	}
+	*/
+	if ((cep = config_find_entry(ce->ce_entries, "options")))
+	{
+		for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+			if (!strcmp(cepp->ce_varname, "noident"))
+			{}
+			else if (!strcmp(cepp->ce_varname, "useip")) 
+			{}
+			else
+			{
+				config_error("%s:%i: allow::options unknown item '%s'",
+					cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, 
+					cepp->ce_varname);
+				errors++;
+			}
+		}
 	
+	}
 	return (errors > 0 ? -1 : 1);
 }
 
@@ -3067,11 +3127,20 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 	}
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_varname || !cep->ce_vardata)
+		if (!cep->ce_varname)
 		{
 			config_error("%s:%i: vhost item without contents",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			errors++; continue;
+		}
+		if (!cep->ce_vardata)
+		{
+			if (stricmp(cep->ce_varname, "from") != NULL)
+			{
+				config_error("%s:%i: vhost item without contents",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++; continue;
+			}
 		}
 		if (!stricmp(cep->ce_varname, "vhost")) {}
 		else if (!strcmp(cep->ce_varname, "login")) {}
@@ -3348,6 +3417,168 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 	return (errors > 0 ? -1 : 1); 
 }
 
+
+int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	ConfigEntry *cepp;
+	ConfigItem_link *link = NULL;
+	OperFlag    *ofp;
+	unsigned char	isnew = 0;
+
+	link = (ConfigItem_link *) MyMallocEx(sizeof(ConfigItem_link));
+	link->servername = strdup(ce->ce_vardata);
+	/* ugly, but it works. if it fails, we know _test_link failed miserably */
+	link->username = strdup(config_find_entry(ce->ce_entries, "username")->ce_vardata);
+	link->hostname = strdup(config_find_entry(ce->ce_entries, "hostname")->ce_vardata);
+	link->bindip = strdup(config_find_entry(ce->ce_entries, "bind-ip")->ce_vardata);
+	link->port = atol(config_find_entry(ce->ce_entries, "port")->ce_vardata);
+	link->recvauth = Auth_ConvertConf2AuthStruct(config_find_entry(ce->ce_entries, "password-receive"));
+	link->connpwd = strdup(config_find_entry(ce->ce_entries, "password-connect")->ce_vardata);
+	cep = config_find_entry(ce->ce_entries, "class");
+	link->class = Find_class(cep->ce_vardata);
+	if (!link->class)
+	{
+		config_status("%s:%i: illegal link::class, unknown class '%s' using default of class 'default'",
+			cep->ce_fileptr->cf_filename,
+			cep->ce_varlinenum,
+			cep->ce_vardata);
+		link->class = default_class;
+	}
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "options"))
+		{
+			/* remove options */
+			link->options = 0;
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!cepp->ce_varname)
+				{
+					config_status("%s:%i: link::flag item without variable name",
+						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+					continue;
+				}
+				for (ofp = _LinkFlags; ofp->name; ofp++)
+				{
+					if (!strcmp(ofp->name, cepp->ce_varname))
+					{
+						if (!(link->options & ofp->flag))
+							link->options |= ofp->flag;
+						break;
+					}
+				}
+				if (!ofp->name)
+				{
+					config_status("%s:%i: unknown link option '%s'",
+						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
+						cepp->ce_varname);
+					continue;
+				}
+			}
+#ifndef USE_SSL
+			if (link->options & CONNECT_SSL)
+			{
+				config_status("%s:%i: link %s with SSL option enabled on a non-SSL compile",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, ce->ce_vardata);
+				link->options &= ~CONNECT_SSL;
+			}
+#endif
+		} else
+		if (!strcmp(cep->ce_varname, "hub"))
+		{
+			link->hubmask = strdup(cep->ce_vardata);
+		} else
+		if (!strcmp(cep->ce_varname, "leaf"))
+		{
+			link->leafmask = strdup(cep->ce_vardata);
+		} else
+		if (!strcmp(cep->ce_varname, "leafdepth"))
+		{
+			link->leafdepth = atol(cep->ce_vardata);
+		} else
+#ifdef USE_SSL
+		if (!strcmp(cep->ce_varname, "ciphers"))
+		{
+			link->ciphers = strdup(cep->ce_vardata);
+		}
+#endif
+	}
+	AddListItem(link, conf_link);
+	return 0;
+}
+
+int	_test_link(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry	*cep;
+	int		errors = 0;
+	char 		**p;
+	char		*requiredsections[] = {
+				"username", "hostname", "bind-ip", "port",
+				"password-receive", "password-connect",
+				"class", NULL
+			};
+	char		*knowndirc[] = 
+			{
+				"username", "hostname", "bind-ip",
+				"port", "password-receive",
+				"password-connect", "class",
+				"options", "hub",
+				"leaf", "leafdepth",
+				"ciphers", NULL
+			};
+	if (!ce->ce_vardata)
+	{
+		config_error("%s:%i: link without servername",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+
+	}
+	if (!strchr(ce->ce_vardata, '.'))
+	{
+		config_error("%s:%i: link: bogus server name",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+	for (p = requiredsections; *p; p++)
+	{
+		if ((cep = config_find_entry(ce->ce_entries, *p)))
+		{
+			if (!cep->ce_vardata)
+			{
+				config_error("%s:%i: link::%s without contents",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, cep->ce_varname);
+				errors++;
+			}
+		}
+		else
+		{
+			config_error("%s:%i: link::%s missing",
+				ce->ce_fileptr->cf_filename,
+				ce->ce_varlinenum, *p);
+			errors++;
+		}
+	}
+	if (errors > 0)
+		return -1;
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		for (p = knowndirc; *p; p++)
+			if (!strcmp(cep->ce_varname, *p))
+				break;
+		if (!*p)
+		{
+			config_error("%s:%i: unknown directive link::%s",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				cep->ce_varname);
+			errors++;
+		}
+	}
+	if (errors > 0)
+		return -1;
+		
+}
 
 
 /*
