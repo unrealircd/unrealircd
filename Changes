@@ -1438,3 +1438,5 @@ seen. gmtime warning still there
 - Win32 SSL compile fixes
 - Made /trace show correct for SSL handshake(s)
 - RELEASENOTES stuff
+- Win32 installer fixes (changed version to beta11)
+- Changed version to beta11
