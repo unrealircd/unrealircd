@@ -3649,11 +3649,10 @@ int  m_oper(cptr, sptr, parc, parv)
 	else
 	{
 		sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name, parv[0]);
-#ifdef  FAILOPER_WARN
+		if (FAILOPER_WARN)
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** Your attempt has been logged.", me.name,
 		    sptr->name);
-#endif
 		sendto_realops
 		    ("Failed OPER attempt by %s (%s@%s) using UID %s [NOPASSWORD]",
 		    parv[0], sptr->user->username, sptr->sockhost, name);

@@ -254,14 +254,6 @@
 #define BPATH		"bot.motd"	/* Bot MOTD */
 #define IRCDTUNE 	"ircd.tune"	/* tuning .. */
 
-/* FAILOPER_WARN
- *
- * When defined, warns users on a failed oper attempt that it was/is logged
- * Only works when FNAME_OPERLOG is defined, and a logfile exists.
- * NOTE: Failed oper attempts are logged regardless.
- */
-#define FAILOPER_WARN
-
 /* CHROOTDIR
  *
  * Define for value added security if you are a rooter.
