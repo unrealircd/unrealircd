@@ -320,7 +320,7 @@ PTHREAD_CFLAGS="-I=../extras/threads/include $ac_cv_pthreadspecial"
 else
 PTHREAD_CFLAGS="-I=../extras/threads/include"
 fi
-PTHREAD_LIBS="../extras/threads/lib/libgthreads.a ../extras/threads/lib/libmalloc.a"
+PTHREAD_LIBS="../extras/threads/lib/libgthreads.a ../extras/malloc.c"
 fi
 fi
 fi
@@ -338,5 +338,47 @@ else
 fi
 
 ])dnl ACX_PTHREAD
+
+dnl Written by Caolan McNamara <caolan@skynet.ie>, modified slightly by codemastr
+AC_DEFUN(AC_caolan_FUNC_WHICH_GETHOSTBYNAME_R,[
+AC_CHECK_FUNC(gethostbyname_r)
+if test "$ac_cv_func_gethostbyname_r" = "yes"; then
+AC_CACHE_CHECK(how many parameters gethostbyname_r takes, ac_cv_func_which_gethostname_r, [
+  AC_TRY_COMPILE([#include <netdb.h>], [
+        char *name;
+        struct hostent *he;
+        struct hostent_data data;
+        (void) gethostbyname_r(name, he, &data);
+  ],ac_cv_func_which_gethostname_r=three, [
+  AC_TRY_COMPILE([#include <netdb.h>], [
+        char *name;
+        struct hostent *he, *res;
+        char buffer[2048];
+        int buflen = 2048;
+        int h_errnop;
+        (void) gethostbyname_r(name, he, buffer, buflen, &res, &h_errnop)
+  ],ac_cv_func_which_gethostname_r=six, [
+  AC_TRY_COMPILE([#include <netdb.h>], [
+                        char *name;
+                        struct hostent *he;
+                        char buffer[2048];
+                        int buflen = 2048;
+                        int h_errnop;
+                        (void) gethostbyname_r(name, he, buffer, buflen, &h_errnop)
+  ],ac_cv_func_which_gethostname_r=five,ac_cv_func_which_gethostname_r=no)
+
+  ])
+
+   ])],ac_cv_func_which_gethostname_r=no)]
+
+if test "$ac_cv_func_which_gethostname_r" = "six"; then
+  AC_DEFINE(HAVE_GETHOSTBYNAME_R_6)
+elif test "$ac_cv_func_which_gethostname_r" = "five"; then
+  AC_DEFINE(HAVE_GETHOSTBYNAME_R_5)
+elif test "$ac_cv_func_which_gethostname_r" = "three"; then
+  AC_DEFINE(HAVE_GETHOSTBYNAME_R_3)
+fi
+fi
+)])
 
 

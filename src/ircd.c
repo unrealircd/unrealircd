@@ -67,7 +67,9 @@ Computing Center and Jarkko Oikarinen";
 #endif
 #include "version.h"
 #include "proto.h"
-
+#ifdef _WIN32
+extern BOOL IsService;
+#endif
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
 ID_Notes("2.48 3/9/94");
@@ -82,6 +84,7 @@ int  un_gid = 99;
 #endif
 /* End */
 
+
 #ifndef _WIN32
 extern char unreallogo[];
 #endif
@@ -95,6 +98,7 @@ extern aMotd *svsmotd;
 extern aMotd *motd;
 extern aMotd *rules;
 extern aMotd *botmotd;
+MemoryInfo StatsZ;
 
 int  R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
 
@@ -263,20 +267,6 @@ VOIDSIG s_restart()
 	}
 }
 
-
-VOIDSIG s_segv(void)
-{
-	char *argv[] = {
-		"./.bugreport",
-		NULL
-	};
-#if !defined(_WIN32) && !defined(_AMIGA)
-	if (fork())
-		abort();
-	execv("/bin/sh", argv);
-	return;
-#endif
-}
 
 #ifndef _WIN32
 VOIDSIG dummy()
@@ -653,7 +643,11 @@ extern TS check_pings(TS currenttime)
 		 * Check UNKNOWN connections - if they have been in this state
 		 * for > 100s, close them.
 		 */
-		if (IsUnknown(cptr))
+		if (IsUnknown(cptr)
+#ifdef USE_SSL
+			|| (IsSSLAcceptHandshake(cptr) || IsSSLConnectHandshake(cptr))
+#endif		
+		)
 			if (cptr->firsttime ? ((TStime() - cptr->firsttime) >
 			    100) : 0)
 				(void)exit_client(cptr, cptr, &me,
@@ -700,9 +694,11 @@ static int bad_command(void)
 	    CMDLINE_CFG);
 	(void)printf("Server not started\n\n");
 #else
-	MessageBox(NULL,
-	    "Usage: wircd [-h servername] [-p portnumber] [-x loglevel]\n",
-	    "UnrealIRCD/32", MB_OK);
+	if (!IsService) {
+		MessageBox(NULL,
+		    "Usage: wircd [-h servername] [-p portnumber] [-x loglevel]\n",
+		    "UnrealIRCD/32", MB_OK);
+	}
 #endif
 	return (-1);
 }
@@ -803,6 +799,7 @@ int InitwIRCD(int argc, char *argv[])
 	WSAStartup(wVersionRequested, &wsaData);
 #endif
 	bzero((char *)&me, sizeof(me));
+	bzero(&StatsZ, sizeof(StatsZ));
 	setup_signals();
 	init_ircstats();
 	umode_init();
@@ -918,8 +915,10 @@ int InitwIRCD(int argc, char *argv[])
 			  (void)printf("%s build %s\n", version, buildid);
 #else
 		  case 'v':
-			  MessageBox(NULL, version,
-			      "UnrealIRCD/Win32 version", MB_OK);
+			  if (!IsService) {
+				  MessageBox(NULL, version,
+				      "UnrealIRCD/Win32 version", MB_OK);
+			  }
 #endif
 			  exit(0);
 		  case 'W':{
@@ -953,9 +952,11 @@ int InitwIRCD(int argc, char *argv[])
 			      "%s: DEBUGMODE must be defined for -x y\n",
 			      myargv[0]);
 # else
-			  MessageBox(NULL,
-			      "DEBUGMODE must be defined for -x option",
-			      "UnrealIRCD/32", MB_OK);
+			  if (!IsService) {
+				  MessageBox(NULL,
+				      "DEBUGMODE must be defined for -x option",
+				      "UnrealIRCD/32", MB_OK);
+			  }
 # endif
 			  exit(0);
 #endif
@@ -970,8 +971,10 @@ int InitwIRCD(int argc, char *argv[])
 # ifndef _WIN32
 		perror("chdir");
 # else
-		MessageBox(NULL, strerror(GetLastError()),
-		    "UnrealIRCD/32: chdir()", MB_OK);
+		if (!IsService) {
+			MessageBox(NULL, strerror(GetLastError()),
+			    "UnrealIRCD/32: chdir()", MB_OK);
+		}
 # endif
 		exit(-1);
 	}
@@ -1047,8 +1050,11 @@ int InitwIRCD(int argc, char *argv[])
 		return bad_command();	/* This should exit out */
 #ifndef _WIN32
 	fprintf(stderr, "%s", unreallogo);
+	fprintf(stderr, "                           v%s\n", VERSIONONLY);
+#ifdef USE_SSL
+	fprintf(stderr, "                     using %s\n\n", OPENSSL_VERSION_TEXT);
 #endif
-	fprintf(stderr, "                           v%s\n\n", VERSIONONLY);
+#endif
 	clear_client_hash_table();
 	clear_channel_hash_table();
 	clear_watch_hash_table();
@@ -1090,13 +1096,17 @@ int InitwIRCD(int argc, char *argv[])
 	make_umodestr();
 	make_cmodestr();
 #ifdef USE_SSL
+#ifndef _WIN32
 	fprintf(stderr, "* Initializing SSL.\n");
+#endif
 	init_ssl();
 #endif
+#ifndef _WIN32
 	fprintf(stderr,
 	    "* Dynamic configuration initialized .. booting IRCd.\n");
 	fprintf(stderr,
 	    "---------------------------------------------------------------------\n");
+#endif
 	open_debugfile();
 #ifndef NO_FDLIST
 	init_fdlist(&serv_fdlist);
@@ -1444,12 +1454,6 @@ static void setup_signals()
 	act.sa_handler = s_die;
 	(void)sigaddset(&act.sa_mask, SIGTERM);
 	(void)sigaction(SIGTERM, &act, NULL);
-/* handling of SIGSEGV as well -sts */
-#ifndef PROPER_COREDUMP
-	act.sa_handler = s_segv;
-	(void)sigaddset(&act.sa_mask, SIGSEGV);
-	(void)sigaction(SIGSEGV, &act, NULL);
-#endif
 #else
 # ifndef	HAVE_RELIABLE_SIGNALS
 	(void)signal(SIGPIPE, dummy);
@@ -1466,7 +1470,6 @@ static void setup_signals()
 	(void)signal(SIGHUP, s_rehash);
 	(void)signal(SIGTERM, s_die);
 	(void)signal(SIGINT, s_restart);
-	(void)signal(SIGSEGV, s_segv);
 #endif
 #ifdef RESTARTING_SYSTEMCALLS
 	/*

@@ -581,7 +581,11 @@ static int do_query_number(Link *lp, struct IN_ADDR *numb, ResRQ *rptr)
 #endif
 		rptr->he.h_length = sizeof(struct IN_ADDR);
 #else
+#ifndef INET6
 		rptr->addr.S_ADDR = numb->S_ADDR;
+#else
+		bcopy(numb->s6_addr, rptr->addr.s6_addr, IN6ADDRSZ);
+#endif
 		rptr->he->h_length = sizeof(struct IN_ADDR);
 
 /*		rptr->addr.s_addr = numb->s_addr;
@@ -1942,7 +1946,13 @@ int	res_copyhostent(struct hostent *from, struct hostent *to)
 	    {
 		amt += 4;
 		to->h_addr_list[i] = (char *)(amt+x);
+#ifndef INET6
 		((struct IN_ADDR *)to->h_addr_list[i])->S_ADDR = ((struct IN_ADDR *)from->h_addr_list[i])->S_ADDR;
+#else
+		bcopy(((struct IN_ADDR *)from->h_addr_list[i])->S_ADDR,((struct IN_ADDR *)to->h_addr_list[i])->S_ADDR, IN6ADDRSZ);
+#endif
+
+
 	    }
 	to->h_addr_list[i] = NULL;
 }

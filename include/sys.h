@@ -45,7 +45,6 @@
 #ifdef	STDLIBH
 #include <stdlib.h>
 #endif
-
 #ifdef	STRINGSH
 #include <strings.h>
 #else
@@ -57,8 +56,13 @@
 #include <openssl/ssl.h>
 #endif
 #ifdef INET6
+#ifndef _WIN32
 #include <netinet/in.h>
 #include <sys/socket.h>
+#else
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#endif
 #endif
 #ifndef GOT_STRCASECMP
 #define	strcasecmp	mycmp
@@ -194,7 +198,7 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
  * Socket, File, and Error portability macros
  */
 #ifndef _WIN32
-
+#define SET_ERRNO(x) errno = x
 #define READ_SOCK(fd, buf, len) read((fd), (buf), (len))
 #define WRITE_SOCK(fd, buf, len) write((fd), (buf), (len))
 #define CLOSE_SOCK(fd) close(fd)
@@ -211,7 +215,7 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 #define P_EINTR         EINTR
 #define P_ETIMEDOUT     ETIMEDOUT
 #define P_ENOTSOCK	ENOTSOCK
-
+#define P_EIO		EIO
 #else
 
 /* IO and Error portability macros */
@@ -221,7 +225,7 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 #define IOCTL(x, y, z) ioctlsocket((x), (y), (z))
 #define ERRNO WSAGetLastError()
 #define STRERROR(x) nt_strerror(x)
-
+#define SET_ERRNO(x) WSASetLastError(x)
 /* Error constant portability */
 #define P_EMFILE        WSAEMFILE
 #define P_ENOBUFS       WSAENOBUFS
@@ -231,6 +235,7 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 #define P_EINTR         WSAEINTR
 #define P_ETIMEDOUT     WSAETIMEDOUT
 #define P_ENOTSOCK	WSAENOTSOCK
+#define P_EIO		EIO
 #endif
 
 #endif /* __sys_include__ */

@@ -25,8 +25,14 @@
 #include <time.h>
 #ifdef _WIN32
 #include <malloc.h>
+#ifdef INET6
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#endif
 #include <windows.h>
+#ifndef INET6
 #include <winsock.h>
+#endif
 #include <process.h>
 #include <io.h>
 #endif
@@ -213,9 +219,6 @@ static char *StsMalloc(size_t size, char *file, long line)
 
 extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 
-#define EVENT_HASHVALUE 337
-#define EVENT_CHECKIT match
-#define EVENT_CRC unreallogo
 /*
  * Protocol support text.  DO NO CHANGE THIS unless you know what
  * you are doing.
@@ -229,41 +232,50 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 
 /* IRCu/Hybrid/Unreal way now :) -Stskeeps */
 
-#define PROTOCTL_CLIENT           \
-		" MAP"            \
+#define PROTOCTL_CLIENT_1         \
+		"MAP"             \
 		" KNOCK"          \
 		" SAFELIST"       \
 		" HCN"	          \
-		" WALLCHOPS"	  \
-		" WATCH=%i"       \
-		" SILENCE=%i"     \
-		" MODES=%i"       \
 		" MAXCHANNELS=%i" \
 		" MAXBANS=%i"     \
 		" NICKLEN=%i"     \
 		" TOPICLEN=%i"    \
 		" KICKLEN=%i"     \
-		" CHANTYPES=%s"    \
-		" PREFIX=%s"     \
+		" MAXTARGETS=%i"  \
+		" AWAYLEN=%i"	  \
+		" :are supported by this server"
+#define PROTOCTL_PARAMETERS_1	  \
+		MAXCHANNELSPERUSER, \
+		MAXBANS, \
+		NICKLEN, \
+		TOPICLEN, \
+		TOPICLEN, \
+		MAXTARGETS, \
+		TOPICLEN
+
+#define PROTOCTL_CLIENT_2	  \
+		"WALLCHOPS"	  \
+		" WATCH=%i"	  \
+		" SILENCE=%i"	  \
+		" MODES=%i"	  \
+		" CHANTYPES=%s"   \
+		" PREFIX=%s"      \
 		" CHANMODES=%s,%s,%s,%s" \
-		" NETWORK=%s" \
+		" NETWORK=%s" 	  \
 		" :are supported by this server"
 
-#define PROTOCTL_PARAMETERS MAXWATCH, \
-                            MAXSILES, \
-                            MAXMODEPARAMS, \
-                            MAXCHANNELSPERUSER, \
-                            MAXBANS, \
-                            NICKLEN, \
-                            TOPICLEN, \
-                            TOPICLEN, \
-                            "#",      \
-                            "(ohv)@%+", \
-                            "ohvbeqa", \
-                            "k", \
-			    "lfL", \
-			    "psmntirRcOAQKVHGCuzN", \
-			    ircnet005
+#define PROTOCTL_PARAMETERS_2	  \
+		 MAXWATCH, \
+                 MAXSILES, \
+                 MAXMODEPARAMS, \
+                 "#",      \
+                 "(ohv)@%+", \
+                 "ohvbeqa", \
+                 "kfL", \
+		 "l", \
+		 "psmntirRcOAQKVHGCuzN", \
+		 ircnet005
 			    
 /* Server-Server PROTOCTL -Stskeeps */
 #define PROTOCTL_SERVER "NOQUIT" \

@@ -178,7 +178,7 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
         if (*parv[2] == '-')
         {
                 fLag = acptr->umodes;
-                if (IsAnOper(acptr))
+                if (IsOper(acptr) && !IsHideOper(acptr))
                         IRCstats.operators--;
                 acptr->umodes &=
                     ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP |UMODE_SERVICES |

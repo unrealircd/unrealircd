@@ -251,9 +251,15 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 				parv[0], alias->nick);
 	}
 	else if (alias->type == ALIAS_NORMAL) {
-		if ((acptr = find_person(alias->nick, NULL)))
-			sendto_one(acptr, ":%s PRIVMSG %s :%s", parv[0],
-				alias->nick, parv[1]);
+		if ((acptr = find_person(alias->nick, NULL))) {
+			if (MyClient(acptr))
+				sendto_one(acptr, ":%s!%s@%s PRIVMSG %s :%s", parv[0], 
+					sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost,
+					alias->nick, parv[1]);
+			else
+				sendto_one(acptr, ":%s PRIVMSG %s :%s", parv[0],
+					alias->nick, parv[1]);
+		}
 		else
 			sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name,
 				parv[0], alias->nick);

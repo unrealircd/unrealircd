@@ -20,7 +20,13 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+/* rewritten 06/02 by larne, the old one was unreadable. */
+
 /* $Id$ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "config.h"
 #include "struct.h"
@@ -29,23 +35,8 @@
 #include "numeric.h"
 #include "msg.h"
 #include "channel.h"
-#include <time.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
-#include <fcntl.h>
 #include "h.h"
 #include "proto.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
-#ifdef _WIN32
-#include "version.h"
-#endif
 
 DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
@@ -66,11 +57,6 @@ ModuleHeader Mod_Header
 	"3.2-b8-1",
 	NULL 
     };
-
-
-/* The purpose of these ifdefs, are that we can "static" link the ircd if we
- * want to
-*/
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
@@ -112,634 +98,698 @@ int	m_who_Unload(int module_unload)
 	return MOD_SUCCESS;
 }
 
+static void do_channel_who(aClient *sptr, aChannel *channel, char *mask);
+static void make_who_status(aClient *, aClient *, aChannel *, Member *, char *, int);
+static void do_other_who(aClient *sptr, char *mask);
+static void send_who_reply(aClient *, aClient *, char *, char *, char *);
+static char *first_visible_channel(aClient *, aClient *, int *);
+static int parse_who_options(aClient *, int, char**);
+static void who_sendhelp(aClient *);
+static int has_common_channels(aClient *, aClient *);
 
+#define WF_OPERONLY  0x01 /* only show opers */
+#define WF_ONCHANNEL 0x02 /* we're on the channel we're /who'ing */
+#define WF_WILDCARD  0x04 /* a wildcard /who */
+#define WF_REALHOST  0x08 /* want real hostnames */
 
-typedef struct SearchOptions {
-	int  umodes;
-	char *nick;
-	char *user;
-	char *host;
-	char *gcos;
-	aChannel *channel;
-	char *server;
-	char umode_plus:1;
-	char nick_plus:1;
-	char user_plus:1;
-	char host_plus:1;
-	char gcos_plus:1;
-	char chan_plus:1;
-	char serv_plus:1;
-	char away_plus:1;
-	char check_away:1;
-	char check_umode:1;
-	char show_chan:1;
-	char search_chan:1;
-	char spare:4;		/* spare space for more stuff(?) */
-} SOpts;
+static int who_flags;
 
+#define WHO_CANTSEE 0x01 /* set if we can't see them */
+#define WHO_CANSEE  0x02 /* set if we can */
+#define WHO_OPERSEE 0x04 /* set if we only saw them because we're an oper */
 
-/* Internally defined stuffs */
-SOpts wsopts;
-int  build_searchopts(aClient *, int, char **);
-int  chk_who(aClient *, aClient *, int);
+#define FVC_HIDDEN  0x01
 
-/* Externally defined stuffs */
-extern int lifesux;
+#define WHO_WANT 1
+#define WHO_DONTWANT 2
+#define WHO_DONTCARE 0
 
+struct {
+  int want_away;
+  int want_channel;
+  char *channel; /* if they want one */
+  int want_gecos;
+  char *gecos;
+  int want_server;
+  char *server;
+  int want_host;
+  char *host;
+  int want_nick;
+  char *nick;
+  int want_user;
+  char *user;
+  int want_umode;
+  int umodes_dontwant;
+  int umodes_want;
+  int common_channels_only;
+} wfl;
 
-int build_searchopts(aClient *sptr, int parc, char *parv[])
-{
-	static char *who_help[] = {
-		"/WHO [+|-][acghmnsuCM] [args]",
-		"Flags are specified like channel modes, the flags cgmnsu all have arguments",
-		"Flags are set to a positive check by +, a negative check by -",
-		"The flags work as follows:",
-		"Flag a: user is away",
-		"Flag c <channel>: user is on <channel>,",
-		"                  no wildcards accepted",
-		"Flag g <gcos/realname>: user has string <gcos> in their GCOS,",
-		"                        wildcards accepted, oper only",
-		"Flag h <host>: user has string <host> in their hostname,",
-		"               wildcards accepted",
-	        "Flag m <usermodes>: user has <usermodes> set on them,",
-		"                    only o/A/a for nonopers",
-		"Flag n <nick>: user has string <nick> in their nickname,",
-		"               wildcards accepted",
-		"Flag s <server>: user is on server <server>,",
-		"                 wildcards not accepted",
-		"Flag u <user>: user has string <user> in their username,",
-		"               wildcards accepted",
-		"Behavior flags:",
-		"Flag C: show first visible channel user is in",
-		"Flag M: check for user in channels I am a member of",
-		NULL
-	};
-	char *flags, change = 1, *s;
-	int  args = 1, i;
-	aClient *srvpptr = NULL;	
-	memset((char *)&wsopts, '\0', sizeof(SOpts));
-	/*
-	 * if we got no extra arguments, send them the help. yeech. 
-	 */
-	/*
-	 * if it's /who ?, send them the help 
-	 */
-	if (parc < 1 || parv[0][0] == '?') {
-		char **ptr = who_help;
-		for (; *ptr; ptr++)
-			sendto_one(sptr, getreply(RPL_LISTSYNTAX), me.name,
-			    sptr->name, *ptr);
-		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name,
-		    "?");
-		return 0;
-	}
-	/*
-	 * backwards compatibility 
-	 */
-	else if (parv[0][0] == '0' && parv[0][1] == 0) {
-		if (parc > 1 && *parv[1] == 'o') {
-			wsopts.check_umode = 1;
-			wsopts.umode_plus = 1;
-			wsopts.umodes = UMODE_OPER;
-		}
-		wsopts.host_plus = 1;
-		wsopts.host = "*";
-		return 1;
-	}
-	/*
-	 * if the first argument isn't a list of stuff 
-	 */
-	else if (parv[0][0] != '+' && parv[0][0] != '-') {
-		if (parv[0][0] == '#') {
-			wsopts.channel = find_channel(parv[0], NullChn);
-			if (wsopts.channel == NULL) {
-				sendto_one(sptr, getreply(ERR_NOSUCHCHANNEL),
-				    me.name, sptr->name, parv[0]);
-				return 0;
-			}
-		} else {
-			/*
-			 * If the arguement has a . in it, treat it as an
-			 * * address. Otherwise treat it as a nick. -Rak 
-			 */
-			if (strchr(parv[0], '.')) {
-				wsopts.host_plus = 1;
-				wsopts.host = parv[0];
-			} else {
-				wsopts.nick_plus = 1;
-				wsopts.nick = parv[0];
-			}
-		}
-		return 1;
-	}
-	/*
-	 * now walk the list (a lot like set_mode) and set arguments
-	 * * as appropriate. 
-	 */
-	flags = parv[0];
-	while (*flags) {
-		switch (*flags) {
-		  case '+':
-		  case '-':
-			  change = (*flags == '+' ? 1 : 0);
-			  break;
-		  case 'a':
-			  if (change)
-				  wsopts.away_plus = 1;	/* they want here people */
-			  else
-				  wsopts.away_plus = 0;
-			  wsopts.check_away = 1;
-			  break;
-		  case 'C':
-			  wsopts.show_chan = change;
-			  break;
-		  case 'M':
-			  wsopts.search_chan = change;
-			  break;
-		  case 'c':
-			  if (parv[args] == NULL || !change) {
-				  sendto_one(sptr, getreply(ERR_WHOSYNTAX),
-				      me.name, sptr->name);
-				  return 0;
-			  }
-			  wsopts.channel = find_channel(parv[args], NullChn);
-			  if (wsopts.channel == NULL) {
-				  sendto_one(sptr, getreply(ERR_NOSUCHCHANNEL),
-				      me.name, sptr->name, parv[args]);
-				  return 0;
-			  }
-			  wsopts.chan_plus = change;
-			  args++;
-			  break;
-		  case 'g':
-			  if (parv[args] == NULL || !IsAnOper(sptr)) {
-				  sendto_one(sptr, getreply(ERR_WHOSYNTAX),
-				      me.name, sptr->name);
-				  return 0;
-			  }
-			  wsopts.gcos = parv[args];
-			  wsopts.gcos_plus = change;
-			  args++;
-			  break;
-		  case 'h':
-			  if (parv[args] == NULL) {
-				  sendto_one(sptr, getreply(ERR_WHOSYNTAX),
-				      me.name, sptr->name);
-				  return 0;
-			  }
-			  wsopts.host = parv[args];
-			  wsopts.host_plus = change;
-			  args++;
-			  break;
-		  case 'm':
-			  if (parv[args] == NULL) {
-				  sendto_one(sptr, getreply(ERR_WHOSYNTAX),
-				      me.name, sptr->name);
-				  return 0;
-			  }
-			  s = parv[args];
-			  while (*s) {
-				  for (i = 0; i <= Usermode_highest; i++) {
-					  if (*s == Usermode_Table[i].flag) {
-						  wsopts.umodes |=
-						     Usermode_Table[i].mode;
-						  break;
-					  }
-				  }
-				  s++;
-			  }
-			  if (!IsAnOper(sptr))	/* only let users search for +/-oOaA */
-				  wsopts.umodes =
-				      (wsopts.
-				      umodes & (UMODE_OPER | UMODE_LOCOP | UMODE_SADMIN |
-				      UMODE_ADMIN));
-			  wsopts.umode_plus = change;
-			  if (wsopts.umodes)
-				  wsopts.check_umode = 1;
-			  args++;
-			  break;
-		  case 'n':
-			  if (parv[args] == NULL) {
-				  sendto_one(sptr, getreply(ERR_WHOSYNTAX),
-				      me.name, sptr->name);
-				  return 0;
-			  }
-			  wsopts.nick = parv[args];
-			  wsopts.nick_plus = change;
-			  args++;
-			  break;
-		  case 's':
-			  
-			  if (parv[args] == NULL || !change) {
-				  sendto_one(sptr, getreply(ERR_WHOSYNTAX),
-				      me.name, sptr->name);
-				  return 0;
-			  }
-			  srvpptr = find_server(parv[args], NULL);
-			  if (srvpptr == NULL) {
-				  sendto_one(sptr, getreply(ERR_NOSUCHSERVER),
-				      me.name, sptr->name, parv[args]);
-				  return 0;
-			  }
-			  wsopts.server = find_or_add(srvpptr->name);
-			  wsopts.serv_plus = change;
-			  args++;
-			  break;
-		  case 'u':
-			  if (parv[args] == NULL) {
-				  sendto_one(sptr, getreply(ERR_WHOSYNTAX),
-				      me.name, sptr->name);
-				  return 0;
-			  }
-			  wsopts.user = parv[args];
-			  wsopts.user_plus = change;
-			  args++;
-			  break;
-		}
-		flags++;
-	}
-
-	/*
-	 * if we specified search_chan, we _must_ specify something useful to go with it.
-	 * * specifying a channel makes no sense, and no params make no sense either, as does
-	 * * specifying a nick. 
-	 */
-
-	if (wsopts.search_chan && !(wsopts.check_away || wsopts.gcos
-	    || wsopts.host || wsopts.check_umode || wsopts.server
-	    || wsopts.user)) {
-		if (parv[args] == NULL || wsopts.channel || wsopts.nick
-		    || parv[args][0] == '#' || parv[args][0] == '&') {
-			sendto_one(sptr, getreply(ERR_WHOSYNTAX), me.name,
-			    sptr->name);
-			return 0;
-		}
-
-		if (strchr(parv[args], '.')) {
-			wsopts.host_plus = 1;
-			wsopts.host = parv[args];
-		} else {
-			sendto_one(sptr, getreply(ERR_WHOSYNTAX), me.name,
-			    sptr->name);
-			return 0;
-		}
-	} else /* can't show_chan if nothing else is set! */ if (wsopts.
-    show_chan && !(wsopts.check_away || wsopts.gcos || wsopts.host
-    || wsopts.check_umode ||
-	    wsopts.server || wsopts.user || wsopts.nick || wsopts.channel)) {
-		if (parv[args] == NULL) {
-			sendto_one(sptr, getreply(ERR_WHOSYNTAX), me.name,
-			    sptr->name);
-			return 0;
-		}
-
-		if (strchr(parv[args], '.')) {
-			wsopts.host_plus = 1;
-			wsopts.host = parv[args];
-		} else {
-			wsopts.nick_plus = 1;
-			wsopts.nick = parv[args];
-		}
-	}
-
-
-	/*
-	 * hey cool, it all worked! 
-	 */
-	return 1;
-}
-
-/* these four are used by chk_who to check gcos/nick/user/host
- * respectively */
-int  (*gchkfn) (char *, char *);
-int  (*nchkfn) (char *, char *);
-int  (*uchkfn) (char *, char *);
-int  (*hchkfn) (char *, char *);
-int  (*ichkfn) (char *, char *);
-
-int chk_who(aClient *from, aClient *ac, int showall)
-{
-	if (!IsPerson(ac))
-		return 0;
-	if (IsInvisible(ac) && !showall)
-		return 0;
-	if (wsopts.check_umode)
-		if ((wsopts.umode_plus
-		    && !((ac->umodes & wsopts.umodes) == wsopts.umodes))
-		    || (!wsopts.umode_plus
-		    && ((ac->umodes & wsopts.umodes) == wsopts.umodes)))
-			return 0;
-	if (wsopts.check_away)
-		if ((wsopts.away_plus && ac->user->away == NULL) ||
-		    (!wsopts.away_plus && ac->user->away != NULL))
-			return 0;
-	/*
-	 * while this is wasteful now, in the future
-	 * * when clients contain pointers to their servers
-	 * * of origin, this'll become a 4 byte check instead of a mycmp
-	 * * -wd 
-	 */
-	/*
-	 * welcome to the future... :) - lucas 
-	 */
-	if (wsopts.serv_plus)
-		if (wsopts.server != ac->user->server)
-			return 0;
-	/*
-	 * we only call match once, since if the first condition
-	 * * isn't true, most (all?) compilers will never try the
-	 * * second...phew :) 
-	 */
-	if (wsopts.user != NULL)
-		if ((wsopts.user_plus
-		    && uchkfn(wsopts.user, ac->user->username))
-		    || (!wsopts.user_plus
-		    && !uchkfn(wsopts.user, ac->user->username)))
-			return 0;
-
-	if (wsopts.nick != NULL)
-		if ((wsopts.nick_plus && nchkfn(wsopts.nick, ac->name)) ||
-		    (!wsopts.nick_plus && !nchkfn(wsopts.nick, ac->name)))
-			return 0;
-
-	if (!IsOper(from))
-	{
-		if (wsopts.host != NULL)
-			if ((wsopts.host_plus && hchkfn(wsopts.host, IsHidden(ac) ? ac->user->virthost : ac->user->realhost)) ||
-			    (!wsopts.host_plus && !hchkfn(wsopts.host, IsHidden(ac) ? ac->user->virthost : ac->user->realhost)))
-				return 0;
-	}
-	else
-	{
-		if (wsopts.host != NULL)
-			if ((wsopts.host_plus && hchkfn(wsopts.host, ac->user->realhost)) ||
-			    (!wsopts.host_plus && !hchkfn(wsopts.host, ac->user->realhost)))
-				return 0;
-	}
-
-	if (wsopts.gcos != NULL)
-		if ((wsopts.gcos_plus && gchkfn(wsopts.gcos, ac->info)) ||
-		    (!wsopts.gcos_plus && !gchkfn(wsopts.gcos, ac->info)))
-			return 0;
-	return 1;
-}
-
-inline char *first_visible_channel(aClient *cptr, aClient *sptr)
-{
-	Membership *lp;
-	int  secret = 0;
-	aChannel *chptr = NULL;
-	static char chnbuf[CHANNELLEN + 2];
-
-	if (IsHiding(cptr))
-		return ("*");
-	if (cptr->user->channel) {
-		if (IsAdmin(sptr)) {
-			chptr = cptr->user->channel->chptr;
-			if (!(ShowChannel(sptr, chptr)))
-				secret = 1;
-		} else {
-			for (lp = cptr->user->channel; lp; lp = lp->next) {
-				if (ShowChannel(sptr, lp->chptr))
-					break;
-			}
-			if (lp)
-				chptr = lp->chptr;
-		}
-
-		if (chptr) {
-			if (!secret)
-				return chptr->chname;
-			ircsprintf(chnbuf, "%%%s", chptr->chname);
-			return chnbuf;
-		}
-	}
-	return "*";
-}
-
-/* allow lusers only 200 replies from /who */
-#define MAXWHOREPLIES 200
-#define WHO_HOPCOUNT(s, a) ((IsULine((a)) && !IsOper((s))) ? 0 : a->hopcount)
 DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	aClient *ac;
-	Member *cm;
-	Membership *lp;
-	int  shown = 0, i = 0, showall = IsAnOper(sptr);
-	char status[10];
+  aClient *target_client;
+  aChannel *target_channel;
+  int opers_only = 0;
+  char *mask = parv[1];
+  char star[] = "*";
+  int i = 0;
 
-	/*
-	 * drop nonlocal clients 
-	 */
-	if (!MyClient(sptr))
-		return 0;
+  who_flags = 0;
+  memset(&wfl, 0, sizeof(wfl));
 
-	if (!build_searchopts(sptr, parc - 1, parv + 1))
-		return 0;	/* /who was no good */
-
-	if (wsopts.gcos != NULL && (strchr(wsopts.gcos, '?')) == NULL &&
-	    (strchr(wsopts.gcos, '*')) == NULL)
-		gchkfn = smycmp;
-	else
-		gchkfn = match;
-	if (wsopts.nick != NULL && (strchr(wsopts.nick, '?')) == NULL &&
-	    (strchr(wsopts.nick, '*')) == NULL)
-		nchkfn = smycmp;
-	else
-		nchkfn = match;
-	if (wsopts.user != NULL && (strchr(wsopts.user, '?')) == NULL &&
-	    (strchr(wsopts.user, '*')) == NULL)
-		uchkfn = smycmp;
-	else
-		uchkfn = match;
-	if (wsopts.host != NULL && (strchr(wsopts.host, '?')) == NULL &&
-	    (strchr(wsopts.host, '*')) == NULL)
-		hchkfn = smycmp;
-	else
-		hchkfn = match;
-
-	if (wsopts.channel != NULL) {
-		if (IsMember(sptr, wsopts.channel))
-			showall = 1;
-		else if (SecretChannel(wsopts.channel) && IsAdmin(sptr))
-			showall = 1;
-		else if (!SecretChannel(wsopts.channel) && IsAnOper(sptr))
-			showall = 1;
-		else
-			showall = 0;
-		if (showall || !SecretChannel(wsopts.channel)) {
-			for (cm = wsopts.channel->members; cm; cm = cm->next) {
-				ac = cm->cptr;
-				i = 0;
-				if (!chk_who(sptr, ac, showall))
-					continue;
-				if (IsHiding(ac) && !IsNetAdmin(sptr))
-					continue;
-				 
-				/*
-				 * get rid of the pidly stuff first 
-				 */
-				/*
-				 * wow, they passed it all, give them the reply...
-				 * * IF they haven't reached the max, or they're an oper 
-				 */
-				status[i++] =
-				    (ac->user->away ? 'G' : 'H');
-				if (IsARegNick(ac))
-					status[i++] = 'r';
-				if (IsAnOper(ac) && (!IsHideOper(ac) || sptr == ac || IsAnOper(sptr)))
-					status[i++] = '*';
-				else if (IsInvisible(ac) && sptr != ac && IsAnOper(sptr))
-					status[i++] = '%';
-				if (cm->flags & CHFL_CHANOP)
-					status[i++] = '@';
-				else if (cm->flags & CHFL_VOICE)
-					i++;				
-				status[i] = 0;
-				sendto_one(sptr, getreply(RPL_WHOREPLY),
-				    me.name, sptr->name, wsopts.channel->chname,
-				    ac->user->username, 
-				    IsHidden(ac) ? ac->user->virthost :
-				    ac->user->realhost,
-				    ac->user->server, ac->name, status,
-				    WHO_HOPCOUNT(sptr, ac), ac->info);
-			}
-		}
-		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name,
-		    wsopts.channel->chname);
-		return 0;
+  if (parc > 1)
+    {
+      i = parse_who_options(sptr, parc - 1, parv + 1);
+      if (i < 0)
+	{
+	  sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, parv[0],
+		     mask);
+	  return 0;
 	}
-	/*
-	 * if (for whatever reason) they gave us a nick with no
-	 * * wildcards, just do a find_person, bewm! 
-	 */
-	else if (nchkfn == smycmp) {
-		ac = find_person(wsopts.nick, NULL);
-		if (ac != NULL) {
-			if (!chk_who(sptr, ac, 1)) {
-				sendto_one(sptr, getreply(RPL_ENDOFWHO),
-				    me.name, sptr->name,
-				    wsopts.host !=
-				    NULL ? wsopts.host : wsopts.nick);
-				return 0;
-			} else {
-				i = 0;
-				status[i++] =
-				    (ac->user->away ? 'G' : 'H');
-				if (IsARegNick(ac))
-					status[i++] = 'r';
-				if (IsAnOper(ac) && (!IsHideOper(ac) || sptr == ac || IsAnOper(sptr)))
-					status[i++] = '*';
-				else if (IsInvisible(ac) && sptr != ac && IsAnOper(sptr))
-					status[i++] = '%';
-				status[i] = 0;
-				sendto_one(sptr, getreply(RPL_WHOREPLY),
-				    me.name, sptr->name,
-				    wsopts.show_chan ? first_visible_channel(ac,
-				    sptr) : "*", ac->user->username,
-				    IsHidden(ac) ? ac->user->virthost :
-				    ac->user->realhost,
-   
-				     ac->user->server, ac->name,
-				    status, WHO_HOPCOUNT(sptr, ac), ac->info);
-				sendto_one(sptr, getreply(RPL_ENDOFWHO),
-				    me.name, sptr->name,
-				    wsopts.host !=
-				    NULL ? wsopts.host : wsopts.nick);
-				return 0;
-			}
-		}
-		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name,
-		    wsopts.host != NULL ? wsopts.host : wsopts.nick);
-		return 0;
-	}
-	/*
-	 * if HTM, drop this too 
-	 */
-	if (lifesux && !IsAnOper(sptr)) {
-		sendto_one(sptr, rpl_str(ERR_HTMDISABLED), me.name, sptr->name, "WHO");
-		return 0;
-	}
+    }
 
-	if (wsopts.search_chan) {
-		for (lp = sptr->user->channel; lp; lp = lp->next) {
-			for (cm = lp->chptr->members; cm; cm = cm->next) {
-				ac = cm->cptr;
-				if (!chk_who(sptr, ac, 1))
-					continue;
-				if ((lp->chptr->mode.mode & MODE_AUDITORIUM) && !((cm->flags & CHFL_CHANOP)))
-					continue;
-				if (shown == MAXWHOREPLIES && !IsAnOper(sptr)) {
-					sendto_one(sptr,
-					    getreply(ERR_WHOLIMEXCEED), me.name,
-					    sptr->name, MAXWHOREPLIES);
-					break;
-				}
-				
-				i = 0;
-				status[i++] =
-				    (ac->user->away ? 'G' : 'H');
-				if (IsARegNick(ac))
-					status[i++] = 'r';
-				if (IsAnOper(ac) && (!IsHideOper(ac) || sptr == ac || IsAnOper(sptr)))
-					status[i++] = '*';
-				else if (IsInvisible(ac) && sptr != ac && IsAnOper(sptr))
-					status[i++] = '%';
-				if (cm->flags & CHFL_CHANOP)
-					status[i++] = '@';
-				else if (cm->flags & CHFL_VOICE)
-					i++;				
-				status[i] = 0;
-				sendto_one(sptr, getreply(RPL_WHOREPLY),
-				    me.name, sptr->name,
-				    lp->chptr->chname, ac->user->username,
-				    IsHidden(ac) ? ac->user->virthost :
-				    ac->user->realhost,
-				     ac->user->server, ac->name,
-				    status, WHO_HOPCOUNT(sptr, ac), ac->info);
-				shown++;
-			}
-		}
-	} else {
-		for (ac = client; ac; ac = ac->next) {
-			if (!chk_who(sptr, ac, showall))
-				continue;
-			/*
-			 * wow, they passed it all, give them the reply...
-			 * * IF they haven't reached the max, or they're an oper 
-			 */
-			if (shown == MAXWHOREPLIES && !IsAnOper(sptr)) {
-				sendto_one(sptr, getreply(ERR_WHOLIMEXCEED),
-				    me.name, sptr->name, MAXWHOREPLIES);
-				break;	/* break out of loop so we can send end of who */
-			}
-			i = 0;
-			status[i++] =
-			    (ac->user->away ? 'G' : 'H');
-			if (IsARegNick(ac))
-				status[i++] = 'r';
-			if (IsAnOper(ac) && (!IsHideOper(ac) || sptr == ac || IsAnOper(sptr)))
-				status[i++] = '*';
-			else if (IsInvisible(ac) && sptr != ac && IsAnOper(sptr))
-				status[i++] = '%';
-			status[i] = 0;
-			sendto_one(sptr, getreply(RPL_WHOREPLY), me.name,
-			    sptr->name,
-			    wsopts.show_chan ? first_visible_channel(ac,
-			    sptr) : "*", ac->user->username, 
-			    IsHidden(ac) ? ac->user->virthost :
-				    ac->user->realhost,
+  if (parc-i < 2 || strcmp(parv[1 + i], "0") == 0)
+    mask = star;
+  else
+    mask = parv[1 + i];
 
-			    ac->user->server, ac->name, status,
-			    WHO_HOPCOUNT(sptr, ac), ac->info);
-			shown++;
-		}
+  if (!i && parc > 2 && *parv[2] == 'o')
+    who_flags |= WF_OPERONLY;
+
+  collapse(mask);
+
+  if (*mask == '\0')
+    {
+      /* no mask given */
+      sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, parv[0], "*");
+      return 0;
+    }
+
+
+  if ((target_channel = find_channel(mask, NULL)) != NULL)
+    {
+      do_channel_who(sptr, target_channel, mask);
+      sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, parv[0], mask);
+      return 0;
+    }
+  else
+    {
+      do_other_who(sptr, mask);
+      sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, parv[0], mask);
+      return 0;
+    }
+
+  return 0;
+}
+
+static void who_sendhelp(aClient *sptr)
+{
+  char *who_help[] = {
+    "/WHO [+|-][acghmnsuCM] [args]",
+    "Flags are specified like channel modes, the flags cgmnsu all have arguments",
+    "Flags are set to a positive check by +, a negative check by -",
+    "The flags work as follows:",
+    "Flag a: user is away",
+    "Flag c <channel>: user is on <channel>,",
+    "                  no wildcards accepted",
+    "Flag g <gcos/realname>: user has string <gcos> in their GCOS,",
+    "                        wildcards accepted, oper only",
+    "Flag h <host>: user has string <host> in their hostname,",
+    "               wildcards accepted",
+    "Flag m <usermodes>: user has <usermodes> set on them,",
+    "                    only o/A/a for nonopers",
+    "Flag n <nick>: user has string <nick> in their nickname,",
+    "               wildcards accepted",
+    "Flag s <server>: user is on server <server>,",
+    "                 wildcards not accepted",
+    "Flag u <user>: user has string <user> in their username,",
+    "               wildcards accepted",
+    "Behavior flags:",
+    "Flag M: check for user in channels I am a member of",
+    "Flag R: show users' real hostnames (oper only.)",
+    NULL
+  };
+  char **s;
+
+  for (s = who_help; *s; s++)
+    sendto_one(sptr, getreply(RPL_LISTSYNTAX), me.name, sptr->name, *s);
+}
+
+#define WHO_ADD 1
+#define WHO_DEL 2
+
+static int parse_who_options(aClient *sptr, int argc, char **argv)
+{
+  char *s = argv[0];
+  int what;
+  int i = 1;
+
+  if (*s != '-' && *s != '+')
+    return 0;
+
+  while (*s)
+    {
+      switch (*s)
+	{
+	case '+':
+	  what = WHO_ADD;
+	  break;
+
+	case '-':
+	  what = WHO_DEL;
+	  break;
+
+	case 'a':
+	  if (what == WHO_ADD)
+	    wfl.want_away = WHO_WANT;
+	  else
+	    wfl.want_away = WHO_DONTWANT;
+	  break;
+
+	case 'c':
+	  if (i >= argc)
+	    {
+	      who_sendhelp(sptr);
+	      return -1;
+	    }
+
+	  wfl.channel = argv[i];
+
+	  if (what == WHO_ADD)
+	    wfl.want_channel = WHO_WANT;
+	  else
+	    wfl.want_channel = WHO_DONTWANT;
+
+	  i++;
+	  break;
+	  
+	case 'g':
+	  if (i >= argc)
+	    {
+	      who_sendhelp(sptr);
+	      return -1;
+	    }
+	  
+	  if (!IsAnOper(sptr))
+	    continue; /* oper-only */
+
+	  wfl.gecos = argv[i];
+	  if (what == WHO_ADD)
+	    wfl.want_gecos = WHO_WANT;
+	  else
+	    wfl.want_gecos = WHO_DONTWANT;
+
+	  i++;
+	  break;
+
+	case 's':
+	  if (i >= argc)
+	    {
+	      who_sendhelp(sptr);
+	      return -1;
+	    }
+
+	  wfl.server = argv[i];
+	  if (what == WHO_ADD)
+	    wfl.want_server = WHO_WANT;
+	  else
+	    wfl.want_server = WHO_DONTWANT;
+
+	  i++;
+	  break;
+
+	case 'h':
+	  if (i >= argc)
+	    {
+	      who_sendhelp(sptr);
+	      return -1;
+	    }
+
+	  wfl.host = argv[i];
+	  if (what == WHO_ADD)
+	    wfl.want_host = WHO_WANT;
+	  else
+	    wfl.want_host = WHO_DONTWANT;
+
+	  i++;
+	  break;
+
+	case 'n':
+	  if (i >= argc)
+	    {
+	      who_sendhelp(sptr);
+	      return -1;
+	    }
+
+	  wfl.nick = argv[i];
+	  if (what == WHO_ADD)
+	    wfl.want_nick = WHO_WANT;
+	  else
+	    wfl.want_nick = WHO_DONTWANT;
+
+	  i++;
+	  break;
+
+	case 'u':
+	  if (i >= argc)
+	    {
+	      who_sendhelp(sptr);
+	      return -1;
+	    }
+
+	  wfl.user = argv[i];
+	  if (what == WHO_ADD)
+	    wfl.want_user = WHO_WANT;
+	  else
+	    wfl.want_user = WHO_DONTWANT;
+
+	  i++;
+	  break;
+
+	case 'm':
+	  if (i >= argc)
+	    {
+	      who_sendhelp(sptr);
+	      return -1;
+	    }
+
+	  {
+	    char *s = argv[i];
+	    int *umodes;
+
+	    if (what == WHO_ADD)
+	      umodes = &wfl.umodes_want;
+	    else
+	      umodes = &wfl.umodes_dontwant;
+
+	    while (*s)
+	      {
+		int i;
+
+		for (i = 0; i <= Usermode_highest; i++) 
+		  {
+		    if (*s == Usermode_Table[i].flag)
+		      {
+			*umodes |= Usermode_Table[i].mode;
+			break;
+		      }
+		  }
+		s++;
+	      }
+
+	    if (!IsAnOper(sptr))
+	      *umodes = *umodes & (UMODE_OPER | UMODE_LOCOP | UMODE_SADMIN |
+				   UMODE_ADMIN);
+	  }
+
+	  i++;
+	  break;
+
+	case 'M':
+	  if (what == WHO_ADD)
+	    wfl.common_channels_only = 1;
+	  else
+	    wfl.common_channels_only = 0;
+	  break;
+
+	case 'R':
+	  if (!IsAnOper(sptr))
+	    break;
+
+	  if (what == WHO_ADD)
+	    who_flags |= WF_REALHOST;
+	  else
+	    who_flags &= ~WF_REALHOST;
+
+	  break;
+
+	default:
+	  who_sendhelp(sptr);
+	  return -1;
 	}
-	sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name,
-	    (wsopts.host != NULL ? wsopts.host :
-	    (wsopts.nick != NULL ? wsopts.nick :
-	    (wsopts.user != NULL ? wsopts.user :
-	    (wsopts.gcos != NULL ? wsopts.gcos :
-	    (wsopts.server != NULL ? wsopts.server : "*"))))));
-	return 0;
+      s++;
+    }
+
+  return i;
+}
+
+static int can_see(aClient *sptr, aClient *acptr, aChannel *channel)
+{
+  int ret = 0;
+
+  do {
+    /* can only see people */
+    if (!IsPerson(acptr))
+      return WHO_CANTSEE;
+
+    /* can only see opers if thats what they want */
+    if (who_flags & WF_OPERONLY)
+      {
+	if (!IsAnOper(acptr))
+	  return ret | WHO_CANTSEE;
+
+	if (IsHideOper(acptr))
+	  if (IsAnOper(sptr))
+	    ret |= WHO_OPERSEE;
+	  else
+	    return ret | WHO_CANTSEE;
+      }
+
+    /* if they only want people who are away */
+    if ((wfl.want_away == WHO_WANT && !acptr->user->away) ||
+	wfl.want_away == WHO_DONTWANT && acptr->user->away)
+      return WHO_CANTSEE;
+
+    /* if they only want people on a certain channel. */
+    if (wfl.want_channel != WHO_DONTCARE)
+      {
+	aChannel *chan = find_channel(wfl.channel, NULL);
+
+	if (!chan && wfl.want_channel == WHO_WANT)
+	  return WHO_CANTSEE;
+
+	if ((wfl.want_channel == WHO_WANT) &&
+	    !IsMember(acptr, chan))
+	  return WHO_CANTSEE;
+
+	if ((wfl.want_channel == WHO_DONTWANT) &&
+	    IsMember(acptr, chan))
+	  return WHO_CANTSEE;
+      }
+
+    /* if they only want people with a certain gecos */
+    if (wfl.want_gecos != WHO_DONTCARE)
+      {
+	if (((wfl.want_gecos == WHO_WANT) && match(wfl.gecos, acptr->info)) ||
+	    ((wfl.want_gecos == WHO_DONTWANT) && !match(wfl.gecos, acptr->info)))
+	  {
+	    return WHO_CANTSEE;
+	  }
+      }
+
+    /* if they only want people with a certain server */
+    if (wfl.want_server != WHO_DONTCARE)
+      {
+	if (((wfl.want_server == WHO_WANT) && strcmp(wfl.server, acptr->user->server)) ||
+	    ((wfl.want_server == WHO_DONTWANT) && !strcmp(wfl.server, acptr->user->server)))
+	  {
+	    return WHO_CANTSEE;
+	  }
+      }
+
+    /* if they only want people with a certain host */
+    if (wfl.want_host != WHO_DONTCARE)
+      {
+	char *host;
+
+	if (IsAnOper(sptr))
+	  host = acptr->user->realhost;
+	else
+	  {
+	    if (IsHidden(sptr))
+	      host = acptr->user->virthost;
+	    else
+	      host = acptr->user->realhost;
+	  }
+
+	if (((wfl.want_host == WHO_WANT) && match(wfl.host, host)) ||
+	    ((wfl.want_host == WHO_DONTWANT) && !match(wfl.host, host)))
+	  {
+	    return WHO_CANTSEE;
+	  }
+      }
+
+    /* if they only want people with a certain nick.. */
+    if (wfl.want_nick != WHO_DONTCARE)
+      {
+	if (((wfl.want_nick == WHO_WANT) && match(wfl.nick, acptr->name)) ||
+	    ((wfl.want_nick == WHO_DONTWANT) && !match(wfl.nick, acptr->name)))
+	  {
+	    return WHO_CANTSEE;
+	  }
+      }
+
+    /* if they only want people with a certain username */
+    if (wfl.want_user != WHO_DONTCARE)
+      {
+	if (((wfl.want_user == WHO_WANT) && match(wfl.user, acptr->user->username)) ||
+	    ((wfl.want_user == WHO_DONTWANT) && !match(wfl.user, acptr->user->username)))
+	  {
+	    return WHO_CANTSEE;
+	  }
+      }
+
+    /* if they only want people with a certain umode */
+    if (wfl.umodes_want)
+      {
+	if (!(acptr->umodes & wfl.umodes_want))
+	  return WHO_CANTSEE;
+      }
+
+    if (wfl.umodes_dontwant)
+      {
+	if (acptr->umodes & wfl.umodes_dontwant)
+	  return WHO_CANTSEE;
+      }
+
+    /* if they only want common channels */
+    if (wfl.common_channels_only)
+      {
+	if (!has_common_channels(sptr, acptr))
+	  return WHO_CANTSEE;
+      }
+
+    if (channel)
+      {
+	int member = who_flags & WF_ONCHANNEL;
+
+	if (SecretChannel(channel) ||
+	    HiddenChannel(channel))
+	  {
+	    /* if they aren't on it.. they can't see it */
+	    if (!(who_flags & WF_ONCHANNEL))
+	      break;
+	  }
+
+	if (IsHiding(acptr))
+	  /* if they're +I .. only show them if the other person is an oper */
+	  break;
+
+	if (IsInvisible(acptr) && !member)
+	  break;
+
+	if ((channel->mode.mode & MODE_AUDITORIUM) &&
+	    !is_chan_op(acptr, channel) &&
+	    !is_chan_op(sptr, channel))
+	  break;
+      }
+    else
+      {
+	/* a user/mask who */
+	
+	if (IsInvisible(acptr))
+	  {
+	    /* don't show them unless it's an exact match */
+	    if ((who_flags & WF_WILDCARD))
+	      break;
+	  }
+      }
+
+    /* phew.. show them. */
+    return WHO_CANSEE;
+  } while (0);
+
+  /* if we get here, it's oper-dependant. */
+  if (IsAnOper(sptr))
+    return ret | WHO_OPERSEE | WHO_CANSEE;
+  else
+    if (sptr == acptr)
+      return ret | WHO_CANSEE;
+    else
+      return ret | WHO_CANTSEE;
+}
+
+static void do_channel_who(aClient *sptr, aChannel *channel, char *mask)
+{
+  Member *cm = channel->members;
+  
+  if (IsMember(sptr, channel))
+    who_flags |= WF_ONCHANNEL;
+
+  for (cm = channel->members; cm; cm = cm->next)
+    {
+      aClient *acptr = cm->cptr;
+      char status[20];
+
+      int cansee;
+
+      if ((cansee = can_see(sptr, acptr, channel)) & WHO_CANTSEE)
+	continue;
+
+      make_who_status(sptr, acptr, channel, cm, status, cansee);
+      send_who_reply(sptr, acptr, channel->chname, status, "");
+    }
+
+  return;
+}
+
+static void make_who_status(aClient *sptr, aClient *acptr, aChannel *channel, 
+			    Member *cm, char *status, int cansee)
+{
+  int i = 0;
+
+  if (acptr->user->away)
+    status[i++] = 'G';
+  else
+    status[i++] = 'H';
+  
+  if (IsARegNick(acptr))
+    status[i++] = 'r';
+
+  if (IsAnOper(acptr) &&
+      (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
+    status[i++] = '*';
+  
+  if (IsAnOper(acptr) &&
+      (IsHideOper(acptr) && sptr != acptr && IsAnOper(sptr)))
+    status[i++] = '!';
+  
+  if (cansee & WHO_OPERSEE)
+    status[i++] = '&';
+
+  if (cm)
+    {
+      if (cm->flags & CHFL_CHANOP)
+	status[i++] = '@';
+      else if (cm->flags & CHFL_HALFOP)
+	status[i++] = '%';
+      else if (cm->flags & CHFL_VOICE)
+	status[i++] = '+';
+    }
+
+  status[i] = '\0';
+}
+
+static void do_other_who(aClient *sptr, char *mask)
+{
+  /* wildcard? */
+  if (strchr(mask, '*') || strchr(mask, '?'))
+    {
+      /* go through all users.. */
+      aClient *acptr;
+
+      who_flags |= WF_WILDCARD;
+
+      for (acptr = client; acptr; acptr = acptr->next)
+	{
+	  int cansee;
+	  char status[20];
+	  char *channel;
+	  int flg;
+
+	  if (match(mask, acptr->name))
+	    continue;
+
+	  if ((cansee = can_see(sptr, acptr, NULL)) & WHO_CANTSEE)
+	    continue;
+
+	  channel = first_visible_channel(sptr, acptr, &flg);
+	  make_who_status(sptr, acptr, NULL, NULL, status, cansee);
+	  send_who_reply(sptr, acptr, channel, status, (flg & FVC_HIDDEN) ? "~" : "");
+	}	  
+    }
+  else
+    {
+      /* just a single client */
+      aClient *acptr = find_client(mask, NULL);
+      int cansee;
+      char status[20];
+      char *channel;
+      int flg;
+
+      if (!acptr)
+	return;
+
+      if ((cansee = can_see(sptr, acptr, NULL)) == WHO_CANTSEE)
+	return;
+      
+      channel = first_visible_channel(sptr, acptr, &flg);
+      make_who_status(sptr, acptr, NULL, NULL, status, cansee);
+      send_who_reply(sptr, acptr, channel, status, (flg & FVC_HIDDEN) ? "~" : "");
+    }
+
+  return;
+}
+
+static void send_who_reply(aClient *sptr, aClient *acptr, 
+			   char *channel, char *status, char *xstat)
+{
+  char *stat;
+
+  stat = malloc(strlen(status) + strlen(xstat) + 1);
+
+  sprintf(stat, "%s%s", status, xstat);
+
+  sendto_one(sptr, getreply(RPL_WHOREPLY), me.name, sptr->name,      
+	     channel,       /* channel name */
+	     acptr->user->username, /* user name */
+	     (IsHidden(acptr) && !(who_flags & WF_REALHOST)) ?
+	     acptr->user->virthost :
+	     acptr->user->realhost, /* hostname */
+	     acptr->user->server,   /* server name */
+	     acptr->name,           /* nick */
+	     stat,                  /* status */
+	     acptr->hopcount,        /* hops */ 
+	     acptr->info            /* realname */
+	     );
+  free(stat);
+}
+
+static char *first_visible_channel(aClient *sptr, aClient *acptr, int *flg)
+{
+  aChannel *chptr;
+  Membership *lp;
+  static char chbuf[CHANNELLEN + 2];
+
+  *flg = 0;
+
+  /* this is a bit cack, but it seems the only way
+     (and is the current behaviour) since +I is not channel-specific */
+  if (IsHiding(acptr))
+    return "*";
+
+  for (lp = acptr->user->channel; lp; lp = lp->next)
+    {
+      aChannel *chptr = lp->chptr;
+      int cansee = ShowChannel(sptr, chptr);
+
+      if (!cansee)
+	{
+	  if (IsAnOper(sptr))
+	    *flg |= FVC_HIDDEN;
+	  else
+	    continue;
+	}
+      
+      return chptr->chname;
+    }
+ 
+  /* no channels that they can see */
+
+  return "*";
+}
+
+static int has_common_channels(aClient *c1, aClient *c2)
+{
+  Membership *lp;
+
+  if (!IsAnOper(c1) && IsHiding(c2))
+    return 0;
+
+  for (lp = c1->user->channel; lp; lp = lp->next)
+    {
+      if (IsMember(c2, lp->chptr))
+	return 1;
+    }
+
+  return 0;
 }

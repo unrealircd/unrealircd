@@ -88,7 +88,11 @@ void start_auth(aClient *cptr)
 
 
 	/* Use the listener that the user got in on, dah? */
+#ifndef INET6
 	sock.SIN_ADDR = cptr->listener->ip; 
+#else
+	bcopy((char *)&cptr->listener->ip, (char *)&sock.SIN_ADDR, sizeof(struct IN_ADDR));
+#endif
 	sock.SIN_PORT = 0;
 	sock.SIN_FAMILY = AFINET;	/* redundant? */
 	(void)bind(cptr->authfd, (struct SOCKADDR *)&sock, sizeof(sock));
@@ -111,8 +115,8 @@ void start_auth(aClient *cptr)
 		cptr->authfd = -1;
 		if (!DoingDNS(cptr))
 			SetAccess(cptr);
-	if (SHOWCONNECTINFO)
-		sendto_one(cptr, REPORT_FAIL_ID);
+		if (SHOWCONNECTINFO) 
+			sendto_one(cptr, REPORT_FAIL_ID);
 		return;
 	}
 	cptr->flags |= (FLAGS_WRAUTH | FLAGS_AUTH);

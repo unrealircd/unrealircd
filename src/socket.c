@@ -84,16 +84,10 @@ int  deliver_it(aClient *cptr, char *str, int len)
 
 #ifdef USE_SSL
 	if (cptr->flags & FLAGS_SSL)
-		 retval = SSL_write((SSL *)cptr->ssl, str, len);	
+		 retval = ircd_SSL_write(cptr, str, len);	
 	else
+#endif
 		retval = send(cptr->fd, str, len, 0);
-#else
-#ifndef INET6
-	retval = send(cptr->fd, str, len, 0);
-#else
-	retval = sendto(cptr->fd, str, len, 0, 0, 0);
-#endif
-#endif
 	/*
 	   ** Convert WOULDBLOCK to a return of "0 bytes moved". This
 	   ** should occur only if socket was non-blocking. Note, that
@@ -231,4 +225,17 @@ char	*Inet_ia2p(struct IN_ADDR *ia)
 	else
 		return((char *)inet_ntop(AFINET, ia, buf, sizeof(buf)));
 #endif
+}
+
+char	*Inet_ia2pNB(struct IN_ADDR *ia, int compressed)
+{
+	static char buf[256];
+#ifndef INET6
+	return ((char *)inet_ntoa(*ia));
+#else
+	if (compressed)
+		return ((char *)inet_ntop(AFINET, ia, buf, sizeof(buf)));
+	else
+		return ((char *)inetntop(AFINET, ia, buf, sizeof(buf)));
+#endif	
 }

@@ -59,11 +59,13 @@
 static Hook *SocksScanHost = NULL;
 static vFP			xEadd_scan = NULL;
 static struct SOCKADDR_IN	*xScan_endpoint = NULL;
-static int xScan_TimeOut = 0;
+static struct IN_ADDR		*xScan_bind = NULL;
+static int *xScan_TimeOut = 0;
 #ifdef STATIC_LINKING
 extern void Eadd_scan();
 extern struct SOCKADDR_IN	Scan_endpoint;
 extern int Scan_TimeOut;
+extern struct IN_ADDR Scan_bind;
 #endif
 void	scan_socks_scan(Scan_AddrStruct *sr);
 void	scan_socks4_scan(Scan_AddrStruct *sr);
@@ -74,6 +76,7 @@ static Mod_SymbolDepTable modsymdep[] =
 {
 	MOD_Dep(Eadd_scan, xEadd_scan, "src/modules/scan.so"),
 	MOD_Dep(Scan_endpoint, xScan_endpoint, "src/modules/scan.so"),
+	MOD_Dep(Scan_bind, xScan_bind, "src/modules/scan.so"),
 	MOD_Dep(Scan_TimeOut, xScan_TimeOut, "src/modules/scan.so"),
 	{NULL, NULL}
 };
@@ -167,6 +170,7 @@ void	scan_socks4_scan(Scan_AddrStruct *h)
 	unsigned char		*cp;
 #endif
 	struct			SOCKADDR_IN sin;
+	struct 			SOCKADDR_IN bin;
 	struct			in_addr ia4;
 	SOCKET			fd;
 	unsigned char		socksbuf[10];
@@ -184,15 +188,7 @@ void	scan_socks4_scan(Scan_AddrStruct *h)
 	bcopy(sin.SIN_ADDR.S_ADDR, h->in.S_ADDR, sizeof(h->in.S_ADDR));
 #endif
 	IRCMutexUnlock((h->lock));
-	/* IPv6 ?*/
 #ifdef INET6
-	IRCMutexLock((h->lock));
-#ifndef INET6
-	sin.SIN_ADDR.S_ADDR = h->in.S_ADDR;
-#else
-	bcopy(sin.SIN_ADDR.S_ADDR, h->in.S_ADDR, sizeof(h->in.S_ADDR));
-#endif
-	IRCMutexUnlock((h->lock));
 	/* ::ffff:ip hack */
 	cp = (u_char *)&h->in.s6_addr;
 	if (!(cp[0] == 0 && cp[1] == 0 && cp[2] == 0 && cp[3] == 0 && cp[4] == 0
@@ -207,6 +203,15 @@ void	scan_socks4_scan(Scan_AddrStruct *h)
 		goto exituniverse;
 		return;
 	}
+
+#ifndef INET6
+	bin.SIN_ADDR = *xScan_bind;
+#else
+	bcopy((char *)xScan_bind, (char *)&bin.SIN_ADDR, sizeof(struct IN_ADDR));
+#endif
+	bin.SIN_FAMILY = AFINET;
+	bin.SIN_PORT = 0;
+	bind(fd, (struct SOCKADDR *)&bin, sizeof(bin));
 	sin.SIN_PORT = htons((unsigned short)SCAN_ON_PORT);
 	sin.SIN_FAMILY = AFINET;
 	/* We do this non-blocking to prevent a hang of the entire ircd with newer
@@ -235,10 +240,9 @@ void	scan_socks4_scan(Scan_AddrStruct *h)
 		goto exituniverse;
 		return;
 	}
-ircd_log(LOG_ERROR, "%s:%d - (Connection Established)", Inet_ia2p(&h->in), SCAN_ON_PORT);
 	
 	/* We wait for write-ready */
-	tv.tv_sec = xScan_TimeOut;
+	tv.tv_sec = *xScan_TimeOut;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
@@ -269,7 +273,7 @@ ircd_log(LOG_ERROR, "%s:%d - (Connection Established)", Inet_ia2p(&h->in), SCAN_
 		goto exituniverse;
 	}
 	/* Now we wait for data. 10 secs ought to be enough  */
-	tv.tv_sec = xScan_TimeOut;
+	tv.tv_sec = *xScan_TimeOut;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
@@ -375,7 +379,7 @@ void	scan_socks5_scan(Scan_AddrStruct *h)
 	}
 	
 	/* We wait for write-ready */
-	tv.tv_sec = xScan_TimeOut;
+	tv.tv_sec = *xScan_TimeOut;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
@@ -397,7 +401,7 @@ void	scan_socks5_scan(Scan_AddrStruct *h)
 		CLOSE_SOCK(fd);
 		goto exituniverse;
 	}
-	tv.tv_sec = xScan_TimeOut;
+	tv.tv_sec = *xScan_TimeOut;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);

@@ -32,7 +32,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 WIRCD DIALOG DISCARDABLE  0, 0, 228, 127
 STYLE DS_MODALFRAME | DS_3DLOOK | DS_NOFAILCREATE | DS_CENTER | 
-    WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+    WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         130,IDC_STATIC,"Static",SS_BITMAP | SS_NOTIFY,14,10,200,
@@ -60,7 +60,7 @@ FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,134,73,50,14
     LTEXT           "Where to get help:",IDC_STATIC,14,11,60,8
-    LTEXT           "Point your IRC client to irc.unrealircd.com and join #UnrealIRCd",
+    LTEXT           "Point your IRC client to irc.unrealircd.com and join #Unreal-Support",
                     IDC_STATIC,14,20,234,9
     LTEXT           "Email us at",IDC_STATIC,14,30,37,8
     CONTROL         "coders@lists.unrealircd.org",IDC_EMAIL,"Button",
@@ -331,7 +331,7 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "none\0"
             VALUE "FileDescription", "\0"
-            VALUE "FileVersion", "1.0\0"
+            VALUE "FileVersion", "3.2\0"
             VALUE "InternalName", "UnrealIRCd\0"
             VALUE "LegalCopyright", "\0"
             VALUE "LegalTrademarks", "\0"

@@ -55,6 +55,9 @@ anAuthStruct AuthTypes[] = {
 #ifdef AUTHENABLE_SSL_PUBKEY
 	{"sslpubkey",   AUTHTYPE_SSL_PUBKEY},
 #endif
+#ifdef AUTHENABLE_RIPEMD160
+	{"ripemd160",	AUTHTYPE_RIPEMD160},
+#endif
 	{NULL,		0}
 };
 
@@ -137,17 +140,11 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 #ifdef	AUTHENABLE_UNIXCRYPT
 	extern	char *crypt();
 #endif
-#if defined(AUTHENABLE_MD5) || defined(AUTHENABLE_SHA1)
+#if defined(AUTHENABLE_MD5) || defined(AUTHENABLE_SHA1) || defined(AUTHENABLE_RIPEMD160)
         static char    buf[512];
         int		i;
 #endif
 
-#ifdef  AUTHENABLE_MD5
-	MD5_CTX	md5_ctx;
-#endif
-#ifdef  AUTHENABLE_SHA1
-        SHA_CTX sha1_ctx;
-#endif
 #ifdef AUTHENABLE_SSL_PUBKEY
 	EVP_PKEY *evp_pkey = NULL;
 	EVP_PKEY *evp_pkeyfile = NULL;
@@ -185,7 +182,7 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 		case AUTHTYPE_MD5:
 			if (!para)
 				return -1;
-			
+#ifndef _WIN32
 			if ((i = b64_encode(MD5(para, strlen(para), NULL),
                                 MD5_DIGEST_LENGTH, buf, sizeof(buf))))
 			{
@@ -197,14 +194,81 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 			else
 				return -1;
 		        break;
+#else
+			{
+				HCRYPTPROV hProv;
+				HCRYPTHASH hHash;
+				char buf2[512];
+				DWORD size = 512;
+				if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL, 0))
+					return -1;
+				if (!CryptCreateHash(hProv, CALG_MD5, 0, 0, &hHash))
+					return -1;
+				if (!CryptHashData(hHash, para, strlen(para), 0))
+					return -1;
+				if (!CryptGetHashParam(hHash, HP_HASHVAL, buf, &size, 0))
+					return -1;
+				CryptDestroyHash(hHash);
+				CryptReleaseContext(hProv, 0);
+				b64_encode(buf, 16, buf2, sizeof(buf2));
+				if (!strcmp(buf2, as->data))
+					return 2;
+				else
+					return -1;
+			}
+			break;
+
+#endif
 #endif
 #ifdef AUTHENABLE_SHA1
 		case AUTHTYPE_SHA1:
 			if (!para)
 				return -1;
+#ifndef _WIN32
 			
 			if ((i = b64_encode(SHA1(para, strlen(para), NULL),
                                 SHA_DIGEST_LENGTH, buf, sizeof(buf))))
+			{
+				if (!strcmp(buf, as->data))
+					return 2;
+				else
+					return -1;
+			}
+			else
+				return -1;
+		        break;
+#else
+			{
+				HCRYPTPROV hProv;
+				HCRYPTHASH hHash;
+				char buf2[512];
+				DWORD size = 512;
+				if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL, 0))
+					return -1;
+				if (!CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash))
+					return -1;
+				if (!CryptHashData(hHash, para, strlen(para), 0))
+					return -1;
+				if (!CryptGetHashParam(hHash, HP_HASHVAL, buf, &size, 0))
+					return -1;
+				CryptDestroyHash(hHash);
+				CryptReleaseContext(hProv, 0);
+				b64_encode(buf, 20, buf2, sizeof(buf2));
+				if (!strcmp(buf2, as->data))
+					return 2;
+				else 
+					return -1;
+			}
+			break;
+#endif
+#endif
+#ifdef AUTHENABLE_RIPEMD160
+		case AUTHTYPE_RIPEMD160:
+			if (!para)
+				return -1;
+			
+			if ((i = b64_encode(RIPEMD160(para, strlen(para), NULL),
+                                RIPEMD160_DIGEST_LENGTH, buf, sizeof(buf))))
 			{
 				if (!strcmp(buf, as->data))
 					return 2;
@@ -264,16 +328,12 @@ char	*Auth_Make(short type, char *para)
 	char	salt[3];
 	extern	char *crypt();
 #endif
-#if defined(AUTHENABLE_MD5) || defined(AUTHENABLE_SHA1)
+#if defined(AUTHENABLE_MD5) || defined(AUTHENABLE_SHA1) || defined(AUTHENABLE_RIPEMD160)
         static char    buf[512];
 	int		i;
 #endif
-
-#ifdef  AUTHENABLE_MD5
-	MD5_CTX	md5_ctx;
-#endif
-#ifdef  AUTHENABLE_SHA1
-        SHA_CTX sha1_ctx;
+#ifdef _WIN32
+	static char buf2[512];
 #endif
 
 	switch (type)
@@ -296,6 +356,7 @@ char	*Auth_Make(short type, char *para)
 		case AUTHTYPE_MD5:
 			if (!para)
 				return NULL;
+#ifndef _WIN32
 			
 			if ((i = b64_encode(MD5(para, strlen(para), NULL),
                                 MD5_DIGEST_LENGTH, buf, sizeof(buf))))
@@ -305,14 +366,69 @@ char	*Auth_Make(short type, char *para)
 			else
 				return NULL;
 		        break;
+#else	
+			{
+				HCRYPTPROV hProv;
+				HCRYPTHASH hHash;
+				DWORD size = 512;
+				if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL, 0))
+					return NULL;
+				if (!CryptCreateHash(hProv, CALG_MD5, 0, 0, &hHash))
+					return NULL;
+				if (!CryptHashData(hHash, para, strlen(para), 0))
+					return NULL;
+				if (!CryptGetHashParam(hHash, HP_HASHVAL, buf, &size, 0))
+					return NULL;
+				CryptDestroyHash(hHash);
+				CryptReleaseContext(hProv, 0);
+				b64_encode(buf, 16, buf2, sizeof(buf2));
+				return (buf2);
+			}
+			break;
+#endif
 #endif
 #ifdef AUTHENABLE_SHA1
 		case AUTHTYPE_SHA1:
 			if (!para)
 				return NULL;
-			
+#ifndef _WIN32			
 			if ((i = b64_encode(SHA1(para, strlen(para), NULL),
                                 SHA_DIGEST_LENGTH, buf, sizeof(buf))))
+			{
+				return (buf);
+			}
+			else
+				return NULL;
+		        break;
+#else
+			{
+				HCRYPTPROV hProv;
+				HCRYPTHASH hHash;
+				DWORD size = 512;
+				if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL, 0))
+					return NULL;
+				if (!CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash))
+					return NULL;
+				if (!CryptHashData(hHash, para, strlen(para), 0))
+					return NULL;
+				if (!CryptGetHashParam(hHash, HP_HASHVAL, buf, &size, 0))
+					return NULL;
+				CryptDestroyHash(hHash);
+				CryptReleaseContext(hProv, 0);
+				b64_encode(buf, 20, buf2, sizeof(buf2));
+				return (buf2);
+			}
+			break;
+#endif
+
+#endif
+#ifdef AUTHENABLE_RIPEMD160
+		case AUTHTYPE_RIPEMD160:
+			if (!para)
+				return NULL;
+			
+			if ((i = b64_encode(RIPEMD160(para, strlen(para), NULL),
+                                RIPEMD160_DIGEST_LENGTH, buf, sizeof(buf))))
 			{
 				return (buf);
 			}

@@ -80,6 +80,7 @@ typedef struct _configitem_ulines ConfigItem_ulines;
 typedef struct _configitem_tld ConfigItem_tld;
 typedef struct _configitem_listen ConfigItem_listen;
 typedef struct _configitem_allow ConfigItem_allow;
+typedef struct _configflag_allow ConfigFlag_allow;
 typedef struct _configitem_allow_channel ConfigItem_allow_channel;
 typedef struct _configitem_vhost ConfigItem_vhost;
 typedef struct _configitem_ssl ConfigItem_ssl;
@@ -99,6 +100,10 @@ typedef struct _configitem_alias_format ConfigItem_alias_format;
 typedef struct _configitem_include ConfigItem_include;
 typedef struct _configitem_help ConfigItem_help;
 typedef struct liststruct ListStruct;
+
+#define CFG_TIME 0x0001
+#define CFG_SIZE 0x0002
+#define CFG_YESNO 0x0004
 
 typedef struct Watch aWatch;
 typedef struct Client aClient;
@@ -190,8 +195,10 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	BOOT_AUTODIE	64
 #define BOOT_NOFORK     128
 
-#define	STAT_LOG	-6	/* logfile for -x */
-#define	STAT_CONNECTING	-4
+#define	STAT_LOG	-7	/* logfile for -x */
+#define	STAT_CONNECTING	-6
+#define STAT_SSL_CONNECT_HANDSHAKE -5
+#define STAT_SSL_ACCEPT_HANDSHAKE -4
 #define	STAT_HANDSHAKE	-3
 #define	STAT_ME		-2
 #define	STAT_UNKNOWN	-1
@@ -210,6 +217,13 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	IsServer(x)		((x)->status == STAT_SERVER)
 #define	IsClient(x)		((x)->status == STAT_CLIENT)
 #define	IsLog(x)		((x)->status == STAT_LOG)
+
+#ifdef USE_SSL
+#define IsSSLAcceptHandshake(x)	((x)->status == STAT_SSL_ACCEPT_HANDSHAKE)
+#define IsSSLConnectHandshake(x)	((x)->status == STAT_SSL_CONNECT_HANDSHAKE)
+#define SetSSLAcceptHandshake(x)	((x)->status = STAT_SSL_ACCEPT_HANDSHAKE)
+#define SetSSLConnectHandshake(x)	((x)->status = STAT_SSL_CONNECT_HANDSHAKE)
+#endif
 
 #define	SetConnecting(x)	((x)->status = STAT_CONNECTING)
 #define	SetHandshake(x)		((x)->status = STAT_HANDSHAKE)
@@ -232,6 +246,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPT_NOT_SJ3	0x0200
 #define OPT_SJB64	0x0400
 #define OPT_NOT_SJB64	0x0800
+#define OPT_VHP		0x1000
+#define OPT_NOT_VHP	0x2000
 
 #define	FLAGS_PINGSENT   0x0001	/* Unreplied ping sent */
 #define	FLAGS_DEADSOCKET 0x0002	/* Local socket is dead--Exiting soon */
@@ -262,7 +278,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define FLAGS_SHUNNED    0x4000000
 #ifdef USE_SSL
 #define FLAGS_SSL	 0x10000000
-#define FLAGS_SSL_HSHAKE 0x20000000
 #endif
 #define FLAGS_DCCBLOCK	0x40000000
 #define FLAGS_MAP       0x80000000	/* Show this entry in /map */
@@ -326,7 +341,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #ifdef STRIPBADWORDS
 #define IsFilteringWords(x)	((x)->umodes & UMODE_STRIPBADWORDS)
 #endif
-
 #define IsNetAdmin(x)		((x)->umodes & UMODE_NETADMIN)
 #define IsCoAdmin(x)		((x)->umodes & UMODE_COADMIN)
 #define IsSAdmin(x)		((x)->umodes & UMODE_SADMIN)
@@ -368,7 +382,9 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define ClearHybNotice(x)	((x)->flags &= ~FLAGS_HYBNOTICE)
 #define IsHidden(x)             ((x)->umodes & UMODE_HIDE)
 #define IsHideOper(x)		((x)->umodes & UMODE_HIDEOPER)
-
+#ifdef USE_SSL
+#define IsSSL(x)		IsSecure(x)
+#endif
 #ifdef NOSPOOF
 #define	IsNotSpoof(x)		((x)->nospoof == 0)
 #else
@@ -397,7 +413,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SetRegNick(x)		((x)->umodes & UMODE_REGNICK)
 #define SetHidden(x)            ((x)->umodes |= UMODE_HIDE)
 #define SetHideOper(x)      ((x)->umodes |= UMODE_HIDEOPER)
-
+#define IsSecureConnect(x)	((x)->umodes & UMODE_SECURE)
 #define ClearAdmin(x)		((x)->umodes &= ~UMODE_ADMIN)
 #define ClearNetAdmin(x)	((x)->umodes &= ~UMODE_NETADMIN)
 #define ClearCoAdmin(x)		((x)->umodes &= ~UMODE_COADMIN)
@@ -591,6 +607,7 @@ struct aloopStruct {
 	unsigned do_garbage_collect : 1;
 	unsigned ircd_booted : 1;
 	unsigned do_bancheck : 1;
+	unsigned tainted : 1;
 };
 
 typedef struct Whowas {
@@ -763,7 +780,7 @@ struct Client {
 	struct Zdata *zip;	/* zip data */
 #endif
 #ifdef USE_SSL
-	struct	SSL	*ssl;
+	SSL		*ssl;
 #endif
 #ifndef NO_FDLIST
 	long lastrecvM;		/* to check for activity --Mika */
@@ -885,6 +902,11 @@ struct _configitem_class {
 	int	   pingfreq, connfreq, maxclients, sendq, clients;
 };
 
+struct _configflag_allow {
+	unsigned	noident :1;
+	unsigned	useip :1;
+};
+
 struct _configitem_allow {
 	ConfigItem       *prev, *next;
 	ConfigFlag 	 flag;
@@ -893,6 +915,7 @@ struct _configitem_allow {
 	short		 maxperip;
 	int		 port;
 	ConfigItem_class *class;
+	ConfigFlag_allow flags;
 };
 
 struct _configitem_oper {
@@ -1114,6 +1137,11 @@ struct stats {
 	unsigned int is_udp;	/* packets recv'd on udp port */
 	unsigned int is_loc;	/* local connections made */
 };
+
+typedef struct _MemoryInfo {
+	unsigned int classes;
+	unsigned long classesmem;
+} MemoryInfo;
 
 struct ListOptions {
 	LOpts *next;

@@ -1,6 +1,6 @@
 /************************************************************************
  *   IRC - Internet Relay Chat, Win32GUI.c
- *   Copyright (C) 2000-2001 David Flynn (DrBin) & Dominick Meglio (codemastr)
+ *   Copyright (C) 2000-2002 David Flynn (DrBin) & Dominick Meglio (codemastr)
  *   
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -21,12 +21,16 @@
 #define IRCDTOTALVERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
 #endif
 
-#define WIN32_VERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH9
-#include <windows.h>
-#include <windowsx.h>
+#define WIN32_VERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4
 #include "resource.h"
 #include "version.h"
 #include "setup.h"
+#ifdef INET6
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#endif
+#include <windows.h>
+#include <windowsx.h>
 #include <commctrl.h>
 #include "struct.h"
 #include "common.h"
@@ -44,6 +48,14 @@
 
 #define MIRC_COLORS "{\\colortbl ;\\red255\\green255\\blue255;\\red0\\green0\\blue127;\\red0\\green147\\blue0;\\red255\\green0\\blue0;\\red147\\green0\\blue0;\\red128\\green0\\blue128;\\red255\\green128\\blue0;\\red255\\green255\\blue0;\\red0\\green255\\blue0;\\red0\\green128\\blue128;\\red0\\green255\\blue255;\\red0\\green0\\blue252;\\red255\\green0\\blue255;\\red128\\green128\\blue128;\\red192\\green192\\blue192;\\red0\\green0\\blue0;}"
 
+/* Lazy macro */
+#define ShowDialog(handle, inst, template, parent, proc) {\
+	if (!IsWindow(handle)) { \
+		handle = CreateDialog(inst, template, parent, (DLGPROC)proc); ShowWindow(handle, SW_SHOW); \
+	}\
+	else\
+		SetForegroundWindow(handle);\
+}
 /* Comments:
  * 
  * DrBin did a great job with the original GUI, but he has been gone a long time
@@ -82,6 +94,8 @@ extern Link *Servers;
 extern ircstats IRCstats;
 char *errors = NULL, *RTFBuf = NULL;
 extern aMotd *botmotd, *opermotd, *motd, *rules;
+extern VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv);
+extern BOOL IsService;
 void CleanUp(void)
 {
 	Shell_NotifyIcon(NIM_DELETE ,&SysTray);
@@ -90,6 +104,7 @@ void CleanUpSegv(int sig)
 {
 	Shell_NotifyIcon(NIM_DELETE ,&SysTray);
 }
+HWND hStatusWnd;
 HWND hwIRCDWnd=NULL;
 HWND hwTreeView;
 HWND hWndMod;
@@ -449,15 +464,23 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	HWND hWnd;
 	WSADATA WSAData;
 	HICON hIcon;
-	InitCommonControls();
-
-	WM_TASKBARCREATED = RegisterWindowMessage("TaskbarCreated");
-	atexit(CleanUp);
-	if(!LoadLibrary("riched20.dll"))
-		LoadLibrary("riched32.dll");
-	InitStackTraceLibrary();
+	SERVICE_TABLE_ENTRY DispatchTable[] = {
+		{ "UnrealIRCd", ServiceMain },
+		{ 0, 0 }
+	};
+	DWORD need;
+	
 	VerInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	GetVersionEx(&VerInfo);
+	if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
+		SC_HANDLE hService, hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
+		if ((hService = OpenService(hSCManager, "UnrealIRCd", GENERIC_READ))) {
+			CloseServiceHandle(hService);
+			CloseServiceHandle(hSCManager);
+			StartServiceCtrlDispatcher(DispatchTable);
+			exit(0);
+		}
+	}
 	strcpy(OSName, "Windows ");
 	if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
 		if (VerInfo.dwMajorVersion == 4) {
@@ -485,11 +508,19 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 				strcat(OSName, "2000 ");
 			else if (VerInfo.dwMinorVersion == 1)
 				strcat(OSName, "XP ");
+			else if (VerInfo.dwMinorVersion == 2)
+				strcat(OSName, ".NET Server ");
 		}
 		strcat(OSName, VerInfo.szCSDVersion);
 	}
 	if (OSName[strlen(OSName)-1] == ' ')
 		OSName[strlen(OSName)-1] = 0;
+	InitCommonControls();
+	WM_TASKBARCREATED = RegisterWindowMessage("TaskbarCreated");
+	atexit(CleanUp);
+	if(!LoadLibrary("riched20.dll"))
+		LoadLibrary("riched32.dll");
+	InitDebug();
 
 	if (WSAStartup(MAKEWORD(1, 1), &WSAData) != 0)
     	{
@@ -508,11 +539,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		MessageBox(NULL, "UnrealIRCd has failed to initialize in InitwIRCD()", "UnrealIRCD Initalization Error" ,MB_OK);
 		return FALSE;
 	}
-
+	ShowWindow(hWnd, SW_SHOW);
 	hMainThread = (HANDLE)_beginthread(SocketLoop, 0, NULL);
 	while (GetMessage(&msg, NULL, 0, 0))
     {
-		if (hWndMod == NULL || !IsDialogMessage(hWndMod, &msg)) {
+		if (!IsWindow(hStatusWnd) || !IsDialogMessage(hStatusWnd, &msg)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
@@ -539,6 +570,7 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 	switch (message)
 			{
 			case WM_INITDIALOG: {
+				ShowWindow(hDlg, SW_HIDE);
 				hCursor = LoadCursor(hInst, MAKEINTRESOURCE(CUR_HAND));
 				hContext = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_CONTEXT)),0);
 				/* Rehash popup menu */
@@ -548,7 +580,6 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 				/* Systray popup menu set the items to point to the other menus*/
 				hTray = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_SYSTRAY)),0);
 				ModifyMenu(hTray, IDM_REHASH, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT)hRehash, "&Rehash");
-				ModifyMenu(hTray, IDM_CONFIG, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT)hConfig, "&Config");
 				ModifyMenu(hTray, IDM_ABOUT, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT)hAbout, "&About");
 				
 				SetWindowText(hDlg, WIN32_VERSION);
@@ -582,13 +613,54 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 					case WM_RBUTTONDOWN:
 						SetForegroundWindow(hDlg);
 						break;
-					case WM_RBUTTONUP: 
+					case WM_RBUTTONUP: {
+						unsigned long i = 60000;
 						GetCursorPos(&p);
+						DestroyMenu(hConfig);
+						hConfig = CreatePopupMenu();
+						DestroyMenu(hLogs);
+						hLogs = CreatePopupMenu();
+						AppendMenu(hConfig, MF_STRING, IDM_CONF, CPATH);
+						if (conf_log) {
+							ConfigItem_log *logs;
+							AppendMenu(hConfig, MF_POPUP|MF_STRING, (UINT)hLogs, "Logs");
+							for (logs = conf_log; logs; logs = (ConfigItem_log *)logs->next) {
+								AppendMenu(hLogs, MF_STRING, i++, logs->file);
+							}
+						}
+						AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
+						if (conf_include) {
+							ConfigItem_include *inc;
+							for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next) {
+								AppendMenu(hConfig, MF_STRING, i++, inc->file);
+							}
+							AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
+						}
+
+						AppendMenu(hConfig, MF_STRING, IDM_MOTD, MPATH);
+						AppendMenu(hConfig, MF_STRING, IDM_OPERMOTD, OPATH);
+						AppendMenu(hConfig, MF_STRING, IDM_BOTMOTD, BPATH);
+						AppendMenu(hConfig, MF_STRING, IDM_RULES, RPATH);
+						
+						if (conf_tld) {
+							ConfigItem_tld *tlds;
+							AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
+							for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *)tlds->next) {
+								if (!tlds->flag.motdptr)
+									AppendMenu(hConfig, MF_STRING, i++, tlds->motd_file);
+								if (!tlds->flag.rulesptr)
+									AppendMenu(hConfig, MF_STRING, i++, tlds->rules_file);
+							}
+						}
+						AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
+						AppendMenu(hConfig, MF_STRING, IDM_NEW, "New File");
+						ModifyMenu(hTray, IDM_CONFIG, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT)hConfig, "&Config");
 						TrackPopupMenu(hTray, TPM_LEFTALIGN|TPM_LEFTBUTTON,p.x,p.y,0,hDlg,NULL);
 						/* Kludge for a win bug */
 						SendMessage(hDlg, WM_NULL, 0, 0);
 						break;
 					}
+				}
 				return 0;
 			}
 			case WM_DESTROY:
@@ -621,8 +693,8 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 				return 0;
 			 }
 			 else if ((p.x >= 85) && (p.x <= 132) && (p.y >= 178) && (p.y <= 190))  {
-				 DialogBox(hInst, "Status", hDlg, (DLGPROC)StatusDLG);
-				 return 0;
+				ShowDialog(hStatusWnd, hInst, "Status", hDlg, StatusDLG);
+				return 0;
 			 }
 			 else if ((p.x >= 140) && (p.x <= 186) && (p.y >= 178) && (p.y <= 190))  {
 				unsigned long i = 60000;
@@ -703,7 +775,7 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 				switch(LOWORD(wParam)) {
 
 					case IDM_STATUS:
-						DialogBox(hInst, "Status", hDlg, (DLGPROC)StatusDLG);
+						ShowDialog(hStatusWnd, hInst, "Status", hDlg, StatusDLG);
 						break;
 					case IDM_SHUTDOWN:
 						if (MessageBox(hDlg, "Close UnrealIRCd?", "Are you sure?", MB_YESNO|MB_ICONQUESTION) == IDNO)
@@ -1477,8 +1549,8 @@ LRESULT CALLBACK StatusDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 				return (TRUE);
 			}
 		case WM_CLOSE:
-			EndDialog(hDlg, TRUE);
-			break;
+			DestroyWindow(hDlg);
+			return TRUE;
 		case WM_TIMER:
 				TreeView_DeleteAllItems(hwTreeView);
 				win_map(&me, hwTreeView, 1);
@@ -1500,8 +1572,10 @@ LRESULT CALLBACK StatusDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 				SetTimer(hDlg, 1, 5000, NULL);
 				return (TRUE);
 		case WM_COMMAND:
-			if (LOWORD(wParam) == IDOK)
-				EndDialog(hDlg, TRUE);
+			if (LOWORD(wParam) == IDOK) {
+				DestroyWindow(hDlg);
+				return TRUE;
+			}
 			break;
 
 		}
@@ -1885,23 +1959,30 @@ void win_log(char *format, ...) {
 		char *buf2;
         va_start(ap, format);
         ircvsprintf(buf, format, ap);
-	strcat(buf, "\r\n");
-	if (errors) {
-		buf2 = MyMalloc(strlen(errors)+strlen(buf)+1);
-		sprintf(buf2, "%s%s",errors,buf);
-		MyFree(errors);
-		errors = NULL;
+	if (!IsService) {
+		strcat(buf, "\r\n");
+		if (errors) {
+			buf2 = MyMalloc(strlen(errors)+strlen(buf)+1);
+			sprintf(buf2, "%s%s",errors,buf);
+			MyFree(errors);
+			errors = NULL;
+		}
+		else {
+			buf2 = MyMalloc(strlen(buf)+1);
+			sprintf(buf2, "%s",buf);
+		}
+		errors = buf2;
 	}
 	else {
-		buf2 = MyMalloc(strlen(buf)+1);
-		sprintf(buf2, "%s",buf);
+		FILE *fd = fopen("service.log", "a");
+		fprintf(fd, "%s\n", buf);
+		fclose(fd);
 	}
-	errors = buf2;
         va_end(ap);
 }
 
 void win_error() {
-	if (errors)
+	if (errors && !IsService)
 		DialogBox(hInst, "ConfigError", hwIRCDWnd, (DLGPROC)ConfigErrorDLG);
 }
 

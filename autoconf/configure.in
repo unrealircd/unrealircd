@@ -1,5 +1,10 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(src/ircd.c)
+if test $# = 0; then
+	echo "You might want to run ./Config or provide some parameters to this script."
+	echo "./configure --help for information about this script"
+	exit 0
+fi
 AC_CONFIG_HEADER(include/setup.h)
 AC_PROG_CC
 if test "$ac_cv_prog_gcc" = "yes"; then
@@ -67,7 +72,12 @@ fi
 dnl module checking based on Hyb7's module checking code
 AC_DEFUN(AC_ENABLE_DYN,
 [
-AC_CHECK_FUNC(dlopen,, AC_CHECK_LIB(dl, dlopen,IRCDLIBS="$IRCDLIBS-ldl",AC_MSG_WARN(Dynamic linking is not enabled because dlopen was not found) AC_DEFINE(STATIC_LINKING)))
+AC_CHECK_FUNC(dlopen,, AC_CHECK_LIB(dl, dlopen,IRCDLIBS="$IRCDLIBS-ldl",
+[
+AC_MSG_WARN(Dynamic linking is not enabled because dlopen was not found) 
+AC_DEFINE(STATIC_LINKING)
+]))
+
 hold_cflags=$CFLAGS
 CFLAGS="$CFLAGS -export-dynamic"
 AC_CACHE_CHECK(if we need the -export-dynamic flag, ac_cv_export_dynamic, [
@@ -99,6 +109,7 @@ ac_cv_underscore=no
 else
 ac_cv_underscore=yes
 fi
+rm -f uscore uscore.c
 ])
 if test "$ac_cv_underscore" = "yes"; then
 AC_DEFINE(UNDERSCORE)
@@ -350,6 +361,7 @@ ACX_PTHREAD
 CC="$PTHREAD_CC"
 CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 IRCDLIBS="$IRCDLIBS $PTHREAD_LIBS"
+AC_caolan_FUNC_WHICH_GETHOSTBYNAME_R
 AC_MSG_CHECKING(if FD_SETSIZE is large enough to allow $ac_fd file descriptors)
 AC_TRY_RUN([
 #include <sys/types.h>

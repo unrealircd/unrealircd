@@ -1,4 +1,4 @@
-/*                              
+/*
  * UnrealIRCd Changes File - (C) Carsten Munk 1999-2002 &
  *                               The UnrealIRCd Team
  *                              
@@ -1297,3 +1297,159 @@ seen. gmtime warning still there
 - Changed version to beta10 and updated documentation
 - Removed obsolete network files
 - Added some new network files (hopefully I'll be able to get all the submissions added soon)
+*** beta10 released ***
+- Added a config check to see which (if any) gethostbyname_r exists (based on a macro by Caolan McNamara)
+- Removed some SOCKS scanner debug code that was forgotten
+- Finally REALLY fixed the scanner (note to Stskeeps: bcmp returns 0 when there IS a match)
+- Added OpenIRC-CA in .SICI
+- Fixed a openssl+ipv6 bug, pointed out by Aragon .. This probably breaks some other crap, but what
+  the heck..
+- Made ident checking work on IPv6 as well
+- Fixed a /stats L/l bug reported by dimplesx [#0000190]
+- Fixed some typos in validate_configuration, fixed a hostilename problem when ident
+  checking is off
+- Fixed a hostilename problem reported by Xuefer [#0000158]
+- Fixed some stuff to deal with #136 - Please note that we do NOT compress our addies
+  - reason for this is because for example ::ffff:192.168.1.5 would really fuck up stuff
+  in the IRC protocol
+- Fixed a typo in doc/example.conf that I believe is causing ident not to work
+- Fixed a /stats Z bug where it didn't correctly report local clients
+- Made /stats Z once again report the # of classes and memory used by classes
+- Added an allow::options this fixes some problems with allow, ident is now used
+  unless allow::options::noident is set, also if the user matches an allow by IP rather
+  than by host the hostname is still used for the u@h, unless allow::options::useip is set
+  (idea inspired by danielek)
+- Fixed a bug in the new allow system reported by danielek
+- Fixed a maxperip and a maxunknownconnectionsperip bug in IPv6 reported by danielek
+- Fixed another scanner bug causing the scanner to never timeout
+- Fixed a module bug when there is an include between a module-config-directive and the loadmodule
+- Made it so if a module fails to load it is non-fatal, reported by Adiga007 (#0000194)
+- Made hosts converted to lowercase before run through hidehost() this way ABC.com is the
+  same as abc.com, reported by Magnet (#0000065)
+- Converted the status window in the win32 GUI to a modeless dialog
+- Fixed a win32 bug where the tray config menu didn't contain anything, reported by Jens (#0000127)
+- Fixed a /who bug where + wasn't shown for voices, reported by Wcc (#0000202)
+- Included larne's /who patch, adding a multitude of symbols? :P
+- Split 005 and 105 up in order to conform to the RFC1459 limit of 15 parameters per
+  command
+- Failsafe check (to be removed again) in s_bsd.c
+- [nighthawk 2002-06-16] Added myself to s_serv.c:m_info().
+- Fixed a doc/conf.doc typo reported by SciFi
+- Documented the new allow::options in doc/conf.doc
+- [nighthawk 2002-06-17] Rewrote m_who.c from scratch.  It's slightly different,
+                         help.conf explains exactly how.
+- [nighthawk 2002-06-17] Changed m_quit.c slightly, removed a redundant strlen,
+                         made prefix-quit of "no" not use one at all, since this
+                         is in example.conf and is sensicle..
+- Couple of updates to INSTALL.
+- Updated INSTALL to no longer say 'make install is not needed' reported by wolfy
+- Fixed a oper count bug caused by +H (reported by dwd) [#0000203]
+- Fixed another oper count bug caused by +H and SVSMODE/SVS2MODE [#0000203]
+- Fixed yet another oper count bug caused by SVSO and +H and +O (local oper)
+- Fixed a modes-on-oper bug that could cause a negative invisible and/or oper count if +i
+  or +H was specified in modes-on-oper.
+- Fix a minor stupid in m_quit.c.
+- Added /who +R which shows real host to opers.
+- Added set::scan::bind-ip, set::scan::message, on request of RaYmAn, documented
+  in example.conf
+- Fixed minor problem with former patch
+- Fixed the set::scan::bind-ip patch to work with win32
+- Added 005 token AWAYLEN= from ircu
+- Heavily updated INSTALL
+- Removed Win32 and READMENOW.Win32.txt (obsolete)
+- Started WinXP IPv6 support (added headers)
+- More WinXP IPv6, finished headers, replaced calls to inet_ntoa with Inet_ia2p
+- Added support for the RIPEMD-160 encryption algorithm for encrypted passwords (supposed to be slightly 
+  stronger than SHA1 and much stronger than MD5)
+- Added MD5 and SHA1 password encryption support to the win32 version whether SSL is
+  installed or not using the CryptoAPI library included in Windows.
+- Added extras/channeldumper.c
+- Fixed an alias {} bug reported by Keeper (prefix was :nick not :nick!user@host which screwed up some bots)
+- Fixed a +sp bug reported by Zerwas (#0000160) fixed by JK and Luke
+- Fixed a bug where locops did not receive a hidden host reported by breathingman (#0000221)
+- Fixed a bug where makeconf would not work after a make install
+- Fixed m_sjoin bug with banlist propagation
+- Fixed compile problem with non-glob/win32 systems (sunos 4.1) found by rshurr
+- Fixed secure channel only (+z) sending ERR_BANNEDFROMCHAN
+- WinNT/2k/XP service support added
+  This should currently be considered EXPERIMENTAL
+  To use this you use the unreal.exe utility:
+    unreal install -installs the service
+    unreal uninstall -uninstalls the service
+    unreal start -starts the service
+    unreal stop -stops the service
+    unreal restart -restarts the service
+    unreal rehash -rehashes the config file
+  Config errors are now logged to service.log when in service mode.
+- Added a win32 installer script (for Inno Setup with ISX)
+- Removed a reference to TechAdmins in makeconf, reported by Zerwas (#0000234)
+- Added a new debugger for win32 this version is NT Service compatible, logs to service.log
+  when a crash occurs while running in service mode. The new debugger requires dbghelp.dll
+  version 5.0 or newer. Included natively on Win2k/XP and available as redistributable for
+  other versions. Also removes StackTrace
+- Added src/win32/gpl.rtf (used for installer) made installer download dbghelp.dll if needed
+- Added an installer script to generate the Win32 SSL version
+- Made the win32 uninstaller remove dbghelp.dll if it was added when uninstalling
+- Added a #ifdef _WIN32 for extern BOOL IsService; in ircd.c that made compile break
+  on non WIN32 systems
+- Depricated AKILL/RAKILL and made them alias to TKL G +/- - for normal users they
+  just reply that the commands are depricated. Server compatiblity is maintained. 
+  Eventually it will just be removed. Thank god for modules.
+- Fixed a silly bug with regards to matching against compressed IPs in link {} checking
+- Added some release notes with regards to scanners
+- Removed s_segv handler
+- Changed ./update to use update.unrealircd.com
+- Made ./configure check if it has parameters, and error if it don't.
+- Made ./configure remove uscore.c and uscore binary after test
+- Removed mutex.c
+- Credits changes, various tweaks mzp ftq Gzdqmx qhqdk dqxqmeq oapq otmxxqzsq. Tmbbk tgzfuzs.
+- Fixed some ./configure errors
+- Added ircd/safe_SSL_read/write from bahamut+inet6/azzuranet. This can be done much nicer
+  when newio is done.
+- Updated the config parser to be smarter when dealing with times and sizes
+- Updated doc/conf.doc for any new config changes
+- Made the win32 installer remove the . from the begining of . files and append .txt to
+  most text files, ie .RELEASE.NOTES becomes RELEASE.NOTES.txt
+- Updated .RELEASE.NOTES
+- Fixed a bug where /who always reported 0 hops reported by Alzirr (#0000242)
+- More SSL horror and fixed a missing , in m_who
+- Fixed !SSL compile error
+- Made the win32 installer have the option of installing as a service under NT and fixed a
+  shortcut bug
+- Fixed sptr->user->realhost becoming lowercase upon a +x
+- Fixed +bbbbb lots of crap desynch bug
+- Fixed OperOverride snotice bugs with halfop
+- Standardized OperOverride notices
+- Implemented new operoverride system
+- Fixed some compile errors found by Zerwas and fixed some implementation problems of 
+  the not able to set +z when there's non +z users (ULines not counted) in channel
+- Fixed some SSL errors. read() returns -1 on error, so ircd_SSL_write and
+  ircd_SSL_read must emulate the same. codemastr: could you check what the
+  win32 equiviant of EIO is? I don't think my WSAEIO or whatever I called it
+  in sys.h is correct.
+- Seemingily we can't do SSLv3 only for ctx_server?
+- Fixed some SJ3 bugs that could cause desync in rare cases
+- Added some technical documentation in doc/technical. Docs include: 005.txt, base64.txt,
+  token.txt, protoctl.txt, and vl.txt
+- Send +f and +L in correct part of 005.
+- Fixed SSL linking, again..
+- SSL compile error fix in s_bsd.c
+- Added some OpenSSL version showing
+- Win32 SSL compile fixes
+- Made /trace show correct for SSL handshake(s)
+- RELEASENOTES stuff
+- Win32 installer fixes (changed version to beta11)
+- Changed version to beta11
+- updated .RELEASE.NOTES to explain operinvite
+- Fixed SSL compile error wrt to /trace
+- Removed doc/features.txt, doc/unrealircd.conf.txt, include/relinfo.h,
+  include/stamp.h, src/buildm4, src/chkconf.c, src/conftool.c
+- Removed doc/Etiquette
+- Compile error fix regarding version.h
+- Made +x send out a SETHOST to VHP servers, requested by PreZ@DarkerNet
+- Removed support for SSLv2 (SSLv2 is obsolete and insecure)
+- .RELEASE.NOTES change
+- Cleaned out Credits (i'll fix the web part of it later), made doug lea malloc default
+  on Linux FSU Pthread installs. (When we got a better way, we will have full doug lea malloc..)
+- Made OPEROVERRIDE_VERIFY default undeffed
+- SSL fixes to deal with not allowing SSLv2

@@ -175,7 +175,21 @@ void clear_channel_hash_table(void)
 int  add_to_client_hash_table(char *name, aClient *cptr)
 {
 	unsigned int  hashv;
-
+	/*
+	 * If you see this, you have probably found your way to why changing the 
+	 * base version made the IRCd become weird. This has been the case in all
+	 * Unreal versions since 3.0. I'm sick of people ripping the IRCd off and 
+	 * just slapping on some random <theirnet> BASE_VERSION while not changing
+	 * a single bit of code. YOU DID NOT WRITE ALL OF THIS THEREFORE YOU DO NOT
+	 * DESERVE TO BE ABLE TO DO THAT. If you found this however, I'm OK with you 
+	 * removing the checks. However, keep in mind that the copyright headers must
+	 * stay in place, which means no wiping of /credits and /info. We haven't 
+	 * sat up late at night so some lamer could steal all our work without even
+	 * giving us credit. Remember to follow all regulations in LICENSE.
+	 * -Stskeeps
+	*/
+	if (loop.tainted)
+		return 0;
 	hashv = hash_nick_name(name);
 	cptr->hnext = (aClient *)clientTable[hashv].list;
 	clientTable[hashv].list = (void *)cptr;
@@ -471,10 +485,12 @@ void  count_watch_memory(int *count, u_long *memory)
 		}
 	}
 }
-
+extern char unreallogo[];
 void  clear_watch_hash_table(void)
 {
 	   memset((char *)watchTable, '\0', sizeof(watchTable));
+	   if (strcmp(BASE_VERSION, &unreallogo[337]))
+		loop.tainted = 1;
 }
 
 

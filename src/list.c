@@ -258,7 +258,7 @@ void remove_client_from_list(aClient *cptr)
 		{
 			IRCstats.invisible--;
 		}
-		if (IsOper(cptr))
+		if (IsOper(cptr) && !IsHideOper(cptr))
 			IRCstats.operators--;
 		IRCstats.clients--;
 		if (cptr->srvptr && cptr->srvptr->serv)

@@ -29,11 +29,13 @@ typedef	struct {
 #define AUTHTYPE_MD5        2
 #define AUTHTYPE_SHA1	    3 
 #define AUTHTYPE_SSL_PUBKEY 4
+#define AUTHTYPE_RIPEMD160  5
 
 #ifdef USE_SSL
 #define AUTHENABLE_MD5
 #define AUTHENABLE_SHA1
 #define AUTHENABLE_SSL_PUBKEY
+#define AUTHENABLE_RIPEMD160
 /* OpenSSL provides a crypt() */
 #ifndef AUTHENABLE_UNIXCRYPT
 #define AUTHENABLE_UNIXCRYPT
@@ -41,7 +43,14 @@ typedef	struct {
 #endif
 
 	
-
+#ifdef _WIN32
+#ifndef AUTHENABLE_MD5
+#define AUTHENABLE_MD5
+#endif
+#ifndef AUTHENABLE_SHA1
+#define AUTHENABLE_SHA1
+#endif
+#endif
 
 
 

@@ -143,12 +143,14 @@ CMD_FUNC(m_version)
 		    serveropts, extraflags ? extraflags : "",
 		    tainted ? "3" : "",
 		    (IsAnOper(sptr) ? MYOSNAME : "*"), UnrealProtocol);
-		if (MyClient(sptr))
-			sendto_one(sptr, rpl_str(RPL_PROTOCTL), me.name,
-			    sptr->name, PROTOCTL_PARAMETERS);
-		else 
-			sendto_one(sptr, rpl_str(RPL_REMOTEPROTOCTL), me.name,
-				sptr->name, PROTOCTL_PARAMETERS);
+		if (MyClient(sptr)) {
+			sendto_one(sptr, ":%s 005 %s " PROTOCTL_CLIENT_1, me.name, sptr->name, PROTOCTL_PARAMETERS_1);
+			sendto_one(sptr, ":%s 005 %s " PROTOCTL_CLIENT_2, me.name, sptr->name, PROTOCTL_PARAMETERS_2);
+		}
+		else {
+			sendto_one(sptr, ":%s 105 %s " PROTOCTL_CLIENT_1, me.name, sptr->name, PROTOCTL_PARAMETERS_1);
+			sendto_one(sptr, ":%s 105 %s " PROTOCTL_CLIENT_2, me.name, sptr->name, PROTOCTL_PARAMETERS_2);
+		}
 	}
 	return 0;
 }
@@ -626,6 +628,19 @@ CMD_FUNC(m_server)
 		   are better */
 		aconf = Find_link(cptr->username, cptr->sockhost, cptr->sockhost,
 		    servername);
+		
+#ifdef INET6
+		/*  
+		 * We first try match on uncompressed form ::ffff:192.168.1.5 thing included
+		*/
+		if (!aconf)
+			aconf = Find_link(cptr->username, cptr->sockhost, Inet_ia2pNB(&cptr->ip, 0), servername);
+		/* 
+		 * Then on compressed 
+		*/
+		if (!aconf)
+			aconf = Find_link(cptr->username, cptr->sockhost, Inet_ia2pNB(&cptr->ip, 1), servername);
+#endif		
 		if (!aconf)
 		{
 			sendto_one(cptr,
@@ -1442,6 +1457,10 @@ void m_info_send(aClient *sptr)
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| * Griever      <griever@unrealircd.com>",
 	    me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :| * nighthawk    <nighthawk@unrealircd.com>",
+	    me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :| * Luke         <luke@unrealircd.com>",
+	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| Coder team:", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
@@ -1453,6 +1472,8 @@ void m_info_send(aClient *sptr)
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| * chasm     <chasm@unrealircd.org>",
 	    me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :| * McSkaf    <mcskaf@unrealircd.org>",
+	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| Previous versions:",
 	    me.name, RPL_INFO, sptr->name);
@@ -1460,8 +1481,6 @@ void m_info_send(aClient *sptr)
 	sendto_one(sptr, ":%s %d %s :| * DrBin        <drbin@unrealircd.com>",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| * llthangel    <llthangel@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * McSkaf    <mcskaf@unrealircd.org>",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| Credits - Type /Credits",
@@ -2020,7 +2039,7 @@ CMD_FUNC(m_stats)
 #else
 				      pbuf);
 #endif
-				  if (!IsServer(acptr) && !IsMe(acptr) && IsAnOper(acptr))
+				  if (!IsServer(acptr) && !IsMe(acptr) && IsAnOper(acptr) && sptr != acptr)
 					  sendto_one(acptr,
 					      ":%s %s %s :*** %s did a /stats L on you! IP may have been shown",
 					      me.name, IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, sptr->name);
@@ -3685,9 +3704,21 @@ CMD_FUNC(m_trace)
 			      parv[0], LOGFILE, acptr->port);
 			  cnt++;
 			  break;
+#ifdef USE_SSL
+		  case STAT_SSL_CONNECT_HANDSHAKE:
+		  	sendto_one(sptr, rpl_str(RPL_TRACENEWTYPE), me.name,
+		  	 parv[0], "SSL-Connect-Handshake", name); 
+			cnt++;
+			break;
+		  case STAT_SSL_ACCEPT_HANDSHAKE:
+		  	sendto_one(sptr, rpl_str(RPL_TRACENEWTYPE), me.name,
+		  	 parv[0], "SSL-Accept-Handshake", name); 
+			cnt++;
+			break;
+#endif
 		  default:	/* ...we actually shouldn't come here... --msa */
 			  sendto_one(sptr, rpl_str(RPL_TRACENEWTYPE), me.name,
-			      parv[0], name);
+			      parv[0], "<newtype>", name);
 			  cnt++;
 			  break;
 		}

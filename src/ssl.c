@@ -20,8 +20,10 @@
 
 #include "config.h"
 #ifdef USE_SSL
-
+#include "common.h"
 #include "struct.h"
+#include "h.h"
+#include "sys.h"
 #ifdef _WIN32
 #include <windows.h>
 
@@ -29,6 +31,14 @@
 extern HINSTANCE hInst;
 extern HWND hwIRCDWnd;
 #endif
+
+#define SAFE_SSL_READ 1
+#define SAFE_SSL_WRITE 2
+#define SAFE_SSL_ACCEPT 3
+#define SAFE_SSL_CONNECT 4
+
+static int fatal_ssl_error(int ssl_error, int where, aClient *sptr);
+
 /* The SSL structures */
 SSL_CTX *ctx_server;
 SSL_CTX *ctx_client;
@@ -114,7 +124,7 @@ void init_ctx_server(void)
 		exit(2);
 	}
 	SSL_CTX_set_default_passwd_cb(ctx_server, ssl_pem_passwd_cb);
-
+	SSL_CTX_set_options(ctx_server, SSL_OP_NO_SSLv2);
 	if (SSL_CTX_use_certificate_file(ctx_server, CERTF, SSL_FILETYPE_PEM) <= 0)
 	{
 		ircd_log(LOG_ERROR, "Failed to load SSL certificate %s", CERTF);
@@ -181,7 +191,7 @@ int  ssl_handshake(aClient *cptr)
 	char *str;
 	int  err;
 
-	cptr->ssl = (struct SSL *)SSL_new(ctx_server);
+	cptr->ssl = SSL_new(ctx_server);
 	CHK_NULL(cptr->ssl);
 	SSL_set_fd((SSL *) cptr->ssl, cptr->fd);
 	set_non_blocking(cptr->fd, cptr);
@@ -192,10 +202,11 @@ int  ssl_handshake(aClient *cptr)
 	 *    The behaviour of SSL_write() depends on the underlying BIO. 
 	 *   
 	 */
-	err = SSL_accept((SSL *) cptr->ssl);
-	if (err == -1)
-	{	
-		/* wtf. it works, so ? */
+	if (!ircd_SSL_accept(cptr, cptr->fd)) {
+		SSL_set_shutdown((SSL *)cptr->ssl, SSL_RECEIVED_SHUTDOWN);
+		SSL_smart_shutdown((SSL *)cptr->ssl);
+		SSL_free((SSL *)cptr->ssl);
+		cptr->ssl = NULL;
 		return -1;
 	}
 
@@ -252,7 +263,7 @@ int  ssl_handshake(aClient *cptr)
 */
 int  ssl_client_handshake(aClient *cptr, ConfigItem_link *l)
 {
-	cptr->ssl = (struct SSL *) SSL_new((SSL_CTX *)ctx_client);
+	cptr->ssl = SSL_new((SSL_CTX *)ctx_client);
 	if (!cptr->ssl)
 	{
 		sendto_realops("Couldn't SSL_new(ctx_client) on %s",
@@ -293,6 +304,12 @@ int	SSL_change_fd(SSL *s, int fd)
 	return 1;
 }
 
+void	SSL_set_nonblocking(SSL *s)
+{
+	BIO_set_nbio(SSL_get_rbio(s),1);  
+	BIO_set_nbio(SSL_get_wbio(s),1);  
+}
+
 char	*ssl_get_cipher(SSL *ssl)
 {
 	static char buf[400];
@@ -321,5 +338,226 @@ char	*ssl_get_cipher(SSL *ssl)
 	return (buf);
 }
 
+int ircd_SSL_read(aClient *acptr, void *buf, int sz)
+{
+    int len, ssl_err;
+    len = SSL_read((SSL *)acptr->ssl, buf, sz);
+    if (len <= 0)
+    {
+       switch(ssl_err = SSL_get_error((SSL *)acptr->ssl, len)) {
+           case SSL_ERROR_SYSCALL:
+               if (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN ||
+                       ERRNO == P_EINTR) {
+           case SSL_ERROR_WANT_READ:
+                   SET_ERRNO(P_EWOULDBLOCK);
+		   Debug((DEBUG_ERROR, "ircd_SSL_read: returning EWOULDBLOCK and 0 for %s - %s", acptr->name,
+			ssl_err == SSL_ERROR_WANT_READ ? "SSL_ERROR_WANT_READ" : "SSL_ERROR_SYSCALL"		   
+		   ));
+                   return -1;
+               }
+           case SSL_ERROR_SSL:
+               if(ERRNO == EAGAIN)
+                   return -1;
+           default:
+           	Debug((DEBUG_ERROR, "ircd_SSL_read: returning fatal_ssl_error for %s",
+           	 acptr->name));
+		return fatal_ssl_error(ssl_err, SAFE_SSL_READ, acptr);        
+       }
+    }
+    Debug((DEBUG_ERROR, "ircd_SSL_read for %s (%p, %i): success", acptr->name, buf, sz));
+    return len;
+}
+int ircd_SSL_write(aClient *acptr, const void *buf, int sz)
+{
+    int len, ssl_err;
+
+    len = SSL_write((SSL *)acptr->ssl, buf, sz);
+    if (len <= 0)
+    {
+       switch(ssl_err = SSL_get_error((SSL *)acptr->ssl, len)) {
+           case SSL_ERROR_SYSCALL:
+               if (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN ||
+                       ERRNO == P_EINTR)
+		{
+			SET_ERRNO(P_EWOULDBLOCK);
+			return -1;
+		}
+		return -1;
+          case SSL_ERROR_WANT_WRITE:
+                   SET_ERRNO(P_EWOULDBLOCK);
+                   return -1;
+           case SSL_ERROR_SSL:
+               if(ERRNO == EAGAIN)
+                   return -1;
+           default:
+		return fatal_ssl_error(ssl_err, SAFE_SSL_WRITE, acptr);
+       }
+    }
+    return len;
+}
+
+int ircd_SSL_client_handshake(aClient *acptr)
+{
+	int ssl_err;
+	
+	acptr->ssl = SSL_new(ctx_client);
+	if (!acptr->ssl)
+	{
+		sendto_realops("Failed to SSL_new(ctx_client)");
+		return FALSE;
+	}
+	SSL_set_fd(acptr->ssl, acptr->fd);
+	SSL_set_connect_state(acptr->ssl);
+	SSL_set_nonblocking(acptr->ssl);
+	if (acptr->serv && acptr->serv->conf->ciphers)
+	{
+		if (SSL_set_cipher_list((SSL *)acptr->ssl, 
+			acptr->serv->conf->ciphers) == 0)
+		{
+			/* We abort */
+			sendto_realops("SSL cipher selecting for %s was unsuccesful (%s)",
+				acptr->serv->conf->servername, 
+				acptr->serv->conf->ciphers);
+			return -2;
+		}
+	}
+	acptr->flags |= FLAGS_SSL;
+	switch (ircd_SSL_connect(acptr))
+	{
+		case -1: 
+			return -1;
+		case 0: 
+			SetSSLConnectHandshake(acptr);
+			return 0;
+		case 1: 
+			/* SSL_init_finished in s_bsd will finish the job */
+			return 1;
+		default:
+			return -1;		
+	}
+
+}
+
+int ircd_SSL_accept(aClient *acptr, int fd) {
+
+    int ssl_err;
+
+    if((ssl_err = SSL_accept((SSL *)acptr->ssl)) <= 0) {
+	switch(ssl_err = SSL_get_error((SSL *)acptr->ssl, ssl_err)) {
+	    case SSL_ERROR_SYSCALL:
+		if (ERRNO == P_EINTR || ERRNO == P_EWOULDBLOCK
+			|| ERRNO == P_EAGAIN)
+	    case SSL_ERROR_WANT_READ:
+	    case SSL_ERROR_WANT_WRITE:
+		    /* handshake will be completed later . . */
+		    return 1;
+	    default:
+		return fatal_ssl_error(ssl_err, SAFE_SSL_ACCEPT, acptr);
+		
+	}
+	/* NOTREACHED */
+	return -1;
+    }
+    return 1;
+}
+
+int ircd_SSL_connect(aClient *acptr) {
+
+    int ssl_err;
+    if((ssl_err = SSL_connect((SSL *)acptr->ssl)) <= 0) {
+	switch(ssl_err = SSL_get_error((SSL *)acptr->ssl, ssl_err)) {
+	    case SSL_ERROR_SYSCALL:
+		if (ERRNO == P_EINTR || ERRNO == P_EWOULDBLOCK
+			|| ERRNO == P_EAGAIN)
+	    case SSL_ERROR_WANT_READ:
+	    case SSL_ERROR_WANT_WRITE:
+		    /* handshake will be completed later . . */
+		    return 0;
+	    default:
+		return fatal_ssl_error(ssl_err, SAFE_SSL_CONNECT, acptr);
+		
+	}
+	/* NOTREACHED */
+	return -1;
+    }
+    return 1;
+}
+
+int SSL_smart_shutdown(SSL *ssl) {
+    char i;
+    int rc;
+    rc = 0;
+    for(i = 0; i < 4; i++) {
+	if((rc = SSL_shutdown(ssl)))
+	    break;
+    }
+
+    return rc;
+}
+
+static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
+{
+    /* don`t alter ERRNO */
+    int errtmp = ERRNO;
+    char *errstr = (char *)strerror(errtmp);
+    char *ssl_errstr, *ssl_func;
+
+    switch(where) {
+	case SAFE_SSL_READ:
+	    ssl_func = "SSL_read()";
+	    break;
+	case SAFE_SSL_WRITE:
+	    ssl_func = "SSL_write()";
+	    break;
+	case SAFE_SSL_ACCEPT:
+	    ssl_func = "SSL_accept()";
+	    break;
+	case SAFE_SSL_CONNECT:
+	    ssl_func = "SSL_connect()";
+	    break;
+	default:
+	    ssl_func = "undefined SSL func";
+    }
+
+    switch(ssl_error) {
+    	case SSL_ERROR_NONE:
+	    ssl_errstr = "SSL: No error";
+	    break;
+	case SSL_ERROR_SSL:
+	    ssl_errstr = "Internal OpenSSL error or protocol error";
+	    break;
+	case SSL_ERROR_WANT_READ:
+	    ssl_errstr = "OpenSSL functions requested a read()";
+	    break;
+	case SSL_ERROR_WANT_WRITE:
+	    ssl_errstr = "OpenSSL functions requested a write()";
+	    break;
+	case SSL_ERROR_WANT_X509_LOOKUP:
+	    ssl_errstr = "OpenSSL requested a X509 lookup which didn`t arrive";
+	    break;
+	case SSL_ERROR_SYSCALL:
+	    ssl_errstr = "Underlying syscall error";
+	    break;
+	case SSL_ERROR_ZERO_RETURN:
+	    ssl_errstr = "Underlying socket operation returned zero";
+	    break;
+	case SSL_ERROR_WANT_CONNECT:
+	    ssl_errstr = "OpenSSL functions wanted a connect()";
+	    break;
+	default:
+	    ssl_errstr = "Unknown OpenSSL error (huh?)";
+    }
+    /* if we reply() something here, we might just trigger another
+     * fatal_ssl_error() call and loop until a stack overflow... 
+     * the client won`t get the ERROR : ... string, but this is
+     * the only way to do it.
+     * IRC protocol wasn`t SSL enabled .. --vejeta
+     */
+    sendto_snomask(SNO_JUNK, "Exiting ssl client %s: %s: %s",
+    	sptr->name, ssl_func, ssl_errstr);
+    SET_ERRNO(errtmp ? errtmp : P_EIO); /* Stick a generic I/O error */
+    sptr->flags |= FLAGS_DEADSOCKET;
+    return -1;
+}
 
 #endif

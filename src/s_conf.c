@@ -50,7 +50,7 @@
 #ifdef _WIN32
 #undef GLOBH
 #endif
-
+extern MemoryInfo StatsZ;
 /*
  * TODO:
  *  - deny version {} (V:lines)
@@ -327,53 +327,115 @@ void	ipport_seperate(char *string, char **ip, char **port)
 	}
 }
 
-int conf_yesno(char *value) {
-	if (!stricmp(value, "yes") || !stricmp(value, "true") || !stricmp(value, "on") || strcmp(value, "1"))
-		return 1;
-	if (!stricmp(value, "no") || !stricmp(value, "false") || !stricmp(value, "off") || strcmp(value, "0"))
-		return 0;
 
-	return -1;
-}
 
-#define KB 1024
-#define MB 1048576
-#define GB 1073741824
-#define TB 1099511627776
+long config_checkval(char *value, unsigned short flags) {
+	char *text, *ptr;
+	long ret = 0;
 
-long conf_size(char *value) {
-	char *numbuf;
-	char *buf = value;
-	long num = 0;
-	int i;
-	if (!buf)
-		return 0;
 
-	numbuf = MyMalloc(strlen(value));
-	for (i = 0;*buf; buf++) {
-		if (isdigit(*buf)) {
-			numbuf[i++] = *buf;
-			continue;
-		}
-		if (isalpha(*buf)) {
-			num = atol(numbuf);
-			if (tolower(*buf) == 't')
-				num *= TB;
-			else if (tolower(*buf) == 'g')
-				num *= GB;
-			else if (tolower(*buf) == 'm')
-				num *= MB;
-			else if (tolower(*buf) == 'k')
-				num *= MB;
-			break;
+	if (flags == CFG_YESNO) {
+		for (text = value; *text; text++) {
+			if (!isalnum(*text))
+				continue;
+			if (tolower(*text) == 'y' || (tolower(*text) == 'o' &&
+tolower(*(text+1)) == 'n') || *text == '1' || tolower(*text) == 't') {
+				ret = 1;
+				break;
+			}
 		}
 	}
-	if (!num)
-		num = atol(numbuf);
-	free(numbuf);
-	return num;
-}
+	else if (flags == CFG_SIZE) {
+		int mfactor = 1;
+		char *sz;
+		for (text = value; *text; text++) {
+			if (!isalpha(*text))
+				text++;
+			if (isalpha(*text)) {
+				if (tolower(*text) == 'k') 
+					mfactor = 1024;
+				else if (tolower(*text) == 'm') 
+					mfactor = 1048576;
+				else if (tolower(*text) == 'g') 
+					mfactor = 1073741824;
+				else 
+					mfactor = 1;
+				sz = text;
+				while (isalpha(*text))
+					text++;
+
+				*sz-- = 0;
+				while (sz-- > value && *sz) {
+					if (isspace(*sz)) 
+						*sz = 0;
+					if (!isdigit(*sz)) 
+						break;
+				}
+				ret += atoi(sz+1)*mfactor;
+				
+			}
+		}
+		mfactor = 1;
+		sz = text;
+		sz--;
+		while (sz-- > value) {
+			if (isspace(*sz)) 
+				*sz = 0;
+			if (!isdigit(*sz)) 
+				break;
+		}
+		ret += atoi(sz+1)*mfactor;
+
 		
+	}
+	else if (flags == CFG_TIME) {
+		int mfactor = 1;
+		char *sz;
+		for (text = value; *text; text++) {
+			if (!isalpha(*text))
+				text++;
+			if (isalpha(*text)) {
+				if (tolower(*text) == 'w')
+					mfactor = 604800;	
+				else if (tolower(*text) == 'd') 
+					mfactor = 86400;
+				else if (tolower(*text) == 'h') 
+					mfactor = 3600;
+				else if (tolower(*text) == 'm') 
+					mfactor = 60;
+				else 
+					mfactor = 1;
+				sz = text;
+				while (isalpha(*text))
+					text++;
+
+				*sz-- = 0;
+				while (sz-- > value && *sz) {
+					if (isspace(*sz)) 
+						*sz = 0;
+					if (!isdigit(*sz)) 
+						break;
+				}
+				ret += atoi(sz+1)*mfactor;
+				
+			}
+		}
+		mfactor = 1;
+		sz = text;
+		sz--;
+		while (sz-- > value) {
+			if (isspace(*sz)) 
+				*sz = 0;
+			if (!isdigit(*sz)) 
+				break;
+		}
+		ret += atoi(sz+1)*mfactor;
+
+		
+	}
+
+	return ret;
+}
 
 int	config_error_flag = 0;
 /* Small function to bitch about stuff */
@@ -402,7 +464,7 @@ void config_error(char *format, ...)
 }
 
 /* Like above */
-static void config_status(char *format, ...)
+void config_status(char *format, ...)
 {
 	va_list		ap;
 	char		buffer[1024];
@@ -438,13 +500,15 @@ void config_progress(char *format, ...)
 	sendto_realops("%s", buffer);
 }
 
-void clear_unknown() {
+void clear_unknown(ConfigFile *file) {
 	ConfigItem_unknown *p;
 	ListStruct *next;
 	ConfigItem_unknown_ext *q;
 
 	for (p = conf_unknown; p; p = (ConfigItem_unknown *)next) {
 		next = (ListStruct *)p->next;
+		if (p->ce->ce_fileptr != file)
+			continue;
 		if (!strcmp(p->ce->ce_varname, "ban")) 
 			config_status("%s:%i: unknown ban type %s",
 				p->ce->ce_fileptr->cf_filename, p->ce->ce_varlinenum,
@@ -471,6 +535,8 @@ void clear_unknown() {
 	}
 	for (q = conf_unknown_set; q; q = (ConfigItem_unknown_ext *)next) {
 		next = (ListStruct *)q->next;
+		if (q->ce_fileptr != file)
+			continue;
 		config_status("%s:%i: unknown directive set::%s",
 			q->ce_fileptr->cf_filename, q->ce_varlinenum,
 			q->ce_varname);
@@ -864,7 +930,7 @@ int	init_conf2(char *filename)
 			filename);
 		i = ConfigParse(cfptr);
 		RunHook0(HOOKTYPE_CONFIG_UNKNOWN);
-		clear_unknown();
+		clear_unknown(cfptr);
 		config_free(cfptr);
 		if (!stricmp(filename, CPATH))
 			return i;
@@ -1164,7 +1230,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 			continue;
 		}
 	}
-	if (isnew)
+	if (isnew) 
 		AddListItem(class, conf_class);
 	return 0;
 }
@@ -1299,7 +1365,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 	}
 	FindClose(hFind);
 #else
-	if ((ret = Module_Load(ce->ce_vardata,0)))) {
+	if ((ret = Module_Load(ce->ce_vardata,0))) {
 			config_status("%s:%i: loadmodule %s: failed to load: %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				ce->ce_vardata, ret);
@@ -1713,7 +1779,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 */
 int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 {
-	ConfigEntry *cep;
+	ConfigEntry *cep, *cepp;
 	ConfigItem_allow *allow;
 	unsigned char isnew = 0;
 
@@ -1740,12 +1806,6 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		if (!cep->ce_varname)
 		{
 			config_status("%s:%i: allow item without variable name",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-			continue;
-		}
-		if (!cep->ce_vardata)
-		{
-			config_status("%s:%i: allow item without parameter",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			continue;
 		}
@@ -1783,6 +1843,14 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "redirect-port")) {
 			allow->port = atoi(cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "options")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				if (!strcmp(cepp->ce_varname, "noident"))
+					allow->flags.noident = 1;
+				else if (!strcmp(cepp->ce_varname, "useip")) 
+					allow->flags.useip = 1;
+			}
 		}
 		else
 		{
@@ -2272,7 +2340,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {
 			CheckNull(cep);
-			ANTI_SPAM_QUIT_MSG_TIME = atime(cep->ce_vardata);
+			ANTI_SPAM_QUIT_MSG_TIME = config_checkval(cep->ce_vardata,CFG_TIME);
 		}
 		else if (!strcmp(cep->ce_varname, "oper-only-stats")) {
 			CheckNull(cep);
@@ -2316,7 +2384,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "prefix-quit")) {
 			CheckNull(cep);
-			if (conf_yesno(cep->ce_vardata) == 0)
+			if (!stricmp(cep->ce_vardata, "no") || *cep->ce_vardata == '0')
 			{
 				ircstrdup(prefix_quit, "Quit: ");
 			}
@@ -2326,10 +2394,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				CheckNull(cepp);
 				if (!strcmp(cepp->ce_varname, "timeout")) {
-					HOST_TIMEOUT = atime(cepp->ce_vardata);
+					HOST_TIMEOUT = config_checkval(cepp->ce_vardata,CFG_TIME);
 				}
 				else if (!strcmp(cepp->ce_varname, "retries")) {
-					HOST_RETRIES = atime(cepp->ce_vardata);
+					HOST_RETRIES = config_checkval(cepp->ce_vardata,CFG_TIME);
 				}
 				else if (!strcmp(cepp->ce_varname, "nameserver")) {
 					ircstrdup(NAME_SERVER, cepp->ce_vardata);
@@ -2385,7 +2453,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					ircstrdup(netadmin_host, cepp->ce_vardata);
 				}
 				else if (!strcmp(cepp->ce_varname, "host-on-oper-up")) {
-					iNAH = conf_yesno(cepp->ce_vardata);
+					iNAH = config_checkval(cepp->ce_vardata,CFG_YESNO);
 				}
 			}
 		}
@@ -2755,7 +2823,7 @@ int	_conf_log(ConfigFile *conf, ConfigEntry *ce)
 			continue;
 		}
 		if (!strcmp(cep->ce_varname, "maxsize")) {
-			log->maxsize = conf_size(cep->ce_vardata);
+			log->maxsize = config_checkval(cep->ce_vardata,CFG_SIZE);
 		}
 		if (!strcmp(cep->ce_varname, "flags")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
@@ -3043,7 +3111,7 @@ void	validate_configuration(void)
 		in.s_addr = inet_addr(NAME_SERVER);
 		if (strcmp((char *)inet_ntoa(in), NAME_SERVER))
 		{
-			Warning("set::dns::nameserver (%s) is not an valid IP. Using 127.0.0.1 as default", NAME_SERVER);
+			Warning("set::dns::nameserver (%s) is not a valid IP. Using 127.0.0.1 as default", NAME_SERVER);
 			ircstrdup(NAME_SERVER, "127.0.0.1");
 			in.s_addr = inet_addr(NAME_SERVER);
 		}
@@ -3072,7 +3140,7 @@ void	validate_configuration(void)
 		hide_host = 0;
 	}
 	if (Missing(locop_host)) {
-		Warning("set::hosts:local is missing");
+		Warning("set::hosts::local is missing");
 		hide_host = 0;
 	}
 	if (Missing(sadmin_host)) {
@@ -3146,6 +3214,8 @@ void	validate_configuration(void)
 				class_ptr->maxclients = 100;
 			}
 		}
+		StatsZ.classes++;
+		StatsZ.classesmem += sizeof(ConfigItem_class);
 	}
 	for (oper_ptr = conf_oper; oper_ptr; oper_ptr = (ConfigItem_oper *) oper_ptr->next)
 	{
@@ -3416,7 +3486,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	ConfigItem_help			*help_ptr;
 	ListStruct 	*next, *next2;
 
-
+	bzero(&StatsZ, sizeof(StatsZ));
 	flush_connections(&me);
 	if (sig == 1)
 	{
@@ -3959,8 +4029,13 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 			goto attach;
 		continue;
 	      attach:
-		if (index(uhost, '@'))
+/*		if (index(uhost, '@'))  now flag based -- codemastr */
+		if (!aconf->flags.noident)
 			cptr->flags |= FLAGS_DOID;
+		if (!aconf->flags.useip && hp) 
+			(void)strncpy(uhost, fullname, sizeof(uhost));
+		else
+			(void)strncpy(uhost, sockhost, sizeof(uhost));
 		get_sockhost(cptr, uhost);
 		/* FIXME */
 		if (aconf->maxperip)
@@ -3968,7 +4043,11 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 			ii = 1;
 			for (i = LastSlot; i >= 0; i--)
 				if (local[i] && MyClient(local[i]) &&
+#ifndef INET6
 				    local[i]->ip.S_ADDR == cptr->ip.S_ADDR)
+#else
+				    !bcmp(local[i]->ip.S_ADDR, cptr->ip.S_ADDR, sizeof(cptr->ip.S_ADDR)))
+#endif
 				{
 					ii++;
 					if (ii > aconf->maxperip)

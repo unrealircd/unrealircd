@@ -35,7 +35,7 @@
 
 #ifndef CLEAN_COMPILE
 static char sccsid[] =
-    "@(#)s_bsd.c	2.78 2/7/94 (C) 1988 University of Oulu, \
+    "@(#)	2.78 2/7/94 (C) 1988 University of Oulu, \
 Computing Center and Jarkko Oikarinen";
 #endif
 
@@ -105,7 +105,7 @@ int readcalls = 0, resfd = -1;
 static struct SOCKADDR_IN mysk;
 
 static struct SOCKADDR *connect_inet(ConfigItem_link *, aClient *, int *);
-static int completed_connection(aClient *);
+int completed_connection(aClient *);
 static int check_init(aClient *, char *, size_t);
 #ifndef _WIN32
 static void do_dns_async();
@@ -144,6 +144,7 @@ extern fdlist socks_fdlist;
 #  endif
 # endif
 #endif
+void	start_of_normal_client_handshake(aClient *acptr);
 
 /* winlocal */
 void add_local_client(aClient* cptr)
@@ -207,7 +208,7 @@ void close_connections(void)
   OpenFiles = 0;
   LastSlot = -1;
 #ifdef _WIN32
-  WSACleanup();
+	  WSACleanup();
 #endif
 }
 
@@ -616,6 +617,10 @@ init_dgram:
 
 	resfd = init_resolver(0x1f);
 	Debug((DEBUG_DNS, "resfd %d", resfd));
+#ifndef _WIN32
+	if (MAXCONNECTIONS > FD_SETSIZE)
+		abort();
+#endif
 	return;
 }
 
@@ -762,7 +767,7 @@ int  check_client(aClient *cptr)
 **	Return	TRUE, if successfully completed
 **		FALSE, if failed and ClientExit
 */
-static int completed_connection(aClient *cptr)
+int completed_connection(aClient *cptr)
 {
 	ConfigItem_link *aconf = cptr->serv ? cptr->serv->conf : NULL;
 	extern char serveropts[];
@@ -773,20 +778,6 @@ static int completed_connection(aClient *cptr)
 		sendto_ops("Lost configuration for %s", get_client_name(cptr, FALSE));
 		return -1;
 	}
-#ifdef USE_SSL
-	if ((aconf->options & CONNECT_SSL))
-		if (ssl_client_handshake(cptr, aconf) == -2)
-		{
-			sendto_realops("Could not handshake SSL with %s", get_client_name(cptr, FALSE));
-			return FALSE;
-		}
-		else
-		{
-
-			sendto_realops("Handshaked SSL with %s", cptr->name);
-			cptr->flags |= FLAGS_SSL;
-		}
-#endif
 	if (!BadPtr(aconf->connpwd))
 		sendto_one(cptr, "PASS :%s", aconf->connpwd);
 
@@ -896,6 +887,14 @@ void close_connection(aClient *cptr)
 	{
 		flush_connections(cptr);
 		remove_local_client(cptr);
+#ifdef USE_SSL
+		if (IsSSL(cptr) && cptr->ssl) {
+			SSL_set_shutdown((SSL *)cptr->ssl, SSL_RECEIVED_SHUTDOWN);
+			SSL_smart_shutdown((SSL *)cptr->ssl);
+			SSL_free((SSL *)cptr->ssl);
+			cptr->ssl = NULL;
+		}
+#endif
 		CLOSE_SOCK(cptr->fd);
 		cptr->fd = -2;
 		--OpenFiles;
@@ -905,17 +904,6 @@ void close_connection(aClient *cptr)
 	}
 
 	cptr->from = NULL;	/* ...this should catch them! >:) --msa */
-#ifdef USE_SSL
-	if (cptr->flags & FLAGS_SSL)
-	{
-		if (cptr->ssl)
-		{
-			SSL_shutdown((SSL *)cptr->ssl);
-			SSL_free((SSL *)cptr->ssl);
-		}
-	}
-#endif
-
 	/*
 	 * fd remap to keep local[i] filled at the bottom.
 	 */
@@ -1152,7 +1140,7 @@ void set_non_blocking(int fd, aClient *cptr)
  */
 aClient *add_connection(aClient *cptr, int fd)
 {
-	Link lin;
+	Link	lin;
 	aClient *acptr;
 	ConfigItem_ban *bconf;
 	int i, j;
@@ -1194,7 +1182,11 @@ add_con_refuse:
 		for (i = LastSlot; i >= 0; i--)
 		{
 			if (local[i] && IsUnknown(local[i]) &&
+#ifndef INET6
 				local[i]->ip.S_ADDR == acptr->ip.S_ADDR)
+#else
+				!bcmp(local[i]->ip.S_ADDR, cptr->ip.S_ADDR, sizeof(cptr->ip.S_ADDR)))
+#endif
 			{
 				j++;
 				if (j > MAXUNKNOWNCONNECTIONSPERIP)
@@ -1234,25 +1226,6 @@ add_con_refuse:
 			goto add_con_refuse;
 		}
 		acptr->port = ntohs(addr.SIN_PORT);
-		if (SHOWCONNECTINFO) {
-			/* Start of the very first DNS check */
-			if (!(cptr->umodes & LISTENER_SSL))
-				FDwrite(fd, REPORT_DO_DNS, R_do_dns);
-		}
-		lin.flags = ASYNC_CLIENT;
-		lin.value.cptr = acptr;
-		Debug((DEBUG_DNS, "lookup %s", acptr->sockhost));
-		acptr->hostp = gethost_byaddr((char *)&acptr->ip, &lin);
-
-		if (!acptr->hostp)
-			SetDNS(acptr);
-		else
-		{
-			if (SHOWCONNECTINFO)
-				if (!(cptr->umodes & LISTENER_SSL))
-					FDwrite(fd, REPORT_FIN_DNSC, R_fin_dnsc);
-		}
-		nextdnscheck = 1;
 	}
 
 	acptr->fd = fd;
@@ -1266,20 +1239,55 @@ add_con_refuse:
 	{
 		((ConfigItem_listen *) acptr->listener->class)->clients++;
 	}
-#ifdef USE_SSL
-	if (cptr->umodes & LISTENER_SSL)
-	{
-		ssl_handshake(acptr);
-		acptr->flags |= FLAGS_SSL;
-	}
-#endif
 	add_client_to_list(acptr);
 	set_non_blocking(acptr->fd, acptr);
 	set_sock_opts(acptr->fd, acptr);
 	IRCstats.unknown++;
-	start_auth(acptr);
-
+#ifdef USE_SSL
+	if (cptr->umodes & LISTENER_SSL)
+	{
+		SetSSLAcceptHandshake(acptr);
+		if ((acptr->ssl = SSL_new(ctx_server)) == NULL)
+		{
+			goto add_con_refuse;
+		}
+		acptr->flags |= FLAGS_SSL;
+		SSL_set_fd(acptr->ssl, fd);
+		SSL_set_nonblocking(acptr->ssl);
+		if (!ircd_SSL_accept(acptr, fd)) {
+			SSL_set_shutdown(acptr->ssl, SSL_RECEIVED_SHUTDOWN);
+			SSL_smart_shutdown(acptr->ssl);
+  	                SSL_free(acptr->ssl);
+	  	        goto add_con_refuse;
+	  	}
+	}
+	else
+#endif
+		start_of_normal_client_handshake(acptr);
 	return acptr;
+}
+
+void	start_of_normal_client_handshake(aClient *acptr)
+{
+	Link	lin;
+	acptr->status = STAT_UNKNOWN;	
+	if (SHOWCONNECTINFO) {
+		sendto_one(acptr, REPORT_DO_DNS);
+	}
+	lin.flags = ASYNC_CLIENT;
+	lin.value.cptr = acptr;
+	Debug((DEBUG_DNS, "lookup %s", acptr->sockhost));
+	acptr->hostp = gethost_byaddr((char *)&acptr->ip, &lin);
+	
+	if (!acptr->hostp)
+		SetDNS(acptr);
+	else
+	{
+		if (SHOWCONNECTINFO)
+			sendto_one(acptr, REPORT_FIN_DNSC);
+	}
+	nextdnscheck = 1;
+	start_auth(acptr);
 }
 
 /*
@@ -1300,20 +1308,12 @@ static int read_packet(aClient *cptr, fd_set *rfd)
 	    !(IsPerson(cptr) && DBufLength(&cptr->recvQ) > 6090))
 	{
 		SET_ERRNO(0);
-#ifdef INET6
-		length = recvfrom(cptr->fd, readbuf, sizeof(readbuf), 0, 0, 0);
-#else
-#ifndef USE_SSL
-		length = recv(cptr->fd, readbuf, sizeof(readbuf), 0);
-#else
+#ifdef USE_SSL
 		if (cptr->flags & FLAGS_SSL)
-	    		length = SSL_read((SSL *)cptr->ssl, readbuf, sizeof(readbuf));
+	    		length = ircd_SSL_read(cptr, readbuf, sizeof(readbuf));
 		else
+#endif
 			length = recv(cptr->fd, readbuf, sizeof(readbuf), 0);
-
-#endif
-#endif
-
 		cptr->lasttime = now;
 		if (cptr->lasttime > cptr->since)
 			cptr->since = cptr->lasttime;
@@ -1471,15 +1471,12 @@ static int read_packet(aClient *cptr)
 	{
 		errno = 0;
 
-#ifndef USE_SSL
-		length = recv(cptr->fd, readbuf, sizeof(readbuf), 0);
-#else
+#ifdef USE_SSL
 		if (cptr->flags & FLAGS_SSL)
-	    		length = SSL_read((SSL *)cptr->ssl, readbuf, sizeof(readbuf));
+	    		length = ircd_SSL_read((SSL *)cptr->ssl, readbuf, sizeof(readbuf));
 		else
-			length = recv(cptr->fd, readbuf, sizeof(readbuf), 0);
-
 #endif
+			length = recv(cptr->fd, readbuf, sizeof(readbuf), 0);
 		cptr->lasttime = now;
 		if (cptr->lasttime > cptr->since)
 			cptr->since = cptr->lasttime;
@@ -1487,7 +1484,7 @@ static int read_packet(aClient *cptr)
 		/*
 		 * If not ready, fake it so it isnt closed
 		 */
-	    if (length < 0 && ((ERRNO == P_EWOULDBLOCK) || ERRNO == P_EAGAIN)))
+	        if (length < 0 && ((ERRNO == P_EWOULDBLOCK) || ERRNO == P_EAGAIN)))
 			return 1;
 		if (length <= 0)
 			return length;
@@ -1548,7 +1545,9 @@ int  read_message(time_t delay)
 int  read_message(time_t delay, fdlist *listp)
 #endif
 {
-	aClient *cptr;
+/* 
+   #undef FD_SET(x,y) do { if (fcntl(x, F_GETFD, &sockerr) == -1) abort(); FD_SET(x,y); } while(0)
+*/	aClient *cptr;
 	int  nfds;
 	struct timeval wait;
 #ifndef _WIN32
@@ -1591,7 +1590,7 @@ int  read_message(time_t delay, fdlist *listp)
 				continue;
 			if (IsLog(cptr))
 				continue;
-
+			
 			if (DoingAuth(cptr))
 			{
 				auth++;
@@ -1623,7 +1622,9 @@ int  read_message(time_t delay, fdlist *listp)
 			}
 			if ((cptr->fd >= 0) && (DBufLength(&cptr->sendQ) || IsConnecting(cptr) ||
 			    (DoList(cptr) && IsSendable(cptr))))
+			{
 				FD_SET(cptr->fd, &write_set);
+			}
 		}
 
 #ifndef _WIN32
@@ -1636,13 +1637,13 @@ int  read_message(time_t delay, fdlist *listp)
 		wait.tv_sec = MIN(delay, delay2);
 		wait.tv_usec = 0;
 #ifdef	HPUX
-		nfds = select(FD_SETSIZE, (int *)&read_set, (int *)&write_set,
+		nfds = select(MAXCONNECTIONS, (int *)&read_set, (int *)&write_set,
 		    0, &wait);
 #else
 # ifndef _WIN32
-		nfds = select(FD_SETSIZE, &read_set, &write_set, 0, &wait);
+		nfds = select(MAXCONNECTIONS, &read_set, &write_set, 0, &wait);
 # else
-		nfds = select(FD_SETSIZE, &read_set, &write_set, &excpt_set, &wait);
+		nfds = select(MAXCONNECTIONS, &read_set, &write_set, &excpt_set, &wait);
 # endif
 #endif
 	    if (nfds == -1 && ((ERRNO == P_EINTR) || (ERRNO == P_ENOTSOCK)))
@@ -1797,7 +1798,14 @@ int  read_message(time_t delay, fdlist *listp)
 			 */
 			ClearBlocked(cptr);
 			if (IsConnecting(cptr))
-				write_err = completed_connection(cptr);
+#ifdef USE_SSL
+				if ((cptr->serv) && (cptr->serv->conf->options & CONNECT_SSL))
+				{
+					write_err = ircd_SSL_client_handshake(cptr);
+				}
+				else
+#endif
+					write_err = completed_connection(cptr);
 			if (!write_err)
 			{
 				if (DoList(cptr) && IsSendable(cptr))
@@ -1820,8 +1828,35 @@ deadsocket:
 			}
 		}
 		length = 1;	/* for fall through case */
-		if (!NoNewLine(cptr) || FD_ISSET(cptr->fd, &read_set))
+		if ((!NoNewLine(cptr) || FD_ISSET(cptr->fd, &read_set)) 
+#ifdef USE_SSL
+			&& 
+			!(IsSSLAcceptHandshake(cptr) || IsSSLConnectHandshake(cptr))
+#endif		
+			)
 			length = read_packet(cptr, &read_set);
+#ifdef USE_SSL
+		if ((cptr->ssl != NULL) && 
+			(IsSSLAcceptHandshake(cptr) || IsSSLConnectHandshake(cptr)) &&
+			FD_ISSET(cptr->fd, &read_set))
+		{
+			if (!SSL_is_init_finished(cptr->ssl))
+			{
+				if (IsDead(cptr) || IsSSLAcceptHandshake(cptr) ? !ircd_SSL_accept(cptr, cptr->fd) : ircd_SSL_connect(cptr) < 0)
+				{
+					length = -1;
+				}
+			}
+			else
+			{
+				if (IsSSLAcceptHandshake(cptr))
+					start_of_normal_client_handshake(cptr);
+				else
+					completed_connection(cptr);
+
+			}
+		}
+#endif
 		if (length > 0)
 			flush_connections(cptr);
 		if ((length != FLUSH_BUFFER) && IsDead(cptr))
@@ -1959,6 +1994,7 @@ int  read_message(time_t delay, fdlist *listp)
 				continue;
 			if (IsLog(cptr))
 				continue;
+			
 			if (DoingAuth(cptr))
 			{
 				if (auth == 0)

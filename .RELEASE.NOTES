@@ -1,5 +1,5 @@
 
-Unreal3.2-Selene (BETA10) RELEASE NOTES
+Unreal3.2-Selene (BETA11) RELEASE NOTES
 ======================================
     
      I M P O R T A N T   R E A D I N G
@@ -11,6 +11,8 @@ Unreal3.2-Selene (BETA10) RELEASE NOTES
   ircd.conf, vhost.conf, chrestrict.conf, unrealircd.conf, into to one new
   unrealircd.conf (what the ircd.conf is called now). See doc/ for more
   information on the configuration format
+
+* THIS IS A BETA VERSION, REPORT BUGS ON http://bugs.unrealircd.org
 
 * We have introduced a new cloaking algoritm (+x), which makes it
   incompatible with Unreal3.1.1 - these can however still link, but the
@@ -118,10 +120,52 @@ Unreal3.2-Selene (BETA10) RELEASE NOTES
 
 * set::socks has been replaced by set::scan (read doc/conf.doc for more info)
 
+* If you experince problems with the scanners, perhaps check out BOPM
+  (http://www.blitzed.org/bopm)
+
 * log {} syslog support added (read doc/conf.doc for more info)
+
+* Added ripemd-160 password encryption support
+
+* Enabled sha1 and md5 password encryption on Win32 regardless of whether SSL is used.
+
+* Added WinNT/2k/XP service support (experimental)
+  To use this you use the unreal.exe utility:
+    unreal install -installs the service
+    unreal uninstall -uninstalls the service
+    unreal start -starts the service
+    unreal stop -stops the service
+    unreal restart -restarts the service
+    unreal rehash -rehashes the config file
+  Config errors and crashes are now logged to service.log when in service mode.
+
+* Implimented a new win32 debugger to make fixing bugs much easier.
+
+* Added a win32 installer to simplify installing under Windows.
+
+* AKILL/RAKILL is depricated. Server command still works but will be removed eventually
+  (aliases to TKL G). For normal opers it notices that the commands are depricated.
+
+* Made the config parser smarter when it comes to time values and size values. Entries are
+  no longer limited to 1d2h1m. You can now enter "1day 2 hours 1 minute" for example. See
+  doc/conf.doc for more information.
+
+* The operoverride code has been rewritten to be less intrusive. You can now no longer
+  automatically join a channel for which you must override a mode. You must /invite
+  yourself to the channel. The idea behind this is it prevents the accidental "rejoin on
+  kick" ban override and joining a +s channel without realizing it is +s and therefore you
+  shouldn't know it exists.
+
+* If you use the SSL features of Unreal, you should use OpenSSL 0.9.6e or later. This is
+  important as the older versions may make the program exploitable. See 
+  http://www.openssl.org for more information
+
+* We have made a lot of changes to deal with SSL, and if you find any flaws or problems,
+  please contact the coder team. We however think that the changes will make SSL
+  more transparent and make it work more efficiently.
+
+* Added technical documentation in doc/technical. This directory will contain information
+  about the protocol used by Unreal.
 
 * MAKE SURE YOU RERUN ./Config AND RUN make clean BEFORE USING THIS VERSION!!!
 
-* THIS IS A BETA VERSION. THINGS MAY NOT WORK. REPORT ANY BUGS TO THESE 
-  ADDRESSES:
-   * coders@lists.unrealircd.org and bugs@lists.unrealircd.org

@@ -787,15 +787,15 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 		 *
 		 * Moved the noident stuff here. -OnyxDragon
 		 */
-		if (!(sptr->flags & FLAGS_DOID))
+		if (!(sptr->flags & FLAGS_DOID)) 
 			strncpyzt(user->username, username, USERLEN + 1);
-		else if (sptr->flags & FLAGS_GOTID)
+		else if (sptr->flags & FLAGS_GOTID) 
 			strncpyzt(user->username, sptr->username, USERLEN + 1);
 		else
 		{
+
 			/* because username may point to user->username */
 			char temp[USERLEN + 1];
-
 			strncpyzt(temp, username, USERLEN + 1);
 			if (IDENT_CHECK == 0) {
 				strncpy(user->username, temp, USERLEN);
@@ -805,10 +805,11 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 				*user->username = '~';
 				(void)strncpy(&user->username[1], temp, USERLEN);
 				user->username[USERLEN] = '\0';
-			}
 #ifdef HOSTILENAME
-			noident = 1;
+				noident = 1;
 #endif
+			}
+
 		}
 #ifdef HOSTILENAME
 		/*
@@ -821,6 +822,11 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 		 *
 		 * Moved the noident thing to the right place - see above
 		 * -OnyxDragon
+		 * 
+		 * No longer use nickname if the entire ident is invalid,
+                 * if thats the case, it is likely the user is trying to cause
+		 * problems so just ban them. (Using the nick could introduce
+		 * hostile chars) -- codemastr
 		 */
 		for (u2 = user->username + noident; *u2; u2++)
 		{
@@ -844,8 +850,7 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 		{
 			if (stripuser[0] == '\0')
 			{
-				strncpy(stripuser, cptr->name, 8);
-				stripuser[8] = '\0';
+				return exit_client(cptr, cptr, cptr, "Hostile username. Please use only 0-9 a-z A-Z _ - and . in your username.");
 			}
 
 			strcpy(olduser, user->username + noident);
@@ -923,8 +928,8 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 				    me.name, parv[0],
 				    me.name, version, umodestring, cmodestring);
 			
-		sendto_one(sptr, rpl_str(RPL_PROTOCTL), me.name, nick,
-		    PROTOCTL_PARAMETERS);
+		sendto_one(sptr, ":%s 005 %s " PROTOCTL_CLIENT_1, me.name, nick, PROTOCTL_PARAMETERS_1);
+		sendto_one(sptr, ":%s 005 %s " PROTOCTL_CLIENT_2, me.name, nick, PROTOCTL_PARAMETERS_2);
 #ifdef USE_SSL
 		if (sptr->flags & FLAGS_SSL)
 			if (sptr->ssl)
@@ -2350,6 +2355,8 @@ CMD_FUNC(m_umode)
 		}
 		sptr->user->virthost = (char *)make_virthost(sptr->user->realhost,
 		    sptr->user->virthost, 1);
+		sendto_serv_butone_token_opt(cptr, OPT_VHP, sptr->name,
+			MSG_SETHOST, TOK_SETHOST, "%s", sptr->user->virthost);
 	}
 	if (!IsHidden(sptr) && (setflags & UMODE_HIDE))
 	{

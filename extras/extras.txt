@@ -31,3 +31,18 @@ anywhere it pleases.
 
 :uline.server RAWTO towho :what to send
 
+=========================
+
+Name: channeldumper.c
+Is a 3rd party module
+Description:
+
+Dumps a list of non secret channels to ircd.channels or something every 5 seconds,
+
+C #channel topic
+M member1
+M member2
+C #channel2 topic
+M member3
+
+You can't rely on topic being there
