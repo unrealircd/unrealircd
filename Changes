@@ -419,3 +419,4 @@
 - Don't know why but m_file.so was in the modules makefile, removed
 - Added irc2.10.3's resolver. Fixes debian-woody-libresolv problems..
   Still some fixes to be done
+- More res.c fixes ..
