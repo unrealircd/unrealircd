@@ -3111,3 +3111,4 @@ seen. gmtime warning still there
 - Added temporary fix for include "http://www.blah.com/"; crashbug...although I doubt
   many people would use it. Reported by Angrywolf (#0001757).
 - Some doc/release notes updates on win module support.
+*** 3.2 release ***
