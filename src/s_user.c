@@ -2187,6 +2187,21 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			ClearCoAdmin(sptr);
 		if (IsTechAdmin(sptr))
 			ClearTechAdmin(sptr);
+		if (sptr->user->snomask & SNO_CLIENT)
+			sptr->user->snomask &= ~SNO_CLIENT;
+		if (sptr->user->snomask & SNO_FCLIENT)
+			sptr->user->snomask &= ~SNO_FCLIENT;
+		if (sptr->user->snomask & SNO_FLOOD)
+			sptr->user->snomask &= ~SNO_FLOOD;
+		if (sptr->user->snomask & SNO_JUNK)
+			sptr->user->snomask &= ~SNO_JUNK;
+		if (sptr->user->snomask & SNO_EYES)
+			sptr->user->snomask &= ~SNO_EYES;
+		if (sptr->user->snomask & SNO_VHOST)
+			sptr->user->snomask &= ~SNO_VHOST;
+		if (sptr->user->snomask & SNO_TKL)
+			sptr->user->snomask &= ~SNO_TKL;
+
 	}
 
 	/*
