@@ -3597,7 +3597,10 @@ CMD_FUNC(m_topic)
 		else if (ttime && topic && (IsServer(sptr)
 		    || IsULine(sptr)))
 		{
-			if (!chptr->topic_time || ttime > chptr->topic_time)
+			if (!chptr->topic_time || ttime > chptr->topic_time || IsULine(sptr))
+			/* The IsUline is to allow services to use an old TS. Apparently
+			 * some services do this in their topic enforcement -- codemastr 
+			 */
 			{
 				/* setting a topic */
 				topiClen = strlen(topic);
