@@ -48,6 +48,7 @@ char backupbuf[8192];
 /*
  * NOTE: parse() should not be called recursively by other functions!
  */
+extern int lifesux;
 static char *para[MAXPARA + 1];
 
 static char sender[HOSTLEN + 1];
@@ -394,19 +395,15 @@ int  parse(cptr, buffer, bufend, mptr)
 		paramcount = mptr->parameters;
 		i = bufend - ch;	/* Is this right? -Donwulff */
 		mptr->bytes += i;
-		if (!(IsServer(cptr) || IsOper(cptr)))
-			cptr->since += (2 + i / 90);
-		/* Allow only 1 msg per 2 seconds
-		 * (on average) to prevent dumping.
-		 * to keep the response rate up,
-		 * bursts of up to 5 msgs are allowed
-		 * -SRB
-		 * 
-		 * Not applying to opers now
-		 * -techie
-		 * 
-		 * 1 msg per 1.5 second i'd say now
-		 */
+		/* Changed this whole lag generating crap .. 
+		 * We only generate fake lag in HTM ..
+		 * --Stskeeps
+		*/
+		if (!IsServer(cptr) && !IsOper(cptr))
+		{
+			if (lifesux)
+				cptr->since += (2 + i / 90);
+		}		
 	}
 	/*
 	   ** Must the following loop really be so devious? On
