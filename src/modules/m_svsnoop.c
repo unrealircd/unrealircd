@@ -84,48 +84,48 @@ DLLFUNC int MOD_UNLOAD(m_svsnoop)(int module_unload)
 }
 int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-        aClient *acptr;
+aClient *acptr;
+long oldumodes;
 
-        if (!(IsULine(sptr) && parc > 2))
-                return 0;
-        /* svsnoop bugfix --binary */
-        if (hunt_server_token(cptr, sptr, MSG_SVSNOOP, TOK_SVSNOOP, "%s :%s", 1, parc,
-            parv) == HUNTED_ISME)
-        {
-                if (parv[2][0] == '+')
-                {
-                        SVSNOOP = 1;
-                        sendto_ops("This server has been placed in NOOP mode");
-                        for (acptr = &me; acptr; acptr = acptr->prev)
-                        {
-                                if (MyClient(acptr) && IsAnOper(acptr))
-                                {
-                                        if (IsOper(acptr))
-                                        {
-                                                IRCstats.operators--;
-                                                VERIFY_OPERCOUNT(acptr, "svsnoop");
-                                        }
+	if (!(IsULine(sptr) && parc > 2))
+		return 0;
+	/* svsnoop bugfix --binary */
+	if (hunt_server_token(cptr, sptr, MSG_SVSNOOP, TOK_SVSNOOP, "%s :%s", 1,
+	                      parc, parv) == HUNTED_ISME)
+	{
+		if (parv[2][0] == '+')
+		{
+			SVSNOOP = 1;
+			sendto_ops("This server has been placed in NOOP mode");
+			for (acptr = &me; acptr; acptr = acptr->prev)
+			{
+				if (MyClient(acptr) && IsAnOper(acptr))
+				{
+					if (IsOper(acptr))
+					{
+						IRCstats.operators--;
+						VERIFY_OPERCOUNT(acptr, "svsnoop");
+					}
 					if (IsAnOper(acptr))
-                                                delfrom_fdlist(acptr->slot, &oper_fdlist);
-                                        acptr->umodes &=
-                                            ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP | UMODE_SERVICES |
-                                            UMODE_SADMIN | UMODE_ADMIN);
-                                        acptr->umodes &=
-                                                ~(UMODE_NETADMIN | UMODE_WHOIS);
-                                        acptr->umodes &=
-                                            ~(UMODE_KIX | UMODE_DEAF | UMODE_HIDEOPER);
-                                        acptr->oflag = 0;
-                                        remove_oper_snomasks(acptr);
+						delfrom_fdlist(acptr->slot, &oper_fdlist);
+					oldumodes = acptr->umodes;
+					acptr->umodes &= ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP |
+					                   UMODE_SERVICES | UMODE_SADMIN | UMODE_ADMIN |
+					                   UMODE_NETADMIN | UMODE_WHOIS | UMODE_KIX |
+					                   UMODE_DEAF | UMODE_HIDEOPER | UMODE_FAILOP |
+					                   UMODE_COADMIN | UMODE_VICTIM);
+					acptr->oflag = 0;
+					remove_oper_snomasks(acptr);
+					send_umode_out(acptr, acptr, oldumodes);
 					RunHook2(HOOKTYPE_LOCAL_OPER, acptr, 0);
-                                }
-                        }
-
-                }
-                else
-                {
-                        SVSNOOP = 0;
-                        sendto_ops("This server is no longer in NOOP mode");
-                }
-        }
+				}
+			}
+		}
+		else
+		{
+			SVSNOOP = 0;
+			sendto_ops("This server is no longer in NOOP mode");
+		}
+	}
 	return 0;
 }

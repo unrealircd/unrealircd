@@ -596,3 +596,5 @@
 - Added a feature to +b ~c, ~c:[prefix]<#channel>, prefix can be +/%/@/&/~ and will
   check if the user is voiced/halfoped/etc.. Especially useful for +e ~c. Idea from
   Bugz (#0002198). Obviously all servers need to be upgraded to make this work.
+- Fixed SVSNOOP bug where remote servers still thought the opers had privileges, reported
+  by Zell (#0002185)
