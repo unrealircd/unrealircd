@@ -531,3 +531,4 @@
 - Updated PREFIX Client Protoctl
 - Added ^MrMike^'s command list, this one will be updated
 - Removed ID_CVS, hopefully fixing some bastard stuff
+- Fixed a last minute SJOIN bug
