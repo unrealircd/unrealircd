@@ -438,6 +438,18 @@ extern long UMODE_STRIPBADWORDS; /* 0x80000000	 */
 extern long UMODE_HIDEWHOIS; /* hides channels in /whois */
 extern long AllUmodes, SendUmodes;
 
+extern long SNO_KILLS;
+extern long SNO_CLIENT;
+extern long SNO_FLOOD;
+extern long SNO_FCLIENT;
+extern long SNO_JUNK;
+extern long SNO_VHOST;
+extern long SNO_EYES;
+extern long SNO_TKL;
+extern long SNO_NICKCHANGE;
+extern long SNO_QLINE;
+extern long SNO_SNOTICE;
+
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *dst, const char *src, size_t size);
 #endif

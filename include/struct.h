@@ -307,23 +307,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
  * -DuffJ
  */
 
-
-#define SNO_KILLS      0x0001
-#define SNO_CLIENT     0x0002
-#define SNO_FLOOD      0x0004
-#define SNO_FCLIENT    0x0008
-#define SNO_JUNK       0x0010
-#define SNO_VHOST      0x0020
-#define SNO_EYES       0x0040
-#define SNO_TKL        0x0080
-#define SNO_NICKCHANGE 0x0100
-#define SNO_QLINE      0x0200
-#define SNO_SNOTICE    0x0400
-
 #define SNO_DEFOPER "+kscfvGq"
 #define SNO_DEFUSER "+ks"
-
-#define SNO_NONOPERS (SNO_KILLS | SNO_SNOTICE)
 
 #define SEND_UMODES (SendUmodes)
 #define ALL_UMODES (AllUmodes)
@@ -642,6 +627,7 @@ struct aloopStruct {
 	unsigned do_garbage_collect : 1;
 	unsigned ircd_booted : 1;
 	unsigned do_bancheck : 1;
+	unsigned ircd_rehashing : 1;
 	unsigned tainted : 1;
 };
 
@@ -756,6 +742,13 @@ typedef struct {
 
 extern aUMtable *Usermode_Table;
 extern short	 Usermode_highest;
+#include "modules.h"
+
+extern Snomask *Snomask_Table;
+extern short Snomask_highest;
+
+extern Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr), long *mode);
+extern void SnomaskDel(Snomask *sno);
 
 
 #define LISTENER_NORMAL		0x000001
@@ -1489,7 +1482,6 @@ extern char *gnulicense[];
 #include "ssl.h"
 #endif
 #define EVENT_HASHES EVENT_DRUGS
-#include "modules.h"
 #include "events.h"
 struct Command {
 	aCommand		*prev, *next;

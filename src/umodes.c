@@ -46,6 +46,9 @@ extern char umodestring[UMODETABLESZ+1];
 aUMtable *Usermode_Table = NULL;
 short	 Usermode_highest = 0;
 
+Snomask *Snomask_Table = NULL;
+short	 Snomask_highest = 0;
+
 /* cptr->umodes (32 bits): 26 used, 6 free */
 long UMODE_INVISIBLE = 0L;     /* makes user invisible */
 long UMODE_OPER = 0L;          /* Operator */
@@ -74,6 +77,18 @@ long UMODE_SETHOST = 0L;       /* Used sethost */
 long UMODE_STRIPBADWORDS = 0L; /* Strip badwords */
 long UMODE_HIDEWHOIS = 0L;     /* Hides channels in /whois */
 
+long SNO_KILLS = 0L;
+long SNO_CLIENT = 0L;
+long SNO_FLOOD = 0L;
+long SNO_FCLIENT = 0L;
+long SNO_JUNK = 0L;
+long SNO_VHOST = 0L;
+long SNO_EYES = 0L;
+long SNO_TKL = 0L;
+long SNO_NICKCHANGE = 0L;
+long SNO_QLINE = 0L;
+long SNO_SNOTICE = 0L;
+
 long AllUmodes;		/* All umodes */
 long SendUmodes;	/* All umodes which are sent to other servers (global umodes) */
 
@@ -81,7 +96,7 @@ void	umode_init(void)
 {
 	long val = 1;
 	int	i;
-	Usermode_Table = (aUMtable *)MyMalloc(sizeof(aUMtable) * UMODETABLESZ);
+	Usermode_Table = MyMalloc(sizeof(aUMtable) * UMODETABLESZ);
 	bzero(Usermode_Table, sizeof(aUMtable) * UMODETABLESZ);
 	for (i = 0; i < UMODETABLESZ; i++)
 	{
@@ -89,6 +104,17 @@ void	umode_init(void)
 		val *= 2;
 	}
 	Usermode_highest = 0;
+
+	Snomask_Table = MyMalloc(sizeof(Snomask) * UMODETABLESZ);
+	bzero(Snomask_Table, sizeof(Snomask) * UMODETABLESZ);
+	val = 1;
+	for (i = 0; i < UMODETABLESZ; i++)
+	{
+		Snomask_Table[i].mode = val;
+		val *= 2;
+	}
+	Snomask_highest = 0;
+
 	/* Set up modes */
 	UMODE_INVISIBLE = umode_gget('i'); /*  0x0001	 makes user invisible */
 	UMODE_OPER = umode_gget('o');      /*  0x0002	 Operator */
@@ -116,6 +142,17 @@ void	umode_init(void)
 	UMODE_SETHOST = umode_gget('t');   /* 0x40000000	 used sethost */
 	UMODE_STRIPBADWORDS = umode_gget('G'); /* 0x80000000	 */
 	UMODE_HIDEWHOIS = umode_gget('p'); /* Hides channels in /whois */
+	SnomaskAdd(NULL, 'k', umode_allow_all, &SNO_KILLS);
+	SnomaskAdd(NULL, 'c', umode_allow_opers, &SNO_CLIENT);
+	SnomaskAdd(NULL, 'f', umode_allow_opers, &SNO_FLOOD);
+	SnomaskAdd(NULL, 'F', umode_allow_opers, &SNO_FCLIENT);
+	SnomaskAdd(NULL, 'j', umode_allow_opers, &SNO_JUNK);
+	SnomaskAdd(NULL, 'v', umode_allow_opers, &SNO_VHOST);
+	SnomaskAdd(NULL, 'e', umode_allow_opers, &SNO_EYES);
+	SnomaskAdd(NULL, 'G', umode_allow_opers, &SNO_TKL);
+	SnomaskAdd(NULL, 'n', umode_allow_opers, &SNO_NICKCHANGE);
+	SnomaskAdd(NULL, 'q', umode_allow_opers, &SNO_QLINE);
+	SnomaskAdd(NULL, 's', umode_allow_all, &SNO_SNOTICE);
 }
 
 void make_umodestr(void)
@@ -193,6 +230,72 @@ int	umode_delete(char ch, long val)
 	return -1;
 }
 
+Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr), long *mode)
+{
+	short	 i = 0;
+	short	 j = 0;
+	short 	 save = -1;
+	while (i < UMODETABLESZ)
+	{
+		if (!Snomask_Table[i].flag && save == -1)
+			save = i;
+		else if (Snomask_Table[i].flag == ch && Snomask_Table[i].unloaded)
+		{
+			save = i;
+			Snomask_Table[i].unloaded = 0;
+			break;
+		}
+		i++;
+	}
+	i = save;
+	if (i != UMODETABLESZ)
+	{
+		Snomask_Table[i].flag = ch;
+		Snomask_Table[i].allowed = allowed;
+		/* Update usermode table highest */
+		for (j = 0; j < UMODETABLESZ; j++)
+			if (Snomask_Table[i].flag)
+				if (i > Snomask_highest)
+					Snomask_highest = i;
+		*mode = Snomask_Table[i].mode;
+		Snomask_Table[i].owner = module;
+		if (module)
+		{
+			ModuleObject *snoobj = MyMallocEx(sizeof(ModuleObject));
+			snoobj->object.snomask = &(Snomask_Table[i]);
+			snoobj->type = MOBJ_SNOMASK;
+			AddListItem(snoobj, module->objects);
+		}
+		return &(Snomask_Table[i]);
+	}
+	else
+	{
+		Debug((DEBUG_DEBUG, "SnomaskAdd failed, no space"));
+		*mode = 0;
+		return NULL;
+	}
+}
+
+void SnomaskDel(Snomask *sno)
+{
+	if (loop.ircd_rehashing)
+		sno->unloaded = 1;
+	else	
+		sno->flag = '\0';
+	if (sno->owner) {
+		ModuleObject *snoobj;
+		for (snoobj = sno->owner->objects; snoobj; snoobj = snoobj->next) {
+			if (snoobj->type == MOBJ_SNOMASK && snoobj->object.snomask == sno) {
+				DelListItem(snoobj, sno->owner->objects);
+				MyFree(snoobj);
+				break;
+			}
+		}
+		sno->owner = NULL;
+	}
+	return;
+}
+
 int umode_allow_all(aClient *sptr)
 {
 	return 1;
@@ -203,3 +306,31 @@ int umode_allow_opers(aClient *sptr)
 	return IsAnOper(sptr) ? 1 : 0;
 }
 
+void unload_all_unused_snomasks()
+{
+	long removed_sno = 0;
+	int i;
+
+	for (i = 0; i < UMODETABLESZ; i++)
+	{
+		if (Snomask_Table[i].unloaded)
+		{
+			removed_sno |= Snomask_Table[i].mode;
+			Snomask_Table[i].flag = '\0';
+			Snomask_Table[i].unloaded = 0;
+		}
+	}
+	for (i = 0; i <= LastSlot; i++)
+	{
+		aClient *cptr = local[i];
+		long oldsno;
+		if (!cptr || !IsPerson(cptr))
+			continue;
+		oldsno = cptr->user->snomask;
+		cptr->user->snomask &= ~(removed_sno);
+		if (oldsno != cptr->user->snomask)
+			sendto_one(cptr, rpl_str(RPL_SNOMASK), me.name,
+				cptr->name, get_snostr(cptr->user->snomask));
+		
+	}
+}

@@ -2254,3 +2254,7 @@ seen. gmtime warning still there
 - Added a goto button on the win32 editor toolbar.
 - Made the win32 editor window maximizable.
 - Added a find text feature to the win32 editor.
+- Added HOOKTYPE_LOCAL_OPER (first param = aClient of oper, second param = 1 if the user
+  just became an oper, 0 if they just -o'ed)
+- Added a system to allow modules to create snomasks using functions SnomaskAdd and SnomaskDel
+

@@ -51,8 +51,6 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_SMO         "SMO"
 #define TOK_SMO         "AU"
 
-extern int sno_mask[]; /* someone is going to make this static, I just know it */
-
 #ifndef DYNAMIC_LINKING
 ModuleHeader m_sendumode_Header
 #else
@@ -162,21 +160,24 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		umode_s = 0;
 		
-		for(i = 0; Usermode_Table[i].flag; i++)
+		for(i = 0; i <= Usermode_highest; i++)
 		{
+			if (!Usermode_Table[i].flag)
+				continue;
 			if (Usermode_Table[i].flag == *p)
 			{
 				umode_s |= Usermode_Table[i].mode;
+				break;
 			}
 		}
-		if (Usermode_Table[i].flag)
-			break;
+		if (i <= Usermode_highest)
+			continue;
 
-		for (i = 1; sno_mask[i]; i += 2)
+		for(i = 0; i <= Snomask_highest; i++)
 		{
-			if (sno_mask[i] ==  *p) 	
+			if (Snomask_Table[i].flag == *p)
 			{
-				snomask |= sno_mask[i - 1];
+				snomask |= Snomask_Table[i].mode;
 				break;
 			}
 		}
@@ -185,11 +186,11 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc > 3)
 	    for(p = parv[2]; *p; p++)
 	{
-		for (i = 1; sno_mask[i]; i += 2)
+		for (i = 0; i <= Snomask_highest; i++)
 		{
-			if (sno_mask[i] ==  *p) 	
+			if (Snomask_Table[i].flag == *p)
 			{
-				snomask |= sno_mask[i - 1];
+				snomask |= Snomask_Table[i].mode;
 				break;
 			}
 		}

@@ -94,6 +94,15 @@ typedef struct {
 #define MOBJ_COMMAND 0x0004
 #define MOBJ_HOOKTYPE 0x0008
 #define MOBJ_VERSIONFLAG 0x0010
+#define MOBJ_SNOMASK 0x0020
+
+typedef struct {
+        long mode;
+        char flag;
+        int (*allowed)(aClient *sptr);
+        char unloaded;
+        Module *owner;
+} Snomask;
 
 typedef struct _command {
 	struct _command *prev, *next;
@@ -115,6 +124,7 @@ typedef struct _ModuleObject {
 		Command *command;
 		Hooktype *hooktype;
 		Versionflag *versionflag;
+		Snomask *snomask;
 	} object;
 } ModuleObject;
 
@@ -301,6 +311,7 @@ int CommandExists(char *name);
 #define HOOKTYPE_LOCAL_KICK 20
 #define HOOKTYPE_LOCAL_CHANMODE 21
 #define HOOKTYPE_LOCAL_TOPIC 22
+#define HOOKTYPE_LOCAL_OPER 23
 /* Module flags */
 #define MODFLAG_NONE	0x0000
 #define MODFLAG_LOADED	0x0001 /* Fully loaded */

@@ -295,6 +295,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 #ifndef NO_FDLIST
 		addto_fdlist(sptr->slot, &oper_fdlist);
 #endif
+		RunHook2(HOOKTYPE_LOCAL_OPER, sptr, 1);
 		sendto_one(sptr, rpl_str(RPL_YOUREOPER), me.name, parv[0]);
 		if (IsInvisible(sptr) && !(old & UMODE_INVISIBLE))
 			IRCstats.invisible++;

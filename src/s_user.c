@@ -56,7 +56,7 @@ void send_umode_out(aClient *, aClient *, long);
 void send_umode_out_nickv2(aClient *, aClient *, long);
 void send_umode(aClient *, aClient *, long, long, char *);
 void set_snomask(aClient *, char *);
-int create_snomask(char *, int);
+void create_snomask(aClient *, anUser *, char *);
 extern int short_motd(aClient *sptr);
 char *get_snostr(long sno);
 /* static  Link    *is_banned(aClient *, aChannel *); */
@@ -64,21 +64,6 @@ int  dontspread = 0;
 extern char *me_hash;
 extern char backupbuf[];
 static char buf[BUFSIZE];
-
-int sno_mask[] = { 
-	SNO_KILLS, 'k',
-	SNO_CLIENT, 'c',
-	SNO_FLOOD, 'f',
-	SNO_FCLIENT, 'F',
-	SNO_JUNK, 'j',
-	SNO_VHOST, 'v',
-	SNO_EYES, 'e',
-	SNO_TKL, 'G',
-	SNO_NICKCHANGE, 'n',
-	SNO_QLINE, 'q',
-	SNO_SNOTICE, 's',
-	0, 0
-};
 
 void iNAH_host(aClient *sptr, char *host)
 {
@@ -1812,16 +1797,15 @@ CMD_FUNC(m_nick)
 ** returns an ascii string of modes
 */
 char *get_sno_str(aClient *sptr) {
-	int flag;
-	int *s;
+	int i;
 	char *m;
 
 	m = buf;
 
 	*m++ = '+';
-	for (s = sno_mask; (flag = *s) && (m - buf < BUFSIZE - 4); s += 2)
-		if (sptr->user->snomask & flag)
-			*m++ = (char)(*(s + 1));
+	for (i = 0; i <= Snomask_highest && (m - buf < BUFSIZE - 4); i++)
+		if (Snomask_Table[i].flag && sptr->user->snomask & Snomask_Table[i].mode)
+			*m++ = Snomask_Table[i].flag;
 	*m = 0;
 	return buf;
 }
@@ -1834,7 +1818,6 @@ char *get_mode_str(aClient *acptr)
 	m = buf;
 	*m++ = '+';
 	for (i = 0; (i <= Usermode_highest) && (m - buf < BUFSIZE - 4); i++)
-		
 		if (Usermode_Table[i].flag && (acptr->umodes & Usermode_Table[i].mode))
 			*m++ = Usermode_Table[i].flag;
 	*m = '\0';
@@ -1858,16 +1841,15 @@ char *get_modestr(long umodes)
 }
 
 char *get_snostr(long sno) {
-	int flag;
-	int *s;
+	int i;
 	char *m;
 
 	m = buf;
 
 	*m++ = '+';
-	for (s = sno_mask; (flag = *s) && (m - buf < BUFSIZE - 4); s += 2)
-		if (sno & flag)
-			*m++ = (char)(*(s + 1));
+	for (i = 0; i <= Snomask_highest && (m - buf < BUFSIZE - 4); i++)
+		if (Snomask_Table[i].flag && sno & Snomask_Table[i].mode)
+			*m++ = Snomask_Table[i].flag;
 	*m = 0;
 	return buf;
 }
@@ -1975,7 +1957,7 @@ CMD_FUNC(m_user)
 		if (CONNECT_SNOMASK)
 		{
 			sptr->umodes |= UMODE_SERVNOTICE;
-			user->snomask = create_snomask(CONNECT_SNOMASK, 0);
+			create_snomask(sptr, user, CONNECT_SNOMASK);
 		}
 	}
 
@@ -2161,7 +2143,7 @@ CMD_FUNC(m_ison)
 void set_snomask(aClient *sptr, char *snomask) {
 	int what = MODE_ADD;
 	char *p;
-	int *s, flag;
+	int i;
 	if (snomask == NULL) {
 		sptr->user->snomask = 0;
 		return;
@@ -2176,28 +2158,32 @@ void set_snomask(aClient *sptr, char *snomask) {
 				what = MODE_DEL;
 				break;
 			default:
-				for (s = sno_mask; (flag = *s); s += 2)
-					if (*p == (char) (*(s + 1))) {
-						if (what == MODE_ADD)
-							sptr->user->snomask |= flag;
-						else
-							sptr->user->snomask &= ~flag;
-					}
-				
+		 	 for (i = 0; i <= Snomask_highest; i++)
+		 	 {
+		 	 	if (!Snomask_Table[i].flag)
+		 	 		continue;
+		 	 	if (*p == Snomask_Table[i].flag)
+		 	 	{
+					if (!Snomask_Table[i].allowed(sptr))
+						continue;
+		 	 		if (what == MODE_ADD)
+			 	 		sptr->user->snomask |= Snomask_Table[i].mode;
+			 	 	else
+			 	 		sptr->user->snomask &= ~Snomask_Table[i].mode;
+		 	 	}
+		 	 }				
 		}
-	}
-	if (!IsAnOper(sptr)) {
-		sptr->user->snomask &= (SNO_NONOPERS);
 	}
 }
 
-int create_snomask(char *snomask, int oper) {
+void create_snomask(aClient *sptr, anUser *user, char *snomask) {
 	int what = MODE_ADD;
 	char *p;
-	int *s, flag, sno = 0;
-	
-	if (snomask == NULL) 
-		return sno;
+	int i;
+	if (snomask == NULL) {
+		user->snomask = 0;
+		return;
+	}
 	
 	for (p = snomask; p && *p; p++) {
 		switch (*p) {
@@ -2208,20 +2194,22 @@ int create_snomask(char *snomask, int oper) {
 				what = MODE_DEL;
 				break;
 			default:
-				for (s = sno_mask; (flag = *s); s += 2)
-					if (*p == (char) (*(s + 1))) {
-						if (what == MODE_ADD)
-							sno |= flag;
-						else
-							sno &= ~flag;
-					}
-				
+		 	 for (i = 0; i <= Snomask_highest; i++)
+		 	 {
+		 	 	if (!Snomask_Table[i].flag)
+		 	 		continue;
+		 	 	if (*p == Snomask_Table[i].flag)
+		 	 	{
+					if (!Snomask_Table[i].allowed(sptr))
+						continue;
+		 	 		if (what == MODE_ADD)
+			 	 		user->snomask |= Snomask_Table[i].mode;
+			 	 	else
+			 	 		user->snomask &= ~Snomask_Table[i].mode;
+		 	 	}
+		 	 }				
 		}
 	}
-	if (!oper) {
-		sno &= (SNO_NONOPERS);
-	}
-	return sno;
 }
 
 /*
@@ -2428,7 +2416,6 @@ CMD_FUNC(m_umode)
 		ClearHideOper(sptr);
 		ClearCoAdmin(sptr);
 		ClearHelpOp(sptr);
-		sptr->user->snomask &= (SNO_NONOPERS);
 	}
 
 	/*
@@ -2552,6 +2539,7 @@ CMD_FUNC(m_umode)
 			sptr->user->snomask &= ~SNO_NICKCHANGE;
 		if (sptr->user->snomask & SNO_QLINE)
 			sptr->user->snomask &= ~SNO_QLINE;
+		RunHook2(HOOKTYPE_LOCAL_OPER, sptr, 0);
 	}
 
 	if ((sptr->umodes & UMODE_BOT) && !(setflags & UMODE_BOT))
