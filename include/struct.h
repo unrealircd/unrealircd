@@ -933,7 +933,7 @@ struct _configitem {
 
 struct _configitem_me {
 	char	   *name, *info;
-	short	   numeric;
+	unsigned short	   numeric;
 };
 
 struct _configitem_admin {

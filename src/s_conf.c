@@ -2550,7 +2550,7 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 		if (cep->ce_vardata)
 		{
 			l = atol(cep->ce_vardata);
-			if ((l < 0) && (l > 254))
+			if ((l < 0) || (l > 254))
 			{
 				config_error("%s:%i: illegal me::numeric error (must be between 0 and 254)",
 					cep->ce_fileptr->cf_filename,

@@ -2147,3 +2147,4 @@ seen. gmtime warning still there
 - Added CASEMAPPING=ascii as per request
 - /WHO code cleanup + partial recode + bugfixes
 - Updated example.conf about U-lines since many people set them wrong.
+- Fixed numeric checking.

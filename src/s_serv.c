@@ -863,6 +863,14 @@ nohostcheck:
 		numeric = num ? atol(num) : numeric;
 		if (numeric)
 		{
+			if ((numeric < 0) || (numeric > 254))
+			{
+				sendto_locfailops("Link %s denied, numeric '%d' out of range (should be 0-254)",
+					inpath, numeric);
+
+				return exit_client(cptr, cptr, cptr,
+				    "Numeric out of range (0-254)");
+			}
 			if (numeric_collides(numeric))
 			{
 				sendto_locfailops("Link %s denied, colliding server numeric",
@@ -986,6 +994,13 @@ CMD_FUNC(m_server_remote)
 	}
 	if (numeric)
 	{
+		if ((numeric < 0) || (numeric > 254))
+		{
+			sendto_locfailops("Link %s(%s) cancelled, numeric '%d' out of range (should be 0-254)",
+				cptr->name, servername, numeric);
+			return exit_client(cptr, cptr, cptr,
+			    "Numeric out of range (0-254)");
+		}
 		if (numeric_collides(numeric))
 		{
 			sendto_locfailops("Link %s(%s) cancelled, colliding server numeric",
