@@ -546,6 +546,8 @@ cat << __EOF__
 |                                                                       |
 | * Stskeeps  stskeeps@unrealircd.com                                   |
 | * codemastr codemastr@unrealircd.com                                  |
+| * Syzop     syzop@unrealircd.com                                      |
+| * McSkaf    mcskaf@unrealircd.com                                     |
 |_______________________________________________________________________|
 __EOF__
 

@@ -2113,3 +2113,4 @@ seen. gmtime warning still there
 - Made SVSNOOP work. Reported by Lx (#0000933).
 - Removed some more html files.
 - Removed CREDITS.POTENTIAL
+- Removed 'bugreport'
