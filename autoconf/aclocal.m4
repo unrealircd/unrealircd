@@ -248,7 +248,11 @@ tar xfz pthreads.tar.gz
 cd threads/src
 ./configure
 cd ../../../
+if test "$ac_cv_pthreadspecial"!=no; then
 PTHREAD_CFLAGS="-I=../extras/threads/include $ac_cv_pthreadspecial"
+else
+PTHREAD_CFLAGS="-I=../extras/threads/include"
+fi
 PTHREAD_LIBS="../extras/lib/libgthreads.a ../extras/lib/libmalloc.a"
 fi
 fi
