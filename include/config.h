@@ -35,18 +35,6 @@
  *
  *
  */
-/*
- * To windows porters:
- *   You can specify name and url for their diff wircd sites
- *   #undef WIN32_SPECIFY for not having any notice about it in the wIRCd
- *    --Techie
- */
-#undef WIN32_SPECIFY
-
-#ifdef WIN32_SPECIFY
-#define WIN32_PORTER "McSkaf"
-#define WIN32_URL ""
-#endif
 
  /*
     * Define this if you're testing/debugging/programming.
@@ -111,11 +99,6 @@
  * cloak algo -griever
  */
 #undef COMPAT_BETA4_KEYS
-
-/*
- * Kill logging -otherguy
-*/
-#undef KILL_LOGGING
 
 /*
   If you want SHUN_NOTICES, define this
@@ -253,13 +236,6 @@
 
 /* #undef	DEBUGMODE	   define DEBUGMODE to enable debugging mode.*/
 
-/* We not check whether this is ok at compile time -- codemastr */
-/*
- * defining FORCE_CORE will automatically "unlimit core", forcing the
- * server to dump a core file whenever it has a fatal error.  -mlv
- */
-/* #define FORCE_CORE */
-
 /*
  * Full pathnames and defaults of irc system's support files. Please note that
  * these are only the recommened names and paths. Change as needed.
@@ -268,8 +244,6 @@
 #define	CPATH		"unrealircd.conf"	/* server configuration file */
 #define	MPATH		"ircd.motd"	/* server MOTD file */
 #define RPATH   	"ircd.rules"	/* server rules file */
-#define ZPATH		"ircd.notes"	/* server notes */
-#define ZCONF   	"networks/unrealircd.conf"	/* ircd configuration .. */
 #define OPATH   	"oper.motd"	/* Operators MOTD file */
 #define	LPATH		"debug.log"	/* Where the debug file lives, if DEBUGMODE */
 #define	PPATH		"ircd.pid"	/* file for server pid */
@@ -529,11 +503,9 @@
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MOTD MPATH
 #define RULES RPATH
-#define SNOTES ZPATH
 #define	MYNAME SPATH
 #define	CONFIGFILE CPATH
 #define	IRCD_PIDFILE PPATH
-#define GLINE_LOG GPATH
 
 #ifdef	__osf__
 #define	OSF
