@@ -391,14 +391,11 @@ inline aCommand *find_Command(char *cmd, short token, int flags)
 	aCommand	*p;
 	
 	for (p = CommandHash[toupper(*cmd)]; p; p = p->next) {
-		if (p->flags != 0) {
 		if ((flags & M_UNREGISTERED) && !(p->flags & M_UNREGISTERED))
 			continue;
-		if ((flags & M_USER) && !(p->flags & M_USER))
+		if ((flags & M_SHUN) && !(p->flags & M_SHUN))
 			continue;
-		if ((flags & M_SERVER) && !(p->flags & M_SERVER))
-			continue;
-		}
+		
 		if (p->token && token)
 		{
 			if (!strcmp(p->cmd, cmd))

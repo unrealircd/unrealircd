@@ -725,6 +725,7 @@ struct Server {
 #define M_UNREGISTERED 0x0001
 #define M_USER 0x0002
 #define M_SERVER 0x0004
+#define M_SHUN 0x0008
 
 struct Command {
 	aCommand		*next;

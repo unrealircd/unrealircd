@@ -327,12 +327,14 @@ int  parse(cptr, buffer, bufend)
 		int flags = 0;
 		if (s)
 			*s++ = '\0';
-		if (!IsRegistered(cptr))
+		if (!IsRegistered(from))
 			flags |= M_UNREGISTERED;
-		if (IsPerson(cptr))
+		if (IsPerson(from))
 			flags |= M_USER;
-		if (IsServer(cptr))
+		if (IsServer(from))
 			flags |= M_SERVER;
+		if (IsShunned(from))
+			flags |= M_SHUN;
 		cmptr = find_Command(ch, IsServer(cptr) ? 1 : 0, flags);
 
 		if (!cmptr)
@@ -353,6 +355,9 @@ int  parse(cptr, buffer, bufend)
 				    me.name, ERR_NOTREGISTERED, ch);
 				return -1;
 			}
+			if (IsShunned(cptr))
+				return -1;
+				
 			if (buffer[0] != '\0')
 			{
 				if (IsPerson(from))
@@ -365,6 +370,13 @@ int  parse(cptr, buffer, bufend)
 			}
 			ircstp->is_unco++;
 			return (-1);
+		}
+		if (((cmptr->flags & M_USER) && !(flags & M_USER))
+			|| ((cmptr->flags & M_SERVER) && !(flags & M_SERVER)))
+		{
+			sendto_one(cptr, rpl_str(ERR_NOPRIVILEGES), me.name,
+					from->name);
+			return -1;
 		}
 		paramcount = cmptr->parameters;
 		i = bufend - ch;	/* Is this right? -Donwulff */
@@ -424,25 +436,6 @@ int  parse(cptr, buffer, bufend)
 	para[++i] = NULL;
 	if (cmptr == NULL)
 		return (do_numeric(numeric, cptr, from, i, para));
-	/* now, lets make sure they use a legit commnd... -nikb */
-	/* There is code in s_serv.c for ADMIN and VERSION and
-	 * in s_user.c for NOTICE to limit commands by 
-	 * unregistered users. -Studded */
-	if (IsShunned(cptr) && IsRegistered(cptr))
-		if ((cmptr->func != m_admin) && (cmptr->func != m_quit)
-		    && (cmptr->func != m_pong))
-			return -4;
-
-/*	if ((!IsRegistered(cptr)) &&
-	    (((cmptr->func != m_user) && (cmptr->func != m_nick) &&
-	    (cmptr->func != m_server) && (cmptr->func != m_pong) &&
-	    (cmptr->func != m_pass) && (cmptr->func != m_quit) &&
-	    (cmptr->func != m_protoctl) && (cmptr->func != m_error) &&
-	    (cmptr->func != m_admin) && (cmptr->func != m_version)
-	    )))
-	{
-	}
-*/
 	cmptr->count++;
 	if (IsRegisteredUser(cptr) && cmptr->func == m_private)
 		from->user->last = TStime();

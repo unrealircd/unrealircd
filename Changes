@@ -340,3 +340,6 @@
   closed source modules.
 - Moved m_setname to a .so
 - Started work on the new improved command hashing system
+- Modified command hashing system to Sts's belief of how eggs should be
+  made. (quick, dirty and fcked up)
+
