@@ -897,7 +897,7 @@ int stats_mem(aClient *sptr, char *para)
 #if !defined(_WIN32) && !defined(_AMIGA)
 #ifdef __alpha
 	sendto_one(sptr, ":%s %d %s :TOTAL: %d sbrk(0)-etext: %u",
-	    me.name, RPL_STATSDEBUG, nick, tot,
+	    me.name, RPL_STATSDEBUG, sptr->name, tot,
 	    (u_int)sbrk((size_t)0) - (u_int)sbrk0);
 #else
 	sendto_one(sptr, ":%s %d %s :TOTAL: %ld sbrk(0)-etext: %lu",

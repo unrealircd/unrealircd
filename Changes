@@ -2589,3 +2589,5 @@ seen. gmtime warning still there
 - Made /rehash reread botmotd and opermotd (#0001291).
 - Made OperOverride work for chanmode +Q (#0001370).
 - A few example.conf changes.
+- Fixed a compile problem on alpha, reported by Hyperi (#0001374).
+- Made "operator count bug" not notice all opers (log only), unless in debugmode.

@@ -729,7 +729,9 @@ char text[2048];
 	               "please report to UnrealIRCd team at http://bugs.unrealircd.org/",
 	               IRCstats.operators, counted, orig->name ? orig->name : "<null>",
 	               orig->srvptr ? orig->srvptr->name : "<null>", tag ? tag : "<null>");
+#ifdef DEBUGMODE
 	sendto_realops("%s", text);
+#endif
 	ircd_log(LOG_ERROR, "%s", text);
 	IRCstats.operators = counted;
 }
