@@ -54,6 +54,7 @@ int stats_notlink(aClient *, char *);
 int stats_class(aClient *, char *);
 int stats_zip(aClient *, char *);
 int stats_officialchannels(aClient *, char *);
+int stats_spamfilter(aClient *, char *);
 
 #define SERVER_AS_PARA 0x1
 #define FLAGS_AS_PARA 0x2
@@ -99,7 +100,7 @@ struct statstab StatsTable[] = {
 	{ 'c', "link", 		stats_links,		0 		},
 	{ 'd', "denylinkauto",	stats_denylinkauto,	0 		},
 	{ 'e', "exceptthrottle",stats_exceptthrottle,	0		},
-	{ 'f', "denydcc",	stats_denydcc,		0		},	
+	{ 'f', "spamfilter",	stats_spamfilter,		FLAGS_AS_PARA		},	
 	{ 'g', "gline",		stats_gline,		FLAGS_AS_PARA	},
 	{ 'h', "link", 		stats_links,		0 		},
 	{ 'j', "officialchans", stats_officialchannels, 0 },
@@ -179,9 +180,11 @@ inline void stats_help(aClient *sptr)
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"D - denylinkall - Send the deny link (all) block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"e - excepthrottle - Send the except trottle block list");
+		"e - exceptthrottle - Send the except trottle block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"E - exceptban - Send the except ban block list");
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+		"f - spamfilter - Send the spamfilter list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"F - denydcc - Send the deny dcc block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
@@ -243,9 +246,9 @@ inline void stats_help(aClient *sptr)
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"U - uline - Send the ulines block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"v - Send the deny version block list");
+		"v - denyver - Send the deny version block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"V - Send the vhost block list");
+		"V - vhost - Send the vhost block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"X - notlink - Send the list of servers that are not current linked");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
@@ -279,9 +282,10 @@ inline int stats_operonly_short(char c)
 	}
 	/* Hack for c/C/H/h */
 	if (l == 'c')
+	{
 		if (strpbrk(OPER_ONLY_STATS, "hH"))
 			return 1;
-	else if (l == 'h')
+	} else if (l == 'h')
 		if (strpbrk(OPER_ONLY_STATS, "cC"))
 			return 1;
 	return 0;
@@ -473,6 +477,13 @@ int stats_gline(aClient *sptr, char *para)
 {
 	tkl_stats(sptr, TKL_GLOBAL|TKL_KILL, para);
 	tkl_stats(sptr, TKL_GLOBAL|TKL_ZAP, para);
+	return 0;
+}
+
+int stats_spamfilter(aClient *sptr, char *para)
+{
+	tkl_stats(sptr, TKL_SPAMF, para);
+	tkl_stats(sptr, TKL_GLOBAL|TKL_SPAMF, para);
 	return 0;
 }
 
@@ -1208,8 +1219,12 @@ int stats_set(aClient *sptr, char *para)
 	    RPL_TEXT, sptr->name, OPER_AUTO_JOIN_CHANS ? OPER_AUTO_JOIN_CHANS : "0");
 	sendto_one(sptr, ":%s %i %s :static-quit: %s", me.name, 
 		RPL_TEXT, sptr->name, STATIC_QUIT ? STATIC_QUIT : "<none>");	
+	sendto_one(sptr, ":%s %i %s :static-part: %s", me.name, 
+		RPL_TEXT, sptr->name, STATIC_PART ? STATIC_PART : "<none>");	
 	sendto_one(sptr, ":%s %i %s :who-limit: %d", me.name, RPL_TEXT,
 		sptr->name, WHOLIMIT);
+	sendto_one(sptr, ":%s %i %s :silence-limit: %d", me.name, RPL_TEXT,
+		sptr->name, SILENCE_LIMIT);
 	sendto_one(sptr, ":%s %i %s :dns::timeout: %s", me.name, RPL_TEXT,
 	    sptr->name, pretty_time_val(HOST_TIMEOUT));
 	sendto_one(sptr, ":%s %i %s :dns::retries: %d", me.name, RPL_TEXT,
@@ -1247,6 +1262,10 @@ int stats_set(aClient *sptr, char *para)
 	sendto_one(sptr, ":%s %i %s :modef-max-unsettime: %hd", me.name, RPL_TEXT,
 			sptr->name, (unsigned short)MODEF_MAX_UNSETTIME);
 #endif
+	sendto_one(sptr, ":%s %i %s :spamfilter::ban-time: %s", me.name, RPL_TEXT,
+		sptr->name, pretty_time_val(SPAMFILTER_BAN_TIME));
+	sendto_one(sptr, ":%s %i %s :spamfilter::ban-reason: %s", me.name, RPL_TEXT,
+		sptr->name, SPAMFILTER_BAN_REASON);
 	sendto_one(sptr, ":%s %i %s :hosts::global: %s", me.name, RPL_TEXT,
 	    sptr->name, oper_host);
 	sendto_one(sptr, ":%s %i %s :hosts::admin: %s", me.name, RPL_TEXT,
@@ -1337,7 +1356,7 @@ int stats_zip(aClient *sptr, char *para)
 		if (acptr->zip->in->total_out && acptr->zip->out->total_in)
 		{
 			sendto_one(sptr,
-				":%s %i %s :Zipstats for link to %s (compresslevel %d): decompressed (in): %01lu/%01lu (%3.1f%%), compressed (out): %01lu/%01lu (%3.1f%%)",
+				":%s %i %s :Zipstats for link to %s (compresslevel %d): decompressed (in): %01lu=>%01lu (%3.1f%%), compressed (out): %01lu=>%01lu (%3.1f%%)",
 				me.name, RPL_TEXT, sptr->name, get_client_name(acptr, TRUE),
 				acptr->serv->conf->compression_level ? 
 				acptr->serv->conf->compression_level : ZIP_DEFAULT_LEVEL,
@@ -1348,7 +1367,7 @@ int stats_zip(aClient *sptr, char *para)
 		} 
 		else 
 			sendto_one(sptr, ":%s %i %s :Zipstats for link to %s: unavailable", 
-				me.name, RPL_TEXT, sptr->name);
+				me.name, RPL_TEXT, sptr->name, acptr->name);
 	}
 #endif
 	return 0;

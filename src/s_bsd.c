@@ -118,6 +118,7 @@ static char readbuf[READBUF_SIZE];
 char zlinebuf[BUFSIZE];
 extern char *version;
 extern ircstats IRCstats;
+TS last_allinuse = 0;
 
 #ifndef NO_FDLIST
 extern fdlist default_fdlist;
@@ -127,6 +128,9 @@ extern fdlist oper_fdlist;
 extern fdlist socks_fdlist;
 #endif
 
+#ifdef USE_LIBCURL
+extern void url_do_transfers_async(void);
+#endif
 
 /*
  * Try and find the correct name to use with getrlimit() for setting the max.
@@ -1649,7 +1653,9 @@ int  read_message(time_t delay, fdlist *listp)
 #ifdef _WIN32
 		FD_ZERO(&excpt_set);
 #endif
-
+#ifdef USE_LIBCURL
+		url_do_transfers_async();
+#endif
 #ifdef NO_FDLIST
 		for (i = LastSlot; i >= 0; i--)
 #else
@@ -1842,8 +1848,12 @@ int  read_message(time_t delay, fdlist *listp)
 			if (++OpenFiles >= MAXCLIENTS)
 			{
 				ircstp->is_ref++;
-				sendto_realops("All connections in use. (%s)",
-				    get_client_name(cptr, TRUE));
+				if (last_allinuse < TStime() - 15)
+				{
+					sendto_realops("All connections in use. (%s)",
+					    get_client_name(cptr, TRUE));
+					last_allinuse = TStime();
+				}
 #ifndef INET6
 				(void)send(fd,
 				    "ERROR :All connections in use\r\n", 31, 0);
@@ -2243,8 +2253,12 @@ int  read_message(time_t delay, fdlist *listp)
 			if (fd >= MAXCLIENTS)
 			{
 				ircstp->is_ref++;
-				sendto_realops("All connections in use. (%s)",
-				    get_client_name(cptr, TRUE));
+				if (last_allinuse < TStime() - 15)
+				{
+					sendto_realops("All connections in use. (%s)",
+					    get_client_name(cptr, TRUE));
+					last_allinuse = TStime();
+				}
 				(void)send(fd,
 				    "ERROR :All connections in use\r\n", 32, 0);
 				(void)close(fd);

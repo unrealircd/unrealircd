@@ -43,6 +43,9 @@ static char sccsid[] =
 #include "h.h"
 #include "proto.h"
 #include <string.h>
+#ifdef USE_LIBCURL
+#include <curl/curl.h>
+#endif
 extern VOIDSIG s_die();
 
 static char buf[BUFSIZE];
@@ -148,6 +151,18 @@ CMD_FUNC(m_version)
 		    serveropts, extraflags ? extraflags : "",
 		    tainted ? "3" : "",
 		    (IsAnOper(sptr) ? MYOSNAME : "*"), UnrealProtocol);
+#ifdef USE_SSL
+		if (IsAnOper(sptr))
+			sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, OPENSSL_VERSION_TEXT);
+#endif
+#ifdef ZIP_LINKS
+		if (IsAnOper(sptr))
+			sendto_one(sptr, ":%s NOTICE %s :zlib %s", me.name, sptr->name, zlibVersion());
+#endif
+#ifdef USE_LIBCURL
+		if (IsAnOper(sptr))
+			sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, curl_version());
+#endif
 		if (MyClient(sptr)) {
 normal:
 			sendto_one(sptr, ":%s 005 %s " PROTOCTL_CLIENT_1, me.name, sptr->name, PROTOCTL_PARAMETERS_1);
@@ -1028,7 +1043,6 @@ CMD_FUNC(m_server_remote)
 	add_server_to_table(acptr);
 	IRCstats.servers++;
 	(void)find_or_add(acptr->name);
-   /*	acptr->flags |= FLAGS_TS8; */
 	add_client_to_list(acptr);
 	(void)add_to_client_hash_table(acptr->name, acptr);
 	RunHook(HOOKTYPE_SERVER_CONNECT, acptr);
@@ -1145,7 +1159,6 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 #endif
 	if ((Find_uline(cptr->name)))
 		cptr->flags |= FLAGS_ULINE;
-  /*	cptr->flags |= FLAGS_TS8; */
 	nextping = TStime();
 	(void)find_or_add(cptr->name);
 #ifdef USE_SSL
@@ -1550,7 +1563,7 @@ CMD_FUNC(m_netinfo)
 #ifdef ZIP_LINKS
 	if ((MyConnect(cptr)) && (IsZipped(cptr)) && cptr->zip->in->total_out && cptr->zip->out->total_in) {
 		sendto_realops
-		("Zipstats for link to %s: decompressed (in): %01lu/%01lu (%3.1f%%), compressed (out): %01lu/%01lu (%3.1f%%)",
+		("Zipstats for link to %s: decompressed (in): %01lu=>%01lu (%3.1f%%), compressed (out): %01lu=>%01lu (%3.1f%%)",
 			get_client_name(cptr, TRUE),
 			cptr->zip->in->total_in, cptr->zip->in->total_out,
 			(100.0*(float)cptr->zip->in->total_in) /(float)cptr->zip->in->total_out,
@@ -2858,6 +2871,15 @@ ConfigItem_tld *tlds;
 	}
 }
 
+static void reread_motdsandrules()
+{
+	motd = (aMotd *) read_file_ex(MPATH, &motd, &motd_tm);
+	rules = (aMotd *) read_file(RPATH, &rules);
+	smotd = (aMotd *) read_file_ex(SMPATH, &smotd, &smotd_tm);
+	botmotd = (aMotd *) read_file(BPATH, &botmotd);
+	opermotd = (aMotd *) read_file(OPATH, &opermotd);
+}
+
 /*
 ** m_rehash
 ** remote rehash by binary
@@ -2865,11 +2887,12 @@ ConfigItem_tld *tlds;
 ** ugly code but it seems to work :) -- codemastr
 ** added -all and fixed up a few lines -- niquil (niquil@programmer.net)
 ** fixed remote rehashing, but it's getting a bit weird code again -- Syzop
+** removed '-all' code, this is now considered as '/rehash', this is ok
+** since we rehash everything with simple '/rehash' now. Syzop/20040205
 */
 CMD_FUNC(m_rehash)
 {
 	int  x;
-
 
 	if (MyClient(sptr) && !OPCanRehash(sptr))
 	{
@@ -2906,19 +2929,26 @@ CMD_FUNC(m_rehash)
 #endif
 		if (parv[2] == NULL)
 		{
+			if (loop.ircd_rehashing)
+			{
+				sendto_one(sptr, ":%s NOTICE %s :A rehash is already in progress",
+					me.name, sptr->name);
+				return 0;
+			}
 			sendto_serv_butone(&me,
 			    ":%s GLOBOPS :%s is remotely rehashing server config file",
 			    me.name, sptr->name);
 			sendto_ops
 			    ("%s is remotely rehashing server config file",
 			    parv[0]);
+			reread_motdsandrules();
 			return rehash(cptr, sptr,
 			    (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
 		}
 		parv[1] = parv[2];
 	}
 
-	if (!BadPtr(parv[1]))
+	if (!BadPtr(parv[1]) && strcmp(parv[1], "-all"))
 	{
 
 		if (!IsAdmin(sptr) && !IsCoAdmin(sptr))
@@ -2929,22 +2959,10 @@ CMD_FUNC(m_rehash)
 
 		if (*parv[1] == '-')
 		{
-			if (!_match("-all", parv[1]))
-			{
-				sendto_ops("%sRehashing everything on the request of %s",
-					cptr != sptr ? "Remotely " : "",sptr->name);
-				if (cptr != sptr)
-					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing everything", me.name, sptr->name);
-				opermotd = (aMotd *) read_file(OPATH, &opermotd);
-				botmotd = (aMotd *) read_file(BPATH, &botmotd);
-				rehash_motdrules();
-				RunHook(HOOKTYPE_REHASHFLAG, parv[1]);
-				return 0;
-			}
 			if (!strnicmp("-gar", parv[1], 4))
 			{
 				loop.do_garbage_collect = 1;
-				RunHook(HOOKTYPE_REHASHFLAG, parv[1]);
+				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 				return 0;
 			}
 			if (!_match("-o*motd", parv[1]))
@@ -2956,7 +2974,7 @@ CMD_FUNC(m_rehash)
 				if (cptr != sptr)
 					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing OperMOTD", me.name, sptr->name);
 				opermotd = (aMotd *) read_file(OPATH, &opermotd);
-				RunHook(HOOKTYPE_REHASHFLAG, parv[1]);
+				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 				return 0;
 			}
 			if (!_match("-b*motd", parv[1]))
@@ -2968,7 +2986,7 @@ CMD_FUNC(m_rehash)
 				if (cptr != sptr)
 					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing BotMOTD", me.name, sptr->name);
 				botmotd = (aMotd *) read_file(BPATH, &botmotd);
-				RunHook(HOOKTYPE_REHASHFLAG, parv[1]);
+				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 				return 0;
 			}
 			if (!strnicmp("-motd", parv[1], 5)
@@ -2981,22 +2999,26 @@ CMD_FUNC(m_rehash)
 				if (cptr != sptr)
 					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing all MOTDs and RULES", me.name, sptr->name);
 				rehash_motdrules();
-				RunHook(HOOKTYPE_REHASHFLAG, parv[1]);
+				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 				return 0;
 			}
-			RunHook(HOOKTYPE_REHASHFLAG, parv[1]);
+			RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 			return 0;
 		}
 	}
 	else
+	{
+		if (loop.ircd_rehashing)
+		{
+			sendto_one(sptr, ":%s NOTICE %s :A rehash is already in progress",
+				me.name, sptr->name);
+			return 0;
+		}
 		sendto_ops("%s is rehashing server config file", parv[0]);
+	}
 
-	/* Normal rehash, rehash main motd&rules too, just like the on in the tld block will :p */
-	motd = (aMotd *) read_file_ex(MPATH, &motd, &motd_tm);
-	rules = (aMotd *) read_file(RPATH, &rules);
-	smotd = (aMotd *) read_file_ex(SMPATH, &smotd, &smotd_tm);
-	botmotd = (aMotd *) read_file(BPATH, &botmotd);
-	opermotd = (aMotd *) read_file(OPATH, &opermotd);
+	/* Normal rehash, rehash motds&rules too, just like the on in the tld block will :p */
+	reread_motdsandrules();
 	if (cptr == sptr)
 		sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
 	return rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
@@ -3013,73 +3035,70 @@ CMD_FUNC(m_rehash)
 */
 CMD_FUNC(m_restart)
 {
-	int  x;
-	if (MyClient(sptr) && !OPCanRestart(sptr))
-	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-		return 0;
-	}
-	if (!MyClient(sptr) && !IsNetAdmin(sptr)
-	    && !IsULine(sptr))
-	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-		return 0;
-	}
-	if (parc > 3)
-	{
-		/* Remote restart. */
-		if (MyClient(sptr) && !IsNetAdmin(sptr))
-		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			    parv[0]);
-			return 0;
-		}
+	char *reason = NULL;
+	/* Check permissions */
+        if (MyClient(sptr) && !OPCanRestart(sptr))
+        {
+                sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+                return 0;
+        }
+        if (!MyClient(sptr) && !IsNetAdmin(sptr)
+            && !IsULine(sptr))
+        {
+                sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+                return 0;
+        }
 
-		if ((x =
-		    hunt_server_token(cptr, sptr, MSG_RESTART, TOK_RESTART, "%s %s :%s", 2, parc,
-		    parv)) != HUNTED_ISME)
-			return 0;
-	}
-
-	if (conf_drpass)
+	/* Syntax: /restart */
+	if (parc == 1)
 	{
-		if (parc < 2)
+		if (conf_drpass)
 		{
 			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name,
-			    parv[0], "RESTART");
-			return 0;
+                            parv[0], "RESTART");
+                        return 0;
 		}
-		x = Auth_Check(cptr, conf_drpass->restartauth, parv[1]);
-		if (x == -1)
-		{
-			sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name,
-			    parv[0]);
-			return 0;
-		}
-		if (x < 1)
-		{
-			return 0;
-		}
-		/* Hack to make the code after this if { } easier: we assign the comment to the
-		 * first param, as if we had not had an X:line. We do not need the password
-		 * now anyways. Accordingly we decrement parc ;)    -- NikB
-		 */
-		parv[1] = parv[2];
-		parc--;
 	}
-	if (cptr != sptr)
+	else if (parc == 2)
 	{
-		sendto_serv_butone(&me,
-		    ":%s GLOBOPS :%s is remotely restarting server (%s)",
-		    me.name, sptr->name, parv[3]);
-		sendto_ops("%s is remotely restarting IRCd (%s)", parv[0],
-		    parv[3]);
-
+		/* Syntax: /restart <pass> */
+		if (conf_drpass)
+		{
+			int ret;
+			ret = Auth_Check(cptr, conf_drpass->restartauth, parv[1]);
+			if (ret == -1)
+			{
+				sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name,
+					   parv[0]);
+				return 0;
+			}
+			if (ret < 1)
+				return 0;
+		}
+		/* Syntax: /rehash <reason> */
+		else 
+			reason = parv[1];
 	}
-
+	else if (parc == 3)
+	{
+		/* Syntax: /restart <pass> <reason> */
+		if (conf_drpass)
+		{
+			int ret;
+			ret = Auth_Check(cptr, conf_drpass->restartauth, parv[1]);
+			if (ret == -1)
+			{
+				sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name,
+					   parv[0]);
+				return 0;
+			}
+			if (ret < 1)
+				return 0;
+		}
+		reason = parv[2];
+	}
 	sendto_ops("Server is Restarting by request of %s", parv[0]);
-	server_reboot((!MyClient(sptr) ? (parc > 2 ? parv[3] : "No reason")
-	    : (parc > 1 ? parv[2] : "No reason")));
+	server_reboot(reason ? reason : "No reason");
 	return 0;
 }
 

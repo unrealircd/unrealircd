@@ -34,7 +34,6 @@ extern int tainted;
 extern char *getreply(int);
 #define rpl_str(x) getreply(x)
 #define err_str(x) getreply(x)
-
 extern Member *freemember;
 extern Membership *freemembership;
 extern MembershipL *freemembershipL;
@@ -184,12 +183,12 @@ extern int del_silence(aClient *, char *);
 extern void send_user_joins(aClient *, aClient *);
 extern void clean_channelname(char *);
 extern int do_nick_name(char *);
-extern int can_send(aClient *, aChannel *, char *);
+extern int can_send(aClient *, aChannel *, char *, int);
 extern long get_access(aClient *, aChannel *);
 extern int is_chan_op(aClient *, aChannel *);
 extern int has_voice(aClient *, aChannel *);
 extern int is_chanowner(aClient *, aChannel *);
-extern Ban *is_banned(aClient *, aClient *, aChannel *);
+extern Ban *is_banned(aClient *, aChannel *, int);
 extern int parse_help(aClient *, char *, char *);
 
 extern void ircd_log(int, char *, ...) __attribute__((format(printf,2,3)));
@@ -213,7 +212,7 @@ extern char *strerror(int);
 extern int dgets(int, char *, int);
 extern char *inetntoa(char *);
 
-#if !defined(HAVE_SNPRINT) || !defined(HAVE_VSNPRINTF)
+#if !defined(HAVE_SNPRINTF) || !defined(HAVE_VSNPRINTF)
 /* #ifndef _WIN32 XXX why was this?? -- Syzop. */
 extern int snprintf (char *str, size_t count, const char *fmt, ...);
 extern int vsnprintf (char *str, size_t count, const char *fmt, va_list arg);
@@ -311,6 +310,7 @@ extern void sendto_opers(char *, ...) __attribute__((format(printf,1,2)));
 extern void sendto_umode(int, char *, ...) __attribute__((format(printf,2,3)));
 extern void sendto_umode_raw(int, char *, ...) __attribute__((format(printf,2,3)));
 extern void sendto_snomask(int snomask, char *pattern, ...) __attribute__((format(printf,2,3)));
+extern void sendnotice(aClient *to, char *pattern, ...) __attribute__((format(printf,2,3)));
 extern int writecalls, writeb[];
 extern int deliver_it(aClient *, char *, int);
 extern int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr);
@@ -448,8 +448,15 @@ extern long SNO_VHOST;
 extern long SNO_EYES;
 extern long SNO_TKL;
 extern long SNO_NICKCHANGE;
+extern long SNO_FNICKCHANGE;
 extern long SNO_QLINE;
 extern long SNO_SNOTICE;
+extern long SNO_SPAMF;
+
+#ifdef EXTCMODE
+/* Extended chanmodes... */
+extern Cmode_t EXTMODE_NONOTICE;
+#endif
 
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *dst, const char *src, size_t size);
@@ -577,12 +584,14 @@ extern time_t rfc2time(char *s);
 extern char *rfctime(time_t t, char *buf);
 extern void *MyMallocEx(size_t size);
 #ifdef USE_SSL
-char  *ssl_get_cipher(SSL *ssl);
+extern char  *ssl_get_cipher(SSL *ssl);
 #endif
-long config_checkval(char *value, unsigned short flags);
-void config_status(char *format, ...) __attribute__((format(printf,1,2)));
-void init_random();
-u_int32_t getrandom32();
+extern long config_checkval(char *value, unsigned short flags);
+extern void config_status(char *format, ...) __attribute__((format(printf,1,2)));
+extern void init_random();
+extern u_char getrandom8();
+extern u_int16_t getrandom16();
+extern u_int32_t getrandom32();
 extern char trouble_info[1024];
 #define EVENT_DRUGS BASE_VERSION
 extern void rejoin_doparts(aClient *sptr);
@@ -590,6 +599,7 @@ extern void rejoin_dojoinandmode(aClient *sptr);
 extern void ident_failed(aClient *cptr);
 
 extern char extchmstr[4][64];
+extern char extbanstr[EXTBANTABLESZ+1];
 #ifdef EXTCMODE
 extern int extcmode_default_requirechop(aClient *, aChannel *, char *, int, int);
 extern int extcmode_default_requirehalfop(aClient *, aChannel *, char *, int, int);
@@ -622,3 +632,29 @@ extern void verify_opercount(aClient *, char *);
 extern int place_host_ban(aClient *sptr, int action, char *reason, long time);
 extern int valid_host(char *host);
 extern int count_oper_sessions(char *);
+extern char *unreal_mktemp(char *dir, char *suffix);
+extern char *unreal_getfilename(char *path);
+extern int unreal_copyfile(char *src, char *dest);
+extern void DeleteTempModules(void);
+extern Extban *extbaninfo;
+extern Extban *findmod_by_bantype(char c);
+extern Extban *ExtbanAdd(Module *reserved, ExtbanInfo req);
+extern void ExtbanDel(Extban *);
+extern void extban_init(void);
+extern char *trim_str(char *str, int len);
+extern char *ban_realhost, *ban_virthost, *ban_ip;
+extern void join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
+extern char *unreal_checkregex(char *s, int fastsupport);
+extern int banact_stringtoval(char *s);
+extern char *banact_valtostring(int val);
+extern int banact_chartoval(char c);
+extern char banact_valtochar(int val);
+extern int spamfilter_gettargets(char *s, aClient *sptr);
+extern char *spamfilter_target_inttostring(int v);
+extern Spamfilter *unreal_buildspamfilter(char *s);
+extern int dospamfilter(aClient *sptr, char *str_in, int type, char *target);
+extern char *our_strcasestr(char *haystack, char *needle);
+extern int spamfilter_getconftargets(char *s);
+extern void remove_oper_snomasks(aClient *sptr);
+extern char *spamfilter_inttostring_long(int v);
+extern int check_channelmask(aClient *, aClient *, char *);

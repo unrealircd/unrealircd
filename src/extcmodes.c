@@ -53,6 +53,8 @@ char extchmstr[4][64];
 Cmode *Channelmode_Table = NULL;
 unsigned short Channelmode_highest = 0;
 
+Cmode_t EXTMODE_NONOTICE = 0L;
+
 void make_extcmodestr()
 {
 char *p;
@@ -81,6 +83,16 @@ int i;
 	*p = '\0';
 }
 
+static void load_extendedchanmodes(void)
+{
+	CmodeInfo req;
+	memset(&req, 0, sizeof(req));
+	
+	req.paracount = 0;
+	req.is_ok = extcmode_default_requirechop;
+	req.flag = 'T';
+	CmodeAdd(NULL, req, &EXTMODE_NONOTICE);
+}
 
 void	extcmode_init(void)
 {
@@ -95,6 +107,9 @@ void	extcmode_init(void)
 	}
 	Channelmode_highest = 0;
 	memset(&extchmstr, 0, sizeof(extchmstr));
+
+	/* And load the build-in extended chanmodes... */
+	load_extendedchanmodes();
 }
 
 Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode)
@@ -105,11 +120,19 @@ Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode)
 	{
 		if (!Channelmode_Table[i].flag)
 			break;
+		else if (Channelmode_Table[i].flag == req.flag)
+		{
+			if (reserved)
+				reserved->errorcode = MODERR_EXISTS;
+			return NULL;
+		}
 		i++;
 	}
 	if (i == EXTCMODETABLESZ)
 	{
 		Debug((DEBUG_DEBUG, "CmodeAdd failed, no space"));
+		if (reserved)
+			reserved->errorcode = MODERR_NOSPACE;
 		return NULL;
 	}
 	*mode = Channelmode_Table[i].mode;
@@ -129,6 +152,8 @@ Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode)
 				Channelmode_highest = j;
 	make_cmodestr();
 	make_extcmodestr();
+	if (reserved)
+		reserved->errorcode = MODERR_NOERROR;
 	return &(Channelmode_Table[i]);
 }
 
@@ -137,6 +162,8 @@ void CmodeDel(Cmode *cmode)
 	/* TODO: remove from all channel */
 	if (cmode)
 		cmode->flag = '\0';
+	make_cmodestr();
+	make_extcmodestr();
 	/* Not unloadable, so module object support is not needed (yet) */
 }
 

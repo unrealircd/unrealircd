@@ -89,11 +89,22 @@ typedef enum {
 #define REG_NEWLINE     (REG_ICASE << 1)
 #define REG_NOSUB       (REG_NEWLINE << 1)
 
+/* Extra regcomp() flags. */
+#define REG_BASIC       0
+#define REG_LITERAL     (REG_NOSUB << 1)
+
 /* POSIX regexec() flags. */
 #define REG_NOTBOL 1
 #define REG_NOTEOL (REG_NOTBOL << 1)
 
 #endif /* !TRE_USE_SYSTEM_REGEX_H */
+
+/* REG_NOSPEC and REG_LITERAL mean the same thing. */
+#if defined(REG_LITERAL)
+#define REG_NOSPEC      REG_LITERAL
+#elif defined(REG_NOSPEC)
+#define REG_LITERAL     REG_NOSPEC
+#endif /* defined(REG_NOSPEC) */
 
 /* The maximum number of iterations in a bound expression. */
 #undef RE_DUP_MAX
@@ -137,6 +148,11 @@ typedef struct {
   int cost_del;        /* Default cost of a deleted character. */
   int cost_subst;      /* Default cost of a substituted character. */
   int max_cost;        /* Maximum allowed cost of a match. */
+
+  int max_ins;         /* Maximum allowed number of inserts. */
+  int max_del;         /* Maximum allowed number of deletes. */
+  int max_subst;       /* Maximum allowed number of substitutes. */
+  int max_err;         /* Maximum allowed number of errors total. */
 } regaparams_t;
 
 /* Approximate matching result struct. */
@@ -144,6 +160,9 @@ typedef struct {
   size_t nmatch;       /* Length of pmatch[] array. */
   regmatch_t *pmatch;  /* Submatch data. */
   int cost;            /* Cost of the match. */
+  int num_ins;         /* Number of inserts in the match. */
+  int num_del;         /* Number of deletes in the match. */
+  int num_subst;       /* Number of substitutes in the match. */
 } regamatch_t;
 
 
@@ -159,6 +178,9 @@ int regawexec(const regex_t *preg, const wchar_t *string,
 int regawnexec(const regex_t *preg, const wchar_t *string, size_t len,
 	       regamatch_t *match, regaparams_t params, int eflags);
 #endif /* TRE_WCHAR */
+
+/* Sets the parameters to default values. */
+void regaparams_default(regaparams_t *params);
 #endif /* TRE_APPROX */
 
 #ifdef __cplusplus

@@ -1,26 +1,26 @@
-/* tre-config.h.in.  This file defines all compile time definitions
-   that are needed in `regex.h'. */
+/* tre-config.h.  This file defines all compile time definitions
+   that are needed in `regex.h' for Win32. */
 
 /* Define to 1 if the system has the type `reg_errcode_t'. */
-#undef HAVE_REG_ERRCODE_T
+/* #undef HAVE_REG_ERRCODE_T */
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-#undef HAVE_SYS_TYPES_H
+#define HAVE_SYS_TYPES_H 1
 
 /* Define to 1 if you have the <wchar.h> header file. */
-#undef HAVE_WCHAR_H
+#define HAVE_WCHAR_H 1
 
 /* Define if you want to enable approximate matching functionality. */
-#undef TRE_APPROX
+#define TRE_APPROX 1
 
 /* Define to enable multibyte character set support. */
 #undef TRE_MULTIBYTE
 
-/* Define to the absolute path to the system regex.h */
-#undef TRE_SYSTEM_REGEX_H_PATH
-
 /* Define to include the system regex.h from TRE regex.h */
-#undef TRE_USE_SYSTEM_REGEX_H
+/* #undef TRE_USE_SYSTEM_REGEX_H */
+
+/* Define to the absolute path to the system regex.h */
+/* #undef TRE_SYSTEM_REGEX_H_PATH */
 
 /* Define to enable wide character (wchar_t) support. */
 #undef TRE_WCHAR

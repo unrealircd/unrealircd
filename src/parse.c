@@ -177,7 +177,7 @@ void ban_flooder(aClient *cptr)
 inline void parse_addlag(aClient *cptr, int cmdbytes)
 {
 	if (!IsServer(cptr) && 
-#ifdef FAKE_LAG_FOR_LOCOPS	
+#ifdef NO_FAKE_LAG_FOR_LOCOPS	
 	!IsAnOper(cptr))
 #else
 	!IsOper(cptr))

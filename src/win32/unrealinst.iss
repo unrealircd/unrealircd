@@ -5,11 +5,13 @@
 ; Uncomment the above line to package an SSL build
 #define USE_ZIP
 ; Uncomment the above line to package with ZIP support
+; #define USE_CURL
+; Uncomment the above line to package with libcurl support
 
 
 [Setup]
 AppName=UnrealIRCd
-AppVerName=UnrealIRCd3.2-beta19
+AppVerName=UnrealIRCd3.2-RC1
 AppPublisher=UnrealIRCd Team
 AppPublisherURL=http://www.unrealircd.com
 AppSupportURL=http://www.unrealircd.com
@@ -70,7 +72,13 @@ Source: "..\ssl.cnf"; DestDir: "{app}"; Flags: ignoreversion
 #ifdef USE_ZIP
 Source: "c:\dev\zlib\dll32\zlib.dll"; DestDir: "{app}"; Flags: ignoreversion
 #endif
+#ifdef USE_CURL
+Source: "c:\dev\curl\lib\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
+#endif
 Source: isxdl.dll; DestDir: {tmp}; Flags: dontcopy
+
+[Dirs]
+Name: "{app}\tmp"
 
 [UninstallDelete]
 Type: files; Name: "{app}\DbgHelp.Dll"

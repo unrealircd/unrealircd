@@ -34,11 +34,11 @@ FROMDOS=/home/cmunk/bin/4dos
 #
 
 #XCFLAGS=-O -g -export-dynamic
-IRCDLIBS=@IRCDLIBS@
+IRCDLIBS=@IRCDLIBS@ -L../extras/regexp/lib -ltre
 CRYPTOLIB=@CRYPTOLIB@
 OPENSSLINCLUDES=
 
-XCFLAGS=@CFLAGS@
+XCFLAGS=-I@TREINCDIR@ @CFLAGS@
 #
 # use the following on MIPS:
 #CFLAGS= -systype bsd43 -DSYSTYPE_BSD43 -I$(INCLUDEDIR)
@@ -95,11 +95,7 @@ IRCDMODE = 711
 IRCDDIR=@IRCDDIR@
 
 
-#
-# If your system is lacking regex, uncomment this line
-#
-#REGEX=../extras/regex/regex.o
-REGEX=@REGEX@
+URL=@URL@
 
 # [CHANGEME]
 # If you get a link-time error dealing with strtoul, comment out
@@ -134,8 +130,8 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 		'INCLUDEDIR=${INCLUDEDIR}' 'IRCDDIR=${IRCDDIR}' \
 		'RM=${RM}' 'CP=${CP}' 'TOUCH=${TOUCH}' \
 		'SHELL=${SHELL}' 'STRTOUL=${STRTOUL}' \
-		'CRYPTOLIB=${CRYPTOLIB}' 'REGEX=${REGEX}' \
-		'CRYPTOINCLUDES=${CRYPTOINCLUDES}'
+		'CRYPTOLIB=${CRYPTOLIB}' \
+		'CRYPTOINCLUDES=${CRYPTOINCLUDES}' 'URL=${URL}'
 
 custommodule:
 	cd src; ${MAKE} ${MAKEARGS} MODULEFILE=${MODULEFILE} 'EXLIBS=${EXLIBS}' custommodule

@@ -56,6 +56,7 @@ static char sendbuf[2048];
 static char tcmd[2048];
 static char ccmd[2048];
 static char xcmd[2048];
+static char wcmd[2048];
 
 /* this array is used to ensure we send a msg only once to a remote 
 ** server.  like, when we are sending a message to all channel members
@@ -119,8 +120,8 @@ void flush_connections(aClient* cptr)
 	{
 		for (i = LastSlot; i >= 0; i--)
 			if ((acptr = local[i]) && !(acptr->flags & FLAGS_BLOCKED)
-			    && DBufLength(&cptr->sendQ) > 0)
-				send_queued(cptr);
+			    && DBufLength(&acptr->sendQ) > 0)
+				send_queued(acptr);
 	}
 	else if (cptr->fd >= 0 && !(cptr->flags & FLAGS_BLOCKED)
 	    && DBufLength(&cptr->sendQ) > 0)
@@ -468,16 +469,20 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 	aClient *acptr;
 	int  i;
 	char is_ctcp = 0;
-	unsigned int tlen, clen, xlen;
+	unsigned int tlen, clen, xlen, wlen = 0;
 	char *p;
 
+	/* For servers with token capability */
 	p = ircsprintf(tcmd, ":%s %s %s :%s", from->name, tok, nick, text);
 	tlen = (int)(p - tcmd);
 	ADD_CRLF(tcmd, tlen);
 
+	/* For dumb servers without tokens */
 	p = ircsprintf(ccmd, ":%s %s %s :%s", from->name, cmd, nick, text);
 	clen = (int)(p - ccmd);
 	ADD_CRLF(ccmd, clen);
+
+	/* For our users... */
 	if (IsPerson(from))
 		p = ircsprintf(xcmd, ":%s!%s@%s %s %s :%s",
 			from->name, from->user->username, GetHost(from), cmd, nick, text);
@@ -485,6 +490,19 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 		p = ircsprintf(xcmd, ":%s %s %s :%s", from->name, cmd, nick, text);
 	xlen = (int)(p - xcmd);
 	ADD_CRLF(xcmd, xlen);
+
+	/* For our webtv friends... */
+	if (!strcmp(cmd, "NOTICE"))
+	{
+		char *chan = strchr(nick, '#'); /* impossible to become NULL? */
+		if (IsPerson(from))
+			p = ircsprintf(wcmd, ":%s!%s@%s %s %s :%s",
+				from->name, from->user->username, GetHost(from), MSG_PRIVATE, chan, text);
+		else
+			p = ircsprintf(wcmd, ":%s %s %s :%s", from->name, MSG_PRIVATE, chan, text);
+		wlen = (int)(p - wcmd);
+		ADD_CRLF(wcmd, wlen);
+	}
 
 	if (do_send_check && *text == 1 && myncmp(text+1,"ACTION ",7) && myncmp(text+1,"DCC ",4))
 		is_ctcp = 1;
@@ -522,7 +540,10 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 			if (IsNoCTCP(acptr) && !IsOper(from) && is_ctcp)
 				continue;
 
-			sendbufto_one(acptr, xcmd, xlen);
+			if (IsWebTV(acptr) && wlen)
+				sendbufto_one(acptr, wcmd, wlen);
+			else
+				sendbufto_one(acptr, xcmd, xlen);
 			sentalong[i] = sentalong_marker;
 		}
 		else
@@ -1875,3 +1896,17 @@ void	sendto_message_one(aClient *to, aClient *from, char *sender,
                          sender, cmd, nick, msg);
 }
 
+void sendnotice(aClient *to, char *pattern, ...)
+{
+static char realpattern[1024];
+va_list vl;
+
+	if (!IsWebTV(to))
+		ircsprintf(realpattern, ":%s NOTICE %s :%s", me.name, to->name, pattern);
+	else
+		ircsprintf(realpattern, ":%s PRIVMSG %s :%s", me.name, to->name, pattern);
+
+	va_start(vl, pattern);
+	vsendto_one(to, realpattern, vl);
+	va_end(vl);
+}

@@ -209,7 +209,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					showchannel = 1;
 				if ((acptr->umodes & UMODE_HIDEWHOIS) && !IsMember(sptr, chptr) && !IsAnOper(sptr))
 					showchannel = 0;
-				if (IsServices(acptr) && !IsNetAdmin(sptr))
+				if (IsServices(acptr) && !IsNetAdmin(sptr) && !IsSAdmin(sptr))
 					showchannel = 0;
 				if (acptr == sptr)
 					showchannel = 1;
@@ -267,10 +267,10 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 			if (buf[0] != '\0')
 				sendto_one(sptr, rpl_str(RPL_WHOISCHANNELS), me.name, parv[0], name, buf);
-
-			sendto_one(sptr, rpl_str(RPL_WHOISSERVER),
-			    me.name, parv[0], name, user->server,
-			    a2cptr ? a2cptr->info : "*Not On This Net*");
+                        if (!(IsULine(acptr) && !IsOper(sptr) && HIDE_ULINES))
+				sendto_one(sptr, rpl_str(RPL_WHOISSERVER),
+				    me.name, parv[0], name, user->server,
+				    a2cptr ? a2cptr->info : "*Not On This Net*");
 
 			if (user->away)
 				sendto_one(sptr, rpl_str(RPL_AWAY), me.name,

@@ -5,10 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef HAVE_REGEX
-#include <regex.h>
+#ifndef _WIN32
+#include "tre/regex.h"
 #else
-#include "../extras/regex/regex.h"
+#include "win32/regex.h"
 #endif
 
 #define MAX_MATCH       1

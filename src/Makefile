@@ -23,12 +23,13 @@ CC = danger will robinson
 
 OBJS=auth.o aln.o badwords.o channel.o cloak.o crule.o dbuf.o \
 	events.o fdlist.o hash.o help.o ircd.o ircsprintf.o list.o lusers.o \
-	match.o modules.o packet.o parse.o $(REGEX) res.o \
+	match.o modules.o packet.o parse.o res.o \
 	res_init.o res_comp.o res_mkquery.o res_skipname.o s_auth.o \
 	s_bsd.o s_conf.o s_debug.o s_err.o s_extra.o s_kline.o \
 	s_misc.o s_numeric.o s_serv.o s_svs.o $(STRTOUL) socket.o \
 	ssl.o s_user.o scache.o send.o support.o umodes.o s_stats.o \
-	version.o webtv.o whowas.o zip.o cidr.o random.o extcmodes.o 
+	version.o webtv.o whowas.o zip.o cidr.o random.o extcmodes.o \
+	extbans.o $(URL)
 
 SRC=$(OBJS:%.o=%.c)
 
@@ -38,8 +39,8 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 		'INCLUDEDIR=${INCLUDEDIR}' 'IRCDDIR=${IRCDDIR}' \
 		'MANDIR=${MANDIR}' 'RM=${RM}' 'CP=${CP}' 'TOUCH=${TOUCH}' \
 		'RES=${RES}' 'SHELL=${SHELL}' 'STRTOUL=${STRTOUL}' \
-		'CRYPTOLIB=${CRYPTOLIB}' 'REGEX=${REGEX}' \
-		'CRYPTOINCLUDES=${CRYPTOINCLUDES}'
+		'CRYPTOLIB=${CRYPTOLIB}' \
+		'CRYPTOINCLUDES=${CRYPTOINCLUDES}' 'URL=${URL}' \
 
 MAKE = make $(MAKEARGS)
 
@@ -245,6 +246,12 @@ random.o: random.c $(INCLUDES)
 
 extcmodes.o: extcmodes.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c extcmodes.c
+
+extbans.o: extbans.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c extbans.c
+
+url.o: url.c $(INCLUDES) ../include/url.h
+	$(CC) $(CFLAGS) -c url.c
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 

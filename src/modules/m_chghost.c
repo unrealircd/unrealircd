@@ -19,6 +19,12 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+/** 
+ * 2003-01-06
+ * - Added ability to log command to ircd.log
+ * XeRXeS
+ */
+
 #include "config.h"
 #include "struct.h"
 #include "common.h"
@@ -193,6 +199,12 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    sptr->name, acptr->name, acptr->user->username,
 			    acptr->user->realhost, parv[2]);
 		}
+ 
+		/* Logging added by XeRXeS */
+ 	      	ircd_log(LOG_CHGCMDS,                                         
+			"CHGHOST: %s changed the virtual hostname of %s (%s@%s) to be %s",            
+			sptr->name, acptr->name, acptr->user->username, acptr->user->realhost, parv[2]); 
+                  
 		acptr->umodes |= UMODE_HIDE;
 		acptr->umodes |= UMODE_SETHOST;
 		sendto_serv_butone_token(cptr, sptr->name,

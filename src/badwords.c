@@ -36,7 +36,7 @@
  * our own strcasestr implementation because strcasestr is often not
  * available or is not working correctly (??).
  */
-static char *our_strcasestr(char *haystack, char *needle) {
+char *our_strcasestr(char *haystack, char *needle) {
 int i;
 int nlength = strlen (needle);
 int hlength = strlen (haystack);

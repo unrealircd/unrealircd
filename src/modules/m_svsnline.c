@@ -172,7 +172,7 @@ DLLFUNC int m_svsnline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				continue;
 			if (bconf->flag.type2 != CONF_BAN_TYPE_AKILL)
 				continue;
-			if (!stricmp(bconf->mask, parv[3]))
+			if (!stricmp(bconf->mask, parv[2]))
 				break;
 		  }
 		  if (bconf)

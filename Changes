@@ -2599,3 +2599,266 @@ seen. gmtime warning still there
 - Changed version to beta19
 - A last-minute fix, lalala...
 *** beta19 release ***
+- Changed the HOOKTYPE_REHASHFLAG syntax to (aClient *cptr, aClient *sptr, char *flag)
+  requested by AngryWolf (#0001365)
+- Added HOOKTYPE_PRE_LOCAL_PART to allow changing of part messages suggested by AngryWolf
+  (#0001365)
+- Fixed a bug with SVSNLINE - reported by FreakyComputer and fixed by AngryWolf 
+  (#0001399)
+- example.conf: added +i in modes-on-connect.
+- Temporarely added fdlist debugcode, please report any bugreports it gives,
+  it would especially be helpful if you know _what_ triggered the error :).
+- '/rehash <server>' didn't reload motds&rules files, reported by w00t (#0001409).
+- Added channelmode +T: no notices allowed in channel.
+- Made ./Config create a tmp/ directory
+- Rewrote some of the module system to allow /rehash to load a new version of a module i.e.
+  after a newer version has been compiled. This also fixes the problem with hooks disappearing
+  during a rehash (#0001332) reported by AngryWolf and (#0001325) reported by Cnils. This
+  might need some testing.
+- Fixed some problems with the copyfile routine for the new module rehash system and also fixed
+  an issue with rehashing when permanent modules are loaded
+- Made "chanop notices" only go to @#chan on non-prefixaq servers (and to ~&@#chan otherwise),
+  internal: added ugly macro CHANOPPFX which is "~&@" if prefix_aq, else "@".
+- Added error checking/error messages to new module reloading system, to catch errors like
+  insufficient hd space, permission denied, etc..
+- Made it compile at windows again
+- Added set::static-part: similar to static-quit, default 'no' (static-part disabled).
+  If set to 'yes' or '1' it will strip all part comments,
+  if set to something else it will use that as a part comment.
+- Partial cleanup of m_part (hopefully I didn't destroy anything).
+- Minor stats compile warning fixed
+- Started some work on the remote include system
+- Fixed a bug with set::who-limit sending multiple error notices, reported by doh
+- Fixed a bug with the configure script reported by doh where Unreal would ignore the
+  manually specified directory for OpenSSL (and also Zlib)
+- Made the ./configure --help display a bit cleaner
+- Added include/types.h to hold any new datatypes we create
+- A lot more work on the remote include system
+- Added a patch by Certus to make it so hide-ulines also hides the server name from a
+  /who /whois and /whowas
+- Merged all of the win32 makefiles into a single file (makefile.win32) with some
+  configurable macros to decide whether ziplinks and/or ssl should be enabled
+- Added "extended bans". An idea from SorceryNet ircd.
+  These bans look like ~<type>:<stuff>. Currently the following bans are available:
+  ~q: quiet bans (ex: ~q:*!*@blah.blah.com). People matching these bans can join
+      but are unable to speak, unless they have +v or higher.
+  ~c: channel bans (ex: ~c:#idiots). People in #idiots are unable to join the channel.
+  ~r: gecos (realname) bans (ex: ~r:*Stupid_bot_script*). If the realname of a user
+      matches this then (s)he is unable to join.
+      NOTE: an underscore ('_') matches both a space (' ') and an underscore ('_'),
+            so this ban would match 'Stupid bot script v1.4'.
+
+  These bantypes can also be used in the channel exception list (+e).
+  +e ~r:*w00t* makes anyone with 'w00t' in their realname able to join,
+  and +e ~c:#admin makes anyone in #admin able to join, etc..
+
+  This system allows modules to add extended bantypes too.
+
+  This feature requires some additional testing, also the module interface will
+  probably be changed in the next few weeks, and perhaps more extended bans will
+  be added before next release.. we'll see...
+- Updated win32 makefile...
+- Module-systemized the extban stuff
+- As expected, fixed a crashbug in extended bans system. Reported by Rocko (#0001444).
+- internal: changed is_banned() again: cptr,sptr -> sptr (dropped cptr). It was too
+  confusing (and thus causing bad code/bugs) and was never used anyway.
+- Added a function join_channel which will make it easier for module coders to force users
+  to join a channel
+- Made it possible to compile the win32 version with libcurl support
+- Updated the win32 TRE lib/dll to the latest version (0.6.3)
+- Fixed a PATH_MAX vs MAX_PATH problem
+- Fixed a bug where if a Mod_Load returned MOD_FAILED, the module was not removed (#0001426)
+  reported by AngryWolf
+- Fixed a bunch of oper fdlist bugs regarding locops
+- Fixed a couple of minor typos in the source
+- Removed the old configure checks for pthreads
+- Added configure/Config stuff for libcurl
+- Added a ./curlinstall script to help with installing curl (Read INSTALL.REMOTEINC for
+  more information).
+- Added code to make remote includes able to use SSL (HTTPS/FTPS) if SSL support is enabled
+- Fixed a remote include bug with rehashing when no remote includes were loaded
+- Fixed a remote include compile bug on Linux regarding url.h
+- Fixed a remote include compile bug regarding ares (#0001458) reported by mustapha88
+- Made the tmp/ directory cleaned up better
+- Added some additional warnings for insane large values for allow::maxperip, and class::*
+  stuff. Reported by Erik_Rana (#0001463).
+- Fixed a bug with /rehash and cached remote includes reported by mustapha88
+- internal: Modified TKL system (getting ready for anti-spam system):
+  Instead of 1 big list of *lines, it's now an array to easily distinct between types.
+  Also made tk->usermask static (USERLEN+2) instead of dynamic.
+  These changes should give enough speed improvement to make the new anti-spam/anti-ads
+  feature fast enough.
+- Updated the TRE library source to 0.6.3 (not yet used)
+- Updated the win32 TRE lib/dll to 0.6.4
+- Updated the TRE library source to 0.6.4 (yup, a release right after I do the last upgrade!)
+- Removed all the FLAGS_TS8 stuff (no longer used)
+- Fixed some operoverride bugs regarding halfops found by Sinus (#0001465)
+- Cleaned up the /kick code to make it a bit faster
+- Reactivated TRE compile
+- Finally made Unreal use TRE under *nix
+- Fixed a compile problem reported by ace (#0001474)
+- Added an EXTBAN 005 token (see doc/technical/005.txt for info)
+- Fixed a bug with the dynamic umode and cmode systems
+- Made CmodeAdd return MODERR_EXISTS if the mode already exists
+- Fixes for TRE under win32
+- Made Extbans use the module object system
+- Fixed a problem caused by the previous change
+- Fixed some compile warnings
+- Made CmodeAdd set MODERR_NOERROR when no error occurs (#0001484) reported by AngryWolf
+- Fixed a bug in /kick reported by rav2k (#0001490)
+- Made /who +M show +i users since they are already visible (#0001489) reported by penna
+- Made /who +M take chmode +u (auditorium) into account
+- Corrected the SVSNLINE documentation in help.conf (reported by Certus)
+- internal: Ok, I'm committing this in parts... did most of the TKL spamfilter
+  integration now, no.. it doesn't work at all yet but most of the internal stuff
+  has now been done (but I temporarely need to work on other things now).
+   moved/added a lot of regex stuff, banaction/spamfilter helper functions, etc
+  into s_misc.c. [note: current code has some bugs but since the stuff isn't
+  used that's no problem... it's also a bit ugly, do NOT mail me about these things ;p]
+- Enabled talk-trough-+M for opers (just like +m)
+- Disabled talk-trough-+m/+M for opers if NO_OPEROVERRIDE is defined
+- Display zlib/SSL version in /version (oper only)... will prolly be improved later.
+- updated doc/compiling_win32.txt
+- updated doc/compiling_win32.txt some more (tre.dll, not gnu_regex.dll)
+- Added a patch by AngryWolf to display libcurl info at startup. Also added support to 
+  display in /version
+- Added a patch by AngryWolf to add ./unreal version (displays the Unreal version)
+- Made permanent modules receive HOOKTYPE_REHASH to notify of a rehash (#0001499)
+- Added EXBCHK_PARAM to allow reporting errors about bad extban parameters. 
+  Requested by AngryWolf (#0001488)
+- Added a patch by XeRXeS to log usage of some potentially abusive commands
+  (#0001397)
+- Renamed "FAKE_LAG_FOR_LOCOPS" to "NO_FAKE_LAG_FOR_LOCOPS" since that's what it did
+  anyway, requested by Greg (#0001453)
+- Made it so chan ops can invite in a +V channel. Requested by AI (#0001478)
+- Added HOOKTYPE_PRE_LOCAL_QUIT to allow changing quit messages. Suggested by penna22
+  (#0001424)
+- Updated some /stats docs, reported by AngryWolf (#0001283)
+- Added set::silence-limit to allow specifying how many entries may be in the SILENCE list
+  also upped the default value to 15. Suggested by tabrisnet (#0001486)
+- Updated the docs to reflect that /module can now be used by users. Reported by fez (#0001434)
+- Made it so the configure script doesn't add include/library paths if they would be the 
+  default path. Reported by LoVeR (#0001307)
+- Changed random number generator to use arc4random-alike routines so we can get "secure"
+  random numbers. We will also no longer be using rand()/random() anywhere.
+  Thanks to dek\ for pointing out this is potentionally dangerous, especially on
+  win32 with NOSPOOF enabled.
+- Changed NOSPOOF msg in ./Config a bit since this can also be effective against
+  "blind proxies" (like HTTP POST proxies).
+- WebTV updates: made it so (user generated) channel notices are now displayed as
+  privmsgs in the channel. Also made the /knock channelnotice a privmsg for webtv.
+- Module coders: added HOOKTYPE_REMOTE_CHANMODE
+- Fixed a bug with HOOKTYPE_CONFIGTEST not being called for permanent modules, found by
+  AngryWolf
+- Updated PRIVMSG/NOTICE paramcount so '/msg IRC NOTICE #chan hi all' works (no ':').
+- Made it so *lines via place_host_ban() take effect immediately (eg for spamfilter,
+  ban version, flood from unknown connection), there was a small delay before.
+- Added spamfilter system. This is an attempt to fight spam, advertising, worms, etc..
+  It's much like badwords but allows you to choose multiple targets (eg: private,
+  channel, notice, etc) and various actions (eg: block, kline, gline, kill, etc).
+  You can use the /spamfilter command to add network-wide spamfilters, but you
+  can also use spamfilter { } config blocks to create local spamfilters.
+  Additionally, set::spamfilter::ban-time (duration of *lines added by spamfilter)
+  and set::spamfilter::ban-reason (*line reason if banned) are added.
+  See the documentation for more information (section 3.14).
+  This system needs some additional testing, I'm sure there will be bugs ;).
+- Fixed a problem with /stats [G|s] extended flags parsing.
+- internal: added sendnotice()
+- win32 compile fix (typo)
+- added set::spamfilter::* to docs
+- updated /stats help and docs on '/stats f'
+- Fixed '/SetHost Error' flood from all servers in some circumstances like re-opering,
+  reported by blotter45 (#0001400).
+- Made ./Config remember the libcurl directory, reported by ace (#0001505).
+- Fixed a problem with the snprintf() check, reported by virusx (#0001510).
+- Fixed a bug where multiple spaces could appear in a MODE message, reported by Airnike
+  (#0001169).
+- Fixed a bug with SSL remaining enabled even when the headers are not found, reported by
+  AngryWolf (#0000863)
+- Added can_setq/q for regulating which opers can set umode +q, requested by cfreak202
+  (#0000478)
+- Added HOOKTYPE_TKL_EXCEPT (arg: cptr, tkline) which is called from find_tkline_match
+  and find_tkline_match_zap. This can be used to add custom TKL exceptions.
+- Fixed possible compile bug (caused by HOOKTYPE_TKL_EXCEPT).
+- Cosmetic 'stats /zip' output change (#0001435).
+- Made services admins able to see on which channel services bots are, just
+  like netadmins can, suggested by EviL_SmUrF (#0001481).
+- Fixed problems with Unreal using devices in a chroot'ed environment and ircd.pid problems
+  with setuid/setgid, reported by thilo (#0001514).
+- Made /sajoin override modes (e.g. +bilk) reported by mcskaf (#0000518).
+- Fixed issue when 2 servers link with identical user@host *:lines but with different
+  expire times, reason field, etc... Entries are now fully synced between servers.
+  Reported by Cnils (#0001448).
+- Added umode +T to help.conf
+- Fixed an issue with add/del/remove in /spamfilter being case sensitive.
+- Fixed invalid nameserver info when chrooted (nameserver was always localhost).
+- Fixed a remote include bug involving cached files. Thanks to chatsphere.net for helping to
+  track this down!
+- Modified 404 numeric a bit (#0001515).
+- Fixed 'no server notice on /restart or /die', reported by Lx (#0001062). This was caused
+  by a bug in flush_connections(&me), hopefully there won't be any side effects.
+- Fixed file owner problems when IRC_UID/IRC_GID is used (eg: when running chrooted).
+- Fixed crashbug if we were unable to write a remote include file to disk.
+- Limited 'All Connections in Use' message to max 1 every 15s, this DOES NOT mean we will
+  introduce throttling of other msgs (or making this configurable)... this is just
+  an exception because this msg is sent to _all opers_ and you cannot disable it by
+  unsetting certain snomasks. Anything lower than 15s would be bad anyway since this
+  is a very serious error condition. Requested by LoVeR (#0001412).
+- Added can_dccdeny operflag so you can give your local/global opers access to this too.
+  Co-admin, admin, sadmin and netadmin get it by default. Suggested in #0001247.
+- Updated operflag docs.
+- '/rehash -all' had bugs and is now considered depricated, just use '/rehash' instead.
+  On '/rehash' we reload everything already so the '-all' option was useless anyway.
+  Reported by fez (#0001516).
+- Made blocked dcc notices (sent to umode +v) global, suggested by neothematrix (#1513).
+- [internal] cleaned up snomask removal after deoper, now remove_oper_snomasks() is
+  called which might look a bit ugly, but is better than before (scattered on 3 places).
+- Added snomasks 'N' which allows you to see nick changes of clients on other servers,
+  requested by several people (#0001323).
+- Made setting of -qaohv etc on services (+S) not possible unless you are a netadmin (purpose
+  is to prevent people from deoping BotServ bots). Suggested by shiny (#0000917)
+- Ripped out fast (bad)words support out of spamfilter to avoid confusion, also renamed
+  spamfilter::word to spamfilter::regex to make it even more clear (since we match
+  on the whole line and have nothing to do with words.. 'word' doesn't make sense).
+- Updated docs with some better regex examples, reported by AngryWolf (#0001520).
+- Added snomasks 'S' (Spamfilter) which notifies you of any spamfilter matches.
+- [internal] always return after spamfilter match, don't continue looping trough
+  targets list (eg in case of: /msg #a,#b,#c spamspam), otherwise you would get
+  duplicate notification msgs.
+- Added SENDSNO server command, similar to SENDUMODE but for snomasks, this is
+  used by the spamfilter snomask (+S) so you get network-wide notifications.
+- Added "compiled for.." versioning system, this way a beta17 module can't be loaded
+  on beta18, etc... People often forgot to recompile their modules or had old ones
+  somewhere by mistake, therefore crashing after upgrades... this should fix this
+  (in the future). Module coders don't have to do anything for making this work,
+  it's done automatically (via modules.h).
+- Forgot to add src/modules/m_sendsno.c to CVS, also fixed 2 compile warnings
+  and a crashbug related to previous commit.. bug hunting will continue ;).
+- Fixed minor compile warning.
+- Added a section "Security tips/checklist" to unreal32docs.html, this is something
+  I worked on a few months ago... It tries to explain how to get a server/network
+  secured, what the potential risks are, etc... Of course security is a complex topic
+  so I cannot talk about everything in it, but I tried to mention the main risks and
+  what you can do about it in a (hopefully) simple and understandable language ;).
+- Fixed a snomask bug reported by Cat / HERZ (#0001531).
+- Started using the umode->allowed stuff a bit ourselves, just to be sure.
+- Fixed a problem with module reloading (#0001533) reported by penna.
+- Removed remote /restart support. There are too many security issues that
+  can not be overcome. 
+- Added a patch by thilo to make Unreal correctly deal with umask settings when
+  creating devices in a chroot'ed environment. (#0001514)
+- Added commands SVSSNO and SVS2SNO (work just like SVSMODE/SVS2MODE but for snomasks)
+  suggested by x64 (#0001461).
+- Added 80% of release notes, rest will be added a day before release or so :).
+- We are having fun with Makefiles...
+- Updated the Donation file to talk about the PayPal address to make donating easier
+  (hint hint.. ;)
+- Added missing lines to include/setup.h.in for snprintf, vsnprintf, strlcpy, strlcat,
+  and strlncat. Should fix #0001510 (for real this time).
+- Ouch!! Fixed a severe bug which caused opers not being recognized on remote
+  servers causing various problems... This was caused by a change 1-2 days ago.
+  Reported by Rocko (#0001537).
+- Fixed fdlist bug/warning if a local operator /oper'd up twice. Reported by
+  DukePyrolator (#0001539).
+- Changed version to RC1
+*** RC1 release ***

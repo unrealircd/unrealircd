@@ -61,10 +61,10 @@
 #include "zip.h"
 #endif
 #include "auth.h" 
-#ifdef HAVE_REGEX
-#include <regex.h>
+#ifndef _WIN32
+#include "tre/regex.h"
 #else
-#include "../extras/regex/regex.h"
+#include "win32/regex.h"
 #endif
 extern int sendanyways;
 
@@ -72,6 +72,7 @@ extern int sendanyways;
 typedef struct aloopStruct LoopStruct;
 typedef struct ConfItem aConfItem;
 typedef struct t_kline aTKline;
+typedef struct _spamfilter Spamfilter;
 /* New Config Stuff */
 typedef struct _configentry ConfigEntry;
 typedef struct _configfile ConfigFile;
@@ -164,8 +165,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	MAXKILLS	20
 #define	MAXBANS		60
 #define	MAXBANLENGTH	1024
-#define	MAXSILES	5
-#define	MAXSILELENGTH	128
+#define	MAXSILELENGTH	NICKLEN+USERLEN+HOSTLEN+10
 #define UMODETABLESZ (sizeof(long) * 8)
 /*
  * Watch it - Don't change this unless you also change the ERR_TOOMANYWATCH
@@ -186,6 +186,9 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define LOG_CLIENT 0x0010
 #define LOG_SERVER 0x0020
 #define LOG_OPER   0x0040
+#define LOG_SACMDS 0x0080
+#define LOG_CHGCMDS 0x0100
+#define LOG_OVERRIDE 0x0200
 
 
 /*
@@ -498,22 +501,23 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
  * defined operator access levels
  */
 #define OFLAG_REHASH	0x00000001	/* Oper can /rehash server */
-#define OFLAG_DIE	0x00000002	/* Oper can /die the server */
+#define OFLAG_DIE		0x00000002	/* Oper can /die the server */
 #define OFLAG_RESTART	0x00000004	/* Oper can /restart the server */
+#define OFLAG_DCCDENY	0x00000008	/* Oper can use /dccdeny and /undccdeny */
 #define OFLAG_HELPOP	0x00000010	/* Oper can send /HelpOps */
 #define OFLAG_GLOBOP	0x00000020	/* Oper can send /GlobOps */
 #define OFLAG_WALLOP	0x00000040	/* Oper can send /WallOps */
-#define OFLAG_LOCOP	0x00000080	/* Oper can send /LocOps */
+#define OFLAG_LOCOP		0x00000080	/* Oper can send /LocOps */
 #define OFLAG_LROUTE	0x00000100	/* Oper can do local routing */
 #define OFLAG_GROUTE	0x00000200	/* Oper can do global routing */
-#define OFLAG_LKILL	0x00000400	/* Oper can do local kills */
-#define OFLAG_GKILL	0x00000800	/* Oper can do global kills */
-#define OFLAG_KLINE	0x00001000	/* Oper can /kline users */
+#define OFLAG_LKILL		0x00000400	/* Oper can do local kills */
+#define OFLAG_GKILL		0x00000800	/* Oper can do global kills */
+#define OFLAG_KLINE		0x00001000	/* Oper can /kline users */
 #define OFLAG_UNKLINE	0x00002000	/* Oper can /unkline users */
 #define OFLAG_LNOTICE	0x00004000	/* Oper can send local serv notices */
 #define OFLAG_GNOTICE	0x00008000	/* Oper can send global notices */
-#define OFLAG_ADMIN	0x00010000	/* Admin */
-#define OFLAG_ZLINE	0x00080000	/* Oper can use /zline and /unzline */
+#define OFLAG_ADMIN		0x00010000	/* Admin */
+#define OFLAG_ZLINE		0x00080000	/* Oper can use /zline and /unzline */
 #define OFLAG_NETADMIN	0x00200000	/* netadmin gets +N */
 #define OFLAG_COADMIN	0x00800000	/* co admin gets +C */
 #define OFLAG_SADMIN	0x01000000	/* services admin gets +a */
@@ -522,15 +526,18 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OFLAG_TKL       0x10000000	/* can use G:lines and shuns */
 #define OFLAG_GZL       0x20000000	/* can use global Z:lines */
 #define OFLAG_OVERRIDE	0x40000000	/* can use oper-override */
+#define OFLAG_UMODEQ	0x80000000	/* can set +q */
 #define OFLAG_LOCAL	(OFLAG_REHASH|OFLAG_HELPOP|OFLAG_GLOBOP|OFLAG_WALLOP|OFLAG_LOCOP|OFLAG_LROUTE|OFLAG_LKILL|OFLAG_KLINE|OFLAG_UNKLINE|OFLAG_LNOTICE)
 #define OFLAG_GLOBAL	(OFLAG_LOCAL|OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
 #define OFLAG_ISGLOBAL	(OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
-#define OFLAG_NADMIN	(OFLAG_NETADMIN | OFLAG_SADMIN | OFLAG_ADMIN | OFLAG_GLOBAL)
-#define OFLAG_ADMIN_	(OFLAG_ADMIN | OFLAG_GLOBAL)
-#define OFLAG_COADMIN_	(OFLAG_COADMIN | OFLAG_GLOBAL)
-#define OFLAG_SADMIN_	(OFLAG_SADMIN | OFLAG_GLOBAL)
+#define OFLAG_NADMIN	(OFLAG_NETADMIN | OFLAG_SADMIN | OFLAG_ADMIN | OFLAG_GLOBAL | OFLAG_UMODEQ | OFLAG_DCCDENY)
+#define OFLAG_ADMIN_	(OFLAG_ADMIN | OFLAG_GLOBAL | OFLAG_DCCDENY)
+#define OFLAG_COADMIN_	(OFLAG_COADMIN | OFLAG_GLOBAL | OFLAG_DCCDENY)
+#define OFLAG_SADMIN_	(OFLAG_SADMIN | OFLAG_GLOBAL | OFLAG_UMODEQ | OFLAG_DCCDENY)
 
 #define OPCanOverride(x) ((x)->oflag & OFLAG_OVERRIDE)
+#define OPCanUmodeq(x)	((x)->oflag & OFLAG_UMODEQ)
+#define OPCanDCCDeny(x)	((x)->oflag & OFLAG_DCCDENY)
 #define OPCanTKL(x)	((x)->oflag & OFLAG_TKL)
 #define OPCanGZL(x)	((x)->oflag & OFLAG_GZL)
 #define OPCanZline(x)   ((x)->oflag & OFLAG_ZLINE)
@@ -634,6 +641,8 @@ struct aloopStruct {
 	unsigned do_bancheck : 1;
 	unsigned ircd_rehashing : 1;
 	unsigned tainted : 1;
+	aClient *rehash_save_cptr, *rehash_save_sptr;
+	int rehash_save_sig;
 };
 
 typedef struct Whowas {
@@ -724,11 +733,28 @@ struct Server {
 #define TKL_GLOBAL	0x0004
 #define TKL_SHUN	0x0008
 #define TKL_QUIET	0x0010
+#define TKL_SPAMF	0x0020
+
+#define SPAMF_CHANMSG		0x0001 /* c */
+#define SPAMF_USERMSG		0x0002 /* p */
+#define SPAMF_USERNOTICE	0x0004 /* n */
+#define SPAMF_CHANNOTICE	0x0008 /* N */
+#define SPAMF_PART			0x0010 /* P */
+#define SPAMF_QUIT			0x0020 /* q */
+#define SPAMF_DCC			0x0040 /* d */
+
+struct _spamfilter {
+	unsigned short action; /* see BAN_ACT* */
+	regex_t expr;
+};
 
 struct t_kline {
 	aTKline *prev, *next;
-	int  type;
-	char *usermask, *hostmask, *reason, *setby;
+	int type;
+	unsigned short subtype; /* subtype (currently spamfilter only), see SPAMF_* */
+	Spamfilter *spamf;
+	char usermask[USERLEN + 3];
+	char *hostmask, *reason, *setby;
 	TS expire_at, set_at;
 };
 
@@ -931,13 +957,14 @@ struct _configflag_tld
 #define CONF_BAN_TYPE_AKILL	1
 #define CONF_BAN_TYPE_TEMPORARY 2
 
-#define BAN_ACT_KILL		0
-#define BAN_ACT_TEMPSHUN	1
-#define BAN_ACT_SHUN		2
-#define BAN_ACT_KLINE		3
-#define BAN_ACT_ZLINE		4
-#define BAN_ACT_GLINE		5
-#define BAN_ACT_GZLINE		6
+#define BAN_ACT_KILL		1
+#define BAN_ACT_TEMPSHUN	2
+#define BAN_ACT_SHUN		3
+#define BAN_ACT_KLINE		4
+#define BAN_ACT_ZLINE		5
+#define BAN_ACT_GLINE		6
+#define BAN_ACT_GZLINE		7
+#define BAN_ACT_BLOCK		8 /* for spamfilter only */
 
 #define CRULE_ALL		0
 #define CRULE_AUTO		1
@@ -978,14 +1005,14 @@ struct _configflag_allow {
 };
 
 struct _configitem_allow {
-	ConfigItem       *prev, *next;
-	ConfigFlag 	 flag;
-	char	         *ip, *hostname, *server;
-	anAuthStruct	 *auth;	
-	short		 maxperip;
-	int		 port;
-	ConfigItem_class *class;
-	ConfigFlag_allow flags;
+	ConfigItem			*prev, *next;
+	ConfigFlag			flag;
+	char				*ip, *hostname, *server;
+	anAuthStruct		*auth;	
+	unsigned short		maxperip;
+	int					port;
+	ConfigItem_class	*class;
+	ConfigFlag_allow	flags;
 };
 
 struct _configitem_oper {
@@ -1082,6 +1109,7 @@ struct _configitem_ban {
 };
 
 #ifdef FAST_BADWORD_REPLACE
+#define BADW_TYPE_INVALID 0x0
 #define BADW_TYPE_FAST    0x1
 #define BADW_TYPE_FAST_L  0x2
 #define BADW_TYPE_FAST_R  0x4
@@ -1178,12 +1206,17 @@ struct _configitem_alias_format {
 	regex_t expr;
 };
 
-#define INCLUDE_NOTLOADED 1
+#define INCLUDE_NOTLOADED  0x1
+#define INCLUDE_REMOTE     0x2
+#define INCLUDE_DLQUEUED   0x4
 	
 struct _configitem_include {
 	ConfigItem *prev, *next;
 	ConfigFlag_ban flag;
 	char *file;
+#ifdef USE_LIBCURL
+	char *url;
+#endif
 };
 
 struct _configitem_help {
@@ -1605,6 +1638,19 @@ int	throttle_can_connect(struct IN_ADDR *in);
 #define VERIFY_OPERCOUNT(clnt,tag) { if (IRCstats.operators < 0) verify_opercount(clnt,tag); } while(0)
 
 #define MARK_AS_OFFICIAL_MODULE(modinf)	do { if (modinf && modinf->handle) ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);  } while(0)
+
+#ifdef PREFIX_AQ
+ #define CHANOPPFX "~&@"
+#else
+ #define CHANOPPFX "@"
+#endif
+
+/* used for is_banned type field: */
+#define BANCHK_JOIN		0	/* checking if a ban forbids the person from joining */
+#define BANCHK_MSG		1	/* checking if a ban forbids the person from sending messages */
+#define BANCHK_NICK		2	/* checking if a ban forbids the person from changing his/her nick */
+
+#define TKLISTLEN 26
 
 #endif /* __struct_include__ */
 

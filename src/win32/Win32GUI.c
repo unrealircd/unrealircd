@@ -737,6 +737,11 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 						if (conf_include) {
 							ConfigItem_include *inc;
 							for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next) {
+#ifdef USE_LIBCURL
+								if (inc->flag.type & INCLUDE_REMOTE)
+									AppendMenu(hConfig, MF_STRING, i++, inc->url);
+								else
+#endif
 								AppendMenu(hConfig, MF_STRING, i++, inc->file);
 							}
 							AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
@@ -825,6 +830,11 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 				if (conf_include) {
 					ConfigItem_include *inc;
 					for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next) {
+#ifdef USE_LIBCURL
+						if (inc->flag.type & INCLUDE_REMOTE)
+							AppendMenu(hConfig, MF_STRING, i++, inc->url);
+						else
+#endif
 						AppendMenu(hConfig, MF_STRING, i++, inc->file);
 					}
 					AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
@@ -872,13 +882,20 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 				if (LOWORD(wParam) >= 60000 && HIWORD(wParam) == 0 && !lParam) {
 					unsigned char path[MAX_PATH];
 					if (GetMenuString(hLogs, LOWORD(wParam), path, MAX_PATH, MF_BYCOMMAND))
-						DialogBoxParam(hInst, "FromVar", hDlg,
-(DLGPROC)FromFileReadDLG, (LPARAM)path);
+						DialogBoxParam(hInst, "FromVar", hDlg, (DLGPROC)FromFileReadDLG, (LPARAM)path);
 					
-					else {
+					else 
+					{
 						GetMenuString(hConfig,LOWORD(wParam), path, MAX_PATH, MF_BYCOMMAND);
-						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, 
-								(LPARAM)path);
+#ifdef USE_LIBCURL
+						if (url_is_valid(path))
+						{
+							char *file = find_remote_include(path);
+							DialogBoxParam(hInst, "FromVar", hDlg, (DLGPROC)FromFileReadDLG, (LPARAM)file);
+						}
+						else
+#endif
+							DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, (LPARAM)path);
 					}
 					return FALSE;
 				}
@@ -1978,6 +1995,24 @@ int CountRTFSize(unsigned char *buffer) {
 				continue;
 			}
 		}
+		else if (*buf == '\n')
+		{
+			if (bold)
+				size += 3;
+			if (uline)
+				size += 7;
+			if (incolor && !reverse)
+				size += 4;
+			if (inbg && !reverse)
+				size += 11;
+			if (reverse)
+				size += 15;
+			if (bold || uline || incolor || inbg || reverse)
+				size++;
+			bold = uline = incolor = inbg = reverse = 0;
+			size +=6;
+			continue;	
+		}
 		else if (*buf == '\2')
 		{
 			if (bold)
@@ -2180,6 +2215,39 @@ void IRCToRTF(unsigned char *buffer, unsigned char *string) {
 			}
 			else
 				string[i++]='\r';
+			continue;
+		}
+		else if (*tmp == '\n')
+		{
+			if (bold)
+			{
+				strcat(string, "\\b0 ");
+				i+=3;
+			}
+			if (uline)
+			{
+				strcat(string, "\\ulnone");
+				i+=7;
+			}
+			if (incolor && !reverse)
+			{
+				strcat(string, "\\cf0");
+				i+=4;
+			}
+			if (inbg && !reverse)
+			{
+				strcat(string, "\\highlight0");
+				i +=11;
+			}
+			if (reverse) {
+				strcat(string, "\\cf0\\highlight0");
+				i += 15;
+			}
+			if (bold || uline || incolor || inbg || reverse)
+				string[i++] = ' ';
+			bold = uline = incolor = inbg = reverse = 0;
+			strcat(string, "\\par\r\n");
+			i +=6;
 			continue;
 		}
 		else if (*tmp == '\2')

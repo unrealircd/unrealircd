@@ -542,12 +542,11 @@ static int query_name(char *name, int class, int type, ResRQ *rptr)
 {
 	struct timeval tv;
 	char buf[MAXPACKET];
-	int  r, s, k = 0;
+	int  r, s;
 	HEADER *hptr;
 
 	bzero(buf, sizeof(buf));
-	r = ircd_res_mkquery(QUERY, name, class, type, NULL, 0, NULL,
-	    (u_char *)buf, sizeof(buf));
+	r = ircd_res_mkquery(QUERY, name, class, type, NULL, 0, NULL, (u_char *)buf, sizeof(buf));
 	if (r <= 0)
 	{
 		Debug((DEBUG_DNS, "query_name: NO_RECOVERY"));
@@ -555,33 +554,11 @@ static int query_name(char *name, int class, int type, ResRQ *rptr)
 		return r;
 	}
 	hptr = (HEADER *) buf;
-#ifndef _WIN32
-	(void)gettimeofday(&tv, NULL);
 	do
 	{
-		/* htons/ntohs can be assembler macros, which cannot
-		   be nested. Thus two lines.   -Vesa               */
-#ifdef LRAND48
-		u_short nstmp = ntohs(hptr->id) + k +
-		    (u_short)(tv.tv_usec & 0xffff) + (u_short)(lrand48() & 0xffff);
-#else
-		u_short nstmp = ntohs(hptr->id) + k +
-		    (u_short)(tv.tv_usec & 0xffff) + (u_short)(rand() & 0xffff);
-#endif /* LRAND48 */
-		hptr->id = htons(nstmp);
-		k++;
-	}
-#else
-	do
-	{
-		/* WIN32: actually this should be safe since it was seeded already */
-		hptr->id = htons(rand() & 0xffff);
-	}
-#endif
-	while (find_id(ntohs(hptr->id)));
-	/* The above loop takes care of preventing requests with duplicate id's,
-	 * it belongs to the do { } block. -- Syzop
-	 */
+		hptr->id = htons(getrandom16());
+	} while (find_id(ntohs(hptr->id)));
+	/* The above loop takes care of preventing requests with duplicate id's. -- Syzop */
 
 	rptr->id = ntohs(hptr->id);
 	rptr->sends++;

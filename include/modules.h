@@ -20,13 +20,11 @@
  */
 #ifndef MODULES_H
 #define MODULES_H
+#include "types.h"
 #define MOD_VERSION	"3.2-b5-1"
 #define MOD_WE_SUPPORT  "3.2-b5*"
 #define MAXCUSTOMHOOKS  30
 #define MAXHOOKTYPES	70
-typedef void			(*vFP)();	/* Void function pointer */
-typedef int			(*iFP)();	/* Integer function pointer */
-typedef char			(*cFP)();	/* char * function pointer */
 #if defined(_WIN32)
 #define DLLFUNC	_declspec(dllexport)
 #define irc_dlopen(x,y) LoadLibrary(x)
@@ -97,6 +95,7 @@ typedef struct {
 #define MOBJ_SNOMASK 0x0020
 #define MOBJ_UMODE 0x0040
 #define MOBJ_CMDOVERRIDE 0x0080
+#define MOBJ_EXTBAN 0x0100
 
 typedef struct {
         long mode;
@@ -217,6 +216,63 @@ typedef struct {
 } CmodeInfo;
 #endif
 
+/*** Extended bans ***/
+
+#define EXBCHK_ACCESS		0 /* Check access */
+#define EXBCHK_ACCESS_ERR	1 /* Check access and send error */
+#define EXBCHK_PARAM		2 /* Check if the parameter is valid */
+
+#define EXBTYPE_BAN			0 /* a ban */
+#define EXBTYPE_EXCEPT		1 /* an except */
+
+#define EXTBANTABLESZ		32
+
+typedef struct {
+	/** extbans module */
+	Module *owner;
+	/** extended ban character */
+	char	flag;
+
+	/** access checking [optional].
+	 * aClient *: the client
+	 * aChannel *: the channel
+	 * para: the ban parameter
+	 * int: check type (see EXBCHK_*)
+	 * int: what (MODE_ADD or MODE_DEL)
+	 * int: what2 (EXBTYPE_BAN or EXBTYPE_EXCEPT)
+	 * return value: 1=ok, 0=bad
+	 * NOTE: just set this of NULL if you want only +hoaq to place/remove bans as usual.
+	 * NOTE2: This has not been tested yet!!
+	 */
+	int			(*is_ok)(aClient *, aChannel *, char *para, int, int, int);
+
+	/** Convert input parameter to output [optional].
+	 * like with normal bans '+b blah' gets '+b blah!*@*', and it allows
+	 * you to limit the length of the ban too. You can set this to NULL however
+	 * to use the value as-is.
+	 * char *: the input parameter.
+	 * return value: pointer to output string (temp. storage)
+	 */
+	char *		(*conv_param)(char *);
+
+	/** Checks if the user is affected by this ban [required].
+	 * Called from is_banned.
+	 * aClient *: the client
+	 * aChannel *: the channel
+	 * para: the ban entry
+	 * int: a value of BANCHK_* (see struct.h)
+	 */
+	int			(*is_banned)(aClient *, aChannel *, char *, int);
+} Extban;
+
+typedef struct {
+	char	flag;
+	int			(*is_ok)(aClient *, aChannel *, char *para, int, int, int);
+	char *		(*conv_param)(char *);
+	int			(*is_banned)(aClient *, aChannel *, char *, int);
+} ExtbanInfo;
+
+
 typedef struct _command {
 	struct _command *prev, *next;
 	aCommand *cmd, *tok;
@@ -240,6 +296,7 @@ typedef struct _ModuleObject {
 		Snomask *snomask;
 		Umode *umode;
 		Cmdoverride *cmdoverride;
+		Extban *extban;
 	} object;
 } ModuleObject;
 
@@ -291,6 +348,7 @@ struct _Module
 	ModuleInfo modinfo; /* Used to store handle info for module */
 	unsigned char options;
 	unsigned char errorcode;
+	char *tmp_file;
 };
 /*
  * Symbol table
@@ -438,11 +496,11 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_LOCAL_NICKCHANGE 2
 #define HOOKTYPE_LOCAL_CONNECT 3
 #define HOOKTYPE_REHASHFLAG 4
-#undef HOOKTYPE_SCAN_INFO
+#define HOOKTYPE_PRE_LOCAL_PART 5
 #define HOOKTYPE_CONFIGPOSTTEST 6
 #define HOOKTYPE_REHASH 7
 #define HOOKTYPE_PRE_LOCAL_CONNECT 8
-#define HOOKTYPE_HTTPD_URL 9
+#define HOOKTYPE_PRE_LOCAL_QUIT 9
 #define HOOKTYPE_GUEST 10
 #define HOOKTYPE_SERVER_CONNECT 11
 #define HOOKTYPE_SERVER_QUIT 12
@@ -468,6 +526,8 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_REMOTE_NICKCHANGE 31
 #define HOOKTYPE_CHANNEL_CREATE 32
 #define HOOKTYPE_CHANNEL_DESTROY 33
+#define HOOKTYPE_REMOTE_CHANMODE 34
+#define HOOKTYPE_TKL_EXCEPT 35
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000
@@ -500,6 +560,12 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define MOD_INIT(name) name##_Init
 #define MOD_LOAD(name) name##_Load
 #define MOD_UNLOAD(name) name##_Unload
+#endif
+
+#ifdef DYNAMIC_LINKING
+/* ugly alert!!!! */
+#include "version.h"
+char Mod_Version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9;
 #endif
 
 #endif

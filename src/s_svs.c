@@ -36,11 +36,6 @@
 #include <time.h>
 #endif
 #include <string.h>
-#ifdef HAVE_REGEX
-#include <regex.h>
-#else
-#include "../extras/regex/regex.h"
-#endif
 
 #include "h.h"
 #include "proto.h"

@@ -70,6 +70,9 @@ Computing Center and Jarkko Oikarinen";
 #ifdef _WIN32
 extern BOOL IsService;
 #endif
+#ifdef USE_LIBCURL
+#include <curl/curl.h>
+#endif
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
 ID_Notes("2.48 3/9/94");
@@ -134,6 +137,10 @@ TS   check_fdlists();
 unsigned char conf_debuglevel = 0;
 char trouble_info[1024];
 
+#ifdef USE_LIBCURL
+extern void url_init(void);
+#endif
+
 void save_stats(void)
 {
 	FILE *stats = fopen("ircd.stats", "w");
@@ -156,6 +163,7 @@ void server_reboot(char *);
 void restart(char *);
 static void open_debugfile(), setup_signals();
 extern void init_glines(void);
+extern void tkl_init(void);
 
 TS   last_garbage_collect = 0;
 char **myargv;
@@ -840,6 +848,48 @@ int InitwIRCD(int argc, char *argv[])
 		exit(-1);
 	}
 	ircd_res_init();
+	{
+		struct stat sb;
+		mode_t umaskold;
+		
+		umaskold = umask(0);
+		if (mkdir("dev", S_IRUSR|S_IWUSR|S_IXUSR|S_IXGRP|S_IXOTH) != 0 && errno != EEXIST)
+		{
+			fprintf(stderr, "ERROR: Cannot mkdir dev: %s\n", strerror(errno));
+			exit(5);
+		}
+		if (stat("/dev/urandom", &sb) != 0)
+		{
+			fprintf(stderr, "ERROR: Cannot stat /dev/urandom: %s\n", strerror(errno));
+			exit(5);
+		}
+		if (mknod("dev/urandom", sb.st_mode, sb.st_rdev) != 0 && errno != EEXIST)
+		{
+			fprintf(stderr, "ERROR: Cannot mknod dev/urandom: %s\n", strerror(errno));
+			exit(5);
+		}
+		if (stat("/dev/null", &sb) != 0)
+		{
+			fprintf(stderr, "ERROR: Cannot stat /dev/null: %s\n", strerror(errno));
+			exit(5);
+		}
+		if (mknod("dev/null", sb.st_mode, sb.st_rdev) != 0 && errno != EEXIST)
+		{
+			fprintf(stderr, "ERROR: Cannot mknod dev/null: %s\n", strerror(errno));
+			exit(5);
+		}
+		if (stat("/dev/tty", &sb) != 0)
+		{
+			fprintf(stderr, "ERROR: Cannot stat /dev/tty: %s\n", strerror(errno));
+			exit(5);
+		}
+		if (mknod("dev/tty", sb.st_mode, sb.st_rdev) != 0 && errno != EEXIST)
+		{
+			fprintf(stderr, "ERROR: Cannot mknod dev/tty: %s\n", strerror(errno));
+			exit(5);
+		}
+		umask(umaskold);
+	}
 	if (chroot(DPATH)) {
 		(void)fprintf(stderr, "ERROR:  Cannot (chdir/)chroot to directory '%s'\n", dpath);
 		exit(5);
@@ -855,10 +905,16 @@ int InitwIRCD(int argc, char *argv[])
 	bzero(&StatsZ, sizeof(StatsZ));
 	setup_signals();
 	init_ircstats();
+#ifdef USE_LIBCURL
+	url_init();
+#endif
+	tkl_init();
 	umode_init();
 #ifdef EXTCMODE
 	extcmode_init();
 #endif
+	extban_init();
+	init_random(); /* needs to be done very early!! */
 	clear_scache_hash_table();
 #ifdef FORCE_CORE
 	corelim.rlim_cur = corelim.rlim_max = RLIM_INFINITY;
@@ -1051,11 +1107,15 @@ int InitwIRCD(int argc, char *argv[])
 	fprintf(stderr, "%s", unreallogo);
 	fprintf(stderr, "                           v%s\n", VERSIONONLY);
 #ifdef USE_SSL
-	fprintf(stderr, "                     using %s\n\n", OPENSSL_VERSION_TEXT);
+	fprintf(stderr, "                     using %s\n", OPENSSL_VERSION_TEXT);
 #endif
 #ifdef ZIP_LINKS
-	fprintf(stderr, "                     using zlib %s\n\n", zlibVersion());
+	fprintf(stderr, "                     using zlib %s\n", zlibVersion());
 #endif
+#ifdef USE_LIBCURL
+	fprintf(stderr, "                     using %s\n", curl_version());
+#endif
+	fprintf(stderr, "\n");
 #endif
 	clear_client_hash_table();
 	clear_channel_hash_table();
@@ -1065,6 +1125,7 @@ int InitwIRCD(int argc, char *argv[])
 	initlists();
 	initwhowas();
 	initstats();
+	DeleteTempModules();
 	booted = FALSE;
 /* Hack to stop people from being able to read the config file */
 #if !defined(_WIN32) && !defined(_AMIGA) && DEFAULT_PERMISSIONS != 0
@@ -1211,7 +1272,6 @@ int InitwIRCD(int argc, char *argv[])
 	R_do_id = strlen(REPORT_DO_ID);
 	R_fin_id = strlen(REPORT_FIN_ID);
 	R_fail_id = strlen(REPORT_FAIL_ID);
-	write_pidfile();
 
 #if !defined(IRC_UID) && !defined(_WIN32)
 	if ((uid != euid) && !euid) {
@@ -1244,7 +1304,7 @@ int InitwIRCD(int argc, char *argv[])
 		}
 	}
 #endif
-	init_random();
+	write_pidfile();
 	Debug((DEBUG_NOTICE, "Server ready..."));
 	SetupEvents();
 #ifdef THROTTLING

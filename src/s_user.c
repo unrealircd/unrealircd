@@ -20,6 +20,11 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+/**
+ * 2003-01-06
+ * - Added ability to log sajoin and sapart to ircd.log
+ * XeRXeS
+ */
 
 #ifndef CLEAN_COMPILE
 static char sccsid[] =
@@ -58,6 +63,7 @@ void send_umode(aClient *, aClient *, long, long, char *);
 void set_snomask(aClient *, char *);
 void create_snomask(aClient *, anUser *, char *);
 extern int short_motd(aClient *sptr);
+extern aChannel *get_channel(aClient *cptr, char *chname, int flag);
 /* static  Link    *is_banned(aClient *, aChannel *); */
 int  dontspread = 0;
 extern char *me_hash;
@@ -1060,7 +1066,7 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 			    "USER server wrong direction");
 		}
 		else
-			sptr->flags |= (acptr->flags /* & FLAGS_TS8 */);
+			sptr->flags |= acptr->flags;
 		/* *FINALL* this gets in ircd... -- Barubary */
 		/* We change this a bit .. */
 		if (IsULine(sptr->srvptr))
@@ -1673,21 +1679,21 @@ CMD_FUNC(m_nick)
 		 */
 		if (MyClient(sptr))
 		{
-			for (mp = cptr->user->channel; mp; mp = mp->next)
+			for (mp = sptr->user->channel; mp; mp = mp->next)
 			{
-				if (is_banned(cptr, &me, mp->chptr) && !is_chanownprotop(cptr, mp->chptr))
+				if (is_banned(sptr, mp->chptr, BANCHK_NICK) && !is_chanownprotop(sptr, mp->chptr))
 				{
-					sendto_one(cptr,
+					sendto_one(sptr,
 					    err_str(ERR_BANNICKCHANGE),
 					    me.name, parv[0],
 					    mp->chptr->chname);
 					return 0;
 				}
-				if (!IsOper(cptr) && !IsULine(cptr)
+				if (!IsOper(sptr) && !IsULine(sptr)
 				    && mp->chptr->mode.mode & MODE_NONICKCHANGE
-				    && !is_chanownprotop(cptr, mp->chptr))
+				    && !is_chanownprotop(sptr, mp->chptr))
 				{
-					sendto_one(cptr,
+					sendto_one(sptr,
 					    err_str(ERR_NONICKCHANGE),
 					    me.name, parv[0],
 					    mp->chptr->chname);
@@ -1706,6 +1712,7 @@ CMD_FUNC(m_nick)
 
 			RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, sptr, nick);
 		} else {
+			sendto_snomask(SNO_FNICKCHANGE, "*** Notice -- %s (%s@%s) has changed his/her nickname to %s", sptr->name, sptr->user->username, sptr->user->realhost, nick);
 			RunHook3(HOOKTYPE_REMOTE_NICKCHANGE, cptr, sptr, nick);
 		}
 		/*
@@ -2385,9 +2392,10 @@ CMD_FUNC(m_umode)
 				goto def;
 			  }
 		  case 'o':
+		  case 'O':
 			  if(sptr->from->flags & FLAGS_QUARANTINE)
 				break;
-			  /* A local user trying to set himself +o is denied here.
+			  /* A local user trying to set himself +o/+O is denied here.
 			   * A while later (outside this loop) it is handled as well (and +C, +N, etc too)
 			   * but we need to take care here too because it might cause problems
 			   * since otherwise all IsOper()/IsAnOper() calls cannot be trusted,
@@ -2508,9 +2516,8 @@ CMD_FUNC(m_umode)
 	   This is to remooove the kix bug.. and to protect some stuffie
 	   -techie
 	 */
-		if ((sptr->umodes & (UMODE_KIX)) && !IsNetAdmin(sptr) && !IsSAdmin(sptr))
+		if (MyClient(sptr) && (sptr->umodes & UMODE_KIX) && (!OPCanUmodeq(sptr) || !IsAnOper(sptr)))
 			sptr->umodes &= ~UMODE_KIX;
-
 		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE) && !IsSecure(sptr))
 			sptr->umodes &= ~UMODE_SECURE;
 		if (MyClient(sptr) && !(sptr->umodes & UMODE_SECURE) && IsSecure(sptr))
@@ -2589,24 +2596,7 @@ CMD_FUNC(m_umode)
 		delfrom_fdlist(sptr->slot, &oper_fdlist);
 #endif
 		sptr->oflag = 0;
-		if (sptr->user->snomask & SNO_CLIENT)
-			sptr->user->snomask &= ~SNO_CLIENT;
-		if (sptr->user->snomask & SNO_FCLIENT)
-			sptr->user->snomask &= ~SNO_FCLIENT;
-		if (sptr->user->snomask & SNO_FLOOD)
-			sptr->user->snomask &= ~SNO_FLOOD;
-		if (sptr->user->snomask & SNO_JUNK)
-			sptr->user->snomask &= ~SNO_JUNK;
-		if (sptr->user->snomask & SNO_EYES)
-			sptr->user->snomask &= ~SNO_EYES;
-		if (sptr->user->snomask & SNO_VHOST)
-			sptr->user->snomask &= ~SNO_VHOST;
-		if (sptr->user->snomask & SNO_TKL)
-			sptr->user->snomask &= ~SNO_TKL;
-		if (sptr->user->snomask & SNO_NICKCHANGE)
-			sptr->user->snomask &= ~SNO_NICKCHANGE;
-		if (sptr->user->snomask & SNO_QLINE)
-			sptr->user->snomask &= ~SNO_QLINE;
+		remove_oper_snomasks(sptr);
 		RunHook2(HOOKTYPE_LOCAL_OPER, sptr, 0);
 	}
 
@@ -2804,13 +2794,12 @@ int  del_silence(aClient *sptr, char *mask)
 int add_silence(aClient *sptr, char *mask, int senderr)
 {
 	Link *lp;
-	int  cnt = 0, len = 0;
+	int  cnt = 0;
 
 	for (lp = sptr->user->silence; lp; lp = lp->next)
 	{
-		len += strlen(lp->value.cp);
 		if (MyClient(sptr))
-			if ((len > MAXSILELENGTH) || (++cnt >= MAXSILES))
+			if ((strlen(lp->value.cp) > MAXSILELENGTH) || (++cnt >= SILENCE_LIMIT))
 			{
 				if (senderr)
 					sendto_one(sptr, err_str(ERR_SILELISTFULL), me.name, sptr->name, mask);
@@ -2951,21 +2940,45 @@ CMD_FUNC(m_sajoin)
 		return 0;
 	}
 
-	sendto_realops("%s used SAJOIN to make %s join %s", sptr->name, parv[1],
-	    parv[2]);
-
 	if (MyClient(acptr))
 	{
-		parv[0] = parv[1];
-		parv[1] = parv[2];
+		int flags;
+		aChannel *chptr;
+		Membership *lp;
+		if (strlen(parv[2]) > CHANNELLEN)
+			parv[2][CHANNELLEN] = 0;
+		clean_channelname(parv[2]);
+		if (check_channelmask(sptr, cptr, parv[2]) == -1 || *parv[2] == '0' ||
+		    !IsChannelName(parv[2]))
+		{
+			sendto_one(sptr,
+			    err_str(ERR_NOSUCHCHANNEL), me.name,
+			    parv[0], parv[2]);
+			return 0;
+		}
+		flags = (ChannelExists(parv[2])) ? CHFL_DEOPPED : CHFL_CHANOP;
+		chptr = get_channel(sptr, parv[2], CREATE);
+		if (chptr && (lp = find_membership_link(acptr->user->channel, chptr)))
+		{
+			sendto_one(sptr, err_str(ERR_USERONCHANNEL), me.name, parv[0], 
+				   parv[1], parv[2]);
+			return 0;
+		}
 		sendto_one(acptr,
 		    ":%s %s %s :*** You were forced to join %s", me.name,
 		    IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, parv[2]);
-		(void)m_join(acptr, acptr, 2, parv);
+		join_channel(chptr, acptr, acptr, flags);
 	}
 	else
 		sendto_one(acptr, ":%s SAJOIN %s %s", parv[0],
 		    parv[1], parv[2]);
+
+	sendto_realops("%s used SAJOIN to make %s join %s", sptr->name, parv[1],
+	    parv[2]);
+
+	/* Logging function added by XeRXeS */
+	ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
+		sptr->name, parv[1], parv[2]);
 
 	return 0;
 }
@@ -3002,6 +3015,11 @@ CMD_FUNC(m_sapart)
 
 	sendto_realops("%s used SAPART to make %s part %s", sptr->name, parv[1],
 	    parv[2]);
+
+ 
+	/* Logging function added by XeRXeS */
+	ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s", 
+		sptr->name, parv[1], parv[2]);
 
 	if (MyClient(acptr))
 	{

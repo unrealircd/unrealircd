@@ -239,3 +239,18 @@
 
 /* Define if rlim_t is long long */
 #undef LONG_LONG_RLIM_T
+
+/* Define if you have snprintf */
+#undef HAVE_SNPRINTF
+
+/* Define if you have vsnprintf */
+#undef HAVE_VSNPRINTF
+
+/* Define if you have strlcpy */
+#undef HAVE_STRLCPY
+
+/* Define if you have strlcat */
+#undef HAVE_STRLCAT
+
+/* Define if you have strlncat */
+#undef HAVE_STRLNCAT

@@ -73,7 +73,7 @@ extern int lifesux;
 /* Some forward declarations */
 CMD_FUNC(do_join);
 void add_invite(aClient *, aChannel *);
-char *clean_ban_mask(char *);
+char *clean_ban_mask(char *, int);
 int add_banid(aClient *, aChannel *, char *);
 int can_join(aClient *, aClient *, aChannel *, char *, char *,
     char **);
@@ -174,6 +174,19 @@ aCtab cFlagTab[] = {
 #define IsSkoAdmin(sptr) (IsAdmin(sptr) || IsNetAdmin(sptr) || IsSAdmin(sptr))
 
 char cmodestring[512];
+
+inline int op_can_override(aClient *sptr)
+{
+#ifndef NO_OPEROVERRIDE
+	if (!IsOper(sptr))
+		return 0;
+	if (MyClient(sptr) && !OPCanOverride(sptr))
+		return 0;
+	return 1;
+#else
+	return 0;
+#endif
+}
 
 void make_cmodestr(void)
 {
@@ -545,58 +558,100 @@ int del_banid(aChannel *chptr, char *banid)
  * Moved to struct.h
  */
 
-/*
- * is_banned - returns a pointer to the ban structure if banned else NULL
+/* Those 3 pointers can be used by extended ban modules so they
+ * don't have to do 3 make_nick_user_host()'s all the time:
  */
-extern Ban *is_banned(aClient *cptr, aClient *sptr, aChannel *chptr)
+char *ban_realhost = NULL, *ban_virthost = NULL, *ban_ip = NULL;
+
+/** is_banned - checks for bans.
+ * PARAMETERS:
+ * sptr:	the client to check (can be remote client)
+ * chptr:	the channel to check
+ * type:	one of BANCHK_*
+ * RETURNS:
+ * a pointer to the ban structure if banned, else NULL.
+ */
+Ban *is_banned(aClient *sptr, aChannel *chptr, int type)
 {
 	Ban *tmp, *tmp2;
-	char *s;
+	char *s, *p;
 	static char realhost[NICKLEN + USERLEN + HOSTLEN + 6];
 	static char virthost[NICKLEN + USERLEN + HOSTLEN + 6];
 	static char     nuip[NICKLEN + USERLEN + HOSTLEN + 6];
 	int dovirt = 0, mine = 0;
+	Extban *extban;
 
-	if (!IsPerson(cptr))
+	if (!IsPerson(sptr))
 		return NULL;
 
-	if (MyConnect(cptr)) { /* MyClient()... but we already know it's a person.. */
+	ban_realhost = realhost;
+	ban_ip = ban_virthost = NULL;
+
+	if (MyConnect(sptr)) {
 		mine = 1;
-		s = make_nick_user_host(cptr->name, cptr->user->username, Inet_ia2p(&cptr->ip));
+		s = make_nick_user_host(sptr->name, sptr->user->username, Inet_ia2p(&sptr->ip));
 		strlcpy(nuip, s, sizeof nuip);
+		ban_ip = nuip;
 	}
 
-	if (cptr->user->virthost)
-		if (strcmp(cptr->user->realhost, cptr->user->virthost))
+	if (sptr->user->virthost)
+		if (strcmp(sptr->user->realhost, sptr->user->virthost))
+		{
 			dovirt = 1;
+		}
 
-	s = make_nick_user_host(cptr->name, cptr->user->username,
-	    cptr->user->realhost);
+	s = make_nick_user_host(sptr->name, sptr->user->username,
+	    sptr->user->realhost);
 	strlcpy(realhost, s, sizeof realhost);
 
 	if (dovirt)
 	{
-		s = make_nick_user_host(cptr->name, cptr->user->username,
-		    cptr->user->virthost);
+		s = make_nick_user_host(sptr->name, sptr->user->username,
+		    sptr->user->virthost);
 		strlcpy(virthost, s, sizeof virthost);
+		ban_virthost = virthost;
 	}
 		/* We now check +b first, if a +b is found we then see if there is a +e.
  * If a +e was found we return NULL, if not, we return the ban.
  */
 	for (tmp = chptr->banlist; tmp; tmp = tmp->next)
-		if ((match(tmp->banstr, realhost) == 0) ||
-		    (dovirt && (match(tmp->banstr, virthost) == 0)) ||
-		    (mine && (match(tmp->banstr, nuip) == 0)))
+	{
+		if (*tmp->banstr == '~')
 		{
-			/* Ban found, now check for +e */
-			for (tmp2 = chptr->exlist; tmp2; tmp2 = tmp2->next)
-				if ((match(tmp2->banstr, realhost) == 0) ||
-				    (dovirt && (match(tmp2->banstr, virthost) == 0)) ||
-				    (mine && (match(tmp2->banstr, nuip) == 0)) )
-					return (NULL);
-
-			break;
+			extban = findmod_by_bantype(tmp->banstr[1]);
+			if (!extban)
+				continue;
+			if (!extban->is_banned(sptr, chptr, tmp->banstr, type))
+				continue;
+		} else {
+			if ((match(tmp->banstr, realhost) == 0) ||
+			    (dovirt && (match(tmp->banstr, virthost) == 0)) ||
+			    (mine && (match(tmp->banstr, nuip) == 0)))
+			{
+				/* matches.. do nothing */
+			} else
+				continue;
 		}
+
+		/* Ban found, now check for +e */
+		for (tmp2 = chptr->exlist; tmp2; tmp2 = tmp2->next)
+		{
+			if (*tmp2->banstr == '~')
+			{
+				extban = findmod_by_bantype(tmp2->banstr[1]);
+				if (!extban)
+					continue;
+				if (extban->is_banned(sptr, chptr, tmp2->banstr, type))
+					return NULL;
+			} else {
+				if ((match(tmp2->banstr, realhost) == 0) ||
+					(dovirt && (match(tmp2->banstr, virthost) == 0)) ||
+					(mine && (match(tmp2->banstr, nuip) == 0)) )
+					return NULL;
+			}
+		}
+		break; /* ban found and not on except */
+	}
 
 	return (tmp);
 }
@@ -794,7 +849,9 @@ int  is_chanprot(aClient *cptr, aChannel *chptr)
 #define CANNOT_SEND_NOCTCP 5
 #define CANNOT_SEND_MODREG 6
 #define CANNOT_SEND_SWEAR 7 /* This isn't actually used here */
-int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
+#define CANNOT_SEND_NOTICE 8 
+
+int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 {
 	Membership *lp;
 	int  member;
@@ -831,12 +888,12 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 		return (CANNOT_SEND_NOPRIVMSGS);
 
 	lp = find_membership_link(cptr->user->channel, chptr);
-	if ((chptr->mode.mode & MODE_MODREG) && !IsRegNick(cptr) && 
+	if ((chptr->mode.mode & MODE_MODREG) && !op_can_override(cptr) && !IsRegNick(cptr) && 
 	    (!lp
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 	    CHFL_HALFOP | CHFL_CHANPROT))))
 		return CANNOT_SEND_MODREG;
-	if (chptr->mode.mode & MODE_MODERATED && !IsOper(cptr) &&
+	if (chptr->mode.mode & MODE_MODERATED && !op_can_override(cptr) &&
 	    (!lp
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 	    CHFL_HALFOP | CHFL_CHANPROT))))
@@ -852,6 +909,13 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 		if (msgtext[0] == 1 && strncmp(&msgtext[1], "ACTION ", 7))
 			return (CANNOT_SEND_NOCTCP);
 
+#ifdef EXTCMODE
+	if (notice && (chptr->mode.extmode & EXTMODE_NONOTICE) &&
+	   (!lp || !(lp->flags & (CHFL_CHANOP | CHFL_CHANOWNER | CHFL_CHANPROT))))
+		return (CANNOT_SEND_NOTICE);
+#endif
+
+
 	/* Makes opers able to talk thru bans -Stskeeps suggested by The_Cat */
 	if (IsOper(cptr))
 		return 0;
@@ -859,7 +923,7 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 	if ((!lp
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 	    CHFL_HALFOP | CHFL_CHANPROT))) && MyClient(cptr)
-	    && is_banned(cptr, cptr, chptr))
+	    && is_banned(cptr, chptr, BANCHK_MSG))
 		return (CANNOT_SEND_BAN);
 
 	return 0;
@@ -1011,6 +1075,10 @@ void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr)
 	}
 #endif
 
+	/* Remove the trailing space from the parameters -- codemastr */
+	if (*pbuf)
+		pbuf[strlen(pbuf)-1]=0;
+
 	*mbuf++ = '\0';
 	return;
 }
@@ -1079,6 +1147,19 @@ static int send_mode_list(aClient *cptr, char *chname, TS creationtime, Member *
 	return sent;
 }
 
+/* A little kludge to prevent sending double spaces -- codemastr */
+static inline void send_channel_mode(aClient *cptr, char *from, aChannel *chptr)
+{
+	if (*parabuf)
+		sendto_one(cptr, ":%s %s %s %s %s %lu", from,
+			(IsToken(cptr) ? TOK_MODE : MSG_MODE), chptr->chname,
+			modebuf, parabuf, chptr->creationtime);
+	else
+		sendto_one(cptr, ":%s %s %s %s %lu", from,
+			(IsToken(cptr) ? TOK_MODE : MSG_MODE), chptr->chname,
+			modebuf, chptr->creationtime);
+}
+
 /*
  * send "cptr" a full list of the modes for channel chptr.
  */
@@ -1095,9 +1176,7 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 	sent = send_mode_list(cptr, chptr->chname, chptr->creationtime,
 	    chptr->members, CHFL_CHANOP, 'o');
 	if (!sent && chptr->creationtime)
-		sendto_one(cptr, ":%s %s %s %s %s %lu", me.name,
-		    (IsToken(cptr) ? TOK_MODE : MSG_MODE), chptr->chname,
-		    modebuf, parabuf, chptr->creationtime);
+		send_channel_mode(cptr, me.name, chptr);
 	else if (modebuf[1] || *parabuf)
 		sendmodeto_one(cptr, me.name,
 		    chptr->chname, modebuf, parabuf, chptr->creationtime);
@@ -1109,9 +1188,7 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 	sent = send_mode_list(cptr, chptr->chname, chptr->creationtime,
 	    chptr->members, CHFL_HALFOP, 'h');
 	if (!sent && chptr->creationtime)
-		sendto_one(cptr, ":%s %s %s %s %s %lu", me.name,
-		    (IsToken(cptr) ? TOK_MODE : MSG_MODE), chptr->chname,
-		    modebuf, parabuf, chptr->creationtime);
+		send_channel_mode(cptr, me.name, chptr);
 	else if (modebuf[1] || *parabuf)
 		sendmodeto_one(cptr, me.name,
 		    chptr->chname, modebuf, parabuf, chptr->creationtime);
@@ -1240,8 +1317,6 @@ CMD_FUNC(m_mode)
 		    me.name, parv[0], "MODE");
 		return 0;
 	}
-
-   /*	sptr->flags &= ~FLAGS_TS8; */
 
 	if (MyConnect(sptr))
 		clean_channelname(parv[1]);
@@ -1533,6 +1608,12 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
 			    "*** OperOverride -- %s (%s@%s) MODE %s %s %s",
 			    sptr->name, sptr->user->username, sptr->user->realhost,
 			    chptr->chname, modebuf, parabuf);
+
+			/* Logging Implementation added by XeRXeS */
+			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) MODE %s %s %s",
+				sptr->name, sptr->user->username, sptr->user->realhost,
+				chptr->chname, modebuf, parabuf);
+
 		sendts = 0;
 	}
 #endif
@@ -1568,7 +1649,8 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
 
 	if (MyConnect(sptr))
 		RunHook7(HOOKTYPE_LOCAL_CHANMODE, cptr, sptr, chptr, modebuf, parabuf, sendts, samode);
-
+	else
+		RunHook7(HOOKTYPE_REMOTE_CHANMODE, cptr, sptr, chptr, modebuf, parabuf, sendts, samode);
 }
 /* make_mode_str -- written by binary
  *	Reconstructs the mode string, to make it look clean.  mode_buf will
@@ -1784,7 +1866,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	int  notsecure;
 	chasing = 0;
 	if (is_half_op(cptr, chptr) && !is_chan_op(cptr, chptr) && !IsULine(cptr)
-	    && !IsOper(cptr))
+	    && !op_can_override(cptr))
 	{
 		/* Ugly halfop hack --sts 
 		   - this allows halfops to do +b +e +v and so on */
@@ -2052,6 +2134,16 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  /* we make the rules, we bend the rules */
 		  if (IsServer(cptr) || IsULine(cptr))
 			  goto breaktherules;
+		
+		  /* Services are special! */
+		  if (IsServices(member->cptr) && MyClient(cptr) && !IsNetAdmin(cptr))
+		  {
+			sendto_one(cptr,
+				":%s %s %s :*** You cannot %s %s in %s, it is a network service",
+				me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE",
+				cptr->name, xxx, member->cptr->name, chptr->chname);
+			break;
+		  }
 
 		  if (is_chanowner(member->cptr, chptr)
 		      && member->cptr != cptr
@@ -2195,11 +2287,29 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  break;
 		  }
 		  retval = 1;
-		  tmpstr = clean_ban_mask(param);
+		  tmpstr = clean_ban_mask(param, what);
 		  if (BadPtr(tmpstr))
-		     break; /* ignore ban, but eat param */
-		  if (MyClient(cptr) && (*tmpstr == '~') && (what == MODE_ADD))
-		     break; /* deny for now.. */
+		      break; /* ignore ban, but eat param */
+		  if ((tmpstr[0] == '~') && MyClient(cptr) && !bounce)
+		  {
+		      /* extban: check access if needed */
+		      Extban *p = findmod_by_bantype(tmpstr[1]);
+		      if (p && p->is_ok)
+		      {
+			if (!p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_BAN))
+		        {
+		            if (IsAnOper(cptr))
+		            {
+		                /* TODO: send operoverride notice */
+  		            } else {
+		                p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS_ERR, what, EXBTYPE_BAN);
+		                break;
+		            }
+		        }
+			if (!p->is_ok(cptr, chptr, tmpstr, EXBCHK_PARAM, what, EXBTYPE_BAN))
+		            break;
+		     }
+		  }
 		  /* For bounce, we don't really need to worry whether
 		   * or not it exists on our server.  We'll just always
 		   * bounce it. */
@@ -2218,11 +2328,29 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  break;
 		  }
 		  retval = 1;
-		  tmpstr = clean_ban_mask(param);
+		  tmpstr = clean_ban_mask(param, what);
 		  if (BadPtr(tmpstr))
 		     break; /* ignore except, but eat param */
-		  if (MyClient(cptr) && (*tmpstr == '~') && (what == MODE_ADD))
-		     break; /* deny for now.. */
+		  if ((tmpstr[0] == '~') && MyClient(cptr) && !bounce)
+		  {
+		      /* extban: check access if needed */
+		      Extban *p = findmod_by_bantype(tmpstr[1]);
+		      if (p && p->is_ok)
+       		      {
+			 if (!p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_EXCEPT))
+		         {
+		            if (IsAnOper(cptr))
+		            {
+		                /* TODO: send operoverride notice */
+		            } else {
+		                p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS_ERR, what, EXBTYPE_EXCEPT);
+		                break;
+		            }
+		        }
+			if (!p->is_ok(cptr, chptr, tmpstr, EXBCHK_PARAM, what, EXBTYPE_EXCEPT))
+		            break;
+		     }
+		  }
 		  /* For bounce, we don't really need to worry whether
 		   * or not it exists on our server.  We'll just always
 		   * bounce it. */
@@ -3008,6 +3136,12 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
                 sendto_snomask(SNO_EYES, "*** OperOverride -- %s (%s@%s) MODE %s %s %s",
                       cptr->name, cptr->user->username, cptr->user->realhost,
                       chptr->chname, modebuf, parabuf);
+
+		/* Logging Implementation added by XeRXeS */
+		ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) MODE %s %s %s",
+			cptr->name, cptr->user->username, cptr->user->realhost,
+			chptr->chname, modebuf, parabuf);		
+
                 htrig = 0;
         }
 #endif
@@ -3076,11 +3210,12 @@ char *trim_str(char *str, int len)
  *   on next clean_ban_mask or make_nick_user_host call.
  * - mask is fragged in some cases, this could be bad.
  */
-char *clean_ban_mask(char *mask)
+char *clean_ban_mask(char *mask, int what)
 {
 	char *cp;
 	char *user;
 	char *host;
+	Extban *p;
 
 	cp = index(mask, ' ');
 	if (cp)
@@ -3091,12 +3226,24 @@ char *clean_ban_mask(char *mask)
 	if (!*mask)
 		return NULL;
 
-	/* This was added right before beta19 release to ease the
-	 * beta19<->beta20 transfer when we implement extended bans.
-	 * This is only to accept such masks from remote servers!
-	 */
-	if (*mask == '~')
+	/* Extended ban? */
+	if ((*mask == '~') && mask[1] && (mask[2] == ':'))
+	{
+		p = findmod_by_bantype(mask[1]);
+		if (!p)
+			return NULL; /* extended bantype not supported */
+		if (p->conv_param)
+			return p->conv_param(mask);
+		/* else, do some basic sanity checks and cut it off at 80 bytes */
+		if ((cp[1] != ':') || (cp[2] == '\0'))
+		    return NULL; /* require a ":<char>" after extban type */
+		if (strlen(mask) > 80)
+			mask[80] = '\0';
 		return mask;
+	}
+
+	if ((*mask == '~') && !strchr(mask, '@'))
+		return NULL; /* not and extended ban and not a ~user@host ban either. */
 
 	if ((user = index((cp = mask), '!')))
 		*user++ = '\0';
@@ -3141,7 +3288,7 @@ Link *lp;
 		if (key && !strcasecmp(key, "override"))
 		{
 			sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-				":%s NOTICE ~&@%s :setting channel -%c due to OperOverride request from %s",
+				":%s NOTICE " CHANOPPFX "%s :setting channel -%c due to OperOverride request from %s",
 				me.name, chptr->chname, mchar, sptr->name);
 			sendto_serv_butone(&me, ":%s MODE %s -%c 0", me.name, chptr->chname, mchar);
 			sendto_channel_butserv(chptr, &me, ":%s MODE %s -%c", me.name, chptr->chname, mchar);
@@ -3179,7 +3326,7 @@ int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *lin
                 return (ERR_ADMONLY);
 
 	/* Admin, Coadmin, Netadmin, and SAdmin can still walk +b in +O */
-	banned = is_banned(cptr, sptr, chptr);
+	banned = is_banned(sptr, chptr, BANCHK_JOIN);
         if (IsOper(sptr) && !IsAdmin(sptr) && !IsCoAdmin(sptr) && !IsNetAdmin(sptr)
 	    && !IsSAdmin(sptr) && banned
             && (chptr->mode.mode & MODE_OPERONLY))
@@ -3486,6 +3633,133 @@ int r;
 	return r;
 }
 
+/* Routine that actually makes a user join the channel
+ * this does no actual checking (banned, etc.) it just adds the user
+ */
+void join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
+{
+	char *parv[] = { 0, 0 };
+	/*
+	   **  Complete user entry to the new channel (if any)
+	 */
+	add_user_to_channel(chptr, sptr, flags);
+	/*
+	   ** notify all other users on the new channel
+	 */
+	if (chptr->mode.mode & MODE_AUDITORIUM)
+	{
+		if (MyClient(sptr))
+			sendto_one(sptr, ":%s!%s@%s JOIN :%s",
+			    sptr->name, sptr->user->username,
+			    GetHost(sptr), chptr->chname);
+		sendto_chanops_butone(NULL, chptr, ":%s!%s@%s JOIN :%s",
+		    sptr->name, sptr->user->username,
+		    GetHost(sptr), chptr->chname);
+	}
+	else
+		sendto_channel_butserv(chptr, sptr,
+		    ":%s JOIN :%s", sptr->name, chptr->chname);
+	
+	sendto_serv_butone_token_opt(cptr, OPT_NOT_SJ3, sptr->name, MSG_JOIN,
+		    TOK_JOIN, "%s", chptr->chname);
+
+#ifdef JOIN_INSTEAD_OF_SJOIN_ON_REMOTEJOIN
+	if ((MyClient(sptr) && !(flags & CHFL_CHANOP)) || !MyClient(sptr))
+		sendto_serv_butone_token_opt(cptr, OPT_SJ3, sptr->name, MSG_JOIN,
+		    TOK_JOIN, "%s", chptr->chname);
+	if (flags & CHFL_CHANOP)
+	{
+#endif
+		/* I _know_ that the "@%s " look a bit wierd
+		   with the space and all .. but its to get around
+		   a SJOIN bug --stskeeps */
+		sendto_serv_butone_token_opt(cptr, OPT_SJ3|OPT_SJB64,
+			me.name, MSG_SJOIN, TOK_SJOIN,
+			"%B %s :%s%s ", chptr->creationtime, 
+			chptr->chname, flags & CHFL_CHANOP ? "@" : "", sptr->name);
+		sendto_serv_butone_token_opt(cptr, OPT_SJ3|OPT_NOT_SJB64,
+			me.name, MSG_SJOIN, TOK_SJOIN,
+			"%li %s :%s%s ", chptr->creationtime, 
+			chptr->chname, flags & CHFL_CHANOP ? "@" : "", sptr->name);
+#ifdef JOIN_INSTEAD_OF_SJOIN_ON_REMOTEJOIN
+	}
+#endif		
+
+	if (MyClient(sptr))
+	{
+		/*
+		   ** Make a (temporal) creationtime, if someone joins
+		   ** during a net.reconnect : between remote join and
+		   ** the mode with TS. --Run
+		 */
+		if (chptr->creationtime == 0)
+		{
+			chptr->creationtime = TStime();
+			sendto_serv_butone_token(cptr, me.name,
+			    MSG_MODE, TOK_MODE, "%s + %lu",
+			    chptr->chname, chptr->creationtime);
+		}
+		del_invite(sptr, chptr);
+		if (flags & CHFL_CHANOP)
+			sendto_serv_butone_token_opt(cptr, OPT_NOT_SJ3, 
+			    me.name,
+			    MSG_MODE, TOK_MODE, "%s +o %s %lu",
+			    chptr->chname, sptr->name,
+			    chptr->creationtime);
+		if (chptr->topic)
+		{
+			sendto_one(sptr, rpl_str(RPL_TOPIC),
+			    me.name, sptr->name, chptr->chname, chptr->topic);
+			sendto_one(sptr,
+			    rpl_str(RPL_TOPICWHOTIME), me.name,
+			    sptr->name, chptr->chname, chptr->topic_nick,
+			    chptr->topic_time);
+		}
+		if (chptr->users == 1 && MODES_ON_JOIN)
+		{
+			chptr->mode.mode = MODES_ON_JOIN;
+#ifdef NEWCHFLOODPROT
+			if (iConf.modes_on_join.floodprot.per)
+			{
+				chptr->mode.floodprot = MyMalloc(sizeof(ChanFloodProt));
+				memcpy(chptr->mode.floodprot, &iConf.modes_on_join.floodprot, sizeof(ChanFloodProt));
+			}
+#else
+			chptr->mode.kmode = iConf.modes_on_join.kmode;
+			chptr->mode.per = iConf.modes_on_join.per;
+			chptr->mode.msgs = iConf.modes_on_join.msgs;
+#endif
+			*modebuf = *parabuf = 0;
+			channel_modes(sptr, modebuf, parabuf, chptr);
+			/* This should probably be in the SJOIN stuff */
+			sendto_serv_butone_token(&me, me.name, MSG_MODE, TOK_MODE, 
+				"%s %s %s %lu", chptr->chname, modebuf, parabuf, 
+				chptr->creationtime);
+			sendto_one(sptr, ":%s MODE %s %s %s", me.name, chptr->chname, modebuf, parabuf);
+		}
+		parv[0] = sptr->name;
+		parv[1] = chptr->chname;
+		(void)m_names(cptr, sptr, 2, parv);
+		RunHook4(HOOKTYPE_LOCAL_JOIN, cptr, sptr,chptr,parv);
+	}
+
+#ifdef NEWCHFLOODPROT
+	/* I'll explain this only once:
+	 * 1. if channel is +f
+	 * 2. local client OR synced server
+	 * 3. then, increase floodcounter
+	 * 4. if we reached the limit AND only if source was a local client.. do the action (+i).
+	 * Nr 4 is done because otherwise you would have a noticeflood with 'joinflood detected'
+	 * from all servers.
+	 */
+	if (chptr->mode.floodprot && (MyClient(sptr) || sptr->srvptr->serv->flags.synced) && 
+	    !IsULine(sptr) && do_chanflood(chptr->mode.floodprot, FLD_JOIN) && MyClient(sptr))
+	{
+		do_chanflood_action(chptr, FLD_JOIN, "join");
+	}
+#endif
+}
+
 /** User request to join a channel.
  * This routine can be called from both m_join or via do_join->can_join->do_join
  * if the channel is 'linked' (chmode +L). We use a counter 'bouncedtimes' which
@@ -3659,10 +3933,6 @@ CMD_FUNC(do_join)
 
 		if (!MyConnect(sptr))
 			flags = CHFL_DEOPPED;
-#if 0
-		if (sptr->flags & FLAGS_TS8)
-			flags |= CHFL_SERVOPOK;
-#endif
 
 		i = -1;
 		if (!chptr ||
@@ -3694,126 +3964,8 @@ CMD_FUNC(do_join)
 			}
 		}
 
-		/*
-		   **  Complete user entry to the new channel (if any)
-		 */
-		add_user_to_channel(chptr, sptr, flags);
-		/*
-		   ** notify all other users on the new channel
-		 */
-		if (chptr->mode.mode & MODE_AUDITORIUM)
-		{
-			if (MyClient(sptr))
-				sendto_one(sptr, ":%s!%s@%s JOIN :%s",
-				    sptr->name, sptr->user->username,
-				    GetHost(sptr), chptr->chname);
-			sendto_chanops_butone(NULL, chptr, ":%s!%s@%s JOIN :%s",
-			    sptr->name, sptr->user->username,
-			    GetHost(sptr), chptr->chname);
-		}
-		else
-			sendto_channel_butserv(chptr, sptr,
-			    ":%s JOIN :%s", parv[0], chptr->chname);
-	
-		sendto_serv_butone_token_opt(cptr, OPT_NOT_SJ3, parv[0], MSG_JOIN,
-			    TOK_JOIN, "%s", chptr->chname);
-
-#ifdef JOIN_INSTEAD_OF_SJOIN_ON_REMOTEJOIN
-		if ((MyClient(sptr) && !(flags & CHFL_CHANOP)) || !MyClient(sptr))
-			sendto_serv_butone_token_opt(cptr, OPT_SJ3, parv[0], MSG_JOIN,
-			    TOK_JOIN, "%s", chptr->chname);
-		if (flags & CHFL_CHANOP)
-		{
-#endif
-			/* I _know_ that the "@%s " look a bit wierd
-			   with the space and all .. but its to get around
-			   a SJOIN bug --stskeeps */
-			sendto_serv_butone_token_opt(cptr, OPT_SJ3|OPT_SJB64,
-				me.name, MSG_SJOIN, TOK_SJOIN,
-				"%B %s :%s%s ", chptr->creationtime, 
-				chptr->chname, flags & CHFL_CHANOP ? "@" : "", sptr->name);
-			sendto_serv_butone_token_opt(cptr, OPT_SJ3|OPT_NOT_SJB64,
-				me.name, MSG_SJOIN, TOK_SJOIN,
-				"%li %s :%s%s ", chptr->creationtime, 
-				chptr->chname, flags & CHFL_CHANOP ? "@" : "", sptr->name);
-#ifdef JOIN_INSTEAD_OF_SJOIN_ON_REMOTEJOIN
-		}
-#endif		
-
-		if (MyClient(sptr))
-		{
-			/*
-			   ** Make a (temporal) creationtime, if someone joins
-			   ** during a net.reconnect : between remote join and
-			   ** the mode with TS. --Run
-			 */
-			if (chptr->creationtime == 0)
-			{
-				chptr->creationtime = TStime();
-				sendto_serv_butone_token(cptr, me.name,
-				    MSG_MODE, TOK_MODE, "%s + %lu",
-				    chptr->chname, chptr->creationtime);
-			}
-			del_invite(sptr, chptr);
-			if (flags & CHFL_CHANOP)
-				sendto_serv_butone_token_opt(cptr, OPT_NOT_SJ3, 
-				    me.name,
-				    MSG_MODE, TOK_MODE, "%s +o %s %lu",
-				    chptr->chname, parv[0],
-				    chptr->creationtime);
-			if (chptr->topic)
-			{
-				sendto_one(sptr, rpl_str(RPL_TOPIC),
-				    me.name, parv[0], name, chptr->topic);
-				sendto_one(sptr,
-				    rpl_str(RPL_TOPICWHOTIME), me.name,
-				    parv[0], name, chptr->topic_nick,
-				    chptr->topic_time);
-			}
-			if (chptr->users == 1 && MODES_ON_JOIN)
-			{
-				chptr->mode.mode = MODES_ON_JOIN;
-#ifdef NEWCHFLOODPROT
-				if (iConf.modes_on_join.floodprot.per)
-				{
-					chptr->mode.floodprot = MyMalloc(sizeof(ChanFloodProt));
-					memcpy(chptr->mode.floodprot, &iConf.modes_on_join.floodprot, sizeof(ChanFloodProt));
-				}
-#else
-				chptr->mode.kmode = iConf.modes_on_join.kmode;
-				chptr->mode.per = iConf.modes_on_join.per;
-				chptr->mode.msgs = iConf.modes_on_join.msgs;
-#endif
-				*modebuf = *parabuf = 0;
-				channel_modes(sptr, modebuf, parabuf, chptr);
-				/* This should probably be in the SJOIN stuff */
-				sendto_serv_butone_token(&me, me.name, MSG_MODE, TOK_MODE, 
-					"%s %s %s %lu", chptr->chname, modebuf, parabuf, 
-					chptr->creationtime);
-				sendto_one(sptr, ":%s MODE %s %s %s", me.name, chptr->chname, modebuf, parabuf);
-			}
-			parv[1] = chptr->chname;
-			(void)m_names(cptr, sptr, 2, parv);
-			RunHook4(HOOKTYPE_LOCAL_JOIN, cptr, sptr,chptr,parv);
-		}
-
-#ifdef NEWCHFLOODPROT
-		/* I'll explain this only once:
-		 * 1. if channel is +f
-		 * 2. local client OR synced server
-		 * 3. then, increase floodcounter
-		 * 4. if we reached the limit AND only if source was a local client.. do the action (+i).
-		 * Nr 4 is done because otherwise you would have a noticeflood with 'joinflood detected'
-		 * from all servers.
-		 */
-		if (chptr->mode.floodprot && (MyClient(sptr) || sptr->srvptr->serv->flags.synced) && 
-		    !IsULine(sptr) && do_chanflood(chptr->mode.floodprot, FLD_JOIN) && MyClient(sptr))
-		{
-			do_chanflood_action(chptr, FLD_JOIN, "join");
-		}
-#endif
+		join_channel(chptr, cptr, sptr, flags);
 	}
-
 	RET(0)
 #undef RET
 }
@@ -3830,10 +3982,10 @@ CMD_FUNC(m_part)
 	aChannel *chptr;
 	Membership *lp;
 	char *p = NULL, *name;
-	char *comment = (parc > 2 && parv[2]) ? parv[2] : NULL;
-
-  /*	sptr->flags &= ~FLAGS_TS8; */
-
+	char *commentx = (parc > 2 && parv[2]) ? parv[2] : NULL;
+	char *comment;
+	int n;
+	
 	if (parc < 2 || parv[1][0] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
@@ -3841,8 +3993,26 @@ CMD_FUNC(m_part)
 		return 0;
 	}
 
-	if (MyClient(sptr) && IsShunned(sptr))
-		comment = NULL;
+	if (MyClient(sptr))
+	{
+		if (IsShunned(sptr))
+			commentx = NULL;
+		if (STATIC_PART)
+		{
+			if (!strcasecmp(STATIC_PART, "yes") || !strcmp(STATIC_PART, "1"))
+				commentx = NULL;
+			else
+				commentx = STATIC_PART;
+		}
+		if (commentx)
+		{
+			n = dospamfilter(sptr, commentx, SPAMF_PART, parv[1]);
+			if (n == FLUSH_BUFFER)
+				return n;
+			if (n < 0)
+				commentx = NULL;
+		}
+	}
 
 	for (; (name = strtoken(&p, parv[1], ",")); parv[1] = NULL)
 	{
@@ -3853,12 +4023,15 @@ CMD_FUNC(m_part)
 			    me.name, parv[0], name);
 			continue;
 		}
-		if (parv[2] && !comment && !(MyClient(sptr) && IsShunned(sptr))) {
-			comment = parv[2];
-			parc = 3;
-		}
 		if (check_channelmask(sptr, cptr, name))
 			continue;
+
+		/* 'commentx' is the general part msg, but it can be changed
+		 * per-channel (eg some chans block badwords, strip colors, etc)
+		 * so we copy it to 'comment' and use that in this for loop :)
+		 */
+		comment = commentx;
+
 		if (!(lp = find_membership_link(sptr->user->channel, chptr)))
 		{
 			/* Normal to get get when our client did a kick
@@ -3871,16 +4044,6 @@ CMD_FUNC(m_part)
 				    parv[0], name);
 			continue;
 		}
-		/*
-		   **  Remove user from the old channel (if any)
-		 */
-		if (!comment)
-			sendto_serv_butone_token(cptr, parv[0],
-			    MSG_PART, TOK_PART, "%s", chptr->chname);
-		else
-			sendto_serv_butone_token(cptr, parv[0],
-			    MSG_PART, TOK_PART, "%s :%s", chptr->chname,
-			    comment);
 
 		if (!IsAnOper(sptr) && !is_chanownprotop(sptr, chptr)) {
 #ifdef STRIPBADWORDS
@@ -3889,36 +4052,25 @@ CMD_FUNC(m_part)
 			if ((chptr->mode.mode & MODE_NOCOLOR) && comment) {
 				if (strchr((char *)comment, 3) || strchr((char *)comment, 27)) {
 					comment = NULL;
-					parc = 2;
 				}
 			}
 			if ((chptr->mode.mode & MODE_MODERATED) && comment &&
 				 !has_voice(sptr, chptr) && !is_halfop(sptr, chptr))
 			{
 				comment = NULL;
-				parc = 2;
 			}
 			if ((chptr->mode.mode & MODE_STRIP) && comment) {
-				comment = (char *)StripColors(parv[2]);
-				parc = 3;
+				comment = (char *)StripColors(comment);
 			}
 #ifdef STRIPBADWORDS
  #ifdef STRIPBADWORDS_CHAN_ALWAYS
 			if (comment)
 			{
 				comment = (char *)stripbadwords_channel(comment, &blocked);
-				if (blocked)
-					parc = 2;
-				else
-					parc = 3;
 			}
  #else
 			if ((chptr->mode.mode & MODE_STRIPBADWORDS) && comment) {
 				comment = (char *)stripbadwords_channel(comment, &blocked);
-				if (blocked)
-					parc = 2;
-				else
-					parc = 3;
 			}
  #endif
 #endif
@@ -3926,12 +4078,26 @@ CMD_FUNC(m_part)
 		}
 		/* +M and not +r? */
 		if ((chptr->mode.mode & MODE_MODREG) && !IsRegNick(sptr) && !IsAnOper(sptr))
-		{
 			comment = NULL;
-			parc = 2;
-		}
+
 		if (MyConnect(sptr))
-			RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, comment);
+		{
+			Hook *tmphook;
+			for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_PART]; tmphook; tmphook = tmphook->next) {
+				comment = (*(tmphook->func.pcharfunc))(sptr, chptr, comment);
+				if (!comment)
+					break;
+			}
+		}
+
+		/* Send to other servers... */
+		if (!comment)
+			sendto_serv_butone_token(cptr, parv[0],
+			    MSG_PART, TOK_PART, "%s", chptr->chname);
+		else
+			sendto_serv_butone_token(cptr, parv[0],
+			    MSG_PART, TOK_PART, "%s :%s", chptr->chname,
+			    comment);
 
 		if (1)
 		{
@@ -3977,6 +4143,9 @@ CMD_FUNC(m_part)
 					    sptr, PartFmt2, parv[0],
 					    chptr->chname, comment);
 			}
+			if (MyClient(sptr))
+				RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, comment);
+
 			remove_user_from_channel(sptr, chptr);
 		}
 	}
@@ -3990,6 +4159,13 @@ CMD_FUNC(m_part)
 **	parv[2] = client to kick
 **	parv[3] = kick comment
 */
+
+#ifdef PREFIX_AQ
+#define CHFL_ISOP (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP)
+#else
+#define CHFL_ISOP (CHFL_CHANOP)
+#endif
+
 CMD_FUNC(m_kick)
 {
 	aClient *who;
@@ -3997,9 +4173,6 @@ CMD_FUNC(m_kick)
 	int  chasing = 0;
 	char *comment, *name, *p = NULL, *user, *p2 = NULL;
 	Membership *lp;
-
-
-   /*	sptr->flags &= ~FLAGS_TS8;  */
 
 	if (parc < 3 || *parv[1] == '\0')
 	{
@@ -4009,6 +4182,7 @@ CMD_FUNC(m_kick)
 	}
 
 	comment = (BadPtr(parv[3])) ? parv[0] : parv[3];
+
 	if (strlen(comment) > (size_t)TOPICLEN)
 		comment[TOPICLEN] = '\0';
 
@@ -4016,6 +4190,7 @@ CMD_FUNC(m_kick)
 
 	for (; (name = strtoken(&p, parv[1], ",")); parv[1] = NULL)
 	{
+		long sptr_flags = 0;
 		chptr = get_channel(sptr, name, !CREATE);
 		if (!chptr)
 		{
@@ -4025,12 +4200,11 @@ CMD_FUNC(m_kick)
 		}
 		if (check_channelmask(sptr, cptr, name))
 			continue;
-		if (!IsServer(cptr)
-#ifndef NO_OPEROVERRIDE
-		    && (!IsOper(sptr) || !(MyClient(sptr) && OPCanOverride(sptr)))
-#endif
-		    && !IsULine(sptr) && !is_chan_op(sptr, chptr)
-		    && !is_halfop(sptr, chptr))
+		/* Store "sptr" access flags */
+		if (IsPerson(sptr))
+			sptr_flags = get_access(sptr, chptr);
+		if (!IsServer(cptr) && !IsULine(sptr) && !op_can_override(sptr)
+		    && !(sptr_flags & CHFL_ISOP) && !(sptr_flags & CHFL_HALFOP))
 		{
 			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
 			    me.name, parv[0], chptr->chname);
@@ -4039,15 +4213,14 @@ CMD_FUNC(m_kick)
 
 		for (; (user = strtoken(&p2, parv[2], ",")); parv[2] = NULL)
 		{
+			long who_flags;
 			if (!(who = find_chasing(sptr, user, &chasing)))
 				continue;	/* No such user left! */
 			if (!who->user)
 				continue;
 			if ((lp = find_membership_link(who->user->channel, chptr)))
 			{
-				if (IsULine(sptr))
-					goto attack;
-				if (IsServer(sptr))
+				if (IsULine(sptr) || IsServer(sptr))
 					goto attack;
 
 				/* Note for coders regarding oper override:
@@ -4058,47 +4231,61 @@ CMD_FUNC(m_kick)
 				 */
 				if (chptr->mode.mode & MODE_NOKICKS)
 				{
-					if (MyClient(sptr) && !(IsOper(sptr) && OPCanOverride(sptr)))
+					if (!op_can_override(sptr))
 					{
 						sendto_one(sptr,
 						    ":%s %s %s :*** You cannot kick people on %s",
-						    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, chptr->chname);
+						    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, 
+						    chptr->chname);
 						goto deny;
 					}
-					if (IsOper(sptr))
-						sendto_snomask(SNO_EYES,
-							"*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
-							sptr->name, sptr->user->username, sptr->user->realhost,
-							chptr->chname, who->name, comment);
+					sendto_snomask(SNO_EYES,
+						"*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
+						sptr->name, sptr->user->username, sptr->user->realhost,
+						chptr->chname, who->name, comment);
 					goto attack; /* No reason to continue.. */
 				}
-
+				/* Store "who" access flags */
+				who_flags = get_access(who, chptr);
 				/* we are neither +o nor +h, OR..
 				 * we are +h but victim is +o, OR...
 				 * we are +h and victim is +h
 				 */
-				if (IsOper(sptr))
-					if ((!is_chan_op(sptr, chptr) && !is_halfop(sptr, chptr)) ||
-					    (is_halfop(sptr, chptr) && is_chan_op(who, chptr)) ||
-					    (is_halfop(sptr, chptr) && is_halfop(who, chptr)))
+				if (op_can_override(sptr))
+				{
+					if ((!(sptr_flags & CHFL_ISOP) && !(sptr_flags & CHFL_HALFOP)) ||
+					    ((sptr_flags & CHFL_HALFOP) && (who_flags & CHFL_ISOP)) ||
+					    ((sptr_flags & CHFL_HALFOP) && (who_flags & CHFL_HALFOP)))
 					{
 						sendto_snomask(SNO_EYES,
 						    "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
 						    sptr->name, sptr->user->username, sptr->user->realhost,
 						    chptr->chname, who->name, comment);
+
+						/* Logging Implementation added by XeRXeS */
+						ircd_log(LOG_OVERRIDE,"OVERRIDE %s (%s@%s) KICK %s %s (%s)",
+							sptr->name, sptr->user->username, sptr->user->realhost,
+							chptr->chname, who->name, comment);
+
 						goto attack;
 					}	/* is_chan_op */
-				
+
+				}				
 				/* victim is +a or +q, we are not +q */
-				if ((is_chanprot(who, chptr)
-				    || is_chanowner(who, chptr)
-				    || IsServices(who)) && !is_chanowner(sptr, chptr)) {
-					if (IsOper(sptr)) /* (and f*ck local ops) */
+				if ((who_flags & (CHFL_CHANOWNER|CHFL_CHANPROT) || IsServices(who))
+					 && !(sptr_flags & CHFL_CHANOWNER)) {
+					if (op_can_override(sptr)) /* (and f*ck local ops) */
 					{	/* IRCop kicking owner/prot */
 						sendto_snomask(SNO_EYES,
 						    "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
 						    sptr->name, sptr->user->username, sptr->user->realhost,
 						    chptr->chname, who->name, comment);
+
+						/* Logging Implementation added by XeRXeS */
+						ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) KICK %s %s (%s)",
+							sptr->name, sptr->user->username, sptr->user->realhost, 
+							chptr->chname, who->name, comment);
+
 						goto attack;
 					}
 					else if (!IsULine(sptr) && (who != sptr) && MyClient(sptr))
@@ -4113,10 +4300,8 @@ CMD_FUNC(m_kick)
 				}
 				
 				/* victim is +o, we are +h [operoverride is already taken care of 2 blocks above] */
-				if (is_chan_op(who, chptr)
-				    && is_halfop(sptr, chptr)
-				    && !is_chan_op(sptr, chptr)
-				    && !IsULine(sptr) && MyClient(sptr))
+				if ((who_flags & CHFL_ISOP) && (sptr_flags & CHFL_HALFOP)
+				    && !(sptr_flags & CHFL_ISOP) && !IsULine(sptr) && MyClient(sptr))
 				{
 					sendto_one(sptr,
 					    ":%s %s %s :*** You cannot kick channel operators on %s if you only are halfop",
@@ -4125,9 +4310,8 @@ CMD_FUNC(m_kick)
 				}
 
 				/* victim is +h, we are +h [operoverride is already taken care of 3 blocks above] */
-				if (is_halfop(who, chptr)
-				    && is_halfop(sptr,chptr)
-				    && !is_chan_op(sptr, chptr) && MyClient(sptr))
+				if ((who_flags & CHFL_HALFOP) && (sptr_flags & CHFL_HALFOP)
+				    && !(sptr_flags & CHFL_ISOP) && MyClient(sptr))
 				{
 					sendto_one(sptr,
 					    ":%s %s %s :*** You cannot kick channel halfops on %s if you only are halfop",
@@ -4218,7 +4402,6 @@ CMD_FUNC(m_kick)
 	return 0;
 }
 
-
 /*
 ** m_topic
 **	parv[0] = sender prefix
@@ -4286,7 +4469,7 @@ CMD_FUNC(m_topic)
 		{
 			if ((chptr->mode.mode & MODE_OPERONLY && !IsAnOper(sptr) && !IsMember(sptr, chptr)) ||
 			    (chptr->mode.mode & MODE_ADMONLY && !IsAdmin(sptr) && !IsMember(sptr, chptr)) ||
-			    (is_banned(sptr,sptr,chptr) && !IsAnOper(sptr) && !IsMember(sptr, chptr))) {
+			    (is_banned(sptr,chptr,BANCHK_JOIN) && !IsAnOper(sptr) && !IsMember(sptr, chptr))) {
 				sendto_one(sptr, err_str(ERR_NOTONCHANNEL), me.name, parv[0], name);
 				return 0;
 			}
@@ -4371,6 +4554,12 @@ CMD_FUNC(m_topic)
 						    "*** OperOverride -- %s (%s@%s) TOPIC %s \'%s\'",
 						    sptr->name, sptr->user->username, sptr->user->realhost,
 						    chptr->chname, topic);
+						
+						/* Logging implementation added by XeRXeS */
+						ircd_log(LOG_OVERRIDE, "OVERRIDE: %s (%s@%s) TOPIC %s \'%s\'",
+							sptr->name, sptr->user->username, sptr->user->realhost,
+							chptr->chname, topic);
+
 #endif
 				}
 			}				
@@ -4567,41 +4756,71 @@ CMD_FUNC(m_invite)
 
 
 	if (over && MyConnect(acptr)) {
-	        if (is_banned(acptr, sptr, chptr))
+	        if (is_banned(sptr, chptr, BANCHK_JOIN))
         	{
                         sendto_snomask(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +b).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
+			/* Logging implementation added by XeRXeS */
+			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Ban).",
+				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
 	        }
         	else if (chptr->mode.mode & MODE_INVITEONLY)
 	        {
                         sendto_snomask(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +i).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
+                        /* Logging implementation added by XeRXeS */
+			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Invite Only)",
+				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
 	        }
         	else if (chptr->mode.limit)
 	        {
                         sendto_snomask(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +l).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-	        }
+
+                        /* Logging implementation added by XeRXeS */
+			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Limit)",
+				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
+		}
         	else if (chptr->mode.mode & MODE_RGSTRONLY)
 	        {
                         sendto_snomask(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +R).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
+                        /* Logging implementation added by XeRXeS */
+			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Reg Nicks Only)",
+				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
 	        }
         	else if (*chptr->mode.key)
 	        {
                         sendto_snomask(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +k).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
+                        /* Logging implementation added by XeRXeS */
+			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Key)",
+				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
 	        }
         	else if (chptr->mode.mode & MODE_ONLYSECURE)
 	        {
                         sendto_snomask(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +z).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
+                        /* Logging implementation added by XeRXeS */
+			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Secure Mode)",
+				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
 				sendto_one(sptr, ":%s NOTICE %s :The channel is +z and you are trying to OperOverride, "
 					"you'll have to override explicitly after this invite with the command '/join %s override'"
 					" (use override as a key) this will set the channel -z and then join you",
@@ -4624,11 +4843,11 @@ CMD_FUNC(m_invite)
 		    )) {
 		        if (over == 1)
                 		sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-		                  ":%s NOTICE ~&@%s :OperOverride -- %s invited him/herself into the channel.",
+		                  ":%s NOTICE " CHANOPPFX "%s :OperOverride -- %s invited him/herself into the channel.",
                 		  me.name, chptr->chname, sptr->name);
 		        else if (over == 0)
 		                sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-                		  ":%s NOTICE ~&@%s :%s invited %s into the channel.",
+                		  ":%s NOTICE " CHANOPPFX "%s :%s invited %s into the channel.",
 		                  me.name, chptr->chname, sptr->name, acptr->name);
 
 		        add_invite(acptr, chptr);
@@ -5283,7 +5502,8 @@ void send_user_joins(aClient *cptr, aClient *user)
 CMD_FUNC(m_knock)
 {
 	aChannel *chptr;
-
+	char buf[1024], chbuf[CHANNELLEN + 8];	
+	
 	if (IsServer(sptr))
 		return 0;
 
@@ -5340,14 +5560,14 @@ CMD_FUNC(m_knock)
 		return 0;
 	}
 
-	if (is_banned(cptr, sptr, chptr))
+	if (is_banned(sptr, chptr, BANCHK_JOIN))
 	{
 		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
 		    me.name, sptr->name, chptr->chname, "You're banned!");
 		return 0;
 	}
 
-	if (chptr->mode.mode & MODE_NOINVITE)
+	if ((chptr->mode.mode & MODE_NOINVITE) && !is_chan_op(sptr, chptr))
 	{
 		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
 		    me.name,
@@ -5357,11 +5577,12 @@ CMD_FUNC(m_knock)
 		return 0;
 	}
 
-	sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-	    ":%s NOTICE ~&@%s :[Knock] by %s!%s@%s (%s) ",
-	    me.name, chptr->chname, sptr->name,
-	    sptr->user->username, GetHost(sptr), 
-	    parv[2] ? parv[2] : "no reason specified");
+	ircsprintf(chbuf, "%s%s", CHANOPPFX, chptr->chname);
+	ircsprintf(buf, "[Knock] by %s!%s@%s (%s)",
+		sptr->name, sptr->user->username, GetHost(sptr),
+		parv[2] ? parv[2] : "no reason specified");
+	sendto_channelprefix_butone_tok(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+		MSG_NOTICE, TOK_NOTICE, chbuf, buf, 0);
 
 	sendto_one(sptr, ":%s %s %s :Knocked on %s", me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE",
 	    sptr->name, chptr->chname);
@@ -6869,7 +7090,7 @@ char m;
 		char comment[1024], target[CHANNELLEN + 8];
 		ircsprintf(comment, "*** Channel %sflood detected (limit is %d per %d seconds), setting mode +%c",
 			text, chptr->mode.floodprot->l[what], chptr->mode.floodprot->per, m);
-		ircsprintf(target, "~&@%%%s", chptr->chname);
+		ircsprintf(target, CHANOPPFX "%%%s", chptr->chname);
 		sendto_channelprefix_butone_tok(NULL, &me, chptr,
 			PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
 			MSG_NOTICE, TOK_NOTICE, target, comment, 0);

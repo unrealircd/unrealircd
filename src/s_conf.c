@@ -18,6 +18,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 #include "struct.h"
+#include "url.h"
 #include "common.h"
 #include "sys.h"
 #include "numeric.h"
@@ -105,6 +106,7 @@ static int	_conf_log		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_alias		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_help		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_offchans		(ConfigFile *conf, ConfigEntry *ce);
+static int	_conf_spamfilter	(ConfigFile *conf, ConfigEntry *ce);
 
 /* 
  * Validation commands 
@@ -139,6 +141,7 @@ static int	_test_log		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_alias		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_help		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_offchans		(ConfigFile *conf, ConfigEntry *ce);
+static int	_test_spamfilter	(ConfigFile *conf, ConfigEntry *ce);
  
 /* This MUST be alphabetized */
 static ConfigCommand _ConfigCommands[] = {
@@ -163,6 +166,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "official-channels", 		_conf_offchans,		_test_offchans	},
 	{ "oper", 		_conf_oper,		_test_oper	},
 	{ "set",		_conf_set,		_test_set	},
+	{ "spamfilter",	_conf_spamfilter,	_test_spamfilter	},
 	{ "tld",		_conf_tld,		_test_tld	},
 	{ "ulines",		_conf_ulines,		_test_ulines	},
 	{ "vhost", 		_conf_vhost,		_test_vhost	},
@@ -196,12 +200,15 @@ static int _OldOperFlags[] = {
 	OFLAG_TKL, 't',
 	OFLAG_GZL, 'Z',
 	OFLAG_OVERRIDE, 'v',
+	OFLAG_UMODEQ, 'q',
+	OFLAG_DCCDENY, 'd',
 	0, 0
 };
 
 /* This MUST be alphabetized */
 static OperFlag _OperFlags[] = {
 	{ OFLAG_ADMIN_,		"admin"},
+	{ OFLAG_DCCDENY,	"can_dccdeny"},
 	{ OFLAG_DIE,		"can_die" },
 	{ OFLAG_TKL,		"can_gkline"},
 	{ OFLAG_GKILL,		"can_globalkill" },
@@ -216,6 +223,7 @@ static OperFlag _OperFlags[] = {
 	{ OFLAG_OVERRIDE,	"can_override" },
 	{ OFLAG_REHASH,		"can_rehash" },
 	{ OFLAG_RESTART,        "can_restart" },
+	{ OFLAG_UMODEQ,		"can_setq" },
 	{ OFLAG_UNKLINE,	"can_unkline" },
 	{ OFLAG_WALLOP,         "can_wallops" },
 	{ OFLAG_ZLINE,		"can_zline"},
@@ -253,11 +261,14 @@ static OperFlag _LinkFlags[] = {
 
 /* This MUST be alphabetized */
 static OperFlag _LogFlags[] = {
+	{ LOG_CHGCMDS, "chg-commands" },
 	{ LOG_CLIENT, "connects" },
 	{ LOG_ERROR, "errors" },
 	{ LOG_KILL, "kills" },
 	{ LOG_KLINE, "kline" },
 	{ LOG_OPER, "oper" },
+	{ LOG_OVERRIDE, "oper-override" },
+	{ LOG_SACMDS, "sadmin-commands" },
 	{ LOG_SERVER, "server-connects" },
 	{ LOG_TKL, "tkl" },
 };
@@ -330,6 +341,12 @@ extern char modebuf[MAXMODEPARAMS*2+1], parabuf[504];
 extern void add_entropy_configfile(struct stat st, char *buf);
 extern void unload_all_unused_snomasks();
 extern void unload_all_unused_umodes();
+
+/* Stuff we only need here for spamfilter, so not in h.h... */
+extern aTKline *tklines[TKLISTLEN];
+extern inline int tkl_hash(char c);
+extern aTKline *tkl_del_line(aTKline *tkl);
+
 /*
  * Config parser (IRCd)
 */
@@ -377,6 +394,17 @@ ConfigFile		*conf = NULL;
 
 int			config_error_flag = 0;
 int			config_verbose = 0;
+
+void add_include(char *);
+#ifdef USE_LIBCURL
+void add_remote_include(char *, char *);
+int remote_include(ConfigEntry *ce);
+#endif
+void unload_notloaded_includes(void);
+void load_includes(void);
+void unload_loaded_includes(void);
+int rehash_internal(aClient *cptr, aClient *sptr, int sig);
+
 
 /* Pick out the ip address and the port number from a string.
  * The string syntax is:  ip:port.  ip must be enclosed in brackets ([]) if its an ipv6
@@ -1318,6 +1346,7 @@ void	free_iConf(aConfiguration *i)
 	ircfree(i->network.x_prefix_quit);
 	ircfree(i->network.x_helpchan);
 	ircfree(i->network.x_stats_server);
+	ircfree(i->spamfilter_ban_reason);
 }
 
 int	config_test();
@@ -1338,6 +1367,8 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->modef_max_unsettime = 60; /* 1 hour seems enough :p */
 #endif
 	i->ban_version_tkl_time = 86400; /* 1d */
+	i->spamfilter_ban_time = 86400; /* 1d */
+	i->spamfilter_ban_reason = strdup("Spam/advertising");
 }
 
 /* needed for set::options::allow-part-if-shunned,
@@ -1358,8 +1389,6 @@ aCommand *cmptr = find_Command_simple("PART");
 
 int	init_conf(char *rootconf, int rehash)
 {
-	ConfigItem_include *inc, *next;
-
 	config_status("Loading IRCd configuration ..");
 	if (conf)
 	{
@@ -1381,15 +1410,7 @@ int	init_conf(char *rootconf, int rehash)
 #ifndef STATIC_LINKING
 			Unload_all_testing_modules();
 #endif
-			for (inc = conf_include; inc; inc = next)
-			{
-				next = (ConfigItem_include *)inc->next;
-				if (inc->flag.type != INCLUDE_NOTLOADED)
-					continue;
-				ircfree(inc->file);
-				DelListItem(inc, conf_include);
-				MyFree(inc);
-			}
+			unload_notloaded_includes();
 			config_free(conf);
 			conf = NULL;
 			free_iConf(&tempiConf);
@@ -1398,25 +1419,28 @@ int	init_conf(char *rootconf, int rehash)
 		
 		if (rehash)
 		{
+			Hook *h;
 			config_rehash();
 #ifndef STATIC_LINKING
 			Unload_all_loaded_modules();
+
+			/* Notify permanent modules of the rehash */
+			for (h = Hooks[HOOKTYPE_REHASH]; h; h = h->next)
+		        {
+				if (!h->owner)
+					continue;
+				if (!(h->owner->options & MOD_OPT_PERM))
+					continue;
+				(*(h->func.intfunc))();
+			}
 #else
 			RunHook0(HOOKTYPE_REHASH);
 #endif
-			for (inc = conf_include; inc; inc = next)
-			{
-				next = (ConfigItem_include *)inc->next;
-				if (inc->flag.type == INCLUDE_NOTLOADED)
-					continue;
-				ircfree(inc->file);
-				DelListItem(inc, conf_include);
-				MyFree(inc);
-			}
-			
+			unload_loaded_includes();
 		}
 #ifndef STATIC_LINKING
 		Init_all_testing_modules();
+		load_includes();
 #else
 		if (!rehash) {
 			ModuleInfo ModCoreInfo;
@@ -1426,11 +1450,6 @@ int	init_conf(char *rootconf, int rehash)
 			l_commands_Init(&ModCoreInfo);
 		}
 #endif
-		for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
-		{
-			if (inc->flag.type == INCLUDE_NOTLOADED)
-				inc->flag.type = 0;
-		}
 		if (config_run() < 0)
 		{
 			config_error("Bad case of config errors. Server will now die. This really shouldn't happen");
@@ -1444,15 +1463,6 @@ int	init_conf(char *rootconf, int rehash)
 	}
 	else	
 	{
-		for (inc = conf_include; inc; inc = next)
-		{
-			next = (ConfigItem_include *)inc->next;
-			if (inc->flag.type != INCLUDE_NOTLOADED)
-				continue;
-			ircfree(inc->file);
-			DelListItem(inc, conf_include);
-			MyFree(inc);
-		}
 		config_error("IRCd configuration failed to load");
 		config_free(conf);
 		conf = NULL;
@@ -1480,7 +1490,6 @@ int	load_conf(char *filename)
 	ConfigFile 	*cfptr, *cfptr2, **cfptr3;
 	ConfigEntry 	*ce;
 	int		ret;
-	ConfigItem_include *includes;
 
 	if (config_verbose > 0)
 		config_status("Loading config file %s ..", filename);
@@ -1509,19 +1518,6 @@ int	load_conf(char *filename)
 				 if (ret < 0) 
 					 	return ret;
 			}
-		if (stricmp(filename, CPATH)) {
-			for (includes = conf_include; includes; includes = (ConfigItem_include *)includes->next) {
-				if (includes->flag.type == INCLUDE_NOTLOADED &&
-				    !stricmp(includes->file, filename)) 
-					break;
-			}
-			if (!includes) {
-				includes = MyMalloc(sizeof(ConfigItem_include));
-				includes->file = strdup(filename);
-				includes->flag.type = INCLUDE_NOTLOADED;
-				AddListItem(includes, conf_include);
-			}
-		}
 		return 1;
 	}
 	else
@@ -1556,6 +1552,7 @@ void	config_rehash()
 	ConfigItem_offchans		*of_ptr;
 	OperStat 			*os_ptr;
 	ListStruct 	*next, *next2;
+	aTKline *tk, *tk_next;
 
 	USE_BAN_VERSION = 0;
 	/* clean out stuff that we don't use */	
@@ -1738,6 +1735,15 @@ void	config_rehash()
 		MyFree(badword_ptr);
 	}
 #endif
+	/* Clean up local spamfilter entries... */
+	for (tk = tklines[tkl_hash('f')]; tk; tk = tk_next)
+	{
+		if (tk->type == TKL_SPAMF)
+			tk_next = tkl_del_line(tk);
+		else /* global spamfilter.. don't touch! */
+			tk_next = tk->next;
+	}
+
 	for (deny_dcc_ptr = conf_deny_dcc; deny_dcc_ptr; deny_dcc_ptr = (ConfigItem_deny_dcc *)next)
 	{
 		next = (ListStruct *)deny_dcc_ptr->next;
@@ -2016,7 +2022,10 @@ int	config_test()
 				for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
 				{
 					int value, errs = 0;
-					if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
+					if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+					    && !(h->owner->options & MOD_OPT_PERM))
+
+
 						continue;
 					value = (*(h->func.intfunc))(cfptr,ce,CONFIG_MAIN,&errs);
 					if (value == 2)
@@ -2480,6 +2489,10 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_varlinenum);
 		return -1;
 	}
+#ifdef USE_LIBCURL
+	if (url_is_valid(ce->ce_vardata))
+		return remote_include(ce);
+#endif
 #if !defined(_WIN32) && !defined(_AMIGA) && DEFAULT_PERMISSIONS != 0
 	chmod(ce->ce_vardata, DEFAULT_PERMISSIONS);
 #endif
@@ -2503,6 +2516,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 			globfree(&files);
 			return ret;
 		}
+		add_include(files.gl_pathv[i]);
 	}
 	globfree(&files);
 #elif defined(_WIN32)
@@ -2526,15 +2540,23 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 		strcpy(path,cPath);
 		strcat(path,FindData.cFileName);
 		ret = load_conf(path);
+		if (ret >= 0)
+			add_include(path);
 		free(path);
+
 	}
 	else
+	{
 		ret = load_conf(FindData.cFileName);
+		if (ret >= 0)
+			add_include(FindData.cFileName);
+	}
 	if (ret < 0)
 	{
 		FindClose(hFind);
 		return ret;
 	}
+
 	ret = 0;
 	while (FindNextFile(hFind, &FindData) != 0) {
 		if (cPath) {
@@ -2542,18 +2564,32 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 			strcpy(path,cPath);
 			strcat(path,FindData.cFileName);
 			ret = load_conf(path);
-			free(path);
-			if (ret < 0)
+			if (ret >= 0)
+			{
+				add_include(path);
+				free(path);
+			}
+			else
+			{
+				free(path);
 				break;
+			}
 		}
 		else
+		{
 			ret = load_conf(FindData.cFileName);
+			if (ret >= 0)
+				add_include(FindData.cFileName);
+		}
 	}
 	FindClose(hFind);
 	if (ret < 0)
 		return ret;
 #else
-	return (load_conf(ce->ce_vardata));
+	ret = load_conf(ce->ce_vardata);
+	if (ret >= 0)
+		add_include(ce->ce_vardata);
+	return ret;
 #endif
 	return 1;
 }
@@ -3070,7 +3106,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 		if (cep->ce_vardata)
 		{
 			l = atol(cep->ce_vardata);
-			if (l < 1)
+			if ((l < 1) || (l > 1000000))
 			{
 				config_error("%s:%i: class::pingfreq with illegal value",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
@@ -3089,7 +3125,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 		if (cep->ce_vardata)
 		{
 			l = atol(cep->ce_vardata);
-			if (!l)
+			if ((l < 1) || (l > 1000000))
 			{
 				config_error("%s:%i: class::maxclients with illegal value",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
@@ -3108,7 +3144,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 		if (cep->ce_vardata)
 		{	
 			l = atol(cep->ce_vardata);
-			if (!l)
+			if ((l < 0) || (l > 2000000000))
 			{
 				config_error("%s:%i: class::sendq with illegal value",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
@@ -3127,9 +3163,9 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 		if (cep->ce_vardata)
 		{
 			l = atol(cep->ce_vardata);
-			if (l < 10)
+			if ((l < 10) || (l > 604800))
 			{
-				config_error("%s:%i: class::connfreq with illegal value (<10)",
+				config_error("%s:%i: class::connfreq with illegal value (must be >10 and <7d)",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 			}
@@ -3140,9 +3176,9 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 		if (cep->ce_vardata)
 		{	
 			l = atol(cep->ce_vardata);
-			if (l < 512)
+			if ((l < 512) || (l > 32768))
 			{
-				config_error("%s:%i: class::recvq with illegal value (<512)",
+				config_error("%s:%i: class::recvq with illegal value (must be >512 and <32k)",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 			}
@@ -3864,9 +3900,10 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (cep->ce_vardata)
 		{
-			if (atoi(cep->ce_vardata) <= 0)
+			int v = atoi(cep->ce_vardata);
+			if ((v <= 0) || (v > 65535))
 			{
-				config_error("%s:%i: allow::maxperip with illegal value (must be >0)",
+				config_error("%s:%i: allow::maxperip with illegal value (must be 1-65535)",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 			}
@@ -4559,35 +4596,14 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 		}
 		else 
 		{
-			
-			int errorcode, errorbufsize, regex=0;
-			char *errorbuf, *tmp;
-			for (tmp = word->ce_vardata; *tmp; tmp++) {
-				if ((int)*tmp < 65 || (int)*tmp > 123) {
-					if ((word->ce_vardata == tmp) && (*tmp == '*'))
-						continue;
-					if ((*(tmp + 1) == '\0') && (*tmp == '*'))
-						continue;
-					regex = 1;
-					break;
-				}
-			}
-			if (regex)
+			char *errbuf = unreal_checkregex(word->ce_vardata,1);
+			if (errbuf)
 			{
-				errorcode = regcomp(&expr, word->ce_vardata, REG_ICASE|REG_EXTENDED);
-				if (errorcode > 0)
-				{
-					errorbufsize = regerror(errorcode, &expr, NULL, 0)+1;
-					errorbuf = MyMalloc(errorbufsize);
-					regerror(errorcode, &expr, errorbuf, errorbufsize);
-					config_error("%s:%i: badword::%s contains an invalid regex: %s",
-						word->ce_fileptr->cf_filename,
-						word->ce_varlinenum,
-						word->ce_varname, errorbuf);
-					errors++;
-					free(errorbuf);
-				}
-				regfree(&expr);
+				config_error("%s:%i: badword::%s contains an invalid regex: %s",
+					word->ce_fileptr->cf_filename,
+					word->ce_varlinenum,
+					word->ce_varname, errbuf);
+				errors++;
 			}
 		}
 
@@ -4648,6 +4664,127 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 	return errors; 
 }
 #endif
+
+int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	aTKline *nl = MyMallocEx(sizeof(aTKline));
+	int target = 0, action = 0;
+	char *word;
+	
+	cep = config_find_entry(ce->ce_entries, "regex");
+	word = cep->ce_vardata;
+		
+	nl->type = TKL_SPAMF;
+	nl->expire_at = 0;
+	nl->set_at = TStime();
+	nl->reason = strdup(word);
+
+	cep = config_find_entry(ce->ce_entries, "target");
+	for (cep = cep->ce_entries; cep; cep = cep->ce_next)
+		target |= spamfilter_getconftargets(cep->ce_varname);
+	strncpyzt(nl->usermask, spamfilter_target_inttostring(target), sizeof(nl->usermask));
+	nl->subtype = target;
+
+	cep = config_find_entry(ce->ce_entries, "action");
+	action = banact_stringtoval(cep->ce_vardata);
+	nl->hostmask = strdup(cep->ce_vardata);
+	nl->setby = strdup(BadPtr(me.name) ? "~server~" : me.name); /* Hmm! */
+	
+	nl->spamf = unreal_buildspamfilter(word);
+	nl->spamf->action = action;
+	
+	AddListItem(nl, tklines[tkl_hash('f')]);
+	return 1;
+}
+
+int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	int errors = 0;
+	int got = 0;
+	
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+		{
+			config_error("%s:%i: blank spamfiler item",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++; continue;
+		}
+		if (!strcmp(cep->ce_varname, "target"))
+			continue;
+		if (!cep->ce_vardata)
+		{
+			config_error("%s:%i: spamfilter::%s without value",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+			errors++; continue;
+		}
+		if (!strcmp(cep->ce_varname, "regex") || !strcmp(cep->ce_varname, "action"))
+			continue;
+		
+		config_error("%s:%i: unknown directive spamfilter::%s",
+			cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+		errors++;
+	}
+
+	if (!(cep = config_find_entry(ce->ce_entries, "regex")))
+	{
+		config_error("%s:%i: spamfilter::regex missing",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	} else if (cep->ce_vardata) {
+		/* Check if it's a valid one */
+		char *errbuf = unreal_checkregex(cep->ce_vardata,0);
+		if (errbuf)
+		{
+			config_error("%s:%i: spamfilter::regex contains an invalid regex: %s",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum,
+				errbuf);
+			errors++;
+		}
+	}
+
+	if (!(cep = config_find_entry(ce->ce_entries, "target")))
+	{
+		config_error("%s:%i: spamfilter::target missing",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	} else if (cep->ce_vardata) {
+		for (cep = cep->ce_entries; cep; cep = cep->ce_next)
+		{
+			if (!cep->ce_varname)
+			{
+				config_error("%s:%i: blank spamfiler::target item",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++; continue; /* I don't understand how this would be possible, but.. */
+			}
+			if (!spamfilter_getconftargets(cep->ce_varname))
+			{
+				config_error("%s:%i: unknown spamfiler target type '%s'",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+				errors++;
+			}
+		}
+	}
+
+	if (!(cep = config_find_entry(ce->ce_entries, "action")))
+	{
+		config_error("%s:%i: spamfilter::action missing",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	} else if (cep->ce_vardata) {
+		if (!banact_stringtoval(cep->ce_vardata))
+		{
+			config_error("%s:%i: spamfilter::action has unknown action type '%s'",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, cep->ce_vardata);
+			errors++;
+		}
+	}
+
+	return errors;
+}
 
 int     _conf_help(ConfigFile *conf, ConfigEntry *ce)
 {
@@ -5085,23 +5222,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 	ca->reason = strdup(cep->ce_vardata);
 	cep = config_find_entry(ce->ce_entries, "action");
 	if (cep)
-	{
-		if (!strcmp(cep->ce_vardata, "kill"))
-			ca->action = BAN_ACT_KILL;
-		else if (!strcmp(cep->ce_vardata, "tempshun"))
-			ca->action = BAN_ACT_TEMPSHUN;
-		else if (!strcmp(cep->ce_vardata, "shun"))
-			ca->action = BAN_ACT_SHUN;
-		else if (!strcmp(cep->ce_vardata, "kline"))
-			ca->action = BAN_ACT_KLINE;
-		else if (!strcmp(cep->ce_vardata, "zline"))
-			ca->action = BAN_ACT_ZLINE;
-		else if (!strcmp(cep->ce_vardata, "gline"))
-			ca->action = BAN_ACT_GLINE;
-		else if (!strcmp(cep->ce_vardata, "gzline"))
-			ca->action = BAN_ACT_GZLINE;
-	}
-
+		ca ->action = banact_stringtoval(cep->ce_vardata);
 	AddListItem(ca, conf_ban);
 	return 0;
 }
@@ -5187,10 +5308,7 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 	cep = config_find_entry(ce->ce_entries, "action");
 	if (cep)
 	{
-		if (strcmp(cep->ce_vardata, "kill")  && strcmp(cep->ce_vardata, "shun") &&
-		    strcmp(cep->ce_vardata, "kline") && strcmp(cep->ce_vardata, "zline") &&
-		    strcmp(cep->ce_vardata, "gline") && strcmp(cep->ce_vardata, "gzline") &&
-		    strcmp(cep->ce_vardata, "tempshun"))
+		if (!banact_stringtoval(cep->ce_vardata))
 		{
 			config_error("%s:%i: ban %s::action has unknown action type '%s'",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata, cep->ce_vardata);
@@ -5247,8 +5365,14 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "static-quit")) {
 			ircstrdup(tempiConf.static_quit, cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "static-part")) {
+			ircstrdup(tempiConf.static_part, cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "who-limit")) {
 			tempiConf.who_limit = atol(cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "silence-limit")) {
+			tempiConf.silence_limit = atol(cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "auto-join")) {
 			ircstrdup(tempiConf.auto_join_chans, cep->ce_vardata);
@@ -5478,6 +5602,16 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.ident_read_timeout = config_checkval(cepp->ce_vardata,CFG_TIME);
 			}
 		}
+		else if (!strcmp(cep->ce_varname, "spamfilter"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "ban-time"))
+					tempiConf.spamfilter_ban_time = config_checkval(cepp->ce_vardata,CFG_TIME);
+				if (!strcmp(cepp->ce_varname, "ban-reason"))
+					ircstrdup(tempiConf.spamfilter_ban_reason, cepp->ce_vardata);
+			}
+		}
 		else if (!strcmp(cep->ce_varname, "default-bantime"))
 		{
 			tempiConf.default_bantime = config_checkval(cep->ce_vardata,CFG_TIME);
@@ -5665,7 +5799,13 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "static-quit")) {
 			CheckNull(cep);
 		}
+		else if (!strcmp(cep->ce_varname, "static-part")) {
+			CheckNull(cep);
+		}
 		else if (!strcmp(cep->ce_varname, "who-limit")) {
+			CheckNull(cep);
+		}
+		else if (!strcmp(cep->ce_varname, "silence-limit")) {
 			CheckNull(cep);
 		}
 		else if (!strcmp(cep->ce_varname, "auto-join")) {
@@ -6042,6 +6182,32 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 		}
+		else if (!strcmp(cep->ce_varname, "spamfilter")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				CheckNull(cepp);
+				if (!strcmp(cepp->ce_varname, "ban-time"))
+				{
+					long x;
+					x = config_checkval(cepp->ce_vardata,CFG_TIME);
+					if ((x < 0) > (x > 2000000000))
+					{
+						config_error("%s:%i: set::spamfilter:ban-time: value '%ld' out of range",
+							cep->ce_fileptr->cf_filename, cep->ce_varlinenum, x);
+						errors++;
+						continue;
+					}
+				} else
+				if (!strcmp(cepp->ce_varname, "ban-reason"))
+				{ }
+				else {
+					config_error("%s:%i: unknown directive set::spamfilter::%s",
+						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname);
+					errors++;
+					continue;
+				}
+			}
+		}
 		else if (!strcmp(cep->ce_varname, "default-bantime") ||
 		         !strcmp(cep->ce_varname, "ban-version-tkl-time")) {
 			long x;
@@ -6187,6 +6353,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 			config_status("%s:%i: loadmodule %s: failed to load: %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				files.gl_pathv[i], ret);
+			return -1;
 		}
 	}
 	globfree(&files);
@@ -6200,15 +6367,19 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 		return -1;
 	}
 	if ((ret = Module_Create(FindData.cFileName))) {
-			config_status("%s:%i: loadmodule %s: failed to load: %s",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				FindData.cFileName, ret);
+		config_status("%s:%i: loadmodule %s: failed to load: %s",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			FindData.cFileName, ret);
+		return -1;
 	}
 	while (FindNextFile(hFind, &FindData) != 0) {
-		if (((ret = Module_Create(FindData.cFileName)))) 
+		if ((ret = Module_Create(FindData.cFileName)))
+		{
 			config_status("%s:%i: loadmodule %s: failed to load: %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				FindData.cFileName, ret);
+			return -1;
+		}
 	}
 	FindClose(hFind);
 #else
@@ -6931,10 +7102,93 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 	return errors;	
 }
 
+#ifdef USE_LIBCURL
+static void conf_download_complete(char *url, char *file, char *errorbuf, int cached)
+{
+	ConfigItem_include *inc;
+	if (!loop.ircd_rehashing)
+	{
+		remove(file);
+		return;
+	}
+	if (!file && !cached)
+	{
+		config_error("Error downloading %s: %s", url, errorbuf);
+		loop.ircd_rehashing = 0;
+		unload_notloaded_includes();
+		return;
+	}
+	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+	{
+		if (!(inc->flag.type & INCLUDE_REMOTE))
+			continue;
+		if (inc->flag.type & INCLUDE_NOTLOADED)
+			continue;
+		if (!stricmp(url, inc->url))
+		{
+			inc->flag.type &= ~INCLUDE_DLQUEUED;
+			break;
+		}
+	}
+	if (cached)
+	{
+		char *urlfile = url_getfilename(url);
+		char *file = unreal_getfilename(urlfile);
+		char *tmp = unreal_mktemp("tmp", file);
+		unreal_copyfile(inc->file, tmp);
+		add_remote_include(tmp, url);
+		free(urlfile);
+	}
+	else
+		add_remote_include(file, url);
+	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+	{
+		if (inc->flag.type & INCLUDE_DLQUEUED)
+			return;
+	}
+	rehash_internal(loop.rehash_save_cptr, loop.rehash_save_sptr, loop.rehash_save_sig);
+}
+#endif
 
 int     rehash(aClient *cptr, aClient *sptr, int sig)
 {
+#ifdef USE_LIBCURL
+	ConfigItem_include *inc;
+	char found_remote = 0;
+	if (loop.ircd_rehashing)
+	{
+		if (!sig)
+			sendto_one(sptr, ":%s NOTICE %s :A rehash is already in progress",
+				me.name, sptr->name);
+		return 0;
+	}	
+
 	loop.ircd_rehashing = 1;
+	loop.rehash_save_cptr = cptr;
+	loop.rehash_save_sptr = sptr;
+	loop.rehash_save_sig = sig;
+	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+	{
+		struct stat sb;
+		if (!(inc->flag.type & INCLUDE_REMOTE))
+			continue;
+		if (inc->flag.type & INCLUDE_NOTLOADED)
+			continue;
+		found_remote = 1;
+		stat(inc->file, &sb);
+		download_file_async(inc->url, sb.st_ctime, conf_download_complete);
+		inc->flag.type |= INCLUDE_DLQUEUED;
+	}
+	if (!found_remote)
+		return rehash_internal(cptr, sptr, sig);
+	return 0;
+#else
+	return rehash_internal(cptr, sptr, sig);
+#endif
+}
+
+int	rehash_internal(aClient *cptr, aClient *sptr, int sig)
+{
 	flush_connections(&me);
 	if (sig == 1)
 	{
@@ -6988,4 +7242,154 @@ void	listen_cleanup()
 	}
 	if (i)
 		close_listeners();
+}
+
+#ifdef USE_LIBCURL
+char *find_remote_include(char *url)
+{
+	ConfigItem_include *inc;
+	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+	{
+		if (!(inc->flag.type & INCLUDE_NOTLOADED))
+			continue;
+		if (!(inc->flag.type & INCLUDE_REMOTE))
+			continue;
+		if (!stricmp(url, inc->url))
+			return inc->file;
+	}
+	return NULL;
+}
+
+int remote_include(ConfigEntry *ce)
+{
+	char *file = find_remote_include(ce->ce_vardata);
+	int ret;
+	if (!loop.ircd_rehashing || (loop.ircd_rehashing && !file))
+	{
+		char *error;
+		if (config_verbose > 0)
+			config_status("Downloading %s", ce->ce_vardata);
+		file = download_file(ce->ce_vardata, &error);
+		if (!file)
+		{
+			config_error("%s:%i: include: error downloading '%s': %s",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+				 ce->ce_vardata, error);
+			return -1;
+		}
+		else
+		{
+			if ((ret = load_conf(file)) >= 0)
+				add_remote_include(file, ce->ce_vardata);
+			free(file);
+			return ret;
+		}
+	}
+	else
+	{
+		if (config_verbose > 0)
+			config_status("Loading %s from download", ce->ce_vardata);
+		if ((ret = load_conf(file)) >= 0)
+			add_remote_include(file, ce->ce_vardata);
+		return ret;
+	}
+	return 0;
+}
+#endif
+		
+void add_include(char *file)
+{
+	ConfigItem_include *inc;
+	if (!stricmp(file, CPATH))
+		return;
+
+	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+	{
+		if (!(inc->flag.type & INCLUDE_NOTLOADED))
+			continue;
+		if (!stricmp(file, inc->file))
+			return;
+	}
+	inc = MyMallocEx(sizeof(ConfigItem_include));
+	inc->file = strdup(file);
+	inc->flag.type = INCLUDE_NOTLOADED;
+	AddListItem(inc, conf_include);
+}
+
+#ifdef USE_LIBCURL
+void add_remote_include(char *file, char *url)
+{
+	ConfigItem_include *inc;
+
+	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+	{
+		if (!(inc->flag.type & INCLUDE_REMOTE))
+			continue;
+		if (!(inc->flag.type & INCLUDE_NOTLOADED))
+			continue;
+		if (!stricmp(url, inc->url))
+			return;
+	}
+	inc = MyMallocEx(sizeof(ConfigItem_include));
+	inc->file = strdup(file);
+	inc->url = strdup(url);
+	inc->flag.type = (INCLUDE_NOTLOADED|INCLUDE_REMOTE);
+	AddListItem(inc, conf_include);
+}
+#endif
+
+void unload_notloaded_includes(void)
+{
+	ConfigItem_include *inc, *next;
+
+	for (inc = conf_include; inc; inc = next)
+	{
+		next = (ConfigItem_include *)inc->next;
+		if (inc->flag.type & INCLUDE_NOTLOADED)
+		{
+#ifdef USE_LIBCURL
+			if (inc->flag.type & INCLUDE_REMOTE)
+			{
+				remove(inc->file);
+				free(inc->url);
+			}
+#endif
+			free(inc->file);
+			DelListItem(inc, conf_include);
+			free(inc);
+		}
+	}
+}
+
+void unload_loaded_includes(void)
+{
+	ConfigItem_include *inc, *next;
+
+	for (inc = conf_include; inc; inc = next)
+	{
+		next = (ConfigItem_include *)inc->next;
+		if (inc->flag.type & INCLUDE_NOTLOADED)
+			continue;
+#ifdef USE_LIBCURL
+		if (inc->flag.type & INCLUDE_REMOTE)
+		{
+			remove(inc->file);
+			free(inc->url);
+		}
+#endif
+		free(inc->file);
+		DelListItem(inc, conf_include);
+		free(inc);
+	}
+}
+			
+void load_includes(void)
+{
+	ConfigItem_include *inc;
+
+	/* Doing this for all the modules should actually be faster
+	 * than only doing it for modules that are not-loaded
+	 */
+	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+		inc->flag.type &= ~INCLUDE_NOTLOADED; 
 }

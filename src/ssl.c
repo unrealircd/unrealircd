@@ -45,6 +45,8 @@ static int fatal_ssl_error(int ssl_error, int where, aClient *sptr);
 SSL_CTX *ctx_server;
 SSL_CTX *ctx_client;
 
+char *SSLKeyPasswd;
+
 typedef struct {
 	int *size;
 	char **buffer;
@@ -143,6 +145,7 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 		strncpyzt(buf, (char *)pass, size);
 		strncpyzt(beforebuf, (char *)pass, sizeof(beforebuf));
 		before = 1;
+		SSLKeyPasswd = beforebuf;
 		return (strlen(buf));
 	}
 	return 0;

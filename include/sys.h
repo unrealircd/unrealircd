@@ -127,12 +127,16 @@ typedef unsigned int u_int;
 #ifdef _WIN32
 #define MYOSNAME OSName
 extern char OSName[256];
+#define PATH_MAX MAX_PATH
 #endif
 #ifdef DEBUGMODE
 // #define ircsprintf sprintf
 //#define ircvsprintf vsprintf
 #endif
 
+#ifdef _WIN32
+typedef unsigned short u_int16_t;
+#endif
 
 /*
  *  IPv4 or IPv6 structures?
