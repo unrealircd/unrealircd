@@ -1401,6 +1401,16 @@ void	config_rehash()
 		DelListItem(badword_ptr, conf_badword_message);
 		MyFree(badword_ptr);
 	}
+	for (badword_ptr = conf_badword_quit; badword_ptr;
+		badword_ptr = (ConfigItem_badword *) next) {
+		next = (ListStruct *)badword_ptr->next;
+		ircfree(badword_ptr->word);
+		if (badword_ptr->replace)
+			ircfree(badword_ptr->replace);
+		regfree(&badword_ptr->expr);
+		DelListItem(badword_ptr, conf_badword_quit);
+		MyFree(badword_ptr);
+	}
 #endif
 	for (deny_dcc_ptr = conf_deny_dcc; deny_dcc_ptr; deny_dcc_ptr = (ConfigItem_deny_dcc *)next)
 	{
