@@ -1725,3 +1725,5 @@ seen. gmtime warning still there
   in memory rather than compiling the regex each time the swear stripping was trigged. 
   This uses slightly more memory, but saves a signifigant amount of execution time.
   Idea inspired by a suggestion from CaliMonk
+- Fixed a bug where makeconf was still included in make install 
+- Fixed a bug reported by |Zerwas| where tsctl required all lowercase params (#0000537)

@@ -138,7 +138,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			return 0;
 		}
 
-		if (strcmp(parv[1], "offset") == 0)
+		if (stricmp(parv[1], "offset") == 0)
 		{
 			if (!parv[3])
 			{
@@ -188,7 +188,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			}
 			return 0;
 		}
-		if (strcmp(parv[1], "time") == 0)
+		if (stricmp(parv[1], "time") == 0)
 		{
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** TStime=%li time()=%li TSoffset=%li",
@@ -196,7 +196,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    TSoffset);
 			return 0;
 		}
-		if (strcmp(parv[1], "alltime") == 0)
+		if (stricmp(parv[1], "alltime") == 0)
 		{
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** Server=%s TStime=%li time()=%li TSoffset=%li",
@@ -207,7 +207,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			return 0;
 
 		}
-		if (strcmp(parv[1], "svstime") == 0)
+		if (stricmp(parv[1], "svstime") == 0)
 		{
 			if (!parv[2] || *parv[2] == '\0')
 			{
