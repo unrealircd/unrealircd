@@ -2733,3 +2733,4 @@ seen. gmtime warning still there
 - Made it so chan ops can invite in a +V channel. Requested by AI (#0001478)
 - Added HOOKTYPE_PRE_LOCAL_QUIT to allow changing quit messages. Suggested by penna22
   (#0001424)
+- Updated some /stats docs, reported by AngryWolf (#0001283)
