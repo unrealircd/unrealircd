@@ -418,11 +418,11 @@
   (must appear before this) class block that will be used for this class. The 
   rest of the directives are optional, allow::password specifies a password that 
   users must enter to connect. The allow::password:: allows you to specify an 
-  authentication method. Currently supported methods are crypt, md3, and sha1. 
-  If you are using plain-text you can just leave this sub-block out. This directive 
-  also allows you to configure clone killing, allow::maxperip lets you specify 
-  the maximum number of clients that may connect from a single IP. Lastly, the 
-  allow block supports redirection when the server is full, allow::redirect-server 
+  authentication method. Currently supported methods are crypt, md3, and sha1, 
+  ripemd-160. If you are using plain-text you can just leave this sub-block out. 
+  This directive also allows you to configure clone killing, allow::maxperip lets 
+  you specify the maximum number of clients that may connect from a single IP. 
+  Lastly, the allow block supports redirection when the server is full, allow::redirect-server 
   specifies the address of a server to forward to, and allow::redirect-port specifies 
   the port, if no port is specified, 6667 is assumed. </p>
 <p>Note: for auto-redirection to occur the client must have support for the redirection 
@@ -498,8 +498,8 @@
   mask that the user must match, you can specify more than one hostmask by creating 
   more than one oper::from::userhost. The oper::password is the password the user 
   must specify, oper::password:: allows you to specify an authentication method 
-  for this password, valid auth-types are crypt, md5, and sha1. If you want to 
-  use a plain-text password leave this sub-block out.</p>
+  for this password, valid auth-types are crypt, md5, and sha1, ripemd-160. If 
+  you want to use a plain-text password leave this sub-block out.</p>
 <p>The oper::class directive specifies the name of a preexisting (appears before 
   this in the config file) class name that the oper block will use.</p>
 <p>The oper::flags directive has two formats. If you wish to use the old style 
@@ -808,7 +808,7 @@
 <p>This block sets the /restart and /die passwords with drpass::restart and drpass::die 
   respectively. The drpass::restart:: and drpass::die:: allow you to specify the 
   type of authentication used by this item. The currently supported authentication 
-  types are crypt, md5, and sha1.</p>
+  types are crypt, md5, and sha1, ripemd-160.</p>
 <p>Example:</p>
 <p>drpass {<br>
   restart &quot;I-love-to-restart&quot;;<br>
@@ -1156,7 +1156,7 @@
   in the login name the user must enter and vhost::password is the password that 
   must be entered. Lastly vhost::password:: allows you to specify the type of 
   authentication used by this item. The currently supported authentication types 
-  are crypt, md5, and sha1.</p>
+  are crypt, md5, and sha1, ripemd-160.</p>
 <p>Example<br>
   vhost {<br>
   vhost my.own.personal.vhost.com;<br>
@@ -1237,8 +1237,9 @@
   connection on. </p>
 <p>The link::password-connect must be a plain-text password since it will be sent 
   to the other server, but link::password-receive may be encrypted using a method 
-  specified in link::password-receive:: valid methods are crypt, md5, and sha1. 
-  You can leave the auth-type parameter out to have it remain plain-text. </p>
+  specified in link::password-receive:: valid methods are crypt, md5, and sha1, 
+  ripemd-160. You can leave the auth-type parameter out to have it remain plain-text. 
+</p>
 <p>The link::hub and link::leaf directives may not be used together, either a 
   server is a hub or a leaf. If link::hub is specified, the value is a mask of 
   what servers this hub may connect. If link::leaf is specified the value specifies 

@@ -1553,3 +1553,4 @@ seen. gmtime warning still there
   default, read warning in config.h. Only use with 3.2-beta12 or higher
 - Made so every join is a SJOIN to prevent TS0 problems. Read config.h to disable this if it causes problems
 - Added set::static-quit to unreal32docs.html
+- Updated docs to include ripemd-160 encryption option
