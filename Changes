@@ -1599,3 +1599,5 @@ seen. gmtime warning still there
 - Added set::ssl::trusted-ca-file, if enabled, it will point the SSL stuff to use that file as trusted CA's (for verify-certificate)
 - Made conf _not_ bitch that it doesn't know set::ssl
 - Removed some leftover client certificate stuff
+- Fixed bug #0000372 reported by MorPheus where Killed (<everything-but-the-first-char-in-killer-letter-got-shown> (reason))
+

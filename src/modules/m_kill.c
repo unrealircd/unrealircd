@@ -340,7 +340,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			if ((killer = index(path, ' ')))
 			{
-				while ((killer > path) && *killer && *killer != '!')
+				while ((killer >= path) && *killer && *killer != '!')
 					killer--;
 				if (!*killer)
 					killer = path;
