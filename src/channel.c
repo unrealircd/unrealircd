@@ -113,7 +113,6 @@ typedef struct {
 	unsigned  parameters : 1; 
 } aCtab;
 
-// typedef struct CFlagTab aCtab;
 #define MODESYS_LINKOK		/* We do this for a TEST  */
 aCtab cFlagTab[] = {
 	{MODE_LIMIT, 'l', 0, 1},
@@ -241,48 +240,50 @@ static aClient *find_chasing(sptr, user, chasing)
 
 /* add_exbanid - add an id to be excepted to the channel bans  (belongs to cptr) */
 
-static int add_exbanid(cptr, chptr, banid)
-	aClient *cptr;
-	aChannel *chptr;
-	char *banid;
+static int add_exbanid(aClient *cptr, aChannel *chptr, char *banid)
 {
-	Ban *ban;
-	int  cnt = 0, len = 0;
+        Ban *ban;
+        int  cnt = 0, len = 0;
 
-	if (MyClient(cptr))
-		(void)collapse(banid);
-	for (ban = chptr->exlist; ban; ban = ban->next)
-	{
-		len += strlen(ban->banstr);
-		if (MyClient(cptr))
-			if ((len > MAXBANLENGTH) || (++cnt >= MAXBANS))
-			{
-				sendto_one(cptr, err_str(ERR_BANLISTFULL),
-				    me.name, cptr->name, chptr->chname, banid);
-				return -1;
-			}
-			else
-			{
-				if (!match(ban->banstr, banid) ||
-				    !match(banid, ban->banstr))
-					return -1;
-			}
-		else if (!mycmp(ban->banstr, banid))
-			return -1;
+        if (MyClient(cptr))
+                (void)collapse(banid);
+        for (ban = chptr->exlist; ban; ban = ban->next)
+        {
+                len += strlen(ban->banstr);
+                if (MyClient(cptr))
+                        if ((len > MAXBANLENGTH) || (++cnt >= MAXBANS))
+                        {
+                                sendto_one(cptr, err_str(ERR_BANLISTFULL),
+                                    me.name, cptr->name, chptr->chname, banid);
+                                return -1;
+                        }
+                        else
+                        {
+#ifdef NAZIISH_CHBAN_HANDLING
+                                if (!match(ban->banstr, banid) ||
+                                    !match(banid, ban->banstr))
+#else
+                                if (!match(ban->banstr, banid))
+#endif
+                                        return -1;
+                        }
+                else if (!mycmp(ban->banstr, banid))
+                        return -1;
 
-	}
-	ban = make_ban();
-	bzero((char *)ban, sizeof(Ban));
-	/*   ban->flags = CHFL_BAN;                  They're all bans!! */
-	ban->next = chptr->exlist;
-	ban->banstr = (char *)MyMalloc(strlen(banid) + 1);
-	(void)strcpy(ban->banstr, banid);
-	ban->who = (char *)MyMalloc(strlen(cptr->name) + 1);
-	(void)strcpy(ban->who, cptr->name);
-	ban->when = TStime();
-	chptr->exlist = ban;
-	return 0;
+        }
+        ban = make_ban();
+        bzero((char *)ban, sizeof(Ban));
+        /*   ban->flags = CHFL_BAN;                  They're all bans!! */
+        ban->next = chptr->exlist;
+        ban->banstr = (char *)MyMalloc(strlen(banid) + 1);
+        (void)strcpy(ban->banstr, banid);
+        ban->who = (char *)MyMalloc(strlen(cptr->name) + 1);
+        (void)strcpy(ban->who, cptr->name);
+        ban->when = TStime();
+        chptr->exlist = ban;
+        return 0;
 }
+
 /*
  * del_exbanid - delete an id belonging to cptr
  */
@@ -315,48 +316,50 @@ static int del_exbanid(chptr, banid)
  */
 /* add_banid - add an id to be banned to the channel  (belongs to cptr) */
 
-static int add_banid(cptr, chptr, banid)
-	aClient *cptr;
-	aChannel *chptr;
-	char *banid;
+static int add_banid(aClient *cptr, aChannel *chptr, char *banid)
 {
-	Ban *ban;
-	int  cnt = 0, len = 0;
+        Ban *ban;
+        int  cnt = 0, len = 0;
+        
+        if (MyClient(cptr))
+                (void)collapse(banid);
+        for (ban = chptr->banlist; ban; ban = ban->next)
+        {
+                len += strlen(ban->banstr);
+                if (MyClient(cptr))
+                        if ((len > MAXBANLENGTH) || (++cnt >= MAXBANS))
+                        {
+                                sendto_one(cptr, err_str(ERR_BANLISTFULL),
+                                    me.name, cptr->name, chptr->chname, banid);
+                                return -1;
+                        }       
+                        else
+                        {
+#ifdef NAZIISH_CHBAN_HANDLING /* why does it do this?? */
+                                if (!match(ban->banstr, banid) ||
+                                    !match(banid, ban->banstr))
+#else
+                                if (!match(ban->banstr, banid))
+#endif
+                                        return -1;
+                        }
+                else if (!mycmp(ban->banstr, banid))
+                        return -1;
 
-	if (MyClient(cptr))
-		(void)collapse(banid);
-	for (ban = chptr->banlist; ban; ban = ban->next)
-	{
-		len += strlen(ban->banstr);
-		if (MyClient(cptr))
-			if ((len > MAXBANLENGTH) || (++cnt >= MAXBANS))
-			{
-				sendto_one(cptr, err_str(ERR_BANLISTFULL),
-				    me.name, cptr->name, chptr->chname, banid);
-				return -1;
-			}
-			else
-			{
-				if (!match(ban->banstr, banid) ||
-				    !match(banid, ban->banstr))
-					return -1;
-			}
-		else if (!mycmp(ban->banstr, banid))
-			return -1;
-
-	}
-	ban = make_ban();
-	bzero((char *)ban, sizeof(Ban));
-	/*   ban->flags = CHFL_BAN;                  They're all bans!! */
-	ban->next = chptr->banlist;
-	ban->banstr = (char *)MyMalloc(strlen(banid) + 1);
-	(void)strcpy(ban->banstr, banid);
-	ban->who = (char *)MyMalloc(strlen(cptr->name) + 1);
-	(void)strcpy(ban->who, cptr->name);
-	ban->when = TStime();
-	chptr->banlist = ban;
-	return 0;
+        }
+        ban = make_ban();
+        bzero((char *)ban, sizeof(Ban));
+        /*   ban->flags = CHFL_BAN;                  They're all bans!! */
+        ban->next = chptr->banlist;
+        ban->banstr = (char *)MyMalloc(strlen(banid) + 1);
+        (void)strcpy(ban->banstr, banid);
+        ban->who = (char *)MyMalloc(strlen(cptr->name) + 1);
+        (void)strcpy(ban->who, cptr->name);
+        ban->when = TStime();
+        chptr->banlist = ban;
+        return 0;
 }
+
 /*
  * del_banid - delete an id belonging to cptr
  */
@@ -381,7 +384,6 @@ static int del_banid(chptr, banid)
 		}
 	return -1;
 }
-
 
 /*
  * IsMember - returns 1 if a person is joined
@@ -1985,13 +1987,11 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 				  if (*param == '*')
 				  {
 					  xzi = 1;
-					  //                      chptr->mode.kmode = 1;
 				  }
 				  else
 				  {
 					  xzi = 0;
 
-					  //                   chptr->mode.kmode = 0;
 				  }
 				  xp = index(param, ':');
 				  *xp = '\0';
@@ -2161,6 +2161,8 @@ void set_mode(chptr, cptr, parc, parv, pcount, pvar, bounce)
 				      me.name, cptr->name, *curchr);
 				  break;
 			  }
+                          if (parc - paracount < 1)
+				  parv[paracount] = NULL;
 			  if (parv[paracount] &&
 			      strlen(parv[paracount]) >= MODEBUFLEN)
 				  parv[paracount][MODEBUFLEN - 1] = '\0';
@@ -4462,6 +4464,7 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
 		c++; /* in my dreams */
 	}
 	pparv.parv[c] = NULL;
+	pparv.parc = c;
 	return (&pparv);
 }
 
@@ -4475,701 +4478,596 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
    **  Modified for UnrealIRCd by Stskeeps
    **  Recoded by Stskeeps
    **      parv[0] = sender prefix
-   **      parv[1] = channel timestamp
+   **      parv[1]      aChannel *chptr;
+        aClient *cptr;
+        int  parc;
+        u_int *pcount;
+        char bounce;
+        char *parv[], pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
+ = channel timestamp
    **      parv[2] = channel name
-   ** 	  
+   **     
    **      if (parc == 3) 
-   **		parv[3] = nick names + modes - all in one parameter
-   **	   if (parc == 4)
-   **		parv[3] = channel modes
-   **		parv[4] = nick names + modes - all in one parameter
-   **	   if (parc > 4)
-   **		parv[3] = channel modes
-   **		parv[4 to parc - 2] = mode parameters
-   **		parv[parc - 1] = nick names + modes
+   **           parv[3] = nick names + modes - all in one parameter
+   **      if (parc == 4)
+   **           parv[3] = channel modes
+   **           parv[4] = nick names + modes - all in one parameter
+   **      if (parc > 4)
+   **           parv[3] = channel modes
+   **           parv[4 to parc - 2] = mode parameters
+   **           parv[parc - 1] = nick names + modes
  */
 
 /* Some ugly macros, but useful */
-#define Addit(x,y) modebuf[b] = x; strcat(parabuf, y); \
-  strcat(parabuf, " "); \
-  if (b >= MODEPARAMS) \
-  { modebuf[b + 1] = '\0'; sendto_serv_butone_sjoin(cptr, \
-  	":%s MODE %s %s %s %lu", sptr->name, chptr->chname,  \
-  	modebuf, parabuf, chptr->creationtime); \
-  	sendto_channel_butserv(chptr, sptr, \
-  	":%s MODE %s %s %s", sptr->name, chptr->chname, \
-  	modebuf, parabuf); \
-  	parabuf[0] = '\0'; \
-  	b = 1; \
-  	} else b++
-
-
-
+#define Addit(mode,param) if (strlen(parabuf) + strlen(param) + 11 < MODEBUFLEN) { \
+        if (*parabuf) \
+                strcat(parabuf, " ");\
+        strcat(parabuf, param);\
+        modebuf[b++] = mode;\
+        modebuf[b] = 0;\
+}\
+else if (*parabuf) {\
+        sendto_serv_butone_sjoin(cptr, ":%s MODE %s %s %s %lu", sptr->name, chptr->chname,\
+                modebuf, parabuf, chptr->creationtime); \
+        sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", sptr->name, chptr->chname,\
+                modebuf, parabuf);\
+        strcpy(parabuf,param);\
+        modebuf[1] = mode;\
+        modebuf[2] = 0;\
+        sendto_serv_butone_sjoin(cptr, ":%s MODE %s %s %s %lu", sptr->name, chptr->chname,\
+                modebuf, parabuf, chptr->creationtime); \
+        sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", sptr->name, chptr->chname,\
+                modebuf, parabuf); \
+        modebuf[1] = 0;\
+        parabuf[0] = 0;\
+        b = 1;\
+}\
+else if (b == MAXMODEPARAMS) {\
+        sendto_serv_butone_sjoin(cptr, ":%s MODE %s %s %s %lu", sptr->name, chptr->chname,\
+                modebuf, parabuf, chptr->creationtime); \
+        sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", sptr->name, chptr->chname,\
+                modebuf, parabuf);\
+        parabuf[0] = 0;\
+        modebuf[1] = 0;\
+        b = 1;\
+}
 #define Addsingle(x) modebuf[b] = x; b++
 #define CheckStatus(x,y) if (modeflags & (y)) { Addit((x), nick); }
 #define AddBan(x) strcat(banbuf, x); strcat(banbuf, " ");
 #define AddEx(x) strcat(exbuf, x); strcat(exbuf, " ");
 
 
-int  m_sjoin(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	unsigned short nopara;
-	unsigned short nomode;
-	unsigned short removeours;
-	unsigned short removetheirs;
-	unsigned short merge;	/* same timestamp */
-	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
-	char paraback[1024], modeback[1024];
-	char banbuf[1024];
-	char exbuf[1024];
-	char cbuf[1024];
-	char nick[NICKLEN + 1];
-	char *s = NULL;
-	aClient *acptr;
-	aChannel *chptr;
-	Link *lp;
-	Ban *ban;
-	aParv *ap;
-	int  ts, oldts, pcount, x, y, z, i, f;
-	unsigned short b, c;
-	Mode oldmode;
-	char *t, *bp, *tamax, *tp, *p = NULL;
-	 char *s0 = NULL;
-	long modeflags;
+        unsigned short nopara;
+        unsigned short nomode;
+        unsigned short removeours;
+        unsigned short removetheirs;
+        unsigned short merge;   /* same timestamp */
+        char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
+        char paraback[1024], modeback[1024];
+        char banbuf[1024];
+        char exbuf[1024];
+        char cbuf[1024];
+        char nick[NICKLEN + 1];
+        char *s = NULL;
+        aClient *acptr;
+        aChannel *chptr;
+        Link *lp;
+        aParv *ap;
+        int  ts, oldts, pcount, x, y, z, i, f;
+        unsigned short b=0,c;
+        Mode oldmode;
+        char *t, *bp, *tp, *p = NULL;
+         char *s0 = NULL;
+        long modeflags;
+        Ban *ban=NULL;
+        if (IsClient(sptr) || parc < 3 || !IsServer(sptr))
+                return 0;
 
-	if (IsClient(sptr) || parc < 3 || !IsServer(sptr))
-		return 0;
+        if (!IsChannelName(parv[2]))
+                return 0;
 
-	if (!IsChannelName(parv[2]))
-		return 0;
+        merge = nopara = nomode = removeours = removetheirs = 0;
 
-	merge = nopara = nomode = removeours = removetheirs = 0;
+        if (SupportSJOIN(cptr) && !SupportSJ3(cptr) &&
+            !strncmp(parv[4], "<none>", 6))
+                nopara = 1;
+        if (SupportSJOIN2(cptr) && !SupportSJ3(cptr) &&
+            !strncmp(parv[4], "<->", 6))
+                nopara = 1;
+        if (SupportSJ3(cptr) && (parc < 6))
+                nopara = 1;
 
-	if (SupportSJOIN(cptr) && !SupportSJ3(cptr) &&
-	    !strncmp(parv[4], "<none>", 6))
-		nopara = 1;
-	if (SupportSJOIN2(cptr) && !SupportSJ3(cptr) &&
-	    !strncmp(parv[4], "<->", 6))
-		nopara = 1;
-	if (SupportSJ3(cptr) && (parc < 6))
-		nopara = 1;
+        if (SupportSJ3(cptr))
+        {
+                if (parc < 5)
+                        nomode = 1;
+        }
+        else
+        {
+                if (parv[3][1] == '\0')
+                        nomode = 1;
+        }
+        chptr = get_channel(cptr, parv[2], CREATE);
 
-	if (SupportSJ3(cptr))
-	{
-		if (parc < 5)
-			nomode = 1;
-	}
-	else
-	{
-		if (parv[3][1] == '\0')
-			nomode = 1;
-	}
-	chptr = get_channel(cptr, parv[2], CREATE);
+        if (*parv[1] != '!')
+                ts = atol(parv[1]);
+        else
+                ts = base64dec(parv[1] + 1);
 
-	if (*parv[1] != '!')
-		ts = atol(parv[1]);
-	else
-		ts = base64dec(parv[1] + 1);
+        if (chptr->creationtime > ts)
+        {
+                removeours = 1;
+                oldts = chptr->creationtime;
+                chptr->creationtime = ts;
+        }
+        else if ((chptr->creationtime < ts) && (chptr->creationtime != 0))
+                removetheirs = 1;
+        else if (chptr->creationtime == ts)
+                merge = 1;
 
-	if (chptr->creationtime > ts)
-	{
-		removeours = 1;
-		oldts = chptr->creationtime;
-		chptr->creationtime = ts;
-	}
-	else if ((chptr->creationtime < ts) && (chptr->creationtime != 0))
-		removetheirs = 1;
-	else if (chptr->creationtime == ts)
-		merge = 1;
+        if (chptr->creationtime == 0)
+        {
+                oldts = -1;
+                chptr->creationtime = ts;
+        }
+        else
+                oldts = chptr->creationtime;
 
-	if (chptr->creationtime == 0)
-	{
-		oldts = -1;
-		chptr->creationtime = ts;
-	}
-	else
-		oldts = chptr->creationtime;
+        if (ts < 750000)
+                if (ts != 0)
+                        sendto_ops
+                            ("Warning! Possible desynch: SJOIN for channel %s has a fishy timestamp (%ld)",
+                            chptr->chname, ts);
+        parabuf[0] = '\0';
+        modebuf[0] = '+';
+        modebuf[1] = '\0';
+        banbuf[0] = '\0';
+        exbuf[0] = '\0';
+        channel_modes(cptr, modebuf, parabuf, chptr);
+        if (removeours)
+        {
+                modebuf[0] = '-';
+                /* remove our modes if any */
+                if (modebuf[1] != '\0')
+                {
 
-	if (ts < 750000)
-		if (ts != 0)
-			sendto_ops
-			    ("Warning! Possible desynch: SJOIN for channel %s has a fishy timestamp (%ld)",
-			    chptr->chname, ts);
-	parabuf[0] = '\0';
-	modebuf[0] = '+';
-	modebuf[1] = '\0';
-	banbuf[0] = '\0';
-	exbuf[0] = '\0';
-	channel_modes(cptr, modebuf, parabuf, chptr);
-	if (removeours)
-	{
-		modebuf[0] = '-';
-		/* remove our modes if any */
-		if (modebuf[1] != '\0')
-		{
-			int  b;
-			Ban *ban;
+                        ap = mp2parv(modebuf, parabuf);
+                        set_mode(chptr, cptr, ap->parc, ap->parv, &pcount,
+                            pvar, 0);
+                        sendto_serv_butone_sjoin(cptr,
+                            ":%s MODE %s %s %s %lu",
+                            sptr->name, chptr->chname, modebuf, parabuf,
+                            chptr->creationtime);
+                        sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
+                            sptr->name, chptr->chname, modebuf, parabuf);
 
-			ap = mp2parv(modebuf, parabuf);
-			set_mode(chptr, cptr, ap->parc, ap->parv, &pcount,
-			    pvar, 0);
-			sendto_serv_butone_sjoin(cptr,
-			    ":%s MODE %s %s %s %lu",
-			    sptr->name, chptr->chname, modebuf, parabuf,
-			    chptr->creationtime);
-			sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
-			    sptr->name, chptr->chname, modebuf, parabuf);
+                }
+                /* remove bans */
+                parabuf[0] = '\0';
+                for (ban = chptr->banlist; ban; ban = ban->next)
+                {
+                        Addit('b', ban->banstr);
+                }
+                for (ban = chptr->exlist; ban; ban = ban->next)
+                {
+                        Addit('e', ban->banstr);
+                }
+                b = 1;
+                for (lp = chptr->members; lp; lp = lp->next)
+                {
+                        if (lp->flags & MODE_CHANOWNER)
+                        {
+                                lp->flags &= ~MODE_CHANOWNER;
+                                Addit('q', lp->value.cptr->name);
+                        }
+                        if (lp->flags & MODE_CHANPROT)
+                        {
+                                lp->flags &= ~MODE_CHANPROT;
+                                Addit('a', lp->value.cptr->name);
+                        }
+                        if (lp->flags & MODE_CHANOP)
+                        {
+                                lp->flags &= ~MODE_CHANOP;
+                                Addit('o', lp->value.cptr->name);
+                        }
+                        if (lp->flags & MODE_HALFOP)
+                        {
+                                lp->flags &= ~MODE_HALFOP;
+                                Addit('h', lp->value.cptr->name);
+                        }
+                        if (lp->flags & MODE_VOICE)
+                        {
+                                lp->flags &= ~MODE_VOICE;
+                                Addit('v', lp->value.cptr->name);
+                        }
+                }
+                if (b > 1)
+                {
+                        modebuf[b] = '\0';
+                        sendto_serv_butone_sjoin(cptr,
+                            ":%s MODE %s %s %s %lu",
+                            sptr->name, chptr->chname,
+                            modebuf, parabuf, chptr->creationtime);
+                        sendto_channel_butserv(chptr,
+                            sptr, ":%s MODE %s %s %s",
+                            sptr->name, chptr->chname, modebuf, parabuf);
 
-		}
-		/* remove bans */
-		b = 1;
-		parabuf[0] = '\0';
-		for (ban = chptr->banlist; ban; ban = ban->next)
-		{
-			Addit('b', ban->banstr);
-		}
-		for (ban = chptr->exlist; ban; ban = ban->next)
-		{
-			Addit('e', ban->banstr);
-		}
-		for (lp = chptr->members; lp; lp = lp->next)
-		{
-			if (lp->flags & MODE_CHANOWNER)
-			{
-				lp->flags &= ~MODE_CHANOWNER;
-				Addit('q', lp->value.cptr->name);
-			}
-			if (lp->flags & MODE_CHANPROT)
-			{
-				lp->flags &= ~MODE_CHANPROT;
-				Addit('a', lp->value.cptr->name);
-			}
-			if (lp->flags & MODE_CHANOP)
-			{
-				lp->flags &= ~MODE_CHANOP;
-				Addit('o', lp->value.cptr->name);
-			}
-			if (lp->flags & MODE_HALFOP)
-			{
-				lp->flags &= ~MODE_HALFOP;
-				Addit('h', lp->value.cptr->name);
-			}
-			if (lp->flags & MODE_VOICE)
-			{
-				lp->flags &= ~MODE_VOICE;
-				Addit('v', lp->value.cptr->name);
-			}
-		}
-		if (b > 1)
-		{
-			modebuf[b] = '\0';
-			sendto_serv_butone_sjoin(cptr,
-			    ":%s MODE %s %s %s %lu",
-			    sptr->name, chptr->chname,
-			    modebuf, parabuf, chptr->creationtime);
-			sendto_channel_butserv(chptr,
-			    sptr, ":%s MODE %s %s %s",
-			    sptr->name, chptr->chname, modebuf, parabuf);
+                }
+        }
+        /* Mode setting done :), now for our beloved clients */
+        parabuf[0] = 0;
+        modebuf[0] = '+';
+        modebuf[1] = '\0';
+        t = parv[parc - 1];
+        f = 1;
+        b = 1;
+        c = 0;
+        bp = buf;
+        strcpy(cbuf, parv[parc-1]);
+        for (s = s0 = strtoken(&p, cbuf, " "); s; s = s0 = strtoken(&p, (char *)NULL, " "))
+        {
 
-		}
-	}
-	/* Mode setting done :), now for our beloved clients */
-	parabuf[0] = 0;
-	modebuf[0] = '+';
-	modebuf[1] = '\0';
-	t = parv[parc - 1];
-	f = 1;
-	b = 1;
-	c = 0;
-	bp = buf;
-	strcpy(cbuf, parv[parc-1]);
-	for (s = s0 = strtoken(&p, cbuf, " "); s; s = s0 = strtoken(&p, (char *)NULL, " "))
-	{
-	
-		c = f = 0;
-		modeflags = 0;
-		i = 0;
-		tp = s;
-		while (
-		    (*tp == '@') || (*tp == '+') || (*tp == '%')
-		    || (*tp == '*') || (*tp == '~') || (*tp == '&')
-		    || (*tp == '"'))
-		{
-			switch (*(tp++))
-			{
-			  case '@':
-				  modeflags |= CHFL_CHANOP;
-				  break;
-			  case '%':
-				  modeflags |= CHFL_HALFOP;
-				  break;
-			  case '+':
-				  modeflags |= CHFL_VOICE;
-				  break;
-			  case '*':
-				  modeflags |= CHFL_CHANOWNER;
-				  break;
-			  case '~':
-				  modeflags |= CHFL_CHANPROT;
-				  break;
-			  case '&':
-				  modeflags |= CHFL_BAN;					  goto getnick;
-				  break;
-			  case '"':
-				  modeflags |= CHFL_EXCEPT;
-				  goto getnick;
-				  break;
-			}
-		}
-	     getnick:
-		i = 0;
-		while ((*tp != ' ') && (*tp != '\0'))
-			nick[i++] = *(tp++);	/* get nick */
-		nick[i] = '\0';
-		if (nick[0] == ' ')
-			continue;
-		if (nick[0] == '\0')
-			continue;
-		Debug((DEBUG_DEBUG, "Got nick: %s", nick));
-		if (!(modeflags & CHFL_BAN)
-		    && !(modeflags & CHFL_EXCEPT))
-		{
-			if (!(acptr = find_person(nick, NULL)))
-			{
-				sendto_realops
-				    ("Missing user %s in SJOIN for %s from %s (%s)",
-				    nick, chptr->chname, sptr->name,
-				    backupbuf);
-				continue;
-			}
-			if (acptr->from != sptr->from)
-			{
-				sendto_one(sptr,
-				    ":%s KICK %s %s :Fake direction",
-				    me.name, chptr->chname,
-				    acptr->name);
-				sendto_ops
-				    ("Fake direction from user %s in SJOIN from %s(%s) at %s",
-				    nick, sptr->srvptr->name,
-				    sptr->name, chptr->chname);
-				continue;
-			}
-			if (removetheirs)
-			{
-				modeflags = 0;
-			}
-			add_user_to_channel(chptr, acptr, modeflags);
-			if (!IsHiding(acptr))
-				sendto_channel_butserv(chptr, acptr,
-				    ":%s JOIN :%s", nick,
-				    chptr->chname);
-			sendto_serv_butone_sjoin(cptr, ":%s JOIN %s",
-			    nick, chptr->chname);
-			CheckStatus('q', CHFL_CHANOWNER);
-			CheckStatus('a', CHFL_CHANPROT);
-			CheckStatus('o', CHFL_CHANOP);
-			CheckStatus('h', CHFL_HALFOP);
-			CheckStatus('v', CHFL_VOICE);
-		}
-		else
-		{
-			if (removetheirs)
-				continue;
-			if (modeflags & CHFL_BAN)
-			{
-				f = add_banid(sptr, chptr, nick);
-				if (f != -1)
-				{
-					Addit('b', nick);
-					AddBan(nick);
-				}
-			}
-			if (modeflags & CHFL_EXCEPT)
-			{
-				f = add_exbanid(sptr, chptr, nick);
-				if (f != -1)
-				{
-					Addit('e', nick);
-					AddEx(nick);
-				}
-			}
-		}
-	}
+                c = f = 0;
+                modeflags = 0;
+                i = 0;
+                tp = s;
+                while (
+                    (*tp == '@') || (*tp == '+') || (*tp == '%')
+                    || (*tp == '*') || (*tp == '~') || (*tp == '&')
+                    || (*tp == '"'))
+                {
+                        switch (*(tp++))
+                        {
+                          case '@':
+                                  modeflags |= CHFL_CHANOP;
+                                  break;
+                          case '%':
+                                  modeflags |= CHFL_HALFOP;
+                                  break;
+                          case '+':
+                                  modeflags |= CHFL_VOICE;
+                                  break;
+                          case '*':
+                                  modeflags |= CHFL_CHANOWNER;
+                                  break;
+                          case '~':
+                                  modeflags |= CHFL_CHANPROT;
+                                  break;
+                          case '&':
+                                  modeflags |= CHFL_BAN;                                          goto getnick;
+                                  break;
+                          case '"':
+                                  modeflags |= CHFL_EXCEPT;
+                                  goto getnick;
+                                  break;
+                        }
+                }
+             getnick:
+                i = 0;
+                while ((*tp != ' ') && (*tp != '\0'))
+                        nick[i++] = *(tp++);    /* get nick */
+                nick[i] = '\0';
+                if (nick[0] == ' ')
+                        continue;
+                if (nick[0] == '\0')
+                        continue;
+                Debug((DEBUG_DEBUG, "Got nick: %s", nick));
+                if (!(modeflags & CHFL_BAN)
+                    && !(modeflags & CHFL_EXCEPT))
+                {
+                        if (!(acptr = find_person(nick, NULL)))
+                        {
+                                sendto_realops
+                                    ("Missing user %s in SJOIN for %s from %s (%s)",
+                                    nick, chptr->chname, sptr->name,
+                                    backupbuf);
+                                continue;
+                        }
+                        if (acptr->from != sptr->from)
+                        {
+                                if (IsMember(acptr, chptr))
+                                {
+                                        /* Nick collision, don't kick or it desynchs -Griever*/
+                                        continue;
+                                }
 
-	if (modebuf[1])
-	{
-		modebuf[b] = '\0';
-		sendto_serv_butone_sjoin(cptr,
-		    ":%s MODE %s %s %s %lu",
-		    sptr->name, chptr->chname, modebuf, parabuf,
-		    chptr->creationtime);
-		sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
-		    sptr->name, chptr->chname, modebuf, parabuf);
-	}
-	
-	if (!merge && !removetheirs && !nomode)
-	{
-		strcpy(modebuf, parv[3]);
-		parabuf[0] = '\0';
-		if (!nopara)
-			for (b = 4; b <= (parc - 2); b++)
-			{
-				strcat(parabuf, parv[b]);
-				strcat(parabuf, " ");
-			}
-		strcpy(paraback, parabuf);
-		ap = mp2parv(modebuf, parabuf);
-		set_mode(chptr, cptr, ap->parc, ap->parv, &pcount, pvar, 0);
-		sendto_serv_butone_sjoin(cptr,
-		    ":%s MODE %s %s %s %lu",
-		    sptr->name, chptr->chname, modebuf, paraback,
-		    chptr->creationtime);
-		sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
-		    sptr->name, chptr->chname, modebuf, paraback);
-	}
-	if (merge && !nomode)
-	{
-		aCtab *acp;
-		bcopy(&chptr->mode, &oldmode, sizeof(Mode));
-		/* merge the modes */
-		strcpy(modebuf, parv[3]);
-		parabuf[0] = '\0';
-		if (!nopara)
-			for (b = 4; b <= (parc - 2); b++)
-			{
-				strcat(parabuf, parv[b]);
-				strcat(parabuf, " ");
-			}
-		ap = mp2parv(modebuf, parabuf);
-		set_mode(chptr, cptr, ap->parc, ap->parv, &pcount, pvar, 0);
+                                sendto_one(sptr,
+                                    ":%s KICK %s %s :Fake direction",
+                                    me.name, chptr->chname,
+                                    acptr->name);
+                                sendto_realops
+                                    ("Fake direction from user %s in SJOIN from %s(%s) at %s",
+                                    nick, sptr->srvptr->name,
+                                    sptr->name, chptr->chname);
+                                continue;
+                        }
+                        if (removetheirs)
+                        {
+                                modeflags = 0;
+                        }
+                        add_user_to_channel(chptr, acptr, modeflags);
+                        if (!IsHiding(acptr))
+                                sendto_channel_butserv(chptr, acptr,
+                                    ":%s JOIN :%s", nick,
+                                    chptr->chname);
+                        sendto_serv_butone_sjoin(cptr, ":%s JOIN %s",
+                            nick, chptr->chname);
+                        CheckStatus('q', CHFL_CHANOWNER);
+                        CheckStatus('a', CHFL_CHANPROT);
+                        CheckStatus('o', CHFL_CHANOP);
+                        CheckStatus('h', CHFL_HALFOP);
+                        CheckStatus('v', CHFL_VOICE);
+                }
+                else
+                {
+                        if (removetheirs)
+                                continue;
+                        if (modeflags & CHFL_BAN)
+                        {
+                                f = add_banid(sptr, chptr, nick);
+                                if (f != -1)
+                                {
+                                        Addit('b', nick);
+                                        AddBan(nick);
+                                }
+                        }
+                        if (modeflags & CHFL_EXCEPT)
+                        {
+                                f = add_exbanid(sptr, chptr, nick);
+                                if (f != -1)
+                                {
+                                        Addit('e', nick);
+                                        AddEx(nick);
+                                }
+                        }
+                }
+        }
 
-		/* Good, now we got modes, now for the differencing and outputting of modes
-		   We first see if any para modes are set
+        if (modebuf[1])
+        {
+                modebuf[b] = '\0';
+                sendto_serv_butone_sjoin(cptr,
+                    ":%s MODE %s %s %s %lu",
+                    sptr->name, chptr->chname, modebuf, parabuf,
+                    chptr->creationtime);
+                sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
+                    sptr->name, chptr->chname, modebuf, parabuf);
+        }
 
-		 */
-		strcpy(modebuf, "-");
-		parabuf[0] = '\0';
-		b = 1;
-		/* however, is this really going to happen at all? may be unneeded */
-		if (oldmode.limit && !chptr->mode.limit)
-		{
-			Addit('l', (char *)my_itoa(oldmode.limit));
-		}
-		if (oldmode.key[0] && !chptr->mode.key[0])
-		{
-			Addit('k', oldmode.key);
-		}
-		if (oldmode.link[0] && !chptr->mode.link[0])
-		{
-			Addit('L', oldmode.link);
-		}
-		if ((oldmode.msgs || oldmode.per || oldmode.kmode)
-		    && ((chptr->mode.msgs == 0) && (chptr->mode.per == 0)
-		    && (chptr->mode.kmode == 0)))
-		{
-			ircsprintf(modeback, "%s%i:%i",
-			    (oldmode.kmode == 1 ? "*" : ""),
-			    oldmode.msgs, oldmode.per);
-			Addit('f', modeback);
-		}
+        if (!merge && !removetheirs && !nomode)
+        {
+                strcpy(modebuf, parv[3]);
+                parabuf[0] = '\0';
+                if (!nopara)
+                        for (b = 4; b <= (parc - 2); b++)
+                        {
+                                strcat(parabuf, parv[b]);
+                                strcat(parabuf, " ");
+                        }
+                strcpy(paraback, parabuf);
+                ap = mp2parv(modebuf, parabuf);
+                set_mode(chptr, cptr, ap->parc, ap->parv, &pcount, pvar, 0);
+                sendto_serv_butone_sjoin(cptr,
+                    ":%s MODE %s %s %s %lu",
+                    sptr->name, chptr->chname, modebuf, paraback,
+                    chptr->creationtime);
+                sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
+                    sptr->name, chptr->chname, modebuf, paraback);
+        }
+        if (merge && !nomode)
+        {
+                aCtab *acp;
+                bcopy(&chptr->mode, &oldmode, sizeof(Mode));
+                /* merge the modes */
+                strcpy(modebuf, parv[3]);
+                parabuf[0] = '\0';
+                if (!nopara)
+                        for (b = 4; b <= (parc - 2); b++)
+                        {
+                                strcat(parabuf, parv[b]);
+                                strcat(parabuf, " ");
+                        }
+                ap = mp2parv(modebuf, parabuf);
+                set_mode(chptr, cptr, ap->parc, ap->parv, &pcount, pvar, 0);
 
-		for (acp = cFlagTab; acp->mode; acp++)
-		{
-			if ((oldmode.mode & acp->mode) &&
-			    !(chptr->mode.mode & acp->mode) && !acp->parameters)
-			{
-				Addsingle(acp->flag);
-			}
-		}
-		if (b > 1)
-		{
-			Addsingle('+');
-		}
-		else
-		{
-			strcpy(modebuf, "+");
-			b = 1;
-		}
-		for (acp = cFlagTab; acp->mode; acp++)
-		{
-			if (!(oldmode.mode & acp->mode) &&
-			    (chptr->mode.mode & acp->mode) && !acp->parameters)
-			{
-				Addsingle(acp->flag);
-			}
-		}
-		/* first we check if it has been set, we did unset longer up */
-		if (!oldmode.limit && chptr->mode.limit)
-		{
-			Addit('l', (char *)my_itoa(chptr->mode.limit));
-		}
-		if (!oldmode.key[0] && chptr->mode.key[0])
-		{
-			Addit('k', chptr->mode.key);
-		}
-		if (!oldmode.link[0] && chptr->mode.link[0])
-		{
-			Addit('L', chptr->mode.link);
-		}
-		if (!(oldmode.msgs || oldmode.per || oldmode.kmode)
-		    && (chptr->mode.msgs || chptr->mode.per
-		    || chptr->mode.kmode))
-		{
-			ircsprintf(modeback, "%s%i:%i",
-			    (chptr->mode.kmode == 1 ? "*" : ""),
-			    chptr->mode.msgs, chptr->mode.per);
-			Addit('f', modeback);
+                /* Good, now we got modes, now for the differencing and outputting of modes
+                   We first see if any para modes are set
 
-		}
-		/* now, if we had diffent para modes - this loop really could be done better, but */
+                 */
+                strcpy(modebuf, "-");
+                parabuf[0] = '\0';
+                b = 1;
+                /* however, is this really going to happen at all? may be unneeded */
+                if (oldmode.limit && !chptr->mode.limit)
+                {
+                        Addit('l', (char *)my_itoa(oldmode.limit));
+                }
+                if (oldmode.key[0] && !chptr->mode.key[0])
+                {
+                        Addit('k', oldmode.key);
+                }
+                if (oldmode.link[0] && !chptr->mode.link[0])
+                {
+                        Addit('L', oldmode.link);
+                }
+                if ((oldmode.msgs || oldmode.per || oldmode.kmode)
+                    && ((chptr->mode.msgs == 0) && (chptr->mode.per == 0)
+                    && (chptr->mode.kmode == 0)))
+                {
+                        ircsprintf(modeback, "%s%i:%i",
+                            (oldmode.kmode == 1 ? "*" : ""),
+                            oldmode.msgs, oldmode.per);
+                        Addit('f', modeback);
+                }
 
-		/* do we have an difference? */
-		if (oldmode.limit && chptr->mode.limit
-		    && (oldmode.limit != chptr->mode.limit))
-		{
-			chptr->mode.limit =
-			    MAX(oldmode.limit, chptr->mode.limit);
-			if (oldmode.limit != chptr->mode.limit)
-			{
-				Addit('l', (char *)my_itoa(chptr->mode.limit));
-			}
-		}
-		/* sketch, longest key wins */
-		if (oldmode.key[0] && chptr->mode.key[0]
-		    && strcmp(oldmode.key, chptr->mode.key))
-		{
-			x = strlen(oldmode.key);
-			y = strlen(chptr->mode.key);
-			z = MAX(x, y);
-			if (z == x)
-			{
-				strcpy(chptr->mode.key, oldmode.key);
-			}
-			else
-			{
-				Addit('k', chptr->mode.key);
-			}
-		}
-		/* same as above .. */
-		if (oldmode.link[0] && chptr->mode.link[0]
-		    && strcmp(oldmode.link, chptr->mode.link))
-		{
-			x = strlen(oldmode.link);
-			y = strlen(chptr->mode.link);
-			z = MAX(x, y);
-			if (z == x)
-			{
-				strcpy(chptr->mode.link, oldmode.link);
-			}
-			else
-			{
-				Addit('L', chptr->mode.link);
-			}
-		}
-		/* 
-		 * run a max on each?
-		 */
-		if ((oldmode.kmode != chptr->mode.kmode)
-		    || (oldmode.msgs != chptr->mode.msgs)
-		    || (oldmode.per != chptr->mode.per))
-		{
-			chptr->mode.kmode =
-			    MAX(chptr->mode.kmode, oldmode.kmode);
-			chptr->mode.msgs = MAX(chptr->mode.msgs, oldmode.msgs);
-			chptr->mode.per = MAX(chptr->mode.per, oldmode.per);
-			if ((oldmode.kmode != chptr->mode.kmode)
-			    || (oldmode.msgs != chptr->mode.msgs)
-			    || (oldmode.per != chptr->mode.per))
-			{
-				ircsprintf(modeback, "%s%i:%i",
-				    (chptr->mode.kmode == 1 ? "*" : ""),
-				    chptr->mode.msgs, chptr->mode.per);
-				Addit('f', modeback);
-			}
-		}
+                for (acp = cFlagTab; acp->mode; acp++)
+                {
+                        if ((oldmode.mode & acp->mode) &&
+                            !(chptr->mode.mode & acp->mode) && !acp->parameters)
+                        {
+                                Addsingle(acp->flag);
+                        }
+                }
+                if (b > 1)
+                {
+                        Addsingle('+');
+                }
+                else
+                {
+                        strcpy(modebuf, "+");
+                        b = 1;
+                }
+                for (acp = cFlagTab; acp->mode; acp++)
+                {
+                        if (!(oldmode.mode & acp->mode) &&
+                            (chptr->mode.mode & acp->mode) && !acp->parameters)
+                        {
+                                Addsingle(acp->flag);
+                        }
+                }
+                /* first we check if it has been set, we did unset longer up */
+                if (!oldmode.limit && chptr->mode.limit)
+                {
+                        Addit('l', (char *)my_itoa(chptr->mode.limit));
+                }
+                if (!oldmode.key[0] && chptr->mode.key[0])
+                {
+                        Addit('k', chptr->mode.key);
+                }
+                if (!oldmode.link[0] && chptr->mode.link[0])
+                {
+                        Addit('L', chptr->mode.link);
+                }
+                if (!(oldmode.msgs || oldmode.per || oldmode.kmode)
+                    && (chptr->mode.msgs || chptr->mode.per
+                    || chptr->mode.kmode))
+                {
+                        ircsprintf(modeback, "%s%i:%i",
+                            (chptr->mode.kmode == 1 ? "*" : ""),
+                            chptr->mode.msgs, chptr->mode.per);
+                        Addit('f', modeback);
 
-		Addsingle('\0');
+                }
+                /* now, if we had diffent para modes - this loop really could be done better, but */
 
-		if (modebuf[1])
-		{
-			sendto_serv_butone_sjoin(cptr,
-			    ":%s MODE %s %s %s %lu",
-			    sptr->name, chptr->chname, modebuf, parabuf,
-			    chptr->creationtime);
-			sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
-			    sptr->name, chptr->chname, modebuf, parabuf);
-		}
-	}
+                /* do we have an difference? */
+                if (oldmode.limit && chptr->mode.limit
+                    && (oldmode.limit != chptr->mode.limit))
+                {
+                        chptr->mode.limit =
+                            MAX(oldmode.limit, chptr->mode.limit);
+                        if (oldmode.limit != chptr->mode.limit)
+                        {
+                                Addit('l', (char *)my_itoa(chptr->mode.limit));
+                        }
+                }
+                /* sketch, longest key wins */
+                if (oldmode.key[0] && chptr->mode.key[0]
+                    && strcmp(oldmode.key, chptr->mode.key))
+                {
+                        x = strlen(oldmode.key);
+                        y = strlen(chptr->mode.key);
+                        z = MAX(x, y);
+                        if (z == x)
+                        {
+                                strcpy(chptr->mode.key, oldmode.key);
+                        }
+                        else
+                        {
+                                Addit('k', chptr->mode.key);
+                        }
+                }
+                /* same as above .. */
+                if (oldmode.link[0] && chptr->mode.link[0]
+                    && strcmp(oldmode.link, chptr->mode.link))
+                {
+                        x = strlen(oldmode.link);
+                        y = strlen(chptr->mode.link);
+                        z = MAX(x, y);
+                        if (z == x)
+                        {
+                                strcpy(chptr->mode.link, oldmode.link);
+                        }
+                        else
+                        {
+                                Addit('L', chptr->mode.link);
+                        }
+                }
+                /* 
+                 * run a max on each?
+                 */
+                if ((oldmode.kmode != chptr->mode.kmode)
+                    || (oldmode.msgs != chptr->mode.msgs)
+                    || (oldmode.per != chptr->mode.per))
+                {
+                        chptr->mode.kmode =
+                            MAX(chptr->mode.kmode, oldmode.kmode);
+                        chptr->mode.msgs = MAX(chptr->mode.msgs, oldmode.msgs);
+                        chptr->mode.per = MAX(chptr->mode.per, oldmode.per);
+                        if ((oldmode.kmode != chptr->mode.kmode)
+                            || (oldmode.msgs != chptr->mode.msgs)
+                            || (oldmode.per != chptr->mode.per))
+                        {
+                                ircsprintf(modeback, "%s%i:%i",
+                                    (chptr->mode.kmode == 1 ? "*" : ""),
+                                    chptr->mode.msgs, chptr->mode.per);
+                                Addit('f', modeback);
+                        }
+                }
 
-	/* we should be synched by now, */
-	if (oldts != -1)
-		if (oldts != chptr->creationtime)
-			sendto_channel_butserv(chptr, &me,
-			    ":%s NOTICE %s :*** Notice -- TS for %s changed from %ld to %ld",
-			    me.name, chptr->chname, chptr->chname,
-			    oldts, chptr->creationtime);
+                Addsingle('\0');
+
+                if (modebuf[1])
+                {
+                        sendto_serv_butone_sjoin(cptr,
+                            ":%s MODE %s %s %s %lu",
+                            sptr->name, chptr->chname, modebuf, parabuf,
+                            chptr->creationtime);
+                        sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
+                            sptr->name, chptr->chname, modebuf, parabuf);
+                }
+        }
+
+        /* we should be synched by now, */
+        if (oldts != -1)
+                if (oldts != chptr->creationtime)
+                        sendto_channel_butserv(chptr, &me,
+                            ":%s NOTICE %s :*** Notice -- TS for %s changed from %ld to %ld",
+                            me.name, chptr->chname, chptr->chname,
+                            oldts, chptr->creationtime);
 
 
-	strcpy(parabuf, "");
-	for (i = 2; i <= (parc - 2); i++)
-	{
-		if (!parv[i])
-		{
-			sendto_ops("Got null parv in SJ3 code");
-			continue;
-		}
-		strcat(parabuf, parv[i]);
-		if (((i + 1) <= (parc - 2)))
-			strcat(parabuf, " ");
-	}
+        strcpy(parabuf, "");
+        for (i = 2; i <= (parc - 2); i++)
+        {
+                if (!parv[i])
+                {
+                        sendto_ops("Got null parv in SJ3 code");
+                        continue;
+                }
+                strcat(parabuf, parv[i]);
+                if (((i + 1) <= (parc - 2)))
+                        strcat(parabuf, " ");
+        }
+        if (!chptr->users)
+        {
+                sub1_from_channel(chptr);
+                return -1;
+        }
+        /* This sends out to SJ3 servers .. */
+        Debug((DEBUG_DEBUG, "Sending '%li %s :%s' to sj3-!sjb64", ts, parabuf,
+            parv[parc - 1]));
+        sendto_serv_butone_token_opt(cptr, OPT_SJOIN | OPT_SJ3 | OPT_NOT_SJB64, sptr->name,
+            MSG_SJOIN, TOK_SJOIN, "%li %s :%s", ts, parabuf, parv[parc - 1]);
+        Debug((DEBUG_DEBUG, "Sending '%B %s :%s' to sj3-sjb64", ts, parabuf,
+            parv[parc - 1]));
+        sendto_serv_butone_token_opt(cptr, OPT_SJOIN | OPT_SJ3 | OPT_SJB64, sptr->name,
+            MSG_SJOIN, TOK_SJOIN, "%B %s :%s", ts, parabuf, parv[parc - 1]);
 
-	/* This sends out to SJ3 servers .. */
-	Debug((DEBUG_DEBUG, "Sending '%li %s :%s' to sj3-!sjb64", ts, parabuf,
-	    parv[parc - 1]));
-	sendto_serv_butone_token_opt(cptr, OPT_SJOIN | OPT_SJ3 | OPT_NOT_SJB64, sptr->name,
-	    MSG_SJOIN, TOK_SJOIN, "%li %s :%s", ts, parabuf, parv[parc - 1]);
-	Debug((DEBUG_DEBUG, "Sending '%B %s :%s' to sj3-sjb64", ts, parabuf,
-	    parv[parc - 1]));
-	sendto_serv_butone_token_opt(cptr, OPT_SJOIN | OPT_SJ3 | OPT_SJB64, sptr->name,
-	    MSG_SJOIN, TOK_SJOIN, "%B %s :%s", ts, parabuf, parv[parc - 1]);
-	 
-	/* We strip out & and " here, for SJ2 */
-	strcpy(parabuf, "");
-	t = parv[parc - 1];
-	ap = mp2parv("*", t);
-	for (i = 1; i < ap->parc; i++)
-	{
-		if (!ap->parv[i])
-		{
-			sendto_ops("Got null parv in SJ2 code");
-			continue;
-		}
-		if (*ap->parv[i] == '&')
-			continue;
-		if (*ap->parv[i] == '"')
-			continue;
-
-		strcat(parabuf, ap->parv[i]);
-		if (!((i + 1) == ap->parc))
-			strcat(parabuf, " ");
-	}
-
-	if (nomode)
-	{
-		sendto_serv_butone_token_opt(cptr,
-		    OPT_SJOIN | OPT_SJOIN2 | OPT_NOT_SJ3, sptr->name, MSG_SJOIN,
-		    TOK_SJOIN, "%s %s + <-> :%s", parv[1], parv[2], parabuf);
-		Debug((DEBUG_DEBUG, "Sending to SJ2: %s %s + <-> :%s", parv[1],
-		    parv[2], parabuf));
-		if (*banbuf)
-		{
-			for (s = (char *)strtok(banbuf, " "); s && (*s != ' ');
-			    s = (char *)strtok(NULL, " "))
-			{
-				sendto_serv_butone_token_opt(cptr,
-				    OPT_SJOIN2 | OPT_NOT_SJ3,
-				    sptr->name, MSG_MODE, TOK_MODE,
-				    "%s +b %s %li", chptr->chname, s,
-				    chptr->creationtime);
-			}
-		}
-
-		if (*exbuf)
-		{
-			for (s = (char *)strtok(exbuf, " "); s && (*s != ' ');
-			    s = (char *)strtok(NULL, " "))
-			{
-				sendto_serv_butone_token_opt(cptr,
-				    OPT_SJOIN2 | OPT_NOT_SJ3,
-				    sptr->name, MSG_MODE, TOK_MODE,
-				    "%s +e %s %li", chptr->chname, s,
-				    chptr->creationtime);
-			}
-		}
-		return 0;
-	}
-
-	if (nopara)
-	{
-		sendto_serv_butone_token_opt(cptr,
-		    OPT_SJOIN | OPT_SJOIN2 | OPT_NOT_SJ3, sptr->name, MSG_SJOIN,
-		    TOK_SJOIN, "%s %s %s <-> :%s", parv[1], parv[2], parv[3],
-		    parabuf);
-		Debug((DEBUG_DEBUG, "Sending to SJ2: %s %s %s <-> :%s",
-		    parv[1], parv[2], parv[3], parabuf));
-		if (*banbuf)
-		{
-			for (s = (char *)strtok(banbuf, " "); s && (*s != ' ');
-			    s = (char *)strtok(NULL, " "))
-			{
-				sendto_serv_butone_token_opt(cptr,
-				    OPT_SJOIN2 | OPT_NOT_SJ3,
-				    sptr->name, MSG_MODE, TOK_MODE,
-				    "%s +b %s %li", chptr->chname, s,
-				    chptr->creationtime);
-			}
-		}
-
-		if (*exbuf)
-		{
-			for (s = (char *)strtok(exbuf, " "); s && (*s != ' ');
-			    s = (char *)strtok(NULL, " "))
-			{
-				sendto_serv_butone_token_opt(cptr,
-				    OPT_SJOIN2 | OPT_NOT_SJ3,
-				    sptr->name, MSG_MODE, TOK_MODE,
-				    "%s +e %s %li", chptr->chname, s,
-				    chptr->creationtime);
-			}
-		}
-		return 0;
-	}
-	strcpy(paraback, "");
-	ap = mp2parv("*", parv[4]);
-	for (i = 1; i < ap->parc; i++)
-	{
-		strcat(paraback, ap->parv[i]);
-		strcat(paraback, " ");
-	}
-	sendto_serv_butone_token_opt(cptr, OPT_SJOIN | OPT_SJOIN2 | OPT_NOT_SJ3,
-	    sptr->name,
-	    MSG_SJOIN, TOK_SJOIN, "%s %s %s %s :%s",
-	    parv[1], parv[2], parv[3], paraback, parabuf);
-	Debug((DEBUG_DEBUG, "sending to SJ2: %s %s %s %s :%s",
-	    parv[1], parv[2], parv[3], paraback, parabuf));
-	/* Syncing bans to sj2 .. correctly. */
-	if (*banbuf)
-	{
-		for (s = (char *)strtok(banbuf, " "); s && (*s != ' ');
-		    s = (char *)strtok(NULL, " "))
-		{
-			sendto_serv_butone_token_opt(cptr,
-			    OPT_SJOIN2 | OPT_NOT_SJ3,
-			    sptr->name, MSG_MODE, TOK_MODE,
-			    "%s +b %s %li", chptr->chname, s,
-			    chptr->creationtime);
-		}
-	}
-
-	if (*exbuf)
-	{
-		for (s = (char *)strtok(exbuf, " "); s && (*s != ' ');
-		    s = (char *)strtok(NULL, " "))
-		{
-			sendto_serv_butone_token_opt(cptr,
-			    OPT_SJOIN2 | OPT_NOT_SJ3,
-			    sptr->name, MSG_MODE, TOK_MODE,
-			    "%s +e %s %li", chptr->chname, s,
-			    chptr->creationtime);
-		}
-	}
-	/* And we are synched */
-	return 0;
+        return 0;
 }
-
 
 static int send_ban_list(cptr, chname, creationtime, channel)
 	aClient *cptr;

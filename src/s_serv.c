@@ -1056,454 +1056,457 @@ int  m_server(cptr, sptr, parc, parv)
 }
 
 int  m_server_estab(cptr)
-	aClient *cptr;
+        aClient *cptr;
 {
-	aClient *acptr;
-	aConfItem *aconf, *bconf;
-	char *inpath, *host, *s, *encr;
-	int  split, i;
-	extern char serveropts[];
-	unsigned long numeric;
+        aClient *acptr;
+        aConfItem *aconf, *bconf;
+        char *inpath, *host, *s, *encr;
+        int  split, i;
+        extern char serveropts[];
+        unsigned long numeric;
 
-	inpath = get_client_name(cptr, TRUE);	/* "refresh" inpath with host */
-	split = mycmp(cptr->name, cptr->sockhost);
-	host = cptr->name;
+        inpath = get_client_name(cptr, TRUE);   /* "refresh" inpath with host */
+        split = mycmp(cptr->name, cptr->sockhost);
+        host = cptr->name;
 
-	current_load_data.conn_count++;
-	update_load();
+        current_load_data.conn_count++;
+        update_load();
 
-	if (!(aconf = find_conf(cptr->confs, host, CONF_NOCONNECT_SERVER)))
-	{
-		ircstp->is_ref++;
-		sendto_one(cptr,
-		    "ERROR :Access denied. No N:line for server %s", inpath);
-		sendto_ops("Access denied. No N:line for server %s", inpath);
-		return exit_client(cptr, cptr, cptr, "No N line for server");
-	}
-	if (!(bconf = find_conf(cptr->confs, host, CONF_CONNECT_SERVER)))
-	{
-		ircstp->is_ref++;
-		sendto_one(cptr, "ERROR :Only N (no C) field for server %s",
-		    inpath);
-		sendto_ops("Only N (no C) field for server %s", inpath);
-		return exit_client(cptr, cptr, cptr, "No C line for server");
-	}
+        if (!(aconf = find_conf(cptr->confs, host, CONF_NOCONNECT_SERVER)))
+        {
+                ircstp->is_ref++;
+                sendto_one(cptr,
+                    "ERROR :Access denied. No N:line for server %s", inpath);
+                sendto_ops("Access denied. No N:line for server %s", inpath);
+                return exit_client(cptr, cptr, cptr, "No N line for server");
+        }
+        if (!(bconf = find_conf(cptr->confs, host, CONF_CONNECT_SERVER)))
+        {
+                ircstp->is_ref++;
+                sendto_one(cptr, "ERROR :Only N (no C) field for server %s",
+                    inpath);
+                sendto_ops("Only N (no C) field for server %s", inpath);
+                return exit_client(cptr, cptr, cptr, "No C line for server");
+        }
 
 #ifdef CRYPT_LINK_PASSWORD
-	/* use first two chars of the password they send in as salt */
+        /* use first two chars of the password they send in as salt */
 
-	/* passwd may be NULL. Head it off at the pass... */
-	if (*cptr->passwd)
-	{
-		char salt[3];
-		extern char *crypt();
+        /* passwd may be NULL. Head it off at the pass... */
+        if (cptr->passwd && *cptr->passwd)
+        {
+                char salt[3];
+                extern char *crypt();
 
-		salt[0] = aconf->passwd[0];
-		salt[1] = aconf->passwd[1];
-		salt[2] = '\0';
-		encr = crypt(cptr->passwd, salt);
-	}
-	else
-		encr = "";
+                salt[0] = aconf->passwd[0];
+                salt[1] = aconf->passwd[1];
+                salt[2] = '\0';
+                encr = crypt(cptr->passwd, salt);
+        }
+        else
+                encr = "";
 #else
-	encr = cptr->passwd;
+        encr = cptr->passwd;
 #endif /* CRYPT_LINK_PASSWORD */
-	if (*aconf->passwd && !StrEq(aconf->passwd, encr))
-	{
-		ircstp->is_ref++;
-		sendto_one(cptr, "ERROR :No Access (passwd mismatch) %s",
-		    inpath);
-		sendto_ops("Access denied (passwd mismatch) %s", inpath);
-		return exit_client(cptr, cptr, cptr, "Bad Password");
-	}
-	if (cptr->passwd)
-	MyFree(cptr->passwd);
-#ifndef	HUB
-	for (i = 0; i <= highest_fd; i++)
-		if (local[i] && IsServer(local[i]))
-		{
-			ircstp->is_ref++;
-			sendto_one(cptr, "ERROR :I'm a leaf not a hub");
-			return exit_client(cptr, cptr, cptr, "I'm a leaf");
-		}
+        if (*aconf->passwd && encr && !StrEq(aconf->passwd, encr))
+        {
+                ircstp->is_ref++;
+                sendto_one(cptr, "ERROR :No Access (passwd mismatch) %s",
+                    inpath);
+                sendto_ops("Access denied (passwd mismatch) %s", inpath);
+                return exit_client(cptr, cptr, cptr, "Bad Password");
+        }
+        if (cptr->passwd)
+        {
+                MyFree(cptr->passwd);
+                cptr->passwd = NULL;
+        }
+#ifndef HUB
+        for (i = 0; i <= highest_fd; i++)
+                if (local[i] && IsServer(local[i]))
+                {
+                        ircstp->is_ref++;
+                        sendto_one(cptr, "ERROR :I'm a leaf not a hub");
+                        return exit_client(cptr, cptr, cptr, "I'm a leaf");
+                }
 #endif
-	if (IsUnknown(cptr))
-	{
-		sendto_one(cptr, "PROTOCTL %s", PROTOCTL_SERVER);
-		if (bconf->passwd[0])
-			sendto_one(cptr, "PASS :%s", bconf->passwd);
-		/*
-		   ** Pass my info to the new server
-		 */
-		/* modified so we send out the Uproto and flags */
-		sendto_one(cptr, "SERVER %s 1 :U%d-%s-%i %s",
-		    my_name_for_link(me.name, aconf), UnrealProtocol,
-		    serveropts, me.serv->numeric, (me.info[0]) ? (me.info) : "IRCers United");
-	}
-	else
-	{
-		s = (char *)index(aconf->host, '@');
-		*s = '\0';	/* should never be NULL */
-		Debug((DEBUG_INFO, "Check Usernames [%s]vs[%s]",
-		    aconf->host, cptr->username));
-		if (match(aconf->host, cptr->username))
-		{
-			*s = '@';
-			ircstp->is_ref++;
-			sendto_ops("Username mismatch [%s]v[%s] : %s",
-			    aconf->host, cptr->username,
-			    get_client_name(cptr, TRUE));
-			sendto_one(cptr, "ERROR :No Username Match");
-			return exit_client(cptr, cptr, cptr, "Bad User");
-		}
-		*s = '@';
-		sendto_one(cptr, "PROTOCTL %s", PROTOCTL_SERVER);
-	}
+        if (IsUnknown(cptr))
+        {
+                sendto_one(cptr, "PROTOCTL %s", PROTOCTL_SERVER);
+                if (bconf->passwd[0])
+                        sendto_one(cptr, "PASS :%s", bconf->passwd);
+                /*
+                   ** Pass my info to the new server
+                 */
+                /* modified so we send out the Uproto and flags */
+                sendto_one(cptr, "SERVER %s 1 :U%d-%s-%i %s",
+                    my_name_for_link(me.name, aconf), UnrealProtocol,
+                    serveropts, me.serv->numeric, (me.info[0]) ? (me.info) : "IRCers United");
+        }
+        else
+        {
+                s = (char *)index(aconf->host, '@');
+                *s = '\0';      /* should never be NULL */
+                Debug((DEBUG_INFO, "Check Usernames [%s]vs[%s]",
+                    aconf->host, cptr->username));
+                if (match(aconf->host, cptr->username))
+                {
+                        *s = '@';
+                        ircstp->is_ref++;
+                        sendto_ops("Username mismatch [%s]v[%s] : %s",
+                            aconf->host, cptr->username,
+                            get_client_name(cptr, TRUE));
+                        sendto_one(cptr, "ERROR :No Username Match");
+                        return exit_client(cptr, cptr, cptr, "Bad User");
+                }
+                *s = '@';
+                sendto_one(cptr, "PROTOCTL %s", PROTOCTL_SERVER);
+        }
 
-	det_confs_butmask(cptr,
-	    CONF_LEAF | CONF_HUB | CONF_NOCONNECT_SERVER | CONF_UWORLD);
-	/*
-	   ** *WARNING*
-	   **   In the following code in place of plain server's
-	   **   name we send what is returned by get_client_name
-	   **   which may add the "sockhost" after the name. It's
-	   **   *very* *important* that there is a SPACE between
-	   **   the name and sockhost (if present). The receiving
-	   **   server will start the information field from this
-	   **   first blank and thus puts the sockhost into info.
-	   **   ...a bit tricky, but you have been warned, besides
-	   **   code is more neat this way...  --msa
-	 */
-	SetServer(cptr);
-	IRCstats.me_servers++;
-	IRCstats.servers++;
-	IRCstats.unknown--;
+        det_confs_butmask(cptr,
+            CONF_LEAF | CONF_HUB | CONF_NOCONNECT_SERVER | CONF_UWORLD);
+        /*
+           ** *WARNING*
+           **   In the following code in place of plain server's
+           **   name we send what is returned by get_client_name
+           **   which may add the "sockhost" after the name. It's
+           **   *very* *important* that there is a SPACE between
+           **   the name and sockhost (if present). The receiving
+           **   server will start the information field from this
+           **   first blank and thus puts the sockhost into info.
+           **   ...a bit tricky, but you have been warned, besides
+           **   code is more neat this way...  --msa
+         */
+        SetServer(cptr);
+        IRCstats.me_servers++;
+        IRCstats.servers++;
+        IRCstats.unknown--;
 #ifndef NO_FDLIST
-	addto_fdlist(cptr->fd, &serv_fdlist);
+        addto_fdlist(cptr->fd, &serv_fdlist);
 #endif
-	if ((find_uline(cptr->confs, cptr->name)))
-		cptr->flags |= FLAGS_ULINE;
-	cptr->flags |= FLAGS_TS8;
-	nextping = TStime();
-	(void)find_or_add(cptr->name);
-	if (TRUEHUB == 1)
-	{
+        if ((find_uline(cptr->confs, cptr->name)))
+                cptr->flags |= FLAGS_ULINE;
+        cptr->flags |= FLAGS_TS8;
+        nextping = TStime();
+        (void)find_or_add(cptr->name);
+        if (TRUEHUB == 1)
+        {
 #ifdef USE_SSL
-		if (IsSecure(cptr))
-			sendto_serv_butone(&me,
-			    ":%s GLOBOPS :Secure link with %s established (%s).", me.name, 
-			    inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
-		else
+                if (IsSecure(cptr))
+                        sendto_serv_butone(&me,
+                            ":%s GLOBOPS :Secure link with %s established (%s).", me.name,
+                            inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
+                else
 #endif
-			sendto_serv_butone(&me,
-			    ":%s GLOBOPS :Link with %s established.", me.name, 
-			    inpath);
-	}
+                        sendto_serv_butone(&me,
+                            ":%s GLOBOPS :Link with %s established.", me.name,
+                            inpath);
+        }
 #ifdef USE_SSL
-	if (IsSecure(cptr))
-		sendto_locfailops("Secure Link with %s established (%s).", inpath,
-			(char *) ssl_get_cipher((SSL *)cptr->ssl));
+        if (IsSecure(cptr))
+                sendto_locfailops("Secure Link with %s established (%s).", inpath,
+                        (char *) ssl_get_cipher((SSL *)cptr->ssl));
 
-	else
+        else
 #endif
-		sendto_locfailops("Link with %s established.", inpath);
-	/* Insert here */
-	(void)add_to_client_hash_table(cptr->name, cptr);
-	/* doesnt duplicate cptr->serv if allocted this struct already */
-	(void)make_server(cptr);
-	cptr->serv->up = me.name;
-	cptr->srvptr = &me;
-	cptr->serv->nline = aconf;
+                sendto_locfailops("Link with %s established.", inpath);
+        /* Insert here */
+        (void)add_to_client_hash_table(cptr->name, cptr);
+        /* doesnt duplicate cptr->serv if allocted this struct already */
+        (void)make_server(cptr);
+        cptr->serv->up = me.name;
+        cptr->srvptr = &me;
+        cptr->serv->nline = aconf;
 
-	if (num && numeric_collides(TS2ts(num)))
-	{
-		sendto_serv_butone(&me,
-		    ":%s GLOBOPS :Cancelling link %s, colliding numeric", me.name, 
-		    inpath);
-		sendto_locfailops("Cancelling link %s, colliding numeric", inpath);
-		return exit_client(cptr, cptr, cptr,
-		    "Colliding server numeric (choose another in the M:line)");
-	}
+        if (num && numeric_collides(TS2ts(num)))
+        {
+                sendto_serv_butone(&me,
+                    ":%s GLOBOPS :Cancelling link %s, colliding numeric", me.name,
+                    inpath);
+                sendto_locfailops("Cancelling link %s, colliding numeric", inpath);
+                return exit_client(cptr, cptr, cptr,
+                    "Colliding server numeric (choose another in the M:line)");
+        }
 
-	if (num)
-	{
-		cptr->serv->numeric = TS2ts(num);
-		num = NULL;
-	}
-	add_server_to_table(cptr);
-	/*
-	   ** Old sendto_serv_but_one() call removed because we now
-	   ** need to send different names to different servers
-	   ** (domain name matching) Send new server to other servers.
-	 */
-	for (i = 0; i <= highest_fd; i++)
-	{
-		if (!(acptr = local[i]) || !IsServer(acptr) ||
-		    acptr == cptr || IsMe(acptr))
-			continue;
-		if ((aconf = acptr->serv->nline) &&
-		    !match(my_name_for_link(me.name, aconf), cptr->name))
-			continue;
-				
-		if (SupportNS(acptr))
-		{
-			sendto_one(acptr, "%c%s %s %s 2 %i :%s",
-				(me.serv->numeric ? '@' : ':'),
-				(me.serv->numeric ? base64enc(me.serv->numeric) : me.name),
-				(IsToken(acptr) ? TOK_SERVER : MSG_SERVER),
-				cptr->name, cptr->serv->numeric, 
-				cptr->info);
-		}
-			else
-		{
-			sendto_one(acptr, ":%s %s %s 2 :%s",
-				me.name, 
-				(IsToken(acptr) ? TOK_SERVER : MSG_SERVER),
-				cptr->name, cptr->info);
-		}
-	}
+        if (num)
+        {
+                cptr->serv->numeric = TS2ts(num);
+                num = NULL;
+        }
+        add_server_to_table(cptr);
+        /*
+           ** Old sendto_serv_but_one() call removed because we now
+           ** need to send different names to different servers
+           ** (domain name matching) Send new server to other servers.
+         */
+        for (i = 0; i <= highest_fd; i++)
+        {
+                if (!(acptr = local[i]) || !IsServer(acptr) ||
+                    acptr == cptr || IsMe(acptr))
+                        continue;
+                if ((aconf = acptr->serv->nline) &&
+                    !match(my_name_for_link(me.name, aconf), cptr->name))
+                        continue;
 
-	/*
-	   ** Pass on my client information to the new server
-	   **
-	   ** First, pass only servers (idea is that if the link gets
-	   ** cancelled beacause the server was already there,
-	   ** there are no NICK's to be cancelled...). Of course,
-	   ** if cancellation occurs, all this info is sent anyway,
-	   ** and I guess the link dies when a read is attempted...? --msa
-	   ** 
-	   ** Note: Link cancellation to occur at this point means
-	   ** that at least two servers from my fragment are building
-	   ** up connection this other fragment at the same time, it's
-	   ** a race condition, not the normal way of operation...
-	   **
-	   ** ALSO NOTE: using the get_client_name for server names--
-	   **   see previous *WARNING*!!! (Also, original inpath
-	   **   is destroyed...)
-	 */
+                if (SupportNS(acptr))
+                {
+                        sendto_one(acptr, "%c%s %s %s 2 %i :%s",
+                                (me.serv->numeric ? '@' : ':'),
+                                (me.serv->numeric ? base64enc(me.serv->numeric) : me.name),
+                                (IsToken(acptr) ? TOK_SERVER : MSG_SERVER),
+                                cptr->name, cptr->serv->numeric,
+                                cptr->info);
+                }
+                        else
+                {
+                        sendto_one(acptr, ":%s %s %s 2 :%s",
+                                me.name,
+                                (IsToken(acptr) ? TOK_SERVER : MSG_SERVER),
+                                cptr->name, cptr->info);
+                }
+        }
 
-	aconf = cptr->serv->nline;
-	for (acptr = &me; acptr; acptr = acptr->prev)
-	{
-		/* acptr->from == acptr for acptr == cptr */
-		if (acptr->from == cptr)
-			continue;
-		if (IsServer(acptr))
-		{
-			if (match(my_name_for_link(me.name, aconf),
-			    acptr->name) == 0)
-				continue;
-			split = (MyConnect(acptr) &&
-			    mycmp(acptr->name, acptr->sockhost));
-			    
-			if (SupportNS(cptr))
-			{
-				/* this has to work. */
-				numeric = ((aClient *) find_server_quick(acptr->serv->up))->serv->numeric;
-				
-				sendto_one(cptr, "%c%s %s %s %d %i :%s",
-					(numeric ? '@' : ':'),
-					(numeric ? base64enc(numeric) : acptr->serv->up),
-					IsToken(cptr) ? TOK_SERVER : MSG_SERVER,
-					acptr->name, acptr->hopcount + 1,
-					acptr->serv->numeric, acptr->info);
-			}
-			else
-				sendto_one(cptr, ":%s %s %s %d :%s",
-				    acptr->serv->up,
-				    (IsToken(cptr) ? TOK_SERVER : MSG_SERVER),
-				    acptr->name, acptr->hopcount + 1,
-				    acptr->info);
+        /*
+           ** Pass on my client information to the new server
+           **
+           ** First, pass only servers (idea is that if the link gets
+           ** cancelled beacause the server was already there,
+           ** there are no NICK's to be cancelled...). Of course,
+           ** if cancellation occurs, all this info is sent anyway,
+           ** and I guess the link dies when a read is attempted...? --msa
+           ** 
+           ** Note: Link cancellation to occur at this point means
+           ** that at least two servers from my fragment are building
+           ** up connection this other fragment at the same time, it's
+           ** a race condition, not the normal way of operation...
+           **
+           ** ALSO NOTE: using the get_client_name for server names--
+           **   see previous *WARNING*!!! (Also, original inpath
+           **   is destroyed...)
+         */
 
-		}
-	}
+        aconf = cptr->serv->nline;
+        for (acptr = &me; acptr; acptr = acptr->prev)
+        {
+                /* acptr->from == acptr for acptr == cptr */
+                if (acptr->from == cptr)
+                        continue;
+                if (IsServer(acptr))
+                {
+                        if (match(my_name_for_link(me.name, aconf),
+                            acptr->name) == 0)
+                                continue;
+                        split = (MyConnect(acptr) &&
+                            mycmp(acptr->name, acptr->sockhost));
 
-	
-	for (acptr = &me; acptr; acptr = acptr->prev)
-	{
-		/* acptr->from == acptr for acptr == cptr */
-		if (acptr->from == cptr)
-			continue;
-		if (IsPerson(acptr))
-		{
-			/*
-			   ** IsPerson(x) is true only when IsClient(x) is true.
-			   ** These are only true when *BOTH* NICK and USER have
-			   ** been received. -avalon
-			   ** Apparently USER command was forgotten... -Donwulff
-			 */
+                        if (SupportNS(cptr))
+                        {
+                                /* this has to work. */
+                                numeric = ((aClient *) find_server_quick(acptr->serv->up))->serv->numeric;
 
-			
-			if (!SupportNICKv2(cptr))
-			{
-				sendto_one(cptr, 
-				  "%s %s %d %d %s %s %s %lu :%s",
-				    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
-				    acptr->name, acptr->hopcount + 1,
-				    acptr->lastnick, acptr->user->username,
-				    acptr->user->realhost,
-				     acptr->user->server,
-				    acptr->user->servicestamp, acptr->info);
-				send_umode(cptr, acptr, 0, SEND_UMODES, buf);
-				if (IsHidden(acptr) && acptr->user->virthost)
-					sendto_one(cptr, ":%s %s %s",
-					    acptr->name,
-					    (IsToken(cptr) ? TOK_SETHOST :
-					    MSG_SETHOST),
-					    acptr->user->virthost);
-			}
-			else
-			{
-				send_umode(NULL, acptr, 0, SEND_UMODES, buf);
-								
-				if (!SupportVHP(cptr))
-				{
-					if (SupportNS(cptr) && acptr->srvptr->serv->numeric)
-					{
-						sendto_one(cptr,
-							cptr->proto & PROTO_SJB64 ?
-							"%s %s %d %B %s %s %b %lu %s %s :%s"
-							:
-							"%s %s %d %d %s %s %b %lu %s %s :%s"
-							,
-						    (IsToken(cptr) ? TOK_NICK :
-						    MSG_NICK), acptr->name,
-						    acptr->hopcount + 1,
-						    acptr->lastnick,
-						    acptr->user->username,
-						    acptr->user->realhost,
-						     acptr->srvptr->serv->numeric,
-						    acptr->user->servicestamp, (!buf
-						    || *buf == '\0' ? "+" : buf),
-						    ((IsHidden(acptr)
-						    && (acptr->
-						    umodes & UMODE_SETHOST)) ? acptr->
-						    user->virthost : "*"), acptr->info);
-					}
-					else
-					{
-						sendto_one(cptr,
-						    (cptr->proto & PROTO_SJB64 ?
-						    "%s %s %d %B %s %s %s %lu %s %s :%s"
-						    : "%s %s %d %d %s %s %s %lu %s %s :%s"),
-						    (IsToken(cptr) ? TOK_NICK :
-						    MSG_NICK), acptr->name,
-						    acptr->hopcount + 1,
-						    acptr->lastnick,
-						    acptr->user->username,
-						    acptr->user->realhost,
-					     		acptr->user->server,
-						    acptr->user->servicestamp, (!buf
-						    || *buf == '\0' ? "+" : buf),
-						    ((IsHidden(acptr)
-						    && (acptr->
-						    umodes & UMODE_SETHOST)) ? acptr->
-						    user->virthost : "*"), acptr->info);
-					}
-				}
-				else
-					sendto_one(cptr,
-					    "%s %s %d %d %s %s %s %lu %s %s :%s",
-					    (IsToken(cptr) ? TOK_NICK :
-					    MSG_NICK), acptr->name,
-					    acptr->hopcount + 1,
-					    acptr->lastnick,
-					    acptr->user->username,
-					    acptr->user->realhost,
-					    (SupportNS(cptr) ?
-					     (acptr->srvptr->serv->numeric ?		    
-					     base64enc(acptr->srvptr->serv->numeric) : 
-					     acptr->user->server) : acptr->user->server),
-					    acptr->user->servicestamp, (!buf
-					    || *buf == '\0' ? "+" : buf),
-					    IsHidden(acptr) ? acptr->user->
-					    virthost : acptr->user->realhost,
-					    acptr->info);
-			}
+                                sendto_one(cptr, "%c%s %s %s %d %i :%s",
+                                        (numeric ? '@' : ':'),
+                                        (numeric ? base64enc(numeric) : acptr->serv->up),
+                                        IsToken(cptr) ? TOK_SERVER : MSG_SERVER,
+                                        acptr->name, acptr->hopcount + 1,
+                                        acptr->serv->numeric, acptr->info);
+                        }
+                        else
+                                sendto_one(cptr, ":%s %s %s %d :%s",
+                                    acptr->serv->up,
+                                    (IsToken(cptr) ? TOK_SERVER : MSG_SERVER),
+                                    acptr->name, acptr->hopcount + 1,
+                                    acptr->info);
 
-			if (acptr->user->away)
-				sendto_one(cptr, ":%s %s :%s", acptr->name,
-				    (IsToken(cptr) ? TOK_AWAY : MSG_AWAY),
-				    acptr->user->away);
-			if (acptr->user->swhois)
-				if (*acptr->user->swhois != '\0')
-					sendto_one(cptr, "%s %s :%s",
-					    (IsToken(cptr) ? TOK_SWHOIS :
-					    MSG_SWHOIS), acptr->name,
-					    acptr->user->swhois);
+                }
+        }
 
-			if (!SupportSJOIN(cptr))
-				send_user_joins(cptr, acptr);
-		}
-	}
-	/*
-	   ** Last, pass all channels plus statuses
-	 */
-	{
-		aChannel *chptr;
-		for (chptr = channel; chptr; chptr = chptr->nextch)
-		{
-			if (!SupportSJOIN(cptr))
-				send_channel_modes(cptr, chptr);
-			else if (SupportSJOIN(cptr) && !SupportSJ3(cptr))
-			{
-				send_channel_modes_sjoin(cptr, chptr);
-			}
-			else
-				send_channel_modes_sjoin3(cptr, chptr);
-			if (chptr->topic_time)
-				sendto_one(cptr, 
-				   (cptr->proto & PROTO_SJB64 ? 
-				     "%s %s %s %B :%s" 
-				     :
-				     "%s %s %s %lu :%s"),
-				    (IsToken(cptr) ? TOK_TOPIC : MSG_TOPIC),
-				    chptr->chname, chptr->topic_nick,
-				    chptr->topic_time, chptr->topic);
-		}
-	}
-	/* pass on TKLs */
-	tkl_synch(cptr);
 
-	/* send out SVSFLINEs */
-	dcc_sync(cptr);
+        for (acptr = &me; acptr; acptr = acptr->prev)
+        {
+                /* acptr->from == acptr for acptr == cptr */
+                if (acptr->from == cptr)
+                        continue;
+                if (IsPerson(acptr))
+                {
+                        /*
+                           ** IsPerson(x) is true only when IsClient(x) is true.
+                           ** These are only true when *BOTH* NICK and USER have
+                           ** been received. -avalon
+                           ** Apparently USER command was forgotten... -Donwulff
+                         */
 
-	/*
-	   ** Pass on all services based q-lines
-	 */
-	{
-		aSqlineItem *tmp;
-		char	*ns = NULL;
-		
-		if (me.serv->numeric && SupportNS(cptr))
-			ns = base64enc(me.serv->numeric);
-		else
-			ns = NULL;
-		
-		for (tmp = sqline; tmp; tmp = tmp->next)
-		{
-			if (tmp->status != CONF_ILLEGAL)
-				if (tmp->reason)
-					sendto_one(cptr, "%s%s %s %s :%s",
-					    ns ? "@" : ":",
-					    ns ? ns : me.name,
-					    (IsToken(cptr) ? TOK_SQLINE :
-					    MSG_SQLINE), tmp->sqline,
-					    tmp->reason);
-				else
-					sendto_one(cptr, "%s%s %s %s",
-					    ns ? "@" : ":",
-					    ns ? ns : me.name,
-					    me.name,
-					    (IsToken(cptr) ? TOK_SQLINE :
-					    MSG_SQLINE), tmp->sqline);
-		}
-	}
 
-	sendto_one(cptr, "%s %li %li %li 0 0 0 0 :%s",
-	    (IsToken(cptr) ? TOK_NETINFO : MSG_NETINFO),
-	    IRCstats.global_max, TStime(), UnrealProtocol, ircnetwork);
-	return 0;
+                        if (!SupportNICKv2(cptr))
+                        {
+                                sendto_one(cptr,
+                                  "%s %s %d %d %s %s %s %lu :%s",
+                                    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
+                                    acptr->name, acptr->hopcount + 1,
+                                    acptr->lastnick, acptr->user->username,
+                                    acptr->user->realhost,
+                                     acptr->user->server,
+                                    acptr->user->servicestamp, acptr->info);
+                                send_umode(cptr, acptr, 0, SEND_UMODES, buf);
+                                if (IsHidden(acptr) && acptr->user->virthost)
+                                        sendto_one(cptr, ":%s %s %s",
+                                            acptr->name,
+                                            (IsToken(cptr) ? TOK_SETHOST :
+                                            MSG_SETHOST),
+                                            acptr->user->virthost);
+                        }
+                        else
+                        {
+                                send_umode(NULL, acptr, 0, SEND_UMODES, buf);
+
+                                if (!SupportVHP(cptr))
+                                {
+                                        if (SupportNS(cptr) && acptr->srvptr->serv->numeric)
+                                        {
+                                                sendto_one(cptr,
+                                                        cptr->proto & PROTO_SJB64 ?
+                                                        "%s %s %d %B %s %s %b %lu %s %s :%s"
+                                                        :
+                                                        "%s %s %d %d %s %s %b %lu %s %s :%s"
+                                                        ,
+                                                    (IsToken(cptr) ? TOK_NICK :
+                                                    MSG_NICK), acptr->name,
+                                                    acptr->hopcount + 1,
+                                                    acptr->lastnick,
+                                                    acptr->user->username,
+                                                    acptr->user->realhost,
+                                                     acptr->srvptr->serv->numeric,
+                                                    acptr->user->servicestamp, (!buf
+                                                    || *buf == '\0' ? "+" : buf),
+                                                    ((IsHidden(acptr)
+                                                    && (acptr->
+                                                    umodes & UMODE_SETHOST)) ? acptr->
+                                                    user->virthost : "*"), acptr->info);
+                                        }
+                                        else
+                                        {
+                                                sendto_one(cptr,
+                                                    (cptr->proto & PROTO_SJB64 ?
+                                                    "%s %s %d %B %s %s %s %lu %s %s :%s"
+                                                    : "%s %s %d %d %s %s %s %lu %s %s :%s"),
+                                                    (IsToken(cptr) ? TOK_NICK :
+                                                    MSG_NICK), acptr->name,
+                                                    acptr->hopcount + 1,
+                                                    acptr->lastnick,
+                                                    acptr->user->username,
+                                                    acptr->user->realhost,
+                                                        acptr->user->server,
+                                                    acptr->user->servicestamp, (!buf
+                                                    || *buf == '\0' ? "+" : buf),
+                                                    ((IsHidden(acptr)
+                                                    && (acptr->
+                                                    umodes & UMODE_SETHOST)) ? acptr->
+                                                    user->virthost : "*"), acptr->info);
+                                        }
+                                }
+                                else
+                                        sendto_one(cptr,
+                                            "%s %s %d %d %s %s %s %lu %s %s :%s",
+                                            (IsToken(cptr) ? TOK_NICK :
+                                            MSG_NICK), acptr->name,
+                                            acptr->hopcount + 1,
+                                            acptr->lastnick,
+                                            acptr->user->username,
+                                            acptr->user->realhost,
+                                            (SupportNS(cptr) ?
+                                             (acptr->srvptr->serv->numeric ?
+                                             base64enc(acptr->srvptr->serv->numeric) :
+                                             acptr->user->server) : acptr->user->server),
+                                            acptr->user->servicestamp, (!buf
+                                            || *buf == '\0' ? "+" : buf),
+                                            IsHidden(acptr) ? acptr->user->
+                                            virthost : acptr->user->realhost,
+                                            acptr->info);
+                        }
+
+                        if (acptr->user->away)
+                                sendto_one(cptr, ":%s %s :%s", acptr->name,
+                                    (IsToken(cptr) ? TOK_AWAY : MSG_AWAY),
+                                    acptr->user->away);
+                        if (acptr->user->swhois)
+                                if (*acptr->user->swhois != '\0')
+                                        sendto_one(cptr, "%s %s :%s",
+                                            (IsToken(cptr) ? TOK_SWHOIS :
+                                            MSG_SWHOIS), acptr->name,
+                                            acptr->user->swhois);
+
+                        if (!SupportSJOIN(cptr))
+                                send_user_joins(cptr, acptr);
+                }
+        }
+        /*
+           ** Last, pass all channels plus statuses
+         */
+        {
+                aChannel *chptr;
+                for (chptr = channel; chptr; chptr = chptr->nextch)
+                {
+                        if (!SupportSJOIN(cptr))
+                                send_channel_modes(cptr, chptr);
+                        else if (SupportSJOIN(cptr) && !SupportSJ3(cptr))
+                        {
+                                send_channel_modes_sjoin(cptr, chptr);
+                        }
+                        else
+                                send_channel_modes_sjoin3(cptr, chptr);
+                        if (chptr->topic_time)
+                                sendto_one(cptr,
+                                   (cptr->proto & PROTO_SJB64 ?
+                                     "%s %s %s %B :%s"
+                                     :
+                                     "%s %s %s %lu :%s"),
+                                    (IsToken(cptr) ? TOK_TOPIC : MSG_TOPIC),
+                                    chptr->chname, chptr->topic_nick,
+                                    chptr->topic_time, chptr->topic);
+                }
+        }
+        /* pass on TKLs */
+        tkl_synch(cptr);
+
+        /* send out SVSFLINEs */
+        dcc_sync(cptr);
+
+        /*
+           ** Pass on all services based q-lines
+         */
+        {
+                aSqlineItem *tmp;
+                char    *ns = NULL;
+
+                if (me.serv->numeric && SupportNS(cptr))
+                        ns = base64enc(me.serv->numeric);
+                else
+                        ns = NULL;
+
+                for (tmp = sqline; tmp; tmp = tmp->next)
+                {
+                        if (tmp->status != CONF_ILLEGAL)
+                                if (tmp->reason)
+                                        sendto_one(cptr, "%s%s %s %s :%s",
+                                            ns ? "@" : ":",
+                                            ns ? ns : me.name,
+                                            (IsToken(cptr) ? TOK_SQLINE :
+                                            MSG_SQLINE), tmp->sqline,
+                                            tmp->reason);
+                                else
+                                        sendto_one(cptr, "%s%s %s %s",
+                                            ns ? "@" : ":",
+                                            ns ? ns : me.name,
+                                            me.name,
+                                            (IsToken(cptr) ? TOK_SQLINE :
+                                            MSG_SQLINE), tmp->sqline);
+                }
+        }
+
+        sendto_one(cptr, "%s %li %li %li 0 0 0 0 :%s",
+            (IsToken(cptr) ? TOK_NETINFO : MSG_NETINFO),
+            IRCstats.global_max, TStime(), UnrealProtocol, ircnetwork);
+        return 0;
 }
 
 /*
@@ -1675,6 +1678,8 @@ void m_info_send(sptr)
 	sendto_one(sptr, ":%s %d %s :| * codemastr    <codemastr@tspre.org>",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| * DrBin        <drbin@tspre.org>",
+	    me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :| * Luke         <luke@unrealircd.org>",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| Credits - Type /Credits",

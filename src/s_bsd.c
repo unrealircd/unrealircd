@@ -1289,6 +1289,7 @@ int  get_sockerr(cptr)
 	return errtmp;
 }
 
+#ifndef _WIN32
 /*
  * set_blocking - Set the client connection into non-blocking mode. 
  * If your system doesn't support this, you're screwed, ircd will run like
@@ -1305,6 +1306,7 @@ int set_blocking(int fd)
     else
         return 1;                                       
 }
+#endif
 
 
 
@@ -1461,7 +1463,7 @@ aClient *add_connection(cptr, fd)
 			FDwrite(fd, REPORT_DO_DNS, R_do_dns);
 #endif
 #ifndef USENEWDNS
-		lin.flags = ASYNC_CLIENT;  //newdns
+		lin.flags = ASYNC_CLIENT;  /* newdns */
 		lin.value.cptr = acptr;
 		Debug((DEBUG_DNS, "lookup %s",
 		inetntoa((char *)&addr.SIN_ADDR)));
@@ -1795,7 +1797,6 @@ static int read_packet(aClient *cptr)
  * write it out.
  */
 
-#define HighscoreFD(x,y) if (x > y) y = x
 #ifndef USE_POLL
 #ifdef NO_FDLIST
 int  read_message(delay)
@@ -1821,7 +1822,6 @@ int  read_message(delay, listp)
 	time_t delay2 = delay, now;
 	u_long usec = 0;
 	int  res, length, fd, i;
-	int  rhighest_fd = 0;
 	int  auth = 0;
 	
 #ifdef SOCKSPORT
@@ -1859,12 +1859,10 @@ int  read_message(delay, listp)
 			if (IsLog(cptr))
 				continue;
 			
-			HighscoreFD(i, rhighest_fd);
 #ifdef SOCKSPORT
 			if (DoingSocks(cptr))
 			{
 				socks++;
-				HighscoreFD(cptr->socksfd, rhighest_fd);
 				FD_SET(cptr->socksfd, &read_set);
 #ifdef _WIN32
 				FD_SET(cptr->socksfd, &excpt_set);
@@ -1877,7 +1875,6 @@ int  read_message(delay, listp)
 			if (DoingAuth(cptr))
 			{
 				auth++;
-				HighscoreFD(cptr->authfd, rhighest_fd);
 				Debug((DEBUG_NOTICE, "auth on %x %d", cptr, i));
 				FD_SET(cptr->authfd, &read_set);
 #ifdef _WIN32
@@ -1914,14 +1911,12 @@ int  read_message(delay, listp)
 		if (me.socksfd >= 0)
 		{
 			FD_SET(me.socksfd, &read_set);
-			HighscoreFD(me.socksfd, rhighest_fd);
 
 		}
 #endif
 #ifndef _WIN32
 		if (resfd >= 0)
 		{
-			HighscoreFD(resfd, rhighest_fd);
 			FD_SET(resfd, &read_set);
 
 		}
@@ -1930,14 +1925,14 @@ int  read_message(delay, listp)
 		wait.tv_sec = MIN(delay2, delay);
 		wait.tv_usec = usec;
 #ifdef	HPUX
-		nfds = select(rhighest_fd + 1, (int *)&read_set, (int *)&write_set,
+		nfds = select(MAXCONNECTIONS, (int *)&read_set, (int *)&write_set,
 		    0, &wait);
 #else
 # ifndef _WIN32
-		nfds = select(rhighest_fd + 1, &read_set, &write_set, 0, &wait);
+		nfds = select(MAXCONNECTIONS, &read_set, &write_set, 0, &wait);
 # else
 		nfds =
-		    select(rhighest_fd + 1, &read_set, &write_set, &excpt_set,
+		    select(MAXCONNECTIONS, &read_set, &write_set, &excpt_set,
 		    &wait);
 # endif
 #endif

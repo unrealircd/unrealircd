@@ -1,10 +1,13 @@
 
-Unreal3.1.1-Darkshades Release Notes
+Unreal3.1.3-Komara Release Notes
 ===================================
 
-* It is REALLY RECOMMENDED that you run only Unreal3.1.1<->Unreal3.1.1,
-  as Unreal3.1+sf got some funny SJOIN bugs that causes the network to
-  desynch
+* It is REALLY RECOMMENDED that you run only Unreal3.1.3<->Unreal3.1.3,
+  as Unreal3.1+sf got has funny SJOIN bugs that cause the network to
+  desynch. Additionally, all versions prior to this are susceptible to a MODE
+  problem that can cause the ircd to segfault. Fixed versions of 3.1.1 and
+  3.1.2 resolve this issue, but introduced a mode propagation problem when
+  servers split and resynched.
 
 * It is ADVISABLE that you allocate numerics to each server on your network.
   You simply in the M: line, just after the port, add :numeric, like:
@@ -19,5 +22,4 @@ Unreal3.1.1-Darkshades Release Notes
       To connect securely to another server, add :S at the end of the C:line
        and make sure it autoconnect/connects to a SSL port
 
-* Read Unreal.nfo for any sake AND THE DOCS IN doc/. To update/upgrade your IRCd,
-  please run the ./update script. This requires "wget" and "cvs" on the box to function
+* Read Unreal.nfo for any sake AND THE DOCS IN doc/.

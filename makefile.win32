@@ -1,6 +1,7 @@
 #
 # Win32Gui Config File .. By DrBin
-#
+# Modified by Zogg for 3.1.x
+
 CC=cl
 COMPILERHELP=compilerhelp.exe
 # Here you put your settings
@@ -10,14 +11,14 @@ NS_ADDRESS=/D NS_ADDRESS="\"nospoof@dal.net\""
 !IFNDEF DEBUG
 
 !IFNDEF DISTDEBUG
-CFLAGS=/MT /O2 /G5 /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D _WIN32GUI /D USENEWDNS /D NOSPOOF=1 /c
+CFLAGS=/MT /O2 /G5 /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D _WIN32GUI /D NOSPOOF=1 /c
 
-LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib \
+LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib \
  oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /out:WIRCD2.EXE
 
 !ELSE
 
-CFLAGS=  /MTd /Zi /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D USENEWDNS /D _WIN32GUI /D NOSPOOF=1 /c
+CFLAGS=  /MTd /Zi /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D _WIN32GUI /D NOSPOOF=1 /c
 #/Od /Yd /G5
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib \
  oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /debug /debugtype:BOTH /OUT:WIRCD.EXE
@@ -28,7 +29,7 @@ LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib \
 
 !ELSE
 
-CFLAGS=  /MTd /Zi /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D DEBUG /D DEBUGMODE /D USENEWDNS /D _DEBUG /D _WIN32GUI /D NOSPOOF=1 /c
+CFLAGS=  /MTd /Zi /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D DEBUG /D DEBUGMODE /D _DEBUG /D _WIN32GUI /D NOSPOOF=1 /c
 #/Od /Yd /G5
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib \
  oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /debug /debugtype:BOTH /OUT:WIRCD.EXE
@@ -40,7 +41,6 @@ INCLUDES=./include/struct.h ./include/config.h ./include/sys.h \
  ./include/common.h ./include/version.h ./include/h.h ./include/numeric.h \
  ./include/msg.h ./include/setup.h ./include/dynconf.h
 LINK=link.exe
-# SRC/RES.OBJ SRC/RES_INIT.OBJ SRC/RES_COMP.OBJ
 OBJ_FILES=SRC/CHANNEL.OBJ SRC/USERLOAD.OBJ SRC/SEND.OBJ SRC/BSD.OBJ \
  SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ  \
  SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ \
@@ -51,7 +51,8 @@ OBJ_FILES=SRC/CHANNEL.OBJ SRC/USERLOAD.OBJ SRC/SEND.OBJ SRC/BSD.OBJ \
  SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/WIN32GUI.OBJ \
  SRC/VERSION.OBJ SRC/S_UNREAL.OBJ SRC/DYNCONF.OBJ \
  SRC/S_SOCKS.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ \
- SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/NEWDNS.OBJ src/version.obj
+ SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ \
+ SRC/RES.OBJ SRC/RES_INIT.OBJ SRC/RES_COMP.OBJ
 RC=rc.exe
 
 ALL: COMPILERHELP.EXE WIRCD.EXE
@@ -95,9 +96,6 @@ CLEAN:
         $(CC) /nologo /I ./include /D CR_CHKCONF /Fosrc/chkconf.obj /c src/chkconf.c
         $(LINK) /nologo /out:./chkconf.exe src/chkconf.obj src/chkmatch.obj \
                 src/chkcrule.obj
-
-src/newdns.obj: src/newdns.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/newdns.c
 
 src/version.obj: src/win32/version.c
         $(CC) $(CFLAGS) src/win32/version.c

@@ -126,20 +126,20 @@ int  ssl_handshake(aClient *cptr)
 
 	if (cptr->client_cert != NULL)
 	{
-		// log (L_DEBUG,"Client certificate:\n");
+		/* log (L_DEBUG,"Client certificate:\n"); */
 
 		str =
 		    X509_NAME_oneline(X509_get_subject_name((X509 *) cptr->
 		    client_cert), 0, 0);
 		CHK_NULL(str);
-		// log (L_DEBUG, "\t subject: %s\n", str);
+		/* log (L_DEBUG, "\t subject: %s\n", str); */
 		free(str);
 
 		str =
 		    X509_NAME_oneline(X509_get_issuer_name((X509 *) cptr->
 		    client_cert), 0, 0);
 		CHK_NULL(str);
-		// log (L_DEBUG, "\t issuer: %s\n", str);
+		/* log (L_DEBUG, "\t issuer: %s\n", str); */
 		free(str);
 
 		/* We could do all sorts of certificate
@@ -150,7 +150,7 @@ int  ssl_handshake(aClient *cptr)
 	}
 	else
 	{
-		// log (L_DEBUG, "Client does not have certificate.\n");
+		/* log (L_DEBUG, "Client does not have certificate.\n"); */
 	}
 #endif
 	return 0;
@@ -176,7 +176,7 @@ int  ssl_client_handshake(aClient *cptr)
 			get_client_name(cptr, FALSE));
 		return -1;
 	}
-	set_blocking(cptr->fd);
+	set_blocking(cptr->fd, NULL);
 	SSL_set_fd((SSL *)cptr->ssl, cptr->fd);
 	SSL_set_connect_state((SSL *)cptr->ssl);
 	if (SSL_connect((SSL *)cptr->ssl) <= 0)
@@ -220,7 +220,7 @@ char	*ssl_get_cipher(SSL *ssl)
 	c = SSL_get_current_cipher(ssl);
 	SSL_CIPHER_get_bits(c, &bits);
 	strcat(buf, "-");
-	strcat(buf, my_itoa(bits));
+	strcat(buf, (char *) my_itoa(bits));
 	strcat(buf, "bits");
 	return (buf);
 }

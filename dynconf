@@ -1,4 +1,3 @@
-                    [ $Id$ ]
              Dynamic Configuration Guide
 
 Okay first you have to go edit the file "unrealircd.conf" in 
@@ -15,7 +14,7 @@ copy the file "template.network" to the name you want to use for
 your network file and edit it.
 
 If you experince any problems email me at stskeeps@tspre.org
-or try msg me at /server irc.global-irc.net : #UnrealIRCd
+or try msg me at /server irc.ircsystems.net : #UnrealIRCd
 My nick is mostly Stskeeps or Techie (or Nightwalker if i had a bad night:P)
 
 --Stskeeps
