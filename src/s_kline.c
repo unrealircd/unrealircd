@@ -324,8 +324,15 @@ int  find_tkline_match(cptr, xx)
 				if (IsAdmin(cptr))
 					return -1;
 				SetShunned(cptr);
+#ifndef __OpenBSD__
 				strncpy(gmt2, asctime(gmtime((clock_t *) &lp->expire_at)),
-				      sizeof(gmt2));
+	      		            sizeof(gmt2));
+
+#else
+				strncpy(gmt2, asctime(gmtime((time_t *) &lp->expire_at)),
+	      		            sizeof(gmt2));
+
+#endif		
 	           		gmt2[strlen(gmt2) - 1] = '\0';
 				if (lp->expire_at)
 					sendto_one(cptr, ":%s NOTICE %s :*** You have been shunned by %s until %s (Reason: %s)", 
@@ -528,11 +535,21 @@ int  m_tkl(cptr, sptr, parc, parv)
 		  tkl_add_line(type, parv[3], parv[4], parv[8], parv[5],
 		      expiry_1, setat_1);
 
-
+#ifndef __OpenBSD__
 		  strncpy(gmt, asctime(gmtime((clock_t *) & setat_1)),
-		      sizeof(gmt));
+		   sizeof(gmt));
+#else
+		  strncpy(gmt, asctime(gmtime((time_t *)& setat_1)),
+		   sizeof(gmt));
+#endif
+		
+#ifndef __OpenBSD__
 		  strncpy(gmt2, asctime(gmtime((clock_t *) & expiry_1)),
 		      sizeof(gmt2));
+#else
+		  strncpy(gmt2, asctime(gmtime((time_t *) & expiry_1)),
+		      sizeof(gmt2));
+#endif
 		  gmt[strlen(gmt) - 1] = '\0';
 		  gmt2[strlen(gmt2) - 1] = '\0';
 
@@ -631,9 +648,15 @@ int  m_tkl(cptr, sptr, parc, parv)
 				  if (!strcmp(tk->hostmask, parv[4])
 				      && !strcmp(tk->usermask, parv[3]))
 				  {
+#ifndef __OpenBSD__
 					  strncpy(gmt,
 					      asctime(gmtime((clock_t *) &
 					      tk->set_at)), sizeof(gmt));
+#else
+					  strncpy(gmt,
+					      asctime(gmtime((time_t *) &
+					      tk->set_at)), sizeof(gmt));
+#endif
 					  gmt[strlen(gmt) - 1] = '\0';
 					  sendto_umode(UMODE_EYES,
 					      "%s removed %s %s@%s (set at %s - reason: %s)",

@@ -178,6 +178,15 @@ case "$OS" in
 	CRYPT_XLINE_PASSWORD=""
         echo "You are using FreeBSD ; do NOT crypt passwords at this time"
         ;;
+    *OpenBSD*2*)
+	DEFCFLAGS="$DEFOPT"
+	DEFLIBS="none"
+	OSNAME="OpenBSD 2.x"
+	CRYPT_OPER_PASSWORD=""
+	CRYPT_LINK_PASSWORD=""
+	CRYPT_ILINE_PASSWORD=""
+	CRYPT_XLINE_PASSWORD=""
+	;;
     *SCO_SV*)
         DEFCFLAGS="$DEFOPT -DSCOUNIX"
         DEFLIBS="-lsocket"
