@@ -7075,7 +7075,8 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 			ircstrdup(format->format, cep->ce_vardata);
 			regcomp(&format->expr, cep->ce_vardata, REG_ICASE|REG_EXTENDED);
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
-				if (!strcmp(cepp->ce_varname, "nick")) {
+				if (!strcmp(cepp->ce_varname, "nick") ||
+				    !strcmp(cepp->ce_varname, "target")) {
 					ircstrdup(format->nick, cepp->ce_vardata);
 				}
 				else if (!strcmp(cepp->ce_varname, "parameters")) {
@@ -7088,12 +7089,15 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 						format->type = ALIAS_STATS;
 					else if (!strcmp(cepp->ce_vardata, "normal"))
 						format->type = ALIAS_NORMAL;
+					else if (!strcmp(cepp->ce_vardata, "channel"))
+						format->type = ALIAS_CHANNEL;
 				}
 			}
 			AddListItem(format, alias->format);
 		}		
 				
-		else if (!strcmp(cep->ce_varname, "nick")) {
+		else if (!strcmp(cep->ce_varname, "nick") || !strcmp(cep->ce_varname, "target")) 
+		{
 			ircstrdup(alias->nick, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "type")) {
@@ -7103,6 +7107,8 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 				alias->type = ALIAS_STATS;
 			else if (!strcmp(cep->ce_vardata, "normal"))
 				alias->type = ALIAS_NORMAL;
+			else if (!strcmp(cep->ce_vardata, "channel"))
+				alias->type = ALIAS_CHANNEL;
 			else if (!strcmp(cep->ce_vardata, "command"))
 				alias->type = ALIAS_COMMAND;
 		}
@@ -7184,9 +7190,9 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 				cep->ce_varlinenum);
 				errors++;
 			}
-			if (!config_find_entry(cep->ce_entries, "nick"))
+			if (!config_find_entry(cep->ce_entries, "nick") && !config_find_entry(cep->ce_entries, "target"))
 			{
-				config_error("%s:%i: alias::format::nick missing", cep->ce_fileptr->cf_filename,
+				config_error("%s:%i: alias::format::target missing", cep->ce_fileptr->cf_filename,
 					cep->ce_varlinenum);
 				errors++;
 			}
@@ -7199,7 +7205,8 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 						cepp->ce_varname);
 					errors++; continue;
 				}
-				if (!strcmp(cepp->ce_varname, "nick")) 
+				if (!strcmp(cepp->ce_varname, "nick") ||
+				    !strcmp(cepp->ce_varname, "target")) 
 					;
 				else if (!strcmp(cepp->ce_varname, "type"))
 				{
@@ -7208,6 +7215,8 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 					else if (!strcmp(cepp->ce_vardata, "stats"))
 						;
 					else if (!strcmp(cepp->ce_vardata, "normal"))
+						;
+					else if (!strcmp(cepp->ce_vardata, "channel"))
 						;
 					else {
 						config_status("%s:%i: unknown alias type",
@@ -7224,7 +7233,7 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 				}
 			}
 		}
-		else if (!strcmp(cep->ce_varname, "nick")) 
+		else if (!strcmp(cep->ce_varname, "nick") || !strcmp(cep->ce_varname, "target")) 
 			;
 		else if (!strcmp(cep->ce_varname, "type")) {
 			if (!strcmp(cep->ce_vardata, "services"))
@@ -7232,6 +7241,8 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 			else if (!strcmp(cep->ce_vardata, "stats"))
 				;
 			else if (!strcmp(cep->ce_vardata, "normal"))
+				;
+			else if (!strcmp(cep->ce_vardata, "channel"))
 				;
 			else if (!strcmp(cep->ce_vardata, "command"))
 				;

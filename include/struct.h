@@ -1264,24 +1264,24 @@ struct _configitem_unknown_ext {
 	ConfigEntry     *ce_entries;
 };
 
-#define ALIAS_SERVICES 1
-#define ALIAS_STATS 2
-#define ALIAS_NORMAL 3
-#define ALIAS_COMMAND 4
+
+typedef enum { 
+	ALIAS_SERVICES=1, ALIAS_STATS, ALIAS_NORMAL, ALIAS_COMMAND, ALIAS_CHANNEL
+} AliasType;
 
 struct _configitem_alias {
 	ConfigItem *prev, *next;
 	ConfigFlag flag;
 	ConfigItem_alias_format *format;
 	char *alias, *nick;
-	short type;
+	AliasType type;
 };
 
 struct _configitem_alias_format {
 	ConfigItem *prev, *next;
 	ConfigFlag flag;
 	char *nick;
-	short type;
+	AliasType type;
 	char *format, *parameters;
 	regex_t expr;
 };

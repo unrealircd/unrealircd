@@ -252,6 +252,7 @@ Isupport *IsupportAdd(Module *module, const char *token, const char *value)
                 AddListItem(isupportobj, module->objects);
                 module->errorcode = MODERR_NOERROR;
 	}
+	return isupport;
 }
 
 /**

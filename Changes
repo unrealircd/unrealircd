@@ -367,3 +367,9 @@
 - Added TRE 0.7.0, fixes #0001952 reported by Praetorian
 - Fixed an (unimportant) cloak typo / made it a few nanosec faster. Reported by Martin Brulisauer.
 - Fixed resolver not working in FreeBSD jail, reported & patch provided by urkel (#0002097).
+- Added a %n specifier to command aliases that is replaced by the user's nickname,
+  requested by many people.
+- Added the ability for an alias {} to send to a channel (#0001686) requested by JasonTik
+  - As a result, alias[::format]::nick is now called alias[::format]::target to avoid
+    confusion. ::nick is maintained for backwards compatibility.
+- Fixed a problem where IsupportAdd did not return a value.
