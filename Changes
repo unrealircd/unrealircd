@@ -356,4 +356,5 @@
 - /quote close do not show realhost of caller anymore
 - /shun accepts nick in add mode now (adds *@host)
 - Allowed /shunned users to use /pong now
-- Fixed (by DrBin) Shun and Gline bug, where they replaced eachothers ->type .... Learn that = != ==
+- Fixed (by DrBin) Shun and Gline bug, where they replaced eachothers ->type
+  .... Learn that (= != ==) /me looks at Sts
