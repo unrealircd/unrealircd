@@ -657,24 +657,6 @@ void write_pidfile()
 #endif
 }
 
-#ifdef INET6
-#undef IN6_IS_ADDR_LOOPBACK
-
-int  IN6_IS_ADDR_LOOPBACK(u_int32_t * f)
-{
-	if ((*f == 0) && (*(f + 1) == 0)
-	    && (*(f + 2) == 0) && (*(f + 3) == htonl(1)))
-		return 1;
-
-	return 0;
-}
-
-#define IN6_IS_ADDR_LOOPBACK(a) \
-	((u_int32_t) (a)[0] == 0) && \
-	((u_int32_t) (a)[1] == 0) && \
-	((u_int32_t) (a)[2] == 0) && \
-	((u_int32_t) (a)[3] == htonl(1))
-#endif
 /*
  * Initialize the various name strings used to store hostnames. This is set
  * from either the server's sockhost (if client fd is a tty or localhost)
@@ -703,21 +685,16 @@ static int check_init(cptr, sockn)
 		report_error("connect failure: %s %s", cptr);
 		return -1;
 	}
-#ifdef INET6
-	inetntop(AF_INET6, (char *)&sk.sin6_addr, sockn, MYDUMMY_SIZE);
-#else
-	(void)strcpy(sockn, (char *)inetntoa((char *)&sk.SIN_ADDR));
-#endif
+	(void)strcpy(sockn, (char *)Inet_si2p(&sk));
 
 #ifdef INET6
-#undef IN6_IS_ADDR_LOOPBACK
 	if (IN6_IS_ADDR_LOOPBACK(&sk.SIN_ADDR))
 #else
 	if (inet_netof(sk.SIN_ADDR) == IN_LOOPBACKNET)
 #endif
 	{
 		cptr->hostp = NULL;
-		strncpyzt(sockn, me.sockhost, HOSTLEN);
+		strncpyzt(sockn, "localhost", HOSTLEN);
 	}
 	bcopy((char *)&sk.SIN_ADDR, (char *)&cptr->ip, sizeof(struct IN_ADDR));
 
@@ -1231,13 +1208,7 @@ add_con_refuse:
 		/* Copy ascii address to 'sockhost' just in case. Then we
 		 * have something valid to put into error messages...
 		 */
-#ifdef INET6
-		inetntop(AF_INET6, (char *)&addr.sin6_addr, mydummy,
-		    MYDUMMY_SIZE);
-		get_sockhost(acptr, (char *)mydummy);
-#else
-		get_sockhost(acptr, (char *)inetntoa((char *)&addr.SIN_ADDR));
-#endif
+		get_sockhost(acptr, Inet_si2p(&addr));
 		bcopy((char *)&addr.SIN_ADDR, (char *)&acptr->ip, sizeof(struct IN_ADDR));
 		j = 1;
 		for (i = LastSlot; i >= 0; i--)
@@ -1260,7 +1231,7 @@ add_con_refuse:
 			}
 		}
 
-		if ((bconf = Find_ban(inetntoa((char *)&acptr->ip), CONF_BAN_IP)))
+		if ((bconf = Find_ban(acptr->sockhost, CONF_BAN_IP)))
 		{
 			ircsprintf(zlinebuf,
 				"ERROR :Closing Link: [%s] (You are not welcome on "
@@ -1288,8 +1259,7 @@ add_con_refuse:
 		}
 		lin.flags = ASYNC_CLIENT;
 		lin.value.cptr = acptr;
-		Debug((DEBUG_DNS, "lookup %s", inetntoa((char *)&addr.SIN_ADDR)));
-
+		Debug((DEBUG_DNS, "lookup %s", acptr->sockhost));
 		acptr->hostp = gethost_byaddr((char *)&acptr->ip, &lin);
 
 		if (!acptr->hostp)
@@ -2524,8 +2494,9 @@ void do_dns_async(id)
 				del_queries((char *)cptr);
 				ClearDNS(cptr);
 				cptr->hostp = hp;
+
 				if (SHOWCONNECTINFO)
-		          	        sendto_one(cptr, REPORT_FIN_DNS);
+		          	        sendto_one(cptr, cptr->hostp ? REPORT_FIN_DNS : REPORT_FAIL_DNS);
 				  if (!DoingAuth(cptr))
 					  SetAccess(cptr);
 			    }

@@ -507,8 +507,8 @@ static int do_query_number(lp, numb, rptr)
 	cp = (u_char *)numb->s6_addr;
 	if (cp[0] == 0 && cp[1] == 0 && cp[2] == 0 && cp[3] == 0 && cp[4] == 0
 	    && cp[5] == 0 && cp[6] == 0 && cp[7] == 0 && cp[8] == 0
-	    && cp[9] == 0 && ((cp[10] == 0 && cp[11] == 0) || (cp[10] == 0xff
-	    && cp[11] == 0xff)))
+	    && cp[9] == 0 && cp[10] == 0xff
+	    && cp[11] == 0xff)
 	{
 		(void)ircsprintf(ipbuf, "%u.%u.%u.%u.in-addr.arpa.",
 		    (u_int)(cp[15]), (u_int)(cp[14]),
@@ -546,30 +546,11 @@ static int do_query_number(lp, numb, rptr)
 	{
 		rptr = make_request(lp);
 		rptr->type = T_PTR;
-#ifndef _WIN32
-#ifdef INET6
-		bcopy(numb->s6_addr, rptr->addr.s6_addr, IN6ADDRSZ);
-		bcopy((char *)numb->s6_addr,
-		    (char *)&rptr->he.h_addr, sizeof(struct in6_addr));
-#else
-		rptr->addr.s_addr = numb->s_addr;
-		bcopy((char *)&numb->s_addr,
-		    (char *)&rptr->he.h_addr, sizeof(struct in_addr));
-#endif
+		bcopy(numb->S_ADDR, rptr->addr.S_ADDR, sizeof(rptr->addr.S_ADDR));
 		rptr->he.h_length = sizeof(struct IN_ADDR);
-#else
-		rptr->addr.S_ADDR = numb->S_ADDR;
-		rptr->he->h_length = sizeof(struct IN_ADDR);
-
-/*		rptr->addr.s_addr = numb->s_addr;
-		bcopy((char *)&numb->s_addr,
-		    (char *)&rptr->he->h_addr, sizeof(struct in_addr));
-		rptr->he->h_length = sizeof(struct IN_ADDR);*/
-
-#endif
 	}
 #ifndef _WIN32
-	return (query_name(ipbuf, C_IN, T_PTR, rptr));
+ 	 return (query_name(ipbuf, C_IN, T_PTR, rptr));
 #else
          rptr->id = _beginthread(async_dns, 0, (void *)rptr);
          rptr->sends++;

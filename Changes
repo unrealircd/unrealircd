@@ -843,3 +843,6 @@ seen. gmtime warning still there
 - Fixed a IPv6 bindip problem
 - Removed bsd.c and made socket.c, moving signal stuff to ircd.c, possible 
   fixing a IPv6 bug
+- Made Inet_si2p (sin to presensation), fixing the "*", bug, some debugging
+  fixes, fixed a lot of IPv6 bugs, hopefully - thanks to JK for borrowing
+  his box

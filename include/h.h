@@ -347,6 +347,13 @@ extern char *inetntop(int af, const void *in, char *local_dummy,
 #endif
 
 /*
+ * socket.c
+*/
+
+char	*Inet_si2p(struct SOCKADDR_IN *sin);
+char	*Inet_si2pB(struct SOCKADDR_IN *sin, char *buf);
+
+/*
  * CommandHash -Stskeeps
 */
 extern aCommand *CommandHash[256];

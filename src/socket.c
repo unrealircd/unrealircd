@@ -172,3 +172,33 @@ int  deliver_it(aClient *cptr, char *str, int len)
 	return (retval);
 }
 
+char	*Inet_si2pB(struct SOCKADDR_IN *sin, char *buf)
+{
+#ifdef INET6
+	u_char	*cp;
+	
+	cp = (u_char *)sin->SIN_ADDR.s6_addr;
+	if (cp[0] == 0 && cp[1] == 0 && cp[2] == 0 && cp[3] == 0 && cp[4] == 0
+	    && cp[5] == 0 && cp[6] == 0 && cp[7] == 0 && cp[8] == 0
+	    && cp[9] == 0 && cp[10] == 0xff
+	    && cp[11] == 0xff)
+	{
+		(void)ircsprintf(buf, "%u.%u.%u.%u",
+		    (u_int)(cp[12]), (u_int)(cp[13]),
+		    (u_int)(cp[14]), (u_int)(cp[15]));
+	
+		return (buf);
+	}
+#endif
+	return ((char *)inetntop(sin->SIN_FAMILY, (void *)&sin->SIN_ADDR, buf, sizeof(buf)));
+
+}
+
+char	*Inet_si2p(struct SOCKADDR_IN *sin)
+{
+	static char	buf[256];
+	
+	return (Inet_si2pB(sin, buf));
+}
+
+
