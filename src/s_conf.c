@@ -4283,13 +4283,18 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 
 #ifdef STRIPBADWORDS
 
-static ConfigItem_badword *copy_badword_struct(ConfigItem_badword *ca)
+static ConfigItem_badword *copy_badword_struct(ConfigItem_badword *ca, int regex, int regflags)
 {
 	ConfigItem_badword *x = MyMalloc(sizeof(ConfigItem_badword));
 	memcpy(x, ca, sizeof(ConfigItem_badword));
 	x->word = strdup(ca->word);
 	if (ca->replace)
 		x->replace = strdup(ca->replace);
+	if (regex) 
+	{
+		memset(&x->expr, 0, sizeof(regex_t));
+		regcomp(&x->expr, x->word, regflags);
+	}
 	return x;
 }
 
@@ -4387,9 +4392,9 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 		AddListItem(ca, conf_badword_quit);
 	else if (!strcmp(ce->ce_vardata, "all"))
 	{
-		AddListItem(copy_badword_struct(ca), conf_badword_channel);
-		AddListItem(copy_badword_struct(ca), conf_badword_message);
-		AddListItem(copy_badword_struct(ca), conf_badword_quit);
+		AddListItem(ca, conf_badword_channel);
+		AddListItem(copy_badword_struct(ca,regex,regflags), conf_badword_message);
+		AddListItem(copy_badword_struct(ca,regex,regflags), conf_badword_quit);
 	}
 	return 1;
 }
