@@ -1,4 +1,5 @@
 # Networks index file - do not touch please 
+# 50 networks listed
 networks/global-irc.network ......: Global-IRC (http://www.global-irc.net)
 networks/mp3fans.network .........: Mp3Fans.Net (http://www.mp3fans.net)
 networks/roxnet.network ..........: ROXnet (http://www.rox.za.net)
@@ -7,7 +8,7 @@ networks/megairc.network .........: MegaIRC (http://www.megairc.net)
 networks/neohorizon.network ......: NeoHorizon (http://www.nhn.net)
 networks/spynet.network ..........: SpyNet (http://www.spynet.org)
 networks/nevernet.network ........: NeverNET (http://www.nevernet.net)
-networks/altirc.network ..........: AlternativeNet IRC (http://www.
+networks/altirc.network ..........: AlternativeNet IRC
 networks/bunker7.network .........: Bunker7 (http://www.bunker7.net)
 networks/realchat.network ........: RealChat.org (http://www.realchat.org)
 networks/newmilennium.network ....: NewMilennium (http://www.newmilennium.net)
@@ -43,3 +44,9 @@ networks/qkaka.network ...........: Qkaka (http://www.qkaka.com)
 networks/sheytoybox.network ......: SheyToyBox (http://www.sheytoybox.net)
 networks/darkfyre.network ........: Darkfyre (http://www.darkfyre.net)
 networks/israelnet.network .......: IsraelNet
+networks/tierrared.network .......: TierraRed (http://www.tierrared.com)
+networks/music-chatnet.network ...: Music-ChatNET
+networks/german-global-irc.network: German Global IRC (http://www.global-irc.de)
+networks/darkwar.network .........: Darkwar (http://www.darkwar.net)
+networks/lamenet.network .........: Lamenet (http://www.lamenet.net)
+networks/spin.network ............: SpiN
