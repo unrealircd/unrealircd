@@ -1,0 +1,28 @@
+/*
+ * Lostchat (irc.lostchat.net) Network Configuration File
+ * --------------------------------------------------
+ *  Added-at:     22 February 2001 20:47
+ *  Author: cerberus
+ *  Email: cerberus@storm-services.net
+ * -----------------------------------------
+ */
+
+set {
+        network-name            "Lostchat";
+        default-server          "irc.lostchat.net";
+        services-server         "services.lostchat.net";
+        stats-server            "stats.mynet.org";
+        help-channel            "#lostchat";
+        hiddenhost-prefix       "lostchat";
+        prefix-quit             "Quit:";
+        hosts {
+                local           "locop.lostchat.net";
+                global          "oper.lostchat.net";
+                coadmin         "coadmin.lostchat.net";
+                admin           "admin.lostchat.net";
+                servicesadmin   "csop.lostchat.net";
+                techadmin       "techadmin.lostchat.net";
+                netadmin        "netadmin.lostchat.net";
+                host-on-oper-up "on";
+        };
+};

@@ -1,0 +1,28 @@
+/*
+ * ShallomChat (IRC.ShallomChat.org) Network Configuration File
+ * --------------------------------------------------
+ *  Added-at:     30 March 2001 13:27
+ *  Author: MasterScript
+ *  Email: MasterScript@shallomchat.org
+ * -----------------------------------------
+ */
+
+set {
+        network-name            "ShallomChat";
+        default-server          "IRC.ShallomChat.org";
+        services-server         "Services.ShallomChat.org";
+        stats-server            "Stats.ShallomChat.org";
+        help-channel            "#SChelp";
+        hiddenhost-prefix       "ShallomChat";
+        prefix-quit             "Quit:";
+        hosts {
+                local           "Locop.ShallomChat.org";
+                global          "Oper.ShallomChat.org";
+                coadmin         "COadmin.ShallomChat.org";
+                admin           "Admin.ShallomChat.org";
+                servicesadmin   "CSop.ShallomChat.org";
+                techadmin       "Techadmin.ShallomChat.org";
+                netadmin        "Netadmin.ShallomChat.org";
+                host-on-oper-up "on";
+        };
+};
