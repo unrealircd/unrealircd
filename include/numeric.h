@@ -20,8 +20,6 @@
  */
 
 /*
- * -- Potvin -- Feb 20/98
- *
  * Added numerics 600-799 as numeric_replies2[], we ran out
  */
 
