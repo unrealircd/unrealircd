@@ -63,6 +63,7 @@ static int xScan_TimeOut = 0;
 #ifdef STATIC_LINKING
 extern void Eadd_scan();
 extern struct SOCKADDR_IN	Scan_endpoint;
+extern int Scan_TimeOut;
 #endif
 void	scan_socks_scan(Scan_AddrStruct *sr);
 void	scan_socks4_scan(Scan_AddrStruct *sr);

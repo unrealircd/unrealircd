@@ -62,6 +62,7 @@ LRESULT CALLBACK StatusDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK ConfigErrorDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK ColorDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK FromVarDLG(HWND, UINT, WPARAM, LPARAM, char *, char **);
+LRESULT CALLBACK FromFileReadDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK FromFileDLG(HWND, UINT, WPARAM, LPARAM);
 
 typedef struct {
@@ -527,7 +528,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 static HCURSOR hCursor;
-static HMENU hRehash, hAbout, hConfig, hTray;
+static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 
 	char *argv[3];
 	aClient *paClient;
@@ -628,8 +629,17 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 				ClientToScreen(hDlg,&p);
 				DestroyMenu(hConfig);
 				hConfig = CreatePopupMenu();
+				DestroyMenu(hLogs);
+				hLogs = CreatePopupMenu();
 
 				AppendMenu(hConfig, MF_STRING, IDM_CONF, CPATH);
+				if (conf_log) {
+					ConfigItem_log *logs;
+					AppendMenu(hConfig, MF_POPUP|MF_STRING, (UINT)hLogs, "Logs");
+					for (logs = conf_log; logs; logs = (ConfigItem_log *)logs->next) {
+						AppendMenu(hLogs, MF_STRING, i++, logs->file);
+					}
+				}
 				AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
 
 				if (conf_include) {
@@ -678,9 +688,15 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 			case WM_COMMAND: {
 				if (LOWORD(wParam) >= 60000 && HIWORD(wParam) == 0 && !lParam) {
 					char path[MAX_PATH];
-					GetMenuString(hConfig,LOWORD(wParam), path, MAX_PATH, MF_BYCOMMAND);
-					DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, 
-							(LPARAM)path);
+					if (GetMenuString(hLogs, LOWORD(wParam), path, MAX_PATH, MF_BYCOMMAND))
+						DialogBoxParam(hInst, "FromVar", hDlg,
+(DLGPROC)FromFileReadDLG, (LPARAM)path);
+					
+					else {
+						GetMenuString(hConfig,LOWORD(wParam), path, MAX_PATH, MF_BYCOMMAND);
+						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, 
+								(LPARAM)path);
+					}
 					return FALSE;
 				}
 
@@ -806,7 +822,8 @@ LRESULT CALLBACK DalDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 	return FromVarDLG(hDlg, message, wParam, lParam, "UnrealIRCd DALnet Credits", dalinfotext);
 }
 
-LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam, char *title, char **s) {
+LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam, char
+*title, char **s) {
 	HWND hWnd;
 	switch (message) {
 		case WM_INITDIALOG: {
@@ -817,7 +834,8 @@ LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			EDITSTREAM edit;
 			SetWindowText(hDlg, title);
 			bzero(String, 16384);
-			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)RESubClassFunc);
+			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT),
+GWL_WNDPROC, (DWORD)RESubClassFunc);
 			while (*s) {
 				strcat(String, *s++);
 				if (*s)
@@ -840,6 +858,88 @@ LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			return (TRUE);
 			}
 
+		case WM_COMMAND: {
+			hWnd = GetDlgItem(hDlg, IDC_TEXT);
+		if (LOWORD(wParam) == IDOK)
+				return EndDialog(hDlg, TRUE);
+		if (LOWORD(wParam) == IDM_COPY) {
+			SendMessage(hWnd, WM_COPY, 0, 0);
+			return 0;
+		}
+		if (LOWORD(wParam) == IDM_SELECTALL) {
+			SendMessage(hWnd, EM_SETSEL, 0, -1);
+			return 0;
+		}
+		if (LOWORD(wParam) == IDM_PASTE) {
+			SendMessage(hWnd, WM_PASTE, 0, 0);
+			return 0;
+		}
+		if (LOWORD(wParam) == IDM_CUT) {
+			SendMessage(hWnd, WM_CUT, 0, 0);
+			return 0;
+		}
+		if (LOWORD(wParam) == IDM_UNDO) {
+			SendMessage(hWnd, EM_UNDO, 0, 0);
+			return 0;
+		}
+		if (LOWORD(wParam) == IDM_DELETE) {
+			SendMessage(hWnd, WM_CLEAR, 0, 0);
+			return 0;
+		}
+
+
+			break;
+		}
+		case WM_CLOSE:
+			EndDialog(hDlg, TRUE);
+			break;
+		case WM_DESTROY:
+			break;
+		}
+	return (FALSE);
+}
+
+LRESULT CALLBACK FromFileReadDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
+	HWND hWnd;
+	switch (message) {
+		case WM_INITDIALOG: {
+			int fd,len;
+			char *buffer = '\0', *string = '\0';
+			EDITSTREAM edit;
+			StreamIO *stream = malloc(sizeof(StreamIO));
+			char szText[256];
+			struct stat sb;
+			HWND hWnd = GetDlgItem(hDlg, IDC_TEXT), hTip;
+			wsprintf(szText, "UnrealIRCd Viewer - %s", (char *)lParam);
+			SetWindowText(hDlg, szText);
+			lpfnOldWndProc = (FARPROC)SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)RESubClassFunc);
+			if ((fd = open((char *)lParam, _O_RDONLY|_O_BINARY)) != -1) {
+				fstat(fd,&sb);
+				/* Only allocate the amount we need */
+				buffer = (char *)malloc(sb.st_size+1);
+				buffer[0] = 0;
+				len = read(fd, buffer, sb.st_size);
+				buffer[len] = 0;
+				len = CountRTFSize(buffer)+1;
+				string = (char *)malloc(len);
+				bzero(string,len);
+				IRCToRTF(buffer,string);
+				RTFBuf = string;
+				len--;
+				stream->size = &len;
+				stream->buffer = &RTFBuf;
+				edit.dwCookie = (UINT)stream;
+				edit.pfnCallback = SplitIt;
+				SendMessage(hWnd, EM_EXLIMITTEXT, 0, (LPARAM)0x7FFFFFFF);
+				SendMessage(hWnd, EM_STREAMIN, (WPARAM)SF_RTF|SFF_PLAINRTF, (LPARAM)&edit);
+				close(fd);
+				RTFBuf = NULL;
+				free(buffer);
+				free(string);
+				free(stream);
+			}
+			return (TRUE);
+			}
 		case WM_COMMAND: {
 			hWnd = GetDlgItem(hDlg, IDC_TEXT);
 		if (LOWORD(wParam) == IDOK)

@@ -68,6 +68,7 @@ static Hook *HttpScanHost = NULL;
 #ifdef STATIC_LINKING
 extern void Eadd_scan();
 extern struct SOCKADDR_IN	Scan_endpoint;
+extern int Scan_TimeOut;
 #endif
 #ifdef DYNAMIC_LINKING
 Module *Mod_Handle = NULL;

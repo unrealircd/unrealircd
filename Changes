@@ -1157,3 +1157,5 @@ v- Fixed some bugreport stuff
   also added set::scan::timeout to specify how long the scanner should wait for a response before giving up
 - Added HOOKTYPE_STATS - allows modules to respond to certain /stats (so far only S is supported)
 - Changed some m_ functions into CMD_FUNC(m_*)
+- Fixed a win32 bug with the scanner code changes
+- Added a win32 menu item that lets you view log files
