@@ -1364,3 +1364,4 @@ seen. gmtime warning still there
 - Added MD5 and SHA1 password encryption support to the win32 version whether SSL is
   installed or not using the CryptoAPI library included in Windows.
 - Added extras/channeldumper.c
+- Fixed an alias {} bug reported by Keeper (prefix was :nick not :nick!user@host which screwed up some bots)
