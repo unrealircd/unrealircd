@@ -861,9 +861,9 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->ce_varname, "connfreq"))
 		{
 			class->connfreq = atol(cep->ce_vardata);
-			if (class->connfreq < 0)
+			if (class->connfreq < 10)
 			{
-				config_error("%s:%i: class::connfreq with illegal value (<0))",
+				config_error("%s:%i: class::connfreq with illegal value (<10))",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			} 
 		} else
