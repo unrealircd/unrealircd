@@ -1382,3 +1382,4 @@ seen. gmtime warning still there
     unreal rehash -rehashes the config file
   Config errors are now logged to service.log when in service mode.
 - Added a win32 installer script (for Inno Setup with ISX)
+- Removed a reference to TechAdmins in makeconf, reported by Zerwas (#0000234)

@@ -235,7 +235,6 @@ echo "  O = global oper"
 echo "  N = network administrator"
 echo "  A = server administrator"
 echo "  C = co administrator"
-echo "  T = technical administrator"
 echo "  read unrealircd.doc for more info about O:line flags)"
 echo $n " [$FLAGS] -> $c"
 read cc
