@@ -3778,6 +3778,50 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		DelListItem(help_ptr, conf_help);
 		MyFree(help_ptr);
 	}
+	if (KLINE_ADDRESS)
+		free(KLINE_ADDRESS);
+	if (AUTO_JOIN_CHANS)
+		free(AUTO_JOIN_CHANS);
+	if (OPER_AUTO_JOIN_CHANS)
+		free(OPER_AUTO_JOIN_CHANS);
+	if (OPER_ONLY_STATS)
+		free(OPER_ONLY_STATS);
+	if (ircnetwork)
+		free(ircnetwork);
+	if (ircnet005)
+		free(ircnet005);
+	if (defserv)
+		free(defserv);
+	if (SERVICES_NAME)
+		free(SERVICES_NAME);
+	if (STATS_SERVER)
+		free(STATS_SERVER);
+	if (helpchan)
+		free(helpchan);
+	if (hidden_host)
+		free(hidden_host);
+	if (prefix_quit)
+		free(prefix_quit);
+	if (NAME_SERVER)
+		free(NAME_SERVER);
+	if (locop_host)
+		free(locop_host);
+	if (oper_host)
+		free(oper_host);
+	if (coadmin_host)
+		free(coadmin_host);
+	if (admin_host)
+		free(admin_host);
+	if (sadmin_host)
+		free(sadmin_host);
+	if (netadmin_host)
+		free(netadmin_host);
+#ifdef USE_SSL
+	if (iConf.x_server_cert_pem)
+		free(iConf.x_server_cert_pem);
+	if (iConf.x_server_key_pem)
+		free(iConf.x_server_key_pem);
+#endif
 	bzero(&iConf, sizeof(iConf));
 
 	/* rehash_modules */
