@@ -2130,12 +2130,11 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 			cSlash--; 
 		*(cSlash+1)=0;
 	}
-	hFind = FindFirstFile(ce->ce_vardata, &FindData);
-	if (!FindData.cFileName) {
+	if ( (hFind = FindFirstFile(ce->ce_vardata, &FindData)) == INVALID_HANDLE_VALUE )
+	{
 		config_status("%s:%i: include %s: invalid file given",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			ce->ce_vardata);
-		FindClose(hFind);
 		return -1;
 	}
 	if (cPath) {
