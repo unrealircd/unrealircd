@@ -3934,17 +3934,8 @@ void send_list(aClient *cptr, int numsend)
 	{
 		Link *lp, *next;
 		sendto_one(cptr, rpl_str(RPL_LISTEND), me.name, cptr->name);
-		for (lp = lopt->yeslist; lp; lp = next)
-		{
-			next = lp->next;
-			free_link(lp);
-		}
-		for (lp = lopt->nolist; lp; lp = next)
-		{
-			next = lp->next;
-			free_link(lp);
-		}
-
+		free_str_list(cptr->user->lopt->yeslist);
+		free_str_list(cptr->user->lopt->nolist);
 		MyFree(cptr->user->lopt);
 		cptr->user->lopt = NULL;
 		return;
@@ -4074,16 +4065,8 @@ CMD_FUNC(m_list)
 	if ((lopt = sptr->user->lopt) != NULL)
 	{
 		sendto_one(sptr, rpl_str(RPL_LISTEND), me.name, parv[0]);
-		for (lp = lopt->yeslist; lp; lp = next)
-		{
-			next = lp->next;
-			free_link(lp);
-		}
-		for (lp = lopt->nolist; lp; lp = next)
-		{
-			next = lp->next;
-			free_link(lp);
-		}
+		free_str_list(sptr->user->lopt->yeslist);
+		free_str_list(sptr->user->lopt->nolist);
 		MyFree(sptr->user->lopt);
 		sptr->user->lopt = NULL;
 		return 0;
