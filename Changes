@@ -2429,3 +2429,4 @@ seen. gmtime warning still there
 - Added HOOKTYPE_LOCAL_PASS and HOOKTYPE_REMOTE_CONNECT
 - Added HOOKTYPE_REMOTE_QUIT
 - Added beta18 release notes (might be changed)
+- Added HOOKTYPE_REHASHFLAG (triggered when /rehash is passed a flag)

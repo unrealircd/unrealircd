@@ -2952,11 +2952,13 @@ CMD_FUNC(m_rehash)
 				opermotd = (aMotd *) read_file(OPATH, &opermotd);
 				botmotd = (aMotd *) read_file(BPATH, &botmotd);
 				rehash_motdrules();
+				RunHook(HOOKTYPE_REHASHFLAG, parv[1]);
 				return 0;
 			}
 			if (!strnicmp("-gar", parv[1], 4))
 			{
 				loop.do_garbage_collect = 1;
+				RunHook(HOOKTYPE_REHASHFLAG, parv[1]);
 				return 0;
 			}
 			if (!_match("-o*motd", parv[1]))
@@ -2968,6 +2970,7 @@ CMD_FUNC(m_rehash)
 				if (cptr != sptr)
 					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing OperMOTD", me.name, sptr->name);
 				opermotd = (aMotd *) read_file(OPATH, &opermotd);
+				RunHook(HOOKTYPE_REHASHFLAG, parv[1]);
 				return 0;
 			}
 			if (!_match("-b*motd", parv[1]))
@@ -2979,6 +2982,7 @@ CMD_FUNC(m_rehash)
 				if (cptr != sptr)
 					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing BotMOTD", me.name, sptr->name);
 				botmotd = (aMotd *) read_file(BPATH, &botmotd);
+				RunHook(HOOKTYPE_REHASHFLAG, parv[1]);
 				return 0;
 			}
 			if (!strnicmp("-motd", parv[1], 5)
@@ -2991,14 +2995,11 @@ CMD_FUNC(m_rehash)
 				if (cptr != sptr)
 					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing all MOTDs and RULES", me.name, sptr->name);
 				rehash_motdrules();
+				RunHook(HOOKTYPE_REHASHFLAG, parv[1]);
 				return 0;
 			}
-			/* didn't match / fall trough... should we continue?? */
-			sendto_ops("%s is %srehashing server config file (unknown option)",
-				sptr->name, cptr != sptr ? "Remotely " : "");
-			if (cptr != sptr)
-				sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing server config file (unknown option)",
-					me.name, sptr->name);
+			RunHook(HOOKTYPE_REHASHFLAG, parv[1]);
+			return 0;
 		}
 	}
 	else
