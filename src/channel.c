@@ -71,6 +71,7 @@ extern char *StripColors(char *);
 extern int lifesux;
 #endif
 
+void over_notice PROTO((aClient *, aClient *, aChannel *, char *));
 static void add_invite PROTO((aClient *, aChannel *));
 static int add_banid PROTO((aClient *, aChannel *, char *));
 static int can_join PROTO((aClient *, aClient *, aChannel *, char *, char *,
@@ -2371,6 +2372,31 @@ static int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, ch
 	return 0;
 }
 
+/* Sends notices to +e's about opers possibly abusing priv's
+ * By NiQuiL (niquil@programmer.net)
+ * suggestion by -ins4ne-
+ */
+
+void over_notice(aClient *cptr, aClient *sptr, aChannel *chptr, char *key)
+{
+	Link *lp;
+
+	for (lp = sptr->user->invited; lp; lp = lp->next)
+	 if (lp->value.chptr == chptr)
+	  break;
+
+	if (is_banned(cptr, sptr, chptr) && IsOper(sptr))
+	{
+		sendto_umode(UMODE_EYES, "*** Banwalk, [IRCop: %s] [Channel: %s]",sptr->name,chptr->chname);
+	} else if (*chptr->mode.key && (BadPtr(key) || mycmp(chptr->mode.key, key))) {
+		sendto_umode(UMODE_EYES, "*** Keywalk [IRCop: %s] [Channel: %s]",sptr->name,chptr->chname);
+	} else if ((chptr->mode.mode & MODE_INVITEONLY) && !lp) {
+		sendto_umode(UMODE_EYES, "*** Invitewalk [IRCop: %s] [Channel: %s]",sptr->name,chptr->chname);
+	}
+
+}
+
+
 
 /*
 ** Remove bells and commas from channel name
@@ -2730,7 +2756,6 @@ int channel_link(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			}
 			continue;
 		}
-
 		/*
 		   **  Complete user entry to the new channel (if any)
 		 */
@@ -2967,15 +2992,10 @@ int m_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			continue;
 
 		}
-		if (is_banned(cptr, sptr, chptr) && IsOper(sptr))
-		{
-			sendto_umode(UMODE_EYES,
-			    "*** Banwalk [IRCop: %s] [Channel: %s]",
-			    sptr->name, chptr->chname);
-		}
 		/*
 		   **  Complete user entry to the new channel (if any)
 		 */
+		(void)over_notice(cptr, sptr, chptr, key);
 		add_user_to_channel(chptr, sptr, flags);
 		/*
 		   ** notify all other users on the new channel

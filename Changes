@@ -411,3 +411,6 @@
 - Added a new Win32 GUI does it work, no one knows
 - Rewrote the ircd_log function a bit to fix the FD bug better, not sure wtf I was smoking
   when I wrote the last one :P
+- When IRCOps are breaking into chans with invite only (+i) or 
+  key-protection (+k) a eyes-notice is sent like it is on banwalk. -NiQuiL
+
