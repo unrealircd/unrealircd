@@ -703,3 +703,4 @@ extern int add_dccallow(aClient *sptr, aClient *optr);
 extern int del_dccallow(aClient *sptr, aClient *optr);
 extern void delete_linkblock(ConfigItem_link *link_ptr);
 extern void delete_classblock(ConfigItem_class *class_ptr);
+extern void del_async_connects(void);

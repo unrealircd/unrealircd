@@ -1532,6 +1532,7 @@ int	init_conf(char *rootconf, int rehash)
 		if (rehash)
 		{
 			Hook *h;
+			del_async_connects();
 			config_rehash();
 #ifndef STATIC_LINKING
 			Unload_all_loaded_modules();

@@ -307,6 +307,19 @@ void del_queries(char *cp)
 	}
 }
 
+void del_async_connects(void)
+{
+ResRQ *rptr, *r2ptr;
+
+	for (rptr = first; rptr; rptr = r2ptr)
+	{
+		r2ptr = rptr->next;
+		if (rptr->cinfo.flags == ASYNC_CONNECT)
+			rem_request(rptr);
+	}
+}
+
+
 /*
  * sends msg to all nameservers found in the "ircd_res" structure.
  * This should reflect /etc/resolv.conf. We will get responses

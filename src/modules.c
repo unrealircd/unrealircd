@@ -209,11 +209,8 @@ char  *Module_Create(char *path_)
 		strcat(path, path_);
 	}
 	unreal_copyfile(path, tmppath);
-MessageBox(NULL, path, tmppath, MB_OK);
 	if ((Mod = irc_dlopen(tmppath, RTLD_NOW)))
 	{
-//MessageBox(NULL, "opened", "D", MB_OK);
-
 		/* We have engaged the borg cube. Scan for lifesigns. */
 		irc_dlsym(Mod, "Mod_Version", Mod_Version);
 		if (Mod_Version && strcmp(Mod_Version, expectedmodversion))
@@ -326,16 +323,7 @@ MessageBox(NULL, path, tmppath, MB_OK);
 	else
 	{
 		/* Return the error .. */
-    static char errbuf[513];
-    DWORD err = GetLastError();
-    if (err == 0)
-        return NULL;
-    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM |
-                  FORMAT_MESSAGE_IGNORE_INSERTS, NULL, err, 0, errbuf, 512,
-                  NULL);
-sprintf(errbuf, "%d", err);
-MessageBox(NULL, errbuf, errbuf, MB_OK);
-    return errbuf;
+		return ((char *)irc_dlerror());
 	}
 	
 	if (path != path_)
