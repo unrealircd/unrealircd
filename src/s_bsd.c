@@ -2742,81 +2742,57 @@ void do_dns_async(id)
 	int  id;
 #endif
 {
-	static Link ln;
-	aClient *cptr;
+	static	Link	ln;
+	aClient	*cptr;
 	ConfigItem_link *aconf;
-	struct hostent *hp;
+	struct	hostent	*hp;
+	int	bytes, pkts;
 
-	ln.flags = -1;
-#ifndef _WIN32
-	hp = get_res((char *)&ln);
-#else
-	hp = get_res((char *)&ln, id);
-#endif
-	while (hp != NULL)
-	{
-		Debug((DEBUG_DNS, "%#x = get_res(%d,%#x)", hp, ln.flags,
-		    ln.value.cptr));
+	pkts = 0;
 
-		switch (ln.flags)
-		{
-		  case ASYNC_NONE:
-			  /*
-			   * no reply was processed that was outstanding or had a client
-			   * still waiting.
-			   */
-			  break;
-		  case ASYNC_CLIENT:
-			  if ((cptr = ln.value.cptr))
-			  {
-				  del_queries((char *)cptr);
-#ifdef SHOWCONNECTINFO
-			          sendto_one(cptr, REPORT_FIN_DNS);
-#endif
-				  ClearDNS(cptr);
-				  if (!DoingAuth(cptr))
-					  SetAccess(cptr);
-				  cptr->hostp = hp;
-			  }
-			  break;
-		  case ASYNC_CONNECT:
-			  aconf = (ConfigItem_link *) ln.value.aconf;
-			  if (hp && aconf)
-			  {
-				  bcopy(hp->h_addr, (char *)&aconf->ipnum,
-				      sizeof(struct IN_ADDR));
-				  (void)connect_server(aconf, NULL, hp);
-			  }
-			  else
-				  sendto_ops
-				      ("Connect to %s failed: host lookup",
-				      (aconf) ? aconf->hostname : "unknown");
-			  break;
-		  case ASYNC_CONF:
-			  aconf = (ConfigItem_link *) ln.value.aconf;
-			  if (hp && aconf)
-				  bcopy(hp->h_addr, (char *)&aconf->ipnum,
-				      sizeof(struct IN_ADDR));
-			  break;
-/*		  case ASYNC_SERVER:
-			  cptr = ln.value.cptr;
-			  del_queries((char *)cptr);
-			  ClearDNS(cptr);
-			  if (check_server(cptr, hp, NULL, NULL, 1))
-				  (void)exit_client(cptr, cptr, &me,
-				      "No Authorization");
-				      
-			  break;*/
-		  default:
-			  break;
-		}
-
+	do {
 		ln.flags = -1;
 #ifndef _WIN32
 		hp = get_res((char *)&ln);
 #else
 		hp = get_res((char *)&ln, id);
 #endif
-	}			/* while (hp != NULL) */
+		Debug((DEBUG_DNS,"%#x = get_res(%d,%#x)", hp, ln.flags,
+			ln.value.cptr));
+
+		switch (ln.flags)
+		{
+		case ASYNC_NONE :
+			/*
+			 * no reply was processed that was outstanding or
+			 * had a client still waiting.
+			 */
+			break;
+		case ASYNC_CLIENT :
+			if ((cptr = ln.value.cptr))
+			    {
+				del_queries((char *)cptr);
+				ClearDNS(cptr);
+				cptr->hostp = hp;
+#ifdef SHOWCONNECTINFO
+	          	        sendto_one(cptr, REPORT_FIN_DNS);
+#endif
+				  if (!DoingAuth(cptr))
+					  SetAccess(cptr);
+			    }
+			break;
+		case ASYNC_CONF :
+		  aconf = (ConfigItem_link *) ln.value.aconf;
+		  if (hp && aconf)
+			  bcopy(hp->h_addr, (char *)&aconf->ipnum,
+		      sizeof(struct IN_ADDR));
+		break;
+		default :
+			break;
+		}
+		pkts++;
+		if (ioctl(resfd, FIONREAD, &bytes) == -1)
+			bytes = 0;
+	} while ((bytes > 0) && (pkts < 10));
 }
 #endif /*NEWDNS*/

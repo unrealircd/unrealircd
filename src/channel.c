@@ -301,12 +301,15 @@ Membership	*make_membership(int local)
 			}
 			lp2 = freemembershipL;
 			freemembershipL = (MembershipL *) lp2->next;
+			Debug((DEBUG_ERROR, "floodmode::alloc gotone"));
 		}
 		else
 		{
 			lp2 = freemembershipL;
 			freemembershipL = (MembershipL *) freemembershipL->next;
+			Debug((DEBUG_ERROR, "floodmode::freelist gotone"));
 		}
+		Debug((DEBUG_ERROR, "floodmode:: bzeroing"));	
 		bzero(&lp2->flood, sizeof(lp2->flood));
 	}
 	if (local)
@@ -3926,6 +3929,7 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 {
 	Membership *lp;
 	MembershipL *lp2;
+
 	if (!MyClient(sptr))
 		return 0;
 	if (IsOper(sptr) || IsULine(sptr))
@@ -3945,10 +3949,13 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 	   then kick 
 	 */
 	lp2 = (MembershipL *) lp2;
+	Debug((DEBUG_ERROR, "Checking for flood +f: lastmsg: %li now: %li per: %li - nmsg: %li msgs: %li",
+		lp2->flood.lastmsg, TStime(), chptr->mode.per,lp2->flood.nmsg, chptr->mode.msgs));
 	if ((TStime() - (lp2->flood.lastmsg)) >=	/* current - lastmsgtime */
 	    chptr->mode.per)	/* mode.per */
 	{
 		/* reset the message counter */
+		Debug((DEBUG_ERROR, "reset flood message counter for %s", sptr->name));
 		lp2->flood.lastmsg = TStime();
 		lp2->flood.nmsg = 1;
 		return 0;	/* forget about it.. */
@@ -3961,7 +3968,6 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 	if ((lp2->flood.nmsg) > chptr->mode.msgs)
 	{
 		char comment[1024], mask[1024];
-
 		ircsprintf(comment,
 		    "Flooding (Limit is %i lines per %i seconds)",
 		    chptr->mode.msgs, chptr->mode.per);
