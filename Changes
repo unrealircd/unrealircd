@@ -3092,3 +3092,4 @@ seen. gmtime warning still there
   upgrading to CVS every time TRE was not recompiled even if you did make clean.
 - Made ./unreal rehash (= kill -1 <pid>) also reread motd/rules/etc just as a
   normal /rehash does, reported by superh (#0001699).
+- Various doc/text updates
