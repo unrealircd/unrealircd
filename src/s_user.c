@@ -544,6 +544,7 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 	for (p = sptr->targets; p < &sptr->targets[MAXTARGETS - 1];)
 		if (*++p == hash)
 		{
+			/* move targethash to first position... */
 			memmove(&sptr->targets[1], &sptr->targets[0],
 			    p - sptr->targets);
 			sptr->targets[0] = hash;
@@ -555,7 +556,7 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 		sptr->since += TARGET_DELAY; /* lag them up */
 		sptr->nexttarget += TARGET_DELAY;
 		sendto_one(sptr, err_str(ERR_TARGETTOOFAST), me.name, sptr->name,
-			name);
+			name, sptr->nexttarget - TStime());
 
 		return 1;
 	}
