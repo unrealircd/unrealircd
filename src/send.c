@@ -1627,8 +1627,9 @@ void sendto_connectnotice(nick, user, sptr)
 	char connectd[1024];
 	char connecth[1024];
 	ircsprintf(connectd,
-	    "*** Notice -- Client connecting on port %d: %s (%s@%s) %s%s%s",
+	    "*** Notice -- Client connecting on port %d: %s (%s@%s) [%s] %s%s%s",
 	    sptr->listener->port, nick, user->username, user->realhost,
+	    sptr->class ? sptr->class->name : "",
 #ifdef USE_SSL
 	IsSecure(sptr) ? "[secure " : "", 
 	IsSecure(sptr) ? SSL_get_cipher((SSL *)sptr->ssl) : "",

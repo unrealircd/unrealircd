@@ -3674,16 +3674,16 @@ int  m_mkpasswd(cptr, sptr, parc, parv)
 **	parv[1] = oper name
 **	parv[2] = oper password
 */
-extern int SVSNOOP;
+int SVSNOOP;
 
 int  m_oper(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;
 	int  parc;
 	char *parv[];
 {
-#ifdef OLD
-	aConfItem *aconf;
-	char *name, *password, *encr;
+	ConfigItem_oper 	*aconf;
+	ConfigItem_oper_from	*oper_from;
+	char *name, *password, *encr, *nuhhost;
 #ifdef CRYPT_OPER_PASSWORD
 	char salt[3];
 	extern char *crypt();
@@ -3728,28 +3728,39 @@ int  m_oper(cptr, sptr, parc, parv)
 		return 0;
 	}
 
-	if (!(aconf =
-	    find_conf_exact(name, sptr->username, sptr->sockhost, CONF_OPS))
-	    && !(aconf =
-	    find_conf_exact(name, sptr->username, inetntoa((char *)&cptr->ip),
-	    CONF_OPS)))
+	if (!(aconf = Find_oper(name)))
 	{
 		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);
-		sendto_realops("Failed OPER attempt by %s (%s@%s)",
+		sendto_realops("Failed OPER attempt by %s (%s@%s) [unknown oper]",
 		    parv[0], sptr->user->username, sptr->sockhost);
 		sptr->since += 7;
 		return 0;
 	}
-
+	nuhhost = make_nick_user_host(sptr->name, sptr->user->username,
+			sptr->user->realhost);
+	for (oper_from = (ConfigItem_oper_from *) aconf->from;
+	          oper_from;
+	          oper_from = (ConfigItem_oper_from *) oper_from->next)
+		if (!match(oper_from->name, nuhhost))
+			break;
+	if (!oper_from)
+	{
+		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);
+		sendto_realops("Failed OPER attempt by %s (%s@%s) [host doesnt match]",
+		    parv[0], sptr->user->username, sptr->sockhost);
+		sptr->since += 7;
+		return 0;
+	}
+	
 #ifdef CRYPT_OPER_PASSWORD
 	/* use first two chars of the password they send in as salt */
 
 	/* passwd may be NULL. Head it off at the pass... */
 	salt[0] = '\0';
-	if (password && aconf->passwd && aconf->passwd[0] && aconf->passwd[1])
+	if (password && aconf->password && aconf->password[0] && aconf->password[1])
 	{
-		salt[0] = aconf->passwd[0];
-		salt[1] = aconf->passwd[1];
+		salt[0] = aconf->password[0];
+		salt[1] = aconf->password[1];
 		salt[2] = '\0';
 		encr = crypt(password, salt);
 	}
@@ -3761,29 +3772,23 @@ int  m_oper(cptr, sptr, parc, parv)
 	encr = password;
 #endif /* CRYPT_OPER_PASSWORD */
 
-
-	if ((aconf->status & CONF_OPS) && StrEq(encr, aconf->passwd)
-	    && !attach_conf(sptr, aconf))
+	if (StrEq(encr, aconf->password))
 	{
 		int  old = (sptr->umodes & ALL_UMODES);
 		char *s;
 
-		s = index(aconf->host, '@');
-		*s++ = '\0';
-		/*if ((aconf->port & OFLAG_AGENT))
-		   sptr->umodes |= UMODE_AGENT; */
-		if ((aconf->port & OFLAG_HELPOP))
+		if ((aconf->oflags & OFLAG_HELPOP))
 		{
 			sptr->umodes |= UMODE_HELPOP;
 		}
 
-		if (!(aconf->port & OFLAG_ISGLOBAL))
+		if (!(aconf->oflags & OFLAG_ISGLOBAL))
 		{
 			SetLocOp(sptr);
 		}
-		else if (aconf->port & OFLAG_NETADMIN)
+		else if (aconf->oflags & OFLAG_NETADMIN)
 		{
-			if (aconf->port & OFLAG_SADMIN)
+			if (aconf->oflags & OFLAG_SADMIN)
 			{
 				sptr->umodes |=
 				    (UMODE_NETADMIN | UMODE_ADMIN |
@@ -3803,9 +3808,9 @@ int  m_oper(cptr, sptr, parc, parv)
 
 			}
 		}
-		else if (aconf->port & OFLAG_COADMIN)
+		else if (aconf->oflags & OFLAG_COADMIN)
 		{
-			if (aconf->port & OFLAG_SADMIN)
+			if (aconf->oflags & OFLAG_SADMIN)
 			{
 				sptr->umodes |=
 				    (UMODE_COADMIN | UMODE_ADMIN |
@@ -3825,9 +3830,9 @@ int  m_oper(cptr, sptr, parc, parv)
 
 			}
 		}
-		else if (aconf->port & OFLAG_TECHADMIN)
+		else if (aconf->oflags & OFLAG_TECHADMIN)
 		{
-			if (aconf->port & OFLAG_SADMIN)
+			if (aconf->oflags & OFLAG_SADMIN)
 			{
 				sptr->umodes |=
 				    (UMODE_TECHADMIN | UMODE_ADMIN |
@@ -3848,7 +3853,7 @@ int  m_oper(cptr, sptr, parc, parv)
 			}
 		}
 		else
-		    if (aconf->port & OFLAG_ADMIN && aconf->port & OFLAG_SADMIN)
+		    if (aconf->oflags & OFLAG_ADMIN && aconf->oflags & OFLAG_SADMIN)
 		{
 			sptr->umodes |= (UMODE_ADMIN | UMODE_SADMIN);
 			SetAdmin(sptr);
@@ -3856,14 +3861,14 @@ int  m_oper(cptr, sptr, parc, parv)
 			SetOper(sptr);
 
 		}
-		else if (aconf->port & OFLAG_SADMIN)
+		else if (aconf->oflags & OFLAG_SADMIN)
 		{
 			sptr->umodes |= (UMODE_SADMIN);
 			SetSAdmin(sptr);
 			SetOper(sptr);
 
 		}
-		else if (aconf->port & OFLAG_ADMIN)
+		else if (aconf->oflags & OFLAG_ADMIN)
 		{
 			sptr->umodes |= (UMODE_ADMIN);
 			SetAdmin(sptr);
@@ -3872,7 +3877,7 @@ int  m_oper(cptr, sptr, parc, parv)
 		}
 		else
 		{
-			if (aconf->port & OFLAG_SADMIN)
+			if (aconf->oflags & OFLAG_SADMIN)
 			{
 				sptr->umodes |= (UMODE_OPER | UMODE_SADMIN);
 				SetSAdmin(sptr);
@@ -3887,25 +3892,23 @@ int  m_oper(cptr, sptr, parc, parv)
 			}
 		}
 
-		if (aconf->port & OFLAG_EYES)
+		if (aconf->oflags & OFLAG_EYES)
 		{
 			sptr->umodes |= (UMODE_EYES);
 			SetEyes(sptr);
 		}
 
-		if (aconf->port & OFLAG_WHOIS)
+		if (aconf->oflags & OFLAG_WHOIS)
 		{
 			sptr->umodes |= (UMODE_WHOIS);
 		}
 
-		if (aconf->port & OFLAG_HIDE)
+		if (aconf->oflags & OFLAG_HIDE)
 		{
 			sptr->umodes |= (UMODE_HIDE);
 		}
 
-		sptr->oflag = aconf->port;
-
-		*--s = '@';
+		sptr->oflag = aconf->oflags;
 
 		sptr->umodes |=
 		    (UMODE_SERVNOTICE | UMODE_WALLOP | UMODE_FAILOP |
@@ -3916,7 +3919,7 @@ int  m_oper(cptr, sptr, parc, parv)
 #endif
 		sendto_one(sptr, rpl_str(RPL_YOUREOPER), me.name, parv[0]);
 
-		if (!(aconf->port & OFLAG_ISGLOBAL))
+		if (!(aconf->oflags & OFLAG_ISGLOBAL))
 		{
 			sendto_ops("%s (%s@%s) is now a local operator (o)",
 			    parv[0], sptr->user->username,
@@ -3927,12 +3930,12 @@ int  m_oper(cptr, sptr, parc, parv)
 			sptr->umodes &= ~UMODE_OPER;
 		}
 /*        	else
-        if ((aconf->port & OFLAG_AGENT))
+        if ((aconf->oflags & OFLAG_AGENT))
         {
 			sendto_ops("%s (%s@%s) is now an IRCd Agent (S)", parv[0],
 				sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost);
         }*/
-		else if (aconf->port & OFLAG_NETADMIN)
+		else if (aconf->oflags & OFLAG_NETADMIN)
 		{
 			sendto_ops
 			    ("%s (%s@%s) is now a network administrator (N)",
@@ -3951,7 +3954,7 @@ int  m_oper(cptr, sptr, parc, parv)
 			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
 				iNAH_host(sptr, netadmin_host);
 		}
-		else if (aconf->port & OFLAG_COADMIN)
+		else if (aconf->oflags & OFLAG_COADMIN)
 		{
 			sendto_ops("%s (%s@%s) is now a co administrator (C)",
 			    parv[0], sptr->user->username,
@@ -3966,7 +3969,7 @@ int  m_oper(cptr, sptr, parc, parv)
 			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
 				iNAH_host(sptr, coadmin_host);
 		}
-		else if (aconf->port & OFLAG_TECHADMIN)
+		else if (aconf->oflags & OFLAG_TECHADMIN)
 		{
 			sendto_ops
 			    ("%s (%s@%s) is now a technical administrator (T)",
@@ -3984,7 +3987,7 @@ int  m_oper(cptr, sptr, parc, parv)
 			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
 				iNAH_host(sptr, techadmin_host);
 		}
-		else if (aconf->port & OFLAG_SADMIN)
+		else if (aconf->oflags & OFLAG_SADMIN)
 		{
 			sendto_ops("%s (%s@%s) is now a services admin (a)",
 			    parv[0], sptr->user->username,
@@ -4001,7 +4004,7 @@ int  m_oper(cptr, sptr, parc, parv)
 			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
 				iNAH_host(sptr, sadmin_host);
 		}
-		else if (aconf->port & OFLAG_ADMIN)
+		else if (aconf->oflags & OFLAG_ADMIN)
 		{
 			sendto_ops("%s (%s@%s) is now a server admin (A)",
 			    parv[0], sptr->user->username,
@@ -4074,7 +4077,6 @@ int  m_oper(cptr, sptr, parc, parv)
 	}
 	else
 	{
-		(void)detach_conf(sptr, aconf);
 		sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name, parv[0]);
 #ifdef  FAILOPER_WARN
 		sendto_one(sptr,
@@ -4119,7 +4121,6 @@ int  m_oper(cptr, sptr, parc, parv)
 #endif
 	}
 	return 0;
-#endif
 }
 
 /***************************************************************************
