@@ -583,9 +583,12 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				 */
 				status[i++] =
 				    (ac->user->away == NULL ? 'H' : 'G');
+				
 				status[i++] =
 				    (IsAnOper(ac) && !(IsHideOper(ac) && !IsOper(ac) && (ac != sptr)) ? '*' : ((IsInvisible(ac)
 				    && IsOper(sptr)) ? '%' : 0));
+				/* Little hack */
+				i = (!status[i - 1] ? i - 1 : i);
 				if (IsARegNick(ac))
 					status[i++] = 'r';
 				
@@ -626,6 +629,8 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				status[i++] =
 				    (IsAnOper(ac) && !(IsHideOper(ac) && !IsOper(ac) && (ac != sptr)) ? '*' : ((IsInvisible(ac)
 				    && IsOper(sptr)) ? '%' : 0));
+				i = (!status[i - 1] ? i - 1 : i);
+
 				if (IsARegNick(ac))
 					status[i++] = 'r';
 				status[i++ ] = 0;
@@ -678,6 +683,7 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				status[i++] =
 				    (IsAnOper(ac) && !(IsHideOper(ac) && !IsOper(ac) && (ac != sptr)) ? '*' : ((IsInvisible(ac)
 				    && IsOper(sptr)) ? '%' : 0));
+				i = (!status[i - 1] ? i - 1 : i);
 				if (IsARegNick(ac))
 					status[i++] = 'r';
 				status[((status[i]) ? ++i : i)] =
@@ -711,11 +717,11 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			i = 0;
 			status[i++] =
 			    (ac->user->away == NULL ? 'H' : 'G');
+			if (IsARegNick(ac))
+				status[i++] = 'r';
 			status[i++] =
 			    (IsAnOper(ac) ? '*' : ((IsInvisible(ac)
 			    && IsOper(sptr)) ? '%' : 0));
-			if (IsARegNick(ac))
-				status[i++] = 'r';
 			status[i++ ] = 0;
 
 			sendto_one(sptr, getreply(RPL_WHOREPLY), me.name,
