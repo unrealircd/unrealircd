@@ -1514,3 +1514,5 @@ seen. gmtime warning still there
 - Fixed a typo in /akill and /rakill obsolete depreciation notices reported by zak (#0000272)
 - Added set::ssl::certificate and set::ssl::key to point to where we got the certificate
   PEM and the private key PEM
+- Fixed a /invite bug where remote clients couldn't be invited, reported by Alzirr (#0000275)
+
