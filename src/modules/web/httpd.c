@@ -50,9 +50,6 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #ifdef _WIN32
 #include "version.h"
 #endif
@@ -61,12 +58,20 @@
 
 SOCKET	httpdfd = -1;
 
-void    httpd_socketthread(void *req);
-void	httpd_acceptthread(void *p);
-
 int	h_u_stats(HTTPd_Request *r);
 int	h_u_vfs(HTTPd_Request *r);
 int	h_u_phtml(HTTPd_Request *r);
+
+void	httpd_setup_acceptthread(void);
+void	httpd_acceptthread(void *p);
+void	httpd_socketthread(void *preq);
+
+void	sockprintf(HTTPd_Request *r, char *format, ...);
+int	httpd_parse(HTTPd_Request *request);
+void	httpd_badrequest(HTTPd_Request *request, char *reason);
+void	httpd_parse_final(HTTPd_Request *request);
+void 	httpd_404_header(HTTPd_Request *request, char *path);
+
 
 
 #ifndef DYNAMIC_LINKING
@@ -85,40 +90,6 @@ ModuleInfo mod_header
     };
 
 
-
-void	httpd_sendfile(HTTPd_Request *r, char *filename)
-{
-	int	xfd = open(filename, O_RDONLY);
-	if (xfd)
-	{
-		while (read(xfd, &r->inbuf[0], 1))
-		{
-			FDwrite(r->fd,&r->inbuf[0], 1);
-		}
-	}
-	close(xfd);
-}
-
-/*
- * Helper function
-*/
-
-void	sockprintf(HTTPd_Request *r, char *format, ...)
-{
-	va_list		ap;
-	char		*ptr;
-
-	va_start(ap, format);
-	vsprintf(r->inbuf, format, ap);
-	strcat(r->inbuf, "\r\n");
-	va_end(ap);
-	FDwrite(r->fd, r->inbuf, strlen(r->inbuf));
-}
-/* The purpose of these ifdefs, are that we can "static" link the ircd if we
- * want to
-*/
-
-/* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	mod_init(int module_load)
 #else
@@ -128,7 +99,7 @@ int    httpd_init(int module_load)
 	add_HookX(HOOKTYPE_HTTPD_URL, h_u_stats, NULL);
 	add_HookX(HOOKTYPE_HTTPD_URL, h_u_vfs, NULL);
 	add_HookX(HOOKTYPE_HTTPD_URL, h_u_phtml, NULL);
-		
+	return 1;
 }
 
 /* Is first run when server is 100% ready */
@@ -138,16 +109,15 @@ DLLFUNC int	mod_load(int module_load)
 int    httpd_load(int module_load)
 #endif
 {
-	THREAD thread;
-	THREAD_ATTR attr;
-	
+	/* We set up the http socket */
 	struct SOCKADDR_IN	sin;
 	if ((httpdfd = socket(AFINET, SOCK_STREAM, 0)) == -1)
 	{
-		config_error("httpd: could not create socket");
+		config_error("httpd: could not create socket: %s", strerror(ERRNO));
 		httpdfd = -1;
 		return -1;
 	}
+	set_non_blocking(httpdfd, NULL);
 	set_sock_opts(httpdfd, NULL);		
 #ifndef INET6
 	sin.SIN_ADDR.S_ADDR = inet_addr("0.0.0.0");
@@ -156,6 +126,7 @@ int    httpd_load(int module_load)
 #endif
 	sin.SIN_PORT = htons(8091);
 	sin.SIN_FAMILY = AFINET;
+	
 	if (bind(httpdfd, (struct SOCKADDR *)&sin, sizeof(sin)))
 	{
 		config_error("httpd: could not bind: %s",
@@ -164,10 +135,9 @@ int    httpd_load(int module_load)
 		httpdfd = -1;
 		return -1;
 	}
-
 	listen(httpdfd, LISTEN_SIZE);
-	IRCCreateThread(thread, attr, httpd_acceptthread, NULL);
-	return 0;
+	httpd_setup_acceptthread();
+	return 1;
 }
 
 
@@ -181,6 +151,253 @@ void	httpd_unload(void)
 	del_HookX(HOOKTYPE_HTTPD_URL, h_u_stats, NULL);
 	del_HookX(HOOKTYPE_HTTPD_URL, h_u_vfs, NULL);
 	del_HookX(HOOKTYPE_HTTPD_URL, h_u_phtml, NULL);
+}
+
+
+void	httpd_setup_acceptthread(void)
+{
+	THREAD	thread;
+	THREAD_ATTR thread_attr;
+	
+	IRCCreateThread(thread, thread_attr, httpd_acceptthread, NULL);
+	return;
+}
+
+void	httpd_acceptthread(void	*p)
+{
+	fd_set		rfds;
+	struct timeval  tv;
+	int		retval;
+	SOCKET		callerfd = -1; 
+	THREAD		thread;
+	THREAD_ATTR	thread_attr;
+	HTTPd_Request	*req = NULL;
+	
+	tv.tv_sec = 10;
+	tv.tv_usec = 0;
+	
+	while (1)
+	{
+		FD_ZERO(&rfds);
+		FD_SET(httpdfd, &rfds);
+		if (retval = select(httpdfd + 1, &rfds, NULL, NULL, NULL))
+		{
+			callerfd = accept(httpdfd, NULL, NULL);
+			if (callerfd >= 0)
+			{
+				req = (HTTPd_Request *) MyMallocEx(sizeof(HTTPd_Request));
+				req->fd = callerfd;
+				set_sock_opts(callerfd, NULL);
+				IRCCreateThread(thread, thread_attr,
+					 httpd_socketthread, (void *)req);
+				req = NULL;
+			}
+			else
+			{
+				ircd_log(LOG_ERROR, "httpd: accept() error: %s",
+					strerror(ERRNO));
+			}
+			
+		}
+	}	
+}
+
+void	httpd_socketthread(void *preq)
+{
+	HTTPd_Request *request = (HTTPd_Request *)preq;
+        fd_set          rfds;
+        struct timeval  tv;
+        char		inbuf[1024];
+	HTTPd_Header	*hp, *hp2;
+	int		retval = 0, retval2 = 0;
+	int		i;
+        tv.tv_sec = 20;
+	tv.tv_usec = 0;
+        request->pos = 0;                            
+	
+	while (request->pos < 1024)
+	{
+	        tv.tv_sec = 3;
+		tv.tv_usec = 0;
+		FD_ZERO(&rfds);
+		FD_SET(request->fd, &rfds);
+		retval = select(request->fd + 1, &rfds, NULL, NULL, &tv);
+		if (retval && FD_ISSET(request->fd, &rfds))
+		{
+			while ((retval2 = recv(request->fd, &inbuf[0], sizeof(inbuf), 0)) > 0)
+			{
+				for (i = 0; i <= retval2; i++)
+				{
+					request->inbuf[request->pos++] = inbuf[i];
+					if (request->pos >= 1024)
+						goto end;
+					if (inbuf[i] == '\n')
+					{
+						request->inbuf[request->pos] = '\0';
+						iCstrip(request->inbuf);
+						if (httpd_parse(request) < 0)
+						{
+							/* We exit */
+							goto end;
+						}
+						else
+							request->pos = 0;
+					}										
+				}
+			}
+			goto end;
+		}
+		else
+		{
+			goto end;
+		}
+	}
+	end:
+	CLOSE_SOCK(request->fd);
+	if (request->url)
+		MyFree(request->url);
+	
+	hp = request->headers;
+	while (hp)
+	{
+		if (hp->name)
+			MyFree(hp->name);
+		if (hp->value)
+			MyFree(hp->value);
+		hp2 = hp;
+		hp = hp->next;
+		MyFree(hp2);
+	}
+	hp = request->dataheaders;
+	while (hp)
+	{
+		if (hp->name)
+			MyFree(hp->name);
+		if (hp->value)
+			MyFree(hp->value);
+		hp2 = hp;
+		hp = hp->next;
+		MyFree(hp2);
+	}
+	MyFree(request);
+	IRCExitThread(NULL);
+	return;
+}
+
+
+int	httpd_parse(HTTPd_Request *request)
+{
+	if (request->state == 0)
+	{
+		char	*cmd;
+
+		cmd = strtok(request->inbuf, " ");
+		if (!cmd)
+		{
+			httpd_badrequest(request, "Bad protocol start");
+			return -1;
+		}
+		else
+		{
+			if (!strcmp(cmd, "GET") || !strcmp(cmd, "POST"))
+			{
+				char *url;
+			
+				url = strtok(NULL, " ");
+				if (!url)
+				{
+					httpd_badrequest(request, "Missing parameter");
+					return -1;
+				}
+				else
+				{
+					request->url = strdup(url);
+					request->state = 1;
+					request->method = !strcmp(cmd, "GET") ? 1 : 0;
+					return 1;
+				}
+				
+			}
+			else
+			{
+				httpd_badrequest(request, cmd);
+			}
+			return -1;
+		}
+		return 1;
+	}	
+	else if (request->state == 1)
+	{
+		char	*headername;
+		char	*headerdata;
+		
+		headername = strtok(request->inbuf, " ");
+		if (!headername)
+		{
+			httpd_parse_final(request);
+			if (request->state > 1)
+			{
+				return 1;
+			}
+			else
+				return -1;
+		}
+		else
+		{
+			headerdata = strtok(NULL, "");
+			if (!headerdata)
+			{
+				httpd_badrequest(request, "Malformed headers");
+				return -1;
+			}
+			else
+			{
+				HTTPd_Header *header;
+				header = (HTTPd_Header *) MyMalloc(sizeof(HTTPd_Header));
+				header->name = strdup(headername);
+				header->value = strdup(headerdata);
+				header->next = request->headers;
+				request->headers = header;
+				return 1;
+			}
+		}
+	} else if (request->state == 2)
+	{
+		if (parse_urlenc(request))
+		{
+			RunHookReturn(HOOKTYPE_HTTPD_URL, request, >0) -1;
+			httpd_404_header(request, request->url);
+			return -1;
+		}
+		else
+		{
+			httpd_badrequest(request, "Bad encoding");
+		}
+		return -1;
+	}
+}
+
+void	sockprintf(HTTPd_Request *r, char *format, ...)
+{
+	va_list		ap;
+	char		*ptr;
+
+	va_start(ap, format);
+	vsprintf(r->inbuf, format, ap);
+	strcat(r->inbuf, "\r\n");
+	va_end(ap);
+	send(r->fd, r->inbuf, strlen(r->inbuf), 0);
+}
+
+
+void	httpd_badrequest(HTTPd_Request *request, char *reason)
+{
+	sockprintf(request, "HTTP/1.1 400 Bad Request");
+	sockprintf(request, "Server: UnrealIRCd HTTPd");
+	sockprintf(request, "Connection: close");
+	sockprintf(request, "Content-Type: text/plain");
+	sockprintf(request, "");
+	sockprintf(request, "%s", reason);
 }
 
 /*	
@@ -351,10 +568,10 @@ void 	httpd_304_header(HTTPd_Request *request)
 }
 
 
-void 	httpd_400_header(HTTPd_Request *request, char *why)
+void 	httpd_500_header(HTTPd_Request *request, char *why)
 {
 	char		 datebuf[100];
-	sockprintf(request, "HTTP/1.1 400 Internal Server Error");
+	sockprintf(request, "HTTP/1.1 500 Internal Server Error");
 	sockprintf(request, "Server: UnrealIRCd HTTPd");
 	sockprintf(request, "Connection: close");
 	sockprintf(request, "Date: %s", (char *) rfctime(time(NULL), datebuf));
@@ -390,233 +607,33 @@ void	httpd_parse_final(HTTPd_Request *request)
 	}
 }
 
-void	httpd_badrequest(HTTPd_Request *request, char *reason)
+void	httpd_sendfile(HTTPd_Request *r, char *filename)
 {
-	sockprintf(request, "HTTP/1.1 400 Bad Request");
-	sockprintf(request, "Server: UnrealIRCd HTTPd");
-	sockprintf(request, "Connection: close");
-	sockprintf(request, "Content-Type: text/plain");
-	sockprintf(request, "");
-	sockprintf(request, "%s", reason);
-}
-
-int	httpd_parse(HTTPd_Request *request)
-{
-	if (request->state == 0)
-	{
-		char	*cmd;
-
-		cmd = strtok(request->inbuf, " ");
-		if (!cmd)
-		{
-			httpd_badrequest(request, "Bad protocol start");
-			return -1;
-		}
-		else
-		{
-			if (!strcmp(cmd, "GET") || !strcmp(cmd, "POST"))
-			{
-				char *url;
-			
-				url = strtok(NULL, " ");
-				if (!url)
-				{
-					httpd_badrequest(request, "Missing parameter");
-					return -1;
-				}
-				else
-				{
-					request->url = strdup(url);
-					request->state = 1;
-					request->method = !strcmp(cmd, "GET") ? 1 : 0;
-					return 1;
-				}
-				
-			}
-			else
-			{
-				httpd_badrequest(request, cmd);
-			}
-			return -1;
-		}
-		return 1;
-	}	
-	else if (request->state == 1)
-	{
-		char	*headername;
-		char	*headerdata;
-		
-		headername = strtok(request->inbuf, " ");
-		if (!headername)
-		{
-			httpd_parse_final(request);
-			if (request->state > 1)
-			{
-				return 1;
-			}
-			else
-				return -1;
-		}
-		else
-		{
-			headerdata = strtok(NULL, "");
-			if (!headerdata)
-			{
-				httpd_badrequest(request, "Malformed headers");
-				return -1;
-			}
-			else
-			{
-				HTTPd_Header *header;
-				header = (HTTPd_Header *) MyMalloc(sizeof(HTTPd_Header));
-				header->name = strdup(headername);
-				header->value = strdup(headerdata);
-				header->next = request->headers;
-				request->headers = header;
-				return 1;
-			}
-		}
-	} else if (request->state == 2)
-	{
-		if (parse_urlenc(request))
-		{
-			RunHookReturn(HOOKTYPE_HTTPD_URL, request, >0) -1;
-			httpd_404_header(request, request->url);
-			return -1;
-		}
-		else
-		{
-			httpd_badrequest(request, "Bad encoding");
-		}
-		return -1;
-	}
-}
-
-
-
-void	httpd_acceptthread(void *p)
-{
+	int	xfd = open(filename, O_RDONLY);
+	int	len = 0, ret = 0;
+	fd_set	wfd;
+	struct timeval tv;
 	
-	SOCKET		callerfd;
-	HTTPd_Request	*req;	
-	
-	THREAD		thread;
-	THREAD_ATTR	thread_attr;
-	
-	while (1)
+	if (xfd)
 	{
-		callerfd = accept(httpdfd, NULL, NULL);
-		if (callerfd >= 0)
+		while ((len = read(xfd, &r->inbuf[0], 1000)))
 		{
-			req = (HTTPd_Request *)MyMallocEx(sizeof(HTTPd_Request));
-			req->fd = callerfd;
-			IRCCreateThread(thread, thread_attr, httpd_socketthread, (void *)req);
+			ret = send(r->fd, &r->inbuf[0], len, 0);
+			if (ret == -1)
+			{
+				ircd_log(LOG_ERROR, "send error: %s",
+					strerror(ERRNO));
+				goto iwilldie;
+			}
+			if (ret != len)
+			{
+				ircd_log(LOG_ERROR, "%i != %i",
+					ret, len);
+				goto iwilldie;
+			}
 		}
 	}
-}
-
-
-
-void    httpd_socketthread(void *req)
-{
-	HTTPd_Request	*request = (HTTPd_Request *)req;
-	HTTPd_Header	*hp, *hp2;
-	fd_set		rfds;
-	struct timeval  tv;
-	int		retval, retval2;
-	tv.tv_sec = 10;
-	tv.tv_usec = 0;
-	FD_ZERO(&rfds);
-	FD_SET(request->fd, &rfds);
-		
-	while (request->pos < 1024)
-	{
-		if (retval = select(request->fd + 1, &rfds, NULL, NULL, &tv))
-		{
-			while ((retval2 = recv(request->fd, &request->inbuf[request->pos], 1, 0)) >= 0)
-			{
-				if (request->state != 2)
-				{
-					if (request->inbuf[request->pos] == '\n')
-					{
-						request->inbuf[request->pos + 1] = '\0';
-						iCstrip(request->inbuf);
-						if (httpd_parse(request) < 0)
-						{
-							request->pos = 1024;
-							break;
-						}
-						else
-							request->pos = 0;
-					}
-					else
-					{
-						request->pos++;
-					}
-					if (request->pos >= 1024)
-					{
-						break;
-					}
-				}
-				else
-				{
-					request->pos++;
-					if (request->pos >= 1024)
-						break;
-					if (request->pos == request->content_length)
-					{
-						request->inbuf[request->pos + 1] = '\0';
-						request->pos = 1024;
-						httpd_parse(request);
-						break;
-					}
-				}
-			}		
-			if (request->pos >= 1024)
-				break;
-
-			if (retval2 < 0)
-				request->pos = 1024;
-			else
-				request->pos += retval2;
-		}				
-		else
-		{
-			if (retval < 0)
-			{	
-				request->pos = 1024;
-			}
-		}
-	}	
-	
-end:
-	CLOSE_SOCK(request->fd);
-	if (request->url)
-		MyFree(request->url);
-	
-	hp = request->headers;
-	while (hp)
-	{
-		if (hp->name)
-			MyFree(hp->name);
-		if (hp->value)
-			MyFree(hp->value);
-		hp2 = hp;
-		hp = hp->next;
-		MyFree(hp2);
-	}
-	hp = request->dataheaders;
-	while (hp)
-	{
-		if (hp->name)
-			MyFree(hp->name);
-		if (hp->value)
-			MyFree(hp->value);
-		hp2 = hp;
-		hp = hp->next;
-		MyFree(hp2);
-	}
-	MyFree(request);
-	IRCExitThread(NULL);
+	iwilldie:
+	close(xfd);
 	return;
 }

@@ -110,7 +110,7 @@ DLLFUNC int h_u_vfs(HTTPd_Request *r)
 			{
 				if (tmt = rfc2time(ims) < 0)
 				{
-					httpd_400_header(r, "Bad date");
+					httpd_500_header(r, "Bad date");
 					return 1;	
 				}
 				if (statf.st_mtime < tmt)
@@ -123,6 +123,8 @@ DLLFUNC int h_u_vfs(HTTPd_Request *r)
 			datebuf = MyMalloc(60);
 			soprintf(r, "Last-Modified: %s",
 				rfctime(statf.st_mtime, datebuf));
+			soprintf(r, "Content-Length: %i",
+				statf.st_size);
 			MyFree(datebuf);
 			soprintf(r, "");
 			

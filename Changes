@@ -804,3 +804,5 @@ seen. gmtime warning still there
 - Cleaned up /mode a bit
 - Cleaned up command parsing a bit (faster)
 - Added config directive alias for services/bot aliases
+- Fixed some credits, recoded httpd (still in progress)
+- Disabled #undef PROPER_CORE

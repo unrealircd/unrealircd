@@ -184,5 +184,6 @@ DLLFUNC int h_u_phtml(HTTPd_Request *r)
 		else
 			sockprintf(r, "%s", bbuf);
 	}
+	fclose(f);
 	return 1;
 }

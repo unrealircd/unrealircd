@@ -98,6 +98,11 @@
  */
 #define ADMINCHAT 1
 
+/*
+ * If we should catch SIGSEGVs..
+*/
+#define PROPER_CORE
+
 
 /*
  * Kill logging -otherguy

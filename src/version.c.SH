@@ -91,7 +91,7 @@ char *unrealcredits[] =
 	"{X} (Laurie) x@tspre.org",
 	"- Making the main code/design of UnrealIRCd/32 gui",
 	"  bugfounds, etc",
-	"CC2IS Internet Services (http://www.cc2is.com)",
+	"Premiumshells.com",
 	"- Hosting development shells and unrealircd.com, .org  - thanks for",
 	"  supporting the UnrealIRCd project",
 	"RaYmAn (Jens Andersen)",
