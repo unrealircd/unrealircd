@@ -3035,3 +3035,5 @@ seen. gmtime warning still there
 - Added __attribute__ stuff for ircsprintf() to catch more warnings.
 - Fixed win32 compile problem. Reported by Troco (#0001644).
 - Added a missing ',' to the version.c.SH script reported by docco (#0001643)
+- Added conf check for too large spamfilter regex + reason field. Reported by
+  Z3l3zT (#0001648).

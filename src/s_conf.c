@@ -4878,6 +4878,7 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	int errors = 0;
 	int got = 0;
+	char *regex = NULL, *reason = NULL;
 	
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -4895,6 +4896,8 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
 			errors++; continue;
 		}
+		if (!strcmp(cep->ce_varname, "reason"))
+			reason = cep->ce_vardata;
 		if (!strcmp(cep->ce_varname, "regex") || !strcmp(cep->ce_varname, "action") ||
 		    !strcmp(cep->ce_varname, "reason") || !strcmp(cep->ce_varname, "ban-time"))
 			continue;
@@ -4912,6 +4915,7 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 	} else if (cep->ce_vardata) {
 		/* Check if it's a valid one */
 		char *errbuf = unreal_checkregex(cep->ce_vardata,0,0);
+		regex = cep->ce_vardata;
 		if (errbuf)
 		{
 			config_error("%s:%i: spamfilter::regex contains an invalid regex: %s",
@@ -4968,6 +4972,14 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, cep->ce_vardata);
 			errors++;
 		}
+	}
+
+	if (regex && reason && (strlen(regex) + strlen(reason) > 505))
+	{
+		config_error("%s:%i: spamfilter block problem: regex + reason field are together over 505 bytes, "
+		             "please choose a shorter regex or reason",
+		             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
 	}
 
 	return errors;
