@@ -1611,7 +1611,8 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 				    "%s %s %d %d %s %s %s %lu %s %s :%s",
 				    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
 				    hopcount, lastnick, username, realhost,
-				    server, servicestamp, umodes, 
+				    SupportNS(cptr) && sptr->srvptr->serv->numeric ? base64enc(sptr->srvptr->serv->numeric) : server,
+				    servicestamp, umodes, 
 					  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : virthost),
 					    info);
 			}

@@ -196,6 +196,7 @@ anUser *make_user(cptr)
 aServer *make_server(cptr)
 	aClient *cptr;
 {
+
 	aServer *serv = cptr->serv;
 
 	if (!serv)

@@ -54,6 +54,7 @@ static char sender[HOSTLEN + 1];
 static int cancel_clients PROTO((aClient *, aClient *, char *));
 static void remove_unknown PROTO((aClient *, char *));
 static char unknownserver[] = "Unknown.Server";
+static char nsprefix = 0;
 /*
 **  Find a client (server or user) by name.
 **
@@ -70,13 +71,6 @@ aClient *find_client(name, cptr)
 
 	if (name)
 	{
-/*		if (*name == '@')
-		{
-			newname = name;
-			if (!name)
-				name = newname;
-		}
-*/
 		cptr = hash_find_client(name, cptr);
 	}
 	return cptr;
@@ -113,14 +107,6 @@ aClient *find_server(name, cptr)
 	char *newname;
 	if (name)
 	{
-/*		if (*name == '@')
-		{
-			newname = name;
-			name = find_by_aln(name + 1);
-			if (!name)
-				name = newname;
-		}
-*/
 		cptr = hash_find_server(name, cptr);
 	}
 	return cptr;
@@ -249,6 +235,8 @@ int  parse(cptr, buffer, bufend, mptr)
 	para[0] = from->name;
 	if (*ch == ':' || *ch == '@')
 	{
+		if (*ch == '@')
+			nsprefix = 1;
 		/*
 		   ** Copy the prefix to 'sender' assuming it terminates
 		   ** with SPACE (or NULL, which is an error, though).
@@ -270,13 +258,21 @@ int  parse(cptr, buffer, bufend, mptr)
 		 */
 		if (*sender && IsServer(cptr))
 		{
-			from = find_client(sender, (aClient *)NULL);
-			if (!from || match(from->name, sender))
-				from = find_server(sender, (aClient *)NULL);
-			else if (!from && index(sender, '@'))
-				from = find_nickserv(sender, (aClient *)NULL);
-
-			para[0] = sender;
+			if (nsprefix)
+			{
+				from = (aClient *) find_server_by_base64(sender);
+				if (from) 
+					para[0] = from->name;
+			}
+				else
+			{
+				from = find_client(sender, (aClient *)NULL);
+				if (!from || match(from->name, sender))
+					from = find_server(sender, (aClient *)NULL);
+				else if (!from && index(sender, '@'))
+					from = find_nickserv(sender, (aClient *)NULL);
+				para[0] = sender;
+			}
 
 			/* Hmm! If the client corresponding to the
 			 * prefix is not found--what is the correct
@@ -694,7 +690,7 @@ static void remove_unknown(cptr, sender)
 	 * Do kill if it came from a server because it means there is a ghost
 	 * user on the other server which needs to be removed. -avalon
 	 */
-	if (!index(sender, '.'))
+	if (!index(sender, '.') && !nsprefix)
 		sendto_one(cptr, ":%s KILL %s :%s (%s(?) <- %s)",
 		    me.name, sender, me.name, sender,
 		    get_client_name(cptr, FALSE));

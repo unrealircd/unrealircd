@@ -201,33 +201,47 @@ int  m_squit(cptr, sptr, parc, parv)
 
 	if (parc > 1)
 	{
-		server = parv[1];
-		/*
-		   ** To accomodate host masking, a squit for a masked server
-		   ** name is expanded if the incoming mask is the same as
-		   ** the server name for that link to the name of link.
-		 */
-		while ((*server == '*') && IsServer(cptr))
+		if (!(*parv[1] == '@'))
 		{
-			aconf = cptr->serv->nline;
-			if (!aconf)
-				break;
-			if (!mycmp(server, my_name_for_link(me.name, aconf)))
-				server = cptr->name;
-			break;	/* WARNING is normal here */
+			server = parv[1];
+			/*
+			   ** To accomodate host masking, a squit for a masked server
+			   ** name is expanded if the incoming mask is the same as
+			   ** the server name for that link to the name of link.
+			 */
+			while ((*server == '*') && IsServer(cptr))
+			{
+				aconf = cptr->serv->nline;
+				if (!aconf)
+					break;
+				if (!mycmp(server, my_name_for_link(me.name, aconf)))
+					server = cptr->name;
+				break;	/* WARNING is normal here */
+			}
+
+			/*
+			   ** The following allows wild cards in SQUIT. Only usefull
+			   ** when the command is issued by an oper.
+			 */
+			for (acptr = client; (acptr = next_client(acptr, server));
+			    acptr = acptr->next)
+				if (IsServer(acptr) || IsMe(acptr))
+					break;
+			if (acptr && IsMe(acptr))
+			{
+				acptr = cptr;
+				server = cptr->sockhost;
+			}
 		}
-		/*
-		   ** The following allows wild cards in SQUIT. Only usefull
-		   ** when the command is issued by an oper.
-		 */
-		for (acptr = client; (acptr = next_client(acptr, server));
-		    acptr = acptr->next)
-			if (IsServer(acptr) || IsMe(acptr))
-				break;
-		if (acptr && IsMe(acptr))
+			else
 		{
-			acptr = cptr;
-			server = cptr->sockhost;
+			server = parv[1];
+			acptr = (aClient *) find_server_by_base64(server + 1);
+			if (acptr && IsMe(acptr))
+			{
+				acptr = cptr;
+				server = cptr->sockhost;
+			}
 		}
 	}
 	else
@@ -546,6 +560,7 @@ int  m_protoctl(cptr, sptr, parc, parv)
 	return 0;
 }
 
+char	*num = NULL;
 
 /*
 ** m_server
@@ -567,7 +582,7 @@ int  m_server(cptr, sptr, parc, parv)
 	aConfItem *aconf, *cconf;
 	int  hop, numeric = 0;
 	int  ts = 0;
-	char *flags, *protocol, *inf;
+	char *flags = NULL, *protocol = NULL, *inf = NULL;
 
 	info[0] = '\0';
 	inpath = get_client_name(cptr, FALSE);
@@ -843,16 +858,23 @@ int  m_server(cptr, sptr, parc, parv)
 			if (match(my_name_for_link(me.name, aconf),
 			    acptr->name) == 0)
 				continue;
-			if (numeric && SupportNS(bcptr))
-				sendto_one(bcptr, ":%s %s %s %d %d :%s",
-				    parv[0],
-				    IsToken(bcptr) ? TOK_SERVER : MSG_SERVER,
-				    acptr->name, hop + 1, numeric, acptr->info);
-			else
+			
+			if (SupportNS(bcptr))
+			{
+				sendto_one(bcptr,
+					"%c%s %s %s %d %i :%s",
+					(sptr->serv->numeric ? '@' : ':'),
+					(sptr->serv->numeric ? base64enc(sptr->serv->numeric) : sptr->name),
+					IsToken(bcptr) ? TOK_SERVER : MSG_SERVER,
+					acptr->name, hop + 1, numeric, acptr->info);
+			}
+				else
+			{
 				sendto_one(bcptr, ":%s %s %s %d :%s",
 				    parv[0],
 				    IsToken(bcptr) ? TOK_SERVER : MSG_SERVER,
 				    acptr->name, hop + 1, acptr->info);
+			}
 		}
 		return 0;
 	}
@@ -875,11 +897,13 @@ int  m_server(cptr, sptr, parc, parv)
 		inf = NULL;
 		protocol = NULL;
 		flags = NULL;
-
+		num = NULL;
 		protocol = (char *)strtok((char *)info, "-");
 		if (protocol)
-			flags = (char *)strtok((char *)NULL, " ");
+			flags = (char *)strtok((char *)NULL, "-");
 		if (flags)
+			num = (char *)strtok((char *)NULL, " ");
+		if (num)
 			inf = (char *)strtok((char *)NULL, "");
 		if (inf)
 		{
@@ -1030,6 +1054,7 @@ int  m_server_estab(cptr)
 	char *inpath, *host, *s, *encr;
 	int  split, i;
 	extern char serveropts[];
+	unsigned long numeric;
 
 	inpath = get_client_name(cptr, TRUE);	/* "refresh" inpath with host */
 	split = mycmp(cptr->name, cptr->sockhost);
@@ -1101,9 +1126,9 @@ int  m_server_estab(cptr)
 		   ** Pass my info to the new server
 		 */
 		/* modified so we send out the Uproto and flags */
-		sendto_one(cptr, "SERVER %s 1 :U%d-%s %s",
+		sendto_one(cptr, "SERVER %s 1 :U%d-%s-%i %s",
 		    my_name_for_link(me.name, aconf), UnrealProtocol,
-		    serveropts, (me.info[0]) ? (me.info) : "IRCers United");
+		    serveropts, me.serv->numeric, (me.info[0]) ? (me.info) : "IRCers United");
 	}
 	else
 	{
@@ -1162,8 +1187,12 @@ int  m_server_estab(cptr)
 	cptr->serv->up = me.name;
 	cptr->srvptr = &me;
 	cptr->serv->nline = aconf;
+	if (num)
+	{
+		cptr->serv->numeric = atoi(num);
+		num = NULL;
+	}
 	add_server_to_table(cptr);
-
 	/*
 	   ** Old sendto_serv_but_one() call removed because we now
 	   ** need to send different names to different servers
@@ -1177,16 +1206,23 @@ int  m_server_estab(cptr)
 		if ((aconf = acptr->serv->nline) &&
 		    !match(my_name_for_link(me.name, aconf), cptr->name))
 			continue;
-		if (cptr->serv->numeric && SupportNS(acptr))
-			sendto_one(acptr, ":%s %s %s 2 %i :%s",
-			    me.name,
-			    (IsToken(acptr) ? TOK_SERVER : MSG_SERVER),
-			    cptr->name, cptr->serv->numeric, cptr->info);
-		else
+				
+		if (SupportNS(acptr))
+		{
+			sendto_one(acptr, "%c%s %s %s 2 %i :%s",
+				(me.serv->numeric ? '@' : ':'),
+				(me.serv->numeric ? base64enc(me.serv->numeric) : me.name),
+				(IsToken(acptr) ? TOK_SERVER : MSG_SERVER),
+				cptr->name, cptr->serv->numeric, 
+				cptr->info);
+		}
+			else
+		{
 			sendto_one(acptr, ":%s %s %s 2 :%s",
-			    me.name,
-			    (IsToken(cptr) ? TOK_SERVER : MSG_SERVER),
-			    cptr->name, cptr->info);
+				me.name, 
+				(IsToken(acptr) ? TOK_SERVER : MSG_SERVER),
+				cptr->name, cptr->info);
+		}
 	}
 
 	/*
@@ -1221,12 +1257,19 @@ int  m_server_estab(cptr)
 				continue;
 			split = (MyConnect(acptr) &&
 			    mycmp(acptr->name, acptr->sockhost));
-			if (acptr->serv->numeric && SupportNS(cptr))
-				sendto_one(cptr, ":%s %s %s %d %i :%s",
-				    acptr->serv->up,
-				    (IsToken(cptr) ? TOK_SERVER : MSG_SERVER),
-				    acptr->name, acptr->hopcount + 1,
-				    acptr->serv->numeric, acptr->info);
+			    
+			if (SupportNS(cptr))
+			{
+				/* this has to work. */
+				numeric = ((aClient *) find_server_quick(acptr->serv->up))->serv->numeric;
+				
+				sendto_one(cptr, "%c%s %s %s %d %i :%s",
+					(numeric ? '@' : ':'),
+					(numeric ? base64enc(numeric) : acptr->serv->up),
+					IsToken(cptr) ? TOK_SERVER : MSG_SERVER,
+					acptr->name, acptr->hopcount + 1,
+					acptr->serv->numeric, acptr->name);
+			}
 			else
 				sendto_one(cptr, ":%s %s %s %d :%s",
 				    acptr->serv->up,

@@ -135,6 +135,34 @@ char *find_server_id(aClient *which)
 	return (base64enc(which->serv->numeric));
 }
 
+aClient *find_server_quick(char *name)
+{
+	Link *lp;
+
+	for (lp = servers; lp; lp = lp->next)
+		if (!strcmp(lp->value.cptr->name, name))
+			return (lp->value.cptr);
+	return NULL;
+}
+
+aClient *find_server_b64_or_real(char *name)
+{
+	Link *lp;
+
+	if (strlen(name) < 4)
+	{
+		for (lp = servers; lp; lp = lp->next)
+			if (!strcmp(base64enc(lp->value.cptr->serv->numeric), name))
+				return (lp->value.cptr);
+	}
+		else
+	{
+		return find_server_quick(name);
+	}
+	return NULL;
+	
+}
+
 /* ':' and '#' and '&' and '+' and '@' must never be in this table. */
 /* these tables must NEVER CHANGE! >) */
 char int6_to_base64_map[] = {
@@ -213,3 +241,4 @@ void ns_stats(aClient *cptr)
 		    find_server_id(sptr));
 	}
 }
+

@@ -4763,9 +4763,9 @@ int  m_sjoin(cptr, sptr, parc, parv)
 				nick[i++] = *(tp++);	/* get nick */
 			nick[i] = '\0';
 			if (nick[0] == ' ')
-				continue;
+				goto nextnick;
 			if (nick[0] == '\0')
-				continue;
+				goto nextnick;
 			if (!(modeflags & CHFL_BAN)
 			    && !(modeflags & CHFL_EXCEPT))
 			{
@@ -4775,9 +4775,9 @@ int  m_sjoin(cptr, sptr, parc, parv)
 					    ("Missing user %s in SJOIN for %s from %s (%s)",
 					    nick, chptr->chname, sptr->name,
 					    backupbuf);
-					continue;
+					goto nextnick;
 				}
-/*				if (acptr->from != sptr->from)
+				if (acptr->from != sptr->from)
 				{
 					sendto_one(sptr,
 					    ":%s KICK %s %s :Fake direction",
@@ -4787,9 +4787,8 @@ int  m_sjoin(cptr, sptr, parc, parv)
 					    nick,
 					    acptr->from->name, sptr->name,
 					    chptr->chname);
-					continue;
+					goto nextnick;
 				}
-*/
 				if (removetheirs)
 				{
 					modeflags = 0;
@@ -4811,7 +4810,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 			else
 			{
 				if (removetheirs)
-					continue;
+					goto nextnick;
 				if (modeflags & CHFL_BAN)
 				{
 					add_banid(sptr, chptr, nick);
@@ -4835,6 +4834,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 			}
 
 		}
+nextnick:
 		t++;
 		c++;
 	}

@@ -1,5 +1,4 @@
 /*
-/*
  *   Unreal Internet Relay Chat Daemon, src/s_user.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
@@ -67,7 +66,7 @@ int  sendanyways = 0;
 int  dontspread = 0;
 extern char *me_hash;
 extern ircstats IRCstats;
-
+extern char backupbuf[];
 static char buf[BUFSIZE], buf2[BUFSIZE];
 static int user_modes[] = { UMODE_OPER, 'o',
 	UMODE_LOCOP, 'O',
@@ -893,7 +892,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	{
 		aClient *acptr;
 
-		if (!(acptr = find_server(user->server, NULL)))
+		if (!(acptr = (aClient *) find_server_quick(user->server, NULL)))
 		{
 			sendto_ops
 			    ("Bad USER [%s] :%s USER %s %s : No such server",
@@ -1131,10 +1130,12 @@ int  m_nick(cptr, sptr, parc, parv)
 	   ** -- Aeto
 	 */
 	if (IsServer(cptr) &&
-	    (parc > 7 && (!(serv = (aClient *)find_server(parv[6], NULL)) ||
+	    (parc > 7 && (!(serv = (aClient *)find_server_b64_or_real(parv[6], NULL)) ||
 	    serv->from != cptr->from)))
+	{
+		sendto_ops("Cannot find server (%s)", backupbuf);
 		return 0;
-
+	}
 	/*
 	   ** Check against nick name collisions.
 	   **
@@ -2796,6 +2797,7 @@ int  m_user(cptr, sptr, parc, parv)
 	    NULL;
 	u_int32_t sstamp = 0;
 	anUser *user;
+	aClient *acptr;
 	char *mparv[] = { sptr->name, sptr->name, NULL };
 
 	if (IsServer(cptr) && !IsUnknown(sptr))
@@ -2849,7 +2851,16 @@ int  m_user(cptr, sptr, parc, parv)
 		if (sptr->srvptr == NULL)
 			sendto_ops("WARNING, User %s introduced as being "
 			    "on non-existant server %s.", sptr->name, server);
-		user->server = find_or_add(server);
+		if (SupportNS(cptr))
+		{
+			acptr = (aClient *) find_server_b64_or_real(server);
+			if (acptr)
+				user->server = find_or_add(acptr->name);
+			else
+				user->server = find_or_add(server);
+		}
+			else
+				user->server = find_or_add(server);
 		strncpyzt(user->realhost, host, sizeof(user->realhost));
 		goto user_finish;
 	}
