@@ -40,7 +40,7 @@ INCLUDES=./include/struct.h ./include/config.h ./include/sys.h \
  ./include/common.h ./include/version.h ./include/h.h ./include/numeric.h \
  ./include/msg.h ./include/setup.h ./include/dynconf.h
 LINK=link.exe
-OBJ_FILES=SRC/CHANNEL.OBJ SRC/USERLOAD.OBJ SRC/SEND.OBJ SRC/BSD.OBJ \
+OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/BSD.OBJ \
  SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ  \
  SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ \
  SRC/S_NUMERIC.OBJ SRC/WHOWAS.OBJ  SRC/S_AUTH.OBJ \

@@ -21,7 +21,7 @@
 
 CC = danger will robinson
 
-OBJS=agent.o aln.o badwords.o bsd.o channel.o cloak.o crule.o dbuf.o \
+OBJS=aln.o badwords.o bsd.o channel.o cloak.o crule.o dbuf.o \
 	events.o fdlist.o hash.o help.o ircd.o ircsprintf.o list.o lusers.o \
 	match.o modules.o packet.o parse.o $(REGEX) res.o \
 	res_init.o res_comp.o res_mkquery.o res_skipname.o s_auth.o \
@@ -197,9 +197,6 @@ scache.o: scache.c ../include/dbuf.h $(INCLUDES)
 
 ircsprintf.o: ircsprintf.c ../include/dbuf.h $(INCLUDES)
 	$(CC) $(CFLAGS) -c ircsprintf.c
-
-agent.o: agent.c ../include/dbuf.h $(INCLUDES)
-	$(CC) $(CFLAGS) -c agent.c
 
 s_user.o: s_user.c $(INCLUDES) \
 	  ../include/dbuf.h ../include/channel.h ../include/whowas.h
