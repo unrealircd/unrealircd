@@ -4927,11 +4927,13 @@ void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, c
  * rejoin_doparts:
  * sends a PART to all channels (to local users only)
  */
-void rejoin_doparts(aClient *sptr)
+void rejoin_doparts(aClient *sptr, char did_parts[])
 {
-Membership *tmp;
-aChannel *chptr;
-char *comment = "Rejoining because of user@host change";
+	Membership *tmp;
+	aChannel *chptr;
+	char *comment = "Rejoining because of user@host change";
+	int i = 0;
+
 	for (tmp = sptr->user->channel; tmp; tmp = tmp->next)
 	{
 		chptr = tmp->chptr;
@@ -4940,7 +4942,11 @@ char *comment = "Rejoining because of user@host change";
 
 		/* If the user is banned, don't do it */
 		if (is_banned(sptr, chptr, BANCHK_JOIN))
+		{
+			did_parts[i++] = 0;
 			continue;
+		}
+		did_parts[i++] = 1;
 
 		if ((chptr->mode.mode & MODE_AUDITORIUM) &&
 		    !(tmp->flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP)))
@@ -4955,12 +4961,12 @@ char *comment = "Rejoining because of user@host change";
  * rejoin_dojoinandmode:
  * sends a JOIN and a MODE (if needed) to restore qaohv modes (to local users only)
  */
-void rejoin_dojoinandmode(aClient *sptr)
+void rejoin_dojoinandmode(aClient *sptr, char did_parts[])
 {
-Membership *tmp;
-aChannel *chptr;
-int i, n, flags;
-char flagbuf[8]; /* For holding "qohva" and "*~@%+" */
+	Membership *tmp;
+	aChannel *chptr;
+	int i, j = 0, n, flags;
+	char flagbuf[8]; /* For holding "qohva" and "*~@%+" */
 
 	for (tmp = sptr->user->channel; tmp; tmp = tmp->next)
 	{
@@ -4970,7 +4976,7 @@ char flagbuf[8]; /* For holding "qohva" and "*~@%+" */
 			continue; /* Is it possible? */
 
 		/* If the user is banned, don't do it */
-		if (is_banned(sptr, chptr, BANCHK_JOIN))
+		if (!did_parts[j++])
 			continue;
 
 		if ((chptr->mode.mode & MODE_AUDITORIUM) && 

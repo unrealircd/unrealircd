@@ -601,8 +601,8 @@ extern u_int16_t getrandom16();
 extern u_int32_t getrandom32();
 extern MODVAR char trouble_info[1024];
 #define EVENT_DRUGS BASE_VERSION
-extern void rejoin_doparts(aClient *sptr);
-extern void rejoin_dojoinandmode(aClient *sptr);
+extern void rejoin_doparts(aClient *sptr, char did_parts[]);
+extern void rejoin_dojoinandmode(aClient *sptr, char did_parts[]);
 extern void ident_failed(aClient *cptr);
 
 extern MODVAR char extchmstr[4][64];

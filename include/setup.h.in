@@ -269,3 +269,12 @@
 
 /* Define if you have inet_ntop */
 #undef HAVE_INET_NTOP
+
+/* Define if you have a compiler with C99 variable length array support */
+#undef HAVE_C99_VARLEN_ARRAY
+
+/* Define if you have alloca.h */
+#undef HAVE_ALLOCA_H
+
+/* Define if you have alloca */
+#undef HAVE_ALLOCA

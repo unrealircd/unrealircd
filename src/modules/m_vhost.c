@@ -17,6 +17,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "macros.h"
 #include "config.h"
 #include "struct.h"
 #include "common.h"
@@ -139,6 +140,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (i > 0)
 	{
 		char olduser[USERLEN+1];
+		DYN_LOCAL(char, did_parts, sptr->user->joined);
 		
 		switch (UHOST_ALLOWED)
 		{
@@ -146,6 +148,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (MyClient(sptr))
 				{
 					sendto_one(sptr, ":%s NOTICE %s :*** /vhost is disabled", me.name, sptr->name);
+					DYN_FREE(did_parts);
 					return 0;
 				}
 				break;
@@ -155,11 +158,12 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (MyClient(sptr) && sptr->user->joined)
 				{
 					sendto_one(sptr, ":%s NOTICE %s :*** /vhost can not be used while you are on a channel", me.name, sptr->name);
+					DYN_FREE(did_parts);
 					return 0;
 				}
 				break;
 			case UHALLOW_REJOIN:
-				rejoin_doparts(sptr);
+				rejoin_doparts(sptr, did_parts);
 				/* join sent later when the host has been changed */
 				break;
 		}
@@ -204,7 +208,8 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    sptr->user->realhost, vhost->virtuser ? vhost->virtuser : "", 
 		    	vhost->virtuser ? "@" : "", vhost->virthost);
 		if (UHOST_ALLOWED == UHALLOW_REJOIN)
-			rejoin_dojoinandmode(sptr);
+			rejoin_dojoinandmode(sptr, did_parts);
+		DYN_FREE(did_parts);
 		return 0;
 	}
 	if (i == -1)

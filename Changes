@@ -477,3 +477,6 @@
 - Added some missing operflags to /stats O and SVSO (#0002193) reported by Bugz.
 - If a user is +b on a channel, and set::allow-userhost-change force-rejoin is used, a
   part/join is not sent in order to prevent flooding (#0001933) suggested by Z3l3zT.
+- Rewrote some of the previous change to deal with some strange issues found by aquanight
+  - Introduced two new macros DYN_LOCAL and DYN_FREE to allow creation/deletion of dynamically
+    sized arrays in the most efficient manner (C99 variable length, alloca, or malloc)

@@ -19,6 +19,7 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+#include "macros.h"
 #include "config.h"
 #include "struct.h"
 #include "common.h"
@@ -193,47 +194,52 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
-	/* uh uh .. too small */
-	switch (UHOST_ALLOWED)
 	{
-		case UHALLOW_NEVER:
-			if (MyClient(sptr))
-			{
-				sendto_one(sptr, ":%s NOTICE %s :*** /SetHost is disabled", me.name, sptr->name);
-				return 0;
-			}
-			break;
-		case UHALLOW_ALWAYS:
-			break;
-		case UHALLOW_NOCHANS:
-			if (MyClient(sptr) && sptr->user->joined)
-			{
-				sendto_one(sptr, ":%s NOTICE %s :*** /SetHost can not be used while you are on a channel", me.name, sptr->name);
-				return 0;
-			}
-			break;
-		case UHALLOW_REJOIN:
-			rejoin_doparts(sptr);
-			/* join sent later when the host has been changed */
-			break;
-	}
+		DYN_LOCAL(char, did_parts, sptr->user->joined);
+		switch (UHOST_ALLOWED)
+		{
+			case UHALLOW_NEVER:
+				if (MyClient(sptr))
+				{
+					sendto_one(sptr, ":%s NOTICE %s :*** /SetHost is disabled", me.name, sptr->name);
+					DYN_FREE(did_parts);	
+					return 0;
+				}
+				break;
+			case UHALLOW_ALWAYS:
+				break;
+			case UHALLOW_NOCHANS:
+				if (MyClient(sptr) && sptr->user->joined)
+				{
+					sendto_one(sptr, ":%s NOTICE %s :*** /SetHost can not be used while you are on a channel", me.name, sptr->name);
+					DYN_FREE(did_parts);
+					return 0;
+				}
+				break;
+			case UHALLOW_REJOIN:
+				rejoin_doparts(sptr, did_parts);
+				/* join sent later when the host has been changed */
+				break;
+		}
 
-	/* hide it */
-	sptr->umodes |= UMODE_HIDE;
-	sptr->umodes |= UMODE_SETHOST;
-	/* get it in */
-	if (sptr->user->virthost)
-	{
-		MyFree(sptr->user->virthost);
-		sptr->user->virthost = NULL;
-	}
-	sptr->user->virthost = strdup(vhost);
-	/* spread it out */
-	sendto_serv_butone_token(cptr, sptr->name, MSG_SETHOST, TOK_SETHOST,
-	    "%s", parv[1]);
+		/* hide it */
+		sptr->umodes |= UMODE_HIDE;
+		sptr->umodes |= UMODE_SETHOST;
+		/* get it in */
+		if (sptr->user->virthost)
+		{
+			MyFree(sptr->user->virthost);
+			sptr->user->virthost = NULL;
+		}
+		sptr->user->virthost = strdup(vhost);
+		/* spread it out */
+		sendto_serv_butone_token(cptr, sptr->name, MSG_SETHOST, TOK_SETHOST,
+		    "%s", parv[1]);
 
-	if (UHOST_ALLOWED == UHALLOW_REJOIN)
-		rejoin_dojoinandmode(sptr);
+		if (UHOST_ALLOWED == UHALLOW_REJOIN)
+			rejoin_dojoinandmode(sptr, did_parts);
+		DYN_FREE(did_parts);
+	}
 
 	if (MyConnect(sptr))
 	{

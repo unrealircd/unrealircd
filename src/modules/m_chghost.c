@@ -25,6 +25,7 @@
  * XeRXeS
  */
 
+#include "macros.h"
 #include "config.h"
 #include "struct.h"
 #include "common.h"
@@ -160,11 +161,13 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if ((acptr = find_person(parv[1], NULL)))
 	{
+		DYN_LOCAL(char, did_parts, acptr->user->joined);
 		if (!strcmp(GetHost(acptr), parv[2]))
 		{
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** /ChgHost Error: requested host is same as current host.",
 			    me.name, parv[0]);
+			DYN_FREE(did_parts);
 			return 0;
 		}
 		switch (UHOST_ALLOWED)
@@ -173,6 +176,7 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (MyClient(sptr))
 				{
 					sendto_one(sptr, ":%s NOTICE %s :*** /ChgHost is disabled", me.name, sptr->name);
+					DYN_FREE(did_parts);
 					return 0;
 				}
 				break;
@@ -182,11 +186,12 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (IsPerson(acptr) && MyClient(sptr) && acptr->user->joined)
 				{
 					sendto_one(sptr, ":%s NOTICE %s :*** /ChgHost can not be used while %s is on a channel", me.name, sptr->name, acptr->name);
+					DYN_FREE(did_parts);
 					return 0;
 				}
 				break;
 			case UHALLOW_REJOIN:
-				rejoin_doparts(acptr);
+				rejoin_doparts(acptr, did_parts);
 				/* join sent later when the host has been changed */
 				break;
 		}
@@ -215,7 +220,8 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 		acptr->user->virthost = strdup(parv[2]);
 		if (UHOST_ALLOWED == UHALLOW_REJOIN)
-			rejoin_dojoinandmode(acptr);
+			rejoin_dojoinandmode(acptr, did_parts);
+		DYN_FREE(did_parts);
 		return 0;
 	}
 	else

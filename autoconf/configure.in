@@ -227,6 +227,7 @@ dnl Checks for library functions.
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_SETPGRP
 AC_FUNC_SETVBUF_REVERSED
+AC_FUNC_ALLOCA
 AC_CHECK_FUNCS(snprintf,AC_DEFINE(HAVE_SNPRINTF))
 AC_CHECK_FUNCS(vsnprintf,AC_DEFINE(HAVE_VSNPRINTF))
 AC_CHECK_FUNCS(strlcpy, AC_DEFINE(HAVE_STRLCPY))
@@ -234,7 +235,19 @@ AC_CHECK_FUNCS(strlcat, AC_DEFINE(HAVE_STRLCAT))
 AC_CHECK_FUNCS(strlncat, AC_DEFINE(HAVE_STRLNCAT))
 AC_CHECK_FUNCS(inet_pton, AC_DEFINE(HAVE_INET_PTON))
 AC_CHECK_FUNCS(inet_ntop, AC_DEFINE(HAVE_INET_NTOP))
-
+dnl Check if it supports C99 style variable length arrays
+AC_CACHE_CHECK(if C99 variable length arrays are supported, ac_cv_varlen_arrays, [
+AC_TRY_COMPILE(,[
+int main() {
+int i = 5;
+int a[i];
+a[0] = 1;
+return 0;
+}], ac_cv_varlen_arrays=yes, ac_cv_varlen_arrays=no)
+])
+if test "$ac_cv_varlen_arrays" = "yes" ; then
+	AC_DEFINE(HAVE_C99_VARLEN_ARRAY)
+fi
 AC_CACHE_CHECK(if we can set the core size to unlimited, ac_cv_force_core,[
 AC_TRY_RUN([
 #include <sys/time.h>
