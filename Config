@@ -880,7 +880,7 @@ cat > $TMP <<__EOF__
 #endif
 main()
 {
-	char  *t = "1\0", *s;
+	char  t[] = "a\0", *s;
 	s = strtok(t, ",");
 	if (!strcmp(t, s))
 		exit(0);
