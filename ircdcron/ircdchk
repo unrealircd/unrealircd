@@ -25,7 +25,7 @@ dir="../src"
 ircdexe="ircd"
 
 # I wouldn't touch this if I were you.
-ircdname="ircd.pid"
+ircdname="../ircd.pid"
 
 ########## you probably don't need to change anything below here ##########
 

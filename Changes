@@ -2225,4 +2225,6 @@ seen. gmtime warning still there
   in include/config.h for more information.
 - Fixed PRIVMSG bug with multiple targets.
 - Yet another resolver fix
+- Fixed a bug with using crontab
+- Docs update
 *** Unreal3.2-beta17 release *** (god save us)
