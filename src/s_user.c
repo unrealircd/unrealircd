@@ -1360,7 +1360,7 @@ CMD_FUNC(m_nick)
 		}
 		sendto_failops("Nick collision on %s (%s %d <- %s %d)",
 		    acptr->name, acptr->from->name, acptr->lastnick,
-		    get_client_name(cptr, FALSE), lastnick);
+		    cptr->name, lastnick);
 		/*
 		   **    I'm putting the KILL handling here just to make it easier
 		   ** to read, it's hard to follow it the way it used to be.

@@ -1600,4 +1600,4 @@ seen. gmtime warning still there
 - Made conf _not_ bitch that it doesn't know set::ssl
 - Removed some leftover client certificate stuff
 - Fixed bug #0000372 reported by MorPheus where Killed (<everything-but-the-first-char-in-killer-letter-got-shown> (reason))
-
+- Fixed bug #0000377 reported by MorPheus where IPs of servers were shown in nick collision notices
