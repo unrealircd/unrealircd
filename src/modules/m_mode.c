@@ -733,8 +733,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		auditorium_ok:
 		  goto setthephuckingmode;
 	  case MODE_OPERONLY:
-		  if (!IsAnOper(cptr) && !IsServer(cptr)
-		      && !IsULine(cptr))
+		  if (MyClient(cptr) && !IsAnOper(cptr))
 		  {
 			sendto_one(cptr, err_str(ERR_NOPRIVILEGES), me.name, cptr->name);
 			break;
