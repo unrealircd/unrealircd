@@ -1,5 +1,4 @@
 /*
-/*
  *   Unreal Internet Relay Chat Daemon, src/s_bsd.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
@@ -716,7 +715,7 @@ int  check_client(cptr)
 	static char sockname[HOSTLEN + 1];
 	struct hostent *hp = NULL;
 	int  i;
-
+	
 	ClearAccess(cptr);
 	Debug((DEBUG_DNS, "ch_cl: check access for %s[%s]",
 	    cptr->name, inetntoa((char *)&cptr->ip)));
@@ -738,7 +737,7 @@ int  check_client(cptr)
 		if (!hp->h_addr_list[i])
 		{
 			sendto_snomask(SNO_JUNK, "IP# Mismatch: %s != %s[%08x]",
-			    inetntoa((char *)&cptr->ip), hp->h_name,
+			    Inet_ia2p((struct IN_ADDR *)&cptr->ip), hp->h_name,
 			    *((unsigned long *)hp->h_addr));
 			hp = NULL;
 		}
@@ -2283,7 +2282,6 @@ int  connect_server(aconf, by, hp)
 	strncpyzt(cptr->sockhost, aconf->hostname, HOSTLEN + 1);
 
 	svp = connect_inet(aconf, cptr, &len);
-
 	if (!svp)
 	{
 		if (cptr->fd >= 0)
@@ -2295,7 +2293,6 @@ int  connect_server(aconf, by, hp)
 		free_client(cptr);
 		return -1;
 	}
-
 	set_non_blocking(cptr->fd, cptr);
 	set_sock_opts(cptr->fd, cptr);
 #ifndef _WIN32
@@ -2397,17 +2394,7 @@ static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
 #ifndef INET6
 		server.SIN_ADDR.S_ADDR = inet_addr(aconf->bindip);	
 #else
-		if (strchr(aconf->bindip, '.'))
-		{
-			inet_pton(AF_INET, aconf->bindip, server.SIN_ADDR.S_ADDR);
-			server.SIN_FAMILY = AF_INET;
-		}
-		else
-		{
-			inet_pton(AF_INET6, aconf->bindip, server.SIN_ADDR.S_ADDR);
-			server.SIN_FAMILY = AF_INET6;
-
-		}
+		inet_pton(AF_INET6, aconf->bindip, server.SIN_ADDR.S_ADDR);
 #endif
 	}
 	if (bind(cptr->fd, (struct SOCKADDR *)&server, sizeof(server)) == -1)
@@ -2423,9 +2410,8 @@ static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
 	 * being present instead. If we dont know it, then the connect fails.
 	 */
 #ifdef INET6
-	if (isdigit(*aconf->hostname) && (AND16(aconf->ipnum.s6_addr) == 255))
-		if (!inet_pton(AF_INET6, aconf->hostname, aconf->ipnum.s6_addr))
-			bcopy(minus_one, aconf->ipnum.s6_addr, IN6ADDRSZ);
+	if (!inet_pton(AF_INET6, aconf->hostname, aconf->ipnum.s6_addr))
+		bcopy(minus_one, aconf->ipnum.s6_addr, IN6ADDRSZ);
 	if (AND16(aconf->ipnum.s6_addr) == 255)
 #else
 	if (isdigit(*aconf->hostname) && (aconf->ipnum.S_ADDR == -1))

@@ -905,3 +905,9 @@ seen. gmtime warning still there
 - Changed the setproctitle check to also check in -lutil (some OSes have it there)
 - Added aliases/auspice.conf, and added a /register command to aliases/aliases.conf
 - Fixed a win32 typo in the .rc
+- VERSION M_SERVER fix by skold
+- Fixed connecting with IPv6
+- Ident requests now orgin with the listener that the user connected on
+- More IPv6 fixes, DNS resolving actually works now too.. (crackhead IRCnet
+  coding)
+- Webserver caching fix

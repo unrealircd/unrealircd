@@ -390,10 +390,8 @@ static int send_res_msg(msg, len, rcount)
 	{
 		Debug((DEBUG_DNS, "Sending to nameserver %i",
 			i));
-#ifndef INET6
 		Debug((DEBUG_DNS, "IP: %s",
-		 inet_ntoa(ircd_res.nsaddr_list[i].sin_addr)));
-#endif
+		 inet_ntoa((char *)&ircd_res.nsaddr_list[0].sin_addr.s_addr)));
 #ifdef INET6
 		/* still IPv4 */
 		ircd_res.nsaddr_list[i].sin_family = AF_INET;
@@ -542,7 +540,7 @@ static int do_query_number(lp, numb, rptr)
 	u_char *cp;
 #ifndef _WIN32
 #ifdef INET6
-	cp = (u_char *)numb->s6_addr;
+	cp = (u_char *)&numb->s6_addr;
 	if (cp[0] == 0 && cp[1] == 0 && cp[2] == 0 && cp[3] == 0 && cp[4] == 0
 	    && cp[5] == 0 && cp[6] == 0 && cp[7] == 0 && cp[8] == 0
 	    && cp[9] == 0 && ((cp[10] == 0 && cp[11] == 0) || (cp[10] == 0xff
@@ -789,32 +787,35 @@ static int proc_answer(rptr, hptr, buf, eob)
 				  hp->h_addrtype = (class == C_IN) ?
 				      AFINET : AF_UNSPEC;
 #ifdef INET6
-			  if (type == T_AAAA)
-				  bcopy(cp, (char *)&dr, dlen);
-			  else
-			  {
-				  dr.s6_addr[0] = dr.s6_addr[1] = 0;
-				  dr.s6_addr[2] = htonl(0xffff);
-				  bcopy(cp, &dr.s6_addr[3], INADDRSZ);
-			  }
-			  bcopy(dr.s6_addr, adr->s6_addr, IN6ADDRSZ);
+
+			if (type == T_AAAA)
+				bcopy(cp, (char *)&dr, dlen);
+			else {
+				/* ugly hack */
+				memset(dr.s6_addr, 0, 10);
+				dr.s6_addr[10] = dr.s6_addr[11] = 0xff;
+				memcpy(dr.s6_addr+12, cp, 4);
+			}
+			bcopy(dr.s6_addr, adr->s6_addr, IN6ADDRSZ);
 #else
-			  bcopy(cp, (char *)&dr, dlen);
-			  adr->s_addr = dr.s_addr;
+			bcopy(cp, (char *)&dr, dlen);
+			adr->s_addr = dr.s_addr;
 #endif
 #ifdef INET6
-			  Debug((DEBUG_INFO, "got ip # %s for %s",
-			      inet_ntop(AF_INET6, (char *)adr, mydummy,
-			      MYDUMMY_SIZE), hostbuf));
+			Debug((DEBUG_INFO,"got ip # %s for %s",
+			       inet_ntop(AF_INET6, (char *)adr, mydummy,
+					 MYDUMMY_SIZE),
+			       hostbuf));
 #else
-			  Debug((DEBUG_INFO, "got ip # %s for %s",
-			      inetntoa((char *)adr), hostbuf));
+			Debug((DEBUG_INFO,"got ip # %s for %s",
+			       inetntoa((char *)adr),
+			       hostbuf));
 #endif
-			  if (!hp->h_name)
-			  {
-				  hp->h_name = (char *)MyMalloc(len + 1);
-				  (void)strcpy(hp->h_name, hostbuf);
-			  }
+			if (!hp->h_name && len < HOSTLEN)
+			    {
+				hp->h_name =(char *)MyMalloc(len+1);
+				(void)strcpy(hp->h_name, hostbuf);
+			    }
 			  ans++;
 			  adr++;
 			  cp += dlen;
@@ -1003,26 +1004,12 @@ struct hostent *get_res(lp,id)
 	a = proc_answer(rptr, hptr, buf, buf + rc);
 	if (a == -1)
 	{
-		sendto_ops("ad hostname returned from %s for %s",
-#ifdef INET6
-		    inetntop(AF_INET, &sin.sin_addr, mydummy2,
-		    MYDUMMY_SIZE),
-		    inetntop(AF_INET6, rptr->he.h_addr.s6_addr,
-		    mydummy, MYDUMMY_SIZE));
-#else
-		    inetntoa((char *)&sin.sin_addr),
-		    inetntoa((char *)&rptr->he.h_addr));
-#endif
-#ifdef INET6
+		sendto_ops("Bad hostname returned from %s for %s",
+		    inet_ntoa((struct IN_ADDR *)&sin.sin_addr),
+		    Inet_ia2p((struct IN_ADDR *)&rptr->he.h_addr));
 		Debug((DEBUG_DNS, "Bad hostname returned from %s for %s",
-		    inet_ntop(AF_INET, &sin.sin_addr, mydummy2, MYDUMMY_SIZE),
-		    inet_ntop(AF_INET6, rptr->he.h_addr.s6_addr, mydummy,
-		    MYDUMMY_SIZE)));
-#else
-		Debug((DEBUG_DNS, "Bad hostname returned from %s for %s",
-		    inetntoa((char *)&sin.sin_addr),
-		    inetntoa((char *)&rptr->he.h_addr)));
-#endif
+		    inet_ntoa((struct IN_ADDR *)&sin.sin_addr),
+		    Inet_ia2p((struct IN_ADDR *)&rptr->he.h_addr)));
 	}
 #ifdef DEBUGMODE
 	Debug((DEBUG_INFO, "get_res:Proc answer = %d", a));
@@ -1034,14 +1021,9 @@ struct hostent *get_res(lp,id)
 		if (BadPtr(rptr->he.h_name))	/* Kludge!      960907/Vesa */
 			goto getres_err;
 
-#ifdef INET6
 		Debug((DEBUG_DNS, "relookup %s <-> %s",
-		    rptr->he.h_name, inet_ntop(AF_INET6,
-		    (char *)&rptr->he.h_addr, mydummy, MYDUMMY_SIZE)));
-#else
-		Debug((DEBUG_DNS, "relookup %s <-> %s",
-		    rptr->he.h_name, inetntoa((char *)&rptr->he.h_addr)));
-#endif
+		    rptr->he.h_name, 
+		    Inet_ia2p((struct IN_ADDR *)&rptr->he.h_addr)));
 		/*
 		 * Lookup the 'authoritive' name that we were given for the
 		 * ip#.  By using this call rather than regenerating the
@@ -1464,7 +1446,7 @@ static aCache *find_cache_number(rptr, numb)
 #ifdef INET6
 	Debug((DEBUG_DNS,
 	    "find_cache_number:find %s[%08x%08x%08x%08x]: hashv = %d",
-	    inet_ntop(AF_INET6, numb, mydummy, MYDUMMY_SIZE), ip->s6_addr[0],
+	    Inet_ia2p((struct IN_ADDR *)ip), ip->s6_addr[0],
 	    ip->s6_addr[1], ip->s6_addr[2], ip->s6_addr[3], hashv));
 #else
 	Debug((DEBUG_DNS, "find_cache_number:find %s[%08x]: hashv = %d",
@@ -1711,11 +1693,11 @@ static void rem_cache(ocp)
 #ifdef	DEBUGMODE
 # ifdef INET6
 	Debug((DEBUG_DEBUG, "rem_cache: h_addr %s hashv %d next %#x first %#x",
-	    inet_ntop(AF_INET6, hp->h_addr, mydummy, MYDUMMY_SIZE),
+	    Inet_ia2p((struct IN_ADDR *)hp->h_addr),
 	    hashv, ocp->hnum_next, hashtable[hashv].num_list));
 # else
 	Debug((DEBUG_DEBUG, "rem_cache: h_addr %s hashv %d next %#x first %#x",
-	    inetntoa(hp->h_addr),
+	    Inet_ia2p((struct IN_ADDR *)hp->h_addr),
 	    hashv, ocp->hnum_next, hashtable[hashv].num_list));
 # endif
 #endif
