@@ -1778,3 +1778,5 @@ seen. gmtime warning still there
 - One more fix to the above
 - Patch by Syzop to fix a bug in the resolver
 - Preperations for beta14. Will be a recommended upgrade
+- Compile fixes regarding throttling
+- Fix when you use another make than make

@@ -65,27 +65,11 @@ typedef struct hashentry {
 */
 #ifdef THROTTLING
 #define THROTTLING_HASH_SIZE	1024
-
-struct ThrottlingBucket
-{
-	struct ThrottlingBucket *next, *prev;
-	struct IN_ADDR	in;
-	time_t		since;
-};
-
-void	init_throttling_hash();
-int	hash_throttling(struct IN_ADDR *in);
-struct	ThrottlingBucket	*find_throttling_bucket(struct IN_ADDR *in);
-void	add_throttling_bucket(struct IN_ADDR *in);
-void	del_throttling_bucket(struct ThrottlingBucket *bucket);
-int	throttle_can_connect(struct IN_ADDR *in);
-
 #endif
 
 
 #define NullChn ((aChannel *)0)
 
 #define find_channel hash_find_channel
-
 
 #endif /* __hash_include__ */
