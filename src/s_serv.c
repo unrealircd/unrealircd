@@ -4214,7 +4214,7 @@ int  m_trace(cptr, sptr, parc, parv)
 	for (i = 0; i <= highest_fd; i++)
 	{
 		char *name;
-		int  class;
+		char *class;
 
 		if (!(acptr = local[i]))	/* Local Connection? */
 			continue;
@@ -4229,8 +4229,7 @@ int  m_trace(cptr, sptr, parc, parv)
 		if (!dow && mycmp(tname, acptr->name))
 			continue;
 		name = get_client_name(acptr, FALSE);
-	//	class = get_client_class(acptr);
-
+		class = acptr->class ? acptr->class->name : "default";
 		switch (acptr->status)
 		{
 		  case STAT_CONNECTING:
