@@ -219,67 +219,39 @@ long set_usermode(char *umode)
 extern fdlist oper_fdlist;
 #endif
 
-/* Recoded to be alot more accurate
- * not based on netgod's (net@lite.net)
- * StripColors, but it was used as a 
- * reference and some of his code was 
- * used, all in all this is still a 
- * messy function, but it should be
- * more accurate (and faster?)
- * -- codemastr 
+/* Taken from xchat by Peter Zelezny
+ * changed very slightly by codemastr
  */
 
-char *StripColors(char *buffer)
-{
-	static char tmp[512], out[512];
-	int  i = 0, j = 0, hascomma = 0;
+unsigned char *StripColors(unsigned char *text) {
+	int nc = 0, col = 0, i = 0, len = strlen(text);
+	unsigned char *new_str = malloc(len + 2);
 
-/* If there isn't any color in the string, just return */
-	if (!strchr(buffer, '\003'))
-		return buffer;
-	bzero((char *)out, sizeof(out));
-	memcpy(tmp, buffer, 512);
-
-	while (tmp[i])
-	{
-		/* Color code found, so parse */
-		if (tmp[i] == '\003')
-		{
-			hascomma = 0;
-
-			/* Increase it by 1 so we can see if it is valid */
-			i++;
-			/* It's fake, so continue */
-			if (!isdigit(tmp[i]))
-				continue;
-
-			if (isdigit(tmp[i]) && isdigit(tmp[i + 1])
-			    && isdigit(tmp[i + 2]))
-			{
-				i += 2;
-				continue;
+	while (len > 0) {
+		if ((col && isdigit(*text) && nc < 2) || (col && *text == ',' && nc < 3)) {
+			nc++;
+			if (*text == ',')
+				nc = 0;
+		}
+		else {
+			if (col)
+				col = 0;
+			if (*text == '\003') {
+				col = 1;
+				nc = 0;
 			}
-
-			while (isdigit(tmp[i]) || (isdigit(tmp[i - 1])
-			    && tmp[i] == ',' && isdigit(tmp[i + 1])
-			    && hascomma == 0))
-			{
-				if (tmp[i] == ',' && hascomma == 1)
-					break;
-
-				if (tmp[i] == ',' && hascomma == 0)
-					hascomma = 1;
+			else {
+				new_str[i] = *text;
 				i++;
 			}
-			continue;
 		}
-		out[j] = tmp[i];
-		i++;
-		j++;
+		text++;
+		len--;
 	}
-	return out;
-
+	new_str[i] = 0;
+	return new_str;
 }
+	
 
 char umodestring[512];
 
