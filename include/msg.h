@@ -301,7 +301,7 @@ extern int m_nick(), m_error(), m_samode();
 extern int m_invite(), m_svskill(), m_identify();
 extern int m_chatops(), m_dns();
 extern int m_gnotice(), m_goper(), m_globops(), m_locops();
-extern int m_protoctl();
+extern int m_protoctl(), m_tkl();
 extern int m_motd(), m_user(), m_list();
 extern int m_server(), m_info(), m_links(), m_summon(), m_stats();
 extern int m_users(), m_version(), m_help();
@@ -322,7 +322,7 @@ extern int m_svsjoin(), m_sajoin(), m_svspart(), m_sapart();
 extern int m_svsfline();
 extern int m_vhost(), m_botmotd(), m_sjoin();
 extern int m_umode2(), m_dccdeny(), m_undccdeny();
-extern int m_post(), m_cycle();
+extern int m_post(), m_cycle(), m_opermotd();
 extern int m_module(), m_alias();
 extern int m_hash(), m_rehash(), m_die(), m_restart();
 #endif

@@ -134,6 +134,7 @@ void	init_CommandHash(void)
 	
 	bzero(CommandHash, sizeof(CommandHash));
 	add_Command(MSG_MODE, TOK_MODE, m_mode, MAXPARA);
+	add_Command(MSG_OPERMOTD, TOK_OPERMOTD, m_opermotd, MAXPARA);
 	add_CommandX(MSG_NICK, TOK_NICK, m_nick, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
 	add_CommandX(MSG_JOIN, TOK_JOIN, m_join, MAXPARA, M_USER);
 	add_Command(MSG_ISON, TOK_ISON, m_ison, 1);
@@ -206,6 +207,7 @@ void	init_CommandHash(void)
 	add_Command(MSG_NEWJOIN, TOK_JOIN, m_join, MAXPARA);
 	add_Command(MSG_CYCLE, TOK_CYCLE, m_cycle, MAXPARA);	
 	add_Command(MSG_MODULE, TOK_MODULE, m_module, MAXPARA);	
+	add_Command(MSG_TKL, TOK_TKL, m_tkl, MAXPARA);
 #ifdef DEVELOP_DEBUG
 	for (i = 0; i <= 255; i++)
 	{
