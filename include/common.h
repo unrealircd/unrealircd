@@ -246,6 +246,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 		" CHANTYPES=%s"    \
 		" PREFIX=%s"     \
 		" CHANMODES=%s,%s,%s,%s" \
+		" NETWORK=%s" \
 		" :are supported by this server"
 
 #define PROTOCTL_PARAMETERS MAXWATCH, \
@@ -261,7 +262,8 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                             "ohvbeqa", \
                             "k", \
 			    "lfL", \
-			    "psmntirRcOAQKVHGCuzN"
+			    "psmntirRcOAQKVHGCuzN", \
+			    ircnet005
 			    
 /* Server-Server PROTOCTL -Stskeeps */
 #define PROTOCTL_SERVER "NOQUIT" \

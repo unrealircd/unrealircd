@@ -34,6 +34,7 @@ struct zNetwork {
 	long	keycrc;
 	unsigned x_inah:1;
 	char *x_ircnetwork;
+	char *x_ircnet005;
 	char *x_defserv;
 	char *x_services_name;
 	char *x_oper_host;
@@ -116,6 +117,7 @@ extern aConfiguration iConf;
 
 
 #define ircnetwork			iConf.network.x_ircnetwork
+#define ircnet005			iConf.network.x_ircnet005
 #define defserv				iConf.network.x_defserv
 #define SERVICES_NAME		iConf.network.x_services_name
 #define oper_host			iConf.network.x_oper_host

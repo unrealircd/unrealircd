@@ -2093,7 +2093,14 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			MAXCHANNELSPERUSER = atoi(cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "network-name")) {
+			char *tmp;
 			ircstrdup(ircnetwork, cep->ce_vardata);
+			for (tmp = cep->ce_vardata; *cep->ce_vardata; cep->ce_vardata++) {
+				if (*cep->ce_vardata == ' ')
+					*cep->ce_vardata='-';
+			}
+			ircstrdup(ircnet005, tmp);
+			cep->ce_vardata = tmp;
 		}
 		else if (!strcmp(cep->ce_varname, "default-server")) {
 			ircstrdup(defserv, cep->ce_vardata);
