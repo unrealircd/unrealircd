@@ -2799,3 +2799,8 @@ seen. gmtime warning still there
   by a bug in flush_connections(&me), hopefully there won't be any side effects.
 - Fixed file owner problems when IRC_UID/IRC_GID is used (eg: when running chrooted).
 - Fixed crashbug if we were unable to write a remote include file to disk.
+- Limited 'All Connections in Use' message to max 1 every 15s, this DOES NOT mean we will
+  introduce throttling of other msgs (or making this configurable)... this is just
+  an exception because this msg is sent to _all opers_ and you cannot disable it by
+  unsetting certain snomasks. Anything lower than 15s would be bad anyway since this
+  is a very serious error condition. Requested by LoVeR (#0001412).

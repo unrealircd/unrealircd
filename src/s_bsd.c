@@ -118,6 +118,7 @@ static char readbuf[READBUF_SIZE];
 char zlinebuf[BUFSIZE];
 extern char *version;
 extern ircstats IRCstats;
+TS last_allinuse = 0;
 
 #ifndef NO_FDLIST
 extern fdlist default_fdlist;
@@ -1847,8 +1848,12 @@ int  read_message(time_t delay, fdlist *listp)
 			if (++OpenFiles >= MAXCLIENTS)
 			{
 				ircstp->is_ref++;
-				sendto_realops("All connections in use. (%s)",
-				    get_client_name(cptr, TRUE));
+				if (last_allinuse < TStime() - 15)
+				{
+					sendto_realops("All connections in use. (%s)",
+					    get_client_name(cptr, TRUE));
+					last_allinuse = TStime();
+				}
 #ifndef INET6
 				(void)send(fd,
 				    "ERROR :All connections in use\r\n", 31, 0);
@@ -2248,8 +2253,12 @@ int  read_message(time_t delay, fdlist *listp)
 			if (fd >= MAXCLIENTS)
 			{
 				ircstp->is_ref++;
-				sendto_realops("All connections in use. (%s)",
-				    get_client_name(cptr, TRUE));
+				if (last_allinuse < TStime() - 15)
+				{
+					sendto_realops("All connections in use. (%s)",
+					    get_client_name(cptr, TRUE));
+					last_allinuse = TStime();
+				}
 				(void)send(fd,
 				    "ERROR :All connections in use\r\n", 32, 0);
 				(void)close(fd);
