@@ -183,6 +183,10 @@ anUser *make_user(aClient *cptr)
 #endif
 		user->swhois = NULL;
 		user->away = NULL;
+#ifdef NO_FLOOD_AWAY
+		user->last_away = 0;
+		user->away_count = 0;
+#endif
 		user->refcnt = 1;
 		user->joined = 0;
 		user->channel = NULL;

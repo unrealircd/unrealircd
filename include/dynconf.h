@@ -100,6 +100,10 @@ struct zConfiguration {
 	long unknown_flood_bantime;
 	long unknown_flood_amount;
 	struct ChMode modes_on_join;
+#ifdef NO_FLOOD_AWAY
+	unsigned char away_count;
+	long away_period;
+#endif
 	aNetwork network;
 };
 
@@ -165,3 +169,8 @@ extern aConfiguration iConf;
 #define UNKNOWN_FLOOD_BANTIME		iConf.unknown_flood_bantime
 #define UNKNOWN_FLOOD_AMOUNT		iConf.unknown_flood_amount
 #define MODES_ON_JOIN			iConf.modes_on_join.mode
+
+#ifdef NO_FLOOD_AWAY
+#define AWAY_PERIOD			iConf.away_period
+#define AWAY_COUNT			iConf.away_count
+#endif

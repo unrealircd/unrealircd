@@ -448,17 +448,19 @@ void port_range(char *string, int *start, int *end)
 	*end = atoi((c+1));
 }
 
-long config_checkval(char *value, unsigned short flags) {
+long config_checkval(char *orig, unsigned short flags) {
+	char *value;
 	char *text;
 	long ret = 0;
 
+	value = strdup(orig);
 
 	if (flags == CFG_YESNO) {
 		for (text = value; *text; text++) {
 			if (!isalnum(*text))
 				continue;
 			if (tolower(*text) == 'y' || (tolower(*text) == 'o' &&
-tolower(*(text+1)) == 'n') || *text == '1' || tolower(*text) == 't') {
+			    tolower(*(text+1)) == 'n') || *text == '1' || tolower(*text) == 't') {
 				ret = 1;
 				break;
 			}
@@ -504,8 +506,6 @@ tolower(*(text+1)) == 'n') || *text == '1' || tolower(*text) == 't') {
 				break;
 		}
 		ret += atoi(sz+1)*mfactor;
-
-		
 	}
 	else if (flags == CFG_TIME) {
 		int mfactor = 1;
@@ -552,10 +552,8 @@ tolower(*(text+1)) == 'n') || *text == '1' || tolower(*text) == 't') {
 				break;
 		}
 		ret += atoi(sz+1)*mfactor;
-
-		
 	}
-
+	free(value);
 	return ret;
 }
 
@@ -2264,6 +2262,15 @@ void report_dynconf(aClient *sptr)
 			sptr->name, pretty_time_val(UNKNOWN_FLOOD_BANTIME ? UNKNOWN_FLOOD_BANTIME : 600));
 	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-amount: %dKB", me.name, RPL_TEXT,
 			sptr->name, UNKNOWN_FLOOD_AMOUNT ? UNKNOWN_FLOOD_AMOUNT : 4);
+#ifdef NO_FLOOD_AWAY
+	if (AWAY_PERIOD)
+	{
+		sendto_one(sptr, ":%s %i %s :anti-flood::away-count: %d", me.name, RPL_TEXT, 
+			sptr->name, AWAY_COUNT);
+		sendto_one(sptr, ":%s %i %s :anti-flood::away-period: %s", me.name, RPL_TEXT,
+			sptr->name, pretty_time_val(AWAY_PERIOD));
+	}
+#endif
 	
 }
 
@@ -5008,6 +5015,12 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.unknown_flood_bantime = config_checkval(cepp->ce_vardata,CFG_TIME);
 				else if (!strcmp(cepp->ce_varname, "unknown-flood-amount"))
 					tempiConf.unknown_flood_amount = atol(cepp->ce_vardata);
+#ifdef NO_FLOOD_AWAY
+				else if (!strcmp(cepp->ce_varname, "away-count"))
+					tempiConf.away_count = atol(cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "away-period"))
+					tempiConf.away_period = config_checkval(cepp->ce_vardata, CFG_TIME);
+#endif
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "options")) {
@@ -5376,6 +5389,28 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->ce_varname, "unknown-flood-amount")) {
 				}
+#ifdef NO_FLOOD_AWAY
+				else if (!strcmp(cepp->ce_varname, "away-count")) {
+					int temp = atol(cepp->ce_vardata);
+					if (temp < 1 || temp > 255)
+					{
+						config_error("%s:%i: set::anti-flood::away-count must be between 1 and 255",
+							cepp->ce_fileptr->cf_filename,
+							cepp->ce_varname);
+						errors++;
+					}
+				}
+				else if (!strcmp(cepp->ce_varname, "away-period")) {
+					int temp = config_checkval(cepp->ce_vardata, CFG_TIME);
+					if (temp < 10)
+					{
+						config_error("%s:%i: set::anti-flood::away-period must be greater than 9",
+							cepp->ce_fileptr->cf_filename,
+							cepp->ce_varname);
+						errors++;
+					}
+				}
+#endif
 				else
 				{
 					config_error("%s:%i: unknown option set::anti-flood::%s",

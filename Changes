@@ -1997,3 +1997,7 @@ seen. gmtime warning still there
 - Fixed a typo in the docs for except throttle (#0000830) reported by CoNfOuNd
 - Added set::modes-on-join to set channel modes that are set when a new channel is created.
 - Fixed a typo in the HTM docs (#0000832) reported by CoNfOuNd
+- Added anti-away-flood code, based on Bahamut. This prevents users from repeatedly using /away.
+  This feature is disabled by default (see NO_FLOOD_AWAY in config.h). 
+- Added set::anti-flood::away-count and set::anti-flood::away-period to control the away flood
+  system.

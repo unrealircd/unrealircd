@@ -667,6 +667,10 @@ struct User {
 	Link *invited;		/* chain of invite pointer blocks */
 	Link *silence;		/* chain of silence pointer blocks */
 	char *away;		/* pointer to away message */
+#ifdef NO_FLOOD_AWAY
+	time_t last_away;	/* last time the user set away */
+	unsigned char away_count;	/* number of times away has been set */
+#endif
 	u_int32_t servicestamp;	/* Services' time stamp variable */
 	signed char refcnt;	/* Number of times this block is referenced */
 	unsigned short joined;		/* number of channels joined */

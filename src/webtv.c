@@ -140,6 +140,10 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		NULL,		/* invited */
 		NULL,		/* silence */
 		NULL,		/* away */
+#ifdef NO_FLOOD_AWAY
+		0,		/* last_away */
+		0,		/* away_count */
+#endif
 		0,		/* servicestamp */
 		1,		/* refcount */
 		0,		/* joined */
