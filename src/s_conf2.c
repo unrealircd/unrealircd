@@ -2948,7 +2948,6 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 					}
 				}
 		}
-		/* TODO: I:line pwds */
 		/* if no password, and no password given, ok */
 		if (!aconf->password && !cptr->passwd)
 			goto goforit;
