@@ -9956,6 +9956,13 @@ CFLAGS="$CFLAGS -D_SOLARIS"
 IRCDLIBS="$IRCDLIBS -lresolv "
 ;;
 esac
+
+if test `uname -p` = "ppc" ; then
+ if test `uname -s` = "Linux" ; then
+  CFLAGS="$CFLAGS -DLINUX_PPC"
+ fi
+fi
+
 ac_config_files="$ac_config_files Makefile src/modules/Makefile unreal"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
