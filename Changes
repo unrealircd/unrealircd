@@ -3168,3 +3168,4 @@ This is the 3.2 fixes branch.
   All of this was done to make it a bit more 'safe' and userfriendly (#0001812).
 - Fixed a remote include bug that would cause unnecessary blocking
 - Fixed a /credits typo
+- Imported TRE 0.6.7 for win32
