@@ -2125,3 +2125,4 @@ seen. gmtime warning still there
 - Fixed unprecise RPING output at windoze, reported by pak (#0000945).
 - Fixed a bug where operoverride notices were not send when overriding chmodes +aq (#0000831)
   reported by _SciFi_
+- Fixed a bug in SVSMODE with setting -b on a user in a channel
