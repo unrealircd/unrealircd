@@ -462,8 +462,10 @@ Extended bans look like ~[!]&lt;type&gt;:&lt;stuff&gt;. Currently the following 
  unless they have +v or higher. <i>Ex: ~q:*!*@blah.blah.com</i></td></tr>
 <tr><td>~n</td><td>nickchange</td><td>People matching these bans cannot change nicks, 
  unless they have +v or higher. <i>Ex: ~n:*!*@*.aol.com</i></td></tr>
-<tr><td>~c</td><td>channel</td><td>If the user is in this channel then (s)he is unable to join. 
-<i>Ex: ~c:#lamers</i></td></tr>
+<tr><td>~c</td><td>[prefix]channel</td><td>If the user is in this channel then (s)he is unable to join. 
+ A prefix can also be specified (+/%/@/&amp;/~) which means that it will only match if the user has
+ that rights or higher on the specified channel.
+<i>Ex: +b ~c:#lamers, +e ~c:@#trusted </i></td></tr>
 <tr><td>~r</td><td>realname</td><td>If the realname of a user matches this then (s)he is unable to join.<br>
  <i>Ex: ~r:*Stupid_bot_script*</i><br>
  NOTE: an underscore ('_') matches both a space (' ') and an underscore ('_'), so this ban would match 
