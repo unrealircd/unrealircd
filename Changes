@@ -283,3 +283,8 @@ ripped cloak.c from 3.2, and added Config
 options as needed.
 --Luke
 ===================================
+
+Fixed 3 svsnoops bugs, so it appears to be
+actually working now...
+--Luke
+===================================

@@ -854,10 +854,20 @@ int  m_svsnoop(cptr, sptr, parc, parv)
 {
 	aClient *acptr;
 
-	if (!(check_registered(sptr) && IsULine(sptr) && parc > 2))
+	/* Intially this was wrong, as check_registered returns -1 if
+	 * they aren't registered and 0 if they are. Thus a ! is required
+	 * in front of it otherwise the entire logic statement is flawed
+	 * and makes the function generally useless.
+	 * --Luke
+	 */
+	if (!(!check_registered(sptr) && IsULine(sptr) && parc > 2))
 		return 0;
-	/* svsnoop bugfix --binary */
-	if (hunt_server(cptr, sptr, "%s SVSNOOP %s :%s", 1, parc,
+	
+	/* svsnoop bugfix --binary
+	 * Forgot a : before the first %s :P
+	 * --Luke
+	 */
+	if (hunt_server(cptr, sptr, ":%s SVSNOOP %s :%s", 1, parc,
 	    parv) == HUNTED_ISME)
 	{
 		if (parv[2][0] == '+')
