@@ -3165,7 +3165,10 @@ int  m_kick(cptr, sptr, parc, parv)
 		}
 		if (check_channelmask(sptr, cptr, name))
 			continue;
-		if (!IsServer(cptr) && !IsOper(sptr)
+		if (!IsServer(cptr) 
+#ifndef NO_OPEROVERRIDE	
+		&& !IsOper(sptr)
+#endif
 		    && !IsULine(cptr, sptr) && !is_chan_op(sptr, chptr)
 		    && !is_halfop(sptr, chptr))
 		{
