@@ -397,6 +397,8 @@ int	ban_version(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc < 2)
 		return 0;
 	len = strlen(parv[1]);
+	if (!len)
+		return 0;
 	if (parv[1][len-1] == '\1')
 		parv[1][len-1] = '\0';
 	if ((ban = Find_ban(parv[1], CONF_BAN_VERSION)))
