@@ -446,3 +446,5 @@
 - Removed newdns
 - Fixed a memory bug in win32 code found and fixed by McSkaf, and fixed a typo
 - Fixed a win32 bug found by RaYmAn causing the tray icon not to be displayed sometimes
+- Fixed a bunch of Win32 bugs reported and fixed by McSkaf
+- Made the IRCd delete its tray icon in win32 on SIGSEGV

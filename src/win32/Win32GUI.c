@@ -78,7 +78,10 @@ void CleanUp(void)
 {
 	Shell_NotifyIcon(NIM_DELETE ,&SysTray);
 }
-
+void CleanUpSegv(int sig)
+{
+	Shell_NotifyIcon(NIM_DELETE ,&SysTray);
+}
 HWND hwIRCDWnd=NULL/* hwnd=NULL*/;
 HWND hwTreeView;
 HANDLE hMainThread = 0;
@@ -473,16 +476,17 @@ LRESULT CALLBACK ConfigDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 			char *buffer = '\0';
 			struct stat sb;
 			SetWindowText(hDlg, "UnrealIRCd Configuration File");
-			fd = open(CPATH, _O_RDONLY|_O_BINARY);
-			fstat(fd,&sb);
-			/* Only allocate the amount we need */
-			buffer = (char *)malloc(sb.st_size+1);
-			buffer[0] = 0;
-			len = read(fd, buffer, sb.st_size);
-			buffer[len] = 0;
-			SetDlgItemText(hDlg, IDC_TEXT, buffer);
-			close(fd);
-			free(buffer);
+			if ((fd = open(CPATH, _O_RDONLY|_O_BINARY)) != -1) {
+				fstat(fd,&sb);
+				/* Only allocate the amount we need */
+				buffer = (char *)malloc(sb.st_size+1);
+				buffer[0] = 0;
+				len = read(fd, buffer, sb.st_size);
+				buffer[len] = 0;
+				SetDlgItemText(hDlg, IDC_TEXT, buffer);
+				close(fd);
+				free(buffer);
+			}
 			return (TRUE);
 			}
 		case WM_COMMAND:
@@ -504,10 +508,6 @@ LRESULT CALLBACK ConfigDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 			}
 
 			break;
-		case WM_CHAR:
-MessageBox(NULL, (char *)wParam, (char *)wParam, MB_OK);
-break;
-
 		case WM_CLOSE:
 			EndDialog(hDlg, TRUE);
 			break;
@@ -522,16 +522,17 @@ LRESULT CALLBACK MotdDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
 			int fd,len;
 			char *buffer = '\0';
 			SetWindowText(hDlg, "UnrealIRCd MOTD File");
-			fd = open(MPATH, _O_RDONLY|_O_BINARY);
-			fstat(fd,&sb);
-			/* Only allocate the amount we need */
-			buffer = (char *)malloc(sb.st_size+1);
-			buffer[0] = 0;
-			len = read(fd, buffer, sb.st_size);
-			buffer[len] = 0;
-			SetDlgItemText(hDlg, IDC_TEXT, buffer);
-			close(fd);
-			free(buffer);
+			if ((fd = open(MPATH, _O_RDONLY|_O_BINARY)) != -1) {
+				fstat(fd,&sb);
+				/* Only allocate the amount we need */
+				buffer = (char *)malloc(sb.st_size+1);
+				buffer[0] = 0;
+				len = read(fd, buffer, sb.st_size);
+				buffer[len] = 0;
+				SetDlgItemText(hDlg, IDC_TEXT, buffer);
+				close(fd);
+				free(buffer);
+			}
 			return (TRUE);
 			}
 		case WM_COMMAND:
@@ -567,16 +568,17 @@ LRESULT CALLBACK OperMotdDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			int fd,len;
 			char *buffer = '\0';
 			SetWindowText(hDlg, "UnrealIRCd OperMOTD File");
-			fd = open(OPATH, _O_RDONLY|_O_BINARY);
-			fstat(fd,&sb);
-			/* Only allocate the amount we need */
-			buffer = (char *)malloc(sb.st_size+1);
-			buffer[0] = 0;
-			len = read(fd, buffer, sb.st_size);
-			buffer[len] = 0;
-			SetDlgItemText(hDlg, IDC_TEXT, buffer);
-			close(fd);
-			free(buffer);
+			if ((fd = open(OPATH, _O_RDONLY|_O_BINARY)) != -1) {
+				fstat(fd,&sb);
+				/* Only allocate the amount we need */
+				buffer = (char *)malloc(sb.st_size+1);
+				buffer[0] = 0;
+				len = read(fd, buffer, sb.st_size);
+				buffer[len] = 0;
+				SetDlgItemText(hDlg, IDC_TEXT, buffer);
+				close(fd);
+				free(buffer);
+			}
 			return (TRUE);
 			}
 		case WM_COMMAND:
@@ -612,16 +614,17 @@ LRESULT CALLBACK BotMotdDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			int fd,len;
 			char *buffer = '\0';
 			SetWindowText(hDlg, "UnrealIRCd BotMOTD File");
-			fd = open(BPATH, _O_RDONLY|_O_BINARY);
-			fstat(fd,&sb);
-			/* Only allocate the amount we need */
-			buffer = (char *)malloc(sb.st_size+1);
-			buffer[0] = 0;
-			len = read(fd, buffer, sb.st_size);
-			buffer[len] = 0;
-			SetDlgItemText(hDlg, IDC_TEXT, buffer);
-			close(fd);
-			free(buffer);
+			if ((fd = open(BPATH, _O_RDONLY|_O_BINARY)) != -1) {
+				fstat(fd,&sb);
+				/* Only allocate the amount we need */
+				buffer = (char *)malloc(sb.st_size+1);
+				buffer[0] = 0;
+				len = read(fd, buffer, sb.st_size);
+				buffer[len] = 0;
+				SetDlgItemText(hDlg, IDC_TEXT, buffer);
+				close(fd);
+				free(buffer);
+			}
 			return (TRUE);
 			}
 		case WM_COMMAND:
@@ -657,16 +660,17 @@ LRESULT CALLBACK RulesDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			int fd,len;
 			char *buffer = '\0';
 			SetWindowText(hDlg, "UnrealIRCd Rules File");
-			fd = open(RPATH, _O_RDONLY|_O_BINARY);
-			fstat(fd,&sb);
-			/* Only allocate the amount we need */
-			buffer = (char *)malloc(sb.st_size+1);
-			buffer[0] = 0;
-			len = read(fd, buffer, sb.st_size);
-			buffer[len] = 0;
-			SetDlgItemText(hDlg, IDC_TEXT, buffer);
-			close(fd);
-			free(buffer);
+			if ((fd = open(RPATH, _O_RDONLY|_O_BINARY)) != -1) {
+				fstat(fd,&sb);
+				/* Only allocate the amount we need */
+				buffer = (char *)malloc(sb.st_size+1);
+				buffer[0] = 0;
+				len = read(fd, buffer, sb.st_size);
+				buffer[len] = 0;
+				SetDlgItemText(hDlg, IDC_TEXT, buffer);
+				close(fd);
+				free(buffer);
+			}
 			return (TRUE);
 			}
 		case WM_COMMAND:
@@ -846,6 +850,7 @@ void win_log(char *format, ...) {
 		buf2 = MyMalloc(strlen(errors)+strlen(buf)+1);
 		sprintf(buf2, "%s%s",errors,buf);
 		MyFree(errors);
+		errors = NULL;
 	}
 	else {
 		buf2 = MyMalloc(strlen(buf)+1);
@@ -866,6 +871,7 @@ LRESULT CALLBACK ConfigErrorDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			MessageBeep(MB_ICONEXCLAMATION);
 			SetDlgItemText(hDlg, IDC_CONFIGERROR, errors);
 			MyFree(errors);
+			errors = NULL;
 			return (TRUE);
 
 		case WM_COMMAND:

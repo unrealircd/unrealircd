@@ -106,7 +106,9 @@ aClient me;			/* That's me */
 char *me_hash;
 aClient *client = &me;		/* Pointer to beginning of Client list */
 extern char backupbuf[8192];
-
+#ifdef _WIN32
+extern void CleanUpSegv(int sig);
+#endif
 #ifndef NO_FDLIST
 fdlist default_fdlist;
 fdlist busycli_fdlist;
@@ -793,9 +795,7 @@ int  InitwIRCD(argc, argv)
 	WSAStartup(wVersionRequested, &wsaData);
 #endif
 	bzero((char *)&me, sizeof(me));
-#ifndef _WIN32
 	setup_signals();
-#endif
 	initload();
 	init_ircstats();
 	clear_scache_hash_table();
@@ -1498,9 +1498,9 @@ static void open_debugfile()
 	return;
 }
 
-#ifndef _WIN32
 static void setup_signals()
 {
+#ifndef _WIN32
 #ifdef	POSIX_SIGNALS
 	struct sigaction act;
 	act.sa_handler = SIG_IGN;
@@ -1557,6 +1557,8 @@ static void setup_signals()
 	 */
 	(void)siginterrupt(SIGALRM, 1);
 #endif
+#else
+	(void)signal(SIGSEGV,CleanUpSegv);
+#endif
 }
 
-#endif /* !_Win32 */
