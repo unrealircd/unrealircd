@@ -455,9 +455,6 @@
  */
 #define SOCKSPORT 6013
 
-/* Define default Z:line time for SOCKS   -taz */
-#define ZLINE_TIME     300
-
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
 
 /* You shouldn't change anything below this line, unless absolutely needed. */
@@ -560,16 +557,6 @@
  * automaticly to switch for the current nick of that user. (seconds)
  */
 #define KILLCHASETIMELIMIT 90   /* Recommended value: 90 */
-
-
-/*
- * SendQ-Always causes the server to put all outbound data into the sendq and
- * flushing the sendq at the end of input processing. This should cause more
- * efficient write's to be made to the network.
- * There *shouldn't* be any problems with this method.
- * -avalon
- */
-#define	SENDQ_ALWAYS
 
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MOTD MPATH

@@ -31,9 +31,6 @@ Computing Center and Jarkko Oikarinen";
  * Option string.  Must be before #ifdef DEBUGMODE.
  */
 char serveropts[] = {
-#ifdef	SENDQ_ALWAYS
-	'A',
-#endif
 #ifdef	CHROOTDIR
 	'c',
 #endif

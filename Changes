@@ -390,3 +390,4 @@
 - Removed DISALLOW_MIXED_CASE and IGNORE_FIRST_CHAR, waste of space
 - Made IDLE_FROM_MSG stock define
 - Made IRCII_KLUDGE disappear :P
+- Fixed SENDQ_ALWAYS to be mainstream define (as always)

@@ -159,11 +159,7 @@ int  send_queued(to)
 		   ** not working correct if send_queued is called for a
 		   ** dead socket... --msa
 		 */
-#ifndef SENDQ_ALWAYS
-		return dead_link(to, "send_queued called for a DEADSOCKET:%s");
-#else
 		return -1;
-#endif
 	}
 	while (DBufLength(&to->sendQ) > 0)
 	{
