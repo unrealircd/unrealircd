@@ -1,5 +1,5 @@
 ; UnrealIRCd Win32 Installation Script for My Inno Setup Extensions
-; Requires ISX 3.0.4 to work
+; Requires Inno Setup 4.1.6 and ISX 3.0.4 to work
 
 ; #define USE_SSL
 ; Uncomment the above line to package an SSL build
@@ -25,7 +25,7 @@ LicenseFile=.\gpl.rtf
 #else
 LicenseFile=.\gplplusssl.rtf
 #endif
-Compression=bzip/9
+Compression=lzma
 MinVersion=4.0.1111,4.0.1381
 OutputDir=../../
 
