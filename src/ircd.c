@@ -106,6 +106,8 @@ aClient *client = &me;		/* Pointer to beginning of Client list */
 extern char backupbuf[8192];
 #ifdef _WIN32
 extern void CleanUpSegv(int sig);
+extern SERVICE_STATUS_HANDLE IRCDStatusHandle;
+extern SERVICE_STATUS IRCDStatus;
 #endif
 #ifndef NO_FDLIST
 fdlist default_fdlist;
@@ -341,8 +343,11 @@ void server_reboot(char *mesg)
 	(void)execv(MYNAME, myargv);
 #else
 	close_connections();
-	CleanUp();
-	(void)execv(myargv[0], myargv);
+	if (!IsService)
+	{
+		CleanUp();
+		(void)execv(myargv[0], myargv);
+	}
 #endif
 #ifndef _WIN32
 	Debug((DEBUG_FATAL, "Couldn't restart server: %s", strerror(errno)));
@@ -351,6 +356,26 @@ void server_reboot(char *mesg)
 	    strerror(GetLastError())));
 #endif
 	unload_all_modules();
+#ifdef _WIN32
+	if (IsService)
+	{
+		SERVICE_STATUS status;
+		PROCESS_INFORMATION pi;
+		STARTUPINFO si;
+		char fname[MAX_PATH];
+		bzero(&status, sizeof(status));
+		bzero(&si, sizeof(si));
+		IRCDStatus.dwCurrentState = SERVICE_STOP_PENDING;
+		SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
+		GetModuleFileName(GetModuleHandle(NULL), fname, MAX_PATH);
+		CreateProcess(fname, "restartsvc", NULL, NULL, FALSE, 
+			0, NULL, NULL, &si, &pi);
+		IRCDStatus.dwCurrentState = SERVICE_STOPPED;
+		SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
+		ExitProcess(0);
+	}
+	else
+#endif
 	exit(-1);
 }
 

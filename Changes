@@ -2267,3 +2267,7 @@ seen. gmtime warning still there
 - Fixed ircd.c compile error discovered by Ravage
 - Made unreal work with Linux under PPC (#0001105,#0000929) reported by drevlan and Cruiser
   and thanks to drevlan for donating a linux ppc shell to help track down the problem
+- Fixed a problem where Unreal would sometimes die without outputting information about the
+  crash under Windows
+- Made /restart work under Windows in NT service mode.
+- Fixed a documentation typo (#0001027) reported by Soldier007

@@ -552,12 +552,37 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
 		SC_HANDLE hService, hSCManager = OpenSCManager(NULL, NULL, GENERIC_EXECUTE);
 		if ((hService = OpenService(hSCManager, "UnrealIRCd", GENERIC_EXECUTE))) {
-			StartServiceCtrlDispatcher(DispatchTable);
+			int save_err = 0;
+			StartServiceCtrlDispatcher(DispatchTable); 
 			if (GetLastError() == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT)
-				StartService(hService, 0, NULL);
+			{ 
+				SERVICE_STATUS status;
+				/* Restart handling, it's ugly but it's as 
+				 * pretty as it is gonna get :)
+				 */
+				if (__argc == 2 && !strcmp(__argv[1], "restartsvc"))
+				{
+					QueryServiceStatus(hService, &status);
+					if (status.dwCurrentState != SERVICE_STOPPED)
+					{
+						ControlService(hService,
+							SERVICE_CONTROL_STOP, &status);
+						while (status.dwCurrentState == SERVICE_STOP_PENDING)
+						{
+							QueryServiceStatus(hService, &status);
+							if (status.dwCurrentState != SERVICE_STOPPED)
+								Sleep(1000);
+						}
+					}
+				}
+				if (!StartService(hService, 0, NULL))
+					save_err = GetLastError();
+			}
+
 			CloseServiceHandle(hService);
 			CloseServiceHandle(hSCManager);
-			exit(0);
+			if (save_err != ERROR_SERVICE_DISABLED)
+				exit(0);
 		}
 	}
 	strcpy(OSName, "Windows ");
