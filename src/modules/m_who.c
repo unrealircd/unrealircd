@@ -560,6 +560,13 @@ int i = 0;
 
 	if (cm)
         {
+#ifdef PREFIX_AQ
+		if (cm->flags & CHFL_CHANOWNER)
+			status[i++] = '~';
+		else if (cm->flags & CHFL_CHANPROT)
+			status[i++] = '&';
+		else
+#endif
 		if (cm->flags & CHFL_CHANOP)
 			status[i++] = '@';
 		else if (cm->flags & CHFL_HALFOP)

@@ -70,6 +70,16 @@
 
 #undef NO_FDLIST
 
+/* Defining this implements a very different handling of channel modes +a and +q.
+ * When set, users who are +q will have prefix ~, and +a prefix &. Chmode +a and +q
+ * now will also include all of the rights given to +o users, that is +oa is no longer
+ * needed, +a is fine. Additionally, due to this change, it is recommended that you only
+ * enable this option if you intend to enable it on ALL servers. At this time, this feature
+ * is still considered experimental.
+ */
+
+#undef PREFIX_AQ
+
 /*
  * Defining this will allow all ircops to see people in +s channels
  * By default, only net/tech admins can see this

@@ -371,6 +371,18 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 						  	pfixchan[len++] = '@';
 						  prefix |= PREFIX_OP;
 						  break;
+#ifdef PREFIX_AQ
+					  case '&':
+						  if (!(prefix & PREFIX_ADMIN))
+							pfixchan[len++] = '&';
+						  prefix |= PREFIX_ADMIN;
+					  	  break;
+					  case '~':
+						  if (!(prefix & PREFIX_OWNER))
+							pfixchan[len++] = '~';
+						  prefix |= PREFIX_OWNER;
+						  break;
+#endif
 					  default:
 						  break;	/* ignore it :P */
 					}

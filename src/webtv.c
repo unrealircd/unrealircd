@@ -313,10 +313,17 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						&& IsAnOper(sptr))
 						*(buf + len++) = '!';
 					access = get_access(acptr, chptr);
+#ifndef PREFIX_AQ
 					if (access & CHFL_CHANOWNER)
 						*(buf + len++) = '*';
 					else if (access & CHFL_CHANPROT)
 						*(buf + len++) = '^';
+#else
+					if (access & CHFL_CHANOWNER)
+						*(buf + len++) = '~';
+					else if (access & CHFL_CHANPROT)
+						*(buf + len++) = '&';
+#endif
 					else if (access & CHFL_CHANOP)
 						*(buf + len++) = '@';
 					else if (access & CHFL_HALFOP)

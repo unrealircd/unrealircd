@@ -681,7 +681,11 @@ int  is_chan_op(aClient *cptr, aChannel *chptr)
 		return 1;
 	if (chptr)
 		if ((lp = find_membership_link(cptr->user->channel, chptr)))
+#ifdef PREFIX_AQ
+			return ((lp->flags & (CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER)));
+#else
 			return ((lp->flags & CHFL_CHANOP));
+#endif
 
 	return 0;
 }
@@ -4306,6 +4310,13 @@ CMD_FUNC(m_names)
 				    CHFL_CHANOWNER)) && acptr != sptr)
 					continue;
 
+#ifdef PREFIX_AQ
+		if (cm->flags & CHFL_CHANOWNER)
+			buf[idx++] = '~';
+		else if (cm->flags & CHFL_CHANPROT)
+			buf[idx++] = '&';
+		else
+#endif
 		if (cm->flags & CHFL_CHANOP)
 			buf[idx++] = '@';
 		else if (cm->flags & CHFL_HALFOP)

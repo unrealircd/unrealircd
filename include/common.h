@@ -38,7 +38,7 @@
 #endif
 #include "dynconf.h"
 #include "ircsprintf.h"
-
+#include "config.h"
 #ifdef	PARAMH
 #include <sys/param.h>
 #endif
@@ -260,19 +260,33 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 		" CASEMAPPING=%s" \
 		" :are supported by this server"
 
+#ifndef PREFIX_AQ
 #define PROTOCTL_PARAMETERS_2	  \
 		 MAXWATCH, \
                  MAXSILES, \
                  MAXMODEPARAMS, \
-                 "#",      \
+                 "#", \
                  "(ohv)@%+", \
-                 "ohvbeqa", \
+                 "beqa", \
                  "kfL", \
 		 "l", \
 		 "psmntirRcOAQKVGCuzNSM", \
 		 ircnet005, \
 		 "ascii"
-			    
+#else
+#define PROTOCTL_PARAMETERS_2     \
+		 MAXWATCH, \
+                 MAXSILES, \
+                 MAXMODEPARAMS, \
+                 "#", \
+                 "(qaohv)~&@%+", \
+                 "be", \
+                 "kfL", \
+		 "l", \
+		 "psmntirRcOAQKVGCuzNSM", \
+		 ircnet005, \
+		 "ascii"
+#endif		    
 /* Server-Server PROTOCTL -Stskeeps */
 #define PROTOCTL_SERVER "NOQUIT" \
                         " TOKEN" \

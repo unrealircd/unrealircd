@@ -278,7 +278,9 @@ extern void    sendto_message_one(aClient *to, aClient *from, char *sender,
 #define PREFIX_ALL		0
 #define PREFIX_HALFOP	0x1
 #define PREFIX_VOICE	0x2
-#define PREFIX_OP		0x4
+#define PREFIX_OP	0x4
+#define PREFIX_ADMIN	0x08
+#define PREFIX_OWNER	0x10
 extern void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
     int prefix, char *pattern, ...);
 extern void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chptr,
