@@ -408,10 +408,6 @@
  */
 #define	CLIENT_FLOOD	8000
 
-/* Define this if you want the server to accomplish ircII standard */
-/* Sends an extra NOTICE in the beginning of client connection     */
-#undef	IRCII_KLUDGE
-
 /* 
  * Define your network service names here.
  */
