@@ -4751,6 +4751,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 				continue;
 			if (nick[0] == '\0')
 				continue;
+			sendto_ops("Adding %s at %s", nick, chptr->chname);
 			if (!(modeflags & CHFL_BAN)
 			    && !(modeflags & CHFL_EXCEPT))
 			{
