@@ -213,8 +213,8 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 
 	if ((cptr->receiveK >= 4) && IsUnknown(cptr))
 	{
-		sendto_realops("Flood from unknown connection %s detected",
-		    cptr->sockhost);
+		sendto_snomask(SNO_FLOOD, "Flood from unknown connection %s detected",
+			cptr->sockhost);
 		ban_flooder(cptr);
 		return 0;
 	}

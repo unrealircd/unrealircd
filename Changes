@@ -1974,3 +1974,4 @@ seen. gmtime warning still there
   (requires THROTTLING)
 - Updated some documentation
 - Fixed "proxyscan on quit" bug (#0000788)
+- Moved the "flood from unknown connection" notices to snomask +f
