@@ -2645,8 +2645,11 @@ int  m_stats(cptr, sptr, parc, parv)
 		  }
 		  break;
 	  }
-	  case 'M':
 	  case 'm':
+		EventStatus(sptr);
+		break;
+
+	  case 'M':
 		  for (i = 0; i <= 255; i++)
 			  for (mptr = CommandHash[i]; mptr; mptr = mptr->next)
 				  if (mptr->count)
@@ -2784,10 +2787,19 @@ int  m_stats(cptr, sptr, parc, parv)
 		  }
 		  break;
 	  }
-	  case 'r':
-
-			/* FIXME:	  cr_report(sptr); */
+	  case 'r': {
+		  ConfigItem_deny_channel *dchans;
+		  ConfigItem_allow_channel *achans;
+		  for (dchans = conf_deny_channel; dchans; dchans = (ConfigItem_deny_channel *) dchans->next) {
+			sendto_one(sptr, ":%s %i %s :deny %s %s", me.name, RPL_TEXT, sptr->name,
+			    dchans->channel, dchans->reason);
+		  }
+  		  for (achans = conf_allow_channel; achans; achans = (ConfigItem_allow_channel *) achans->next) {
+			sendto_one(sptr, ":%s %i %s :allow %s", me.name, RPL_TEXT, sptr->name,
+			    achans->channel);
+		  }
 		  break;
+	  }
 	  case 't':
 	  {
 		  ConfigItem_tld *tld;
@@ -2835,9 +2847,17 @@ int  m_stats(cptr, sptr, parc, parv)
 		  }
 		  break;
 	  }
-	  case 'V':
-		  EventStatus(sptr);
+	  case 'V': {
+		  ConfigItem_vhost *vhosts;
+		  for(vhosts = conf_vhost; vhosts; vhosts = (ConfigItem_vhost *) vhosts->next) {
+			for (oper_p_from = (ConfigItem_oper_from *)vhosts->from; oper_p_from; oper_p_from = (ConfigItem_oper_from *)oper_p_from->next) {
+				sendto_one(sptr, ":%s %i %s :vhost %s%s%s %s %s", me.name, RPL_TEXT, sptr->name,
+				     vhosts->virtuser ? vhosts->virtuser : "", vhosts->virtuser ? "@" : "",
+				     vhosts->virthost, vhosts->login, oper_p_from->name);
+			}
+		  }
 		  break;
+	  }
 	  case 'X':
 	  case 'x':
 		  for (link_p = conf_link; link_p; link_p = (ConfigItem_link *) link_p->next)

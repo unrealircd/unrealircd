@@ -605,3 +605,4 @@ seen. gmtime warning still there
 - Moved m_svsmode and m_svs2mode to m_svsmode.so and updated modulize a bit
 - Moved m_swhois and m_svsmotd to modules
 - Fixed a bug where configure would pick both -ldescrypt and -lcrypt
+- Fixed /stats to work fully with newconf

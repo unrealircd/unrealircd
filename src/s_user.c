@@ -771,14 +771,15 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			char temp[USERLEN + 1];
 
 			strncpyzt(temp, username, USERLEN + 1);
-#ifdef NO_IDENT_CHECKING
-			strncpy(user->username, temp, USERLEN);
-			user->username[USERLEN] = '\0';
-#else
-			*user->username = '~';
-			(void)strncpy(&user->username[1], temp, USERLEN);
-			user->username[USERLEN] = '\0';
-#endif
+			if (IDENT_CHECK == 0) {
+				strncpy(user->username, temp, USERLEN);
+				user->username[USERLEN] = '\0';
+			}
+			else {
+				*user->username = '~';
+				(void)strncpy(&user->username[1], temp, USERLEN);
+				user->username[USERLEN] = '\0';
+			}
 #ifdef HOSTILENAME
 			noident = 1;
 #endif

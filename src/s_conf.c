@@ -2078,9 +2078,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "hide-ulines")) {
 					HIDE_ULINES = 1;
 				}
-				else if (!strcmp(cepp->ce_varname, "enable-chatops")) {
-					ALLOW_CHATOPS = 1;
-				}
 				else if (!strcmp(cepp->ce_varname, "no-stealth")) {
 					NO_OPER_HIDING = 1;
 				}
@@ -2089,6 +2086,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->ce_varname, "identd-check")) {
 					IDENT_CHECK = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "show-opers")) {
+					SHOWOPERS = 1;
 				}
 			}
 		}
@@ -3664,18 +3664,18 @@ void report_dynconf(aClient *sptr)
 	    sptr->name, KLINE_ADDRESS);
 	sendto_one(sptr, ":%s %i %s :modes-on-connect: %s", me.name, RPL_TEXT,
 	    sptr->name, get_modestr(CONN_MODES));
-	sendto_one(sptr, ":%s %i %s :SHOWOPERS: %d", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :options::show-opers: %d", me.name, RPL_TEXT,
 	    sptr->name, SHOWOPERS);
 	sendto_one(sptr, ":%s %i %s :options::show-opermotd: %d", me.name, RPL_TEXT,
 	    sptr->name, SHOWOPERMOTD);
 	sendto_one(sptr, ":%s %i %s :options::hide-ulines: %d", me.name, RPL_TEXT,
 	    sptr->name, HIDE_ULINES);
-	sendto_one(sptr, ":%s %i %s :options::enable-chatops: %d", me.name, RPL_TEXT,
-	    sptr->name, ALLOW_CHATOPS);
 	sendto_one(sptr, ":%s %i %s :options::webtv-support: %d", me.name, RPL_TEXT,
 	    sptr->name, WEBTV_SUPPORT);
 	sendto_one(sptr, ":%s %i %s :options::no-stealth: %d", me.name, RPL_TEXT,
 	    sptr->name, NO_OPER_HIDING);
+	sendto_one(sptr, ":%s %i %s :options::identd-check: %d", me.name, RPL_TEXT,
+	    sptr->name, IDENT_CHECK);
 	sendto_one(sptr, ":%s %i %s :socks::ban-message: %s", me.name, RPL_TEXT,
 	    sptr->name, iConf.socksbanmessage);
 	sendto_one(sptr, ":%s %i %s :socks::quit-message: %s", me.name, RPL_TEXT,
@@ -3701,37 +3701,35 @@ void report_network(aClient *sptr)
 {
 	sendto_one(sptr, ":%s %i %s :*** Network Configuration Report ***",
 	    me.name, RPL_TEXT, sptr->name);
-	sendto_one(sptr, ":%s %i %s :NETWORK: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :network-name: %s", me.name, RPL_TEXT,
 	    sptr->name, ircnetwork);
-	sendto_one(sptr, ":%s %i %s :DEFAULT_SERVER: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :default-server: %s", me.name, RPL_TEXT,
 	    sptr->name, defserv);
-	sendto_one(sptr, ":%s %i %s :SERVICES_NAME: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :services-server: %s", me.name, RPL_TEXT,
 	    sptr->name, SERVICES_NAME);
-	sendto_one(sptr, ":%s %i %s :OPER_HOST: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :hosts::global: %s", me.name, RPL_TEXT,
 	    sptr->name, oper_host);
-	sendto_one(sptr, ":%s %i %s :ADMIN_HOST: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :hosts::admin: %s", me.name, RPL_TEXT,
 	    sptr->name, admin_host);
-	sendto_one(sptr, ":%s %i %s :LOCOP_HOST: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :hosts::local: %s", me.name, RPL_TEXT,
 	    sptr->name, locop_host);
-	sendto_one(sptr, ":%s %i %s :SADMIN_HOST: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :hosts::servicesadmin: %s", me.name, RPL_TEXT,
 	    sptr->name, sadmin_host);
-	sendto_one(sptr, ":%s %i %s :NETADMIN_HOST: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :hosts::netadmin: %s", me.name, RPL_TEXT,
 	    sptr->name, netadmin_host);
-	sendto_one(sptr, ":%s %i %s :COADMIN_HOST: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :hosts::coadmin: %s", me.name, RPL_TEXT,
 	    sptr->name, coadmin_host);
-	sendto_one(sptr, ":%s %i %s :TECHADMIN_HOST: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :hosts::techadmin: %s", me.name, RPL_TEXT,
 	    sptr->name, techadmin_host);
-	sendto_one(sptr, ":%s %i %s :HIDDEN_HOST: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :hiddenhost-prefix: %s", me.name, RPL_TEXT,
 	    sptr->name, hidden_host);
-	sendto_one(sptr, ":%s %i %s :NETDOMAIN: %s", me.name, RPL_TEXT,
-	    sptr->name, netdomain);
-	sendto_one(sptr, ":%s %i %s :HELPCHAN: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :help-channel: %s", me.name, RPL_TEXT,
 	    sptr->name, helpchan);
-	sendto_one(sptr, ":%s %i %s :STATS_SERVER: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :stats-server: %s", me.name, RPL_TEXT,
 	    sptr->name, STATS_SERVER);
-	sendto_one(sptr, ":%s %i %s :INAH: %i", me.name, RPL_TEXT, sptr->name,
+	sendto_one(sptr, ":%s %i %s :hosts::host-on-oper-up: %i", me.name, RPL_TEXT, sptr->name,
 	    iNAH);
-	sendto_one(sptr, ":%s %i %s :KEYCRC: %X", me.name, RPL_TEXT, sptr->name,
+	sendto_one(sptr, ":%s %i %s :cloak-keys: %X", me.name, RPL_TEXT, sptr->name,
 		CLOAK_KEYCRC);
 }
 

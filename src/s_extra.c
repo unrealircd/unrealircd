@@ -307,10 +307,6 @@ int  channel_canjoin(aClient *sptr, char *name)
 	return 1;
 }
 
-void vhost_report(aClient *sptr)
-{
-
-}
 
 int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {

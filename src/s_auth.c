@@ -60,10 +60,10 @@ void start_auth(cptr)
 	struct SOCKADDR_IN sock;
 	int  addrlen = sizeof(struct SOCKADDR_IN);
 
-#ifdef NO_IDENT_CHECKING
-	cptr->flags &= ~(FLAGS_WRAUTH | FLAGS_AUTH);
-	return;
-#endif
+	if (IDENT_CHECK == 0) {
+		cptr->flags &= ~(FLAGS_WRAUTH | FLAGS_AUTH);
+		return;
+	}
 	Debug((DEBUG_NOTICE, "start_auth(%x) slot=%d, fd=%d, status=%d",
 	    cptr, cptr->slot, cptr->fd, cptr->status));
 	if ((cptr->authfd = socket(AFINET, SOCK_STREAM, 0)) == -1)
