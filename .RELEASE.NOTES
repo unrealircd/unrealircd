@@ -1,5 +1,5 @@
 
-Unreal3.2-beta16 Release Notes
+Unreal3.2-beta17 Release Notes
 ======================================
 
 ==[ GENERAL INFORMATION ]==
@@ -32,13 +32,36 @@ Unreal3.2-beta16 Release Notes
 * added anti-away-flood based on bahamut, disabled by default (set::anti-flood::away-*).
 * Added set::anti-flood::unknown-flood-bantime and set::anti-flood::unknown-flood-amount
   so you can config the "flood from unknown connection" thresholds / ban duration.
+* Implemented short motds (ircd.smotd). If you don't know what short motds are, read on:
+   short motds are a method of conserving bandwidth. When a user connects ircd.smotd
+   is displayed (or a tld::shortmotd). This file contains brief text. Alternatively,
+   ircd.motd (or tld::motd) is displayed when a user types /motd. The idea behind this is
+   instead of displaying huge ASCII art, and tons of text to every user when they connect
+   (since most users will ignore it anyway) you only show that stuff to users who specifically
+   request it. Also, if you choose not to use short motds, everything will function as it used
+   to the ircd.motd (or tld::motd) will be displayed both when users connect and /motd.
+* Implemented +a/+q prefixes (#define PREFIX_AQ in config.h) read the comment above PREFIX_AQ
+  in include/config.h for more information.
+* Added the TRE regex library to extras/tre (minor modifications to reduce source size)
+* MacOS X support, you need dlcompat package installed in /usr for this to work
+* Renamed channel mode +a to "channel admin" it fits better, and it makes us more consistent 
+  with other IRCds.
+* Added set::ident::connect-timeout (default 10s) and set::ident::read-timeout (default 30s) to
+  have much more control over ident timeouts, this should also fix connection timeout problems
+  during connecting.
+* Resolver code for win32 has been shaped up so it should work better
+* Added deny channel::redirect, which allows you to forward a client to another channel
+  if the one he/she joined is not allowed. can also be used for channel "aliases" like
+  #operhelp sends people to #help
+* IPv6: UnrealIRCd can now lookup ip6.arpa addresses too (original IRCnet patch modified for
+  UnrealIRCd by Onliner).
 
 ==[ UPDATED ]==
 * documentation and text fixes
 * channelmode +f (flood) algorithm is now much better
 
 ==[ MAJOR BUGS FIXED ]==
-* Security fixes
+* Security fixes (major)
 * fixed major "messages being lost" bug which could cause: ziplink corruption,
   duplicate user entry in sjoin, etc which would happen if BUFFERPOOL was too small.
 * /who: there was a bug in the new /who system which could make it crash (oper only)
