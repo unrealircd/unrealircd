@@ -22,26 +22,65 @@
 #ifdef USE_SSL
 
 #include "struct.h"
-
+#ifdef _WIN32
+#include <windows.h>
+#include "resource.h"
+extern HINSTANCE hInst;
+extern HWND hwIRCDWnd;
+#endif
 /* The SSL structures */
 SSL_CTX *ctx_server;
 SSL_CTX *ctx_client;
 
 #define CHK_SSL(err) if ((err)==-1) { ERR_print_errors_fp(stderr); }
-
+#ifdef _WIN32
+LRESULT SSLPassDLG(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam) {
+	StreamIO *stream;
+	switch (Message) {
+		case WM_INITDIALOG:
+			return TRUE;
+		case WM_COMMAND:
+			stream = (StreamIO *)lParam;
+			if (LOWORD(wParam) == IDCANCEL) {
+				*stream->buffer = NULL;
+				EndDialog(hDlg, TRUE);
+			}
+			else if (LOWORD(wParam) == IDOK) {
+				GetDlgItemText(hDlg, IDC_PASS, *stream->buffer, *stream->size);
+				EndDialog(hDlg, TRUE);
+			}
+			return FALSE;
+		case WM_CLOSE:
+			*stream->buffer = NULL;
+			EndDialog(hDlg, TRUE);
+		default:
+			return FALSE;
+	}
+}
+#endif				
+				
+				
 int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 {
-#ifndef _WIN32
 	char *pass;
 	static int before = 0;
 	static char beforebuf[1024];
+#ifdef _WIN32
+	StreamIO stream;
+#endif
 	if (before)
 	{
 		strncpy(buf, (char *)beforebuf, size);
 		buf[size - 1] = '\0';
 		return (strlen(buf));
 	}
+#ifndef _WIN32
 	pass = getpass("Password for SSL private key: ");
+#else
+	stream.buffer = &pass;
+	stream.size = &size;
+	DialogBoxParam(hInst, "SSLPass", hwIRCDWnd, SSLPassDLG, (LPARAM)&stream); 
+#endif
 	if (pass)
 	{
 		strncpy(buf, (char *)pass, size);
@@ -52,7 +91,6 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 		return (strlen(buf));
 	}
 	return 0;
-#endif
 }
 
 void init_ctx_server(void)
