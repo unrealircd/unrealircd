@@ -51,10 +51,13 @@
  * refcnt = 0 means it is doomed for cleanup
 */
 HStruct			Hosts[SCAN_AT_ONCE];
+HStruct			VHosts[SCAN_AT_ONCE];
+
 /* 
  * If it is legal to edit Hosts table
 */
 pthread_mutex_t		HSlock;
+pthread_mutex_t		VSlock;
 
 /* Some prototypes .. aint they sweet? */
 DLLFUNC int			h_scan_connect(aClient *sptr);
@@ -144,6 +147,22 @@ HStruct	*HS_Add(char *host)
 	return NULL;
 }
 
+HStruct	*VS_Add(char *host)
+{
+	int	i;
+	
+	for (i = 0; i <= SCAN_AT_ONCE; i++)
+		if (!(*VHosts[i].host))
+			break;
+	if (!*VHosts[i].host && (i != SCAN_AT_ONCE))
+	{
+		strcpy(VHosts[i].host, host);
+		VHosts[i].refcnt = 0;	
+		return (&VHosts[i]);
+	}
+	return NULL;
+}
+
 
 HStruct *HS_Find(char *host)
 {
@@ -153,6 +172,18 @@ HStruct *HS_Find(char *host)
 		if (!strcmp(Hosts[i].host, host))
 		{
 			return (&Hosts[i]);
+		}
+	return NULL;
+}
+
+HStruct *VS_Find(char *host)
+{
+	int	i;
+
+	for (i = 0; i <= SCAN_AT_ONCE; i++)
+		if (!strcmp(VHosts[i].host, host))
+		{
+			return (&VHosts[i]);
 		}
 	return NULL;
 }
