@@ -8,7 +8,8 @@ as well, but have not been tested.
 2. Copy extras/regex/regex.h to include/
 3. Copy extras/regex/regex.c to src/
 4. Edit include/settings.h to your liking (pretty much change DOMAINNAME)
-5. Execute "nmake makefile.win32"
+5. Unzip src/win32/unrealircd.bmp.gz
+6. Execute "nmake makefile.win32"
 
 Congratulations, you should have a functioning win32 binary.
 

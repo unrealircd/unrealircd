@@ -1044,9 +1044,15 @@ extern char *getfield();
 
 #define STAR1 OFLAG_SADMIN|OFLAG_ADMIN|OFLAG_NETADMIN|OFLAG_COADMIN
 #define STAR2 OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
-#define STAR3 OFLAG_INVISIBLE
+#ifdef ENABLE_INVISOPER
+  #define STAR3 OFLAG_INVISIBLE
+#endif
 static int oper_access[] = {
+#ifdef ENABLE_INVISOPER
 	~(STAR1 | STAR2 | STAR3), '*',
+#else
+	~(STAR1 | STAR2 ), '*',
+#endif
 	OFLAG_LOCAL, 'o',
 	OFLAG_GLOBAL, 'O',
 	OFLAG_REHASH, 'r',
@@ -1075,7 +1081,9 @@ static int oper_access[] = {
 	OFLAG_WHOIS, 'W',
 	OFLAG_HIDE, 'H',
 /*        OFLAG_AGENT,	'S',*/
+#ifdef ENABLE_INVISOPER
 	OFLAG_INVISIBLE, '^',
+#endif
 	0, 0
 };
 
