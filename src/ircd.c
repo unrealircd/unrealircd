@@ -88,6 +88,7 @@ extern char unreallogo[];
 int SVSNOOP = 0;
 extern char *buildid;
 time_t timeofday = 0;
+int tainted = 0;
 LoopStruct loop;
 extern aMotd *opermotd;
 extern aMotd *svsmotd;

@@ -1181,3 +1181,6 @@ v- Fixed some bugreport stuff
 - Made makefile ability to "make custommodule MODULEFILE=m_zline"
   if m_zline.c is in src/modules/, it will get compiled. This SHOULD
   help 3rd party modules atleast
+- Added "tainted" variable. 3rd party modules must ++ this upon load,
+  -- upon unload. Will show a "3" in flags.
+- Added extras/m_rawto.c - 3rd party module. Fixed some documentation

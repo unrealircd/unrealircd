@@ -29,7 +29,7 @@
 #include "fdlist.h"
 #endif
 extern char *extraflags;
-
+extern int tainted;
 /* for the new s_err.c */
 extern char *getreply(int);
 #define rpl_str(x) getreply(x)
