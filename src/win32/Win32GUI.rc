@@ -117,7 +117,7 @@ BEGIN
     LTEXT           "",IDC_LMAXCLIENTS,170,118,41,9,SS_SUNKEN,WS_EX_RIGHT
 END
 
-ConfigError DIALOG DISCARDABLE  0, 0, 331, 178
+CONFIGERROR DIALOG DISCARDABLE  0, 0, 331, 178
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
 CAPTION "Configuration Error"
 FONT 8, "MS Sans Serif"
@@ -204,7 +204,7 @@ BEGIN
         BOTTOMMARGIN, 162
     END
 
-    "ConfigError", DIALOG
+    "CONFIGERROR", DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 324
@@ -294,10 +294,10 @@ MENU_ABOUT MENU DISCARDABLE
 BEGIN
     POPUP "About"
     BEGIN
-        MENUITEM "Credits",                     IDM_CREDITS
-        MENUITEM "DALnet Credits",              IDM_DAL
-        MENUITEM "License",                     IDM_LICENSE
-        MENUITEM "Help",                        IDM_HELP
+        MENUITEM "&Credits",                    IDM_CREDITS
+        MENUITEM "&DALnet Credits",             IDM_DAL
+        MENUITEM "&License",                    IDM_LICENSE
+        MENUITEM "&Help",                       IDM_HELP
     END
 END
 
@@ -305,12 +305,12 @@ MENU_CONFIG MENU DISCARDABLE
 BEGIN
     POPUP "Config"
     BEGIN
-        MENUITEM "ircd.conf",                   IDM_CONF
+        MENUITEM "ircd.&conf",                  IDM_CONF
         MENUITEM SEPARATOR
-        MENUITEM "ircd.motd",                   IDM_MOTD
-        MENUITEM "oper.motd",                   IDM_OPERMOTD
-        MENUITEM "bot.motd",                    IDM_BOTMOTD
-        MENUITEM "ircd.rules",                  IDM_RULES
+        MENUITEM "ircd.&motd",                  IDM_MOTD
+        MENUITEM "&oper.motd",                  IDM_OPERMOTD
+        MENUITEM "&bot.motd",                   IDM_BOTMOTD
+        MENUITEM "ircd.&rules",                 IDM_RULES
     END
 END
 
