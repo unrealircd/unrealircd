@@ -441,3 +441,4 @@
 - Added regex portablity and checks in Config
 - Added a #define capability to config.h (DISABLE_USERMOD),
   disables /sethost, /setident, /chgname, /chghost, /chgident
+- Fixed a /rehash -garbage bug reported by Curt|s

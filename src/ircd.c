@@ -1160,6 +1160,9 @@ void SocketLoop(void *dummy)
 					    (ii - freelinks));
 				}
 			}
+			if (do_garbage_collect == 1)
+				do_garbage_collect = 0;
+				
 			last_garbage_collect = now;
 		}
 		/*
