@@ -1710,8 +1710,8 @@ int  read_message(delay, listp)
 			
 			else if (!IsMe(cptr))
 			{
-/*				if (DBufLength(&cptr->recvQ) && delay2 > 2)
-					delay2 = 1; */
+				if (DBufLength(&cptr->recvQ) && delay2 > 2)
+					delay2 = 1;
 				if (DBufLength(&cptr->recvQ) < 4088)
 					FD_SET(i, &read_set);
 			}
@@ -1736,7 +1736,7 @@ int  read_message(delay, listp)
 		}
 #endif
 
-		wait.tv_sec = delay;
+		wait.tv_sec = MIN(delay, delay2);
 		wait.tv_usec = 0;
 #ifdef	HPUX
 		nfds = select(FD_SETSIZE, (int *)&read_set, (int *)&write_set,
@@ -1781,6 +1781,7 @@ int  read_message(delay, listp)
 			close(tmpsock);
 #endif /* _WIN32 */
 		FD_CLR(me.socksfd, &read_set);
+		nfds--;
 	}
 #endif /* SOCKSPORT */
 #ifndef _WIN32
@@ -1836,15 +1837,19 @@ int  read_message(delay, listp)
 			}
 		}
 #endif
-		if ((nfds > 0) && FD_ISSET(cptr->authfd, &write_set))
+		if (nfds > 0)
 		{
-			nfds--;
-			send_authports(cptr);
-		}
-		else if ((nfds > 0) && FD_ISSET(cptr->authfd, &read_set))
-		{
-			nfds--;
-			read_authports(cptr);
+			if (FD_ISSET(cptr->authfd, &read_set) ||
+				FD_ISSET(cptr->authfd, &write_set))
+				nfds--;
+			if ((cptr->authfd > 0) && FD_ISSET(cptr->authfd, &write_set))
+			{
+				send_authports(cptr);
+			}
+			if ((cptr->authfd > 0) && FD_ISSET(cptr->authfd, &read_set))
+			{
+				read_authports(cptr);
+			}
 		}
 	}
 #ifdef SOCKSPORT
@@ -1885,15 +1890,19 @@ int  read_message(delay, listp)
 			}
 		}
 #endif /* _WIN32 */
-		if ((nfds > 0) && FD_ISSET(cptr->socksfd, &write_set))
+		if (nfds > 0)
 		{
-			nfds--;
-			send_socksquery(cptr);
-		}
-		else if ((nfds > 0) && FD_ISSET(cptr->socksfd, &read_set))
-		{
-			nfds--;
-			read_socks(cptr);
+			if (FD_ISSET(cptr->socksfd, &read_set) ||
+				FD_ISSET(cptr->socksfd, &write_set))
+				nfds--;
+			if ((cptr->socksfd > 0) && FD_ISSET(cptr->socksfd, &read_set))
+			{
+				read_socks(cptr);
+			}
+			if ((cptr->socksfd > 0) && FD_ISSET(cptr->socksfd, &write_set))
+			{
+				send_socksquery(cptr);
+			}
 		}
 	}
 #endif /* SOCKSPORT */
@@ -1960,7 +1969,6 @@ int  read_message(delay, listp)
 		if (FD_ISSET(i, &write_set))
 		{
 			int  write_err = 0;
-			nfds--;
 			/*
 			   ** ...room for writing, empty some queue then...
 			 */
