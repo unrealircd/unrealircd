@@ -8,12 +8,14 @@
 #
 # NO WARRANTY IS INCLUDED
 CURRENT_VERSION="Unreal3.1-Silverheart"
+CURRENT_TAG="devel"
+
 clear
 cat .UPDATE
 cd src
 rm update.sh
 wget http://unreal.tspre.org/update.sh
 chmod +x update.sh
-export CURRENT_VERSION
+export CURRENT_VERSION CURRENT_TAG
 ./update.sh
 exit 1
