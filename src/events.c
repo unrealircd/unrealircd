@@ -138,15 +138,17 @@ inline void	DoEvents(void)
 	for (eventptr = events; eventptr; eventptr = eventptr->next)
 		if ((eventptr->every == 0) || ((TStime() - eventptr->last) >= eventptr->every))
 		{
-			if (eventptr->howmany > 0)
-				eventptr->howmany--;
 			eventptr->last = TStime();
 			(*eventptr->event)(eventptr->data);
-			if (eventptr->howmany == 0)
+			if (eventptr->howmany > 0)
 			{
-				temp.next = EventDel(eventptr);
-				eventptr = &temp;
-				continue;
+				eventptr->howmany--;
+				if (eventptr->howmany == 0)
+				{
+					temp.next = EventDel(eventptr->name);
+					eventptr = &temp;
+					continue;
+				}
 			}
 
 		}

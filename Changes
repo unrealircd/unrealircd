@@ -1048,3 +1048,5 @@ seen. gmtime warning still there
 - Made validate_configuration be called on /rehash, reported by Mick
 - Fixed a /chgname bug reported by rob where you had to prefix
   the name with a : to set a realname with spaces.
+- Fixed a major events bug caused by Stskeeps drunken coding
+  reported by Dragon974
