@@ -439,6 +439,8 @@ CMD_FUNC(m_watch)
 		 */
 		if (*s == '+')
 		{
+			if (!*(s+1))
+				continue;
 			if (do_nick_name(s + 1))
 			{
 				if (sptr->watches >= MAXWATCH)
@@ -463,6 +465,8 @@ CMD_FUNC(m_watch)
 		 */
 		if (*s == '-')
 		{
+			if (!*(s+1))
+				continue;
 			del_from_watch_hash_table(s + 1, sptr);
 			show_watch(sptr, s + 1, RPL_WATCHOFF, RPL_WATCHOFF);
 
