@@ -62,6 +62,7 @@ struct zConfiguration {
 	long		nospoof_seed02; */
 	long host_timeout;
 	int  host_retries;
+	int  exempt_all;
 	char *kline_address;
 	char *include;
 	char *domainname;
@@ -100,6 +101,7 @@ extern aConfiguration iConf;
 #define AUTO_JOIN_CHANS			iConf.auto_join_chans
 #define OPER_AUTO_JOIN_CHANS		iConf.oper_auto_join_chans
 #define HOST_TIMEOUT			iConf.host_timeout
+#define EXEMPT_ALL			iConf.exempt_all
 #define HOST_RETRIES			iConf.host_retries
 #define CLOAK_KEY1			iConf.ckey_1
 #define CLOAK_KEY2			iConf.ckey_2

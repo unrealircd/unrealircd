@@ -14,6 +14,12 @@ Unreal3.1.4-Meadows Release Notes
   as the cloaking routine was unable to deal with IPv6 format addresses. This is
   also corrected in this version
 
+* Please Note: There have been a couple of configuration file changes! This is
+  IMPORTANT. Your IRCd WILL NOT START if you don't change the cloak key values found
+  in the .network file. Additionally, it would be prudent to note that there is a
+  new directive in unrealircd.conf, exempt_all, which permits exempt lines in
+  ircd.conf to match glines in addition to klines. It defaults to 1. 
+
 * The rest of the changes can be found (obviously) in the Changes file.
 
 * Finally, read Unreal.nfo as usual AND THE DOCS in doc/.

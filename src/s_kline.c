@@ -294,14 +294,14 @@ int  find_tkline_match(cptr, xx)
 	 * not just klines.
 	 */
 
-#ifdef ENABLE_EXEMPTALL
-	for (tmp = conf; tmp; tmp = tmp->next)
-	if ((tmp->status == CONF_EXCEPT) && tmp->host && tmp->name &&
-	    ((match(tmp->host, chost) == 0) || (match(tmp->host,cip) == 0)) &&
-	    (!cname || match(tmp->name, cname) == 0) &&
-	    (!tmp->port || (tmp->port == cptr->acpt->port)))
-		return -1;
-#endif
+	if (EXEMPT_ALL == 1) {
+	  for (tmp = conf; tmp; tmp = tmp->next)
+	  if ((tmp->status == CONF_EXCEPT) && tmp->host && tmp->name &&
+	      ((match(tmp->host, chost) == 0) || (match(tmp->host,cip) == 0)) &&
+	      (!cname || match(tmp->name, cname) == 0) &&
+	      (!tmp->port || (tmp->port == cptr->acpt->port)))
+	  	  return -1;
+	}
 
 	if ((lp->type & TKL_KILL) && (xx != 2))
 	{

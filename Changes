@@ -350,3 +350,13 @@ upgrade)
 --Luke
 ===================================
 
+Moved exempt_all option to unrealircd.conf, no longer
+a #define in settings.h & ./Config option.
+--Luke
+===================================
+
+Made stop code error more stupid-people friendly
+--Luke
+===================================
+
+

@@ -308,12 +308,15 @@ int  load_conf2(FILE * conf, char *filename, int type)
 				{
 #ifdef _WIN32
 					MessageBox(NULL,
-					    "UnrealIRCD/32 Init Error",
-					    "Read Config stop code in file",
+					    "UnrealIRCd/32 Init Error - STOP code in file",
+					    "*** READ/EDIT YOUR CONFIGURATION FILES! ***",
 					    MB_OK);
 #else
 					fprintf(stderr,
-					    "[fatal error] File stop code recieved in %s - RTFM\n",
+					    "[fatal error] STOP code in %s\n",
+					    filename);
+					fprintf(stderr,
+					    "*** READ/EDIT YOUR CONFIGURATION FILES! ***",
 					    filename);
 #endif
 					exit(-1);
@@ -383,6 +386,10 @@ int  load_conf2(FILE * conf, char *filename, int type)
 			else if (strcmp(var, "HOST_RETRIES") == 0)
 			{
 				HOST_RETRIES = atoi(setto);
+			}
+			else if (strcmp(var, "EXEMPT_ALL") == 0)
+			{
+				EXEMPT_ALL = atoi(setto);
 			}
 #ifndef BIG_SECURITY_HOLE
 			else if (strcmp(var, "SETUID") == 0)
@@ -551,6 +558,8 @@ void doneconf(int type)
 		    "- OPER_AUTO_JOIN_CHANS is an invalid value\n");
 	if (HOST_TIMEOUT < 0 || HOST_TIMEOUT > 180)
 		strcat(errormsg, "- HOST_TIMEOUT is an invalid value\n");
+	if ((EXEMPT_ALL != 0) && (EXEMPT_ALL != 1))
+		strcat(errormsg, "- EXEMPT_ALL is an invalid value\n");
 	if (HOST_RETRIES < 0 || HOST_RETRIES > 10)
 		strcat(errormsg, "- HOST_RETRIES is an invalid value\n");
 #define Missing(x) !(x) || (*(x) == '\0')
@@ -645,6 +654,8 @@ void report_dynconf(aClient *sptr)
 	    RPL_TEXT, sptr->name, OPER_AUTO_JOIN_CHANS);
 	sendto_one(sptr, ":%s %i %s :HOST_TIMEOUT: %li", me.name, RPL_TEXT,
 	    sptr->name, HOST_TIMEOUT);
+	sendto_one(sptr, ":%s %i %s :EXEMPT_ALL: %i", me.name, RPL_TEXT,
+	    sptr->name, EXEMPT_ALL);
 	sendto_one(sptr, ":%s %i %s :HOST_RETRIES: %d", me.name, RPL_TEXT,
 	    sptr->name, HOST_RETRIES);
 }
