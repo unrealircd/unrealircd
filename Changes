@@ -2415,3 +2415,4 @@ seen. gmtime warning still there
 - Fix-for-fix-for-+mu-fix (it was still crashing)... don't ask.
 - Minor +f code tweaks.
 - Added checks for ipv4 listen lines on ipv6 compile.
+- Finished some of the extcmode code (memleaks).

@@ -186,12 +186,26 @@ CmodeParam *extcmode_duplicate_paramlist(CmodeParam *lst)
 
 void extcmode_free_paramlist(CmodeParam *lst)
 {
-	CmodeParam *n; /* prolly not needed but I'm afraid of aliasing and stuff :p */
-	/* TODO: Don't we need to like... free something? */
+	CmodeParam *n;
+	int i;
+	Cmode *tbl;
+
 	while(lst)
 	{
+		/* first remove it from the list... */
 		n = lst;
 		DelListItem(n, lst);
+		/* then hunt for the param free function and let it free */
+		tbl = NULL;
+		for (i=0; i <= Channelmode_highest; i++)
+		{
+			if (Channelmode_Table[i].flag == n->flag)
+			{
+				tbl = &Channelmode_Table[i]; /* & ? */
+				break;
+			}
+		}
+		tbl->free_param(n);
 	}
 }
 

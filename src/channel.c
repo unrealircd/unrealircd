@@ -2693,7 +2693,7 @@ int x;
 		if (what == MODE_DEL)
 		{
 			if (!(chptr->mode.extmode & Channelmode_Table[modeindex].mode))
-				return paracnt; /* There's nothing to remove! [TODO: -> 0] */
+				return paracnt; /* There's nothing to remove! */
 			/* del means any parameter is ok, the one-who-is-set will be used */
 			ircsprintf(pvar[*pcount], "-%c", Channelmode_Table[modeindex].flag);
 		} else {
@@ -2793,7 +2793,7 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
 	long oldm, oldl;
 	int checkrestr = 0, warnrestr = 1;
 #ifdef EXTCMODE
-	int extm;
+	int extm = 1000000; /* (default value not used but stops gcc from complaining) */
 	Cmode_t oldem;
 #endif
 	paracount = 1;
@@ -3304,7 +3304,9 @@ void sub1_from_channel(aChannel *chptr)
 			free_ban(ban);
 		}
 #ifdef EXTCMODE
-		/* TODO: free extcmode params */
+		/* free extcmode params */
+		extcmode_free_paramlist(chptr->mode.extmodeparam);
+		chptr->mode.extmodeparam = NULL;
 #endif
 		if (chptr->topic)
 			MyFree(chptr->topic);
