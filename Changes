@@ -2190,3 +2190,5 @@ seen. gmtime warning still there
 - Fixed /map bug that permitted trivial finding of U-lined servers
 - Fixed bug in HOOKTYPE_LOCAL_JOIN which could cause 0-member-channels if a hook returned
   1 and the channel was new.
+- Made it so a permanent /kline no longer says "Permanent Timed K:line" which can be confusing
+  (#0000997) reported by AngryWolf

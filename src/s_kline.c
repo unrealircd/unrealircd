@@ -606,10 +606,10 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  switch (type)
 		  {
 		    case TKL_KILL:
-			    strcpy(txt, "Timed K:Line");
+			    strcpy(txt, "K:Line");
 			    break;
 		    case TKL_ZAP:
-			    strcpy(txt, "Timed Z:Line");
+			    strcpy(txt, "Z:Line");
 			    break;
 		    case TKL_KILL | TKL_GLOBAL:
 			    strcpy(txt, "G:Line");
