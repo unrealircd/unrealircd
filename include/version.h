@@ -31,7 +31,7 @@
 #define PATCH1  		"3"
 #define PATCH2  		".1"
 #define PATCH3  		"-Silverheart"
-#define PATCH4  		"(beta3)"
+#define PATCH4  		"(RC1)"
 #define PATCH5  		""
 #define PATCH6  		""
 #define PATCH7  		""

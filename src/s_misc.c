@@ -423,6 +423,7 @@ int  exit_client(cptr, sptr, from, comment)
 			IRCstats.me_clients--;
 		if (IsServer(sptr))
 			IRCstats.me_servers--;
+		
 		sptr->flags |= FLAGS_CLOSING;
 		if (IsPerson(sptr))
 		{
@@ -602,6 +603,7 @@ int  exit_client(cptr, sptr, from, comment)
 		}
 		recurse--;
 	}
+	
 
 	/*
 	 * Finally, clear out the server we lost itself
