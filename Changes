@@ -83,5 +83,6 @@
 - Merged in sts-laptop branch
 - Made /admin use the new config (had to modify some newconf stuff to make a backwards copy
   of the list as well)
+- Made U:lines loaded from the newconf, also made /stats U read the U:lines from the newconf
 - Added listen {} runtime-configuration code work :))
-- Removed unrealircd.conf from stock
+- Removed unrealircd.com from the stock

@@ -850,7 +850,7 @@ int  m_server(cptr, sptr, parc, parv)
 		 * server are also U:lined, very helpful if HIDE_ULINES is on
 		 */
 		if (IsULine(sptr)
-		    || (find_uline(cptr->confs, acptr->name)))
+		    || (Find_uline(acptr->name))) 
 			acptr->flags |= FLAGS_ULINE;
 		add_server_to_table(acptr);
 		IRCstats.servers++;
@@ -1196,7 +1196,7 @@ int  m_server_estab(cptr)
 #ifndef NO_FDLIST
 	addto_fdlist(cptr->fd, &serv_fdlist);
 #endif
-	if ((find_uline(cptr->confs, cptr->name)))
+	if ((Find_uline(cptr->name))) 
 		cptr->flags |= FLAGS_ULINE;
 	cptr->flags |= FLAGS_TS8;
 	nextping = TStime();
@@ -2603,8 +2603,13 @@ int  m_stats(cptr, sptr, parc, parv)
 		  tstats(sptr, parv[0]);
 		  break;
 	  case 'U':
-		  report_configured_links(sptr, CONF_UWORLD);
+	  {
+		  ConfigItem_ulines *ulines;
+		  for (ulines = conf_ulines; ulines; ulines = (ConfigItem_ulines *)ulines->next) {
+			sendto_one(sptr, rpl_str(RPL_STATSULINE), me.name, parv[0], ulines->servername);
+		  }
 		  break;
+	  }
 	  case 'u':
 	  {
 		  time_t tmpnow;

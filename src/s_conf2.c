@@ -1859,4 +1859,17 @@ ConfigItem_listen	*Find_listen(char *ipmask, int port)
 	return NULL;
 }
 
+ConfigItem_ulines *Find_uline(char *host) {
+	ConfigItem_ulines *ulines;	
+
+	if (!host)
+		return NULL;
+	
+	for(ulines = conf_ulines; ulines; ulines =(ConfigItem_ulines *) ulines->next) {
+		if (!stricmp(host, ulines->servername))
+			return ulines;
+	}
+	return NULL;
+}
+
 

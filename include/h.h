@@ -64,6 +64,7 @@ extern ConfigItem_link		*conf_link;
 ConfigItem_class	*Find_class(char *name);
 ConfigItem_oper		*Find_oper(char *name);
 ConfigItem_listen	*Find_listen(char *ipmask, int port);
+ConfigItem_ulines	*Find_uline(char *host);
 
 /* Remmed out for win32 compatibility.. as stated of 467leaf win32 port.. */
 
