@@ -1009,4 +1009,4 @@ seen. gmtime warning still there
 - Fixed other scanner bugs (hopefully it 100% works now?)
 - Fixed a typo in s_misc.c
 - Config parser fixes (bugs found by Souleh)
-
+- Changed SERVICES-NAME warning to error

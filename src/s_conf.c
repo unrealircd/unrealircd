@@ -3014,7 +3014,7 @@ void	validate_configuration(void)
 	if (Missing(ircnetwork))
 		Error("set::network-name is missing");
 	if (Missing(SERVICES_NAME))
-		Warning("set::services-server is missing. All services commands are being disabled");
+		Error("set::services-server is missing. All services commands are being disabled");
 	if (Missing(oper_host)) {
 		Warning("set::hosts::global is missing");
 		hide_host = 0;
