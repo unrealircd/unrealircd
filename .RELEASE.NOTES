@@ -174,8 +174,6 @@ Unreal3.2-beta16 Release Notes
 
 * You can now specify a cipher list for SSL links (read doc/unreal32docs.html for more info)
 
-* +I is now in invisibility.so so it is easily disabled
-
 * log {} syslog support added (read doc/unreal32docs.html for more info)
 
 * Added ripemd-160 password encryption support
