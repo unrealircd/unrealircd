@@ -61,6 +61,7 @@ struct zConfiguration {
 	unsigned ident_check:1;
 	unsigned fail_oper_warn:1;
 	unsigned show_connect_info:1;
+	unsigned dont_resolve:1;
 	unsigned use_egd;
 	long host_timeout;
 	int  host_retries;
@@ -103,6 +104,7 @@ extern aConfiguration iConf;
 #define MAXCHANNELSPERUSER		iConf.maxchannelsperuser
 #define WEBTV_SUPPORT			iConf.webtv_support
 #define NO_OPER_HIDING			iConf.no_oper_hiding
+#define DONT_RESOLVE			iConf.dont_resolve
 #define AUTO_JOIN_CHANS			iConf.auto_join_chans
 #define OPER_AUTO_JOIN_CHANS		iConf.oper_auto_join_chans
 #define HOST_TIMEOUT			iConf.host_timeout

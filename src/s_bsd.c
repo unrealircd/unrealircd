@@ -1329,6 +1329,8 @@ void	start_of_normal_client_handshake(aClient *acptr)
 	}
 	lin.flags = ASYNC_CLIENT;
 	lin.value.cptr = acptr;
+	if (DONT_RESOLVE)
+		goto skipdns;
 	Debug((DEBUG_DNS, "lookup %s", acptr->sockhost));
 	acptr->hostp = gethost_byaddr((char *)&acptr->ip, &lin);
 	
@@ -1340,6 +1342,7 @@ void	start_of_normal_client_handshake(aClient *acptr)
 			sendto_one(acptr, "%s", REPORT_FIN_DNSC);
 	}
 	nextdnscheck = 1;
+skipdns:
 	start_auth(acptr);
 }
 

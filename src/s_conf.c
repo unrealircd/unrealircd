@@ -4837,6 +4837,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "show-connect-info")) {
 					tempiConf.show_connect_info = 1;
 				}
+				else if (!strcmp(cepp->ce_varname, "dont-resolve")) {
+					tempiConf.dont_resolve = 1;
+				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "hosts")) {
@@ -5120,6 +5123,8 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "fail-oper-warn")) {
 				}
 				else if (!strcmp(cepp->ce_varname, "show-connect-info")) {
+				}
+				else if (!strcmp(cepp->ce_varname, "dont-resolve")) {
 				}
 				else
 				{

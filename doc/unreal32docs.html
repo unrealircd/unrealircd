@@ -1488,6 +1488,10 @@ loadmodule "src/modules/scan_http.so";
 <p><font class="set">set::options::show-connect-info;</font><br>
   If present notices showing &quot;ident request&quot;, &quot;hostname lookup&quot;, 
   etc. will be displayed when a user connects.</p>
+<p><font class="set">set::options::dont-resolve;</font><br>
+  If present hosts of incomming users are not resolved, can be usefull if many of your
+  users don't have a host to speed up connecting.<br>
+  Note that since no resolving is done you also can't have host based allow blocks.</p>
 <p><font class="set">set::dns::timeout &lt;timevalue&gt;;</font><br>
   A time value specifying the length of time a DNS server has to respond before 
   a timeout. A time value is a numeric string with d meaning days, h meaning hours, 
