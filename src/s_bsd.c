@@ -148,14 +148,20 @@ extern fdlist socks_fdlist;
 /* winlocal */
 void add_local_client(aClient* cptr)
 {
+	int		i;
 	if (LastSlot >= (MAXCONNECTIONS-1))
 	{
 		Debug((DEBUG_ERROR, "add_local_client() called when LastSlot >= MAXCONNECTIONS!"));
 		cptr->slot = -1;
 		return;
 	}
-	cptr->slot = ++LastSlot;
+	i = 0;
+	while (local[i])
+		i++;
+	cptr->slot = i;
 	local[cptr->slot] = cptr;
+	if (i > LastSlot)
+		LastSlot = i;
 }
 
 void remove_local_client(aClient* cptr)
@@ -169,12 +175,12 @@ void remove_local_client(aClient* cptr)
 		return;
 	}
 
-	/* replace the vacated slot with the entry at the end of the local[] array
-	 * so we keep the array contiguous 
+	/* Keep LastSlot as the last one
 	 */
-	local[cptr->slot] = local[LastSlot--];
-	local[cptr->slot]->slot = cptr->slot;
+	local[cptr->slot] = NULL;
 	cptr->slot = -1;
+	while (!local[LastSlot])
+		LastSlot--;
 }
 
 void close_connections(void)

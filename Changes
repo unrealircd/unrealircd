@@ -522,3 +522,4 @@ seen. gmtime warning still there
 - Updated makefile.win32 for events.c
 - Added McSkaf's rehash patch
 - Made the Status Dialog update its values every 5 seconds
+- Made slot arrangement be different.
