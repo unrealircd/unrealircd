@@ -73,7 +73,6 @@ ModuleHeader l_commands_Header
  * want to
 */
 
-extern int m_htm_Test(ModuleInfo *modinfo);
 #ifdef SCAN_API
 extern int m_scan_Test(ModuleInfo *modinfo);
 #endif
@@ -149,6 +148,7 @@ extern int m_scan_Unload(), scan_socks_Unload(), scan_http_Unload();
 extern int invisibility_Unload();
 #endif
 
+#ifdef SCAN_API
 #ifdef DYNAMIC_LINKING
 DLLFUNC int Mod_Test(ModuleInfo *modinfo)
 #else
@@ -157,16 +157,14 @@ int l_commands_Test(ModuleInfo *modinfo)
 {
 	Module p;
 	bcopy(modinfo,&ModCmdsInfo,modinfo->size);
-#ifdef SCAN_API
         p.header = &scan_socks_Header;
         Module_Depend_Resolve(&p);
         p.header = &scan_http_Header;
         Module_Depend_Resolve(&p);
-	m_scan_Test(&ModCmdsInfo);
-#endif
-	m_htm_Test(&ModCmdsInfo);
+	m_scan_Test(modinfo);
 	return MOD_SUCCESS;
 }
+#endif
 
 
 #ifdef DYNAMIC_LINKING

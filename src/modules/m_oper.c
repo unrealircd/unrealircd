@@ -278,12 +278,10 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 				    user->virthost : sptr->user->realhost, parv[1], announce);
 
 		} 
-		if (aconf->snomask)
-			set_snomask(sptr, aconf->snomask);
-		else if (OPER_SNOMASK)
-			set_snomask(sptr, OPER_SNOMASK);
-		else
+		if (!aconf->snomask)
 			set_snomask(sptr, SNO_DEFOPER);
+		else
+			set_snomask(sptr, aconf->snomask);
 		send_umode_out(cptr, sptr, old);
 		sendto_one(sptr, rpl_str(RPL_SNOMASK),
 			me.name, parv[0], get_sno_str(sptr));

@@ -125,6 +125,9 @@ int  m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[])
                     me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0]);
                 return 0;
         }
+#ifndef _WIN32
+        srandom(TStime());
+#endif
 	if ((type = Auth_FindType(parv[1])) == -1)
 	{
 		sendto_one(sptr, 
