@@ -992,6 +992,10 @@ struct _configitem_ban {
 	ConfigFlag_ban	flag;
 	ConfigItem		*prev, *next;
 	char			*mask, *reason;
+	struct IN_ADDR netmask;
+	int bits;
+	short masktype;
+
 };
 
 struct _configitem_badword {
@@ -1088,6 +1092,10 @@ struct _irchook {
 		void (*voidfunc)();
 	} func;
 };
+
+#define HM_HOST 1
+#define HM_IPV4 2
+#define HM_IPV6 3
 
 /*
  * statistics structures

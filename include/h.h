@@ -112,8 +112,11 @@ ConfigItem_vhost	*Find_vhost(char *name);
 ConfigItem_deny_channel *Find_channel_allowed(char *name);
 ConfigItem_alias	*Find_alias(char *name);
 int			AllowClient(aClient *cptr, struct hostent *hp, char *sockhost);
-
-
+int parse_netmask(const char *text, struct IN_ADDR *addr, int *b);
+int match_ipv4(struct IN_ADDR *addr, struct IN_ADDR *mask, int b);
+#ifdef INET6
+int match_ipv6(struct IN_ADDR *addr, struct IN_ADDR *mask, int b);
+#endif
 aMotd *read_motd(char *filename);
 aMotd *read_rules(char *filename);
 extern struct tm *motd_tm;

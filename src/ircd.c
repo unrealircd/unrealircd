@@ -546,11 +546,34 @@ extern TS check_pings(TS currenttime, int check_kills)
 
 		if (check_kills && !killflag && IsPerson(cptr))
 		{
-			if (bconf =
+/*			if (bconf =
 			    Find_ban(inetntoa((char *)&cptr->ip), CONF_BAN_IP))
 			{
 				killflag = 1;
+			} */
+			for (bconf = conf_ban; bconf; bconf = (ConfigItem_ban *)bconf->next) {
+				if (bconf->flag.type == CONF_BAN_IP) {
+					if (bconf->masktype == HM_HOST) {
+						if (!match(bconf->mask, inetntoa((char *)&cptr->ip)))
+							break;
+						continue;
+					}
+					if (bconf->masktype == HM_IPV4) {
+						if (!match_ipv4(&cptr->ip,&bconf->netmask,bconf->bits))
+							break;
+						continue;
+					}
+#ifdef INET6
+					if (bconf->masktype == HM_IPV6) {
+						if (!match_ipv6(&cptr->ip,&bconf->netmask,bconf->bits))
+							break;
+						continue;
+					}
+#endif
+				}
 			}
+			if (bconf)
+				killflag = 1;
 			if (find_tkline_match(cptr, 0) < 0)
 			{
 				continue;
@@ -935,6 +958,13 @@ int  InitwIRCD(argc, argv)
 			      "UnrealIRCD/Win32 version", MB_OK);
 #endif
 			  exit(0);
+		case 'W': {
+			struct IN_ADDR bah;
+			int bit;
+			parse_netmask("255.255.255.255/8", &bah, &bit);
+			printf("%s - %d",Inet_ia2p(&bah), bit);
+			exit(0);
+		}
 		  case 'C':
 			  conf_debuglevel = atoi(p);
 			  break;

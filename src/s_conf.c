@@ -2066,6 +2066,9 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 		}
 		if (!strcmp(cep->ce_varname, "mask")) {
 			ca->mask = strdup(cep->ce_vardata);
+			if (ca->flag.type == CONF_BAN_IP) {
+				ca->masktype = parse_netmask(ca->mask, &ca->netmask, &ca->bits);
+			}
 		} else
 		if (!strcmp(cep->ce_varname, "reason")) {
 			ca->reason = strdup(cep->ce_vardata);
