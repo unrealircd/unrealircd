@@ -26,7 +26,7 @@
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2.2-CVS </font><br>
-  <b>Letztes Dokumentation Update:</b>        2004-10-13</div>
+  <b>Letztes Dokumentation Update:</b>         2004-12-01</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
 <b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
@@ -796,6 +796,12 @@ gesetzt:<br>
     <td width="123">d</td>
     <td colspan="2" width="127">dcc</td>
     <td width="621">DCC Dateiname</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td width="123">a</td>
+    <td colspan="2" width="127">away</td>
+    <td width="621">Away Meldung</td>
   </tr>
   <tr>
     <td width="74"></td>
@@ -2693,6 +2699,8 @@ Beispiel:<br>
 <p><font class="set">set::kline-address &lt;email-address&gt;;</font><br>
 Eine email Adresse, an die Fragen zur K-Line gesandt werden sollen. Es muss hier
 ein Wert angegeben sein.</p>
+<p><font class="set">set::gline-address &lt;email-address&gt;;</font><br>
+Eine email Adresse, an die Fragen zur G-Line gesandt werden sollen.&nbsp;</p>
 <p><font class="set">set::modes-on-connect &lt;+modes&gt;;</font><br>
 Die Modi, die für einen User nach einer Verbindung eingestellt werden.</p>
 <p><font class="set">set::snomask-on-connect &lt;+modes&gt;</font><br>
