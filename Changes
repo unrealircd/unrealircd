@@ -1647,3 +1647,4 @@ seen. gmtime warning still there
   config processing somewhat
 - Converted the config flag parsing systems to use a binary search
 - Conf3 cleanups
+- Converted help and log to conf3

@@ -141,16 +141,18 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "admin", 		_conf_admin,		_test_admin 	},
 	{ "allow",		_conf_allow,		_test_allow	},
 #ifdef STRIPBADWORDS
-	{ "badword",	_conf_badword,		_test_badword	},
+	{ "badword",		_conf_badword,		_test_badword	},
 #endif
 	{ "class", 		_conf_class,		_test_class	},
 	{ "drpass",		_conf_drpass,		_test_drpass	},
 	{ "except",		_conf_except,		_test_except	},
-	{ "include",	NULL,		  		_test_include	},
-	{ "listen", 	_conf_listen,		_test_listen	},
-	{ "me", 		_conf_me,			_test_me	},
-	{ "oper", 		_conf_oper,			_test_oper	},
-	{ "tld",		_conf_tld,			_test_tld	},
+	{ "help",		_conf_help,		_test_help	},
+	{ "include",		NULL,	  		_test_include	},
+	{ "listen", 		_conf_listen,		_test_listen	},
+	{ "log",		_conf_log,		_test_log	},
+	{ "me", 		_conf_me,		_test_me	},
+	{ "oper", 		_conf_oper,		_test_oper	},
+	{ "tld",		_conf_tld,		_test_tld	},
 	{ "ulines",		_conf_ulines,		_test_ulines	},
 	{ "vhost", 		_conf_vhost,		_test_vhost	},
 
@@ -160,9 +162,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "set",		_conf_set,		_test_set	},
 	{ "deny",		_conf_deny,		_test_deny	},
 	{ "loadmodule",		_conf_loadmodule, 	_test_loadmodule},
-	{ "log",		_conf_log,		_test_log	},
-	{ "alias",		_conf_alias,		_test_alias	},
-	{ "help",		_conf_help,		_test_help	},*/
+	{ "alias",		_conf_alias,		_test_alias	},*/
 };
 
 static int _OldOperFlags[] = {
@@ -3194,6 +3194,159 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 	return (errors > 0 ? -1 : 1); 
 }
 #endif
+
+int     _conf_help(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	ConfigItem_help *ca;
+	aMotd *last = NULL, *temp;
+
+	ca = MyMallocEx(sizeof(ConfigItem_help));
+
+	if (!ce->ce_vardata)
+		ca->command = NULL;
+	else
+		ca->command = strdup(ce->ce_vardata);
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		temp = MyMalloc(sizeof(aMotd));
+		temp->line = strdup(cep->ce_varname);
+		temp->next = NULL;
+		if (!ca->text)
+			ca->text = temp;
+		else
+			last->next = temp;
+		last = temp;
+	}
+	AddListItem(ca, conf_help);
+	return 1;
+
+}
+
+int _test_help(ConfigFile *conf, ConfigEntry *ce) { 
+	int errors = 0;
+	ConfigEntry *cep;
+	if (!ce->ce_entries)
+	{
+		config_error("%s:%i: empty help block", 
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+		{
+			config_error("%s:%i: blank help item",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++; continue;
+		}
+	}
+	return (errors > 0 ? -1 : 1); 
+}
+
+int     _conf_log(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep, *cepp;
+	ConfigItem_log *ca;
+	aMotd *last = NULL, *temp;
+	OperFlag *ofp = NULL;
+
+	ca = MyMallocEx(sizeof(ConfigItem_log));
+	ircstrdup(ca->file, ce->ce_vardata);
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "maxsize")) {
+			ca->maxsize = config_checkval(cep->ce_vardata,CFG_SIZE);
+		}
+		else if (!strcmp(cep->ce_varname, "flags")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if ((ofp = config_binary_flags_search(_LogFlags, cepp->ce_varname, sizeof(_LogFlags)/sizeof(_LogFlags[0])))) 
+					ca->flags |= ofp->flag;
+			}
+		}
+	}
+	AddListItem(ca, conf_help);
+	return 1;
+
+}
+
+int _test_log(ConfigFile *conf, ConfigEntry *ce) { 
+	int errors = 0;
+	ConfigEntry *cep, *flags, *maxsize, *cepp;
+	OperFlag *ofp = NULL;
+
+	if (!ce->ce_vardata)
+	{
+		config_error("%s:%i: log block without filename", 
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+	if (!ce->ce_entries)
+	{
+		config_error("%s:%i: empty log block", 
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+		{
+			config_error("%s:%i: blank log item",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++; continue;
+		}
+		if (!strcmp(cep->ce_varname, "flags")) {}
+		else if (!strcmp(cep->ce_varname, "maxsize")) {}
+		else {
+			config_error("%s:%i: unknown directive log::%s",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				cep->ce_varname);
+			errors++; continue;
+		}
+	}
+	if ((maxsize = config_find_entry(ce->ce_entries, "maxsize"))) 
+	{
+		if (!maxsize->ce_vardata) 
+		{
+			config_error("%s:%i: log::maxsize without contents",
+				maxsize->ce_fileptr->cf_filename, maxsize->ce_varlinenum);
+			errors++;
+		}
+	}
+	if (!(flags = config_find_entry(ce->ce_entries, "flags"))) {
+		config_error("%s:%i: log::flags missing",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	}
+	else {
+		if (!flags->ce_entries) {
+			config_error("%s:%i: log::flags without contents",
+				flags->ce_fileptr->cf_filename, flags->ce_varlinenum);
+			errors++;
+		}
+		else {
+			for (cepp = flags->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!cepp->ce_varname)
+				{
+					config_error("%s:%i: log::flags item without variable name",
+						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+					errors++; continue;
+				}
+				if (!config_binary_flags_search(_LogFlags, cepp->ce_varname, sizeof(_LogFlags)/sizeof(_LogFlags[0]))) {
+					 config_error("%s:%i: unknown log flag '%s'",
+						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
+						cepp->ce_varname);
+					errors++; 
+				}
+			}
+		}
+	}
+	return (errors > 0 ? -1 : 1); 
+}
 
 
 
