@@ -2238,3 +2238,4 @@ seen. gmtime warning still there
   to be sent to +d clients (for in channel commands).
 - Added a README
 - Added some checking in fdlist add/remove functions.
+- Updated docs a bit (how-to-get-support/FAQ link style).
