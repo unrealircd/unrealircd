@@ -1014,3 +1014,4 @@ seen. gmtime warning still there
 - Fixed a /time GMT offset bug under Win32 reported by Dave337
 - Documentation updates
 - Made a few updconf changes
+- Credits updates
