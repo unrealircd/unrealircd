@@ -1941,6 +1941,10 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 				vhost->virthost = strdup(host);
 			}
 		}
+		else if (!stricmp(cep->ce_varname, "swhois"))
+		{
+			vhost->swhois = strdup(cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "from"))
 		{
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)

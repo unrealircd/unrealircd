@@ -182,6 +182,14 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			"%s", vhost->virthost);
 		sendto_one(sptr, ":%s MODE %s :+tx",
 		    sptr->name, sptr->name);
+		if (vhost->swhois) {
+			if (sptr->user->swhois)
+				MyFree(sptr->user->swhois);
+			sptr->user->swhois = MyMalloc(strlen(vhost->swhois) +1);
+			strcpy(sptr->user->swhois, vhost->swhois);
+			sendto_serv_butone_token(cptr, sptr->name,
+				MSG_SWHOIS, TOK_SWHOIS, "%s :%s", sptr->name, vhost->swhois);
+		}
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** Your vhost is now %s%s%s",
 		    me.name, sptr->name, vhost->virtuser ? vhost->virtuser : "", 

@@ -1558,3 +1558,5 @@ seen. gmtime warning still there
 - Fixed problem where SSL handshakes weren't unknown--'ed on remove reported
   by Alzirr
 - Compile fix regarding above fix
+- Added vhost::swhois requested by FrostByghte (#0000171)
+
