@@ -64,7 +64,7 @@ static int advanced_check(char *, int);
 aSqlineItem *sqline = NULL;
 aConfItem *conf = NULL;
 extern char zlinebuf[];
-
+extern ircstats IRCstats;
 /*
  * remove all conf entries from the client except those which match
  * the status field mask.
@@ -1309,8 +1309,28 @@ int  initconf(opt)
 			else
 				aconf->port = atoi(tmp);
 			if ((tmp = getfield(NULL)) == NULL)
+			{
 				break;
+			}
 			Class(aconf) = find_class(atoi(tmp));
+			if (aconf->status == CONF_ME)
+			{
+				if (me.serv->numeric)
+				{
+					if (atoi(tmp) != me.serv->numeric)
+					{
+						if (IRCstats.servers > 1)
+						{
+							sendto_ops("You cannot change numeric when servers are connected");
+						}
+							else
+						{
+							me.serv->numeric = atoi(tmp);
+						}
+					}
+				} else
+					me.serv->numeric = atoi(tmp);
+			}			
 			break;
 		}
 		/*

@@ -1005,6 +1005,8 @@ int  InitwIRCD(argc, argv)
 	(void)init_sys();
 	me.flags = FLAGS_LISTEN;
 	me.fd = -1;
+	SetMe(&me);
+	make_server(&me);
 
 #ifdef USE_SYSLOG
 	openlog(myargv[0], LOG_PID | LOG_NDELAY, LOG_FACILITY);
@@ -1053,11 +1055,9 @@ int  InitwIRCD(argc, argv)
 #ifdef SOCKSPORT
 	me.socksfd = -1;
 #endif
-	SetMe(&me);
-	make_server(&me);
 	me_hash = find_or_add(me.name);
 	me.serv->up = me_hash;
-
+	add_server_to_table(&me);
 	me.lasttime = me.since = me.firsttime = TStime();
 	(void)add_to_client_hash_table(me.name, &me);
 #if !defined(_AMIGA) && !defined(_WIN32) && !defined(NO_FORKING)

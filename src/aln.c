@@ -54,6 +54,8 @@ static inline char *int_to_base64(unsigned long);
 static inline unsigned long base64_to_int(char *);
 
 
+static Link	*servers = NULL;
+
 char *base64enc(unsigned long i)
 {
    return int_to_base64(i);
@@ -62,6 +64,75 @@ char *base64enc(unsigned long i)
 unsigned long base64dec(char *b64)
 {
    return base64_to_int(b64);
+}
+
+int	numeric_collides(unsigned long numeric)
+{
+	Link *lp;
+	
+	if (!numeric)
+		return 0;
+	
+	for (lp = servers; lp; lp = lp->next)
+		if (numeric == lp->value.cptr->serv->numeric)
+			return 1;
+	return 0;
+}
+
+void	add_server_to_table(aClient *what)
+{
+	Link	*ptr;
+	
+	if (IsServer(what) || IsMe(what))
+	{
+		ptr = make_link();
+		ptr->value.cptr = what;
+		ptr->flags = what->serv->numeric;
+		ptr->flood = NULL;
+		ptr->next = servers;
+		servers = ptr;
+	}
+}
+
+void	remove_server_from_table(aClient *what)
+{
+	Link **curr;
+	Link *tmp;
+	Link *lp = servers;
+	
+	for (; lp && (lp->value.cptr == what); lp = lp->next);
+	for (;;)
+	{
+		for (curr = &servers; (tmp = *curr); curr = &tmp->next)
+			if (tmp->value.cptr == what)
+			{
+				*curr = tmp->next;
+				free_link(tmp);
+				break;
+			}
+		if (lp)
+			break;
+	}
+}
+
+aClient *find_server_by_numeric(unsigned long value)
+{
+	Link *lp;
+	
+	for (lp = servers; lp; lp = lp->next)
+		if (lp->value.cptr->serv->numeric == value)
+			return (lp->value.cptr);
+	return NULL;
+}
+
+aClient	*find_server_by_base64(char *b64)
+{
+	return find_server_by_numeric(base64dec(b64));
+}
+
+char	*find_server_id(aClient *which)
+{
+	return (base64enc(which->serv->numeric));	
 }
 
 /* ':' and '#' and '&' and '+' and '@' must never be in this table. */
@@ -123,4 +194,18 @@ static inline unsigned long base64_to_int(char *b64)
    }
 
    return v;
+}
+
+
+void	ns_stats(aClient *cptr)
+{
+	Link	*lp;
+	aClient *sptr;
+	for (lp = servers; lp; lp = lp->next)
+	{
+		sptr = lp->value.cptr;
+		sendto_one(cptr, ":%s NOTICE %s :*** server=%s numeric=%i b64=%s",
+			me.name, cptr->name, sptr->name, sptr->serv->numeric,
+			find_server_id(sptr));
+	}		
 }

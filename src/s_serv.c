@@ -553,9 +553,10 @@ int  m_server(cptr, sptr, parc, parv)
 	char pp[512];
 	aClient *acptr, *bcptr;
 	aConfItem *aconf, *cconf;
-	int  hop, ts = 0;
+	int  hop, numeric = 0;
+	int  ts = 0;
 	char *flags, *protocol, *inf;
-
+	
 	info[0] = '\0';
 	inpath = get_client_name(cptr, FALSE);
 	if (parc < 2 || *parv[1] == '\0')
@@ -567,7 +568,7 @@ int  m_server(cptr, sptr, parc, parv)
 	host = parv[1];
 	if (parc > 4)
 	{
-		ts = atoi(parv[3]);
+		numeric = atoi(parv[3]);
 		hop = atoi(parv[2]);
 		(void)strncpy(info, parv[4], REALLEN);
 		info[REALLEN] = '\0';
@@ -696,6 +697,7 @@ int  m_server(cptr, sptr, parc, parv)
 		    (ocptr->from ? ocptr->from->name : "<nobody>"));
 		return exit_client(acptr, acptr, acptr, "Server Exists");
 	}
+	
 	if ((acptr = find_client(host, NULL)))
 	{
 		/*
@@ -708,12 +710,10 @@ int  m_server(cptr, sptr, parc, parv)
 		    ("Link %s cancelled: Server/nick collision on %s", inpath,
 		    host);
 		sendto_serv_butone(&me,
-		    ":%s GLOBOPS : Link %s cancelled: Server/nick collision on %s",
+		    ":%s GLOBOPS :Link %s cancelled: Server/nick collision on %s",
 		    parv[0], inpath, host);
 		return exit_client(cptr, cptr, cptr, "Nick as Server");
 	}
-
-	
 	
 	if (IsServer(cptr))
 	{
@@ -783,8 +783,14 @@ int  m_server(cptr, sptr, parc, parv)
 			return exit_client(cptr, cptr, cptr, "Q-Lined Server");
 		}
 
+		if (numeric_collides(numeric))
+		{
+			return exit_client(cptr, cptr, cptr, "Colliding server numeric (choose another in the M:line)");
+		}
+
 		acptr = make_client(cptr, find_server(parv[0], NULL));
 		(void)make_server(acptr);
+		acptr->serv->numeric = numeric;
 		acptr->hopcount = hop;
 		strncpyzt(acptr->name, host, sizeof(acptr->name));
 		strncpyzt(acptr->info, info, sizeof(acptr->info));
@@ -795,9 +801,11 @@ int  m_server(cptr, sptr, parc, parv)
                  */
 		if (IsULine(sptr,sptr) || (find_uline(cptr->confs, acptr->name))) 
 			acptr->flags |= FLAGS_ULINE;
+		add_server_to_table(acptr);
 		IRCstats.servers++;
 		(void)find_or_add(acptr->name);
 		acptr->flags |= FLAGS_TS8;
+		
 		add_client_to_list(acptr);
 		(void)add_to_client_hash_table(acptr->name, acptr);
 		/*
@@ -820,11 +828,11 @@ int  m_server(cptr, sptr, parc, parv)
 			if (match(my_name_for_link(me.name, aconf),
 			    acptr->name) == 0)
 				continue;
-			if (ts)
+			if (numeric && SupportNS(bcptr))
 				sendto_one(bcptr, ":%s %s %s %d %d :%s",
 				    parv[0],
 				    IsToken(bcptr) ? TOK_SERVER : MSG_SERVER,
-				    acptr->name, hop + 1, ts, acptr->info);
+				    acptr->name, hop + 1, numeric, acptr->info);
 			else
 				sendto_one(bcptr, ":%s %s %s %d :%s",
 					parv[0],
@@ -1123,6 +1131,7 @@ int  m_server_estab(cptr)
 	cptr->serv->up = me.name;
 	cptr->srvptr = &me;
 	cptr->serv->nline = aconf;
+	add_server_to_table(cptr);
 
 	/*
 	   ** Old sendto_serv_but_one() call removed because we now
@@ -1137,11 +1146,11 @@ int  m_server_estab(cptr)
 		if ((aconf = acptr->serv->nline) &&
 		    !match(my_name_for_link(me.name, aconf), cptr->name))
 			continue;
-		if (split)
-			sendto_one(acptr, ":%s %s %s 2 :%s",
+		if (cptr->serv->numeric && SupportNS(acptr))
+			sendto_one(acptr, ":%s %s %s 2 %i :%s",
 				me.name,
 			    (IsToken(acptr) ? TOK_SERVER : MSG_SERVER),
-			    cptr->name, cptr->info);
+			    cptr->name, cptr->serv->numeric, cptr->info);
 		else
 			sendto_one(acptr, ":%s %s %s 2 :%s",
 				me.name,
@@ -1181,11 +1190,12 @@ int  m_server_estab(cptr)
 				continue;
 			split = (MyConnect(acptr) &&
 			    mycmp(acptr->name, acptr->sockhost));
-			if (split)
-				sendto_one(cptr, ":%s %s %s %d :%s",
+			if (acptr->serv->numeric && SupportNS(cptr))
+				sendto_one(cptr, ":%s %s %s %d %i :%s",
 					acptr->serv->up,
 				    (IsToken(cptr) ? TOK_SERVER : MSG_SERVER),
 				    acptr->name, acptr->hopcount + 1,
+				    acptr->serv->numeric,
 				    acptr->info);
 			else
 				sendto_one(cptr, ":%s %s %s %d :%s",
@@ -2459,7 +2469,12 @@ int  m_stats(cptr, sptr, parc, parv)
 		  break;
 	  case 's':
 	  	  if (IsOper(sptr))
+	  	  {
+	  	  	sendto_one(sptr, ":%s NOTICE %s :*** SCACHE:", me.name, sptr->name);
 	  	  	list_scache(sptr);
+	  	  	sendto_one(sptr, ":%s NOTICE %s :*** NS:", me.name, sptr->name);
+			ns_stats(sptr);
+		  }
 		  break;
 	  case 'S':
 		  if (IsOper(sptr))
@@ -4691,7 +4706,8 @@ void dump_map(cptr, server, mask, prompt_length, length)
 		}
 
 		sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, prompt,
-		    length, server->name, local, (local * 100) / cnt);
+		    length, server->name, local, 
+		      (server->serv->numeric ? (char *) my_itoa(server->serv->numeric) : ""));
 		cnt = 0;
 	}
 

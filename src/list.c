@@ -207,6 +207,7 @@ aServer *make_server(cptr)
 		serv->user = NULL;
 		serv->nexts = NULL;
 		*serv->by = '\0';
+		serv->numeric = 0;
 		serv->up = NULL;
 		cptr->serv = serv;
 	}
@@ -263,7 +264,10 @@ void remove_client_from_list(cptr)
 	aClient *cptr;
 {
 	if (IsServer(cptr))
+	{
+		remove_server_from_table(cptr);
 		IRCstats.servers--;
+	}
 	if (IsClient(cptr))
 	{
 		if (IsInvisible(cptr))

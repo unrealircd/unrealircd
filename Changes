@@ -472,3 +472,4 @@
 - Removed SVSMODE +l support, and fixed servicestamp and +d support
 - Changed to ircu/hybrid6/unreal mix of numeric 005
 - Fixed a SJ3 Fake Direction loopbug (kills on nick collisions)
+- NS part 1
