@@ -7,7 +7,7 @@
 # or included in any package without permission from the author.
 #
 # NO WARRANTY IS INCLUDED
-CURRENT_VERSION="Unreal3.1.4-Meadows"
+CURRENT_VERSION="Unreal3.1.5-Valek"
 WHATYAWANT="wget"
 clear
 cat .UPDATE
