@@ -1657,3 +1657,7 @@ seen. gmtime warning still there
 - Converted _conf_alias to conf3, in the process changed the format to be slightly more
   stable. See aliases/aliases.conf for the format changes
 - Numerous Sts-coded-conf3-while-sick bugs
+- Added SVSLUSERS, allows changing of local/global max users. This is designed so services
+  can make sure all servers report the same global max and that a local max can be adjusted
+  if for example a clone flood occurs. It is NOT designed to make the max count higher than
+  you actually have.

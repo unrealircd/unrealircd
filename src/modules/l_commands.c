@@ -87,7 +87,7 @@ extern int m_akill_Init(ModuleInfo *modinfo), m_rakill_Init(ModuleInfo *modinfo)
 extern int m_unzline_Init(ModuleInfo *modinfo), m_kline_Init(ModuleInfo *modinfo), m_unkline_Init(ModuleInfo *modinfo);
 extern int m_sqline_Init(ModuleInfo *modinfo), m_unsqline_Init(ModuleInfo *modinfo), m_tkl_Init(ModuleInfo *modinfo);
 extern int m_vhost_Init(ModuleInfo *modinfo), m_cycle_Init(ModuleInfo *modinfo), m_svsjoin_Init(ModuleInfo *modinfo);
-extern int m_svspart_Init(ModuleInfo *modinfo);
+extern int m_svspart_Init(ModuleInfo *modinfo), m_svslusers_Init(ModuleInfo *modinfo);
 #ifdef GUEST
 extern int m_guest_Init(ModuleInfo *modinfo);
 #endif
@@ -112,7 +112,7 @@ extern int m_akill_Load(int module_load), m_rakill_Load(int module_load), m_zlin
 extern int m_unzline_Load(int module_load), m_kline_Load(int module_load), m_unkline_Load(int module_load);
 extern int m_sqline_Load(int module_load), m_unsqline_Load(int module_load), m_tkl_Load(int module_load);
 extern int m_vhost_Load(int module_load), m_cycle_Load(int module_load), m_svsjoin_Load(int module_load);
-extern int m_svspart_Load(int module_load);
+extern int m_svspart_Load(int module_load), m_svslusers_Load(int module_load);
 #ifdef GUEST
 extern int m_guest_Load(int module_load);
 #endif
@@ -133,7 +133,7 @@ extern int m_message_Unload(), m_whois_Unload(), m_quit_Unload(), m_kill_Unload(
 extern int m_pingpong_Unload(), m_oper_Unload(), m_akill_Unload(), m_rakill_Unload();
 extern int m_zline_Unload(), m_unzline_Unload(), m_kline_Unload(), m_unkline_Unload();
 extern int m_sqline_Unload(), m_unsqline_Unload(), m_tkl_Unload(), m_vhost_Unload();
-extern int m_cycle_Unload(), m_svsjoin_Unload(), m_svspart_Unload();
+extern int m_cycle_Unload(), m_svsjoin_Unload(), m_svspart_Unload(), m_svslusers_Unload();
 #ifdef GUEST
 extern int m_guest_Unload();
 #endif
@@ -202,6 +202,7 @@ int    l_commands_Init(ModuleInfo *modinfo)
 	m_cycle_Init(&ModCmdsInfo);
 	m_svsjoin_Init(&ModCmdsInfo);
 	m_svspart_Init(&ModCmdsInfo);
+	m_svslusers_Init(&ModCmdsInfo);
 #ifdef GUEST
 	m_guest_Init(&ModCmdsInfo);
 #endif
@@ -268,6 +269,7 @@ int    l_commands_Load(int module_load)
 	m_cycle_Load(module_load);
 	m_svsjoin_Load(module_load);
 	m_svspart_Load(module_load);
+	m_svslusers_Load(module_load);
 #ifdef GUEST
 	m_guest_Load(module_load);
 #endif
@@ -330,6 +332,7 @@ int	l_commands_Unload(int module_unload)
 	m_cycle_Unload();
 	m_svsjoin_Unload();
 	m_svspart_Unload();
+	m_svslusers_Unload();
 #ifdef GUEST
 	m_guest_Unload();
 #endif
