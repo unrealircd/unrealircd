@@ -1147,6 +1147,7 @@ void config_setdefaultsettings(aConfiguration *i)
 {
 	i->unknown_flood_amount = 4;
 	i->unknown_flood_bantime = 600;
+	i->oper_snomask = strdup(SNO_DEFOPER);
 }
 
 int	init_conf(char *rootconf, int rehash)
@@ -2206,7 +2207,7 @@ void report_dynconf(aClient *sptr)
 	sendto_one(sptr, ":%s %i %s :modes-on-join: %s %s", me.name, RPL_TEXT,
 		sptr->name, modebuf, parabuf);
 	sendto_one(sptr, ":%s %i %s :snomask-on-oper: %s", me.name, RPL_TEXT,
-	    sptr->name, OPER_SNOMASK ? OPER_SNOMASK : SNO_DEFOPER);
+	    sptr->name, OPER_SNOMASK);
 	sendto_one(sptr, ":%s %i %s :snomask-on-connect: %s", me.name, RPL_TEXT,
 	    sptr->name, CONNECT_SNOMASK ? CONNECT_SNOMASK : "+");
 	if (OPER_ONLY_STATS)
