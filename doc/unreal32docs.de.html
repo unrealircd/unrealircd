@@ -68,7 +68,9 @@ und&nbsp; eine FAQ @
 -- 3.14. <a href="#feature_spamfilter"> Spamfilter</a><br>
 -- 3.15. <a href="#feature_cidr">CIDR<br>
 </a>
-  -- 3.16. <a href="#feature_other">Andere Features<br>
+-- 3.16. <a href="#feature_nickchars">Nick Zeichensätze</a><a href="#feature_cidr"><br>
+</a>
+  -- 3.17. <a href="#feature_other">Andere Features</a> <a href="#feature_other"><br>
 </a>
   4. <a href="#configuringyourunrealircdconf">Konfiguration der unrealircd.conf
 Datei</a><br>
@@ -446,8 +448,11 @@ Weiterhin gibt es einige Channel Modi, welche sehr effektiv gegen Flood sein
 können. Einige davon sind:<br>
 <b>K</b> = no /knock (kein Anklopfen, um in Channel eingeladen zu werden), <b>N</b> = no
 nickchanges (keine Änderung der Nicknamen möglich), <b> C</b> = no CTCPs
-(keine CTCP möglich), <b> M</b> = nur registrierte User können schreiben<br>
+(keine CTCP möglich), <b> M</b> = nur registrierte User können schreiben, <b>j</b>
+= join throttling (Beschränkung der Joins je User)<br>
+<br>
 Seit der Beta 18 gibt es zusätzlich noch den erweiterten Modus +f...<br>
+<br>
 <b>Channel mode f<br>
 </b>Um nicht Scripts und Bots zum Schutz gegen Channel Flood benutzen zu
 müssen, ist der notwendige Schutz nun im IRCd integriert.<br>
@@ -987,7 +992,69 @@ kann&nbsp; CIDR bei /kline, /gline, /zline, /gzline, und /shun benutzt werden. U
 verwendet die Standard Syntax von IP/bits, z.B. 127.0.0.0/8 (passt auf 127.0.0.0 - 127.255.255.255),
 und fe80:0:0:123::/64 (passt auf fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p></div>
 
-<p><font size="+2"><b><a name="feature_other">3.16 - Andere Features</a></b></font></p><div class="desc">
+<p><font size="+2"><b><a name="feature_nickchars">3.16 - Nick Zeichensätze</a></b></font></p><div class="desc">
+<p>UnrealIRCd bietet die Möglichkeit, festzulegen, welche
+Zeichensätze/Sprachen in Nicknamen gestattet sein sollen. Dies wird festgelegt
+in <b> set::allowed-nickchars</b>.<br>
+Hier eine Liste der möglichen Einstellungen:<br>
+<table border="1" width="868">
+<tr><td width="98"><b>Name:</b></td>	<td width="494"><b>Beschreibung:</b></td>	<td width="254"><b>Character set/encoding:</b></td></tr>
+<tr><td width="98">catalan</td> <td width="494">Katalanische Zeichen</td> <td width="254">iso8859-1 (latin1)</td></tr>
+<tr><td width="98">dutch</td> <td width="494">	Niederländische Zeichen</td> <td width="254">	iso8859-1 (latin1)</td></tr>
+<tr><td width="98">french</td> <td width="494">	Französische Zeichen</td> <td width="254">	iso8859-1 (latin1)</td></tr>
+<tr><td width="98">german</td> <td width="494">	Deutsche Zeichen	</td> <td width="254">iso8859-1 (latin1)</td></tr>
+<tr><td width="98">swiss-german</td> <td width="494">	Scheiz-Deutsche Zeichen
+    (kein 'ß')</td> <td width="254">	iso8859-1 (latin1)</td></tr>
+<tr><td width="98">icelandic	</td> <td width="494">Isländische Zeichen</td> <td width="254">	iso8859-1 (latin1)</td></tr>
+<tr><td width="98">italian</td> <td width="494">	Italienische Zeichen</td> <td width="254">	iso8859-1 (latin1)</td></tr>
+<tr><td width="98">spanish</td> <td width="494">	Spanische Zeichen</td> <td width="254">	iso8859-1 (latin1)</td></tr>
+<tr><td width="98">swedish</td> <td width="494">	Schwedische Zeichen</td> <td width="254">	iso8859-1 (latin1)</td></tr>
+<tr><td width="98"><b>latin1</b></td> <td width="494">	katalanisch,
+    niederländisch, französisch, deutsch, schweizer deutsch, spanisch,
+    isländisch, italienisch, schwedisch</td> <td width="254">	iso8859-1 (latin1)
+<tr><td width="98">hungarian</td> <td width="494">	Ungarische Zeichen	</td> <td width="254">	iso8859-2 (latin2), windows-1250</td></tr>
+<tr><td width="98">polish</td> <td width="494">		Polnische Zeichen&nbsp; <td width="254">	iso8859-2 (latin2)</td></tr>
+<tr><td width="98">romanian</td> <td width="494">		Rumänische Zeichen <td width="254">	iso8859-2 (latin2), windows-1250, iso8859-16</td></tr>
+<tr><td width="98"><b>latin2</b></td> <td width="494">		ungarisch, polnisch,
+    rumänisch <td width="254">	iso8859-2 (latin2)</td></tr>
+<tr><td width="98">polish-w1250</td> <td width="494">	Polnische Zeichen,
+    Windows Variante (leider mehr allgemein, als iso)<td width="254">	windows-1250</td></tr>
+<tr><td width="98">slovak-w1250</td> <td width="494">	Slowakische Zeichen,
+    Windows Variante<td width="254">	windows-1250</td></tr>
+<tr><td width="98">czech-w1250</td> <td width="494">	Tschechische Zeichen,
+    Windows Variante	<td width="254">windows-1250</td></tr>
+<tr><td width="98"><b>windows-1250</b></td> <td width="494">	polnisch-w1250,
+    slowakisch-w1250, tschechisch-w1250, ungarisch, rumänisch	<td width="254">windows-1250</td></tr>
+<tr><td width="98">greek</td> <td width="494">	Griechische Zeichen	<td width="254">iso8859-7</td></tr>
+<tr><td width="98">turkish</td> <td width="494">	Türkische Zeichen	<td width="254">iso8859-9</td></tr>
+<tr><td width="98">russian-w1251</td> <td width="494">	Russische Zeichen	<td width="254">windows-1251</td></tr>
+<tr><td width="98">hebrew</td> <td width="494">	Hebräische Zeichen	<td width="254">iso8859-8-I/windows-1255</td></tr>
+<tr><td width="98">chinese-simp</td> <td width="494">	Einfaches Chinesisch	<td width="254">Multibyte: GBK/GB2312</td></tr>
+<tr><td width="98">chinese-trad</td> <td width="494">	Traditionelles
+    Chinesisch	<td width="254">Multibyte: GBK</td></tr>
+<tr><td width="98">chinese-ja</td> <td width="494">	Japanisch Hiragana/Pinyin	<td width="254">Multibyte: GBK</td></tr>
+<tr><td width="98"><b>chinese</b></td> <td width="494">	chinese-*	<td width="254">Multibyte: GBK</td></tr>
+<tr><td width="98"><b>gbk</b></td> <td width="494">	chinese-*	<td width="254">Multibyte: GBK</td></tr>
+</table>
+Zu beachten ist, dass einige Kombinationen Probleme verursachen können.
+Beispielsweise kann eine Kombination aus latin* und chinesisch-* nicht korrekt
+von IRCd behandelt werden und es wird ein Fehler angezeigt. Das Mischen von
+Zeichensätzen kann der Grund von Anzeige Problemen sein. Aus diesem Grund wird
+Unreal eine Warnung anzeigen, wenn versucht wird, latin1/latin2/greek zu mischen.<br>
+<br>
+Beispiel 1, für West-Europäer:<br>
+<br>
+<font face="Courier">
+set { allowed-nickchars { latin1; }; };<br>
+</font>
+<br>
+Beispiel 2, wenn man überwiegend chinesische User hat und normale chinesische
+Schriftzeichen gestatten will:<br>
+<br>
+<font face="Courier">
+set { allowed-nickchars { chinese-simp; chinese-trad; }; };</font></div>
+
+<p><font size="+2"><b><a name="feature_other">3.17 - Andere Features</a></b></font></p><div class="desc">
 <p>UnrealIRCd hat eine Reihe weiterer Features, die hier nicht alle einzeln
 aufgeführt sind. Man wird sie während der Konfiguration selbst herausfinden ;)</p></div>
 
@@ -2737,7 +2804,8 @@ Die snomask (Server Notice mask), die eingestellt wird, wenn User
 (berechtigterweise) den /oper Befehl verwenden.</p>
 <p><font class="set">set::modes-on-join &lt;+modes&gt;;</font><br>
 Die Modi, die für einen Channel eingestellt werden, wenn er das erste mal
-(durch /join) erstellt wird. Nicht alle Modi sind mit diesem Befehl möglich. Die Modi +qaohvbeOAzlLk
+(durch /join) erstellt wird. Nicht alle Modi sind mit diesem Befehl möglich. Die Modi
++qaohvbeOAzlLk
 können NICHT durch diesen Befehl gesetzt werden.</p>
 <p><font class="set">set::restrict-usermodes &lt;modes&gt;</font><br>
 Die User-Modi, die User wählen können werden auf die hier angegebenen Modi
@@ -2805,6 +2873,9 @@ In dieser Syntax dürfen nur <b>lange Operflags</b> angegeben wwerden.</p>
 Einstellung, in wie vielen Channels ein User gleichzeitig sein darf.</p>
 <p><b>set::maxdccallow &lt;amount-of-entries&gt;;</b><br>
 Legt fest, wie viele Einträge ein User in seiner DCCALLOW Liste haben kann.</p>
+<p><b>set::allowed-nickchars</b>;<br>
+Zeichensätze/Sprachen, die für Nicks erlaubt sind. Siehe auch hier: <a href="#feature_nickchars">Nick
+Zeichensätze</a></p>
 <p><font class="set">set::channel-command-prefix &lt;command-prefixes&gt;;<br>
 </font>Stellt das Vorzeichen für Services in &quot;channel Befehlen&quot; ein.
 Nachrichten, die mit einem dieser Zeichen beginnen, werden auch noch gesendet,
@@ -3054,22 +3125,13 @@ möglich. Beispiel: except "#help,#spamreport"</p> </div>
   </tr>
   <tr> 
     <td width="136"><div align="center">f * &lt;lines:seconds&gt;</div></td>
-    <td width="647">Flood Schutz, wenn der '*' angegeben ist, wird ein User
-      gekickt und gebannt, wenn er &lt;lines:seconds&gt; sendet, ohne '*' wird
-      man nur gekickt.&nbsp; Vergleiche auch die <a href="#feature_antiflood">erweiterten
-      Modi</a>.</td>
+    <td width="647">Channel Flood Schutz. Siehe <a href="http://www.smart-irc.de/ct5_blank/index.php#feature_antiflood">Abschnitt
+      3.12</a> für detailliertere Informationen</td>
   </tr>
   <tr> 
     <td width="136"><div align="center">G</div></td>
     <td width="647">'G rated'. Es werden Worte im Badword Block überprüft und
       bei Vorhandensein durch die dort angegebenen Worte esetzt</td>
-  </tr>
-  <td><div align="center">j &lt;joins:seconds&gt;</div></td>
-  <td> Beschränkt die joins für einen User auf <i>joins</i> per <i>seconds</i></>
-  <tr> 
-    <td width="136"><div align="center">M</div></td>
-    <td width="647">Nur registrierte Nicks(+r) können im Nachrichten in den
-      Channel senden</td>
   </tr>
   <tr> 
     <td width="136"><div align="center">h &lt;nick&gt;</div></td>
@@ -3079,6 +3141,17 @@ möglich. Beispiel: except "#help,#spamreport"</p> </div>
     <td width="136"><div align="center">i</div></td>
     <td width="647">Es ist eine Einladung (/invite) erforderlich, um diesen
       Channel zu joinen</td>
+  </tr>
+  <tr> 
+    <td width="136">
+      <p align="center">I</td>
+    <td width="647">Invite Ausnahme ("invex") - Falls jemand hierzu passt, kann
+      eine +i Einstellung umgangen werden, um den Channel zu betreten.</td>
+  </tr>
+  <tr> 
+    <td width="136">
+      <p align="center">j&lt;joins:sekunden&gt;</td>
+    <td width="647">Beschränkt die Joins des Users auf die angegebenen Sekunden</td>
   </tr>
   <tr> 
     <td width="136"><div align="center">K</div></td>
@@ -3097,6 +3170,11 @@ möglich. Beispiel: except "#help,#spamreport"</p> </div>
     <td width="136"><div align="center">L &lt;Chan&gt;</div></td>
     <td width="647">Wenn so viele User, wie bei +l eingestellt ist, im Channel
       sind, werden weitere User in diesen Channel geforwardet</td>
+  </tr>
+  <tr>
+    <td width="136"><div align="center">M</div></td>
+    <td width="647">Nur registrierte Nicks(+r) können im Nachrichten in den
+      Channel senden</td>
   </tr>
   <tr> 
     <td width="136"><div align="center">m</div></td>
@@ -3173,124 +3251,121 @@ möglich. Beispiel: except "#help,#spamreport"</p> </div>
   </tr>
 </table>
 <p>&nbsp;</p>
-<table width="75%" border="1">
+<table width="75%" border="1" height="898">
   <tr> 
-    <td><div align="center"><b>Mode</b></div></td>
-    <td><div align="center"><b>Beschreibung</b></div></td>
+    <td height="19"><div align="center"><b>Mode</b></div></td>
+    <td height="19"><div align="center"><b>Beschreibung</b></div></td>
   </tr>
   <tr> 
-    <td colspan="2"><div align="center"><b>User Modi</b></div></td>
+    <td colspan="2" height="19"><div align="center"><b>User Modi</b></div></td>
   </tr>
-  <tr> 
-    <td><div align="center">r</div></td>
-    <td>Identifiziert einen Nick als registriert</td>
+  <tr>
+    <td height="19"><div align="center">A</div></td>
+    <td height="19">Server Admin (wird im Oper Block eingestellt)</td>
   </tr>
-  <tr> 
-    <td><div align="center">s</div></td>
-    <td>Kann Server Notices lesen</td>
+  <tr>
+    <td height="19"><div align="center">a</div></td>
+    <td height="19">Services Admin (wird im Oper Block eingestellt)</td>
   </tr>
-  <tr> 
-    <td><div align="center">v</div></td>
-    <td>Empfängt Rejection Notices, wenn bei DCC File infiziert ist</td>
+  <tr>
+    <td height="19"><div align="center">B</div></td>
+    <td height="19">Markiert User als Bot</td>
   </tr>
-  <tr> 
-    <td><div align="center">o</div></td>
-    <td>Globaler IRC Operator (wird im Oper Block eingestellt)</td>
+  <tr>
+    <td height="19"><div align="center">C</div></td>
+    <td height="19">Co-Admin (wird im Oper Block eingestellt)</td>
   </tr>
-  <tr> 
-    <td><div align="center">O</div></td>
-    <td>Lokaler IRC Operator (wird im Oper Block eingestellt)</td>
+  <tr>
+    <td height="19"><div align="center">d</div></td>
+    <td height="19">User kann keine Channel PRIVMSGs empfangen</td>
   </tr>
-  <tr> 
-    <td><div align="center">B</div></td>
-    <td>Markiert User als Bot</td>
+  <tr>
+    <td height="19"><div align="center">G</div></td>
+    <td height="19">Filtert Badwords per Konfiguration aus</td>
   </tr>
-  <tr> 
-    <td><div align="center">i</div></td>
-    <td>Unsichtbar (wird bei /who nicht angezeigt)</td>
+  <tr>
+    <td height="19"><div align="center">g</div></td>
+    <td height="19">Kann Globops und Locops lesen und senden</td>
   </tr>
-  <tr> 
-    <td><div align="center">A</div></td>
-    <td>Server Admin (wird im Oper Block eingestellt)</td>
+  <tr>
+    <td height="19"><div align="center">H</div></td>
+    <td height="19">IRCop Status verbergen (nur IRCops)</td>
   </tr>
-  <tr> 
-    <td><div align="center">x</div></td>
-    <td>Verschlüsselt den Hostnamen des Users (vgl. <a href="#feature_cloaking">Cloaking</a>) </td>
+  <tr>
+    <td height="19"><div align="center">h</div></td>
+    <td height="19">Verfügbar für Hilfe (HelpOp, wird im Oper Block
+      eingestellt)</td>
   </tr>
-  <tr> 
-    <td><div align="center">q</div></td>
-    <td>Nur U:Lines können User kicken (Nur Services Admins)</td>
+  <tr>
+    <td height="19"><div align="center">i</div></td>
+    <td height="19">Unsichtbar (wird bei /who nicht angezeigt)</td>
   </tr>
-  <tr> 
-    <td><div align="center">a</div></td>
-    <td>Services Admin (wird im Oper Block eingestellt)</td>
+  <tr>
+    <td height="19"><div align="center">N</div></td>
+    <td height="19">Network Administrator (wird im Oper Block eingestellt)</td>
   </tr>
-  <tr> 
-    <td><div align="center">g</div></td>
-    <td>Kann Globops und Locops lesen und senden</td>
+  <tr>
+    <td height="17"><div align="center">o</div></td>
+    <td height="17">Globaler IRC Operator (wird im Oper Block eingestellt)</td>
   </tr>
-  <tr> 
-    <td><div align="center">H</div></td>
-    <td>IRCop Status verbergen (nur IRCops)</td>
+  <tr>
+    <td height="19"><div align="center">O</div></td>
+    <td height="19">Lokaler IRC Operator (wird im Oper Block eingestellt)</td>
   </tr>
-  <tr> 
-    <td><div align="center">S</div></td>
-    <td>Zum Schutz von Services Daemons</td>
+  <tr>
+    <td height="19"><div align="center">p</div></td>
+    <td height="19">Zeigt bei einer /whois Antwort nicht die Channels an, in denen man ist</td>
   </tr>
-  <tr> 
-    <td><div align="center">t</div></td>
-    <td>zeigt, dass der User einen&nbsp; /vhost benutzt</td>
-  </tr>
-  <tr> 
-    <td><div align="center">C</div></td>
-    <td>Co-Admin (wird im Oper Block eingestellt)</td>
-  </tr>
-  <tr> 
-    <td><div align="center">d</div></td>
-    <td>User kann keine Channel PRIVMSGs empfangen</td>
-  </tr>
-  <tr> 
-    <td><div align="center">N</div></td>
-    <td>Network Administrator (wird im Oper Block eingestellt)</td>
-  </tr>
-  <tr> 
-    <td><div align="center">w</div></td>
-    <td>Kann wallop Nachrichten empfangen</td>
-  </tr>
-  <tr> 
-    <td><div align="center">h</div></td>
-    <td>Verfügbar für Hilfe (HelpOp) (wird im Oper Block eingestellt)</td>
-  </tr>
-  <tr> 
-    <td><div align="center">G</div></td>
-    <td>Filtert Badwords per Konfiguration aus</td>
-  </tr>
-  <tr> 
-    <td><div align="center">W</div></td>
-    <td>User kann sehen, wenn ein anderer User auf ihn ein&nbsp; /whois auf ihn
-      ausführt (nur
-      IRCops)</td>
-  </tr>
-  <tr> 
-    <td><div align="center">p</div></td>
-    <td>Zeigt bei einer /whois Antwort nicht die Channels an, in denen man ist</td>
-  </tr>
-  <tr> 
-    <td align="center">R</td>
-    <td>Gestattet es,&nbsp; PRIVMSGs/NOTICEs nur von registrierten (+r) Usern zu
+  <tr>
+    <td align="center" height="19">R</td>
+    <td height="19">Gestattet es,&nbsp; PRIVMSGs/NOTICEs nur von registrierten (+r) Usern zu
       empfangen</td>
   </tr>
   <tr> 
-    <td align="center">V</td>
-    <td>WebTV User</td>
+    <td height="19"><div align="center">r</div></td>
+    <td height="19">Identifiziert einen Nick als registriert</td>
+  </tr>
+  <tr>
+    <td height="19"><div align="center">S</div></td>
+    <td height="19">Zum Schutz von Services Daemons</td>
   </tr>
   <tr> 
-    <td align="center">z</td>
-    <td>Zeigt an, dass man einen SSL Client benutzt</td>
+    <td height="19"><div align="center">s</div></td>
+    <td height="19">Kann Server Notices lesen</td>
+  </tr>
+  <tr>
+    <td align="center" height="19">T</td>
+    <td height="19">Schützt vor dem Empfang von&nbsp; CTCPs</td>
+  </tr>
+  <tr>
+    <td height="19"><div align="center">t</div></td>
+    <td height="19">zeigt, dass der User einen&nbsp; /vhost benutzt</td>
+  </tr>
+  <tr>
+    <td align="center" height="19">V</td>
+    <td height="19">WebTV User</td>
   </tr>
   <tr> 
-    <td align="center">T</td>
-    <td>Schützt vor dem Empfang von&nbsp; CTCPs</td>
+    <td height="19"><div align="center">v</div></td>
+    <td height="19">Empfängt Rejection Notices, wenn bei DCC File infiziert ist</td>
+  </tr>
+  <tr>
+    <td height="19"><div align="center">W</div></td>
+    <td height="19">User kann sehen, wenn ein anderer User auf ihn ein&nbsp; /whois auf ihn
+      ausführt (nur
+      IRCops)</td>
+  </tr>
+  <tr>
+    <td height="19"><div align="center">w</div></td>
+    <td height="19">Kann wallop Nachrichten empfangen</td>
+  </tr>
+  <tr> 
+    <td height="19"><div align="center">x</div></td>
+    <td height="19">Verschlüsselt den Hostnamen des Users (vgl. <a href="#feature_cloaking">Cloaking</a>) </td>
+  </tr>
+  <tr> 
+    <td align="center" height="19">z</td>
+    <td height="19">Zeigt an, dass man einen SSL Client benutzt</td>
   </tr>
 </table>
 <p></p></div>
@@ -3555,6 +3630,11 @@ Befehlsliste</a></b></font></p><div class="desc">
       gewünschte Ergebnis zu erhalten. Opers dürfen eine 1 als ersten
       Parameter angeben, um eine Liste der Einträge im DNS Cache zu erhalten.</td>
     <td width="93" height="76">Alle</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">userip &lt;nick&gt;</td>
+    <td width="486" height="38">Liefert die IP des angefragten Nicknamen</td>
+    <td width="93" height="38">Alle</td>
   </tr>
   <tr> 
     <td height="38" width="267">oper &lt;userid&gt; &lt;password&gt;</td>
