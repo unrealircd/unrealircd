@@ -3,6 +3,7 @@ VL Information (c) 2002 codemastr (Dominick Meglio) [codemastr@unrealircd.com]
 
 Protocol       Version
 ------------------------------------------------------------------------------------------------
+2306           3.2.3
 2305           3.2.2
 2304           3.2.1
 2303           3.2-beta*, 3.2-RC*, 3.2

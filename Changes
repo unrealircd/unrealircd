@@ -736,3 +736,5 @@
 - Updated russian-w1251 (added 2 chars).
 - Made the (G)ZLINE warning only happen on add, as it should. Reported by crazy.
 - Made some (incorrect) -Wall warnings dissapear.
+- Renamed version to 3.2.3-pre1, for Thursday. I'll keep the doc version numbers
+  at 3.2.2-CVS to avoid confusion with the online semi-realtime docs ;).
