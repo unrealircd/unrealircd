@@ -196,73 +196,73 @@ static int _OldOperFlags[] = {
 	0, 0
 };
 
+/* This MUST be alphabetized */
 static OperFlag _OperFlags[] = {
-	{ OFLAG_LOCAL,		"local" },
-	{ OFLAG_GLOBAL,		"global" },
-	{ OFLAG_REHASH,		"can_rehash" },
-	{ OFLAG_DIE,		"can_die" },
-	{ OFLAG_RESTART,        "can_restart" },
-	{ OFLAG_HELPOP,         "helpop" },
-	{ OFLAG_GLOBOP,         "can_globops" },
-	{ OFLAG_WALLOP,         "can_wallops" },
-	{ OFLAG_LOCOP,		"locop"},
-	{ OFLAG_LROUTE,		"can_localroute" },
-	{ OFLAG_GROUTE,		"can_globalroute" },
-	{ OFLAG_LKILL,		"can_localkill" },
-	{ OFLAG_GKILL,		"can_globalkill" },
-	{ OFLAG_KLINE,		"can_kline" },
-	{ OFLAG_UNKLINE,	"can_unkline" },
-	{ OFLAG_LNOTICE,	"can_localnotice" },
-	{ OFLAG_GNOTICE,	"can_globalnotice" },
 	{ OFLAG_ADMIN_,		"admin"},
+	{ OFLAG_DIE,		"can_die" },
+	{ OFLAG_TKL,		"can_gkline"},
+	{ OFLAG_GKILL,		"can_globalkill" },
+	{ OFLAG_GNOTICE,	"can_globalnotice" },
+	{ OFLAG_GROUTE,		"can_globalroute" },
+	{ OFLAG_GLOBOP,         "can_globops" },
+	{ OFLAG_GZL,		"can_gzline"},
+	{ OFLAG_KLINE,		"can_kline" },
+	{ OFLAG_LKILL,		"can_localkill" },
+	{ OFLAG_LNOTICE,	"can_localnotice" },
+	{ OFLAG_LROUTE,		"can_localroute" },
+	{ OFLAG_REHASH,		"can_rehash" },
+	{ OFLAG_RESTART,        "can_restart" },
+	{ OFLAG_INVISIBLE,	"can_stealth"},
+	{ OFLAG_UNKLINE,	"can_unkline" },
+	{ OFLAG_WALLOP,         "can_wallops" },
+	{ OFLAG_ZLINE,		"can_zline"},
+	{ OFLAG_COADMIN,	"coadmin"},
+	{ OFLAG_HIDE,		"get_host"},
+	{ OFLAG_WHOIS,		"get_umodew"},
+	{ OFLAG_GLOBAL,		"global" },
+	{ OFLAG_HELPOP,         "helpop" },
+	{ OFLAG_LOCAL,		"local" },
+	{ OFLAG_LOCOP,		"locop"},
 	{ OFLAG_SADMIN_,	"services-admin"},
 	{ OFLAG_NADMIN,		"netadmin"},
-	{ OFLAG_COADMIN,	"coadmin"},
-	{ OFLAG_ZLINE,		"can_zline"},
-	{ OFLAG_WHOIS,		"get_umodew"},
-	{ OFLAG_INVISIBLE,	"can_stealth"},
-	{ OFLAG_HIDE,		"get_host"},
-	{ OFLAG_TKL,		"can_gkline"},
-	{ OFLAG_GZL,		"can_gzline"},
-	{ 0L, 	NULL  }
 };
 
+/* This MUST be alphabetized */
 static OperFlag _ListenerFlags[] = {
-	{ LISTENER_NORMAL, 	"standard"},
 	{ LISTENER_CLIENTSONLY, "clientsonly"},
-	{ LISTENER_SERVERSONLY, "serversonly"},
-	{ LISTENER_REMOTEADMIN, "remoteadmin"},
 	{ LISTENER_JAVACLIENT, 	"java"},
 	{ LISTENER_MASK, 	"mask"},
+	{ LISTENER_REMOTEADMIN, "remoteadmin"},
+	{ LISTENER_SERVERSONLY, "serversonly"},
 	{ LISTENER_SSL, 	"ssl"},
-	{ 0L,			NULL },
+	{ LISTENER_NORMAL, 	"standard"},
 };
 
+/* This MUST be alphabetized */
 static OperFlag _LinkFlags[] = {
 	{ CONNECT_AUTO,	"autoconnect" },
+	{ CONNECT_QUARANTINE, "quarantine"},
 	{ CONNECT_SSL,	"ssl"		  },
 	{ CONNECT_ZIP,	"zip"		  },
-	{ CONNECT_QUARANTINE, "quarantine"},
-	{ 0L, 		NULL }
 };
 
+/* This MUST be alphabetized */
 static OperFlag _LogFlags[] = {
+	{ LOG_CLIENT, "connects" },
 	{ LOG_ERROR, "errors" },
 	{ LOG_KILL, "kills" },
-	{ LOG_TKL, "tkl" },
-	{ LOG_CLIENT, "connects" },
-	{ LOG_SERVER, "server-connects" },
 	{ LOG_KLINE, "kline" },
 	{ LOG_OPER, "oper" },
-	{ 0L, NULL }
+	{ LOG_SERVER, "server-connects" },
+	{ LOG_TKL, "tkl" },
 };
 
 #ifdef USE_SSL
+/* This MUST be alphabetized */
 static OperFlag _SSLFlags[] = {
 	{ SSLFLAG_FAILIFNOCERT, "fail-if-no-clientcert" },
-	{ SSLFLAG_VERIFYCERT, "verify-certificate" },
 	{ SSLFLAG_DONOTACCEPTSELFSIGNED, "no-self-signed" },
-	{ 0L, NULL }	
+	{ SSLFLAG_VERIFYCERT, "verify-certificate" },
 };
 #endif
 
@@ -1006,7 +1006,7 @@ int	config_run()
 
 ConfigCommand *config_binary_search(char *cmd) {
 	int start = 0;
-	int stop = sizeof(_ConfigCommands)/sizeof(_ConfigCommands[0])-1;
+	int stop = sizeof(_ConfigCommands)/sizeof(_ConfigCommands[0]);
 	int mid;
 	while (start <= stop) {
 		mid = (start+stop)/2;
@@ -1021,6 +1021,25 @@ ConfigCommand *config_binary_search(char *cmd) {
 	}
 	return NULL;
 }
+
+OperFlag *config_binary_flags_search(OperFlag *table, char *cmd, int size) {
+	int start = 0;
+	int stop = size;
+	int mid;
+	while (start <= stop) {
+		mid = (start+stop)/2;
+		if (smycmp(cmd,table[mid].name) < 0) {
+			stop = mid-1;
+		}
+		else if (smycmp(cmd,table[mid].name) == 0) {
+			return &(table[mid]);
+		}
+		else
+			start = mid+1;
+	}
+	return NULL;
+}
+
 
 int	config_test()
 {
@@ -1830,15 +1849,8 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 	{
 		for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 		{
-			/* this should have been olp ;) -Stskeeps */
-			for (ofp = _OperFlags; ofp->name; ofp++)
-			{
-				if (!strcmp(ofp->name, cepp->ce_varname))
-				{
-					oper->oflags |= ofp->flag;
-					break;
-				}
-			}
+			if ((ofp = config_binary_flags_search(_OperFlags, cepp->ce_varname, sizeof(_OperFlags)/sizeof(_OperFlags[0])))) 
+				oper->oflags |= ofp->flag;
 		}
 	}
 	if ((cep = config_find_entry(ce->ce_entries, "swhois")))
@@ -1938,20 +1950,14 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 					{
 						config_error("%s:%i: oper::flags item without variable name",
 							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-						errors++; continue;
+						errors++; 
+						continue;
 					}
-					/* this should have been olp ;) -Stskeeps */
-					for (ofp = _OperFlags; ofp->name; ofp++)
-					{
-						if (!strcmp(ofp->name, cepp->ce_varname))
-							break;
-					}
-					if (!ofp->name)
-					{
-						config_error("%s:%i: unknown oper flag '%s'",
+					if (!config_binary_flags_search(_OperFlags, cepp->ce_varname, sizeof(_OperFlags)/sizeof(_OperFlags[0]))) {
+						 config_error("%s:%i: unknown oper flag '%s'",
 							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
 							cepp->ce_varname);
-						errors++; continue;
+						errors++; 
 					}
 				}
 				continue;
@@ -2431,15 +2437,8 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 			listen->options = 0;
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
-				for (ofp = _ListenerFlags; ofp->name; ofp++)
-				{
-					if (!strcmp(ofp->name, cepp->ce_varname))
-					{
-						if (!(listen->options & ofp->flag))
-							listen->options |= ofp->flag;
-						break;
-					}
-				}
+				if ((ofp = config_binary_flags_search(_ListenerFlags, cepp->ce_varname, sizeof(_ListenerFlags)/sizeof(_ListenerFlags[0]))))
+					listen->options |= ofp->flag;
 			}
 #ifndef USE_SSL
 			if (listen->options & LISTENER_SSL)
@@ -2532,14 +2531,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 					errors++; continue;
 				}
-				for (ofp = _ListenerFlags; ofp->name; ofp++)
-				{
-					if (!strcmp(ofp->name, cepp->ce_varname))
-					{
-						break;
-					}
-				}
-				if (!ofp->name)
+				if (!config_binary_flags_search(_ListenerFlags, cepp->ce_varname, sizeof(_ListenerFlags)/sizeof(_ListenerFlags[0])))
 				{
 					config_error("%s:%i: unknown listen option '%s'",
 						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
