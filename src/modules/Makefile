@@ -27,6 +27,8 @@ COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
 
 MODULES=commands.so $(R_MODULES)
 
+PTHREAD=-kthread
+
 all: build
 
 build: $(MODULES)
@@ -61,11 +63,11 @@ m_sdesc.so: m_sdesc.c $(INCLUDES)
 
 
 scan.so: scan.c $(INCLUDES)
-	$(CC) $(CFLAGS) -fPIC -DPIC -shared -DDYNAMIC_LINKING \
+	$(CC) $(CFLAGS) $(PTHREAD) -fPIC -DPIC -shared -DDYNAMIC_LINKING \
 		 -o scan.so scan.c
 
 scan_socks.so: scan_socks.c $(INCLUDES)
-	$(CC) $(CFLAGS) -fPIC -DPIC -shared -DDYNAMIC_LINKING \
+	$(CC) $(CFLAGS) $(PTHREAD) -fPIC -DPIC -shared -DDYNAMIC_LINKING \
 		 -o scan_socks.so scan_socks.c
 
 clean:

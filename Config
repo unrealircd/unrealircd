@@ -65,6 +65,7 @@ DIR=`pwd`
 # Some reasonable defaults
 #
 DEFOPT="-O -g -export-dynamic"
+PTHREADFLAG="-pthread"
 DEFCFLAGS="$DEFOPT"
 DEFLIBS="none"
 MKPASSWDLIBS="-lcrypt"
@@ -145,6 +146,7 @@ case "$OS" in
     *FreeBSD*2.2.*)
         DEFCFLAGS="$DEFOPT"
         DEFLIBS="-lcrypt"
+	PTHREADFLAG="-kthread"
         OSNAME="FreeBSD 2.2.x"
         CRYPT_OPER_PASSWORD=""
         CRYPT_LINK_PASSWORD=""
@@ -155,6 +157,7 @@ case "$OS" in
     *FreeBSD*2.2*)
         DEFCFLAGS="$DEFOPT"
         DEFLIBS="none"
+	PTHREADFLAG="-kthread"
         OSNAME="FreeBSD 2.2"
         CRYPT_OPER_PASSWORD=""
         CRYPT_LINK_PASSWORD=""
@@ -165,6 +168,7 @@ case "$OS" in
     *FreeBSD*4.0*)
         DEFCFLAGS="$DEFOPT"
         DEFLIBS="-lcrypt"
+	PTHREADFLAG="-kthread"
         OSNAME="FreeBSD 4.0"
         CRYPT_OPER_PASSWORD=""
         CRYPT_LINK_PASSWORD=""
@@ -175,6 +179,7 @@ case "$OS" in
     *FreeBSD*3*)
         DEFCFLAGS="$DEFOPT"
         DEFLIBS="-lcrypt"
+	PTHREADFLAG="-kthread"
         OSNAME="FreeBSD 3.x"
         CRYPT_OPER_PASSWORD=""
         CRYPT_LINK_PASSWORD=""
@@ -185,6 +190,7 @@ case "$OS" in
     *FreeBSD*)
         DEFCFLAGS="$DEFOPT"
         DEFLIBS="none"
+	PTHREADFLAG="-kthread"
         OSNAME="FreeBSD"
         CRYPT_OPER_PASSWORD=""
         CRYPT_LINK_PASSWORD=""
@@ -205,6 +211,7 @@ case "$OS" in
     *SCO_SV*)
         DEFCFLAGS="$DEFOPT -DSCOUNIX"
         DEFLIBS="-lsocket"
+	PTHREADFLAG="-Kthread"
         OSNAME="SCO Openserver"
         NEEDSKIPNAME="Yep"
         echo "You're using SCO Unix. For more support, stskeeps@tspre.org"
@@ -243,11 +250,13 @@ case "$OS" in
     *SunOS*4.*)
         DEFCFLAGS="$DEFOPT"
         DEFLIBS="none"
+	PTHREADFLAG="-pthreads"
         OSNAME="SunOS 4.x"
         ;;
     *SunOS*5.*)
         DEFCFLAGS="$DEFOPT -DSOL20"
         DEFLIBS="-lsocket -lnsl -lresolv"
+	PTHREADFLAG="-pthreads"
         OSNAME="Solaris 2.x (or SunOS 5.x)"
         ;;
     *IRIX*)
@@ -399,6 +408,12 @@ $RM -f crypt/Makefile.tmp
 sed -e "s@^LIBS=\(.*\)@LIBS=$MKPASSWDLIBS@" crypt/Makefile > crypt/Makefile.tmp
 cp crypt/Makefile.tmp crypt/Makefile
 $RM -f crypt/Makefile.tmp
+
+# Fix modules Makefile
+$RM -f crypt/Makefile.tmp
+sed -e "s@^PTHREAD=\(.*\)@PTHREAD=$PTHREADFLAG@" src/modules/Makefile > src/modules/Makefile.tmp
+cp src/modules/Makefile.tmp src/modules/Makefile
+$RM -f src/modules/Makefile.tmp
 
 cat <<__EOF__
 
