@@ -334,8 +334,7 @@ void server_reboot(mesg)
 	(void)close(1);
 	if ((bootopt & BOOT_CONSOLE) || isatty(0))
 		(void)close(0);
-	if (!(bootopt & (BOOT_OPER)))
-		(void)execv(MYNAME, myargv);
+	(void)execv(MYNAME, myargv);
 #else
 	for (i = 0; i < highest_fd; i++)
 		if (closesocket(i) == -1)
@@ -808,10 +807,6 @@ int  InitwIRCD(argc, argv)
 			  dpath = p;
 			  break;
 #ifndef _WIN32
-		  case 'o':	/* Per user local daemon... */
-			  (void)setuid((uid_t) uid);
-			  bootopt |= BOOT_OPER;
-			  break;
 #ifdef CMDLINE_CONFIG
 		  case 'f':
 			  (void)setuid((uid_t) uid);
@@ -1116,16 +1111,7 @@ int  InitwIRCD(argc, argv)
 #endif
 
 	check_class();
-	if (bootopt & BOOT_OPER)
-	{
-		aClient *tmp = add_connection(&me, 0);
-
-		if (!tmp)
-			exit(1);
-		SetMaster(tmp);
-	}
-	else
-		write_pidfile();
+	write_pidfile();
 
 	Debug((DEBUG_NOTICE, "Server ready..."));
 #ifdef USE_SYSLOG

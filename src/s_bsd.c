@@ -518,8 +518,7 @@ if (bootopt & BOOT_TTY)		/* debugging is going to a tty */
 if (!(bootopt & BOOT_DEBUG))
 	(void)close(2);
 
-if (((bootopt & BOOT_CONSOLE) || isatty(0)) &&
-    !(bootopt & (BOOT_INETD | BOOT_OPER)))
+if ((bootopt & BOOT_CONSOLE) || isatty(0))
 {
 #ifndef _AMIGA
 /*		if (fork())
