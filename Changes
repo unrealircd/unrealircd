@@ -2861,3 +2861,4 @@ seen. gmtime warning still there
 - Fixed fdlist bug/warning if a local operator /oper'd up twice. Reported by
   DukePyrolator (#0001539).
 - Changed version to RC1
+*** RC1 release ***
