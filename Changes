@@ -887,3 +887,4 @@ seen. gmtime warning still there
 - Fixed a DEBUGMODE problem with umodes.c
 - Fixed a snomask bug found by Rob
 - Made the missing commands error a little more.. tardfriendly
+- Preperation for beta4
