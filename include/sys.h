@@ -247,4 +247,8 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 #define P_EMSGSIZE	WSAEMSGSIZE
 #endif
 
+#ifndef __GNUC__
+#define __attribute__(x) /* nothing */
+#endif
+
 #endif /* __sys_include__ */

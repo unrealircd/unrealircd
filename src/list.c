@@ -240,12 +240,14 @@ void free_user(anUser *user, aClient *cptr)
 			MyFree((char *)user->swhois);
 		if (user->virthost)
 			MyFree((char *)user->virthost);
+		if (user->operlogin)
+			MyFree(user->operlogin);
 		/*
 		 * sanity check
 		 */
 		if (user->joined || user->refcnt < 0 ||
 		    user->invited || user->channel)
-			sendto_realops("* %#x user (%s!%s@%s) %#x %#x %#x %d %d *",
+			sendto_realops("* %p user (%s!%s@%s) %p %p %p %d %d *",
 			    cptr, cptr ? cptr->name : "<noname>",
 			    user->username, user->realhost, user,
 			    user->invited, user->channel, user->joined,

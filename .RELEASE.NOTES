@@ -1,5 +1,5 @@
 
-Unreal3.2-beta18 Release Notes
+Unreal3.2-beta19 Release Notes
 ======================================
 
 ==[ GENERAL INFORMATION ]==
@@ -9,67 +9,58 @@ Unreal3.2-beta18 Release Notes
   FAQ: http://www.vulnscan.org/UnrealIrcd/faq/
   Read them before asking for help.
 * Report bugs at http://bugs.unrealircd.org/
-* This release adds a lot nice new features and fixes most win32 crashes.
+* This is a RECOMMENDED release. It fixes several security issues and crash bugs.
+* As usual, if you are using mixed versions you could get desync issues.
+  This is especially true for OperOverride KICK this time.
 
 == [NEW FEATURES (see unreal32docs.html for more information) ]==
-* ChannelMode +f has been changed a lot, it's an advanced anti-flood mode now.
-  It can protect against: joinflood, ctcpflood, msgflood, nickflood and knockflood.
-  For example: +f [30j,50m]:15 means max 30 joins and 50 messages are allowed per
-  15 seconds, if the max joins limit is reached the channel is automatically put +i,
-  if the messages limit is reached the channel is put +m.
-  For more info see: http://www.vulnscan.org/UnrealIrcd/unreal32docs.html#feature_antiflood
-  You might want to enable it by default via set::modes-on-join.
-* The /stats system has been recoded, some new features:
-  * extended flags for shun and kline, for example:
-    "/stats G +m *aol.com" will display all glines matching *aol.com.
-  * support for long flags, like: /stats exceptban
-* Finally support for up to 32 new channelmodes, all of which can be done in modules
-  (currently disabled by default). SnoMask module support has been added as well.
-* Added nickflood protection, set::anti-flood::nick-flood, this is
-  enabled by default and set at 3:60 (max 3 nickchanges per 60 seconds).
-* The win32 editor has been improved: better handling of mIRC codes, short motd editting,
-  goto button, find text feature, etc..
-* A new deny channel :: warn option, this will inform opers (with eyes snomask) that the
-  user was trying to join the forbidden channel.
-* official-channels support, these channels are shown in /list even if they have 0 users,
-  you can also a default topic which is shown in /list.
-* Added badwords all { }, you can use this instead of using a badwords channel,
-  badword message and badword quit block for the same word.
-* Added set::channel-command-prefix to allow channel text which starts with specific
-  characters to be sent to +d clients (for in channel commands).
-* You can now set the default bantime for a gline/kline/gzline/.. in set::default-bantime
-  (like for /gline *@*.something.net)
-* A README file has been added.
-* Will now strip/block color codes in quits if the user is in a +S/+c channel.
+* /who output limit (amount of lines) settable in set::who-limit
+* usermode +T: No CTCP (except ACTION and DCC)
+* Added 'action' field to ban version { } so it will kill,zline,gline,shun,..
+* Added "remove channelmode after X minutes" in mode f:
+  The format is +f [30j#R5]:15, where 5 is the "do -R after 5 minutes". For a default
+  action like +i you would have to do the same: +f [30j#i5]:15 (remove 'i' after 5 minutes).
+  Additionally, 2 config items are added:
+  * set::modef-default-unsettime, if this is set to for example '5' then things like
+    +f [30j]:15 will be transformed into +f [30j#i5]:15. It's just a default, the user can still
+    override it. By default this feature is not used.
+  * set::modef-max-unsettime, specifies the maximum amount of time for the <time> parameter,
+    by default this is set to 60 (=1 hour), the value should be between 0 and 255.
+* Added set::options::allow-part-if-shunned (allows shunned users to use /part)
+* Added oper::maxlogins by which you can limit the number of concurrent oper sessions.
+* OperOverride support for +Q/+z.
+* PREFIX_AQ is enabled by default on windows and asked in ./Config on *NIX:
+  Just like +o has '@', this will give +a (chanadmin) '&' and +q (chanowner) the '~' prefix.
+  This is supported by the major clients (mIRC, xchat, epic, eggdrop, Klient, PJIRC and more)
+  with the notable exceptions of irssi, KVIrc and CGI:IRC.
+  If enabled, it also means setting someone +a/+q is enough, no extra +o (+oa/+oq) is needed.
+  This feature should be enabled/disabled network-wide.
 
 ==[ CHANGED ]==
-* We will now error at too large cloak keys (>2147483646)
-* away-flood configuration now works just like nick-flood,
-  it's also enabled by default at 4 per 120s.
-* badword filtering is now only done at the first server (source),
-  this can reduce CPU usage a lot, especially at hubs.
+* The /module command can now be used by users to get a (less detailed) module list,
+  also opers can use /module [servername] to get a remote module list.
+  Both is to protect against abusive admins a bit, see Changes for details.
+* Optimized the channel msg code, now ~33% faster.
+* modules: changed a few things, added new hooks, added cmd override system
+* Made /rehash reload botmotd and opermotd
 
 ==[ MAJOR BUGS FIXED ]==
-* The buggy windows resolver has been replaced with the *NIX resolver,
-  the win-resolver was the main cause of unrealircd@windows crashes.
-* services-related crashbug found 24h after beta17 release :(
-* ban version crash
-* UnrealIRCd should now be able to run fine at PowerPC.
-* No security related fixes this release.
+* serious bug by which users can crash the ircd
+* a serious snomask issue
+* +f bounce mode could crash the ircd
+* various bugs discovered after security audit
 
 ==[ MINOR BUGS FIXED ]==
-* oper::swhois wasn't working correctly (/whois from remote servers).
-* /silence with cloaked hosts
-* trafficstats were sometimes incorrect (/stats T and /HTM).
-* multiple channelmode +(m)u fixes, most of them were multiserver related.
-* IPv6: FreeBSD has support for ::ffff:1.2.3.4 alike IPs disabled by default,
-  we will now spit out some information about this if binding to such IPs fails.  
-* Fixed a chroot bug
-* Made /restart work at windows in service mode.
-* A few +b/+e bugfixes
-* Allow o/a/q'd people to nickchange if banned
-* Added some missing info to /stats
-* etc..
+* link::autoconnect sometimes wasn't working
+* multiple negative opercounts issues
+* Yet another HTM problem
+* weird /gline command crashing windows
+* +L desynch bug
+* extended channelmode desynch bug
+* a bug where colorquits were stripped when they shouldn't be
+* multiple oper override bugs (kick, chmode +z)
+* weird-ban problem
+* more..
 
 ==[ ADDITIONAL INFO ]==
 * See Changelog

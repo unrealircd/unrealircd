@@ -631,8 +631,9 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 				} else
 				{
 					char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
-					int v, i;
-					unsigned short warnings = 0, breakit;
+					int v;
+					unsigned short breakit;
+					unsigned char r;
 					
 					/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
 					strlcpy(xbuf, param, sizeof(xbuf));
@@ -659,14 +660,27 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 							break;
 						p++;
 						a = '\0';
+						r = 0;
 						if (*p != '\0')
 						{
 							if (*p == '#')
 							{
 								p++;
 								a = *p;
+								p++;
+								if (*p != '\0')
+								{
+									int tv;
+									tv = atoi(p);
+									if (tv <= 0)
+										tv = 0; /* (ignored) */
+									if (tv > 255)
+										tv = 255; /* set to max */
+									r = tv;
+								}
 							}
 						}
+
 						switch(c)
 						{
 							case 'c':
@@ -675,6 +689,7 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 									newf.a[FLD_CTCP] = a;
 								else
 									newf.a[FLD_CTCP] = 'C';
+								newf.r[FLD_CTCP] = r;
 								break;
 							case 'j':
 								newf.l[FLD_JOIN] = v;
@@ -682,10 +697,12 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 									newf.a[FLD_JOIN] = a;
 								else
 									newf.a[FLD_JOIN] = 'i';
+								newf.r[FLD_JOIN] = r;
 								break;
 							case 'k':
 								newf.l[FLD_KNOCK] = v;
 								newf.a[FLD_KNOCK] = 'K';
+								newf.r[FLD_KNOCK] = r;
 								break;
 							case 'm':
 								newf.l[FLD_MSG] = v;
@@ -693,15 +710,18 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 									newf.a[FLD_MSG] = a;
 								else
 									newf.a[FLD_MSG] = 'm';
+								newf.r[FLD_MSG] = r;
 								break;
 							case 'n':
 								newf.l[FLD_NICK] = v;
 								newf.a[FLD_NICK] = 'N';
+								newf.r[FLD_NICK] = r;
 								break;
 							case 't':
 								newf.l[FLD_TEXT] = v;
 								if (a == 'b')
 									newf.a[FLD_TEXT] = 'b';
+								/** newf.r[FLD_TEXT] ** not supported */
 								break;
 							default:
 								breakit=1;
@@ -1313,6 +1333,27 @@ void config_setdefaultsettings(aConfiguration *i)
 #ifdef NO_FLOOD_AWAY
 	i->away_count = 4; i->away_period = 120; /* awayflood protection: max 4 per 120s */
 #endif
+#ifdef NEWCHFLOODPROT
+	i->modef_default_unsettime = 0;
+	i->modef_max_unsettime = 60; /* 1 hour seems enough :p */
+#endif
+	i->ban_version_tkl_time = 86400; /* 1d */
+}
+
+/* needed for set::options::allow-part-if-shunned,
+ * we can't just make it M_SHUN and do a ALLOW_PART_IF_SHUNNED in
+ * m_part itself because that will also block internal calls (like sapart). -- Syzop
+ */
+static void do_weird_shun_stuff()
+{
+aCommand *cmptr = find_Command_simple("PART");
+
+	if (!cmptr) /* Huh? */
+		return;
+	if (ALLOW_PART_IF_SHUNNED)
+		cmptr->flags |= M_SHUN;
+	else
+		cmptr->flags &= ~M_SHUN;
 }
 
 int	init_conf(char *rootconf, int rehash)
@@ -1428,6 +1469,8 @@ int	init_conf(char *rootconf, int rehash)
 	if (rehash)
 		module_loadall(0);
 #endif
+	do_weird_shun_stuff();
+	nextconnect = TStime() + 1; /* check for autoconnects */
 	config_status("Configuration loaded without any problems ..");
 	return 0;
 }
@@ -1810,6 +1853,7 @@ int	config_post_test()
 {
 #define Error(x) { config_error((x)); errors++; }
 	int 	errors = 0;
+	Hook *h;
 	
 	if (!requiredstuff.conf_me)
 		Error("me {} block missing");
@@ -1849,13 +1893,13 @@ int	config_post_test()
 		Error("set::help-channel missing");
 	if (!requiredstuff.settings.hidhost)
 		Error("set::hiddenhost-prefix missing");
-	for (global_i = Hooks[HOOKTYPE_CONFIGPOSTTEST]; global_i; 
-		global_i = global_i->next) 
+	for (h = Hooks[HOOKTYPE_CONFIGPOSTTEST]; h; h = h->next) 
 	{
 		int value, errs = 0;
-		if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
+		if (h->owner && !(h->owner->flags & MODFLAG_TESTING) &&
+		                !(h->owner->options & MOD_OPT_PERM))
 			continue;
-		value = (*(global_i->func.intfunc))(&errs);
+		value = (*(h->func.intfunc))(&errs);
 		if (value == -1)
 		{
 			errors += errs;
@@ -1873,6 +1917,7 @@ int	config_run()
 	ConfigFile	*cfptr;
 	ConfigCommand	*cc;
 	int		errors = 0;
+	Hook *h;
 	for (cfptr = conf; cfptr; cfptr = cfptr->cf_next)
 	{
 		if (config_verbose > 1)
@@ -1886,10 +1931,9 @@ int	config_run()
 			else
 			{
 				int value;
-				for (global_i = Hooks[HOOKTYPE_CONFIGRUN]; global_i;
-				     global_i = global_i->next)
+				for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
 				{
-					value = (*(global_i->func.intfunc))(cfptr,ce,CONFIG_MAIN);
+					value = (*(h->func.intfunc))(cfptr,ce,CONFIG_MAIN);
 					if (value == 1)
 						break;
 				}
@@ -1947,6 +1991,7 @@ int	config_test()
 	ConfigFile	*cfptr;
 	ConfigCommand	*cc;
 	int		errors = 0;
+	Hook *h;
 
 	for (cfptr = conf; cfptr; cfptr = cfptr->cf_next)
 	{
@@ -1968,13 +2013,12 @@ int	config_test()
 			else 
 			{
 				int used = 0;
-				for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
-					global_i = global_i->next) 
+				for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
 				{
 					int value, errs = 0;
-					if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
+					if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
 						continue;
-					value = (*(global_i->func.intfunc))(cfptr,ce,CONFIG_MAIN,&errs);
+					value = (*(h->func.intfunc))(cfptr,ce,CONFIG_MAIN,&errs);
 					if (value == 2)
 						used = 1;
 					if (value == 1)
@@ -2070,6 +2114,24 @@ ConfigItem_oper	*Find_oper(char *name)
 			return (p);
 	}
 	return NULL;
+}
+
+int count_oper_sessions(char *name)
+{
+int i, count = 0;
+aClient *cptr;
+
+#ifdef NO_FDLIST
+	for (i = 0; i <= LastSlot; i++)
+#else
+int j;
+	for (i = oper_fdlist.entry[j = 1]; j <= oper_fdlist.last_entry; i = oper_fdlist.entry[++j])
+#endif
+		if ((cptr = local[i]) && IsPerson(cptr) && IsAnOper(cptr) &&
+		    cptr->user && cptr->user->operlogin && !strcmp(cptr->user->operlogin,name))
+			count++;
+
+	return count;
 }
 
 ConfigItem_listen	*Find_listen(char *ipmask, int port)
@@ -2571,9 +2633,16 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (cep->ce_vardata)
 		{
+			char *p;
 			if (!strchr(cep->ce_vardata, '.'))
 			{	
 				config_error("%s:%i: illegal me::name, must be fully qualified hostname",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+			if (!valid_host(cep->ce_vardata))
+			{
+				config_error("%s:%i: illegal me::name contains invalid character(s) [only a-z, 0-9, _, -, . are allowed]",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 			}
@@ -2731,6 +2800,10 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 	{
 		ircstrdup(oper->snomask, cep->ce_vardata);
 	}
+	if ((cep = config_find_entry(ce->ce_entries, "maxlogins")))
+	{
+		oper->maxlogins = (int)config_checkval(cep->ce_vardata, CFG_TIME);
+	}
 	cep = config_find_entry(ce->ce_entries, "from");
 	for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 	{
@@ -2789,6 +2862,16 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			else if (!strcmp(cep->ce_varname, "swhois")) {
 			}
 			else if (!strcmp(cep->ce_varname, "snomask")) {
+			}
+			else if (!strcmp(cep->ce_varname, "maxlogins"))
+			{
+				long l = config_checkval(cep->ce_vardata, CFG_TIME);
+				if ((l < 0) || (l > 5000))
+				{
+					config_error("%s:%i: oper::maxlogins: value out of range (%ld) should be 0-5000",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, l);
+					errors++; continue;
+				}
 			}
 			else if (!strcmp(cep->ce_varname, "flags"))
 			{
@@ -3380,8 +3463,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 			if (tmpflags & LISTENER_SSL)
 			{
 				config_status("%s:%i: listen with SSL flag enabled on a non SSL compile",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-					cep->ce_varname);
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				tmpflags &= ~LISTENER_SSL;
 			}
 #endif
@@ -3538,6 +3620,7 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp;
 	ConfigItem_allow *allow;
+	Hook *h;
 
 	if (ce->ce_vardata)
 	{
@@ -3548,10 +3631,9 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		else
 		{
 			int value;
-			for (global_i = Hooks[HOOKTYPE_CONFIGRUN]; global_i;
-			     global_i = global_i->next)
+			for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
 			{
-				value = (*(global_i->func.intfunc))(conf,ce,CONFIG_ALLOW);
+				value = (*(h->func.intfunc))(conf,ce,CONFIG_ALLOW);
 				if (value == 1)
 					break;
 			}
@@ -3612,6 +3694,8 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp;
 	int		errors = 0;
+	Hook *h;
+	
 	if (ce->ce_vardata)
 	{
 		if (!strcmp(ce->ce_vardata, "channel"))
@@ -3621,13 +3705,12 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 		else
 		{
 			int used = 0;
-			for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
-				global_i = global_i->next) 
+			for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
 			{
 				int value, errs = 0;
-				if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
+				if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
 					continue;
-				value = (*(global_i->func.intfunc))(conf,ce,CONFIG_ALLOW,&errs);
+				value = (*(h->func.intfunc))(conf,ce,CONFIG_ALLOW,&errs);
 				if (value == 2)
 					used = 1;
 				if (value == 1)
@@ -3870,7 +3953,7 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 
 	ConfigEntry *cep, *cep2, *cep3;
 	ConfigItem_except *ca;
-
+	Hook *h;
 
 	if (!strcmp(ce->ce_vardata, "ban")) {
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -3920,10 +4003,9 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else {
 		int value;
-		for (global_i = Hooks[HOOKTYPE_CONFIGRUN]; global_i;
-		     global_i = global_i->next)
+		for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
 		{
-			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_EXCEPT);
+			value = (*(h->func.intfunc))(conf,ce,CONFIG_EXCEPT);
 			if (value == 1)
 				break;
 		}
@@ -3936,6 +4018,7 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 
 	ConfigEntry *cep, *cep3;
 	int	    errors = 0;
+	Hook *h;
 
 	if (!ce->ce_vardata)
 	{
@@ -4063,13 +4146,12 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else {
 		int used = 0;
-		for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
-			global_i = global_i->next) 
+		for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
 		{
 			int value, errs = 0;
-			if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
+			if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
 				continue;
-			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_EXCEPT,&errs);
+			value = (*(h->func.intfunc))(conf,ce,CONFIG_EXCEPT,&errs);
 			if (value == 2)
 				used = 1;
 			if (value == 1)
@@ -4966,6 +5048,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 
 	ConfigEntry *cep;
 	ConfigItem_ban *ca;
+	Hook *h;
 
 	ca = MyMallocEx(sizeof(ConfigItem_ban));
 	if (!strcmp(ce->ce_vardata, "nick"))
@@ -4986,10 +5069,9 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 	else {
 		int value;
 		free(ca); /* ca isn't used, modules have their own list. */
-		for (global_i = Hooks[HOOKTYPE_CONFIGRUN]; global_i;
-		     global_i = global_i->next)
+		for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
 		{
-			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_BAN);
+			value = (*(h->func.intfunc))(conf,ce,CONFIG_BAN);
 			if (value == 1)
 				break;
 		}
@@ -5001,6 +5083,25 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 		ca->masktype = parse_netmask(ca->mask, &ca->netmask, &ca->bits);
 	cep = config_find_entry(ce->ce_entries, "reason");
 	ca->reason = strdup(cep->ce_vardata);
+	cep = config_find_entry(ce->ce_entries, "action");
+	if (cep)
+	{
+		if (!strcmp(cep->ce_vardata, "kill"))
+			ca->action = BAN_ACT_KILL;
+		else if (!strcmp(cep->ce_vardata, "tempshun"))
+			ca->action = BAN_ACT_TEMPSHUN;
+		else if (!strcmp(cep->ce_vardata, "shun"))
+			ca->action = BAN_ACT_SHUN;
+		else if (!strcmp(cep->ce_vardata, "kline"))
+			ca->action = BAN_ACT_KLINE;
+		else if (!strcmp(cep->ce_vardata, "zline"))
+			ca->action = BAN_ACT_ZLINE;
+		else if (!strcmp(cep->ce_vardata, "gline"))
+			ca->action = BAN_ACT_GLINE;
+		else if (!strcmp(cep->ce_vardata, "gzline"))
+			ca->action = BAN_ACT_GZLINE;
+	}
+
 	AddListItem(ca, conf_ban);
 	return 0;
 }
@@ -5009,6 +5110,8 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	int	    errors = 0;
+	Hook *h;
+	
 	if (!ce->ce_vardata)
 	{
 		config_error("%s:%i: ban without type",	
@@ -5030,13 +5133,12 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 	else
 	{
 		int used = 0;
-		for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
-			global_i = global_i->next) 
+		for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
 		{
 			int value, errs = 0;
-			if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
+			if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
 				continue;
-			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_BAN, &errs);
+			value = (*(h->func.intfunc))(conf,ce,CONFIG_BAN, &errs);
 			if (value == 2)
 				used = 1;
 			if (value == 1)
@@ -5082,6 +5184,20 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 
+	cep = config_find_entry(ce->ce_entries, "action");
+	if (cep)
+	{
+		if (strcmp(cep->ce_vardata, "kill")  && strcmp(cep->ce_vardata, "shun") &&
+		    strcmp(cep->ce_vardata, "kline") && strcmp(cep->ce_vardata, "zline") &&
+		    strcmp(cep->ce_vardata, "gline") && strcmp(cep->ce_vardata, "gzline") &&
+		    strcmp(cep->ce_vardata, "tempshun"))
+		{
+			config_error("%s:%i: ban %s::action has unknown action type '%s'",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata, cep->ce_vardata);
+			errors++;
+		}
+	}
+
 	if (!(cep = config_find_entry(ce->ce_entries, "reason")))
 	{
 		config_error("%s:%i: ban %s::reason missing",
@@ -5106,6 +5222,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep, *cepp, *ceppp;
 	OperFlag 	*ofl = NULL;
 	char	    temp[512];
+	Hook *h;
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -5129,6 +5246,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "static-quit")) {
 			ircstrdup(tempiConf.static_quit, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "who-limit")) {
+			tempiConf.who_limit = atol(cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "auto-join")) {
 			ircstrdup(tempiConf.auto_join_chans, cep->ce_vardata);
@@ -5308,6 +5428,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "mkpasswd-for-everyone")) {
 					tempiConf.mkpasswd_for_everyone = 1;
 				}
+				else if (!strcmp(cepp->ce_varname, "allow-part-if-shunned")) {
+					tempiConf.allow_part_if_shunned = 1;
+				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "hosts")) {
@@ -5359,6 +5482,20 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		{
 			tempiConf.default_bantime = config_checkval(cep->ce_vardata,CFG_TIME);
 		}
+		else if (!strcmp(cep->ce_varname, "ban-version-tkl-time"))
+		{
+			tempiConf.ban_version_tkl_time = config_checkval(cep->ce_vardata,CFG_TIME);
+		}
+#ifdef NEWCHFLOODPROT
+		else if (!strcmp(cep->ce_varname, "modef-default-unsettime")) {
+			int v = atoi(cep->ce_vardata);
+			tempiConf.modef_default_unsettime = (unsigned char)v;
+		}
+		else if (!strcmp(cep->ce_varname, "modef-max-unsettime")) {
+			int v = atoi(cep->ce_vardata);
+			tempiConf.modef_max_unsettime = (unsigned char)v;
+		}
+#endif
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 #ifdef USE_SSL
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
@@ -5404,10 +5541,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else 
 		{
 			int value;
-			for (global_i = Hooks[HOOKTYPE_CONFIGRUN]; global_i;
-			     global_i = global_i->next)
+			for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
 			{
-				value = (*(global_i->func.intfunc))(conf,cep,CONFIG_SET);
+				value = (*(h->func.intfunc))(conf,cep,CONFIG_SET);
 				if (value == 1)
 					break;
 			}
@@ -5424,6 +5560,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 	int		tempi;
 	int	    i;
 	int	    errors = 0;
+	Hook	*h;
 #define CheckNull(x) if ((!(x)->ce_vardata) || (!(*((x)->ce_vardata)))) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -5526,6 +5663,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckNull(cep);
 		}
 		else if (!strcmp(cep->ce_varname, "static-quit")) {
+			CheckNull(cep);
+		}
+		else if (!strcmp(cep->ce_varname, "who-limit")) {
 			CheckNull(cep);
 		}
 		else if (!strcmp(cep->ce_varname, "auto-join")) {
@@ -5712,8 +5852,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					if (temp < 1 || temp > 255)
 					{
 						config_error("%s:%i: set::anti-flood::away-count must be between 1 and 255",
-							cepp->ce_fileptr->cf_filename,
-							cepp->ce_varname);
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 						errors++;
 					}
 				}
@@ -5722,8 +5861,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					if (temp < 10)
 					{
 						config_error("%s:%i: set::anti-flood::away-period must be greater than 9",
-							cepp->ce_fileptr->cf_filename,
-							cepp->ce_varname);
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 						errors++;
 					}
 				}
@@ -5735,8 +5873,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					{
 						config_error("%s:%i: set::anti-flood::away-flood error. Syntax is '<count>:<period>' (eg 5:60), "
 						             "count should be 1-255, period should be greater than 9",
-							cepp->ce_fileptr->cf_filename,
-							cepp->ce_varname);
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 						errors++;
 					}
 				}
@@ -5749,8 +5886,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					{
 						config_error("%s:%i: set::anti-flood::away-flood error. Syntax is '<count>:<period>' (eg 5:60), "
 						             "count should be 1-255, period should be greater than 4",
-							cepp->ce_fileptr->cf_filename,
-							cepp->ce_varname);
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 						errors++;
 					}
 				}
@@ -5784,6 +5920,8 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "dont-resolve")) {
 				}
 				else if (!strcmp(cepp->ce_varname, "mkpasswd-for-everyone")) {
+				}
+				else if (!strcmp(cepp->ce_varname, "allow-part-if-shunned")) {
 				}
 				else
 				{
@@ -5904,16 +6042,37 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 		}
-		else if (!strcmp(cep->ce_varname, "default-bantime")) {
+		else if (!strcmp(cep->ce_varname, "default-bantime") ||
+		         !strcmp(cep->ce_varname, "ban-version-tkl-time")) {
 			long x;
 			x = config_checkval(cep->ce_vardata,CFG_TIME);
 			if ((x < 0) > (x > 2000000000))
 			{
-				config_error("%s:%i: set::default-bantime: value '%ld' out of range",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, x);
+				config_error("%s:%i: set::%s: value '%ld' out of range",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname, x);
 				errors++;
 			}
 		}
+#ifdef NEWCHFLOODPROT
+		else if (!strcmp(cep->ce_varname, "modef-default-unsettime")) {
+			int v = atoi(cep->ce_vardata);
+			if ((v <= 0) || (v > 255))
+			{
+				config_error("%s:%i: set::modef-default-unsettime: value '%d' out of range (should be 1-255)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, v);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "modef-max-unsettime")) {
+			int v = atoi(cep->ce_vardata);
+			if ((v <= 0) || (v > 255))
+			{
+				config_error("%s:%i: set::modef-max-unsettime: value '%d' out of range (should be 1-255)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, v);
+				errors++;
+			}
+		}
+#endif
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 #ifdef USE_SSL
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
@@ -5957,13 +6116,13 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else
 		{
 			int used = 0;
-			for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
-				global_i = global_i->next) 
+			for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
 			{
 				int value, errs = 0;
-				if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
+				if (h->owner && !(h->owner->flags & MODFLAG_TESTING) &&
+				                !(h->owner->options & MOD_OPT_PERM))
 					continue;
-				value = (*(global_i->func.intfunc))(conf,cep,CONFIG_SET, &errs);
+				value = (*(h->func.intfunc))(conf,cep,CONFIG_SET, &errs);
 				if (value == 2)
 					used = 1;
 				if (value == 1)
@@ -6382,6 +6541,8 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 
 int	_conf_deny(ConfigFile *conf, ConfigEntry *ce)
 {
+Hook *h;
+
 	if (!strcmp(ce->ce_vardata, "dcc"))
 		_conf_deny_dcc(conf, ce);
 	else if (!strcmp(ce->ce_vardata, "channel"))
@@ -6393,10 +6554,9 @@ int	_conf_deny(ConfigFile *conf, ConfigEntry *ce)
 	else
 	{
 		int value;
-		for (global_i = Hooks[HOOKTYPE_CONFIGRUN]; global_i;
-		     global_i = global_i->next)
+		for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
 		{
-			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_DENY);
+			value = (*(h->func.intfunc))(conf,ce,CONFIG_DENY);
 			if (value == 1)
 				break;
 		}
@@ -6511,6 +6671,8 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	int	    errors = 0;
+	Hook	*h;
+	
 	if (!ce->ce_vardata)
 	{
 		config_error("%s:%i: deny without type",	
@@ -6732,13 +6894,12 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 	else
 	{
 		int used = 0;
-		for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
-			global_i = global_i->next) 
+		for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
 		{
 			int value, errs = 0;
-			if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
+			if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
 				continue;
-			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_DENY, &errs);
+			value = (*(h->func.intfunc))(conf,ce,CONFIG_DENY, &errs);
 			if (value == 2)
 				used = 1;
 			if (value == 1)

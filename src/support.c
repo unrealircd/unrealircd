@@ -1390,6 +1390,8 @@ strlcat(char *dst, const char *src, size_t size)
 	size_t len2 = strlen(src);
 	size_t ret = len1 + len2;
 
+	if (size <= len1)
+		return size;
 	if (len1 + len2 >= size)
 		len2 = size - (len1 + 1);
 
@@ -1413,6 +1415,9 @@ strlncat(char *dst, const char *src, size_t size, size_t n)
 	size_t len2 = strlen(src);
 	size_t ret = len1 + len2;
 
+	if (size <= len1)
+		return size;
+		
 	if (len2 > n)
 		len2 = n;
 

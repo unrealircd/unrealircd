@@ -70,16 +70,6 @@
 
 #undef NO_FDLIST
 
-/* Defining this implements a very different handling of channel modes +a and +q.
- * When set, users who are +q will have prefix ~, and +a prefix &. Chmode +a and +q
- * now will also include all of the rights given to +o users, that is +oa is no longer
- * needed, +a is fine. Additionally, due to this change, it is recommended that you only
- * enable this option if you intend to enable it on ALL servers. At this time, this feature
- * is still considered experimental.
- */
-
-#undef PREFIX_AQ
-
 /*
  * Defining this will allow all ircops to see people in +s channels
  * By default, only net/tech admins can see this
@@ -428,8 +418,13 @@
 /*
  * Time interval to wait and if no messages have been received, then check for
  * PINGFREQUENCY and CONNECTFREQUENCY
+ * Imo this is quite useless nowdays, it only saves _some_ cpu on tiny networks
+ * with like 10 users all of them being inactive. On a normal network with >30
+ * users this value is completely irrelevant.
+ * The original value here was 60 (which was [hopefuly] never reached and was
+ * stupid anyway), changed to 2.
  */
-#define TIMESEC  60		/* Recommended value: 60 */
+#define TIMESEC  2
 
 /*
  * If daemon doesn't receive anything from any of its links within
@@ -491,9 +486,8 @@
 /*
  * Extended channel modes. This extends the channel modes with yet another
  * 32 possible modes which can also be used in modules.
- * This is currently considered experimental however.
  */
-#undef EXTCMODE
+#define EXTCMODE
 
 /*
  * New channelmode +f system which allows flood control for:

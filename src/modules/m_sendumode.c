@@ -68,6 +68,7 @@ DLLFUNC int MOD_INIT(m_sendumode)(ModuleInfo *modinfo)
 	*/
 	add_Command(MSG_SENDUMODE, TOK_SENDUMODE, m_sendumode, MAXPARA);
 	add_Command(MSG_SMO, TOK_SMO, m_sendumode, MAXPARA);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 

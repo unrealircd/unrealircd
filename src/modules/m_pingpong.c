@@ -75,8 +75,8 @@ DLLFUNC int MOD_INIT(m_pingpong)(ModuleInfo *modinfo)
 
 	add_Command(MSG_PING, TOK_PING, m_ping, MAXPARA);
 	add_CommandX(MSG_PONG, TOK_PONG, m_pong, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER|M_SHUN);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
-	
 }
 
 /* Is first run when server is 100% ready */
@@ -113,7 +113,6 @@ DLLFUNC int  m_ping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	aClient *acptr;
 	char *origin, *destination;
 
-
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NOORIGIN), me.name, parv[0]);
@@ -122,16 +121,22 @@ DLLFUNC int  m_ping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	origin = parv[1];
 	destination = parv[2];	/* Will get NULL or pointer (parc >= 2!!) */
 
-	acptr = find_client(origin, NULL);
-	if (!acptr)
-		acptr = find_server_quick(origin);
-	if (acptr && acptr != sptr)
-		origin = cptr->name;
+	if (!MyClient(sptr))
+	{
+		/* I've no idea who invented this or what it is supposed to do.. */
+		acptr = find_client(origin, NULL);
+		if (!acptr)
+			acptr = find_server_quick(origin);
+		if (acptr && acptr != sptr)
+			origin = cptr->name;
+	}
+
 	if (!BadPtr(destination) && mycmp(destination, me.name) != 0)
 	{
-		if ((acptr = find_server_quick(destination)))
-			sendto_one(acptr, ":%s PING %s :%s", parv[0],
-			    origin, destination);
+		if (MyClient(sptr))
+			origin = sptr->name; /* Make sure origin is not spoofed */
+		if ((acptr = find_server_quick(destination)) && (acptr != &me))
+			sendto_one(acptr, ":%s PING %s :%s", parv[0], origin, destination);
 		else
 		{
 			sendto_one(sptr, err_str(ERR_NOSUCHSERVER),
@@ -141,7 +146,7 @@ DLLFUNC int  m_ping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	else
 		sendto_one(sptr, ":%s %s %s :%s", me.name,
-		    IsToken(sptr) ? TOK_PONG : MSG_PONG,
+		    IsToken(cptr) ? TOK_PONG : MSG_PONG,
 		    (destination) ? destination : me.name, origin);
 	return 0;
 }
@@ -221,6 +226,10 @@ DLLFUNC int m_pong(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	destination = parv[2];
 	cptr->flags &= ~FLAGS_PINGSENT;
 	sptr->flags &= ~FLAGS_PINGSENT;
+
+	/* Remote pongs for clients? uhh... */
+	if (MyClient(sptr) || !IsRegistered(sptr))
+		destination = NULL;
 
 	if (!BadPtr(destination) && mycmp(destination, me.name) != 0)
 	{

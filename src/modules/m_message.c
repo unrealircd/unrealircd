@@ -72,6 +72,7 @@ DLLFUNC int MOD_INIT(m_message)(ModuleInfo *modinfo)
 	*/
 	add_CommandX(MSG_PRIVATE, TOK_PRIVATE, m_private, MAXPARA, M_USER|M_SERVER|M_RESETIDLE);
 	add_Command(MSG_NOTICE, TOK_NOTICE, m_notice, MAXPARA);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 	
 }
@@ -139,11 +140,6 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 	if (IsHandshake(sptr))
 		return 0;
 
-	if (notice)
-	{
-	}
-
-  /*	sptr->flags &= ~FLAGS_TS8; */
 	cmd = notice ? MSG_NOTICE : MSG_PRIVATE;
 	if (parc < 2 || *parv[1] == '\0')
 	{
@@ -158,13 +154,6 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 		return -1;
 	}
 
-/*	if (WEBTV_SUPPORT == 1)
-	{
-		if (*parv[2] != '\1')
-		{
-			cmd = MSG_PRIVATE;
-		}
-	}*/
 	if (MyConnect(sptr))
 		parv[1] = (char *)canonize(parv[1]);
 		
@@ -208,6 +197,16 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 					acptr->name);
 				return 0;
 			}
+			if (IsNoCTCP(acptr) && !IsOper(sptr) && *parv[2] == 1 && acptr != sptr)
+			{
+				ctcp = &parv[2][1];
+				if (myncmp(ctcp, "ACTION ", 7) && myncmp(ctcp, "DCC ", 4))
+				{
+					sendto_one(sptr, err_str(ERR_NOCTCP), me.name, parv[0],
+						acptr->name);
+					return 0;
+				}
+			}
 			/* F:Line stuff by _Jozeph_ added by Stskeeps with comments */
 			if (*parv[2] == 1 && MyClient(sptr) && !IsOper(sptr))
 				/* somekinda ctcp thing
@@ -230,8 +229,10 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 						continue;
 					}
 					ctcp = &parv[2][10];
-					end = (char *)index(ctcp, ' ');
-
+					if (*ctcp == '"' && *(ctcp+1))
+						end = index(ctcp+1, '"');
+					else
+						end = index(ctcp, ' ');
 					/* check if it was fake.. just pass it along then .. */
 					if (!end || (end < ctcp))
 						goto dcc_was_ok;
@@ -434,7 +435,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				    prefix,
 				    notice ? MSG_NOTICE : MSG_PRIVATE,
 				    notice ? TOK_NOTICE : TOK_PRIVATE,
-				    nick, text);
+				    nick, text, 1);
 
 #ifdef NEWCHFLOODPROT
 				if (chptr->mode.floodprot && !is_skochanop(sptr, chptr) &&

@@ -76,6 +76,7 @@ long UMODE_HIDEOPER = 0L;      /* Hide oper mode */
 long UMODE_SETHOST = 0L;       /* Used sethost */
 long UMODE_STRIPBADWORDS = 0L; /* Strip badwords */
 long UMODE_HIDEWHOIS = 0L;     /* Hides channels in /whois */
+long UMODE_NOCTCP = 0L;	       /* Blocks ctcp (except dcc and action) */
 
 long SNO_KILLS = 0L;
 long SNO_CLIENT = 0L;
@@ -127,6 +128,7 @@ void	umode_init(void)
 	UmodeAdd(NULL, 's', UMODE_LOCAL, NULL, &UMODE_SERVNOTICE);
 	UmodeAdd(NULL, 'O', UMODE_LOCAL, NULL, &UMODE_LOCOP);
 	UmodeAdd(NULL, 'R', UMODE_GLOBAL, NULL, &UMODE_RGSTRONLY);
+	UmodeAdd(NULL, 'T', UMODE_GLOBAL, NULL, &UMODE_NOCTCP);
 	UmodeAdd(NULL, 'V', UMODE_GLOBAL, NULL, &UMODE_WEBTV);
 	UmodeAdd(NULL, 'S', UMODE_GLOBAL, NULL, &UMODE_SERVICES);
 	UmodeAdd(NULL, 'x', UMODE_GLOBAL, NULL, &UMODE_HIDE);
@@ -173,7 +175,7 @@ void make_umodestr(void)
  * Add a usermode with character 'ch', if global is set to 1 the usermode is global
  * (sent to other servers) otherwise it's a local usermode
  */
-Umode *UmodeAdd(Module *module, char ch, int global, int (*allowed)(aClient *sptr), long *mode)
+Umode *UmodeAdd(Module *module, char ch, int global, int (*allowed)(aClient *sptr, int what), long *mode)
 {
 	short	 i = 0;
 	short	 j = 0;
@@ -273,7 +275,7 @@ void UmodeDel(Umode *umode)
 	return;
 }
 
-Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr), long *mode)
+Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr, int what), long *mode)
 {
 	short	 i = 0;
 	short	 j = 0;
@@ -366,12 +368,12 @@ void SnomaskDel(Snomask *sno)
 	return;
 }
 
-int umode_allow_all(aClient *sptr)
+int umode_allow_all(aClient *sptr, int what)
 {
 	return 1;
 }
 
-int umode_allow_opers(aClient *sptr)
+int umode_allow_opers(aClient *sptr, int what)
 {
 	return IsAnOper(sptr) ? 1 : 0;
 }
@@ -442,7 +444,7 @@ void unload_all_unused_snomasks()
 	}
 }
 
-long umode_get(char ch, int options, int (*allowed)(aClient *sptr))
+long umode_get(char ch, int options, int (*allowed)(aClient *sptr, int what))
 {
 	long flag;
 	if (UmodeAdd(NULL, ch, options, allowed, &flag))

@@ -65,8 +65,8 @@ DLLFUNC int MOD_INIT(m_quit)(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	add_CommandX(MSG_QUIT, TOK_QUIT, m_quit, 1, M_UNREGISTERED|M_USER);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
-	
 }
 
 /* Is first run when server is 100% ready */
@@ -97,7 +97,7 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	static char comment[TOPICLEN + 1];
 	Membership *lp;
 
-	if (!IsServer(cptr))
+	if (!IsServer(cptr) && IsPerson(sptr))
 	{
 #ifdef STRIPBADWORDS
 		int blocked = 0;
@@ -120,7 +120,7 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				ocomment = parv[0];
 
 		/* Strip color codes if any channel is +S, use nick as reason if +c. */
-		if (strchr(ocomment, '\003'))
+		if (IsPerson(sptr) && (strchr(ocomment, '\003')))
 		{
 			unsigned char filtertype = 0; /* 1=filter, 2=block, highest wins. */
 			for (lp = sptr->user->channel; lp; lp = lp->next)
@@ -141,9 +141,9 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				ocomment = StripColors(ocomment);
 				if (*ocomment == '\0')
 					ocomment = parv[0];
-			} else {
+			} else
+			if (filtertype == 2)
 				ocomment = parv[0];
-			}
 		} /* (strip color codes) */
 
 		strncpy(s, ocomment, TOPICLEN - (s - comment));

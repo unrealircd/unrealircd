@@ -71,6 +71,7 @@ DLLFUNC int MOD_INIT(m_rping)(ModuleInfo *modinfo)
 	*/
 	add_Command(MSG_RPING, TOK_RPING, m_rping, MAXPARA);
 	add_Command(MSG_RPONG, TOK_RPONG, m_rpong, MAXPARA);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 

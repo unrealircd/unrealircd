@@ -68,6 +68,7 @@ DLLFUNC int MOD_INIT(m_svsnline)(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_SVSNLINE, TOK_SVSNLINE, m_svsnline, MAXPARA);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 

@@ -195,6 +195,9 @@
 /* Define if you want spoof protection */
 #undef NOSPOOF
 
+/* Define if you want +a/+q prefixes */
+#undef PREFIX_AQ
+
 /* Define if you want to compile as a hub */
 #undef HUB
 

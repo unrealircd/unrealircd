@@ -1250,6 +1250,9 @@ int InitwIRCD(int argc, char *argv[])
 #ifdef THROTTLING
 	init_throttling_hash();
 #endif
+#ifdef NEWCHFLOODPROT
+	init_modef();
+#endif
 	loop.do_bancheck = 0;
 	loop.ircd_booted = 1;
 #if defined(HAVE_SETPROCTITLE)
@@ -1300,7 +1303,7 @@ void SocketLoop(void *dummy)
 		oldtimeofday = timeofday;
 		timeofday = time(NULL) + TSoffset;
 		if (timeofday - oldtimeofday < 0) {
-			sendto_realops("Time running backwards! %i-%i<0",
+			sendto_realops("Time running backwards! %ld - %ld < 0",
 			    timeofday, oldtimeofday);
 		}
 		LockEventSystem();
@@ -1379,7 +1382,7 @@ void SocketLoop(void *dummy)
 			}
 			flush_fdlist_connections(&serv_fdlist);
 			timeofday = time(NULL) + TSoffset;
-			if ((alllasttime + (lifesux + 1)) > timeofday) {
+			if ((alllasttime + (lifesux + 1)) < timeofday) {
 				read_message(delay, NULL);	/*  check everything */
 				alllasttime = timeofday;
 			}

@@ -203,6 +203,7 @@ int    l_commands_Init(ModuleInfo *modinfo)
 #ifdef GUEST
 	m_guest_Init(ModCmdsInfo);
 #endif
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 #ifdef DYNAMIC_LINKING

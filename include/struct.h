@@ -124,11 +124,13 @@ typedef struct SLink Link;
 typedef struct SBan Ban;
 typedef struct SMode Mode;
 typedef struct SChanFloodProt ChanFloodProt;
+typedef struct SRemoveFld RemoveFld;
 typedef struct ListOptions LOpts;
 typedef struct FloodOpt aFloodOpt;
 typedef struct MotdItem aMotd;
 typedef struct trecord aTrecord;
 typedef struct Command aCommand;
+typedef struct _cmdoverride Cmdoverride;
 typedef struct SMember Member;
 typedef struct SMembership Membership;
 typedef struct SMembershipL MembershipL;
@@ -360,6 +362,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsARegNick(x)		((x)->umodes & (UMODE_REGNICK))
 #define IsRegNick(x)		((x)->umodes & UMODE_REGNICK)
 #define IsRegNickMsg(x)		((x)->umodes & UMODE_RGSTRONLY)
+#define IsNoCTCP(x)		((x)->umodes & UMODE_NOCTCP)
 #define IsWebTV(x)		((x)->umodes & UMODE_WEBTV)
 #define	IsPerson(x)		((x)->user && IsClient(x))
 #define	IsPrivileged(x)		(IsAnOper(x) || IsServer(x))
@@ -672,6 +675,7 @@ struct User {
 #ifdef	LIST_DEBUG
 	aClient *bcptr;
 #endif
+	char *operlogin;	/* Only used if person is/was opered, used for oper::maxlogins */
 	struct {
 		time_t nick_t;
 		unsigned char nick_c;
@@ -756,10 +760,10 @@ extern Cmode *Channelmode_Table;
 extern unsigned short Channelmode_highest;
 #endif
 
-extern Umode *UmodeAdd(Module *module, char ch, int options, int (*allowed)(aClient *sptr), long *mode);
+extern Umode *UmodeAdd(Module *module, char ch, int options, int (*allowed)(aClient *sptr, int what), long *mode);
 extern void UmodeDel(Umode *umode);
 
-extern Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr), long *mode);
+extern Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr, int what), long *mode);
 extern void SnomaskDel(Snomask *sno);
 
 #ifdef EXTCMODE
@@ -927,6 +931,14 @@ struct _configflag_tld
 #define CONF_BAN_TYPE_AKILL	1
 #define CONF_BAN_TYPE_TEMPORARY 2
 
+#define BAN_ACT_KILL		0
+#define BAN_ACT_TEMPSHUN	1
+#define BAN_ACT_SHUN		2
+#define BAN_ACT_KLINE		3
+#define BAN_ACT_ZLINE		4
+#define BAN_ACT_GLINE		5
+#define BAN_ACT_GZLINE		6
+
 #define CRULE_ALL		0
 #define CRULE_AUTO		1
 
@@ -984,6 +996,7 @@ struct _configitem_oper {
 	ConfigItem_class *class;
 	ConfigItem	 *from;
 	long		 oflags;
+	int			maxlogins;
 };
 
 struct _configitem_oper_from {
@@ -1020,7 +1033,7 @@ struct _configitem_listen {
 	ConfigFlag 	flag;
 	char		*ip;
 	int		port;
-	long		options, clients;
+	int		options, clients;
 	aClient		*listener;
 };
 
@@ -1065,7 +1078,7 @@ struct _configitem_ban {
 	struct IN_ADDR netmask;
 	int bits;
 	short masktype;
-
+	unsigned short action;
 };
 
 #ifdef FAST_BADWORD_REPLACE
@@ -1255,12 +1268,21 @@ struct ListOptions {
 
 #define NUMFLD	6 /* 6 flood types */
 
+struct SRemoveFld {
+	struct SRemoveFld *prev, *next;
+	aChannel *chptr;
+	char m; /* mode to be removed */
+	time_t when; /* scheduled at */
+};
+
 struct SChanFloodProt {
 	unsigned short	per; /* setting: per <XX> seconds */
 	time_t			t[NUMFLD]; /* runtime: timers */
 	unsigned short	c[NUMFLD]; /* runtime: counters */
 	unsigned short	l[NUMFLD]; /* setting: limit */
 	unsigned char	a[NUMFLD]; /* setting: action */
+	unsigned char	r[NUMFLD]; /* setting: remove-after <this> minutes */
+	unsigned long	timer_flags; /* if a "-m timer" is running this is & MODE_MODERATED etc.. */
 };
 
 /* mode structure for channels */
@@ -1543,13 +1565,22 @@ struct Command {
 	int			flags;
 	unsigned int    	count;
 	unsigned		parameters : 5;
-	unsigned		token : 1;
 	unsigned long   	bytes;
 	Module 			*owner;
+	aCommand		*friend; /* cmd if token, token if cmd */
+	Cmdoverride		*overriders;
+	Cmdoverride		*overridetail;
 #ifdef DEBUGMODE
 	unsigned long 		lticks;
 	unsigned long 		rticks;
 #endif
+};
+
+struct _cmdoverride {
+	Cmdoverride		*prev, *next;
+	Module			*owner;
+	aCommand		*command;
+	int			(*func)();
 };
 
 #ifdef THROTTLING
@@ -1572,6 +1603,8 @@ int	throttle_can_connect(struct IN_ADDR *in);
 #endif
 
 #define VERIFY_OPERCOUNT(clnt,tag) { if (IRCstats.operators < 0) verify_opercount(clnt,tag); } while(0)
+
+#define MARK_AS_OFFICIAL_MODULE(modinf)	do { if (modinf && modinf->handle) ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);  } while(0)
 
 #endif /* __struct_include__ */
 

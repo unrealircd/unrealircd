@@ -57,6 +57,7 @@ ModuleHeader MOD_HEADER(m_tkl)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_tkl)(ModuleInfo *modinfo)
 {
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	/*
 	 * We call our add_Command crap here
 	*/
@@ -65,6 +66,7 @@ DLLFUNC int MOD_INIT(m_tkl)(ModuleInfo *modinfo)
 	add_Command(MSG_ZLINE, TOK_NONE, m_tzline, 3);
 	add_Command(MSG_KLINE, TOK_NONE, m_tkline, 3);
 	add_Command(MSG_GZLINE, TOK_NONE, m_gzline, 3);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
@@ -250,6 +252,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		NULL,		/*7  set_at */
 		"no reason"	/*8  reason */
 	};
+	struct tm *t;
 
 	if (parc == 1)
 	{
@@ -337,7 +340,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		if (secs < 0)
 		{
 			sendto_one(sptr,
-			    ":%s NOTICE %s :*** [error] Please specify a positive value for time",
+			    ":%s NOTICE %s :*** [error] The time you specified is out of range!",
 			    me.name, sptr->name);
 			return 0;
 		}
@@ -367,6 +370,17 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		} else if (parc > 2) {
 			tkllayer[8] = parv[2];
 		}
+		/* Blerghhh... */
+		i = atol(mo);
+		t = gmtime((TS *)&i);
+		if (!t)
+		{
+			sendto_one(sptr,
+				":%s NOTICE %s :*** [error] The time you specified is out of range",
+				me.name, sptr->name);
+			return 0;
+		}
+		
 		/* call the tkl layer .. */
 		m_tkl(&me, &me, 9, tkllayer);
 	}

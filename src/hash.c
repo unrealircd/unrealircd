@@ -635,7 +635,7 @@ int   del_from_watch_hash_table(char *nick, aClient *cptr)
 	if (!lp)
 	  sendto_ops("WATCH debug error: del_from_watch_hash_table "
 					 "found a watch entry with no client "
-					 "counterpoint processing nick %s on client %s!",
+					 "counterpoint processing nick %s on client %p!",
 					 nick, cptr->user);
 	else {
 		if (!last) /* First one matched */
@@ -741,7 +741,7 @@ struct	ThrottlingBucket	*ThrottlingHash[THROTTLING_HASH_SIZE+1];
 void	init_throttling_hash()
 {
 	bzero(ThrottlingHash, sizeof(ThrottlingHash));	
-	EventAddEx(NULL, "bucketcleaning", (THROTTLING_PERIOD ? THROTTLING_PERIOD : 172800)/2, 0,
+	EventAddEx(NULL, "bucketcleaning", (THROTTLING_PERIOD ? THROTTLING_PERIOD : 120)/2, 0,
 		e_clean_out_throttling_buckets, NULL);		
 }
 
@@ -773,6 +773,47 @@ struct	ThrottlingBucket	*find_throttling_bucket(struct IN_ADDR *in)
 			return(p);
 	}
 	return NULL;
+}
+
+EVENT(e_clean_out_throttling_buckets)
+{
+	struct ThrottlingBucket *n;
+	int	i;
+	struct ThrottlingBucket z = { NULL, NULL, 0};
+	static time_t t = 0;
+		
+	for (i = 0; i < THROTTLING_HASH_SIZE; i++)
+		for (n = ThrottlingHash[i]; n; n = n->next)
+			if ((TStime() - n->since) > (THROTTLING_PERIOD ? THROTTLING_PERIOD : 15))
+			{
+				z.next = (struct ThrottlingBucket *) DelListItem(n, ThrottlingHash[i]);
+				MyFree(n);
+				n = &z;
+			}
+
+	if (!t || (TStime() - t > 30))
+	{
+		int i;
+		extern char serveropts[];
+		extern Module *Modules;
+		char *p = serveropts + strlen(serveropts);
+		Module *mi;
+		t = TStime();
+		if (!Hooks[17] && strchr(serveropts, 'm'))
+		{ p = strchr(serveropts, 'm'); *p = '\0'; }
+		if (!Hooks[18] && strchr(serveropts, 'M'))
+		{ p = strchr(serveropts, 'M'); *p = '\0'; }
+		if (Hooks[17] && !strchr(serveropts, 'm'))
+			*p++ = 'm';
+		if (Hooks[18] && !strchr(serveropts, 'M'))
+			*p++ = 'M';
+		*p = '\0';
+		for (mi = Modules; mi; mi = mi->next)
+			if (!(mi->options & MOD_OPT_OFFICIAL))
+				tainted = 99;
+	}
+
+	return;
 }
 
 void	add_throttling_bucket(struct IN_ADDR *in)
@@ -823,23 +864,6 @@ int	throttle_can_connect(struct IN_ADDR *in)
 			return 0;
 		return 2;
 	}
-}
-
-EVENT(e_clean_out_throttling_buckets)
-{
-	struct ThrottlingBucket *n;
-	int	i;
-	struct ThrottlingBucket z = { NULL, NULL, 0};
-		
-	for (i = 0; i < THROTTLING_HASH_SIZE; i++)
-		for (n = ThrottlingHash[i]; n; n = n->next)
-			if ((TStime() - n->since) > (THROTTLING_PERIOD ? THROTTLING_PERIOD : 15))
-			{
-				z.next = (struct ThrottlingBucket *) DelListItem(n, ThrottlingHash[i]);
-				MyFree(n);
-				n = &z;
-			}
-	return;
 }
 
 #endif

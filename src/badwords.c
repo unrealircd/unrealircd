@@ -266,6 +266,9 @@ char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
 		}
 #endif
 	}
+
+	cleanstr[511] = '\0'; /* cutoff, just to be sure */
+
 	return (cleaned) ? cleanstr : str;
 }
 

@@ -67,6 +67,7 @@ ModuleHeader MOD_HEADER(m_svsnoop)
 DLLFUNC int MOD_INIT(m_svsnoop)(ModuleInfo *modinfo)
 {
 	add_Command(MSG_SVSNOOP, TOK_SVSNOOP, m_svsnoop, MAXPARA);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
@@ -102,7 +103,7 @@ int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[])
                         {
                                 if (MyClient(acptr) && IsAnOper(acptr))
                                 {
-                                        if (IsAnOper(acptr))
+                                        if (IsOper(acptr))
                                         {
                                                 IRCstats.operators--;
                                                 VERIFY_OPERCOUNT(acptr, "svsnoop");

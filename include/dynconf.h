@@ -79,6 +79,7 @@ struct zConfiguration {
 	unsigned dont_resolve:1;
 	unsigned use_ban_version:1;
 	unsigned mkpasswd_for_everyone:1;
+	unsigned allow_part_if_shunned:1;
 	unsigned use_egd;
 	long host_timeout;
 	int  host_retries;
@@ -122,6 +123,12 @@ struct zConfiguration {
 	int ident_connect_timeout;
 	int ident_read_timeout;
 	long default_bantime;
+	int who_limit;
+#ifdef NEWCHFLOODPROT
+	unsigned char modef_default_unsettime;
+	unsigned char modef_max_unsettime;
+#endif
+	long ban_version_tkl_time;
 	aNetwork network;
 };
 
@@ -204,3 +211,13 @@ extern aConfiguration iConf;
 #define CHANCMDPFX iConf.channel_command_prefix
 
 #define DEFAULT_BANTIME			iConf.default_bantime
+#define WHOLIMIT			iConf.who_limit
+
+#ifdef NEWCHFLOODPROT
+#define MODEF_DEFAULT_UNSETTIME	iConf.modef_default_unsettime
+#define MODEF_MAX_UNSETTIME		iConf.modef_max_unsettime
+#endif
+
+#define ALLOW_PART_IF_SHUNNED	iConf.allow_part_if_shunned
+
+#define BAN_VERSION_TKL_TIME	iConf.ban_version_tkl_time

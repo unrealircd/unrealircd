@@ -79,7 +79,6 @@ int i;
 		if (!Channelmode_Table[i].paracount && Channelmode_Table[i].flag)
 			*p++ = Channelmode_Table[i].flag;
 	*p = '\0';
-	printf("dect: %s/%s/%s/%s\n", extchmstr[0], extchmstr[1], extchmstr[2], extchmstr[3]);
 }
 
 

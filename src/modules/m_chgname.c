@@ -68,8 +68,8 @@ DLLFUNC int MOD_INIT(m_chgname)(ModuleInfo *modinfo)
 	*/
 	add_Command(MSG_CHGNAME, TOK_CHGNAME, m_chgname, 2);
         add_Command(MSG_SVSNAME, TOK_CHGNAME, m_chgname, 2);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
-	
 }
 
 /* Is first run when server is 100% ready */

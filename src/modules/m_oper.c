@@ -97,6 +97,7 @@ DLLFUNC int MOD_INIT(m_oper)(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_OPER, TOK_OPER, m_oper, MAXPARA);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
@@ -189,6 +190,24 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	if (i > 1)
 	{
 		int  old = (sptr->umodes & ALL_UMODES);
+
+		if (aconf->maxlogins && (count_oper_sessions(aconf->name) >= aconf->maxlogins))
+		{
+			sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);
+			sendto_one(sptr, ":%s NOTICE %s :Your maximum number of concurrent oper logins has been reached (%d)",
+				me.name, sptr->name, aconf->maxlogins);
+			sendto_realops
+				("Failed OPER attempt by %s (%s@%s) [maxlogins reached]",
+				parv[0], sptr->user->username, sptr->sockhost);
+			ircd_log(LOG_OPER, "OPER TOOMANYLOGINS (%s) by (%s!%s@%s)", name, parv[0],
+				sptr->user->username, sptr->sockhost);
+			sptr->since += 4;
+			return 0;
+		}
+
+		if (sptr->user->operlogin)
+			MyFree(sptr->user->operlogin);
+		sptr->user->operlogin = strdup(aconf->name);
 
 		/* Put in the right class */
 		if (sptr->class)

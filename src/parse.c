@@ -150,28 +150,7 @@ void ban_flooder(aClient *cptr)
 {
 	int i;
 	aClient *acptr;
-	char hostip[128], mo[100], mo2[100];
-	char *tkllayer[9] = {
-		me.name,	/*0  server.name */
-		"+",		/*1  +|- */
-		"z",		/*2  G   */
-		"*",		/*3  user */
-		NULL,		/*4  host */
-		NULL,
-		NULL,		/*6  expire_at */
-		NULL,		/*7  set_at */
-		NULL		/*8  reason */
-	};
 
-	strlcpy(hostip, Inet_ia2p(&cptr->ip), sizeof(hostip));
-
-	tkllayer[4] = hostip;
-	tkllayer[5] = me.name;
-	ircsprintf(mo, "%li", UNKNOWN_FLOOD_BANTIME + TStime());
-	ircsprintf(mo2, "%li", TStime());
-	tkllayer[6] = mo;
-	tkllayer[7] = mo2;
-	tkllayer[8] = "Flood from unknown connection";
 	/* This removes all unknown clients from the specified IP, it should prevent
  	 * duplicate notices about the flood */
 	for (i = 0; i <= LastSlot; i++)
@@ -187,7 +166,8 @@ void ban_flooder(aClient *cptr)
 #endif
 			exit_client(acptr, acptr, acptr, "Flood from unknown connection");
 	}
-	m_tkl(&me, &me, 9, tkllayer);
+
+	place_host_ban(cptr, BAN_ACT_ZLINE, "Flood from unknown connection", UNKNOWN_FLOOD_BANTIME);
 	return;
 }
 
@@ -468,13 +448,22 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 	if (cmptr->flags & M_ALIAS)
 		return (*cmptr->func) (cptr, from, i, para, cmptr->cmd);
 	else
-		return (*cmptr->func) (cptr, from, i, para);
+	{
+		if (!cmptr->overriders)
+			return (*cmptr->func) (cptr, from, i, para);
+		return (*cmptr->overridetail->func) (cmptr->overridetail, cptr, from, i, para);
+	}
 #else
 	then = clock();
 	if (cmptr->flags & M_ALIAS)
 		retval = (*cmptr->func) (cptr, from, i, para, cmptr->cmd);
 	else 
-		retval = (*cmptr->func) (cptr, from, i, para);
+	{
+		if (!cmptr->overriders)
+			retval = (*cmptr->func) (cptr, from, i, para);
+		else
+			retval = (*cmptr->overridetail->func) (cmptr->overridetail, cptr, from, i, para);
+	}
 	if (retval != FLUSH_BUFFER)
 	{
 		ticks = (clock() - then);

@@ -436,12 +436,12 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 			}
 			on_for = TStime() - sptr->firsttime;
 			if IsHidden(sptr)
-				ircd_log(LOG_CLIENT, "Disconnect - (%d:%d:%d) %s!%s@%s [VHOST %s]",
+				ircd_log(LOG_CLIENT, "Disconnect - (%ld:%ld:%ld) %s!%s@%s [VHOST %s]",
 					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
 					sptr->name, sptr->user->username,
 					sptr->user->realhost, sptr->user->virthost);
 			else
-				ircd_log(LOG_CLIENT, "Disconnect - (%d:%d:%d) %s!%s@%s",
+				ircd_log(LOG_CLIENT, "Disconnect - (%ld:%ld:%ld) %s!%s@%s",
 					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
 					sptr->name, sptr->user->username, sptr->user->realhost);
 		} else
@@ -719,7 +719,7 @@ char text[2048];
 
 	for (acptr = client; acptr; acptr = acptr->next)
 	{
-		if (IsAnOper(acptr) && !IsHideOper(acptr))
+		if (IsOper(acptr) && !IsHideOper(acptr))
 			counted++;
 	}
 	if (counted == IRCstats.operators)
@@ -729,7 +729,22 @@ char text[2048];
 	               "please report to UnrealIRCd team at http://bugs.unrealircd.org/",
 	               IRCstats.operators, counted, orig->name ? orig->name : "<null>",
 	               orig->srvptr ? orig->srvptr->name : "<null>", tag ? tag : "<null>");
+#ifdef DEBUGMODE
 	sendto_realops("%s", text);
+#endif
 	ircd_log(LOG_ERROR, "%s", text);
 	IRCstats.operators = counted;
+}
+
+/** Check if the specified hostname does not contain forbidden characters.
+ * RETURNS:
+ * 1 if ok, 0 if rejected.
+ */
+int valid_host(char *host)
+{
+char *p;
+	for (p=host; *p; p++)
+		if (!isalnum(*p) && (*p != '_') && (*p != '-') && (*p != '.') && (*p != ':'))
+			return 0;
+	return 1;
 }

@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
-<title>UnrealIRCd - 3.2 - Offical Documentation</title>
+<title>UnrealIRCd - 3.2 - Official Documentation</title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <style type="text/css">
  .block_section { font-size: 24; font-weight: bold; }
@@ -20,9 +20,9 @@
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
-  <b>Current Version:</b> 3.2 Beta18<br>
-  <b>Last doc update:</b> 2003-09-22</div>
-  <b>Head Coders:</b> Stskeeps / codemastr / Luke / McSkaf / Syzop<br>
+  <b>Current Version:</b> 3.2 Beta19<br>
+  <b>Last doc update:</b> 2003-11-23</div>
+  <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke / McSkaf<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
 <p>Due to the increasing complexity of UnrealIRCd3.2 We have switched to an easier 
@@ -87,7 +87,7 @@
   ---4.24. <a href="#denylinkblock">Deny Link Block -=- (D:Line / d:Line)</a><br>
   ---4.25. <a href="#denychannelblock">Deny Channel Block -=- (chrestrict.conf)</a><br>
   ---4.26. <a href="#allowchannelblock">Allow Channel Block</a><br>
-  ---4.27. <a href="#vhostblock">Vhost Block Block -=- (vhost.conf)</a><br>
+  ---4.27. <a href="#vhostblock">Vhost Block -=- (vhost.conf)</a><br>
   ---4.28. <a href="#badwordsblock">Badword Block -=- (badwords.conf)</a><br>
   ---4.29. <a href="#ulinesblock">Uline Block -=- (U:Line)</a><br>
   ---4.30. <a href="#linkblock">Link Block -=- (C/N/H:Lines)</a><br>
@@ -120,7 +120,7 @@
 <div class="desc">
 <p>In case you are upgrading from Unreal3.1.x to Unreal3.2 you'll notice the whole config file has changed,
    you may find it hard at first, but once you've switched you'll find it much better!</p>
-<p>Also don't forget to read section 3 about features, altough you know already some of them which are in 3.1.x there are several new features too!</p>
+<p>Also don't forget to read section 3 about features, although you know already some of them which are in 3.1.x there are several new features too!</p>
 <p>It's best not to mix/link 3.1.x with 3.2, but if you really want to, you need at least 3.1.4, but 3.1.5.1 is strongly recommended.</p></div>
 
 <p><font size="+2"><b>1.2 &#8211; Notes on upgrading between 3.2 versions</b></font><a name="notesonupgrade"></a><br>
@@ -223,13 +223,15 @@ Windows:<br>
    c - local connects<br>
    F - far connects (except from U-lined servers)<br>
    f - flood notices<br>
-   k - kill notices<br>
+   k - kill notices [*]<br>
    e - 'eyes' notices<br>
    j - 'junk' notices<br>
    v - vhost notices<br>
    G - gline/shun notices<br>
    n - nick change notices<br>
    q - deny nick (Q:line) rejection notices<br>
+   s - receives server notices [*]<br>
+   [*: this snomask is also allowed to non-ircops]<br>
    </p>
 <p>You can control which snomasks you automatically get (set::snomask-on-connect) and which you get
    on oper (set::snomask-on-oper, set::oper::snomask)</p></div>
@@ -243,7 +245,7 @@ Windows:<br>
    a file with default aliases for most commonly used services.</p></div>
    
 <p><font size="+2"><b>3.5 - Helpop</b></font><a name="feature_helpop"></a></p><div class="desc">
-<p>UnrealIRCd has a built-in help system accessable by /helpop. The /helpop command is completely user configurable via
+<p>UnrealIRCd has a built-in help system accessible by /helpop. The /helpop command is completely user configurable via
    the help block in the configuration file. Additionally, a help.conf is included which contains some basic help for
    all commands.<br>
    For example <i>/helpop chmodes</i> gives you a overview of all channel modes UnrealIRCd has.<br>
@@ -310,11 +312,11 @@ There are also some channel modes which can be very effective against floods. To
 As of beta18 there's also a much more advanced channelmode +f...<br>
 <b>Channel mode f</b><br>
 Instead of using scripts and bots to protect against channel floods it is now build into the ircd.<br>
-This is an example +f mode: <i>*** Blah sets mode: +f [10j]:15</i><br>
+An example +f mode is: <i>*** Blah sets mode: +f [10j]:15</i><br>
 This means 10 joins per 15 seconds are allowed in the channel, if the limit is hit, the channel will be set +i automatically.<br>
 The following floodtypes are available:<br>
 <table border=1 cellpadding=3 cellspacing=1>
-<tr><td>mode:</td><td>name:</td><td>default action:</td><td>other avail. actions:</td><td>comments</td></tr>
+<tr><td>type:</td><td>name:</td><td>default action:</td><td>other avail. actions:</td><td>comments</td></tr>
 <tr><td>c</td><td>CTCPs</td><td>auto +C</td><td>m, M</td><td>&nbsp;</td></tr>
 <tr><td>j</td><td>joins</td><td>auto +i</td><td>R</td><td>&nbsp;</td></tr>
 <tr><td>k</td><td>knocks</td><td>auto +K</td><td>&nbsp;</td><td><font size=-1>(counted for local clients only)</font></td></tr>
@@ -355,13 +357,38 @@ Example:
 <font color=green>*** server1.test.net sets mode: +N</font>
 </pre>
 
+In fact, it can get even more advanced/complicated:<br>
 Instead of the default action, you can for some floodtypes specify another one, for example: <i>+f [20j#R,50m#M]:15</i><br>
 This will set the channel +R if the joinlimit is reached (&gt;20 joins in 15 seconds),
 and will set the channel +M if the msg limit is reached (&gt;50 messages in 15 seconds).<br>
-Look at the table above to see more options.<br>
+<br>
+There's also a &quot;remove mode after X minutes&quot; feature: <i>+f [20j#R5]:15</i> will set the channel +R if the 
+limit is reached and will set -R after 5 minutes.<br>
+A server can have a default unsettime (set::modef-default-unsettime), so if you type <i>+f [20j]:15</i> it could get 
+transformed into <i>+f [20j#i10]:15</i>, it's just a default, you can still set [20j#i2]:15 or something like that, 
+and you can also disable the remove-chanmode completely by doing a +f [20j#i0]:15 (an explicit 0).<br>
 <br>
 The old +f mode (msgflood per-user) is also still available as 't', +f 10:6 is now called +f [10t]:6 and 
-+f *20:10 is now +f [20t#b]:10. Currently the ircd will automatically convert old +f mode types to new ones.<br>
++f *20:10 is now +f [20t#b]:10. Currently the ircd will automatically convert old +f mode types to new ones. 
+Note that there's no unsettime feature available for 't' bans ([20t#b30]:15 does not work).<br>
+<br>
+What the best +f mode is heavily depends on the channel... how many users does it have? do you have a game that makes users 
+msg a lot (eg: trivia) or do users often use popups? is it some kind of mainchannel or in auto-join? etc..<br>
+There's no perfect channelmode +f that is good for all channels, but to get you started have a look at the next example and modify 
+it to suit your needs:<br>
++f [30j#i10,40m#m10,7c#C15,10n#N15,30k#K10]:15<br>
+30 joins per 15 seconds, if limit is reached set channel +i for 10 minutes<br>
+40 messages per 15 seconds, if limit is reached set channel +m for 10 minutes<br>
+7 ctcps per 15 seconds, if limit is reached set channel +C for 15 minutes<br>
+10 nickchanges per 15 seconds, if limit is reached set channel +N for 15 minutes<br>
+30 knocks per 15 seconds, if limit is reached set channel +K for 5 minutes<br>
+
+If it's some kind of large user channel (&gt;75 users?) you will want to increase the join sensitivity (to eg: 50) and the 
+message limit as well (to eg: 60 or 75).<br>
+Especially the remove-mode times are a matter of taste.. you should think like.. what if no op is available to handle 
+the situation, do I want to have the channel locked for like 15 minutes (=not nice for users) or 5 minutes (=likely the flooders 
+will just wait 5m and flood again). It also depends on the floodtype, users unable to join (+i) or speak (+m) is worse than 
+having them unable to change their nick (+N) or send ctcps to the channel (+C) so you might want to use different removal times.
 </p></div>
 
 <p><font size="+2"><b>3.13 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
@@ -414,7 +441,7 @@ The old +f mode (msgflood per-user) is also still available as 't', +f 10:6 is n
        &nbsp;&nbsp;&nbsp;&nbsp;comment */<br>
  </p>
 <p>Now that you know how it works, create your unrealircd.conf from scratch or
-   copy doc/example.conf and start editting. It's recommended to walk step by step
+   copy doc/example.conf and start editing. It's recommended to walk step by step
    trough all block types and use this manual as a reference.</p>
 <p></p></div>
 <p><font class="block_section">4.2 - </font><font class="block_name">Me Block</font>
@@ -454,7 +481,7 @@ admin {
 <p> </p>
 <p>The admin block defines the text displayed in a /admin request. You can specify 
   as many lines as you want and they can contain whatever information you 
-  choose, but it is standard to include the admin's nickname and email address 
+  choose, but it is standard to include the admins nickname and email address 
   at a minimum. Other information may include any other contact information you 
   wish to give.</p>
 <p>Example:<br>
@@ -487,7 +514,7 @@ class &lt;name&gt; {
 <p><b>pingfreq</b> is the number of seconds between PINGs from the server</p>
 <p><b>connfreq</b> is used only for servers and is the number of seconds between connection attempts if autoconnect is enabled</p>
 <p><b>maxclients</b> specifies the maximum (total) number of clients/servers which can be in this class</p>
-<p><b>sendq</b> specifies the amount of data which can be in the send queue (very high for servers with low bandwith, medium for clients)</p>
+<p><b>sendq</b> specifies the amount of data which can be in the send queue (very high for servers with low bandwidth, medium for clients)</p>
 <p><b>recvq</b> specifies the amount of data which can be in the receive queue and is used for flood control 
  (this only applies to normal users, try experimenting with values 3000-8000, 8000 is the default).</p>
 <p>Examples:<br>
@@ -541,6 +568,9 @@ allow {
    *@*.wanadoo.fr (only from wanadoo.fr).</p>
 <p><b>password</b> (optional)<br>
    Require a connect password. You can also specify an password encryption method here.
+</p>
+<p><b>class</b><br>
+   Specifies the class name that connections using this allow block will be placed into.
 </p>
 <p><b>maxperip</b> (optional, but recommended)<br>
    Allows you to specify how many connections per IP are allowed to this server (ex: maxperip 4;).
@@ -600,7 +630,7 @@ listen &lt;ip:port&gt; {
   Like [::1]:6667 (listen at localhost on port 6667). If you are using IPv6 and you 
   want to listen at a specific IPv4 addr you need to use ::ffff:ipv4ip. For example: 
   [::ffff:203.123.67.1]:6667 which will listen at 203.123.67.1 on port 6667. 
-  Ofcourse you can also just use *.</p>
+  Of course you can also just use *.</p>
 <p><b>options block</b> (optional)<br>
   You can specify special options for this port if you want, valid options are:<br>
 <table border="0">
@@ -644,19 +674,20 @@ listen *:6601 {
 	};
 	swhois &lt;whois info&gt;;
 	snomask &lt;snomask&gt;;
+	maxlogins &lt;num&gt;;
 };
 </pre></p>
-<p>The oper block allows you to assign IRC Operators for your server. The oper:: 
-  specifies the login name for the /oper. The oper::from::userhost is a user@host 
+<p>The oper block allows you to assign IRC Operators for your server. The <b>oper::</b> 
+  specifies the login name for the /oper. The <b>oper::from::userhost</b> is a user@host 
   mask that the user must match, you can specify more than one hostmask by creating 
-  more than one oper::from::userhost. The oper::password is the password the user 
+  more than one oper::from::userhost. The <b>oper::password</b> is the password the user 
   must specify, oper::password:: allows you to specify an authentication method 
   for this password, valid auth-types are crypt, md5, and sha1, ripemd-160. If 
   you want to use a plain-text password leave this sub-block out.</p>
 <p>Please note that BOTH the login name and password are case sensitive</p>
-<p>The oper::class directive specifies the name of a preexisting (appears before 
+<p>The <b>oper::class</b> directive specifies the name of a preexisting (appears before 
   this in the config file) class name that the oper block will use.</p>
-<p>The oper::flags directive has two formats. If you wish to use the old style 
+<p>The <b>oper::flags</b> directive has two formats. If you wish to use the old style 
   oper flags i.e., OAa, you use the flags &lt;flags&gt; method, if you want to 
   use the new style,i.e., services-admin, then you use the flags { &lt;flag&gt;; 
   } method. Below is a list of all the flags (in both formats) and what they do.</p>
@@ -797,7 +828,7 @@ listen *:6601 {
     <td>Can use <a href="#operoverride">OperOverride</a></td>
   </tr>
 </table>
-<p>Certin flags give you other flags by default:</p>
+<p>Certain flags give you other flags by default:</p>
 <table width="59%" border="1">
   <tr> 
     <td width="19%"><b>local</b></td>
@@ -890,11 +921,36 @@ listen *:6601 {
     <td>can_globalnotice</td>
     <td>can_globalnotice</td>
   </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>global</td>
+    <td>global</td>
+    <td>global</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>admin</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>services-admin</td>
+  </tr>
 </table>
-<p>The oper::swhois directive allows you to add an extra line to an opers whois 
-  information.</p>
-<p>The oper::snomask directive allows you to preset an oper's server notice mask 
-  on oper up. For a list of available SNOMASKs, see <a href="#feature_snomasks">Section 3.4</a><br>
+<p>The <b>oper::swhois</b> directive allows you to add an extra line to an opers whois 
+  information. <font color=blue>[optional]</font></p>
+<p>The <b>oper::snomask</b> directive allows you to preset an oper's server notice mask 
+  on oper up. For a list of available SNOMASKs, see <a href="#feature_snomasks">Section 3.3</a> 
+  <font color=blue>[optional]</font></p>
+<p>The <b>oper::maxlogins</b> allows you to restrict the number of concurrent oper logins from this host,
+   for example if you set it to 1 then only 1 person can be oper'ed via this block at any time. 
+   <font color=blue>[optional]</font></p>
 
 <p>Example:<br>
 <pre>
@@ -907,6 +963,11 @@ oper bobsmith {
 	password "f00";
 	flags {
 		netadmin;
+		can_gkline;
+		can_gzline;
+		can_zline;
+		can_restart;
+		can_die;
 		global;
 	};
 	swhois "Example of a whois mask";
@@ -1052,7 +1113,8 @@ tld {
   you to specify a channel that this user will be forced to join on connect. If 
   this exists it will override the default auto join channel.
   The <b>tld::options</b> block allows you to define additional requirements,
-  currently only tld::options::ssl exists.</p>
+  currently only tld::options::ssl which only displays the file for SSL users, and
+  tld::options::remote which only displays the file for remote users, exists.</p>
 <p>TLD entries are matched upside down</p>
 <p>Example:<br>
 <pre>
@@ -1172,17 +1234,31 @@ ban realname {
 ban version {
 	mask &lt;version-mask&gt;;
 	reason &lt;reason-for-ban&gt;;
+	action [kill|tempshun|shun|kline|zline|gline|gzline];
 };</pre></p>
-<p>The ban version block allows you to ban a client based on the IRC client software
-  they use. This makes use of the clients CTCP version reply. Therefore if a client does not   send out a CTCP version, the ban will not work. This feature is intended to allow you to block   malicious scripts. The ban::mask specifies the version which should be banned. 
-  The mask may contain wildcards. The ban::reason specifies the reason why this 
-  ban is being placed.</p>
+<p>The ban version block allows you to ban a client based on the IRC client software they use. 
+  This makes use of the clients CTCP version reply. Therefore if a client does not 
+  send out a CTCP version, the ban will not work. This feature is intended to allow you to block 
+  malicious scripts. The <b>ban::mask</b> specifies the version which should be banned. 
+  The mask may contain wildcards. The <b>ban::reason</b> specifies the reason why this 
+  ban is being placed. You can also specify <b>ban::action</b>, <i>kill</i> is the default, 
+  <i>tempshun</i> will shun the specific user connection only and would work very effective against 
+  zombies/bots at dynamic IPs because it won't affect innocent users. <i>shun/kline/zline/gline/gzline</i> 
+  will place a ban of that type on the ip (*@IPADDR), the duration of these bans can be configured 
+  with set::ban-version-tkl-time and defaults to 1 day.</p>
 <p>Example:<br>
 <pre>
 ban version {
 	mask "*SomeLameScript*";
 	reason "SomeLameScript contains backdoors";
-};</pre></p>
+};</pre>
+<pre>
+ban version {
+	mask "*w00tZombie*";
+	reason "I hate those hundreds of zombies";
+	action zline;
+};</pre>
+</p>
 <p></p></div>
 <p><font class="block_section">4.19 - </font><font class="block_name">Ban Exceptions Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the E:Line)</font><a name="banexceptionblock"></a><div class="desc">
@@ -1396,10 +1472,10 @@ vhost {
   /vhost. The vhost::from::userhost contains a user@host that the user must match 
   to be eligible for the vhost. You may specify more than one hostmask. The vhost::login 
   in the login name the user must enter and vhost::password is the password that 
-  must be entered. Lastly vhost::password:: allows you to specify the type of 
+  must be entered. The vhost::password:: allows you to specify the type of 
   authentication used by this item. The currently supported authentication types 
-  are crypt, md5, and sha1, ripemd-160. vhost::swhois allows you to add an extra 
-  line to a users whois, exactly as it does in the Oper Block oper::svhost.</p>
+  are crypt, md5, and sha1, ripemd-160. Lastly vhost::swhois allows you to add an extra 
+  line to a users whois, exactly as it does in the Oper Block oper::swhois.</p>
 <p>Example:<br>
 <pre>
 vhost {
@@ -1492,10 +1568,10 @@ link &lt;server-name&gt; {
 </p>
 <p><b>hostname</b><br>
   The remote host or IP of the remote server. This is used for both connecting AND for 
-  authentication/verification on the incomming side. Some examples:<br>
+  authentication/verification on the incoming side. Some examples:<br>
   <table border="0">
   <tr><td><i>1.2.3.4</i></td><td> normal IP</td></tr>
-  <tr><td><i>hub.blah.com</i></td><td> host: only for outgoing, cannot accept _incomming_ connections unless 
+  <tr><td><i>hub.blah.com</i></td><td> host: only for outgoing, cannot accept _incoming_ connections unless 
   link::options::nohostcheck is present</td></tr>
   <tr><td><i>*</i></td><td> cannot connect TO but will allow a server connection (with correct password) from everywhere</td></tr>
   <tr><td><i>::ffff:1.2.3.4</i></td><td> for linking ipv6 to ipv4.</td></tr>
@@ -1509,10 +1585,10 @@ link &lt;server-name&gt; {
   Port to connect to (at which the remote server is listening).
  </p>
 <p><b>password-connect</b><br>
-  The password used for connecting to the remote server, must be plaintext.
+  The password used for connecting to the remote server, must be plain-text.
  </p>
 <p><b>password-receive</b><br>
-  The password used for validating incomming links, can be encrypted (valid methods 
+  The password used for validating incoming links, can be encrypted (valid methods 
   are crypt, md5, sha1,  ripemd-160). You can leave the auth-type parameter out to
   just use plain-text. Often this password is the same as your password-connect.
 </p>
@@ -1531,7 +1607,7 @@ link &lt;server-name&gt; {
   (number of hops) this server may have beneath it.
 </p>
 <p><b>class</b><br>
-  The class this server is put into, often a seperate server class is used for this.
+  The class this server is put into, often a separate server class is used for this.
 </p>
 <p><b>compression-level</b> (optional)<br>
   Specifies the compression level (1-9) for this link. Only used if link::options::zip is set.
@@ -1695,7 +1771,7 @@ set {
 		global globalop.mynet.com;
 	};
 };</pre></p>
-<p>Now if you wanted to make the set statements seperate, say you wanted to set 
+<p>Now if you wanted to make the set statements separate, say you wanted to set 
   your options in a single line.<br>
   Example:<br>
   set { options { hide-ulines; no-stealth; }; };<br>
@@ -1720,14 +1796,17 @@ set {
 <p><font class="set">set::restrict-channelmodes &lt;modes&gt;</font><br>
   Restrict users to set/unset the channelmodes listed here (don't use + or -).<br>
   For example you can set +G in modes-on-join and G in restrict-channelmodes,
-  that way you can force all (new) channels to be +G and unable to do -G.</p>
+  that way you can force all (new) channels to be +G and unable to do -G.<br>
+  NOTE: it may still be possible to use these channelmodes trough services 
+  by using MLOCK. Unfortunately we can't do much about that, you would have
+  to ask the services coders to implement a restrict-channelmodes feature too.</p>
 <p><font class="set">set::auto-join &lt;channels&gt;;</font><br>
   The channel(s) a user will be forced to join at connection. To specify more 
-  than one channel use a comma seperated list.<br>
+  than one channel use a comma separated list.<br>
   [Note: don't forget to add quotes, like: auto-join "#chan";]</p>
 <p><font class="set">set::oper-auto-join &lt;channels&gt;;</font><br>
   The channel(s) a user will be forced to join when they /oper. To specify more 
-  than one channel use a comma seperated list.<br>
+  than one channel use a comma separated list.<br>
   [Note: don't forget to add quotes, like: oper-auto-join "#chan";]</p>
 <p><font class="set">set::anti-spam-quit-message-time &lt;timevalue&gt;;</font><br>
   A time value specifying the length of time a user must be connected for before 
@@ -1741,10 +1820,13 @@ set {
   Sets a static quit message that will be sent whenever a client logs off the 
   network. This eliminates the need for anti-spam-quit-message-time, as well as 
   the set::prefix-quit. It will NOT replace ERRORS with the static-quit message.</p>
+<p><font class="set">set::who-limit &lt;limit&gt;;</font><br>
+  Sets the limit for the maximum number of matches that will be returned for a /who.
+  If this option is left out, no limit is enforced.</p>
 <p><font class="set">set::oper-only-stats &lt;stats-list&gt;;</font><br>
-  Specifies a list of stats flags with no seperators that defines stats flags 
+  Specifies a list of stats flags with no separators that defines stats flags 
   only opers can use. Leave this value out to allow users to use all flags, or 
-  specify * for users to be able to use no flags. Only short operflags may be specifed
+  specify * for users to be able to use no flags. Only short operflags may be specified
   here.</p>
 <p><font class="set">set::oper-only-stats {&lt;stats-flag&gt;; &lt;stats-flag&gt;;};</font><br>
   Specifies a list of stats flags that can only be used by opers. This only works with long
@@ -1773,12 +1855,14 @@ set {
   If present notices showing "ident request", "hostname lookup", 
   etc. will be displayed when a user connects.</p>
 <p><font class="set">set::options::dont-resolve;</font><br>
-  If present hosts of incomming users are not resolved, can be useful if many of your
+  If present hosts of incoming users are not resolved, can be useful if many of your
   users don't have a host to speed up connecting.<br>
   Note that since no resolving is done you also can't have host based allow blocks.</p>
 <p><font class="set">set::options::mkpasswd-for-everyone;</font><br>
   Makes it so the /mkpasswd can be used by anyone instead of oper-only, usage of the command 
   by non-opers is sent to the EYES snomask.</p>
+<p><font class="set">set::options::allow-part-if-shunned;</font><br>
+  Allow shunned user to use /part.</p>
 <p><font class="set">set::dns::timeout &lt;timevalue&gt;;</font><br>
   A time value specifying the length of time a DNS server has to respond before 
   a timeout. A time value is a numeric string with d meaning days, h meaning hours, 
@@ -1871,6 +1955,15 @@ set {
  <p><font class="set">set::default-bantime &lt;time&gt;</font><br>
   Default bantime when doing /kline, /gline, /zline, /shun, etc without time parameter 
   (like /gline *@some.nasty.isp), the default is permanent (0). Example: <i>default-bantime 90d;</i></p>
+ <p><font class="set">set::modef-default-unsettime &lt;value&gt;</font><br>
+  For channelmode +f you can specify a default unsettime, if you specify 10 for example then 
+  +f [5j]:15 will be transformed to [5j#i10]:15. The default is no default unsettime.</p>
+ <p><font class="set">set::modef-max-unsettime &lt;value&gt;</font><br>
+  The maximum amount of minutes for a mode +f unsettime (in +f [5j#i&lt;TIME&gt;]:15), this is a 
+  value between 0 and 255. The default is 60 (= 1 hour).</p>
+ <p><font class="set">set::ban-version-tkl-time &lt;value&gt;</font><br>
+  If you specify an 'action' like zline/gline/etc in ban version, then you can specify here 
+  how long the ip should be banned, the default is 86400 (1 day).</p>
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; Additional Files<a name="addtlfiles"></a>
   </font></b></p><div class="desc">
@@ -1917,7 +2010,7 @@ set {
   <tr> 
     <td><div align="center">b &lt;nick!user@host&gt;<br>
       </div></td>
-    <td>Bans the givin user from the channel</td>
+    <td>Bans the given user from the channel</td>
   </tr>
   <tr> 
     <td><div align="center">c</div></td>
@@ -2113,10 +2206,6 @@ set {
     <td>Makes it so you can not receive channel PRIVMSGs</td>
   </tr>
   <tr> 
-    <td><div align="center">k</div></td>
-    <td>Can see all the /kill commands executed</td>
-  </tr>
-  <tr> 
     <td><div align="center">N</div></td>
     <td>Network Administrator (Set in Oper Block)</td>
   </tr>
@@ -2151,6 +2240,10 @@ set {
   <tr>
     <td><div align="center">z</div></td>
     <td>Indicates that you are an SSL client</td>
+  </tr>
+  <tr>
+    <td><div align="center">T</div></td>
+    <td>Prevents you from receiving CTCPs</td>
   </tr>
 </table>
 <p></p></div>
@@ -2202,7 +2295,7 @@ to get more information on a command.</p>
   </tr>
   <tr> 
     <td height="39">cycle &lt;channel1, channel2, ...&gt;</td>
-    <td>Cycles the given channel(s). This command is equivilent
+    <td>Cycles the given channel(s). This command is equivalent
       to sending a PART then a JOIN command.</td>
     <td>All</td>
   </tr>
@@ -2346,7 +2439,7 @@ to get more information on a command.</p>
   </tr>
   <tr> 
     <td height="39">credits</td>
-    <td>Lists credits for everyone that has helped create UnrealIRCD<br></td>
+    <td>Lists credits for everyone that has helped create UnrealIRCd<br></td>
     <td>All</td>
   </tr>
   <tr> 
@@ -2380,7 +2473,7 @@ to get more information on a command.</p>
   <tr> 
     <td height="39">dns &lt;option&gt;</td>
     <td>Returns information about the IRC server's DNS cache.
-        Note, since most clients have a builtin DNS command,
+        Note, since most clients have a built-in DNS command,
         you will most likely need to use /raw DNS to use this.
         Opers may specify an l as the first parameter to the command
         to receive a list of entries in the DNS cache.</td>
@@ -2521,7 +2614,7 @@ to get more information on a command.</p>
   </tr>
   <tr> 
     <td height="39">connect &lt;server&gt; &lt;port&gt; &lt;server&gt;</td>
-    <td>If only one server is givin, it will attempt to connect the server you 
+    <td>If only one server is given, it will attempt to connect the server you 
       are ON to the given server. If 2 servers are given, it will attempt to connect 
       the 2 servers together. Put the hub server as the first, and the leaf server 
       as the second.<br></td>

@@ -94,7 +94,7 @@ void make_mode_str(aChannel *, long, long, int,
 int do_mode_char(aChannel *, long, char, char *,
 	u_int, aClient *,
     u_int *, char[MAXMODEPARAMS][MODEBUFLEN + 3], char);
-void do_mode(aChannel *, aClient *, aClient *, int, char **, int,
+void do_mode(aChannel *, aClient *, aClient *, int, char **, time_t,
     int);
 void bounce_mode(aChannel *, aClient *, int, char **);
 
@@ -103,13 +103,18 @@ void sub1_from_channel(aChannel *);
 void clean_channelname(char *);
 void del_invite(aClient *, aChannel *);
 
+#ifdef NEWCHFLOODPROT
+void chanfloodtimer_del(aChannel *chptr, char mflag, long mbit);
+void chanfloodtimer_stopchantimers(aChannel *chptr);
+#endif
+
 static char *PartFmt = ":%s PART %s";
 static char *PartFmt2 = ":%s PART %s :%s";
 /*
  * some buffers for rebuilding channel/nick lists with ,'s
  */
 static char nickbuf[BUFSIZE], buf[BUFSIZE];
-char modebuf[MAXMODEPARAMS*2+1], parabuf[504];
+char modebuf[BUFSIZE], parabuf[BUFSIZE];
 #include "sjoin.h"
 
 typedef struct {
@@ -410,6 +415,8 @@ int add_exbanid(aClient *cptr, aChannel *chptr, char *banid)
 			}
 			else
 			{
+			  /* Temp workaround added in b19. -- Syzop */
+			  if (!mycmp(ban->banstr, banid) || (!strchr(banid, '\\') && !strchr(ban->banstr, '\\')))
 #ifdef NAZIISH_CHBAN_HANDLING
 				if (!match(ban->banstr, banid) ||
 				    !match(banid, ban->banstr))
@@ -483,6 +490,8 @@ int add_banid(aClient *cptr, aChannel *chptr, char *banid)
 			}
 			else
 			{
+			  /* Temp workaround added in b19. -- Syzop */
+			  if (!mycmp(ban->banstr, banid) || (!strchr(banid, '\\') && !strchr(ban->banstr, '\\')))
 #ifdef NAZIISH_CHBAN_HANDLING /* why does it do this?? */
 				if (!match(ban->banstr, banid) ||
 				    !match(banid, ban->banstr))
@@ -857,16 +866,24 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 }
 
 /* [just a helper for channel_modef_string()] */
-static inline char *chmodefstrhelper(char *buf, char t, char tdef, unsigned short l, unsigned char a)
+static inline char *chmodefstrhelper(char *buf, char t, char tdef, unsigned short l, unsigned char a, unsigned char r)
 {
 char *p;
+char tmpbuf[16], *p2 = tmpbuf;
+
 	ircsprintf(buf, "%hd", l);
 	p = buf + strlen(buf);
 	*p++ = t;
-	if (a && (a != tdef))
+	if (a && ((a != tdef) || r))
 	{
 		*p++ = '#';
 		*p++ = a;
+		if (r)
+		{
+			sprintf(tmpbuf, "%hd", (short)r);
+			while ((*p = *p2++))
+				p++;
+		}
 	}
 	*p++ = ',';
 	return p;
@@ -881,17 +898,17 @@ char *p = retbuf;
 
 	/* (alphabetized) */
 	if (x->l[FLD_CTCP])
-		p = chmodefstrhelper(p, 'c', 'C', x->l[FLD_CTCP], x->a[FLD_CTCP]);
+		p = chmodefstrhelper(p, 'c', 'C', x->l[FLD_CTCP], x->a[FLD_CTCP], x->r[FLD_CTCP]);
 	if (x->l[FLD_JOIN])
-		p = chmodefstrhelper(p, 'j', 'i', x->l[FLD_JOIN], x->a[FLD_JOIN]);
+		p = chmodefstrhelper(p, 'j', 'i', x->l[FLD_JOIN], x->a[FLD_JOIN], x->r[FLD_JOIN]);
 	if (x->l[FLD_KNOCK])
-		p = chmodefstrhelper(p, 'k', 'K', x->l[FLD_KNOCK], x->a[FLD_KNOCK]);
+		p = chmodefstrhelper(p, 'k', 'K', x->l[FLD_KNOCK], x->a[FLD_KNOCK], x->r[FLD_KNOCK]);
 	if (x->l[FLD_MSG])
-		p = chmodefstrhelper(p, 'm', 'm', x->l[FLD_MSG], x->a[FLD_MSG]);
+		p = chmodefstrhelper(p, 'm', 'm', x->l[FLD_MSG], x->a[FLD_MSG], x->r[FLD_MSG]);
 	if (x->l[FLD_NICK])
-		p = chmodefstrhelper(p, 'n', 'N', x->l[FLD_NICK], x->a[FLD_NICK]);
+		p = chmodefstrhelper(p, 'n', 'N', x->l[FLD_NICK], x->a[FLD_NICK], x->r[FLD_NICK]);
 	if (x->l[FLD_TEXT])
-		p = chmodefstrhelper(p, 't', '\0', x->l[FLD_TEXT], x->a[FLD_TEXT]);
+		p = chmodefstrhelper(p, 't', '\0', x->l[FLD_TEXT], x->a[FLD_TEXT], x->r[FLD_TEXT]);
 
 	if (*(p - 1) == ',')
 		p--;
@@ -1445,7 +1462,7 @@ void bounce_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[])
  *	User or server is authorized to do the mode.  This takes care of
  * setting the mode and relaying it to other users and servers.
  */
-void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], int sendts, int samode)
+void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode)
 {
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
 	int  pcount;
@@ -1912,26 +1929,33 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				{
 				case MODE_NOCTCP:
 					chptr->mode.floodprot->c[FLD_CTCP] = 0;
+					chanfloodtimer_del(chptr, 'C', MODE_NOCTCP);
 					break;
 				case MODE_NONICKCHANGE:
 					chptr->mode.floodprot->c[FLD_NICK] = 0;
+					chanfloodtimer_del(chptr, 'N', MODE_NONICKCHANGE);
 					break;
 				case MODE_MODERATED:
 					chptr->mode.floodprot->c[FLD_MSG] = 0;
 					chptr->mode.floodprot->c[FLD_CTCP] = 0;
+					chanfloodtimer_del(chptr, 'm', MODE_MODERATED);
 					break;
 				case MODE_NOKNOCK:
 					chptr->mode.floodprot->c[FLD_KNOCK] = 0;
+					chanfloodtimer_del(chptr, 'K', MODE_NOKNOCK);
 					break;
 				case MODE_INVITEONLY:
 					chptr->mode.floodprot->c[FLD_JOIN] = 0;
+					chanfloodtimer_del(chptr, 'i', MODE_INVITEONLY);
 					break;
 				case MODE_MODREG:
 					chptr->mode.floodprot->c[FLD_MSG] = 0;
 					chptr->mode.floodprot->c[FLD_CTCP] = 0;
+					chanfloodtimer_del(chptr, 'M', MODE_MODREG);
 					break;
 				case MODE_RGSTRONLY:
 					chptr->mode.floodprot->c[FLD_JOIN] = 0;
+					chanfloodtimer_del(chptr, 'R', MODE_RGSTRONLY);
 					break;
 				default:
 					break;
@@ -2172,6 +2196,10 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  }
 		  retval = 1;
 		  tmpstr = clean_ban_mask(param);
+		  if (BadPtr(tmpstr))
+		     break; /* ignore ban, but eat param */
+		  if (MyClient(cptr) && (*tmpstr == '~') && (what == MODE_ADD))
+		     break; /* deny for now.. */
 		  /* For bounce, we don't really need to worry whether
 		   * or not it exists on our server.  We'll just always
 		   * bounce it. */
@@ -2191,6 +2219,10 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  }
 		  retval = 1;
 		  tmpstr = clean_ban_mask(param);
+		  if (BadPtr(tmpstr))
+		     break; /* ignore except, but eat param */
+		  if (MyClient(cptr) && (*tmpstr == '~') && (what == MODE_ADD))
+		     break; /* deny for now.. */
 		  /* For bounce, we don't really need to worry whether
 		   * or not it exists on our server.  We'll just always
 		   * bounce it. */
@@ -2216,7 +2248,6 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  break;
 		  }
 
-		linkok:
 		  if (!chptr->mode.limit && what == MODE_ADD)
 		  {
 			  sendto_one(cptr,
@@ -2224,6 +2255,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
 			  break;
 		  }
+		linkok:
 		  retval = 1;
 		  for (x = 0; x < *pcount; x++)
 		  {
@@ -2238,20 +2270,10 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  break;
 		  if (what == MODE_ADD)
 		  {
+		      char *tmp;
 			  if (!param || *pcount >= MAXMODEPARAMS)
 			  {
 				  retval = 0;
-				  break;
-			  }
-			  if (!stricmp(param, chptr->mode.link))
-				break;
-			  if (!stricmp(param, chptr->chname))
-			  {
-				  if (MyClient(cptr))
-					  sendto_one(cptr,
-					      ":%s %s %s :*** %s cannot be linked to itself.",
-					      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name,
-					      chptr->chname);
 				  break;
 			  }
 			  if (strchr(param, ','))
@@ -2270,20 +2292,34 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 					      me.name, cptr->name, param);
 				  break;
 			  }
+			  /* Now make it a clean channelname.. This has to be done before all checking
+			   * because it could have been changed later to something disallowed (like
+			   * self-linking). -- Syzop
+			   */
+			  strlcpy(tmpbuf, param, CHANNELLEN+1);
+			  clean_channelname(tmpbuf);
+			  /* don't allow linking to local chans either.. */
+			  if ((tmp = strchr(tmpbuf, ':')))
+				*tmp = '\0';
+
+			  if (!stricmp(tmpbuf, chptr->mode.link))
+				break;
+			  if (!stricmp(tmpbuf, chptr->chname))
+			  {
+				  if (MyClient(cptr))
+					  sendto_one(cptr,
+					      ":%s %s %s :*** %s cannot be linked to itself.",
+					      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name,
+					      chptr->chname);
+				  break;
+			  }
 			  if (!bounce)	/* don't do the mode at all. */
 			  {
-				  char *tmp;
-				  clean_channelname(param);
-				  /* This may same like duplicate code, but it's not. -- Syzop */
-				  if ((tmp = strchr(param, ':')))
-					*tmp = '\0';
-				  if (strlen(param) > CHANNELLEN)
-				    param[CHANNELLEN] = '\0';
-
-				  strncpyzt(chptr->mode.link, param,
+				  strncpyzt(chptr->mode.link, tmpbuf,
 				      sizeof(chptr->mode.link));
-			  }
-			  tmpstr = param;
+			      tmpstr = tmpbuf;
+			  } else
+			      tmpstr = param; /* Use the original value if bounce?? -- Syzop */
 		  }
 		  else
 		  {
@@ -2486,6 +2522,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 					char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
 					int v, i;
 					unsigned short warnings = 0, breakit;
+					unsigned char r;
 
 					/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
 					strlcpy(xbuf, param, sizeof(xbuf));
@@ -2534,12 +2571,24 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 						}
 						p++;
 						a = '\0';
+						r = MyClient(cptr) ? MODEF_DEFAULT_UNSETTIME : 0;
 						if (*p != '\0')
 						{
 							if (*p == '#')
 							{
 								p++;
 								a = *p;
+								p++;
+								if (*p != '\0')
+								{
+									int tv;
+									tv = atoi(p);
+									if (tv <= 0)
+										tv = 0; /* (ignored) */
+									if (tv > (MyClient(cptr) ? MODEF_MAX_UNSETTIME : 255))
+										tv = (MyClient(cptr) ? MODEF_MAX_UNSETTIME : 255); /* set to max */
+									r = (unsigned char)tv;
+								}
 							}
 						}
 
@@ -2551,6 +2600,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 									newf.a[FLD_CTCP] = a;
 								else
 									newf.a[FLD_CTCP] = 'C';
+								newf.r[FLD_CTCP] = r;
 								break;
 							case 'j':
 								newf.l[FLD_JOIN] = v;
@@ -2558,10 +2608,12 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 									newf.a[FLD_JOIN] = a;
 								else
 									newf.a[FLD_JOIN] = 'i';
+								newf.r[FLD_JOIN] = r;
 								break;
 							case 'k':
 								newf.l[FLD_KNOCK] = v;
 								newf.a[FLD_KNOCK] = 'K';
+								newf.r[FLD_KNOCK] = r;
 								break;
 							case 'm':
 								newf.l[FLD_MSG] = v;
@@ -2569,15 +2621,18 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 									newf.a[FLD_MSG] = a;
 								else
 									newf.a[FLD_MSG] = 'm';
+								newf.r[FLD_MSG] = r;
 								break;
 							case 'n':
 								newf.l[FLD_NICK] = v;
 								newf.a[FLD_NICK] = 'N';
+								newf.r[FLD_NICK] = r;
 								break;
 							case 't':
 								newf.l[FLD_TEXT] = v;
 								if (a == 'b')
 									newf.a[FLD_TEXT] = a;
+								/** newf.r[FLD_TEXT] ** not supported */
 								break;
 							default:
 								breakit=1;
@@ -2631,20 +2686,27 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				if (!chptr->mode.floodprot)
 					chptr->mode.floodprot = MyMalloc(sizeof(ChanFloodProt));
 				memcpy(chptr->mode.floodprot, &newf, sizeof(ChanFloodProt));
-			} /* !bounce */
-			strcpy(tmpbuf, channel_modef_string(chptr->mode.floodprot));
-			tmpstr = tmpbuf;
+				strcpy(tmpbuf, channel_modef_string(chptr->mode.floodprot));
+				tmpstr = tmpbuf;
+			} else {
+				/* bounce... */
+				tmpstr = param;
+			}
 			retval = 1;
 		} else
 		{ /* MODE_DEL */
 			if (!chptr->mode.floodprot)
 				break; /* no change */
-			strcpy(tmpbuf, channel_modef_string(chptr->mode.floodprot));
-			tmpstr = tmpbuf;
 			if (!bounce)
 			{
+				strcpy(tmpbuf, channel_modef_string(chptr->mode.floodprot));
+				tmpstr = tmpbuf;
 				free(chptr->mode.floodprot);
 				chptr->mode.floodprot = NULL;
+				chanfloodtimer_stopchantimers(chptr);
+			} else {
+				/* bounce.. */
+				tmpstr = param;
 			}
 			retval = 0; /* ??? copied from previous +f code. */
 		}
@@ -3007,11 +3069,34 @@ char *trim_str(char *str, int len)
 	return str;
 }
 
+/* clean_ban_mask:	makes a proper banmask
+ * RETURNS: pointer to correct banmask or NULL in case of error
+ * NOTES:
+ * - A pointer is returned to a static buffer, which is overwritten
+ *   on next clean_ban_mask or make_nick_user_host call.
+ * - mask is fragged in some cases, this could be bad.
+ */
 char *clean_ban_mask(char *mask)
 {
 	char *cp;
 	char *user;
 	char *host;
+
+	cp = index(mask, ' ');
+	if (cp)
+		*cp = '\0';
+
+	/* Strip any ':' at beginning coz that desynchs clients/banlists */
+	for (; (*mask && (*mask == ':')); mask++);
+	if (!*mask)
+		return NULL;
+
+	/* This was added right before beta19 release to ease the
+	 * beta19<->beta20 transfer when we implement extended bans.
+	 * This is only to accept such masks from remote servers!
+	 */
+	if (*mask == '~')
+		return mask;
 
 	if ((user = index((cp = mask), '!')))
 		*user++ = '\0';
@@ -3029,6 +3114,44 @@ char *clean_ban_mask(char *mask)
 		trim_str(host,HOSTLEN));
 }
 
+/* This function adds as an extra (weird) operoverride.
+ * Currently it's only used if you try to operoverride for a +z channel,
+ * if you then do '/join #chan override' it will put the channel -z and allow you directly in.
+ * This is to avoid attackers from using 'race conditions' to prevent you from joining.
+ * PARAMETERS: sptr = the client, chptr = the channel, mval = mode value (eg MODE_ONLYSECURE),
+ *             mchar = mode char (eg 'z')
+ * RETURNS: 1 if operoverride, 0 if not.
+ */
+int extended_operoverride(aClient *sptr, aChannel *chptr, char *key, int mval, char mchar)
+{
+unsigned char invited = 0;
+Link *lp;
+
+	if (!IsAnOper(sptr) || !OPCanOverride(sptr))
+		return 0;
+
+	for (lp = sptr->user->invited; lp; lp = lp->next)
+		if (lp->value.chptr == chptr)
+		{
+			invited = 1;
+			break;
+		}
+	if (invited)
+	{
+		if (key && !strcasecmp(key, "override"))
+		{
+			sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+				":%s NOTICE ~&@%s :setting channel -%c due to OperOverride request from %s",
+				me.name, chptr->chname, mchar, sptr->name);
+			sendto_serv_butone(&me, ":%s MODE %s -%c 0", me.name, chptr->chname, mchar);
+			sendto_channel_butserv(chptr, &me, ":%s MODE %s -%c", me.name, chptr->chname, mchar);
+			chptr->mode.mode &= ~mval;
+			return 1;
+		}
+	}
+	return 0;
+}
+
 /* Now let _invited_ people join thru bans, +i and +l.
  * Checking if an invite exist could be done only if a block exists,
  * but I'm not too fancy of the complicated structure that'd cause,
@@ -3041,9 +3164,13 @@ int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *lin
         Link *lp;
 	Ban *banned;
 
-        if ((chptr->mode.mode & MODE_ONLYSECURE) &&
-                !(sptr->umodes & UMODE_SECURE))
-                return (ERR_SECUREONLYCHAN);
+		if ((chptr->mode.mode & MODE_ONLYSECURE) && !(sptr->umodes & UMODE_SECURE))
+		{
+			if (!extended_operoverride(sptr, chptr, key, MODE_ONLYSECURE, 'z'))
+				return (ERR_SECUREONLYCHAN);
+			else
+				return 0;
+		}
 
         if ((chptr->mode.mode & MODE_OPERONLY) && !IsOper(sptr))
                 return (ERR_OPERONLY);
@@ -3195,6 +3322,7 @@ aChannel *get_channel(aClient *cptr, char *chname, int flag)
 		channel = chptr;
 		(void)add_to_channel_hash_table(chname, chptr);
 		IRCstats.channels++;
+		RunHook2(HOOKTYPE_CHANNEL_CREATE, cptr, chptr);
 	}
 	return chptr;
 }
@@ -3292,6 +3420,7 @@ void sub1_from_channel(aChannel *chptr)
 		/*
 		 * Now, find all invite links from channel structure
 		 */
+		RunHook(HOOKTYPE_CHANNEL_DESTROY, chptr);
 		while ((lp = chptr->invites))
 			del_invite(lp->value.cptr, chptr);
 
@@ -3315,6 +3444,11 @@ void sub1_from_channel(aChannel *chptr)
 		/* free extcmode params */
 		extcmode_free_paramlist(chptr->mode.extmodeparam);
 		chptr->mode.extmodeparam = NULL;
+#endif
+#ifdef NEWCHFLOODPROT
+		chanfloodtimer_stopchantimers(chptr);
+		if (chptr->mode.floodprot)
+			MyFree(chptr->mode.floodprot);
 #endif
 		if (chptr->topic)
 			MyFree(chptr->topic);
@@ -3544,8 +3678,9 @@ CMD_FUNC(do_join)
 
 		if (MyConnect(sptr)) {
 			int breakit = 0;
-			for (global_i = Hooks[HOOKTYPE_PRE_LOCAL_JOIN]; global_i; global_i = global_i->next) {
-				if((*(global_i->func.intfunc))(sptr,chptr,parv) > 0) {
+			Hook *h;
+			for (h = Hooks[HOOKTYPE_PRE_LOCAL_JOIN]; h; h = h->next) {
+				if((*(h->func.intfunc))(sptr,chptr,parv) > 0) {
 					breakit = 1;
 					break;
 				}
@@ -3557,7 +3692,6 @@ CMD_FUNC(do_join)
 					sub1_from_channel(chptr);
 				continue;
 			}
-			RunHook4(HOOKTYPE_LOCAL_JOIN, cptr, sptr,chptr,parv);
 		}
 
 		/*
@@ -3660,6 +3794,7 @@ CMD_FUNC(do_join)
 			}
 			parv[1] = chptr->chname;
 			(void)m_names(cptr, sptr, 2, parv);
+			RunHook4(HOOKTYPE_LOCAL_JOIN, cptr, sptr,chptr,parv);
 		}
 
 #ifdef NEWCHFLOODPROT
@@ -3672,7 +3807,7 @@ CMD_FUNC(do_join)
 		 * from all servers.
 		 */
 		if (chptr->mode.floodprot && (MyClient(sptr) || sptr->srvptr->serv->flags.synced) && 
-		    do_chanflood(chptr->mode.floodprot, FLD_JOIN) && MyClient(sptr))
+		    !IsULine(sptr) && do_chanflood(chptr->mode.floodprot, FLD_JOIN) && MyClient(sptr))
 		{
 			do_chanflood_action(chptr, FLD_JOIN, "join");
 		}
@@ -3706,6 +3841,9 @@ CMD_FUNC(m_part)
 		return 0;
 	}
 
+	if (MyClient(sptr) && IsShunned(sptr))
+		comment = NULL;
+
 	for (; (name = strtoken(&p, parv[1], ",")); parv[1] = NULL)
 	{
 		chptr = get_channel(sptr, name, 0);
@@ -3715,7 +3853,7 @@ CMD_FUNC(m_part)
 			    me.name, parv[0], name);
 			continue;
 		}
-		if (parv[2] && !comment) {
+		if (parv[2] && !comment && !(MyClient(sptr) && IsShunned(sptr))) {
 			comment = parv[2];
 			parc = 3;
 		}
@@ -3911,21 +4049,38 @@ CMD_FUNC(m_kick)
 					goto attack;
 				if (IsServer(sptr))
 					goto attack;
-				if ((chptr->mode.mode & MODE_NOKICKS)
-				    && !IsULine(sptr))
+
+				/* Note for coders regarding oper override:
+				 * always let a remote kick (=from a user on another server) trough or
+				 * else we will get desynched. In short this means all the denying should
+				 * always contain a && MyClient(sptr) [or sptr!=cptr] and at the end
+				 * a remote kick should always be allowed (pass trough). -- Syzop
+				 */
+				if (chptr->mode.mode & MODE_NOKICKS)
 				{
-					sendto_one(sptr,
-					    ":%s %s %s :*** You cannot kick people on %s",
-					    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, chptr->chname);
-					goto deny;
-					continue;
+					if (MyClient(sptr) && !(IsOper(sptr) && OPCanOverride(sptr)))
+					{
+						sendto_one(sptr,
+						    ":%s %s %s :*** You cannot kick people on %s",
+						    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, chptr->chname);
+						goto deny;
+					}
+					if (IsOper(sptr))
+						sendto_snomask(SNO_EYES,
+							"*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
+							sptr->name, sptr->user->username, sptr->user->realhost,
+							chptr->chname, who->name, comment);
+					goto attack; /* No reason to continue.. */
 				}
 
+				/* we are neither +o nor +h, OR..
+				 * we are +h but victim is +o, OR...
+				 * we are +h and victim is +h
+				 */
 				if (IsOper(sptr))
-					if ((!is_chan_op(sptr, chptr)
-					    && !is_halfop(sptr, chptr))
-					    || (is_halfop(sptr, chptr)
-					    && is_chan_op(who, chptr)))
+					if ((!is_chan_op(sptr, chptr) && !is_halfop(sptr, chptr)) ||
+					    (is_halfop(sptr, chptr) && is_chan_op(who, chptr)) ||
+					    (is_halfop(sptr, chptr) && is_halfop(who, chptr)))
 					{
 						sendto_snomask(SNO_EYES,
 						    "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
@@ -3933,10 +4088,12 @@ CMD_FUNC(m_kick)
 						    chptr->chname, who->name, comment);
 						goto attack;
 					}	/* is_chan_op */
+				
+				/* victim is +a or +q, we are not +q */
 				if ((is_chanprot(who, chptr)
 				    || is_chanowner(who, chptr)
 				    || IsServices(who)) && !is_chanowner(sptr, chptr)) {
-					if (IsNetAdmin(sptr))
+					if (IsOper(sptr)) /* (and f*ck local ops) */
 					{	/* IRCop kicking owner/prot */
 						sendto_snomask(SNO_EYES,
 						    "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
@@ -3944,8 +4101,7 @@ CMD_FUNC(m_kick)
 						    chptr->chname, who->name, comment);
 						goto attack;
 					}
-					else if (!IsULine(sptr)
-					    && who != sptr)
+					else if (!IsULine(sptr) && (who != sptr) && MyClient(sptr))
 					{
 						sendto_one(sptr,
 						    ":%s %s %s :*** You cannot kick %s from %s because %s is channel admin",
@@ -3955,19 +4111,23 @@ CMD_FUNC(m_kick)
 						continue;
 					}	/* chanprot/chanowner */
 				}
+				
+				/* victim is +o, we are +h [operoverride is already taken care of 2 blocks above] */
 				if (is_chan_op(who, chptr)
 				    && is_halfop(sptr, chptr)
 				    && !is_chan_op(sptr, chptr)
-				    && !IsULine(sptr))
+				    && !IsULine(sptr) && MyClient(sptr))
 				{
 					sendto_one(sptr,
 					    ":%s %s %s :*** You cannot kick channel operators on %s if you only are halfop",
 					    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, chptr->chname);
 					goto deny;
 				}
+
+				/* victim is +h, we are +h [operoverride is already taken care of 3 blocks above] */
 				if (is_halfop(who, chptr)
 				    && is_halfop(sptr,chptr)
-				    && !is_chan_op(sptr, chptr))
+				    && !is_chan_op(sptr, chptr) && MyClient(sptr))
 				{
 					sendto_one(sptr,
 					    ":%s %s %s :*** You cannot kick channel halfops on %s if you only are halfop",
@@ -3975,7 +4135,8 @@ CMD_FUNC(m_kick)
 					goto deny;
 				}	/* halfop */
 
-				if (IsKix(who) && !IsULine(sptr))
+				/* applies to everyone (well except remote/ulines :p) */
+				if (IsKix(who) && !IsULine(sptr) && MyClient(sptr))
 				{
 					if (!IsNetAdmin(sptr))
 					{
@@ -3992,6 +4153,7 @@ CMD_FUNC(m_kick)
 					}
 				}
 
+				/* allowed (either coz access granted or a remote kick), so attack! */
 				goto attack;
 
 			      deny:
@@ -4003,8 +4165,9 @@ CMD_FUNC(m_kick)
 			      attack:
 				if (MyConnect(sptr)) {
 					int breakit = 0;
-					for (global_i = Hooks[HOOKTYPE_PRE_LOCAL_KICK]; global_i; global_i = global_i->next) {
-						if((*(global_i->func.intfunc))(sptr,who,chptr,comment) > 0) {
+					Hook *h;
+					for (h = Hooks[HOOKTYPE_PRE_LOCAL_KICK]; h; h = h->next) {
+						if((*(h->func.intfunc))(sptr,who,chptr,comment) > 0) {
 							breakit = 1;
 							break;
 						}
@@ -4434,6 +4597,16 @@ CMD_FUNC(m_invite)
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +k).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
 	        }
+        	else if (chptr->mode.mode & MODE_ONLYSECURE)
+	        {
+                        sendto_snomask(SNO_EYES,
+                          "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +z).",
+                          sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+				sendto_one(sptr, ":%s NOTICE %s :The channel is +z and you are trying to OperOverride, "
+					"you'll have to override explicitly after this invite with the command '/join %s override'"
+					" (use override as a key) this will set the channel -z and then join you",
+					me.name, sptr->name, chptr->chname);
+	        }
 #ifdef OPEROVERRIDE_VERIFY
         	else if (chptr->mode.mode & MODE_SECRET || chptr->mode.mode & MODE_PRIVATE)
 	               over = -1;
@@ -4450,12 +4623,12 @@ CMD_FUNC(m_invite)
 #endif
 		    )) {
 		        if (over == 1)
-                		sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP,
-		                  ":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
+                		sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+		                  ":%s NOTICE ~&@%s :OperOverride -- %s invited him/herself into the channel.",
                 		  me.name, chptr->chname, sptr->name);
 		        else if (over == 0)
-		                sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP,
-                		  ":%s NOTICE @%s :%s invited %s into the channel.",
+		                sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+                		  ":%s NOTICE ~&@%s :%s invited %s into the channel.",
 		                  me.name, chptr->chname, sptr->name, acptr->name);
 
 		        add_invite(acptr, chptr);
@@ -5184,8 +5357,8 @@ CMD_FUNC(m_knock)
 		return 0;
 	}
 
-	sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP,
-	    ":%s NOTICE @%s :[Knock] by %s!%s@%s (%s) ",
+	sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+	    ":%s NOTICE ~&@%s :[Knock] by %s!%s@%s (%s) ",
 	    me.name, chptr->chname, sptr->name,
 	    sptr->user->username, GetHost(sptr), 
 	    parv[2] ? parv[2] : "no reason specified");
@@ -5194,7 +5367,8 @@ CMD_FUNC(m_knock)
 	    sptr->name, chptr->chname);
 
 #ifdef NEWCHFLOODPROT
-	if (chptr->mode.floodprot && do_chanflood(chptr->mode.floodprot, FLD_KNOCK) && MyClient(sptr))
+	if (chptr->mode.floodprot && !IsULine(sptr) &&
+	    do_chanflood(chptr->mode.floodprot, FLD_KNOCK) && MyClient(sptr))
 		do_chanflood_action(chptr, FLD_KNOCK, "knock");
 #endif
 	return 0;
@@ -5315,7 +5489,8 @@ CMD_FUNC(m_sjoin)
 	Member *lp;
 	Membership *lp2;
 	aParv *ap;
-	int  ts, oldts, pcount, i, f;
+	int pcount, i, f;
+	time_t ts, oldts;
 	unsigned short b=0,c;
 	Mode oldmode;
 	char *t, *bp, *tp, *p = NULL;
@@ -5352,9 +5527,9 @@ CMD_FUNC(m_sjoin)
 	chptr = get_channel(cptr, parv[2], CREATE);
 
 	if (*parv[1] != '!')
-		ts = atol(parv[1]);
+		ts = (time_t)atol(parv[1]);
 	else
-		ts = base64dec(parv[1] + 1);
+		ts = (time_t)base64dec(parv[1] + 1);
 
 	if (chptr->creationtime > ts)
 	{
@@ -5600,7 +5775,7 @@ CMD_FUNC(m_sjoin)
 				} else
 					sendto_channel_butserv(chptr, acptr, ":%s JOIN :%s", nick, chptr->chname);
 #ifdef NEWCHFLOODPROT
-				if (chptr->mode.floodprot && sptr->serv->flags.synced)
+				if (chptr->mode.floodprot && sptr->serv->flags.synced && !IsULine(sptr))
 			        do_chanflood(chptr->mode.floodprot, FLD_JOIN);
 #endif
 			}
@@ -5879,13 +6054,19 @@ CMD_FUNC(m_sjoin)
 		{
 			char *x;
 			int i;
-			chptr->mode.floodprot->per = MAX(chptr->mode.floodprot->per, oldmode.floodprot->per);
-			for (i=0; i < NUMFLD; i++)
-				chptr->mode.floodprot->l[i] = MAX(chptr->mode.floodprot->l[i], oldmode.floodprot->l[i]);
-			for (i=0; i < NUMFLD; i++)
-				chptr->mode.floodprot->a[i] = MAX(chptr->mode.floodprot->a[i], oldmode.floodprot->a[i]);
-			x = channel_modef_string(chptr->mode.floodprot);
-			Addit('f', x);
+
+			if (memcmp(chptr->mode.floodprot, oldmode.floodprot, sizeof(ChanFloodProt)))
+			{
+				chptr->mode.floodprot->per = MAX(chptr->mode.floodprot->per, oldmode.floodprot->per);
+				for (i=0; i < NUMFLD; i++)
+				{
+					chptr->mode.floodprot->l[i] = MAX(chptr->mode.floodprot->l[i], oldmode.floodprot->l[i]);
+					chptr->mode.floodprot->a[i] = MAX(chptr->mode.floodprot->a[i], oldmode.floodprot->a[i]);
+					chptr->mode.floodprot->r[i] = MAX(chptr->mode.floodprot->r[i], oldmode.floodprot->r[i]);
+				}
+				x = channel_modef_string(chptr->mode.floodprot);
+				Addit('f', x);
+			}
 		}
 #else
 		if ((oldmode.kmode != chptr->mode.kmode)
@@ -5921,22 +6102,24 @@ CMD_FUNC(m_sjoin)
 			{
 				int r;
 				char *parax;
-				r = Channelmode_Table[i].sjoin_check(chptr, extcmode_get_struct(oldmode.extmodeparam,Channelmode_Table[i].flag), extcmode_get_struct(chptr->mode.extmodeparam, Channelmode_Table[i].flag));
+				CmodeParam *ourm = extcmode_get_struct(oldmode.extmodeparam,Channelmode_Table[i].flag);
+				CmodeParam *theirm = extcmode_get_struct(chptr->mode.extmodeparam, Channelmode_Table[i].flag);
+				
+				r = Channelmode_Table[i].sjoin_check(chptr, ourm, theirm);
 				switch (r)
 				{
 					case EXSJ_WEWON:
 					{
-						CmodeParam *p = extcmode_get_struct(oldmode.extmodeparam, Channelmode_Table[i].flag);
 						CmodeParam *r;
-						parax = Channelmode_Table[i].get_param(p);
+						parax = Channelmode_Table[i].get_param(ourm);
 						Debug((DEBUG_DEBUG, "sjoin: we won: '%s'", parax));
-						r = Channelmode_Table[i].put_param(p, parax);
-						if (r != p)
+						r = Channelmode_Table[i].put_param(theirm, parax);
+						if (r != theirm) /* confusing eh ;) */
 							AddListItem(r, chptr->mode.extmodeparam);
 						break;
 					}
 					case EXSJ_THEYWON:
-						parax = Channelmode_Table[i].get_param(extcmode_get_struct(chptr->mode.extmodeparam,Channelmode_Table[i].flag));
+						parax = Channelmode_Table[i].get_param(theirm);
 						Debug((DEBUG_DEBUG, "sjoin: they won: '%s'", parax));
 						Addit(Channelmode_Table[i].flag, parax);
 						break;
@@ -6491,6 +6674,142 @@ char flagbuf[8]; /* For holding "qohva" and "*~@%+" */
 }
 
 #ifdef NEWCHFLOODPROT
+RemoveFld *removefld_list = NULL;
+
+RemoveFld *chanfloodtimer_find(aChannel *chptr, char mflag)
+{
+RemoveFld *e;
+
+	for (e=removefld_list; e; e=e->next)
+	{
+		if ((e->chptr == chptr) && (e->m == mflag))
+			return e;
+	}
+	return NULL;
+}
+
+/*
+ * Adds a "remove channelmode set by +f" timer.
+ * chptr	Channel
+ * mflag	Mode flag, eg 'C'
+ * mbit		Mode bitflag, eg MODE_NOCTCP
+ * when		when it should be removed
+ * NOTES:
+ * - This function takes care of overwriting of any previous timer
+ *   for the same modechar.
+ * - The function takes care of chptr->mode.floodprot->timer_flags,
+ *   do not modify it yourself.
+ * - chptr->mode.floodprot is asumed to be non-NULL.
+ */
+void chanfloodtimer_add(aChannel *chptr, char mflag, long mbit, time_t when)
+{
+RemoveFld *e;
+unsigned char add=1;
+
+	if (chptr->mode.floodprot->timer_flags & mbit)
+	{
+		/* Already exists... */
+		e = chanfloodtimer_find(chptr, mflag);
+		if (e)
+			add = 0;
+	}
+
+	if (add)
+		e = MyMallocEx(sizeof(RemoveFld));
+
+	e->chptr = chptr;
+	e->m = mflag;
+	e->when = when;
+
+	if (add)
+		AddListItem(e, removefld_list);
+
+	chptr->mode.floodprot->timer_flags |= mbit;
+}
+
+void chanfloodtimer_del(aChannel *chptr, char mflag, long mbit)
+{
+RemoveFld *e;
+
+	if (chptr->mode.floodprot && !(chptr->mode.floodprot->timer_flags & mbit))
+		return; /* nothing to remove.. */
+	e = chanfloodtimer_find(chptr, mflag);
+	if (!e)
+		return;
+
+	DelListItem(e, removefld_list);
+
+	if (chptr->mode.floodprot)
+		chptr->mode.floodprot->timer_flags &= ~mbit;
+}
+
+long get_chanbitbychar(char m)
+{
+aCtab *tab = &cFlagTab[0];
+	while(tab->mode != 0x0)
+	{
+		if (tab->flag == m)
+			return tab->mode;
+		tab++;;
+	}
+	return 0;
+}
+
+EVENT(modef_event)
+{
+RemoveFld *e = removefld_list;
+time_t now;
+long mode;
+
+	now = TStime();
+	
+	while(e)
+	{
+		if (e->when <= now)
+		{
+			/* Remove chanmode... */
+#ifdef NEWFLDDBG
+			sendto_realops("modef_event: chan %s mode -%c EXPIRED", e->chptr->chname, e->m);
+#endif
+			mode = get_chanbitbychar(e->m);
+			if (e->chptr->mode.mode & mode)
+			{
+				sendto_serv_butone(&me, ":%s MODE %s -%c 0", me.name, e->chptr->chname, e->m);
+				sendto_channel_butserv(e->chptr, &me, ":%s MODE %s -%c", me.name, e->chptr->chname, e->m);
+				e->chptr->mode.mode &= ~mode;
+			}
+			
+			/* And delete... */
+			e = (RemoveFld *)DelListItem(e, removefld_list);
+		} else {
+#ifdef NEWFLDDBG
+			sendto_realops("modef_event: chan %s mode -%c about %d seconds",
+				e->chptr->chname, e->m, e->when - now);
+#endif
+			e = e->next;
+		}
+	}
+}
+
+void init_modef()
+{
+	EventAddEx(NULL, "modef_event", 10, 0, modef_event, NULL);
+}
+
+void chanfloodtimer_stopchantimers(aChannel *chptr)
+{
+RemoveFld *e = removefld_list;
+	while(e)
+	{
+		if (e->chptr == chptr)
+			e = (RemoveFld *)DelListItem(e, removefld_list);
+		else
+			e = e->next;
+	}
+}
+
+
+
 int do_chanflood(ChanFloodProt *chp, int what)
 {
 
@@ -6553,10 +6872,17 @@ char m;
 		ircsprintf(target, "~&@%%%s", chptr->chname);
 		sendto_channelprefix_butone_tok(NULL, &me, chptr,
 			PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-			MSG_NOTICE, TOK_NOTICE, target, comment);
+			MSG_NOTICE, TOK_NOTICE, target, comment, 0);
 		sendto_serv_butone(&me, ":%s MODE %s +%c 0", me.name, chptr->chname, m);
 		sendto_channel_butserv(chptr, &me, ":%s MODE %s +%c", me.name, chptr->chname, m);
 		chptr->mode.mode |= modeflag;
+		if (chptr->mode.floodprot->r[what]) /* Add remove-chanmode timer... */
+		{
+			chanfloodtimer_add(chptr, m, modeflag, TStime() + ((long)chptr->mode.floodprot->r[what] * 60) - 5);
+			/* (since the chanflood timer event is called every 10s, we do -5 here so the accurancy will
+			 *  be -5..+5, without it it would be 0..+10.)
+			 */
+		}
 	}
 }
 #endif

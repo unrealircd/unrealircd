@@ -3,13 +3,13 @@
 
 ; #define USE_SSL
 ; Uncomment the above line to package an SSL build
-; #define USE_ZIP
+#define USE_ZIP
 ; Uncomment the above line to package with ZIP support
 
 
 [Setup]
 AppName=UnrealIRCd
-AppVerName=UnrealIRCd3.2-beta18
+AppVerName=UnrealIRCd3.2-beta19
 AppPublisher=UnrealIRCd Team
 AppPublisherURL=http://www.unrealircd.com
 AppSupportURL=http://www.unrealircd.com
@@ -30,7 +30,7 @@ OutputDir=../../
 [Tasks]
 Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"
 Name: "quicklaunchicon"; Description: "Create a &Quick Launch icon"; GroupDescription: "Additional icons:"; Flags: unchecked
-Name: "installservice"; Description: "Install as a &service"; GroupDescription: "Service support:"; MinVersion: 0,4.0
+Name: "installservice"; Description: "Install as a &service (not for beginners)"; GroupDescription: "Service support:"; MinVersion: 0,4.0
 Name: "installservice/startboot"; Description: "S&tart UnrealIRCd when Windows starts"; GroupDescription: "Service support:"; MinVersion: 0,4.0; Flags: exclusive
 Name: "installservice/startdemand"; Description: "Start UnrealIRCd on &request"; GroupDescription: "Service support:"; MinVersion: 0,4.0; Flags: exclusive
 Name: "installservice/crashrestart"; Description: "Restart UnrealIRCd if it &crashes"; GroupDescription: "Service support:"; MinVersion: 0,5.0;

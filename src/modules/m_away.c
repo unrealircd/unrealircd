@@ -63,6 +63,7 @@ ModuleHeader MOD_HEADER(m_away)
 DLLFUNC int MOD_INIT(m_away)(ModuleInfo *modinfo)
 {
 	add_Command(MSG_AWAY, TOK_AWAY, m_away, 1);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 

@@ -66,6 +66,7 @@ DLLFUNC int MOD_INIT(m_kill)(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_KILL, TOK_KILL, m_kill, 2);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 

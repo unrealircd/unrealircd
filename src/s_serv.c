@@ -620,8 +620,7 @@ CMD_FUNC(m_server)
 			break;
 	if (*ch || !index(servername, '.'))
 	{
-		sendto_one(sptr, "ERROR :Bogus server name (%s)",
-		    sptr->name, servername);
+		sendto_one(sptr, "ERROR :Bogus server name (%s)", servername);
 		sendto_snomask
 		    (SNO_JUNK,
 		    "WARNING: Bogus server name (%s) from %s (maybe just a fishy client)",
@@ -997,7 +996,7 @@ CMD_FUNC(m_server_remote)
 	{
 		if ((numeric < 0) || (numeric > 254))
 		{
-			sendto_locfailops("Link %s(%s) cancelled, numeric '%d' out of range (should be 0-254)",
+			sendto_locfailops("Link %s(%s) cancelled, numeric '%ld' out of range (should be 0-254)",
 				cptr->name, servername, numeric);
 			return exit_client(cptr, cptr, cptr,
 			    "Numeric out of range (0-254)");
@@ -1041,7 +1040,7 @@ CMD_FUNC(m_server_remote)
 		if (SupportNS(bcptr))
 		{
 			sendto_one(bcptr,
-				"%c%s %s %s %d %i :%s",
+				"%c%s %s %s %d %ld :%s",
 				(sptr->serv->numeric ? '@' : ':'),
 				(sptr->serv->numeric ? base64enc(sptr->serv->numeric) : sptr->name),
 				IsToken(bcptr) ? TOK_SERVER : MSG_SERVER,
@@ -1266,13 +1265,13 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 			if (!SupportNICKv2(cptr))
 			{
 				sendto_one(cptr,
-				    "%s %s %d %d %s %s %s %lu :%s",
+				    "%s %s %d %ld %s %s %s %lu :%s",
 				    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 				    acptr->name, acptr->hopcount + 1,
 				    acptr->lastnick, acptr->user->username,
 				    acptr->user->realhost,
 				    acptr->user->server,
-				    acptr->user->servicestamp, acptr->info);
+				    (unsigned long)acptr->user->servicestamp, acptr->info);
 				send_umode(cptr, acptr, 0, SEND_UMODES, buf);
 				if (IsHidden(acptr) && acptr->user->virthost)
 					sendto_one(cptr, ":%s %s %s",
@@ -1294,24 +1293,17 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 						    cptr->proto & PROTO_SJB64 ?
 						    "%s %s %d %B %s %s %b %lu %s %s :%s"
 						    :
-						    "%s %s %d %d %s %s %b %lu %s %s :%s",
-						    (IsToken(cptr) ? TOK_NICK :
-						    MSG_NICK), acptr->name,
+						    "%s %s %d %ld %s %s %b %lu %s %s :%s",
+						    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
+						    acptr->name,
 						    acptr->hopcount + 1,
 						    acptr->lastnick,
 						    acptr->user->username,
 						    acptr->user->realhost,
-						    acptr->srvptr->
-						    serv->numeric,
-						    acptr->user->servicestamp,
-						    (!buf
-						    || *buf ==
-						    '\0' ? "+" : buf),
-						    ((IsHidden(acptr)
-						    && (acptr->
-						    umodes & UMODE_SETHOST)) ?
-						    acptr->
-						    user->virthost : "*"),
+						    acptr->srvptr->serv->numeric,
+						    (unsigned long)acptr->user->servicestamp,
+						    (!buf || *buf == '\0' ? "+" : buf),
+						    ((IsHidden(acptr) && (acptr->umodes & UMODE_SETHOST)) ? acptr->user->virthost : "*"),
 						    acptr->info);
 					}
 					else
@@ -1320,29 +1312,23 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 						    (cptr->proto & PROTO_SJB64 ?
 						    "%s %s %d %B %s %s %s %lu %s %s :%s"
 						    :
-						    "%s %s %d %d %s %s %s %lu %s %s :%s"),
-						    (IsToken(cptr) ? TOK_NICK :
-						    MSG_NICK), acptr->name,
+						    "%s %s %d %ld %s %s %s %lu %s %s :%s"),
+						    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
+						    acptr->name,
 						    acptr->hopcount + 1,
 						    acptr->lastnick,
 						    acptr->user->username,
 						    acptr->user->realhost,
 						    acptr->user->server,
-						    acptr->user->servicestamp,
-						    (!buf
-						    || *buf ==
-						    '\0' ? "+" : buf),
-						    ((IsHidden(acptr)
-						    && (acptr->umodes &
-						    UMODE_SETHOST)) ?
-						    acptr->
-						    user->virthost : "*"),
+						    (unsigned long)acptr->user->servicestamp,
+						    (!buf || *buf == '\0' ? "+" : buf),
+						    ((IsHidden(acptr) && (acptr->umodes & UMODE_SETHOST)) ? acptr->user->virthost : "*"),
 						    acptr->info);
 					}
 				}
 				else
 					sendto_one(cptr,
-					    "%s %s %d %d %s %s %s %lu %s %s :%s",
+					    "%s %s %d %ld %s %s %s %lu %s %s :%s",
 					    (IsToken(cptr) ? TOK_NICK :
 					    MSG_NICK), acptr->name,
 					    acptr->hopcount + 1,
@@ -1354,7 +1340,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 					    base64enc(acptr->srvptr->
 					    serv->numeric) : acptr->
 					    user->server) : acptr->user->
-					    server), acptr->user->servicestamp,
+					    server), (unsigned long)acptr->user->servicestamp,
 					    (!buf
 					    || *buf == '\0' ? "+" : buf),
 					    GetHost(acptr),
@@ -1442,7 +1428,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 		}
 	}
 
-	sendto_one(cptr, "%s %li %li %li %X 0 0 0 :%s",
+	sendto_one(cptr, "%s %i %li %i %lX 0 0 0 :%s",
 	    (IsToken(cptr) ? TOK_NETINFO : MSG_NETINFO),
 	    IRCstats.global_max, TStime(), UnrealProtocol,
 	    CLOAK_KEYCRC,
@@ -1558,7 +1544,7 @@ CMD_FUNC(m_netinfo)
 		    me.name, cptr->name, (xx), (endsync), (xx - endsync));
 	}
 	sendto_realops
-	    ("Link %s -> %s is now synced [secs: %li recv: %li.%li sent: %li.%li]",
+	    ("Link %s -> %s is now synced [secs: %li recv: %ld.%hu sent: %ld.%hu]",
 	    cptr->name, me.name, (TStime() - endsync), sptr->receiveK,
 	    sptr->receiveB, sptr->sendK, sptr->sendB);
 #ifdef ZIP_LINKS
@@ -1574,7 +1560,7 @@ CMD_FUNC(m_netinfo)
 #endif
 
 	sendto_serv_butone(&me,
-	    ":%s SMO o :\2(sync)\2 Link %s -> %s is now synced [secs: %li recv: %li.%li sent: %li.%li]",
+	    ":%s SMO o :\2(sync)\2 Link %s -> %s is now synced [secs: %li recv: %ld.%hu sent: %ld.%hu]",
 	    me.name, cptr->name, me.name, (TStime() - endsync), sptr->receiveK,
 	    sptr->receiveB, sptr->sendK, sptr->sendB);
 
@@ -1590,10 +1576,10 @@ CMD_FUNC(m_netinfo)
 	if ((protocol != UnrealProtocol) && (protocol != 0))
 	{
 		sendto_realops
-		    ("Link %s is running Protocol u%li while we are running %li!",
+		    ("Link %s is running Protocol u%li while we are running %d!",
 		    cptr->name, protocol, UnrealProtocol);
 		sendto_serv_butone(&me,
-		    ":%s SMO o :\2(sync)\2 Link %s is running u%li while %s is running %li!",
+		    ":%s SMO o :\2(sync)\2 Link %s is running u%li while %s is running %d!",
 		    me.name, cptr->name, protocol, me.name, UnrealProtocol);
 
 	}
@@ -1601,7 +1587,7 @@ CMD_FUNC(m_netinfo)
 	if (*parv[4] != '*' && strcmp(buf, parv[4]))
 	{
 		sendto_realops
-			("Link %s is having a different cloak key - %s != %s",
+			("Link %s is having a DIFFERENT CLOAK KEY - %s != %s. \002YOU SHOULD CORRECT THIS ASAP\002.",
 				cptr->name, parv[4], buf);
 	}
 	SetNetInfo(cptr);
@@ -1629,11 +1615,11 @@ void m_info_send(aClient *sptr)
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| * codemastr    <codemastr@unrealircd.com>",
 	    me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :| * Syzop        <syzop@unrealircd.com>",
+	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| * Luke         <luke@unrealircd.com>",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| * McSkaf       <mcskaf@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * Syzop        <syzop@unrealircd.com>",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| Contributors:", me.name, RPL_INFO, sptr->name);
@@ -3009,6 +2995,8 @@ CMD_FUNC(m_rehash)
 	motd = (aMotd *) read_file_ex(MPATH, &motd, &motd_tm);
 	rules = (aMotd *) read_file(RPATH, &rules);
 	smotd = (aMotd *) read_file_ex(SMPATH, &smotd, &smotd_tm);
+	botmotd = (aMotd *) read_file(BPATH, &botmotd);
+	opermotd = (aMotd *) read_file(OPATH, &opermotd);
 	if (cptr == sptr)
 		sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
 	return rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
@@ -3287,7 +3275,7 @@ CMD_FUNC(m_trace)
 		 */
 		sendto_one(sptr, rpl_str(RPL_TRACESERVER),
 		    me.name, parv[0], 0, link_s[me.slot],
-		    link_u[me.slot], me.name, "*", "*", me.name);
+		    link_u[me.slot], me.name, "*", "*", me.name, 0);
 		return 0;
 	}
 	for (cltmp = conf_class; doall && cltmp; cltmp = (ConfigItem_class *) cltmp->next)
@@ -3570,20 +3558,20 @@ CMD_FUNC(m_botmotd)
 
 	if (botmotd == (aMotd *) NULL)
 	{
-		sendto_one(sptr, ":%s NOTICE AUTH :BOTMOTD File not found",
-		    me.name);
+		sendto_one(sptr, ":%s NOTICE %s :BOTMOTD File not found",
+		    me.name, sptr->name);
 		return 0;
 	}
-	sendto_one(sptr, ":%s NOTICE AUTH :- %s Bot Message of the Day - ",
-	    me.name, me.name);
+	sendto_one(sptr, ":%s NOTICE %s :- %s Bot Message of the Day - ",
+	    me.name, sptr->name, me.name);
 
 	temp = botmotd;
 	while (temp)
 	{
-		sendto_one(sptr, ":%s NOTICE AUTH :- %s", me.name, temp->line);
+		sendto_one(sptr, ":%s NOTICE %s :- %s", me.name, sptr->name, temp->line);
 		temp = temp->next;
 	}
-	sendto_one(sptr, ":%s NOTICE AUTH :End of /BOTMOTD command.", me.name);
+	sendto_one(sptr, ":%s NOTICE %s :End of /BOTMOTD command.", me.name, sptr->name);
 	return 0;
 }
 

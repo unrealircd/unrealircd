@@ -817,3 +817,80 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return 0;
 }
 
+/* execute_ban_action, a tkl helper. (Syzop/2003)
+ * PARAMETERS:
+ * sptr:     the client which is affected
+ * action:   type of ban (BAN_ACT*)
+ * reason:   ban reason
+ * duration: duration of ban in seconds
+ * WHAT IT DOES:
+ * This function will shun/kline/gline/zline the user.
+ * If the action field is 0 (BAN_ACT_KILL) the user is
+ * just killed (and the time parameter is ignored).
+ * ASSUMES:
+ * This function assumes that sptr is locally connected.
+ * RETURN VALUE:
+ * The return value is the usual return value about sptr,
+ * eg: FLUSH_BUFFER (=sptr has been freed so don't touch!)
+ * USED BY:
+ * 
+ */
+int place_host_ban(aClient *sptr, int action, char *reason, long duration)
+{
+	switch(action)
+	{
+		case BAN_ACT_TEMPSHUN:
+			/* We simply mark this connection as shunned and do not add a ban record */
+			sendto_snomask(SNO_TKL, "Temporarely shun added at user %s (%s@%s) [%s]",
+				sptr->name,
+				sptr->user ? sptr->user->username : "unknown",
+				sptr->user ? sptr->user->realhost : Inet_ia2p(&sptr->ip),
+				reason);
+			SetShunned(sptr);
+			break;
+		case BAN_ACT_SHUN:
+		case BAN_ACT_KLINE:
+		case BAN_ACT_ZLINE:
+		case BAN_ACT_GLINE:
+		case BAN_ACT_GZLINE:
+		{
+			char hostip[128], mo[100], mo2[100];
+			char *tkllayer[9] = {
+				me.name,	/*0  server.name */
+				"+",		/*1  +|- */
+				"?",		/*2  type */
+				"*",		/*3  user */
+				NULL,		/*4  host */
+				NULL,
+				NULL,		/*6  expire_at */
+				NULL,		/*7  set_at */
+				NULL		/*8  reason */
+			};
+
+			strlcpy(hostip, Inet_ia2p(&sptr->ip), sizeof(hostip));
+
+			if (action == BAN_ACT_KLINE)
+				tkllayer[2] = "k";
+			else if (action == BAN_ACT_ZLINE)
+				tkllayer[2] = "z";
+			else if (action == BAN_ACT_GZLINE)
+				tkllayer[2] = "Z";
+			else if (action == BAN_ACT_GLINE)
+				tkllayer[2] = "G";
+			else if (action == BAN_ACT_SHUN)
+				tkllayer[2] = "S";
+			tkllayer[4] = hostip;
+			tkllayer[5] = me.name;
+			ircsprintf(mo, "%li", duration + TStime());
+			ircsprintf(mo2, "%li", TStime());
+			tkllayer[6] = mo;
+			tkllayer[7] = mo2;
+			tkllayer[8] = reason;
+			return m_tkl(&me, &me, 9, tkllayer);
+		}
+		case BAN_ACT_KILL:
+		default:
+			return exit_client(sptr, sptr, sptr, reason);
+	}
+	return 0;
+}

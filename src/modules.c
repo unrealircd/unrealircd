@@ -49,7 +49,6 @@
 #endif
 
 Hook	   	*Hooks[MAXHOOKTYPES];
-Hook 	   	*global_i = NULL;
 Hooktype	Hooktypes[MAXCUSTOMHOOKS];
 Module          *Modules = NULL;
 Versionflag     *Versionflags = NULL;
@@ -351,6 +350,9 @@ void Unload_all_loaded_modules(void)
 			else if (objs->type == MOBJ_UMODE) {
 				UmodeDel(objs->object.umode);
 			}
+			else if (objs->type == MOBJ_CMDOVERRIDE) {
+				CmdoverrideDel(objs->object.cmdoverride);
+			}
 		}
 		for (child = mi->children; child; child = childnext)
 		{
@@ -400,7 +402,9 @@ void Unload_all_testing_modules(void)
 			else if (objs->type == MOBJ_UMODE) {
 				UmodeDel(objs->object.umode);
 			}
-
+			else if (objs->type == MOBJ_CMDOVERRIDE) {
+				CmdoverrideDel(objs->object.cmdoverride);
+			}
 		}
 		for (child = mi->children; child; child = childnext)
 		{
@@ -455,6 +459,9 @@ int    Module_free(Module *mod)
 		}
 		else if (objs->type == MOBJ_UMODE) {
 			UmodeDel(objs->object.umode);
+		}
+		else if (objs->type == MOBJ_CMDOVERRIDE) {
+			CmdoverrideDel(objs->object.cmdoverride);
 		}
 	}
 	for (p = Modules; p; p = p->next)
@@ -699,16 +706,27 @@ int	Module_Depend_Resolve(Module *p)
 #endif
 }
 
-
+/* m_module.
+ * originally by ?? (codemastr?)
+ * I (Syzop) changed it so it's now public for users too,
+ * as quite some people (and users) requested they should have the
+ * right to see what kind of weird modules are loaded on the server,
+ * especially since people like to load spy modules these days.
+ * I do not consider this sensitive information, but just in case
+ * I stripped the version string for non-admins (eg: normal users).
+ */
 int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	Module          *mi;
-	
-	if (!IsAdmin(sptr))
-	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+	int i;
+	char tmp[1024], *p;
+	aCommand *mptr;
+
+	/* Opers can do /module <servername> */
+	if ((parc > 1) && (IsServer(cptr) || IsOper(sptr)) &&
+	    (hunt_server_token(cptr, sptr, MSG_MODULE, TOK_MODULE, ":%s", 1, parc, parv) != HUNTED_ISME))
 		return 0;
-	}
+	
 	if (!Modules)
 	{
 		sendto_one(sptr, ":%s NOTICE %s :*** No modules loaded", me.name, sptr->name);
@@ -716,15 +734,61 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	for (mi = Modules; mi; mi = mi->next)
 	{
-		char tmp[256];
 		tmp[0] = '\0';
 		if (mi->flags & MODFLAG_DELAYED)
 			strcat(tmp, "[Unloading] ");
 		if (mi->options & MOD_OPT_PERM)
 			strcat(tmp, "[PERM] ");
-		sendto_one(sptr, ":%s NOTICE %s :*** %s - %s (%s) %s", me.name, sptr->name,
-			mi->header->name, mi->header->version, mi->header->description, tmp);
+		if (!(mi->options & MOD_OPT_OFFICIAL))
+			strcat(tmp, "[3RD] ");
+		if (!IsOper(sptr))
+			sendto_one(sptr, ":%s NOTICE %s :*** %s (%s)%s", me.name, sptr->name,
+				mi->header->name, mi->header->description,
+				mi->options & MOD_OPT_OFFICIAL ? "" : " [3RD]");
+		else
+			sendto_one(sptr, ":%s NOTICE %s :*** %s - %s (%s) %s", me.name, sptr->name,
+				mi->header->name, mi->header->version, mi->header->description, tmp);
 	}
+
+	if (!IsOper(sptr))
+		return 0;
+
+	tmp[0] = '\0';
+	p = tmp;
+	for (i=0; i < MAXHOOKTYPES; i++)
+	{
+		if (!Hooks[i])
+			continue;
+		sprintf(p, "%d ", i);
+		p += strlen(p);
+		if (p > tmp+480)
+		{
+			sendto_one(sptr, ":%s NOTICE %s :Hooks: %s", me.name, sptr->name, tmp);
+			tmp[0] = '\0';
+			p = tmp;
+		}
+	}
+	sendto_one(sptr, ":%s NOTICE %s :Hooks: %s ", me.name, sptr->name, tmp);
+
+	tmp[0] = '\0';
+	p = tmp;
+	for (i=0; i < 256; i++)
+	{
+		for (mptr = CommandHash[i]; mptr; mptr = mptr->next)
+			if (mptr->overriders)
+			{
+				sprintf(p, "%s ", mptr->cmd);
+				p += strlen(p);
+				if (p > tmp+470)
+				{
+					sendto_one(sptr, ":%s NOTICE %s :Override: %s", me.name, sptr->name, tmp);
+					tmp[0] = '\0';
+					p = tmp;
+				}
+			}
+	}
+	sendto_one(sptr, ":%s NOTICE %s :Override: %s", me.name, sptr->name, tmp);
+	
 	return 1;
 }
 
@@ -953,6 +1017,79 @@ Hook *HookDel(Hook *hook)
 		}
 	}
 	return NULL;
+}
+
+Cmdoverride *CmdoverrideAdd(Module *module, char *name, iFP function)
+{
+	aCommand *p;
+	Cmdoverride *ovr;
+	
+	if (!(p = find_Command_simple(name)))
+	{
+		if (module)
+			module->errorcode = MODERR_NOTFOUND;
+		return NULL;
+	}
+	ovr = MyMallocEx(sizeof(Cmdoverride));
+	ovr->func = function;
+	ovr->owner = module; /* TODO: module objects */
+	if (module)
+	{
+		ModuleObject *cmdoverobj = MyMallocEx(sizeof(ModuleObject));
+		cmdoverobj->type = MOBJ_CMDOVERRIDE;
+		cmdoverobj->object.cmdoverride = ovr;
+		AddListItem(cmdoverobj, module->objects);
+		module->errorcode = MODERR_NOERROR;
+	}
+	ovr->command = p;
+	if (!p->overriders)
+		p->overridetail = ovr;
+	AddListItem(ovr, p->overriders);
+	if (p->friend)
+	{
+		if (!p->friend->overriders)
+			p->friend->overridetail = ovr;
+		AddListItem(ovr, p->friend->overriders);
+	}
+	return ovr;
+}
+
+void CmdoverrideDel(Cmdoverride *cmd)
+{
+	if (!cmd->next)
+		cmd->command->overridetail = cmd->prev;
+	DelListItem(cmd, cmd->command->overriders);
+	if (!cmd->command->overriders)
+		cmd->command->overridetail = NULL;
+	if (cmd->command->friend)
+	{
+		if (!cmd->prev)
+			cmd->command->friend->overridetail = NULL;
+		DelListItem(cmd, cmd->command->friend->overriders);
+	}
+	if (cmd->owner)
+	{
+		ModuleObject *obj;
+		for (obj = cmd->owner->objects; obj; obj = obj->next)
+		{
+			if (obj->type != MOBJ_CMDOVERRIDE)
+				continue;
+			if (obj->object.cmdoverride == cmd)
+			{
+				DelListItem(obj, cmd->owner->objects);
+				MyFree(obj);
+				break;
+			}
+		}
+	}
+	MyFree(cmd);
+}
+
+int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[])
+{
+	if (ovr->prev)
+		return ovr->prev->func(ovr->prev, cptr, sptr, parc, parv);
+	return ovr->command->func(cptr, sptr, parc, parv);
 }
 
 EVENT(e_unload_module_delayed)

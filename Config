@@ -42,6 +42,9 @@ fi
 if [ "$INET6" = "1" ] ; then
 ARG="$ARG--enable-inet6 "
 fi
+if [ "$PREFIXAQ" = "1" ]; then
+ARG="$ARG--enable-prefixaq "
+fi
 ARG="$ARG--with-listen=$LISTEN_SIZE "
 ARG="$ARG--with-dpath=$DPATH "
 ARG="$ARG--with-spath=$SPATH "
@@ -86,6 +89,7 @@ MAXSENDQLENGTH="3000000"
 BUFFERPOOL="18"
 MAXCONNECTIONS="1024"
 INET6=""
+PREFIXAQ=""
 EXTRAPARA=""
 if [ "`eval echo -n 'a'`" = "-n a" ] ; then
         c="\c"
@@ -384,6 +388,40 @@ fi
 
 TEST=""
 while [ -z "$TEST" ] ; do
+    if [ "$PREFIXAQ" = "1" ] ; then
+	TEST="Yes"
+    else
+	TEST="No"
+    fi
+    echo ""
+    echo "Do you want to enable prefixes for chanadmin and chanowner?"
+    echo "This will give +a the & prefix and ~ for +q (just like +o is @)"
+    echo "Supported by the major clients (mIRC, xchat, epic, eggdrop, Klient, PJIRC, etc.)"
+    echo "with the notable exceptions of irssi, KVIrc and CGI:IRC."
+    echo "This feature should be enabled/disabled network-wide."
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	cc=$TEST
+    fi
+    case "$cc" in
+	[Yy]*)
+	    PREFIXAQ="1"
+	    ;;
+	[Nn]*)
+	    PREFIXAQ=""
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter either Yes or No"
+	    TEST=""
+	    ;;
+    esac
+done
+
+
+TEST=""
+while [ -z "$TEST" ] ; do
     TEST="$LISTEN_SIZE"
     echo ""
     echo "What listen() backlog value do you wish to use?  Some older servers"
@@ -514,6 +552,7 @@ NOSPOOF="$NOSPOOF"
 DPATH="$DPATH"
 SPATH="$SPATH"
 INET6="$INET6"
+PREFIXAQ="$PREFIXAQ"
 LISTEN_SIZE="$LISTEN_SIZE"
 MAXSENDQLENGTH="$MAXSENDQLENGTH"
 BUFFERPOOL="$BUFFERPOOL"

@@ -65,6 +65,7 @@ DLLFUNC int MOD_INIT(m_sethost)(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_SETHOST, TOK_SETHOST, m_sethost, MAXPARA);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
@@ -98,7 +99,6 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #else
 	int  permit = 2;
 #endif
-	int  legalhost = 1;	/* is legal characters? */
 
 
 	if (!MyConnect(sptr))
@@ -172,19 +172,23 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
-	/* illegal?! */
-	for (s = vhost; *s; s++)
-	{
-		if (!isallowed(*s) && !(*s == ':'))
-		{
-			legalhost = 0;
-		}
-	}
-
-	if (legalhost == 0)
+	if (!valid_host(vhost))
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** /SetHost Error: A hostname may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them",
+		    me.name, parv[0]);
+		return 0;
+	}
+	if (vhost[0] == ':')
+	{
+		sendto_one(sptr, ":%s NOTICE %s :*** A hostname cannot start with ':'", me.name, sptr->name);
+		return 0;
+	}
+
+	if (!strcmp(GetHost(sptr), vhost))
+	{
+		sendto_one(sptr,
+		    ":%s NOTICE %s :*** /SetHost Error: requested host is same as current host.",
 		    me.name, parv[0]);
 		return 0;
 	}

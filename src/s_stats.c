@@ -501,7 +501,7 @@ int stats_command(aClient *sptr, char *para)
 {
 	int i;
 	aCommand *mptr;
-	for (i = 0; i <= 255; i++)
+	for (i = 0; i < 256; i++)
 		for (mptr = CommandHash[i]; mptr; mptr = mptr->next)
 			if (mptr->count)
 #ifndef DEBUGMODE
@@ -515,6 +515,21 @@ int stats_command(aClient *sptr, char *para)
 				mptr->lticks, mptr->lticks / CLOCKS_PER_SEC,
 				mptr->rticks, mptr->rticks / CLOCKS_PER_SEC);
 #endif
+	for (i = 0; i < 256; i++)
+		for (mptr = TokenHash[i]; mptr; mptr = mptr->next)
+			if (mptr->count)
+#ifndef DEBUGMODE
+			sendto_one(sptr, rpl_str(RPL_STATSCOMMANDS),
+				me.name, sptr->name, mptr->cmd,
+				mptr->count, mptr->bytes);
+#else
+			sendto_one(sptr, rpl_str(RPL_STATSCOMMANDS),
+				me.name, sptr->name, mptr->cmd,
+				mptr->count, mptr->bytes,
+				mptr->lticks, mptr->lticks / CLOCKS_PER_SEC,
+				mptr->rticks, mptr->rticks / CLOCKS_PER_SEC);
+#endif
+
 	return 0;
 }	
 
@@ -670,13 +685,13 @@ int stats_traffic(aClient *sptr, char *para)
 	    me.name, RPL_STATSDEBUG, sptr->name);
 	sendto_one(sptr, ":%s %d %s :connected %u %u",
 	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_cl, sp->is_sv);
-	sendto_one(sptr, ":%s %d %s :bytes sent %u.%uK %u.%uK",
+	sendto_one(sptr, ":%s %d %s :bytes sent %ld.%huK %ld.%huK",
 	    me.name, RPL_STATSDEBUG, sptr->name,
 	    sp->is_cks, sp->is_cbs, sp->is_sks, sp->is_sbs);
-	sendto_one(sptr, ":%s %d %s :bytes recv %u.%uK %u.%uK",
+	sendto_one(sptr, ":%s %d %s :bytes recv %ld.%huK %ld.%huK",
 	    me.name, RPL_STATSDEBUG, sptr->name,
 	    sp->is_ckr, sp->is_cbr, sp->is_skr, sp->is_sbr);
-	sendto_one(sptr, ":%s %d %s :time connected %u %u",
+	sendto_one(sptr, ":%s %d %s :time connected %ld %ld",
 	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_cti, sp->is_sti);
 #ifndef NO_FDLIST
 	sendto_one(sptr,
@@ -814,14 +829,14 @@ int stats_mem(aClient *sptr, char *para)
 		}
 	}
 
-	sendto_one(sptr, ":%s %d %s :Client Local %d(%d) Remote %d(%d)",
+	sendto_one(sptr, ":%s %d %s :Client Local %d(%ld) Remote %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, lc, lcm, rc, rcm);
 	sendto_one(sptr, ":%s %d %s :Users %d(%d) Invites %d(%d)",
 	    me.name, RPL_STATSDEBUG, sptr->name, us, us * sizeof(anUser), usi,
 	    usi * sizeof(Link));
-	sendto_one(sptr, ":%s %d %s :User channels %d(%d) Aways %d(%d)",
+	sendto_one(sptr, ":%s %d %s :User channels %d(%d) Aways %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, usc, usc * sizeof(Link), aw, awm);
-	sendto_one(sptr, ":%s %d %s :WATCH headers %d(%d) entries %d(%d)",
+	sendto_one(sptr, ":%s %d %s :WATCH headers %d(%ld) entries %d(%d)",
 	    me.name, RPL_STATSDEBUG, sptr->name, wlh, wlhm, wle, wle * sizeof(Link));
 	sendto_one(sptr, ":%s %d %s :Attached confs %d(%d)",
 	    me.name, RPL_STATSDEBUG, sptr->name, lcc, lcc * sizeof(Link));
@@ -830,13 +845,13 @@ int stats_mem(aClient *sptr, char *para)
 	totcl += lcc * sizeof(Link) + usi * sizeof(Link) + wlhm;
 	totcl += wle * sizeof(Link);
 
-	sendto_one(sptr, ":%s %d %s :Conflines %d(%d)",
+	sendto_one(sptr, ":%s %d %s :Conflines %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, co, com);
 
-	sendto_one(sptr, ":%s %d %s :Classes %d(%d)",
+	sendto_one(sptr, ":%s %d %s :Classes %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, StatsZ.classes, StatsZ.classesmem);
 
-	sendto_one(sptr, ":%s %d %s :Channels %d(%d) Bans %d(%d)",
+	sendto_one(sptr, ":%s %d %s :Channels %d(%ld) Bans %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, ch, chm, chb, chbm);
 	sendto_one(sptr, ":%s %d %s :Channel members %d(%d) invite %d(%d)",
 	    me.name, RPL_STATSDEBUG, sptr->name, chu, chu * sizeof(Link),
@@ -844,10 +859,10 @@ int stats_mem(aClient *sptr, char *para)
 
 	totch = chm + chbm + chu * sizeof(Link) + chi * sizeof(Link);
 
-	sendto_one(sptr, ":%s %d %s :Whowas users %d(%d) away %d(%d)",
+	sendto_one(sptr, ":%s %d %s :Whowas users %d(%d) away %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, wwu, wwu * sizeof(anUser),
 	    wwa, wwam);
-	sendto_one(sptr, ":%s %d %s :Whowas array %d(%d)",
+	sendto_one(sptr, ":%s %d %s :Whowas array %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, NICKNAMEHISTORYLENGTH, wwm);
 
 	totww = wwu * sizeof(anUser) + wwam + wwm;
@@ -858,7 +873,7 @@ int stats_mem(aClient *sptr, char *para)
 	    sizeof(aHashEntry) * CH_MAX, WATCHHASHSIZE,
 	    sizeof(aWatch *) * WATCHHASHSIZE);
 	db = dbufblocks * sizeof(dbufbuf);
-	sendto_one(sptr, ":%s %d %s :Dbuf blocks %d(%d)",
+	sendto_one(sptr, ":%s %d %s :Dbuf blocks %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, dbufblocks, db);
 
 	link = freelink;
@@ -877,15 +892,15 @@ int stats_mem(aClient *sptr, char *para)
 	tot += sizeof(aHashEntry) * CH_MAX;
 	tot += sizeof(aWatch *) * WATCHHASHSIZE;
 
-	sendto_one(sptr, ":%s %d %s :Total: ww %d ch %d cl %d co %d db %d",
+	sendto_one(sptr, ":%s %d %s :Total: ww %ld ch %ld cl %ld co %ld db %ld",
 	    me.name, RPL_STATSDEBUG, sptr->name, totww, totch, totcl, com, db);
 #if !defined(_WIN32) && !defined(_AMIGA)
 #ifdef __alpha
 	sendto_one(sptr, ":%s %d %s :TOTAL: %d sbrk(0)-etext: %u",
-	    me.name, RPL_STATSDEBUG, nick, tot,
+	    me.name, RPL_STATSDEBUG, sptr->name, tot,
 	    (u_int)sbrk((size_t)0) - (u_int)sbrk0);
 #else
-	sendto_one(sptr, ":%s %d %s :TOTAL: %d sbrk(0)-etext: %ul",
+	sendto_one(sptr, ":%s %d %s :TOTAL: %ld sbrk(0)-etext: %lu",
 	    me.name, RPL_STATSDEBUG, sptr->name, tot,
 	    (u_long)sbrk((size_t)0) - (u_long)sbrk0);
 
@@ -1106,7 +1121,7 @@ int stats_set(aClient *sptr, char *para)
 	    sptr->name, hidden_host);
 	sendto_one(sptr, ":%s %i %s :help-channel: %s", me.name, RPL_TEXT,
 	    sptr->name, helpchan);
-	sendto_one(sptr, ":%s %i %s :cloak-keys: %X", me.name, RPL_TEXT, sptr->name,
+	sendto_one(sptr, ":%s %i %s :cloak-keys: %lX", me.name, RPL_TEXT, sptr->name,
 		CLOAK_KEYCRC);
 	sendto_one(sptr, ":%s %i %s :kline-address: %s", me.name, RPL_TEXT,
 	    sptr->name, KLINE_ADDRESS);
@@ -1183,6 +1198,8 @@ int stats_set(aClient *sptr, char *para)
 	    sptr->name, DONT_RESOLVE);
 	sendto_one(sptr, ":%s %i %s :options::mkpasswd-for-everyone: %d", me.name, RPL_TEXT,
 	    sptr->name, MKPASSWD_FOR_EVERYONE);
+	sendto_one(sptr, ":%s %i %s :options::allow-part-if-shunned: %d", me.name, RPL_TEXT,
+	    sptr->name, ALLOW_PART_IF_SHUNNED);
 	sendto_one(sptr, ":%s %i %s :maxchannelsperuser: %i", me.name, RPL_TEXT,
 	    sptr->name, MAXCHANNELSPERUSER);
 	sendto_one(sptr, ":%s %i %s :auto-join: %s", me.name, RPL_TEXT,
@@ -1191,12 +1208,16 @@ int stats_set(aClient *sptr, char *para)
 	    RPL_TEXT, sptr->name, OPER_AUTO_JOIN_CHANS ? OPER_AUTO_JOIN_CHANS : "0");
 	sendto_one(sptr, ":%s %i %s :static-quit: %s", me.name, 
 		RPL_TEXT, sptr->name, STATIC_QUIT ? STATIC_QUIT : "<none>");	
+	sendto_one(sptr, ":%s %i %s :who-limit: %d", me.name, RPL_TEXT,
+		sptr->name, WHOLIMIT);
 	sendto_one(sptr, ":%s %i %s :dns::timeout: %s", me.name, RPL_TEXT,
 	    sptr->name, pretty_time_val(HOST_TIMEOUT));
 	sendto_one(sptr, ":%s %i %s :dns::retries: %d", me.name, RPL_TEXT,
 	    sptr->name, HOST_RETRIES);
 	sendto_one(sptr, ":%s %i %s :dns::nameserver: %s", me.name, RPL_TEXT,
 	    sptr->name, NAME_SERVER);
+	sendto_one(sptr, ":%s %i %s :ban-version-tkl-time: %s", me.name, RPL_TEXT,
+	    sptr->name, pretty_time_val(BAN_VERSION_TKL_TIME));
 #ifdef THROTTLING
 	sendto_one(sptr, ":%s %i %s :throttle::period: %s", me.name, RPL_TEXT,
 			sptr->name, THROTTLING_PERIOD ? pretty_time_val(THROTTLING_PERIOD) : "disabled");
@@ -1205,7 +1226,7 @@ int stats_set(aClient *sptr, char *para)
 #endif
 	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-bantime: %s", me.name, RPL_TEXT,
 			sptr->name, pretty_time_val(UNKNOWN_FLOOD_BANTIME));
-	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-amount: %dKB", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-amount: %ldKB", me.name, RPL_TEXT,
 			sptr->name, UNKNOWN_FLOOD_AMOUNT);
 #ifdef NO_FLOOD_AWAY
 	if (AWAY_PERIOD)
@@ -1220,6 +1241,12 @@ int stats_set(aClient *sptr, char *para)
 			sptr->name, pretty_time_val(IDENT_CONNECT_TIMEOUT));
 	sendto_one(sptr, ":%s %i %s :ident::read-timeout: %s", me.name, RPL_TEXT,
 			sptr->name, pretty_time_val(IDENT_READ_TIMEOUT));
+#ifdef NEWCHFLOODPROT
+	sendto_one(sptr, ":%s %i %s :modef-default-unsettime: %hd", me.name, RPL_TEXT,
+			sptr->name, (unsigned short)MODEF_DEFAULT_UNSETTIME);
+	sendto_one(sptr, ":%s %i %s :modef-max-unsettime: %hd", me.name, RPL_TEXT,
+			sptr->name, (unsigned short)MODEF_MAX_UNSETTIME);
+#endif
 	sendto_one(sptr, ":%s %i %s :hosts::global: %s", me.name, RPL_TEXT,
 	    sptr->name, oper_host);
 	sendto_one(sptr, ":%s %i %s :hosts::admin: %s", me.name, RPL_TEXT,

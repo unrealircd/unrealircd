@@ -40,7 +40,10 @@ static char sccsid[] =
 #include <string.h>
 
 void vsendto_one(aClient *to, char *pattern, va_list vl);
-void sendbufto_one(aClient *to);
+void sendbufto_one(aClient *to, char *msg, unsigned int quick);
+
+#define ADD_CRLF(buf, len) { if (len > 510) len = 510; \
+                             buf[len++] = '\r'; buf[len++] = '\n'; buf[len] = '\0'; } while(0)
 
 #ifndef NO_FDLIST
 extern fdlist serv_fdlist;
@@ -50,9 +53,9 @@ extern fdlist oper_fdlist;
 #define NEWLINE	"\r\n"
 
 static char sendbuf[2048];
-static char tcmd[1024];
-static char ccmd[1024];
-static char xcmd[1024];
+static char tcmd[2048];
+static char ccmd[2048];
+static char xcmd[2048];
 
 /* this array is used to ensure we send a msg only once to a remote 
 ** server.  like, when we are sending a message to all channel members
@@ -237,16 +240,26 @@ void sendto_one(aClient *to, char *pattern, ...)
 void vsendto_one(aClient *to, char *pattern, va_list vl)
 {
 	ircvsprintf(sendbuf, pattern, vl);
-	sendbufto_one(to);
+	sendbufto_one(to, sendbuf, 0);
 }
 
 
-void sendbufto_one(aClient *to)
+/* sendbufto_one:
+ * to: the client to which the buffer should be send
+ * msg: the message
+ * quick: normally set to 0, see later.
+ * NOTES:
+ * - neither to or msg can be NULL
+ * - if quick is set to 0, the length is calculated, the string is cutoff
+ *   at 510 bytes if needed, and \r\n is added if needed.
+ *   if quick is >0 it is assumed the message has \r\n and 'quick' is used
+ *   as length. Of course you should be very careful with that.
+ */
+void sendbufto_one(aClient *to, char *msg, unsigned int quick)
 {
 	int  len;
-	char *msg = sendbuf;
 	
-	Debug((DEBUG_ERROR, "Sending [%s] to %s", sendbuf, to->name));
+	Debug((DEBUG_ERROR, "Sending [%s] to %s", msg, to->name));
 
 	if (to->from)
 		to = to->from;
@@ -265,31 +278,41 @@ void sendbufto_one(aClient *to)
 		return;
 	}
 
-	len = strlen(sendbuf);
-	if (!len || (sendbuf[len - 1] != '\n'))
+	if (!quick)
 	{
-		if (len > 510)
-			len = 510;
-		sendbuf[len++] = '\r';
-		sendbuf[len++] = '\n';
-		sendbuf[len] = '\0';
+		len = strlen(msg);
+		if (!len || (msg[len - 1] != '\n'))
+		{
+			if (len > 510)
+				len = 510;
+			msg[len++] = '\r';
+			msg[len++] = '\n';
+			msg[len] = '\0';
+		}
+	} else
+		len = quick;
+
+	if (len > 512)
+	{
+		ircd_log(LOG_ERROR, "sendbufto_one: len=%u, quick=%u", len, quick);
+		abort();
 	}
 
 	if (IsMe(to))
 	{
-		char tmp_sendbuf[sizeof(sendbuf)];
+		char tmp_msg[500], *p;
 
-		strcpy(tmp_sendbuf, sendbuf);
-		if (len >= 2)
-			tmp_sendbuf[len - 2]  = '\0'; /* strip CRLF */
-		sendto_ops("Trying to send [%s] to myself!", tmp_sendbuf);
+		p = strchr(msg, '\r');
+		if (p) *p = '\0';
+		snprintf(tmp_msg, 500, "Trying to send data to myself! '%s'", msg);
+		ircd_log(LOG_ERROR, "%s", tmp_msg);
+		sendto_ops("%s", tmp_msg); /* recursion? */
 		return;
 	}
 	if (DBufLength(&to->sendQ) > get_sendq(to))
 	{
 		if (IsServer(to))
-			sendto_ops("Max SendQ limit exceeded for %s: "
-			    "%lu > %lu",
+			sendto_ops("Max SendQ limit exceeded for %s: %u > %d",
 			    get_client_name(to, FALSE), DBufLength(&to->sendQ),
 			    get_sendq(to));
 		dead_link(to, "Max SendQ exceeded");
@@ -308,7 +331,7 @@ void sendbufto_one(aClient *to)
 	
 	if (len && !dbuf_put(&to->sendQ, msg, len))
 #else
-	if (!dbuf_put(&to->sendQ, sendbuf, len))
+	if (!dbuf_put(&to->sendQ, msg, len))
 #endif
 	{
 		dead_link(to, "Buffer allocation error");
@@ -439,15 +462,33 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 
 void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chptr,
 	int	prefix,
-    char *cmd, char *tok, char *nick, char *text)
+    char *cmd, char *tok, char *nick, char *text, char do_send_check)
 {
 	Member *lp;
 	aClient *acptr;
 	int  i;
+	char is_ctcp = 0;
+	unsigned int tlen, clen, xlen;
+	char *p;
 
-	sprintf(tcmd, ":%s %s %s :%s", from->name, tok, nick, text);
-	sprintf(ccmd, ":%s %s %s :%s", from->name, cmd, nick, text);
-	sprintf(xcmd, "%s %s :%s", cmd, nick, text);
+	p = ircsprintf(tcmd, ":%s %s %s :%s", from->name, tok, nick, text);
+	tlen = (int)(p - tcmd);
+	ADD_CRLF(tcmd, tlen);
+
+	p = ircsprintf(ccmd, ":%s %s %s :%s", from->name, cmd, nick, text);
+	clen = (int)(p - ccmd);
+	ADD_CRLF(ccmd, clen);
+	if (IsPerson(from))
+		p = ircsprintf(xcmd, ":%s!%s@%s %s %s :%s",
+			from->name, from->user->username, GetHost(from), cmd, nick, text);
+	else
+		p = ircsprintf(xcmd, ":%s %s %s :%s", from->name, cmd, nick, text);
+	xlen = (int)(p - xcmd);
+	ADD_CRLF(xcmd, xlen);
+
+	if (do_send_check && *text == 1 && myncmp(text+1,"ACTION ",7) && myncmp(text+1,"DCC ",4))
+		is_ctcp = 1;
+
 
 	++sentalong_marker;
 	for (lp = chptr->members; lp; lp = lp->next)
@@ -478,8 +519,10 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 			continue;
 		if (MyConnect(acptr) && IsRegisteredUser(acptr))
 		{
-			sendto_prefix_one(acptr, from, ":%s %s",
-				from->name, xcmd);
+			if (IsNoCTCP(acptr) && !IsOper(from) && is_ctcp)
+				continue;
+
+			sendbufto_one(acptr, xcmd, xlen);
 			sentalong[i] = sentalong_marker;
 		}
 		else
@@ -489,9 +532,9 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 			if (sentalong[i] != sentalong_marker)
 			{
 				if (IsToken(acptr->from))
-					sendto_one(acptr, "%s", tcmd);
+					sendbufto_one(acptr, tcmd, tlen);
 				else
-					sendto_one(acptr, "%s", ccmd);
+					sendbufto_one(acptr, ccmd, clen);
 				sentalong[i] = sentalong_marker;
 			}
 		}
@@ -627,7 +670,7 @@ void sendto_serv_butone_token(aClient *one, char *prefix, char *command,
 #ifndef NO_FDLIST
 	int  j;
 #endif
-	static char buff[1024];
+	static char buff[2048];
 	static char pref[100];
 	va_start(vl, pattern);
 
@@ -707,9 +750,9 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 #ifndef NO_FDLIST
 	int  j;
 #endif
-	static char tcmd[1024];
-	static char ccmd[1024];
-	static char buff[1024];
+	static char tcmd[2048];
+	static char ccmd[2048];
+	static char buff[2048];
 	static char pref[100];
 
 	va_start(vl, pattern);
@@ -1353,8 +1396,30 @@ void sendto_umode(int umodes, char *pattern, ...)
 	va_end(vl);
 	return;
 }
+
 /*
- * sendto_umode
+ * sendto_umode_raw
+ *
+ *  Send to specified umode , raw, not a notice
+ */
+void sendto_umode_raw(int umodes, char *pattern, ...)
+{
+	va_list vl;
+	aClient *cptr;
+	int  i;
+	va_start(vl, pattern);
+	for (i = 0; i <= LastSlot; i++)
+		if ((cptr = local[i]) && IsPerson(cptr) && (cptr->umodes & umodes) == umodes)
+		{
+			va_start(vl, pattern);
+			vsendto_one(cptr, pattern, vl);
+			va_end(vl);
+		}
+	va_end(vl);
+	return;
+}
+/*
+ * sendto_snomask
  *
  *  Send to specified umode
  */
@@ -1609,7 +1674,7 @@ void vsendto_prefix_one(struct Client *to, struct Client *from,
 	}
 	else
 		ircvsprintf(sendbuf, pattern, vl);
-	sendbufto_one(to);
+	sendbufto_one(to, sendbuf, 0);
 }
 
 /*

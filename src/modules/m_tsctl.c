@@ -65,6 +65,7 @@ DLLFUNC int MOD_INIT(m_tsctl)(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_TSCTL, TOK_TSCTL, m_tsctl, MAXPARA);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 

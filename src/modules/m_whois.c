@@ -67,6 +67,7 @@ DLLFUNC int MOD_INIT(m_whois)(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_WHOIS, TOK_WHOIS, m_whois, MAXPARA);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 

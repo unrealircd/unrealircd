@@ -28,3 +28,4 @@ e              SSL supported
 O              OperOverride enabled
 o              OperOverride without verify
 Z              Zip links supported
+3              3rd party modules (were) loaded

@@ -802,7 +802,9 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 	cptr->last = TStime();
 	parv[0] = sptr->name;
 	parv[1] = parv[2] = NULL;
-
+	nick = sptr->name; /* <- The data is always the same, but the pointer is sometimes not,
+	                    *    I need this for one of my modules, so do not remove! ;) -- Syzop */
+	
 	if (MyConnect(sptr))
 	{
 		if ((i = check_client(sptr))) {
@@ -949,8 +951,7 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 			    ":%s %d %s :*** Your GECOS (real name) is not allowed on this server (%s)"
 			    " Please change it and reconnect",
 			    me.name, ERR_YOUREBANNEDCREEP,
-			    cptr->name, bconf->reason ? bconf->reason : "",
-			    KLINE_ADDRESS);
+			    cptr->name, bconf->reason ? bconf->reason : "");
 
 			return exit_client(cptr, sptr, &me,
 			    "Your GECOS (real name) is banned from this server");
@@ -1489,7 +1490,7 @@ CMD_FUNC(m_nick)
 				differ = (mycmp(acptr->user->username, parv[4])
 				    || mycmp(acptr->user->realhost, parv[5]));
 		}
-		sendto_failops("Nick collision on %s (%s %d <- %s %d)",
+		sendto_failops("Nick collision on %s (%s %ld <- %s %ld)",
 		    acptr->name, acptr->from->name, acptr->lastnick,
 		    cptr->name, lastnick);
 		/*
@@ -1541,7 +1542,7 @@ CMD_FUNC(m_nick)
 
 			sendto_one(cptr, ":%s KILL %s :%s (Nick Collision)",
 			    me.name, parv[1], me.name);
-			sendto_one(cptr, "NICK %s %d %d %s %s %s :%s",
+			sendto_one(cptr, "NICK %s %d %ld %s %s %s :%s",
 			    acptr->name, acptr->hopcount + 1, acptr->lastnick,
 			    acptr->user->username, acptr->user->realhost,
 			    acptr->user->server, acptr->info);
@@ -1569,7 +1570,7 @@ CMD_FUNC(m_nick)
 		differ = (mycmp(acptr->user->username, sptr->user->username) ||
 		    mycmp(acptr->user->realhost, sptr->user->realhost));
 		sendto_failops
-		    ("Nick change collision from %s to %s (%s %d <- %s %d)",
+		    ("Nick change collision from %s to %s (%s %ld <- %s %ld)",
 		    sptr->name, acptr->name, acptr->from->name, acptr->lastnick,
 		    sptr->from->name, lastnick);
 		if (!(parc > 2) || lastnick == acptr->lastnick)
@@ -1620,7 +1621,7 @@ CMD_FUNC(m_nick)
 			/* Kill their user. */
 			sendto_one(cptr, ":%s KILL %s :%s (Nick Collision)",
 			    me.name, parv[1], me.name);
-			sendto_one(cptr, "NICK %s %d %d %s %s %s :%s",
+			sendto_one(cptr, "NICK %s %d %ld %s %s %s :%s",
 			    acptr->name, acptr->hopcount + 1, acptr->lastnick,
 			    acptr->user->username, acptr->user->realhost,
 			    acptr->user->server, acptr->info);
@@ -1704,6 +1705,8 @@ CMD_FUNC(m_nick)
 			sendto_snomask(SNO_NICKCHANGE, "*** Notice -- %s (%s@%s) has changed his/her nickname to %s", sptr->name, sptr->user->username, sptr->user->realhost, nick);
 
 			RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, sptr, nick);
+		} else {
+			RunHook3(HOOKTYPE_REMOTE_NICKCHANGE, cptr, sptr, nick);
 		}
 		/*
 		 * Client just changing his/her nick. If he/she is
@@ -1724,7 +1727,7 @@ CMD_FUNC(m_nick)
 		add_history(sptr, 1);
 		sendto_common_channels(sptr, ":%s NICK :%s", parv[0], nick);
 		sendto_serv_butone_token(cptr, parv[0], MSG_NICK, TOK_NICK,
-		    "%s %d", nick, sptr->lastnick);
+		    "%s %ld", nick, sptr->lastnick);
 		sptr->umodes &= ~UMODE_REGNICK;
 	}
 	else if (!sptr->name[0])
@@ -1788,6 +1791,7 @@ CMD_FUNC(m_nick)
 			if (register_user(cptr, sptr, nick,
 			    sptr->user->username, NULL, NULL) == FLUSH_BUFFER)
 				return FLUSH_BUFFER;
+			strcpy(nick, sptr->name); /* don't ask, but I need this. do not remove! -- Syzop */
 			update_watch = 0;
 			newusr = 1;
 		}
@@ -1817,7 +1821,7 @@ CMD_FUNC(m_nick)
 		hash_check_watch(sptr, RPL_LOGON);
 
 #ifdef NEWCHFLOODPROT
-	if (sptr->user && !newusr)
+	if (sptr->user && !newusr && !IsULine(sptr))
 	{
 		for (mp = sptr->user->channel; mp; mp = mp->next)
 		{
@@ -2009,7 +2013,11 @@ CMD_FUNC(m_user)
 		}
 	}
 
-	strncpyzt(user->realhost, host, sizeof(user->realhost));
+	/* Set it temporarely to at least something trusted,
+	 * this was copying user supplied data directly into user->realhost
+	 * which seemed bad. Not to say this is much better ;p. -- Syzop
+	 */
+	strncpyzt(user->realhost, Inet_ia2p(&sptr->ip), sizeof(user->realhost));
 	user->server = me_hash;
       user_finish:
 	user->servicestamp = sstamp;
@@ -2193,7 +2201,7 @@ CMD_FUNC(m_ison)
 }
 
 void set_snomask(aClient *sptr, char *snomask) {
-	int what = MODE_ADD;
+	int what = MODE_ADD; /* keep this an int. -- Syzop */
 	char *p;
 	int i;
 	if (snomask == NULL) {
@@ -2216,7 +2224,7 @@ void set_snomask(aClient *sptr, char *snomask) {
 		 	 		continue;
 		 	 	if (*p == Snomask_Table[i].flag)
 		 	 	{
-					if (Snomask_Table[i].allowed && !Snomask_Table[i].allowed(sptr))
+					if (Snomask_Table[i].allowed && !Snomask_Table[i].allowed(sptr,what))
 						continue;
 		 	 		if (what == MODE_ADD)
 			 	 		sptr->user->snomask |= Snomask_Table[i].mode;
@@ -2229,7 +2237,7 @@ void set_snomask(aClient *sptr, char *snomask) {
 }
 
 void create_snomask(aClient *sptr, anUser *user, char *snomask) {
-	int what = MODE_ADD;
+	int what = MODE_ADD; /* keep this an int. -- Syzop */
 	char *p;
 	int i;
 	if (snomask == NULL) {
@@ -2252,7 +2260,7 @@ void create_snomask(aClient *sptr, anUser *user, char *snomask) {
 		 	 		continue;
 		 	 	if (*p == Snomask_Table[i].flag)
 		 	 	{
-					if (Snomask_Table[i].allowed && !Snomask_Table[i].allowed(sptr))
+					if (Snomask_Table[i].allowed && !Snomask_Table[i].allowed(sptr,what))
 						continue;
 		 	 		if (what == MODE_ADD)
 			 	 		user->snomask |= Snomask_Table[i].mode;
@@ -2276,6 +2284,7 @@ CMD_FUNC(m_umode)
 	char **p, *m;
 	aClient *acptr;
 	int  what, setflags, setsnomask = 0;
+	/* (small note: keep 'what' as an int. -- Syzop). */
 	short rpterror = 0, umode_restrict_err = 0, chk_restrict = 0, modex_err = 0;
 
 	what = MODE_ADD;
@@ -2378,6 +2387,14 @@ CMD_FUNC(m_umode)
 		  case 'o':
 			  if(sptr->from->flags & FLAGS_QUARANTINE)
 				break;
+			  /* A local user trying to set himself +o is denied here.
+			   * A while later (outside this loop) it is handled as well (and +C, +N, etc too)
+			   * but we need to take care here too because it might cause problems
+			   * since otherwise all IsOper()/IsAnOper() calls cannot be trusted,
+			   * that's just asking for bugs! -- Syzop.
+			   */
+			  if (MyClient(sptr) && (what == MODE_ADD)) /* Someone setting himself +o? Deny it. */
+			    break;
 			  goto def;
 		  case 'x':
 			  switch (UHOST_ALLOWED)
@@ -2416,13 +2433,11 @@ CMD_FUNC(m_umode)
 			  {
 				  if (*m == Usermode_Table[i].flag)
 				  {
+					  if (Usermode_Table[i].allowed)
+						if (!Usermode_Table[i].allowed(sptr,what))
+							break;
 					  if (what == MODE_ADD)
-					  {
-						  if (Usermode_Table[i].allowed)
-							if (!Usermode_Table[i].allowed(sptr))
-								break;
 						  sptr->umodes |= Usermode_Table[i].mode;
-					  }
 					  else
 						  sptr->umodes &= ~Usermode_Table[i].mode;
 					  break;
@@ -2595,7 +2610,7 @@ CMD_FUNC(m_umode)
 		RunHook2(HOOKTYPE_LOCAL_OPER, sptr, 0);
 	}
 
-	if ((sptr->umodes & UMODE_BOT) && !(setflags & UMODE_BOT))
+	if ((sptr->umodes & UMODE_BOT) && !(setflags & UMODE_BOT) && MyClient(sptr))
 	{
 		/* now +B */
 	  (void)m_botmotd(sptr, sptr, 1, parv);
@@ -2611,11 +2626,15 @@ CMD_FUNC(m_umode)
 	/* FIXME: This breaks something */
 	if (!(setflags & UMODE_HIDEOPER) && IsHideOper(sptr))
 	{
-		IRCstats.operators--;
+		if (IsOper(sptr)) /* decrease, but only if GLOBAL oper */
+			IRCstats.operators--;
 		VERIFY_OPERCOUNT(sptr, "umode2");
 	}
 	if ((setflags & UMODE_HIDEOPER) && !IsHideOper(sptr))
-		IRCstats.operators++;
+	{
+		if (IsOper(sptr)) /* increase, but only if GLOBAL oper */
+			IRCstats.operators++;
+	}
 	if (!(setflags & UMODE_INVISIBLE) && IsInvisible(sptr))
 		IRCstats.invisible++;
 	if ((setflags & UMODE_INVISIBLE) && !IsInvisible(sptr))
@@ -2648,13 +2667,13 @@ CMD_FUNC(m_umode2)
 		parv[0],
 		parv[0],
 		parv[1],
-		parv[3] ? parv[3] : NULL,
+		(parc > 3) ? parv[3] : NULL,
 		NULL
 	};
 
 	if (!parv[1])
 		return 0;
-	return m_umode(cptr, sptr, parv[3] ? 4 : 3, xparv);
+	return m_umode(cptr, sptr, (parc > 3) ? 4 : 3, xparv);
 }
 
 

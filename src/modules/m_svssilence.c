@@ -65,6 +65,7 @@ DLLFUNC int MOD_INIT(m_svssilence)(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_SVSSILENCE, TOK_SVSSILENCE, m_svssilence, MAXPARA);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 

@@ -1630,12 +1630,19 @@ int m_dns(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	aCache *cp;
 	int  i;
 
-	if (IsOper(sptr) && parv[1] && *parv[1] == 'l')
+	/* Why would normal users need to know all this? */
+	if (!IsOper(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		return 0;
+	}
+
+	if (parv[1] && *parv[1] == 'l')
 	{
 		sendto_realops("%s did a DNS cache list", sptr->name);
 		for (cp = cachetop; cp; cp = cp->list_next)
 		{
-			sendto_one(sptr, "NOTICE %s :Ex %d ttl %d host %s(%s)",
+			sendto_one(sptr, "NOTICE %s :Ex %ld ttl %ld host %s(%s)",
 			    parv[0], cp->expireat - TStime(), cp->ttl,
 #ifdef INET6
 			    HE(cp)->h_name, inetntop(AF_INET6,
@@ -1667,7 +1674,7 @@ int m_dns(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 		return 2;
 	}
-	if (IsOper(sptr) && parv[1] && *parv[1] == 'i')
+	if (parv[1] && *parv[1] == 'i')
 	{
 		int i;
 		/* Display nameserver list */
@@ -1727,9 +1734,9 @@ u_long cres_mem(aClient *sptr, char *nick)
 			nm += strlen(h->h_name);
 	}
 	ts = ARES_CACSIZE * sizeof(CacheTable);
-	sendto_one(sptr, ":%s %d %s :RES table %d",
+	sendto_one(sptr, ":%s %d %s :RES table %ld",
 	    me.name, RPL_STATSDEBUG, nick, ts);
-	sendto_one(sptr, ":%s %d %s :Structs %d IP storage %d Name storage %d",
+	sendto_one(sptr, ":%s %d %s :Structs %ld IP storage %ld Name storage %ld",
 	    me.name, RPL_STATSDEBUG, nick, sm, im, nm);
 	return ts + sm + im + nm;
 }

@@ -63,6 +63,7 @@ ModuleHeader MOD_HEADER(m_svsnick)
 DLLFUNC int MOD_INIT(m_svsnick)(ModuleInfo *modinfo)
 {
 	add_Command(MSG_SVSNICK, TOK_SVSNICK, m_svsnick, MAXPARA);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
@@ -111,7 +112,7 @@ int  m_svsnick(aClient *cptr, aClient *sptr, int parc, char *parv[])
                         if (IsPerson(acptr))
                                 add_history(acptr, 1);
                         sendto_serv_butone_token(NULL, parv[1], MSG_NICK,
-                            TOK_NICK, "%s :%i", parv[2], TS2ts(parv[3]));
+                            TOK_NICK, "%s :%ld", parv[2], TS2ts(parv[3]));
                         if (acptr->name[0])
                         {
 				(void)del_from_client_hash_table(acptr->name, acptr);

@@ -2441,3 +2441,161 @@ seen. gmtime warning still there
 - Minor doc update.
 - Updated all the modules to use the new macros
 - Changed version to 'beta18'
+- Fixed a problem with tre.dll
+- Rewrote some of the message searching code to make it roughly 25% faster
+- Minor botmotd-on-mode+B fix.
+- Added a "command override" system for modules (experimental)
+- Fixed some documentation typos (#0001273) reported by AngryWolf
+- Fixed a bug where SVSNOOP could cause negative oper counts
+- Fixed even more negative oper count bugs:
+  1) if services would do a '-o' via svsmode/svs2mode on a +H person (instead of -oH)
+  2) services setting +H on a non-oper
+  3) services making someone a global oper while he's already local op might cause confusion.
+  4) if local opers would do /mode nick +H
+  5) Some false warnings (negative opercount) if services would do -Ho (-oH went fine)
+- Fixed a problem with HTM where it would never actually read messages from clients
+- Made /who limit output (uses set::who-limit) (#0001244) suggested by Exael23 
+- Made /who * disabled (for non-opers) in HTM mode
+- Added usermode +T - No CTCP (excludes ACTION and DCC), (#001288) suggested by White_Magic
+  and others.
+- Optimized the channel privmsg/notice code again (sendto_channelprefix_butone_tok),
+  now ~33% faster.
+- Yet another code audit:
+  - (Just for the record, this audit has nothing to do with the ircnet buffer overflow,
+     unrealircd is not vulnerable)
+  - Various fixes
+  - Visual bug regarding +f & server synching, it was sometimes setting mode +f multiple
+    times depending on the ban-/userlist.
+  - Fixed a possible desynch regarding chmode +L.
+  - Fixed possible client confusion regarding bans.
+- Now it would be even better if it actually compiles...
+- Optimized send code re-enabled, I disabled it 6h ago due a bug-triggering-a-bug (see next).
+- Fixed a PING bug resulting in 'trying to send .. to myself' msg.
+- Some spelling corrections in unreal32docs.html.
+- Added checks for /sethost&/chghost to same host.
+- Added remove-chanmode-after-X-minutes in +f.
+  The format is +f [30j#R5]:15, where 5 is the "do -R after 5 minutes". For a default
+  action like +i you would have to do the same: +f [30j#i5]:15 (remove 'i' after 5 minutes).
+  Additionally, 2 config items are added:
+  - set::modef-default-unsettime, if this is set to for example '5' then things like
+    +f [30j]:15 will be transormed into +f [30j#i5]:15. It's just a default, the user can still
+    override it. By default this feature is not used.
+  - set::modef-max-unsettime, specifies the maximum amount of time for the <time> parameter,
+    by default this is set to 60 (=1 hour), the value should be between 0 and 255.
+  I didn't do the extended tests I usually do but it seems stable, also the docs are updated
+  but are probably updated again later to make it a bit more readable.
+  Feel free to report any bugs as soon as you discover them.
+  The only thing I could think of is: _usually_ only 1 server will have the -i/-R/.. timer
+  running, so if that server splits (or even worse dies) it will only be -i/-R/.. at that server
+  and when they sync back they merge chanmodes so +i/+R is set again.
+  I don't consider this a huge problem but maybe it can be inconveniently, if people have
+  a lot of trouble with this I'll have to consider a 50% recode of the +f system :/.
+- Fixed gline with weird value causing a crash at windows, reported by Spectre (#0001309).
+- Fix for +L without +l desynch on serverlinking.
+- Fixed a problem regarding module hooks, if a hook was called within a hook it could cause
+  problems (like pre connect hook -> exit_client -> quit hook).
+- Changed some useless stuff.
+- Enabled EXTCMODE by default, I presume it's stable but can't promise anything.
+- Module coders: changed 'allowed' callback function for umodes&snomasks,
+  from 'aClient *sptr' to 'aClient *sptr, int what'.
+  'what' will be MODE_ADD if trying to add and MODE_DEL if trying to remove.
+- Added HOOKTYPE_REMOTE_NICKCHANGE (called like: cptr, sptr, newnick).
+- Fixed a bug regarding +f and bounce modes, would cause a crash, reported by Rocko.
+- Made it so the dccdeny system can now check files that contain spaces (suggested by
+  Lamego)
+- Added set::options::allow-part-if-shunned. Sometimes shunned users close a channel
+  window, most irc clients just close the window immediately and send a part msg..
+  they don't wait for the server to confirm the part and thus the user thinks he has left
+  the channel while in fact he has not... this can be annoying if you are temporarely
+  shunning n00bs for a few minutes, they won't understand why they get a 'You are already
+  on that channel' error msg when they try to join that chan again.
+  This is however disabled by default because the idea of shun is to totally shun a user
+  so (s)he can't do anything except /admin (and thus not causing "any" [server]traffic).
+  Suggested by brentos. Note that we won't support /quit, or any other command, just this.
+- Module coders: Moved call to HOOKTYPE_LOCAL_JOIN down to where the JOIN, NAMES, etc
+  are already sent... this seems to make more sense since we have a prejoin hook now.
+- Moved it a bit too far (outside the loop), should be fixed now.
+- Fixed bug where color quits were stripped when they shouldn't be >:).
+- Added 'action' field to ban version { } which can be: kill: kills the user (default),
+  tempshun: shun the specific connection only, kline/zline/gline/gzline/shun: place
+  a ban on *@IP. Time of those bans can be specified in set::ban-version-tkl-time.
+  It's up to the admin to take a good decision, sometimes zlines are best (=won't use
+  much sockets but will reconnect quite quickly), sometimes tempshun (=will use 1 socket
+  but generates nearly no network traffic), sometimes klines/glines, etc..
+- Added sendto_umode_raw, sends to umodes, but not as a NOTICE
+- Added hook HOOKTYPE_CHANNEL_CREATE (cptr(user creating channel), chptr
+  (channel that has gotten created)
+- Added hook HOOKTYPE_CHANNEL_DESTROY (chptr (channel getting destroyed))
+- Minor doc updates regarding snomasks reported by Stoebi (#0001324).
+- Fixed two OperOverride kick bugs:
+  - If ircop is +h and victim is +h it would deny it, reported by Special (#0001308)
+  - Ircops (all except netadmin) had trouble kicking +q people, if the ircop isn't
+    op'ed he can kick them, but if he has +o he can't. Reported by Michi (#0001012).
+  If you use mixed unreal versions you can get desynch problems if you use those
+  fixed things (like kick a +h if you are +h) because older servers will still block
+  the kick. You will receive a 'You cannot kick channel' message from every older
+  server so you'll at least be notified ;p.
+- Don't allow remote pongs if unregistered.
+- (Internal) Added __attribute__ format checking for most format string functions,
+  this will currently produce a lot of warnings with -Wall.
+- Fixed 159 of 184 warnings detected by the above, the other warnings are false.
+  Most warnings had to do with long vs int, and thus the format strings (%d->%ld)
+  or the vars (int->long) have been changed (many of these were time_t/TS vs int).
+  Only a few rare crashbugs were discovered.
+- Module coders: for HOOKTYPE_LOCAL_CHANMODE the 'sendts' parameter was changed
+  from type 'int' to 'time_t', while in most circumstances (like on ia32)
+  you won't notice, I suggest you to update your callback functions anyway.
+- Possibly fixed an issue with set::modes-on-join and mode +f, it could have
+  set random remove-chanmode times in the default chanmode line.
+- Fixed some other weird remote PING/PONG stuff as well.
+- Fixed a bug where link::options::autoconnect wasn't working after rehash, ircd
+  had to be restarted to make it work. Will now try to connect on /rehash to
+  servers with autoconnect enabled. Bug was reported by Rocko (#0001321).
+- Added insane OperOverride system for joining +z channels (#0001189).
+  This seems better than just allowing the insecure oper trough +z.
+- Fixed a UMODE2 bug.
+- Made it so chanmode +f flood detection doesn't apply to u-lined servers. This was
+  already indirectly the case because services don't support the EOS command, but
+  now some (homemade) services do :p. Reported by Troco (#0001337).
+- (Internal) Moved most valid-host checking into 1 function, valid_host(),
+  which checks for invalid characters.
+- Added hostname check for me::name since this could cause mysterious trouble.
+- Removed references to tkline/tzline from help.conf. Reported by penna22 (#0001340)
+- Fix for permanent modules w/ config hooks (they were not called).
+- Fixed desynch bug regarding extended channelmodes. Reported by AngryWolf (#0001347)
+- Multiple /module changes (the command):
+  - Normal users can now get a list, versioninfo will be hidden however.
+  - Opers get some additional details like hooks and commandoverride's.
+  - Opers can use /module <servername> to get a remote list of loaded modules.
+  - Added flag [3RD] to show it's a 3rd party module
+  This was requested by by quite some people because serveradmins started to load
+  "spy modules" without clearly mentioning it in the MOTD (which is highly unethical
+  and in some countries even illegal due to privacy law). Also the remote module
+  list was requested by quite a few opers.
+  Sure, this isn't a 100% guarantee but at least if someone goes hiding stuff
+  then it's clear what their intentions are (and thus will be refused support, ..).
+- Changed emailaddr in help window at windows to unreal-users mailinglist.
+- Made the cloak mismatch msg during linking a bit more scary.
+- Added comment to 'Install as a service' option in installer to help n00bs a bit.
+- Made win32 work again (broke it by /module patch 30 minutes ago).
+- Fixed a snomask issue reported by Magnet (#0001354).
+- Added oper::maxlogins which allows you to limit the number of concurrent session
+  with the same oper block. Suggested by kain.
+- Made /dns oper-only (the ircd command, not your client /dns command :p).
+- Various help.conf fixes. Reported by nukie (#0001373).
+- Fixed remote BOTMOTD bug reported by Angrywolf (#0001365).
+- Workaround for "special ban makes it impossible to add other bans" bug
+  reported by wilkie, SerialKillinNinja, etc. 
+- Made /rehash reread botmotd and opermotd (#0001291).
+- Made OperOverride work for chanmode +Q (#0001370).
+- A few example.conf changes.
+- Fixed a compile problem on alpha, reported by Hyperi (#0001374).
+- Made "operator count bug" not notice all opers (log only), unless in debugmode.
+- Added comment regarding MLOCK and set::restrict-chanmodes in unreal32docs.html.
+- Made PREFIX_AQ a ./Config question at *NIX and enabled it by default at Win32.
+- Added stuff that will ease the transition to extended bans next release.
+- Added beta19 release notes
+- Made USE_ZIP the default again in src/win32/unrealinst.iss
+- Changed version to beta19
+- A last-minute fix, lalala...
+*** beta19 release ***
