@@ -1277,7 +1277,7 @@ int  m_netinfo(cptr, sptr, parc, parv)
 		    me.name, cptr->name, parv[8], ircnetwork);
 	}
 
-	if (protocol != UnrealProtocol)
+	if ((protocol != UnrealProtocol) && (protocol != 0))
 	{
 		sendto_realops
 		    ("Link %s is running Protocol u%li while we are running %li!",

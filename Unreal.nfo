@@ -22,10 +22,6 @@ and to get latest stable:
 latest beta:
 "cvs -d :pserver:anonymous@cvs.ircsystems.net:/home/cmunk/ircsystems/cvsroot checkout -r beta -d Unreal-beta unreal"
 
-latest devel version:
-
-"cvs -d :pserver:anonymous@cvs.ircsystems.net:/home/cmunk/ircsystems/cvsroot checkout -r devel -d Unreal-devel unreal"
-
   * To get support
   ================
     * IRC: /server irc.ircsystems.net 6667 - /join #unrealircd

@@ -338,3 +338,4 @@
 - Made /close reset IRCstats.unknown ..
 - Made SVSO (ofcourse) IRCstats.operators--;
 - Another IRCstats.unknown fix. Hope this works (hacked from undernet code)
+- NETINFO protocol 0 is accepted as valid protocool (for services etc)
