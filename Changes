@@ -298,3 +298,7 @@
   compiling modules and their (binary) compatability, zip links (zlib), ssl (OpenSSL)...
   Remote includes (curl and c-ares) instructions still need to be added.
 - Made 'Install as a service' unchecked by default, this should help beginners a lot.
+- Updated doc/compiling_win32.txt again with curl build instructions.
+  Also linked to a page with an unreal dev package which contains zlib+ssl+curl
+  precompiled. This basically means many people no longer need to compile zlib/ssl/curl
+  anymore themselves (which is a pain to do and takes a lot of time).
