@@ -1973,3 +1973,4 @@ seen. gmtime warning still there
 - Added set::throttle::period to allow you to change the throttling period 
   (requires THROTTLING)
 - Updated some documentation
+- Fixed "proxyscan on quit" bug (#0000788)

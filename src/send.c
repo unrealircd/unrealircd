@@ -1525,9 +1525,9 @@ void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnec
 	char connectd[1024];
 	char connecth[1024];
 
-	RunHook(HOOKTYPE_LOCAL_CONNECT, sptr);
 	if (!disconnect)
 	{
+		RunHook(HOOKTYPE_LOCAL_CONNECT, sptr);
 		ircsprintf(connectd,
 		    "*** Notice -- Client connecting on port %d: %s (%s@%s) [%s] %s%s%s",
 		    sptr->listener->port, nick, user->username, user->realhost,
