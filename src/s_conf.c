@@ -3568,6 +3568,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		MyFree(vhost_ptr);
 	}
 
+#ifdef STRIPBADWORDS
 	for (badword_ptr = conf_badword_channel; badword_ptr;
 		badword_ptr = (ConfigItem_badword *) next) {
 		next = (ListStruct *)badword_ptr->next;
@@ -3584,7 +3585,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		DelListItem(badword_ptr, conf_badword_message);
 		MyFree(badword_ptr);
 	}
-
+#endif
 	for (deny_dcc_ptr = conf_deny_dcc; deny_dcc_ptr; deny_dcc_ptr = (ConfigItem_deny_dcc *)next)
 	{
 		next = (ListStruct *)deny_dcc_ptr->next;
