@@ -1356,7 +1356,10 @@ CMD_FUNC(m_botmotd)
 	    parv) != HUNTED_ISME)
 		return 0;
 
-	strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost), sizeof userhost);
+	if (!IsPerson(sptr))
+		return 0;
+
+	strlcpy(userhost,make_user_host(sptr->user->username, sptr->user->realhost), sizeof userhost);
 	ptr = Find_tld(sptr, userhost);
 
 	if (ptr)

@@ -445,3 +445,4 @@
 - Removed an excess space from the SAMODE notice when a mode without a parameter was set
   (#0002134) reported by Bugz.
 - Fixed small memory leak on /rehash (post-3.2.2).
+- Fixed botmotd crash due to last change (post-3.2.2).
