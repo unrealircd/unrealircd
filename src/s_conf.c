@@ -373,10 +373,11 @@ void config_error(char *format, ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
+	if (!loop.ircd_booted)
 #ifndef _WIN32
-	fprintf(stderr, "[error] %s\n", buffer);
+		fprintf(stderr, "[error] %s\n", buffer);
 #else
-	win_log("[error] %s", buffer);
+		win_log("[error] %s", buffer);
 #endif
 	sendto_realops("error: %s", buffer);
 	/* We cannot live with this */
@@ -395,10 +396,11 @@ static void config_status(char *format, ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
+	if (!loop.ircd_booted)
 #ifndef _WIN32
-	fprintf(stderr, "* %s\n", buffer);
+		fprintf(stderr, "* %s\n", buffer);
 #else
-	win_log("* %s", buffer);
+		win_log("* %s", buffer);
 #endif
 	sendto_realops("warning: %s", buffer);
 }
@@ -414,7 +416,8 @@ void config_progress(char *format, ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
-	fprintf(stderr, "* %s\n", buffer);
+	if (!loop.ircd_booted)
+		fprintf(stderr, "* %s\n", buffer);
 	sendto_realops("%s", buffer);
 }
 

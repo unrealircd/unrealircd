@@ -599,3 +599,5 @@ seen. gmtime warning still there
 - Taking some more Config changes
 - Some more INET6 fixes
 - Made Unreal use FSU Pthreads if the pthreads on the system will show multiple copies of Unreal in ps
+- Fixed a /rehash bug dealing with echoing to stderr
+
