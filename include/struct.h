@@ -1543,7 +1543,6 @@ struct Command {
 	int			flags;
 	unsigned int    	count;
 	unsigned		parameters : 5;
-	unsigned		token : 1;
 	unsigned long   	bytes;
 	Module 			*owner;
 #ifdef DEBUGMODE

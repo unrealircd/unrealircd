@@ -2442,3 +2442,4 @@ seen. gmtime warning still there
 - Updated all the modules to use the new macros
 - Changed version to 'beta18'
 - Fixed a problem with tre.dll
+- Rewrote some of the message searching code to make it roughly 25% faster

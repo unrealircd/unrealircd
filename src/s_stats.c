@@ -501,7 +501,7 @@ int stats_command(aClient *sptr, char *para)
 {
 	int i;
 	aCommand *mptr;
-	for (i = 0; i <= 255; i++)
+	for (i = 0; i < 256; i++)
 		for (mptr = CommandHash[i]; mptr; mptr = mptr->next)
 			if (mptr->count)
 #ifndef DEBUGMODE
@@ -515,6 +515,21 @@ int stats_command(aClient *sptr, char *para)
 				mptr->lticks, mptr->lticks / CLOCKS_PER_SEC,
 				mptr->rticks, mptr->rticks / CLOCKS_PER_SEC);
 #endif
+	for (i = 0; i < 256; i++)
+		for (mptr = TokenHash[i]; mptr; mptr = mptr->next)
+			if (mptr->count)
+#ifndef DEBUGMODE
+			sendto_one(sptr, rpl_str(RPL_STATSCOMMANDS),
+				me.name, sptr->name, mptr->cmd,
+				mptr->count, mptr->bytes);
+#else
+			sendto_one(sptr, rpl_str(RPL_STATSCOMMANDS),
+				me.name, sptr->name, mptr->cmd,
+				mptr->count, mptr->bytes,
+				mptr->lticks, mptr->lticks / CLOCKS_PER_SEC,
+				mptr->rticks, mptr->rticks / CLOCKS_PER_SEC);
+#endif
+
 	return 0;
 }	
 

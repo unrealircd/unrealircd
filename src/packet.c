@@ -28,7 +28,8 @@ ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
 ID_Notes("2.12 1/30/94");
 
-aCommand	*CommandHash[256]; 
+aCommand	*CommandHash[256]; /* one per letter */
+aCommand	*TokenHash[256]; 
 
 /*
 ** dopacket
@@ -218,6 +219,7 @@ void	init_CommandHash(void)
 #endif
 	
 	bzero(CommandHash, sizeof(CommandHash));
+	bzero(TokenHash, sizeof(TokenHash));
 	add_Command(MSG_MODE, TOK_MODE, m_mode, MAXPARA);
 	add_Command(MSG_OPERMOTD, TOK_OPERMOTD, m_opermotd, MAXPARA);
 	add_CommandX(MSG_NICK, TOK_NICK, m_nick, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
@@ -299,6 +301,16 @@ void	init_CommandHash(void)
 			fprintf(stderr, "%c chainlength = %i\r\n",
 					i, chainlength);
 	}				
+	fprintf(stderr, "Tokens:\n");
+	for (i = 0; i <= 255; i++)
+	{
+		chainlength = 0;
+		for (p = TokenHash[i]; p; p = p->next)
+			chainlength++;
+		if (chainlength)
+			fprintf(stderr, "%c chainlength = %i\r\n",
+					i, chainlength);
+	}				
 #endif
 }
 
@@ -310,12 +322,14 @@ aCommand *add_Command_backend(char *cmd, int (*func)(), unsigned char parameters
 	
 	newcmd->cmd = (char *) strdup(cmd);
 	newcmd->parameters = (parameters > MAXPARA) ? MAXPARA : parameters;
-	newcmd->token = token;
 	newcmd->func = func;
 	newcmd->flags = flags;
 	
 	/* Add in hash with hash value = first byte */
-	AddListItem(newcmd, CommandHash[toupper(*cmd)]);
+	if (!token)
+		AddListItem(newcmd, CommandHash[toupper(*cmd)]);
+	else
+		AddListItem(newcmd, TokenHash[*cmd]);
 	return newcmd;
 }
 
@@ -326,6 +340,11 @@ int CommandExists(char *name)
 	for (p = CommandHash[toupper(*name)]; p; p = p->next)
 	{
 		if (!stricmp(p->cmd, name))
+			return 1;
+	}
+	for (p = TokenHash[*name]; p; p = p->next)
+	{
+		if (!strcmp(p->cmd, name))
 			return 1;
 	}
 	return 0;
@@ -354,7 +373,7 @@ Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigne
 void CommandDel(Command *command) {
 	DelListItem(command->cmd, CommandHash[toupper(*command->cmd->cmd)]);
 	if (command->tok)
-		DelListItem(command->tok, CommandHash[toupper(*command->tok->cmd)]);
+		DelListItem(command->tok, TokenHash[*command->tok->cmd]);
 	if (command->cmd->owner) {
 		ModuleObject *cmdobj;
 		for (cmdobj = command->cmd->owner->objects; cmdobj; cmdobj = (ModuleObject *)cmdobj->next) {
@@ -392,17 +411,16 @@ inline aCommand *find_CommandEx(char *cmd, int (*func)(), int token)
 {
 	aCommand *p;
 	
-	for (p = CommandHash[toupper(*cmd)]; p; p = p->next)
-		if (p->token && token)
-		{
-			if (!strcmp(p->cmd, cmd))
-				if (p->func == func)
-					return (p);
-		}
-		else
-			if (!stricmp(p->cmd, cmd))
-				if (p->func == func)
-					return (p);
+	if (!token)
+	{
+		for (p = CommandHash[toupper(*cmd)]; p; p = p->next)
+			if (!stricmp(p->cmd, cmd) && p->func == func)
+				return p;
+		return NULL;
+	}
+	for (p = TokenHash[*cmd]; p; p = p->next)
+		if (!strcmp(p->cmd, cmd) && p->func == func)
+			return p;
 	return NULL;
 	
 }
@@ -427,7 +445,7 @@ int del_Command(char *cmd, char *token, int (*func)())
 			i--;
 		else
 		{
-			DelListItem(p, CommandHash[toupper(*token)]);
+			DelListItem(p, TokenHash[*token]);
 			if (p->cmd)
 				MyFree(p->cmd);
 			MyFree(p);
@@ -437,12 +455,26 @@ int del_Command(char *cmd, char *token, int (*func)())
 
 }
 
-inline aCommand *find_Command(char *cmd, short token, int flags)
+static inline aCommand *find_Token(char *cmd, int flags)
 {
-	aCommand	*p;
-	
-	Debug((DEBUG_NOTICE, "FindCommand %s", cmd));
+	aCommand *p;
 
+	for (p = TokenHash[*cmd]; p; p = p->next) {
+		if ((flags & M_UNREGISTERED) && !(p->flags & M_UNREGISTERED))
+			continue;
+		if ((flags & M_SHUN) && !(p->flags & M_SHUN))
+			continue;
+		if ((flags & M_ALIAS) && !(p->flags & M_ALIAS))
+			continue;
+		if (!strcmp(p->cmd, cmd))
+			return p;
+	}
+	return NULL;
+}
+
+static inline aCommand *find_Cmd(char *cmd, int flags)
+{
+	aCommand *p;
 	for (p = CommandHash[toupper(*cmd)]; p; p = p->next) {
 		if ((flags & M_UNREGISTERED) && !(p->flags & M_UNREGISTERED))
 			continue;
@@ -450,18 +482,32 @@ inline aCommand *find_Command(char *cmd, short token, int flags)
 			continue;
 		if ((flags & M_ALIAS) && !(p->flags & M_ALIAS))
 			continue;
-		if (p->token && token)
-		{
-			if (!strcmp(p->cmd, cmd))
-				return (p);
-		}
-		else if (!p->token)
-			if (!stricmp(p->cmd, cmd))
-				return (p);
+		if (!stricmp(p->cmd, cmd))
+			return p;
 	}
 	return NULL;
 }
 
+inline aCommand *find_Command(char *cmd, short token, int flags)
+{
+	aCommand *p;
+	
+	Debug((DEBUG_NOTICE, "FindCommand %s", cmd));
+
+	if (token)
+	{
+		if (strlen(cmd) < 3)
+		{
+			if ((p = find_Token(cmd, flags)))
+				return p;
+			return find_Cmd(cmd, flags);
+		}
+		if ((p = find_Cmd(cmd, flags)))
+			return p;
+		return find_Token(cmd, flags);
+	}
+	return find_Cmd(cmd, flags);
+}
 
 aCommand *find_Command_simple(char *cmd)
 {
@@ -471,6 +517,10 @@ aCommand *find_Command_simple(char *cmd)
 		if (!stricmp(p->cmd, cmd))
 				return (p);
 	}
+
+	for (p = TokenHash[*cmd]; p; p = p->next) {
+		if (!strcmp(p->cmd, cmd))
+				return p;
+	}
 	return NULL;
-	
 }

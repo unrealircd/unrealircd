@@ -485,6 +485,7 @@ char	*Inet_ia2pNB(struct IN_ADDR *ia, int compressed);
  * CommandHash -Stskeeps
 */
 extern aCommand *CommandHash[256];
+extern aCommand *TokenHash[256];
 extern void	init_CommandHash(void);
 extern aCommand	*add_Command_backend(char *cmd, int (*func)(), unsigned char parameters, unsigned char token, int flags);
 extern void	add_Command(char *cmd, char *token, int (*func)(), unsigned char parameters);
