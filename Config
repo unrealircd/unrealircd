@@ -11,7 +11,7 @@
 # distribution without the author's prior consent.
 #
 # $Id$
-IRCD_VERSION="Unreal3.1-beta3"
+IRCD_VERSION="Unreal3.1"
 CONF_DATE=`date`
 LAST_VERSION="very very old"
 #
@@ -141,6 +141,14 @@ case "$OS" in
         CRYPT_OPER_PASSWORD=""
         CRYPT_LINK_PASSWORD=""
         echo "You are using FreeBSD 2.2; do NOT crypt passwords at this time"
+        ;;
+    *FreeBSD*4.0*)
+        DEFCFLAGS="$DEFOPT"
+        DEFLIBS="-lcrypt"
+        OSNAME="FreeBSD 4.0"
+        CRYPT_OPER_PASSWORD=""
+        CRYPT_LINK_PASSWORD=""
+        echo "You are using FreeBSD 4.0; You can use encrypted passwords now."
         ;;
     *FreeBSD*3*)
         DEFCFLAGS="$DEFOPT"

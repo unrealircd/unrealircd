@@ -371,3 +371,5 @@
 - Made /zline not memory corrupt/crash, bad df bug
 - Fixed a counting bug with unknown connections, very hopefully
 - Fixed /htm giving wrong response when /htm to 1
+- Fixed /shun showing "1970" to permanently shunned users
+- Fixed ./Config showing freebsd 3.0 in freebsd 4

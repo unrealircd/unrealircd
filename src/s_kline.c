@@ -325,8 +325,13 @@ int  find_tkline_match(cptr, xx)
 				strncpy(gmt2, asctime(gmtime((clock_t *) &lp->expire_at)),
 				      sizeof(gmt2));
 	           		gmt2[strlen(gmt2) - 1] = '\0';
-				sendto_one(cptr, ":%s NOTICE %s :*** You have been shunned by %s until %s (Reason: %s)", 
-					me.name, cptr->name, lp->setby, gmt2, lp->reason);
+				if (lp->expire_at)
+					sendto_one(cptr, ":%s NOTICE %s :*** You have been shunned by %s until %s (Reason: %s)", 
+						me.name, cptr->name, lp->setby, gmt2, lp->reason);
+				else
+					sendto_one(cptr, ":%s NOTICE %s :*** You have been shunned permanently by %s (Reason: %s)", 
+						me.name, cptr->name, lp->setby, lp->reason);
+						
 				return -1;
 			}
 		}
