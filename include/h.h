@@ -421,7 +421,6 @@ extern long UMODE_WHOIS;     /* 0x100000	 gets notice on /whois */
 extern long UMODE_KIX;       /* 0x200000	 usermode +q */
 extern long UMODE_BOT;       /* 0x400000	 User is a bot */
 extern long UMODE_SECURE;    /*	0x800000	 User is a secure connect */
-extern long UMODE_HIDING;    /* 0x2000000	 Totally invisible .. */
 extern long UMODE_VICTIM;    /* 0x8000000	 Intentional Victim */
 extern long UMODE_DEAF;      /* 0x10000000       Deaf */
 extern long UMODE_HIDEOPER;  /* 0x20000000	 Hide oper mode */

@@ -1898,3 +1898,4 @@ seen. gmtime warning still there
   Feature suggested Gargo (#0000603).
 - Fixed a bug in coadmin: global flags were not added (#0000716).
 - Made ".. did a /whois on you" always show the real host (#0000705).
+- Removed usermode +I (invisibility)

@@ -2360,9 +2360,6 @@ static int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, ch
         if ((chptr->mode.mode & MODE_ADMONLY) && !IsSkoAdmin(sptr))
                 return (ERR_ADMONLY);
 
-        if ((chptr->mode.mode & MODE_NOHIDING) && IsHiding(sptr))
-                return (ERR_NOHIDING);
-
 	/* Admin, Coadmin, Netadmin, and SAdmin can still walk +b in +O */
 	banned = is_banned(cptr, sptr, chptr);
         if (IsOper(sptr) && !IsAdmin(sptr) && !IsCoAdmin(sptr) && !IsNetAdmin(sptr)
@@ -2809,19 +2806,8 @@ CMD_FUNC(channel_link)
 		/*
 		   ** notify all other users on the new channel
 		 */
-		if (!IsHiding(sptr))
-			sendto_channel_butserv(chptr, sptr,
-			    ":%s JOIN :%s", parv[0], name);
-		else
-		{
-			if (MyClient(sptr))
-				sendto_one(sptr, ":%s!%s@%s JOIN :%s",
-				    sptr->name, sptr->user->username,
-				    GetHost(sptr), name);
-			sendto_umode(UMODE_NETADMIN,
-			    "*** Invisible(+I) user %s joined %s", sptr->name,
-			    chptr->chname);
-		}
+		sendto_channel_butserv(chptr, sptr,
+		    ":%s JOIN :%s", parv[0], name);
 		sendto_serv_butone_token(cptr, parv[0], MSG_JOIN,
 		    TOK_JOIN, name);
 
@@ -3035,24 +3021,7 @@ CMD_FUNC(m_join)
 		/*
 		   ** notify all other users on the new channel
 		 */
-		if (IsHiding(sptr))
-		{
-			if (MyClient(sptr))
-			{
-				sendto_one(sptr, ":%s!%s@%s JOIN :%s",
-				    sptr->name, sptr->user->username,
-				    GetHost(sptr), chptr->chname);
-				sendto_umode(UMODE_ADMIN,
-				    "*** [+I] %s invisible joined %s",
-				    sptr->name, chptr->chname);
-				sendto_serv_butone_token(&me, me.name, MSG_SMO,
-				    TOK_SMO, "A :[+I] %s invisible joined %s",
-				    sptr->name, chptr->chname);
-				sendto_channel_ntadmins(sptr, chptr,  ":%s JOIN :%s",
-				    sptr->name, chptr->chname);
-			}
-		}
-		else if (chptr->mode.mode & MODE_AUDITORIUM)
+		if (chptr->mode.mode & MODE_AUDITORIUM)
 		{
 			if (MyClient(sptr))
 				sendto_one(sptr, ":%s!%s@%s JOIN :%s",
@@ -3226,44 +3195,7 @@ CMD_FUNC(m_part)
 
 		if (1)
 		{
-
-			if (IsHiding(sptr))
-			{
-				if (MyClient(sptr))
-				{
-					sendto_umode(UMODE_ADMIN,
-					    "*** [+I] %s invisible parted %s",
-					    sptr->name, chptr->chname);
-					sendto_serv_butone_token(&me,
-					    me.name, MSG_SMO, TOK_SMO,
-					    "A :[+I] %s invisible parted %s",
-					    sptr->name, chptr->chname);
-					if (!comment)
-						sendto_channel_ntadmins(sptr, chptr, ":%s PART %s",
-						    sptr->name, chptr->chname);
-					else
-						sendto_channel_ntadmins(sptr, chptr, ":%s PART %s :%s",
-						    sptr->name, chptr->chname, comment);
-				}
-				if (MyClient(sptr)) {
-					/* awful hack .. */
-					if (!comment)
-						sendto_one(sptr,
-						    ":%s!%s@%s PART %s",
-						    sptr->name,
-						    sptr->user->username,
-						    GetHost(sptr),
-						    chptr->chname);
-					else
-						sendto_one(sptr,
-						    ":%s!%s@%s PART %s :%s",
-						    sptr->name,
-						    sptr->user->username,
-						    GetHost(sptr),
-						    chptr->chname, comment);
-				}
-			}
-			else if (chptr->mode.mode & MODE_AUDITORIUM)
+			if (chptr->mode.mode & MODE_AUDITORIUM)
 			{
 				if (MyClient(sptr))
 				{
@@ -3391,19 +3323,6 @@ CMD_FUNC(m_kick)
 					goto attack;
 				if (IsServer(sptr))
 					goto attack;
-				/* Hiding patch by }{ */
-				if (IsHiding(who))
-				{
-					sendto_one(sptr,
-					    err_str(ERR_NOSUCHNICK),
-					    me.name, parv[0], user, name);
-					sendto_one(who,
-					    ":%s %s %s :*** Hidden: %s tried to kick you from channel %s (%s)",
-					    me.name, IsWebTV(who) ? "PRIVMSG" : "NOTICE", who->name, parv[0],
-					    chptr->chname, comment);
-					break;
-				}
-
 				if ((chptr->mode.mode & MODE_NOKICKS)
 				    && !IsULine(sptr))
 				{
@@ -4440,8 +4359,6 @@ CMD_FUNC(m_names)
 		acptr = cm->cptr;
 		if (IsInvisible(acptr) && !member && !IsNetAdmin(sptr))
 			continue;
-		if (IsHiding(acptr) && acptr != sptr && !IsNetAdmin(sptr))
-			continue;
 		if (chptr->mode.mode & MODE_AUDITORIUM)
 			if (!is_chan_op(sptr, chptr)
 			    && !is_chanprot(sptr, chptr)
@@ -5000,10 +4917,9 @@ CMD_FUNC(m_sjoin)
 			} else
 #endif
 			add_user_to_channel(chptr, acptr, modeflags);
-			if (!IsHiding(acptr))
-				sendto_channel_butserv(chptr, acptr,
-				    ":%s JOIN :%s", nick,
-				    chptr->chname);
+			sendto_channel_butserv(chptr, acptr,
+			    ":%s JOIN :%s", nick,
+			    chptr->chname);
 			sendto_serv_butone_sjoin(cptr, ":%s JOIN %s",
 			    nick, chptr->chname);
 			CheckStatus('q', CHFL_CHANOWNER);

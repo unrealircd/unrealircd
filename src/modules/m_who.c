@@ -570,10 +570,6 @@ static int can_see(aClient *sptr, aClient *acptr, aChannel *channel)
 	      break;
 	  }
 
-	if (IsHiding(acptr))
-	  /* if they're +I .. only show them if the other person is an oper */
-	  break;
-
 	if (IsInvisible(acptr) && !member)
 	  break;
 
@@ -750,11 +746,6 @@ static char *first_visible_channel(aClient *sptr, aClient *acptr, int *flg)
 
   *flg = 0;
 
-  /* this is a bit cack, but it seems the only way
-     (and is the current behaviour) since +I is not channel-specific */
-  if (IsHiding(acptr))
-    return "*";
-
   for (lp = acptr->user->channel; lp; lp = lp->next)
     {
       aChannel *chptr = lp->chptr;
@@ -779,9 +770,6 @@ static char *first_visible_channel(aClient *sptr, aClient *acptr, int *flg)
 static int has_common_channels(aClient *c1, aClient *c2)
 {
   Membership *lp;
-
-  if (!IsAnOper(c1) && IsHiding(c2))
-    return 0;
 
   for (lp = c1->user->channel; lp; lp = lp->next)
     {

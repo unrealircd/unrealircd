@@ -2424,9 +2424,6 @@ CMD_FUNC(m_umode)
 				ClearNetAdmin(sptr);
 			if (IsCoAdmin(sptr) && !OPIsCoAdmin(sptr))
 				ClearCoAdmin(sptr);
-			if ((sptr->umodes & UMODE_HIDING)
-			    && !(sptr->oflag & OFLAG_INVISIBLE))
-				sptr->umodes &= ~UMODE_HIDING;
 			if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
 			    && !IsSecure(sptr))
 				sptr->umodes &= ~UMODE_SECURE;
@@ -2438,43 +2435,9 @@ CMD_FUNC(m_umode)
 		if ((sptr->umodes & (UMODE_KIX)) && !IsNetAdmin(sptr))
 			sptr->umodes &= ~UMODE_KIX;
 
-		if ((sptr->umodes & UMODE_HIDING) && !IsAnOper(sptr))
-			sptr->umodes &= ~UMODE_HIDING;
-
-		if ((sptr->umodes & UMODE_HIDING)
-		    && !(sptr->oflag & OFLAG_INVISIBLE))
-			sptr->umodes &= ~UMODE_HIDING;
 		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
 		    && !IsSecure(sptr))
 			sptr->umodes &= ~UMODE_SECURE;
-
-		if ((sptr->umodes & (UMODE_HIDING))
-		    && !(setflags & UMODE_HIDING))
-		{
-			sendto_umode(UMODE_ADMIN,
-			    "[+I] Activated total invisibility mode on %s",
-			    sptr->name);
-			sendto_serv_butone(cptr,
-			    ":%s SMO A :[+I] Activated total invisibility mode on %s",
-			    me.name, sptr->name);
-			sendto_channels_inviso_part(sptr);
-		}
-
-		if (!(sptr->umodes & (UMODE_HIDING)))
-		{
-			if (setflags & UMODE_HIDING)
-			{
-				sendto_umode(UMODE_ADMIN,
-				    "[+I] De-activated total invisibility mode on %s",
-				    sptr->name);
-				sendto_serv_butone(cptr,
-				    ":%s SMO A :[+I] De-activated total invisibility mode on %s",
-				    me.name, sptr->name);
-				sendto_channels_inviso_join(sptr);
-
-			}
-		}
-
 	}
 	/*
 	 * For Services Protection...

@@ -67,7 +67,6 @@ long UMODE_WHOIS = 0L;         /* gets notice on /whois */
 long UMODE_KIX = 0L;           /* usermode +q */
 long UMODE_BOT = 0L;           /* User is a bot */
 long UMODE_SECURE = 0L;        /* User is a secure connect */
-long UMODE_HIDING = 0L;        /* Totally invisible .. */
 long UMODE_VICTIM = 0L;        /* Intentional Victim */
 long UMODE_DEAF = 0L;          /* Deaf */
 long UMODE_HIDEOPER = 0L;      /* Hide oper mode */

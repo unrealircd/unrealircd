@@ -99,9 +99,6 @@ extern int m_guest_Init(ModuleInfo *modinfo);
 #ifdef SCAN_API
 extern int m_scan_Init(ModuleInfo *modinfo), scan_socks_Init(ModuleInfo *modinfo), scan_http_Init(ModuleInfo *modinfo);
 #endif
-#ifdef _WIN32
-extern int invisibility_Init(ModuleInfo *modinfo);
-#endif
 
 extern int m_sethost_Load(int module_load), m_setname_Load(int module_load), m_chghost_Load(int module_load);
 extern int m_chgident_Load(int module_load), m_setident_Load(int module_load), m_sdesc_Load(int module_load);
@@ -124,9 +121,6 @@ extern int m_guest_Load(int module_load);
 #ifdef SCAN_API
 extern int m_scan_Load(int module_load), scan_socks_Load(int module_load), scan_http_Load(int module_load);
 #endif
-#ifdef _WIN32
-extern int invisibility_Load(int module_load);
-#endif
 
 extern int m_sethost_Unload(), m_setname_Unload(), m_chghost_Unload(), m_chgident_Unload();
 extern int m_setident_Unload(), m_sdesc_Unload(), m_svsmode_Unload(), m_swhois_Unload();
@@ -144,9 +138,6 @@ extern int m_guest_Unload();
 #endif
 #ifdef SCAN_API
 extern int m_scan_Unload(), scan_socks_Unload(), scan_http_Unload();
-#endif
-#ifdef _WIN32
-extern int invisibility_Unload();
 #endif
 
 #ifdef DYNAMIC_LINKING
@@ -234,9 +225,6 @@ int    l_commands_Init(ModuleInfo *modinfo)
 	scan_socks_Init(&ModCmdsInfo);
 	scan_http_Init(&ModCmdsInfo);
 #endif
-#ifdef _WIN32
-	invisibility_Init(&ModCmdsInfo);
-#endif
 	return MOD_SUCCESS;
 }
 #ifdef DYNAMIC_LINKING
@@ -295,9 +283,6 @@ int    l_commands_Load(int module_load)
 	scan_socks_Load(module_load);
 	scan_http_Load(module_load);
 #endif
-#ifdef _WIN32
-	invisibility_Load(module_load);
-#endif
 	return MOD_SUCCESS;
 }
 
@@ -355,9 +340,6 @@ int	l_commands_Unload(int module_unload)
 	scan_socks_Unload();
 	scan_http_Unload();
 	m_scan_Unload();
-#endif
-#ifdef _WIN32
-	invisibility_Unload();
 #endif
 	return MOD_SUCCESS;
 }
