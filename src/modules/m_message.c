@@ -270,8 +270,9 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 
 						sendto_umode(UMODE_VICTIM,
 						    "%s tried to send forbidden file %s (%s) to %s (is blocked now)",
-						    sptr->name, file,
-						    fl->reason, acptr->name);
+						    sptr->name, file, fl->reason, acptr->name);
+						sendto_serv_butone(NULL, ":%s SMO v :%s tried to send forbidden file %s (%s) to %s (is blocked now)",
+							me.name, sptr->name, file, fl->reason, acptr->name);
 						sptr->flags |= FLAGS_DCCBLOCK;
 						continue;
 					}

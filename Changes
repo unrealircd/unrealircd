@@ -2810,3 +2810,4 @@ seen. gmtime warning still there
 - '/rehash -all' had bugs and is now considered depricated, just use '/rehash' instead.
   On '/rehash' we reload everything already so the '-all' option was useless anyway.
   Reported by fez (#0001516).
+- Made blocked dcc notices (sent to umode +v) global, suggested by neothematrix (#1513).
