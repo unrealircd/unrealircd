@@ -765,3 +765,5 @@
 ** internal 3.2.3-pre3 release **
 - Some spelling fixes in unreal32docs.html, reported by alex323 (#2412).
 - Updated the list of donators
+- /SAMODE could cause 'fishy timestamp' if digit parameters were used (eg: SAMODE #chan +l 5),
+  this has now be fixed by sending an explicit TS 0.

@@ -105,6 +105,7 @@ Unreal3.2.3-pre3 Release Notes
 - zlib upgraded to 1.2.2, curl upgraded to 7.13.1, both fix various issues.
 - Win32 installer now also installs doc\technical\*.*
 - Desynch issues regarding +s/+p and +c/+S
+- /SAMODE causing a 'fishy timestamp' if a cmode with a digit parameter was used.
 
 ==[ REMOVED ]==
 - NAZIISH_CHBAN_HANDLING (did not work at all)

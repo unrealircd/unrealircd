@@ -498,6 +498,9 @@ creationtime = sendts;
 		sendto_serv_butone_token(cptr, sptr->name, MSG_MODE, TOK_MODE,
 		    "%s %s%s %s %lu", chptr->chname, isbounce ? "&" : "",
 		    modebuf, parabuf, sendts);
+	else if (samode && IsMe(sptr)) /* SAMODE is a special case: always send a TS of 0 (omitting TS==desynch) */
+		sendto_serv_butone_token(cptr, sptr->name, MSG_MODE, TOK_MODE,
+		    "%s %s %s 0", chptr->chname, modebuf, parabuf);
 	else
 		sendto_serv_butone_token(cptr, sptr->name, MSG_MODE, TOK_MODE,
 		    "%s %s%s %s", chptr->chname, isbounce ? "&" : "",
