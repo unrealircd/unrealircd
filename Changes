@@ -549,3 +549,4 @@
 - Hopefully fixed the +x problem
 - Fixed a bug with mkpasswd on OpenBSD
 - Added desynch +e warning, and updated ./update enough ...
+- Updated update to work better, and that you can use lynx instead of wget
