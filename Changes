@@ -363,3 +363,5 @@
   is probably a good idea... Just in case your configuration file gets stolen one day ;).
 - MD5 password encryption is now always available on *NIX, even if SSL is disabled.
 - Temporary fix for ircsprintf %lu 1..6 issue.
+- Fixed a problem with +u for some clients that have a strict interpretation of the RFC.
+- Added TRE 0.7.0, fixes #0001952 reported by Praetorian

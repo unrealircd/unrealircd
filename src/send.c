@@ -578,7 +578,7 @@ void sendto_chmodemucrap(aClient *from, aChannel *chptr, char *text)
 
 	sprintf(tcmd, ":%s %s %s :%s", from->name, TOK_PRIVATE, chptr->chname, text); /* token */
 	sprintf(ccmd, ":%s %s %s :%s", from->name, MSG_PRIVATE, chptr->chname, text); /* msg */
-	sprintf(xcmd, ":IRC PRIVMSG %s :%s: %s", chptr->chname, from->name, text); /* local */
+	sprintf(xcmd, ":IRC!IRC@%s PRIVMSG %s :%s: %s", me.name, chptr->chname, from->name, text); /* local */
 
 	++sentalong_marker;
 	for (lp = chptr->members; lp; lp = lp->next)
