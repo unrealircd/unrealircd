@@ -260,6 +260,7 @@ Module *Module_make(ModuleHeader *header,
 	modp->header = header;
 	modp->dll = mod;
 	modp->flags = MODFLAG_NONE;
+	modp->options = 0;
 	modp->children = NULL;
 	modp->modinfo.size = sizeof(ModuleInfo);
 	modp->modinfo.module_load = 0;
