@@ -2511,7 +2511,7 @@ static void do_who(sptr, acptr, repchan)
                     !ShowChannel(sptr,repchan))
                         status[i++] = '!';
 #endif
-	else
+	else if (sptr != acptr)
 #ifdef ENABLE_INVISOPER
 		if (channelwho && IsHiding(acptr) ||
                     IsInvisible(acptr) && !IsMember(sptr,repchan) ||
