@@ -1777,12 +1777,12 @@ fi
 
 if [ -n "$OPENSSL_OTHERPLACE" ] ; then
        $RM -f Makefile.tmp
-       sed -e "s@^OPENSSLINCLUDE=\(.*\)@OPENSSLINCLUDE=-I/usr/local/ssl/include/openssl@" Makefile > Makefile.tmp
+       sed -e "s@^OPENSSLINCLUDE=\(.*\)@OPENSSLINCLUDES=-I/usr/local/ssl/include/openssl@" Makefile > Makefile.tmp
        cp Makefile.tmp Makefile
        $RM -f Makefile.tmp
 else
     $RM -f Makefile.tmp
-    sed -e "s@^OPENSSLINCLUDE=\(.*\)@OPENSSLINCLUDE=@" Makefile > Makefile.tmp
+    sed -e "s@^OPENSSLINCLUDE=\(.*\)@OPENSSLINCLUDES=@" Makefile > Makefile.tmp
     cp Makefile.tmp Makefile
     $RM -f Makefile.tmp
 fi
