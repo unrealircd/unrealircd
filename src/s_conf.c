@@ -1416,8 +1416,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 					{
 						if (!strcmp(ofp->name, cepp->ce_varname))
 						{
-							if (!(oper->oflags & ofp->flag))
-								oper->oflags |= ofp->flag;
+							oper->oflags |= ofp->flag;
 							break;
 						}
 					}
