@@ -372,7 +372,7 @@ static char *replies[] = {
 /* 332    RPL_TOPIC */ ":%s 332 %s %s :%s",
 /* 333    RPL_TOPICWHOTIME */ ":%s 333 %s %s %s %lu",
 /* 334    RPL_LISTSYNTAX */ ":%s 334 %s :%s",
-/* 335    RPL_WHOISBOT */ ":%s 335 %s %s :is a \2Bot\2 on %s",
+/* 335    RPL_WHOISBOT */ ":%s 335 %s %s :is a bot on %s",
 /* 336 */ NULL,
 /* 337 */ NULL,
 /* 338 */ NULL,

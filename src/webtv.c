@@ -347,7 +347,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 			if (acptr->umodes & UMODE_BOT)
 			{
-				sendto_one(sptr, ":IRC PRIVMSG %s :%s is an Bot on %s",
+				sendto_one(sptr, ":IRC PRIVMSG %s :%s is a bot on %s",
 					sptr->name, name, ircnetwork);
 			}
 			if (acptr->umodes & UMODE_SECURE)
