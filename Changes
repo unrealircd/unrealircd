@@ -157,3 +157,4 @@
 - Fixed a compile bug with DEBUGMODE
 - Changed a load of old aConfItem crap .., FIX: ConfigItem_link->options
 - Fixed a /connect bug
+- Made /svsnoop "work" again, moved it to s_svs.c (and made that file too)

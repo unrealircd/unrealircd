@@ -412,7 +412,7 @@ struct Message msgtab[] = {
 	{MSG_USERS, m_users, 0, MAXPARA, TOK_USERS, 0L},
 	{MSG_SAMODE, m_samode, 0, MAXPARA, TOK_SAMODE, 0L},
 	{MSG_SVSKILL, m_svskill, 0, MAXPARA, TOK_SVSKILL, 0L},
-//	{MSG_SVSNOOP, m_svsnoop, 0, MAXPARA, TOK_SVSNOOP, 0L},
+	{MSG_SVSNOOP, m_svsnoop, 0, MAXPARA, TOK_SVSNOOP, 0L},
 	{MSG_CS, m_chanserv, 0, 1, TOK_CHANSERV, 0L},
 	{MSG_NICKSERV, m_nickserv, 0, 1, TOK_NICKSERV, 0L},
 	{MSG_NS, m_nickserv, 0, 1, TOK_NICKSERV, 0L},

@@ -27,7 +27,7 @@ OBJS=agent.o aln.o badwords.o bsd.o channel.o class.o cloak.o crule.o dbuf.o dyn
 	fdlist.o hash.o help.o ircd.o ircsprintf.o list.o lusers.o \
 	match.o packet.o parse.o $(REGEX) res.o $(RES) s_auth.o \
 	s_bsd.o s_conf.o s_debug.o s_err.o s_extra.o s_kline.o \
-	s_misc.o s_numeric.o s_serv.o s_socks.o $(STRTOUL) ssl.o s_unreal.o \
+	s_misc.o s_numeric.o s_serv.o s_socks.o s_svs.o $(STRTOUL) ssl.o s_unreal.o \
 	s_user.o scache.o send.o support.o userload.o version.o webtv.o \
 	whowas.o zip.o s_conf2.o
 
@@ -117,6 +117,9 @@ userload.o: userload.c $(INCLUDES)
 
 s_conf2.o: s_conf2.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c s_conf2.c
+
+s_svs.o: s_svs.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c s_svs.c
 
 help.o: help.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c help.c
