@@ -357,14 +357,14 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 	if (!strcmp(vhost->password, pwd)) {
-		char olduser[USERLEN];
+		char olduser[USERLEN+1];
 		if (sptr->user->virthost)
 			MyFree(sptr->user->virthost);
 		sptr->user->virthost = MyMalloc(strlen(vhost->virthost) + 1);
 		strncpy(sptr->user->virthost, vhost->virthost, HOSTLEN);
 		if (vhost->virtuser) {
-			strcmp(olduser, sptr->user->username);
-			strncpy(sptr->user->username, vhost->virtuser, USERLEN);
+			strcpy(olduser, sptr->user->username);
+			strncpy(sptr->user->username, vhost->virtuser, USERLEN+1);
 		}
 		sptr->umodes |= UMODE_HIDE;
 		sptr->umodes |= UMODE_SETHOST;
