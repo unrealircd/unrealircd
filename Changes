@@ -282,3 +282,6 @@
   reported by vonitsanet and AngryWolf.
 - Fixed an MacOS X crash-on-first-connect if SSL was enabled (#0001982), reported by bit.
 - Fixed a bug if me::info was set to "".
+- Added a missing error message for ModuleGetErrorStr. Additionally added error checking to
+  ensure NULL is returned when an invalid error code is specified (#0001986) reported by
+  AngryWolf.
