@@ -58,13 +58,13 @@ Just extract it somewhere (eg: to c:\dev).
 Then, use compile flags to enable the features + specify where to look.
 Here are examples if you used c:\dev:
 ZIP: nmake -f makefile.win32 USE_ZIPLINKS=1 ZLIB_INC_DIR="c:\dev\zlib" ZLIB_LIB_DIR="c:\dev\zlib\dll32"
-SSL: nmake -f makefile.win32 USE_SSL=1 OPENSSL_INC_DIR="c:\openssl\include" OPENSSL_LIB_DIR="c:\openssl\lib" 
+SSL: nmake -f makefile.win32 USE_SSL=1 OPENSSL_INC_DIR="c:\dev\openssl\include" OPENSSL_LIB_DIR="c:\dev\openssl\lib" 
 CURL: nmake -f makefile.win32 USE_REMOTEINC=1 LIBCURL_INC_DIR="c:\dev\curl\include" LIBCURL_LIB_DIR="c:\dev\curl\lib"
 
 Obviously you can (and probably will) combine all these options, like
 to build a zip+ssl+curl version (all in 1 line):
 nmake -f makefile.win32 USE_ZIPLINKS=1 ZLIB_INC_DIR="c:\dev\zlib" ZLIB_LIB_DIR="c:\dev\zlib\dll32"
-USE_SSL=1 OPENSSL_INC_DIR="c:\openssl\include" OPENSSL_LIB_DIR="c:\openssl\lib" USE_REMOTEINC=1
+USE_SSL=1 OPENSSL_INC_DIR="c:\dev\openssl\include" OPENSSL_LIB_DIR="c:\dev\openssl\lib" USE_REMOTEINC=1
 LIBCURL_INC_DIR="c:\dev\curl\include" LIBCURL_LIB_DIR="c:\dev\curl\lib"
 
 == COMPILING ZLIB/SSL/CURL YOURSELF ==
