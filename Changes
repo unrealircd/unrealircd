@@ -1783,3 +1783,4 @@ seen. gmtime warning still there
 - Fixed so crypt() works on !HAVE_CRYPT systems with openssl 0.9.7+ too
   (yes, this makes us able to compile win32-ssl)
 ** beta14 released **
+- Fixed example.conf set::dns::retries, 2s -> 2
