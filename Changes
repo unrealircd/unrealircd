@@ -2596,3 +2596,4 @@ seen. gmtime warning still there
 - Added stuff that will ease the transition to extended bans next release.
 - Added beta19 release notes
 - Made USE_ZIP the default again in src/win32/unrealinst.iss
+- Changed version to beta19
