@@ -106,7 +106,6 @@ int    l_commands_init(int module_load)
 	m_tsctl_init(module_load);
 	m_htm_init(module_load);
 	m_chgname_init(module_load);
-	m_remgline_init(module_load);
 	m_message_init(module_load);
 	m_whois_init(module_load);
 	m_quit_init(module_load);
@@ -162,7 +161,6 @@ void    l_commands_load(int module_load)
 	m_tsctl_load(module_load);
 	m_htm_load(module_load);
 	m_chgname_load(module_load);
-	m_remgline_load(module_load);
 	m_message_load(module_load);
 	m_whois_load(module_load);
 	m_quit_load(module_load);
@@ -217,7 +215,6 @@ void	l_commands_unload(void)
 	m_tsctl_unload();
 	m_htm_unload();
 	m_chgname_unload();
-	m_remgline_unload();
 	m_message_unload();
 	m_whois_unload();
 	m_quit_unload();

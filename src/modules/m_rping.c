@@ -18,6 +18,7 @@
 #ifdef _WIN32
 #include <io.h>
 #endif
+#include <sys/timeb.h>
 #include <fcntl.h>
 #include "h.h"
 #ifdef STRIPBADWORDS

@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 #ifdef _WIN32
+#define snprintf _snprintf
 #include <io.h>
 #endif
 #include <fcntl.h>

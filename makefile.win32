@@ -261,7 +261,7 @@ src/m_adminchat.obj: src/modules/m_adminchat.c $(INCLUDES)
 src/m_akill.obj: src/modules/m_akill.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/modules/m_akill.c
 
-src/m_chgname.obj: src/modules/chgname.c $(INCLUDES)
+src/m_chgname.obj: src/modules/m_chgname.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/modules/m_chgname.c
 
 src/m_guest.obj: src/modules/m_guest.c $(INCLUDES)
