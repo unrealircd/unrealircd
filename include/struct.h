@@ -115,7 +115,6 @@ typedef struct Command aCommand;
 typedef struct SMember Member;
 typedef struct SMembership Membership;
 typedef struct SMembershipL MembershipL;
-typedef struct _irchook Hook;
 
 #ifdef NEED_U_INT32_T
 typedef unsigned int u_int32_t;	/* XXX Hope this works! */
@@ -1076,16 +1075,6 @@ struct _configitem_help {
 	ConfigFlag flag;
 	char *command;
 	aMotd *text;
-};
-
-struct _irchook {
-	Hook *prev, *next;
-	ConfigFlag flag;
-	union
-	{
-		int (*intfunc)();
-		void (*voidfunc)();
-	} func;
 };
 
 #define HM_HOST 1

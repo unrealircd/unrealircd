@@ -47,6 +47,7 @@ DLLFUNC int m_guest(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 
+Module *Mod_Handle = NULL;
 #ifndef DYNAMIC_LINKING
 ModuleHeader m_guest_Header
 #else
@@ -77,7 +78,7 @@ int    m_guest_Init(int module_load)
 	 * We call our add_Command crap here
 	*/
 #ifdef GUEST
-	add_Hook(HOOKTYPE_GUEST, m_guest);
+	HookAddEx(Mod_Handle, HOOKTYPE_GUEST, m_guest);
 #endif
 	return MOD_SUCCESS;
 	
@@ -103,7 +104,7 @@ int	m_guest_Unload(int module_unload)
 #endif
 {
 #ifdef GUEST
-	del_Hook(HOOKTYPE_GUEST, m_guest);
+	HookDel(HOOKTYPE_GUEST, m_guest);
 #endif
 	return MOD_SUCCESS;
 }

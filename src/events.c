@@ -106,6 +106,7 @@ Event	*EventDel(Event *event)
 				for (eventobjs = p->owner->objects; eventobjs; eventobjs = eventobjs->next) {
 					if (eventobjs->type == MOBJ_EVENT && eventobjs->object.event == p) {
 						DelListItem(eventobjs, p->owner->objects);
+						MyFree(eventobjs);
 						break;
 					}
 				}

@@ -71,7 +71,7 @@ int	httpd_parse(HTTPd_Request *request);
 void	httpd_badrequest(HTTPd_Request *request, char *reason);
 void	httpd_parse_final(HTTPd_Request *request);
 void 	httpd_404_header(HTTPd_Request *request, char *path);
-
+Module *Mod_Handle = NULL;
 
 
 #ifndef DYNAMIC_LINKING
@@ -95,9 +95,9 @@ DLLFUNC int	Mod_Init(int module_load)
 int    httpd_Init(int module_load)
 #endif
 {
-	HookAddEx(HOOKTYPE_HTTPD_URL, h_u_stats, NULL);
-	HookAddEx(HOOKTYPE_HTTPD_URL, h_u_vfs, NULL);
-	HookAddEx(HOOKTYPE_HTTPD_URL, h_u_phtml, NULL);
+	HookAddEx(Mod_Handle, HOOKTYPE_HTTPD_URL, h_u_stats);
+	HookAddEx(Mod_Handle, HOOKTYPE_HTTPD_URL, h_u_vfs);
+	HookAddEx(Mod_Handle, HOOKTYPE_HTTPD_URL, h_u_phtml);
 	return 1;
 }
 

@@ -1117,3 +1117,5 @@ v- Fixed some bugreport stuff
   event the IRCd will not crash. Also fixed a crash involving delayed unloads and cleaned up notices
 - Problem with sendto_ops and !aClient->user  fix
 - Fixed bug in m_tkl_line and various m_line functions (was checking for wrong # of paras)
+- Recoded hooks to take advantage of the module object code
+- Fixed a memory leak in hooks

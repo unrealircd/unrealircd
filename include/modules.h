@@ -50,6 +50,7 @@ typedef char			(*cFP)();	/* char * function pointer */
 typedef struct _mod_symboltable Mod_SymbolDepTable;
 typedef struct _event Event;
 typedef struct _eventinfo EventInfo;
+typedef struct _irchook Hook;
 
 /*
  * Module header that every module must include, with the name of
@@ -88,6 +89,16 @@ typedef struct _ModuleObject {
 		aCommand *command;
 	} object;
 } ModuleObject;
+
+struct _irchook {
+	Hook *prev, *next;
+	short type;
+	union {
+		int (*intfunc)();
+		void (*voidfunc)();
+	} func;
+	Module *owner;
+};
 
 /*
  * What we use to keep track internally of the modules
@@ -178,15 +189,19 @@ vFP     Module_Sym(char *name);
 vFP     Module_SymX(char *name, Module **mptr);
 int	Module_free(Module *mod);
 
-#define add_Hook(hooktype, func) HookAddEx(hooktype, func, NULL)
+#define add_Hook(hooktype, func) HookAddMain(NULL, hooktype, func, NULL)
 #define del_Hook(hooktype, func) HookDelEx(hooktype, func, NULL)
-#define HookAdd(hooktype, func) HookAddEx(hooktype, func, NULL)
+#define HookAdd(hooktype, func) HookAddMain(NULL, hooktype, func, NULL)
+#define HookAddEx(module, hooktype, func) HookAddMain(module, hooktype, func, NULL)
 #define HookDel(hooktype, func) HookDelEx(hooktype, func, NULL)
+#define HookAddInt(hooktype, func) HookAddMain(NULL, hooktype, NULL, func)
+#define HookAddIntEx(module, hooktype, func) HookAddMain(module, hooktype, NULL, func)
+#define HookDelInt(hooktype, func) HookDelEx(hooktype, NULL, func)
 
-#define add_HookX(hooktype, func1, func2) HookAddEx(hooktype, func1, func2)
+#define add_HookX(hooktype, func1, func2) HookAddMain(NULL, hooktype, func1, func2)
 #define del_HookX(hooktype, func1, func2) HookDelEx(hooktype, func1, func2)
 
-void	HookAddEx(int hooktype, int (*intfunc)(), void (*voidfunc)());
+void	HookAddMain(Module *module, int hooktype, int (*intfunc)(), void (*voidfunc)());
 void	HookDelEx(int hooktype, int (*intfunc)(), void (*voidfunc)());
 
 #define RunHook0(hooktype) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next)(*(global_i->func.intfunc))()

@@ -68,7 +68,7 @@ static struct SOCKADDR_IN	*xScan_endpoint = NULL;
 extern void Eadd_scan();
 extern struct SOCKADDR_IN	Scan_endpoint;
 #endif
-
+Module *Mod_Handle = NULL;
 static Mod_SymbolDepTable modsymdep[] = 
 {
 	MOD_Dep(Eadd_scan, xEadd_scan, "src/modules/scan.so"),
@@ -107,7 +107,7 @@ int    scan_http_Init(int module_load)
 	/*
 	 * Add scanning hooks
 	*/
-	HookAddEx(HOOKTYPE_SCAN_HOST, NULL, scan_http_scan); 
+	HookAddIntEx(Mod_Handle, HOOKTYPE_SCAN_HOST, scan_http_scan); 
 	return MOD_SUCCESS;
 }
 

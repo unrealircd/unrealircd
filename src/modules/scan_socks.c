@@ -104,7 +104,7 @@ int    scan_socks_Init(int module_load)
 	/*
 	 * Add scanning hooks
 	*/
-	HookAddEx(HOOKTYPE_SCAN_HOST, NULL, scan_socks_scan); 
+	HookAddIntEx(Mod_Handle, HOOKTYPE_SCAN_HOST, scan_socks_scan); 
 	return MOD_SUCCESS;
 }
 
@@ -125,7 +125,7 @@ DLLFUNC int	Mod_Unload(int module_unload)
 int	scan_socks_Unload(int module_unload)
 #endif
 {
-	HookDelEx(HOOKTYPE_SCAN_HOST, NULL, scan_socks_scan);
+	HookDelInt(HOOKTYPE_SCAN_HOST, scan_socks_scan);
 }
 
 #define HICHAR(s)	(((unsigned short) s) >> 8)

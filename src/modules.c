@@ -253,8 +253,14 @@ int    Module_free(Module *mod)
 	}
 	for (objs = mod->objects; objs; objs = next) {
 		next = objs->next;
-		if (objs->type == MOBJ_EVENT) 
+		if (objs->type == MOBJ_EVENT) {
 			EventDel(objs->object.event);
+
+		}
+		else if (objs->type == MOBJ_HOOK) {
+			HookDelEx(objs->object.hook->type, objs->object.hook->func.intfunc,
+				objs->object.hook->func.voidfunc);
+		}
 	}
 	for (p = Modules; p; p = p->next)
 	{
@@ -597,7 +603,7 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return 1;
 }
 
-void	HookAddEx(int hooktype, int (*func)(), void (*vfunc)())
+void	HookAddMain(Module *module, int hooktype, int (*func)(), void (*vfunc)())
 {
 	Hook *p;
 	
@@ -606,7 +612,15 @@ void	HookAddEx(int hooktype, int (*func)(), void (*vfunc)())
 		p->func.intfunc = func;
 	if (vfunc)
 		p->func.voidfunc = vfunc;
+	p->type = hooktype;
+	p->owner = module;
 	AddListItem(p, Hooks[hooktype]);
+	if (module) {
+		ModuleObject *hookobj = (ModuleObject *)MyMallocEx(sizeof(ModuleObject));
+		hookobj->object.hook = p;
+		hookobj->type = MOBJ_HOOK;
+		AddListItem(hookobj, module->objects);
+	}
 }
 
 void	HookDelEx(int hooktype, int (*func)(), void (*vfunc)())
@@ -618,6 +632,17 @@ void	HookDelEx(int hooktype, int (*func)(), void (*vfunc)())
 			(vfunc && (p->func.voidfunc == vfunc)))
 		{
 			DelListItem(p, Hooks[hooktype]);
+			if (p->owner) {
+				ModuleObject *hookobj;
+				for (hookobj = p->owner->objects; hookobj; hookobj = hookobj->next) {
+					if (hookobj->type == MOBJ_HOOK && hookobj->object.hook == p) {
+						DelListItem(hookobj, p->owner->objects);
+						MyFree(hookobj);
+						break;
+					}
+				}
+			}
+			MyFree(p);
 			return;
 		}
 }
