@@ -283,3 +283,4 @@ char	*Auth_Make(short type, char *para)
 	}
 
 }
+
