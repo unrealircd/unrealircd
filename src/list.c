@@ -188,6 +188,8 @@ anUser *make_user(cptr)
 		user->invited = NULL;
 		user->silence = NULL;
 		user->server = NULL;
+		user->lopt = NULL;
+		user->whowas = NULL;
 		user->virthost = MyMalloc(5);
 		*user->virthost = '\0';
 		cptr->user = user;

@@ -684,3 +684,4 @@
 - Moved lopt and whowas to anUser (saves 8 bytes for every server)
 - Removed aClient->history, not used (saves 4 bytes for every user/server)
 - Fixed compile error with SSL
+- Fixed a /list and /quit bug
