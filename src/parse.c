@@ -151,22 +151,7 @@ void ban_flooder(aClient *cptr)
 	int i;
 	aClient *acptr;
 
-	/* This removes all unknown clients from the specified IP, it should prevent
- 	 * duplicate notices about the flood */
-	for (i = 0; i <= LastSlot; i++)
-	{
-		if (!(acptr = local[i]))
-			continue;
-		if (!IsUnknown(acptr))
-			continue;
-#ifndef INET6
-		if (acptr->ip.S_ADDR == cptr->ip.S_ADDR)
-#else
-		if (!bcmp(acptr->ip.S_ADDR, cptr->ip.S_ADDR, sizeof(cptr->ip.S_ADDR)))
-#endif
-			exit_client(acptr, acptr, acptr, "Flood from unknown connection");
-	}
-
+	/* place_host_ban also takes care of removing any other clients with same host/ip */
 	place_host_ban(cptr, BAN_ACT_ZLINE, "Flood from unknown connection", UNKNOWN_FLOOD_BANTIME);
 	return;
 }

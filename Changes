@@ -2931,3 +2931,4 @@ seen. gmtime warning still there
   - Internal: added EXTTKL PROTOCTL, this determinates if 10 parameters
     instead of 8 are supported for m_tkl (used by spamfilter add).
   This new system needs some testing... :)
+- Fixed a bug in 'Flood from unknown connection' (#0001566).
