@@ -204,7 +204,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						acptr->user->username, acptr->user->realhost),
 						sizeof uhost);
 					strlcpy(vhost, make_nick_user_host(acptr->name,
-						acptr->user->username, acptr->user->virthost ? acptr->user->virthost : acptr->user->realhost),
+						acptr->user->username, GetHost(acptr)),
 						sizeof vhost);
 					ban = chptr->banlist;
 					while (ban) {
@@ -349,10 +349,16 @@ int  m_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
                           case 'o':
                                   if (what == MODE_ADD
                                       && !(acptr->umodes & UMODE_OPER))
+                                  {
                                           IRCstats.operators++;
+                                          addto_fdlist(acptr->slot, &oper_fdlist);
+                                  }
                                   if (what == MODE_DEL
                                       && (acptr->umodes & UMODE_OPER))
+                                  {
                                           IRCstats.operators--;
+                                          delfrom_fdlist(acptr->slot, &oper_fdlist);
+                                  }
                                   goto setmodex;
 			  case 'H':
 				  if (what == MODE_ADD && !(acptr->umodes & UMODE_HIDEOPER))
@@ -475,10 +481,16 @@ int  m_svs2mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
                                         break;
                                   if (what == MODE_ADD
                                       && !(acptr->umodes & UMODE_OPER))
+                                  {
                                           IRCstats.operators++;
+                                          addto_fdlist(acptr->slot, &oper_fdlist);
+                                  }
                                   if (what == MODE_DEL
                                       && (acptr->umodes & UMODE_OPER))
+                                  {
                                           IRCstats.operators--;
+                                          delfrom_fdlist(acptr->slot, &oper_fdlist);
+                                  }
 				  goto setmodey;
 			  case 'H':
 				  if (what == MODE_ADD && !(acptr->umodes & UMODE_HIDEOPER))

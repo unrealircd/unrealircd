@@ -70,6 +70,8 @@ extern ircstats IRCstats;
 extern int lifesux;
 #endif
 
+/* Some forward declarations */
+CMD_FUNC(do_join);
 static void add_invite(aClient *, aChannel *);
 static int add_banid(aClient *, aChannel *, char *);
 static int can_join(aClient *, aClient *, aChannel *, char *, char *,
@@ -230,7 +232,7 @@ Membership *find_membership_link(Membership *lp, aChannel *ptr)
 Member	*make_member(void)
 {
 	Member *lp;
-	int	i;
+	unsigned int	i;
 
 	if (freemember == NULL)
 	{
@@ -267,7 +269,7 @@ Membership	*make_membership(int local)
 {
 	Membership *lp = NULL;
 	MembershipL *lp2 = NULL;
-	int	i;
+	unsigned int	i;
 
 	if (!local)
 	{
@@ -662,6 +664,14 @@ void remove_user_from_channel(aClient *sptr, aChannel *chptr)
 	sub1_from_channel(chptr);
 }
 
+long get_access(aClient *cptr, aChannel *chptr)
+{
+	Membership *lp;
+	if (chptr)
+		if ((lp = find_membership_link(cptr->user->channel, chptr)))
+			return lp->flags;
+	return 0;
+}
 
 int  is_chan_op(aClient *cptr, aChannel *chptr)
 {
@@ -671,11 +681,14 @@ int  is_chan_op(aClient *cptr, aChannel *chptr)
 		return 1;
 	if (chptr)
 		if ((lp = find_membership_link(cptr->user->channel, chptr)))
+#ifdef PREFIX_AQ
+			return ((lp->flags & (CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER)));
+#else
 			return ((lp->flags & CHFL_CHANOP));
+#endif
 
 	return 0;
 }
-
 
 int  has_voice(aClient *cptr, aChannel *chptr)
 {
@@ -1353,6 +1366,12 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
 					chptr->chname, chptr->creationtime, sendts);			
 					*/
 				chptr->creationtime = sendts;
+#if 0
+				if (sendts < 750000)
+					sendto_realops(
+						"Warning! Possible desynch: MODE for channel %s ('%s %s') has fishy timestamp (%ld) (from %s/%s)"
+						chptr->chname, modebuf, parabuf, sendts, cptr->name, sptr->name);
+#endif
 				/* new chan or our timestamp is wrong */
 				/* now works for double-bounce prevention */
 
@@ -1425,6 +1444,10 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
 		    modebuf, parabuf);
 	/* tell them it's not a timestamp, in case the last param
 	   ** is a number. */
+
+	if (MyConnect(sptr))
+		RunHook7(HOOKTYPE_LOCAL_CHANMODE, cptr, sptr, chptr, modebuf, parabuf, sendts, samode);
+
 }
 /* make_mode_str -- written by binary
  *	Reconstructs the mode string, to make it look clean.  mode_buf will
@@ -1727,21 +1750,32 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 /* do pro-opping here (popping) */
 	  case MODE_CHANOWNER:
 		  if (!IsULine(cptr) && !IsServer(cptr)
-		      && !IsNetAdmin(cptr) && !is_chanowner(cptr, chptr))
+		       && !is_chanowner(cptr, chptr))
 		  {
-			  sendto_one(cptr, err_str(ERR_ONLYSERVERSCANCHANGE),
-			      me.name, cptr->name, chptr->chname);
-			  break;
+			  if (IsNetAdmin(cptr))
+				opermode = 1;
+			  else
+			  {
+				  sendto_one(cptr, err_str(ERR_ONLYSERVERSCANCHANGE),
+				      me.name, cptr->name, chptr->chname);
+				  break;
+			  }
 		  }
 	  case MODE_CHANPROT:
 		  if (!IsULine(cptr) && !IsServer(cptr)
-		      && !IsNetAdmin(cptr) && !is_chanowner(cptr, chptr))
+		      && !is_chanowner(cptr, chptr))
 		  {
-			  sendto_one(cptr,
-			      ":%s %s %s :*** Protected User mode (+a) can only be set by the channel owner",
-			      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
-			  break;
+			  if (IsNetAdmin(cptr))
+				opermode = 1;
+			  else
+			  {
+				  sendto_one(cptr,
+				      ":%s %s %s :*** Channel admins (+a) can only be set by the channel owner",
+				      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
+				  break;
+			  }
 		  }
+		 
 
 	  case MODE_HALFOP:
 	  case MODE_CHANOP:
@@ -1752,7 +1786,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			    xxx = "dechannelown";
 			    break;
 		    case MODE_CHANPROT:
-			    xxx = "deprotect";
+			    xxx = "deadmin";
 			    break;
 		    case MODE_HALFOP:
 			    xxx = "dehalfop";
@@ -1817,7 +1851,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  if (MyClient(cptr))
 			  {
 				  sendto_one(cptr,
-				      ":%s %s %s :*** You cannot %s %s in %s, (s)he is a protected user (+a).",
+				      ":%s %s %s :*** You cannot %s %s in %s, (s)he is a channel admin (+a).",
 				      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name, xxx,
 				      member->cptr->name, chptr->chname);
 			  }
@@ -2034,9 +2068,9 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  }
 			  if (!bounce)	/* don't do the mode at all. */
 			  {
-				  char *tmp; 
-				  if ((tmp = strchr(param, ' ')))
-					*tmp = '\0';
+				  char *tmp;
+				  clean_channelname(param);
+				  /* This may same like duplicate code, but it's not. -- Syzop */
 				  if ((tmp = strchr(param, ':')))
 					*tmp = '\0';
 				  if (strlen(param) > CHANNELLEN)
@@ -2105,7 +2139,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 					      && (*xp != '*'))
 						goto break_flood;
 					  /* uh oh, not the first char */
-					  if (*xp == '*' && *param != '*')
+					  if (*xp == '*' && (xp != param))
 						goto break_flood;
 				  }
 				  /* We can avoid 2 strchr() and a strrchr() like this
@@ -2281,8 +2315,8 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
 			  {
 				  if (warnrestr)
 				  {
-					sendto_one(cptr, ":%s NOTICE %s :Setting/removing of channelmode(s) '%s' has been disabled.",
-						me.name, cptr->name, RESTRICT_CHANNELMODES);
+					sendto_one(cptr, ":%s %s %s :Setting/removing of channelmode(s) '%s' has been disabled.",
+						me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name, RESTRICT_CHANNELMODES);
 					warnrestr = 0;
 				  }
 				  paracount += foundat.parameters;
@@ -2419,7 +2453,7 @@ static int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, ch
                                     chptr->mode.link);
                                 parv[0] = sptr->name;
                                 parv[1] = (chptr->mode.link);
-                                channel_link(cptr, sptr, 2, parv);
+                                do_join(cptr, sptr, 2, parv);
                                 return -1;
                         }
                 }
@@ -2666,233 +2700,6 @@ static void sub1_from_channel(aChannel *chptr)
 	}
 }
 
-
-/*
- * Channel Link
- */
-
-CMD_FUNC(channel_link)
-{
-	static char jbuf[BUFSIZE];
-	Membership *lp;
-	aChannel *chptr;
-	char *name, *key = NULL, *link = NULL;
-	int  i, i1, flags = 0;
-	char *p = NULL, *p2 = NULL;
-
-	if (parc < 2 || *parv[1] == '\0')
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "JOIN");
-		return 0;
-	}
-
-	*jbuf = '\0';
-	/*
-	   ** Rebuild list of channels joined to be the actual result of the
-	   ** JOIN.  Note that "JOIN 0" is the destructive problem.
-	 */
-	bouncedtimes++;
-	if (bouncedtimes > MAXBOUNCE)
-	{
-		/* bounced too many times */
-		sendto_one(sptr,
-		    ":%s %s %s :*** Couldn't join %s ! - Link setting was too bouncy",
-		    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, parv[1]);
-		return 0;
-	}
-	for (i = 0, name = strtoken(&p, parv[1], ","); name;
-	    name = strtoken(&p, NULL, ","))
-	{
-		/* pathological case only on longest channel name.
-		   ** If not dealt with here, causes desynced channel ops
-		   ** since ChannelExists() doesn't see the same channel
-		   ** as one being joined. cute bug. Oct 11 1997, Dianora/comstud
-		   ** Copied from Dianora's "hybrid 5" ircd.
-		 */
-
-		if (strlen(name) > CHANNELLEN)	/* same thing is done in get_channel() */
-			name[CHANNELLEN] = '\0';
-
-		if (MyConnect(sptr))
-			clean_channelname(name);
-		if (check_channelmask(sptr, cptr, name) == -1)
-			continue;
-		if (*name == '&')
-			continue;
-		if (*name == '0' && !atoi(name))
-		{
-			(void)strcpy(jbuf, "0");
-			i = 1;
-			continue;
-		}
-		else if (!IsChannelName(name))
-		{
-			if (MyClient(sptr))
-				sendto_one(sptr,
-				    err_str(ERR_NOSUCHCHANNEL), me.name,
-				    parv[0], name);
-			continue;
-		}
-		if (*jbuf)
-			(void)strlcat(jbuf, ",", sizeof jbuf);
-		(void)strlncat(jbuf, name, sizeof jbuf, sizeof(jbuf) - i - 1);
-		i += strlen(name) + 1;
-	}
-	/*
-	 * FIXME: Hopefully parv[1] is long enough?
-	*/
-	(void)strcpy(parv[1], jbuf);
-
-	p = NULL;
-	if (parv[2])
-		if (parv[2])
-			key = strtoken(&p2, parv[2], ",");
-	parv[2] = NULL;		/* for m_names call later, parv[parc] must == NULL */
-	for (name = strtoken(&p, jbuf, ","); name;
-	    key = (key) ? strtoken(&p2, NULL, ",") : NULL,
-	    name = strtoken(&p, NULL, ","))
-	{
-		/*
-		   ** JOIN 0 sends out a part for all channels a user
-		   ** has joined.
-		 */
-		if (*name == '0' && !atoi(name))
-		{
-			while ((lp = sptr->user->channel))
-			{
-				chptr = lp->chptr;
-				sendto_channel_butserv(chptr, sptr,
-				    PartFmt, parv[0], chptr->chname);
-				remove_user_from_channel(sptr, chptr);
-			}
-			sendto_serv_butone_token(cptr, parv[0],
-			    MSG_JOIN, TOK_JOIN, "0");
-			continue;
-		}
-
-		if (MyConnect(sptr))
-		{
-			/*
-			   ** local client is first to enter previously nonexistant
-			   ** channel so make them (rightfully) the Channel
-			   ** Operator.
-			 */
-			flags =
-			    (ChannelExists(name)) ? CHFL_DEOPPED : CHFL_CHANOP;
-
-			if (sptr->user->joined >= MAXCHANNELSPERUSER)
-			{
-				sendto_one(sptr,
-				    err_str(ERR_TOOMANYCHANNELS),
-				    me.name, parv[0], name);
-				return 0;
-			}
-		}
-
-		chptr = get_channel(sptr, name, CREATE);
-
-		/* Faster this way */
-		if (chptr && (lp = find_membership_link(sptr->user->channel, chptr)))
-			continue;
-
-		if (!MyConnect(sptr))
-			flags = CHFL_DEOPPED;
-#if 0
-	/*	if (sptr->flags & FLAGS_TS8)
-			flags |= CHFL_SERVOPOK; */
-#endif
-
-		i1 = 0;
-		if (chptr == NULL)
-			return 0;
-
-		if (!chptr ||
-		    (MyConnect(sptr)
-		    && (i = can_join(cptr, sptr, chptr, key, link, parv))))
-		{
-			if (i != -1)
-			{
-				sendto_one(sptr, err_str(i),
-				    me.name, parv[0], name);
-			}
-			continue;
-		}
-		if (MyConnect(sptr)) {
-			int breakit = 0;
-			for (global_i = Hooks[HOOKTYPE_LOCAL_JOIN]; global_i; global_i = global_i->next) {
-				if((*(global_i->func.intfunc))(cptr, sptr, chptr, parv) > 0) {
-					breakit = 1;
-					break;
-				}
-			}
-			if (breakit)
-				continue;
-		}
-		/*
-		   **  Complete user entry to the new channel (if any)
-		 */
-		add_user_to_channel(chptr, sptr, flags);
-		/*
-		   ** notify all other users on the new channel
-		 */
-		sendto_channel_butserv(chptr, sptr,
-		    ":%s JOIN :%s", parv[0], name);
-		sendto_serv_butone_token(cptr, parv[0], MSG_JOIN,
-		    TOK_JOIN, name);
-
-		if (MyClient(sptr))
-		{
-			/*
-			   ** Make a (temporal) creationtime, if someone joins
-			   ** during a net.reconnect : between remote join and
-			   ** the mode with TS. --Run
-			 */
-			if (chptr->creationtime == 0)
-			{
-				chptr->creationtime = TStime();
-				sendto_serv_butone_token(cptr, me.name,
-				    MSG_MODE, TOK_MODE, "%s + %lu",
-				    name, chptr->creationtime);
-			}
-			del_invite(sptr, chptr);
-			if (flags & CHFL_CHANOP)
-				sendto_serv_butone_token(cptr, me.name,
-				    MSG_MODE, TOK_MODE,
-				    "%s +o %s %lu",
-				    name, parv[0], chptr->creationtime);
-			if (chptr->topic)
-			{
-				sendto_one(sptr, rpl_str(RPL_TOPIC),
-				    me.name, parv[0], name, chptr->topic);
-				sendto_one(sptr,
-				    rpl_str(RPL_TOPICWHOTIME), me.name,
-				    parv[0], name, chptr->topic_nick,
-				    chptr->topic_time);
-			}
-			if (chptr->users == 1 && MODES_ON_JOIN)
-			{
-				chptr->mode.mode = MODES_ON_JOIN;
-				chptr->mode.kmode = iConf.modes_on_join.kmode;
-				chptr->mode.per = iConf.modes_on_join.per;
-				chptr->mode.msgs = iConf.modes_on_join.msgs;
-				*modebuf = *parabuf = 0;
-				channel_modes(sptr, modebuf, parabuf, chptr);
-				/* This should probably be in the SJOIN stuff */
-				sendto_serv_butone_token(&me, me.name, MSG_MODE, TOK_MODE, 
-					"%s %s %s %lu", chptr->chname, modebuf, parabuf, 
-					chptr->creationtime);
-				sendto_one(sptr, ":%s MODE %s %s %s", me.name, chptr->chname, modebuf, parabuf);
-			}
-			parv[1] = name;
-			(void)m_names(cptr, sptr, 2, parv);
-			bouncedtimes = 0;
-		}
-
-	}
-	return 0;
-}
-
 /*
 ** m_join
 **	parv[0] = sender prefix
@@ -2901,22 +2708,51 @@ CMD_FUNC(channel_link)
 */
 CMD_FUNC(m_join)
 {
-	static char jbuf[BUFSIZE];
+int r;
+
+	if (bouncedtimes)
+		sendto_realops("m_join: bouncedtimes=%d??? [please report at http://bugs.unrealircd.org/]", bouncedtimes);
+	bouncedtimes = 0;
+	if (IsServer(sptr))
+		return 0;
+	r = do_join(cptr, sptr, parc, parv);
+	bouncedtimes = 0;
+	return r;
+}
+
+/** User request to join a channel.
+ * This routine can be called from both m_join or via do_join->can_join->do_join
+ * if the channel is 'linked' (chmode +L). We use a counter 'bouncedtimes' which
+ * is set to 0 in m_join, increased every time we enter this loop and decreased
+ * anytime we leave the loop. So be carefull ;p.
+ */
+CMD_FUNC(do_join)
+{
+	char jbuf[BUFSIZE];
 	Membership *lp;
 	aChannel *chptr;
 	char *name, *key = NULL, *link = NULL;
 	int  i, flags = 0;
 	char *p = NULL, *p2 = NULL;
 
-	bouncedtimes = 0;
-	if (IsServer(sptr))
-		return 0;
-		
+#define RET(x) { bouncedtimes--; return x; }
+
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
 		    me.name, parv[0], "JOIN");
 		return 0;
+	}
+	bouncedtimes++;
+	/* don't use 'return x;' but 'RET(x)' from here ;p */
+
+	if (bouncedtimes > MAXBOUNCE)
+	{
+		/* bounced too many times */
+		sendto_one(sptr,
+		    ":%s %s %s :*** Couldn't join %s ! - Link setting was too bouncy",
+		    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, parv[1]);
+		RET(0)
 	}
 
 	*jbuf = '\0';
@@ -2960,6 +2796,9 @@ CMD_FUNC(m_join)
 		(void)strlncat(jbuf, name, sizeof jbuf, sizeof(jbuf) - i - 1);
 		i += strlen(name) + 1;
 	}
+	/* This strcpy should be safe since jbuf contains the "filtered"
+	 * result of parv[1] which should never be larger than the source.
+	 */
 	(void)strcpy(parv[1], jbuf);
 
 	p = NULL;
@@ -2982,6 +2821,8 @@ CMD_FUNC(m_join)
 				sendto_channel_butserv(chptr, sptr,
 				    PartFmt2, parv[0], chptr->chname,
 				    "Left all channels");
+				if (MyConnect(sptr))
+					RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, "Left all channels");
 				remove_user_from_channel(sptr, chptr);
 			}
 			sendto_serv_butone_token(cptr, parv[0],
@@ -3012,13 +2853,32 @@ CMD_FUNC(m_join)
 					    err_str
 					    (ERR_TOOMANYCHANNELS),
 					    me.name, parv[0], name);
-					return 0;
+					RET(0)
 				}
 /* RESTRICTCHAN */
 			if (conf_deny_channel)
 			{
-				if (channel_canjoin(sptr, name) != 1)
-					return 0;
+				if (!IsOper(sptr) && !IsULine(sptr))
+				{
+					ConfigItem_deny_channel *d;
+					if ((d = Find_channel_allowed(name)))
+					{
+						if (d->reason)
+							sendto_one(sptr, 
+							":%s %s %s :*** Can not join %s: %s",
+							me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, name, d->reason);
+						if (d->redirect)
+						{
+							sendto_one(sptr,
+							":%s %s %s :*** Redirecting you to %s",
+							me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, d->redirect);
+							parv[0] = sptr->name;
+							parv[1] = d->redirect;
+							do_join(cptr, sptr, 2, parv);
+						}
+						continue;
+					}
+				}
 			}
 		}
 
@@ -3033,6 +2893,7 @@ CMD_FUNC(m_join)
 			flags |= CHFL_SERVOPOK;
 #endif
 
+		i = -1;
 		if (!chptr ||
 		    (MyConnect(sptr)
 		    && (i = can_join(cptr, sptr, chptr, key, link, parv))))
@@ -3041,11 +2902,9 @@ CMD_FUNC(m_join)
 			if (i != -1)
 				sendto_one(sptr, err_str(i),
 				    me.name, parv[0], name);
-
-			/* uhm? was *chptr ??? *NULL = dangerous */
 			continue;
-
 		}
+
 		if (MyConnect(sptr)) {
 			int breakit = 0;
 			for (global_i = Hooks[HOOKTYPE_LOCAL_JOIN]; global_i; global_i = global_i->next) {
@@ -3055,7 +2914,12 @@ CMD_FUNC(m_join)
 				}
 			}
 			if (breakit)
+			{
+				/* Rejected... if we just created a new chan we should destroy it too. -- Syzop */
+				if (!chptr->users)
+					sub1_from_channel(chptr);
 				continue;
+			}
 		}
 
 		/*
@@ -3154,8 +3018,8 @@ CMD_FUNC(m_join)
 
 	}
 
-	bouncedtimes = 0;
-	return 0;
+	RET(0)
+#undef RET
 }
 
 
@@ -3261,6 +3125,9 @@ CMD_FUNC(m_part)
 #endif
 			
 		}
+
+		if (MyConnect(sptr))
+			RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, comment);
 
 		if (1)
 		{
@@ -3429,7 +3296,7 @@ CMD_FUNC(m_kick)
 					    && who != sptr)
 					{
 						sendto_one(sptr,
-						    ":%s %s %s :*** You cannot kick %s from %s because %s is channel protected",
+						    ":%s %s %s :*** You cannot kick %s from %s because %s is channel admin",
 						    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name,
 						    who->name, chptr->chname, who->name);
 						goto deny;
@@ -3482,6 +3349,17 @@ CMD_FUNC(m_kick)
 				continue;
 
 			      attack:
+				if (MyConnect(sptr)) {
+					int breakit = 0;
+					for (global_i = Hooks[HOOKTYPE_LOCAL_KICK]; global_i; global_i = global_i->next) {
+						if((*(global_i->func.intfunc))(cptr,sptr,who,chptr,comment) > 0) {
+							breakit = 1;
+							break;
+						}
+					}
+					if (breakit)
+						continue;
+				}
 				if (lp)
 					sendto_channel_butserv(chptr,
 					    sptr, ":%s KICK %s %s :%s",
@@ -3642,21 +3520,38 @@ CMD_FUNC(m_topic)
 		    || IsULine(sptr) || is_halfop(sptr, chptr)) && topic)
 		{
 			/* setting a topic */
-			if ((MyClient(sptr) ? (IsOper(sptr) &&
-			     OPCanOverride(sptr)) : IsOper(sptr)) && 
-			     !(is_halfop(sptr, chptr)
-			     || IsULine(sptr)
-			     || is_chan_op(sptr, chptr))
-			     && (chptr->mode.mode & MODE_TOPICLIMIT))
+			if (chptr->mode.mode & MODE_TOPICLIMIT)
 			{
-#ifdef NO_OPEROVERRIDE
-				return 0;
+				if (!is_halfop(sptr, chptr) && !IsULine(sptr) && !
+					is_chan_op(sptr, chptr))
+				{
+#ifndef NO_OPEROVERRIDE
+					if ((MyClient(sptr) ? (!IsOper(sptr) || !OPCanOverride(sptr)) : !IsOper(sptr)))
+					{
 #endif
-				sendto_snomask(SNO_EYES,
-				    "*** OperOverride -- %s (%s@%s) TOPIC %s \'%s\'",
-				    sptr->name, sptr->user->username, sptr->user->realhost,
-				    chptr->chname, topic);
-			}
+					sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
+					    me.name, parv[0], chptr->chname);
+					return 0;
+#ifndef NO_OPEROVERRIDE
+					}
+					else
+						sendto_snomask(SNO_EYES,
+						    "*** OperOverride -- %s (%s@%s) TOPIC %s \'%s\'",
+						    sptr->name, sptr->user->username, sptr->user->realhost,
+						    chptr->chname, topic);
+#endif
+				}
+			}				
+			/* ready to set... */
+			if (MyClient(sptr))
+			{
+				Hook *tmphook;
+				for (tmphook = Hooks[HOOKTYPE_LOCAL_TOPIC]; tmphook; tmphook = tmphook->next) {
+					topic = (*(tmphook->func.pcharfunc))(cptr, sptr, chptr, topic);
+					if (!topic)
+						return 0;
+				}
+			}					
 			/* setting a topic */
 			topiClen = strlen(topic);
 #ifndef TOPIC_NICK_IS_NUHOST
@@ -4415,6 +4310,13 @@ CMD_FUNC(m_names)
 				    CHFL_CHANOWNER)) && acptr != sptr)
 					continue;
 
+#ifdef PREFIX_AQ
+		if (cm->flags & CHFL_CHANOWNER)
+			buf[idx++] = '~';
+		else if (cm->flags & CHFL_CHANPROT)
+			buf[idx++] = '&';
+		else
+#endif
 		if (cm->flags & CHFL_CHANOP)
 			buf[idx++] = '@';
 		else if (cm->flags & CHFL_HALFOP)
@@ -4949,9 +4851,16 @@ CMD_FUNC(m_sjoin)
 			{
 				modeflags = 0;
 			}
-#if 1
-			/* temporarely added for tracing user-twice-in-channel bugs -- Syzop, 2003-01-24 */
+			/* [old: temporarely added for tracing user-twice-in-channel bugs -- Syzop, 2003-01-24.]
+			 * 2003-05-29: now traced this bug down: it's possible to get 2 joins if persons
+			 * at 2 different servers kick a target on a 3rd server. This will require >3 servers
+			 * most of the time but is also possible with only 3 if there's asynchronic lag.
+			 * The general rule here (and at other places as well! see kick etc) is we ignore it
+			 * locally (dont send a join to the chan) but propagate it to the other servers.
+			 * I'm not sure if the propagation is needed however -- Syzop.
+			 */
 			if (IsMember(acptr, chptr)) {
+#if 0
 				int i;
 				sendto_realops("[BUG] Duplicate user entry in SJOIN! Please report at http://bugs.unrealircd.org !!! Chan='%s', User='%s', modeflags=%ld",
 					chptr->chname ? chptr->chname : "<NULL>", acptr->name ? acptr->name : "<NULL>", modeflags);
@@ -4961,12 +4870,13 @@ CMD_FUNC(m_sjoin)
 				for (i=0; i < parc; i++)
 					ircd_log(LOG_ERROR, "parv[%d] = '%s'", i, BadPtr(parv[i]) ? "<NULL-or-empty>" : parv[i]);
 				ircd_log(LOG_ERROR, "--- End of dump ---");
-			} else
 #endif
-			add_user_to_channel(chptr, acptr, modeflags);
-			sendto_channel_butserv(chptr, acptr,
-			    ":%s JOIN :%s", nick,
-			    chptr->chname);
+			} else {
+				add_user_to_channel(chptr, acptr, modeflags);
+				sendto_channel_butserv(chptr, acptr,
+				    ":%s JOIN :%s", nick,
+				    chptr->chname);
+			}
 			sendto_serv_butone_sjoin(cptr, ":%s JOIN %s",
 			    nick, chptr->chname);
 			CheckStatus('q', CHFL_CHANOWNER);

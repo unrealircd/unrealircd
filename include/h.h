@@ -135,9 +135,7 @@ int match_ipv4(struct IN_ADDR *addr, struct IN_ADDR *mask, int b);
 #ifdef INET6
 int match_ipv6(struct IN_ADDR *addr, struct IN_ADDR *mask, int b);
 #endif
-aMotd *read_motd(char *filename);
-aMotd *read_rules(char *filename);
-extern struct tm *motd_tm;
+extern struct tm motd_tm, smotd_tm;
 extern Link	*Servers;
 void add_ListItem(ListStruct *, ListStruct **);
 ListStruct *del_ListItem(ListStruct *, ListStruct **);
@@ -157,9 +155,9 @@ extern int del_exbanid(aChannel *chptr, char *banid);
 #define BREPORT_FIN_ID	"NOTICE AUTH :*** Received identd response\r\n"
 #define BREPORT_FAIL_ID	"NOTICE AUTH :*** No ident response; username prefixed with ~\r\n"
 
-extern char REPORT_DO_DNS[128], REPORT_FIN_DNS[128], REPORT_FIN_DNSC[128],
-    REPORT_FAIL_DNS[128], REPORT_DO_ID[128], REPORT_FIN_ID[128],
-    REPORT_FAIL_ID[128];
+extern char REPORT_DO_DNS[256], REPORT_FIN_DNS[256], REPORT_FIN_DNSC[256],
+    REPORT_FAIL_DNS[256], REPORT_DO_ID[256], REPORT_FIN_ID[256],
+    REPORT_FAIL_ID[256];
 
 extern int R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns,
     R_do_id, R_fin_id, R_fail_id;
@@ -186,6 +184,7 @@ extern void send_user_joins(aClient *, aClient *);
 extern void clean_channelname(char *);
 extern int do_nick_name(char *);
 extern int can_send(aClient *, aChannel *, char *);
+extern long get_access(aClient *, aChannel *);
 extern int is_chan_op(aClient *, aChannel *);
 extern int has_voice(aClient *, aChannel *);
 extern int is_chanowner(aClient *, aChannel *);
@@ -279,7 +278,9 @@ extern void    sendto_message_one(aClient *to, aClient *from, char *sender,
 #define PREFIX_ALL		0
 #define PREFIX_HALFOP	0x1
 #define PREFIX_VOICE	0x2
-#define PREFIX_OP		0x4
+#define PREFIX_OP	0x4
+#define PREFIX_ADMIN	0x08
+#define PREFIX_OWNER	0x10
 extern void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
     int prefix, char *pattern, ...);
 extern void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chptr,
@@ -539,14 +540,16 @@ extern void link_cleanup(ConfigItem_link *link_ptr);
 extern void       listen_cleanup();
 extern int  numeric_collides(long numeric);
 extern u_long cres_mem(aClient *sptr, char *nick);
-extern void      flag_add(char *ch);
+extern void      flag_add(char ch);
 extern void      flag_del(char ch);
 extern void init_dynconf(void);
 extern char *pretty_time_val(long);
 extern int        init_conf(char *filename, int rehash);
 extern void       validate_configuration(void);
 extern void       run_configuration(void);
+extern void rehash_motdrules();
 extern aMotd *read_file(char *filename, aMotd **list);
+extern aMotd *read_file_ex(char *filename, aMotd **list, struct tm *);
 CMD_FUNC(m_server_remote);
 extern void send_proto(aClient *, ConfigItem_link *);
 extern char *xbase64enc(long i);
@@ -569,3 +572,4 @@ extern char trouble_info[1024];
 #define EVENT_DRUGS BASE_VERSION
 extern void rejoin_doparts(aClient *sptr);
 extern void rejoin_dojoinandmode(aClient *sptr);
+extern void ident_failed(aClient *cptr);

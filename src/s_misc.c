@@ -423,7 +423,7 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 		sptr->flags |= FLAGS_CLOSING;
 		if (IsPerson(sptr))
 		{
-			RunHook(HOOKTYPE_LOCAL_QUIT, sptr);
+			RunHook2(HOOKTYPE_LOCAL_QUIT, sptr, comment);
 			sendto_connectnotice(sptr->name, sptr->user, sptr, 1, comment);
 			/* Clean out list and watch structures -Donwulff */
 			hash_del_watch_list(sptr);

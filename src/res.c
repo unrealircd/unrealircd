@@ -82,6 +82,7 @@ static int bad_hostname(char *, int);
 #ifdef _WIN32
 static	void	async_dns(void *parm);
 #endif
+#define CLI_HASH_VALUE local[tcc % 256]
 
 #ifndef _WIN32
 extern TS nextexpire;
@@ -96,6 +97,8 @@ static struct cacheinfo {
 	int  ca_nu_hits;
 	int  ca_updates;
 } cainfo;
+
+static char *global_timeout_list = NOTINIT;
 
 static struct resinfo {
 	int  re_errors;
@@ -164,8 +167,8 @@ int init_resolver(int op)
 #endif
 	}
 #ifdef DEBUGMODE
-	if (op & RES_INITDEBG);
-	ircd_res.options |= RES_DEBUG;
+	if (op & RES_INITDEBG)
+		ircd_res.options |= RES_DEBUG;
 #endif
 	if (op & RES_INITCACH)
 	{
@@ -251,18 +254,13 @@ static void rem_request(ResRQ *old)
 	if (!old)
 		return;
 
-	lock_request();
-
 #ifdef _WIN32
 	/* don't remove if async_dns() thread is running because it needs this memory
 	** we should consider terminating the thread here esp.
 	** if exit_client() called us
 	*/
 	if (old->locked)
-	{
-		unlock_request();
 		return;
-	}
 #endif
 	for (rptr = &first; *rptr; r2ptr = *rptr, rptr = &(*rptr)->next)
 		if (*rptr == old)
@@ -289,7 +287,6 @@ static void rem_request(ResRQ *old)
 	if (r2ptr->name)
 		MyFree(r2ptr->name);
 	MyFree(r2ptr);
-	unlock_request();
 	return;
 }
 
@@ -548,6 +545,7 @@ struct hostent *gethost_byaddr(char *addr, Link *lp)
 
 static int do_query_name(Link *lp, char *name, ResRQ *rptr)
 {
+#ifndef _WIN32
 	char hname[HOSTLEN + 1];
 	int  len;
 
@@ -561,6 +559,7 @@ static int do_query_name(Link *lp, char *name, ResRQ *rptr)
 		(void)strncat(hname, ircd_res.defdname,
 		    sizeof(hname) - len - 1);
 	}
+#endif
 
 	/*
 	 * Store the name passed as the one to lookup and generate other host
@@ -613,7 +612,7 @@ static int do_query_number(Link *lp, struct IN_ADDR *numb, ResRQ *rptr)
 	else
 	{
 		(void)ircsprintf(ipbuf,
-		    "%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.ip6.int.",
+		    "%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.ip6.%s.",
 		    (u_int)(cp[15] & 0xf), (u_int)(cp[15] >> 4),
 		    (u_int)(cp[14] & 0xf), (u_int)(cp[14] >> 4),
 		    (u_int)(cp[13] & 0xf), (u_int)(cp[13] >> 4),
@@ -629,7 +628,13 @@ static int do_query_number(Link *lp, struct IN_ADDR *numb, ResRQ *rptr)
 		    (u_int)(cp[3] & 0xf), (u_int)(cp[3] >> 4),
 		    (u_int)(cp[2] & 0xf), (u_int)(cp[2] >> 4),
 		    (u_int)(cp[1] & 0xf), (u_int)(cp[1] >> 4),
-		    (u_int)(cp[0] & 0xf), (u_int)(cp[0] >> 4));
+		    (u_int)(cp[0] & 0xf), (u_int)(cp[0] >> 4),
+#ifdef SIXBONE_HACK
+		    (cp[0] == 0x3f && cp[1] == 0xfe) ? "int" : "arpa"
+#else
+		    "arpa"
+#endif
+		    );
 	}
 #else
 	cp = (u_char *)&numb->s_addr;
@@ -759,7 +764,7 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 {
 	char *cp, **alias;
 	struct hent *hp;
-	int  class, type, dlen, len, ans = 0, n;
+	int  class, type, dlen, len, ans = 0, ansa = 0, n;
 	struct IN_ADDR dr, *adr;
 
 	cp = buf + sizeof(HEADER);
@@ -835,6 +840,11 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 				      dlen, hostbuf));
 				  return -2;
 			  }
+			if (ansa >= MAXADDRS - 1)
+			{
+				cp += dlen;
+				break;
+			}
 			  hp->h_length = dlen;
 			  if (ans == 1)
 				  hp->h_addrtype = (class == C_IN) ?
@@ -870,6 +880,7 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 				(void)strlcpy(hp->h_name, hostbuf, len+1);
 			    }
 			  ans++;
+			  ansa++;
 			  adr++;
 			  cp += dlen;
 			  break;
@@ -915,6 +926,7 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 			  ans++;
 			  break;
 		  default:
+			  cp += dlen;
 #ifdef DEBUGMODE
 			  Debug((DEBUG_INFO, "proc_answer: type:%d for:%s",
 			      type, hostbuf));
@@ -983,6 +995,7 @@ struct hostent *get_res(char *lp,long id)
 	 * response for an id which we have already received an answer for
 	 * just ignore this response.
 	 */
+	lock_request();
 #ifndef _WIN32
 	rptr = find_id(hptr->id);
 #else
@@ -1194,11 +1207,13 @@ struct hostent *get_res(char *lp,long id)
  # endif
          rptr->locked = 0;
          rem_request(rptr);
+	 unlock_request();
          return cp ? (struct hostent *)cp->he : NULL;
 
  getres_err:
          if (lp && rptr)
                  bcopy((char *)&rptr->cinfo, lp, sizeof(Link));
+	 unlock_request();
 
 #endif
 	return (struct hostent *)NULL;
@@ -2026,10 +2041,10 @@ int	res_copyhostent(struct hostent *from, struct hostent *to)
 	for (x = 0; from->h_aliases[x]; x++)
 		;
 	x *= sizeof(char *);
-	amt += sizeof(char *);
+	amt += sizeof(char *) + x;
 	for (i = 0; from->h_aliases[i]; i++)
 	    {
-		to->h_aliases[i] = (char *)(amt+x);
+		to->h_aliases[i] = (char *)amt;
 		strcpy(to->h_aliases[i], from->h_aliases[i]);
 		amt += strlen(to->h_aliases[i])+1;
 		if (amt&0x3)
@@ -2041,19 +2056,30 @@ int	res_copyhostent(struct hostent *from, struct hostent *to)
 	for (x = 0; from->h_addr_list[x]; x++)
 		;
 	x *= sizeof(char *);
+	amt += sizeof(char *) + x;
 	for (i = 0; from->h_addr_list[i]; i++)
 	    {
-		amt += 4;
-		to->h_addr_list[i] = (char *)(amt+x);
+		to->h_addr_list[i] = (char *)amt;
 #ifndef INET6
 		((struct IN_ADDR *)to->h_addr_list[i])->S_ADDR = ((struct IN_ADDR *)from->h_addr_list[i])->S_ADDR;
 #else
 		bcopy(((struct IN_ADDR *)from->h_addr_list[i])->S_ADDR,((struct IN_ADDR *)to->h_addr_list[i])->S_ADDR, IN6ADDRSZ);
 #endif
-
-
+		amt += sizeof(struct IN_ADDR); /* Prolly 4 */
 	    }
 	to->h_addr_list[i] = NULL;
+
+#ifdef WINDNSDEBUG
+	{
+		int aliascnt = 0, addrcnt = 0;
+		for (aliascnt = 0; from->h_aliases[aliascnt]; aliascnt++);
+		for (addrcnt = 0; from->h_addr_list[addrcnt]; addrcnt++);
+		ircd_log(LOG_ERROR, "resolver: amt=0x%x, to=0x%x, len=%d, max=%d [%d aliases, %d addrs]",
+			amt, to, (char *)amt - (char *)to, MAXGETHOSTSTRUCT, aliascnt, addrcnt);
+	}
+#endif
+	if ((char *)amt + 4 > (char *)to + MAXGETHOSTSTRUCT)
+		ircd_log(LOG_ERROR, "resolver: overflow???");
 	return 1;
 }
 #endif /*_WIN32*/

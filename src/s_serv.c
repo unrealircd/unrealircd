@@ -57,10 +57,11 @@ aMotd *rules;
 aMotd *motd;
 aMotd *svsmotd;
 aMotd *botmotd;
-struct tm *motd_tm;
+aMotd *smotd;
+struct tm motd_tm;
+struct tm smotd_tm;
 aMotd *read_file(char *filename, aMotd **list);
-aMotd *read_motd(char *filename);
-aMotd *read_rules(char *filename);
+aMotd *read_file_ex(char *filename, aMotd **list, struct tm *);
 extern aMotd *Find_file(char *, short);
 /*
 ** m_functions execute protocol messages on this server:
@@ -863,6 +864,14 @@ nohostcheck:
 		numeric = num ? atol(num) : numeric;
 		if (numeric)
 		{
+			if ((numeric < 0) || (numeric > 254))
+			{
+				sendto_locfailops("Link %s denied, numeric '%d' out of range (should be 0-254)",
+					inpath, numeric);
+
+				return exit_client(cptr, cptr, cptr,
+				    "Numeric out of range (0-254)");
+			}
 			if (numeric_collides(numeric))
 			{
 				sendto_locfailops("Link %s denied, colliding server numeric",
@@ -986,6 +995,13 @@ CMD_FUNC(m_server_remote)
 	}
 	if (numeric)
 	{
+		if ((numeric < 0) || (numeric > 254))
+		{
+			sendto_locfailops("Link %s(%s) cancelled, numeric '%d' out of range (should be 0-254)",
+				cptr->name, servername, numeric);
+			return exit_client(cptr, cptr, cptr,
+			    "Numeric out of range (0-254)");
+		}
 		if (numeric_collides(numeric))
 		{
 			sendto_locfailops("Link %s(%s) cancelled, colliding server numeric",
@@ -1551,7 +1567,7 @@ CMD_FUNC(m_netinfo)
 
 	}
 	ircsprintf(buf, "%lX", CLOAK_KEYCRC);
-	if (strcmp(buf, parv[4]))
+	if (*parv[4] != '*' && strcmp(buf, parv[4]))
 	{
 		sendto_realops
 			("Link %s is having a different cloak key - %s != %s",
@@ -2589,7 +2605,7 @@ CMD_FUNC(m_stats)
 				return 0;
 			}
 #ifndef ZIP_LINKS
-			sendto_one(sptr, ":%s NOTICE %s :Sorry this server doesn't support zip links", me.name, parv[0]);
+			sendto_one(sptr, ":%s %i %s :Sorry this server doesn't support zip links", me.name, RPL_TEXT, parv[0]);
 #else
 			for (i=0; i <= LastSlot; i++)
 			{
@@ -2600,15 +2616,15 @@ CMD_FUNC(m_stats)
 				if (acptr->zip->in->total_out && acptr->zip->out->total_in)
 				{
 				  sendto_one(sptr,
-				    ":%s NOTICE %s :Zipstats for link to %s (compresslevel %d): decompressed (in): %01lu/%01lu (%3.1f%%), compressed (out): %01lu/%01lu (%3.1f%%)",
-				    me.name, parv[0], get_client_name(acptr, TRUE),
+				    ":%s %i %s :Zipstats for link to %s (compresslevel %d): decompressed (in): %01lu/%01lu (%3.1f%%), compressed (out): %01lu/%01lu (%3.1f%%)",
+				    me.name, RPL_TEXT, parv[0], get_client_name(acptr, TRUE),
 				    acptr->serv->conf->compression_level ? acptr->serv->conf->compression_level : ZIP_DEFAULT_LEVEL,
 				    acptr->zip->in->total_in, acptr->zip->in->total_out,
 				    (100.0*(float)acptr->zip->in->total_in) /(float)acptr->zip->in->total_out,
 				    acptr->zip->out->total_in, acptr->zip->out->total_out,
 				    (100.0*(float)acptr->zip->out->total_out) /(float)acptr->zip->out->total_in);
 				} else {
-					sendto_one(sptr, ":%s NOTICE %s :Zipstats for link to %s: unavailable", me.name, parv[0]);
+					sendto_one(sptr, ":%s %i %s :Zipstats for link to %s: unavailable", me.name, RPL_TEXT, parv[0]);
 				}
 			}
 #endif
@@ -2692,6 +2708,10 @@ CMD_FUNC(m_stats)
 		      "Y - Send the class block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "Z - Send memory usage information");
+#ifdef ZIP_LINKS
+		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
+		      "zip - Send compression information about ziplinked servers");
+#endif
 		  stat = '*';
 		  break;
 	}
@@ -3456,7 +3476,7 @@ CMD_FUNC(m_svskill)
 		return -1;
 
 
-	if (!(acptr = find_client(parv[1], NULL)))
+	if (!(acptr = find_person(parv[1], NULL)))
 		return 0;
 
 	sendto_serv_butone_token(cptr, parv[0],
@@ -3508,6 +3528,22 @@ CMD_FUNC(m_admin)
 	return 0;
 }
 
+/** Rehash motd and rule files (MPATH/RPATH and all tld entries). */
+void rehash_motdrules()
+{
+ConfigItem_tld *tlds;
+
+	motd = (aMotd *) read_file_ex(MPATH, &motd, &motd_tm);
+	rules = (aMotd *) read_file(RPATH, &rules);
+	smotd = (aMotd *) read_file_ex(SMPATH, &smotd, &smotd_tm);
+	for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *) tlds->next)
+	{
+		tlds->motd = read_file_ex(tlds->motd_file, &tlds->motd, &tlds->motd_tm);
+		tlds->rules = read_file(tlds->rules_file, &tlds->rules);
+		if (tlds->smotd_file)
+			tlds->smotd = read_file_ex(tlds->smotd_file, &tlds->smotd, &tlds->smotd_tm);
+	}
+}
 
 /*
 ** m_rehash
@@ -3582,38 +3618,13 @@ CMD_FUNC(m_rehash)
 		{
 			if (!_match("-all", parv[1]))
 			{
-				ConfigItem_tld *tlds;
-				aMotd *amotd;
 				sendto_ops("%sRehashing everything on the request of %s",
 					cptr != sptr ? "Remotely " : "",sptr->name);
 				if (cptr != sptr)
 					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing everything", me.name, sptr->name);
 				opermotd = (aMotd *) read_file(OPATH, &opermotd);
 				botmotd = (aMotd *) read_file(BPATH, &botmotd);
-				motd = (aMotd *) read_motd(MPATH);
-				rules = (aMotd *) read_rules(RPATH);
-                                for (tlds = conf_tld; tlds;
-                                    tlds = (ConfigItem_tld *) tlds->next)
-                                {
-                                        while (tlds->motd)
-                                        {
-                                                amotd = tlds->motd->next;
-                                                MyFree(tlds->motd->line);
-                                                MyFree(tlds->motd);
-                                                tlds->motd = amotd;
-                                        }
-                                        tlds->motd = read_motd(tlds->motd_file);
-                                        while (tlds->rules)
-                                        {
-                                                amotd = tlds->rules->next;
-                                                MyFree(tlds->rules->line);
-                                                MyFree(tlds->rules);
-                                                tlds->rules = amotd;
-                                        }
-                                        tlds->rules =
-                                            read_rules(tlds->rules_file);
-                                }
-
+				rehash_motdrules();
 				return 0;
 			}
 			if (!strnicmp("-gar", parv[1], 4))
@@ -3646,40 +3657,13 @@ CMD_FUNC(m_rehash)
 			if (!strnicmp("-motd", parv[1], 5)
 			    || !strnicmp("-rules", parv[1], 6))
 			{
-				ConfigItem_tld *tlds;
-				aMotd *amotd;
 				sendto_ops
 				    ("%sRehashing all MOTDs and RULES on request of %s",
 				    cptr != sptr ? "Remotely " : "",
 				    sptr->name);
 				if (cptr != sptr)
 					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing all MOTDs and RULES", me.name, sptr->name);
-				motd = (aMotd *) read_motd(MPATH);
-				rules = (aMotd *) read_rules(RPATH);
-				for (tlds = conf_tld; tlds;
-				    tlds = (ConfigItem_tld *) tlds->next)
-				{
-					if (!tlds->flag.motdptr) {
-						while (tlds->motd)
-						{
-							amotd = tlds->motd->next;
-							MyFree(tlds->motd->line);
-							MyFree(tlds->motd);
-							tlds->motd = amotd;
-						}
-					}
-					tlds->motd = read_motd(tlds->motd_file);
-					if (!tlds->flag.rulesptr) {
-						while (tlds->rules)
-						{
-							amotd = tlds->rules->next;
-							MyFree(tlds->rules->line);
-							MyFree(tlds->rules);
-							tlds->rules = amotd;
-						}
-					}
-					tlds->rules = read_rules(tlds->rules_file);
-				}
+				rehash_motdrules();
 				return 0;
 			}
 			/* didn't match / fall trough... should we continue?? */
@@ -3693,6 +3677,10 @@ CMD_FUNC(m_rehash)
 	else
 		sendto_ops("%s is rehashing server config file", parv[0]);
 
+	/* Normal rehash, rehash main motd&rules too, just like the on in the tld block will :p */
+	motd = (aMotd *) read_file_ex(MPATH, &motd, &motd_tm);
+	rules = (aMotd *) read_file(RPATH, &rules);
+	smotd = (aMotd *) read_file_ex(SMPATH, &smotd, &smotd_tm);
 	if (cptr == sptr)
 		sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
 	return rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
@@ -3981,6 +3969,77 @@ CMD_FUNC(m_trace)
 	return 0;
 }
 
+/*
+ * Heavily modified from the ircu m_motd by codemastr
+ * Also svsmotd support added
+ */
+int short_motd(aClient *sptr) {
+	ConfigItem_tld *ptr;
+	aMotd *temp, *temp2;
+	struct tm *tm = &smotd_tm;
+	char userhost[HOSTLEN + USERLEN + 6];
+	char is_short = 1;
+	strlcpy(userhost,make_user_host(sptr->user->username, sptr->user->realhost), sizeof userhost);
+	ptr = Find_tld(sptr, userhost);
+
+	if (ptr)
+	{
+		if (ptr->smotd)
+		{
+			temp = ptr->smotd;
+			tm = &ptr->smotd_tm;
+		}
+		else if (smotd)
+			temp = smotd;
+		else
+		{
+			temp = ptr->motd;
+			tm = &ptr->motd_tm;
+			is_short = 0;
+		}
+	}
+	else
+	{
+		if (smotd)
+			temp = smotd;
+		else
+		{
+			temp = motd;
+			tm = &motd_tm;
+			is_short = 0;
+		}
+	}
+
+	if (!temp)
+	{
+		sendto_one(sptr, err_str(ERR_NOMOTD), me.name, sptr->name);
+		return 0;
+	}
+	if (tm)
+	{
+		sendto_one(sptr, rpl_str(RPL_MOTDSTART), me.name, sptr->name,
+		    me.name);
+		sendto_one(sptr, ":%s %d %s :- %d/%d/%d %d:%02d", me.name,
+		    RPL_MOTD, sptr->name, tm->tm_mday, tm->tm_mon + 1,
+		    1900 + tm->tm_year, tm->tm_hour, tm->tm_min);
+	}
+	if (is_short)
+	{
+		sendto_one(sptr, rpl_str(RPL_MOTD), me.name, sptr->name,
+			"This is the short MOTD. To view the complete MOTD type /motd");
+		sendto_one(sptr, rpl_str(RPL_MOTD), me.name, sptr->name, "");
+	}
+
+	while (temp)
+	{
+		sendto_one(sptr, rpl_str(RPL_MOTD), me.name, sptr->name,
+		    temp->line);
+		temp = temp->next;
+	}
+	sendto_one(sptr, rpl_str(RPL_ENDOFMOTD), me.name, sptr->name);
+	return 0;
+}
+
 
 /*
  * Heavily modified from the ircu m_motd by codemastr
@@ -3990,7 +4049,7 @@ CMD_FUNC(m_motd)
 {
 	ConfigItem_tld *ptr;
 	aMotd *temp, *temp2;
-	struct tm *tm = motd_tm;
+	struct tm *tm = &motd_tm;
 	int  svsnofile = 0;
 	char userhost[HOSTLEN + USERLEN + 6];
 
@@ -4012,7 +4071,7 @@ HUNTED_ISME)
 	if (ptr)
 	{
 		temp = ptr->motd;
-		tm = ptr->motd_tm;
+		tm = &ptr->motd_tm;
 	}
 	else
 		temp = motd;
@@ -4061,7 +4120,10 @@ CMD_FUNC(m_opermotd)
 	aMotd *temp;
 
 	if (!IsAnOper(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
+	}
 
 	if (opermotd == (aMotd *) NULL)
 	{
@@ -4085,123 +4147,28 @@ CMD_FUNC(m_opermotd)
 
 /*
  * A merge from ircu and bahamut, and some extra stuff added by codemastr
- */
-
-aMotd *read_rules(char *filename)
-{
-	int  fd = open(filename, O_RDONLY);
-	aMotd *temp, *newmotd, *last, *old;
-	char line[82];
-	char *tmp;
-	int  i;
-
-	if (fd == -1)
-		return NULL;
-/* If it is the default RULES, clear it -- codemastr */
-	if (!stricmp(filename, RPATH))
-	{
-		while (rules)
-		{
-			old = rules->next;
-			MyFree(rules->line);
-			MyFree(rules);
-			rules = old;
-		}
-	}
-
-
-	(void)dgets(-1, NULL, 0);	/* make sure buffer is at empty pos */
-
-	newmotd = last = NULL;
-	while ((i = dgets(fd, line, sizeof(line) - 1)) > 0)
-	{
-		line[i] = '\0';
-		if ((tmp = (char *)strchr(line, '\n')))
-			*tmp = '\0';
-		if ((tmp = (char *)strchr(line, '\r')))
-			*tmp = '\0';
-		temp = (aMotd *) MyMalloc(sizeof(aMotd));
-		if (!temp)
-			outofmemory();
-		AllocCpy(temp->line, line);
-		temp->next = NULL;
-		if (!newmotd)
-			newmotd = temp;
-		else
-			last->next = temp;
-		last = temp;
-	}
-	close(fd);
-	return newmotd;
-}
-
-
-/*
- * A merge from ircu and bahamut, and some extra stuff added by codemastr
- */
-
-aMotd *read_motd(char *filename)
-{
-	int  fd = open(filename, O_RDONLY);
-	aMotd *temp, *newmotd, *last, *old;
-	struct stat sb;
-	char line[82];
-	char *tmp;
-	int  i;
-	if (fd == -1)
-		return NULL;
-
-	fstat(fd, &sb);
-
-	/* If it is the default MOTD, clear it -- codemastr */
-	if (!stricmp(filename, MPATH))
-	{
-		while (motd)
-		{
-			old = motd->next;
-			MyFree(motd->line);
-			MyFree(motd);
-			motd = old;
-		}
-		/* We also wanna set it's last changed value -- codemastr */
-		motd_tm = localtime(&sb.st_mtime);
-	}
-
-
-	(void)dgets(-1, NULL, 0);	/* make sure buffer is at empty pos */
-
-	newmotd = last = NULL;
-	while ((i = dgets(fd, line, 81)) > 0)
-	{
-		line[i] = '\0';
-		if ((tmp = (char *)strchr(line, '\n')))
-			*tmp = '\0';
-		if ((tmp = (char *)strchr(line, '\r')))
-			*tmp = '\0';
-		temp = (aMotd *) MyMalloc(sizeof(aMotd));
-		if (!temp)
-			outofmemory();
-		AllocCpy(temp->line, line);
-		temp->next = NULL;
-		if (!newmotd)
-			newmotd = temp;
-		else
-			last->next = temp;
-		last = temp;
-	}
-	close(fd);
-	return newmotd;
-
-}
-
-
-/*
- * A merge from ircu and bahamut, and some extra stuff added by codemastr
  * we can now use 1 function for multiple files -- codemastr
+ * Merged read_motd/read_rules stuff into this -- Syzop
  */
 
+/** Read motd-like file, used for rules/motd/botmotd/opermotd/etc.
+ * @param filename Filename of file to read.
+ * @param list Reference to motd pointer (used for freeing if needed, can be NULL)
+ * @returns Pointer to MOTD or NULL if reading failed.
+ */
 aMotd *read_file(char *filename, aMotd **list)
 {
+	return read_file_ex(filename, list, NULL);
+}
+
+/** Read motd-like file, used for rules/motd/botmotd/opermotd/etc.
+ * @param filename Filename of file to read.
+ * @param list Reference to motd pointer (used for freeing if needed, NULL allowed)
+ * @param t Pointer to struct tm to store filedatetime info in (NULL allowed)
+ * @returns Pointer to MOTD or NULL if reading failed.
+ */
+aMotd *read_file_ex(char *filename, aMotd **list, struct tm *t)
+{
 
 	int  fd = open(filename, O_RDONLY);
 	aMotd *temp, *newmotd, *last, *old;
@@ -4212,12 +4179,29 @@ aMotd *read_file(char *filename, aMotd **list)
 	if (fd == -1)
 		return NULL;
 
-	while (*list)
+	if (list)
 	{
-		old = (*list)->next;
-		MyFree((*list)->line);
-		MyFree(*list);
-		*list  = old;
+		while (*list)
+		{
+			old = (*list)->next;
+			MyFree((*list)->line);
+			MyFree(*list);
+			*list  = old;
+		}
+	}
+
+	if (t)
+	{
+		struct tm *ttmp;
+		struct stat sb;
+		if (!fstat(fd, &sb))
+		{
+			ttmp = localtime(&sb.st_mtime);
+			memcpy(t, ttmp, sizeof(struct tm));
+		} else {
+			/* Sure, fstat() shouldn't fail, but... */
+			memset(t, 0, sizeof(struct tm));
+		}
 	}
 
 	(void)dgets(-1, NULL, 0);	/* make sure buffer is at empty pos */
@@ -4462,7 +4446,8 @@ void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_length, int
 	for (lp = Servers; lp; lp = lp->next)
 	{
 		acptr = lp->value.cptr;
-		if (acptr->srvptr != server)
+		if (acptr->srvptr != server ||
+ 		    (IsULine(acptr) && !IsOper(cptr) && HIDE_ULINES))
 			continue;
 		acptr->flags |= FLAGS_MAP;
 		cnt++;
@@ -4471,14 +4456,13 @@ void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_length, int
 	for (lp = Servers; lp; lp = lp->next)
 	{
 		acptr = lp->value.cptr;
-		if (acptr->srvptr != server)
+		if (IsULine(acptr) && HIDE_ULINES && !IsOper(cptr))
 			continue;
-		--cnt;
-		if (IsULine(acptr) && HIDE_ULINES && !IsAnOper(cptr))
+		if (acptr->srvptr != server)
 			continue;
 		if (!acptr->flags & FLAGS_MAP)
 			continue;
-		if (cnt == 0)
+		if (--cnt == 0)
 			*p = '`';
 		dump_map(cptr, acptr, mask, prompt_length + 2, length - 2);
 

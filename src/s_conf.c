@@ -190,7 +190,6 @@ static int _OldOperFlags[] = {
 	OFLAG_ZLINE, 'z',
 	OFLAG_WHOIS, 'W',
 	OFLAG_HIDE, 'H',
-	OFLAG_INVISIBLE, '^',
 	OFLAG_TKL, 't',
 	OFLAG_GZL, 'Z',
 	OFLAG_OVERRIDE, 'v',
@@ -214,7 +213,6 @@ static OperFlag _OperFlags[] = {
 	{ OFLAG_OVERRIDE,	"can_override" },
 	{ OFLAG_REHASH,		"can_rehash" },
 	{ OFLAG_RESTART,        "can_restart" },
-	{ OFLAG_INVISIBLE,	"can_stealth"},
 	{ OFLAG_UNKLINE,	"can_unkline" },
 	{ OFLAG_WALLOP,         "can_wallops" },
 	{ OFLAG_ZLINE,		"can_zline"},
@@ -1149,6 +1147,8 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->unknown_flood_amount = 4;
 	i->unknown_flood_bantime = 600;
 	i->oper_snomask = strdup(SNO_DEFOPER);
+	i->ident_read_timeout = 30;
+	i->ident_connect_timeout = 10;
 }
 
 int	init_conf(char *rootconf, int rehash)
@@ -1449,6 +1449,7 @@ void	config_rehash()
 		next = (ListStruct *)tld_ptr->next;
 		ircfree(tld_ptr->motd_file);
 		ircfree(tld_ptr->rules_file);
+		ircfree(tld_ptr->smotd_file);
 		if (!tld_ptr->flag.motdptr) {
 			while (tld_ptr->motd) {
 				motd = tld_ptr->motd->next;
@@ -1464,6 +1465,12 @@ void	config_rehash()
 				ircfree(tld_ptr->rules);
 				tld_ptr->rules = motd;
 			}
+		}
+		while (tld_ptr->smotd) {
+			motd = tld_ptr->smotd->next;
+			ircfree(tld_ptr->smotd->line);
+			ircfree(tld_ptr->smotd);
+			tld_ptr->smotd = motd;
 		}
 		DelListItem(tld_ptr, conf_tld);
 		MyFree(tld_ptr);
@@ -1553,6 +1560,7 @@ void	config_rehash()
 	for (deny_channel_ptr = conf_deny_channel; deny_channel_ptr; deny_channel_ptr = (ConfigItem_deny_channel *) next)
 	{
 		next = (ListStruct *)deny_channel_ptr->next;
+		ircfree(deny_channel_ptr->redirect);
 		ircfree(deny_channel_ptr->channel);
 		ircfree(deny_channel_ptr->reason);
 		DelListItem(deny_channel_ptr, conf_deny_channel);
@@ -2298,6 +2306,10 @@ void report_dynconf(aClient *sptr)
 			sptr->name, pretty_time_val(AWAY_PERIOD));
 	}
 #endif
+	sendto_one(sptr, ":%s %i %s :ident::connect-timeout: %s", me.name, RPL_TEXT,
+			sptr->name, pretty_time_val(IDENT_CONNECT_TIMEOUT));
+	sendto_one(sptr, ":%s %i %s :ident::read-timeout: %s", me.name, RPL_TEXT,
+			sptr->name, pretty_time_val(IDENT_READ_TIMEOUT));
 	
 }
 
@@ -2552,7 +2564,7 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 		if (cep->ce_vardata)
 		{
 			l = atol(cep->ce_vardata);
-			if ((l < 0) && (l > 254))
+			if ((l < 0) || (l > 254))
 			{
 				config_error("%s:%i: illegal me::numeric error (must be between 0 and 254)",
 					cep->ce_fileptr->cf_filename,
@@ -2758,10 +2770,17 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 						continue;
 					}
 					if (!config_binary_flags_search(_OperFlags, cepp->ce_varname, sizeof(_OperFlags)/sizeof(_OperFlags[0]))) {
+						if (!strcmp(cepp->ce_varname, "can_stealth"))
+						{
+						 config_status("%s:%i: unknown oper flag '%s' [feature no longer exists]",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
+							cepp->ce_varname);
+						} else {
 						 config_error("%s:%i: unknown oper flag '%s'",
 							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
 							cepp->ce_varname);
 						errors++; 
+						}
 					}
 				}
 				continue;
@@ -3125,12 +3144,17 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 	cep = config_find_entry(ce->ce_entries, "mask");
 	ca->mask = strdup(cep->ce_vardata);
 	cep = config_find_entry(ce->ce_entries, "motd");
-	ca->motd = read_motd(cep->ce_vardata); 
 	ca->motd_file = strdup(cep->ce_vardata);
-	ca->motd_tm = motd_tm;
+	ca->motd = read_file_ex(cep->ce_vardata, NULL, &ca->motd_tm);
+ 	if ((cep = config_find_entry(ce->ce_entries, "shortmotd")))
+	{
+		ca->smotd_file = strdup(cep->ce_vardata);
+		ca->smotd = read_file_ex(cep->ce_vardata, NULL, &ca->smotd_tm);
+	}
+
 	cep = config_find_entry(ce->ce_entries, "rules");
-	ca->rules = read_rules(cep->ce_vardata);
 	ca->rules_file = strdup(cep->ce_vardata);
+	ca->rules = read_file(cep->ce_vardata, NULL);
 	cep = config_find_entry(ce->ce_entries, "options");
 	if (cep)
 	{
@@ -3176,6 +3200,8 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "rules")) {
 		}
 		else if (!strcmp(cep->ce_varname, "channel")) {
+		}
+		else if (!strcmp(cep->ce_varname, "shortmotd")) {
 		}
 		else if (!strcmp(cep->ce_varname, "options")) {
 			ConfigEntry *cep2;
@@ -4077,12 +4103,51 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else
 	{
+		char *at, *tmp, *host;
 		if (!vhost->ce_vardata)
 		{
 			config_error("%s:%i: vhost::vhost without contents",
 				vhost->ce_fileptr->cf_filename, vhost->ce_varlinenum);
 			errors++;
 		}	
+		if ((at = strchr(vhost->ce_vardata, '@')))
+		{
+			for (tmp = vhost->ce_vardata; tmp != at; tmp++)
+			{
+				if (*tmp == '~' && tmp == vhost->ce_vardata)
+					continue;
+				if (!isallowed(*tmp))
+					break;
+			}
+			if (tmp != at)
+			{
+				config_error("%s:%i: vhost::vhost contains an invalid ident",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+				errors++;
+			}
+			host = at+1;
+		}
+		else
+			host = vhost->ce_vardata;
+		if (!*host)
+		{
+			config_error("%s:%i: vhost::vhost does not have a host set",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			errors++;
+		}
+		else
+		{
+			for (; *host; host++)
+			{
+				if (!isallowed(*host) && *host != ':')
+				{
+					config_error("%s:%i: vhost::vhost contains an invalid host",
+						ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+					errors++;
+					break;
+				}
+			}
+		}
 	}
 	if (!(login = config_find_entry(ce->ce_entries, "login")))
 	{
@@ -4215,8 +4280,8 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 
 	ca = MyMallocEx(sizeof(ConfigItem_badword));
 	ca->action = BADWORD_REPLACE;
-	regflags = REG_ICASE;
-	if (cep = config_find_entry(ce->ce_entries, "action"))
+	regflags = REG_ICASE|REG_EXTENDED;
+	if ((cep = config_find_entry(ce->ce_entries, "action")))
 	{
 		if (!strcmp(cep->ce_vardata, "block"))
 		{
@@ -4337,37 +4402,34 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 		{
 			
 			int errorcode, errorbufsize, regex=0;
-			char *errorbuf, *tmp, *tmpbuf=NULL;
+			char *errorbuf, *tmp;
 			for (tmp = word->ce_vardata; *tmp; tmp++) {
 				if ((int)*tmp < 65 || (int)*tmp > 123) {
+					if ((word->ce_vardata == tmp) && (*tmp == '*'))
+						continue;
+					if ((*(tmp + 1) == '\0') && (*tmp == '*'))
+						continue;
 					regex = 1;
 					break;
 				}
 			}
 			if (regex)
-				errorcode = regcomp(&expr, word->ce_vardata, REG_ICASE);
-			else
 			{
-				tmpbuf = MyMalloc(strlen(word->ce_vardata) +
-					 strlen(PATTERN) -1);
-				ircsprintf(tmpbuf, PATTERN, word->ce_vardata);
-				errorcode = regcomp(&expr, tmpbuf, REG_ICASE);
+				errorcode = regcomp(&expr, word->ce_vardata, REG_ICASE|REG_EXTENDED);
+				if (errorcode > 0)
+				{
+					errorbufsize = regerror(errorcode, &expr, NULL, 0)+1;
+					errorbuf = MyMalloc(errorbufsize);
+					regerror(errorcode, &expr, errorbuf, errorbufsize);
+					config_error("%s:%i: badword::%s contains an invalid regex: %s",
+						word->ce_fileptr->cf_filename,
+						word->ce_varlinenum,
+						word->ce_varname, errorbuf);
+					errors++;
+					free(errorbuf);
+				}
+				regfree(&expr);
 			}
-			if (errorcode > 0)
-			{
-				errorbufsize = regerror(errorcode, &expr, NULL, 0)+1;
-				errorbuf = MyMalloc(errorbufsize);
-				regerror(errorcode, &expr, errorbuf, errorbufsize);
-				config_error("%s:%i: badword::%s contains an invalid regex: %s",
-					word->ce_fileptr->cf_filename,
-					word->ce_varlinenum,
-					word->ce_varname, errorbuf);
-				errors++;
-				free(errorbuf);
-			}
-			if (!regex)
-				free(tmpbuf);	
-			regfree(&expr);
 		}
 
 	}
@@ -5132,6 +5194,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "dont-resolve")) {
 					tempiConf.dont_resolve = 1;
 				}
+				else if (!strcmp(cepp->ce_varname, "mkpasswd-for-everyone")) {
+					tempiConf.mkpasswd_for_everyone = 1;
+				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "hosts")) {
@@ -5168,6 +5233,16 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			ircsprintf(temp, "%li.%li.%li", tempiConf.network.key,
 				tempiConf.network.key2, tempiConf.network.key3);
 			tempiConf.network.keycrc = (long) our_crc32(temp, strlen(temp));
+		}
+		else if (!strcmp(cep->ce_varname, "ident"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "connect-timeout"))
+					tempiConf.ident_connect_timeout = config_checkval(cepp->ce_vardata,CFG_TIME);
+				if (!strcmp(cepp->ce_varname, "read-timeout"))
+					tempiConf.ident_read_timeout = config_checkval(cepp->ce_vardata,CFG_TIME);
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 #ifdef USE_SSL
@@ -5549,6 +5624,8 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->ce_varname, "dont-resolve")) {
 				}
+				else if (!strcmp(cepp->ce_varname, "mkpasswd-for-everyone")) {
+				}
 				else
 				{
 					config_error("%s:%i: unknown option set::options::%s",
@@ -5631,6 +5708,28 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			config_status("%s:%i: set::scan: WARNING: scanner support has been removed, "
 			    "use BOPM instead: http://www.blitzed.org/bopm/ (*NIX) / http://vulnscan.org/winbopm/ (Windows)",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+		}
+		else if (!strcmp(cep->ce_varname, "ident")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				CheckNull(cepp);
+				if (!strcmp(cepp->ce_varname, "connect-timeout") || !strcmp(cepp->ce_varname, "read-timeout"))
+				{
+					int v = config_checkval(cepp->ce_vardata,CFG_TIME);;
+					if ((v > 60) || (v < 1))
+					{
+						config_error("%s:%i: set::ident::%s value out of range (%d), should be between 1 and 60.",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname, v);
+						errors++;
+						continue;
+					}
+				} else {
+					config_error("%s:%i: unknown directive set::ident::%s",
+						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname);
+					errors++;
+					continue;
+				}
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 #ifdef USE_SSL
@@ -6078,6 +6177,10 @@ int	_conf_deny_channel(ConfigFile *conf, ConfigEntry *ce)
 		{
 			ircstrdup(deny->channel, cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "redirect"))
+		{
+			ircstrdup(deny->redirect, cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "reason"))
 		{
 			ircstrdup(deny->reason, cep->ce_vardata);
@@ -6211,9 +6314,11 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 				errors++; continue;
 			}
 			if (!strcmp(cep->ce_varname, "channel"))
-			;
+				;
+			else if (!strcmp(cep->ce_varname, "redirect"))
+				;
 			else if (!strcmp(cep->ce_varname, "reason"))
-			;
+				;
 			else 
 			{
 				config_error("%s:%i: unknown directive deny::%s",

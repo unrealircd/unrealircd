@@ -229,7 +229,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(sptr, rpl_str(RPL_WHOISREGNICK), me.name, parv[0], name);
 			
 			found = 1;
-			mlen = strlen(me.name) + strlen(parv[0]) + 6 + strlen(name);
+			mlen = strlen(me.name) + strlen(parv[0]) + 10 + strlen(name);
 			for (len = 0, *buf = '\0', lp = user->channel; lp; lp = lp->next)
 			{
 				chptr = lp->chptr;
@@ -248,9 +248,11 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					showchannel = 0;
 				if (acptr == sptr)
 					showchannel = 1;
-
+				/* Hey, if you are editting here... don't forget to change the webtv w_whois ;p. */
+				
 				if (showchannel)
 				{
+					long access;
 					if (len + strlen(chptr->chname) > (size_t)BUFSIZE - 4 - mlen)
 					{
 						sendto_one(sptr,
@@ -267,19 +269,27 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					if (IsNetAdmin(sptr)
 #endif
 					    && SecretChannel(chptr) && !IsMember(sptr, chptr))
-						*(buf + len++) = '~';
+						*(buf + len++) = '?';
 					if (acptr->umodes & UMODE_HIDEWHOIS && !IsMember(sptr, chptr)
 						&& IsAnOper(sptr))
 						*(buf + len++) = '!';
-					if (is_chanowner(acptr, chptr))
+					access = get_access(acptr, chptr);
+#ifndef PREFIX_AQ
+					if (access & CHFL_CHANOWNER)
 						*(buf + len++) = '*';
-					else if (is_chanprot(acptr, chptr))
+					else if (access & CHFL_CHANPROT)
 						*(buf + len++) = '^';
-					else if (is_chan_op(acptr, chptr))
+#else
+					if (access & CHFL_CHANOWNER)
+						*(buf + len++) = '~';
+					else if (access & CHFL_CHANPROT)
+						*(buf + len++) = '&';
+#endif
+					else if (access & CHFL_CHANOP)
 						*(buf + len++) = '@';
-					else if (is_half_op(acptr, chptr))
+					else if (access & CHFL_HALFOP)
 						*(buf + len++) = '%';
-					else if (has_voice(acptr, chptr))
+					else if (access & CHFL_VOICE)
 						*(buf + len++) = '+';
 					if (len)
 						*(buf + len) = '\0';

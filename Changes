@@ -2115,3 +2115,117 @@ seen. gmtime warning still there
 - Removed CREDITS.POTENTIAL
 - Removed 'bugreport'
 *** beta16 release ***
+- Fixed a bug where opers without can_override could still operoverride with /topic,
+  (#0000942) reported by Rocko
+- Added verification that a vhost::vhost is valid (#0000924) reported by AngryWolf and ChRiS
+- Fixed "make install" error caused by bugreport file removal.
+- Removed some leftover +I code (can_stealth/^).
+- Fixed a badword::action block bug with regex (non-fast) badwords, could cause a crash,
+  reported by auspice (#0000946).
+- Fixed unprecise RPING output at windoze, reported by pak (#0000945).
+- Fixed a bug where operoverride notices were not send when overriding chmodes +aq (#0000831)
+  reported by _SciFi_
+- Fixed a bug in SVSMODE with setting -b on a user in a channel
+- Recoded the "version flag" system, it is now safe to have multiple modules that use the 
+  same flag, new functions are VersionflagAdd and VersionflagDel they replace flag_add and
+  flag_del
+- Fixed a local /kill bug during connection phase, reported by Gilou (#0000952).
+- Fixed ripemd-160 vs ripemd160 confusion, reported by thelight (#0000949).
+- Little find_client() audit.
+- Removed some leftover TECHAT references (#0000953).
+- Added a CommandExists function to be used by module coders to determine if a command already
+  exists.
+- Renamed channel mode +a to "channel admin" it fits better, and it makes us more consistent 
+  with other IRCds.
+- Made the command parsing loop slightly faster by validating command parameters when a command
+  is created rather than when a command is used.
+- Made ban version {} also listen for CTCP SCRIPT replies. Some scripts apparently use this to
+  report their version info.
+- Made it so NETINFO won't report a different cloak key error if the server specifies * for the
+  cloak keys. Useful for services that rely on VHP.
+- Misc /whois and webtv whois fixes
+- Added CASEMAPPING=ascii as per request
+- /WHO code cleanup + partial recode + bugfixes
+- Updated example.conf about U-lines since many people set them wrong.
+- Fixed numeric checking.
+- Moved /stats zip from NOTICE to RPL_TEXT, updated stats documentation.
+- Made it so it is no longer necessary to copy the ModuleInfo structure passed to Mod_Test
+  and Mod_Init. Unreal now does this internally.
+- Code cleanup/merge m_join/channel_link: fixed multiple channelmode +L problems.
+- And another minor +L fix.
+- Minor channelmode +f fix.
+- IPv6: Fixed unable-to-resolve-bug if both a A/AAAA record and NS/MX/etc records were present
+  for the same hostname, reported by Byte (#0000972).
+- Updated flags in /version (and greeting), added 'Z' for zip links support, updated tech doc.
+- Added set::ident::connect-timeout (default 10s) and set::ident::read-timeout (default 30s) to
+  have much more control over ident timeouts, this should also fix connection timeout problems
+  during connecting.
+- Updated example.conf (added throttle block).
+- Made some fixes to the resolver code under Win32
+- Fixed a bug in del_throttling_bucket 
+- Code cleanup (sys_errlist[])
+- Fixed a crash in SVSMOTD that could occur if invalid parameters were used. Reported by 
+  emigrant
+- Committed little de-Fizzer module to extras/
+- Check in autoconf for MacOS X that will make compiling and running on it 
+  to work
+- Possibly fixed a compile problem on Solaris/SunOS (#0000984) reported by Dom
+- Added deny channel::redirect, which allows you to forward a client to another channel
+  if the one he/she joined is not allowed. can also be used for channel "aliases" like
+  #operhelp sends people to #help
+- Made it so Unreal always uses extended regex support
+- Fixed the compile problem on Solaris/SunOS (#0000984) reported by Dom
+- Updated src/win32/unrealinst.iss a bit
+- Changed /who flag '&' to '?'
+- Fixed regex detection problem (introduced by a change 2 days ago).
+- Added set::options::mkpasswd-for-everyone to let normal users use /mkpasswd, requested
+  by Evats.
+- Added error messages if not oper for: sdesc, mkpasswd, htm, rping, opermotd (#0000988).
+- Removed the old TSP stuff from the extras directory, this is no longer used and it just
+  wastes space.
+- Made /whois work slightly faster
+- Probably fixed server-notices bug (duplicates, to non-opers) caused by a few SVS* cmds,
+  reported by _loco_ (#0000991).
+- Fixed a bug in the win32 editor reported by ChAoS^TiGeR
+- Fixed /map bug that permitted trivial finding of U-lined servers
+- Fixed bug in HOOKTYPE_LOCAL_JOIN which could cause 0-member-channels if a hook returned
+  1 and the channel was new.
+- Made it so a permanent /kline no longer says "Permanent Timed K:line" which can be confusing
+  (#0000997) reported by AngryWolf
+- Module coders: new hooks: part, kick, chanmode, topic. changed: quit (added 'comment' param).
+- Enlarged REPORT_* vars a bit.
+- IPv6: UnrealIRCd can now lookup ip6.arpa addresses too (original IRCnet patch modified for
+  UnrealIRCd by Onliner).
+- Doc updates
+- Removed "Duplicate user entry in SJOIN" notice because the problem has been traced down.
+- Fixed some ./Config problems on Solaris with IPv6, SSL, and some other misc. things 
+  (#0001004) reported by lion.
+- Changed the /whois "secret channel" flag from '~' to '?'
+- Fixed some MOTD problems: remote MOTD gone after rehash (#0001007) and motd time, etc...
+- Fixed _some_ gcc3.3 + -Wall warnings.
+- Fixed a bug where the win32 config editor could crash if the file contained color codes.
+- Resolver fix nr #1 (prolly not "the real problem").
+- Minor oob fix for parse_v4_netmask
+- Fixed another serious bug in the win32 resolver.
+- Removed mutex stuff from rem_request, no longer needed, should make the resolver much
+  faster.
+- Implemented short motds (ircd.smotd). If you don't know what short motds are, read on:
+   short motds are a method of conserving bandwidth. When a user connects ircd.smotd
+   is displayed (or a tld::shortmotd). This file contains brief text. Alternatively,
+   ircd.motd (or tld::motd) is displayed when a user types /motd. The idea behind this is
+   instead of displaying huge ASCII art, and tons of text to every user when they connect
+   (since most users will ignore it anyway) you only show that stuff to users who specifically
+   request it. Also, if you choose not to use short motds, everything will function as it used
+   to the ircd.motd (or tld::motd) will be displayed both when users connect and /motd.
+- Changed a few messages so that they use PRIVMSG when being sent to a WebTV user rather than
+  using NOTICE.
+- Added the TRE regex library to extras/tre (minor modifications to reduce source size)
+- Made ./Config configure, compile, and install TRE
+- Implemented +a/+q prefixes (#define PREFIX_AQ in config.h) read the comment above PREFIX_AQ
+  in include/config.h for more information.
+- Fixed PRIVMSG bug with multiple targets.
+- Yet another resolver fix
+- Fixed a bug with using crontab
+- Docs update
+- Temporarily disabled compiling TRE 
+*** Unreal3.2-beta17 release *** (god save us)

@@ -319,7 +319,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	else
 	{
 		/* It's seemingly a nick .. let's see if we can find the user */
-		if ((acptr = find_client(mask, NULL)) && IsPerson(acptr))
+		if ((acptr = find_person(mask, NULL)))
 		{
 			usermask = "*";
 			hostmask = acptr->user->realhost;

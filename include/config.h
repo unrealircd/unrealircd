@@ -70,6 +70,16 @@
 
 #undef NO_FDLIST
 
+/* Defining this implements a very different handling of channel modes +a and +q.
+ * When set, users who are +q will have prefix ~, and +a prefix &. Chmode +a and +q
+ * now will also include all of the rights given to +o users, that is +oa is no longer
+ * needed, +a is fine. Additionally, due to this change, it is recommended that you only
+ * enable this option if you intend to enable it on ALL servers. At this time, this feature
+ * is still considered experimental.
+ */
+
+#undef PREFIX_AQ
+
 /*
  * Defining this will allow all ircops to see people in +s channels
  * By default, only net/tech admins can see this
@@ -272,6 +282,7 @@
  */
 #define	CPATH		"unrealircd.conf"	/* server configuration file */
 #define	MPATH		"ircd.motd"	/* server MOTD file */
+#define SMPATH          "ircd.smotd"    /* short MOTD file */
 #define RPATH   	"ircd.rules"	/* server rules file */
 #define OPATH   	"oper.motd"	/* Operators MOTD file */
 #define	LPATH		"debug.log"	/* Where the debug file lives, if DEBUGMODE */
@@ -525,6 +536,13 @@
  * Use much faster badwords replace routine (>100 times faster).
  */
 #define FAST_BADWORD_REPLACE
+
+/*
+ * Only important for people using IPv6 (default should be ok for now) -Onliner
+ * Because ip6.arpa is still not delegated for the 6bone (3ffe::/16)
+ * this options allows you to still resolve it using ip6.int.
+ */
+#define SIXBONE_HACK
 
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MOTD MPATH

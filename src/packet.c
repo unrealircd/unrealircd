@@ -308,7 +308,7 @@ aCommand *add_Command_backend(char *cmd, int (*func)(), unsigned char parameters
 	bzero(newcmd, sizeof(aCommand));
 	
 	newcmd->cmd = (char *) strdup(cmd);
-	newcmd->parameters = parameters;
+	newcmd->parameters = (parameters > MAXPARA) ? MAXPARA : parameters;
 	newcmd->token = token;
 	newcmd->func = func;
 	newcmd->flags = flags;
@@ -316,6 +316,18 @@ aCommand *add_Command_backend(char *cmd, int (*func)(), unsigned char parameters
 	/* Add in hash with hash value = first byte */
 	AddListItem(newcmd, CommandHash[toupper(*cmd)]);
 	return newcmd;
+}
+
+int CommandExists(char *name)
+{
+	aCommand *p;
+	
+	for (p = CommandHash[toupper(*name)]; p; p = p->next)
+	{
+		if (!stricmp(p->cmd, name))
+			return 1;
+	}
+	return 0;
 }
 
 Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigned char params, int flags) {

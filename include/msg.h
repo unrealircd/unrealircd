@@ -200,8 +200,6 @@
 #define TOK_SJOIN	"~"
 #define MSG_SETHOST 	"SETHOST"	/* sethost */
 #define TOK_SETHOST 	"AA"	/* 127 4ever !;) */
-#define MSG_TECHAT 	"TECHAT"	/* techadmin chat */
-#define TOK_TECHAT  	"AB"	/* questionmark? */
 #define MSG_NACHAT  	"NACHAT"	/* netadmin chat */
 #define TOK_NACHAT  	"AC"	/* *beep* */
 #define MSG_SETIDENT    "SETIDENT"

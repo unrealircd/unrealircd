@@ -258,7 +258,7 @@ void add_local_domain(char *hname, int size)
 **	text	is a *format* string for outputting error. It must
 **		contain only two '%s', the first will be replaced
 **		by the sockhost from the cptr, and the latter will
-**		be taken from sys_errlist[errno].
+**		be taken from strerror(errno).
 **
 **	cptr	if not NULL, is the *LOCAL* client associated with
 **		the error.
@@ -1654,20 +1654,33 @@ int  read_message(time_t delay, fdlist *listp)
 			
 			if (DoingAuth(cptr))
 			{
-				auth++;
-				Debug((DEBUG_NOTICE, "auth on %x %d", cptr, i));
-				if (cptr->authfd >= 0)
+				int s = TStime() - cptr->firsttime;
+				/* Maybe they should be timed out. -- Syzop. */
+				if ( ((s > IDENT_CONNECT_TIMEOUT) && (cptr->flags & FLAGS_WRAUTH)) ||
+				     (s > IDENT_READ_TIMEOUT))
 				{
-					FD_SET(cptr->authfd, &read_set);
-#ifdef _WIN32
-					FD_SET(cptr->authfd, &excpt_set);
-#endif
-					if (cptr->flags & FLAGS_WRAUTH)
-						FD_SET(cptr->authfd, &write_set);
+					Debug((DEBUG_NOTICE, "ident timed out (cptr %x, %d sec)", cptr, s));
+					ident_failed(cptr);
+				}
+				else
+				{
+					auth++;
+					Debug((DEBUG_NOTICE, "auth on %x %d %d", cptr, i, s));
+					if (cptr->authfd >= 0)
+					{
+						FD_SET(cptr->authfd, &read_set);
+#ifdef _WIN32	
+						FD_SET(cptr->authfd, &excpt_set);
+#endif	
+						if (cptr->flags & FLAGS_WRAUTH)
+							FD_SET(cptr->authfd, &write_set);
+					}
 				}
 			}
-			if (DoingDNS(cptr) || DoingAuth(cptr)
-			    )
+			/* (warning: don't merge the DoingAuth() here with the check
+			 *  above coz ident_failed() might have been called -- Syzop.)
+			 */
+			if (DoingDNS(cptr) || DoingAuth(cptr))
 				continue;
 			if (IsMe(cptr) && IsListening(cptr))
 			{

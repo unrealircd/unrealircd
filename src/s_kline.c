@@ -337,7 +337,6 @@ int  find_shun(aClient *cptr)
 	aTKline *lp;
 	char *chost, *cname, *cip;
 	TS   nowtime;
-	char msge[1024];
 	int	points = 0;
 	ConfigItem_except *excepts;
 	char host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
@@ -606,10 +605,10 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  switch (type)
 		  {
 		    case TKL_KILL:
-			    strcpy(txt, "Timed K:Line");
+			    strcpy(txt, "K:Line");
 			    break;
 		    case TKL_ZAP:
-			    strcpy(txt, "Timed Z:Line");
+			    strcpy(txt, "Z:Line");
 			    break;
 		    case TKL_KILL | TKL_GLOBAL:
 			    strcpy(txt, "G:Line");

@@ -53,7 +53,7 @@ int hlength = strlen (haystack);
 inline int fast_badword_match(ConfigItem_badword *badword, char *line)
 {
  	char *p;
-	int ret, bwlen = strlen(badword->word);
+	int bwlen = strlen(badword->word);
 	if ((badword->type & BADW_TYPE_FAST_L) && (badword->type & BADW_TYPE_FAST_R))
 		return (our_strcasestr(line, badword->word) ? 1 : 0);
 
@@ -231,7 +231,7 @@ char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
 #endif
 			if (this_word->action == BADWORD_BLOCK)
 			{
-				if (!regexec(&this_word->expr, ptr, 0, NULL, 0))
+				if (!regexec(&this_word->expr, cleanstr, 0, NULL, 0))
 				{
 					*blocked = 1;
 					return NULL;

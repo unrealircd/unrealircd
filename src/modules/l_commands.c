@@ -48,7 +48,7 @@
 #endif
 
 extern ModuleHeader m_svsnoop_Header;
-ModuleInfo ModCmdsInfo;
+ModuleInfo *ModCmdsInfo;
 /* Place includes here */
 /* replace this with a common name of your module */
 #ifdef DYNAMIC_LINKING
@@ -136,8 +136,8 @@ int l_commands_Test(ModuleInfo *modinfo)
 #ifdef SCAN_API
 	Module p;
 #endif
-	bcopy(modinfo,&ModCmdsInfo,modinfo->size);
-	m_htm_Test(&ModCmdsInfo);
+	ModCmdsInfo = modinfo;
+	m_htm_Test(ModCmdsInfo);
 	return MOD_SUCCESS;
 }
 
@@ -155,54 +155,53 @@ int    l_commands_Init(ModuleInfo *modinfo)
 	/*
 	 * We call our add_Command crap here
 	*/
-	bcopy(modinfo,&ModCmdsInfo,modinfo->size);
-	module_load = ModCmdsInfo.module_load;
-	m_sethost_Init(&ModCmdsInfo);
-	m_setname_Init(&ModCmdsInfo);
-	m_chghost_Init(&ModCmdsInfo);
-	m_chgident_Init(&ModCmdsInfo);
-	m_setident_Init(&ModCmdsInfo);
-	m_sdesc_Init(&ModCmdsInfo);
-	m_svsmode_Init(&ModCmdsInfo);
-	m_swhois_Init(&ModCmdsInfo);
-	m_svsmotd_Init(&ModCmdsInfo);
-	m_svsnline_Init(&ModCmdsInfo);
-	m_who_Init(&ModCmdsInfo);
-	m_mkpasswd_Init(&ModCmdsInfo);
-	m_away_Init(&ModCmdsInfo);
-	m_svsnoop_Init(&ModCmdsInfo);
-	m_svso_Init(&ModCmdsInfo);
-	m_svsnick_Init(&ModCmdsInfo);
-	m_adminchat_Init(&ModCmdsInfo);
-	m_nachat_Init(&ModCmdsInfo);
-	m_lag_Init(&ModCmdsInfo);
-	m_rping_Init(&ModCmdsInfo);
-	m_sendumode_Init(&ModCmdsInfo);
-	m_tsctl_Init(&ModCmdsInfo);
-	m_htm_Init(&ModCmdsInfo);
-	m_chgname_Init(&ModCmdsInfo);
-	m_message_Init(&ModCmdsInfo);
-	m_whois_Init(&ModCmdsInfo);
-	m_quit_Init(&ModCmdsInfo);
-	m_kill_Init(&ModCmdsInfo);
-	m_pingpong_Init(&ModCmdsInfo);
-	m_oper_Init(&ModCmdsInfo);
-	m_akill_Init(&ModCmdsInfo);
-	m_rakill_Init(&ModCmdsInfo);
-	m_unzline_Init(&ModCmdsInfo);
-	m_unkline_Init(&ModCmdsInfo);
-	m_sqline_Init(&ModCmdsInfo);
-	m_unsqline_Init(&ModCmdsInfo);
-	m_tkl_Init(&ModCmdsInfo);
-	m_vhost_Init(&ModCmdsInfo);
-	m_cycle_Init(&ModCmdsInfo);
-	m_svsjoin_Init(&ModCmdsInfo);
-	m_svspart_Init(&ModCmdsInfo);
-	m_svswatch_Init(&ModCmdsInfo);
-	m_svssilence_Init(&ModCmdsInfo);
-	m_svslusers_Init(&ModCmdsInfo);
+	module_load = ModCmdsInfo->module_load;
+	m_sethost_Init(ModCmdsInfo);
+	m_setname_Init(ModCmdsInfo);
+	m_chghost_Init(ModCmdsInfo);
+	m_chgident_Init(ModCmdsInfo);
+	m_setident_Init(ModCmdsInfo);
+	m_sdesc_Init(ModCmdsInfo);
+	m_svsmode_Init(ModCmdsInfo);
+	m_swhois_Init(ModCmdsInfo);
+	m_svsmotd_Init(ModCmdsInfo);
+	m_svsnline_Init(ModCmdsInfo);
+	m_who_Init(ModCmdsInfo);
+	m_mkpasswd_Init(ModCmdsInfo);
+	m_away_Init(ModCmdsInfo);
+	m_svsnoop_Init(ModCmdsInfo);
+	m_svso_Init(ModCmdsInfo);
+	m_svsnick_Init(ModCmdsInfo);
+	m_adminchat_Init(ModCmdsInfo);
+	m_nachat_Init(ModCmdsInfo);
+	m_lag_Init(ModCmdsInfo);
+	m_rping_Init(ModCmdsInfo);
+	m_sendumode_Init(ModCmdsInfo);
+	m_tsctl_Init(ModCmdsInfo);
+	m_htm_Init(ModCmdsInfo);
+	m_chgname_Init(ModCmdsInfo);
+	m_message_Init(ModCmdsInfo);
+	m_whois_Init(ModCmdsInfo);
+	m_quit_Init(ModCmdsInfo);
+	m_kill_Init(ModCmdsInfo);
+	m_pingpong_Init(ModCmdsInfo);
+	m_oper_Init(ModCmdsInfo);
+	m_akill_Init(ModCmdsInfo);
+	m_rakill_Init(ModCmdsInfo);
+	m_unzline_Init(ModCmdsInfo);
+	m_unkline_Init(ModCmdsInfo);
+	m_sqline_Init(ModCmdsInfo);
+	m_unsqline_Init(ModCmdsInfo);
+	m_tkl_Init(ModCmdsInfo);
+	m_vhost_Init(ModCmdsInfo);
+	m_cycle_Init(ModCmdsInfo);
+	m_svsjoin_Init(ModCmdsInfo);
+	m_svspart_Init(ModCmdsInfo);
+	m_svswatch_Init(ModCmdsInfo);
+	m_svssilence_Init(ModCmdsInfo);
+	m_svslusers_Init(ModCmdsInfo);
 #ifdef GUEST
-	m_guest_Init(&ModCmdsInfo);
+	m_guest_Init(ModCmdsInfo);
 #endif
 	return MOD_SUCCESS;
 }

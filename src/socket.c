@@ -27,9 +27,6 @@
 #ifndef _WIN32
 extern int errno;		/* ...seems that errno.h doesn't define this everywhere */
 #endif
-#if !defined(__FreeBSD__) && !defined(__NetBSD__) && !defined(__linux__)
-extern char *sys_errlist[];
-#endif
 #include <sys/types.h>
 #ifndef _WIN32
 #include <sys/socket.h>
@@ -123,7 +120,7 @@ int  deliver_it(aClient *cptr, char *str, int len)
 	{
 		writeb[0]++;
 # ifndef _WIN32
-		Debug((DEBUG_ERROR, "write error (%s) to %s", sys_errlist[errno], cptr->name));
+		Debug((DEBUG_ERROR, "write error (%s) to %s", strerror(errno), cptr->name));
 # else
                 Debug((DEBUG_ERROR, "write error (%s) to %s", "", cptr->name));
 # endif

@@ -69,6 +69,7 @@ struct zConfiguration {
 	unsigned show_connect_info:1;
 	unsigned dont_resolve:1;
 	unsigned use_ban_version:1;
+	unsigned mkpasswd_for_everyone:1;
 	unsigned use_egd;
 	long host_timeout;
 	int  host_retries;
@@ -105,6 +106,8 @@ struct zConfiguration {
 	unsigned char away_count;
 	long away_period;
 #endif
+	int ident_connect_timeout;
+	int ident_read_timeout;
 	aNetwork network;
 };
 
@@ -177,3 +180,8 @@ extern aConfiguration iConf;
 #define AWAY_PERIOD			iConf.away_period
 #define AWAY_COUNT			iConf.away_count
 #endif
+
+#define IDENT_CONNECT_TIMEOUT	iConf.ident_connect_timeout
+#define IDENT_READ_TIMEOUT		iConf.ident_read_timeout
+
+#define MKPASSWD_FOR_EVERYONE	iConf.mkpasswd_for_everyone

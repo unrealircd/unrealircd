@@ -16,11 +16,6 @@ Description:
 Little program to test out the different aspects of the unreal protocol and
 produce net.burst dumps
 
-======================
-Name: pthreads.tar.gz
-Description:
-FSU Pthreads, used on some systems
-
 =======================
 Name: m_rawto.c
 Is a 3rd party module

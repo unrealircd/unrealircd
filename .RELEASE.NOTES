@@ -1,5 +1,5 @@
 
-Unreal3.2-beta16 Release Notes
+Unreal3.2-beta17 Release Notes
 ======================================
 
 ==[ GENERAL INFORMATION ]==
@@ -7,60 +7,49 @@ Unreal3.2-beta16 Release Notes
 * The official UnrealIRCd documentation is doc/unreal32docs.html (also contains a FAQ),
   read it before asking for help.
 * Report bugs at http://bugs.unrealircd.org/
+* This is a forced release because of a security bug, so not many new features.
 
 ==[ REMOVED ]==
-* The built-in scanner (and threading at *NIX) has been removed, NOT because we want to
-  annoy our users (again), but because it made UnrealIRCd unstable (especially in case
-  of server attacks!). You should consider using BOPM instead:
-  http://www.blitzed.org/bopm/ (*NIX) / http://vulnscan.org/winbopm/ (Windows)
-* not removed, but CMDLINE_CONFIG(-f) is now disabled by default
+Nothing.
 
 == [NEW FEATURES (see unreal32docs.html for more information) ]==
-* throttling has been improved and is now considered stable. You can configure it in
-  the set::throttle block. It allows you to config max. X connections in Y seconds.
-* ban version { }: bans users based on CTCP VERSION (tested on connect).
-* usermode +p: hide channels in whois and who
-* set::modes-on-join: channel modes that are set when a new channel is created
-* set::restrict-channelmodes: deny users to set/unset specified channelmodes
-* badword::action <replace|block>, "block" prevents the message from being sent (default=replace).
-* added aliases/anope.conf
-* IP bans like *!*@194.109.*
-* tld::options::ssl: for specific rules/motd's for SSL users
-* link::options::nohostcheck: makes Unreal not to check the incomming host/IP (useful for dyndns)
-* allow::options::ssl: for SSL based allow blocks
-* allow::options::nopasscont: support for putting a user in different class if a password is given.
-* added anti-away-flood based on bahamut, disabled by default (set::anti-flood::away-*).
-* Added set::anti-flood::unknown-flood-bantime and set::anti-flood::unknown-flood-amount
-  so you can config the "flood from unknown connection" thresholds / ban duration.
+* Implemented short motds (ircd.smotd). When a user connects ircd.smotd is displayed 
+  (or a tld::shortmotd). This file contains brief text. Alternatively, ircd.motd (or
+  tld::motd) is displayed when a user types /motd. The idea behind this is instead of
+  displaying huge ASCII art, and tons of text to every user when they connect (since
+  most users will ignore it anyway) you only show that stuff to users who specifically
+  request it. If you choose not to use short motds, everything will function as it used to.
+* Added set::ident::connect-timeout (default 10s) and set::ident::read-timeout (default 30s) to
+  give much more control over ident timeouts, this should also fix connection timeout problems
+  during connecting.
+* Added deny channel::redirect, which allows you to forward a client to another channel
+  if the one he/she joined is not allowed. can also be used for channel "aliases" like
+  #operhelp sends people to #help.
+* Added set::options::mkpasswd-for-everyone to let normal users use /mkpasswd.
+* MacOS X support, you need dlcompat package installed in /usr for this to work
 
 ==[ UPDATED ]==
-* documentation and text fixes
-* channelmode +f (flood) algorithm is now much better
+* ban version {} now also checks for SCRIPT replies
+* module updates (module coders should check Changes)
+* Renamed channel mode +a to "channel admin"
+* IPv6: UnrealIRCd can now lookup ip6.arpa addresses too
 
 ==[ MAJOR BUGS FIXED ]==
-* Security fixes
-* fixed major "messages being lost" bug which could cause: ziplink corruption,
-  duplicate user entry in sjoin, etc which would happen if BUFFERPOOL was too small.
-* /who: there was a bug in the new /who system which could make it crash (oper only)
-* /list: opers couldn't see +s channels
-* a set::allow-userhost-change force-rejoin crash
-* compile error on redhat 9 with SSL enabled
-* multiple throttling fixes
-* out of bounds config parser reads, could make it crash on start or /rehash.
-* fast badword replace crash
-* sqline: a crash and a unable-to-remove-sqline bug
-* cloaking bug
-* auditted servernotices which are sent to normal users: some are now sent to opers only,
-  some have now "sensitive information" (like IP/host) removed.
-* wrong hub/leaf settings ("non-hub introduced leaf") could cause a crash
-* Far connects (+s +F) hides connects from U-lined servers again
-* usermode +S was accidently changed to a local usermode in beta15
-* minor badwords /rehash memleak
-* random ziplink crashes
+* Security fixes, including a bug which allows any user to crash the ircd
+* Several win32 resolver fixes
+* "make install" fixed, was broken in beta16
+* badword::action block with regex (non-fast) badwords could cause a crash
+* misc /whois and webtv fixes
+* /who cleanup & bugfixes
+* /join cleanup: multiple chanmode +L fixes
+* IPv6 resolver
+* SVS* bug which could cause server notices to be sent to random users
+* Solaris/SunOS compile fixes
+* MOTD cleanup: fixes remote MOTD gone after rehash etc
 
 ==[ ADDITIONAL INFO ]==
-* Sorry, better +a/+q support and giving +a/+q a symbol in nicklist (like @ for +o)
-  has been postponed to beta17.
+* There's experimental "+a/+q with symbol" support in this version (you need to enable it
+  in config.h explicitly). Full support will be in next release.
 * See Changelog
 
 ============================= (old release notes below) ==============================

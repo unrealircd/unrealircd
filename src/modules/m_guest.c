@@ -62,7 +62,7 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
-ModuleInfo ModGuestInfo;
+ModuleInfo *ModGuestInfo;
 /* The purpose of these ifdefs, are that we can "static" link the ircd if we
  * want to
 */
@@ -78,8 +78,8 @@ int    m_guest_Init(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 #ifdef GUEST
-	bcopy(modinfo,&ModGuestInfo,modinfo.size);
-	GuestHook = HookAddEx(ModGuestInfo.handle, HOOKTYPE_GUEST, m_guest);
+	ModGuestInfo = modinfo;
+	GuestHook = HookAddEx(ModGuestInfo->handle, HOOKTYPE_GUEST, m_guest);
 #endif
 	return MOD_SUCCESS;
 	

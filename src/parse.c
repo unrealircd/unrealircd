@@ -423,8 +423,13 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 	i = 0;
 	if (s)
 	{
+		/*
 		if (paramcount > MAXPARA)
 			paramcount = MAXPARA;
+		We now use functions to create commands, so we can just check this 
+		once when the command is created rather than each time the command
+		is used -- codemastr
+		*/
 		for (;;)
 		{
 			/*

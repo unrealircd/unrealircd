@@ -57,6 +57,7 @@ void send_umode_out_nickv2(aClient *, aClient *, long);
 void send_umode(aClient *, aClient *, long, long, char *);
 void set_snomask(aClient *, char *);
 int create_snomask(char *, int);
+extern int short_motd(aClient *sptr);
 char *get_snostr(long sno);
 /* static  Link    *is_banned(aClient *, aChannel *); */
 int  dontspread = 0;
@@ -1018,7 +1019,8 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 				    ssl_get_cipher(sptr->ssl));
 #endif
 		(void)m_lusers(sptr, sptr, 1, parv);
-		(void)m_motd(sptr, sptr, 1, parv);
+		short_motd(sptr);
+//		(void)m_motd(sptr, sptr, 1, parv);
 #ifdef EXPERIMENTAL
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** \2NOTE:\2 This server (%s) is running experimental IRC server software. If you find any bugs or problems, please mail unreal-dev@lists.sourceforge.net about it",
@@ -2287,8 +2289,8 @@ CMD_FUNC(m_umode)
 		{
 			if (!umode_restrict_err)
 			{
-				sendto_one(sptr, ":%s NOTICE %s :Setting/removing of usermode(s) '%s' has been disabled.",
-					me.name, sptr->name, RESTRICT_USERMODES);
+				sendto_one(sptr, ":%s %s %s :Setting/removing of usermode(s) '%s' has been disabled.",
+					me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, RESTRICT_USERMODES);
 				umode_restrict_err = 1;
 			}
 			continue;
@@ -2346,7 +2348,7 @@ CMD_FUNC(m_umode)
 					if (MyClient(sptr))
 					{
 						if (!modex_err) {
-							sendto_one(sptr, ":%s NOTICE %s :*** Setting %cx is disabled", me.name, sptr->name, what == MODE_ADD ? '+' : '-');
+							sendto_one(sptr, ":%s %s %s :*** Setting %cx is disabled", me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, what == MODE_ADD ? '+' : '-');
 							modex_err = 1;
 						}
 						break;
@@ -2356,7 +2358,7 @@ CMD_FUNC(m_umode)
 					if (MyClient(sptr) && sptr->user->joined)
 					{
 						if (!modex_err) {
-							sendto_one(sptr, ":%s NOTICE %s :*** Setting %cx can not be done while you are on channels", me.name, sptr->name, what == MODE_ADD ? '+' : '-');
+							sendto_one(sptr, ":%s %s %s :*** Setting %cx can not be done while you are on channels", me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, what == MODE_ADD ? '+' : '-');
 							modex_err = 1;
 						}
 						break;

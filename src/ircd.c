@@ -91,13 +91,14 @@ extern aMotd *svsmotd;
 extern aMotd *motd;
 extern aMotd *rules;
 extern aMotd *botmotd;
+extern aMotd *smotd;
 MemoryInfo StatsZ;
 
 int  R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
 
-char REPORT_DO_DNS[128], REPORT_FIN_DNS[128], REPORT_FIN_DNSC[128],
-    REPORT_FAIL_DNS[128], REPORT_DO_ID[128], REPORT_FIN_ID[128],
-    REPORT_FAIL_ID[128];
+char REPORT_DO_DNS[256], REPORT_FIN_DNS[256], REPORT_FIN_DNSC[256],
+    REPORT_FAIL_DNS[256], REPORT_DO_ID[256], REPORT_FIN_ID[256],
+    REPORT_FAIL_ID[256];
 extern ircstats IRCstats;
 aClient me;			/* That's me */
 char *me_hash;
@@ -952,12 +953,6 @@ int InitwIRCD(int argc, char *argv[])
 			  int  bit;
 			  parse_netmask("255.255.255.255/8", &bah, &bit);
 			  printf("%s - %d\n", Inet_ia2p(&bah), bit);
-			  flag_add("m");
-			  flag_del('m');
-			  flag_add("n");
-			  flag_add("m");
-			  flag_del('m');
-			  printf("%s\n", extraflags);
 			  exit(0);
 		  }
 		  case 'C':
@@ -1139,11 +1134,12 @@ int InitwIRCD(int argc, char *argv[])
 	me.umodes = conf_listen->options;
 	conf_listen->listener = &me;
 	run_configuration();
-	botmotd = (aMotd *) read_file(BPATH, &botmotd);
-	rules = (aMotd *) read_rules(RPATH);
-	opermotd = (aMotd *) read_file(OPATH, &opermotd);
-	motd = (aMotd *) read_motd(MPATH);
-	svsmotd = (aMotd *) read_file(VPATH, &svsmotd);
+	botmotd = (aMotd *) read_file(BPATH, NULL);
+	rules = (aMotd *) read_file(RPATH, NULL);
+	opermotd = (aMotd *) read_file(OPATH, NULL);
+	motd = (aMotd *) read_file_ex(MPATH, NULL, &motd_tm);
+	smotd = (aMotd *) read_file_ex(SMPATH, NULL, &smotd_tm);
+	svsmotd = (aMotd *) read_file(VPATH, NULL);
 	strncpy(me.sockhost, conf_listen->ip, sizeof(me.sockhost) - 1);
 	if (me.name[0] == '\0')
 		strncpyzt(me.name, me.sockhost, sizeof(me.name));

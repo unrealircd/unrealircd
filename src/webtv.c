@@ -58,6 +58,7 @@ aMessage	webtv_cmds[] =
 {
 	{"WHOIS", w_whois, 15},
 	{"\1VERSION", ban_version, 1},
+	{"\1SCRIPT", ban_version, 1},
 	{NULL, 0, 15}
 };
 
@@ -169,7 +170,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	for (tmp = parv[1]; (nick = strtoken(&p, tmp, ",")); tmp = NULL)
 	{
-		int  invis, showsecret = 0, showperson, member, wilds;
+		int  invis, showsecret = 0, showchannel, showperson, member, wilds;
 
 		found = 0;
 		(void)collapse(nick);
@@ -268,14 +269,30 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(sptr, ":IRC PRIVMSG %s :%s is a registered nick",
 					sptr->name, name);
 			found = 1;
-			mlen = strlen(me.name) + strlen(sptr->name) + 6 +
-			    strlen(name);
+			mlen = 24 + strlen(sptr->name) + strlen(name);
 			for (len = 0, *buf = '\0', lp = user->channel; lp;
 			    lp = lp->next)
 			{
 				chptr = lp->chptr;
-				if (IsAnOper(sptr) || ShowChannel(sptr, chptr) || (acptr == sptr))
+				showchannel = 0;
+				if (ShowChannel(sptr, chptr))
+					showchannel = 1;
+#ifndef SHOW_SECRET
+				if (IsAnOper(sptr) && !SecretChannel(chptr))
+#else
+				if (IsAnOper(sptr))
+#endif
+					showchannel = 1;
+				if ((acptr->umodes & UMODE_HIDEWHOIS) && !IsMember(sptr, chptr) && !IsAnOper(sptr))
+					showchannel = 0;
+				if (IsServices(acptr) && !IsNetAdmin(sptr))
+					showchannel = 0;
+				if (acptr == sptr)
+					showchannel = 1;
+					
+				if (showchannel)
 				{
+					long access;
 					if (len + strlen(chptr->chname)
 					    > (size_t)BUFSIZE - 4 - mlen)
 					{
@@ -285,18 +302,33 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						*buf = '\0';
 						len = 0;
 					}
-					if (!(acptr == sptr) && IsAnOper(sptr)
-					&& (showsecret == 1) && SecretChannel(chptr))
-						*(buf + len++) = '~';
-					if (is_chanowner(acptr, chptr))
+#ifdef SHOW_SECRET
+					if (IsAnOper(sptr)
+#else
+					if (IsNetAdmin(sptr)
+#endif
+					    && SecretChannel(chptr) && !IsMember(sptr, chptr))
+						*(buf + len++) = '?';
+					if (acptr->umodes & UMODE_HIDEWHOIS && !IsMember(sptr, chptr)
+						&& IsAnOper(sptr))
+						*(buf + len++) = '!';
+					access = get_access(acptr, chptr);
+#ifndef PREFIX_AQ
+					if (access & CHFL_CHANOWNER)
 						*(buf + len++) = '*';
-					else if (is_chanprot(acptr, chptr))
+					else if (access & CHFL_CHANPROT)
 						*(buf + len++) = '^';
-					else if (is_chan_op(acptr, chptr))
+#else
+					if (access & CHFL_CHANOWNER)
+						*(buf + len++) = '~';
+					else if (access & CHFL_CHANPROT)
+						*(buf + len++) = '&';
+#endif
+					else if (access & CHFL_CHANOP)
 						*(buf + len++) = '@';
-					else if (is_half_op(acptr, chptr))
+					else if (access & CHFL_HALFOP)
 						*(buf + len++) = '%';
-					else if (has_voice(acptr, chptr))
+					else if (access & CHFL_VOICE)
 						*(buf + len++) = '+';
 					if (len)
 						*(buf + len) = '\0';
@@ -396,6 +428,8 @@ int	ban_version(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc < 2)
 		return 0;
 	len = strlen(parv[1]);
+	if (!len)
+		return 0;
 	if (parv[1][len-1] == '\1')
 		parv[1][len-1] = '\0';
 	if ((ban = Find_ban(parv[1], CONF_BAN_VERSION)))

@@ -44,6 +44,23 @@ static char sccsid[] = "@(#)s_auth.c	1.18 4/18/94 (C) 1992 Darren Reed";
 #include "proto.h"
 #include <string.h>
 
+void ident_failed(aClient *cptr)
+{
+	Debug((DEBUG_NOTICE, "ident_failed() for %x", cptr));
+	ircstp->is_abad++;
+	if (cptr->authfd != -1)
+	{
+		CLOSE_SOCK(cptr->authfd);
+		--OpenFiles;
+		cptr->authfd = -1;
+	}
+	cptr->flags &= ~(FLAGS_WRAUTH | FLAGS_AUTH);
+	if (!DoingDNS(cptr))
+		SetAccess(cptr);
+	if (SHOWCONNECTINFO && !cptr->serv)
+		sendto_one(cptr, "%s", REPORT_FAIL_ID);
+}
+
 /*
  * start_auth
  *
@@ -68,9 +85,7 @@ void start_auth(aClient *cptr)
 	{
 		Debug((DEBUG_ERROR, "Unable to create auth socket for %s:%s",
 		    get_client_name(cptr, TRUE), strerror(get_sockerr(cptr))));
-		if (!DoingDNS(cptr))
-			SetAccess(cptr);
-		ircstp->is_abad++;
+		ident_failed(cptr);
 		return;
 	}
     if (++OpenFiles >= (MAXCONNECTIONS - 2))
@@ -109,17 +124,7 @@ void start_auth(aClient *cptr)
 
 	if (connect(cptr->authfd, (struct sockaddr *)&sock, sizeof(sock)) == -1 && !(ERRNO == P_EWORKING))
 	{
-		ircstp->is_abad++;
-		/*
-		 * No error report from this...
-		 */
-		CLOSE_SOCK(cptr->authfd);
-		--OpenFiles;
-		cptr->authfd = -1;
-		if (!DoingDNS(cptr))
-			SetAccess(cptr);
-		if (SHOWCONNECTINFO && !cptr->serv) 
-			sendto_one(cptr, "%s", REPORT_FAIL_ID);
+		ident_failed(cptr);
 		return;
 	}
 	cptr->flags |= (FLAGS_WRAUTH | FLAGS_AUTH);
@@ -161,15 +166,7 @@ void send_authports(aClient *cptr)
 		if (ERRNO == P_EAGAIN)
 			return; /* Not connected yet, try again later */
 authsenderr:
-		ircstp->is_abad++;
-		CLOSE_SOCK(cptr->authfd);
-		--OpenFiles;
-		cptr->authfd = -1;
-		cptr->flags &= ~FLAGS_AUTH;
-		if (SHOWCONNECTINFO && !cptr->serv)
-			sendto_one(cptr, "%s", REPORT_FAIL_ID);
-		if (!DoingDNS(cptr))
-			SetAccess(cptr);
+		ident_failed(cptr);
 	}
 	cptr->flags &= ~FLAGS_WRAUTH;
 	return;

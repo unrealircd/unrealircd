@@ -221,6 +221,13 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    me.name, parv[0]);
 			continue;
 		}
+		if (!IsPerson(acptr))
+		{
+			/* Nick exists but user is not registered yet: IOTW "doesn't exist". -- Syzop */
+			sendto_one(sptr, err_str(ERR_NOSUCHNICK),
+			    me.name, parv[0], nick);
+			continue;
+		}
 
 		if (IsServices(acptr) && !(IsNetAdmin(sptr) || IsULine(sptr)))
 		{

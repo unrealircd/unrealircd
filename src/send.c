@@ -384,12 +384,18 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 		if (acptr->from == one)
 			continue;	/* ...was the one I should skip
 					   or user not not a channel op */
-        if ((prefix & PREFIX_HALFOP) && (lp->flags & CHFL_HALFOP))
+	        if ((prefix & PREFIX_HALFOP) && (lp->flags & CHFL_HALFOP))
 			goto good;
 		if ((prefix & PREFIX_VOICE) && (lp->flags & CHFL_VOICE))
 			goto good;
 		if ((prefix & PREFIX_OP) && (lp->flags & CHFL_CHANOP))
 			goto good;
+#ifdef PREFIX_AQ
+		if ((prefix & PREFIX_ADMIN) && (lp->flags & CHFL_CHANPROT))
+			goto good;
+		if ((prefix & PREFIX_OWNER) && (lp->flags & CHFL_CHANOWNER))
+			goto good;
+#endif
 		continue;
 		
 		good:
@@ -451,6 +457,12 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 			goto good;
 		if ((prefix & PREFIX_OP) && (lp->flags & CHFL_CHANOP))
 			goto good;
+#ifdef PREFIX_AQ
+		if ((prefix & PREFIX_ADMIN) && (lp->flags & CHFL_CHANPROT))
+			goto good;
+		if ((prefix & PREFIX_OWNER) && (lp->flags & CHFL_CHANOWNER))
+			goto good;
+#endif
 		continue;
 		
 		good:

@@ -532,7 +532,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OFLAG_TKL       0x10000000	/* can use G:lines and shuns */
 #define OFLAG_GZL       0x20000000	/* can use global Z:lines */
 #define OFLAG_OVERRIDE	0x40000000	/* can use oper-override */
-#define OFLAG_INVISIBLE 0x80000000
 #define OFLAG_LOCAL	(OFLAG_REHASH|OFLAG_HELPOP|OFLAG_GLOBOP|OFLAG_WALLOP|OFLAG_LOCOP|OFLAG_LROUTE|OFLAG_LKILL|OFLAG_KLINE|OFLAG_UNKLINE|OFLAG_LNOTICE)
 #define OFLAG_GLOBAL	(OFLAG_LOCAL|OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
 #define OFLAG_ISGLOBAL	(OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
@@ -934,7 +933,7 @@ struct _configitem {
 
 struct _configitem_me {
 	char	   *name, *info;
-	short	   numeric;
+	unsigned short	   numeric;
 };
 
 struct _configitem_admin {
@@ -1001,9 +1000,9 @@ struct _configitem_ulines {
 struct _configitem_tld {
 	ConfigItem 	*prev, *next;
 	ConfigFlag_tld 	flag;
-	char 		*mask, *motd_file, *rules_file, *channel;
-	struct tm	*motd_tm;
-	aMotd		*rules, *motd;
+	char 		*mask, *motd_file, *rules_file, *smotd_file, *channel;
+	struct tm	motd_tm, smotd_tm;
+	aMotd		*rules, *motd, *smotd;
 	u_short		options;
 };
 
@@ -1102,7 +1101,7 @@ struct _configitem_deny_version {
 struct _configitem_deny_channel {
 	ConfigItem		*prev, *next;
 	ConfigFlag		flag;
-	char			*channel, *reason;
+	char			*channel, *reason, *redirect;
 };
 
 struct _configitem_allow_channel {

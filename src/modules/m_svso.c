@@ -53,9 +53,8 @@ DLLFUNC int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define STAR1 OFLAG_SADMIN|OFLAG_ADMIN|OFLAG_NETADMIN|OFLAG_COADMIN
 #define STAR2 OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
-#define STAR3 OFLAG_INVISIBLE
 static int oper_access[] = {
-        ~(STAR1 | STAR2 | STAR3), '*',
+        ~(STAR1 | STAR2), '*',
         OFLAG_LOCAL, 'o',
         OFLAG_GLOBAL, 'O',
         OFLAG_REHASH, 'r',
@@ -80,7 +79,6 @@ static int oper_access[] = {
         OFLAG_ZLINE, 'z',
         OFLAG_WHOIS, 'W',
         OFLAG_HIDE, 'H',
-        OFLAG_INVISIBLE, '^',
 	OFLAG_TKL, 't',
 	OFLAG_GZL, 'Z',
 	OFLAG_OVERRIDE, 'v', 
@@ -153,7 +151,7 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
         if (parc < 3)
                 return 0;
 
-        if (!(acptr = find_client(parv[1], (aClient *)NULL)))
+        if (!(acptr = find_person(parv[1], (aClient *)NULL)))
                 return 0;
 
         if (!MyClient(acptr))
@@ -183,6 +181,8 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 fLag = acptr->umodes;
                 if (IsOper(acptr) && !IsHideOper(acptr))
                         IRCstats.operators--;
+                if (IsAnOper(acptr))
+                        delfrom_fdlist(acptr->slot, &oper_fdlist);
                 acptr->umodes &=
                     ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP |UMODE_SERVICES |
                     UMODE_SADMIN | UMODE_ADMIN);

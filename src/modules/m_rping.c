@@ -142,8 +142,11 @@ DLLFUNC int  m_rping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	aClient *acptr;
 
 	if (!IsPrivileged(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
-
+	}
+	
 	if (parc < (IsAnOper(sptr) ? (MyConnect(sptr) ? 2 : 3) : 6))
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0],
@@ -248,7 +251,12 @@ DLLFUNC int  m_rpong(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 DLLFUNC char *militime(char *sec, char *usec)
 {
-/* Now just as accurate on win as on linux -- codemastr */
+/* Now just as accurate on win as on linux -- codemastr
+ * Actually no, coz windows has millitime and *NIX uses microtime,
+ * this is a ugly *1000 workaround. One might consider breaking
+ * compatability and just use msec instead of usec crap. -- Syzop
+ */
+
 #ifndef _WIN32
 	struct timeval tv;
 #else
@@ -265,13 +273,13 @@ DLLFUNC char *militime(char *sec, char *usec)
 #ifndef _WIN32
 		    (tv.tv_sec - atoi(sec)) * 1000 + (tv.tv_usec - atoi(usec)) / 1000);
 #else
-		    (tv.time - atoi(sec)) * 1000 + (tv.millitm - atoi(usec)) / 1000);
+		    (tv.time - atoi(sec)) * 1000 + (tv.millitm - (atoi(usec)/1000)));
 #endif
 	else
 #ifndef _WIN32
 		ircsprintf(timebuf, "%ld %ld", tv.tv_sec, tv.tv_usec);
 #else
-		ircsprintf(timebuf, "%ld %ld", tv.time, tv.millitm);
+		ircsprintf(timebuf, "%ld %ld", tv.time, tv.millitm * 1000);
 #endif
 	return timebuf;
 }

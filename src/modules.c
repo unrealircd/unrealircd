@@ -52,6 +52,7 @@ Hook	   	*Hooks[MAXHOOKTYPES];
 Hook 	   	*global_i = NULL;
 Hooktype	Hooktypes[MAXCUSTOMHOOKS];
 Module          *Modules = NULL;
+Versionflag     *Versionflags = NULL;
 int     Module_Depend_Resolve(Module *p);
 Module *Module_make(ModuleHeader *header, 
 #ifdef _WIN32
@@ -120,7 +121,6 @@ char  *Module_Create(char *path_)
 	int		ret = 0;
 	Module          *mod = NULL, **Mod_Handle = NULL;
 	int betaversion,tag;
-	ModuleInfo modinfo;
 	Debug((DEBUG_DEBUG, "Attempting to load module from %s",
 	       path_));
 	path = path_;
@@ -196,10 +196,7 @@ char  *Module_Create(char *path_)
 		if (Mod_Test)
 		{
 			if (betaversion >= 8) {
-				modinfo.size = sizeof(ModuleInfo);
-				modinfo.module_load = 0;
-				modinfo.handle = mod;
-				if ((ret = (*Mod_Test)(&modinfo)) < MOD_SUCCESS) {
+				if ((ret = (*Mod_Test)(&mod->modinfo)) < MOD_SUCCESS) {
 					ircsprintf(errorbuf, "Mod_Test returned %i",
 						   ret);
 					/* We EXPECT the module to have cleaned up it's mess */
@@ -262,6 +259,9 @@ Module *Module_make(ModuleHeader *header,
 	modp->dll = mod;
 	modp->flags = MODFLAG_NONE;
 	modp->children = NULL;
+	modp->modinfo.size = sizeof(ModuleInfo);
+	modp->modinfo.module_load = 0;
+	modp->modinfo.handle = modp;
 	return (modp);
 }
 
@@ -271,7 +271,6 @@ void Init_all_testing_modules(void)
 	Module *mi, *next;
 	int betaversion, tag, ret;
 	iFP Mod_Init;
-	ModuleInfo modinfo;
 	for (mi = Modules; mi; mi = next)
 	{
 		next = mi->next;
@@ -280,10 +279,7 @@ void Init_all_testing_modules(void)
 		irc_dlsym(mi->dll, "Mod_Init", Mod_Init);
 		sscanf(mi->header->modversion, "3.2-b%d-%d", &betaversion, &tag);
 		if (betaversion >= 8) {
-			modinfo.size = sizeof(ModuleInfo);
-			modinfo.module_load = 0;
-			modinfo.handle = mi;
-			if ((ret = (*Mod_Init)(&modinfo)) < MOD_SUCCESS) {
+			if ((ret = (*Mod_Init)(&mi->modinfo)) < MOD_SUCCESS) {
 				config_error("Error loading %s: Mod_Init returned %i",
 					mi->header->name, ret);
 		        	Module_free(mi);
@@ -342,6 +338,9 @@ void Unload_all_loaded_modules(void)
 			else if (objs->type == MOBJ_HOOKTYPE) {
 				HooktypeDel(objs->object.hooktype, mi);
 			}
+			else if (objs->type == MOBJ_VERSIONFLAG) {
+				VersionflagDel(objs->object.versionflag, mi);
+			}
 		}
 		for (child = mi->children; child; child = childnext)
 		{
@@ -381,6 +380,9 @@ void Unload_all_testing_modules(void)
 			}
 			else if (objs->type == MOBJ_HOOKTYPE) {
 				HooktypeDel(objs->object.hooktype, mi);
+			}
+			else if (objs->type == MOBJ_VERSIONFLAG) {
+				VersionflagDel(objs->object.versionflag, mi);
 			}
 		}
 		for (child = mi->children; child; child = childnext)
@@ -427,6 +429,9 @@ int    Module_free(Module *mod)
 		}
 		else if (objs->type == MOBJ_HOOKTYPE) {
 			HooktypeDel(objs->object.hooktype, mod);
+		}
+		else if (objs->type == MOBJ_VERSIONFLAG) {
+			VersionflagDel(objs->object.versionflag, mod);
 		}
 	}
 	for (p = Modules; p; p = p->next)
@@ -707,6 +712,94 @@ Hooktype *HooktypeFind(char *string) {
 	return NULL;
 }
 
+Versionflag *VersionflagFind(char flag)
+{
+	Versionflag *vflag;
+	for (vflag = Versionflags; vflag; vflag = vflag->next)
+	{
+		if (vflag->flag == flag)
+			return vflag;
+	}
+	return NULL;
+}
+
+Versionflag *VersionflagAdd(Module *module, char flag)
+{
+	Versionflag *vflag;
+	ModuleChild *parent;
+	if ((vflag = VersionflagFind(flag)))
+	{
+		ModuleChild *child;
+		for (child = vflag->parents; child; child = child->next) {
+			if (child->child == module)
+				break;
+		}
+		if (!child)
+		{
+			parent = MyMallocEx(sizeof(ModuleChild));
+			parent->child = module;
+			if (module) {
+				ModuleObject *vflagobj;
+				vflagobj = MyMallocEx(sizeof(ModuleObject));
+				vflagobj->type = MOBJ_VERSIONFLAG;
+				vflagobj->object.versionflag = vflag;
+				AddListItem(vflagobj, module->objects);
+			}
+			AddListItem(parent,vflag->parents);
+		}
+		return vflag;
+	}
+	vflag = MyMallocEx(sizeof(Versionflag));
+	vflag->flag = flag;
+	parent = MyMallocEx(sizeof(ModuleChild));
+	parent->child = module;
+	if (module)
+	{
+		ModuleObject *vflagobj;
+		vflagobj = MyMallocEx(sizeof(ModuleObject));
+		vflagobj->type = MOBJ_VERSIONFLAG;
+		vflagobj->object.versionflag = vflag;
+		AddListItem(vflagobj, module->objects);
+	}
+	flag_add(flag);
+	AddListItem(parent,vflag->parents);
+	AddListItem(vflag, Versionflags);
+	return vflag;
+}
+	
+void VersionflagDel(Versionflag *vflag, Module *module)
+{
+	ModuleChild *owner;
+	if (!vflag)
+		return;
+	for (owner = vflag->parents; owner; owner = owner->next)
+	{
+		if (owner->child == module)
+		{
+			DelListItem(owner,vflag->parents);
+			MyFree(owner);
+			break;
+		}
+	}
+	if (module)
+	{
+		ModuleObject *objs;
+		for (objs = module->objects; objs; objs = objs->next) {
+			if (objs->type == MOBJ_VERSIONFLAG && objs->object.versionflag == vflag) {
+				DelListItem(objs,module->objects);
+				MyFree(objs);
+				break;
+			}
+		}
+	}
+	if (!vflag->parents)
+	{
+		flag_del(vflag->flag);
+		DelListItem(vflag, Versionflags);
+		MyFree(vflag);
+	}
+}
+		
 Hooktype *HooktypeAdd(Module *module, char *string, int *type) {
 	Hooktype *hooktype;
 	int i;

@@ -28,8 +28,8 @@ AC_PATH_PROG(INSTALL,install)
 dnl Checks for libraries.
 AC_CHECK_LIB(descrypt, crypt, [AC_DEFINE(HAVE_CRYPT) IRCDLIBS="$IRCDLIBS-ldescrypt " MKPASSWDLIBS="-ldescrypt"],
 AC_CHECK_LIB(crypt, crypt,[ AC_DEFINE(HAVE_CRYPT) IRCDLIBS="$IRCDLIBS-lcrypt " MKPASSWDLIBS="-lcrypt"]))
-AC_CHECK_LIB(socket, socket,IRCDLIBS="$IRCDLIBS-lsocket ")
-AC_CHECK_LIB(nsl, inet_ntoa,IRCDLIBS="$IRCDLIBS-lnsl ")
+AC_CHECK_LIB(socket, socket,IRCDLIBS="$IRCDLIBS-lsocket " SOCKLIB="-lsocket")
+AC_CHECK_LIB(nsl, inet_ntoa,IRCDLIBS="$IRCDLIBS-lnsl " INETLIB="-lnsl")
 
 AC_SUBST(IRCDLIBS)
 AC_SUBST(MKPASSWDLIBS)
@@ -63,6 +63,11 @@ fi
 AC_CACHE_CHECK(for compiler option to produce PIC,ac_cv_pic,[
 if test "$ac_cv_prog_gcc" = "yes"; then
 	ac_cv_pic="-fPIC -DPIC -shared"
+	case `uname -s` in
+		Darwin*[)]
+		ac_cv_pic="-bundle -flat_namespace -undefined suppress"
+		;;
+	esac
 else
 case `uname -s` in
 	SunOS*[)]
@@ -94,6 +99,8 @@ AC_DEFINE(DYNAMIC_LINKING)
 ])
 AC_DEFUN(AC_ENABLE_INET6,[
 AC_CACHE_CHECK(if your system has IPv6 support, ac_cv_ip6, [
+save_libs="$LIBS"
+LIBS="$LIBS $SOCKLIB"
 AC_TRY_RUN([
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -109,6 +116,7 @@ AC_MSG_WARN(Your system does not support IPv6 so it will not be enabled)
 else
 AC_DEFINE(INET6)
 fi
+LIBS="$save_libs"
 ])
 AC_CHECK_HEADER(sys/param.h,AC_DEFINE(PARAMH))
 AC_CHECK_HEADER(stdlib.h,AC_DEFINE(STDLIBH))
@@ -118,7 +126,6 @@ AC_CHECK_HEADER(unistd.h,AC_DEFINE(UNISTDH))
 AC_CHECK_HEADER(string.h,AC_DEFINE(STRINGH))
 AC_CHECK_HEADER(strings.h,AC_DEFINE(STRINGSH))
 AC_CHECK_HEADER(regex.h,AC_DEFINE(HAVE_REGEX),AC_INSTALL_REGEX)
-AC_CHECK_HEADER(openssl/ssl.h,openssl=yes)
 AC_CHECK_HEADER(malloc.h,AC_DEFINE(MALLOCH,<malloc.h>))
 AC_CHECK_HEADER(sys/rusage.h,AC_DEFINE(RUSAGEH))
 AC_CHECK_HEADER(glob.h,AC_DEFINE(GLOBH))
@@ -132,6 +139,8 @@ AC_TYPE_UID_T
 unreal_CHECK_TYPE_SIZES
 
 AC_CACHE_CHECK(what kind of nonblocking sockets you have, ac_cv_nonblocking,[
+save_libs="$LIBS"
+LIBS="$LIBS $SOCKLIB"
 AC_TRY_RUN([
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -215,6 +224,7 @@ AC_DEFINE(NBLOCK_BSD)
 elif test "$ac_cv_nonblocking" = "FIONBIO"; then
 AC_DEFINE(NBLOCK_SYSV)
 fi
+LIBS="$save_libs"
 dnl Checks for library functions.
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_SETPGRP
@@ -294,9 +304,12 @@ AC_CHECK_FUNCS(bcopy,,AC_DEFINE(NEED_BCOPY))
 AC_CHECK_FUNCS(bcmp,,AC_DEFINE(NEED_BCMP))
 AC_CHECK_FUNCS(bzero,,AC_DEFINE(NEED_BZERO))
 AC_CHECK_FUNCS(strcasecmp,AC_DEFINE(GOT_STRCASECMP))
+save_libs="$LIBS"
+LIBS="$LIBS $SOCKLIB $INETLIB"
 AC_CHECK_FUNCS(inet_addr,,AC_DEFINE(NEED_INET_ADDR))
 AC_CHECK_FUNCS(inet_ntoa,,AC_DEFINE(NEED_INET_NTOA))
 AC_CHECK_FUNCS(inet_netof,,AC_DEFINE(NEED_INET_NETOF))
+LIBS="$save_libs"
 AC_CHECK_FUNCS(syslog,AC_DEFINE(HAVE_SYSLOG))
 AC_CHECK_FUNCS(vsyslog,AC_DEFINE(HAVE_VSYSLOG))
 AC_SUBST(REGEX)
@@ -331,7 +344,6 @@ AC_ARG_ENABLE(dynamic-linking, [ --enable-dynamic-linking     Make the IRCd dyna
 AC_ARG_ENABLE(inet6, [ --enable-inet6     Make the IRCd support IPv6 ], AC_ENABLE_INET6)
 AC_SUBST(IRCDDIR)
 AC_SUBST(BINDIR)
-AC_caolan_FUNC_WHICH_GETHOSTBYNAME_R
 AC_MSG_CHECKING(if FD_SETSIZE is large enough to allow $ac_fd file descriptors)
 AC_TRY_RUN([
 #include <sys/types.h>
@@ -346,26 +358,24 @@ FD_SETSIZE="-DFD_SETSIZE=$ac_fd"
 AC_MSG_RESULT(no)
 ])
 AC_SUBST(FD_SETSIZE)
-case "${host_cpu}-${host_os}" in
-SunOS*5.*)
-CFLAGS="$CFLAGS -DSOL20"
+case `uname -s` in
+*SunOS*)
+CFLAGS="$CFLAGS -D_SOLARIS"
+IRCDLIBS="$IRCDLIBS -lresolv "
 ;;
 *solaris*)
 CFLAGS="$CFLAGS -D_SOLARIS"
 IRCDLIBS="$IRCDLIBS -lresolv "
 ;;
-*AmigaOS*68020*)
-CFLAGS="$CFLAGS -D_AMIGA -m68020"
-;;
-*AmigaOS*68030*)
-CFLAGS="$CFLAGS -D_AMIGA -m68030"
-;;
-*AmigaOS*68040*)
-CFLAGS="$CFLAGS -D_AMIGA -m68040"
-;;
-*AmigaOS*68060*)
-CFLAGS="$CFLAGS -D_AMIGA -m68060"
-;;
 esac
+dnl AC_MSG_RESULT(configuring TRE regex library)
+dnl cur_dir=`pwd`
+dnl cd extras/tre
+dnl ./configure --disable-agrep --disable-system-abi --disable-wchar --disable-multibyte --prefix=$cur_dir/extras/regexp
+dnl AC_MSG_RESULT(compiling TRE regex library)
+dnl make
+dnl AC_MSG_RESULT(installing TRE regex library)
+dnl make install
+dnl cd $cur_dir
 AC_OUTPUT(Makefile src/modules/Makefile unreal)
 chmod 0700 unreal

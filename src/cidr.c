@@ -157,7 +157,7 @@ parse_v4_netmask(const char *text, struct IN_ADDR *addr, int *b)
 #ifndef INET6
   const char *p;
   const char *digits[4];
-  unsigned char addb[4];
+  unsigned char addb[8]; /* will only use 4, but space for overflow [?]. -- Syzop*/
   int n = 0, bits = 0;
   char c;
 

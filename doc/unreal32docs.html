@@ -20,8 +20,8 @@
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
-  <b>Current Version:</b> 3.2 Beta16<br>
-  <b>Last doc update:</b> 2003-05-01 </div>
+  <b>Current Version:</b> 3.2 Beta17<br>
+  <b>Last doc update:</b> 2003-06-15 </div>
   <b>Head Coders:</b> Stskeeps / codemastr / Luke / McSkaf / Syzop<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -274,6 +274,7 @@ Windows:<br>
 </pre>
    If you then connect to 127.0.0.1 port 6667, your traffic will be encrypted and forwarded to irc.myserv.com
    port 6900 (an SSL port).</p>
+<p><a href="http://www.bovine.net/~jlawson/coding/stuntour/" target="_blank">StunTour</a> for mIRC might also be helpful to you.</p>
 <p>If you are really concerned about security/sniffing then you also need to validate certificates on the client end.
    That's however way too off topic to explain here. Learn about SSL, don't ask us, it has nothing to do with UnrealIRCd.</p></div>
 <p><font size="+2"><b>3.9 - IPv6</b></font><a name="feature_ipv6"></a></p><div class="desc">
@@ -585,6 +586,7 @@ listen *:6601 {
   must specify, oper::password:: allows you to specify an authentication method 
   for this password, valid auth-types are crypt, md5, and sha1, ripemd-160. If 
   you want to use a plain-text password leave this sub-block out.</p>
+<p>Please note that BOTH the login name and password are case sensitive</p>
 <p>The oper::class directive specifies the name of a preexisting (appears before 
   this in the config file) class name that the oper block will use.</p>
 <p>The oper::flags directive has two formats. If you wish to use the old style 
@@ -968,6 +970,7 @@ tld {
 	mask &lt;hostmask&gt;;
 	motd &lt;motd-file&gt;;
 	rules &lt;rules-file&gt;;
+	shortmotd &lt;shortmotd-file&gt;;
 	channel &lt;channel-name&gt;;
 	options {
 		ssl;
@@ -976,8 +979,9 @@ tld {
 <p>The tld block allows you to specify a motd, rules, and channel for a user based 
   on their host. This is useful if you want different motds for different languages. 
   The <b>tld::mask</b> is a user@host mask that the user's username and hostname must 
-  match. The <b>tld::motd</b> and <b>tld::rules</b> specify the motd and rules file, respectively, 
-  to be displayed to this hostmask. <b>tld::channel</b> is optional, it allows 
+  match. The <b>tld::motd</b>, <b>tld::shortmotd</b>, and <b>tld::rules</b> specify the 
+  motd, shortmotd, and rules file, respectively, to be displayed to this hostmask. 
+  The tld::shortmotd is optional. <b>tld::channel</b> is optional, it allows 
   you to specify a channel that this user will be forced to join on connect. If 
   this exists it will override the default auto join channel.
   The <b>tld::options</b> block allows you to define additional requirements,
@@ -1252,18 +1256,28 @@ deny link {
 deny channel {
 	channel "&lt;channel-mask&gt;";
 	reason &lt;reason-for-ban&gt;;
+	redirect "&lt;channel-name&gt;";
 };</pre></p>
 <p> </p>
 <p>The deny channel block allows you to disallow users from joining specific channels. 
   The deny::channel directive specifies a wildcard mask of channels the users 
   may not join, and the deny::reason specifies the reason why the channel may 
-  not be joined.</p>
+  not be joined. Additionally, you may specify a deny::redirect. If this is specified,
+  when a user tries to join a channel that matches deny::channel, he/she will be redirected
+  to deny::redirect.</p>
 <p>Example</p>
 <pre>
 deny channel {
 	channel "#unrealsucks";
 	reason "No it don't!";
+};
+
+deny channel {
+	channel "#operhelp";
+	reason "Our network help channel is #help, not #operhelp";
+	redirect "#help";
 };</pre></p>
+
 <p></p></div>
 <p><font class="block_section">4.26 - </font><font class="block_name">Allow Channel Block</font>
    <font class="block_optional">OPTIONAL</font><a name="allowchannelblock"></a>
@@ -1654,6 +1668,9 @@ set {
   If present hosts of incomming users are not resolved, can be useful if many of your
   users don't have a host to speed up connecting.<br>
   Note that since no resolving is done you also can't have host based allow blocks.</p>
+<p><font class="set">set::options::mkpasswd-for-everyone;</font><br>
+  Makes it so the /mkpasswd can be used by anyone instead of oper-only, usage of the command 
+  by non-opers is sent to the EYES snomask.</p>
 <p><font class="set">set::dns::timeout &lt;timevalue&gt;;</font><br>
   A time value specifying the length of time a DNS server has to respond before 
   a timeout. A time value is a numeric string with d meaning days, h meaning hours, 
@@ -1727,6 +1744,10 @@ set {
   times.</p>
 <p><font class="set">set::throttle::connections &lt;amount&gt;;</font><br>
   How many times a user must connect with the same host to be throttled.</p>
+<p><font class="set">set::ident::connect-timeout &lt;amount&gt;;</font><br>
+  Amount of seconds after which to give up connecting to the ident server (default: 10s).</p>
+<p><font class="set">set::ident::read-timeout &lt;amount&gt;;</font><br>
+  Amount of seconds after which to give up waiting for a reply (default: 30s).</p>
 <p><font class="set">set::anti-flood::unknown-flood-bantime &lt;timevalue&gt;;</font><br>
   Specifies how long an unknown connection flooder is banned for.</p>
  <p><font class="set">set::anti-flood::unknown-flood-amount &lt;amount&gt;;</font><br>
@@ -1774,7 +1795,7 @@ set {
   </tr>
   <tr> 
     <td><div align="center">a &lt;nick&gt;</div></td>
-    <td>Gives protection to that user, may not be kicked</td>
+    <td>Makes the user a channel admin</td>
   </tr>
   <tr> 
     <td><div align="center">b &lt;nick!user@host&gt;<br>
