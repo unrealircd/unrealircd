@@ -2141,3 +2141,5 @@ seen. gmtime warning still there
   is created rather than when a command is used.
 - Made ban version {} also listen for CTCP SCRIPT replies. Some scripts apparently use this to
   report their version info.
+- Made it so NETINFO won't report a different cloak key error if the server specifies * for the
+  cloak keys. Useful for services that rely on VHP.

@@ -1551,7 +1551,7 @@ CMD_FUNC(m_netinfo)
 
 	}
 	ircsprintf(buf, "%lX", CLOAK_KEYCRC);
-	if (strcmp(buf, parv[4]))
+	if (*parv[4] != '*' && strcmp(buf, parv[4]))
 	{
 		sendto_realops
 			("Link %s is having a different cloak key - %s != %s",
