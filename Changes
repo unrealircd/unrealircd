@@ -2597,3 +2597,4 @@ seen. gmtime warning still there
 - Added beta19 release notes
 - Made USE_ZIP the default again in src/win32/unrealinst.iss
 - Changed version to beta19
+*** beta19 release ***

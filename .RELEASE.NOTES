@@ -9,7 +9,7 @@ Unreal3.2-beta19 Release Notes
   FAQ: http://www.vulnscan.org/UnrealIrcd/faq/
   Read them before asking for help.
 * Report bugs at http://bugs.unrealircd.org/
-* This is a RECOMMENDED release because it fixes security issues and crash bugs.
+* This is a RECOMMENDED release. It fixes several security issues and crash bugs.
 * As usual, if you are using mixed versions you could get desync issues.
   This is especially true for OperOverride KICK this time.
 
