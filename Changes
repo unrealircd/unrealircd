@@ -405,3 +405,4 @@
 - Added some future SJOIN skip stuff.
 - Updated version to 3.2.2-pre1 already.
 ** internal 3.2.2-pre1 release **
+- Fixed some doc & release notes typos. Reported by Rocko, HiT.
