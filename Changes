@@ -2586,3 +2586,4 @@ seen. gmtime warning still there
 - Fixed remote BOTMOTD bug reported by Angrywolf (#0001365).
 - Workaround for "special ban makes it impossible to add other bans" bug
   reported by wilkie, SerialKillinNinja, etc. 
+- Made /rehash reread botmotd and opermotd (#0001291).

@@ -2995,6 +2995,8 @@ CMD_FUNC(m_rehash)
 	motd = (aMotd *) read_file_ex(MPATH, &motd, &motd_tm);
 	rules = (aMotd *) read_file(RPATH, &rules);
 	smotd = (aMotd *) read_file_ex(SMPATH, &smotd, &smotd_tm);
+	botmotd = (aMotd *) read_file(BPATH, &botmotd);
+	opermotd = (aMotd *) read_file(OPATH, &opermotd);
 	if (cptr == sptr)
 		sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
 	return rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
