@@ -1469,7 +1469,7 @@ except ban {
 	mask &lt;hostmaszk&gt;;
 };</pre></p>
 <p>Az except ban blokkal határozhatod meg, mely user@host-ok bírálhatnak felül egy szélesebb maszkra
-  beállított letiltást. Hasznos, ha egy Internet szolgáltató ki van tiltva, de
+  beállított kitiltást. Hasznos, ha egy Internet szolgáltató ki van tiltva, de
   onnan bizonyos felhasználókat még mindig szeretnél kapcsolódni engedni. Az except::mask direktíva
   a kapcsolódásra engedélyezett kliens user@host maszkját határozza meg.</p>
 <p>Példa:<br>
@@ -1492,8 +1492,8 @@ except tkl {
 		...
 	};
 };</pre></p>
-<p>Az except tkl blokkal szélesebb hostra illõ maszkon beállított tkl banok felülbírálását
-  engedélyezeted bizonyos user@host-okra. Hasznos, ha egy Internet szolgáltató ki van tiltva,
+<p>Az except tkl blokkal meghatározhatod, mely user@host-ok bírálhatnak felül egy szélesebb
+  maszkra beállított tkl kitiltást. Hasznos, ha egy Internet szolgáltató ki van tiltva,
   de még mindig szeretnéd, hogy onnan kapcsolódhassanak bizonyos felhasználók.
   Az except::mask direktíva a kapcsolódásra engedélyezett felhasználó user@host maszkja.
   Az except::type meghatározza, hogy milyen letiltást bírálhat felül a kliens. Érvényes típusok:
@@ -1534,13 +1534,13 @@ deny dcc {
 	reason &lt;letiltás-indoka&gt;;
 	soft [yes|no];
 };</pre></p>
-<p>A deny dcc blokkal határozhatsz meg fájlneveket, amelyek a szerveren nem
-  engedélyezettek DCC-n keresztüli küldésre. Ez nagyon hasznos a trójai lovak és vírusok
+<p>A deny dcc blokkal megadhatod olyan fájlok nevét, amelyek nem engedélyezettek
+  a szerveren DCC-n keresztüli küldésre. Ez nagyon hasznos a trójai lovak és vírusok
   terjesztésének megállítására. </p>
 <p>A <b>deny::filename</b> paraméter egy joker karaktereket megengedõ maszk annak a fájlnak a nevére,
   amelynek a küldése letiltandó, és a <b>deny::reason</b> adja meg az indokot, hogy a fájl miért van blokkolva.</p>
 <p>Van még egy <b>deny::soft</b> opció is (gyenge letiltás); ha "yes"-re állítod, a dcc mindaddig blokkolva lesz,
-   mígnem a felhasználó kifejezetten engedélyezi a <i>/DCCALLOW +küldõ-nickneve</i> paranccsal.
+   mígnem a felhasználó kimondottan engedélyezi a <i>/DCCALLOW +küldõ-nickneve</i> paranccsal.
    A dccallow.conf-ban találhatsz egy jó példát dccallow konfigurációra.</p>
 <p>Példa:<br>
 <pre>
