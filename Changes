@@ -1469,3 +1469,5 @@ seen. gmtime warning still there
   #ifdef _WIN32 'ed find_match_server, causing me to believe it was gone.
 - Allowed SQLINE/UNSQLINE to come from a U:lined client as well
 - Module load fix for a minor fuckup in SQLINE/UNSQLINE
+- Fixed a long existing bug where when MAXCONNECTIONS is too high it was displayed as set
+  to 0

@@ -530,7 +530,11 @@ void init_sys(void)
 		if (limit.rlim_max < MAXCONNECTIONS)
 		{
 			(void)fprintf(stderr, "The OS enforces a limit on max open files\n");
+#ifndef LONG_LONG_RLIM_T
 			(void)fprintf(stderr, "Hard Limit: %ld MAXCONNECTIONS: %d\n",
+#else
+			(void)fprintf(stderr, "Hard Limit: %lld MAXCONNECTIONS: %d\n",
+#endif
 			    limit.rlim_max, MAXCONNECTIONS);
 			(void)fprintf(stderr, "Fix MAXCONNECTIONS\n");
 			exit(-1);
