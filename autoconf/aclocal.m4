@@ -235,7 +235,7 @@ pthread_attr_t attrs;
 pid = getpid();
 pthread_attr_init(&attrs);
 pthread_create(&thread, &attrs, (void*)testthreads, NULL);
-while (1);
+pthread_join(&thread, NULL);
 }
 ],ac_cv_thread_multi=no, ac_cv_thread_multi=yes)
 LIBS="$save_LIBS"

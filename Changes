@@ -670,3 +670,5 @@ seen. gmtime warning still there
 - Fixed a documentation bug in unrealircd.conf.txt, made config_error
   actually bitch when loop.ircd_booted
 - Made badword fix found by eternal/Jsmj
+- Changed pthread process check to pthread_join on proposal and idea by
+  codemastr
