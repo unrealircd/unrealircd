@@ -303,7 +303,6 @@
 extern int m_join(), m_part(), m_mode();
 extern int m_wallops();
 extern int m_nick(), m_error();
-extern int m_svskill();
 extern int m_chatops(), m_dns();
 extern int m_gnotice(), m_goper(), m_globops(), m_locops();
 extern int m_protoctl(), m_tkl();
@@ -312,7 +311,7 @@ extern int m_server(), m_info(), m_links(), m_summon(), m_stats();
 extern int m_users(), m_version(), m_help();
 extern int m_squit(), m_connect();
 extern int m_pass(), m_trace();
-extern int m_time(), m_names(), m_admin();
+extern int m_names(), m_admin();
 extern int m_lusers(), m_umode(), m_close();
 extern int m_motd(), m_whowas(), m_silence();
 extern int m_service(), m_userhost(), m_ison(), m_watch();
