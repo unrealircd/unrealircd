@@ -474,3 +474,4 @@
 - Renamed RPL_INVITELIST/RPL_ENDOFINVITELIST to RPL_INVEXLIST/RPL_ENDOFINVEXLIST
 - Using /invite with no parameters now lists the channels you are invited to but have not
   yet joined (#0002190) suggested by sac.
+- Added some missing operflags to /stats O and SVSO (#0002193) reported by Bugz.
