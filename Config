@@ -94,6 +94,16 @@ fi
 #parse arguments
 NOCACHE=""
 NOINTRO=""
+if [ "$1" = "--help" ] ; then
+	echo "Config utility for UnrealIRCd"
+	echo "-----------------------------"
+	echo "Syntax: ./Config [options]"
+	echo "-nocache     Ignore settings saved in config.settings"
+	echo "-nointro     Skip intro (release notes, etc)"
+	echo "-quick       Skip questions, go straight to configure"
+	echo "-C           Clean ./configure cache"
+	exit 0
+fi
 if [ "$1" = "-nocache" -o "$2" = "-nocache" ] ; then
     NOCACHE="1"
 fi
@@ -101,8 +111,12 @@ if [ "$1" = "-nointro" -o "$2" = "-nointro" ] ; then
     NOINTRO="1"
 fi
 
-if [ -f "config.settings" -a -z $NOCACHE ] ; then
+if [ -f "config.settings" -a -z "$NOCACHE" ] ; then
     . config.settings
+fi
+
+if [ "$1" = "-C" -o "$2" = "-C" ] ; then
+	rm -f config.cache
 fi
 
 if [ "$1" = "-quick" -o "$1" = "-q" -o "$2" = "-quick" ] ; then
@@ -113,13 +127,13 @@ fi
 
 clear
 
-    if [ -f ".CHANGES.NEW" -a -z $NOINTRO ] ; then
+    if [ -f ".CHANGES.NEW" -a -z "$NOINTRO" ] ; then
         more .CHANGES.NEW
         echo $n "[Enter to continue]"
         read cc
         clear
     fi
-    if [ -f ".RELEASE.NOTES" -a -z $NOINTRO ] ; then
+    if [ -f ".RELEASE.NOTES" -a -z "$NOINTRO" ] ; then
         more .RELEASE.NOTES
         echo $n "[Enter to continue]"
         read cc
