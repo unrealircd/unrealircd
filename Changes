@@ -1506,4 +1506,4 @@ seen. gmtime warning still there
 - Fixed a bug where set {} info wasn't cleared out at rehash
 - Removed .NEW_CONFIG referenced from the win32 installer scripts
 - Removed LEAST_IDLE, wtf did that do in the first place?
-
+- Added version flags (O and o) for oper override and oper override verify

@@ -92,6 +92,12 @@ char serveropts[] = {
 #ifdef USE_SSL
 	'e',
 #endif
+#ifndef NO_OPEROVERRIDE
+	'O',
+#endif
+#ifndef OPEROVERRIDE_VERIFY
+	'o',
+#endif
 	'\0'
 };
 
