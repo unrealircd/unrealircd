@@ -140,6 +140,7 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 #endif
 #if defined(AUTHENABLE_MD5) || defined(AUTHENABLE_SHA1)
         static char    buf[512];
+        int		i;
 #endif
 
 #ifdef  AUTHENABLE_MD5
@@ -269,6 +270,7 @@ char	*Auth_Make(short type, char *para)
 #endif
 #if defined(AUTHENABLE_MD5) || defined(AUTHENABLE_SHA1)
         static char    buf[512];
+	int		i;
 #endif
 
 #ifdef  AUTHENABLE_MD5
