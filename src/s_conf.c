@@ -2115,7 +2115,7 @@ int	config_post_test()
 	if (!settings.has_dns_retries)
 		Error("set::dns::retries is missing");
 	if (!settings.has_services_server)
-		Error("set::services_server is missing");
+		Error("set::services-server is missing");
 	if (!settings.has_default_server)
 		Error("set::default-server is missing");
 	if (!settings.has_network_name)
@@ -3943,7 +3943,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	char	    copy[256];
 	char	    *ip;
 	char	    *port;
-	int	    start, end, iport;
+	int	    start, end, iport, isnew;
 	int tmpflags =0;
 
 	strcpy(copy, ce->ce_vardata);
@@ -3983,16 +3983,21 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 #endif
 	for (iport = start; iport < end; iport++)
 	{
-		
-		listen = MyMallocEx(sizeof(ConfigItem_listen));
-		listen->ip = strdup(ip);
-		listen->port = iport;
+		if (!(listen = Find_listen(ip, iport)))
+		{
+			listen = MyMallocEx(sizeof(ConfigItem_listen));
+			listen->ip = strdup(ip);
+			listen->port = iport;
+			isnew = 1;
+		} else
+			isnew = 0;
 
 		if (listen->options & LISTENER_BOUND)
 			tmpflags |= LISTENER_BOUND;
 
 		listen->options = tmpflags;
-		AddListItem(listen, conf_listen);
+		if (isnew)
+			AddListItem(listen, conf_listen);
 		listen->flag.temporary = 0;
 	}
 	return 1;

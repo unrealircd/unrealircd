@@ -96,7 +96,7 @@ static int dead_link(aClient *to, char *notice)
 	if (!IsPerson(to) && !IsUnknown(to) && !(to->flags & FLAGS_CLOSING))
 		(void)sendto_failops_whoare_opers("Closing link: %s - %s",
 			notice, get_client_name(to, FALSE));
-	Debug((DEBUG_ERROR, notice, get_client_name(to, FALSE), error));
+	Debug((DEBUG_ERROR, "dead_link: %s - %s", notice, get_client_name(to, FALSE)));
 	to->error_str = strdup(notice);
 	return -1;
 }

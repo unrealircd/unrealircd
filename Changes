@@ -441,3 +441,5 @@
 - Small fix for above
 - Added the ability to specify a botmotd and opermotd in a tld {} (#0000176) suggested by
   swissSolaris.
+- Fixed crashbug on /rehash due to config rewrite, also made DEBUGMODE working again.
+  Probably more fixes to come (small or not)...
