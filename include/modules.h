@@ -23,6 +23,11 @@
 #define MAXMODULES	50
 #define MAXHOOKTYPES	20
 
+#ifndef RTLD_NOW
+#define RTLD_NOW RTLD_LAZY
+#endif
+
+
 #ifdef _WIN32
 #define DLLFUNC	_declspec(dllexport)
 #define irc_dlopen(x,y) LoadLibrary(x)
@@ -73,3 +78,4 @@ void	del_Hook(int hooktype, int (*func)());
 
 #define HOOKTYPE_LOCAL_QUIT		1
 #define HOOKTYPE_LOCAL_NICKCHANGE 	2
+

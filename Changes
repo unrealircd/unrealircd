@@ -457,3 +457,4 @@
 - Added keyboard shortcuts to the win32 config and about popup menus
 - Possible fixed a buggie in +f
 - Fixed a bug causing Found your hostname (cached) to be displayed 2 times
+- Fixed RTLD_NOW problem with openbsd
