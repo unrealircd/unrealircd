@@ -1724,7 +1724,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		  if (is_chanowner(member->value.cptr, chptr)
 		      && member->value.cptr != cptr
 		      && !is_chanowner(cptr, chptr)
-		      && !IsNetAdmin(cptr) && (what == MODE_DEL))
+		      && !opermode && (what == MODE_DEL))
 		  {
 			  if (MyClient(cptr))
 			  {
@@ -1739,7 +1739,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		      && member->value.cptr != cptr
 		      && !is_chanowner(cptr, chptr)
 		      && modetype != MODE_CHANOWNER && (what == MODE_DEL)
-		      && !IsOper(cptr))
+		      && !opermode)
 		  {
 			  if (MyClient(cptr))
 			  {

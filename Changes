@@ -838,4 +838,8 @@ Fixed bug where HCN would display exit client notices twice.
 --Luke
 ===================================
 
+Modified it so people with override flag in O line can
+dechanown, dechanprot people.
+--Luke
+===================================
 
