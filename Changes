@@ -314,3 +314,6 @@
   /module unload <modulename>
 - Added loadmodule "filename.so"; and made the modules
   unable to get loaded twice with same name.
+- Reintroduced "fake lag". Flood algoritm works this way:
+   Make next check for parsing be 
+   (1 + (length of command+parameters / 60)

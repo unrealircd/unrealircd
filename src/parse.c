@@ -364,8 +364,8 @@ int  parse(cptr, buffer, bufend)
 		*/
 		if (!IsServer(cptr) && !IsOper(cptr))
 		{
-			if (lifesux)
-				cptr->since += (2 + i / 90);
+			cptr->since += (1 + i /90);
+			
 		}		
 	}
 	/*
