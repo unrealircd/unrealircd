@@ -64,9 +64,11 @@ typedef struct t_vhost aVhost;
 typedef struct SqlineItem aSqlineItem;
 typedef struct aloopStruct LoopStruct;
 typedef struct ConfItem aConfItem;
+
 /* New Config Stuff */
 typedef struct _configentry ConfigEntry;
 typedef struct _configfile ConfigFile;
+typedef struct _configflag ConfigFlag;
 typedef struct _configitem ConfigItem;
 typedef struct _configitem_me ConfigItem_me;
 typedef struct _configitem_admin ConfigItem_admin;
@@ -916,15 +918,19 @@ struct _configentry
         ConfigEntry     *ce_next;
 };
 
+struct _configflag 
+{
+	unsigned	temporary : 1;
+};
 
 struct _configitem {
-	long	   flags;
+	ConfigFlag flag;
 	ConfigItem *prev;
 	ConfigItem *next;
 };
 
 struct _configitem_me {
-	long	   flags;
+	ConfigFlag flag;
 	ConfigItem *prev;
 	ConfigItem *next;
 
@@ -934,14 +940,14 @@ struct _configitem_me {
 };
 
 struct _configitem_admin {
-	long	   flags;
+	ConfigFlag flag;
 	ConfigItem *prev;
 	ConfigItem *next;
 	char	   *line; 
 };
 
 struct _configitem_class {
-	long	   flags;
+	ConfigFlag flag;
 	ConfigItem *prev;
 	ConfigItem *next;
 	char	   *name;
@@ -951,7 +957,7 @@ struct _configitem_class {
 };
 
 struct _configitem_allow {
-	long	         flags;
+	ConfigFlag 	 flag;
 	ConfigItem       *prev;
 	ConfigItem       *next;
 	char	         *ip;
@@ -960,7 +966,7 @@ struct _configitem_allow {
 };
 
 struct _configitem_oper {
-	long	         flags;
+	ConfigFlag 	 flag;
 	ConfigItem       *prev;
 	ConfigItem       *next;
 	ConfigItem	 *from;
@@ -969,6 +975,7 @@ struct _configitem_oper {
 };
 
 struct _configitem_drpass {
+	ConfigFlag 	 flag;
 	ConfigItem       *prev;
 	ConfigItem       *next;
 	char 		 *restart;
@@ -976,6 +983,7 @@ struct _configitem_drpass {
 };
 
 struct _configitem_ulines {
+	ConfigFlag 	 flag;
 	ConfigItem       *prev;
 	ConfigItem       *next;
 	char 		 *servername;

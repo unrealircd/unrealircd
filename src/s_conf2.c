@@ -647,8 +647,8 @@ int	_conf_admin(ConfigFile *conf, ConfigEntry *ce)
 		if (!cep->ce_varname)
 		{
 			config_error("%s:%i: blank admin item",
-				ce->ce_fileptr->cf_filename,
-				ce->ce_varlinenum);
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum);
 			continue;	
 		}
 		ca = MyMallocEx(sizeof(ConfigItem_admin));
@@ -671,8 +671,8 @@ int	_conf_ulines(ConfigFile *conf, ConfigEntry *ce)
 		if (!cep->ce_varname)
 		{
 			config_error("%s:%i: blank uline item",
-				ce->ce_fileptr->cf_filename,
-				ce->ce_varlinenum);
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum);
 			continue;	
 		}
 		ca = MyMallocEx(sizeof(ConfigItem_ulines));
@@ -703,35 +703,40 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 		if (!cep->ce_varname)
 		{
 			config_error("%s:%i: class item without variable name",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			continue;	
 		}
 		if (!cep->ce_vardata)
 		{
 			config_error("%s:%i: class item without parameter",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			continue;	
 		}
 		if (!strcmp(cep->ce_varname, "pingfreq"))
 		{
 			class->pingfreq = atol(cep->ce_vardata);
-			if (class->pingfreq < 1)
+			if (!class->pingfreq)
 			{
 				config_error("%s:%i: class::pingfreq with illegal value",
-					ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			}
 		} else
 		if (!strcmp(cep->ce_varname, "maxclients"))
 		{
 			class->maxclients = atol(cep->ce_vardata);
+			if (class->maxclients < 0)
+			{
+				config_error("%s:%i: class::maxclients with illegal value (<0))",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			} 
 		} else
 		if (!strcmp(cep->ce_varname, "sendq"))
 		{
 			class->sendq = atol(cep->ce_vardata);
-			if (class->sendq < 1)
+			if (!class->sendq)
 			{
 				config_error("%s:%i: class::sendq with illegal value",
-					ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			}
 		}
 	}
