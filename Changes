@@ -1338,3 +1338,6 @@ seen. gmtime warning still there
 - Documented the new allow::options in doc/conf.doc
 - [nighthawk 2002-06-17] Rewrote m_who.c from scratch.  It's slightly different,
                          help.conf explains exactly how.
+- [nighthawk 2002-06-17] Changed m_quit.c slightly, removed a redundant strlen,
+                         made prefix-quit of "no" not use one at all, since this
+                         is in example.conf and is sensicle..

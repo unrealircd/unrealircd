@@ -125,8 +125,11 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (!IsServer(cptr))
 	{
-		ircsprintf(comment, "%s ",
-		    BadPtr(prefix_quit) ? "Quit:" : prefix_quit);
+		char *s = comment;
+
+		if (strcmp(prefix_quit, "no"))
+			s = ircsprintf(comment, "%s ",
+		    		BadPtr(prefix_quit) ? "Quit:" : prefix_quit);
 
 #ifdef CENSOR_QUIT
 		ocomment = (char *)stripbadwords_channel(ocomment);
@@ -134,7 +137,7 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (!IsAnOper(sptr) && ANTI_SPAM_QUIT_MSG_TIME)
 			if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
 				ocomment = parv[0];
-		strncpy(comment + strlen(comment), ocomment, TOPICLEN - 7);
+		strncpy(s, ocomment, TOPICLEN - (s - comment));
 		comment[TOPICLEN] = '\0';
 		return exit_client(cptr, sptr, sptr, comment);
 	}
