@@ -3908,12 +3908,6 @@ int  m_oper(cptr, sptr, parc, parv)
 				iNAH_host(sptr, locop_host);
 			sptr->umodes &= ~UMODE_OPER;
 		}
-/*        	else
-        if ((aconf->port & OFLAG_AGENT))
-        {
-			sendto_ops("%s (%s@%s) is now an IRCd Agent (S)", parv[0],
-				sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost);
-        }*/
 		else if (aconf->port & OFLAG_NETADMIN)
 		{
 			sendto_ops
@@ -3935,22 +3929,22 @@ int  m_oper(cptr, sptr, parc, parv)
 		}
 		else if (aconf->port & OFLAG_COADMIN)
 		{
-			sendto_ops("%s (%s@%s) is now a co administrator (C)",
+			sendto_ops("%s (%s@%s) is now a co administrator (C) on %s",
 			    parv[0], sptr->user->username,
 			    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
-			    realhost);
+			    realhost,me.name);
 			if (MyClient(sptr))
 			{
-				/*      sendto_serv_butone(&me, ":%s GLOBOPS :%s (%s@%s) is now a co administrator (C)", me.name, parv[0],
-				   sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost);
-				 */
+				sendto_serv_butone(&me, ":%s GLOBOPS :%s (%s@%s) is now a co administrator (C) on %s",
+				me.name, parv[0], sptr->user->username,
+				IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost, me.name);
 			}
 			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
 				iNAH_host(sptr, coadmin_host);
 		}
 		else if (aconf->port & OFLAG_SADMIN)
 		{
-			sendto_ops("%s (%s@%s) is now a services admin (a)",
+			sendto_ops("%s (%s@%s) is now a services administrator (a)",
 			    parv[0], sptr->user->username,
 			    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
 			    realhost);
@@ -3967,19 +3961,33 @@ int  m_oper(cptr, sptr, parc, parv)
 		}
 		else if (aconf->port & OFLAG_ADMIN)
 		{
-			sendto_ops("%s (%s@%s) is now a server admin (A)",
+			sendto_ops("%s (%s@%s) is now a server administrator (A) on %s",
 			    parv[0], sptr->user->username,
 			    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
-			    realhost);
+			    realhost,me.name);
+			if (MyClient(sptr))
+			{
+				sendto_serv_butone(&me,
+				    ":%s GLOBOPS :%s (%s@%s) is now a server administrator (A) on %s",
+				    me.name, parv[0], sptr->user->username,
+				    IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost,me.name);
+			}
 			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
 				iNAH_host(sptr, admin_host);
 		}
 		else
 		{
-			sendto_ops("%s (%s@%s) is now an operator (O)", parv[0],
+			sendto_ops("%s (%s@%s) is now an operator (O) on %s", parv[0],
 			    sptr->user->username,
 			    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
-			    realhost);
+			    realhost,me.name);
+			if (MyClient(sptr))
+			{
+				sendto_serv_butone(&me,
+				    ":%s GLOBOPS :%s (%s@%s) is now an operator (O) on %s",
+				    me.name, parv[0], sptr->user->username,
+				    IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost,me.name);
+			}
 			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
 				iNAH_host(sptr, oper_host);
 		}
