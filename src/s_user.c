@@ -77,7 +77,7 @@ void iNAH_host(aClient *sptr, char *host)
 {
 	if (!sptr->user)
 		return;
-	if (sptr->user->virthost)
+	if (IsHidden(sptr) && sptr->user->virthost)
 		MyFree(sptr->user->virthost);
 	sptr->user->virthost = MyMalloc(strlen(host) + 1);
 	ircsprintf(sptr->user->virthost, "%s", host);
