@@ -221,3 +221,5 @@
    TODOs: dcc_del_wild_match doesn't work. dcc_wipe_services() either
 - Made deny_dcc get rehashed
 - Made it so the IRCd can survive with certain set {} errors (uses defaults)
+- stats-server and services-server are no longer required (missing = disabled services aliases)
+- socks set {} options are now optional. Defaults are used if missing

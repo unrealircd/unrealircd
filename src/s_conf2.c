@@ -2199,7 +2199,7 @@ void	validate_configuration(void)
 	if (Missing(defserv))
 		Error("set::default-server is missing");
 	if (Missing(SERVICES_NAME))
-		Error("set::services-server is missing");
+		Warning("set::services-server is missing. All services commands are being disabled");
 	if (Missing(oper_host)) {
 		Warning("set::hosts::global is missing");
 		hide_host = 0;
@@ -2236,12 +2236,20 @@ void	validate_configuration(void)
 		Error("set::hiddenhost-prefix is missing");
 	if (Missing(helpchan))
 		Error("set::help-channel is missing");
-	if (Missing(STATS_SERVER))
-		Error("set::stats-server is missing");
-	if (Missing(iConf.socksbanmessage))
-		Error("set::socks::ban-message is missing");
-	if (Missing(iConf.socksquitmessage))
-		Error("set::socks::quit-message is missing");
+	if (Missing(STATS_SERVER)) 
+		Warning("set::stats-server is missing. /statserv is being disabled");
+	if (iConf.socksbantime < 10) {
+		Warning("set::socks::ban-time is invalid. Using default of 1 day");
+		iConf.socksbantime = 86400;
+	}
+	if (Missing(iConf.socksbanmessage)) {
+		Warning("set::socks::ban-message is missing. Using default of \"Insecure SOCKS server\"");
+		ircstrdup(iConf.socksbanmessage, "Insecure SOCKS server");
+	}
+	if (Missing(iConf.socksquitmessage)) {
+		Warning("set::socks::quit-message is missing. Using default of \"Insecure SOCKS server\"");
+		ircstrdup(iConf.socksquitmessage, "Insecure SOCKS server");
+	}
 
 	/* Now for the real config */
 	if (conf_me)

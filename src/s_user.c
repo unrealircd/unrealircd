@@ -2163,7 +2163,7 @@ int  m_chanserv(cptr, sptr, parc, parv)
 		return -1;
 	}
 
-	if ((acptr = find_person(ChanServ, NULL)))
+	if (SERVICES_NAME && (acptr = find_person(ChanServ, NULL)))
 		sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", parv[0],
 		    ChanServ, SERVICES_NAME, parv[1]);
 	else
@@ -2184,7 +2184,7 @@ int  m_memoserv(cptr, sptr, parc, parv)
 		return -1;
 	}
 
-	if ((acptr = find_person(MemoServ, NULL)))
+	if (SERVICES_NAME && (acptr = find_person(MemoServ, NULL)))
 		sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", parv[0],
 		    MemoServ, SERVICES_NAME, parv[1]);
 	else
@@ -2206,7 +2206,7 @@ int  m_nickserv(cptr, sptr, parc, parv)
 		return -1;
 	}
 
-	if ((acptr = find_person(NickServ, NULL)))
+	if (SERVICES_NAME && (acptr = find_person(NickServ, NULL)))
 		sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", parv[0],
 		    NickServ, SERVICES_NAME, parv[1]);
 	else
@@ -2228,7 +2228,7 @@ int  m_botserv(cptr, sptr, parc, parv)
 		return -1;
 	}
 
-	if ((acptr = find_person(BotServ, NULL)))
+	if (SERVICES_NAME && (acptr = find_person(BotServ, NULL)))
 		sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", parv[0],
 		    BotServ, SERVICES_NAME, parv[1]);
 	else
@@ -2248,7 +2248,7 @@ int m_infoserv(cptr, sptr, parc, parv)
 	return -1;
 	}
 
-	if ((acptr = find_person(InfoServ, NULL)))
+	if (SERVICES_NAME && (acptr = find_person(InfoServ, NULL)))
 	{
 	sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", parv[0],
 		InfoServ, SERVICES_NAME, parv[1]);		
@@ -2270,7 +2270,7 @@ int  m_operserv(cptr, sptr, parc, parv)
 		sendto_one(sptr, err_str(ERR_NOTEXTTOSEND), me.name, parv[0]);
 		return -1;
 	}
-	if ((acptr = find_person(OperServ, NULL)))
+	if (SERVICES_NAME && (acptr = find_person(OperServ, NULL)))
 		sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", parv[0],
 		    OperServ, SERVICES_NAME, parv[1]);
 	else
@@ -2292,7 +2292,7 @@ int  m_helpserv(cptr, sptr, parc, parv)
 		return -1;
 	}
 
-	if ((acptr = find_person(HelpServ, NULL)))
+	if (SERVICES_NAME && (acptr = find_person(HelpServ, NULL)))
 		sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", parv[0],
 		    HelpServ, SERVICES_NAME, parv[1]);
 	else
@@ -2316,7 +2316,7 @@ int  m_statserv(cptr, sptr, parc, parv)
 		return -1;
 	}
 
-	if ((acptr = find_person(StatServ, NULL)))
+	if (STATS_SERVER && (acptr = find_person(StatServ, NULL)))
 #ifndef STATSERV_ABSOLUTE
 		if (!strncmp(acptr->srvptr->name, STATS_SERVER,
 		    strlen(STATS_SERVER)))
@@ -2363,7 +2363,7 @@ int  m_identify(cptr, sptr, parc, parv)
 	{
 		if ((*parv[1] == '#') && ((char *)index(parv[1], ' ')))
 		{
-			if ((acptr = find_person(ChanServ, NULL)))
+			if (SERVICES_NAME && (acptr = find_person(ChanServ, NULL)))
 				sendto_one(acptr,
 				    ":%s PRIVMSG %s@%s :IDENTIFY %s", parv[0],
 				    ChanServ, SERVICES_NAME, parv[1]);
@@ -2373,7 +2373,7 @@ int  m_identify(cptr, sptr, parc, parv)
 		}
 		else
 		{
-			if ((acptr = find_person(NickServ, NULL)))
+			if (SERVICES_NAME && (acptr = find_person(NickServ, NULL)))
 				sendto_one(acptr,
 				    ":%s PRIVMSG %s@%s :IDENTIFY %s", parv[0],
 				    NickServ, SERVICES_NAME, parv[1]);
