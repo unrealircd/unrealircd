@@ -389,4 +389,5 @@
 - Possibly fixed the vhost crashing bug, with much help from IpAddress
 - Found a way to do +x IPv4 cloaking right. 
 - Added set::cloak-keys { longvalue; longvalue; longvalue; }; for the cipher
+- Fixed a NETINFO parameter problem - solves the new NETINFO format
  

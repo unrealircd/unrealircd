@@ -1921,7 +1921,7 @@ int  m_netinfo(cptr, sptr, parc, parv)
 	{
 		sendto_realops
 			("Link %s is having a different cloak key - %s != %s",
-				parv[4], buf);
+				cptr->name, parv[4], buf);
 	}	
 	SetNetInfo(cptr);
 }
