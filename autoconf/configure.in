@@ -337,6 +337,7 @@ AC_DEFINE_UNQUOTED(MAXCONNECTIONS, $ac_fd)
 AC_ARG_WITH(spath, [ --with-spath     Specify the location of the executable],
 AC_DEFINE_UNQUOTED(SPATH,"$withval") BINDIR="$withval",AC_DEFINE_UNQUOTED(SPATH,"`pwd`/src/ircd") BINDIR="`pwd`/src/ircd")
 AC_ARG_ENABLE(nospoof, [ --enable-nospoof     Enable spoofing protection], AC_DEFINE(NOSPOOF))
+AC_ARG_ENABLE(prefixaq, [ --enable-prefixaq    Enable chanadmin and chanprot prefixes], AC_DEFINE(PREFIX_AQ))
 AC_ARG_ENABLE(hub, [ --enable-hub     Compile as a hub server], AC_DEFINE(HUB))
 CHECK_SSL
 CHECK_ZLIB

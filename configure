@@ -823,6 +823,7 @@ Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
  --enable-nospoof     Enable spoofing protection
+ --enable-prefixaq    Enable chanadmin and chanprot prefixes
  --enable-hub     Compile as a hub server
   --enable-ssl enable ssl will check /usr/local/ssl
                               /usr/lib/ssl /usr/ssl /usr/pkg /usr/local /usr
@@ -9487,6 +9488,14 @@ if test "${enable_nospoof+set}" = set; then
   enableval="$enable_nospoof"
   cat >>confdefs.h <<\_ACEOF
 #define NOSPOOF 1
+_ACEOF
+
+fi;
+# Check whether --enable-prefixaq or --disable-prefixaq was given.
+if test "${enable_prefixaq+set}" = set; then
+  enableval="$enable_prefixaq"
+  cat >>confdefs.h <<\_ACEOF
+#define PREFIX_AQ 1
 _ACEOF
 
 fi;

@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta18<br>
-  <b>Last doc update:</b> 2003-11-18</div>
+  <b>Last doc update:</b> 2003-11-21</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke / McSkaf<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -1796,7 +1796,10 @@ set {
 <p><font class="set">set::restrict-channelmodes &lt;modes&gt;</font><br>
   Restrict users to set/unset the channelmodes listed here (don't use + or -).<br>
   For example you can set +G in modes-on-join and G in restrict-channelmodes,
-  that way you can force all (new) channels to be +G and unable to do -G.</p>
+  that way you can force all (new) channels to be +G and unable to do -G.<br>
+  NOTE: it may still be possible to use these channelmodes trough services 
+  by using MLOCK. Unfortunately we can't do much about that, you would have
+  to ask the services coders to implement a restrict-channelmodes feature too.</p>
 <p><font class="set">set::auto-join &lt;channels&gt;;</font><br>
   The channel(s) a user will be forced to join at connection. To specify more 
   than one channel use a comma separated list.<br>
