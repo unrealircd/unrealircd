@@ -119,7 +119,6 @@ DLLFUNC int  m_whois(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	static anUser UnknownUser = {
-		NULL,		/* nextu */
 		NULL,		/* channel */
 		NULL,		/* invited */
 		NULL,		/* silence */

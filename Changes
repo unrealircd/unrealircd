@@ -1026,3 +1026,4 @@ seen. gmtime warning still there
 - make install fix
 - Fixed a last minute bug in win32
 - Fixed a bug affecting DEFAULT_PERMISSIONS reported by ashukmin
+- Fixes for ->user structures
