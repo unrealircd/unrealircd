@@ -211,7 +211,6 @@
 - Made tld {} get rehashed
 - Made listen/allow get validated
 - Finished up validate_conf()
-<<<<<<< Changes
 - Made badwords be in newconf (you can now specify a replace word for each word)
 - Made vhosts and badwords rehash
 - Fixed a bug in the rehash code
