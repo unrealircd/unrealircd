@@ -150,6 +150,12 @@ Unreal3.2-Selene (BETA11) RELEASE NOTES
   no longer limited to 1d2h1m. You can now enter "1day 2 hours 1 minute" for example. See
   doc/conf.doc for more information.
 
+* The operoverride code has been rewritten to be less intrusive. You can now no longer
+  automatically join a channel for which you must override a mode. You must /invite
+  yourself to the channel. The idea behind this is it prevents the accidental "rejoin on
+  kick" ban override and joining a +s channel without realizing it is +s and therefore you
+  shouldn't know it exists.
+
 * If you use the SSL features of Unreal, you should use OpenSSL 0.9.6e or later. This is
   important as the older versions may make the program exploitable. See 
   http://www.openssl.org for more information

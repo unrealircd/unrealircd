@@ -1440,3 +1440,4 @@ seen. gmtime warning still there
 - RELEASENOTES stuff
 - Win32 installer fixes (changed version to beta11)
 - Changed version to beta11
+- updated .RELEASE.NOTES to explain operinvite
