@@ -11,7 +11,7 @@
 # distribution without the author's prior consent.
 #
 # $Id$
-IRCD_VERSION="Unreal3.1.3 Komara"
+IRCD_VERSION="Unreal3.1.4 Meadows"
 CONF_DATE=`date`
 LAST_VERSION="very very old"
 #

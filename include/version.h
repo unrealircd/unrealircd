@@ -25,7 +25,7 @@
      /**/
 #define COMPILEINFO DEBUGMODESET DEBUGSET
 /*
- * Version Unreal3.1.3-Komara
+ * Version Unreal3.1.4-Meadows
  */
 #define UnrealProtocol 		2302
 #define PATCH1  		"3"
