@@ -59,7 +59,7 @@ version.o: version.c ../include/version.h
 	$(CC) $(CFLAGS) -c version.c
 
 ircd: $(OBJS) 
-	$(CC) $(CFLAGS) -o ircd $(OBJS) $(LDFLAGS) $(IRCDLIBS)
+	$(CC) $(CFLAGS) -o ircd $(OBJS) $(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
 	chmod $(IRCDMODE) ircd
 
 chkconf: ../include/struct.h ../include/config.h ../include/settings.h ../include/sys.h \

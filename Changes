@@ -20,7 +20,7 @@
  *
 */
 
-*** Unreal3.1 *** (state: beta third state)
+*** Unreal3.1 *** (state: we're going for the final)
 - Moved REMOVE_ADVERTISE a little
 - Fixed bug where you could /mode #test +L #test (link a channel to
   itself)
@@ -437,3 +437,4 @@
   in NICKv2 use the real virthost even if its +t. (Thanks to SL7)
 - Added support for the CR Java Chat auto join feature
 - Fixed a msg.h location problem ..
+- Added secure connections and openssl tracing to Config

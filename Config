@@ -42,7 +42,10 @@ NINETNETOF=undef
 GETTIMEOFDAY=undef
 LRAND48=undef
 STRTOUL=undef
+OPENSSL=""
 NEEDSKIPNAME=""
+CRYPTOLIB=""
+CRYPTOIRCD=""
 CCPATH=''
 SIGNAL=''
 BLOCKING=''
@@ -63,8 +66,6 @@ OSNAME="an unrecgonized operating system"
 #
 IRCNET=""
 NOSPOOF="1"
-NOSPOOF_SEED01="0x12345678"
-NOSPOOF_SEED02="0x9abcdef0"
 KLINE_ADDRESS=""
 DPATH="$DIR"
 SPATH="$DIR/src/ircd"
@@ -477,6 +478,15 @@ if [ -r /usr/include/sys/rusage.h ] ; then
 else
 	echo 'not found (good!)'
 fi
+
+echo $n "...Looking for /usr/include/openssl/blowfish.h...$c"
+if [ -r /usr/include/openssl/blowfish.h ] ; then
+	OPENSSL=define
+	echo 'found!'
+else
+	echo 'not found (you will not be able to do secure connections)'
+fi
+
 #
 # to b or not to b
 #
@@ -1093,87 +1103,6 @@ while [ -z "$FOO" ] ; do
     esac
 done
 
-if [ -n "$NOSPOOF" ] ; then
-
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    FOO="$NOSPOOF_SEED01"
-    echo "For security, the nospoof code uses two special values, called"
-    echo "seeds.  Here, please enter one of them.  The values are in"
-    echo "hexidecimal (base 16) using the digits 0123456789abcdef.  Each"
-    echo "value can contain up to 8 digits, and should be specified in the"
-    echo "form 0x12345678.  If you use the defaults, that should be ok, but"
-    echo "it is more secure if you choose your own special values and keep"
-    echo "them secret."
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
-	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
-    if [ -z "$cc" ] ; then
-	cc=$FOO
-    fi
-    case "$cc" in
-	0x[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])
-	    NOSPOOF_SEED01=$cc
-	    ;;
-	[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])
-	    NOSPOOF_SEED01=0x$cc
-	    ;;
-	*)
-	    echo " "
-	    echo "Read the instructions and try again...  You did not enter the"
-	    echo "value correctly."
-	    echo ""
-	    FOO=""
-	    ;;
-    esac
-done
-
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    FOO="$NOSPOOF_SEED02"
-    echo "For security, the nospoof code uses two special values, called"
-    echo "seeds.  Here, please enter one of them.  The values are in"
-    echo "hexidecimal (base 16) using the digits 0123456789abcdef.  Each"
-    echo "value can contain up to 8 digits, and should be specified in the"
-    echo "form 0x12345678.  If you use the defaults, that should be ok, but"
-    echo "it is more secure if you choose your own special values and keep"
-    echo "them secret."
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
-	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
-    if [ -z "$cc" ] ; then
-	cc=$FOO
-    fi
-    case "$cc" in
-	0x[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])
-	    NOSPOOF_SEED02=$cc
-	    ;;
-	[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])
-	    NOSPOOF_SEED02=0x$cc
-	    ;;
-	*)
-	    echo " "
-	    echo "Read the instructions and try again...  You did not enter the"
-	    echo "value correctly."
-	    echo ""
-	    FOO=""
-	    ;;
-    esac
-done
-
-# this matches a NOSPOOF check waaaaaay up there
-fi
-
 FOO=""
 runonce=""
 while [ -z "$FOO" ] ; do
@@ -1251,7 +1180,7 @@ while [ -z "$FOO" ] ; do
     esac
 done
 
-DOMAINNAME="box.name"
+DOMAINNAME=`hostname -f`
 FOO=""
 runonce=""
 while [ -z "$FOO" ] ; do
@@ -1270,6 +1199,45 @@ while [ -z "$FOO" ] ; do
     fi
 done
 DOMAINNAME=$cc
+
+if [ -n "$OPENSSL" ] ; then
+FOO=""
+runonce=""
+while [ -z "$FOO" ] ; do
+    if [ -n "$CRYPTOIRCD" ] ; then
+	FOO="Yes"
+    else
+	FOO="No"
+    fi
+    echo ""
+    echo "Do you want to support encrypted connections"
+    echo $n "[$FOO] -> $c"
+    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+	read cc
+    else
+	cc=""
+	runonce=Yes
+    fi
+    if [ -z "$cc" ] ; then
+	cc=$FOO
+    fi
+    case "$cc" in
+	[Yy]*)
+	    CRYPTOIRCD="1"
+	    CRYPTOLIB="-lcrypto"
+	    ;;
+	[Nn]*)
+	    CRYPTOIRCD=""
+	    ;;
+	*)
+	    echo ""
+	    echo "You need to enter either Yes or No here..."
+	    echo ""
+	    FOO=""
+	    ;;
+    esac
+done
+fi
 
 FOO=""
 runonce=""
@@ -1657,6 +1625,19 @@ else
     $RM -f Makefile.tmp
 fi
 
+if [ -n "$CRYPTOLIB" ] ; then
+	$RM -f Makefile.tmp
+	sed -e "s@^CRYPTOLIB=\(.*\)@CRYPTOLIB=$CRYPTOLIB@" Makefile > Makefile.tmp
+	cp Makefile.tmp Makefile
+	$RM -f Makefile.tmp
+else
+    $RM -f Makefile.tmp
+    sed -e "s@^CRYPTOLIB=\(.*\)@CRYPTOLIB=@" Makefile > Makefile.tmp
+    cp Makefile.tmp Makefile
+    $RM -f Makefile.tmp
+	
+fi
+
 $RM -f $EXEC $TMP
 
 $RM -f ./core
@@ -1691,6 +1672,11 @@ if [ -n "$CRYPT_OPER_PASSWORD" ] ; then
 else
     echo "#undef CRYPT_OPER_PASSWORD" >> $OPTIONS_H
 fi
+if [ -n "$CRYPTOIRCD" ] ; then
+    echo "#define CRYPTOIRCD 1" >> $OPTIONS_H
+else
+    echo "#undef CRYPTOIRCD" >> $OPTIONS_H
+fi
 if [ -n "$CRYPT_LINK_PASSWORD" ] ; then
     echo "#define CRYPT_LINK_PASSWORD 1" >> $OPTIONS_H
 else
@@ -1717,12 +1703,6 @@ if [ -n "$NOSPOOF" ] ; then
 else
     echo "#undef NOSPOOF" >> $OPTIONS_H
 fi
-if [ -n "$NOSPOOF_SEED01" ] ; then
-    echo "#define NOSPOOF_SEED01 $NOSPOOF_SEED01" >> $OPTIONS_H
-fi
-if [ -n "$NOSPOOF_SEED02" ] ; then
-    echo "#define NOSPOOF_SEED02 $NOSPOOF_SEED02" >> $OPTIONS_H
-fi
 
 if [ "$OSNAME" = "Linux (with GLIBC 2.x or greater)" ]; then
     echo "#define GLIBC2_x" >> $OPTIONS_H
@@ -1745,8 +1725,6 @@ cat > $OPTIONS << __EOF__
 IRCNET="$IRCNET"
 LAST_VERSION="$IRCD_VERSION"
 NOSPOOF="$NOSPOOF"
-NOSPOOF_SEED01="$NOSPOOF_SEED01"
-NOSPOOF_SEED02="$NOSPOOF_SEED02"
 DPATH="$DPATH"
 SPATH="$SPATH"
 CRYPT_OPER_PASSWORD="$CRYPT_OPER_PASSWORD"
@@ -1785,8 +1763,8 @@ cat << __EOF__
 |_____________________________________________________________________|
 |_____________________________________________________________________|
 | - The UnrealIRCd Team -                                             |
-| * Stskeeps  stskeeps@tspre.org
-| * codemastr codemastr@tspre.org
-| * DrBin     drbin@tspre.org
+| * Stskeeps  stskeeps@tspre.org                                      |
+| * codemastr codemastr@tspre.org                                     |
+| * DrBin     drbin@tspre.org                                         |
 |_____________________________________________________________________|
 __EOF__

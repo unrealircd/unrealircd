@@ -33,7 +33,7 @@ FROMDOS=/home/cmunk/bin/4dos
 #
 XCFLAGS=
 IRCDLIBS=
-
+CRYPTOLIB=
 #
 # use the following on MIPS:
 #CFLAGS= -systype bsd43 -DSYSTYPE_BSD43 -I$(INCLUDEDIR)
