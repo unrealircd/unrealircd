@@ -2315,6 +2315,7 @@ seen. gmtime warning still there
 - stats bugfixes: a null pointer crash and a '/stats k' bug.
 - Fixed a couple of problems in the new stats system
 - Fixed another stats problem, reported by Angrywolf (#0001163)
+=======
 - Rewrote the usermode module interface to be more stable and consistent with other
   module functions. New functions are UmodeAdd and UmodeDel (backwards compatibility
   is available for the old functions).
@@ -2328,3 +2329,5 @@ seen. gmtime warning still there
 - made some functions in channel.c non-static so module coders
   can use them (they are not defined in the header files [yet] however).
 - fixed 2 minor oob write issues
+- Fixed a bug with stats l/L
+

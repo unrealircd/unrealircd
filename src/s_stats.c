@@ -1314,14 +1314,17 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 	 * are invisible not being visible to 'foreigners' who use
 	 * a wild card based search to list it.
 	 */
-	if (!para)
+	if (para)
+	{
+		if (!mycmp(para, me.name))
+			doall = 2;
+		else if (match(para, me.name) == 0)
+			doall = 1;
+		if (index(para, '*') || index(para, '?'))
+			wilds = 1;
+	}
+	else
 		para = me.name;
-	if (!mycmp(para, me.name))
-		doall = 2;
-	else if (match(para, me.name) == 0)
-		doall = 1;
-	if (index(para, '*') || index(para, '?'))
-		wilds = 1;
 	sendto_one(sptr, Sformat, me.name, RPL_STATSLINKINFO, sptr->name);
 	if (!MyClient(sptr))
 	{
