@@ -141,3 +141,7 @@
 - updconf now makes use of from {} in oper {} to eliminate duplicate O:lines
 - Made allow {} passwords work (AllowClient) - TODO: I:line encryptions
 - Made allow { maxperip }; work, the old ONE password thing, just better
+- Added a hack to updconf so ONE sets maxperip to 1 and made another hack
+  -I IPMASK:HOSTMASK:IPs,... to allow you to specify an ipmax. ex. 
+  -I *@205.188.*:*@*.aol.com:10,*@*:*@*:100 that will allow 10 on your aol.com allow, 
+  and 100 on your *@* allow

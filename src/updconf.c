@@ -31,6 +31,7 @@ struct flags {
 };
 
 struct class *classes = NULL;
+struct allow *allows = NULL;
 struct uline *ulines = NULL;
 struct link  *links = NULL;
 struct oper *opers = NULL;
@@ -140,6 +141,13 @@ struct host {
 	struct host *next;
 };
 
+struct allow {
+	char *ip;
+	char *host;
+	int ips;
+	struct allow *next;
+};
+
 struct class {
 	int number;
 	char *name;
@@ -181,6 +189,19 @@ int add_class(char *name, int number) {
 	return 1;
 }
 
+int add_allow(char *ip, char *host, int ips) {
+	struct allow *al = (struct allow *)malloc(sizeof(struct allow));
+
+	if (!al)
+		return 0;
+	AllocCpy(al->ip,ip);
+	AllocCpy(al->host,host);
+	al->ips = ips;
+
+	al->next = allows;
+	allows = al;
+}
+
 int add_uline(char *name) {
 	struct uline *ul = (struct uline *)malloc(sizeof(struct uline));
 
@@ -204,6 +225,16 @@ struct class *find_class(int number) {
 	}
 	return NULL;
 }	
+
+struct allow *find_allow(char *ip, char *host) {
+	struct allow *al;
+
+	for (al = allows; al; al = al->next) {
+		if (!stricmp(ip,al->ip) && !stricmp(host,al->host))
+			return al;
+	}
+	return NULL;
+}
 
 struct host *add_host(struct oper *oper, char *mask) {
 	struct host *host = (struct host *)malloc(sizeof(struct host));
@@ -297,6 +328,7 @@ int main (int argc, char *argv[]) {
 	struct oper *op;
 	struct host *operhost;
 	struct flags *_flags;
+	struct allow *al;
 	fd = fopen("ircd.conf", "r");
 	fd2 = fopen("ircd.conf.new", "w");
 	for (i=1; i < argc; i++) {
@@ -307,13 +339,25 @@ int main (int argc, char *argv[]) {
 				char *class;
 				int num;
 				++i;
-			for (tmp = strtok(argv[i], ","); tmp; tmp = strtok(NULL, ",")) {
-				char *tmp2;
-				int num;
-				num = atoi(getfield(tmp));	
-				tmp2 = getfield(NULL);
-				add_class(tmp2,num);
+				for (tmp = strtok(argv[i], ","); tmp; tmp = strtok(NULL, ",")) {
+					char *tmp2;
+					int num;
+					num = atoi(getfield(tmp));	
+					tmp2 = getfield(NULL);
+					add_class(tmp2,num);
+				}
 			}
+			if (*param == 'I') {
+				char *ip;
+				char *host;
+				int ips;
+				i++;
+				for (tmp = strtok(argv[i], ","); tmp; tmp = strtok(NULL, ",")) {
+					ip = getfield(tmp);
+					host = getfield(NULL);
+					ips = atoi(getfield(NULL));
+					add_allow(ip,host,ips);
+				}
 			}
 	
 		}
@@ -322,8 +366,7 @@ int main (int argc, char *argv[]) {
 	fprintf(fd2, "/* Created using the UnrealIRCd configuration file updater */\n\n");
 
 	while (fgets(buf, 1023, fd)) {
-		if (buf[0] == '#')
-			continue;
+		if (buf[0] == '#')			continue;
 
 		iCstrip(buf);
 	switch (buf[0]) {
@@ -376,14 +419,22 @@ int main (int argc, char *argv[]) {
 		fprintf(fd2, "};\n\n");
 		break;	
 	case 'I':
+	{
+		char *ip, *pass;
 		fprintf(fd2, "allow {\n");
-		tmp = getfield(&buf[2]);
-		fprintf(fd2, "\tip %s;\n", tmp);
+		ip = getfield(&buf[2]);
+		pass = getfield(NULL);
 		tmp = getfield(NULL);
-		if (!BadPtr(tmp))
-			fprintf(fd2, "\tpassword \"%s\";\n", tmp);
-		tmp = getfield(NULL);
+		fprintf(fd2, "\tip %s;\n", ip);
 		fprintf(fd2, "\thostname %s;\n", tmp);
+		if (al = find_allow(ip, tmp))
+			fprintf(fd2, "\tmaxperip %d;\n", al->ips);
+		if (!BadPtr(pass)) {
+			if(!strcmp(pass, "ONE") && !al)
+				fprintf(fd2, "\tmaxperip 1;\n");
+			else
+				fprintf(fd2, "\tpassword \"%s\";\n", tmp);
+		}
 		getfield(NULL);
 		tmp = getfield(NULL);
 		if ((cl = find_class(atoi(tmp))))
@@ -392,7 +443,7 @@ int main (int argc, char *argv[]) {
 		fprintf(fd2, "\tclass %s;\n", tmp);
 		fprintf(fd2,"};\n\n");
 		break;
-
+	}
 	case 'O':
 	case 'o':
 	{
