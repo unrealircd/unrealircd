@@ -745,13 +745,8 @@ int  m_server(cptr, sptr, parc, parv)
 		return exit_client(acptr, acptr, acptr, "Server Exists");
 	}
 
-	if ((acptr = find_client(host, NULL)))
+/*	if ((acptr = find_client(host, NULL)))
 	{
-		/*
-		   ** Server trying to use the same name as a person. Would
-		   ** cause a fair bit of confusion. Enough to make it hellish
-		   ** for a while and servers to send stuff to the wrong place.
-		 */
 		sendto_one(cptr, "ERROR :Nickname %s already exists!", host);
 		sendto_locfailops
 		    ("Link %s cancelled: Server/nick collision on %s", inpath,
@@ -760,7 +755,7 @@ int  m_server(cptr, sptr, parc, parv)
 		    ":%s GLOBOPS :Link %s cancelled: Server/nick collision on %s",
 		    parv[0], inpath, host);
 		return exit_client(cptr, cptr, cptr, "Nick as Server");
-	}
+	} */
 
 	if (IsServer(cptr))
 	{
