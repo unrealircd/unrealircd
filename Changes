@@ -560,3 +560,4 @@
 - Added IRIX support (does it work?)
 - Fixed crypter so it actually functions (Makefile now sets mode 700) and
   it encrypts X and N lines too.
+- Fixed empty mode sends in register_user, reported by Bagge

@@ -971,7 +971,8 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			sendto_one(nsptr, ":%s PRIVMSG %s@%s :IDENTIFY %s",
 			    sptr->name, NickServ, SERVICES_NAME, sptr->passwd);
 		/* Force the user to join the given chans -- codemastr */
-		sendto_one(cptr,":%s MODE %s :%s", cptr->name, cptr->name, buf);
+		if (buf[1] != '\0')
+			sendto_one(cptr,":%s MODE %s :%s", cptr->name, cptr->name, buf);
 		
 		if (strcmp(AUTO_JOIN_CHANS, "0"))
 		{
