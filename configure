@@ -962,10 +962,8 @@ if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
   IRCDLIBS="$IRCDLIBS-ldescrypt " MKPASSWDLIBS="-ldescrypt"
 else
   echo "$ac_t""no" 1>&6
-fi
-
 echo $ac_n "checking for crypt in -lcrypt""... $ac_c" 1>&6
-echo "configure:969: checking for crypt in -lcrypt" >&5
+echo "configure:967: checking for crypt in -lcrypt" >&5
 ac_lib_var=`echo crypt'_'crypt | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -973,7 +971,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lcrypt  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 977 "configure"
+#line 975 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -984,7 +982,7 @@ int main() {
 crypt()
 ; return 0; }
 EOF
-if { (eval echo configure:988: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:986: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -1002,6 +1000,8 @@ if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
   IRCDLIBS="$IRCDLIBS-lcrypt " MKPASSWDLIBS="-lcrypt"
 else
   echo "$ac_t""no" 1>&6
+fi
+
 fi
 
 echo $ac_n "checking for socket in -lsocket""... $ac_c" 1>&6
