@@ -766,3 +766,4 @@ seen. gmtime warning still there
 - Fixed bindip problem with it not being made
 - Made even more config errors recoverable
 - Added more network files
+- Fixed some typos in s_conf.c

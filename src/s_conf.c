@@ -3006,7 +3006,7 @@ void	validate_configuration(void)
 			if (class_ptr->maxclients < 0) {
 				Warning("class %s:maxclients with illegal (negative) value, using default of 100",
 					class_ptr->name);
-				class->maxclients = 100;
+				class_ptr->maxclients = 100;
 			}
 		}
 	}
@@ -3018,7 +3018,7 @@ void	validate_configuration(void)
 			Warning("oper %s: does not have a from record, using (unsafe) default of *@*",
 				oper_ptr->name);
 			oper_from = (ConfigItem_oper_from *)MyMallocEx(sizeof(ConfigItem_oper_from));
-			ircstrdup(from->name, "*@*");
+			ircstrdup(oper_from->name, "*@*");
 			add_ConfigItem((ConfigItem *) oper_from, (ConfigItem **)&oper_ptr->from);	
 		}
 		if (!oper_ptr->class) {
