@@ -1343,3 +1343,4 @@ seen. gmtime warning still there
                          is in example.conf and is sensicle..
 - Couple of updates to INSTALL.
 - Updated INSTALL to no longer say 'make install is not needed' reported by wolfy
+- Fixed a oper count bug caused by +H (reported by dwd) [#0000203]
