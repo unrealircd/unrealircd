@@ -1,0 +1,28 @@
+/*
+ * ROXnet (irc.rox.za.net) Network Configuration File
+ * --------------------------------------------------
+ *  Added-at:     14 July 1999 00:00 GMT
+ *  Author:       Stskeeps (Carsten Munk)
+ *  E-Mail:       stskeeps@roxnet.org
+ * $Id$
+ * -----------------------------------------
+ */
+
+set {
+	network-name		"IRCsystems";
+	default-server		"irc.ircsystems.net";
+	services-server		"services.ircsystems.net";
+	stats-server		"stats.ircsystems.net";
+	help-channel		"#IRCsystems";
+	hiddenhost-prefix	"rox";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"locop.ircsystems.net";
+		global		"ircop.ircsystems.net";
+		coadmin		"coadmin.ircsystems.net";
+		admin		"admin.ircsystems.net";
+		servicesadmin	"csops.ircsystems.net";
+		netadmin	"netadmin.ircsystems.net";
+		host-on-oper-up	"off";
+	};
+};

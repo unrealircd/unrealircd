@@ -58,9 +58,18 @@ typedef struct hashentry {
 #define WW_MAX_INITIAL_MASK (WW_MAX_INITIAL-1)
 #define WW_MAX (WW_MAX_INITIAL*MAX_SUB)
 
-#define NOTIFYHASHSIZE  10007	/* prime number  */
+#define WATCHHASHSIZE  10007	/* prime number  */
+
+/*
+ * Throttling
+*/
+#ifdef THROTTLING
+#define THROTTLING_HASH_SIZE	1019 /* prime number */
+#endif
+
 
 #define NullChn ((aChannel *)0)
 
 #define find_channel hash_find_channel
+
 #endif /* __hash_include__ */

@@ -1,17 +1,50 @@
 
-Unreal3.1.6-Noon Release Notes
-===================================
+Unreal3.2 Release Notes
+========================
 
-* Initial release preparation, no bugs fixed yet!
+==[ GENERAL INFORMATION ]==
+* If you are upgrading, make sure you run make clean and ./Config before doing make
+* The official UnrealIRCd documentation is doc/unreal32docs.html
+  online version at: http://www.vulnscan.org/UnrealIrcd/unreal32docs.html
+  FAQ: http://www.vulnscan.org/UnrealIrcd/faq/
+  Read them before asking for help.
+* Report bugs at http://bugs.unrealircd.org/
 
-* If you are upgrading from Unreal3.1.4-Meadows, please read
-  doc/RELEASE-NOTES.3.1.5 as well.
+== [ NEW ]==
+- Added german docs (doc/unreal32docs.de.html)
+- In a spamfilter reason field '_' gets converted to a space (' '),
+  now also added '__' which gets converted to underscore itself ('_').
 
-* If you are upgrading from an even earlier version (before 3.1.4),
-  please read the doc/RELEASE-NOTES.3.1.4 file as well. There
-  were numerous important/significant changes between 3.1.4 and
-  earlier versions.
+==[ MAJOR BUGS FIXED ]==
+- '/spamfiltere remove' was often removing the wrong entry (RC2 bug)
+- The TRE regex library was sometimes matching too much if [range].+
+  was used multiple times.
+- Fixed a remote include issue and added timeouts in case a connection/transfer fails
 
-* Finally, read Unreal.nfo as usual AND THE DOCS in doc/.
+==[ MINOR BUGS FIXED ]==
+- Sometimes hosts were not resolved on Windows due to a resolver bug
+- spamfilter and sqline: memory leak on /rehash (a few kb)
+- spamfilter: protect against insane long reason/regex fields in configfile
+- set::modes-on-join now accepts extended channelmodes
+- Opteron: various crashbugs fixed, should work ok now.
+- Win32 GUI "rehash all" option did not reload motd/rules.
+- Same for ./unreal rehash on *NIX
+- Usermode 'r' (registered) was unset if you changed the case of your
+  nick (eg: 'blah'->'Blah'), this affected at least ircservices.
+- vhost::swhois wasn't shown if you did a remote /whois.
+- Made './curlinstall' work with new c-ares-1.0.0.
+- Fixed compile problem on some machines related to TRE / libintl.
+- /who +m was incorrectly hiding +H users even for opers.
+- Fixed /rehash bug if an .so or remote include didn't load properly
 
-- Luke (luke@unrealircd.com)
+==[ CHANGED ]==
+- spamfilter.conf: fixed fyle sig, added sigs for: soex, Nkie, LOI, Gaggle,
+  changed a lot of sigs from block to gline.
+- Windows: now using new Inno Setup which made the installer 300k smaller
+- Docs, help.conf and other text updates.
+
+==[ COMMING UP ]==
+- You can expect module support on windows in a nearby release.
+
+==[ ADDITIONAL INFO ]==
+* See Changelog

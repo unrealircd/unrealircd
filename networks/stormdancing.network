@@ -1,0 +1,20 @@
+set {
+	network-name		"tormdancing.Net";
+	default-server		"irc.stormdancing.net";
+	services-server		"Services.Stormdancing.Net";
+	stats-server		"stats.ircnet.org";
+	help-channel		"#Help";
+	hiddenhost-prefix	"Stormdancing";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"LocOp.Stormdancing.Net";
+		global		"IRCop.Stormdancing.Net";
+		coadmin		"CoAdmin.Stormdancing.Net";
+		admin		"Admin.Stormdancing.Net";
+		servicesadmin	"ServiceOp.Stormdancing.Net";
+		netadmin	"NetAdmin.Stormdancing.Net";
+		host-on-oper-up	"on";
+	};
+};
+
+

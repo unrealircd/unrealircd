@@ -1,0 +1,3834 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>UnrealIRCd - 3.2 - Offical Documentation</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<style type="text/css">
+ .block_section { font-size: 24; font-weight: bold; }
+ .block_name { font-size: 24; font-weight: bold; }
+ .block_required { color: red; font-weight: bold; }
+ .block_recommended { color: green; font-weight: bold; }
+ .block_optional { color: blue; font-weight: bold; }
+ .block_old { font-size: 14; }
+ .set { font-weight: bold; }
+ .desc { margin-left: 15px; }
+ pre { font: "times new roman"; font-style: normal;}
+</style>
+</head>
+
+<body>
+<a href="unreal32docs.html">English</a> | German<br><br>
+
+<div align="center"><b><font size="7">UnrealIRCd</font></b><br>
+  <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
+  <font size="4">Version: 3.2</font><br>
+  <b>Aktuelle Version:</b> 3.2<br>
+  <b>Letztes Dokumentation Update:</b>    2004-04-24 </div>
+  <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
+  <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
+<b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
+<b>Deutsche Übersetzung:</b> Stylus740<br>
+<p>Aufgrund des wachsenden Umfangs der Dokumentation von UnrealIRCd3.2 wurde das
+Dokument auf HTML umgestellt, um leichter navigieren und besser
+Querverweisen folgen zu können. Um diese Dokumentation zu lesen, wird einer der
+nachfolgenden Browser benötigt. Aktuelle Dokumentationen sind erhältlich&nbsp; @ <a href="http://www.vulnscan.org/UnrealIrcd/unreal32docs.html">http://www.vulnscan.org/UnrealIrcd/unreal32docs.html</a>
+und&nbsp; eine FAQ @
+<a href="http://www.vulnscan.org/UnrealIrcd/faq/.">http://www.vulnscan.org/UnrealIrcd/faq</a>/.</p>
+<p><b>Kompatible Browser: </b><br>
+<ul>
+<li>Opera 6.02
+<li>Microsoft Internet Explorer 6.X / 5.5
+<li>Netscape Navigator 6.X
+<li>Mozilla 1.2.X
+<li>Lynx (to a point)
+</ul>
+<p><font size="+2"><b>INHALTSVERZEICHNIS</b></font><br>
+  1. <a href="#IntroductionNotes">Einführung &amp; Anmerkungen</a><br>
+  ---1.1. <a href="#notesonolder">Anmerkungen zu Upgrade/Mixing 3.1.x -&gt; 3.2</a><br>
+  ---1.2. <a href="#notesonupgrade">Anmerkungen zu Upgrade von 3.2 Versionen</a><br>
+  2. <a href="#installation">Installation</a><br>
+  3. <a href="#features">Features</a><br>
+  -- 3.1. <a href="#feature_cloaking">Cloaking</a><br>
+  -- 3.2. <a href="#feature_modules">Module</a><br>
+  -- 3.3. <a href="#feature_snomasks">Snomasks</a><br>
+  -- 3.4. <a href="#feature_aliases">Aliases</a><br>
+  -- 3.5. <a href="#feature_helpop">Helpop</a><br>
+  -- 3.6. <a href="#feature_operaccesslevels">Oper Zugriffs-Levels</a><br>
+  -- 3.7. <a href="#feature_opercmds">Oper Befehle</a><br>
+  -- 3.8. <a href="#feature_ssl">SSL</a><br>
+  -- 3.9. <a href="#feature_ipv6">IPv6</a><br>
+  -- 3.10. <a href="#feature_ziplinks">Zip Links</a><br>
+  -- 3.11. <a href="#feature_dyndns">Dynamische DNS/IP Link Unterstützung</a><br>
+  -- 3.12. <a href="#feature_antiflood">Anti-Flood Features<br>
+</a>-- 3.13. <a href="#feature_bantypes"> Bann Typen</a><br>
+-- 3.14. <a href="#feature_spamfilter"> Spamfilter</a><br>
+  -- 3.15. <a href="#feature_other">Andere Features</a><br>
+  4. <a href="#configuringyourunrealircdconf">Konfiguration der unrealircd.conf
+Datei</a><br>
+  ---4.1. <a href="#configurationfileexplained">Erklärung der
+Konfigurationsdatei</a><br>
+  ---4.2. <a href="#meblock"> Me Block -=- (M:Line)</a><br>
+  ---4.3. <a href="#adminblock">Admin Block -=- (A:Line)</a><br>
+  ---4.4. <a href="#classblock">Class Block -=- (Y:Line)</a><br>
+  ---4.5. <a href="#allowblock">Allow Block -=- (I:Line)</a><br>
+  ---4.6. <a href="#listenblock">Listen Block -=- (P:Line)</a><br>
+  ---4.7. <a href="#operblock">Oper Block -=- (O:Line)</a><br>
+  ---4.8. <a href="#drpassblock">DRpass Block -=-(X:Line)</a><br>
+  ---4.9. <a href="#includedirective">Include Anweisung</a><br>
+  ---4.10. <a href="#loadmoduledirective">Loadmodule Anweisung</a><br>
+  ---4.11. <a href="#logblock">Log Block</a><br>
+  ---4.12. <a href="#tldblock">TLD Block -=- (T:Line)</a><br>
+  ---4.13. <a href="#bannickblock">Ban Nick Block -=- (Q:Line)</a><br>
+  ---4.14. <a href="#banuserblock">Ban User Block -=- (K:Line)</a><br>
+  ---4.15. <a href="#banipblock">Ban IP Block -=- (Z:Line)</a><br>
+  ---4.16. <a href="#banserverblock">Ban Server Block -=-(q:Line)</a><br>
+  ---4.17. <a href="#banrealnameblock">Ban Realname Block -=- (n:Line)</a><br>
+  ---4.18. <a href="#banversionblock">Ban Version Block</a><br>
+  ---4.19. <a href="#banexceptionblock">Ban Exception Block -=- (E:Line)</a><br>
+  ---4.20. <a href="#tklexceptionblock">TKL Exception Block</a><br>
+  ---4.21. <a href="#throttleexceptionblock">Throttle Exception Block</a><br>
+  ---4.22. <a href="#denydccblock">Deny DCC Block -=- (dccdeny.conf)</a><br>
+  ---4.23. <a href="#denyversionblock">Deny Version Block -=- (V:Line)</a><br>
+  ---4.24. <a href="#denylinkblock">Deny Link Block -=- (D:Line / d:Line)</a><br>
+  ---4.25. <a href="#denychannelblock">Deny Channel Block -=- (chrestrict.conf)</a><br>
+  ---4.26. <a href="#allowchannelblock">Allow Channel Block</a><br>
+  ---4.27. <a href="#vhostblock">Vhost Block -=- (vhost.conf)</a><br>
+  ---4.28. <a href="#badwordsblock">Badword Block -=- (badwords.conf)</a><br>
+  ---4.29. <a href="#ulinesblock">Uline Block -=- (U:Line)</a><br>
+  ---4.30. <a href="#linkblock">Link Block -=- (C/N/H:Lines)</a><br>
+  ---4.31. <a href="#aliasblock">Alias Block</a><br>
+  ---4.32. <a href="#helpblock">Help Block<br>
+</a>---4.33. <a href="#officialchannels"> Official Channels Block</a><br>
+---4.34. <a href="#spamfilter"> Spamfilter Block</a><br>
+---4.35. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
+  5. <a href="#addtlfiles">Additional Files</a><br>
+  6. <a href="#userchannelmodes">User & Channel Modi</a><br>
+  7. <a href="#useropercommands">User & Oper Befehlsliste<br>
+</a>8. <a href="#secsummary"> Sicherheitstipps/Checkliste</a><br>
+---8.1. <a href="#secsummary"> Passworte</a><br>
+---8.2. <a href="#secsummary"> Nicht IRCD betreffende Angriffsmöglichkeiten</a><br>
+---8.3. <a href="#secinformation"> Berechtigungen und Config Datei</a><br>
+---8.4. <a href="#secsummary"> User bezogene Probleme</a><br>
+---8.5. <a href="#secsummary"> SSL/SSH &amp; Sniffing</a><br>
+---8.6. <a href="#secDoS"> Denial of Service Angriffe (DoS) [oder: wie schütze ich meinen Hub]</a><br>
+---8.7. <a href="#secinformation"> Informationsbeschaffung</a><br>
+---8.8. <a href="#secantiexpolit"> Schutz gegen Exploits</a><br>
+---8.9. <a href="#secsummary"> Zusammenfassung</a><br>
+9. <a href="#faq">Frequently Asked Questions (FAQ)</a><br> 
+</p>
+<p><b><font size="+2"><a name="IntroductionNotes">1.0 &#8211; Einführung &amp;
+Anmerkungen</a>&nbsp;</font></b><br>
+</p><div class="desc">
+<p>Diese Anleitung wurde exklusiv zur Verwendung von UnrealIRCd geschrieben. Die
+Verwendung des Textes mit anderer Software oder das Anbieten zusammen mit
+anderer Software ohne schriftliche Genehmigung des UnrealIRCd Entwicklungsteams
+ist streng verboten. Solange es der Benutzung von UnrealIRCd dient, darf dieses
+Dokument beliebig kopiert/gedruckt/veröffentlicht, jedoch nicht verändert
+werden. &#8211; Copyright UnrealIRCd Development Team 2002-2004</p>
+<p>Bitte lesen Sie diese Anleitung, bevor Sie um Hilfe bitten und schauen Sie
+WIRKLICH erst ein mal in die <a href="#faq">FAQ</a>, da rund 80% der Fragen dort
+beantwortet sind. Hilft
+dies alles nicht, kann bzgl. Support bei irc.ircsystems.net
+(Port 6667) Channel #unreal-support 
+nach Unterstützung gefragt werden (Wir erwarten UNBEDINGT, dass zuvor Dokumentation
+und
+FAQ gelesen wurden und wir helfen nur zu UnrealIRCd, nicht zu Services!). Im Falle eines echten Bugs (z.B. einem Crash) bitte Nachricht an 
+   <a href="http://bugs.unrealircd.org" TARGET="_blank">http://bugs.unrealircd.org</a>.</p></div>
+
+<p><font size="+2"><b><a name="notesonolder">1.1 &#8211; Anmerkungen zu Upgrade/Mixing 3.1.x -&gt; 3.2</a>&nbsp; </b></font><br>
+</p>
+<div class="desc">
+<p>Bei einem Upgrade von Unreal3.1.x auf Unreal3.2 wird als erstes die völlig
+veränderte Konfigurations- Datei auffallen. Anfänglich ist dies eine große Umstellung,
+aber nachdem man erst einmal umgestellt hat, wird man feststellen, dass die neue
+Form viel besser ist!</p>
+<p>Nicht vergessen, im Teil 3 über neue Features nachzulesen! Auch wenn einige
+Features aus früheren Versionen bekannt sind, finden sich hier auch eine Reihe
+neuer Features!</p>
+<p>Am besten verzichtet man auf mischen/linken von 3.1.x mit 3.2, aber wenn das
+doch gewollt ist, wird mindestens 3.1.4 benötigt. Jedoch wird Version 3.1.5.1
+unbedingt empfohlen.</p></div>
+
+<p><font size="+2"><b><a name="notesonupgrade">1.2 &#8211; Anmerkungen zu
+Upgrade von 3.2 Versionen</a></b></font><br>
+</p><div class="desc">
+<p>Der empfohlene Weg für ein Upgrade ist:<br>
+Linux:<br>
+<ul>
+<li>Altes UnrealIRCd Verzeichnis umbenennen (oder es wird im nächsten Schritt
+  überschrieben)
+<li>Neue UnrealIRCd Version entpacken und &quot;./Config&quot; und &quot;make&quot;
+  laufen lassen (*NIX).
+<li>Alte Konfigurationsdateien in das neue Verzeichnis kopieren (unrealircd.conf,
+  motd, rules, server.* [SSL certs], network file, etc)</ul>
+Windows:<br>
+<ul>
+<li>Alle Konfigurationsdateien in einen temporären Ordner kopieren.
+<li>Die Deinstallation des vorhandenen Unreal starten.
+<li>Den Installer für den neuen Unreal starten.
+<li>Die alten Config Files in den neuen Ordner kopieren.
+</ul>
+<p>Bitte auch die RELEASE.NOTES lesen und ggf. jede Changes Datei um zu sehen,
+was sich geändert hat. Falls Änderungen (oder Bugs) zwischen Versionen
+festgestellt werden, AUF JEDEN FALL ERST IN DIESEN DATEIEN NACHLESEN bevor ein
+Bug gemeldet wird!</p></div>
+
+<p><font size="+2"><b><a name="installation">2.0 - Installation</a></b></font><br><div class="desc">
+  <br>
+  <b>Getestete & unterstützte Betriebs Systeme:</b><br>
+<ul>
+<li><b>*NIX Versionen:</b>
+<ul>
+<li>Linux 2.2.x
+<li>Linux 2.4.x
+<li>FreeBSD 4.6-STABLE
+<li>FreeBSD 4.5-STABLE
+<li>Solaris 2.x
+</ul>
+<li><b>Windows Versionen:</b>
+<ul> 
+<li>WindowsXP Home
+<li>WindowsXP Pro
+<li>Windows 2000 Pro
+<li>Windows 2000 Server
+<li>Windows 2000 Advanced Server
+<li>Windows 98
+<li>Windows Me
+</ul>
+</ul>
+  <br>
+  Im Falle, dass Unreal3.2 korrekt unter anderen Betriebssystemen läuft, bitte
+  Details an <a href="mailto://docs@unrealircd.com">docs@unrealircd.com
+  </a>  senden. <p><b>Installationsanleitungen</b><br>
+Linux:<br>
+<ol>
+<li>gunzip -d Unreal3.2.tar.gz
+<li>tar xvf Unreal3.2.tar
+<li>cd Unreal3.2
+<li>./Config
+<li>Die hierbei angezeigten Fragen nach bestem Wissen beantworten. Allgemein ist
+  es empfehlenswert, bei Unsicherheiten den Default zu belassen.
+<li>make
+<li>Nun die eigene unrealircd.conf und die anderen Konfigurationsdateien
+  erstellen, siehe Teil 4.
+</ol>
+<p>
+Windows:<br>
+<ol>
+<li>Den Unreal Installer starten
+<li>Nun die eigene unrealircd.conf und die anderen Konfigurationsdateien
+  erstellen, siehe Teil 4.
+</ol>
+<p> </p></div>
+<p><font size="+2"><b><a name="features">3.0 - Features</a></b></font> 
+&nbsp;</p><div class="desc">
+<p>In diesem Abschnitt werden einiger der größeren besonderen Features
+erläutert. Es wird ein genereller Überblick gegeben, in dem sich manchmal auf
+die .conf Datei bezogen wird (die Neuanfängern momentan noch unbekannt sein
+dürfte).</p>
+<p>Dieser Abschnitt kann auch übersprungen werden, obwohl es sinnvoll ist ihn
+vor oder nach der Installation zu lesen.</p></div>
+
+<p><font size="+2"><b><a name="feature_cloaking">3.1 - Cloaking</a></b></font></p><div class="desc">
+<p>Das Cloaking ist eine Möglichkeit, den echten Hostnamen vor Usern zu verbergen.
+Wenn z.B. der echte Host <i>d5142341.cable.wanadoo.nl </i>lautet, wird er (in
+join, part, whois, etc)
+als <i>rox-2DCA3201.cable.wanadoo.nl </i>angezeigt. Das ist hilfreich, um sich
+davor zu schützen, dass User flooden, da sie die echte Host/IP nicht erkennen
+können.</p>
+<p>Eingestellt wird dies durch den Usermode +x (also: /mode yournick +x), Admins
+können +x auch als Default erzwingen oder so einstellen, dass User kein -x
+einstellen können.</p>
+<p>Ein durch Cloaking geschützter Host wird durch&nbsp; 3 &quot;cloak keys&quot;
+erzeugt. Diese 3 Keys müssen in der unrealircd.conf gesetzt werden, indem man
+drei zufällige Zahlen zwischen 10,000 and 4,294,967,295 einträgt. Wenn jemand
+diese drei keys kennt, kann er den geschützten Host erkennen und den realen
+Host ermitteln. Aus diesem Grund sollten die Keys geheimgehalten werden. <u> Die
+Keys müssen auf allen Servern des Netzwerks identisch sein.</u></p>
+</div>
+<p><font size="+2"><b><a name="feature_modules">3.2 - Module</a></b></font></p><div class="desc">
+<p>UnrealIRCd unterstützt Module, was sehr nützlich
+ist, weil:<br>
+   - Module können durch /rehash geladen und entladen werden, wodurch Bugs
+behoben werden können, ohne dass ein Neustart erforderlich ist.<br>
+   - Andere Entwickler können weitere Module mit neuen Befehlen oder anderen
+Usermodi erstellen.<br>
+   UnrealIRCd selbst enthält nur wenige Module. Durch eine Suche auf <a href="http://www.unrealircd.com"> www.unrealircd.com</a>
+ (modules) oder per Google können weitere 3rd party Module gefunden werden.<br>
+Momentan werden Module in Windows nicht unterstützt, in einer späteren 
+Version kann jedoch damit gerechnet werden.</p>
+<p>Achtung: Minimal muss das commands Modul geladen sein!</p></div>
+
+<p><font size="+2"><b><a name="feature_snomasks">3.3 - Snomasks</a></b></font></p><div class="desc">
+<p>Bei Snomasks handelt es sich um <b>S</b>erver <b>no</b>tice <b>masks</b>, eine spezielle Form
+der Usermodi, durch die gesteuert wird, welche Server Nachrichten man empfängt
+(in der Regel von Opern benutzt)</p>
+<p>Sie können durch &quot;/mode yournick +s SNOMASK&quot; eingestellt werden,
+z.B.:<font face="Courier New"> /mode yournick +s +cF<br>
+</font>(d.h. +s leitet dem Modus &quot;snomask&quot; ein, danach folgen die
+Flags)<br>
+Um aktuelle snomasks zu löschen, gibt man z.B. ein: <font face="Courier New"> /mode yournick +s -c</font><br>
+Will man sämtliche snomask Flags löschen, gibt man ein: <font face="Courier New"> /mode yournick -s</font></p>
+<p>Momentan unterstützte snomasks Flags sind:<br>
+   c - lokale Connects<br>
+   F - ferne Connects (also auf anderen Servern im Netz - mit Ausnahme der U-lined
+Server)<br>
+   f - Flood Meldungen<br>
+k - Kill Meldungen<br>
+   e - 'eyes' Meldungen<br>
+   j - 'junk' Meldungen<br>
+   v - vhost Meldungen<br>
+   G - gline/shun Meldungen<br>
+   n - lokale nick Änderungs-Meldungen<br>
+N - globale nick Änderungs- Meldungen<br>
+   q - deny nick (Q:line) Meldungen zu Abweisung gesperrter
+Nicks<br>
+s- Server nachrichten anzeigen [*]<br>
+[*: Diese snomask ist auch für Nicht-IrcOps möglich]<br>
+   </p>
+<p>Es kann eingestellt werden, welche snomasks man automatisch erhält (set::snomask-on-connect)
+und welche man als Oper erhält (set::snomask-on-oper, set::oper::snomask)</p></div>
+
+<p><font size="+2"><b><a name="feature_aliases">3.4 - Aliases</a></b></font></p><div class="desc">
+<p>Mit Alias können serverseitig bestimmte Befehle eingestellt und dadurch
+vereinfacht werden. So ist es z.B. möglich, dass der Befehl <font face="Courier New" size="2"> "/ns identify
+blah&quot;</font> direkt an Nickserv geleitet und übersetzt wird in: <font face="Courier New" size="2">&quot;privmsg nickserv identify
+blah&quot;</font>. Man kann auch recht komplexe Alias Definitionen vornehmen,
+die beispielsweise den Befehl <font face="Courier New" size="2">/register</font>
+an Chanserv weiterleitet, wenn der erste Parameter mit einem # beginnt oder an
+Nickserv, wenn der erste Parameter nicht mit einem # beginnt. (Im ersten Fall
+soll ein Channel registriert werden, im zweiten Fall ein Nickname)</p>
+<p>Aliases werden in alias Blocks in der Konfigurationsdatei definiert oder in
+einer Include Datei mit den häufigsten Default Aliassen.&nbsp;</p></div>
+   
+<p><font size="+2"><b><a name="feature_helpop">3.5 - Helpop</a></b></font></p><div class="desc">
+<p>UnrealIRCd hat ein integriertes Hilfesystem, auf welches mit dem Befehl
+&quot;/helpop&quot; zugegriffen werden kann. Über den Help Block in der
+Konfigurationsdatei bzw. die beigefügte &quot;help.conf&quot; ist die
+anzuzeigende Hilfe völlig frei konfigurierbar. Grundlegende Hilfen sind in der
+mitgelieferten help.conf schon vorkonfiguriert.<br>
+Beispielsweise wird nach dem Befehl&nbsp; <font face="Courier New" size="2">/helpop chmodes</font>
+ein Überblick über sämtliche Channel Modi von UnrealIRCd angezeigt.<br>
+Zu beachten ist, dass ein ircop (helpop) vor den Suchbegriff ein '?' setzten muss, also statt <i>/helpop</i>  ist <i>/helpop ?</i>  einzugeben und statt 
+   <i>/helpop chmodes</i>  ist <i>/helpop ?chmodes</i>  einzugeben etc..
+(Alternative: Vor der Abfrage das +h Flag per <font face="Courier New" size="2">&quot;/mode
+&lt;nick&gt; -h&quot;</font> entfernen)</p></div>
+
+<p><font size="+2"><b><a name="feature_operaccesslevels">3.6 - Oper Zugriffs-Levels</a></b></font></p><div class="desc">
+<p>Es gibt verschiedene Oper Levels in UnrealIRCd und jeder Level kann um
+zusätzliche Rechte (wie z.B. use /gline) erweitert werden, so dass jedem Oper
+genau die benötigten Rechte gegeben werden können..</p>
+<p>Gesteuert wird dies über die Oper Flags im Oper Block. (siehe <a href="#operblock">oper block</a>
+für weitere Informationen.)</p></div>
+
+<p><font size="+2"><b><a name="feature_opercmds">3.7 - Oper Befehle</a></b></font></p><div class="desc">
+<p>UnrealIRCd hat eine Reihe mächtiger Befehle für Opers, die im Abschnitt <a href="#useropercommands">User
+&amp; Oper Befehlsliste</a>
+erklärt werden. Es empfiehl sich, diese nach der Installation zu lesen :).</p></div>
+
+<p><font size="+2"><b><a name="feature_ssl">3.8 - SSL</a></b></font></p><div class="desc">
+<p>SSL ist die Abkürzung für &quot;Secure Socket Layer&quot; und ermöglicht
+sichere verschlüsselte Verbindungen. Dadurch kann&nbsp; server&lt;-&gt;server Traffic
+verschlüsselt werden, aber auch die Verschlüsselung client&lt;-&gt;server ist
+möglich. Üblicherweise wird SSL als Schutz vor &quot;Sniffing&quot; (Abhören
+von Netz Traffic) und zur sicheren Authentifizierung eingesetzt.</p>
+<p>Um das zu ermöglichen, ist es erforderlich, dass der IRC Server mit SSL
+Support kompiliert wird. Um einen SSL Port einzustellen, muss<br>
+<font face="Courier New">&quot;set listen::options::ssl&quot;</font> eingetragen
+sein.</p>
+<p>Zu einem SSL Port kann nicht normal verbunden werden (also nicht den Port 6667
+auf&nbsp; SSL einstellen!), sondern es wird ein Client oder ein Tunnel
+benötigt, der das SSL Protokoll unterstützt.</p>
+<p>Diese Clients unterstützen SSL: <A HREF="http://www.xchat.org/" TARGET="_blank">XChat</a>,
+<a href="http://www.irssi.org/">irssi</a>, <a href="http://www.mirc.com/"> mIRC</a> (6.14
+und höher, weitere <a href="http://www.mirc.co.uk/ssl.html">zusätzliche
+Schritte</a> erforderlich)</p>
+<p>Für Clients, die kein SSL unterstützen, kann man einen Tunnel wie <a href="http://www.mirc.co.uk/ssl.html">stunnel</a>
+ benutzen. Hie ein Beispiel für eine stunnel.conf Beispiel (für stunnel 4.x):</p>
+   <pre>
+   client = yes
+   [irc]
+   accept = 127.0.0.1:6667
+   connect = irc.myserv.com:6900
+</pre>
+Damit wird zu 127.0.0.1 über Port 6667 verbunden, der Datenverkehr wird
+verschlüsselt und weitergeleitet an irc.myserv.com
+   port 6900 (ein SSL Port).<p><a href="http://www.bovine.net/~jlawson/coding/stuntour/" target="_blank">StunTour</a> 
+für mIRC kann ebenfalls hilfreich sein.</p>
+<p>Es sollten auch
+die Zertifikate überprüft werden, wenn man zu einem Server verbindet und
+diesen nicht blind vertrauen (wie im stunnel Beispiel), andernfalls ist man noch
+durch &quot;active sniffing&quot; Angriffe (ssl redirects) empfänglich. Das ist allerdings ein anderes
+Thema und führt zu weit von der Erklärung zum IRCd weg. Hierzu gibt es eigene
+Sites im Internet um das zu lernen. Nicht bei Unreal nachfragen, es hat nichts
+mit dem UnrealIRCd zu tun. (mIRC und XChat öffnen ein Popup Fenster und fragen
+nach, ob ein Zertifikat erlaubt oder zurückgewiesen wird und das ist gut!)</p></div>
+<p><font size="+2"><b><a name="feature_ipv6">3.9 - IPv6</a></b></font></p><div class="desc">
+<p>UnrealIRCd unterstützt&nbsp; IPv6, seit beta15 stabil zu sein scheint.<br>
+Das Betriebssystem muss IPv6 unterstützen und es ist erforderlich, IPv6
+Unterstützung in UnrealIRCD zu aktivieren (die entsprechende Frage bei ./config
+mit &quot;yes&quot; beantworten).&nbsp;</p>
+<p>Obwohl Microsoft eine experimentelle IPv6 Unterstützung in w2k/XP
+implementiert hat, wird diese (noch) nicht von UnrealIRCd unterstützt.</p>
+</div>
+
+<p><font size="+2"><b><a name="feature_ziplinks">3.10 - Zip Links</a></b></font></p><div class="desc">
+<p>Zip Links können für&nbsp; server&lt;-&gt;server Verbindungen aktiviert
+werden. Dadurch werden die Daten durch Verwendung von zlib komprimiert und es
+können so&nbsp; 60-80% Bandbreite eingespart werden. Das ist sinnvoll für
+Links mit niedriger Bandbreite oder für Links mit vielen Usern und kann ein
+wenig beim Linken helfen, da eine Menge von Daten über jeden User und jeden
+Channel zu übertragen sind.</p>
+<p>Um mit&nbsp; zip links Support zu kompilieren, muss die zlib Frage mit &quot;Yes&quot;
+bei ./config beantwortet werden und dieses mit&nbsp; link::options::zip
+eingetragen sein.</p></div>
+
+<p><font size="+2"><b><a name="feature_dyndns">3.11 - Dynamische DNS/IP Link
+Unterstützung</a></b></font></p><div class="desc">
+<p>UnrealIRCd hat einige (neue) Features, die es ermöglichen, dass User
+dynamische IP's verwenden können (wie z.B.: blah.dyndns.org). Sollen zwei Hosts
+mit dynamischer DNS gelinkt werden, so ist <font face="Courier New"> set link::options::nodnscache</font>
+und <font face="Courier New">link::options::nohostcheck</font> einzutragen. 
+</p></div>
+
+<p><font size="+2"><b><a name="feature_antiflood">3.12 - Anti-Flood Features</a></b></font></p><div class="desc">
+
+<p><b>Throttling</b><br>
+Throttling nennt man die Methode, mit der geregelt wird, wie schnell ein User die
+Verbindung trennen und sich erneut zum Server verbinden kann. Im&nbsp; &quot;set::throttle block&quot;&nbsp;kann eingestellt werden,
+X Verbindungen
+innerhalb von YY Sekunden von derselben IP zu gestatten.</p>
+
+<p><b>Channel Modi</b><br>
+Weiterhin gibt es einige Channel Modi, welche sehr effektiv gegen Flood sein
+können. Einige davon sind:<br>
+<b>K</b> = no /knock (kein Anklopfen, um in Channel eingeladen zu werden), <b>N</b> = no
+nickchanges (keine Änderung der Nicknamen möglich), <b> C</b> = no CTCPs
+(keine CTCP möglich), <b> M</b> = nur registrierte User können schreiben<br>
+Seit der Beta 18 gibt es zusätzlich noch den erweiterten Modus +f...<br>
+<b>Channel mode f<br>
+</b>Um nicht Scripts und Bots zum Schutz gegen Channel Flood benutzen zu
+müssen, ist der notwendige Schutz nun im IRCd integriert.<br>
+Ein Beispiel für den +f Modus ist: <font face="Courier New"> *** Blah sets mode: +f [10j]:15</font><br>
+Das bedeutet, dass 10 joins innerhalb von 15 Sekunden im Channel gestattet sind.
+Wird dieser Wert überschritten, wird der Channel automatisch auf&nbsp; +i
+eingestellt.
+</p>
+<p>Für folgende Flood Arten stehen Aktionen zur Verfügung:<br>
+</p>
+<table border="1" cellspacing="1" width="775">
+  <tr>
+    <td width="39">
+
+<p>Typ:&nbsp;&nbsp;&nbsp;</p></td>
+    <td width="115">
+
+<p>Name:&nbsp;&nbsp;&nbsp;</p></td>
+    <td width="101">
+
+<p>Default Action:&nbsp;&nbsp;&nbsp;</p></td>
+    <td width="108"><p>mögliche weitere Actions:&nbsp;&nbsp;&nbsp;</p></td>
+    <td width="378"><p>Kommentar</p></td>
+  </tr>
+  <tr>
+    <td width="39">
+
+<p>c&nbsp;&nbsp;&nbsp;</p></td>
+    <td width="115">
+
+<p>&nbsp;CTCPs&nbsp;&nbsp;&nbsp;</p></td>
+    <td width="101">
+
+<p>&nbsp;auto +C&nbsp;&nbsp;&nbsp;</p></td>
+    <td width="108">
+
+<p>m, M&nbsp;&nbsp;&nbsp;</p></td>
+    <td width="378">
+
+<p>&nbsp;</p></td>
+  </tr>
+  <tr>
+    <td width="39">
+
+<p>j&nbsp;&nbsp;&nbsp;</p></td>
+    <td width="115">
+
+<p>&nbsp;joins&nbsp;&nbsp;&nbsp;</p></td>
+    <td width="101">
+
+<p>&nbsp;auto +i R&nbsp;&nbsp;&nbsp;</p></td>
+    <td width="108">
+
+<p>&nbsp;</p></td>
+    <td width="378">
+
+<p>&nbsp;</p></td>
+  </tr>
+  <tr>
+    <td width="39">
+
+<p>k&nbsp;&nbsp;&nbsp;</p></td>
+    <td width="115">
+
+<p>&nbsp;knocks&nbsp;&nbsp;&nbsp;</p></td>
+    <td width="101">
+
+<p>&nbsp;auto +K&nbsp;&nbsp;&nbsp;</p></td>
+    <td width="108">
+
+<p>&nbsp;</p></td>
+    <td width="378"><p>(nur für lokale Clients)</p></td>
+  </tr>
+  <tr>
+    <td width="39">
+
+<p>m&nbsp;&nbsp;&nbsp;</p></td>
+    <td width="115">
+
+<p>&nbsp;messages/notices</p></td>
+    <td width="101">
+
+<p>&nbsp;auto +m&nbsp;&nbsp;&nbsp;</p></td>
+    <td width="108">
+
+<p>M</p></td>
+    <td width="378">
+
+<p>&nbsp;</p></td>
+  </tr>
+  <tr>
+    <td width="39">
+
+<p>n&nbsp;&nbsp;&nbsp;</p></td>
+    <td width="115">
+
+<p>&nbsp;nickchanges&nbsp;&nbsp;&nbsp;</p></td>
+    <td width="101">
+
+<p>&nbsp;auto +N&nbsp;&nbsp;&nbsp;</p></td>
+    <td width="108">
+
+<p>&nbsp;</p></td>
+    <td width="378">
+
+<p>&nbsp;</p></td>
+  </tr>
+  <tr>
+    <td width="39">
+
+<p>t&nbsp;&nbsp;&nbsp;</p></td>
+    <td width="115">
+
+<p>&nbsp;text&nbsp;&nbsp;&nbsp;</p></td>
+    <td width="101">
+
+<p>&nbsp;kick&nbsp;&nbsp;&nbsp;</p></td>
+    <td width="108">
+
+<p>b</p></td>
+    <td width="378">
+
+<p>in messages/notices wie das alte +f. Kickt oder bannt User.</p></td>
+  </tr>
+</table>
+
+<p>Beispiel:<br>
+<br>
+<font face="Courier New" size="2"><font color="#008000">
+*** ChanOp sets mode: +f [20j,50m,7n]:15</font><br>
+&lt;ChanOp> lalala<br>
+<font color="#008000">
+*** Evil1 (~fdsdsfddf@Clk-17B4D84B.blah.net) has joined #test<br>
+*** Evil2 (~jcvibhcih@Clk-3472A942.xx.someispcom) has joined #test<br>
+*** Evil3 (~toijhlihs@Clk-38D374A3.aol.com) has joined #test<br>
+*** Evil4 (~eihjifihi@Clk-5387B42F.dfdfd.blablalba.be) has joined #test</font><br>
+-- snip XX lines --<br>
+<font color="#008000">
+*** Evil21 (~jiovoihew@Clk-48D826C3.e.something.org) has joined #test<br>
+</font><font color="#800000">
+-server1.test.net:#test *** Channel joinflood detected (limit is 20 per 15 seconds), putting +i<br>
+</font><font color="#008000">
+*** server1.test.net sets mode: +i<br>
+</font>
+&lt;Evil2> fsdjfdshfdkjfdkjfdsgdskjgsdjgsdsdfsfdujsflkhsfdl<br>
+&lt;Evil12> fsdjfdshfdkjfdkjfdsgdskjgsdjgsdsdfsfdujsflkhsfdl<br>
+&lt;Evil15> fsdjfdshfdkjfdkjfdsgdskjgsdjgsdsdfsfdujsflkhsfdl<br>
+&lt;Evil10> fsdjfdshfdkjfdkjfdsgdskjgsdjgsdsdfsfdujsflkhsfdl<br>
+&lt;Evil8> fsdjfdshfdkjfdkjfdsgdskjgsdjgsdsdfsfdujsflkhsfdl<br>
+-- snip XX lines --<br>
+<font color="#800000">
+-server1.test.net:#test *** Channel msg/noticeflood detected (limit is 50 per 15 seconds), putting +m<br>
+</font><font color="#008000">
+*** server1.test.net sets mode: +m<br>
+*** Evil1 is now known as Hmmm1<br>
+*** Evil2 is now known as Hmmm2<br>
+*** Evil3 is now known as Hmmm3<br>
+*** Evil4 is now known as Hmmm4<br>
+*** Evil5 is now known as Hmmm5<br>
+*** Evil6 is now known as Hmmm6<br>
+*** Evil7 is now known as Hmmm7<br>
+*** Evil8 is now known as Hmmm8<br>
+</font><font color="#800000">
+-server1.test.net:#test *** Channel nickflood detected (limit is 7 per 15 seconds), putting +N<br>
+</font><font color="#008000">
+*** server1.test.net sets mode: +N<br>
+</font></font>
+<br>
+Das Ganze kann noch erweitert (damit aber auch komplizierter) werden:<br>
+Anstelle der Default Aktion kann für einige Flood Typen auch eine andere Aktion
+gewählt werden, wie z.B.: <font face="Courier New"> +f [20j#R,50m#M]:15</font><br>
+Dieser Channel wird auf +R gestellt, wenn das Join-Limit erreicht ist (>20 Joins in 15
+Sekunden), und wird auf +M gesetzt, wenn das Msg Limit erreicht ist (>50
+Nachrichten in 15 Sekunden).<br>
+<br>
+Zusätzlich gibt es eine&nbsp; &quot;Lösche nach X Minuten&quot; Einstellung: <font face="Courier New"> +f [20j#R5]:15</font>
+setzt den Channel auf +R, wenn das Limit erreicht wird und nach 5 Minuten wieder
+auf -R.<br>
+Ein Server kann eine Default Unset-Zeit haben (<b>set::modef-default-unsettime</b>),
+die bewirkt, dass eine Angabe von&nbsp; <font face="Courier New">+f [20j]:15</font>
+automatisch in <font face="Courier New"> +f [20j#i10]:15 </font>umgewandelt
+wird. Es handelt sich hierbei lediglich um einen Default und man kann weiterhin
+auch andere Angaben wie <font face="Courier New"> [20j#i2]:15</font> setzen.
+Ebenso kann man den Lösch Channel Modus&nbsp; auch ganz abschalten, indem man <font face="Courier New"> +f [20j#i0]:15</font>
+angibt (also explizit den Wert 0 setzt).<br>
+<br>
+Der alte +f Modus (messageflood per User) ist weiterhin vorhanden, allerdings
+als 't'. Der Eintrag <font face="Courier New">+f 10:6</font> lautet nun <font face="Courier New"> +f [10t]:6</font>
+und&nbsp;<font face="Courier New"><br>
+ +f *20:10</font> ist jetzt <font face="Courier New">+f [20t#b]:10</font>.
+Aktuell wird der ircd alte +f Modi automatisch in die neuen Modi umwandeln. Zu
+beachten ist, dass es keine Unsettime Einstellung für 't' Banns gibt.&nbsp; ([20t#b30]:15
+funktioniert <b>nicht!</b>).<br>
+<br>
+Was der beste +f Modus ist, hängt vom jeweiligen Channel ab. Wie viele User hat
+der Channel? Läuft möglicherweise ein Spiel in dem Channel, welches viele
+längere Messages erfordert? Handelt es sich um einen Hauptchannel,
+möglicherweise mit auto-join? Das, was in dem einen Channel Flood ist, kann in
+einem anderen völlig normal sein...<br>
+Es gibt also keinen perfekten Channelmodus +f, der für alle Channels geeignet
+ist. Aber für den Anfang seien hier einige Beispiele gegeben, die man auf die
+eigenen Bedürfnisse anpassen kann:<br>
+<font face="Courier New">
++f [30j#i10,40m#m10,7c#C15,10n#N15,30k#K10]:15<br>
+</font>
+30 Joins pro 15 Sekunden, bei Erreichen des Limits wird der Channel für 10 min
+auf +i gesetzt<br>
+40 Messages pro 15 Sekunden, bei Erreichen des Limits wird der Channel für 10
+min auf +m gesetzt<br>
+7 CTCP pro 15 Sekunden, bei Erreichen des Limits wird der Channel für 15 min
+auf +C gesetzt<br>
+10 Nickänderungen pro 15 Sekunden, bei Erreichen des Limits wird der Channel
+für 15 min auf +N gesetzt<br>
+30 Knocks pro 15 Sekunden, bei Erreichen des Limits wird der Channel für 5 min
+auf +K gesetzt<br>
+<br>
+In bestimmten größeren Channels (>75 User?) sollte man die Join Grenze
+erhöhen (auf z.B.: 50) und auch das Message Limit (z.B. 60 oder 75).<br>
+Speziell die Lösch-Modi erfordern viel Feinabstimmung. Man sollte bedenken, was
+passiert, wenn kein Op anwesend ist, der eine Situation regulieren kann. Soll
+ein Channel 15 Minuten gesperrt sein (nicht so schön für die User)? Oder nur 5
+Minuten (dann warten Flooder möglicherweise 5 min um dann erneut zu flooden)?
+Das hängt auch vom Typ des Floods ab. Es beeinträchtigt User mehr, wenn sie
+nicht joinen können (+i) oder nicht schreiben können (+m) als wenn sie keinen
+Nick ändern können (+N) oder keine CTCP senden können (+C). Es sollten daher
+unterschiedliche Zeiten für das Löschen der Modi angegeben werden..<br>
+<br></div>
+
+&nbsp;
+<p><font size="+2"><b><a name="feature_bantypes">
+
+3.13 - Bann Typen</a><br><div class="desc">
+</b></font>
+<b>Einfache Bann-Typen und verdeckte Hosts<br>
+</b>
+UnrealIRCd unterstützt die einfache Bann Form: <font face="Courier New"> +b
+nick!user@host.</font><br>
+Angenommen, der verdeckte Host von jemandem ist 'rox-ACB17294.isp.com' und es
+wird ein Bann auf *!*@rox-ACB17294.isp.com gesetzt, dann wird auch, wenn der
+User sich selbst -x setzt (und sein Host z.B. zu 'dial-123.isp.com' wird), der
+Bann weiterhin gelten. Banns werden immer sowohl gegen reale Hosts UND verdeckte
+Hosts geprüft.<br>
+Auch IP Banns (z.B.: *!*@128.*) sind möglich und werden ebenso immer geprüft.<br>
+<br>
+Banns auf verdeckte IPs erfordern einige Erklärungen:<br>
+Angenommen, ein User hat die IP 1.2.3.4, dann könnte sein verdeckter Host '341C6CEC.8FC6128B.303AEBC6.IP'
+sein.<br>
+Wenn man auf '*!*@341C6CEC.8FC6128B.303AEBC6.IP' einen Bann setzt, bannt man '*!*@1.2.3.4'
+(einleuchtend...)<br>
+Wenn man auf '*!*@*.8FC6128B.303AEBC6.IP' einen Bann setzt, bannt man '*!*@1.2.3.*'<br>
+Wenn man auf '*!*@*.303AEBC6.IP' einen Bann setzt, bannt man '*!*@1.2.*'<br>
+(Die &quot;Stelle&quot; in der verdeckten IP ist also genau anders herum, wie in
+der realen IP)<br>
+Diese Information könnte hilfreich sein, wenn man entscheidet, wie breit eine
+Maske sein soll.<br>
+<br>
+<b>Erweiterte bann Typen<br>
+</b>Erweiterte Bann Typen sind so aufgebaut: '<font color="#008080">~[!]&lt;type>:&lt;stuff&gt;</font>'.
+Gegenwärtig gibt es folgende Typen:
+<table border="1" cellspacing="1" width="859">
+  <tr>
+    <td width="25">Typ</td>
+    <td width="54">Name</td>
+    <td width="758">Erklärung</td>
+  </tr>
+  <tr>
+    <td width="25" valign="top">~q</td>
+    <td width="54" valign="top">quiet</td>
+    <td width="758">User, auf die dieser Bann gesetzt ist, können joinen, aber
+      nicht schreiben, solange sie nicht +v oder höher haben. Beispiel: <i> ~q:*!*@blah.blah.com</i></td>
+  </tr>
+  <tr>
+    <td width="25" valign="top">~c</td>
+    <td width="54" valign="top">Channel</td>
+    <td width="758">Wenn der User in diesem Channel ist, kann er nicht joinen.
+      Beispiel: <i> ~c:#lamers</i></td>
+  </tr>
+  <tr>
+    <td width="25" valign="top">~r</td>
+    <td width="54" valign="top">Realname</td>
+    <td width="758">Wenn der Realname des Users gebannt ist, kann der User nicht
+      joinen. Beispiel: <i> ~r:*Stupid_bot_script*<br>
+      </i><b>Zu Beachten</b>: Ein Unterstrich ('_') bedeutet beides, sowohl ein
+Leerzeichen (' '), als auch den Unterstrich ('_') selbst. Der Bann aus dem
+Beispiel oben würde also&nbsp; 'Stupid bot script v1.4' treffen.</td>
+  </tr>
+</table>
+<p>
+Diese Bann Typen werden auch in der Ausnahme Liste der Channels (channel exception list
+[+e]) berücksichtigt.<br>
+Ebenso können über Module andere erweiterte Bann Typen definiert werden.
+<br></div>
+&nbsp;
+<p><font size="+2"><b><a name="feature_spamfilter">
+3.14 - Spamfilter</a></b></font><br></p>
+<div class="desc">
+<br>
+Spamfilter ist ein neues System gegen Spam, Belästigungen, Würmer etc. Es
+arbeitet ein wenig ähnlich wie 'badwords', hat aber einige Erweiterungen..<br>
+<br>
+Spamfilter werden durch den&nbsp; /spamfilter Befehl gesetzt, der die folgende
+Syntax hat:<br>
+<b>/spamfilter [add|del|remove|+|-] [type] [action] [tkltime] [reason] [regex]<br>
+</b>
+<table border="0" cellspacing="1" width="959">
+  <tr>
+    <td width="74" valign="top"><b>[type]&nbsp;</b></td>
+    <td colspan="2" width="871"> gibt den Zieltyp an, also welche Art von Nachrichten. Man kann
+verschiedene angeben. es gilt: 'c' für Channel Nachrichten, 'p' für private
+Nachrichten, 'n' für private Notice, 'N' für Channel Notice, 'P' Part Meldung, 'q'
+für Quit Meldung und&nbsp; 'd' für dcc</td>
+  </tr>
+  <tr>
+    <td width="74"><b>[action]</b></td>
+    <td colspan="2" width="871"><i>[action]</i> gibt an, welche Aktion erfolgen soll (es kann nur 1 Aktion
+angegeben werden)</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td width="76">kill</td>
+    <td width="789">Killt den User</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td width="76">tempshun</td>
+    <td width="789">setzt für die laufende Verbindung einen Shun auf den User
+      (bei Reconnect ist der Shun aufgehoben</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td width="76">shun</td>
+    <td width="789">Setzt einen Shun auf den Host</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td width="76">kline</td>
+    <td width="789">Setzt eine kline auf den Host</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td width="76">gline</td>
+    <td width="789">Setzt eine gline auf den Host</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td width="76">zline</td>
+    <td width="789">Setzt eine zline auf den Host</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td width="76">gzline</td>
+    <td width="789">Setzt eine gzline (globale zline) auf den Host</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td width="76">block</td>
+    <td width="789">Blockiert lediglich die Nachricht</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td width="76">dccblock</td>
+    <td width="789">markiert den User derart, dass er nicht in der Lage ist,
+      irgend welche DCCs zu senden</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
+    <td width="76">viruschan</td>
+    <td width="789">User wird aus allen Channels entfernt, wird in den unter <b>set::spamfilter::virus-help-channel</b>
+      eingetragenen Channel geforwardet, alle Befehle außer PONG und ADMIN
+      werden deaktiviert und msg/notices werden zum Channel aus <b>set::spamfilter::virus-help-channel</b>
+      geleitet</td>
+  </tr>
+  <tr>
+    <td width="74" valign="top"><b>[tkltime]</b></td>
+    <td colspan="2" width="871">Die Zeitdauer, die für eine durch den Filter
+      gesetzte Line gilt. Um den Default zu benutzen oder zum Übergehen (z.B. wenn action = 'block'),
+      lediglich ein '-' eintragen,</td>
+  </tr>
+  <tr>
+    <td width="74" valign="top"><b>[reason]</b></td>
+    <td colspan="2" width="871">Der anzuzeigende Grund für Block- oder *lines
+      Befehle. Man kann hier KEINE Leerzeichen eintragen, aber Unterstriche
+      ('_') werden zur Laufzeit in Leerzeichen umgesetzt. Ein doppelter
+      Underscore ('__') erzeugt einen Underscore ('_') in der Ausgabe. Auch hier
+      ein '-' eintragen, um den Default zu benutzen.</td>
+  </tr>
+  <tr>
+    <td width="74" valign="top"><b>[regex]</b></td>
+    <td colspan="2" width="871">&nbsp;gibt den Ausdruck oder das 'bad word' an, welches geblockt werden
+soll, oder worauf die Aktion erfolgen soll</td>
+  </tr>
+</table>
+<p>Beispiele: (man beachte die Striche '-', die Default Angaben erzwingen) <i> <br>
+<br>
+ /spamfilter add pc gline - - Come watch me on my webcam</i><br>
+Wenn der Text &quot;come watch me on my webcam&quot; entweder in einer priv msg
+oder in einer Channel Nachricht auftaucht, wird er blockiert und auf den Sender
+eine G-Line gesetzt.<br>
+<br>
+ <i> /spamfilter add pc block - - come to irc\..+\..+</i><br>
+Hier wird auf Werbungen wie &quot;Hi, come to irc.blah.net&quot;
+usw. geprüft und die Nachricht wird einfach nur geblockt.<br>
+<br>
+Und ein Beispiel mit time/reason:<br>
+<br>
+<i>/spamfilter add p gline 3h Please_go_to_www.viruscan.xx/nicepage/virus=blah Come watch me on my webcam</i><br>
+Wenn der Text &quot;come watch me on my webcam&quot; in einer privaten Nachricht
+gefunden wird, erfolgt eine G-Line für 3 Stunden mit dem Grund: &quot;Please go to
+www.viruscan.xx/nicepage/virus=blah&quot;.<br>
+<br>
+Spamfilter die über /spamfilter definiert werden, gelten netzweit. Sie wirken
+unabhängig davon, ob der User +G gesetzt hat und nur Oper und U-Lines
+(Services) sind von der Filterung ausgenommen.<br>
+<br>
+Spamfilter können auch in der Config Datei eingetragen sein, doch sie sind dann
+nur lokal für den Server, auf dem sie eingetragen sind (also nicht netzweit),
+gültig.
+Die Syntax dieser spamfilter { } Blöcke wird <a href="#spamfilter">hier</a>
+erklärt:<br>
+<br>
+<b>
+set::spamfilter::ban-time</b> ermöglicht die Festlegung einer Default Bann
+Dauer für *lines die durch den Spamfilter gesetzt wurden (default: 1 Tag)<br>
+<b>
+set::spamfilter::ban-reason</b> ermöglicht die Festlegung eines Grundes für
+die *lines (Default: 'Spam/advertising'). Mehrere Worte sind durch Underscores
+(&quot;_&quot;) und nicht durch Leerzeichen zu trennen.<br>
+<b>set::spamfilter::virus-help-channel</b> ermöglicht die Angabe eines
+Channels, in den bei der Action 'viruschan' gejoined wird (Default: #help)
+</div>
+
+<p><font size="+2"><b><a name="feature_other">3.15 - Andere Features</a></b></font></p><div class="desc">
+<p>UnrealIRCd hat eine Reihe weiterer Features, die hier nicht alle einzeln
+aufgeführt sind. Man wird sie während der Konfiguration selbst herausfinden ;)</p></div>
+
+<p> </p>
+<p><font size="+2"><b><a name="configuringyourunrealircdconf">4.0 - Konfiguration
+der unrealircd.conf</a></b></font> 
+<a name="configuringyourunrealircdconf">&nbsp;</a></p><div class="desc">
+<p>Beim ersten Mal wird das Erstellen einer guten unrealircd.conf Datei eine
+gewisse Zeit in Anspruch nehmen - je nach Vorerfahrung etwa 10 - 60 Minuten. Man
+kann versuchen, so rasch wie möglich den ircd zu starten und später zu
+verfeinern oder man kann die Haupt Abschnitte Schritt für Schritt erlernen (was
+der empfohlene Weg ist ;P). Im Falle auftretender Probleme zuerst die Syntax
+überprüfen, diese Anleitung und auch die FAQ bevor man nach Hilfe fragt oder
+einen Bug meldet.</p></div>
+<p><b><font size="+2"><a name="configurationfileexplained">4.1 Erklärung der
+Konfigurationsdatei<br>
+</a></font></b><div class="desc">
+<p>Das neue System benutzt ein Block-basiertes Format. Jeder Eintrag, also jeder
+Block, in der neuen Form hat ein spezielles Format, welches etwa so aussieht:</p>
+<pre>
+&lt;block-name&gt; &lt;block-value&gt; {
+	&lt;block-directive&gt; &lt;directive-value&gt;;
+};
+</pre>
+<p>&lt;<i>block-name</i>&gt; ist der Typ des Blocks wie z.B. &quot;me&quot;, oder
+&quot;admin&quot;.&nbsp;<br>
+ &lt;<i>block-value</i>&gt; gibt bei einigen Typen einen notwendigen Wert an,
+wie z.B. &quot;/oper login&quot;, oder in anderen Fällen einen Untertyp wie
+in&nbsp; &quot;ban user&quot;.</p>
+<p>&lt;<i>block-directive</i>&gt; ist eine speziell auf den Block bezogene
+Variable&nbsp;<br>
+&lt;<i>directive-value</i>&gt; ist der zugewiesene Wert. Falls &lt;directive-value&gt;
+Leerzeichen oder Kommentarzeichen enthält, muss die Abgabe von
+Anführungszeichen eingeschlossen sein. Soll das Anführungszeichen ebenfalls
+Bestandteil des Eintrags sein, muss im das Zeichen &quot;\" vorangestellt
+werden, damit es als Anführungszeichen erkannt wird.</p>
+<p>Innerhalb von &lt;block-directive&gt; können Anweisungen stehen, die dann
+mit geschweiften Klammern &quot;{ }&quot; eingeschlossen sind. Einige Blöcke
+haben keine Anweisungen sondern lediglich eine &lt;block-value&gt; Angabe, wie
+z.B. &quot;include&quot;. Ebenso ist zu beachten, dass es kein spezielles
+Einstellungsformat gibt. Ein Block kann also in einer einzigen Zeile angegeben
+werden oder in mehreren Zeilen. Normalerweise wird das oben angegebene Format
+benutzt, welches leicht zu lesen ist und auch in der mitgelieferten
+unrealircd.conf benutzt wird. </p>
+<p>Achtung: Die Konfigurationsdatei ist derzeit &quot;case sensitive&quot;,
+daher ist &quot;BLOCK-NAME&quot; nicht dasselbe wie &quot;block-name&quot;. Es
+gibt eine spezielle Notation wie Einträge in der Konfigurationsdatei als
+Beschreibung angegeben werden. Spricht man z.B. über &quot;&lt;directive-name&gt;&quot;
+im obigen Beispiel, so wird angegeben &quot;&lt;block-name&gt;::&lt;block-directive&gt;&quot;
+(also zwei Doppelpunkte dazwischen), und falls die Anweisung einen Unterblock
+hat, auf den sich bezogen wird, würde ein weiteres Paar &quot;::&quot;
+hinzugefügt, gefolgt vom Namen der Unteranweisung. </p>
+<p>Bei einer Anweisung ohne Namen wird&nbsp; &quot;&lt;block-name&gt;::&quot;
+gesagt, was einfach nur &quot;&lt;block-value&gt;&quot; bedeutet, oder es
+könnte ein Eintrag in
+einem Unterblock sein, der keinen Namen hat.</p>
+<p>Es gibt drei Arten von Kommentaren::</p>
+<p> # Ein-Zeilen Kommentar<br>
+    // Ein-Zeilen Kommentar<br>
+    /* Kommentar<br>
+&nbsp;&nbsp;&nbsp; über mehrere<br>
+       &nbsp;&nbsp;&nbsp;&nbsp;Zeilen */<br>
+ </p>
+<p>Es sollte nun klar sein, wie das Block Format der .conf funktioniert und nun
+kann begonnen werden, eine eigene unrealircd.conf zu erstellen. Hierzu kann man
+auch dei Beispielsdatei oder Teile der Dokumentation verwenden und sich die
+entsprechenden Blöcke in die eigene Datei kopieren und editieren. Es ist
+empfehlenswert, sich Schritt für Schritt durch alle Blöcke und diese Anleitung
+als Referenz durchzuarbeiten.</p>
+<p></p></div>
+<p><font class="block_section"><a name="meblock">4.2 - </a> </font><a name="meblock"><font class="block_name">Me Block</font>
+</a> <font class="block_required">ERFORDERLICH</font> <font class="block_old">(Früher
+bekannt als M:Line)</font><div class="desc">
+<p>Syntax:
+<p>me {<br>
+name &lt;Name-des-Servers&gt;;<br>
+info &lt;Server-Beschreibung&gt;;<br>
+numeric &lt;Server-Nummer&gt;;<br>
+};<br>
+<p>Diese Werte sollten klar sein. Der <b>name</b>  gibt den Namen des Servers an
+(nicht dessen Internetadresse!), 
+  <b>info</b>  eine kurze Info Zeile zur Beschreibung des Servers und <b>numeric</b> 
+ bedeutet eine Zahl zur Identifikation des Servers. Hierbei muss es sich um einen
+Wert zwischen 1 und 255 handeln, der EINMALIG im Netzwerk ist, es darf also KEIN
+Server im Netzwerk denselben numeric Wert haben.</p>
+<p>Beispiel:
+<pre>me {
+	name &quot;irc.foonet.com&quot;;
+	info &quot;FooNet Server&quot;;
+	numeric 1;
+};
+</pre></div>
+<p></p>
+<p><font class="block_section"><a name="adminblock">4.3 - </a> </font><a name="adminblock"><font class="block_name">Admin Block</font>
+</a> <font class="block_required">ERFORDERLICH</font> <font class="block_old">(Früher
+bekannt als A:Line)</font><div class="desc">
+<p>Syntax:
+<pre>admin {
+	&lt;Text-Zeile&gt;;
+	&lt;Text-Zeile&gt;;
+};</pre>
+<p>Im Admin Block werden<span style="font-size:12.0pt;font-family:&quot;Times New Roman&quot;;
+mso-fareast-font-family:&quot;Times New Roman&quot;;mso-ansi-language:DE;mso-fareast-language:
+DE;mso-bidi-language:AR-SA"> die Informationen über die Serveradministration
+angegeben. Wenn ein User später eintippt:<span style="mso-spacerun: yes">&nbsp;
+</span>&quot;/admin&quot; (oder &quot;/admin &lt;servername&gt;&quot;), so wird
+ihm die hier angegebene Information dargestellt.</span><span style="font-size: 12.0pt; font-family: Times New Roman; mso-fareast-font-family: Times New Roman; mso-ansi-language: DE; mso-fareast-language: DE; mso-bidi-language: AR-SA">
+Es können beliebig viele Zeilen eingetragen werden, die jede beliebige
+Information enthalten können, aber es gilt als Standard, mindestens den
+Nicknamen des Admins und dessen email Adresse anzugeben. Weitere Informationen
+können Kontakt Infos sein, die man angeben möchte</span>.</p>
+<p>Beispiel:
+<pre>admin {
+	&quot;Bob Smith&quot;;
+	&quot;bob&quot;;
+	&quot;widely@used.name&quot;;
+};
+</pre></div>
+<p></p>
+<p><font class="block_section"><a name="classblock">4.4 - </a> </font><a name="classblock"><font class="block_name">Class Block</font>
+</a> <font class="block_required">ERFORDERLICH</font> <font class="block_old">(Früher
+bekannt als Y:Line)</font><div class="desc">
+<p>Syntax:
+<pre>class &lt;name&gt; {
+	pingfreq &lt;Ping-Frequenz&gt;;
+	connfreq &lt;Connect-Frequenz&gt;;
+	maxclients &lt;Maximum-Clients&gt;;
+	sendq &lt;send-queue&gt;;
+	recvq &lt;recv-queue&gt;;
+};
+</pre>
+<p> </p>
+<p>Class Blöcke definieren Verbindungs Klassen in welche Verbindungen
+eingeordnet werden (z.B. von Allow Blöcken oder Server von Link Blöcken). Im
+Allgemeinen hat man mehrere Class Blöcke (z.B. für Server,
+für Clients, für Opers)</p>
+<p><span style="font-size:12.0pt;font-family:&quot;Times New Roman&quot;;mso-fareast-font-family:
+&quot;Times New Roman&quot;;mso-ansi-language:DE;mso-fareast-language:DE;mso-bidi-language:
+AR-SA">Verbindungsklassen definieren eine Reihe von Parametern für
+Verbindungen, die folgendes umfassen:</span></p>
+<p><b>name</b> ist ein beschreibender Name wie &quot;clients&quot; oder &quot;servers&quot;,
+dieser Name wird später in anderen Blöcken als Referenz verwendet.</p>
+<p><b>pingfreq</b>  ist die Anzahl von Sekunden zwischen PINGs von diesem
+Server.</p>
+<p><b>connfreq</b> wird nur für Server verwendet und ist die Anzahl Sekunden
+zwischen zwei Verbindungsversuchen, falls autoconnect eingeschaltet ist.</p>
+<p><b>maxclients</b>  gibt die maximale Gesamtzahl an Clients und Servern an,
+die in dieser Klasse sein können.</p>
+<p><b>sendq</b>  gibt die Menge an Daten an, die sich in der Sende Queue
+befinden dürfen (sehr hoch für Server mit geringer Bandbreite, mittel für Clients)</p>
+<p><b>recvq</b>  gibt die Menge an Daten an, die sich in der Empfangsqueue
+befinden können und wird zur Flood Kontrolle verwendet (das betrifft nur
+normale User, es sollte mit Werten zwischen 3000-8000 experimentiert werden, >8000
+ergibt keine Änderung und 8000 ist Default).</p>
+<p>Beispiele:
+<pre>class clients {
+	pingfreq 90;
+	maxclients 500;
+	sendq 100000;
+	recvq 8000;
+};
+
+class servers{
+	pingfreq 90;
+	maxclients 10; /* Maximum an gleichzeitigen möglichen Server Verbindungen */
+	sendq 1000000;
+	connfreq 100;  /* Wieviele Sekunden zwischen jedem Verbindungs Versuch */
+};
+</pre>
+</div>
+<p><font class="block_section"><a name="allowblock">4.5 - </a> </font><a name="allowblock"><font class="block_name">Allow Block</font>
+ </a><font class="block_required">ERFORDERLICH</font> <font class="block_old">(Früher
+bekannt als I:Line)</font><div class="desc">
+<p>Syntax:
+<pre>allow {
+	ip &lt;user@ip-connection-mask&gt;;
+	hostname &lt;user@host-connection-mask&gt;;
+	class &lt;connection-class&gt;;
+	password &lt;connection-password&gt; { &lt;auth-type&gt;; };
+	maxperip &lt;max-connections-per-ip&gt;;
+	redirect-server &lt;server-to-forward-to&gt;;
+	redirect-port &lt;port-to-forward-to&gt;;
+	options {
+		&lt;option&gt;;
+		&lt;option&gt;;
+		...
+	};
+};
+</pre>
+<p>In Allow Blöcken wird angegeben, wer zum Server connecten darf. Es können
+mehrere Allow Blöcke vorhanden sein (was in der Regel auch erforderlich ist).</p>
+<p><b>Anmerkungen zu Übereinstimmung (matching)</b><br>
+Die Zugangskontrolle arbeitet folgendermaßen: Es müssen entweder IPs
+übereinstimmen ODER Hosts. Einträge von &quot;hostname *@*;&quot; und &quot;ip
+*@1.2.3.4;&quot; stimmen also mit allem überein und gestatten einen
+universellen Zugang. Allow Blöcke in der unrealircd.conf werden von <b>unten
+nach oben</b> ausgewertet, deswegen müssen spezielle Host/IP Böcke NACH den
+allgemeinen *@* Allow Blöcken aufgeführt werden. Soll ein Block
+ausschliesslich für eine IP gelten, so ist das Feld &quot;hostname&quot; auf
+irgendeinen ungültigen Wert zu setzen, wie z.B. &quot;hostname NOBODY;&quot;.
+Dadurch wird der Allow Block ausschliesslich auf Übereinstimmung der IP
+eingestellt.</p>
+<p><b>ip</b><br>
+Für die IP Maske gilt die Form user@ip, dabei ist user der ident und meist mit
+* eingetragen, ip ist eine gültige IP Adresse, die ebenfalls Wildcards
+enthalten kann. Einige Beispiele: *@* (jeder von überall her), *@192.168.* (jeder,
+dessen IP Adresse mit 192.168 beginnt), etc.</p>
+<p><b>host</b><br>
+Für die host gilt die Form user@hostmask, dabei ist user der ident und meist
+mit * eingetragen, hostmask eine Internetadresse. Einige Beispiele: *@* (jeder
+von überall her), *@*.wanadoo.fr (nur User von wanadoo.fr).</p>
+<p><b>password</b> (optional)<br>
+Die Verbindung erfordert ein Passwort. Zusätzlich kann hier eine
+Verschlüsselungs Methode angegeben werden.
+</p>
+<p><b>maxperip</b> (optional, aber empfohlen)<br>
+Festlegung, wieviele Verbindungen mit derselben IP auf dem Server erlaubt sind (z.B.: maxperip 4;).
+</p>
+<p><b>redirect-server</b> (optional)<br>
+Wenn die Klasse voll ist, werden User zu diesem Server umgeleitet (wenn der
+Client das unterstützt [mIRC 6 unterstützt es]).</p>
+<p><b>redirect-port</b> (optional)<br>
+Wenn ein redirect-server angegeben ist, kann hier der Port eingetragen werden.
+Ohne Eintrag wird 6667 als Default angenommen.</p>
+<p><b>options block</b> (optional)<br>
+Gültige Optionen sind:<br>
+&nbsp;&nbsp;&nbsp;<b>useip</b>  immer nur IP stat Hostnamen anzeigen<br>
+&nbsp;&nbsp;&nbsp;<b>noident</b>  kein ident verwendensondern den vom Client
+übergebenen Usernamen<br>
+&nbsp;&nbsp;&nbsp;<b>ssl</b>  Übereinstimmung ist nur gegeben, wenn der User
+via SSL verbindet<br>
+&nbsp;&nbsp;&nbsp;<b>nopasscont</b>  Überprüfung fortsetzen, wenn kein
+Passwort angegeben wurde (dadurch kann man User, die ein Passwort übermitteln
+in eine extra Klasse<br>
+&nbsp;&nbsp; packen).<p>Beispiele:
+<pre>allow {
+	ip *;
+	hostname *;
+	class clients;
+	maxperip 5;
+};
+
+allow {
+	ip *@*;
+	hostname *@*.passworded.ugly.people;
+	class clients;
+	password &quot;f00Ness&quot;;
+	maxperip 1;
+};
+</pre></div>
+<p>&nbsp;</p>
+<p><font class="block_section"><a name="listenblock">4.6 - </a> </font><a name="listenblock"><font class="block_name">Listen Block</font>
+</a> <font class="block_required">ERFORDERLICH</font> <font class="block_old">(Früher
+bekannt als P:Line)</font><div class="desc">
+<p>Syntax:
+<pre>listen &lt;ip:port&gt; {
+	options {
+		&lt;option&gt;;
+		&lt;option&gt;;
+		...
+	};
+};
+</pre>
+<p> </p>
+<p>Mit diesem Block können spezielle Ports angegeben werden, auf die der IRCD
+reagiert. Falls keine Optionen erforderlich sind, kann man diesen Eintrag auch
+in der einfachen Form setzen:<br>
+&lt;ip:port&gt;;.</p>
+<p><b>ip und port</b><br>
+Die IP wird normalerweise auf &quot;*&quot; eingestellt, aber man kann auch eine
+IP eingeben, um ausschließlich diese an den Port zu binden.. Der Port ist die
+Nummer des Ports, der hier eingestellt werden soll. Man kann sowohl einen
+Portbereich als auch einen einzelnen Port angeben Beispielsweise bewirkt die
+Angabe &quot;6660-6669&quot;, dass auf jeden Port von 6660 bis 6669 (einschließlich)
+reagiert wird. IPv6 User: siehe nächster Absatz.</p>
+<p><b>Info für IPv6 User</b><br>
+Wenn für den Server IPv6 aktiviert ist, müssen die IPs in eckige Klammern (Brackets,
+&quot;[ ]&quot;) eingeschlossen sein, wie z.B.: &quot;[::1]:6667&quot; (reagiere
+auf Local Host an Port 6667). Verwendet man IPv6 und es soll eine bestimmte IPv4
+Adresse definiert werden, gilt das Format: &quot;::ffff:ipv4ip&quot;. Ein
+Beispiel: 
+  [::ffff:203.123.67.1]:6667 (reagiert wird auf IP 203.123.67.1 auf Port 6667).
+Allerdings kann man auch &quot;*&quot; mit IPv6 verwenden.</p>
+<p><b>options block</b> (optional)<br>
+Für den Port können besondere Optionen angegeben werden. Gültige Optionen
+sind:<br>
+<table border="0">
+<TR><TD><center><b>clientsonly</b></center></TD><TD> Port ist nur für Clients</TD></TR>
+<TR><TD><center><b>serversonly</b></center></TD><TD> Port ist nur für Server</TD></TR>
+<TR><TD><center><b>java</b></center></TD><TD> CR javachat support</TD></TR>
+<TR><TD><center><b>ssl</b></center></TD><TD> SSL encrypted port</TD></TR>
+</table>
+
+<p>Beispiele:</p>
+<pre>listen *:6601 {
+	options {
+		ssl;
+		clientsonly;
+	};
+};
+
+</pre>
+<p>Oder, wenn es keine Optionen gibt:</p>
+<p>listen *:8067;<br>
+  listen *:6660-6669;</p></div>
+<p><font class="block_section"><a name="operblock">4.7 - </a> </font><a name="operblock"><font class="block_name">Oper Block</font>
+</a> <font class="block_recommended">EMPFOHLEN</font> <font class="block_old">(Früher
+bekannt als O:Line)</font><div class="desc">
+<pre>oper &lt;name&gt; {
+	from {
+		userhost &lt;hostmask&gt;;
+		userhost &lt;hostmask&gt;;
+	};
+	password &lt;password&gt; { &lt;auth-type&gt;; };
+	class &lt;class-name&gt;;
+	flags &lt;flags&gt;;
+	flags {
+		&lt;flag&gt;;
+		&lt;flag&gt;;
+		...
+	};
+	swhois &lt;whois info&gt;;
+	snomask &lt;snomask&gt;;
+	maxlogins &lt;num&gt;;
+};</pre>
+<p>Mit dem Oper Block können für den Server IRC Operatoren festgelegt werden.&nbsp;<br>
+Der <b> oper::</b> Eintrag legt den Login Namen für den /oper Befehl fest.&nbsp;<br>
+Der Eintrag <b> oper::from::userhost</b> ist eine user@host Maske, die zum User passen
+muss. Man kann hier mehr als eine Maske angeben, indem man mehrere
+oper::from::userhost Einträge erstellt.&nbsp;<br>
+Der Eintrag <b> oper::password</b> enthält das Passwort, dass der User angeben muss.
+Hier kann zusätzlich eine Verschlüsselungsmethode für dieses Passwort angegeben
+werden, gültige
+Typen sind dann: crypt, md5, und sha1, ripemd-160. Soll ein einfaches
+unverschlüsseltes Passwort verwendet werden, bleibt dieses Feld einfach leer.</p>
+<p>Zu beachten ist, dass sowohl der Loginname als auch das Passwort case sensitive
+sind.</p>
+<p>Beim Eintrag <b> oper::class</b> muss es sich um eine schon definierte Klasse
+handeln, die in der Konfigurationsdatei schon vor dieser Blockdefinition
+auftaucht (also ERST Class definieren und erst DANACH oper!).</p>
+<p>Bei der <b> oper::flags</b> Anweisung gibt es zwei Formate. Falls man die frühere
+Form der Operflags vorzieht (mit Buchstaben wie z.B.: &quot;OAa&quot;, verwendet
+man die&nbsp; &quot;flags &lt;flags&gt;&quot; Methode. Wenn man dagegen die neue
+Form (wie z.B.: &quot;services-admin&quot;) verwenden möchte, benutzt man die
+&quot;flags { &lt;flag&gt;; 
+  }&quot; Methode.</p>
+<p>Nachfolgend eine Liste aller Flags in beiden Formaten und ihre Bedeutung.</p>
+<table width="728" border="1">
+  <tr> 
+    <td width="74"><div align="center"><b>Altes Flag</b></div></td>
+    <td width="103"><div align="center"><b>Neues Flag</b></div></td>
+    <td width="529"><b>Description</b></td>
+  </tr>
+  <tr> 
+    <td height="24" width="74"><div align="center">o</div></td>
+    <td width="103"><div align="center">local</div></td>
+    <td width="529">Macht User zu lokalem Operator</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">O</div></td>
+    <td width="103"><div align="center">global</div></td>
+    <td width="529">Macht User zu globalem Operator</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">C</div></td>
+    <td width="103"><div align="center">coadmin</div></td>
+    <td width="529">Macht User zum Coadmin</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">A</div></td>
+    <td width="103"><div align="center">admin</div></td>
+    <td width="529">Macht User zum Admin</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">a</div></td>
+    <td width="103"><div align="center">services-admin</div></td>
+    <td width="529">Macht User zum Services Admin</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">N</div></td>
+    <td width="103"><div align="center">netadmin</div></td>
+    <td width="529">Macht User zum Netzwerk Admin</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">r</div></td>
+    <td width="103"><div align="center">can_rehash</div></td>
+    <td width="529">Oper kann /rehash durchführen</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">D</div></td>
+    <td width="103"><div align="center">can_die</div></td>
+    <td width="529">Oper kann /die durchführen</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">R</div></td>
+    <td width="103"><div align="center">can_restart</div></td>
+    <td width="529">Oper kann /restart durchführen</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">h</div></td>
+    <td width="103"><div align="center">helpop</div></td>
+    <td width="529">Oper empfängt umode +h (helpop)</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">w</div></td>
+    <td width="103"><div align="center">can_wallops</div></td>
+    <td width="529">Oper kann /wallops senden</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">g</div></td>
+    <td width="103"><div align="center">can_globops</div></td>
+    <td width="529">Oper kann /globops senden</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">c</div></td>
+    <td width="103"><div align="center">can_localroute</div></td>
+    <td width="529">Kann zu Servern lokal verbinden</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">L</div></td>
+    <td width="103"><div align="center">can_globalroute</div></td>
+    <td width="529">Kann zu Servern global verbinden</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">k</div></td>
+    <td width="103"><div align="center">can_localkill</div></td>
+    <td width="529">Kann /kill auf lokale User ausführen</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">K</div></td>
+    <td width="103"><div align="center">can_globalkill</div></td>
+    <td width="529">Kann /kill auf globale User ausführen</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">b</div></td>
+    <td width="103"><div align="center">can_kline</div></td>
+    <td width="529">Kann /kline setzen</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">B</div></td>
+    <td width="103"><div align="center">can_unkline</div></td>
+    <td width="529">Kann&nbsp; mit /kline -u@h K-Line löschen</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">n</div></td>
+    <td width="103"><div align="center">can_localnotice</div></td>
+    <td width="529">Kann lokale Server Notices senden</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">G</div></td>
+    <td width="103"><div align="center">can_globalnotice</div></td>
+    <td width="529">Kann globale Server Notices senden</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">z</div></td>
+    <td width="103"><div align="center">can_zline</div></td>
+    <td width="529">Kann /zline setzen</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">t</div></td>
+    <td width="103"><div align="center">can_gkline</div></td>
+    <td width="529">Kann /gline, /shun und /spamfilter setzen</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">Z</div></td>
+    <td width="103"><div align="center">can_gzline</div></td>
+    <td width="529">Kann /gzline setzen</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">W</div></td>
+    <td width="103"><div align="center">get_umodew</div></td>
+    <td width="529">Setzt Umode +W (Anzeige von externem /whois) wenn man (via
+      /oper) als Operator identifiziert</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">H</div></td>
+    <td width="103"><div align="center">get_host</div></td>
+    <td width="529">Setzt Host auf Oper host (Durch das Flag wird die Anzeige
+      der Funktion unterdrückt)</td>
+  </tr>
+  <tr> 
+    <td width="74"><div align="center">v</div></td>
+    <td width="103"><div align="center">can_override</div></td>
+    <td width="529">Kann <a href="#operoverride"> OperOverride</a>  ausführen</td>
+  </tr>
+  <tr> 
+    <td width="74" align="center">q</td>
+    <td width="103" align="center">can_setq</td>
+    <td width="529">Kann Usermode +q setzen</td>
+  </tr>
+  <tr> 
+    <td width="74" align="center">d</td>
+    <td width="103" align="center">can_dccdeny</td>
+    <td width="529">Kann /dccdny und /undccdny benutzen</td>
+  </tr>
+</table>
+<p>Bestimmte Flags setzen andere Flags per Default:</p>
+<table width="59%" border="1">
+  <tr> 
+    <td width="19%"><b>local</b></td>
+    <td width="17%"><b>global</b></td>
+    <td width="19%"><b>admin/coadmin</b></td>
+    <td width="22%"><b>services-admin</b></td>
+    <td width="23%"><b>netadmin</b></td>
+  </tr>
+  <tr> 
+    <td>can_rehash</td>
+    <td>can_rehash</td>
+    <td>can_rehash</td>
+    <td>can_rehash</td>
+    <td>can_rehash</td>
+  </tr>
+  <tr> 
+    <td>helpop</td>
+    <td>helpop</td>
+    <td>helpop</td>
+    <td>helpop</td>
+    <td>helpop</td>
+  </tr>
+  <tr> 
+    <td>can_globops</td>
+    <td>can_glopops</td>
+    <td>can_glopops</td>
+    <td>can_glopops</td>
+    <td>can_glopops</td>
+  </tr>
+  <tr> 
+    <td>can_wallops</td>
+    <td>can_wallops</td>
+    <td>can_wallops</td>
+    <td>can_wallops</td>
+    <td>can_wallops</td>
+  </tr>
+  <tr> 
+    <td>can_localroute</td>
+    <td>can_localroute</td>
+    <td>can_localroute</td>
+    <td>can_localroute</td>
+    <td>can_localroute</td>
+  </tr>
+  <tr> 
+    <td>can_localkill</td>
+    <td>can_localkill</td>
+    <td>can_localkill</td>
+    <td>can_localkill</td>
+    <td>can_localkill</td>
+  </tr>
+  <tr> 
+    <td>can_kline</td>
+    <td>can_kline</td>
+    <td>can_kline</td>
+    <td>can_kline</td>
+    <td>can_kline</td>
+  </tr>
+  <tr> 
+    <td>can_unkline</td>
+    <td>can_unkline</td>
+    <td>can_unkline</td>
+    <td>can_unkline</td>
+    <td>can_unkline</td>
+  </tr>
+  <tr> 
+    <td>can_localnotice</td>
+    <td>can_localnotice</td>
+    <td>can_localnotice</td>
+    <td>can_localnotice</td>
+    <td>can_localnotice</td>
+  </tr>
+  <tr> 
+    <td>&nbsp;</td>
+    <td>can_globalroute</td>
+    <td>can_globalroute</td>
+    <td>can_globalroute</td>
+    <td>can_globalroute</td>
+  </tr>
+  <tr> 
+    <td>&nbsp;</td>
+    <td>can_globalkill</td>
+    <td>can_globalkill</td>
+    <td>can_globalkill</td>
+    <td>can_globalkill</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>can_globalnotice</td>
+    <td>can_globalnotice</td>
+    <td>can_globalnotice</td>
+    <td>can_globalnotice</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>global</td>
+    <td>global</td>
+    <td>global</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>can_dccdeny</td>
+    <td>can_dccdeny</td>
+    <td>can_dccdeny</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>can_setq</td>
+    <td>can_setq</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>admin</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>services-admin</td>
+  </tr>
+</table>
+<p>Mit der <b> oper::swhois</b> Anweisung kann eine zusätzliche Zeile für die whois
+Information eines Opers gesetzt werden. <font color="#0000FF">[optional]</font></p>
+<p>Mit der <b> oper::snomask</b> Anweisung kann eine server notice Mask für einen Oper
+voreingestellt werden, so dass man beim oper Befehl bestimmte Flags automatisch
+voreingestellt bekommt. Siehe <a href="#feature_snomasks">Abschnitt 3.3</a>&nbsp;
+für
+Infos über snomasks. <font color="#0000FF">[optional]</font>
+<p>Mit der <b> oper::maxlogins</b> Anweisung kann man die
+die Anzahl gleichzeitiger Oper Logins einschränken. Wenn hier z.B. der Wert 1
+eingestellt wird, kann immer nur eine Person über diesen Oper Block eingeloggt
+sein. <font color="#0000FF"> [optional]</font>
+
+<p>Beispiel:
+<pre>oper bobsmith {
+	class clients;
+	from {
+		userhost bob@smithco.com;
+		userhost boblaptop@somedialupisp.com
+	};
+	password &quot;f00&quot;;
+	flags {
+		netadmin;
+		can_gkline;
+		can_gzline;
+		can_zline;
+		can_restart;
+		can_die;
+		global;
+	};
+	swhois &quot;Beispiel einer whois Maske&quot;;
+	snomask frebWqFv;
+};
+</pre>
+<b><a name="operoverride">Einige Infos zu OperOverride:</a></b><br>
+OperOverride bedeutet z.B. joining in einen +ikl Channel und Übergehung von
+Banns (trotzdem muss man zuvor für sich selbst ein /invite durchführen), sich
+selbst Op in einem Channel zu geben etc.<br>
+Das &quot;can_override&quot; gibt es, um Missbrauch dieser Möglichkeiten
+einzuschränken. Per Default kann kein Oper vorhandene Einstellungen übergehen,
+solange nicht das Operflag &quot;v&quot; explizit gesetzt ist.</div>
+<p><font class="block_section"><a name="drpassblock">4.8 - </a> </font><a name="drpassblock"><font class="block_name">DRpass Block</font>
+</a> <font class="block_recommended">EMPFOHLEN</font> <font class="block_old">(Früher
+bekannt als X:Line)</font><div class="desc">
+<p>Syntax:
+<pre>drpass {
+	restart &lt;restart-password&gt; { &lt;auth-type&gt;; };
+	die &lt;die-password&gt; { &lt;auth-type&gt;; };
+};</pre>
+<p>Mit den Blöcken drpass::restart und drpass::die werden die Passworte für
+die Befehle &quot;/restart&quot; und &quot;/die&quot; festgelegt. Ebenfalls ist
+es möglich, einen Typ der Authentifizierung festzulegen. Gültige Typen sind
+hierbei crypt, md5, und sha1, ripemd-160.</p>
+<p>Beispiel:</p>
+<pre>drpass {
+	restart &quot;I-love-to-restart&quot;;
+	die &quot;die-you-stupid&quot;;
+};
+</pre>
+</div>
+<p><font class="block_section"><a name="includedirective">4.9 - </a> </font><a name="includedirective"><font class="block_name">Include
+Anweisung</font></a><div class="desc">
+<p>Syntax:</p>
+<p><font face="Courier New">
+  include &lt;file-name&gt;;</font></p>
+<p>Mit dieser Anweisung wird eine separate Konfigurationsdatei mit dem Namen
+&quot;file-name&quot; geladen. Diese Datei kann jeden Typ von Config Blöcken
+enthalten und ihrerseits weitere Include Anweisungen enthalten. Wildcards im
+Dateinamen werden unterstützt, wodurch es auch möglich ist, mehrere Dateien
+auf einmal zu laden..</p>
+<p><b>Beispiel 1: eine network Datei</b>
+  <pre>include mynetwork.network;</pre>
+<p>Diese Anweisung lädt die Datei &quot;mynetwork.network, wenn man eine eigene
+network Datei verwenden möchte. Eigene network Dateien sind eigentlich nicht
+mehr erforderlich, da sämtliche Anweisungen auch in der unrealircd.conf stehen
+können. Mit einer Include Anweisung kann man das File statt dessen getrennt
+halten und laden.</p>
+<p><b>Beispiel 2: aliases</b>
+</p>
+  <pre>include aliases/ircservices.conf</pre>
+<p>Ein weiteres Beispiel für die Anwendung von Alias Blöcken. UnrealIRCd wird
+mit einigen Dateien geliefert, die schon die wesentlichen Aliasse für die
+meisten Services enthalten.:<br>
+<ul>
+<li>aliases/ircservices.conf (IRCServices, Daylight)
+<li>aliases/epona.conf (Epona)
+<li>aliases/anope.conf (Anope)
+<li>aliases/auspice.conf (Auspice)
+<li>aliases/generic.conf (Magick, Sirius, Wrecked)
+<li>aliases/cygnus.conf (Cygnus)
+<li>aliases/operstats.conf (OperStats)
+<li>aliases/genericstats.conf (GeoStats, NeoStats)
+</ul>
+<p></p></div>
+<p><font class="block_section"><a name="loadmoduledirective">4.10 - </a> </font><font class="block_name"><a name="loadmoduledirective">LoadModule
+Anweisung</a></font> <font class="block_required">ERFORDERLICH</font><div class="desc">
+<p>Syntax:<br>
+  loadmodule &lt;file-name&gt;;</p>
+<p>UnrealIRCd unterstützt nun für *NIX Systeme die Verwendung von Modulen.
+Dadurch ist es leichter möglich, Erweiterungen zum ircd zu schreiben und man
+kann sie sowohl laden als auch entfernen, während der ircd läuft.</p>
+<p>Folgende Module werden standardmäßig bei Unreal3.2 mitgeliefert:</p>
+<p>commands.so - Enthält sämtliche&nbsp; / Befehle (noch nicht wirklich alle,
+aber sicher in einer der nächsten Versionen) <font color="red">ERFORDERLICH</font></p>
+<p>Es ist sicherzustellen, dass dieses Modul in jedem Fall geladen wird:</p>
+<pre>loadmodule &quot;src/modules/commands.so&quot;;
+</pre></div>
+<p><font class="block_section"><a name="logblock">4.11 - </a> </font><a name="logblock"><font class="block_name">Log Block</font>
+</a>
+   <font class="block_optional">OPTIONAL</font><div class="desc">
+<p>Syntax:
+<pre>log &lt;file-name&gt; {
+	maxsize &lt;max-file-size&gt;;
+	flags {
+		&lt;flag&gt;;
+		&lt;flag&gt;;
+		...
+	};
+};
+</pre>
+<p>Mit dem Log Block kann man verschiedene Logfiles zu den unterschiedlichsten
+Zwecken erstellen lassen.&nbsp;<br>
+<b>log::</b> ist der Name der Logdatei.<br>
+<b>log::maxsize</b> ist eine optionale Anweisung, um eine Größe
+anzugeben, ab der die Datei gelöscht und neu begonnen wird. Die Zahlenangabe
+dahinter kann gefolgt sein von&nbsp; MB für Megabytes, KB für Kilobytes oder
+GB&nbsp; für Gigabytes.<br>
+Bei <b>log::flags</b> wird angegeben, welche Art von Informationen in der
+Log Datei gespeichert werden sollen. Angegeben werden kann hier einer oder
+mehrere der unten aufgelisteten Flags.</p>
+<p>Es können auch mehrere Log Blocks definiert sein, um unterschiedliche Dinge
+in verschiedenen Dateien zu loggen.</p>
+<p>Gültige Flags:</p>
+<table border="1" width="580">
+  <tr>
+    <td width="113">
+<p><b>Flag</b></p>
+    </td>
+    <td width="451">
+<p><b>Bedeutung</b></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="113">
+<p>errors</p>
+    </td>
+    <td width="451"><p>selbsterklärend</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="113">
+<p>
+  kills</p>
+    </td>
+    <td width="451"><p>zeichnet /kill Meldungen auf</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="113">
+<p>
+  tkl</p>
+    </td>
+    <td width="451">
+<p>zeichnet Infos auf über glines, shuns, tklines, tzlines, gzlines</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="113">
+<p>
+  connects</p>
+    </td>
+    <td width="451"><p>Zeichnet connects/quits der User auf</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="113">
+<p>
+  server-connects</p>
+    </td>
+    <td width="451">
+<p>Zeichnet connects/squits der Server auf</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="113">
+<p>
+  kline</p>
+    </td>
+    <td width="451"><p>Zeichnet Infos über kline und unkline auf</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="113">
+<p>
+  oper</p>
+    </td>
+    <td width="451"><p>Zeichnet Oper Zugriffe auf (sowohl fehlgeschlagene als
+      auch erfolgreiche)</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="113">
+sadmin-commands
+    </td>
+    <td width="451">Zeichnet die Verwendung von /sa* (samode, sajoin etc.) auf
+    </td>
+  </tr>
+  <tr>
+    <td width="113">
+chg-commands
+    </td>
+    <td width="451">Zeichnet die Verwendung von /chg* (chghost, chgname,
+      chgident, etc.) auf
+    </td>
+  </tr>
+  <tr>
+    <td width="113">
+oper-override
+    </td>
+    <td width="451">Zeichnet die Verwendung von Operoverrides auf
+    </td>
+  </tr>
+</table>
+<p>Beispiel:</p>
+<pre>log ircd.log {
+	maxsize 5MB;
+	flags {
+		errors;
+		kills;
+		oper;
+		kline;
+		tkl;
+	};
+};
+</pre>
+</div>
+<p><font class="block_section"><a name="tldblock">4.12 - </a> </font><a name="tldblock"><font class="block_name">TLD Block</font>
+</a>
+   <font class="block_optional">OPTIONAL</font>  <font class="block_old">(Früher
+bekannt als T:Line)</font><div class="desc">
+<p>Syntax:
+<pre>tld {
+	mask &lt;hostmask&gt;;
+	motd &lt;motd-file&gt;;
+	rules &lt;rules-file&gt;;
+	shortmotd &lt;shortmotd-file&gt;;
+	channel &lt;channel-name&gt;;
+	options {
+		ssl;
+	}
+};</pre>
+<p>Mit dem TLD Block eine motd (Messageoftheday), rules und channels für einen
+User basierend auf deren Host festlegen. Das ist nützlich, falls man
+verschiedene motd's für verschiedene Sprachen verwenden möchte.<br>
+ <b>tld::mask</b> ist eine user@host Maske, die zum Usernamen und seiner
+Hostmask passen muss.<br>
+ <b>tld::motd</b>, <b>tld::shortmotd</b>, und <b>tld::rules</b>  legen die
+jeweiligen Dateien für motd und rules fest, die in Abhängigkeit von der
+Hostmask angezeigt werden.<br>
+ <b>tld::channel</b> ist optional, und ermöglicht es, einen Channel
+festzulegen, in den der User beim Connect geleitet wird. Wenn dieser Eintrag
+existiert, überschreibt er einen Default Auto join.<br>
+ <b>tld::options</b>  ermöglicht es, noch weitere notwendige Bedingungen zu
+setzen, bislang ist hier aber nur&nbsp; tld::options::ssl möglich.</p>
+<p>TLD Einträge werden von unten nach oben abgearbeitet.</p>
+<p>Beispiel:
+<pre>tld {
+	mask *@*.fr;&lt;
+	motd &quot;ircd.motd.fr&quot;;
+	rules &quot;ircd.rules.fr&quot;;
+};</pre>
+<p></p></div>
+<p><font class="block_section"><a name="bannickblock">4.13 - </a> </font><a name="bannickblock"><font class="block_name">Ban Nick Block</font>
+</a>
+   <font class="block_optional">OPTIONAL</font>  <font class="block_old">(Früher
+bekannt als Q:Line)</font><div class="desc">
+<p>Syntax:
+<pre>ban nick {
+
+	mask &lt;nickname&gt;;
+	reason &lt;grund-für-bann&gt;;
+};</pre>
+<p>Mit dem Ban Nick Block können bestimmte Nicknamen auf dem Server gesperrt
+werden.&nbsp;<br>
+<b> 
+  ban::mask</b> gestattet Masken mit Wildcards um mehrere Nicknamen zu erfassen<br>
+<b>ban::reason</b> ermöglicht es, einen Grund für den Bann anzugeben.&nbsp;<br>
+In der Regel werden in TLD Blöcken die Namen der Services angegeben, so dass
+kein User diese Namen als seinen Nick wählen kann.</p>
+<p>Beispiel:
+<pre>ban nick {
+	mask &quot;*C*h*a*n*S*e*r*v*&quot;;
+	reason &quot;Reserved for Services&quot;;
+};</pre>
+<p></p></div>
+<p><font class="block_section"><a name="banuserblock">4.14 - </a> </font><a name="banuserblock"><font class="block_name">Ban User Block</font>
+</a>
+   <font class="block_optional">OPTIONAL</font>  <font class="block_old">(Früher
+bekannt als K:Line)</font><div class="desc">
+<p>Syntax:
+<pre>ban user {
+	mask &lt;hostmask&gt;;
+	reason &lt;reason-for-ban&gt;;
+};</pre>
+<p>Mit diesem Block kann man verbieten, dass sich ein user@host zum Server
+verbindet.<br>
+<b>ban::mask</b> ist eine user@host Maske, die gebannt werden soll, wobei
+Wildcards möglich sind.<br>
+<b> ban::reason</b> ist der Grund, der dem gesperrten User beim
+Verbindungsversuch angezeigt wird.<br>
+Zu beachten ist, dass dieser Bann nur lokal wirkt und deswegen der betreffende
+User ohne weiteres über andere Server zum Netzwerk verbinden kann.</p>
+<p>Beispiel:
+<pre>ban user {
+	mask *tirc@*.saturn.bbn.com;
+	reason &quot;Idiot&quot;;
+};</pre>
+<p></p></div>
+<p><font class="block_section"><a name="banipblock">4.15 - </a> </font><a name="banipblock"><font class="block_name">Ban IP Block</font>
+</a>
+   <font class="block_optional">OPTIONAL</font>  <font class="block_old">(Früher
+bekannt als Z:Line)</font><div class="desc">
+<p>Syntax:
+<pre>ban ip {
+	mask &lt;ipmask&gt;;
+	reason &lt;reason-for-ban&gt;;
+};</pre>
+<p>Der Ban IP Block verhindert das Verbinden von bestimmten IP Adressen her zum
+Server. Das gilt sowohl für Verbindungsversuche von Usern als auch von Servern.<br>
+<b>ban::mask</b> ist eine IP, die Wildcards enthalten kann<br>
+<b>ban::reason</b> ist der Grund, warum der Bann eingetragen wurde.<br>
+Da dieser Bann auch Server betreffen kann, sollte man beim Eintrag von IP
+Adressen sehr vorsichtig sein.</p>
+<p>Beispiel:
+<pre>ban ip {
+	mask 192.168.1.*;
+	reason &quot;Nimm eine richtige IP, du Lamer!&quot;;
+};</pre>
+</div>
+<p><font class="block_section"><a name="banserverblock">4.16 - </a> </font><a name="banserverblock"><font class="block_name">Ban Server Block</font>
+</a>
+   <font class="block_optional">OPTIONAL</font>  <font class="block_old">(Früher
+bekannt als&nbsp; q:Line)</font><div class="desc">
+<p>Syntax:
+<pre>ban server {
+	mask &lt;server-name&gt;;
+	reason &lt;reason-for-ban&gt;;
+};</pre>
+<p>Dieser Block verhindert, dass sich bestimmte Server zum eigenen Server
+verbinden können.<br>
+<b>ban::mask</b> beinhaltet eine Maske, die Wildcards gestattet und zu dem Namen
+eines Servers passt, der nicht verbinden darf.<br>
+<b>ban::reason</b> Der Grund, warum dieser Bann existiert.</p>
+<p>Beispiel:
+<pre>ban server {
+	mask broken.server.my.network.com;
+	reason &quot;Its broken!&quot;;
+};</pre>
+<p> </p></div>
+<p><font class="block_section"><a name="banrealnameblock">4.17 - </a> </font><a name="banrealnameblock"><font class="block_name">Ban RealName Block</font>
+</a>
+   <font class="block_optional">OPTIONAL</font>  <font class="block_old">(Früher
+bekannt als n:Line)</font><div class="desc">
+<p>Syntax:
+<pre>ban realname {
+	mask &lt;realname-mask&gt;;
+	reason &lt;reason-for-ban&gt;;
+};</pre>
+<p>Der Ban Realname Block ermöglicht es, Clients auf das GECOS (Realname) Feld
+zu testen und entsprechend zu bannen, Das kann hilfreich sein, um Floods von
+Clones zu vermindern, da Floodbots des öfteren denselben Eintrag im Realnamen
+Feld verwenden.<br>
+<b> ban::mask</b> legt den Realnamen fest, der gebannt werden soll. Die Maske
+kann Wildcards enthalten.<br>
+<b> ban::reason</b> legt den anzuzeigenden Grund für den Bann fest.</p>
+<p>Beispiel:
+<pre>ban realname {
+	mask &quot;Bob*&quot;;
+	reason &quot;Bob sucks!&quot;;
+};</pre>
+</div>
+<p><font class="block_section"><a name="banversionblock">4.18 - </a> </font><a name="banversionblock"><font class="block_name">Ban Version Block</font>
+ </a>
+   <font class="block_optional">OPTIONAL</font>  <font class="block_old">(Früher
+nicht vorhanden)</font><div class="desc">
+<p>Syntax:
+<pre>ban version {
+	mask &lt;version-mask&gt;;
+	reason &lt;reason-for-ban&gt;;
+	action [kill|tempshun|shun|kline|zline|gline|gzline];
+};</pre>
+<p>Mit dem &quot;ban version block&quot; kann man Clients in Abhängigkeit der
+von ihnen verwendeten IRC Software bannen. Dazu wird die Antwort auf die CTCP Versions
+Abfrage ausgewertet. Deshalb wird dieser Bann dann nicht wirksam sein, wenn der
+entsprechende Client keine CTCP Version sendet. Mit diesem Feature ist es
+möglich, bestimmte möglicherweise störende Scripts zu blocken und damit zu
+verbieten.<br>
+<b>ban::mask</b> legt die Version des Clients fest, der gebannt werden soll. Die
+Maske kann Wildcards enthalten.<br>
+<b>ban::reason</b> legt den Grund fest, der dem User angezeigt wird.<br>
+<b>ban::action</b> kann ebenfalls festgelegt werden. Dabei ist der Default auf
+&quot;kill&quot;. <i>tempshun</i> setzt ein shun auf die Verbindung des Users
+und arbeitet effektiv gegen zombies und/oder Bots mit dynamischer IP, weil sie
+unschuldige User nicht beeinträchtigen. <i>shun/kline/zline/gzline</i> setzen
+einen Bann auf die IP (*@IPADDR). Die Dauer dieser Banns kann mit 'set::ban-version-tkl-time'
+konfiguriert werden und beträgt per Default 1 Tag.</p>
+<p>Beispiele:
+<pre>ban version {
+	mask &quot;*SomeLameScript*&quot;;
+	reason &quot;SomeLameScript enthält Backdoors!&quot;;
+};</pre>
+<p><font face="Courier New" size="2">ban version {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mask "*w00tZombie*";<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; reason "I hate those hundreds of zombies";<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; action zline;<br>
+};</font></p></div>
+<p><font class="block_section"><a name="banexceptionblock">4.19 - </a> </font><a name="banexceptionblock"><font class="block_name">Ban Exceptions Block</font>
+</a>
+   <font class="block_optional">OPTIONAL</font>  <font class="block_old">(Früher
+bekannt als E:Line)</font><div class="desc">
+<p>Syntax:
+<pre>except ban {
+	mask &lt;hostmask&gt;;
+};</pre>
+<p>Mit dem &quot;except ban Block&quot; kann man user@host
+Masken angeben, die von den gesetzten Banns der Blöcke zuvor ausgenommen werden
+sollen. So etwas kann verwendet werden, falls man z.B. ganze ISP bannen möchte,
+aber einzelnen Usern trotzdem die Verbindung erlauben möchte. Dazu bei <b> except::mask</b>
+den oder die Hosts eintragen (als user@host Mask) die trotz globalem Bann
+connecten dürfen.</p>
+<p>Beispiel:
+<pre>except ban {
+	mask myident@my.isp.com;
+};</pre>
+</div>
+<p><font class="block_section"><a name="tklexceptionblock">4.20 - </a> </font><a name="tklexceptionblock"><font class="block_name">TKL Exceptions Block</font>
+</a>
+   <font class="block_optional">OPTIONAL </font><font class="block_old">(Früher
+nicht vorhanden)</font><div class="desc">
+<p>Syntax:
+<pre>except tkl {
+	mask &lt;hostmask&gt;;
+	type &lt;type&gt;;
+};</pre>
+<p>Mit dem &quot;except tkl Block&quot; kann man <a href="mailto:user@host">user@host</a>
+Masken angeben, die von den gesetzten Banns tkl Banns (also G-Lines, Shuns, GZ
+Lines) ausgenommen werden sollen. So etwas kann verwendet werden, falls man z.B.
+ganze ISP bannen möchte, aber einzelnen Usern trotzdem die Verbindung erlauben
+möchte. Dazu bei <b> except::mask</b> den oder die Hosts eintragen (als user@host
+Mask) die trotz globalem Bann connecten dürfen. Bei <b>except::type</b> wird
+angegeben, welcher Bann Typ ausgenommen werden soll. Gültige Typen sind hier:
+gline, gzline, qline, gqline und shun, für Ausnahmen von Glines, Global Zlines,
+Qlines, Global Qlines und Shuns.</p>
+<p>Beispiel:
+<pre>except tkl {
+	mask myident@my.isp.com;
+	type gline;
+};</pre>
+</div>
+<p><font class="block_section"><a name="throttleexceptionblock">4.21 - </a> </font><a name="throttleexceptionblock"><font class="block_name">Throttle Exceptions Block</font>
+</a>
+   <font class="block_optional">OPTIONAL</font>  <font class="block_old">(Früher
+nicht vorhanden)</font>
+</p><div class="desc">
+<p>Syntax:
+<pre>except throttle {
+	mask &lt;ipmask&gt;;
+};</pre>
+<p>Der &quot;except throttle block&quot; gestattet die Angabe einer IP Maske,
+für die das 
+  throttling System nicht gelten soll. Dieser Block hat nur eine Auswirkung,
+wenn throttling im &quot;<a href="#setblock">set Block</a>&quot; auch aktiviert
+ist. Die bei <b> 
+  except::mask</b> angegebene IP Maske wird nicht wegen Throttlings gebannt.</p>
+<p>Beispiel:
+<pre>except throttle {
+	mask 192.168.1.*;
+};</pre>
+</div>
+<p><font class="block_section"><a name="denydccblock">4.22 - </a> </font><a name="denydccblock"><font class="block_name">Deny DCC Block</font>
+</a>
+   <font class="block_optional">OPTIONAL</font>  <font class="block_old">(Früher
+bekannt als dccdeny.conf)</font>
+</p><div class="desc">
+<p>Syntax:
+<pre>deny dcc {
+	filename &lt;file-to-block&gt;;
+	reason &lt;reason-for-ban&gt;;
+};</pre>
+<p>Im &quot;deny dcc Block&quot; können Dateinamen angegeben werden, die nicht
+per DCC über den Server versandt werden dürfen. Das kann helfen, die
+Verteilung von Viren und Trojanern zu verhindern. </p>
+<p>Der Parameter <b>deny::filename</b> definiert eine Maske von Dateinamen,
+deren Versand blockiert wird, Wildcards sind hier möglich. <b> deny::reason</b>
+legt den anzuzeigenden Grund für die Sperrung der Datei fest.</p>
+<p>Beispiel:
+<pre>deny dcc {
+	filename virus.exe;
+	reason &quot;Das ist ein Virus&quot;;
+};</pre></div>
+<p></p>
+<p><font class="block_section"><a name="denyversionblock">4.23 - </a> </font><a name="denyversionblock"><font class="block_name">Deny Version Block</font>
+</a>
+   <font class="block_optional">OPTIONAL</font>  <font class="block_old">(Früher
+bekannt als V:Line)</font><div class="desc">
+<p> Syntax:
+<pre>deny version {
+	mask &lt;server-name&gt;;
+	version &lt;version-number&gt;;
+	flags &lt;compile-flags&gt;;
+};</pre>
+<p>Mit diesem Block ist es möglich, Server aufgrund der Version ihres Unreal
+Ircds bzw. des Compilierungszeitpunktes oder bestimmter Optionen vom Linken
+auszuschliessen. Das Format des Blockes ist etwas komplex, aber nicht so schwer
+zu verstehen.<br>
+<b>deny::mask</b> definiert eine Wildcard Maske, für welchen Server die
+Ablhnung gelten soll.<br>
+<b> deny::version</b> bezeichnet eine Protokoll Nummer, um welche Version es
+geht.</p>
+<p>Ein Beispiel: Für den UnrealIRCD Version 3.0 ist die Versionsnummer 2301,
+für 3.1.1/3.1.2 ist es 2302 und für&nbsp; 3.2 ist es 2303. Das erste Zeichen
+des Parameters kann eines der folgenden sein: &gt;, &lt;, =, !. Dieses Zeichen
+gibt an, wie der IRCD die Version interpretieren soll. Ist also z.B. das erste
+Zeichen ein &quot;&gt;&quot; so werden alle Versionen mit einer größeren
+Nummer abgelehnt. Handelt es sich um ein &quot;&lt;&quot;, so werden alle
+kleineren Versionen abgelehnt. Bei einem &quot;=&quot; wird nur die angegebene
+Version abgelehnt. Bei einem &quot;!&quot; werden alle Versionen außer der
+angegebenen abgelehnt.<br>
+<b>deny::flags</b> ermöglicht die Angabe von Compile Zeit Flag, die der Server
+haben oder nicht haben darf. Die Flags müssen direkt nacheinander ohne
+Zwischenräume angegeben sein. Wird einem Zeichen ein &quot;!&quot;
+vorangestellt, darf der Server dieses Flag nicht haben, steht kein &quot;!&quot;
+davor, so muss der Server dieses Flag haben, um vom Linken ausgeschlossen zu
+sein.</p>
+</div>
+<p><font class="block_section"><a name="denylinkblock">4.24 - </a> </font><a name="denylinkblock"><font class="block_name">Deny Link Block</font>
+</a>
+   <font class="block_optional">OPTIONAL</font>  <font class="block_old">(Früher
+bekannt als D/d:Line)</font><div class="desc">
+<p>Syntax:
+<pre>deny link {
+	mask &lt;server-name&gt;;
+	rule &lt;crule-expression&gt;;
+	type &lt;type-of-denial&gt;;
+};</pre>
+<p>Mit diesem Block können Regeln angegeben werden, nach denen man Server vom
+Linken ausschliessen kann.<br>
+<b>deny::mask</b> definiert eine Wildcard Maske auf den Servernamen, für den
+die Regel gelten soll.<br>
+<b>deny::rule</b> ist ein sehr komplexer Ausdruck. Ein crule Ausdruck erlaubt
+es, den Link sehr detailliert zu steuern und ist aufgebaut wie eine Programm
+Anweisung. Vier Operatoren werden unterstützt:<br>
+&nbsp;&nbsp;&nbsp; connected(&lt;servermask&gt;) ergibt 'wahr', wenn ein Server
+zu dem die angegebene deny::mask passt, verbunden ist.<br>
+&nbsp;&nbsp;&nbsp; directcon(&lt;servermask&gt;) ergibt 'wahr', wenn ein Server
+zu dem die angegebene deny::mask passt, direkt verbunden ist.<br>
+&nbsp;&nbsp;&nbsp; via(&lt;viamask&gt;,&lt;servermask&gt;) ergibt 'wahr', wenn
+ein Server aus deny::mask über einen Server verbunden ist, auf den viamask
+passt.<br>
+&nbsp;&nbsp;&nbsp; directop() ergibt wahr, wenn der Operator über /connect
+direkt zu diesem Server verbunden hat.&nbsp;<br>
+Diese Operatoren können durch Verwendung von && (und) und || (oder) miteinander
+kombiniert werden. Durch Verwendung von Klammern um die eizelnen Items sind auch
+Gruppierungen möglich. Darüber hinaus kann einem Operator ein &quot;!&quot;
+vorangestellt sein, um darauf zu testen, ob der Operator 'falsch' ergibt. Wenn
+der gesamte Ausdruck 'wahr' ergibt, wird der Link abgelehnt.<br>
+<b>deny::type</b> kann zwei Werte haben: &quot;auto&quot; (gilt nur für
+autoconnects, /connect funktioniert trotzdem), und &quot;all&quot; (gilt für
+alle Verbindungsanfragen).</p>
+</div>
+<p><font class="block_section"><a name="denychannelblock">4.25 - </a> </font><a name="denychannelblock"><font class="block_name">Deny Channel Block</font>
+</a>
+   <font class="block_optional">OPTIONAL</font>  <font class="block_old">(Früher
+bekannt als chrestrict.conf)</font>
+</p><div class="desc">
+<p>Syntax:
+<pre>deny channel {
+	channel &quot;&lt;channel-mask&gt;&quot;;
+	reason &lt;reason-for-ban&gt;;
+	redirect &quot;&lt;channel-name&gt;&quot;;
+	warn [on|off];
+};</pre>
+<p>Mit dem &quot;deny channel Block&quot; kann man Usern das joinen bestimmter
+Channels verbieten. In <b>deny::channel</b> wird die Maske der Channels
+angegeben, die die User nicht betreten dürfen, Wildcards sind erlaubt. In <b>deny::reason</b>
+wird der anzuzeigende Grund eingetragen, weswegen der Channel nicht betreten
+werden kann.&nbsp; Darüber hinaus kann in <b>deny::redirect</b> ein Channel
+angegeben werden, in den ein User umgeleitet wird, falls er versucht einen
+gesperrten Channel zu betreten. Darüber hinaus kann über <b>deny::warn</b>
+(falls eingestellt) angegeben werden, dass eine OperNotice (an EYES snomask)
+gesendet wird, wenn ein User versucht, einen solchen Channel zu joinen.</p>
+<p>Beispiel:</p>
+<pre>deny channel {
+	channel &quot;#unrealsucks&quot;;
+	reason &quot;Nein, tut es nicht!&quot;;
+};
+
+deny channel {
+	channel &quot;#*teen*sex*&quot;;
+	reason &quot;You == dead&quot;;
+	warn on;
+};
+
+deny channel {
+	channel &quot;#operhelp&quot;;
+	reason &quot;Unser Hilfe Channel ist #help und nicht #operhelp&quot;;
+	redirect &quot;#help&quot;;
+};</pre>
+
+</div>
+<p><font class="block_section"><a name="allowchannelblock">4.26 - </a> </font><a name="allowchannelblock"><font class="block_name">Allow Channel Block</font>
+</a>
+   <font class="block_optional">OPTIONAL </font><font class="block_old">(Früher
+nicht vorhanden)</font>
+</p><div class="desc">
+<p>Syntax:
+<pre>allow channel {
+	channel &quot;&lt;channel-mask&gt;&quot;;
+};</pre>
+<p>Mit dem &quot;allow channel Block&quot; kann man Channels festlegen, in die
+User joinen dürfen. In <b>allow::channel</b> wird eine Channel Maske angegeben,
+die auch Wildcards enthalten kann und festlegt, in welche Channels die User
+joinen dürfen.</p>
+<p>Beispiele:<br>
+<pre>allow channel {
+	channel &quot;#something&quot;;
+};</pre>
+<pre>allow channel {
+	channel &quot;#smart_*&quot;;
+};</pre>
+</div>
+<p><font class="block_section"><a name="vhostblock">4.27 - </a> </font><a name="vhostblock"><font class="block_name">Vhost Block</font>
+</a>
+   <font class="block_optional">OPTIONAL</font>  <font class="block_old">(Früher
+bekannt als vhosts.conf)</font>
+</p><div class="desc">
+<p>Syntax:
+<pre>vhost {
+	vhost &lt;vhost&gt;;
+	from {
+		userhost &lt;hostmask&gt;;
+		userhost &lt;hostmask&gt;;
+		...
+	};
+	login &lt;login-name&gt;;
+	password &lt;password&gt; { &lt;auth-type&gt;; };
+	swhois &quot;&lt;swhois info&gt;&quot;;
+};</pre>
+<p>Der &quot;vhost Block&quot; ermöglicht es, eine &quot;login&quot;/&quot;Passwort&quot;
+Kombination festzulegen, die in Verbindung mit dem /vhost Befehl einen Fake
+Hostnamen ermöglicht. Der <b>vhost::vhost</b> Parameter kann entweder in der
+Form &quot;user@host&quot;&nbsp; oder einfach als Hos angegeben werden, damit
+der User erfolgreich /vhost durchführen kann. <b>vhost::from::userhost</b>
+enthält einen &quot;user@host&quot;&nbsp; der zu dem User passen muß, um einen
+vhost zu erhalten. Es kann mehr als eine Host Maske angegeben werden. <b>vhost::login</b>
+ist der Login Name, den der User eingeben muss und <b> vhost::password</b> ist
+das einzugebende Passwort. Darüber hinaus kann bei <b>vhost::password::</b>
+auch ein Authentifizierungstyp für Verschlüsselung angegeben werden.
+Unterstützt werden hier z.Zt.&nbsp; crypt, md5, und sha1, ripemd-160. <b> vhost::swhois</b>
+ermöglicht es, eine Extra Zeile für eine /whois Abfrage einzufügen, genau wie
+im Oper Block bei &quot;oper::svhost&quot;.</p>
+<p>Beispiel:
+<pre>vhost {
+	vhost my.own.personal.vhost.com;
+	from {
+		userhost my@isp.com;
+		userhost myother@isp.com;
+	};
+	login mynick;
+	password mypassword;
+	swhois &quot;Ich bin wichtig ;)&quot;;
+};</pre>
+</div>
+<p><font class="block_section"><a name="badwordsblock">4.28 - </a> </font><a name="badwordsblock"><font class="block_name">Badword Block</font>
+</a>
+   <font class="block_optional">OPTIONAL</font>  <font class="block_old">(Früher
+bekannt als badwords.*.conf)</font>
+</p><div class="desc">
+<p>Syntax:
+<pre>badword &lt;type&gt; {
+	word &lt;text-to-match&gt;;
+	replace &lt;replace-with&gt;;
+	action &lt;replace|block&gt;;
+};</pre>
+<p>Mit dem Badword Block kann die Liste für User- und Channelmodus +G
+bearbeitet werden, um bestimmte &quot;badwords&quot; zu beahandeln. <b>badword::</b>
+legt den Typ fest, wobei gültige Werte hier sind: channel, message und quit. channel
+gilt für Channel Modus +G list, message gilt für User Modus +G list, und quit
+gilt für die quit Meldung. <b> badword::word</b> kann ein einfaches Wort sein
+oder ein Ausdruck, nach dem gesucht werden soll. <b>badword::replace</b> ist ein
+Ersetzungstext, der anstelle des gefundenen Badwords angezeigt wird. Wird hier
+nichts eingetragen, so wird ein gefundenes Badword durch&nbsp; &lt;censored&gt;
+erstezt. Bei <b> badword::action</b> wird angegeben, was im Falle eines
+gefundenen Badwords geschehen soll. Wird hier das Wort &quot;replace&quot;
+eingetragen, dann wird das Badword ersetzt. Falls hier &quot;block&quot;
+angegeben wird, wird die gesamte Nachricht gar nicht erst angezeigt. Falls
+&quot;badword::action&quot; nicht gesetzt ist, wird &quot;replace&quot; als
+Default angenommen.</p>
+<p>Beispiel:
+<pre>badword channel {
+	word shit;
+	replace shoot;
+};</pre>
+</div>
+<p><font class="block_section"><a name="ulinesblock">4.29 - </a> </font><a name="ulinesblock"><font class="block_name">ULines Block</font>
+</a>
+   <font class="block_optional">OPTIONAL</font>  <font class="block_old">(Früher
+bekannt als U:Line)</font><div class="desc">
+<p>Syntax:
+<pre>ulines {
+	&lt;server-name&gt;;
+	&lt;server-name&gt;;
+	...
+};</pre>
+<p>Mit dem ulines block können bestimmte Server mit speziellen Zwecken
+definiert werden. Das sollte ausschließlich für Server wie &quot;services&quot;
+oder &quot;stats&quot; benutzt werden und nicht für normale Server. Jeder
+Eintrag steht für den Namen des Servers mit einem besonderen Zweck.</p>
+<p>Beispiel:<br>
+<pre>ulines {
+	services.mynetwork.com;
+	stats.mynetwork.com;
+};</pre>
+</div>
+<p><font class="block_section"><a name="linkblock">4.30 - </a> </font><a name="linkblock"><font class="block_name">Link Block</font>
+</a>
+   <font class="block_optional">OPTIONAL</font>  <font class="block_old">(Früher
+bekannt als C/N/H:Lines)</font>
+</p><div class="desc">
+<p>Syntax:
+<pre>link &lt;server-name&gt; {
+	username &lt;usermask&gt;;
+	hostname &lt;ipmask&gt;;
+	bind-ip &lt;ip-to-bind-to&gt;;
+	port &lt;port-to-connect-on&gt;;
+	password-connect &lt;password-to-connect-with&gt;;
+	password-receive &lt;password-to-receive&gt; { &lt;auth-type&gt;; };
+	hub &lt;hub-mask&gt;;
+	leaf &lt;leaf-mask&gt;;
+	leafdepth &lt;depth&gt;;
+	class &lt;class-name&gt;;
+	options {
+		&lt;option&gt;;
+		&lt;option&gt;;
+		...
+	};
+};</pre>
+<p>Dieser Block wird benötigt, um Server zueinander linken zu lassen. Man
+sollte sich Zeit nehmen, hierzu alles genau zu lesen, weil das Ganze nicht
+unkompliziert ist und hier die häufigsten Fehler gemacht werden.</p>
+<p>Der erste Eintrag, <b>server-name</b>, ist der Name des zu verbindenden
+entfernten Servers, so wie er in dessen Me { } Block definiert wurde (z.B.:
+hub.blah.com).
+Es darf sich nicht um eine IP handeln und der Eintrag kann sich von &quot;hostname&quot;
+unterscheiden.</p>
+<p><b>username</b><br>
+Hier kann zu Zwecken der Authentifizierung über ident ein Eintrag erfolgen,
+aber normalerweise wird nur &quot;*&quot; eingestellt.
+</p>
+<p><b>hostname</b><br>
+Der Hostname oder die IP des entfernten Servers. Der Eintrag gilt gleichermaßen
+für das Verbinden UND die Authentifizierung seitens des eigenen Servers.<br>
+Einige Beispiele:<br>
+  <table border="0">
+  <tr><td><i>1.2.3.4</i></td><td> normale IP</td></tr>
+  <tr><td><i>hub.blah.com</i></td><td> Host: nur für ausgehende Verbindung,
+      kann keine eingehenden Verbindungen akzeptieren, solange nicht &quot;link::options::nohostcheck&quot;
+      gesetzt ist.</td></tr>
+  <tr><td><i>*</i></td><td> kann nicht selbst zu anderen Servern verbinden, aber
+      akzeptiert eingehende Serververbindungen (mit korrektem Passwort) von
+      überall her.</td></tr>
+  <tr><td><i>::ffff:1.2.3.4</i></td><td> für Linking ipv6 zu ipv4.</td></tr>
+  </table>
+<p><b>bind-ip</b> (optional)<br>
+Kann genutzt werden, um eine bestimmte IP (z.B.: 192.168.0.1) daran zu binden,
+von wo aus verbunden werden soll, wird allerdings so gut wie nie benutzt.
+ </p>
+<p><b>port</b><br>
+  Port zu dem verbunden wird (auf welchen der entfernte Server reagiert).
+ </p>
+<p><b>password-connect</b><br>
+Das Passwort, welches zum Verbinden erforderlich ist. Es muss im Klartext
+vorliegen und darf nicht verschlüsselt sein.
+ </p>
+<p><b>password-receive</b><br>
+Das Passwort, welches zur Überprüfung eingehender Verbindungen verwendet wird,
+kann auch verschlüsselt sein (gültige Methoden sind&nbsp; crypt, md5, sha1,  ripemd-160).
+Der &quot;auth-type&quot; Parameter kann auch frei gelassen werden, um das
+passwort im Klartext zu verwenden. Normalerweise ist das Passwort hier dasselbe,
+wie bei &quot;password-connect&quot;.
+</p>
+<p><b>hub oder leaf</b><br>
+Zu einem hub sind mehrere Server verbunden, ein leaf hat immer nur eine
+Verbindung. Ein Server ist entweder ein hub oder ein leaf - die beiden Optionen
+können nicht kombiniert werden.
+</p>
+<p><b>hub</b> (optional)<br>
+Der Wert ist eine Maske, auf welche Server dieser hub connecten darf (z.B.: *.my.net).
+</p>
+<p><b>leaf</b> (optional)<br>
+Der Wert ist eine Maske, dass dieser Server wie ein leaf in Richtung zum eigenen
+Server fungiert.
+</p>
+<p><b>leaf-depth</b> (optional)<br>
+Falls dies angegeben ist, sollte auch &quot;leaf&quot; angegeben sein. Angegeben
+wird die Tiefe (Anzahl der hops) die dieser Server darunter haben darf.
+</p>
+<p><b>class</b><br>
+Die Klasse, in die der Server kommt, oft ist eine eigene Klasse für Server
+definiert.
+</p>
+<p><b>compression-level</b> (optional)<br>
+Gibt den Kompressions Level (1-9) für diesen Link an. Wird nur verwendet, wenn
+auch &quot;link::options::zip&quot; gesetzt ist.
+</p>
+<p><b>options block</b><br>
+Eine oder mehrere Optionen für eine Verbindung zu diesem Server. Wird manchmal
+nicht benötigt.<br>
+<table border="0">
+<tr><td><b>ssl</b></td><td> wenn zu einem SSL Port verbunden wird.</td></tr>
+<tr><td><b>autoconnect</b></td><td> Server versucht autoconnect, Zeit, wie in
+    &quot;class::connfreq&quot; spezifiziert wird (wird am besten nur auf
+    einer Seite aktiviert,wie leaf-&gt;hub)</td></tr>
+<tr><td><b>zip</b></td><td> wenn komprimierte Verbindungen gewollt sind, muß
+    auf beiden Seiten mit +set zip compiliert sein.</td></tr>
+<tr><td><b>nodnscache</b></td><td> IP für ausgehende Serververbindung nicht im
+    cache speichern, wird bei oft wechselndem Host benutzt (wie dyndns.org)</td></tr>
+<tr><td><b>nohostcheck</b></td><td> den entfernten Host nicht überprüfen (link::hostname),
+    wird bei oft wechselndem Host benutzt (wie dyndns.org)</td></tr>
+<tr><td><b>quarantine</b></td><td> Opers auf diesem Server behalten locop Status bei</td></tr>
+</table>
+<p>Beispiel:</p>
+<pre>link hub.mynet.com {
+	username *;
+	hostname 1.2.3.4;
+	bind-ip *;
+	port 7029;
+	hub *;
+	password-connect &quot;LiNk&quot;;
+	password-receive &quot;LiNk&quot;;
+	class servers;
+	options {
+		autoconnect;
+		ssl;
+		zip;
+	};
+};</pre>
+</div>
+<p><font class="block_section"><a name="aliasblock">4.31 - </a> </font><a name="aliasblock"><font class="block_name">Alias Block</font>
+</a>
+   <font class="block_optional">OPTIONAL </font><font class="block_old">(Früher
+nicht vorhanden)</font>
+</p><div class="desc">
+<p>Syntax [standard alias]:<br>
+<pre>alias &lt;name&gt; {
+	nick &lt;nick-to-forward-to&gt;;
+	type &lt;type-of-alias&gt;;
+};</pre>
+<p>(Hinweis: siehe auch <a href="#includedirective">hier</a> , welche Standard
+Alias Dateien bei UnrealIRCd mitgeliefert werden.)</p>
+<p>Mit dem &quot;alias block [standard alias]&quot; kann festgelegt werden, daß
+ein Befehl an einen User geleitet wird. So wird z.B. durch /chanserv eine
+Nachricht an den &quot;User&quot; chanserv weitergeleitet. <b> alias::</b> legt
+den Namen des Befehls fest, der das Alias wird, z.B. &quot;/chanserv&quot;. <b>alias::nick</b> ist
+der Nickname, an den weitergeleitet wird. Wenn &quot;alias::&quot; identisch mit
+dem Nick ist, an den weitergeleitet wird, kann &quot;alias::nick&quot;
+weggelassen werden. <b> alias::type</b> gibt den Typ des Alias an, gültige
+Typen sind hier &quot;services&quot; (der User ist auf dem Services Server),
+&quot;stats&quot; (der User ist auf dem Stats Server), und &quot;normal&quot; (der
+User ist normaler User auf irgendeinem Server). Der &quot;alias block&quot; hat
+auch einen weiteren Zweck, der nachfolgend erklärt ist.</p>
+<p>Syntax [Befehl alias]:
+<pre>alias &lt;name&gt; {
+	format &lt;regex-expression&gt; {
+		nick &lt;nick-to-forward-to&gt;;
+		type &lt;type-of-alias&gt;;
+		parameters &lt;parameter-string&gt;;
+	};
+	format &lt;regex-expression&gt; {
+		...
+	};
+	type command;
+};</pre>
+<p>Wird der &quot;alias Block&quot; in diesem Format benutzt, ermöglicht er
+eine breitere Anwendungsweise. Beispielsweise kann man einen Alias wie /identify
+erstellen. <b> alias::</b> 
+  ist dasselbe wie oben, der Name des Alias Befehls. <b> alias::format</b> legt
+einen regulären Ausdruck fest, der mit dem Text verglichen wird, der als Alias
+Befehl gesandt wurde. Es können mehrere &quot;alias::format&quot; angegeben
+werden, um unterschiedliche Dinge in Abhängigkeit vom gesandten Text
+durchführen zu lassen. <b> alias::format::nick</b> ist der Nickname, an den der
+Alias weitergeleitet wird. <b> alias::format::type</b> definiert den Typ des
+Alias, zu dem die Nachricht geleitet wird. <b> alias::format::parameters</b>
+ist, was als Parameter an den Alias geschickt wird. Um Parameter für einen
+Befehl an den Alias anzugeben, wird ein &quot;%&quot; gefolgt von einer Nummer
+angegeben. So ist z.B. %1 der erste Parameter, %2 der zweite Parameter usw.&nbsp;
+Man kann auch festlegen, dass ab einem Parameter alle bis zum Ende gelten
+sollen, dann gibt man z.B. an:&nbsp; %1- (das Minuszeichen bedeutet: &quot;alle
+weiteren&quot;)</p>
+<p>Beispiele:</p><font SIZE="2">
+<p><font face="Courier New">alias &quot;identify&quot; {<br>
+</font></font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<font face="Courier New"><font SIZE="2">format &quot;^#&quot; {<br>
+</font></font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<font face="Courier New"><font SIZE="2">nick &quot;chanserv&quot;;<br>
+</font></font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<font face="Courier New"><font SIZE="2">type services;<br>
+</font></font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<font face="Courier New"><font SIZE="2">parameters &quot;IDENTIFY %1-&quot;;<br>
+</font></font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<font face="Courier New"><font SIZE="2">};<br>
+</font></font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<font face="Courier New"><font SIZE="2">format &quot;^[^#]&quot; {<br>
+</font></font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<font SIZE="2"><font face="Courier New">nick &quot;nickserv&quot;;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </font><font face="Courier New">type
+services;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </font><font face="Courier New">parameters
+&quot;IDENTIFY %1-&quot;;<br>
+</font></font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<font SIZE="2"><font face="Courier New">};<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; type command;<br>
+};</font></p>
+</font>
+</div>
+<p><font class="block_section"><a name="helpblock">4.32 - </a> </font><a name="helpblock"><font class="block_name">Help Block</font>
+</a>
+   <font class="block_optional">OPTIONAL </font><font class="block_old">(Früher
+nicht vorhanden)</font>
+</p><div class="desc">
+<p>Syntax:
+<pre>help &lt;name&gt; {
+	&lt;text-line&gt;;
+	&lt;text-line&gt;;
+	...
+};</pre>
+<p>(zu beachten: Normalerweise genügt es statt dessen die help.conf per Include
+einzufügen)</p>
+<p>Der &quot;help block&quot; ermöglicht es, Einträge zur Verwendung für den
+Befehl &quot;/helpop&quot; zu erstellen. <b>help::</b> 
+  ist der Begriff, der später dem /helpop Befehl als Parameter übergeben wird.
+Wird hier kein Begriff angegeben, wird das Feld so verwendet, wie wenn bei
+&quot;/helpop&quot; kein weiterer Parameter angegeben ist (also z.B. eine
+globale Hilfe Übersicht).&nbsp; Die Einträge für den &quot;help Block&quot;
+sind der Text, der später dem User nach der Eingabe von &quot;/helpop&quot;
+angezeigt werden.</p>
+</div>
+<p><font class="block_section"><a name="officialchannels">4.33 - Offizielle
+Channels Block</a></font>
+   <font class="block_optional">OPTIONAL </font><font class="block_old">(Früher
+nicht vorhanden)</font>
+</p><div class="desc">
+<p>Syntax:
+<p><font size="2" face="Courier New">official-channels {<br>
+&quot;#channel&quot; { topic &quot;The default topic&quot;; };<br>
+};</font><p>Offizielle Channels werden in der Channelliste (/list) auch
+angezeigt, wenn keine User im Channel sind. Das <b>topic</b> ist optional und
+wird nur angezeigt, wenn der Channel 0 User hat.</p>
+<p>Beispiel:</p>
+<p><font face="Courier New" size="2">official-channels {<br>
+	"#Help" { topic "The official help channel, if nobody is present type /helpop helpme"; };<br>
+	"#Home";<br>
+	"#Main" { topic "The main channel"; };<br>
+};</font></p>
+</div>
+<p><font class="block_section"><a name="spamfilter">4.34 - Spamfilter Block</a></font><font class="block_optional">
+OPTIONAL </font><font class="block_old">(Früher
+nicht vorhanden)</font>
+</p><div class="desc">
+Mit dem Spamfilter Block kann man lokale (nicht netzweite) Spam Filter festlegen.<br>
+Siehe auch <a href="#feature_spamfilter"> Features - Spamfilter</a> für
+genauere Erläuterungen zu Spam Filtern.<br>
+<br>
+Syntax:<br>
+<br>
+<font face="Courier New" size="2">spamfilter {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; regex &lt;word>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; target { &lt;target(s)> };<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; action &lt;action&gt;;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; reason &lt;reason&gt;;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ban-time &lt;time&gt;;<br>
+};<br>
+</font><br>
+<b>regex</b> ist der Ausdruck, auf den geprüft wird.<br>
+<b>target</b> gibt die Art der Nachrichten an.&nbsp; Möglich ist hier: channel,
+private, private-notice, channel-notice, part, quit, dcc.<br>
+<b>action</b> gibt die Aktion an, die erfolgen soll. Eine Liste möglicher
+Aktionen kann <a href="#feature_spamfilter">hier</a> nachgelesen werden.<br>
+<b>reason</b> ist optional und legt den Grund für die Aktion fest, der dem User
+angezeigt wird. Der Text ist in Anführungszeichen anzugeben und sollte - anders
+als beim /spamfilter Befehl - keinerlei Undersores &quot;_&quot; zwischen den
+Worten enthalten (andernfalls werden die Underscores mit angezeigt).<br>
+<b>ban-time</b> ist optional und legt die Zeit für einen *line Bann fest. Ohne
+Angabe gilt der Default von 1 Tag.<br>
+<br>
+Beispiele:
+<p><font face="Courier New" size="2">spamfilter {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; regex "Come watch me on my webcam";<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; target { private; channel; };<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; action gline;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; reason &quot;Du hast einen Trojaner,
+bitte schaue hier nach: www.antivirus.xx/blah/virus=GrrTrojan&quot;;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ban-time 6h;<br>
+};<br>
+<br>
+spamfilter {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; regex "come to irc\..+\..+";<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; target { private; channel; };<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; action gline;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; reason &quot;Kein Spam erlaubt&quot;<br>
+};<br>
+</font></div>
+<p><font class="block_section"><a name="setblock">4.35 - </a> </font><a name="setblock"><font class="block_name">Set Block</font>
+</a> <font class="block_required">ERFORDERLICH</font> <font class="block_old">(Früher
+bekannt als unrealircd.conf/networks file)</font>
+</p><div class="desc">
+<p>Im Set Block findet sich das, was früher in der networks/unrealircd.conf und
+der networks Datei von UnrealIRCd angegeben wurde. In Einzel-Server Netzwerken
+kann man die Set Anweisungen einfach in die unrealircd.conf eintragen, während
+es empfehlenswert ist, in größeren Netzwerken mit mehreren Servern weiterhin
+eine &quot;networks&quot; Datei zu verwenden.</p>
+<p>Wenn nämlich der Server in ein Netzwerk eingebunden ist, werden
+wahrscheinlich überall die selben &quot;Set&quot; Einstellungen verwendet, so
+dass es mehr Sinn macht, eine &quot;network&quot; Datei zu verwenden, die mit
+der <b>include::</b> Anweisung eingebunden wird. Zum Einbinden von Files siehe
+auch Abschnitt <a href="#includedirective">4.9</a>. Weiter unten werden sämtliche
+möglichen &quot;Set&quot; Anweisungen im Einzelnen beschrieben.</p>
+<p>In dieser Dokumentation werden Einstellungen / Anweisungen im <b> &lt;block-name&gt;::&lt;block-directive&gt;</b>
+Format angegeben. Dieses Format kann jedoch <b>NICHT</b> so in die
+unrealircd.conf eingetragen werden! Die Angaben <b>MÜSSEN</b> in das
+nachfolgend beschriebene Format konvertiert werden!&nbsp; Die Darstellung im
+vereinfachten Format dient nur der vereinfachten Beschreibung der möglichen
+Einstellungen.</p>
+<p>Syntax:
+<pre>set {
+	&lt;entry&gt; &lt;value&gt;;
+	&lt;entry&gt; &lt;value&gt;;
+	...
+};</pre>
+<p>Im&nbsp; &quot;Set Block&quot; werden die Optionen für bestimmte Server
+Funktionen eingestellt. Jeder Eintrag bewirkt etwas anderes und deshalb wird
+jeder einzeln beschrieben. Es gibt viele zu berücksichtigende Anweisungen und
+alle nachfolgend beschriebenen Anweisungen können in EINER &quot;Set&quot;
+Definition eingetragen werden. Wenn eine Anweisung Optionen ermöglicht oder
+erfordert, werden diese genauso in der einzelnen &quot;Set&quot; Anweisung mit
+angegeben.<p>Beispiel:
+<pre>set {
+	kine-address my@emailaddress.com;
+	auto-join #welcome;
+	options {
+		hide-ulines;
+	};
+	hosts {
+		local LocalOp.MyNet.com;
+		global globalop.mynet.com;
+	};
+};</pre>
+<p>Sollen die &quot;Set&quot; Anweisungen getrennt erfolgen, also z.B. die
+Optionen in einer einzelnen Zeile aufgeführt werden,&nbsp; ist auch dies
+möglich:.<br>
+Beispiel:<br>
+  set { options { hide-ulines; no-stealth; }; };<br>
+</p>
+<p><font class="set">set::kline-address &lt;email-address&gt;;</font><br>
+Eine email Adresse, an die Fragen zur K-Line gesandt werden sollen. Es muss hier
+ein Wert angegeben sein.</p>
+<p><font class="set">set::modes-on-connect &lt;+modes&gt;;</font><br>
+Die Modi, die für einen User nach einer Verbindung eingestellt werden.</p>
+<p><font class="set">set::snomask-on-connect &lt;+modes&gt;</font><br>
+Die snomask (Server Notice mask), die für einen User nach einer Verbindung
+eingestellt wird.</p>
+<p><font class="set">set::modes-on-oper &lt;+modes&gt;;</font><br>
+Die Modi, die eingestellt werden, wenn User (berechtigterweise) den /oper Befehl
+verwenden.</p>
+<p><font class="set">set::snomask-on-oper &lt;+modes&gt;;</font><br>
+Die snomask (Server Notice mask), die eingestellt wird, wenn User
+(berechtigterweise) den /oper Befehl verwenden.</p>
+<p><font class="set">set::modes-on-join &lt;+modes&gt;;</font><br>
+Die Modi, die für einen Channel eingestellt werden, wenn er das erste mal
+(durch /join) erstellt wird. Nicht alle Modi sind mit diesem Befehl möglich. Die Modi +qaohvbeOAzlLk
+können NICHT durch diesen Befehl gesetzt werden.</p>
+<p><font class="set">set::restrict-usermodes &lt;modes&gt;</font><br>
+Die User-Modi, die User wählen können werden auf die hier angegebenen Modi
+eingeschränkt. (kein + oder - angeben!).<br>
+Beispielsweise kann man&nbsp; +G in 'modes-on-connect' setzen und G in 'restrict-usermodes',
+wodurch erreicht wird, dass sämtliche User&nbsp; +G erhalten, aber kein -G
+anwenden können.</p>
+<p><font class="set">set::restrict-channelmodes &lt;modes&gt;</font><br>
+Die Channel-Modi, die User wählen können werden auf die hier angegebenen Modi
+eingeschränkt. (kein + oder - angeben!).<br>
+Beispielsweise kann man&nbsp; +G in 'modes-on-join' setzen und G in 'restrict-channelmodes',
+wodurch erreicht wird, dass sämtliche (neuen) Channels&nbsp; +G erhalten, aber kein -G
+eingestellt werden kann.</p>
+<p><font class="set">set::auto-join &lt;channels&gt;;</font><br>
+Der oder die Channel(s), in den/die User beim Connect automatisch geforwardet
+werden. Soll mehr als ein Channel angegeben werden, so sind diese durch Kommata
+zu trennen.<br>
+[Achtung: nicht vergessen, Anführungszeichen zu verwenden, wie: auto-join &quot;#chan&quot;;]</p>
+<p><font class="set">set::oper-auto-join &lt;channels&gt;;</font><br>
+Der oder die Channel(s), in den/die User bei /oper automatisch geforwardet
+werden. Soll mehr als ein Channel angegeben werden, so sind diese durch Kommata
+zu trennen.<br>
+[Achtung: nicht vergessen, Anführungszeichen zu verwenden, wie: auto-join &quot;#chan&quot;;]</p>
+<p><font class="set">set::anti-spam-quit-message-time &lt;timevalue&gt;;</font><br>
+Eine Zeitangabe, in der festgelegt wird, wie lange ein User verbunden gewesen
+sein muss, bevor eine /quit Meldung angezeigt wird. Das dient der Vermeidung von
+Spam. Ein Zeitwert ist ein numerischer String, in dem 'd&quot; Tage bedeutet,
+'h' Stunden, 'm' Minuten und 's' Sekunden. Beispiel: 1d2h3m bedeutet 1 Tag, 2
+Stunden und 3 Minuten.</p>
+<p><font class="set">set::prefix-quit &lt;text-to-prefix-quit&gt;;</font><br>
+Hier wird der Text festgelegt, der einer Quit Meldung vorangestellt wird. Ist
+hier eine 0 eingetragen, wird der Standard &quot;Quit:&quot; verwendet.</p>
+<p><font class="set">set::static-quit &lt;quit message&gt;;</font><br>
+Hiermit kann eine feste Quit Meldung eingestellt werden, die immer angezeigt
+wird, wenn ein Client ausloggt. Das kann die 'anti-spam-quit-message-time'
+ebenso überflüssig machen, wie das 'set::prefix-quit'. Fehlermeldungen werden
+NICHT durch diese Einstellung ersetzt! (z.B. wird &quot;ping timeout&quot;
+weiterhin angezeigt)</p>
+<p><font class="set">set::static-part &lt;no|yes|part message&gt;;</font><br>
+Ein Wert von 'yes' unterdrückt sämtliche Kommentare bei 'part', ein Wert von 'no'
+läßt 'part' wie gewohnt arbeiten, jede andere Angabe wird als Kommentar für
+'part' fest eingestellt (z.B.: static-part "Bye!"). Da dies auch als
+belästigend empfunden werden kann, sollte man dies mit Bedacht wählen.</p>
+<p><font class="set">set::who-limit &lt;limit&gt;;<br>
+</font>Stellt den Maximalwert ein, wie viele Angaben bei einem&nbsp; /who
+angezeigt werden sollen. Ohne Eintrag hier gibt es kein Limit.</p>
+<p><font class="set">set::silence-limit &lt;limit&gt;;<br>
+</font>Stellt den Maximalwert der anzeigbaren SILENCE Einträge ein. Ohne Eintrag ist hier ein Limit von 15 voreingestellt.</p>
+<p><font class="set">set::oper-only-stats &lt;stats-list&gt;;</font><br>
+Definiert eine Liste von Stats-Flags, die nur von Opers benutzt werden können.
+Die Flags sind ohne Trennungen (keine Kommata, keine Leerzeichen) anzugeben.
+Wird hier nichts angegeben, können alle User sämtliche Flags benutzen, bei
+Angabe von '*' keines. Es dürfen nur <b> kurze Operflags</b> angegeben werden.</p>
+<p><b>set::oper-only-stats {&lt;stats-flag>; &lt;stats-flag&gt;;};</b><br>
+Definiert eine Liste von Stats Flags, die nur von Opers benutzt werden können.
+In dieser Syntax dürfen nur <b>lange Operflags</b> angegeben wwerden.</p>
+<p><font class="set">set::maxchannelsperuser &lt;amount-of-channels&gt;;</font><br>
+Einstellung, in wie vielen Channels ein User gleichzeitig sein darf.</p>
+<p><font class="set">set::channel-command-prefix &lt;command-prefixes&gt;;<br>
+</font>Stellt das Vorzeichen für Services in &quot;channel Befehlen&quot; ein.
+Nachrichten, die mit einem dieser Zeichen beginnen, werden auch noch gesendet,
+wenn der Client +d ist. Die Voreinstellung lautet "`".</p>
+<p><font class="set">set::allow-userhost-change [never|always|not-on-channels|force-rejoin]</font><br>
+Einstellung, was passiert, wenn sich der user@host ändert (+x/-x/chghost/chgident/setident/vhost/etc).<br>
+  <i>never</i>  schaltet sämtliche Befehle ab, <i>always</i>  gestattet so
+etwas auch in Channel immer (was zu desyncs von Clients führen kann)&nbsp; [default], <i>not-on-channels</i> 
+bedeutet, dass solche Befehle nur erlaubt sind, wenn der User in keinem Channel
+ist, <i>force-rejoin</i>  bewirkt einen rejoin in sämtlichen Channels sowie
+re-op/voice/etc falls notwendig.</p>
+<p><font class="set">set::options::hide-ulines;</font><br>
+Wenn dies eingestellt ist, werden Ulined Server bei&nbsp; /links von Nicht-Opers
+nicht angezeigt.</p>
+<p><font class="set">set::options::show-opermotd;</font><br>
+Falls eingestellt wird die opermotd den Usern angezeigt, die erfolgreich /oper
+benutzen.</p>
+<p><font class="set">set::options::identd-check;</font><br>
+Falls eingestellt, wird die Präsenz eines identd Servers geprüft und der
+Rückgabewert für den Usernamen verwendet. Wird kein Rückgabewert geliefert
+oder existiert der identd Server nicht, wird dem Usernamen ein '~'
+vorangestellt. Wird diese Einstellung ausgelassen, erfolgt keine Überprüfung.</p>
+<p><font class="set">set::options::show-connect-info;</font><br>
+Falls eingestellt, werden dem User beim Connect Notices wie &quot;ident request&quot;, &quot;hostname lookup&quot;, 
+  etc. angezeigt.</p>
+<p><font class="set">set::options::dont-resolve;</font><br>
+Wenn eingestellt, werden die Hosts connectender User nicht aufgelöst. Das kann
+nützlich sein, um die Verbindung zu beschleunigen, falls viele User keinen Host
+haben.<br>
+Zu beachten ist, dass man keine host basierten allow Blöcke verwenden kann,
+wenn dies eingestellt ist.</p>
+<p><font class="set">set::options::mkpasswd-for-everyone;</font><br>
+Stellt ein, dass /mkpasswd von jedem User verwendet werden kann und nicht nur
+von Opers. Die Anwendung dieses Befehls durch Nicht-Oper wird an die EYES
+snomask gesendet.</p>
+<p><font class="set">set::options::allow-part-if-shunned;<br>
+</font>Erlaubt es Usern, auf die ein /shun gesetzt ist, den /part Befehl zu
+benutzen.</p>
+<p><font class="set">set::dns::timeout &lt;timevalue&gt;;</font><br>
+Ein Wert, der angibt, innerhalb welcher Zeit ein DNS Server zu antworten hat, bevor
+&quot;timeout&quot; gemeldet wird. Der Zeitwert ist ein numerischer String, in
+dem 'd' Tage bedeutet, 'h' Sunden, 'm' Minuten und 's' Sekunden. Beispiel: '1d2h3m'
+bedeutet 1 Tag, 2 Stunden, 3 Minuten.</p>
+<p><font class="set">set::dns::retries &lt;number-of-retries&gt;;</font><br>
+Ein Zahlenwert, durch den festgelegt wird, wie oft versucht werden soll, die DNS
+aufzulösen, bevor ein Fehler gemeldet wird.</p>
+<p><font class="set">set::dns::nameserver &lt;name-of-dns-server&gt;;</font><br>
+Gibt den Hostnamen des Servers an, der zur DNS Namensauflösungen dient.</p>
+<p><font class="set">set::network-name &lt;name-of-network&gt;;</font><br>
+Gibt den Namen des Netzwerks an, in dem der Server läuft (also den Namen des
+irc Netzes!) Dieser Eintrag sollte auf allen Servern im Netzwerk absolut
+identisch sein.</p>
+<p><font class="set">set::default-server &lt;server-name&gt;;</font><br>
+Legt den Namen des Servers fest, der den Usern mitteilt, wo sie connecten
+sollen, wenn dieser Server voll ist.</p>
+<p><font class="set">set::services-server &lt;server-name&gt;;</font><br>
+Legt den Namen des Servers fest, zu dem die Services Bots verbunden sind. Muß
+angegeben sein, der Wert ist auf so etwas wie 'services.yournet.com' zu setzen,
+wenn man keine Services hat.</p>
+<p><font class="set">set::stats-server &lt;server-name&gt;;</font><br>
+Stellt den Namen des Servers ein, auf dem die Stats laufen. Die Angabe kann
+ausgelassen werden, wenn man keine Stats laufen hat.</p>
+<p><font class="set">set::help-channel &lt;network-help-channel&gt;;</font><br>
+Legt den Namen des Hilfe Channels in diesem Netzwerk fest.</p>
+<p><font class="set">set::cloak-keys { &lt;value&gt;; &lt;value&gt;; &lt;value&gt;; };</font><br>
+Stellt die Verschlüsselungs Keys ein, die für die Erstellung eines +x Host
+erforderlich sind. Diese Einstellung muss auf allen Servern identisch sein,
+ansonsten linken die Server nicht. Jeder Wert in 'set::cloak-keys::' muß ein
+numerischer Wert &gt; 10000 sein. Es müssen exakt 3 Werte angegeben werden.</p>
+<p><font class="set">set::hiddenhost-prefix &lt;prefix-value&gt;;</font><br>
+Legt die ersten Zeichen eines verdeckten Hosts (+x) fest. Üblicherweise nimmt
+man hier 3 oder 4 Buchstaben, die den Netzwerksnamen bezeichnen.</p>
+<p><font class="set">set::hosts::local &lt;locop-host-name&gt;;</font><br>
+Legt den Hostnamen fest, der lokalen Operatoren zugewiesen wird, wenn sie +x
+setzen.</p>
+<p><font class="set">set::hosts::global &lt;globop-host-name&gt;;</font><br>
+Legt den Hostnamen fest, der globalen Operatoren zugewiesen wird, wenn sie +x
+setzen.</p>
+<p><font class="set">set::hosts::coadmin &lt;coadmin-host-name&gt;;</font><br>
+Legt den Hostnamen fest, der co-admins zugewiesen wird, wenn sie +x setzen.</p>
+<p><font class="set">set::hosts::admin &lt;admin-host-name&gt;;</font><br>
+Legt den Hostnamen fest, der Admins zugewiesen wird, wenn sie +x setzen.</p>
+<p><font class="set">set::hosts::servicesadmin &lt;servicesadmin-host-name&gt;;</font><br>
+Legt den Hostnamen fest, der Service-Admins zugewiesen wird, wenn sie +x setzen.</p>
+<p><font class="set">set::hosts::netadmin &lt;netadmin-host-name&gt;;</font><br>
+Legt den Hostnamen fest, der Netadmins zugewiesen wird, wenn sie +x setzen.</p>
+<p><font class="set">set::hosts::host-on-oper-up &lt;yes/no&gt;;</font><br>
+Falls auf 'yes' eingestellt, wird das H/get_host Flag akzeptiert und&nbsp; +x
+wird automatisch bei /oper gesetzt.. Falls 'no', muss sich der User manuell +x
+setzen, um einen oper Host zu erhalten.</p>
+<p><font class="set">set::ssl::egd &lt;filename&gt;;</font><br>
+Gibt an, dass EGD (Entropy Gathering Daemon) Unterstützung aktiviert wird. Hat
+man OpenSSL 0.9.7 oder höher laufen, dann wird /var/run/egd-pool, /dev/egd-pool,
+/etc/egd-pool, und /etc/entropy per Default gesucht und es ist kein Dateiname
+erforderlich. Dann legt man einfach 'set::ssl::egd' ohne Wert fest. Verwendet
+man ältere Versionen von 
+  OpenSSL, oder soll der EGD socket woanders als in den oben angegebenen Ordnern
+liegen, muss man den Dateinamen des UNIX Domain 
+  Socket angeben, an dem&nbsp; EGD lauscht.</p>
+<p><font class="set">set::ssl::certificate &lt;filename&gt;;</font><br>
+Gibt den Dateinamen an, wo das SSL Zertifikat des Servers liegt.</p>
+<p><font class="set">set::ssl::key &lt;filename&gt;;</font><br>
+Gibt den Dateinamen an, wo der private SSL Key des Servers liegt.</p>
+<p><font class="set">set::ssl::trusted-ca-file &lt;filename&gt;;</font><br>
+Gibt den Dateinamen der Zertifikate der vertrauten CAs an.</p>
+<p><font class="set">set::ssl::options::fail-if-no-clientcert;</font><br>
+Stellt ein, dass Clients ohne Zertifikat nicht connecten können.</p>
+<p><font class="set">set::ssl::options::no-self-signed;</font><br>
+Verbietet Verbindungen von Usern mit selbst erstellten Zertifikaten.</p>
+<p><font class="set">set::ssl::options::verify-certificate;</font><br>
+Stellt ein, dass Unreal&nbsp; SSL Zertifikate auf Gültigkeit überprüft, bevor
+eine Verbindung akzeptiert wird.</p>
+<p><font class="set">set::throttle::period &lt;timevalue&gt;</font><br>
+Wie lange muss ein User zum erneuten Connecten warten, wenn er häufiger, als
+unter 'set::throttle::connections' eingestellt, verbunden war.</p>
+<p><font class="set">set::throttle::connections &lt;amount&gt;;</font><br>
+Wie oft muss ein User mit demselben Host verbinden, bevor er temporär gesperrt
+wird.</p>
+<p><font class="set">set::ident::connect-timeout &lt;amount&gt;;</font><br>
+Zeitangabe von Sekunden, ab wann aufgegeben wird zum Ident Server zu verbinden (Default: 10s).</p>
+<p><font class="set">set::ident::read-timeout &lt;amount&gt;;</font><br>
+Nach wie viele Sekunden Warten auf einen Reply soll aufgegeben werden (Default: 30s).</p>
+<p><font class="set">set::anti-flood::unknown-flood-bantime &lt;timevalue&gt;;</font><br>
+Gibt an, wie lang ein Flooder mit 'unknown connection' gebannt wird.</p>
+<p><font class="set">set::anti-flood::unknown-flood-amount &lt;amount&gt;;</font><br>
+Legt eine Datenmenge (in KiloBytes) fest, die eine ' unknown connection' senden
+muss, damit der User gekillt wird.</p>
+<p><b>set::anti-flood::away-flood &lt;count>:&lt;period></b><br>
+Schutz vor 'Away Flood': legt fest, wie viele&nbsp; ('count') /away Änderungen
+innderhalb welcher Zeit in Sekunden ('period') erfolgen dürfen.. Das erfordert,
+dass in der config.h die Einstellung 'NO_FLOOD_AWAY' aktiviert wurde. Beispiel: away-flood 5:60s;
+bedeutet maximal 5 Änderungen innerhalb von 60 Sekunden.</p>
+<p><font class="set">set::anti-flood::nick-flood &lt;count>:&lt;period><br>
+</font>Nickflood Schutz: Beschränkt Nickänderungen auf&nbsp; 'count' pro 'period'
+Sekunden. Beispiel: nick-flood 4:90 bedeutet maximal&nbsp; 4 Nickänderungen in 90
+Sekunden. Default ist&nbsp; 3 per 60.</p>
+<p><b>set::default-bantime &lt;time></b><br>
+Default Bann Dauer wenn /kline, /gline, /zline, /shun, etc ohne Zeitangabe
+gesetzt werden (wie /gline *@some.nasty.isp). Default ist permanent (0).
+Beispiel: default-bantime 90d; (90 Tage)</p> 
+<p><b>set::modef-default-unsettime &lt;value&gt;<br>
+</b>Für den Channel Modus +f kann eine Default Abschaltzeit festgelegt werden.
+Wird z.B. der Wert 10 festgelegt, dann wird +f [5j]:15 in [5j#i10]:15
+umgewandelt. Default ist keine Abschaltzeit.</p> 
+<p><b>set::modef-max-unsettime &lt;value&gt;</b><br>
+Maximalwert in Minuten für eine Modus +f Abschaltzeit (z.B. in +f [5j#i&lt;TIME&gt;]:15).
+Der Wert kann zwischen 0 und 255 liegen und Default ist 60 (= 1 Stunde).</p> 
+<p><b>set::ban-version-tkl-time &lt;value&gt;</b><br>
+Definiert man in 'ban version' eine Aktion, wie zline/gline/etc, dann kann man
+hier die Dauer des Banns auf die IP in Sekunden angeben. Default ist 86400 (1
+Tag).</p> 
+<p><b>set::spamfilter::ban-time &lt;value&gt;</b><br>
+Genauso, wie oben, aber für&nbsp; *lines, die durch den Spam Filter gesetzt
+wurden.</p> 
+<p><b>set::spamfilter::ban-reason &lt;reason&gt;</b><br>
+Anzuzeigender Grund bei&nbsp; *lines, die durch den Spam Filter gesetzt wurden.
+Mehrere Worte sind durch Underscores (&quot;_&quot;) und nicht durch Leerzeichen
+zu trennen.</p>  
+<p><b>set::spamfilter::virus-help-channel &lt;channel&gt;</b><br>
+Festlegung des Channels für die Aktion 'viruschan'&nbsp; in Spamfilter<br>
+<br>
+<b>set::spamfilter::except &lt;target(s)&gt;</b><br>
+Diese Ziele werden vom Spamfilter ausgenommen (es wird also keine Aktion
+durchgeführt). Es sind einzelne Ziele oder eine durch Kommata getrennte Liste
+möglich. Beispiel: except "#help,#spamreport"</p> </div>
+<p><b><font size="+2"><a name="addtlfiles">5 &#8211; Additional Files</a></font></b></p><div class="desc">
+  Zusätzlich zu den Konfigurationsdateien hat Unreal einige weitere Dateien,
+  wie MOTD, OperMOTD, BotMOTD, und Rules. In der nachfolgenden Liste stehen die
+  Namen dieser dateien und ihr Verwendungszweck.<br>
+  Zu beachten ist, dass die motd Dateien (alle Typen) und die rules Dateien auch
+  in einem speziellen tld Block angegeben sein können. Dies sind nur die
+  Dateien, die per Default benutzt werden (und für Anforderungen von
+  MOTD/RULES).
+<table width="83%" border="1">
+  <tr>
+    <td>ircd.motd</td><td>Wird angezeigt, wenn der /motd Befehl ausgeführt wird
+      und wenn ein User connected</td> 
+  </tr>
+  <tr>
+    <td>ircd.rules</td><td>Wird angezeigt, wenn der /rules Befehl ausgeführt
+      wird</td>
+  </tr>
+  <tr>
+    <td>oper.motd</td><td>Wird angezeigt, wenn der /opermotd Befehl ausgeführt
+      wird, oder wenn man&nbsp; /oper (erfolgreich) benutzt</td>
+  </tr>
+  <tr>
+    <td>bot.motd</td><td>Wird angezeigt, wenn der /botmotd Befehl ausgeführt
+      wird.</td>
+  </tr>
+</table>
+</div>
+<p><b><font size="+2"><a name="userchannelmodes">6 &#8211; User & Channel Modi</a></font></b></p><div class="desc">
+<table width="799" border="1">
+  <tr> 
+    <td width="136"><div align="center"><b>Mode</b></div></td>
+    <td width="647"><div align="center"><b>Beschreibung</b></div></td>
+  </tr>
+  <tr> 
+    <td colspan="2" width="789"><div align="center"><b>Channel Modi</b></div></td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">A</div></td>
+    <td width="647">Nur ein Administrator kann joinen</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">a &lt;nick&gt;</div></td>
+    <td width="647">Macht einen User zum Channel Admin</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">b &lt;nick!user@host&gt;
+      </div></td>
+    <td width="647">Bannt den angegebenen User vom Channel</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">c</div></td>
+    <td width="647">Es können keine ANSI Farbcodes im Channel benutzt werden</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">C</div></td>
+    <td width="647">Es sind keine CTCP's im Channel erlaubt</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">e &lt;nick!user@host&gt;</div></td>
+    <td width="647">Bann Ausnahme &#8211; Wenn für jemanden dieser user@host
+      zutrifft, kann er auch dann in den Channel joinen, wenn auf ihn eine
+      Ban-Mask passt.</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">f * &lt;lines:seconds&gt;</div></td>
+    <td width="647">Flood Schutz, wenn der '*' angegeben ist, wird ein User
+      gekickt und gebannt, wenn er &lt;lines:seconds&gt; sendet, ohne '*' wird
+      man nur gekickt.&nbsp; Vergleiche auch die <a href="#feature_antiflood">erweiterten
+      Modi</a>.</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">G</div></td>
+    <td width="647">'G rated'. Es werden Worte im Badword Block überprüft und
+      bei Vorhandensein durch die dort angegebenen Worte esetzt</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">M</div></td>
+    <td width="647">Nur registrierte Nicks(+r) können im Nachrichten in den
+      Channel senden</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">h &lt;nick&gt;</div></td>
+    <td width="647">Gibt dem User Half-Op Status</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">i</div></td>
+    <td width="647">Es ist eine Einladung (/invite) erforderlich, um diesen
+      Channel zu joinen</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">K</div></td>
+    <td width="647">Der Befehl /knock ist nicht erlaubt</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">k &lt;key&gt;</div></td>
+    <td width="647">Stellt ein, dass man einen 'key', ein Passwort, benötigt,
+      um joinen zu können</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">l &lt;##&gt;</div></td>
+    <td width="647">Stellt die maximale Anzahl von Usern im Channel ein</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">L &lt;Chan&gt;</div></td>
+    <td width="647">Wenn so viele User, wie bei +l eingestellt ist, im Channel
+      sind, werden weitere User in diesen Channel geforwardet</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">m</div></td>
+    <td width="647">Moderierter Channel. Nur +v/o/h User können Nachrichten in
+      den Channel senden</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">N</div></td>
+    <td width="647">Kein Wechsel des Nicknamens erlaubt</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">n</div></td>
+    <td width="647">Keine Nachrichten von außerhalb des Channels erlaubt</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">O</div></td>
+    <td width="647">Nur IRCOps dürfen joinen</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">o &lt;nick&gt;</div></td>
+    <td width="647">Gibt dem User Channel Op Status</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">p</div></td>
+    <td width="647">Macht einen Channel privat</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">q</div></td>
+    <td width="647">Stellt den Channel Owner ein</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">Q</div></td>
+    <td width="647">Nur U:Lined Server können User kicken</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">R</div></td>
+    <td width="647">Erfordert einen registrierten Usernamen, um joinen zu
+      können</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">S</div></td>
+    <td width="647">Löscht sämtliche eingehenden Farbcodes</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">s</div></td>
+    <td width="647">Macht den Channel geheim (Wird bei /list nicht mehr
+      angezeigt)</td>
+  </tr>
+   <tr> 
+    <td width="136"><div align="center">t</div></td>
+    <td width="647">Nur ein Channel Op kann das Topic verändern</td>
+  </tr>
+   <tr> 
+    <td width="136">
+      <p align="center">T</td>
+    <td width="647">Im Channel sind keine NOTICE's gestattet</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">u</div></td>
+    <td width="647">Auditorium. Bewirkt, dass /names und /who #channel nur
+      Channel OPs angezeigt wird</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">V</div></td>
+    <td width="647">Der Befehl /invite ist nicht erlaubt</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">v &lt;nick&gt;</div></td>
+    <td width="647">Gibt dem User voice Status. (Darf in +m Channels schreiben)</td>
+  </tr>
+  <tr> 
+    <td width="136"><div align="center">z</div></td>
+    <td width="647">Nur Clients mit einer Secure (SSL) Verbindung dürfen joinen</td>
+  </tr>
+</table>
+<p>&nbsp;</p>
+<table width="75%" border="1">
+  <tr> 
+    <td><div align="center"><b>Mode</b></div></td>
+    <td><div align="center"><b>Beschreibung</b></div></td>
+  </tr>
+  <tr> 
+    <td colspan="2"><div align="center"><b>User Modi</b></div></td>
+  </tr>
+  <tr> 
+    <td><div align="center">r</div></td>
+    <td>Identifiziert einen Nick als registriert</td>
+  </tr>
+  <tr> 
+    <td><div align="center">s</div></td>
+    <td>Kann Server Notices lesen</td>
+  </tr>
+  <tr> 
+    <td><div align="center">v</div></td>
+    <td>Empfängt Rejection Notices, wenn bei DCC File infiziert ist</td>
+  </tr>
+  <tr> 
+    <td><div align="center">o</div></td>
+    <td>Globaler IRC Operator (wird im Oper Block eingestellt)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">O</div></td>
+    <td>Lokaler IRC Operator (wird im Oper Block eingestellt)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">B</div></td>
+    <td>Markiert User als Bot</td>
+  </tr>
+  <tr> 
+    <td><div align="center">i</div></td>
+    <td>Unsichtbar (wird bei /who nicht angezeigt)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">A</div></td>
+    <td>Server Admin (wird im Oper Block eingestellt)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">x</div></td>
+    <td>Verschlüsselt den Hostnamen des Users (vgl. <a href="#feature_cloaking">Cloaking</a>) </td>
+  </tr>
+  <tr> 
+    <td><div align="center">q</div></td>
+    <td>Nur U:Lines können User kicken (Nur Services Admins)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">a</div></td>
+    <td>Services Admin (wird im Oper Block eingestellt)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">g</div></td>
+    <td>Kann Globops und Locops lesen und senden</td>
+  </tr>
+  <tr> 
+    <td><div align="center">H</div></td>
+    <td>IRCop Status verbergen (nur IRCops)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">S</div></td>
+    <td>Zum Schutz von Services Daemons</td>
+  </tr>
+  <tr> 
+    <td><div align="center">t</div></td>
+    <td>zeigt, dass der User einen&nbsp; /vhost benutzt</td>
+  </tr>
+  <tr> 
+    <td><div align="center">C</div></td>
+    <td>Co-Admin (wird im Oper Block eingestellt)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">d</div></td>
+    <td>User kann keine Channel PRIVMSGs empfangen</td>
+  </tr>
+  <tr> 
+    <td><div align="center">N</div></td>
+    <td>Network Administrator (wird im Oper Block eingestellt)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">w</div></td>
+    <td>Kann wallop Nachrichten empfangen</td>
+  </tr>
+  <tr> 
+    <td><div align="center">h</div></td>
+    <td>Verfügbar für Hilfe (HelpOp) (wird im Oper Block eingestellt)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">G</div></td>
+    <td>Filtert Badwords per Konfiguration aus</td>
+  </tr>
+  <tr> 
+    <td><div align="center">W</div></td>
+    <td>User kann sehen, wenn ein anderer User auf ihn ein&nbsp; /whois auf ihn
+      ausführt (nur
+      IRCops)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">p</div></td>
+    <td>Zeigt bei einer /whois Antwort nicht die Channels an, in denen man ist</td>
+  </tr>
+  <tr> 
+    <td align="center">R</td>
+    <td>Gestattet es,&nbsp; PRIVMSGs/NOTICEs nur von registrierten (+r) Usern zu
+      empfangen</td>
+  </tr>
+  <tr> 
+    <td align="center">V</td>
+    <td>WebTV User</td>
+  </tr>
+  <tr> 
+    <td align="center">z</td>
+    <td>Zeigt an, dass man einen SSL Client benutzt</td>
+  </tr>
+  <tr> 
+    <td align="center">T</td>
+    <td>Schützt vor dem Empfang von&nbsp; CTCPs</td>
+  </tr>
+</table>
+<p></p></div>
+<p><font size="+2"><b><a name="useropercommands">7 – User &amp; Oper
+Befehlsliste</a></b></font></p><div class="desc">
+<p>ACHTUNG: die /helpop Dokumentation ist aktueller, nutze <i>/helpop Befehl</i>
+(oder <i>/helpop ?Befehl</i> wenn Du Oper bist), um zusätzliche Informationen
+über einen Befehl zu erhalten.</p>
+
+<table width="868" border="1" height="5302">
+  <tr> 
+    <td width="267" height="19"><div align="center"><b>Befehl</b></div></td>
+    <td width="486" height="19"><div align="center"><b>Beschreibung</b></div></td>
+    <td width="93" height="19"><div align="center"><b>Wer</b></div></td>
+  </tr>
+  <tr> 
+    <td width="267" height="57">nick &lt;neuernickname&gt;</td>
+    <td width="486" height="57">Ändert Deine Online Identität auf dem Server.&nbsp; Alle in den
+      Channels, in denen Du bist, werden über den Wechsel des Nicknamens
+      benachrichtigt.</td>
+    <td width="93" height="57">Alle</td>
+  </tr>
+  <tr> 
+    <td width="267" height="57">whois &lt;nick&gt;</td>
+    <td width="486" height="57">Zeigt Informationen über den User, für den der Befehl ausgeführt
+      wurde an, wie den Name, Channels in denen der User aktuell ist, Hostmask, etc.</td>
+    <td width="93" height="57">Alle</td>
+  </tr>
+  <tr> 
+    <td height="57" width="267">who &lt;mask&gt;</td>
+    <td width="486" height="57">Mit /who kann man User enstprechend einer Maske
+      suchen. Maske beinhaltet: nickname, #channel, hostmask (*.attbi.com) Siehe
+      auch /helpop ?who</td>
+    <td width="93" height="57">Alle</td>
+  </tr>
+  <tr> 
+    <td height="57" width="267">whowas &lt;nick&gt; &lt;maxreplys&gt;</td>
+    <td width="486" height="57">Liefert Informationen über User, die nicht mehr zum server verbunden sind.
+      Das &lt;max replies&gt; Feldt ist optional und schränkt ggf. die Anzahl
+      der Antworten ein.<br></td>
+    <td width="93" height="57">Alle</td>
+  </tr>
+  <tr> 
+    <td height="57" width="267">ison &lt;nick1 nick2 nick3 ...&gt;</td>
+    <td width="486" height="57">Überprüfung, ob bestimmte User mit angegebenem Nicknamen momentan online sind.
+      Einfache Rückgabe, wird meist in Scripts verwendet</td>
+    <td width="93" height="57">Alle</td>
+  </tr>
+  <tr> 
+    <td height="57" width="267">join &lt;channel1,channel2, ...&gt;</td>
+    <td width="486" height="57">Wird verwendet, um einen oder mehrere Channels auf einem Server zu betreten. Alle schon im Channel befindlichen User werden über das betreten informiert. Wird JOIN mit 0 als Parameter verwendet, werden sämtliche Channels verlassen.</td>
+    <td width="93" height="57">Alle</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">cycle &lt;channel1, channel2, ...></td>
+    <td width="486" height="38">Dieser Befehl ist gleichbedeutend mit /part und
+      nachfolgendem /join. </td>
+    <td width="93" height="38">Alle</td>
+  </tr>
+  <tr> 
+    <td height="57" width="267">motd &lt;server&gt;</td>
+    <td width="486" height="57">Zeigt die Message Of The Day des IRC Servers an, auf dem man eingeloggt ist. Dabei handelt es sich um eine Information über den Server.
+      Bei Angabe eines Servers erhält man die Motd des entsprechenden Servers.</td>
+    <td width="93" height="57">Alle</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">rules &lt;server&gt;</td>
+    <td width="486" height="38">Zeigt die Regeln des Servers an, mit dem man verbunden ist.
+      Bei Angabe eines Servers erhält man die Regeln des entsprechenden
+      Servers.</td>
+    <td width="93" height="38">Alle</td>
+  </tr>
+  <tr> 
+    <td height="57" width="267">lusers &lt;server&gt; </td>
+    <td width="486" height="57">Liefert Informationen über die Anzahl lokaler und globaler User und die maximal
+      erreichte Userzahl.</td>
+    <td width="93" height="57">Alle</td>
+  </tr>
+  <tr> 
+    <td height="33" width="267">map</td>
+    <td width="486" height="33">Zeigt eine (pseudo-)grafische Netzwerks Karte an, aus der die Struktur des IRC Netzwerkes hervorgeht. Das wird hauptsächlich zu Routing Zwecken benötigt.</td>
+    <td width="93" height="33">Alle</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">quit &lt;reason&gt;</td>
+    <td width="486" height="38">Beendet die Verbindung zum IRC Server. Wird ein
+      Grund angegeben, wird dieser in allen Channels angezeigt, die man
+      verlässt</td>
+    <td width="93" height="38">Alle</td>
+  </tr>
+  <tr> 
+    <td height="57" width="267">ping &lt;user&gt;</td>
+    <td width="486" height="57">Der Ping Befehl dient dazu, die Anwesenheit eines Users oder Servers auf der anderen Seite der Verbindung zu überprüfen.
+      Server senden in regelmäßigen Abständen eine PING Nachricht, wenn keine andere Aktivität von der anderen Seite aus eingeht. Wird eine solche Ping Nachricht nicht innerhalb einer festgelegten Zeit beantwortet, wird die Verbindung beendet. Eine Ping Nachricht kann auch bei einer aktiven Verbindung gesendet werden. Zu beachten ist, dass dies unterschiedlich zum  CTCP PING Befehl ist.</td>
+    <td width="93" height="57">Alle</td>
+  </tr>
+  <tr> 
+    <td height="57" width="267">version &lt;nick&gt;</td>
+    <td width="486" height="57">Sendet eine CTCP Versions Anfrage an den User.
+      Dessen Client sendet, falls entsprechend konfiguriert, die Client Version
+      als Antwort.</td>
+    <td width="93" height="57">Alle</td>
+  </tr>
+  <tr> 
+    <td height="33" width="267">links</td>
+    <td width="486" height="33">Listet sämtliche Server auf, die momentan zum Netzwerk verbunden sind.<br>
+      Je nach Einstellung können möglicherweise nur IRCops gelinkte U-lined Servers
+      /Services sehen.</td>
+    <td width="93" height="33">Alle</td>
+  </tr>
+  <tr> 
+    <td height="57" width="267">Admin &lt;server&gt;</td>
+    <td width="486" height="57">Liefert Informationen über die Administration des Servers.
+      Wird ein Servername mit angegeben, werden die Admin Infos dieses Servers
+      angezeigt.</td>
+    <td width="93" height="57">Alle</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">userhost &lt;nick&gt;</td>
+    <td width="486" height="38">Zeigt den userhost des angegebenen Nicknamen an. Wird üblicherweise von Scripts oder Bots benutzt.</td>
+    <td width="93" height="38">Alle</td>
+  </tr>
+  <tr> 
+    <td height="57" width="267">topic &lt;channel&gt; &lt;topic&gt;</td>
+    <td width="486" height="57">Setzt oder ändert das Topic des angegebenen Channels oder zeigt das aktuelle Topic an.
+      Topic &lt;channel&gt; zeigt das aktuelle Topic, Topic 
+      &lt;channel&gt; &lt;topic&gt; ändert das Topic des angegebenen Channels.</td>
+    <td width="93" height="57">Alle</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">invite &lt;nick&gt; &lt;channel&gt;</td>
+    <td width="486" height="38">Sendet einem User eine Einladung, einen bestimmten Channel zu betreten. Man muss Oper im Channel sein, um einen User einladen zu können.</td>
+    <td width="93" height="38">ChanOp</td>
+  </tr>
+  <tr> 
+    <td height="57" width="267">kick &lt;channel, channel&gt; &lt;user, user&gt; &lt;reason&gt;</td>
+    <td width="486" height="57">Entfernt einen User aus einem Channel. Kann nur von Operators oder HalfOps benutzt werden.
+      Ein Grund kann mit angegeben werden.</td>
+    <td width="93" height="57">ChanOp</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">away &lt;reason&gt;</td>
+    <td width="486" height="38">Stellt den eigenen  Online Status auf  "Away" ein.
+      Ein Grund kann mit angegeben werden (und wird dann bei /whois auch
+      angezeigt).</td>
+    <td width="93" height="38">Alle</td>
+  </tr>
+  <tr> 
+    <td height="133" width="267">Watch +-&lt;nick&gt; +-&lt;nick&gt;</td>
+    <td width="486" height="133">Watch ist ein Benachrichtigungssystem welches schneller und ressourcenschonender arbeitet, als das alte Notify System. Der Server sendet eine Nachricht an einen selbst, wann immer ein User, der in der eigenen "Watch" Liste steht, ein- oder ausloggt.<br>
+      Die Watch Liste wird nicht gespeichert, man muß über den eigenen Client oder ein Script bei jeder neuen Verbindung dafür sorgen, dass sie erneut an den Server übertragen wird. D.h. der Watch Befehl ist dann erneut einzugeben.</td>
+    <td width="93" height="133">Alle</td>
+  </tr>
+  <tr> 
+    <td height="114" width="267">helpop ?&lt;topic&gt; or !&lt;topic&gt;</td>
+    <td width="486" height="114">HelpOp ist ein System, um IRC Server Hilfe zu
+      bekommen. Man gibt etweder ein &quot;/HELPOP 
+      ? &lt;help system topic&gt;&quot; oder &quot;/HELPOP ! &lt;question&gt;&quot;.
+      Das "?" 
+      in /HELPOP bedeutet, dass das Hilfesystem befragt wird und wenn man keine
+      Antwort erhält, kann man die Frage mit '!' einem Help Operator online
+      senden. Benutzt man weder ? noch !, bedeutet das, dass zunächst im Hilfe
+      System gefragt wird und, wenn nichts passendes gefunden wird, ein Forward
+      an die Help Operators erfolgt.</td>
+    <td width="93" height="114">Alle</td>
+  </tr>
+  <tr> 
+    <td height="247" width="267">list &lt;search string&gt;</td>
+    <td width="486" height="247">
+      Ohne Angabe eines Suchstrings wird defaultmäßig die ungefilterte
+      gesammte Channel Liste angezeigt. Nachfolgend Optionen, die man benutzen
+      kann und die Ergebnisse, die LIST dann liefert:<br> <i><b>/list &gt;zahl</b></i>
+      Zeigt Channels mit mehr als&nbsp; &lt;zahl&gt; Usern an.<br> <b><i>/list &lt;zahl</i></b>
+      Zeigt Channels mit weniger als &lt;zahl&gt; Usern an.<br>
+      <i><b>/list C&gt;zahl </b></i>Channels, die in den letzten &lt;zahl&gt;
+      Minuten eröffnet wurden.<br>
+      <i><b>/list C&lt;zahl</b></i> Channels, die vor mehr als &lt;zahl&gt;
+      Minuten eröffnet wurden.<br>
+      <i><b>/list T&gt;zahl</b></i> Channels, deren topic älter als
+      &lt;zahl&gt; Minuten ist.<br>
+      <b><i>/list T&lt;zahl</i></b> Channels, deren topic neuer als &lt;zahl&gt;
+      Minuten ist.<br>
+      <b><i>/list *mask*</i></b> Channels, deren Name zur angegebenen Maske
+      passt.<br>
+      <b><i>/list !*mask*</i></b> Channels, deren Name <b>nicht</b> zur
+      angegebenen Maske passt.<br> </td>
+      <td width="93" height="247">Alle</td>
+  </tr>
+  <tr> 
+    <td height="76" width="267">Knock &lt;channel&gt; &lt;message&gt;</td>
+    <td width="486" height="76">Ermöglicht es, in einem invite only Channel
+      &quot;anzuklopfen&quot; und um eine Einladung zu bitten. Funktioniert
+      nicht in Channels, in denen&nbsp; +K und/oder +V gesetzt ist. Auch wer
+      gebannt ist, kann diesen Befehl nicht benutzen.</td>
+    <td width="93" height="76">Alle</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">setname</td>
+    <td width="486" height="38">Ermöglicht es Usern, ihren &#8216;Real Name&#8217;
+      ohne reconnecting zu ändern.</td>
+    <td width="93" height="38">Alle</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">vhost &lt;login&gt; &lt;password&gt;</td>
+    <td width="486" height="38">Verbirgt den eigenen Host durch Anzeige eines
+      vom Server gelieferten virtuellen Hosts.</td>
+    <td width="93" height="38">Alle</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">mode &lt;chan/nick&gt; &lt;mode&gt;</td>
+    <td width="486" height="38">Ermöglicht es, Channel- oder User-Modi zu
+      setzen oder zu ändern. Siehe auch Liste der Modi in <a href="#userchannelmodes">Abschnitt
+      6</a></td>
+    <td width="93" height="38">Alle</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">credits</td>
+    <td width="486" height="38">Zeigt eine Dankesliste der Unterstützer von UnrealIRCD
+      an.</td>
+    <td width="93" height="38">Alle</td>
+  </tr>
+  <tr> 
+    <td height="33" width="267">license</td>
+    <td width="486" height="33">Zeigt die GNU Lizenz an</td>
+    <td width="93" height="33">Alle</td>
+  </tr>
+  <tr> 
+    <td height="57" width="267">time &lt;server&gt;</td>
+    <td width="486" height="57">Zeigt Datum und Zeit des Servers an. Die Angabe
+      des Servers ermöglicht es, Datum und Zeit aller Server im Netz zu
+      überprüfen.</td>
+    <td width="93" height="57">Alle</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">botmotd &lt;server&gt;</td>
+    <td width="486" height="38">Zeigt die botmotd (Bot Message Of The Day) an.
+      Bei Angabe eines Servers, wird dessen botmotd angezeigt.</td>
+    <td width="93" height="38">Alle</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">identify &lt;password&gt;</td>
+    <td width="486" height="38">Schickt das eigene Passwort an die Services, um
+      den eigenen Nick zu identifizieren.</td>
+    <td width="93" height="38">Alle</td>
+  </tr>
+  <tr> 
+    <td height="57" width="267">identify &lt;channel&gt; &lt;password&gt;</td>
+    <td width="486" height="57">Schickt das eigene Passwort an die Services, um
+      sich als Owner eines Channels zu identifizieren.</td>
+    <td width="93" height="57">Alle</td>
+  </tr>
+  <tr> 
+    <td height="76" width="267">dns &lt;option></td>
+    <td width="486" height="76">Liefert Informationen des DNS Cache des Servers.
+      Da viele Clients einen eingebauten DNS Befehl haben, wird man den Befehl
+      meist in der Form <i><b>/raw DNS</b></i> eingeben müssen, um das
+      gewünschte Ergebnis zu erhalten. Opers dürfen eine 1 als ersten
+      Parameter angeben, um eine Liste der Einträge im DNS Cache zu erhalten.</td>
+    <td width="93" height="76">Alle</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">oper &lt;userid&gt; &lt;password&gt;</td>
+    <td width="486" height="38">Befehl, um dem User IRCOp Status zu geben, wenn
+      userid und passwort mit den Angaben im Operblock übereinstimmen.</td>
+    <td width="93" height="38">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="33" width="267">wallop &lt;message&gt;</td>
+    <td width="486" height="33">Schickt eine Nachricht an alle User mit dem
+      Usermode +w</td>
+    <td width="93" height="33">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="33" width="267">globops &lt;message&gt;</td>
+    <td width="486" height="33">Schickt eine Nachricht an alle IRCops</td>
+    <td width="93" height="33">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="33" width="267">chatops &lt;message&gt;</td>
+    <td width="486" height="33">Schickt eine Nachricht an alle IRCops mit dem
+      Usermode +c</td>
+    <td width="93" height="33">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="33" width="267">locops &lt;message&gt;</td>
+    <td width="486" height="33">Schickt eine Nachricht an alle lokalen IRCops</td>
+    <td width="93" height="33">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="33" width="267">adchat &lt;message&gt;</td>
+    <td width="486" height="33">Schickt eine Nachricht an alle Admins</td>
+    <td width="93" height="33">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="33" width="267">nachat &lt;message&gt;</td>
+    <td width="486" height="33">Schickt eine Nachricht an alle Net Admins</td>
+    <td width="93" height="33">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="33" width="267">kill &lt;nick&gt; &lt;reason&gt;</td>
+    <td width="486" height="33">Disconnected (killt) einen User vom Netzwerk.</td>
+    <td width="93" height="33">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="57" width="267">kline [+-]&lt;user@host&gt; [&lt;time to ban&gt; &lt;reason&gt;]</td>
+    <td width="486" height="57">Bannt die Host Mask von dem Server, auf dem die
+      Line gesetzt wurde. Eine kline ist kein globaler Bann. <b>time to ban</b> ist
+      entweder a) ein Wert in
+      Sekunden, b) ein Zeitwert, wie '1d' für1 Tag, oder c) '0' für permanent.
+      Zeit und Grund sind optional, falls nicht angegeben, werden der Werte aus
+      'set::default-bantime (Default: 0/permanent) und 'no reason' verwendet. Um
+      eine kline zu löschen, benutzt man den Befehl /kline -user@host.</td>
+    <td width="93" height="57">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="76" width="267">zline [+-]&lt;*@ip&gt; [&lt;time to ban&gt; &lt;reason&gt;]</td>
+    <td width="486" height="76">Bannt eine IP Adresse vom lokalen Server, auf dem die
+      Line gesetzt wurde (nicht global).&nbsp; Siehe bei kline für genauere
+      Informationen zur Syntax. Zum Löschen benutzt man /zline -*@ip.</td>
+    <td width="93" height="76">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="57" width="267">gline [+-]&lt;user@host&gt;| nick&gt; [&lt;time to ban&gt;
+      &lt;reason&gt;]<br></td>
+    <td width="486" height="57">Setzt einen globalen Bann auf alle, auf die die
+      Maske zutrifft. Siehe bei kline für genauere Informationen zur Syntax.
+      Zum Löschen benutzt man /gline -user@host.</td>
+    <td width="93" height="57">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="76" width="267">shun [+-]&lt;user@host | nick&gt; [&lt;time to shun&gt;
+      &lt;reason&gt;]<br></td>
+    <td width="486" height="76">Bewirkt, dass der User KEINERLEI Befehle auf dem
+      Server mehr ausführen und auch nichts mehr schreiben kann. Shuns sind
+      global (wie glines) Siehe bei kline für genauere Informationen zur
+      Syntax. Zum Löschen benutzt man /shun -user@host..</td>
+    <td width="93" height="76">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="57" width="267">gzline [+-]&lt;ip&gt; &lt;time to ban&gt; :&lt;reason&gt;</td>
+    <td width="486" height="57">Setzt eine globale zline (Bann auf IP). Siehe
+      bei kline für genauere Informationen zur Syntax. Zum Löschen benutzt man
+      /gzline -*@ip.</td>
+    <td width="93" height="57">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="152" width="267">rehash &lt;server&gt; &#8211;&lt;flags&gt;</td>
+    <td width="486" height="152">Rehasht die Config Datei des Servers (liest sie
+      neu ein). Indem man den Server Namen angibt, kann man die Config Datei
+      dieses Servers remote rehashen. Ebenso sind einige Flags möglich:<br>
+      -all - Rehasht sämtliche Config Dateien<br>
+      -motd - Rehasht all MOTD und RULES Dateien (incl. tld {})<br>
+      -opermotd - Rehasht die OPERMOTD<br>
+      -botmotd - Rehasht die BOTMOTD<br>
+      -garbage - Bewirkt Garbage Collection (Garbage Collection ist eine Methode,
+      mit der nicht mehr verwendeter Speicher automatisch freigegeben wird).
+    <td width="93" height="152">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="57" width="267">restart &lt;server&gt; &lt;password&gt;</td>
+    <td width="486" height="57">Restartet den IRCD Prozess. Das Passwort ist
+      erforderlich. Durch Angabe des Servernamens kann man auch einen entfernten
+      Server restarten.</td>
+    <td width="93" height="57">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">die &lt;password&gt;</td>
+    <td width="486" height="38">Beendet den IRCD Prozess. Das Passwort ist
+      erforderlich.</td>
+    <td width="93" height="38">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="76" width="267">lag &lt;server&gt;</td>
+    <td width="486" height="76">Dieser Befehl ähnelt einem TraceRoute für IRC
+      server. Nach Eingabe von 
+      /LAG irc.fyremoon.net erhält man Antwort von jedem Server mit Zeit.
+      Nützlich, um herauszufinden, wo ein Lag ist und optional (TS future/past 
+      travels [??])</td>
+    <td width="93" height="76">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">sethost &lt;newhost&gt;</td>
+    <td width="486" height="38">Ermöglicht es, den eigenen vHost zu was immer
+      man möchte, zu ändern.</td>
+    <td width="93" height="38">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">setident &lt;newident&gt;</td>
+    <td width="486" height="38">Ermöglicht es, die eigene Ident zu was immer
+      man möchte, zu ändern.</td>
+    <td width="93" height="38">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">chghost &lt;nick&gt; &lt;newhost&gt;</td>
+    <td width="486" height="38">Ermöglicht es, den Host eines Users, der online
+      ist, zu ändern.</td>
+    <td width="93" height="38">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">chgident &lt;nick&gt; &lt;newident&gt;</td>
+    <td width="486" height="38">Ermöglicht es, den Ident eines Users, der
+      online ist, zu ändern.</td>
+    <td width="93" height="38">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">chgname &lt;nick&gt; &lt;newname&gt;</td>
+    <td width="486" height="38">Ermöglicht es, den Real Name eines Users, der
+      online ist, zu ändern.</td>
+    <td width="93" height="38">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">squit &lt;sever&gt;</td>
+    <td width="486" height="38">Entfernt einen Server aus dem Netzwerk.</td>
+    <td width="93" height="38">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="76" width="267">connect &lt;server&gt; &lt;port&gt; &lt;server&gt;</td>
+    <td width="486" height="76">Wenn nur ein Server angegeben ist, wird
+      versucht, den Server, auf dem man aktuell ist, zum zweiten Server zu
+      verbinden. Sind 2 Server angegeben, wird versucht, die beiden Server
+      miteinander zu verbinden. Ein Leaf ist an erster Stelle anzugeben, ein Hub
+      an zweiter Stelle.</td>
+    <td width="93" height="76">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">dccdeny &lt;filemask&gt; &lt;reason&gt;</td>
+    <td width="486" height="38">Setzt ein&nbsp; DCCDENY für diese Dateimaske.
+      Verhindert, dass diese Datei gesendet wird.</td>
+    <td width="93" height="38">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">undccdeny &lt;filemask&gt;</td>
+    <td width="486" height="38">Löscht ein DCCDENY</td>
+    <td width="93" height="38">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">sajoin &lt;nick&gt; &lt;channel&gt;, &lt;channel&gt;</td>
+    <td width="486" height="38">Zwingt einen User den/die angegebenen Channels
+      zu joinen. Steht nur Services und Admins zur Verfügung.</td>
+    <td width="93" height="38">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">sapart &lt;nick&gt; &lt;channel&gt;, &lt;channel&gt;</td>
+    <td width="486" height="38">Zwingt einen User den/die angegebenen Channels
+      zu verlassen. Steht nur Services und Admins zur Verfügung.</td>
+    <td width="93" height="38">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="57" width="267">samode &lt;channel&gt; &lt;mode&gt;</td>
+    <td width="486" height="57">Erlaubt es Netadmins und Service-Admins die Modi
+      eines Channels zu ändern, ohne dort Channel Op zu sein.</td>
+    <td width="93" height="57">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">rping &lt;servermask&gt;</td>
+    <td width="486" height="38">Berechnet den Lag zwischen Servern in
+      Millisekunden.</td>
+    <td width="93" height="38">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">trace &lt;servermask&gt;</td>
+    <td width="486" height="38">Berechnet den Lag zwischen Servern in
+      Millisekunden.</td>
+    <td width="93" height="38">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">opermotd</td>
+    <td width="486" height="38">Zeigt die OperMotd Datei des Servers an.</td>
+    <td width="93" height="38">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">addmotd :&lt;text&gt;</td>
+    <td width="486" height="38">Fügt den gegebenen Text an das Ende der&nbsp; Motd
+      an.</td>
+    <td width="93" height="38">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">addomotd :&lt;text&gt;</td>
+    <td width="486" height="38">Fügt den gegebenen Text an das Ende der&nbsp;
+      OperMotd an.</td>
+    <td width="93" height="38">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="54" width="267">sdesc &lt;newdescription&gt;</td>
+    <td width="486" height="54">Gestattet es Server Admins den Eintrag mit der Beschreibung des
+      Servers zu ändern, ohne dass ein Restart erforderlich
+      ist.</td>
+    <td width="93" height="54">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">addline &lt;text&gt;</td>
+    <td width="486" height="38">Ermöglicht die Ergänzung der Unrealircd.conf
+      um die in &lt;text&gt; angegebenen Zeilen.</td>
+    <td width="93" height="38">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">mkpasswd &lt;password&gt;</td>
+    <td width="486" height="38">Verschlüsselt ein Clear Text Passwort zum
+      Eintrag in die Unrealircd.conf.</td>
+    <td width="93" height="38">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="57" width="267">tsctl offset +/- &lt;time&gt;</td>
+    <td width="486" height="57">Stellt die IRCD interne Uhr nach (NICHT
+      benutzen, wenn man nicht genau versteht, was dieser Befehl tut!).</td>
+    <td width="93" height="57">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="38" width="267">tsctl time<br></td>
+    <td width="486" height="38">Liefert einen TS Report.</td>
+    <td width="93" height="38">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="30" width="267">tsctl alltime</td>
+    <td width="486" height="30">Liefert einen TS Report ALLER Server.</td>
+    <td width="93" height="30">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="57" width="267">tsctl svstime &lt;timestamp&gt;<br></td>
+    <td width="486" height="57">Stellt die TS Zeit aller Server (NICHT benutzen,
+      wenn man nicht genau versteht, was dieser Befehl tut!).</td>
+    <td width="93" height="57">IRCop</td>
+  </tr>
+  <tr> 
+    <td height="171" width="267">htm &lt;option&gt;</td>
+    <td width="486" height="171">Steuert Einstellungen, die sich auf den High Traffic
+      Modus beziehen. Der High Traffic Modus (HTM) deaktiviert einige User
+      Befehle, wie /list, /whois, /who etc als Antwort auf extrem hohen Traffic
+      auf dem Server. Mögliche Optionen sind:<br>
+      -ON Schaltet&nbsp; HTM für den Server ein<br>
+      -OFF Schaltet&nbsp; HTM für den Server aus<br>
+      -NOISY Der Server benachrichtigt users/admins bei Wechsel in oder aus HTM
+      Modus<br>
+      -QUIET Der Server benachrichtigt NIEMANDEN bei HTM Modus Wechsel<br>
+      -TO &lt;value> Stellt die Traffic Rate ein, ab der HTM aktiviert wird. </td>
+    <td width="93" height="171">IRCop</td>
+  </tr>
+  <tr>
+    <td height="570" width="267">stats &lt;option&gt;<br></td>
+    <td width="486" height="570"> B - banversion - Anzeige der Bann auf Version
+      Liste<br>
+      b - badword - Anzeige der Badword Liste<br>
+      C - link - Anzeige der Liste geblockter Links<br>
+      d - denylinkauto - Anzeige der Liste geblockter Links (deny link (auto)<br>
+      D - denylinkall - Anzeige der Liste geblockter Links (deny link (all)<br>
+      e - exceptthrottle - Anzeige der Ausnahmen bei throttle block<br>
+      E - exceptban - Anzeige der Ausnahmen von Banns<br>
+      f - spamfilter - Anzeige der Spamfilter Liste<br>
+      F - denydcc - Anzeige der Liste geblockter DCCs<br>
+      G - gline - Anzeige der Liste von glines<br>
+      &nbsp; Erweiterte Flags: [+/-mrs] [mask] [reason] [setby]<br>
+      &nbsp;&nbsp;&nbsp; m Liefert glines, die zur angegebenen Maske
+      passen/nicht passen<br>
+      &nbsp;&nbsp;&nbsp; r&nbsp; Liefert glines, die zum angegebenen Grund
+      passen/nicht passen<br>
+      &nbsp;&nbsp;&nbsp; s&nbsp; Return glines, die von angegebenem Namen
+      gesetzt/nicht gesetzt wurden<br>
+      I - allow - Anzeige der Allow block Liste<br>
+      j - officialchans - Liste der offiziellen Channels<br>
+      K - kline - Liste der User/Bann und IP/Ausnahmen<br>
+      l - linkinfo - Anzeige von Link Informationen<br>
+      L - linkinfoall - Anzeige aller Link Informationen<br>
+      M - command - Anzeige, wie oft jeder Befehl benutzt wurde<br>
+      n - banrealname - Liste von Banns auf Realname<br>
+      O - oper - Liste der Opers<br>
+      S - set - Liste der Einträge im set Block<br>
+      s - shun - Liste der Shuns<br>
+      &nbsp; Erweiterte Flags: [+/-mrs] [mask] [reason] [setby]<br>
+      &nbsp;&nbsp;&nbsp;
+    m Liefert shuns, die zur angegebenen Maske passen/nicht passen<br>
+      &nbsp;&nbsp;&nbsp;
+    r&nbsp; Liefert shuns, die zum angegebenen Grund passen/nicht passen<br>
+      &nbsp;&nbsp;&nbsp;
+    s&nbsp; Return shuns, die von angegebenem Namen gesetzt/nicht gesetzt wurden<br>
+      P - port - Liste verwendeter Ports<br>
+      q - sqline - Anzeige der SQLINE Liste<br>
+      Q - bannick - Anzeige der Liste gebannter Nicks<br>
+      r - chanrestrict - Anzeige der Liste verbotener Channels<br>
+      R - usage - Zeigt Benutzungs Informationen an<br>
+      t - tld - Zeigt die tld Block Liste an<br>
+      T - traffic - Zeigt Traffic Informationen an<br>
+      u - uptime - Gibt an, wielange der Server schon up ist und wie viele User
+      max<br>
+      U - uline - Anzeige der ulines (Services)<br>
+      v - denyver - Anzeige der deny version Block Liste<br>
+      V - vhost - Anzeige der vHosts (soweit im vHost Block gesetzt)<br>
+      X - notlink - Liste der Server, die momentan nicht gekinkt sind<br>
+      Y - class - Anzeige Klassen im class Block<br>
+      z - zip - Anzeige der Kompression bei ziplinked Servern (wenn mit ziplink
+      Unterstützung kompiliert wurde)<br>
+      Z - mem - Anzeige, für welche Zwecke wie viel Speicher benutzt wird</td>
+    <td width="93" height="570">Admin</td>
+  </tr>
+  <tr>
+    <td height="38" width="267">module<br></td>
+    <td width="486" height="38">
+    Anzeige aller geladenen Module
+    <td width="93" height="38">Alle</td>
+  </tr>
+  <tr>
+    <td height="38" width="267">close</td>
+    <td width="486" height="38">
+ Dieser befehl disconnected alle unbekannten Verbindungen vom Server.
+    <td width="93" height="38">IRCOp</td>
+  </tr>
+</table>
+
+<p></p></div>
+<p><font size="+2"><b><a name="security">8 &#8211; Sicherheits Tipps/Checkliste</a></b></font></p>
+<div class="desc"><p>Wenn man um die Sicherheit besorgt ist (und das sollte man
+  sein!), findet man in diesem Abschnitt Hilfe, um einen Überblick über
+  Risiken und deren Bedeutung zu erhalten. Man kann diesen Abschnitt auch als
+  &quot;Checkliste&quot; benutzen, um die Netzwerk Konfiguration zu überprüfen
+  und sie sicherer zu machen.
+  </p><p>Die Liste ist na Popularität/Risiko und Level der am meisten
+  verwendeten Methoden bei Attacken geordnet:<br>
+  </p></div>
+<p><font size="+2"><b><a name="secpassword">8.1 Passworte</a></b></font></p>
+<div class="desc">Wähle gute Oper Passworte, Link Passworte, etc:<br>
+  - benutze eine Mischung aus Groß -und Kleinschreibung und Ziffern ("Whbviwf5")
+  und/oder etwas Langes (&quot;blaheatsafish&quot;, "AlphaBeta555").<br>
+  - VERWENDE KEINE link/oper Passwords für andere Zwecke, wie Mail Account, Bot
+  Passwort, Foren, etc...<br>
+</div>
+<p><font size="+2"><b><a name="secnonircd">8.2 Nicht IRCD betreffende Angriffsmöglichkeiten</a></b></font></p>
+<div class="desc">Die Wahrscheinlichkeit, dass ein System durch nicht den IRCd
+  betreffende Angriffsmöglichkeiten gehackt wird, ist weit größer, als durch
+  einen Bug im UnrealIRCd. Läßt man z.B.&nbsp; http, dns, smtp und ftp servers
+  im selben System laufen, wie den IRCd, so ist das Risiko bedeutend höher.
+  Wenn man ein Multi-User System benutzt (z.B. man hat eine Shell gemietet),
+  riskiert mal lokale Exploits und schlechte/unsichere
+  Berechtigungseinstellungen (siehe nächsten Absatz). Dieses Risiko ist recht
+  hoch und man sollte deswegen vorsichtig bei der Auswahl des Shell Providers
+  sein.</div>
+<p><font size="+2"><b><a name="secpermissions">8.3 Berechtigungen und Config
+Datei</a></b></font></p>
+<div class="desc">Grundsätzlich sollte sicher gestellt sein, dass das /home
+  Verzeichnis und das /UnrealIRCd Verzeichnis korrekte
+  Berechtigungseinstellungen hat. &quot;Gruppe&quot; und &quot;Andere&quot;
+  sollten keine Lese Berechtigung haben. Andernfalls könnte ein lokaler User
+  einfach die Config datei zum Lesen öffnen und die Passworte auslesen.... Ist
+  man sich dessen unsicher, hier ein Kurz-Befehl um das sicherzustellen: <i> chmod -R go-rwx
+  /path/to/Unreal3.2</i>&nbsp;<br>
+  Weiter zu beachten ist: Niemals sollte der UnrealIRCd Ordner innerhalb eines webroot
+  Verzeichnisses oder anderer öffentlicher Verzeichnisse liegen.<br>
+  Auch bei Backups ist sicher zu stellen, dass hier wieder auf korrekte
+  Berechtigungseinstellungen geachtet wird. (es passiert häufiger, dass alles
+  korrekt und sicher eingestellt ist, aber irgendwelche backup.tar.gz
+  ungeschützt und für jedermann lesbar auf dem Server liegen).<br>
+  <br>
+  Möglicherweise möchte man verschlüsselte Passworte verwenden, wo immer das
+  möglich ist. Das ist kein ausreichender Schutz, sondern nur eine andere Ebene
+  von Sicherheit. Eine reihe von 1-8 Zeichen Passworten können innerhalb
+  weniger Stunden/Tage entschlüsselt werden. Außerdem gibt es üblicherweise
+  weitere interessante Informationen in Config Dateien, die nicht verschlüsselt
+  sind (wie: link::password-connect).</div>
+<p><font size="+2"><b><a name="secuser">8.4 User bezogene Probleme</a></b></font></p>
+<div class="desc">Wie die meisten dieser Punkte ist auch dies nicht
+  UnrealIRCd-spezifisch, aber...<br>
+  Man sollte seine Opers und Admins weise auswählen und sich immer an das
+  Prinzip des schwächsten Glieds einer Kette erinnern. Da hat man gerade
+  sorgfältigst an alles gedacht, was in dieser Doku beschrieben ist und dann
+  macht möglicherweise ein Freund, der Oper ist, irgend etwas Dummes. Wie z.B.
+  die Festplatte via netbios/kazaa/morpheus/.. freigeben, einen Trojaner fangen,
+  ein unsicheres Passwort nutzen , etc etc.. Unglücklicherweise hat man dadurch
+  nicht alles unter eigener Konrolle.</div>
+<p><font size="+2"><b><a name="secsnif">8.5 SSL/SSH &amp; Sniffing</a></b></font></p>
+<div class="desc">Es sollten unbedingt SSL Verbindungen zwischen Servern und als
+  Oper benutzt werden, um gegen &quot;Sniffing&quot; geschützt zu sein.
+  Sniffing ist möglich, wenn ein Angreifer ein System irgendwo zwischen Dir und
+  dem Server gehackt hat. Der Angreifer kann dann den GESAMTEN Netzwerksverkehr,
+  der durchläuft, beobachten, und u.a. sämtliche Passworte (Oper Logins,
+  Nickserv etc.) aufzeichnen. Aus dem selben Grund sollte immer SSH statt Telnet
+  benutzt werden.</div>
+<p><font size="+2"><b><a name="secDoS">8.6 Denial of Service Angriffe (DoS)
+[oder: wie schütze ich meinen hub</a></b></font></p>
+<div class="desc">Viele Netzwerke haben erfahren müssen, wie viel &quot;Fun&quot;
+  ein Flood oder ein (D)DoS Angriff ist, allerdings kann man einige Dinge tun,
+  um den daraus resultierenden Schaden in Grenzen zu halten. Die meisten Netze
+  haben einen Hub Server und einige Menschen scheinen zu vergessen, dass es
+  vergleichsweise einfach ist, einen solchen Hub Server vor Angriffen zu
+  schützen.<br>
+  Dies soll hier erklärt werden:
+  <ol>
+    <li>Der Name des Hubs sollte auf einen Host eingestellt sein, der nicht
+      existiert (z.B.: 'hub.yournet.com'), aber es sollte kein DNS Eintrag für
+      ihn erfolgen. Dadurch kann ein Angreifer den Host nicht zu einer IP
+      auflösen und ihn damit nicht flooden. Dann werden Server und Hub einfach
+      durch Angabe der IP oder einen weiteren nicht öffentlichen Hostnamen
+      gelinkt.<br>
+      Beispiel 1: <i> link visibiblename.yournet.com { hostname 194.15.123.16; [etc] };.</i><br>
+      Beispiel2: <i> link visibiblename.yournet.com { hostname thehostnamethatworks.yournet.com; [etc] };.</i><br>
+      Nebenbei bemerkt muss für das zweite Beispiel sichergestellt sein, dass
+      der Nameserver keine Zonenübertragungen erlaubt, aber das führt hier zu
+      weit vom Thema weg.</li>
+    <li>Ein weiterer wichtiger Punkt ist,&nbsp; '/stats c' und andere Stats
+      Informationen zu verbergen, andernfalls können Angreifer einfach die Link
+      Blöcke einsehen. Sinnvollerweise, wenn man so extrem wie der Autor auf
+      Sicherheit bedacht ist, kann man folgendes eintragen:<i> set { oper-only-stats "*"; };</i>
+      und verhindert somit jeglichen Gebrauch von&nbsp; /stats.<br>
+      Wenn das nicht gewollt ist, ist wenigstens &quot;CdDlLXz&quot; zu
+      verbergen. Mehr dazu im nächsten Abschnitt.</li>
+  </ol>
+  <p>Allerdings sind solche Dinge wenig hilfreich, wenn sie später (z.B. nach
+  einigen Monaten) durchgeführt werden, statt von Anfang an. Sonst könnte die
+  IP nämlich bereits bekannt sein und auch einigen böswilligen Menschen.</p>
+  <p>Es ist auch zu beachten, dass Angreifer weiterhin die Nicht-Hub Server
+  flooden können, aber das bedeutet einen höheren Aufwand, als lediglich 1-2
+  Schwachpunkte (die Hubs) anzugreifen. Das trägt damit ebenso zum Überleben
+  von Hubs &amp; Services bei :).</div>
+<p><font size="+2"><b><a name="secinformation">8.7 Informationsbeschaffung</a></b></font></p>
+<div class="desc">Der /stats Befehl ist sehr informativ und es ist vielleicht
+  sinnvoll, dessen Verwendung so weit wie möglich einzuschränken. Man sollte
+  sich dabei von der frage leiten lassen: &quot;Was möchte ich, dass meine User
+  es sehen können?&quot;. Die meisten großen Netzwerke stellen hier
+  &quot;nichts&quot; ein, während in anderen Netzwerken den Usern erlaubt
+  wird,&nbsp; '/stats g' und '/stats k' zu benutzen.<br>
+  Ich empfehle die Einstellung { oper-only-stats "*"; }; zu setzen und damit
+  sämtliche /stats Aufrufe für Nicht-Opers zu verbieten. Ist dies nicht
+  gewollt, sollte mit <i>/stats list</i> die gesamte Liste möglicher /stats
+  Parameter angezeigt werden und alles geblockt werden, was man nicht
+  ausdrücklich anzuzeigen erlauben möchte. (im Zweifelsfalle einfach
+  verbieten.... warum sollten die User das wirklich alles wissen müssen?).<br>
+  Einige Beispiele:<br>
+  - /stats o: zeigt die Nicks der Opers an (in der Schreibweise, wie sie sich
+  opern!) und deren Hostmasks.<br>
+  - /stats c: zeigt eine Übersicht der Serverlinks und welcher als&nbsp; 'backup',
+  etc. benutzt wird.<br>
+  - /stats g, /stats k: wird üblicherweise für gebannte Proxies benutzt....
+  und zeigt daher einem Angreifer, welche Proxies er nutzen kann.<br>
+  - /stats E, /stats e: ziemlich sensitive Information, besonders, wenn ein
+  Angreifer diese Adresse benutzen kann<br>
+  - /stats i, /stats y: könnte einem Angreifer helfen, Hosts zu finden, welche
+  viele Verbindungen gestatten.<br>
+  - /stats P: hilft dem Angreifer, serveronly Ports zu finden<br>
+  etc etc...<br>
+  <br>
+  Das ganze &quot;Verbergen von Informationen&quot; ist natürlich keine
+  &quot;echte&quot; Sicherheit. Allerdings macht es Angriffe schwieriger und
+  erhöht den Aufwand für einen Angriff oder hack.</div>
+<p><font size="+2"><b><a name="secantiexpolit">8.8 Schutz gegen Expolits</a></b></font></p>
+<div class="desc">Es gibt Kernel Patches, die es Stack- oder Heap-basierenden
+  Expolits erschweren, zu arbeiten. Allerdings sollte man nicht nur primär
+  hierauf achten, es gibt weit größere Risiken mit Expolits, die andere
+  Punkte, als den Kernel angreifen.... aus verschiedenen Gründen.<br>
+  <br>
+  Eines allerdings sollte man tun: IMMER DIE NEUESTE VERSION BENUTZEN. Wenn man
+  sich in die Unreal-notify mailinglist einträgt, erhält man die Ankündigung
+  über neue Versionen (unreal-notify ist nur für Ankündigungen und man
+  erhält nur alle X Monate 1 Mail). Üblicherweise gibt es neue Releases, wenn
+  es (bedeutende) Sicherheits Fixes gibt..</div>
+<p><font size="+2"><b><a name="secsummary">8.9 Zusammenfassung</a></b></font></p>
+<div class="desc">Wie jetzt hoffentlich einleuchtend erklärt wurde, kann man
+  niemals 100% sicher sein. Anwender und Entwickler haben jedes Sicherheitsloch
+  zu finden und zu fixen, währen der Angreifer lediglich 1 Server mit 1
+  Sicherheitsloch finden muss. Alles, was hier erklärt wurde, hilft jedoch, die
+  Risiken zu minimieren. Man sollte sich die Zeit nehmen, das netzwerk sicher zu
+  machen und die eigenen Opers zum Sicherheitsbewußtsein anzuleiten. Viele
+  Menschen kümmern sich so lange nicht um Sicherheit, bis sie gehackt wurden.
+  Man sollte versuchen, dies zu vermeiden :).</div>
+<p>&nbsp;</p>
+<p><font size="+2"><b><a name="faq">9 &#8211; Frequently Asked Questions (FAQ)</a></b></font></p>
+<div class="desc"><p>Die FAQ kann man online <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">hier</a>
+  lesen .</p></div>
+<p></p>
+</body>
+</html>

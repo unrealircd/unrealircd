@@ -35,6 +35,10 @@
 #define	RPL_MYINFO           004
 #define RPL_PROTOCTL	     005
 
+#define RPL_REDIR	     10
+
+#define RPL_REMOTEPROTOCTL 105
+
 /*
  * Errors are in the range from 400-599 currently and are grouped by what
  * commands they come from.
@@ -59,6 +63,9 @@
 #define	ERR_NOADMININFO      423
 #define	ERR_FILEERROR        424
 #define ERR_NOOPERMOTD	     425
+#ifdef NO_FLOOD_AWAY
+#define ERR_TOOMANYAWAY	     429
+#endif
 #define ERR_NONICKNAMEGIVEN  431
 #define ERR_ERRONEUSNICKNAME 432
 #define ERR_NICKNAMEINUSE    433
@@ -78,10 +85,12 @@
 #define ERR_USERSDISABLED    446
 #define ERR_NONICKCHANGE     447
 
+
 #define ERR_NOTREGISTERED    451
 
 #define ERR_HOSTILENAME      455
 
+#define ERR_NOHIDING	     459
 #define ERR_NOTFORHALFOPS	 460
 #define ERR_NEEDMOREPARAMS   461
 #define ERR_ALREADYREGISTRED 462
@@ -110,12 +119,13 @@
 #define ERR_ATTACKDENY       484
 #define ERR_KILLDENY	     485
 
-#define ERR_HTMDISABLED	     486
-
+#define ERR_NONONREG	     486
+#define ERR_NOTFORUSERS	    487
+#define ERR_HTMDISABLED		 488
 #define ERR_SECUREONLYCHAN   489
-
+#define ERR_NOSWEAR	     490
 #define ERR_NOOPERHOST       491
-#define ERR_NOSERVICEHOST    492
+#define ERR_NOCTCP	     492
 
 #define ERR_UMODEUNKNOWNFLAG 501
 #define ERR_USERSDONTMATCH   502
@@ -128,7 +138,7 @@
 #define ERR_ADMONLY			 519
 #define ERR_OPERONLY		 520
 #define ERR_LISTSYNTAX       521
-#define ERR_OPERSPVERIFY     524
+
 /*
  * Numberic replies from server commands.
  * These are currently in the range 200-399.
@@ -231,6 +241,7 @@
 #define RPL_TRACENEWTYPE     208
 #define RPL_TRACECLASS       209
 
+#define RPL_STATSHELP	     210
 #define RPL_STATSLINKINFO    211
 #define RPL_STATSCOMMANDS    212
 #define RPL_STATSCLINE       213
@@ -251,6 +262,8 @@
 #define RPL_STATSELINE	     225
 #define RPL_STATSNLINE	     226
 #define RPL_STATSVLINE	     227
+#define RPL_STATSBANVER	     228
+#define RPL_STATSSPAMF       229
 #define RPL_SERVICEINFO      231
 #define RPL_RULES            232
 #define	RPL_SERVICE          233
@@ -298,6 +311,13 @@
 #define RPL_MAP              006
 #define RPL_MAPMORE          610
 #define RPL_MAPEND           007
+
+
+#define ERR_WHOSYNTAX 522
+#define ERR_WHOLIMEXCEED 523
+#define ERR_OPERSPVERIFY 524
+
+#define RPL_SNOMASK	     8
 
 /*
  * Numberic replies from server commands.

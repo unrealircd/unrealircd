@@ -28,9 +28,9 @@
  */
 #include "ircsprintf.h"
 #include <stdio.h>
-extern char *xbase64enc(long i);
-
 /* *INDENT-OFF* */
+
+extern char *base64enc(long i);
 
 const char atoi_tab[4000] = {
     '0','0','0',0, '0','0','1',0, '0','0','2',0, '0','0','3',0, '0','0','4',0,
@@ -237,7 +237,7 @@ const char atoi_tab[4000] = {
 /* *INDENT-ON* */
 
 static char scratch_buffer[32];
-#ifndef DEBUGMODE
+
 /*
  * sprintf_irc
  *
@@ -373,7 +373,7 @@ char *ircvsprintf(char *str, const char *format, va_list vl)
 				char *ap;
 				
 				v1 = va_arg(vl, long);
-				for (ap = (char *) xbase64enc(v1); *ap; ap++)
+				for (ap = (char *) base64enc(v1); *ap; ap++)
 					*str++ = *ap;
 				continue;
 			}
@@ -384,7 +384,7 @@ char *ircvsprintf(char *str, const char *format, va_list vl)
 				
 				v1 = va_arg(vl, long);
 				*str++ = '!';
-				for (ap = (char *) xbase64enc(v1); *ap; ap++)
+				for (ap = (char *) base64enc(v1); *ap; ap++)
 					*str++ = *ap;
 				continue;
 			}
@@ -472,5 +472,3 @@ char *ircsprintf(char *str, const char *format, ...)
 	va_end(vl);
 	return ret;
 }
-
-#endif

@@ -19,7 +19,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef lint
+#ifndef CLEAN_COMPILE
 static char sccsid[] =
     "@(#)s_numeric.c	2.14 1/30/94 (C) 1988 University of Oulu, \
 Computing Center and Jarkko Oikarinen";
@@ -30,6 +30,7 @@ Computing Center and Jarkko Oikarinen";
 #include "sys.h"
 #include "numeric.h"
 #include "h.h"
+#include "proto.h"
 #include <string.h>
 
 extern char backupbuf[];
@@ -50,11 +51,7 @@ static char buffer[1024];
 **	sending back a neat error message -- big danger of creating
 **	a ping pong error message...
 */
-int  do_numeric(numeric, cptr, sptr, parc, parv)
-	int  numeric;
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  do_numeric(int numeric, aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 	aChannel *chptr;
@@ -67,13 +64,6 @@ int  do_numeric(numeric, cptr, sptr, parc, parv)
 	if (numeric < 100)
 		numeric += 100;
 
-/*	if (numeric == ERR_NOTONCHANNEL)
-		if (!MyClient(sptr) && IsServer(sptr))
-		{
-			sendto_umode(UMODE_EYES, "Recieved ERR_NOTONCHANNEL from remote server %s. Possible desynch, contact UnrealIRCd Team (%s)",
-				sptr->name, backupbuf);
-		}
-*/	
 	/*
 	   ** Prepare the parameter portion of the message into 'buffer'.
 	   ** (Because the buffer is twice as large as the message buffer
@@ -84,6 +74,9 @@ int  do_numeric(numeric, cptr, sptr, parc, parv)
 	buffer[0] = '\0';
 	if (parc > 2)
 	{
+		/*
+		 * For strlcat nazis, please read above
+		*/
 		for (i = 2; i < (parc - 1); i++)
 		{
 			(void)strcat(buffer, " ");

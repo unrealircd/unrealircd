@@ -1,0 +1,35 @@
+
+Configuration rant, by Stskeeps
+--------------------------------
+
+Right.. so you think you are done now, you can boot your IRCd and be happy,
+and it just works. No, you still got a lot to do. You need to read all of
+the documentation through. Would you even have made it this far without
+makeconf?. 
+
+Well, today, people think they can be 3 months on IRC, and be ready to run
+an IRC daemon. I hate to say this, but I don't think so. 
+
+If you cannot read an IRC help file, or understand what stuff like "desynch",
+"masskill", "k-line", or what "mode # +l 5" means - or you got no experince
+in the UNIX field at all, like, you MUST know how to invoke a editor in a
+shell, or to unzip a file. If you don't know/can do these things, I suggest
+you stop trying to set this up, and go read on some UNIX tutorials, and IRC
+tutorials. It takes a LOT of work to run a IRC server good. 
+
+I mean. I sit on the #unreal-support support channel each day, and I see
+countless questions about stuff that IS IN the documentation. Numerous
+people don't even bother to look at the config files (CONFIG_FILE_STOP
+problem). 
+
+You need to look at the documentation now. You need to see how to "include"
+other configuration files. You need to know how to work out how to use
+doc/example.settings.  I can only tell you, if you ask for support, and it
+is for errors that you could solve by reading the first lines of a document,
+then you'll be firmly ignored. I'm sorry, we cannot help your laziness.
+
+Anyhow, good luck with setting this up. Hope you understand what I am saying
+here. You will learn a lot more reading, than just ignoring what we are
+saying.
+
+--Stskeeps

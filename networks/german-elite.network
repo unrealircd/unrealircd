@@ -1,0 +1,23 @@
+/*
+ * German-Elite (irc.german-elite.net) Network Configuration File
+ * -----------------------------------------
+ */
+
+set {
+	network-name		"German-Elite";
+	default-server		"irc.german-elite.net";
+	services-server		"services.german-elite.net";
+	stats-server		"stats.german-elite.net";
+	help-channel		"#german-elite";
+	hiddenhost-prefix	"GE";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"locop.german-elite.net";
+		global		"ircop.german-elite.net";
+		coadmin		"coadmin.german-elite.net";
+		admin		"admin.german-elite.net";
+		servicesadmin	"csop.german-elite.net";
+		netadmin	"netadmin.german-elite.net";
+		host-on-oper-up	"on";
+	};
+};

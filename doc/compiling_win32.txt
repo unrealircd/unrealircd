@@ -1,0 +1,43 @@
+==[ IMPORTANT MESSAGE ABOUT DISABLING NOSPOOF ]==
+Disabling NOSPOOF at windows (w9x, nt, w2k, xp) is NOT recommended since this
+will allow users to use "spoofed hosts" (like the IP of someone you trust).
+
+If you got problems with NOSPOOF fix your client (bot?) instead (you should
+PONG back to the initial PING at connect).
+
+==[ HOW TO COMPILE UNREALIRCD WITHOUT SSL AT WINDOWS ]==
+First of all you need Microsoft Visual C++, compiling with cygwin
+is not supported.
+
+== "old" VC++ 6.0 ==
+1. You need the Platform SDK (PSDK)
+   Grab it at: http://www.microsoft.com/msdownload/platformsdk/sdkupdate/ ->
+   core sdk -> install this sdk.
+   Note that this can take some time to download because it's >200Mb
+   (450mb installed) [!].
+2. To compile:
+   start -> programs -> platform sdk blabla -> open build env. -> (choose os) ->
+   set blabla build env (debug). This will launch a DOS window.
+3. Go to your UnrealIrcd dir (like: cd \dev\unreal3.2) and then compile with:
+   nmake -f makefile.win32
+   This will generate a wircd.exe and unreal.exe
+4. Copy the src\win32\tre.dll to your UnrealIrcd main dir.
+5. Done!
+
+== VC++ 7.x (.NET) ==
+1. Start the Visual Studio .NET Command Prompt
+2. Go to your UnrealIrcd dir (like: cd \dev\unreal3.2) and then compile with:
+   nmake -f makefile.win32
+   This will generate a wircd.exe and unreal.exe
+3. Copy the src\win32\tre.dll to your UnrealIrcd main dir.
+4. Done!
+
+==[ HOW TO COMPILE UNREALIRCD WITH SSL AT WINDOWS ]==
+Ouch, that's much work ;).
+You need to compile openssl yourself.
+Then have a look at makefile.win32 for instruction on how
+to enable / specify path / etc...
+DO NOT ask us for help with compiling openssl!
+
+==[ AND ZIP LINKS SUPPORT? ]==
+See makefile.win32 for instructions.

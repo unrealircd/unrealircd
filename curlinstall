@@ -1,0 +1,66 @@
+#!/bin/sh
+
+if test "x$1" = x -o "x$2" = x ; then
+	echo "Syntax:"
+	echo "curlinstall ares_path libcurl_path"
+	echo ""
+	exit 1
+fi
+
+if [ "`eval echo -n 'a'`" = "-n a" ] ; then
+        c="\c"
+else
+        n="-n"
+fi
+
+save_PWD=`pwd`
+echo "Installing ares"
+cd $1
+./configure --prefix=$HOME/ares && make && make install
+
+SSLFLAG=""
+while [ -z "$SSLFLAG" ] ; do
+	echo ""
+	echo "Should libcurl be built with SSL support?"
+	echo $n "-> " $c
+	read cc
+	case "$cc" in
+		[Yy]*)
+			SSLFLAG="--with-ssl"
+			;;
+		[Nn]*)
+			SSLFLAG="--without-ssl"
+			;;
+		*)
+			echo ""
+		        echo "You must enter either Yes or No"
+			;;
+	esac
+done
+if [ -f $HOME/ares/lib/libcares.a ] ; then
+	if [ -f $HOME/ares/lib/libares.a ] ; then
+		rm -f $HOME/ares/lib/libares.a
+	fi
+	cp $HOME/ares/lib/libcares.a $HOME/ares/lib/libares.a
+fi
+
+echo "Installing libcurl"
+cd $2
+CPPFLAGS="-I$HOME/ares/include" ./configure --prefix=$HOME/curl --disable-shared \
+ --disable-thread --enable-ares=$HOME/ares --disable-ipv6 $SSLFLAG
+cp -R $HOME/ares/lib ares
+make && make install
+
+if [ -f $HOME/curl/lib/libares.a ] ; then
+	rm -f $HOME/curl/lib/libares.a
+fi
+cp $HOME/ares/lib/libares.a $HOME/curl/lib
+
+cd $save_PWD
+
+echo ""
+echo ""
+echo "libcurl has been installed. When running ./Config specify:"
+echo "$HOME/curl"
+echo "for the directory you installed libcurl to."
+

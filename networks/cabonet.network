@@ -1,0 +1,27 @@
+/*
+ * CaboNet (irc.cabonet.org) Network Configuration File
+ * --------------------------------------------------
+ *  Added-at:     03 February 2001 15:38
+ *  Author: Nandin
+ *  Email: nandin@cabonet.org
+ * -----------------------------------------
+ */
+
+set {
+        network-name            "CaboNet";
+        default-server          "irc.cabonet.org";
+        services-server         "services.cabonet.org";
+        stats-server            "stats.cabonet.org";
+        help-channel            "#cabonet";
+        hiddenhost-prefix       "cnet";
+        prefix-quit             "Quit:";
+        hosts {
+                local           "local.cabonet.org";
+                global          "oper.cabonet.org";
+                coadmin         "coadmin.cabonet.org";
+                admin           "admin.cabonet.org";
+                servicesadmin   "csop.cabonet.org";
+                netadmin        "netadmin.cabonet.org";
+                host-on-oper-up "on";
+        };
+};

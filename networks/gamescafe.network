@@ -1,0 +1,26 @@
+/*
+ * GamesCafe (irc.gamerscafe.net) Network Configuration File
+ *
+ * Added-at:     22 August 2001 01:17
+ * Author: Osiris
+ * Email: daniel@linux.ws
+ */
+
+set {
+network-name "GamesCafe";
+default-server "irc.gamerscafe.net"; 
+services-server "Services.GamersCafe.Net";
+stats-server "Services.GamersCafe.Net";
+help-channel "#GamersCafe";
+hiddenhost-prefix "GC";
+hosts {
+local "localoper.gamerscafe.net";
+global "oper.gamerscafe.net";
+coadmin "coadmin.gamerscafe.net";
+admin "admin.gamerscafe.net";
+servicesadmin "csop.gamerscafe.net";
+netadmin "network-admin.gamerscafe.net";
+host-on-oper yes;
+};
+};
+

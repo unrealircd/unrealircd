@@ -25,26 +25,29 @@
 #include <time.h>
 #ifdef _WIN32
 #include <malloc.h>
+#ifdef INET6
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#endif
 #include <windows.h>
+#ifndef INET6
 #include <winsock.h>
+#endif
 #include <process.h>
 #include <io.h>
-//#include "struct.h"
 #endif
-#include "dynconf.h"
-#include "ircsprintf.h"
-
+//#include "dynconf.h"
+#include "config.h"
 #ifdef	PARAMH
 #include <sys/param.h>
 #endif
 
-#ifndef PROTO
-#if __STDC__
-#	define PROTO(x)	x
-#else
-#	define PROTO(x)	()
+#if !defined(IN_ADDR)
+#include "sys.h"
 #endif
-#endif
+
+#include "ircsprintf.h"
+
 
 #ifdef DEVELOP_CVS
 #define ID_Copyright(x) static char id_copyright[] = x
@@ -90,41 +93,41 @@ void free();
 #endif
 #endif
 
-
 #define TS time_t
 
-extern int match PROTO((char *, char *));
+
+extern int match(char *, char *);
 #define mycmp(a,b) \
- ( (toupper((a)[0])!=toupper((b)[0])) || smycmp((a)+1,(b)+1) )
-extern int smycmp PROTO((char *, char *));
+ ( (toupper(a[0])!=toupper(b[0])) || smycmp((a)+1,(b)+1) )
+extern int smycmp(char *, char *);
 #ifndef GLIBC2_x
-extern int myncmp PROTO((char *, char *, int));
+extern int myncmp(char *, char *, int);
 #endif
 
 #ifdef NEED_STRTOK
-extern char *strtok2 PROTO((char *, char *));
+extern char *strtok2(char *, char *);
 #endif
 #ifdef NEED_STRTOKEN
-extern char *strtoken PROTO((char **, char *, char *));
+extern char *strtoken(char **, char *, char *);
 #endif
 #ifdef NEED_INET_ADDR
-extern unsigned long inet_addr PROTO((char *));
+extern unsigned long inet_addr(char *);
 #endif
 
 #if defined(NEED_INET_NTOA) || defined(NEED_INET_NETOF) && !defined(_WIN32)
 #include <netinet/in.h>
 #endif
 #ifdef NEED_INET_NTOA
-extern char *inet_ntoa PROTO((struct IN_ADDR));
+extern char *inet_ntoa(struct IN_ADDR);
 #endif
 
 #ifdef NEED_INET_NETOF
-extern int inet_netof PROTO((struct IN_ADDR));
+extern int inet_netof(struct IN_ADDR);
 #endif
 
 int  global_count, max_global_count;
-extern char *myctime PROTO((TS));
-extern char *strtoken PROTO((char **, char *, char *));
+extern char *myctime(time_t);
+extern char *strtoken(char **, char *, char *);
 
 #define PRECISE_CHECK
 
@@ -135,16 +138,20 @@ extern char *strtoken PROTO((char **, char *, char *));
 #define MIN(a, b)	((a) < (b) ? (a) : (b))
 #endif
 
-#define DupString(x,y) do{x=MyMalloc(strlen(y)+1);(void)strcpy(x,y);}while(0)
+#define DupString(x,y) do{int l=strlen(y);x=MyMalloc(l+1);(void)memcpy(x,y, l+1);}while(0)
 
 extern u_char tolowertab[], touppertab[];
 
+#if defined(CHINESE_NICK) || defined(JAPANESE_NICK)
+#define USE_LOCALE
+#endif
+
 #ifndef USE_LOCALE
 #undef tolower
-#define tolower(c) (tolowertab[(c)])
+#define tolower(c) (tolowertab[(u_char)(c)])
 
 #undef toupper
-#define toupper(c) (touppertab[(c)])
+#define toupper(c) (touppertab[(u_char)(c)])
 
 #undef isalpha
 #undef isdigit
@@ -184,8 +191,8 @@ extern unsigned char char_atribs[];
 #define islower(c) ((char_atribs[(u_char)(c)]&ALPHA) && ((u_char)(c) > 0x5f))
 #define isupper(c) ((char_atribs[(u_char)(c)]&ALPHA) && ((u_char)(c) < 0x60))
 #define isdigit(c) (char_atribs[(u_char)(c)]&DIGIT)
-#define	isxdigit(c) (isdigit(c) || 'a' <= (c) && (c) <= 'f' || \
-		     'A' <= (c) && (c) <= 'F')
+#define	isxdigit(c) (isdigit(c) || ('a' <= (c) && (c) <= 'f') || \
+		     ('A' <= (c) && (c) <= 'F'))
 #define isalnum(c) (char_atribs[(u_char)(c)]&(DIGIT|ALPHA))
 #define isprint(c) (char_atribs[(u_char)(c)]&PRINT)
 #define isascii(c) ((u_char)(c) >= 0 && (u_char)(c) <= 0x7f)
@@ -193,14 +200,25 @@ extern unsigned char char_atribs[];
 #define ispunct(c) (!(char_atribs[(u_char)(c)]&(CNTRL|ALPHA|DIGIT)))
 #endif
 
-#ifndef DMALLOC
-extern char *MyMalloc();
-#else
+#ifndef MALLOCD
+#define MyFree free
 #define MyMalloc malloc
 #define MyRealloc realloc
-#define MyFree free
+#else
+#define MyFree(x) do {debug(DEBUG_MALLOC, "%s:%i: free %02x", __FILE__, __LINE__, x); free(x); } while(0)
+#define MyMalloc(x) StsMalloc(x, __FILE__, __LINE__)
+#define MyRealloc realloc
+static char *StsMalloc(size_t size, char *file, long line)
+{
+	void *x;
+	
+	x = malloc(size);
+	debug(DEBUG_MALLOC, "%s:%i: malloc %02x", file, line, x);
+	return x;
+}
+
 #endif
-extern void flush_connections();
+
 extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 
 /*
@@ -210,41 +228,82 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 
 /* IRCu/Hybrid/Unreal way now :) -Stskeeps */
 
-#define PROTOCTL_CLIENT           \
-		":%s 005 %s"      \
-		" MAP"            \
+#ifdef EXTCMODE
+ #define EXPAR1	extchmstr[0]
+ #define EXPAR2	extchmstr[1]
+ #define EXPAR3	extchmstr[2]
+ #define EXPAR4	extchmstr[3]
+#else
+ #define EXPAR1 ""
+ #define EXPAR2 ""
+ #define EXPAR3 ""
+ #define EXPAR4 ""
+#endif /* EXTCMODE */
+
+#define PROTOCTL_CLIENT_1         \
+		"MAP"             \
 		" KNOCK"          \
 		" SAFELIST"       \
 		" HCN"	          \
-		" WATCH=%i"       \
-		" SILENCE=%i"     \
-		" MODES=%i"       \
 		" MAXCHANNELS=%i" \
 		" MAXBANS=%i"     \
 		" NICKLEN=%i"     \
 		" TOPICLEN=%i"    \
 		" KICKLEN=%i"     \
-		" CHANTYPES=%s"    \
-		" PREFIX=%s"     \
-		" CHANMODES=%s,%s,%s,%s" \
+		" MAXTARGETS=%i"  \
+		" AWAYLEN=%i"	  \
+		" :are supported by this server"
+#define PROTOCTL_PARAMETERS_1	  \
+		MAXCHANNELSPERUSER, \
+		MAXBANS, \
+		NICKLEN, \
+		TOPICLEN, \
+		TOPICLEN, \
+		MAXTARGETS, \
+		TOPICLEN
+
+#ifdef PREFIX_AQ
+#define CHPFIX	"(qaohv)~&@%+"
+#define CHPAR1	"be"
+#else
+#define CHPFIX	"(ohv)@%+"
+#define CHPAR1	"beqa"
+#endif /* PREFIX_AQ */
+
+#define CHPAR2	"kfL"
+#define CHPAR3	"l"
+#define CHPAR4	"psmntirRcOAQKVGCuzNSM"
+
+#define PROTOCTL_CLIENT_2	  \
+		"WALLCHOPS"	  \
+		" WATCH=%i"	  \
+		" SILENCE=%i"	  \
+		" MODES=%i"	  \
+		" CHANTYPES=%s"   \
+		" PREFIX=%s"      \
+		" CHANMODES=%s%s,%s%s,%s%s,%s%s" \
+		" NETWORK=%s" 	  \
+		" CASEMAPPING=%s" \
+		" EXTBAN=~,%s" \
 		" :are supported by this server"
 
-#define PROTOCTL_PARAMETERS MAXWATCH, \
-                            MAXSILES, \
-                            MAXMODEPARAMS, \
-                            MAXCHANNELSPERUSER, \
-                            MAXBANS, \
-                            NICKLEN, \
-                            TOPICLEN, \
-                            TOPICLEN, \
-                            "#",      \
-                            "(ohv)@%+", \
-			    "ohvbeqa", \
-			    "kfL", \
-			    "l", \
-			    "psmntirRcOAQKVGCuzNSM"
+#define PROTOCTL_PARAMETERS_2	  \
+		MAXWATCH, \
+		SILENCE_LIMIT, \
+		MAXMODEPARAMS, \
+		"#", \
+		CHPFIX, \
+		CHPAR1, EXPAR1, \
+		CHPAR2, EXPAR2, \
+		CHPAR3, EXPAR3, \
+		"psmntirRcOAQKVGCuzNSM", EXPAR4, \
+		ircnet005, \
+		"ascii", \
+		extbanstr
 
-/* Server-Server PROTOCTL -Stskeeps */
+/* Server-Server PROTOCTL -Stskeeps
+ * Please check send_proto() for more. -- Syzop
+ */
 #define PROTOCTL_SERVER "NOQUIT" \
                         " TOKEN" \
                         " NICKv2" \
@@ -254,7 +313,8 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                         " VL" \
                         " SJ3" \
                         " NS" \
-                        " SJB64"
+                        " SJB64" \
+                        " TKLEXT"
 
 #ifdef _WIN32
 /*
@@ -263,6 +323,9 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
  */
 extern int DisplayString(HWND hWnd, char *InBuf, ...);
 #undef	strerror
+#else
+typedef int SOCKET;
+#define INVALID_SOCKET -1
 #endif
 
 #if defined(__FreeBSD__) || defined(__APPLE__)
@@ -298,5 +361,6 @@ TS   now;
 #endif
 #endif
 
+#define READBUF_SIZE 8192
 
 #endif /* __common_include__ */

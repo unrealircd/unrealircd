@@ -41,14 +41,12 @@ u_char touppertab[], tolowertab[];
  * match()
  *  written by binary
  */
-int  match(mask, name)
-	char *mask, *name;
+static inline int match2(char *mask, char *name)
 {
-	u_char *m;		/* why didn't the old one use registers ?!??!?!?! */
-	u_char *n;
+	u_char *m;		/* why didn't the old one use registers */
+	u_char *n;		/* because registers suck -- codemastr */
 	u_char cm;
-	u_char *mylowertab;
-	u_char *wsn = NULL;
+	u_char *wsn;
 	u_char *wsm;
 
 	m = (u_char *)mask;
@@ -56,9 +54,8 @@ int  match(mask, name)
 	cm = *m;
 
 #ifndef USE_LOCALE
-	mylowertab = tolowertab2;
-#define lc(x) mylowertab[x]	/* use mylowertab, because registers are FASTER */
-#else
+#define lc(x) tolowertab2[x]	/* use mylowertab, because registers are FASTER */
+#else				/* maybe in the old 4mb hard drive days but not anymore -- codemastr */
 #define lc(x) tolower(x)
 #endif
 
@@ -70,6 +67,12 @@ int  match(mask, name)
 	}
 	else if (cm != '?' && lc(cm) != lc(*n))
 		return 1;	/* most likely first chars won't match */
+	else if ((cm == '_') && (*n != ' ') && (*n != '_'))
+		return 1;	/* false: '_' but first character not '_' nor ' ' */
+	else if ((*m == '\0') && (*n == '\0'))
+		return 0;  /* true: both are empty */
+	else if (*n == '\0')
+		return 1; /* false: name is empty */
 	else
 	{
 		m++;
@@ -77,6 +80,7 @@ int  match(mask, name)
 	}
 	cm = lc(*m);
 	wsm = (char *)NULL;
+	wsn = (char *)NULL;
 	while (1)
 	{
 		if (cm == '*')	/* found the * wildcard */
@@ -93,13 +97,19 @@ int  match(mask, name)
 			cm = *m;
 			if (cm == '\\')	/* don't do ? checking if a \ */
 			{
+				
 				cm = *(++m);	/* just skip this char, no ? checking */
+				/* In case of something like: '*\', return false. */
+				if (!*m)
+					return 1;
 			}
 			else if (cm == '?')	/* if it's a ? */
 			{
 				do
 				{
 					m++;	/* go to the next char of both */
+					if (!*n)
+						return 1; /* false: no character left */
 					n++;
 					if (!*n)	/* if end of test string... */
 						return (!*m ? 0 : 1);	/* true if end of mask str, else false */
@@ -112,9 +122,9 @@ int  match(mask, name)
 			cm = lc(cm);
 			while (lc(*n) != cm)
 			{	/* compare */
-				n++;	/* go to next char of n */
 				if (!*n)	/* if at end of n string */
 					return 1;	/* function becomes false. */
+				n++;	/* go to next char of n */
 			}
 			wsm = m;	/* mark after where wildcard found */
 			cm = lc(*(++m));	/* go to next mask char */
@@ -125,6 +135,18 @@ int  match(mask, name)
 		if (cm == '?')	/* found ? wildcard */
 		{
 			cm = lc(*(++m));	/* just skip and go to next */
+			if (!*n)
+				return 1; /* false: no character left */
+			n++;
+			if (!*n)	/* return true if end of both, */
+				return (cm ? 1 : 0);	/* false if end of test str only */
+			continue;
+		}
+		if (cm == '_')	/* found _: check for '_' or ' ' */
+		{
+			cm = lc(*(++m));	/* just skip and go to next */
+			if ((*n != ' ') && (*n != '_'))
+				return 1; /* false: didnt match or no character left */
 			n++;
 			if (!*n)	/* return true if end of both, */
 				return (cm ? 1 : 0);	/* false if end of test str only */
@@ -145,9 +167,9 @@ int  match(mask, name)
 			cm = lc(*m);
 			while (cm != lc(*n))
 			{	/* compare them */
-				n++;	/* go to next char of n */
 				if (!*n)	/* if we reached end of n string, */
 					return 1;	/* function becomes false. */
+				n++;	/* go to next char of n */
 			}
 			wsn = n;	/* mark spot first char was found */
 		}
@@ -164,8 +186,7 @@ int  match(mask, name)
  * This particular version is "in place", so that it changes the pattern
  * which is to be reduced to a "minimal" size.
  */
-char *collapse(pattern)
-	char *pattern;
+char *collapse(char *pattern)
 {
 	char *s;
 	char *s1;
@@ -209,9 +230,7 @@ char *collapse(pattern)
  *		<0, if s1 lexicographically less than s2
  *		>0, if s1 lexicographically greater than s2
  */
-int  smycmp(s1, s2)
-	char *s1;
-	char *s2;
+int  smycmp(char *s1, char *s2)
 {
 	u_char *str1;
 	u_char *str2;
@@ -231,10 +250,7 @@ int  smycmp(s1, s2)
 }
 
 
-int  myncmp(str1, str2, n)
-	char *str1;
-	char *str2;
-	int  n;
+int  myncmp(char *str1, char *str2, int n)
 {
 	u_char *s1;
 	u_char *s2;
@@ -393,3 +409,31 @@ u_char char_atribs[] = {
 /* e0-ef */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 /* f0-ff */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
+
+/* Old match() */
+int _match(char *mask, char *name) {
+	return match2(mask,name);
+}
+
+
+/* Old match() plus some optimizations from bahamut */
+int match(char *mask, char *name) {
+	if (mask[0] == '*' && mask[1] == '!') {
+		mask += 2;
+		while (*name != '!' && *name)
+			name++;
+		if (!*name)
+			return 1;
+		name++;
+	}
+		
+	if (mask[0] == '*' && mask[1] == '@') {
+		mask += 2;
+		while (*name != '@' && *name)
+			name++;
+		if (!*name)
+			return 1;
+		name++;
+	}
+	return match2(mask,name);
+}

@@ -25,6 +25,7 @@
 #include "h.h"
 #include "hash.h"
 #include "proto.h"
+#include "msg.h"
 #include <string.h>
 
 /* externally defined functions */
@@ -68,7 +69,12 @@ void add_history(aClient *cptr, int online)
 	AllocCpy(new->name, cptr->name);
 	AllocCpy(new->username, cptr->user->username);
 	AllocCpy(new->hostname, cptr->user->realhost);
-	AllocCpy(new->virthost, cptr->user->virthost);
+	if (cptr->user->virthost)
+	{
+		AllocCpy(new->virthost, cptr->user->virthost);
+	}
+	else
+		new->virthost = strdup("");
 	new->servername = cptr->user->server;
 	AllocCpy(new->realname, cptr->info);
 
@@ -141,67 +147,6 @@ void count_whowas_memory(int *wwu, u_long *wwum)
 	*wwum = um;
 	return;
 }
-/*
-** m_whowas
-**      parv[0] = sender prefix
-**      parv[1] = nickname queried
-*/
-int  m_whowas(aClient *cptr, aClient *sptr, int parc, char *parv[])
-{
-	aWhowas *temp;
-	int  cur = 0;
-	int  max = -1, found = 0;
-	char *p, *nick;
-
-	if (parc < 2)
-	{
-		sendto_one(sptr, err_str(ERR_NONICKNAMEGIVEN),
-		    me.name, parv[0]);
-		return 0;
-	}
-	if (parc > 2)
-		max = atoi(parv[2]);
-	if (parc > 3)
-		if (hunt_server(cptr, sptr, ":%s WHOWAS %s %s :%s", 3, parc,
-		    parv))
-			return 0;
-
-	if (!MyConnect(sptr) && (max > 20))
-		max = 20;
-
-	p = (char *)strchr(parv[1], ',');
-	if (p)
-		*p = '\0';
-	nick = parv[1];
-	temp = WHOWASHASH[hash_whowas_name(nick)];
-	found = 0;
-	for (; temp; temp = temp->next)
-	{
-		if (!mycmp(nick, temp->name))
-		{
-			sendto_one(sptr, rpl_str(RPL_WHOWASUSER),
-			    me.name, parv[0], temp->name,
-			    temp->username,
-			    (IsOper(sptr) ? temp->hostname :
-			    (*temp->virthost !=
-			    '\0') ? temp->virthost : temp->hostname),
-			    temp->realname);
-			sendto_one(sptr, rpl_str(RPL_WHOISSERVER), me.name,
-			    parv[0], temp->name, temp->servername,
-			    myctime(temp->logoff));
-			cur++;
-			found++;
-		}
-		if (max > 0 && cur >= max)
-			break;
-	}
-	if (!found)
-		sendto_one(sptr, err_str(ERR_WASNOSUCHNICK),
-		    me.name, parv[0], nick);
-
-	sendto_one(sptr, rpl_str(RPL_ENDOFWHOWAS), me.name, parv[0], parv[1]);
-	return 0;
-}
 
 void initwhowas()
 {
@@ -215,7 +160,6 @@ void initwhowas()
 	for (i = 0; i < WW_MAX; i++)
 		WHOWASHASH[i] = NULL;
 }
-
 
 static void add_whowas_to_clist(aWhowas ** bucket, aWhowas * whowas)
 {

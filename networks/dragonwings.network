@@ -1,0 +1,18 @@
+set {
+	network-name		"DragonWings";
+	default-server		"irc.dragonwings.org";
+	services-server		"saturn.dragonwings.org";
+	stats-server		"stats.dragonwings.org";
+	help-channel		"#DragonWings";
+	hiddenhost-prefix	"dw";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"locop.dragonwings.org";
+		global		"ircop.dragonwings.org";
+		coadmin		"coadmin.dragonwings.org";
+		admin		"admin.dragonwings.org";
+		servicesadmin	"serviceop.dragonwings.org";
+		netadmin	"netadmin.dragonwings.org";
+		host-on-oper-up	"off";
+	};
+};

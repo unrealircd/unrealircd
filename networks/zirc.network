@@ -1,0 +1,25 @@
+/*
+ * ZiRC (irc.zirc.org) Network Configuration File
+ *
+ * Added-at:     18 June 2001 11:29
+ * Author: BaTmAn
+ * Email: BaTmAn@UnrealIRCd.org
+ */
+
+set {
+	network-name "ZiRC";
+	default-server "irc.zirc.org"; 
+	services-server "services.zirc.org";
+	stats-server "stats.zirc.org";
+	help-channel "#ZiRC";
+	hiddenhost-prefix "ZiRC";
+	hosts {
+		local "staff.zirc.org";
+		global "staff.zirc.org";
+		coadmin "staff.zirc.org";
+		admin "staff.zirc.org";
+		servicesadmin "staff.zirc.org";
+		netadmin "staff.zirc.org";
+		host-on-oper yes;
+	};
+};

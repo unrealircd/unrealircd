@@ -136,7 +136,10 @@ int create_client(const char *hostname, const int hostport) {
   socket_address hostaddr;
   int adlen;
 
+  /* winlocal
   if ((descript=socket(PF_INET, SOCK_STREAM, 0)) < 0)
+  */
+  if ((descript=socket(PF_INET, SOCK_STREAM, 0)) == -1)		// winlocal
     fatal("socket");
 
   name_to_number(AF_INET, hostname, hostport, &hostaddr, &adlen);
