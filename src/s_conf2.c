@@ -628,6 +628,7 @@ int	_conf_admin(ConfigFile *conf, ConfigEntry *ce)
 			continue;	
 		}
 		ca = MyMallocEx(sizeof(ConfigItem_admin));
+		ca->flags = CNF_ADMIN;
 		ca->line = strdup(cep->ce_varname);
 		add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_admin);
 	} 
@@ -649,6 +650,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 	}
 	class = (ConfigItem_class *) MyMallocEx(sizeof(ConfigItem_class));
 	class->name = strdup(ce->ce_vardata);
+	class->flags = CNF_CLASS;
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!cep->ce_varname)
@@ -689,6 +691,7 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 	if (!conf_me)
 	{
 		conf_me = (ConfigItem_me *) MyMallocEx(sizeof(ConfigItem_me));
+		conf_me->flags = CNF_ME;
 	}
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{

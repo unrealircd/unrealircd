@@ -879,7 +879,15 @@ struct Client {
 
 /*
  * conf2 stuff -stskeeps
-*/ 
+*/
+
+/* Config flags */
+#define CNF_ME		0x000001
+#define CNF_ADMIN	0x000002
+#define CNF_CLASS	0x000004
+#define CNF_ALLOW	0x000008
+#define CNF_OPER	0x000010
+ 
 struct _configfile
 {
         char            *cf_filename;
