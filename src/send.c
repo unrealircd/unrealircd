@@ -1290,8 +1290,7 @@ void sendto_umode(int umodes, char *pattern, ...)
 	int  w;
 	va_start(vl, pattern);
 	for (i = 0; i <= LastSlot; i++)
-		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-		    (cptr->umodes & umodes) == umodes)
+		if ((cptr = local[i]) && IsPerson(cptr) && (cptr->umodes & umodes) == umodes)
 		{
 			(void)ircsprintf(nbuf, ":%s NOTICE %s :",
 			    me.name, cptr->name);
@@ -1315,11 +1314,8 @@ void sendto_snomask(int snomask, char *pattern, ...)
 	char nbuf[1024];
 	int  w;
 	va_start(vl, pattern);
-	w = (snomask == SNO_CLIENT ? 1 : 0);
 	for (i = 0; i <= LastSlot; i++)
-		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-		    (cptr->user->snomask & snomask) == snomask /*&& ((w == 1)
-		    && !IsHybNotice(cptr))*/)
+		if ((cptr = local[i]) && IsPerson(cptr) && (cptr->user->snomask & snomask))
 		{
 			(void)ircsprintf(nbuf, ":%s NOTICE %s :",
 			    me.name, cptr->name);

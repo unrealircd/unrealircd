@@ -780,3 +780,4 @@ seen. gmtime warning still there
 - Fixed an oper-only-stats bug
 - Updated some documentation to prepar for release
 - Docs prepare
+- Fixed a major snomask bug found by narf
