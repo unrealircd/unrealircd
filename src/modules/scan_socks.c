@@ -164,9 +164,13 @@ void	scan_socks_scan(HStruct *h)
 
 	sin.SIN_PORT = htons(SCAN_ON_PORT);
 	sin.SIN_FAMILY = AFINET;
-	/* We do this blocking. */
+	/* We do this non-blocking to prevent a hang of the entire ircd with newer
+	 * versions of glibc.  Don't you just love new "features?"
+	 * Passing null to this is probably bad, a better method is needed. 
+	 * Maybe a version of set_non_blocking that doesn't send error messages? */
+	set_non_blocking(fd, NULL);
 	if ((retval = connect(fd, (struct sockaddr *)&sin,
-		sizeof(sin))) == -1)
+		sizeof(sin))) == -1 && errno != EINPROGRESS)
 	{
 		printf("%i", ERRNO);
 		/* we have no socks server! */
