@@ -2022,7 +2022,7 @@ void	validate_configuration(void)
 	
 	/* Let us validate dynconf first */
 	if (!KLINE_ADDRESS || (*KLINE_ADDRESS == '\0'))
-		Error("Missing KLINE_ADDRESS");
+		Error("set::kline-address is missing");
 #ifndef DEVELOP
 	if (KLINE_ADDRESS) 
 		if (!strchr(KLINE_ADDRESS, '@') && !strchr(KLINE_ADDRESS, ':'))
@@ -2088,8 +2088,8 @@ void	validate_configuration(void)
 			Error("me::info is missing");
 		/* numeric is being checked in _conf_me */	
 	}
-	if (!conf_admin)
-		Error("admin {} is missing");
+		else
+			Error("me {} is missing");
 
 	for (class_ptr = conf_class; class_ptr; class_ptr = (ConfigItem_class *) class_ptr->next)
 	{
