@@ -413,4 +413,4 @@
   when I wrote the last one :P
 - When IRCOps are breaking into chans with invite only (+i) or 
   key-protection (+k) a eyes-notice is sent like it is on banwalk. -NiQuiL
-
+- Added unitedirc.network -NiQuiL
