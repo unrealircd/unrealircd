@@ -60,6 +60,7 @@ void module_init(void)
 
 int  load_module(char *module)
 {
+#ifndef STATIC_LINKING
 #ifdef _WIN32
 	HMODULE Mod;
 #else
@@ -183,11 +184,13 @@ int  load_module(char *module)
 		return -1;
 	}
 #endif
+#endif
 }
 
 
 int	unload_module(char *name)
 {
+#ifndef STATIC_LINKING
 	int	i;
 	
 	for (i = 0; i < MAXMODULES; i++)
@@ -205,10 +208,12 @@ int	unload_module(char *name)
 	Modules[i] = NULL;
 	modules_loaded--;
 	return 1;
+#endif
 }
 
 vFP module_sym(char *name)
 {
+#ifndef STATIC_LINKING
 	vFP	fp;
 	char	buf[512];
 	int	i;
@@ -232,11 +237,13 @@ vFP module_sym(char *name)
 			return (fp);
 	}
 	return NULL;
+#endif
 }
 
 
 void	module_loadall()
 {
+#ifndef STATIC_LINKING
 	vFP	fp;
 	char	buf[512];
 	int	i;
@@ -270,6 +277,7 @@ void	module_loadall()
 		/* Call the module_load */
 		(*fp)();
 	}
+#endif
 }
 
 int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
@@ -337,21 +345,25 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return 1;
 }
 
-void	add_Hook(int hooktype, int (*func)())
+void	add_HookX(int hooktype, int (*func)(), void (*vfunc)())
 {
 	Hook *p;
 	
 	p = (Hook *) MyMallocEx(sizeof(Hook));
-	p->func = func;
+	if (func)
+		p->func.intfunc = func;
+	if (vfunc)
+		p->func.voidfunc = vfunc;
 	add_ConfigItem((ConfigItem *) p, (ConfigItem **) &Hooks[hooktype]);
 }
 
-void	del_Hook(int hooktype, int (*func)())
+void	del_HookX(int hooktype, int (*func)(), void (*vfunc)())
 {
 	Hook *p;
 	
 	for (p = Hooks[hooktype]; p; p = p->next)
-		if (p->func == func)
+		if ((func && (p->func.intfunc == func)) || 
+			(vfunc && (p->func.voidfunc == vfunc)))
 		{
 			del_ConfigItem((ConfigItem *) p, (ConfigItem **) &Hooks[hooktype]);
 			return;

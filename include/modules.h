@@ -24,7 +24,7 @@
 #define MAXHOOKTYPES	20
 
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(STATIC_LINKING)
 #define DLLFUNC	_declspec(dllexport)
 #define irc_dlopen(x,y) LoadLibrary(x)
 #define irc_dlclose FreeLibrary
@@ -66,13 +66,19 @@ int  	load_module(char *module);
 int	unload_module(char *name);
 vFP	module_sym(char *name);
 
-void	add_Hook(int hooktype, int (*func)());
-void	del_Hook(int hooktype, int (*func)());
+#define add_Hook(hooktype, func) add_HookX(hooktype, func, NULL)
+#define del_Hook(hooktype, func) del_HookX(hooktype, func, NULL)
 
-#define RunHook(hooktype,x) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*global_i->func)(x)
-#define RunHook2(hooktype,x,y) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*global_i->func)(x,y)
+void	add_HookX(int hooktype, int (*intfunc)(), void (*voidfunc)());
+void	del_HookX(int hooktype, int (*intfunc)(), void (*voidfunc)());
 
+
+#define RunHook(hooktype,x) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(x)
+#define RunHook2(hooktype,x,y) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(x,y)
 #define HOOKTYPE_LOCAL_QUIT	1
 #define HOOKTYPE_LOCAL_NICKCHANGE 2
 #define HOOKTYPE_LOCAL_CONNECT 3
+#define HOOKTYPE_SCAN_HOST 4
+#define HOOKTYPE_SCAN_INFO 5
+
 

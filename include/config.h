@@ -188,6 +188,18 @@
 */
 #define MAXUNKNOWNCONNECTIONSPERIP 3
 
+/*
+ * Settings:
+ * 
+ * SCAN_AT_ONCE
+ *  - How many the scanning module can support scanning at once
+ * Memory will be SCAN_AT_ONCE * (HOSTLENGTH + 1)
+*/
+
+#define SCAN_AT_ONCE 100
+#define SCAN_HOSTLENGTH 30
+
+
 /* Do these work? I dunno... */
 
 /* #undef	VMS		   Should work for IRC client, not server */

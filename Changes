@@ -532,7 +532,10 @@ seen. gmtime warning still there
 - Made Config say Unreal3.2
 - Made a popup menu for the tray icon to contain the same 'buttons' as the GUI does
 - Made Unreal run correctly on OpenBSD (thanks to PFAK for the shell)
+- Fixed with bug with ircd not -r'ing users on nick switch
 - Fixed the /stats C = crash if it is a leaf bug found by BaTmAn
 - Added a patch by McSkaf to make Unreal reload its tray icon if explorer restarts
 - Fixed a win32 bug found by eternal
 - Fixed yet another win32 bug (I think I should test before I commit ;P)
+- Changed how hooks work, making them support voidfuncs
+- Added src/modules/scan.c and src/modules/scan_dummy.c

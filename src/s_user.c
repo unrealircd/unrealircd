@@ -1738,6 +1738,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		sendto_common_channels(sptr, ":%s NICK :%s", parv[0], nick);
 		sendto_serv_butone_token(cptr, parv[0], MSG_NICK, TOK_NICK,
 		    "%s %d", nick, sptr->lastnick);
+		acptr->umodes &= ~UMODE_REGNICK;
 	}
 	else if (!sptr->name[0])
 	{
