@@ -49,3 +49,5 @@ Assigned to DrBin:
 * Port to BeOS
 * +N (no nickname changes chmode)
 * Chmodes in /list possbility
+* Make chached MOTDs more memory friendly (dynamic allocation)
+* Fix up the flag and proto system
