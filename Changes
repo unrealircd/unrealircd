@@ -1079,3 +1079,4 @@ seen. gmtime warning still there
 - Recoded the win32 editor to use a toolbar, and added support
   for XP style controls
 - Made a few additional cleanups to the win32 code
+- // comments are not supported by many compilers and should not be used

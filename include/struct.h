@@ -734,18 +734,12 @@ struct Client {
 	struct Client *next, *prev, *hnext;
 	anUser *user;		/* ...defined, if this is a User */
 	aServer *serv;		/* ...defined, if this is a server */
-//	TS   lasttime;		/* ...should be only LOCAL clients? --msa */
-//	TS   firsttime;		/* time client was created */
-//	TS   since;		/* last time we parsed something */
 	TS   lastnick;		/* TimeStamp on nick */
-//	TS   nextnick;		/* Time the next nick change will be allowed */
-//	u_char targets[MAXTARGETS];	/* Hash values of current targets */
 	long flags;		/* client flags */
 	long umodes;		/* client usermodes */
 	aClient *from;		/* == self, if Local Client, *NEVER* NULL! */
 	int  fd;		/* >= 0, for local clients */
 	unsigned char hopcount;		/* number of servers to this 0 = local */
-//	short status;		/* Client type */
 	char name[HOSTLEN + 1];	/* Unique name of the client, nick or host */
 	char username[USERLEN + 1];	/* username here now for auth stuff */
 	char info[REALLEN + 1];	/* Free form additional client information */
