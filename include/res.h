@@ -39,22 +39,13 @@ typedef	struct	reslist {
 	char	*name;
 	struct	reslist	*next;
 	Link	cinfo;
-#ifndef _WIN32
 	struct	hent he;
-#else
-	struct hostent *he;
-	char locked;
-#endif
 	} ResRQ;
 
 typedef	struct	cache {
 	time_t	expireat;
 	time_t	ttl;
-#ifndef _WIN32
 	struct hostent he;
-#else
-	struct hostent *he;
-#endif
 	struct	cache	*hname_next, *hnum_next, *list_next;
 	} aCache;
 

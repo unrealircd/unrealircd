@@ -2356,3 +2356,7 @@ seen. gmtime warning still there
   and badword quit lists... could be useful :p.
 - Little config.h cleanup (removed obsolete non-working defines).
 - Allow opers to talk in channel even if +m (#0001109).
+- Implemented the *nix resolver under windows. This should solve 90% of the problems that
+  exist in the Windows version. There may be some problems with the resolver that still
+  need to be worked out, however it should be much more stable than before. Some of this
+  code is based on the ircu Windows NT port by run.

@@ -349,21 +349,21 @@ static int ns_name_ntop(const u_char *src, char *dst, size_t dstsiz)
 		if ((n & NS_CMPRSFLGS) != 0)
 		{
 			/* Some kind of compression pointer. */
-			errno = EMSGSIZE;
+			SET_ERRNO(P_EMSGSIZE);
 			return (-1);
 		}
 		if (dn != dst)
 		{
 			if (dn >= eom)
 			{
-				errno = EMSGSIZE;
+				SET_ERRNO(P_EMSGSIZE);
 				return (-1);
 			}
 			*dn++ = '.';
 		}
 		if (dn + n >= eom)
 		{
-			errno = EMSGSIZE;
+			SET_ERRNO(P_EMSGSIZE);
 			return (-1);
 		}
 		for ((void)NULL; n > 0; n--)
@@ -373,7 +373,7 @@ static int ns_name_ntop(const u_char *src, char *dst, size_t dstsiz)
 			{
 				if (dn + 1 >= eom)
 				{
-					errno = EMSGSIZE;
+					SET_ERRNO(P_EMSGSIZE);
 					return (-1);
 				}
 				*dn++ = '\\';
@@ -383,7 +383,7 @@ static int ns_name_ntop(const u_char *src, char *dst, size_t dstsiz)
 			{
 				if (dn + 3 >= eom)
 				{
-					errno = EMSGSIZE;
+					SET_ERRNO(P_EMSGSIZE);
 					return (-1);
 				}
 				*dn++ = '\\';
@@ -395,7 +395,7 @@ static int ns_name_ntop(const u_char *src, char *dst, size_t dstsiz)
 			{
 				if (dn >= eom)
 				{
-					errno = EMSGSIZE;
+					SET_ERRNO(P_EMSGSIZE);
 					return (-1);
 				}
 				*dn++ = (char)c;
@@ -406,14 +406,14 @@ static int ns_name_ntop(const u_char *src, char *dst, size_t dstsiz)
 	{
 		if (dn >= eom)
 		{
-			errno = EMSGSIZE;
+			SET_ERRNO(P_EMSGSIZE);
 			return (-1);
 		}
 		*dn++ = '.';
 	}
 	if (dn >= eom)
 	{
-		errno = EMSGSIZE;
+		SET_ERRNO(P_EMSGSIZE);
 		return (-1);
 	}
 	*dn++ = '\0';
@@ -452,20 +452,20 @@ static int ns_name_pton(const char *src, u_char *dst, size_t dstsiz)
 				if ((c = *src++) == 0 ||
 				    (cp = strchr(digits, c)) == NULL)
 				{
-					errno = EMSGSIZE;
+					SET_ERRNO(P_EMSGSIZE);
 					return (-1);
 				}
 				n += (cp - digits) * 10;
 				if ((c = *src++) == 0 ||
 				    (cp = strchr(digits, c)) == NULL)
 				{
-					errno = EMSGSIZE;
+					SET_ERRNO(P_EMSGSIZE);
 					return (-1);
 				}
 				n += (cp - digits);
 				if (n > 255)
 				{
-					errno = EMSGSIZE;
+					SET_ERRNO(P_EMSGSIZE);
 					return (-1);
 				}
 				c = n;
@@ -482,12 +482,12 @@ static int ns_name_pton(const char *src, u_char *dst, size_t dstsiz)
 			c = (bp - label - 1);
 			if ((c & NS_CMPRSFLGS) != 0)
 			{	/* Label too big. */
-				errno = EMSGSIZE;
+				SET_ERRNO(P_EMSGSIZE);
 				return (-1);
 			}
 			if (label >= eom)
 			{
-				errno = EMSGSIZE;
+				SET_ERRNO(P_EMSGSIZE);
 				return (-1);
 			}
 			*label = c;
@@ -498,21 +498,21 @@ static int ns_name_pton(const char *src, u_char *dst, size_t dstsiz)
 				{
 					if (bp >= eom)
 					{
-						errno = EMSGSIZE;
+						SET_ERRNO(P_EMSGSIZE);
 						return (-1);
 					}
 					*bp++ = '\0';
 				}
 				if ((bp - dst) > MAXCDNAME)
 				{
-					errno = EMSGSIZE;
+					SET_ERRNO(P_EMSGSIZE);
 					return (-1);
 				}
 				return (1);
 			}
 			if (c == 0)
 			{
-				errno = EMSGSIZE;
+				SET_ERRNO(P_EMSGSIZE);
 				return (-1);
 			}
 			label = bp++;
@@ -520,7 +520,7 @@ static int ns_name_pton(const char *src, u_char *dst, size_t dstsiz)
 		}
 		if (bp >= eom)
 		{
-			errno = EMSGSIZE;
+			SET_ERRNO(P_EMSGSIZE);
 			return (-1);
 		}
 		*bp++ = (u_char)c;
@@ -528,12 +528,12 @@ static int ns_name_pton(const char *src, u_char *dst, size_t dstsiz)
 	c = (bp - label - 1);
 	if ((c & NS_CMPRSFLGS) != 0)
 	{			/* Label too big. */
-		errno = EMSGSIZE;
+		SET_ERRNO(P_EMSGSIZE);
 		return (-1);
 	}
 	if (label >= eom)
 	{
-		errno = EMSGSIZE;
+		SET_ERRNO(P_EMSGSIZE);
 		return (-1);
 	}
 	*label = c;
@@ -541,14 +541,14 @@ static int ns_name_pton(const char *src, u_char *dst, size_t dstsiz)
 	{
 		if (bp >= eom)
 		{
-			errno = EMSGSIZE;
+			SET_ERRNO(P_EMSGSIZE);
 			return (-1);
 		}
 		*bp++ = 0;
 	}
 	if ((bp - dst) > MAXCDNAME)
 	{			/* src too big */
-		errno = EMSGSIZE;
+		SET_ERRNO(P_EMSGSIZE);
 		return (-1);
 	}
 	return (0);
@@ -573,7 +573,7 @@ static int ns_name_unpack(const u_char *msg, const u_char *eom, const u_char *sr
 	dstlim = dst + dstsiz;
 	if (srcp < msg || srcp >= eom)
 	{
-		errno = EMSGSIZE;
+		SET_ERRNO(P_EMSGSIZE);
 		return (-1);
 	}
 	/* Fetch next label in domain name. */
@@ -586,7 +586,7 @@ static int ns_name_unpack(const u_char *msg, const u_char *eom, const u_char *sr
 			  /* Limit checks. */
 			  if (dstp + n + 1 >= dstlim || srcp + n >= eom)
 			  {
-				  errno = EMSGSIZE;
+				  SET_ERRNO(P_EMSGSIZE);
 				  return (-1);
 			  }
 			  checked += n + 1;
@@ -599,7 +599,7 @@ static int ns_name_unpack(const u_char *msg, const u_char *eom, const u_char *sr
 		  case NS_CMPRSFLGS:
 			  if (srcp >= eom)
 			  {
-				  errno = EMSGSIZE;
+				  SET_ERRNO(P_EMSGSIZE);
 				  return (-1);
 			  }
 			  if (len < 0)
@@ -607,7 +607,7 @@ static int ns_name_unpack(const u_char *msg, const u_char *eom, const u_char *sr
 			  srcp = msg + (((n & 0x3f) << 8) | (*srcp & 0xff));
 			  if (srcp < msg || srcp >= eom)
 			  {	/* Out of range. */
-				  errno = EMSGSIZE;
+				  SET_ERRNO(P_EMSGSIZE);
 				  return (-1);
 			  }
 			  checked += 2;
@@ -618,13 +618,13 @@ static int ns_name_unpack(const u_char *msg, const u_char *eom, const u_char *sr
 			   */
 			  if (checked >= eom - msg)
 			  {
-				  errno = EMSGSIZE;
+				  SET_ERRNO(P_EMSGSIZE);
 				  return (-1);
 			  }
 			  break;
 
 		  default:
-			  errno = EMSGSIZE;
+			  SET_ERRNO(P_EMSGSIZE);
 			  return (-1);	/* flag error */
 		}
 	}
@@ -681,13 +681,13 @@ static int ns_name_pack(const u_char *src, u_char *dst, int dstsiz, const u_char
 		n = *srcp;
 		if ((n & NS_CMPRSFLGS) != 0)
 		{
-			errno = EMSGSIZE;
+			SET_ERRNO(P_EMSGSIZE);
 			return (-1);
 		}
 		l += n + 1;
 		if (l > MAXCDNAME)
 		{
-			errno = EMSGSIZE;
+			SET_ERRNO(P_EMSGSIZE);
 			return (-1);
 		}
 		srcp += n + 1;
@@ -707,7 +707,7 @@ static int ns_name_pack(const u_char *src, u_char *dst, int dstsiz, const u_char
 			{
 				if (dstp + 1 >= eob)
 				{
-					errno = EMSGSIZE;
+					SET_ERRNO(P_EMSGSIZE);
 					return (-1);
 				}
 				*dstp++ = (l >> 8) | NS_CMPRSFLGS;
@@ -725,12 +725,12 @@ static int ns_name_pack(const u_char *src, u_char *dst, int dstsiz, const u_char
 		/* copy label to buffer */
 		if (n & NS_CMPRSFLGS)
 		{		/* Should not happen. */
-			errno = EMSGSIZE;
+			SET_ERRNO(P_EMSGSIZE);
 			return (-1);
 		}
 		if (dstp + 1 + n >= eob)
 		{
-			errno = EMSGSIZE;
+			SET_ERRNO(P_EMSGSIZE);
 			return (-1);
 		}
 		memcpy(dstp, srcp, n + 1);
@@ -743,7 +743,7 @@ static int ns_name_pack(const u_char *src, u_char *dst, int dstsiz, const u_char
 	{
 		if (msg != NULL)
 			*lpp = NULL;
-		errno = EMSGSIZE;
+		SET_ERRNO(P_EMSGSIZE);
 		return (-1);
 	}
 	return (dstp - dst);
@@ -817,14 +817,14 @@ static int ns_name_skip(const u_char **ptrptr, const u_char *eom)
 			  cp++;
 			  break;
 		  default:	/* illegal type */
-			  errno = EMSGSIZE;
+			  SET_ERRNO(P_EMSGSIZE);
 			  return (-1);
 		}
 		break;
 	}
 	if (cp > eom)
 	{
-		errno = EMSGSIZE;
+		SET_ERRNO(P_EMSGSIZE);
 		return (-1);
 	}
 	*ptrptr = cp;
@@ -925,13 +925,13 @@ static int dn_find(const u_char *domain, const u_char *msg, const u_char *const 
 				  break;
 
 			  default:	/* illegal type */
-				  errno = EMSGSIZE;
+				  SET_ERRNO(P_EMSGSIZE);
 				  return (-1);
 			}
 		}
 	      next:;
 	}
-	errno = ENOENT;
+	SET_ERRNO(ENOENT);
 	return (-1);
 }
 

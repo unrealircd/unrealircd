@@ -112,12 +112,8 @@ static struct SOCKADDR_IN mysk;
 static struct SOCKADDR *connect_inet(ConfigItem_link *, aClient *, int *);
 int completed_connection(aClient *);
 static int check_init(aClient *, char *, size_t);
-#ifndef _WIN32
 static void do_dns_async();
 void set_sock_opts(int, aClient *);
-#else
-void set_sock_opts(int, aClient *);
-#endif
 static char readbuf[READBUF_SIZE];
 char zlinebuf[BUFSIZE];
 extern char *version;
@@ -1718,10 +1714,8 @@ int  read_message(time_t delay, fdlist *listp)
 			}
 		}
 
-#ifndef _WIN32
 		if (resfd >= 0)
 			FD_SET(resfd, &read_set);
-#endif
 		if (me.fd >= 0)
 			FD_SET(me.fd, &read_set);
 
@@ -1751,7 +1745,6 @@ int  read_message(time_t delay, fdlist *listp)
 		Sleep(10000);
 #endif
 	}
-#ifndef _WIN32
 	if (resfd >= 0 && FD_ISSET(resfd, &read_set))
 	{
 		Debug((DEBUG_DNS, "Doing DNS async.."));
@@ -1759,7 +1752,6 @@ int  read_message(time_t delay, fdlist *listp)
 		nfds--;
 		FD_CLR(resfd, &read_set);
 	}
-#endif
 	/*
 	 * Check fd sets for the auth fd's (if set and valid!) first
 	 * because these can not be processed using the normal loops below.
@@ -2552,11 +2544,7 @@ static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int 
  * reading.
  */
 
-#ifndef _WIN32
 static void do_dns_async(void)
-#else
-void do_dns_async(int id)
-#endif
 {
 	static	Link	ln;
 	aClient	*cptr;
@@ -2568,11 +2556,7 @@ void do_dns_async(int id)
 
 	do {
 		ln.flags = -1;
-#ifndef _WIN32
 		hp = get_res((char *)&ln);
-#else
-		hp = get_res((char *)&ln, id);
-#endif
 		Debug((DEBUG_DNS,"%#x = get_res(%d,%#x)", hp, ln.flags,
 			ln.value.cptr));
 
