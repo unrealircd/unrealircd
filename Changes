@@ -3099,3 +3099,4 @@ seen. gmtime warning still there
 - doc/unreal32docs.html and help.conf updates (#0001734 + other stuff).
 - spamfilter.conf: added signatures for Gaggle worm.
 - Changed version to pre1
+- Fixed SJOIN bug: it sometimes was setting too many modes at once.

@@ -153,39 +153,25 @@ static int compare_floodprot_modes(ChanFloodProt *a, ChanFloodProt *b)
  */
 
 /* Some ugly macros, but useful */
-#define Addit(mode,param) if (strlen(parabuf) + strlen(param) + 11 < MODEBUFLEN) { \
+#define Addit(mode,param) if ((strlen(parabuf) + strlen(param) + 11 < MODEBUFLEN) && (b <= MAXMODEPARAMS)) { \
 	if (*parabuf) \
 		strcat(parabuf, " ");\
 	strcat(parabuf, param);\
 	modebuf[b++] = mode;\
 	modebuf[b] = 0;\
 }\
-else if (*parabuf) {\
+else {\
 	sendto_serv_butone_sjoin(cptr, ":%s MODE %s %s %s %lu", sptr->name, chptr->chname,\
 		modebuf, parabuf, chptr->creationtime); \
-        sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", sptr->name, chptr->chname,\
-        	modebuf, parabuf);\
+	sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", sptr->name, chptr->chname,\
+		modebuf, parabuf);\
 	strcpy(parabuf,param);\
+	modebuf[0] = '+';\
 	modebuf[1] = mode;\
-	modebuf[2] = 0;\
-	sendto_serv_butone_sjoin(cptr, ":%s MODE %s %s %s %lu", sptr->name, chptr->chname,\
-		modebuf, parabuf, chptr->creationtime); \
-        sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", sptr->name, chptr->chname,\
-        	modebuf, parabuf); \
-	modebuf[1] = 0;\
-	parabuf[0] = 0;\
-	b = 1;\
-}\
-else if (b == MAXMODEPARAMS) {\
-	sendto_serv_butone_sjoin(cptr, ":%s MODE %s %s %s %lu", sptr->name, chptr->chname,\
-		modebuf, parabuf, chptr->creationtime); \
-        sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", sptr->name, chptr->chname,\
-        	modebuf, parabuf);\
-	parabuf[0] = 0;\
-	modebuf[1] = 0;\
-	b = 1;\
+	modebuf[2] = '\0';\
+	b = 2;\
 }
-#define Addsingle(x) modebuf[b] = x; b++
+#define Addsingle(x) modebuf[b] = x; b++; modebuf[b] = '\0'
 #define CheckStatus(x,y) if (modeflags & (y)) { Addit((x), nick); }
 #define AddBan(x) strlcat(banbuf, x, sizeof banbuf); strlcat(banbuf, " ", sizeof banbuf);
 #define AddEx(x) strlcat(exbuf, x, sizeof exbuf); strlcat(exbuf, " ", sizeof banbuf);
