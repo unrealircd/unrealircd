@@ -2068,8 +2068,10 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  /* Services are special! */
 		  if (IsServices(member->cptr) && MyClient(cptr) && !IsNetAdmin(cptr) && (what == MODE_DEL))
 		  {
+			char errbuf[NICKLEN+50];
+			ircsprintf(errbuf, "%s is a network service", member->cptr->name);
 			sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), me.name, cptr->name,
-				   modechar, "user is a network service");
+				   modechar, errbuf);
 			break;
 		  }
 
@@ -2080,8 +2082,10 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  {
 			  if (MyClient(cptr))
 			  {
+				char errbuf[NICKLEN+30];
+				ircsprintf(errbuf, "%s is a channel owner", member->cptr->name);
 				sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), me.name, cptr->name,
-				   modechar, "user is a channel owner");
+				   modechar, errbuf);
 				break;
 			  } else
 			  if (IsOper(cptr))
@@ -2094,8 +2098,10 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  {
 			  if (MyClient(cptr))
 			  {
+				char errbuf[NICKLEN+30];
+				ircsprintf(errbuf, "%s is a channel admin", member->cptr->name);
 				sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), me.name, cptr->name,
-				   modechar, "user is a channel admin");
+				   modechar, errbuf);
 				break;
 			  } else
 			  if (IsOper(cptr))

@@ -3308,3 +3308,4 @@ This is the 3.2 fixes branch.
 - Updated example.conf: added all new flags we added in the example block, removed
   old confusing comment on SEGV logging, config.h: ripped out lPATH since that define
   isn't anywhere used and is only confusing.
+- Made the new numerics use nicknames (#0001896) suggested by Dukat.
