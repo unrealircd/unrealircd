@@ -67,8 +67,15 @@ static ConfigFile *config_parse(char *filename, char *confdata);
 static void config_entry_free(ConfigEntry *ceptr);
 int	ConfigParse(ConfigFile *cfptr);
 
-
 ConfigItem_me	*conf_me = NULL;
+
+void	*MyMallocEx(size_t size)
+{
+	void *p = MyMalloc(size);
+	
+	bzero(p, size);
+	return (p);
+}
 
 void	add_ConfigItem(ConfigItem *item, ConfigItem **list)
 {
@@ -584,7 +591,11 @@ int	_conf_admin(ConfigFile *conf, ConfigEntry *ce)
 int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
-	
+
+	if (!conf_me)
+	{
+		conf_me = (ConfigItem_me *) MyMallocEx(sizeof(ConfigItem_me));
+	}
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!cep->ce_varname)
@@ -594,7 +605,26 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 		}
 		config_status("[me] Set %s to %s",
 				cep->ce_varname, cep->ce_vardata);
-	} 
+		if (!strcmp(cep->ce_varname, "name"))
+		{
+			if (conf_me->name)
+				MyFree(conf_me->name);
+			conf_me->name = strdup(cep->ce_vardata);
+			config_status("Set me->name to %s :)", conf_me->name);
+		} else
+		if (!strcmp(cep->ce_varname, "info"))
+		{
+			if (conf_me->info)
+				MyFree(conf_me->info);
+			conf_me->info = strdup(cep->ce_vardata);
+			config_status("Set me->info to %s :)", conf_me->info);
+		} else
+		if (!strcmp(cep->ce_varname, "numeric"))
+		{
+			conf_me->numeric = atol(cep->ce_vardata);
+			config_status("Set me->numeric to %i (i) :))", conf_me->numeric);
+		}
+	}
 }
 
 int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)

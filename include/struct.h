@@ -913,7 +913,7 @@ struct _configitem {
 	ConfigItem *next;
 };
 
-struct _confitem_me {
+struct _configitem_me {
 	long	   flags;
 	ConfigItem *prev;
 	ConfigItem *next;
@@ -923,14 +923,14 @@ struct _confitem_me {
 	short	   numeric;
 };
 
-struct _confitem_admin {
+struct _configitem_admin {
 	long	   flags;
 	ConfigItem *prev;
 	ConfigItem *next;
 	char	   *line; 
 };
 
-struct _confitem_class {
+struct _configitem_class {
 	long	   flags;
 	ConfigItem *prev;
 	ConfigItem *next;
@@ -940,7 +940,7 @@ struct _confitem_class {
 	int	   sendq;
 };
 
-struct _confitem_allow {
+struct _configitem_allow {
 	long	         flags;
 	ConfigItem       *prev;
 	ConfigItem       *next;
@@ -949,7 +949,7 @@ struct _confitem_allow {
 	ConfigItem_class *class;
 };
 
-struct _confitem_oper {
+struct _configitem_oper {
 	long	         flags;
 	ConfigItem       *prev;
 	ConfigItem       *next;
