@@ -4320,6 +4320,8 @@ int  localdie(void)
 	return 0;
 }
 
+#endif
+
 aClient *find_match_server(char *mask)
 {
 	aClient *acptr;
@@ -4336,4 +4338,3 @@ aClient *find_match_server(char *mask)
 	}
 	return acptr;
 }
-#endif

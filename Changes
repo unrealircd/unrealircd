@@ -1465,3 +1465,5 @@ seen. gmtime warning still there
 - Fixed a make install bug due to removing obsolete files, reported by Morbid (#0000250)
 - Removed find_match_server from hash.c since it wasn't removed and was instead already
   moved to s_serv.
+- .. Fixed a problem with normal unix source compiling as codemastr had
+  #ifdef _WIN32 'ed find_match_server, causing me to believe it was gone.
