@@ -20,17 +20,6 @@
  *
 */
 
-*** BUGS ***
-* /map has a few little display problems (fixable? sts: no not the hide ulines, already fixed)
-* You can make the server flood off opers if you clone with > MAXCLIENTS
-  fix: make a unknown connection clone defense:P
-* -ex-2.routing.md.us.exchat.org- *** Notice -- Aieeee!!! Server terminating: Segmention fault (buf:
-  :Methos PRIVMSG #exchat :for the * flag)
-
-*** FIXED -- we think ***
-- Potential problem with die/restart from 3.0(fix) ... peopl can not restart/kill servers even
-  if they have the neseccery O:Lines -- it seems towork in 3.1
-
 *** Unreal3.1 *** (state: beta third state)
 - Moved REMOVE_ADVERTISE a little
 - Fixed bug where you could /mode #test +L #test (link a channel to
