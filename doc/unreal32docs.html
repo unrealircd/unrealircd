@@ -73,6 +73,7 @@
   ---3.31. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
   4. <a href="#userchannelmodes">User &amp; Channel Modes</a><br>
   5. <a href="#useropercommands">User &amp; Oper Commands</a><br>
+  6. <a href="#faq">Frequently Asked Questions (FAQ)</a><br> 
 </p>
 <p><strong><font size="+2">1.0 &#8211;Introduction &amp; Notes <a name="IntroductionNotes"></a></font></strong><br>
 </p>
@@ -82,6 +83,14 @@
   of the UnrealIRCd Development Team. This document may be copied/printed/reproduced/published 
   as many times as you like, providing it is for use with UnrealIRCd and is not 
   modified in anyway. &#8211; Copyright UnrealIRCd Development Team 2002</p>
+<p>Please read this manual before asking for help, you may also want to take a look
+   at the <a href="#faq">FAQ</a> for common problems. If that didn't help you can
+   ask for support at irc.ircsystems.net (port 6667) channel #unreal-support (strict UnrealIrcd support, dont
+   ask for help about services!). If you have a real bug (like a crash) then report it at 
+   <a href="http://bugs.unrealircd.org">http://bugs.unrealircd.org</a>.</p>
+<p>We haven't a section about UnrealIrcd features yet (snomasks, modules, etc), in the meantime 
+   you might want to read <A HREF="Unreal31_to_32.html">this</A> which contains some scattered info.</p>
+
 <p><font size="+2"><strong>1.1 &#8211; Notes on upgrading/mixing 3.1.x -&gt; 3.2.x </strong></font><a name="notesonolder"></a><br>
 </p>
 <p>In case you are upgrading from Unreal3.1.x to Unreal3.2 please read <A HREF="Unreal31_to_32.html">this</A>. 
@@ -716,29 +725,43 @@
   file. This file may contain any type of config block and can even include other 
   files. Wildcards are supported in the file name to allow you to load multiple 
   files at once.</p>
-<p>Example:<br>
-  Include mynetwork.network;</p>
+<p><b>example 1: a network file</b><br>
+  <pre>Include mynetwork.network;</pre></p>
 <p>That would be the statement to use if you wanted to use a separate network 
   file. Separate network files are no longer required; all the network settings 
   can be inserted directly into the unrealircd.conf. Or you can put an include 
   statement them to load the file.</p>
+<p><b>example 2: aliases</b><br>
+  <pre>Include aliases/ircservices.conf</pre></p>
+<p>Another example is to use it for including alias blocks, UnrealIrcd comes with
+   some files which (should) contain the right aliases for most services:<br>
+   aliases/ircservices.conf (IRCServices, Daylight)<br>
+   aliases/epona.conf (Epona)<br>
+   aliases/auspice.conf (Auspice)<Br>
+   aliases/generic.conf (Magick, Sirius, Wrecked)<br>
+   aliases/operstats.conf (OperStats)<br>
+   aliases/genericstats.conf (GeoStats, NeoStats)<br>
+</p>
 <p></p>
-<p><font class="block_section">3.10 - </font><font class="block_name">LoadModule Directive</font><a name="loadmoduledirective"></a>
+<p><font class="block_section">3.10 - </font><font class="block_name">LoadModule Directive</font>
+   <font class="block_required">REQUIRED</font><a name="loadmoduledirective"></a>
 </p>
 <p>Syntax:<br>
   loadmodule &lt;file-name&gt;;</p>
-<p>This directive specifies a filename to be loaded as a module. Some modules 
-  may have there own documentation which should be consulted when setting it up. 
-  Loadmodule also supports wildcards to easily load multiple modules at once. 
-</p>
+<p>UnrealIrcd now supports modules (at *NIX). Modules make it easy to write extensions and you 
+   can load/unload them while the ircd is running.</p>
 <p>Modules that come standard with Unreal3.2:</p>
 <p>scan_http.so - HTTP proxy scanner module<br>
-  scan_socks.so - SOCKS proxy scanner module<br>
-  scan.so - Main scanner module (scan_socks and scan_http rely on it)<br>
-  commands.so - All the / commands (well not all yet, but will eventually be all)</p>
-<p>Example:<br>
-  Loadmodule socks.so;</p>
-<p> </p>
+   scan_socks.so - SOCKS proxy scanner module<br>
+   scan.so - Main scanner module (scan_socks and scan_http rely on it)<br>
+   commands.so - All the / commands (well not all yet, but will eventually be all) <font color="red">REQUIRED</font></p>
+<p>So you want to be sure you have commands.so loaded, and often you want the scan* modules too, example:</p>
+<pre>
+loadmodule "src/modules/commands.so";
+loadmodule "src/modules/scan.so";
+loadmodule "src/modules/scan_socks.so";
+loadmodule "src/modules/scan_http.so";
+</pre>
 <p><font class="block_section">3.11 - </font><font class="block_name">Log Block</font>
    <font class="block_optional">OPTIONAL</font><a name="logblock"></a>
 </p>
@@ -1210,6 +1233,7 @@
   nick &lt;nick-to-forward-to&gt;;<br>
   type &lt;type-of-alias&gt;;<br>
   };</p>
+<p>(Note: also see <a href="#includedirective">here</a> about the standard alias files UnrealIrcd has)</p>
 <p>The alias block [standard alias] allows you to forward a command to a user, 
   for example /chanserv sends a message to the user chanserv. The alias:: specifies 
   the name of the command that will be the alias, ex /chanserv, alias::nick is 
@@ -2179,5 +2203,12 @@
     <td>IRCop/All</td>
   </tr>
 </table>
+
+<p>&nbsp;</p>
+<p><font size="+2"><strong>6 &#8211; Frequently Asked Questions (FAQ)<a name="faq"></a></strong></font></p>
+<p>The FAQ is available online <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">here</a></p>
+
+<p>&nbsp;</p>
+<p>&nbsp;</p>
 </body>
 </html>

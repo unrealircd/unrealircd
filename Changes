@@ -1891,3 +1891,4 @@ seen. gmtime warning still there
 - Added USE_ZIP stuff to win32 installer script.
 - Fixed a bug with except ban {} reported by Gargo (#0000604). As a result except tkl {} of
   type tkline and tzline have been removed since they are now handled by except ban {}
+- Updated docs.
