@@ -2855,3 +2855,6 @@ seen. gmtime warning still there
   (hint hint.. ;)
 - Added missing lines to include/setup.h.in for snprintf, vsnprintf, strlcpy, strlcat,
   and strlncat. Should fix #0001510 (for real this time).
+- Ouch!! Fixed a severe bug which caused opers not being recognized on remote
+  servers causing various problems... This was caused by a change 1-2 days ago.
+  Reported by Rocko (#0001537).

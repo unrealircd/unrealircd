@@ -387,7 +387,10 @@ int umode_allow_all(aClient *sptr, int what)
 
 int umode_allow_opers(aClient *sptr, int what)
 {
-	return IsAnOper(sptr) ? 1 : 0;
+	if (MyClient(sptr))
+		return IsAnOper(sptr) ? 1 : 0;
+	else
+		return 1;
 }
 
 void unload_all_unused_umodes()
