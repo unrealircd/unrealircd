@@ -365,3 +365,4 @@
   the SWHOIS after you /oper will override this)
 - Added a donation credit
 - Reverted a change
+- Fixed a double definition (double m_chghost and m_chghost.so)
