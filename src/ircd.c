@@ -483,7 +483,7 @@ static TS try_connections(currenttime)
 		}
 		if (connect_server(con_conf, (aClient *)NULL,
 		    (struct hostent *)NULL) == 0)
-			sendto_ops("Connection to %s[%s] activated.",
+			sendto_realops("Connection to %s[%s] activated.",
 			    con_conf->name, con_conf->host);
 	}
 	Debug((DEBUG_NOTICE, "Next connection check : %s", myctime(next)));

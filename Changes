@@ -700,3 +700,8 @@ Fixed m_who bug displaying channels
 when it isn't supposed to, thanks to frozen
 --Luke
 ===================================
+
+Fixed issue with server IP addresses being
+shown to normal +s lusers (thanks to MrAllthat)
+--Luke
+===================================
