@@ -508,7 +508,6 @@ EXPORTS
 	hash_throttling
 	hash_whowas_name
 	helpign
-	hidehost
 	highest_rate
 	highest_rate2
 	hunt_server
