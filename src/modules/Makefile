@@ -20,7 +20,7 @@
 #*/
 
 COMMANDS_MODULES=m_sethost.so m_chghost.so m_chgident.so m_setname.so \
-		m_setident.so m_sdesc.so m_file.so
+		m_setident.so m_sdesc.so m_file.so 
 
 COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
          m_sdesc.c
@@ -63,7 +63,6 @@ m_file.so: m_file.c $(INCLUDES)
 	$(CC) $(CFLAGS) -I/usr/local/mysql/include  \
 		-fPIC -DPIC -shared -DDYNAMIC_LINKING \
 		-o m_file.so m_file.c -L/usr/local/lib -lmysqlclient 
-
 
 clean:
 	$(RM) -f *.o *.so *~ core
