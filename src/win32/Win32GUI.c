@@ -150,15 +150,28 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 static HCURSOR hCursor;
-static HMENU hAbout, hConfig;
-	int wmId, wmEvent;
+static HMENU hRehash, hAbout, hConfig;
+
+	char *argv[3];
+	aClient *paClient;
+	char *msg;
 	
 	switch (message)
 			{
 			case WM_INITDIALOG: {
 				hCursor = LoadCursor(hInst, MAKEINTRESOURCE(CUR_HAND));
+				/* Rehash popup menu */
+				hRehash = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_REHASH)),0);
+				/* About popup menu */
 				hAbout = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_ABOUT)),0);
+				/* Config popup menu ... get menu items from macros */
 				hConfig = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_CONFIG)),0);
+				ModifyMenu(hConfig, IDM_CONF, MF_BYCOMMAND, IDM_CONF, CPATH);
+				ModifyMenu(hConfig, IDM_MOTD, MF_BYCOMMAND, IDM_MOTD, MPATH);
+				ModifyMenu(hConfig, IDM_OPERMOTD, MF_BYCOMMAND, IDM_OPERMOTD, OPATH);
+				ModifyMenu(hConfig, IDM_BOTMOTD, MF_BYCOMMAND, IDM_BOTMOTD, BPATH);
+				ModifyMenu(hConfig, IDM_RULES, MF_BYCOMMAND, IDM_RULES, RPATH);
+				/* DrawMenuBar(hConfig); */
 				SetWindowText(hDlg, WIN32_VERSION);
 				SendMessage(hDlg, WM_SETICON, (WPARAM)ICON_SMALL, 
 					(LPARAM)(HICON)LoadImage(hInst, MAKEINTRESOURCE(ICO_MAIN), IMAGE_ICON,16, 16, 0));
@@ -210,10 +223,9 @@ static HMENU hAbout, hConfig;
 		     p.y = HIWORD(lParam);
 			 if ((p.x >= 24) && (p.x <= 78) && (p.y >= 178) && (p.y <= 190))
              {
-				 MessageBox(hDlg, "Rehashing the wIRCd", "Rehashing", MB_OK);
-				 sendto_realops("server config file is being rehashed from the console");
-         		 rehash(&me, &me, 0);
-				 return 0;
+				ClientToScreen(hDlg,&p);
+				TrackPopupMenu(hRehash,TPM_LEFTALIGN|TPM_LEFTBUTTON,p.x,p.y,0,hDlg,NULL);
+				return 0;
 			 }
 			 else if ((p.x >= 85) && (p.x <= 132) && (p.y >= 178) && (p.y <= 190))  {
 				 DialogBox(hInst, "Status", hDlg, (DLGPROC)StatusDLG);
@@ -229,7 +241,6 @@ static HMENU hAbout, hConfig;
 				TrackPopupMenu(hAbout,TPM_LEFTALIGN|TPM_LEFTBUTTON,p.x,p.y,0,hDlg,NULL);
 				return 0;
 			 }
-
 			 else if ((p.x >= 245) && (p.x <= 311) && (p.y >= 178) && (p.y <= 190)) {
 				 if (MessageBox(hDlg, "Close UnrealIRCd?", "Are you sure?", MB_YESNO|MB_ICONQUESTION) == IDNO)
 					 return 0;
@@ -238,11 +249,51 @@ static HMENU hAbout, hConfig;
 					 exit(0);
 				 }
 			 }
-
 		}
 			case WM_COMMAND: {
 				switch(LOWORD(wParam)) {
-					case IDM_LICENSE: 
+
+					case IDM_RHALL:
+					case IDM_RHCONF:
+					case IDM_RHMOTD:
+					case IDM_RHOMOTD:
+					case IDM_RHBMOTD:
+						argv[0] = "The Console";
+						paClient = make_client(NULL, &me);
+						SetNetAdmin(paClient);
+						SetAdmin(paClient);
+						strcpy(paClient->name, "The Console");
+						switch (LOWORD(wParam))
+						{
+						case IDM_RHALL:
+							msg = "Rehashing the wIRCd";
+							argv[2] = "-all";
+	         				m_rehash(&me, paClient, 3, argv);
+							/* fall through! */
+						case IDM_RHCONF:
+							if (LOWORD(wParam) == IDM_RHCONF)
+								msg = "Rehashing the config file";
+							argv[1] = "";
+							argv[2] = NULL;
+							break;
+						case IDM_RHMOTD:
+							msg = "Rehashing all MOTDs and Rules files";
+							argv[2] = "-motd";
+							break;
+						case IDM_RHOMOTD:
+							msg = "Rehashing the OPER MOTD file";
+							argv[2] = "-opermotd";
+							break;
+						case IDM_RHBMOTD:
+							msg = "Rehashing the BOT MOTD file";
+							argv[2] = "-botmotd";
+							break;
+						}
+						MessageBox(hDlg, msg, "Rehashing", MB_OK);
+       					m_rehash(&me, paClient, 3, argv);
+						free(paClient);
+						break;
+						case IDM_LICENSE: 
 						DialogBox(hInst, "FromVar", hDlg, (DLGPROC)LicenseDLG);
 						break;
 					case IDM_CREDITS:
@@ -510,7 +561,7 @@ LRESULT CALLBACK ConfigDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 				EndDialog(hDlg, TRUE);
 			if (LOWORD(wParam) == IDOK) {
 				int fd, len;
-				char *buffer = '\0', string[21];
+				char *buffer = '\0';
 				len = SendMessage(GetDlgItem(hDlg, IDC_TEXT), WM_GETTEXTLENGTH, 0, 0);
 				len++;
 				/* Again, only allocate the amount we need */
@@ -557,7 +608,7 @@ LRESULT CALLBACK MotdDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
 				EndDialog(hDlg, TRUE);
 			if (LOWORD(wParam) == IDOK) {
 				int fd, len;
-				char *buffer = '\0', string[21];
+				char *buffer = '\0';
 				len = SendMessage(GetDlgItem(hDlg, IDC_TEXT), WM_GETTEXTLENGTH, 0, 0);
 				len++;
 				/* Again, only allocate the amount we need */
@@ -604,7 +655,7 @@ LRESULT CALLBACK OperMotdDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				EndDialog(hDlg, TRUE);
 			if (LOWORD(wParam) == IDOK) {
 				int fd, len;
-				char *buffer = '\0', string[21];
+				char *buffer = '\0';
 				len = SendMessage(GetDlgItem(hDlg, IDC_TEXT), WM_GETTEXTLENGTH, 0, 0);
 				len++;
 				/* Again, only allocate the amount we need */
@@ -651,7 +702,7 @@ LRESULT CALLBACK BotMotdDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 				EndDialog(hDlg, TRUE);
 			if (LOWORD(wParam) == IDOK) {
 				int fd, len;
-				char *buffer = '\0', string[21];
+				char *buffer = '\0';
 				len = SendMessage(GetDlgItem(hDlg, IDC_TEXT), WM_GETTEXTLENGTH, 0, 0);
 				len++;
 				/* Again, only allocate the amount we need */
@@ -698,7 +749,7 @@ LRESULT CALLBACK RulesDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				EndDialog(hDlg, TRUE);
 			if (LOWORD(wParam) == IDOK) {
 				int fd, len;
-				char *buffer = '\0', string[21];
+				char *buffer = '\0';
 				len = SendMessage(GetDlgItem(hDlg, IDC_TEXT), WM_GETTEXTLENGTH, 0, 0);
 				len++;
 				/* Again, only allocate the amount we need */

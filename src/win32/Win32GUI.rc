@@ -316,6 +316,19 @@ BEGIN
     END
 END
 
+MENU_REHASH MENU DISCARDABLE
+BEGIN
+    POPUP "Rehash"
+    BEGIN
+        MENUITEM "&Everything",                 IDM_RHALL
+        MENUITEM SEPARATOR
+        MENUITEM "&Config file",                IDM_RHCONF
+        MENUITEM "&All MOTDs and Rules",        IDM_RHMOTD
+        MENUITEM "&OPER MOTD",                  IDM_RHOMOTD
+        MENUITEM "&BOT MOTD",                   IDM_RHBMOTD
+    END
+END
+
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
