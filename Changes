@@ -1168,3 +1168,6 @@ v- Fixed some bugreport stuff
   read only (reported by dimplesx #0000057)
 - Removed useless stuff in m_oper (null ptr thing, just dont set them)
 - Fixed auth.c to use random salt
+- Fixed loadmodule invisibility.so: undefined symbol: 
+  get_umode bug, reported by James-Bond, #0000060)
+
