@@ -3645,8 +3645,8 @@ CMD_FUNC(m_topic)
 				if (topiClen > (TOPICLEN))
 					topiClen = TOPICLEN;
 
-				if (nicKlen > (NICKLEN))
-					nicKlen = NICKLEN;
+				if (nicKlen > (NICKLEN+USERLEN+HOSTLEN+5))
+					nicKlen = (NICKLEN+USERLEN+HOSTLEN+5);
 
 				chptr->topic = MyMalloc(topiClen + 1);
 				strncpyzt(chptr->topic, topic, topiClen + 1);
@@ -3690,17 +3690,20 @@ CMD_FUNC(m_topic)
 			}
 			/* setting a topic */
 			topiClen = strlen(topic);
+#ifndef TOPIC_NICK_IS_NUHOST
 			nicKlen = strlen(sptr->name);
-
+#else
+			tnick = make_nick_user_host(sptr->name, sptr->user->username, 
+				IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost);
+			nicKLen = strlen(tnick);
+#endif
 			if (chptr->topic)
 				MyFree(chptr->topic);
 
 			if (topiClen > (TOPICLEN))
 				topiClen = TOPICLEN;
-
-			if (nicKlen > (NICKLEN))
-				nicKlen = NICKLEN;
-
+			if (nicKLen > (NICKLEN+USERLEN+HOSTLEN+5))
+				nicKLen = NICKLEN+USERLEN+HOSTLEN+5;
 			chptr->topic = MyMalloc(topiClen + 1);
 			strncpyzt(chptr->topic, topic, topiClen + 1);
 
@@ -3708,8 +3711,13 @@ CMD_FUNC(m_topic)
 				MyFree(chptr->topic_nick);
 
 			chptr->topic_nick = MyMalloc(nicKlen + 1);
-			strncpyzt(chptr->topic_nick, sptr->name, nicKlen + 1);
-
+			strncpyzt(chptr->topic_nick, 
+#ifndef TOPIC_NICK_IS_NUHOST
+			sptr->name, 
+#else
+			tnick,
+#endif
+			nicKlen + 1);
 			if (ttime && IsServer(cptr))
 				chptr->topic_time = ttime;
 			else

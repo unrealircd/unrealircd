@@ -184,6 +184,13 @@
 #define NICK_DELAY 15		/* recommended value 15 */
 
 /*
+ * This makes topics include nick!user@host instead of nick in topic whoset, 
+ * ALL servers must be Unreal3.2-beta12 or higher, and services may have some
+ * problems with this
+*/
+#undef TOPIC_NICK_IS_NUHOST
+
+/*
 ** Freelinks garbage collector -Stskeeps
 **
 ** GARBAGE_COLLECT_EVERY - how many seconds between every garbage collect
