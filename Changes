@@ -2401,3 +2401,5 @@ seen. gmtime warning still there
   the message. This will reduce CPU usage, especially at hubs (#0001022).
 - Will now strip/block color codes in quits if any channel the user is in has mode +S/+c.
 - Temporarely added trace code for hunting down negative operator counts (#0001155).
+- Made it so that with +M and user not +r and not voice/halfop/ops/etc the part message isn't
+  shown, just like with +m.

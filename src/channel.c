@@ -3767,7 +3767,12 @@ CMD_FUNC(m_part)
 #endif
 			
 		}
-
+		/* +M and not +r? */
+		if ((chptr->mode.mode & MODE_MODREG) && !IsRegNick(sptr) && !IsAnOper(sptr))
+		{
+			comment = NULL;
+			parc = 2;
+		}
 		if (MyConnect(sptr))
 			RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, comment);
 
