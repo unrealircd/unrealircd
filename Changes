@@ -3090,3 +3090,5 @@ seen. gmtime warning still there
 - Fixed halfop mode code to not check remote halfop modes (desynch danger).
 - Force a TRE recompile if ./Config is re-run, due to timestamp fun if you were
   upgrading to CVS every time TRE was not recompiled even if you did make clean.
+- Made ./unreal rehash (= kill -1 <pid>) also reread motd/rules/etc just as a
+  normal /rehash does, reported by superh (#0001699).

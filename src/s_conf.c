@@ -7462,6 +7462,8 @@ int	rehash_internal(aClient *cptr, aClient *sptr, int sig)
 	}
 	if (init_conf(configfile, 1) == 0)
 		run_configuration();
+	if (sig == 1)
+		reread_motdsandrules();
 	unload_all_unused_snomasks();
 	unload_all_unused_umodes();
 	loop.ircd_rehashing = 0;	
