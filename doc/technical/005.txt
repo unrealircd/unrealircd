@@ -86,7 +86,7 @@ PREFIX        (modes)prefixes (qaohv)~&@%+                 Indicates the modes o
                                                            that corespond to the given
                                                            nickname prefixes.
 
-CHANMODES     A,B,C,D         be,kfL,l,                    Specifies how each channel mode is
+CHANMODES     A,B,C,D         be,kfL,lj,                   Specifies how each channel mode is
                               psmntirRcOAQKVHGCuzNSMT      set/unset. The A section specifies
                                                            modes that add a nick/mask to a
                                                            list. The B section specifies
