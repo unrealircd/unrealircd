@@ -1595,6 +1595,12 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
 			    "*** OperOverride -- %s (%s@%s) MODE %s %s %s",
 			    sptr->name, sptr->user->username, sptr->user->realhost,
 			    chptr->chname, modebuf, parabuf);
+
+			/* Logging Implementation added by XeRXeS */
+			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) MODE %s %s %s",
+				sptr->name, sptr->user->username, sptr->user->realhost,
+				chptr->chname, modebuf, parabuf);
+
 		sendts = 0;
 	}
 #endif
@@ -2264,16 +2270,21 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  {
 		      /* extban: check access if needed */
 		      Extban *p = findmod_by_bantype(tmpstr[1]);
-		      if (p && p->is_ok && !p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_BAN))
+		      if (p && p->is_ok)
 		      {
-		          if (IsAnOper(cptr))
-		          {
-		              /* TODO: send operoverride notice */
-		          } else {
-		              p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS_ERR, what, EXBTYPE_BAN);
-		              break;
-		          }
-		      }
+			if (!p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_BAN))
+		        {
+		            if (IsAnOper(cptr))
+		            {
+		                /* TODO: send operoverride notice */
+  		            } else {
+		                p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS_ERR, what, EXBTYPE_BAN);
+		                break;
+		            }
+		        }
+			if (!p->is_ok(cptr, chptr, tmpstr, EXBCHK_PARAM, what, EXBTYPE_BAN))
+		            break;
+		     }
 		  }
 		  /* For bounce, we don't really need to worry whether
 		   * or not it exists on our server.  We'll just always
@@ -2300,16 +2311,21 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  {
 		      /* extban: check access if needed */
 		      Extban *p = findmod_by_bantype(tmpstr[1]);
-		      if (p && p->is_ok && !p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_EXCEPT))
-		      {
-		          if (IsAnOper(cptr))
-		          {
-		              /* TODO: send operoverride notice */
-		          } else {
-		              p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS_ERR, what, EXBTYPE_EXCEPT);
-		              break;
-		          }
-		      }
+		      if (p && p->is_ok)
+       		      {
+			 if (!p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_EXCEPT))
+		         {
+		            if (IsAnOper(cptr))
+		            {
+		                /* TODO: send operoverride notice */
+		            } else {
+		                p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS_ERR, what, EXBTYPE_EXCEPT);
+		                break;
+		            }
+		        }
+			if (!p->is_ok(cptr, chptr, tmpstr, EXBCHK_PARAM, what, EXBTYPE_EXCEPT))
+		            break;
+		     }
 		  }
 		  /* For bounce, we don't really need to worry whether
 		   * or not it exists on our server.  We'll just always
@@ -3096,6 +3112,12 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
                 sendto_snomask(SNO_EYES, "*** OperOverride -- %s (%s@%s) MODE %s %s %s",
                       cptr->name, cptr->user->username, cptr->user->realhost,
                       chptr->chname, modebuf, parabuf);
+
+		/* Logging Implementation added by XeRXeS */
+		ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) MODE %s %s %s",
+			cptr->name, cptr->user->username, cptr->user->realhost,
+			chptr->chname, modebuf, parabuf);		
+
                 htrig = 0;
         }
 #endif
@@ -4206,6 +4228,12 @@ CMD_FUNC(m_kick)
 						    "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
 						    sptr->name, sptr->user->username, sptr->user->realhost,
 						    chptr->chname, who->name, comment);
+
+						/* Logging Implementation added by XeRXeS */
+						ircd_log(LOG_OVERRIDE,"OVERRIDE %s (%s@%s) KICK %s %s (%s)",
+							sptr->name, sptr->user->username, sptr->user->realhost,
+							chptr->chname, who->name, comment);
+
 						goto attack;
 					}	/* is_chan_op */
 
@@ -4219,6 +4247,12 @@ CMD_FUNC(m_kick)
 						    "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
 						    sptr->name, sptr->user->username, sptr->user->realhost,
 						    chptr->chname, who->name, comment);
+
+						/* Logging Implementation added by XeRXeS */
+						ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) KICK %s %s (%s)",
+							sptr->name, sptr->user->username, sptr->user->realhost, 
+							chptr->chname, who->name, comment);
+
 						goto attack;
 					}
 					else if (!IsULine(sptr) && (who != sptr) && MyClient(sptr))
@@ -4487,6 +4521,12 @@ CMD_FUNC(m_topic)
 						    "*** OperOverride -- %s (%s@%s) TOPIC %s \'%s\'",
 						    sptr->name, sptr->user->username, sptr->user->realhost,
 						    chptr->chname, topic);
+						
+						/* Logging implementation added by XeRXeS */
+						ircd_log(LOG_OVERRIDE, "OVERRIDE: %s (%s@%s) TOPIC %s \'%s\'",
+							sptr->name, sptr->user->username, sptr->user->realhost,
+							chptr->chname, topic);
+
 #endif
 				}
 			}				
@@ -4688,36 +4728,66 @@ CMD_FUNC(m_invite)
                         sendto_snomask(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +b).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
+			/* Logging implementation added by XeRXeS */
+			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Ban).",
+				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
 	        }
         	else if (chptr->mode.mode & MODE_INVITEONLY)
 	        {
                         sendto_snomask(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +i).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
+                        /* Logging implementation added by XeRXeS */
+			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Invite Only)",
+				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
 	        }
         	else if (chptr->mode.limit)
 	        {
                         sendto_snomask(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +l).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-	        }
+
+                        /* Logging implementation added by XeRXeS */
+			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Limit)",
+				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
+		}
         	else if (chptr->mode.mode & MODE_RGSTRONLY)
 	        {
                         sendto_snomask(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +R).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
+                        /* Logging implementation added by XeRXeS */
+			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Reg Nicks Only)",
+				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
 	        }
         	else if (*chptr->mode.key)
 	        {
                         sendto_snomask(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +k).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
+                        /* Logging implementation added by XeRXeS */
+			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Key)",
+				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
 	        }
         	else if (chptr->mode.mode & MODE_ONLYSECURE)
 	        {
                         sendto_snomask(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +z).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
+                        /* Logging implementation added by XeRXeS */
+			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Secure Mode)",
+				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
 				sendto_one(sptr, ":%s NOTICE %s :The channel is +z and you are trying to OperOverride, "
 					"you'll have to override explicitly after this invite with the command '/join %s override'"
 					" (use override as a key) this will set the channel -z and then join you",

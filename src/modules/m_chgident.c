@@ -19,6 +19,12 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+/**
+ * 2003-01-06
+ * - Added ability to log command use to ircd.log
+ * XeRXeS
+ */
+
 #include "config.h"
 #include "struct.h"
 #include "common.h"
@@ -196,6 +202,14 @@ int m_chgident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    sptr->name, acptr->name, acptr->user->username,
 			    GetHost(acptr), parv[2]);
 		}
+
+		/* Logging ability added by XeRXeS */
+		ircd_log(LOG_CHGCMDS,
+		"CHGIDENT: %s changed the virtual ident of %s (%s@%s) to be %s",
+		sptr->name, acptr->name, acptr->user->username,    
+		GetHost(acptr), parv[2]);
+
+
 		sendto_serv_butone_token(cptr, sptr->name,
 		    MSG_CHGIDENT,
 		    TOK_CHGIDENT, "%s %s", acptr->name, parv[2]);

@@ -187,6 +187,9 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define LOG_CLIENT 0x0010
 #define LOG_SERVER 0x0020
 #define LOG_OPER   0x0040
+#define LOG_SACMDS 0x0080
+#define LOG_CHGCMDS 0x0100
+#define LOG_OVERRIDE 0x0200
 
 
 /*

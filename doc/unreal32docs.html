@@ -1108,7 +1108,10 @@ log &lt;file-name&gt; {
   connects logs user connects/quits<br>
   server-connects logs server connects/squits<br>
   kline logs kline and unkline<br>
-  oper logs oper attempts (both failed and successful)</p>
+  oper logs oper attempts (both failed and successful)<br>
+  sadmin-commands logs /sa* (samode, sajoin, sapart, etc.) usage<br>
+  chg-commands logs /chg* (chghost, chgname, chgident, etc.) usage<br>
+  oper-override logs operoverride usage</p>
 <p>Example:</p>
 <pre>
 log ircd.log {

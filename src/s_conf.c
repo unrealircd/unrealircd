@@ -254,11 +254,14 @@ static OperFlag _LinkFlags[] = {
 
 /* This MUST be alphabetized */
 static OperFlag _LogFlags[] = {
+	{ LOG_CHGCMDS, "chg-commands" },
 	{ LOG_CLIENT, "connects" },
 	{ LOG_ERROR, "errors" },
 	{ LOG_KILL, "kills" },
 	{ LOG_KLINE, "kline" },
 	{ LOG_OPER, "oper" },
+	{ LOG_OVERRIDE, "oper-override" },
+	{ LOG_SACMDS, "sadmin-commands" },
 	{ LOG_SERVER, "server-connects" },
 	{ LOG_TKL, "tkl" },
 };

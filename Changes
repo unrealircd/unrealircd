@@ -2724,3 +2724,7 @@ seen. gmtime warning still there
   display in /version
 - Added a patch by AngryWolf to add ./unreal version (displays the Unreal version)
 - Made permanent modules receive HOOKTYPE_REHASH to notify of a rehash (#0001499)
+- Added EXBCHK_PARAM to allow reporting errors about bad extban parameters. 
+  Requested by AngryWolf (#0001488)
+- Added a patch by XeRXeS to log usage of some potentially abusive commands
+  (#0001397)

@@ -20,6 +20,11 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+/**
+ * 2003-01-06
+ * - Added ability to log sajoin and sapart to ircd.log
+ * XeRXeS
+ */
 
 #ifndef CLEAN_COMPILE
 static char sccsid[] =
@@ -2954,6 +2959,10 @@ CMD_FUNC(m_sajoin)
 	sendto_realops("%s used SAJOIN to make %s join %s", sptr->name, parv[1],
 	    parv[2]);
 
+	/* Logging function added by XeRXeS */
+	ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
+		sptr->name, parv[1], parv[2]);
+
 	if (MyClient(acptr))
 	{
 		parv[0] = parv[1];
@@ -3002,6 +3011,11 @@ CMD_FUNC(m_sapart)
 
 	sendto_realops("%s used SAPART to make %s part %s", sptr->name, parv[1],
 	    parv[2]);
+
+ 
+	/* Logging function added by XeRXeS */
+	ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s", 
+		sptr->name, parv[1], parv[2]);
 
 	if (MyClient(acptr))
 	{

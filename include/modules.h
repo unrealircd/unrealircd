@@ -220,6 +220,7 @@ typedef struct {
 
 #define EXBCHK_ACCESS		0 /* Check access */
 #define EXBCHK_ACCESS_ERR	1 /* Check access and send error */
+#define EXBCHK_PARAM		2 /* Check if the parameter is valid */
 
 #define EXBTYPE_BAN			0 /* a ban */
 #define EXBTYPE_EXCEPT		1 /* an except */
