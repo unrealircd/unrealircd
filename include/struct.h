@@ -80,6 +80,7 @@ typedef struct _configitem_ulines ConfigItem_ulines;
 typedef struct _configitem_tld ConfigItem_tld;
 typedef struct _configitem_listen ConfigItem_listen;
 typedef struct _configitem_allow ConfigItem_allow;
+typedef struct _configflag_allow ConfigFlag_allow;
 typedef struct _configitem_allow_channel ConfigItem_allow_channel;
 typedef struct _configitem_vhost ConfigItem_vhost;
 typedef struct _configitem_ssl ConfigItem_ssl;
@@ -885,6 +886,11 @@ struct _configitem_class {
 	int	   pingfreq, connfreq, maxclients, sendq, clients;
 };
 
+struct _configflag_allow {
+	unsigned	noident :1;
+	unsigned	useip :1;
+};
+
 struct _configitem_allow {
 	ConfigItem       *prev, *next;
 	ConfigFlag 	 flag;
@@ -893,6 +899,7 @@ struct _configitem_allow {
 	short		 maxperip;
 	int		 port;
 	ConfigItem_class *class;
+	ConfigFlag_allow flags;
 };
 
 struct _configitem_oper {

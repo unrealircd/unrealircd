@@ -1713,7 +1713,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 */
 int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 {
-	ConfigEntry *cep;
+	ConfigEntry *cep, *cepp;
 	ConfigItem_allow *allow;
 	unsigned char isnew = 0;
 
@@ -1740,12 +1740,6 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		if (!cep->ce_varname)
 		{
 			config_status("%s:%i: allow item without variable name",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-			continue;
-		}
-		if (!cep->ce_vardata)
-		{
-			config_status("%s:%i: allow item without parameter",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			continue;
 		}
@@ -1783,6 +1777,14 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "redirect-port")) {
 			allow->port = atoi(cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "options")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				if (!strcmp(cepp->ce_varname, "noident"))
+					allow->flags.noident = 1;
+				else if (!strcmp(cepp->ce_varname, "useip")) 
+					allow->flags.useip = 1;
+			}
 		}
 		else
 		{
@@ -3961,8 +3963,13 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 			goto attach;
 		continue;
 	      attach:
-		if (index(uhost, '@')) 
+/*		if (index(uhost, '@'))  now flag based -- codemastr */
+		if (!aconf->flags.noident)
 			cptr->flags |= FLAGS_DOID;
+		if (!aconf->flags.useip) 
+			(void)strncpy(uhost, fullname, sizeof(uhost));
+		else
+			(void)strncpy(uhost, sockhost, sizeof(uhost));
 		get_sockhost(cptr, uhost);
 		/* FIXME */
 		if (aconf->maxperip)

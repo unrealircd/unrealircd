@@ -1315,3 +1315,7 @@ seen. gmtime warning still there
 - Fixed a typo in doc/example.conf that I believe is causing ident not to work
 - Fixed a /stats Z bug where it didn't correctly report local clients
 - Made /stats Z once again report the # of classes and memory used by classes
+- Added an allow::options this fixes some problems with allow, ident is now used
+  unless allow::options::noident is set, also if the user matches an allow by IP rather
+  than by host the hostname is still used for the u@h, unless allow::options::useip is set
+  (idea inspired by danielek)
