@@ -552,6 +552,9 @@
 - Moved channel mode +G to extcmode to make room for invex.
 - Added debug code to trace proto-check bugs in DEBUGMODE [IsToken() etc]
 - [Module coders] Added new function: do_cmd(cptr, sptr, cmd, parc, parv) which is an
-  uniform method to call any other commands. For more info, see description in src/parcket.c.
+  uniform method to call any other commands. For more info, see description in src/packet.c.
   This will be used for any further modulization of commands that need to call other
   commands, like NICK (will be done soon).
+- Added invite exceptions (+I). This prevents users from needing a /invite in for a +i
+  channel (#0002044) suggested by medice.
+- Updated help.conf's +f documentation for the new syntax

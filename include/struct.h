@@ -1481,6 +1481,7 @@ struct Channel {
 	Link *invites;
 	Ban *banlist;
 	Ban *exlist;		/* exceptions */
+	Ban *invexlist;         /* invite list */
 	char chname[1];
 };
 

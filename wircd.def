@@ -198,16 +198,15 @@ EXPORTS
 	add_CommandX
 	add_Command_backend
 	add_ListItem
-	add_banid
 	add_client_to_list
 	add_connection
 	add_dccallow
 	add_entropy_configfile
-	add_exbanid
 	add_history
 	add_include
 	add_invite
 	add_listener2
+	add_listmode
 	add_local_client
 	add_local_domain
 	add_send_mode_param
@@ -392,13 +391,12 @@ EXPORTS
 	del_Command
 	del_ListItem
 	del_async_connects
-	del_banid
 	del_dccallow
-	del_exbanid
 	del_from_channel_hash_table
 	del_from_client_hash_table
 	del_from_watch_hash_table
 	del_invite
+	del_listmode
 	del_queries
 	del_silence
 	del_throttling_bucket

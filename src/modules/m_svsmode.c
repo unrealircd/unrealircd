@@ -228,14 +228,14 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 								if (extban->is_banned(acptr, chptr, ban->banstr, BANCHK_JOIN))
 								{
 									add_send_mode_param(chptr, acptr, '-', 'b', ban->banstr);
-									del_banid(chptr, ban->banstr);
+									del_listmode(&chptr->banlist, chptr, ban->banstr);
 								}
 							}
 						}
 						else if (!match(ban->banstr, uhost) || !match(ban->banstr, vhost) || !match(ban->banstr, ihost)) {
 							add_send_mode_param(chptr, sptr, '-',  'b', 
 								ban->banstr);
-							del_banid(chptr, ban->banstr);
+							del_listmode(&chptr->banlist, chptr, ban->banstr);
 						}
 						ban = bnext;
 					}
@@ -253,7 +253,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 							}
 						}
 						add_send_mode_param(chptr, sptr, '-',  'b', ban->banstr);
-						del_banid(chptr, ban->banstr);
+						del_listmode(&chptr->banlist, chptr, ban->banstr);
 						ban = bnext;
 					}
 				}
@@ -295,14 +295,14 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 								if (extban->is_banned(acptr, chptr, ban->banstr, BANCHK_JOIN))
 								{
 									add_send_mode_param(chptr, acptr, '-', 'b', ban->banstr);
-									del_banid(chptr, ban->banstr);
+									del_listmode(&chptr->exlist, chptr, ban->banstr);
 								}
 							}
 						}
-						if (!match(ban->banstr, uhost) || !match(ban->banstr, vhost) || !match(ban->banstr, ihost)) {
+						else if (!match(ban->banstr, uhost) || !match(ban->banstr, vhost) || !match(ban->banstr, ihost)) {
 							add_send_mode_param(chptr, sptr, '-',  'e', 
 								ban->banstr);
-							del_exbanid(chptr, ban->banstr);
+							del_listmode(&chptr->exlist, chptr, ban->banstr);
 						}
 						ban = bnext;
 					}
@@ -320,7 +320,54 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 							}
 						}
 						add_send_mode_param(chptr, sptr, '-',  'e', ban->banstr);
-						del_exbanid(chptr, ban->banstr);
+						del_listmode(&chptr->exlist, chptr, ban->banstr);
+						ban = bnext;
+					}
+				}
+			}
+			break;
+			case 'I': {
+				Ban *ban, *bnext;
+				if (parc >= i) {
+					char uhost[NICKLEN+USERLEN+HOSTLEN+6], vhost[NICKLEN+USERLEN+HOSTLEN+6];
+					char ihost[NICKLEN+USERLEN+HOSTLEN+6];
+					if (!(acptr = find_person(parv[i-1], NULL))) {
+						i++;
+						break;
+					}
+					if (ts && ts != acptr->since) {
+						i++;
+						break;
+					}
+					i++;
+
+					strlcpy(uhost, make_nick_user_host(acptr->name, 
+						acptr->user->username, acptr->user->realhost),
+						sizeof uhost);
+					strlcpy(vhost, make_nick_user_host(acptr->name,
+						acptr->user->username, GetHost(acptr)),
+						sizeof vhost);
+					strlcpy(ihost, make_nick_user_host(acptr->name,
+						acptr->user->username, GetIP(acptr)),
+						sizeof ihost);
+
+					ban = chptr->invexlist;
+					while (ban) {
+						bnext = ban->next;
+						if (!match(ban->banstr, uhost) || !match(ban->banstr, vhost) || !match(ban->banstr, ihost)) {
+							add_send_mode_param(chptr, sptr, '-',  'I', 
+								ban->banstr);
+							del_listmode(&chptr->invexlist, chptr, ban->banstr);
+						}
+						ban = bnext;
+					}
+				}
+				else {
+					ban = chptr->invexlist;
+					while (ban) {
+						bnext = ban->next;
+						add_send_mode_param(chptr, sptr, '-',  'I', ban->banstr);
+						del_listmode(&chptr->invexlist, chptr, ban->banstr);
 						ban = bnext;
 					}
 				}

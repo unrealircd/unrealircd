@@ -905,6 +905,18 @@ int stats_mem(aClient *sptr, char *para)
 			chbm += (strlen(ban->banstr) + 1 +
 			    strlen(ban->who) + 1 + sizeof(Ban));
 		}
+		for (ban = chptr->exlist; ban; ban = ban->next)
+		{
+			chb++;
+			chbm += (strlen(ban->banstr) + 1 +
+			    strlen(ban->who) + 1 + sizeof(Ban));
+		}
+		for (ban = chptr->invexlist; ban; ban = ban->next)
+		{
+			chb++;
+			chbm += (strlen(ban->banstr) + 1 +
+			    strlen(ban->who) + 1 + sizeof(Ban));
+		}
 	}
 
 	sendto_one(sptr, ":%s %d %s :Client Local %d(%ld) Remote %d(%ld)",

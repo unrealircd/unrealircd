@@ -75,12 +75,10 @@ extern int lifesux;
 CMD_FUNC(do_join);
 void add_invite(aClient *, aChannel *);
 char *clean_ban_mask(char *, int, aClient *);
-int add_banid(aClient *, aChannel *, char *);
 int can_join(aClient *, aClient *, aChannel *, char *, char *,
     char **);
 void channel_modes(aClient *, char *, char *, aChannel *);
 int check_channelmask(aClient *, aClient *, char *);
-int del_banid(aChannel *, char *);
 void set_mode(aChannel *, aClient *, int, char **, u_int *,
     char[MAXMODEPARAMS][MODEBUFLEN + 3], int);
 
@@ -143,6 +141,7 @@ aCtab cFlagTab[] = {
 	{MODE_BAN, 'b', 1, 1},
 	{MODE_STRIP, 'S', 0, 0},	/* works? */
 	{MODE_EXCEPT, 'e', 1, 0},	/* exception ban */
+	{MODE_INVEX, 'I', 1, 0},	/* exception ban */
 	{MODE_NOKNOCK, 'K', 0, 0},	/* knock knock (no way!) */
 	{MODE_NOINVITE, 'V', 0, 0},	/* no invites */
 	{MODE_FLOODLIMIT, 'f', 0, 1},	/* flood limiter */
@@ -392,21 +391,20 @@ aClient *find_chasing(aClient *sptr, char *user, int *chasing)
 		return who;
 	else return NULL;
 }
+
 /*
-  Exception functions to work with mode +e
-   -sts
-*/
+ * add_listmode - Add a listmode (+beI) with the specified banid to
+ *                the specified channel.
+ */
 
-/* add_exbanid - add an id to be excepted to the channel bans  (belongs to cptr) */
-
-int add_exbanid(aClient *cptr, aChannel *chptr, char *banid)
+add_listmode(Ban **list, aClient *cptr, aChannel *chptr, char *banid)
 {
 	Ban *ban;
-	int  cnt = 0, len = 0;
+	int cnt = 0, len = 0;
 
 	if (MyClient(cptr))
 		(void)collapse(banid);
-	for (ban = chptr->exlist; ban; ban = ban->next)
+	for (ban = *list; ban; ban = ban->next)
 	{
 		len += strlen(ban->banstr);
 		if (MyClient(cptr))
@@ -429,102 +427,28 @@ int add_exbanid(aClient *cptr, aChannel *chptr, char *banid)
 	}
 	ban = make_ban();
 	bzero((char *)ban, sizeof(Ban));
-	/*   ban->flags = CHFL_BAN;                  They're all bans!! */
-	ban->next = chptr->exlist;
+	ban->next = *list;
 	ban->banstr = (char *)MyMalloc(strlen(banid) + 1);
 	(void)strcpy(ban->banstr, banid);
 	ban->who = (char *)MyMalloc(strlen(cptr->name) + 1);
 	(void)strcpy(ban->who, cptr->name);
 	ban->when = TStime();
-	chptr->exlist = ban;
+	*list = ban;
 	return 0;
 }
 /*
- * del_exbanid - delete an id belonging to cptr
+ * del_listmode - delete a listmode (+beI) from a channel
+ *                that matches the specified banid.
  */
-int del_exbanid(aChannel *chptr, char *banid)
+int del_listmode(Ban **list, aChannel *chptr, char *banid)
 {
 	Ban **ban;
 	Ban *tmp;
 
 	if (!banid)
 		return -1;
-	for (ban = &(chptr->exlist); *ban; ban = &((*ban)->next))
-		if (mycmp(banid, (*ban)->banstr) == 0)
-		{
-			tmp = *ban;
-			*ban = tmp->next;
-			MyFree(tmp->banstr);
-			MyFree(tmp->who);
-			free_ban(tmp);
-			return 0;
-		}
-	return -1;
-}
-
-
-
-/*
- * Ban functions to work with mode +b
- */
-/* add_banid - add an id to be banned to the channel  (belongs to cptr) */
-
-int add_banid(aClient *cptr, aChannel *chptr, char *banid)
-{
-	Ban *ban;
-	int  cnt = 0, len = 0;
-
-	if (MyClient(cptr))
-		(void)collapse(banid);
-	for (ban = chptr->banlist; ban; ban = ban->next)
+	for (ban = list; *ban; ban = &((*ban)->next))
 	{
-		len += strlen(ban->banstr);
-		if (MyClient(cptr))
-			if ((len > MAXBANLENGTH) || (++cnt >= MAXBANS))
-			{
-				sendto_one(cptr, err_str(ERR_BANLISTFULL),
-				    me.name, cptr->name, chptr->chname, banid);
-				return -1;
-			}
-			else
-			{
-			  /* Temp workaround added in b19. -- Syzop */
-			  if (!mycmp(ban->banstr, banid) || (!strchr(banid, '\\') && !strchr(ban->banstr, '\\')))
-#ifdef NAZIISH_CHBAN_HANDLING /* why does it do this?? */
-				if (!match(ban->banstr, banid) ||
-				    !match(banid, ban->banstr))
-#else
-				if (!match(ban->banstr, banid))
-#endif
-					return -1;
-			}
-		else if (!mycmp(ban->banstr, banid))
-			return -1;
-
-	}
-	ban = make_ban();
-	bzero((char *)ban, sizeof(Ban));
-	/*   ban->flags = CHFL_BAN;                  They're all bans!! */
-	ban->next = chptr->banlist;
-	ban->banstr = (char *)MyMalloc(strlen(banid) + 1);
-	(void)strcpy(ban->banstr, banid);
-	ban->who = (char *)MyMalloc(strlen(cptr->name) + 1);
-	(void)strcpy(ban->who, cptr->name);
-	ban->when = TStime();
-	chptr->banlist = ban;
-	return 0;
-}
-/*
- * del_banid - delete an id belonging to cptr
- */
-int del_banid(aChannel *chptr, char *banid)
-{
-	Ban **ban;
-	Ban *tmp;
-
-	if (!banid)
-		return -1;
-	for (ban = &(chptr->banlist); *ban; ban = &((*ban)->next))
 		if (mycmp(banid, (*ban)->banstr) == 0)
 		{
 			tmp = *ban;
@@ -534,9 +458,9 @@ int del_banid(aChannel *chptr, char *banid)
 			free_ban(tmp);
 			return 0;
 		}
+	}
 	return -1;
 }
-
 
 /*
  * IsMember - returns 1 if a person is joined
@@ -1085,7 +1009,7 @@ static int send_mode_list(aClient *cptr, char *chname, TS creationtime, Member *
 		 * as only ban-lists are feed in with CHFL_BAN mask.
 		 * However, we still need to typecast... -Donwulff 
 		 */
-		if ((mask == CHFL_BAN) || (mask == CHFL_EXCEPT))
+		if ((mask == CHFL_BAN) || (mask == CHFL_EXCEPT) || (mask == CHFL_INVEX))
 		{
 /*			if (!(((Ban *)lp)->flags & mask)) continue; */
 			name = ((Ban *) lp)->banstr;
@@ -1191,6 +1115,15 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 	modebuf[1] = '\0';
 	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
 	    (Member *)chptr->exlist, CHFL_EXCEPT, 'e');
+	if (modebuf[1] || *parabuf)
+		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
+		    parabuf, chptr->creationtime);
+
+	*parabuf = '\0';
+	*modebuf = '+';
+	modebuf[1] = '\0';
+	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
+	    (Member *)chptr->invexlist, CHFL_INVEX, 'I');
 	if (modebuf[1] || *parabuf)
 		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
 		    parabuf, chptr->creationtime);
@@ -1376,6 +1309,10 @@ CMD_FUNC(m_mode)
 	{
 		if (!IsMember(sptr, chptr))
 			return 0;
+		for (ban = chptr->invexlist; ban; ban = ban->next)
+			sendto_one(sptr, rpl_str(RPL_INVEXLIST), me.name,
+			    sptr->name, chptr->chname, ban->banstr,
+			    ban->who, ban->when);
 		sendto_one(sptr, rpl_str(RPL_ENDOFINVEXLIST), me.name,
 		    sptr->name, chptr->chname);
 		return 0;
@@ -2236,8 +2173,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		   * or not it exists on our server.  We'll just always
 		   * bounce it. */
 		  if (!bounce &&
-		      ((what == MODE_ADD && add_banid(cptr, chptr, tmpstr))
-		      || (what == MODE_DEL && del_banid(chptr, tmpstr))))
+		      ((what == MODE_ADD && add_listmode(&chptr->banlist, cptr, chptr, tmpstr))
+		      || (what == MODE_DEL && del_listmode(&chptr->banlist, chptr, tmpstr))))
 			  break;	/* already exists */
 		  (void)ircsprintf(pvar[*pcount], "%cb%s",
 		      what == MODE_ADD ? '+' : '-', tmpstr);
@@ -2277,10 +2214,31 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		   * or not it exists on our server.  We'll just always
 		   * bounce it. */
 		  if (!bounce &&
-		      ((what == MODE_ADD && add_exbanid(cptr, chptr, tmpstr))
-		      || (what == MODE_DEL && del_exbanid(chptr, tmpstr))))
+		      ((what == MODE_ADD && add_listmode(&chptr->exlist, cptr, chptr, tmpstr))
+		      || (what == MODE_DEL && del_listmode(&chptr->exlist, chptr, tmpstr))))
 			  break;	/* already exists */
 		  (void)ircsprintf(pvar[*pcount], "%ce%s",
+		      what == MODE_ADD ? '+' : '-', tmpstr);
+		  (*pcount)++;
+		  break;
+	  case MODE_INVEX:
+		  if (!param || *pcount >= MAXMODEPARAMS)
+		  {
+			  retval = 0;
+			  break;
+		  }
+		  retval = 1;
+		  tmpstr = clean_ban_mask(param, what, cptr);
+		  if (BadPtr(tmpstr))
+		     break; /* ignore except, but eat param */
+		  /* For bounce, we don't really need to worry whether
+		   * or not it exists on our server.  We'll just always
+		   * bounce it. */
+		  if (!bounce &&
+		      ((what == MODE_ADD && add_listmode(&chptr->invexlist, cptr, chptr, tmpstr))
+		      || (what == MODE_DEL && del_listmode(&chptr->invexlist, chptr, tmpstr))))
+			  break;	/* already exists */
+		  (void)ircsprintf(pvar[*pcount], "%cI%s",
 		      what == MODE_ADD ? '+' : '-', tmpstr);
 		  (*pcount)++;
 		  break;
@@ -3234,6 +3192,46 @@ Link *lp;
 	return 0;
 }
 
+int find_invex(aChannel *chptr, aClient *sptr)
+{
+	Ban *inv;
+	char *s;
+	static char realhost[NICKLEN + USERLEN + HOSTLEN + 6];
+	static char virthost[NICKLEN + USERLEN + HOSTLEN + 6];
+	static char     nuip[NICKLEN + USERLEN + HOSTLEN + 6];
+	int dovirt = 0, mine = 0;
+
+	if (MyConnect(sptr)) 
+	{
+		mine = 1;
+		s = make_nick_user_host(sptr->name, sptr->user->username, GetIP(sptr));
+		strlcpy(nuip, s, sizeof nuip);
+	}
+
+	if (sptr->user->virthost)
+		if (strcmp(sptr->user->realhost, sptr->user->virthost))
+			dovirt = 1;
+
+	s = make_nick_user_host(sptr->name, sptr->user->username,
+	    sptr->user->realhost);
+	strlcpy(realhost, s, sizeof realhost);
+
+	if (dovirt)
+	{
+		s = make_nick_user_host(sptr->name, sptr->user->username,
+		    sptr->user->virthost);
+		strlcpy(virthost, s, sizeof virthost);
+	}
+	for (inv = chptr->invexlist; inv; inv = inv->next)
+	{
+		if ((match(inv->banstr, realhost) == 0) ||
+			(dovirt && (match(inv->banstr, virthost) == 0)) ||
+			(mine && (match(inv->banstr, nuip) == 0)))
+			return 1;
+	}
+	return 0;
+}
+
 /* Now let _invited_ people join thru bans, +i and +l.
  * Checking if an invite exist could be done only if a block exists,
  * but I'm not too fancy of the complicated structure that'd cause,
@@ -3301,7 +3299,7 @@ Ban *banned;
         if (*chptr->mode.key && (BadPtr(key) || strcmp(chptr->mode.key, key)))
                 return (ERR_BADCHANNELKEY);
 
-        if ((chptr->mode.mode & MODE_INVITEONLY))
+        if ((chptr->mode.mode & MODE_INVITEONLY) && !find_invex(chptr, sptr))
                 return (ERR_INVITEONLYCHAN);
 
         if ((chptr->mode.limit && chptr->users >= chptr->mode.limit))
@@ -3516,6 +3514,14 @@ void sub1_from_channel(aChannel *chptr)
 		{
 			ban = chptr->exlist;
 			chptr->exlist = ban->next;
+			MyFree(ban->banstr);
+			MyFree(ban->who);
+			free_ban(ban);
+		}
+		while (chptr->invexlist)
+		{
+			ban = chptr->invexlist;
+			chptr->invexlist = ban->next;
 			MyFree(ban->banstr);
 			MyFree(ban->who);
 			free_ban(ban);
@@ -4329,7 +4335,7 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 		if (banthem)
 		{		/* ban. */
 			ircsprintf(mask, "*!*@%s", GetHost(sptr));
-			add_banid(&me, chptr, mask);
+			add_listmode(&chptr->banlist, &me, chptr, mask);
 			sendto_serv_butone(&me, ":%s MODE %s +b %s 0",
 			    me.name, chptr->chname, mask);
 			sendto_channel_butserv(chptr, &me,
@@ -4611,6 +4617,44 @@ static int send_ban_list(aClient *cptr, char *chname, TS creationtime, aChannel 
 			*cp = '\0';
 		}
 	}
+	top = channel->invexlist;
+	for (lp = top; lp; lp = lp->next)
+	{
+		name = ((Ban *) lp)->banstr;
+
+		if (strlen(parabuf) + strlen(name) + 11 < (size_t)MODEBUFLEN)
+		{
+			if (*parabuf)
+				(void)strcat(parabuf, " ");
+			(void)strcat(parabuf, name);
+			count++;
+			*cp++ = 'I';
+			*cp = '\0';
+		}
+		else if (*parabuf)
+			send = 1;
+		if (count == MODEPARAMS)
+			send = 1;
+		if (send)
+		{
+			/* cptr is always a server! So we send creationtimes */
+			sendto_one(cptr, "%s %s %s %s %lu",
+			    (IsToken(cptr) ? TOK_MODE : MSG_MODE),
+			    chname, modebuf, parabuf, creationtime);
+			sent = 1;
+			send = 0;
+			*parabuf = '\0';
+			cp = modebuf;
+			*cp++ = '+';
+			if (count != MODEPARAMS)
+			{
+				(void)strlcpy(parabuf, name, sizeof parabuf);
+				*cp++ = 'I';
+			}
+			count = 0;
+			*cp = '\0';
+		}
+	}
 	return sent;
 }
 
@@ -4838,6 +4882,27 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 	for (ban = chptr->exlist; ban; ban = ban->next)
 	{
 		*bufptr++ = '"';
+		strcpy(bufptr, ban->banstr);
+		bufptr += strlen(bufptr);
+		*bufptr++ = ' ';
+		n++;
+		if (bufptr - buf > BUFSIZE - 80)
+		{
+			*bufptr++ = '\0';
+			if (bufptr[-1] == ' ')
+				bufptr[-1] = '\0';
+			sendto_one(cptr, "%s", buf);
+
+			strcpy(buf, bbuf);
+			n = 0;
+
+			bufptr = buf + strlen(buf);
+		}
+
+	}
+	for (ban = chptr->invexlist; ban; ban = ban->next)
+	{
+		*bufptr++ = '\'';
 		strcpy(bufptr, ban->banstr);
 		bufptr += strlen(bufptr);
 		*bufptr++ = ' ';

@@ -251,10 +251,10 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 
 #ifdef PREFIX_AQ
 #define CHPFIX        "(qaohv)~&@%+"
-#define CHPAR1        "be"
+#define CHPAR1        "beI"
 #else
 #define CHPFIX        "(ohv)@%+"
-#define CHPAR1        "beqa"
+#define CHPAR1        "beIqa"
 #endif /* PREFIX_AQ */
 
 #define CHPAR2        "kfL"
