@@ -349,7 +349,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	pwd = parv[2];
 
 	if (!(vhost = Find_vhost(user))) {
-		sendto_umode(UMODE_EYES,
+		sendto_snomask(SNO_VHOST,
 		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - incorrect password",
 		    user, sptr->name,
 		    sptr->user->username,
@@ -366,7 +366,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			break;
 	}
 	if (!from) {
-		sendto_umode(UMODE_EYES,
+		sendto_snomask(SNO_VHOST,
 		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - host does not match",
 		    user, sptr->name, sptr->user->username, sptr->user->realhost);
 		sendto_one(sptr,
@@ -397,7 +397,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    ":%s NOTICE %s :*** Your vhost is now %s%s%s",
 		    me.name, sptr->name, vhost->virtuser ? vhost->virtuser : "", 
 			vhost->virtuser ? "@" : "", vhost->virthost);
-		sendto_umode(UMODE_EYES,
+		sendto_snomask(SNO_VHOST,
 		    "[\2vhost\2] %s (%s!%s@%s) is now using vhost %s%s%s",
 		    user, sptr->name,
 		    vhost->virtuser ? olduser : sptr->user->username,
@@ -406,7 +406,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 	else {
-		sendto_umode(UMODE_EYES,
+		sendto_snomask(SNO_VHOST,
 		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - incorrect password",
 		    user, sptr->name,
 		    sptr->user->username,

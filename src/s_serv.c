@@ -623,8 +623,8 @@ int  m_server(cptr, sptr, parc, parv)
 	{
 		sendto_one(sptr, "ERROR :Bogus server name (%s)",
 		    sptr->name, servername);
-		sendto_umode
-		    (UMODE_JUNK,
+		sendto_snomask
+		    (SNO_JUNK,
 		    "WARNING: Bogus server name (%s) from %s (maybe just a fishy client)",
 		    servername, get_client_name(cptr, TRUE));
 
@@ -2985,7 +2985,7 @@ int  m_stats(cptr, sptr, parc, parv)
 
 
 	if (stat != '*')
-		sendto_umode(UMODE_EYES, "Stats \'%c\' requested by %s (%s@%s)",
+		sendto_snomask(SNO_EYES, "Stats \'%c\' requested by %s (%s@%s)",
 		    stat, sptr->name, sptr->user->username,
 		    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
 		    realhost);

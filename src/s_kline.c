@@ -160,7 +160,7 @@ aTKline *tkl_expire(aTKline * tmp)
 		else if (tmp->type & TKL_SHUN)
 			strcpy(whattype, "Local Shun");
 	}
-	sendto_umode(UMODE_EYES,
+	sendto_snomask(SNO_TKL,
 	    "*** Expiring %s (%s@%s) made by %s (Reason: %s) set %li seconds ago",
 	    whattype, tmp->usermask, tmp->hostmask, tmp->setby, tmp->reason,
 	    TStime() - tmp->set_at);
@@ -577,7 +577,7 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  }
 		  if (expiry_1 != 0)
 		  {
-			  sendto_umode(UMODE_EYES,
+			  sendto_snomask(SNO_TKL,
 			      "*** %s added for %s@%s on %s GMT (from %s to expire at %s GMT: %s)",
 			      txt, parv[3], parv[4], gmt, parv[5], gmt2,
 			      parv[8]);
@@ -588,7 +588,7 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  }
 		  else
 		  {
-			  sendto_umode(UMODE_EYES,
+			  sendto_snomask(SNO_TKL,
 			      "*** Permanent %s added for %s@%s on %s GMT (from %s: %s)",
 			      txt, parv[3], parv[4], gmt, parv[5], parv[8]);
 			  ircd_log
@@ -654,7 +654,7 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					      asctime(gmtime((TS *)&tk->
 					      set_at)), sizeof(gmt));
 					  gmt[strlen(gmt) - 1] = '\0';
-					  sendto_umode(UMODE_EYES,
+					  sendto_snomask(SNO_TKL,
 					      "%s removed %s %s@%s (set at %s - reason: %s)",
 					      parv[5], txt, tk->usermask,
 					      tk->hostmask, gmt, tk->reason);

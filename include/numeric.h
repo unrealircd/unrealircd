@@ -304,6 +304,8 @@
 #define RPL_MAPMORE          610
 #define RPL_MAPEND           007
 
+#define RPL_SNOMASK	     8
+
 /*
  * Numberic replies from server commands.
  * These are also in the range 600-799.

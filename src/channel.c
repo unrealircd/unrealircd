@@ -1249,7 +1249,7 @@ int m_mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (!(*parv[2] == '&'))	/* & denotes a bounce */
 		{
 			/* !!! */
-			sendto_umode(UMODE_EYES,
+			sendto_snomask(SNO_EYES,
 			    "*** TS bounce for %s - %lu(ours) %lu(theirs)",
 			    chptr->chname, chptr->creationtime, sendts);
 			bounce_mode(chptr, cptr, parc - 2, parv + 2);
@@ -1266,7 +1266,7 @@ int m_mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 /*	if (IsPerson(sptr) && IsOper(sptr)) {
 		if (!is_chan_op(sptr, chptr)) {
 			if (MyClient(sptr) && !IsULine(cptr) && mode_buf[1])
-				sendto_umode(UMODE_EYES, "*** OperMode [IRCop: %s] - [Channel: %s] - [Mode: %s %s]",
+				sendto_snomask(SNO_EYES, "*** OperMode [IRCop: %s] - [Channel: %s] - [Mode: %s %s]",
         	 		   sptr->name, chptr->chname, mode_buf, parabuf);
 			sendts = 0;
 		}
@@ -1338,7 +1338,7 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
 				tschange = 1;
 /*
 				if (chptr->creationtime != 0)
-					sendto_umode(UMODE_EYES, "*** TS fix for %s - %lu(ours) %lu(theirs)",
+					sendto_snomask(SNO_EYES, "*** TS fix for %s - %lu(ours) %lu(theirs)",
 					chptr->chname, chptr->creationtime, sendts);			
 					*/
 				chptr->creationtime = sendts;
@@ -1378,7 +1378,7 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
 	if (opermode == 1)
 	{
 		if (MyClient(sptr) && mode_buf[1])
-			sendto_umode(UMODE_EYES,
+			sendto_snomask(SNO_EYES,
 			    "*** OperMode [IRCop: %s] - [Channel: %s] - [Mode: %s %s]",
 			    sptr->name, chptr->chname, mode_buf, parabuf);
 		sendts = 0;
@@ -2406,12 +2406,12 @@ void over_notice(aClient *cptr, aClient *sptr, aChannel *chptr, char *key)
 
 	if (is_banned(cptr, sptr, chptr) && IsOper(sptr) && !IsULine(sptr))
 	{
-		sendto_umode(UMODE_EYES, "*** Banwalk [IRCop: %s] [Channel: %s]",sptr->name,chptr->chname);
+		sendto_snomask(SNO_EYES, "*** Banwalk [IRCop: %s] [Channel: %s]",sptr->name,chptr->chname);
 	} else if (IsOper(sptr) && !IsULine(sptr) && *chptr->mode.key && (BadPtr(key) || 
             mycmp(chptr->mode.key, key))) {
-		sendto_umode(UMODE_EYES, "*** Keywalk [IRCop: %s] [Channel: %s]",sptr->name,chptr->chname);
+		sendto_snomask(SNO_EYES, "*** Keywalk [IRCop: %s] [Channel: %s]",sptr->name,chptr->chname);
 	} else if (IsOper(sptr) && !IsULine(sptr) && (chptr->mode.mode & MODE_INVITEONLY) && !lp) {
-		sendto_umode(UMODE_EYES, "*** Invitewalk [IRCop: %s] [Channel: %s]",sptr->name,chptr->chname);
+		sendto_snomask(SNO_EYES, "*** Invitewalk [IRCop: %s] [Channel: %s]",sptr->name,chptr->chname);
 	}
 
 }
@@ -3416,7 +3416,7 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					    || (is_halfop(sptr, chptr)
 					    && is_chan_op(who, chptr)))
 					{
-						sendto_umode(UMODE_EYES,
+						sendto_snomask(SNO_EYES,
 						    "*** OperKick [%s @ %s -> %s (%s)]",
 						    sptr->name,
 						    chptr->chname,
@@ -3429,7 +3429,7 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					if (IsNetAdmin
 						(sptr) || IsTechAdmin(sptr))
 					{	/* IRCop kicking owner/prot */
-						sendto_umode(UMODE_EYES,
+						sendto_snomask(SNO_EYES,
 						    "*** OperKick [%s @ %s -> %s (%s)]",
 						    sptr->name,
 						    chptr->chname,
@@ -3547,8 +3547,8 @@ int m_topic(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			if (!MyClient(sptr) && !IsULine(sptr))
 			{
-				sendto_umode
-				    (UMODE_JUNK,"Remote TOPIC for unknown channel %s (%s)",
+				sendto_snomask
+				    (SNO_JUNK,"Remote TOPIC for unknown channel %s (%s)",
 				    parv[1], backupbuf);
 			}
 			sendto_one(sptr, rpl_str(ERR_NOSUCHCHANNEL),
@@ -3649,7 +3649,7 @@ int m_topic(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifdef NO_OPEROVERRIDE
 				return 0;
 #endif
-				sendto_umode(UMODE_EYES,
+				sendto_snomask(SNO_EYES,
 				    "*** OperTopic [IRCop: %s] - [Channel: %s] - [Topic: %s]",
 				    sptr->name, chptr->chname, topic);
 			}

@@ -472,7 +472,7 @@ int  exit_client(cptr, sptr, from, comment)
 		if (IsPerson(sptr))
 		{
 			RunHook(HOOKTYPE_LOCAL_QUIT, sptr);
-			sendto_umode(UMODE_OPER | UMODE_CLIENT,
+			sendto_snomask(SNO_CLIENT,
 			    "*** Notice -- Client exiting: %s (%s@%s) [%s]",
 			    sptr->name, sptr->user->username,
 			    sptr->user->realhost, comment);
@@ -722,7 +722,7 @@ static void exit_one_client_backend(cptr, sptr, from, comment, split)
 
 			if (!IsULine(sptr) && !split)
 				if (sptr->user->server != me_hash)
-					sendto_umode(UMODE_FCLIENT,
+					sendto_snomask(SNO_FCLIENT,
 					    "*** Notice -- Client exiting at %s: %s!%s@%s (%s)",
 					    sptr->user->server, sptr->name,
 					    sptr->user->username,

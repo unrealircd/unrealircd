@@ -774,3 +774,4 @@ seen. gmtime warning still there
 - Fixed a codemastr-on-crack /version bug, and fixed some IPv6 stuff in
   scan*
 - Fixed some more IPv6 stuff in httpd
+- Implimented snomask (similar to IRCu) and moved several usermodes to it

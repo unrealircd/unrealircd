@@ -286,7 +286,7 @@ void report_error(text, cptr)
 			if (err)
 				errtmp = err;
 #endif
-	sendto_umode(UMODE_JUNK, text, host, strerror(errtmp));
+	sendto_snomask(SNO_JUNK, text, host, strerror(errtmp));
 	ircd_log(LOG_ERROR, text,host,strerror(errtmp));
 #ifdef USE_SYSLOG
 	syslog(LOG_WARNING, text, host, strerror(errtmp));
@@ -757,7 +757,7 @@ int  check_client(cptr)
 				break;
 		if (!hp->h_addr_list[i])
 		{
-			sendto_umode(UMODE_JUNK, "IP# Mismatch: %s != %s[%08x]",
+			sendto_snomask(SNO_JUNK, "IP# Mismatch: %s != %s[%08x]",
 			    inetntoa((char *)&cptr->ip), hp->h_name,
 			    *((unsigned long *)hp->h_addr));
 			hp = NULL;
@@ -1395,7 +1395,7 @@ static int read_packet(cptr, rfd)
 
 		if (IsPerson(cptr) && DBufLength(&cptr->recvQ) > CLIENT_FLOOD)
 		{
-			sendto_umode(UMODE_FLOOD | UMODE_OPER,
+			sendto_snomask(SNO_FLOOD,
 			    "*** Flood -- %s!%s@%s (%d) exceeds %d recvQ",
 			    cptr->name[0] ? cptr->name : "*",
 			    cptr->user ? cptr->user->username : "*",
@@ -1565,7 +1565,7 @@ static int read_packet(aClient *cptr)
 #endif
 		    DBufLength(&cptr->recvQ) > CLIENT_FLOOD)
 		{
-			sendto_umode(UMODE_FLOOD,
+			sendto_snomask(SNO_FLOOD,
 			    "Flood -- %s!%s@%s (%d) Exceeds %d RecvQ",
 			    cptr->name[0] ? cptr->name : "*",
 			    cptr->user ? cptr->user->username : "*",

@@ -37,7 +37,7 @@ static char *replies[] = {
 /* 005    RPL_PROTOCTL */ ":%s 005 %s" PROTOCTL_CLIENT,
 /* 006    RPL_MAP */      ":%s 006 %s :%s%-*s(%d)  %s",
 /* 007    RPL_MAPEND */   ":%s 007 %s :End of /MAP",
-/* 008 */ NULL,
+/* 008    RPL_SNOMASK */  ":%s 008 %s :Server notice mask (%s)",
 /* 009 */ NULL,
 /* 010    RPL_REDIR */	  ":%s 010 %s %s %d :Please use this Server/Port instead",
 /* 011 */ NULL,

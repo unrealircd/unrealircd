@@ -452,14 +452,8 @@ int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		switch (*p)
 		{
 		  case 'e':
-			  sendto_umode(UMODE_EYES, "%s", parv[2]);
+			  sendto_snomask(SNO_EYES, "%s", parv[2]);
 			  break;
-		  case 'F':
-		  {
-			  if (*parv[2] != 'C' && *(parv[2] + 1) != 'l')
-				  sendto_umode(UMODE_FCLIENT, "%s", parv[2]);
-			  break;
-		  }
 		  case 'o':
 			  sendto_umode(UMODE_OPER, "%s", parv[2]);
 			  break;
@@ -879,7 +873,7 @@ int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 		if (!IsULine(sptr))
 		{
-			sendto_umode(UMODE_EYES,
+			sendto_snomask(SNO_EYES,
 			    "%s changed the GECOS of %s (%s@%s) to be %s",
 			    sptr->name, acptr->name, acptr->user->username,
 			    (acptr->umodes & UMODE_HIDE ? acptr->

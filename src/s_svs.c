@@ -226,12 +226,12 @@ int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					    ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP | UMODE_SERVICES |
 					    UMODE_SADMIN | UMODE_ADMIN);
 					acptr->umodes &=
-		    				~(UMODE_NETADMIN | UMODE_TECHADMIN | UMODE_CLIENT |
-		 			   UMODE_FLOOD | UMODE_EYES | UMODE_WHOIS);
+		    				~(UMODE_NETADMIN | UMODE_TECHADMIN | UMODE_WHOIS);
 					acptr->umodes &=
-					    ~(UMODE_KIX | UMODE_FCLIENT | UMODE_HIDING |
-					    UMODE_DEAF | UMODE_HIDEOPER);
+					    ~(UMODE_KIX | UMODE_HIDING | UMODE_DEAF | UMODE_HIDEOPER);
 					acptr->oflag = 0;
+					acptr->user->snomask &= ~(SNO_CLIENT|SNO_FLOOD|SNO_FCLIENT|
+						SNO_EYES|SNO_VHOST);
 				
 				}
 			}
@@ -297,12 +297,11 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP | UMODE_SERVICES |
 		    UMODE_SADMIN | UMODE_ADMIN);
 		acptr->umodes &=
-		    ~(UMODE_NETADMIN | UMODE_TECHADMIN | UMODE_CLIENT |
-		    UMODE_FLOOD | UMODE_EYES | UMODE_WHOIS);
+		    ~(UMODE_NETADMIN | UMODE_TECHADMIN | UMODE_WHOIS);
 		acptr->umodes &=
-		    ~(UMODE_KIX | UMODE_FCLIENT | UMODE_HIDING |
-		    UMODE_DEAF | UMODE_HIDEOPER);
+		    ~(UMODE_KIX | UMODE_HIDING | UMODE_DEAF | UMODE_HIDEOPER);
 		acptr->oflag = 0;
+		acptr->user->snomask &= ~(SNO_CLIENT|SNO_FLOOD|SNO_FCLIENT|SNO_EYES|SNO_VHOST);
 		send_umode_out(acptr, acptr, fLag);
 	}
 }

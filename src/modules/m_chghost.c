@@ -175,7 +175,7 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		if (!IsULine(sptr))
 		{
-			sendto_umode(UMODE_EYES,
+			sendto_snomask(SNO_EYES,
 			    "%s changed the virtual hostname of %s (%s@%s) to be %s",
 			    sptr->name, acptr->name, acptr->user->username,
 			    acptr->user->realhost, parv[2]);
