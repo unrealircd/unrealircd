@@ -784,3 +784,4 @@ seen. gmtime warning still there
 - Using bahamut /who now, this needs some testing.
 - HCN fix
 - /who fix .. removed nick matching functionality..
+- Fixed a SNOMASK problem found by Arantis
