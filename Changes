@@ -1358,3 +1358,4 @@ seen. gmtime warning still there
 - Heavily updated INSTALL
 - Removed Win32 and READMENOW.Win32.txt (obsolete)
 - Started WinXP IPv6 support (added headers)
+- More WinXP IPv6, finished headers, replaced calls to inet_ntoa with Inet_ia2p

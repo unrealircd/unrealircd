@@ -176,7 +176,7 @@ char *inetntoa(char *in)
 
 	return buf;
 }
-
+#ifndef INET6
 #ifdef NEED_INET_NETOF
 /*
 **	inet_netof --	return the net portion of an internet number
@@ -199,7 +199,7 @@ int  inet_netof(struct IN_ADDR in)
 }
 
 #endif /* NEED_INET_NETOF */
-
+#endif
 /*
  * -1 - error on read *     >0 - number of bytes returned (<=num) *
  * After opening a fd, it is necessary to init dgets() by calling it as *

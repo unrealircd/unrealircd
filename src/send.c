@@ -1659,7 +1659,7 @@ void sendto_connectnotice(char *nick, anUser *user, aClient *sptr)
 #endif
 	ircsprintf(connecth,
 	    "*** Notice -- Client connecting: %s (%s@%s) [%s] {%s}", nick,
-	    user->username, user->realhost, inet_ntoa(sptr->ip),
+	    user->username, user->realhost, Inet_ia2p(&sptr->ip),
 	    sptr->class ? sptr->class->name : "0");
 
 	for (i = 0; i <= LastSlot; i++)
