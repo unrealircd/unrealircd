@@ -5533,7 +5533,7 @@ CMD_FUNC(m_knock)
 		return 0;
 	}
 
-	if (chptr->mode.mode & MODE_NOINVITE)
+	if ((chptr->mode.mode & MODE_NOINVITE) && !is_chan_op(sptr, chptr))
 	{
 		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
 		    me.name,

@@ -170,7 +170,7 @@
 /*
  * Enables locops to override the RFC1459 flood control too
 */
-#undef FAKE_LAG_FOR_LOCOPS
+#undef NO_FAKE_LAG_FOR_LOCOPS
 
 /*
  * HOSTILENAME - Define this if you want the hostile username patch included,

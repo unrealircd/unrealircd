@@ -2728,3 +2728,6 @@ seen. gmtime warning still there
   Requested by AngryWolf (#0001488)
 - Added a patch by XeRXeS to log usage of some potentially abusive commands
   (#0001397)
+- Renamed "FAKE_LAG_FOR_LOCOPS" to "NO_FAKE_LAG_FOR_LOCOPS" since that's what it did
+  anyway, requested by Greg (#0001453)
+- Made it so chan ops can invite in a +V channel. Requested by AI (#0001478)
