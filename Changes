@@ -1459,3 +1459,4 @@ seen. gmtime warning still there
 - Modulized /vhost, /cycle, /svsjoin, /svspart
 - Fixed a autoconf problem where FD_SETSIZE was NOT replaced when it wasn't big enough
   (abort() problem on some installs.)
+- Readded find_match_server which got removed, m_rping uses it. Now in hash.c
