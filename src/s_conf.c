@@ -3329,8 +3329,8 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 							cepp->ce_varlinenum, "oper",
 							cepp->ce_varname);
 						errors++; 
-					}
-					oper_flags |= ofp->flag;
+					} else
+						oper_flags |= ofp->flag;
 				}
 				continue;
 			}
