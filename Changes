@@ -665,3 +665,4 @@
 - Added some fixes on the SJB64 crashing bug, and added tokenization in 
   channel messsages (yahooooo!)
 - Fixed the /list bug, reported by many people
+- Fixed a linking bug (where did that come from)

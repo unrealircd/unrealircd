@@ -651,9 +651,10 @@ int  m_server(cptr, sptr, parc, parv)
 	{
 		sendto_one(sptr, "ERROR :Bogus server name (%s)",
 		    sptr->name, host);
-		sendto_ops
+/*		sendto_ops
 		    ("WARNING: Bogus server name (%s) from %s (maybe just a fishy client)",
 		    host, get_client_name(cptr, TRUE));
+*/
 		sptr->since += 7;
 		return 0;
 	}
@@ -720,7 +721,7 @@ int  m_server(cptr, sptr, parc, parv)
 		}
 		/* bzero(cptr->passwd, sizeof(cptr->passwd)); */
 	}
-	if ((acptr = find_name(host, NULL)))
+	if ((acptr = find_server_quickx(host, NULL)))
 	{
 		aClient *ocptr;
 
