@@ -181,12 +181,12 @@ char *download_file(char *url, char **error)
 #endif
 	if (file)
 		free(file);
-	curl_easy_cleanup(curl);
 	if (res == CURLE_OK)
 	{
 		long last_mod;
 
 		curl_easy_getinfo(curl, CURLINFO_FILETIME, &last_mod);
+		curl_easy_cleanup(curl);
 
 		if (last_mod != -1)
 			unreal_setfilemodtime(tmp, last_mod);
@@ -194,6 +194,7 @@ char *download_file(char *url, char **error)
 	}
 	else
 	{
+		curl_easy_cleanup(curl);
 		remove(tmp);
 		*error = errorbuf;
 		return NULL;

@@ -2984,3 +2984,5 @@ seen. gmtime warning still there
 - Fixed a bug reported by Joolz that would cause problems when deleting a remote
   included file from a server (#0001587).
 - Fixed a few more remote include problems on Windows
+- Fixed a remote include problem caused by an earlier fix that resulted in referencing
+  free'd memory 
