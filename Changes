@@ -2847,3 +2847,5 @@ seen. gmtime warning still there
   can not be overcome. 
 - Added a patch by thilo to make Unreal correctly deal with umask settings when
   creating devices in a chroot'ed environment. (#0001514)
+- Added commands SVSSNO and SVS2SNO (work just like SVSMODE/SVS2MODE but for snomasks)
+  suggested by x64 (#0001461).
