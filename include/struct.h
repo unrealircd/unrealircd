@@ -101,6 +101,10 @@ typedef struct _configitem_include ConfigItem_include;
 typedef struct _configitem_help ConfigItem_help;
 typedef struct liststruct ListStruct;
 
+#define CFG_TIME 0x0001
+#define CFG_SIZE 0x0002
+#define CFG_YESNO 0x0004
+
 typedef struct Watch aWatch;
 typedef struct Client aClient;
 typedef struct Channel aChannel;

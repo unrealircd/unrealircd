@@ -327,53 +327,115 @@ void	ipport_seperate(char *string, char **ip, char **port)
 	}
 }
 
-int conf_yesno(char *value) {
-	if (!stricmp(value, "yes") || !stricmp(value, "true") || !stricmp(value, "on") || strcmp(value, "1"))
-		return 1;
-	if (!stricmp(value, "no") || !stricmp(value, "false") || !stricmp(value, "off") || strcmp(value, "0"))
-		return 0;
 
-	return -1;
-}
 
-#define KB 1024
-#define MB 1048576
-#define GB 1073741824
-#define TB 1099511627776
+long config_checkval(char *value, unsigned short flags) {
+	char *text, *ptr;
+	long ret = 0;
 
-long conf_size(char *value) {
-	char *numbuf;
-	char *buf = value;
-	long num = 0;
-	int i;
-	if (!buf)
-		return 0;
 
-	numbuf = MyMalloc(strlen(value));
-	for (i = 0;*buf; buf++) {
-		if (isdigit(*buf)) {
-			numbuf[i++] = *buf;
-			continue;
-		}
-		if (isalpha(*buf)) {
-			num = atol(numbuf);
-			if (tolower(*buf) == 't')
-				num *= TB;
-			else if (tolower(*buf) == 'g')
-				num *= GB;
-			else if (tolower(*buf) == 'm')
-				num *= MB;
-			else if (tolower(*buf) == 'k')
-				num *= MB;
-			break;
+	if (flags == CFG_YESNO) {
+		for (text = value; *text; text++) {
+			if (!isalnum(*text))
+				continue;
+			if (tolower(*text) == 'y' || (tolower(*text) == 'o' &&
+tolower(*(text+1)) == 'n') || *text == '1' || tolower(*text) == 't') {
+				ret = 1;
+				break;
+			}
 		}
 	}
-	if (!num)
-		num = atol(numbuf);
-	free(numbuf);
-	return num;
-}
+	else if (flags == CFG_SIZE) {
+		int mfactor = 1;
+		char *sz;
+		for (text = value; *text; text++) {
+			if (!isalpha(*text))
+				text++;
+			if (isalpha(*text)) {
+				if (tolower(*text) == 'k') 
+					mfactor = 1024;
+				else if (tolower(*text) == 'm') 
+					mfactor = 1048576;
+				else if (tolower(*text) == 'g') 
+					mfactor = 1073741824;
+				else 
+					mfactor = 1;
+				sz = text;
+				while (isalpha(*text))
+					text++;
+
+				*sz-- = 0;
+				while (sz-- > value && *sz) {
+					if (isspace(*sz)) 
+						*sz = 0;
+					if (!isdigit(*sz)) 
+						break;
+				}
+				ret += atoi(sz+1)*mfactor;
+				
+			}
+		}
+		mfactor = 1;
+		sz = text;
+		sz--;
+		while (sz-- > value) {
+			if (isspace(*sz)) 
+				*sz = 0;
+			if (!isdigit(*sz)) 
+				break;
+		}
+		ret += atoi(sz+1)*mfactor;
+
 		
+	}
+	else if (flags == CFG_TIME) {
+		int mfactor = 1;
+		char *sz;
+		for (text = value; *text; text++) {
+			if (!isalpha(*text))
+				text++;
+			if (isalpha(*text)) {
+				if (tolower(*text) == 'w')
+					mfactor = 604800;	
+				else if (tolower(*text) == 'd') 
+					mfactor = 86400;
+				else if (tolower(*text) == 'h') 
+					mfactor = 3600;
+				else if (tolower(*text) == 'm') 
+					mfactor = 60;
+				else 
+					mfactor = 1;
+				sz = text;
+				while (isalpha(*text))
+					text++;
+
+				*sz-- = 0;
+				while (sz-- > value && *sz) {
+					if (isspace(*sz)) 
+						*sz = 0;
+					if (!isdigit(*sz)) 
+						break;
+				}
+				ret += atoi(sz+1)*mfactor;
+				
+			}
+		}
+		mfactor = 1;
+		sz = text;
+		sz--;
+		while (sz-- > value) {
+			if (isspace(*sz)) 
+				*sz = 0;
+			if (!isdigit(*sz)) 
+				break;
+		}
+		ret += atoi(sz+1)*mfactor;
+
+		
+	}
+
+	return ret;
+}
 
 int	config_error_flag = 0;
 /* Small function to bitch about stuff */
@@ -2278,7 +2340,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {
 			CheckNull(cep);
-			ANTI_SPAM_QUIT_MSG_TIME = atime(cep->ce_vardata);
+			ANTI_SPAM_QUIT_MSG_TIME = config_checkval(cep->ce_vardata,CFG_TIME);
 		}
 		else if (!strcmp(cep->ce_varname, "oper-only-stats")) {
 			CheckNull(cep);
@@ -2322,7 +2384,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "prefix-quit")) {
 			CheckNull(cep);
-			if (conf_yesno(cep->ce_vardata) == 0)
+			if (!stricmp(cep->ce_vardata, "no") || *cep->ce_vardata == '0')
 			{
 				ircstrdup(prefix_quit, "Quit: ");
 			}
@@ -2332,10 +2394,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				CheckNull(cepp);
 				if (!strcmp(cepp->ce_varname, "timeout")) {
-					HOST_TIMEOUT = atime(cepp->ce_vardata);
+					HOST_TIMEOUT = config_checkval(cepp->ce_vardata,CFG_TIME);
 				}
 				else if (!strcmp(cepp->ce_varname, "retries")) {
-					HOST_RETRIES = atime(cepp->ce_vardata);
+					HOST_RETRIES = config_checkval(cepp->ce_vardata,CFG_TIME);
 				}
 				else if (!strcmp(cepp->ce_varname, "nameserver")) {
 					ircstrdup(NAME_SERVER, cepp->ce_vardata);
@@ -2391,7 +2453,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					ircstrdup(netadmin_host, cepp->ce_vardata);
 				}
 				else if (!strcmp(cepp->ce_varname, "host-on-oper-up")) {
-					iNAH = conf_yesno(cepp->ce_vardata);
+					iNAH = config_checkval(cepp->ce_vardata,CFG_YESNO);
 				}
 			}
 		}
@@ -2761,7 +2823,7 @@ int	_conf_log(ConfigFile *conf, ConfigEntry *ce)
 			continue;
 		}
 		if (!strcmp(cep->ce_varname, "maxsize")) {
-			log->maxsize = conf_size(cep->ce_vardata);
+			log->maxsize = config_checkval(cep->ce_vardata,CFG_SIZE);
 		}
 		if (!strcmp(cep->ce_varname, "flags")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)

@@ -125,8 +125,30 @@ Unreal3.2-Selene (BETA11) RELEASE NOTES
 
 * log {} syslog support added (read doc/conf.doc for more info)
 
+* Added ripemd-160 password encryption support
+
+* Enabled sha1 and md5 password encryption on Win32 regardless of whether SSL is used.
+
+* Added WinNT/2k/XP service support (experimental)
+  To use this you use the unreal.exe utility:
+    unreal install -installs the service
+    unreal uninstall -uninstalls the service
+    unreal start -starts the service
+    unreal stop -stops the service
+    unreal restart -restarts the service
+    unreal rehash -rehashes the config file
+  Config errors and crashes are now logged to service.log when in service mode.
+
+* Implimented a new win32 debugger to make fixing bugs much easier.
+
+* Added a win32 installer to simplify installing under Windows.
+
 * AKILL/RAKILL is depricated. Server command still works but will be removed eventually
   (aliases to TKL G). For normal opers it notices that the commands are depricated.
+
+* Made the config parser smarter when it comes to time values and size values. Entries are
+  no longer limited to 1d2h1m. You can now enter "1day 2 hours 1 minute" for example. See
+  doc/conf.doc for more information.
 
 * MAKE SURE YOU RERUN ./Config AND RUN make clean BEFORE USING THIS VERSION!!!
 

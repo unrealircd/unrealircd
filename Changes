@@ -1406,3 +1406,8 @@ seen. gmtime warning still there
 - Fixed some ./configure errors
 - Added ircd/safe_SSL_read/write from bahamut+inet6/azzuranet. This can be done much nicer
   when newio is done.
+- Updated the config parser to be smarter when dealing with times and sizes
+- Updated doc/conf.doc for any new config changes
+- Made the win32 installer remove the . from the begining of . files and append .txt to
+  most text files, ie .RELEASE.NOTES becomes RELEASE.NOTES.txt
+- Updated .RELEASE.NOTES

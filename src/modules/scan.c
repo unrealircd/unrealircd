@@ -369,7 +369,7 @@ DLLFUNC int	h_config_set_scan(void)
 								ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 						break;
 					}
-					Scan_BanTime = atime(ce->ce_vardata);
+					Scan_BanTime = config_checkval(ce->ce_vardata,CFG_TIME);
 				}
 				else
 				if (!strcmp(ce->ce_varname, "timeout")) {
@@ -378,7 +378,7 @@ DLLFUNC int	h_config_set_scan(void)
 								ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 						break;
 					}
-					Scan_TimeOut = atime(ce->ce_vardata);
+					Scan_TimeOut = config_checkval(ce->ce_vardata,CFG_TIME);
 				}
 				else
 				if (!strcmp(ce->ce_varname, "endpoint"))
