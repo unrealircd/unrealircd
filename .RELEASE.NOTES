@@ -11,8 +11,8 @@ Unreal3.2-beta16 Release Notes
 ==[ REMOVED ]==
 * The built-in scanner (and threading at *NIX) has been removed, NOT because we want to
   annoy our users (again), but because it made UnrealIRCd unstable (especially in case
-  of server attacks!). If you have *NIX then you should consider using BOPM instead:
-  http://www.blitzed.org/bopm/
+  of server attacks!). You should consider using BOPM instead:
+  http://www.blitzed.org/bopm/ (*NIX) / http://vulnscan.org/winbopm/ (Windows)
 * not removed, but CMDLINE_CONFIG(-f) is now disabled by default
 
 == [NEW FEATURES (see unreal32docs.html for more information) ]==

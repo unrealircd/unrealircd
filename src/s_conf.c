@@ -5628,7 +5628,8 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			requiredstuff.settings.cloakkeys = 1;	
 		}
 		else if (!strcmp(cep->ce_varname, "scan")) {
-			config_status("%s:%i: set::scan: WARNING: scanner support has been removed, (*NIX users) use BOPM instead: http://www.blitzed.org/bopm/",
+			config_status("%s:%i: set::scan: WARNING: scanner support has been removed, "
+			    "use BOPM instead: http://www.blitzed.org/bopm/ (*NIX) / http://vulnscan.org/winbopm/ (Windows)",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
