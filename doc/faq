@@ -65,61 +65,12 @@ A: Mostly you can download the newest version at
 
    Versions may be spewed out regulary due to new features and bugs.. 
 
-8) Why does it say "unlimit core failed" or something when I boot the IRCd?
-A: It's just a warning, mainly just ignore it.
-
-9) I use Linux Mandrake and ./Config always hangs! What can I do??
-A: Go edit the Config script and remove those lines:
--SNIP START-
-cat > $TMP <<__EOF__
-#$STRINGH STRINGH
-#$STRINGSH STRINGSH
-#ifdef STRINGH
-#include <string.h>
-#endif
-#ifdef STRINGSH
-#include <strings.h>
-#endif
-main()
-{
-	char  *t = "a", *s = strtok(t, ",");
-	if (!strcmp(t, s))
-		exit(0);
-	exit(1);
-}
-__EOF__
-$COMP >/dev/null 2>&1
-if [ $? -ne 0 ] ; then
-	echo $n " strtok$c"
-	NSTRTOK=define
-else
-	$EXEC
-	if [ $? -ne 0 ] ; then
-		echo $n " strtok$c"
-		NSTRTOK=define
-	fi
-fi
-$RM -f $EXEC $TMP
---- SNIP END---
-And replace it by
-NSTRTOK=undef
-
-This should get it to work=) (thanks to Joe Whipple for reporting this bug)
----END----
-
 10) Hosts show up as (null).network.net !!
 A:  This is because you have forgotten to include the network file.
     The correct form is (in unrealircd.conf)
     Include ..........: <network file>
 
-    If this doesn't work .. seek me at irc.global-irc.net #unrealircd
-
-11) The IRCd uses like 66.7% CPU !!!?
-A:  Try run it with nice :
-    /usr/bin/nice -n 19 src/ircd
-
-    if services go this way too just place ./<name> instead of src/ircd
-    Any more support seek me at the default place:P
+    If this doesn't work .. seek me at irc.ircsystems.net #unrealircd
 
 12) My IRCd which runs on a FreeBSD says something about FDs and
     Max: 0 What shall I do?? 
@@ -190,4 +141,4 @@ match.c:247: argument 'n' doesn't match prototype
 Then go into include/setup.h and add this line:
 #define GOT_STRCASECMP
 
-(C) Carsten Munk 1999
+(C) Carsten Munk 1999-2000
