@@ -4869,7 +4869,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	/* This sends out to SJ3 servers .. */
 	sendto_serv_butone_token_opt(cptr, OPT_SJOIN | OPT_SJ3, sptr->name,
 	    MSG_SJOIN, TOK_SJOIN, "%s :%s", parabuf, parv[parc - 1]);
-
+	Debug((DEBUG_DEBUG, "Sending '%s :%s' to sj3", parabuf, parv[parc - 1]));
 	/* We strip out & and " here, for SJ2 */
 	strcpy(parabuf, "");
 	t = parv[parc - 1];
@@ -4891,6 +4891,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 		sendto_serv_butone_token_opt(cptr,
 		    OPT_SJOIN | OPT_SJOIN2 | OPT_NOT_SJ3, sptr->name, MSG_SJOIN,
 		    TOK_SJOIN, "%s %s + <-> :%s", parv[1], parv[2], parabuf);
+		Debug((DEBUG_DEBUG, "Sending to SJ2: %s %s + <-> :%s", parv[1], parv[2], parabuf));
 		return 0;
 	}
 	if (nopara)
@@ -4899,8 +4900,9 @@ int  m_sjoin(cptr, sptr, parc, parv)
 		    OPT_SJOIN | OPT_SJOIN2 | OPT_NOT_SJ3, sptr->name, MSG_SJOIN,
 		    TOK_SJOIN, "%s %s %s <-> :%s", parv[1], parv[2], parv[3],
 		    parabuf);
+		Debug((DEBUG_DEBUG, "Sending to SJ2: %s %s %s <-> :%s",
+			parv[1], parv[2], parv[3], parabuf));
 		return 0;
-
 	}
 	strcpy(paraback, "");
 	ap = mp2parv("*", parv[4]);
@@ -4913,7 +4915,10 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	    sptr->name,
 	    MSG_SJOIN, TOK_SJOIN, "%s %s %s %s :%s",
 	    parv[1], parv[2], parv[3], paraback, parabuf);
-
+	Debug((DEBUG_DEBUG, "sending to SJ2: %s %s %s %s :%s",
+		parv[1], parv[2], parv[3], paraback, parabuf));
+	/* And we are synched */
+	return 0;
 }
 
 
