@@ -1282,7 +1282,7 @@ void SocketLoop(void *dummy)
 					lifesux = 0;
 					if (noisy_htm)
 						sendto_realops
-						    ("Resuming standard operation (incoming = %0.2f kb/s, outgoing = %0.2f kb/s timeofday)",
+						    ("Resuming standard operation (incoming = %0.2f kb/s, outgoing = %0.2f kb/s now)",
 						    currentrate, currentrate2);
 				}
 			}
@@ -1367,7 +1367,7 @@ void SocketLoop(void *dummy)
 		}
 		{
 			static TS lasttime = 0;
-			if ((lasttime + (lifesux + 1) * 2) < (timeofday = TStime()))
+			if ((lasttime + (lifesux + 1) * 2) < timeofday)
 			{
 				read_message(delay, NULL);	/*  check everything */
 				lasttime = timeofday;
@@ -1376,7 +1376,6 @@ void SocketLoop(void *dummy)
 
 #endif
 		Debug((DEBUG_DEBUG, "Got message(s)"));
-		timeofday = TStime();
 		/*
 		   ** ...perhaps should not do these loops every time,
 		   ** but only if there is some chance of something
