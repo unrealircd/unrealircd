@@ -691,3 +691,15 @@
 - /who's now show +i users for opers in channels, idea by
   Strider@ChatCircuit
 - Fixed NO_OPEROVERRIDE bug reported by otherguy
+- #define STATSWRITING will make ircd write ircd.stats every 4 seconds,
+  idea/sortof by WaveRide
+    Format of ircd.stats:
+       <global users>
+       <global invisible users>
+       <global servers>
+       <irc operators>
+       <unknown connections>
+       <local clients>
+       <local servers>
+       <local max clients>
+       <global max clients>

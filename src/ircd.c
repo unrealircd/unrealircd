@@ -127,6 +127,23 @@ int  noisy_htm = 1;
 TS   check_fdlists();
 #endif
 
+void save_stats(void)
+{
+	FILE	*stats = fopen("ircd.stats", "w");
+	if (!stats)
+		return;
+	fprintf(stats, "%li\n", IRCstats.clients);
+	fprintf(stats, "%li\n", IRCstats.invisible);
+	fprintf(stats, "%li\n", IRCstats.servers);
+	fprintf(stats, "%li\n", IRCstats.operators);
+	fprintf(stats, "%li\n", IRCstats.unknown);
+	fprintf(stats, "%li\n", IRCstats.me_clients);
+	fprintf(stats, "%li\n", IRCstats.me_servers);
+	fprintf(stats, "%li\n", IRCstats.me_max);
+	fprintf(stats, "%li\n", IRCstats.global_max);
+	fclose(stats);
+}
+
 
 void server_reboot(char *);
 void restart PROTO((char *));
@@ -1155,6 +1172,9 @@ void SocketLoop(void *dummy)
 		{
 			tkl_check_expire();
 			lastglinecheck = now;
+#ifdef STATSWRITING
+			save_stats();
+#endif
 		}
 		if (loop.do_tkl_sweep)
 		{
