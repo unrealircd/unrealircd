@@ -271,6 +271,8 @@ int  dcc_loadconf(void)
 		if (buf[0] == '#' || buf[0] == '/' || buf[0] == '\0')
 			continue;
 		iCstrip(buf);
+		if (buf[0] == '#' || buf[0] == '/' || buf[0] == '\0')
+			continue;
 		x = strtok(buf, " ");
 		if (strcmp("deny", x) == 0)
 		{
@@ -526,6 +528,8 @@ int  cr_loadconf(void)
 		if (buf[0] == '#' || buf[0] == '/' || buf[0] == '\0')
 			continue;
 		iCstrip(buf);
+		if (buf[0] == '#' || buf[0] == '/' || buf[0] == '\0')
+			continue;
 		x = strtok(buf, " ");
 		if (strcmp("allow", x) == 0)
 		{
@@ -668,9 +672,10 @@ int  vhost_loadconf(void)
 	while (fgets(buf, 2048, f))
 	{
 		if (buf[0] == '#' || buf[0] == '/' || buf[0] == '\0')
-
 			continue;
 		iCstrip(buf);
+		if (buf[0] == '#' || buf[0] == '/' || buf[0] == '\0')
+			continue;
 		x = strtok(buf, " ");
 		if (strcmp("vhost", x) == 0)
 		{

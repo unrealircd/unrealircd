@@ -118,7 +118,8 @@ int  load_conf(char *filename, int type)
 	iCstrip(buf);
 	version = strtok(buf, "^");
 	version = strtok(NULL, "");
-
+	if (!version)
+		goto malformed;
 	/* is this a unrealircd.conf file? */
 	if (!match("1.*", version))
 	{
@@ -189,6 +190,7 @@ int  load_conf(char *filename, int type)
 	}
 	else
 	{
+malformed:
 		if (type == 1)
 		{
 			sendto_ops
@@ -255,8 +257,12 @@ int  load_conf2(FILE * conf, char *filename, int type)
 			if (*var == '\0')
 				continue;
 
-			strtok(NULL, " ");
+			setto = strtok(NULL, " ");
+			if (!setto)
+				continue;
 			setto = strtok(NULL, "");
+			if (!setto)
+				continue;
 			/* Is it a aint variable */
 			if (strcmp(var, "MODE_X") == 0)
 			{
@@ -428,8 +434,12 @@ int  load_conf3(FILE * conf, char *filename, int type)
 			if (*var == '\0')
 				continue;
 
-			strtok(NULL, " ");
+			setto = strtok(NULL, " ");
+			if (!setto)
+				continue;
 			setto = strtok(NULL, "");
+			if (!setto)
+				continue;
 			/* Is it a aint variable */
 			if (strcmp(var, "iNAH") == 0)
 			{

@@ -562,3 +562,5 @@
   it encrypts X and N lines too.
 - Fixed empty mode sends in register_user, reported by Bagge
 - Added some portability stuff
+- Fixed some empty-line/missing parameter stuff in dccdeny, vhost, 
+  and dynconf, chrestrict
