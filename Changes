@@ -3226,3 +3226,4 @@ This is the 3.2 fixes branch.
 - Made a bunch of TKL parameters case insensitive (#0001766) reported by medice.
 - Made Unreal create the tmp/ dir at startup, rather than configure (#0001824) suggested by
   LinDevel
+- Added /dns c to clear the DNS cache (#0001852) suggested by samson.

@@ -1664,6 +1664,13 @@ int m_dns(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr, "NOTICE %s :End of info.", sptr->name);
 		return 2;
 	}
+	if (parv[1] && *parv[1] == 'c')
+	{
+		flush_cache();
+		sendto_realops("%s cleared the DNS cache", sptr->name);
+		sendto_one(sptr, "NOTICE %s :DNS cache cleared", sptr->name);
+		return 2;
+	}
 	sendto_one(sptr, "NOTICE %s :Ca %d Cd %d Ce %d Cl %d Ch %d:%d Cu %d",
 	    sptr->name,
 	    cainfo.ca_adds, cainfo.ca_dels, cainfo.ca_expires,
