@@ -674,3 +674,4 @@ seen. gmtime warning still there
   codemastr
 - Some configure.in fixes to pthread stuff
 - Added possiblity to add parameters to configure in Config
+- Minor SJOIN fix .. 

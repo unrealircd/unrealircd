@@ -735,10 +735,11 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 	if (strchr(prefix, '.'))
 	{
 		acptr = (aClient *) find_server_quick(prefix);
-		if (acptr->serv->numeric)
-		{
-			strcpy(pref, base64enc(acptr->serv->numeric));
-		}
+		if (acptr && acptr->serv)
+			if (acptr->serv->numeric)
+			{
+				strcpy(pref, base64enc(acptr->serv->numeric));
+			}
 	}
 
 	strcpy(tcmd, token);
