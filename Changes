@@ -997,3 +997,5 @@ seen. gmtime warning still there
 - A and a give you O, set::modes-on-oper
 - Made link::hubmask and link::leafmask actually work properly
 - Big mods to TKL, oper commands split into module, testing
+- TKL mods compile and run fine, set{} stuff to decide what funcs are 
+  avail forthcoming

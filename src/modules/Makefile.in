@@ -213,6 +213,10 @@ m_svsnick.so: m_svsnick.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_svsnick.so m_svsnick.c
 
+m_tkl.so: m_tkl.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_tkl.so m_tkl.c
+
 scan.so: scan.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		 -o scan.so scan.c

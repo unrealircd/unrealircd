@@ -32,12 +32,12 @@ DLLFUNC int m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-DLLFUNC int m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char type);
+DLLFUNC int m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type);
 
 /* Place includes here */
 #define MSG_GLINE "GLINE"
 #define TOK_GLINE "}"
-#define MSG_SHUN "SHUN
+#define MSG_SHUN "SHUN"
 #define TOK_SHUN "BL"
 #define MSG_GZLINE "GZLINE"
 #define MSG_TKLINE "TKLINE"
@@ -73,11 +73,11 @@ int    m_tkl_Init(int module_load)
 	/*
 	 * We call our add_Command crap here
 	*/
-	add_Command(MSG_GLINE, TOK_GLINE, m_gline, 4);
-	add_Command(MSG_SHUN, TOK_SHUN, m_shun, 4);
-	add_Command(MSG_TZLINE, TOK_NONE, m_tzline, 4);
-	add_Command(MSG_TKLINE, TOK_NONE, m_tkline, 4);
-	add_Command(MSG_GZLINE, TOK_NONE, m_gzline, 4);
+	add_Command(MSG_GLINE, TOK_GLINE, m_gline, 3);
+	add_Command(MSG_SHUN, TOK_SHUN, m_shun, 3);
+	add_Command(MSG_TZLINE, TOK_NONE, m_tzline, 3);
+	add_Command(MSG_TKLINE, TOK_NONE, m_tkline, 3);
+	add_Command(MSG_GZLINE, TOK_NONE, m_gzline, 3);
 
 }
 
@@ -98,11 +98,11 @@ DLLFUNC int	Mod_Unload(int module_unload)
 int	m_tkl_Unload(int module_unload)
 #endif
 {
-	if (del_Command(MSG_GLINE, TOK_GLINE, m_gline) < 0) ||
-	    del_Command(MSG_SHUN, TOK_SHUN, m_shun) < 0 ) ||
-	    del_Command(MSG_TZLINE, TOK_NONE, m_tzline) < 0) ||
-	    del_Command(MSG_GZLINE, TOK_NONE, m_gzline) < 0) ||
-	    del_Command(MSG_TKLINE, TOK_NONE, m_tkline) < 0))
+	if ((del_Command(MSG_GLINE, TOK_GLINE, m_gline) < 0) ||
+	    (del_Command(MSG_SHUN, TOK_SHUN, m_shun) < 0 ) ||
+	    (del_Command(MSG_TZLINE, TOK_NONE, m_tzline) < 0) ||
+	    (del_Command(MSG_GZLINE, TOK_NONE, m_gzline) < 0) ||
+	    (del_Command(MSG_TKLINE, TOK_NONE, m_tkline) < 0))
 
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
@@ -125,7 +125,7 @@ DLLFUNC int m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (IsServer(sptr))
 		return 0;
 
-	if (!OpCanTKL(sptr) || !IsOper(sptr))
+	if (!OPCanTKL(sptr) || !IsOper(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -154,7 +154,7 @@ DLLFUNC int m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (IsServer(sptr))
 		return 0;
 
-	if (!OpCanGZL(sptr) || !IsOper(sptr))
+	if (!OPCanGZL(sptr) || !IsOper(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -183,7 +183,7 @@ DLLFUNC int m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (IsServer(sptr))
 		return 0;
 
-	if (!OpCanTKL(sptr) || !IsOper(sptr))
+	if (!OPCanTKL(sptr) || !IsOper(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -212,7 +212,7 @@ DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (IsServer(sptr))
 		return 0;
 
-	if (!OpCanKline(sptr) || !IsAnOper(sptr))
+	if (!OPCanKline(sptr) || !IsAnOper(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -241,7 +241,7 @@ DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (IsServer(sptr))
 		return 0;
 
-	if (!OpCanZline(sptr) || !IsAnOper(sptr))
+	if (!OPCanZline(sptr) || !IsAnOper(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -277,8 +277,7 @@ DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 ** parv[3] = reason
 */
 
-DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type)
-{
+DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type) {
 	aTKline *tk;
 	TS   secs;
 	int  whattodo = 0;	/* 0 = add  1 = del */
@@ -348,7 +347,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	usermask = strtok(mask, "@");
 	hostmask = strtok(NULL, "");
 	if (BadPtr(hostmask)) {
-		if (BadPtr(usermask) {
+		if (BadPtr(usermask)) {
 			return 0;
 		}
 		hostmask = usermask;
@@ -358,7 +357,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 
 	secs = 0;
 
-	if (whattodo == 0 && (parc > 1))
+	if (whattodo == 0 && (parc > 2))
 	{
 		secs = atime(parv[2]);
 		if (secs < 0)
