@@ -153,7 +153,7 @@ help.o: help.c $(INCLUDES)
 #	./buildm4 ${IRCDDIR}
 
 clean:
-	$(RM) -f *.o *.so *~ core ircd version.c chkconf; \
+	$(RM) -f *.o *.so *~ core ircd version.c; \
 	cd modules; make clean
 
 cleandir: clean
