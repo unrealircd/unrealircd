@@ -3250,6 +3250,8 @@ int  m_kick(cptr, sptr, parc, parv)
 			{
 				if (IsULine(cptr, sptr))
 					goto attack;
+				if (IsServer(sptr))
+					goto attack;
 				/* Hiding patch by }{ */
 				if (IsHiding(who))
 				{
