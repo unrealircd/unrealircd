@@ -1379,7 +1379,7 @@ void SocketLoop(void *dummy)
 			}
 			flush_fdlist_connections(&serv_fdlist);
 			timeofday = time(NULL) + TSoffset;
-			if ((alllasttime + (lifesux + 1)) > timeofday) {
+			if ((alllasttime + (lifesux + 1)) < timeofday) {
 				read_message(delay, NULL);	/*  check everything */
 				alllasttime = timeofday;
 			}

@@ -579,7 +579,7 @@ static char *replies[] = {
 /* 520    520 */ ":%s 520 %s :Cannot join channel (IRCops only)",
 /* 521    ERR_LISTSYNTAX */ ":%s 521 %s Bad list syntax, type /quote list ? or /raw list ?",
 /* 522    ERR_WHOSYNTAX */ ":%s 522 %s :/WHO Syntax incorrect, use /who ? for help",
-/* 523 	  ERR_WHOLIMEXCEED */ ":%s 523 %s :Error, /who limit of %d exceed.   Please narrow your search down and try again",
+/* 523 	  ERR_WHOLIMEXCEED */ ":%s 523 %s :Error, /who limit of %d exceeded. Please narrow your search down and try again",
 /* 524    ERR_OPERSPVERIFY */ ":%s 524 %s :Trying to join +s or +p channel as an oper. Please invite yourself first.",
 /* 525 */ NULL,
 /* 526 */ NULL,

@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta18<br>
-  <b>Last doc update:</b> 2003-09-28</div>
+  <b>Last doc update:</b> 2003-10-03</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Luke / McSkaf / Syzop<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -1766,6 +1766,9 @@ set {
   Sets a static quit message that will be sent whenever a client logs off the 
   network. This eliminates the need for anti-spam-quit-message-time, as well as 
   the set::prefix-quit. It will NOT replace ERRORS with the static-quit message.</p>
+<p><font class="set">set::who-limit &lt;limit&gt;;</font><br>
+  Sets the limit for the maximum number of matches that will be returned for a /who.
+  If this option is left out, no limit is enforced.</p>
 <p><font class="set">set::oper-only-stats &lt;stats-list&gt;;</font><br>
   Specifies a list of stats flags with no seperators that defines stats flags 
   only opers can use. Leave this value out to allow users to use all flags, or 

@@ -1206,6 +1206,8 @@ int stats_set(aClient *sptr, char *para)
 	    RPL_TEXT, sptr->name, OPER_AUTO_JOIN_CHANS ? OPER_AUTO_JOIN_CHANS : "0");
 	sendto_one(sptr, ":%s %i %s :static-quit: %s", me.name, 
 		RPL_TEXT, sptr->name, STATIC_QUIT ? STATIC_QUIT : "<none>");	
+	sendto_one(sptr, ":%s %i %s :who-limit: %d", me.name, RPL_TEXT,
+		sptr->name, WHOLIMIT);
 	sendto_one(sptr, ":%s %i %s :dns::timeout: %s", me.name, RPL_TEXT,
 	    sptr->name, pretty_time_val(HOST_TIMEOUT));
 	sendto_one(sptr, ":%s %i %s :dns::retries: %d", me.name, RPL_TEXT,

@@ -122,6 +122,7 @@ struct zConfiguration {
 	int ident_connect_timeout;
 	int ident_read_timeout;
 	long default_bantime;
+	int who_limit;
 	aNetwork network;
 };
 
@@ -204,3 +205,4 @@ extern aConfiguration iConf;
 #define CHANCMDPFX iConf.channel_command_prefix
 
 #define DEFAULT_BANTIME			iConf.default_bantime
+#define WHOLIMIT			iConf.who_limit

@@ -2453,3 +2453,7 @@ seen. gmtime warning still there
   3) services making someone a global oper while he's already local op might cause confusion.
   4) if local opers would do /mode nick +H
   5) Some false warnings (negative opercount) if services would do -Ho (-oH went fine)
+- Fixed a problem with HTM where it would never actually read messages from clients
+- Made /who limit output (uses set::who-limit) (#0001244) suggested by Exael23 
+- Made /who * disabled (for non-opers) in HTM mode
+

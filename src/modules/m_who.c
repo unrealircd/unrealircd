@@ -500,8 +500,8 @@ int ret = 0;
 
 static void do_channel_who(aClient *sptr, aChannel *channel, char *mask)
 {
-Member *cm = channel->members;
-  
+	Member *cm = channel->members;
+  	int i = 0;
 	if (IsMember(sptr, channel) || IsNetAdmin(sptr))
 		who_flags |= WF_ONCHANNEL;
 
@@ -510,7 +510,6 @@ Member *cm = channel->members;
 		aClient *acptr = cm->cptr;
 		char status[20];
 		int cansee;
-
 		if ((cansee = can_see(sptr, acptr, channel)) & WHO_CANTSEE)
 			continue;
 
@@ -566,8 +565,17 @@ static void do_other_who(aClient *sptr, char *mask)
 int oper = IsAnOper(sptr);
 
 	/* wildcard? */
+#ifndef NO_FDLIST
+	if (lifesux && !IsOper(sptr) && *mask == '*' && *(mask+1) == 0)
+	{
+		sendto_one(sptr, err_str(ERR_HTMDISABLED), me.name,
+                    sptr->name, "/WHO");
+		return;
+	}
+#endif		
 	if (strchr(mask, '*') || strchr(mask, '?'))
 	{
+		int i = 0;
 		/* go through all users.. */
 		aClient *acptr;
 		who_flags |= WF_WILDCARD;
@@ -600,6 +608,11 @@ int oper = IsAnOper(sptr);
 matchok:
 			if ((cansee = can_see(sptr, acptr, NULL)) & WHO_CANTSEE)
 				continue;
+			if (WHOLIMIT && !IsAnOper(sptr) && ++i > WHOLIMIT)
+			{
+				sendto_one(sptr, rpl_str(ERR_WHOLIMEXCEED), me.name, sptr->name, WHOLIMIT);
+				continue;
+			}
 
 			channel = first_visible_channel(sptr, acptr, &flg);
 			make_who_status(sptr, acptr, NULL, NULL, status, cansee);
@@ -630,7 +643,7 @@ matchok:
 static void send_who_reply(aClient *sptr, aClient *acptr, 
 			   char *channel, char *status, char *xstat)
 {
-char *stat;
+	char *stat;
 
 	stat = malloc(strlen(status) + strlen(xstat) + 1);
 	sprintf(stat, "%s%s", status, xstat);
@@ -652,7 +665,7 @@ char *stat;
 
 static char *first_visible_channel(aClient *sptr, aClient *acptr, int *flg)
 {
-Membership *lp;
+	Membership *lp;
 
 	*flg = 0;
 
@@ -679,7 +692,7 @@ Membership *lp;
 
 static int has_common_channels(aClient *c1, aClient *c2)
 {
-Membership *lp;
+	Membership *lp;
 
 	for (lp = c1->user->channel; lp; lp = lp->next)
 	{
