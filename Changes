@@ -2184,3 +2184,5 @@ seen. gmtime warning still there
 - Removed the old TSP stuff from the extras directory, this is no longer used and it just
   wastes space.
 - Made /whois work slightly faster
+- Probably fixed server-notices bug (duplicates, to non-opers) caused by a few SVS* cmds,
+  reported by _loco_ (#0000991).

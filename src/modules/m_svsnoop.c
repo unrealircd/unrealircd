@@ -121,7 +121,10 @@ int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[])
                                 if (MyClient(acptr) && IsAnOper(acptr))
                                 {
                                         if (IsAnOper(acptr))
+                                        {
                                                 IRCstats.operators--;
+                                                delfrom_fdlist(acptr->slot, &oper_fdlist);
+                                        }
                                         acptr->umodes &=
                                             ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP | UMODE_SERVICES |
                                             UMODE_SADMIN | UMODE_ADMIN);

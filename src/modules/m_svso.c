@@ -181,6 +181,8 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 fLag = acptr->umodes;
                 if (IsOper(acptr) && !IsHideOper(acptr))
                         IRCstats.operators--;
+                if (IsAnOper(acptr))
+                        delfrom_fdlist(acptr->slot, &oper_fdlist);
                 acptr->umodes &=
                     ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP |UMODE_SERVICES |
                     UMODE_SADMIN | UMODE_ADMIN);
