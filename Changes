@@ -339,7 +339,7 @@ done, but whatever.)
 --Luke
 ===================================
 
-Moved cloak key definitions to unrealircd.conf
+Moved cloak key definitions to .network file
 --Luke
 ===================================
 
