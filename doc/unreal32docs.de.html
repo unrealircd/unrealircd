@@ -23,7 +23,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2 </font><br>
   <b>Aktuelle Version:</b> 3.2 *CVS*<br>
-  <b>Letztes Dokumentation Update:</b>   2004-06-10</div>
+  <b>Letztes Dokumentation Update:</b>    2004-06-17</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
 <b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
@@ -62,7 +62,10 @@ und&nbsp; eine FAQ @
   -- 3.12. <a href="#feature_antiflood">Anti-Flood Features<br>
 </a>-- 3.13. <a href="#feature_bantypes"> Bann Typen</a><br>
 -- 3.14. <a href="#feature_spamfilter"> Spamfilter</a><br>
-  -- 3.15. <a href="#feature_other">Andere Features</a><br>
+-- 3.15. <a href="#feature_cidr">CIDR<br>
+</a>
+  -- 3.16. <a href="#feature_other">Andere Features<br>
+</a>
   4. <a href="#configuringyourunrealircdconf">Konfiguration der unrealircd.conf
 Datei</a><br>
   ---4.1. <a href="#configurationfileexplained">Erklärung der
@@ -862,7 +865,19 @@ Channels, in den bei der Action 'viruschan' gejoined wird (Default: #help)<br>
 den virus-help-channel zu blockieren (Default: no)
 </div>
 
-<p><font size="+2"><b><a name="feature_other">3.15 - Andere Features</a></b></font></p><div class="desc">
+<p><font size="+2"><b><a name="feature_cidr">3.15 - CIDR</a></b></font></p><div class="desc">
+<p>UnrealIRCd unterstützt nun auch CIDR (Classless Interdomain Routing). CIDR
+ermöglicht es, IP Bereiche zu bannen. IPs werden an Internet Service Provider (ISP)
+unter Verwendung von CIDR vergeben. Daher ist es möglich unter Verwendung eines
+CIDR basierten Banns auf einfache Weise ganze ISPs zu sperren. Unreal
+unterstützt CIDR sowohl für IPv4 als auch für IPv6. CIDR Masken können
+benutzt werden bei: allow::ip, ban user::mask, ban ip::mask, except ban::mask, except
+throttle::mask, und except tkl::mask (für gzline, gline, and shun). Zusätzlich
+kann&nbsp; CIDR bei /kline, /gline, /zline, /gzline, und /shun benutzt werden. Unreal
+verwendet die Standard Syntax von IP/bits, z.B. 127.0.0.0/8 (passt auf 127.0.0.0 - 127.255.255.255),
+und fe80:0:0:123::/64 (passt auf fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p></div>
+
+<p><font size="+2"><b><a name="feature_other">3.16 - Andere Features</a></b></font></p><div class="desc">
 <p>UnrealIRCd hat eine Reihe weiterer Features, die hier nicht alle einzeln
 aufgeführt sind. Man wird sie während der Konfiguration selbst herausfinden ;)</p></div>
 
@@ -1352,6 +1367,11 @@ Form (wie z.B.: &quot;services-admin&quot;) verwenden möchte, benutzt man die
     <td width="74" align="center">q</td>
     <td width="103" align="center">can_setq</td>
     <td width="529">Kann Usermode +q setzen</td>
+  </tr>
+  <tr> 
+    <td width="74" align="center">X</td>
+    <td width="103" align="center">can_addline</td>
+    <td width="529">Kann den Befehl /addline benutzen</td>
   </tr>
   <tr> 
     <td width="74" align="center">d</td>
@@ -2388,7 +2408,7 @@ Alias Dateien bei UnrealIRCd mitgeliefert werden.)</p>
 <p>Mit dem &quot;alias block [standard alias]&quot; kann festgelegt werden, daß
 ein Befehl an einen User geleitet wird. So wird z.B. durch /chanserv eine
 Nachricht an den &quot;User&quot; chanserv weitergeleitet. <b> alias::</b> legt
-den Namen des Befehls fest, der das Alias wird, z.B. &quot;/chanserv&quot;. <b>alias::nick</b> ist
+den Namen des Befehls fest, der das Alias wird, z.B. 'chanserv'. <b>alias::nick</b> ist
 der Nickname, an den weitergeleitet wird. Wenn &quot;alias::&quot; identisch mit
 dem Nick ist, an den weitergeleitet wird, kann &quot;alias::nick&quot;
 weggelassen werden. <b> alias::type</b> gibt den Typ des Alias an, gültige
