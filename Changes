@@ -560,3 +560,4 @@
 - Updated help.conf's +f documentation for the new syntax
 - Fixed some problems with the /stats help and documentation (#0002299) reported by Rocko.
 - Corrected the help.conf documentation for /invite (#0002306) reported by White_Magic.
+- Fixed a documentation inconsistency with me::numeric (#0002290) reported by Bugz.
