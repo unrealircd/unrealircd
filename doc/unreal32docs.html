@@ -24,7 +24,7 @@ English | <a href="unreal32docs.de.html">German</a><br><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 *CVS*<br>
-  <b>Last doc update:</b> 2004-06-17</div>
+  <b>Last doc update:</b> 2004-06-25</div>
 <br>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -1224,25 +1224,29 @@ log &lt;file-name&gt; {
 };
 </pre></p>
 <p>The log block allows you to assign different log files for different purposes. 
-  The log:: contains the name of the log file. log::maxsize is an optional directive 
+  The <b>log::</b> contains the name of the log file. <b>log::maxsize</b> is an optional directive 
   that allows you to specify a size that the log file will be wiped and restarted. 
   You can enter this string using MB for megabytes, KB, for kilobytes, GB, for 
-  gigabytes. The log::flags specifies which types of information will be in this 
-  log. You can specify one or more of the following, errors, kills, tkl (G:lines 
-  and Shuns), connects, server-connects, kline, and oper.</p>
+  gigabytes. The <b>log::flags</b> specifies which types of information will be in this 
+  log. See the list of available flags below.</p>
 <p>You may also have multiple log blocks, to log different things to different 
   log files.</p>
-<p>Available Flags:</p>
-<p>errors self explanatory<br>
-  kills logs /kill notices<br>
-  tkl logs info on glines, shuns, tklines, tzlines, gzlines<br>
-  connects logs user connects/quits<br>
-  server-connects logs server connects/squits<br>
-  kline logs kline and unkline<br>
-  oper logs oper attempts (both failed and successful)<br>
-  sadmin-commands logs /sa* (samode, sajoin, sapart, etc.) usage<br>
-  chg-commands logs /chg* (chghost, chgname, chgident, etc.) usage<br>
-  oper-override logs operoverride usage</p>
+<p><b>Available Flags:</b><br>
+  <table border=0>
+  <tr><td>errors</td><td>self explanatory</td></tr>
+  <tr><td>kills</td><td>logs /kill notices</td></tr>
+  <tr><td>tkl</td><td>logs info on *lines, shuns and spamfilters (adding/removing/expire)</td></tr>
+  <tr><td>connects</td><td>logs user connects/disconnects</td></tr>
+  <tr><td>server-connects</td><td>logs server connects/squits</td></tr>
+  <tr><td>kline</td><td>logs /kline usage</td></tr>
+  <tr><td>oper</td><td>logs oper attempts (both failed and successful)</td></tr>
+  <tr><td>sadmin-commands</td><td>logs /sa* (samode, sajoin, sapart, etc.) usage</td></tr>
+  <tr><td>chg-commands</td><td>logs /chg* (chghost, chgname, chgident, etc.) usage</td></tr>
+  <tr><td>oper-override</td><td>logs operoverride usage</td></tr>
+  <tr><td>spamfilter</td><td>logs spamfilter matches</td></tr>
+ </table>
+</p>
+
 <p>Example:</p>
 <pre>
 log ircd.log {

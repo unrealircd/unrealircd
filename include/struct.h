@@ -186,7 +186,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 /* NOTE: this must be down here so the stuff from struct.h IT uses works */
 #include "whowas.h"
 
-/* Loggin types */
+/* Logging types */
 #define LOG_ERROR 0x0001
 #define LOG_KILL  0x0002
 #define LOG_TKL   0x0004
@@ -197,6 +197,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define LOG_SACMDS 0x0080
 #define LOG_CHGCMDS 0x0100
 #define LOG_OVERRIDE 0x0200
+#define LOG_SPAMFILTER 0x0400
 
 
 /*

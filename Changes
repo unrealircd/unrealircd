@@ -3304,3 +3304,7 @@ This is the 3.2 fixes branch.
 - Added a donator to /credits
 - Fixed '/stats P' negative usercount bug (#0001691).
 - Made IPv6 bans work the way they should again, reported by al5001 (#0001876).
+- Added new logtype 'spamfilter' to log spamfilter matches
+- Updated example.conf: added all new flags we added in the example block, removed
+  old confusing comment on SEGV logging, config.h: ripped out lPATH since that define
+  isn't anywhere used and is only confusing.

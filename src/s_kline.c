@@ -1473,6 +1473,7 @@ char *str = (char *)StripControlCodes(str_in);
 
 			sendto_snomask(SNO_SPAMF, "%s", buf);
 			sendto_serv_butone_token(NULL, me.name, MSG_SENDSNO, TOK_SENDSNO, "S :%s", buf);
+			ircd_log(LOG_SPAMFILTER, "%s", buf);
 
 			if (tk->ptr.spamf->action == BAN_ACT_BLOCK)
 			{

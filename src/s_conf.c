@@ -274,6 +274,7 @@ static OperFlag _LogFlags[] = {
 	{ LOG_OVERRIDE, "oper-override" },
 	{ LOG_SACMDS, "sadmin-commands" },
 	{ LOG_SERVER, "server-connects" },
+	{ LOG_SPAMFILTER, "spamfilter" },
 	{ LOG_TKL, "tkl" },
 };
 
