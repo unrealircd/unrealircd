@@ -3017,3 +3017,4 @@ seen. gmtime warning still there
 - Added a check to try and prevent people from adding all-encompassing
   regexp's in /spamfilter. Thanks to Ville Laurikari for coming up with the
   method!
+- Removed the old/unused src/win32/version.c (#0001630) reported by fez
