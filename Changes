@@ -503,3 +503,4 @@ seen. gmtime warning still there
   DEBUGMODE from config.h. Still cores, but we might be closer to a
   solution. Broken code, do not use devel right now
 - Fixed to winlocal by McSkaf
+- More fixes
