@@ -510,21 +510,6 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 			if (IsClient(acptr) && (acptr->srvptr == sptr))
 				exit_one_client(NULL, acptr,
 				    &me, comment1, 1);
-#ifdef DEBUGMODE
-			else if (IsClient(acptr) &&
-			    (find_server(acptr->user->server, NULL) == sptr))
-			{
-				sendto_ops("WARNING, srvptr!=sptr but "
-				    "find_server did!  User %s on %s "
-				    "thought it was on %s while "
-				    "loosing %s.  Tell coding team.",
-				    acptr->name, acptr->user->server,
-				    acptr->srvptr ? acptr->
-				    srvptr->name : "<noserver>", sptr->name);
-				exit_one_client_in_split(NULL, acptr, &me,
-				    comment1);
-			}
-#endif
 		}
 
 		/*
