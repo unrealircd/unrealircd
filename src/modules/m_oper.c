@@ -224,12 +224,6 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 				MSG_SWHOIS, TOK_SWHOIS, "%s :%s", sptr->name, aconf->swhois);
 		}
 
-#ifdef POTVINIZE /* scary shit below */
-
-/* Begone evil demons! */
-
-#else
-
 /* new oper code */
 
 		sptr->umodes |= OPER_MODES;
@@ -249,7 +243,6 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		}
 
 		sptr->oflag = aconf->oflags;
-
 		if ((aconf->oflags & OFLAG_HIDE) && iNAH && !BadPtr(host)) {
 			iNAH_host(sptr, host);
 			SetHidden(sptr);
@@ -258,6 +251,10 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		if (!IsOper(sptr))
 		{
 			sptr->umodes |= UMODE_LOCOP;
+			if ((aconf->oflags & OFLAG_HIDE) && iNAH && !BadPtr(locop_host)) {
+				iNAH_host(sptr, locop_host);
+				SetHidden(sptr);
+			}
 			sendto_ops("%s (%s@%s) is now a local operator (o)",
 			    parv[0], sptr->user->username,
 			    IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost);
@@ -278,9 +275,6 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 				    user->virthost : sptr->user->realhost, announce);
 
 		} 
-
-#endif
-
 		if (!aconf->snomask)
 			set_snomask(sptr, SNO_DEFOPER);
 		else

@@ -1366,3 +1366,4 @@ seen. gmtime warning still there
 - Added extras/channeldumper.c
 - Fixed an alias {} bug reported by Keeper (prefix was :nick not :nick!user@host which screwed up some bots)
 - Fixed a +sp bug reported by Zerwas (#0000160) fixed by JK and Luke
+- Fixed a bug where locops did not receive a hidden host reported by breathingman (#0000221)
