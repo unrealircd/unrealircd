@@ -338,7 +338,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		if (secs < 0)
 		{
 			sendto_one(sptr,
-			    ":%s NOTICE %s :*** [error] The time you specified for the gline is out of range!",
+			    ":%s NOTICE %s :*** [error] The time you specified is out of range!",
 			    me.name, sptr->name);
 			return 0;
 		}
@@ -374,7 +374,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		if (!t)
 		{
 			sendto_one(sptr,
-				":%s NOTICE %s :*** [error] The time you specified for the gline is out of range",
+				":%s NOTICE %s :*** [error] The time you specified is out of range",
 				me.name, sptr->name);
 			return 0;
 		}
