@@ -1602,13 +1602,15 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 	  case MODE_MODERATED:
 	  case MODE_TOPICLIMIT:
 	  case MODE_NOPRIVMSGS:
-	  case MODE_INVITEONLY:
-		if (what == MODE_DEL && modetype == MODE_INVITEONLY && (chptr->mode.mode & MODE_NOKNOCK))
-			chptr->mode.mode &= ~MODE_NOKNOCK;
 	  case MODE_RGSTRONLY:
 	  case MODE_NOCOLOR:
 	  case MODE_NOKICKS:
 	  case MODE_STRIP:
+		goto setthephuckingmode;
+	  case MODE_INVITEONLY:
+		if (what == MODE_DEL && modetype == MODE_INVITEONLY && (chptr->mode.mode & MODE_NOKNOCK))
+			chptr->mode.mode &= ~MODE_NOKNOCK;
+		goto setthephuckingmode;
 	  case MODE_NOKNOCK:
 		if (what == MODE_ADD && modetype == MODE_NOKNOCK && !(chptr->mode.mode & MODE_INVITEONLY))
 		{
@@ -1617,16 +1619,13 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 			    me.name, cptr->name);
 			break;
 		}
-#ifdef STRIPBADWORDS
-	  case MODE_STRIPBADWORDS:
-#endif
-	  case MODE_NOCTCP:
+		goto setthephuckingmode;
 	  case MODE_ONLYSECURE:
 		if (what == MODE_ADD && modetype == MODE_ONLYSECURE && !(IsServer(cptr) || IsULine(cptr)))
 		{
 	  	  for (member = chptr->members; member; member = member->next)
 		  {
-		    if (!IsSecure(member->value.cptr))
+		    if (!IsSecureConnect(member->value.cptr) && !IsULine(member->value.cptr))
 		    {
 		      sendto_one(cptr,
 		      ":%s NOTICE %s :*** Secure Mode (+z) can only be set when all members of the channel are connected via SSL.",
@@ -1639,6 +1638,11 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		  /* first break nailed the for loop, this one nails switch() */
 		  if (notsecure == 1) break;
 		}
+		goto setthephuckingmode;
+#ifdef STRIPBADWORDS
+	  case MODE_STRIPBADWORDS:
+#endif
+	  case MODE_NOCTCP:
 	  case MODE_NONICKCHANGE:
 	  case MODE_NOINVITE:
 		setthephuckingmode:
