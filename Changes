@@ -147,3 +147,5 @@
   and 100 on your *@* allow
 - /vhost uses newconf
 - Removed old vhost.conf code 
+- Fixed check_pings (check_kills) code, so G:lines & ban nick/ip/realname
+  works again

@@ -130,7 +130,7 @@ unsigned char conf_debuglevel = 0;
 
 void save_stats(void)
 {
-	FILE	*stats = fopen("ircd.stats", "w");
+	FILE *stats = fopen("ircd.stats", "w");
 	if (!stats)
 		return;
 	fprintf(stats, "%li\n", IRCstats.clients);
@@ -274,12 +274,14 @@ VOIDSIG s_segv()
 #else
 # define corename "core"
 #endif
-	if (!segv_last) {
+	if (!segv_last)
+	{
 		sendto_ops("Recieved first Segfault, doing re-enter test");
 		segv_last = TStime();
 		return;
 	}
-	if ((TStime() - segv_last) > 5) {
+	if ((TStime() - segv_last) > 5)
+	{
 #ifdef USE_SYSLOG
 		(void)syslog(LOG_WARNING, "Possible fake segfault");
 #endif
@@ -290,9 +292,9 @@ VOIDSIG s_segv()
 	act.sa_flags = 0;
 	act.sa_handler = SIG_DFL;
 	(void)sigemptyset(&act.sa_mask);
-        (void)sigaction(SIGSEGV,&act,NULL);	
+	(void)sigaction(SIGSEGV, &act, NULL);
 #else
-        (void)signal(SIGSEGV,SIG_DFL);
+	(void)signal(SIGSEGV, SIG_DFL);
 #endif
 
 #ifdef USE_SYSLOG
@@ -305,7 +307,8 @@ VOIDSIG s_segv()
 	sendto_serv_butone(&me,
 	    ":%s GLOBOPS :AIEEE!!! Server Terminating: Segmention fault (buf: %s)",
 	    me.name, backupbuf);
-        sendto_all_butone(NULL, &me, "NOTICE ALL :SEGFAULT! I'm Meeeeellllting, what a world!");
+	sendto_all_butone(NULL, &me,
+	    "NOTICE ALL :SEGFAULT! I'm Meeeeellllting, what a world!");
 	log = fopen(lPATH, "a");
 	if (log)
 	{
@@ -317,7 +320,10 @@ VOIDSIG s_segv()
 
 #if !defined(_WIN32) && !defined(_AMIGA)
 	p = getpid();
-	if (fork()) { return; }
+	if (fork())
+	{
+		return;
+	}
 	write_pidfile();
 #ifdef RENAME_CORE
 	(void)ircsprintf(corename, "core.%d", p);
@@ -330,16 +336,18 @@ VOIDSIG s_segv()
 	flush_connections(me.fd);
 
 #ifndef _WIN32
-	for (i = 3; i < MAXCONNECTIONS; i++) {
+	for (i = 3; i < MAXCONNECTIONS; i++)
+	{
 		(void)close(i);
 	}
 #else
-	for (i = 0; i < highest_fd; i++) {
+	for (i = 0; i < highest_fd; i++)
+	{
 		if (closesocket(i) == -1)
 			close(i);
 	}
 #endif
-	kill(p,SIGQUIT);
+	kill(p, SIGQUIT);
 	exit(-1);
 }
 
@@ -389,6 +397,7 @@ void server_reboot(mesg)
 #endif
 	exit(-1);
 }
+
 char *areason;
 
 /*
@@ -487,209 +496,225 @@ static TS try_connections(currenttime)
 	return (next);
 }
 
-extern char *areason;
 
 /* Now find_kill is only called when a kline-related command is used:
    AKILL/RAKILL/KLINE/UNKLINE/REHASH.  Very significant CPU usage decrease.
-   I made changes to evm_lusers
-ery check_pings call to add new parameter.
    -- Barubary */
 extern TS check_pings(TS currenttime, int check_kills)
 {
-
+	ConfigItem_ban *bconf;
+	static char moobuf[1024];
 	aClient *cptr;
 	int  killflag;
 	int  ping = 0, i, i1, rflag = 0;
 	TS   oldest = 0, timeout;
 
-	for (i1 = 0; i1 <= 7; i1++)
+	for (i = 0; i <= highest_fd; i++)
 	{
-		for (i = 0; i <= highest_fd; i++)
+		/* If something we should not touch .. */
+		if (!(cptr = local[i]) || IsMe(cptr) || IsLog(cptr))
+			continue;
+
+		/*
+		   ** Note: No need to notify opers here. It's
+		   ** already done when "FLAGS_DEADSOCKET" is set.
+		 */
+		if (cptr->flags & FLAGS_DEADSOCKET)
 		{
-			if (!(cptr = local[i]) || IsMe(cptr) || IsLog(cptr))
-				continue;
-
-			/*
-			   ** Note: No need to notify opers here. It's
-			   ** already done when "FLAGS_DEADSOCKET" is set.
-			 */
-			if (cptr->flags & FLAGS_DEADSOCKET)
+			(void)exit_client(cptr, cptr, &me, "Dead socket");
+			continue;
+		}
+		bconf = NULL;
+		if (check_kills)
+		{
+			if (IsPerson(cptr))
 			{
-				(void)exit_client(cptr, cptr, &me, "Dead socket");
-				continue;
-			}
-			areason = NULL;
-#ifdef OLD
-			if (check_kills)
-				killflag = IsPerson(cptr) ? find_kill(cptr) : 0;
-			else
-#endif
-				killflag = 0;
-#ifdef OLD
-			if (check_kills && !killflag && IsPerson(cptr))
-				if (find_zap(cptr, 1)
-				    || find_tkline_match(cptr, 0) > -1 ||
-				    (!IsAnOper(cptr) && find_nline(cptr)))
+				bconf =
+				    Find_ban(make_user_host(cptr->username,
+				    cptr->user ? cptr->user->realhost : cptr->
+				    sockhost), CONF_BAN_USER);
+				if (bconf)
 					killflag = 1;
-#endif
-			ping = IsRegistered(cptr) ? cptr->class->pingfreq :
-			    CONNECTTIMEOUT;
-			Debug((DEBUG_DEBUG, "c(%s)=%d p %d k %d r %d a %d",
-			    cptr->name, cptr->status, ping, killflag, rflag,
-			    currenttime - cptr->lasttime));
-			/*
-			 * Ok, so goto's are ugly and can be avoided here but this code
-			 * is already indented enough so I think its justified. -avalon
-			 */
-			if (!killflag && !rflag && IsRegistered(cptr) &&
-			    (ping >= currenttime - cptr->lasttime))
-				goto ping_timeout;
-			/*
-			 * If the server hasnt talked to us in 2*ping seconds
-			 * and it has a ping time, then close its connection.
-			 * If the client is a user and a KILL line was found
-			 * to be active, close this connection too.
-			 */
-			if (killflag || rflag ||
-			    ((currenttime - cptr->lasttime) >= (2 * ping) &&
-			    (cptr->flags & FLAGS_PINGSENT)) ||
-			    (!IsRegistered(cptr) &&
-			    (currenttime - cptr->firsttime) >= ping))
+				else
+					killflag = 0;
+			}
+		}
+		else
+			killflag = 0;
+
+		if (check_kills && !killflag && IsPerson(cptr))
+		{
+			if (bconf = Find_ban(cptr->sockhost, CONF_BAN_IP))
 			{
-				if (!IsRegistered(cptr) &&
-				    (DoingDNS(cptr) || DoingAuth(cptr)
+				killflag = 1;
+				goto nextstep;
+			}
+			if (find_tkline_match(cptr, 0) < 0)
+			{
+				continue;	
+			}
+			if (!IsAnOper(cptr) && (bconf = Find_ban(cptr->info, CONF_BAN_REALNAME)))
+			{
+				killflag = 1;
+				goto nextstep;
+			}
+		}
+nextstep:
+		ping = IsRegistered(cptr) ? (cptr->class ? cptr->class->pingfreq :
+			CONNECTTIMEOUT) : CONNECTTIMEOUT;
+		Debug((DEBUG_DEBUG, "c(%s)=%d p %d k %d r %d a %d",
+		    cptr->name, cptr->status, ping, killflag, rflag,
+		    currenttime - cptr->lasttime));
+		/*
+		 * Ok, so goto's are ugly and can be avoided here but this code
+		 * is already indented enough so I think its justified. -avalon
+		 */
+		if (!killflag && !rflag && IsRegistered(cptr) &&
+		    (ping >= currenttime - cptr->lasttime))
+			goto ping_timeout;
+		/*
+		 * If the server hasnt talked to us in 2*ping seconds
+		 * and it has a ping time, then close its connection.
+		 * If the client is a user and a KILL line was found
+		 * to be active, close this connection too.
+		 */
+		if (killflag || rflag ||
+		    ((currenttime - cptr->lasttime) >= (2 * ping) &&
+		    (cptr->flags & FLAGS_PINGSENT)) ||
+		    (!IsRegistered(cptr) &&
+		    (currenttime - cptr->firsttime) >= ping))
+		{
+			if (!IsRegistered(cptr) &&
+			    (DoingDNS(cptr) || DoingAuth(cptr)
 #ifdef SOCKSPORT
-				    || DoingSocks(cptr)
+			    || DoingSocks(cptr)
 #endif
-				    ))
+			    ))
+			{
+				if (cptr->authfd >= 0)
 				{
-					if (cptr->authfd >= 0)
-					{
 #ifndef _WIN32
-						(void)close(cptr->authfd);
+					(void)close(cptr->authfd);
 #else
-						(void)closesocket(cptr->authfd);
+					(void)closesocket(cptr->authfd);
 #endif
-						cptr->authfd = -1;
-						cptr->count = 0;
-						*cptr->buffer = '\0';
-					}
+					cptr->authfd = -1;
+					cptr->count = 0;
+					*cptr->buffer = '\0';
+				}
 
 #ifdef SOCKSPORT
-					if (cptr->socksfd >= 0)
-					{
+				if (cptr->socksfd >= 0)
+				{
 #ifndef _WIN32
-						(void)close(cptr->socksfd);
+					(void)close(cptr->socksfd);
 #else
-						(void)closesocket(cptr->socksfd);
+					(void)closesocket(cptr->socksfd);
 #endif /* _WIN32 */
-						cptr->socksfd = -1;
-					}
+					cptr->socksfd = -1;
+				}
 #endif /* SOCKSPORT */
 
 
 #ifdef SHOWCONNECTINFO
-					if (DoingDNS(cptr))
-						sendto_one(cptr, REPORT_FAIL_DNS);
-					else if (DoingAuth(cptr))
-						sendto_one(cptr, REPORT_FAIL_ID);
+				if (DoingDNS(cptr))
+					sendto_one(cptr, REPORT_FAIL_DNS);
+				else if (DoingAuth(cptr))
+					sendto_one(cptr, REPORT_FAIL_ID);
 
 #ifdef SOCKSPORT
-					else
-						sendto_one(cptr, REPORT_NO_SOCKS);
+				else
+					sendto_one(cptr, REPORT_NO_SOCKS);
 #endif /* SOCKSPORT */
 #endif
-					Debug((DEBUG_NOTICE,
-					    "DNS/AUTH timeout %s",
-					    get_client_name(cptr, TRUE)));
+				Debug((DEBUG_NOTICE,
+				    "DNS/AUTH timeout %s",
+				    get_client_name(cptr, TRUE)));
 #ifndef NEWDNS
-					del_queries((char *)cptr);
-#else /*NEWDNS*/
-					/*We dont do anything (yet)*/
-#endif /*NEWDNS*/	
-					ClearAuth(cptr);
-					ClearDNS(cptr);
+				del_queries((char *)cptr);
+#else				 /*NEWDNS*/
+				    /*We dont do anything (yet) */
+#endif				     /*NEWDNS*/
+				    ClearAuth(cptr);
+				ClearDNS(cptr);
 #ifdef SOCKSPORT
-					ClearSocks(cptr);
+				ClearSocks(cptr);
 #endif
-					SetAccess(cptr);
-					cptr->firsttime = currenttime;
-					cptr->lasttime = currenttime;
-					continue;
-				}
-				if (IsServer(cptr) || IsConnecting(cptr) ||
-				    IsHandshake(cptr))
-				{
-					sendto_realops
-					    ("No response from %s, closing link",
-					    get_client_name(cptr, FALSE));
-					sendto_serv_butone(&me,
-					    ":%s GLOBOPS :No response from %s, closing link",
-					    me.name, get_client_name(cptr,
-					    FALSE));
-				}
-				/*
-				 * this is used for KILL lines with time restrictions
-				 * on them - send a messgae to the user being killed
-				 * first.
-				 */
-				if (killflag && IsPerson(cptr))
-					sendto_realops
-					    ("Kill line active for %s (%s)",
-					    get_client_name(cptr, FALSE),
-					    areason ? areason : "no reason");
-
-				if (killflag)
-				{
-					char moobuf[1024];
-
-					if (areason)
-					{
-						ircsprintf(moobuf,
-						    "User has been banned (%s)",
-						    areason);
-						(void)exit_client(cptr, cptr, &me,
-						    moobuf);
-					}
-					else
-					{
-
-						(void)exit_client(cptr, cptr, &me,
-						    "User has been banned");
-
-					}
-					areason = NULL;
-				}
-				else
-					(void)exit_client(cptr, cptr, &me,
-					    "Ping timeout");
+				SetAccess(cptr);
+				cptr->firsttime = currenttime;
+				cptr->lasttime = currenttime;
 				continue;
 			}
-			else if (IsRegistered(cptr) &&
-			    (cptr->flags & FLAGS_PINGSENT) == 0)
+			if (IsServer(cptr) || IsConnecting(cptr) ||
+			    IsHandshake(cptr))
 			{
-				/*
-				 * if we havent PINGed the connection and we havent
-				 * heard from it in a while, PING it to make sure
-				 * it is still alive.
-				 */
-				cptr->flags |= FLAGS_PINGSENT;
-				/* not nice but does the job */
-				cptr->lasttime = currenttime - ping;
-				sendto_one(cptr, "%s :%s", IsToken(cptr) ? TOK_PING : MSG_PING, me.name);
+				sendto_realops
+				    ("No response from %s, closing link",
+				    get_client_name(cptr, FALSE));
+				sendto_serv_butone(&me,
+				    ":%s GLOBOPS :No response from %s, closing link",
+				    me.name, get_client_name(cptr, FALSE));
 			}
-		      ping_timeout:
-			timeout = cptr->lasttime + ping;
-			while (timeout <= currenttime)
-				timeout += ping;
-			if (timeout < oldest || !oldest)
-				oldest = timeout;
+			/*
+			 * this is used for KILL lines with time restrictions
+			 * on them - send a messgae to the user being killed
+			 * first.
+			 */
+			if (killflag && IsPerson(cptr))
+				sendto_realops
+				    ("Kill line active for %s (%s)",
+				    get_client_name(cptr, FALSE),
+				    bconf->reason ? bconf->reason : "no reason");
+
+			if (killflag)
+			{
+				if (bconf->reason)
+				{
+					ircsprintf(moobuf,
+					    "User has been banned (%s)",
+					    bconf->reason);
+					(void)exit_client(cptr, cptr, &me,
+					    moobuf);
+				}
+				else
+				{
+
+					(void)exit_client(cptr, cptr, &me,
+					    "User has been banned");
+
+				}
+				bconf = NULL;
+			}
+			else
+				(void)exit_client(cptr, cptr, &me,
+				    "Ping timeout");
+			continue;
 		}
+		else if (IsRegistered(cptr) &&
+		    (cptr->flags & FLAGS_PINGSENT) == 0)
+		{
+			/*
+			 * if we havent PINGed the connection and we havent
+			 * heard from it in a while, PING it to make sure
+			 * it is still alive.
+			 */
+			cptr->flags |= FLAGS_PINGSENT;
+			/* not nice but does the job */
+			cptr->lasttime = currenttime - ping;
+			sendto_one(cptr, "%s :%s",
+			    IsToken(cptr) ? TOK_PING : MSG_PING, me.name);
+		}
+	      ping_timeout:
+		timeout = cptr->lasttime + ping;
+		while (timeout <= currenttime)
+			timeout += ping;
+		if (timeout < oldest || !oldest)
+			oldest = timeout;
 	}
 
 	if (!oldest || oldest < currenttime)
 		oldest = currenttime + PINGFREQUENCY;
-	Debug((DEBUG_NOTICE, "Next check_ping() call at: %s, %d %d %d",
+	Debug((DEBUG_NOTICE, "Next auto check_ping() call at: %s, %d %d %d",
 	    myctime(oldest), ping, oldest, currenttime));
 
 	return (oldest);
@@ -723,7 +748,7 @@ static int bad_command()
 	return (-1);
 }
 
-char chess[] = {85, 110, 114, 101, 97, 108, 0};
+char chess[] = { 85, 110, 114, 101, 97, 108, 0 };
 
 #ifndef _WIN32
 int  main(argc, argv)
@@ -740,7 +765,7 @@ int  InitwIRCD(argc, argv)
 	uid_t uid, euid;
 	TS   delay = 0;
 #endif
-	int i, ggg;
+	int  i, ggg;
 	int  portarg = 0;
 #ifdef  FORCE_CORE
 	struct rlimit corelim;
@@ -844,9 +869,14 @@ int  InitwIRCD(argc, argv)
 			  break;
 #endif
 		  case 'h':
-			  if (!strchr(p, '.')) {
-				(void)printf("ERROR: %s is not valid: Server names must contain at least 1 \".\"\n", p);
-				exit(1);
+			  if (!strchr(p, '.'))
+			  {
+				  
+				      (void)
+				      printf
+				      ("ERROR: %s is not valid: Server names must contain at least 1 \".\"\n",
+				      p);
+				  exit(1);
 			  }
 			  strncpyzt(me.name, p, sizeof(me.name));
 			  break;
@@ -886,9 +916,9 @@ int  InitwIRCD(argc, argv)
 			      MB_OK);
 #endif
 			  exit(0);
-	          case 'C':
-	          	conf_debuglevel = atoi(p);
-	          	break;
+		  case 'C':
+			  conf_debuglevel = atoi(p);
+			  break;
 		  case 'x':
 #ifdef	DEBUGMODE
 # ifndef _WIN32
@@ -999,7 +1029,7 @@ int  InitwIRCD(argc, argv)
 #ifndef _WIN32
 	fprintf(stderr, unreallogo);
 #endif
-	
+
 	fprintf(stderr, "                           v%s\n\n", VERSIONONLY);
 	clear_client_hash_table();
 	clear_channel_hash_table();
@@ -1073,17 +1103,18 @@ int  InitwIRCD(argc, argv)
 	/* Put in our info */
 	strncpyzt(me.info, conf_me->info, sizeof(me.info));
 	strncpyzt(me.name, conf_me->name, sizeof(me.name));
-	 
+
 	/* We accept the first listen record */
 	portnum = conf_listen->port;
-	me.ip.S_ADDR = *conf_listen->ip != '*' ? inet_addr(conf_listen->ip) : INADDR_ANY;
-	
+	me.ip.S_ADDR =
+	    *conf_listen->ip != '*' ? inet_addr(conf_listen->ip) : INADDR_ANY;
+
 	Debug((DEBUG_ERROR, "Port = %d", portnum));
 	if (inetport(&me, conf_listen->ip, portnum))
 		exit(1);
 	conf_listen->options |= LISTENER_BOUND;
 	me.umodes = conf_listen->options;
-	ircd_log("* Bound to %s:%i\n", conf_listen->ip, conf_listen->port);	
+	ircd_log("* Bound to %s:%i\n", conf_listen->ip, conf_listen->port);
 	run_configuration();
 	botmotd = (aMotd *) read_botmotd(BPATH);
 	rules = (aMotd *) read_rules(RPATH);
@@ -1334,19 +1365,19 @@ void SocketLoop(void *dummy)
 		   ** DNS checks. One to timeout queries, one for cache expiries.
 		 */
 
-		/*TODO: Add FULL Caching*/
+		/*TODO: Add FULL Caching */
 #ifndef NEWDNS
 		if (now >= nextdnscheck)
 			nextdnscheck = timeout_query_list(now);
 		if (now >= nextexpire)
 			nextexpire = expire_cache(now);
-#endif /*NEWDNS*/
-		/*
-		   ** take the smaller of the two 'timed' event times as
-		   ** the time of next event (stops us being late :) - avalon
-		   ** WARNING - nextconnect can return 0!
-		 */
-		if (nextconnect)
+#endif		 /*NEWDNS*/
+		    /*
+		       ** take the smaller of the two 'timed' event times as
+		       ** the time of next event (stops us being late :) - avalon
+		       ** WARNING - nextconnect can return 0!
+		     */
+		    if (nextconnect)
 			delay = MIN(nextping, nextconnect);
 		else
 			delay = nextping;
