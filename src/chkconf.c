@@ -123,6 +123,9 @@ static int oper_access[] = {
 	OFLAG_ZLINE, 'z',
 	OFLAG_WHOIS, 'W',
 	OFLAG_HIDE, 'H',
+#ifndef NO_OPEROVERRIDE
+	OFLAG_CANOVER, 'v',
+#endif
 	0, 0
 };
 

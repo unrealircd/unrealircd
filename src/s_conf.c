@@ -1081,6 +1081,9 @@ static int oper_access[] = {
 	OFLAG_WHOIS, 'W',
 	OFLAG_HIDE, 'H',
 /*        OFLAG_AGENT,	'S',*/
+#ifndef NO_OPEROVERRIDE
+	OFLAG_CANOVER, 'v',
+#endif
 #ifdef ENABLE_INVISOPER
 	OFLAG_INVISIBLE, '^',
 #endif

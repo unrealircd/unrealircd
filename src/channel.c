@@ -62,7 +62,7 @@ static int bouncedtimes = 0;
 
 struct CHLink chlbounce[MAXBOUNCE];
 int  chbounce = 0;
-static long opermode = 0;
+static short opermode = 0;
 aChannel *channel = NullChn;
 extern char backupbuf[];
 extern aCRline *crlines;
@@ -562,9 +562,7 @@ int  is_chan_op(cptr, chptr)
 /* chanop/halfop ? */
 	if (chptr)
 		if ((lp = find_user_link(chptr->members, cptr)))
-			return ((lp->flags & CHFL_CHANOP) ||
-				(lp->flags & CHFL_CHANOWNER) ||
-				(lp->flags & CHFL_CHANPROT));
+			return ((lp->flags & CHFL_CHANOP));
 
 	return 0;
 }
@@ -638,8 +636,7 @@ int  is_chanprot(cptr, chptr)
 
 	if (chptr)
 		if ((lp = find_user_link(chptr->members, cptr)))
-			return (lp->flags & CHFL_CHANPROT ||
-				lp->flags & CHFL_CHANOWNER);
+			return (lp->flags & CHFL_CHANPROT);
 
 	return 0;
 }
@@ -1045,7 +1042,7 @@ int  m_mode(cptr, sptr, parc, parv)
 	{
 		if (!IsMember(sptr, chptr)
 #ifndef NO_OPEROVERRIDE
-	     	   && !IsOper(sptr)
+	     	   && !OPCanOver(sptr)
 #endif
 		   )
 			return 0;
@@ -1066,7 +1063,7 @@ int  m_mode(cptr, sptr, parc, parv)
 	{
 		if (!IsMember(sptr, chptr)
 #ifndef NO_OPEROVERRIDE
-		    && !IsOper(sptr)
+		    && !OPCanOver(sptr)
 #endif
 		   )
 			return 0;
@@ -1087,7 +1084,7 @@ int  m_mode(cptr, sptr, parc, parv)
 	{
 		if (!IsMember(sptr, chptr)
 #ifndef NO_OPEROVERRIDE
-		    && !IsOper(sptr)
+		    && !OPCanOver(sptr)
 #endif
 		   )
 			return 0;
@@ -1115,7 +1112,7 @@ int  m_mode(cptr, sptr, parc, parv)
 	{
 		if (!IsMember(sptr, chptr)
 #ifndef NO_OPEROVERRIDE
-		    && !IsOper(sptr)
+		    && !OPCanOver(sptr)
 #endif
 		   )
 			return 0;
@@ -1144,7 +1141,7 @@ int  m_mode(cptr, sptr, parc, parv)
 	{
 		if (!IsMember(sptr, chptr)
 #ifndef NO_OPEROVERRIDE
-		    && !IsOper(sptr)
+		    && !OPCanOver(sptr)
 #endif
 		   )
 			return 0;
@@ -1159,7 +1156,7 @@ int  m_mode(cptr, sptr, parc, parv)
 	
 #ifndef NO_OPEROVERRIDE
 	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
-	    && !is_half_op(sptr, chptr) && IsOper(sptr))
+	    && !is_half_op(sptr, chptr) && OPCanOver(sptr))
 	{
 		sendts = 0;
 		opermode = 1;
@@ -1167,7 +1164,7 @@ int  m_mode(cptr, sptr, parc, parv)
 	}
 
 	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
-	    && is_half_op(sptr, chptr) && IsOper(sptr))
+	    && is_half_op(sptr, chptr) && OPCanOver(sptr))
 	{
 		opermode = 2;
 		goto aftercheck;
@@ -2361,7 +2358,8 @@ static int can_join(cptr, sptr, chptr, key, link, parv)
 
 #ifndef NO_OPEROVERRIDE
 #ifdef OPEROVERRIDE_VERIFY
-        if (IsOper(sptr) && (chptr->mode.mode & MODE_SECRET ||
+        if (IsOper(sptr) && OPCanOver(sptr) &&
+	    (chptr->mode.mode & MODE_SECRET ||
             chptr->mode.mode & MODE_PRIVATE))
                 return (ERR_OPERSPVERIFY);
 #endif
@@ -3307,7 +3305,7 @@ int  m_kick(cptr, sptr, parc, parv)
 			continue;
 		if (!IsServer(cptr)
 #ifndef NO_OPEROVERRIDE
-		    && !IsOper(sptr)
+		    && !OPCanOver(sptr)
 #endif
 		    && !IsULine(sptr) && !is_chan_op(sptr, chptr)
 		    && !is_halfop(sptr, chptr))
@@ -3397,27 +3395,27 @@ int  m_kick(cptr, sptr, parc, parv)
 			
 				/* Overriding channel mode +Q */
 			        if ((chptr->mode.mode & MODE_NOKICKS) &&
-				     ((IsOper(sptr) && !IsServices(who)) || IsNetAdmin(sptr)))
+				     ((OPCanOver(sptr) && !IsServices(who)) || IsNetAdmin(sptr)))
 					goto override;	
 				
 				/* sptr isn't a channel operator or a halfop, automatically means override */
 				if ((!is_chan_op(sptr,chptr) && !is_halfop(sptr,chptr)) &&
-				     ((IsOper(sptr) && !IsServices(who)) || IsNetAdmin(sptr)))
+				     ((OPCanOver(sptr) && !IsServices(who)) || IsNetAdmin(sptr)))
 					goto override;
 				
 				/* Half op oper kicking a channel operator */
 				if (is_chan_op(who,chptr) && !is_chan_op(sptr,chptr) && is_halfop(sptr,chptr) &&
-				    ((!IsServices(who) && IsOper(sptr)) || IsNetAdmin(sptr)))
+				    ((!IsServices(who) && OPCanOver(sptr)) || IsNetAdmin(sptr)))
 					goto override;
 			
 				/* Oper taking out a protected user */	
 				if (is_chanprot(who,chptr) && !is_chanowner(sptr,chptr) &&
-			       	    ((!IsServices(who) && IsOper(sptr)) || IsNetAdmin(sptr)))
+			       	    ((!IsServices(who) && OPCanOver(sptr)) || IsNetAdmin(sptr)))
 					goto override;
 
 				/* Oper taking out channel owner */
 				if (is_chanowner(who,chptr) &&
-				    ((!IsServices(who) && IsOper(sptr)) || IsNetAdmin(sptr)))
+				    ((!IsServices(who) && OPCanOver(sptr)) || IsNetAdmin(sptr)))
 					goto override;
 #endif
 				
@@ -3565,12 +3563,12 @@ int  m_topic(cptr, sptr, parc, parv)
 			    me.name, parv[0], name);
 			return 0;
 		}
-		if (parc >= 2)
+		if (parc > 2 || SecretChannel(chptr))
 		{
 			if (!IsMember(sptr, chptr) && !IsServer(sptr)
 			    && !IsULine(sptr)
 #ifndef NO_OPEROVERRIDE
-			    && !IsOper(sptr)
+			    && !OPCanOver(sptr)
 #endif
 			    )
 			{
@@ -3619,8 +3617,8 @@ int  m_topic(cptr, sptr, parc, parv)
 				if (topiClen > (TOPICLEN))
 					topiClen = TOPICLEN;
 
-				if (nicKlen > (NICKLEN+USERLEN+HOSTLEN+4))
-					nicKlen = NICKLEN+USERLEN+HOSTLEN+4;
+				if (nicKlen > (NICKLEN+USERLEN+HOSTLEN+5))
+					nicKlen = NICKLEN+USERLEN+HOSTLEN+5;
 
 				chptr->topic = MyMalloc(topiClen + 1);
 				strncpyzt(chptr->topic, topic, topiClen + 1);
@@ -3644,24 +3642,27 @@ int  m_topic(cptr, sptr, parc, parv)
 				    chptr->topic_nick);
 			}
 		}
+#ifdef NO_OPEROVERRIDE
 		else if (((chptr->mode.mode & MODE_TOPICLIMIT) == 0 ||
-		    is_chan_op(sptr, chptr)) || IsOper(sptr)
-		    || IsULine(sptr) || (is_halfop(sptr, chptr) && topic))
+		    (is_chan_op(sptr, chptr))
+		    || IsULine(sptr) || is_halfop(sptr, chptr)) && topic)
 		{
-			/* setting a topic */
-			if (IsOper(sptr) && !(is_halfop(sptr, chptr)
+#else
+		else if (((chptr->mode.mode & MODE_TOPICLIMIT) == 0 ||
+		    (is_chan_op(sptr, chptr)) || OPCanOver(sptr) 
+		    || IsULine(sptr) || is_halfop(sptr, chptr)) && topic)
+		{
+			if (OPCanOver(sptr) && !(is_halfop(sptr, chptr)
 			    || IsULine(sptr)
 			    || is_chan_op(sptr, chptr))
 			    && (chptr->mode.mode & MODE_TOPICLIMIT))
 			{
-#ifdef NO_OPEROVERRIDE
-				return 0;
-#endif
 				sendto_umode(UMODE_EYES,
 				    "*** OperOverride -- %s (%s@%s) TOPIC %s \'%s\'",
 				    sptr->name, sptr->user->username, sptr->user->realhost,
 				    chptr->chname, topic);
 			}
+#endif
 			/* setting a topic */
 			topiClen = strlen(topic);
 			nicKlen = strlen(sptr->name);
@@ -3749,7 +3750,7 @@ int  m_invite(cptr, sptr, parc, parv)
 	if (chptr->mode.mode & MODE_NOINVITE && !IsULine(sptr))
 	{
 #ifndef NO_OPEROVERRIDE
-		if (IsOper(sptr) && sptr == acptr)
+		if (OPCanOver(sptr) && sptr == acptr)
 			over = 1;
 		else {
 #endif
@@ -3764,7 +3765,7 @@ int  m_invite(cptr, sptr, parc, parv)
 	if (!IsMember(sptr, chptr) && !IsULine(sptr))
 	{
 #ifndef NO_OPEROVERRIDE
-		if (IsOper(sptr) && sptr == acptr)
+		if (OPCanOver(sptr) && sptr == acptr)
 			over = 1;
 		else {
 #endif		
@@ -3788,7 +3789,7 @@ int  m_invite(cptr, sptr, parc, parv)
 		if (!is_chan_op(sptr, chptr) && !IsULine(sptr))
 		{
 #ifndef NO_OPEROVERRIDE
-			if (IsOper(sptr) && sptr == acptr)
+			if (OPCanOver(sptr) && sptr == acptr)
 				over = 1;
 			else {
 #endif
@@ -3802,7 +3803,7 @@ int  m_invite(cptr, sptr, parc, parv)
 		else if (!IsMember(sptr, chptr) && !IsULine(sptr))
 		{
 #ifndef NO_OPEROVERRIDE
-                        if (IsOper(sptr) && sptr == acptr)
+                        if (OPCanOver(sptr) && sptr == acptr)
 				over = 1;
                         else {
 #endif
@@ -3840,7 +3841,7 @@ int  m_invite(cptr, sptr, parc, parv)
 	if (!(chptr && sptr->user &&
 	    (is_chan_op(sptr,chptr) || IsULine(sptr)
 #ifndef NO_OPEROVERRIDE
-	     || IsOper(sptr)
+	     || OPCanOver(sptr)
 #endif
 	    )))
 	       return 0;
@@ -3945,7 +3946,10 @@ void send_list(aClient *cptr, int numsend)
 			{
 				if (SecretChannel(chptr)
 				    && !IsMember(cptr, chptr)
-				    && !IsAnOper(cptr))
+#ifndef NO_OPEROVERRIDE
+				    && !OPCanOver(cptr)
+#endif
+				    )
 					continue;
 
 				if ((!lopt->showall)
@@ -3988,7 +3992,7 @@ void send_list(aClient *cptr, int numsend)
 				else
 					strcat(modebuf, "]");
 #endif
-				if (!IsAnOper(cptr))
+				if (!OPCanOver(cptr))
 					sendto_one(cptr,
 					    rpl_str(RPL_LIST), me.name,
 					    cptr->name,
@@ -4845,6 +4849,7 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
                 }
                 /* remove bans */
+		/* reset the buffers */
 		modebuf[0] = '-';
 		modebuf[1] = '\0';
 		parabuf[0] = '\0';
@@ -4853,22 +4858,6 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 {
                         Addit('b', ban->banstr);
                 }
-		/* blah code */
-		if (b > 1)
-		{
-                        modebuf[b] = '\0';
-                        sendto_serv_butone_sjoin(cptr,
-                            ":%s MODE %s %s %s %lu",
-                            sptr->name, chptr->chname,
-                            modebuf, parabuf, chptr->creationtime);
-                        sendto_channel_butserv(chptr,
-                            sptr, ":%s MODE %s %s %s",
-                            sptr->name, chptr->chname, modebuf, parabuf);
-                }
-		modebuf[0] = '-';
-		modebuf[1] = '\0';
-		parabuf[0] = '\0';
-		b = 1;
                 for (ban = chptr->exlist; ban; ban = ban->next)
                 {
                         Addit('e', ban->banstr);

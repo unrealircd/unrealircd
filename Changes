@@ -383,7 +383,7 @@ larne
 --Luke
 ===================================
 
-Rewrote all of /who, fuck everyone's patches
+Rewrote all of /who, screw everyone's patches
 mine are better!
 --Luke
 ===================================
@@ -706,4 +706,49 @@ shown to normal +s lusers (thanks to MrAllthat)
 --Luke
 ===================================
 
-*** Unreal3.1.5 Released ***
+Added prefixes for channel owner/protected to
+/who and /whois (& and ~). They probably should never
+have been removed. Still to be implemented
+are actual prefixes in /names.
+--Luke
+===================================
+
+Small m_who bug with opers fixed.
+--Luke
+===================================
+
+Implemented awesome new feature for operoverride, per
+codemastr. You now need the letter "v" in your O line
+in order to be able to override!
+--Luke
+===================================
+
+------------------------------------------------------
+Beta3 Released
+------------------------------------------------------
+
+Fixed problem with topics screwing up services
+--Luke
+===================================
+
+Fixed semantics with operoverride_verify and +s/+p
+channels.
+--Luke
+===================================
+
+Kill me. Really. Still trying to fix services fun...
+--Luke
+===================================
+
+Given up for now on fixing the services "problem."
+(it isn't really a problem, afaik, it's just annoying.)
+Anyone that has ideas about what causes it, or how
+it can be fixed email luke@unrealircd.com.
+The problem is that IRC Services 5 starts sending out
+notices about being "unable to set modes for #channel"
+blah blah. There isn't any indication of anything actually
+being bounced, so we're not sure why it happens.
+--Luke
+===================================
+
+*** Unreal 3.1.5 Released ***

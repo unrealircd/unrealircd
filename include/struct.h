@@ -461,7 +461,9 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OFLAG_SADMIN	0x01000000	/* services admin gets +a */
 #define OFLAG_WHOIS     0x02000000	/* gets auto +W on oper up */
 #define OFLAG_HIDE      0x04000000	/* gets auto +x on oper up */
-#define OFLAG_AFOUNDER  0x10000000
+#ifndef NO_OPEROVERRIDE
+#define OFLAG_CANOVER   0x10000000	/* Oper can utilize operoverride */
+#endif
 #define OFLAG_COFOUND   0x20000000
 #define OFLAG_WMASTER	0x40000000
 #ifdef ENABLE_INVISOPER
@@ -497,6 +499,9 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPCanUModeF(x)	((x)->oflag & OFLAG_UMODEF)
 #define OPIsEyes(x)	((x)->oflag & OFLAG_EYES)
 #define OPIsWhois(x)    ((x)->oflag & OFLAG_WHOIS)
+#ifndef NO_OPEROVERRIDE
+#define OPCanOver(x)	(MyClient(x) ? (IsOper(x) && ((x)->oflag & OFLAG_CANOVER)) : IsOper(x))
+#endif
 
 #define OPSetRehash(x)	((x)->oflag |= OFLAG_REHASH)
 #define OPSetDie(x)	((x)->oflag |= OFLAG_DIE)
@@ -522,6 +527,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPSetEyes(x)	((x)->oflag |= OFLAG_EYES)
 #define OPSetZLine(x)	((x)->oflag |= OFLAG_ZLINE)
 #define OPSetWhois(x)   ((x)->oflag |= OFLAG_WHOIS)
+
 #define OPClearRehash(x)	((x)->oflag &= ~OFLAG_REHASH)
 #define OPClearDie(x)		((x)->oflag &= ~OFLAG_DIE)
 #define OPClearRestart(x)	((x)->oflag &= ~OFLAG_RESTART)
@@ -546,6 +552,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPClearEyes(x)		((x)->oflag &= ~OFLAG_EYES)
 #define OPClearZLine(x)		((x)->oflag &= ~OFLAG_ZLINE)
 #define OPClearWhois(x)         ((x)->oflag &= ~OFLAG_WHOIS)
+
 /*
  * defined debugging levels
  */
