@@ -52,7 +52,6 @@ typedef struct  t_crline aCRline;
 typedef struct  t_vhline aVHline;
 typedef struct	t_kline aTKline;
 typedef struct  t_vhost aVhost;
-typedef struct  t_hush aHush;
 
 typedef struct  SqlineItem aSqlineItem;
 typedef	struct	ConfItem aConfItem;
@@ -692,15 +691,6 @@ struct t_vhost {
 	aVhost	*prev;
 };
 
-struct t_hush {
-	char	*nuhmask;
-	char	*setby;
-	time_t	set_at;
-	time_t expire_at;
-	aHush *next;
-	aHush *prev;	
-};
-
 /* tkl:
  *   TKL_KILL|TKL_GLOBAL 	= Global K:Line (G:Line)
  *   TKL_ZAP|TKL_GLOBAL		= Global Z:Line (ZLINE)
@@ -766,6 +756,7 @@ struct t_vhline {
 #define LISTENER_REMOTEADMIN	0x000008
 #define LISTENER_JAVACLIENT	0x000010
 #define LISTENER_MASK		0x000020
+
 struct Client	{
 	struct	Client *next, *prev, *hnext;
 	anUser	*user;		/* ...defined, if this is a User */
