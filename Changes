@@ -514,4 +514,5 @@
   reported by aquanight.
 - Made the (?) kill message not show IP addresses (#0002227) reported by neothematrix.
 - Added some error checking to /sapart (#0002253) suggested by Troco.
-- Imported TRE to 0.7.2 for Windows
+- Imported TRE 0.7.2 for Windows
+- Imported TRE 0.7.2 for *nix
