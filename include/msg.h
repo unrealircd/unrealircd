@@ -313,7 +313,7 @@ extern int m_connect();
 extern int m_trace();
 extern int m_names(), m_admin();
 extern int m_lusers(), m_umode(), m_close();
-extern int m_motd(), m_whowas(), m_silence();
+extern int m_motd(), m_whowas();
 extern int m_service(), m_watch();
 extern int m_map(), m_dalinfo();
 extern int m_addline(), m_rules();
