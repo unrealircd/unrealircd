@@ -2693,12 +2693,15 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if ((cep = config_find_entry(ce->ce_entries, "pingfreq")))
 	{
-		l = atol(cep->ce_vardata);
-		if (l < 1)
+		if (cep->ce_vardata)
 		{
-			config_error("%s:%i: class::pingfreq with illegal value",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-			errors++;
+			l = atol(cep->ce_vardata);
+			if (l < 1)
+			{
+				config_error("%s:%i: class::pingfreq with illegal value",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
 		}
 	}
 	else
@@ -2709,12 +2712,15 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if ((cep = config_find_entry(ce->ce_entries, "maxclients")))
 	{
-		l = atol(cep->ce_vardata);
-		if (!l)
+		if (cep->ce_vardata)
 		{
-			config_error("%s:%i: class::maxclients with illegal value",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-			errors++;
+			l = atol(cep->ce_vardata);
+			if (!l)
+			{
+				config_error("%s:%i: class::maxclients with illegal value",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
 		}
 	}
 	else
@@ -2725,12 +2731,15 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if ((cep = config_find_entry(ce->ce_entries, "sendq")))
 	{
-		l = atol(cep->ce_vardata);
-		if (!l)
-		{
-			config_error("%s:%i: class::sendq with illegal value",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-			errors++;
+		if (cep->ce_vardata)
+		{	
+			l = atol(cep->ce_vardata);
+			if (!l)
+			{
+				config_error("%s:%i: class::sendq with illegal value",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
 		}
 	}
 	else
@@ -2741,12 +2750,15 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if ((cep = config_find_entry(ce->ce_entries, "connfreq")))
 	{
-		l = atol(cep->ce_vardata);
-		if (l < 10)
+		if (cep->ce_vardata)
 		{
-			config_error("%s:%i: class::connfreq with illegal value (<10)",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-			errors++;
+			l = atol(cep->ce_vardata);
+			if (l < 10)
+			{
+				config_error("%s:%i: class::connfreq with illegal value (<10)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
 		}
 	}
 	
@@ -2938,15 +2950,18 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else
 	{
-		if (((fd = open(cep->ce_vardata, O_RDONLY)) == -1))
+		if (cep->ce_vardata)
 		{
-			config_error("%s:%i: tld::motd: %s: %s",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				cep->ce_vardata, strerror(errno));
-			errors++;
+			if (((fd = open(cep->ce_vardata, O_RDONLY)) == -1))
+			{
+				config_error("%s:%i: tld::motd: %s: %s",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					cep->ce_vardata, strerror(errno));
+				errors++;
+			}
+			else
+				close(fd);
 		}
-		else
-			close(fd);
 		
 	}
 	
@@ -2958,15 +2973,18 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else
 	{
-		if (((fd = open(cep->ce_vardata, O_RDONLY)) == -1))
+		if (cep->ce_vardata)
 		{
-			config_error("%s:%i: tld::rules: %s: %s",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				cep->ce_vardata, strerror(errno));
-			errors++;
+			if (((fd = open(cep->ce_vardata, O_RDONLY)) == -1))
+			{
+				config_error("%s:%i: tld::rules: %s: %s",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					cep->ce_vardata, strerror(errno));
+				errors++;
+			}
+			else
+				close(fd);
 		}
-		else
-			close(fd);
 	}
 	
 	return errors;
@@ -3405,10 +3423,7 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 		if (Auth_CheckError(cep) < 0)
 			errors++;
 	}
-	if ((cep = config_find_entry(ce->ce_entries, "class")))
-	{
-	}
-	else
+	if (!(cep = config_find_entry(ce->ce_entries, "class")))
 	{
 		config_error("%s:%i: allow::class missing",
 			ce->ce_fileptr->cf_filename,
@@ -3417,11 +3432,14 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if ((cep = config_find_entry(ce->ce_entries, "maxperip")))
 	{
-		if (atoi(cep->ce_vardata) <= 0)
+		if (cep->ce_vardata)
 		{
-			config_error("%s:%i: allow::maxperip with illegal value (must be >0)",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-			errors++;
+			if (atoi(cep->ce_vardata) <= 0)
+			{
+				config_error("%s:%i: allow::maxperip with illegal value (must be >0)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
 		}
 	}
 	if ((cep = config_find_entry(ce->ce_entries, "options")))
