@@ -729,3 +729,4 @@ seen. gmtime warning still there
 - Updated networks/networks.ndx and alphabetized it and added all network files submitted in 3.2 format
   (didn't feel like converting right now ;P)
 - Win32 code cleanup
+- Made my_itoa use _itoa on win32

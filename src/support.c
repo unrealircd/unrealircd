@@ -50,8 +50,11 @@ long	TS2ts(char *s)
 char	*my_itoa(int i)
 {
 	static char buf[128];
-	
-	ircsprintf(buf, "%i", i);
+#ifndef _WIN32	
+	ircsprintf(buf, "%d", i);
+#else
+	_itoa(i, buf, 10);
+#endif
 	return (buf);
 }
 
