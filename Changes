@@ -2196,3 +2196,4 @@ seen. gmtime warning still there
 - Enlarged REPORT_* vars a bit.
 - IPv6: UnrealIRCd can now lookup ip6.arpa addresses too (original IRCnet patch modified for
   UnrealIRCd by Onliner).
+- Doc updates
