@@ -79,7 +79,7 @@ static int can_join PROTO((aClient *, aClient *, aChannel *, char *, char *,
 static int channel_link PROTO((aClient *, aClient *, int, char **));
 static void channel_modes PROTO((aClient *, char *, char *, aChannel *));
 static int check_channelmask PROTO((aClient *, aClient *, char *));
-static int del_banid PROTO((aChannel *, char *));
+int del_banid PROTO((aChannel *, char *));
 static void set_mode PROTO((aChannel *, aClient *, int, char **, u_int *,
     char[MAXMODEPARAMS][MODEBUFLEN + 3], int));
 static void make_mode_str PROTO((aChannel *, long, long, int,
@@ -101,7 +101,7 @@ static char *PartFmt2 = ":%s PART %s :%s";
  * some buffers for rebuilding channel/nick lists with ,'s
  */
 static char nickbuf[BUFSIZE], buf[BUFSIZE];
-static char modebuf[MODEBUFLEN], parabuf[MODEBUFLEN];
+char modebuf[MODEBUFLEN], parabuf[MODEBUFLEN];
 #include "sjoin.h"
 
 #ifdef USE_LONGMODE
@@ -484,7 +484,7 @@ static int add_banid(aClient *cptr, aChannel *chptr, char *banid)
 /*
  * del_banid - delete an id belonging to cptr
  */
-static int del_banid(aChannel *chptr, char *banid)
+int del_banid(aChannel *chptr, char *banid)
 {
 	Ban **ban;
 	Ban *tmp;
@@ -5486,3 +5486,50 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 		sendto_one(cptr, "%s", buf);
 	}
 }
+
+void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, char *param) {
+	static char *modes = modebuf;
+	static short count = 0;
+	short send = 0;
+	if (!modebuf[0]) {
+		modes = modebuf;
+		*modes++ = what;
+		*modes = 0;
+		*parabuf = 0;
+		count = 0;
+	}
+	if (strlen(parabuf) + strlen(param) + 11 < MODEBUFLEN) {
+		if (*parabuf) 
+			strcat(parabuf, " ");
+		strcat(parabuf, param);
+		*modes++ = mode;
+		*modes = 0;
+		count++;
+	}
+	else if (*parabuf) 
+		send = 1;
+
+	if (count == MAXMODEPARAMS)
+		send = 1;
+
+	if (send) {
+		sendto_channel_butserv(chptr, from, ":%s MODE %s %s %s",
+			from->name, chptr->chname, modebuf, parabuf);
+		sendto_serv_butone(NULL, ":%s MODE %s %s %s", from->name, chptr->chname, modebuf, parabuf);
+		send = 0;
+		*parabuf = 0;
+		modes = modebuf;
+		*modes++ = what;
+		if (count != MAXMODEPARAMS) {
+			strcpy(parabuf, param);
+			*modes++ = mode;
+			count = 1;
+		}
+		else 
+			count = 0;
+		*modes = 0;
+	}
+}
+		
+	
+	

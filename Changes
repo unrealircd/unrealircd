@@ -730,3 +730,4 @@ seen. gmtime warning still there
   (didn't feel like converting right now ;P)
 - Win32 code cleanup
 - Made my_itoa use _itoa on win32
+- Implimented SVSMODE #channel -b nick to remove all matching bans against a nick, idea from bahamut
