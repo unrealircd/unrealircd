@@ -710,7 +710,8 @@ struct User {
 	char *server;
 	char *swhois;		/* special whois thing */
 	aClient *serv;
-
+	LOpts *lopt;            /* Saved /list options */
+	aWhowas *whowas;
 #ifdef	LIST_DEBUG
 	aClient *bcptr;
 #endif
@@ -822,7 +823,6 @@ struct Client {
 	TS   nextnick;		/* Time the next nick change will be allowed */
 	TS   nexttarget;	/* Time until a change in targets is allowed */
 	u_char targets[MAXTARGETS];	/* Hash values of current targets */
-	aWhowas *whowas;
 	long flags;		/* client flags */
 	long umodes;		/* client usermodes */
 	aClient *from;		/* == self, if Local Client, *NEVER* NULL! */
@@ -833,7 +833,6 @@ struct Client {
 	char username[USERLEN + 1];	/* username here now for auth stuff */
 	char info[REALLEN + 1];	/* Free form additional client information */
 	aClient *srvptr;	/* Server introducing this.  May be &me */
-	Link *history;		/* Whowas linked list */
 	/*
 	   ** The following fields are allocated only for local clients
 	   ** (directly connected to *this* server with a socket.
@@ -882,7 +881,6 @@ struct Client {
 	struct hostent *hostp;
 	u_short notifies;	/* Keep track of count of notifies */
 	Link *notify;		/* Links to clients notify-structures */
-	LOpts *lopt;		/* Saved /list options */
 	char sockhost[HOSTLEN + 1];	/* This is the host name from the socket
 					   ** and after which the connection was
 					   ** accepted.
@@ -1145,7 +1143,7 @@ struct FloodOpt {
 /* Lifted somewhat from Undernet code --Rak */
 
 #define IsSendable(x)		(DBufLength(&x->sendQ) < 2048)
-#define DoList(x)		((x)->lopt)
+#define DoList(x)		((x)->user && (x)->user->lopt)
 
 /* String manipulation macros */
 

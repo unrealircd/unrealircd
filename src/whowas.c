@@ -59,7 +59,7 @@ void add_history(aClient *cptr, int online)
 		new->servername = NULL;
 
 		if (new->online)
-			del_whowas_from_clist(&(new->online->whowas), new);
+			del_whowas_from_clist(&(new->online->user->whowas), new);
 		del_whowas_from_list(&WHOWASHASH[new->hashv], new);
 	}
 	new->hashv = hash_whowas_name(cptr->name);
@@ -81,7 +81,7 @@ void add_history(aClient *cptr, int online)
 	if (online)
 	{
 		new->online = cptr;
-		add_whowas_to_clist(&(cptr->whowas), new);
+		add_whowas_to_clist(&(cptr->user->whowas), new);
 	}
 	else
 		new->online = NULL;
@@ -95,11 +95,11 @@ void off_history(aClient *cptr)
 {
 	aWhowas *temp, *next;
 
-	for (temp = cptr->whowas; temp; temp = next)
+	for (temp = cptr->user->whowas; temp; temp = next)
 	{
 		next = temp->cnext;
 		temp->online = NULL;
-		del_whowas_from_clist(&(cptr->whowas), temp);
+		del_whowas_from_clist(&(cptr->user->whowas), temp);
 	}
 }
 

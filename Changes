@@ -678,3 +678,5 @@
 - Tokenized PING and PONG
 - Fixes a missing : in SJOIN
 - Possible fixed a internal server list bug
+- Moved lopt and whowas to anUser (saves 8 bytes for every server)
+- Removed aClient->history, not used (saves 4 bytes for every user/server)

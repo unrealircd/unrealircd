@@ -449,11 +449,11 @@ int  exit_client(cptr, sptr, from, comment)
 				current_load_data.local_count--;
 			/* Clean out list and watch structures -Donwulff */
 			hash_del_notify_list(sptr);
-			if (sptr->lopt)
+			if (sptr->user && sptr->user->lopt)
 			{
-				free_str_list(sptr->lopt->yeslist);
-				free_str_list(sptr->lopt->nolist);
-				MyFree(sptr->lopt);
+				free_str_list(sptr->user->lopt->yeslist);
+				free_str_list(sptr->user->lopt->nolist);
+				MyFree(sptr->user->lopt);
 			}
 		}
 		update_load();

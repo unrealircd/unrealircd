@@ -3710,7 +3710,7 @@ int  m_invite(cptr, sptr, parc, parv)
 void send_list(aClient *cptr, int numsend)
 {
 	aChannel *chptr;
-	LOpts *lopt = cptr->lopt;
+	LOpts *lopt = cptr->user->lopt;
 	int  hashnum;
 #ifdef LIST_SHOW_MODES
 char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
@@ -3813,8 +3813,8 @@ char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
 			free_link(lp);
 		}
 
-		MyFree(cptr->lopt);
-		cptr->lopt = NULL;
+		MyFree(cptr->user->lopt);
+		cptr->user->lopt = NULL;
 		return;
 	}
 
@@ -3940,7 +3940,7 @@ int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 
 	/* If a /list is in progress, then another one will cancel it */
-	if ((lopt = sptr->lopt) != NULL)
+	if ((lopt = sptr->user->lopt) != NULL)
 	{
 		sendto_one(sptr, rpl_str(RPL_LISTEND), me.name, parv[0]);
 		for (lp = lopt->yeslist; lp; lp = next)
@@ -3953,8 +3953,8 @@ int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			next = lp->next;
 			free_link(lp);
 		}
-		MyFree(sptr->lopt);
-		sptr->lopt = NULL;
+		MyFree(sptr->user->lopt);
+		sptr->user->lopt = NULL;
 		return 0;
 	}
 
@@ -3973,7 +3973,7 @@ int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 
 		sendto_one(sptr, rpl_str(RPL_LISTSTART), me.name, parv[0]);
-		lopt = sptr->lopt = (LOpts *) MyMalloc(sizeof(LOpts));
+		lopt = sptr->user->lopt = (LOpts *) MyMalloc(sizeof(LOpts));
 		memset(lopt, '\0', sizeof(LOpts));
 
 		lopt->showall = 1;
@@ -4118,7 +4118,7 @@ int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (doall)
 	{
-		lopt = sptr->lopt = (LOpts *) MyMalloc(sizeof(LOpts));
+		lopt = sptr->user->lopt = (LOpts *) MyMalloc(sizeof(LOpts));
 		memset(lopt, '\0', sizeof(LOpts));
 		lopt->usermin = usermin;
 		lopt->usermax = usermax;
