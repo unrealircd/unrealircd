@@ -3278,3 +3278,5 @@ This is the 3.2 fixes branch.
   - Note: This needs testing
 - To be able to use /ADDLINE you now need the (new) 'can_addline' operflag (oper::flags),
   reason for this is that it's such a powerful/dangerous command.
+- Fixed find_qline crashes regarding except tkl 'type qline', reported by Gilou (#0001882).
+- Fixed some CIDR bugs causing things not to match.

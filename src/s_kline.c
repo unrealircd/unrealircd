@@ -417,9 +417,11 @@ int  find_tkline_match(aClient *cptr, int xx)
 			continue;
 
 		if (excepts->netmask)
+		{
 			if (match_ip(cptr->ip, NULL, NULL, excepts->netmask))
 				return 1;		
-		else if (!match(excepts->mask, host) || !match(excepts->mask, host2))
+		} else
+		if (!match(excepts->mask, host) || !match(excepts->mask, host2))
 			return 1;		
 	}
 
@@ -537,8 +539,10 @@ int  find_shun(aClient *cptr)
 		    excepts->type != lp->type))
 			continue;
 		if (excepts->netmask)
+		{
 			if (match_ip(cptr->ip, NULL, NULL, excepts->netmask))
 				return 1;		
+		}
 		else if (!match(excepts->mask, host) || !match(excepts->mask, host2))
 			return 1;		
 	}
@@ -551,7 +555,7 @@ aTKline *find_qline(aClient *cptr, char *nick, int *ishold)
 {
 	aTKline *lp;
 	char *chost, *cname, *cip;
-	char host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
+	char host[NICKLEN+USERLEN+HOSTLEN+6], hostx2[NICKLEN+USERLEN+HOSTLEN+6], *host2 = NULL;
 	int	points = 0;
 	ConfigItem_except *excepts;
 	*ishold = 0;
@@ -583,17 +587,30 @@ aTKline *find_qline(aClient *cptr, char *nick, int *ishold)
 
 	chost = cptr->sockhost;
 	cname = cptr->user ? cptr->user->username : "unknown";
-	cip = (char *)Inet_ia2p(&cptr->ip);
 	strcpy(host, make_user_host(cname, chost));
-	strcpy(host2, make_user_host(cname, cip));
 
-	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
+	if (MyConnect(cptr))
+	{
+		cip = (char *)Inet_ia2p(&cptr->ip);
+		strcpy(hostx2, make_user_host(cname, cip));
+		host2 = hostx2;
+	} else
+	if (cptr->user->ip_str)
+	{
+		strcpy(hostx2, make_user_host(cname, cptr->user->ip_str));
+		host2 = hostx2;
+	}
+
+	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next)
+	{
 		if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != TKL_NICK)
 			continue;
 		if (excepts->netmask)
+		{
 			if (match_ip(cptr->ip, NULL, NULL, excepts->netmask))
-				return 1;		
-		else if (!match(excepts->mask, host) || !match(excepts->mask, host2))
+				return NULL;
+		} else
+		if (!match(excepts->mask, host) || (host2 && !match(excepts->mask, host2)))
 			return NULL;
 	}
 	return lp;
@@ -627,9 +644,10 @@ int  find_tkline_match_zap(aClient *cptr)
 					if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != lp->type)
 						continue;
 					if (excepts->netmask)
+					{
 						if (match_ip(cptr->ip, NULL, NULL, excepts->netmask))
 							return -1;		
-					else if (!match(excepts->mask, cip))
+					} else if (!match(excepts->mask, cip))
 						return -1;		
 				}
 				for (tmphook = Hooks[HOOKTYPE_TKL_EXCEPT]; tmphook; tmphook = tmphook->next)
