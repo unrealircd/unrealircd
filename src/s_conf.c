@@ -1449,6 +1449,7 @@ void	config_rehash()
 		next = (ListStruct *)tld_ptr->next;
 		ircfree(tld_ptr->motd_file);
 		ircfree(tld_ptr->rules_file);
+		ircfree(tld_ptr->smotd_file);
 		if (!tld_ptr->flag.motdptr) {
 			while (tld_ptr->motd) {
 				motd = tld_ptr->motd->next;
@@ -1464,6 +1465,12 @@ void	config_rehash()
 				ircfree(tld_ptr->rules);
 				tld_ptr->rules = motd;
 			}
+		}
+		while (tld_ptr->smotd) {
+			motd = tld_ptr->smotd->next;
+			ircfree(tld_ptr->smotd->line);
+			ircfree(tld_ptr->smotd);
+			tld_ptr->smotd = motd;
 		}
 		DelListItem(tld_ptr, conf_tld);
 		MyFree(tld_ptr);
@@ -3139,6 +3146,12 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 	cep = config_find_entry(ce->ce_entries, "motd");
 	ca->motd_file = strdup(cep->ce_vardata);
 	ca->motd = read_file_ex(cep->ce_vardata, NULL, &ca->motd_tm);
+ 	if ((cep = config_find_entry(ce->ce_entries, "shortmotd")))
+	{
+		ca->smotd_file = strdup(cep->ce_vardata);
+		ca->smotd = read_file_ex(cep->ce_vardata, NULL, &ca->smotd_tm);
+	}
+
 	cep = config_find_entry(ce->ce_entries, "rules");
 	ca->rules_file = strdup(cep->ce_vardata);
 	ca->rules = read_file(cep->ce_vardata, NULL);
@@ -3187,6 +3200,8 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "rules")) {
 		}
 		else if (!strcmp(cep->ce_varname, "channel")) {
+		}
+		else if (!strcmp(cep->ce_varname, "shortmotd")) {
 		}
 		else if (!strcmp(cep->ce_varname, "options")) {
 			ConfigEntry *cep2;

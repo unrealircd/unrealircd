@@ -57,7 +57,9 @@ aMotd *rules;
 aMotd *motd;
 aMotd *svsmotd;
 aMotd *botmotd;
+aMotd *smotd;
 struct tm motd_tm;
+struct tm smotd_tm;
 aMotd *read_file(char *filename, aMotd **list);
 aMotd *read_file_ex(char *filename, aMotd **list, struct tm *);
 extern aMotd *Find_file(char *, short);
@@ -3533,10 +3535,13 @@ ConfigItem_tld *tlds;
 
 	motd = (aMotd *) read_file_ex(MPATH, &motd, &motd_tm);
 	rules = (aMotd *) read_file(RPATH, &rules);
+	smotd = (aMotd *) read_file_ex(SMPATH, &smotd, &smotd_tm);
 	for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *) tlds->next)
 	{
 		tlds->motd = read_file_ex(tlds->motd_file, &tlds->motd, &tlds->motd_tm);
 		tlds->rules = read_file(tlds->rules_file, &tlds->rules);
+		if (tlds->smotd_file)
+			tlds->smotd = read_file_ex(tlds->smotd_file, &tlds->smotd, &tlds->smotd_tm);
 	}
 }
 
@@ -3675,7 +3680,7 @@ CMD_FUNC(m_rehash)
 	/* Normal rehash, rehash main motd&rules too, just like the on in the tld block will :p */
 	motd = (aMotd *) read_file_ex(MPATH, &motd, &motd_tm);
 	rules = (aMotd *) read_file(RPATH, &rules);
-
+	smotd = (aMotd *) read_file_ex(SMPATH, &smotd, &smotd_tm);
 	if (cptr == sptr)
 		sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
 	return rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
@@ -3961,6 +3966,77 @@ CMD_FUNC(m_trace)
 	/*	if (cltmp->clients > 0) */
 			sendto_one(sptr, rpl_str(RPL_TRACECLASS), me.name,
 			    parv[0], cltmp->name ? cltmp->name : "[noname]", cltmp->clients);
+	return 0;
+}
+
+/*
+ * Heavily modified from the ircu m_motd by codemastr
+ * Also svsmotd support added
+ */
+int short_motd(aClient *sptr) {
+	ConfigItem_tld *ptr;
+	aMotd *temp, *temp2;
+	struct tm *tm = &smotd_tm;
+	char userhost[HOSTLEN + USERLEN + 6];
+	char is_short = 1;
+	strlcpy(userhost,make_user_host(sptr->user->username, sptr->user->realhost), sizeof userhost);
+	ptr = Find_tld(sptr, userhost);
+
+	if (ptr)
+	{
+		if (ptr->smotd)
+		{
+			temp = ptr->smotd;
+			tm = &ptr->smotd_tm;
+		}
+		else if (smotd)
+			temp = smotd;
+		else
+		{
+			temp = ptr->motd;
+			tm = &ptr->motd_tm;
+			is_short = 0;
+		}
+	}
+	else
+	{
+		if (smotd)
+			temp = smotd;
+		else
+		{
+			temp = motd;
+			tm = &motd_tm;
+			is_short = 0;
+		}
+	}
+
+	if (!temp)
+	{
+		sendto_one(sptr, err_str(ERR_NOMOTD), me.name, sptr->name);
+		return 0;
+	}
+	if (tm)
+	{
+		sendto_one(sptr, rpl_str(RPL_MOTDSTART), me.name, sptr->name,
+		    me.name);
+		sendto_one(sptr, ":%s %d %s :- %d/%d/%d %d:%02d", me.name,
+		    RPL_MOTD, sptr->name, tm->tm_mday, tm->tm_mon + 1,
+		    1900 + tm->tm_year, tm->tm_hour, tm->tm_min);
+	}
+	if (is_short)
+	{
+		sendto_one(sptr, rpl_str(RPL_MOTD), me.name, sptr->name,
+			"This is the short MOTD. To view the complete MOTD type /motd");
+		sendto_one(sptr, rpl_str(RPL_MOTD), me.name, sptr->name, "");
+	}
+
+	while (temp)
+	{
+		sendto_one(sptr, rpl_str(RPL_MOTD), me.name, sptr->name,
+		    temp->line);
+		temp = temp->next;
+	}
+	sendto_one(sptr, rpl_str(RPL_ENDOFMOTD), me.name, sptr->name);
 	return 0;
 }
 

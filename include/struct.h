@@ -1000,9 +1000,9 @@ struct _configitem_ulines {
 struct _configitem_tld {
 	ConfigItem 	*prev, *next;
 	ConfigFlag_tld 	flag;
-	char 		*mask, *motd_file, *rules_file, *channel;
-	struct tm	motd_tm;
-	aMotd		*rules, *motd;
+	char 		*mask, *motd_file, *rules_file, *smotd_file, *channel;
+	struct tm	motd_tm, smotd_tm;
+	aMotd		*rules, *motd, *smotd;
 	u_short		options;
 };
 

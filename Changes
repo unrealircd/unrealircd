@@ -2209,3 +2209,11 @@ seen. gmtime warning still there
 - Fixed another serious bug in the win32 resolver.
 - Removed mutex stuff from rem_request, no longer needed, should make the resolver much
   faster.
+- Implemented short motds (ircd.smotd). If you don't know what short motds are, read on:
+   short motds are a method of conserving bandwidth. When a user connects ircd.smotd
+   is displayed (or a tld::shortmotd). This file contains brief text. Alternatively,
+   ircd.motd (or tld::motd) is displayed when a user types /motd. The idea behind this is
+   instead of displaying huge ASCII art, and tons of text to every user when they connect
+   (since most users will ignore it anyway) you only show that stuff to users who specifically
+   request it. Also, if you choose not to use short motds, everything will function as it used
+   to the ircd.motd (or tld::motd) will be displayed both when users connect and /motd.

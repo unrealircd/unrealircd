@@ -135,7 +135,7 @@ int match_ipv4(struct IN_ADDR *addr, struct IN_ADDR *mask, int b);
 #ifdef INET6
 int match_ipv6(struct IN_ADDR *addr, struct IN_ADDR *mask, int b);
 #endif
-extern struct tm motd_tm;
+extern struct tm motd_tm, smotd_tm;
 extern Link	*Servers;
 void add_ListItem(ListStruct *, ListStruct **);
 ListStruct *del_ListItem(ListStruct *, ListStruct **);

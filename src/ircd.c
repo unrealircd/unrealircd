@@ -91,6 +91,7 @@ extern aMotd *svsmotd;
 extern aMotd *motd;
 extern aMotd *rules;
 extern aMotd *botmotd;
+extern aMotd *smotd;
 MemoryInfo StatsZ;
 
 int  R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
@@ -1133,11 +1134,12 @@ int InitwIRCD(int argc, char *argv[])
 	me.umodes = conf_listen->options;
 	conf_listen->listener = &me;
 	run_configuration();
-	botmotd = (aMotd *) read_file(BPATH, &botmotd);
+	botmotd = (aMotd *) read_file(BPATH, NULL);
 	rules = (aMotd *) read_file(RPATH, NULL);
-	opermotd = (aMotd *) read_file(OPATH, &opermotd);
+	opermotd = (aMotd *) read_file(OPATH, NULL);
 	motd = (aMotd *) read_file_ex(MPATH, NULL, &motd_tm);
-	svsmotd = (aMotd *) read_file(VPATH, &svsmotd);
+	smotd = (aMotd *) read_file_ex(SMPATH, NULL, &smotd_tm);
+	svsmotd = (aMotd *) read_file(VPATH, NULL);
 	strncpy(me.sockhost, conf_listen->ip, sizeof(me.sockhost) - 1);
 	if (me.name[0] == '\0')
 		strncpyzt(me.name, me.sockhost, sizeof(me.name));

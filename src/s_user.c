@@ -57,6 +57,7 @@ void send_umode_out_nickv2(aClient *, aClient *, long);
 void send_umode(aClient *, aClient *, long, long, char *);
 void set_snomask(aClient *, char *);
 int create_snomask(char *, int);
+extern int short_motd(aClient *sptr);
 char *get_snostr(long sno);
 /* static  Link    *is_banned(aClient *, aChannel *); */
 int  dontspread = 0;
@@ -1018,7 +1019,8 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 				    ssl_get_cipher(sptr->ssl));
 #endif
 		(void)m_lusers(sptr, sptr, 1, parv);
-		(void)m_motd(sptr, sptr, 1, parv);
+		short_motd(sptr);
+//		(void)m_motd(sptr, sptr, 1, parv);
 #ifdef EXPERIMENTAL
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** \2NOTE:\2 This server (%s) is running experimental IRC server software. If you find any bugs or problems, please mail unreal-dev@lists.sourceforge.net about it",

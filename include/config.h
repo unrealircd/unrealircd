@@ -272,6 +272,7 @@
  */
 #define	CPATH		"unrealircd.conf"	/* server configuration file */
 #define	MPATH		"ircd.motd"	/* server MOTD file */
+#define SMPATH          "ircd.smotd"    /* short MOTD file */
 #define RPATH   	"ircd.rules"	/* server rules file */
 #define OPATH   	"oper.motd"	/* Operators MOTD file */
 #define	LPATH		"debug.log"	/* Where the debug file lives, if DEBUGMODE */
