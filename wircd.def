@@ -1,4 +1,4 @@
-; dlltool --output-def wircd.def.in --export-all-symbols SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ SRC/S_NUMERIC.OBJ SRC/WHOWAS.OBJ SRC/S_AUTH.OBJ SRC/HELP.OBJ SRC/S_MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ SRC/S_DEBUG.OBJ SRC/SUPPORT.OBJ SRC/LIST.OBJ SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/S_BSD.OBJ SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/VERSION.OBJ SRC/RES_INIT.OBJ SRC/RES_COMP.OBJ SRC/RES_MKQUERY.OBJ SRC/RES_SKIPNAME.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MD5.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ SRC/EXTBANS.OBJ
+; dlltool --output-def wircd.def.in --export-all-symbols SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ SRC/S_NUMERIC.OBJ SRC/WHOWAS.OBJ SRC/S_AUTH.OBJ SRC/HELP.OBJ SRC/S_MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ SRC/S_DEBUG.OBJ SRC/SUPPORT.OBJ SRC/LIST.OBJ SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/S_BSD.OBJ SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/CHARSYS.OBJ SRC/VERSION.OBJ SRC/RES_INIT.OBJ SRC/RES_COMP.OBJ SRC/RES_MKQUERY.OBJ SRC/RES_SKIPNAME.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MD5.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ SRC/EXTBANS.OBJ
 EXPORTS
 	zlinebuf
 	AllUmodes
@@ -30,6 +30,7 @@ EXPORTS
 	DoEvents
 	DoMD5
 	DoesOp
+	EXTMODE_JOINTHROTTLE
 	EXTMODE_NONOTICE
 	EXTMODE_STRIPBADWORDS
 	EfunctionAddMain
@@ -263,6 +264,14 @@ EXPORTS
 	channel_modef_string
 	channel_modes
 	char_atribs
+	charsys_add_language
+	charsys_addallowed
+	charsys_addmultibyterange
+	charsys_finish
+	charsys_postconftest
+	charsys_reset
+	charsys_reset_pretest
+	charsys_test_language
 	check_channelmask
 	check_client
 	check_fdlists
@@ -286,6 +295,18 @@ EXPORTS
 	close_connections
 	close_listeners
 	cmdstr
+	cmodej_addentry
+	cmodej_cleanup_structs
+	cmodej_conv_param
+	cmodej_delchannelentries
+	cmodej_delentry
+	cmodej_deluserentries
+	cmodej_dup_struct
+	cmodej_free_param
+	cmodej_get_param
+	cmodej_is_ok
+	cmodej_put_param
+	cmodej_sjoin_check
 	cmodestring
 	collapse
 	completed_connection
@@ -414,6 +435,7 @@ EXPORTS
 	do_mode
 	do_nick_name
 	do_numeric
+	do_remote_nick_name
 	dontspread
 	dopacket
 	dospamfilter
@@ -551,6 +573,8 @@ EXPORTS
 	iCstrip
 	iNAH_host
 	ident_failed
+	ilanglist
+	illegalnickchars
 	inet_netof
 	inet_ntop
 	inet_pton
@@ -597,6 +621,7 @@ EXPORTS
 	is_skochanop
 	isupport_init
 	join_channel
+	langsinuse
 	last_allinuse
 	last_garbage_collect
 	lastlucheck
@@ -658,6 +683,8 @@ EXPORTS
 	max_client_count
 	max_connection_count
 	max_global_count
+	mblist
+	mblist_tail
 	me
 	me_hash
 	modebuf
@@ -889,4 +916,3 @@ EXPORTS
 	webtv_parse
 	whowas_next
 	write_pidfile
-	??_C@_0L@PKJOOFPP@?$DMcensored?$DO?$AA@

@@ -94,7 +94,7 @@ DLLFUNC CMD_FUNC(m_userip)
 	if (parc < 2)
 	{
 		sendto_one(sptr, rpl_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "USERHOST");
+		    me.name, parv[0], "USERIP");
 		return 0;
 	}
 

@@ -653,3 +653,6 @@
 - NickChars: Updated polish a bit, and added polish-w1250 which is unfortunately more
   common than real latin2 (iso-8859-2), supplied by k4be as well.
 - NickChars: Added 'icelandic', supplied by Saevar.
+- Updated wircd.def
+- Fixed a bug where USERIP would say USERHOST in the not-enough-parameters numeric
+  (#0002366) reported by vonitsanet.
