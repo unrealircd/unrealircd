@@ -42,6 +42,67 @@
 
 extern int SVSNOOP;
 extern ircstats IRCstats;
+
+#define STAR1 OFLAG_SADMIN|OFLAG_ADMIN|OFLAG_NETADMIN|OFLAG_COADMIN
+#define STAR2 OFLAG_TECHADMIN|OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
+#define STAR3 OFLAG_INVISIBLE
+
+int oper_access[] = {
+	~(STAR1 | STAR2 | STAR3), '*',
+	OFLAG_LOCAL, 'o',
+	OFLAG_GLOBAL, 'O',
+	OFLAG_REHASH, 'r',
+	OFLAG_EYES, 'e',
+	OFLAG_DIE, 'D',
+	OFLAG_RESTART, 'R',
+	OFLAG_HELPOP, 'h',
+	OFLAG_GLOBOP, 'g',
+	OFLAG_WALLOP, 'w',
+	OFLAG_LOCOP, 'l',
+	OFLAG_LROUTE, 'c',
+	OFLAG_GROUTE, 'L',
+	OFLAG_LKILL, 'k',
+	OFLAG_GKILL, 'K',
+	OFLAG_KLINE, 'b',
+	OFLAG_UNKLINE, 'B',
+	OFLAG_LNOTICE, 'n',
+	OFLAG_GNOTICE, 'G',
+	OFLAG_ADMIN, 'A',
+	OFLAG_SADMIN, 'a',
+	OFLAG_NETADMIN, 'N',
+	OFLAG_COADMIN, 'C',
+	OFLAG_TECHADMIN, 'T',
+	OFLAG_UMODEC, 'u',
+	OFLAG_UMODEF, 'f',
+	OFLAG_ZLINE, 'z',
+	OFLAG_WHOIS, 'W',
+	OFLAG_HIDE, 'H',
+	OFLAG_INVISIBLE, '^',
+	0, 0
+};
+
+char oflagbuf[128];
+
+char *oflagstr(long oflag)
+{
+	int *i, flag;
+	char m;
+	char *p = oflagbuf;
+
+	for (i = &oper_access[6], m = *(i + 1); (flag = *i);
+	    i += 2, m = *(i + 1))
+	{
+		if (oflag & flag)
+		{
+			*p = m;
+			p++;
+		}
+	}
+	*p = '\0';
+	return oflagbuf;
+}
+
+
 int  m_svsnoop(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;
 	int  parc;
@@ -85,5 +146,70 @@ int  m_svsnoop(cptr, sptr, parc, parv)
 			SVSNOOP = 0;
 			sendto_ops("This server is no longer in NOOP mode");
 		}
+	}
+}
+
+/*
+** m_svso - Stskeeps
+**      parv[0] = sender prefix
+**      parv[1] = nick
+**      parv[2] = options
+*/
+
+int  m_svso(cptr, sptr, parc, parv)
+	aClient *cptr, *sptr;
+	int  parc;
+	char *parv[];
+{
+	aClient *acptr;
+	long fLag;
+
+	if (!IsULine(sptr))
+		return 0;
+
+	if (parc < 3)
+		return 0;
+
+	if (!(acptr = find_client(parv[1], (aClient *)NULL)))
+		return 0;
+
+	if (!MyClient(acptr))
+	{
+		sendto_one(acptr, ":%s SVSO %s %s", parv[0], parv[1], parv[2]);
+		return 0;
+	}
+
+ 	if (*parv[2] == '+')
+	{
+		int	*i, flag;
+		char *m = NULL;
+		for (m = (parv[2] + 1); *m; m++)
+		{
+			for (i = oper_access; flag = *i; i += 2)
+			{
+				if (*m == (char) *(i + 1))
+				{
+					acptr->oflag |= flag;
+					break;
+				}
+			}
+		}
+	}
+	if (*parv[2] == '-')
+	{
+		fLag = acptr->umodes;
+		if (IsAnOper(acptr))
+			IRCstats.operators--;
+		acptr->umodes &=
+		    ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP | UMODE_SERVICES |
+		    UMODE_SADMIN | UMODE_ADMIN);
+		acptr->umodes &=
+		    ~(UMODE_NETADMIN | UMODE_TECHADMIN | UMODE_CLIENT |
+		    UMODE_FLOOD | UMODE_EYES | UMODE_WHOIS);
+		acptr->umodes &=
+		    ~(UMODE_KIX | UMODE_FCLIENT | UMODE_HIDING |
+		    UMODE_DEAF | UMODE_HIDEOPER);
+		acptr->oflag = 0;
+		send_umode_out(acptr, acptr, fLag);
 	}
 }

@@ -486,7 +486,7 @@ struct Message msgtab[] = {
 	{MSG_SAPART, m_sapart, 0, MAXPARA, TOK_SAPART, 0L},
 	{MSG_CHGIDENT, m_chgident, 0, MAXPARA, TOK_CHGIDENT, 0L},
 	{MSG_SWHOIS, m_swhois, 0, MAXPARA, TOK_SWHOIS, 0L},
-//	{MSG_SVSO, m_svso, 0, MAXPARA, TOK_SVSO, 0L},
+	{MSG_SVSO, m_svso, 0, MAXPARA, TOK_SVSO, 0L},
 	{MSG_SVSFLINE, m_svsfline, 0, MAXPARA, TOK_SVSFLINE, 0L},
 	{MSG_TKL, m_tkl, 0, MAXPARA, TOK_TKL, 0L},
 	{MSG_VHOST, m_vhost, 0, MAXPARA, TOK_VHOST, 0L},
