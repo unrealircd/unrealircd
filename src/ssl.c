@@ -108,12 +108,18 @@ int  ssl_handshake(aClient *cptr)
 	CHK_NULL(cptr->ssl);
 	SSL_set_fd((SSL *) cptr->ssl, cptr->fd);
 	set_non_blocking(cptr->fd, cptr);
+	/* 
+	 *  if necessary, SSL_write() will negotiate a TLS/SSL session, if not already explicitly
+	 *  performed by SSL_connect() or SSL_accept(). If the peer requests a
+	 *  re-negotiation, it will be performed transparently during the SSL_write() operation.
+	 *    The behaviour of SSL_write() depends on the underlying BIO. 
+	 *   
+	 */
 	err = SSL_accept((SSL *) cptr->ssl);
-	if ((err) == -1)
-	{
-		sendto_umode(UMODE_JUNK, "Lost connection to %s:Error in SSL_accept()",			
-			    get_client_name(cptr, TRUE));
-		return 0;
+	if (err == -1)
+	{	
+		/* wtf. it works, so ? */
+		return -1;
 	}
 
 	/* Get client's certificate (note: beware of dynamic

@@ -224,3 +224,4 @@
 - stats-server and services-server are no longer required (missing = disabled services aliases)
 - socks set {} options are now optional. Defaults are used if missing
 - If an invalid ban or except is found, it is removed
+- Some small SSL fixes .. 
