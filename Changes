@@ -867,3 +867,7 @@ Fixed double snotice exit bug (probably)
 --Luke
 ===================================
 
+Fixed stats being visible to users even after defining
+STATS_ONLYOPER in config.h
+--Luke
+===================================

@@ -422,6 +422,15 @@ void tkl_stats(cptr)
 	   Character:
 	   G, Z, K, z                                    
 	 */
+#ifdef STATS_ONLYOPER
+        if (!IsAnOper(cptr))
+        {
+                sendto_one(cptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+                return 0;
+        }
+
+#endif
+
 	tkl_check_expire();
 	curtime = TStime();
 	for (tk = tklines; tk; tk = tk->next)

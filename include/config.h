@@ -118,6 +118,12 @@
 */
 #define STRIPBADWORDS
 
+/* STATS_ONLYOPER
+ *   This changes all stats related commands so that the output
+ *   is only visible if the user is an oper.
+*/
+#undef STATS_ONLYOPER
+
 /*
  * NO_OPEROVERRIDE
  *   This will disable OperMode, OperTopic and Banwalks
