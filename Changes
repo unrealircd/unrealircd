@@ -209,3 +209,4 @@
 - Added config_progress() Fixed temporary stuff
   with conf_link
 - Made tld {} get rehashed
+- Made listen/allow get validated

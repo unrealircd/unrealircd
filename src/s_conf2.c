@@ -2012,6 +2012,9 @@ void	validate_configuration(void)
 {
 	ConfigItem_class *class_ptr;
 	ConfigItem_oper	 *oper_ptr;
+	ConfigItem_tld   *tld_ptr;
+	ConfigItem_allow *allow_ptr;
+	ConfigItem_listen *listen_ptr;
 	
 	/* Let us validate dynconf first */
 	if (!KLINE_ADDRESS || (*KLINE_ADDRESS == '\0'))
@@ -2118,7 +2121,26 @@ void	validate_configuration(void)
 			Warning("oper %s without privileges",
 				oper_ptr->name);
 	}
-
+	
+	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)listen_ptr->next)
+	{
+		if (!listen_ptr->ip)
+			Error("listen without ip");
+		if (!listen_ptr->port)
+			Error("listen with illegal port");
+	}
+	for (allow_ptr = conf_allow; allow_ptr; allow_ptr = (ConfigItem_allow *) allow_ptr->next)
+	{
+		if (!allow_ptr->ip)
+			Error("allow::ip, missing value");
+		if (!allow_ptr->hostname)
+			Error("allow::hostname, missing value");
+		if (allow_ptr->maxperip < 0)
+			Error("allow::maxperip, must be positive or 0");
+		if (!allow_ptr->class)
+			Error("allow::class, unknown class");	
+	}
+	
 }
 #undef Error
 #undef Status
