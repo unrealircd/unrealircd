@@ -2236,3 +2236,5 @@ seen. gmtime warning still there
   is disabled by default at newer *BSD versions. Also improved another warning.
 - Added set::channel-command-prefix to allow channel text which starts with specific characters
   to be sent to +d clients (for in channel commands).
+- Added a README
+- Added some checking in fdlist add/remove functions.

@@ -27,9 +27,26 @@
 #include "fdlist.h"
 #include <string.h>
 
+extern fdlist default_fdlist;
+extern fdlist busycli_fdlist;
+extern fdlist serv_fdlist;
+extern fdlist oper_fdlist;
+
 void addto_fdlist(int fd, fdlist * listp)
 {
 	int  index;
+
+	/* I prefer this little 5-cpu-cycles-check over memory corruption. -- Syzop */
+	if ((fd < 0) || (fd >= MAXCONNECTIONS))
+	{
+		sendto_realops("[BUG] trying to add fd #%d to 0x%x (%x/%x/%x/%x), range is 0..%d",
+			fd, listp, &default_fdlist, &busycli_fdlist, &serv_fdlist, &oper_fdlist,
+			MAXCONNECTIONS);
+		ircd_log(LOG_ERROR, "[BUG] trying to add fd #%d to 0x%x (%x/%x/%x/%x), range is 0..%d",
+			fd, listp, &default_fdlist, &busycli_fdlist, &serv_fdlist, &oper_fdlist,
+			MAXCONNECTIONS);
+		return;
+	}
 
 	if ((index = ++listp->last_entry) >= MAXCONNECTIONS)
 	{
@@ -48,6 +65,18 @@ void addto_fdlist(int fd, fdlist * listp)
 void delfrom_fdlist(int fd, fdlist * listp)
 {
 	int  i;
+
+	/* I prefer this little 5-cpu-cycles-check over memory corruption. -- Syzop */
+	if ((fd < 0) || (fd >= MAXCONNECTIONS))
+	{
+		sendto_realops("[BUG] trying to remove fd #%d to 0x%x (%x/%x/%x/%x), range is 0..%d",
+			fd, listp, &default_fdlist, &busycli_fdlist, &serv_fdlist, &oper_fdlist,
+			MAXCONNECTIONS);
+		ircd_log(LOG_ERROR, "[BUG] trying to remove fd #%d to 0x%x (%x/%x/%x/%x), range is 0..%d",
+			fd, listp, &default_fdlist, &busycli_fdlist, &serv_fdlist, &oper_fdlist,
+			MAXCONNECTIONS);
+		return;
+	}
 
 	for (i = listp->last_entry; i; i--)
 	{
