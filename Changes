@@ -2023,3 +2023,7 @@ seen. gmtime warning still there
 - Fixed an SQLINE bug with sqlines without a reason
 - Fixed a bug effecting additions/deletions of SQLINES and deletions of SVSNLINES (may be
   the cause of #0000866)
+- Fixed MAJOR "messages are lost" bug which can cause various problems: ziplink corruption,
+  duplicate user entry in sjoin, etc etc. This would happen if BUFFERPOOL was set too low (like
+  the default) and you got a lot of traffic. It's now handled a bit better and you'll get
+  a nice warning, additionally the default BUFFERPOOL is now set to MAXSENDQLENGTH*18 instead of *9.

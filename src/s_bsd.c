@@ -1400,7 +1400,7 @@ static int read_packet(aClient *cptr, fd_set *rfd)
 		   ** it on the end of the receive queue and do it when its
 		   ** turn comes around.
 		 */
-		if (dbuf_put(&cptr->recvQ, readbuf, length) < 0)
+		if (!dbuf_put(&cptr->recvQ, readbuf, length))
 			return exit_client(cptr, cptr, cptr, "dbuf_put fail");
 
 		if (IsPerson(cptr) && DBufLength(&cptr->recvQ) > get_recvq(cptr))
@@ -1563,7 +1563,7 @@ static int read_packet(aClient *cptr)
 		 * Before we even think of parsing what we just read, stick
 		 * it on the end of the receive queue and do it when its turn
 		 * comes around. */
-		if (dbuf_put(&cptr->recvQ, readbuf, length) < 0)
+		if (!dbuf_put(&cptr->recvQ, readbuf, length))
 			return exit_client(cptr, cptr, cptr, "dbuf_put fail");
 
 		if (IsPerson(cptr) &&

@@ -129,6 +129,7 @@ TS   check_fdlists();
 #endif
 
 unsigned char conf_debuglevel = 0;
+char trouble_info[1024];
 
 void save_stats(void)
 {
@@ -1393,6 +1394,14 @@ void SocketLoop(void *dummy)
 			nextfdlistcheck = check_fdlists(timeofday);
 #endif
 		flush_connections(&me);
+
+		/* ThA UnReAl TrOuBlE RePoRtInG SyStEm!!! */
+		if (trouble_info[0] != '\0')
+		{
+			sendto_realops("*** TROUBLE: %s ***", trouble_info);
+			ircd_log(LOG_ERROR, "TROUBLE: %s", trouble_info);
+			trouble_info[0] = '\0';
+		}
 	}
 }
 

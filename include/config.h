@@ -361,7 +361,7 @@
  *  Recommended value is 2 * MAXSENDQLENGTH, for hubs, 5 *.
  */
 #ifndef BUFFERPOOL
-#define	BUFFERPOOL     (9 * MAXSENDQLENGTH)
+#define	BUFFERPOOL     (18 * MAXSENDQLENGTH)
 #endif
 
 /*

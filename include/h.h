@@ -560,5 +560,6 @@ long config_checkval(char *value, unsigned short flags);
 void config_status(char *format, ...);
 void init_random();
 u_int32_t getrandom32();
+extern char trouble_info[1024];
 #define EVENT_DRUGS BASE_VERSION
 

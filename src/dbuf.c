@@ -39,9 +39,7 @@
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
-#ifdef USE_DMALLOC
 #include "h.h"
-#endif
 ID_Copyright("(C) 1990 Markku Savela");
 ID_Notes("2.17 1/30/94 (C) 1990 Markku Savela");
 #if !defined(VALLOC) && !defined(valloc) && !defined(USE_DMALLOC)
@@ -84,6 +82,7 @@ static dbufbuf *dbuf_alloc(void)
 	if (dbufalloc * DBUFSIZ > BUFFERPOOL)
 	{
 		dbufalloc--;
+		strcpy(trouble_info, "buffer allocation error! Increase BUFFERPOOL!");
 		return NULL;
 	}
 
@@ -100,7 +99,10 @@ static dbufbuf *dbuf_alloc(void)
 
 	dbptr = (dbufbuf *)valloc(num * sizeof(dbufbuf));
 	if (!dbptr)
+	{
+		strcpy(trouble_info, "buffer allocation error! Out of memory! OUCH!!!");
 		return (dbufbuf *)NULL;
+	}
 
 	num--;
 	for (db2ptr = dbptr; num; num--)
@@ -112,7 +114,10 @@ static dbufbuf *dbuf_alloc(void)
 	return dbptr;
 #else
 	dbufblocks++;
-	return (dbufbuf *)MyMalloc(sizeof(dbufbuf));
+	dbptr = (dbufbuf *)MyMalloc(sizeof(dbufbuf));
+	if (!dbptr)
+		strcpy(trouble_info, "buffer allocation error! Out of memory! OUCH!!!");
+	return dbptr;
 #endif
 }
 
@@ -144,7 +149,7 @@ static int dbuf_malloc_error(dbuf *dyn)
 		dbuf_free(p);
 	}
 	dyn->tail = dyn->head;
-	return -1;
+	return 0;
 }
 
 
