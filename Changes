@@ -2038,3 +2038,4 @@ seen. gmtime warning still there
 - code cleanup / misc minor bugfixes (MyMalloc, oper msgs)
 - Fixed a throttling bug where it could return negative numbers.
 - Improved IPv6 throttle hashing
+- Make the above actually work
