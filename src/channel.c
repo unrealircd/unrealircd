@@ -3588,13 +3588,14 @@ CMD_FUNC(m_topic)
 		if (parc > 2 || SecretChannel(chptr))
 		{
 			if (!IsMember(sptr, chptr) && !IsServer(sptr)
-			    && !IsULine(sptr))
+			    && !IsOper(sptr) && !IsULine(sptr))
 			{
 				sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
 				    me.name, parv[0], name);
 				return 0;
 			}
-			topic = parv[2];
+			if (parc > 2)
+				topic = parv[2];
 		}
 		if (parc > 4)
 		{

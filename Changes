@@ -1860,3 +1860,4 @@ seen. gmtime warning still there
 - Bugfix for crash with STRIPBADWORDS_CHAN_ALWAYS.
 - Fixed bug in ipv6 + unknown connection flood.
 - Don't encrypt SSL certificate by default @ win32.
+- Fixed /topic for opers when not in +s-channel.
