@@ -1544,3 +1544,7 @@ seen. gmtime warning still there
 - Removed ssl.rnd as it was not supposed to be provided by CVS
 - Made standard-threads default, and made a Config option if to use FSU
   pthreads or not
+- Made set::static-quit - check doc/example.conf for documentation - but
+  this allows the admin to decide a standard custom quit for users. so they
+  won't be able to make their own quits. This affects set::prefix-quit and
+  ANTI_SPAM_QUIT_TIME - it simply replaces it with the message if enabled

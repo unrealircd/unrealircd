@@ -2330,6 +2330,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckNull(cep);
 			OPER_MODES = (long) set_usermode(cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "static-quit")) {
+			CheckNull(cep);
+			ircstrdup(STATIC_QUIT, cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "auto-join")) {
 			CheckNull(cep);
 			ircstrdup(AUTO_JOIN_CHANS, cep->ce_vardata);
@@ -3778,49 +3782,29 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		DelListItem(help_ptr, conf_help);
 		MyFree(help_ptr);
 	}
-	if (KLINE_ADDRESS)
-		free(KLINE_ADDRESS);
-	if (AUTO_JOIN_CHANS)
-		free(AUTO_JOIN_CHANS);
-	if (OPER_AUTO_JOIN_CHANS)
-		free(OPER_AUTO_JOIN_CHANS);
-	if (OPER_ONLY_STATS)
-		free(OPER_ONLY_STATS);
-	if (ircnetwork)
-		free(ircnetwork);
-	if (ircnet005)
-		free(ircnet005);
-	if (defserv)
-		free(defserv);
-	if (SERVICES_NAME)
-		free(SERVICES_NAME);
-	if (STATS_SERVER)
-		free(STATS_SERVER);
-	if (helpchan)
-		free(helpchan);
-	if (hidden_host)
-		free(hidden_host);
-	if (prefix_quit)
-		free(prefix_quit);
-	if (NAME_SERVER)
-		free(NAME_SERVER);
-	if (locop_host)
-		free(locop_host);
-	if (oper_host)
-		free(oper_host);
-	if (coadmin_host)
-		free(coadmin_host);
-	if (admin_host)
-		free(admin_host);
-	if (sadmin_host)
-		free(sadmin_host);
-	if (netadmin_host)
-		free(netadmin_host);
+	ircfree(KLINE_ADDRESS);
+	ircfree(AUTO_JOIN_CHANS);
+	ircfree(OPER_AUTO_JOIN_CHANS);
+	ircfree(OPER_ONLY_STATS);
+	ircfree(ircnetwork);
+	ircfree(ircnet005);
+	ircfree(defserv);
+	ircfree(SERVICES_NAME);
+	ircfree(STATS_SERVER);
+	ircfree(helpchan);
+	ircfree(hidden_host);
+	ircfree(prefix_quit);
+	ircfree(NAME_SERVER);
+	ircfree(locop_host);
+	ircfree(oper_host);
+	ircfree(coadmin_host);
+	ircfree(admin_host);
+	ircfree(sadmin_host);
+	ircfree(netadmin_host);
+	ircfree(STATIC_QUIT);
 #ifdef USE_SSL
-	if (iConf.x_server_cert_pem)
-		free(iConf.x_server_cert_pem);
-	if (iConf.x_server_key_pem)
-		free(iConf.x_server_key_pem);
+	ircfree(iConf.x_server_cert_pem);
+	ircfree(iConf.x_server_key_pem);
 #endif
 	bzero(&iConf, sizeof(iConf));
 
@@ -4236,6 +4220,8 @@ void report_dynconf(aClient *sptr)
 	    sptr->name, AUTO_JOIN_CHANS ? AUTO_JOIN_CHANS : "0");
 	sendto_one(sptr, ":%s %i %s :oper-auto-join: %s", me.name,
 	    RPL_TEXT, sptr->name, OPER_AUTO_JOIN_CHANS ? OPER_AUTO_JOIN_CHANS : "0");
+	sendto_one(sptr, ":%s %i %s :static-quit: %s", me.name, 
+		RPL_TEXT, sptr->name, STATIC_QUIT ? STATIC_QUIT : "<none>");	
 	sendto_one(sptr, ":%s %i %s :dns::timeout: %li", me.name, RPL_TEXT,
 	    sptr->name, HOST_TIMEOUT);
 	sendto_one(sptr, ":%s %i %s :dns::retries: %d", me.name, RPL_TEXT,
