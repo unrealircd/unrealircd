@@ -1356,3 +1356,4 @@ seen. gmtime warning still there
 - Fixed the set::scan::bind-ip patch to work with win32
 - Added 005 token AWAYLEN= from ircu
 - Heavily updated INSTALL
+- Removed Win32 and READMENOW.Win32.txt (obsolete)
