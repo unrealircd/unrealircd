@@ -3477,7 +3477,8 @@ int  m_topic(cptr, sptr, parc, parv)
 				    me.name, parv[0], name);
 				return 0;
 			}
-			topic = parv[2];
+			if (parc > 2)
+				topic = parv[2];
 		}
 		if (parc > 4)
 		{
