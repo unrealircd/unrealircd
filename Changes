@@ -1037,3 +1037,4 @@ seen. gmtime warning still there
 - Fixed yet another Win32 editor bug affecting Windows 95/98/NT4,
   found by HA|Raptor
 - If host == null, don't set it (m_oper, was setting it to "eek.host.is.null.pointer")
+- Small fix for #427583 mode bug
