@@ -2048,3 +2048,7 @@ seen. gmtime warning still there
   (#0000557) suggested by paranomix
 - Made /stats b output badword quit {} (#0000883) reported by AngryWolf
 - Made except ban {} override ban ip {} (suggested by Lithium).
+- Removed some old defines for the old password encryption system (#0000765) reported by
+  AngryWolf
+- Made it so you can use a ~ as the first character of an ident with /chgident (#0000765)
+  reported by AngryWolf
