@@ -2835,3 +2835,8 @@ seen. gmtime warning still there
 - Forgot to add src/modules/m_sendsno.c to CVS, also fixed 2 compile warnings
   and a crashbug related to previous commit.. bug hunting will continue ;).
 - Fixed minor compile warning.
+- Added a section "Security tips/checklist" to unreal32docs.html, this is something
+  I worked on a few months ago... It tries to explain how to get a server/network
+  secured, what the potential risks are, etc... Of course security is a complex topic
+  so I cannot talk about everything in it, but I tried to mention the main risks and
+  what you can do about it in a (hopefully) simple and understandable language ;).

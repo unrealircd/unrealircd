@@ -101,7 +101,17 @@
   5. <a href="#addtlfiles">Additional Files</a><br>
   6. <a href="#userchannelmodes">User & Channel Modes</a><br>
   7. <a href="#useropercommands">User & Oper Commands</a><br>
-  8. <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">Frequently Asked Questions (FAQ)</a><br> 
+  8. <a href="#security">Security tips/checklist</a><br>
+  ---8.1. <a href="#secpasswords">Passwords</a><br>
+  ---8.2. <a href="#secnonircd">Non-Ircd related vulnerabilities</a><br>
+  ---8.3. <a href="#secpermissions">Permissions and the configfile</a><br>
+  ---8.4. <a href="#secuser">User-related problems</a><br>
+  ---8.5. <a href="#secsnif">SSL/SSH & sniffing</a><br>
+  ---8.6. <a href="#secDoS">Denial of Service attacks (DoS) [or: how to protect my hub]</a><br>
+  ---8.7. <a href="#secinformation">Information disclosure</a><br>
+  ---8.8. <a href="#secantiexploit">Protecting against exploits</a><br>
+  ---8.9. <a href="#secsummary">Summary</a><br>
+  9. <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">Frequently Asked Questions (FAQ)</a><br> 
 </p>
 <p><b><font size="+2">1.0 &#8211;Introduction & Notes <a name="IntroductionNotes"></a></font></b><br>
 </p><div class="desc">
@@ -2933,7 +2943,128 @@ to get more information on a command.</p>
 </table>
 
 <p></p></div>
-<p><font size="+2"><b>8 &#8211; Frequently Asked Questions (FAQ)<a name="faq"></a></b></font></p>
+
+<p><font size="+2"><b>8 &#8211; Security tips/checklist<a name="security"></a></b></font></p>
+<div class="desc">
+<p>If you are concerned about security (you should be!), this section will help you get an overview 
+of the risks that are out there and their risk-level. Alternatively you can use it as a "checklist" 
+to walk trough your (network) configuration to make things more secure.</p>
+<p>The list is ordered by by popularity/risk level/most-often-used-attack-methods:</p>
+</div></p>
+
+<p><b><font size="+2">8.1 Passwords</font></b><a name="secpasswords"></a><br><div class="desc">
+Choose good oper passwords, link passwords, etc:<br>
+- use mixed case and digits ("Whbviwf5") and/or something long ("blaheatsafish", "AlphaBeta555").<br>
+- DO NOT use your link/oper passwords for something else like your mail account, bot password, forums, etc...<br>
+</div></p>
+
+<p><b><font size="+2">8.2 Non-Ircd related vulnerabilities</font></b><a name="secnonircd"></a><br><div class="desc">
+There's a far bigger chance a box will get hacked by a non-irc(d) vulnerability than by some bug in UnrealIRCd.
+If you for example run http, dns, smtp and ftp servers on the same box you have a much higher risk. 
+Also, if you are on a multi-user box (eg: you bought a shell) there's the risk of local exploits and bad permissions 
+(see next). This risk is quite high so be careful when selecting a shell provider.
+</div></p>
+
+<p><b><font size="+2">8.3 Permissions and the configfile</font></b><a name="secpermissions"></a><br><div class="desc">
+Always make sure your home directory and UnrealIRCd directory have correct permissions, 
+(group/)other shouldn't have read permissions. Otherwise a local user can simply grab 
+your configfile and look for passwords... In short: <i>chmod -R go-rwx /path/to/Unreal3.2</i> if you are unsure about this.<br>
+Other things related to this: never put your UnrealIRCd inside the webroot or some other 
+kind of shared directory. And for backups, make sure they get the correct permissions too 
+(it happens quite frequently everything is secured fine but there's a backup.tar.gz lying 
+around readable by everyone).<br>
+<br>
+You probably also want to use encrypted passwords were possible. 
+Note however that this is just 'yet another layer of security', a lot 1-8 char passwords
+can be cracked within a few hours/days, and usually there's other unencrypted interesting
+information in the configfile anyway (like link::password-connect).
+</div></p>
+
+<p><b><font size="+2">8.4 User-related problems</font></b><a name="secuser"></a><br><div class="desc">
+Just like most of these things, this is not UnrealIRCd-specific, but..<br>
+Always choose your opers and admins wisely. And do remember the concept of weakest-link. 
+Even though you are careful and did everything in this doc, maybe your friend which is an
+oper too did something stupid. Like share his harddrive via netbios/kazaa/morpheus/..,
+got a trojan, used an obvious password, etc etc.. Unfortunately, it's not always in your control. 
+</div></p>
+
+<p><b><font size="+2">8.5 SSL/SSH &amp; sniffing</font></b><a name="secsnif"></a><br><div class="desc">
+Use SSL connections between servers and as an oper, this will protect you against "sniffing". 
+Sniffing is possible if an attacker hacked a box somewhere between you and your ircd server, 
+he can then look at ALL network traffic that passes by; watch all conversations, capture all passwords 
+(oper logins, nickserv, etc).. For the same reason, always use ssh instead of telnet.
+</div></p>
+
+<p><b><font size="+2">8.6 Denial of Service attacks (DoS) [or: how to protect my hub]</font></b><a name="secDoS"></a><br><div class="desc">
+A lot of networks have experienced how much "fun" a flood or (D)DoS attack is, you can however 
+do some things to reduce the damage caused by it. Most nets have a hub server, what some people 
+seem to forget is that it's quite easy to protect the hub server from getting attacked.<br>
+I'll explain it here:<br>
+1. Set the name of the hub to a hostname that doesn't exist, eg 'hub.yournet.com', but<br>
+&nbsp;&nbsp;&nbsp; don't add a dns record for it. This way an attacker cannot resolve the host and<br>
+&nbsp;&nbsp;&nbsp; cannot flood it either. Then simply link your servers to the hub by specifying the<br>
+&nbsp;&nbsp;&nbsp; IP or another non-public hostname.<br>
+&nbsp;&nbsp;&nbsp; Example 1: <i>link visibiblename.yournet.com { hostname 194.15.123.16; [etc] };</i>.<br>
+&nbsp;&nbsp;&nbsp; Example 2: <i>link visibiblename.yournet.com { hostname thehostnamethatworks.yournet.com; [etc] };</i>.<br>
+&nbsp;&nbsp;&nbsp; On a sidenote, for the last example you must be sure your nameservers don't allow zone transfers, 
+ but that's way too off-topic ;).<br>
+2. Another important step is then to hide '/stats c' and other stats information, otherwise<br>
+&nbsp;&nbsp;&nbsp; attackers can simply list your link blocks. Usually if you are this paranoid (like<br>
+&nbsp;&nbsp;&nbsp; me) you can simply do: set { oper-only-stats "*"; }; to restrict all /stats usage.<br>
+&nbsp;&nbsp;&nbsp; If you don't want that, at least hide "CdDlLXz". More about this in the next section.<br>
+<br>
+Of course those steps are less useful if they are applied afterwards (eg: after a few months)<br>
+instead of at the beginning because the IP's might be already known to some evil guys, still.. it's worth to do.<br>
+Also note that attackers can still flood all non-hub servers, but that requires more effort<br>
+than just attacking 1 or 2 weak points (the hubs), also this way your hubs &amp; services 
+will stay alive :).<br>
+</div></p>
+
+<p><b><font size="+2">8.7 Information disclosure</font></b><a name="secinformation"></a><br><div class="desc">
+The /stats command is very informative, you probably want to restrict it's usage as much 
+as possible. A question you should ask yourself is "what do I want my users to see?". 
+Most big networks choose "nothing", while others prefer their clients to be able to do 
+'/stats g' and '/stats k'.<br>
+I suggest you to use set <i>{ oper-only-stats "*"; };</i> to deny all /stats for non-opers, but if you don't
+want that, step trough the '/stats' list (gives an overview of all available options) and
+block everything except what you want to allow.. (if in doubt, just deny.. why should they
+really need to know all this?).<br>
+To give you a few examples:<br>
+- /stats o: gives you the nicks of opers (with correct case) and hostmasks.<br>
+- /stats c: gives you an idea about serverlinks and which to use as 'backup', etc..<br>
+- /stats g, /stats k: usually used for banning proxies.. so this will simply give attackers
+  a list of proxies they can use.<br>
+- /stats E, /stats e: pretty sensitive info, especially if an attacker can use these addresses<br>
+- /stats i, /stats y: might aid an attacker in finding hosts which allow lots of connections.<br>
+- /stats P: helps him find serveronly ports<br>
+etc etc...<br>
+<br>
+Of course all of this is "information hiding", so it's not "true" security. 
+It will however make it more difficult / increase the effort needed to attack/hack.<br>
+</div></p>
+
+<p><b><font size="+2">8.8 Protecting against exploits</font></b><a name="secantiexploit"></a><br><div class="desc">
+There are kernel patches that make it more difficult for stack- and heap-based exploits to 
+work. This should however not be your main focus point, you have a far more bigger risk 
+of getting exploited trough the other points than this... for various reasons.<br>
+<br>
+There's one thing you should do however, which is to ALWAYS USE THE LATEST VERSION, 
+subscribe to the <a href="http://mail1.sourceforge.net/mailman/listinfo/unreal-notify" target="_blank">unreal-notify mailinglist</a> 
+right now so you receive the release announcements (unreal-notify is for release announcements only, 
+so only 1 mail per X months). Usually it's explicitly mentioned in the release announcement if the 
+release contains (high risk) security fixes.<br> 
+</div></p>
+
+<p><b><font size="+2">8.9 Summary</font></b><a name="secsummary"></a><br><div class="desc">
+As you now hopefully understand, you can never be 100% secure. You (and us) have to 
+find&amp;fix every hole out there, while an attacker only needs to find just 1 server with 1 hole. 
+Everything that was explained here DOES however help by minimizing the risks considerably. 
+Do take the time to secure your network and educate your opers. A lot of people don't care about 
+security until they got hacked, try to avoid that :).
+</div></p>
+
+
+<p><font size="+2"><b>9 &#8211; Frequently Asked Questions (FAQ)<a name="faq"></a></b></font></p>
 <div class="desc"><p>The FAQ is available online <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">here</a></p></div>
 <p></p>
 </body>
