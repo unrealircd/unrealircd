@@ -1411,3 +1411,4 @@ seen. gmtime warning still there
 - Made the win32 installer remove the . from the begining of . files and append .txt to
   most text files, ie .RELEASE.NOTES becomes RELEASE.NOTES.txt
 - Updated .RELEASE.NOTES
+- Fixed a bug where /who always reported 0 hops reported by Alzirr (#0000242)
