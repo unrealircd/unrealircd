@@ -3009,3 +3009,4 @@ seen. gmtime warning still there
 - Minor doc update.
 - Changed version to RC2
 *** RC2 release ***
+- Fixed a bug regarding the new HOOKTYPE_PRE_LOCAL_JOIN reported by bla

@@ -3897,7 +3897,7 @@ CMD_FUNC(do_join)
 		if (!chptr)
 			continue;
 
-		i = -1;
+		i = HOOK_CONTINUE;
 		if (!MyConnect(sptr))
 			flags = CHFL_DEOPPED;
 		else
