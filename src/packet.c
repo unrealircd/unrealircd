@@ -235,24 +235,17 @@ void	init_CommandHash(void)
 	add_Command(MSG_CONNECT, TOK_CONNECT, m_connect, MAXPARA);
 	add_CommandX(MSG_VERSION, TOK_VERSION, m_version, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
 	add_Command(MSG_STATS, TOK_STATS, m_stats, 3);
-	add_Command(MSG_LINKS, TOK_LINKS, m_links, MAXPARA);
 	add_Command(MSG_SUMMON, NULL, m_summon, 1);
 	add_Command(MSG_USERS, NULL, m_users, MAXPARA);
-	add_Command(MSG_HELP, TOK_HELP, m_help, 1);
-	add_Command(MSG_HELPOP, TOK_HELP, m_help, 1);
 	add_Command(MSG_INFO, TOK_INFO, m_info, MAXPARA);
 	add_Command(MSG_MOTD, TOK_MOTD, m_motd, MAXPARA);
-	add_Command(MSG_CLOSE, TOK_CLOSE, m_close, MAXPARA);
 	add_Command(MSG_DNS, TOK_DNS, m_dns, MAXPARA);
 	add_Command(MSG_REHASH, TOK_REHASH, m_rehash, MAXPARA);
 	add_Command(MSG_RESTART, TOK_RESTART, m_restart, MAXPARA);
 	add_Command(MSG_DIE, TOK_DIE, m_die, MAXPARA);
-	add_Command(MSG_RULES, TOK_RULES, m_rules, MAXPARA);
-	add_Command(MSG_MAP, TOK_MAP, m_map, MAXPARA);
 	add_Command(MSG_DALINFO, TOK_DALINFO, m_dalinfo, MAXPARA);
 	add_Command(MSG_CREDITS, TOK_CREDITS, m_credits, MAXPARA);
 	add_Command(MSG_LICENSE, TOK_LICENSE, m_license, MAXPARA);
-	add_Command(MSG_NETINFO, TOK_NETINFO, m_netinfo, MAXPARA);
 	add_Command(MSG_SVSFLINE, TOK_SVSFLINE, m_svsfline, MAXPARA);
 	add_Command(MSG_BOTMOTD, TOK_BOTMOTD, m_botmotd, MAXPARA);
 	add_Command(MSG_DCCDENY, TOK_DCCDENY, m_dccdeny, 2);
@@ -260,7 +253,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_NEWJOIN, TOK_JOIN, m_join, MAXPARA);
 	add_Command(MSG_MODULE, TOK_MODULE, m_module, MAXPARA);	
 	add_Command(MSG_TKL, TOK_TKL, m_tkl, MAXPARA);
-	add_CommandX(MSG_EOS, TOK_EOS, m_eos, MAXPARA, M_SERVER);
 		
 #ifdef DEVELOP_DEBUG
 	for (i = 0; i <= 255; i++)

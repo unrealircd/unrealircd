@@ -152,7 +152,8 @@ MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OB
  SRC/M_UMODE2.OBJ SRC/M_SQUIT.OBJ SRC/M_PROTOCTL.OBJ SRC/M_SJOIN.OBJ SRC/M_PASS.OBJ \
  SRC/M_USERHOST.OBJ SRC/M_ISON.OBJ SRC/M_SILENCE.OBJ SRC/M_ADDLINE.OBJ SRC/M_ADDMOTD.OBJ \
  SRC/M_ADDOMOTD.OBJ SRC/M_WALLOPS.OBJ SRC/M_GLOBOPS.OBJ SRC/M_LOCOPS.OBJ SRC/M_CHATOPS.OBJ \
- SRC/M_ADMIN.OBJ SRC/M_TRACE.OBJ
+ SRC/M_ADMIN.OBJ SRC/M_TRACE.OBJ SRC/M_NETINFO.OBJ SRC/M_LINKS.OBJ SRC/M_HELP.OBJ \
+ SRC/M_RULES.OBJ SRC/M_CLOSE.OBJ SRC/M_MAP.OBJ SRC/M_EOS.OBJ
 
 ALL: CONF UNREAL.EXE WIRCD.EXE
 
@@ -583,6 +584,27 @@ src/m_chatops.obj: src/modules/m_chatops.c $(INCLUDES)
 
 src/m_trace.obj: src/modules/m_trace.c $(INCLUDES)
         $(CC) $(CFLAGS) src/modules/m_trace.c
+
+src/m_netinfo.obj: src/modules/m_netinfo.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_netinfo.c
+
+src/m_links.obj: src/modules/m_links.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_links.c
+
+src/m_help.obj: src/modules/m_help.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_help.c
+
+src/m_rules.obj: src/modules/m_rules.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_rules.c
+
+src/m_close.obj: src/modules/m_close.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_close.c
+
+src/m_map.obj: src/modules/m_map.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_map.c
+
+src/m_eos.obj: src/modules/m_eos.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_eos.c
 
 src/win32/win32.res: src/win32/win32gui.rc
         $(RC) /l 0x409 /fosrc/win32/win32.res /i ./include /i ./src \

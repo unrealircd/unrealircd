@@ -678,3 +678,5 @@ extern void sub1_from_channel(aChannel *);
 extern aCtab cFlagTab[];
 extern char *unreal_encodespace(char *s);
 extern char *unreal_decodespace(char *s);
+extern Link *helpign;
+extern aMotd *rules;

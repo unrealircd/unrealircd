@@ -104,7 +104,10 @@ extern int m_addline_Init(ModuleInfo *modinfo), m_addmotd_Init(ModuleInfo *modin
 extern int m_addomotd_Init(ModuleInfo *modinfo), m_wallops_Init(ModuleInfo *modinfo);
 extern int m_admin_Init(ModuleInfo *modinfo), m_globops_Init(ModuleInfo *modinfo);
 extern int m_locops_Init(ModuleInfo *modinfo), m_chatops_Init(ModuleInfo *modinfo);
-extern int m_trace_Init(ModuleInfo *modinfo);
+extern int m_trace_Init(ModuleInfo *modinfo), m_netinfo_Init(ModuleInfo *modinfo);
+extern int m_links_Init(ModuleInfo *modinfo), m_help_Init(ModuleInfo *modinfo);
+extern int m_rules_Init(ModuleInfo *modinfo), m_close_Init(ModuleInfo *modinfo);
+extern int m_map_Init(ModuleInfo *modinfo), m_eos_Init(ModuleInfo *modinfo);
 #ifdef GUEST
 extern int m_guest_Init(ModuleInfo *modinfo);
 #endif
@@ -139,7 +142,10 @@ extern int m_addline_Load(int module_load), m_addmotd_Load(int module_load);
 extern int m_addomotd_Load(int module_load), m_wallops_Load(int module_load);
 extern int m_admin_Load(int module_load), m_globops_Load(int module_load);
 extern int m_locops_Load(int module_load), m_chatops_Load(int module_load);
-extern int m_trace_Load(int module_load);
+extern int m_trace_Load(int module_load), m_netinfo_Load(int module_load);
+extern int m_links_Load(int module_load), m_help_Load(int module_load);
+extern int m_rules_Load(int module_load), m_close_Load(int module_load);
+extern int m_map_Load(int module_load), m_eos_Load(int module_load);
 #ifdef GUEST
 extern int m_guest_Load(int module_load);
 #endif
@@ -166,6 +172,9 @@ extern int m_ison_Unload(), m_silence_Unload();
 extern int m_addline_Unload(), m_addmotd_Unload(), m_addomotd_Unload();
 extern int m_wallops_Unload(), m_admin_Unload(), m_globops_Unload();
 extern int m_locops_Unload(), m_chatops_Unload(), m_trace_Unload();
+extern int m_netinfo_Unload(), m_links_Unload(), m_help_Unload();
+extern int m_rules_Unload(), m_close_Unload(), m_map_Unload();
+extern int m_eos_Unload();
 #ifdef GUEST
 extern int m_guest_Unload();
 #endif
@@ -272,6 +281,13 @@ int    l_commands_Init(ModuleInfo *modinfo)
 	m_locops_Init(ModCmdsInfo);
 	m_chatops_Init(ModCmdsInfo);
 	m_trace_Init(ModCmdsInfo);
+	m_netinfo_Init(ModCmdsInfo);
+	m_links_Init(ModCmdsInfo);
+	m_help_Init(ModCmdsInfo);
+	m_rules_Init(ModCmdsInfo);
+	m_close_Init(ModCmdsInfo);
+	m_map_Init(ModCmdsInfo);
+	m_eos_Init(ModCmdsInfo);
 #ifdef GUEST
 	m_guest_Init(ModCmdsInfo);
 #endif
@@ -357,6 +373,13 @@ int    l_commands_Load(int module_load)
 	m_locops_Load(module_load);
 	m_chatops_Load(module_load);
 	m_trace_Load(module_load);
+	m_netinfo_Load(module_load);
+	m_links_Load(module_load);
+	m_help_Load(module_load);
+	m_rules_Load(module_load);
+	m_close_Load(module_load);
+	m_map_Load(module_load);
+	m_eos_Load(module_load);
 #ifdef GUEST
 	m_guest_Load(module_load);
 #endif
@@ -442,6 +465,13 @@ int	l_commands_Unload(int module_unload)
 	m_locops_Unload();
 	m_chatops_Unload();
 	m_trace_Unload();
+	m_netinfo_Unload();
+	m_links_Unload();
+	m_help_Unload();
+	m_rules_Unload();
+	m_close_Unload();
+	m_map_Unload();
+	m_eos_Unload();
 #ifdef GUEST
 	m_guest_Unload();
 #endif

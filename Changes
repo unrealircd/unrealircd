@@ -2941,3 +2941,5 @@ seen. gmtime warning still there
 - Modulized: addline, addmotd, addomotd, wallops, globops, locops, chatops,
   admin, trace.
 - Removed: gnotice, goper
+- Modulized: netinfo, links, help, rules, close, map, eos
+  and made it compile on win32 again.
