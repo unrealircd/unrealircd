@@ -734,6 +734,13 @@ int  m_server(cptr, sptr, parc, parv)
 		/* OK, let us check in the data now now */
 		hop = TS2ts(parv[2]);
 		numeric = (parc > 4) ? TS2ts(parv[3]) : 0;
+		if ((numeric < 0) || (numeric > 255))
+		{
+			sendto_realops
+				("Cancelling link %s, invalid numeric",
+					get_client_name(cptr, TRUE));
+			return exit_client(cptr, cptr, &me, "Invalid numeric");
+		}
 		(void)strncpy(info, parv[parc - 1], REALLEN + 60);
 		strncpyzt(cptr->name, servername, sizeof(cptr->name));
 		cptr->hopcount = hop;
@@ -904,6 +911,15 @@ int	m_server_remote(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	/* OK, let us check in the data now now */
 	hop = TS2ts(parv[2]);
 	numeric = (parc > 4) ? TS2ts(parv[3]) : 0;
+	if ((numeric < 0) || (numeric > 255))
+	{
+		sendto_realops
+			("Cancelling link %s, invalid numeric at server %s",
+				get_client_name(cptr, TRUE), servername);
+		sendto_one(cptr, "ERROR :Invalid numeric (%s)",
+			servername);
+		return exit_client(cptr, cptr, &me, "Invalid remote numeric");
+	}
 	(void)strncpy(info, parv[parc - 1], REALLEN + 60);
 	if (!cptr->serv->conf)
 	{

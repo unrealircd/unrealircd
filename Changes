@@ -517,3 +517,4 @@ seen. gmtime warning still there
 - Fixed identd problem
 - Commited McSkaf's tab patch for win32
 - Possible fixed fdlist problem with default_fdlist
+- Added some numeric checking in m_server*
