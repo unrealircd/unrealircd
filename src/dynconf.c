@@ -42,6 +42,7 @@ ID_Copyright("(C) 1999-2000 Carsten Munk");
 #define DoDebug fprintf(stderr, "[%s] %s | %li\n", babuf, __FILE__, __LINE__);
 #define AllocCpy(x,y) if ((x) && type == 1) MyFree((x)); x = (char *) MyMalloc(strlen(y) + 1); strcpy(x,y)
 #define XtndCpy(x,y) x = (char *) MyMalloc(strlen(y) + 2); *x = '\0'; strcat(x, "*"); strcpy(x,y)
+#define ircabs(x) (x < 0) ? -x : x
 
 /* externals */
 extern int un_uid, un_gid;
@@ -307,13 +308,15 @@ int  load_conf2(FILE * conf, char *filename, int type)
 				{
 #ifdef _WIN32
 					MessageBox(NULL,
-					    "UnrealIRCD/32 Init Error",
-					    "Read Config stop code in file",
+					    "UnrealIRCd/32 Init Error - STOP code in file",
+					    "*** READ/EDIT YOUR CONFIGURATION FILES! ***",
 					    MB_OK);
 #else
 					fprintf(stderr,
-					    "[fatal error] File stop code recieved in %s - RTFM\n",
+					    "[fatal error] STOP code in %s\n",
 					    filename);
+					fprintf(stderr,
+					    "*** READ/EDIT YOUR CONFIGURATION FILES! ***");
 #endif
 					exit(-1);
 				}
@@ -382,6 +385,22 @@ int  load_conf2(FILE * conf, char *filename, int type)
 			else if (strcmp(var, "HOST_RETRIES") == 0)
 			{
 				HOST_RETRIES = atoi(setto);
+			}
+			else if (strcmp(var, "EXEMPT_ALL") == 0)
+			{
+				EXEMPT_ALL = atoi(setto);
+			}
+			else if (strcmp(var, "CLOAK_KEY_1") == 0)
+			{
+				CLOAK_KEY1 = ircabs(atol(setto));
+			}
+			else if (strcmp(var, "CLOAK_KEY_2") == 0)
+			{
+				CLOAK_KEY2 = ircabs(atol(setto));
+			}
+			else if (strcmp(var, "CLOAK_KEY_3") == 0)
+			{
+				CLOAK_KEY3 = ircabs(atol(setto));
 			}
 #ifndef BIG_SECURITY_HOLE
 			else if (strcmp(var, "SETUID") == 0)
@@ -482,10 +501,6 @@ int  load_conf3(FILE * conf, char *filename, int type)
 			{
 				AllocCpy(netadmin_host, setto);
 			}
-			else if (strcmp(var, "techadmin_host") == 0)
-			{
-				AllocCpy(techadmin_host, setto);
-			}
 			else if (strcmp(var, "coadmin_host") == 0)
 			{
 				AllocCpy(coadmin_host, setto);
@@ -548,8 +563,12 @@ void doneconf(int type)
 		    "- OPER_AUTO_JOIN_CHANS is an invalid value\n");
 	if (HOST_TIMEOUT < 0 || HOST_TIMEOUT > 180)
 		strcat(errormsg, "- HOST_TIMEOUT is an invalid value\n");
+	if ((EXEMPT_ALL != 0) && (EXEMPT_ALL != 1))
+		strcat(errormsg, "- EXEMPT_ALL is an invalid value\n");
 	if (HOST_RETRIES < 0 || HOST_RETRIES > 10)
 		strcat(errormsg, "- HOST_RETRIES is an invalid value\n");
+        if ((CLOAK_KEY1 < 10000) || (CLOAK_KEY2 < 10000) || (CLOAK_KEY3 < 10000))
+                strcat(errormsg, "- Missing cloak keys, or they're too easy to guess. Make them > 10000\n");
 #define Missing(x) !(x) || (*(x) == '\0')
 	if (Missing(defserv))
 		strcat(errormsg, "- Missing defserv field\n");
@@ -567,8 +586,6 @@ void doneconf(int type)
 		strcat(errormsg, "- Missing netadmin_host field\n");
 	if (Missing(coadmin_host))
 		strcat(errormsg, "- Missing coadmin_host field\n");
-	if (Missing(techadmin_host))
-		strcat(errormsg, "- Missing techadmin_host field\n");
 	if (Missing(hidden_host))
 		strcat(errormsg, "- Missing hidden_host field\n");
 	if (Missing(netdomain))
@@ -642,6 +659,8 @@ void report_dynconf(aClient *sptr)
 	    RPL_TEXT, sptr->name, OPER_AUTO_JOIN_CHANS);
 	sendto_one(sptr, ":%s %i %s :HOST_TIMEOUT: %li", me.name, RPL_TEXT,
 	    sptr->name, HOST_TIMEOUT);
+	sendto_one(sptr, ":%s %i %s :EXEMPT_ALL: %i", me.name, RPL_TEXT,
+	    sptr->name, EXEMPT_ALL);
 	sendto_one(sptr, ":%s %i %s :HOST_RETRIES: %d", me.name, RPL_TEXT,
 	    sptr->name, HOST_RETRIES);
 }
@@ -669,8 +688,6 @@ void report_network(aClient *sptr)
 	    sptr->name, netadmin_host);
 	sendto_one(sptr, ":%s %i %s :COADMIN_HOST: %s", me.name, RPL_TEXT,
 	    sptr->name, coadmin_host);
-	sendto_one(sptr, ":%s %i %s :TECHADMIN_HOST: %s", me.name, RPL_TEXT,
-	    sptr->name, techadmin_host);
 	sendto_one(sptr, ":%s %i %s :HIDDEN_HOST: %s", me.name, RPL_TEXT,
 	    sptr->name, hidden_host);
 	sendto_one(sptr, ":%s %i %s :NETDOMAIN: %s", me.name, RPL_TEXT,

@@ -78,7 +78,6 @@ static int user_modes[] = { UMODE_OPER, 'o',
 	UMODE_HIDEOPER, 'H',
 	UMODE_ADMIN, 'A',
 	UMODE_NETADMIN, 'N',
-	UMODE_TECHADMIN, 'T',
 	UMODE_CLIENT, 'c',
 	UMODE_COADMIN, 'C',
 	UMODE_FLOOD, 'f',
@@ -89,7 +88,9 @@ static int user_modes[] = { UMODE_OPER, 'o',
 	UMODE_KIX, 'q',
 	UMODE_BOT, 'B',
 	UMODE_FCLIENT, 'F',
+#ifdef ENABLE_INVISOPER
 	UMODE_HIDING, 'I',
+#endif
 	UMODE_SECURE, 'z',
 	UMODE_DEAF, 'd',
 	UMODE_VICTIM, 'v',
@@ -565,6 +566,16 @@ int  m_remgline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	    me.name, sptr->name);
 }
 
+int  m_remgzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
+{
+	if (!IsOper(sptr))
+		return 0;
+
+	sendto_one(sptr,
+	    ":%s NOTICE %s :*** Please use /gzline -mask instead of /Remgzline",
+	    me.name, sptr->name);
+}
+
 extern char cmodestring[512];
 
 int	m_post(aClient *cptr, aClient *sptr, int parc, char *parv[])
@@ -827,22 +838,22 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		{
 /* I:line password encryption --codemastr */
 #ifdef CRYPT_ILINE_PASSWORD
-		if (sptr->passwd) {
-			char salt[3];
-			extern char *crypt();
+			if (sptr->passwd) {
+				char salt[3];
+				extern char *crypt();
 
-			salt[0]=aconf->passwd[0];
-			salt[1]=aconf->passwd[1];
-			salt[3]='\0';
+				salt[0]=aconf->passwd[0];
+				salt[1]=aconf->passwd[1];
+				salt[3]='\0';
 			
-			encr = crypt(sptr->passwd, salt);
-		}
-		else
-			encr = "";
+				encr = crypt(sptr->passwd, salt);
+			}
+			else
+				encr = "";
 #else
-			encr = sptr->passwd;
+				encr = sptr->passwd;
 #endif
-			if (!encr || !StrEq(encr, aconf->passwd))
+			if (BadPtr(sptr->passwd) || !StrEq(encr, aconf->passwd))
 			{
 				ircstp->is_ref++;
 				sendto_one(sptr, err_str(ERR_PASSWDMISMATCH),
@@ -855,7 +866,13 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			 * - Wizzu
 			 */
 			else
-			MyFree(sptr->passwd);
+			{
+				MyFree(sptr->passwd);
+				/* BadPtr relies on things being null, it doesn't
+				 * test validity which is *not* cool.
+				 */
+				sptr->passwd = NULL;
+			}
 		}
 
 		/*
@@ -1015,7 +1032,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	 */
 	if (MyConnect(sptr))
 	{
-	if (sptr->passwd) 
+	if (!BadPtr(sptr->passwd)) 
 		if (sptr->passwd && (nsptr = find_person(NickServ, NULL)))
 			sendto_one(nsptr, ":%s PRIVMSG %s@%s :IDENTIFY %s",
 			    sptr->name, NickServ, SERVICES_NAME, sptr->passwd);
@@ -1035,8 +1052,10 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	}
 
 	if (MyConnect(sptr) && !BadPtr(sptr->passwd)) 
+	{
 		MyFree(sptr->passwd);
-
+		sptr->passwd = NULL;
+	}
 	return 0;
 }
 
@@ -1599,19 +1618,44 @@ int  m_nick(cptr, sptr, parc, parv)
 			for (lp = cptr->user->channel; lp; lp = lp->next) {
 				if (is_banned(cptr, &me, lp->value.chptr))
 				{
-					sendto_one(cptr,
-					    err_str(ERR_BANNICKCHANGE),
-					    me.name, parv[0],
-					    lp->value.chptr->chname);
-					return 0;
+/* Horrible hack to add operoverride notification for +N channels --Luke */
+#ifndef NO_OPEROVERRIDE
+					if (IsOper(cptr))
+					{
+						sendto_umode(UMODE_EYES, "*** OperOverride -- %s (%s@%s) BANWALK %s",
+							cptr->name, cptr->user->username, cptr->user->realhost,
+							lp->value.chptr->chname);
+					}
+					else {
+#endif
+						sendto_one(cptr,
+						    err_str(ERR_BANNICKCHANGE),
+						    me.name, parv[0],
+						    lp->value.chptr->chname);
+						return 0;
+#ifndef NO_OPEROVERRIDE
+					}
+#endif
 				}
-				if (!IsOper(cptr) && !IsULine(cptr) && lp->value.chptr->mode.mode &
+				if (!IsULine(cptr) && lp->value.chptr->mode.mode &
 				   MODE_NONICKCHANGE && !is_chanownprotop(cptr, lp->value.chptr)) {
-					sendto_one(cptr,
-					   err_str(ERR_NONICKCHANGE),
-					   me.name, parv[0],
-					   lp->value.chptr->chname);
-					return 0;
+#ifndef NO_OPEROVERRIDE
+					if (IsOper(cptr))
+					{
+						sendto_umode(UMODE_EYES, "*** OperOverride -- %s (%s@%s) NICKWALK %s",
+							cptr->name, cptr->user->username, cptr->user->realhost,
+							lp->value.chptr->chname);
+					}
+					else {
+#endif
+						sendto_one(cptr,
+						   err_str(ERR_NONICKCHANGE),
+						   me.name, parv[0],
+						   lp->value.chptr->chname);
+						return 0;
+#ifndef NO_OPEROVERRIDE
+					}
+#endif
 				}
 			}
 		/*
@@ -1629,6 +1673,8 @@ int  m_nick(cptr, sptr, parc, parv)
 		sendto_common_channels(sptr, ":%s NICK :%s", parv[0], nick);
 		sendto_serv_butone_token(cptr, parv[0], MSG_NICK, TOK_NICK,
 		    "%s %d", nick, sptr->lastnick);
+		sendto_umode(UMODE_JUNK, "*** Notice -- %s (%s@%s) has changed their nickname to %s",
+		    parv[0], sptr->user->username, sptr->user->realhost, nick);
 	}
 	else if (!sptr->name[0])
 	{
@@ -1674,11 +1720,13 @@ int  m_nick(cptr, sptr, parc, parv)
 		/* Copy password to the passwd field if it's given after NICK
 		 * - originally by taz, modified by Wizzu
 		 */
-		if ((parc > 2) && (strlen(parv[2]) < sizeof(sptr->passwd)))
+		if (parc > 2)
 		{
-			if (sptr->passwd)
+			if (BadPtr(sptr->passwd) || strlen(parv[2]) > strlen(sptr->passwd))
+			{
 				MyFree(sptr->passwd);
-			sptr->passwd = MyMalloc(strlen(parv[2]) + 1);
+				sptr->passwd = MyMalloc(strlen(parv[2]) + 1);
+			}
 			(void)strcpy(sptr->passwd, parv[2]);
 		}
 		/* This had to be copied here to avoid problems.. */
@@ -2404,47 +2452,100 @@ int  m_notice(cptr, sptr, parc, parv)
 }
 
 int  channelwho = 0;
+int  show_hosts = 0;
 
 static void do_who(sptr, acptr, repchan)
 	aClient *sptr, *acptr;
 	aChannel *repchan;
 {
-	char status[8];
+	char status[9];
 	int  i = 0;
 
-	/* auditoriums only show @'s */
-	if (repchan && (repchan->mode.mode & MODE_AUDITORIUM) &&
-		!is_chan_op(acptr, repchan))
+	/* checks for channel /who's and nonopers */
+	if (channelwho && !IsOper(sptr) && sptr != acptr)
+	{
+#ifdef ENABLE_INVISOPER
+		if IsHiding(acptr)
 			return;
-			
+#endif
+		if (IsAuditorium(repchan) && !is_chan_op(acptr,repchan)
+		    && !is_chan_op(sptr,repchan))
+			return;
+		if (!ShowChannel(sptr,repchan))
+			return;
+		if (IsInvisible(acptr) && !IsMember(sptr,repchan))
+			return;
+	}
+#ifdef ENABLE_INVISOPER	
+	if (channelwho && IsHiding(acptr) && !IsNetAdmin(sptr))
+		return;
+#endif
 	if (acptr->user->away)
 		status[i++] = 'G';
 	else
 		status[i++] = 'H';
+
 	if (IsARegNick(acptr))
 		status[i++] = 'r';
 
-	/* Check for +H here too -- codemastr */
+	/* They're an oper. Either they aren't +H, they're /whoing themselves, or sptr
+	 * is also an oper.
+	 */
 	if (IsAnOper(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
 		status[i++] = '*';
-	else if (IsInvisible(acptr) && sptr != acptr && IsAnOper(sptr))
-		status[i++] = '%';
+
+	/* Whackassed conditionals to indicate to an oper that they're seeing this person
+	 * simply because they are an oper. (adds ! to the who "flags")
+	 */
+	if (IsAnOper(sptr) && sptr != acptr)
+#ifdef ENABLE_INVISOPER
+		if (channelwho && IsHiding(acptr) && IsNetAdmin(sptr) ||
+		    IsInvisible(acptr) && !IsMember(sptr,repchan) ||
+		    IsAuditorium(repchan) && !is_chan_op(acptr,repchan) ||
+		    !ShowChannel(sptr,repchan)) 
+			status[i++] = '!';
+#else
+		if (
+		    IsInvisible(acptr) && !IsMember(sptr,repchan) ||
+                    IsAuditorium(repchan) && !is_chan_op(acptr,repchan) ||
+                    !ShowChannel(sptr,repchan))
+                        status[i++] = '!';
+#endif
+
+	
+	/* Channel owner */
+/*	if (repchan && is_chanowner(acptr, repchan))
+		status[i++] = '~';  */
+	/* Channel protected */
+/*	else if (repchan && is_chanprot(acptr, repchan))
+		status[i++] = '&';  */
+	/* Channel operator */
 	if (repchan && is_chan_op(acptr, repchan))
 		status[i++] = '@';
+
+	/* Channel halfop */
+	else if (repchan && is_half_op(acptr, repchan))
+		status[i++] = '%';
+
+	/* Channel voice */
 	else if (repchan && has_voice(acptr, repchan))
 		status[i++] = '+';
+	
 	status[i] = '\0';
-	if (IsWhois(acptr) && channelwho == 0)
+	if (IsWhois(acptr) && channelwho == 0 && (acptr != sptr))
 	{
 		sendto_one(acptr,
 		    ":%s NOTICE %s :*** %s either did a /who or a specific /who on you",
 		    me.name, acptr->name, sptr->name);
 	}
-	if (IsHiding(acptr) && sptr != acptr && !IsNetAdmin(sptr) && !IsTechAdmin(sptr))
-	repchan = NULL;
+#ifdef ENABLE_INVISOPER
+	if (IsHiding(acptr) && sptr != acptr && !IsNetAdmin(sptr))
+		repchan = NULL;
+#endif
+
 	sendto_one(sptr, rpl_str(RPL_WHOREPLY), me.name, sptr->name,
 	    (repchan) ? (repchan->chname) : "*", acptr->user->username,
-	    IsHidden(acptr) ? acptr->user->virthost : acptr->user->realhost,
+	    (show_hosts) ? acptr->user->realhost : (IsHidden(acptr) ? acptr->user->virthost : acptr->user->realhost),
 	    acptr->user->server, acptr->name, status, acptr->hopcount,
 	    acptr->info);
 
@@ -2455,7 +2556,7 @@ static void do_who(sptr, acptr, repchan)
 ** m_who
 **	parv[0] = sender prefix
 **	parv[1] = nickname mask list
-**	parv[2] = additional selection flag, only 'o' for now.
+**	parv[2] = additional selection flag, 'o' and 'h' for now.
 */
 int  m_who(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;
@@ -2466,12 +2567,15 @@ int  m_who(cptr, sptr, parc, parv)
 	char *mask = parc > 1 ? parv[1] : NULL;
 	Link *lp;
 	aChannel *chptr;
-	aChannel *mychannel;
 	char *channame = NULL, *s;
-	int  oper = parc > 2 ? (*parv[2] == 'o') : 0;	/* Show OPERS only */
+	int  show_opers = parc > 2 ? (*parv[2] == 'o') : 0;	/* Show OPERS only */
 	int  member;
 
+	show_hosts = 0;
 
+	if IsOper(sptr)
+		show_hosts = parc > 2 ? (*parv[2] == 'h') : 0;
+	
 	if (!BadPtr(mask))
 	{
 		if ((s = (char *)index(mask, ',')))
@@ -2481,20 +2585,15 @@ int  m_who(cptr, sptr, parc, parv)
 		}
 		clean_channelname(mask);
 	}
+	
 	channelwho = 0;
-	mychannel = NullChn;
-	if (oper)
+	
+	if (show_opers)
 	{
-		sendto_umode(UMODE_HELPOP, "*** HelpOp -- from %s: [Did a /who 0 o]", parv[0]);		
-		sendto_serv_butone(&me, ":%s HELP :[Did a /who 0 o]", parv[0]);
+		sendto_umode(UMODE_HELPOP, "*** HelpOp -- from %s: Executed /who %s o", parv[0], parv[1]);		
+		sendto_serv_butone(&me, ":%s HELP :Executed /who %s o", parv[0], parv[1]);
 	}
-	if (sptr->user)
-		if ((lp = sptr->user->channel))
-			mychannel = lp->value.chptr;
-
-	/* Allow use of m_who without registering */
-
-
+	
 	/*
 	   **  Following code is some ugly hacking to preserve the
 	   **  functions of the old implementation. (Also, people
@@ -2504,43 +2603,36 @@ int  m_who(cptr, sptr, parc, parv)
 	if (!mask || *mask == '\0')
 		mask = NULL;
 	else if (mask[1] == '\0' && mask[0] == '*')
-	{
 		mask = NULL;
-		if (mychannel)
-			channame = mychannel->chname;
-	}
 	else if (mask[1] == '\0' && mask[0] == '0')	/* "WHO 0" for irc.el */
 		mask = NULL;
 	else
 		channame = mask;
+	
 	(void)collapse(mask);
+	
 	/* Don't allow masks for non opers */
 	if (!IsOper(sptr) && mask && (strchr(mask, '*') || strchr(mask, '?')))
 	{
 
 		sendto_one(sptr, rpl_str(RPL_ENDOFWHO), me.name, parv[0],
 		    BadPtr(mask) ? "*" : mask);
+		return 0;
 	}
+	
+	/* List all users on a given channel */
 	if (IsChannelName(channame))
 	{
-		/*
-		 * List all users on a given channel
-		 */
 		chptr = find_channel(channame, NULL);
 		if (chptr)
 		{
-			member = IsMember(sptr, chptr) || IsOper(sptr);
-			if (member || !SecretChannel(chptr))
+			if (ShowChannel(sptr,chptr) || IsOper(sptr))
 				for (lp = chptr->members; lp; lp = lp->next)
 				{
-					if (IsHiding(lp->value.cptr))
+					if (show_opers && (!IsOper(lp->value.cptr)))
 						continue;
-					if (oper && (!IsAnOper(lp->value.cptr)
-					    ))
-						continue;
-					if ((lp->value.cptr != sptr
-					    && IsInvisible(lp->value.cptr)
-					    && !member) && !IsOper(sptr))
+					if (show_opers && IsHideOper(lp->value.cptr) &&
+					    !IsOper(sptr))
 						continue;
 					channelwho = 1;
 					do_who(sptr, lp->value.cptr, chptr);
@@ -2548,53 +2640,26 @@ int  m_who(cptr, sptr, parc, parv)
 		}
 	}
 	else
+		/* Mask/other who */
 		for (acptr = client; acptr; acptr = acptr->next)
 		{
 			aChannel *ch2ptr = NULL;
-			int  showsecret, showperson, isinvis;
-
+			
 			if (!IsPerson(acptr))
 				continue;
-			if (oper && (!IsAnOper(acptr) || (IsHideOper(acptr) && sptr != acptr && !IsAnOper(sptr))))
+
+			if (show_opers && (!IsOper(acptr) || (IsHideOper(acptr) && sptr != acptr
+			    && !IsOper(sptr))))
 				continue;
-			showperson = 0;
-			showsecret = 0;
-			/*
-			 * Show user if they are on the same channel, or not
-			 * invisible and on a non secret channel (if any).
-			 * Do this before brute force match on all relevant fields
-			 * since these are less cpu intensive (I hope :-) and should
-			 * provide better/more shortcuts - avalon
+			
+			/* The other method my have been slightly more efficient,
+			 * but I honestly doubt it. The readability of that code was
+			 * well, insane. --Luke
 			 */
-			isinvis = acptr != sptr && IsInvisible(acptr)
-			    && !IsAnOper(sptr);
-			for (lp = acptr->user->channel; lp; lp = lp->next)
-			{
-				chptr = lp->value.chptr;
-				member = IsMember(sptr, chptr) || IsOper(sptr);
-				if (isinvis && !member)
-					continue;
-				if (IsAnOper(sptr))
-					showperson = 1;
-				if (member || (!isinvis &&
-				    ShowChannel(sptr, chptr)))
-				{
-					ch2ptr = chptr;
-					showperson = 1;
-					break;
-				}
-				if (HiddenChannel(chptr)
-				    && !SecretChannel(chptr) && !isinvis)
-					showperson = 1;
-			}
-			if (!acptr->user->channel && !isinvis)
-				showperson = 1;
-			/*
-			   ** This is brute force solution, not efficient...? ;( 
-			   ** Show entry, if no mask or any of the fields match
-			   ** the mask. --msa
-			 */
-			if (showperson &&
+			if (acptr->user->channel)
+				ch2ptr = acptr->user->channel->value.chptr;
+
+			if (
 			    (!mask ||
 			    match(mask, acptr->name) == 0 ||
 			    match(mask, acptr->user->username) == 0 ||
@@ -2607,6 +2672,7 @@ int  m_who(cptr, sptr, parc, parv)
 			    || match(mask, acptr->user->server) == 0
 			    || match(mask, acptr->info) == 0))
 				do_who(sptr, acptr, ch2ptr);
+
 		}
 	sendto_one(sptr, rpl_str(RPL_ENDOFWHO), me.name, parv[0],
 	    BadPtr(mask) ? "*" : mask);
@@ -2644,18 +2710,23 @@ int  m_whois(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	static anUser UnknownUser = {
-		NULL,		/* nextu */
-		NULL,		/* channel */
-		NULL,		/* invited */
-		NULL,		/* silence */
-		NULL,		/* away */
-		0,		/* last */
-		0,		/* servicestamp */
-		1,		/* refcount */
-		0,		/* joined */
-		"<Unknown>",	/* username */
-		"<Unknown>",	/* host */
-		"<Unknown>"	/* server */
+                "<Unknown>",    /* host */
+                "<Unknown>",    /* username */
+                NULL,           /* nextu */
+                NULL,           /* channel */
+                NULL,           /* invited */
+                NULL,           /* silence */
+                NULL,           /* away */
+                NULL,           /* virthost */
+                NULL,           /* server */
+                NULL,           /* swhois */
+                NULL,           /* serv */
+                NULL,           /* Lopts */
+                NULL,           /* whowas */
+                0,              /* last */
+                0,              /* servicestamp */
+                0,              /* joined */
+                1               /* refcount */
 	};
 	Link *lp;
 	anUser *user;
@@ -2751,7 +2822,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			if (!IsPerson(acptr))
 				continue;
 
-			if (IsWhois(acptr))
+			if (IsWhois(acptr) && (acptr != sptr))
 			{
 				sendto_one(acptr,
 				    ":%s NOTICE %s :*** %s (%s@%s) did a /whois on you.",
@@ -2787,49 +2858,54 @@ int  m_whois(cptr, sptr, parc, parv)
 			found = 1;
 			mlen = strlen(me.name) + strlen(parv[0]) + 6 +
 			    strlen(name);
-			for (len = 0, *buf = '\0', lp = user->channel; lp;
-			    lp = lp->next)
+
+			if (!IsServices(acptr) || (IsServices(acptr) && IsNetAdmin(sptr)))
 			{
-				chptr = lp->value.chptr;
-				if (IsAnOper(sptr) || ShowChannel(sptr, chptr) || (acptr == sptr))
+				for (len = 0, *buf = '\0', lp = user->channel; lp;
+				    lp = lp->next)
 				{
-					if (len + strlen(chptr->chname)
-					    > (size_t)BUFSIZE - 4 - mlen)
+					chptr = lp->value.chptr;
+					if (IsAnOper(sptr) || ShowChannel(sptr, chptr) || (acptr == sptr))
 					{
-						sendto_one(sptr,
-						    ":%s %d %s %s :%s",
-						    me.name,
-						    RPL_WHOISCHANNELS,
-						    parv[0], name, buf);
-						*buf = '\0';
-						len = 0;
-					}
+						if (len + strlen(chptr->chname)
+						    > (size_t)BUFSIZE - 4 - mlen)
+						{
+							sendto_one(sptr,
+							    ":%s %d %s %s :%s",
+							    me.name,
+							    RPL_WHOISCHANNELS,
+							    parv[0], name, buf);
+							*buf = '\0';
+							len = 0;
+						}
 #ifdef SHOW_SECRET
-					if (!(acptr == sptr) && IsAnOper(sptr)
+	                                        if (!(acptr == sptr) && IsAnOper(sptr)
 #else
-					if (!(acptr == sptr) && (IsNetAdmin(sptr) || IsTechAdmin(sptr))
+	                                        if (!(acptr == sptr)
+	                                            && IsNetAdmin(sptr)
 #endif
-					&& (showsecret == 1) && SecretChannel(chptr))
-						*(buf + len++) = '~';
-					if (is_chanowner(acptr, chptr))
-						*(buf + len++) = '*';
-					else if (is_chanprot(acptr, chptr))
-						*(buf + len++) = '^';
-					else if (is_chan_op(acptr, chptr))
-						*(buf + len++) = '@';
-					else if (is_half_op(acptr, chptr))
-						*(buf + len++) = '%';
-					else if (has_voice(acptr, chptr))
-						*(buf + len++) = '+';
-					if (len)
-						*(buf + len) = '\0';
-					(void)strcpy(buf + len, chptr->chname);
-					len += strlen(chptr->chname);
-					(void)strcat(buf + len, " ");
-					len++;
+																                                                && SecretChannel(chptr))
+                                                        *(buf + len++) = '!';
+		/*				if (is_chanowner(acptr, chptr))
+							*(buf + len++) = '~';
+						else if (is_chanprot(acptr, chptr))
+							*(buf + len++) = '&';  */
+						if (is_chan_op(acptr, chptr))
+							*(buf + len++) = '@';
+						else if (is_half_op(acptr, chptr))
+							*(buf + len++) = '%';
+						else if (has_voice(acptr, chptr))
+							*(buf + len++) = '+';
+						if (len)
+							*(buf + len) = '\0';
+						(void)strcpy(buf + len, chptr->chname);
+						len += strlen(chptr->chname);
+						(void)strcat(buf + len, " ");
+						len++;
+					}
 				}
 			}
-
+			
 			if (buf[0] != '\0')
 				sendto_one(sptr, rpl_str(RPL_WHOISCHANNELS),
 				    me.name, parv[0], name, buf);
@@ -2850,9 +2926,6 @@ int  m_whois(cptr, sptr, parc, parv)
 				buf[0] = '\0';
 				if (IsNetAdmin(acptr))
 					strcat(buf, "a Network Administrator");
-				else if (IsTechAdmin(acptr))
-					strcat(buf,
-					    "a Technical Administrator");
 				else if (IsSAdmin(acptr))
 					strcat(buf, "a Services Operator");
 				else if (IsAdmin(acptr) && !IsCoAdmin(acptr))
@@ -2887,7 +2960,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			{
 				sendto_one(sptr, ":%s %d %s %s :%s",me.name, 
 				RPL_WHOISSPECIAL,
-				parv[0], name, "is a \2Secure Connection\2");
+				parv[0], name, "is a Secure Connection");
 			}
 			if (user->swhois && !IsHideOper(acptr))
 			{
@@ -2941,7 +3014,7 @@ int  m_user(cptr, sptr, parc, parv)
 	if (IsServer(cptr) && !IsUnknown(sptr))
 		return 0;
 
-	if (MyClient(sptr) && (sptr->acpt->umodes & LISTENER_SERVERSONLY)) {
+	if (MyConnect(sptr) && (sptr->acpt->umodes & LISTENER_SERVERSONLY)) {
 		return exit_client(cptr, sptr, sptr, "This port is for servers only");
 	}
 		
@@ -3097,18 +3170,23 @@ int  m_kill(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	static anUser UnknownUser = {
-		NULL,		/* nextu */
-		NULL,		/* channel */
-		NULL,		/* invited */
-		NULL,		/* silence */
-		NULL,		/* away */
-		0,		/* last */
-		0,		/* servicestamp */
-		1,		/* refcount */
-		0,		/* joined */
-		"<Unknown>",	/* username */
-		"<Unknown>",	/* host */
-		"<Unknown>"	/* server */
+                "<Unknown>",    /* host */
+                "<Unknown>",    /* username */
+                NULL,           /* nextu */
+                NULL,           /* channel */
+                NULL,           /* invited */
+                NULL,           /* silence */
+                NULL,           /* away */
+                NULL,           /* virthost */
+                NULL,           /* server */
+                NULL,           /* swhois */
+                NULL,           /* serv */
+                NULL,           /* Lopts */
+                NULL,           /* whowas */
+                0,              /* last */
+                0,              /* servicestamp */
+                0,              /* joined */
+                1               /* refcount */	
 	};
 	aClient *acptr;
 	anUser *auser;
@@ -3196,14 +3274,14 @@ int  m_kill(cptr, sptr, parc, parv)
 			continue;
 		}
 
-		if (IsServices(acptr) && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)
+		if (IsServices(acptr) && !(IsNetAdmin(sptr)
 		    || IsULine(sptr)))
 		{
 			sendto_one(sptr, err_str(ERR_KILLDENY), me.name,
 			    parv[0], parv[1]);
 			return 0;
 		}
-/*        if (IsULine(sptr) || (IsSAdmin(sptr) && !IsSAdmin(acptr)) || (IsNetAdmin(sptr)) || (IsTechAdmin(sptr) || (IsCoAdmin(sptr)))) {
+/*        if (IsULine(sptr) || (IsSAdmin(sptr) && !IsSAdmin(acptr)) || (IsNetAdmin(sptr)) || (IsCoAdmin(sptr)))) {
         goto aftermath;
         } else if (IsULine(acptr)) {
                 goto error;
@@ -3656,7 +3734,7 @@ int  m_oper(cptr, sptr, parc, parv)
 		return 0;
 	}
 
-	if (SVSNOOP)
+	if (SVSNOOP==1)
 	{
 		sendto_one(sptr, ":%s NOTICE %s :*** This server is in NOOP mode, you cannot /oper",
 			me.name, sptr->name);
@@ -3718,153 +3796,59 @@ int  m_oper(cptr, sptr, parc, parv)
 #endif /* CRYPT_OPER_PASSWORD */
 
 	if ((aconf->status & CONF_OPS) && StrEq(encr, aconf->passwd)
-	    && !attach_conf(sptr, aconf))
+	    && ((!attach_conf(sptr, aconf)) || (attach_conf(sptr, aconf) == 1)))
 	{
 		int  old = (sptr->umodes & ALL_UMODES);
 		char *s;
 
 		s = index(aconf->host, '@');
 		*s++ = '\0';
-		/*if ((aconf->port & OFLAG_AGENT))
-		   sptr->umodes |= UMODE_AGENT; */
 		if ((aconf->port & OFLAG_HELPOP))
+			SetHelpOp(sptr);
+		
+		if (aconf->port & OFLAG_NETADMIN)
 		{
-			sptr->umodes |= UMODE_HELPOP;
-		}
-
-		if (!(aconf->port & OFLAG_ISGLOBAL))
-		{
-			SetLocOp(sptr);
-		}
-		else if (aconf->port & OFLAG_NETADMIN)
-		{
-			if (aconf->port & OFLAG_SADMIN)
-			{
-				sptr->umodes |=
-				    (UMODE_NETADMIN | UMODE_ADMIN |
-				    UMODE_SADMIN);
-				SetNetAdmin(sptr);
-				SetSAdmin(sptr);
-				SetAdmin(sptr);
-
-				SetOper(sptr);
-			}
-			else
-			{
-				sptr->umodes |= (UMODE_NETADMIN | UMODE_ADMIN);
-				SetNetAdmin(sptr);
-				SetAdmin(sptr);
-				SetOper(sptr);
-
-			}
-		}
-		else if (aconf->port & OFLAG_COADMIN)
-		{
-			if (aconf->port & OFLAG_SADMIN)
-			{
-				sptr->umodes |=
-				    (UMODE_COADMIN | UMODE_ADMIN |
-				    UMODE_SADMIN);
-				SetCoAdmin(sptr);
-				SetSAdmin(sptr);
-				SetAdmin(sptr);
-				SetOper(sptr);
-
-			}
-			else
-			{
-				sptr->umodes |= (UMODE_COADMIN | UMODE_ADMIN);
-				SetCoAdmin(sptr);
-				SetAdmin(sptr);
-				SetOper(sptr);
-
-			}
-		}
-		else if (aconf->port & OFLAG_TECHADMIN)
-		{
-			if (aconf->port & OFLAG_SADMIN)
-			{
-				sptr->umodes |=
-				    (UMODE_TECHADMIN | UMODE_ADMIN |
-				    UMODE_SADMIN);
-				SetTechAdmin(sptr);
-				SetSAdmin(sptr);
-				SetAdmin(sptr);
-				SetOper(sptr);
-
-			}
-			else
-			{
-				sptr->umodes |= (UMODE_TECHADMIN | UMODE_ADMIN);
-				SetTechAdmin(sptr);
-				SetAdmin(sptr);
-				SetOper(sptr);
-
-			}
-		}
-		else
-		    if (aconf->port & OFLAG_ADMIN && aconf->port & OFLAG_SADMIN)
-		{
-			sptr->umodes |= (UMODE_ADMIN | UMODE_SADMIN);
+			SetNetAdmin(sptr);
 			SetAdmin(sptr);
-			SetSAdmin(sptr);
 			SetOper(sptr);
-
-		}
-		else if (aconf->port & OFLAG_SADMIN)
-		{
-			sptr->umodes |= (UMODE_SADMIN);
-			SetSAdmin(sptr);
-			SetOper(sptr);
-
 		}
 		else if (aconf->port & OFLAG_ADMIN)
 		{
-			sptr->umodes |= (UMODE_ADMIN);
 			SetAdmin(sptr);
 			SetOper(sptr);
-
 		}
+		else if (aconf->port & OFLAG_COADMIN)
+		{
+			SetCoAdmin(sptr);
+			SetAdmin(sptr);
+			SetOper(sptr);
+		}
+		else if (aconf->port & OFLAG_ISGLOBAL)
+			SetOper(sptr);
 		else
-		{
-			if (aconf->port & OFLAG_SADMIN)
-			{
-				sptr->umodes |= (UMODE_OPER | UMODE_SADMIN);
-				SetSAdmin(sptr);
-				SetOper(sptr);
-
-			}
-			else
-			{
-				sptr->umodes |= (UMODE_OPER);
-				SetOper(sptr);
-
-			}
-		}
-
+			SetLocOp(sptr);
+		
+		if (aconf->port & OFLAG_SADMIN)
+			SetSAdmin(sptr);
+		
 		if (aconf->port & OFLAG_EYES)
-		{
-			sptr->umodes |= (UMODE_EYES);
 			SetEyes(sptr);
-		}
 
 		if (aconf->port & OFLAG_WHOIS)
-		{
-			sptr->umodes |= (UMODE_WHOIS);
-		}
+			SetWhois(sptr);
 
 		if (aconf->port & OFLAG_HIDE)
-		{
-			sptr->umodes |= (UMODE_HIDE);
-		}
+			SetHide(sptr);
 
 		sptr->oflag = aconf->port;
 
 		*--s = '@';
 
+		/* Set useful modes here */
 		sptr->umodes |=
 		    (UMODE_SERVNOTICE | UMODE_WALLOP | UMODE_FAILOP |
 		    UMODE_FLOOD | UMODE_CLIENT | UMODE_KILLS);
+		
 		send_umode_out(cptr, sptr, old);
 #ifndef NO_FDLIST
 		addto_fdlist(sptr->fd, &oper_fdlist);
@@ -3881,12 +3865,6 @@ int  m_oper(cptr, sptr, parc, parv)
 				iNAH_host(sptr, locop_host);
 			sptr->umodes &= ~UMODE_OPER;
 		}
-/*        	else
-        if ((aconf->port & OFLAG_AGENT))
-        {
-			sendto_ops("%s (%s@%s) is now an IRCd Agent (S)", parv[0],
-				sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost);
-        }*/
 		else if (aconf->port & OFLAG_NETADMIN)
 		{
 			sendto_ops
@@ -3914,34 +3892,16 @@ int  m_oper(cptr, sptr, parc, parv)
 			    realhost);
 			if (MyClient(sptr))
 			{
-				/*      sendto_serv_butone(&me, ":%s GLOBOPS :%s (%s@%s) is now a co administrator (C)", me.name, parv[0],
-				   sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost);
-				 */
+				sendto_serv_butone(&me, ":%s GLOBOPS :%s (%s@%s) is now a co administrator (C)",
+				me.name, parv[0], sptr->user->username,
+				IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost);
 			}
 			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
 				iNAH_host(sptr, coadmin_host);
 		}
-		else if (aconf->port & OFLAG_TECHADMIN)
-		{
-			sendto_ops
-			    ("%s (%s@%s) is now a technical administrator (T)",
-			    parv[0], sptr->user->username,
-			    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
-			    realhost);
-			if (MyClient(sptr))
-			{
-				sendto_serv_butone(&me,
-				    ":%s GLOBOPS :%s (%s@%s) is now a technical administrator (T)",
-				    me.name, parv[0], sptr->user->username,
-				    IsHidden(sptr) ? sptr->user->
-				    virthost : sptr->user->realhost);
-			}
-			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
-				iNAH_host(sptr, techadmin_host);
-		}
 		else if (aconf->port & OFLAG_SADMIN)
 		{
-			sendto_ops("%s (%s@%s) is now a services admin (a)",
+			sendto_ops("%s (%s@%s) is now a services administrator (a)",
 			    parv[0], sptr->user->username,
 			    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
 			    realhost);
@@ -3958,10 +3918,17 @@ int  m_oper(cptr, sptr, parc, parv)
 		}
 		else if (aconf->port & OFLAG_ADMIN)
 		{
-			sendto_ops("%s (%s@%s) is now a server admin (A)",
+			sendto_ops("%s (%s@%s) is now a server administrator (A)",
 			    parv[0], sptr->user->username,
 			    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
 			    realhost);
+			if (MyClient(sptr))
+			{
+				sendto_serv_butone(&me,
+				    ":%s GLOBOPS :%s (%s@%s) is now a server administrator (A)",
+				    me.name, parv[0], sptr->user->username,
+				    IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost);
+			}
 			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
 				iNAH_host(sptr, admin_host);
 		}
@@ -3971,6 +3938,13 @@ int  m_oper(cptr, sptr, parc, parv)
 			    sptr->user->username,
 			    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
 			    realhost);
+			if (MyClient(sptr))
+			{
+				sendto_serv_butone(&me,
+				    ":%s GLOBOPS :%s (%s@%s) is now an operator (O)",
+				    me.name, parv[0], sptr->user->username,
+				    IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost);
+			}
 			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
 				iNAH_host(sptr, oper_host);
 		}
@@ -4105,8 +4079,11 @@ int  m_pass(cptr, sptr, parc, parv)
 		return 0;
 	}
 	PassLen = strlen(password);
-	if (cptr->passwd)
+	if (!BadPtr(cptr->passwd))
+	{
 		MyFree(cptr->passwd);
+		cptr->passwd = NULL;
+	}
 	if (PassLen > (PASSWDLEN))
 		PassLen = PASSWDLEN;
 	cptr->passwd = MyMalloc(PassLen + 1);
@@ -4159,7 +4136,8 @@ int  m_userhost(cptr, sptr, parc, parv)
         {
           ircsprintf(response[i], "%s%s=%c%s@%s",
                      acptr->name,
-                     IsAnOper(acptr) ? "*" : "",
+                     (IsAnOper(acptr) && (((acptr != sptr) && IsOper(sptr) && IsHideOper(acptr)))
+		          || (!IsHideOper(acptr)) || (acptr == sptr)) ? "*" : "",
                      (acptr->user->away) ? '-' : '+',
                      acptr->user->username,
    			((acptr != sptr) && !IsOper(sptr) 
@@ -4333,11 +4311,13 @@ int  m_umode(cptr, sptr, parc, parv)
 				      && MyClient(sptr))
 					  break;
 				  goto def;
+#ifdef ENABLE_INVISOPER
 			  case 'I':
 				  if (NO_OPER_HIDING == 1 && what == MODE_ADD
 				      && MyClient(sptr))
 					  break;
 				  goto def;
+#endif
 			  case 'B':
 				  if (what == MODE_ADD && MyClient(sptr))
 					  (void)m_botmotd(sptr, sptr, 1, parv);
@@ -4403,8 +4383,6 @@ int  m_umode(cptr, sptr, parc, parv)
 			ClearHideOper(sptr);
 		if (IsCoAdmin(sptr))
 			ClearCoAdmin(sptr);
-		if (IsTechAdmin(sptr))
-			ClearTechAdmin(sptr);
 		if (IsEyes(sptr))
 			ClearEyes(sptr);
 	}
@@ -4428,11 +4406,11 @@ int  m_umode(cptr, sptr, parc, parv)
 			ClearNetAdmin(sptr);
 		if (IsCoAdmin(sptr) && !OPIsCoAdmin(sptr))
 			ClearCoAdmin(sptr);
-		if (IsTechAdmin(sptr) && !OPIsTechAdmin(sptr))
-			ClearTechAdmin(sptr);
+#ifdef ENABLE_INVISOPER
 		if ((sptr->umodes & UMODE_HIDING)
 		    && !(sptr->oflag & OFLAG_INVISIBLE))
 			sptr->umodes &= ~UMODE_HIDING;
+#endif
 		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
 		    && !IsSecure(sptr))
 			sptr->umodes &= ~UMODE_SECURE;
@@ -4468,7 +4446,7 @@ int  m_umode(cptr, sptr, parc, parv)
 	if (MyConnect(sptr))
 	{
 		if ((sptr->umodes & (UMODE_KIX)) && !(IsNetAdmin(sptr)
-		    || IsTechAdmin(sptr)))
+		    ))
 			sptr->umodes &= ~UMODE_KIX;
 		if ((sptr->umodes & (UMODE_FCLIENT)) && !IsOper(sptr))
 			sptr->umodes &= ~UMODE_FCLIENT;
@@ -4476,17 +4454,17 @@ int  m_umode(cptr, sptr, parc, parv)
 		/* Agents 
 		   if ((sptr->umodes & (UMODE_AGENT)) && !(sptr->oflag & OFLAG_AGENT))
 		   sptr->umodes &= ~UMODE_AGENT; */
+#ifdef ENABLE_INVISOPER
 		if ((sptr->umodes & UMODE_HIDING) && !IsAnOper(sptr))
 			sptr->umodes &= ~UMODE_HIDING;
-
-
 		if ((sptr->umodes & UMODE_HIDING)
 		    && !(sptr->oflag & OFLAG_INVISIBLE))
 			sptr->umodes &= ~UMODE_HIDING;
+#endif
 		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
 		    && !IsSecure(sptr))
 			sptr->umodes &= ~UMODE_SECURE;
-
+#ifdef ENABLE_INVISOPER
 		if ((sptr->umodes & (UMODE_HIDING))
 		    && !(setflags & UMODE_HIDING))
 		{
@@ -4498,9 +4476,11 @@ int  m_umode(cptr, sptr, parc, parv)
 			    me.name, sptr->name);
 			sendto_channels_inviso_part(sptr);
 		}
+#endif
 		if ((sptr->umodes & UMODE_JUNK) && !IsOper(sptr))
 			sptr->umodes &= ~UMODE_JUNK;
 			
+#ifdef ENABLE_INVISOPER
 		if (!(sptr->umodes & (UMODE_HIDING)))
 		{
 			if (setflags & UMODE_HIDING)
@@ -4515,6 +4495,7 @@ int  m_umode(cptr, sptr, parc, parv)
 
 			}
 		}
+#endif
 	}
 	/*
 	 * If I understand what this code is doing correctly...

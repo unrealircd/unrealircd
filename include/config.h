@@ -83,7 +83,7 @@
 
 /*
  * Defining this will allow all ircops to see people in +s channels
- * By default, only net/tech admins can see this
+ * By default, only net admins can see this
  */
 #undef SEE_SECRET
 
@@ -123,6 +123,14 @@
  *   This will disable OperMode, OperTopic and Banwalks
 */
 #undef NO_OPEROVERRIDE
+
+/*
+ * OPEROVERRIDE_VERIFY
+ *   This will prompt opers before permitting them to join +s/+p
+ *   channels, preventing them from "accidentally" joining random
+ *   channels
+ */
+#undef OPEROVERRIDE_VERIFY
 
 /*
  * Disable /sethost, /setident, /chgname, /chghost, /chgident 

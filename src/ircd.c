@@ -81,6 +81,9 @@ int  un_gid = 99;
 extern char unreallogo[];
 #endif
 
+#ifndef NO_FDLIST
+extern void flush_fdlist_connections(fdlist * listp);
+#endif
 LoopStruct loop;
 extern aMotd *opermotd;
 extern aMotd *svsmotd;
@@ -132,15 +135,15 @@ void save_stats(void)
 	FILE	*stats = fopen("ircd.stats", "w");
 	if (!stats)
 		return;
-	fprintf(stats, "%li\n", IRCstats.clients);
-	fprintf(stats, "%li\n", IRCstats.invisible);
-	fprintf(stats, "%li\n", IRCstats.servers);
-	fprintf(stats, "%li\n", IRCstats.operators);
-	fprintf(stats, "%li\n", IRCstats.unknown);
-	fprintf(stats, "%li\n", IRCstats.me_clients);
-	fprintf(stats, "%li\n", IRCstats.me_servers);
-	fprintf(stats, "%li\n", IRCstats.me_max);
-	fprintf(stats, "%li\n", IRCstats.global_max);
+	fprintf(stats, "%i\n", IRCstats.clients);
+	fprintf(stats, "%i\n", IRCstats.invisible);
+	fprintf(stats, "%i\n", IRCstats.servers);
+	fprintf(stats, "%i\n", IRCstats.operators);
+	fprintf(stats, "%i\n", IRCstats.unknown);
+	fprintf(stats, "%i\n", IRCstats.me_clients);
+	fprintf(stats, "%i\n", IRCstats.me_servers);
+	fprintf(stats, "%i\n", IRCstats.me_max);
+	fprintf(stats, "%i\n", IRCstats.global_max);
 	fclose(stats);
 }
 
@@ -409,7 +412,8 @@ static TS try_connections(currenttime)
 	int  connecting, confrq;
 	TS   next = 0;
 	aClass *cltmp;
-	aConfItem *cconf, *con_conf;
+	aConfItem *cconf;
+	aConfItem *con_conf = NULL;
 	int  con_class = 0;
 
 	connecting = FALSE;
@@ -490,10 +494,13 @@ extern char *areason;
 
 /* Now find_kill is only called when a kline-related command is used:
    AKILL/RAKILL/KLINE/UNKLINE/REHASH.  Very significant CPU usage decrease.
-   I made changes to evm_lusers
-ery check_pings call to add new parameter.
-   -- Barubary */
-extern TS check_pings(TS currenttime, int check_kills)
+   -- Barubary
+   
+   DUDE! THAT IS _NOT_ COOL!
+   -Stskeeps
+   
+   */
+extern TS check_pings(TS currenttime)
 {
 	aClient *cptr;
 	int  killflag;
@@ -517,11 +524,11 @@ extern TS check_pings(TS currenttime, int check_kills)
 				continue;
 			}
 			areason = NULL;
-			if (check_kills)
+			if (loop.do_ban_check)
 				killflag = IsPerson(cptr) ? find_kill(cptr) : 0;
 			else
 				killflag = 0;
-			if (check_kills && !killflag && IsPerson(cptr))
+			if (loop.do_ban_check && !killflag && IsPerson(cptr))
 				if (find_zap(cptr, 1)
 				    || find_tkline_match(cptr, 0) > -1 ||
 				    (!IsAnOper(cptr) && find_nline(cptr)))
@@ -685,7 +692,8 @@ extern TS check_pings(TS currenttime, int check_kills)
 		oldest = currenttime + PINGFREQUENCY;
 	Debug((DEBUG_NOTICE, "Next check_ping() call at: %s, %d %d %d",
 	    myctime(oldest), ping, oldest, currenttime));
-
+	if (loop.do_ban_check)
+		loop.do_ban_check = 1;
 	return (oldest);
 }
 
@@ -699,15 +707,13 @@ extern TS check_pings(TS currenttime, int check_kills)
 static int bad_command()
 {
 #ifndef _WIN32
-
-	(void)printf
-	    ("Usage: ircd %s[-h servername] [-p portnumber] [-x loglevel] [-t] [-H]\n",
 #ifdef CMDLINE_CONFIG
-	    "[-f config] "
+#define CMDLINE_CFG "[-f config]"
 #else
-	    ""
+#define CMDLINE_CFG ""
 #endif
-	    );
+	(void)printf
+	    ("Usage: ircd %s[-h servername] [-p portnumber] [-x loglevel] [-t] [-H]\n",CMDLINE_CFG);
 	(void)printf("Server not started\n\n");
 #else
 	MessageBox(NULL,
@@ -734,7 +740,6 @@ int  InitwIRCD(argc, argv)
 	uid_t uid, euid;
 	TS   delay = 0;
 #endif
-	int i;
 	int  portarg = 0;
 #ifdef  FORCE_CORE
 	struct rlimit corelim;
@@ -806,7 +811,9 @@ int  InitwIRCD(argc, argv)
 				argc -= 1;
 			}
 			else
+			{
 				p = "";
+			}
 
 		switch (flag)
 		{
@@ -1410,11 +1417,11 @@ void SocketLoop(void *dummy)
 		   ** ping times) --msa
 		 */
 #ifdef NO_FDLIST
-		if (now >= nextping)
+		if ((now >= nextping) || loop.do_ban_check)
 #else
-		if (now >= nextping && !lifesux)
+		if ((now >= nextping && !lifesux) || loop.do_ban_check)
 #endif
-			nextping = check_pings(now, 0);
+			nextping = check_pings(now);
 
 		if (dorehash)
 		{

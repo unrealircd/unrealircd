@@ -82,7 +82,10 @@
 
 #define ERR_HOSTILENAME      455
 
-#define ERR_NOHIDING	     459
+#ifdef ENABLE_INVISOPER
+  #define ERR_NOHIDING	     459
+#endif
+
 #define ERR_NOTFORHALFOPS	 460
 #define ERR_NEEDMOREPARAMS   461
 #define ERR_ALREADYREGISTRED 462
@@ -111,7 +114,9 @@
 #define ERR_ATTACKDENY       484
 #define ERR_KILLDENY	     485
 
-#define ERR_HTMDISABLED		 486
+#define ERR_HTMDISABLED	     486
+
+#define ERR_SECUREONLYCHAN   489
 
 #define ERR_NOOPERHOST       491
 #define ERR_NOSERVICEHOST    492
@@ -127,7 +132,7 @@
 #define ERR_ADMONLY			 519
 #define ERR_OPERONLY		 520
 #define ERR_LISTSYNTAX       521
-
+#define ERR_OPERSPVERIFY     524
 /*
  * Numberic replies from server commands.
  * These are currently in the range 200-399.

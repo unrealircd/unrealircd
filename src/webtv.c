@@ -130,18 +130,23 @@ int	webtv_parse(aClient *sptr, char *string)
 int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	static anUser UnknownUser = {
-		NULL,		/* nextu */
-		NULL,		/* channel */
-		NULL,		/* invited */
-		NULL,		/* silence */
-		NULL,		/* away */
-		0,		/* last */
-		0,		/* servicestamp */
-		1,		/* refcount */
-		0,		/* joined */
-		"<Unknown>",	/* username */
-		"<Unknown>",	/* host */
-		"<Unknown>"	/* server */
+                "<Unknown>",    /* host */
+                "<Unknown>",    /* username */
+                NULL,           /* nextu */
+                NULL,           /* channel */
+                NULL,           /* invited */
+                NULL,           /* silence */
+                NULL,           /* away */
+                NULL,           /* virthost */ 
+                NULL,           /* server */
+                NULL,           /* swhois */
+                NULL,           /* serv */
+                NULL,           /* Lopts */
+                NULL,           /* whowas */
+                0,              /* last */
+                0,              /* servicestamp */
+                0,              /* joined */
+                1               /* refcount */
 	};
 	Link *lp;
 	anUser *user;
@@ -299,8 +304,12 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				}
 			}
 
+#ifdef ENABLE_INVISOPER
 			if (buf[0] != '\0' && !IsULine(acptr) && (!IsHiding(acptr) ||
-				IsNetAdmin(sptr) || IsTechAdmin(sptr) || sptr == acptr))
+				IsNetAdmin(sptr) || sptr == acptr))
+#else
+			if (buf[0] != '\0' && !IsULine(acptr))
+#endif
 				sendto_one(sptr, 
 					":IRC PRIVMSG %s :%s is on %s",
 						sptr->name, name, buf);
@@ -321,9 +330,6 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				buf[0] = '\0';
 				if (IsNetAdmin(acptr))
 					strcat(buf, "a Network Administrator");
-				else if (IsTechAdmin(acptr))
-					strcat(buf,
-					    "a Technical Administrator");
 				else if (IsSAdmin(acptr))
 					strcat(buf, "a Services Operator");
 				else if (IsAdmin(acptr) && !IsCoAdmin(acptr))
@@ -350,7 +356,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 			if (acptr->umodes & UMODE_BOT)
 			{
-				sendto_one(sptr, ":IRC PRIVMSG %s :%s is an Bot on %s",
+				sendto_one(sptr, ":IRC PRIVMSG %s :%s is a bot on %s",
 					sptr->name, name, ircnetwork);
 			}
 			if (acptr->umodes & UMODE_SECURE)

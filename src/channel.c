@@ -102,7 +102,7 @@ static char *PartFmt2 = ":%s PART %s :%s";
  * some buffers for rebuilding channel/nick lists with ,'s
  */
 static char nickbuf[BUFSIZE], buf[BUFSIZE];
-static char modebuf[MODEBUFLEN], parabuf[MODEBUFLEN];
+static char modebuf[MAXMODEPARAMS*2+1], parabuf[504];
 #include "sjoin.h"
 
 #ifdef USE_LONGMODE
@@ -141,7 +141,9 @@ aCtab cFlagTab[] = {
 	{MODE_NOKNOCK, 'K', 0, 0},	/* knock knock (no way!) */
 	{MODE_NOINVITE, 'V', 0, 0},	/* no invites */
 	{MODE_FLOODLIMIT, 'f', 0, 1},	/* flood limiter */
+#ifdef ENABLE_INVISOPER
 	{MODE_NOHIDING, 'H', 0, 0},	/* no +I joiners */
+#endif
 #ifdef STRIPBADWORDS
 	{MODE_STRIPBADWORDS, 'G', 0, 0},	/* no badwords */
 #endif
@@ -160,7 +162,7 @@ aCtab cFlagTab[] = {
 #define	BADOP_OVERRIDE	4
 
 /* is some kind of admin */
-#define IsSkoAdmin(sptr) (IsAdmin(sptr) || IsNetAdmin(sptr) || IsTechAdmin(sptr) || IsSAdmin(sptr))
+#define IsSkoAdmin(sptr) (IsAdmin(sptr) || IsNetAdmin(sptr) || IsSAdmin(sptr))
 
 char cmodestring[512];
 
@@ -243,19 +245,33 @@ static aClient *find_chasing(sptr, user, chasing)
 static int add_exbanid(aClient *cptr, aChannel *chptr, char *banid)
 {
         Ban *ban;
-        int  cnt = 0, len = 0;
+        int  cnt = 0;
 
         if (MyClient(cptr))
                 (void)collapse(banid);
-        for (ban = chptr->exlist; ban; ban = ban->next)
+
+        /* I'm not sure wtf MAXBANLENGTH is *supposed* to implement
+         * but I rewrote this section so that it actually seems sane,
+         * at least in my mind. --Luke
+         */
+        if (strlen(banid) > (NICKLEN+USERLEN+HOSTLEN+2))
         {
+                sendto_one(cptr, err_str(ERR_BANLISTFULL),
+                    me.name, cptr->name, chptr->chname, banid);
+                return -1;
+        }
+        
+        for (ban = chptr->banlist; ban; ban = ban->next)
+        {
+                /* wtf is this?
                 len += strlen(ban->banstr);
+                */
                 if (MyClient(cptr))
-                        if ((len > MAXBANLENGTH) || (++cnt >= MAXBANS))
+                        if (++cnt >= MAXBANS)
                         {
-                                sendto_one(cptr, err_str(ERR_BANLISTFULL),
+		       	       sendto_one(cptr, err_str(ERR_BANLISTFULL),
                                     me.name, cptr->name, chptr->chname, banid);
-                                return -1;
+                               return -1;
                         }
                         else
                         {
@@ -319,17 +335,27 @@ static int del_exbanid(chptr, banid)
 static int add_banid(aClient *cptr, aChannel *chptr, char *banid)
 {
         Ban *ban;
-        int  cnt = 0, len = 0;
+        int  cnt = 0;
         
         if (MyClient(cptr))
                 (void)collapse(banid);
-        for (ban = chptr->banlist; ban; ban = ban->next)
+
+	if (strlen(banid) > (NICKLEN+USERLEN+HOSTLEN+2))
+	{
+		sendto_one(cptr, err_str(ERR_BANLISTFULL),
+		    me.name, cptr->name, chptr->chname, banid);
+		return -1;
+	}
+	
+	for (ban = chptr->banlist; ban; ban = ban->next)
         {
+		/* wtf is this?
                 len += strlen(ban->banstr);
+		*/
                 if (MyClient(cptr))
-                        if ((len > MAXBANLENGTH) || (++cnt >= MAXBANS))
+                        if (++cnt >= MAXBANS)
                         {
-                                sendto_one(cptr, err_str(ERR_BANLISTFULL),
+				sendto_one(cptr, err_str(ERR_BANLISTFULL),
                                     me.name, cptr->name, chptr->chname, banid);
                                 return -1;
                         }       
@@ -536,7 +562,9 @@ int  is_chan_op(cptr, chptr)
 /* chanop/halfop ? */
 	if (chptr)
 		if ((lp = find_user_link(chptr->members, cptr)))
-			return ((lp->flags & CHFL_CHANOP));
+			return ((lp->flags & CHFL_CHANOP) ||
+				(lp->flags & CHFL_CHANOWNER) ||
+				(lp->flags & CHFL_CHANPROT));
 
 	return 0;
 }
@@ -610,7 +638,8 @@ int  is_chanprot(cptr, chptr)
 
 	if (chptr)
 		if ((lp = find_user_link(chptr->members, cptr)))
-			return (lp->flags & CHFL_CHANPROT);
+			return (lp->flags & CHFL_CHANPROT ||
+				lp->flags & CHFL_CHANOWNER);
 
 	return 0;
 }
@@ -939,7 +968,9 @@ int  m_samode(cptr, sptr, parc, parv)
 		    me.name, parv[0], "MODE");
 		return 0;
 	}
+	
 	opermode = 0;
+
 	(void)do_mode(chptr, cptr, sptr, parc - 2, parv + 2, 0, 1);
 
 	return 0;
@@ -962,10 +993,8 @@ int  m_mode(cptr, sptr, parc, parv)
 	int  parc;
 	char *parv[];
 {
-	static char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
 	long unsigned sendts = 0;
 	Ban *ban;
-	aClient *user;
 	aChannel *chptr;
 
 
@@ -999,12 +1028,12 @@ int  m_mode(cptr, sptr, parc, parv)
 
 	if (parc < 3)
 	{
-		*mode_buf = *parabuf = '\0';
+		*modebuf = *parabuf = '\0';
 		
-		mode_buf[1] = '\0';
-		channel_modes(sptr, mode_buf, parabuf, chptr);
+		modebuf[1] = '\0';
+		channel_modes(sptr, modebuf, parabuf, chptr);
 		sendto_one(sptr, rpl_str(RPL_CHANNELMODEIS), me.name, parv[0],
-		    chptr->chname, mode_buf, parabuf);
+		    chptr->chname, modebuf, parabuf);
 		sendto_one(sptr, rpl_str(RPL_CREATIONTIME), me.name, parv[0],
 		    chptr->chname, chptr->creationtime);
 		return 0;
@@ -1014,7 +1043,11 @@ int  m_mode(cptr, sptr, parc, parv)
 	    && parv[2][1] == '\0') || (parv[2][1] == 'b' && parv[2][2] == '\0'
 	    && (*parv[2] == '+' || *parv[2] == '-'))))
 	{
-		if (!IsMember(sptr, chptr))
+		if (!IsMember(sptr, chptr)
+#ifndef NO_OPEROVERRIDE
+	     	   && !IsOper(sptr)
+#endif
+		   )
 			return 0;
 		/* send ban list */
 		for (ban = chptr->banlist; ban; ban = ban->next)
@@ -1031,7 +1064,11 @@ int  m_mode(cptr, sptr, parc, parv)
 	    && parv[2][1] == '\0') || (parv[2][1] == 'e' && parv[2][2] == '\0'
 	    && (*parv[2] == '+' || *parv[2] == '-'))))
 	{
-		if (!IsMember(sptr, chptr))
+		if (!IsMember(sptr, chptr)
+#ifndef NO_OPEROVERRIDE
+		    && !IsOper(sptr)
+#endif
+		   )
 			return 0;
 		/* send exban list */
 		for (ban = chptr->exlist; ban; ban = ban->next)
@@ -1048,33 +1085,22 @@ int  m_mode(cptr, sptr, parc, parv)
 	    && parv[2][1] == '\0') || (parv[2][1] == 'q' && parv[2][2] == '\0'
 	    && (*parv[2] == '+' || *parv[2] == '-'))))
 	{
-		if (!IsMember(sptr, chptr))
+		if (!IsMember(sptr, chptr)
+#ifndef NO_OPEROVERRIDE
+		    && !IsOper(sptr)
+#endif
+		   )
 			return 0;
+		else 
 		{
 			struct SLink *member;
 			/* send chanowner list */
-			/* For our future reference i think there is a 
-			   problem doing this the way i am ... i think
-			   the way i commented out would work better as
-			   the members->value.cptr points to a user in
-			   the linked list of users ... however, by doing
-			   it the way i have there is risk of missing ppl
-			   out ... but doing it the other way seems to bugger
-			   it all up ... DrBin */
-			/* BTW: i was right =) */
-
-			/* For prosperity ... keep this line, and give it to any new coders to 
-			   see if they can a) spot whats wrong and[in both cases] b) correct it
-			   *devilish grin* -- DrBin ... after 1 hr of debugging ... realised he
-			   was lookin at the same piece of data... many times */
-			for (member = chptr->members, user = member->value.cptr;
-			    member->next;
-			    member = member->next, user = member->value.cptr)
+			for (member = chptr->members; member; member = member->next)
 			{
-				if (is_chanowner(user, chptr))
+				if (is_chanowner(member->value.cptr, chptr))
 					sendto_one(sptr, rpl_str(RPL_QLIST),
 					    me.name, sptr->name, chptr->chname,
-					    user->name);
+					    member->value.cptr->name);
 			}
 			sendto_one(cptr,
 			    rpl_str(RPL_ENDOFQLIST), me.name, sptr->name,
@@ -1087,33 +1113,22 @@ int  m_mode(cptr, sptr, parc, parv)
 	    && parv[2][1] == '\0') || (parv[2][1] == 'a' && parv[2][2] == '\0'
 	    && (*parv[2] == '+' || *parv[2] == '-'))))
 	{
-		if (!IsMember(sptr, chptr))
+		if (!IsMember(sptr, chptr)
+#ifndef NO_OPEROVERRIDE
+		    && !IsOper(sptr)
+#endif
+		   )
 			return 0;
+		else
 		{
 			struct SLink *member;
-			/* send chanowner list */
-			/* For our future reference i think there is a 
-			   problem doing this the way i am ... i think
-			   the way i commented out would work better as
-			   the members->value.cptr points to a user in
-			   the linked list of users ... however, by doing
-			   it the way i have there is risk of missing ppl
-			   out ... but doing it the other way seems to bugger
-			   it all up ... DrBin */
-			/* BTW: i was right =) */
-
-			/* For prosperity ... keep this line, and give it to any new coders to 
-			   see if they can a) spot whats wrong and[in both cases] b) correct it
-			   *devilish grin* -- DrBin ... after 1 hr of debugging ... realised he
-			   was lookin at the same piece of data... many times */
-			for (member = chptr->members, user = member->value.cptr;
-			    member->next;
-			    member = member->next, user = member->value.cptr)
+			/* send chanprotect list */
+			for (member = chptr->members; member; member = member->next)
 			{
-				if (is_chanprot(user, chptr))
+				if (is_chanprot(member->value.cptr, chptr))
 					sendto_one(sptr, rpl_str(RPL_ALIST),
 					    me.name, sptr->name, chptr->chname,
-					    user->name);
+					    member->value.cptr->name);
 			}
 			sendto_one(cptr,
 			    rpl_str(RPL_ENDOFALIST), me.name, sptr->name,
@@ -1127,31 +1142,38 @@ int  m_mode(cptr, sptr, parc, parv)
 	    && parv[2][1] == '\0') || (parv[2][1] == 'I' && parv[2][2] == '\0'
 	    && (*parv[2] == '+' || *parv[2] == '-'))))
 	{
-		if (!IsMember(sptr, chptr))
+		if (!IsMember(sptr, chptr)
+#ifndef NO_OPEROVERRIDE
+		    && !IsOper(sptr)
+#endif
+		   )
 			return 0;
-		sendto_one(sptr, rpl_str(RPL_ENDOFINVITELIST), me.name,
-		    sptr->name, chptr->chname);
-		return 0;
+		else
+		{
+			sendto_one(sptr, rpl_str(RPL_ENDOFINVITELIST), me.name,
+			    sptr->name, chptr->chname);
+			return 0;
+		}
 	}
 	opermode = 0;
-	/* opermode stuff --sts */
+	
 #ifndef NO_OPEROVERRIDE
-	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr))
-		if (IsOper(sptr))
-		{
-			sendts = 0;
-			opermode = 1;
-			goto aftercheck;
-		}
-#endif
-/*-------*/
+	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
+	    && !is_half_op(sptr, chptr) && IsOper(sptr))
+	{
+		sendts = 0;
+		opermode = 1;
+		goto aftercheck;
+	}
 
-
-	if (is_half_op(sptr, chptr))
+	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
+	    && is_half_op(sptr, chptr) && IsOper(sptr))
 	{
 		opermode = 2;
 		goto aftercheck;
 	}
+#endif
+
 	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
 	    && !is_half_op(sptr, chptr)
 	    && (cptr == sptr || !IsSAdmin(sptr) || !IsOper(sptr)))
@@ -1191,15 +1213,6 @@ int  m_mode(cptr, sptr, parc, parv)
 		parc--;		/* server supplied a time stamp, remove it now */
 
       aftercheck:
-/*	if (IsPerson(sptr) && IsOper(sptr)) {
-		if (!is_chan_op(sptr, chptr)) {
-			if (MyClient(sptr) && !IsULine(cptr) && mode_buf[1])
-				sendto_umode(UMODE_EYES, "*** OperMode [IRCop: %s] - [Channel: %s] - [Mode: %s %s]",
-        	 		   sptr->name, chptr->chname, mode_buf, parabuf);
-			sendts = 0;
-		}
-	}	
-*/
 	/* Filter out the unprivileged FIRST. *
 	 * Now, we can actually do the mode.  */
 
@@ -1223,19 +1236,18 @@ void bounce_mode(chptr, cptr, parc, parv)
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
 	int  pcount;
 	long oldm, oldl;
-	char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
 
 	oldm = chptr->mode.mode;
 	oldl = chptr->mode.limit;
 	set_mode(chptr, cptr, parc, parv, &pcount, pvar, 1);
-	make_mode_str(chptr, oldm, oldl, pcount, pvar, mode_buf, parabuf, 1);
+	/* make_mode_str(chptr, oldm, oldl, pcount, pvar, modebuf, parabuf, 1); */
 
 	if (chptr->creationtime)
 		sendto_one(cptr, ":%s MODE %s &%s %s %lu", me.name,
-		    chptr->chname, mode_buf, parabuf, chptr->creationtime);
+		    chptr->chname, modebuf, parabuf, chptr->creationtime);
 	else
 		sendto_one(cptr, ":%s MODE %s &%s %s", me.name, chptr->chname,
-		    mode_buf, parabuf);
+		    modebuf, parabuf);
 
 	/* the '&' denotes a bounce so servers won't bounce a bounce */
 }
@@ -1254,7 +1266,6 @@ void do_mode(chptr, cptr, sptr, parc, parv, sendts, samode)
 	int  pcount;
 	long oldm, oldl;
 	char tschange = 0, isbounce = 0;	/* fwd'ing bounce */
-	char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
 
 	if (**parv == '&')
 		isbounce = 1;
@@ -1262,7 +1273,7 @@ void do_mode(chptr, cptr, sptr, parc, parv, sendts, samode)
 	oldl = chptr->mode.limit;
 
 	set_mode(chptr, sptr, parc, parv, &pcount, pvar, 0);
-	make_mode_str(chptr, oldm, oldl, pcount, pvar, mode_buf, parabuf, 0);
+	/* make_mode_str(chptr, oldm, oldl, pcount, pvar, modebuf, parabuf, 0); */
 
 	if (IsServer(sptr))
 	{
@@ -1272,11 +1283,6 @@ void do_mode(chptr, cptr, sptr, parc, parv, sendts, samode)
 			    || sendts < chptr->creationtime)
 			{
 				tschange = 1;
-/*
-				if (chptr->creationtime != 0)
-					sendto_umode(UMODE_EYES, "*** TS fix for %s - %lu(ours) %lu(theirs)",
-					chptr->chname, chptr->creationtime, sendts);			
-					*/
 				chptr->creationtime = sendts;
 				/* new chan or our timestamp is wrong */
 				/* now works for double-bounce prevention */
@@ -1293,8 +1299,8 @@ void do_mode(chptr, cptr, sptr, parc, parv, sendts, samode)
 		if (sendts == -1 && chptr->creationtime)
 			sendts = chptr->creationtime;
 	}
-	if (*mode_buf == '\0' || (*(mode_buf + 1) == '\0' && (*mode_buf == '+'
-	    || *mode_buf == '-')))
+	if (*modebuf == '\0' || (*(modebuf + 1) == '\0' && (*modebuf == '+'
+	    || *modebuf == '-')))
 	{
 		if (tschange || isbounce) {	/* relay bounce time changes */
 			if (chptr->creationtime)
@@ -1309,14 +1315,16 @@ void do_mode(chptr, cptr, sptr, parc, parv, sendts, samode)
 		return;		/* nothing to send */
 		}
 	}
+
 	/* opermode for twimodesystem --sts */
 #ifndef NO_OPEROVERRIDE
 	if (opermode == 1)
 	{
-		if (MyClient(sptr) && mode_buf[1])
+		if (modebuf[1])
 			sendto_umode(UMODE_EYES,
-			    "*** OperMode [IRCop: %s] - [Channel: %s] - [Mode: %s %s]",
-			    sptr->name, chptr->chname, mode_buf, parabuf);
+			    "*** OperOverride -- %s (%s@%s) MODE %s %s %s",
+			    sptr->name, sptr->user->username, sptr->user->realhost,
+			    chptr->chname, modebuf, parabuf);
 		sendts = 0;
 	}
 #endif
@@ -1324,53 +1332,55 @@ void do_mode(chptr, cptr, sptr, parc, parv, sendts, samode)
 	if (IsPerson(sptr) && samode && MyClient(sptr))
 	{
 		sendto_serv_butone_token(NULL, me.name, MSG_GLOBOPS,
-		    TOK_GLOBOPS, ":%s used SAMODE %s (%s %s)", sptr->name,
-		    chptr->chname, mode_buf, parabuf);
+		    TOK_GLOBOPS, ":%s (%s@%s) used SAMODE %s %s %s", sptr->name,
+		    sptr->user->username, sptr->user->realhost, chptr->chname,
+		    modebuf, parabuf);
 		sendto_failops_whoare_opers
-		    ("from %s: %s used SAMODE %s (%s %s)", me.name, sptr->name,
-		    chptr->chname, mode_buf, parabuf);
+		    ("from %s: %s (%s@%s) used SAMODE %s %s %s", me.name, sptr->name,
+		    sptr->user->username, sptr->user->realhost, chptr->chname,
+		    modebuf, parabuf);
 		sptr = &me;
 		sendts = 0;
 	}
 	/* Should stop null modes */
-	if (*(mode_buf + 1) == '\0')
+	if (*(modebuf + 1) == '\0')
 		return;
 	
 	sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
-	    sptr->name, chptr->chname, mode_buf, parabuf);
+	    sptr->name, chptr->chname, modebuf, parabuf);
 	if (IsServer(sptr) && sendts != -1)
 		sendto_serv_butone_token(cptr, sptr->name, MSG_MODE, TOK_MODE,
 		    "%s %s%s %s %lu", chptr->chname, isbounce ? "&" : "",
-		    mode_buf, parabuf, sendts);
+		    modebuf, parabuf, sendts);
 	else
 		sendto_serv_butone_token(cptr, sptr->name, MSG_MODE, TOK_MODE,
 		    "%s %s%s %s", chptr->chname, isbounce ? "&" : "",
-		    mode_buf, parabuf);
+		    modebuf, parabuf);
 	/* tell them it's not a timestamp, in case the last param
 	   ** is a number. */
 }
 /* make_mode_str -- written by binary
- *	Reconstructs the mode string, to make it look clean.  mode_buf will
+ *	Reconstructs the mode string, to make it look clean.  modebuf will
  *  contain the +x-y stuff, and the parabuf will contain the parameters.
  *  If bounce is set to 1, it will make the string it needs for a bounce.
  */
-void make_mode_str(chptr, oldm, oldl, pcount, pvar, mode_buf, parabuf, bounce)
+void make_mode_str(chptr, oldm, oldl, pcount, pvar, mode_buf, para_buf, bounce)
 	aChannel *chptr;
 	int  pcount;
 	long oldm, oldl;
-	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], *mode_buf, *parabuf, bounce;
+	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], *mode_buf, *para_buf, bounce;
 {
 
-	char tmpbuf[MODEBUFLEN], *tmpstr;
+	char tmpbuf[MODEBUFLEN+3], *tmpstr;
 	aCtab *tab = &cFlagTab[0];
 	char *x = mode_buf;
 	int  what, cnt, z;
-
+	char *m;
 	what = 0;
 
 	*tmpbuf = '\0';
 	*mode_buf = '\0';
-	*parabuf = '\0';
+	*para_buf = '\0';
 	what = 0;
 	/* + param-less modes */
 	tab = &cFlagTab[0];
@@ -1392,7 +1402,7 @@ void make_mode_str(chptr, oldm, oldl, pcount, pvar, mode_buf, parabuf, bounce)
 	}
 
 	*x = '\0';
-/* + param-less modes */
+	/* - param-less modes */
 	tab = &cFlagTab[0];
 	while (tab->mode != 0x0)
 	{
@@ -1437,7 +1447,7 @@ void make_mode_str(chptr, oldm, oldl, pcount, pvar, mode_buf, parabuf, bounce)
 			*x++ = 'l';
 			if (bounce)
 				chptr->mode.limit = oldl;	/* set it back */
-			ircsprintf(parabuf, "%s%d ", parabuf, chptr->mode.limit);
+			ircsprintf(para_buf, "%s%d ", para_buf, chptr->mode.limit);
 		}
 	}
 	/* reconstruct bkov chain */
@@ -1455,17 +1465,23 @@ void make_mode_str(chptr, oldm, oldl, pcount, pvar, mode_buf, parabuf, bounce)
 		}
 		*x++ = *(pvar[cnt] + 1);
 		tmpstr = &pvar[cnt][2];
-		strncat(parabuf, tmpstr, MODEBUFLEN - 1);
-		parabuf[MODEBUFLEN - 1] = '\0';
-		z = strlen(parabuf);
-		parabuf[z] = ' ';	/* add a space */
-		parabuf[z + 1] = '\0';
+		z = (MODEBUFLEN * MAXMODEPARAMS);
+		m = para_buf;
+		while ((*m)) { m++; }
+		while ((*tmpstr) && ((m-para_buf) < z))
+		{
+			*m = *tmpstr;
+			m++;
+			tmpstr++;
+		}
+		*m++ = ' ';
+		*m = '\0';
 	}
 	if (bounce)
 		chptr->mode.mode = oldm;
-	z = strlen(parabuf);
-	if (parabuf[z - 1] == ' ')
-		parabuf[z - 1] = '\0';
+	z = strlen(para_buf);
+	if (para_buf[z - 1] == ' ')
+		para_buf[z - 1] = '\0';
 	*x = '\0';
 	if (*mode_buf == '\0')
 	{
@@ -1502,6 +1518,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 	Link *member;
 	aClient *who;
 	unsigned int tmp = 0;
+	unsigned int notsecure = 0;
 	char tmpbuf[512], *tmpstr;
 	char tc = ' ';		/* */
 	int  chasing, x;
@@ -1510,7 +1527,8 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 	char *xp;
 
 	chasing = 0;
-	if (opermode == 2 && !is_chan_op(cptr, chptr) && !IsULine(cptr))
+	if (is_half_op(cptr, chptr) && !is_chan_op(cptr, chptr) && !IsULine(cptr)
+	    && !IsOper(cptr))
 	{
 		/* Ugly halfop hack --sts 
 		   - this allows halfops to do +b +e +v and so on */
@@ -1529,104 +1547,133 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 			return (0);
 		}
 	}
+
 	switch (modetype)
 	{
 	  case MODE_AUDITORIUM:
-		  if (IsULine(cptr) || IsServer(cptr))
-			  goto auditorium_ok;
-		  if (!IsNetAdmin(cptr) && !IsTechAdmin(cptr)
-		      && !is_chanowner(cptr, chptr))
+		  if (!IsULine(cptr) && !IsServer(cptr) && !IsNetAdmin(cptr) && !is_chanowner(cptr,chptr))
 		  {
 			  sendto_one(cptr,
-			      ":%s NOTICE %s :*** Channel mode +u can only be set by the channel owner",
+			      ":%s NOTICE %s :*** Auditorium mode (+u) can only be set by the channel owner.",
 			      me.name, cptr->name);
 			  break;
 		  }
-
-		auditorium_ok:
 		  goto setthephuckingmode;
 	  case MODE_OPERONLY:
-		  if (!IsAnOper(cptr) && !IsServer(cptr)
-		      && !IsULine(cptr))
+		  if (!IsOper(cptr) && !IsServer(cptr) && !IsULine(cptr))
 		  {
 			  sendto_one(cptr,
-			      ":%s NOTICE %s :*** Only IRCops can set that mode",
+			      ":%s NOTICE %s :*** Opers Only mode (+O) can only be set by IRC Operators.",
 			      me.name, cptr->name);
 			  break;
 		  }
 		  goto setthephuckingmode;
 	  case MODE_ADMONLY:
-		  if (!IsSkoAdmin(cptr) && !IsServer(cptr)
-		      && !IsULine(cptr))
+		  if (!IsSkoAdmin(cptr) && !IsServer(cptr) && !IsULine(cptr))
 		  {
 			  sendto_one(cptr,
-			      ":%s NOTICE %s :*** Only admins can set that mode",
+			      ":%s NOTICE %s :*** Admins Only mode (+A) can only be set by Administrators.",
 			      me.name, cptr->name);
 			  break;
 		  }
 		  goto setthephuckingmode;
 	  case MODE_RGSTR:
 		  if (!IsServer(cptr) && !IsULine(cptr))
-			  break;
-		  goto setthephuckingmode;
-	  case MODE_NOHIDING:
-		  if (!IsSkoAdmin(cptr) && !IsServer(cptr)
-		      && !IsULine(cptr))
 		  {
 			  sendto_one(cptr,
-			      ":%s NOTICE %s :*** Only admins can set that mode",
+			      ":%s NOTICE %s :*** Registered mode (+r) can only be set by Services.",
 			      me.name, cptr->name);
 			  break;
 		  }
 		  goto setthephuckingmode;
+#ifdef ENABLE_INVISOPER
+	  case MODE_NOHIDING:
+		  if (!IsSkoAdmin(cptr) && !IsServer(cptr) && !IsULine(cptr))
+		  {
+			  sendto_one(cptr,
+			      ":%s NOTICE %s :*** No Hiding mode (+H) can only be set by Administrators.",
+			      me.name, cptr->name);
+			  break;
+		  }
+		  goto setthephuckingmode;
+#endif
 	  case MODE_SECRET:
 	  case MODE_PRIVATE:
 	  case MODE_MODERATED:
 	  case MODE_TOPICLIMIT:
 	  case MODE_NOPRIVMSGS:
-	  case MODE_INVITEONLY:
-		if (what == MODE_DEL && modetype == MODE_INVITEONLY && (chptr->mode.mode & MODE_NOKNOCK))
-			chptr->mode.mode &= ~MODE_NOKNOCK;
 	  case MODE_RGSTRONLY:
 	  case MODE_NOCOLOR:
 	  case MODE_NOKICKS:
 	  case MODE_STRIP:
+		goto setthephuckingmode;
+	  case MODE_INVITEONLY:
+		if (what == MODE_DEL && modetype == MODE_INVITEONLY && (chptr->mode.mode & MODE_NOKNOCK))
+			chptr->mode.mode &= ~MODE_NOKNOCK;
+		goto setthephuckingmode;
 	  case MODE_NOKNOCK:
 		if (what == MODE_ADD && modetype == MODE_NOKNOCK && !(chptr->mode.mode & MODE_INVITEONLY))
+		{
+			sendto_one(cptr,
+			    ":%s NOTICE %s :*** No Knocks mode (+K) can only be set when channel is invite only (+i)",
+			    me.name, cptr->name);
 			break;
+		}
+		goto setthephuckingmode;
+	  case MODE_ONLYSECURE:
+		if (what == MODE_ADD && modetype == MODE_ONLYSECURE && !(IsServer(cptr) || IsULine(cptr)))
+		{
+	  	  for (member = chptr->members; member; member = member->next)
+		  {
+		    if (!IsSecureConnect(member->value.cptr) && !IsULine(member->value.cptr))
+		    {
+		      sendto_one(cptr,
+		      ":%s NOTICE %s :*** Secure Mode (+z) can only be set when all members of the channel are connected via SSL.",
+		      me.name, cptr->name);
+		      notsecure = 1;
+		      break;
+		    }
+		  }
+		  member = NULL;
+		  /* first break nailed the for loop, this one nails switch() */
+		  if (notsecure == 1) break;
+		}
+		goto setthephuckingmode;
 #ifdef STRIPBADWORDS
 	  case MODE_STRIPBADWORDS:
 #endif
 	  case MODE_NOCTCP:
-	  case MODE_ONLYSECURE:
 	  case MODE_NONICKCHANGE:
 	  case MODE_NOINVITE:
 		setthephuckingmode:
-		  /* +sp bugfix.. */
-		  if (modetype == MODE_SECRET
-		      && (chptr->mode.mode & MODE_PRIVATE))
-			  chptr->mode.mode &= ~MODE_PRIVATE;
-		  if (modetype == MODE_PRIVATE
-		      && (chptr->mode.mode & MODE_SECRET))
-			  chptr->mode.mode &= ~MODE_SECRET;
-		  if (modetype == MODE_NOCOLOR
-		      && (chptr->mode.mode & MODE_STRIP))
-			  chptr->mode.mode &= ~MODE_STRIP;
-		  if (modetype == MODE_STRIP
-		      && (chptr->mode.mode & MODE_NOCOLOR))
-			  chptr->mode.mode &= ~MODE_NOCOLOR;
 		  retval = 0;
 		  if (what == MODE_ADD)
+		  {
+			/* real +sp bufix :P --JK/Luke */
+			  if (modetype == MODE_SECRET
+			      && (chptr->mode.mode & MODE_PRIVATE))
+				  chptr->mode.mode &= ~MODE_PRIVATE;
+		 	  if (modetype == MODE_PRIVATE
+			      && (chptr->mode.mode & MODE_SECRET))
+				  chptr->mode.mode &= ~MODE_SECRET;
+			  if (modetype == MODE_NOCOLOR
+			      && (chptr->mode.mode & MODE_STRIP))
+				  chptr->mode.mode &= ~MODE_STRIP;
+			  if (modetype == MODE_STRIP
+			      && (chptr->mode.mode & MODE_NOCOLOR))
+				  chptr->mode.mode &= ~MODE_NOCOLOR; 
 			  chptr->mode.mode |= modetype;
+		  }
 		  else
 			  chptr->mode.mode &= ~modetype;
 		  break;
 
 /* do pro-opping here (popping) */
 	  case MODE_CHANOWNER:
+		  /* Channel owners can dechanown themselves */
 		  if (!IsULine(cptr) && !IsServer(cptr)
-		      && !IsNetAdmin(cptr) && !IsTechAdmin(cptr)
-		      && !is_chanowner(cptr, chptr))
+		      && !IsNetAdmin(cptr)
+		      && !(is_chanowner(cptr, chptr) && what == MODE_DEL))
 		  {
 			  sendto_one(cptr, err_str(ERR_ONLYSERVERSCANCHANGE),
 			      me.name, cptr->name, chptr->chname);
@@ -1634,11 +1681,11 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		  }
 	  case MODE_CHANPROT:
 		  if (!IsULine(cptr) && !IsServer(cptr)
-		      && !IsNetAdmin(cptr) && !IsTechAdmin(cptr)
+		      && !IsNetAdmin(cptr)
 		      && !is_chanowner(cptr, chptr))
 		  {
 			  sendto_one(cptr,
-			      ":%s NOTICE %s :*** Protected users can only be set by the channel owner.",
+			      ":%s NOTICE %s :*** Protected User mode (+a) can only be set by the channel owner.",
 			      me.name, cptr->name);
 			  break;
 		  }
@@ -1649,10 +1696,10 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		  switch (modetype)
 		  {
 		    case MODE_CHANOWNER:
-			    xxx = "deown";
+			    xxx = "dechannelown";
 			    break;
 		    case MODE_CHANPROT:
-			    xxx = "deprot";
+			    xxx = "deprotect";
 			    break;
 		    case MODE_HALFOP:
 			    xxx = "dehalfop";
@@ -1686,13 +1733,13 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 
 		  if (is_chanowner(member->value.cptr, chptr)
 		      && member->value.cptr != cptr
-		      && !is_chanowner(cptr, chptr) && !IsServer(cptr)
-		      && !IsULine(cptr) && (what == MODE_DEL))
+		      && !is_chanowner(cptr, chptr)
+		      && !IsNetAdmin(cptr) && (what == MODE_DEL))
 		  {
 			  if (MyClient(cptr))
 			  {
 				  sendto_one(cptr,
-				      ":%s NOTICE %s :*** You cannot %s because %s is %s channel owner (+q)",
+				      ":%s NOTICE %s :*** You cannot %s %s in %s, they are the channel owner (+q).",
 				      me.name, cptr->name, xxx,
 				      member->value.cptr->name, chptr->chname);
 			  }
@@ -1700,13 +1747,14 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		  }
 		  if (is_chanprot(member->value.cptr, chptr)
 		      && member->value.cptr != cptr
-		      && !is_chanowner(cptr, chptr) && !IsServer(cptr)
-		      && modetype != MODE_CHANOWNER && (what == MODE_DEL))
+		      && !is_chanowner(cptr, chptr)
+		      && modetype != MODE_CHANOWNER && (what == MODE_DEL)
+		      && !IsOper(cptr))
 		  {
 			  if (MyClient(cptr))
 			  {
 				  sendto_one(cptr,
-				      ":%s NOTICE %s :*** You cannot %s because %s is %s protected user (+a)",
+				      ":%s NOTICE %s :*** You cannot %s %s in %s, they are a protected user (+a).",
 				      me.name, cptr->name, xxx,
 				      member->value.cptr->name, chptr->chname);
 			  }
@@ -1849,11 +1897,11 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 			  goto linkok;
 		  }
 
-		  if (!IsNetAdmin(cptr) && !IsTechAdmin(cptr)
+		  if (!IsNetAdmin(cptr)
 		      && !is_chanowner(cptr, chptr))
 		  {
 			  sendto_one(cptr,
-			      ":%s NOTICE %s :*** Channel mode +L can only be set by the channel owner",
+			      ":%s NOTICE %s :*** Channel Linking (+L) can only be set by the channel owner.",
 			      me.name, cptr->name);
 			  break;
 		  }
@@ -1862,7 +1910,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		  if (!chptr->mode.limit && what == MODE_ADD)
 		  {
 			  sendto_one(cptr,
-			      ":%s NOTICE %s :*** Channel mode +l <max> is requried for +L to be set",
+			      ":%s NOTICE %s :*** A Channel Limit (+l <max>) is required for +L to be set.",
 			      me.name, cptr->name);
 			  break;
 		  }
@@ -1890,7 +1938,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 			  {
 				  if (MyClient(cptr))
 					  sendto_one(cptr,
-					      ":%s NOTICE %s :*** You can't link %s to itself",
+					      ":%s NOTICE %s :*** %s cannot be linked to itself.",
 					      me.name, cptr->name,
 					      chptr->chname);
 				  break;
@@ -1899,7 +1947,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 			  {
 				  if (MyClient(cptr))
 					  sendto_one(cptr,
-					      ":%s NOTICE %s :*** You may only specify 1 channel to link to",
+					      ":%s NOTICE %s :*** Only one channel may be specified for linking.",
 					      me.name, cptr->name);
 				  break;
 			  }
@@ -2079,16 +2127,23 @@ void set_mode(chptr, cptr, parc, parv, pcount, pvar, bounce)
 {
 	char *curchr;
 	u_int what = MODE_ADD;
-	long modetype;
-	int  paracount;
+	long modetype = 0;
+	int  paracount = 1;
 #ifdef DEVELOP
 	char *tmpo = NULL;
 #endif
 	aCtab *tab = &cFlagTab[0];
 	aCtab foundat;
 	int  found = 0;
+	unsigned int htrig = 0;
+	long oldm, oldl;
+	
 	paracount = 1;
 	*pcount = 0;
+
+	oldm = chptr->mode.mode;
+	oldl = chptr->mode.limit;
+
 	for (curchr = parv[0]; *curchr; curchr++)
 	{
 		switch (*curchr)
@@ -2109,31 +2164,6 @@ void set_mode(chptr, cptr, parc, parv, pcount, pvar, bounce)
 			  MyFree(tmpo);
 			  break;
 #endif
-		  case 'x':
-			  if (MyClient(cptr))
-			  {
-				  sendto_one(cptr,
-				      ":%s NOTICE %s :*** Mode not set - Please do not use mode +x as this is now named +c instead (Colorblock)",
-				      me.name, cptr->name);
-				  break;
-			  }
-			  else
-			  {
-				  /* compatiblity */
-				  *curchr = 'c';
-			  }
-			  goto jumpdammit;
-		  case 'I':
-			  if (MyClient(cptr))
-			  {
-				  break;
-			  }
-			  else
-			  {
-				  /* compatiblity */
-				  *curchr = 'V';
-			  }
-			jumpdammit:
 		  default:
 			  found = 0;
 			  tab = &cFlagTab[0];
@@ -2161,11 +2191,21 @@ void set_mode(chptr, cptr, parc, parv, pcount, pvar, bounce)
 				      me.name, cptr->name, *curchr);
 				  break;
 			  }
-                          if (parc - paracount < 1)
-				  parv[paracount] = NULL;
+
+#ifndef NO_OPEROVERRIDE			  
+			  if ((Halfop_mode(modetype) == FALSE) && opermode == 2 && htrig != 1)
+			  {
+				opermode = 0;
+				htrig = 1;
+			  }
+#endif					  
+				  
+			  /* We can afford to send off a param */
+                          if (parc <= paracount)
+			  	parv[paracount] = NULL;
 			  if (parv[paracount] &&
 			      strlen(parv[paracount]) >= MODEBUFLEN)
-				  parv[paracount][MODEBUFLEN - 1] = '\0';
+				parv[paracount][MODEBUFLEN-1] = '\0';
 			  paracount +=
 			      do_mode_char(chptr, modetype, *curchr,
 			      parv[paracount], what, cptr, pcount, pvar,
@@ -2173,6 +2213,21 @@ void set_mode(chptr, cptr, parc, parv, pcount, pvar, bounce)
 			  break;
 		}
 	}
+
+	make_mode_str(chptr, oldm, oldl, *pcount, pvar, modebuf, parabuf, bounce);
+
+#ifndef NO_OPEROVERRIDE
+	if (htrig == 1)
+	{
+		/* This is horrible. Just horrible. */
+		if (!((modebuf[0] == '+' || modebuf[0] == '-') && modebuf[1] == '\0'))
+		sendto_umode(UMODE_EYES, "*** OperOverride -- %s (%s@%s) MODE %s %s %s",
+                      cptr->name, cptr->user->username, cptr->user->realhost,
+                      chptr->chname, modebuf, parabuf);
+		htrig = 0;
+	}
+#endif
+
 }
 
 int  DoesOp(modebuf)
@@ -2199,6 +2254,8 @@ int  sendmodeto_one(cptr, from, name, mode, param, creationtime)
 	else
 		sendto_one(cptr, ":%s %s %s %s %s", from,
 		    (IsToken(cptr) ? TOK_MODE : MSG_MODE), name, mode, param);
+	
+	return 0;
 }
 
 char *pretty_mask(mask)
@@ -2234,14 +2291,31 @@ static int can_join(cptr, sptr, chptr, key, link, parv)
 	char *parv[];
 {
 	Link *lp;
-#ifndef NO_OPEROVERRIDE
-	int  ib = 1;
-#else
-	int  ib = 0;
+
+	if ((chptr->mode.mode & MODE_ONLYSECURE) &&
+		!(sptr->umodes & UMODE_SECURE))
+	{
+		return (ERR_SECUREONLYCHAN);
+	}
+
+	if ((chptr->mode.mode & MODE_OPERONLY) && !IsOper(sptr))
+		return (ERR_OPERONLY);
+
+	if ((chptr->mode.mode & MODE_ADMONLY) && !IsSkoAdmin(sptr))
+		return (ERR_ADMONLY);
+
+#ifdef ENABLE_INVISOPER
+	if ((chptr->mode.mode & MODE_NOHIDING) && IsHiding(sptr))
+		return (ERR_NOHIDING);
 #endif
 
-
-	/* 0 = noone 1 = IRCops 2 = Net Admins 3 =Net/Tech admins  (override) */
+	if ((IsOper(sptr) && is_banned(cptr, sptr, chptr)
+	    && (chptr->mode.mode & MODE_OPERONLY)))
+		return (ERR_BANNEDFROMCHAN);    /* banned as an ircop at a +O cannot join */
+		
+	for (lp = sptr->user->invited; lp; lp = lp->next)
+		if (lp->value.chptr == chptr)
+			return 0;
 
 	if ((chptr->mode.limit && chptr->users >= chptr->mode.limit))
 	{
@@ -2263,90 +2337,31 @@ static int can_join(cptr, sptr, chptr, key, link, parv)
 		/* We check this later return (ERR_CHANNELISFULL); */
 	}
 
-/*    if ((chptr->mode.mode & MODE_OPERONLY) && IsOper(sptr)) {
-    	goto admok;
-    } */
-	if ((chptr->mode.mode & MODE_ONLYSECURE) &&
-		!(sptr->umodes & UMODE_SECURE))
-	{
-		sendto_one(sptr, ":%s NOTICE %s :*** Cannot join: %s is a Secure-only channel (+z)",
-				me.name, sptr->name, chptr->chname); 
-		return (ERR_BANNEDFROMCHAN);	
-	}
-	if ((chptr->mode.mode & MODE_OPERONLY) && !IsOper(sptr))
-	{
-		return (ERR_OPERONLY);
-	}
-	if ((chptr->mode.mode & MODE_ADMONLY))
-	{
-		if (!IsSkoAdmin(sptr))
-			return (ERR_ADMONLY);
-	}
-
-	if ((chptr->mode.mode & MODE_NOHIDING) && IsHiding(sptr))
-		return (ERR_NOHIDING);
-
-	if ((IsOper(sptr) && !((chptr->mode.mode & MODE_ADMONLY))) && !(ib==0))
-	{
-		return 0;	/* may override */
-	}
-	if ((IsOper(sptr) && is_banned(cptr, sptr, chptr)
-	    && (chptr->mode.mode & MODE_OPERONLY)))
-		return (ERR_BANNEDFROMCHAN);	/* banned as an ircop at a +O cannot join */
-
-/*	if (ib == 1)
-		if (IsOper(sptr))
-			return 0;
-	else
-		if (ib == 2)
-			if (IsNetAdmin(sptr))
-				return 0;
-*/
-	switch (ib)
-	{
-	  case 1:
-		  if (IsOper(sptr))
-		  {
-			  return 0;
-		  }
-		  break;
-	  case 2:
-		  if (IsNetAdmin(sptr))
-		  {
-			  return 0;
-		  }
-		  break;
-	  case 3:
-		  if (IsNetAdmin(sptr) || IsTechAdmin(sptr))
-			  return 0;
-		  break;
-	  default:
-		  break;
-	}
 	if ((chptr->mode.mode & MODE_RGSTRONLY) && !IsARegNick(sptr))
 		return (ERR_NEEDREGGEDNICK);
 
 	if (*chptr->mode.key && (BadPtr(key) || mycmp(chptr->mode.key, key)))
 		return (ERR_BADCHANNELKEY);
 
-	for (lp = sptr->user->invited; lp; lp = lp->next)
-		if (lp->value.chptr == chptr)
-			break;
-
-	if ((chptr->mode.mode & MODE_INVITEONLY) && !lp)
+	if ((chptr->mode.mode & MODE_INVITEONLY))
 		return (ERR_INVITEONLYCHAN);
 
 	if ((chptr->mode.limit && chptr->users >= chptr->mode.limit))
 		return (ERR_CHANNELISFULL);
 
-	if (is_banned(sptr, sptr, chptr) && !lp)
+	if (is_banned(sptr, sptr, chptr))
 		return (ERR_BANNEDFROMCHAN);
 
-
+#ifndef NO_OPEROVERRIDE
+#ifdef OPEROVERRIDE_VERIFY
+        if (IsOper(sptr) && (chptr->mode.mode & MODE_SECRET ||
+            chptr->mode.mode & MODE_PRIVATE))
+                return (ERR_OPERSPVERIFY);
+#endif
+#endif
 
 	return 0;
 }
-
 
 /*
 ** Remove bells and commas from channel name
@@ -2604,9 +2619,9 @@ int  channel_link(cptr, sptr, parc, parv)
 	{
 		/* bounced too many times */
 		sendto_one(sptr,
-		    ":%s NOTICE %s :*** Couldn't join %s ! - Link setting was too bouncy",
+		    ":%s NOTICE %s :*** Cannot join %s: bounced through too many links.",
 		    me.name, sptr->name, parv[1]);
-		return;
+		return 0;
 	}
 	for (i = 0, name = strtoken(&p, parv[1], ","); name;
 	    name = strtoken(&p, NULL, ","))
@@ -2706,7 +2721,7 @@ int  channel_link(cptr, sptr, parc, parv)
 
 		i1 = 0;
 		if (chptr == NULL)
-			return;
+			return 0;
 
 		if (!chptr ||
 		    (MyConnect(sptr)
@@ -2727,9 +2742,12 @@ int  channel_link(cptr, sptr, parc, parv)
 		/*
 		   ** notify all other users on the new channel
 		 */
+#ifdef ENABLE_INVISOPER
 		if (!IsHiding(sptr))
+#endif
 			sendto_channel_butserv(chptr, sptr,
 			    ":%s JOIN :%s", parv[0], name);
+#ifdef ENABLE_INVISOPER
 		else
 		{
 			if (MyClient(sptr))
@@ -2738,10 +2756,11 @@ int  channel_link(cptr, sptr, parc, parv)
 				    (IsHidden(sptr) ? sptr->
 				    user->virthost : sptr->user->realhost),
 				    name);
-			sendto_umode(UMODE_NETADMIN | UMODE_TECHADMIN,
-			    "*** Invisible(+I) user %s joined %s", sptr->name,
-			    chptr->chname);
+			sendto_umode(UMODE_ADMIN,
+			    "*** Invisibility -- %s (%s@%s) JOIN %s", sptr->name,
+			    sptr->user->username, sptr->user->realhost, chptr->chname);
 		}
+#endif
 		sendto_serv_butone_token(cptr, parv[0], MSG_JOIN,
 		    TOK_JOIN, name);
 
@@ -2942,12 +2961,6 @@ int  m_join(cptr, sptr, parc, parv)
 			continue;
 
 		}
-		if (is_banned(cptr, sptr, chptr) && IsOper(sptr))
-		{
-			sendto_umode(UMODE_EYES,
-			    "*** Banwalk [IRCop: %s] [Channel: %s]",
-			    sptr->name, chptr->chname);
-		}
 		/*
 		   **  Complete user entry to the new channel (if any)
 		 */
@@ -2955,6 +2968,7 @@ int  m_join(cptr, sptr, parc, parv)
 		/*
 		   ** notify all other users on the new channel
 		 */
+#ifdef ENABLE_INVISOPER
 		if (IsHiding(sptr))
 		{
 			if (MyClient(sptr))
@@ -2965,16 +2979,21 @@ int  m_join(cptr, sptr, parc, parv)
 				    user->virthost : sptr->user->realhost),
 				    chptr->chname);
 				sendto_umode(UMODE_ADMIN,
-				    "*** [+I] %s invisible joined %s",
-				    sptr->name, chptr->chname);
+				    "*** Invisibility -- %s (%s@%s) JOIN %s",
+				    sptr->name, sptr->user->username,
+				    sptr->user->realhost, chptr->chname);
 				sendto_serv_butone_token(&me, me.name, MSG_SMO,
-				    TOK_SMO, "A :[+I] %s invisible joined %s",
-				    sptr->name, chptr->chname);
+				    TOK_SMO, "A :Invisibility -- %s (%s@%s) JOIN %s",
+				    sptr->name, sptr->user->username,
+				    sptr->user->realhost, chptr->chname);
 				sendto_channel_ntadmins(sptr, chptr,  ":%s JOIN :%s",
 				    sptr->name, chptr->chname);
 			}
 		}
 		else if (chptr->mode.mode & MODE_AUDITORIUM)
+#else
+		if (chptr->mode.mode & MODE_AUDITORIUM)
+#endif
 		{
 			if (MyClient(sptr))
 				sendto_one(sptr, ":%s!%s@%s JOIN :%s",
@@ -3117,18 +3136,20 @@ int  m_part(cptr, sptr, parc, parv)
 
 		if (1)
 		{
-
+#ifdef ENABLE_INVISOPER
 			if (IsHiding(sptr))
 			{
 				if (MyClient(sptr))
 				{
 					sendto_umode(UMODE_ADMIN,
-					    "*** [+I] %s invisible parted %s",
-					    sptr->name, chptr->chname);
+					    "*** Invisibility -- %s (%s@%s) PART %s",
+					    sptr->name, sptr->user->username, 
+					    sptr->user->realhost, chptr->chname);
 					sendto_serv_butone_token(&me,
 					    me.name, MSG_SMO, TOK_SMO,
-					    "A :[+I] %s invisible parted %s",
-					    sptr->name, chptr->chname);
+					    "A :Invisibility -- %s (%s@%s) PART %s",
+					    sptr->name, sptr->user->username,
+					    sptr->user->realhost, chptr->chname);
 					if (parc < 3)
 						sendto_channel_ntadmins(sptr, chptr, ":%s PART %s",
 						    sptr->name, chptr->chname);
@@ -3158,6 +3179,9 @@ int  m_part(cptr, sptr, parc, parv)
 						    chptr->chname, comment);
 			}
 			else if (chptr->mode.mode & MODE_AUDITORIUM)
+#else
+			if (chptr->mode.mode & MODE_AUDITORIUM)
+#endif
 			{
 				if (MyClient(sptr))
 				{
@@ -3286,6 +3310,10 @@ int  m_kick(cptr, sptr, parc, parv)
 			continue;
 		}
 
+		/* I rewrote almost this entire loop, as the person that originally wrote it (or modded it)
+		 * was under a severe dosage of some type of drug.
+		 * --Luke
+		 */
 		lp2 = find_user_link(chptr->members, sptr);
 		for (; (user = strtoken(&p2, parv[2], ",")); parv[2] = NULL)
 		{
@@ -3293,99 +3321,143 @@ int  m_kick(cptr, sptr, parc, parv)
 				continue;	/* No such user left! */
 			if ((lp = find_user_link(chptr->members, who)))
 			{
+				/* Obviously U lines and servers get immediate kick privs */
 				if (IsULine(sptr))
 					goto attack;
 				if (IsServer(sptr))
 					goto attack;
+				
 				/* Hiding patch by }{ */
+#ifdef ENABLE_INVISOPER
 				if (IsHiding(who))
 				{
 					sendto_one(sptr,
 					    err_str(ERR_NOSUCHNICK),
 					    me.name, parv[0], user, name);
 					sendto_one(who,
-					    ":%s NOTICE %s :*** Hidden: %s tried to kick you from channel %s (%s)",
+					    ":%s NOTICE %s :*** Invisibility: %s tried to kick you from %s (%s)",
 					    me.name, who->name, parv[0],
 					    chptr->chname, comment);
 					break;
 				}
+#endif
+				/* If you're kicking yourself, it really shouldn't matter what modes you have set
+				 * unless the channel is +Q
+				 */
+				if ((sptr == who) && !(chptr->mode.mode & MODE_NOKICKS))
+					goto attack;
 
-				if ((chptr->mode.mode & MODE_NOKICKS)
-				    && !IsULine(sptr))
+				/* If you're +q, only netadmin can kick you. */
+#ifndef NO_OPEROVERRIDE
+				if (IsKix(who) && !IsNetAdmin(sptr))
+#else
+				if (IsKix(who))
+#endif
 				{
 					sendto_one(sptr,
-					    ":%s NOTICE %s :*** You cannot kick people on %s",
-					    me.name, sptr->name, chptr->chname);
+					    ":%s NOTICE %s :*** Cannot kick %s from %s (usermode +q)",
+					    me.name, sptr->name, who->name, chptr->chname);
+					sendto_one(who,
+					    ":%s NOTICE %s :*** Q: %s tried to kick you from %s (%s)",
+					    me.name, who->name, parv[0], chptr->chname, comment);
 					goto deny;
-					continue;
 				}
 
-				if (IsOper(sptr))
-					if (!is_chan_op(sptr, chptr)
-					    && !is_halfop(sptr, chptr)
-					    || (is_halfop(sptr, chptr)
-					    && is_chan_op(who, chptr)))
+#ifndef NO_OPEROVERRIDE
+				if (IsServices(who) && !IsNetAdmin(sptr))
+#else
+				if (IsServices(who))
+#endif
+				{
+					sendto_one(sptr,
+					    ":%s NOTICE %s :*** Cannot kick %s from %s (usermode +S)",
+	    				    me.name, sptr->name, who->name, chptr->chname);
+    					goto deny;
+				}
+				
+				/* If oper override is defined, opers can take out just about anyone
+				 * (netadmin required to take out a service)
+				 */
+
+#ifndef NO_OPEROVERRIDE
+				/* Netadmin nailing +q user */
+				if (IsKix(who) && IsNetAdmin(sptr))
+					goto override;
+
+				/* Netadmin nailing services */
+				if (IsServices(who) && IsNetAdmin(sptr))
+					goto override;
+			
+				/* Overriding channel mode +Q */
+			        if ((chptr->mode.mode & MODE_NOKICKS) &&
+				     ((IsOper(sptr) && !IsServices(who)) || IsNetAdmin(sptr)))
+					goto override;	
+				
+				/* sptr isn't a channel operator or a halfop, automatically means override */
+				if ((!is_chan_op(sptr,chptr) && !is_halfop(sptr,chptr)) &&
+				     ((IsOper(sptr) && !IsServices(who)) || IsNetAdmin(sptr)))
+					goto override;
+				
+				/* Half op oper kicking a channel operator */
+				if (is_chan_op(who,chptr) && !is_chan_op(sptr,chptr) && is_halfop(sptr,chptr) &&
+				    ((!IsServices(who) && IsOper(sptr)) || IsNetAdmin(sptr)))
+					goto override;
+			
+				/* Oper taking out a protected user */	
+				if (is_chanprot(who,chptr) && !is_chanowner(sptr,chptr) &&
+			       	    ((!IsServices(who) && IsOper(sptr)) || IsNetAdmin(sptr)))
+					goto override;
+
+				/* Oper taking out channel owner */
+				if (is_chanowner(who,chptr) &&
+				    ((!IsServices(who) && IsOper(sptr)) || IsNetAdmin(sptr)))
+					goto override;
+#endif
+				
+				/* Channel has +Q set, nobody can get kicked.
+				 * I seriously fail to see why the people that originally coded this
+				 * put !IsULine(sptr) crap all over the place, check above. If sptr
+				 * is a U line it immediately goes to attack.
+				 */
+				if (chptr->mode.mode & MODE_NOKICKS)
+				{
+					sendto_one(sptr,
+					    ":%s NOTICE %s :*** You cannot kick people on %s (channel mode +Q)",
+					    me.name, sptr->name, chptr->chname);
+					goto deny;
+				}
+
+				/* Halfops can't take out channel ops */
+				if (is_chan_op(who,chptr) && is_halfop(sptr,chptr)
+				    && !is_chan_op(sptr,chptr))
+				{
+					sendto_one(sptr,
+					    ":%s NOTICE %s :*** You cannot kick operators on %s if you are only a halfop",
+					    me.name, sptr->name, chptr->chname);
+					goto deny;
+				}
+				
+				/* Protected users, Owners, and Services can't get nailed unless they're nailing themselves
+				 * However, owners CAN nail protected users, as they're higher.
+				 */
+				if ((is_chanprot(who, chptr) || is_chanowner(who, chptr) || IsServices(who)))
+				{
+					if (is_chanowner(sptr, chptr) && (is_chanprot(who,chptr) && !is_chanowner(who,chptr)))
 					{
-						sendto_umode(UMODE_EYES,
-						    "*** OperKick [%s @ %s -> %s (%s)]",
-						    sptr->name,
-						    chptr->chname,
-						    who->name, comment);
-						goto attack;
-					}	/* is_chan_op */
-				if (is_chanprot(who, chptr)
-				    || is_chanowner(who, chptr)
-				    || IsServices(who))
-					if (IsNetAdmin
-						(sptr) || IsTechAdmin(sptr))
-					{	/* IRCop kicking owner/prot */
-						sendto_umode(UMODE_EYES,
-						    "*** OperKick [%s @ %s -> %s (%s)]",
-						    sptr->name,
-						    chptr->chname,
-						    who->name, comment);
 						goto attack;
 					}
-					else if (!IsULine(sptr)
-					    && who != sptr)
+					else
 					{
 						sendto_one(sptr,
-						    ":%s NOTICE %s :*** You cannot kick %s from %s because %s is channel protected",
+						    ":%s NOTICE %s :*** You cannot kick %s from %s because %s is protected (+a)",
 						    me.name, sptr->name,
 						    who->name,
 						    chptr->chname, who->name);
 						goto deny;
-						continue;
-					}	/* chanprot/chanowner */
-				if (is_chan_op(who, chptr)
-				    && is_halfop(sptr, chptr)
-				    && !is_chan_op(sptr, chptr)
-				    && !IsULine(sptr))
-				{
-					sendto_one(sptr,
-					    ":%s NOTICE %s :*** You cannot kick channel operators on %s if you only are halfop",
-					    me.name, sptr->name, chptr->chname);
-					goto deny;
-				}	/* halfop */
-
-				if (IsKix(who) && !IsULine(sptr))
-				{
-					if (!(IsNetAdmin(sptr)
-					    || IsTechAdmin(sptr)))
-					{
-						sendto_one(sptr,
-						    ":%s NOTICE %s :*** Cannot kick %s from channel %s (usermode +q)",
-						    me.name, sptr->name,
-						    who->name, chptr->chname);
-						sendto_one(who,
-						    ":%s NOTICE %s :*** Q: %s tried to kick you from channel %s (%s)",
-						    me.name, who->name,
-						    parv[0],
-						    chptr->chname, comment);
-						goto deny;
 					}
 				}
 
+				/* Well, we made it this far...the kick *should* be good, so attack */
 				goto attack;
 
 			      deny:
@@ -3393,6 +3465,12 @@ int  m_kick(cptr, sptr, parc, parv)
 				    err_str(ERR_ATTACKDENY), me.name,
 				    parv[0], chptr->chname, user);
 				continue;
+
+			      override:
+                                sendto_umode(UMODE_EYES, "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
+                                sptr->name, sptr->user->username, sptr->user->realhost,
+                                chptr->chname, who->name, comment);
+                                goto attack;
 
 			      attack:
 				if (lp)
@@ -3444,7 +3522,7 @@ int  m_topic(cptr, sptr, parc, parv)
 	TS   ttime = 0;
 	int  topiClen = 0;
 	int  nicKlen = 0;
-
+	
 	if (parc < 2)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
@@ -3461,17 +3539,21 @@ int  m_topic(cptr, sptr, parc, parv)
 			if (!MyClient(sptr) && !IsULine(sptr))
 			{
 				sendto_umode
-				    (UMODE_JUNK,"Remote TOPIC for unknown channel %s (%s)",
+				    (UMODE_JUNK,"*** Remote TOPIC for unknown channel %s (%s)",
 				    parv[1], backupbuf);
 			}
 			sendto_one(sptr, rpl_str(ERR_NOSUCHCHANNEL),
 			    me.name, parv[0], name);
 			return 0;
 		}
-		if (parc > 2)
+		if (parc >= 2)
 		{
 			if (!IsMember(sptr, chptr) && !IsServer(sptr)
-			    && !IsULine(sptr))
+			    && !IsULine(sptr)
+#ifndef NO_OPEROVERRIDE
+			    && !IsOper(sptr)
+#endif
+			    )
 			{
 				sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
 				    me.name, parv[0], name);
@@ -3545,7 +3627,7 @@ int  m_topic(cptr, sptr, parc, parv)
 		}
 		else if (((chptr->mode.mode & MODE_TOPICLIMIT) == 0 ||
 		    is_chan_op(sptr, chptr)) || IsOper(sptr)
-		    || IsULine(sptr) || is_halfop(sptr, chptr) && topic)
+		    || IsULine(sptr) || (is_halfop(sptr, chptr) && topic))
 		{
 			/* setting a topic */
 			if (IsOper(sptr) && !(is_halfop(sptr, chptr)
@@ -3557,8 +3639,9 @@ int  m_topic(cptr, sptr, parc, parv)
 				return 0;
 #endif
 				sendto_umode(UMODE_EYES,
-				    "*** OperTopic [IRCop: %s] - [Channel: %s] - [Topic: %s]",
-				    sptr->name, chptr->chname, topic);
+				    "*** OperOverride -- %s (%s@%s) TOPIC %s \'%s\'",
+				    sptr->name, sptr->user->username, sptr->user->realhost,
+				    chptr->chname, topic);
 			}
 			/* setting a topic */
 			topiClen = strlen(topic);
@@ -3615,7 +3698,7 @@ int  m_invite(cptr, sptr, parc, parv)
 {
 	aClient *acptr;
 	aChannel *chptr;
-
+	short over = 0;
 
 	if (parc < 3 || *parv[1] == '\0')
 	{
@@ -3628,32 +3711,50 @@ int  m_invite(cptr, sptr, parc, parv)
 	{
 		sendto_one(sptr, err_str(ERR_NOSUCHNICK),
 		    me.name, parv[0], parv[1]);
-		return 0;
+		return -1;
 	}
 
 	if (MyConnect(sptr))
 		clean_channelname(parv[2]);
+	
 	if (check_channelmask(sptr, cptr, parv[2]))
-		return 0;
+		return -1;
+	
 	if (!(chptr = find_channel(parv[2], NullChn)))
 	{
-
-		sendto_prefix_one(acptr, sptr, ":%s INVITE %s :%s",
-		    parv[0], parv[1], parv[2]);
-		return 0;
+		sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL),
+		    me.name, parv[0], parv[2]);
+		return -1;
 	}
-	if (chptr->mode.mode & MODE_NOINVITE)
-		if (!IsULine(sptr))
-		{
+
+	if (chptr->mode.mode & MODE_NOINVITE && !IsULine(sptr))
+	{
+#ifndef NO_OPEROVERRIDE
+		if (IsOper(sptr) && sptr == acptr)
+			over = 1;
+		else {
+#endif
 			sendto_one(sptr, err_str(ERR_NOINVITE),
 			    me.name, parv[0], parv[2]);
 			return -1;
+#ifndef NO_OPEROVERRIDE
 		}
-	if (chptr && !IsMember(sptr, chptr) && !IsULine(sptr))
+#endif
+	}
+
+	if (!IsMember(sptr, chptr) && !IsULine(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
-		    me.name, parv[0], parv[2]);
-		return -1;
+#ifndef NO_OPEROVERRIDE
+		if (IsOper(sptr) && sptr == acptr)
+			over = 1;
+		else {
+#endif		
+			sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
+			    me.name, parv[0], parv[2]);
+			return -1;
+#ifndef NO_OPEROVERRIDE
+		}
+#endif
 	}
 
 	if (IsMember(acptr, chptr))
@@ -3662,20 +3763,37 @@ int  m_invite(cptr, sptr, parc, parv)
 		    me.name, parv[0], parv[1], parv[2]);
 		return 0;
 	}
-	if (chptr && (chptr->mode.mode & MODE_INVITEONLY))
+
+	if (chptr->mode.mode & MODE_INVITEONLY)
 	{
 		if (!is_chan_op(sptr, chptr) && !IsULine(sptr))
 		{
-			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
-			    me.name, parv[0], chptr->chname);
-			return -1;
+#ifndef NO_OPEROVERRIDE
+			if (IsOper(sptr) && sptr == acptr)
+				over = 1;
+			else {
+#endif
+				sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
+				    me.name, parv[0], chptr->chname);
+				return -1;
+#ifndef NO_OPEROVERRIDE
+			}
+#endif
 		}
 		else if (!IsMember(sptr, chptr) && !IsULine(sptr))
 		{
-			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
-			    me.name, parv[0],
-			    ((chptr) ? (chptr->chname) : parv[2]));
-			return -1;
+#ifndef NO_OPEROVERRIDE
+                        if (IsOper(sptr) && sptr == acptr)
+				over = 1;
+                        else {
+#endif
+				sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
+				    me.name, parv[0],
+				    ((chptr) ? (chptr->chname) : parv[2]));
+				return -1;
+#ifndef NO_OPEROVERRIDE
+			}
+#endif
 		}
 	}
 
@@ -3683,33 +3801,91 @@ int  m_invite(cptr, sptr, parc, parv)
 	{
 		if (check_for_target_limit(sptr, acptr, acptr->name))
 			return 0;
-
-		sendto_one(sptr, rpl_str(RPL_INVITING), me.name,
-		    parv[0], acptr->name,
-		    ((chptr) ? (chptr->chname) : parv[2]));
-		if (acptr->user->away)
-			sendto_one(sptr, rpl_str(RPL_AWAY), me.name,
-			    parv[0], acptr->name, acptr->user->away);
+		if (!over)
+		{
+		   	sendto_one(sptr, rpl_str(RPL_INVITING), me.name,
+			    parv[0], acptr->name,
+			    ((chptr) ? (chptr->chname) : parv[2]));
+			if (acptr->user->away)
+				sendto_one(sptr, rpl_str(RPL_AWAY), me.name,
+				    parv[0], acptr->name, acptr->user->away);
+		}
 	}
 	/* Note: is_banned() here will cause some extra CPU load, 
 	 *       and we're really only relying on the existence
 	 *       of the limit because we could momentarily have
 	 *       less people on channel.
 	 */
-	if (MyConnect(acptr))
-		if (chptr && sptr->user
-		    && (is_banned(acptr, sptr, chptr)
-		    || (chptr->mode.mode & MODE_INVITEONLY)
-		    || chptr->mode.limit) && (is_chan_op(sptr, chptr)
-		    || IsULine(sptr)))
-		{
-			add_invite(acptr, chptr);
-			sendto_channelops_butone(NULL, &me, chptr,
-			    ":%s NOTICE @%s :%s invited %s into the channel.",
-			    me.name, chptr->chname, sptr->name, acptr->name);
-		}
+	
+	/* Yes, it's crack induced. This checks if we should even bother going further */
+	if (!(MyConnect(acptr) && chptr && sptr->user &&
+	    (is_chan_op(sptr,chptr) || IsULine(sptr)
+#ifndef NO_OPEROVERRIDE
+	     || IsOper(sptr)
+#endif
+	    )))
+	       return 0;
+
+	if (is_banned(acptr, sptr, chptr))
+	{
+		if (over)
+			sendto_umode(UMODE_EYES,
+			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +b).",
+			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+	}
+	else if (chptr->mode.mode & MODE_INVITEONLY)
+	{
+		if (over)
+			sendto_umode(UMODE_EYES,
+			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +i).",
+			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+	}
+	else if (chptr->mode.limit)
+	{
+		if (over)
+			sendto_umode(UMODE_EYES,
+			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +l).",
+			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+	}
+	else if (chptr->mode.mode & MODE_RGSTRONLY)
+	{
+		if (over)
+			sendto_umode(UMODE_EYES,
+			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +R).",
+			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+	}
+	else if (*chptr->mode.key)
+	{
+		if (over)
+			sendto_umode(UMODE_EYES,
+			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +k).",
+			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+	}
+#ifdef OPEROVERRIDE_VERIFY
+	else if (chptr->mode.mode & MODE_SECRET || chptr->mode.mode & MODE_PRIVATE)
+	       over = -1;	
+#endif
+	else
+		return 0;
+	
+#ifdef ENABLE_INVISOPER
+	if (over == 1 && !IsHiding(sptr))
+#else
+	if (over == 1)
+#endif
+		sendto_channelops_butone(NULL, &me, chptr,
+		  ":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
+	  	  me.name, chptr->chname, sptr->name);
+	else if (over == 0)
+		sendto_channelops_butone(NULL, &me, chptr,
+	    	  ":%s NOTICE @%s :%s invited %s into the channel.",
+		  me.name, chptr->chname, sptr->name, acptr->name);
+ 
+	add_invite(acptr, chptr);	
+	
 	sendto_prefix_one(acptr, sptr, ":%s INVITE %s :%s", parv[0],
 	    acptr->name, ((chptr) ? (chptr->chname) : parv[2]));
+	
 	return 0;
 }
 
@@ -3737,9 +3913,6 @@ void send_list(aClient *cptr, int numsend)
 	aChannel *chptr;
 	LOpts *lopt = cptr->user->lopt;
 	int  hashnum;
-#ifdef LIST_SHOW_MODES
-char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
-#endif
 
 	for (hashnum = lopt->starthash; hashnum < CH_MAX; hashnum++)
 	{
@@ -3786,12 +3959,12 @@ char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
 				    lopt->yeslist, chptr->topic)))
 					continue;
 #ifdef LIST_SHOW_MODES
-				mode_buf[0] = '[';
-				channel_modes(cptr, &mode_buf[1], parabuf, chptr);
-				if (mode_buf[2] == '\0')
-					mode_buf[0] = '\0';
+				modebuf[0] = '[';
+				channel_modes(cptr, &modebuf[1], parabuf, chptr);
+				if (modebuf[2] == '\0')
+					modebuf[0] = '\0';
 				else
-					strcat(mode_buf, "]");
+					strcat(modebuf, "]");
 #endif
 				if (!IsAnOper(cptr))
 					sendto_one(cptr,
@@ -3802,7 +3975,7 @@ char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
 					    "*", chptr->users,
 #ifdef LIST_SHOW_MODES
 					    ShowChannel(cptr, chptr) ?
-					    mode_buf : "",
+					    modebuf : "",
 #endif
 					    ShowChannel(cptr,
 					    chptr) ? (chptr->topic ?
@@ -3813,7 +3986,7 @@ char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
 					    cptr->name, chptr->chname,
 					    chptr->users,
 #ifdef LIST_SHOW_MODES
-					    mode_buf,
+					    modebuf,
 #endif					    
 					    (chptr->topic ? chptr->topic : ""));
 				numsend--;
@@ -3895,7 +4068,7 @@ int  check_for_chan_flood(cptr, sptr, chptr)
 		char comment[1024], mask[1024];
 
 		ircsprintf(comment,
-		    "Flooding (Limit is %i lines per %i seconds)",
+		    "Flooding (limit is %i lines per %i second(s))",
 		    chptr->mode.msgs, chptr->mode.per);
 		if (chptr->mode.kmode == 1)
 		{		/* ban. */
@@ -3916,6 +4089,8 @@ int  check_for_chan_flood(cptr, sptr, chptr)
 		remove_user_from_channel(sptr, chptr);
 		return 1;
 	}
+
+	return 0;
 }
 
 /* Originally from bahamut, modified a bit for Unreal by codemastr
@@ -3936,9 +4111,6 @@ int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	TS   chantimemin, chantimemax;
 	TS   topictimemin, topictimemax;
 	Link *yeslist = NULL, *nolist = NULL;
-#ifdef LIST_SHOW_MODES
-	char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
-#endif
 
 	static char *usage[] = {
 		"   Usage: /LIST <options>",
@@ -4057,7 +4229,7 @@ int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				    sendto_one(sptr,
 					err_str(ERR_LISTSYNTAX),
 					me.name, cptr->name,
-					"Bad list syntax, type /list ?");
+					"Improper list syntax, type /list ?");
 				    error = 1;
 			  }
 			  break;
@@ -4080,7 +4252,7 @@ int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				    sendto_one(sptr,
 					err_str(ERR_LISTSYNTAX),
 					me.name, cptr->name,
-					"Bad list syntax, type /list ?");
+					"Improper list syntax, type /list ?");
 				    error = 1;
 			  }
 			  break;
@@ -4117,12 +4289,12 @@ int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				  chptr = find_channel(name, NullChn);
 				  if (chptr && ShowChannel(sptr, chptr)) {
 #ifdef LIST_SHOW_MODES
-					mode_buf[0] = '[';
-					channel_modes(sptr, &mode_buf[1], parabuf, chptr);
-					if (mode_buf[2] == '\0')
-						mode_buf[0] = '\0';
+					modebuf[0] = '[';
+					channel_modes(sptr, &modebuf[1], parabuf, chptr);
+					if (modebuf[2] == '\0')
+						modebuf[0] = '\0';
 					else
-						strcat(mode_buf, "]");
+						strcat(modebuf, "]");
 #endif
 					  sendto_one(sptr,
 					      rpl_str(RPL_LIST),
@@ -4132,7 +4304,7 @@ int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					      chptr->users,
 #ifdef LIST_SHOW_MODES
 					      ShowChannel(sptr, chptr) ?
-					      mode_buf : "",
+					      modebuf : "",
 #endif
 					      (chptr->topic ? chptr->topic :
 					      ""));
@@ -4206,7 +4378,7 @@ int  m_names(cptr, sptr, parc, parv)
 		if (*s == ',')
 		{
 			para[TRUNCATED_NAMES] = '\0';
-			sendto_realops("names abuser %s %s",
+			sendto_realops("NAMES abuser: %s - %s",
 			    get_client_name(sptr, FALSE), para);
 			sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
 			    me.name, sptr->name, "NAMES");
@@ -4252,8 +4424,10 @@ int  m_names(cptr, sptr, parc, parv)
 		acptr = cm->value.cptr;
 		if (IsInvisible(acptr) && !member)
 			continue;
-		if (IsHiding(acptr) && acptr != sptr && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
+#ifdef ENABLE_INVISOPER
+		if (IsHiding(acptr) && acptr != sptr && !(IsNetAdmin(sptr)))
 			continue;
+#endif
 		if (chptr->mode.mode & MODE_AUDITORIUM)
 			if (!is_chan_op(sptr, chptr)
 			    && !is_chanprot(sptr, chptr)
@@ -4263,6 +4437,10 @@ int  m_names(cptr, sptr, parc, parv)
 				    CHFL_CHANOWNER)) && acptr != sptr)
 					continue;
 
+/*		if (cm->flags & CHFL_CHANOWNER)
+			buf[idx++] = '~';
+		else if (cm->flags & CHFL_CHANPROT)
+			buf[idx++] = '&';  */
 		if (cm->flags & CHFL_CHANOP)
 			buf[idx++] = '@';
 		else if (cm->flags & CHFL_HALFOP)
@@ -4424,19 +4602,19 @@ int  m_knock(cptr, sptr, parc, parv)
 		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
 		    me.name,
 		    sptr->name,
-		    chptr->chname, "You can not get invited anyways! (+I)");
+		    chptr->chname, "Channel has INVITE disabled! (+I)");
 
 		return 0;
 	}
 
 	sendto_channelops_butone(NULL, &me, chptr,
-	    ":%s NOTICE @%s :[Knock] by %s!%s@%s (%s) ",
+	    ":%s NOTICE @%s :[KNOCK] by %s!%s@%s (%s) ",
 	    me.name, chptr->chname, sptr->name,
 	    sptr->user->username,
 	    (IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost),
 	    parv[2] ? parv[2] : "no reason specified");
 
-	sendto_one(sptr, ":%s NOTICE %s :Knocked on %s", me.name,
+	sendto_one(sptr, ":%s NOTICE %s :*** Knocked on %s", me.name,
 	    sptr->name, chptr->chname);
 	return 0;
 }
@@ -4645,7 +4823,10 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
                 }
                 /* remove bans */
-                parabuf[0] = '\0';
+		modebuf[0] = '-';
+		modebuf[1] = '\0';
+		parabuf[0] = '\0';
+		b = 1;
                 for (ban = chptr->banlist; ban; ban = ban->next)
                 {
                         Addit('b', ban->banstr);
@@ -4654,7 +4835,6 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 {
                         Addit('e', ban->banstr);
                 }
-                b = 1;
                 for (lp = chptr->members; lp; lp = lp->next)
                 {
                         if (lp->flags & MODE_CHANOWNER)
@@ -4788,7 +4968,9 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
                                 modeflags = 0;
                         }
                         add_user_to_channel(chptr, acptr, modeflags);
-                        if (!IsHiding(acptr))
+#ifdef ENABLE_INVISOPER
+			if (!IsHiding(acptr))
+#endif
                                 sendto_channel_butserv(chptr, acptr,
                                     ":%s JOIN :%s", nick,
                                     chptr->chname);
@@ -4967,11 +5149,8 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 if (oldmode.key[0] && chptr->mode.key[0]
                     && strcmp(oldmode.key, chptr->mode.key))
                 {
-                        x = strlen(oldmode.key);
-                        y = strlen(chptr->mode.key);
-                        z = MAX(x, y);
-                        if (z == x)
-                        {
+                        if (strcmp(oldmode.key, chptr->mode.key) > 0)
+			{
                                 strcpy(chptr->mode.key, oldmode.key);
                         }
                         else
@@ -4979,15 +5158,12 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
                                 Addit('k', chptr->mode.key);
                         }
                 }
-                /* same as above .. */
+                /* same as above (except case insensitive #test == #TEST -- codemastr) */
                 if (oldmode.link[0] && chptr->mode.link[0]
-                    && strcmp(oldmode.link, chptr->mode.link))
+                    && stricmp(oldmode.link, chptr->mode.link))
                 {
-                        x = strlen(oldmode.link);
-                        y = strlen(chptr->mode.link);
-                        z = MAX(x, y);
-                        if (z == x)
-                        {
+                        if (strcmp(oldmode.link, chptr->mode.link) > 0)
+			{
                                 strcpy(chptr->mode.link, oldmode.link);
                         }
                         else

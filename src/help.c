@@ -116,7 +116,7 @@ int  parse_help(sptr, name, help)
       SND(" -");
 	  SND(" -----------------oOo----------------");
       SND(" OPER     WALLOPS GLOBOPS  CHATOPS LOCOPS");
-      SND(" ADCHAT   NACHAT  TECHAT   KILL    KLINE");
+      SND(" ADCHAT   NACHAT  GZLINE   KILL    KLINE");
       SND(" UNKLINE  ZLINE   UNZLINE  GLINE   SHUN");
       SND(" AKILL    RAKILL  REHASH   RESTART DIE");
       SND(" LAG      SETHOST SETIDENT CHGHOST CHGIDENT");
@@ -164,9 +164,7 @@ int  parse_help(sptr, name, help)
      SND(" a = Is a Services Administrator");
      SND(" A = Is a Server Administrator");
      SND(" N = Is a Network Administrator");
-     SND(" T = Is a Technical Administrator");
      SND(" C = Is a Co Administrator");
-/*   SND(" 1 = Is a coder");  Taken out */
      SND(" c = See's all Connects/Disconnects on local server");
      SND(" f = Listen to Flood Alerts from server");
      SND(" r = Identifies the nick as being Registered");
@@ -184,6 +182,7 @@ int  parse_help(sptr, name, help)
      SND(" t = Says that you are using a /VHOST");
      SND(" G = Filters out all Bad words in your messages with <censored>.");
      SND(" z = Marks the client as being on a Secure Connection (SSL)");
+     SND(" j = \"Junk\" mode. Displays misc information + nick changes");
      SND(" ---------------------oOo-------------------");
      SND(" -");
 	}
@@ -204,7 +203,7 @@ int  parse_help(sptr, name, help)
 		SND(" q = Channel owner");
 		SND(" Q = No kicks able in channel unless by U:Lines");
 		SND(" O = IRC Operator only channel (Settable by IRCops)");
-		SND(" A = Server/Net/Tech Admin only channel (Settable by Admins)");
+		SND(" A = Server/Net Admin only channel (Settable by Admins)");
 		SND(" K = /KNOCK is not allowed");
 		SND(" V = /INVITE is not allowed");
 		SND(" S = Strip all incoming colours away");
@@ -259,7 +258,6 @@ int  parse_help(sptr, name, help)
 		SND(" A = Gets +A on oper up. Is Server Administrator");
 		SND(" a = Gets +a on oper up. Is Services Administrator");
 		SND(" N = Gets +N on oper up. Is Network Administrator");
-		SND(" T = Gets +T on oper up. Is Technical Administrator");
 		SND(" C = Gets +C on oper up. Is Co Administrator");
 		SND(" z = Can add Z:Lines");
 		SND(" H = Gets +x on oper up.");
@@ -1001,23 +999,11 @@ int  parse_help(sptr, name, help)
       SND(" -");
       HDR(" *** NACHAT Command ***");
       SND(" -");
-      SND(" This command sends to all NetAdmins & TechAdmins online");
-      SND(" Only for Net/Tech Admins. This is a ChatOps style command");
+      SND(" This command sends to all NetAdmins online");
+      SND(" Only for Net Admins. This is a ChatOps style command");
       SND(" -");
       SND(" Syntax:  NACHAT <text>");
       SND(" Example: NACHAT Hey guys!");
-      SND(" -");
-   }
-   else if (!myncmp(help, "TECHAT", 8))
-   {
-      SND(" -");
-      HDR(" *** TECHAT Command ***");
-      SND(" -");
-      SND(" This command sends to all TechAdmins online");
-      SND(" Only for Net/Tech Admins. This is a ChatOps style command");
-      SND(" -");
-      SND(" Syntax:  TECHAT <text>");
-      SND(" Example: TECHAT Hey guys!");
       SND(" -");
    }
    else if (!myncmp(help, "KILL", 8))
@@ -1080,6 +1066,24 @@ int  parse_help(sptr, name, help)
       SND(" -");
       SND(" Syntax:  UNZLINE <ip>");
       SND(" Example: UNZLINE 127.0.0.1");
+      SND(" -");
+   }
+   else if (!myncmp(help, "GZLINE", 8))
+   {
+      SND(" -");
+      HDR(" *** ^BGZLINE command^B ***");
+      SND(" -");
+      SND(" This command provides timed Z:Lines. If you match a Z:Line you cannot");
+      SND(" connect to ANY server on the IRC network");
+      SND(" A time of 0 in the ZLINE makes it permanent (Never Expires).");
+      SND(" In Unreal 3.1.4 you may also specify the time in the format 1d10h15m30s.");  
+      SND(" IRC Operator only command.");
+      SND(" -");
+      SND(" Syntax:  GZLINE <user@host mask> <seconds to be banned> :<reason>");
+      SND("          (Adds a Z:line for user@host)");
+      SND("          GZLINE -<user@host mask> (Removes a Z:line for user@host)");
+      SND(" Example: GZLINE *@24.247.1.* 900 :Spammers  (Adds a 15 min Z:line)");
+      SND("          GZLINE *@24.247.1.* 1d5h :Spammers (Adds a 29 hour Z:line)");
       SND(" -");
    }
    else if (!myncmp(help, "GLINE", 8))
@@ -1159,7 +1163,7 @@ int  parse_help(sptr, name, help)
       SND(" If servername and flags are not specified this rehashes the");
       SND(" ircd.conf , removing any temporary k:lines.");
       SND(" If servername is specified, this is used to rehash config files on servername");
-      SND(" Only TechAdmins and NetAdmins may specify a server name");
+      SND(" Only NetAdmins may specify a server name");
       SND(" -");
       SND(" The flags are used to rehash other config files, valid flags are:");
       SND("       -dccdeny   - Rehashes dccdeny.conf");

@@ -783,10 +783,10 @@ int  m_vhost(cptr, sptr, parc, parv)
 					sendto_one(sptr, ":%s MODE %s :+tx",
 					    sptr->name, sptr->name);
 					sendto_one(sptr,
-					    ":%s NOTICE %s :*** Your hostname is now %s",
+					    ":%s NOTICE %s :*** VirtualHost -- Your host is now %s",
 					    me.name, sptr->name, p->virthost);
 					sendto_umode(UMODE_EYES,
-					    "[\2vhost\2] %s (%s!%s@%s) is now using vhost %s",
+					    "*** VirtualHost -- %s (%s!%s@%s) is now using host %s",
 					    user, sptr->name,
 					    sptr->user->username,
 					    sptr->user->realhost, p->virthost);
@@ -795,12 +795,12 @@ int  m_vhost(cptr, sptr, parc, parv)
 				else
 				{
 					sendto_umode(UMODE_EYES,
-					    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - incorrect password",
+					    "*** VirtualHost -- Failed login for %s by %s!%s@%s (incorrect password)",
 					    user, sptr->name,
 					    sptr->user->username,
 					    sptr->user->realhost);
 					sendto_one(sptr,
-					    ":%s NOTICE %s :*** [\2vhost\2] Login for %s failed - password incorrect",
+					    ":%s NOTICE %s :*** VirtualHost -- Login for %s failed (password incorrect)",
 					    me.name, sptr->name, user);
 					return 0;
 				}
@@ -808,11 +808,11 @@ int  m_vhost(cptr, sptr, parc, parv)
 		}
 	}
 	sendto_umode(UMODE_EYES,
-	    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - host does not match",
+	    "*** VirtualHost -- Failed login for %s by %s!%s@%s (host does not match)",
 	    user, sptr->name, sptr->user->username, sptr->user->realhost);
 	sendto_one(sptr,
-	    ":%s NOTICE %s :*** No vHost lines available for your host",
-	    me.name, sptr->name);
+	    ":%s NOTICE %s :*** VirtualHost -- Login for %s failed (host does not match)",
+	    me.name, sptr->name, user);
 	return 0;
 }
 

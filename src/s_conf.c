@@ -854,9 +854,19 @@ int  m_svsnoop(cptr, sptr, parc, parv)
 {
 	aClient *acptr;
 
-	if (!(check_registered(sptr) && IsULine(sptr) && parc > 2))
+	/* Intially this was wrong, as check_registered returns -1 if
+	 * they aren't registered and 0 if they are. Thus a ! is required
+	 * in front of it otherwise the entire logic statement is flawed
+	 * and makes the function generally useless.
+	 * --Luke
+	 */
+	if (!(!check_registered(sptr) && IsULine(sptr) && parc > 2))
 		return 0;
-	/* svsnoop bugfix --binary */
+	
+	/* svsnoop bugfix --binary
+	 * Forgot a : before the first %s :P
+	 * --Luke
+	 */
 	if (hunt_server(cptr, sptr, ":%s SVSNOOP %s :%s", 1, parc,
 	    parv) == HUNTED_ISME)
 	{
@@ -874,11 +884,17 @@ int  m_svsnoop(cptr, sptr, parc, parv)
 					    ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP | UMODE_SERVICES |
 					    UMODE_SADMIN | UMODE_ADMIN);
 					acptr->umodes &=
-		    				~(UMODE_NETADMIN | UMODE_TECHADMIN | UMODE_CLIENT |
+		    				~(UMODE_NETADMIN | UMODE_CLIENT |
 		 			   UMODE_FLOOD | UMODE_EYES | UMODE_WHOIS);
+#ifdef ENABLE_INVISOPER
 					acptr->umodes &=
 					    ~(UMODE_KIX | UMODE_FCLIENT | UMODE_HIDING |
 					    UMODE_DEAF | UMODE_HIDEOPER);
+#else
+					acptr->umodes &=
+					    ~(UMODE_KIX | UMODE_FCLIENT |
+					    UMODE_DEAF | UMODE_HIDEOPER);
+#endif
 					acptr->oflag = 0;
 				
 				}
@@ -996,7 +1012,7 @@ int  rehash(cptr, sptr, sig)
 				free_conf(tmp2);
 		}
 	/* Added to make sure K-lines are checked -- Barubary */
-	check_pings(TStime(), 1);
+	loop.do_ban_check = 1;
 	/* Recheck all U-lines -- Barubary */
 	for (i = 0; i < highest_fd; i++)
 		if ((acptr = local[i]) && !IsMe(acptr))
@@ -1027,10 +1043,16 @@ int  openconf()
 extern char *getfield();
 
 #define STAR1 OFLAG_SADMIN|OFLAG_ADMIN|OFLAG_NETADMIN|OFLAG_COADMIN
-#define STAR2 OFLAG_TECHADMIN|OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
-#define STAR3 OFLAG_INVISIBLE
+#define STAR2 OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
+#ifdef ENABLE_INVISOPER
+  #define STAR3 OFLAG_INVISIBLE
+#endif
 static int oper_access[] = {
+#ifdef ENABLE_INVISOPER
 	~(STAR1 | STAR2 | STAR3), '*',
+#else
+	~(STAR1 | STAR2 ), '*',
+#endif
 	OFLAG_LOCAL, 'o',
 	OFLAG_GLOBAL, 'O',
 	OFLAG_REHASH, 'r',
@@ -1053,14 +1075,15 @@ static int oper_access[] = {
 	OFLAG_SADMIN, 'a',
 	OFLAG_NETADMIN, 'N',
 	OFLAG_COADMIN, 'C',
-	OFLAG_TECHADMIN, 'T',
 	OFLAG_UMODEC, 'u',
 	OFLAG_UMODEF, 'f',
 	OFLAG_ZLINE, 'z',
 	OFLAG_WHOIS, 'W',
 	OFLAG_HIDE, 'H',
 /*        OFLAG_AGENT,	'S',*/
+#ifdef ENABLE_INVISOPER
 	OFLAG_INVISIBLE, '^',
+#endif
 	0, 0
 };
 
@@ -1361,8 +1384,6 @@ int  initconf(opt)
 				{
 					if (*cp == 'S')
 						aconf->options |= CONNECT_SSL;
-					else if (*cp == 'Z')
-						aconf->options |= CONNECT_ZIP;
 				}
 			}
 			break;
@@ -1853,208 +1874,6 @@ static int is_comment(comment)
 
 
 
-/*
-** m_rakill;
-**      parv[0] = sender prefix
-**      parv[1] = hostmask
-**      parv[2] = username
-**      parv[3] = comment
-*/
-int  m_rakill(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
-{
-	char *hostmask, *usermask;
-	int  result;
-
-	if (parc < 2 && IsPerson(sptr))
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "AKILL");
-		return 0;
-	}
-
-	if (IsServer(sptr) && parc < 3)
-		return 0;
-
-	if (!IsServer(cptr))
-	{
-		if (!IsOper(sptr))
-		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			    sptr->name);
-			return 0;
-		}
-		else
-		{
-			if ((hostmask = (char *)index(parv[1], '@')))
-			{
-				*hostmask = 0;
-				hostmask++;
-				usermask = parv[1];
-			}
-			else
-			{
-				sendto_one(sptr, ":%s NOTICE %s :%s", me.name,
-				    sptr->name, "Please use a user@host mask.");
-				return 0;
-			}
-		}
-	}
-	else
-	{
-		hostmask = parv[1];
-		usermask = parv[2];
-	}
-
-	if (!usermask || !hostmask)
-	{
-		/*
-		 * This is very bad, it should never happen.
-		 */
-		sendto_ops("Error adding akill from %s!", sptr->name);
-		return 0;
-	}
-
-	result = del_temp_conf(CONF_KILL, hostmask, NULL, usermask, 0, 0, 2);
-	if (result == KLINE_DEL_ERR)
-	{
-		if (!MyClient(sptr))
-		{
-			sendto_serv_butone(cptr, ":%s RAKILL %s %s",
-			    IsServer(cptr) ? parv[0] : me.name, hostmask,
-			    usermask);
-			return 0;
-		}
-		sendto_one(sptr, ":%s NOTICE %s :Akill %s@%s does not exist.",
-		    me.name, sptr->name, usermask, hostmask);
-		return 0;
-	}
-
-	if (MyClient(sptr))
-	{
-		sendto_ops("%s removed akill for %s@%s",
-		    sptr->name, usermask, hostmask);
-		sendto_serv_butone(&me,
-		    ":%s GLOBOPS :%s removed akill for %s@%s",
-		    me.name, sptr->name, usermask, hostmask);
-	}
-
-	sendto_serv_butone(cptr, ":%s RAKILL %s %s",
-	    IsServer(cptr) ? parv[0] : me.name, hostmask, usermask);
-
-	check_pings(TStime(), 1);
-}
-
-/* ** m_akill;
-**	parv[0] = sender prefix
-**	parv[1] = hostmask
-**	parv[2] = username
-**	parv[3] = comment
-*/
-int  m_akill(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
-{
-	char *hostmask, *usermask, *comment;
-
-
-	if (parc < 2 && IsPerson(sptr))
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "AKILL");
-		return 0;
-	}
-
-	if (IsServer(sptr) && parc < 3)
-		return 0;
-
-	if (!IsServer(cptr))
-	{
-		if (!IsOper(sptr))
-		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			    sptr->name);
-			return 0;
-		}
-		else
-		{
-			comment = parc < 3 ? NULL : parv[2];
-			if ((hostmask = (char *)index(parv[1], '@')))
-			{
-				*hostmask = 0;
-				hostmask++;
-				usermask = parv[1];
-			}
-			else
-			{
-				sendto_one(sptr, ":%s NOTICE %s :%s", me.name,
-				    sptr->name,
-				    "Please use a nick!user@host mask.");
-				return 0;
-			}
-			if (!strcmp(usermask, "*") || !strchr(hostmask, '.'))
-			{
-				sendto_one(sptr,
-				    "NOTICE %s :*** What a sweeping AKILL.  If only your admin knew you tried that..",
-				    parv[0]);
-				sendto_realops("%s attempted to /akill *@*",
-				    parv[0]);
-				return 0;
-			}
-			if (MyClient(sptr))
-			{
-				sendto_ops("%s added akill for %s@%s (%s)",
-				    sptr->name, usermask, hostmask,
-				    !BadPtr(comment) ? comment : "no reason");
-				sendto_serv_butone(&me,
-				    ":%s GLOBOPS :%s added akill for %s@%s (%s)",
-				    me.name, sptr->name, usermask, hostmask,
-				    !BadPtr(comment) ? comment : "no reason");
-			}
-		}
-	}
-	else
-	{
-		hostmask = parv[1];
-		usermask = parv[2];
-		comment = parc < 4 ? NULL : parv[3];
-	}
-
-	if (!usermask || !hostmask)
-	{
-		/*
-		 * This is very bad, it should never happen.
-		 */
-		sendto_ops("Error adding akill from %s!", sptr->name);
-		return 0;
-	}
-
-	if (!find_kill_byname(hostmask, usermask))
-	{
-
-#ifndef COMMENT_IS_FILE
-		add_temp_conf(CONF_KILL, hostmask, comment, usermask, 0, 0, 2);
-#else
-		add_temp_conf(CONF_KILL, hostmask, NULL, usermask, 0, 0, 2);
-#endif
-	}
-
-	if (comment)
-		sendto_serv_butone(cptr, ":%s AKILL %s %s :%s",
-		    IsServer(cptr) ? parv[0] : me.name, hostmask,
-		    usermask, comment);
-	else
-		sendto_serv_butone(cptr, ":%s AKILL %s %s",
-		    IsServer(cptr) ? parv[0] : me.name, hostmask, usermask);
-
-
-	check_pings(TStime(), 1);
-
-}
-
 /*    m_sqline
 **	parv[0] = sender
 **	parv[1] = nickmask
@@ -2240,7 +2059,8 @@ int  m_kline(cptr, sptr, parc, parv)
 	}
 
 	add_temp_conf(CONF_KILL, uhost, parv[2], name, 0, 0, 1);
-	check_pings(TStime(), 1);
+	/* We do not care if we kill cptr or sptr */
+	loop.do_ban_check = 1;
 }
 
 
@@ -2327,7 +2147,7 @@ int  m_unkline(cptr, sptr, parc, parv)
 		}
 	}
 	/* This wasn't here before -- Barubary */
-	check_pings(TStime(), 1);
+	loop.do_ban_check = 1;
 }
 
 /*
@@ -2530,7 +2350,7 @@ int  m_zline(cptr, sptr, parc, parv)
 		sendto_serv_butone(cptr, ":%s ZLINE %s :%s", parv[0], parv[1],
 		    reason ? reason : "");
 
-	check_pings(TStime(), 1);
+	loop.do_ban_check = 1;
 
 }
 
@@ -2845,11 +2665,17 @@ int  m_svso(cptr, sptr, parc, parv)
 		    ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP | UMODE_SERVICES |
 		    UMODE_SADMIN | UMODE_ADMIN);
 		acptr->umodes &=
-		    ~(UMODE_NETADMIN | UMODE_TECHADMIN | UMODE_CLIENT |
+		    ~(UMODE_NETADMIN | UMODE_CLIENT |
 		    UMODE_FLOOD | UMODE_EYES | UMODE_WHOIS);
+#ifdef ENABLE_INVISOPER
 		acptr->umodes &=
 		    ~(UMODE_KIX | UMODE_FCLIENT | UMODE_HIDING |
 		    UMODE_DEAF | UMODE_HIDEOPER);
+#else
+		acptr->umodes &=
+		    ~(UMODE_KIX | UMODE_FCLIENT |
+		    UMODE_DEAF | UMODE_HIDEOPER);
+#endif
 		acptr->oflag = 0;
 		send_umode_out(acptr, acptr, fLag);
 	}

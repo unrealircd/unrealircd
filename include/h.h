@@ -41,7 +41,7 @@ extern struct stats *ircstp;
 extern int bootopt;
 extern TS TSoffset;
 /* Prototype added to force errors -- Barubary */
-extern TS check_pings(TS now, int check_kills);
+extern TS check_pings(TS now);
 extern TS TS2ts(char *s);
 
 /* Remmed out for win32 compatibility.. as stated of 467leaf win32 port.. */
@@ -330,7 +330,7 @@ extern char *find_by_aln PROTO((char *));
 extern char *convert2aln PROTO((int));
 extern int convertfromaln PROTO((char *));
 extern char *find_server_aln PROTO((char *));
-extern atime(char *xtime);
+extern time_t atime(char *xtime);
 
 
 extern int dopacket PROTO((aClient *, char *, int));

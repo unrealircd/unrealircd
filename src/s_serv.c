@@ -712,7 +712,8 @@ int  m_server(cptr, sptr, parc, parv)
 #else
 		encr = cptr->passwd;
 #endif /* CRYPT_LINK_PASSWORD */
-		if (aconf->passwd && encr && *aconf->passwd && !StrEq(aconf->passwd, encr))
+		if (aconf->passwd && *aconf->passwd  &&
+		    (!encr || !StrEq(aconf->passwd, encr)))
 		{
 			sendto_one(cptr,
 			    "ERROR :No Access (passwd mismatch) %s", inpath);
@@ -1673,13 +1674,11 @@ void m_info_send(sptr)
 	sendto_one(sptr, ":%s %d %s :| Brought to you by the following people:",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * Stskeeps     <stskeeps@tspre.org>",
+	sendto_one(sptr, ":%s %d %s :| * Stskeeps     <stskeeps@unrealircd.com>",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * codemastr    <codemastr@tspre.org>",
+	sendto_one(sptr, ":%s %d %s :| * codemastr    <codemastr@unrealircd.com>",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * DrBin        <drbin@tspre.org>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * Luke         <luke@unrealircd.org>",
+	sendto_one(sptr, ":%s %d %s :| * Luke         <luke@unrealircd.com>",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| Credits - Type /Credits",
@@ -1687,11 +1686,11 @@ void m_info_send(sptr)
 	sendto_one(sptr, ":%s %d %s :| DALnet Credits - Type /DalInfo",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| This is an UnrealIRCD-style server",
+	sendto_one(sptr, ":%s %d %s :| This is an UnrealIRCd-style server",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| If you find any bugs, please mail",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|  unreal-dev@lists.sourceforge.net",
+	sendto_one(sptr, ":%s %d %s :|  coders@lists.unrealircd.org",
 	    me.name, RPL_INFO, sptr->name);
 
 	sendto_one(sptr,
@@ -2264,10 +2263,6 @@ static void report_configured_links(sptr, mask)
 							optbuf[cnt] = 'S';
 							cnt++;
 						}
-						if (options & CONNECT_ZIP) {
-							optbuf[cnt] = 'Z';
-							cnt++;
-						}
 						optbuf[cnt] = '\0';
 					}
 						
@@ -2359,7 +2354,10 @@ int  m_stats(cptr, sptr, parc, parv)
 
 #ifdef STATS_ONLYOPER
 	if (!IsAnOper(sptr))
+	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		return 0;
+	}
 
 #endif
 
@@ -2381,13 +2379,13 @@ int  m_stats(cptr, sptr, parc, parv)
 		name = me.name;
 
 	if (stat != '\0')
-		sendto_umode(UMODE_EYES, "Stats \'%c\' requested by %s (%s@%s)",
+		sendto_umode(UMODE_EYES, "*** Stats \'%c\' requested by %s (%s@%s)",
 		    stat, sptr->name, sptr->user->username,
 		    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
 		    realhost);
 	else
 		sendto_umode(UMODE_EYES,
-		    "Stats \'NULL\' requested by %s (%s@%s)", sptr->name,
+		    "*** Stats \'NULL\' requested by %s (%s@%s)", sptr->name,
 		    sptr->user->username,
 		    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
 		    realhost);
@@ -3594,7 +3592,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	if (!MyClient(sptr) && !(IsTechAdmin(sptr) || IsNetAdmin(sptr))
+	if (!MyClient(sptr) && !(IsNetAdmin(sptr))
 	    && !IsULine(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
@@ -3698,7 +3696,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 			}
 #endif
 		}
-		if (MyClient(sptr) && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
+		if (MyClient(sptr) && !(IsNetAdmin(sptr)))
 		{
 			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 			    parv[0]);
@@ -3886,7 +3884,7 @@ int  m_restart(cptr, sptr, parc, parv)
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	if (!MyClient(sptr) && !(IsTechAdmin(sptr) || IsNetAdmin(sptr))
+	if (!MyClient(sptr) && !(IsNetAdmin(sptr))
 	    && !IsULine(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
@@ -3895,7 +3893,7 @@ int  m_restart(cptr, sptr, parc, parv)
 	if (parc > 3)
 	{
 		/* Remote restart. */
-		if (MyClient(sptr) && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
+		if (MyClient(sptr) && !(IsNetAdmin(sptr)))
 		{
 			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 			    parv[0]);
@@ -4818,7 +4816,8 @@ void dump_map(cptr, server, mask, prompt_length, length)
 	for (lp = (Link *) return_servers(); lp; lp = lp->next)
 	{
 		acptr = lp->value.cptr;
-		if (acptr->srvptr != server)
+		if (acptr->srvptr != server ||
+		    IsULine(acptr) && !IsOper(cptr) && HIDE_ULINES)
 			continue;
 		acptr->flags |= FLAGS_MAP;
 		cnt++;
@@ -4827,7 +4826,7 @@ void dump_map(cptr, server, mask, prompt_length, length)
 	for (lp = (Link *) return_servers(); lp; lp = lp->next)
 	{
 		acptr = lp->value.cptr;
-		if (IsULine(acptr) && HIDE_ULINES && !IsAnOper(cptr))
+		if (IsULine(acptr) && HIDE_ULINES && !IsOper(cptr))
 			continue;		
 		if (acptr->srvptr != server)
 			continue;

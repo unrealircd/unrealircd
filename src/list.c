@@ -41,12 +41,14 @@
 #include "sys.h"
 #include "h.h"
 #include "numeric.h"
+#include <string.h>
 #ifdef	DBMALLOC
 #include "malloc.h"
 #endif
 void free_link PROTO((Link *));
 Link *make_link PROTO(());
 extern ircstats IRCstats;
+extern void remove_server_from_table(aClient *what);
 
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");

@@ -622,7 +622,6 @@ static int cancel_clients(cptr, sptr, cmd)
 		 (cptr->name!=NULL)?cptr->name:"<unknown>",
 		 (fromname!=NULL)?fromname:"<unknown>");
 
-		 /*
 		 * We don't drop the server anymore.  Just ignore
 		 * the message and go about your business.  And hope
 		 * we don't get flooded. :-)  -Cabal95

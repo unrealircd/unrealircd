@@ -7,7 +7,7 @@
 #
 # (c) 2000 codemastr (Dominick Meglio) and the UnrealIRCd Team
 
-VERSION="2.2"
+VERSION="2.3"
 DATE=`date "+%d %B %Y %H:%M"`
 FILE="mynet.network"
 EXISTS="y"
@@ -21,7 +21,6 @@ ADMIN_HOST="admin.mynet.org"
 LOCOP_HOST="locop.mynet.org"
 CSOP_HOST="csop.mynet.org"
 NETADMIN_HOST="netadmin.mynet.org"
-TECHADMIN_HOST="techadmin.mynet.org"
 COADMIN_HOST="coadmin.mynet.org"
 HIDDEN_HOST="hide"
 NETDOMAIN="mynet.org"
@@ -157,14 +156,6 @@ if [ ! -z $cc ]; then
 fi
 
 echo ""
-echo "What is the virtual host techadmins will get when they oper up?"
-echo $n "[$TECHADMIN_HOST] -> $c"
-read cc
-if [ ! -z $cc ]; then
-	TECHADMIN_HOST="$cc"
-fi
-
-echo ""
 echo "What is the virtual host netadmins will get when they oper up?"
 echo $n "[$NETADMIN_HOST] -> $c"
 read cc
@@ -236,7 +227,6 @@ Set locop_host ....: $LOCOP_HOST
 Set sadmin_host ...: $CSOP_HOST
 Set netadmin_host .: $NETADMIN_HOST
 Set coadmin_host ..: $COADMIN_HOST
-Set techadmin_host : $TECHADMIN_HOST
 Set hidden_host ...: $HIDDEN_HOST
 Set netdomain .....: $NETDOMAIN
 Set helpchan ......: $HELPCHAN

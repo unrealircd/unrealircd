@@ -226,12 +226,12 @@
 #define TOK_ADDLINE     "z"	/* 122 */
 #define MSG_GLINE	"GLINE"	/* The awesome g-line */
 #define TOK_GLINE	"}"	/* 125 */
+#define MSG_GZLINE	"GZLINE" /* Teh awesome global z-line */
+#define TOK_GZLINE	"{"	/* ahem? */
 #define MSG_SJOIN	"SJOIN"
 #define TOK_SJOIN	"~"
 #define MSG_SETHOST 	"SETHOST"	/* sethost */
 #define TOK_SETHOST 	"AA"	/* 127 4ever !;) */
-#define MSG_TECHAT 	"TECHAT"	/* techadmin chat */
-#define TOK_TECHAT  	"AB"	/* questionmark? */
 #define MSG_NACHAT  	"NACHAT"	/* netadmin chat */
 #define TOK_NACHAT  	"AC"	/* *beep* */
 #define MSG_SETIDENT 	"SETIDENT"	/* set ident */
@@ -296,6 +296,8 @@
 #define TOK_BOTMOTD 	"BF"
 #define MSG_REMGLINE	"REMGLINE"	/* remove g-line */
 #define TOK_REMGLINE	"BG"
+#define MSG_REMGZLINE	"REMGZLINE"	/* remove global z-line */
+#define TOK_REMGZLINE	"BP"
 #define MSG_HTM		"HTM"
 #define TOK_HTM		"BH"
 #define MSG_UMODE2	"UMODE2"
@@ -345,11 +347,11 @@ extern int m_service(), m_userhost(), m_ison(), m_watch();
 extern int m_service(), m_servset(), m_servlist(), m_squery();
 extern int m_rehash(), m_restart(), m_die(), m_dns(), m_hash();
 /*extern int m_noshortn(),m_noshortc(),m_noshortm(),m_noshorto(),m_noshorth();*/
-
+extern int m_gzline(), m_remgzline();
 extern int m_gline(), m_remgline(), m_map(), m_svs2mode(), m_admins(),
 m_dalinfo();
 extern int m_addline(), m_rules(), m_mkpasswd();
-extern int m_sethost(), m_nachat(), m_techat(), m_setident(), m_setname();
+extern int m_sethost(), m_nachat(), m_setident(), m_setname();
 extern int m_lag(), m_sdesc(), m_knock(), m_credits();
 extern int m_license(), m_chghost(), m_rping(), m_rpong();
 extern int m_netinfo(), m_sendumode(), m_addmotd(), m_addomotd();
@@ -453,13 +455,14 @@ struct Message msgtab[] = {
 	{MSG_MAP, m_map, 0, MAXPARA, TOK_MAP, 0L},
 	{MSG_GLINE, m_gline, 0, MAXPARA, TOK_GLINE, 0L},
 	{MSG_REMGLINE, m_remgline, 0, MAXPARA, TOK_REMGLINE, 0L},
+	{MSG_GZLINE, m_gzline, 0, MAXPARA, TOK_GZLINE, 0L},
+	{MSG_REMGZLINE, m_remgzline, 0, MAXPARA, TOK_REMGZLINE, 0L},
 	{MSG_DALINFO, m_dalinfo, 0, MAXPARA, TOK_DALINFO, 0L},
 	{MSG_SVS2MODE, m_svs2mode, 0, MAXPARA, TOK_SVS2MODE, 0L},
 	{MSG_MKPASSWD, m_mkpasswd, 0, MAXPARA, TOK_MKPASSWD, 0L},
 	{MSG_ADDLINE, m_addline, 0, 1, TOK_ADDLINE, 0L},
 	{MSG_ADMINCHAT, m_admins, 0, 1, TOK_ADMINCHAT, 0L},
 	{MSG_SETHOST, m_sethost, 0, MAXPARA, TOK_SETHOST, 0L},
-	{MSG_TECHAT, m_techat, 0, 1, TOK_TECHAT, 0L},
 	{MSG_NACHAT, m_nachat, 0, 1, TOK_NACHAT, 0L},
 	{MSG_SETIDENT, m_setident, 0, MAXPARA, TOK_SETIDENT, 0L},
 	{MSG_SETNAME, m_setname, 0, 1, TOK_SETNAME, 0L},

@@ -1,0 +1,16 @@
+Compiling UnrealIRCd 3.1.x for Windows
+--------------------------------------
+This document assumes you have a working build environment for
+Visual Studio .NET or Visual Studio 6.0. Other versions may work
+as well, but have not been tested.
+
+1. Copy include/win32/settings.h and setup.h to include/
+2. Copy extras/regex/regex.h to include/
+3. Copy extras/regex/regex.c to src/
+4. Edit include/settings.h to your liking (pretty much change DOMAINNAME)
+5. Unzip src/win32/unrealircd.bmp.gz
+6. Execute "nmake makefile.win32"
+
+Congratulations, you should have a functioning win32 binary.
+
+--Luke (luke@unrealircd.com)
