@@ -32,6 +32,7 @@
 #include "nameser.h"
 #include "resolv.h"
 #include "inet.h"
+#include "threads.h"
 #include <string.h>
 #ifndef CLEAN_COMPILE
 static char rcsid[] = "@(#)$Id$";
@@ -50,10 +51,11 @@ static int incache = 0;
 static CacheTable hashtable[ARES_CACSIZE];
 static aCache *cachetop = NULL;
 static ResRQ *last, *first;
-/* control access to request queue - allow only one thread at a time */
-#ifdef _WIN32
-static HANDLE g_hResMutex = NULL;
-#endif
+/* control access to request queue - allow only one thread at a time.
+** Currently the list is only protected on Windows because we don't use 
+** threads to access it on Unix
+*/
+static MUTEX g_hResMutex;
 static int lock_request();
 static int unlock_request();
 
@@ -107,13 +109,13 @@ int init_resolver(int op)
 	int  ret = 0;
 
 #ifdef _WIN32
-	g_hResMutex = CreateMutex(NULL, 0, "UnrealResMutex");
-#ifdef	DEBUGMODE
+	IRCCreateMutex(g_hResMutex);
 	if (g_hResMutex == NULL)
 	{
-		Debug((DEBUG_ERROR, "init_request: CreateMutex failed. Last error is %d", GetLastError()));
+		ircd_log(LOG_ERROR, "IRCCreateMutex failed: %s:%i.  %s", 
+				 __FILE__, __LINE__,strerror(GetLastError()));
+		return ret;
 	}
-#endif
 #endif
 
 #ifdef	LRAND48
@@ -175,41 +177,44 @@ int init_resolver(int op)
 /* get access to resolver request queue */
 static int lock_request()
 {
+	int iRc = 1;
 #ifdef _WIN32
 	DWORD dwWaitRes;
 
 	if (g_hResMutex)
 	{
-		dwWaitRes = WaitForSingleObject(g_hResMutex, INFINITE);
-#ifdef	DEBUGMODE
+		dwWaitRes = IRCMutexLock(g_hResMutex);
 		if (dwWaitRes != WAIT_OBJECT_0)
 		{
-			Debug((DEBUG_ERROR, "lock_request: failed with %u. Last error is %d", dwWaitRes, GetLastError()));
+			ircd_log(LOG_ERROR, "IRCMutexLock failed with %d: %s:%i.  %s", 
+					 dwWaitRes, __FILE__, __LINE__,strerror(GetLastError()));
+			iRc = 0;
 		}
-#endif
 	}
-#endif	
-	return 1;
+#endif
+	return iRc;
 }
 
 /* release access to resolver request queue */
 static int unlock_request()
 {
+	int iRc = 1;
+
 #ifdef _WIN32
 	BOOL bRc;
 
 	if (g_hResMutex)
 	{
-		bRc = ReleaseMutex(g_hResMutex);
-#ifdef	DEBUGMODE
+		bRc = IRCMutexUnlock(g_hResMutex);
 		if (!bRc)
 		{
-			Debug((DEBUG_ERROR, "unlock_request: failed.  Last error is %d", GetLastError()));
+			ircd_log(LOG_ERROR, "IRCMutexUnlock failed: %s:%i.  %s", 
+					 __FILE__, __LINE__,strerror(GetLastError()));
+			iRc = 0;
 		}
-#endif
 	}
 #endif
-	return 1;
+	return iRc;
 }
 
 static int add_request(ResRQ *new)

@@ -1704,3 +1704,4 @@ seen. gmtime warning still there
 - Removed m_kline.c and m_zline.c these are now implimented as part of m_tkl.c
 - Implemented a patch by poisoner to log vhosts in connect/disconnect logging (#0000487)
 - Made some changes to the thread API to fix some win32 crashes
+- Changed resolver code to use IRCMutex macros.
