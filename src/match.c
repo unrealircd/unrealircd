@@ -97,6 +97,9 @@ static inline int match2(char *mask, char *name)
 			{
 				
 				cm = *(++m);	/* just skip this char, no ? checking */
+				/* In case of something like: '*\', return false. */
+				if (!*m)
+					return 1;
 			}
 			else if (cm == '?')	/* if it's a ? */
 			{
