@@ -116,7 +116,7 @@ char *unrealcredits[] =
 	"list of all the coders' credits. ",
 	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
 	"This IRCd is dedicated to those who have kept us rocking and", 
-	"in good mood all through the years we've struggled with this"
+	"in good mood all through the years we've struggled with this",
 	"project. Unreal3.0 and up is dedicated to Morrigan.",
 	0
 }; 

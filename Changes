@@ -3034,3 +3034,4 @@ seen. gmtime warning still there
 - More Opteron fixes... sizeof() fun, %B fun (always use a 'long'!), etc..
 - Added __attribute__ stuff for ircsprintf() to catch more warnings.
 - Fixed win32 compile problem. Reported by Troco (#0001644).
+- Added a missing ',' to the version.c.SH script reported by docco (#0001643)
