@@ -3007,3 +3007,4 @@ seen. gmtime warning still there
 - Fixed a little error in the spamfilter.conf
 - And some more spamfilter.conf rules (aplore, gtbot, sdbot, spybot).
 - Minor doc update.
+- Changed version to RC2
