@@ -30,11 +30,10 @@ struct flags {
 	char *newflag;
 };
 
-struct class *classes = NULL;
-struct allow *allows = NULL;
 struct uline *ulines = NULL;
 struct link  *links = NULL;
 struct oper *opers = NULL;
+struct vhost *vhosts = NULL;
 
 struct flags oflags[] = {
 	{ 'o', "local" },
@@ -125,7 +124,6 @@ char *getfield(char *newline)
 	return (field);
 }
 
-/* Allow naming of classes */
 
 struct oper {
 	char *login;
@@ -136,22 +134,17 @@ struct oper {
 	struct oper *next;
 };
 
+struct vhost {
+	char *login;
+	char *pass;
+	char *vhost;
+	struct host *hosts;
+	struct vhost *next;
+};
+
 struct host {
 	char *host;
 	struct host *next;
-};
-
-struct allow {
-	char *ip;
-	char *host;
-	int ips;
-	struct allow *next;
-};
-
-struct class {
-	int number;
-	char *name;
-	struct class *next;
 };
 
 struct uline {
@@ -176,31 +169,6 @@ struct link {
 };
 	
 
-int add_class(char *name, int number) {
-	struct class *cl = (struct class *)malloc(sizeof(struct class));
-
-	if (!cl)
-		return 0;
-	cl->number = number;
-	AllocCpy(cl->name, name);
-
-	cl->next = classes;
-	classes = cl;
-	return 1;
-}
-
-int add_allow(char *ip, char *host, int ips) {
-	struct allow *al = (struct allow *)malloc(sizeof(struct allow));
-
-	if (!al)
-		return 0;
-	AllocCpy(al->ip,ip);
-	AllocCpy(al->host,host);
-	al->ips = ips;
-
-	al->next = allows;
-	allows = al;
-}
 
 int add_uline(char *name) {
 	struct uline *ul = (struct uline *)malloc(sizeof(struct uline));
@@ -215,26 +183,6 @@ int add_uline(char *name) {
 }
 
 
-
-struct class *find_class(int number) {
-	struct class *cl;
-
-	for (cl = classes; cl; cl = cl->next) {
-		if (number == cl->number)
-			return cl;
-	}
-	return NULL;
-}	
-
-struct allow *find_allow(char *ip, char *host) {
-	struct allow *al;
-
-	for (al = allows; al; al = al->next) {
-		if (!stricmp(ip,al->ip) && !stricmp(host,al->host))
-			return al;
-	}
-	return NULL;
-}
 
 struct host *add_host(struct oper *oper, char *mask) {
 	struct host *host = (struct host *)malloc(sizeof(struct host));
@@ -251,10 +199,11 @@ struct host *add_host(struct oper *oper, char *mask) {
 	return host;
 }
 
+
 int find_host(struct oper *oper, char *mask) {
 	struct host *host;
 
-	for (host = oper->hosts; host; host = oper->hosts->next) {
+	for (host = oper->hosts; host; host = host->next) {
 		if (!stricmp(host->host, mask))
 			return 1;
 	}
@@ -304,6 +253,53 @@ struct link *find_link(char *name) {
 	return NULL;
 }	
 
+struct vhost *add_vhost(char *name) {
+	struct vhost *vh = (struct vhost *)malloc(sizeof(struct vhost));
+
+	if (!vh)
+		return NULL;
+	AllocCpy(vh->login, name);
+
+	vh->next = vhosts;
+	vhosts = vh;
+	return vh;
+}
+
+struct vhost *find_vhost(char *name, char *pass) {
+	struct vhost *vh;
+
+	for (vh = vhosts; vh; vh = vh->next) {
+		if (!stricmp(vh->login, name) && !stricmp(vh->pass, pass))
+			return vh;
+	}
+	return NULL;
+}	
+
+struct host *add_vhost_host(struct vhost *vh, char *mask) {
+	struct host *host = (struct host *)malloc(sizeof(struct host));
+
+	if (!host)
+		return NULL;
+
+	AllocCpy(host->host, mask);
+
+		host->next = vh->hosts;
+
+	vh->hosts = host;
+
+	return host;
+}
+
+
+int find_vhost_host(struct vhost *vh, char *mask) {
+	struct host *host;
+
+	for (host = vh->hosts; host; host = host->next) {
+		if (!stricmp(host->host, mask))
+			return 1;
+	}
+	return 0;
+}
 
 
 void iCstrip(char *line)
@@ -316,388 +312,386 @@ void iCstrip(char *line)
 		*c = '\0';
 }
 
-int main (int argc, char *argv[]) {
-	FILE *fd;
-	FILE *fd2;
-	char buf[1024], *tmp, *param;
-	int mainport, i;
-	char mainip[256];
-	struct class *cl;
-	struct uline *ul;
-	struct link *lk;
+int main(int argc, char *argv[]) {
+        FILE *fd;
+        FILE *fd2;
+	char buf[1024], mainip[32], *tmp;
+	int mainport;
 	struct oper *op;
+	struct link *lk;
+	struct uline *ul;
 	struct host *operhost;
+	struct vhost *vh;
 	struct flags *_flags;
-	struct allow *al;
-	fd = fopen("ircd.conf", "r");
-	fd2 = fopen("unrealircd.conf.new", "w");
-	for (i=1; i < argc; i++) {
-		param = argv[i];
-		if (*param == '-') {
-			++param;
-			if (*param == 'Y') {
-				char *class;
-				int num;
-				++i;
-				for (tmp = strtok(argv[i], ","); tmp; tmp = strtok(NULL, ",")) {
-					char *tmp2;
-					int num;
-					num = atoi(getfield(tmp));	
-					tmp2 = getfield(NULL);
-					add_class(tmp2,num);
-				}
-			}
-			if (*param == 'I') {
-				char *ip;
-				char *host;
-				int ips;
-				i++;
-				for (tmp = strtok(argv[i], ","); tmp; tmp = strtok(NULL, ",")) {
-					ip = getfield(tmp);
-					host = getfield(NULL);
-					ips = atoi(getfield(NULL));
-					add_allow(ip,host,ips);
-				}
-			}
-	
-		}
+	if (argc >= 3) { 
+		fd = fopen(argv[1],"r");
+		fd2 = fopen(argv[2],"w");
 	}
+	else {
+		fd = fopen("ircd.conf","r");
+		fd2 = fopen("unrealircd.conf.new", "w");
+	}
+	if (!fd || !fd2)
+		return;
 
 	fprintf(fd2, "/* Created using the UnrealIRCd configuration file updater */\n\n");
 
 	while (fgets(buf, 1023, fd)) {
-		if (buf[0] == '#')			continue;
-
+		if (buf[0] == '#')
+			continue;
 		iCstrip(buf);
-	switch (buf[0]) {
-	/* M:line */
-	case 'M': 
-		fprintf(fd2, "me {\n");
-		tmp = getfield(&buf[2]);
-		fprintf(fd2, "\tname \"%s\";\n", tmp);
-		strcpy(mainip, getfield(NULL));
-		tmp = getfield(NULL);
-		fprintf(fd2, "\tinfo \"%s\";\n", tmp);
-		tmp = getfield(NULL);
-		mainport = atoi(tmp);
-		tmp = getfield(NULL);
-		if (tmp)
-			fprintf(fd2, "\tnumeric %s;\n", tmp);
-		fprintf(fd2, "};\n\n");
-
-		break;
-	/* A:line */
-	case 'A': 
-		fprintf(fd2, "admin {\n");
-		tmp = getfield(&buf[2]);
-		if (tmp)
-			fprintf(fd2, "\t\"%s\";\n", tmp);
-		tmp = getfield(NULL);
-		if (tmp)
-			fprintf(fd2, "\t\"%s\";\n", tmp);
-		tmp = getfield(NULL);
-		if (tmp)
-			fprintf(fd2, "\t\"%s\";\n", tmp);
-		fprintf(fd2,"};\n\n");
-		break;
-	/* Y:line */
-	case 'Y': 
-		tmp = getfield(&buf[2]);
-		if ((cl = find_class(atoi(tmp))))
-			fprintf(fd2, "class %s {\n", cl->name);
-		else	
-		fprintf(fd2, "class %s {\n",tmp);
-		tmp = getfield(NULL);
-		fprintf(fd2, "\tpingfreq %s;\n", tmp);
-		tmp = getfield(NULL);
-		if (atoi(tmp) != 0)
-			fprintf(fd2, "\tconnfreq %s;\n", tmp);
-		tmp = getfield(NULL);
-		fprintf(fd2, "\tmaxclients %s;\n", tmp);
-		tmp = getfield(NULL);
-		fprintf(fd2, "\tsendq %s;\n", tmp);
-		fprintf(fd2, "};\n\n");
-		break;	
-	case 'I':
-	{
-		char *ip, *pass;
-		fprintf(fd2, "allow {\n");
-		ip = getfield(&buf[2]);
-		pass = getfield(NULL);
-		tmp = getfield(NULL);
-		fprintf(fd2, "\tip %s;\n", ip);
-		fprintf(fd2, "\thostname %s;\n", tmp);
-		if (al = find_allow(ip, tmp))
-			fprintf(fd2, "\tmaxperip %d;\n", al->ips);
-		if (!BadPtr(pass)) {
-			if(!strcmp(pass, "ONE") && !al)
-				fprintf(fd2, "\tmaxperip 1;\n");
-			else
-				fprintf(fd2, "\tpassword \"%s\";\n", tmp);
-		}
-		getfield(NULL);
-		tmp = getfield(NULL);
-		if ((cl = find_class(atoi(tmp))))
-			fprintf(fd2, "\tclass %s;\n", cl->name);
-		else
-		fprintf(fd2, "\tclass %s;\n", tmp);
-		fprintf(fd2,"};\n\n");
-		break;
-	}
-	case 'O':
-	case 'o':
-	{
-		char host[256], pass[32];
-		struct flags *_oflags;
-		char rebuild[128];
-		int i = 0;
-		strcpy(host, getfield(&buf[2]));
-		strcpy(pass, getfield(NULL));
-		tmp = getfield(NULL);
-		if (!(op = find_oper(tmp, pass)))
-			op = add_oper(tmp);
-		AllocCpy(op->pass, pass);
-		tmp = getfield(NULL);
-		if (!find_host(op, host))
-			add_host(op, host);
-		if (!BadPtr(op->flags)) {
-			memset(rebuild, 0, 128);
-			for(_oflags = oflags; _oflags->oldflag;_oflags++) {
-				if (strchr(op->flags, _oflags->oldflag) || strchr(tmp, _oflags->oldflag)) {
-					rebuild[i] = _oflags->oldflag;
-					i++;
+	
+		if (buf[1] == ':') {
+			/* Regular config line, switch! */
+			switch(buf[0]) {
+			case 'M':
+				fprintf(fd2, "me {\n");
+				tmp = getfield(&buf[2]);
+				fprintf(fd2, "\tname \"%s\";\n", tmp);
+				strcpy(mainip, getfield(NULL));
+				tmp = getfield(NULL);
+				fprintf(fd2, "\tinfo \"%s\";\n", tmp);
+				tmp = getfield(NULL);
+				mainport = atoi(tmp);
+				tmp = getfield(NULL);
+				if (tmp)
+					fprintf(fd2, "\tnumeric %s;\n", tmp);
+				fprintf(fd2, "};\n\n");
+				break;
+			case 'A': 
+				fprintf(fd2, "admin {\n");
+				tmp = getfield(&buf[2]);
+				if (tmp)
+					fprintf(fd2, "\t\"%s\";\n", tmp);
+				tmp = getfield(NULL);
+				if (tmp)
+					fprintf(fd2, "\t\"%s\";\n", tmp);
+				tmp = getfield(NULL);
+				if (tmp)
+					fprintf(fd2, "\t\"%s\";\n", tmp);
+				fprintf(fd2,"};\n\n");
+				break;
+			case 'Y': 
+				tmp = getfield(&buf[2]);
+				fprintf(fd2, "class %s {\n",tmp);
+				tmp = getfield(NULL);
+				fprintf(fd2, "\tpingfreq %s;\n", tmp);
+				tmp = getfield(NULL);
+				if (atoi(tmp) != 0)
+					fprintf(fd2, "\tconnfreq %s;\n", tmp);
+				tmp = getfield(NULL);
+				fprintf(fd2, "\tmaxclients %s;\n", tmp);
+				tmp = getfield(NULL);
+				fprintf(fd2, "\tsendq %s;\n", tmp);
+				fprintf(fd2, "};\n\n");
+				break;	
+			case 'I':
+			{
+				char *ip, *pass;
+				fprintf(fd2, "allow {\n");
+				ip = getfield(&buf[2]);
+				pass = getfield(NULL);
+				tmp = getfield(NULL);
+				fprintf(fd2, "\tip %s;\n", ip);
+				fprintf(fd2, "\thostname %s;\n", tmp);
+				if (!BadPtr(pass)) {
+					if(!strcmp(pass, "ONE"))
+						fprintf(fd2, "\tmaxperip 1;\n");
+					else
+						fprintf(fd2, "\tpassword \"%s\";\n", tmp);
 				}
+				getfield(NULL);
+				tmp = getfield(NULL);
+				fprintf(fd2, "\tclass %s;\n", tmp);
+				fprintf(fd2,"};\n\n");
+				break;
 			}
-			AllocCpy(op->flags, rebuild);
-		}
-		else {
-			AllocCpy(op->flags, tmp);
-		}
-		tmp = getfield(NULL);
-		if ((cl = find_class(atoi(tmp)))) {
-			AllocCpy(op->class, cl->name);
-		}
-		else {
-			AllocCpy(op->class, tmp);
-		}
-		break;
-	}
-	case 'U':
-		add_uline(getfield(&buf[2]));
-		break;
-	case 'X':
-		fprintf(fd2, "drpass {\n");
-		tmp = getfield(&buf[2]);
-		fprintf(fd2, "\tdie \"%s\";\n", tmp);
-		tmp = getfield(NULL);
-		fprintf(fd2, "\trestart \"%s\";\n", tmp);
-		fprintf(fd2, "};\n\n");
-		break;
-	case 'P':
-	{
-		char ip[256], flags[20];
-		struct flags *_lflags;
-		strcpy(ip,getfield(&buf[2]));
-		strcpy(flags,getfield(NULL));
-		getfield(NULL);
-		tmp = getfield(NULL);
-		if (!BadPtr(flags)) {
-			fprintf(fd2, "listen %s:%s {\n", ip, tmp);
-			tmp = flags;
-			fprintf(fd2, "\toptions {\n");
-			for(; *tmp; tmp++) {
-				for(_lflags = listenflags; _lflags->oldflag; _lflags++) {
-					if (*tmp == _lflags->oldflag)
-						fprintf(fd2, "\t\t%s;\n", _lflags->newflag);
+			case 'O':
+			case 'o':
+			{
+				char host[256], pass[32];
+				struct flags *_oflags;
+				char rebuild[128];
+				int i = 0;
+				tmp = getfield(&buf[2]);
+				if (!strchr(tmp,'@'))
+					sprintf(host, "*@%s",tmp);
+				else
+					strcpy(host, tmp);
+				strcpy(pass, getfield(NULL));
+				tmp = getfield(NULL);
+				if (!(op = find_oper(tmp, pass)))
+					op = add_oper(tmp);
+				AllocCpy(op->pass, pass);
+				tmp = getfield(NULL);
+				if (!find_host(op, host))
+					add_host(op, host);
+				if (!BadPtr(op->flags)) {
+					memset(rebuild, 0, 128);
+					for(_oflags = oflags; _oflags->oldflag;_oflags++) {
+						if (strchr(op->flags, _oflags->oldflag) || strchr(tmp, _oflags->oldflag)) {
+							rebuild[i] = _oflags->oldflag;
+							i++;	
+						}
+					}
+					AllocCpy(op->flags, rebuild);
 				}
+				else {
+					AllocCpy(op->flags, tmp);
+				}
+				tmp = getfield(NULL);
+				AllocCpy(op->class, tmp);
+				break;
 			}
-			fprintf(fd2, "\t};\n};\n\n");
-		}
-		else
-			fprintf(fd2, "listen %s:%s;\n\n", ip, tmp);
-		break;
-	}
-	case 'T':
-		fprintf(fd2, "tld {\n");
-		tmp = getfield(&buf[2]);
-		fprintf(fd2, "\tmask %s;\n", tmp);
-		tmp = getfield(NULL);
-		fprintf(fd2, "\tmotd \"%s\";\n", tmp);
-		tmp = getfield(NULL);
-		fprintf(fd2, "\trules \"%s\";\n", tmp);
-		fprintf(fd2, "};\n\n");
-		break;
-	case 'E': 
-	{
-		char *tmp2;
-		fprintf(fd2, "except ban {\n");
-		tmp = getfield(&buf[2]);
-		getfield(NULL);
-		tmp2 = getfield(NULL);
-		fprintf(fd2, "\tmask %s@%s;\n", tmp2, tmp);
-		fprintf(fd2, "};\n\n");
-		break;
-	}
-	case 'e':
-		fprintf(fd2, "except socks {\n");
-		tmp = getfield(&buf[2]);
-		fprintf(fd2, "\tmask %s;\n", tmp);
-		fprintf(fd2, "};\n\n");
-		break;
-	case 'L':
-	{
-		char *leafmask;
-		leafmask = getfield(&buf[2]);
-		getfield(NULL);
-		tmp = getfield(NULL);
-		if (!(lk = find_link(tmp))) 
-			lk = add_server(tmp);
-		AllocCpy(lk->leafmask, leafmask);
-		lk->type = 0;
-		tmp = getfield(NULL);
-		if (!BadPtr(tmp))
-			lk->leafdepth = atoi(tmp);
-		else
-			lk->leafdepth = 0;
-		break;
-	}
-	case 'H':
-	{
-		char *hubmask;
-		hubmask = getfield(&buf[2]);
-		getfield(NULL);
-		tmp = getfield(NULL);
-		if (!(lk = find_link(tmp)))
-			lk = add_server(tmp);
-		AllocCpy(lk->hubmask, hubmask);
-		lk->type = 1;
-		lk->leafdepth = 0;
-		break;
-	}
-	case 'N':
-	{
-		char *host, *pass;		
+			case 'U':
+				add_uline(getfield(&buf[2]));
+				break;
+			case 'X':
+				fprintf(fd2, "drpass {\n");
+				tmp = getfield(&buf[2]);
+				fprintf(fd2, "\tdie \"%s\";\n", tmp);
+				tmp = getfield(NULL);
+				fprintf(fd2, "\trestart \"%s\";\n", tmp);
+				fprintf(fd2, "};\n\n");
+				break;
+			case 'P':
+			{
+				char ip[256], flags[20];
+				struct flags *_lflags;
+				strcpy(ip,getfield(&buf[2]));
+				strcpy(flags,getfield(NULL));
+				getfield(NULL);
+				tmp = getfield(NULL);
+				if (!BadPtr(flags) && flags[0] != '*') {
+					fprintf(fd2, "listen %s:%s {\n", ip, tmp);
+					tmp = flags;
+					fprintf(fd2, "\toptions {\n");
+					for(; *tmp; tmp++) {
+						for(_lflags = listenflags; _lflags->oldflag; _lflags++) {
+							if (*tmp == _lflags->oldflag)
+								fprintf(fd2, "\t\t%s;\n", _lflags->newflag);
+						}
+					}
+					fprintf(fd2, "\t};\n};\n\n");
+				}
+				else
+					fprintf(fd2, "listen %s:%s;\n\n", ip, tmp);
+				break;
+			}
+			case 'T':
+				fprintf(fd2, "tld {\n");
+				tmp = getfield(&buf[2]);
+				fprintf(fd2, "\tmask %s;\n", tmp);
+				tmp = getfield(NULL);
+				fprintf(fd2, "\tmotd \"%s\";\n", tmp);
+				tmp = getfield(NULL);
+				fprintf(fd2, "\trules \"%s\";\n", tmp);
+				fprintf(fd2, "};\n\n");
+				break;
+			case 'E': 
+			{
+				char *tmp2;
+				fprintf(fd2, "except ban {\n");
+				tmp = getfield(&buf[2]);
+				getfield(NULL);
+				tmp2 = getfield(NULL);
+				fprintf(fd2, "\tmask %s@%s;\n", tmp2, tmp);
+				fprintf(fd2, "};\n\n");
+				break;
+			}
+			case 'e':
+				fprintf(fd2, "except socks {\n");
+				tmp = getfield(&buf[2]);
+				fprintf(fd2, "\tmask %s;\n", tmp);
+				fprintf(fd2, "};\n\n");
+				break;
+			case 'L':
+			{
+				char *leafmask;
+				leafmask = getfield(&buf[2]);
+				getfield(NULL);
+				tmp = getfield(NULL);
+				if (!(lk = find_link(tmp))) 
+					lk = add_server(tmp);
+				AllocCpy(lk->leafmask, leafmask);
+				lk->type = 0;
+				tmp = getfield(NULL);
+				if (!BadPtr(tmp))
+					lk->leafdepth = atoi(tmp);
+				else
+					lk->leafdepth = 0;
+				break;
+			}
+			case 'H':
+			{
+				char *hubmask;
+				hubmask = getfield(&buf[2]);
+				getfield(NULL);
+				tmp = getfield(NULL);
+				if (!(lk = find_link(tmp)))
+					lk = add_server(tmp);
+				AllocCpy(lk->hubmask, hubmask);
+				lk->type = 1;
+				lk->leafdepth = 0;
+				break;
+			}
+			case 'N':
+			{
+				char *host, *pass;		
 		
-		host = getfield(&buf[2]);
-		pass = getfield(NULL);
-		tmp = getfield(NULL);
-		if (!(lk = find_link(tmp)))
-			lk = add_server(tmp);
-		AllocCpy(lk->recpass,pass);
-		getfield(NULL);
-		tmp = getfield(NULL);
-		if ((cl = find_class(atoi(tmp)))) {
-			AllocCpy(lk->recclass, cl->name);
+				host = getfield(&buf[2]);
+				pass = getfield(NULL);
+				tmp = getfield(NULL);
+				if (!(lk = find_link(tmp)))
+					lk = add_server(tmp);
+				AllocCpy(lk->recpass,pass);
+				getfield(NULL);
+				tmp = getfield(NULL);
+				AllocCpy(lk->recclass,tmp);
+				break;
+			}			
+			case 'C':
+			{
+				char *host, *pass;
+		
+				host = getfield(&buf[2]);
+				pass = getfield(NULL);
+				tmp = getfield(NULL);
+				if (!(lk = find_link(tmp)))
+					lk = add_server(tmp);
+				AllocCpy(lk->hostmask, host);
+				AllocCpy(lk->connpass,pass);
+				tmp = getfield(NULL);
+				if (!BadPtr(tmp))
+					lk->port = atoi(tmp);
+				else
+					lk->port = 0;
+				tmp = getfield(NULL);
+				AllocCpy(lk->connclass, tmp);
+				tmp = getfield(NULL);
+				if (!BadPtr(tmp)) {
+					AllocCpy(lk->flags, tmp);
+				}
+				else
+					lk->flags = NULL;
+				break;
+			}
+			case 'Q':
+			{
+				char *tmp2;
+				getfield(&buf[2]);
+				tmp2 = getfield(NULL);
+				tmp = getfield(NULL);
+				fprintf(fd2, "ban nick {\n");
+				fprintf(fd2, "\tmask \"%s\";\n", tmp);
+				if (!BadPtr(tmp2))
+				fprintf(fd2, "\treason \"%s\";\n", tmp2);
+				fprintf(fd2, "};\n\n");
+				break;
+			}
+			case 'q':
+			{	
+				char *tmp2;
+				getfield(&buf[2]);
+				tmp2 = getfield(NULL);
+				tmp = getfield(NULL);
+				fprintf(fd2, "ban server {\n");
+				fprintf(fd2, "\tmask \"%s\";\n", tmp);
+				if (!BadPtr(tmp2))
+				fprintf(fd2, "\treason \"%s\";\n", tmp2);
+				fprintf(fd2, "};\n\n");
+				break;
+			}
+			case 'Z':
+				tmp = getfield(&buf[2]);
+				fprintf(fd2, "ban ip {\n");
+				fprintf(fd2, "\tmask \"%s\";\n", tmp);
+				tmp = getfield(NULL);
+				if (!BadPtr(tmp))
+					fprintf(fd2, "\treason \"%s\";\n", tmp);
+				fprintf(fd2, "};\n\n");
+				break;
+			case 'n':
+				tmp = getfield(&buf[2]);
+				fprintf(fd2, "ban realname {\n");
+				fprintf(fd2, "\tmask \"%s\";\n", tmp);
+				tmp = getfield(NULL);
+				if (!BadPtr(tmp))
+					fprintf(fd2, "\treason \"%s\";\n", tmp);
+				fprintf(fd2, "};\n\n");
+				break;
+			case 'K':
+			case 'k':
+			{
+				char *host, *user, *reason;
+				host = getfield(&buf[2]);
+				reason = getfield(NULL);
+				user = getfield(NULL);
+				fprintf(fd2, "ban user {\n");
+				fprintf(fd2, "\tmask %s@%s;\n", user, host);
+				if (!BadPtr(reason))
+					fprintf(fd2, "\treason \"%s\";\n", reason);
+				fprintf(fd2, "};\n\n");
+				break;
+			}
+			case 'V':
+			case 'v':
+			{
+				char *version, *flags;
+				version = getfield(&buf[2]);
+				flags = getfield(NULL);
+				tmp = getfield(NULL);
+				fprintf(fd2, "deny version {\n");
+				fprintf(fd2, "\tmask %s;\n", tmp);
+				fprintf(fd2, "\tversion \"%s\";\n", version);
+				fprintf(fd2, "\tflags \"%s\";\n", flags);
+				fprintf(fd2, "};\n\n");
+				break;
+				}
+			case 'D':
+				fprintf(fd2, "deny link {\n");
+				fprintf(fd2, "\tmask %s;\n", getfield(&buf[2]));
+				getfield(NULL);
+				fprintf(fd2, "\trule \"%s\";\n", getfield(NULL));
+				fprintf(fd2, "\ttype all;\n};\n\n");
+				break;
+			case 'd':
+				fprintf(fd2, "deny link {\n");
+				fprintf(fd2, "\tmask %s;\n", getfield(&buf[2]));
+				getfield(NULL);
+				fprintf(fd2, "\trule \"%s\";\n", getfield(NULL));
+				fprintf(fd2, "\ttype auto;\n};\n\n");
+				break;
+			}
 		}
-		else {
-			AllocCpy(lk->recclass,tmp);
-		}
-		break;
-	}			
-	case 'C':
-	{
-		char *host, *pass;
+	tmp = strtok(buf, " ");
+	if (!strcmp(tmp, "deny")) {
+		fprintf(fd2, "deny dcc {\n");
+		fprintf(fd2, "\tmask \"%s\";\n",strtok(NULL, " "));
+		fprintf(fd2, "\treason \"%s\"\n};\n",strtok(NULL,""));
+		continue;
+	}
+	if (!strcmp(tmp, "allow")) {
+		fprintf(fd2, "allow channel {\n");
+		fprintf(fd2, "\tchannel \"%s\";\n",strtok(NULL, " "));
+		continue;
+	}
+	if (!strcmp(tmp, "vhost")) {
+		char host[100];
+		tmp = strtok(&buf[2]," ");
+		vh = add_vhost(strtok(NULL, " "));	
+		AllocCpy(vh->vhost,tmp);
+		AllocCpy(vh->pass,strtok(NULL," "));
+		tmp = strtok(NULL, "");
+		strcpy(host,tmp);
+		if (!strchr(tmp,'@'))
+			sprintf(host, "*@%s",tmp);
+		else
+			strcpy(host, tmp);
+		if (!find_vhost_host(vh, host))
+			add_vhost_host(vh, host);
+	}
 
-		host = getfield(&buf[2]);
-		pass = getfield(NULL);
-		tmp = getfield(NULL);
-		if (!(lk = find_link(tmp)))
-			lk = add_server(tmp);
-		AllocCpy(lk->hostmask, host);
-		AllocCpy(lk->connpass,pass);
-		tmp = getfield(NULL);
-		if (!BadPtr(tmp))
-			lk->port = atoi(tmp);
-		else
-			lk->port = 0;
-		tmp = getfield(NULL);
-		if ((cl = find_class(atoi(tmp)))) {
-			AllocCpy(lk->connclass, cl->name);
-		}
-		else {
-			AllocCpy(lk->connclass, tmp);
-		}
-		tmp = getfield(NULL);
-		if (!BadPtr(tmp)) {
-			AllocCpy(lk->flags, tmp);
-		}
-		else
-			lk->flags = NULL;
-		break;
-	}
-	case 'Q':
-	{
-		char *tmp2;
-		getfield(&buf[2]);
-		tmp2 = getfield(NULL);
-		tmp = getfield(NULL);
-		fprintf(fd2, "ban nick {\n");
-		fprintf(fd2, "\tmask \"%s\";\n", tmp);
-		if (!BadPtr(tmp2))
-		fprintf(fd2, "\treason \"%s\";\n", tmp2);
-		fprintf(fd2, "};\n\n");
-		break;
-	}
-	case 'q':
-	{
-		char *tmp2;
-		getfield(&buf[2]);
-		tmp2 = getfield(NULL);
-		tmp = getfield(NULL);
-		fprintf(fd2, "ban server {\n");
-		fprintf(fd2, "\tmask \"%s\";\n", tmp);
-		if (!BadPtr(tmp2))
-		fprintf(fd2, "\treason \"%s\";\n", tmp2);
-		fprintf(fd2, "};\n\n");
-		break;
-	}
-	case 'Z':
-		tmp = getfield(&buf[2]);
-		fprintf(fd2, "ban ip {\n");
-		fprintf(fd2, "\tmask \"%s\";\n", tmp);
-		tmp = getfield(NULL);
-		if (!BadPtr(tmp))
-		fprintf(fd2, "\treason \"%s\";\n", tmp);
-		fprintf(fd2, "};\n\n");
-		break;
-	case 'n':
-		tmp = getfield(&buf[2]);
-		fprintf(fd2, "ban realname {\n");
-		fprintf(fd2, "\tmask \"%s\";\n", tmp);
-		tmp = getfield(NULL);
-		if (!BadPtr(tmp))
-			fprintf(fd2, "\treason \"%s\";\n", tmp);
-		fprintf(fd2, "};\n\n");
-		break;
-	case 'K':
-	case 'k':
-	{
-		char *host, *user, *reason;
-		host = getfield(&buf[2]);
-		reason = getfield(NULL);
-		user = getfield(NULL);
-		fprintf(fd2, "ban user {\n");
-		fprintf(fd2, "\tmask %s@%s;\n", user, host);
-		if (!BadPtr(reason))
-			fprintf(fd2, "\treason \"%s\";\n", reason);
-		fprintf(fd2, "};\n\n");
-		break;
-	}
-	case 'V':
-	case 'v':
-	{
-		char *version, *flags;
-		version = getfield(&buf[2]);
-		flags = getfield(NULL);
-		tmp = getfield(NULL);
-		fprintf(fd2, "deny version {\n");
-		fprintf(fd2, "\tmask %s;\n", tmp);
-		fprintf(fd2, "\tversion \"%s\";\n", version);
-		fprintf(fd2, "\tflags \"%s\";\n", flags);
-		fprintf(fd2, "};\n\n");
-		break;
-	}
-	}
 	}
 	/* Old M:line bind */
 	fprintf(fd2, "listen %s:%d;\n\n", mainip, mainport);
@@ -772,10 +766,18 @@ int main (int argc, char *argv[]) {
 		fprintf(fd2, "};\n\n");
 	}
 		
-		
-			
-
-	/* Because of how new U:lines are, we have to add them at the end */
+	for (vh = vhosts; vh; vh = vh->next) {
+		fprintf(fd2, "vhost {\n");
+		fprintf(fd2, "\tfrom {\n");
+		for (operhost = vh->hosts; operhost; operhost = operhost->next) {
+			fprintf(fd2, "\t\tuserhost %s;\n", operhost->host);
+		}
+		fprintf(fd2, "\t};\n");
+		fprintf(fd2, "\tvhost %s;\n", vh->vhost);
+		fprintf(fd2, "\tlogin %s;\n", vh->login);
+		fprintf(fd2, "\tpassword \"%s\";\n", vh->pass);
+		fprintf(fd2, "};\n\n");
+	}
 	if (ulines)
 		fprintf(fd2, "ulines {\n");
 	for (ul = ulines; ul; ul = ul->next) {	
