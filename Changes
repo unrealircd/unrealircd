@@ -547,3 +547,5 @@
 - Added an options member to the ExtbanInfo structure. This currently supports one flag,
   EXTBOPT_CHSVSMODE. When set, this extban will be removed when an SVSMODE -b [nick] is
   executed (#0002222) suggested by Snake.
+- Fixed a bug where specifying a reason to SVSPART would cause it to fail (#0002210) reported 
+  by tabrisnet.

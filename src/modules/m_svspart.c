@@ -101,7 +101,8 @@ CMD_FUNC(m_svspart)
 	if (!IsULine(sptr))
 		return 0;
 
-	if (parc != 3 || !(acptr = find_person(parv[1], NULL))) return 0;
+	if (parc < 3 || !(acptr = find_person(parv[1], NULL))) 
+		return 0;
 
 	if (MyClient(acptr))
 	{
