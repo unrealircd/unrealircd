@@ -265,3 +265,4 @@
 - Fixed a whois bug when PREFIX_AQ is undefined, reported by Shaun
 - Moved the RTF win32 code to a seperate file
 - More win32 code cleanups
+- Added src/win32/editor.c (woops), (#0001932) reported by Troco
