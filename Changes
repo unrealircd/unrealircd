@@ -1710,3 +1710,4 @@ seen. gmtime warning still there
 - Updated docs some more
 - Fixed a makefile.win32.ssl problem reported by WeeD
 - Changed version to beta13, updated docs
+- Check for connect() success/failure in scanners on all OSs.

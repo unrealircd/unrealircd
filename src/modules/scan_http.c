@@ -193,9 +193,9 @@ void	scan_http_scan_port(HSStruct *z)
 	struct			SOCKADDR_IN bin;
 	SOCKET			fd;
 	unsigned char		httpbuf[160];
-	fd_set			rfds;
+	fd_set			rfds, efds;
+	int  err, len = sizeof(err);
 	struct timeval  	tv;
-	int			len;
 
 	IRCMutexLock((h->lock));
 #ifndef INET6
@@ -250,26 +250,43 @@ void	scan_http_scan_port(HSStruct *z)
          * -Zogg
 	 */
 	set_non_blocking(fd, NULL);
-	if ((retval = connect(fd, (struct sockaddr *)&sin,
-                sizeof(sin))) == -1 && !(ERRNO == P_EINPROGRESS))
+	if ((retval = connect(fd, (struct sockaddr *)&sin, sizeof(sin))) == -1 && (ERRNO != P_EWORKING))
 	{
 		/* we have no socks server! */
 		CLOSE_SOCK(fd);	
 		goto exituniverse;
-		return;
 	}
 	
-	/* We wait for write-ready */
+	/* We wait for connection to complete */
 	tv.tv_sec = *xScan_TimeOut;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
-	if (!select(fd + 1, NULL, &rfds, NULL, &tv))
+	FD_ZERO(&efds);
+	FD_SET(fd, &efds);
+	if (select(fd + 1, NULL, &rfds, &efds, &tv) <= 0)
 	{
+		/* timeout or error */
 		CLOSE_SOCK(fd);
 		goto exituniverse;
 	}
-				
+	/* did connection fail on windows? */
+	if (FD_ISSET(fd, &efds))
+	{
+		err = ERRNO;
+		CLOSE_SOCK(fd);
+		goto exituniverse;
+	}
+#ifdef	SO_ERROR
+	/* did connection fail on unix? */
+	if (!getsockopt(fd, SOL_SOCKET, SO_ERROR, (OPT_TYPE *)&err, &len))
+		if (err)
+		{
+			/* connection failed */
+			CLOSE_SOCK(fd);
+			goto exituniverse;
+		}
+#endif
 	bzero(httpbuf, sizeof(httpbuf));
 	snprintf(httpbuf, sizeof httpbuf, "CONNECT %s:%i HTTP/1.1\n\n",
 		Inet_ia2p(&xScan_endpoint->SIN_ADDR), ntohs(xScan_endpoint->SIN_PORT));
@@ -278,7 +295,7 @@ void	scan_http_scan_port(HSStruct *z)
 		CLOSE_SOCK(fd);
 		goto exituniverse;
 	}
-	/* Now we wait for data. 10 secs ought to be enough  */
+	/* Now we wait for data. Duration is set::scan::timeout */
 	tv.tv_sec = *xScan_TimeOut;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
@@ -290,7 +307,7 @@ void	scan_http_scan_port(HSStruct *z)
 		CLOSE_SOCK(fd);
 		if (len < 4)
 			goto exituniverse;
-		if (!strncmp(httpbuf, "HTTP/1.0 200", 12))
+		if (strncmp(httpbuf, "HTTP/1.0 200", 12))
 		{
 			/* Gotcha */
 			IRCMutexLock((h->lock));
