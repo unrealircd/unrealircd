@@ -138,7 +138,7 @@ int  m_version(cptr, sptr, parc, parv)
 	{
 		sendto_one(sptr, rpl_str(RPL_VERSION), me.name,
 		    parv[0], version, debugmode, me.name,
-		    serveropts, extraflags,
+		    serveropts, extraflags ? extraflags : "",
 		    (IsAnOper(sptr) ? MYOSNAME : "*"), UnrealProtocol);
 		if (MyClient(sptr))
 			sendto_one(sptr, rpl_str(RPL_PROTOCTL), me.name,

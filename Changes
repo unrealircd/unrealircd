@@ -1151,3 +1151,4 @@ v- Fixed some bugreport stuff
 - Removed ircnetwork part of /version
 - Cleaned up a bunch of -Wall warnings (unused variables, etc)
 - -Wall cleanup cleanup with SSL AUTH problem
+- Fix for /version crash, reported by RaYmAn
