@@ -120,7 +120,7 @@ char *unrealcredits[] =
 	"SirDeath, l33, EiniD, uo, RevPsych and the subgenius.net network,",
 	"^RavenX^, Mich[a]el, {X}, Fish, Shmad, Killer, BrainSCAN, RevNull,",
 	"GoNiS, Mikey, DrBin, rapta, crow, SevenEagle, Curt|s, Scooter,",
-	"auspice, RaYmAn, Taz, HERZ, Pique, ROXnet",
+	"auspice, RaYmAn, Taz, HERZ, Pique, ROXnet, trinity, scpt0r",
 	"",
 	"",
         "                   \2\37Stskeeps would like to thank:\2\37", 
