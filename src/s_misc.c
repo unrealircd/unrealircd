@@ -481,12 +481,6 @@ int  exit_client(cptr, sptr, from, comment)
 			    sptr->name, sptr->user->username,
 			    sptr->user->realhost, comment, sptr->sockhost);
 
-		}
-		if (IsPerson(sptr))
-		{
-			char mydom_mask[HOSTLEN + 1];
-			mydom_mask[0] = '\0';
-			strncpy(&mydom_mask[1], DOMAINNAME, HOSTLEN - 1);
 			/* Clean out list and watch structures -Donwulff */
 			hash_del_watch_list(sptr);
 			if (sptr->user && sptr->user->lopt)
@@ -495,20 +489,18 @@ int  exit_client(cptr, sptr, from, comment)
 				free_str_list(sptr->user->lopt->nolist);
 				MyFree(sptr->user->lopt);
 			}
-		}
-		on_for = TStime() - sptr->firsttime;
+			on_for = TStime() - sptr->firsttime;
 # if defined(USE_SYSLOG) && defined(SYSLOG_USERS)
-		if (IsPerson(sptr))
 			syslog(LOG_NOTICE, "%s (%3d:%02d:%02d): %s@%s (%s)\n",
 			    myctime(sptr->firsttime),
 			    on_for / 3600, (on_for % 3600) / 60,
 			    on_for % 60, sptr->user->username,
 			    sptr->sockhost, sptr->name);
 #endif
-			if (IsPerson(sptr))
-				ircd_log(LOG_CLIENT, "Disconnect - (%d:%d:%d) %s!%s@%s",
-					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
-					sptr->name, sptr->user->username, sptr->user->realhost);
+			ircd_log(LOG_CLIENT, "Disconnect - (%d:%d:%d) %s!%s@%s",
+				on_for / 3600, (on_for % 3600) / 60, on_for % 60,
+				sptr->name, sptr->user->username, sptr->user->realhost);
+		}
 
 		if (sptr->fd >= 0 && !IsConnecting(sptr))
 		{
@@ -591,9 +583,11 @@ int  exit_client(cptr, sptr, from, comment)
 		for (acptr = client; acptr; acptr = next)
 		{
 			next = acptr->next;
-			if (IsServer(acptr) && acptr->srvptr == sptr)
+			if (IsServer(acptr) && acptr->srvptr == sptr) {
 				exit_client(sptr, acptr,	/* RECURSION */
 				    sptr, comment1);
+				RunHook(HOOKTYPE_SERVER_QUIT, acptr);
+			}
 			/*
 			 * I am not masking SQUITS like I do QUITs.  This
 			 * is probobly something we could easily do, but
@@ -622,6 +616,7 @@ int  exit_client(cptr, sptr, from, comment)
 	/*
 	 * Finally, clear out the server we lost itself
 	 */
+	RunHook(HOOKTYPE_SERVER_QUIT, sptr);
 	exit_one_client(cptr, sptr, from, comment);
 	return cptr == sptr ? FLUSH_BUFFER : 0;
 }

@@ -966,3 +966,5 @@ seen. gmtime warning still there
 - Added oper::snomask to allow you to specify a default snomask for an oper
 - Added snomask +q (Qline notice), triggered when a nick is being denied from a user due to
   a Q:line.
+- Added HOOKTYPE_SERVER_CONNECT and HOOKTYPE_SERVER_QUIT for when servers connect and
+  disconnect respectively
