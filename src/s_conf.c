@@ -322,7 +322,14 @@ void	ipport_seperate(char *string, char **ip, char **port)
 	}
 }
 
+int conf_yesno(char *value) {
+	if (!stricmp(value, "yes") || !stricmp(value, "true") || !stricmp(value, "on") || strcmp(value, "1"))
+		return 1;
+	if (!stricmp(value, "no") || !stricmp(value, "false") || !stricmp(value, "off") || strcmp(value, "0"))
+		return 0;
 
+	return -1;
+}
 /*
  * This will link in a ConfigItem into a list of it
  * Example:
@@ -2222,7 +2229,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			ircstrdup(hidden_host, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "prefix-quit")) {
-			if (!strcmp(cep->ce_vardata, "no"))
+			if (conf_yesno(cep->ce_vardata) == 0)
 			{
 				ircstrdup(prefix_quit, "Quit: ");
 			}
@@ -2252,10 +2259,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					ircstrdup(netadmin_host, cepp->ce_vardata);
 				}
 				else if (!strcmp(cepp->ce_varname, "host-on-oper-up")) {
-					if (!stricmp(cepp->ce_vardata, "no"))
-						iNAH = 0;
-					else
-						iNAH = 1;
+					iNAH = conf_yesno(cepp->ce_vardata);
 				}
 			}
 		}
