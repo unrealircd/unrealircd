@@ -3029,6 +3029,7 @@ void	validate_configuration(void)
 	{
 		Warning("set::dns::nameserver is missing. Using 127.0.0.1 as default");
 		NAME_SERVER = strdup("127.0.0.1");
+		in.s_addr = inet_addr(NAME_SERVER);
 	}
 	else
 	{
@@ -3037,6 +3038,7 @@ void	validate_configuration(void)
 		{
 			Warning("set::dns::nameserver (%s) is not an valid IP. Using 127.0.0.1 as default", NAME_SERVER);
 			ircstrdup(NAME_SERVER, "127.0.0.1");
+			in.s_addr = inet_addr(NAME_SERVER);
 		}
 	}
 	if (HOST_TIMEOUT < 0 || HOST_TIMEOUT > 180) {
@@ -3122,9 +3124,9 @@ void	validate_configuration(void)
 	/* Now for the real config */
 	if (conf_me)
 	{
-		if (!conf_me->name)
+		if (BadPtr(conf_me->name))
 			Error("me::name is missing");
-		if (!conf_me->info)
+		if (BadPtr(conf_me->info))
 			Error("me::info is missing");
 		/* numeric is being checked in _conf_me */
 	}
@@ -3133,7 +3135,7 @@ void	validate_configuration(void)
 
 	for (class_ptr = conf_class; class_ptr; class_ptr = (ConfigItem_class *) class_ptr->next)
 	{
-		if (!class_ptr->name)
+		if (BadPtr(class_ptr->name))
 			Error("class without name");
 		else
 		{
@@ -3170,9 +3172,10 @@ void	validate_configuration(void)
 				oper_ptr->name);
 			oper_ptr->class = default_class;
 		}
-		if (!oper_ptr->password)
+		if (BadPtr(oper_ptr->password)) {
 			Error("oper %s::password is missing",
 				oper_ptr->name);
+		}
 		if (!oper_ptr->oflags) {
 			oper_ptr->oflags |= OFLAG_LOCAL;
 			Warning("oper %s without privileges",
@@ -3182,20 +3185,26 @@ void	validate_configuration(void)
 	
 	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)listen_ptr->next)
 	{
-		if (!listen_ptr->ip) {
+		if (BadPtr(listen_ptr->ip)) {
 			Warning("listen without ip, using default of *");
 			ircstrdup(listen_ptr->ip,"*");
 		}
-		if (!listen_ptr->port)
-			Error("listen with illegal port");
+		if (!listen_ptr->port) {
+			Warning("listen port illegal. Deleting listen {} block");
+			ircfree(listen_ptr->ip);
+			t.next = del_ConfigItem((ConfigItem *)listen_ptr, (ConfigItem **)&conf_listen);
+			MyFree(listen_ptr);
+			listen_ptr = (ConfigItem_listen *)&t;
+			continue;
+		}
 	}
 	for (allow_ptr = conf_allow; allow_ptr; allow_ptr = (ConfigItem_allow *) allow_ptr->next)
 	{
-		if (!allow_ptr->ip) {
+		if (BadPtr(allow_ptr->ip)) {
 			Warning("allow::ip, missing value, using default of *@*");
 			ircstrdup(allow_ptr->ip, "*@*");
 		}
-		if (!allow_ptr->hostname) {
+		if (BadPtr(allow_ptr->hostname)) {
 			Warning("allow::hostname, missing value, using default of *@*");
 			ircstrdup(allow_ptr->hostname, "*@*");
 		}
@@ -3220,31 +3229,71 @@ void	validate_configuration(void)
 	for (ban_ptr = conf_ban; ban_ptr; ban_ptr = (ConfigItem_ban *) ban_ptr->next)
 	{
 		if (BadPtr(ban_ptr->mask)) {
-			Warning("ban mask missing");
+			Warning("ban mask missing. Deleting ban {} block");
 			ircfree(ban_ptr->reason);
 			t.next = del_ConfigItem((ConfigItem *)ban_ptr, (ConfigItem **)&conf_ban);
 			MyFree(ban_ptr);
 			ban_ptr = (ConfigItem_ban *)&t;
+			continue;
 		}
+		if (BadPtr(ban_ptr->reason)) {
+			Warning("ban reason invalid, using default of 'no reason specified'");
+			ircstrdup(ban_ptr->reason, "No reason specified");
+		}
+			
 	}
 	for (link_ptr = conf_link; link_ptr; link_ptr = (ConfigItem_link *) link_ptr->next)
 	{
-		if (!link_ptr->servername)
+		if (BadPtr(link_ptr->servername))
 		{
-			Error("link: name missing");
+			Warning("link without name. Deleting link {} block");
+			t.next = del_ConfigItem((ConfigItem *)link_ptr, (ConfigItem **)&conf_link);
+			ircfree(link_ptr->username);
+			ircfree(link_ptr->hostname);
+			ircfree(link_ptr->connpwd);
+			ircfree(link_ptr->recvpwd);
+			MyFree(link_ptr);
+			link_ptr = (ConfigItem_link *)&t;
 		}
 		else
 		{
-			if (!link_ptr->username) {
+			if (BadPtr(link_ptr->username)) {
 				Warning("link %s::username is missing, using default of *", link_ptr->servername);
 				ircstrdup(link_ptr->username, "*");
 			}
-			if (!link_ptr->hostname)
-				Error("link %s::hostname is missing", link_ptr->servername);
-			if (!link_ptr->connpwd)
-				Error("link %s::password-connect is missing", link_ptr->servername);
-			if (!link_ptr->recvpwd)
-				Error("link %s::password-receive is missing", link_ptr->servername);
+			if (BadPtr(link_ptr->hostname)) {
+				Warning("link with invalid hostname. Deleting link {} block");
+				t.next = del_ConfigItem((ConfigItem *)link_ptr, (ConfigItem **)&conf_link);
+				ircfree(link_ptr->username);
+				ircfree(link_ptr->servername);
+				ircfree(link_ptr->connpwd);
+				ircfree(link_ptr->recvpwd);
+				MyFree(link_ptr);
+				link_ptr = (ConfigItem_link *)&t;
+				continue;
+			}
+			if (BadPtr(link_ptr->connpwd)) {
+				Warning("link with invalid password-connect. Deleting link {} block");
+				t.next = del_ConfigItem((ConfigItem *)link_ptr, (ConfigItem **)&conf_link);
+				ircfree(link_ptr->username);
+				ircfree(link_ptr->hostname);
+				ircfree(link_ptr->servername);
+				ircfree(link_ptr->recvpwd);
+				MyFree(link_ptr);
+				link_ptr = (ConfigItem_link *)&t;
+				continue;
+			}
+			if (BadPtr(link_ptr->recvpwd)) {
+				Warning("link with invalid password-receive. Deleting link {} block");
+				t.next = del_ConfigItem((ConfigItem *)link_ptr, (ConfigItem **)&conf_link);
+				ircfree(link_ptr->username);
+				ircfree(link_ptr->hostname);
+				ircfree(link_ptr->connpwd);
+				ircfree(link_ptr->servername);
+				MyFree(link_ptr);
+				link_ptr = (ConfigItem_link *)&t;
+				continue;
+			}
 			if (!link_ptr->class) {
 				Warning("link %s::class is missing, using default of class 'default'", link_ptr->servername);
 				link_ptr->class = default_class;
@@ -3253,12 +3302,14 @@ void	validate_configuration(void)
 	}
 	for (tld_ptr = conf_tld; tld_ptr; tld_ptr = (ConfigItem_tld *) tld_ptr->next)
 	{
-		if (!tld_ptr->mask)
-			Error("tld {} without mask");
-		else
-		{
-			if (!tld_ptr->motd_file)
-				Error("tld %s::motd is missing", tld_ptr->mask);
+		if (BadPtr(tld_ptr->mask)) {
+			Warning("tld without mask. Deleting tld {} block");
+			t.next = del_ConfigItem((ConfigItem *)tld_ptr, (ConfigItem **)&conf_tld);
+			ircfree(tld_ptr->motd_file);
+			ircfree(tld_ptr->rules_file);
+			MyFree(tld_ptr);
+			tld_ptr = (ConfigItem_tld *)&t;
+			continue;
 		}
 	}
 	for (vhost_ptr = conf_vhost; vhost_ptr; vhost_ptr = (ConfigItem_vhost *)vhost_ptr->next) {
