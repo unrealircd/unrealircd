@@ -252,6 +252,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			CloseServiceHandle(hSCManager);
 			if (save_err != ERROR_SERVICE_DISABLED)
 				exit(0);
+		} else {
+			CloseServiceHandle(hSCManager);
 		}
 	}
 	InitCommonControls();

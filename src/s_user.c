@@ -609,7 +609,12 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 **	a change should be global, some confusion would
 **	result if only few servers allowed it...
 */
-#if defined(CHINESE_NICK) || defined(JAPANESE_NICK)
+
+#if defined(NICK_GB2312) || defined(NICK_GBK) || defined(NICK_GBK_JAP)
+#define NICK_MULTIBYTE
+#endif
+
+#ifdef NICK_MULTIBYTE
 /* Chinese Nick Verification Code - Added by RexHsu on 08/09/00 (beta2)
  * Now Support All GBK Words,Thanks to Mr.WebBar <climb@guomai.sh.cn>!
  * Special Char Bugs Fixed by RexHsu 09/01/00 I dont know whether it is
@@ -626,34 +631,56 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
  * 6. 日文平假名编码区(a4a1-a4f3) -->work correctly?maybe...
  * 7. 日文片假名编码区(a5a1-a5f7) -->work correctly?maybe...
  * 8. 韩文编码区(xxxx-yyyy)
+ *
+ * isvalidChinese() rewritten by Xuefer (2004-10-10),
+ * this will probably be the last time we do it this way,
+ * in 3.2.3 we are gonna try a more generic aproach. -- Syzop
  */
-int  isvalidChinese(const unsigned char c1, const unsigned char c2)
+
+int isvalidChinese(const unsigned char c1, const unsigned char c2)
 {
-	const unsigned int GBK_S = 0xb0a1;
-	const unsigned int GBK_E = 0xf7fe;
-	const unsigned int GBK_2_S = 0x8140;
-	const unsigned int GBK_2_E = 0xa0fe;
-	const unsigned int GBK_3_S = 0xaa40;
-	const unsigned int GBK_3_E = 0xfea0;
-	const unsigned int JPN_PING_S = 0xa4a1;
-	const unsigned int JPN_PING_E = 0xa4f3;
-	const unsigned int JPN_PIAN_S = 0xa5a1;
-	const unsigned int JPN_PIAN_E = 0xa5f7;
-	unsigned int AWord = c1 * 256 + c2;
-#if defined(CHINESE_NICK) && defined(JAPANESE_NICK)
-	return (AWord >= GBK_S && AWord <= GBK_E || AWord >= GBK_2_S
-	    && AWord <= GBK_2_E || AWord >= JPN_PING_S && AWord <= JPN_PING_E
-	    || AWord >= JPN_PIAN_S && AWord <= JPN_PIAN_E) ? 1 : 0;
+    unsigned int w = (((unsigned int)c1) << 8) | c2;
+
+/* rang of w/c1/c2 (rw never used) */
+#define rw(s, e) (w >= ((unsigned int )s) && w <= ((unsigned int )e))
+#define r1(s, e) (c1 >= ((unsigned char)s) && c1 <= ((unsigned char)e))
+#define r2(s, e) (c2 >= ((unsigned char)s) && c2 <= ((unsigned char)e))
+#define e1(e) (c1 == (unsigned char)e)
+
+#ifdef NICK_GBK_JAP
+    /* GBK/1 */
+    /* JIS_PIN part 1 */
+    if (e1(0xA4) && r2(0xA1, 0xF3)) return 1;
+    /* JIS_PIN part 2 */
+    if (e1(0xA5) && r2(0xA1, 0xF6)) return 1;
 #endif
-#if defined(CHINESE_NICK) && !defined(JAPANESE_NICK)
-	return (AWord >= GBK_S && AWord <= GBK_E || AWord >= GBK_2_S
-	    && AWord <= GBK_2_E ? 1 : 0);
-#endif
-#if !defined(CHINESE_NICK) && defined(JAPANESE_NICK)
-	return (AWord >= JPN_PING_S && AWord <= JPN_PING_E
-	    || AWord >= JPN_PIAN_S && AWord <= JPN_PIAN_E) ? 1 : 0;
+#if defined(NICK_GB2312) || defined(NICK_GBK)
+    /* GBK/2 BC with GB2312 */
+    if (r2(0xA1, 0xFE))
+    {
+        /* Block 16-55, ordered by Chinese Spelling(PinYin) 3755 chars */
+        if (r1(0xB0, 0xD6)) return 1;
+        /* Block 55 is NOT full (w <= 0xd7f9) */
+        if (e1(0xD7) && c2 <= (unsigned char)0xF9 /* r2(0xA1, 0xF9)*/) return 1;
+        /* Block 56-87 is level 2 chars, ordered by writing 3008 chars */
+        if (r1(0xD8, 0xF7)) return 1;
+    }
 #endif
 
+#ifdef NICK_GBK
+    /* GBK/3 */
+    if (r1(0x81, 0xA0) && r2(0x40, 0xFE)) return 1;
+    /* GBK/4 */
+    if (r2(0x40, 0xA0) && r1(0xAA, 0xFE)) return 1;
+#endif
+
+    /* all failed */
+    return 0;
+
+#undef rw
+#undef r1
+#undef r2
+#undef e1
 }
 
 /* Chinese Nick Supporting Code (Switch Mode) - Modified by RexHsu on 08/09/00 */

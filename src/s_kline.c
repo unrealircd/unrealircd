@@ -564,6 +564,9 @@ int find_spamfilter_user(aClient *sptr)
 {
 char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64]; /* n!u@h:r */
 
+	if (IsAnOper(sptr))
+		return 0;
+
 	ircsprintf(spamfilter_user, "%s!%s@%s:%s",
 		sptr->name, sptr->user->username, sptr->user->realhost, sptr->info);
 	return dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL);

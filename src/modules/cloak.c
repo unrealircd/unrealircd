@@ -107,6 +107,12 @@ DLLFUNC int MOD_LOAD(cloak)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(cloak)(int module_unload)
 {
+	if (cloak_key1)
+	{
+		MyFree(cloak_key1);
+		MyFree(cloak_key2);
+		MyFree(cloak_key3);
+	}
 	return MOD_SUCCESS;
 }
 

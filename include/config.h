@@ -100,8 +100,9 @@
 /*
    If you want to support chinese and/or japanese nicks
 */
-#undef CHINESE_NICK
-#undef JAPANESE_NICK
+#undef NICK_GB2312
+#undef NICK_GBK
+#undef NICK_GBK_JAP
 
 /*
   Remote rehash

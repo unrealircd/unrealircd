@@ -150,8 +150,9 @@ extern char *strtoken(char **, char *, char *);
 
 extern MODVAR u_char tolowertab[], touppertab[];
 
-#if defined(CHINESE_NICK) || defined(JAPANESE_NICK)
+#if defined(NICK_GB2312) || defined(NICK_GBK) || defined(NICK_GBK_JAP)
 #define USE_LOCALE
+#include <ctype.h>
 #endif
 
 #ifndef USE_LOCALE

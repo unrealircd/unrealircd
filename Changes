@@ -387,3 +387,7 @@
 - Fix for too broad regex in badword::word causing the IRCd to hang, reported by Flop
   (#0002101).
 - IPv6: Fixed hostnames in link::hostname not working, reported by Jasmin (#0001990).
+- Fixed OOB read/write on user quit (did no harm on Linux&FreeBSD).
+- Fixed some tiny memory leaks (~100 bytes) on rehash.
+- Updated chinese&japanese GBK nick code, fix supplied by Xuefer (#0002051).
+- Added release notes (unfinished).
