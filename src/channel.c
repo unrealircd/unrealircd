@@ -392,8 +392,12 @@ static int add_exbanid(aClient *cptr, aChannel *chptr, char *banid)
 			}
 			else
 			{
+#ifdef ANNOYING_BAN_THING
 				if (!match(ban->banstr, banid) ||
 				    !match(banid, ban->banstr))
+#else
+				if (!match(ban->banstr, banid))
+#endif
 					return -1;
 			}
 		else if (!mycmp(ban->banstr, banid))
@@ -461,8 +465,12 @@ static int add_banid(aClient *cptr, aChannel *chptr, char *banid)
 			}
 			else
 			{
+#ifdef ANNOYING_BAN_THING /* why does it do this?? */
 				if (!match(ban->banstr, banid) ||
 				    !match(banid, ban->banstr))
+#else
+				if (!match(ban->banstr, banid))
+#endif
 					return -1;
 			}
 		else if (!mycmp(ban->banstr, banid))

@@ -137,6 +137,13 @@
 #undef NO_OPEROVERRIDE
 
 /*
+ * ANNOYING_BAN_THING
+ *   Reject bans that are matched by existing bans, causes chanserv
+ *   To flood-kick an akicked user if their akick is matched by another
+ *   Ban, but if you don't mind, this can free up ban list space I guess
+#undef ANNOYING_BAN_THING
+
+/*
  * Disable /sethost, /setident, /chgname, /chghost, /chgident
 */
 #undef DISABLE_USERMOD
