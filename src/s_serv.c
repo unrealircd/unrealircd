@@ -2493,7 +2493,7 @@ CMD_FUNC(m_stats)
 		  for (classes = conf_class; classes; classes = (ConfigItem_class *) classes->next) {
 			  sendto_one(sptr, rpl_str(RPL_STATSYLINE),
 				me.name, sptr->name, classes->name, classes->pingfreq, classes->connfreq,
-				classes->maxclients, classes->sendq);
+				classes->maxclients, classes->sendq, classes->recvq ? classes->recvq : CLIENT_FLOOD);
 		  }
 		  break;
 	  }
