@@ -58,7 +58,7 @@ extern float highest_rate;
 extern float highest_rate2;
 extern int  lifesux;
 extern int  LRV;
-extern TS   LCF;
+extern time_t   LCF;
 extern int  currlife;
 extern int  HTMLOCK;
 extern int  noisy_htm;
