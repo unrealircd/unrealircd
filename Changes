@@ -3323,3 +3323,4 @@ This is the 3.2 fixes branch.
 - Changed version to 3.2.1-pre1 and updated protocol # to 2304.
 - Updated wircd.def
 ** internal 3.2.1-pre1 release **
+- Various (>15) small fixes for unreal32docs.html, reported by AngryWolf (#0001906).

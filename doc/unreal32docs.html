@@ -23,8 +23,8 @@ English | <a href="unreal32docs.de.html">German</a><br><br>
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
-  <b>Current Version:</b> 3.2.1-pre1<br>
-  <b>Last doc update:</b> 2004-06-25</div>
+  <b>Current Version:</b> 3.2.1-pre1 *CVS*<br>
+  <b>Last doc update:</b> 2004-06-28</div>
 <br>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -2148,14 +2148,14 @@ set {
   not run this value may be left out.</p>
 <p><font class="set">set::help-channel &lt;network-help-channel&gt;;</font><br>
   Sets the name of the help channel for this network.</p>
-<p><font class="set">set::cloak-keys { &quote;key1&quote;; &quote;key2&quote;; &quote;key3&quote;; };</font><br>
+<p><font class="set">set::cloak-keys { &quot;key1&quot;; &quot;key2&quot;; &quot;key3&quot;; };</font><br>
   Sets the keys to be used to generate a +x host. This value must be the same 
   on all servers or the servers will not link. Each of the 3 set::cloak-keys:: 
   must be a string of 5-100 characters (10-20 is fine) consisting of mixed 
   lowcase (a-z), upcase (A-Z) and digits (0-9). Note that depending on which 
   cloaking module you have loaded, other rules may apply.</p>
 <p><font class="set">set::hiddenhost-prefix &lt;prefix-value&gt;;</font><br>
-  Defines the prefix that will be used on hiddenhosts (+x) this is usually three 
+  Defines the prefix that will be used on hiddenhosts (+x). This is usually three 
   or four letters representing the network name.</p>
 <p><font class="set">set::hosts::local &lt;locop-host-name&gt;;</font><br>
   Defines the hostname that will be assigned to local opers when they set +x.</p>
@@ -2364,7 +2364,7 @@ set {
     <td>Makes channel private</td>
   </tr>
   <tr> 
-    <td><div align="center">q</div></td>
+    <td><div align="center">q &lt;nick&gt;</div></td>
     <td>Sets channel owner</td>
   </tr>
   <tr> 
@@ -2394,7 +2394,7 @@ set {
   </tr>
   <tr> 
     <td><div align="center">u</div></td>
-    <td>Auditorium Makes /names and /who #channel only show channel ops</td>
+    <td>Auditorium &#8211; Makes /names and /who #channel only show channel ops</td>
   </tr>
   <tr> 
     <td><div align="center">V</div></td>
@@ -2402,7 +2402,7 @@ set {
   </tr>
   <tr> 
     <td><div align="center">v &lt;nick&gt;</div></td>
-    <td>Gives a voice to users. (May speak in +M Channels</td>
+    <td>Gives a voice to users. (May speak in +m channels)</td>
   </tr>
   <tr> 
     <td><div align="center">z</div></td>
@@ -2508,7 +2508,7 @@ set {
   </tr>
   <tr> 
     <td><div align="center">p</div></td>
-    <td>Hides the channels you are in in a /whois reply</td>
+    <td>Hides the channels you are in from /whois</td>
   </tr>
   <tr> 
     <td><div align="center">R</div></td>
@@ -2556,7 +2556,7 @@ to get more information on a command.</p>
     <td>All</td>
   </tr>
   <tr> 
-    <td height="39">whowas &lt;nick&gt; &lt;maxreplys&gt;</td>
+    <td height="39">whowas &lt;nick&gt; &lt;maxreplies&gt;</td>
     <td>Displays information on a nick that has logged off. The &lt;max replies&gt; 
       field is optional, and limits how many records will be returned.<br></td>
     <td>All</td>
@@ -2569,9 +2569,9 @@ to get more information on a command.</p>
   </tr>
   <tr> 
     <td height="39">join &lt;channel1,channel2, ...&gt;</td>
-    <td>Allows you to join channels. Using the /join #channel1, #channel2, channel3 
+    <td>Allows you to join channels. Using the /join #channel1,#channel2,#channel3 
       will allow you to join more than one channel at a time. The /join 0 command 
-      makes you PART</td>
+      makes you PART all channels.</td>
     <td>All</td>
   </tr>
   <tr> 
@@ -2594,7 +2594,8 @@ to get more information on a command.</p>
   </tr>
   <tr> 
     <td height="39">lusers &lt;server&gt; </td>
-    <td>Displays current & max user loads, both global and local. Adding a server name allows you to view rules on other servers.<br></td>
+    <td>Displays current &amp; max user loads, both global and local. Adding a server name 
+        allows you to view the statistics from other servers.<br></td>
     <td>All</td>
   </tr>
   <tr> 
@@ -2673,7 +2674,7 @@ to get more information on a command.</p>
     <td>HelpOp is a new system of getting IRC Server help. You type either /HELPOP 
       ? &lt;help system topic&gt; or /HELPOP ! &lt;question&gt; The "?" 
       in /HELPOP means query the help system and if you get no response you can 
-      choose '!' to send it to the Help Operators online Using neither ? nor ! 
+      choose '!' to send it to the Help Operators online. Using neither ? nor ! 
       will mean the command will be first queried within the help system and if 
       no match if found , it will be forwarded to the help operators</td>
     <td>All</td>
@@ -2715,7 +2716,8 @@ to get more information on a command.</p>
   </tr>
   <tr> 
     <td height="39">mode &lt;chan/nick&gt; &lt;mode&gt;<br></td>
-    <td>Lets you set channel and user modes. Refer to section 5 for lists of modes<br></td>
+    <td>Lets you set channel and user modes. See 
+        <a href="#userchannelmodes">User &amp; Channel Modes</a> for a list.<br></td>
     <td>All</td>
   </tr>
   <tr> 
@@ -2860,7 +2862,7 @@ to get more information on a command.</p>
     <td height="39">lag &lt;server&gt; <br></td>
     <td>This command is like a Sonar or Traceroute for IRC server. You type in 
       /LAG irc.fyremoon.net and it will reply from every server it passes with 
-      time and so on Useful for looking where lag is and optional TS future/past 
+      time and so on. Useful for looking where lag is and optional TS future/past 
       travels<br></td>
     <td>IRCop</td>
   </tr>
@@ -2881,7 +2883,7 @@ to get more information on a command.</p>
   </tr>
   <tr> 
     <td height="39">chgident &lt;nick&gt; &lt;newident&gt;<br></td>
-    <td>Lets you set your ident to what ever you want it to be<br></td>
+    <td>Lets you change the ident of a user currently on the system<br></td>
     <td>IRCop</td>
   </tr>
   <tr> 
@@ -2936,8 +2938,9 @@ to get more information on a command.</p>
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">trace &lt;servermask&gt;<br></td>
-    <td>Will calculate in milliseconds the lag between servers<br></td>
+    <td height="39">trace &lt;servermask|nickname&gt;<br></td>
+    <td>When used on a user it will give you class and lag info. If you use
+        it on a server it gives you class/version/link info.<br></td>
     <td>IRCop</td>
   </tr>
   <tr> 
@@ -3000,10 +3003,9 @@ to get more information on a command.</p>
       response to extremely high traffic on the server. Options include: <br>
       -ON Forces server into HTM <br>
       -OFF Forces server out of HTM <br>
-      -NOISY Sets the server to notify users/admins when in goes in and out of 
-      HTM<br>
+      -NOISY Sets the server to notify users/admins when in goes in and out of HTM<br>
       -QUIET Sets the server to NOT notify when going in and out of HTM<br>
-      -TO &lt;value&gt; Sets Traffic rate HTM activate<br> </td>
+      -TO &lt;value&gt; Tell HTM at what incoming rate to activate HTM<br> </td>
     <td>IRCop</td>
   </tr>
   <tr>
