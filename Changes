@@ -1846,3 +1846,5 @@ seen. gmtime warning still there
   by Maxsus (#0000678)
 - Added some missing stuff to the documentation. Reported by AngryWolf (#0000611)
 - Started work on set::allow-userhost-change
+- Fixed some typos in aliases/operstats.conf (#0000684) and added an aliases/cygnus.conf
+  (#0000686), both reported by katsklaw
