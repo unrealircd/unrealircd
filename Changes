@@ -535,3 +535,7 @@
 [ last fixes ]
 - Re-added res_comp.c and win32.c and res_mkquery.c, which was damaged by
   the ID_CVS remove
+- Fixed a SHOWCONNECTINFO bug
+- Fixed a MODE_STRIPWORDS bug
+- Fixed a PART bug
+- Fixed a STRIPBADWORDS bug

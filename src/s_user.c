@@ -2905,7 +2905,7 @@ int  m_user(cptr, sptr, parc, parv)
 		}
 		if (MODE_STRIPWORDS == 1)
 		{
-			sptr->umodes |= MODE_STRIPWORDS;
+			sptr->umodes |= UMODE_STRIPBADWORDS;
 		}
 	}
 

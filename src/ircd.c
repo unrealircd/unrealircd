@@ -91,7 +91,6 @@ int  R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
 int  R_do_socks, R_no_socks, R_good_socks;
 #endif
 
-extern ircstats IRCstats;
 char REPORT_DO_DNS[128], REPORT_FIN_DNS[128], REPORT_FIN_DNSC[128],
     REPORT_FAIL_DNS[128], REPORT_DO_ID[128], REPORT_FIN_ID[128],
     REPORT_FAIL_ID[128];
@@ -99,6 +98,7 @@ char REPORT_DO_DNS[128], REPORT_FIN_DNS[128], REPORT_FIN_DNSC[128],
 char REPORT_DO_SOCKS[128], REPORT_NO_SOCKS[128], REPORT_GOOD_SOCKS[128];
 #endif
 #endif
+extern ircstats IRCstats;
 aClient me;			/* That's me */
 char *me_hash;
 aClient *client = &me;		/* Pointer to beginning of Client list */

@@ -3171,7 +3171,6 @@ int  m_part(cptr, sptr, parc, parv)
 		}
 		else {
 
-			if (MyClient(sptr)) {
 
 				if (parc < 3)
 				
@@ -3182,7 +3181,6 @@ int  m_part(cptr, sptr, parc, parv)
 					sendto_channel_butserv(chptr,
 						sptr, PartFmt2, parv[0],
 						chptr->chname, comment);
-			}
 		}
 			remove_user_from_channel(sptr, chptr);
 		}

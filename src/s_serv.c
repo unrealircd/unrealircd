@@ -2392,9 +2392,11 @@ int  m_stats(cptr, sptr, parc, parv)
 
 	switch (stat)
 	{
+#ifdef STRIPBADWORDS
 	  case 'b':
 		  badwords_stats();
 		  break;
+#endif
 	  case 'L':
 	  case 'l':
 		  /*
