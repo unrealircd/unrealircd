@@ -318,7 +318,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 					    acptr->user->away);
 
 #ifdef STRIPBADWORDS
-				if (!(IsULine(acptr) || IsULine(sptr)) && IsFilteringWords(acptr))
+				if (MyClient(sptr) && !IsULine(acptr) && IsFilteringWords(acptr))
 				{
 					text = stripbadwords_message(parv[2], &blocked);
 					if (blocked)
@@ -413,24 +413,14 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 					sendanyways = (parv[2][0] == '`' ? 1 : 0);
 				else
 					sendanyways = (strchr(CHANCMDPFX,parv[2][0]) ? 1 : 0);
-				text =
-				    (chptr->mode.mode & MODE_STRIP ?
-				    (char *)StripColors(parv[2]) : parv[2]);
+				text = parv[2];
+				if (MyClient(sptr) && (chptr->mode.mode & MODE_STRIP))
+					text = StripColors(parv[2]);
 #ifdef STRIPBADWORDS
+				if (MyClient(sptr))
+				{
  #ifdef STRIPBADWORDS_CHAN_ALWAYS
-				text = stripbadwords_channel(text,& blocked);
-				if (blocked)
-				{
-					if (!notice)
-						sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
-						    me.name, parv[0], parv[0],
-						    err_cantsend[6], p2);
-					continue;
-				}
- #else
-				if (chptr->mode.mode & MODE_STRIPBADWORDS)
-				{
-					text = stripbadwords_channel(text, &blocked);
+					text = stripbadwords_channel(text,& blocked);
 					if (blocked)
 					{
 						if (!notice)
@@ -439,8 +429,21 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 							    err_cantsend[6], p2);
 						continue;
 					}
-				}
+ #else
+					if (chptr->mode.mode & MODE_STRIPBADWORDS)
+					{
+						text = stripbadwords_channel(text, &blocked);
+						if (blocked)
+						{
+							if (!notice)
+								sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
+								    me.name, parv[0], parv[0],
+								    err_cantsend[6], p2);
+							continue;
+						}
+					}
  #endif
+				}
 #endif
 				for (tmphook = Hooks[HOOKTYPE_CHANMSG]; tmphook; tmphook = tmphook->next) {
 					text = (*(tmphook->func.pcharfunc))(cptr, sptr, chptr, text, notice);
