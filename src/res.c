@@ -1760,7 +1760,7 @@ int m_dns(cptr, sptr, parc, parv)
 
 	if (IsOper(sptr) && parv[1] && *parv[1] == 'l')
 	{
-		sendto_realops("%s did a DNS cache list");
+		sendto_realops("%s did a DNS cache list", sptr->name);
 		for (cp = cachetop; cp; cp = cp->list_next)
 		{
 			sendto_one(sptr, "NOTICE %s :Ex %d ttl %d host %s(%s)",

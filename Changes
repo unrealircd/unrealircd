@@ -442,3 +442,4 @@
 - Added method mod_load in dummy example and made it work. mod_load() is executed 
   when server is ready
 - Fixed minor problem with mod_load code
+- Fixed possible crash with /quote dns l
