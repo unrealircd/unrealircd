@@ -354,3 +354,11 @@
   SVSJOIN is now BX (#0002073) reported by trystanscott.
 - Fixed a bug regarding chanmode +mu where the <IRC> messages were not properly relayed
   to all servers. Reported by Aenox (#0002079).
+- Added salted passwords. Salts are useful because it "protects" against stored-plaintext
+  attacks (eg: rainbow) and prevents cracking of several passwords at once.
+  This change means /MKPASSWD will now just generate a different string than before.
+  Do note however, that the old syntax/encrypted passwords will still work and _will continue
+  to work_ in the future, for at least the whole 3.2* series.
+  If you are concerned with security and have some time, then converting your passwords
+  is probably a good idea... Just in case your configuration file gets stolen one day ;).
+- MD5 password encryption is now always available on *NIX, even if SSL is disabled.

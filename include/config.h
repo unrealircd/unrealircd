@@ -93,14 +93,6 @@
 #undef SECURECHANMSGSONLYGOTOSECURE
 
 /*
- * be compatible with older cloak keys? If you link to servers beta4 and 
- * earlier without this the cloak keys will produce diff results
- * Not recommended, however, as beta4 and earlier 3.2 has an insecure
- * cloak algo -griever
- */
-#undef COMPAT_BETA4_KEYS
-
-/*
   If you want SHUN_NOTICES, define this
 */
 #undef SHUN_NOTICES
