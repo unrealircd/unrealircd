@@ -19,3 +19,13 @@ TODO :
 
 * stskeeps - Tue Dec 12 2000 - 1 - [ Code ] :
     Split up code, and make the placement of functions more logic
+
+* codemastr - Tue Dec 12 2000 - 4 - [ Zip_Links ]:
+    Actually add this since it was planned for 3.0
+
+* codemastr - Tue Dec 12 2000 - 5 - [ Dynconf Recode ]:
+    Dynconf has a bunch of bugs that can be resolved with a recode
+
+* codemastr - Tue Dec 12 2000 - 8 - [ +I Fixes ]:
+    +I still has some bugs that may cause desync and show users
+    that the +I user is actually on the channel.
