@@ -84,6 +84,7 @@ int (*can_join)(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *
 void (*do_mode)(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode);
 void (*set_mode)(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
+int (*m_umode)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 00 */	{NULL, NULL},
@@ -92,7 +93,7 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 03 */	{"can_join", (void *)&can_join},
 /* 04 */	{"do_mode", (void *)&do_mode},
 /* 05 */	{"set_mode", (void *)&set_mode},
-/* 06 */	{NULL, NULL},
+/* 06 */	{"m_umode", (void *)&m_umode},
 /* 07 */	{NULL, NULL},
 /* 08 */	{NULL, NULL},
 /* 09 */	{NULL, NULL},

@@ -50,9 +50,9 @@ DLLFUNC CMD_FUNC(m_mode);
 void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode);
 void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
+DLLFUNC CMD_FUNC(_m_umode);
 
 /* local: */
-CMD_FUNC(m_umode);
 static void bounce_mode(aChannel *, aClient *, int, char **);
 int do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
     u_int what, aClient *cptr,
@@ -84,6 +84,7 @@ DLLFUNC int MOD_TEST(m_mode)(ModuleInfo *modinfo)
 {
 	EfunctionAddVoid(modinfo->handle, EFUNC_DO_MODE, _do_mode);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SET_MODE, _set_mode);
+	EfunctionAdd(modinfo->handle, EFUNC_M_UMODE, _m_umode);
 	return MOD_SUCCESS;
 }
 
@@ -1966,7 +1967,7 @@ void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pc
  * parv[1] - username to change mode for
  * parv[2] - modes to change
  */
-CMD_FUNC(m_umode)
+DLLFUNC CMD_FUNC(_m_umode)
 {
 	int  i;
 	char **p, *m;

@@ -644,6 +644,7 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define EFUNC_CAN_JOIN      3
 #define EFUNC_DO_MODE       4
 #define EFUNC_SET_MODE      5
+#define EFUNC_M_UMODE		6
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000
