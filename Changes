@@ -372,3 +372,4 @@
 - Made /kick not core on users kicking servers. (WTF?)
 - Fixed a problem with users opping servers.. Found by Morbid
 - Fixed a problem with SDESC module token being wrong - Found by eternal
+- If no oper flags are found, default to locop (suggested by devdev)

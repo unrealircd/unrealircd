@@ -2714,9 +2714,11 @@ void	validate_configuration(void)
 		if (!oper_ptr->password)
 			Error("oper %s::password is missing",
 				oper_ptr->name);
-		if (!oper_ptr->oflags)
+		if (!oper_ptr->oflags) {
+			oper_ptr->oflags |= OFLAG_LOCAL;
 			Warning("oper %s without privileges",
 				oper_ptr->name);
+		}
 	}
 	
 	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)listen_ptr->next)
