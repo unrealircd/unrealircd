@@ -1,5 +1,5 @@
-esOriginally by Roddy Vagg -- roddy@dal.net
-modified for UnrealIRCD3.0
+Originally by Roddy Vagg -- roddy@dal.net
+modified for UnrealIRCD3.1 by codemastr
 
 --------------------
 
@@ -40,7 +40,15 @@ modified for UnrealIRCD3.0
 	 7.7) .......................... Set SHOWOPERS Line
 	 7.8) .......................... Set KILLDIFF Line
 	 7.9) .......................... Set SHOWOPERMOTD Line
-	 7.10) .......................... Set HIDE_ULINES Line
+	 7.10).......................... Set HIDE_ULINES Line
+       7.11).......................... Set ALLOW_CHATOPS Line
+       7.12).......................... Set SOCKS_BAN_MESSAGE Line
+       7.13).......................... Set SOCKS_QUIT_MESSAGE Line
+       7.14).......................... Set SOCKSBANTIME Line
+       7.15).......................... Set MAXCHANNELSPERUSER Line
+       7.16).......................... Set WEBTV_SUPPORT Line
+       7.17).......................... Set NO_OPER_HIDING Line
+	 7.18) ......................... Set AUTO_JOIN_CHANS Line
 	8) ............................. network files
 	 8.1) .......................... Network Line
 	 8.2) .......................... Set ircnetwork Line
@@ -76,8 +84,8 @@ modified for UnrealIRCD3.0
 2) ircd.conf Basics:
 
   When you compile your server, you must specify the correct paths to
- where you plan on keeping your ircd.conf, for simplicity it is recomended
- that you keep it in the same diretory as your ircd binary and other ircd
+ where you plan on keeping your ircd.conf, for simplicity it is recommended
+ that you keep it in the same directory as your ircd binary and other ircd
  files.
    note: You need only supply full pathnames for DPATH and SPATH, the
  other defines will only point to files under these directories so you
@@ -89,7 +97,7 @@ modified for UnrealIRCD3.0
   When you have made your ircd.conf you may check it with the program
  `chkconf', this program is supplied with the source code release and will
  be installed into your ircd directory when you run `make install',
- `chkconf' will check your ircd.conf for errors so is a usefull tool for
+ `chkconf' will check your ircd.conf for errors so is a useful tool for
  beginners to ircd.conf.
   Your ircd.conf will be made up of a series of lines, each line is used
  for a different purpose in the running of your server, some lines are
@@ -97,12 +105,12 @@ modified for UnrealIRCD3.0
  start, these lines are listed below.
   You may enter comments in your ircd.conf with the use of a hash mark (#)
  at the beginning of a line, it is recommended that you make full use of
- this to add comments to everything you put in your ircd.conf so you dont
+ this to add comments to everything you put in your ircd.conf so you don't
  have any problems later.
    eg: Put a contact email address and the name/nick of the server admin
        above each C/N line pair.
   When ircd reads the ircd.conf file, it does it upside down, so lines with
- higher prefrence should go lower in the file, this will be explained later.
+ higher preference should go lower in the file, this will be explained later.
 
 --------------------
 
@@ -116,7 +124,7 @@ modified for UnrealIRCD3.0
                 to other servers. (note: you can run ircd stand alone)
      SUGGESTED: it is highly suggested that you use this line
       OPTIONAL: it's completely up to you whether to define this or not
-   DISCOURAGED: you really really should not use this line if at all
+   DISCOURAGED: you really should not use this line if at all
                 possible.
 
   Note that "*" in a field indicates an "unused" field.
@@ -126,35 +134,18 @@ modified for UnrealIRCD3.0
 3.1) M Lines: [MANDATORY]
 
  This line sets your server's name, description, and port number.
- If you are to be a part of DALnet you will be assigned 2 different
- DNS entries for your ircd machine, the 1st is for general public use
- and involves: <servername>.DAL.net
- The second is for use between servers for identification, these take
- the form of: <servername>.[<state>].<country>.DAL.net
- If your server is located in the US or Australia, you will be given
- a `state' field in your server's real name, otherwise your `state', or
- `area' will not be included.
- Most IRC networks default to port 6667 for their client connection's,
- but DALnet uses port 7000 as its standard, you should compile ircd with
- port 7000, not 6667, but you may open up port 6667 (it is recomended
- that you do) with a P line (see later). Your M line's port number
- should be the same as the number you defined in your config.h at compile
- time.
+ The standard port number used by most networks and supported by most clients is     
+ 6667. It is recommended that you specify this as your main port.
+ 
  
  Syntax:
-M:hostname:IP:Description Of Your Server:7000
+M:hostname:IP:Description Of Your Server:6667
  The 1st field should be the `real' name of your server, not the short
  name.
- The 2nd field is the IP the server should bind to - "*" if all interfaces
-     on the server
- The 3rd field is your server's description, it is up to you what you
- put in this field, but a short description of its geographic location
- is recomended.
- The 4th field is the port number you compiled ircd with. This should be
- 7000 for DALnet.
+ The 2nd field is the IP the server should bind to. Use an "*" to bind to all interfaces on the server. The 3rd field is your server's description, it is up to you what you put in this field, but a short description of its geographic location is recommended. The 4th field is the port number you compiled ircd with. This generally should be 6667.
  
  Example:
-M:disney.irc.net::Walt's IRC Server:7000
+M:Irc.yournet.com::My first IRC server:6667
 
 --------------------
 
@@ -174,7 +165,7 @@ A:A little info about your server:Admin's nick/real name:contact address
  responsible for the server.
 
  Example:
-A:Disney's IRC Server:Admin - Walt Disney:walt@RIP.org
+A:FooBar IRC Server:Admin - foobar:email - foo@bar.com
 
 --------------------
 
@@ -183,10 +174,8 @@ A:Disney's IRC Server:Admin - Walt Disney:walt@RIP.org
  These lines define connection classes. They allow you to fine-tune
  your incomming and outgoing connections, both server and client types.
  These classes are for use with C, N, I and O lines, more on this in later
- sections. DALnet has a set of Y lines that each server must use for their
- server connections, these are listed below and again at the bottom of this
- document. Client connection classes are your responsibility, you must
- make up your own set of Y lines for client connections based on your own
+ sections. Client and server connection classes are your responsibility, you   
+ must make up your own set of Y lines for client connections based on your own
  situation (netwise location, machine, etc).
  Connection classes define a number of parameters for connections, these
  include:
@@ -210,7 +199,7 @@ A:Disney's IRC Server:Admin - Walt Disney:walt@RIP.org
  listed in the server's ircd.conf (see C/N lines) is missing and belongs
  on a conenction class that is holding less connections that defined by
  the max links field, the server will keep on trying to connect to
- the missing server. The ammount time between connection attempts is what
+ the missing server. The amount time between connection attempts is what
  you define in this field.
   example:
    server1 and server2 are listed in server0's ircd.conf but the only
@@ -226,10 +215,10 @@ A:Disney's IRC Server:Admin - Walt Disney:walt@RIP.org
  class will be allowed as this number on server connection classes is used for
  auto-connect purposes. As shown in the above example, when a missing server
  is listed for a particular connection class, and the class is not `full',
- your server will try and connect to this server untill it becomes visible
+ your server will try and connect to this server until it becomes visible
  again. Servers being connected manually on a `full' connection class via the
  /connect command will be allowed as long as you compiled with MAXIMUM_LINKS
- high enough to accomidate all of your server connections. (you must compile
+ high enough to accommodate all of your server connections. (you must compile
  as a HUB if you wish to hold more than one server connection, also see H
  lines later in this document).
  - Maximum sendq: SendQ defines the `que' of data waiting to be sent to the
@@ -242,7 +231,7 @@ A:Disney's IRC Server:Admin - Walt Disney:walt@RIP.org
  0, it is `abnormal' for a sendq to be high for a client for a long period
  of time. When 2 servers connect, they must send their own data to
  eachother, this data includes: all the users on the server and already
- connected servers, channels, user modes, channel modes, topics (DALnet only)
+ connected servers, channels, user modes, channel modes, topics 
  etc. When there are many clients on a particular side of the connection, a
  sendq will build up, especially if the link is slow, or already congested
  (example: the link from Australia to the US). When the sendq built up reaches
@@ -272,7 +261,7 @@ Y:1:90:0:20:10000
  The number of clients allowed to use this class is 20.
  Clients may only build up a sendq on the server of 10000 bits.
 
- These are the standard server Y lines used on DALnet:
+ These are some standard Y:lines that most networks use:
 
 # Connecting a hub to a hub
 Y:20:10:300:1:3000000
@@ -288,6 +277,10 @@ Y:45:60:20:1:2200000
 Y:42:240:0:0:2200000
 # Connecting an AU leaf to a US hub
 Y:43:240:60:1:2200000
+# Oper connection class
+Y:10:300:0:20:1000000
+#User connection class
+Y:1:90:0:256:500000
 
 --------------------
 
@@ -298,7 +291,7 @@ Y:43:240:60:1:2200000
  may connect, and which connection class they will connect through.
  I lines, like C, N and O lines refer back to Y lines, as they allow
  connections, and each connection to ircd needs to be assigned to a
- connection class. If you dont provide a connection class, the connection
+ connection class. If you don't provide a connection class, the connection
  will be governed by the defaults set at compile time in your config.h.
  When a client connects to the server, it gives its own information,
  this information includes username, nick and can include a password, the
@@ -346,9 +339,9 @@ I:205.133.*::*.toledolink.com::1
  address starting with 205.133 OR with a hostname ending in
  .toledolink.com to connect to the server. remember, ircd uses the
  right-most match, so if I connect as rmiller@glass.toledolink.com
- (which is rmiller@205.133.127.8) I will show up on irc as
+ (which is rmiller@205.133.127.8) I will show up on IRC as
  rmiller@glass.toledolink.com since that is the first match it found.
- (Even though the second match is valid). Any clients comming through
+ (Even though the second match is valid). Any clients coming through
  on this line will use connection class 1.
 
 I:*@205.133.*::*@*.toledolink.com::1
@@ -374,11 +367,11 @@ I:NOMATCH::*@*.de::3
 I:NOMATCH::*@*.se::4
 I:NOMATCH::*@*.au::5
 I:129.180.*::*.une.edu.au::6
- In this example, conencting clients will 1st be matched against the mask
+ In this example, connecting clients will 1st be matched against the mask
  *.une.edu.au, if they match they will be placed on connection class 6
  (note: if 6 is full, they will be rejected, they wont be passed on to the
  next I line), then tried against the IP 129.180.*, if they match, they will
- be placed on class 6. If the client dosen't match either of these masks, they
+ be placed on class 6. If the client doesn't match either of these masks, they
  will be tried against the mask *.au, so if they are from Australia, but are
  not from *.une.edu.au they will be placed on class 5. This goes on through
  the other lines, being placed on the various connection classes if they match
@@ -394,12 +387,12 @@ I:129.180.*::*.une.edu.au::6
  These lines provide rules as to who may gain Operator status on your server.
  O lines are much like I lines in their operation and syntax.
  Servers need not have any Operators as ircd, given well defined connection's
- can perform all of its functions automatically. Server admins have the
+ can perform all of its functions automatically. Server admin's have the
  ability to `kill -HUP' the server's PID to rehash the config file, removing
- the need to use the /rehash command. However, a well running network such as
- DALnet needs operators to oversee the users of the server, and make sure
- users actually enjoy their time on IRC without being continually harrased
- etc by troublematers.
+ the need to use the /rehash command. However, an efficient network needs  
+ operators to oversee the users of the server, and make sure
+ users actually enjoy their time on IRC without being continually harassed
+ etc by troublemakers.
  O lines give users power over the whole network, to use commands
  such as /kill, local Operators only have power on their local server, that
  is, the server where they can use the /oper command to make themselves +o.
@@ -411,41 +404,77 @@ I:129.180.*::*.une.edu.au::6
 
  Syntax:
 
-O:hostname:password:nickname::class
+O:hostname:password:nickname:flags:class
  See I lines for rules about the hostname and using ident.
  If you use ident, a client matching the hostname must have ident running on
  their host to be able to +o themselves.
  If you compiled defining oper passwords to be crypted, you must 1st crypt
- the plaintext using mkpasswd, a program supplied with the ircd distribution.
+ the plain text using mkpasswd, a program supplied with the ircd distribution.
  See src/crypt/README for more information on this.
  The nickname is the nickname they must pass with the /oper command
   ie:
    /oper <nickname> <password>
+ The flags allow you to specify what access an oper will have with great  
+ control. This also allows you to give users Administrator access on your  
+ server. A set of standard FULL ACCESS flags is OaARDNz*^. See below for a 
+ complete list of flags.
+
  The class is the connection class to be used when the user /oper's using
  the O line, they connect using the standard I -- Y lines, but when they
- /oper succusfully they are passed across to the new Y line.
+ /oper successfully they are passed across to the new Y line.
 
  Examples:
 
-O:RIP.org:waltspass:Walt::10
+O:RIP.org:waltspass:Walt:OaARD:10
  This line will allow anyone on the host RIP.org (running ident or not) to
  issue the command `/oper Walt waltspass', at which point they will be moved
- over to class 10 and be made usermode +o.
+ over to class 10 and be made an Admin with /restart and /die access.
 
+ Valid Flags: 
+r = access to /rehash server
+R = access to /restart server
+D = access to /die server
+h = oper can send /help ops
+g = oper can send /globops
+w = oper can send /wallops
+l = oper can send /locops
+c = access to do local /squits and /connects
+L = access to do remote /squits and /connects
+k = access to do local /kills
+K = access to do global /kills
+b = oper can /kline users from server
+B = oper can /unkline users from server
+n = oper can send local server notices(/notice $servername message)
+G = oper can send global server notices(/notce $*.my.net message)
+S = oper can join unlimited amount of channels
+A = admin
+u = oper can set /umode +c
+f = oper can set /umode +f
+^ = oper can set /umode +I
+e = oper can set /umode +e
+W = oper can set /umode +W
+H = oper gets auto +x on /oper
+o = local oper, flags included: rhgwlckbBnuf
+O = global oper, flags included: oRDCK
+a = services admin, access to /samode
+C = co admin
+T = tech admin
+A = admin
+N = network admin access to remote /rehash and remote /restart and a bunch more
+* = flags included: AaNCTzSHW^
 --------------------
 
 3.6) U Lines: [OPTIONAL]
 
  These lines define which server(s) on the network your server is connected
  to will be able to `hack' channel modes.
- On DALnet, services.dal.net is given this power, this allows the server
+ On most networks, services are given this power, this allows the server
  to change modes on channels without being a channel operator, the
  commonly used form is ChanServ changing channel modes while not in the
  channels.
- If you are connected to a network such as DALnet that requires you to have
- certain U lines and you don't have them, your server will cause problems
- to the other servers when the server(s) that require U lines attempt to
- change channel modes.
+ It is very important that you add the U:lines required by your network, because 
+ if you don't it can lead to desync in channel modes as well as "mode setting 
+ wars".
  U lined servers also have the capability to add Akill's to your server,
  Akill's are much the same as the /kline command except that they show up
  as A: lines on /stats k.
@@ -456,11 +485,9 @@ U:servername:*:*
  lined server's name.
 
  Example:
-U:services.dal.net::
-U:services2.dal.net::
- Both these lines are required on all DALnet server's, they allow servers
- with the name's `services.dal.net' and `services2.dal.net' to hack channel
- modes.
+U:services.your.net:*:*
+ This will allow services.your.net to "hack" channel modes and use certain 
+ U:line only commands.
 
 --------------------
 
@@ -469,13 +496,13 @@ U:services2.dal.net::
  These lines are always used in pairs, one will not work without the other.
  C lines define who your server may connect to, while N lines define what
  servers may connect to you.
- When two servers connect, they both send eachother the `SERVER' command,
+ When two servers connect, they both send each other the `SERVER' command,
  this command contains the server name and server info (set by M lines)
  along with this command is sent a password with the PASS command, C and N
  lines provide a set of rules governing the connection between servers
  given the details of the server and pass command's.
  When one a server initiates the connection, the other server will check
- the details of the incomming server against its N lines, if a match is
+ the details of the incoming server against its N lines, if a match is
  found, the server will return the server and pass command's to the
  initiating server, which will also check its N lines for a match.
  For a server to initiate a connection, it must have a C line. C lines
@@ -488,7 +515,7 @@ U:services2.dal.net::
 C:remote server's hostname/IP:password:remote server's name:port:class
 N:remote server's hostname/IP:password:remote server's name:host mask:class
  The remote server's hostname/IP should be the location on the internet that
- the server can be found. IP addresses are prefered as they are more secure,
+ the server can be found. IP addresses are preferred as they are more secure,
  and can be a little quicker for the server. As with I and O lines, ident
  can be used with this 1st field to specify the username the ircd on the
  remote server is running from (if the remote server is running ident), to
@@ -496,10 +523,10 @@ N:remote server's hostname/IP:password:remote server's name:host mask:class
  The password should be crypted if you compile ircd specifying that link
  passwords should be crypted. Your link passwords should be very secure, as
  they provide more power, if hacked, than Operator passwords do. However
- crypted link passwords can be very akward to keep track of.
+ crypted link passwords can be very awkward to keep track of.
  Your C line password is the password used in the pass command, while your
  N line password will be used to check against the pass command used by
- incomming servers. So, your C line password should match the listed
+ incoming servers. So, your C line password should match the listed
  server's N line password, and your N line password should match their C
  line password.
  If you compile your ircd specifying crypted link passwords, you only need
@@ -513,10 +540,8 @@ N:remote server's hostname/IP:password:remote server's name:host mask:class
  with the SERVER command, so it must match the one given. The C and N line
  pair should have the same name for this field.
  The 4th field of C lines may contain the remote servers connection port.
- Even though DALnet runs all its servers with a standard port 7000 open,
- server -- server connections should be taken place through port 7325. It is
- not mandatory that you place a port number in this field. If you don't give
- a port number, the server will not try and autoconnect to the listed
+ It is not mandatory that you place a port number in this field. If you don't  
+ give a port number, the server will not try and autoconnect to the listed 
  server. If you do give a port number, the server will only try and
  autoconnect to the listed server if there is enough room on the connection
  class listed at the end of the C line (connection classes are covered in
@@ -527,7 +552,7 @@ N:remote server's hostname/IP:password:remote server's name:host mask:class
  port number, any /connect command's will use this port unless another port
  number is given with the command.
  The 4th field of N lines is called the `host mask', this defined how many
- parts of your hostname the incomming server will mask to. So, if your
+ parts of your hostname the incoming server will mask to. So, if your
  server's name is disney.us.dal.net, and you want the connecting server to
  see you as *.us.dal.net you will give a host mask of 1 in your N line. This
  field should normally be left blank.
@@ -535,38 +560,38 @@ N:remote server's hostname/IP:password:remote server's name:host mask:class
  place the connection on. If your C line has a 42 in this field, and your
  server initiates a connection through this line, the connection will be
  placed on class 42, however, if You have a 42 in your C line and a 43 in
- your N line and an incomming server initiates a connection via this N
+ your N line and an incoming server initiates a connection via this N
  line, the server connection will be placed on class 43.
  
  Examples: 
-C:143.53.233.32:mypass:somewhere.fr.dal.net:7325:35
-N:143.53.233.32:yourpass:somewhere.fr.dal.net::35
+C:143.53.233.32:mypass:somewhere.fr.your.net:7325:35
+N:143.53.233.32:yourpass:somewhere.fr.your.net::35
  This set will allow a server named somewhere.fr.dal.net to connect to your
  server if it has the IP address of 143.53.233.32 and gives a password of
  `yourpass'. This connection will be governed by connection class 35.
- If your server recieves the command /connect somewhere.*, it will try and
+ If your server receives the command /connect somewhere.*, it will try and
  connect to the IP 143.53.233.32 through port 7325 and give the password
  `mypass'.
 
-C:143.53.233.32:mypass:somewhere.fr.dal.net:7325:35
-N:143.53.233.32:yourpass:somewhere.fr.dal.net::35
-C:ircd@176.43.652.31:apass:elsewhere.jp.dal.net:7235:35
-N:ircd@176.43.652.31:THEpass:elsewhere.jp.dal.net::33
+C:143.53.233.32:mypass:somewhere.fr.your.net:7325:35
+N:143.53.233.32:yourpass:somewhere.fr.your.net::35
+C:ircd@176.43.652.31:apass:elsewhere.jp.your.net:7235:35
+N:ircd@176.43.652.31:THEpass:elsewhere.jp.your.net::33
  Both these set's will work as explained above, but if your Y line defining
  class 35 has `max links' set to 1, and one of these servers is connected to
  your server, your server will not try and autoconnect to the other since
- the Y line is `full', but it will accept any incomming connections from the
+ the Y line is `full', but it will accept any incoming connections from the
  other server and any /connect commands given for this server. If your Y
  line allows for more connections but your C lines do not have port numbers,
  your server will not try and autoconnect.
  Since the second set in this example has a username, ident will be used to
  authenticate any connections made to this server. If the listed server does
- not run ident, or the incomming connection comes from another username, the
+ not run ident, or the incoming connection comes from another username, the
  connection will be rejected.
  If a connection is made via the second set by your server, the connection
  will be ruled by connection class 35, if the other server initiates the
  connection, the connection will use class 33.
- Autoconnect C/N line pairs can be given prefrence over other pairs by placing
+ Autoconnect C/N line pairs can be given preference over other pairs by placing
  them lower in your ircd.conf, the lower the line, the higher the priority
  when autoconnecting.
  Connection classes and C/N line set's allow you to refine your autoconnects
@@ -577,16 +602,16 @@ N:ircd@176.43.652.31:THEpass:elsewhere.jp.dal.net::33
 
 3.8) K Lines [OPTIONAL]
 
- These lines restric access to certain users to your server based on
+ These lines restrict access to certain users to your server based on
  user@host matches and time of the day.
  K lines can come in 3 forms, only one of which you can specify in your
- ircd.conf, this type will show up as K on /stats k, the other other types
+ ircd.conf, this type will show up as K on /stats k, the other types
  are `AutoKill' which will show up as A on /stats k, and `kline' which will
  show up as k on /stats k. AutoKill's are set by U lined servers (see
  above), they act in the same way as K lines except that they are set
- remotly and are usually set on all servers, they dissapear when you
+ remotely and are usually set on all servers, they disappear when you
  /rehash or restart your server. klines are set via the /kline command,
- they operate more like AutoKill's than K lines because they also dissapear
+ they operate more like AutoKill's than K lines because they also disappear
  when you /rehash, or restart the server. The /kline command can be used on
  nicknames that appear on IRC, or you can use a user@host mask. If the
  /kline is done on an existing nickname, a kline will be set with that users
@@ -628,9 +653,9 @@ K:*.lamer.org:|kc.spamming:*
 
 K:*::*rad
  This K line will reject anyone with the username `rad', or anything ending
- in `rad'. This ban will dissalow anyone using `rad' running ident or not.
+ in `rad'. This ban will disallow anyone using `rad' running ident or not.
  You must always take into account the ident character (`~') that is placed
- infront of usernames when their host is not running ident. If you place a
+ in front of usernames when their host is not running ident. If you place a
  K line on a username `rad' the user will be banned only if they are running
  ident, but if this user can turn off ident they can appear as ~rad, this
  will allow them to bypass any ban of username `rad'. So, wildcards should
@@ -642,24 +667,24 @@ K:*::*rad
 
 3.9) Q Lines (server form) [DISCOURAGED]
 
- Server form Q lines on DALnet servers are used to dissalow operators on
+ Server form Q lines on servers are used to disallow operators on
  certain servers to use commands such as remote /kill's, and remote
- /connect's, this will effectivly restrict the operators on the server to
- local operator priveleges. These lines are usually only used for `test'
- server situations. If a server isn't officially part of DALnet, they may
+ /connect's, this will effectively restrict the operators on the server to
+ local operator privileges. These lines are usually only used for `test'
+ server situations. If a server isn't officially part of a network, they may
  be temporarily linked and Q lined, this means the server can be tested
- while not posing a threat to the rest of DALnet. Q lines need only be
+ while not posing a threat to the rest of the network. Q lines need only be
  placed on the hub connecting the `test' server.
 
  Syntax:
 Q:*:*:servername
  The 1st 2 fields are currently unused. A Q line placed on a hub connected
- to the named server will dissalow operators on the server to affect other
+ to the named server will disallow operators on the server to affect other
  DALnet users/servers.
 
  Example:
-Q:::test-server.my.dal.net
- Q line a server with the name `test-server.my.dal.net'.
+Q:::test-server.my.net
+ Q line a server with the name `test-server.my.net'.
 
 --------------------
 
@@ -682,10 +707,10 @@ Q:*:reason why nick is quarantined:nickname
 
  Examples:
 Q::No nicknames on MY server!:*
- This Q line will dissalow any nicknames on the server giving the reason:
+ This Q line will disallow any nicknames on the server giving the reason:
   No nicknames on MY server!
  Only Operators will be allowed to use any nicknames, but since you must be
- a user before you can be +o, you will effectivly ban everyone from your
+ a user before you can be +o, you will effectively ban everyone from your
  server.
 
 Q::Do not use the Lords name in vain!:God
@@ -693,7 +718,7 @@ Q::Do not use the Lords name in vain!:God
  that they must find a new nickname and will be given the reason:
   Do not use the Lords name in vain!
 
- DALnet has a set of standard Q lines that should be in place on all
+ Below are a set of standard Q lines that should be in place on all
  server's. They are as follows:
 
 Q::Reserved for services:*Chan*S*rv*
@@ -701,8 +726,9 @@ Q::Reserved for services:*Nick*S*rv*
 Q::Reserved for services:*Memo*S*rv
 Q::Reserved for services:*Oper*S*rv*
 Q::Reserved for services:*Help*S*rv*
-Q::Reserved for operators:DALnet
+Q::Reserved for services:*Stat*S*rv*
 Q::Reserved for operators:IRC*op*
+Q::Reserved for operators:*oper*
 Q::Causes problems with mIRC:Status
 
 --------------------
@@ -711,7 +737,7 @@ Q::Causes problems with mIRC:Status
 
  These lines specify which servers are to behave as leaves, that is,
  servers that may not have any other servers connected to them.
- They will only be usefull if your server is a non-leaf (hub) server.
+ They will only be useful if your server is a non-leaf (hub) server.
  Not only can you limit servers to leaves, but you can also specify
  what tree depth may appear after certain servers. If a server connects
  but tells your server that it has a larger tree depth behind it than is
@@ -738,18 +764,18 @@ L:hostmask of disallowed servers:*:server name:depth
 
  Examples:
 L:::leaf.de.dal.net
- This line will allow a server named `leaf.de.dal.net' to connect only as
+ This line will allow a server named `leaf.de.your.net' to connect only as
  a leaf. So this server may not connect any other servers behind it.
 
 L:::semi-hub.sg.dal.net:1
- This line will force the server named `semi-hub.sg.dal.net' to allow only
+ This line will force the server named `semi-hub.sg.your.net' to allow only
  leaf servers to connect behind it. ie: to have a tree depth of 1.
 
-L:*.us.dal.net::*.au.dal.net
-L:*.eu.dal.net::*.au.dal.net
+L:*.us.dal.net::*.au.your.net
+L:*.eu.dal.net::*.au.your.net
  These lines will make sure that any server with a name matching
- *.au.dal.net will not introduce any servers matching *.us.dal.net or
- *.eu.dal.net. This can be usefull for stopping certain hubs from letting
+ *.au.your.net will not introduce any servers matching *.us.your.net or
+ *.eu.your.net. This can be useful for stopping certain hubs from letting
  its autoconnects route the network badly.
 
 --------------------
@@ -763,7 +789,7 @@ L:*.eu.dal.net::*.au.dal.net
 
  Syntax:
 H:servers which are allowed behind the hub:*:hub servername
- The 1st field defines what servernames the H lined server is allowed to
+ The 1st field defines what server names the H lined server is allowed to
  introduce. Wildcards are allowed.
  The 2nd field is currently unused and should be left blank.
  The 3rd field should be the exact name of the server allowed to be a hub
@@ -771,16 +797,16 @@ H:servers which are allowed behind the hub:*:hub servername
  the server's name includes a `*' (See N lines for host masking).
 
  Examples:
-H:*::dal-hub.us.dal.net
- This line will allow the server with the name `dal-hub.us.dal.net' to act
+H:*::dal-hub.us.your.net
+ This line will allow the server with the name `dal-hub.us.your.net' to act
  as a hub server while you are connected to it, there are no restrictions
  on the names of the servers it may introduce.
 
-H:*.us.dal.net::usa-hub.us.dal.net
- This line will allow the server named `usa-hub.us.dal.net' to act as a hub
+H:*.us.dal.net::usa-hub.us.your.net
+ This line will allow the server named `usa-hub.us.your.net' to act as a hub
  while your server is connected to it, but it is limited to introducing
- servers with names matching `*.us.dal.net', so any servers trying to
- connect to `usa-hub.us.dal.net' with a name such as `bad-link.nz.dal.net'
+ servers with names matching `*.us.your.net', so any servers trying to
+ connect to `usa-hub.us.your.net' with a name such as `bad-link.nz.your.net'
  will be rejected by your server.
 
 --------------------
@@ -811,8 +837,7 @@ P:hostmask or UNIX socket file:*:*:port number
 
  Examples:
 P:*:::7325
- This will open up the DALnet server connection port and wait for
- connections. This line is mandatory if you run a server connected to DALnet
+ This will open up port 7325.
 
 P:*.net:::6665
  This line will open up port 6665 and wait for connections, connections from
@@ -906,10 +931,10 @@ e:234.45.32.1:*:*
 
 3.17) Summary:
 
- Well, thats it for the lines you may use in your ircd.conf. Remember that
+ Well, that's it for the lines you may use in your ircd.conf. Remember that
  ircd.conf is an art, just like any other type of programming. Some parts
  are particularly easy, but other's, like Y lines, can take a while to get
- used to. Given a little time experementing with lines on a network of
+ used to. Given a little time experimenting with lines on a network of
  servers, you will become well versed in ircd.conf programming.
 
 Good luck!
@@ -1254,6 +1279,161 @@ Set HIDE_ULINES .........: 1
 
 Set HIDE_ULINES .........: 0
  This line makes it so anyone can see U:lined servers in /links.
+
+--------------------
+
+7.11) Set ALLOW_CHATOPS Line
+
+ This line defines whether or not /chatops will be allowed to be used. When  
+ disabled /chatops as well as user mode +b will be disabled.
+
+ Syntax:
+Set ALLOW_CHATOPS .......: 1/0
+ If this line is set to 1, then /chatops and +b are allowed, if it is set to 0, 
+ then /chatops and +b are disabled.
+
+ Examples:
+Set ALLOW_CHATOPS .......: 1
+ This line will allow use of /chatops and +b.
+
+Set ALLOW_CHATOPS .......: 0
+ This line will disable /chatops and +b.
+
+--------------------
+
+7.12) Set SOCKS_BAN_MESSAGE Line
+
+ This line allows you to specify the reason to be used in the Z:line when a user 
+ is killed for an open proxy server. It is very important that this is set, if 
+ left NULL it can cause serious problems.
+
+ Syntax:
+Set SOCKS_BAN_MESSAGE ...: message
+ In this line the word "message" should be replaced with the reason the user is 
+ being Z:lined, the default is "Insecure SOCKS Server".
+
+ Examples:
+Set SOCKS_BAN_MESSAGE ...: You are running an insecure SOCKS Server.
+ This line will Z:line a user using an open SOCKS server with the reason, "You  
+ are running an insecure SOCKS Server."
+
+--------------------
+
+7.13) Set SOCKS_QUIT_MESSAGE Line
+
+ This line defines the message that will be used in the QUIT message the user 
+ will have when they are killed for an insecure SOCKS server.
+
+ Syntax:
+Set SOCKS_QUIT_MESSAGE ..: message
+ In this line the word "message" will be used as the QUIT message for the user 
+ being killed.
+
+ Examples:
+Set SOCKS_QUIT_MESSAGE ..: User was running an insecure SOCKS Server.
+ This line will use "User was running an insecure SOCKS Server." as the QUIT 
+ message for the user when they are found to be running an insecure SOCKS  
+ server.
+
+--------------------
+
+7.14) Set SOCKSBANTIME Line
+
+ This line lets you specify how long a user using an open SOCKS server will be 
+ Z:lined for.
+
+ Syntax:
+Set SOCKSBANTIME ........: time in seconds
+ This line will ban a user for "time in seconds" seconds, it is important to 
+ remember that this is seconds, not minutes.
+
+ Examples:
+Set SOCKSBANTIME ........: 86400
+ This line will Z:line all users running open SOCKS servers for 86400 seconds.
+
+--------------------
+
+7.15) Set MAXCHANNELSPERUSER Line
+
+ This line allows you to define the max amount of channels a user may join. 
+ Note, IRCd Agents can still join unlimited channels no matter what this is set 
+ to.
+
+ Syntax:
+Set MAXCHANNELSPERUSER ..: number of channels
+ This line will allow users to join "number of channels", the recommended value 
+ is 10 but it is not required.
+
+ Examples:
+Set MAXCHANNELSPERUSER ..: 11
+ This line will allow users to join 11 channels before they are given an error.
+
+--------------------
+
+7.16) Set WEBTV_SUPPORT Line
+
+ This line allows you to specify whether WebTV Support will be enabled or not.
+ When WebTV Support is enabled the /NOTICE command is disabled also, anyone 
+ using /NOTICE will send a /PRIVMSG. Also, in addition to using /<command> users 
+ can /PRIVMSG irc <command> this is so WebTV users can also use commands.
+
+ Syntax:
+Set WEBTV_SUPPORT .......: 1/0
+ When this line is set to 1, WebTV support will be enabled, when it is set to 0 
+ it will be disabled and the IRCd will support /NOTICE as it normally would.
+
+ Examples:
+Set WEBTV_SUPPORT .......: 1
+ This line enables WebTV Support disabling /NOTICE and enabling /PRIVMSG irc 
+ <command>.
+
+Set WEBTV_SUPPORT .......: 0
+ This line disables WebTV Support and leaving /NOTICE alone.
+
+--------------------
+
+7.17) Set NO_OPER_HIDING Line
+
+ This line allows you to specify whether IRCops will be allowed to set 
+ themselves +I (if they have the ^ Oflag).
+
+ Syntax:
+Set NO_OPER_HIDING ......: 1/0
+ If this line is set to 1 IRCops will not be able to use usermode +I, if this is 
+ set to 0 they may use usermode +I. 
+
+ Examples:
+Set NO_OPER_HIDING ......: 1
+ This line has use of usermode +I disabled.
+
+Set NO_OPER_HIDING ......: 0
+ This line has use of usermode +I enabled for IRCops.
+
+--------------------
+
+7.18) Set AUTO_JOIN_CHANS Line
+
+ This line allows you to force a user to join one or more channels when they 
+ connect to the server. Using this will not override modes if you set it to make 
+ a user join a +k channel they still need the password.
+
+ Syntax:
+Set AUTO_JOIN_CHANS .....: 0/<channel>[,channel2,...]
+ When this line is set to 0 it will not make the user join any channels on 
+ connect. If this is set to a channel name it will name the user join that 
+ channel, to enter more than one channel use a comma separated list.
+
+ Examples:
+Set AUTO_JOIN_CHANS .....: 0
+ This line makes it so the user will not be forced to join a channel when they 
+ connect to the server.
+
+Set AUTO_JOIN_CHANS .....: #main
+ This line will make the user join #main when they connect to the server.
+
+Set AUTO_JOIN_CHANS .....: #main,#help
+ This line will make the user join #main and help when they connect, you may 
+ specify as many channels as are defined in MAXCHANNELSPERUSER (see 7.15).
 
 --------------------
 

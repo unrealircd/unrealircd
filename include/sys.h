@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, include/sys.h
+ *   Unreal Internet Relay Chat Daemon, include/sys.h
  *   Copyright (C) 1990 University of Oulu, Computing Center
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -30,7 +30,6 @@
 #include <errno.h>
 # endif
 #endif
-
 #include "setup.h"
 #include <stdio.h>
 #include <sys/types.h>
@@ -85,7 +84,6 @@ extern	char	*rindex PROTO((char *, char));
 #else
 #include <sys/time.h>
 #endif
-
 #if !defined(DEBUGMODE)
 # ifndef _WIN32
 #  define MyFree(x)	if ((x) != NULL) free(x)
@@ -95,15 +93,14 @@ extern	char	*rindex PROTO((char *, char));
 #else
 #define	free(x)		MyFree(x)
 #endif
-
 #ifdef NEXT
-#define VOIDSIG int	/* whether signal() returns int of void */
+#define VOIDSIG int		/* whether signal() returns int of void */
 #else
-#define VOIDSIG void	/* whether signal() returns int of void */
+#define VOIDSIG void		/* whether signal() returns int of void */
 #endif
 
-#ifdef SOL20
-#define OPT_TYPE char	/* opt type for get/setsockopt */
+#ifdef _SOLARIS
+#define OPT_TYPE char		/* opt type for get/setsockopt */
 #else
 #define OPT_TYPE void
 #endif
@@ -116,26 +113,83 @@ extern	char	*rindex PROTO((char *, char));
 #endif
 
 #ifndef _WIN32
-extern	VOIDSIG	dummy();
-#endif
-
-#ifdef	DYNIXPTX
-#define	NO_U_TYPES
-typedef unsigned short n_short;         /* short as received from the net */
-typedef unsigned long   n_long;         /* long as received from the net */
-typedef unsigned long   n_time;         /* ms since 00:00 GMT, byte rev */
-#define _NETINET_IN_SYSTM_INCLUDED
+extern VOIDSIG dummy();
 #endif
 
 #ifdef	NO_U_TYPES
-typedef	unsigned char	u_char;
-typedef	unsigned short	u_short;
-typedef	unsigned long	u_long;
-typedef	unsigned int	u_int;
+typedef unsigned char u_char;
+typedef unsigned short u_short;
+typedef unsigned long u_long;
+typedef unsigned int u_int;
 #endif
 
 #ifdef _WIN32
 #define MYOSNAME "Win32"
+#endif
+#ifdef DEBUGMODE
+#define ircsprintf sprintf
+#define ircvsprintf vsprintf
+#endif
+
+
+/*
+ *  IPv4 or IPv6 structures?
+ */
+
+#ifdef INET6
+
+# define AND16(x) ((x)[0]&(x)[1]&(x)[2]&(x)[3]&(x)[4]&(x)[5]&(x)[6]&(x)[7]&(x)[8]&(x)[9]&(x)[10]&(x)[11]&(x)[12]&(x)[13]&(x)[14]&(x)[15])
+static unsigned char minus_one[] =
+    { 255, 255, 255, 255, 255, 255, 255, 255, 255,
+	255, 255, 255, 255, 255, 255, 255, 0
+};
+
+# define WHOSTENTP(x) ((x)[0]|(x)[1]|(x)[2]|(x)[3]|(x)[4]|(x)[5]|(x)[6]|(x)[7]|(x)[8]|(x)[9]|(x)[10]|(x)[11]|(x)[12]|(x)[13]|(x)[14]|(x)[15])
+
+# define	AFINET		AF_INET6
+# define	SOCKADDR_IN	sockaddr_in6
+# define	SOCKADDR	sockaddr
+# define	SIN_FAMILY	sin6_family
+# define	SIN_PORT	sin6_port
+# define	SIN_ADDR	sin6_addr
+# define	S_ADDR		s6_addr
+# define	IN_ADDR		in6_addr
+
+# ifndef uint32_t
+#  define uint32_t __u32
+# endif
+
+# define MYDUMMY_SIZE 128
+char mydummy[MYDUMMY_SIZE];
+char mydummy2[MYDUMMY_SIZE];
+
+# if defined(linux) || defined(__NetBSD__) || defined(__FreeBSD__) || defined(bsdi)
+#  ifndef s6_laddr
+#   define s6_laddr        s6_addr32
+#  endif
+# endif
+
+# if defined(linux)
+static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0
+};
+
+# endif
+
+# define IRCDCONF_DELIMITER '%'
+
+#else
+# define	AFINET		AF_INET
+# define	SOCKADDR_IN	sockaddr_in
+# define	SOCKADDR	sockaddr
+# define	SIN_FAMILY	sin_family
+# define	SIN_PORT	sin_port
+# define	SIN_ADDR	sin_addr
+# define	S_ADDR		s_addr
+# define	IN_ADDR		in_addr
+
+# define WHOSTENTP(x) (x)
+# define IRCDCONF_DELIMITER ':'
 #endif
 
 #endif /* __sys_include__ */

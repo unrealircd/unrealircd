@@ -37,10 +37,7 @@
 #define WINNOTIFY_2 0x0400
 #define WINNOTIFY_3 0x0800
 /*end*/
-//#define ircnetwork "a network"
-//#define netdomain "netdomain"
-//#define helpchan "helpchan"
-//#define IRCDTOTALVERSION "3"
+
 #ifndef IRCDTOTALVERSION
 #define IRCDTOTALVERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
 #endif
@@ -57,7 +54,6 @@
 #include "sys.h"
 #include "numeric.h"
 #include "userload.h"
-//#include "services.h"
 #include <sys/stat.h>
 #include <signal.h>
 #include <fcntl.h>
@@ -70,6 +66,18 @@
 #include <richedit.h>
 
 /* end */
+
+/* Service Stuff */
+/*SERVICE_STATUS          ServiceStatus; 
+SERVICE_STATUS_HANDLE   ServiceStatusHandle; 
+
+
+VOID SvcDebugOut(LPSTR String, DWORD Status);
+_stdcall void StartUnrealService (DWORD argc, LPTSTR *argv); 
+VOID  ServiceCtrlHandler (DWORD opcode); 
+DWORD ServiceInitialization (DWORD argc, LPTSTR *argv, DWORD *specificError); 
+/* end */
+extern ircstats IRCstats;
 int	SetDebugLevel(HWND hWnd, int NewLevel);
 void SetupPopups(HWND hDlg);
 HWND CreateATreeView(HWND hwndParent/*, LPSTR lpszFileName*/,RECT rcClient); 
@@ -87,12 +95,14 @@ LRESULT CALLBACK Dreamforge(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 LRESULT CALLBACK IRCDLicense(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 extern  void      SocketLoop(void *dummy), s_rehash(), do_dns_async(HANDLE id);
 void	windebug(level, form, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
+void GetOSVersion(void);
 extern struct /*current_load_struct */current_load_data;
 LRESULT CALLBACK GraphCtlProc(HWND hwnd,UINT msg,WPARAM wParam,LPARAM lParam);
 void NiceQuit(void);
 extern int max_client_count;
 HINSTANCE hInst;
 HWND hStatsWnd,hgraphwnd;
+BOOL gbIsWinNT;
 int windebuglevel = 0 ;
 //| WINDEBUGLEVEL_0 | WINDEBUGLEVEL_1 | WINDEBUGLEVEL_2 | WINDEBUGLEVEL_3 | WINDEBUGLEVEL_FLUSH ;
 int usernumhistory[530], usernumpointer;
@@ -122,12 +132,28 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     WSADATA WSAData;
 	char meep[MAX_PATH];
 
-	if ((debugfile = fopen("debugout2.log","ac"))==NULL)
+	GetOSVersion();
+
+	if ((debugfile = fopen("debugout.log","ac"))==NULL)
 		MessageBox(NULL, "UnrealIRCD/32 Initalization Error", "Unable to create debugout.log",MB_OK);
+	fprintf(debugfile,"\n\n");
 	windebug(WINDEBUG_FORCE,"Initializing Unreal wIRCd");
 	windebug(WINDEBUG_FORCE,"%s compiled on %s %s",version,__DATE__,__TIME__);
 	windebug(WINDEBUG_FORCE,"%s Last modifed %s",__FILE__,__TIMESTAMP__);
 
+/*	if(gbIsWinNT)
+	{ 
+		SERVICE_TABLE_ENTRY   DispatchTable[] = 
+			{ 
+			{ "Unreal wIRCd", StartUnrealService}, 
+			{ NULL,              NULL			} 
+			}; 
+ 
+	    if (!StartServiceCtrlDispatcher( DispatchTable)) 
+		{ 
+			SvcDebugOut(" [MY_SERVICE] StartServiceCtrlDispatcher error = %d\n", GetLastError()); 
+		} 
+ 	}
 
 	/* Create a new instance */
     if ( WSAStartup(MAKEWORD(1, 1), &WSAData) != 0 )
@@ -330,7 +356,7 @@ switch (message)
 			switch(wParam)
 				{
 				case UPDATE_TIMER:
-					usernumhistory[usernumpointer] = lu_clu;
+					usernumhistory[usernumpointer] = IRCstats.me_clients ;
 					usernumpointer++;
 					usernumpointer %= 370;
 					if (hStatsWnd != NULL)
@@ -1060,7 +1086,7 @@ WINSTATS  pWSTATS /*= (pWINSTATS) LocalAlloc (LPTR, sizeof(pWINSTATS))*/;
 		//		{
 		//		windebug(WINDEBUGLEVEL_2,"Allocating pWSTATS for i=%d of max %d",i,TreeView_GetCount(hwTreeView));
 				{
-				
+			/*	
 				windebug(WINDEBUGLEVEL_2,"Allocated pWSTATS");
 				windebug(WINDEBUGLEVEL_2,"assigning pWSTATS.connections");
 				pWSTATS.connections=current_load_data.conn_count;
@@ -1104,35 +1130,35 @@ WINSTATS  pWSTATS /*= (pWINSTATS) LocalAlloc (LPTR, sizeof(pWINSTATS))*/;
 
 				windebug(WINDEBUGLEVEL_2,"assigning pWSTATS.chans");
 				pWSTATS.chans=lu_channel;
-				windebug(WINDEBUGLEVEL_2,"pWSTATS.chans=%d",pWSTATS.chans);
-				wsprintf(string, "%d",pWSTATS.CurrLoclUsers);
+				windebug(WINDEBUGLEVEL_2,"pWSTATS.chans=%d",pWSTATS.chans);*/
+				wsprintf(string, "%d",/*pWSTATS.CurrLoclUsers*/IRCstats.me_clients);
 				SetDlgItemText(hDlg,EDIT_CLOCAL,string);
-				wsprintf(string, "%d",pWSTATS.MaxLoclUsers);
-				SetDlgItemText(hDlg,EDIT_CLOCALMAX,string);
-				wsprintf(string, "%d",pWSTATS.Invisible);
+				/*wsprintf(string, "%d",pWSTATS.MaxLoclUsers);
+				SetDlgItemText(hDlg,EDIT_CLOCALMAX,string);*/ /*Seems i have forgotten to make MaxLoclUsers*/
+				wsprintf(string, "%d",/*pWSTATS.Invisible*/IRCstats.invisible);
 				SetDlgItemText(hDlg,EDIT_INV,string);
-				wsprintf(string, "%d",pWSTATS.NumUsers);
+				wsprintf(string, "%d",/*pWSTATS.NumUsers*/IRCstats.clients);
 				SetDlgItemText(hDlg,EDIT_NONINV,string);
-				wsprintf(string, "%d",pWSTATS.Servers);
+				wsprintf(string, "%d",/*pWSTATS.Servers*/IRCstats.servers);
 				SetDlgItemText(hDlg,EDIT_IRCSERVERS,string);
-				wsprintf(string, "%d",pWSTATS.LocalClients);
+				wsprintf(string, "%d",/*pWSTATS.LocalClients*/IRCstats.me_clients);
 				SetDlgItemText(hDlg,EDIT_MYUSERS,string);
-				wsprintf(string, "%d",pWSTATS.LocalServers);
+				wsprintf(string, "%d",/*pWSTATS.LocalServers*/IRCstats.me_servers);
 				SetDlgItemText(hDlg,EDIT_MYSERVERS,string);
-				wsprintf(string, "%d",pWSTATS.CurrGlobUsers);
+				wsprintf(string, "%d",/*pWSTATS.CurrGlobUsers*/IRCstats.clients);
 				SetDlgItemText(hDlg,EDIT_GLOBAL,string);
-				wsprintf(string, "%d",pWSTATS.MaxLoclUsers);
+				wsprintf(string, "%d",/*pWSTATS.MaxLoclUsers*/IRCstats.me_max);
 				SetDlgItemText(hDlg,EDIT_GLOBALMAX,string);
-				wsprintf(string, "%d",pWSTATS.NumIRCops);
+				wsprintf(string, "%d",/*pWSTATS.NumIRCops*/IRCstats.operators);
 				SetDlgItemText(hDlg,EDIT_IRCOPS,string);
-				wsprintf(string, "%d",pWSTATS.chans);
+				wsprintf(string, "%d",/*pWSTATS.chans*/IRCstats.channels);
 				SetDlgItemText(hDlg,EDIT_CHANNELS,string);
 				wsprintf(string, "%d",MAXCLIENTS);
 				SetDlgItemText(hDlg,EDIT_LOCALMAXPOS,string);
 
  SetLastError(0);
 	//			SetWindowLong (hDlg,i, (LONG) pWSTATS);
-	  windebug(WINDEBUGLEVEL_2,"Saved (pWSTATS) into (hDlg) offset = i = %d, Last error =%u",i,GetLastError());
+	 // windebug(WINDEBUGLEVEL_2,"Saved (pWSTATS) into (hDlg) offset = i = %d, Last error =%u",i,GetLastError());
 //LocalFree (LocalHandle ((LPVOID) pWSTATS));
 
 				//store them in a safe place that we can find later
@@ -1142,7 +1168,7 @@ WINSTATS  pWSTATS /*= (pWINSTATS) LocalAlloc (LPTR, sizeof(pWINSTATS))*/;
 			//	{
 
 
-			if ((hgraph=CreateWindowEx(WS_EX_CLIENTEDGE,"Graph","m",WS_VISIBLE | WS_CHILD, 166, 70, 364, 70, hDlg, NULL, hInst, NULL))==NULL)
+			if ((hgraph=CreateWindowEx(WS_EX_CLIENTEDGE,"Graph","m",WS_VISIBLE | WS_CHILD, 145, 70, 364, 70, hDlg, NULL, hInst, NULL))==NULL)
 			       {
 				   MessageBox (NULL,
                     "Error Creating Graph Control \n CreateWindow (\"Graph\", \"\",WS_VISIBLE , 335, 25, 100, 400, hDlg, NULL, hInst, NULL)","Error CreatingWindow",
@@ -1753,3 +1779,156 @@ int GUI_TextWaiting(char *szInBuf,int iLength)
 {
 return 0;
 }
+
+/*
+** GetOSVersion()
+** 
+** Use :: Gets os version .. sets gbIsWinNT to True if OS= WinNT
+**
+*/
+void GetOSVersion(void)
+{
+	OSVERSIONINFO osvi;
+
+	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	
+	if(GetVersionEx(&osvi)==FALSE) {
+		MessageBox( NULL,"Unable to get version info", "GetOSVersion()", MB_OK );
+	}
+
+	if(osvi.dwPlatformId==VER_PLATFORM_WIN32s) {
+		MessageBox( NULL,"This application does not run under WIN32s!", "Error", MB_OK );
+	}
+	
+	if (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT) 
+		gbIsWinNT = 1;
+	else 
+		gbIsWinNT = 0;
+}
+/*
+VOID SvcDebugOut(LPSTR String, DWORD Status) 
+{ 
+    CHAR  Buffer[1024]; 
+    if (strlen(String) < 1000) 
+    { 
+        sprintf(Buffer, String, Status); 
+        OutputDebugStringA(Buffer); 
+    } 
+} 
+/* Write Service Start stuff ... *//*
+VOID StartUnrealService (DWORD argc, LPTSTR *argv) 
+{ 
+    DWORD status; 
+    DWORD specificError; 
+ 
+    ServiceStatus.dwServiceType        = SERVICE_WIN32; 
+    ServiceStatus.dwCurrentState       = SERVICE_START_PENDING; 
+    ServiceStatus.dwControlsAccepted   = SERVICE_ACCEPT_STOP | 
+        SERVICE_ACCEPT_PAUSE_CONTINUE; 
+    ServiceStatus.dwWin32ExitCode      = 0; 
+    ServiceStatus.dwServiceSpecificExitCode = 0; 
+    ServiceStatus.dwCheckPoint         = 0; 
+    ServiceStatus.dwWaitHint           = 0; 
+ 
+    ServiceStatusHandle = RegisterServiceCtrlHandler( 
+        "Unreal wIRCd", ServiceCtrlHandler); 
+ 
+    if (ServiceStatusHandle == (SERVICE_STATUS_HANDLE)0) 
+    { 
+        SvcDebugOut(" [MY_SERVICE] RegisterServiceCtrlHandler failed %d\n", GetLastError()); 
+        return; 
+    } 
+ 
+    // Initialization code goes here. 
+    status = ServiceInitialization(argc,argv, &specificError); 
+ 
+    // Handle error condition 
+    if (status != NO_ERROR) 
+    { 
+        ServiceStatus.dwCurrentState       = SERVICE_STOPPED; 
+        ServiceStatus.dwCheckPoint         = 0; 
+        ServiceStatus.dwWaitHint           = 0; 
+        ServiceStatus.dwWin32ExitCode      = status; 
+        ServiceStatus.dwServiceSpecificExitCode = specificError; 
+ 
+        SetServiceStatus (ServiceStatusHandle, &ServiceStatus); 
+        return; 
+    } 
+ 
+    // Initialization complete - report running status. 
+    ServiceStatus.dwCurrentState       = SERVICE_RUNNING; 
+    ServiceStatus.dwCheckPoint         = 0; 
+    ServiceStatus.dwWaitHint           = 0; 
+ 
+    if (!SetServiceStatus (ServiceStatusHandle, &ServiceStatus)) 
+    { 
+        status = GetLastError(); 
+        SvcDebugOut(" [MY_SERVICE] SetServiceStatus error %ld\n",status); 
+    } 
+ 
+    // This is where the service does its work. 
+    SvcDebugOut(" [MY_SERVICE] Returning the Main Thread \n",0); 
+ 
+    return; 
+} 
+ 
+// Stub initialization function. 
+DWORD ServiceInitialization(DWORD   argc, LPTSTR  *argv, 
+    DWORD *specificError) 
+{ 
+    argv; 
+    argc; 
+    specificError; 
+    return(0); 
+} 
+
+VOID ServiceCtrlHandler (DWORD Opcode) 
+{ 
+    DWORD status; 
+ 
+    switch(Opcode) 
+    { 
+       // case SERVICE_CONTROL_PAUSE: 
+        // Do whatever it takes to pause here. 
+         //   ServiceStatus.dwCurrentState = SERVICE_PAUSED; 
+           // break; 
+ 
+        //case SERVICE_CONTROL_CONTINUE: 
+        // Do whatever it takes to continue here. 
+         //   ServiceStatus.dwCurrentState = SERVICE_RUNNING; 
+           // break; 
+ 
+        case SERVICE_CONTROL_STOP: 
+        // Do whatever it takes to stop here. 
+            ServiceStatus.dwWin32ExitCode = 0; 
+           // ServiceStatus.dwCurrentState  = SERVICE_STOPPED_PENDING; 
+            ServiceStatus.dwCheckPoint    = 0; 
+            ServiceStatus.dwWaitHint      = 0; 
+ 
+            if (!SetServiceStatus (ServiceStatusHandle, 
+                &ServiceStatus))
+            { 
+                status = GetLastError(); 
+                SvcDebugOut(" [MY_SERVICE] SetServiceStatus error %ld\n",status); 
+            } 
+ 
+            SvcDebugOut(" [MY_SERVICE] Leaving Service \n",0); 
+            return; 
+ 
+        case SERVICE_CONTROL_INTERROGATE: 
+        // Fall through to send current status. 
+            break; 
+ 
+        default: 
+            SvcDebugOut(" [MY_SERVICE] Unrecognized opcode %ld\n", 
+                Opcode); 
+    } 
+ 
+    // Send current status. 
+    if (!SetServiceStatus (ServiceStatusHandle,  &ServiceStatus)) 
+    { 
+        status = GetLastError(); 
+        SvcDebugOut(" [MY_SERVICE] SetServiceStatus error %ld\n",status); 
+    } 
+    return; 
+} */

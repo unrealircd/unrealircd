@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, ircd/channel.h
+ *   Unreal Internet Relay Chat Daemon, ircd/channel.h
  *   Copyright (C) 1990 Jarkko Oikarinen
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -21,8 +21,8 @@
 
 #ifndef	__channel_include__
 #define __channel_include__
-#define CREATE 1	/* whether a channel should be
-			   created or just tested for existance */
+#define CREATE 1		/* whether a channel should be
+				   created or just tested for existance */
 
 #define	MODEBUFLEN	200
 
@@ -38,7 +38,7 @@
  */
 #include "msg.h"
 #define	MAXMODEPARAMS	(MAXPARA-2)	/* Maximum modes processed */
-#define RESYNCMODES	12		/* Max modes per MODE in resync */
-#define MODEPARAMS	6		/* Max modes from user */
+#define RESYNCMODES	12	/* Max modes per MODE in resync */
+#define MODEPARAMS	6	/* Max modes from user */
 
 #endif

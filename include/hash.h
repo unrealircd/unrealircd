@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, include/hash.h
+ *   Unreal Internet Relay Chat Daemon, include/hash.h
  *   Copyright (C) 1991 Darren Reed
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -22,27 +22,45 @@
 #ifndef	__hash_include__
 #define __hash_include__
 
-/* Ditch the stats if not running in debugmode */
-#ifdef DEBUGMODE
-typedef	struct	hashentry {
-	int	hits;
-	int	links;
-	void	*list;
-	} aHashEntry;
-#else /* DEBUGMODE */
-typedef	void	*aHashEntry;
-#endif /* DEBUGMODE */
+typedef struct hashentry {
+	int  hits;
+	int  links;
+	void *list;
+} aHashEntry;
 
-#ifndef	DEBUGMODE
-#define	HASHSIZE	32003	/* prime number */
-#define	CHANNELHASHSIZE	10007	/* prime number */
-#else
-extern	int	HASHSIZE;
-extern	int	CHANNELHASHSIZE;
-#endif
+/* Taner had BITS_PER_COL 4 BITS_PER_COL_MASK 0xF - Dianora */
 
-#define NOTIFYHASHSIZE	10007	/* prime number  */
+#define BITS_PER_COL 3
+#define BITS_PER_COL_MASK 0x7
+#define MAX_SUB     (1<<BITS_PER_COL)
 
-#define NullChn	((aChannel *)0)
+/* Client hash table 
+ * used in hash.c 
+ */
 
-#endif	/* __hash_include__ */
+#define U_MAX_INITIAL 2048
+#define U_MAX_INITIAL_MASK (U_MAX_INITIAL-1)
+#define U_MAX (U_MAX_INITIAL*MAX_SUB)
+
+/* Channel hash table 
+ * used in hash.c 
+ */
+
+#define CH_MAX_INITIAL  2048
+#define CH_MAX_INITIAL_MASK (CH_MAX_INITIAL-1)
+#define CH_MAX (CH_MAX_INITIAL*MAX_SUB)
+
+/* Who was hash table 
+ * used in whowas.c 
+ */
+
+#define WW_MAX_INITIAL  16
+#define WW_MAX_INITIAL_MASK (WW_MAX_INITIAL-1)
+#define WW_MAX (WW_MAX_INITIAL*MAX_SUB)
+
+#define NOTIFYHASHSIZE  10007	/* prime number  */
+
+#define NullChn ((aChannel *)0)
+
+#define find_channel hash_find_channel
+#endif /* __hash_include__ */

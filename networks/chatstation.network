@@ -1,0 +1,30 @@
+ver^2.2
+#
+# Chatstation  (irc.chatstation.net) Network Configuration File
+# --------------------------------------------------
+#  Added-at:     14 July 1999 00:00 GMT
+#  Author:       Astronomy (Kerem Durmus)
+#  E-Mail:       ircadmin@chatstation.net
+#  $Id$
+# -----------------------------------------
+#
+
+Network >..........: Chatstation
+Set ircnetwork ....: Chatstation
+Set defserv .......: irc.chatstation.net
+Set SERVICES_NAME .: services.chatstation.net
+Set oper_host .....: IRCop.Chatstation.Net
+Set admin_host ....: Admin.Chatstation.Net
+Set locop_host ....: Locop.Chatstation.Net
+Set sadmin_host ...: CSops.Chatstation.Net
+Set netadmin_host .: NetAdmin.Chatstation.Net
+Set coadmin_host ..: Coadmin.Chatstation.Net
+Set techadmin_host : TechAdmin.Chatstation.Net
+Set hidden_host ...: Chatstation
+Set netdomain .....: chatstation.net
+Set helpchan ......: #Help
+Set STATS_SERVER ..: stats.Chatstation.Net
+Set HUB ...........: 1
+Set iNAH ..........: 1
+Set net_quit ......: CS
+

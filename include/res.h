@@ -17,54 +17,54 @@
 
 #define	AR_TTL		600	/* TTL in seconds for dns cache entries */
 
-struct	hent {
-	char	*h_name;	/* official name of host */
-	char	*h_aliases[MAXALIASES];	/* alias list */
-	int	h_addrtype;	/* host address type */
-	int	h_length;	/* length of address */
+struct hent {
+	char *h_name;		/* official name of host */
+	char *h_aliases[MAXALIASES];	/* alias list */
+	int  h_addrtype;	/* host address type */
+	int  h_length;		/* length of address */
 	/* list of addresses from name server */
-	struct	in_addr	h_addr_list[MAXADDRS];
+	struct IN_ADDR h_addr_list[MAXADDRS];
 #define	h_addr	h_addr_list[0]	/* address, for backward compatiblity */
 };
 
-typedef	struct	reslist {
-	int	id;
-	int	sent;	/* number of requests sent */
-	int	srch;
-	time_t	ttl;
-	char	type;
-	char	retries; /* retry counter */
-	char	sends;	/* number of sends (>1 means resent) */
-	char	resend;	/* send flag. 0 == dont resend */
-	time_t	sentat;
-	time_t	timeout;
-	struct	in_addr	addr;
-	char	*name;
-	struct	reslist	*next;
-	Link	cinfo;
+typedef struct reslist {
+	int  id;
+	int  sent;		/* number of requests sent */
+	int  srch;
+	time_t ttl;
+	char type;
+	char retries;		/* retry counter */
+	char sends;		/* number of sends (>1 means resent) */
+	char resend;		/* send flag. 0 == dont resend */
+	time_t sentat;
+	time_t timeout;
+	struct IN_ADDR addr;
+	char *name;
+	struct reslist *next;
+	Link cinfo;
 #ifndef _WIN32
-	struct	hent he;
+	struct hent he;
 #else
-	struct	hostent *he;
-	char	locked;
+	struct hostent *he;
+	char locked;
 #endif
-	} ResRQ;
+} ResRQ;
 
-typedef	struct	cache {
-	time_t	expireat;
-	time_t	ttl;
+typedef struct cache {
+	time_t expireat;
+	time_t ttl;
 #ifndef _WIN32
-	struct	hostent	he;
+	struct hostent he;
 #else
-	struct	hostent	*he;
+	struct hostent *he;
 #endif
-	struct	cache	*hname_next, *hnum_next, *list_next;
-	} aCache;
+	struct cache *hname_next, *hnum_next, *list_next;
+} aCache;
 
-typedef struct	cachetable {
-	aCache	*num_list;
-	aCache	*name_list;
-	} CacheTable;
+typedef struct cachetable {
+	aCache *num_list;
+	aCache *name_list;
+} CacheTable;
 
 #define ARES_CACSIZE	101
 

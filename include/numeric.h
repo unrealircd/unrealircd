@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, include/numeric.h
+ *   Unreal Internet Relay Chat Daemon, include/numeric.h
  *   Copyright (C) 1990 Jarkko Oikarinen
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -112,6 +112,8 @@
 #define ERR_ATTACKDENY       484
 #define ERR_KILLDENY	     485
 
+#define ERR_HTMDISABLED		 486
+
 #define ERR_NOOPERHOST       491
 #define ERR_NOSERVICEHOST    492
 
@@ -141,7 +143,7 @@
 #define RPL_WHOISREGNICK     307
 #define RPL_RULESSTART       308
 #define RPL_ENDOFRULES       309
-#define RPL_WHOISHELPOP      310 /* -Donwulff */
+#define RPL_WHOISHELPOP      310	/* -Donwulff */
 
 #define RPL_WHOISUSER        311
 #define RPL_WHOISSERVER      312
@@ -151,7 +153,7 @@
 /* rpl_endofwho below (315) */
 #define	RPL_ENDOFWHOWAS      369
 
-#define RPL_WHOISCHANOP      316 /* redundant and not needed but reserved */
+#define RPL_WHOISCHANOP      316	/* redundant and not needed but reserved */
 #define RPL_WHOISIDLE        317
 
 #define RPL_ENDOFWHOIS       318
@@ -206,6 +208,10 @@
 #define RPL_YOURESERVICE     383
 #define RPL_MYPORTIS         384
 #define RPL_NOTOPERANYMORE   385
+#define RPL_QLIST			 386
+#define	RPL_ENDOFQLIST		 387
+#define	RPL_ALIST			 388
+#define	RPL_ENDOFALIST		 389
 
 #define RPL_TIME             391
 #define	RPL_USERSSTART       392
@@ -217,6 +223,7 @@
 #define RPL_TRACECONNECTING  201
 #define RPL_TRACEHANDSHAKE   202
 #define RPL_TRACEUNKNOWN     203
+
 #define RPL_TRACEOPERATOR    204
 #define RPL_TRACEUSER        205
 #define RPL_TRACESERVER      206
@@ -227,7 +234,8 @@
 #define RPL_STATSLINKINFO    211
 #define RPL_STATSCOMMANDS    212
 #define RPL_STATSCLINE       213
-#define RPL_STATSNLINE       214
+#define RPL_STATSOLDNLINE    214
+
 #define RPL_STATSILINE       215
 #define RPL_STATSKLINE       216
 #define RPL_STATSQLINE       217
@@ -235,10 +243,14 @@
 #define RPL_ENDOFSTATS       219
 #define RPL_STATSBLINE	     220
 
+
 #define RPL_UMODEIS          221
 #define RPL_SQLINE_NICK      222
 #define RPL_STATSGLINE		 223
 #define RPL_STATSTLINE		 224
+#define RPL_STATSELINE	     225
+#define RPL_STATSNLINE	     226
+#define RPL_STATSVLINE	     227
 #define RPL_SERVICEINFO      231
 #define RPL_RULES            232
 #define	RPL_SERVICE          233
@@ -251,7 +263,7 @@
 #define	RPL_STATSHLINE       244
 #define	RPL_STATSSLINE       245
 #define RPL_STATSXLINE	     247
-#define RPL_STATSULINE       248	
+#define RPL_STATSULINE       248
 #define	RPL_STATSDEBUG	     249
 #define RPL_STATSCONN        250
 
@@ -266,13 +278,11 @@
 #define	RPL_ADMINEMAIL       259
 
 #define	RPL_TRACELOG         261
-
 #define RPL_LOCALUSERS       265
 #define RPL_GLOBALUSERS      266
 
 #define RPL_SILELIST         271
 #define RPL_ENDOFSILELIST    272
-
 #define RPL_STATSDLINE       275
 
 #define RPL_HELPHDR	     290
@@ -305,3 +315,5 @@
 #define RPL_DUMPING			 640
 #define RPL_DUMPRPL			 641
 #define RPL_EODUMP           642
+
+#define ERR_NUMERICERR       999

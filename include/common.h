@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, include/common.h
+ *   Unreal Internet Relay Chat Daemon, include/common.h
  *   Copyright (C) 1990 Armin Gruner
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -32,6 +32,7 @@
 #include "struct.h"
 #endif
 #include "dynconf.h"
+#include "ircsprintf.h"
 
 #ifdef	PARAMH
 #include <sys/param.h>
@@ -45,9 +46,15 @@
 #endif
 #endif
 
+#ifdef DEVELOP_CVS
 #define ID_CVS(x) static char id_cvs[] = x
 #define ID_Copyright(x) static char id_copyright[] = x
 #define ID_Notes(x) static char id_notes[] = x
+#else
+#define ID_CVS(x)
+#define ID_Copyright(x)
+#define ID_Notes(x)
+#endif
 
 #define BMAGIC 0x4675636B596F754661736369737473
 
@@ -72,27 +79,27 @@
 
 #if 0
 #ifndef	MALLOCH
-char	*malloc(), *calloc();
-void	free();
+char *malloc(), *calloc();
+void free();
 #else
 #include MALLOCH
 #endif
 #endif
 
 
-extern	int	match PROTO((char *, char *));
+extern int match PROTO((char *, char *));
 #define mycmp(a,b) \
  ( (toupper((a)[0])!=toupper((b)[0])) || smycmp((a)+1,(b)+1) )
-extern  int     smycmp PROTO((char *, char *));
+extern int smycmp PROTO((char *, char *));
 #ifndef GLIBC2_x
-extern	int	myncmp PROTO((char *, char *, int));
-#endif 
+extern int myncmp PROTO((char *, char *, int));
+#endif
 
 #ifdef NEED_STRTOK
-extern	char	*strtok2 PROTO((char *, char *));
+extern char *strtok2 PROTO((char *, char *));
 #endif
 #ifdef NEED_STRTOKEN
-extern	char	*strtoken PROTO((char **, char *, char *));
+extern char *strtoken PROTO((char **, char *, char *));
 #endif
 #ifdef NEED_INET_ADDR
 extern unsigned long inet_addr PROTO((char *));
@@ -102,14 +109,14 @@ extern unsigned long inet_addr PROTO((char *));
 #include <netinet/in.h>
 #endif
 #ifdef NEED_INET_NTOA
-extern char *inet_ntoa PROTO((struct in_addr));
+extern char *inet_ntoa PROTO((struct IN_ADDR));
 #endif
 
 #ifdef NEED_INET_NETOF
-extern int inet_netof PROTO((struct in_addr));
+extern int inet_netof PROTO((struct IN_ADDR));
 #endif
 
-int global_count, max_global_count;
+int  global_count, max_global_count;
 extern char *myctime PROTO((time_t));
 extern char *strtoken PROTO((char **, char *, char *));
 
@@ -124,14 +131,9 @@ extern char *strtoken PROTO((char **, char *, char *));
 
 #define DupString(x,y) do{x=MyMalloc(strlen(y)+1);(void)strcpy(x,y);}while(0)
 
-#ifdef USE_CASETABLES
-extern int casetable;
-extern u_char *tolowertab, tolowertab1[], tolowertab2[];
-extern u_char *touppertab, touppertab1[], touppertab2[];
-#else
 extern u_char tolowertab[], touppertab[];
-#endif
 
+#ifndef USE_LOCALE
 #undef tolower
 #define tolower(c) (tolowertab[(c)])
 
@@ -150,7 +152,7 @@ extern u_char tolowertab[], touppertab[];
 #undef isupper
 #undef isspace
 #undef iscntrl
-
+#endif
 extern unsigned char char_atribs[];
 
 #define PRINT 1
@@ -168,8 +170,9 @@ extern unsigned char char_atribs[];
 #define KLINE_EXCEPT 3
 #endif
 
-#define	iscntrl(c) (char_atribs[(u_char)(c)]&CNTRL)
 #define isallowed(c) (char_atribs[(u_char)(c)]&ALLOW)
+#ifndef USE_LOCALE
+#define	iscntrl(c) (char_atribs[(u_char)(c)]&CNTRL)
 #define isalpha(c) (char_atribs[(u_char)(c)]&ALPHA)
 #define isspace(c) (char_atribs[(u_char)(c)]&SPACE)
 #define islower(c) ((char_atribs[(u_char)(c)]&ALPHA) && ((u_char)(c) > 0x5f))
@@ -182,24 +185,38 @@ extern unsigned char char_atribs[];
 #define isascii(c) ((u_char)(c) >= 0 && (u_char)(c) <= 0x7f)
 #define isgraph(c) ((char_atribs[(u_char)(c)]&PRINT) && ((u_char)(c) != 0x32))
 #define ispunct(c) (!(char_atribs[(u_char)(c)]&(CNTRL|ALPHA|DIGIT)))
+#endif
 
+// #ifndef DMALLOC
 extern char *MyMalloc();
+// #else
+// #define MyMalloc malloc
+// #define MyRealloc realloc
+// #define MyFree free
+// #endif
 extern void flush_connections();
-extern struct SLink *find_user_link(/* struct SLink *, struct Client * */);
+extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 
 /*
  * Protocol support text.  DO NO CHANGE THIS unless you know what
  * you are doing.
  */
+
+#ifdef ZIP_LINKS
+#define ZIPSTUFF " ZIP"
+#else
+#define ZIPSTUFF ""
+#endif
+
 #define PROTOCTL_CLIENT "TOKEN WATCH=128 SAFELIST HCN PREFIX=@+%"
-#define PROTOCTL_SERVER "NOQUIT TOKEN NICKv2 SJOIN SJOIN2"
+#define PROTOCTL_SERVER "NOQUIT TOKEN NICKv2 SJOIN SJOIN2 UMODE2 ALN VL SJ3" ZIPSTUFF
 
 #ifdef _WIN32
 /*
  * Used to display a string to the GUI interface.
  * Windows' internal strerror() function doesn't work with socket errors.
  */
-extern	int	DisplayString(HWND hWnd, char *InBuf, ...);
+extern int DisplayString(HWND hWnd, char *InBuf, ...);
 #undef	strerror
 #endif
 
@@ -207,10 +224,10 @@ extern	int	DisplayString(HWND hWnd, char *InBuf, ...);
 extern char *malloc_options;
 #endif
 
-extern int lu_noninv, lu_inv, lu_serv, lu_oper, 
-           lu_unknown, lu_channel, lu_lu, lu_lulocal, lu_lserv, 
-           lu_clu, lu_mlu, lu_cglobalu, lu_mglobalu;
-           
-time_t	now;
+extern int lu_noninv, lu_inv, lu_serv, lu_oper,
+    lu_unknown, lu_channel, lu_lu, lu_lulocal, lu_lserv,
+    lu_clu, lu_mlu, lu_cglobalu, lu_mglobalu;
+
+time_t now;
 
 #endif /* __common_include__ */

@@ -10,11 +10,12 @@ BOOL Cio_Init(HINSTANCE hInstance);
 
 // Cio_Main.c
 LRESULT CALLBACK Cio_WndProc(HWND, UINT, WPARAM, LPARAM);
-HWND Cio_Create(HINSTANCE hInstance, HWND hParent, DWORD Style, int X, int Y, int W, int H);
+HWND Cio_Create(HINSTANCE hInstance, HWND hParent, DWORD Style, int X, int Y,
+    int W, int H);
 BOOL Cio_WndCreate(HWND hWnd);
 BOOL Cio_WndPaint(HWND hWnd);
 BOOL Cio_WndDestroy(HWND hWnd);
 BOOL Cio_WndAddString(HWND hWnd, int Len, char *Buffer);
 BOOL Cio_WndSize(HWND hWnd, LPARAM lParam);
-void Cio_Scroll(HWND hWnd, CioWndInfo *CWI, int Scroll);
+void Cio_Scroll(HWND hWnd, CioWndInfo * CWI, int Scroll);
 BOOL Cio_PrintF(HWND hWnd, char *InBuf, ...);

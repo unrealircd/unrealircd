@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, include/dynconf.h
+ *   Unreal Internet Relay Chat Daemon, include/dynconf.h
  *   Copyright (C) 1999 Carsten Munk
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -21,68 +21,84 @@
 
 
 #define DYNCONF_H
-typedef struct zNetwork		aNetwork;
-struct	zNetwork {
-	char		*x_ircnetwork;
-	char		*x_defserv;
-	char		*x_services_name;
-	char		*x_oper_host;
-	char		*x_admin_host;
-	char		*x_locop_host;
-	char		*x_sadmin_host;
-	char		*x_netadmin_host;
-	char		*x_coadmin_host;
-	char		*x_techadmin_host;
-	char		*x_hidden_host;
-	char		*x_netdomain;
-	char		*x_helpchan;
-	char		*x_stats_server;
-	int			x_halfhub;
-	int			x_inah;
-	char		*x_net_quit;
-	int			x_se;
+
+/* config level */
+#define DYNCONF_CONF_VERSION "1.5"
+#define DYNCONF_NETWORK_VERSION "2.2"
+
+typedef struct zNetwork aNetwork;
+struct zNetwork {
+	unsigned x_inah:1;
+	char *x_ircnetwork;
+	char *x_defserv;
+	char *x_services_name;
+	char *x_oper_host;
+	char *x_admin_host;
+	char *x_locop_host;
+	char *x_sadmin_host;
+	char *x_netadmin_host;
+	char *x_coadmin_host;
+	char *x_techadmin_host;
+	char *x_hidden_host;
+	char *x_netdomain;
+	char *x_helpchan;
+	char *x_stats_server;
 };
 
 typedef struct zConfiguration aConfiguration;
-struct	zConfiguration {
-	long		nospoof_seed01;
-	long		nospoof_seed02;
-	char		*kline_address;
-	char    	*include;
-	char		*domainname;
-	char		*domainmask; /* '*' + domainname */
-	int		som;
-	int		mode_x;
-	int		mode_i;
-	int		truehub;
-	int		stop;
-	int		showopers;
-	int		killdiff;
-	int     	hide_ulines;
-	int     	allow_chatops;
-	int		socksbantime;
-	char		*socksbanmessage;
-	char		*socksquitmessage;	
-	aNetwork	network;
+struct zConfiguration {
+	unsigned som:1;
+	unsigned mode_x:1;
+	unsigned mode_i:1;
+	unsigned mode_stripbadwords:1;
+	unsigned truehub:1;
+	unsigned stop:1;
+	unsigned showopers:1;
+	unsigned killdiff:1;
+	unsigned hide_ulines:1;
+	unsigned allow_chatops:1;
+	unsigned webtv_support:1;
+	unsigned no_oper_hiding:1;
+/*	long		nospoof_seed01;
+	long		nospoof_seed02; */
+	long host_timeout;
+	int  host_retries;
+	char *kline_address;
+	char *include;
+	char *domainname;
+	char *domainmask;	/* '*' + domainname */
+	char *auto_join_chans;
+	char *oper_auto_join_chans;
+	int  socksbantime;
+	int  maxchannelsperuser;
+	char *socksbanmessage;
+	char *socksquitmessage;
+	aNetwork network;
 };
 
 #ifndef DYNCONF_C
-extern	aConfiguration iConf;
+extern aConfiguration iConf;
 #endif
 
-// #define NOSPOOF_SEED01		iConf.nospoof_seed01
-// #define NOSPOOF_SEED02		iConf.nospoof_seed02
 #define KLINE_ADDRESS		iConf.kline_address
 #define INCLUDE				iConf.include
 #define DOMAINNAMEMASK		"*" DOMAINNAME
 #define MODE_X				iConf.mode_x
 #define MODE_I				iConf.mode_i
+#define MODE_STRIPWORDS			iConf.mode_stripbadwords
 #define TRUEHUB				iConf.truehub
 #define SHOWOPERS			iConf.showopers
 #define KILLDIFF			iConf.killdiff
 #define SHOWOPERMOTD			iConf.som
 #define HIDE_ULINES			iConf.hide_ulines
-#define ALLOW_CHATOPS		iConf.allow_chatops
+#define ALLOW_CHATOPS			iConf.allow_chatops
+#define MAXCHANNELSPERUSER		iConf.maxchannelsperuser
+#define WEBTV_SUPPORT			iConf.webtv_support
+#define NO_OPER_HIDING			iConf.no_oper_hiding
+#define AUTO_JOIN_CHANS			iConf.auto_join_chans
+#define OPER_AUTO_JOIN_CHANS		iConf.oper_auto_join_chans
+#define HOST_TIMEOUT			iConf.host_timeout
+#define HOST_RETRIES			iConf.host_retries
 
 #define ircnetwork			iConf.network.x_ircnetwork
 #define defserv				iConf.network.x_defserv

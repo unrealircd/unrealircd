@@ -1,27 +1,38 @@
 ===============================================
-=            UnrealIRCd v3.0                  =
+=            UnrealIRCd v3.1                  =
 ===============================================
  Was brought to you by:
   * Stskeeps  <stskeeps@tspre.org>
   * codemastr <codemastr@tspre.org>
+  * DrBin     <drbin@tspre.org>
   
  Precenses on the Internet:
   * http://unreal.tspre.org or http://unreal.sourceforge.net
   * ftp://unreal.sourceforge.net/pub/unreal
-  * ftp://ftp.shadow-realm.org/pub/ircd/UnrealIRCd
  
- CVS Repository:
-  * Alpha versions (or beta)
-  ==========================  
-cvs -z9 -d :pserver:anonymous@cvs.unreal.sourceforge.net:/cvsroot/unreal login
-    (just press enter when it asks for password)
-cvs -z9 -d :pserver:anonymous@cvs.unreal.sourgeforge.net:/cvsroot/unreal co alpha
+ CVS:
+To get anonymous access: (read only)
+"cvs -d :pserver:anonymous@cvs.ircsystems.net:/home/cmunk/ircsystems/cvsroot login"
+
+press enter when asked for password
+
+and to get latest stable:
+"cvs -d :pserver:anonymous@cvs.ircsystems.net:/home/cmunk/ircsystems/cvsroot checkout -r stable -d Unreal-stable unreal"
+
+latest beta:
+"cvs -d :pserver:anonymous@cvs.ircsystems.net:/home/cmunk/ircsystems/cvsroot checkout -r beta -d Unreal-beta unreal"
 
   * To get support
   ================
-    * IRC: /server irc.flirt.org 6667 - /join #unrealircd
+    * IRC: /server irc.ircsystems.net 6667 - /join #unrealircd
+      [Note: Please be patient after asking questions, we may do other stuff
+             or we're away. Don't repeat questions, we heard you first time,
+             READ THE TOPIC before you ask anything. We do this on a free
+             base so we are volunteeringly helping you, but we are humans
+             like you, and we got to have peace at times as well.]
     * Mailing list: unreal-support@lists.sourceforge.net (for support)
-  
+    * READ doc/faq BEFORE ASKING QUESTIONS!
+ 
   * Got a bug to report? 
   ====================== 
     * If the server crashes and dumps core do this:

@@ -1,0 +1,34 @@
+ver^2.2
+#
+# Network Configuration File Template
+# -----------------------------------------
+#  Added-at:     <day> <month> <year> <hh:dd> GMT
+#  Author:       <nick> (<real name>)
+#  E-Mail:       <email>
+#  $Id$
+# -----------------------------------------
+# This is a template so you can create your own network configuration files
+# Just follow the instructions and it will prolly work ;)
+# 0 = No   1 = Yes
+# -------------------------------------------------------
+#
+# These two specify the name of the IRC network, set the same in both fields
+
+Network >..........: Thai IRC Network
+Set ircnetwork ....: Thai IRC Network
+Set defserv .......: irc.thai.com
+Set SERVICES_NAME .: services.thai.com
+Set oper_host .....: ircop.thai.com
+Set admin_host ....: admin.thai.com
+Set locop_host ....: locop.thai.com
+Set sadmin_host ...: serviceop.thai.com
+Set netadmin_host .: netadmin.thai.com
+Set coadmin_host ..: coadmin.thai.com
+Set techadmin_host : techadmin.thai.com
+Set hidden_host ...: ThaiNet
+Set netdomain .....: irc.thai.com
+Set helpchan ......: #Services
+Set STATS_SERVER ..: stats.thai.com
+Set HUB ...........: 1
+Set iNAH ..........: 1
+Set net_quit ......: ic

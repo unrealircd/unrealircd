@@ -1,5 +1,6 @@
+
 /************************************************************************
- *   IRC - Internet Relay Chat, include/sock.h
+ *   Unreal Internet Relay Chat Daemon, include/sock.h
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
  *
@@ -22,6 +23,18 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.1.1.1.6.2  2000/07/16 20:37:04  stskeeps
+ * Unreal3.1-beta3 to Unreal3.1
+ *
+ * Revision 1.1.1.1.6.1.2.1  2000/07/14 20:22:57  stskeeps
+ * +- Indentation and more SJ3 fixes
+ *
+ * Revision 1.1.1.1.6.1  2000/05/28 08:55:24  cmunk
+ * Import of Unreal3.1-beta3
+ *
+ * Revision 1.2  2000/03/02 21:22:37  stskeeps
+ * ...........
+ *
  * Revision 1.1.1.1  2000/01/30 12:16:33  stskeeps
  * Begin of CVS at cvs.unreal.sourceforge.net
  *
@@ -70,6 +83,5 @@
 #endif
 
 #ifdef RCVTIMEO
-#define SO_RCVTIMEO     0x1006          /* receive timeout */
+#define SO_RCVTIMEO     0x1006	/* receive timeout */
 #endif
-

@@ -3,7 +3,8 @@
  *  $Id$
 */
 
-int main() {
+int  main()
+{
 	printf("|=-=-=-=-=-==-==--=-=-=-=-=-==-==--=-=-=-=-=-==-==|\n");
 	printf("|                                                 |\n");
 	printf("| UnrealIRCd Configuration Tool                   |\n");
@@ -11,5 +12,6 @@ int main() {
 	printf("|                                                 |\n");
 	printf("|-=-=-=-=-=-==-=-=-=-=-=-=-=-==-==-=-=-=-=-=-==-==|\n");
 
-	printf("Actually this is only a demo .. so wait for it to be released;p");
+	printf
+	    ("Actually this is only a demo .. so wait for it to be released;p");
 }

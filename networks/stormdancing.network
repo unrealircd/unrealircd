@@ -1,0 +1,71 @@
+ver2^2
+#
+# Network Configuration File Template
+# -----------------------------------------
+#  Added-at:     <day> <month> <year> <hh:dd> GMT
+#  Author:       <nick> (<real name>)
+#  E-Mail:       <email>
+#  $Id$
+# -----------------------------------------
+# This is a template so you can create your own network configuration files
+# Just follow the instructions and it will prolly work ;)
+# 0 = No   1 = Yes
+# -------------------------------------------------------
+#
+# These two specify the name of the IRC network, set the same in both fields
+Network >..........: Stormdancing.Net
+Set ircnetwork ....: Stormdancing.Net
+
+# This is where your DNS pool is (like irc.dal.net)
+Set defserv .......: irc.stormdancing.net
+
+# This is the name of your Services Server
+Set SERVICES_NAME .: Services.Stormdancing.Net
+
+# This is the virtual hostname IRCops will get if iNAH option is enabled
+# on oper up
+Set oper_host .....: IRCop.Stormdancing.Net
+
+# This is the virtual hostname Server Admins will get if iNAH option is enabled
+# on oper up
+Set admin_host ....: Admin.Stormdancing.Net
+
+# This is the virtual hostname Local IRCops will get if iNAH option is enabled
+# on oper up
+
+Set locop_host ....: LocOp.Stormdancing.Net
+
+# This is the virtual hostname Services Operators/Admins will get
+# if iNAH option is enabled on oper up
+
+Set sadmin_host ...: ServiceOp.Stormdancing.Net
+
+# This is the virtual hostname NetAdmins will get
+# if iNAH option is enabled on oper up
+
+Set netadmin_host .: NetAdmin.Stormdancing.Net
+
+# This is the virtual hostname CoAdmins will get
+# if iNAH option is enabled on oper up
+Set coadmin_host ..: CoAdmin.Stormdancing.Net
+
+
+# This is the virtual hostname TechAdmins will get
+# if iNAH option is enabled on oper up
+Set techadmin_host : TechAdmin.Stormdancing.Net
+
+# This is the prefix of the hidden host (cloaking) hostname
+Set hidden_host ...: Stormdancing
+# This is the domain of the IRC network
+Set netdomain .....: Stormdancing.Net
+# This is where people can go for help
+Set helpchan ......: #Help
+# This is the name of the stats server
+Set STATS_SERVER ..: stats.ircnet.org
+# -- Not in use--
+Set HUB ...........: 1
+# This enables the auto-setting of f.x @netadmin.network.net 
+# on oper up
+Set iNAH ..........: 1
+# -- Not in use but still here --
+Set net_quit ......: SD
