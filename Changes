@@ -2224,4 +2224,5 @@ seen. gmtime warning still there
 - Implemented +a/+q prefixes (#define PREFIX_AQ in config.h) read the comment above PREFIX_AQ
   in include/config.h for more information.
 - Fixed PRIVMSG bug with multiple targets.
+- Yet another resolver fix
 *** Unreal3.2-beta17 release *** (god save us)

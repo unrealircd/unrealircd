@@ -764,7 +764,7 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 {
 	char *cp, **alias;
 	struct hent *hp;
-	int  class, type, dlen, len, ans = 0, n;
+	int  class, type, dlen, len, ans = 0, ansa = 0, n;
 	struct IN_ADDR dr, *adr;
 
 	cp = buf + sizeof(HEADER);
@@ -840,6 +840,11 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 				      dlen, hostbuf));
 				  return -2;
 			  }
+			if (ansa >= MAXADDRS - 1)
+			{
+				cp += dlen;
+				break;
+			}
 			  hp->h_length = dlen;
 			  if (ans == 1)
 				  hp->h_addrtype = (class == C_IN) ?
@@ -875,6 +880,7 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 				(void)strlcpy(hp->h_name, hostbuf, len+1);
 			    }
 			  ans++;
+			  ansa++;
 			  adr++;
 			  cp += dlen;
 			  break;
