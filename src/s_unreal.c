@@ -674,8 +674,6 @@ int  m_admins(cptr, sptr, parc, parv)
 #ifdef ADMINCHAT
 	sendto_umode(UMODE_ADMIN, "*** AdminChat -- from %s: %s",
 	    parv[0], message);
-	sendto_umode(UMODE_COADMIN, "*** AdminChat -- from %s: %s",
-	    parv[0], message);
 #endif
 	return 0;
 }

@@ -3286,6 +3286,10 @@ int  m_kick(cptr, sptr, parc, parv)
 			continue;
 		}
 
+		/* I rewrote almost this entire loop, as the person that originally wrote it (or modded it)
+		 * was under a severe dosage of some type of drug.
+		 * --Luke
+		 */
 		lp2 = find_user_link(chptr->members, sptr);
 		for (; (user = strtoken(&p2, parv[2], ",")); parv[2] = NULL)
 		{
@@ -3293,10 +3297,12 @@ int  m_kick(cptr, sptr, parc, parv)
 				continue;	/* No such user left! */
 			if ((lp = find_user_link(chptr->members, who)))
 			{
+				/* Obviously U lines and servers get immediate kick privs */
 				if (IsULine(sptr))
 					goto attack;
 				if (IsServer(sptr))
 					goto attack;
+				
 				/* Hiding patch by }{ */
 				if (IsHiding(who))
 				{
@@ -3310,44 +3316,64 @@ int  m_kick(cptr, sptr, parc, parv)
 					break;
 				}
 
-				if ((chptr->mode.mode & MODE_NOKICKS)
-				    && !IsULine(sptr))
+				/* If you're +q, only netadmin can kick you. */
+				if (IsKix(who) && !IsNetAdmin(sptr))
+				{
+					sendto_one(sptr,
+					    ":%s NOTICE %s :*** Cannot kick %s from channel %s (usermode +q)",
+					    me.name, sptr->name, who->name, chptr->chname);
+					sendto_one(who,
+					    ":%s NOTICE %s :*** Q: %s tried to kick you from channel %s (%s)",
+					    me.name, who->name, parv[0], chptr->chname, comment);
+					goto deny;
+				}
+				
+				/* If oper override is defined, opers can take out just about anyone
+				 * (netadmin required to take out a service)
+				 */
+
+#ifndef NO_OPEROVERRIDE
+				if ((IsOper(sptr) && !IsServices(who)) || IsNetAdmin(sptr))
+				{
+					sendto_umode(UMODE_EYES, "*** OperKick [%s @ %s -> %s (%s)]",
+						     sptr->name, chptr->chname, who->name, comment);
+					goto attack;
+				}
+#endif
+				
+				/* Channel has +Q set, nobody can get kicked.
+				 * I seriously fail to see why the people that originally coded this
+				 * put !IsULine(sptr) crap all over the place, check above. If sptr
+				 * is a U line it immediately goes to attack.
+				 */
+				if (chptr->mode.mode & MODE_NOKICKS)
 				{
 					sendto_one(sptr,
 					    ":%s NOTICE %s :*** You cannot kick people on %s",
 					    me.name, sptr->name, chptr->chname);
 					goto deny;
-					continue;
 				}
 
-				if (IsOper(sptr))
-					if (!is_chan_op(sptr, chptr)
-					    && !is_halfop(sptr, chptr)
-					    || (is_halfop(sptr, chptr)
-					    && is_chan_op(who, chptr)))
+				/* Halfops can't take out channel ops */
+				if (is_chan_op(who,chptr) && is_halfop(sptr,chptr)
+				    && !is_chan_op(sptr,chptr))
+				{
+					sendto_one(sptr,
+					    ":%s NOTICE %s :*** You cannot kick channel operators on %s if you only are halfop",
+					    me.name, sptr->name, chptr->chname);
+					goto deny;
+				}
+				
+				/* Protected users, Owners, and Services can't get nailed unless they're nailing themselves
+				 * However, owners CAN nail protected users, as they're higher.
+				 */
+				if ((is_chanprot(who, chptr) || is_chanowner(who, chptr) || IsServices(who)) && (who != sptr))
+				{
+					if (is_chanowner(sptr, chptr) && (is_chanprot(who,chptr) && !is_chanowner(who,chptr)))
 					{
-						sendto_umode(UMODE_EYES,
-						    "*** OperKick [%s @ %s -> %s (%s)]",
-						    sptr->name,
-						    chptr->chname,
-						    who->name, comment);
-						goto attack;
-					}	/* is_chan_op */
-				if (is_chanprot(who, chptr)
-				    || is_chanowner(who, chptr)
-				    || IsServices(who))
-					if (IsNetAdmin
-						(sptr))
-					{	/* IRCop kicking owner/prot */
-						sendto_umode(UMODE_EYES,
-						    "*** OperKick [%s @ %s -> %s (%s)]",
-						    sptr->name,
-						    chptr->chname,
-						    who->name, comment);
 						goto attack;
 					}
-					else if (!IsULine(sptr)
-					    && who != sptr)
+					else
 					{
 						sendto_one(sptr,
 						    ":%s NOTICE %s :*** You cannot kick %s from %s because %s is channel protected",
@@ -3355,37 +3381,10 @@ int  m_kick(cptr, sptr, parc, parv)
 						    who->name,
 						    chptr->chname, who->name);
 						goto deny;
-						continue;
-					}	/* chanprot/chanowner */
-				if (is_chan_op(who, chptr)
-				    && is_halfop(sptr, chptr)
-				    && !is_chan_op(sptr, chptr)
-				    && !IsULine(sptr))
-				{
-					sendto_one(sptr,
-					    ":%s NOTICE %s :*** You cannot kick channel operators on %s if you only are halfop",
-					    me.name, sptr->name, chptr->chname);
-					goto deny;
-				}	/* halfop */
-
-				if (IsKix(who) && !IsULine(sptr))
-				{
-					if (!(IsNetAdmin(sptr)
-					    ))
-					{
-						sendto_one(sptr,
-						    ":%s NOTICE %s :*** Cannot kick %s from channel %s (usermode +q)",
-						    me.name, sptr->name,
-						    who->name, chptr->chname);
-						sendto_one(who,
-						    ":%s NOTICE %s :*** Q: %s tried to kick you from channel %s (%s)",
-						    me.name, who->name,
-						    parv[0],
-						    chptr->chname, comment);
-						goto deny;
 					}
 				}
 
+				/* Well, we made it this far...the kick *should* be good, so attack */
 				goto attack;
 
 			      deny:

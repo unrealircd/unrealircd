@@ -251,4 +251,19 @@ E lines now match glines, zlines, shuns
 map bug still exists (earlier fix made it
 worse)...removed.
 --Luke
-=================================== 
+===================================
+
+/adchat bug that sends it to coadmins twice
+(coadmins are actually server admins as far
+as the ircd is concerned for most purposes, no
+need to send to both UMODES)
+--Luke
+===================================
+
+rewrote m_kick almost entirely (it sucked)
+--Luke
+===================================
+
+newdns.c removed - another useless file
+--Luke
+===================================
