@@ -28,7 +28,13 @@ AC_DEFUN(AC_ENABLE_SSL,
 [
 if test $openssl = yes; then
 AC_DEFINE(USE_SSL)
-CRYPTOLIB="-lcrypto -lssl"
+CRYPTOLIB="-lcrypto"
+if [ ! -f server.req.pem ]; then
+export OPENSSLPATH
+make pem
+cat .SICI
+read cc
+fi
 else
 AC_WARN(SSL support could not be enabled because openssl/ssl.h could not be found)
 fi
@@ -59,7 +65,7 @@ case `uname -s` in
 esac
 fi
 ])
-MODULEFLAGS="$ac_cv_pic"
+MFLAGS=$ac_cv_pic
 AC_DEFINE(DYNAMIC_LINKING)
 ])
 AC_CHECK_HEADER(sys/param.h,AC_DEFINE(PARAMH))
@@ -247,14 +253,16 @@ AC_CHECK_FUNCS(inet_ntoa,,AC_DEFINE(NEED_INET_NTOA))
 AC_CHECK_FUNCS(inet_netof,,AC_DEFINE(NEED_INET_NETOF))
 AC_SUBST(REGEX)
 AC_SUBST(STRTOUL)
-AC_SUBST(MODULEFLAGS)
 AC_SUBST(NEED_U_INT32_T)
 AC_SUBST(CRYPTOLIB)
+AC_SUBST(MFLAGS)
 AC_ARG_WITH(crypt-oper, [ --with-crypt-oper     Specify whether oper passwords should be crypted],
 AC_DEFINE(CRYPT_OPER_PASSWORD))
-AC_ARG_WITH(crypt-iline, [ --with-crypt-iline     Specify whether allow passwords should be crypted],
+AC_ARG_WITH(crypt-iline, [ --with-crypt-iline     Specify whether allow
+passwords should be crypted],
 AC_DEFINE(CRYPT_ILINE_PASSWORD))
-AC_ARG_WITH(crypt-link, [ --with-crypt-link     Specify whether link passwords should be crypted],
+AC_ARG_WITH(crypt-link, [ --with-crypt-link     Specify whether link
+passwords should be crypted],
 AC_DEFINE(CRYPT_LINK_PASSWORD))
 AC_ARG_WITH(crypt-xline, [ --with-crypt-xline     Specify whether die/restart  passwords should be
 crypted], AC_DEFINE(CRYPT_XLINE_PASSWORD))
@@ -265,7 +273,7 @@ AC_DEFINE_UNQUOTED(NICKNAMEHISTORYLENGTH,$withval), AC_DEFINE(NICKNAMEHISTORYLEN
 AC_ARG_WITH(sendq, [ --with-sendq=maxsendq     Specify the max sendq for the server],
 AC_DEFINE_UNQUOTED(MAXSENDQLENGTH,$withval),AC_DEFINE(MAXSENDQLENGTH,3000000))
 AC_ARG_WITH(bufferpool, [ --with-bufferpool=size     Specify the size of the buffer pool],
-AC_DEFINE_UNQUOTED(BUFFERPOOL,[($withval * MAXSENDQLENGTH)]),AC_DEFINE(BUFFERPOOL,[(9 * MAXSENDQLENGTH)]))
+AC_DEFINE_UNQUOTED(BUFFERPOOL,$withval),AC_DEFINE(BUFFERPOOL,[(9 * MAXSENDQLENGTH)]))
 
 AC_ARG_WITH(hostname, [ --with-hostname=host     Specify the local hostname of the server], AC_DEFINE_UNQUOTED(DOMAINNAME,"$withval"),AC_DEFINE_UNQUOTED(DOMAINNAME,"`hostname`"))
 AC_DEFINE_UNQUOTED(MYOSNAME,"`uname -a`")
@@ -296,4 +304,21 @@ exit(1);
 }
 ], AC_MSG_RESULT(yes), FD_SETSIZE="-DFD_SETSIZE=$ac_fd" AC_MSG_RESULT(no))
 AC_SUBST(FD_SETSIZE)
-AC_OUTPUT(Makefile src/modules/Makefile crypt/Makefile)
+case "${host_cpu}-${host_os}" in
+SunOS*5.*)
+CFLAGS="$CFLAGS -DSOL20"
+;;
+*AmigaOS*68020*)
+CFLAGS="$CFLAGS -D_AMIGA -m68020"
+;;
+*AmigaOS*68030*)
+CFLAGS="$CFLAGS -D_AMIGA -m68030"
+;;
+*AmigaOS*68040*)
+CFLAGS="$CFLAGS -D_AMIGA -m68040"
+;;
+*AmigaOS*68060*)
+CFLAGS="$CFLAGS -D_AMIGA -m68060"
+;;
+esac
+AC_OUTPUT(Makefile crypt/Makefile src/modules/Makefile)
