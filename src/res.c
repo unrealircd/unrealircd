@@ -1340,6 +1340,7 @@ ResRQ	*rptr;
 #ifndef _WIN32
 	if (!rptr->he.h_name || !rptr->he.h_addr.S_ADDR)
 #else
+	if (!rptr->he->h_name || !((struct in_addr *)rptr->he->h_addr)->s_addr)
 #endif
 		return NULL;
 	/*
