@@ -129,7 +129,7 @@ DLLFUNC int  m_ping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		origin = cptr->name;
 	if (!BadPtr(destination) && mycmp(destination, me.name) != 0)
 	{
-		if ((acptr = find_server_quick(destination)))
+		if ((acptr = find_server_quick(destination)) && (acptr != &me))
 			sendto_one(acptr, ":%s PING %s :%s", parv[0],
 			    origin, destination);
 		else

@@ -2469,3 +2469,6 @@ seen. gmtime warning still there
   - Fixed a possible desynch regarding chmode +L.
   - Fixed possible client confusion regarding bans.
 - Now it would be even better if it actually compiles...
+- Optimized send code re-enabled, I disabled it 6h ago due a bug-triggering-a-bug (see next).
+- Fixed a PING bug resulting in 'trying to send .. to myself' msg.
+- Some spelling corrections in unreal32docs.html.

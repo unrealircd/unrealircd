@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
-<title>UnrealIRCd - 3.2 - Offical Documentation</title>
+<title>UnrealIRCd - 3.2 - Official Documentation</title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <style type="text/css">
  .block_section { font-size: 24; font-weight: bold; }
@@ -120,7 +120,7 @@
 <div class="desc">
 <p>In case you are upgrading from Unreal3.1.x to Unreal3.2 you'll notice the whole config file has changed,
    you may find it hard at first, but once you've switched you'll find it much better!</p>
-<p>Also don't forget to read section 3 about features, altough you know already some of them which are in 3.1.x there are several new features too!</p>
+<p>Also don't forget to read section 3 about features, although you know already some of them which are in 3.1.x there are several new features too!</p>
 <p>It's best not to mix/link 3.1.x with 3.2, but if you really want to, you need at least 3.1.4, but 3.1.5.1 is strongly recommended.</p></div>
 
 <p><font size="+2"><b>1.2 &#8211; Notes on upgrading between 3.2 versions</b></font><a name="notesonupgrade"></a><br>
@@ -243,7 +243,7 @@ Windows:<br>
    a file with default aliases for most commonly used services.</p></div>
    
 <p><font size="+2"><b>3.5 - Helpop</b></font><a name="feature_helpop"></a></p><div class="desc">
-<p>UnrealIRCd has a built-in help system accessable by /helpop. The /helpop command is completely user configurable via
+<p>UnrealIRCd has a built-in help system accessible by /helpop. The /helpop command is completely user configurable via
    the help block in the configuration file. Additionally, a help.conf is included which contains some basic help for
    all commands.<br>
    For example <i>/helpop chmodes</i> gives you a overview of all channel modes UnrealIRCd has.<br>
@@ -414,7 +414,7 @@ The old +f mode (msgflood per-user) is also still available as 't', +f 10:6 is n
        &nbsp;&nbsp;&nbsp;&nbsp;comment */<br>
  </p>
 <p>Now that you know how it works, create your unrealircd.conf from scratch or
-   copy doc/example.conf and start editting. It's recommended to walk step by step
+   copy doc/example.conf and start editing. It's recommended to walk step by step
    trough all block types and use this manual as a reference.</p>
 <p></p></div>
 <p><font class="block_section">4.2 - </font><font class="block_name">Me Block</font>
@@ -454,7 +454,7 @@ admin {
 <p> </p>
 <p>The admin block defines the text displayed in a /admin request. You can specify 
   as many lines as you want and they can contain whatever information you 
-  choose, but it is standard to include the admin's nickname and email address 
+  choose, but it is standard to include the admins nickname and email address 
   at a minimum. Other information may include any other contact information you 
   wish to give.</p>
 <p>Example:<br>
@@ -487,7 +487,7 @@ class &lt;name&gt; {
 <p><b>pingfreq</b> is the number of seconds between PINGs from the server</p>
 <p><b>connfreq</b> is used only for servers and is the number of seconds between connection attempts if autoconnect is enabled</p>
 <p><b>maxclients</b> specifies the maximum (total) number of clients/servers which can be in this class</p>
-<p><b>sendq</b> specifies the amount of data which can be in the send queue (very high for servers with low bandwith, medium for clients)</p>
+<p><b>sendq</b> specifies the amount of data which can be in the send queue (very high for servers with low bandwidth, medium for clients)</p>
 <p><b>recvq</b> specifies the amount of data which can be in the receive queue and is used for flood control 
  (this only applies to normal users, try experimenting with values 3000-8000, 8000 is the default).</p>
 <p>Examples:<br>
@@ -603,7 +603,7 @@ listen &lt;ip:port&gt; {
   Like [::1]:6667 (listen at localhost on port 6667). If you are using IPv6 and you 
   want to listen at a specific IPv4 addr you need to use ::ffff:ipv4ip. For example: 
   [::ffff:203.123.67.1]:6667 which will listen at 203.123.67.1 on port 6667. 
-  Ofcourse you can also just use *.</p>
+  Of course you can also just use *.</p>
 <p><b>options block</b> (optional)<br>
   You can specify special options for this port if you want, valid options are:<br>
 <table border="0">
@@ -1517,10 +1517,10 @@ link &lt;server-name&gt; {
 </p>
 <p><b>hostname</b><br>
   The remote host or IP of the remote server. This is used for both connecting AND for 
-  authentication/verification on the incomming side. Some examples:<br>
+  authentication/verification on the incoming side. Some examples:<br>
   <table border="0">
   <tr><td><i>1.2.3.4</i></td><td> normal IP</td></tr>
-  <tr><td><i>hub.blah.com</i></td><td> host: only for outgoing, cannot accept _incomming_ connections unless 
+  <tr><td><i>hub.blah.com</i></td><td> host: only for outgoing, cannot accept _incoming_ connections unless 
   link::options::nohostcheck is present</td></tr>
   <tr><td><i>*</i></td><td> cannot connect TO but will allow a server connection (with correct password) from everywhere</td></tr>
   <tr><td><i>::ffff:1.2.3.4</i></td><td> for linking ipv6 to ipv4.</td></tr>
@@ -1534,10 +1534,10 @@ link &lt;server-name&gt; {
   Port to connect to (at which the remote server is listening).
  </p>
 <p><b>password-connect</b><br>
-  The password used for connecting to the remote server, must be plaintext.
+  The password used for connecting to the remote server, must be plain-text.
  </p>
 <p><b>password-receive</b><br>
-  The password used for validating incomming links, can be encrypted (valid methods 
+  The password used for validating incoming links, can be encrypted (valid methods 
   are crypt, md5, sha1,  ripemd-160). You can leave the auth-type parameter out to
   just use plain-text. Often this password is the same as your password-connect.
 </p>
@@ -1556,7 +1556,7 @@ link &lt;server-name&gt; {
   (number of hops) this server may have beneath it.
 </p>
 <p><b>class</b><br>
-  The class this server is put into, often a seperate server class is used for this.
+  The class this server is put into, often a separate server class is used for this.
 </p>
 <p><b>compression-level</b> (optional)<br>
   Specifies the compression level (1-9) for this link. Only used if link::options::zip is set.
@@ -1720,7 +1720,7 @@ set {
 		global globalop.mynet.com;
 	};
 };</pre></p>
-<p>Now if you wanted to make the set statements seperate, say you wanted to set 
+<p>Now if you wanted to make the set statements separate, say you wanted to set 
   your options in a single line.<br>
   Example:<br>
   set { options { hide-ulines; no-stealth; }; };<br>
@@ -1748,11 +1748,11 @@ set {
   that way you can force all (new) channels to be +G and unable to do -G.</p>
 <p><font class="set">set::auto-join &lt;channels&gt;;</font><br>
   The channel(s) a user will be forced to join at connection. To specify more 
-  than one channel use a comma seperated list.<br>
+  than one channel use a comma separated list.<br>
   [Note: don't forget to add quotes, like: auto-join "#chan";]</p>
 <p><font class="set">set::oper-auto-join &lt;channels&gt;;</font><br>
   The channel(s) a user will be forced to join when they /oper. To specify more 
-  than one channel use a comma seperated list.<br>
+  than one channel use a comma separated list.<br>
   [Note: don't forget to add quotes, like: oper-auto-join "#chan";]</p>
 <p><font class="set">set::anti-spam-quit-message-time &lt;timevalue&gt;;</font><br>
   A time value specifying the length of time a user must be connected for before 
@@ -1770,9 +1770,9 @@ set {
   Sets the limit for the maximum number of matches that will be returned for a /who.
   If this option is left out, no limit is enforced.</p>
 <p><font class="set">set::oper-only-stats &lt;stats-list&gt;;</font><br>
-  Specifies a list of stats flags with no seperators that defines stats flags 
+  Specifies a list of stats flags with no separators that defines stats flags 
   only opers can use. Leave this value out to allow users to use all flags, or 
-  specify * for users to be able to use no flags. Only short operflags may be specifed
+  specify * for users to be able to use no flags. Only short operflags may be specified
   here.</p>
 <p><font class="set">set::oper-only-stats {&lt;stats-flag&gt;; &lt;stats-flag&gt;;};</font><br>
   Specifies a list of stats flags that can only be used by opers. This only works with long
@@ -1801,7 +1801,7 @@ set {
   If present notices showing "ident request", "hostname lookup", 
   etc. will be displayed when a user connects.</p>
 <p><font class="set">set::options::dont-resolve;</font><br>
-  If present hosts of incomming users are not resolved, can be useful if many of your
+  If present hosts of incoming users are not resolved, can be useful if many of your
   users don't have a host to speed up connecting.<br>
   Note that since no resolving is done you also can't have host based allow blocks.</p>
 <p><font class="set">set::options::mkpasswd-for-everyone;</font><br>
@@ -1945,7 +1945,7 @@ set {
   <tr> 
     <td><div align="center">b &lt;nick!user@host&gt;<br>
       </div></td>
-    <td>Bans the givin user from the channel</td>
+    <td>Bans the given user from the channel</td>
   </tr>
   <tr> 
     <td><div align="center">c</div></td>
@@ -2234,7 +2234,7 @@ to get more information on a command.</p>
   </tr>
   <tr> 
     <td height="39">cycle &lt;channel1, channel2, ...&gt;</td>
-    <td>Cycles the given channel(s). This command is equivilent
+    <td>Cycles the given channel(s). This command is equivalent
       to sending a PART then a JOIN command.</td>
     <td>All</td>
   </tr>
@@ -2378,7 +2378,7 @@ to get more information on a command.</p>
   </tr>
   <tr> 
     <td height="39">credits</td>
-    <td>Lists credits for everyone that has helped create UnrealIRCD<br></td>
+    <td>Lists credits for everyone that has helped create UnrealIRCd<br></td>
     <td>All</td>
   </tr>
   <tr> 
@@ -2412,7 +2412,7 @@ to get more information on a command.</p>
   <tr> 
     <td height="39">dns &lt;option&gt;</td>
     <td>Returns information about the IRC server's DNS cache.
-        Note, since most clients have a builtin DNS command,
+        Note, since most clients have a built-in DNS command,
         you will most likely need to use /raw DNS to use this.
         Opers may specify an l as the first parameter to the command
         to receive a list of entries in the DNS cache.</td>
@@ -2553,7 +2553,7 @@ to get more information on a command.</p>
   </tr>
   <tr> 
     <td height="39">connect &lt;server&gt; &lt;port&gt; &lt;server&gt;</td>
-    <td>If only one server is givin, it will attempt to connect the server you 
+    <td>If only one server is given, it will attempt to connect the server you 
       are ON to the given server. If 2 servers are given, it will attempt to connect 
       the 2 servers together. Put the hub server as the first, and the leaf server 
       as the second.<br></td>
