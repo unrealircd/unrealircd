@@ -272,7 +272,7 @@ extern void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr);
 extern void sendto_locfailops(char *pattern, ...) __attribute__((format(printf,1,2)));
 extern void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnect, char *comment);
 extern void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr, char *nick, int hopcount,
-int lastnick, char *username, char *realhost, char *server, long servicestamp, char *info, char *umodes,
+long lastnick, char *username, char *realhost, char *server, long servicestamp, char *info, char *umodes,
 char *virthost);
 extern void    sendto_message_one(aClient *to, aClient *from, char *sender,
     char *cmd, char *nick, char *msg);
@@ -646,7 +646,7 @@ extern void extban_init(void);
 extern char *trim_str(char *str, int len);
 extern char *ban_realhost, *ban_virthost, *ban_ip;
 extern void join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
-extern char *unreal_checkregex(char *s, int fastsupport);
+extern char *unreal_checkregex(char *s, int fastsupport, int check_broadness);
 extern int banact_stringtoval(char *s);
 extern char *banact_valtostring(int val);
 extern int banact_chartoval(char c);
@@ -684,3 +684,4 @@ extern fdlist default_fdlist, busycli_fdlist, serv_fdlist, oper_fdlist;
 extern void DCCdeny_add(char *filename, char *reason, int type);
 extern void DCCdeny_del(ConfigItem_deny_dcc *deny);
 extern void dcc_wipe_services(void);
+extern void reread_motdsandrules();

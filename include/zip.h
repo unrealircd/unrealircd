@@ -24,6 +24,9 @@
  */
 #ifndef INCLUDED_s_zip_h
 #define INCLUDED_s_zip_h
+#ifdef _WIN32
+ #define ZLIB_WINAPI
+#endif
 #include <zlib.h>		/* z_stream */
 #endif
 

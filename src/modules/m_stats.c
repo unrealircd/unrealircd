@@ -292,9 +292,9 @@ inline void stats_help(aClient *sptr)
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"P - port - Send information about ports");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"q - sqline - Send the SQLINE list");
+		"q - bannick - Send the ban nick block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"Q - bannick - Send the ban nick block list");
+		"Q - sqline - Send the global qline list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"r - chanrestrict - Send the channel deny/allow block list");
 #ifdef DEBUGMODE
@@ -901,15 +901,15 @@ int stats_mem(aClient *sptr, char *para)
 
 	sendto_one(sptr, ":%s %d %s :Client Local %d(%ld) Remote %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, lc, lcm, rc, rcm);
-	sendto_one(sptr, ":%s %d %s :Users %d(%d) Invites %d(%d)",
-	    me.name, RPL_STATSDEBUG, sptr->name, us, us * sizeof(anUser), usi,
-	    usi * sizeof(Link));
-	sendto_one(sptr, ":%s %d %s :User channels %d(%d) Aways %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, usc, usc * sizeof(Link), aw, awm);
-	sendto_one(sptr, ":%s %d %s :WATCH headers %d(%ld) entries %d(%d)",
-	    me.name, RPL_STATSDEBUG, sptr->name, wlh, wlhm, wle, wle * sizeof(Link));
-	sendto_one(sptr, ":%s %d %s :Attached confs %d(%d)",
-	    me.name, RPL_STATSDEBUG, sptr->name, lcc, lcc * sizeof(Link));
+	sendto_one(sptr, ":%s %d %s :Users %d(%ld) Invites %d(%ld)",
+	    me.name, RPL_STATSDEBUG, sptr->name, us, (long)(us * sizeof(anUser)),
+	    usi, (long)(usi * sizeof(Link)));
+	sendto_one(sptr, ":%s %d %s :User channels %d(%ld) Aways %d(%ld)",
+	    me.name, RPL_STATSDEBUG, sptr->name, usc, (long)(usc * sizeof(Link)), aw, awm);
+	sendto_one(sptr, ":%s %d %s :WATCH headers %d(%ld) entries %d(%ld)",
+	    me.name, RPL_STATSDEBUG, sptr->name, wlh, wlhm, wle, (long)(wle * sizeof(Link)));
+	sendto_one(sptr, ":%s %d %s :Attached confs %d(%ld)",
+	    me.name, RPL_STATSDEBUG, sptr->name, lcc, (long)(lcc * sizeof(Link)));
 
 	totcl = lcm + rcm + us * sizeof(anUser) + usc * sizeof(Link) + awm;
 	totcl += lcc * sizeof(Link) + usi * sizeof(Link) + wlhm;
@@ -923,14 +923,15 @@ int stats_mem(aClient *sptr, char *para)
 
 	sendto_one(sptr, ":%s %d %s :Channels %d(%ld) Bans %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, ch, chm, chb, chbm);
-	sendto_one(sptr, ":%s %d %s :Channel members %d(%d) invite %d(%d)",
-	    me.name, RPL_STATSDEBUG, sptr->name, chu, chu * sizeof(Link),
-	    chi, chi * sizeof(Link));
+	sendto_one(sptr, ":%s %d %s :Channel members %d(%ld) invite %d(%ld)",
+	    me.name, RPL_STATSDEBUG, sptr->name, chu, (long)(chu * sizeof(Link)),
+	    chi, (long)(chi * sizeof(Link)));
 
 	totch = chm + chbm + chu * sizeof(Link) + chi * sizeof(Link);
 
-	sendto_one(sptr, ":%s %d %s :Whowas users %d(%d) away %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, wwu, wwu * sizeof(anUser),
+	sendto_one(sptr, ":%s %d %s :Whowas users %d(%ld) away %d(%ld)",
+	    me.name, RPL_STATSDEBUG, sptr->name, 
+	    wwu, (long)(wwu * sizeof(anUser)),
 	    wwa, wwam);
 	sendto_one(sptr, ":%s %d %s :Whowas array %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, NICKNAMEHISTORYLENGTH, wwm);
@@ -938,10 +939,11 @@ int stats_mem(aClient *sptr, char *para)
 	totww = wwu * sizeof(anUser) + wwam + wwm;
 
 	sendto_one(sptr,
-	    ":%s %d %s :Hash: client %d(%d) chan %d(%d) watch %d(%d)", me.name,
-	    RPL_STATSDEBUG, sptr->name, U_MAX, sizeof(aHashEntry) * U_MAX, CH_MAX,
-	    sizeof(aHashEntry) * CH_MAX, WATCHHASHSIZE,
-	    sizeof(aWatch *) * WATCHHASHSIZE);
+	    ":%s %d %s :Hash: client %d(%ld) chan %d(%ld) watch %d(%ld)", me.name,
+	    RPL_STATSDEBUG, sptr->name, U_MAX,
+	    (long)(sizeof(aHashEntry) * U_MAX), CH_MAX,
+	    (long)(sizeof(aHashEntry) * CH_MAX), WATCHHASHSIZE,
+	    (long)(sizeof(aWatch *) * WATCHHASHSIZE));
 	db = dbufblocks * sizeof(dbufbuf);
 	sendto_one(sptr, ":%s %d %s :Dbuf blocks %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, dbufblocks, db);
@@ -950,9 +952,10 @@ int stats_mem(aClient *sptr, char *para)
 	while ((link = link->next))
 		fl++;
 	fl++;
-	sendto_one(sptr, ":%s %d %s :Link blocks free %d(%d) total %d(%d)",
-	    me.name, RPL_STATSDEBUG, sptr->name, fl, fl * sizeof(Link),
-	    flinks, flinks * sizeof(Link));
+	sendto_one(sptr, ":%s %d %s :Link blocks free %d(%ld) total %d(%ld)",
+	    me.name, RPL_STATSDEBUG, sptr->name,
+	    fl, (long)(fl * sizeof(Link)),
+	    flinks, (long)(flinks * sizeof(Link)));
 
 	rm = cres_mem(sptr,sptr->name);
 
@@ -976,7 +979,7 @@ int stats_mem(aClient *sptr, char *para)
 
 #endif
 #else
-	sendto_one(sptr, ":%s %d %s :TOTAL: %d",
+	sendto_one(sptr, ":%s %d %s :TOTAL: %lu",
 	    me.name, RPL_STATSDEBUG, sptr->name, tot);
 #endif
 	return 0;
@@ -1415,7 +1418,8 @@ int stats_zip(aClient *sptr, char *para)
 		{
 			sendto_one(sptr,
 				":%s %i %s :Zipstats for link to %s (compresslevel %d): decompressed (in): %01lu=>%01lu (%3.1f%%), compressed (out): %01lu=>%01lu (%3.1f%%)",
-				me.name, RPL_TEXT, sptr->name, get_client_name(acptr, TRUE),
+				me.name, RPL_TEXT, sptr->name,
+				IsAnOper(sptr) ? get_client_name(acptr, TRUE) : acptr->name,
 				acptr->serv->conf->compression_level ? 
 				acptr->serv->conf->compression_level : ZIP_DEFAULT_LEVEL,
 				acptr->zip->in->total_in, acptr->zip->in->total_out,
@@ -1502,9 +1506,8 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 			continue;
 
 #ifdef DEBUGMODE
-		ircsprintf(pbuf, "%d :%d", acptr->cputime,
-		      (acptr->user && MyConnect(acptr)) ?
-		      TStime() - acptr->last : 0);
+		ircsprintf(pbuf, "%ld :%ld", (long)acptr->cputime,
+		      (long)(acptr->user && MyConnect(acptr)) ? TStime() - acptr->last : 0);
 #endif
 		if (IsOper(sptr))
 		{

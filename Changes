@@ -3012,3 +3012,103 @@ seen. gmtime warning still there
 - Fixed a bug regarding the new HOOKTYPE_PRE_LOCAL_JOIN reported by bla
 - Fixed a compile problem on Solaris due to tar not supporting the z option
 *** RC2fix release ***
+- spamfilter.conf: fixed fyle sig (was bad!), some minor updates to the rest,
+  added mirc 6.12 exploit sig. Reported by PHANTOm.
+- Added a check to try and prevent people from adding all-encompassing
+  regexp's in /spamfilter. Thanks to Ville Laurikari for coming up with the
+  method!
+- Removed the old/unused src/win32/version.c (#0001630) reported by fez
+- Updated docs to mention except tkl {} type qline/gqline
+- spamfilter.conf: added soex trojan. Sig provided by Jay.
+- Fixed a spamfilter memory leak
+- Added '__' -> '_' decoding for spamfilter reason field.
+- Made it so set::modes-on-join correctly works with extcmodes. Note: to 
+  correctly work with modes created by modules, the module _must_ call CmodeAdd
+  from Mod_Test (#0001624) reported by thunderbirdjl
+- Made some changes to the curlinstall script to make it work with c-ares-1.0.0
+  also updated INSTALL.REMOTEINC
+- Fixed a typo in the /credits
+- Made it so curlinstall doesn't use cp -f since it is nonportable
+- Hide server IP in /stats z
+- First Opteron crash bugfix. Thanks to Liverbugg for helping us trace this issue.
+- More Opteron fixes... sizeof() fun, %B fun (always use a 'long'!), etc..
+- Added __attribute__ stuff for ircsprintf() to catch more warnings.
+- Fixed win32 compile problem. Reported by Troco (#0001644).
+- Added a missing ',' to the version.c.SH script reported by docco (#0001643)
+- Added conf check for too large spamfilter regex + reason field. Reported by
+  Z3l3zT (#0001648).
+- Added spamfilters for the Nkie worm
+- Fixed a little sqline recode memory leak
+- Fixed /spamfilter removal problem... often the wrong entry was removed [!] or
+  nothing was removed at all. Reported by MiNdErAsR, RealCFC and others (#0001669).
+- Fixed /spamfilter reason field bug.. things were double escaped sometimes,
+  especially in post-RC2-cvs this was noticable. Reported by Fury (#0001670).
+- help.conf: updated snomasks section.
+- Added a patch by baafie to fix a problem where environment variables could not
+  be specified in the Config script (#0001657)
+- Imported TRE 0.6.6 on Win32 and Linux
+- Made use of TRE's pkg-config support to solve a problem with libintl reported by
+  raistlinmajere (#0001592)
+- Fixed a problem with /stats S and extended channel modes (#0001675) reported by
+  AngryWolf
+- Fixed a resolver problem that could cause hosts to not be resolved on some Windows
+  systems
+- Fixed a problem where the win32 GUI's "rehash all" option did not reload motd/rules
+  (#0001678) reported by w00t
+- Made some changes to the win32 setup script to make it work with the latest version
+  of Inno Setup (4.2.0)
+- Made the setup script use the new compression method 'lzma' which makes the setup.exe
+  ~300Kb smaller. Now also requires Inno Setup 4.1.6 (tested with 4.2.0).
+- Usermode 'r' (registered) was unset even in case of "case"-nickchanges (like:
+  'Syzop' -> 'syzop'). This affected f.e. ircservices. Reported by LoVeR (#0001679).
+- spamfilter.conf: changed a lot of rules from 'block' to 'gline', left some
+  on 'block' however if there was some (very low) chance on false positives (even though
+  just like 0.01%).
+- Fixed an SVSMODE #chan -qaohv bug that would cause the user to be able to readd the mode
+  (#0001690) reported by auspice
+- spamfilter.conf: added signature for LOI trojan.
+- Added german translation of unreal32docs (doc/unreal32docs.de.html), translated
+  by Stylus740 which will also maintain it.
+- Patched TRE 0.6.6 to fix known crashbug (#0001684), testing is welcomed.
+- Applied the above patch to the win32 TRE dll/lib files.
+- Fixed a problem with vhost::swhois not being displayed remotely (#0001702) reported by 
+  medice.
+- Windows: Updated makefile/unrealinst.iss/zip.h to use zlib 1.2.1.
+- Updated credits
+- German doc updates (spelling+synch).
+- Updated /credits a bit more
+- Updated the /stats ? output to say Q is sqline and q is ban nick (#0001689) reported
+  by Alzirr
+- Made a note in example.conf about not using link::options::autoconnect for services
+  (#0001674) suggested by fez
+- Fixed a typo in /credits
+- Fixed something if sptr->user->virthost was NULL (which is/should never be the case),
+  just to be sure... (#0001724).
+- Updated server<->server code for MODE so operoverride bug #0001704 and other
+  feature requests can be fixed/added in the future (3.2.1).
+- Fixed /who +m bug for opers, reported by Bugz (#0001715).
+- Fixed halfop mode code to not check remote halfop modes (desynch danger).
+- Force a TRE recompile if ./Config is re-run, due to timestamp fun if you were
+  upgrading to CVS every time TRE was not recompiled even if you did make clean.
+- Made ./unreal rehash (= kill -1 <pid>) also reread motd/rules/etc just as a
+  normal /rehash does, reported by superh (#0001699).
+- Various doc/text updates
+- Added some release notes already.
+- Fixed /rehash bug if an .so (or remote include?) failed to load properly,
+  reported by fez (#0001736).
+- doc/unreal32docs.html and help.conf updates (#0001734 + other stuff).
+- spamfilter.conf: added signatures for Gaggle worm.
+- Changed version to pre1
+- Fixed SJOIN bug: it sometimes was setting too many modes at once.
+- Minor sajoin/sapart ERR_NEEDMOREPARAMS tweak.
+** internal pre1 release **
+- Docs/help.conf tweak on /connect syntax (#0001755).
+- German doc updates (from April 18) + gzline docs tweak.
+- Fixed some remote includes issues and added a connect/transfer timeout, server should
+  now no longer be frozen if the site is unreachable. Reported by Ron2K (#0001751).
+- Changed version to 3.2 already
+** internal pre2 release **
+- Added temporary fix for include "http://www.blah.com/"; crashbug...although I doubt
+  many people would use it. Reported by Angrywolf (#0001757).
+- Some doc/release notes updates on win module support.
+*** 3.2 release ***

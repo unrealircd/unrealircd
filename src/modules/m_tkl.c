@@ -505,6 +505,7 @@ char *tkllayer[11] = {
 struct tm *t;
 int targets = 0, action = 0;
 char targetbuf[64], actionbuf[2];
+char reason[512]; 
 
 	if (IsServer(sptr))
 		return 0;
@@ -563,7 +564,7 @@ char targetbuf[64], actionbuf[2];
 	actionbuf[1] = '\0';
 	
 	/* now check the regex... */
-	p = unreal_checkregex(parv[6],0);
+	p = unreal_checkregex(parv[6],0,1);
 	if (p)
 	{
 		sendto_one(sptr, ":%s NOTICE %s :Error in regex '%s': %s",
@@ -583,10 +584,13 @@ char targetbuf[64], actionbuf[2];
 	}
 	else
 		tkllayer[8] = parv[4];
+
 	if (parv[5][0] == '-')
-		tkllayer[9] = SPAMFILTER_BAN_REASON;
+		strlcpy(reason, unreal_encodespace(SPAMFILTER_BAN_REASON), sizeof(reason));
 	else
-		tkllayer[9] = parv[5];
+		strlcpy(reason, parv[5], sizeof(reason));
+
+	tkllayer[9] = reason;
 	tkllayer[10] = parv[6];
 	
 	if (whattodo == 0)

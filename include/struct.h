@@ -762,7 +762,7 @@ struct Server {
 struct _spamfilter {
 	unsigned short action; /* see BAN_ACT* */
 	regex_t expr;
-	char *tkl_reason;
+	char *tkl_reason; /* spamfilter reason field [escaped by unreal_encodespace()!] */
 	TS tkl_duration;
 };
 

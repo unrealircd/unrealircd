@@ -1,77 +1,50 @@
 
-Unreal3.2-RC2 Release Notes
-============================
+Unreal3.2 Release Notes
+========================
 
 ==[ GENERAL INFORMATION ]==
-* This is the second (and hopefully last) Release Candidate.
-  After this we intend to release 3.2 final.
-* If you are upgrading, make sure you run ./Config and make clean before doing make
+* If you are upgrading, make sure you run make clean and ./Config before doing make
 * The official UnrealIRCd documentation is doc/unreal32docs.html
   online version at: http://www.vulnscan.org/UnrealIrcd/unreal32docs.html
   FAQ: http://www.vulnscan.org/UnrealIrcd/faq/
   Read them before asking for help.
 * Report bugs at http://bugs.unrealircd.org/
-* This is a recommended release because various crashbugs have been fixed.
 
-== [NEW FEATURES (see unreal32docs.html for more information) ]==
-* Lots of spamfilter improvements.
-  * The new syntax is:
-    /spamfilter [what] [type] [action] [tkltime] [reason] [regex]
-    [tkltime] specifies the duration of any *lines placed by this rule.
-    [reason]  specifies the *line, kill and/or block reason.. no spaces
-              allowed, but '_' will be translated to a space.
-    In both cases you can simply use '-' to skip and use the default.
-    Ex: /spamfilter add p block - - Come watch me on my webcam
-        /spamfilter add p gline 3h Please_go_to_www.viruscan.xx/[linewrap]
-        nicepage/virus=blah Come watch me on my webcam
-  * The spamfilter { } blocks also have a new 'reason' and 'ban-time' field.
-  * The user will now receive a notice if the msg/notice/dcc is blocked.
-  * There are 2 new spamfilter action types:
-    'dccblock' will mark the user so (s)he's unable to send any files by DCC.
-    'viruschan' will part the user from all channels and join
-      set::spamfilter::virus-help-channel (default: #help).
-      After this all commands for the user are disabled except: PONG, ADMIN
-      and NOTICE/PRIVMSG's to the virus-help-channel.
-      Also any ops (+oaq) in the virus help channel will receive a notice
-      explaining which filter the user matched (so they can help the user out).
-  * Added set::spamfilter::except which allows you to specify targets where
-    spamfilter should not take action. Useful for spam-report/help chans.
-    Ex: set { spamfilter { except "#spamreport,#help"; }; };
-  * there's now a 'spamfilter.conf' file with some effective spamfilter rules.
-* Added '/tempshun' command (/tempshun nick reason, /tempshun -nick).
+== [ NEW ]==
+- Added german docs (doc/unreal32docs.de.html)
+- In a spamfilter reason field '_' gets converted to a space (' '),
+  now also added '__' which gets converted to underscore itself ('_').
 
 ==[ MAJOR BUGS FIXED ]==
-* The ircd was unable to boot on some OSs because unreal removed tmp/
-* crash: if an invalid regex was entered (eg: in spamfilter) the ircd could crash
-* crash: The TRE regex library could be crashed in case of some (advanced) regexes.
-* crash: several remote includes problems (also non-crash)
-* crash/security: an user-triggerable crash bug
-* Fixed problem with 'tkl update' which could lead to server fights in some cases.
+- '/spamfiltere remove' was often removing the wrong entry (RC2 bug)
+- The TRE regex library was sometimes matching too much if [range].+
+  was used multiple times.
+- Fixed a remote include issue and added timeouts in case a connection/transfer fails
 
 ==[ MINOR BUGS FIXED ]==
-* allow::options::noident now actually works
-* Fixed compile problem on Solaris
-* Some OperOverride + ExtModes fixes (eg: globop w/can_override couldn't set +T)
-* +qaohv'ing a network service was disallowed
-* chanmode +f was often reset on synch when it was already the same at both sides
-* Spamfilter single-target are now supported, eg:
-  spamfilter { regex "blah"; action kill; target private; };
-  previously the ircd didn't warn about this (but it didn't work).
+- Sometimes hosts were not resolved on Windows due to a resolver bug
+- spamfilter and sqline: memory leak on /rehash (a few kb)
+- spamfilter: protect against insane long reason/regex fields in configfile
+- set::modes-on-join now accepts extended channelmodes
+- Opteron: various crashbugs fixed, should work ok now.
+- Win32 GUI "rehash all" option did not reload motd/rules.
+- Same for ./unreal rehash on *NIX
+- Usermode 'r' (registered) was unset if you changed the case of your
+  nick (eg: 'blah'->'Blah'), this affected at least ircservices.
+- vhost::swhois wasn't shown if you did a remote /whois.
+- Made './curlinstall' work with new c-ares-1.0.0.
+- Fixed compile problem on some machines related to TRE / libintl.
+- /who +m was incorrectly hiding +H users even for opers.
+- Fixed /rehash bug if an .so or remote include didn't load properly
 
 ==[ CHANGED ]==
-* Updated /credits. Now includes everyone who has sent in donations,
-  thanks to everyone!
-* Various help.conf/docs updates as usual
-* New hooks for module coders and other module system improvements.
-* Modulized A LOT of commands (34): this allows better "hot patching"
-  and leaving out commands (eg: loading all m_*.so mods except m_addline.so).
-* Moved SQLINE system (and ban nick) to TKL and introduced "holds",
-  this might later be used by services for nick enforcement.
-* Restricted class::pingfreq to 30-600.. anything higher and you might get
-  mysterious (mass) disconnect issues... Anything lower is dumb too.
-* Added checking for insane listen port ranges (eg 6667-7000).
-* Improved DCC blocking (like dcc to channels)
-* Made some numerics more clear by including the channelname (+V/+O/+A)
+- spamfilter.conf: fixed fyle sig, added sigs for: soex, Nkie, LOI, Gaggle,
+  changed a lot of sigs from block to gline.
+- Windows: now using new Inno Setup which made the installer 300k smaller
+- Docs, help.conf and other text updates.
+
+==[ COMMING UP ]==
+- You can expect module support on windows in a nearby release.
 
 ==[ ADDITIONAL INFO ]==
 * See Changelog

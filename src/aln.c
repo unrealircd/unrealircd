@@ -232,6 +232,15 @@ static inline char *int_to_base64(long val)
 
 	base64buf[i] = '\0';
 
+	/* Temporary debugging code.. remove before 2038 ;p */
+	if (val > 2147483646)
+	{
+		snprintf(trouble_info, sizeof(trouble_info),
+			"[BUG] int_to_base64() called for insane value %ld. Please report!", val);
+		ircd_log(LOG_ERROR, "%s", trouble_info);
+		val = 2147483647L; /* prevent buffer overflow */
+	}
+
 	do
 	{
 		base64buf[--i] = int6_to_base64_map[val & 63];

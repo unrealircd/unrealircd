@@ -52,8 +52,12 @@ enum UHAllowed { UHALLOW_ALWAYS, UHALLOW_NOCHANS, UHALLOW_REJOIN, UHALLOW_NEVER 
 
 struct ChMode {
         long mode;
+#ifdef EXTCMODE
+	long extmodes;
+	char *extparams[EXTCMODETABLESZ];
+#endif
 #ifdef NEWCHFLOODPROT
-		ChanFloodProt	floodprot;
+	ChanFloodProt	floodprot;
 #else
         unsigned short  msgs;
         unsigned short  per; 

@@ -1815,7 +1815,7 @@ void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnec
  */
 void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 			char *nick, int hopcount,
-    int lastnick, char *username, char *realhost, char *server,
+    long lastnick, char *username, char *realhost, char *server,
     long servicestamp, char *info, char *umodes, char *virthost)
 {
 	int  i;
@@ -1847,9 +1847,9 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 					    ,
 					    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
 					    hopcount, lastnick, username, realhost,
-					    sptr->srvptr->serv->numeric,
+					    (long)(sptr->srvptr->serv->numeric),
 					    servicestamp, umodes,
-						  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : virthost),
+						  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : (virthost ? virthost : "*")),
 						    info);
 				else
 					sendto_one(cptr,
@@ -1858,7 +1858,7 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 					    hopcount, lastnick, username, realhost,
 					    SupportNS(cptr) && sptr->srvptr->serv->numeric ? base64enc(sptr->srvptr->serv->numeric) : server,
 					    servicestamp, umodes,
-						  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : virthost),
+						  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : (virthost ? virthost : "*")),
 						    info);
 
 			}

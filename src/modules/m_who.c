@@ -439,13 +439,13 @@ char has_common_chan = 0;
 		/* if they only want people with a certain umode */
 		if (wfl.umodes_want)
 		{
-			if (!(acptr->umodes & wfl.umodes_want) || (acptr->umodes & UMODE_HIDEOPER))
+			if (!(acptr->umodes & wfl.umodes_want) || (!IsAnOper(sptr) && (acptr->umodes & UMODE_HIDEOPER)))
 				return WHO_CANTSEE;
 		}
 
 		if (wfl.umodes_dontwant)
 		{
-			if ((acptr->umodes & wfl.umodes_dontwant) && !(acptr->umodes & UMODE_HIDEOPER))
+			if ((acptr->umodes & wfl.umodes_dontwant) && (!(acptr->umodes & UMODE_HIDEOPER) || IsAnOper(sptr)))
 				return WHO_CANTSEE;
 		}
 

@@ -28,6 +28,8 @@ AC_PATH_PROG(INSTALL,install)
 AC_CHECK_PROG(MAKER, gmake, gmake, make)
 AC_PATH_PROG(GMAKE,gmake)
 AC_PATH_PROG(GUNZIP, gunzip)
+AC_PATH_PROG(PKGCONFIG, pkg-config)
+
 dnl Checks for libraries.
 AC_CHECK_LIB(descrypt, crypt, [AC_DEFINE(HAVE_CRYPT) IRCDLIBS="$IRCDLIBS-ldescrypt " MKPASSWDLIBS="-ldescrypt"],
 AC_CHECK_LIB(crypt, crypt,[ AC_DEFINE(HAVE_CRYPT) IRCDLIBS="$IRCDLIBS-lcrypt " MKPASSWDLIBS="-lcrypt"]))
@@ -362,9 +364,13 @@ IRCDLIBS="$IRCDLIBS -lresolv "
 ;;
 esac
 
+dnl REMEMBER TO CHANGE WITH A NEW RELEASE!
+tre_version="0.6.6"
 AC_MSG_RESULT(extracting TRE regex library)
 cur_dir=`pwd`
 cd extras
+dnl remove old tre directory to force a recompile...
+rm -rf tre-$tre_version
 if test "x$ac_cv_path_GUNZIP" = "x" ; then
 	tar xfz tre.tar.gz
 else
@@ -373,9 +379,8 @@ else
 	cp tre.tar.gz.bak tre.tar.gz
 	tar xf tre.tar
 fi
-dnl REMEMBER TO CHANGE WITH A NEW RELEASE!
 AC_MSG_RESULT(configuring TRE regex library)
-cd tre-0.6.5
+cd tre-$tre_version
 ./configure --disable-agrep --disable-shared --disable-system-abi --disable-wchar --disable-multibyte --prefix=$cur_dir/extras/regexp
 AC_MSG_RESULT(compiling TRE regex library)
 $ac_cv_prog_MAKER
@@ -383,6 +388,12 @@ AC_MSG_RESULT(installing TRE regex library)
 $ac_cv_prog_MAKER install
 TREINCDIR="$cur_dir/extras/regexp/include"
 AC_SUBST(TREINCDIR)
+if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
+	TRELIBS="-L../extras/regexp/lib -ltre"
+else
+	TRELIBS=`$ac_cv_path_PKGCONFIG --libs tre.pc`
+fi
+AC_SUBST(TRELIBS)
 cd $cur_dir
 AC_OUTPUT(Makefile src/modules/Makefile unreal ircdcron/ircdchk)
 chmod 0700 unreal

@@ -396,7 +396,7 @@ int			config_verbose = 0;
 
 void add_include(char *);
 #ifdef USE_LIBCURL
-void add_remote_include(char *, char *, int);
+void add_remote_include(char *, char *, int, char *);
 int remote_include(ConfigEntry *ce);
 #endif
 void unload_notloaded_includes(void);
@@ -614,9 +614,16 @@ long config_checkval(char *orig, unsigned short flags) {
 void set_channelmodes(char *modes, struct ChMode *store, int warn)
 {
 	aCtab *tab;
-	char *param = strchr(modes, ' ');
-	if (param)
-		param++;
+	char *params = strchr(modes, ' ');
+	char *parambuf = NULL;
+	char *param = NULL;
+	if (params)
+	{
+		params++;
+		parambuf = MyMalloc(strlen(params)+1);
+		strcpy(parambuf, params);
+		param = strtok(parambuf, " ");
+	}		
 
 	for (; *modes && *modes != ' '; modes++)
 	{
@@ -636,13 +643,18 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 			case 'f':
 			{
 #ifdef NEWCHFLOODPROT
+				char *myparam = param;
+
 				/* TODO */
 				ChanFloodProt newf;
 				
 				memset(&newf, 0, sizeof(newf));
-				if (!param)
+				if (!myparam)
 					break;
-				if (param[0] != '[')
+				/* Go to next parameter */
+				param = strtok(NULL, " ");
+
+				if (myparam[0] != '[')
 				{
 					if (warn)
 						config_status("set::modes-on-join: please use the new +f format: '10:5' becomes '[10t]:5' "
@@ -655,7 +667,7 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 					unsigned char r;
 					
 					/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
-					strlcpy(xbuf, param, sizeof(xbuf));
+					strlcpy(xbuf, myparam, sizeof(xbuf));
 					p2 = strchr(xbuf+1, ']');
 					if (!p2)
 						break;
@@ -776,15 +788,19 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 					break;
 				}
 #else
+				char *myparam = param;
 				char kmode = 0;
 				char *xp;
 				int msgs=0, per=0;
 				int hascolon = 0;
-				if (!param)
+				if (!myparam)
 					break;
-				if (*param == '*')
+				/* Go to next parameter */
+				param = strtok(NULL, " ");
+
+				if (*myparam == '*')
 					kmode = 1;
-				for (xp = param; *xp; xp++)
+				for (xp = myparam; *xp; xp++)
 				{
 					if (*xp == ':')
 					{
@@ -793,14 +809,14 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 					}
 					if (((*xp < '0') || (*xp > '9')) && *xp != '*')
 						break;
-					if (*xp == '*' && *param != '*')
+					if (*xp == '*' && *myparam != '*')
 						break;
 				}
 				if (hascolon != 1)
 					break;
-				xp = strchr(param, ':');
+				xp = strchr(myparam, ':');
 					*xp = 0;
-				msgs = atoi((*param == '*') ? (param+1) : param);
+				msgs = atoi((*myparam == '*') ? (myparam+1) : myparam);
 				xp++;
 				per = atoi(xp);
 				xp--;
@@ -818,15 +834,47 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 				for (tab = &cFlagTab[0]; tab->mode; tab++)
 				{
 					if (tab->flag == *modes)
+					{
 						store->mode |= tab->mode;
+						break;
+					}
 				}
+#ifdef EXTCMODE
+				/* Try extcmodes */
+				if (!tab->mode)
+				{
+					int i;
+					for (i=0; i <= Channelmode_highest; i++)
+					{
+						if (!(Channelmode_Table[i].flag))
+							continue;
+						if (*modes == Channelmode_Table[i].flag)
+						{
+							if (Channelmode_Table[i].paracount)
+							{
+								if (!param)
+									break;
+								store->extparams[i] = strdup(Channelmode_Table[i].conv_param(param));
+								/* Get next parameter */
+								param = strtok(NULL, " ");
+							}
+							store->extmodes |= Channelmode_Table[i].mode;
+							break;
+						}
+					}
+				}
+#endif
 		}
 	}
+	if (parambuf)
+		free(parambuf);
 }
 
 void chmode_str(struct ChMode modes, char *mbuf, char *pbuf)
 {
 	aCtab *tab;
+	int i;
+	*pbuf = 0;
 	*mbuf++ = '+';
 	for (tab = &cFlagTab[0]; tab->mode; tab++)
 	{
@@ -836,17 +884,38 @@ void chmode_str(struct ChMode modes, char *mbuf, char *pbuf)
 				*mbuf++ = tab->flag;
 		}
 	}
+#ifdef EXTCMODE
+	for (i=0; i <= Channelmode_highest; i++)
+	{
+		if (!(Channelmode_Table[i].flag))
+			continue;
+	
+		if (modes.extmodes & Channelmode_Table[i].mode)
+		{
+			*mbuf++ = Channelmode_Table[i].flag;
+			if (Channelmode_Table[i].paracount)
+			{
+				strcat(pbuf, modes.extparams[i]);
+				strcat(pbuf, " ");
+			}
+		}
+	}
+#endif
 #ifdef NEWCHFLOODPROT
 	if (modes.floodprot.per)
 	{
 		*mbuf++ = 'f';
-		sprintf(pbuf, "%s", channel_modef_string(&modes.floodprot));
+		strcat(pbuf, channel_modef_string(&modes.floodprot));
 	}
 #else
 	if (modes.per)
 	{
 		*mbuf++ = 'f';
-		sprintf(pbuf, "%s%d:%d", modes.kmode ? "*" : "", modes.msgs, modes.per);
+		if (modes.kmode)
+			strcat(pbuf, "*");
+		strcat(pbuf, my_itoa(modes.msgs));
+		strcat(pbuf, ":");
+		strcat(pbuf, my_itoa(modes.per));
 	}
 #endif
 	*mbuf++=0;
@@ -1500,6 +1569,10 @@ int	init_conf(char *rootconf, int rehash)
 	else	
 	{
 		config_error("IRCd configuration failed to load");
+#ifndef STATIC_LINKING
+		Unload_all_testing_modules();
+#endif
+		unload_notloaded_includes();
 		config_free(conf);
 		conf = NULL;
 		free_iConf(&tempiConf);
@@ -1593,6 +1666,7 @@ void	config_rehash()
 	ListStruct 	*next, *next2;
 	aTKline *tk, *tk_next;
 	SpamExcept *spamex_ptr;
+	int i;
 
 	USE_BAN_VERSION = 0;
 	/* clean out stuff that we don't use */	
@@ -1906,6 +1980,13 @@ void	config_rehash()
 		ircfree(of_ptr->topic);
 		MyFree(of_ptr);
 	}
+#ifdef EXTCMODE
+	for (i = 0; i < EXTCMODETABLESZ; i++)
+	{
+		if (iConf.modes_on_join.extparams[i])
+			free(iConf.modes_on_join.extparams[i]);
+	}
+#endif
 	conf_offchans = NULL;
 }
 
@@ -4681,7 +4762,7 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 		}
 		else 
 		{
-			char *errbuf = unreal_checkregex(word->ce_vardata,1);
+			char *errbuf = unreal_checkregex(word->ce_vardata,1,0);
 			if (errbuf)
 			{
 				config_error("%s:%i: badword::%s contains an invalid regex: %s",
@@ -4785,7 +4866,7 @@ int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 	nl->spamf->action = action;
 
 	if ((cep = config_find_entry(ce->ce_entries, "reason")))
-		nl->spamf->tkl_reason = strdup(cep->ce_vardata);
+		nl->spamf->tkl_reason = strdup(unreal_encodespace(cep->ce_vardata));
 	else
 		nl->spamf->tkl_reason = strdup("<internally added by ircd>");
 
@@ -4803,6 +4884,7 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	int errors = 0;
 	int got = 0;
+	char *regex = NULL, *reason = NULL;
 	
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -4820,6 +4902,8 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
 			errors++; continue;
 		}
+		if (!strcmp(cep->ce_varname, "reason"))
+			reason = cep->ce_vardata;
 		if (!strcmp(cep->ce_varname, "regex") || !strcmp(cep->ce_varname, "action") ||
 		    !strcmp(cep->ce_varname, "reason") || !strcmp(cep->ce_varname, "ban-time"))
 			continue;
@@ -4836,7 +4920,8 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 		errors++;
 	} else if (cep->ce_vardata) {
 		/* Check if it's a valid one */
-		char *errbuf = unreal_checkregex(cep->ce_vardata,0);
+		char *errbuf = unreal_checkregex(cep->ce_vardata,0,0);
+		regex = cep->ce_vardata;
 		if (errbuf)
 		{
 			config_error("%s:%i: spamfilter::regex contains an invalid regex: %s",
@@ -4893,6 +4978,14 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, cep->ce_vardata);
 			errors++;
 		}
+	}
+
+	if (regex && reason && (strlen(regex) + strlen(reason) > 505))
+	{
+		config_error("%s:%i: spamfilter block problem: regex + reason field are together over 505 bytes, "
+		             "please choose a shorter regex or reason",
+		             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
 	}
 
 	return errors;
@@ -5310,6 +5403,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 		nl->reason = strdup(cep->ce_vardata);
 		strcpy(nl->usermask, "*");
 		AddListItem(nl, tklines[tkl_hash('q')]);
+		free(ca);
 		return 0;
 	}
 	else if (!strcmp(ce->ce_vardata, "ip"))
@@ -7292,12 +7386,12 @@ static void conf_download_complete(char *url, char *file, char *errorbuf, int ca
 		if (!stricmp(url, inc->url))
 		{
 			inc->flag.type &= ~INCLUDE_DLQUEUED;
-			if (!file && !cached)
-				inc->errorbuf = strdup(errorbuf);
 			break;
 		}
 	}
-	if (!inc->errorbuf)
+	if (!file && !cached)
+		add_remote_include(file, url, 0, errorbuf);
+	else
 	{
 		if (cached)
 		{
@@ -7305,11 +7399,11 @@ static void conf_download_complete(char *url, char *file, char *errorbuf, int ca
 			char *file = unreal_getfilename(urlfile);
 			char *tmp = unreal_mktemp("tmp", file);
 			unreal_copyfile(inc->file, tmp);
-			add_remote_include(tmp, url, 0);
+			add_remote_include(tmp, url, 0, NULL);
 			free(urlfile);
 		}
 		else
-			add_remote_include(file, url, 0);
+			add_remote_include(file, url, 0, NULL);
 	}
 	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
 	{
@@ -7372,6 +7466,8 @@ int	rehash_internal(aClient *cptr, aClient *sptr, int sig)
 	}
 	if (init_conf(configfile, 1) == 0)
 		run_configuration();
+	if (sig == 1)
+		reread_motdsandrules();
 	unload_all_unused_snomasks();
 	unload_all_unused_umodes();
 	loop.ircd_rehashing = 0;	
@@ -7451,10 +7547,10 @@ char *find_loaded_remote_include(char *url)
 
 int remote_include(ConfigEntry *ce)
 {
-	char *errorbuf;
+	char *errorbuf = NULL;
 	char *file = find_remote_include(ce->ce_vardata, &errorbuf);
 	int ret;
-	if (!loop.ircd_rehashing || (loop.ircd_rehashing && !file))
+	if (!loop.ircd_rehashing || (loop.ircd_rehashing && !file && !errorbuf))
 	{
 		char *error;
 		if (config_verbose > 0)
@@ -7470,7 +7566,7 @@ int remote_include(ConfigEntry *ce)
 		else
 		{
 			if ((ret = load_conf(file)) >= 0)
-				add_remote_include(file, ce->ce_vardata, INCLUDE_USED);
+				add_remote_include(file, ce->ce_vardata, INCLUDE_USED, NULL);
 			free(file);
 			return ret;
 		}
@@ -7487,7 +7583,7 @@ int remote_include(ConfigEntry *ce)
 		if (config_verbose > 0)
 			config_status("Loading %s from download", ce->ce_vardata);
 		if ((ret = load_conf(file)) >= 0)
-			add_remote_include(file, ce->ce_vardata, INCLUDE_USED);
+			add_remote_include(file, ce->ce_vardata, INCLUDE_USED, NULL);
 		return ret;
 	}
 	return 0;
@@ -7504,6 +7600,8 @@ void add_include(char *file)
 	{
 		if (!(inc->flag.type & INCLUDE_NOTLOADED))
 			continue;
+		if (inc->flag.type & INCLUDE_REMOTE)
+			continue;
 		if (!stricmp(file, inc->file))
 			return;
 	}
@@ -7514,7 +7612,7 @@ void add_include(char *file)
 }
 
 #ifdef USE_LIBCURL
-void add_remote_include(char *file, char *url, int flags)
+void add_remote_include(char *file, char *url, int flags, char *errorbuf)
 {
 	ConfigItem_include *inc;
 
@@ -7529,9 +7627,12 @@ void add_remote_include(char *file, char *url, int flags)
 	}
 
 	inc = MyMallocEx(sizeof(ConfigItem_include));
-	inc->file = strdup(file);
+	if (file)
+		inc->file = strdup(file);
 	inc->url = strdup(url);
 	inc->flag.type = (INCLUDE_NOTLOADED|INCLUDE_REMOTE|flags);
+	if (errorbuf)
+		inc->errorbuf = strdup(errorbuf);
 	AddListItem(inc, conf_include);
 }
 #endif

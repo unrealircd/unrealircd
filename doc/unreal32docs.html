@@ -16,14 +16,18 @@
 </style>
 </head>
 
+<!-- $Id$ -->
+
 <body>
+English | <a href="unreal32docs.de.html">German</a><br><br>
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
-  <b>Current Version:</b> 3.2 RC2<br>
-  <b>Last doc update:</b> 2004-03-07</div>
-  <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke / McSkaf<br>
-  <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
+  <b>Current Version:</b> 3.2<br>
+  <b>Last doc update:</b> 2004-04-24</div>
+<br>
+  <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
+  <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
 <p>Due to the increasing complexity of UnrealIRCd3.2 We have switched to an easier 
   to navigate, more inclusive documentation set. To view this documentation you 
@@ -113,7 +117,7 @@
   ---8.9. <a href="#secsummary">Summary</a><br>
   9. <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">Frequently Asked Questions (FAQ)</a><br> 
 </p>
-<p><b><font size="+2">1.0 &#8211;Introduction & Notes <a name="IntroductionNotes"></a></font></b><br>
+<p><b><font size="+2">1.0 &#8211; Introduction & Notes <a name="IntroductionNotes"></a></font></b><br>
 </p><div class="desc">
 <p>This document was written for exclusive use with UnrealIRCd. Use of this 
   document with another software package, or distribution of this document with 
@@ -184,8 +188,8 @@ Windows:<br>
 <p><b>Installation Instructions</b><br>
 Linux:<br>
 <ol>
-<li>gunzip -d Unreal3.2-RC2.tar.gz
-<li>tar xvf Unreal3.2-RC2.tar
+<li>gunzip -d Unreal3.2.tar.gz
+<li>tar xvf Unreal3.2.tar
 <li>cd Unreal3.2
 <li>./Config
 <li>Answer these questions to the best of your knowledge. Generally if your not 
@@ -219,12 +223,14 @@ Windows:<br>
    have to keep them secret. _The cloak keys must be the same on all servers on the network_.</p>
 </div>
 <p><font size="+2"><b>3.2 - Modules</b></font><a name="feature_modules"></a></p><div class="desc">
-<p>UnrealIRCd supports modules (except under windows) which is nice because:<br>
+<p>UnrealIRCd supports modules which is nice because:<br>
    - You can load/reload/unload them while the ircd is running (by /rehash). This allows some bugs to be fixed or new features to be added without requiring a restart.<br>
    - Other people can create (3rd party) modules with new commands, usermodes and even channelmodes.<br>
    UnrealIRCd only comes with a few modules, take a look at www.unrealircd.com -&gt; modules
-   or use google to find 3rd party modules.</p>
-<p>Note that you need to load at least the commands module!</p></div>
+   or use google to find 3rd party modules.<br>
+NOTE: currently modules are not supported on windows, you can however expect this is in a nearby release</p>
+<p>You need to load at least the commands module or else the ircd won't load!</p>
+</div>
 
 <p><font size="+2"><b>3.3 - Snomasks</b></font><a name="feature_snomasks"></a></p><div class="desc">
 <p>Snomasks are server notice masks, it's a special type of usermode that controls which 
@@ -273,7 +279,7 @@ Windows:<br>
 <p>This is controlled by the oper flags in the oper block, see the oper block for more information.</p></div>
 
 <p><font size="+2"><b>3.7 - Oper commands</b></font><a name="feature_opercmds"></a></p><div class="desc">
-<p>UnrealIRCd has a lot of powerful oper commands which are explained in section 6,
+<p>UnrealIRCd has a lot of powerful oper commands which are explained in <a href="#useropercommands">User &amp; Oper Commands</a>,
    you probably want to read those after installing :).</p></div>
 
 <p><font size="+2"><b>3.8 - SSL</b></font><a name="feature_ssl"></a></p><div class="desc">
@@ -286,7 +292,7 @@ Windows:<br>
 <p>Clients that support SSL: <A HREF="http://www.xchat.org/" TARGET="_blank">XChat</a>,
                              <A HREF="http://www.irssi.org/" TARGET="_blank">irssi</a>,
                              <A HREF="http://www.irssi.org/" TARGET="_blank">mIRC</a> (6.14 and up, 
-                             also requires some <a href="http://www.mirc.co.uk/ssl.html" target="_blank>additional steps</a>)</p>
+                             also requires some <a href="http://www.mirc.co.uk/ssl.html" target="_blank">additional steps</a>)</p>
 <p>For clients which do not support SSL you can use a tunnel like
    <A HREF="http://www.stunnel.org/" TARGET="_blank">stunnel</A>, here's a stunnel.conf example (for stunnel 4.x):<br>
    <pre>
@@ -466,7 +472,7 @@ Modules can also add other extended ban types.<br>
    <tr valign="top"><td><b>[tkltime]</b></td><td> The duration of the *line added by the filter, use '-' to use the default or to skip 
    (eg: if action = 'block')</td></tr>
    <tr valign="top"><td><b>[reason]</b></td><td> Block or *line reason.. you CANNOT use spaces in this, but underscores ('_') will be translated
-into spaces at runtime. Again, use '-' to use the default.</td></tr>
+into spaces at runtime. And double underscore ('__') gets an underscore ('_'). Again, use '-' to use the default reason.</td></tr>
    <tr valign="top"><td><b>[regex]</b></td><td> this is the actual regex or 'bad word' where we should block on and perform the action at</td></tr>
    </table>
    <br>
@@ -1420,8 +1426,8 @@ except tkl {
   still want specific users to be able to connect. The except::mask directive 
   specifies the user@host mask of the client who will be allowed to connect. The 
   except::type specifies which type of ban this should override. Valid types are
-  gline, gzline, and shun, which make an exception from Glines, Global Zlines, and
-  shuns.</p>
+  gline, gzline, qline, gqline, and shun, which make an exception from Glines, 
+  Global Zlines, Qlines, Global Qlines, and shuns.</p>
 <p>Example:<br>
 <pre>
 except tkl {
@@ -2713,35 +2719,37 @@ to get more information on a command.</p>
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">kline +-&lt;hostmask&gt; &lt;time to ban&gt; &lt;reason&gt;</td>
-    <td>Bans the hostmask from the server it is issued on. It is not a global 
-      ban. Time to ban is in seconds, or you can use 1d for 1 days. If the hostmask is prefixed with a -, the kline is removed</td>
+    <td height="39">kline [+|-]&lt;user@host | nick&gt; [&lt;time to ban&gt; &lt;reason&gt;]</td>
+    <td>Bans the hostmask from the server it is issued on. A kline is not a global ban.<br> 
+        <b>time to ban</b> is either: a) a value in seconds, b) a time value, like '1d' is 1 day or c) '0' for permanent.
+        Time and reason are optional, if unspecified set::default-bantime (default: 0/permanent) and 'no reason' are used.<br>
+        To remove a kline use /kline -user@host</td>
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">zline +-&lt;ip&gt; &lt;time to ban&gt; &lt;reason&gt;</td>
-    <td>Bans an IP Address from the local server it is issued on. Time to ban is in seconds, or you can use 1d for 1 days. If the ip is prefixed with a - then the zline is removed.<br></td>
+    <td height="39">zline [+|-]&lt;*@ip&gt; [&lt;time to ban&gt; &lt;reason&gt;]</td>
+    <td>Bans an IP Address from the local server it is issued on (not global). See kline for more syntax info. 
+        Use /zline -*@ip to remove.<br></td>
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">gline +-&lt;user@host&gt; &lt;time to ban&gt; :&lt;reason&gt;<br></td>
-    <td>Adds a global ban to anyone that matches. Time to ban is in seconds, or 
-      you can use 1d for 1 days. To remove a gline, put a &#8211;user@host<br></td>
+    <td height="39">gline [+|-]&lt;user@host | nick&gt; [&lt;time to ban&gt; &lt;reason&gt;]<br></td>
+    <td>Adds a global ban to anyone that matches. See kline for more syntax info.
+      Use /gline -user@host to remove.<br></td>
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">shun +-&lt;user@host&gt; &lt;time to shun&gt; :&lt;reason&gt;<br></td>
+    <td height="39">shun [+|-]&lt;user@host | nick&gt; [&lt;time to shun&gt; &lt;reason&gt;]<br></td>
     <td>Prevents a user from executing ANY commands and prevents them from speaking. 
-      Shuns are global (like glines). Time to shun is in seconds, or you can use 1d for 1 days. 
-      To remove a shun, put a &#8211;user@host. Setting time to 0 makes it permanent. 
+      Shuns are global (like glines). See kline for more syntax info.
+      Use /shun -user@host to remove a shun.
       <br></td>
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">gzline +-&lt;ip&gt; &lt;time to ban&gt; :&lt;reason&gt;<br></td>
-    <td>Adds a global zline. Time to ban is in seconds, or you can use 1d for 1 
-      days. To remove a gzline, put a &#8211;user@host. Setting time to 0 makes 
-      it permanent.<br></td>
+    <td height="39">gzline [+|-]&lt;ip&gt; &lt;time to ban&gt; :&lt;reason&gt;<br></td>
+    <td>Adds a global zline. See kline for more syntax info.
+      Use /gzline -*@ip to remove a gzline.<br></td>
     <td>IRCop</td>
   </tr>
   <tr> 
@@ -2808,7 +2816,7 @@ to get more information on a command.</p>
     <td height="39">connect &lt;server&gt; &lt;port&gt; &lt;server&gt;</td>
     <td>If only one server is given, it will attempt to connect the server you 
       are ON to the given server. If 2 servers are given, it will attempt to connect 
-      the 2 servers together. Put the hub server as the first, and the leaf server 
+      the 2 servers together. Put the leaf server as the first, and the hub server 
       as the second.<br></td>
     <td>IRCop</td>
   </tr>

@@ -188,7 +188,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				MyFree(sptr->user->swhois);
 			sptr->user->swhois = MyMalloc(strlen(vhost->swhois) +1);
 			strcpy(sptr->user->swhois, vhost->swhois);
-			sendto_serv_butone_token(cptr, sptr->name,
+			sendto_serv_butone_token(cptr, me.name,
 				MSG_SWHOIS, TOK_SWHOIS, "%s :%s", sptr->name, vhost->swhois);
 		}
 		sendto_one(sptr,

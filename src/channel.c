@@ -1825,7 +1825,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	{
 		/* Ugly halfop hack --sts 
 		   - this allows halfops to do +b +e +v and so on */
-		if (Halfop_mode(modetype) == FALSE)
+		/* (Syzop/20040413: Allow remote halfop modes */
+		if ((Halfop_mode(modetype) == FALSE) && MyClient(cptr))
 		{
 			int eaten = 0;
 			while (tab->mode != 0x0)
@@ -2012,7 +2013,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				if (!is_halfop(cptr, chptr)) /* htrig will take care of halfop override notices */
 				   opermode = 1;
 			  }
-			  else
+			  else if (MyClient(cptr))
 			  {
 				  sendto_one(cptr, err_str(ERR_ONLYSERVERSCANCHANGE),
 				      me.name, cptr->name, chptr->chname);
@@ -2028,7 +2029,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				if (!is_halfop(cptr, chptr)) /* htrig will take care of halfop override notices */
 				   opermode = 1;
 			  }
-			  else
+			  else if (MyClient(cptr))
 			  {
 				  sendto_one(cptr,
 				      ":%s %s %s :*** Channel admins (+a) can only be set by the channel owner",
@@ -2111,8 +2112,10 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				      ":%s %s %s :*** You cannot %s %s in %s, (s)he is the channel owner (+q).",
 				      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name, xxx,
 				      member->cptr->name, chptr->chname);
-			  }
-			  break;
+				  break;
+			  } else
+			  if (IsOper(cptr))
+			      opermode = 1;
 		  }
 		  if (is_chanprot(member->cptr, chptr)
 		      && member->cptr != cptr
@@ -2125,8 +2128,10 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				      ":%s %s %s :*** You cannot %s %s in %s, (s)he is a channel admin (+a).",
 				      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name, xxx,
 				      member->cptr->name, chptr->chname);
-			  }
-			  break;
+				  break;
+			  } else
+			  if (IsOper(cptr))
+			      opermode = 1;
 		  }
 		breaktherules:
 		  tmp = member->flags;
@@ -3678,8 +3683,28 @@ void join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
 			    sptr->name, chptr->chname, chptr->topic_nick,
 			    chptr->topic_time);
 		}
-		if (chptr->users == 1 && MODES_ON_JOIN)
+		if (chptr->users == 1 && (MODES_ON_JOIN
+#ifdef EXTCMODE
+		    || iConf.modes_on_join.extmodes)
+#endif
+		)
 		{
+#ifdef EXTCMODE
+			int i;
+			chptr->mode.extmode =  iConf.modes_on_join.extmodes;
+			/* Param fun */
+			for (i = 0; i <= Channelmode_highest; i++)
+			{
+				if (!Channelmode_Table[i].flag || !Channelmode_Table[i].paracount)
+					continue;
+				if (chptr->mode.extmode & Channelmode_Table[i].mode)
+				{
+					CmodeParam *p;
+					p = Channelmode_Table[i].put_param(NULL, iConf.modes_on_join.extparams[i]);
+					AddListItem(p, chptr->mode.extmodeparam);
+				}
+			}
+#endif
 			chptr->mode.mode = MODES_ON_JOIN;
 #ifdef NEWCHFLOODPROT
 			if (iConf.modes_on_join.floodprot.per)
