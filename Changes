@@ -2436,3 +2436,4 @@ seen. gmtime warning still there
   setting up a module for both static and dynamic linking easier
 - Fixed a win32 resolver lockup bug
 - Fixed hunt_server* bug
+- Very Very small change to doc/example.conf
