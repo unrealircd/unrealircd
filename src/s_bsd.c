@@ -87,8 +87,10 @@ int  rr;
 #define IN_LOOPBACKNET	0x7f
 #endif
 
+#ifndef INADDRSZ
 #define INADDRSZ sizeof(struct IN_ADDR)
 #define IN6ADDRSZ sizeof(struct IN_ADDR)
+#endif
 
 extern char backupbuf[8192];
 aClient *local[MAXCONNECTIONS];
@@ -152,15 +154,15 @@ void add_local_domain(hname, size)
 	/* try to fix up unqualified names */
 	if (!index(hname, '.'))
 	{
-		if (!(_res.options & RES_INIT))
+		if (!(ircd_res.options & RES_INIT))
 		{
 			Debug((DEBUG_DNS, "res_init()"));
-			res_init();
+			ircd_res_init();
 		}
-		if (_res.defdname[0])
+		if (ircd_res.defdname[0])
 		{
 			(void)strncat(hname, ".", size - 1);
-			(void)strncat(hname, _res.defdname, size - 2);
+			(void)strncat(hname, ircd_res.defdname, size - 2);
 		}
 	}
 #endif

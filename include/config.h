@@ -706,4 +706,11 @@ error You stuffed up config.h signals
 #define Reg8 register
 #define Reg9 register
 #define Reg10 register
+#if defined(AIX) && defined(_XOPEN_SOURCE_EXTENDED) && _XOPEN_SOURCE_EXTENDED
+# define SOCK_LEN_TYPE size_t
+#else
+# define SOCK_LEN_TYPE int
+#endif
+
 #endif				/* __config_include__ */
+
