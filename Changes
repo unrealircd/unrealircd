@@ -1937,3 +1937,4 @@ seen. gmtime warning still there
 - Added a new badword type, quit. This replaces the old CENSOR_QUIT. If you want to censor
   quit messages you create a badword quit {}. Additionally loading badwords.quit.conf will
   censor several badwords by default. Based on suggestions by Gargo
+- Fixed two ident bugs (multihomed&connect), both resulted in ident not working.

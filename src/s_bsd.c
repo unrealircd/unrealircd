@@ -1887,7 +1887,12 @@ deadsocket:
 			}
 		}
 		length = 1;	/* for fall through case */
-		if ((!NoNewLine(cptr) || FD_ISSET(cptr->fd, &read_set)) 
+		/* Note: these DoingDNS/DoingAuth checks are here because of a
+		 * filedescriptor race condition, so don't remove them without
+		 * being sure that has been fixed. -- Syzop
+		 */
+		if ((!NoNewLine(cptr) || FD_ISSET(cptr->fd, &read_set)) &&
+		    !(DoingDNS(cptr) || DoingAuth(cptr))
 #ifdef USE_SSL
 			&& 
 			!(IsSSLAcceptHandshake(cptr) || IsSSLConnectHandshake(cptr))

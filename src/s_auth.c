@@ -55,8 +55,9 @@ static char sccsid[] = "@(#)s_auth.c	1.18 4/18/94 (C) 1992 Darren Reed";
  */
 void start_auth(aClient *cptr)
 {
-	struct SOCKADDR_IN sock;
-
+	struct SOCKADDR_IN sock, us;
+	int len;
+	
 	if (IDENT_CHECK == 0) {
 		cptr->flags &= ~(FLAGS_WRAUTH | FLAGS_AUTH);
 		return;
@@ -86,16 +87,19 @@ void start_auth(aClient *cptr)
 
 	set_non_blocking(cptr->authfd, cptr);
 
-
-	/* Use the listener that the user got in on, dah? */
+	/* Bind to the IP the user got in */
+	len = sizeof(us);
+	if (!getsockname(cptr->fd, (struct SOCKADDR *)&us, &len))
+	{
 #ifndef INET6
-	sock.SIN_ADDR = cptr->listener->ip; 
+		sock.SIN_ADDR = us.SIN_ADDR;
 #else
-	bcopy((char *)&cptr->listener->ip, (char *)&sock.SIN_ADDR, sizeof(struct IN_ADDR));
+		bcopy(&us.SIN_ADDR, &sock.SIN_ADDR, sizeof(struct IN_ADDR));
 #endif
-	sock.SIN_PORT = 0;
-	sock.SIN_FAMILY = AFINET;	/* redundant? */
-	(void)bind(cptr->authfd, (struct SOCKADDR *)&sock, sizeof(sock));
+		sock.SIN_PORT = 0;
+		sock.SIN_FAMILY = AFINET;	/* redundant? */
+		(void)bind(cptr->authfd, (struct SOCKADDR *)&sock, sizeof(sock));
+	}
 
 	bcopy((char *)&cptr->ip, (char *)&sock.SIN_ADDR,
 	    sizeof(struct IN_ADDR));
