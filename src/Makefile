@@ -22,7 +22,7 @@
 CC = danger will robinson
 
 OBJS=agent.o aln.o badwords.o bsd.o channel.o cloak.o crule.o dbuf.o \
-	fdlist.o hash.o help.o ircd.o ircsprintf.o list.o lusers.o \
+	events.o fdlist.o hash.o help.o ircd.o ircsprintf.o list.o lusers.o \
 	match.o modules.o packet.o parse.o $(REGEX) res.o \
 	res_init.o res_comp.o res_mkquery.o res_skipname.o s_auth.o \
 	s_bsd.o s_conf.o s_debug.o s_err.o s_extra.o s_kline.o \
@@ -122,6 +122,8 @@ userload.o: userload.c $(INCLUDES)
 
 s_svs.o: s_svs.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c s_svs.c
+events.o: events.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c events.c
 
 help.o: help.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c help.c
