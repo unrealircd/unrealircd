@@ -4562,7 +4562,7 @@ setmodey:
 		    TOK_SVS2MODE, "%s %s", parv[1], parv[2]);
 
 	send_umode(NULL, acptr, setflags, ALL_UMODES, buf);
-	if (MyClient(acptr))
+	if (MyClient(acptr) && buf[1])
 		sendto_one(acptr, ":%s MODE %s :%s", parv[0], parv[1], buf);
 	return 0;
 }
