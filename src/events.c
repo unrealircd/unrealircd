@@ -28,6 +28,7 @@
 #include "channel.h"
 #include "userload.h"
 #include "version.h"
+#include "proto.h"
 #include <time.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -39,27 +40,128 @@
 #include <fcntl.h>
 #include "h.h"
 
-ID_Copyright("(C) Carsten Munk 1999");
+ID_Copyright("(C) Carsten Munk 2001");
+
+
 
 Event *events = NULL;
 
-void	DoEvents(void)
+void	EventAdd(char *name, long every, long howmany,
+		  vFP event, void *data)
+{
+	Event *newevent;
+	
+	if (!name || (every < 0) || (howmany < 0) || !event)
+	{
+		return;
+	}
+	newevent = (Event *) MyMallocEx(sizeof(Event));
+	newevent->name = strdup(name);
+	newevent->howmany = howmany;
+	newevent->every = every;
+	newevent->event = event;
+	newevent->data = data;
+	newevent->next = events;
+	newevent->prev = NULL;
+	/* We don't want a quick execution */
+	newevent->last = TStime();
+	if (events)
+		events->prev = newevent;
+	events = newevent;
+}
+
+Event	*EventDel(char *name)
+{
+	Event *p, *q;
+	
+	for (p = events; p; p = p->next)
+	{
+		if (!strcmp(p->name, name))
+		{
+			q = p->next;
+			MyFree(p->name);
+			if (p->prev)
+				p->prev->next = p->next;
+			else
+				events = p->next;
+				
+			if (p->next)
+				p->next->prev = p->prev;
+			MyFree(p);
+			return q;		
+		}
+	}
+	return NULL;
+}
+
+Event	*EventFind(char *name)
+{
+	Event *eventptr;
+
+	for (eventptr = events; eventptr; eventptr = eventptr->next)
+		if (!strcmp(eventptr->name, name))
+			return (eventptr);
+	return NULL;
+}
+
+void	EventModEvery(char *name, int every)
 {
 	Event *eventptr;
 	
-	for (eventptr = events; events; events = events->next)
-		if ((TStime() - eventptr->last) >= eventptr->every)
+	eventptr = EventFind(name);
+	if (eventptr)
+		eventptr->every = every;
+}
+
+inline void	DoEvents(void)
+{
+	Event *eventptr;
+	Event temp;
+
+	for (eventptr = events; eventptr; eventptr = eventptr->next)
+		if ((eventptr->every == 0) || ((TStime() - eventptr->last) >= eventptr->every))
 		{
 			if (eventptr->howmany > 0)
 			{
+
 				eventptr->howmany--;
 				if (eventptr->howmany == 0)
 				{
-					/* Mark event for deletion, or delete it
-					*/
+					temp.next = EventDel(eventptr->name);
+					eventptr = &temp;
+					continue;
 				}
 			}
 			eventptr->last = TStime();
-			(*evenptr->event)(eventptr->data);
+			(*eventptr->event)(eventptr->data);
 		}
+}
+
+void	EventStatus(aClient *sptr)
+{
+	Event *eventptr;
+
+	if (!events)
+	{
+		sendto_one(sptr, ":%s NOTICE %s :*** No events",
+				me.name, sptr->name);
+	}
+	for (eventptr = events; eventptr; eventptr = eventptr->next)
+	{
+		sendto_one(sptr, ":%s NOTICE %s :*** Event %s: e/%i h/%i n/%i l/%i", me.name,
+			sptr->name, eventptr->name, eventptr->every, eventptr->howmany,
+				TStime() - eventptr->last, (eventptr->last + eventptr->every) - TStime());
+	}
+}
+
+void	SetupEvents(void)
+{
+	/* Start events */
+	EventAdd("tklexpire", 5, 0, tkl_check_expire, NULL);
+	EventAdd("tunefile", 300, 0, save_tunefile, NULL);
+	EventAdd("garbage", GARBAGE_COLLECT_EVERY, 0, garbage_collect, NULL);
+	EventAdd("loop", 0, 0, loop_event, NULL);
+#ifndef NO_FDLISTS
+	EventAdd("fdlistcheck", 1, 0, e_check_fdlists, NULL);
+#endif
 }

@@ -77,6 +77,7 @@ extern ConfigItem_allow_channel *conf_allow_channel;
 extern ConfigItem_deny_version	*conf_deny_version;
 extern ConfigItem_log		*conf_log;
 
+EVENT(tkl_check_expire);
 
 ConfigItem_class	*Find_class(char *name);
 ConfigItem_deny_dcc	*Find_deny_dcc(char *name);

@@ -404,6 +404,51 @@ void server_reboot(mesg)
 
 char *areason;
 
+EVENT(loop_event)
+{
+	if (loop.do_tkl_sweep)
+	{
+		tkl_sweep();
+		loop.do_tkl_sweep = 0;
+	}
+	if (loop.do_garbage_collect == 1)
+	{
+		garbage_collect(NULL);			
+	}
+}
+
+EVENT(garbage_collect)
+{
+	extern int freelinks;
+	extern Link *freelink;
+	Link p;
+	int  ii;
+	
+	if (loop.do_garbage_collect == 1)
+		sendto_realops("Doing garbage collection ..");
+	if (freelinks > HOW_MANY_FREELINKS_ALLOWED)
+	{
+		ii = freelinks;
+		while (freelink
+			   && (freelinks > HOW_MANY_FREELINKS_ALLOWED))
+		{
+			freelinks--;
+			p.next = freelink;
+			freelink = freelink->next;
+			MyFree(p.next);
+		}
+		if (loop.do_garbage_collect == 1)
+		{
+			loop.do_garbage_collect = 0;
+			sendto_realops
+			   ("Cleaned up %i garbage blocks",
+					    (ii - freelinks));
+		}
+	}
+	if (loop.do_garbage_collect == 1)
+		loop.do_garbage_collect = 0;
+}
+
 /*
 ** try_connections
 **
@@ -1147,12 +1192,15 @@ int  InitwIRCD(argc, argv)
 #ifdef USE_SYSLOG
 	syslog(LOG_NOTICE, "Server Ready");
 #endif
+	SetupEvents();
 	loop.ircd_booted = 1;
 	module_loadall();
 #ifndef NO_FDLIST
 	check_fdlists(TStime());
 #endif
 	nextkillcheck = TStime() + (TS)1;
+	
+
 #ifdef _WIN32
 	return 1;
 }
@@ -1166,64 +1214,14 @@ void SocketLoop(void *dummy)
 #ifndef NO_FDLIST
 	TS   nextfdlistcheck = 0;	/*end of priority code */
 #endif
+	
 	while (1)
 #else
 	for (;;)
 #endif
 	{
 		timeofday = time(NULL) + TSoffset;
-		if ((timeofday - lastglinecheck) > 4)
-		{
-			tkl_check_expire();
-			lastglinecheck = timeofday;
-#ifdef STATSWRITING
-			save_stats();
-#endif
-		}
-		if (loop.do_tkl_sweep)
-		{
-			tkl_sweep();
-			loop.do_tkl_sweep = 0;
-		}
-		/* we want accuarte time here not the fucked up TStime() :P -Stskeeps */
-		if ((timeofday - last_tune) > 300)
-		{
-			last_tune = timeofday;
-			save_tunefile();
-		}
-
-		if (((timeofday - last_garbage_collect) >
-		    GARBAGE_COLLECT_EVERY || (loop.do_garbage_collect == 1)))
-		{
-			extern int freelinks;
-			extern Link *freelink;
-			Link p;
-			int  ii;
-			if (loop.do_garbage_collect == 1)
-				sendto_realops("Doing garbage collection ..");
-			if (freelinks > HOW_MANY_FREELINKS_ALLOWED)
-			{
-				ii = freelinks;
-				while (freelink
-				    && (freelinks > HOW_MANY_FREELINKS_ALLOWED))
-				{
-					freelinks--;
-					p.next = freelink;
-					freelink = freelink->next;
-					MyFree(p.next);
-				}
-				if (loop.do_garbage_collect == 1)
-				{
-					loop.do_garbage_collect = 0;
-					sendto_realops
-					    ("Cleaned up %i garbage blocks",
-					    (ii - freelinks));
-				}
-			}
-			if (loop.do_garbage_collect == 1)
-				loop.do_garbage_collect = 0;
-			last_garbage_collect = timeofday;
-		}
+		DoEvents();
 		/*
 		   ** Run through the hashes and check lusers every
 		   ** second
@@ -1401,16 +1399,16 @@ void SocketLoop(void *dummy)
 		   ** have data in them (or at least try to flush)
 		   ** -avalon
 		 */
-#ifndef NO_FDLIST
-		/* check which clients are active */
-		if (timeofday > nextfdlistcheck)
-			nextfdlistcheck = check_fdlists(timeofday);
-#endif
 		flush_connections(me.fd);
 	}
 }
 #ifndef NO_FDLIST
-TS   check_fdlists(now)
+EVENT(e_check_fdlists)
+{
+	check_fdlists(TStime());
+}
+
+inline TS   check_fdlists(now)
 	TS   now;
 {
 	aClient *cptr;

@@ -27,10 +27,11 @@ void	EventAdd(char *name, long every, long howmany,
 typedef struct _event Event;
 
 struct _event {
+	Event   *next, *prev;
 	char	*name;
 	time_t	every;
 	long	howmany;
-	vFP	event;
+	vFP		event;
 	void	*data;
 	time_t	last;
 };

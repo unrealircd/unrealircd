@@ -225,7 +225,7 @@ aTKline *tkl_expire(aTKline * tmp)
 	return (tkl_del_line(tmp));
 }
 
-void tkl_check_expire(void)
+EVENT(tkl_check_expire)
 {
 	aTKline *gp, t;
 	TS   nowtime;
@@ -381,7 +381,7 @@ int  tkl_sweep()
 	aClient *acptr;
 	long i;
 
-	tkl_check_expire();
+	tkl_check_expire(NULL);
 	for (i = 0; i <= (MAXCONNECTIONS - 1); i++)
 	{
 		if (acptr = local[i])
@@ -402,7 +402,7 @@ void tkl_stats(aClient *cptr)
 	   Character:
 	   G, Z, K, z                                    
 	 */
-	tkl_check_expire();
+	tkl_check_expire(NULL);
 	curtime = TStime();
 	for (tk = tklines; tk; tk = tk->next)
 	{
@@ -502,7 +502,7 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc < 2)
 		return 0;
 
-	tkl_check_expire();
+	tkl_check_expire(NULL);
 
 	switch (*parv[1])
 	{
@@ -802,7 +802,7 @@ int  m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
       nochecks:
 	usermask = strtok(mask, "@");
 	hostmask = strtok(NULL, "");
-	tkl_check_expire();
+	tkl_check_expire(NULL);
 
 	for (tk = tklines; tk; tk = tk->next)
 	{
@@ -1008,7 +1008,7 @@ int  m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
       nochecks:
 	usermask = strtok(mask, "@");
 	hostmask = strtok(NULL, "");
-	tkl_check_expire();
+	tkl_check_expire(NULL);
 
 	for (tk = tklines; tk; tk = tk->next)
 	{

@@ -43,17 +43,21 @@ void sendto_serv_butone_token(aClient *one, char *prefix, char *command, char *t
 void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *command, char *token, char *pattern, ...);
 void sendto_channel_ntadmins(aClient *from, aChannel *chptr, char *pattern, ...); 
 
+/* ircd.c */
+EVENT(e_check_fdlists);
+EVENT(garbage_collect);
+EVENT(loop_event);
 /* support.c */
 char *my_itoa(int i);
 
 /* s_kline.c */
 int  find_tkline_match(aClient *cptr, int xx);
-void tkl_check_expire(void);
+extern EVENT(tkl_check_expire);
 int  tkl_sweep(void);
 
 /* s_serv.c */
 void load_tunefile(void);
-void save_tunefile(void);
+extern EVENT(save_tunefile);
 aMotd *read_rules(char *filename);
 aMotd *read_motd(char *filename);
 

@@ -940,7 +940,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			return exit_client(cptr, sptr, &me,
 			    "Your GECOS (real name) is banned from this server");
 		}
-		tkl_check_expire();
+		tkl_check_expire(NULL);
 		if ((xx = find_tkline_match(sptr, 0)) != -1)
 		{
 			ircstp->is_ref++;

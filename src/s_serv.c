@@ -2818,6 +2818,7 @@ int  m_stats(cptr, sptr, parc, parv)
 		  break;
 	  }
 	  case 'V':
+		  EventStatus(sptr);
 		  break;
 	  case 'X':
 	  case 'x':
@@ -3146,7 +3147,7 @@ int  m_lusers(cptr, sptr, parc, parv)
 }
 
 
-void save_tunefile(void)
+EVENT(save_tunefile)
 {
 	FILE *tunefile;
 

@@ -1346,7 +1346,7 @@ struct DSlink {
 #define	MyClient(x)			(MyConnect(x) && IsClient(x))
 #define	MyOper(x)			(MyConnect(x) && IsOper(x))
 
-#define TStime() (timeofday)
+#define TStime() (timeofday == 0 ? (timeofday = time(NULL) + TSoffset) : timeofday)
 
 /* Lifted somewhat from Undernet code --Rak */
 
