@@ -3012,3 +3012,5 @@ seen. gmtime warning still there
 - Fixed a bug regarding the new HOOKTYPE_PRE_LOCAL_JOIN reported by bla
 - Fixed a compile problem on Solaris due to tar not supporting the z option
 *** RC2fix release ***
+- spamfilter.conf: fixed fyle sig (was bad!), some minor updates to the rest,
+  added mirc 6.12 exploit sig. Reported by PHANTOm.
