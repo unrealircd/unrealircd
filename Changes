@@ -2065,3 +2065,5 @@ seen. gmtime warning still there
   (#0000732).
 - Fixed a bug where an unknown set::dns directive wasn't reported as an error (#0000898)
   reported by AngryWolf
+- Made it so /msg nick@server and /notice nick@server use tokens if the server supports it
+  (#0000895) reported by Troco

@@ -495,9 +495,15 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 					 */
 					if (!IsMe(acptr))
 					{
-						sendto_one(acptr,
-						    ":%s %s %s :%s", parv[0],
-						    cmd, nick, parv[2]);
+						if (IsToken(acptr))
+							sendto_one(acptr,
+							    ":%s %s %s :%s", parv[0],
+							    notice ? TOK_NOTICE : TOK_PRIVATE,
+							    nick, parv[2]);
+						else
+							sendto_one(acptr,
+							    ":%s %s %s :%s", parv[0],
+							    cmd, nick, parv[2]);
 						continue;
 					}
 
