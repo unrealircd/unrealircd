@@ -614,8 +614,8 @@ int  m_remgline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 
 	sendto_one(sptr,
-	    ":%s NOTICE %s :*** Please use /gline -mask instead of /Remgline",
-	    me.name, sptr->name);
+	    ":%s %s %s :*** Please use /gline -mask instead of /Remgline",
+	    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name);
 }
 
 extern char cmodestring[512];
@@ -2373,11 +2373,9 @@ int  m_whois(cptr, sptr, parc, parv)
 			if (IsWhois(acptr) && (sptr != acptr))
 			{
 				sendto_one(acptr,
-				    ":%s NOTICE %s :*** %s (%s@%s) did a /whois on you.",
-				    me.name, acptr->name, sptr->name,
-				    sptr->user->username,
-				    IsHidden(acptr) ? sptr->
-				    user->virthost : sptr->user->realhost);
+				    ":%s %s %s :*** %s (%s@%s) did a /whois on you.",
+				    me.name, IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, sptr->name,
+				    sptr->user->username, IsHidden(acptr) ? sptr->user->virthost : sptr->user->realhost);
 			}
 
 			sendto_one(sptr, rpl_str(RPL_WHOISUSER), me.name,
@@ -2806,8 +2804,8 @@ int  m_kill(cptr, sptr, parc, parv)
 				continue;
 			}
 			sendto_one(sptr,
-			    ":%s NOTICE %s :*** KILL changed from %s to %s",
-			    me.name, parv[0], nick, acptr->name);
+			    ":%s %s %s :*** KILL changed from %s to %s",
+			    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], nick, acptr->name);
 			chasing = 1;
 		}
 		if ((!MyConnect(acptr) && MyClient(cptr) && !OPCanGKill(cptr))
@@ -2841,8 +2839,8 @@ int  m_kill(cptr, sptr, parc, parv)
 		if (!IsServer(sptr) && (kcount > MAXKILLS))
 		{
 			sendto_one(sptr,
-			    ":%s NOTICE %s :*** Too many targets, kill list was truncated. Maximum is %d.",
-			    me.name, parv[0], MAXKILLS);
+			    ":%s %s %s :*** Too many targets, kill list was truncated. Maximum is %d.",
+			    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], MAXKILLS);
 			break;
 		}
 		if (!IsServer(cptr))
@@ -3212,8 +3210,8 @@ int  m_mkpasswd(cptr, sptr, parc, parv)
 	if (useable == 0)
 	{
 		sendto_one(sptr,
-		    ":%s NOTICE %s :*** Encryption's MUST be atleast 1 character in length",
-		    me.name, parv[0]);
+		    ":%s %s %s :*** Encryption's MUST be atleast 1 character in length",
+		    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0]);
 		return 0;
 	}
 	srandom(TStime());
@@ -3229,14 +3227,14 @@ int  m_mkpasswd(cptr, sptr, parc, parv)
 	if ((strchr(saltChars, salt[0]) == NULL)
 	    || (strchr(saltChars, salt[1]) == NULL))
 	{
-		sendto_one(sptr, ":%s NOTICE %s :*** Illegal salt %s", me.name,
-		    parv[0], salt);
+		sendto_one(sptr, ":%s %s %s :*** Illegal salt %s", me.name,
+			IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], salt);
 		return 0;
 	}
 
 
-	sendto_one(sptr, ":%s NOTICE %s :*** Encryption for [%s] is %s",
-	    me.name, parv[0], parv[1], crypt(parv[1], salt));
+	sendto_one(sptr, ":%s %s %s :*** Encryption for [%s] is %s",
+	    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], parv[1], crypt(parv[1], salt));
 	return 0;
 }
 
@@ -3247,8 +3245,8 @@ int  m_mkpasswd(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	sendto_one(sptr,
-	    ":%s NOTICE %s :*** Encryption is disabled on UnrealIRCD-win32",
-	    me.name, parv[0]);
+	    ":%s %s %s :*** Encryption is disabled on UnrealIRCD-win32",
+	    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0]);
 	return 0;
 }
 
@@ -3289,8 +3287,8 @@ int  m_oper(cptr, sptr, parc, parv)
 	if (SVSNOOP)
 	{
 		sendto_one(sptr,
-		    ":%s NOTICE %s :*** This server is in NOOP mode, you cannot /oper",
-		    me.name, sptr->name);
+		    ":%s %s %s :*** This server is in NOOP mode, you cannot /oper",
+		    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name);
 		return 0;
 	}
 
@@ -3653,8 +3651,8 @@ int  m_oper(cptr, sptr, parc, parv)
 		sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name, parv[0]);
 		if (FAILOPER_WARN)
 		sendto_one(sptr,
-		    ":%s NOTICE %s :*** Your attempt has been logged.", me.name,
-		    sptr->name);
+		    ":%s %s %s :*** Your attempt has been logged.", me.name,
+		    IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name);
 		sendto_realops
 		    ("Failed OPER attempt by %s (%s@%s) using UID %s [NOPASSWORD]",
 		    parv[0], sptr->user->username, sptr->sockhost, name);
@@ -4604,8 +4602,8 @@ int  m_sajoin(cptr, sptr, parc, parv)
 		parv[0] = parv[1];
 		parv[1] = parv[2];
 		sendto_one(acptr,
-		    ":%s NOTICE %s :*** You were forced to join %s", me.name,
-		    acptr->name, parv[2]);
+		    ":%s %s %s :*** You were forced to join %s", me.name,
+		    IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, parv[2]);
 		(void)m_join(acptr, acptr, 2, parv);
 	}
 	else
@@ -4686,8 +4684,8 @@ int  m_sapart(cptr, sptr, parc, parv)
 		parv[1] = parv[2];
 		parv[2] = NULL;
 		sendto_one(acptr,
-		    ":%s NOTICE %s :*** You were forced to part %s", me.name,
-		    acptr->name, parv[1]);
+		    ":%s %s %s :*** You were forced to part %s", me.name,
+		    IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, parv[1]);
 		(void)m_part(acptr, acptr, 2, parv);
 	}
 	else

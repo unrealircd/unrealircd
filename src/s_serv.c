@@ -286,8 +286,8 @@ int  m_squit(cptr, sptr, parc, parv)
 		if (acptr->user)
 		{
 			sendto_one(sptr,
-			    ":%s NOTICE :*** Cannot do fake kill by SQUIT !!!",
-			    me.name);
+			    ":%s %s %s :*** Cannot do fake kill by SQUIT !!!",
+			    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name);
 			sendto_ops
 			    ("%s tried to do a fake kill using SQUIT (%s (%s))",
 			    sptr->name, acptr->name, comment);
@@ -584,8 +584,8 @@ int  m_server(cptr, sptr, parc, parv)
 		sendto_one(cptr, err_str(ERR_ALREADYREGISTRED),
 		    me.name, parv[0]);
 		sendto_one(cptr,
-		    ":%s NOTICE %s :*** Sorry, but your IRC program doesn't appear to support changing servers.",
-		    me.name, cptr->name);
+		    ":%s %s %s :*** Sorry, but your IRC program doesn't appear to support changing servers.",
+		    me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
 		sptr->since += 7;
 		return 0;
 	}
@@ -2543,8 +2543,8 @@ int  m_stats(cptr, sptr, parc, parv)
 #endif
 				  if (!IsServer(acptr) && !IsMe(acptr) && IsAnOper(acptr))
 					  sendto_one(acptr,
-					      ":%s NOTICE %s :*** %s did a /stats L on you! IP may have been shown",
-					      me.name, acptr->name, sptr->name);
+					      ":%s %s %s :*** %s did a /stats L on you! IP may have been shown",
+					      me.name, IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, sptr->name);
 			  }
 			  else if (!strchr(acptr->name, '.'))
 				  sendto_one(sptr, Lformat, me.name,
@@ -2740,8 +2740,8 @@ int  m_stats(cptr, sptr, parc, parv)
 					continue;
 	  	  	  	if (!IsListening(acptr))
 	  	  	  		continue;
-	  	  	  	sendto_one(sptr, ":%s NOTICE %s :*** Listener on %s:%i, clients %i. is %s",
-	  	  	  		me.name, sptr->name,
+	  	  	  	sendto_one(sptr, ":%s %s %s :*** Listener on %s:%i, clients %i. is %s",
+	  	  	  		me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name,
 	  	  	  		((ConfigItem_listen *)acptr->class)->ip,
 	  	  	  		((ConfigItem_listen *)acptr->class)->port,
 	  	  	  		((ConfigItem_listen *)acptr->class)->clients,
@@ -2779,11 +2779,11 @@ int  m_stats(cptr, sptr, parc, parv)
 	  case 's':
 		  if (IsOper(sptr))
 		  {
-			  sendto_one(sptr, ":%s NOTICE %s :*** SCACHE:",
-			      me.name, sptr->name);
+			  sendto_one(sptr, ":%s %s %s :*** SCACHE:",
+			      me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name);
 			  list_scache(sptr);
-			  sendto_one(sptr, ":%s NOTICE %s :*** NS:", me.name,
-			      sptr->name);
+			  sendto_one(sptr, ":%s %s %s :*** NS:", me.name,
+			      IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name);
 			  ns_stats(sptr);
 		  }
 		  break;
@@ -3298,8 +3298,8 @@ void load_tunefile(void)
 
 	if ((acptr = find_server_quick(parv[1])))
 	{
-		sendto_one(sptr, ":%s NOTICE %s :*** Connect: Server %s %s %s.",
-		    me.name, parv[0], parv[1], "already exists from",
+		sendto_one(sptr, ":%s %s %s :*** Connect: Server %s %s %s.",
+		    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], parv[1], "already exists from",
 		    acptr->from->name);
 		return 0;
 	}
@@ -3313,8 +3313,8 @@ void load_tunefile(void)
 	if (!aconf)
 	{
 		sendto_one(sptr,
-		    "NOTICE %s :*** Connect: Server %s is not configured for linking",
-		    parv[0], parv[1]);
+		    ":%s %s %s :*** Connect: Server %s is not configured for linking", me.name,
+		    IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], parv[1]);
 		return 0;
 	}
 	/*
@@ -3328,14 +3328,15 @@ void load_tunefile(void)
 		if ((port = atoi(parv[2])) <= 0)
 		{
 			sendto_one(sptr,
-			    "NOTICE %s :*** Connect: Illegal port number", parv[0]);
+			    ":%s %s %s :*** Connect: Illegal port number", me.name,
+			    IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0]);
 			return 0;
 		}
 	}
 	else if (port <= 0 && (port = PORTNUM) <= 0)
 	{
-		sendto_one(sptr, ":%s NOTICE %s :*** Connect: missing port number",
-		    me.name, parv[0]);
+		sendto_one(sptr, ":%s %s %s :*** Connect: missing port number",
+		    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0]);
 		return 0;
 	}
 
@@ -3344,8 +3345,8 @@ void load_tunefile(void)
 		if (deny->flag.type == CRULE_ALL && !match(deny->mask, aconf->servername)
 			&& crule_eval(deny->rule)) {
 			sendto_one(sptr,
-				"NOTICE %s :Connect: Disallowed by connection rule",
-				parv[0]);
+				":%s %s %s :Connect: Disallowed by connection rule",
+				me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0]);
 			return 0;
 		}
 	}
@@ -3369,21 +3370,21 @@ void load_tunefile(void)
 	{
 	  case 0:
 		  sendto_one(sptr,
-		      ":%s NOTICE %s :*** Connecting to %s[%s].",
-		      me.name, parv[0], aconf->servername, aconf->hostname);
+		      ":%s %s %s :*** Connecting to %s[%s].",
+		      me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], aconf->servername, aconf->hostname);
 		  break;
 	  case -1:
-		  sendto_one(sptr, ":%s NOTICE %s :*** Couldn't connect to %s.",
-		      me.name, parv[0], aconf->servername);
+		  sendto_one(sptr, ":%s %s %s :*** Couldn't connect to %s.",
+		      me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], aconf->servername);
 		  break;
 	  case -2:
-		  sendto_one(sptr, ":%s NOTICE %s :*** Hostname %s is unknown for server %s.",
-		      me.name, parv[0], aconf->hostname, aconf->servername);
+		  sendto_one(sptr, ":%s %s %s :*** Hostname %s is unknown for server %s.",
+		      me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], aconf->hostname, aconf->servername);
 		  break;
 	  default:
 		  sendto_one(sptr,
-		      ":%s NOTICE %s :*** Connection to %s failed: %s",
-		      me.name, parv[0], aconf->servername, strerror(retval));
+		      ":%s %s %s :*** Connection to %s failed: %s",
+		      me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], aconf->servername, strerror(retval));
 	}
 	aconf->port = tmpport;
 	return 0;
@@ -3480,8 +3481,8 @@ int  m_addline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 	/* Display what they wrote too */
-	sendto_one(sptr, ":%s NOTICE %s :*** Wrote (%s) to ircd.conf",
-	    me.name, parv[0], text);
+	sendto_one(sptr, ":%s %s %s :*** Wrote (%s) to ircd.conf",
+	    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], text);
 	fprintf(conf, "// Added by %s\n", make_nick_user_host(sptr->name,
 	    sptr->user->username, sptr->user->realhost));
 /*	for (i=1 ; i<parc ; i++)
@@ -3530,8 +3531,8 @@ int  m_addmotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		return 0;
 	}
-	sendto_one(sptr, ":%s NOTICE %s :*** Wrote (%s) to file: ircd.motd",
-	    me.name, parv[0], text);
+	sendto_one(sptr, ":%s %s %s :*** Wrote (%s) to file: ircd.motd",
+	    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], text);
 	/*      for (i=1 ; i<parc ; i++)
 	   {
 	   if (i!=parc-1)
@@ -3577,8 +3578,8 @@ int  m_addomotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		return 0;
 	}
-	sendto_one(sptr, ":%s NOTICE %s :*** Wrote (%s) to OperMotd",
-	    me.name, parv[0], text);
+	sendto_one(sptr, ":%s %s %s :*** Wrote (%s) to OperMotd",
+	    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], text);
 	/*      for (i=1 ; i<parc ; i++)
 	   {
 	   if (i!=parc-1)
@@ -4745,8 +4746,8 @@ int  m_die(cptr, sptr, parc, parv)
 			continue;
 		if (IsClient(acptr))
 			sendto_one(acptr,
-			    ":%s NOTICE %s :Server Terminating. %s",
-			    me.name, acptr->name, sptr->name);
+			    ":%s %s %s :Server Terminating. %s",
+			    me.name, IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, sptr->name);
 		else if (IsServer(acptr))
 			sendto_one(acptr, ":%s ERROR :Terminated by %s",
 			    me.name, get_client_name(sptr, TRUE));
@@ -4880,8 +4881,8 @@ int  localdie(void)
 			continue;
 		if (IsClient(acptr))
 			sendto_one(acptr,
-			    ":%s NOTICE %s :Server Terminated by local console",
-			    me.name, acptr->name);
+			    ":%s %s %s :Server Terminated by local console",
+			    me.name, IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name);
 		else if (IsServer(acptr))
 			sendto_one(acptr,
 			    ":%s ERROR :Terminated by local console", me.name);

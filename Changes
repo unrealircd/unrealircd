@@ -817,3 +817,4 @@ seen. gmtime warning still there
 - Added chasm to /info
 - Started work on usermode +V (WebTV mode)
 - Some aClient cleanups to reduce memory usage
+- Made a bunch of messages check +V and if +V use PRIVMSG instead of NOTICE
