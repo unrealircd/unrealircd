@@ -127,8 +127,9 @@ int  dopacket(cptr, buffer, length)
 	char *ch2;
 	aClient *acpt = cptr->acpt;
 #ifdef CRYPTOIRCD
-	int  lengthweneed, num, lengthbackup;
+	int  lengthweneed, num, lengthbackup, li;
 	char *s;
+	char	f[4096], x[512];
 #endif
 
 	me.receiveB += length;	/* Update bytes received */
@@ -157,34 +158,39 @@ int  dopacket(cptr, buffer, length)
 #ifdef CRYPTOIRCD
 	if (IsSecure(cptr))
 	{
-		lengthbackup = length + cptr->count;
 		while (--length >= 0)
 		{
 			*ch1 = *ch2++;
+			if (ch1 - cptr->buffer > 2)
+			{
+				lengthweneed = ((unsigned char) *cptr->buffer) * 256 
+					+ ((unsigned char) *(cptr->buffer + 1));
+				lengthbackup = ch1 - cptr->buffer;
+				if (lengthbackup >= lengthweneed + 2)
+				{
+					s = (char *) ep_decrypt(cptr, cptr->buffer);
+					me.receiveM += 1;
+					cptr->receiveM += 1;
+					cptr->count = 0;
+					ch1 = cptr->buffer;
+					Debug((DEBUG_ERROR, "Length: %i/%i", strlen(s), li));
+					if (cptr->acpt != &me)
+						cptr->acpt->receiveM += 1;
+					if (parse(cptr, s, s + lengthweneed, msgtab) == FLUSH_BUFFER)
+						return FLUSH_BUFFER;
+					if (cptr->flags & FLAGS_DEADSOCKET)
+						return exit_client(cptr, cptr, &me, "Dead socket");
+				}
+					else
+					if (ch1 < cptr->buffer + (sizeof(cptr->buffer) - 1))
+						ch1++;
+
+			}
+				else
 			if (ch1 < cptr->buffer + (sizeof(cptr->buffer) - 1))
 				ch1++;
+			
 		}
-		if (lengthbackup > 2)
-		{
-			lengthweneed = ((unsigned char) *cptr->buffer) * 256 
-					+ ((unsigned char) *(cptr->buffer + 1));
-			if (lengthbackup >= lengthweneed +2)
-			{
-				s = (char *) ep_decrypt(cptr, cptr->buffer);
-				cptr->count = lengthbackup - lengthweneed;
-				cptr->count -= 2;
-				me.receiveM += 1;
-				cptr->receiveM += 1;
-				if (cptr->acpt != &me)
-					cptr->acpt->receiveM += 1;
-				if (parse(cptr, s, s + lengthweneed, msgtab) == FLUSH_BUFFER)
-					return FLUSH_BUFFER;
-				if (cptr->flags & FLAGS_DEADSOCKET)
-					return exit_client(cptr, cptr, &me, "Dead socket");
-				ch1 = cptr->buffer;
-			}
-		}
-		
 	}
 		else
 #endif
