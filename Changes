@@ -753,3 +753,4 @@ seen. gmtime warning still there
 - Fixed a bug where /restart didn't send out notices on win32
 - Made /restart call mod_unload for all modules
 - Fixed a typo in the win32 makefile
+- Rewrote Addit, hopefully it fixes the SJOIN problems?

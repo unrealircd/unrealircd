@@ -4584,21 +4584,38 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
  */
 
 /* Some ugly macros, but useful */
-#define Addit(x,y) modebuf[b] = x; strcat(parabuf, y); \
-  strcat(parabuf, " "); \
-  if (b >= MODEPARAMS) \
-  { modebuf[b + 1] = '\0'; sendto_serv_butone_sjoin(cptr, \
-  	":%s MODE %s %s %s %lu", sptr->name, chptr->chname,  \
-  	modebuf, parabuf, chptr->creationtime); \
-  	sendto_channel_butserv(chptr, sptr, \
-  	":%s MODE %s %s %s", sptr->name, chptr->chname, \
-  	modebuf, parabuf); \
-  	parabuf[0] = '\0'; \
-  	b = 1; \
-  	} else b++
-
-
-
+#define Addit(mode,param) if (strlen(parabuf) + strlen(param) + 11 < MODEBUFLEN) { \
+	if (*parabuf) \
+		strcat(parabuf, " ");\
+	strcat(parabuf, param);\
+	modebuf[b++] = mode;\
+	modebuf[b] = 0;\
+}\
+else if (*parabuf) {\
+	sendto_serv_butone_sjoin(cptr, ":%s MODE %s %s %s %lu", sptr->name, chptr->chname,\
+		modebuf, parabuf, chptr->creationtime); \
+        sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", sptr->name, chptr->chname,\
+        	modebuf, parabuf);\
+	strcpy(parabuf,param);\
+	modebuf[1] = mode;\
+	modebuf[2] = 0;\
+	sendto_serv_butone_sjoin(cptr, ":%s MODE %s %s %s %lu", sptr->name, chptr->chname,\
+		modebuf, parabuf, chptr->creationtime); \
+        sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", sptr->name, chptr->chname,\
+        	modebuf, parabuf); \
+	modebuf[1] = 0;\
+	parabuf[0] = 0;\
+	b = 1;\
+}\
+else if (b == MAXMODEPARAMS) {\
+	sendto_serv_butone_sjoin(cptr, ":%s MODE %s %s %s %lu", sptr->name, chptr->chname,\
+		modebuf, parabuf, chptr->creationtime); \
+        sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", sptr->name, chptr->chname,\
+        	modebuf, parabuf);\
+	parabuf[0] = 0;\
+	modebuf[1] = 0;\
+	b = 1;\
+}
 #define Addsingle(x) modebuf[b] = x; b++
 #define CheckStatus(x,y) if (modeflags & (y)) { Addit((x), nick); }
 #define AddBan(x) strcat(banbuf, x); strcat(banbuf, " ");
