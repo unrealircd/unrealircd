@@ -1573,7 +1573,11 @@ static int do_client_queue(aClient *cptr)
 	    ((cptr->status < STAT_UNKNOWN) || (cptr->since - now < 10)))
 	{
 		/* If it's become registered as a server, just parse the whole block */
-		if (IsServer(cptr))
+		if (IsServer(cptr) 
+#ifdef CRYPTOIRCD
+			|| IsSecure(cptr)
+#endif
+		)
 		{
 			dolen =
 			    dbuf_get(&cptr->recvQ, readbuf, sizeof(readbuf));

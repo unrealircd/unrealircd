@@ -1535,8 +1535,6 @@ int  m_crypto(cptr, sptr, parc, parv)
 		BF_set_key(sptr->cryptinfo->key, strlen(parv[2]), parv[2]);
 		sendto_one(sptr, "CRYPTO ON BLOWFISH");
 		SetSecure(sptr);
-		for (method = 1; method <= 30; method++)
-			sendto_one(sptr, ":%s NOTICE %s :moooooooooooooooooooooooooooooooooooooooooooo %i", me.name, sptr->name, method);
 		return 0;
 	}
 	sendto_one(sptr, "CRYPTO ERROR :No such method %s", parv[1]);

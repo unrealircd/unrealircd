@@ -248,8 +248,6 @@ void sendbufto_one(aClient *to)
 	{
 		s = (char *) ep_encrypt(to, sendbuf, &len);
 		bcopy(s, sendbuf, len);
-	 	for (i = 0; i<=len; i++)
-	 		Debug((DEBUG_ERROR,"%hd", sendbuf[i]));
 	}
 #endif
 	if (DBufLength(&to->sendQ) > get_sendq(to))
