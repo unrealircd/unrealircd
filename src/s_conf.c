@@ -2116,6 +2116,24 @@ ConfigItem_oper	*Find_oper(char *name)
 	return NULL;
 }
 
+int count_oper_sessions(char *name)
+{
+int i, count = 0;
+aClient *cptr;
+
+#ifdef NO_FDLIST
+	for (i = 0; i <= LastSlot; i++)
+#else
+int j;
+	for (i = oper_fdlist.entry[j = 1]; j <= oper_fdlist.last_entry; i = oper_fdlist.entry[++j])
+#endif
+		if ((cptr = local[i]) && IsPerson(cptr) && IsAnOper(cptr) &&
+		    cptr->user && cptr->user->operlogin && !strcmp(cptr->user->operlogin,name))
+			count++;
+
+	return count;
+}
+
 ConfigItem_listen	*Find_listen(char *ipmask, int port)
 {
 	ConfigItem_listen	*p;
@@ -2782,6 +2800,10 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 	{
 		ircstrdup(oper->snomask, cep->ce_vardata);
 	}
+	if ((cep = config_find_entry(ce->ce_entries, "maxlogins")))
+	{
+		oper->maxlogins = (int)config_checkval(cep->ce_vardata, CFG_TIME);
+	}
 	cep = config_find_entry(ce->ce_entries, "from");
 	for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 	{
@@ -2840,6 +2862,16 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			else if (!strcmp(cep->ce_varname, "swhois")) {
 			}
 			else if (!strcmp(cep->ce_varname, "snomask")) {
+			}
+			else if (!strcmp(cep->ce_varname, "maxlogins"))
+			{
+				long l = config_checkval(cep->ce_vardata, CFG_TIME);
+				if ((l < 0) || (l > 5000))
+				{
+					config_error("%s:%i: oper::maxlogins: value out of range (%ld) should be 0-5000",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, l);
+					errors++; continue;
+				}
 			}
 			else if (!strcmp(cep->ce_varname, "flags"))
 			{

@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta18<br>
-  <b>Last doc update:</b> 2003-10-30</div>
+  <b>Last doc update:</b> 2003-11-18</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke / McSkaf<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -674,19 +674,20 @@ listen *:6601 {
 	};
 	swhois &lt;whois info&gt;;
 	snomask &lt;snomask&gt;;
+	maxlogins &lt;num&gt;;
 };
 </pre></p>
-<p>The oper block allows you to assign IRC Operators for your server. The oper:: 
-  specifies the login name for the /oper. The oper::from::userhost is a user@host 
+<p>The oper block allows you to assign IRC Operators for your server. The <b>oper::</b> 
+  specifies the login name for the /oper. The <b>oper::from::userhost</b> is a user@host 
   mask that the user must match, you can specify more than one hostmask by creating 
-  more than one oper::from::userhost. The oper::password is the password the user 
+  more than one oper::from::userhost. The <b>oper::password</b> is the password the user 
   must specify, oper::password:: allows you to specify an authentication method 
   for this password, valid auth-types are crypt, md5, and sha1, ripemd-160. If 
   you want to use a plain-text password leave this sub-block out.</p>
 <p>Please note that BOTH the login name and password are case sensitive</p>
-<p>The oper::class directive specifies the name of a preexisting (appears before 
+<p>The <b>oper::class</b> directive specifies the name of a preexisting (appears before 
   this in the config file) class name that the oper block will use.</p>
-<p>The oper::flags directive has two formats. If you wish to use the old style 
+<p>The <b>oper::flags</b> directive has two formats. If you wish to use the old style 
   oper flags i.e., OAa, you use the flags &lt;flags&gt; method, if you want to 
   use the new style,i.e., services-admin, then you use the flags { &lt;flag&gt;; 
   } method. Below is a list of all the flags (in both formats) and what they do.</p>
@@ -942,10 +943,14 @@ listen *:6601 {
     <td>services-admin</td>
   </tr>
 </table>
-<p>The oper::swhois directive allows you to add an extra line to an opers whois 
-  information.</p>
-<p>The oper::snomask directive allows you to preset an oper's server notice mask 
-  on oper up. For a list of available SNOMASKs, see <a href="#feature_snomasks">Section 3.3</a><br>
+<p>The <b>oper::swhois</b> directive allows you to add an extra line to an opers whois 
+  information. <font color=blue>[optional]</font></p>
+<p>The <b>oper::snomask</b> directive allows you to preset an oper's server notice mask 
+  on oper up. For a list of available SNOMASKs, see <a href="#feature_snomasks">Section 3.3</a> 
+  <font color=blue>[optional]</font></p>
+<p>The <b>oper::maxlogins</b> allows you to restrict the number of concurrent oper logins from this host,
+   for example if you set it to 1 then only 1 person can be oper'ed via this block at any time. 
+   <font color=blue>[optional]</font></p>
 
 <p>Example:<br>
 <pre>
@@ -958,6 +963,11 @@ oper bobsmith {
 	password "f00";
 	flags {
 		netadmin;
+		can_gkline;
+		can_gzline;
+		can_zline;
+		can_restart;
+		can_die;
 		global;
 	};
 	swhois "Example of a whois mask";

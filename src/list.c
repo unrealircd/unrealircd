@@ -240,6 +240,8 @@ void free_user(anUser *user, aClient *cptr)
 			MyFree((char *)user->swhois);
 		if (user->virthost)
 			MyFree((char *)user->virthost);
+		if (user->operlogin)
+			MyFree(user->operlogin);
 		/*
 		 * sanity check
 		 */

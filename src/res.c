@@ -1630,7 +1630,14 @@ int m_dns(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	aCache *cp;
 	int  i;
 
-	if (IsOper(sptr) && parv[1] && *parv[1] == 'l')
+	/* Why would normal users need to know all this? */
+	if (!IsOper(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		return 0;
+	}
+
+	if (parv[1] && *parv[1] == 'l')
 	{
 		sendto_realops("%s did a DNS cache list", sptr->name);
 		for (cp = cachetop; cp; cp = cp->list_next)
@@ -1667,7 +1674,7 @@ int m_dns(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 		return 2;
 	}
-	if (IsOper(sptr) && parv[1] && *parv[1] == 'i')
+	if (parv[1] && *parv[1] == 'i')
 	{
 		int i;
 		/* Display nameserver list */

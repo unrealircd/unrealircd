@@ -2579,3 +2579,7 @@ seen. gmtime warning still there
 - Added comment to 'Install as a service' option in installer to help n00bs a bit.
 - Made win32 work again (broke it by /module patch 30 minutes ago).
 - Fixed a snomask issue reported by Magnet (#0001354).
+- Added oper::maxlogins which allows you to limit the number of concurrent session
+  with the same oper block. Suggested by kain.
+- Made /dns oper-only (the ircd command, not your client /dns command :p).
+- Various help.conf fixes. Reported by nukie (#0001373).

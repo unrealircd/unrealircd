@@ -675,6 +675,7 @@ struct User {
 #ifdef	LIST_DEBUG
 	aClient *bcptr;
 #endif
+	char *operlogin;	/* Only used if person is/was opered, used for oper::maxlogins */
 	struct {
 		time_t nick_t;
 		unsigned char nick_c;
@@ -995,6 +996,7 @@ struct _configitem_oper {
 	ConfigItem_class *class;
 	ConfigItem	 *from;
 	long		 oflags;
+	int			maxlogins;
 };
 
 struct _configitem_oper_from {
