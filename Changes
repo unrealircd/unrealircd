@@ -2777,3 +2777,5 @@ seen. gmtime warning still there
   AngryWolf (#0000863)
 - Added can_setq/q for regulating which opers can set umode +q, requested by cfreak202
   (#0000478)
+- Added HOOKTYPE_TKL_EXCEPT (arg: cptr, tkline) which is called from find_tkline_match
+  and find_tkline_match_zap. This can be used to add custom TKL exceptions.

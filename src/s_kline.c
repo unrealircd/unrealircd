@@ -320,6 +320,7 @@ int  find_tkline_match(aClient *cptr, int xx)
 	int index;
 	if (IsServer(cptr) || IsMe(cptr))
 		return -1;
+	Hook *tmphook;
 
 	nowtime = TStime();
 	chost = cptr->sockhost;
@@ -359,6 +360,10 @@ int  find_tkline_match(aClient *cptr, int xx)
 		if (!match(excepts->mask, host) || !match(excepts->mask, host2))
 			return 1;		
 	}
+
+	for (tmphook = Hooks[HOOKTYPE_TKL_EXCEPT]; tmphook; tmphook = tmphook->next)
+		if (tmphook->func.intfunc(cptr, lp) > 0)
+			return 1;
 	
 	if ((lp->type & TKL_KILL) && (xx != 2))
 	{
@@ -467,9 +472,10 @@ int  find_tkline_match_zap(aClient *cptr)
 	TS   nowtime;
 	char msge[1024];
 	ConfigItem_except *excepts;
+	Hook *tmphook;
+	
 	if (IsServer(cptr) || IsMe(cptr))
 		return -1;
-
 
 	nowtime = TStime();
 	cip = (char *)Inet_ia2p(&cptr->ip);
@@ -487,6 +493,10 @@ int  find_tkline_match_zap(aClient *cptr)
 					if (!match(excepts->mask, cip))
 						return -1;		
 				}
+				for (tmphook = Hooks[HOOKTYPE_TKL_EXCEPT]; tmphook; tmphook = tmphook->next)
+					if (tmphook->func.intfunc(cptr, lp) > 0)
+						return -1;
+
 				ircstp->is_ref++;
 				ircsprintf(msge,
 				    "ERROR :Closing Link: [%s] Z:Lined (%s)\r\n",
