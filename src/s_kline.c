@@ -440,38 +440,41 @@ int  find_tkline_match(aClient *cptr, int xx)
 		if (lp->type & TKL_GLOBAL)
 		{
 			ircstp->is_ref++;
-			sendto_one(cptr,
-				":%s NOTICE %s :*** You are %s from %s (%s)",
-					me.name, cptr->name,
-					(lp->expire_at ? "banned" : "permanently banned"),
-					ircnetwork, lp->reason);
+			if (GLINE_ADDRESS)
+				sendto_one(cptr, ":%s NOTICE %s :*** You are %s from %s (%s)"
+					   " Email %s for more information.",
+					   me.name, cptr->name,
+					   (lp->expire_at ? "banned" : "permanently banned"),
+					   ircnetwork, lp->reason, GLINE_ADDRESS);
+			else
+				sendto_one(cptr, ":%s NOTICE %s :*** You are %s from %s (%s)",
+					   me.name, cptr->name,
+					   (lp->expire_at ? "banned" : "permanently banned"),
+					   ircnetwork, lp->reason);
 			ircsprintf(msge, "User has been %s from %s (%s)",
-				(lp->expire_at ? "banned" : "permanently banned"),
-				ircnetwork, lp->reason);
-			return (exit_client(cptr, cptr, &me,
-				msge));
+				   (lp->expire_at ? "banned" : "permanently banned"),
+				   ircnetwork, lp->reason);
+			return (exit_client(cptr, cptr, &me, msge));
 		}
 		else
 		{
 			ircstp->is_ref++;
-			sendto_one(cptr,
-				":%s NOTICE %s :*** You are %s from %s (%s)",
-					me.name, cptr->name,
-					(lp->expire_at ? "banned" : "permanently banned"),
-				me.name, lp->reason);
+			sendto_one(cptr, ":%s NOTICE %s :*** You are %s from %s (%s)"
+				   " Email %s for more information.",
+				   me.name, cptr->name,
+				   (lp->expire_at ? "banned" : "permanently banned"),
+				   me.name, lp->reason, KLINE_ADDRESS);
 			ircsprintf(msge, "User is %s (%s)",
-				(lp->expire_at ? "banned" : "permanently banned"),
-				lp->reason);
-			return (exit_client(cptr, cptr, &me,
-				msge));
+				   (lp->expire_at ? "banned" : "permanently banned"),
+				   lp->reason);
+			return (exit_client(cptr, cptr, &me, msge));
 
 		}
 	}
 	if (lp->type & TKL_ZAP)
 	{
 		ircstp->is_ref++;
-		ircsprintf(msge,
-		    "Z:lined (%s)",lp->reason);
+		ircsprintf(msge, "Z:lined (%s)",lp->reason);
 		return exit_client(cptr, cptr, &me, msge);
 	}
 

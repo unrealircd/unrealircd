@@ -1214,6 +1214,9 @@ int stats_set(aClient *sptr, char *para)
 		CLOAK_KEYCRC);
 	sendto_one(sptr, ":%s %i %s :kline-address: %s", me.name, RPL_TEXT,
 	    sptr->name, KLINE_ADDRESS);
+	if (GLINE_ADDRESS)
+		sendto_one(sptr, ":%s %i %s :gline-address: %s", me.name, RPL_TEXT,
+		    sptr->name, GLINE_ADDRESS);
 	sendto_one(sptr, ":%s %i %s :modes-on-connect: %s", me.name, RPL_TEXT,
 	    sptr->name, get_modestr(CONN_MODES));
 	sendto_one(sptr, ":%s %i %s :modes-on-oper: %s", me.name, RPL_TEXT,

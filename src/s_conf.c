@@ -1452,6 +1452,7 @@ void	free_iConf(aConfiguration *i)
 {
 	ircfree(i->name_server);
 	ircfree(i->kline_address);
+	ircfree(i->gline_address);
 	ircfree(i->auto_join_chans);
 	ircfree(i->oper_auto_join_chans);
 	ircfree(i->oper_only_stats);
@@ -6337,6 +6338,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->ce_varname, "kline-address")) {
 			ircstrdup(tempiConf.kline_address, cep->ce_vardata);
 		}
+		if (!strcmp(cep->ce_varname, "gline-address")) {
+			ircstrdup(tempiConf.gline_address, cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "modes-on-connect")) {
 			tempiConf.conn_modes = (long) set_usermode(cep->ce_vardata);
 		}
@@ -6754,6 +6758,23 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			else if (!match("*@unrealircd.com", cep->ce_vardata) || !match("*@unrealircd.org",cep->ce_vardata) || !match("unreal-*@lists.sourceforge.net",cep->ce_vardata)) 
 			{
 				config_error("%s:%i: set::kline-address may not be an UnrealIRCd Team address",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++; continue;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "gline-address")) {
+			CheckNull(cep);
+			CheckDuplicate(cep, gline_address, "gline-address");
+			if (!strchr(cep->ce_vardata, '@') && !strchr(cep->ce_vardata, ':'))
+			{
+				config_error("%s:%i: set::gline-address must be an e-mail or an URL",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+				continue;
+			}
+			else if (!match("*@unrealircd.com", cep->ce_vardata) || !match("*@unrealircd.org",cep->ce_vardata) || !match("unreal-*@lists.sourceforge.net",cep->ce_vardata)) 
+			{
+				config_error("%s:%i: set::gline-address may not be an UnrealIRCd Team address",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++; continue;
 			}

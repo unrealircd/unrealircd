@@ -91,6 +91,7 @@ struct zConfiguration {
 	char throttle_count;
 #endif
 	char *kline_address;
+	char *gline_address;
 	long conn_modes;
 	long oper_modes;
 	char *oper_snomask;
@@ -151,7 +152,8 @@ struct zConfiguration {
 extern MODVAR aConfiguration iConf;
 #endif
 
-#define KLINE_ADDRESS		iConf.kline_address
+#define KLINE_ADDRESS			iConf.kline_address
+#define GLINE_ADDRESS			iConf.gline_address
 #define CONN_MODES			iConf.conn_modes
 #define OPER_MODES			iConf.oper_modes
 #define OPER_SNOMASK			iConf.oper_snomask
@@ -268,6 +270,7 @@ struct SetCheck {
 	unsigned has_throttle_connections:1;
 #endif
 	unsigned has_kline_address:1;
+	unsigned has_gline_address:1;
 	unsigned has_modes_on_connect:1;
 	unsigned has_modes_on_oper:1;
 	unsigned has_snomask_on_connect:1;

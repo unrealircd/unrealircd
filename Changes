@@ -486,3 +486,5 @@
 - Fixed alloca warning @ Linux (post-3.2.2)
 - Numeric audit: 15 small changes (int/long mismatches etc). This might have fixed some
   bugs on architectures where 'long' and 'int' have different sizes (eg: opteron).
+- Added a set::gline-address which works like set::kline-address (#0001298) suggested by
+  Bugz.
