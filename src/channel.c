@@ -2551,7 +2551,11 @@ static void sub1_from_channel(chptr)
 	Ban *ban;
 	Link *lp;
 
-	if (--chptr->users <= 0)
+        /* Bad. Bad. Bad. chptr->users is unsigned
+         * someone doesn't remember what -- does when
+         * preceding a variable.
+        if (--chptr->users <= 0) */
+        if (chptr->users-- == 0)
 	{
 		/*
 		 * Now, find all invite links from channel structure
@@ -3992,7 +3996,9 @@ void send_list(aClient *cptr, int numsend)
 				else
 					strcat(modebuf, "]");
 #endif
+#ifndef NO_OPEROVERRIDE
 				if (!OPCanOver(cptr))
+#endif
 					sendto_one(cptr,
 					    rpl_str(RPL_LIST), me.name,
 					    cptr->name,
@@ -4006,6 +4012,7 @@ void send_list(aClient *cptr, int numsend)
 					    ShowChannel(cptr,
 					    chptr) ? (chptr->topic ?
 					    chptr->topic : "") : "");
+#ifndef NO_OPEROVERRIDE
 				else
 					sendto_one(cptr,
 					    rpl_str(RPL_LIST), me.name,
@@ -4015,6 +4022,7 @@ void send_list(aClient *cptr, int numsend)
 					    modebuf,
 #endif					    
 					    (chptr->topic ? chptr->topic : ""));
+#endif
 				numsend--;
 			}
 		else

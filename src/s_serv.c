@@ -2772,6 +2772,8 @@ int  m_help(cptr, sptr, parc, parv)
 		}
 		if (message[0] == '!')
 			message++;
+		if (BadPtr(message))
+			return 0;
 		sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL,
 		    parv[0], MSG_HELP, TOK_HELP, "%s", message);
 		sendto_umode(UMODE_HELPOP, "*** HelpOp -- from %s (HelpOp): %s",
@@ -2796,6 +2798,8 @@ int  m_help(cptr, sptr, parc, parv)
 				return 0;
 		}
 
+		if (BadPtr(message))
+			return 0;
 		s = make_nick_user_host(cptr->name, cptr->user->username,
 		    cptr->user->realhost);
 		for (tmpl = helpign; tmpl; tmpl = tmpl->next)

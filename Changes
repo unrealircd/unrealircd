@@ -752,3 +752,31 @@ being bounced, so we're not sure why it happens.
 ===================================
 
 *** Unreal 3.1.5 Released ***
+
+[ Unreal 3.1.5.1 ]
+--------------------------------------------------
+Had I only known what I was getting myself into...
+--------------------------------------------------
+
+Fixed a "bug" too stupid to be listed here. No, I
+didn't introduce it, and apparently it has existed
+since pre-3.0. *shudder*
+--Luke
+===================================
+
+Fixed bug with "empty" channels showing up in list with
+60 something odd thousand users in it. (found by codemastr)
+--Luke
+===================================
+
+Fixed compilation error when NO_OPEROVERRIDE is defined,
+reported by Joe.
+--Luke
+===================================
+
+Ummm, yea, you want to upgrade. There's a, um, bug that
+probably isn't a good thing
+--Luke
+===================================
+
+*** Unreal 3.1.5.1 Released ***

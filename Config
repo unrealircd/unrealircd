@@ -11,7 +11,7 @@
 # distribution without the author's prior consent.
 #
 # $Id$
-IRCD_VERSION="Unreal3.1.5 Valek"
+IRCD_VERSION="Unreal3.1.5.1 Valek"
 CONF_DATE=`date`
 LAST_VERSION="very very old"
 #
