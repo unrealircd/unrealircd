@@ -148,6 +148,7 @@ aCtab cFlagTab[] = {
 #ifdef STRIPBADWORDS
 	{MODE_STRIPBADWORDS, 'G', 0},	/* no badwords */
 #endif
+	{MODE_NOCTCP,	     'C', 0},   /* no CTCPs */
 	{0x0, 0x0, 0x0}
 };
 #endif
@@ -630,7 +631,7 @@ int  is_chanprot(cptr, chptr)
 #define CANNOT_SEND_NOPRIVMSGS 2
 #define CANNOT_SEND_NOCOLOR 3
 #define CANNOT_SEND_BAN 4
-// #define CAN_SEND_STRIP 5
+#define CANNOT_SEND_NOCTCP 5
 
 int  can_send(cptr, chptr, msgtext)
 	aClient *cptr;
@@ -661,6 +662,12 @@ int  can_send(cptr, chptr, msgtext)
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 	    CHFL_HALFOP | CHFL_CHANPROT))))
 		return (CANNOT_SEND_MODERATED);
+
+	if (chptr->mode.mode & MODE_NOCTCP &&
+            (!lp
+            || !(lp->flags & (CHFL_CHANOP | CHFL_CHANOWNER | CHFL_CHANPROT))))
+	    	if (msgtext[0] == 1 && strncmp(&msgtext[1], "ACTION ", 7))
+		   return (CANNOT_SEND_NOCTCP);
 
 	/* Makes opers able to talk thru bans -Stskeeps suggested by The_Cat */
 	if (IsOper(cptr))
@@ -1573,6 +1580,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 #ifdef STRIPBADWORDS
 	  case MODE_STRIPBADWORDS:
 #endif
+	  case MODE_NOCTCP:
 	  case MODE_NOINVITE:
 		setthephuckingmode:
 		  /* +sp bugfix.. */

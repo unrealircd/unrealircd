@@ -1686,6 +1686,7 @@ static int m_message(cptr, sptr, parc, parv, notice)
 		"No external channel messages",
 		"Colour is not permitted in this channel",
 		"You are banned",
+		"CTCPs are not permitted in this channel",
 		NULL
 	};
 

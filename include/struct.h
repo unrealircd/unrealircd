@@ -1026,6 +1026,7 @@ struct Channel	{
 #ifdef STRIPBADWORDS
 #define MODE_STRIPBADWORDS	0x8000000
 #endif
+#define MODE_NOCTCP		0x10000000
 #define is_halfop is_half_op
 /*
  * mode flags which take another parameter (With PARAmeterS)
