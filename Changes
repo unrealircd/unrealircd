@@ -1332,3 +1332,4 @@ seen. gmtime warning still there
 - Included larne's /who patch, adding a multitude of symbols? :P
 - Split 005 and 105 up in order to conform to the RFC1459 limit of 15 parameters per
   command
+- Failsafe check (to be removed again) in s_bsd.c

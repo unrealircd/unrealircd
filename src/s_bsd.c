@@ -1616,7 +1616,11 @@ int  read_message(time_t delay, fdlist *listp)
 			}
 			if ((cptr->fd >= 0) && (DBufLength(&cptr->sendQ) || IsConnecting(cptr) ||
 			    (DoList(cptr) && IsSendable(cptr))))
+			{
+				if (cptr->fd <= 0)
+					abort();
 				FD_SET(cptr->fd, &write_set);
+			}
 		}
 
 #ifndef _WIN32
