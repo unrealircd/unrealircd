@@ -132,13 +132,13 @@ aClient *make_client(aClient *from, aClient *servr)
 	cptr->status = STAT_UNKNOWN;
 	cptr->fd = -1;
 	
-	cptr->passwd = NULL;
 	(void)strcpy(cptr->username, "unknown");
 	if (size == CLIENT_LOCAL_SIZE)
 	{
 		cptr->since = cptr->lasttime =
 		    cptr->lastnick = cptr->firsttime = TStime();
 		cptr->class = NULL;
+		cptr->passwd = NULL;
 		cptr->sockhost[0] = '\0';
 		cptr->buffer[0] = '\0';
 		cptr->authfd = -1;
