@@ -2576,9 +2576,11 @@ void	validate_configuration(void)
 	ConfigItem_except *except_ptr;
 	ConfigItem_ban *ban_ptr;
 	ConfigItem_link *link_ptr;
+	ConfigItem_vhost *vhost_ptr;
 	ConfigItem_log *log_ptr;
 	ConfigItem t;
 	short hide_host = 1;
+	char *s;
 	struct in_addr in;
 	
 	/* Let us validate dynconf first */
@@ -2754,6 +2756,7 @@ void	validate_configuration(void)
 		if (!except_ptr->mask) {
 			Warning("except mask missing. Deleting except {} block");
 			t.next = del_ConfigItem((ConfigItem *)except_ptr, (ConfigItem **)&conf_except);
+			MyFree(except_ptr);
 			except_ptr = (ConfigItem_except *)&t;
 		}
 	}
@@ -2761,7 +2764,9 @@ void	validate_configuration(void)
 	{
 		if (!ban_ptr->mask) {
 			Warning("ban mask missing");
+			ircfree(ban_ptr->reason);
 			t.next = del_ConfigItem((ConfigItem *)ban_ptr, (ConfigItem **)&conf_ban);
+			MyFree(ban_ptr);
 			ban_ptr = (ConfigItem_ban *)&t;
 		}
 	}	
@@ -2795,6 +2800,31 @@ void	validate_configuration(void)
 				Error("tld %s::motd is missing", tld_ptr->mask);
 		}
 	}
+	for (vhost_ptr = conf_vhost; vhost_ptr; vhost_ptr = (ConfigItem_vhost *)vhost_ptr->next) {
+		for (s = vhost_ptr->virthost; *s; s++)
+		{
+			if (!isallowed(*s)) {
+				ConfigItem_oper_from *vhost_from;
+				Warning("vhost::vhost %s is not valid. Deleting vhost {} block", vhost_ptr->virthost);
+				ircfree(vhost_ptr->login);
+				ircfree(vhost_ptr->virthost);
+				ircfree(vhost_ptr->password);
+				for (vhost_from = (ConfigItem_oper_from *) vhost_ptr->from; vhost_from; vhost_from = (ConfigItem_oper_from *) vhost_from->next)
+				{
+					ircfree(vhost_from->name);
+					t.next = del_ConfigItem((ConfigItem *)vhost_from, (ConfigItem **)&vhost_ptr->from);
+					MyFree(vhost_from);
+					vhost_from = (ConfigItem_oper_from *) &t;
+				}
+				t.next = del_ConfigItem((ConfigItem *)vhost_ptr, (ConfigItem **)&conf_vhost);
+				MyFree(vhost_ptr);
+				vhost_ptr = (ConfigItem_vhost *)&t;
+				break;
+			}
+		}
+	}
+
+				
 	/* No log? No problem! Make a simple default one */
 	if (!conf_log) {
 		log_ptr = MyMallocEx(sizeof(ConfigItem_log));
