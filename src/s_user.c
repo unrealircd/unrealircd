@@ -2821,7 +2821,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			    lp = lp->next)
 			{
 				chptr = lp->value.chptr;
-				if (IsAnOper(sptr) || ShowChannel(sptr, chptr) || (acptr == sptr))
+				if (!IsServices(sptr) && (IsAnOper(sptr) || ShowChannel(sptr, chptr) || (acptr == sptr)))
 				{
 					if (len + strlen(chptr->chname)
 					    > (size_t)BUFSIZE - 4 - mlen)

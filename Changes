@@ -97,3 +97,4 @@
 - Removed the old chmode +x = +c and +I = +V support (3.x use +cV and 2.1.7 is obsolete)
 - Implimented except socks {} and tld {}
 - Removed the old read_tlines code and made /stats t show tld {} blocks
+- Fixed bug with /whois showing +S user channels (ChanServ)

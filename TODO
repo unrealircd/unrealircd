@@ -168,3 +168,17 @@ InTe[_:#roxnet> -oxygen.phrozen.org- *** Global -- from Irc.LinuxFreakz.Net:
        /whois shows what channels +S are in
 * codemastr - Tue Jan 03 2001 - 1 - [ Idea ]
 	Add /kill logging option suggested by Cerb
+
+* stskeeps - Tue Jan  9 2001 - 1 Idea
+	limit whowas outputs -hedge
+* stskeeps - Wed Jan 10 2001 - 1 Idea
+  -     unknown mode char only once per command
+<GiNArAaH> when i whoised a user
+<GiNArAaH> who was on the same server
+<GiNArAaH> as the one i was on
+<GiNArAaH> there was no idle time
+<Stskeeps> was he a ircop?
+<GiNArAaH> no
+<Stskeeps> were you?
+ωνω Hesiod [~hesiod@rox-22407.dialup.mindspring.com] has joined #UnrealIRCD
+<GiNArAaH> no

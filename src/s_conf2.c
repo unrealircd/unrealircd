@@ -300,32 +300,6 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 						filename, linenumber);
 					break;
 				}
-/*
-				if (!strcmp(curce->ce_varname, "include"))
-				{
-					ConfigFile	*cfptr;
-
-					if (!curce->ce_vardata)
-					{
-						config_error("%s:%i Ignoring \"include\": No filename given\n",
-							filename, linenumber);
-						config_entry_free(curce);
-						curce = NULL;
-						continue;
-					}
-					if (strlen(curce->ce_vardata) > 255)
-						curce->ce_vardata[255] = '\0';
-					cfptr = config_load(curce->ce_vardata);
-					if (cfptr)
-					{
-						lastcf->cf_next = cfptr;
-						lastcf = cfptr;
-					}
-					config_entry_free(curce);
-					curce = NULL;
-					continue;
-				}
-*/
 				*lastce = curce;
 				lastce = &(curce->ce_next);
 				curce->ce_fileposend = (ptr - confdata);
