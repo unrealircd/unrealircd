@@ -667,7 +667,7 @@ nextstep:
 				    get_client_name(cptr, FALSE),
 				    bconf->reason ? bconf->reason : "no reason");
 
-			if (killflag)
+			if (killflag && bconf)
 			{
 				if (bconf->reason)
 				{
