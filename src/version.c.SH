@@ -96,6 +96,7 @@ char *unrealcredits[] =
 	"Andy Hansis - irc.technerd.net, Crimson - www.n00bstories.com",
 	"Devin Reams, Cleggo - irc.ugcentral.net, Tillo - irc.OSirc.net,",
 	"Matthew Burdine - irc.owns.us, Philip Veale - flame.tiefighter.org,",
+	"Latinus - irc.lokanova.com, Vincent Guesnard - irc.rs2i.net,",
 	"Windfyre IRC Network - irc.windfyre.net",
 	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-[Hosting]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=",
 	"Phil Veale - email@phillipveale.com - http://www.tiefighter.org",

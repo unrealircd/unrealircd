@@ -3237,3 +3237,4 @@ This is the 3.2 fixes branch.
 - Added /who +i (search by IP) and /who +I (show IP), oper only.
 - Made it so /who +m doesn't default to /who if a user uses modes they aren't allowed to
   use (#0001858) reported by Bugz
+- Added a couple donators to /credits
