@@ -2160,18 +2160,23 @@ set {
   Defines the prefix that will be used on hiddenhosts (+x). This is usually three 
   or four letters representing the network name.</p>
 <p><font class="set">set::hosts::local &lt;locop-host-name&gt;;</font><br>
-  Defines the hostname that will be assigned to local opers when they set +x.</p>
+  Defines the hostname that will be assigned to local opers when they set +x. You may
+  optionally specify a username@host for this value.</p>
 <p><font class="set">set::hosts::global &lt;globop-host-name&gt;;</font><br>
   Defines the hostname that will be assigned to global operators when they set 
-  +x.</p>
+  +x. You may optionally specify a username@host for this value.</p>
 <p><font class="set">set::hosts::coadmin &lt;coadmin-host-name&gt;;</font><br>
-  Sets the hostname that will be assigned to co-admins when they set +x.</p>
+  Sets the hostname that will be assigned to co-admins when they set +x. You may
+  optionally specify a username@host for this value.</p>
 <p><font class="set">set::hosts::admin &lt;admin-host-name&gt;;</font><br>
-  Defines the hostname that will be set for admins when they set +x.</p>
+  Defines the hostname that will be set for admins when they set +x. You may
+  optionally specify a username@host for this value.</p>
 <p><font class="set">set::hosts::servicesadmin &lt;servicesadmin-host-name&gt;;</font><br>
-  Sets the hostname that will be given to services-admins when they set +x.</p>
+  Sets the hostname that will be given to services-admins when they set +x. You may
+  optionally specify a username@host for this value.</p>
 <p><font class="set">set::hosts::netadmin &lt;netadmin-host-name&gt;;</font><br>
-  Sets the hostname that will be given to netadmins when they set +x.</p>
+  Sets the hostname that will be given to netadmins when they set +x. You may
+  optionally specify a username@host for this value.</p>
 <p><font class="set">set::hosts::host-on-oper-up &lt;yes/no&gt;;</font><br>
   If set to yes, the H/get_host flag will be honored and +x will be automatically 
   set at /oper. If set to no, the user must set +x manually to receive the oper 

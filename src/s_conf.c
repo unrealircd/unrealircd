@@ -6489,6 +6489,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "hosts")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
+				char *c, *host;
 				if (!cepp->ce_vardata)
 				{
 					config_error("%s:%i: set::hosts item without value",
@@ -6525,6 +6526,60 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					errors++;
 					continue;
 
+				}
+				if ((c = strchr(cepp->ce_vardata, '@')))
+				{
+					char *tmp;
+					if (!(*(c+1)) || (c-cepp->ce_vardata) > USERLEN ||
+					    c == cepp->ce_vardata)
+					{
+						config_error("%s:%i: illegal value for set::hosts::%s",
+							     cepp->ce_fileptr->cf_filename,
+							     cepp->ce_varlinenum, 
+							     cepp->ce_varname);
+						errors++;
+						continue;
+					}
+					for (tmp = cepp->ce_vardata; tmp != c; tmp++)
+					{
+						if (*tmp == '~' && tmp == cepp->ce_vardata)
+							continue;
+						if (!isallowed(*tmp))
+							break;
+					}
+					if (tmp != c)
+					{
+						config_error("%s:%i: illegal value for set::hosts::%s",
+							     cepp->ce_fileptr->cf_filename,
+							     cepp->ce_varlinenum, 
+							     cepp->ce_varname);
+						errors++;
+						continue;
+					}
+					host = c+1;
+				}
+				else
+					host = cepp->ce_vardata;
+				if (strlen(host) > HOSTLEN)
+				{
+					config_error("%s:%i: illegal value for set::hosts::%s",
+						     cepp->ce_fileptr->cf_filename,
+						     cepp->ce_varlinenum, 
+						     cepp->ce_varname);
+					errors++;
+					continue;
+				}
+				for (; *host; host++)
+				{
+					if (!isallowed(*host) && *host != ':')
+					{
+						config_error("%s:%i: illegal value for set::hosts::%s",
+							     cepp->ce_fileptr->cf_filename,
+							     cepp->ce_varlinenum, 
+							     cepp->ce_varname);
+						errors++;
+						continue;
+					}
 				}
 			}
 		}

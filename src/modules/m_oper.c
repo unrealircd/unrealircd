@@ -270,7 +270,19 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 
 		sptr->oflag = aconf->oflags;
 		if ((aconf->oflags & OFLAG_HIDE) && iNAH && !BadPtr(host)) {
-			iNAH_host(sptr, host);
+			char *c;
+			char *vhost = host;
+
+			if ((c = strchr(host, '@')))
+			{
+				vhost =	c+1;
+				strncpy(sptr->user->username, host, c-host);
+				sptr->user->username[c-host] = 0;
+				sendto_serv_butone_token(NULL, sptr->name, MSG_SETIDENT, 
+							 TOK_SETIDENT, "%s", 
+							 sptr->user->username);
+			}
+			iNAH_host(sptr, vhost);
 			SetHidden(sptr);
 		} else
 		if (IsHidden(sptr) && !sptr->user->virthost) {
