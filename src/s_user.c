@@ -802,7 +802,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			 * - Wizzu
 			 */
 			else
-				sptr->passwd[0] = '\0';
+			MyFree(sptr->passwd);
 		}
 
 		/*
@@ -962,6 +962,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	 */
 	if (MyConnect(sptr))
 	{
+	if (sptr->passwd[0]) 
 		if (sptr->passwd[0] && (nsptr = find_person(NickServ, NULL)))
 			sendto_one(nsptr, ":%s PRIVMSG %s@%s :IDENTIFY %s",
 			    sptr->name, NickServ, SERVICES_NAME, sptr->passwd);
@@ -980,9 +981,10 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		}
 	}
 
-	if (MyConnect(sptr) && !BadPtr(sptr->passwd))
-		bzero(sptr->passwd, sizeof(sptr->passwd));
-
+	if (MyConnect(sptr) && !BadPtr(sptr->passwd)) {
+		MyFree(sptr->passwd);
+		ircd_log("%s freed", sptr->passwd);
+	}
 
 	return 0;
 }
@@ -3988,7 +3990,7 @@ int  m_pass(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	char *password = parc > 1 ? parv[1] : NULL;
-
+	int PassLen = 0;
 	if (BadPtr(password))
 	{
 		sendto_one(cptr, err_str(ERR_NEEDMOREPARAMS),
@@ -4001,7 +4003,13 @@ int  m_pass(cptr, sptr, parc, parv)
 		    me.name, parv[0]);
 		return 0;
 	}
-	strncpyzt(cptr->passwd, password, sizeof(cptr->passwd));
+	PassLen = strlen(password);
+	if (cptr->passwd)
+		MyFree(cptr->passwd);
+	if (PassLen > (PASSWDLEN))
+		PassLen = PASSWDLEN;
+	cptr->passwd = MyMalloc(PassLen + 1);
+	strncpyzt(cptr->passwd, password, PassLen +1);
 	return 0;
 }
 

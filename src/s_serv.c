@@ -1109,7 +1109,8 @@ int  m_server_estab(cptr)
 		sendto_ops("Access denied (passwd mismatch) %s", inpath);
 		return exit_client(cptr, cptr, cptr, "Bad Password");
 	}
-	bzero(cptr->passwd, sizeof(cptr->passwd));
+	if (cptr->passwd)
+	MyFree(cptr->passwd);
 #ifndef	HUB
 	for (i = 0; i <= highest_fd; i++)
 		if (local[i] && IsServer(local[i]))

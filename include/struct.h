@@ -866,7 +866,7 @@ struct Client {
 					   ** and after which the connection was
 					   ** accepted.
 					 */
-	char passwd[PASSWDLEN + 1];
+	char *passwd;
 #ifdef DEBUGMODE
 	TS   cputime;
 #endif
