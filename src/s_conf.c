@@ -4366,7 +4366,7 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 				errorcode = regcomp(&expr, word->ce_vardata, REG_ICASE);
 			else
 			{
-				tmpbuf = malloc(strlen(word->ce_vardata) +
+				tmpbuf = MyMalloc(strlen(word->ce_vardata) +
 					 strlen(PATTERN) -1);
 				ircsprintf(tmpbuf, PATTERN, word->ce_vardata);
 				errorcode = regcomp(&expr, tmpbuf, REG_ICASE);
@@ -4374,7 +4374,7 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 			if (errorcode > 0)
 			{
 				errorbufsize = regerror(errorcode, &expr, NULL, 0)+1;
-				errorbuf = malloc(errorbufsize);
+				errorbuf = MyMalloc(errorbufsize);
 				regerror(errorcode, &expr, errorbuf, errorbufsize);
 				config_error("%s:%i: badword::%s contains an invalid regex: %s",
 					word->ce_fileptr->cf_filename,
@@ -5901,7 +5901,7 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
                         if (errorcode > 0)
                         {
                                 errorbufsize = regerror(errorcode, &expr, NULL, 0)+1;
-                                errorbuf = malloc(errorbufsize);
+                                errorbuf = MyMalloc(errorbufsize);
                                 regerror(errorcode, &expr, errorbuf, errorbufsize);
                                 config_error("%s:%i: alias::format contains an invalid regex: %s",
  					cep->ce_fileptr->cf_filename,

@@ -1054,7 +1054,7 @@ struct hostent *get_res(char *lp,long id)
 	a = proc_answer(rptr, hptr, buf, buf + rc);
 	if (a == -1)
 	{
-		sendto_ops("Bad hostname returned from %s for %s",
+		sendto_snomask(SNO_JUNK, "Bad hostname returned from %s for %s",
 		    inet_ntoa(sin.sin_addr),
 		    Inet_ia2p((struct IN_ADDR *)&rptr->he.h_addr));
 		Debug((DEBUG_DNS, "Bad hostname returned from %s for %s",

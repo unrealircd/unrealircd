@@ -279,7 +279,7 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 				int i = 0, j = 0, k = 1;
 				char output[501];
 				char nums[4];
-				char *current = malloc(strlen(parv[1])+1);
+				char *current = MyMalloc(strlen(parv[1])+1);
 				char *xparv[3];
 				bzero(current, strlen(parv[1])+1);
 				bzero(output, sizeof output);

@@ -779,7 +779,7 @@ void	add_throttling_bucket(struct IN_ADDR *in)
 	int	hash;
 	struct	ThrottlingBucket	*n;
 	
-	n = malloc(sizeof(struct ThrottlingBucket));	
+	n = MyMalloc(sizeof(struct ThrottlingBucket));	
 	n->next = n->prev = NULL; 
 	bcopy(in, &n->in, sizeof(struct IN_ADDR));
 	n->since = TStime();

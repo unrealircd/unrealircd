@@ -2035,3 +2035,4 @@ seen. gmtime warning still there
 - Added allow::options::ssl and allow::options::nopasscont, requested by iguy and Scytale.
 - Removed usermode +b from docs (been gone for a long time) (#0000798) reported by Rocko
 - Fixed an SQLINE bug
+- code cleanup / misc minor bugfixes (MyMalloc, oper msgs)

@@ -62,7 +62,7 @@ Module *Module_make(ModuleHeader *header,
        );
 #ifdef UNDERSCORE
 void *obsd_dlsym(void *handle, char *symbol) {
-    char *obsdsymbol = (char*)malloc(strlen(symbol) + 2);
+    char *obsdsymbol = (char*)MyMalloc(strlen(symbol) + 2);
     void *symaddr = NULL;
 
     if (obsdsymbol) {
@@ -127,7 +127,7 @@ char  *Module_Create(char *path_)
 
 	if(!strchr(path, '/'))
 	{
-		path = malloc(strlen(path) + 3);
+		path = MyMalloc(strlen(path) + 3);
 		strcpy(path, "./");
 		strcat(path, path_);
 	}

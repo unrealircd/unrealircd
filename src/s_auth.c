@@ -75,7 +75,7 @@ void start_auth(aClient *cptr)
 	}
     if (++OpenFiles >= (MAXCONNECTIONS - 2))
 	{
-		sendto_ops("Can't allocate fd for auth on %s, too many connections.", get_client_name(cptr, TRUE));
+		sendto_ops("Can't allocate fd, too many connections.");
 		CLOSE_SOCK(cptr->authfd);
 		--OpenFiles;
 		cptr->authfd = -1;

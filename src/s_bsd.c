@@ -1045,7 +1045,7 @@ void set_sock_opts(int fd, aClient *cptr)
 			for (*readbuf = '\0'; opt > 0; opt--, s += 3)
 				(void)ircsprintf(s, "%2.2x:", *t++);
 			*s = '\0';
-			sendto_ops("Connection %s using IP opts: (%s)",
+			sendto_realops("Connection %s using IP opts: (%s)",
 			    get_client_name(cptr, TRUE), readbuf);
 		}
 		if (setsockopt(fd, IPPROTO_IP, IP_OPTIONS, (OPT_TYPE *)NULL,
@@ -1820,7 +1820,7 @@ int  read_message(time_t delay, fdlist *listp)
 			if (++OpenFiles >= MAXCLIENTS)
 			{
 				ircstp->is_ref++;
-				sendto_ops("All connections in use. (%s)",
+				sendto_realops("All connections in use. (%s)",
 				    get_client_name(cptr, TRUE));
 #ifndef INET6
 				(void)send(fd,
@@ -2221,7 +2221,7 @@ int  read_message(time_t delay, fdlist *listp)
 			if (fd >= MAXCLIENTS)
 			{
 				ircstp->is_ref++;
-				sendto_ops("All connections in use. (%s)",
+				sendto_realops("All connections in use. (%s)",
 				    get_client_name(cptr, TRUE));
 				(void)send(fd,
 				    "ERROR :All connections in use\r\n", 32, 0);

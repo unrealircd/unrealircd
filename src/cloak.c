@@ -172,7 +172,7 @@ char *hidehost(char *rhost)
 	int		i;
 	char		*p, *q;
 
-	host = malloc(strlen(rhost)+1);
+	host = MyMalloc(strlen(rhost)+1);
 	q = host;
 	for (p = rhost; *p; p++, q++) {
 		*q = tolower(*p);

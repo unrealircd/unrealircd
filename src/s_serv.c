@@ -724,7 +724,7 @@ errlink:
 			    "ERROR :Server %s already exists from %s",
 			    servername,
 			    (ocptr->from ? ocptr->from->name : "<nobody>"));
-			sendto_ops
+			sendto_realops
 			    ("Link %s cancelled, server %s already exists from %s",
 			    get_client_name(acptr, TRUE), servername,
 			    (ocptr->from ? ocptr->from->name : "<nobody>"));
@@ -911,7 +911,7 @@ CMD_FUNC(m_server_remote)
 		    "ERROR :Server %s already exists from %s",
 		    servername,
 		    (ocptr->from ? ocptr->from->name : "<nobody>"));
-		sendto_ops
+		sendto_realops
 		    ("Link %s cancelled, server %s already exists from %s",
 		    get_client_name(acptr, TRUE), servername,
 		    (ocptr->from ? ocptr->from->name : "<nobody>"));
