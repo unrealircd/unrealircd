@@ -268,6 +268,7 @@ int    Module_free(Module *mod)
 			if (cp->child == mod)
 			{
 				DelListItem(mod, p->children);
+				MyFree(cp);
 				/* We can assume there can be only one. */
 				break;
 			}

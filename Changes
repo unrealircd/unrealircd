@@ -1123,3 +1123,4 @@ v- Fixed some bugreport stuff
 - Recoded hooks to work just like events
 - Fixed a listener bug reported by Dragon974
 - Removed some useless tkl code
+- Fixed #0000046 regarding Module_free memory leak
