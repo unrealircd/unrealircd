@@ -730,3 +730,6 @@
   SJOIN code, that if the line doesnt have a " " appeneded, it wont take the
   last users or first for that sake. Hopefully patched SJ3 code for it
 - Added OPT target OPT_SJB64 and OPT_NOT_SJB64
+- Made SSL server<->server work, using __blocking__ sockets (this is only
+  in connect moment thou) -stskeeps
+- Removed 1.0 msg/s when not in HTM

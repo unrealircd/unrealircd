@@ -42,7 +42,7 @@ void init_ctx_server(void)
 
 void init_ctx_client(void)
 {
-	ctx_client = SSL_CTX_new(SSLv2_client_method());
+	ctx_client = SSL_CTX_new(SSLv3_client_method());
 	if (!ctx_client)
 	{
 		ircd_log("Failed to do SSL CTX new client");
@@ -151,74 +151,24 @@ int  ssl_handshake(aClient *cptr)
       -2  = Error doing SSL_connect
       -3  = Try again 
 */
-int  ssl_client_handshake(struct Client *cptr)
+int  ssl_client_handshake(aClient *cptr)
 {
-	int	err = 0;
-	char 	*str = NULL;
-	/* Use client CTX, as we are*/
-	cptr->ssl = (struct SSL *) SSL_new(ctx_client);
+	cptr->ssl = (struct SSL *) SSL_new((SSL_CTX *)ctx_client);
 	if (!cptr->ssl)
 	{
-		sendto_realops("Could not SSL_new for client %s: Error in SSL",
-			get_client_name(cptr, TRUE));
-		return -1;
-	}	
-	
-	/* Set the SSL connection up to bind with cptr->fd */
-	SSL_set_fd((SSL *) cptr->ssl, cptr->fd);
+		sendto_realops("Couldn't SSL_new(ctx_client)");
+		return;
+	}
+	SSL_set_fd((SSL *)cptr->ssl, cptr->fd);
 	SSL_set_connect_state((SSL *)cptr->ssl);
-	err = SSL_connect((SSL *) cptr->ssl);
-	if (err == -1)
+	if (SSL_connect((SSL *)cptr->ssl) <= 0)
 	{
-		sendto_realops("Lost connection to %s:Error in SSL_connect(), %s",
-		    get_client_name(cptr, TRUE), ERR_error_string(ERR_get_error(), NULL));
-		return -2;		    
-	}
-	if (err == 0)
+		sendto_realops("Couldn't SSL_connect");
 		return -2;
-		
-	sendto_ops("%i", err);
-	/* Get the cipher - opt */
-
-	sendto_ops("SSL connection using %s\n",
-	    SSL_get_cipher((SSL *) cptr->ssl));
-
-	/* Get client's certificate (note: beware of dynamic
-	 * allocation) - opt */
-
-	cptr->client_cert =
-	    (struct X509 *)SSL_get_peer_certificate((SSL *) cptr->ssl);
-
-	if (cptr->client_cert != NULL)
-	{
-		sendto_realops("Client certificate:\n");
-
-		str =
-		    X509_NAME_oneline(X509_get_subject_name((X509 *) cptr->
-		    client_cert), 0, 0);
-		CHK_NULL(str);
-		sendto_realops("\t subject: %s\n", str);
-		free(str);
-
-		str =
-		    X509_NAME_oneline(X509_get_issuer_name((X509 *) cptr->
-		    client_cert), 0, 0);
-		CHK_NULL(str);
-		sendto_realops("\t issuer: %s\n", str);
-		free(str);
-
-		/* We could do all sorts of certificate
-		 * verification stuff here before
-		 *        deallocating the certificate. */
-
-		X509_free((X509 *) cptr->client_cert);
 	}
-	else
-	{
-		sendto_realops("Client does not have certificate.\n");
-	}
-	return -1;
-
+	set_non_blocking(cptr);
+	cptr->flags |= FLAGS_SSL;
+	return 1;
 }
 
 /* This is a bit homemade to fix IRCd's cleaning madness -- Stskeeps */
@@ -228,5 +178,34 @@ int	SSL_change_fd(SSL *s, int fd)
 	BIO_set_fd(SSL_get_wbio(s), fd, BIO_NOCLOSE);
 	return 1;
 }
+
+char	*ssl_get_cipher(SSL *ssl)
+{
+	static char buf[400];
+	int bits;
+	SSL_CIPHER *c; 
+	
+	buf[0] = '\0';
+	switch(ssl->session->ssl_version)
+	{
+		case SSL2_VERSION:
+			strcat(buf, "SSLv2"); break;
+		case SSL3_VERSION:
+			strcat(buf, "SSLv3"); break;
+		case TLS1_VERSION:
+			strcat(buf, "TLSv1"); break;
+		default:
+			strcat(buf, "UNKNOWN");
+	}
+	strcat(buf, "-");
+	strcat(buf, SSL_get_cipher(ssl));
+	c = SSL_get_current_cipher(ssl);
+	SSL_CIPHER_get_bits(c, &bits);
+	strcat(buf, "-");
+	strcat(buf, my_itoa(bits));
+	strcat(buf, "bits");
+	return (buf);
+}
+
 
 #endif

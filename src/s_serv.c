@@ -1186,12 +1186,26 @@ int  m_server_estab(cptr)
 	nextping = TStime();
 	(void)find_or_add(cptr->name);
 	if (TRUEHUB == 1)
-		sendto_serv_butone(&me,
-		    ":%s GLOBOPS :%sLink with %s established.", me.name, 
-		    IsSecure(cptr) ? "Secure " : "",
-		    inpath);
-	sendto_locfailops("%sLink with %s established.", 
-		IsSecure(cptr) ? "Secure " : "", inpath);
+	{
+#ifdef USE_SSL
+		if (IsSecure(cptr))
+			sendto_serv_butone(&me,
+			    ":%s GLOBOPS :Secure link with %s established (%s).", me.name, 
+			    inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
+		else
+#endif
+			sendto_serv_butone(&me,
+			    ":%s GLOBOPS :Link with %s established.", me.name, 
+			    inpath);
+	}
+#ifdef USE_SSL
+	if (IsSecure(cptr))
+		sendto_locfailops("Secure Link with %s established (%s).", inpath,
+			(char *) ssl_get_cipher((SSL *)cptr->ssl));
+
+	else
+#endif
+		sendto_locfailops("%sLink with %s established.", inpath);
 	/* Insert here */
 	(void)add_to_client_hash_table(cptr->name, cptr);
 	/* doesnt duplicate cptr->serv if allocted this struct already */

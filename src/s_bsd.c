@@ -971,9 +971,8 @@ static int completed_connection(cptr)
 	if ((cline->options & CONNECT_SSL))
 		if (ssl_client_handshake(cptr) == -2)
 		{
-			sendto_realops("Could not handshake SSL with %s, trying again", get_client_name(cptr, FALSE));
-			cptr->flags |= FLAGS_SSL_HSHAKE;
-			return -2;
+			sendto_realops("Could not handshake SSL with %s", get_client_name(cptr, FALSE));
+			return FALSE;
 		}
 		else
 		{
@@ -1149,7 +1148,7 @@ void close_connection(cptr)
 	/*
 	 * fd remap to keep local[i] filled at the bottom.
 	 */
-#ifdef NO_REMAPPING
+#ifdef DO_REMAPPING
 	if (empty > 0)
 		if ((j = highest_fd) > (i = empty) &&
 		    (local[j]->status != STAT_LOG))
@@ -1919,9 +1918,6 @@ int  read_message(delay, listp)
 			}
 
 			if (DBufLength(&cptr->sendQ) || IsConnecting(cptr) ||
-#ifdef USE_SSL
-			    cptr->flags & FLAGS_SSL_HSHAKE ||
-#endif
 			    (DoList(cptr) && IsSendable(cptr)))
 				FD_SET(i, &write_set);
 		}
@@ -2163,7 +2159,7 @@ int  read_message(delay, listp)
 	{
 		if (!(cptr = local[i]) || IsMe(cptr))
 			continue;
-			
+					
 		if (FD_ISSET(i, &write_set))
 		{
 			int  write_err = 0;
@@ -2174,14 +2170,6 @@ int  read_message(delay, listp)
 			ClearBlocked(cptr);
 			if (IsConnecting(cptr))
 				write_err = completed_connection(cptr);
-#ifdef USE_SSL
-			if (cptr->flags & FLAGS_SSL_HSHAKE)
-			{
-				write_err = completed_connection(cptr);
-				if (write_err == -2)
-					write_err = 0;
-			}
-#endif
 			if (!write_err)
 			{
 				if (DoList(cptr) && IsSendable(cptr))
@@ -2719,7 +2707,8 @@ int  connect_server(aconf, by, hp)
 		return -1;
 	}
 
-	set_non_blocking(cptr->fd, cptr);
+	if (!(aconf->options & CONNECT_SSL))
+		set_non_blocking(cptr->fd, cptr);
 	set_sock_opts(cptr->fd, cptr);
 #ifndef _WIN32
 	(void)signal(SIGALRM, dummy);
