@@ -218,3 +218,5 @@
 - Added infofield in /stats L for clients/listeners
 - Fixed a blocking socket thing
 - Fixed up /stats L bug
+- Changed CONNECTTIMEOUT to 30sec
+- Changed some _more_ credits
