@@ -100,6 +100,7 @@ static LangList langlist[] = {
 	{ "greek",        "gre", LANGAV_ASCII|LANGAV_ISO8859_7 },
 	{ "hebrew",       "heb", LANGAV_ASCII|LANGAV_ISO8859_8I },
 	{ "hungarian",    "hun", LANGAV_ASCII|LANGAV_LATIN2 },
+	{ "icelandic",    "ice", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "italian",      "ita", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "latin1",       "cat,dut,fre,ger,ita,spa,swe", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "latin2",       "hun", LANGAV_ASCII|LANGAV_LATIN2 },
@@ -535,6 +536,11 @@ char latin1=0, latin2=0, chinese=0;
 		/* supplied by Tank */
 		/* ao, Ao, a", A", o", O" */ 
 		charsys_addallowed("Â≈‰ƒˆ÷");
+	}
+	if (latin1 || !strcmp(name, "icelandic"))
+	{
+		/* supplied by Saevar */
+		charsys_addallowed("∆Ê÷ˆ¡·ÕÌ–⁄˙”Û›˝ﬁ˛");
 	}
 
 	/* [LATIN2] */

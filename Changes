@@ -652,3 +652,4 @@
 - Fixed a doc typo, reported by SDF_of_BC.
 - NickChars: Updated polish a bit, and added polish-w1250 which is unfortunately more
   common than real latin2 (iso-8859-2), supplied by k4be as well.
+- NickChars: Added 'icelandic', supplied by Saevar.
