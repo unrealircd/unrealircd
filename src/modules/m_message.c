@@ -270,13 +270,13 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 
 				if (MyClient(sptr))
 				{
-					ret = dospamfilter(sptr, text, newcmd == MSG_NOTICE ? SPAMF_USERNOTICE : SPAMF_USERMSG, acptr->name);
+					ret = dospamfilter(sptr, text, notice, acptr->name);
 					if (ret < 0)
 						return FLUSH_BUFFER;
 				}
 
 				for (tmphook = Hooks[HOOKTYPE_USERMSG]; tmphook; tmphook = tmphook->next) {
-					text = (*(tmphook->func.pcharfunc))(cptr, sptr, acptr, text, (int)(newcmd == MSG_NOTICE ? 1 : 0) );
+					text = (*(tmphook->func.pcharfunc))(cptr, sptr, acptr, text, notice);
 					if (!text)
 						break;
 				}

@@ -302,3 +302,6 @@
   Also linked to a page with an unreal dev package which contains zlib+ssl+curl
   precompiled. This basically means many people no longer need to compile zlib/ssl/curl
   anymore themselves (which is a pain to do and takes a lot of time).
+- Windows: the 'notice' parameter in the usermsg callback was always 0 due some windows/vc
+  weirdness, this also affected spamfilter (so any spamfilters added only at notice
+  and not at msg on windows would not work). Now using the real 'notice' parameter.
