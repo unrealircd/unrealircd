@@ -1348,3 +1348,4 @@ seen. gmtime warning still there
 - Fixed yet another oper count bug caused by SVSO and +H and +O (local oper)
 - Fixed a modes-on-oper bug that could cause a negative invisible and/or oper count if +i
   or +H was specified in modes-on-oper.
+- Fix a minor stupid in m_quit.c.

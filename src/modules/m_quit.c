@@ -127,7 +127,7 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		char *s = comment;
 
-		if (strcmp(prefix_quit, "no"))
+		if (!prefix_quit || strcmp(prefix_quit, "no"))
 			s = ircsprintf(comment, "%s ",
 		    		BadPtr(prefix_quit) ? "Quit:" : prefix_quit);
 
