@@ -2378,9 +2378,16 @@ static int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, ch
                 return (ERR_NOHIDING);
 #endif
 
-        if ((IsOper(sptr) && is_banned(cptr, sptr, chptr)
-            && (chptr->mode.mode & MODE_OPERONLY)))
-                return (ERR_BANNEDFROMCHAN);    /* banned as an ircop at a +O cannot join */
+	/* Admin, Coadmin, Netadmin, and SAdmin can still walk +b in +O */
+        if (IsOper(sptr) && !IsAdmin(sptr) && !IsCoAdmin(sptr) && !IsNetAdmin(sptr)
+	    && !IsSAdmin(sptr) && is_banned(cptr, sptr, chptr)
+            && (chptr->mode.mode & MODE_OPERONLY))
+                return (ERR_BANNEDFROMCHAN);
+
+	/* Only NetAdmin/SAdmin can walk +b in +A */
+	if (IsOper(sptr) && !IsNetAdmin(sptr) && !IsSAdmin(sptr)
+	    && (chptr->mode.mode & MODE_ADMONLY))
+	    	return (ERR_BANNEDFROMCHAN);
 
         for (lp = sptr->user->invited; lp; lp = lp->next)
                 if (lp->value.chptr == chptr)

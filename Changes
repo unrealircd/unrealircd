@@ -1538,3 +1538,4 @@ seen. gmtime warning still there
 - Added src/win32/gplplusssl.rtf for ssl-install script to show during
   install in license - GPL + the notes from openssl
 - Made minor changes to help.conf
+- Fixed +O/+A ban implementation issues
