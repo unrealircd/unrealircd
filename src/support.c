@@ -1822,7 +1822,7 @@ time_t unreal_getfilemodtime(char *filename)
 	struct stat sb;
 	if (stat(filename, &sb))
 		return 0;
-	return sb.st_ctime;
+	return sb.st_mtime;
 #else
 	/* See how much more fun WinAPI programming is??? */
 	FILETIME cTime;
