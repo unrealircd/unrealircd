@@ -294,3 +294,7 @@
   /connect or autoconnect) and was not present in the cache. Reported and traced by sh0
   (#0001976).
 - Fixed compile bug at *NIX caused by ModuleGetErrorStr fix.
+- Improved doc/compiling_win32.txt a lot: now VC7 only, and has instructions on:
+  compiling modules and their (binary) compatability, zip links (zlib), ssl (OpenSSL)...
+  Remote includes (curl and c-ares) instructions still need to be added.
+- Made 'Install as a service' unchecked by default, this should help beginners a lot.
