@@ -737,10 +737,10 @@ int	init_conf2(char *filename)
 	}
 	
 	
-	config_status("Opening config file %s .. ", filename);
+	config_progress("Opening config file %s .. ", filename);
 	if (cfptr = config_load(filename))
 	{
-		config_status("Config file %s loaded without problems",
+		config_progress("Config file %s loaded without problems",
 			filename);
 		i = ConfigParse(cfptr);
 		config_free(cfptr);
