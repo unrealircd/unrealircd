@@ -109,12 +109,12 @@ HWND hwIRCDWnd=NULL;
 HWND hwTreeView;
 HWND hWndMod;
 HANDLE hMainThread = 0;
-UINT WM_TASKBARCREATED;
+UINT WM_TASKBARCREATED, WM_FINDMSGSTRING;
 FARPROC lpfnOldWndProc;
 HMENU hContext;
 OSVERSIONINFO VerInfo;
 char OSName[256];
-
+HWND hFind;
 void TaskBarCreated() {
 	HICON hIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(ICO_MAIN), IMAGE_ICON,16, 16, 0);
 	SysTray.cbSize = sizeof(NOTIFYICONDATA);
@@ -596,6 +596,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		OSName[strlen(OSName)-1] = 0;
 	InitCommonControls();
 	WM_TASKBARCREATED = RegisterWindowMessage("TaskbarCreated");
+	WM_FINDMSGSTRING = RegisterWindowMessage(FINDMSGSTRING);
 	atexit(CleanUp);
 	if(!LoadLibrary("riched20.dll"))
 		LoadLibrary("riched32.dll");
@@ -1196,13 +1197,14 @@ HWND DrawToolbar(HWND hwndParent, UINT iID) {
 		{ 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0}, 0L, 0}
 	};
 		
-	TBBUTTON tbAddButtons[6] = {
+	TBBUTTON tbAddButtons[7] = {
 		{ 0, IDC_BOLD, TBSTATE_ENABLED, TBSTYLE_CHECK, {0}, 0L, 0},
 		{ 1, IDC_UNDERLINE, TBSTATE_ENABLED, TBSTYLE_CHECK, {0}, 0L, 0},
 		{ 2, IDC_COLOR, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0L, 0},
 		{ 3, IDC_BGCOLOR, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0L, 0},
 		{ 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0}, 0L, 0},
 		{ 4, IDC_GOTO, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0L, 0},
+		{ STD_FIND, IDC_FIND, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0L, 0}
 	};
 	hTool = CreateToolbarEx(hwndParent, WS_VISIBLE|WS_CHILD|TBSTYLE_FLAT|TBSTYLE_TOOLTIPS, 
 				IDC_TOOLBAR, 0, HINST_COMMCTRL, IDB_STD_SMALL_COLOR,
@@ -1215,7 +1217,7 @@ HWND DrawToolbar(HWND hwndParent, UINT iID) {
 	tbAddButtons[2].iBitmap += newidx;
 	tbAddButtons[3].iBitmap += newidx;
 	tbAddButtons[5].iBitmap += newidx;
-	SendMessage(hTool, TB_ADDBUTTONS, (WPARAM)6, (LPARAM)&tbAddButtons);
+	SendMessage(hTool, TB_ADDBUTTONS, (WPARAM)7, (LPARAM)&tbAddButtons);
 	return hTool;
 }
 
@@ -1259,10 +1261,55 @@ LRESULT CALLBACK GotoDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
 LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 	HWND hWnd;
 	static FINDREPLACE find;
+	static char findbuf[256];
 	static unsigned char *file;
 	static HWND hTool, hClip, hStatus;
 	static RECT rOld;
 	CHARFORMAT2 chars;
+
+	if (message == WM_FINDMSGSTRING)
+	{
+		FINDREPLACE *fr = (FINDREPLACE *)lParam;
+
+		if (fr->Flags & FR_FINDNEXT)
+		{
+			HWND hRich = GetDlgItem(hDlg, IDC_TEXT);
+			DWORD flags=0;
+			FINDTEXTEX ft;
+			CHARRANGE chrg;
+
+			if (fr->Flags & FR_DOWN)
+				flags |= FR_DOWN;
+			if (fr->Flags & FR_MATCHCASE)
+				flags |= FR_MATCHCASE;
+			if (fr->Flags & FR_WHOLEWORD)
+				flags |= FR_WHOLEWORD;
+			ft.lpstrText = fr->lpstrFindWhat;
+			SendMessage(hRich, EM_EXGETSEL, 0, (LPARAM)&chrg);
+			if (flags & FR_DOWN)
+			{
+				ft.chrg.cpMin = chrg.cpMax;
+				ft.chrg.cpMax = -1;
+			}
+			else
+			{
+				ft.chrg.cpMin = chrg.cpMin;
+				ft.chrg.cpMax = -1;
+			}
+			if (SendMessage(hRich, EM_FINDTEXTEX, flags, (LPARAM)&ft) == -1)
+			{
+				MessageBox(NULL, "Unreal has finished searching the document",
+					"Find", MB_ICONINFORMATION|MB_OK);
+			}
+			else
+			{
+				SendMessage(hRich, EM_EXSETSEL, 0, (LPARAM)&(ft.chrgText));
+				SendMessage(hRich, EM_SCROLLCARET, 0, 0);
+				SetFocus(hRich);
+			}
+		}
+		return TRUE;
+	}
 	switch (message) {
 		case WM_INITDIALOG: {
 			int fd,len;
@@ -1330,12 +1377,16 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 		}
 		case WM_SIZE:
 		{
-			DWORD new_width = LOWORD(lParam);
-			DWORD new_height = HIWORD(lParam);
-			HWND hRich = GetDlgItem(hDlg, IDC_TEXT);
+			DWORD new_width, new_height;
+			HWND hRich;
 			RECT rOldRich;
 			DWORD old_width, old_height;
 			DWORD old_rich_width, old_rich_height;
+			if (hDlg == hFind)
+				return FALSE;
+			new_width =  LOWORD(lParam);
+			new_height = HIWORD(lParam);
+			hRich  = GetDlgItem(hDlg, IDC_TEXT);
 			SendMessage(hStatus, WM_SIZE, 0, 0);
 			SendMessage(hTool, TB_AUTOSIZE, 0, 0);
 			old_width = rOld.right-rOld.left;
@@ -1349,7 +1400,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				old_rich_height+new_height,
 				SWP_NOMOVE|SWP_NOREPOSITION|SWP_NOZORDER);
 			bzero(&rOld, sizeof(RECT));
-			return FALSE;
+			return TRUE;
 		}
 		case WM_NOTIFY:
 			switch (((NMHDR *)lParam)->code) {
@@ -1435,6 +1486,9 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 					case IDC_GOTO:
 						strcpy(lpttt->szText, "Goto");
 						break;
+					case IDC_FIND:
+						strcpy(lpttt->szText, "Find");
+						break;
 				}
 				return (TRUE);
 			}
@@ -1486,11 +1540,31 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				return TRUE;
 			}
 			if (LOWORD(wParam) == IDC_COLOR) 
+			{
 				DialogBoxParam(hInst, "Color", hDlg, (DLGPROC)ColorDLG, (LPARAM)WM_USER+10);
+				return 0;
+			}
 			if (LOWORD(wParam) == IDC_BGCOLOR)
+			{
 				DialogBoxParam(hInst, "Color", hDlg, (DLGPROC)ColorDLG, (LPARAM)WM_USER+11);
+				return 0;
+			}
 			if (LOWORD(wParam) == IDC_GOTO)
+			{
 				DialogBox(hInst, "GOTO", hDlg, (DLGPROC)GotoDLG);
+				return 0;
+			}
+			if (LOWORD(wParam) == IDC_FIND)
+			{
+				static FINDREPLACE fr;
+				bzero(&fr, sizeof(FINDREPLACE));
+				fr.lStructSize = sizeof(FINDREPLACE);
+				fr.hwndOwner = hDlg;
+				fr.lpstrFindWhat = findbuf;
+				fr.wFindWhatLen = 255;
+				hFind = FindText(&fr);
+				return 0;
+			}
 				
 		hWnd = GetDlgItem(hDlg, IDC_TEXT);
 		if (LOWORD(wParam) == IDM_COPY) {
@@ -1638,6 +1712,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			}
 			else
 				EndDialog(hDlg, TRUE);
+			break;
 		}
 		case WM_DESTROY:
 			ChangeClipboardChain(hDlg, hClip);

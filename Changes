@@ -2253,3 +2253,4 @@ seen. gmtime warning still there
 - Added support for editting short motds in the win32 editor.
 - Added a goto button on the win32 editor toolbar.
 - Made the win32 editor window maximizable.
+- Added a find text feature to the win32 editor.
