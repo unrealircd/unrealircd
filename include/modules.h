@@ -40,7 +40,7 @@ typedef char			(*cFP)();	/* char * function pointer */
 #else
 #define irc_dlopen dlopen
 #define irc_dlclose dlclose
-#if defined(__OpenBSD__)
+#if defined(UNDERSCORE)
 #define irc_dlsym(x,y,z) z = obsd_dlsym(x,y)
 #else
 #define irc_dlsym(x,y,z) z = dlsym(x,y)

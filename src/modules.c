@@ -60,7 +60,7 @@ Module *Module_make(ModuleHeader *header,
 #endif
        );
 
-#ifdef __OpenBSD__
+#ifdef UNDERSCORE
 void *obsd_dlsym(void *handle, char *symbol) {
     char *obsdsymbol = (char*)malloc(strlen(symbol) + 2);
     void *symaddr = NULL;
