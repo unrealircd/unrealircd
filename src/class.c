@@ -23,7 +23,6 @@
 #include "numeric.h"
 #include "h.h"
 
-ID_CVS("$Id$");
 ID_Copyright("(C) 1990 Darren Reed");
 ID_Notes("1.4 6/28/93");
 
@@ -33,7 +32,7 @@ ID_Notes("1.4 6/28/93");
 #define BAD_CLIENT_CLASS	-3
 
 aClass *classes;
-int	badclass = 0;
+int  badclass = 0;
 
 int  get_conf_class(aconf)
 	aConfItem *aconf;
@@ -143,7 +142,7 @@ void add_class(class, ping, confreq, maxli, sendq)
 	if (maxli > (MAXCONNECTIONS - 15))
 	{
 		Debug((DEBUG_DEBUG, "Reducing class %d to %i",
-			class, (MAXCONNECTIONS - 15)));
+		    class, (MAXCONNECTIONS - 15)));
 		maxli = MAXCONNECTIONS - 15;
 	}
 	t = find_class(class);

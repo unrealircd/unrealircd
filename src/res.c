@@ -25,7 +25,6 @@
 static  char sccsid[] = "@(#)res.c	2.38 4/13/94 (C) 1992 Darren Reed";
 #endif
 
-ID_CVS("$Id$");
 ID_Copyright("(C) 1992 Darren Reed");
 ID_Notes("2.38 4/13/94");
 

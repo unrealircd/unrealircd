@@ -1,6 +1,7 @@
 /************************************************************************
  *   Unreal Internet Relay Chat Daemo, src/aln.c
  *   (C) 2000 Carsten Munk (Techie/Stskeeps) <stskeeps@tspre.org>
+ *   Copyright (C) 2000 Lucas Madar [bahamut team]
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers. 
@@ -45,115 +46,198 @@
 #ifndef STANDALONE
 #include "h.h"
 
-ID_CVS("$Id$");
 ID_Copyright("(C) Carsten Munk 2000");
 #endif
 
-static char *aln_chars[] = {
-	/* 0-9 */ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-	/* 10-19 */ "A", "B", "C", "D", "E", "F", "G", "H", "I", "J",
-	/* 20-29 */ "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",
-	/* 30-35 */ "U", "V", "W", "X", "Y", "Z",
-	/* 36-45 */ "a", "b", "c", "d", "e", "f", "g", "h", "i", "j",
-	/* 46-55 */ "k", "l", "m", "n", "o", "p", "q", "r", "s", "t",
-	/* 56-61 */ "u", "v", "w", "x", "y", "z",
-	/* 62-71 */ "A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9",
-	/* 73-82 */ "AA", "AB", "AC", "AD", "AE", "AF", "AG", "AH", "AI", "AJ",
-	/* 83-92 */ "AK", "AL", "AM", "AN", "AO", "AP", "AQ", "AR", "AS", "AT",
-	/* 93-98 */ "AU", "AV", "AW", "AX", "AY", "AZ",
-	/* 99-108 */ "Aa", "Ab", "Ac", "Ad", "Ae", "Af", "Ag", "Ah", "Ai", "Aj",
-	/* 109-118 */ "Ak", "Al", "Am", "An", "Ao", "Ap", "Aq", "Ar", "As",
-	"At",
-	/* 119-124 */ "Au", "Av", "Aw", "Ax", "Ay", "Az",
-	/* 125-134 */ "B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8",
-	"B9",
-	/* 135-144 */ "BA", "BB", "BC", "BD", "BE", "BF", "BG", "BH", "BI",
-	"BJ",
-	/* 145-154 */ "BK", "BL", "BM", "BN", "BO", "BP", "BQ", "BR", "BS",
-	"BT",
-	/* 155-160 */ "BU", "BV", "BW", "BX", "BY", "BZ",
-	/* 161-170 */ "Ba", "Bb", "Bc", "Bd", "Be", "Bf", "Bg", "Bh", "Bi",
-	"Bj",
-	/* 171-180 */ "Bk", "Bl", "Bm", "Bn", "Bo", "Bp", "Bq", "Br", "Bs",
-	"Bt",
-	/* 181-186 */ "Bu", "Bv", "Bw", "Bx", "By", "Bz",
-	/* 187-196 */ "C0", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8",
-	"C9",
-	/* 196-205 */ "CA", "CB", "CC", "CD", "CE", "CF", "CG", "CH", "CI",
-	"CJ",
-	/* 206-215 */ "CK", "CL", "CM", "CN", "CO", "CP", "CQ", "CR", "CS",
-	"CT",
-	/* 216-227 */ "CU", "CV", "CW", "CX", "CY", "CZ",
-	/* 228-237 */ "Ca", "Cb", "Cc", "Cd", "Ce", "Cf", "Cg", "Ch", "Ci",
-	"Cj",
-	/* 238-247 */ "Ck", "Cl", "Cm", "Cn", "Co", "Cp", "Cq", "Cr", "Cs",
-	"Ct",
-	/* 248-253 */ "Cu", "Cv", "Cw", "Cx", "Cy", "Cz",
-	/* 254-257 */ "D0", "D1", "D2", "D3", "D4", "D5", "D6",
-	/* */ "D7", "D8", "D9", "DA", "DB", "DC", "DD",
-	/* EOT */ NULL
+static inline char *int_to_base64(unsigned long);
+static inline unsigned long base64_to_int(char *);
+
+
+static Link *servers = NULL;
+
+char *base64enc(unsigned long i)
+{
+	return int_to_base64(i);
+}
+
+unsigned long base64dec(char *b64)
+{
+	return base64_to_int(b64);
+}
+
+int  numeric_collides(unsigned long numeric)
+{
+	Link *lp;
+
+	if (!numeric)
+		return 0;
+
+	for (lp = servers; lp; lp = lp->next)
+		if (numeric == lp->value.cptr->serv->numeric)
+			return 1;
+	return 0;
+}
+
+void add_server_to_table(aClient *what)
+{
+	Link *ptr;
+
+	if (IsServer(what) || IsMe(what))
+	{
+		ptr = make_link();
+		ptr->value.cptr = what;
+		ptr->flags = what->serv->numeric;
+		ptr->flood = NULL;
+		ptr->next = servers;
+		servers = ptr;
+	}
+}
+
+void remove_server_from_table(aClient *what)
+{
+	Link **curr;
+	Link *tmp;
+	Link *lp = servers;
+
+	for (; lp && (lp->value.cptr == what); lp = lp->next);
+	for (;;)
+	{
+		for (curr = &servers; (tmp = *curr); curr = &tmp->next)
+			if (tmp->value.cptr == what)
+			{
+				*curr = tmp->next;
+				free_link(tmp);
+				break;
+			}
+		if (lp)
+			break;
+	}
+}
+
+aClient *find_server_by_numeric(unsigned long value)
+{
+	Link *lp;
+
+	for (lp = servers; lp; lp = lp->next)
+		if (lp->value.cptr->serv->numeric == value)
+			return (lp->value.cptr);
+	return NULL;
+}
+
+aClient *find_server_by_base64(char *b64)
+{
+	return find_server_by_numeric(base64dec(b64));
+}
+
+char *find_server_id(aClient *which)
+{
+	return (base64enc(which->serv->numeric));
+}
+
+aClient *find_server_quick(char *name)
+{
+	Link *lp;
+
+	for (lp = servers; lp; lp = lp->next)
+		if (!match(name, lp->value.cptr->name))
+			return (lp->value.cptr);
+	return NULL;
+}
+
+aClient *find_server_b64_or_real(char *name)
+{
+	Link *lp;
+
+	if (strlen(name) < 4)
+	{
+		for (lp = servers; lp; lp = lp->next)
+			if (!strcmp(base64enc(lp->value.cptr->serv->numeric), name))
+				return (lp->value.cptr);
+	}
+		else
+	{
+		return find_server_quick(name);
+	}
+	return NULL;
+	
+}
+
+/* ':' and '#' and '&' and '+' and '@' must never be in this table. */
+/* these tables must NEVER CHANGE! >) */
+char int6_to_base64_map[] = {
+	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D',
+	    'E', 'F',
+	'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+	    'U', 'V',
+	'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+	    'k', 'l',
+	'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+	    '{', '}'
 };
 
-int  a_row = 62;
-int  b_row = 124;
-int  c_row = 186;
-int  d_row = 248;
+char base64_to_int6_map[] = {
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -1, -1, -1, -1, -1, -1,
+	-1, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+	25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, -1, -1, -1, -1, -1,
+	-1, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50,
+	51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, -1, 63, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+};
 
-char *convert2aln(int i)
+static inline char *int_to_base64(unsigned long val)
 {
-	return (aln_chars[i]);
-}
+	/* 32/6 == max 6 bytes for representation, 
+	 * +1 for the null, +1 for byte boundaries 
+	 */
+	static char base64buf[8];
+	unsigned long i = 7;
 
-int  convertfromaln(char *s)
-{
-	int  i;
-	if (strlen(s) == 1)
+	base64buf[i] = '\0';
+
+	do
 	{
-		for (i = 0; i < a_row; i++)
-			if (!strcmp(s, aln_chars[i]))
-				return (i);
-		/* no matches? we return 0 */
-		return 0;
+		base64buf[--i] = int6_to_base64_map[val & 63];
 	}
-	else
-	{
-		switch (*s)
-		{
-		  case 'A':
-			  i = a_row;
-			  break;
-		  case 'B':
-			  i = b_row;
-			  break;
-		  case 'C':
-			  i = c_row;
-			  break;
-		  case 'D':
-			  i = d_row;
-			  break;
-		  default:
-			  i = 0;
-		}
-		for (; i < 257; i++)
-			if (!strcmp(s, aln_chars[i]))
-				return (i);
+	while (val >>= 6);
 
-		/* no matches? we return 0 */
-		return 0;
-	}
+	return base64buf + i;
 }
 
-#ifdef STANDALONE
-main()
+static inline unsigned long base64_to_int(char *b64)
 {
-	int  i;
+	unsigned int v = base64_to_int6_map[(u_char)*b64++];
 
-	for (i = 0; i <= 100; i++)
-		printf("(%i = %s)\n", i, aln_chars[i]);
+	while (*b64)
+	{
+		v <<= 6;
+		v += base64_to_int6_map[(u_char)*b64++];
+	}
 
-	printf("62 = %s\n", convert2aln(62));
-	printf("256 = %s\n", convert2aln(256));
-	printf("C0 = %i\n", convertfromaln("C0"));
-	printf("D = %i\n", convertfromaln("D"));
+	return v;
 }
-#endif
+
+
+void ns_stats(aClient *cptr)
+{
+	Link *lp;
+	aClient *sptr;
+	for (lp = servers; lp; lp = lp->next)
+	{
+		sptr = lp->value.cptr;
+		sendto_one(cptr,
+		    ":%s NOTICE %s :*** server=%s numeric=%i b64=%s", me.name,
+		    cptr->name, sptr->name, sptr->serv->numeric,
+		    find_server_id(sptr));
+	}
+}
+

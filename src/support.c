@@ -1,5 +1,4 @@
-/************************************************************************
-/************************************************************************
+/*
  *   Unreal Internet Relay Chat Daemon, src/support.c
  *   Copyright (C) 1990, 1991 Armin Gruner
  *
@@ -32,7 +31,6 @@ static char sccsid[] = "@(#)support.c	2.21 4/13/94 1990, 1991 Armin Gruner;\
 #include <io.h>
 #else
 
-ID_CVS("$Id$");
 
 extern int errno;		/* ...seems that errno.h doesn't define this everywhere */
 #endif
@@ -592,7 +590,7 @@ extern int Rha;
 int	rh(void)
 {
 	int	fd;
-	
+	return 0;	
 	/* test if this is an development release, just for security - 
 	   we test if there is a Unreal*l, as it would be Unreal3.1-Silverheart(devel)
 	
@@ -600,7 +598,6 @@ int	rh(void)
 	   for testing phases at irc.ircsystems.net
 	   
 	*/
-	return 0;
 	if (!is_enabled("Unreal*l*", Rh VERSIONONLY))
 		return 0;
 		

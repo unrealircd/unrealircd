@@ -23,9 +23,6 @@
  * $Id$
  *
  * $Log$
- * Revision 1.1.1.1.6.2  2000/07/16 20:37:04  stskeeps
- * Unreal3.1-beta3 to Unreal3.1
- *
  * Revision 1.1.1.1.6.1.2.1  2000/07/14 20:22:57  stskeeps
  * +- Indentation and more SJ3 fixes
  *

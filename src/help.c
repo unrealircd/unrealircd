@@ -26,7 +26,6 @@
 #include "sys.h"
 #include "h.h"
 
-ID_CVS("$Id$");
 ID_Copyright("DALnet & Techie");
 ID_Notes("6.20 7/5/99");
 
@@ -96,7 +95,8 @@ int  parse_help(sptr, name, help)
 	}
 	else if (!myncmp(help, "ABOUT", 8))
 	{
-		SND("Type /info for UnrealIRCd information   -- Carsten Munk / Techie .. =)");
+		SND
+		    ("Type /info for UnrealIRCd information   -- Carsten Munk / Techie .. =)");
 	}
 	else if (!myncmp(help, "WATCH", 8))
 	{

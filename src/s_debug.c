@@ -1,5 +1,4 @@
-/************************************************************************
-/************************************************************************
+/*
  *   Unreal Internet Relay Chat Daemon, src/s_debug.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
@@ -106,6 +105,8 @@ char serveropts[] = {
 #ifdef CRYPTOIRCD
 	'r',
 #endif
+/* we are a stable ircd */
+	'S',
 	'\0'
 };
 
@@ -153,7 +154,6 @@ char serveropts[] = {
 #define ssize_t unsigned int
 #endif
 
-ID_CVS("$Id$");
 
 #ifdef DEBUGMODE
 static char debugbuf[1024];

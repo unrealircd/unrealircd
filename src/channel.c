@@ -1,4 +1,5 @@
-/************************************************************************
+
+/*
  *   Unreal Internet Relay Chat Daemon, src/channel.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Co Center
@@ -46,7 +47,6 @@
 #include "hash.h"		/* For CHANNELHASHSIZE */
 #include "h.h"
 
-ID_CVS("$Id$");
 ID_Copyright
     ("(C) 1990 University of Oulu, Computing Center and Jarkko Oikarinen");
 
@@ -1425,27 +1425,6 @@ void make_mode_str(chptr, oldm, oldl, pcount, pvar, mode_buf, parabuf, bounce)
 	}
 
 	*x = '\0';
-	/* reconstruct bkov chain */
-	for (cnt = 0; cnt < pcount; cnt++)
-	{
-		if ((*(pvar[cnt]) == '+') && what != MODE_ADD)
-		{
-			*x++ = bounce ? '-' : '+';
-			what = MODE_ADD;
-		}
-		if ((*(pvar[cnt]) == '-') && what != MODE_DEL)
-		{
-			*x++ = bounce ? '+' : '-';
-			what = MODE_DEL;
-		}
-		*x++ = *(pvar[cnt] + 1);
-		tmpstr = &pvar[cnt][2];
-		strncat(parabuf, tmpstr, MODEBUFLEN - 1);
-		parabuf[MODEBUFLEN - 1] = '\0';
-		z = strlen(parabuf);
-		parabuf[z] = ' ';	/* add a space */
-		parabuf[z + 1] = '\0';
-	}
 	/* user limit */
 	if (chptr->mode.limit != oldl)
 	{
@@ -1473,6 +1452,27 @@ void make_mode_str(chptr, oldm, oldl, pcount, pvar, mode_buf, parabuf, bounce)
 				chptr->mode.limit = oldl;	/* set it back */
 			ircsprintf(parabuf, "%s%d", parabuf, chptr->mode.limit);
 		}
+	}
+	/* reconstruct bkov chain */
+	for (cnt = 0; cnt < pcount; cnt++)
+	{
+		if ((*(pvar[cnt]) == '+') && what != MODE_ADD)
+		{
+			*x++ = bounce ? '-' : '+';
+			what = MODE_ADD;
+		}
+		if ((*(pvar[cnt]) == '-') && what != MODE_DEL)
+		{
+			*x++ = bounce ? '+' : '-';
+			what = MODE_DEL;
+		}
+		*x++ = *(pvar[cnt] + 1);
+		tmpstr = &pvar[cnt][2];
+		strncat(parabuf, tmpstr, MODEBUFLEN - 1);
+		parabuf[MODEBUFLEN - 1] = '\0';
+		z = strlen(parabuf);
+		parabuf[z] = ' ';	/* add a space */
+		parabuf[z + 1] = '\0';
 	}
 	if (bounce)
 		chptr->mode.mode = oldm;
@@ -1900,6 +1900,14 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 					      ":%s NOTICE %s :*** You can't link %s to itself",
 					      me.name, cptr->name,
 					      chptr->chname);
+				  break;
+			  }
+			  if (strchr(param, ','))
+			  {
+				  if (MyClient(cptr))
+					  sendto_one(cptr,
+					      ":%s NOTICE %s :*** You may only specify 1 channel to link to",
+					      me.name, cptr->name);
 				  break;
 			  }
 			  if (!IsChannelName(param))
@@ -2727,9 +2735,8 @@ int  channel_link(cptr, sptr, parc, parv)
 			if (MyClient(sptr))
 				sendto_one(sptr, ":%s!%s@%s JOIN :%s",
 				    sptr->name, sptr->user->username,
-				    (IsHidden(sptr) ? sptr->
-				    user->virthost : sptr->user->realhost),
-				    name);
+				    (IsHidden(sptr) ? sptr->user->
+				    virthost : sptr->user->realhost), name);
 			sendto_umode(UMODE_NETADMIN | UMODE_TECHADMIN,
 			    "*** Invisible(+I) user %s joined %s", sptr->name,
 			    chptr->chname);
@@ -2949,19 +2956,15 @@ int  m_join(cptr, sptr, parc, parv)
 		/*
 		   ** notify all other users on the new channel
 		 */
-		if (!(IsHiding(sptr)))
-			sendto_channel_butserv(chptr, sptr,
-			    ":%s JOIN :%s", parv[0], chptr->chname);
-		else
+		if (IsHiding(sptr))
 		{
 			if (MyClient(sptr))
+			{
 				sendto_one(sptr, ":%s!%s@%s JOIN :%s",
 				    sptr->name, sptr->user->username,
-				    (IsHidden(sptr) ? sptr->
-				    user->virthost : sptr->user->realhost),
+				    (IsHidden(sptr) ? sptr->user->
+				    virthost : sptr->user->realhost),
 				    chptr->chname);
-			if (MyClient(sptr))
-			{
 				sendto_umode(UMODE_ADMIN,
 				    "*** [+I] %s invisible joined %s",
 				    sptr->name, chptr->chname);
@@ -2971,6 +2974,22 @@ int  m_join(cptr, sptr, parc, parv)
 				    sptr->name, chptr->chname);
 			}
 		}
+		else if (chptr->mode.mode & MODE_AUDITORIUM)  {
+			if (MyClient(sptr))
+				sendto_one(sptr, ":%s!%s@%s JOIN :%s",
+					sptr->name, sptr->user->username,
+					(IsHidden(sptr) ? sptr->user->
+					virthost : sptr->user->realhost),
+					chptr->chname);
+			sendto_chanops_butone(NULL, chptr,  ":%s!%s@%s JOIN :%s",
+				sptr->name, sptr->user->username,
+				(IsHidden(sptr) ? sptr->user->
+				virthost : sptr->user->realhost),
+				chptr->chname);	
+		}	
+		else
+			sendto_channel_butserv(chptr, sptr,
+				":%s JOIN :%s", parv[0], chptr->chname);
 
 		sendto_serv_butone_token(cptr, parv[0], MSG_JOIN,
 		    TOK_JOIN, "%s", chptr->chname);
@@ -3076,22 +3095,8 @@ int  m_part(cptr, sptr, parc, parv)
 
 		if (1)
 		{
-			if (!IsHiding(sptr))
-			{
-				if (parc < 3)
-				{
-					sendto_channel_butserv(chptr,
-					    sptr, PartFmt, parv[0],
-					    chptr->chname);
-				}
-				else
-				{
-					sendto_channel_butserv(chptr,
-					    sptr, PartFmt2, parv[0],
-					    chptr->chname, comment);
-				}
-			}
-			else
+
+			if (IsHiding(sptr))
 			{
 				if (MyClient(sptr))
 				{
@@ -3124,6 +3129,61 @@ int  m_part(cptr, sptr, parc, parv)
 						    sptr->user->realhost),
 						    chptr->chname, comment);
 			}
+		else if (chptr->mode.mode & MODE_AUDITORIUM) {
+			if (MyClient(sptr)) {
+				if (parc < 3) {
+				sendto_chanops_butone(NULL, chptr,
+					":%s!%s@%s PART %s",
+					sptr->name,
+					sptr->user->username,
+					(IsHidden(sptr) ?
+					sptr->user->virthost :
+					sptr->user->realhost),
+					chptr->chname);
+				if (!is_chan_op(sptr, chptr)) 
+					sendto_one(sptr, ":%s!%s@%s PART %s",
+						sptr->name,
+						sptr->user->username,
+						(IsHidden(sptr) ?
+						sptr->user->virthost :
+						sptr->user->realhost),
+						chptr->chname);
+				}
+				else { 
+					sendto_chanops_butone(NULL, chptr,
+					":%s!%s@%s PART %s %s",
+					sptr->name,
+					sptr->user->username,
+					(IsHidden(sptr) ?
+					sptr->user->virthost :
+					sptr->user->realhost),
+					chptr->chname, comment);
+				if (!is_chan_op(cptr, chptr))
+					sendto_one(sptr, ":%s!%s@%s PART %s %s",
+					sptr->name,
+					sptr->user->username,
+					(IsHidden(sptr) ?
+					sptr->user->virthost :
+					sptr->user->realhost),
+					chptr->chname, comment);
+				}
+			}
+		}
+		else {
+
+			if (MyClient(sptr)) {
+
+				if (parc < 3)
+				
+					sendto_channel_butserv(chptr,
+       				        	sptr, PartFmt, parv[0],
+						chptr->chname);
+				else
+					sendto_channel_butserv(chptr,
+						sptr, PartFmt2, parv[0],
+						chptr->chname, comment);
+			}
+		}
 			remove_user_from_channel(sptr, chptr);
 		}
 	}
@@ -3220,7 +3280,8 @@ int  m_kick(cptr, sptr, parc, parv)
 				}
 
 				if (IsOper(sptr))
-					if (!is_chan_op(sptr, chptr))
+					if (!is_chan_op(sptr, chptr) && !is_halfop(sptr, chptr)
+					   || (is_halfop(sptr, chptr) && is_chan_op(who, chptr)))
 					{
 						sendto_umode(UMODE_EYES,
 						    "*** OperKick [%s @ %s -> %s (%s)]",
@@ -3232,7 +3293,16 @@ int  m_kick(cptr, sptr, parc, parv)
 				if (is_chanprot(who, chptr)
 				    || is_chanowner(who, chptr)
 				    || IsServices(who))
-					if (!IsULine(cptr, sptr) && who != sptr)
+					if IsOper(sptr)
+					{ /* IRCop kicking owner/prot */
+						sendto_umode(UMODE_EYES,
+						    "*** OperKick [%s @ %s -> %s (%s)]",
+						    sptr->name,
+						    chptr->chname,
+						    who->name, comment);
+						goto attack;
+					}
+					else if (!IsULine(cptr, sptr) && who != sptr)
 					{
 						sendto_one(sptr,
 						    ":%s NOTICE %s :*** You cannot kick %s from %s because %s is channel protected",
@@ -3439,7 +3509,7 @@ int  m_topic(cptr, sptr, parc, parv)
 			    && (chptr->mode.mode & MODE_TOPICLIMIT))
 			{
 #ifdef NO_OPEROVERRIDE
-				continue;
+				return 0;
 #endif
 				sendto_umode(UMODE_EYES,
 				    "*** OperTopic [IRCop: %s] - [Channel: %s] - [Topic: %s]",
@@ -3634,18 +3704,17 @@ void send_list(aClient *cptr, int numsend)
 				    && !IsMember(cptr, chptr)
 				    && !IsAnOper(cptr))
 					continue;
-				if ((!lopt->showall)
-				    && ((chptr->users < lopt->usermin)
-				    || ((lopt->usermax >= 0)
+					
+				if ((!lopt->showall) 
+	&& ((chptr->users < lopt->usermin) || ((lopt->usermax >= 0)
 				    && (chptr->users > lopt->usermax))
-				    || ((chptr->creationtime
-				    || 1) <= lopt->chantimemin)
-				    || (chptr->topic_time <
+				    || ((chptr->creationtime) <= lopt->chantimemin)
+				   /* || (chptr->topic_time <
 				    lopt->topictimemin)
 				    || (chptr->creationtime >=
 				    lopt->chantimemax)
 				    || (chptr->topic_time >
-				    lopt->topictimemax)))
+				    lopt->topictimemax) */))
 					continue;
 
 				if (lopt->nolist &&
@@ -3762,8 +3831,8 @@ int  check_for_chan_flood(cptr, sptr, chptr)
 		if (chptr->mode.kmode == 1)
 		{		/* ban. */
 			ircsprintf(mask, "*!*@%s",
-			    (IsHidden(sptr) ? sptr->user->
-			    virthost : sptr->user->realhost));
+			    (IsHidden(sptr) ? sptr->user->virthost : sptr->
+			    user->realhost));
 			add_banid(&me, chptr, mask);
 			sendto_serv_butone(&me, ":%s MODE %s +b %s 0",
 			    me.name, chptr->chname, mask);
@@ -4093,11 +4162,13 @@ int  m_names(cptr, sptr, parc, parv)
 		acptr = cm->value.cptr;
 		if (IsInvisible(acptr) && !member)
 			continue;
-		if (IsHiding(acptr))
+		if (IsHiding(acptr) && acptr != sptr)
 			continue;
 		if (chptr->mode.mode & MODE_AUDITORIUM)
-			if (!is_chan_op(sptr, chptr))
-				if (!(cm->flags & CHFL_CHANOP))
+			if (!is_chan_op(sptr, chptr) && !is_chanprot(sptr, chptr) && 
+			    !is_chanowner(sptr, chptr))
+				if (!(cm->flags & (CHFL_CHANOP | CHFL_CHANPROT | CHFL_CHANOWNER))
+			            && acptr != sptr)
 					continue;
 
 		if (cm->flags & CHFL_CHANOP)
@@ -4196,7 +4267,7 @@ int  m_knock(cptr, sptr, parc, parv)
 {
 	aChannel *chptr;
 
-	if (parc < 3 || *parv[1] == '\0')
+	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
 		    me.name, parv[0], "KNOCK");
@@ -4209,7 +4280,7 @@ int  m_knock(cptr, sptr, parc, parv)
 	if (check_channelmask(sptr, cptr, parv[1]))
 		return 0;
 	/* bugfix for /knock PRv Please? */
-	if (*parv[1] != '#' && *parv[1] != '&')
+	if (*parv[1] != '#')
 	{
 		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
 		    me.name,
@@ -4241,10 +4312,7 @@ int  m_knock(cptr, sptr, parc, parv)
 		return 0;
 	}
 
-	if (chptr->mode.mode & MODE_INVITEONLY)
-	{
-	}
-	else
+	if (!(chptr->mode.mode & MODE_INVITEONLY))
 	{
 		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
 		    me.name,
@@ -4274,9 +4342,9 @@ int  m_knock(cptr, sptr, parc, parv)
 	    me.name, chptr->chname, sptr->name,
 	    sptr->user->username,
 	    (IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost),
-	    parv[2]);
+	    parv[2] ? parv[2] : "no reason specified");
 
-	sendto_one(sptr, ":%s NOTICE %s :Knocked on to %s", me.name,
+	sendto_one(sptr, ":%s NOTICE %s :Knocked on %s", me.name,
 	    sptr->name, chptr->chname);
 	return 0;
 }
@@ -4331,7 +4399,7 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
 /* Some ugly macros, but useful */
 #define Addit(x,y) modebuf[b] = x; strcat(parabuf, y); \
   strcat(parabuf, " "); \
-  if (b == RESYNCMODES) \
+  if (b >= RESYNCMODES) \
   { modebuf[b + 1] = '\0'; sendto_serv_butone_sjoin(cptr, \
   	":%s MODE %s %s %s %lu", sptr->name, chptr->chname,  \
   	modebuf, parabuf, chptr->creationtime); \
@@ -4342,8 +4410,12 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
   	b = 1; \
   	} else b++
 
+
+
 #define Addsingle(x) modebuf[b] = x; b++
 #define CheckStatus(x,y) if (modeflags & (y)) { Addit((x), nick); }
+#define AddBan(x) strcat(banbuf, x); strcat(banbuf, " ");
+#define AddEx(x) strcat(exbuf, x); strcat(exbuf, " ");
 
 
 int  m_sjoin(cptr, sptr, parc, parv)
@@ -4358,16 +4430,19 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	unsigned short merge;	/* same timestamp */
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
 	char paraback[1024], modeback[1024];
+	char banbuf[1024];
+	char exbuf[1024];
 	char nick[NICKLEN + 1];
+	char *s;
 	aClient *acptr, *tempptr;
 	aChannel *chptr;
 	Link *lp;
-	Ban *ban;
+	Ban *ban; 
 	aParv *ap;
-	int  ts, oldts, pcount, x, y, z, i;
-	unsigned short b;
+	int  ts, oldts, pcount, x, y, z, i, f;
+	unsigned short b, c;
 	Mode oldmode;
-	char *t;
+	char *t, *bp, *tp;
 	long modeflags;
 
 	if (IsClient(sptr) || parc < 3 || !IsServer(sptr))
@@ -4378,18 +4453,18 @@ int  m_sjoin(cptr, sptr, parc, parv)
 
 	merge = nopara = nomode = removeours = removetheirs = 0;
 
-	if (SupportSJOIN(sptr) && !SupportSJ3(sptr) &&
-		!strncmp(parv[4], "<none>", 6))
-			nopara = 1;
-	if (SupportSJOIN2(sptr) && !SupportSJ3(sptr) &&
-		!strncmp(parv[4], "<->", 6))
-			nopara = 1;
-	if (SupportSJ3(sptr) && (parc < 5))
+	if (SupportSJOIN(cptr) && !SupportSJ3(cptr) &&
+	    !strncmp(parv[4], "<none>", 6))
+		nopara = 1;
+	if (SupportSJOIN2(cptr) && !SupportSJ3(cptr) &&
+	    !strncmp(parv[4], "<->", 6))
+		nopara = 1;
+	if (SupportSJ3(cptr) && (parc < 6))
 		nopara = 1;
 
-	if (SupportSJ3(sptr))
+	if (SupportSJ3(cptr))
 	{
-		if (parc < 4)
+		if (parc < 5)
 			nomode = 1;
 	}
 	else
@@ -4428,6 +4503,8 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	parabuf[0] = '\0';
 	modebuf[0] = '+';
 	modebuf[1] = '\0';
+	banbuf[0] = '\0';
+	exbuf[0] = '\0';
 	channel_modes(cptr, modebuf, parabuf, chptr);
 	if (removeours)
 	{
@@ -4524,8 +4601,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	if (merge && !nomode)
 	{
 		aCtab *acp;
-
-		bcopy(&chptr->mode, &oldmode, sizeof(oldmode));
+		bcopy(&chptr->mode, &oldmode, sizeof(Mode));
 		/* merge the modes */
 		strcpy(modebuf, parv[3]);
 		parabuf[0] = '\0';
@@ -4535,7 +4611,6 @@ int  m_sjoin(cptr, sptr, parc, parv)
 				strcat(parabuf, parv[b]);
 				strcat(parabuf, " ");
 			}
-		strcpy(paraback, parabuf);
 		ap = mp2parv(modebuf, parabuf);
 		set_mode(chptr, cptr, ap->parc, ap->parv, &pcount, pvar, 0);
 
@@ -4699,23 +4774,31 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	/* Mode setting done :), now for our beloved clients */
 	parabuf[0] = 0;
 	modebuf[0] = '+';
+	modebuf[1] = '\0';
 	t = parv[parc - 1];
-	*(--t) = ' ';		/* set to leading space */
+	f = 1;
 	b = 1;
-	strcpy(modebuf, "+");
+	c = 0;
+	bp = buf;
 	while (*t != '\0')
 	{
 		if (*t == ' ')
 		{
-			i = 0;
-			t++;
+			if (f)
+				strncpyzt(bp, (t - c), (c + 1));	/* Put the nick in bp */
+			else
+				strncpyzt(bp, (t - (c - 1)), c);	/* Put the nick in bp */
+
+			c = f = 0;
 			modeflags = 0;
+			i = 0;
+			tp = bp;
 			while (
-			    (*t == '@') || (*t == '+') || (*t == '%')
-			    || (*t == '*') || (*t == '~') || (*t == '&')
-			    || (*t == '"'))
+			    (*tp == '@') || (*tp == '+') || (*tp == '%')
+			    || (*tp == '*') || (*tp == '~') || (*tp == '&')
+			    || (*tp == '"'))
 			{
-				switch (*(t++))
+				switch (*(tp++))
 				{
 				  case '@':
 					  modeflags |= CHFL_CHANOP;
@@ -4744,13 +4827,13 @@ int  m_sjoin(cptr, sptr, parc, parv)
 			}
 		      getnick:
 			i = 0;
-			while ((*t != ' ') && (*t != '\0'))
-				nick[i++] = *(t++);	/* get nick */
+			while ((*tp != ' ') && (*tp != '\0'))
+				nick[i++] = *(tp++);	/* get nick */
 			nick[i] = '\0';
 			if (nick[0] == ' ')
-				continue;
+				goto nextnick;
 			if (nick[0] == '\0')
-				continue;
+				goto nextnick;
 			if (!(modeflags & CHFL_BAN)
 			    && !(modeflags & CHFL_EXCEPT))
 			{
@@ -4760,21 +4843,20 @@ int  m_sjoin(cptr, sptr, parc, parv)
 					    ("Missing user %s in SJOIN for %s from %s (%s)",
 					    nick, chptr->chname, sptr->name,
 					    backupbuf);
-					continue;
+					goto nextnick;
 				}
-				if (acptr->from != sptr)
+				if (acptr->from != sptr->from)
 				{
-					/* The client is not from the server, send a kick for it */
 					sendto_one(sptr,
 					    ":%s KICK %s %s :Fake direction",
-					    me.name, acptr->name);
+					    me.name,chptr->chname, acptr->name);
 					sendto_ops
-					    ("Fake direction from user %s in SJOIN from %s at %s",
-					    acptr->from, sptr->name,
+					    ("Fake direction from user %s in SJOIN from %s(%s) at %s",
+					    nick,
+					    sptr->from->name, sptr->name,
 					    chptr->chname);
-					continue;
+					goto nextnick;
 				}
-
 				if (removetheirs)
 				{
 					modeflags = 0;
@@ -4784,7 +4866,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 					sendto_channel_butserv(chptr, acptr,
 					    ":%s JOIN :%s", nick,
 					    chptr->chname);
-				sendto_serv_butone_sjoin(cptr, ":%s JOIN :%s",
+				sendto_serv_butone_sjoin(cptr, ":%s JOIN %s",
 				    nick, chptr->chname);
 
 				CheckStatus('q', CHFL_CHANOWNER);
@@ -4796,26 +4878,28 @@ int  m_sjoin(cptr, sptr, parc, parv)
 			else
 			{
 				if (removetheirs)
-					continue;
+					goto nextnick;
 				if (modeflags & CHFL_BAN)
 				{
 					add_banid(sptr, chptr, nick);
 					Addit('b', nick);
-					sendto_serv_butone_token_opt(cptr, OPT_SJOIN2|OPT_NOT_SJ3,
-						sptr->name, MSG_MODE, TOK_MODE, "%s +b %s %li", chptr->chname,
-							nick, TStime());
+					AddBan(nick);
 				}
 				if (modeflags & CHFL_EXCEPT)
 				{
 					add_exbanid(sptr, chptr, nick);
 					Addit('e', nick);
-					sendto_serv_butone_token_opt(cptr, OPT_SJOIN2|OPT_NOT_SJ3,
-						sptr->name, MSG_MODE, TOK_MODE, "%s +e %s %li", chptr->chname,
-							nick, TStime());
+					AddEx(nick);
 				}
 			}
+
 		}
+nextnick:
+		t++;
+		c++;
 	}
+
+
 	if (modebuf[1])
 	{
 		sendto_serv_butone_sjoin(cptr,
@@ -4828,69 +4912,154 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	/* we should be synched by now, */
 	if (oldts != -1)
 		if (oldts != chptr->creationtime)
-			sendto_channel_butserv(chptr, &me, 
-			":%s NOTICE %s :*** Notice -- TS for %s changed from %ld to %ld",
-			me.name, chptr->chname, chptr->chname,
-			oldts, chptr->creationtime);	
-        
-       
-        strcpy(parabuf, "");
-        for (i = 1; i <= (parc - 2); i++)
-        {
-        	strcat(parabuf, parv[i]);
-        	if (((i + 1) <= (parc - 2)))
-	        	strcat(parabuf, " ");
-        }
+			sendto_channel_butserv(chptr, &me,
+			    ":%s NOTICE %s :*** Notice -- TS for %s changed from %ld to %ld",
+			    me.name, chptr->chname, chptr->chname,
+			    oldts, chptr->creationtime);
+
+
+	strcpy(parabuf, "");
+	for (i = 1; i <= (parc - 2); i++)
+	{
+		if (!parv[i])
+		{
+			sendto_ops("Got null parv in SJ3 code");
+			continue;			
+		}
+		strcat(parabuf, parv[i]);
+		if (((i + 1) <= (parc - 2)))
+			strcat(parabuf, " ");
+	}
 
 	/* This sends out to SJ3 servers .. */
-	sendto_serv_butone_token_opt(cptr, OPT_SJOIN|OPT_SJ3, sptr->name,
-        	MSG_SJOIN, TOK_SJOIN, "%s :%s", parabuf, parv[parc - 1]);
-        
+	sendto_serv_butone_token_opt(cptr, OPT_SJOIN | OPT_SJ3, sptr->name,
+	    MSG_SJOIN, TOK_SJOIN, "%s :%s", parabuf, parv[parc - 1]);
+	Debug((DEBUG_DEBUG, "Sending '%s :%s' to sj3", parabuf, parv[parc - 1]));
 	/* We strip out & and " here, for SJ2 */
-        strcpy(parabuf, "");
-        t = parv[parc - 1];
-        ap = mp2parv("*", t);
+	strcpy(parabuf, "");
+	t = parv[parc - 1];
+	ap = mp2parv("*", t);
 	for (i = 1; i < ap->parc; i++)
 	{
+		if (!ap->parv[i])
+		{
+			sendto_ops("Got null parv in SJ2 code");
+			continue;
+		}
 		if (*ap->parv[i] == '&')
 			continue;
 		if (*ap->parv[i] == '"')
 			continue;
-	 	
+
 		strcat(parabuf, ap->parv[i]);
 		if (!((i + 1) == ap->parc))
 			strcat(parabuf, " ");
 	}
-	
+
 	if (nomode)
 	{
-		sendto_serv_butone_token_opt(cptr, OPT_SJOIN|OPT_SJOIN2|OPT_NOT_SJ3,
-			sptr->name,
-			MSG_SJOIN, TOK_SJOIN, "%s %s + <-> :%s", parv[1],
-				parv[2], parabuf);
+		sendto_serv_butone_token_opt(cptr,
+		    OPT_SJOIN | OPT_SJOIN2 | OPT_NOT_SJ3, sptr->name, MSG_SJOIN,
+		    TOK_SJOIN, "%s %s + <-> :%s", parv[1], parv[2], parabuf);
+		Debug((DEBUG_DEBUG, "Sending to SJ2: %s %s + <-> :%s", parv[1], parv[2], parabuf));
+		if (*banbuf)
+		{
+			for (s = (char *) strtok(banbuf, " "); s && (*s != ' '); s = (char *) strtok(NULL, " "))
+			{
+				sendto_serv_butone_token_opt(cptr,
+					OPT_SJOIN2|OPT_NOT_SJ3,
+						sptr->name, MSG_MODE, TOK_MODE,
+					"%s +b %s %li", chptr->chname, s,
+					chptr->creationtime);
+			} 
+		}
+		
+		if (*exbuf)
+		{
+			for (s = (char *) strtok(exbuf, " "); s && (*s != ' '); s = (char *) strtok(NULL, " "))
+			{
+				sendto_serv_butone_token_opt(cptr,
+					OPT_SJOIN2|OPT_NOT_SJ3,
+						sptr->name, MSG_MODE, TOK_MODE,
+					"%s +e %s %li", chptr->chname, s,
+					chptr->creationtime);
+			} 
+		}
 		return 0;
 	}
+	
 	if (nopara)
 	{
-		sendto_serv_butone_token_opt(cptr, OPT_SJOIN|OPT_SJOIN2|OPT_NOT_SJ3,
-			sptr->name,
-			MSG_SJOIN, TOK_SJOIN, "%s %s %s <-> :%s", parv[1],
-				parv[2], parv[3], parabuf);
-		return 0;
+		sendto_serv_butone_token_opt(cptr,
+		    OPT_SJOIN | OPT_SJOIN2 | OPT_NOT_SJ3, sptr->name, MSG_SJOIN,
+		    TOK_SJOIN, "%s %s %s <-> :%s", parv[1], parv[2], parv[3],
+		    parabuf);
+		Debug((DEBUG_DEBUG, "Sending to SJ2: %s %s %s <-> :%s",
+			parv[1], parv[2], parv[3], parabuf));
+		if (*banbuf)
+		{
+			for (s = (char *) strtok(banbuf, " "); s && (*s != ' '); s = (char *) strtok(NULL, " "))
+			{
+				sendto_serv_butone_token_opt(cptr,
+					OPT_SJOIN2|OPT_NOT_SJ3,
+						sptr->name, MSG_MODE, TOK_MODE,
+					"%s +b %s %li", chptr->chname, s,
+					chptr->creationtime);
+			} 
+		}
 		
+		if (*exbuf)
+		{
+			for (s = (char *) strtok(exbuf, " "); s && (*s != ' '); s = (char *) strtok(NULL, " "))
+			{
+				sendto_serv_butone_token_opt(cptr,
+					OPT_SJOIN2|OPT_NOT_SJ3,
+						sptr->name, MSG_MODE, TOK_MODE,
+					"%s +e %s %li", chptr->chname, s,
+					chptr->creationtime);
+			} 
+		}
+		return 0;
 	}
 	strcpy(paraback, "");
-        ap = mp2parv("*", parv[4]);
+	ap = mp2parv("*", parv[4]);
 	for (i = 2; i < ap->parc; i++)
 	{
 		strcat(paraback, ap->parv[i]);
 		strcat(paraback, " ");
 	}
-	sendto_serv_butone_token_opt(cptr, OPT_SJOIN|OPT_SJOIN2|OPT_NOT_SJ3,
-		sptr->name,
-		MSG_SJOIN, TOK_SJOIN, "%s %s %s %s :%s",
-			parv[1], parv[2], parv[3], paraback, parabuf);
+	sendto_serv_butone_token_opt(cptr, OPT_SJOIN | OPT_SJOIN2 | OPT_NOT_SJ3,
+	    sptr->name,
+	    MSG_SJOIN, TOK_SJOIN, "%s %s %s %s :%s",
+	    parv[1], parv[2], parv[3], paraback, parabuf);
+	Debug((DEBUG_DEBUG, "sending to SJ2: %s %s %s %s :%s",
+		parv[1], parv[2], parv[3], paraback, parabuf));
+	/* Syncing bans to sj2 .. correctly. */
+	if (*banbuf)
+	{
+		for (s = (char *) strtok(banbuf, " "); s && (*s != ' '); s = (char *) strtok(NULL, " "))
+		{
+			sendto_serv_butone_token_opt(cptr,
+				OPT_SJOIN2|OPT_NOT_SJ3,
+					sptr->name, MSG_MODE, TOK_MODE,
+				"%s +b %s %li", chptr->chname, s,
+				chptr->creationtime);
+		} 
+	}
 	
+	if (*exbuf)
+	{
+		for (s = (char *) strtok(exbuf, " "); s && (*s != ' '); s = (char *) strtok(NULL, " "))
+		{
+			sendto_serv_butone_token_opt(cptr,
+				OPT_SJOIN2|OPT_NOT_SJ3,
+					sptr->name, MSG_MODE, TOK_MODE,
+				"%s +e %s %li", chptr->chname, s,
+				chptr->creationtime);
+		} 
+	}
+	/* And we are synched */
+	return 0;
 }
 
 
@@ -5108,7 +5277,7 @@ void send_channel_modes_sjoin3(cptr, chptr)
 	Ban *ban;
 	char *name;
 	char *bufptr;
-	short	nomode, nopara;
+	short nomode, nopara;
 	char bbuf[1024];
 	int  n = 0;
 
@@ -5123,36 +5292,34 @@ void send_channel_modes_sjoin3(cptr, chptr)
 
 	*modebuf = *parabuf = '\0';
 	channel_modes(cptr, modebuf, parabuf, chptr);
-	
+
 	if (!modebuf[1])
 		nomode = 1;
 	if (!(*parabuf))
 		nopara = 1;
-	
-	
-	if (nomode)
+
+
+	if (nomode && nopara)
 	{
 		ircsprintf(buf, "%s %ld %s :",
 		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
 		    chptr->creationtime, chptr->chname);
 	}
-		else
-	if (nopara)
+	if (nopara && !nomode)
 	{
 		ircsprintf(buf, "%s %ld %s %s :",
 		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
 		    chptr->creationtime, chptr->chname, modebuf);
 
 	}
-		else
 	if (!nopara && !nomode)
 	{
 		ircsprintf(buf, "%s %ld %s %s %s :",
-			    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
+		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
 		    chptr->creationtime, chptr->chname, modebuf, parabuf);
 	}
 	strcpy(bbuf, buf);
-	
+
 	bufptr = buf + strlen(buf);
 
 	for (lp = members; lp; lp = lp->next)
@@ -5212,7 +5379,7 @@ void send_channel_modes_sjoin3(cptr, chptr)
 
 			bufptr = buf + strlen(buf);
 		}
-		
+
 	}
 	for (ban = chptr->exlist; ban; ban = ban->next)
 	{
@@ -5233,9 +5400,9 @@ void send_channel_modes_sjoin3(cptr, chptr)
 
 			bufptr = buf + strlen(buf);
 		}
-		
+
 	}
-	
+
 	if (n)
 	{
 		*bufptr++ = '\0';

@@ -30,7 +30,6 @@ Computing Center and Jarkko Oikarinen";
 #include "struct.h"
 #include "common.h"
 
-ID_CVS("$Id$");
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
 ID_Notes("2.33 1/30/94");
@@ -54,6 +53,7 @@ static char sender[HOSTLEN + 1];
 static int cancel_clients PROTO((aClient *, aClient *, char *));
 static void remove_unknown PROTO((aClient *, char *));
 static char unknownserver[] = "Unknown.Server";
+static char nsprefix = 0;
 /*
 **  Find a client (server or user) by name.
 **
@@ -70,13 +70,6 @@ aClient *find_client(name, cptr)
 
 	if (name)
 	{
-		if (*name == '@')
-		{
-			newname = name;
-			name = find_by_aln(name + 1);
-			if (!name)
-				name = newname;
-		}
 		cptr = hash_find_client(name, cptr);
 	}
 	return cptr;
@@ -113,49 +106,11 @@ aClient *find_server(name, cptr)
 	char *newname;
 	if (name)
 	{
-		if (*name == '@')
-		{
-			newname = name;
-			name = find_by_aln(name + 1);
-			if (!name)
-				name = newname;
-		}
 		cptr = hash_find_server(name, cptr);
 	}
 	return cptr;
 }
 
-aClient *find_serveraln(name, cptr)
-	char *name;
-	aClient *cptr;
-{
-	char *newname;
-	if (name)
-	{
-		if (*name == '@')
-		{
-			newname = name;
-			name = find_by_aln(name + 1);
-			if (!name)
-				name = newname;
-		}
-		if (strlen(name) < 3)
-		{
-			newname = name;
-#ifdef DEVELOP
-//                      sendto_ops("Trying to find %s", name);
-#endif
-			name = find_by_aln(name);
-			if (!name)
-				name = newname;
-		}
-		cptr = hash_find_client(name, cptr);
-#ifdef DEVELOP
-//             (cptr) sendto_ops("Found it ! (%s)", cptr->name);
-#endif
-	}
-	return cptr;
-}
 
 aClient *find_name(name, cptr)
 	char *name;
@@ -200,11 +155,10 @@ aClient *find_person(name, cptr)
 		return cptr;
 }
 
-int  alnprefix = 0;
 
-void	ban_flooder(aClient *cptr)
+void ban_flooder(aClient *cptr)
 {
-	char	hostip[128], mo[100], mo2[100];
+	char hostip[128], mo[100], mo2[100];
 	char *tkllayer[9] = {
 		me.name,	/*0  server.name */
 		"+",		/*1  +|- */
@@ -216,10 +170,10 @@ void	ban_flooder(aClient *cptr)
 		NULL,		/*7  set_at */
 		NULL		/*8  reason */
 	};
-	
-	strcpy(hostip, (char *)inetntoa((char *) &cptr->ip));
+
+	strcpy(hostip, (char *)inetntoa((char *)&cptr->ip));
 	exit_client(cptr, cptr, &me, "Flooding");
-	
+
 	tkllayer[4] = hostip;
 	tkllayer[5] = me.name;
 	ircsprintf(mo, "%li", 600 + TStime());
@@ -231,7 +185,7 @@ void	ban_flooder(aClient *cptr)
 	return;
 }
 
-int	Rha = 0;
+int  Rha = 0;
 
 /*
  * parse a buffer.
@@ -261,27 +215,29 @@ int  parse(cptr, buffer, bufend, mptr)
 #ifdef RAWDEBUG
 	sendto_ops("Debug: parse(): %s", buffer);
 #endif
-	
+
 	if ((cptr->receiveK >= 4) && IsUnknown(cptr))
 	{
-		sendto_realops("Flood from unknown connection %s detected", cptr->sockhost);
+		sendto_realops("Flood from unknown connection %s detected",
+		    cptr->sockhost);
 		ban_flooder(cptr);
 		return 0;
 	}
-	
-	/* this call is a bit obsolete? - takes up CPU*/
+
+	/* this call is a bit obsolete? - takes up CPU */
 	backupbuf[0] = '\0';
 	strcpy(backupbuf, buffer);
 	s = sender;
 	*s = '\0';
-	alnprefix = 0;
 	for (ch = buffer; *ch == ' '; ch++)
 		;
 	para[0] = from->name;
 	if (*ch == ':' || *ch == '@')
 	{
 		if (*ch == '@')
-			alnprefix = 1;
+			nsprefix = 1;
+		else
+			nsprefix = 0;
 		/*
 		   ** Copy the prefix to 'sender' assuming it terminates
 		   ** with SPACE (or NULL, which is an error, though).
@@ -303,19 +259,21 @@ int  parse(cptr, buffer, bufend, mptr)
 		 */
 		if (*sender && IsServer(cptr))
 		{
-			if ((strlen(sender) < 3) && alnprefix)
+			if (nsprefix)
 			{
-				p = find_by_aln(sender);
-				if (p)
-					strcpy(sender, p);
+				from = (aClient *) find_server_by_base64(sender);
+				if (from) 
+					para[0] = from->name;
 			}
-			from = find_client(sender, (aClient *)NULL);
-			if (!from || match(from->name, sender))
-				from = find_server(sender, (aClient *)NULL);
-			else if (!from && index(sender, '@'))
-				from = find_nickserv(sender, (aClient *)NULL);
-
-			para[0] = sender;
+				else
+			{
+				from = find_client(sender, (aClient *)NULL);
+				if (!from || match(from->name, sender))
+					from = find_server_quick(sender);
+				else if (!from && index(sender, '@'))
+					from = find_nickserv(sender, (aClient *)NULL);
+				para[0] = sender;
+			}
 
 			/* Hmm! If the client corresponding to the
 			 * prefix is not found--what is the correct
@@ -323,7 +281,7 @@ int  parse(cptr, buffer, bufend, mptr)
 			 * (old IRC just let it through as if the
 			 * prefix just wasn't there...) --msa
 			 */
-			 
+
 			/* debugging tool */
 			if (Rha == 1)
 				from = NULL;
@@ -509,9 +467,9 @@ int  parse(cptr, buffer, bufend, mptr)
 	 * unregistered users. -Studded */
 	if (IsShunned(cptr) && IsRegistered(cptr))
 		if ((mptr->func != m_admin) && (mptr->func != m_quit)
-			&& (mptr->func != m_pong))
+		    && (mptr->func != m_pong))
 			return -4;
-			
+
 	if ((!IsRegistered(cptr)) &&
 	    (((mptr->func != m_user) && (mptr->func != m_nick) &&
 	    (mptr->func != m_server) && (mptr->func != m_pong) &&
@@ -532,9 +490,8 @@ int  parse(cptr, buffer, bufend, mptr)
 	}
 
 	mptr->count++;
-	if (IsRegisteredUser(cptr) &&
-	    mptr->func == m_private)
-	    	from->user->last = TStime();
+	if (IsRegisteredUser(cptr) && mptr->func == m_private)
+		from->user->last = TStime();
 
 #ifndef DEBUGMODE
 	return (*mptr->func) (cptr, from, i, para);
@@ -734,12 +691,11 @@ static void remove_unknown(cptr, sender)
 	 * Do kill if it came from a server because it means there is a ghost
 	 * user on the other server which needs to be removed. -avalon
 	 */
-	if (!index(sender, '.') && !alnprefix)
+	if (!index(sender, '.') && !nsprefix)
 		sendto_one(cptr, ":%s KILL %s :%s (%s(?) <- %s)",
 		    me.name, sender, me.name, sender,
 		    get_client_name(cptr, FALSE));
 	else
-		sendto_one(cptr, ":%s SQUIT %s%s :(Unknown from %s)",
-		    me.name, (alnprefix ? "@" : ""), sender,
-		    get_client_name(cptr, FALSE));
+		sendto_one(cptr, ":%s SQUIT %s :(Unknown from %s)",
+		    me.name, sender, get_client_name(cptr, FALSE));
 }

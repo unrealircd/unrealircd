@@ -1,5 +1,4 @@
-/****************************************************************************
-/****************************************************************************
+/*
  *  Userload module by Michael L. VanLoon (mlv) <michaelv@iastate.edu>
  *  Written 2/93.  Originally grafted into irc2.7.2g 4/93.
  *
@@ -40,7 +39,6 @@
 #endif
 #include "h.h"
 
-ID_CVS("$Id$");
 
 struct current_load_struct current_load_data;
 struct load_entry *load_list_head = NULL, *load_list_tail = NULL,

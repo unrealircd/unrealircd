@@ -38,7 +38,6 @@ static char sccsid[] =
 #include <io.h>
 #endif
 
-ID_CVS("$Id$");
 
 void vsendto_one(aClient *to, char *pattern, va_list vl);
 void sendbufto_one(aClient *to);
@@ -248,6 +247,9 @@ void sendbufto_one(aClient *to)
 	{
 		s = (char *) ep_encrypt(to, sendbuf, &len);
 		bcopy(s, sendbuf, len);
+#ifdef DEVELOP
+		sendto_ops("Sent off encrypted packet len %i", len);
+#endif
 	}
 #endif
 	if (DBufLength(&to->sendQ) > get_sendq(to))
@@ -337,12 +339,15 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 		if (acptr->from == one)
 			continue;	/* ...was the one I should skip
 					   or user not not a channel op */
-		if ((prefix & 0x1) && !(lp->flags & CHFL_HALFOP))
+                if ((prefix & 0x1) && (lp->flags & CHFL_HALFOP))
+                	goto good;
+		if ((prefix & 0x2) && (lp->flags & CHFL_VOICE))
+			goto good;
+		if ((prefix & 0x4) && (lp->flags & CHFL_CHANOP))
+			goto good;
+		bad:	
 			continue;
-		if ((prefix & 0x2) && !(lp->flags & CHFL_VOICE))
-			continue;
-		if ((prefix & 0x4) && !(lp->flags & CHFL_CHANOP))
-			continue;
+		good:
 		
 		i = acptr->from->fd;
 		if (MyConnect(acptr) && IsRegisteredUser(acptr))
@@ -365,7 +370,30 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 	return;
 }
 
+/*
+   sendto_chanops_butone -Stskeeps
+*/
 
+void sendto_chanops_butone(aClient *one, aChannel *chptr, char *pattern, ...)
+{
+	va_list vl;
+	Link *lp;
+	aClient *acptr;
+
+	va_start(vl, pattern);
+	for (lp = chptr->members; lp; lp = lp->next)
+	{
+		acptr = lp->value.cptr;
+		if (acptr == one || !(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
+			continue;	/* ...was the one I should skip
+					   or user not not a channel op */
+		if (MyConnect(acptr) && IsRegisteredUser(acptr))
+		{
+			vsendto_one(acptr, pattern, vl);
+		}
+	}
+
+}
 
 /*
  * sendto_channelops_butone Added 1 Sep 1996 by Cabal95.
@@ -554,6 +582,7 @@ void sendto_serv_butone_token(aClient *one, char *prefix, char *command,
 	va_list vl;
 	int  i;
 	aClient *cptr;
+	aClient *acptr;
 #ifndef NO_FDLIST
 	int  j;
 #endif
@@ -565,8 +594,13 @@ void sendto_serv_butone_token(aClient *one, char *prefix, char *command,
 
 	pref[0] = '\0';
 	if (strchr(prefix, '.'))
-		ircsprintf(pref, "@%s", find_server_aln(prefix));
-
+	{
+		acptr = (aClient *) find_server_quick(prefix);
+		if (acptr->serv->numeric)
+		{
+			strcpy(pref, base64enc(acptr->serv->numeric));
+		}
+	}
 	strcpy(tcmd, token);
 	strcpy(ccmd, command);
 	strcat(tcmd, " ");
@@ -589,19 +623,29 @@ void sendto_serv_butone_token(aClient *one, char *prefix, char *command,
 #endif
 			if (IsToken(cptr))
 			{
-				if ((pref[0] != '\0') && SupportALN(cptr))
-					sendto_one(cptr, "%s %s", pref, tcmd);
-				else
-					sendto_one(cptr, ":%s %s", prefix,
-					    tcmd);
+				if (SupportNS(cptr) && pref[0])
+				{
+					sendto_one(cptr, "@%s %s",	
+						pref, tcmd);
+				}
+					else
+				{
+					sendto_one(cptr, ":%s %s", 
+						prefix, tcmd);
+				}
 			}
 			else
 			{
-				if ((pref[0] != '\0') && SupportALN(cptr))
-					sendto_one(cptr, "%s %s", pref, ccmd);
+				if (SupportNS(cptr) && pref[0])
+				{
+					sendto_one(cptr, "@%s %s",
+						pref, ccmd);
+				}
 				else
+				{
 					sendto_one(cptr, ":%s %s", prefix,
 					    ccmd);
+				}
 			}
 	}
 	va_end(vl);
@@ -621,6 +665,7 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 	va_list vl;
 	int  i;
 	aClient *cptr;
+	aClient *acptr;
 #ifndef NO_FDLIST
 	int  j;
 #endif
@@ -634,7 +679,13 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 	
 	pref[0] = '\0';
 	if (strchr(prefix, '.'))
-		ircsprintf(pref, "@%s", find_server_aln(prefix));
+	{
+		acptr = (aClient *) find_server_quick(prefix);
+		if (acptr->serv->numeric)
+		{
+			strcpy(pref, base64enc(acptr->serv->numeric));
+		}
+	}
 
 	strcpy(tcmd, token);
 	strcpy(ccmd, command);
@@ -678,21 +729,31 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 		if ((opt & OPT_SJ3) && !SupportSJ3(cptr))
 			continue;
 		if (IsToken(cptr))
+		{
+			if (SupportNS(cptr) && pref[0])
 			{
-				if ((pref[0] != '\0') && SupportALN(cptr))
-					sendto_one(cptr, "%s %s", pref, tcmd);
+				sendto_one(cptr, "@%s %s",	
+					pref, tcmd);
+			}
 				else
-					sendto_one(cptr, ":%s %s", prefix,
-					    tcmd);
+			{
+				sendto_one(cptr, ":%s %s", 
+					prefix, tcmd);
+			}
+		}
+		else
+		{
+			if (SupportNS(cptr) && pref[0])
+			{
+				sendto_one(cptr, "@%s %s",
+					pref, ccmd);
 			}
 			else
 			{
-				if ((pref[0] != '\0') && SupportALN(cptr))
-					sendto_one(cptr, "%s %s", pref, ccmd);
-				else
-					sendto_one(cptr, ":%s %s", prefix,
-					    ccmd);
+				sendto_one(cptr, ":%s %s", prefix,
+				    ccmd);
 			}
+		}
 	}
 	va_end(vl);
 	return;
@@ -1628,8 +1689,8 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 				    "%s %s %d %d %s %s %s %lu %s %s :%s",
 				    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
 				    hopcount, lastnick, username, realhost,
-				    (SupportALN(cptr) ? find_server_aln(server)
-				    : server), servicestamp, umodes, 
+				    SupportNS(cptr) && sptr->srvptr->serv->numeric ? base64enc(sptr->srvptr->serv->numeric) : server,
+				    servicestamp, umodes, 
 					  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : virthost),
 					    info);
 			}
@@ -1639,8 +1700,7 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 				    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 				    nick, hopcount, lastnick, username,
 				    realhost,
-				    (SupportALN(cptr) ? find_server_aln(server)
-				    : server), servicestamp, info);
+				    server, servicestamp, info);
 				if (strcmp(umodes, "+"))
 				{
 					sendto_one(cptr, ":%s %s %s :%s",

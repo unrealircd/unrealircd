@@ -42,7 +42,6 @@
 #ifdef USE_DMALLOC
 #include "h.h"
 #endif
-ID_CVS("$Id$");
 ID_Copyright("(C) 1990 Markku Savela");
 ID_Notes("2.17 1/30/94 (C) 1990 Markku Savela");
 #if !defined(VALLOC) && !defined(valloc) && !defined(USE_DMALLOC)
@@ -313,7 +312,7 @@ int  dbuf_getmsg(dyn, buf, length)
 	while (length > 0 && dlen > 0)
 	{
 		dlen--;
-		if (*s == '\n' /* || *s == '\r' */) /*let stop at \n now .. */ 
+		if (*s == '\n' /* || *s == '\r' */ )	/*let stop at \n now .. */
 		{
 			copy = dyn->length - dlen;
 			/*

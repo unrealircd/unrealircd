@@ -458,3 +458,77 @@
 - Updated networks/networks.ndx (bad sts!)
 - Added networks/linuxsquare.network
 - Added networks/chatstation.network
+[recall]
+- Fixed the pesky hostname bug
+- Fixed a NO_OPEROVERDIE bug reported by Taz
+- Fixed a +L bug
+- Fixed a typo in Config
+- SJ3 fixes. Let's hope this works (f*cken hell..)
+- Fixed a V:line bug
+- Added /infoserv (you can stop bugging us now skold ;P)
+- Removed ALN, and the ALN system.
+- Added base64 encoding instead, for ALN v2 (NS)
+- Removed a SJ3 debug msg
+- Removed SVSMODE +l support, and fixed servicestamp and +d support
+- Changed to ircu/hybrid6/unreal mix of numeric 005
+- Fixed a SJ3 Fake Direction loopbug (kills on nick collisions)
+- SJ3 fixes, loop fix
+- Added NS, new generation ALN.
+- Added llthangel's whoisfix.patch, Makes sure +hv users show up as
+  %#channel instead of +#channel. Bug report by ^Fanta.
+- Changed find_server_quick to work with masks too ..
+- Removed UPING UDP socket. Only resfd opens a udp fd now
+- Small memory cleanup
+- NS introduction in sendto_serv_butone_token
+- Fixed Q:lined nick NickServ from <unregistered> on Nickname Server message
+- Fixed a problem in synch using acptr->name as info line
+- Introduced NS in SQLINE..
+- Fixed a problem in SVS2MODE not displaying mode changes, and well known
+  why
+- Recoded SVSNOOP, but the IRCd doesn't get it at all??
+- added llthangel to credits
+- Changed channel.c so when you kick someone as halfop it doesn't show as an
+  OperKick (unless you kick an op) (reported by ^Fanta, patch by llthangel)
+(rc2)
+- Fixed SVS2MODE bug with illegal modes
+- Fixed /notice @%+ bug, where it didnt work at all
+- Fixed a small chmode +u bug
+- Added sendto_chanops_butone because of codemastr's laziness
+- Fixed a few +u bugs 
+- Fixed a +I bug (yes another one)
+- Changed channel.c so that when an opped non +q/+a Oper kicks a user who
+  is +q/+a it invokes an OperKick (patch by llthangel)
+- Fixed the +lL (+Ll) bug, will first be fixed 100% when all is 3.1
+- Possible fixed the lopts bug
+- Fixed a egcs problem in Config, the strtok bug
+- Fixed the 'ulimit core size failed' bug (now checks whether it should
+  set the core size to unlimited in ./Config
+- Changed s_user.c so that Opers will see +s channels in /whois
+  (patch by llthangel)
+- +u now lists +a and +q people, and sends JOINs/PARTs to +a and +q people
+- Fixed a /mode (umode) typo where it said no such channel rather than no such nick,
+  reported by llthangel
+- Disabled anything with time in /list options temporary, causes bugs
+- Fixed a little /chghost bug
+- Fixed a SJ3 bug with ban syncing to SJ2 servers
+- Fixed some cloak bugs(???)
+- Made it so you can /knock without a reason, and a few /knock cleanups
+- Made it so if the server name specified in the M:line does not contain a "."
+  the ircd logs it to ircd.log and dies
+- Updated ./ircd to also say to look at ircd.log
+- Fixed a SQLINE synch bug
+- Added command line option -F to prevent the ircd to fork out
+- Fixed the f*cken TKL bug
+- Fixed a netsplit bug
+- Changed some find_server(name, NULL) to find_server_quick to speed up
+  lookup of servers
+- Made find_server_quick a prototype, and made some work more quicker as
+  well
+- Removed the : in :nick NICK newnick :timestamp
+- Added script ./update to help update, uses pull technology (wget, cvs)
+- Added script ./Setup which makes the user forced through Unreal.nfo, FAQ,
+  Config, and all the things we want them to read/do to compile the IRCd
+- Updated PREFIX Client Protoctl
+- Added ^MrMike^'s command list, this one will be updated
+- Removed ID_CVS, hopefully fixing some bastard stuff
+- Fixed a last minute SJOIN bug

@@ -41,7 +41,6 @@ static char sccxid[] = "@(#)cloak.c		9.00 7/12/99 UnrealIRCd";
 #endif
 #include "h.h"
 
-ID_CVS("$Id$");
 
 // #define iNAH /* networks.h now */
 /* Hidden host code below */
@@ -214,8 +213,6 @@ char *make_virthost(char *curr, char *new, int mode)
 	char *x;
 	int  i;
 	if (curr == NULL)
-		return;
-	if (new == NULL)
 		return;
 
 	mask = hidehost(curr, 0);

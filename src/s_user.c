@@ -54,7 +54,6 @@ Computing Center and Jarkko Oikarinen";
 #include "version.h"
 #endif
 
-ID_CVS("$Id$");
 void send_umode_out PROTO((aClient *, aClient *, int));
 void send_umode_out_nickv2 PROTO((aClient *, aClient *, int));
 void send_svsmode_out PROTO((aClient *, aClient *, aClient *, int));
@@ -66,7 +65,7 @@ int  sendanyways = 0;
 int  dontspread = 0;
 extern char *me_hash;
 extern ircstats IRCstats;
-
+extern char backupbuf[];
 static char buf[BUFSIZE], buf2[BUFSIZE];
 static int user_modes[] = { UMODE_OPER, 'o',
 	UMODE_LOCOP, 'O',
@@ -107,10 +106,12 @@ static int user_modes[] = { UMODE_OPER, 'o',
 
 void iNAH_host(aClient *sptr, char *host)
 {
+	if (!sptr->user)
+		return;
 	if (sptr->user->virthost)
 		MyFree(sptr->user->virthost);
 	sptr->user->virthost = MyMalloc(strlen(host) + 1);
-	ircsprintf(sptr->user->virthost, host);
+	ircsprintf(sptr->user->virthost, "%s", host);
 	if (MyConnect(sptr))
 		sendto_serv_butone_token(&me, sptr->name, MSG_SETHOST,
 		    TOK_SETHOST, "%s", sptr->user->virthost);
@@ -324,7 +325,7 @@ int  hunt_server(cptr, sptr, command, server, parc, parv)
 	if ((acptr = find_client(parv[server], NULL)))
 		if (acptr->from == sptr->from && !MyConnect(acptr))
 			acptr = NULL;
-	if (!acptr && (acptr = find_server(parv[server], NULL)))
+	if (!acptr && (acptr = find_server_quick(parv[server])))
 		if (acptr->from == sptr->from && !MyConnect(acptr))
 			acptr = NULL;
 	if (!acptr)
@@ -867,7 +868,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			    cmodestring);
 #endif
 		sendto_one(sptr, rpl_str(RPL_PROTOCTL), me.name, nick,
-		    PROTOCTL_CLIENT);
+		    PROTOCTL_PARAMETERS);
 		(void)m_lusers(sptr, sptr, 1, parv);
 		update_load();
 		(void)m_motd(sptr, sptr, 1, parv);
@@ -892,7 +893,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	{
 		aClient *acptr;
 
-		if (!(acptr = find_server(user->server, NULL)))
+		if (!(acptr = (aClient *) find_server_quick(user->server)))
 		{
 			sendto_ops
 			    ("Bad USER [%s] :%s USER %s %s : No such server",
@@ -1060,6 +1061,7 @@ int  m_nick(cptr, sptr, parc, parv)
 	aConfItem *aconf;
 	aSqlineItem *asqline;
 	aClient *acptr, *serv;
+	aClient *acptrs;
 	char nick[NICKLEN + 2], *s;
 	Link *lp;
 	time_t lastnick = (time_t) 0;
@@ -1129,12 +1131,13 @@ int  m_nick(cptr, sptr, parc, parv)
 	   ** We should really only deal with this for msgs from servers.
 	   ** -- Aeto
 	 */
-	/* Fixed up to work with ALN too .. --Stskeeps */
 	if (IsServer(cptr) &&
-	    (parc > 7 && (!(serv = (aClient *)find_serveraln(parv[6], NULL)) ||
+	    (parc > 7 && (!(serv = (aClient *)find_server_b64_or_real(parv[6], NULL)) ||
 	    serv->from != cptr->from)))
+	{
+		sendto_ops("Cannot find server (%s)", backupbuf);
 		return 0;
-
+	}
 	/*
 	   ** Check against nick name collisions.
 	   **
@@ -1143,7 +1146,7 @@ int  m_nick(cptr, sptr, parc, parv)
 	   ** is present in the nicklist (due to the way the below for loop is
 	   ** constructed). -avalon
 	 */
-	if ((acptr = find_server(nick, NULL)))
+	if ((acptr = find_server_quick(nick)))
 	{
 		if (MyConnect(sptr))
 		{
@@ -1169,13 +1172,23 @@ int  m_nick(cptr, sptr, parc, parv)
 	    && ((aconf = find_conf_name(nick, CONF_QUARANTINED_NICK))
 	    || (asqline = find_sqline_match(nick))))
 	{
-		sendto_realops("Q-lined nick %s from %s on %s.", nick,
-		    (*sptr->name != 0 && !IsServer(sptr)) ? sptr->name :
-		    "<unregistered>",
-		    (sptr->user ==
-		    NULL) ? ((IsServer(sptr)) ? (strlen(parv[6]) <
-		    3 ? find_by_aln(parv[6]) : parv[6]) : me.name) : sptr->
-		    user->server);
+		if (IsServer(sptr))
+		{
+			acptrs = (aClient *) find_server_b64_or_real(sptr->user == NULL ? (char *) parv[6] : (char *) sptr->user->server);
+			sendto_realops("Q:lined nick %s from %s on %s",
+				nick, 
+				(*sptr->name != 0 && !IsServer(sptr) ? sptr->name :
+				 "<unregistered>"),
+				 acptrs ? acptrs->name : "unknown server");
+		}
+			else
+		{
+			sendto_realops("Q:lined nick %s from %s on %s",
+				nick,
+				*sptr->name ? sptr->name : "<unregistered>",
+				me.name);
+		}
+
 		if ((!IsServer(cptr)) && (!IsOper(cptr)))
 		{
 
@@ -1530,7 +1543,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		add_history(sptr, 1);
 		sendto_common_channels(sptr, ":%s NICK :%s", parv[0], nick);
 		sendto_serv_butone_token(cptr, parv[0], MSG_NICK, TOK_NICK,
-		    "%s :%d", nick, sptr->lastnick);
+		    "%s %d", nick, sptr->lastnick);
 	}
 	else if (!sptr->name[0])
 	{
@@ -1910,7 +1923,7 @@ static int m_message(cptr, sptr, parc, parv, notice)
 			/* There is always a \0 if its a string */
 			if (*(server + 1) != '\0')
 			{
-				acptr = find_server(server + 1, NULL);
+				acptr = find_server_quick(server + 1);
 				if (acptr)
 				{
 					/* 
@@ -2048,6 +2061,27 @@ int  m_nickserv(cptr, sptr, parc, parv)
 		    parv[0], NickServ);
 }
 
+int m_infoserv(cptr, sptr, parc, parv)
+	aClient *cptr, *sptr;
+	int  parc;
+	char *parv[];
+{
+	aClient *acptr;
+	if (parc < 2 || *parv[1] == '\0')
+	{
+	sendto_one(sptr, err_str(ERR_NOTEXTTOSEND), me.name, parv[0]);
+	return -1;
+	}
+
+	if ((acptr = find_person(InfoServ, NULL)))
+	{
+	sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", parv[0],
+		InfoServ, SERVICES_NAME, parv[1]);		
+	}
+	else
+		sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
+			parv[0], InfoServ);
+}
 int  m_operserv(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;
 	int  parc;
@@ -2405,13 +2439,14 @@ int  m_who(cptr, sptr, parc, parv)
 		for (acptr = client; acptr; acptr = acptr->next)
 		{
 			aChannel *ch2ptr = NULL;
-			int  showperson, isinvis;
+			int  showsecret, showperson, isinvis;
 
 			if (!IsPerson(acptr))
 				continue;
 			if (oper && (!IsAnOper(acptr) || (IsHideOper(acptr) && sptr != acptr && !IsAnOper(sptr))))
 				continue;
 			showperson = 0;
+			showsecret = 0;
 			/*
 			 * Show user if they are on the same channel, or not
 			 * invisible and on a non secret channel (if any).
@@ -2537,7 +2572,7 @@ int  m_whois(cptr, sptr, parc, parv)
 
 	for (tmp = parv[1]; (nick = strtoken(&p, tmp, ",")); tmp = NULL)
 	{
-		int  invis, showperson, member, wilds;
+		int  invis, showsecret, showperson, member, wilds;
 
 		found = 0;
 		(void)collapse(nick);
@@ -2592,10 +2627,14 @@ int  m_whois(cptr, sptr, parc, parv)
 				if (!invis && HiddenChannel(chptr) &&
 				    !SecretChannel(chptr))
 					showperson = 1;
+				else if (IsAnOper(sptr) && SecretChannel(chptr)) {
+					showperson = 1;
+					showsecret = 1;
+				}
 			}
 			if (!showperson)
 				continue;
-			a2cptr = find_server(user->server, NULL);
+			a2cptr = find_server_quick(user->server);
 
 			if (!IsPerson(acptr))
 				continue;
@@ -2640,7 +2679,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			    lp = lp->next)
 			{
 				chptr = lp->value.chptr;
-				if (ShowChannel(sptr, chptr) || (acptr == sptr))
+				if (IsAnOper(sptr) || ShowChannel(sptr, chptr) || (acptr == sptr))
 				{
 					if (len + strlen(chptr->chname)
 					    > (size_t)BUFSIZE - 4 - mlen)
@@ -2653,16 +2692,19 @@ int  m_whois(cptr, sptr, parc, parv)
 						*buf = '\0';
 						len = 0;
 					}
+					if (!(acptr == sptr) && IsAnOper(sptr)
+					&& (showsecret == 1) && SecretChannel(chptr))
+						*(buf + len++) = '~';
 					if (is_chanowner(acptr, chptr))
 						*(buf + len++) = '*';
 					else if (is_chanprot(acptr, chptr))
 						*(buf + len++) = '^';
 					else if (is_chan_op(acptr, chptr))
 						*(buf + len++) = '@';
-					else if (has_voice(acptr, chptr))
-						*(buf + len++) = '+';
 					else if (is_half_op(acptr, chptr))
 						*(buf + len++) = '%';
+					else if (has_voice(acptr, chptr))
+						*(buf + len++) = '+';
 					if (len)
 						*(buf + len) = '\0';
 					(void)strcpy(buf + len, chptr->chname);
@@ -2774,6 +2816,7 @@ int  m_user(cptr, sptr, parc, parv)
 	    NULL;
 	u_int32_t sstamp = 0;
 	anUser *user;
+	aClient *acptr;
 	char *mparv[] = { sptr->name, sptr->name, NULL };
 
 	if (IsServer(cptr) && !IsUnknown(sptr))
@@ -2827,24 +2870,16 @@ int  m_user(cptr, sptr, parc, parv)
 		if (sptr->srvptr == NULL)
 			sendto_ops("WARNING, User %s introduced as being "
 			    "on non-existant server %s.", sptr->name, server);
-		if (SupportALN(cptr))
+		if (SupportNS(cptr))
 		{
-			if (strlen(server) < 3)
-			{
-				user->server = find_by_aln(server);
-				if (!user->server)
-					user->server =
-					    find_or_add("unknownserver");
-			}
+			acptr = (aClient *) find_server_b64_or_real(server);
+			if (acptr)
+				user->server = find_or_add(acptr->name);
 			else
-			{
 				user->server = find_or_add(server);
-			}
 		}
-		else
-		{
-			user->server = find_or_add(server);
-		}
+			else
+				user->server = find_or_add(server);
 		strncpyzt(user->realhost, host, sizeof(user->realhost));
 		goto user_finish;
 	}
@@ -3273,12 +3308,12 @@ int  m_ping(cptr, sptr, parc, parv)
 
 	acptr = find_client(origin, NULL);
 	if (!acptr)
-		acptr = find_server(origin, NULL);
+		acptr = find_server_quick(origin);
 	if (acptr && acptr != sptr)
 		origin = cptr->name;
 	if (!BadPtr(destination) && mycmp(destination, me.name) != 0)
 	{
-		if ((acptr = find_server(destination, NULL)))
+		if ((acptr = find_server_quick(destination)))
 			sendto_one(acptr, ":%s PING %s :%s", parv[0],
 			    origin, destination);
 		else
@@ -3371,7 +3406,7 @@ int  m_pong(cptr, sptr, parc, parv)
 	if (!BadPtr(destination) && mycmp(destination, me.name) != 0)
 	{
 		if ((acptr = find_client(destination, NULL)) ||
-		    (acptr = find_server(destination, NULL)))
+		    (acptr = find_server_quick(destination)))
 		{
 			if (!IsServer(cptr) && !IsServer(acptr))
 			{
@@ -3470,6 +3505,8 @@ int  m_mkpasswd(cptr, sptr, parc, parv)
 **	parv[1] = oper name
 **	parv[2] = oper password
 */
+extern int SVSNOOP;
+
 int  m_oper(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;
 	int  parc;
@@ -3492,6 +3529,13 @@ int  m_oper(cptr, sptr, parc, parv)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
 		    me.name, parv[0], "OPER");
+		return 0;
+	}
+
+	if (SVSNOOP)
+	{
+		sendto_one(sptr, ":%s NOTICE %s :*** This server is in NOOP mode, you cannot /oper",
+			me.name, sptr->name);
 		return 0;
 	}
 
@@ -4119,7 +4163,7 @@ int  m_umode(cptr, sptr, parc, parv)
 	if (!(acptr = find_person(parv[1], NULL)))
 	{
 		if (MyConnect(sptr))
-			sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL),
+			sendto_one(sptr, err_str(ERR_NOSUCHNICK),
 			    me.name, parv[0], parv[1]);
 		return 0;
 	}
@@ -4311,8 +4355,8 @@ int  m_umode(cptr, sptr, parc, parv)
 
 	if (IsHidden(sptr) && !(setflags & UMODE_HIDE))
 	{
-		sptr->user->virthost =
-		    (char *)make_virthost(sptr->user->realhost,
+		sptr->user->virthost = 
+		(char *)make_virthost(sptr->user->realhost,
 		    sptr->user->virthost, 1);
 	}
 
@@ -4526,9 +4570,9 @@ setmodey:
 		sendto_serv_butone_token(cptr, parv[0], MSG_SVS2MODE,
 		    TOK_SVS2MODE, "%s %s", parv[1], parv[2]);
 
-	send_umode(NULL, sptr, setflags, ALL_UMODES, buf);
-	if (MyClient(sptr))
-		sendto_one(sptr, ":%s MODE %s :%s", parv[0], parv[1], buf);
+	send_umode(NULL, acptr, setflags, ALL_UMODES, buf);
+	if (MyClient(acptr) && buf[1])
+		sendto_one(acptr, ":%s MODE %s :%s", parv[0], parv[1], buf);
 	return 0;
 }
 
@@ -4586,15 +4630,6 @@ int  m_svsmode(cptr, sptr, parc, parv)
 			  case '\r':
 			  case '\t':
 				  break;
-			  case 'l':
-				  if (parv[3] && isdigit(*parv[3]))
-					  max_global_count = atoi(parv[3]);
-				  break;
-			  case 'd':
-				  if (parv[3] && isdigit(*parv[3]))
-					  acptr->user->servicestamp =
-					      atol(parv[3]);
-				  break;
 			  case 'i':
 				  if (what == MODE_ADD)
 					  IRCstats.invisible++;
@@ -4606,6 +4641,13 @@ int  m_svsmode(cptr, sptr, parc, parv)
 					  IRCstats.operators++;
 				  if (what == MODE_DEL)
 					  IRCstats.operators--;
+			  case 'd':
+				  if (parv[3] && isdigit(*parv[3]))
+				  {
+					  acptr->user->servicestamp =
+					      atol(parv[3]);
+					  break;
+				  }
 			  default:
 setmodex:
 				  for (s = user_modes; (flag = *s); s += 2)

@@ -48,7 +48,6 @@ void free_link PROTO((Link *));
 Link *make_link PROTO(());
 extern ircstats IRCstats;
 
-ID_CVS("$Id$");
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
 ID_Notes("2.24 4/20/94");
@@ -186,8 +185,7 @@ anUser *make_user(cptr)
 		user->invited = NULL;
 		user->silence = NULL;
 		user->server = NULL;
-		user->virthost = MyMalloc(2);
-		*user->virthost = '\0';
+		user->virthost = NULL;
 		cptr->user = user;
 	}
 	return user;
@@ -196,6 +194,7 @@ anUser *make_user(cptr)
 aServer *make_server(cptr)
 	aClient *cptr;
 {
+
 	aServer *serv = cptr->serv;
 
 	if (!serv)
@@ -207,6 +206,7 @@ aServer *make_server(cptr)
 		serv->user = NULL;
 		serv->nexts = NULL;
 		*serv->by = '\0';
+		serv->numeric = 0;
 		serv->up = NULL;
 		cptr->serv = serv;
 	}
@@ -263,7 +263,10 @@ void remove_client_from_list(cptr)
 	aClient *cptr;
 {
 	if (IsServer(cptr))
+	{
+		remove_server_from_table(cptr);
 		IRCstats.servers--;
+	}
 	if (IsClient(cptr))
 	{
 		if (IsInvisible(cptr))

@@ -103,6 +103,8 @@ char *unrealcredits[] =
 	"",
 	"noriko noriko@linuxsquare.net",
 	"- Giving us an OpenBSD shell to develop on :)",
+	"llthangel",
+	"- A good job helping with bugs/especially SJ3",
 	"",
 	"                         \37Donations to Unreal:\37",
 	"BlueFlame^",

@@ -61,7 +61,6 @@ Computing Center and Jarkko Oikarinen";
 #endif
 #include "version.h"
 
-ID_CVS("$Id$");
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
 ID_Notes("2.48 3/9/94");
@@ -101,7 +100,7 @@ char REPORT_DO_SOCKS[128], REPORT_NO_SOCKS[128], REPORT_GOOD_SOCKS[128];
 #endif
 #endif
 aClient me;			/* That's me */
-char	*me_hash;
+char *me_hash;
 aClient *client = &me;		/* Pointer to beginning of Client list */
 extern char backupbuf[8192];
 
@@ -649,6 +648,8 @@ extern time_t check_pings(time_t currenttime, int check_kills)
 	return (oldest);
 }
 
+
+
 /*
 ** bad_command
 **	This is called when the commandline is not acceptable.
@@ -784,6 +785,9 @@ int  InitwIRCD(argc, argv)
 #endif
 			  dpath = p;
 			  break;
+		  case 'F':
+		  		bootopt |= BOOT_NOFORK;
+		  		break;
 #ifndef _WIN32
 #ifdef CMDLINE_CONFIG
 		  case 'f':
@@ -806,6 +810,17 @@ int  InitwIRCD(argc, argv)
 			  (void)printf("sizeof(aClient) == %u\n", sizeof(aClient));
 			  (void)printf("sizeof(aChannel) == %u\n", sizeof(aChannel));
 			  (void)printf("sizeof(aServer) == %u\n", sizeof(aServer));
+			  (void)printf("sizeof(Link) == %u\n", sizeof(Link));
+			  (void)printf("sizeof(anUser) == %u\n", sizeof(anUser));
+			  (void)printf("sizeof(aConfItem) == %u\n", sizeof(aConfItem));
+			  (void)printf("sizeof(aVhost) == %u\n", sizeof(aVhost));
+			  (void)printf("sizeof(aTKline) == %u\n", sizeof(aTKline));
+			  
+			      (void)printf("sizeof(struct ircstatsx) == %u\n",
+			      sizeof(struct ircstatsx));
+			  (void)printf("aClient remote == %u\n",
+			      CLIENT_REMOTE_SIZE);
+
 			  exit(0);
 			  break;
 #ifndef _WIN32
@@ -997,6 +1012,8 @@ int  InitwIRCD(argc, argv)
 	(void)init_sys();
 	me.flags = FLAGS_LISTEN;
 	me.fd = -1;
+	SetMe(&me);
+	make_server(&me);
 
 #ifdef USE_SYSLOG
 	openlog(myargv[0], LOG_PID | LOG_NDELAY, LOG_FACILITY);
@@ -1032,7 +1049,6 @@ int  InitwIRCD(argc, argv)
 	motd = (aMotd *) read_motd(MPATH);
 	svsmotd = (aMotd *) read_svsmotd(VPATH);
 	read_tlines();
-	(void)setup_ping();
 	(void)get_my_name(&me, me.sockhost, sizeof(me.sockhost) - 1);
 	if (me.name[0] == '\0')
 		strncpyzt(me.name, me.sockhost, sizeof(me.name));
@@ -1045,16 +1061,15 @@ int  InitwIRCD(argc, argv)
 #ifdef SOCKSPORT
 	me.socksfd = -1;
 #endif
-	SetMe(&me);
-	make_server(&me);
 	me_hash = find_or_add(me.name);
 	me.serv->up = me_hash;
-
+	add_server_to_table(&me);
 	me.lasttime = me.since = me.firsttime = TStime();
 	(void)add_to_client_hash_table(me.name, &me);
 #if !defined(_AMIGA) && !defined(_WIN32) && !defined(NO_FORKING)
-	if (fork())
-		exit(0);
+	if (!(bootopt & BOOT_NOFORK))
+		if (fork())
+			exit(0);
 
 #endif
 
@@ -1087,10 +1102,9 @@ int  InitwIRCD(argc, argv)
 #ifdef SOCKSPORT
 	init_socks(&me);
 #endif
-
 	check_class();
 	write_pidfile();
-
+	
 	Debug((DEBUG_NOTICE, "Server ready..."));
 #ifdef USE_SYSLOG
 	syslog(LOG_NOTICE, "Server Ready");
@@ -1103,6 +1117,7 @@ int  InitwIRCD(argc, argv)
 #ifdef _WIN32
 	return 1;
 }
+
 
 void SocketLoop(void *dummy)
 {
@@ -1162,7 +1177,7 @@ void SocketLoop(void *dummy)
 			}
 			if (do_garbage_collect == 1)
 				do_garbage_collect = 0;
-				
+
 			last_garbage_collect = now;
 		}
 		/*

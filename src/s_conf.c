@@ -1,4 +1,5 @@
 /*
+/*
  *   Unreal Internet Relay Chat Daemon, src/s_conf.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
@@ -53,7 +54,6 @@ Computing Center and Jarkko Oikarinen";
 #include <time.h>
 #endif
 
-ID_CVS("$Id$");
 ID_Notes("O:line flags in here");
 #include "h.h"
 #define IN6ADDRSZ (sizeof(struct IN_ADDR))
@@ -64,7 +64,7 @@ static int advanced_check(char *, int);
 aSqlineItem *sqline = NULL;
 aConfItem *conf = NULL;
 extern char zlinebuf[];
-
+extern ircstats IRCstats;
 /*
  * remove all conf entries from the client except those which match
  * the status field mask.
@@ -839,28 +839,53 @@ aSqlineItem *find_sqline_match(nickname)
 **      parv[2] = +/-
 **
 */
+
+int SVSNOOP = 0;
+
 int  m_svsnoop(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;
 	int  parc;
 	char *parv[];
 {
 	aConfItem *aconf;
+	aClient *acptr;
 
 	if (!(check_registered(sptr) && IsULine(cptr, sptr) && parc > 2))
 		return 0;
-/* svsnoop bugfix --binary */
+	/* svsnoop bugfix --binary */
 	if (hunt_server(cptr, sptr, ":%s SVSNOOP %s :%s", 1, parc,
 	    parv) == HUNTED_ISME)
 	{
 		if (parv[2][0] == '+')
-			for (aconf = conf; aconf; aconf = aconf->next)
+		{
+			SVSNOOP = 1;
+			sendto_ops("This server has been placed in NOOP mode");
+			for (acptr = &me; acptr; acptr = acptr->prev)
 			{
-				if (aconf->status & CONF_OPERATOR
-				    || aconf->status & CONF_LOCOP)
-					aconf->status = CONF_ILLEGAL;
+				if (MyClient(acptr) && IsAnOper(acptr))
+				{
+					if (IsOper(acptr))
+						IRCstats.operators--;
+					acptr->umodes &=
+					    ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP | UMODE_SERVICES |
+					    UMODE_SADMIN | UMODE_ADMIN);
+					acptr->umodes &=
+		    				~(UMODE_NETADMIN | UMODE_TECHADMIN | UMODE_CLIENT |
+		 			   UMODE_FLOOD | UMODE_EYES | UMODE_CHATOP | UMODE_WHOIS);
+					acptr->umodes &=
+					    ~(UMODE_KIX | UMODE_FCLIENT | UMODE_HIDING | UMODE_CODER |
+					    UMODE_DEAF | UMODE_HIDEOPER);
+					acptr->oflag = 0;
+				
+				}
 			}
+
+		}
 		else
-			(void)rehash(&me, &me, 2);
+		{
+			SVSNOOP = 0;
+			sendto_ops("This server is no longer in NOOP mode");
+		}
 	}
 }
 
@@ -1309,8 +1334,28 @@ int  initconf(opt)
 			else
 				aconf->port = atoi(tmp);
 			if ((tmp = getfield(NULL)) == NULL)
+			{
 				break;
+			}
 			Class(aconf) = find_class(atoi(tmp));
+			if (aconf->status == CONF_ME)
+			{
+				if (me.serv->numeric)
+				{
+					if (atoi(tmp) != me.serv->numeric)
+					{
+						if (IRCstats.servers > 1)
+						{
+							sendto_ops("You cannot change numeric when servers are connected");
+						}
+							else
+						{
+							me.serv->numeric = atoi(tmp);
+						}
+					}
+				} else
+					me.serv->numeric = atoi(tmp);
+			}			
 			break;
 		}
 		/*
@@ -1477,6 +1522,10 @@ int  initconf(opt)
 		if (aconf->status == CONF_ME)
 		{
 			strncpyzt(me.info, aconf->name, sizeof(me.info));
+			if (me.name[0] == '\0' && !strchr(aconf->host, '.')) {
+				ircd_log("ERROR: Invalid Server Name %s, Reason: Servername must contain at least one \".\"\n",aconf->host);
+				exit(-1);
+			}
 			if (me.name[0] == '\0' && aconf->host[0])
 				strncpyzt(me.name, aconf->host,
 				    sizeof(me.name));

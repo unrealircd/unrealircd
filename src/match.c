@@ -22,7 +22,6 @@
 #include "common.h"
 #include "sys.h"
 
-ID_CVS("$Id$");
 ID_Copyright("(C) 1990 Jarkko Oikarinen");
 
 /*

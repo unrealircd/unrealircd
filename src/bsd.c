@@ -24,7 +24,6 @@
 #include "h.h"
 #include <signal.h>
 
-ID_CVS("$Id$");
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
 
