@@ -1,8 +1,13 @@
 
-Unreal3.2.1-pre2 Release Notes
-==============================
+Unreal3.2.1 Release Notes
+==========================
 
-Please READ this carefully, otherwise your ircd won't boot!
+Please READ this document carefully, otherwise your ircd won't boot!
+
+This is a RECOMMENDED RELEASE due to the fact that the previous
+cloaking algorithm has been cracked. Besides that, this version
+also brings quite some exciting new features (win32 module support,
+and a _lot_ more).
 
 ==[ GENERAL INFORMATION ]==
 - If you are upgrading on *NIX, make sure you run make clean and ./Config before doing make
@@ -19,11 +24,12 @@ Please READ this carefully, otherwise your ircd won't boot!
   - 2 cloaking modules are provided: 'cloak' and 'oldcloak':
   - 'cloak' is the new, RECOMMENDED, and much more secure cloaking algorithm that uses
     md5 internally. It requires 3 keys of 5-100 characters (10-20 is fine) consisting
-    of mixed lowcase (a-z), upcase (A-Z) and digits (0-9). So for example:
+    of mixed lowercase (a-z), uppercase (A-Z) and digits (0-9). So for example:
     set { cloak-keys { "AHsHS6ds2sQGAkish"; "qF5D3orm6Evba26hjf"; "f6oaO2hhd6sIHSfs"; };
   - 'oldcloak' is the <=3.2 cloaking algorithm, it is ONLY ment for use during the
     upgrade process (it will give a warning if you use it), you should switch to the
-    much more secure 'cloak' module as soon as all your servers are upgraded.
+    much more secure 'cloak' module AS SOON AS POSSIBLE. As mentioned earlier, the old
+    cloaking algorithm has been cracked so it makes no sense to keep using it.
   - 3rd party cloak modules are also possible.
 - [!] Windows now also supports modules
   - This means you MUST load commands.dll and a cloaking module on windows too, eg:

@@ -3332,3 +3332,4 @@ This is the 3.2 fixes branch.
 - Fixed a problem with the win32 installer as a result of MSVCR70D.DLL, reported by
   aquanight
 - Updated /Credits and added a donator.
+- Made release notes a bit more scary + some minor english-only doc updates

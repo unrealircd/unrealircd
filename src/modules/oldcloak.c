@@ -164,8 +164,8 @@ int errors = 0;
 		errors++;
 	}
 	config_status("oldcloak: WARNING: The 'oldcloak' module should *ONLY* be used temporary "
-	              "for upgrading purposes since it is considered insecure, "
-	              "upgrade to 'cloak' as soon as you can.");
+	              "for upgrading purposes since it is considered INSECURE, "
+	              "upgrade to 'cloak' AS SOON AS YOU CAN.");
 
 	*errs = errors;
 	return errors ? -1 : 1;
