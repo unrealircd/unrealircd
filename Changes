@@ -879,3 +879,4 @@ seen. gmtime warning still there
 - Added a hell lot of DNS debugging code, and fixed the BIGENDIAN problem
   with resolver. Thanks to dawn and Trash.net for shell on a sparc
 - Added umodes.c, long val = get_umode('c');
+- Added new umode system to win32 makefile
