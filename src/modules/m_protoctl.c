@@ -310,6 +310,11 @@ CMD_FUNC(m_protoctl)
 			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
 			SetTKLEXT(cptr);
 		}
+		else if (strcmp(s, "NICKIP") == 0)
+		{
+			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
+			cptr->proto |= PROTO_NICKIP;
+		}
 		/*
 		 * Add other protocol extensions here, with proto
 		 * containing the base option, and options containing

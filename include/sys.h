@@ -142,6 +142,9 @@ typedef unsigned short u_int16_t;
  *  IPv4 or IPv6 structures?
  */
 
+# define MYDUMMY_SIZE 128
+
+
 #ifdef INET6
 
 # define AND16(x) ((x)[0]&(x)[1]&(x)[2]&(x)[3]&(x)[4]&(x)[5]&(x)[6]&(x)[7]&(x)[8]&(x)[9]&(x)[10]&(x)[11]&(x)[12]&(x)[13]&(x)[14]&(x)[15])
@@ -160,7 +163,6 @@ typedef unsigned short u_int16_t;
 //#  define uint32_t __u32
 // # endif
 
-# define MYDUMMY_SIZE 128
 char mydummy[MYDUMMY_SIZE];
 char mydummy2[MYDUMMY_SIZE];
 

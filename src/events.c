@@ -151,7 +151,11 @@ int EventMod(Event *event, EventInfo *mods) {
 	return 0;
 }
 
+#ifndef _WIN32
 inline void	DoEvents(void)
+#else
+void DoEvents(void)
+#endif
 {
 	Event *eventptr;
 	Event temp;

@@ -199,6 +199,7 @@ anUser *make_user(aClient *cptr)
 		user->snomask = 0;
 		*user->realhost = '\0';
 		user->virthost = NULL;
+		user->ip_str = NULL;
 		cptr->user = user;		
 	}
 	return user;
@@ -235,11 +236,13 @@ void free_user(anUser *user, aClient *cptr)
 	if (--user->refcnt <= 0)
 	{
 		if (user->away)
-			MyFree((char *)user->away);
+			MyFree(user->away);
 		if (user->swhois)
-			MyFree((char *)user->swhois);
+			MyFree(user->swhois);
 		if (user->virthost)
-			MyFree((char *)user->virthost);
+			MyFree(user->virthost);
+		if (user->ip_str)
+			MyFree(user->ip_str);
 		if (user->operlogin)
 			MyFree(user->operlogin);
 		/*
@@ -252,7 +255,7 @@ void free_user(anUser *user, aClient *cptr)
 			    user->username, user->realhost, user,
 			    user->invited, user->channel, user->joined,
 			    user->refcnt);
-		MyFree((char *)user);
+		MyFree(user);
 #ifdef	DEBUGMODE
 		users.inuse--;
 #endif

@@ -26,7 +26,6 @@ EXPORTS
 	DCCdeny_add
 	DCCdeny_del
 	DeleteTempModules
-	DoEvents
 	DoesOp
 	EXTMODE_NONOTICE
 	EventAddEx
@@ -854,3 +853,5 @@ EXPORTS
 	whowas_next
 	write_pidfile
 	zlinebuf
+	encode_ip
+	decode_ip

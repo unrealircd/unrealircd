@@ -125,6 +125,14 @@ extern char *inet_ntoa(struct IN_ADDR);
 extern int inet_netof(struct IN_ADDR);
 #endif
 
+#ifndef HAVE_INET_NTOP
+const char *inet_ntop(int, const void *, char *, size_t);
+#endif
+
+#ifndef HAVE_INET_PTON
+int inet_pton(int af, const char *src, void *dst);
+#endif
+
 MODVAR int  global_count, max_global_count;
 extern char *myctime(time_t);
 extern char *strtoken(char **, char *, char *);
@@ -314,7 +322,8 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                         " SJ3" \
                         " NS" \
                         " SJB64" \
-                        " TKLEXT"
+                        " TKLEXT" \
+			" NICKIP"
 
 #ifdef _WIN32
 /*
@@ -338,6 +347,7 @@ extern int lu_noninv, lu_inv, lu_serv, lu_oper,
 
 MODVAR TS   now;
 
+#ifndef _WIN32
 #if defined(__STDC__)
 #define __const         const
 #define __signed        signed
@@ -359,6 +369,9 @@ MODVAR TS   now;
 #define volatile
 #endif
 #endif
+#endif
+#else
+#define inline __inline
 #endif
 
 #define READBUF_SIZE 8192

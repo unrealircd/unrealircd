@@ -688,3 +688,5 @@ extern void reread_motdsandrules();
 extern MODVAR int SVSNOOP;
 extern int callbacks_check(void);
 extern void callbacks_switchover(void);
+extern char *encode_ip(char *);
+extern char *decode_ip(char *);

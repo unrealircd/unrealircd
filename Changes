@@ -3190,3 +3190,5 @@ This is the 3.2 fixes branch.
 - German doc updates (week 21)
 - Fixed a permanent modules bug: custom allow/except/ban/deny types were lost
   after /rehash. Reported by AngryWolf (#0001837).
+- Fixed a problem with NICK collisions not using NICKv2 (#0001773) reported by thilo
+- Added NICKIP (#0000605 & #0001376) 

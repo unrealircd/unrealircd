@@ -278,6 +278,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPT_NOT_VHP	0x2000
 #define OPT_TKLEXT	0x4000
 #define OPT_NOT_TKLEXT	0x8000
+#define OPT_NICKIP	0x10000
+#define OPT_NOT_NICKIP  0x20000
 
 /* client->flags (32 bits): 28 used, 4 free */
 #define	FLAGS_PINGSENT   0x0001	/* Unreplied ping sent */
@@ -345,6 +347,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define PROTO_VHP		0x0400	/* Send hostnames in NICKv2 even if not sethosted */
 #define PROTO_SJB64		0x0800
 #define PROTO_TKLEXT	0x1000	/* TKL extension: 10 parameters instead of 8 (3.2RC2) */
+#define PROTO_NICKIP	0x2000  /* Send IP addresses in the NICK command */
+
 /* note: client->proto is currently a 'short' (max is 0x8000) */
 
 /*
@@ -484,6 +488,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsToken(x)		((x)->proto & PROTO_TOKEN)
 #define SupportSJOIN(x)		((x)->proto & PROTO_SJOIN)
 #define SupportNICKv2(x)	((x)->proto & PROTO_NICKv2)
+#define SupportNICKIP(x)	((x)->proto & PROTO_NICKIP)
 #define SupportSJOIN2(x)	((x)->proto & PROTO_SJOIN2)
 #define SupportUMODE2(x)	((x)->proto & PROTO_UMODE2)
 #define SupportNS(x)		((x)->proto & PROTO_NS)
@@ -701,6 +706,7 @@ struct User {
 #ifdef	LIST_DEBUG
 	aClient *bcptr;
 #endif
+	char *ip_str;		/* The IP in string form */
 	char *operlogin;	/* Only used if person is/was opered, used for oper::maxlogins */
 	struct {
 		time_t nick_t;

@@ -798,9 +798,9 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 					{
 						sendto_one(cptr,
 						    ((cptr->proto & PROTO_SJB64) ?
-						    "%s %s %d %B %s %s %b %lu %s %s :%s"
+						    "%s %s %d %B %s %s %b %lu %s %s %s%s:%s"
 						    :
-						    "%s %s %d %lu %s %s %b %lu %s %s :%s"),
+						    "%s %s %d %lu %s %s %b %lu %s %s %s%s:%s"),
 						    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 						    acptr->name,
 						    acptr->hopcount + 1,
@@ -811,15 +811,16 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 						    (unsigned long)acptr->user->servicestamp,
 						    (!buf || *buf == '\0' ? "+" : buf),
 						    ((IsHidden(acptr) && (acptr->umodes & UMODE_SETHOST)) ? acptr->user->virthost : "*"),
-						    acptr->info);
+						    SupportNICKIP(cptr) ? encode_ip(acptr->user->ip_str) : "",
+					            SupportNICKIP(cptr) ? " " : "", acptr->info);
 					}
 					else
 					{
 						sendto_one(cptr,
 						    (cptr->proto & PROTO_SJB64 ?
-						    "%s %s %d %B %s %s %s %lu %s %s :%s"
+						    "%s %s %d %B %s %s %s %lu %s %s %s%s:%s"
 						    :
-						    "%s %s %d %lu %s %s %s %lu %s %s :%s"),
+						    "%s %s %d %lu %s %s %s %lu %s %s %s%s:%s"),
 						    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 						    acptr->name,
 						    acptr->hopcount + 1,
@@ -830,12 +831,13 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 						    (unsigned long)acptr->user->servicestamp,
 						    (!buf || *buf == '\0' ? "+" : buf),
 						    ((IsHidden(acptr) && (acptr->umodes & UMODE_SETHOST)) ? acptr->user->virthost : "*"),
-						    acptr->info);
+						    SupportNICKIP(cptr) ? encode_ip(acptr->user->ip_str) : "",
+					            SupportNICKIP(cptr) ? " " : "", acptr->info);
 					}
 				}
 				else
 					sendto_one(cptr,
-					    "%s %s %d %ld %s %s %s %lu %s %s :%s",
+					    "%s %s %d %ld %s %s %s %lu %s %s %s%s:%s",
 					    (IsToken(cptr) ? TOK_NICK :
 					    MSG_NICK), acptr->name,
 					    acptr->hopcount + 1,
@@ -851,7 +853,8 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 					    (!buf
 					    || *buf == '\0' ? "+" : buf),
 					    GetHost(acptr),
-					    acptr->info);
+					    SupportNICKIP(cptr) ? encode_ip(acptr->user->ip_str) : "",
+				            SupportNICKIP(cptr) ? " " : "", acptr->info);
 			}
 
 			if (acptr->user->away)

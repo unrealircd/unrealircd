@@ -673,11 +673,7 @@ static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from, char *c
 
 			if (!IsULine(sptr) && !split)
 				if (sptr->user->server != me_hash)
-					sendto_snomask(SNO_FCLIENT,
-					    "*** Notice -- Client exiting at %s: %s!%s@%s (%s)",
-					    sptr->user->server, sptr->name,
-					    sptr->user->username,
-					    sptr->user->realhost, comment);
+					sendto_fconnectnotice(sptr->name, sptr->user, sptr, 1, comment);
 			if (!MyClient(sptr))
 			{
 				RunHook2(HOOKTYPE_REMOTE_QUIT, sptr, comment);

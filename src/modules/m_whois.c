@@ -182,11 +182,11 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				    me.name, parv[0], name,
 				    get_mode_str(acptr));
 			}
-			if (IsHidden(acptr) && ((acptr == sptr) || IsAnOper(sptr))) 
+			if ((acptr == sptr) || IsAnOper(sptr))
 			{
 				sendto_one(sptr, rpl_str(RPL_WHOISHOST),
 				    me.name, parv[0], acptr->name,
-				    user->realhost);
+				    user->realhost, user->ip_str ? user->ip_str : "");
 			}
 
 			if (IsARegNick(acptr))
