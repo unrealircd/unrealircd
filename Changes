@@ -1502,3 +1502,4 @@ seen. gmtime warning still there
 - Added NEW doc/unreal32docs.html Docs
 - Fixed an oper::swhois bug where the swhois was not propagated reported by FrostByghte
   (#0000247)
+- Converted cr/lf to just lf in doc/unrea32docs.html
