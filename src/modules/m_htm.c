@@ -131,6 +131,12 @@ int	m_htm_Unload(int module_unload)
 #endif
 }
 
+/* m_htm recoded by griever
+parameters
+
+HTM [server] [command] [param]
+*/
+
 DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	int  x = HUNTED_NOSUCH;
@@ -138,7 +144,6 @@ DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (!IsOper(sptr))
 		return 0;
 
-#ifndef NO_FDLIST
 
 	switch(parc) {
 		case 1:
@@ -166,6 +171,7 @@ DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			return 0;
 	}
 
+#ifndef NO_FDLIST
 
 	if (!command)
 	{
