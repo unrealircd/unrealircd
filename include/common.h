@@ -293,6 +293,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 		" NETWORK=%s" 	  \
 		" CASEMAPPING=%s" \
 		" EXTBAN=~,%s" \
+		" ELIST=MNUCT" \
 		" :are supported by this server"
 
 #define PROTOCTL_PARAMETERS_2	  \

@@ -74,8 +74,8 @@ PREFIX        (modes)prefixes (qaohv)~&@%+                 Indicates the modes o
                                                            that corespond to the given
                                                            nickname prefixes.
 
-CHANMODES     A,B,C,D         be,k,lfL,                    Specifies how each channel mode is
-                              psmntirRcOAQKVHGCuzN         set/unset. The A section specifies
+CHANMODES     A,B,C,D         be,kfL,l,                    Specifies how each channel mode is
+                              psmntirRcOAQKVHGCuzNSMT      set/unset. The A section specifies
                                                            modes that add a nick/mask to a
                                                            list. The B section specifies
                                                            modes that require a parameter
@@ -100,3 +100,14 @@ EXTBAN        prefix,types    ~,cqr                        Specifies what extban
                                                            defines which character indicates
                                                            an extban and the types defines
                                                            which extbans the server supports.
+
+ELIST         flags           MNUCT                        Specifies the set of extended LIST
+                                                           options supported. The M flag 
+                                                           indicates mask based searching,
+                                                           the N flag indicates negative
+                                                           mask based searching. The U flag
+                                                           meaning support for user count
+                                                           searching. The C flag allows channel
+                                                           creation time searching, and the T
+                                                           flag allows topic set time 
+                                                           searching.

@@ -3294,3 +3294,5 @@ This is the 3.2 fixes branch.
   - HOOKTYPE_TKL_DEL [aClient *cptr, aClient *sptr, aTKline *tk]
     NOTE: 'NULL, NULL, tk' is used for *lines that are removed due to expiring
   - HOOKTYPE_LOCAL_KILL [aClient *sptr, aClient *target, char *comment]
+- Added support for the ELIST 005 token with MNUCT options
+

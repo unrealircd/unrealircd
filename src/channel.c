@@ -1517,7 +1517,8 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
 					sendto_snomask(SNO_EYES, "*** TS fix for %s - %lu(ours) %lu(theirs)",
 					chptr->chname, chptr->creationtime, sendts);			
 					*/
-				chptr->creationtime = sendts;
+				chptr->
+creationtime = sendts;
 #if 0
 				if (sendts < 750000)
 					sendto_realops(
@@ -4240,38 +4241,36 @@ void send_list(aClient *cptr, int numsend)
 				    && !IsAnOper(cptr))
 					continue;
 
-				if ((!lopt->showall)
-				    && ((chptr->users < lopt->usermin)
-				    || ((lopt->usermax >= 0)
-				    && (chptr->users > lopt->usermax))
-#ifdef LIST_USE_T
-				    || ( (chptr->creationtime) <=
-				    lopt->chantimemin)
-				     || (chptr->topic_time <
-				       lopt->topictimemin)
-				       || (chptr->creationtime >=
-				       lopt->chantimemax)
-				       || (chptr->topic_time >
-				       lopt->topictimemax)))
-#else
-					))
-#endif
-					continue;
+				/* Much more readable like this -- codemastr */
+				if ((!lopt->showall))
+				{
+					/* User count must be in range */
+					if ((chptr->users < lopt->usermin) || 
+					    ((lopt->usermax >= 0) && (chptr->users > 
+					    lopt->usermax)))
+						continue;
 
-				if (lopt->nolist &&
-				    (find_str_match_link(lopt->nolist,
-				    chptr->chname)
-				    || (chptr->topic ?
-				    find_str_match_link(lopt->nolist,
-				    chptr->topic) : 0)))
-					continue;
-				if (lopt->yeslist &&
-				    (!find_str_match_link(
-				    lopt->yeslist, chptr->chname)
-				    &&
-				    !find_str_match_link(
-				    lopt->yeslist, chptr->topic)))
-					continue;
+					/* Creation time must be in range */
+					if ((chptr->creationtime && (chptr->creationtime <
+					    lopt->chantimemin)) || (chptr->creationtime >
+					    lopt->chantimemax))
+						continue;
+
+					/* Topic time must be in range */
+					if ((chptr->topic_time < lopt->topictimemin) ||
+					    (chptr->topic_time > lopt->topictimemax))
+						continue;
+
+					/* Must not be on nolist (if it exists) */
+					if (lopt->nolist && find_str_match_link(lopt->nolist,
+					    chptr->chname))
+						continue;
+
+					/* Must be on yeslist (if it exists) */
+					if (lopt->yeslist && !find_str_match_link(lopt->yeslist,
+					    chptr->chname))
+						continue;
+				}
 #ifdef LIST_SHOW_MODES
 				modebuf[0] = '[';
 				channel_modes(cptr, &modebuf[1], parabuf, chptr);
