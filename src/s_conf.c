@@ -2844,7 +2844,7 @@ int  m_svso(cptr, sptr, parc, parv)
 			{
 				if (*m == (char) *(i + 1))
 				{
-					acptr->user->oflags |= flag;
+					acptr->oflag |= flag;
 					break;
 				}
 			}

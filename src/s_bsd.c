@@ -1891,7 +1891,9 @@ int  read_message(delay, listp)
 			}
 
 			if (DBufLength(&cptr->sendQ) || IsConnecting(cptr) ||
+#ifdef USE_SSL
 			    cptr->flags & FLAGS_SSL_HSHAKE ||
+#endif
 			    (DoList(cptr) && IsSendable(cptr)))
 				FD_SET(i, &write_set);
 		}
