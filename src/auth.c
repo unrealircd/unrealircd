@@ -225,12 +225,8 @@ char *saltstr, *hashstr;
 	if (r == 0) /* Old method without salt: b64(MD5(<pass>)) */
 	{
 		char result[16];
-		MD5_CTX hash;
 		
-		MD5_Init(&hash);
-		MD5_Update(&hash, para, strlen(para));
-		MD5_Final(result, &hash);
-				
+		DoMD5(result, para, strlen(para));
 		if ((i = b64_encode(result, sizeof(result), buf, sizeof(buf))))
 		{
 			if (!strcmp(buf, as->data))
@@ -244,7 +240,6 @@ char *saltstr, *hashstr;
 		char result1[MAXSALTLEN+16+1];
 		char result2[16];
 		char rsalt[MAXSALTLEN+1];
-		MD5_CTX hash;
 		int rsaltlen;
 		
 		/* First, decode the salt to something real... */
@@ -253,17 +248,13 @@ char *saltstr, *hashstr;
 			return -1;
 		
 		/* Then hash the password (1st round)... */
-		MD5_Init(&hash);
-		MD5_Update(&hash, para, strlen(para));
-		MD5_Final(result1, &hash);
+		DoMD5(result1, para, strlen(para));
 
 		/* Add salt to result */
 		memcpy(result1+16, rsalt, rsaltlen); /* b64_decode already made sure bounds are ok */
 
 		/* Then hash it all together again (2nd round)... */
-		MD5_Init(&hash);
-		MD5_Update(&hash, result1, rsaltlen+16);
-		MD5_Final(result2, &hash);
+		DoMD5(result2, result1, rsaltlen+16);
 		
 		/* Then base64 encode it all and we are done... */
 		if ((i = b64_encode(result2, sizeof(result2), buf, sizeof(buf))))
@@ -551,7 +542,6 @@ char result2[16];
 char saltstr[REALSALTLEN]; /* b64 encoded printable string*/
 char saltraw[RAWSALTLEN];  /* raw binary */
 char xresult[64];
-MD5_CTX hash;
 int i;
 
 	if (!para) return NULL;
@@ -573,17 +563,13 @@ int i;
 	 */
 
 	/* STEP 1 */
-	MD5_Init(&hash);
-	MD5_Update(&hash, para, strlen(para));
-	MD5_Final(result1, &hash);
+	DoMD5(result1, para, strlen(para));
 
 	/* STEP 2 */
 	/* add salt to result */
 	memcpy(result1+16, saltraw, RAWSALTLEN);
 	/* Then hash it all together */
-	MD5_Init(&hash);
-	MD5_Update(&hash, result1, RAWSALTLEN+16);
-	MD5_Final(result2, &hash);
+	DoMD5(result2, result1, RAWSALTLEN+16);
 	
 	/* STEP 3 */
 	/* Then base64 encode it all together.. */

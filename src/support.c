@@ -1754,7 +1754,15 @@ char *unreal_getfilename(char *path)
 int unreal_copyfile(char *src, char *dest)
 {
 	char buf[2048];
-	time_t mtime = unreal_getfilemodtime(src);
+	time_t mtime;
+
+#ifndef _WIN32
+	/* Try a hardlink first... */
+	if (!link(src, dest))
+		return 0; /* success */
+#endif
+
+	mtime = unreal_getfilemodtime(src);
 
 #ifndef _WIN32
 	int srcfd = open(src, O_RDONLY);

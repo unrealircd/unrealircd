@@ -203,7 +203,6 @@ DLLFUNC int cloak_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 ConfigEntry *cep;
 char buf[512], result[16];
-MD5_CTX hash;
 
 	if (type != CONFIG_CLOAKKEYS)
 		return 0;
@@ -218,9 +217,7 @@ MD5_CTX hash;
 
 	/* Calculate checksum */
 	sprintf(buf, "%s:%s:%s", KEY1, KEY2, KEY3);
-	MD5_Init(&hash);
-	MD5_Update(&hash, buf, strlen(buf));
-	MD5_Final(result, &hash);
+	DoMD5(result, buf, strlen(buf));
 	ircsprintf(cloak_checksum, "MD5:%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x",
 		(u_int)(result[0] & 0xf), (u_int)(result[0] >> 4),
 		(u_int)(result[1] & 0xf), (u_int)(result[1] >> 4),
@@ -284,7 +281,6 @@ char r[4];
 static char *hidehost_ipv4(char *host)
 {
 unsigned int a, b, c, d;
-MD5_CTX hash;
 static char buf[512], res[512], res2[512], result[128];
 unsigned long n;
 unsigned int alpha, beta, gamma;
@@ -303,38 +299,26 @@ unsigned int alpha, beta, gamma;
 
 	/* ALPHA... */
 	ircsprintf(buf, "%s:%s:%s", KEY2, host, KEY3);
-	MD5_Init(&hash);
-	MD5_Update(&hash, buf, strlen(buf));
-	MD5_Final(res, &hash);
+	DoMD5(res, buf, strlen(buf));
 	strcpy(res+16, KEY1); /* first 16 bytes are filled, append our key.. */
 	n = strlen(res+16) + 16;
-	MD5_Init(&hash);
-	MD5_Update(&hash, res, n);
-	MD5_Final(res2, &hash);
+	DoMD5(res2, res, n);
 	alpha = downsample(res2);
 
 	/* BETA... */
 	ircsprintf(buf, "%s:%d.%d.%d:%s", KEY3, a, b, c, KEY1);
-	MD5_Init(&hash);
-	MD5_Update(&hash, buf, strlen(buf));
-	MD5_Final(res, &hash);
+	DoMD5(res, buf, strlen(buf));
 	strcpy(res+16, KEY2); /* first 16 bytes are filled, append our key.. */
 	n = strlen(res+16) + 16;
-	MD5_Init(&hash);
-	MD5_Update(&hash, res, n);
-	MD5_Final(res2, &hash);
+	DoMD5(res2, res, n);
 	beta = downsample(res2);
 
 	/* GAMMA... */
 	ircsprintf(buf, "%s:%d.%d:%s", KEY1, a, b, KEY2);
-	MD5_Init(&hash);
-	MD5_Update(&hash, buf, strlen(buf));
-	MD5_Final(res, &hash);
+	DoMD5(res, buf, strlen(buf));
 	strcpy(res+16, KEY3); /* first 16 bytes are filled, append our key.. */
 	n = strlen(res+16) + 16;
-	MD5_Init(&hash);
-	MD5_Update(&hash, res, n);
-	MD5_Final(res2, &hash);
+	DoMD5(res2, res, n);
 	gamma = downsample(res2);
 
 	ircsprintf(result, "%X.%X.%X.IP", alpha, beta, gamma);
@@ -344,7 +328,6 @@ unsigned int alpha, beta, gamma;
 static char *hidehost_ipv6(char *host)
 {
 unsigned int a, b, c, d, e, f, g, h;
-MD5_CTX hash;
 static char buf[512], res[512], res2[512], result[128];
 unsigned long n;
 unsigned int alpha, beta, gamma;
@@ -364,38 +347,26 @@ unsigned int alpha, beta, gamma;
 
 	/* ALPHA... */
 	ircsprintf(buf, "%s:%s:%s", KEY2, host, KEY3);
-	MD5_Init(&hash);
-	MD5_Update(&hash, buf, strlen(buf));
-	MD5_Final(res, &hash);
+	DoMD5(res, buf, strlen(buf));
 	strcpy(res+16, KEY1); /* first 16 bytes are filled, append our key.. */
 	n = strlen(res+16) + 16;
-	MD5_Init(&hash);
-	MD5_Update(&hash, res, n);
-	MD5_Final(res2, &hash);
+	DoMD5(res2, res, n);
 	alpha = downsample(res2);
 
 	/* BETA... */
 	ircsprintf(buf, "%s:%x:%x:%x:%x:%x:%x:%x:%s", KEY3, a, b, c, d, e, f, g, KEY1);
-	MD5_Init(&hash);
-	MD5_Update(&hash, buf, strlen(buf));
-	MD5_Final(res, &hash);
+	DoMD5(res, buf, strlen(buf));
 	strcpy(res+16, KEY2); /* first 16 bytes are filled, append our key.. */
 	n = strlen(res+16) + 16;
-	MD5_Init(&hash);
-	MD5_Update(&hash, res, n);
-	MD5_Final(res2, &hash);
+	DoMD5(res2, res, n);
 	beta = downsample(res2);
 
 	/* GAMMA... */
 	ircsprintf(buf, "%s:%x:%x:%x:%x:%s", KEY1, a, b, c, d, KEY2);
-	MD5_Init(&hash);
-	MD5_Update(&hash, buf, strlen(buf));
-	MD5_Final(res, &hash);
+	DoMD5(res, buf, strlen(buf));
 	strcpy(res+16, KEY3); /* first 16 bytes are filled, append our key.. */
 	n = strlen(res+16) + 16;
-	MD5_Init(&hash);
-	MD5_Update(&hash, res, n);
-	MD5_Final(res2, &hash);
+	DoMD5(res2, res, n);
 	gamma = downsample(res2);
 
 	ircsprintf(result, "%X:%X:%X:IP", alpha, beta, gamma);
@@ -405,19 +376,14 @@ unsigned int alpha, beta, gamma;
 static char *hidehost_normalhost(char *host)
 {
 char *p;
-MD5_CTX hash;
 static char buf[512], res[512], res2[512], result[HOSTLEN+1];
 unsigned int alpha, n;
 
 	ircsprintf(buf, "%s:%s:%s", KEY1, host, KEY2);
-	MD5_Init(&hash);
-	MD5_Update(&hash, buf, strlen(buf));
-	MD5_Final(res, &hash);
+	DoMD5(res, buf, strlen(buf));
 	strcpy(res+16, KEY3); /* first 16 bytes are filled, append our key.. */
 	n = strlen(res+16) + 16;
-	MD5_Init(&hash);
-	MD5_Update(&hash, res, n);
-	MD5_Final(res2, &hash);
+	DoMD5(res2, res, n);
 	alpha = downsample(res2);
 
 	for (p = host; *p; p++)

@@ -737,3 +737,4 @@ extern void chanfloodtimer_del(aChannel *chptr, char mflag, long mbit);
 extern char *clean_ban_mask(char *, int, aClient *);
 extern void chanfloodtimer_stopchantimers(aChannel *chptr);
 extern int find_invex(aChannel *chptr, aClient *sptr);
+extern void DoMD5(unsigned char *mdout, unsigned char *src, unsigned long n);

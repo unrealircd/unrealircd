@@ -571,3 +571,9 @@
   related to existing commands).
 - Various (important) fixes to above, also made win32 compile work again.
 - And some more.
+- Made unreal_copyfile try hardlinking first, if that fails.. it will try to copy
+  (perhaps this should be a different function?). Anyway, this means less diskspace
+  is needed (~1.5mb or more), and it also makes it a bit easier for RBAC (#2300).
+- Made a new function DoMD5() which is ssl/non-ssl independent. Also made the cloaking
+  module and the auth functions use it. Hopefully I didn't break anything ;). Suggested
+  by Bugz (#2298).
