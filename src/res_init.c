@@ -394,7 +394,7 @@ void get_res_from_reg_nt()
 			if (!get_res_interfaces_nt(hInter, "NameServer", buf, &key_len))
 			{
 				key_len = BUFSIZ;
-				if (!get_res_interfaces_nt(hInter, "NameServer", buf, &key_len))
+				if (!get_res_interfaces_nt(hInter, "DhcpNameServer", buf, &key_len))
 				{
 					Debug((DEBUG_DNS, "get_res_from_reg_nt: RegQueryValue: NameServer failed"));
 				}

@@ -2416,3 +2416,4 @@ seen. gmtime warning still there
 - Minor +f code tweaks.
 - Added checks for ipv4 listen lines on ipv6 compile.
 - Finished some of the extcmode code (memleaks).
+- Fixed a problem in the new win32 resolver code
