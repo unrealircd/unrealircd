@@ -4752,6 +4752,19 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			errors++;
 		}
 	}
+#ifdef INET6
+	/* I'm nice... I'll help those poort ipv6 users. -- Syzop */
+	if ((cep = config_find_entry(ce->ce_entries, "hostname")))
+	{
+		/* [ not null && len>6 && has not a : in it && last character is a digit ] */
+		if (cep->ce_vardata && (strlen(cep->ce_vardata) > 6) && !strchr(cep->ce_vardata, ':') &&
+		    isdigit(cep->ce_vardata[strlen(cep->ce_vardata)-1]))
+		{
+			config_status("%s:%i: link %s prolly has IPv4 host, but you should use the ::ffff:1.2.3.4 form instead",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, ce->ce_vardata);
+		}
+	}
+#endif
 	if ((cep = config_find_entry(ce->ce_entries, "password-receive")))
 	{
 		if (Auth_CheckError(cep) < 0)
