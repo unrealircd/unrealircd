@@ -244,7 +244,7 @@ int main() {
 	pthread_mutex_lock(&mutex);
 	pthread_create(&thread, &attrs, (void*)testthreads, NULL);
 	pthread_mutex_unlock(&mutex);
-	sleep(5);
+	sleep(2);
 	pthread_mutex_lock(&mutex);
 	if (mypid == pid)
 		exit(0);
@@ -259,7 +259,7 @@ if test "$USESTDTHREAD" != "1"; then
 if test "$ac_cv_thread_multi" = "yes"; then
 AC_MSG_RESULT(Ok we'll install FSU Pthreads)
 cd extras
-if [ -f pthreads.tar.gz ] ; then 
+if [ -f "pthreads.tar.gz" ] ; then 
 	gunzip -d pthreads.tar.gz
 fi
 tar xf pthreads.tar
