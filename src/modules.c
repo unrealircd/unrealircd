@@ -1241,7 +1241,8 @@ const char *our_dlerror(void)
 {
 	static char errbuf[513];
 	DWORD err = GetLastError();
-	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, err, 0, errbuf, 512, NULL);
+	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS, NULL, err,
+		0, errbuf, 512, NULL);
 	return errbuf;
 }
 #endif
