@@ -31,12 +31,8 @@
 #include "version.h"
 #endif
 
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_chmodetst_Header
-#else
-#define m_chmodetst_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+
+ModuleHeader MOD_HEADER(m_chmodetst)
   = {
 	"chmodetst",	/* Name of module */
 	"channelmode test", /* Version */
@@ -68,11 +64,7 @@ typedef struct {
 
 Cmode *ModeTest = NULL, *ModeTest2 = NULL;
 /* This is called on module init, before Server Ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    m_dummy_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_dummy)(ModuleInfo *modinfo)
 {
 	CmodeInfo req;
 	ircd_log(LOG_ERROR, "debug: mod_init called from chmodetst module");
@@ -103,22 +95,14 @@ int    m_dummy_Init(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int    m_dummy_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_dummy)(int module_load)
 {
 	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_dummy_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(m_dummy)(int module_unload)
 {
 	/* Aaaaaaaargh... we are assumed to be a permanent module */
 	sendto_realops("Mod_Unload was called??? Arghhhhhh..");

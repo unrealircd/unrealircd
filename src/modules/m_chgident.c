@@ -49,12 +49,8 @@
 
 DLLFUNC int m_chgident(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_chgident_Header
-#else
-#define m_chgident_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+
+ModuleHeader MOD_HEADER(m_chgident)
   = {
 	"chgident",	/* Name of module */
 	"$Id$", /* Version */
@@ -63,16 +59,7 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
-/*
- * The purpose of these ifdefs, are that we can "static" link the ircd if we
- * want to
-*/
-
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int   m_chgident_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_chgident)(ModuleInfo *modinfo)
 {
 	/* extern variable to export m_chgident_info to temporary
            ModuleHeader *modulebuffer;
@@ -86,25 +73,17 @@ int   m_chgident_Init(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int   m_chgident_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_chgident)(int module_load)
 {
 	return MOD_SUCCESS;
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_chgident_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(m_chgident)(int module_unload)
 {
 	if (del_Command(MSG_CHGIDENT, TOK_CHGIDENT, m_chgident) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_chgident_Header.name);
+				MOD_HEADER(m_chgident).name);
 	}
 	return MOD_SUCCESS;
 }

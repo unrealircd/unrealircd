@@ -2439,3 +2439,5 @@ seen. gmtime warning still there
 - Very Very small change to doc/example.conf
 - Updated .CHANGES.NEW to read Beta18
 - Minor doc update.
+- Updated all the modules to use the new macros
+

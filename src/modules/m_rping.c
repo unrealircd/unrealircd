@@ -54,12 +54,7 @@ DLLFUNC char *militime(char *sec, char *usec);
 #define MSG_RPONG       "RPONG"
 #define TOK_RPONG       "AN"
 
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_rping_Header
-#else
-#define m_rping_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+ModuleHeader MOD_HEADER(m_rping)
   = {
 	"rping",	/* Name of module */
 	"$Id$", /* Version */
@@ -68,17 +63,8 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
-
-/* The purpose of these ifdefs, are that we can "static" link the ircd if we
- * want to
-*/
-
 /* This is called on module init, before Server Ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    m_rping_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_rping)(ModuleInfo *modinfo)
 {
 	/*
 	 * We call our add_Command crap here
@@ -86,40 +72,29 @@ int    m_rping_Init(ModuleInfo *modinfo)
 	add_Command(MSG_RPING, TOK_RPING, m_rping, MAXPARA);
 	add_Command(MSG_RPONG, TOK_RPONG, m_rpong, MAXPARA);
 	return MOD_SUCCESS;
-	
 }
 
 /* Is first run when server is 100% ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int    m_rping_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_rping)(int module_load)
 {
 	return MOD_SUCCESS;
-	
 }
 
 
 /* Called when module is unloaded */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_rping_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(m_rping)(int module_unload)
 {
 	if (del_Command(MSG_RPING, TOK_RPING, m_rping) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_rping_Header.name);
+				MOD_HEADER(m_rping).name);
 	}
 	if (del_Command(MSG_RPONG, TOK_RPONG, m_rpong) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_rping_Header.name);
+				MOD_HEADER(m_rping).name);
 	}
 	return MOD_SUCCESS;	
-	
 }
 
 /*

@@ -51,13 +51,7 @@ DLLFUNC int m_svslusers(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_SVSLUSERS 	"SVSLUSERS"	
 #define TOK_SVSLUSERS 	"BU"	
 
-
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_svslusers_Header
-#else
-#define m_svslusers_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+ModuleHeader MOD_HEADER(m_svslusers)
   = {
 	"m_svslusers",
 	"$Id$",
@@ -66,35 +60,23 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    m_svslusers_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_svslusers)(ModuleInfo *modinfo)
 {
 	add_Command(MSG_SVSLUSERS, TOK_SVSLUSERS, m_svslusers, MAXPARA);
 	return MOD_SUCCESS;
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int    m_svslusers_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_svslusers)(int module_load)
 {
 	return MOD_SUCCESS;
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_svslusers_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(m_svslusers)(int module_unload)
 {
 	if (del_Command(MSG_SVSLUSERS, TOK_SVSLUSERS, m_svslusers) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_svslusers_Header.name);
+				MOD_HEADER(m_svslusers).name);
 	}
 	return MOD_SUCCESS;
 }

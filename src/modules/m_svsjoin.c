@@ -49,12 +49,7 @@ DLLFUNC int m_svsjoin(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_SVSJOIN       "SVSJOIN"
 #define TOK_SVSJOIN       "BR"
 
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_svsjoin_Header
-#else
-#define m_svsjoin_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+ModuleHeader MOD_HEADER(m_svsjoin)
   = {
 	"svsjoin",	/* Name of module */
 	"$Id$", /* Version */
@@ -63,49 +58,29 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
-
-/* The purpose of these ifdefs, are that we can "static" link the ircd if we
- * want to
-*/
-
 /* This is called on module init, before Server Ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    m_svsjoin_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_svsjoin)(ModuleInfo *modinfo)
 {
 	/*
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_SVSJOIN, TOK_SVSJOIN, m_svsjoin, MAXPARA);
 	return MOD_SUCCESS;
-	
 }
 
 /* Is first run when server is 100% ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int    m_svsjoin_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_svsjoin)(int module_load)
 {
 	return MOD_SUCCESS;
-	
 }
 
-
 /* Called when module is unloaded */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_svsjoin_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(m_svsjoin)(int module_unload)
 {
 	if (del_Command(MSG_SVSJOIN, TOK_SVSJOIN, m_svsjoin) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_svsjoin_Header.name);
+				MOD_HEADER(m_svsjoin).name);
 	}
 	return MOD_SUCCESS;	
 }

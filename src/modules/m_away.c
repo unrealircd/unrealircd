@@ -51,13 +51,7 @@ DLLFUNC int m_away(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_AWAY 	"AWAY"	
 #define TOK_AWAY 	"6"	
 
-
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_away_Header
-#else
-#define m_away_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+ModuleHeader MOD_HEADER(m_away)
   = {
 	"m_away",
 	"$Id$",
@@ -66,35 +60,23 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    m_away_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_away)(ModuleInfo *modinfo)
 {
 	add_Command(MSG_AWAY, TOK_AWAY, m_away, 1);
 	return MOD_SUCCESS;
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int    m_away_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_away)(int module_load)
 {
 	return MOD_SUCCESS;
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_away_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(m_away)(int module_unload)
 {
 	if (del_Command(MSG_AWAY, TOK_AWAY, m_away) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_away_Header.name);
+				MOD_HEADER(m_away).name);
 	}
 	return MOD_SUCCESS;
 }

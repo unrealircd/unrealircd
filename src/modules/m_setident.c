@@ -48,12 +48,8 @@
 #define	TOK_SETIDENT	"AD"	/* good old BASIC ;P */
 
 DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_setident_Header
-#else
-#define m_setident_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+
+ModuleHeader MOD_HEADER(m_setident)
   = {
 	"setident",	/* Name of module */
 	"$Id$", /* Version */
@@ -62,47 +58,28 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
-/*
- * The purpose of these ifdefs, are that we can "static" link the ircd if we
- * want to
-*/
-
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    m_setident_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_setident)(ModuleInfo *modinfo)
 {
 	/*
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_SETIDENT, TOK_SETIDENT, m_setident, MAXPARA);
 	return MOD_SUCCESS;
-	
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int	m_setident_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_setident)(int module_load)
 {
 	return MOD_SUCCESS;
-	
 }
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_setident_Unload(int module_unload)
-#endif
+
+DLLFUNC int MOD_UNLOAD(m_setident)(int module_unload)
 {
 	if (del_Command(MSG_SETIDENT, TOK_SETIDENT, m_setident) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_setident_Header.name);
+				MOD_HEADER(m_setident).name);
 	}
 	return MOD_SUCCESS;
-	
 }
 
 /* m_setident - 12/05/1999 - Stskeeps

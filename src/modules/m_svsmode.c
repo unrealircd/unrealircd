@@ -55,12 +55,7 @@ extern ircstats IRCstats;
 #define MSG_SVS2MODE    "SVS2MODE"
 #define TOK_SVS2MODE	"v"
 
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_svsmode_Header
-#else
-#define m_svsmode_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+ModuleHeader MOD_HEADER(m_svsmode)
   = {
 	"m_svsmode",
 	"$Id$",
@@ -69,36 +64,24 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    m_svsmode_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_svsmode)(ModuleInfo *modinfo)
 {
 	add_Command(MSG_SVSMODE, TOK_SVSMODE, m_svsmode, MAXPARA);
 	add_Command(MSG_SVS2MODE, TOK_SVS2MODE, m_svs2mode, MAXPARA);
 	return MOD_SUCCESS;
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int m_svsmode_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_svsmode)(int module_load)
 {
 	return MOD_SUCCESS;
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_svsmode_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(m_svsmode)(int module_unload)
 {
 	if (del_Command(MSG_SVSMODE, TOK_SVSMODE, m_svsmode) < 0 || del_Command(MSG_SVS2MODE, TOK_SVS2MODE, m_svs2mode) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_svsmode_Header.name);
+				MOD_HEADER(m_svsmode).name);
 	}
 	return MOD_SUCCESS;
 }

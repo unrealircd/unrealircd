@@ -49,12 +49,8 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 /* Place includes here */
 #define MSG_SETHOST 	"SETHOST"	/* sethost */
 #define TOK_SETHOST 	"AA"	/* 127 4ever !;) */
-#ifndef DYNAMIC_LINKING
-ModuleHeader m_sethost_Header
-#define Mod_Header m_sethost_Header
-#else
-ModuleHeader Mod_Header
-#endif
+
+ModuleHeader MOD_HEADER(m_sethost)
   = {
 	"sethost",	/* Name of module */
 	"$Id$", /* Version */
@@ -63,48 +59,28 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
-/*
- * The purpose of these ifdefs, are that we can "static" link the ircd if we
- * want to
-*/
-
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    m_sethost_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(m_sethost)(ModuleInfo *modinfo)
 {
 	/*
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_SETHOST, TOK_SETHOST, m_sethost, MAXPARA);
 	return MOD_SUCCESS;
-	
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int    m_sethost_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_sethost)(int module_load)
 {
 	return MOD_SUCCESS;
-	 
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	m_sethost_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(m_sethost)(int module_unload)
 {
 	if (del_Command(MSG_SETHOST, TOK_SETHOST, m_sethost) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				Mod_Header.name);
+				MOD_HEADER(m_sethost).name);
 	}
 	return MOD_SUCCESS;
-	 
 }
 
 /*
