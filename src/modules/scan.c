@@ -154,9 +154,10 @@ int    m_scan_load(int module_load)
 	if (bind(blackholefd, (struct SOCKADDR *)&blackholesin, sizeof(blackholesin)))
 	{
 		CLOSE_SOCK(blackholefd);
-		config_error("set::blackhole: could not bind to %s:%i", blackhole_conf.ip, blackhole_conf.port);
+		config_error("set::blackhole: could not bind to %s:%i - %s", blackhole_conf.ip, blackhole_conf.port,
+			strerror(errno)); 
 		blackholefd = -1;
-		return -1;		
+		return -1;
 	}
 
 	listen(blackholefd, LISTEN_SIZE);
@@ -212,8 +213,6 @@ void	m_scan_unload(void)
 	IRCMutexDestroy(HSlock);
 	IRCMutexLock(VSlock);
 	IRCMutexDestroy(VSlock);
-	if (blackhole_conf.ip)
-		MyFree(blackhole_conf.ip);
 	del_Hook(HOOKTYPE_CONFIG_UNKNOWN, h_config_set_blackhole);
 	blackhole_stop = 1;
 	if (blackholefd)
@@ -226,6 +225,8 @@ void	m_scan_unload(void)
 		IRCJoinThread(acceptthread, NULL);
 		CLOSE_SOCK(fd);
 	}
+	if (blackhole_conf.ip)
+		MyFree(blackhole_conf.ip);
 }
 
 HStruct	*HS_Add(char *host)
