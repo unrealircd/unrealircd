@@ -1522,3 +1522,4 @@ seen. gmtime warning still there
 - Made it so Unreal can still be launched by clicking wircd.exe when in NT service mode
 - Stripped the docs. 100kb down, but a reformat in something other than MS
   word would really really help.
+- Changed version to beta12
