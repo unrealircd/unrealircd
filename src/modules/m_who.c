@@ -110,6 +110,7 @@ static int has_common_channels(aClient *, aClient *);
 #define WF_OPERONLY  0x01 /* only show opers */
 #define WF_ONCHANNEL 0x02 /* we're on the channel we're /who'ing */
 #define WF_WILDCARD  0x04 /* a wildcard /who */
+#define WF_REALHOST  0x08 /* want real hostnames */
 
 static int who_flags;
 
@@ -224,6 +225,7 @@ static void who_sendhelp(aClient *sptr)
     "               wildcards accepted",
     "Behavior flags:",
     "Flag M: check for user in channels I am a member of",
+    "Flag R: show users' real hostnames (oper only.)",
     NULL
   };
   char **s;
@@ -407,6 +409,17 @@ static int parse_who_options(aClient *sptr, int argc, char **argv)
 	    wfl.common_channels_only = 1;
 	  else
 	    wfl.common_channels_only = 0;
+	  break;
+
+	case 'R':
+	  if (!IsAnOper(sptr))
+	    break;
+
+	  if (what == WHO_ADD)
+	    who_flags |= WF_REALHOST;
+	  else
+	    who_flags &= ~WF_REALHOST;
+
 	  break;
 
 	default:
@@ -719,7 +732,7 @@ static void send_who_reply(aClient *sptr, aClient *acptr,
   sendto_one(sptr, getreply(RPL_WHOREPLY), me.name, sptr->name,      
 	     channel,       /* channel name */
 	     acptr->user->username, /* user name */
-	     IsHidden(acptr) ?
+	     (IsHidden(acptr) && !(who_flags & WF_REALHOST)) ?
 	     acptr->user->virthost :
 	     acptr->user->realhost, /* hostname */
 	     acptr->user->server,   /* server name */
