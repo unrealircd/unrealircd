@@ -72,6 +72,9 @@ struct zConfiguration {
 	int  maxchannelsperuser;
 	char *socksbanmessage;
 	char *socksquitmessage;
+	long ckey_1;
+	long ckey_2;
+	long ckey_3;
 	aNetwork network;
 };
 
@@ -98,6 +101,9 @@ extern aConfiguration iConf;
 #define OPER_AUTO_JOIN_CHANS		iConf.oper_auto_join_chans
 #define HOST_TIMEOUT			iConf.host_timeout
 #define HOST_RETRIES			iConf.host_retries
+#define CLOAK_KEY1			iConf.ckey_1
+#define CLOAK_KEY2			iConf.ckey_2
+#define CLOAK_KEY3			iConf.ckey_3
 
 #define ircnetwork			iConf.network.x_ircnetwork
 #define defserv				iConf.network.x_defserv

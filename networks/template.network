@@ -65,3 +65,11 @@ Set HUB ...........: 1
 Set iNAH ..........: 0
 # -- Not in use but still here --
 Set net_quit ......: ic
+
+
+# These are the cloak keys for your network. They should be the same on ALL SERVERS
+# They must also be > 10000
+Set cloak_key_1 ...: 0
+Set cloak_key_2 ...: 0
+Set cloak_key_3 ...: 0
+

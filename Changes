@@ -324,5 +324,21 @@ Added temp patch to m_kline to stop segfault
 --Luke
 ===================================
 
+------------------------------------------------
+Beta3
+------------------------------------------------
+
 Backported check_pings with loop.do_ban_check from 3.2
 --Stskeeps
+===================================
+
+Added nice fix to HCN so that BOPM works natively
+(it would still be wise to mod bopm yourself
+and have it scan all clients by using +F, as I've
+done, but whatever.)
+--Luke
+===================================
+
+Moved cloak key definitions to unrealircd.conf
+--Luke
+===================================

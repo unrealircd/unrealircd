@@ -42,6 +42,7 @@ ID_Copyright("(C) 1999-2000 Carsten Munk");
 #define DoDebug fprintf(stderr, "[%s] %s | %li\n", babuf, __FILE__, __LINE__);
 #define AllocCpy(x,y) if ((x) && type == 1) MyFree((x)); x = (char *) MyMalloc(strlen(y) + 1); strcpy(x,y)
 #define XtndCpy(x,y) x = (char *) MyMalloc(strlen(y) + 2); *x = '\0'; strcat(x, "*"); strcpy(x,y)
+#define ircabs(x) (x < 0) ? -x : x
 
 /* externals */
 extern int un_uid, un_gid;
@@ -498,6 +499,12 @@ int  load_conf3(FILE * conf, char *filename, int type)
 			{
 				AllocCpy(helpchan, setto);
 			}
+                        else if (strcmp(var, "cloak_key_1") == 0)
+                                CLOAK_KEY1 = ircabs(atol(setto));
+                        else if (strcmp(var, "cloak_key_2") == 0)
+                                CLOAK_KEY2 = ircabs(atol(setto));
+                        else if (strcmp(var, "cloak_key_3") == 0)
+                                CLOAK_KEY3 = ircabs(atol(setto));
 			else if (strcmp(var, "STATS_SERVER") == 0)
 			{
 				AllocCpy(STATS_SERVER, setto);
@@ -569,6 +576,8 @@ void doneconf(int type)
 		strcat(errormsg, "- Missing netdomain field\n");
 	if (Missing(helpchan))
 		strcat(errormsg, "- Missing helpchan field\n");
+	if ((CLOAK_KEY1 < 10000) || (CLOAK_KEY2 < 10000) || (CLOAK_KEY3 < 10000))
+		strcat(errormsg, "- Missing cloak keys, or they're too easy to guess. Make them > 10000\n");
 	if (Missing(STATS_SERVER))
 		strcat(errormsg, "- Missing STATS_SERVER field\n");
 	if (Missing(iConf.socksbanmessage))

@@ -1638,7 +1638,7 @@ void sendto_connectnotice(nick, user, sptr)
 #endif
 	ircsprintf(connecth,
 	    "*** Notice -- Client connecting: %s (%s@%s) [%s] {%d}", nick,
-	    user->username, user->realhost, sptr->sockhost,
+	    user->username, user->realhost, inet_ntoa(sptr->ip),
 	    get_client_class(sptr));
 
 	for (i = 0; i <= highest_fd; i++)
