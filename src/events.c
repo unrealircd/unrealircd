@@ -121,7 +121,7 @@ Event	*EventFind(char *name)
 	return NULL;
 }
 
-void	EventModEvery(Event *event, int every)
+void	EventModEvery(Event *event, long every)
 {
 	Event *eventptr;
 

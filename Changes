@@ -941,3 +941,4 @@ seen. gmtime warning still there
   an event, for e_unload_module_delayed
 - Updated makefile.win32 for the Auth system
 - Redid the event system somewhat
+- Fixed a little event issue involving data types.
