@@ -570,3 +570,4 @@
   BOTMOTD (100), LUSERS (100). More will follow soon (probably including more subfunctions
   related to existing commands).
 - Various (important) fixes to above, also made win32 compile work again.
+- And some more.

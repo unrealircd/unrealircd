@@ -2290,7 +2290,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 	if ((sptr->umodes & UMODE_BOT) && !(setflags & UMODE_BOT) && MyClient(sptr))
 	{
 		/* now +B */
-	  (void)m_botmotd(sptr, sptr, 1, parv);
+	  do_cmd(sptr, sptr, "BOTMOTD", 1, parv);
 	}
 
 	if (!(setflags & UMODE_OPER) && IsOper(sptr))

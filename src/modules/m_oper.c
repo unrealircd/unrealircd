@@ -341,7 +341,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 			IRCstats.operators++;
 
 		if (SHOWOPERMOTD == 1)
-			m_opermotd(cptr, sptr, parc, parv);
+			do_cmd(cptr, sptr, "OPERMOTD", parc, parv);
 		if (!BadPtr(OPER_AUTO_JOIN_CHANS)
 		    && strcmp(OPER_AUTO_JOIN_CHANS, "0"))
 		{
