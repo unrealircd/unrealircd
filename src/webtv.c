@@ -58,6 +58,7 @@ aMessage	webtv_cmds[] =
 {
 	{"WHOIS", w_whois, 15},
 	{"\1VERSION", ban_version, 1},
+	{"\1SCRIPT", ban_version, 1},
 	{NULL, 0, 15}
 };
 

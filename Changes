@@ -2139,3 +2139,5 @@ seen. gmtime warning still there
   with other IRCds.
 - Made the command parsing loop slightly faster by validating command parameters when a command
   is created rather than when a command is used.
+- Made ban version {} also listen for CTCP SCRIPT replies. Some scripts apparently use this to
+  report their version info.
