@@ -4747,6 +4747,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 			while ((*t != ' ') && (*t != '\0'))
 				nick[i++] = *(t++);	/* get nick */
 			nick[i] = '\0';
+			sendto_ops("Ehm.. %s",nick);
 			if (nick[0] == ' ')
 				continue;
 			if (nick[0] == '\0')
