@@ -140,7 +140,7 @@ int  m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr, 
 			":%s NOTICE %s :*** Authentication method %s failed",
 				me.name, sptr->name, parv[1]);
-		return;
+		return 0;
 	}
         sendto_one(sptr, ":%s %s %s :*** Authentication phrase (method=%s, para=%s) is: %s",
             me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], parv[1], parv[2], result);

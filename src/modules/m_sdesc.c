@@ -115,15 +115,11 @@ int	m_sdesc_Unload(int module_unload)
 
 int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	if (IsCoAdmin(sptr))
-		goto sdescok;
-	/* ignoring */
-	if (!IsAdmin(sptr))
-		return;
-      sdescok:
+	if (!IsAdmin(sptr) && !IsCoAdmin(sptr))
+		return 0;
 
 	if (parc < 2)
-		return;
+		return 0;
 
 	if (strlen(parv[1]) < 1)
 		if (MyConnect(sptr))

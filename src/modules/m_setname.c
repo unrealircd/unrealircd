@@ -116,7 +116,7 @@ int	m_setname_Unload(int module_unload)
 */ 
 DLLFUNC int m_setname(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
         if (parc < 2)
-                return;
+                return 0;
         if (strlen(parv[1]) > (REALLEN))
        {
                 if (MyConnect(sptr))

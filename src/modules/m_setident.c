@@ -229,5 +229,5 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    IsHidden(sptr) ? sptr->user->virthost : sptr->
 		    user->realhost);
 	}
-	return;
+	return 0;
 }

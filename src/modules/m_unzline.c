@@ -181,7 +181,7 @@ DLLFUNC int m_unzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(sptr,
 				    ":%s NOTICE %s :*** it's not possible to have a z:line that's not an ip addresss...",
 				    me.name, sptr->name);
-				return;
+				return 0;
 			}
 			in++;
 		}
@@ -197,7 +197,7 @@ DLLFUNC int m_unzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(sptr,
 				    ":%s NOTICE %s :*** it's not possible to have a z:line that's not an ip addresss...",
 				    me.name, sptr->name);
-				return;
+				return 0;
 			}
 			in++;
 		}

@@ -323,6 +323,13 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		mask++;
 	}
 
+	if (strchr(mask, '!'))
+	{
+		sendto_one(sptr, ":%s NOTICE %s :[error] Cannot have ! in masks.", me.name,
+		    sptr->name);
+		return 0;
+	}
+
 	/* Check if its a hostmask and legal .. */
 	p = strchr(mask, '@');
 

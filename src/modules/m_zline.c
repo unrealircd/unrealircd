@@ -181,7 +181,7 @@ DLLFUNC int m_zline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(sptr,
 				    ":%s NOTICE %s :*** z:lines work only with ip addresses (you cannot specify ident either)",
 				    me.name, sptr->name);
-				return;
+				return 0;
 			}
 			in++;
 		}
@@ -205,7 +205,7 @@ DLLFUNC int m_zline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(sptr,
 				    ":%s NOTICE %s :*** z:lines work only with ip addresses (you cannot specify ident either)",
 				    me.name, sptr->name);
-				return;
+				return 0;
 			}
 			in++;
 		}
@@ -220,7 +220,7 @@ DLLFUNC int m_zline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sendto_one(sptr,
 			    ":%s NOTICE %s :** *@%s is a bad z:line mask...",
 			    me.name, sptr->name, userhost);
-		return;
+		return 0;
 	}
 
 	if (!(bconf = Find_ban(userhost, CONF_BAN_IP)))

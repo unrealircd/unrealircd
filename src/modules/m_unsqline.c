@@ -131,8 +131,5 @@ DLLFUNC int m_unsqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			MyFree(bconf->reason);
 		MyFree(bconf);
 	}
-	else
-		return;
-
 	return 0;
 }
