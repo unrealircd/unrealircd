@@ -1446,19 +1446,19 @@ int	config_post_test()
 	for (global_i = Hooks[HOOKTYPE_CONFIGPOSTTEST]; global_i; 
 		global_i = global_i->next) 
 	{
-		int value;
+		int value, errs = 0;
 		if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
 			continue;
-		value = (*(global_i->func.intfunc))();
+		value = (*(global_i->func.intfunc))(&errs);
 		if (value == -1)
 		{
-			errors++;
+			errors += errs;
 			break;
 		}
 		if (value == -2)
-			errors++;
+			errors += errs;
 	}
-	return (errors > 0 ? -1 : 1);	
+	return errors;	
 }
 
 int	config_run()
@@ -1545,8 +1545,8 @@ int	config_test()
 				return -1;
 			}
 			if ((cc = config_binary_search(ce->ce_varname))) {
-				if ((cc->testfunc) && (cc->testfunc(cfptr, ce) < 0))
-					errors++;
+				if (cc->testfunc)
+					errors += (cc->testfunc(cfptr, ce));
 			}
 			else 
 			{
@@ -1554,10 +1554,10 @@ int	config_test()
 				for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
 					global_i = global_i->next) 
 				{
-					int value;
+					int value, errs = 0;
 					if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
 						continue;
-					value = (*(global_i->func.intfunc))(cfptr,ce,CONFIG_MAIN);
+					value = (*(global_i->func.intfunc))(cfptr,ce,CONFIG_MAIN,&errs);
 					if (value == 2)
 						used = 1;
 					if (value == 1)
@@ -1568,13 +1568,13 @@ int	config_test()
 					if (value == -1)
 					{
 						used = 1;
-						errors++;
+						errors += errs;
 						break;
 					}
 					if (value == -2) 
 					{
 						used = 1;
-						errors++;
+						errors += errs;
 					}
 						
 				}
@@ -1585,7 +1585,7 @@ int	config_test()
 			}
 		}
 	}
-	errors += (config_post_test() < 0 ? 1 : 0);
+	errors += config_post_test();
 	if (errors > 0)
 	{
 		config_error("%i errors encountered", errors);
@@ -2129,7 +2129,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 
 int	_test_include(ConfigFile *conf, ConfigEntry *ce)
 {
-	return 1;
+	return 0;
 }
 
 int	_conf_admin(ConfigFile *conf, ConfigEntry *ce)
@@ -2164,7 +2164,7 @@ int	_test_admin(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 	requiredstuff.conf_admin = 1;
-	return (errors == 0 ? 1 : -1);
+	return errors;
 }
 
 int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
@@ -2285,7 +2285,7 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 	requiredstuff.conf_me = 1;
-	return (errors == 0 ? 1 : -1);
+	return errors;
 }
 
 /*
@@ -2519,7 +2519,7 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_varlinenum);
 		errors++;
 	}	
-	return (errors == 0 ? 1 : -1);
+	return errors;
 	
 }
 
@@ -2657,7 +2657,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 	
-	return (errors == 0 ? 1 : -1);
+	return errors;
 }
 
 int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
@@ -2727,7 +2727,7 @@ int     _test_drpass(ConfigFile *conf, ConfigEntry *ce)
 			errors++; continue;
 		}
 	}
-	return (errors == 0 ? 1 : -1);
+	return errors;
 }
 
 /*
@@ -2769,7 +2769,7 @@ int	_test_ulines(ConfigFile *conf, ConfigEntry *ce)
 			continue;
 		}
 	}
-	return (errors == 0 ? 1 : -1);
+	return errors;
 }
 
 int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
@@ -2831,9 +2831,6 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 			errors++; continue;
 		}
 	}
-	if (errors)
-		return -1;
-
 	if (!(cep = config_find_entry(ce->ce_entries, "mask")))
 	{
 		config_error("%s:%i: tld::mask missing",
@@ -2879,7 +2876,7 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 			close(fd);
 	}
 	
-	return (errors == 0 ? 1 : -1);
+	return errors;
 }
 
 int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
@@ -2976,7 +2973,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_error("%s:%i: listen without ip:port",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return -1;
+		return 1;
 	}
 
 	strcpy(copy, ce->ce_vardata);
@@ -2986,26 +2983,26 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_error("%s:%i: listen: illegal ip:port mask",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return -1;
+		return 1;
 	}
 	if (strchr(ip, '*') && strcmp(ip, "*"))
 	{
 		config_error("%s:%i: listen: illegal ip, (mask, and not '*')",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return -1;
+		return 1;
 	}
 	if (!port || !*port)
 	{
 		config_error("%s:%i: listen: missing port in mask",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return -1;
+		return 1;
 	}
 	iport = atol(port);
 	if ((iport < 0) || (iport > 65535))
 	{
 		config_error("%s:%i: listen: illegal port (must be 0..65536)",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return -1;
+		return 1;
 	}
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -3052,7 +3049,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 
 	}
 	requiredstuff.conf_listen = 1;
-	return (errors == 0 ? 1 : -1);
+	return errors;
 }
 
 
@@ -3144,10 +3141,10 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 			for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
 				global_i = global_i->next) 
 			{
-				int value;
+				int value, errs = 0;
 				if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
 					continue;
-				value = (*(global_i->func.intfunc))(conf,ce,CONFIG_ALLOW);
+				value = (*(global_i->func.intfunc))(conf,ce,CONFIG_ALLOW,&errs);
 				if (value == 2)
 					used = 1;
 				if (value == 1)
@@ -3158,21 +3155,21 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 				if (value == -1)
 				{
 					used = 1;
-					errors++;
+					errors += errs;
 					break;
 				}
 				if (value == -2)
 				{
 					used = 1;
-					errors++;
+					errors += errs;
 				}
 			}
 			if (!used) {
 				config_error("%s:%i: allow item with unknown type",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-				return -1;
+				return 1;
 			}
-			return (errors ? -1 : 1);
+			return errors;
 		}
 	}
 
@@ -3309,14 +3306,6 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 			errors++;
 		}
 	}
-	/* NOT REQUIRED
-	if ((cep = config_find_entry(ce->ce_entries, "redirect-server")))
-	{
-	}
-	if ((cep = config_find_entry(ce->ce_entries, "redirect-port")))
-	{
-	}
-	*/
 	if ((cep = config_find_entry(ce->ce_entries, "options")))
 	{
 		if (!cep->ce_entries)
@@ -3342,7 +3331,7 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 	
 	}
-	return (errors > 0 ? -1 : 1);
+	return errors;
 }
 
 int	_conf_allow_channel(ConfigFile *conf, ConfigEntry *ce)
@@ -3386,7 +3375,7 @@ int	_test_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 			errors++;
 		}
 	}
-	return (errors == 0 ? 1 : -1);
+	return errors;
 }
 
 int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
@@ -3467,7 +3456,7 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_error("%s:%i: except without type",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return -1;
+		return 1;
 	}
 
 	if (!strcmp(ce->ce_vardata, "ban")) {
@@ -3475,7 +3464,7 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 		{
 			config_error("%s:%i: except ban without mask item",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			return -1;
+			return 1;
 		}
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 		{
@@ -3497,14 +3486,14 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 		}
-		return (errors > 0 ? -1 : 1);
+		return errors;
 	}
 	else if (!strcmp(ce->ce_vardata, "scan")) {
 		if (!config_find_entry(ce->ce_entries, "mask"))
 		{
 			config_error("%s:%i: except scan without mask item",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			return -1;
+			return 1;
 		}
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 		{
@@ -3526,20 +3515,20 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 		}
-		return (errors > 0 ? -1 : 1);
+		return errors;
 	}
 	else if (!strcmp(ce->ce_vardata, "tkl")) {
 		if (!config_find_entry(ce->ce_entries, "mask"))
 		{
 			config_error("%s:%i: except tkl without mask item",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			return -1;
+			return 1;
 		}
 		if (!(cep3 = config_find_entry(ce->ce_entries, "type")))
 		{
 			config_error("%s:%i: except tkl without type item",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			return -1;
+			return 1;
 		}
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 		{
@@ -3572,20 +3561,20 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 			config_error("%s:%i: unknown except tkl type %s",
 				cep3->ce_fileptr->cf_filename, cep3->ce_varlinenum,
 				cep3->ce_vardata);
-			return -1;
+			return 1;
 
 		}
-		return (errors ? -1 : 1);
+		return errors;
 	}
 	else {
 		int used = 0;
 		for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
 			global_i = global_i->next) 
 		{
-			int value;
+			int value, errs = 0;
 			if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
 				continue;
-			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_EXCEPT);
+			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_EXCEPT,&errs);
 			if (value == 2)
 				used = 1;
 			if (value == 1)
@@ -3596,23 +3585,23 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 			if (value == -1)
 			{
 				used = 1;
-				errors++;
+				errors += errs;
 				break;
 			}
 			if (value == -2)
 			{
 				used = 1;
-				errors++;
+				errors += errs;
 			}
 		}
 		if (!used) {
 			config_error("%s:%i: unknown except type %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, 
 				ce->ce_vardata);
-			return -1;
+			return 1;
 		}
 	}
-	return (errors ? -1 : 1);
+	return errors;
 }
 
 /*
@@ -3664,7 +3653,7 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_error("%s:%i: empty vhost block", 
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return -1;
+		return 1;
 	}
 	if (!(vhost = config_find_entry(ce->ce_entries, "vhost")))
 	{
@@ -3795,9 +3784,7 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 
-	if (errors > 0)
-		return -1;
-	return 1;
+	return errors;
 }
 
 #ifdef STRIPBADWORDS
@@ -3842,18 +3829,18 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 	{
 		config_error("%s:%i: empty badword block", 
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return -1;
+		return 1;
 	}
 	if (!ce->ce_vardata)
 	{
 		config_error("%s:%i: badword without type",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return -1;
+		return 1;
 	}
 	else if (strcmp(ce->ce_vardata, "channel") && strcmp(ce->ce_vardata, "message")) {
 			config_error("%s:%i: badword with unknown type",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return -1;
+		return 1;
 	}
 	if (!(word = config_find_entry(ce->ce_entries, "word")))
 	{
@@ -3899,7 +3886,7 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 	}
 
 	
-	return (errors > 0 ? -1 : 1); 
+	return errors; 
 }
 #endif
 
@@ -3938,7 +3925,7 @@ int _test_help(ConfigFile *conf, ConfigEntry *ce) {
 	{
 		config_error("%s:%i: empty help block", 
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return -1;
+		return 1;
 	}
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -3949,7 +3936,7 @@ int _test_help(ConfigFile *conf, ConfigEntry *ce) {
 			errors++; continue;
 		}
 	}
-	return (errors > 0 ? -1 : 1); 
+	return errors; 
 }
 
 int     _conf_log(ConfigFile *conf, ConfigEntry *ce)
@@ -3989,13 +3976,13 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 	{
 		config_error("%s:%i: log block without filename", 
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return -1;
+		return 1;
 	}
 	if (!ce->ce_entries)
 	{
 		config_error("%s:%i: empty log block", 
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return -1;
+		return 1;
 	}
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -4053,7 +4040,7 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 			}
 		}
 	}
-	return (errors > 0 ? -1 : 1); 
+	return errors; 
 }
 
 
@@ -4150,14 +4137,14 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_error("%s:%i: link without servername",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return -1;
+		return 1;
 
 	}
 	if (!strchr(ce->ce_vardata, '.'))
 	{
 		config_error("%s:%i: link: bogus server name",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return -1;
+		return 1;
 	}
 	
 	for (p = requiredsections; *p; p++)
@@ -4186,7 +4173,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			errors++;
 	}
 	if (errors > 0)
-		return -1;
+		return errors;
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "options")) 
@@ -4231,7 +4218,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			errors++;
 		}
 	}
-	return (errors > 0 ? -1 : 1);
+	return errors;
 		
 }
 
@@ -4281,7 +4268,7 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_error("%s:%i: ban without type",	
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return -1;
+		return 1;
 	}
 	if (!strcmp(ce->ce_vardata, "nick"))
 	{}
@@ -4299,10 +4286,10 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 		for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
 			global_i = global_i->next) 
 		{
-			int value;
+			int value, errs = 0;
 			if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
 				continue;
-			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_BAN);
+			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_BAN, &errs);
 			if (value == 2)
 				used = 1;
 			if (value == 1)
@@ -4313,22 +4300,22 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 			if (value == -1)
 			{
 				used = 1;
-				errors++;
+				errors += errs;
 				break;
 			}
 			if (value == -2)
 			{
 				used = 1;
-				errors++;
+				errors += errs;
 			}
 		}
 		if (!used) {
 			config_error("%s:%i: unknown ban type %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				ce->ce_vardata);
-			return -1;
+			return 1;
 		}
-		return (errors ? -1 : 1);
+		return errors;
 	}
 	
 	if (!(cep = config_find_entry(ce->ce_entries, "mask")))
@@ -4364,7 +4351,7 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 			errors++;
 		}
 	}
-	return (errors > 0 ? -1 : 1);	
+	return errors;	
 }
 
 int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
@@ -4844,10 +4831,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
 				global_i = global_i->next) 
 			{
-				int value;
+				int value, errs = 0;
 				if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
 					continue;
-				value = (*(global_i->func.intfunc))(conf,cep,CONFIG_SET);
+				value = (*(global_i->func.intfunc))(conf,cep,CONFIG_SET, &errs);
 				if (value == 2)
 					used = 1;
 				if (value == 1)
@@ -4858,13 +4845,13 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				if (value == -1)
 				{
 					used = 1;
-					errors++;
+					errors += errs;
 					break;
 				}
 				if (value == -2)
 				{
 					used = 1;
-					errors++;
+					errors += errs;
 				}
 			}
 			if (!used) {
@@ -4875,7 +4862,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 	}
-	return (errors > 0 ? -1 : 1);
+	return errors;
 }
 
 int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
@@ -4949,14 +4936,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 
 int	_test_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 {
-/*	if (!ce->ce_vardata)
-	{
-		config_status("%s:%i: loadmodule without filename",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return -1;
-	}
-*/
-	return 1;
+	return 0;
 }
 
 /*
@@ -5056,7 +5036,7 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 	{
 		config_error("%s:%i: empty alias block", 
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return -1;
+		return 1;
 	}
 	if (!ce->ce_vardata) 
 	{
@@ -5163,7 +5143,7 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 			errors++;
 		}
 	}
-	return (errors > 0 ? -1 : 1); 
+	return errors; 
 }
 
 int	_conf_deny(ConfigFile *conf, ConfigEntry *ce)
@@ -5293,7 +5273,7 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_error("%s:%i: deny without type",	
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return -1;
+		return 1;
 	}
 	if (!strcmp(ce->ce_vardata, "dcc"))
 	{
@@ -5509,10 +5489,10 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 		for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
 			global_i = global_i->next) 
 		{
-			int value;
+			int value, errs = 0;
 			if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
 				continue;
-			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_DENY);
+			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_DENY, &errs);
 			if (value == 2)
 				used = 1;
 			if (value == 1)
@@ -5523,25 +5503,25 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 			if (value == -1)
 			{
 				used = 1;
-				errors++;
+				errors += errs;
 				break;
 			}
 			if (value == -2)
 			{
 				used = 1;
-				errors++;
+				errors += errs;
 			}
 		}
 		if (!used) {
 			config_error("%s:%i: unknown deny type %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				ce->ce_vardata);
-			return -1;
+			return 1;
 		}
-		return (errors ? -1 : 1);
+		return errors;
 	}
 
-	return (errors > 0 ? -1 : 1);	
+	return errors;	
 }
 
 

@@ -1688,3 +1688,5 @@ seen. gmtime warning still there
 - Fixed serious bug in /who that caused the server to lock up (there's a ID
   for this, could someone find it). Beta13 SHOULD be a LOT nearer now
 - Small typo in config validation found by ins4ne
+- Changed the way return values work in conf3 to better report the number of errors that
+  occurred.

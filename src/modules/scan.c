@@ -62,9 +62,9 @@ MUTEX Scannings_lock;
 static char	*scan_message;
 extern ConfigEntry		*config_find_entry(ConfigEntry *ce, char *name);
 DLLFUNC int h_scan_connect(aClient *sptr);
-DLLFUNC int h_config_test(ConfigFile *, ConfigEntry *, int);
+DLLFUNC int h_config_test(ConfigFile *, ConfigEntry *, int, int *);
 DLLFUNC int h_config_run(ConfigFile *, ConfigEntry *, int);
-DLLFUNC int h_config_posttest();
+DLLFUNC int h_config_posttest(int *);
 DLLFUNC int h_config_rehash();
 DLLFUNC int h_stats_scan(aClient *sptr, char *stats);
 
@@ -347,7 +347,7 @@ DLLFUNC int h_scan_connect(aClient *sptr)
  *    };
  * 
  */
-DLLFUNC h_config_test(ConfigFile *cf, ConfigEntry *ce, int type) {
+DLLFUNC h_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs) {
 	ConfigEntry *cep;
 	int errors = 0;
 
@@ -385,26 +385,26 @@ DLLFUNC h_config_test(ConfigFile *cf, ConfigEntry *ce, int type) {
 				{
 					config_error("%s:%i: set::scan::endpoint: illegal ip:port mask",
 						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-					return -1;
+					errors++;
 				}
 				if (strchr(ip, '*'))
 				{
 					config_error("%s:%i: set::scan::endpoint: illegal ip",
 						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-					return -1;
+					errors++;
 				}
 				if (!port || !*port)
 				{
 					config_error("%s:%i: set::scan::endpoint: missing port in mask",
 						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-					return -1;
+					errors++;
 				}
 				iport = atol(port);
 				if ((iport < 0) || (iport > 65535))
 				{
 					config_error("%s:%i: set::scan::endpoint: illegal port (must be 0..65536)",
 						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-					return -1;
+					errors++;
 				}
 				ReqConf.endpoint = 1;
 			}
@@ -414,7 +414,7 @@ DLLFUNC h_config_test(ConfigFile *cf, ConfigEntry *ce, int type) {
 				{
 					config_error("%s:%i: set::scan::bind-ip: illegal ip, (mask, and not '*')",
 						ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-					return -1;
+					errors++;
 				}
 				ReqConf.bindip = 1;
 			}
@@ -432,6 +432,7 @@ DLLFUNC h_config_test(ConfigFile *cf, ConfigEntry *ce, int type) {
 			}
 			
 		}
+		*errs = errors;
 		return errors ? -1 : 1;
 	}
 	else
@@ -484,7 +485,7 @@ DLLFUNC h_config_run(ConfigFile *cf, ConfigEntry *ce, int type) {
 	return 0;
 }
 
-DLLFUNC int h_config_posttest() {
+DLLFUNC int h_config_posttest(int *errs) {
 	int errors = 0;
 	if (!ReqConf.endpoint)
 	{
@@ -506,6 +507,7 @@ DLLFUNC int h_config_posttest() {
 		config_error("set::scan::bind-ip missing");
 		errors++;
 	}
+	*errs = errors;
 	return errors ? -1 : 1;	
 }
 
