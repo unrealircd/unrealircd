@@ -398,8 +398,9 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 		good:
 		
 		i = acptr->from->fd;
-		if (MyConnect(acptr) && IsRegisteredUser(acptr) && (IsDeaf(acptr)
-			    && !(sendanyways == 1)))
+
+		if (MyConnect(acptr) && IsRegisteredUser(acptr) && !(IsDeaf(acptr) 
+			&& !(sendanyways == 1)))
 		{
 			sendto_prefix_one(acptr, from, ":%s %s %s :%s",
 				from->name, cmd, nick, text);
