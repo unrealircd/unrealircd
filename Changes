@@ -1021,3 +1021,4 @@ seen. gmtime warning still there
 - Final release cleanups
 - Updated /info
 - Added back good old error reporting in ./unreal start
+- Changed to beta5
