@@ -86,7 +86,6 @@ tre_ctype_t tre_ctype(const char *name);
 #define tre_strlen  strlen
 #endif /* !TRE_WCHAR */
 
-#define REG_NOTAGS (REG_NOTEOL << 1)
 typedef enum { STR_WIDE, STR_BYTE, STR_MBS } tre_str_type_t;
 
 /* Returns number of bytes to add to (char *)ptr to make it
@@ -101,24 +100,32 @@ typedef enum { STR_WIDE, STR_BYTE, STR_MBS } tre_str_type_t;
 #define MAX(a, b) (((a) >= (b)) ? (a) : (b))
 #define MIN(a, b) (((a) <= (b)) ? (a) : (b))
 
-/* TNFA transition definition.  Each transition has a range of accepted
-   characters, pointer to the next state and the ID number of that state,
-   a -1 -terminated array of tags, assertion bitmap, and character class
-   assertions.  A TNFA state is an array of transitions, the terminator is
-   a transition with state == NULL: */
+/* TNFA transition type. A TNFA state is an array of transitions,
+   the terminator is a transition with NULL `state'. */
 typedef struct tnfa_transition tre_tnfa_transition_t;
 
 struct tnfa_transition {
+  /* Range of accepted characters. */
   tre_cint_t code_min;
   tre_cint_t code_max;
+  /* Pointer to the destination state. */
   tre_tnfa_transition_t *state;
+  /* ID number of the destination state. */
   int state_id;
+  /* -1 terminated array of tags (or NULL). */
   int *tags;
+  /* Matching parameters settings (or NULL). */
+  int *params;
+  /* Assertion bitmap. */
   int assertions;
+  /* Assertion parameters. */
   union {
+    /* Character class assertion. */
     tre_ctype_t class;
+    /* Back reference assertion. */
     int backref;
   } u;
+  /* Negative character class assertions. */
   tre_ctype_t *neg_classes;
 };
 
@@ -141,6 +148,25 @@ typedef enum {
   TRE_TAG_MAXIMIZE = 1
 } tre_tag_direction_t;
 
+/* Parameters that can be changed dynamically while matching. */
+typedef enum {
+  TRE_PARAM_COST_INS        = 0,
+  TRE_PARAM_COST_DEL        = 1,
+  TRE_PARAM_COST_SUBST      = 2,
+  TRE_PARAM_COST_MAX        = 3,
+  TRE_PARAM_MAX_INS         = 4,
+  TRE_PARAM_MAX_DEL         = 5,
+  TRE_PARAM_MAX_SUBST       = 6,
+  TRE_PARAM_MAX_ERR         = 7,
+  TRE_PARAM_DEPTH           = 8,
+  TRE_PARAM_LAST            = 9
+} tre_param_t;
+
+/* Unset matching parameter */
+#define TRE_PARAM_UNSET -1
+
+/* Signifies the default matching parameter value. */
+#define TRE_PARAM_DEFAULT -2
 
 /* Instructions to compute submatch register values from tag values
    after a successful match.  */
@@ -170,17 +196,24 @@ struct tnfa {
   unsigned int num_submatches;
   tre_tag_direction_t *tag_directions;
   int *minimal_tags;
-  int *marker_offs;
   int num_tags;
   int num_minimals;
   int end_tag;
   int num_states;
   int cflags;
   int have_backrefs;
+  int have_approx;
+  int params_depth;
 };
 
+int
+tre_compile(regex_t *preg, const tre_char_t *regex, size_t n, int cflags);
+
 void
-tre_fill_pmatch(size_t nmatch, regmatch_t pmatch[],
+tre_free(regex_t *preg);
+
+void
+tre_fill_pmatch(size_t nmatch, regmatch_t pmatch[], int cflags,
 		const tre_tnfa_t *tnfa, int *tags, int match_eo);
 
 reg_errcode_t

@@ -18,21 +18,12 @@
 
 */
 
-/*
-  This algorithm is very similar to the one in `tre-match-parallel.c'.
-  The main difference is that the input string does not need to match
-  exactly to the language of the TNFA.  Each missing, extra, or
-  changed character increases the "cost" of a match.  A maximum
-  allowed cost must be specified.  If the maximum cost is set to zero,
-  this matcher should return results identical to the exact matchers.
-*/
-
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
 /* AIX requires this to be the first thing in the file.  */
+#ifdef TRE_USE_ALLOCA
 #ifndef __GNUC__
 # if HAVE_ALLOCA_H
 #  include <alloca.h>
@@ -46,10 +37,12 @@ char *alloca ();
 #  endif
 # endif
 #endif
+#endif /* TRE_USE_ALLOCA */
 
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #ifdef HAVE_WCHAR_H
 #include <wchar.h>
 #endif /* HAVE_WCHAR_H */
@@ -68,527 +61,754 @@ char *alloca ();
 #include "regex.h"
 #include "xmalloc.h"
 
+#define TRE_M_COST      0
+#define TRE_M_NUM_INS   1
+#define TRE_M_NUM_DEL   2
+#define TRE_M_NUM_SUBST 3
+#define TRE_M_NUM_ERR   4
+#define TRE_M_LAST      5
 
+#define TRE_M_MAX_DEPTH 3
 
 typedef struct {
+  /* State in the TNFA transition table. */
   tre_tnfa_transition_t *state;
-  int cost;
-  int *tags;
-  int state_id;  /* XXX - this could be removed by using tre_tnfa_state_t
-		    for `state'. */
-} tre_tnfa_approx_reach_t;
-
-typedef struct {
+  /* Position in input string. */
   int pos;
-  int cost;
-  tre_tnfa_approx_reach_t *reach;
-  int **tags;
-} tre_approx_reach_pos_t;
+  /* Tag values. */
+  int *tags;
+  /* Matching parameters. */
+  regaparams_t params;
+  /* Nesting depth of parameters.  This is used as an index in
+     the `costs' array. */
+  int depth;
+  /* Costs and counter values for different parameter nesting depths. */
+  int costs[TRE_M_MAX_DEPTH + 1][TRE_M_LAST];
+} tre_tnfa_approx_reach_t;
 
 
 #ifdef TRE_DEBUG
+/* Prints the `reach' array in a readable fashion with DPRINT. */
 static void
-print_reach(const tre_tnfa_t *tnfa, tre_tnfa_approx_reach_t *reach)
+tre_print_reach(const tre_tnfa_t *tnfa, tre_tnfa_approx_reach_t *reach, int pos)
 {
-  int i;
+  int id;
 
-  while (reach->state != NULL)
+  /* Print each state on one line. */
+  DPRINT(("  reach:\n"));
+  for (id = 0; id < tnfa->num_states; id++)
     {
-      DPRINT((" %p(%d)", (void *)reach->state, reach->cost));
-      if (tnfa->num_tags > 0)
+      int i, j;
+      if (reach[id].pos < pos)
+	continue;  /* Not reached. */
+      DPRINT(("  %03d, costs ", id));
+      for (i = 0; i <= reach[id].depth; i++)
 	{
-	  DPRINT(("/"));
-	  for (i = 0; i < tnfa->num_tags; i++)
+	  DPRINT(("["));
+	  for (j = 0; j < TRE_M_LAST; j++)
 	    {
-	      DPRINT(("%d:%d", i, reach->tags[i]));
-	      if (i < (tnfa->num_tags-1))
+	      DPRINT(("%2d", reach[id].costs[i][j]));
+	      if (j + 1 < TRE_M_LAST)
 		DPRINT((","));
 	    }
+	  DPRINT(("]"));
+	  if (i + 1 <= reach[id].depth)
+	    DPRINT((", "));
 	}
-      reach++;
+      DPRINT(("\n       tags "));
+      for (i = 0; i < tnfa->num_tags; i++)
+	{
+	  DPRINT(("%02d", reach[id].tags[i]));
+	  if (i + 1 < tnfa->num_tags)
+	    DPRINT((","));
+	}
+      DPRINT(("\n"));
     }
   DPRINT(("\n"));
-
 }
 #endif /* TRE_DEBUG */
+
+
+/* Sets the matching parameters in `reach' to the ones defined in the `pa'
+   array.  If `pa' specifies default values, they are taken from
+   `default_params'. */
+inline static void
+tre_set_params(tre_tnfa_approx_reach_t *reach,
+	       int *pa, regaparams_t default_params)
+{
+  int value;
+
+  /* If depth is increased reset costs and counters to zero for the
+     new levels. */
+  value = pa[TRE_PARAM_DEPTH];
+  assert(value <= TRE_M_MAX_DEPTH);
+  if (value > reach->depth)
+    {
+      int i, j;
+      for (i = reach->depth + 1; i <= value; i++)
+	for (j = 0; j < TRE_M_LAST; j++)
+	  reach->costs[i][j] = 0;
+    }
+  reach->depth = value;
+
+  /* Set insert cost. */
+  value = pa[TRE_PARAM_COST_INS];
+  if (value == TRE_PARAM_DEFAULT)
+    reach->params.cost_ins = default_params.cost_ins;
+  else if (value != TRE_PARAM_UNSET)
+    reach->params.cost_ins = value;
+
+  /* Set delete cost. */
+  value = pa[TRE_PARAM_COST_DEL];
+  if (value == TRE_PARAM_DEFAULT)
+    reach->params.cost_del = default_params.cost_del;
+  else if (value != TRE_PARAM_UNSET)
+    reach->params.cost_del = value;
+
+  /* Set substitute cost. */
+  value = pa[TRE_PARAM_COST_SUBST];
+  if (value == TRE_PARAM_DEFAULT)
+    reach->params.cost_subst = default_params.cost_subst;
+  else
+    reach->params.cost_subst = value;
+
+  /* Set maximum cost. */
+  value = pa[TRE_PARAM_COST_MAX];
+  if (value == TRE_PARAM_DEFAULT)
+    reach->params.max_cost = default_params.max_cost;
+  else if (value != TRE_PARAM_UNSET)
+    reach->params.max_cost = value;
+
+  /* Set maximum inserts. */
+  value = pa[TRE_PARAM_MAX_INS];
+  if (value == TRE_PARAM_DEFAULT)
+    reach->params.max_ins = default_params.max_ins;
+  else if (value != TRE_PARAM_UNSET)
+    reach->params.max_ins = value;
+
+  /* Set maximum deletes. */
+  value = pa[TRE_PARAM_MAX_DEL];
+  if (value == TRE_PARAM_DEFAULT)
+    reach->params.max_del = default_params.max_del;
+  else if (value != TRE_PARAM_UNSET)
+    reach->params.max_del = value;
+
+  /* Set maximum substitutes. */
+  value = pa[TRE_PARAM_MAX_SUBST];
+  if (value == TRE_PARAM_DEFAULT)
+    reach->params.max_subst = default_params.max_subst;
+  else if (value != TRE_PARAM_UNSET)
+    reach->params.max_subst = value;
+
+  /* Set maximum number of errors. */
+  value = pa[TRE_PARAM_MAX_ERR];
+  if (value == TRE_PARAM_DEFAULT)
+    reach->params.max_err = default_params.max_err;
+  else if (value != TRE_PARAM_UNSET)
+    reach->params.max_err = value;
+}
+
 
 reg_errcode_t
 tre_tnfa_run_approx(const tre_tnfa_t *tnfa, const void *string, int len,
 		    tre_str_type_t type, int *match_tags,
-		    regamatch_t *match, regaparams_t params,
+		    regamatch_t *match, regaparams_t default_params,
 		    int eflags, int *match_end_ofs)
 {
+  /* State variables required by GET_NEXT_WCHAR. */
   tre_char_t prev_c = 0, next_c = 0;
   const char *str_byte = string;
-  char *buf;
-  int pos = -1, pos_add_next = 1;
-  tre_tnfa_transition_t *trans_i;
-  tre_tnfa_approx_reach_t *reach, *reach_next, *reach_i, *reach_next_i;
-  tre_approx_reach_pos_t *reach_pos;
-  int i;
+  int pos = -1;
+#ifdef TRE_MULTIBYTE
+  int pos_add_next = 1;
+#endif /* TRE_MULTIBYTE */
+#ifdef TRE_WCHAR
+  const wchar_t *str_wide = string;
+#endif /* TRE_WCHAR */
+#ifdef TRE_MBSTATE
+  mbstate_t mbstate;
+#endif /* !TRE_WCHAR */
   int reg_notbol = eflags & REG_NOTBOL;
   int reg_noteol = eflags & REG_NOTEOL;
   int reg_newline = tnfa->cflags & REG_NEWLINE;
-  int match_eo = -1;       /* end offset of match (-1 if no match found yet) */
-  int match_cost = -1;
+
+  /* Compilation flags for this regexp. */
   int cflags = tnfa->cflags;
-  int *tmp_tags = NULL;
+
+  /* Number of tags. */
   int num_tags;
-  int *tag_i;
-  int *tmp_iptr;
-#ifdef TRE_WCHAR
-  const wchar_t *str_wide = string;
-#ifdef TRE_MBSTATE
-  mbstate_t mbstate;
-  memset(&mbstate, '\0', sizeof(mbstate));
-#endif /* TRE_MBSTATE */
-#endif /* !TRE_WCHAR */
+  /* The reach tables. */
+  tre_tnfa_approx_reach_t *reach, *reach_next;
+  /* Tag array for temporary use. */
+  int *tmp_tags;
 
-  DPRINT(("tre_tnfa_run_approx, input type %d\n", type));
+  /* End offset of best match so far, or -1 if no match found yet. */
+  int match_eo = -1;
+  /* Costs of the match. */
+  int match_costs[TRE_M_LAST];
 
-  if (eflags & REG_NOTAGS)
+  /* Space for temporary data required for matching. */
+  unsigned char *buf;
+
+  int i, id;
+
+  if (!match_tags)
     num_tags = 0;
   else
     num_tags = tnfa->num_tags;
 
+#ifdef TRE_MBSTATE
+  memset(&mbstate, '\0', sizeof(mbstate));
+#endif /* TRE_MBSTATE */
+
+  DPRINT(("tre_tnfa_run_approx, input type %d, len %d\n", type, len));
+  DPRINT(("max cost %d, ins %d, del %d, subst %d\n",
+	  default_params.max_cost,
+	  default_params.cost_ins,
+	  default_params.cost_del,
+	  default_params.cost_subst));
+
   /* Allocate memory for temporary data required for matching.  This needs to
      be done for every matching operation to be thread safe.  This allocates
-     everything in a single large block from the stack frame using alloca(). */
+     everything in a single large block. */
   {
-    int tbytes, rbytes, pbytes, xbytes, total_bytes;
-    char *tmp_buf;
-    /* Compute the length of the block we need. */
-    tbytes = sizeof(*tmp_tags) * num_tags;
-    rbytes = sizeof(*reach_next) * (tnfa->num_states + 1);
-    pbytes = sizeof(*reach_pos) * tnfa->num_states;
-    xbytes = sizeof(int) * num_tags;
-    total_bytes =
-      (sizeof(long) - 1) * 4 /* for alignment paddings */
-      + (rbytes + xbytes * tnfa->num_states) * 2 + tbytes + pbytes;
+    unsigned char *buf_cursor;
+    /* Space needed for one array of tags. */
+    int tag_bytes = sizeof(*tmp_tags) * num_tags;
+    /* Space needed for one reach table. */
+    int reach_bytes = sizeof(*reach_next) * tnfa->num_states;
+    /* Total space needed. */
+    int total_bytes = reach_bytes * 2 + (tnfa->num_states * 2 + 1 ) * tag_bytes;
+    /* Add some extra to make sure we can align the pointers.  The multiplier
+       used here must be equal to the number of ALIGN calls below. */
+    total_bytes += (sizeof(long) - 1) * 3;
 
     /* Allocate the memory. */
+#ifdef TRE_USE_ALLOCA
     buf = alloca(total_bytes);
-    if (buf == NULL)
+#else /* !TRE_USE_ALLOCA */
+    buf = xmalloc(total_bytes);
+#endif /* !TRE_USE_ALLOCA */
+    if (!buf)
       return REG_ESPACE;
     memset(buf, 0, total_bytes);
 
-    /* Get the various pointers within tmp_buf (properly aligned). */
+    /* Allocate `tmp_tags' from `buf'. */
     tmp_tags = (void *)buf;
-    tmp_buf = buf + tbytes;
-    tmp_buf += ALIGN(tmp_buf, long);
-    reach_next = (void *)tmp_buf;
-    tmp_buf += rbytes;
-    tmp_buf += ALIGN(tmp_buf, long);
-    reach = (void *)tmp_buf;
-    tmp_buf += rbytes;
-    tmp_buf += ALIGN(tmp_buf, long);
-    reach_pos = (void *)tmp_buf;
-    tmp_buf += pbytes;
-    tmp_buf += ALIGN(tmp_buf, long);
+    buf_cursor = buf + tag_bytes;
+    buf_cursor += ALIGN(buf_cursor, long);
+
+    /* Allocate `reach' from `buf'. */
+    reach = (void *)buf_cursor;
+    buf_cursor += reach_bytes;
+    buf_cursor += ALIGN(buf_cursor, long);
+
+    /* Allocate `reach_next' from `buf'. */
+    reach_next = (void *)buf_cursor;
+    buf_cursor += reach_bytes;
+    buf_cursor += ALIGN(buf_cursor, long);
+
+    /* Allocate tag arrays for `reach' and `reach_next' from `buf'. */
     for (i = 0; i < tnfa->num_states; i++)
       {
-	reach[i].tags = (void *)tmp_buf;
-	tmp_buf += xbytes;
-	reach_next[i].tags = (void *)tmp_buf;
-	tmp_buf += xbytes;
-	reach[i].cost = 0;
-	reach_next[i].cost = 0;
+	reach[i].tags = (void *)buf_cursor;
+	buf_cursor += tag_bytes;
+	reach_next[i].tags = (void *)buf_cursor;
+	buf_cursor += tag_bytes;
       }
+    assert(buf_cursor <= buf + total_bytes);
   }
 
+  for (i = 0; i < TRE_M_LAST; i++)
+    match_costs[i] = INT_MAX;
+
+  /* Mark the reach arrays empty. */
   for (i = 0; i < tnfa->num_states; i++)
-    reach_pos[i].pos = -1;
+    reach[i].pos = reach_next[i].pos = -2;
 
-  reach_next_i = reach_next;
   GET_NEXT_WCHAR();
-
-  DPRINT(("length: %d\n", len));
-  DPRINT(("pos:chr/code | states and costs\n"));
-  DPRINT(("-------------+------------------------------------------------\n"));
 
   while (1)
     {
-      DPRINT(("pos %d\n", pos));
-      /* Add the initial states to `reach_pos'. */
-      if (match_eo < 0 || (match_eo >= 0 && match_cost > 0))
+      DPRINT(("%03d:%2lc/%05d\n", pos, (tre_cint_t)next_c, (int)next_c));
+
+      /* Add initial states to `reach_next' if an exact match has not yet
+	 been found. */
+      if (match_costs[TRE_M_COST] > 0)
 	{
-	  DPRINT((" init >"));
-	  trans_i = tnfa->initial;
-	  while (trans_i->state != NULL)
+	  tre_tnfa_transition_t *trans;
+	  DPRINT(("  init"));
+	  for (trans = tnfa->initial; trans->state; trans++)
 	    {
-	      if (reach_pos[trans_i->state_id].pos < pos)
+	      int id = trans->state_id;
+
+	      /* If this state is not currently in `reach_next', add it
+		 there. */
+	      if (reach_next[id].pos < pos)
 		{
-		  if (trans_i->assertions
-		      && CHECK_ASSERTIONS(trans_i->assertions))
+		  if (trans->assertions && CHECK_ASSERTIONS(trans->assertions))
 		    {
-		      DPRINT(("assertion failed\n"));
-		      trans_i++;
+		      /* Assertions failed, don't add this state. */
+		      DPRINT((" !%d (assert)", id));
 		      continue;
 		    }
+		  DPRINT((" %d", id));
+		  reach_next[id].state = trans->state;
+		  reach_next[id].pos = pos;
 
-		  DPRINT((" %p", (void *)trans_i->state));
-		  reach_next_i->state = trans_i->state;
+		  /* Compute tag values after this transition. */
 		  for (i = 0; i < num_tags; i++)
-		    reach_next_i->tags[i] = -1;
-		  if (trans_i->tags)
-		    for (tag_i = trans_i->tags; *tag_i >= 0; tag_i++)
-		      reach_next_i->tags[*tag_i] = pos;
-		  if (reach_next_i->state == tnfa->final)
+		    reach_next[id].tags[i] = -1;
+		  if (trans->tags)
+		    for (i = 0; trans->tags[i] >= 0; i++)
+		      reach_next[id].tags[trans->tags[i]] = pos;
+
+		  /* Set the parameters, depth, and costs. */
+		  reach_next[id].params = default_params;
+		  reach_next[id].depth = 0;
+		  for (i = 0; i < TRE_M_LAST; i++)
+		    reach_next[id].costs[0][i] = 0;
+		  if (trans->params)
+		    tre_set_params(&reach_next[id], trans->params,
+				   default_params);
+
+		  /* If this is the final state, mark the exact match. */
+		  if (trans->state == tnfa->final)
 		    {
 		      match_eo = pos;
 		      for (i = 0; i < num_tags; i++)
-			match_tags[i] = reach_next_i->tags[i];
+			match_tags[i] = reach_next[id].tags[i];
+		      for (i = 0; i < TRE_M_LAST; i++)
+			match_costs[i] = 0;
 		    }
-		  reach_next_i->cost = 0;
-		  reach_next_i->state_id = trans_i->state_id;
-		  DPRINT(("1: setting state %d pos to %d\n",
-			  trans_i->state_id, pos));
-		  reach_pos[trans_i->state_id].pos = pos;
-		  reach_pos[trans_i->state_id].tags = &reach_next_i->tags;
-		  reach_pos[trans_i->state_id].cost = 0;
-		  reach_pos[trans_i->state_id].reach = reach_next_i;
-		  reach_next_i++;
 		}
-	      trans_i++;
 	    }
-	  DPRINT(("\n"));
-	  reach_next_i->state = NULL;
-	}
-      else if (reach_next_i == reach_next)
-	{
-	  DPRINT(("Found exact match.\n"));
-	  break;
+	    DPRINT(("\n"));
 	}
 
-      /* Handle insertions -- this is done by pretending there is an
-	 epsilon transition from each state back to the same state
-	 with cost `cost_ins'. */
-      for (reach_i = reach; reach_i->state; reach_i++)
+
+      /* Handle inserts.  This is done by pretending there's an epsilon
+	 transition from each state in `reach' back to the same state.
+	 We don't need to worry about the final state here; this will never
+	 give a better match than what we already have. */
+      for (id = 0; id < tnfa->num_states; id++)
 	{
-	  int state_id = reach_i->state_id;
-	  int cost = reach_i->cost + params.cost_ins;
-	  if (cost > params.max_cost)
-	    break;
-	  if (reach_pos[state_id].pos < pos)
+	  int depth, j;
+	  int cost, cost0;
+
+	  /* XXX - `pos - 1' does not work for mbs. */
+	  if (reach[id].pos != pos - 1)
 	    {
-	      DPRINT(("insertion (new): state %p, cost %d\n",
-		      reach_i->state, cost));
-	      reach_next_i->cost = cost;
-	      reach_next_i->state = reach_i->state;
-	      reach_next_i->state_id = state_id;
-	      for (i = 0; i < num_tags; i++)
-		reach_next_i->tags[i] = reach_i->tags[i];
-	      DPRINT(("2: setting state %d pos to %d\n",
-		      trans_i->state_id, pos));
-	      reach_pos[state_id].pos = pos;
-	      reach_pos[state_id].tags = &reach_i->tags;
-	      reach_pos[state_id].cost = cost;
-	      reach_pos[state_id].reach = reach_next_i;
-	      reach_next_i++;
+	      DPRINT(("  insert: %d not reached\n", id));
+	      continue;  /* Not reached. */
 	    }
-	  else if (reach_pos[state_id].cost > cost)
+
+	  depth = reach[id].depth;
+
+	  /* Compute and check cost at current depth. */
+	  cost = reach[id].costs[depth][TRE_M_COST];
+	  if (reach[id].params.cost_ins != TRE_PARAM_UNSET)
+	    cost += reach[id].params.cost_ins;
+	  if (cost > reach[id].params.max_cost)
+	    continue;  /* Cost too large. */
+
+	  /* Check number of inserts at current depth. */
+	  if (reach[id].costs[depth][TRE_M_NUM_INS] + 1
+	      > reach[id].params.max_ins)
+	    continue;  /* Too many inserts. */
+
+	  /* Check total number of errors at current depth. */
+	  if (reach[id].costs[depth][TRE_M_NUM_ERR] + 1
+	      > reach[id].params.max_err)
+	    continue;  /* Too many errors. */
+
+	  /* Compute overall cost. */
+	  cost0 = cost;
+	  if (depth > 0)
 	    {
-	      DPRINT(("insertion (win): state %p, cost %d\n",
-		      reach_i->state, cost));
-	      reach_pos[state_id].cost = cost;
-	      reach_pos[state_id].reach->cost = cost;
+	      cost0 = reach[id].costs[0][TRE_M_COST];
+	      if (reach[id].params.cost_ins != TRE_PARAM_UNSET)
+		cost0 += reach[id].params.cost_ins;
+	      else
+		cost0 += default_params.cost_ins;
 	    }
+
+	  DPRINT(("  insert: from %d to %d, cost %d: ", id, id,
+		  reach[id].costs[depth][TRE_M_COST]));
+	  if (reach_next[id].pos == pos
+	      && (cost0 >= reach_next[id].costs[0][TRE_M_COST]))
+	    {
+	      DPRINT(("lose\n"));
+	      continue;
+	    }
+	  DPRINT(("win\n"));
+
+	  /* Copy state, position, tags, parameters, and depth. */
+	  reach_next[id].state = reach[id].state;
+	  reach_next[id].pos = pos;
+	  for (i = 0; i < num_tags; i++)
+	    reach_next[id].tags[i] = reach[id].tags[i];
+	  reach_next[id].params = reach[id].params;
+	  reach_next[id].depth = reach[id].depth;
+
+	  /* Set the costs after this transition. */
+	  for (i = 0; i <= depth; i++)
+	    for (j = 0; j < TRE_M_LAST; j++)
+	      reach_next[id].costs[i][j] = reach[id].costs[i][j];
+	  reach_next[id].costs[depth][TRE_M_COST] = cost;
+	  reach_next[id].costs[depth][TRE_M_NUM_INS]++;
+	  reach_next[id].costs[depth][TRE_M_NUM_ERR]++;
+	  if (depth > 0)
+	    {
+	      reach_next[id].costs[0][TRE_M_COST] = cost0;
+	      reach_next[id].costs[0][TRE_M_NUM_INS]++;
+	      reach_next[id].costs[0][TRE_M_NUM_ERR]++;
+	    }
+
 	}
 
-      /* Handle deletions -- this is done by traversing through the whole
-	 TNFA pretending that all transitions are epsilon transitions with
-	 cost `cost_del'. */
-      DPRINT(("deletions\n"));
+
+      /* Handle deletes.  This is done by traversing through the whole TNFA
+	 pretending that all transitions are epsilon transitions, until
+         no more states can be reached with better costs. */
       {
-	/* XXX - how big should the ring buffer be? */
-	tre_tnfa_approx_reach_t ringbuffer[512];
-	tre_tnfa_approx_reach_t *deque_start, *deque_end;
+	/* XXX - dynamic ringbuffer size */
+	tre_tnfa_approx_reach_t *ringbuffer[512];
+	tre_tnfa_approx_reach_t **deque_start, **deque_end;
 
 	deque_start = deque_end = ringbuffer;
 
 	/* Add all states in `reach_next' to the deque. */
-	for (reach_i = reach_next; reach_i->state; reach_i++)
+	for (id = 0; id < tnfa->num_states; id++)
 	  {
-	    DPRINT(("adding %p to deque\n", reach_i->state));
-	    deque_end->state = reach_i->state;
-	    deque_end->cost = reach_i->cost;
-	    deque_end->tags = reach_i->tags;
+	    if (reach_next[id].pos != pos)
+	      continue;
+	    *deque_end = &reach_next[id];
 	    deque_end++;
+	    assert(deque_end != deque_start);
 	  }
 
-	/* Repeat until the deque is empty */
-	DPRINT(("deque has %d items\n", deque_end - deque_start));
+	/* Repeat until the deque is empty. */
 	while (deque_end != deque_start)
 	  {
-	    tre_tnfa_transition_t *trans_i;
 	    tre_tnfa_approx_reach_t *reach_p;
-	    int cost;
+	    int id;
+	    int depth;
+	    int j;
+	    int cost, cost0;
+	    tre_tnfa_transition_t *trans;
 
-	    /* Pop the first state off the deque. */
-	    reach_p = deque_start;
-	    cost = reach_p->cost + params.cost_del;
-	    DPRINT(("deletion: from %p: ", reach_p->state));
-	    if (cost > params.max_cost)
+	    /* Pop the first item off the deque. */
+	    reach_p = *deque_start;
+	    id = reach_p - reach_next;
+	    depth = reach_p->depth;
+
+	    /* Compute cost at current depth. */
+	    cost = reach_p->costs[depth][TRE_M_COST];
+	    if (reach_p->params.cost_del != TRE_PARAM_UNSET)
+	      cost += reach_p->params.cost_del;
+
+	    /* Check cost, number of deletes, and total number of errors
+	       at current depth. */
+	    if (cost > reach_p->params.max_cost
+		|| (reach_p->costs[depth][TRE_M_NUM_DEL] + 1
+		    > reach_p->params.max_del)
+		|| (reach_p->costs[depth][TRE_M_NUM_ERR] + 1
+		    > reach_p->params.max_err))
 	      {
-		DPRINT(("not possible\n"));
+		/* Too many errors or cost too large. */
+		DPRINT(("  delete: from %03d: cost too large\n", id));
 		deque_start++;
 		if (deque_start >= (ringbuffer + 512))
 		  deque_start = ringbuffer;
 		continue;
 	      }
 
-	    for (trans_i = reach_p->state; trans_i->state; trans_i++)
+	    /* Compute overall cost. */
+	    cost0 = cost;
+	    if (depth > 0)
 	      {
-		/* Compute the tags after this transition. */
+		cost0 = reach_p->costs[0][TRE_M_COST];
+		if (reach_p->params.cost_del != TRE_PARAM_UNSET)
+		  cost0 += reach_p->params.cost_del;
+		else
+		  cost0 += default_params.cost_del;
+	      }
+
+	    for (trans = reach_p->state; trans->state; trans++)
+	      {
+		int dest_id = trans->state_id;
+		DPRINT(("  delete: from %03d to %03d, cost %d (%d): ",
+			id, dest_id, cost0, reach_p->params.max_cost));
+
+		if (trans->assertions && CHECK_ASSERTIONS(trans->assertions))
+		  {
+		    DPRINT(("assertion failed\n"));
+		    continue;
+		  }
+
+		/* Compute tag values after this transition. */
 		for (i = 0; i < num_tags; i++)
 		  tmp_tags[i] = reach_p->tags[i];
-		if (trans_i->tags)
-		  for (tag_i = trans_i->tags; *tag_i >= 0; tag_i++)
-		    tmp_tags[*tag_i] = pos;
+		if (trans->tags)
+		  for (i = 0; trans->tags[i] >= 0; i++)
+		    tmp_tags[trans->tags[i]] = pos;
 
-		DPRINT(("to %p\n", trans_i->state));
-		DPRINT(("pos = %d\n", pos));
-		DPRINT(("cost = %d\n", cost));
-		DPRINT(("reach_pos[%d].pos = %d\n", trans_i->state_id,
-			reach_pos[trans_i->state_id].pos));
-		DPRINT(("reach_pos[%d].cost = %d\n", trans_i->state_id,
-			reach_pos[trans_i->state_id].cost));
-		/* XXX - should use input order counts to optimize! */
-		/* XXX - should we check some assertions (BOL, EOL)? */
-		if (reach_pos[trans_i->state_id].pos < pos
-		    || reach_pos[trans_i->state_id].cost > cost)
+		/* If another path has also reached this state, choose the one
+		   with the smallest cost or best tags if costs are equal. */
+		if (reach_next[dest_id].pos == pos
+		    && (cost0 > reach_next[dest_id].costs[0][TRE_M_COST]
+			|| (cost0 == reach_next[dest_id].costs[0][TRE_M_COST]
+			    && tre_tag_order(num_tags, tnfa->tag_directions,
+					     reach_next[dest_id].tags,
+					     tmp_tags))))
 		  {
-#ifdef TRE_DEBUG
-		    DPRINT(("to %p, cost %d, tags ",
-			    reach_p->state, cost));
-		    for (i = 0; i < num_tags; i++)
-		      DPRINT(("%d, ", tmp_tags[i]));
-		    DPRINT(("\n"));
-		    if (trans_i->state == tnfa->final)
-		      DPRINT(("final state!\n"));
-#endif /* TRE_DEBUG */
-		    if (reach_pos[trans_i->state_id].pos < pos)
-		      {
-			/* Not reached yet. */
-			reach_next_i->state = trans_i->state;
-			reach_next_i->state_id = trans_i->state_id;
-			reach_next_i->cost = cost;
-			DPRINT(("3: setting state %d pos to %d\n",
-				trans_i->state_id, pos));
-			reach_pos[trans_i->state_id].pos = pos;
-			reach_pos[trans_i->state_id].tags = &reach_next_i->tags;
-			reach_pos[trans_i->state_id].cost = cost;
-			reach_pos[trans_i->state_id].reach = reach_next_i;
-
-			tmp_iptr = reach_next_i->tags;
-			reach_next_i->tags = tmp_tags;
-			tmp_tags = tmp_iptr;
-
-			if (reach_next_i->state == tnfa->final
-			    && cost <= params.max_cost
-			    && (match_eo == -1
-				|| match_cost > cost
-				|| (match_cost == cost
-				    && (num_tags > 0
-					&& reach_next_i->tags[0] <= match_tags[0]))))
-			  {
-			    DPRINT(("setting new match at %d, cost %d\n",
-				    pos, cost));
-			    match_eo = pos;
-			    match_cost = cost;
-			    for (i = 0; i < num_tags; i++)
-			      match_tags[i] = reach_next_i->tags[i];
-			  }
-
-			reach_next_i++;
-		      }
-		    else
-		      {
-			/* Already reached.  Reset cost. */
-			reach_pos[trans_i->state_id].reach->cost = cost;
-			reach_pos[trans_i->state_id].reach->state =
-			  trans_i->state;
-			tmp_iptr = *reach_pos[trans_i->state_id].tags;
-			*reach_pos[trans_i->state_id].tags = tmp_tags;
-			if (trans_i->state == tnfa->final
-			    && (match_eo == -1
-				|| match_cost > cost
-				|| (match_cost == cost
-				    && (num_tags > 0
-					&& tmp_tags[0] <= match_tags[0]))))
-			  {
-			    DPRINT(("setting better match at %d, cost %d\n",
-				    pos, cost));
-			    match_eo = pos;
-			    match_cost = cost;
-			    for (i = 0; i < num_tags; i++)
-			      match_tags[i] = tmp_tags[i];
-			  }
-			tmp_tags = tmp_iptr;
-		      }
-
-		    /* Add to the end of the deque. */
-		    deque_end->state = trans_i->state;
-		    deque_end->cost = cost;
-		    deque_end->tags = tmp_tags;
-		    deque_end++;
-		    if (deque_end >= (ringbuffer + 512))
-		      deque_end = ringbuffer;
-		    assert(deque_end != deque_start);
+		    DPRINT(("lose, cost0 %d, have %d\n",
+			    cost0, reach_next[dest_id].costs[0][TRE_M_COST]));
+		    continue;
 		  }
-	      }
-	    DPRINT(("\n"));
+		DPRINT(("win\n"));
 
+		/* Set state, position, tags, parameters, depth, and costs. */
+		reach_next[dest_id].state = trans->state;
+		reach_next[dest_id].pos = pos;
+		for (i = 0; i < num_tags; i++)
+		  reach_next[dest_id].tags[i] = tmp_tags[i];
+
+		reach_next[dest_id].params = reach_p->params;
+		if (trans->params)
+		  tre_set_params(&reach_next[dest_id], trans->params,
+				 default_params);
+
+		reach_next[dest_id].depth = reach_p->depth;
+		for (i = 0; i <= depth; i++)
+		  for (j = 0; j < TRE_M_LAST; j++)
+		    reach_next[dest_id].costs[i][j] = reach_p->costs[i][j];
+		reach_next[dest_id].costs[depth][TRE_M_COST] = cost;
+		reach_next[dest_id].costs[depth][TRE_M_NUM_DEL]++;
+		reach_next[dest_id].costs[depth][TRE_M_NUM_ERR]++;
+		if (depth > 0)
+		  {
+		    reach_next[dest_id].costs[0][TRE_M_COST] = cost0;
+		    reach_next[dest_id].costs[0][TRE_M_NUM_DEL]++;
+		    reach_next[dest_id].costs[0][TRE_M_NUM_ERR]++;
+		  }
+
+		if (trans->state == tnfa->final
+		    && (match_eo < 0
+			|| match_costs[TRE_M_COST] > cost0
+			|| (match_costs[TRE_M_COST] == cost0
+			    && (num_tags > 0
+				&& tmp_tags[0] <= match_tags[0]))))
+		  {
+		    DPRINT(("    setting new match at %d, cost %d\n",
+			    pos, cost0));
+		    match_eo = pos;
+		    for (i = 0; i < TRE_M_LAST; i++)
+		      match_costs[i] = reach_next[dest_id].costs[0][i];
+		    for (i = 0; i < num_tags; i++)
+		      match_tags[i] = tmp_tags[i];
+		  }
+
+		/* Add to the end of the deque. */
+		*deque_end = &reach_next[dest_id];
+		deque_end++;
+		if (deque_end >= (ringbuffer + 512))
+		  deque_end = ringbuffer;
+		assert(deque_end != deque_start);
+	      }
 	    deque_start++;
 	    if (deque_start >= (ringbuffer + 512))
 	      deque_start = ringbuffer;
 	  }
+
       }
 
-      reach_next_i->state = NULL;
-      GET_NEXT_WCHAR();
-
 #ifdef TRE_DEBUG
-      DPRINT(("%3d:%2lc/%05d |", pos - 1, (tre_cint_t)prev_c, (int)prev_c));
-      print_reach(tnfa, reach_next);
+      tre_print_reach(tnfa, reach_next, pos);
 #endif /* TRE_DEBUG */
 
+      GET_NEXT_WCHAR();
+
       /* Check for end of string. */
-      if ((len < 0 && prev_c == L'\0')
-	  || (len >= 0 && pos > len))
-	break;
+      if (len < 0)
+        {
+          if (prev_c == L'\0')
+            break;
+        }
+      else
+        {
+          if (pos > len)
+            break;
+        }
 
       /* Swap `reach' and `reach_next'. */
-      reach_i = reach;
-      reach = reach_next;
-      reach_next = reach_i;
+      {
+	tre_tnfa_approx_reach_t *tmp;
+	tmp = reach;
+	reach = reach_next;
+	reach_next = tmp;
+      }
 
-      /* Go through each state in `reach' and the transitions to
-	 other states. */
-      reach_i = reach;
-      reach_next_i = reach_next;
-      while (reach_i->state != NULL)
+      /* Handle exact matches and substitutions. */
+      for (id = 0; id < tnfa->num_states; id++)
 	{
-	  trans_i = reach_i->state;
-	  while (trans_i->state != NULL)
-	    {
-	      int cost = reach_i->cost;
-	      if (trans_i->code_min > prev_c ||
-		  trans_i->code_max < prev_c)
-		{
-		  /* Handle substitutions.  The required character was not
-		     in the string, so match it in place of whatever was
-		     supposed to be there and increase cost by `cost_subst'. */
-		  cost += params.cost_subst;
-		  if (cost > params.max_cost)
-		    {
-		      trans_i++;
-		      continue;
-		    }
-		  DPRINT(("substitution, from %p, cost %d\n",
-			  trans_i->state, cost));
-		}
+	  tre_tnfa_transition_t *trans;
 
-	      if (trans_i->assertions
-		  && (CHECK_ASSERTIONS(trans_i->assertions)
+	  /* XXX - `pos - 1' does not work for mbs. */
+	  if (reach[id].pos < pos - 1)
+	    continue;  /* Not reached. */
+	  for (trans = reach[id].state; trans->state; trans++)
+	    {
+	      int dest_id;
+	      int j, depth;
+	      int cost, cost0, err;
+
+	      if (trans->assertions
+		  && (CHECK_ASSERTIONS(trans->assertions)
 		      /* Handle character class transitions. */
-		      || ((trans_i->assertions & ASSERT_CHAR_CLASS)
+		      || ((trans->assertions & ASSERT_CHAR_CLASS)
 			  && !(cflags & REG_ICASE)
-			  && !tre_isctype((tre_cint_t)prev_c, trans_i->u.class))
-		      || ((trans_i->assertions & ASSERT_CHAR_CLASS)
+			  && !tre_isctype((tre_cint_t)prev_c, trans->u.class))
+		      || ((trans->assertions & ASSERT_CHAR_CLASS)
 			  && (cflags & REG_ICASE)
 			  && (!tre_isctype(tre_tolower((tre_cint_t)prev_c),
-					trans_i->u.class)
+					   trans->u.class)
 			      && !tre_isctype(tre_toupper((tre_cint_t)prev_c),
-					   trans_i->u.class)))
-		      || ((trans_i->assertions & ASSERT_CHAR_CLASS_NEG)
-			  && neg_char_classes_match(trans_i->neg_classes,
-						    (tre_cint_t)prev_c,
-						    cflags & REG_ICASE))))
+					      trans->u.class)))
+		      || ((trans->assertions & ASSERT_CHAR_CLASS_NEG)
+			  && tre_neg_char_classes_match(trans->neg_classes,
+							(tre_cint_t)prev_c,
+							cflags & REG_ICASE))))
 		{
-		  DPRINT(("assertion failed\n"));
-		  trans_i++;
+		  DPRINT(("  exact,  from %d: assert failed\n", id));
 		  continue;
 		}
 
-	      /* Compute the tags after this transition. */
-	      for (i = 0; i < num_tags; i++)
-		tmp_tags[i] = reach_i->tags[i];
-	      if (trans_i->tags)
-		for (tag_i = trans_i->tags; *tag_i >= 0; tag_i++)
-		  tmp_tags[*tag_i] = pos;
+	      depth = reach[id].depth;
+	      dest_id = trans->state_id;
 
-	      if (reach_pos[trans_i->state_id].pos < pos)
+	      cost = reach[id].costs[depth][TRE_M_COST];
+	      cost0 = reach[id].costs[0][TRE_M_COST];
+	      err = 0;
+
+	      if (trans->code_min > prev_c ||
+		  trans->code_max < prev_c)
 		{
-		  /* Found an unvisited node. */
-		  reach_next_i->state = trans_i->state;
-		  reach_next_i->state_id = trans_i->state_id;
-		  reach_next_i->cost = cost;
-		  tmp_iptr = reach_next_i->tags;
-		  reach_next_i->tags = tmp_tags;
-		  tmp_tags = tmp_iptr;
-		  DPRINT(("4: setting state %d pos to %d\n",
-			  trans_i->state_id, pos));
-		  reach_pos[trans_i->state_id].pos = pos;
-		  reach_pos[trans_i->state_id].tags = &reach_next_i->tags;
-		  reach_pos[trans_i->state_id].cost = cost;
-		  reach_pos[trans_i->state_id].reach = reach_next_i;
+		  /* Handle substitutes.  The required character was not in
+		     the string, so match it in place of whatever was supposed
+		     to be there and increase costs accordingly. */
+		  err = 1;
 
-		  if (reach_next_i->state == tnfa->final
-		      && cost <= params.max_cost
-		      && (match_eo == -1
-			  || match_cost > cost
-			  || (match_cost == cost
-			      && (num_tags > 0
-				  && reach_next_i->tags[0] <= match_tags[0]))))
+		  /* Compute and check cost at current depth. */
+		  cost = reach[id].costs[depth][TRE_M_COST];
+		  if (reach[id].params.cost_subst != TRE_PARAM_UNSET)
+		    cost += reach[id].params.cost_subst;
+		  if (cost > reach[id].params.max_cost)
+		    continue; /* Cost too large. */
+
+		  /* Check number of substitutes at current depth. */
+		  if (reach[id].costs[depth][TRE_M_NUM_SUBST] + 1
+		      > reach[id].params.max_subst)
+		    continue; /* Too many substitutes. */
+
+		  /* Check total number of errors at current depth. */
+		  if (reach[id].costs[depth][TRE_M_NUM_ERR] + 1
+		      > reach[id].params.max_err)
+		    continue; /* Too many errors. */
+
+		  /* Compute overall cost. */
+		  cost0 = cost;
+		  if (depth > 0)
 		    {
-		      DPRINT(("setting new match at %d, cost %d\n", pos, cost));
-		      match_eo = pos;
-		      match_cost = cost;
-		      for (i = 0; i < num_tags; i++)
-			match_tags[i] = reach_next_i->tags[i];
+		      cost0 = reach[id].costs[0][TRE_M_COST];
+		      if (reach[id].params.cost_subst != TRE_PARAM_UNSET)
+			cost0 += reach[id].params.cost_subst;
+		      else
+			cost0 += default_params.cost_subst;
 		    }
-		  reach_next_i++;
-
+		  DPRINT(("  subst,  from %03d to %03d, cost %d: ",
+			  id, dest_id, cost0));
 		}
 	      else
+		DPRINT(("  exact,  from %03d to %03d, cost %d: ",
+			id, dest_id, cost0));
+
+	      /* Compute tag values after this transition. */
+	      for (i = 0; i < num_tags; i++)
+		tmp_tags[i] = reach[id].tags[i];
+	      if (trans->tags)
+		for (i = 0; trans->tags[i] >= 0; i++)
+		  tmp_tags[trans->tags[i]] = pos;
+
+	      /* If another path has also reached this state, choose the
+		 one with the smallest cost or best tags if costs are equal. */
+	      if (reach_next[dest_id].pos == pos
+		  && (cost0 > reach_next[dest_id].costs[0][TRE_M_COST]
+		      || (cost0 == reach_next[dest_id].costs[0][TRE_M_COST]
+			  && tre_tag_order(num_tags, tnfa->tag_directions,
+					   reach_next[dest_id].tags,
+					   tmp_tags))))
 		{
-		  assert(reach_pos[trans_i->state_id].pos == pos);
-		  /* Another path has also reached this state.  We choose the
-		     one with the smallest cost. */
-		  if (reach_pos[trans_i->state_id].cost > cost
-		      || (reach_pos[trans_i->state_id].cost == cost
-			  && tag_order(num_tags, tnfa->tag_directions, tmp_tags,
-				       *reach_pos[trans_i->state_id].tags)))
-		    {
-		      /* The new path wins. */
-		      reach_pos[trans_i->state_id].cost = cost;
-		      reach_pos[trans_i->state_id].reach->cost = cost;
-		      tmp_iptr = *reach_pos[trans_i->state_id].tags;
-		      *reach_pos[trans_i->state_id].tags = tmp_tags;
-		      if (trans_i->state == tnfa->final)
-			{
-			  DPRINT(("setting better match at %d, cost %d\n",
-				  pos, cost));
-			  match_eo = pos;
-			  match_cost = cost;
-			  for (i = 0; i < num_tags; i++)
-			    match_tags[i] = tmp_tags[i];
-			}
-		      tmp_tags = tmp_iptr;
-		    }
+		  DPRINT(("lose\n"));
+		  continue;
 		}
-	      trans_i++;
+	      DPRINT(("win %d %d\n",
+		      reach_next[dest_id].pos,
+		      reach_next[dest_id].costs[0][TRE_M_COST]));
+
+	      /* Set state, position, tags, and depth. */
+	      reach_next[dest_id].state = trans->state;
+	      reach_next[dest_id].pos = pos;
+	      for (i = 0; i < num_tags; i++)
+		reach_next[dest_id].tags[i] = tmp_tags[i];
+	      reach_next[dest_id].depth = reach[id].depth;
+
+	      /* Set parameters. */
+	      reach_next[dest_id].params = reach[id].params;
+	      if (trans->params)
+		tre_set_params(&reach_next[dest_id], trans->params,
+			       default_params);
+
+	      /* Set the costs after this transition. */
+	      for (i = 0; i <= depth; i++)
+		for (j = 0; j < TRE_M_LAST; j++)
+		  reach_next[dest_id].costs[i][j] = reach[id].costs[i][j];
+	      reach_next[dest_id].costs[depth][TRE_M_COST] = cost;
+	      reach_next[dest_id].costs[depth][TRE_M_NUM_SUBST] += err;
+	      reach_next[dest_id].costs[depth][TRE_M_NUM_ERR] += err;
+	      if (depth > 0)
+		{
+		  reach_next[dest_id].costs[0][TRE_M_COST] = cost0;
+		  reach_next[dest_id].costs[0][TRE_M_NUM_SUBST] += err;
+		  reach_next[dest_id].costs[0][TRE_M_NUM_ERR] += err;
+		}
+
+	      if (trans->state == tnfa->final
+		  && (match_eo < 0
+		      || cost0 < match_costs[TRE_M_COST]
+		      || (cost0 == match_costs[TRE_M_COST]
+			  && num_tags > 0 && tmp_tags[0] <= match_tags[0])))
+		{
+		  DPRINT(("    setting new match at %d, cost %d\n",
+			  pos, cost0));
+		  match_eo = pos;
+		  for (i = 0; i < TRE_M_LAST; i++)
+		    match_costs[i] = reach_next[dest_id].costs[0][i];
+		  for (i = 0; i < num_tags; i++)
+		    match_tags[i] = tmp_tags[i];
+		}
 	    }
-	  reach_i++;
 	}
-      reach_next_i->state = NULL;
     }
 
-  DPRINT(("match end offset = %d, match cost = %d\n", match_eo, match_cost));
-  match->cost = match_cost;
+  DPRINT(("match end offset = %d, match cost = %d\n", match_eo,
+	  match_costs[TRE_M_COST]));
+  match->cost = match_costs[TRE_M_COST];
+  match->num_ins = match_costs[TRE_M_NUM_INS];
+  match->num_del = match_costs[TRE_M_NUM_DEL];
+  match->num_subst = match_costs[TRE_M_NUM_SUBST];
   *match_end_ofs = match_eo;
+
   return match_eo >= 0 ? REG_OK : REG_NOMATCH;
 }
-
-/* EOF */

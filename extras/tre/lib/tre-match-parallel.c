@@ -39,6 +39,7 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#ifdef TRE_USE_ALLOCA
 /* AIX requires this to be the first thing in the file.  */
 #ifndef __GNUC__
 # if HAVE_ALLOCA_H
@@ -53,6 +54,7 @@ char *alloca ();
 #  endif
 # endif
 #endif
+#endif /* TRE_USE_ALLOCA */
 
 #include <assert.h>
 #include <stdlib.h>
@@ -90,7 +92,7 @@ typedef struct {
 
 #ifdef TRE_DEBUG
 static void
-print_reach(const tre_tnfa_t *tnfa, tre_tnfa_reach_t *reach)
+tre_print_reach(const tre_tnfa_t *tnfa, tre_tnfa_reach_t *reach)
 {
   int i;
 
@@ -128,7 +130,10 @@ tre_tnfa_run_parallel(const tre_tnfa_t *tnfa, const void *string, int len,
   tre_char_t prev_c = 0, next_c = 0;
   const char *str_byte = string;
   char *buf;
-  int pos = -1, pos_add_next = 1;
+  int pos = -1;
+#ifdef TRE_MULTIBYTE
+  int pos_add_next = 1;
+#endif /* TRE_MULTIBYTE */
   tre_tnfa_transition_t *trans_i;
   tre_tnfa_reach_t *reach, *reach_next, *reach_i, *reach_next_i;
   tre_reach_pos_t *reach_pos;
@@ -152,7 +157,7 @@ tre_tnfa_run_parallel(const tre_tnfa_t *tnfa, const void *string, int len,
 
   DPRINT(("tre_tnfa_run_parallel, input type %d\n", type));
 
-  if (eflags & REG_NOTAGS)
+  if (!match_tags)
     num_tags = 0;
   else
     num_tags = tnfa->num_tags;
@@ -173,7 +178,11 @@ tre_tnfa_run_parallel(const tre_tnfa_t *tnfa, const void *string, int len,
       + (rbytes + xbytes * tnfa->num_states) * 2 + tbytes + pbytes;
 
     /* Allocate the memory. */
+#ifdef TRE_USE_ALLOCA
     buf = alloca(total_bytes);
+#else /* !TRE_USE_ALLOCA */
+    buf = xmalloc(total_bytes);
+#endif /* !TRE_USE_ALLOCA */
     if (buf == NULL)
       return REG_ESPACE;
     memset(buf, 0, total_bytes);
@@ -217,7 +226,13 @@ tre_tnfa_run_parallel(const tre_tnfa_t *tnfa, const void *string, int len,
       /* XXX - use memchr(), wcschr() and wmemchr() as well! */
       str_byte = strchr(orig_str, first);
       if (str_byte == NULL)
-	return REG_NOMATCH;
+	{
+#ifndef TRE_USE_ALLOCA
+	  if (buf)
+	    xfree(buf);
+#endif /* !TRE_USE_ALLOCA */
+	  return REG_NOMATCH;
+	}
       prev_c = *(str_byte - 2);
       next_c = *(str_byte - 1);
       pos += str_byte - orig_str;
@@ -289,7 +304,8 @@ tre_tnfa_run_parallel(const tre_tnfa_t *tnfa, const void *string, int len,
 		  if (tag_i)
 		    while (*tag_i >= 0)
 		      {
-			reach_next_i->tags[*tag_i] = pos;
+			if (*tag_i < num_tags)
+			  reach_next_i->tags[*tag_i] = pos;
 			tag_i++;
 		      }
 		  if (reach_next_i->state == tnfa->final)
@@ -320,7 +336,7 @@ tre_tnfa_run_parallel(const tre_tnfa_t *tnfa, const void *string, int len,
 
 #ifdef TRE_DEBUG
       DPRINT(("%3d:%2lc/%05d |", pos - 1, (tre_cint_t)prev_c, (int)prev_c));
-      print_reach(tnfa, reach_next);
+      tre_print_reach(tnfa, reach_next);
 #endif /* TRE_DEBUG */
 
       /* Check for end of string. */
@@ -391,12 +407,10 @@ tre_tnfa_run_parallel(const tre_tnfa_t *tnfa, const void *string, int len,
       /* For each state in `reach' see if there is a transition leaving with
 	 the current input symbol to a state not yet in `reach_next', and
 	 add the destination states to `reach_next'. */
-      reach_i = reach;
       reach_next_i = reach_next;
-      while (reach_i->state != NULL)
+      for (reach_i = reach; reach_i->state; reach_i++)
 	{
-	  trans_i = reach_i->state;
-	  while (trans_i->state != NULL)
+	  for (trans_i = reach_i->state; trans_i->state; trans_i++)
 	    {
 	      /* Does this transition match the input symbol? */
 	      if (trans_i->code_min <= prev_c &&
@@ -415,12 +429,11 @@ tre_tnfa_run_parallel(const tre_tnfa_t *tnfa, const void *string, int len,
 				  && !tre_isctype(tre_toupper((tre_cint_t)prev_c),
 					       trans_i->u.class)))
 			  || ((trans_i->assertions & ASSERT_CHAR_CLASS_NEG)
-			      && neg_char_classes_match(trans_i->neg_classes,
-							(tre_cint_t)prev_c,
-							cflags & REG_ICASE))))
+			      && tre_neg_char_classes_match(trans_i->neg_classes,
+							    (tre_cint_t)prev_c,
+							    cflags & REG_ICASE))))
 		    {
 		      DPRINT(("assertion failed\n"));
-		      trans_i++;
 		      continue;
 		    }
 
@@ -431,7 +444,8 @@ tre_tnfa_run_parallel(const tre_tnfa_t *tnfa, const void *string, int len,
 		  if (tag_i != NULL)
 		    while (*tag_i >= 0)
 		      {
-			tmp_tags[*tag_i] = pos;
+			if (*tag_i < num_tags)
+			  tmp_tags[*tag_i] = pos;
 			tag_i++;
 		      }
 
@@ -465,8 +479,9 @@ tre_tnfa_run_parallel(const tre_tnfa_t *tnfa, const void *string, int len,
 		      /* Another path has also reached this state.  We choose
 			 the winner by examining the tag values for both
 			 paths. */
-		      if (tag_order(num_tags, tnfa->tag_directions, tmp_tags,
-				    *reach_pos[trans_i->state_id].tags))
+		      if (tre_tag_order(num_tags, tnfa->tag_directions,
+					tmp_tags,
+					*reach_pos[trans_i->state_id].tags))
 			{
 			  /* The new path wins. */
 			  tmp_iptr = *reach_pos[trans_i->state_id].tags;
@@ -483,14 +498,17 @@ tre_tnfa_run_parallel(const tre_tnfa_t *tnfa, const void *string, int len,
 			}
 		    }
 		}
-	      trans_i++;
 	    }
-	  reach_i++;
 	}
       reach_next_i->state = NULL;
     }
 
   DPRINT(("match end offset = %d\n", match_eo));
+
+#ifndef TRE_USE_ALLOCA
+  if (buf)
+    xfree(buf);
+#endif /* !TRE_USE_ALLOCA */
 
   *match_end_ofs = match_eo;
   return match_eo >= 0 ? REG_OK : REG_NOMATCH;

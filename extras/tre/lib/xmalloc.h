@@ -1,7 +1,7 @@
 /*
   xmalloc.h - Simple malloc debugger library API
 
-  Copyright (C) 2001, 2002 Ville Laurikari <vl@iki.fi>.
+  Copyright (C) 2001-2003 Ville Laurikari <vl@iki.fi>.
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License version 2 (June
@@ -58,7 +58,7 @@ void *xcalloc_impl(size_t nmemb, size_t size, const char *file, int line,
 void xfree_impl(void *ptr, const char *file, int line, const char *func);
 void *xrealloc_impl(void *ptr, size_t new_size, const char *file, int line,
 		    const char *func);
-void xmalloc_dump_leaks();
+int xmalloc_dump_leaks(void);
 void xmalloc_configure(int fail_after);
 
 #undef malloc

@@ -2688,3 +2688,4 @@ seen. gmtime warning still there
   Also made tk->usermask static (USERLEN+2) instead of dynamic.
   These changes should give enough speed improvement to make the new anti-spam/anti-ads
   feature fast enough.
+- Updated the TRE library source to 0.6.3 (not yet used)

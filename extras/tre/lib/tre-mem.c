@@ -76,7 +76,7 @@ tre_mem_destroy(tre_mem_t mem)
    allocated block or NULL if an underlying malloc() failed. */
 void *
 tre_mem_alloc_impl(tre_mem_t mem, int provided, void *provided_block,
-		   size_t size)
+		   int zero, size_t size)
 {
   void *ptr;
 
@@ -149,16 +149,19 @@ tre_mem_alloc_impl(tre_mem_t mem, int provided, void *provided_block,
 	  mem->n = block_size;
 	}
     }
-  else
-    {
-      /* Make sure the next pointer will be aligned. */
-      size += ALIGN(mem->ptr + size, long);
-    }
+
+  /* Make sure the next pointer will be aligned. */
+  size += ALIGN(mem->ptr + size, long);
 
   /* Allocate from current block. */
   ptr = mem->ptr;
   mem->ptr += size;
   mem->n -= size;
+
+  /* Set to zero if needed. */
+  if (zero)
+    memset(ptr, 0, size);
+
   return ptr;
 }
 

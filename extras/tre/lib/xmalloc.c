@@ -1,7 +1,7 @@
 /*
   xmalloc.c - Simple malloc debugger library implementation
 
-  Copyright (C) 2001, 2002 Ville Laurikari <vl@iki.fi>.
+  Copyright (C) 2001-2003 Ville Laurikari <vl@iki.fi>.
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License version 2 (June
@@ -21,6 +21,7 @@
 /*
   TODO:
    - red zones
+   - group dumps by source location
 */
 
 #ifdef HAVE_CONFIG_H
@@ -60,7 +61,7 @@ static int xmalloc_fail_after;
 #define TABLE_SIZE (1 << TABLE_BITS)
 
 static hashTable *
-hash_table_new()
+hash_table_new(void)
 {
   hashTable *tbl;
 
@@ -177,7 +178,7 @@ hash_table_del(hashTable *tbl, void *ptr)
 static hashTable *xmalloc_table = NULL;
 
 static void
-xmalloc_init()
+xmalloc_init(void)
 {
   if (xmalloc_table == NULL)
     {
@@ -205,8 +206,8 @@ xmalloc_configure(int fail_after)
   xmalloc_fail_after = fail_after;
 }
 
-void
-xmalloc_dump_leaks()
+int
+xmalloc_dump_leaks(void)
 {
   int i;
   int num_leaks = 0;
@@ -242,6 +243,8 @@ xmalloc_dump_leaks()
   else
     printf("N/A");
   printf(" bytes per block).\n");
+
+  return num_leaks;
 }
 
 void *

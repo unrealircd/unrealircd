@@ -29,14 +29,15 @@
 #include <sys/types.h>
 #include <locale.h>
 #include <string.h>
+#ifdef HAVE_MALLOC_H
+#include <malloc.h>
+#endif /* HAVE_MALLOC_H */
+#include <limits.h>
 #if HAVE_RX
 #include <hackerlab/rx-posix/regex.h>
 #else
 #include <regex.h>
 #endif
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif /* HAVE_MALLOC_H */
 
 #ifdef MALLOC_DEBUGGING
 #include "xmalloc.h"
@@ -76,7 +77,7 @@ test_exec(char *str, int cost_ins, int cost_del, int cost_subst,
   va_start(ap, cost);
   match.pmatch = pmatch;
   match.nmatch = elementsof(pmatch);
-  memset(&params, 0, sizeof(params));
+  regaparams_default(&params);
   params.cost_ins = cost_ins;
   params.cost_del = cost_del;
   params.cost_subst = cost_subst;
@@ -133,7 +134,7 @@ test_exec(char *str, int cost_ins, int cost_del, int cost_subst,
 	  && reobj.re_nsub <= elementsof(pmatch))
 	{
 	  printf("Comp error, regex: \"%s\"\n", regex_pattern);
-	  printf("  re_nsub is %d, should be %d\n", reobj.re_nsub, i - 1);
+	  printf("  re_nsub is %d, should be %d\n", (int)reobj.re_nsub, i - 1);
 	  fail = 1;
 	}
 
@@ -187,6 +188,10 @@ test_comp(char *re, int flags, int ret)
 int
 main(int argc, char **argv)
 {
+  test_comp("(Laurikari){~}", REG_EXTENDED, 0);
+  test_exec("suyhEKaurikawipEksnkhpkns", 1, 1, 1, INT_MAX, 0, REG_OK,
+	    2, 5, 14, 5, 14, END);
+
   test_comp("abc", REG_EXTENDED, 0);
   test_exec("xaxcxxxx", 1, 1, 1, 3, 0, REG_OK, 1, 1, 4, END);
 
@@ -218,5 +223,5 @@ main(int argc, char **argv)
   test_comp("foobar", REG_EXTENDED, 0);
   test_exec("faobar\n", 1, 1, 1, 2, 0, REG_OK, 1, 0, 6, END);
 
-  return 0;
+  return comp_errors || exec_errors;
 }

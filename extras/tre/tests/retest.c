@@ -19,9 +19,10 @@
 */
 
 /*
-   This is just a simple test application containing various hand-written
-   tests for regression testing TRE.  Some of these tests are TRE
-   specific, but most are applicable to any POSIX regexp implementation.
+   This is just a simple test application containing various hands-written
+   tests for regression testing TRE.  I've tried to surround TRE specific
+   tests inside ifdefs, so this can be used to test any POSIX compatible
+   regexp implementation.
 */
 
 #ifdef HAVE_CONFIG_H
@@ -103,14 +104,46 @@ test_exec(char *str, int eflags, ...)
 #endif /* !MALLOC_DEBUGGING */
   /* XXX - test the approximate matcher (with cost 0) and the
      backtracking matcher as well using special eflags. */
+
+#if defined(MALLOC_DEBUGGING) && !defined(TRE_USE_ALLOCA)
+  {
+    static int j = 0, k = 0;
+    int i = 0;
+    while (1)
+      {
+	if (j++ % 20 == 0)
+	  {
+	    printf(",");
+	    if (++k % 79 == 0)
+	      printf("\n");
+	    fflush(stdout);
+	  }
+	xmalloc_configure(i);
+	comp_tests++;
+	m = regnexec(&reobj, data, len, elementsof(pmatch), pmatch, eflags);
+	if (m != REG_ESPACE)
+	  {
+	    printf("#");
+	    if (++k % 79 == 0)
+	      printf("\n");
+	    break;
+	  }
+#ifdef REGEX_DEBUG
+	xmalloc_dump_leaks();
+#endif /* REGEX_DEBUG */
+	i++;
+      }
+  }
+#else
   m = regnexec(&reobj, data, len, elementsof(pmatch), pmatch, eflags);
+#endif
   xfree(data);
   if (m != va_arg(ap, int))
     {
       printf("Exec error, regex: \"%s\", cflags %d, "
 	     "string: \"%s\", eflags %d\n", regex_pattern, cflags,
 	     str, eflags);
-      printf("  got %smatch\n", m ? "no " : "");
+      printf("  got %smatch (regnexec returned %d)\n", m ? "no " : "", m);
       fail = 1;
     }
 
@@ -127,8 +160,12 @@ test_exec(char *str, int eflags, ...)
 	    {
 	      printf("Exec error, regex: \"%s\", string: \"%s\"\n",
 		     regex_pattern, str);
-	      printf("  group %d: expected (%d, %d), got (%d, %d)\n",
-		     i, rm_so, rm_eo, pmatch[i].rm_so, pmatch[i].rm_eo);
+	      printf("  group %d: expected (%d, %d) \"%.*s\", "
+		     "got (%d, %d) \"%.*s\"\n",
+		     i, rm_so, rm_eo, rm_eo - rm_so, str + rm_so,
+		     pmatch[i].rm_so, pmatch[i].rm_eo,
+		     pmatch[i].rm_eo - pmatch[i].rm_so,
+		     str + pmatch[i].rm_so);
 	      fail = 1;
 	    }
 	}
@@ -138,7 +175,7 @@ test_exec(char *str, int eflags, ...)
 	  && reobj.re_nsub <= elementsof(pmatch))
 	{
 	  printf("Comp error, regex: \"%s\"\n", regex_pattern);
-	  printf("  re_nsub is %d, should be %d\n", reobj.re_nsub, i - 1);
+	  printf("  re_nsub is %d, should be %d\n", (int)reobj.re_nsub, i - 1);
 	  fail = 1;
 	}
 
@@ -248,6 +285,114 @@ int
 main(int argc, char **argv)
 {
 
+#if 0
+  /* Should these match or not? */
+  test_comp("(a)*-\\1b", REG_EXTENDED, 0);
+  test_exec("aaa-b", 0, REG_NOMATCH, END);
+  test_comp("((.*)\\1)+", REG_EXTENDED, 0);
+  test_exec("xxxxxx", 0, REG_NOMATCH, END);
+#endif
+
+#ifdef TRE_APPROX
+  /*
+   * Approximate matching tests.
+   *
+   * The approximate matcher always searches for the best match, and returns
+   * the leftmost and longest one if there are several best matches.
+   */
+
+  test_comp("(fou){# ~1}", REG_EXTENDED, 0);
+  test_comp("(fuu){#}", REG_EXTENDED, 0);
+  test_comp("(fuu){# ~}", REG_EXTENDED, 0);
+  test_comp("(anaconda){ 1i + 1d < 1, #1}", REG_EXTENDED, 0);
+  test_comp("(anaconda){ 1i + 1d < 1 #1 ~10 }", REG_EXTENDED, 0);
+  test_comp("(anaconda){ #1, ~1, 1i + 1d < 1 }", REG_EXTENDED, 0);
+
+  test_comp("(znacnda){ #1 ~3 1i + 1d < 1 }", REG_EXTENDED, 0);
+  test_exec("molasses anaconda foo bar baz smith anderson ",
+	    0, REG_NOMATCH);
+  test_comp("(znacnda){ #1 ~3 1i + 1d < 2 }", REG_EXTENDED, 0);
+  test_exec("molasses anaconda foo bar baz smith anderson ",
+	    0, REG_OK, 9, 17, 9, 17, END);
+  test_comp("(ananda){ 1i + 1d < 2 }", REG_EXTENDED, 0);
+  test_exec("molasses anaconda foo bar baz smith anderson ",
+	    0, REG_NOMATCH);
+
+  test_comp("(fuu){ +3 -3 ~5}", REG_EXTENDED, 0);
+  test_exec("anaconda foo bar baz smith anderson",
+	    0, REG_OK, 9, 10, 9, 10, END);
+  test_comp("(fuu){ +2 -2 ~5}", REG_EXTENDED, 0);
+  test_exec("anaconda foo bar baz smith anderson",
+	    0, REG_OK, 9, 10, 9, 10, END);
+  test_comp("(fuu){ +3 -3 ~}", REG_EXTENDED, 0);
+  test_exec("anaconda foo bar baz smith anderson",
+	    0, REG_OK, 9, 10, 9, 10, END);
+
+  test_comp("(laurikari){ #3, 1i + 1d < 3 }", REG_EXTENDED, 0);
+
+  /* No cost limit. */
+  test_comp("(foobar){~}", REG_EXTENDED, 0);
+  test_exec("xirefoabralfobarxie", 0, REG_OK, 11, 16, 11, 16, END);
+
+  /* At most two errors. */
+  test_comp("(foobar){~2}", REG_EXTENDED, 0);
+  test_exec("xirefoabrzlfd", 0, REG_OK, 4, 9, 4, 9, END);
+  test_exec("xirefoabzlfd", 0, REG_NOMATCH, END);
+
+  /* At most two inserts or substitutions and max two errors total. */
+  test_comp("(foobar){+2#2~2}", REG_EXTENDED, 0);
+  test_exec("oobargoobaploowap", 0, REG_OK, 5, 11, 5, 11, END);
+
+  /* Find best whole word match for "foobar". */
+  test_comp("\\<(foobar){~}\\>", REG_EXTENDED, 0);
+  test_exec("zfoobarz", 0, REG_OK, 0, 8, 0, 8, END);
+  test_exec("boing zfoobarz goobar woop", 0, REG_OK, 15, 21, 15, 21, END);
+
+  /* Match whole string, allow only 1 error. */
+  test_comp("^(foobar){~1}$", REG_EXTENDED, 0);
+  test_exec("foobar", 0, REG_OK, 0, 6, 0, 6, END);
+  test_exec("xfoobar", 0, REG_OK, 0, 7, 0, 7, END);
+  /*
+    This currently fails.
+  test_exec("foobarx", 0, REG_OK, 0, 7, 0, 7, END);
+  */
+  test_exec("fooxbar", 0, REG_OK, 0, 7, 0, 7, END);
+  test_exec("foxbar", 0, REG_OK, 0, 6, 0, 6, END);
+  test_exec("xoobar", 0, REG_OK, 0, 6, 0, 6, END);
+  test_exec("foobax", 0, REG_OK, 0, 6, 0, 6, END);
+  test_exec("oobar", 0, REG_OK, 0, 5, 0, 5, END);
+  test_exec("fobar", 0, REG_OK, 0, 5, 0, 5, END);
+  test_exec("fooba", 0, REG_OK, 0, 5, 0, 5, END);
+  test_exec("xfoobarx", 0, REG_NOMATCH, END);
+  test_exec("foobarxx", 0, REG_NOMATCH, END);
+  test_exec("xxfoobar", 0, REG_NOMATCH, END);
+  test_exec("xfoxbar", 0, REG_NOMATCH, END);
+  test_exec("foxbarx", 0, REG_NOMATCH, END);
+
+  /* At most one insert, two deletes, and three substitutions.
+     Additionally, deletes cost two and substitutes one, and total
+     cost must be less than 4. */
+  test_comp("(foobar){+1 -2 #3, 2d + 1s < 4}", REG_EXTENDED, 0);
+  test_exec("3oifaowefbaoraofuiebofasebfaobfaorfeoaro",
+	    0, REG_OK, 26, 33, 26, 33, END);
+
+  /* Partially approximate matches. */
+  test_comp("foo(bar){~1}zap", REG_EXTENDED, 0);
+  test_exec("foobarzap", 0, REG_OK, 0, 9, 3, 6, END);
+  test_exec("fobarzap", 0, REG_NOMATCH);
+  test_exec("foobrzap", 0, REG_OK, 0, 8, 3, 5, END);
+  test_comp("^.*(dot.org){~}.*$", REG_EXTENDED, 0);
+  test_exec("www.cnn.com 64.236.16.20\n"
+	    "www.slashdot.org 66.35.250.150\n"
+	    "For useful information, use www.slashdot.org\n"
+	    "this is demo data!\n",
+	    0, REG_OK, 0, 120, 93, 100, END);
+
+  /* Approximate matching and back referencing cannot be used together. */
+  test_comp("(foo{~})\\1", REG_EXTENDED, REG_BADPAT);
+
+#endif /* TRE_APPROX */
+
   /*
    * Basic tests with pure regular expressions
    */
@@ -261,7 +406,7 @@ main(int argc, char **argv)
   test_comp("aaaa", REG_EXTENDED, 0);
   test_exec("xxaaaaaaaaaaaaaaaaa", 0, REG_OK, 2, 6, END);
 
-  /* Test zero length match. */
+  /* Test zero length matches. */
   test_comp("(a*)", REG_EXTENDED, 0);
   test_exec("", 0, REG_OK, 0, 0, 0, 0, END);
 
@@ -663,6 +808,7 @@ main(int argc, char **argv)
   test_comp("[[=", 0, REG_ECOLLATE);
 
 
+
   /* Miscellaneous tests. */
   test_comp("abc\\(\\(de\\)\\(fg\\)\\)hi", 0, 0);
   test_exec("xabcdefghiy", 0, REG_OK, 1, 10, 4, 8, 4, 6, 6, 8, END);
@@ -940,6 +1086,21 @@ main(int argc, char **argv)
   test_comp("((..)|(.)){2}", REG_EXTENDED, 0);
   test_exec("aa", 0, REG_OK, 0, 2, 1, 2, -1, -1, 1, 2, END);
 
+  /* Nested repeats. */
+  test_comp("(.){2}{3}", REG_EXTENDED, 0);
+  test_exec("xxxxx", 0, REG_NOMATCH, END);
+  test_exec("xxxxxx", 0, REG_OK, 0, 6, 5, 6, END);
+  test_comp("(..){2}{3}", REG_EXTENDED, 0);
+  test_exec("xxxxxxxxxxx", 0, REG_NOMATCH, END);
+  test_exec("xxxxxxxxxxxx", 0, REG_OK, 0, 12, 10, 12, END);
+  test_comp("((..){2}.){3}", REG_EXTENDED, 0);
+  test_exec("xxxxxxxxxxxxxx", 0, REG_NOMATCH, END);
+  test_exec("xxxxxxxxxxxxxxx", 0, REG_OK, 0, 15, 10, 15, 12, 14, END);
+  test_comp("((..){1,2}.){3}", REG_EXTENDED, 0);
+  test_exec("xxxxxxxx", 0, REG_NOMATCH, END);
+  test_exec("xxxxxxxxx", 0, REG_OK, 0, 9, 6, 9, 6, 8, END);
+  test_exec("xxxxxxxxxx", 0, REG_OK, 0, 9, 6, 9, 6, 8, END);
+  test_exec("xxxxxxxxxxx", 0, REG_OK, 0, 11, 8, 11, 8, 10, END);
 
   /*
    * Back referencing tests.
@@ -970,6 +1131,20 @@ main(int argc, char **argv)
   test_comp("(a)\\1{1,2}", REG_EXTENDED, 0);
   test_exec("aabc", 0, REG_OK, 0, 2, 0, 1, END);
 
+  test_comp("((.*)\\1)+", REG_EXTENDED, 0);
+  test_exec("aa", 0, REG_OK, 0, 2, 0, 2, 0, 1, END);
+
+  test_comp("()(\\1\\1)*", REG_EXTENDED, 0);
+  test_exec("", 0, REG_OK, 0, 0, 0, 0, -1, -1, END);
+
+  /* Check that back references work with REG_NOSUB. */
+  test_comp("(o)\\1", REG_EXTENDED | REG_NOSUB, 0);
+  test_exec("foobar", 0, REG_OK, END);
+  test_comp("(o)\\1", REG_EXTENDED, 0);
+  test_exec("foobar", 0, REG_OK, 1, 3, 1, 2, END);
+  test_comp("(o)\\1", REG_EXTENDED, 0);
+  test_exec("fobar", 0, REG_NOMATCH, END);
+
 
   /*
    * Test minimal repetitions (non-greedy repetitions)
@@ -998,7 +1173,10 @@ main(int argc, char **argv)
    */
 
   test_comp("\\", REG_EXTENDED, REG_EESCAPE);
+  test_comp("\\\\", REG_EXTENDED, REG_OK);
+  test_exec("\\", 0, REG_OK, 0, 1, END);
   test_comp("(", REG_EXTENDED, REG_EPAREN);
+  test_comp("(aaa", REG_EXTENDED, REG_EPAREN);
   test_comp(")", REG_EXTENDED, REG_OK);
   test_exec(")", 0, REG_OK, 0, 1, END);
   test_comp("a{1", REG_EXTENDED, REG_EBRACE);
@@ -1007,6 +1185,7 @@ main(int argc, char **argv)
   test_comp("a{1,0}", REG_EXTENDED, REG_BADBR);
   test_comp("a{x}", REG_EXTENDED, REG_BADBR);
   test_comp("a{}", REG_EXTENDED, REG_BADBR);
+
 
   test_comp("\\", 0, REG_EESCAPE);
   test_comp("\\(", 0, REG_EPAREN);
@@ -1060,10 +1239,9 @@ main(int argc, char **argv)
     printf("All %d tests passed.\n", comp_tests + exec_tests);
 
 
-
-
 #ifdef MALLOC_DEBUGGING
-  xmalloc_dump_leaks();
+  if (xmalloc_dump_leaks())
+    return 1;
 #endif /* MALLOC_DEBUGGING */
 
   return comp_errors || exec_errors;

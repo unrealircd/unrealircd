@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
 lib_LTLIBRARIES = libtre.la
-libtre_la_LDFLAGS = -version-info 3:1:0
+libtre_la_LDFLAGS = -version-info 4:3:0
 
 noinst_HEADERS =		\
 	tre-internal.h		\
@@ -12,6 +12,7 @@ noinst_HEADERS =		\
 
 libtre_la_SOURCES =		\
 	tre-mem.c		\
+	tre-compile.c		\
 	tre-match-parallel.c	\
 	tre-match-backtrack.c	\
 	tre-match-approx.c	\

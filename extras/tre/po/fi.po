@@ -6,7 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: TRE 0.4.0\n"
-"POT-Creation-Date: 2003-04-15 22:32+0300\n"
+"Report-Msgid-Bugs-To: vl@iki.fi\n"
+"POT-Creation-Date: 2003-11-04 16:21+0200\n"
 "PO-Revision-Date: 2002-07-29 23:46+0300\n"
 "Last-Translator: Ville Laurikari <vl@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -68,7 +69,7 @@ msgstr "Virheellinen merkkialue"
 msgid "Out of memory"
 msgstr "Muisti loppu"
 
-#: lib/regerror.c:69
+#: lib/regerror.c:68
 msgid "Unknown error"
 msgstr "Tuntematon virhe"
 

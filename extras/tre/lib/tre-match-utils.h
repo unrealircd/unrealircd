@@ -60,7 +60,7 @@
             else							      \
               {								      \
                 w = tre_mbrtowc(&next_c, str_byte, max, &mbstate);	      \
-                if (w < 0)						      \
+                if (w == (size_t)-1 || w == (size_t)-2)			      \
    	          return REG_NOMATCH;					      \
 	        pos_add_next = w;					      \
                 str_byte += w;						      \
@@ -125,19 +125,15 @@
 
 /* Returns 1 if `t1' wins `t2', 0 otherwise. */
 inline static int
-tag_order(int num_tags, tre_tag_direction_t *tag_directions, int *t1, int *t2)
+tre_tag_order(int num_tags, tre_tag_direction_t *tag_directions,
+	      int *t1, int *t2)
 {
   int i;
-  /*
-  DPRINT(("tag_order\n"));
-  DPRINT(("t1[0] = %d, t2[0] = %d\n", *t1, *t2));
-  */
   i = 0;
   while (i < num_tags)
     {
       if (tag_directions[i] == TRE_TAG_MINIMIZE)
 	{
-	  DPRINT(("< t1[%d] = %d, t2[%d] = %d\n", i, t1[i], i, t2[i]));
 	  if (t1[i] > t2[i])
 	    return 0;
 	  if (t1[i] < t2[i])
@@ -145,7 +141,6 @@ tag_order(int num_tags, tre_tag_direction_t *tag_directions, int *t1, int *t2)
 	}
       else
 	{
-	  DPRINT(("> t1[%d] = %d, t2[%d] = %d\n", i, t1[i], i, t2[i]));
 	  if (t1[i] > t2[i])
 	    return 1;
 	  if (t1[i] < t2[i])
@@ -158,7 +153,7 @@ tag_order(int num_tags, tre_tag_direction_t *tag_directions, int *t1, int *t2)
 }
 
 inline static int
-neg_char_classes_match(tre_ctype_t *classes, tre_cint_t wc, int icase)
+tre_neg_char_classes_match(tre_ctype_t *classes, tre_cint_t wc, int icase)
 {
   DPRINT(("neg_char_classes_test: %p, %d, %d\n", classes, wc, icase));
   while (*classes != (tre_ctype_t)0)

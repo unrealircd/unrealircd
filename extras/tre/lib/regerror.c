@@ -38,7 +38,7 @@
 
 /* Error message strings for error codes listed in `regex.h'.  This list
    needs to be in sync with the codes listed there, naturally. */
-static const char *error_messages[] =
+static const char *tre_error_messages[] =
   { gettext_noop("No error"),                      /* REG_OK */
     gettext_noop("No match"),                      /* REG_NOMATCH */
     gettext_noop("Invalid regexp"),                /* REG_BADPAT */
@@ -56,15 +56,14 @@ static const char *error_messages[] =
   };
 
 size_t
-regerror(int errcode, const regex_t *preg, char *errbuf,
-	 size_t errbuf_size)
+regerror(int errcode, const regex_t *preg, char *errbuf, size_t errbuf_size)
 {
   const char *err;
   size_t err_len;
 
   if (errcode >= 0
-      && errcode < (sizeof(error_messages) / sizeof(*error_messages)))
-    err = gettext(error_messages[errcode]);
+      && errcode < (sizeof(tre_error_messages) / sizeof(*tre_error_messages)))
+    err = gettext(tre_error_messages[errcode]);
   else
     err = gettext("Unknown error");
 

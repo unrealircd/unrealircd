@@ -1,1 +1,1 @@
-EXTRA_DIST = autogen.sh
+EXTRA_DIST = autogen.sh build-rpm.sh

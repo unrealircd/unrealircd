@@ -1,16 +1,25 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(TRE, 0.5.3, [Ville Laurikari <vl@iki.fi>])
+AC_INIT(TRE, 0.6.3, [Ville Laurikari <vl@iki.fi>])
 AC_CONFIG_SRCDIR([lib/regcomp.c])
 AC_CONFIG_AUX_DIR(utils)
-AC_CANONICAL_TARGET([])
+AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE
 AC_PREREQ(2.57)
 
 dnl Checks for programs.
-CFLAGS="-g"
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
+
+tre_version_1=0
+tre_version_2=6
+tre_version_3=3
+tre_version=$tre_version_1.$tre_version_2.$tre_version_3
+AC_DEFINE_UNQUOTED(TRE_VERSION,  "$tre_version",  [ TRE version string.  ])
+AC_DEFINE_UNQUOTED(TRE_VERSION_1, $tre_version_1, [ TRE version level 1. ])
+AC_DEFINE_UNQUOTED(TRE_VERSION_2, $tre_version_2, [ TRE version level 2. ])
+AC_DEFINE_UNQUOTED(TRE_VERSION_3, $tre_version_3, [ TRE version level 3. ])
+AC_SUBST(TRE_VERSION, $tre_version)
 
 dnl Options
 AC_ARG_ENABLE(profile,
@@ -34,11 +43,11 @@ AC_ARG_ENABLE(debug,
 if test "$tre_debug" = "yes"; then
   AM_CONDITIONAL(TRE_DEBUG, true)
   AC_DEFINE(TRE_DEBUG, 1,
-    [Define if you want TRE to print debug messages to stdout.])
+    [ Define if you want TRE to print debug messages to stdout. ])
 else
   AM_CONDITIONAL(TRE_DEBUG, false)
   TRE_PROG_CC_OPTIMIZATIONS
-  AC_DEFINE(NDEBUG, 1, [Define if you want to disable debug assertions.])
+  AC_DEFINE(NDEBUG, 1, [ Define if you want to disable debug assertions. ])
 fi
 
 AC_ARG_ENABLE(warnings,
@@ -59,7 +68,7 @@ AC_ARG_ENABLE(approx,
   [ tre_approx="yes" ])
 if test "$tre_approx" = "yes"; then
   AC_DEFINE(TRE_APPROX, 1,
-    [Define if you want to enable approximate matching functionality.])
+    [ Define if you want to enable approximate matching functionality. ])
   AM_CONDITIONAL(TRE_APPROX, true)
 else
   AM_CONDITIONAL(TRE_APPROX, false)
@@ -83,7 +92,23 @@ AC_C_INLINE
 
 dnl Checks for headers, functions, types, and macros
 AC_HEADER_STDC
-AC_FUNC_ALLOCA
+
+AC_ARG_WITH(alloca,
+  AC_HELP_STRING(
+    [--without-alloca],
+    [don't use alloca  @<:@default=use@:>@]),
+  [ tre_use_alloca="$withval" ],
+  [ tre_use_alloca="yes" ])
+if test "$tre_use_alloca" = "yes"; then
+  ALLOCA=""
+  AC_FUNC_ALLOCA
+  if test -z "$ALLOCA"; then
+    # alloca() works.
+    AC_DEFINE(TRE_USE_ALLOCA, 1,
+      [ Define if you want TRE to use alloca() instead of malloc() when
+        allocating memory needed for regexec operations. ])
+  fi
+fi
 AC_CHECK_HEADERS([getopt.h])
 
 AC_CHECK_FUNCS([getopt_long],,
@@ -93,10 +118,11 @@ AC_CHECK_FUNCS([getopt_long],,
 
 AC_ARG_ENABLE(system-abi,
   AC_HELP_STRING(
-    [--disable-system-abi],
-    [don't include system regex.h from TRE regex.h  @<:@default=enabled@:>@]),
+    [--enable-system-abi],
+    [try to make TRE compatible with the system \
+regex ABI  @<:@default=disabled@:>@]),
   [ tre_system_abi="$enableval" ],
-  [ tre_system_abi="yes" ])
+  [ tre_system_abi="no" ])
 
 # If we are building a version compatible with the system ABI, we need to
 # find an absolute path to the system regex.h (so it can be included from
@@ -113,8 +139,6 @@ if test "$tre_system_abi" = "yes"; then
 #include <sys/types.h>
 #endif
 ])
-else
-  tre_system_abi="no (disabled with --disable-system-abi)"
 fi
 
 if test "$tre_system_abi" = "yes"; then
@@ -158,13 +182,14 @@ if test "$tre_system_abi" = "yes"; then
   if test -z "$tre_regex_t_field"; then
     AC_MSG_RESULT(no)
     tre_system_abi="no (unknown regex_t contents, report to \
-Ville Laurikari <vl@iki.fi>)"
+$PACKAGE_BUGREPORT)"
   fi
 fi
 
 # Check if we can redefine the functions...
 if test "$tre_system_abi" = "yes"; then
-  AC_DEFINE(_REGCOMP_INTERNAL, 1, [Define on IRIX])
+  # IRIX has some macro magic which we need to turn off.
+  AC_DEFINE(_REGCOMP_INTERNAL, 1, [ Define on IRIX ])
   AC_MSG_CHECKING([if POSIX regex functions can be redefined])
   AC_COMPILE_IFELSE(
         [ AC_LANG_PROGRAM([
@@ -211,12 +236,12 @@ if test "$tre_system_abi" = "yes"; then
     ])
 
   AC_DEFINE(TRE_USE_SYSTEM_REGEX_H, 1,
-    [Define to include the system regex.h from TRE regex.h])
+    [ Define to include the system regex.h from TRE regex.h ])
   AC_DEFINE_UNQUOTED(TRE_SYSTEM_REGEX_H_PATH, "$tre_system_regex_h",
-    [Define to the absolute path to the system regex.h])
+    [ Define to the absolute path to the system regex.h ])
   AC_DEFINE_UNQUOTED(TRE_REGEX_T_FIELD, $tre_regex_t_field,
-    [Define to a field in the regex_t struct where TRE should store a pointer to
-  the internal tre_tnfa_t structure])
+    [ Define to a field in the regex_t struct where TRE should store a
+      pointer to the internal tre_tnfa_t structure ])
 else
   AC_DEFINE(TRE_REGEX_T_FIELD, value)
 fi
@@ -275,7 +300,7 @@ fi
 
 if test "$tre_wchar" = "yes"; then
   AC_DEFINE(TRE_WCHAR, 1,
-    [Define to enable wide character (wchar_t) support.])
+    [ Define to enable wide character (wchar_t) support. ])
 fi
 
 dnl Check for multibyte character set support
@@ -319,7 +344,7 @@ fi
 
 if test "$tre_multibyte" = "yes"; then
   AC_DEFINE(TRE_MULTIBYTE, 1,
-    [Define to enable multibyte character set support.])
+    [ Define to enable multibyte character set support. ])
 fi
 
 AM_GNU_GETTEXT([external])
@@ -327,8 +352,8 @@ AC_PROG_LIBTOOL
 
 dnl Output files
 AC_CONFIG_HEADERS([config.h lib/tre-config.h])
-AC_CONFIG_FILES([Makefile lib/Makefile src/Makefile tests/Makefile \
-                 po/Makefile.in m4/Makefile utils/Makefile tre.pc])
+AC_CONFIG_FILES([Makefile lib/Makefile src/Makefile tests/Makefile po/Makefile.in
+		 m4/Makefile utils/Makefile tre.pc tre.spec])
 AC_OUTPUT
 
 
@@ -350,14 +375,15 @@ TRE is now configured as follows:
   CPPFLAGS = $CPPFLAGS
   LD       = $LD
   LDFLAGS  = $LDFLAGS
+  Use alloca():                       $tre_use_alloca
 
 * TRE options
 
-  Development-time debugging:              $tre_debug
-  System regex ABI compatibility:          $tre_system_abi
-  Wide character (wchar_t) support:        $tre_wchar
-  Multibyte character set support:         $tre_multibyte
-  Approximate matching support:            $tre_approx
-  Build and install agrep:                 $tre_agrep
+  Development-time debugging:         $tre_debug
+  System regex ABI compatibility:     $tre_system_abi
+  Wide character (wchar_t) support:   $tre_wchar
+  Multibyte character set support:    $tre_multibyte
+  Approximate matching support:       $tre_approx
+  Build and install agrep:            $tre_agrep
 
 EOF

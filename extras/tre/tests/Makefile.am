@@ -25,6 +25,7 @@ else !TRE_DEBUG
   noinst_LTLIBRARIES = libxtre.la
   libxtre_la_SOURCES =			\
 	../lib/tre-mem.c		\
+	../lib/tre-compile.c		\
 	../lib/tre-match-parallel.c	\
 	../lib/tre-match-backtrack.c	\
 	../lib/tre-match-approx.c	\

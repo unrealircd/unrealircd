@@ -1,7 +1,7 @@
 /*
-  bench.c - regex benchmark program
+  bench.c - simple regex benchmark program
 
-  Copyright (C) 2001, 2002 Ville Laurikari <vl@iki.fi>.
+  Copyright (C) 2001-2003 Ville Laurikari <vl@iki.fi>.
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License version 2 (June
@@ -18,13 +18,20 @@
 
 */
 
-#define _XOPEN_SOURCE
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif /* HAVE_CONFIG_H */
+
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef HAVE_GETOPT_H
+#include <getopt.h>
+#endif /* HAVE_GETOPT_H */
 #include <time.h>
 #include <unistd.h>
 #include <math.h>
 #include <sys/types.h>
+
 #if 0
 #include <hackerlab/rx-posix/regex.h>
 #else

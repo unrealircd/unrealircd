@@ -2,9 +2,10 @@
            Acknowledgements
 
 
-Thanks for suggestions, interesting discussions, spotting bugs, and
-patches:
+Thanks for suggestions, interesting discussions, spotting bugs,
+patches, and contributions (in alphabetical order):
 
+Matthew Berg <galt@gothpoodle.com>
 Angelo Borsotti <angelo.borsotti@alcatel.it>
 Glenn Fowler <gsf@research.att.com>
 George Harpur <gfh@neurascript.com>
@@ -12,4 +13,5 @@ Rune Kleveland <runekl@opoint.com>
 Rici Lake <RLake@oxfam.org.uk>
 Dominick Meglio <codemstr@ptd.net>
 Aymeric Moizard <jack@atosc.org>
+Santiago Vila
 Bill Yerazunis <wsy@merl.com>
