@@ -401,9 +401,11 @@ int ircd_SSL_write(aClient *acptr, const void *buf, int sz)
                if(ERRNO == EAGAIN)
                    return -1;
            default:
+		Debug((DEBUG_ERROR, "ircd_SSL_write: returning fatal_ssl_error for %s", acptr->name));
 		return fatal_ssl_error(ssl_err, SAFE_SSL_WRITE, acptr);
        }
     }
+    Debug((DEBUG_ERROR, "ircd_SSL_write for %s (%p, %i): success", acptr->name, buf, sz));
     return len;
 }
 
