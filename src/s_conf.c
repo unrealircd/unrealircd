@@ -4491,17 +4491,24 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 						cepp->ce_varname);
 					errors++; 
 				}
-#ifndef USE_SSL
 				else 
 				{
+#ifndef USE_SSL
 					if (ofp->flag == CONNECT_SSL)
 					{
 						config_status("%s:%i: link %s with SSL option enabled on a non-SSL compile",
 							cep->ce_fileptr->cf_filename, cep->ce_varlinenum, ce->ce_vardata);
 						errors++;
 					}
+#endif
+#ifndef ZIP_LINKS
+					if (ofp->flag == CONNECT_ZIP)
+					{
+						config_status("%s:%i: link %s with ZIP option enabled on a non-ZIP compile",
+							cep->ce_fileptr->cf_filename, cep->ce_varlinenum, ce->ce_vardata);
+					}
+#endif
 				}
-#endif	
 			}
 			continue;
 		}
