@@ -32,7 +32,7 @@
 #define PATCH2  		".1"
 #define PATCH3  		"-Silverheart"
 #define PATCH4  		"+"
-#define PATCH5  		""
+#define PATCH5  		"sf"
 #define PATCH6  		""
 #define PATCH7  		""
 #define PATCH8  		COMPILEINFO
