@@ -1880,3 +1880,5 @@ seen. gmtime warning still there
 - Fixed a bug in m_part
 - Fixed a bug where compiling with ZIP_LINKS and SSL wouldn't work (#0000707) reported by 
   Ravage.
+- Added the ability to enable ziplinks via ./Config as well as specify a directory zlib is
+  in. Also added the ability to specify a directory for OpenSSL.

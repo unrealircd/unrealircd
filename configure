@@ -828,7 +828,11 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
  --enable-nospoof     Enable spoofing protection
  --enable-hub     Compile as a hub server
- --enable-ssl     Enable client and server SSL connections
+  --enable-ssl enable ssl will check /usr/local/ssl
+                              /usr/lib/ssl /usr/ssl /usr/pkg /usr/local /usr
+
+  --enable-ziplinks enable ziplinks will check /usr/local /usr /usr/pkg
+
  --enable-dynamic-linking     Make the IRCd dynamically link shared objects rather than statically
  --enable-inet6     Make the IRCd support IPv6
  --enable-standardthreads     Use standard threads
@@ -2469,8 +2473,6 @@ fi
 
 
 
-
-openssl=no
 
 
 
@@ -9601,73 +9603,83 @@ if test "${enable_hub+set}" = set; then
 _ACEOF
 
 fi;
+
 # Check whether --enable-ssl or --disable-ssl was given.
 if test "${enable_ssl+set}" = set; then
   enableval="$enable_ssl"
 
-if test "$openssl" = "yes"; then
+echo "$as_me:$LINENO: checking for openssl" >&5
+echo $ECHO_N "checking for openssl... $ECHO_C" >&6
+    for dir in $withval /usr/local/ssl /usr/lib/ssl /usr/ssl /usr/pkg /usr/local /usr; do
+        ssldir="$dir"
+        if test -f "$dir/include/openssl/ssl.h"; then
+	    echo "$as_me:$LINENO: result: found in $ssldir/include/openssl" >&5
+echo "${ECHO_T}found in $ssldir/include/openssl" >&6
+            found_ssl="yes";
+            CFLAGS="$CFLAGS -I$ssldir/include/openssl";
+            break;
+        fi
+        if test -f "$dir/include/ssl.h"; then
+	    echo "$as_me:$LINENO: result: found in $ssldir/include" >&5
+echo "${ECHO_T}found in $ssldir/include" >&6
+            found_ssl="yes";
+            CFLAGS="$CFLAGS -I$ssldir/include";
+            break
+        fi
+    done
+    if test x_$found_ssl != x_yes; then
+	echo "$as_me:$LINENO: result: not found" >&5
+echo "${ECHO_T}not found" >&6
+	{ echo "$as_me:$LINENO: WARNING: disabling ssl support" >&5
+echo "$as_me: WARNING: disabling ssl support" >&2;}
+    else
+        CRYPTOLIB="-lssl -lcrypto";
+        LDFLAGS="$LDFLAGS -L$ssldir/lib";
+    fi
 cat >>confdefs.h <<\_ACEOF
 #define USE_SSL 1
 _ACEOF
 
-echo "$as_me:$LINENO: checking what order we should supply the SSL libraries in" >&5
-echo $ECHO_N "checking what order we should supply the SSL libraries in... $ECHO_C" >&6
-if test "${ac_cv_ssl_libs+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-
-save_libs="$LIBS"
-LIBS="$LIBS -lssl -lcrypto -lssl"
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-#include "confdefs.h"
-#include <openssl/ssl.h>
-#ifdef F77_DUMMY_MAIN
-#  ifdef __cplusplus
-     extern "C"
-#  endif
-   int F77_DUMMY_MAIN() { return 1; }
-#endif
-int
-main ()
-{
-
-SSL_write(NULL, NULL, NULL);
-
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-         { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_ssl_libs="-lssl -lcrypto -lssl" LIBS="$save_libs"
-else
-  echo "$as_me: failed program was:" >&5
-cat conftest.$ac_ext >&5
-ac_cv_ssl_libs="-lssl -lcrypto -lssl" LIBS="$save_libs"
-fi
-rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-fi
-echo "$as_me:$LINENO: result: $ac_cv_ssl_libs" >&5
-echo "${ECHO_T}$ac_cv_ssl_libs" >&6
-CRYPTOLIB="$ac_cv_ssl_libs"
-CFLAGS="$CFLAGS -I/usr/local/include -I/usr/local/ssl/include -L/usr/local/lib -L/usr/local/ssl/lib"
-else
-{ echo "$as_me:$LINENO: WARNING: SSL support could not be enabled because openssl/ssl.h could not be found" >&5
-echo "$as_me: WARNING: SSL support could not be enabled because openssl/ssl.h could not be found" >&2;}
-fi
 
 fi;
+
+
+# Check whether --enable-ziplinks or --disable-ziplinks was given.
+if test "${enable_ziplinks+set}" = set; then
+  enableval="$enable_ziplinks"
+
+echo "$as_me:$LINENO: checking for zlib" >&5
+echo $ECHO_N "checking for zlib... $ECHO_C" >&6
+    for dir in $withval /usr/local /usr /usr/pkg; do
+        zlibdir="$dir"
+        if test -f "$dir/include/zlib.h"; then
+	    echo "$as_me:$LINENO: result: found in $zlibdir" >&5
+echo "${ECHO_T}found in $zlibdir" >&6
+            found_zlib="yes";
+	    if test "$zlibdir" = "/usr" ; then
+		CFLAGS="$CFLAGS -DZIP_LINKS";
+	    else
+	        CFLAGS="$CFLAGS -I$zlibdir/include -DZIP_LINKS";
+	    fi
+            break;
+        fi
+    done
+    if test x_$found_zlib != x_yes; then
+	echo "$as_me:$LINENO: result: not found" >&5
+echo "${ECHO_T}not found" >&6
+	{ echo "$as_me:$LINENO: WARNING: disabling ziplink support" >&5
+echo "$as_me: WARNING: disabling ziplink support" >&2;}
+    else
+        IRCDLIBS="$IRCDLIBS -lz";
+	if test "$zlibdir" != "/usr" ; then
+             LDFLAGS="$LDFLAGS -L$zlibdir/lib";
+	fi
+        HAVE_ZLIB=yes
+    fi
+
+
+fi;
+
 # Check whether --enable-dynamic-linking or --disable-dynamic-linking was given.
 if test "${enable_dynamic_linking+set}" = set; then
   enableval="$enable_dynamic_linking"
@@ -11509,6 +11521,7 @@ s,@REGEX@,$REGEX,;t t
 s,@STRTOUL@,$STRTOUL,;t t
 s,@CRYPTOLIB@,$CRYPTOLIB,;t t
 s,@MODULEFLAGS@,$MODULEFLAGS,;t t
+s,@HAVE_ZLIB@,$HAVE_ZLIB,;t t
 s,@IRCDDIR@,$IRCDDIR,;t t
 s,@BINDIR@,$BINDIR,;t t
 s,@build@,$build,;t t

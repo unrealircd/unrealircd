@@ -26,7 +26,18 @@ if [ -n "$HUB" ] ; then
 ARG="$ARG--enable-hub "
 fi
 if [  "$CRYPTOIRCD" = "1" ] ; then
+if test x"$SSLDIR" = "x" ; then
 ARG="$ARG--enable-ssl "
+else
+ARG="$ARG--enable-ssl=$SSLDIR "
+fi
+fi
+if [ "$ZIPLINKS" = "1" ] ; then
+if test x"$ZIPLINKSDIR" = "x" ; then
+ARG="$ARG--enable-ziplinks "
+else
+ARG="$ARG--enable-ziplinks=$ZIPLINKSDIR "
+fi
 fi
 if [ "$INET6" = "1" ] ; then
 ARG="$ARG--enable-inet6 "
@@ -69,6 +80,9 @@ HUB="1"
 DOMAINNAME=`hostname`
 DEFPERM="0600"
 CRYPTOIRCD=""
+SSLDIR=""
+ZIPLINKS=""
+ZIPLINKSDIR=""
 LISTEN_SIZE="5"
 NICKNAMEHISTORYLENGTH="2000"
 MAXSENDQLENGTH="3000000"
@@ -180,7 +194,6 @@ else
    DPATH=$cc
 fi
 
-
 TEST="$SPATH"
 echo ""
 echo "What is the path to the ircd binary including the name of the binary?"
@@ -258,7 +271,6 @@ while [ -z "$TEST" ] ; do
 
 done
 
-
 TEST=""
 while [ -z "$TEST" ] ; do
     if [ "$CRYPTOIRCD" = "1" ] ; then
@@ -288,6 +300,20 @@ while [ -z "$TEST" ] ; do
     esac
 done
 
+if [ "$CRYPTOIRCD" = "1" ] ; then
+TEST=""
+echo ""
+echo "If you know the path to OpenSSL on your system, enter it here. If not"
+echo "leave this blank"
+echo $n "[$TEST] -> $c"
+    read cc
+if [ -z "$cc" ] ; then
+    SSLDIR=""
+else 
+    SSLDIR=$cc
+fi
+fi
+
 TEST=""
 while [ -z "$TEST" ] ; do
     if [ "$INET6" = "1" ] ; then
@@ -316,6 +342,49 @@ while [ -z "$TEST" ] ; do
 	    ;;
     esac
 done
+
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$ZIPLINKS" = "1" ] ; then
+	TEST="Yes"
+    else
+	TEST="No"
+    fi
+    echo ""
+    echo "Do you want to enable ziplinks support?"
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	cc=$TEST
+    fi
+    case "$cc" in
+	[Yy]*)
+	    ZIPLINKS="1"
+	    ;;
+	[Nn]*)
+	    ZIPLINKS=""
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter either Yes or No"
+	    TEST=""
+	    ;;
+    esac
+done
+
+if [ "$ZIPLINKS" = "1" ] ; then
+TEST=""
+echo ""
+echo "If you know the path to zlib on your system, enter it here. If not"
+echo "leave this blank"
+echo $n "[$TEST] -> $c"
+    read cc
+if [ -z "$cc" ] ; then
+    ZIPLINKSDIR=""
+else 
+    ZIPLINKSDIR=$cc
+fi
+fi
 
 TEST=""
 while [ -z "$TEST" ] ; do
@@ -493,6 +562,9 @@ HUB="$HUB"
 DOMAINNAME="$DOMAINNAME"
 DEFPERM="$DEFPERM"
 CRYPTOIRCD="$CRYPTOIRCD"
+SSLDIR="$SSLDIR"
+ZIPLINKS="$ZIPLINKS"
+ZIPLINKSDIR="$ZIPLINKSDIR"
 STANDARD_THREADS="1"
 EXTRAPARA="$EXTRAPARA"
 __EOF__
@@ -516,3 +588,4 @@ cat << __EOF__
 | * codemastr codemastr@unrealircd.com                                  |
 |_______________________________________________________________________|
 __EOF__
+
