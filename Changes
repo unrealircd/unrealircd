@@ -1535,3 +1535,5 @@ seen. gmtime warning still there
   running
 - Some install script win32 changes to deal with unreal32docs.html
 - win32 install script changes to deal with version switchover
+- Added src/win32/gplplusssl.rtf for ssl-install script to show during
+  install in license - GPL + the notes from openssl
