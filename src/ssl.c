@@ -204,7 +204,7 @@ int  ssl_handshake(aClient *cptr)
       -2  = Error doing SSL_connect
       -3  = Try again 
 */
-int  ssl_client_handshake(aClient *cptr)
+int  ssl_client_handshake(aClient *cptr, ConfigItem_link *l)
 {
 	cptr->ssl = (struct SSL *) SSL_new((SSL_CTX *)ctx_client);
 	if (!cptr->ssl)
@@ -216,6 +216,17 @@ int  ssl_client_handshake(aClient *cptr)
 /*	set_blocking(cptr->fd); */
 	SSL_set_fd((SSL *)cptr->ssl, cptr->fd);
 	SSL_set_connect_state((SSL *)cptr->ssl);
+	if (l && l->ciphers)
+	{
+		if (SSL_set_cipher_list((SSL *)cptr->ssl, 
+			l->ciphers) == 0)
+		{
+			/* We abort */
+			sendto_realops("SSL cipher selecting for %s was unsuccesful (%s)",
+				l->servername, l->ciphers);
+			return -2;
+		}
+	}
 	if (SSL_connect((SSL *)cptr->ssl) <= 0)
 	{
 #if 0

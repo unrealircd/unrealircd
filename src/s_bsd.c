@@ -795,7 +795,7 @@ static int completed_connection(cptr)
 	}
 #ifdef USE_SSL
 	if ((aconf->options & CONNECT_SSL))
-		if (ssl_client_handshake(cptr) == -2)
+		if (ssl_client_handshake(cptr, aconf) == -2)
 		{
 			sendto_realops("Could not handshake SSL with %s", get_client_name(cptr, FALSE));
 			return FALSE;

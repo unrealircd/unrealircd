@@ -1129,3 +1129,5 @@ v- Fixed some bugreport stuff
   one to slip through, reported by Zogg
 - Fixed a win32 editor bug reported by Jens that limited text additions to 32KB
 - Really fixed bug #0000011 reported by Dragon974 (listener bug)
+- Added link::cipher for #define USE_SSL, use this to select
+  ciphers, read example.conf for more. Closes #000016. Suggested by narf

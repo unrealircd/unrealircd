@@ -967,6 +967,9 @@ struct _configitem_link {
 	ConfigItem_class	*class;
 	struct IN_ADDR 		ipnum;
 	time_t			hold;
+#ifdef USE_SSL
+	char		*ciphers;
+#endif
 };
 
 struct _configitem_except {

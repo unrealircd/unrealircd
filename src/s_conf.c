@@ -2147,6 +2147,13 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 		{
 			link->connpwd = strdup(cep->ce_vardata);
 		} else
+#ifdef USE_SSL
+		if (!strcmp(cep->ce_varname, "ciphers"))
+		{
+			link->ciphers = strdup(cep->ce_vardata);
+		}
+		else
+#endif
 		if (!strcmp(cep->ce_varname, "password-receive"))
 		{
 			link->recvauth = Auth_ConvertConf2AuthStruct(cep);
@@ -2900,6 +2907,9 @@ void	link_cleanup(ConfigItem_link *link_ptr)
 	ircfree(link_ptr->hubmask);
 	ircfree(link_ptr->leafmask);
 	ircfree(link_ptr->connpwd);
+#ifdef USE_SSL
+	ircfree(link_ptr->ciphers);
+#endif
 	Auth_DeleteAuthStruct(link_ptr->recvauth);
 	link_ptr->recvauth = NULL;
 }
