@@ -1530,3 +1530,4 @@ seen. gmtime warning still there
     specifies how long to wait after a crash to restart Unreal (in minutes). If no delay is
     specified, no action is taken when a crash occurs
 - Made some changes to the win32 resolver, hopefully this will fix the crash bugs
+- Made /die exit gracefully when in service mode
