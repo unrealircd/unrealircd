@@ -570,6 +570,27 @@ extern Ban *is_banned(aClient *cptr, aClient *sptr, aChannel *chptr)
 }
 
 /*
+ * Checks if the "user" IRC is banned, used by +mu.
+ */
+static int is_irc_banned(aChannel *chptr)
+{
+	Ban *tmp;
+	/* Check for this user, ident/host are "illegal" on purpose */
+	const char *check = "IRC!\001@\001";
+	
+	for (tmp = chptr->banlist; tmp; tmp = tmp->next)
+		if (match(tmp->banstr, check) == 0)
+		{
+			/* Ban found, now check for +e */
+			for (tmp = chptr->exlist; tmp; tmp = tmp->next)
+				if (match(tmp->banstr, check) == 0)
+					return 0; /* In exception list */
+			return 1;
+		}
+	return 0;
+}
+
+/*
  * adds a user to a channel by adding another link to the channels member
  * chain.
  */
@@ -753,9 +774,9 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 			return (CANNOT_SEND_MODERATED);
 		} 
 		{
-			sendto_chanops_butone(cptr, chptr, ":IRC PRIVMSG %s :%s: %s",
-					chptr->chname, cptr->name,
-					msgtext);
+			if (!is_irc_banned(chptr))
+				sendto_chanops_butone(cptr, chptr, ":IRC PRIVMSG %s :%s: %s",
+						chptr->chname, cptr->name, msgtext);
 			return (CANNOT_SEND_MODERATED);
 		}
 	    }

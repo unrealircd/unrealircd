@@ -1943,3 +1943,5 @@ seen. gmtime warning still there
 - Removed/updated some NS stuff
 - Added EventMarkDel which marks an event for deletion for the (next) DoEvents() call.
 - Fixed /rehash stall caused by delayed unloading of the scan module (deadlock).
+- Added feature that if the chan is +m AND +u (so both!) and you ban IRC!*@* then ops
+  will no longer see the "relayed" message from IRC.
