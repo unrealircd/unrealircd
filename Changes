@@ -538,3 +538,5 @@
   reported by tabrisnet.
 - Fixed a resolver cache bug regarding CNAME's. This needs some more testing.
   [this description will be updated after testing]
+- Fixed a bug related to the sajoin recode regarding notices displayed (#0002293) reported
+  by Troco.

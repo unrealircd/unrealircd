@@ -195,20 +195,24 @@ DLLFUNC CMD_FUNC(m_sajoin)
 			(void)strlncat(jbuf, name, sizeof jbuf, sizeof(jbuf) - i - 1);
 			i += strlen(name) + 1;
 		}
+		sendnotice(acptr, "*** You were forced to join %s", jbuf);
+		sendto_realops("%s used SAJOIN to make %s join %s", sptr->name, acptr->name,
+			       jbuf);
+		sendto_serv_butone(&me, ":%s GLOBOPS :%s used SAJOIN to make %s join %s",
+				   me.name, sptr->name, acptr->name, jbuf);
+		/* Logging function added by XeRXeS */
+		ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
+			sptr->name, parv[1], jbuf);
 	}
 	else
+	{
 		sendto_one(acptr, ":%s SAJOIN %s %s", parv[0],
 		    parv[1], parv[2]);
 
-	sendnotice(acptr, "*** You were forced to join %s", jbuf);
-
-
-	sendto_realops("%s used SAJOIN to make %s join %s", sptr->name, parv[1],
-	    jbuf);
-
-	/* Logging function added by XeRXeS */
-	ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
-		sptr->name, parv[1], jbuf);
+		/* Logging function added by XeRXeS */
+		ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
+			sptr->name, parv[1], parv[2]);
+	}
 
 	return 0;
 }
