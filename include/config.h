@@ -142,11 +142,9 @@
 
 /*
  * THROTTLING
- *   This will only allow 1 connection per ip in THROTTLING_PERIOD time
- *   this will be adaptable using conf later
-*/
-#undef THROTTLING
-#define THROTTLING_PERIOD 15
+ *   This will only allow 1 connection per ip in set::throttle::period time
+ */
+#define THROTTLING
 
 /*
  * NAZIISH_CHBAN_HANDLING (formerly ANNOYING_BAN_THING)

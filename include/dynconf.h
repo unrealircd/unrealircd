@@ -66,6 +66,9 @@ struct zConfiguration {
 	long host_timeout;
 	int  host_retries;
 	char *name_server;
+#ifdef THROTTLING
+	long throttle_period;
+#endif
 	char *kline_address;
 	long conn_modes;
 	long oper_modes;
@@ -131,7 +134,7 @@ extern aConfiguration iConf;
 #define techadmin_host		iConf.network.x_techadmin_host
 #define hidden_host			iConf.network.x_hidden_host
 #define helpchan			iConf.network.x_helpchan
-#define STATS_SERVER		iConf.network.x_stats_server
+#define STATS_SERVER			iConf.network.x_stats_server
 #define iNAH				iConf.network.x_inah
 #define prefix_quit			iConf.network.x_prefix_quit
 #define SSL_SERVER_CERT_PEM		(iConf.x_server_cert_pem ? iConf.x_server_cert_pem : "server.cert.pem")
@@ -143,4 +146,7 @@ extern aConfiguration iConf;
 #define CLOAK_KEYCRC			iConf.network.keycrc
 #define STATIC_QUIT			iConf.static_quit
 #define UHOST_ALLOWED			iConf.userhost_allowed
-#define RESTRICT_USERMODES	iConf.restrict_usermodes
+#define RESTRICT_USERMODES		iConf.restrict_usermodes
+#ifdef THROTTLING
+#define THROTTLING_PERIOD		iConf.throttle_period
+#endif

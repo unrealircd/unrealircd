@@ -1607,6 +1607,15 @@ int	config_run()
 	free_iConf(&iConf);
 	bcopy(&tempiConf, &iConf, sizeof(aConfiguration));
 	bzero(&tempiConf, sizeof(aConfiguration));
+#ifdef THROTTLING
+	{
+		EventInfo eInfo;
+		eInfo.flags = EMOD_EVERY;
+		eInfo.every = THROTTLING_PERIOD ? THROTTLING_PERIOD/2 : 7;
+		EventMod(EventFind("bucketcleaning"), &eInfo);
+	}
+#endif
+
 	if (errors > 0)
 	{
 		config_error("%i fatal errors encountered", errors);
@@ -2142,6 +2151,8 @@ void report_dynconf(aClient *sptr)
 	    sptr->name, HOST_RETRIES);
 	sendto_one(sptr, ":%s %i %s :dns::nameserver: %s", me.name, RPL_TEXT,
 	    sptr->name, NAME_SERVER);
+	sendto_one(sptr, ":%s %i %s :throttle::period: %s", me.name, RPL_TEXT,
+			sptr->name, pretty_time_val(THROTTLING_PERIOD ? THROTTLING_PERIOD : 15));
 }
 
 /* Report the network file info -codemastr */
@@ -4861,6 +4872,14 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 		}
+#ifdef THROTTLING
+		else if (!strcmp(cep->ce_varname, "throttle")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				if (!strcmp(cepp->ce_varname, "period")) 
+					tempiConf.throttle_period = config_checkval(cepp->ce_vardata,CFG_TIME);
+			}
+		}
+#endif
 		else if (!strcmp(cep->ce_varname, "options")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				if (!strcmp(cepp->ce_varname, "webtv-support")) {
@@ -5154,6 +5173,24 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 		}
+#ifdef THROTTLING
+		else if (!strcmp(cep->ce_varname, "throttle")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				CheckNull(cepp);
+				if (!strcmp(cepp->ce_varname, "period")) {
+				}
+				else
+				{
+					config_error("%s:%i: unknown option set::throttle::%s",
+						cepp->ce_fileptr->cf_filename,
+						cepp->ce_varlinenum,
+						cepp->ce_varname);
+					errors++;
+					continue;
+				}
+			}
+		}
+#endif
 		else if (!strcmp(cep->ce_varname, "options")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				if (!strcmp(cepp->ce_varname, "webtv-support")) {

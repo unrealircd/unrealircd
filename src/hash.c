@@ -741,7 +741,7 @@ struct	ThrottlingBucket	*ThrottlingHash[THROTTLING_HASH_SIZE+1];
 void	init_throttling_hash()
 {
 	bzero(ThrottlingHash, sizeof(ThrottlingHash));	
-	EventAddEx(NULL, "bucketcleaning", THROTTLING_PERIOD/2, 0,
+	EventAddEx(NULL, "bucketcleaning", (THROTTLING_PERIOD ? THROTTLING_PERIOD : 15)/2, 0,
 		e_clean_out_throttling_buckets, NULL);		
 }
 
@@ -818,7 +818,7 @@ EVENT(e_clean_out_throttling_buckets)
 		
 	for (i = 0; i < THROTTLING_HASH_SIZE; i++)
 		for (n = ThrottlingHash[i]; n; n = n->next)
-			if (TStime() - n->since > THROTTLING_PERIOD)
+			if ((TStime() - n->since) > (THROTTLING_PERIOD ? THROTTLING_PERIOD : 15))
 			{
 				if (n->prev)
 					n->prev->next = n->next;
