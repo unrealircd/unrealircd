@@ -75,7 +75,11 @@ int  m_sethost(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	char *vhost, *s;
+#ifndef DISABLE_USERMOD
 	int  permit = 0;	// 0 = opers(glob/locop) 1 = global oper 2 = not MY clients.. 
+#else
+	int  permit = 2;
+#endif
 	int  donotice = 0;	/* send out notices if local connect ( 0 = NOT 1 = yes ) */
 	int  legalhost = 1;	/* is legal characters? */
 
@@ -208,7 +212,13 @@ int  m_chghost(cptr, sptr, parc, parv)
 	char *s;
 	int  legalhost = 1;
 
-
+#ifdef DISABLE_USERMOD
+	if (MyClient(sptr))
+	{
+		sendto_one(sptr, ":%s NOTICE %s :*** The /chghost command is disabled on this server", me.name, sptr->name);
+		return 0;
+	}
+#endif
 
 	if (MyClient(sptr))
 		if (!IsAnOper(sptr))
@@ -307,7 +317,13 @@ int  m_chgident(cptr, sptr, parc, parv)
 	char *s;
 	int  legalident = 1;
 
-
+#ifdef DISABLE_USERMOD
+	if (MyClient(sptr))
+	{
+		sendto_one(sptr, ":%s NOTICE %s :*** The /chgident command is disabled on this server", me.name, sptr->name);
+		return 0;
+	}
+#endif
 
 	if (MyClient(sptr))
 		if (!IsAnOper(sptr))
@@ -401,7 +417,11 @@ int  m_setident(cptr, sptr, parc, parv)
 {
 
 	char *vident, *s;
+#ifndef DISABLE_USERMOD
 	int  permit = 0;	/* 0 = opers(glob/locop) 1 = global oper */
+#else
+	int  permit = 2;
+#endif
 	int  donotice = 0;	/* send out notices if local connect ( 0 = NOT 1 = yes ) */
 	int  legalident = 1;	/* is legal characters? */
 	if (!MyConnect(sptr))
@@ -1438,6 +1458,15 @@ int  m_chgname(cptr, sptr, parc, parv)
 {
 	aClient *acptr;
 	char *s;
+
+#ifdef DISABLE_USERMOD
+	if (MyClient(sptr))
+	{
+		sendto_one(sptr, ":%s NOTICE %s :*** The /chgname command is disabled on this server", me.name, sptr->name);
+		return 0;
+	}
+#endif
+
 
 	if (MyClient(sptr))
 		if (!IsAnOper(sptr))

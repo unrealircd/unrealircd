@@ -439,3 +439,5 @@
 - Fixed a msg.h location problem ..
 - Added secure connections and openssl tracing to Config
 - Added regex portablity and checks in Config
+- Added a #define capability to config.h (DISABLE_USERMOD),
+  disables /sethost, /setident, /chgname, /chghost, /chgident

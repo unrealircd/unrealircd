@@ -105,10 +105,15 @@
 #define STRIPBADWORDS
 
 /*
-  NO_OPEROVERRIDE
-    This will disable OperMode, OperTopic and Banwalks
+ * NO_OPEROVERRIDE
+ *   This will disable OperMode, OperTopic and Banwalks
 */
 #undef NO_OPEROVERRIDE
+
+/*
+ * Disable /sethost, /setident, /chgname, /chghost, /chgident 
+*/
+#undef DISABLE_USERMOD
 
 /* 
   Ident checking
