@@ -1276,3 +1276,5 @@ seen. gmtime warning still there
 - Memory leak fixes with scanners
 - Some fixes with connect(). Knowing my luck this will fuck up to hell
 - Fixed another memory leak with the scanners
+- Fixed some helpop typos reported by BiGi (#0000144)
+- Fixed a typo in /stats ? where T/t were reversed, reported by Zer0

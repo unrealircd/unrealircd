@@ -2448,9 +2448,9 @@ CMD_FUNC(m_stats)
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "S - Send the dynamic configuration list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "T - Send the tld block list");
+		      "t - Send the tld block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "t - Send connection information");
+		      "T - Send connection information");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "u - Send server uptime and connection count");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
