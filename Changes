@@ -1857,3 +1857,4 @@ seen. gmtime warning still there
 - Fast badword replace is now enabled by default
 - Added (optional) class::recvq so you can dynamically/per class set the recvq (flood control).
   CLIENT_FLOOD in config.h is used as a default value if recvq is not specified.
+- Bugfix for crash with STRIPBADWORDS_CHAN_ALWAYS.

@@ -3218,7 +3218,8 @@ CMD_FUNC(m_part)
 			}
 #ifdef STRIPBADWORDS
  #ifdef STRIPBADWORDS_CHAN_ALWAYS
-			comment = (char *)stripbadwords_channel(comment);
+			if (comment)
+				comment = (char *)stripbadwords_channel(comment);
 			parc = 3;
  #else
 			if ((chptr->mode.mode & MODE_STRIPBADWORDS) && comment) {
