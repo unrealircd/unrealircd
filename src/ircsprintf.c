@@ -28,9 +28,9 @@
  */
 #include "ircsprintf.h"
 #include <stdio.h>
-#include "struct.h"
-#include "h.h"
 /* *INDENT-OFF* */
+
+extern char *xbase64enc(long i);
 
 const char atoi_tab[4000] = {
     '0','0','0',0, '0','0','1',0, '0','0','2',0, '0','0','3',0, '0','0','4',0,

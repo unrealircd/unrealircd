@@ -136,6 +136,9 @@ DLLFUNC int	Mod_Init(int module_load)
 int    l_commands_Init(int module_load)
 #endif
 {
+#ifdef SCAN_API
+	Module p;
+#endif
 	/*
 	 * We call our add_Command crap here
 	*/

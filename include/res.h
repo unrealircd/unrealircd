@@ -70,10 +70,10 @@ typedef struct	cachetable {
 extern struct __res_state ircd_res;
 extern int ircd_res_init();
 extern u_int ircd_res_randomid();
-extern u_int16_t ircd_getshort(const u_char *msgp);
-extern u_int32_t ircd_getlong(const u_char *msgp);
-extern void ircd__putshort(register u_int16_t s, register u_char *msgp);
-extern void ircd__putlong(register u_int32_t l,register u_char *msgp);
+extern u_int ircd_getshort(const u_char *msgp);
+extern u_long ircd_getlong(const u_char *msgp);
+extern void ircd__putshort(register u_int s, register u_char *msgp);
+extern void ircd__putlong(register u_long l,register u_char *msgp);
 extern int ircd_dn_expand(const u_char *msg, const u_char *eom, const u_char *src, char *dst, int dstsiz);
 extern int __ircd_dn_skipname(const u_char *ptr, const u_char *eom);
 extern int ircd_dn_comp(const char *src, u_char *dst, int dstsiz, u_char **dnptrs, u_char **lastdnptr);
