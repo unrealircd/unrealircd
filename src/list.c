@@ -523,7 +523,7 @@ void add_ListItem(ListStruct *item, ListStruct **list) {
 ListStruct *del_ListItem(ListStruct *item, ListStruct **list) {
 	ListStruct *l, *ret;
 
-	for (l = *list; *l; l = l->next) {
+	for (l = *list; l; l = l->next) {
 		if (l == item) {
 			ret = item->next;
 			if (l->prev)

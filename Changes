@@ -955,5 +955,7 @@ seen. gmtime warning still there
 - Made checking for redundant bans both ways an ifdef, off by default. 
   Note that undefing this might SLIGHTLY break compat w/ beta4 and pre
 - Added "griever would like to thank" section to /credits
-
+- Auth/SSL fixes, list.c fix, code: could you add auth.c and ssl.c to
+  makefile.win32?. If SSL is enabled, we can use MD5, SHA1, and crypt()
+  even on win32
 

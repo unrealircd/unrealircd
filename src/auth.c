@@ -59,7 +59,7 @@ int		Auth_FindType(char *type)
 {
 	anAuthStruct 	*p = AuthTypes;
 	
-	while (p)
+	while (p->data)
 	{
 		if (!strcmp(p->data, type))
 			return p->type;
@@ -136,14 +136,14 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 	extern	char *crypt();
 #endif
 #if defined(AUTHENABLE_MD5) || defined(AUTHENABLE_SHA1)
-	char	buf[512];
+        static char    buf[512];
 #endif
 
 #ifdef  AUTHENABLE_MD5
 	MD5_CTX	md5_ctx;
 #endif
 #ifdef  AUTHENABLE_SHA1
-	SHA1_CTX sha1_ctx;
+        SHA_CTX sha1_ctx;
 #endif
 	int	i = 0; /* We can always use this .. */
 	
@@ -183,7 +183,7 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 				return -1;
 			
 			if ((i = b64_encode(MD5(para, strlen(para), NULL),
-				MD5_DIGEST_LENGTH, buf, sizeof(buf)))
+                                MD5_DIGEST_LENGTH, buf, sizeof(buf))))
 			{
 				if (!strcmp(buf, as->data))
 					return 2;
@@ -200,7 +200,7 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 				return -1;
 			
 			if ((i = b64_encode(SHA1(para, strlen(para), NULL),
-				SHA1_DIGEST_LENGTH, buf, sizeof(buf)))
+                                SHA_DIGEST_LENGTH, buf, sizeof(buf))))
 			{
 				if (!strcmp(buf, as->data))
 					return 2;
@@ -222,15 +222,16 @@ char	*Auth_Make(short type, char *para)
 	extern	char *crypt();
 #endif
 #if defined(AUTHENABLE_MD5) || defined(AUTHENABLE_SHA1)
-	char	buf[512];
+        static char    buf[512];
 #endif
 
 #ifdef  AUTHENABLE_MD5
 	MD5_CTX	md5_ctx;
 #endif
 #ifdef  AUTHENABLE_SHA1
-	SHA1_CTX sha1_ctx;
+        SHA_CTX sha1_ctx;
 #endif
+        int i;
 
 	switch (type)
 	{
@@ -256,7 +257,7 @@ char	*Auth_Make(short type, char *para)
 				return NULL;
 			
 			if ((i = b64_encode(MD5(para, strlen(para), NULL),
-				MD5_DIGEST_LENGTH, buf, sizeof(buf)))
+                                MD5_DIGEST_LENGTH, buf, sizeof(buf))))
 			{
 				return (buf);
 			}
@@ -270,7 +271,7 @@ char	*Auth_Make(short type, char *para)
 				return NULL;
 			
 			if ((i = b64_encode(SHA1(para, strlen(para), NULL),
-				SHA1_DIGEST_LENGTH, buf, sizeof(buf)))
+                                SHA_DIGEST_LENGTH, buf, sizeof(buf))))
 			{
 				return (buf);
 			}

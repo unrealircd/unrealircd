@@ -100,7 +100,6 @@ void	m_mkpasswd_unload(void)
 **      parv[0] = sender prefix
 **      parv[1] = password to encrypt
 */
-#ifndef _WIN32
 int  m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	short	type;
@@ -121,7 +120,9 @@ int  m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[])
                     me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0]);
                 return 0;
         }
+#ifndef _WIN32
         srandom(TStime());
+#endif
 	if ((type = Auth_FindType(parv[1])) == -1)
 	{
 		sendto_one(sptr, 
@@ -141,12 +142,3 @@ int  m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[])
             me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], parv[1], parv[2], result);
         return 0;
 }
-#else
-int  m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
-        sendto_one(sptr,
-            ":%s %s %s :*** Encryption is disabled on UnrealIRCD-win32",
-            me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0]);
-        return 0;
-}
-
-#endif

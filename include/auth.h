@@ -33,6 +33,10 @@ typedef	struct {
 #ifdef USE_SSL
 #define AUTHENABLE_MD5
 #define AUTHENABLE_SHA1
+/* OpenSSL provides a crypt() */
+#ifndef AUTHENABLE_UNIXCRYPT
+#define AUTHENABLE_UNIXCRYPT
+#endif
 #endif
 
 	
