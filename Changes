@@ -2424,3 +2424,5 @@ seen. gmtime warning still there
 - Fixed some issues regarding unsetting of -R/-M when server set that mode due to a flood (+f),
   it would set the mode back immediately after next msg/join, counters are now reset.
 - Updated documentation
+- Added set::default-bantime. It allows you to set the default time for a gline/kline/gzline/
+  shun/etc when the time is not not specified (like with /gline *@*.stupid.net).

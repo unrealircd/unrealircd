@@ -374,7 +374,12 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	if (whattodo == 0)
 	{
 		if (secs == 0)
-			ircsprintf(mo, "%li", secs);
+		{
+			if (DEFAULT_BANTIME && (parc <= 3))
+				ircsprintf(mo, "%li", DEFAULT_BANTIME + TStime());
+			else
+				ircsprintf(mo, "%li", secs); /* "0" */
+		}
 		else
 			ircsprintf(mo, "%li", secs + TStime());
 		ircsprintf(mo2, "%li", TStime());

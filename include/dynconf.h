@@ -121,6 +121,7 @@ struct zConfiguration {
 	long nick_period;
 	int ident_connect_timeout;
 	int ident_read_timeout;
+	long default_bantime;
 	aNetwork network;
 };
 
@@ -201,3 +202,5 @@ extern aConfiguration iConf;
 
 #define MKPASSWD_FOR_EVERYONE	iConf.mkpasswd_for_everyone
 #define CHANCMDPFX iConf.channel_command_prefix
+
+#define DEFAULT_BANTIME			iConf.default_bantime

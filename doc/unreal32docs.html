@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta17<br>
-  <b>Last doc update:</b> 2003-09-15</div>
+  <b>Last doc update:</b> 2003-09-17</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Luke / McSkaf / Syzop<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -1866,6 +1866,9 @@ set {
  <p><font class="set">set::anti-flood::nick-flood &lt;count&gt;:&lt;period&gt;</font><br>
   Nickflood protection: limits nickchanges to 'count' per 'period' seconds.
   For example <i>nick-flood 4:90</i> means 4 per 90 seconds, the default is 3 per 60.</p>
+ <p><font class="set">set::default-bantime &lt;time&gt;</font><br>
+  Default bantime when doing /kline, /gline, /zline, /shun, etc without time parameter 
+  (like /gline *@some.nasty.isp), the default is permanent (0). Example: <i>default-bantime 90d;</i></p>
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; Additional Files<a name="addtlfiles"></a>
   </font></b></p><div class="desc">

@@ -5355,6 +5355,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.ident_read_timeout = config_checkval(cepp->ce_vardata,CFG_TIME);
 			}
 		}
+		else if (!strcmp(cep->ce_varname, "default-bantime"))
+		{
+			tempiConf.default_bantime = config_checkval(cep->ce_vardata,CFG_TIME);
+		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 #ifdef USE_SSL
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
@@ -5898,6 +5902,16 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					errors++;
 					continue;
 				}
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "default-bantime")) {
+			long x;
+			x = config_checkval(cep->ce_vardata,CFG_TIME);
+			if ((x < 0) > (x > 2000000000))
+			{
+				config_error("%s:%i: set::default-bantime: value '%ld' out of range",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, x);
+				errors++;
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
