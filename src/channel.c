@@ -235,7 +235,7 @@ static aClient *find_chasing(sptr, user, chasing)
 /*
   Exception functions to work with mode +e
    -sts
-
+*/
 
 /* add_exbanid - add an id to be excepted to the channel bans  (belongs to cptr) */
 
@@ -1084,7 +1084,6 @@ int  m_mode(cptr, sptr, parc, parv)
 			   see if they can a) spot whats wrong and[in both cases] b) correct it
 			   *devilish grin* -- DrBin ... after 1 hr of debugging ... realised he
 			   was lookin at the same piece of data... many times */
-/*for (user=chptr->members->value.cptr ; user; user=/*chptr->members->next->value.cptr *//*user->next *//*) */
 			for (member = chptr->members, user = member->value.cptr;
 			    member->next;
 			    member = member->next, user = member->value.cptr)
@@ -1124,7 +1123,6 @@ int  m_mode(cptr, sptr, parc, parv)
 			   see if they can a) spot whats wrong and[in both cases] b) correct it
 			   *devilish grin* -- DrBin ... after 1 hr of debugging ... realised he
 			   was lookin at the same piece of data... many times */
-/*for (user=chptr->members->value.cptr ; user; user=/*chptr->members->next->value.cptr *//*user->next *//*) */
 			for (member = chptr->members, user = member->value.cptr;
 			    member->next;
 			    member = member->next, user = member->value.cptr)
@@ -2091,7 +2089,6 @@ void set_mode(chptr, cptr, parc, parv, pcount, pvar, bounce)
 	u_int what = MODE_ADD;
 	long modetype;
 	int  paracount;
-	char *tmpo;
 	aCtab *tab = &cFlagTab[0];
 	aCtab foundat;
 	int  found = 0;
@@ -3411,7 +3408,7 @@ int  m_topic(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	aChannel *chptr = NullChn;
-	char *topic = NULL, *name, *p = NULL, *tnick = NULL;
+	char *topic = NULL, *name, *tnick = NULL;
 	TS   ttime = 0;
 	int  topiClen = 0;
 	int  nicKlen = 0;
@@ -4455,7 +4452,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	char exbuf[1024];
 	char nick[NICKLEN + 1];
 	char *s;
-	aClient *acptr, *tempptr;
+	aClient *acptr;
 	aChannel *chptr;
 	Link *lp;
 	Ban *ban;

@@ -44,7 +44,6 @@ char *stripbadwords_channel(char *str)
 	regex_t pcomp;
 	static char cleanstr[4096];
 	char buf[4096];
-	char errbuf[2048];
 	char *ptr;
 	int  errorcode, matchlen, stringlen, this_word;
 
@@ -94,7 +93,6 @@ char *stripbadwords_message(char *str)
 	regex_t pcomp;
 	static char cleanstr[4096];
 	char buf[4096];
-	char errbuf[2048];
 	char *ptr;
 	int  errorcode, matchlen, stringlen, this_word;
 

@@ -61,7 +61,6 @@ aMessage	webtv_cmds[] =
 
 void	webtv_parse(aClient *sptr, char *string)
 {
-	char *command;
 	char *cmd = NULL, *s = NULL;
 	int i;
 	aMessage *message = webtv_cmds;
@@ -147,10 +146,10 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	anUser *user;
 	aClient *acptr, *a2cptr;
 	aChannel *chptr;
-	char *nick, *tmp, *name, *temp;
+	char *nick, *tmp, *name;
 	char *p = NULL;
 	char buf[512];
-	int  found, len, mlen, t;
+	int  found, len, mlen;
 
 	if (parc < 2)
 	{

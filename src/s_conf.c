@@ -847,7 +847,6 @@ int  m_svsnoop(cptr, sptr, parc, parv)
 	int  parc;
 	char *parv[];
 {
-	aConfItem *aconf;
 	aClient *acptr;
 
 	if (!(check_registered(sptr) && IsULine(cptr, sptr) && parc > 2))
@@ -2326,7 +2325,7 @@ int  m_zline(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	char userhost[512 + 2] = "", *in;
-	int  result = 0, uline = 0, i = 0, propo = 0;
+	int  uline = 0, i = 0, propo = 0;
 	char *reason, *mask, *server, *person;
 	aClient *acptr;
 

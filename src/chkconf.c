@@ -416,8 +416,6 @@ static aConfItem *initconf(opt)
 		 */
 		if (aconf->status & CONF_CLASS)
 		{
-			int  class = 0;
-
 			if (!aconf->host)
 			{
 				(void)fprintf(stderr, "\tERROR: no class #\n");

@@ -425,7 +425,7 @@ void free_str_list(lp)
 
 Link *make_link()
 {
-	Link *lp, *lp1;
+	Link *lp;
 	int  i;
 
 	/* "caching" slab-allocator... ie. we're allocating one pages

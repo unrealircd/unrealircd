@@ -220,7 +220,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 
 #define FLAGS_MAP       0x80000000	/* Show this entry in /map */
 
-/* Dec 26th, 1997 - added flags2 when I ran out of room in flags -DuffJ 
+/* Dec 26th, 1997 - added flags2 when I ran out of room in flags -DuffJ */
 
 /* Dec 26th, 1997 - having a go at
  * splitting flags into flags and umodes

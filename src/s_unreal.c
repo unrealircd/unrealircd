@@ -80,7 +80,6 @@ int  m_sethost(cptr, sptr, parc, parv)
 #else
 	int  permit = 2;
 #endif
-	int  donotice = 0;	/* send out notices if local connect ( 0 = NOT 1 = yes ) */
 	int  legalhost = 1;	/* is legal characters? */
 
 
@@ -421,7 +420,6 @@ int  m_setident(cptr, sptr, parc, parv)
 #else
 	int  permit = 2;
 #endif
-	int  donotice = 0;	/* send out notices if local connect ( 0 = NOT 1 = yes ) */
 	int  legalident = 1;	/* is legal characters? */
 	if (!MyConnect(sptr))
 		goto permit_2;
@@ -1479,7 +1477,6 @@ int  m_chgname(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	aClient *acptr;
-	char *s;
 
 #ifdef DISABLE_USERMOD
 	if (MyClient(sptr))

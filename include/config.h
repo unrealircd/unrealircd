@@ -59,15 +59,15 @@
 /*	HPUX			Nothing needed (A.08/A.09) */
 /*	ULTRIX			Nothing needed (4.2) */
 /*	OSF			Nothing needed (1.2) */
-/* #undef	AIX		/* IBM ugly so-called Unix, AIX */
-/* #undef	MIPS		/* MIPS Unix */
+/* #undef	AIX		IBM ugly so-called Unix, AIX */
+/* #undef	MIPS		MIPS Unix */
 /*	SGI			Nothing needed (IRIX 4.0.4) */
-/* #undef 	SVR3		/* SVR3 stuff - being worked on where poss. */
-/* #undef	DYNIXPTX	/* Sequents Brain-dead Posix implement. */
-/* #undef	SOL20		/* Solaris2 */
-/* #undef	ESIX		/* ESIX */
-/* #undef	NEXT		/* NeXTStep */
-/* #undef	SVR4 /* */
+/* #undef 	SVR3		SVR3 stuff - being worked on where poss. */
+/* #undef	DYNIXPTX	Sequents Brain-dead Posix implement. */
+/* #undef	SOL20		Solaris2 */
+/* #undef	ESIX		ESIX */
+/* #undef	NEXT		NeXTStep */
+/* #undef	SVR4 */
 
 /* Additional flags to give FreeBSD's malloc, only play with this if you
  * know what you're doing.
@@ -130,7 +130,7 @@
  *
  * This enables the spoof protection.
  */
-/* #define NOSPOOF 1 /* */
+/* #define NOSPOOF 1  */
 
 /*
  * HOSTILENAME - Define this if you want the hostile username patch included,
@@ -169,9 +169,9 @@
 
 /* Do these work? I dunno... */
 
-/* #undef	VMS		/* Should work for IRC client, not server */
-/* #undef	MAIL50		/* If you're running VMS 5.0 */
-/* #undef	PCS		/* PCS Cadmus MUNIX, use with BSD flag! */
+/* #undef	VMS		   Should work for IRC client, not server */
+/* #undef	MAIL50		   If you're running VMS 5.0 */
+/* #undef	PCS		   PCS Cadmus MUNIX, use with BSD flag! */
 
 /*
  * NOTE: On some systems, valloc() causes many problems.
@@ -199,7 +199,7 @@
  *       the maintainer.
  */
 
-/* #undef	DEBUGMODE	/* define DEBUGMODE to enable debugging mode.*/
+/* #undef	DEBUGMODE	   define DEBUGMODE to enable debugging mode.*/
 
 /* We not check whether this is ok at compile time -- codemastr */
 /*
@@ -253,7 +253,7 @@
  *
  * You may want to define IRC_UID and IRC_GID
  */
-/* #define CHROOTDIR /* */
+/* #define CHROOTDIR    */
 
 /* SHOW_INVISIBLE_LUSERS
  *

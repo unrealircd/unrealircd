@@ -66,7 +66,6 @@ aClient inline *find_client(name, cptr)
 	char *name;
 	aClient *cptr;
 {
-	char *newname;
 
 	if (name)
 	{
@@ -103,7 +102,6 @@ aClient inline *find_server(name, cptr)
 	char *name;
 	aClient *cptr;
 {
-	char *newname;
 	if (name)
 	{
 		cptr = hash_find_server(name, cptr);
@@ -196,7 +194,7 @@ int  parse(cptr, buffer, bufend, mptr)
 	struct Message *mptr;
 {
 	aClient *from = cptr;
-	char *ch, *s, *p;
+	char *ch, *s;
 	int  len, i, numeric, paramcount, noprefix = 0;
 	int  token, mfound;
 #ifdef DEBUGMODE

@@ -573,7 +573,7 @@ void cr_report(sptr)
 	aClient *sptr;
 {
 	aCRline *tmp;
-	char *filemask, *reason;
+	char *filemask;
 	char a;
 
 	if (crlines)

@@ -457,7 +457,6 @@ void init_sys()
 #ifndef USE_POLL
 #ifdef RLIMIT_FD_MAX
 	struct rlimit limit;
-	int  pid;
 
 	if (!getrlimit(RLIMIT_FD_MAX, &limit))
 	{

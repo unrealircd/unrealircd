@@ -402,11 +402,9 @@ int  find_tkline_match_zap(cptr)
 	aClient *cptr;
 {
 	aTKline *lp;
-	char *chost, *cname, *cip;
+	char *cip;
 	TS   nowtime;
-	int  is_ip;
 	char msge[1024];
-	char gmt2[256];
 
 	if (IsServer(cptr) || IsMe(cptr))
 		return -1;
@@ -443,7 +441,7 @@ int  tkl_sweep()
 {
 	/* just sweeps net for people that should be killed */
 	aClient *acptr;
-	long i, i1;
+	long i;
 
 	tkl_check_expire();
 	for (i = 0; i <= (MAXCONNECTIONS - 1); i++)

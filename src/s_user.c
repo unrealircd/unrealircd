@@ -581,12 +581,11 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	char *nick, *username, *virthost, *umode;
 {
 	aConfItem *aconf;
-	char *parv[3], *tmpstr, c, *encr;
+	char *parv[3], *tmpstr, *encr;
 #ifdef HOSTILENAME
 	char stripuser[USERLEN + 1], *u1 = stripuser, *u2, olduser[USERLEN + 1],
 	    userbad[USERLEN * 2 + 1], *ubad = userbad, noident = 0;
 #endif
-	short oldstatus = sptr->status, upper = 0, lower = 0, special = 0;
 	int  xx;
 	anUser *user = sptr->user;
 	aClient *nsptr;
@@ -1074,9 +1073,6 @@ int  m_nick(cptr, sptr, parc, parv)
 	Link *lp;
 	time_t lastnick = (time_t) 0;
 	int  differ = 1;
-
-	u_int32_t md5data[16];
-	static u_int32_t md5hash[4];
 
 	/*
 	 * If the user didn't specify a nickname, complain
@@ -1686,7 +1682,7 @@ static int m_message(cptr, sptr, parc, parv, notice)
 	aClient *acptr;
 	char *s;
 	aChannel *chptr;
-	char *nick, *server, *p, *cmd, *host, *ctcp, *p2, *pc, *text;
+	char *nick, *server, *p, *cmd, *ctcp, *p2, *pc, *text;
 	int  cansend = 0;
 	int  prefix = 0;
 
@@ -2256,7 +2252,6 @@ int  m_services(cptr, sptr, parc, parv)
 	int  parc;
 	char *parv[];
 {
-	aClient *acptr;
 	char *tmps;
 
 
@@ -2582,9 +2577,9 @@ int  m_whois(cptr, sptr, parc, parv)
 	anUser *user;
 	aClient *acptr, *a2cptr;
 	aChannel *chptr;
-	char *nick, *tmp, *name, *temp;
+	char *nick, *tmp, *name;
 	char *p = NULL;
-	int  found, len, mlen, t;
+	int  found, len, mlen;
 
 
 
@@ -2850,7 +2845,6 @@ int  m_user(cptr, sptr, parc, parv)
 	u_int32_t sstamp = 0;
 	anUser *user;
 	aClient *acptr;
-	char *mparv[] = { sptr->name, sptr->name, NULL };
 
 	if (IsServer(cptr) && !IsUnknown(sptr))
 		return 0;
@@ -3476,7 +3470,6 @@ int  m_mkpasswd(cptr, sptr, parc, parv)
 	    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./";
 	char salt[3];
 	extern char *crypt();
-	int  i;
 	int  useable = 0;
 
 	if (!IsAnOper(sptr))
@@ -3541,9 +3534,7 @@ int  m_oper(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	aConfItem *aconf;
-	aClient *acptr;
 	char *name, *password, *encr;
-	anUser *user = sptr->user;
 #ifdef CRYPT_OPER_PASSWORD
 	char salt[3];
 	extern char *crypt();
@@ -4155,8 +4146,6 @@ int  m_umode(cptr, sptr, parc, parv)
 	int *s;
 	char **p, *m;
 	aClient *acptr;
-	anUser *user = sptr->user;
-	aConfItem *aconf;
 	int  what, setflags;
 
 
@@ -4811,7 +4800,6 @@ void send_svsmode_out(cptr, sptr, bsptr, old)
 
 	int  old;
 {
-	int  i;
 	aClient *acptr;
 
 	send_umode(NULL, sptr, old, SEND_UMODES, buf);

@@ -203,8 +203,6 @@ void vsendto_one(aClient *to, char *pattern, va_list vl)
 void sendbufto_one(aClient *to)
 {
 	int  len;
-	char *s;
-	int  i;
 
 	Debug((DEBUG_ERROR, "Sending [%s] to %s", sendbuf, to->name));
 
@@ -346,7 +344,7 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 			goto good;
 		if ((prefix & 0x4) && (lp->flags & CHFL_CHANOP))
 			goto good;
-		bad:	
+		bad:
 			continue;
 		good:
 		
@@ -670,7 +668,6 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 #ifndef NO_FDLIST
 	int  j;
 #endif
-	char	*p;
 	static char tcmd[1024];
 	static char ccmd[1024];
 	static char buff[1024];
@@ -1664,7 +1661,6 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
     int lastnick, char *username, char *realhost, char *server,
     long servicestamp, char *info, char *umodes, char *virthost)
 {
-	va_list vl;
 	int  i;
 	aClient *cptr;
 #ifndef NO_FDLIST

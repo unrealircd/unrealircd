@@ -66,7 +66,7 @@ int  get_client_class(acptr)
 {
 	Link *tmp;
 	aClass *cl;
-	int  i = 0, retc = BAD_CLIENT_CLASS;
+	int retc = BAD_CLIENT_CLASS;
 
 	if (acptr && !IsMe(acptr) && (acptr->confs))
 		for (tmp = acptr->confs; tmp; tmp = tmp->next)

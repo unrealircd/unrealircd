@@ -686,7 +686,6 @@ int  InitwIRCD(argc, argv)
 	int  argc;
 	char *argv[];
 {
-	int  x;
 	char chess[] = {85, 110, 114, 101, 97, 108, 0};
 
 #ifdef _WIN32
@@ -1169,7 +1168,7 @@ void SocketLoop(void *dummy)
 		{
 			extern int freelinks;
 			extern Link *freelink;
-			Link p, *lpp;
+			Link p;
 			int  ii;
 
 			if (loop.do_garbage_collect == 1)
@@ -1208,8 +1207,6 @@ void SocketLoop(void *dummy)
 		{
 			static TS lasttime = 0;
 			static long lastrecvK, lastsendK;
-			static int init = 0;
-			static TS loadcfreq = LOADCFREQ;
 			static int lrv;
 
 			if (now - lasttime < LCF)

@@ -575,12 +575,10 @@ int  m_server(cptr, sptr, parc, parv)
 {
 	char *ch;
 	int  i;
-	char info[REALLEN + 61], *inpath, *host, *encr, *f;
-	char pp[512];
+	char info[REALLEN + 61], *inpath, *host, *encr;
 	aClient *acptr, *bcptr;
 	aConfItem *aconf, *cconf;
 	int  hop, numeric = 0;
-	int  ts = 0;
 	char *flags = NULL, *protocol = NULL, *inf = NULL;
 
 	info[0] = '\0';
@@ -4667,7 +4665,7 @@ void dump_map(cptr, server, mask, prompt_length, length)
 {
 	static char prompt[64];
 	char *p = &prompt[prompt_length];
-	int  cnt = 0, local = 0;
+	int  cnt = 0;
 	aClient *acptr;
 	Link *lp;
 	
