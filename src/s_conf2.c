@@ -68,6 +68,7 @@ int	_conf_ulines	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_include	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_tld	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_listen	(ConfigFile *conf, ConfigEntry *ce);
+int	_conf_allow	(ConfigFile *conf, ConfigEntry *ce);
 
 extern int conf_debuglevel;
 
@@ -81,6 +82,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "include", 	_conf_include },
 	{ "tld",	_conf_tld },
 	{ "listen", 	_conf_listen },
+	{ "allow",	_conf_allow },
 	{ NULL, 	NULL  }
 };
 
@@ -156,7 +158,7 @@ ConfigItem_ulines	*conf_ulines = NULL;
 ConfigItem_tld		*conf_tld = NULL;
 ConfigItem_oper		*conf_oper = NULL;
 ConfigItem_listen	*conf_listen = NULL;
-
+ConfigItem_allow	*conf_allow = NULL;
 
 
 /*
@@ -819,6 +821,13 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			}
 		}
+		else
+		{
+			config_error("%s:%i: unknown directive class::%s",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					cep->ce_varname);
+			continue;								
+		}
 	}
 	if (isnew)
 		add_ConfigItem((ConfigItem *) class, (ConfigItem **) &conf_class);
@@ -852,8 +861,6 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_varname);
 			continue;	
 		}
-		config_status("[me] Set %s to %s",
-				cep->ce_varname, cep->ce_vardata);
 		if (!strcmp(cep->ce_varname, "name"))
 		{
 			if (conf_me->name)
@@ -994,10 +1001,6 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 						{
 							if (!(oper->oflags & ofp->flag))
 								oper->oflags |= ofp->flag;
-							config_status("%s:%i: setting flag %s",
-								cepp->ce_fileptr->cf_filename,
-								cepp->ce_varlinenum,
-								ofp->name);
 							break;
 						} 
 					}
@@ -1244,10 +1247,6 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 					{
 						if (!(listen->options & ofp->flag))
 							listen->options |= ofp->flag;
-						config_status("%s:%i: setting option %s",
-							cepp->ce_fileptr->cf_filename,
-							cepp->ce_varlinenum,
-							ofp->name);
 						break;
 					} 
 				}
@@ -1273,6 +1272,71 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 		add_ConfigItem((ConfigItem *)listen, (ConfigItem **)&conf_listen);
 }
 
+/*
+ * allow {} block parser
+*/
+int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	ConfigItem_allow *allow;
+	unsigned char isnew = 0;
+	
+	allow = (ConfigItem_allow *) MyMallocEx(sizeof(ConfigItem_allow));
+	isnew = 1;
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+		{
+			config_error("%s:%i: allow item without variable name",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			continue;	
+		}
+		if (!cep->ce_vardata)
+		{
+			config_error("%s:%i: allow item without parameter",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			continue;	
+		}
+		if (!strcmp(cep->ce_varname, "ip"))
+		{
+			allow->ip = strdup(cep->ce_vardata);
+		} else
+		if (!strcmp(cep->ce_varname, "user"))
+		{
+			allow->user = strdup(cep->ce_vardata);
+		} else
+		if (!strcmp(cep->ce_varname, "hostname"))
+		{
+			allow->hostname = strdup(cep->ce_vardata);
+		} else
+		if (!strcmp(cep->ce_varname, "password"))
+		{
+			allow->password = strdup(cep->ce_vardata);
+		} else
+		if (!strcmp(cep->ce_varname, "class"))
+		{
+			allow->class = Find_class(cep->ce_vardata);
+			if (!allow->class)
+			{
+				config_error("%s:%i: illegal allow::class, unknown class '%s'",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum,
+					cep->ce_vardata);
+			}
+		}
+		else
+		{
+			config_error("%s:%i: unknown directive allow::%s",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					cep->ce_varname);
+			continue;								
+		}
+	}
+	if (isnew)
+		add_ConfigItem((ConfigItem *) allow, (ConfigItem **) &conf_allow);
+}
+
 
 /*
  * Report functions
@@ -1287,7 +1351,9 @@ void	report_configuration(void)
 	ConfigItem_ulines	*uline_ptr;
 	ConfigItem_tld		*tld_ptr;
 	ConfigItem_listen	*listen_ptr;
+	ConfigItem_allow	*allow_ptr;
 	OperFlag		*ofp;
+	
 	printf("Report:\n");
 	printf("-------\n");
 	if (conf_me)
@@ -1362,6 +1428,21 @@ void	report_configuration(void)
 					printf("  * option: %s\n", ofp->name);
 		}		
 	}
+	if (conf_allow)
+	{
+		for (allow_ptr = conf_allow; allow_ptr; allow_ptr = (ConfigItem_allow *) allow_ptr->next)
+		{
+			printf("I allow for user %s IP %s and hostname %s to enter.\n",
+				allow_ptr->user,
+				allow_ptr->ip,
+				allow_ptr->hostname);
+				
+			printf("      * class: %s\n      * password: %s\n",
+				(allow_ptr->class ? allow_ptr->class->name : "NO CLASS (BAD)"),
+				(allow_ptr->password ? allow_ptr->password : "(no password)"));
+		}		
+	}
+	
 }
 
 
@@ -1416,6 +1497,3 @@ ConfigItem_listen	*Find_listen(char *ipmask, int port)
 	}
 	return NULL;
 }
-
-
-

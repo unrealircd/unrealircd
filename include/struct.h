@@ -79,6 +79,7 @@ typedef struct _configitem_drpass ConfigItem_drpass;
 typedef struct _configitem_ulines ConfigItem_ulines;
 typedef struct _configitem_tld ConfigItem_tld;
 typedef struct _configitem_listen ConfigItem_listen;
+typedef struct _configitem_allow ConfigItem_allow;
 
 typedef struct Notify aNotify;
 typedef struct Client aClient;
@@ -963,8 +964,10 @@ struct _configitem_allow {
 	ConfigFlag 	 flag;
 	ConfigItem       *prev;
 	ConfigItem       *next;
+	char		 *user;
 	char	         *ip;
 	char	   	 *hostname;
+	char		 *password;
 	ConfigItem_class *class;
 };
 
@@ -1018,6 +1021,7 @@ struct _configitem_listen {
 	int		port;
 	long		options;
 };
+
 
 /*
  * statistics structures
