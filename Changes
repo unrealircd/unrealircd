@@ -359,4 +359,8 @@ Made stop code error more stupid-people friendly
 --Luke
 ===================================
 
-
+Added code that shows nick changes on entire net
+when umode +j (JUNK). Also, went through channel.c
+and made all snotices look "nicer"
+--Luke
+===================================

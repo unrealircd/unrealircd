@@ -1326,11 +1326,13 @@ void do_mode(chptr, cptr, sptr, parc, parv, sendts, samode)
 	if (IsPerson(sptr) && samode && MyClient(sptr))
 	{
 		sendto_serv_butone_token(NULL, me.name, MSG_GLOBOPS,
-		    TOK_GLOBOPS, ":%s used SAMODE %s (%s %s)", sptr->name,
-		    chptr->chname, mode_buf, parabuf);
+		    TOK_GLOBOPS, ":%s (%s@%s) used SAMODE %s %s %s", sptr->name,
+		    sptr->user->username, sptr->user->realhost, chptr->chname,
+		    mode_buf, parabuf);
 		sendto_failops_whoare_opers
-		    ("from %s: %s used SAMODE %s (%s %s)", me.name, sptr->name,
-		    chptr->chname, mode_buf, parabuf);
+		    ("from %s: %s (%s@%s) used SAMODE %s %s %s", sptr->name,
+		    sptr->user->username, sptr->user->realhost, chptr->chname,
+		    mode_buf, parabuf);
 		sptr = &me;
 		sendts = 0;
 	}
@@ -1546,7 +1548,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		      && !is_chanowner(cptr, chptr))
 		  {
 			  sendto_one(cptr,
-			      ":%s NOTICE %s :*** Channel mode +u can only be set by the channel owner",
+			      ":%s NOTICE %s :*** Auditorium mode (+u) can only be set by the channel owner.",
 			      me.name, cptr->name);
 			  break;
 		  }
@@ -1558,7 +1560,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		      && !IsULine(cptr))
 		  {
 			  sendto_one(cptr,
-			      ":%s NOTICE %s :*** Only IRCops can set that mode",
+			      ":%s NOTICE %s :*** Opers Only mode (+O) can only be set by IRC Operators.",
 			      me.name, cptr->name);
 			  break;
 		  }
@@ -1568,7 +1570,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		      && !IsULine(cptr))
 		  {
 			  sendto_one(cptr,
-			      ":%s NOTICE %s :*** Only admins can set that mode",
+			      ":%s NOTICE %s :*** Admins Only mode (+A) can only be set by Administrators.",
 			      me.name, cptr->name);
 			  break;
 		  }
@@ -1582,7 +1584,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		      && !IsULine(cptr))
 		  {
 			  sendto_one(cptr,
-			      ":%s NOTICE %s :*** Only admins can set that mode",
+			      ":%s NOTICE %s :*** No Hiding mode (+H) can only be set by Administrators.",
 			      me.name, cptr->name);
 			  break;
 		  }
@@ -1646,7 +1648,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		      && !is_chanowner(cptr, chptr))
 		  {
 			  sendto_one(cptr,
-			      ":%s NOTICE %s :*** Protected users can only be set by the channel owner.",
+			      ":%s NOTICE %s :*** Protected User mode (+a) can only be set by the channel owner.",
 			      me.name, cptr->name);
 			  break;
 		  }
@@ -1657,10 +1659,10 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		  switch (modetype)
 		  {
 		    case MODE_CHANOWNER:
-			    xxx = "deown";
+			    xxx = "dechannelown";
 			    break;
 		    case MODE_CHANPROT:
-			    xxx = "deprot";
+			    xxx = "deprotect";
 			    break;
 		    case MODE_HALFOP:
 			    xxx = "dehalfop";
@@ -1700,7 +1702,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 			  if (MyClient(cptr))
 			  {
 				  sendto_one(cptr,
-				      ":%s NOTICE %s :*** You cannot %s because %s is %s channel owner (+q)",
+				      ":%s NOTICE %s :*** You cannot %s %s in %s, they are the channel owner (+q).",
 				      me.name, cptr->name, xxx,
 				      member->value.cptr->name, chptr->chname);
 			  }
@@ -1714,7 +1716,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 			  if (MyClient(cptr))
 			  {
 				  sendto_one(cptr,
-				      ":%s NOTICE %s :*** You cannot %s because %s is %s protected user (+a)",
+				      ":%s NOTICE %s :*** You cannot %s %s in %s, they are a protected user (+a).",
 				      me.name, cptr->name, xxx,
 				      member->value.cptr->name, chptr->chname);
 			  }
@@ -1861,7 +1863,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		      && !is_chanowner(cptr, chptr))
 		  {
 			  sendto_one(cptr,
-			      ":%s NOTICE %s :*** Channel mode +L can only be set by the channel owner",
+			      ":%s NOTICE %s :*** Channel Linking (+L) can only be set by the channel owner.",
 			      me.name, cptr->name);
 			  break;
 		  }
@@ -1870,7 +1872,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		  if (!chptr->mode.limit && what == MODE_ADD)
 		  {
 			  sendto_one(cptr,
-			      ":%s NOTICE %s :*** Channel mode +l <max> is requried for +L to be set",
+			      ":%s NOTICE %s :*** A Channel Limit (+l <max>) is required for +L to be set.",
 			      me.name, cptr->name);
 			  break;
 		  }
@@ -1898,7 +1900,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 			  {
 				  if (MyClient(cptr))
 					  sendto_one(cptr,
-					      ":%s NOTICE %s :*** You can't link %s to itself",
+					      ":%s NOTICE %s :*** %s cannot be linked to itself.",
 					      me.name, cptr->name,
 					      chptr->chname);
 				  break;
@@ -1907,7 +1909,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 			  {
 				  if (MyClient(cptr))
 					  sendto_one(cptr,
-					      ":%s NOTICE %s :*** You may only specify 1 channel to link to",
+					      ":%s NOTICE %s :*** Only one channel may be specified for linking.",
 					      me.name, cptr->name);
 				  break;
 			  }
@@ -2118,20 +2120,6 @@ void set_mode(chptr, cptr, parc, parv, pcount, pvar, bounce)
 			  MyFree(tmpo);
 			  break;
 #endif
-		  case 'x':
-			  if (MyClient(cptr))
-			  {
-				  sendto_one(cptr,
-				      ":%s NOTICE %s :*** Mode not set - Please do not use mode +x as this is now named +c instead (Colorblock)",
-				      me.name, cptr->name);
-				  break;
-			  }
-			  else
-			  {
-				  /* compatiblity */
-				  *curchr = 'c';
-			  }
-			  goto jumpdammit;
 		  case 'I':
 			  if (MyClient(cptr))
 			  {
@@ -2280,7 +2268,7 @@ static int can_join(cptr, sptr, chptr, key, link, parv)
 	if ((chptr->mode.mode & MODE_ONLYSECURE) &&
 		!(sptr->umodes & UMODE_SECURE))
 	{
-		sendto_one(sptr, ":%s NOTICE %s :*** Cannot join: %s is a Secure-only channel (+z)",
+		sendto_one(sptr, ":%s NOTICE %s :*** Cannot join: %s is a secure client-only channel (+z)",
 				me.name, sptr->name, chptr->chname); 
 		return (ERR_BANNEDFROMCHAN);	
 	}
@@ -2644,7 +2632,7 @@ int  channel_link(cptr, sptr, parc, parv)
 	{
 		/* bounced too many times */
 		sendto_one(sptr,
-		    ":%s NOTICE %s :*** Couldn't join %s ! - Link setting was too bouncy",
+		    ":%s NOTICE %s :*** Cannot join %s: bounced through too many links.",
 		    me.name, sptr->name, parv[1]);
 		return;
 	}
@@ -2779,8 +2767,8 @@ int  channel_link(cptr, sptr, parc, parv)
 				    user->virthost : sptr->user->realhost),
 				    name);
 			sendto_umode(UMODE_NETADMIN,
-			    "*** Invisible(+I) user %s joined %s", sptr->name,
-			    chptr->chname);
+			    "*** Invisibility -- %s (%s@%s) JOIN %s", sptr->name,
+			    sptr->user->username, sptr->user->realhost, chptr->chname);
 		}
 		sendto_serv_butone_token(cptr, parv[0], MSG_JOIN,
 		    TOK_JOIN, name);
@@ -3000,11 +2988,13 @@ int  m_join(cptr, sptr, parc, parv)
 				    user->virthost : sptr->user->realhost),
 				    chptr->chname);
 				sendto_umode(UMODE_ADMIN,
-				    "*** [+I] %s invisible joined %s",
-				    sptr->name, chptr->chname);
+				    "*** Invisibility -- %s (%s@%s) JOIN %s",
+				    sptr->name, sptr->user->username,
+				    sptr->user->realhost, chptr->chname);
 				sendto_serv_butone_token(&me, me.name, MSG_SMO,
-				    TOK_SMO, "A :[+I] %s invisible joined %s",
-				    sptr->name, chptr->chname);
+				    TOK_SMO, "A :Invisibility -- %s (%s@%s) JOIN %s",
+				    sptr->name, sptr->user->username,
+				    sptr->user->realhost, chptr->chname);
 				sendto_channel_ntadmins(sptr, chptr,  ":%s JOIN :%s",
 				    sptr->name, chptr->chname);
 			}
@@ -3158,12 +3148,14 @@ int  m_part(cptr, sptr, parc, parv)
 				if (MyClient(sptr))
 				{
 					sendto_umode(UMODE_ADMIN,
-					    "*** [+I] %s invisible parted %s",
-					    sptr->name, chptr->chname);
+					    "*** Invisibility -- %s (%s@%s) PART %s",
+					    sptr->name, sptr->user->username, 
+					    sptr->user->realhost, chptr->chname);
 					sendto_serv_butone_token(&me,
 					    me.name, MSG_SMO, TOK_SMO,
-					    "A :[+I] %s invisible parted %s",
-					    sptr->name, chptr->chname);
+					    "A :Invisibility -- %s (%s@%s) PART %s",
+					    sptr->name, sptr->user->username,
+					    sptr->user->realhost, chptr->chname);
 					if (parc < 3)
 						sendto_channel_ntadmins(sptr, chptr, ":%s PART %s",
 						    sptr->name, chptr->chname);
@@ -3345,7 +3337,7 @@ int  m_kick(cptr, sptr, parc, parv)
 					    err_str(ERR_NOSUCHNICK),
 					    me.name, parv[0], user, name);
 					sendto_one(who,
-					    ":%s NOTICE %s :*** Hidden: %s tried to kick you from channel %s (%s)",
+					    ":%s NOTICE %s :*** Invisibility: %s tried to kick you from %s (%s)",
 					    me.name, who->name, parv[0],
 					    chptr->chname, comment);
 					break;
@@ -3365,10 +3357,10 @@ int  m_kick(cptr, sptr, parc, parv)
 #endif
 				{
 					sendto_one(sptr,
-					    ":%s NOTICE %s :*** Cannot kick %s from channel %s (usermode +q)",
+					    ":%s NOTICE %s :*** Cannot kick %s from %s (usermode +q)",
 					    me.name, sptr->name, who->name, chptr->chname);
 					sendto_one(who,
-					    ":%s NOTICE %s :*** Q: %s tried to kick you from channel %s (%s)",
+					    ":%s NOTICE %s :*** Q: %s tried to kick you from %s (%s)",
 					    me.name, who->name, parv[0], chptr->chname, comment);
 					goto deny;
 				}
@@ -3380,7 +3372,7 @@ int  m_kick(cptr, sptr, parc, parv)
 #endif
 				{
 					sendto_one(sptr,
-					    ":%s NOTICE %s :*** Cannot kick %s from channel %s (usermode +S)",
+					    ":%s NOTICE %s :*** Cannot kick %s from %s (usermode +S)",
 	    				    me.name, sptr->name, who->name, chptr->chname);
     					goto deny;
 				}
@@ -3432,7 +3424,7 @@ int  m_kick(cptr, sptr, parc, parv)
 				if (chptr->mode.mode & MODE_NOKICKS)
 				{
 					sendto_one(sptr,
-					    ":%s NOTICE %s :*** You cannot kick people on %s",
+					    ":%s NOTICE %s :*** You cannot kick people on %s (channel mode +Q)",
 					    me.name, sptr->name, chptr->chname);
 					goto deny;
 				}
@@ -3442,7 +3434,7 @@ int  m_kick(cptr, sptr, parc, parv)
 				    && !is_chan_op(sptr,chptr))
 				{
 					sendto_one(sptr,
-					    ":%s NOTICE %s :*** You cannot kick channel operators on %s if you only are halfop",
+					    ":%s NOTICE %s :*** You cannot kick operators on %s if you are only a halfop",
 					    me.name, sptr->name, chptr->chname);
 					goto deny;
 				}
@@ -3459,7 +3451,7 @@ int  m_kick(cptr, sptr, parc, parv)
 					else
 					{
 						sendto_one(sptr,
-						    ":%s NOTICE %s :*** You cannot kick %s from %s because %s is channel protected",
+						    ":%s NOTICE %s :*** You cannot kick %s from %s because %s is protected (+a)",
 						    me.name, sptr->name,
 						    who->name,
 						    chptr->chname, who->name);
@@ -3549,7 +3541,7 @@ int  m_topic(cptr, sptr, parc, parv)
 			if (!MyClient(sptr) && !IsULine(sptr))
 			{
 				sendto_umode
-				    (UMODE_JUNK,"Remote TOPIC for unknown channel %s (%s)",
+				    (UMODE_JUNK,"*** Remote TOPIC for unknown channel %s (%s)",
 				    parv[1], backupbuf);
 			}
 			sendto_one(sptr, rpl_str(ERR_NOSUCHCHANNEL),
@@ -3984,7 +3976,7 @@ int  check_for_chan_flood(cptr, sptr, chptr)
 		char comment[1024], mask[1024];
 
 		ircsprintf(comment,
-		    "Flooding (Limit is %i lines per %i seconds)",
+		    "Flooding (limit is %i lines per %i second(s))",
 		    chptr->mode.msgs, chptr->mode.per);
 		if (chptr->mode.kmode == 1)
 		{		/* ban. */
@@ -4146,7 +4138,7 @@ int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				    sendto_one(sptr,
 					err_str(ERR_LISTSYNTAX),
 					me.name, cptr->name,
-					"Bad list syntax, type /list ?");
+					"Improper list syntax, type /list ?");
 				    error = 1;
 			  }
 			  break;
@@ -4169,7 +4161,7 @@ int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				    sendto_one(sptr,
 					err_str(ERR_LISTSYNTAX),
 					me.name, cptr->name,
-					"Bad list syntax, type /list ?");
+					"Improper list syntax, type /list ?");
 				    error = 1;
 			  }
 			  break;
@@ -4295,7 +4287,7 @@ int  m_names(cptr, sptr, parc, parv)
 		if (*s == ',')
 		{
 			para[TRUNCATED_NAMES] = '\0';
-			sendto_realops("names abuser %s %s",
+			sendto_realops("NAMES abuser: %s - %s",
 			    get_client_name(sptr, FALSE), para);
 			sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
 			    me.name, sptr->name, "NAMES");
@@ -4513,19 +4505,19 @@ int  m_knock(cptr, sptr, parc, parv)
 		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
 		    me.name,
 		    sptr->name,
-		    chptr->chname, "You can not get invited anyways! (+I)");
+		    chptr->chname, "Channel has INVITE disabled! (+I)");
 
 		return 0;
 	}
 
 	sendto_channelops_butone(NULL, &me, chptr,
-	    ":%s NOTICE @%s :[Knock] by %s!%s@%s (%s) ",
+	    ":%s NOTICE @%s :[KNOCK] by %s!%s@%s (%s) ",
 	    me.name, chptr->chname, sptr->name,
 	    sptr->user->username,
 	    (IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost),
 	    parv[2] ? parv[2] : "no reason specified");
 
-	sendto_one(sptr, ":%s NOTICE %s :Knocked on %s", me.name,
+	sendto_one(sptr, ":%s NOTICE %s :*** Knocked on %s", me.name,
 	    sptr->name, chptr->chname);
 	return 0;
 }

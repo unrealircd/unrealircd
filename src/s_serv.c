@@ -2377,13 +2377,13 @@ int  m_stats(cptr, sptr, parc, parv)
 		name = me.name;
 
 	if (stat != '\0')
-		sendto_umode(UMODE_EYES, "Stats \'%c\' requested by %s (%s@%s)",
+		sendto_umode(UMODE_EYES, "*** Stats \'%c\' requested by %s (%s@%s)",
 		    stat, sptr->name, sptr->user->username,
 		    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
 		    realhost);
 	else
 		sendto_umode(UMODE_EYES,
-		    "Stats \'NULL\' requested by %s (%s@%s)", sptr->name,
+		    "*** Stats \'NULL\' requested by %s (%s@%s)", sptr->name,
 		    sptr->user->username,
 		    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
 		    realhost);

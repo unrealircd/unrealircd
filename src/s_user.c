@@ -1663,6 +1663,8 @@ int  m_nick(cptr, sptr, parc, parv)
 		sendto_common_channels(sptr, ":%s NICK :%s", parv[0], nick);
 		sendto_serv_butone_token(cptr, parv[0], MSG_NICK, TOK_NICK,
 		    "%s %d", nick, sptr->lastnick);
+		sendto_umode(UMODE_JUNK, "*** Notice -- %s (%s@%s) has changed their nickname to %s",
+		    parv[0], sptr->user->username, sptr->user->realhost, nick);
 	}
 	else if (!sptr->name[0])
 	{
