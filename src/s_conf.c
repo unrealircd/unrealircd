@@ -886,9 +886,15 @@ int  m_svsnoop(cptr, sptr, parc, parv)
 					acptr->umodes &=
 		    				~(UMODE_NETADMIN | UMODE_CLIENT |
 		 			   UMODE_FLOOD | UMODE_EYES | UMODE_WHOIS);
+#ifdef ENABLE_INVISOPER
 					acptr->umodes &=
 					    ~(UMODE_KIX | UMODE_FCLIENT | UMODE_HIDING |
 					    UMODE_DEAF | UMODE_HIDEOPER);
+#else
+					acptr->umodes &=
+					    ~(UMODE_KIX | UMODE_FCLIENT |
+					    UMODE_DEAF | UMODE_HIDEOPER);
+#endif
 					acptr->oflag = 0;
 				
 				}
@@ -2855,9 +2861,15 @@ int  m_svso(cptr, sptr, parc, parv)
 		acptr->umodes &=
 		    ~(UMODE_NETADMIN | UMODE_CLIENT |
 		    UMODE_FLOOD | UMODE_EYES | UMODE_WHOIS);
+#ifdef ENABLE_INVISOPER
 		acptr->umodes &=
 		    ~(UMODE_KIX | UMODE_FCLIENT | UMODE_HIDING |
 		    UMODE_DEAF | UMODE_HIDEOPER);
+#else
+		acptr->umodes &=
+		    ~(UMODE_KIX | UMODE_FCLIENT |
+		    UMODE_DEAF | UMODE_HIDEOPER);
+#endif
 		acptr->oflag = 0;
 		send_umode_out(acptr, acptr, fLag);
 	}

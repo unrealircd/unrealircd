@@ -81,6 +81,7 @@ CRYPT_OPER_PASSWORD=""
 CRYPT_LINK_PASSWORD=""
 CRYPT_ILINE_PASSWORD=""
 CRYPT_XLINE_PASSWORD=""
+ENABLE_INVISOPER=""
 LISTEN_SIZE="5"
 MAXSENDQLENGTH="3000000"
 BUFFERPOOL="(9 * MAXSENDQLENGTH)"
@@ -1502,6 +1503,41 @@ fi
 		esac
 done		
 
+FOO=""
+runonce=""
+while [ -z "$FOO" ] ; do
+if [ -n "$ENABLE_INVISOPER" ] ; then
+	FOO="Yes"
+else
+	FOO="No"
+fi
+echo ""
+echo "Do you want to enable total invisibility (+I) mode for opers?"
+echo $n "[$FOO] -> $c"
+if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+	read cc
+else
+	cc=""
+	runonce=Yes
+fi
+if [ -z "$cc" ] ; then
+	cc=$FOO
+fi
+	case "$cc" in
+		[Yy]*)
+			ENABLE_INVISOPER="1"
+			;;
+		[Nn]*)
+			ENABLE_INVISOPER=""
+			;;
+		*)
+			echo ""
+			echo "You need to enter either Yes or No here..."
+			echo ""
+			FOO=""
+			;;
+		esac
+done
 
 FOO=""
 runonce=""
@@ -1852,6 +1888,11 @@ if [ -n "$CRYPT_XLINE_PASSWORD" ] ; then
 else
     echo "#undef CRYPT_XLINE_PASSWORD" >> $OPTIONS_H
 fi
+if [ -n "$ENABLE_INVISOPER" ] ; then
+    echo "#define ENABLE_INVISOPER 1" >> $OPTIONS_H
+else
+    echo "#undef ENABLE_INVISOPER" >> $OPTIONS_H
+fi
 if [ -n "$HUB" ] ; then
     echo "#define HUB 1" >> $OPTIONS_H
 else
@@ -1897,6 +1938,7 @@ CRYPT_OPER_PASSWORD="$CRYPT_OPER_PASSWORD"
 CRYPT_LINK_PASSWORD="$CRYPT_LINK_PASSWORD"
 CRYPT_ILINE_PASSWORD="$CRYPT_ILINE_PASSWORD"
 CRYPT_XLINE_PASSWORD="$CRYPT_XLINE_PASSWORD"
+ENABLE_INVISOPER="$ENABLE_INVISOPER"
 LISTEN_SIZE="$LISTEN_SIZE"
 MAXSENDQLENGTH="$MAXSENDQLENGTH"
 BUFFERPOOL="$BUFFERPOOL"

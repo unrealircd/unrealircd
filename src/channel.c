@@ -142,7 +142,9 @@ aCtab cFlagTab[] = {
 	{MODE_NOKNOCK, 'K', 0, 0},	/* knock knock (no way!) */
 	{MODE_NOINVITE, 'V', 0, 0},	/* no invites */
 	{MODE_FLOODLIMIT, 'f', 0, 1},	/* flood limiter */
+#ifdef ENABLE_INVISOPER
 	{MODE_NOHIDING, 'H', 0, 0},	/* no +I joiners */
+#endif
 #ifdef STRIPBADWORDS
 	{MODE_STRIPBADWORDS, 'G', 0, 0},	/* no badwords */
 #endif
@@ -1565,6 +1567,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		  if (!IsServer(cptr) && !IsULine(cptr))
 			  break;
 		  goto setthephuckingmode;
+#ifdef ENABLE_INVISOPER
 	  case MODE_NOHIDING:
 		  if (!IsSkoAdmin(cptr) && !IsServer(cptr)
 		      && !IsULine(cptr))
@@ -1575,6 +1578,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 			  break;
 		  }
 		  goto setthephuckingmode;
+#endif
 	  case MODE_SECRET:
 	  case MODE_PRIVATE:
 	  case MODE_MODERATED:
@@ -2268,8 +2272,10 @@ static int can_join(cptr, sptr, chptr, key, link, parv)
 			return (ERR_ADMONLY);
 	}
 
+#ifdef ENABLE_INVISOPER
 	if ((chptr->mode.mode & MODE_NOHIDING) && IsHiding(sptr))
 		return (ERR_NOHIDING);
+#endif
 
 	if ((IsOper(sptr) && !((chptr->mode.mode & MODE_ADMONLY))) && !(ib==0))
 	{
@@ -2741,9 +2747,12 @@ int  channel_link(cptr, sptr, parc, parv)
 		/*
 		   ** notify all other users on the new channel
 		 */
+#ifdef ENABLE_INVISOPER
 		if (!IsHiding(sptr))
+#endif
 			sendto_channel_butserv(chptr, sptr,
 			    ":%s JOIN :%s", parv[0], name);
+#ifdef ENABLE_INVISOPER
 		else
 		{
 			if (MyClient(sptr))
@@ -2756,6 +2765,7 @@ int  channel_link(cptr, sptr, parc, parv)
 			    "*** Invisibility -- %s (%s@%s) JOIN %s", sptr->name,
 			    sptr->user->username, sptr->user->realhost, chptr->chname);
 		}
+#endif
 		sendto_serv_butone_token(cptr, parv[0], MSG_JOIN,
 		    TOK_JOIN, name);
 
@@ -2964,6 +2974,7 @@ int  m_join(cptr, sptr, parc, parv)
 		/*
 		   ** notify all other users on the new channel
 		 */
+#ifdef ENABLE_INVISOPER
 		if (IsHiding(sptr))
 		{
 			if (MyClient(sptr))
@@ -2986,6 +2997,9 @@ int  m_join(cptr, sptr, parc, parv)
 			}
 		}
 		else if (chptr->mode.mode & MODE_AUDITORIUM)
+#else
+		if (chptr->mode.mode & MODE_AUDITORIUM)
+#endif
 		{
 			if (MyClient(sptr))
 				sendto_one(sptr, ":%s!%s@%s JOIN :%s",
@@ -3128,7 +3142,7 @@ int  m_part(cptr, sptr, parc, parv)
 
 		if (1)
 		{
-
+#ifdef ENABLE_INVISOPER
 			if (IsHiding(sptr))
 			{
 				if (MyClient(sptr))
@@ -3171,6 +3185,9 @@ int  m_part(cptr, sptr, parc, parv)
 						    chptr->chname, comment);
 			}
 			else if (chptr->mode.mode & MODE_AUDITORIUM)
+#else
+			if (chptr->mode.mode & MODE_AUDITORIUM)
+#endif
 			{
 				if (MyClient(sptr))
 				{
@@ -3317,6 +3334,7 @@ int  m_kick(cptr, sptr, parc, parv)
 					goto attack;
 				
 				/* Hiding patch by }{ */
+#ifdef ENABLE_INVISOPER
 				if (IsHiding(who))
 				{
 					sendto_one(sptr,
@@ -3328,7 +3346,7 @@ int  m_kick(cptr, sptr, parc, parv)
 					    chptr->chname, comment);
 					break;
 				}
-
+#endif
 				/* If you're kicking yourself, it really shouldn't matter what modes you have set
 				 * unless the channel is +Q
 				 */
@@ -4319,8 +4337,10 @@ int  m_names(cptr, sptr, parc, parv)
 		acptr = cm->value.cptr;
 		if (IsInvisible(acptr) && !member)
 			continue;
+#ifdef ENABLE_INVISOPER
 		if (IsHiding(acptr) && acptr != sptr && !(IsNetAdmin(sptr)))
 			continue;
+#endif
 		if (chptr->mode.mode & MODE_AUDITORIUM)
 			if (!is_chan_op(sptr, chptr)
 			    && !is_chanprot(sptr, chptr)
@@ -4855,7 +4875,9 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
                                 modeflags = 0;
                         }
                         add_user_to_channel(chptr, acptr, modeflags);
-                        if (!IsHiding(acptr))
+#ifdef ENABLE_INVISOPER
+			if (!IsHiding(acptr))
+#endif
                                 sendto_channel_butserv(chptr, acptr,
                                     ":%s JOIN :%s", nick,
                                     chptr->chname);

@@ -395,3 +395,8 @@ it will display real hosts instead of masked ones
 in the replies.
 --Luke
 ===================================
+
+Oper invisibility is no longer enabled by default
+but is a provided option in ./Config
+--Luke
+===================================
