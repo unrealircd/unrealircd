@@ -76,6 +76,40 @@ LRESULT SSLPassDLG(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam) {
 	}
 }
 #endif				
+
+char *ssl_error_str(int err)
+{
+     char *ssl_errstr = NULL;
+     switch(err) {
+    	case SSL_ERROR_NONE:
+	    ssl_errstr = "SSL: No error";
+	    break;
+	case SSL_ERROR_SSL:
+	    ssl_errstr = "Internal OpenSSL error or protocol error";
+	    break;
+	case SSL_ERROR_WANT_READ:
+	    ssl_errstr = "OpenSSL functions requested a read()";
+	    break;
+	case SSL_ERROR_WANT_WRITE:
+	    ssl_errstr = "OpenSSL functions requested a write()";
+	    break;
+	case SSL_ERROR_WANT_X509_LOOKUP:
+	    ssl_errstr = "OpenSSL requested a X509 lookup which didn`t arrive";
+	    break;
+	case SSL_ERROR_SYSCALL:
+	    ssl_errstr = "Underlying syscall error";
+	    break;
+	case SSL_ERROR_ZERO_RETURN:
+	    ssl_errstr = "Underlying socket operation returned zero";
+	    break;
+	case SSL_ERROR_WANT_CONNECT:
+	    ssl_errstr = "OpenSSL functions wanted a connect()";
+	    break;
+	default:
+	    ssl_errstr = "Unknown OpenSSL error (huh?)";
+     }
+     return (ssl_errstr);
+}
 				
 				
 int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
@@ -440,9 +474,11 @@ int ircd_SSL_client_handshake(aClient *acptr)
 		case -1: 
 			return -1;
 		case 0: 
+			Debug((DEBUG_DEBUG, "SetSSLConnectHandshake(%s)", get_client_name(acptr, TRUE)));
 			SetSSLConnectHandshake(acptr);
 			return 0;
 		case 1: 
+			Debug((DEBUG_DEBUG, "SSL_init_finished should finish this job (%s)", get_client_name(acptr, TRUE)));
 			/* SSL_init_finished in s_bsd will finish the job */
 			return 1;
 		default:
@@ -462,6 +498,7 @@ int ircd_SSL_accept(aClient *acptr, int fd) {
 			|| ERRNO == P_EAGAIN)
 	    case SSL_ERROR_WANT_READ:
 	    case SSL_ERROR_WANT_WRITE:
+		    Debug((DEBUG_DEBUG, "ircd_SSL_accept(%s), - %s", get_client_name(acptr, TRUE), ssl_error_str(ssl_err)));
 		    /* handshake will be completed later . . */
 		    return 1;
 	    default:
@@ -484,8 +521,11 @@ int ircd_SSL_connect(aClient *acptr) {
 			|| ERRNO == P_EAGAIN)
 	    case SSL_ERROR_WANT_READ:
 	    case SSL_ERROR_WANT_WRITE:
+	    	 {
+		    Debug((DEBUG_DEBUG, "ircd_SSL_connect(%s), - %s", get_client_name(acptr, TRUE), ssl_error_str(ssl_err)));
 		    /* handshake will be completed later . . */
 		    return 0;
+	         }
 	    default:
 		return fatal_ssl_error(ssl_err, SAFE_SSL_CONNECT, acptr);
 		
