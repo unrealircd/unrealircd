@@ -3340,7 +3340,11 @@ int  m_kick(cptr, sptr, parc, parv)
 				}
 
 				/* If you're +q, only netadmin can kick you. */
+#ifndef NO_OPEROVERRIDE
 				if (IsKix(who) && !IsNetAdmin(sptr))
+#else
+				if (IsKix(who))
+#endif
 				{
 					sendto_one(sptr,
 					    ":%s NOTICE %s :*** Cannot kick %s from channel %s (usermode +q)",
@@ -3350,19 +3354,56 @@ int  m_kick(cptr, sptr, parc, parv)
 					    me.name, who->name, parv[0], chptr->chname, comment);
 					goto deny;
 				}
+
+#ifndef NO_OPEROVERRIDE
+				if (IsServices(who) && !IsNetAdmin(sptr))
+#else
+				if (IsServices(who))
+#endif
+				{
+					sendto_one(sptr,
+					    ":%s NOTICE %s :*** Cannot kick %s from channel %s (usermode +S)",
+	    				    me.name, sptr->name, who->name, chptr->chname);
+    					goto deny;
+				}
 				
 				/* If oper override is defined, opers can take out just about anyone
 				 * (netadmin required to take out a service)
 				 */
 
 #ifndef NO_OPEROVERRIDE
-				if ((IsOper(sptr) && !IsServices(who)) || IsNetAdmin(sptr))
-				{
-					sendto_umode(UMODE_EYES, "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
-						     sptr->name, sptr->user->username, sptr->user->realhost,
-						     chptr->chname, who->name, comment);
-					goto attack;
-				}
+				/* Netadmin nailing +q user */
+				if (IsKix(who) && IsNetAdmin(sptr))
+					goto override;
+
+				/* Netadmin nailing services */
+				if (IsServices(who) && IsNetAdmin(sptr))
+					goto override;
+			
+				/* Overriding channel mode +Q */
+			        if ((chptr->mode.mode & MODE_NOKICKS) &&
+				     (IsOper(sptr) && !IsServices(who) || IsNetAdmin(sptr)))
+					goto override;	
+				
+				/* sptr isn't a channel operator or a halfop, automatically means override */
+				if ((!is_chan_op(sptr,chptr) && !is_halfop(sptr,chptr)) &&
+				     (IsOper(sptr) && !IsServices(who) || IsNetAdmin(sptr)))
+					goto override;
+				
+				/* Half op oper kicking a channel operator */
+				if (is_chan_op(who,chptr) && !is_chan_op(sptr,chptr) && is_halfop(sptr,chptr) &&
+				    (!IsServices(who) && IsOper(sptr) || IsNetAdmin(sptr)))
+					goto override;
+			
+				/* Oper taking out a protected user */	
+				if (is_chanprot(who,chptr) && !is_chanowner(sptr,chptr) &&
+			       	    (!IsServices(who) && IsOper(sptr) || IsNetAdmin(sptr)))
+					goto override;
+
+				/* Oper taking out channel owner */
+				if (is_chanowner(who,chptr) &&
+				    (!IsServices(who) && IsOper(sptr) || IsNetAdmin(sptr)))
+					goto override;
 #endif
 				
 				/* Channel has +Q set, nobody can get kicked.
@@ -3416,6 +3457,12 @@ int  m_kick(cptr, sptr, parc, parv)
 				    err_str(ERR_ATTACKDENY), me.name,
 				    parv[0], chptr->chname, user);
 				continue;
+
+			      override:
+                                sendto_umode(UMODE_EYES, "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
+                                sptr->name, sptr->user->username, sptr->user->realhost,
+                                chptr->chname, who->name, comment);
+                                goto attack;
 
 			      attack:
 				if (lp)
