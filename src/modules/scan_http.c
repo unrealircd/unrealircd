@@ -111,7 +111,7 @@ int    scan_http_Init(int module_load)
 	/*
 	 * Add scanning hooks
 	*/
-	HookAddIntEx(Mod_Handle, HOOKTYPE_SCAN_HOST, scan_http_scan); 
+	HookAddVoidEx(Mod_Handle, HOOKTYPE_SCAN_HOST, scan_http_scan); 
 	return MOD_SUCCESS;
 }
 
@@ -132,7 +132,7 @@ DLLFUNC int	Mod_Unload(int module_unload)
 int	scan_http_Unload(int module_unload)
 #endif
 {
-	HookDelEx(HOOKTYPE_SCAN_HOST, NULL, scan_http_scan);
+	HookDelVoid(HOOKTYPE_SCAN_HOST, scan_http_scan);
 }
 
 #define HICHAR(s)	(((unsigned short) s) >> 8)

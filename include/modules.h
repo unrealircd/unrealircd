@@ -194,9 +194,9 @@ int	Module_free(Module *mod);
 #define HookAdd(hooktype, func) HookAddMain(NULL, hooktype, func, NULL)
 #define HookAddEx(module, hooktype, func) HookAddMain(module, hooktype, func, NULL)
 #define HookDel(hooktype, func) HookDelEx(hooktype, func, NULL)
-#define HookAddInt(hooktype, func) HookAddMain(NULL, hooktype, NULL, func)
-#define HookAddIntEx(module, hooktype, func) HookAddMain(module, hooktype, NULL, func)
-#define HookDelInt(hooktype, func) HookDelEx(hooktype, NULL, func)
+#define HookAddVoid(hooktype, func) HookAddMain(NULL, hooktype, NULL, func)
+#define HookAddVoidEx(module, hooktype, func) HookAddMain(module, hooktype, NULL, func)
+#define HookDelVoid(hooktype, func) HookDelEx(hooktype, NULL, func)
 
 #define add_HookX(hooktype, func1, func2) HookAddMain(NULL, hooktype, func1, func2)
 #define del_HookX(hooktype, func1, func2) HookDelEx(hooktype, func1, func2)
