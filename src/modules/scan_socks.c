@@ -1,7 +1,26 @@
 /*
- * Scanning API Client Skeleton, by Carsten V. Munk 2001 <stskeeps@tspre.org>
- * May be used, modified, or changed by anyone, no license applies.
- * You may relicense this, to any license
+ *   IRC - Internet Relay Chat, src/modules/scan_socks.c
+ *   (C) 2001 Carsten Munk (Techie/Stskeeps) <stskeeps@tspre.org>
+ *
+ *   SOCKS4 scanning module for scan.so
+ *
+ *   See file AUTHORS in IRC package for additional names of
+ *   the programmers. 
+ *
+ *   This program is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 1, or (at your option)
+ *   any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program; if not, write to the Free Software
+ *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
  */
 #include "config.h"
 #include "struct.h"
@@ -33,13 +52,14 @@
 #include "version.h"
 #endif
 #include "modules/scan.h"
+#include "modules/blackhole.h"
 
 #ifndef SCAN_ON_PORT
 #define SCAN_ON_PORT 1080
 #endif
 
-iFP	xVS_add = NULL;
-
+iFP			xVS_add = NULL;
+ConfigItem_blackhole	*blackhole_conf = NULL;
 void	scan_socks_scan(HStruct *h);
 
 ModuleInfo scan_socks_info
@@ -76,9 +96,11 @@ void    scan_socks_init(void)
 	if (!xHSlock || !xVSlock || !xVS_add)
 	{
 		module_buffer = NULL;
-		ircd_log(LOG_ERROR, "scan_socks: i depend on scan.so");
+		config_error("scan_socks: i depend on scan.so");
 		return;
 	}	
+	
+	blackhole_conf = (ConfigItem_blackhole *) module_sym("blackhole_conf");
 	module_buffer = &scan_socks_info;
 	
 	/*
@@ -117,7 +139,7 @@ void	scan_socks_scan(HStruct *h)
 	struct			SOCKADDR_IN sin;
 	SOCKET				fd;
 	int				sinlen = sizeof(struct SOCKADDR_IN);
-	unsigned short	sport = SOCKSPORT;
+	unsigned short	sport = blackhole_conf->port;
 	unsigned char   socksbuf[12];
 	unsigned long   theip;
 	fd_set			rfds;
@@ -159,7 +181,7 @@ void	scan_socks_scan(HStruct *h)
 		goto exituniverse;
 	}
 				
-	sin.SIN_ADDR.S_ADDR = inet_addr("65.160.249.130");
+	sin.SIN_ADDR.S_ADDR = inet_addr(blackhole_conf->ip);
 	theip = htonl(sin.SIN_ADDR.S_ADDR);
 	bzero(socksbuf, sizeof(socksbuf));
 	socksbuf[0] = 4;

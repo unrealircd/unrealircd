@@ -570,3 +570,4 @@ seen. gmtime warning still there
 - Removed src/agent.c (empty file)
 - Removed src/userload.obj from the win32 makefile
 - Added link::options::quarantine suggested by DumbFish
+- Made blackhole.so work

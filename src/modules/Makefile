@@ -20,7 +20,8 @@
 #*/
 
 R_MODULES=m_sethost.so m_chghost.so m_chgident.so m_setname.so \
-		m_setident.so m_sdesc.so scan.so scan_socks.so
+		m_setident.so m_sdesc.so scan.so scan_socks.so \
+		blackhole.so
 
 COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
          m_sdesc.c
@@ -69,6 +70,10 @@ scan.so: scan.c $(INCLUDES)
 scan_socks.so: scan_socks.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(PTHREAD) -fPIC -DPIC -shared -DDYNAMIC_LINKING \
 		 -o scan_socks.so scan_socks.c
+
+blackhole.so: blackhole.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(PTHREAD) -fPIC -DPIC -shared -DDYNAMIC_LINKING \
+		 -o blackhole.so blackhole.c
 
 clean:
 	$(RM) -f *.o *.so *~ core

@@ -228,7 +228,7 @@ static OperFlag _LogFlags[] = {
 void 			config_free(ConfigFile *cfptr);
 ConfigFile 		*config_load(char *filename);
 ConfigEntry 		*config_find(ConfigEntry *ceptr, char *name);
-static void 		config_error(char *format, ...);
+void 			config_error(char *format, ...);
 static ConfigFile 	*config_parse(char *filename, char *confdata);
 static void 		config_entry_free(ConfigEntry *ceptr);
 int			ConfigParse(ConfigFile *cfptr);
@@ -301,7 +301,8 @@ void	ipport_seperate(char *string, char **ip, char **port)
 	        *port = (f + 1);
 	        f = strrchr(string, ']');
 	        if (f) *f = '\0';
-	        *ip = string;
+	        *ip = (*string == '[' ? (string + 1) : string);
+	        
 	}
 	else if (strchr(string, ':'))
 	{

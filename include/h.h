@@ -91,6 +91,7 @@ extern ConfigItem_allow_channel *conf_allow_channel;
 extern ConfigItem_deny_version	*conf_deny_version;
 extern ConfigItem_log		*conf_log;
 extern ConfigItem_unknown	*conf_unknown;
+extern ConfigItem_unknown_ext   *conf_unknown_set;
 extern void clear_unknown();
 EVENT(tkl_check_expire);
 

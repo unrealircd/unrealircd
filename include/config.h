@@ -454,7 +454,7 @@
  *
  * Undefining this will eliminate the checker from ircd.
  */
-#define SOCKSPORT 6013
+#undef SOCKSPORT 6013
 
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
 
