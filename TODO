@@ -48,3 +48,11 @@ TODO :
           Admin/Network Admin) and you are set +q/+a in a channel. When someone /whoises
           you hey see the channel names: *#channel ^#channel.
   Fix /whois ShowChannel code
+
+* stskeeps - Wed Dec 13 2000 - 5 - [ Bugfixes ]:
+[RexHsu(~webmin@202.109.72.rox-42822)] #TVB ÄÖÄÖ H root@61.151.53.User-42432
+          :0 none
+[RexHsu(~webmin@202.109.72.rox-42822)] #TVB ÄÖÄÖ H@
+          ~webmin@202.109.72.User-42822 :0 none
+[RexHsu(~webmin@202.109.72.rox-42822)] * End of /WHO list.
+     Chinese nicks "clash", this is not the right nicks i typed in
