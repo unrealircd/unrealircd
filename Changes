@@ -334,3 +334,4 @@
 - Fixed a bunch of +H bugs
 - Fixed a bug where the channel was still shown in /who for +I users
 - First part of ZIP_LINKS
+- Fixed a typo in ./newnet
