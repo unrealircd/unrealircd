@@ -21,7 +21,7 @@ ADMIN_HOST="admin.mynet.org"
 LOCOP_HOST="locop.mynet.org"
 CSOP_HOST="csop.mynet.org"
 NETADMIN_HOST="netadmin.mynet.org"
-TECHADMIN_HOST="techadmin.mynet.org"
+#TECHADMIN_HOST="techadmin.mynet.org"
 COADMIN_HOST="coadmin.mynet.org"
 HIDDEN_HOST="hide"
 NETDOMAIN="mynet.org"
@@ -156,13 +156,13 @@ if [ ! -z $cc ]; then
 	COADMIN_HOST="$cc"
 fi
 
-echo ""
-echo "What is the virtual host techadmins will get when they oper up?"
-echo $n "[$TECHADMIN_HOST] -> $c"
-read cc
-if [ ! -z $cc ]; then
-	TECHADMIN_HOST="$cc"
-fi
+#echo ""
+#echo "What is the virtual host techadmins will get when they oper up?"
+#echo $n "[$TECHADMIN_HOST] -> $c"
+#read cc
+#if [ ! -z $cc ]; then
+#	TECHADMIN_HOST="$cc"
+#fi
 
 echo ""
 echo "What is the virtual host netadmins will get when they oper up?"
