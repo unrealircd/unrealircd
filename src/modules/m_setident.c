@@ -199,13 +199,13 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	/* illegal?! */
 	for (s = vident; *s; s++)
 	{
+		if ((*s == '~') && (s == vident))
+			continue;
 		if (!isallowed(*s))
 		{
 			legalident = 0;
+			break;
 		}
-		if (*s == '~')
-			legalident = 1;
-
 	}
 
 	if (legalident == 0)

@@ -1955,3 +1955,4 @@ seen. gmtime warning still there
 - Added except throttle {}, only working when #define THROTTLE
 - Doc/text updates
 - Changed version to beta15
+- Fixed /setident bug
