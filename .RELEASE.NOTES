@@ -1,58 +1,80 @@
 
-Unreal3.2-beta17 Release Notes
+Unreal3.2-beta18 Release Notes
 ======================================
 
 ==[ GENERAL INFORMATION ]==
 * If you are upgrading, make sure you run ./Config and make clean before doing make
-* The official UnrealIRCd documentation is doc/unreal32docs.html (also contains a FAQ),
-  read it before asking for help.
+* The official UnrealIRCd documentation is doc/unreal32docs.html
+  online version at: http://www.vulnscan.org/UnrealIrcd/unreal32docs.html
+  FAQ: http://www.vulnscan.org/UnrealIrcd/faq/
+  Read them before asking for help.
 * Report bugs at http://bugs.unrealircd.org/
-* This is a forced release because of a security bug, so not many new features.
-
-==[ REMOVED ]==
-Nothing.
+* This release adds a lot nice new features and fixes most win32 crashes.
 
 == [NEW FEATURES (see unreal32docs.html for more information) ]==
-* Implemented short motds (ircd.smotd). When a user connects ircd.smotd is displayed 
-  (or a tld::shortmotd). This file contains brief text. Alternatively, ircd.motd (or
-  tld::motd) is displayed when a user types /motd. The idea behind this is instead of
-  displaying huge ASCII art, and tons of text to every user when they connect (since
-  most users will ignore it anyway) you only show that stuff to users who specifically
-  request it. If you choose not to use short motds, everything will function as it used to.
-* Added set::ident::connect-timeout (default 10s) and set::ident::read-timeout (default 30s) to
-  give much more control over ident timeouts, this should also fix connection timeout problems
-  during connecting.
-* Added deny channel::redirect, which allows you to forward a client to another channel
-  if the one he/she joined is not allowed. can also be used for channel "aliases" like
-  #operhelp sends people to #help.
-* Added set::options::mkpasswd-for-everyone to let normal users use /mkpasswd.
-* MacOS X support, you need dlcompat package installed in /usr for this to work
+* ChannelMode +f has been changed a lot, it's an advanced anti-flood mode now.
+  It can protect against: joinflood, ctcpflood, msgflood, nickflood and knockflood.
+  For example: +f [30j,50m]:15 means max 30 joins and 50 messages are allowed per
+  15 seconds, if the max joins limit is reached the channel is automatically put +i,
+  if the messages limit is reached the channel is put +m.
+  For more info see: http://www.vulnscan.org/UnrealIrcd/unreal32docs.html#feature_antiflood
+  You might want to enable it by default via set::modes-on-join.
+* The /stats system has been recoded, some new features:
+  * extended flags for shun and kline, for example:
+    "/stats G +m *aol.com" will display all glines matching *aol.com.
+  * support for long flags, like: /stats exceptban
+* Finally support for up to 32 new channelmodes, all of which can be done in modules
+  (currently disabled by default). SnoMask module support has been added as well.
+* Added nickflood protection, set::anti-flood::nick-flood, this is
+  enabled by default and set at 3:60 (max 3 nickchanges per 60 seconds).
+* The win32 editor has been improved: better handling of mIRC codes, short motd editting,
+  goto button, find text feature, etc..
+* A new deny channel :: warn option, this will inform opers (with eyes snomask) that the
+  user was trying to join the forbidden channel.
+* official-channels support, these channels are shown in /list even if they have 0 users,
+  you can also a default topic which is shown in /list.
+* Added badwords all { }, you can use this instead of using a badwords channel,
+  badword message and badword quit block for the same word.
+* Added set::channel-command-prefix to allow channel text which starts with specific
+  characters to be sent to +d clients (for in channel commands).
+* You can now set the default bantime for a gline/kline/gzline/.. in set::default-bantime
+  (like for /gline *@*.something.net)
+* A README file has been added.
+* Will now strip/block color codes in quits if the user is in a +S/+c channel.
 
-==[ UPDATED ]==
-* ban version {} now also checks for SCRIPT replies
-* module updates (module coders should check Changes)
-* Renamed channel mode +a to "channel admin"
-* IPv6: UnrealIRCd can now lookup ip6.arpa addresses too
+==[ CHANGED ]==
+* We will now error at too large cloak keys (>2147483646)
+* away-flood configuration now works just like nick-flood,
+  it's also enabled by default at 4 per 120s.
+* badword filtering is now only done at the first server (source),
+  this can reduce CPU usage a lot, especially at hubs.
 
 ==[ MAJOR BUGS FIXED ]==
-* Security fixes, including a bug which allows any user to crash the ircd
-* Several win32 resolver fixes
-* "make install" fixed, was broken in beta16
-* badword::action block with regex (non-fast) badwords could cause a crash
-* misc /whois and webtv fixes
-* /who cleanup & bugfixes
-* /join cleanup: multiple chanmode +L fixes
-* IPv6 resolver
-* SVS* bug which could cause server notices to be sent to random users
-* Solaris/SunOS compile fixes
-* MOTD cleanup: fixes remote MOTD gone after rehash etc
+* The buggy windows resolver has been replaced with the *NIX resolver,
+  the win-resolver was the main cause of unrealircd@windows crashes.
+* services-related crashbug found 24h after beta17 release :(
+* ban version crash
+* UnrealIRCd should now be able to run fine at PowerPC.
+* No security related fixes this release.
+
+==[ MINOR BUGS FIXED ]==
+* oper::swhois wasn't working correctly (/whois from remote servers).
+* /silence with cloaked hosts
+* trafficstats were sometimes incorrect (/stats T and /HTM).
+* multiple channelmode +(m)u fixes, most of them were multiserver related.
+* IPv6: FreeBSD has support for ::ffff:1.2.3.4 alike IPs disabled by default,
+  we will now spit out some information about this if binding to such IPs fails.  
+* Fixed a chroot bug
+* Made /restart work at windows in service mode.
+* A few +b/+e bugfixes
+* Allow o/a/q'd people to nickchange if banned
+* Added some missing info to /stats
+* etc..
 
 ==[ ADDITIONAL INFO ]==
-* There's experimental "+a/+q with symbol" support in this version (you need to enable it
-  in config.h explicitly). Full support will be in next release.
 * See Changelog
 
-============================= (old release notes below) ==============================
+========================= (pretty old release notes below) ==========================
 [this has been editted a bit]
 
 * Unreal3.2 is a lot different than Unreal3.1.1. Forget all you have
