@@ -104,6 +104,7 @@ char REPORT_DO_SOCKS[128], REPORT_NO_SOCKS[128], REPORT_GOOD_SOCKS[128];
 #endif
 #endif
 aClient me;			/* That's me */
+char	*me_hash;
 aClient *client = &me;		/* Pointer to beginning of Client list */
 extern char backupbuf[8192];
 
@@ -1073,8 +1074,8 @@ int  InitwIRCD(argc, argv)
 #endif
 	SetMe(&me);
 	make_server(&me);
-	(void)find_or_add(me.name);
-	me.serv->up = find_or_add(me.name);
+	me_hash = find_or_add(me.name);
+	me.serv->up = me_hash;
 
 	me.lasttime = me.since = me.firsttime = TStime();
 	(void)add_to_client_hash_table(me.name, &me);

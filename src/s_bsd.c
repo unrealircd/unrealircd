@@ -419,8 +419,7 @@ int  add_listener(aconf)
  * close_listeners
  *
  * Close and free all clients which are marked as having their socket open
- * and in a state where they can accept connections.  Unix sockets have
- * the path to the socket unlinked for cleanliness.
+ * and in a state where they can accept connections. 
  */
 void close_listeners()
 {
@@ -429,8 +428,7 @@ void close_listeners()
 	aConfItem *aconf;
 
 	/*
-	 * close all 'extra' listening ports we have and unlink the file
-	 * name if it was a unix socket.
+	 * close all 'extra' listening ports we have
 	 */
 	for (i = highest_fd; i >= 0; i--)
 	{
@@ -660,8 +658,7 @@ int  check_client(cptr)
 	if (check_init(cptr, sockname))
 		return -2;
 
-	if (!IsUnixSocket(cptr))
-		hp = cptr->hostp;
+	hp = cptr->hostp;
 	/*
 	 * Verify that the host to ip mapping is correct both ways and that
 	 * the ip#(s) for the socket is listed for the host.
@@ -763,7 +760,7 @@ int  check_server_init(cptr)
 	   ** real name, then check with it as the host. Use gethostbyname()
 	   ** to check for servername as hostname.
 	 */
-	if (!IsUnixSocket(cptr) && !cptr->hostp)
+	if (!cptr->hostp)
 	{
 		aConfItem *aconf;
 
@@ -916,14 +913,13 @@ int  check_server(cptr, hp, c_conf, n_conf, estab)
 	(void)attach_conf(cptr, c_conf);
 	(void)attach_confs(cptr, name, CONF_HUB | CONF_LEAF | CONF_UWORLD);
 #ifdef INET6
-	if ((AND16(c_conf->ipnum.s6_addr) == 255) && !IsUnixSocket(cptr))
+	if ((AND16(c_conf->ipnum.s6_addr) == 255))
 #else
-	if ((c_conf->ipnum.S_ADDR == -1) && !IsUnixSocket(cptr))
+	if (c_conf->ipnum.S_ADDR == -1)
 #endif
 		bcopy((char *)&cptr->ip, (char *)&c_conf->ipnum,
 		    sizeof(struct IN_ADDR));
-	if (!IsUnixSocket(cptr))
-		get_sockhost(cptr, c_conf->host);
+	get_sockhost(cptr, c_conf->host);
 
 	Debug((DEBUG_DNS, "sv_cl: access ok: %s[%s]", name, cptr->sockhost));
 	if (estab)

@@ -189,7 +189,7 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 #define	FLAGS_DEADSOCKET 0x0002	/* Local socket is dead--Exiting soon */
 #define	FLAGS_KILLED     0x0004	/* Prevents "QUIT" from being sent for this */
 #define	FLAGS_BLOCKED    0x0008	/* socket is in a blocked condition */
-#define	FLAGS_UNIX	 0x0010	/* socket is in the unix domain, not inet */
+/* #define	FLAGS_UNIX	 0x0010	 */ 
 #define	FLAGS_CLOSING    0x0020	/* set when closing to suppress errors */
 #define	FLAGS_LISTEN     0x0040 /* used to mark clients which we listen() on */
 #define	FLAGS_CHKACCESS  0x0080 /* ok to check clients access if set */
@@ -305,7 +305,6 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 #define	IsPrivileged(x)		(IsAnOper(x) || IsServer(x))
 #define	SendWallops(x)		((x)->umodes & UMODE_WALLOP)
 #define	SendServNotice(x)	((x)->umodes & UMODE_SERVNOTICE)
-#define	IsUnixSocket(x)		((x)->flags & FLAGS_UNIX)
 #define	IsListening(x)		((x)->flags & FLAGS_LISTEN)
 #define	DoAccess(x)		((x)->flags & FLAGS_CHKACCESS)
 #define	IsLocal(x)		((x)->flags & FLAGS_LOCAL)
@@ -344,7 +343,6 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 #define	SetInvisible(x)		((x)->umodes |= UMODE_INVISIBLE)
 #define SetEyes(x)		((x)->umodes |= UMODE_EYES)
 #define	SetWallops(x)  		((x)->umodes |= UMODE_WALLOP)
-#define	SetUnixSock(x)		((x)->flags |= FLAGS_UNIX)
 #define	SetDNS(x)		((x)->flags |= FLAGS_DOINGDNS)
 #define	DoingDNS(x)		((x)->flags & FLAGS_DOINGDNS)
 #define	SetAccess(x)		((x)->flags |= FLAGS_CHKACCESS)

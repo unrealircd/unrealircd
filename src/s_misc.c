@@ -61,6 +61,7 @@ extern float currentrate;
 extern float currentrate2;
 #endif
 extern ircstats IRCstats;
+extern char	*me_hash;
 
 ID_CVS("$Id$");
 static void exit_one_client PROTO((aClient *, aClient *, aClient *, char *));
@@ -266,37 +267,25 @@ char *get_client_name(sptr, showip)
 
 	if (MyConnect(sptr))
 	{
-		if (IsUnixSocket(sptr))
+		if (showip)
+			(void)ircsprintf(nbuf, "%s[%s@%s.%u]",
+			    sptr->name,
+			    (!(sptr->flags & FLAGS_GOTID)) ? "" :
+			    sptr->username,
+#ifdef INET6
+			    inetntop(AF_INET6,
+			    (char *)&sptr->ip, mydummy, MYDUMMY_SIZE),
+#else
+			    inetntoa((char *)&sptr->ip),
+#endif
+			    (unsigned int)sptr->port);
+		else
 		{
-			if (showip)
+			if (mycmp(sptr->name, sptr->sockhost))
 				(void)ircsprintf(nbuf, "%s[%s]",
 				    sptr->name, sptr->sockhost);
 			else
-				(void)ircsprintf(nbuf, "%s[%s]",
-				    sptr->name, me.sockhost);
-		}
-		else
-		{
-			if (showip)
-				(void)ircsprintf(nbuf, "%s[%s@%s.%u]",
-				    sptr->name,
-				    (!(sptr->flags & FLAGS_GOTID)) ? "" :
-				    sptr->username,
-#ifdef INET6
-				    inetntop(AF_INET6,
-				    (char *)&sptr->ip, mydummy, MYDUMMY_SIZE),
-#else
-				    inetntoa((char *)&sptr->ip),
-#endif
-				    (unsigned int)sptr->port);
-			else
-			{
-				if (mycmp(sptr->name, sptr->sockhost))
-					(void)ircsprintf(nbuf, "%s[%s]",
-					    sptr->name, sptr->sockhost);
-				else
-					return sptr->name;
-			}
+				return sptr->name;
 		}
 		return nbuf;
 	}
@@ -312,13 +301,10 @@ char *get_client_host(cptr)
 		return cptr->name;
 	if (!cptr->hostp)
 		return get_client_name(cptr, FALSE);
-	if (IsUnixSocket(cptr))
-		(void)ircsprintf(nbuf, "%s[%s]", cptr->name, me.name);
-	else
-		(void)ircsprintf(nbuf, "%s[%-.*s@%-.*s]",
-		    cptr->name, USERLEN,
-		    (!(cptr->flags & FLAGS_GOTID)) ? "" : cptr->username,
-		    HOSTLEN, cptr->hostp->h_name);
+	(void)ircsprintf(nbuf, "%s[%-.*s@%-.*s]",
+	    cptr->name, USERLEN,
+	    (!(cptr->flags & FLAGS_GOTID)) ? "" : cptr->username,
+	    HOSTLEN, cptr->hostp->h_name);
 	return nbuf;
 }
 
@@ -709,8 +695,8 @@ static void exit_one_client_backend(cptr, sptr, from, comment, split)
 			sendto_common_channels(sptr, ":%s QUIT :%s",
 			    sptr->name, comment);
 
-			if (!IsULine(cptr, sptr) && !MyClient(sptr) && !split)
-				if (!MyClient(sptr))
+			if (!IsULine(cptr, sptr) && !split)
+				if (sptr->user->server != me_hash)
 					sendto_umode(UMODE_FCLIENT,
 					    "*** Notice -- Client exiting at %s: %s!%s@%s (%s)",
 					    sptr->user->server, sptr->name,

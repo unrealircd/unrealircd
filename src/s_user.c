@@ -64,6 +64,7 @@ static is_silenced PROTO((aClient *, aClient *));
 
 int  sendanyways = 0;
 int  dontspread = 0;
+extern char *me_hash;
 extern ircstats IRCstats;
 
 static char buf[BUFSIZE], buf2[BUFSIZE];
@@ -633,10 +634,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			MyFree(tmpx);
 			return xx;
 		}
-		if (IsUnixSocket(sptr))
-			strncpyzt(user->realhost, me.sockhost,
-			    sizeof(user->realhost));
-		else if (sptr->hostp)
+		if (sptr->hostp)
 		{
 			/* No control-chars or ip-like dns replies... I cheat :)
 			   -- OnyxDragon */
@@ -2916,7 +2914,7 @@ int  m_user(cptr, sptr, parc, parv)
 	}
 
 	strncpyzt(user->realhost, host, sizeof(user->realhost));
-	user->server = me.name;
+	user->server = me_hash;
       user_finish:
 	user->servicestamp = sstamp;
 	strncpyzt(sptr->info, realname, sizeof(sptr->info));
@@ -3116,12 +3114,9 @@ int  m_kill(cptr, sptr, parc, parv)
 			   **   ...!operhost!oper
 			   **   ...!operhost!oper (comment)
 			 */
-			if (IsUnixSocket(cptr))	/* Don't use get_client_name syntax */
-				strcpy(inpath, me.name);
-			else
-				strcpy(inpath,
-				    IsHidden(cptr) ? cptr->user->
-				    virthost : cptr->user->realhost);
+			strcpy(inpath,
+			    IsHidden(cptr) ? cptr->user->
+			    virthost : cptr->user->realhost);
 			if (kcount < 2)	/* Only check the path the first time 
 					   around, or it gets appended to itself. */
 				if (!BadPtr(path))

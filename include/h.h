@@ -175,7 +175,6 @@ extern	void	report_error PROTO((char *, aClient *));
 extern	void	set_non_blocking PROTO((int, aClient *));
 extern	int	setup_ping PROTO(());
 extern	void	summon PROTO((aClient *, char *, char *, char *));
-extern	int	unixport PROTO((aClient *, char *, int));
 extern	int	utmp_open PROTO(());
 extern	int	utmp_read PROTO((int, char *, char *, char *, int));
 extern	int	utmp_close PROTO((int));
