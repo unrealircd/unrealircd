@@ -189,7 +189,8 @@ char	*Inet_si2pB(struct SOCKADDR_IN *sin, char *buf, int sz)
 	
 		return (buf);
 	}
-	return ((char *)inetntop(AFINET, &sin->SIN_ADDR.s6_addr, buf, sz));
+	else
+		return ((char *)inetntop(AFINET, &sin->SIN_ADDR.s6_addr, buf, sz));
 #else
 	return ((char *)inet_ntoa(sin->SIN_ADDR));	
 #endif
@@ -208,6 +209,22 @@ char	*Inet_ia2p(struct IN_ADDR *ia)
 #ifndef INET6
 	return(inet_ntoa(ia));
 #else
-	return(inet_ntop(AFINET, ia, buf, sizeof(buf)));
+	/* Hack to make proper addresses */
+	u_char	*cp;
+	
+	cp = (u_char *)((struct IN_ADDR *)ia)->s6_addr;
+	if (cp[0] == 0 && cp[1] == 0 && cp[2] == 0 && cp[3] == 0 && cp[4] == 0
+	    && cp[5] == 0 && cp[6] == 0 && cp[7] == 0 && cp[8] == 0
+	    && cp[9] == 0 && cp[10] == 0xff
+	    && cp[11] == 0xff)
+	{
+		(void)ircsprintf(buf, "%u.%u.%u.%u",
+		    (u_int)(cp[12]), (u_int)(cp[13]),
+		    (u_int)(cp[14]), (u_int)(cp[15]));
+	
+		return (buf);
+	}
+	else
+		return((char *)inet_ntop(AFINET, ia, buf, sizeof(buf)));
 #endif
 }

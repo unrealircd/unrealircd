@@ -683,7 +683,7 @@ extern int register_user(cptr, sptr, nick, username, umode, virthost)
 			if (*tmpstr || !*user->realhost
 			    || isdigit(*(tmpstr - 1)))
 				strncpyzt(sptr->sockhost,
-				    (char *)inetntoa((char *)&sptr->ip), sizeof(sptr->sockhost));	/* Fix the sockhost for debug jic */
+				    (char *)Inet_ia2p((struct IN_ADDR*)&sptr->ip), sizeof(sptr->sockhost));	/* Fix the sockhost for debug jic */
 			strncpyzt(user->realhost, sptr->sockhost,
 			    sizeof(sptr->sockhost));
 		}
