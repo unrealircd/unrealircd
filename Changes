@@ -858,3 +858,4 @@ seen. gmtime warning still there
 - Added aliases/ which contains config files for aliases to some popular IRC services (more will be added)
 - Made makeconf load scan_http.so
 - Fixed a /who bug, found by IXpfah
+- Updated makefile.win32 for all the new modules
