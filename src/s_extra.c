@@ -236,7 +236,7 @@ void dcc_wipe_services(void)
 	
 	for (dconf = conf_deny_dcc; dconf; dconf = (ConfigItem_deny_dcc *) next)
 	{
-		next = dconf->next;
+		next = (ConfigItem_deny_dcc *)dconf->next;
 		if ((dconf->flag.type2 == CONF_BAN_TYPE_AKILL))
 		{
 			DelListItem(dconf, conf_deny_dcc);

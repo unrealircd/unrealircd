@@ -13,6 +13,15 @@ fi
 if test "$ac_cv_gcc3" = "yes"; then
 CFLAGS="$CFLAGS -Wnone"
 fi
+AC_CACHE_CHECK(if gcc has a working -pipe, ac_cv_pipe, [
+	save_cflags="$CFLAGS"
+	CFLAGS="$CFLAGS -pipe"
+	AC_TRY_COMPILE(,, ac_cv_pipe="yes", ac_cv_pipe="no")
+	CFLAGS="$save_cflags"
+])
+if test "$ac_cv_pipe" = "yes"; then
+CFLAGS="-pipe $CFLAGS"
+fi
 fi
 
 AC_PATH_PROG(RM,rm)

@@ -1135,3 +1135,5 @@ v- Fixed some bugreport stuff
 - Fixed some minor issues with dialog interface for .pem SSL passwords
 - Added makecert.bat / encpem.bat to src/win32, which are used in SSL release
 - Fixed some t.next's and replaced with codemastr method(tm)
+- Fixed a t.next recode typo
+- Added a ./Config check to see if gcc supports -pipe (speeds up compilation)
