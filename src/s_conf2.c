@@ -1136,6 +1136,8 @@ void	report_configuration(void)
 	ConfigItem_oper		*oper_ptr;
 	ConfigItem_oper_from	*from_ptr;
 	ConfigItem_class	*class_ptr;
+	ConfigItem_ulines	*uline_ptr;
+	ConfigItem_tld		*tld_ptr;
 	
 	printf("Report:\n");
 	printf("-------\n");
@@ -1177,6 +1179,29 @@ void	report_configuration(void)
 			printf("         * maxclients: %i\n", class_ptr->maxclients);
 			printf("         * sendq: %i\n", class_ptr->sendq);
 		}
+	}
+	if (conf_drpass)
+	{
+		printf("I also got a Die/Restart password pair\n");
+		printf("         * restart: %s\n", conf_drpass->restart);
+		printf("         *     die: %s\n", conf_drpass->die);
+	}
+	if (conf_ulines)
+	{
+		printf("Got some Ulines configured too:\n");
+		for (uline_ptr = conf_ulines; uline_ptr; uline_ptr = (ConfigItem_ulines *) uline_ptr->next)
+		{
+			printf("       * %s\n", uline_ptr->servername);	
+		}
+	}
+	if (conf_tld)
+	{
+		printf("Got some TLDs:\n");
+		for (tld_ptr = conf_tld; tld_ptr; tld_ptr = (ConfigItem_tld *) tld_ptr->next)
+			printf("       * %s (motd=%s) (rules=%s)\n",
+					tld_ptr->mask,
+					(tld_ptr->motd ? tld_ptr->motd : "no motd"),		
+					(tld_ptr->rules ? tld_ptr->rules : "no rules"));
 	}
 }
 
