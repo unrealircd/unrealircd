@@ -2118,3 +2118,4 @@ seen. gmtime warning still there
 - Fixed a bug where opers without can_override could still operoverride with /topic,
   (#0000942) reported by Rocko
 - Added verification that a vhost::vhost is valid (#0000924) reported by AngryWolf and ChRiS
+- Fixed "make install" error caused by bugreport file removal.

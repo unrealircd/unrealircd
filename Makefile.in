@@ -218,7 +218,7 @@ install: all
 	$(TOUCH) $(IRCDDIR)/unrealircd.conf
 	chmod 0600 $(IRCDDIR)/unrealircd.conf
 	$(INSTALL) -m 0600 badwords.*.conf help.conf LICENSE Donation $(IRCDDIR)
-	$(INSTALL) -m 0700 bugreport unreal $(IRCDDIR)
+	$(INSTALL) -m 0700 unreal $(IRCDDIR)
 	$(INSTALL) -m 0700 -d $(IRCDDIR)/modules
 	$(INSTALL) -m 0700 src/modules/*.so $(IRCDDIR)/modules
 
