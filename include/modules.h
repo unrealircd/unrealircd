@@ -514,7 +514,7 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_LOCAL_PART 19
 #define HOOKTYPE_LOCAL_KICK 20
 #define HOOKTYPE_LOCAL_CHANMODE 21
-#define HOOKTYPE_LOCAL_TOPIC 22
+#define HOOKTYPE_TOPIC 22
 #define HOOKTYPE_LOCAL_OPER 23
 #define HOOKTYPE_UNKUSER_QUIT 24
 #define HOOKTYPE_LOCAL_PASS 25

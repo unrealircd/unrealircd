@@ -4602,6 +4602,7 @@ CMD_FUNC(m_topic)
 #else
 			strncpyzt(chptr->topic_nick, tnick, nicKlen + 1);
 #endif
+			RunHook4(HOOKTYPE_TOPIC, cptr, sptr, chptr, topic);
 			if (ttime && IsServer(cptr))
 				chptr->topic_time = ttime;
 			else
