@@ -1,6 +1,6 @@
 ; dlltool --output-def wircd.def.in --export-all-symbols SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ SRC/S_NUMERIC.OBJ SRC/WHOWAS.OBJ SRC/S_AUTH.OBJ SRC/HELP.OBJ SRC/S_MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ SRC/S_DEBUG.OBJ SRC/SUPPORT.OBJ SRC/LIST.OBJ SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/S_BSD.OBJ SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/VERSION.OBJ SRC/RES_INIT.OBJ SRC/RES_COMP.OBJ SRC/RES_MKQUERY.OBJ SRC/RES_SKIPNAME.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MD5.OBJ SRC/EXTBANS.OBJ
 EXPORTS
-	find_Command_simple
+	find_CommandEx
 	AllUmodes
 	AllowClient
 	AuthTypes
@@ -390,6 +390,8 @@ EXPORTS
 	del_queries
 	del_silence
 	del_throttling_bucket
+	delete_classblock
+	delete_linkblock
 	delfrom_fdlist
 	deliver_it
 	dgets
@@ -416,6 +418,7 @@ EXPORTS
 	extban_init
 	extban_modec_conv_param
 	extban_modec_is_banned
+	extban_moden_is_banned
 	extban_modeq_is_banned
 	extban_moder_conv_param
 	extban_moder_is_banned
@@ -432,7 +435,7 @@ EXPORTS
 	fast_badword_match
 	fast_badword_replace
 	find_Command
-	find_CommandEx
+	find_Command_simple
 	find_by_hash
 	find_chasing
 	find_client
@@ -640,6 +643,7 @@ EXPORTS
 	make_user_host
 	make_virthost
 	match
+	match_ip
 	match_ipv4
 	max_client_count
 	max_connection_count
