@@ -684,6 +684,8 @@ int oper = IsAnOper(sptr);
 	  char *channel;
 	  int flg;
 
+	  if (!IsPerson(acptr))
+	  	continue;
 	  if (!oper) {
 		if (match(mask, acptr->name))
 			continue;
