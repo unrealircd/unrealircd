@@ -91,5 +91,10 @@ scan_socks.so: scan_socks.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		 -o scan_socks.so scan_socks.c
 
+web/httpd.so: web/httpd.c web/u_stats.c web/vfs.c web/phtml.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		 -o web/httpd.so web/httpd.c web/u_stats.c web/vfs.c web/phtml.c
+
+
 clean:
 	$(RM) -f *.o *.so *~ core
