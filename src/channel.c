@@ -139,7 +139,7 @@ aCtab cFlagTab[] = {
 	{MODE_NOKNOCK, 'K', 0, 0},	/* knock knock (no way!) */
 	{MODE_NOINVITE, 'V', 0, 0},	/* no invites */
 	{MODE_FLOODLIMIT, 'f', 0, 1},	/* flood limiter */
-	{MODE_NOHIDING, 'H', 0, 0},	/* no +I joiners */
+	{MODE_MODREG, 'M', 0, 0},	/* Need umode +r to talk */
 #ifdef STRIPBADWORDS
 	{MODE_STRIPBADWORDS, 'G', 0, 0},	/* no badwords */
 #endif
@@ -716,6 +716,7 @@ int  is_chanprot(aClient *cptr, aChannel *chptr)
 #define CANNOT_SEND_NOCOLOR 3
 #define CANNOT_SEND_BAN 4
 #define CANNOT_SEND_NOCTCP 5
+#define CANNOT_SEND_MODREG 6
 
 int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 {
@@ -737,7 +738,11 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 		return (CANNOT_SEND_NOPRIVMSGS);
 
 	lp = find_membership_link(cptr->user->channel, chptr);
-
+	if ((chptr->mode.mode & MODE_MODREG) && !IsRegNick(cptr) && 
+	    (!lp
+	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
+	    CHFL_HALFOP | CHFL_CHANPROT))))
+		return CANNOT_SEND_MODREG;
 	if (chptr->mode.mode & MODE_MODERATED &&
 	    (!lp
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
@@ -1629,22 +1634,13 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  break;
 		  }
 		  goto setthephuckingmode;
-	  case MODE_NOHIDING:
-		  if (!IsSkoAdmin(cptr) && !IsServer(cptr)
-		      && !IsULine(cptr))
-		  {
-			  sendto_one(cptr,
-			      ":%s %s %s :*** No Hiding mode (+H) can only be set by Administrators.",
-			      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
-			  break;
-		  }
-		  goto setthephuckingmode;
 	  case MODE_SECRET:
 	  case MODE_PRIVATE:
 	  case MODE_MODERATED:
 	  case MODE_TOPICLIMIT:
 	  case MODE_NOPRIVMSGS:
 	  case MODE_RGSTRONLY:
+	  case MODE_MODREG:
 	  case MODE_NOCOLOR:
 	  case MODE_NOKICKS:
 	  case MODE_STRIP:

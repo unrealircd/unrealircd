@@ -3524,7 +3524,7 @@ CMD_FUNC(m_rehash)
 	if (!BadPtr(parv[1]))
 	{
 
-		if (!IsAdmin(sptr))
+		if (!IsAdmin(sptr) && !IsCoAdmin(sptr))
 		{
 			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 			return 0;

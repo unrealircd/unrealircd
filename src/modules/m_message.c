@@ -154,6 +154,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 		"Colour is not permitted in this channel",
 		"You are banned",
 		"CTCPs are not permitted in this channel",
+		"You must have a registered nick (+r) to talk on this channel",
 		NULL
 	};
 

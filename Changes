@@ -1902,3 +1902,7 @@ seen. gmtime warning still there
 - Fixed link::port bug reported by AngryWolf: was signed so ports >32767 had problems
 - Fixed a win32 bug that could cause crashes when editting files. Reported by camje_lemon
   (#0000717)
+- Removed channel mode +H (not needed without umode +I)
+- Allow coadmins to use /rehash -flags. Suggested by kyotou
+- Added channel mode +M. Can't talk unless you are using a registered nick. Suggested by 
+  CaliMonk
