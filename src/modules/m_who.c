@@ -207,7 +207,7 @@ static void who_sendhelp(aClient *sptr)
     "Flag h <host>:          user has string <host> in his/her hostname,",
     "                        wildcards accepted",
     "Flag m <usermodes>:     user has <usermodes> set, only",
-    "                        O/o/C/A/a/N are allowed",
+    "                        O/o/C/A/a/N/B are allowed",
     "Flag n <nick>:          user has string <nick> in his/her nickname,",
     "                        wildcards accepted",
     "Flag s <server>:        user is on server <server>,",
@@ -353,7 +353,7 @@ int i = 1;
 					}
 
 					if (!IsAnOper(sptr))
-						*umodes = *umodes & (UMODE_OPER | UMODE_LOCOP | UMODE_SADMIN | UMODE_ADMIN | UMODE_COADMIN | UMODE_NETADMIN);
+						*umodes = *umodes & (UMODE_OPER | UMODE_LOCOP | UMODE_SADMIN | UMODE_ADMIN | UMODE_COADMIN | UMODE_NETADMIN | UMODE_BOT);
 					if (*umodes == 0)
 						return -1;
 				}
@@ -605,6 +605,9 @@ int i = 0;
 
 	if (IsARegNick(acptr))
 		status[i++] = 'r';
+
+	if (acptr->umodes & UMODE_BOT)
+		status[i++] = 'B';
 
 	if (IsAnOper(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
 		status[i++] = '*';

@@ -446,3 +446,6 @@
   (#0002134) reported by Bugz.
 - Fixed small memory leak on /rehash (post-3.2.2).
 - Fixed botmotd crash due to last change (post-3.2.2).
+- Updated the Donation file
+- Added a 'B' flag to /who output for bots, and allowed normal users to /who +m B
+  (#0002096) suggested by White_Magic
