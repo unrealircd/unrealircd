@@ -1265,6 +1265,8 @@ int stats_set(aClient *sptr, char *para)
 		sptr->name, pretty_time_val(SPAMFILTER_BAN_TIME));
 	sendto_one(sptr, ":%s %i %s :spamfilter::ban-reason: %s", me.name, RPL_TEXT,
 		sptr->name, SPAMFILTER_BAN_REASON);
+	sendto_one(sptr, ":%s %i %s :spamfilter::virus-help-channel: %s", me.name, RPL_TEXT,
+		sptr->name, SPAMFILTER_VIRUSCHAN);
 	sendto_one(sptr, ":%s %i %s :hosts::global: %s", me.name, RPL_TEXT,
 	    sptr->name, oper_host);
 	sendto_one(sptr, ":%s %i %s :hosts::admin: %s", me.name, RPL_TEXT,

@@ -52,8 +52,8 @@
 #endif
 #include "badwords.h"
 
-#define ircstrdup(x,y) if (x) MyFree(x); if (!y) x = NULL; else x = strdup(y)
-#define ircfree(x) if (x) MyFree(x); x = NULL
+#define ircstrdup(x,y) do { if (x) MyFree(x); if (!y) x = NULL; else x = strdup(y); } while(0)
+#define ircfree(x) do { if (x) MyFree(x); x = NULL; } while(0)
 #define ircabs(x) (x < 0) ? -x : x
 
 /* 
@@ -1338,6 +1338,7 @@ void	free_iConf(aConfiguration *i)
 	ircfree(i->network.x_helpchan);
 	ircfree(i->network.x_stats_server);
 	ircfree(i->spamfilter_ban_reason);
+	ircfree(i->spamfilter_virus_help_channel);
 }
 
 int	config_test();
@@ -1360,22 +1361,53 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->ban_version_tkl_time = 86400; /* 1d */
 	i->spamfilter_ban_time = 86400; /* 1d */
 	i->spamfilter_ban_reason = strdup("Spam/advertising");
+	i->spamfilter_virus_help_channel = strdup("#help");
 }
 
-/* needed for set::options::allow-part-if-shunned,
+/* 1: needed for set::options::allow-part-if-shunned,
  * we can't just make it M_SHUN and do a ALLOW_PART_IF_SHUNNED in
  * m_part itself because that will also block internal calls (like sapart). -- Syzop
+ * 2: now also used by spamfilter entries added by config...
+ * we got a chicken-and-egg problem here.. antries added without reason or ban-time
+ * field should use the config default (set::spamfilter::ban-reason/ban-time) but
+ * this isn't (or might not) be known yet when parsing spamfilter entries..
+ * so we do a VERY UGLY mass replace here.. unless someone else has a better idea.
  */
 static void do_weird_shun_stuff()
 {
-aCommand *cmptr = find_Command_simple("PART");
+aCommand *cmptr;
+aTKline *tk;
+char *encoded;
 
-	if (!cmptr) /* Huh? */
-		return;
-	if (ALLOW_PART_IF_SHUNNED)
-		cmptr->flags |= M_SHUN;
-	else
-		cmptr->flags &= ~M_SHUN;
+	if ((cmptr = find_Command_simple("PART")))
+	{
+		if (ALLOW_PART_IF_SHUNNED)
+			cmptr->flags |= M_SHUN;
+		else
+			cmptr->flags &= ~M_SHUN;
+	}
+
+	encoded = unreal_encodespace(SPAMFILTER_BAN_REASON);
+	for (tk = tklines[tkl_hash('f')]; tk; tk = tk->next)
+	{
+		if (tk->type != TKL_SPAMF)
+			continue; /* global entry or something else.. */
+		if (!strcmp(tk->spamf->tkl_reason, "<internally added by ircd>"))
+		{
+			MyFree(tk->spamf->tkl_reason);
+			tk->spamf->tkl_reason = strdup(encoded);
+			tk->spamf->tkl_duration = SPAMFILTER_BAN_TIME;
+		}
+		/* This one is even more ugly, but our config crap is VERY confusing :[ */
+		if (!strcmp(tk->setby, "~server~"))
+		{
+			MyFree(tk->setby);
+			if (me.name[0] != '\0')
+				tk->setby = strdup(me.name);
+			else
+				tk->setby = strdup(conf_me->name ? conf_me->name : "~server~");
+		}
+	}
 }
 
 int	init_conf(char *rootconf, int rehash)
@@ -4701,7 +4733,17 @@ int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 	
 	nl->spamf = unreal_buildspamfilter(word);
 	nl->spamf->action = action;
-	
+
+	if ((cep = config_find_entry(ce->ce_entries, "reason")))
+		nl->spamf->tkl_reason = strdup(cep->ce_vardata);
+	else
+		nl->spamf->tkl_reason = strdup("<internally added by ircd>");
+
+	if ((cep = config_find_entry(ce->ce_entries, "ban-time")))
+		nl->spamf->tkl_duration = config_checkval(cep->ce_vardata, CFG_TIME);
+	else
+		nl->spamf->tkl_duration = (SPAMFILTER_BAN_TIME ? SPAMFILTER_BAN_TIME : 86400);
+		
 	AddListItem(nl, tklines[tkl_hash('f')]);
 	return 1;
 }
@@ -4728,7 +4770,8 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
 			errors++; continue;
 		}
-		if (!strcmp(cep->ce_varname, "regex") || !strcmp(cep->ce_varname, "action"))
+		if (!strcmp(cep->ce_varname, "regex") || !strcmp(cep->ce_varname, "action") ||
+		    !strcmp(cep->ce_varname, "reason") || !strcmp(cep->ce_varname, "ban-time"))
 			continue;
 		
 		config_error("%s:%i: unknown directive spamfilter::%s",
@@ -5629,6 +5672,8 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.spamfilter_ban_time = config_checkval(cepp->ce_vardata,CFG_TIME);
 				if (!strcmp(cepp->ce_varname, "ban-reason"))
 					ircstrdup(tempiConf.spamfilter_ban_reason, cepp->ce_vardata);
+				if (!strcmp(cepp->ce_varname, "virus-help-channel"))
+					ircstrdup(tempiConf.spamfilter_virus_help_channel, cepp->ce_vardata);
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "default-bantime"))
@@ -6235,8 +6280,19 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					}
 				} else
 				if (!strcmp(cepp->ce_varname, "ban-reason"))
-				{ }
-				else {
+				{ } else
+				if (!strcmp(cepp->ce_varname, "virus-help-channel"))
+				{
+					if ((cepp->ce_vardata[0] != '#') || (strlen(cepp->ce_vardata) > CHANNELLEN))
+					{
+						config_error("%s:%i: set::spamfilter:virus-help-channel: "
+						             "specified channelname is too long or contains invalid characters (%s)",
+						             cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+						             cepp->ce_vardata);
+						errors++;
+						continue;
+					}
+				} else {
 					config_error("%s:%i: unknown directive set::spamfilter::%s",
 						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname);
 					errors++;

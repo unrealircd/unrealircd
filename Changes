@@ -2909,3 +2909,25 @@ seen. gmtime warning still there
   issue (#0001558) reported by hybridz.
 - Fixed a bug caused by the fix to bug (#0000917) that would also prevent you from
   setting +qaohv on a network service (#0001563) reported by Rocko.
+- Fixed a few wrong macro's (ircstrdup/ircfree) in s_conf.c causing
+  very weird behavior... This also fixes a bug where set::spamfilter::ban-reason
+  would have the value of ban-time.
+- Improved spamfilter again.
+  - The new syntax is:
+    /spamfilter [what] [type] [action] [tkltime] [reason] [regex]
+    [tkltime] specifies the duration of any *lines placed by this rule.
+    [reason] specifies the *line, kill and/or block reason.. no spaces
+    allowed, but '_' will be escaped to a space.
+    In both cases you can simply use '-' to skip and use the default.
+    Ex: /spamfilter add p block - - Come watch me on my webcam
+        /spamfilter add p gline 3h Please_go_to_www.viruscan.xx/
+        nicepage/virus=blah Come watch me on my webcam
+  - A message is now shown if the msg/notice/dcc is blocked.
+  - There are 2 new spamfilter action types:
+    'dccblock' will mark the user so (s)he's unable to send any files by DCC.
+    'viruschan' will part the user from all channels and join
+     set::spamfilter::virus-help-channel (default: #help).
+     this action might be improved to do more later.
+  - Internal: added EXTTKL PROTOCTL, this determinates if 10 parameters
+    instead of 8 are supported for m_tkl (used by spamfilter add).
+  This new system needs some testing... :)

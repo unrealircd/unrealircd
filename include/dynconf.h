@@ -133,6 +133,7 @@ struct zConfiguration {
 	long ban_version_tkl_time;
 	long spamfilter_ban_time;
 	char *spamfilter_ban_reason;
+	char *spamfilter_virus_help_channel;
 	aNetwork network;
 };
 
@@ -230,3 +231,4 @@ extern aConfiguration iConf;
 
 #define SPAMFILTER_BAN_TIME		iConf.spamfilter_ban_time
 #define SPAMFILTER_BAN_REASON	iConf.spamfilter_ban_reason
+#define SPAMFILTER_VIRUSCHAN	iConf.spamfilter_virus_help_channel

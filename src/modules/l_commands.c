@@ -151,7 +151,7 @@ extern int m_sajoin_Unload(), m_sapart_Unload(), m_knock_Umload();
 extern int m_kick_Unload(), m_topic_Unload(), m_umode2_Unload();
 extern int m_invite_Unload(), m_list_Unload(), m_squit_Unload();
 extern int m_samode_Unload(), m_sjoin_Unload(), m_protoctl_Unload();
-extern int m_pass_Unload(), m_userhost_Unload();
+extern int m_pass_Unload(), m_userhost_Unload(), m_knock_Unload();
 extern int m_ison_Unload(), m_silence_Unload();
 #ifdef GUEST
 extern int m_guest_Unload();

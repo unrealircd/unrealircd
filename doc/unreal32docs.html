@@ -20,8 +20,8 @@
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
-  <b>Current Version:</b> 3.2 RC1<br>
-  <b>Last doc update:</b> 2004-02-06</div>
+  <b>Current Version:</b> 3.2 RC1 *CVS*<br>
+  <b>Last doc update:</b> 2004-02-19</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke / McSkaf<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -442,28 +442,37 @@ Modules can also add other extended ban types.<br>
 <p>Spamfilter is a new system to fight spam, advertising, worms and other things. It works a bit like
    the badwords system but has several advantages.</p>
 <p>Spamfilters are added via the /spamfilter command which uses the following syntax:<br>
-   <b>/spamfilter [add|del|remove|+|-] [type] [action] [regex]</b><br>
+   <b>/spamfilter [add|del|remove|+|-] [type] [action] [tkltime] [reason] [regex]</b><br>
    <i>[type]</i> specifies the target type, you can specify multiple targets:
    'c' channel msg, 'p' private msg, 'n' private notice, 'N' channel notice, 'P' part msg, 'q' quit msg, 'd' dcc<br>
    <i>[action]</i> specifies the action to be taken (only 1 action can be specified): 
           'kill', 'tempshun' (only shun current session), 'shun', 
           'kline', 'gline', 'zline', 'gzline', 'block' (blocks only)<br>
+   <i>[tkltime]</i> The duration of the *line added by the filter, use '-' to use the default or to skip 
+   (eg: if action = 'block')<br>
+   <i>[reason]</i> Block or *line reason.. you CANNOT use spaces in this, but underscores ('_') will be translated
+into spaces at runtime. Again, use '-' to use the default.<br>
    <i>[regex]</i> this is the actual regex or 'bad word' where we should block on and perform the action at<br>
    <br>
-   Here's an example: <i>/spamfilter add pc gline Come watch me on my webcam</i><br>
+   Here's an example: <i>/spamfilter add pc gline - - Come watch me on my webcam</i><br>
    If the text <i>come watch me on my webcam</i> is found in either a private msg or a channel msg 
    then the message will be blocked and a gline will be added immediately.<br>
-   Another example: <i>/spamfilter add pc block come to irc\..+\..+</i><br>
+   Another example: <i>/spamfilter add pc block - - come to irc\..+\..+</i><br>
    This is a regex that will match on <i>Hi, come to irc.blah.net</i> etc....<br>
+   And an example with specified time/reason:<br>
+   <i>/spamfilter add p gline 3h Please_go_to_www.viruscan.xx/nicepage/virus=blah Come watch me on my webcam</i><br>
+   If <i>come watch me on my webcam</i> is found in a private msg then the user is glined for 3 hours 
+   with the reason <i>Please go to www.viruscan.xx/nicepage/virus=blah</i>.<br>
    <br>
    Spamfilters added with /spamfilter are network-wide. They work regardless of whether the user/channel
    has mode +G set, only opers and ulines (services) are exempted from filtering.
 </p>
 <p>You can also add spamfilters in the config file but these will be local spamfilters (not 
-   network-wide). The syntax of these spamfilter { } blocks are explained <a href="#spamfilter">here</a><br>
+   network-wide, though you could use remote includes for this). 
+   The syntax of these spamfilter { } blocks are explained <a href="#spamfilter">here</a><br>
 </p>
 <p><b>set::spamfilter::ban-time</b> allows you to modify the default ban time for *lines added by spamfilter (default: 1 day)<br>
-   <b>set::spamfilter::ban-reason</b> allows you to specify a reason for the *lines (default: 'Spam/advertising')<br>
+   <b>set::spamfilter::ban-reason</b> allows you to specify a default reason for the *lines (default: 'Spam/advertising')<br>
 </p></div>
 
 <p><font size="+2"><b>3.15 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
@@ -1845,11 +1854,15 @@ spamfilter {
 	regex &lt;word&gt;;
 	target { &lt;target(s)&gt; };
 	action &lt;action&gt;;
+	reason &lt;reason&gt;;
+	ban-time &lt;time&gt;;
 };</pre></p>
 <p><b>regex</b> is the regex to be matched.<br>
    <b>target</b> specifies the targets, possible targets are: channel, private, private-notice, channel-notice, 
    part, quit, dcc.<br>
    <b>action</b> specifies the action to be taken, possible values are: kill, tempshun, shun, kline, gline, zline, gzline, block<br>
+   <b>reason</b> optional: specifies the ban or block reason, else the default is used.<br>
+   <b>ban-time</b> optional: specifies the duration of a *line ban, else the default is used (1 day).<br>
 </p>
 
 <p>Examples:<br>
@@ -1858,12 +1871,16 @@ spamfilter {
 	regex "Come watch me on my webcam";
 	target { private; channel; };
 	action gline;
+	reason "You are infected, please go to www.antivirus.xx/blah/virus=GrrTrojan";
+	ban-time 6h;
 };
 
 spamfilter {
 	regex "come to irc\..+\..+";
 	target { private; channel; };
 	action gline;
+	action gline;
+	reason "No spamming allowed";
 };
 </pre></p>
 </div>

@@ -311,7 +311,8 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                         " VL" \
                         " SJ3" \
                         " NS" \
-                        " SJB64"
+                        " SJB64" \
+                        " TKLEXT"
 
 #ifdef _WIN32
 /*
