@@ -22,14 +22,6 @@
 #ifndef	__class_include__
 #define __class_include__
 
-#ifndef PROTO
-#if __STDC__
-#       define PROTO(x) x
-#else
-#       define PROTO(x) ()
-#endif
-#endif
-
 typedef struct Class {
 	int  class;
 	int  conFreq;
@@ -59,13 +51,13 @@ typedef struct Class {
 
 extern aClass *classes;
 
-extern aClass *find_class PROTO((int));
-extern int get_conf_class PROTO((aConfItem *));
-extern int get_client_class PROTO((aClient *));
-extern int get_client_ping PROTO((aClient *));
-extern int get_con_freq PROTO((aClass *));
-extern void add_class PROTO((int, int, int, int, long));
-extern void check_class PROTO((void));
-extern void initclass PROTO((void));
+extern aClass *find_class(int);
+extern int get_conf_class(aConfItem *);
+extern int get_client_class(aClient *);
+extern int get_client_ping(aClient *);
+extern int get_con_freq(aClass *);
+extern void add_class(int, int, int, int, long);
+extern void check_class(void);
+extern void initclass(void);
 
 #endif /* __class_include__ */

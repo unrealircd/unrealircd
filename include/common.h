@@ -41,14 +41,6 @@
 #include "sys.h"
 #endif
 
-#ifndef PROTO
-#if __STDC__
-#	define PROTO(x)	x
-#else
-#	define PROTO(x)	()
-#endif
-#endif
-
 #ifdef DEVELOP_CVS
 #define ID_Copyright(x) static char id_copyright[] = x
 #define ID_Notes(x) static char id_notes[] = x
@@ -96,38 +88,38 @@ void free();
 #define TS time_t
 
 
-extern int match PROTO((char *, char *));
+extern int match(char *, char *);
 #define mycmp(a,b) \
  ( (toupper(a[0])!=toupper(b[0])) || smycmp((a)+1,(b)+1) )
-extern int smycmp PROTO((char *, char *));
+extern int smycmp(char *, char *);
 #ifndef GLIBC2_x
-extern int myncmp PROTO((char *, char *, int));
+extern int myncmp(char *, char *, int);
 #endif
 
 #ifdef NEED_STRTOK
-extern char *strtok2 PROTO((char *, char *));
+extern char *strtok2(char *, char *);
 #endif
 #ifdef NEED_STRTOKEN
-extern char *strtoken PROTO((char **, char *, char *));
+extern char *strtoken(char **, char *, char *);
 #endif
 #ifdef NEED_INET_ADDR
-extern unsigned long inet_addr PROTO((char *));
+extern unsigned long inet_addr(char *);
 #endif
 
 #if defined(NEED_INET_NTOA) || defined(NEED_INET_NETOF) && !defined(_WIN32)
 #include <netinet/in.h>
 #endif
 #ifdef NEED_INET_NTOA
-extern char *inet_ntoa PROTO((struct IN_ADDR));
+extern char *inet_ntoa(struct IN_ADDR);
 #endif
 
 #ifdef NEED_INET_NETOF
-extern int inet_netof PROTO((struct IN_ADDR));
+extern int inet_netof(struct IN_ADDR);
 #endif
 
 int  global_count, max_global_count;
-extern char *myctime PROTO((time_t));
-extern char *strtoken PROTO((char **, char *, char *));
+extern char *myctime(time_t);
+extern char *strtoken(char **, char *, char *);
 
 #define PRECISE_CHECK
 
