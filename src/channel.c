@@ -1168,7 +1168,7 @@ int  m_mode(cptr, sptr, parc, parv)
 		return 0;
 	}
 
-	if (IsServer(sptr) && (sendts = atoi(parv[parc - 1]))
+	if (IsServer(sptr) && (sendts = TS2ts(parv[parc - 1]))
 	    && !IsULine(sptr) && chptr->creationtime
 	    && sendts > chptr->creationtime)
 	{

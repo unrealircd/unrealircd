@@ -608,14 +608,14 @@ int  m_server(cptr, sptr, parc, parv)
 	host = parv[1];
 	if (parc > 4)
 	{
-		numeric = atoi(parv[3]);
-		hop = atoi(parv[2]);
+		numeric = TS2ts(parv[3]);
+		hop = TS2ts(parv[2]);
 		(void)strncpy(info, parv[4], REALLEN + 60);
 		info[REALLEN + 60] = '\0';
 	}
-	else if (parc > 3 && atoi(parv[2]))
+	else if (parc > 3 && TS2ts(parv[2]))
 	{
-		hop = atoi(parv[2]);
+		hop = TS2ts(parv[2]);
 		(void)strncpy(info, parv[3], REALLEN + 60);
 		info[REALLEN + 60] = '\0';
 	}
@@ -1214,7 +1214,7 @@ int  m_server_estab(cptr)
 	cptr->srvptr = &me;
 	cptr->serv->nline = aconf;
 
-	if (num && numeric_collides(atoi(num)))
+	if (num && numeric_collides(TS2ts(num)))
 	{
 		sendto_serv_butone(&me,
 		    ":%s GLOBOPS :Cancelling link %s, colliding numeric", me.name, 
@@ -1226,7 +1226,7 @@ int  m_server_estab(cptr)
 
 	if (num)
 	{
-		cptr->serv->numeric = atoi(num);
+		cptr->serv->numeric = TS2ts(num);
 		num = NULL;
 	}
 	add_server_to_table(cptr);

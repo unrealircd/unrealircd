@@ -1014,13 +1014,13 @@ int  m_svsnick(cptr, sptr, parc, parv)
 				return exit_client(cptr, acptr, sptr,
 				    "SVSNICK Collide (nick changed to be server)");
 			acptr->umodes &= ~UMODE_REGNICK;
-			acptr->lastnick = atoi(parv[3]);
+			acptr->lastnick = TS2ts(parv[3]);
 			sendto_common_channels(acptr, ":%s NICK :%s", parv[1],
 			    parv[2]);
 			if (IsPerson(acptr))
 				add_history(acptr, 1);
 			sendto_serv_butone_token(NULL, parv[1], MSG_NICK,
-			    TOK_NICK, "%s :%i", parv[2], atoi(parv[3]));
+			    TOK_NICK, "%s :%i", parv[2], TS2ts(parv[3]));
 			if (acptr->name[0])
 			{
 				(void)del_from_client_hash_table(acptr->name, acptr);
@@ -1524,7 +1524,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		sptr = make_client(cptr, serv);
 		add_client_to_list(sptr);
 		if (parc > 2)
-			sptr->hopcount = atoi(parv[2]);
+			sptr->hopcount = TS2ts(parv[2]);
 		if (parc > 3)
 			sptr->lastnick = TS2ts(parv[3]);
 		else		/* Little bit better, as long as not all upgraded */
@@ -1566,7 +1566,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		if (mycmp(parv[0], nick) ||
 		    /* Next line can be removed when all upgraded  --Run */
 		    !MyClient(sptr) && parc > 2
-		    && atoi(parv[2]) < sptr->lastnick)
+		    && TS2ts(parv[2]) < sptr->lastnick)
 			sptr->lastnick = (MyClient(sptr)
 			    || parc < 3) ? TStime() : TS2ts(parv[2]);
 		add_history(sptr, 1);
@@ -4580,9 +4580,9 @@ int  m_svs2mode(cptr, sptr, parc, parv)
 					  max_global_count = atoi(parv[3]);
 				  break;
 			  case 'd':
-				  if (parv[3] && isdigit(*parv[3]))
+				  if (parv[3] && (isdigit(*parv[3]) || (*parv[3] == '!')))
 					  acptr->user->servicestamp =
-					      atol(parv[3]);
+					      TS2ts(parv[3]);
 				  break;
 			  case 'i':
 				  if (what == MODE_ADD)
