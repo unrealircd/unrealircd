@@ -2881,3 +2881,4 @@ seen. gmtime warning still there
 - Added HOOKTYPE_REHASH_COMPLETE to allow permanent modules to reload
   command overrides. (#0001553) reported by AngryWolf
 - Modulized: time, svskill
+- Modulized: sjoin, pass, userhost, ison, silence

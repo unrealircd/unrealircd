@@ -66,6 +66,10 @@
 #else
 #include "win32/regex.h"
 #endif
+
+#include "channel.h"
+
+
 extern int sendanyways;
 
 
@@ -1625,6 +1629,13 @@ struct ThrottlingBucket
 	time_t		since;
 	char		count;
 };
+
+typedef struct {
+	long mode;
+	char flag;
+	unsigned  halfop : 1;       /* 1 = yes 0 = no */
+	unsigned  parameters : 1;
+} aCtab;
 
 void	init_throttling_hash();
 int	hash_throttling(struct IN_ADDR *in);

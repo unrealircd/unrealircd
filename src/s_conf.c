@@ -611,14 +611,6 @@ long config_checkval(char *orig, unsigned short flags) {
 	return ret;
 }
 
-typedef struct {
-	long mode;
-	char flag;
-	unsigned  halfop : 1;		/* 1 = yes 0 = no */
-	unsigned  parameters : 1; 
-} aCtab;
-extern aCtab cFlagTab[];
-
 void set_channelmodes(char *modes, struct ChMode *store, int warn)
 {
 	aCtab *tab;

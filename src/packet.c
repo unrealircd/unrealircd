@@ -224,11 +224,9 @@ void	init_CommandHash(void)
 	add_Command(MSG_OPERMOTD, TOK_OPERMOTD, m_opermotd, MAXPARA);
 	add_CommandX(MSG_NICK, TOK_NICK, m_nick, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
 	add_CommandX(MSG_JOIN, TOK_JOIN, m_join, MAXPARA, M_USER);
-	add_Command(MSG_ISON, TOK_ISON, m_ison, 1);
 	add_CommandX(MSG_USER, TOK_USER, m_user, 4, M_UNREGISTERED|M_USER);
 	add_CommandX(MSG_PART, TOK_PART, m_part, 2, M_USER);
 	add_Command(MSG_WATCH, TOK_WATCH, m_watch, 1);
-	add_Command(MSG_USERHOST, TOK_USERHOST, m_userhost, 1);
 	add_Command(MSG_LUSERS, TOK_LUSERS, m_lusers, MAXPARA);
 	add_Command(MSG_WALLOPS, TOK_WALLOPS, m_wallops, 1);
 	add_CommandX(MSG_ERROR, TOK_ERROR, m_error, MAXPARA, M_UNREGISTERED|M_SERVER);
@@ -238,7 +236,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_WHOWAS, TOK_WHOWAS, m_whowas, MAXPARA);
 	add_Command(MSG_NAMES, TOK_NAMES, m_names, MAXPARA);
 	add_Command(MSG_TRACE, TOK_TRACE, m_trace, MAXPARA);
-	add_CommandX(MSG_PASS, TOK_PASS, m_pass, 1, M_UNREGISTERED|M_USER|M_SERVER);
 	add_Command(MSG_CONNECT, TOK_CONNECT, m_connect, MAXPARA);
 	add_CommandX(MSG_VERSION, TOK_VERSION, m_version, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
 	add_Command(MSG_STATS, TOK_STATS, m_stats, 3);
@@ -251,7 +248,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_INFO, TOK_INFO, m_info, MAXPARA);
 	add_Command(MSG_MOTD, TOK_MOTD, m_motd, MAXPARA);
 	add_Command(MSG_CLOSE, TOK_CLOSE, m_close, MAXPARA);
-	add_Command(MSG_SILENCE, TOK_SILENCE, m_silence, MAXPARA);
 	add_Command(MSG_GNOTICE, TOK_GNOTICE, m_gnotice, MAXPARA);
 	add_Command(MSG_GOPER, TOK_GOPER, m_goper, MAXPARA);
 	add_Command(MSG_GLOBOPS, TOK_GLOBOPS, m_globops, 1);
@@ -273,7 +269,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_ADDOMOTD, TOK_ADDOMOTD, m_addomotd, 1);
 	add_Command(MSG_SVSFLINE, TOK_SVSFLINE, m_svsfline, MAXPARA);
 	add_Command(MSG_BOTMOTD, TOK_BOTMOTD, m_botmotd, MAXPARA);
-	add_Command(MSG_SJOIN, TOK_SJOIN, m_sjoin, MAXPARA);
 	add_Command(MSG_UMODE2, TOK_UMODE2, m_umode2, MAXPARA);
 	add_Command(MSG_DCCDENY, TOK_DCCDENY, m_dccdeny, 2);
 	add_Command(MSG_UNDCCDENY, TOK_UNDCCDENY, m_undccdeny, MAXPARA);

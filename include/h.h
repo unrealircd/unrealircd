@@ -667,3 +667,10 @@ extern int op_can_override(aClient *sptr);
 extern aClient *find_chasing(aClient *sptr, char *user, int *chasing);
 extern long opermode;
 extern void do_mode(aChannel *, aClient *, aClient *, int, char **, time_t, int);
+extern void set_mode(aChannel *, aClient *, int, char **, u_int *,
+                     char[MAXMODEPARAMS][MODEBUFLEN + 3], int);
+extern void add_user_to_channel(aChannel *chptr, aClient *who, int flags);
+extern int add_banid(aClient *, aChannel *, char *);
+extern int add_exbanid(aClient *cptr, aChannel *chptr, char *banid);
+extern void sub1_from_channel(aChannel *);
+extern aCtab cFlagTab[];

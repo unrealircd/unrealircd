@@ -95,7 +95,9 @@ extern int m_sajoin_Init(ModuleInfo *modinfo), m_sapart_Init(ModuleInfo *modinfo
 extern int m_kick_Init(ModuleInfo *modinfo), m_topic_Init(ModuleInfo *modinfo);
 extern int m_invite_Init(ModuleInfo *modinfo), m_list_Init(ModuleInfo *modinfo);
 extern int m_samode_Init(ModuleInfo *modinfo), m_time_Init(ModuleInfo *modinfo);
-extern int m_svskill_Init(ModuleInfo *modinfo);
+extern int m_svskill_Init(ModuleInfo *modinfo), m_sjoin_Init(ModuleInfo *modinfo);
+extern int m_pass_Init(ModuleInfo *modinfo), m_userhost_Init(ModuleInfo *modinfo);
+extern int m_ison_Init(ModuleInfo *modinfo), m_silence_Init(ModuleInfo *modinfo);
 #ifdef GUEST
 extern int m_guest_Init(ModuleInfo *modinfo);
 #endif
@@ -121,7 +123,9 @@ extern int m_sajoin_Load(int module_load), m_sapart_Load(int module_load);
 extern int m_kick_Load(int module_load), m_topic_Load(int module_load);
 extern int m_invite_Load(int module_load), m_list_Load(int module_load);
 extern int m_samode_Load(int module_load), m_time_Load(int module_load);
-extern int m_svskill_Load(int module_load);
+extern int m_svskill_Load(int module_load), m_sjoin_Load(int module_load);
+extern int m_pass_Load(int module_load), m_userhost_Load(int module_load);
+extern int m_ison_Load(int module_load), m_silence_Load(int module_load);
 #ifdef GUEST
 extern int m_guest_Load(int module_load);
 #endif
@@ -142,7 +146,9 @@ extern int m_sendsno_Unload(), m_svssno_Unload(), m_time_Unload();
 extern int m_sajoin_Unload(), m_sapart_Unload();
 extern int m_kick_Unload(), m_topic_Unload();
 extern int m_invite_Unload(), m_list_Unload();
-extern int m_samode_Unload();
+extern int m_samode_Unload(), m_sjoin_Unload();
+extern int m_pass_Unload(), m_userhost_Unload();
+extern int m_ison_Unload(), m_silence_Unload();
 #ifdef GUEST
 extern int m_guest_Unload();
 #endif
@@ -230,6 +236,11 @@ int    l_commands_Init(ModuleInfo *modinfo)
 	m_invite_Init(ModCmdsInfo);
 	m_list_Init(ModCmdsInfo);
 	m_time_Init(ModCmdsInfo);
+	m_sjoin_Init(ModCmdsInfo);
+	m_pass_Init(ModCmdsInfo);
+	m_userhost_Init(ModCmdsInfo);
+	m_ison_Init(ModCmdsInfo);
+	m_silence_Init(ModCmdsInfo);
 	m_svskill_Init(ModCmdsInfo);
 #ifdef GUEST
 	m_guest_Init(ModCmdsInfo);
@@ -298,6 +309,11 @@ int    l_commands_Load(int module_load)
 	m_list_Load(module_load);
 	m_time_Load(module_load);
 	m_svskill_Load(module_load);
+	m_sjoin_Load(module_load);
+	m_pass_Load(module_load);
+	m_userhost_Load(module_load);
+	m_ison_Load(module_load);
+	m_silence_Load(module_load);
 #ifdef GUEST
 	m_guest_Load(module_load);
 #endif
@@ -365,6 +381,11 @@ int	l_commands_Unload(int module_unload)
 	m_list_Unload();
 	m_time_Unload();
 	m_svskill_Unload();
+	m_sjoin_Unload();
+	m_pass_Unload();
+	m_userhost_Unload();
+	m_ison_Unload();
+	m_silence_Unload();
 #ifdef GUEST
 	m_guest_Unload();
 #endif
