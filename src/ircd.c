@@ -79,7 +79,10 @@ int  un_gid = 99;
 #endif
 /* End */
 
+#ifndef _WIN32
 extern char unreallogo[];
+#endif
+
 extern aMotd *opermotd;
 extern aMotd *svsmotd;
 extern aMotd *motd;
@@ -951,7 +954,9 @@ int  InitwIRCD(argc, argv)
 		return bad_command();	/* This should exit out */
 
 
+#ifndef _WIN32
 	fprintf(stderr, unreallogo);
+#endif
 	fprintf(stderr, "                           v%s\n\n", VERSIONONLY);
 	clear_client_hash_table();
 	clear_channel_hash_table();

@@ -50,6 +50,10 @@ Computing Center and Jarkko Oikarinen";
 #include "badwords.h"
 #endif
 
+#ifdef _WIN32
+#include "version.h"
+#endif
+
 ID_CVS("$Id$");
 void send_umode_out PROTO((aClient *, aClient *, int));
 void send_umode_out_nickv2 PROTO((aClient *, aClient *, int));
