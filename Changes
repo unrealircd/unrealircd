@@ -1128,4 +1128,4 @@ v- Fixed some bugreport stuff
 - Possible fix of #0000042 regarding duplicate scans at same time causing
   one to slip through, reported by Zogg
 - Fixed a win32 editor bug reported by Jens that limited text additions to 32KB
-
+- Really fixed bug #0000011 reported by Dragon974 (listener bug)
