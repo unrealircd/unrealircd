@@ -896,3 +896,4 @@ seen. gmtime warning still there
 - Replaced killircd, ircd, and rehash with ./unreal start|stop|rehash
 - Fixed a bug where the win32 help dialog links were plain text
 - IPv6 fixes to Inet_si2p & Inet_si2pB
+- IPv6 fixes to make dual ipv4/ipv6 work

@@ -377,8 +377,9 @@ int  inetport(cptr, name, port)
 	 * At first, open a new socket
 	 */
 	if (cptr->fd == -1)
+	{
 		cptr->fd = socket(AFINET, SOCK_STREAM, 0);
-
+	}
 	if (cptr->fd < 0)
 	{
 #if !defined(DEBUGMODE) && !defined(_WIN32)
@@ -407,10 +408,7 @@ int  inetport(cptr, name, port)
 #ifndef INET6
 		server.SIN_ADDR.S_ADDR = inet_addr(ipname);
 #else
-		if (strchr(ipname, '.'))
-			inet_pton(AF_INET, ipname, server.SIN_ADDR.S_ADDR);
-		else
-			inet_pton(AF_INET6, ipname, server.SIN_ADDR.S_ADDR);
+		inet_pton(AFINET, ipname, server.SIN_ADDR.S_ADDR);
 #endif
 		server.SIN_PORT = htons(port);
 		/*
