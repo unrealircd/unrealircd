@@ -2009,3 +2009,4 @@ seen. gmtime warning still there
 - Fixed a set::modes-on-join bug and fixed an oob read in config parser.
 - Fixed an oper bug with /names on a +s channel (#0000816).
 - Fixed 2 other oob reads in config parser (parsing of size and time).
+- Fixed yet another oob read in config parser (ie: #0000841).

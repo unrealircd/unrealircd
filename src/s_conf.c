@@ -929,7 +929,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				start = ptr;
 				for(;*ptr;ptr++)
 				{
-					if ((*ptr == ' ') || (*ptr == '=') || (*ptr == '\t') || (*ptr == '\n') || (*ptr == ';') || (*ptr == '\0'))
+					if ((*ptr == ' ') || (*ptr == '=') || (*ptr == '\t') || (*ptr == '\n') || (*ptr == ';'))
 						break;
 				}
 				if (!*ptr)
@@ -976,6 +976,8 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					ptr--;
 				break;
 		} /* switch */
+		if (!*ptr) /* This IS possible. -- Syzop */
+			break;
 	} /* for */
 	if (curce)
 	{
