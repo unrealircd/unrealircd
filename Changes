@@ -1094,3 +1094,4 @@ seen. gmtime warning still there
 - Converted all calls to hunt_server to hunt_server_token
 - Preparation for release
 - Changed version to beta6 and added final cleanups
+- Added the TKline, TZline, and GZline commands to the documentation

@@ -648,6 +648,48 @@
       Example : SHUN +foobar@aol.com 600 :Spamming (Shuns foobar@aol.com for 10 mins for Spamming) 
                 SHUN +foobar@aol.com 1d6h :Spamming (Adds a 30 hour SHUN)
 
+     *** GZLINE Command ***
+
+     This command provides timed global Z:line. If you match a Global Z:Line you cannot
+     connect to ANY server on the IRC network
+     A time of 0 in the GZLINE makes it permanent (Never Expires).
+     You may also specify the time in the format 1d10h15m30s.
+     IRC Operator only command.
+
+     Syntax:  GZLINE <user@host mask> <seconds to be banned> :<reason>
+      (Adds a Global Z:line for user@host)
+              GZLINE -<user@host mask> (Removes a Global Z:line for user@host)
+     Example: GZLINE *@*.dal.net 900 :Spammers (Adds a 15 min Global Z:line)
+              GZLINE *@*.dal.net 1d5h :Spammers (Adds a 29 hour Global Z:line)
+
+     *** TKLINE Command ***
+
+     This command provides timed K:Lines. If you match a time K:Line you cannot
+     connect to the server until the time has expired
+     A time of 0 in the TKLINE makes it permanent (Never Expires).
+     You may also specify the time in the format 1d10h15m30s.
+     IRC Operator only command.
+
+     Syntax:  TKLINE <user@host mask> <seconds to be banned> :<reason>
+      (Adds a Timed K:line for user@host)
+              TKLINE -<user@host mask> (Removes a Timed K:line for user@host)
+     Example: TKLINE *@*.dal.net 900 :Spammers (Adds a 15 min Timed K:line)
+              TKLINE *@*.dal.net 1d5h :Spammers (Adds a 29 hour Timed K:line)
+
+     *** TZLINE Command ***
+
+     This command provides timed G:Lines. If you match a Timed Z:Line you cannot
+     connect to the server until the time has expired
+     A time of 0 in the TZLINE makes it permanent (Never Expires).
+     You may also specify the time in the format 1d10h15m30s.
+     IRC Operator only command.
+	
+     Syntax:  TZLINE <user@host mask> <seconds to be banned> :<reason>
+      (Adds a Timed Z:line for user@host)
+              TZLINE -<user@host mask> (Removes a Timed Z:line for user@host)
+     Example: TZLINE *@*.dal.net 900 :Spammers (Adds a 15 min Timed Z:line)
+              TZLINE *@*.dal.net 1d5h :Spammers (Adds a 29 hour Timed Z:line)
+
       *** AKILL Command *** (Use Services AKILL Instead)
 
       Adds an Autokill for the specific host mask. This prevents any user from that 
