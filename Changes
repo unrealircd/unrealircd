@@ -999,3 +999,4 @@ seen. gmtime warning still there
 - Big mods to TKL, oper commands split into module, testing
 - TKL mods compile and run fine, set{} stuff to decide what funcs are 
   avail forthcoming
+- SMO recoded but wierd because sendto_umode and sendto_snomask are wierd

@@ -50,6 +50,8 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_SMO         "SMO"
 #define TOK_SMO         "AU"
 
+extern int sno_mask[]; /* someone is going to make this static, I just know it */
+
 #ifndef DYNAMIC_LINKING
 ModuleHeader m_sendumode_Header
 #else
@@ -135,7 +137,7 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	message = (parc > 3) ? parv[3] : parv[2];
 
-	if (BadPtr(message))
+	if (parc < 3)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
 		    me.name, parv[0], "SENDUMODE");
@@ -159,8 +161,7 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			if (Usermode_Table[i].flag == *p)
 			{
-				sendto_umode(Usermode_Table[i].mode, "%s", message);
-				break;
+				umode_s |= Usermode_Table[i].mode;
 			}
 		}
 		if (Usermode_Table[i].flag)
@@ -170,7 +171,7 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			if (sno_mask[i] ==  *p) 	
 			{
-				sendto_snomask(sno_mask[i - 1], "%s", message);
+				snomask |= sno_mask[i - 1];
 				break;
 			}
 		}
@@ -183,10 +184,16 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			if (sno_mask[i] ==  *p) 	
 			{
-				sendto_snomask(sno_mask[i - 1], "%s", message);
+				snomask |= sno_mask[i - 1];
 				break;
 			}
 		}
+	}
+
+	sendto_umode(umode_s, "%s", message);
+
+	if (snomask) {
+		sendto_snomask(snomask, "%s", message);
 	}
 
 	return 0;
