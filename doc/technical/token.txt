@@ -81,7 +81,6 @@ MKPASSWD       y
 ADDLINE        z
 GLINE          }
 SETHOST        AA
-TECHAT         AB
 NACHAT         AC
 SETIDENT       AD
 SETNAME        AE
