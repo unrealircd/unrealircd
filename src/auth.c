@@ -55,6 +55,9 @@ anAuthStruct AuthTypes[] = {
 #ifdef AUTHENABLE_SSL_PUBKEY
 	{"sslpubkey",   AUTHTYPE_SSL_PUBKEY},
 #endif
+#ifdef AUTHENABLE_RIPEMD160
+	{"ripemd160",	AUTHTYPE_RIPEMD160},
+#endif
 	{NULL,		0}
 };
 
@@ -137,17 +140,11 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 #ifdef	AUTHENABLE_UNIXCRYPT
 	extern	char *crypt();
 #endif
-#if defined(AUTHENABLE_MD5) || defined(AUTHENABLE_SHA1)
+#if defined(AUTHENABLE_MD5) || defined(AUTHENABLE_SHA1) || defined(AUTHENABLE_RIPEMD160)
         static char    buf[512];
         int		i;
 #endif
 
-#ifdef  AUTHENABLE_MD5
-	MD5_CTX	md5_ctx;
-#endif
-#ifdef  AUTHENABLE_SHA1
-        SHA_CTX sha1_ctx;
-#endif
 #ifdef AUTHENABLE_SSL_PUBKEY
 	EVP_PKEY *evp_pkey = NULL;
 	EVP_PKEY *evp_pkeyfile = NULL;
@@ -215,6 +212,23 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 				return -1;
 		        break;
 #endif
+#ifdef AUTHENABLE_RIPEMD160
+		case AUTHTYPE_RIPEMD160:
+			if (!para)
+				return -1;
+			
+			if ((i = b64_encode(RIPEMD160(para, strlen(para), NULL),
+                                RIPEMD160_DIGEST_LENGTH, buf, sizeof(buf))))
+			{
+				if (!strcmp(buf, as->data))
+					return 2;
+				else
+					return -1;
+			}
+			else
+				return -1;
+		        break;
+#endif
 #ifdef AUTHENABLE_SSL_PUBKEY
 		case AUTHTYPE_SSL_PUBKEY:
 			if (!para)
@@ -264,16 +278,9 @@ char	*Auth_Make(short type, char *para)
 	char	salt[3];
 	extern	char *crypt();
 #endif
-#if defined(AUTHENABLE_MD5) || defined(AUTHENABLE_SHA1)
+#if defined(AUTHENABLE_MD5) || defined(AUTHENABLE_SHA1) || defined(AUTHENABLE_RIPEMD160)
         static char    buf[512];
 	int		i;
-#endif
-
-#ifdef  AUTHENABLE_MD5
-	MD5_CTX	md5_ctx;
-#endif
-#ifdef  AUTHENABLE_SHA1
-        SHA_CTX sha1_ctx;
 #endif
 
 	switch (type)
@@ -313,6 +320,20 @@ char	*Auth_Make(short type, char *para)
 			
 			if ((i = b64_encode(SHA1(para, strlen(para), NULL),
                                 SHA_DIGEST_LENGTH, buf, sizeof(buf))))
+			{
+				return (buf);
+			}
+			else
+				return NULL;
+		        break;
+#endif
+#ifdef AUTHENABLE_RIPEMD160
+		case AUTHTYPE_RIPEMD160:
+			if (!para)
+				return NULL;
+			
+			if ((i = b64_encode(RIPEMD160(para, strlen(para), NULL),
+                                RIPEMD160_DIGEST_LENGTH, buf, sizeof(buf))))
 			{
 				return (buf);
 			}

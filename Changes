@@ -1359,3 +1359,5 @@ seen. gmtime warning still there
 - Removed Win32 and READMENOW.Win32.txt (obsolete)
 - Started WinXP IPv6 support (added headers)
 - More WinXP IPv6, finished headers, replaced calls to inet_ntoa with Inet_ia2p
+- Added support for the RIPEMD-160 encryption algorithm for encrypted passwords (supposed to be slightly 
+  stronger than SHA1 and much stronger than MD5)
