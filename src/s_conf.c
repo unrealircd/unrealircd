@@ -1394,6 +1394,7 @@ void	free_iConf(aConfiguration *i)
 #endif	
 	ircfree(i->restrict_usermodes);
 	ircfree(i->restrict_channelmodes);
+	ircfree(i->restrict_extendedbans);
 	ircfree(i->network.x_ircnetwork);
 	ircfree(i->network.x_ircnet005);	
 	ircfree(i->network.x_defserv);
@@ -5701,6 +5702,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			*x = '\0';
 			tempiConf.restrict_channelmodes = p;
 		}
+		else if (!strcmp(cep->ce_varname, "restrict-extendedbans")) {
+			ircstrdup(tempiConf.restrict_extendedbans, cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {
 			tempiConf.anti_spam_quit_message_time = config_checkval(cep->ce_vardata,CFG_TIME);
 		}
@@ -6240,6 +6244,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				}
 			}
+		}
+		else if (!strcmp(cep->ce_varname, "restrict-extendedbans"))
+		{
+			CheckNull(cep);
 		}
 		else if (!strcmp(cep->ce_varname, "dns")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {

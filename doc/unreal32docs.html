@@ -444,6 +444,8 @@ Extended bans look like ~[!]&lt;type&gt;:&lt;stuff&gt;. Currently the following 
 <tr><td>type:</td><td>name</td><td>explanation:</td></tr>
 <tr><td>~q</td><td>quiet</td><td>People matching these bans can join but are unable to speak, 
  unless they have +v or higher. <i>Ex: ~q:*!*@blah.blah.com</i></td></tr>
+<tr><td>~n</td><td>nickchange</td><td>People matching these bans cannot change nicks, 
+ unless they have +v or higher. <i>Ex: ~n:*!*@*.aol.com</i></td></tr>
 <tr><td>~c</td><td>channel</td><td>If the user is in this channel then (s)he is unable to join. 
 <i>Ex: ~c:#lamers</i></td></tr>
 <tr><td>~r</td><td>realname</td><td>If the realname of a user matches this then (s)he is unable to join.<br>
@@ -2024,6 +2026,8 @@ set {
   NOTE: it may still be possible to use these channelmodes trough services 
   by using MLOCK. Unfortunately we can't do much about that, you would have
   to ask the services coders to implement a restrict-channelmodes feature too.</p>
+<p><font class="set">set::restrict-extendedbans &lt;types|*&gt;</font><br>
+  Don't allow users to use any extended bans ("*") or disallow only certain ones (eg: "qc").</p>
 <p><font class="set">set::auto-join &lt;channels&gt;;</font><br>
   The channel(s) a user will be forced to join at connection. To specify more 
   than one channel use a comma separated list.<br>

@@ -74,7 +74,7 @@ extern int lifesux;
 /* Some forward declarations */
 CMD_FUNC(do_join);
 void add_invite(aClient *, aChannel *);
-char *clean_ban_mask(char *, int);
+char *clean_ban_mask(char *, int, aClient *);
 int add_banid(aClient *, aChannel *, char *);
 int can_join(aClient *, aClient *, aChannel *, char *, char *,
     char **);
@@ -2248,7 +2248,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  break;
 		  }
 		  retval = 1;
-		  tmpstr = clean_ban_mask(param, what);
+		  tmpstr = clean_ban_mask(param, what, cptr);
 		  if (BadPtr(tmpstr))
 		      break; /* ignore ban, but eat param */
 		  if ((tmpstr[0] == '~') && MyClient(cptr) && !bounce)
@@ -2289,7 +2289,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  break;
 		  }
 		  retval = 1;
-		  tmpstr = clean_ban_mask(param, what);
+		  tmpstr = clean_ban_mask(param, what, cptr);
 		  if (BadPtr(tmpstr))
 		     break; /* ignore except, but eat param */
 		  if ((tmpstr[0] == '~') && MyClient(cptr) && !bounce)
@@ -3179,7 +3179,7 @@ char *trim_str(char *str, int len)
  *   on next clean_ban_mask or make_nick_user_host call.
  * - mask is fragged in some cases, this could be bad.
  */
-char *clean_ban_mask(char *mask, int what)
+char *clean_ban_mask(char *mask, int what, aClient *cptr)
 {
 	char *cp;
 	char *user;
@@ -3198,9 +3198,34 @@ char *clean_ban_mask(char *mask, int what)
 	/* Extended ban? */
 	if ((*mask == '~') && mask[1] && (mask[2] == ':'))
 	{
+		if (RESTRICT_EXTENDEDBANS && MyClient(cptr) && !IsAnOper(cptr))
+		{
+			if (!strcmp(RESTRICT_EXTENDEDBANS, "*"))
+			{
+				sendnotice(cptr, "Setting/removing of extended bans has been disabled");
+				return NULL;
+			}
+			if (strchr(RESTRICT_EXTENDEDBANS, mask[1]))
+			{
+				sendnotice(cptr, "Setting/removing of extended bantypes '%s' has been disabled",
+					RESTRICT_EXTENDEDBANS);
+				return NULL;
+			}
+		}
 		p = findmod_by_bantype(mask[1]);
 		if (!p)
-			return NULL; /* extended bantype not supported */
+		{
+			/* extended bantype not supported, what to do?
+			 * Here are the rules:
+			 * - if from a remote client/server: allow it (easy upgrading,
+			 *   no desynch)
+			 * - if from a local client trying to REMOVE the extban,
+			 *   allow it too (so you don't get "unremovable" extbans).
+			 */
+			if (!MyClient(cptr) || (what == MODE_DEL))
+				return mask; /* allow it */
+			return NULL; /* reject */
+		}
 		if (p->conv_param)
 			return p->conv_param(mask);
 		/* else, do some basic sanity checks and cut it off at 80 bytes */

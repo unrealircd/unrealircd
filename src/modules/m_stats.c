@@ -1234,6 +1234,9 @@ int stats_set(aClient *sptr, char *para)
 	if (RESTRICT_CHANNELMODES)
 		sendto_one(sptr, ":%s %i %s :restrict-channelmodes: %s", me.name, RPL_TEXT,
 			sptr->name, RESTRICT_CHANNELMODES);
+	if (RESTRICT_EXTENDEDBANS)
+		sendto_one(sptr, ":%s %i %s :restrict-extendedbans: %s", me.name, RPL_TEXT,
+			sptr->name, RESTRICT_EXTENDEDBANS);
 	switch (UHOST_ALLOWED)
 	{
 		case UHALLOW_ALWAYS:

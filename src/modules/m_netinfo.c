@@ -138,12 +138,17 @@ DLLFUNC CMD_FUNC(m_netinfo)
 	xx = TStime();
 	if ((xx - endsync) < 0)
 	{
+		char *emsg = "";
+		if (xx - endsync < -10)
+		{
+			emsg = " [\002PLEASE SYNC YOUR CLOCKS!\002]";
+		}
 		sendto_realops
-		    ("Possible negative TS split at link %s (%li - %li = %li)",
-		    cptr->name, (xx), (endsync), (xx - endsync));
+		    ("Possible negative TS split at link %s (%li - %li = %li)%s",
+		    cptr->name, (xx), (endsync), (xx - endsync), emsg);
 		sendto_serv_butone(&me,
-		    ":%s SMO o :\2(sync)\2 Possible negative TS split at link %s (%li - %li = %li)",
-		    me.name, cptr->name, (xx), (endsync), (xx - endsync));
+		    ":%s SMO o :\2(sync)\2 Possible negative TS split at link %s (%li - %li = %li)%s",
+		    me.name, cptr->name, (xx), (endsync), (xx - endsync), emsg);
 	}
 	sendto_realops
 	    ("Link %s -> %s is now synced [secs: %li recv: %ld.%hu sent: %ld.%hu]",

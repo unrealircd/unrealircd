@@ -116,6 +116,7 @@ struct zConfiguration {
 	enum UHAllowed userhost_allowed;
 	char *restrict_usermodes;
 	char *restrict_channelmodes;
+	char *restrict_extendedbans;
 	char *channel_command_prefix;
 	long unknown_flood_bantime;
 	long unknown_flood_amount;
@@ -200,6 +201,7 @@ extern MODVAR aConfiguration iConf;
 #define UHOST_ALLOWED			iConf.userhost_allowed
 #define RESTRICT_USERMODES		iConf.restrict_usermodes
 #define RESTRICT_CHANNELMODES		iConf.restrict_channelmodes
+#define RESTRICT_EXTENDEDBANS		iConf.restrict_extendedbans
 #ifdef THROTTLING
 #define THROTTLING_PERIOD		iConf.throttle_period
 #define THROTTLING_COUNT		iConf.throttle_count

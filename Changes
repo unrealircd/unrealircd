@@ -3258,3 +3258,13 @@ This is the 3.2 fixes branch.
 - Added set::maxdccallow: max number of entries of the DCCALLOW list (default: 10).
 - Various (non-critical) fixes for dccallow reported by Rocko (incorrect nick in deny msg,
   added set::maxdccallow in docs, added bmp/vob/log/ to dccallow.conf).
+- Made extbans desynchs a bit more friendly: if a bantype is unknown for the server
+  it will just accept it if it's from a remote server, and also ops/etc will be allowed
+  to REMOVE any unknown extbans (but not add new unknown ones).
+- Added extended ban type ~n (nickchange ban), if a user matches this (s)he can not
+  change nicks (eg: +b ~n:*!*@*.aol.com) unless (s)he has voice or higher.
+  This can be useful as an overall measure for some +m chans (+b ~n:!*@*) or against
+  specific 'good' people that are just nickflooding due to a wrongly configured script.
+- Added set::restrict-extendedbans by which you can disallow normal users to use
+  any extendedbans ("*") or disallow only certain ones (eg: "qc").
+- Made the negative TS message a bit more annoying if time is off more than 10 seconds.
