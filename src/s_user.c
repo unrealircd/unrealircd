@@ -1673,21 +1673,21 @@ CMD_FUNC(m_nick)
 		 */
 		if (MyClient(sptr))
 		{
-			for (mp = cptr->user->channel; mp; mp = mp->next)
+			for (mp = sptr->user->channel; mp; mp = mp->next)
 			{
-				if (is_banned(cptr, &me, mp->chptr, BANCHK_NICK) && !is_chanownprotop(cptr, mp->chptr))
+				if (is_banned(sptr, sptr, mp->chptr, BANCHK_NICK) && !is_chanownprotop(sptr, mp->chptr))
 				{
-					sendto_one(cptr,
+					sendto_one(sptr,
 					    err_str(ERR_BANNICKCHANGE),
 					    me.name, parv[0],
 					    mp->chptr->chname);
 					return 0;
 				}
-				if (!IsOper(cptr) && !IsULine(cptr)
+				if (!IsOper(sptr) && !IsULine(sptr)
 				    && mp->chptr->mode.mode & MODE_NONICKCHANGE
-				    && !is_chanownprotop(cptr, mp->chptr))
+				    && !is_chanownprotop(sptr, mp->chptr))
 				{
-					sendto_one(cptr,
+					sendto_one(sptr,
 					    err_str(ERR_NONICKCHANGE),
 					    me.name, parv[0],
 					    mp->chptr->chname);
