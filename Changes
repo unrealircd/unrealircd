@@ -813,3 +813,5 @@ seen. gmtime warning still there
 - Moved FAILOPER_WARN define to set::options::fail-oper-warn
 - Fixed an alias {} bug found by James-Bond
 - Moved SHOWCONNECTINFO define to set::options::show-connect-info
+- Added support for nested comments in the configuration file (by chasm)
+- Added chasm to /info

@@ -587,16 +587,27 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				else if (*(ptr+1) == '*')
 				{
 					int commentstart = linenumber;
+					int commentlevel = 1;
 
 					for(ptr+=2;*ptr;ptr++)
 					{
-						if ((*ptr == '*') && (*(ptr+1) == '/'))
+						if ((*ptr == '/') && (*(ptr+1) == '*'))
 						{
+							commentlevel++;
 							ptr++;
-							break;
 						}
+
+						else if ((*ptr == '*') && (*(ptr+1) == '/'))
+						{
+							commentlevel--;
+							ptr++;
+						}
+
 						else if (*ptr == '\n')
 							linenumber++;
+
+						if (!commentlevel)
+							break;
 					}
 					if (!*ptr)
 					{
