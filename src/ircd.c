@@ -131,7 +131,6 @@ void restart PROTO((char *));
 static void open_debugfile(), setup_signals();
 extern void init_glines(void);
 
-int  do_garbage_collect = 0;
 TS   last_garbage_collect = 0;
 char **myargv;
 int  portnum = -1;		/* Server port number, listening this */

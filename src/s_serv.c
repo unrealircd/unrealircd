@@ -3629,7 +3629,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 			{
 				if (!IsAdmin(sptr))
 					return 0;
-				do_garbage_collect = 1;
+				loop.do_garbage_collect = 1;
 				return 0;
 			}
 			if (!match("-rest*", parv[1]))
