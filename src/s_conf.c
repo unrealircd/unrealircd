@@ -6639,7 +6639,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 		FindClose(hFind);
 		return -1;
 	}
-/* TODO FIX MEM LEAK */
+
 	if (cPath) {
 		path = MyMalloc(strlen(cPath) + strlen(FindData.cFileName)+1);
 		strcpy(path,cPath);
@@ -6648,6 +6648,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 			config_status("%s:%i: loadmodule %s: failed to load: %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				FindData.cFileName, ret);
+			free(path);
 			return -1;
 		}
 		free(path);
@@ -6671,6 +6672,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 				config_status("%s:%i: loadmodule %s: failed to load: %s",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 					FindData.cFileName, ret);
+				free(path);
 				return -1;
 			}
 			free(path);
