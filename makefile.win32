@@ -17,7 +17,7 @@ LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib \
 
 !ELSE
 
-CFLAGS=  /MTd /Zi /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D USENEWDNS /D _WIN32GUI /D NOSPOOF=1 /c
+CFLAGS=  /MTd /Zi /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D _WIN32GUI /D NOSPOOF=1 /c
 #/Od /Yd /G5
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib \
  oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /debug /debugtype:BOTH /OUT:WIRCD.EXE
@@ -28,7 +28,7 @@ LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib \
 
 !ELSE
 
-CFLAGS=  /MTd /Zi /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D DEBUG /D DEBUGMODE /D USENEWDNS /D _DEBUG /D _WIN32GUI /D NOSPOOF=1 /c
+CFLAGS=  /MTd /Zi /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D DEBUG /D DEBUGMODE /D _DEBUG /D _WIN32GUI /D NOSPOOF=1 /c
 #/Od /Yd /G5
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib \
  oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /debug /debugtype:BOTH /OUT:WIRCD.EXE
@@ -95,9 +95,6 @@ CLEAN:
         $(CC) /nologo /I ./include /D CR_CHKCONF /Fosrc/chkconf.obj /c src/chkconf.c
         $(LINK) /nologo /out:./chkconf.exe src/chkconf.obj src/chkmatch.obj \
                 src/chkcrule.obj
-
-src/newdns.obj: src/newdns.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/newdns.c
 
 src/version.obj: src/win32/version.c
         $(CC) $(CFLAGS) src/win32/version.c

@@ -443,3 +443,4 @@
   when server is ready
 - Fixed minor problem with mod_load code
 - Fixed possible crash with /quote dns l
+- Removed newdns

@@ -119,9 +119,6 @@ extern fdlist socks_fdlist;
 #endif
 
 
-#ifdef NEWDNS
-void newdns_lookupfromip( aClient *);
-#endif /*NEWDNS*/
 /*
  * Try and find the correct name to use with getrlimit() for setting the max.
  * number of files allowed to be open by this process.
@@ -620,9 +617,7 @@ if ((bootopt & BOOT_CONSOLE) || isatty(0))
 }
 init_dgram:
 #endif /*_WIN32*/
-#ifndef NEWDNS
 resfd = init_resolver(0x1f);
-#endif /*NEWDNS*/
 return;
 }
 
@@ -889,9 +884,7 @@ void close_connection(cptr)
 	/*
 	 * remove outstanding DNS queries.
 	 */
-#ifndef NEWDNS	
 	del_queries((char *)cptr);
-#endif /*NEWDNS*/
 	/*
 	 * If the connection has been up for a long amount of time, schedule
 	 * a 'quick' reconnect, else reset the next-connect cycle.
@@ -1287,8 +1280,7 @@ aClient *add_connection(cptr, fd)
 		if (!(cptr->umodes & LISTENER_SSL))	
 			FDwrite(fd, REPORT_DO_DNS, R_do_dns);
 #endif
-#ifndef USENEWDNS
-		lin.flags = ASYNC_CLIENT;  //newdns
+		lin.flags = ASYNC_CLIENT;  
 		lin.value.cptr = acptr;
 		Debug((DEBUG_DNS, "lookup %s",
 		inetntoa((char *)&addr.SIN_ADDR)));
@@ -1308,20 +1300,10 @@ aClient *add_connection(cptr, fd)
 		nextdnscheck = 1;
 
 
-#else /*USENEWDNS*/
-
-		Debug((DEBUG_DNS, "lookup %s",
-		inetntoa((char *)&addr.SIN_ADDR)));
-
-
-		if (acptr->hostp = newdns_checkcacheip(acptr))
-
 #ifdef SHOWCONNECTINFO
 		if (!(cptr->umodes & LISTENER_SSL))
 			FDwrite(fd, REPORT_FIN_DNSC, R_fin_dnsc);
 #endif /*SHOWCONNECTINFO*/
-
-#endif /*USENEWDNS*/
 	}
 
 	acptr->fd = fd;
@@ -2469,11 +2451,7 @@ int  connect_server(aconf, by, hp)
 #else
 			aconf->ipnum.S_ADDR = 0;
 #endif
-#ifndef NEWDNS
 			hp = gethost_byname(s, &lin);
-#else  /*NEWDNS*/
-			hp = newdns_checkcachename(s);
-#endif /*NEWDNS*/
 			if (!hp)
 				return 0;
 			bcopy(hp->h_addr, (char *)&aconf->ipnum,
@@ -2734,7 +2712,6 @@ void get_my_name(cptr, name, len)
  * reading.
  */
 
-#ifndef NEWDNS
 #ifndef _WIN32
 static void do_dns_async()
 #else
@@ -2799,4 +2776,3 @@ void do_dns_async(id)
 			bytes = 0;
 	} while ((bytes > 0) && (pkts < 10));
 }
-#endif /*NEWDNS*/
