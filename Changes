@@ -1040,3 +1040,5 @@ seen. gmtime warning still there
 - Small fix for #427583 mode bug
 - Fixed it so /module load doesnt require you to do ./module.so if the module is in
   current dir
+- Fixed a freeze bug in m_htm (pthreads now uses recursive mutexes)
+
