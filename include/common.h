@@ -141,6 +141,10 @@ extern char *strtoken PROTO((char **, char *, char *));
 
 extern u_char tolowertab[], touppertab[];
 
+#if defined(CHINESE_NICK) || defined(JAPANESE_NICK)
+#define USE_LOCALE
+#endif
+
 #ifndef USE_LOCALE
 #undef tolower
 #define tolower(c) (tolowertab[(c)])
