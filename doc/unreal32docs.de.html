@@ -26,7 +26,7 @@
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2.2-CVS </font><br>
-  <b>Letztes Dokumentation Update:</b>       2004-10-11</div>
+  <b>Letztes Dokumentation Update:</b>        2004-10-13</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
 <b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
@@ -2818,6 +2818,9 @@ snomask gesendet.</p>
 <p><font class="set">set::options::allow-part-if-shunned;<br>
 </font>Erlaubt es Usern, auf die ein /shun gesetzt ist, den /part Befehl zu
 benutzen.</p>
+<p><font class="set">set::options::fail-oper-warn;</font><font class="set"><br>
+</font>Falls gesetzt, wird ein User benachrichtigt, dass ein fehlgeschlagener
+Oper Zugriff geloggt wurde.&lt;/p></p>
 <p><font class="set">set::dns::timeout &lt;timevalue&gt;;</font><br>
 Ein Wert, der angibt, innerhalb welcher Zeit ein DNS Server zu antworten hat, bevor
 &quot;timeout&quot; gemeldet wird. Der Zeitwert ist ein numerischer String, in
@@ -3914,12 +3917,21 @@ Datei</a></b></font></p>
   korrekt und sicher eingestellt ist, aber irgendwelche backup.tar.gz
   ungeschützt und für jedermann lesbar auf dem Server liegen).<br>
   <br>
-  Möglicherweise möchte man verschlüsselte Passworte verwenden, wo immer das
-  möglich ist. Das ist kein ausreichender Schutz, sondern nur eine andere Ebene
-  von Sicherheit. Eine reihe von 1-8 Zeichen Passworten können innerhalb
-  weniger Stunden/Tage entschlüsselt werden. Außerdem gibt es üblicherweise
-  weitere interessante Informationen in Config Dateien, die nicht verschlüsselt
-  sind (wie: link::password-connect).</div>
+  Sicherlich möchte man auch verschlüsselte Passworte benutzen, wo immer das
+  möglich ist, wenn man mit OpenSSL Unterstützung compiliert (was man
+  natürlich, besorgt um Sicherheit, tun wird, richtig?) Zu empfehlen sind in
+  diesem Fall die Verschlüsselung der Passworte mit &quot;sha1&quot; oder
+  &quot;ripemd160&quot;, andernfalls &quot;md5&quot;. Soweit man schon
+  verschlüsselte (oper) Blöcke von Unreal3.2.1 oder früher hat, sollten diese
+  neu verschlüsselt werden (einfach erneut /mkpasswd), da mit 3.2.1 ein
+  bedeutende Anti Crack Maßnahmen eingeführt wurden&nbsp; (basically a 14x slowdown of active cracks, and making stored-plain-ciphertext cracks
+  impossible). [Text in Klammern nicht übersetzt, da vom Übersetzer nicht
+  verstanden, sorry ;) ]<br>
+  Auch sollte noch beachtet werden, dass dies &quot;nur eine andere Ebene
+  von Sicherheit&quot; ist, da schlechte Passworte noch relativ leicht geknackt
+  werden können. Und falls es jemandem gelingt, die Config Datei einzusehen,
+  gibt es für einen potentiellen Angreifer darin interessante Dinge zu sehen,
+  wie 'link::password-connect'.</div>
 <p><font size="+2"><b><a name="secuser">8.4 User bezogene Probleme</a></b></font></p>
 <div class="desc">Wie die meisten dieser Punkte ist auch dies nicht
   UnrealIRCd-spezifisch, aber...<br>
@@ -3929,7 +3941,9 @@ Datei</a></b></font></p>
   macht möglicherweise ein Freund, der Oper ist, irgend etwas Dummes. Wie z.B.
   die Festplatte via netbios/kazaa/morpheus/.. freigeben, einen Trojaner fangen,
   ein unsicheres Passwort nutzen , etc etc.. Unglücklicherweise hat man dadurch
-  nicht alles unter eigener Konrolle.</div>
+  nicht alles unter eigener Konrolle.<br>
+  Eines könnte man jedoch tun: Sorgfältig wählen, welche Privilegien jemand
+  wirklich benötigt (oper::flags).</div>
 <p><font size="+2"><b><a name="secsnif">8.5 SSL/SSH &amp; Sniffing</a></b></font></p>
 <div class="desc">Es sollten unbedingt SSL Verbindungen zwischen Servern und als
   Oper benutzt werden, um gegen &quot;Sniffing&quot; geschützt zu sein.
@@ -4000,8 +4014,7 @@ Datei</a></b></font></p>
   - /stats i, /stats y: könnte einem Angreifer helfen, Hosts zu finden, welche
   viele Verbindungen gestatten.<br>
   - /stats P: hilft dem Angreifer, serveronly Ports zu finden<br>
-  etc etc...
-  <p><b>MAP / LINKS</b><br>
+  etc etc...<p><b>MAP / LINKS</b><br>
   Es wurde häufig gefragt, ob es möglich sei,&nbsp; /map oder /links zu
   deaktivieren. Unnsere Position hier zu ist, dass dies leichtfertig wäre und
   ein falsches Gefühl von Sicherheit gäbe. Um das zu erklären: Server zu
@@ -4020,9 +4033,9 @@ Datei</a></b></font></p>
   Dinge genauso.<br>
   <br>
   <b>NORMAL USERS &amp; SNOMASKS</b><br>
-  Ein nicht allgemein beakanntes Feature ist, dass normale User ebenfalls einige
+  Ein nicht allgemein bekanntes Feature ist, dass normale User ebenfalls einige
   eingeschränkte snomasks gesetzt haben können, insbesondere +s +sk. Dadurch
-  können sie Dinge wie rehashs, oper ups, kills und verschiedene andere
+  können sie Dinge wie rehashs, kills und verschiedene andere
   Meldungen lesen.<br>
   Um das zu deaktivieren, kann man set::restrict-usermodes benutzten, wie hier: set { restrict-usermodes "s"; };.<br>
   <br>
@@ -4036,10 +4049,11 @@ Datei</a></b></font></p>
   Punkte, als den Kernel angreifen.... aus verschiedenen Gründen.<br>
   <br>
   Eines allerdings sollte man tun: IMMER DIE NEUESTE VERSION BENUTZEN. Wenn man
-  sich in die Unreal-notify mailinglist einträgt, erhält man die Ankündigung
+  sich in die <a href="http://mail1.sourceforge.net/mailman/listinfo/unreal-notify"> Unreal-notify mailinglist</a> einträgt, erhält man die Ankündigung
   über neue Versionen (unreal-notify ist nur für Ankündigungen und man
   erhält nur alle X Monate 1 Mail). Üblicherweise gibt es neue Releases, wenn
-  es (bedeutende) Sicherheits Fixes gibt..</div>
+  es (bedeutende) Sicherheits Fixes gibt, aber eigentlich ist es gut, in jedem
+  Fall zu upgraden.</div>
 <p><font size="+2"><b><a name="secsummary">8.9 Zusammenfassung</a></b></font></p>
 <div class="desc">Wie jetzt hoffentlich einleuchtend erklärt wurde, kann man
   niemals 100% sicher sein. Anwender und Entwickler haben jedes Sicherheitsloch
