@@ -398,3 +398,4 @@
 - Added sajoin/sapart error message patch by NiQuiL (modified slightly by codemastr)
 - Implimented IRCNet style server redirection, based on the hybrid-7 code. Some clients will connect
   to the specified server automatically, others will require you to do it manually.
+- Made /info use @unrealircd.com emails instead of @tspre.org

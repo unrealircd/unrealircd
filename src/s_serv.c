@@ -1942,11 +1942,11 @@ void m_info_send(sptr)
 	sendto_one(sptr, ":%s %d %s :| Brought to you by the following people:",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * Stskeeps     <stskeeps@tspre.org>",
+	sendto_one(sptr, ":%s %d %s :| * Stskeeps     <stskeeps@unrealircd.com>",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * codemastr    <codemastr@tspre.org>",
+	sendto_one(sptr, ":%s %d %s :| * codemastr    <codemastr@unrealircd.com>",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * DrBin        <drbin@tspre.org>",
+	sendto_one(sptr, ":%s %d %s :| * DrBin        <drbin@unrealircd.com>",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| Credits - Type /Credits",
