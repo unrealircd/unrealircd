@@ -230,6 +230,7 @@
 #define RPL_TRACENEWTYPE     208
 #define RPL_TRACECLASS       209
 
+#define RPL_STATSHELP	     210
 #define RPL_STATSLINKINFO    211
 #define RPL_STATSCOMMANDS    212
 #define RPL_STATSCLINE       213

@@ -2375,18 +2375,6 @@ int  m_stats(cptr, sptr, parc, parv)
 	else
 		name = me.name;
 
-	if (stat != '\0')
-		sendto_umode(UMODE_EYES, "Stats \'%c\' requested by %s (%s@%s)",
-		    stat, sptr->name, sptr->user->username,
-		    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
-		    realhost);
-	else
-		sendto_umode(UMODE_EYES,
-		    "Stats \'NULL\' requested by %s (%s@%s)", sptr->name,
-		    sptr->user->username,
-		    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
-		    realhost);
-
 	switch (stat)
 	{
 #ifdef STRIPBADWORDS
@@ -2636,9 +2624,49 @@ int  m_stats(cptr, sptr, parc, parv)
 			  count_memory(sptr, parv[0]);
 		  break;
 	  default:
-		  stat = '*';
+		/* Display a help menu */
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "/Stats flags:");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "b - Send the badwords list");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "C - Send the C/N line list");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "d - Send the d line list");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "D - Send the D line list");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "e - Send the e line list");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "E - Send the E line list");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "F - Send the dccdeny line list");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "G - Report TKL information (G:lines/Shuns)");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "H - Send the H/L line list");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "I - Send the I line list");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "K - Send the K/E/Z line list (Includes AKILLs)");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "L - Send Link information");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "M - Send list of how many times each command was used");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "n - Send the n line list");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "N - Send network configuration list");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "O - Send the O line list");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "q - Send the SQLINE list");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "Q - Send the Q line list");
+#ifdef DEBUGMODE
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "R - Send the usage list");
+#endif
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "s - Send the SCache and NS list");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "S - Send the dynamic configuration list");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "t - Send the T line list");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "t - Send connection information");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "u - Send server uptime and connection count");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "U - Send the U line list");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "v - Send the V line list");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "V - Send the vhost list");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "W - Send load information");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "Y - Send the Y line list");
+		sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0], "Z - Send memory usage information");
+		stat = '*';
 		  break;
 	}
+	if (stat != '*')
+		sendto_umode(UMODE_EYES, "Stats \'%c\' requested by %s (%s@%s)",
+			stat, sptr->name, sptr->user->username,
+			IsHidden(sptr) ? sptr->user->virthost : sptr->user->
+			realhost);
+		
 	sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, parv[0], stat);
 	return 0;
 }

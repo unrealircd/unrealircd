@@ -239,7 +239,7 @@ static char *replies[] = {
 /* 207    RPL_TRACESERVICE */    ":%s 207 %s Service %d %s",
 /* 208    RPL_TRACENEWTYPE */    ":%s 208 %s <newtype> 0 %s",
 /* 209    RPL_TRACECLASS */      ":%s 209 %s Class %d %d",
-/* 210 */ NULL,
+/* 210    RPL_STATSHELP */       ":%s 210 %s :%s",
 /* 211 */ NULL, /* Used */
 #ifdef DEBUGMODE
 /* 212    RPL_STATSCOMMANDS */ ":%s 212 %s %s %u %u %u %u %u %u",
