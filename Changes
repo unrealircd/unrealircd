@@ -635,3 +635,6 @@
 - Added P:line flags C - client only, S - server only, J - java clients (replaces CONFROOM_JAVA_PORT)
 - Fixed up a few various things
 - Made SHOWCONNECTNOTICES work properly again, also with SSL
+- Changed ./Config to detect SSL better, and generate certificates properly
+- Removed some annoying logging in ssl.c
+- Merged in changes from TEMPcvs branch

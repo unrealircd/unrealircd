@@ -1254,6 +1254,8 @@ int  get_sockerr(cptr)
 	return errtmp;
 }
 
+
+
 /*
 ** set_non_blocking
 **	Set the client connection into non-blocking mode. If your

@@ -1183,8 +1183,11 @@ int  m_server_estab(cptr)
 	(void)find_or_add(cptr->name);
 	if (TRUEHUB == 1)
 		sendto_serv_butone(&me,
-		    ":%s GLOBOPS :Link with %s established.", me.name, inpath);
-	sendto_locfailops("Link with %s established.", inpath);
+		    ":%s GLOBOPS :%sLink with %s established.", me.name, 
+		    IsSecure(cptr) ? "Secure " : "",
+		    inpath);
+	sendto_locfailops("%sLink with %s established.", 
+		IsSecure(cptr) ? "Secure " : "", inpath);
 	/* Insert here */
 	(void)add_to_client_hash_table(cptr->name, cptr);
 	/* doesnt duplicate cptr->serv if allocted this struct already */

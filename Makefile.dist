@@ -121,6 +121,9 @@ STRTOUL=
 # override it here and see what happens.
 FD_SETSIZE=
 
+# Where is your openssl binary
+OPENSSLPATH=
+
 CFLAGS=-I$(INCLUDEDIR) $(XCFLAGS) $(NEED_U_INT32_T) $(FD_SETSIZE)
 
 SHELL=/bin/sh
@@ -211,7 +214,7 @@ install: all
 	@echo "Now install by hand; make install is broken."
 
 pem:	src/ssl.cnf
-	/usr/local/ssl/bin/openssl req -new -x509 -days 365 -nodes \
+	$(OPENSSLPATH) req -new -x509 -days 365 -nodes \
                 -config src/ssl.cnf -out server.pem -keyout server.pem
-	/usr/local/ssl/bin/openssl x509 -subject -dates -fingerprint -noout \
+	$(OPENSSLPATH) x509 -subject -dates -fingerprint -noout \
 		-in server.pem
