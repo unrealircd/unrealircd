@@ -8,6 +8,13 @@ Unreal3.2-beta16 Release Notes
   read it before asking for help.
 * Report bugs at http://bugs.unrealircd.org/
 
+==[ REMOVED ]==
+* The built-in scanner (and threading at *NIX) has been removed, NOT because we want to
+  annoy our users (again), but because it made UnrealIRCd unstable (especially in case
+  of server attacks!). If you have *NIX then you should consider using BOPM instead:
+  http://www.blitzed.org/bopm/
+* not removed, but CMDLINE_CONFIG(-f) is now disabled by default
+
 == [NEW FEATURES (see unreal32docs.html for more information) ]==
 * throttling has been improved and is now considered stable. You can configure it in
   the set::throttle block. It allows you to config max. X connections in Y seconds.
@@ -50,11 +57,6 @@ Unreal3.2-beta16 Release Notes
 * usermode +S was accidently changed to a local usermode in beta15
 * minor badwords /rehash memleak
 * random ziplink crashes
-
-==[ REMOVED ]==
-* The built-in scanner (and threading at *NIX) has been removed because it
-  made UnrealIRCd unstable, you can use BOPM instead: http://www.blitzed.org/bopm/
-* not removed, but CMDLINE_CONFIG(-f) is now disabled by default
 
 ==[ ADDITIONAL INFO ]==
 * Sorry, better +a/+q support and giving +a/+q a symbol in nicklist (like @ for +o)
