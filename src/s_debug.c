@@ -461,7 +461,7 @@ void count_memory(cptr, nick)
 
 	sendto_one(cptr, ":%s %d %s :Channels %d(%d) Bans %d(%d)",
 	    me.name, RPL_STATSDEBUG, nick, ch, chm, chb, chbm);
-	sendto_one(cptr, ":%s %d %s :Channel membrs %d(%d) invite %d(%d)",
+	sendto_one(cptr, ":%s %d %s :Channel members %d(%d) invite %d(%d)",
 	    me.name, RPL_STATSDEBUG, nick, chu, chu * sizeof(Link),
 	    chi, chi * sizeof(Link));
 

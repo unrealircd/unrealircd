@@ -398,3 +398,4 @@
 - Removed some odd Clone stuff(?)
 - Added Blowfish encryption ability (SetSecure()), will extend to more
   better encryption
+- Fixed a typo in /stats z
