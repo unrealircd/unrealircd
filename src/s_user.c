@@ -54,7 +54,6 @@ Computing Center and Jarkko Oikarinen";
 
 void send_umode_out PROTO((aClient *, aClient *, long));
 void send_umode_out_nickv2 PROTO((aClient *, aClient *, long));
-void send_svsmode_out PROTO((aClient *, aClient *, aClient *, long));
 void send_umode PROTO((aClient *, aClient *, long, long, char *));
 static is_silenced PROTO((aClient *, aClient *));
 /* static  Link    *is_banned PROTO((aClient *, aChannel *)); */
@@ -2816,16 +2815,15 @@ int  m_whois(cptr, sptr, parc, parv)
 
 	for (tmp = parv[1]; (nick = strtoken(&p, tmp, ",")); tmp = NULL)
 	{
-		int  invis, showsecret, showperson, member, wilds;
+		int  invis, showchannel, member, wilds;
 
 		found = 0;
-		(void)collapse(nick);
+		/* We do not support "WHOIS *" */
 		wilds = (index(nick, '?') || index(nick, '*'));
 		if (wilds)
 			continue;
 
-		for (acptr = client; (acptr = next_client(acptr, nick));
-		    acptr = acptr->next)
+		if (acptr = find_client(nick, NULL))
 		{
 			if (IsServer(acptr))
 				continue;
@@ -2836,57 +2834,22 @@ int  m_whois(cptr, sptr, parc, parv)
 				break;
 			/*
 			 * 'Rules' established for sending a WHOIS reply:
-			 *
-			 * - only allow a remote client to get replies for
-			 *   local clients if wildcards are being used;
-			 *
-			 * - if wildcards are being used dont send a reply if
-			 *   the querier isnt any common channels and the
-			 *   client in question is invisible and wildcards are
-			 *   in use (allow exact matches only);
-			 *
 			 * - only send replies about common or public channels
 			 *   the target user(s) are on;
 			 */
-			if (!MyConnect(sptr) && !MyConnect(acptr) && wilds)
-				continue;
+
 			user = acptr->user ? acptr->user : &UnknownUser;
 			name = (!*acptr->name) ? "?" : acptr->name;
 
 			invis = acptr != sptr && IsInvisible(acptr);
 			member = (user->channel) ? 1 : 0;
-			showperson = (wilds && !invis && !member) || !wilds;
 
-			for (lp = user->channel; lp; lp = lp->next)
-			{
-				chptr = lp->chptr;
-				member = IsMember(sptr, chptr) || IsOper(sptr);
-				if (!IsServices(acptr)) {
-					break;
-				}
-				if (invis && !member)
-					continue;
-				if (member || (!invis && PubChannel(chptr)))
-				{
-					showperson = 1;
-					break;
-				}
-				if (!invis && HiddenChannel(chptr) && !SecretChannel(chptr))
-					showperson = 1;
-				else if (IsAnOper(sptr) && SecretChannel(chptr))
-				{
-					showperson = 1;
-					showsecret = 1;
-				}
-			}
-			if (!showperson)
-				continue;
 			a2cptr = find_server_quick(user->server);
 
 			if (!IsPerson(acptr))
 				continue;
 
-			if (IsWhois(acptr) && sptr != acptr)
+			if (IsWhois(acptr) && (sptr != acptr))
 			{
 				sendto_one(acptr,
 				    ":%s NOTICE %s :*** %s (%s@%s) did a /whois on you.",
@@ -2909,21 +2872,36 @@ int  m_whois(cptr, sptr, parc, parv)
 				    me.name, parv[0], name,
 				    get_mode_str(acptr));
 			}
-			if (IsAnOper(sptr) && IsHidden(acptr) ||
-			    acptr == sptr && IsHidden(sptr))
+			if (IsHidden(acptr) && ((acptr == sptr) || IsAnOper(sptr))) 
 			{
 				sendto_one(sptr, rpl_str(RPL_WHOISHOST),
 				    me.name, parv[0], acptr->name,
 				    user->realhost);
 			}
+
 			if (IsARegNick(acptr))
 				sendto_one(sptr, rpl_str(RPL_WHOISREGNICK), me.name, parv[0], name);
+			
 			found = 1;
 			mlen = strlen(me.name) + strlen(parv[0]) + 6 + strlen(name);
 			for (len = 0, *buf = '\0', lp = user->channel; lp; lp = lp->next)
 			{
 				chptr = lp->chptr;
-				if (!invis && !IsServices(sptr) && (IsAnOper(sptr) || ShowChannel(sptr, chptr) || (acptr == sptr)))
+				showchannel = 0;
+				if (ShowChannel(sptr, chptr))
+					showchannel = 1;
+#ifndef SHOW_SECRET
+				if (IsAnOper(sptr) && !SecretChannel(chptr))
+#else
+				if (IsAnOper(sptr))
+#endif
+					showchannel = 1;
+				if (IsServices(acptr) && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
+					showchannel = 0;
+				if (acptr == sptr)
+					showchannel = 1;
+
+				if (showchannel)
 				{
 					if (len + strlen(chptr->chname) > (size_t)BUFSIZE - 4 - mlen)
 					{
@@ -2942,7 +2920,6 @@ int  m_whois(cptr, sptr, parc, parv)
 					    && (IsNetAdmin(sptr)
 					    || IsTechAdmin(sptr))
 #endif
-					    && (showsecret == 1)
 					    && SecretChannel(chptr))
 						*(buf + len++) = '~';
 					if (is_chanowner(acptr, chptr))
@@ -3023,7 +3000,7 @@ int  m_whois(cptr, sptr, parc, parv)
 				sendto_one(sptr, ":%s %d %s %s :%s", me.name,
 				    RPL_WHOISSPECIAL,
 				    parv[0], name,
-				    "is a \2Secure Connection\2");
+				    "is a Secure Connection");
 			}
 			if (user->swhois && !IsHideOper(acptr))
 			{
@@ -3038,8 +3015,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			 * global oper or services.
 			 * -CodeM/Barubary
 			 */
-			if (MyConnect(acptr) && (IsOper(sptr) || (acptr->user
-			    && MyConnect(acptr) && !IsOper(acptr))))
+			if (MyConnect(acptr))
 				sendto_one(sptr, rpl_str(RPL_WHOISIDLE),
 				    me.name, parv[0], name,
 				    TStime() - user->last, acptr->firsttime);
@@ -5036,25 +5012,6 @@ void send_umode_out_nickv2(cptr, sptr, old)
 
 }
 
-/*
- * added by taz
- */
-void send_svsmode_out(cptr, sptr, bsptr, old)
-	aClient *cptr, *sptr, *bsptr;
-
-	long old;
-{
-	aClient *acptr;
-
-	send_umode(NULL, sptr, old, SEND_UMODES, buf);
-
-	sendto_serv_butone_token(acptr, bsptr->name, MSG_SVSMODE, TOK_SVSMODE,
-	    "%s :%s", sptr->name, buf);
-
-/*	if (cptr && MyClient(cptr))
-		send_umode(cptr, sptr, old, ALL_UMODES, buf);
-*/
-}
 
 /***********************************************************************
  * m_silence() - Added 19 May 1994 by Run.
