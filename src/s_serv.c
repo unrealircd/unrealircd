@@ -2656,6 +2656,8 @@ CMD_FUNC(m_help)
 	}
 	else
 	{
+		if (!message)
+			return 0;
 		sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL,
 		    parv[0], MSG_HELP, TOK_HELP, "%s", message);
 		sendto_umode(UMODE_HELPOP, "*** HelpOp -- from %s: %s", parv[0],
