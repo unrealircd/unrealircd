@@ -1306,3 +1306,6 @@ seen. gmtime warning still there
   the heck..
 - Made ident checking work on IPv6 as well
 - Fixed a /stats L/l bug reported by dimplesx [#0000190]
+- Fixed some typos in validate_configuration, fixed a hostilename problem when ident
+  checking is off
+- Fixed a hostilename problem reported by Xuefer [#0000158]

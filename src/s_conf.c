@@ -3043,7 +3043,7 @@ void	validate_configuration(void)
 		in.s_addr = inet_addr(NAME_SERVER);
 		if (strcmp((char *)inet_ntoa(in), NAME_SERVER))
 		{
-			Warning("set::dns::nameserver (%s) is not an valid IP. Using 127.0.0.1 as default", NAME_SERVER);
+			Warning("set::dns::nameserver (%s) is not a valid IP. Using 127.0.0.1 as default", NAME_SERVER);
 			ircstrdup(NAME_SERVER, "127.0.0.1");
 			in.s_addr = inet_addr(NAME_SERVER);
 		}
@@ -3072,7 +3072,7 @@ void	validate_configuration(void)
 		hide_host = 0;
 	}
 	if (Missing(locop_host)) {
-		Warning("set::hosts:local is missing");
+		Warning("set::hosts::local is missing");
 		hide_host = 0;
 	}
 	if (Missing(sadmin_host)) {

@@ -805,10 +805,11 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 				*user->username = '~';
 				(void)strncpy(&user->username[1], temp, USERLEN);
 				user->username[USERLEN] = '\0';
-			}
 #ifdef HOSTILENAME
-			noident = 1;
+				noident = 1;
 #endif
+			}
+
 		}
 #ifdef HOSTILENAME
 		/*
@@ -821,6 +822,11 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 		 *
 		 * Moved the noident thing to the right place - see above
 		 * -OnyxDragon
+		 * 
+		 * No longer use nickname if the entire ident is invalid,
+                 * if thats the case, it is likely the user is trying to cause
+		 * problems so just ban them. (Using the nick could introduce
+		 * hostile chars) -- codemastr
 		 */
 		for (u2 = user->username + noident; *u2; u2++)
 		{
@@ -844,8 +850,7 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 		{
 			if (stripuser[0] == '\0')
 			{
-				strncpy(stripuser, cptr->name, 8);
-				stripuser[8] = '\0';
+				return exit_client(cptr, cptr, cptr, "Hostile username. Please use only 0-9 a-z A-Z _ - and . in your username.");
 			}
 
 			strcpy(olduser, user->username + noident);
