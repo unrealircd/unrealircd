@@ -425,3 +425,9 @@
   - Added duplicate config entry detection (#0002126) suggested by brain2
   - May have a few bugs (easily fixed)
 - Corrected numerous -Wall warnings
+- Fixed a bug with /rehash and classes due to the config parser rewrite
+- Modified the module symbol dependency code to do more accurate searching for the module
+  that contains the necessary symbol (#0002123) suggested by Xuefer.
+  - Unreal will now prepend the pathname to the module and append the appropriate extension
+    (.so or .dll) to the end)
+  - The new module system version is "3.2.3" to allow for backwards compatibility

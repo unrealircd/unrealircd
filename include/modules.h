@@ -21,23 +21,24 @@
 #ifndef MODULES_H
 #define MODULES_H
 #include "types.h"
-#define MOD_VERSION	"3.2-b5-1"
-#define MOD_WE_SUPPORT  "3.2-b5*"
 #define MAXCUSTOMHOOKS  30
 #define MAXHOOKTYPES	100
 #define MAXCALLBACKS	30
 #if defined(_WIN32)
+ #define MOD_EXTENSION "dll"
  #define DLLFUNC	_declspec(dllexport)
  #define irc_dlopen(x,y) LoadLibrary(x)
  #define irc_dlclose FreeLibrary
  #define irc_dlsym(x,y,z) z = (void *)GetProcAddress(x,y)
  #define irc_dlerror our_dlerror
 #elif defined(HPUX)
+ #define MOD_EXTENSION "so"
  #define irc_dlopen(x,y) shl_load(x,y,0L)
  #define irc_dlsym(x,y,z) shl_findsym(x,y,z)
  #define irc_dlclose shl_unload
  #define irc_dlerror() strerror(errno)
 #else
+ #define MOD_EXTENSION "so"
  #define irc_dlopen dlopen
  #define irc_dlclose dlclose
  #if defined(UNDERSCORE)
@@ -381,6 +382,7 @@ struct _Module
 	unsigned char options;
 	unsigned char errorcode;
 	char *tmp_file;
+	unsigned long mod_sys_version;
 };
 /*
  * Symbol table

@@ -1693,6 +1693,32 @@ char *unreal_mktemp(char *dir, char *suffix)
 	return NULL; 
 }
 
+/* Returns the path portion of the given path/file
+ * in the specified location (must be at least PATH_MAX
+ * bytes).
+ */
+char *unreal_getpathname(char *filepath, char *path)
+{
+	char *end = filepath+strlen(filepath);
+
+	while (*end != '\\' && *end != '/' && end > filepath)
+		end--;
+	if (end == filepath)
+		path = NULL;
+	else
+	{
+		int size = end-filepath;
+		if (size >= PATH_MAX)
+			path = NULL;
+		else
+		{
+			memcpy(path, filepath, size);
+			path[size] = 0;
+		}
+	}
+	return path;
+}
+
 /* Returns the filename portion of the given path
  * The original string is not modified
  */

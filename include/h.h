@@ -639,6 +639,7 @@ extern int place_host_ban(aClient *sptr, int action, char *reason, long time);
 extern int valid_host(char *host);
 extern int count_oper_sessions(char *);
 extern char *unreal_mktemp(char *dir, char *suffix);
+extern char *unreal_getpathname(char *filepath, char *path);
 extern char *unreal_getfilename(char *path);
 extern int unreal_copyfile(char *src, char *dest);
 extern time_t unreal_getfilemodtime(char *filename);

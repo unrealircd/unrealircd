@@ -62,7 +62,7 @@ Callback	*RCallbacks[MAXCALLBACKS];	/* 'Real' callback function, used for callba
 MODVAR Module          *Modules = NULL;
 MODVAR Versionflag     *Versionflags = NULL;
 
-int     Module_Depend_Resolve(Module *p);
+int     Module_Depend_Resolve(Module *p, char *path);
 Module *Module_make(ModuleHeader *header, 
 #ifdef _WIN32
        HMODULE mod
@@ -171,6 +171,30 @@ static char retbuf[128];
 	return retbuf;
 }
 
+int parse_modsys_version(char *version)
+{
+	int betaversion, tag;
+	if (!strcmp(version, "3.2.3"))
+		return 0x32300;
+	if (sscanf(version, "3.2-b%d-%d", &betaversion, &tag)) 
+	{
+		switch (betaversion)
+		{
+			case 5:
+				return 0x320b5;
+			case 6:
+				return 0x320b6;
+			case 7:
+				return 0x320b7;
+			case 8:
+				return 0x320b8;
+			default:
+				return 0;
+		}
+	}
+	return 0;
+}
+
 /*
  * Returns an error if insucessful .. yes NULL is OK! 
 */
@@ -189,11 +213,11 @@ char  *Module_Create(char *path_)
 	char    *Mod_Version;
 	static char 	errorbuf[1024];
 	char 		*path, *tmppath;
-	ModuleHeader    *mod_header;
+	ModuleHeader    *mod_header = NULL;
 	int		ret = 0;
 	Module          *mod = NULL, **Mod_Handle = NULL;
-	int betaversion,tag;
 	char *expectedmodversion = our_mod_version();
+	long modsys_ver = 0;
 	Debug((DEBUG_DEBUG, "Attempting to load module from %s",
 	       path_));
 	path = path_;
@@ -243,14 +267,13 @@ char  *Module_Create(char *path_)
 			remove(tmppath);
 			return ("Lacking mod_header->modversion");
 		}
-		if (sscanf(mod_header->modversion, "3.2-b%d-%d", &betaversion, &tag)) {
-			if (betaversion < 5 || betaversion >8) {
-				snprintf(errorbuf, 1023, "Unsupported version, we support %s, %s is %s",
-					   MOD_WE_SUPPORT, path, mod_header->modversion);
-				irc_dlclose(Mod);
-				remove(tmppath);
-				return(errorbuf);
-			}
+		if (!(modsys_ver = parse_modsys_version(mod_header->modversion)))
+		{
+			snprintf(errorbuf, 1023, "Unsupported module system version '%s'",
+				   mod_header->modversion);
+			irc_dlclose(Mod);
+			remove(tmppath);
+			return(errorbuf);
 		}
 		if (!mod_header->name || !mod_header->version ||
 		    !mod_header->description)
@@ -267,6 +290,7 @@ char  *Module_Create(char *path_)
 		}
 		mod = (Module *)Module_make(mod_header, Mod);
 		mod->tmp_file = strdup(tmppath);
+		mod->mod_sys_version = modsys_ver;
 		irc_dlsym(Mod, "Mod_Init", Mod_Init);
 		if (!Mod_Init)
 		{
@@ -285,7 +309,7 @@ char  *Module_Create(char *path_)
 			Module_free(mod);
 			return ("Unable to locate Mod_Load"); 
 		}
-		if (Module_Depend_Resolve(mod) == -1)
+		if (Module_Depend_Resolve(mod, path) == -1)
 		{
 			Module_free(mod);
 			return ("Dependancy problem");
@@ -296,7 +320,7 @@ char  *Module_Create(char *path_)
 		irc_dlsym(Mod, "Mod_Test", Mod_Test);
 		if (Mod_Test)
 		{
-			if (betaversion >= 8) {
+			if (mod->mod_sys_version >= 0x320b8) {
 				if ((ret = (*Mod_Test)(&mod->modinfo)) < MOD_SUCCESS) {
 					ircsprintf(errorbuf, "Mod_Test returned %i",
 						   ret);
@@ -365,6 +389,7 @@ Module *Module_make(ModuleHeader *header,
 	modp->modinfo.size = sizeof(ModuleInfo);
 	modp->modinfo.module_load = 0;
 	modp->modinfo.handle = modp;
+		
 	return (modp);
 }
 
@@ -372,7 +397,7 @@ void Init_all_testing_modules(void)
 {
 	
 	Module *mi, *next;
-	int betaversion, tag, ret;
+	int ret;
 	iFP Mod_Init;
 	for (mi = Modules; mi; mi = next)
 	{
@@ -380,8 +405,7 @@ void Init_all_testing_modules(void)
 		if (!(mi->flags & MODFLAG_TESTING))
 			continue;
 		irc_dlsym(mi->dll, "Mod_Init", Mod_Init);
-		sscanf(mi->header->modversion, "3.2-b%d-%d", &betaversion, &tag);
-		if (betaversion >= 8) {
+		if (mi->mod_sys_version >= 0x320b8) {
 			if ((ret = (*Mod_Init)(&mi->modinfo)) < MOD_SUCCESS) {
 				config_error("Error loading %s: Mod_Init returned %i",
 					mi->header->name, ret);
@@ -786,15 +810,13 @@ inline void	Module_AddAsChild(Module *parent, Module *child)
 	AddListItem(childp, parent->children);
 }
 
-int	Module_Depend_Resolve(Module *p)
+int	Module_Depend_Resolve(Module *p, char *path)
 {
 	Mod_SymbolDepTable *d = p->header->symdep;
 	Module		   *parental = NULL;
 	
 	if (d == NULL)
-	{
 		return 0;
-	}
 #ifndef STATIC_LINKING
 	while (d->pointer)
 	{
@@ -806,8 +828,22 @@ int	Module_Depend_Resolve(Module *p)
 		*(d->pointer) = Module_SymX(d->symbol, &parental);
 		if (!*(d->pointer))
 		{
-			config_progress("Unable to resolve symbol %s, attempting to load %s to find it", d->symbol, d->module);
-			Module_Create(d->module);
+			/* If >= 3.2.3 */
+			if (p->mod_sys_version >= 0x32300)
+			{
+				char tmppath[PATH_MAX], curpath[PATH_MAX];
+
+				unreal_getpathname(path, curpath);
+				snprintf(tmppath, PATH_MAX, "%s/%s.%s", curpath, d->module,
+					MOD_EXTENSION);
+				config_progress("Unable to resolve symbol %s, attempting to load %s to find it", d->symbol, tmppath);
+				Module_Create(tmppath);
+			}
+			else
+			{
+				config_progress("Unable to resolve symbol %s, attempting to load %s to find it", d->symbol, d->module);
+				Module_Create(d->module);
+			}
 			*(d->pointer) = Module_SymX(d->symbol, &parental);
 			if (!*(d->pointer)) {
 				config_progress("module dependancy error: cannot resolve symbol %s",

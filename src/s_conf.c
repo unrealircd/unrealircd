@@ -3368,8 +3368,19 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	ConfigItem_class *class;
+	unsigned char isnew = 0;
 
-	class = MyMallocEx(sizeof(ConfigItem_class));
+	if (!(class = Find_class(ce->ce_vardata)))
+	{
+		class = MyMallocEx(sizeof(ConfigItem_class));
+		ircstrdup(class->name, ce->ce_vardata);
+		isnew = 1;
+	}
+	else
+	{
+		isnew = 0;
+		class->flag.temporary = 0;
+	}
 	ircstrdup(class->name, ce->ce_vardata);
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -3385,7 +3396,8 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "recvq"))
 			class->recvq = atol(cep->ce_vardata);
 	}
-	AddListItem(class, conf_class);
+	if (isnew)
+		AddListItem(class, conf_class);
 	return 1;
 }
 
