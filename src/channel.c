@@ -3256,7 +3256,7 @@ Link *lp;
 		if (key && !strcasecmp(key, "override"))
 		{
 			sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-				":%s NOTICE " CHANOPPFX "%s :setting channel -%c due to OperOverride request from %s",
+				":%s NOTICE @%s :setting channel -%c due to OperOverride request from %s",
 				me.name, chptr->chname, mchar, sptr->name);
 			sendto_serv_butone(&me, ":%s MODE %s -%c 0", me.name, chptr->chname, mchar);
 			sendto_channel_butserv(chptr, &me, ":%s MODE %s -%c", me.name, chptr->chname, mchar);
@@ -5203,7 +5203,7 @@ char m;
 		char comment[1024], target[CHANNELLEN + 8];
 		ircsprintf(comment, "*** Channel %sflood detected (limit is %d per %d seconds), setting mode +%c",
 			text, chptr->mode.floodprot->l[what], chptr->mode.floodprot->per, m);
-		ircsprintf(target, CHANOPPFX "%%%s", chptr->chname);
+		ircsprintf(target, "@%%%s", chptr->chname);
 		sendto_channelprefix_butone_tok(NULL, &me, chptr,
 			PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
 			MSG_NOTICE, TOK_NOTICE, target, comment, 0);

@@ -122,7 +122,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 	char *nick, *server, *p, *cmd, *ctcp, *p2, *pc, *text;
 	int  cansend = 0;
 	int  prefix = 0;
-	char pfixchan[CHANNELLEN + 32];
+	char pfixchan[CHANNELLEN + 4];
 	int ret;
 
 	/*
@@ -291,45 +291,85 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 		{
 			if (p2 != nick)
 			{
-				int len = 0;
 				for (pc = nick; pc != p2; pc++)
 				{
+#ifdef PREFIX_AQ
+ #define PREFIX_REST (PREFIX_ADMIN|PREFIX_OWNER)
+#else
+ #define PREFIX_REST (0)
+#endif
 					switch (*pc)
 					{
 					  case '+':
-						  if (!(prefix & PREFIX_VOICE))
-						  	pfixchan[len++] = '+';
-						  prefix |= PREFIX_VOICE;
+						  prefix |= PREFIX_VOICE | PREFIX_HALFOP | PREFIX_OP | PREFIX_REST;
 						  break;
 					  case '%':
-						  if (!(prefix & PREFIX_HALFOP))
-						  	pfixchan[len++] = '%';
-						  prefix |= PREFIX_HALFOP;
+						  prefix |= PREFIX_HALFOP | PREFIX_OP | PREFIX_REST;
 						  break;
 					  case '@':
-						  if (!(prefix & PREFIX_OP))
-						  	pfixchan[len++] = '@';
-						  prefix |= PREFIX_OP;
+						  prefix |= PREFIX_OP | PREFIX_REST;
 						  break;
 #ifdef PREFIX_AQ
 					  case '&':
-						  if (!(prefix & PREFIX_ADMIN))
-							pfixchan[len++] = '&';
-						  prefix |= PREFIX_ADMIN;
+						  prefix |= PREFIX_ADMIN | PREFIX_OWNER;
 					  	  break;
 					  case '~':
-						  if (!(prefix & PREFIX_OWNER))
-							pfixchan[len++] = '~';
 						  prefix |= PREFIX_OWNER;
+						  break;
+#else
+					  case '&':
+						  prefix |= PREFIX_OP | PREFIX_REST;
+					  	  break;
+					  case '~':
+						  prefix |= PREFIX_OP | PREFIX_REST;
 						  break;
 #endif
 					  default:
 						  break;	/* ignore it :P */
 					}
 				}
-				pfixchan[len] = '\0';
-				strlcat(pfixchan, p2, sizeof(pfixchan));
-				nick = pfixchan;
+				
+				if (prefix)
+				{
+					if (MyClient(sptr) && !op_can_override(sptr))
+					{
+						Membership *lp = find_membership_link(sptr->user->channel, chptr);
+						/* Check if user is allowed to send. RULES:
+						 * Need at least voice (+) in order to send to +,% or @
+						 * Need at least ops (@) in order to send to & or ~
+						 */
+						if (!lp || !(lp->flags & (CHFL_VOICE|CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
+						{
+							sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
+								me.name, sptr->name, chptr->chname);
+							return 0;
+						}
+						if (!(prefix & PREFIX_OP) && ((prefix & PREFIX_OWNER) || (prefix & PREFIX_ADMIN)) &&
+						    !(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
+						{
+							sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
+								me.name, sptr->name, chptr->chname);
+							return 0;
+						}
+					}
+					/* Now find out the lowest prefix and use that.. (so @&~#chan becomes @#chan) */
+					if (prefix & PREFIX_VOICE)
+						pfixchan[0] = '+';
+					else if (prefix & PREFIX_HALFOP)
+						pfixchan[0] = '%';
+					else if (prefix & PREFIX_OP)
+						pfixchan[0] = '@';
+#ifdef PREFIX_AQ
+					else if (prefix & PREFIX_ADMIN)
+						pfixchan[0] = '&';
+					else if (prefix & PREFIX_OWNER)
+						pfixchan[0] = '~';
+#endif
+					else
+						abort();
+					strlcpy(pfixchan+1, p2, sizeof(pfixchan)-1);
+					nick = pfixchan;
+				}
 			}
 			
 			if (MyClient(sptr) && (*parv[2] == 1))

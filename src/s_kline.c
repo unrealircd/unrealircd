@@ -1450,7 +1450,7 @@ char *str = (char *)StripControlCodes(str_in);
 				chptr = find_channel(SPAMFILTER_VIRUSCHAN, NULL);
 				if (chptr)
 				{
-					ircsprintf(chbuf, "%s%s", CHANOPPFX, chptr->chname);
+					ircsprintf(chbuf, "@%s", chptr->chname);
 					ircsprintf(buf, "[Spamfilter] %s matched filter '%s' [%s%s] [%s]",
 						sptr->name, tk->reason, spamfilter_inttostring_long(type), targetbuf,
 						unreal_decodespace(tk->spamf->tkl_reason));

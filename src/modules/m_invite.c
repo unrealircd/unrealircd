@@ -302,11 +302,11 @@ DLLFUNC CMD_FUNC(m_invite)
 		    )) {
 		        if (over == 1)
                 		sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-		                  ":%s NOTICE " CHANOPPFX "%s :OperOverride -- %s invited him/herself into the channel.",
+		                  ":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
                 		  me.name, chptr->chname, sptr->name);
 		        else if (over == 0)
 		                sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-                		  ":%s NOTICE " CHANOPPFX "%s :%s invited %s into the channel.",
+                		  ":%s NOTICE @%s :%s invited %s into the channel.",
 		                  me.name, chptr->chname, sptr->name, acptr->name);
 
 		        add_invite(acptr, chptr);

@@ -60,7 +60,7 @@ typedef struct oper_oflag_ {
 
 static oper_oflag_t oper_oflags[10]; 
 
-static init_operflags()
+static void init_operflags()
 {
 	oper_oflags[0].oflag = OFLAG_NETADMIN;
 	oper_oflags[0].umode = &UMODE_NETADMIN;

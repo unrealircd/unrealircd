@@ -1677,11 +1677,8 @@ int	throttle_can_connect(struct IN_ADDR *in);
 
 #define MARK_AS_OFFICIAL_MODULE(modinf)	do { if (modinf && modinf->handle) ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);  } while(0)
 
-#ifdef PREFIX_AQ
- #define CHANOPPFX "~&@"
-#else
- #define CHANOPPFX "@"
-#endif
+/* old.. please don't use anymore */
+#define CHANOPPFX "@"
 
 /* used for is_banned type field: */
 #define BANCHK_JOIN		0	/* checking if a ban forbids the person from joining */

@@ -3159,3 +3159,10 @@ This is the 3.2 fixes branch.
 - Changed 'Services operator' in /whois (back) to 'Services administrator', this was
   requested by many people and seems to be the best after all (#0001634).
 - Local opers can now also join +O (operonly) channels (#0001694).
+- Changed the way MSG/NOTICE <prefix>#chan works:
+  - It now goes to <prefix> and higher, so '/notice +#chan hi!' goes to +vhoaq
+  - You need at least voice in order to be able to msg/notice +#chan, %#chan or @#chan
+  - You need at least ops in order to be able to msg/notice &#chan or ~#chan
+  - Any multi-prefix targets will be converted automatically (eg: ~&@#chan to @#chan).
+  - internal: use of the CHANOPPFX macro is now deprecated.
+  All of this was done to make it a bit more 'safe' and userfriendly (#0001812).
