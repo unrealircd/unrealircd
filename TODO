@@ -49,7 +49,6 @@ Assigned to DrBin:
 * Port to BeOS
 * +N (no nickname changes chmode)
 * Chmodes in /list possbility
-* Make cached MOTDs more memory friendly (dynamic allocation)
 * Fix up the flag and proto system
 * Make a is_chan_op, is_chanprot, is_chanowner all-in-one function
 * Split up Link (SLink)

@@ -808,6 +808,10 @@ int  InitwIRCD(argc, argv)
 			  break;
 #endif
 		  case 'h':
+			  if (!strchr(p, '.')) {
+				(void)printf("ERROR: %s is not valid: Server names must contain at least 1 \".\"\n", p);
+				exit(1);
+			  }
 			  strncpyzt(me.name, p, sizeof(me.name));
 			  break;
 		  case 'H':
@@ -841,7 +845,7 @@ int  InitwIRCD(argc, argv)
 			  bootopt |= BOOT_TTY;
 			  break;
 		  case 'v':
-			  (void)printf("ircd %s\n", version);
+			  (void)printf("%s\n", version);
 #else
 		  case 'v':
 			  MessageBox(NULL, version, "UnrealIRCD/Win32 version",

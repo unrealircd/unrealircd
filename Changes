@@ -600,3 +600,4 @@
 - Made aClient->passwd dynamically allocated (saves 32bytes per user/server) [may need debugging]
 - Fixed a NOTICE crash bug, reported by EJ
 - Removed a excessive va_end in send.c
+- Fixed a bug when running the ircd with -h
