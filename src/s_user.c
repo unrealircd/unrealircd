@@ -722,9 +722,6 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	anUser *user = sptr->user;
 	aClient *nsptr;
 	int  i;
-#ifdef OWNLOGON
-	FILE *ownlog;
-#endif
 	char mo[256], mo2[256];
 	char *tmpx;
 	char *tkllayer[9] = {
@@ -991,6 +988,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	{
 		IRCstats.unknown--;
 		IRCstats.me_clients++;
+		ircd_log(LOG_CLIENT, "Connect - %s!%s@%s", nick, user->username, user->realhost);
 		sendto_one(sptr, rpl_str(RPL_WELCOME), me.name, nick,
 		    ircnetwork, nick, user->username, user->realhost);
 		/* This is a duplicate of the NOTICE but see below... */
@@ -4193,33 +4191,8 @@ int  m_oper(cptr, sptr, parc, parv)
 		syslog(LOG_INFO, "OPER (%s) (%s) by (%s!%s@%s)",
 		    name, encr, parv[0], sptr->user->username, sptr->sockhost);
 #endif
-#ifdef FNAME_OPERLOG
-		{
-			int  logfile;
-
-			/*
-			 * This conditional makes the logfile active only after
-			 * it's been created - thus logging can be turned off by
-			 * removing the file.
-			 *
-			 * stop NFS hangs...most systems should be able to open a
-			 * file in 3 seconds. -avalon (curtesy of wumpus)
-			 */
-			if (IsPerson(sptr) &&
-			    (logfile =
-			    open(FNAME_OPERLOG, O_WRONLY | O_APPEND)) != -1)
-			{
-
-				(void)ircsprintf(buf,
-				    "%s OPER (%s) (%s) by (%s!%s@%s)\n",
-				    myctime(TStime()), name, encr, parv[0],
-				    sptr->user->username, sptr->sockhost);
-				(void)write(logfile, buf, strlen(buf));
-				(void)close(logfile);
-			}
-			/* Modification by pjg */
-		}
-#endif
+		ircd_log(LOG_OPER, "OPER (%s) by (%s!%s@%s)", name, parv[0], sptr->user->username,
+			sptr->sockhost);
 
 	}
 	else

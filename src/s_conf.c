@@ -217,6 +217,7 @@ static OperFlag _LogFlags[] = {
 	{ LOG_CLIENT, "connects" },
 	{ LOG_SERVER, "server-connects" },
 	{ LOG_KLINE, "kline" },
+	{ LOG_OPER, "oper" },
 	{ 0L, NULL }
 };
 

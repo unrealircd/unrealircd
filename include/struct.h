@@ -150,7 +150,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define LOG_KLINE 0x0008
 #define LOG_CLIENT 0x0010
 #define LOG_SERVER 0x0020
-
+#define LOG_OPER   0x0040
 
 
 /*

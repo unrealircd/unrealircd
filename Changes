@@ -399,3 +399,6 @@
 - Implimented IRCNet style server redirection, based on the hybrid-7 code. Some clients will connect
   to the specified server automatically, others will require you to do it manually.
 - Made /info use @unrealircd.com emails instead of @tspre.org
+- Removed FNAME_OPERLOG and replaced it with log {} flag oper
+- Removed OWNLOGON (did nothing?)
+- Replaced FNAME_USERLOG with log {} flag connects (logs user connects and disconnects)

@@ -246,16 +246,6 @@
 #define BPATH		"bot.motd"	/* Bot MOTD */
 #define IRCDTUNE 	"ircd.tune"	/* tuning .. */
 
-/*
- * Define this filename to maintain a list of persons who log
- * into this server. Logging will stop when the file does not exist.
- * Logging will be disable also if you do not define this.
- * FNAME_USERLOG just logs user connections, FNAME_OPERLOG logs every
- * successful use of /oper.  These are either full paths or files within DPATH.
- */
-#define FNAME_USERLOG "users.log"
-#define FNAME_OPERLOG "opers.log"
-
 /* FAILOPER_WARN
  *
  * When defined, warns users on a failed oper attempt that it was/is logged

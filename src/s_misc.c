@@ -426,9 +426,7 @@ int  exit_client(cptr, sptr, from, comment)
 {
 	aClient *acptr;
 	aClient *next;
-#ifdef	FNAME_USERLOG
 	time_t on_for;
-#endif
 	ConfigItem_listen *listen_conf;
 	static char comment1[HOSTLEN + HOSTLEN + 2];
 	static int recurse = 0;
@@ -504,7 +502,6 @@ int  exit_client(cptr, sptr, from, comment)
 			}
 		}
 		update_load();
-#ifdef FNAME_USERLOG
 		on_for = TStime() - sptr->firsttime;
 # if defined(USE_SYSLOG) && defined(SYSLOG_USERS)
 		if (IsPerson(sptr))
@@ -513,37 +510,12 @@ int  exit_client(cptr, sptr, from, comment)
 			    on_for / 3600, (on_for % 3600) / 60,
 			    on_for % 60, sptr->user->username,
 			    sptr->sockhost, sptr->name);
-# else
-		{
-			char linebuf[160];
-			int  logfile;
-
-			/*
-			 * This conditional makes the logfile active only after
-			 * it's been created - thus logging can be turned off by
-			 * removing the file.
-			 *
-			 * stop NFS hangs...most systems should be able to open a
-			 * file in 3 seconds. -avalon (curtesy of wumpus)
-			 */
-			if (IsPerson(sptr) &&
-			    (logfile =
-			    open(FNAME_USERLOG, O_WRONLY | O_APPEND)) != -1)
-			{
-				(void)ircsprintf(linebuf,
-				    "%s (%3d:%02d:%02d): %s@%s [%s]\n",
-				    myctime(sptr->firsttime),
-				    on_for / 3600, (on_for % 3600) / 60,
-				    on_for % 60,
-				    sptr->user->username, sptr->user->realhost,
-				    sptr->username);
-				(void)write(logfile, linebuf, strlen(linebuf));
-				(void)close(logfile);
-			}
-			/* Modification by stealth@caen.engin.umich.edu */
-		}
-# endif
 #endif
+			if (IsPerson(sptr))
+				ircd_log(LOG_CLIENT, "Disconnect - (%d:%d:%d) %s!%s@%s",
+					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
+					sptr->name, sptr->user->username, sptr->user->realhost);
+
 		if (sptr->fd >= 0 && !IsConnecting(sptr))
 		{
 			if (cptr != NULL && sptr != cptr)
