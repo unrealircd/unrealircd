@@ -1520,3 +1520,5 @@ seen. gmtime warning still there
 - Rewrote /helpop to work as advertised, reported by FrostByghte (#0000217)
 - Fixed a set {} memory leak on /rehash
 - Made it so Unreal can still be launched by clicking wircd.exe when in NT service mode
+- Stripped the docs. 100kb down, but a reformat in something other than MS
+  word would really really help.
