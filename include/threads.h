@@ -44,9 +44,9 @@ typedef HANDLE MUTEX;
 #define IRCCreateThread(thread, attr, start, arg) thread = _beginthread((void *)start, 0, arg)
 #define IRCMutexLock(mutex) WaitForSingleObject(mutex, INFINITE)
 #define IRCMutexUnlock(mutex) ReleaseMutex(mutex)
-#define IRCCreateMutex(mutex) mutex = CreateMutex(NULL, TRUE, NULL)
+#define IRCCreateMutex(mutex) mutex = CreateMutex(NULL, FALSE, NULL)
 #define IRCMutexDestroy(mutex) CloseHandle(mutex)
-#define IRCExitThread(x) _endthread(x)
+#define IRCExitThread(x) _endthreadex(x)
 #endif
 
 #endif

@@ -546,3 +546,4 @@ seen. gmtime warning still there
   include/modules/scan.h (the dir too)
 - Converted threads to IRC*Thread by codemastr. 
 - Updated the win32 thread code (maybe it will work now?)
+- One last final change for the win32 thread stuff, but at least it works now :)
