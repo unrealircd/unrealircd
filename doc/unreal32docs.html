@@ -691,11 +691,6 @@ listen *:6601 {
     <td>Can use /kline -u@h</td>
   </tr>
   <tr> 
-    <td><div align="center">t</div></td>
-    <td><div align="center">can_gkline</div></td>
-    <td>Can use /gline and /shun</td>
-  </tr>
-  <tr> 
     <td><div align="center">n</div></td>
     <td><div align="center">can_localnotice</div></td>
     <td>Can send local server notices</td>
@@ -1065,9 +1060,11 @@ ban server {
 	mask &lt;server-name&gt;;
 	reason &lt;reason-for-ban&gt;;
 };</pre></p>
-<p>This block disables a server's ability to connect to your server. The ban::mask 
-  field specifies a wildcard mask to match against the server attempting to connect's 
-  name, and ban::reason specifies the reason for which this ban has been placed.</p>
+<p>This block disables a server's ability to connect to the network. If the server links 
+  directly to your server, the link is denied. If the server links to a remote server, the 
+  local server will disconnect from the network. The ban::mask field specifies a wildcard
+  mask to match against the server attempting to connect's name, and ban::reason specifies 
+  the reason for which this ban has been placed.</p>
 <p>Example:<br>
 <pre>
 ban server {
