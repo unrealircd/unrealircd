@@ -1838,7 +1838,7 @@ alias &lt;name&gt; {
 <p>(Note: also see <a href="#includedirective">here</a> about the standard alias files UnrealIRCd has)</p>
 <p>The alias block [standard alias] allows you to forward a command to a user, 
   for example /chanserv sends a message to the user chanserv. The alias:: specifies 
-  the name of the command that will be the alias, ex /chanserv, alias::nick is 
+  the name of the command that will be the alias (eg: chanserv), alias::nick is 
   the nickname it will forward to, if the alias:: is the same as the nick it will 
   forward to, alias::nick can be left out. The alias::type specifies the type 
   of alias, valid types are services (the user is on the services server), stats 
@@ -1960,9 +1960,9 @@ spamfilter {
    <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as unrealircd.conf/networks file)</font><a name="setblock"></a>
 </p><div class="desc">
 <p>The set file is what use to be our networks/unrealircd.conf and our networks 
-  file. On single server networks, rather than have 3 files, on single server 
-  networks, you can just include the set statements in the unrealircd.conf, on 
-  multi-server networks, i recommend still using a networks file.</p>
+  file. On single server networks, rather than having 3 files you can just put all
+  the set statements in the unrealircd.conf itself, on multi-server networks, I
+  recommend using a seperate networks file.</p>
   <p>Now, if your server is on a network, chances are you will all basically use 
     the same Set settings. Therefore it makes more sense to have a network file, 
     which is loaded with an <a href="#includedirective">include</a> directive. 
@@ -2055,13 +2055,13 @@ set {
 <p><font class="set">set::who-limit &lt;limit&gt;;</font><br>
   Sets the limit for the maximum number of matches that will be returned for a /who.
   If this option is left out, no limit is enforced.</p>
-<p><font class="set">set::silence-limit &lt;limit&gt;;</font<br>
+<p><font class="set">set::silence-limit &lt;limit&gt;;</font><br>
   Sets the limit on the maximum SILENCE list entries. If this directive is not specified,
   a limit of 15 is set.</p>
 <p><font class="set">set::oper-only-stats &lt;stats-list&gt;;</font><br>
   Specifies a list of stats flags with no separators that defines stats flags 
   only opers can use. Leave this value out to allow users to use all flags, or 
-  specify * for users to be able to use no flags. Only short operflags may be specified
+  specify * for users to be able to use no flags. Only short stats flags may be specified
   here.</p>
 <p><font class="set">set::oper-only-stats {&lt;stats-flag&gt;; &lt;stats-flag&gt;;};</font><br>
   Specifies a list of stats flags that can only be used by opers. This only works with long

@@ -3268,3 +3268,4 @@ This is the 3.2 fixes branch.
 - Added set::restrict-extendedbans by which you can disallow normal users to use
   any extendedbans ("*") or disallow only certain ones (eg: "qc").
 - Made the negative TS message a bit more annoying if time is off more than 10 seconds.
+- Minor doc tweakers, reported by AngryWolf (#0001871).
