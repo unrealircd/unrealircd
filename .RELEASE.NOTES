@@ -182,6 +182,14 @@ Unreal3.2-Selene (BETA12) Release Notes
   (http://www.aet.tu-cottbus.de/personen/jaenicke/postfix_tls/prngd.html), and EGD
   (http://egd.sourceforge.net). Other EGD compatible programs should work as well.
 
+* Added Authentication method 'sslclientcert', the "password" parameter is
+  used as a filename which it loads a X509 client certificate from and
+  compares with the SSL client certificate (if provided). Example in an
+   oper {}:
+     password "clientcertificate.stskeeps.pem" { sslclientcert; };
+  In this event, the parameter of /oper login is not used, but must be
+  provided anyway, so for example do OPER login *
+
 * We have created a new complete set of docs!  doc/unreal32docs.html is now a complete
   set of docs!  It is still not finished, however it contains atleast what was already
   avail. in the other doc files.  
