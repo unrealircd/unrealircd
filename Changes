@@ -697,3 +697,6 @@ seen. gmtime warning still there
   :test bug, found by Alzirr 
 - Fixed struct IN_ADDR problems on some OS'es
 - Fixed some more gcc 3.0 problems and made FSU pthreads a bit easier to install
+- Fixed some updconf bugs reported by Joe
+- Fixed a bug where 'fake direction' messages were sent to non-ops reported by Janos
+- Made it so unreal searches harder for SSL headers and libraries

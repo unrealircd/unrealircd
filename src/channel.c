@@ -4851,7 +4851,7 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				    ":%s KICK %s %s :Fake direction",
 				    me.name, chptr->chname,
 				    acptr->name);
-				sendto_ops
+				sendto_realops
 				    ("Fake direction from user %s in SJOIN from %s(%s) at %s",
 				    nick, sptr->srvptr->name,
 				    sptr->name, chptr->chname);

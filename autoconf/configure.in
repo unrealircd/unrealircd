@@ -43,6 +43,7 @@ AC_DEFUN(AC_ENABLE_SSL,
 if test "$openssl" = "yes"; then
 AC_DEFINE(USE_SSL)
 CRYPTOLIB="-lcrypto -lssl"
+CFLAGS="$CFLAGS -I/usr/local/include -I/usr/local/ssl/include -L/usr/local/lib -L/usr/local/ssl/lib"
 else
 AC_WARN(SSL support could not be enabled because openssl/ssl.h could not be found)
 fi
