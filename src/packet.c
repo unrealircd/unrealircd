@@ -239,7 +239,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_NAMES, TOK_NAMES, m_names, MAXPARA);
 	add_Command(MSG_TRACE, TOK_TRACE, m_trace, MAXPARA);
 	add_CommandX(MSG_PASS, TOK_PASS, m_pass, 1, M_UNREGISTERED|M_USER|M_SERVER);
-	add_Command(MSG_TIME, TOK_TIME, m_time, MAXPARA);
 	add_Command(MSG_CONNECT, TOK_CONNECT, m_connect, MAXPARA);
 	add_CommandX(MSG_VERSION, TOK_VERSION, m_version, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
 	add_Command(MSG_STATS, TOK_STATS, m_stats, 3);
@@ -247,7 +246,6 @@ void	init_CommandHash(void)
 	add_CommandX(MSG_ADMIN, TOK_ADMIN, m_admin, MAXPARA, M_UNREGISTERED|M_USER|M_SHUN);
 	add_Command(MSG_SUMMON, NULL, m_summon, 1);
 	add_Command(MSG_USERS, NULL, m_users, MAXPARA);
-	add_Command(MSG_SVSKILL, TOK_SVSKILL, m_svskill, MAXPARA);
 	add_Command(MSG_HELP, TOK_HELP, m_help, 1);
 	add_Command(MSG_HELPOP, TOK_HELP, m_help, 1);
 	add_Command(MSG_INFO, TOK_INFO, m_info, MAXPARA);

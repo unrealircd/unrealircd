@@ -2880,4 +2880,4 @@ seen. gmtime warning still there
 - Modulized: samode, sajoin, sapart, kick, topic, invite, list
 - Added HOOKTYPE_REHASH_COMPLETE to allow permanent modules to reload
   command overrides. (#0001553) reported by AngryWolf
-
+- Modulized: time, svskill

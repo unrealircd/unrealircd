@@ -2761,56 +2761,6 @@ CMD_FUNC(m_goper)
 	sendto_opers("from %s: %s", parv[0], message);
 	return 0;
 }
-/*
-** m_time
-**	parv[0] = sender prefix
-**	parv[1] = servername
-*/
-CMD_FUNC(m_time)
-{
-	if (hunt_server_token(cptr, sptr, MSG_TIME, TOK_TIME, ":%s", 1, parc,
-	    parv) == HUNTED_ISME)
-		sendto_one(sptr, rpl_str(RPL_TIME), me.name, parv[0], me.name,
-		    date((long)0));
-	return 0;
-}
-
-/*
-** m_svskill
-**	parv[0] = servername
-**	parv[1] = client
-**	parv[2] = kill message
-*/
-CMD_FUNC(m_svskill)
-{
-	aClient *acptr;
-	/* this is very wierd ? */
-	char *comment = NULL;
-
-
-	if (parc < 2)
-		return -1;
-	if (parc > 3)
-		return -1;
-	if (parc == 3)
-		comment = parv[2];
-
-	if (parc == 2)
-		comment = "SVS Killed";
-
-	if (!IsULine(sptr))
-		return -1;
-
-
-	if (!(acptr = find_person(parv[1], NULL)))
-		return 0;
-
-	sendto_serv_butone_token(cptr, parv[0],
-	    MSG_SVSKILL, TOK_SVSKILL, "%s :%s", parv[1], comment);
-
-	return exit_client(cptr, acptr, sptr, comment);
-
-}
 
 /*
 ** m_admin
