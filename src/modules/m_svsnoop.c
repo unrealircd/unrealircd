@@ -102,7 +102,7 @@ int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[])
                         {
                                 if (MyClient(acptr) && IsAnOper(acptr))
                                 {
-                                        if (IsAnOper(acptr))
+                                        if (IsOper(acptr))
                                         {
                                                 IRCstats.operators--;
                                                 VERIFY_OPERCOUNT(acptr, "svsnoop");

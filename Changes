@@ -2446,3 +2446,4 @@ seen. gmtime warning still there
 - Minor botmotd-on-mode+B fix.
 - Added a "command override" system for modules (experimental)
 - Fixed some documentation typos (#0001273) reported by AngryWolf
+- Fixed a bug where SVSNOOP could cause negative oper counts
