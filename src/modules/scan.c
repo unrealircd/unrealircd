@@ -194,7 +194,7 @@ int	Scan_IsBeingChecked(struct IN_ADDR *ia)
 	IRCMutexLock(Scannings_lock);
 	for (sr = Scannings; sr; sr = sr->next)
 	{
-		if (bcmp(&sr->in, ia, sizeof(Scan_AddrStruct)))
+		if (!bcmp(&sr->in, ia, sizeof(Scan_AddrStruct)))
 		{
 			ret = 1;
 			break;
