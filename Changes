@@ -1557,3 +1557,4 @@ seen. gmtime warning still there
 ** beta12 released **
 - Fixed problem where SSL handshakes weren't unknown--'ed on remove reported
   by Alzirr
+- Compile fix regarding above fix
