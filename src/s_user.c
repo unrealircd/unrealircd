@@ -467,11 +467,11 @@ int isvalidChinese(const unsigned char c1, const unsigned char c2)
      const unsigned int JPN_PIAN_E = 0xa5f7;
      unsigned int AWord = c1 * 256 + c2;
 #if defined(CHINESE_NICK) && defined(JAPANESE_NICK)
-     return (AWord >= GBK_S && AWord <= GBK_E || AWord >= GBK_2_S && AWord <= GBK_2_E || AWord >= GBK_3_S && AWord <= GBK_3_E 
+     return (AWord >= GBK_S && AWord <= GBK_E || AWord >= GBK_2_S && AWord <= GBK_2_E 
      	 || AWord >= JPN_PING_S && AWord <= JPN_PING_E || AWord >= JPN_PIAN_S && AWord <= JPN_PIAN_E) ? 1 : 0;
 #endif
 #if defined(CHINESE_NICK) && !defined(JAPANESE_NICK)
-     return (AWord >= GBK_S && AWord <= GBK_E || AWord >= GBK_2_S && AWord <= GBK_2_E || AWord >= GBK_3_S && AWord <= GBK_3_E ? 1 : 0);
+     return (AWord >= GBK_S && AWord <= GBK_E || AWord >= GBK_2_S && AWord <= GBK_2_E ? 1 : 0);
 #endif
 #if !defined(CHINESE_NICK) && defined(JAPANESE_NICK)
      return (AWord >= JPN_PING_S && AWord <= JPN_PING_E || AWord >= JPN_PIAN_S && AWord <= JPN_PIAN_E) ? 1 : 0;

@@ -3886,7 +3886,7 @@ int  m_restart(cptr, sptr, parc, parv)
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	if (parc > 2)
+	if (parc > 3)
 	{
 		/* Remote restart. */
 		if (MyClient(sptr) && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
