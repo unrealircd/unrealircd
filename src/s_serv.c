@@ -2243,7 +2243,7 @@ CMD_FUNC(m_stats)
 		  for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) {
 			  if (bans->flag.type == CONF_BAN_NICK && (bans->flag.type2 == CONF_BAN_TYPE_AKILL))
 				sendto_one(sptr, rpl_str(RPL_SQLINE_NICK),
-				    me.name, parv[0], bans->mask, bans->reason);
+				    me.name, parv[0], bans->mask, bans->reason ? bans->reason : "No Reason");
 		  }
 		  break;
 	  }
