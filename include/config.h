@@ -73,12 +73,6 @@
  */
 
 #define MALLOC_FLAGS_EXTRA ""
-/* 
-   ConferenceRoom Java Client Hack -Fish
-   if you want it to work #define CONFROOM_JAVA_PORT <port>
-   where port MUST be a seperate port java clients connects on .. 
-*/
-#undef CONFROOM_JAVA_PORT
 
 /*
     dog3/comstud ircd fdlists
@@ -111,8 +105,8 @@
 /*
    If you want to support chinese and/or japanese nicks
 */
-#undef CHINESE_NICKS
-#undef JAPANESE_NICKS
+#undef CHINESE_NICK
+#undef JAPANESE_NICK
 
 /*
   Remote rehash
