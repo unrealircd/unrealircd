@@ -510,3 +510,4 @@ seen. gmtime warning still there
 - Added HOOKTYPE_LOCAL_CONNECT (aClient *)
 - Fixed DEBUGMODE under win32
 - Fixed /trace problem with slots (idea from ircu2.10.01+winnt)
+- Fixed listener problem, reported by McSkaf
