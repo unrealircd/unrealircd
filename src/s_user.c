@@ -946,6 +946,7 @@ extern int register_user(cptr, sptr, nick, username, umode, virthost)
 	 */
 	if (MyConnect(sptr))
 	{
+		char userhost[USERLEN + HOSTLEN + 6];
 		if (sptr->passwd && (nsptr = find_person(NickServ, NULL)))
 			sendto_one(nsptr, ":%s %s %s@%s :IDENTIFY %s",
 			    sptr->name,
@@ -955,9 +956,10 @@ extern int register_user(cptr, sptr, nick, username, umode, virthost)
 		if (buf[0] != '\0' && buf[1] != '\0')
 			sendto_one(cptr, ":%s MODE %s :%s", cptr->name,
 			    cptr->name, buf);
+		strcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost));
 
 		for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *) tlds->next) {
-			if (!match(tlds->mask, cptr->user->realhost))
+			if (!match(tlds->mask, userhost))
 				break;
 		}
 		if (tlds && !BadPtr(tlds->channel)) {

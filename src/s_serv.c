@@ -3836,6 +3836,7 @@ int  m_motd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	aMotd *temp, *temp2;
 	struct tm *tm = motd_tm;
 	int  svsnofile = 0;
+	char userhost[HOSTLEN + USERLEN + 6];
 
 	if (hunt_server(cptr, sptr, ":%s MOTD :%s", 1, parc,
 	    parv) != HUNTED_ISME)
@@ -3847,9 +3848,10 @@ int  m_motd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		goto playmotd;
 	}
 #endif
+	strcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost));
 	for (ptr = conf_tld; ptr; ptr = (ConfigItem_tld *) ptr->next)
 	{
-		if (!match(ptr->mask, cptr->user->realhost))
+		if (!match(ptr->mask, userhost))
 			break;
 	}
 
@@ -4127,7 +4129,7 @@ int  m_rules(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	ConfigItem_tld *ptr;
 	aMotd *temp;
-
+	char userhost[USERLEN + HOSTLEN + 6];
 	if (hunt_server(cptr, sptr, ":%s RULES :%s", 1, parc,
 	    parv) != HUNTED_ISME)
 		return 0;
@@ -4138,9 +4140,10 @@ int  m_rules(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		goto playrules;
 	}
 #endif
+	strcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost));
 	for (ptr = conf_tld; ptr; ptr = (ConfigItem_tld *) ptr->next)
 	{
-		if (!match(ptr->mask, cptr->user->realhost))
+		if (!match(ptr->mask, userhost))
 			break;
 	}
 
