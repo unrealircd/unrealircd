@@ -1289,7 +1289,7 @@ void	config_rehash()
 		ircfree(badword_ptr->word);
 		if (badword_ptr->replace)
 			ircfree(badword_ptr->replace);
-		regfree(badword_ptr->expr);
+		regfree(&badword_ptr->expr);
 		DelListItem(badword_ptr, conf_badword_channel);
 		MyFree(badword_ptr);
 	}
@@ -1299,7 +1299,7 @@ void	config_rehash()
 		ircfree(badword_ptr->word);
 		if (badword_ptr->replace)
 			ircfree(badword_ptr->replace);
-		regfree(badword_ptr->expr);
+		regfree(&badword_ptr->expr);
 		DelListItem(badword_ptr, conf_badword_message);
 		MyFree(badword_ptr);
 	}
