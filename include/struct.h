@@ -1093,10 +1093,12 @@ struct _configitem_alias_format {
 	short type;
 	char *format, *parameters;
 };
+
+#define INCLUDE_NOTLOADED 1
 	
 struct _configitem_include {
 	ConfigItem *prev, *next;
-	ConfigFlag flag;
+	ConfigFlag_ban flag;
 	char *file;
 };
 

@@ -1731,3 +1731,5 @@ seen. gmtime warning still there
   crash (#0000543)
 - Added a max of 500:500 to +f (higher than this is just stupid), this fixes
   (#0000542) reported by BiGi
+- Fixed a bug where included files were not added to the file list in the Config menu under
+  win32. Reported by PoisonDart316 (#0000535)

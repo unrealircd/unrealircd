@@ -995,6 +995,8 @@ void	free_iConf(aConfiguration *i)
 
 int	init_conf(char *rootconf, int rehash)
 {
+	ConfigItem_include *inc, *next;
+
 	config_status("Loading IRCd configuration ..");
 	if (conf)
 	{
@@ -1015,6 +1017,15 @@ int	init_conf(char *rootconf, int rehash)
 #ifndef STATIC_LINKING
 			Unload_all_testing_modules();
 #endif
+			for (inc = conf_include; inc; inc = next)
+			{
+				next = (ConfigItem_include *)inc->next;
+				if (inc->flag.type != INCLUDE_NOTLOADED)
+					continue;
+				ircfree(inc->file);
+				DelListItem(inc, conf_include);
+				MyFree(inc);
+			}
 			config_free(conf);
 			conf = NULL;
 			free_iConf(&tempiConf);
@@ -1029,6 +1040,16 @@ int	init_conf(char *rootconf, int rehash)
 #else
 			RunHook0(HOOKTYPE_REHASH);
 #endif
+			for (inc = conf_include; inc; inc = next)
+			{
+				next = (ConfigItem_include *)inc->next;
+				if (inc->flag.type == INCLUDE_NOTLOADED)
+					continue;
+				ircfree(inc->file);
+				DelListItem(inc, conf_include);
+				MyFree(inc);
+			}
+			
 		}
 #ifndef STATIC_LINKING
 		Init_all_testing_modules();
@@ -1041,6 +1062,11 @@ int	init_conf(char *rootconf, int rehash)
 			l_commands_Init(&ModCoreInfo);
 		}
 #endif
+		for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+		{
+			if (inc->flag.type == INCLUDE_NOTLOADED)
+				inc->flag.type = 0;
+		}
 		if (config_run() < 0)
 		{
 			config_error("Bad case of config errors. Server will now die. This really shouldn't happen");
@@ -1054,6 +1080,15 @@ int	init_conf(char *rootconf, int rehash)
 	}
 	else	
 	{
+		for (inc = conf_include; inc; inc = next)
+		{
+			next = (ConfigItem_include *)inc->next;
+			if (inc->flag.type != INCLUDE_NOTLOADED)
+				continue;
+			ircfree(inc->file);
+			DelListItem(inc, conf_include);
+			MyFree(inc);
+		}
 		config_error("IRCd configuration failed to load");
 		config_free(conf);
 		conf = NULL;
@@ -1079,6 +1114,7 @@ int	load_conf(char *filename)
 	ConfigFile 	*cfptr, *cfptr2, **cfptr3;
 	ConfigEntry 	*ce;
 	int		ret;
+	ConfigItem_include *includes;
 
 	if (config_verbose > 0)
 		config_status("Loading config file %s ..", filename);
@@ -1107,7 +1143,20 @@ int	load_conf(char *filename)
 				 if (ret < 0) 
 					 	return ret;
 			}
-			return 1;
+		if (stricmp(filename, CPATH)) {
+			for (includes = conf_include; includes; includes = (ConfigItem_include *)includes->next) {
+				if (includes->flag.type == INCLUDE_NOTLOADED &&
+				    !stricmp(includes->file, filename)) 
+					break;
+			}
+			if (!includes) {
+				includes = MyMalloc(sizeof(ConfigItem_include));
+				includes->file = strdup(filename);
+				includes->flag.type = INCLUDE_NOTLOADED;
+				AddListItem(includes, conf_include);
+			}
+		}
+		return 1;
 	}
 	else
 	{
@@ -1383,13 +1432,6 @@ void	config_rehash()
 		}
 		DelListItem(alias_ptr, conf_alias);
 		MyFree(alias_ptr);
-	}
-	for (include_ptr = conf_include; include_ptr; include_ptr = (ConfigItem_include *)next)
-	{
-		next = (ListStruct *)include_ptr->next;	 
-		ircfree(include_ptr->file);
-		DelListItem(include_ptr, conf_include);
-		MyFree(include_ptr);
 	}
 	for (help_ptr = conf_help; help_ptr; help_ptr = (ConfigItem_help *)next) {
 		aMotd *text;
