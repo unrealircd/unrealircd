@@ -1323,3 +1323,4 @@ seen. gmtime warning still there
 - Fixed a maxperip and a maxunknownconnectionsperip bug in IPv6 reported by danielek
 - Fixed another scanner bug causing the scanner to never timeout
 - Fixed a module bug when there is an include between a module-config-directive and the loadmodule
+- Made it so if a module fails to load it is non-fatal, reported by Adiga007 (#0000194)

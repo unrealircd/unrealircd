@@ -484,7 +484,7 @@ void	module_loadall(int module_load)
 		/* Call the module_load */
 		if ((*fp)(module_load) != MOD_SUCCESS)
 		{
-			config_error("cannot load module %s", mi->header->name);
+			config_status("cannot load module %s", mi->header->name);
 		}
 		else
 		{

@@ -357,7 +357,7 @@ DLLFUNC int	h_config_set_scan(void)
 			{
 				if (!strcmp(ce->ce_varname, "bantime")) {
 					if (!ce->ce_vardata) {
-						config_error("%s:%i: set::scan::bantime has no value",
+						config_status("%s:%i: set::scan::bantime has no value",
 								ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 						break;
 					}
@@ -365,7 +365,7 @@ DLLFUNC int	h_config_set_scan(void)
 				}
 				if (!strcmp(ce->ce_varname, "timeout")) {
 					if (!ce->ce_vardata) {
-						config_error("%s:%i: set::scan::timeout has no value",
+						config_status("%s:%i: set::scan::timeout has no value",
 								ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 						break;
 					}
@@ -376,27 +376,27 @@ DLLFUNC int	h_config_set_scan(void)
 				{
 					if (!ce->ce_vardata)
 					{
-						config_error("%s:%i: set::scan::endpoint: syntax [ip]:port",
+						config_status("%s:%i: set::scan::endpoint: syntax [ip]:port",
 							     ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 						break;
 					}
 					ipport_seperate(ce->ce_vardata, &ip, &port);
 					if (!ip || !*ip)
 					{
-						config_error("%s:%i: set::scan::endpoint: illegal ip",
+						config_status("%s:%i: set::scan::endpoint: illegal ip",
 							     ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 						break;
 					}
 				        if (!port || !*port)
 					{
-						config_error("%s:%i: set::scan::endpoint: missing/invalid port",
+						config_status("%s:%i: set::scan::endpoint: missing/invalid port",
 							    ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 					        break;
 					}
 					iport = atol(port);
 					if ((iport < 0) || (iport > 65535))
 					{
-						config_error("%s:%i: set::scan::endpoint: illegal port",
+						config_status("%s:%i: set::scan::endpoint: illegal port",
 							     ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 						break;
 					}

@@ -402,7 +402,7 @@ void config_error(char *format, ...)
 }
 
 /* Like above */
-static void config_status(char *format, ...)
+void config_status(char *format, ...)
 {
 	va_list		ap;
 	char		buffer[1024];
