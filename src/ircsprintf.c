@@ -366,27 +366,29 @@ char *ircvsprintf(char *str, const char *format, va_list vl)
 			}
 #endif
 			/* Send base64 value */
+
 			if (c == 'b')
 			{
-				unsigned long v1;
+				long v1;
 				char *ap;
 				
-				v1 = va_arg(vl, unsigned long);
+				v1 = va_arg(vl, long);
 				for (ap = (char *) xbase64enc(v1); *ap; ap++)
 					*str++ = *ap;
 				continue;
 			}
 			if (c == 'B')
 			{
-				unsigned long v1;
+				long v1;
 				char *ap;
 				
-				v1 = va_arg(vl, unsigned long);
+				v1 = va_arg(vl, long);
 				*str++ = '!';
 				for (ap = (char *) xbase64enc(v1); *ap; ap++)
 					*str++ = *ap;
 				continue;
 			}
+			
 			if (c == 'd')
 			{
 				unsigned int v1, v2;

@@ -1884,20 +1884,21 @@ static int m_message(cptr, sptr, parc, parv, notice)
 				    mode & MODE_STRIPBADWORDS ? (char *)
 				    stripbadwords_channel(text) : text);
 #endif
-				if (!prefix)
+/*				if (!prefix)
 				{
 					sendto_channel_butone(cptr, sptr, chptr,
 					    ":%s %s %s :%s",
 					    parv[0], cmd, nick, text);
 				}
 				else
-				{
-					sendto_channelprefix_butone(cptr,
+				{ */
+					sendto_channelprefix_butone_tok(cptr,
 					    sptr, chptr,
 					    prefix,
-					    ":%s %s %s :%s", parv[0],
-					    cmd, nick, text);
-				}
+					    notice ? MSG_NOTICE : MSG_PRIVATE,
+					    notice ? TOK_NOTICE : TOK_PRIVATE,
+					     nick, text);
+/*				}*/
 				sendanyways = 0;
 				continue;
 			}

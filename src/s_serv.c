@@ -1302,6 +1302,7 @@ int  m_server_estab(cptr)
 		}
 	}
 
+	
 	for (acptr = &me; acptr; acptr = acptr->prev)
 	{
 		/* acptr->from == acptr for acptr == cptr */
@@ -1316,7 +1317,7 @@ int  m_server_estab(cptr)
 			   ** Apparently USER command was forgotten... -Donwulff
 			 */
 
-
+			
 			if (!SupportNICKv2(cptr))
 			{
 				sendto_one(cptr, 
@@ -1325,10 +1326,7 @@ int  m_server_estab(cptr)
 				    acptr->name, acptr->hopcount + 1,
 				    acptr->lastnick, acptr->user->username,
 				    acptr->user->realhost,
-				    (SupportNS(cptr) ?
-				     (acptr->srvptr->serv->numeric ?		    
-				     base64enc(acptr->srvptr->serv->numeric) : 
-				     acptr->user->server) : acptr->user->server),
+				     acptr->user->server,
 				    acptr->user->servicestamp, acptr->info);
 				send_umode(cptr, acptr, 0, SEND_UMODES, buf);
 				if (IsHidden(acptr) && acptr->user->virthost)
@@ -1341,28 +1339,52 @@ int  m_server_estab(cptr)
 			else
 			{
 				send_umode(NULL, acptr, 0, SEND_UMODES, buf);
+								
 				if (!SupportVHP(cptr))
-					sendto_one(cptr,
-					    (cptr->proto & PROTO_SJB64 ?
-					    "%s %s %d %B %s %s %s %lu %s %s :%s"
-					    :
-					    "%s %s %d %d %s %s %s %lu %s %s :%s"),
-					    (IsToken(cptr) ? TOK_NICK :
-					    MSG_NICK), acptr->name,
-					    acptr->hopcount + 1,
-					    acptr->lastnick,
-					    acptr->user->username,
-					    acptr->user->realhost,
-					    (SupportNS(cptr) ?
-					     (acptr->srvptr->serv->numeric ?		    
-					     base64enc(acptr->srvptr->serv->numeric) : 
-					     acptr->user->server) : acptr->user->server),
-					    acptr->user->servicestamp, (!buf
-					    || *buf == '\0' ? "+" : buf),
-					    ((IsHidden(acptr)
-					    && (acptr->
-					    umodes & UMODE_SETHOST)) ? acptr->
-					    user->virthost : "*"), acptr->info);
+				{
+					if (SupportNS(cptr) && acptr->srvptr->serv->numeric)
+					{
+						sendto_one(cptr,
+							cptr->proto & PROTO_SJB64 ?
+							"%s %s %d %B %s %s %b %lu %s %s :%s"
+							:
+							"%s %s %d %d %s %s %b %lu %s %s :%s"
+							,
+						    (IsToken(cptr) ? TOK_NICK :
+						    MSG_NICK), acptr->name,
+						    acptr->hopcount + 1,
+						    acptr->lastnick,
+						    acptr->user->username,
+						    acptr->user->realhost,
+						     acptr->srvptr->serv->numeric,
+						    acptr->user->servicestamp, (!buf
+						    || *buf == '\0' ? "+" : buf),
+						    ((IsHidden(acptr)
+						    && (acptr->
+						    umodes & UMODE_SETHOST)) ? acptr->
+						    user->virthost : "*"), acptr->info);
+					}
+					else
+					{
+						sendto_one(cptr,
+						    (cptr->proto & PROTO_SJB64 ?
+						    "%s %s %d %B %s %s %s %lu %s %s :%s"
+						    : "%s %s %d %d %s %s %s %lu %s %s :%s"),
+						    (IsToken(cptr) ? TOK_NICK :
+						    MSG_NICK), acptr->name,
+						    acptr->hopcount + 1,
+						    acptr->lastnick,
+						    acptr->user->username,
+						    acptr->user->realhost,
+					     		acptr->user->server,
+						    acptr->user->servicestamp, (!buf
+						    || *buf == '\0' ? "+" : buf),
+						    ((IsHidden(acptr)
+						    && (acptr->
+						    umodes & UMODE_SETHOST)) ? acptr->
+						    user->virthost : "*"), acptr->info);
+					}
+				}
 				else
 					sendto_one(cptr,
 					    "%s %s %d %d %s %s %s %lu %s %s :%s",

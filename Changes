@@ -658,3 +658,4 @@
 - Fixed a sptr->passwd bug
 - Removed the unnecessary param from IsULine() it is now just IsULine(sptr)
 - ircsprintf() is now used everywhere
+- Fixed the SJB64 bugs that misplaced users

@@ -4527,7 +4527,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	if (*parv[1] != '!')
 		ts = atol(parv[1]);
 	else
-		ts = xbase64dec(parv[1] + 1);
+		ts = base64dec(parv[1] + 1);
 	if (chptr->creationtime > ts)
 	{
 		removeours = 1;

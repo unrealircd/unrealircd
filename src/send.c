@@ -50,6 +50,8 @@ extern fdlist oper_fdlist;
 #define NEWLINE	"\r\n"
 
 static char sendbuf[2048];
+static char tcmd[1024];
+static char ccmd[1024];
 
 static int send_message PROTO((aClient *, char *, int));
 
@@ -378,6 +380,60 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 	return;
 }
 
+void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chptr,
+	int	prefix,
+    char *cmd, char *tok, char *nick, char *text)
+{
+	Link *lp;
+	aClient *acptr;
+	int  i;
+	
+	sprintf(tcmd, ":%s %s %s :%s", from->name, tok, nick, text);
+	sprintf(ccmd, ":%s %s %s :%s", from->name, cmd, nick, text);
+	for (i = 0; i < MAXCONNECTIONS; i++)
+		sentalong[i] = 0;
+	for (lp = chptr->members; lp; lp = lp->next)
+	{
+		acptr = lp->value.cptr;
+		if (acptr->from == one)
+			continue;	/* ...was the one I should skip
+					   or user not not a channel op */
+                if (prefix == 0)
+                	goto good;
+                if ((prefix & 0x1) && (lp->flags & CHFL_HALFOP))
+                	goto good;
+		if ((prefix & 0x2) && (lp->flags & CHFL_VOICE))
+			goto good;
+		if ((prefix & 0x4) && (lp->flags & CHFL_CHANOP))
+			goto good;
+		bad:
+			continue;
+		good:
+		
+		i = acptr->from->fd;
+		if (MyConnect(acptr) && IsRegisteredUser(acptr))
+		{
+			sendto_one(acptr, "%s", ccmd);
+			sentalong[i] = 1;
+		}
+		else
+		{
+			/* Now check whether a message has been sent to this
+			 * remote link already */
+			if (sentalong[i] == 0)
+			{
+				if (IsToken(acptr->from))
+					sendto_one(acptr, "%s", tcmd);
+				else
+					sendto_one(acptr, "%s", ccmd);
+				sentalong[i] = 1;
+			}
+		}
+	}
+	return;
+}
+
+
 /*
    sendto_chanops_butone -Stskeeps
 */
@@ -594,8 +650,6 @@ void sendto_serv_butone_token(aClient *one, char *prefix, char *command,
 #ifndef NO_FDLIST
 	int  j;
 #endif
-	static char tcmd[1024];
-	static char ccmd[1024];
 	static char buff[1024];
 	static char pref[100];
 	va_start(vl, pattern);
@@ -1664,14 +1718,29 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 		{
 			if (SupportNICKv2(cptr))
 			{
-				sendto_one(cptr,
-				    "%s %s %d %d %s %s %s %lu %s %s :%s",
-				    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
-				    hopcount, lastnick, username, realhost,
-				    SupportNS(cptr) && sptr->srvptr->serv->numeric ? base64enc(sptr->srvptr->serv->numeric) : server,
-				    servicestamp, umodes, 
-					  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : virthost),
-					    info);
+				if (sptr->srvptr->serv->numeric && SupportNS(cptr))
+					sendto_one(cptr,
+						(cptr->proto & PROTO_SJB64) ? 
+					    "%s %s %d %B %s %s %b %lu %s %s :%s"
+					    :
+					    "%s %s %d %d %s %s %b %lu %s %s :%s"
+					    ,
+					    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
+					    hopcount, lastnick, username, realhost,
+					    sptr->srvptr->serv->numeric,
+					    servicestamp, umodes, 
+						  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : virthost),
+						    info);
+				else
+					sendto_one(cptr,
+					    "%s %s %d %d %s %s %s %lu %s %s :%s",
+					    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
+					    hopcount, lastnick, username, realhost,
+					    SupportNS(cptr) && sptr->srvptr->serv->numeric ? base64enc(sptr->srvptr->serv->numeric) : server,
+					    servicestamp, umodes, 
+						  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : virthost),
+						    info);
+				
 			}
 			else
 			{

@@ -967,15 +967,6 @@ static int completed_connection(cptr)
 		sendto_ops("Lost C-Line for %s", get_client_name(cptr, FALSE));
 		return -1;
 	}
-	if (!BadPtr(aconf->passwd))
-		sendto_one(cptr, "PASS :%s", aconf->passwd);
-
-	aconf = find_conf(cptr->confs, cptr->name, CONF_NOCONNECT_SERVER);
-	if (!aconf)
-	{
-		sendto_ops("Lost N-Line for %s", get_client_name(cptr, FALSE));
-		return -1;
-	}
 #ifdef USE_SSL
 	if (cline->options & CONNECT_SSL)
 		if (!ssl_client_handshake(cptr))
@@ -986,9 +977,19 @@ static int completed_connection(cptr)
 		else
 		{
 
+			sendto_realops("Handshaked SSL with %s", cptr->name);
 			cptr->flags |= FLAGS_SSL;
 		}
 #endif	
+	if (!BadPtr(aconf->passwd))
+		sendto_one(cptr, "PASS :%s", aconf->passwd);
+
+	aconf = find_conf(cptr->confs, cptr->name, CONF_NOCONNECT_SERVER);
+	if (!aconf)
+	{
+		sendto_ops("Lost N-Line for %s", get_client_name(cptr, FALSE));
+		return -1;
+	}
 	sendto_one(cptr, "PROTOCTL %s", PROTOCTL_SERVER);
 	sendto_one(cptr, "SERVER %s 1 :U%d-%s-%i %s",
 	    my_name_for_link(me.name, aconf), UnrealProtocol, serveropts, me.serv->numeric,
