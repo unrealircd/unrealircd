@@ -1265,7 +1265,7 @@ add_con_refuse:
 		else if (!throttle_can_connect(&acptr->ip))
 		{
 			ircsprintf(zlinebuf,
-				"ERROR :Closing Link: [%s] (Throttling: Reconnecting too fast) -"
+				"ERROR :Closing Link: [%s] (Throttled: Reconnecting too fast) -"
 					"Email %s for more information.)\r\n",
 					Inet_ia2p(&acptr->ip),
 					KLINE_ADDRESS);
