@@ -505,13 +505,13 @@ static int do_query_number(lp, numb, rptr)
 	    && cp[9] == 0 && ((cp[10] == 0 && cp[11] == 0) || (cp[10] == 0xff
 	    && cp[11] == 0xff)))
 	{
-		(void)sprintf(ipbuf, "%u.%u.%u.%u.in-addr.arpa.",
+		(void)ircsprintf(ipbuf, "%u.%u.%u.%u.in-addr.arpa.",
 		    (u_int)(cp[15]), (u_int)(cp[14]),
 		    (u_int)(cp[13]), (u_int)(cp[12]));
 	}
 	else
 	{
-		(void)sprintf(ipbuf,
+		(void)ircsprintf(ipbuf,
 		    "%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.ip6.int.",
 		    (u_int)(cp[15] & 0xf), (u_int)(cp[15] >> 4),
 		    (u_int)(cp[14] & 0xf), (u_int)(cp[14] >> 4),
@@ -532,7 +532,7 @@ static int do_query_number(lp, numb, rptr)
 	}
 #else
 	cp = (u_char *)&numb->s_addr;
-	(void)sprintf(ipbuf, "%u.%u.%u.%u.in-addr.arpa.",
+	(void)ircsprintf(ipbuf, "%u.%u.%u.%u.in-addr.arpa.",
 	    (u_int)(cp[3]), (u_int)(cp[2]), (u_int)(cp[1]), (u_int)(cp[0]));
 #endif
 

@@ -421,3 +421,4 @@
   Still some fixes to be done
 - More res.c fixes ..
 - Final res.c fixes 
+- res.c: fixed ircsprintf problems
