@@ -47,3 +47,5 @@ Assigned to DrBin:
 * #define for auto oflag +H
 * Port to MacOS 7-9, 68k architecture and PPC
 * Port to BeOS
+* +N (no nickname changes chmode)
+* Chmodes in /list possbility
