@@ -97,6 +97,12 @@
  */
 #define ADMINCHAT 1
 
+
+/*
+ * Kill logging -otherguy
+*/
+#undef KILL_LOGGING
+
 /*
   If you want SHUN_NOTICES, define this 
 */

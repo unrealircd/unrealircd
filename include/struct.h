@@ -27,6 +27,7 @@
 #include "common.h"
 #include "sys.h"
 #include "hash.h"
+#include "modules.h"
 #include <stdio.h>
 #include <sys/types.h>
 #ifdef ZIP_LINKS

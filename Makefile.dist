@@ -35,6 +35,7 @@ XCFLAGS=
 IRCDLIBS=
 CRYPTOLIB=
 OPENSSLINCLUDES=
+
 #
 # use the following on MIPS:
 #CFLAGS= -systype bsd43 -DSYSTYPE_BSD43 -I$(INCLUDEDIR)
@@ -223,7 +224,8 @@ install: all
 
 pem:	src/ssl.cnf
 	@echo "Generating certificate request .. "
-	$(OPENSSLPATH) req -new -config src/ssl.cnf -out server.req.pem \
+	$(OPENSSLPATH) req -new \
+              -config src/ssl.cnf -out server.req.pem \
               -keyout server.key.pem -nodes
 	@echo "Generating self-signed certificate .. "
 	$(OPENSSLPATH) req -x509 -days 365 -in server.req.pem \

@@ -25,11 +25,13 @@ LINTFLAGS=-hba
 
 OBJS=agent.o aln.o badwords.o bsd.o channel.o cloak.o crule.o dbuf.o \
 	fdlist.o hash.o help.o ircd.o ircsprintf.o list.o lusers.o \
-	match.o packet.o parse.o $(REGEX) res.o $(RES) s_auth.o \
+	match.o modules.o packet.o parse.o $(REGEX) res.o $(RES) s_auth.o \
 	s_bsd.o s_conf.o s_debug.o s_err.o s_extra.o s_kline.o \
 	s_misc.o s_numeric.o s_serv.o s_socks.o s_svs.o $(STRTOUL) ssl.o s_unreal.o \
 	s_user.o scache.o send.o support.o userload.o version.o webtv.o \
 	whowas.o zip.o
+
+MODULES=libdummy.so
 
 SRC=$(OBJS:%.o=%.c)
 
@@ -51,7 +53,7 @@ version.c: version.c.SH
 version.o: version.c ../include/version.h
 	$(CC) $(CFLAGS) -c version.c
 
-ircd: $(OBJS) 
+ircd: $(OBJS) $(MODULES)
 #	$(CC) $(CFLAGS) $(CRYPTOLIB) -o ircd $(OBJS) $(LDFLAGS) $(IRCDLIBS) -lssl
 	$(CC) $(CFLAGS) $(CRYPTOINCLUDES) -o ircd $(CRYPTOLIB) $(OBJS) $(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
 	chmod $(IRCDMODE) ircd
@@ -68,6 +70,10 @@ saber: $(SRC)
 
 lint:
 	lint $(LINTFLAGS) -I../include $(SRC) | egrep -v 'sendto_|debug'
+
+libdummy.so: m_test.c $(INCLUDES)
+	$(CC) $(CFLAGS) -DDYNAMIC_LINKING \
+        -fPIC -DPIC -shared -o libdummy.so m_test.c 
 
 parse.o: parse.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c parse.c
@@ -128,7 +134,7 @@ help.o: help.c $(INCLUDES)
 #	./buildm4 ${IRCDDIR}
 
 clean:
-	$(RM) -f *.o *~ core ircd version.c chkconf
+	$(RM) -f *.o *.so *~ core ircd version.c chkconf
 
 cleandir: clean
 

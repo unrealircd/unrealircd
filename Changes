@@ -309,3 +309,6 @@
 - Added "get_host" old 'H' O:flag
 - Added #define KILL_LOGGING, by otherguy
 - Added /cycle #channels, suggested by ^loki^
+- Added Modules, using dlopen() and LoadLibrary for *nix/win32. 
+- Added /module load <path.to.so>, /module status (list modules), 
+  /module unload <modulename>

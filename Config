@@ -64,7 +64,7 @@ DIR=`pwd`
 #
 # Some reasonable defaults
 #
-DEFOPT="-O -g"
+DEFOPT="-O -g -export-dynamic"
 DEFCFLAGS="$DEFOPT"
 DEFLIBS="none"
 MKPASSWDLIBS="-lcrypt"
@@ -273,10 +273,10 @@ __EOF__
         GLIBCVERS=`$EXEC`
         if [ -n "$GLIBCVERS" -a "$GLIBCVERS" -ge 2 ];then
                 OSNAME="Linux (with GLIBC 2.x or greater)"
-                DEFLIBS="-lcrypt -lresolv"
+                DEFLIBS="-lcrypt -lresolv -ldl"
         else
                 OSNAME="Linux"
-                DEFLIBS=""
+                DEFLIBS="-ldl"
         fi
         DEFCFLAGS="$DEFOPT"
         ;;

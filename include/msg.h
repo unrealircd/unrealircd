@@ -294,6 +294,9 @@
 #define MSG_CYCLE	"CYCLE"
 #define TOK_CYCLE	"BP"
 
+#define MSG_MODULE	"MODULE"
+#define TOK_MODULE	"BQ"
+
 #define MAXPARA    	15
 
 extern int m_private(), m_topic(), m_join(), m_part(), m_mode(), m_svsmode();
@@ -333,6 +336,7 @@ extern int m_chgident(), m_swhois(), m_svso(), m_svsfline();
 extern int m_tkl(), m_vhost(), m_botmotd(), m_sjoin(), m_htm();
 extern int m_umode2(), m_dccdeny(), m_undccdeny();
 extern int m_chgname(), m_shun(), m_post(), m_cycle();
+extern int m_module();
 #ifdef GUEST
 extern int m_guest();
 #endif
