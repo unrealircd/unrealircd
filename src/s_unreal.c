@@ -29,6 +29,9 @@
 #include "userload.h"
 #include "version.h"
 #include <time.h>
+#ifdef _WIN32
+#include <sys/timeb.h>
+#endif
 #include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -260,15 +263,14 @@ static char *militime(char *sec, char *usec)
 #ifndef _WIN32
 		    (tv.tv_sec - atoi(sec)) * 1000 + (tv.tv_usec - atoi(usec)) / 1000);
 #else
-		    (tv.time - atoi(sec)) * 1000 + (tv.militm - atoi(usec)) / 1000);
+		    (tv.time - atoi(sec)) * 1000 + (tv.millitm - atoi(usec)) / 1000);
 #endif
 	else
 #ifndef _WIN32
 		ircsprintf(timebuf, "%ld %ld", tv.tv_sec, tv.tv_usec);
 #else
-		ircsprintf(timebuf, "%ld %ld", tv.time, tv.militm);
+		ircsprintf(timebuf, "%ld %ld", tv.time, tv.millitm);
 #endif
-
 	return timebuf;
 }
 

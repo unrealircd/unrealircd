@@ -27,9 +27,8 @@
 #ifdef _WIN32
 #include "version.h"
 #endif
-#include <pthread.h>
+#include "modules/scan.h"
 
-extern pthread_mutex_t		HSlock;
 
 void	scan_dummy_scan(HStruct *h);
 
@@ -90,14 +89,17 @@ void	scan_dummy_unload(void)
 void	scan_dummy_scan(HStruct *h)
 {
 	char	host[SCAN_HOSTLENGTH];
+
 	/* Get host */
-	pthread_mutex_lock(&HSlock);
+	IRCMutexLock(HSlock);
 	strcpy(host, h->host);
-	pthread_mutex_unlock(&HSlock);
-	
+	IRCMutexUnlock(HSlock);
+	IRCMutexLock(VSlock);
+	IRCMutexUnlock(VSlock);
+
 	/* Indicate we don't use that structure anymore */
-	pthread_mutex_lock(&HSlock);
+	IRCMutexLock(HSlock);
 	h->refcnt--;
-	pthread_mutex_unlock(&HSlock);
-	pthread_exit(NULL);
+	IRCMutexUnlock(HSlock);
+	IRCExitThread(NULL);
 }

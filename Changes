@@ -541,3 +541,9 @@ seen. gmtime warning still there
 - Added src/modules/scan.c and src/modules/scan_dummy.c
 - Made militime() just as accurate on win32 as on linux
 - Made match() a little bit faster
+- Fixed codemastr's broken millitime patch (sys/timeb.h)
+- Added scan_socks.c, added and moved some stuff to
+  include/modules/scan.h (the dir too)
+- Converted threads to IRC*Thread by codemastr. 
+
+

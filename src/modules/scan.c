@@ -2,6 +2,8 @@
  *   IRC - Internet Relay Chat, src/modules/scan.c
  *   (C) 2001 Carsten Munk (Techie/Stskeeps) <stskeeps@tspre.org>
  *
+ *   Generic scanning API for Unreal3.2 and up 
+ *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers. 
  *
@@ -42,7 +44,7 @@
 #ifdef _WIN32
 #include "version.h"
 #endif
-#include <pthread.h>
+#include "modules/scan.h"
 
 #define MSG_SCAN 	"SCAN"	/* scan */
 #define TOK_SCAN "??"
@@ -51,17 +53,18 @@
  * refcnt = 0 means it is doomed for cleanup
 */
 HStruct			Hosts[SCAN_AT_ONCE];
-HStruct			VHosts[SCAN_AT_ONCE];
+VHStruct		VHosts[SCAN_AT_ONCE];
 
 /* 
  * If it is legal to edit Hosts table
 */
-pthread_mutex_t		HSlock;
-pthread_mutex_t		VSlock;
+MUTEX				HSlock;
+MUTEX				VSlock;
 
 /* Some prototypes .. aint they sweet? */
 DLLFUNC int			h_scan_connect(aClient *sptr);
 DLLFUNC EVENT		(HS_Cleanup);
+DLLFUNC EVENT		(VS_Ban);
 DLLFUNC int			h_scan_info(aClient *sptr);
 DLLFUNC int			m_scan(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
@@ -96,8 +99,11 @@ void    m_scan_init(void)
 	add_Hook(HOOKTYPE_LOCAL_CONNECT, h_scan_connect);
 	add_Hook(HOOKTYPE_SCAN_INFO, h_scan_info);
 	bzero(Hosts, sizeof(Hosts));
+	bzero(VHosts, sizeof(VHosts));
 	EventAdd("hscleanup", 1, 0, HS_Cleanup, NULL);
-	pthread_mutex_init(&HSlock, NULL);
+	EventAdd("vsban", 1, 0, VS_Ban, NULL);
+	IRCCreateMutex(HSlock);
+	IRCCreateMutex(VSlock);
 	add_Command(MSG_SCAN, TOK_SCAN, m_scan, MAXPARA);
 }
 
@@ -125,10 +131,13 @@ void	m_scan_unload(void)
 	}
 	del_Hook(HOOKTYPE_LOCAL_CONNECT, h_scan_connect);
 	del_Hook(HOOKTYPE_SCAN_INFO, h_scan_info);
+	EventDel("vsban");
 	EventDel("hscleanup");
 	/* We need to catch it, and throw it out as soon as we get it */
-	pthread_mutex_lock(&HSlock);
-	pthread_mutex_destroy(&HSlock);
+	IRCMutexLock(HSlock);
+	IRCMutexDestroy(HSlock);
+	IRCMutexLock(VSlock);
+	IRCMutexDestroy(VSlock);
 }
 
 HStruct	*HS_Add(char *host)
@@ -137,29 +146,24 @@ HStruct	*HS_Add(char *host)
 	
 	for (i = 0; i <= SCAN_AT_ONCE; i++)
 		if (!(*Hosts[i].host))
-			break;
-	if (!*Hosts[i].host && (i != SCAN_AT_ONCE))
-	{
-		strcpy(Hosts[i].host, host);
-		Hosts[i].refcnt = 0;	
-		return (&Hosts[i]);
-	}
+		{
+			strcpy(Hosts[i].host, host);
+			return (&Hosts[i]);
+		}
 	return NULL;
 }
 
-HStruct	*VS_Add(char *host)
+VHStruct	*VS_Add(char *host, char *reason)
 {
 	int	i;
 	
 	for (i = 0; i <= SCAN_AT_ONCE; i++)
 		if (!(*VHosts[i].host))
-			break;
-	if (!*VHosts[i].host && (i != SCAN_AT_ONCE))
-	{
-		strcpy(VHosts[i].host, host);
-		VHosts[i].refcnt = 0;	
-		return (&VHosts[i]);
-	}
+		{
+			strcpy(VHosts[i].host, host);
+			strcpy(VHosts[i].reason, reason);
+			return (&VHosts[i]);
+		}
 	return NULL;
 }
 
@@ -176,7 +180,7 @@ HStruct *HS_Find(char *host)
 	return NULL;
 }
 
-HStruct *VS_Find(char *host)
+VHStruct *VS_Find(char *host)
 {
 	int	i;
 
@@ -194,15 +198,57 @@ DLLFUNC EVENT(HS_Cleanup)
 
 	/* If it is called as a event, get lock */
 	if (data == NULL)
-		pthread_mutex_lock(&HSlock);			
+		IRCMutexLock(HSlock);			
 	for (i = 0; i <= SCAN_AT_ONCE; i++)
-		if ((Hosts[i].refcnt < 1) && *Hosts[i].host)
+		if (Hosts[i].host[0] && (Hosts[i].refcnt <= 0))
 		{
-			*Hosts[i].host = '\0';
+			*(Hosts[i].host) = '\0';	
 			Hosts[i].refcnt = 0;
 		}
 	if (data == NULL)
-		pthread_mutex_unlock(&HSlock);
+		IRCMutexUnlock(HSlock);
+}
+
+DLLFUNC EVENT(VS_Ban)
+{
+	int i;
+	char hostip[128], mo[100], mo2[100], reason[256];
+	char *tkllayer[9] = {
+		me.name,	/*0  server.name */
+		"+",		/*1  +|- */
+		"z",		/*2  G   */
+		"*",		/*3  user */
+		NULL,		/*4  host */
+		NULL,
+		NULL,		/*6  expire_at */
+		NULL,		/*7  set_at */
+		NULL		/*8  reason */
+	};
+
+	if (data == NULL)
+		IRCMutexLock(VSlock);			
+	for (i = 0; i <= SCAN_AT_ONCE; i++)
+		if (*VHosts[i].host && *VHosts[i].reason)
+		{
+			
+			strcpy(hostip, VHosts[i].host);
+			tkllayer[4] = hostip;
+			tkllayer[5] = me.name;
+			ircsprintf(mo, "%li", SOCKSBANTIME + TStime());
+			ircsprintf(mo2, "%li", TStime());
+			tkllayer[6] = mo;
+			tkllayer[7] = mo2;
+			strcpy(reason, VHosts[i].reason);
+			tkllayer[8] = reason;
+			m_tkl(&me, &me, 9, tkllayer);
+			/* De-stroy */
+			*VHosts[i].host = '\0';
+		    *VHosts[i].reason = '\0';
+		}
+	if (data == NULL)
+		IRCMutexUnlock(VSlock);
+
+	
 }
 
 DLLFUNC int h_scan_connect(aClient *sptr)
@@ -210,15 +256,16 @@ DLLFUNC int h_scan_connect(aClient *sptr)
 	Hook			*hook;
 	HStruct			*h;
 	vFP				*vfp;
-	pthread_t		thread;
-    pthread_attr_t	thread_attr;
+	THREAD			thread;
+    THREAD_ATTR		thread_attr;
+	THREAD_ID		id;
 
-	pthread_mutex_lock(&HSlock);
+	IRCMutexLock(HSlock);
 	HS_Cleanup((void *)1);
 	if (HS_Find(sptr->sockhost))
 	{
 		/* Not gonna scan, already scanning */
-		pthread_mutex_unlock(&HSlock);
+		IRCMutexUnlock(HSlock);
 		return 0;
 	}
 	if (h = HS_Add(sptr->sockhost))
@@ -229,10 +276,9 @@ DLLFUNC int h_scan_connect(aClient *sptr)
 		{
 	        h->refcnt++;
 			/* Create thread for connection */
-			pthread_create( &thread, NULL,
-                                 (void*)(hook->func.voidfunc), (void*) h);			
+			IRCCreateThread(id, thread, thread_attr, (hook->func.voidfunc), h); 
 		}
-		pthread_mutex_unlock(&HSlock);
+		IRCMutexUnlock(HSlock);
 		return 1;
 	}
 	else
@@ -242,7 +288,7 @@ DLLFUNC int h_scan_connect(aClient *sptr)
 		*/
 		sendto_realops("Problem: We ran out of Host slots. Cannot scan %s. increase SCAN_AT_ONCE",
 			sptr->sockhost);
-		pthread_mutex_unlock(&HSlock);
+		IRCMutexUnlock(HSlock);
 		return 0;
 	}
 }
@@ -251,7 +297,8 @@ DLLFUNC int h_scan_info(aClient *sptr)
 {
 	int i;
 	/* We're gonna read from Hosts, so we better get a lock */
-	pthread_mutex_lock(&HSlock);
+	IRCMutexLock(HSlock);
+	IRCMutexLock(VSlock);
 	sendto_one(sptr, ":%s NOTICE %s :*** scan API $Id$ by Stskeeps",
 			me.name, sptr->name);
 	sendto_one(sptr, ":%s NOTICE %s :*** Currently scanning:",
@@ -260,8 +307,15 @@ DLLFUNC int h_scan_info(aClient *sptr)
 		if (*Hosts[i].host)
 			sendto_one(sptr, ":%s NOTICE %s :*** IP: %s refcnt: %i",
 				me.name, sptr->name, Hosts[i].host, Hosts[i].refcnt);
-		
-	pthread_mutex_unlock(&HSlock);
+	sendto_one(sptr, ":%s NOTICE %s :*** Currently banning:",
+		me.name, sptr->name);
+	for (i = 0; i <= SCAN_AT_ONCE; i++)
+		if (*VHosts[i].host)
+			sendto_one(sptr, ":%s NOTICE %s :*** IP: %s Reason: %s",
+				me.name, sptr->name, VHosts[i].host, VHosts[i].reason);
+	
+	IRCMutexUnlock(HSlock);
+	IRCMutexUnlock(VSlock);
 	return 0;
 }
 

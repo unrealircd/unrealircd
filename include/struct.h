@@ -882,14 +882,6 @@ struct Client {
 #define	CLIENT_LOCAL_SIZE sizeof(aClient)
 #define	CLIENT_REMOTE_SIZE offsetof(aClient,count)
 
-typedef struct _HStruct HStruct;
-
-struct _HStruct
-{
-	char			host[SCAN_HOSTLENGTH];
-	unsigned char	refcnt;
-};
-
 /*
  * conf2 stuff -stskeeps
 */
