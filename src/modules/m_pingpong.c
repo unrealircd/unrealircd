@@ -202,7 +202,7 @@ Debug((DEBUG_NOTICE, "NOSPOOF"));
 			goto temp;
 	}
 	sptr->nospoof = 0;
-	if (USE_BAN_VERSION)
+	if (USE_BAN_VERSION && MyConnect(sptr))
 		sendto_one(sptr, ":IRC PRIVMSG %s :\1VERSION\1",
 			   sptr->name);
 

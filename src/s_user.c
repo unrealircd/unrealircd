@@ -1764,7 +1764,7 @@ CMD_FUNC(m_nick)
 			   ** --must test this and exit m_nick too!!!
 			 */
 #ifndef NOSPOOF
-			if (USE_BAN_VERSION)
+			if (USE_BAN_VERSION && MyConnect(sptr))
 				sendto_one(sptr, ":IRC PRIVMSG %s :\1VERSION\1",
 					nick);
 #endif
@@ -1985,7 +1985,7 @@ CMD_FUNC(m_user)
 	if (sptr->name[0] && (IsServer(cptr) ? 1 : IsNotSpoof(sptr)))
 		/* NICK and no-spoof already received, now we have USER... */
 	{
-		if (USE_BAN_VERSION)
+		if (USE_BAN_VERSION && MyConnect(sptr))
 			sendto_one(sptr, ":IRC PRIVMSG %s :\1VERSION\1",
 				sptr->name);
 
