@@ -1507,3 +1507,5 @@ seen. gmtime warning still there
 - Removed .NEW_CONFIG referenced from the win32 installer scripts
 - Removed LEAST_IDLE, wtf did that do in the first place?
 - Added version flags (O and o) for oper override and oper override verify
+- FAKE_LAG_FOR_LOCOPS define added in config.h - enables local ops to
+  override RFC1459 flood control

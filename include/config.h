@@ -161,6 +161,12 @@
  */
 /* #define NOSPOOF 1  */
 
+
+/*
+ * Enables locops to override the RFC1459 flood control too
+*/
+#undef FAKE_LAG_FOR_LOCOPS
+
 /*
  * HOSTILENAME - Define this if you want the hostile username patch included,
  *		 it will strip characters that are not 0-9,a-z,A-Z,_,- or .

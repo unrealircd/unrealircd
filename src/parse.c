@@ -374,7 +374,13 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 		 * We only generate fake lag in HTM ..
 		 * --Stskeeps
 		*/
-		if (!IsServer(cptr) && !IsOper(cptr) && !(cmptr->flags & M_NOLAG))
+		if (!IsServer(cptr) && 
+#ifdef FAKE_LAG_FOR_LOCOPS	
+		!IsAnOper(cptr)
+#else
+		!IsOper(cptr)
+#endif		
+		&& !(cmptr->flags & M_NOLAG))
 		{
 			cptr->since += (1 + i /90);
 			
