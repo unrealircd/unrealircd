@@ -178,7 +178,7 @@ int  load_module(char *module, int module_load)
 		mod_header->dll = Mod;
 		mod_header->unload = mod_unload;
 
-		mod_unload = irc_dlsym(Mod, "mod_load");
+		mod_load = irc_dlsym(Mod, "mod_load");
 		if (!mod_load)
 		{
 			mod_load = irc_dlsym(Mod, "_mod_load");
