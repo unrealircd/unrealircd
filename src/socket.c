@@ -31,8 +31,9 @@ extern int errno;		/* ...seems that errno.h doesn't define this everywhere */
 extern char *sys_errlist[];
 #endif
 #include <sys/types.h>
+#ifndef _WIN32
 #include <sys/socket.h>
-
+#endif
 #ifdef DEBUGMODE
 int  writecalls = 0, writeb[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 #endif
