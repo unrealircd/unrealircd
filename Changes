@@ -598,3 +598,6 @@
   Bugz (#0002198). Obviously all servers need to be upgraded to make this work.
 - Fixed SVSNOOP bug where remote servers still thought the opers had privileges, reported
   by Zell (#0002185)
+- Docs: log { } from 'optional' -> 'recomended'
+- If no log { } block is present a warning will be printed out and we will fallback
+  to a default of logging errors to ircd.log. Suggested by w00t (#0002327).

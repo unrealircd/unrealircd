@@ -1570,6 +1570,17 @@ char *encoded;
 	}
 }
 
+static void make_default_logblock(void)
+{
+ConfigItem_log *ca = MyMallocEx(sizeof(ConfigItem_log));
+
+	config_status("No log { } block found -- using default: errors will be logged to 'ircd.log'");
+
+	ca->file = strdup("ircd.log");
+	ca->flags |= LOG_ERROR;
+	AddListItem(ca, conf_log);
+}
+
 int	init_conf(char *rootconf, int rehash)
 {
 	config_status("Loading IRCd configuration ..");
@@ -1673,6 +1684,8 @@ int	init_conf(char *rootconf, int rehash)
 		RunHook0(HOOKTYPE_REHASH_COMPLETE);
 	}
 	do_weird_shun_stuff();
+	if (!conf_log)
+		make_default_logblock();
 	nextconnect = TStime() + 1; /* check for autoconnects */
 	config_status("Configuration loaded without any problems ..");
 	return 0;
