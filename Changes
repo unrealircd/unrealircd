@@ -1919,3 +1919,5 @@ seen. gmtime warning still there
 - Removed some leftover +I code
 - Fixed a bug in /who where +s was case sensitive. Reported by jollino (#0000736)
 - Removed some debugging messages
+- Fixed an alias bug reported by darko`` where alias::format::type of "normal" produced
+  an error.

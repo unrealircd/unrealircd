@@ -5538,9 +5538,9 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 				{
 					if (!strcmp(cepp->ce_vardata, "services"))
 						;
-					else if (!strcmp(cep->ce_vardata, "stats"))
+					else if (!strcmp(cepp->ce_vardata, "stats"))
 						;
-					else if (!strcmp(cep->ce_vardata, "normal"))
+					else if (!strcmp(cepp->ce_vardata, "normal"))
 						;
 					else {
 						config_status("%s:%i: unknown alias type",
