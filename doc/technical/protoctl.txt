@@ -122,6 +122,6 @@ SJB64         This token allows timestamps to be specified in base64 notation to
               characters following the ! represent the timestamp in base64. See
               doc/technical/base64.txt for information on the base64 system used. 
               
-
-
-
+ZIP           If both servers have this set then the link will be (zlib) compressed after
+              the SERVER message. If one of the servers does not have ZIP in his PROTOCTL
+              message then the link stays uncompressed.
