@@ -1175,3 +1175,4 @@ v- Fixed some bugreport stuff
   This might fix the double recursion mutex problem we got.
 - More -Wall cleanups
 - Fixed hunt_server_token (use IsToken on acptr->from, not acptr)
+- Unbroken Griever's broken hunt_server_token broken token fix
