@@ -67,6 +67,7 @@ void make_mode_str(aChannel *chptr, long oldm, Cmode_t oldem, long oldl, int pco
 void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf, char bounce);
 #endif
+static void mode_cutoff(char *s);
 
 #define MSG_MODE 	"MODE"	
 #define TOK_MODE 	"G"	
@@ -332,6 +333,11 @@ CMD_FUNC(m_mode)
 		}
 	}	
 */
+
+	/* This is to prevent excess +<whatever> modes. -- Syzop */
+	if (MyClient(sptr) && parv[2])
+		mode_cutoff(parv[2]);
+
 	/* Filter out the unprivileged FIRST. *
 	 * Now, we can actually do the mode.  */
 
@@ -339,6 +345,22 @@ CMD_FUNC(m_mode)
 	opermode = 0; /* Important since sometimes forgotten. -- Syzop */
 	return 0;
 }
+
+/** Cut off mode string (eg: +abcdfjkdsgfgs) at MAXMODEPARAMS modes.
+ * @param s The mode string (modes only, no parameters)
+ * @notes Should only used on local clients
+ * @author Syzop
+ */
+static void mode_cutoff(char *s)
+{
+unsigned short modesleft = MAXMODEPARAMS;
+
+	for (; *s && modesleft; s++)
+		if ((*s != '-') && (*s != '+'))
+			modesleft--;
+	*s = '\0';
+}
+
 
 /* bounce_mode -- written by binary
  *	User or server is NOT authorized to change the mode.  This takes care
@@ -676,6 +698,8 @@ void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount,
  *  modified for Unreal by stskeeps..
  */
 
+#define REQUIRE_PARAMETER() { if (!param || *pcount >= MAXMODEPARAMS) { retval = 0; break; } retval = 1; }
+
 int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, 
 	u_int what, aClient *cptr,
 	 u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char bounce)
@@ -870,6 +894,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 
 /* do pro-opping here (popping) */
 	  case MODE_CHANOWNER:
+		  REQUIRE_PARAMETER()
 		  if (!IsULine(cptr) && !IsServer(cptr)
 		       && !is_chanowner(cptr, chptr))
 		  {
@@ -886,6 +911,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  }
 		  }
 	  case MODE_CHANPROT:
+		  REQUIRE_PARAMETER()
 		  if (!IsULine(cptr) && !IsServer(cptr)
 		      && !is_chanowner(cptr, chptr))
 		  {
@@ -906,12 +932,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	  case MODE_HALFOP:
 	  case MODE_CHANOP:
 	  case MODE_VOICE:
-		  if (!param || *pcount >= MAXMODEPARAMS)
-		  {
-			  retval = 0;
-			  break;
-		  }
-		  retval = 1;
+		  REQUIRE_PARAMETER()
 		  if (!(who = find_chasing(cptr, param, &chasing)))
 			  break;
 		  if (!who->user)

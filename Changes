@@ -660,3 +660,5 @@
   Rob_.
 - Fixed a bug where SAJOIN would list channels multiple times in the notices (#0002325)
   reported by vonitsanet.
+- Fixed a bug in mode-skipping (eg '+qk a b' if not +q) and error msgs, reported by brain2
+  (#0002372).
