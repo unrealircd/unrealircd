@@ -239,11 +239,16 @@ typedef struct {
 
 #define EXTBANTABLESZ		32
 
+typedef enum ExtbanOptions { EXTBOPT_CHSVSMODE=0x1 } ExtbanOptions;
+
 typedef struct {
 	/** extbans module */
 	Module *owner;
 	/** extended ban character */
 	char	flag;
+
+	/** extban options */
+	ExtbanOptions options;
 
 	/** access checking [optional].
 	 * aClient *: the client
@@ -279,8 +284,9 @@ typedef struct {
 
 typedef struct {
 	char	flag;
+	ExtbanOptions options;
 	int			(*is_ok)(aClient *, aChannel *, char *para, int, int, int);
-	char *		(*conv_param)(char *);
+	char *			(*conv_param)(char *);
 	int			(*is_banned)(aClient *, aChannel *, char *, int);
 } ExtbanInfo;
 

@@ -99,6 +99,7 @@ char tmpbuf[512];
 	ExtBan_Table[slot].conv_param = req.conv_param;
 	ExtBan_Table[slot].is_banned = req.is_banned;
 	ExtBan_Table[slot].owner = module;
+	ExtBan_Table[slot].options = req.options;
 	if (module)
 	{
 		ModuleObject *banobj = MyMallocEx(sizeof(ModuleObject));
@@ -289,5 +290,6 @@ void extban_init(void)
 	req.flag = 'r';
 	req.conv_param = extban_moder_conv_param;
 	req.is_banned = extban_moder_is_banned;
+	req.options = EXTBOPT_CHSVSMODE;
 	ExtbanAdd(NULL, req);
 }

@@ -544,3 +544,6 @@
 - Fixed a bug where /whois notices were not sent to users who are +R if the sender is -r
   and on a remote server (#0002288) reported by Freadon.
 - Made /stats E include tkl except stats as well (#0001524) suggested by Cnils.
+- Added an options member to the ExtbanInfo structure. This currently supports one flag,
+  EXTBOPT_CHSVSMODE. When set, this extban will be removed when an SVSMODE -b [nick] is
+  executed (#0002222) suggested by Snake.

@@ -194,6 +194,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			}
 			break;
 			case 'b': {
+				Extban *extban;
 				Ban *ban, *bnext;
 				if (parc >= i) {
 					char uhost[NICKLEN+USERLEN+HOSTLEN+6], vhost[NICKLEN+USERLEN+HOSTLEN+6];
@@ -220,7 +221,18 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					ban = chptr->banlist;
 					while (ban) {
 						bnext = ban->next;
-						if (!match(ban->banstr, uhost) || !match(ban->banstr, vhost) || !match(ban->banstr, ihost)) {
+						if (*ban->banstr == '~' && (extban = findmod_by_bantype(ban->banstr[1])))
+						{
+							if (extban->options & EXTBOPT_CHSVSMODE) 
+							{
+								if (extban->is_banned(acptr, chptr, ban->banstr, BANCHK_JOIN))
+								{
+									add_send_mode_param(chptr, acptr, '-', 'b', ban->banstr);
+									del_banid(chptr, ban->banstr);
+								}
+							}
+						}
+						else if (!match(ban->banstr, uhost) || !match(ban->banstr, vhost) || !match(ban->banstr, ihost)) {
 							add_send_mode_param(chptr, sptr, '-',  'b', 
 								ban->banstr);
 							del_banid(chptr, ban->banstr);
@@ -232,6 +244,14 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					ban = chptr->banlist;
 					while (ban) {
 						bnext = ban->next;
+						if (*ban->banstr == '~' && (extban = findmod_by_bantype(ban->banstr[1])))
+						{
+							if (!(extban->options & EXTBOPT_CHSVSMODE))							
+							{
+								ban = bnext;
+								continue;
+							}
+						}
 						add_send_mode_param(chptr, sptr, '-',  'b', ban->banstr);
 						del_banid(chptr, ban->banstr);
 						ban = bnext;
@@ -240,6 +260,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			}
 			break;
 			case 'e': {
+				Extban *extban;
 				Ban *ban, *bnext;
 				if (parc >= i) {
 					char uhost[NICKLEN+USERLEN+HOSTLEN+6], vhost[NICKLEN+USERLEN+HOSTLEN+6];
@@ -267,6 +288,17 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					ban = chptr->exlist;
 					while (ban) {
 						bnext = ban->next;
+						if (*ban->banstr == '~' && (extban = findmod_by_bantype(ban->banstr[1])))
+						{
+							if (extban->options & EXTBOPT_CHSVSMODE) 
+							{
+								if (extban->is_banned(acptr, chptr, ban->banstr, BANCHK_JOIN))
+								{
+									add_send_mode_param(chptr, acptr, '-', 'b', ban->banstr);
+									del_banid(chptr, ban->banstr);
+								}
+							}
+						}
 						if (!match(ban->banstr, uhost) || !match(ban->banstr, vhost) || !match(ban->banstr, ihost)) {
 							add_send_mode_param(chptr, sptr, '-',  'e', 
 								ban->banstr);
@@ -279,6 +311,14 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					ban = chptr->exlist;
 					while (ban) {
 						bnext = ban->next;
+						if (*ban->banstr == '~' && (extban = findmod_by_bantype(ban->banstr[1])))
+						{
+							if (!(extban->options & EXTBOPT_CHSVSMODE))							
+							{
+								ban = bnext;
+								continue;
+							}
+						}
 						add_send_mode_param(chptr, sptr, '-',  'e', ban->banstr);
 						del_exbanid(chptr, ban->banstr);
 						ban = bnext;
