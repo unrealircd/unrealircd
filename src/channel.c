@@ -3992,8 +3992,15 @@ CMD_FUNC(m_kick)
 					goto attack;
 				if (IsServer(sptr))
 					goto attack;
+
+				/* Note for coders regarding oper override:
+				 * always let a remote kick (=from a user on another server) trough or
+				 * else we will get desynched. In short this means all the denying should
+				 * always contain a && MyClient(sptr) [or sptr!=cptr] and at the end
+				 * a remote kick should always be allowed (pass trough). -- Syzop
+				 */
 				if ((chptr->mode.mode & MODE_NOKICKS)
-				    && !IsULine(sptr))
+				    && MyClient(sptr))
 				{
 					sendto_one(sptr,
 					    ":%s %s %s :*** You cannot kick people on %s",
@@ -4002,11 +4009,14 @@ CMD_FUNC(m_kick)
 					continue;
 				}
 
+				/* we are neither +o nor +h, OR..
+				 * we are +h but victim is +o, OR...
+				 * we are +h and victim is +h
+				 */
 				if (IsOper(sptr))
-					if ((!is_chan_op(sptr, chptr)
-					    && !is_halfop(sptr, chptr))
-					    || (is_halfop(sptr, chptr)
-					    && is_chan_op(who, chptr)))
+					if ((!is_chan_op(sptr, chptr) && !is_halfop(sptr, chptr)) ||
+					    (is_halfop(sptr, chptr) && is_chan_op(who, chptr)) ||
+					    (is_halfop(sptr, chptr) && is_halfop(who, chptr)))
 					{
 						sendto_snomask(SNO_EYES,
 						    "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
@@ -4014,10 +4024,12 @@ CMD_FUNC(m_kick)
 						    chptr->chname, who->name, comment);
 						goto attack;
 					}	/* is_chan_op */
+				
+				/* victim is +a or +q, we are not +q */
 				if ((is_chanprot(who, chptr)
 				    || is_chanowner(who, chptr)
 				    || IsServices(who)) && !is_chanowner(sptr, chptr)) {
-					if (IsNetAdmin(sptr))
+					if (IsOper(sptr)) /* (and f*ck local ops) */
 					{	/* IRCop kicking owner/prot */
 						sendto_snomask(SNO_EYES,
 						    "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
@@ -4025,8 +4037,7 @@ CMD_FUNC(m_kick)
 						    chptr->chname, who->name, comment);
 						goto attack;
 					}
-					else if (!IsULine(sptr)
-					    && who != sptr)
+					else if (!IsULine(sptr) && (who != sptr) && MyClient(sptr))
 					{
 						sendto_one(sptr,
 						    ":%s %s %s :*** You cannot kick %s from %s because %s is channel admin",
@@ -4036,19 +4047,23 @@ CMD_FUNC(m_kick)
 						continue;
 					}	/* chanprot/chanowner */
 				}
+				
+				/* victim is +o, we are +h [operoverride is already taken care of 2 blocks above] */
 				if (is_chan_op(who, chptr)
 				    && is_halfop(sptr, chptr)
 				    && !is_chan_op(sptr, chptr)
-				    && !IsULine(sptr))
+				    && !IsULine(sptr) && MyClient(sptr))
 				{
 					sendto_one(sptr,
 					    ":%s %s %s :*** You cannot kick channel operators on %s if you only are halfop",
 					    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, chptr->chname);
 					goto deny;
 				}
+
+				/* victim is +h, we are +h [operoverride is already taken care of 3 blocks above] */
 				if (is_halfop(who, chptr)
 				    && is_halfop(sptr,chptr)
-				    && !is_chan_op(sptr, chptr))
+				    && !is_chan_op(sptr, chptr) && MyClient(sptr))
 				{
 					sendto_one(sptr,
 					    ":%s %s %s :*** You cannot kick channel halfops on %s if you only are halfop",
@@ -4056,7 +4071,8 @@ CMD_FUNC(m_kick)
 					goto deny;
 				}	/* halfop */
 
-				if (IsKix(who) && !IsULine(sptr))
+				/* applies to everyone (well except remote/ulines :p) */
+				if (IsKix(who) && !IsULine(sptr) && MyClient(sptr))
 				{
 					if (!IsNetAdmin(sptr))
 					{
@@ -4073,6 +4089,7 @@ CMD_FUNC(m_kick)
 					}
 				}
 
+				/* allowed (either coz access granted or a remote kick), so attack! */
 				goto attack;
 
 			      deny:

@@ -223,13 +223,15 @@ Windows:<br>
    c - local connects<br>
    F - far connects (except from U-lined servers)<br>
    f - flood notices<br>
-   k - kill notices<br>
+   k - kill notices [*]<br>
    e - 'eyes' notices<br>
    j - 'junk' notices<br>
    v - vhost notices<br>
    G - gline/shun notices<br>
    n - nick change notices<br>
    q - deny nick (Q:line) rejection notices<br>
+   s - receives server notices [*]<br>
+   [*: this snomask is also allowed to non-ircops]<br>
    </p>
 <p>You can control which snomasks you automatically get (set::snomask-on-connect) and which you get
    on oper (set::snomask-on-oper, set::oper::snomask)</p></div>
@@ -2189,10 +2191,6 @@ set {
   <tr> 
     <td><div align="center">d</div></td>
     <td>Makes it so you can not receive channel PRIVMSGs</td>
-  </tr>
-  <tr> 
-    <td><div align="center">k</div></td>
-    <td>Can see all the /kill commands executed</td>
   </tr>
   <tr> 
     <td><div align="center">N</div></td>
