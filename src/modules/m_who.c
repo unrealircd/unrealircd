@@ -594,7 +594,7 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (cm->flags & CHFL_CHANOP)
 					status[i++] = '@';
 				else if (cm->flags & CHFL_VOICE)
-					i++;				
+					status[i++] = '+';				
 				status[i] = 0;
 				sendto_one(sptr, getreply(RPL_WHOREPLY),
 				    me.name, sptr->name, wsopts.channel->chname,
