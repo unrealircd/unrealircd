@@ -840,13 +840,17 @@ int  m_server(cptr, sptr, parc, parv)
 		 * VL stuff and don't -- codemastr
 		 */
 		aConfItem *vlines = NULL;
+		inf = NULL;
+		protocol = NULL;
+		flags = NULL;
+		
 		protocol = (char *)strtok((char *)info, "-");
 		if (protocol)
 		flags = (char *)strtok((char *)NULL, " ");
 		if (flags) 
 		inf = (char *)strtok((char *)NULL, "");
 		if (inf) {
-		strncpyzt(cptr->info, inf[0] ? inf : me.name, sizeof(cptr->info));
+		strncpyzt(cptr->info, *inf ? inf : me.name, sizeof(cptr->info));
 		for (vlines = conf; vlines; vlines = vlines->next) {
 			if ((vlines->status & CONF_VERSION) && !match(vlines->name,cptr->name))
 			break;

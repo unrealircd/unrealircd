@@ -25,17 +25,8 @@ typedef struct  SynchList aSynchList;
 
 /* SJOIN synch structure */
 struct SynchList {
-        char            nick[NICKLEN];
-        int             deop;
-        int             devoice;
-	int		dehalf;
- 	int		deown;
- 	int		deprot;
-        int             op;
-        int             voice;
-	int		half;
-	int		own;
-	int		prot;
+	aClient		*cptr;
+	long		setflags;
         aSynchList      *next, *prev;
 };
 
@@ -46,12 +37,8 @@ aSynchList *make_synchlist()
     Reg1 aSynchList *synchptr;
 
     synchptr = (aSynchList *) MyMalloc(sizeof(aSynchList));
-
-    synchptr->nick[0] = 0;
-    synchptr->deop = synchptr->dehalf = synchptr->deown = synchptr->deprot = 0;
-    synchptr->devoice = 0;
-    synchptr->op = 0;
-    synchptr->voice = synchptr->half = synchptr->own = synchptr->prot = 0;
+    synchptr->cptr = NULL;
+    synchptr->setflags = 0;
     synchptr->prev = synchptr->next = NULL;
 
     return synchptr;

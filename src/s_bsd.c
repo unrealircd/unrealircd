@@ -1474,7 +1474,6 @@ static int read_packet(cptr, rfd)
 		if (length <= 0)
 			return length;
 	}
-	Debug((DEBUG_ERROR, "Block: %s", readbuf));
 	/*
 	   ** For server connections, we process as many as we can without
 	   ** worrying about the time of day or anything :)
