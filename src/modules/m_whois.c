@@ -198,7 +198,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(acptr,
 				    ":%s %s %s :*** %s (%s@%s) did a /whois on you.",
 				    me.name, IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, sptr->name,
-				    sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost);
+				    sptr->user->username, GetHost(sptr));
 			}
 
 			sendto_one(sptr, rpl_str(RPL_WHOISUSER), me.name,

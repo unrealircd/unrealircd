@@ -245,9 +245,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :Your nick!user@host-mask is now (%s!%s@%s) - To disable ident set change it manually by /setident'ing again",
-		    me.name, parv[0], parv[0], sptr->user->username,
-		    IsHidden(sptr) ? sptr->user->virthost : sptr->
-		    user->realhost);
+		    me.name, parv[0], parv[0], sptr->user->username, GetHost(sptr));
 	}
 	return 0;
 }

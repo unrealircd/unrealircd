@@ -2817,9 +2817,7 @@ CMD_FUNC(channel_link)
 			if (MyClient(sptr))
 				sendto_one(sptr, ":%s!%s@%s JOIN :%s",
 				    sptr->name, sptr->user->username,
-				    (IsHidden(sptr) ? sptr->
-				    user->virthost : sptr->user->realhost),
-				    name);
+				    GetHost(sptr), name);
 			sendto_umode(UMODE_NETADMIN,
 			    "*** Invisible(+I) user %s joined %s", sptr->name,
 			    chptr->chname);
@@ -3043,9 +3041,7 @@ CMD_FUNC(m_join)
 			{
 				sendto_one(sptr, ":%s!%s@%s JOIN :%s",
 				    sptr->name, sptr->user->username,
-				    (IsHidden(sptr) ? sptr->
-				    user->virthost : sptr->user->realhost),
-				    chptr->chname);
+				    GetHost(sptr), chptr->chname);
 				sendto_umode(UMODE_ADMIN,
 				    "*** [+I] %s invisible joined %s",
 				    sptr->name, chptr->chname);
@@ -3061,13 +3057,10 @@ CMD_FUNC(m_join)
 			if (MyClient(sptr))
 				sendto_one(sptr, ":%s!%s@%s JOIN :%s",
 				    sptr->name, sptr->user->username,
-				    (IsHidden(sptr) ? sptr->
-				    user->virthost : sptr->user->realhost),
-				    chptr->chname);
+				    GetHost(sptr), chptr->chname);
 			sendto_chanops_butone(NULL, chptr, ":%s!%s@%s JOIN :%s",
 			    sptr->name, sptr->user->username,
-			    (IsHidden(sptr) ? sptr->user->virthost : sptr->
-			    user->realhost), chptr->chname);
+			    GetHost(sptr), chptr->chname);
 		}
 		else
 			sendto_channel_butserv(chptr, sptr,
@@ -3259,18 +3252,14 @@ CMD_FUNC(m_part)
 						    ":%s!%s@%s PART %s",
 						    sptr->name,
 						    sptr->user->username,
-						    (IsHidden(sptr) ?
-						    sptr->user->virthost :
-						    sptr->user->realhost),
+						    GetHost(sptr),
 						    chptr->chname);
 					else
 						sendto_one(sptr,
 						    ":%s!%s@%s PART %s :%s",
 						    sptr->name,
 						    sptr->user->username,
-						    (IsHidden(sptr) ?
-						    sptr->user->virthost :
-						    sptr->user->realhost),
+						    GetHost(sptr),
 						    chptr->chname, comment);
 				}
 			}
@@ -3284,9 +3273,7 @@ CMD_FUNC(m_part)
 						    chptr, ":%s!%s@%s PART %s",
 						    sptr->name,
 						    sptr->user->username,
-						    (IsHidden(sptr) ? sptr->
-						    user->virthost : sptr->
-						    user->realhost),
+						    GetHost(sptr),
 						    chptr->chname);
 						if (!is_chan_op(sptr, chptr))
 							sendto_one(sptr,
@@ -3294,10 +3281,7 @@ CMD_FUNC(m_part)
 							    sptr->name,
 							    sptr->user->
 							    username,
-							    (IsHidden(sptr) ?
-							    sptr->user->
-							    virthost : sptr->
-							    user->realhost),
+							    GetHost(sptr),
 							    chptr->chname);
 					}
 					else
@@ -3307,9 +3291,7 @@ CMD_FUNC(m_part)
 						    ":%s!%s@%s PART %s %s",
 						    sptr->name,
 						    sptr->user->username,
-						    (IsHidden(sptr) ? sptr->
-						    user->virthost : sptr->
-						    user->realhost),
+						    GetHost(sptr),
 						    chptr->chname, comment);
 						if (!is_chan_op(cptr, chptr))
 							sendto_one(sptr,
@@ -3317,10 +3299,7 @@ CMD_FUNC(m_part)
 							    sptr->name,
 							    sptr->user->
 							    username,
-							    (IsHidden(sptr) ?
-							    sptr->user->
-							    virthost : sptr->
-							    user->realhost),
+							    GetHost(sptr),
 							    chptr->chname,
 							    comment);
 					}
@@ -3692,8 +3671,7 @@ CMD_FUNC(m_topic)
 #ifndef TOPIC_NICK_IS_NUHOST
 			nicKlen = strlen(sptr->name);
 #else
-			tnick = make_nick_user_host(sptr->name, sptr->user->username, 
-				IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost);
+			tnick = make_nick_user_host(sptr->name, sptr->user->username, GetHost(sptr));
 			nicKlen = strlen(tnick);
 #endif
 			if (chptr->topic)
@@ -4114,9 +4092,7 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 		    chptr->mode.msgs, chptr->mode.per);
 		if (chptr->mode.kmode == 1)
 		{		/* ban. */
-			ircsprintf(mask, "*!*@%s",
-			    (IsHidden(sptr) ? sptr->user->
-			    virthost : sptr->user->realhost));
+			ircsprintf(mask, "*!*@%s", GetHost(sptr));
 			add_banid(&me, chptr, mask);
 			sendto_serv_butone(&me, ":%s MODE %s +b %s 0",
 			    me.name, chptr->chname, mask);
@@ -4643,8 +4619,7 @@ CMD_FUNC(m_knock)
 	sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP,
 	    ":%s NOTICE @%s :[Knock] by %s!%s@%s (%s) ",
 	    me.name, chptr->chname, sptr->name,
-	    sptr->user->username,
-	    (IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost),
+	    sptr->user->username, GetHost(sptr), 
 	    parv[2] ? parv[2] : "no reason specified");
 
 	sendto_one(sptr, ":%s %s %s :Knocked on %s", me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE",

@@ -264,23 +264,19 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 				SetHidden(sptr);
 			}
 			sendto_ops("%s (%s@%s) is now a local operator (o)",
-			    parv[0], sptr->user->username,
-			    IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost);
-				
+			    parv[0], sptr->user->username, GetHost(sptr));
 		}
 
 
 		if (announce != NULL) {
 			sendto_ops
 			    ("%s (%s@%s) [%s] %s",
-			    parv[0], sptr->user->username,
-			    IsHidden(sptr) ? sptr->user->virthost : sptr->
-			    user->realhost, parv[1], announce);
+			    parv[0], sptr->user->username, GetHost(sptr),
+			    parv[1], announce);
 				sendto_serv_butone(&me,
 				    ":%s GLOBOPS :%s (%s@%s) [%s] %s",
 				    me.name, parv[0], sptr->user->username,
-				    IsHidden(sptr) ? sptr->
-				    user->virthost : sptr->user->realhost, parv[1], announce);
+				    GetHost(sptr), parv[1], announce);
 
 		} 
 		if (aconf->snomask)

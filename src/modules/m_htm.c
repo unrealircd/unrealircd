@@ -238,7 +238,7 @@ DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sendto_ops
 			    ("%s (%s@%s) forced High traffic mode to activate",
 			    parv[0], sptr->user->username,
-			    sptr->user->realhost);
+			    GetHost(sptr));
 			LCF = 60;	/* 60 seconds */
 			mod.flags = EMOD_EVERY;
 			mod.every = LCF;
@@ -262,7 +262,7 @@ DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sendto_ops
 			    ("%s (%s@%s) forced High traffic mode to deactivate",
 			    parv[0], sptr->user->username,
-			    sptr->user->realhost);
+			    GetHost(sptr));
 		}
 		else if (!stricmp(command, "TO"))
 		{
@@ -286,7 +286,7 @@ DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					sendto_ops
 					    ("%s (%s@%s) changed the High traffic mode max rate to %dkb/s",
 					    parv[0], sptr->user->username,
-					    sptr->user->realhost, LRV);
+					    GetHost(sptr), LRV);
 				}
 			}
 		}
@@ -298,7 +298,7 @@ DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    me.name, parv[0]);
 			sendto_ops("%s (%s@%s) set High traffic mode to QUIET",
 			    parv[0], sptr->user->username,
-			    sptr->user->realhost);
+			    GetHost(sptr));
 		}
 
 		else if (!stricmp(command, "NOISY"))
@@ -309,7 +309,7 @@ DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    me.name, parv[0]);
 			sendto_ops("%s (%s@%s) set High traffic mode to NOISY",
 			    parv[0], sptr->user->username,
-			    sptr->user->realhost);
+			    GetHost(sptr));
 		}
 		else
 			sendto_one(sptr, ":%s NOTICE %s :Unknown option: %s",

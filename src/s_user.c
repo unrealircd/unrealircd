@@ -985,7 +985,7 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 	{
 		IRCstats.unknown--;
 		IRCstats.me_clients++;
-		if IsHidden(sptr)
+		if (IsHidden(sptr))
 			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s [VHOST %s]", nick,
 				user->username, user->realhost, user->virthost);
 		else
@@ -2129,7 +2129,7 @@ CMD_FUNC(m_ison)
 			{
 				strcpy(namebuf, acptr->user->username);
 				strcat(namebuf, "@");
-				strcat(namebuf, IsHidden(acptr) ? acptr->user->virhost : acptr->user->realhost);
+				strcat(namebuf, GetHost(acptr));
 				if (match(user, namebuf))
 					continue;
 				*--user = '!';

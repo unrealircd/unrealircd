@@ -1259,8 +1259,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 					    server), acptr->user->servicestamp,
 					    (!buf
 					    || *buf == '\0' ? "+" : buf),
-					    IsHidden(acptr) ? acptr->user->
-					    virthost : acptr->user->realhost,
+					    GetHost(acptr),
 					    acptr->info);
 			}
 
@@ -2610,9 +2609,7 @@ CMD_FUNC(m_stats)
 
 	if (stat != '*')
 		sendto_snomask(SNO_EYES, "Stats \'%c\' requested by %s (%s@%s)",
-		    stat, sptr->name, sptr->user->username,
-		    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
-		    realhost);
+		    stat, sptr->name, sptr->user->username, GetHost(sptr));
 
 	return 0;
 }
@@ -3812,8 +3809,7 @@ CMD_FUNC(m_trace)
 					      rpl_str(RPL_TRACEOPERATOR),
 					      me.name,
 					      parv[0], class, acptr->name,
-					      IsHidden(acptr) ? acptr->user->
-					      virthost : acptr->user->realhost,
+					      GetHost(acptr),
 					      now - acptr->lasttime);
 				  else
 					  sendto_one(sptr,
@@ -4272,9 +4268,7 @@ CMD_FUNC(m_close)
 	}
 	sendto_one(sptr, rpl_str(RPL_CLOSEEND), me.name, parv[0], closed);
 	sendto_realops("%s!%s@%s closed %d unknown connections", sptr->name,
-	    sptr->user->username,
-	    IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost,
-	    closed);
+	    sptr->user->username, GetHost(sptr), closed);
 	IRCstats.unknown = 0;
 	return 0;
 }

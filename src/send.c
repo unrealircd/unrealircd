@@ -1432,10 +1432,7 @@ void vsendto_prefix_one(struct Client *to, struct Client *from,
 			    && !MyConnect(from))
 			{
 				strcat(sender, "@");
-
-				    (void)strcat(sender,
-				    (!IsHidden(from) ? user->realhost : user->
-				    virthost));
+				(void)strcat(sender, GetHost(from));
 				flag = 1;
 			}
 		}
@@ -1447,9 +1444,7 @@ void vsendto_prefix_one(struct Client *to, struct Client *from,
 		    && (IsHidden(from) ? *user->virthost : *user->realhost))
 		{
 			strcat(sender, "@");
-			strcat(sender,
-			    (!IsHidden(from) ? user->realhost : user->
-			    virthost));
+			strcat(sender, GetHost(from));
 		}
 		*sendbuf = ':';
 		strcpy(&sendbuf[1], sender);

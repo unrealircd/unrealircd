@@ -368,8 +368,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	tkllayer[3] = usermask;
 	tkllayer[4] = hostmask;
 	tkllayer[5] =
-	    make_nick_user_host(sptr->name, sptr->user->username,
-	    (IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost));
+	    make_nick_user_host(sptr->name, sptr->user->username, GetHost(sptr));
 	if (whattodo == 0)
 	{
 		if (secs == 0)

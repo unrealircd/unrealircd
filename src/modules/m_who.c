@@ -509,12 +509,7 @@ static int can_see(aClient *sptr, aClient *acptr, aChannel *channel)
 	if (IsAnOper(sptr))
 	  host = acptr->user->realhost;
 	else
-	  {
-	    if (IsHidden(acptr))
-	      host = acptr->user->virthost;
-	    else
-	      host = acptr->user->realhost;
-	  }
+	  host = GetHost(acptr);
 
 	if (((wfl.want_host == WHO_WANT) && match(wfl.host, host)) ||
 	    ((wfl.want_host == WHO_DONTWANT) && !match(wfl.host, host)))
