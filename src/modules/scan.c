@@ -35,6 +35,12 @@
 #include <string.h>
 #ifdef _WIN32
 #include <io.h>
+#else
+#include <sys/socket.h>
+#include <sys/file.h>
+#include <sys/ioctl.h>
+#include <sys/resource.h>
+
 #endif
 #include <fcntl.h>
 #include "h.h"
@@ -45,7 +51,9 @@
 #include "version.h"
 #endif
 #define IS_SCAN_C
+
 #include "modules/scan.h"
+#include "modules/blackhole.h"
 
 #define MSG_SCAN 	"SCAN"	/* scan */
 #define TOK_SCAN "??"
@@ -62,18 +70,27 @@ VHStruct		VHosts[SCAN_AT_ONCE];
 MUTEX				HSlock;
 MUTEX				VSlock;
 
+MUTEX				blackhole_mutex;
+ConfigItem_blackhole		blackhole_conf;
+char				blackhole_stop = 0;
+SOCKET				blackholefd = 0;
+struct SOCKADDR_IN		blackholesin;
 /* Some prototypes .. aint they sweet? */
 DLLFUNC int			h_scan_connect(aClient *sptr);
-DLLFUNC EVENT		(HS_Cleanup);
-DLLFUNC EVENT		(VS_Ban);
+DLLFUNC EVENT			(HS_Cleanup);
+DLLFUNC EVENT			(VS_Ban);
 DLLFUNC int			h_scan_info(aClient *sptr);
 DLLFUNC int			m_scan(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+DLLFUNC int			h_config_set_blackhole(void);
+DLLFUNC void 			blackhole(void *p);
+THREAD				acceptthread;
+THREAD_ATTR			acceptthread_attr;
 
 #ifndef DYNAMIC_LINKING
 ModuleInfo m_scan_info
 #else
-#define m_scan_info module_header
-ModuleInfo module_header
+#define m_scan_info mod_header
+ModuleInfo mod_header
 #endif
   = {
   	2,
@@ -105,15 +122,47 @@ int    m_scan_init(int module_load)
 	IRCCreateMutex(HSlock);
 	IRCCreateMutex(VSlock);
 	add_Command(MSG_SCAN, TOK_SCAN, m_scan, MAXPARA);
+	blackhole_stop = 0;
+	bzero(&blackhole_conf, sizeof(blackhole_conf));
+	add_Hook(HOOKTYPE_CONFIG_UNKNOWN, h_config_set_blackhole);
 }
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_load(void)
+DLLFUNC int	mod_load(int module_load)
 #else
-void    m_scan_load(void)
+int    m_scan_load(int module_load)
 #endif
 {
+
+	if (!blackhole_conf.ip || !blackhole_conf.port)
+	{
+		config_progress("set::blackhole: missing ip/port mask or configuration not loaded. using %s:6013",
+			conf_listen->ip);
+		blackhole_conf.ip = strdup(conf_listen->ip);
+		blackhole_conf.port = 6013;
+	}
+	if ((blackholefd = socket(AFINET, SOCK_STREAM, 0)) == -1)
+	{
+		config_error("set::blackhole: could not create socket");
+		blackholefd = -1;
+		return -1;
+	}		
+	blackholesin.SIN_ADDR.S_ADDR = inet_addr(blackhole_conf.ip);
+	blackholesin.SIN_PORT = htons(blackhole_conf.port);
+	blackholesin.SIN_FAMILY = AFINET;
+	blackhole_stop = 0;
+	if (bind(blackholefd, (struct SOCKADDR *)&blackholesin, sizeof(blackholesin)))
+	{
+		CLOSE_SOCK(blackholefd);
+		config_error("set::blackhole: could not bind to %s:%i", blackhole_conf.ip, blackhole_conf.port);
+		blackholefd = -1;
+		return -1;		
+	}
+
+	listen(blackholefd, LISTEN_SIZE);
+	/* Create blackhole accept() thread */
+	IRCCreateThread(acceptthread, acceptthread_attr, blackhole, NULL);
 }
 
 
@@ -124,6 +173,8 @@ DLLFUNC void	mod_unload(void)
 void	m_scan_unload(void)
 #endif
 {
+	SOCKET fd;
+	int j,i;
 	if (del_Command(MSG_SCAN, TOK_SCAN, m_scan) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
@@ -131,13 +182,51 @@ void	m_scan_unload(void)
 	}
 	del_Hook(HOOKTYPE_LOCAL_CONNECT, h_scan_connect);
 	del_Hook(HOOKTYPE_SCAN_INFO, h_scan_info);
-	EventDel("vsban");
 	EventDel("hscleanup");
-	/* We need to catch it, and throw it out as soon as we get it */
+	EventDel("vsban");
+	i = 1;
+	while (i)
+	{
+		i = 0;
+		HS_Cleanup(NULL);
+		IRCMutexLock(HSlock);
+		for (j = 0; j <= SCAN_AT_ONCE;  j++)
+			if (Hosts[i].host[0])
+				i++;
+		IRCMutexUnlock(HSlock);
+	}
+	i = 1;
+	while (i)
+	{
+		i = 0;
+		VS_Ban(NULL);
+		IRCMutexLock(VSlock);
+		for (j = 0; j <= SCAN_AT_ONCE;  j++)
+			if (VHosts[i].host[0])
+				i++;
+		IRCMutexUnlock(VSlock);
+		
+	}
+	/* We need to catch it, and throw it out as soon as we get it */	
 	IRCMutexLock(HSlock);
 	IRCMutexDestroy(HSlock);
 	IRCMutexLock(VSlock);
 	IRCMutexDestroy(VSlock);
+	if (blackhole_conf.ip)
+		MyFree(blackhole_conf.ip);
+	del_Hook(HOOKTYPE_CONFIG_UNKNOWN, h_config_set_blackhole);
+	blackhole_stop = 1;
+	if (blackholefd)
+	{
+		fd = socket(AFINET, SOCK_STREAM, 0);
+		if (fd >-1)
+		{
+			connect(fd, (struct sockaddr *) &blackholesin, sizeof(blackholesin));
+		}
+		
+	}
+	pthread_join(acceptthread, NULL);
+	CLOSE_SOCK(fd);
 }
 
 HStruct	*HS_Add(char *host)
@@ -323,4 +412,75 @@ DLLFUNC int m_scan(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	HS_Cleanup(NULL);
 	RunHook(HOOKTYPE_SCAN_INFO, sptr);
 	return 0;
+}
+
+DLLFUNC int	h_config_set_blackhole(void)
+{
+	ConfigItem_unknown_ext *sets;
+	
+	char	*ip;
+	char	*port;
+	int	iport;
+	for (sets = conf_unknown_set; sets; 
+		sets = (ConfigItem_unknown_ext *)sets->next)
+	{
+		if (!strcmp(sets->ce_varname, "blackhole"))
+		{
+			if (!sets->ce_vardata)
+			{
+				config_error("%s:%i: set::blackhole - missing parameter");
+				goto explodeblackhole;
+			}
+			ipport_seperate(sets->ce_vardata, &ip, &port);
+			if (!ip || !*ip)
+			{
+				config_error("%s:%i: set::blackhole: illegal ip:port mask",
+					sets->ce_fileptr->cf_filename, sets->ce_varlinenum);
+				goto explodeblackhole;
+			}
+			if (strchr(ip, '*'))
+			{
+				config_error("%s:%i: set::blackhole: illegal ip, (mask)",
+					sets->ce_fileptr->cf_filename, sets->ce_varlinenum);
+				goto explodeblackhole;
+			}
+			if (!port || !*port)
+			{
+				config_error("%s:%i: set::blackhole: missing port in mask",
+					sets->ce_fileptr->cf_filename, sets->ce_varlinenum);
+				goto explodeblackhole;
+			}
+			iport = atol(port);
+			if ((iport < 0) || (iport > 65535))
+			{
+				config_error("%s:%i: set::blackhole: illegal port (must be 0..65536)",
+					sets->ce_fileptr->cf_filename, sets->ce_varlinenum);
+				goto explodeblackhole;
+			}
+ 			blackhole_conf.ip = strdup(ip);
+ 			blackhole_conf.port = iport;			
+	explodeblackhole:
+			del_ConfigItem((ConfigItem *)sets, 
+				(ConfigItem **) &conf_unknown_set);
+			continue;
+		}	
+	}
+	if (!blackhole_conf.ip || !blackhole_conf.port)
+	{
+		config_error("set::blackhole: missing ip/port mask");
+	}
+	return 0;
+}
+
+DLLFUNC void blackhole(void *p)
+{
+	int	callerfd;
+	while (blackhole_stop != 1)
+	{
+		callerfd = accept(blackholefd, NULL, NULL);
+		CLOSE_SOCK(callerfd);
+	}
+	CLOSE_SOCK(blackholefd);
+	blackhole_stop = 0;
+	IRCExitThread(NULL);	
 }

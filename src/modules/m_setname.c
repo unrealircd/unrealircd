@@ -81,6 +81,13 @@ int    m_setname_init(int module_load)
 	*/
 	add_Command(MSG_SETNAME, TOK_SETNAME, m_setname, 1);
 }
+#ifdef DYNAMIC_LINKING
+DLLFUNC int	mod_load(int module_load)
+#else
+int    m_setname_load(int module_load)
+#endif
+{
+}
 
 #ifdef DYNAMIC_LINKING
 DLLFUNC void	mod_unload(void)

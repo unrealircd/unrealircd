@@ -203,6 +203,7 @@ int  load_module(char *module, int module_load)
 					config_progress
 					    ("Failed to load module %s: mod_load failed",
 					    module);
+					(*mod_unload)();
 					Modules[i] = NULL;
 					irc_dlclose(Mod);
 					return -1;

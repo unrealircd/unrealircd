@@ -79,7 +79,13 @@ int    m_chghost_init(int module_load)
 	*/
 	add_Command(MSG_CHGHOST, TOK_CHGHOST, m_chghost, MAXPARA);
 }
-
+#ifdef DYNAMIC_LINKING
+DLLFUNC int	mod_load(int module_load)
+#else
+int    m_chghost_load(int module_load)
+#endif
+{
+}
 #ifdef DYNAMIC_LINKING
 DLLFUNC void	mod_unload(void)
 #else

@@ -627,3 +627,5 @@ seen. gmtime warning still there
 - Made the ircd call mod_unload when it shuts down
 - Made use of the new module_load parameter in mod_init, and made commands.so use mod_load
 - Fixed a module bug where loading == unloading
+- Moved blackhole into scan.c and removed blackhole.c, and fixed some
+  blackhole bugs.

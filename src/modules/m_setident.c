@@ -81,6 +81,13 @@ int    m_setident_init(int module_load)
 }
 
 #ifdef DYNAMIC_LINKING
+DLLFUNC int	mod_load(int module_load)
+#else
+int	m_setident_load(int module_load)
+#endif
+{
+}
+#ifdef DYNAMIC_LINKING
 DLLFUNC void	mod_unload(void)
 #else
 void	m_setident_unload(void)

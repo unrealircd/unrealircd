@@ -82,6 +82,14 @@ int    m_sethost_init(int module_load)
 }
 
 #ifdef DYNAMIC_LINKING
+DLLFUNC int	mod_load(int module_load)
+#else
+int    m_sethost_load(int module_load)
+#endif
+{
+}
+
+#ifdef DYNAMIC_LINKING
 DLLFUNC void	mod_unload(void)
 #else
 void	m_sethost_unload(void)
