@@ -101,7 +101,7 @@
 /*
  * If we should catch SIGSEGVs..
 */
-#define PROPER_CORE
+#define PROPER_COREDUMP
 
 
 /*

@@ -866,3 +866,4 @@ seen. gmtime warning still there
 - Really removed remgline (since sts didn't really do it)
 - Made changes so the new modules compile on win32
 - Added headers to all the new modules
+- Fixed a typo in config.h
