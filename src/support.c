@@ -15,6 +15,8 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ * $Id$
  */
 
 #ifndef CLEAN_COMPILE
@@ -69,8 +71,6 @@ char	*my_itoa(int i)
 ** 	strtoken.c --  	walk through a string of tokens, using a set
 **			of separators
 **			argv 9/90
-**
-**	$Id$
 */
 
 char *strtoken(char **save, char *str, char *fs)
@@ -121,7 +121,6 @@ char *strtok2(char *str, char *fs)
 **	strerror - return an appropriate system error string to a given errno
 **
 **		   argv 11/90
-**	$Id$
 */
 char *strerror(int err_no)
 {
@@ -152,7 +151,6 @@ char *strerror(int err_no)
 **			internet number (some ULTRIX don't have this)
 **			argv 11/90).
 **	inet_ntoa --	its broken on some Ultrix/Dynix too. -avalon
-**	$Id$
 */
 
 char *inetntoa(char *in)
@@ -174,8 +172,6 @@ char *inetntoa(char *in)
 /*
 **	inet_netof --	return the net portion of an internet number
 **			argv 11/90
-**	$Id$
-**
 */
 
 int  inet_netof(struct IN_ADDR in)
