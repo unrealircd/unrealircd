@@ -4847,10 +4847,10 @@ int  m_sjoin(cptr, sptr, parc, parv)
         	MSG_SJOIN, TOK_SJOIN, "%s :%s", parabuf, parv[parc - 1]);
         
 	/* We strip out & and " here, for SJ2 */
-        strcpy(parabuf, ":");
+        strcpy(parabuf, "");
         t = parv[parc - 1];
         ap = mp2parv("*", t);
-	for (i = 2; i < ap->parc; i++)
+	for (i = 1; i < ap->parc; i++)
 	{
 		if (*ap->parv[i] == '&')
 			continue;

@@ -1841,21 +1841,11 @@ static int m_message(cptr, sptr, parc, parv, notice)
 				}
 				else
 				{
-					if (prefix & PREFIX_VOICE)
-						sendto_channelvoice_butone(cptr,
-						    sptr, chptr,
-						    ":%s %s %s :%s", parv[0],
-						    cmd, nick, text);
-					if (prefix & PREFIX_HALFOP)
-						sendto_channelhalfop_butone
-						    (cptr, sptr, chptr,
-						    ":%s %s %s :%s", parv[0],
-						    cmd, nick, text);
-					if (prefix & PREFIX_OP)
-						sendto_channelops_butone(cptr,
-						    sptr, chptr,
-						    ":%s %s %s :%s", parv[0],
-						    cmd, nick, text);
+					sendto_channelprefix_butone(cptr,
+					    sptr, chptr,
+					    prefix,
+					    ":%s %s %s :%s", parv[0],
+					    cmd, nick, text);
 				}
 				sendanyways = 0;
 				continue;

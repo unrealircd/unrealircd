@@ -319,6 +319,54 @@ void sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
 	va_end(vl);
 }
 
+void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
+	int	prefix,
+    char *pattern, ...)
+{
+	va_list vl;
+	Link *lp;
+	aClient *acptr;
+	int  i;
+
+	va_start(vl, pattern);
+	for (i = 0; i < MAXCONNECTIONS; i++)
+		sentalong[i] = 0;
+	for (lp = chptr->members; lp; lp = lp->next)
+	{
+		acptr = lp->value.cptr;
+		if (acptr->from == one)
+			continue;	/* ...was the one I should skip
+					   or user not not a channel op */
+		if ((prefix & 0x1) && !(lp->flags & CHFL_HALFOP))
+			continue;
+		if ((prefix & 0x2) && !(lp->flags & CHFL_VOICE))
+			continue;
+		if ((prefix & 0x4) && !(lp->flags & CHFL_CHANOP))
+			continue;
+		
+		i = acptr->from->fd;
+		if (MyConnect(acptr) && IsRegisteredUser(acptr))
+		{
+			vsendto_prefix_one(acptr, from, pattern, vl);
+			sentalong[i] = 1;
+		}
+		else
+		{
+			/* Now check whether a message has been sent to this
+			 * remote link already */
+			if (sentalong[i] == 0)
+			{
+				vsendto_prefix_one(acptr, from, pattern, vl);
+				sentalong[i] = 1;
+			}
+		}
+	}
+	va_end(vl);
+	return;
+}
+
+
+
 /*
  * sendto_channelops_butone Added 1 Sep 1996 by Cabal95.
  *   Send a message to all OPs in channel chptr that

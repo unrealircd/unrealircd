@@ -371,11 +371,11 @@
  * If you _must_ insist on running as root and not wanting the program to change its
  * UID, then define BIG_SECURITY_HOLE below
  */
-#if !defined(_WIN32) && !defined(_AMIGA)
+#if !defined(_WIN32)
 /* Change This Line Below \/ */
 #define BIG_SECURITY_HOLE
 /* Its the one above ^^^^^^^ */
-#ifndef BIG_SECUTIRY_HOLE
+#ifndef BIG_SECURITY_HOLE
 #define	IRC_UID un_uid
 #define	IRC_GID un_gid
 #endif
