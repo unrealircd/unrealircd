@@ -498,3 +498,5 @@ seen. gmtime warning still there
 - Added events code and converted some stuff to events
 - Converted htmcalc/lcf to events
 - Fixed /stats L bug found by larne
+- Fixed the loop, made htmcalc more clean
+

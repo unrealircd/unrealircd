@@ -145,4 +145,19 @@ EVENT(lcf_check)
 
 EVENT(htm_calc)
 {
+	static time_t last = 0;
+	if (last == 0)
+		last = TStime();
+	
+	currentrate =
+		   ((float)(me.receiveK -
+		    lastrecvK)) / ((float)(timeofday - last));
+	currentrate2 =
+		   ((float)(me.sendK -
+			 lastsendK)) / ((float)(timeofday - last));
+	if (currentrate > highest_rate)
+			highest_rate = currentrate;
+	if (currentrate2 > highest_rate2)
+			highest_rate2 = currentrate2;
+	last = TStime();
 }

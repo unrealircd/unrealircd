@@ -130,7 +130,6 @@ long lastsendK = 0;
 
 TS   check_fdlists();
 #endif
-static TS alllasttime = 0;
 
 unsigned char conf_debuglevel = 0;
 
@@ -1263,7 +1262,14 @@ void SocketLoop(void *dummy)
 	for (;;)
 #endif
 	{
+		time_t oldtimeofday;
+
+		oldtimeofday = timeofday;
 		timeofday = time(NULL) + TSoffset;
+		if (timeofday - oldtimeofday < 0)
+		{
+			sendto_realops("Time running backwards! %i-%i<0", timeofday, oldtimeofday);
+		}
 		DoEvents();
 		/*
 		   ** Run through the hashes and check lusers every
@@ -1272,24 +1278,8 @@ void SocketLoop(void *dummy)
 		 */
 
 #ifndef NO_FDLIST
-		{
-			lastrecvK = me.receiveK;
-			lastsendK = me.sendK;
-			if (alllasttime != timeofday)
-			{
-				currentrate =
-				    ((float)(me.receiveK -
-				    lastrecvK)) / ((float)(timeofday - alllasttime));
-				currentrate2 =
-				    ((float)(me.sendK -
-				    lastsendK)) / ((float)(timeofday - alllasttime));
-				if (currentrate > highest_rate)
-					highest_rate = currentrate;
-				if (currentrate2 > highest_rate2)
-					highest_rate2 = currentrate2;
-			}
-			;
-		}
+		lastrecvK = me.receiveK;
+		lastsendK = me.sendK;
 #endif
 		if (IRCstats.clients > IRCstats.global_max)
 			IRCstats.global_max = IRCstats.clients;
@@ -1342,6 +1332,8 @@ void SocketLoop(void *dummy)
 		(void)read_message(1, &busycli_fdlist);	/* busy clients */
 		if (lifesux)
 		{
+			static time_t alllasttime = 0;
+
 			(void)read_message(1, &serv_fdlist);
 			/* read servs more often */
 			if (lifesux > 9)	/* life really sucks */
@@ -1350,14 +1342,16 @@ void SocketLoop(void *dummy)
 				(void)read_message(1, &serv_fdlist);
 			}
 			flush_fdlist_connections(&serv_fdlist);
-		}
-		{
 			timeofday = time(NULL) + TSoffset;
 			if ((alllasttime + ((lifesux + 1) * 2)) > timeofday)
 			{
 				read_message(delay, NULL);	/*  check everything */
 				alllasttime = timeofday;
 			}
+		}
+		else
+		{
+			read_message(delay, NULL);	/*  check everything */
 		}
 
 #endif
