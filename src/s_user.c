@@ -2386,39 +2386,14 @@ CMD_FUNC(m_umode)
 	 */
 	if (!IsAnOper(sptr) && !IsServer(cptr))
 	{
-		if (IsWhois(sptr))
-			sptr->umodes &= ~UMODE_WHOIS;
-		if (IsAdmin(sptr))
-			ClearAdmin(sptr);
-		if (IsSAdmin(sptr))
-			ClearSAdmin(sptr);
-		if (IsNetAdmin(sptr))
-			ClearNetAdmin(sptr);
-		if (IsHideOper(sptr))
-			ClearHideOper(sptr);
-		if (IsCoAdmin(sptr))
-			ClearCoAdmin(sptr);
-		if (IsHelpOp(sptr))
-			ClearHelpOp(sptr);
-		if (sptr->user->snomask & SNO_CLIENT)
-			sptr->user->snomask &= ~SNO_CLIENT;
-		if (sptr->user->snomask & SNO_FCLIENT)
-			sptr->user->snomask &= ~SNO_FCLIENT;
-		if (sptr->user->snomask & SNO_FLOOD)
-			sptr->user->snomask &= ~SNO_FLOOD;
-		if (sptr->user->snomask & SNO_JUNK)
-			sptr->user->snomask &= ~SNO_JUNK;
-		if (sptr->user->snomask & SNO_EYES)
-			sptr->user->snomask &= ~SNO_EYES;
-		if (sptr->user->snomask & SNO_VHOST)
-			sptr->user->snomask &= ~SNO_VHOST;
-		if (sptr->user->snomask & SNO_TKL)
-			sptr->user->snomask &= ~SNO_TKL;
-		if (sptr->user->snomask & SNO_NICKCHANGE)
-			sptr->user->snomask &= ~SNO_NICKCHANGE;
-		if (sptr->user->snomask & SNO_QLINE)
-			sptr->user->snomask &= ~SNO_QLINE;
-
+		sptr->umodes &= ~UMODE_WHOIS;
+		ClearAdmin(sptr);
+		ClearSAdmin(sptr);
+		ClearNetAdmin(sptr);
+		ClearHideOper(sptr);
+		ClearCoAdmin(sptr);
+		ClearHelpOp(sptr);
+		sptr->user->snomask &= (SNO_NONOPERS);
 	}
 
 	/*

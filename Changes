@@ -1874,3 +1874,4 @@ seen. gmtime warning still there
   with an often changing host (like dyndns.org).
 - Documentation updates for nodnscache.
 - Fixed minor memleak with zip links.
+- Code cleanup in m_umode
