@@ -1352,3 +1352,4 @@ seen. gmtime warning still there
 - Added /who +R which shows real host to opers.
 - Added set::scan::bind-ip, set::scan::message, on request of RaYmAn, documented
   in example.conf
+- Fixed minor problem with former patch

@@ -459,9 +459,9 @@ DLLFUNC int h_stats_scan(aClient *sptr, char *stats) {
 		sendto_one(sptr, ":%s %i %s :scan::timeout: %d", me.name, RPL_TEXT, sptr->name,
 				Scan_TimeOut);
 		sendto_one(sptr, ":%s %i %s :scan::bind-ip: %s",
-			me.name, RPL_TEXT, Inet_ia2p(&Scan_bind));
+			me.name, RPL_TEXT, sptr->name, Inet_ia2p(&Scan_bind));
 		sendto_one(sptr, ":%s %i %s :scan::message: %s",
-			me.name, RPL_TEXT, scan_message ? scan_message : "<NULL>");
+			me.name, RPL_TEXT, sptr->name, scan_message ? scan_message : "<NULL>");
 	}
         return 0;
 }
