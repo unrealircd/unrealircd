@@ -4388,37 +4388,34 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 		{
 			
 			int errorcode, errorbufsize, regex=0;
-			char *errorbuf, *tmp, *tmpbuf=NULL;
+			char *errorbuf, *tmp;
 			for (tmp = word->ce_vardata; *tmp; tmp++) {
 				if ((int)*tmp < 65 || (int)*tmp > 123) {
+					if ((word->ce_vardata == tmp) && (*tmp == '*'))
+						continue;
+					if ((*(tmp + 1) == '\0') && (*tmp == '*'))
+						continue;
 					regex = 1;
 					break;
 				}
 			}
 			if (regex)
+			{
 				errorcode = regcomp(&expr, word->ce_vardata, REG_ICASE|REG_EXTENDED);
-			else
-			{
-				tmpbuf = MyMalloc(strlen(word->ce_vardata) +
-					 strlen(PATTERN) -1);
-				ircsprintf(tmpbuf, PATTERN, word->ce_vardata);
-				errorcode = regcomp(&expr, tmpbuf, REG_ICASE|REG_EXTENDED);
+				if (errorcode > 0)
+				{
+					errorbufsize = regerror(errorcode, &expr, NULL, 0)+1;
+					errorbuf = MyMalloc(errorbufsize);
+					regerror(errorcode, &expr, errorbuf, errorbufsize);
+					config_error("%s:%i: badword::%s contains an invalid regex: %s",
+						word->ce_fileptr->cf_filename,
+						word->ce_varlinenum,
+						word->ce_varname, errorbuf);
+					errors++;
+					free(errorbuf);
+				}
+				regfree(&expr);
 			}
-			if (errorcode > 0)
-			{
-				errorbufsize = regerror(errorcode, &expr, NULL, 0)+1;
-				errorbuf = MyMalloc(errorbufsize);
-				regerror(errorcode, &expr, errorbuf, errorbufsize);
-				config_error("%s:%i: badword::%s contains an invalid regex: %s",
-					word->ce_fileptr->cf_filename,
-					word->ce_varlinenum,
-					word->ce_varname, errorbuf);
-				errors++;
-				free(errorbuf);
-			}
-			if (!regex)
-				free(tmpbuf);	
-			regfree(&expr);
 		}
 
 	}

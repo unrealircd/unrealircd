@@ -2177,3 +2177,4 @@ seen. gmtime warning still there
 - Fixed the compile problem on Solaris/SunOS (#0000984) reported by Dom
 - Updated src/win32/unrealinst.iss a bit
 - Changed /who flag '&' to '?'
+- Fixed regex detection problem (introduced by a change 2 days ago).
