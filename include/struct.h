@@ -897,7 +897,7 @@ struct _configfile
 struct _configentry
 {
         ConfigFile	*ce_fileptr;
-        int 	 	ce_varlinenum, ce_vardatanum, ce_fileposstart, ce_fileposend, ce_sectlinenum;
+        int 	 	ce_varlinenum, ce_fileposstart, ce_fileposend, ce_sectlinenum;
         char 		*ce_varname, *ce_vardata;
         ConfigEntry     *ce_entries, *ce_prevlevel, *ce_next;
 };

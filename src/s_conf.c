@@ -575,7 +575,6 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 						curce->ce_vardata = (char *)malloc(ptr-start+1);
 						strncpy(curce->ce_vardata, start, ptr-start);
 						curce->ce_vardata[ptr-start] = '\0';
-						curce->ce_vardatanum = atoi(curce->ce_vardata);
 					}
 				}
 				else
@@ -639,7 +638,6 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 						curce->ce_vardata = (char *)malloc(ptr-start+1);
 						strncpy(curce->ce_vardata, start, ptr-start);
 						curce->ce_vardata[ptr-start] = '\0';
-						curce->ce_vardatanum = atoi(curce->ce_vardata);
 					}
 				}
 				else
