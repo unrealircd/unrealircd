@@ -120,6 +120,9 @@ Unreal3.2-Selene (BETA10) RELEASE NOTES
 
 * log {} syslog support added (read doc/conf.doc for more info)
 
+* AKILL/RAKILL is depricated. Server command still works but will be removed eventually
+  (aliases to TKL G). For normal opers it notices that the commands are depricated.
+
 * MAKE SURE YOU RERUN ./Config AND RUN make clean BEFORE USING THIS VERSION!!!
 
 * THIS IS A BETA VERSION. THINGS MAY NOT WORK. REPORT ANY BUGS TO THESE 

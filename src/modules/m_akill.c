@@ -121,7 +121,19 @@ DLLFUNC int m_akill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *hostmask, *usermask, *comment;
 	ConfigItem_ban *bconf;
-
+	char	mo[1024];
+	char *tkllayer[9] = {
+		me.name,	/*0  server.name */
+		"+",		/*1  +|- */
+		"G",		/*2  G   */
+		NULL,		/*3  user */
+		NULL,		/*4  host */
+		NULL,		/*5  setby */
+		"0",		/*6  expire_at */
+		NULL,		/*7  set_at */
+		"no reason"	/*8  reason */
+	};
+		
 	if (parc < 2 && IsPerson(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
@@ -131,86 +143,34 @@ DLLFUNC int m_akill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (IsServer(sptr) && parc < 3)
 		return 0;
-
+	
 	if (!IsServer(cptr))
 	{
-		if (!IsOper(sptr))
+		if (IsOper(sptr))
 		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			    sptr->name);
-			return 0;
+			sendto_one(sptr, ":%s NOTICE %s :*** AKILL is depricated and should not be used. Please use /gline instead",
+				me.name, sptr->name);
 		}
 		else
 		{
-			comment = parc < 3 ? NULL : parv[2];
-			if ((hostmask = (char *)index(parv[1], '@')))
-			{
-				*hostmask = 0;
-				hostmask++;
-				usermask = parv[1];
-			}
-			else
-			{
-				sendto_one(sptr, ":%s NOTICE %s :%s", me.name,
-				    sptr->name,
-				    "Please use a nick!user@host mask.");
-				return 0;
-			}
-			if (!strchr(hostmask, '.'))
-			{
-				sendto_one(sptr,
-				    "NOTICE %s :*** What a sweeping AKILL.  If only your admin knew you tried that..",
-				    parv[0]);
-				sendto_realops("%s attempted to /akill *@*",
-				    parv[0]);
-				return 0;
-			}
-			if (MyClient(sptr))
-			{
-				sendto_realops("%s added akill for %s@%s (%s)",
-				    sptr->name, usermask, hostmask,
-				    !BadPtr(comment) ? comment : "no reason");
-				sendto_serv_butone(&me,
-				    ":%s GLOBOPS :%s added akill for %s@%s (%s)",
-				    me.name, sptr->name, usermask, hostmask,
-				    !BadPtr(comment) ? comment : "no reason");
-			}
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+			    sptr->name);
+	
 		}
-	}
-	else
-	{
-		hostmask = parv[1];
-		usermask = parv[2];
-		comment = parc < 4 ? NULL : parv[3];
-	}
-
-	if (!usermask || !hostmask)
-	{
-		/*
-		 * This is very bad, it should never happen.
-		 */
-		sendto_ops("Error adding akill from %s!", sptr->name);
 		return 0;
 	}
-
-	if (!(bconf = Find_banEx(make_user_host(usermask, hostmask), CONF_BAN_USER, CONF_BAN_TYPE_AKILL)))
-	{
-		bconf = (ConfigItem_ban *) MyMallocEx(sizeof(ConfigItem_ban));
-		bconf->flag.type = CONF_BAN_USER;
-		bconf->mask = strdup(make_user_host(usermask, hostmask));
-		bconf->reason = comment ? strdup(comment) : NULL;
-		bconf->flag.type2 = CONF_BAN_TYPE_AKILL;
-		AddListItem(bconf, conf_ban);
-	}
-
-	if (comment)
-		sendto_serv_butone(cptr, ":%s AKILL %s %s :%s",
-		    IsServer(cptr) ? parv[0] : me.name, hostmask,
-		    usermask, comment);
-	else
-		sendto_serv_butone(cptr, ":%s AKILL %s %s",
-		    IsServer(cptr) ? parv[0] : me.name, hostmask, usermask);
-
+	hostmask = parv[1];
+	usermask = parv[2];
+	comment = parc < 4 ? NULL : parv[3];
+	tkllayer[1] = "+";
+	tkllayer[2] = "G";
+	tkllayer[3] = usermask;
+	tkllayer[4] = hostmask;
+	tkllayer[5] = sptr->name;
+	ircsprintf(mo, "%li", TStime());
+	tkllayer[7] = mo;
+	tkllayer[8] = comment ? comment : "no reason";
+	m_tkl(&me, &me, 9, tkllayer);
 	loop.do_bancheck = 1;
 	return 0;
 }

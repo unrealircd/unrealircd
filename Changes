@@ -1390,3 +1390,8 @@ seen. gmtime warning still there
 - Added src/win32/gpl.rtf (used for installer) made installer download dbghelp.dll if needed
 - Added an installer script to generate the Win32 SSL version
 - Made the win32 uninstaller remove dbghelp.dll if it was added when uninstalling
+- Added a #ifdef _WIN32 for extern BOOL IsService; in ircd.c that made compile break
+  on non WIN32 systems
+- Depricated AKILL/RAKILL and made them alias to TKL G +/- - for normal users they
+  just reply that the commands are depricated. Server compatiblity is maintained. 
+  Eventually it will just be removed. Thank god for modules.

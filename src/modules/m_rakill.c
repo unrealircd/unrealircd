@@ -123,7 +123,15 @@ int	m_rakill_Unload(int module_unload)
 DLLFUNC int m_rakill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *hostmask, *usermask;
-	ConfigItem_ban  *bconf;
+	char	mo[1024];
+	char *tkllayer[6] = {
+		me.name,	/*0  server.name */
+		"-",		/*1  - */
+		"G",		/*2  G   */
+		NULL,		/*3  user */
+		NULL,		/*4  host */
+		NULL		/*5  whoremoved */
+	};
 
 	if (parc < 2 && IsPerson(sptr))
 	{
@@ -145,74 +153,15 @@ DLLFUNC int m_rakill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 		else
 		{
-			if ((hostmask = (char *)index(parv[1], '@')))
-			{
-				*hostmask = 0;
-				hostmask++;
-				usermask = parv[1];
-			}
-			else
-			{
-				sendto_one(sptr, ":%s NOTICE %s :*** %s", me.name,
-				    sptr->name, "Please use a user@host mask.");
-				return 0;
-			}
+			sendto_one(sptr, ":%s NOTICE %s :*** RAKILL is depricated and should not be used. Please use /gline -user@host instead", 
+				me.name, sptr->name);
 		}
 	}
-	else
-	{
-		hostmask = parv[1];
-		usermask = parv[2];
-	}
-
-	if (!usermask || !hostmask)
-	{
-		/*
-		 * This is very bad, it should never happen.
-		 */
-		sendto_realops("Error adding akill from %s!", sptr->name);
-		return 0;
-	}
 	
-	if (!(bconf = Find_banEx(make_user_host(usermask, hostmask), CONF_BAN_USER, CONF_BAN_TYPE_AKILL)))
-	{
-		if (!MyClient(sptr))
-		{
-			sendto_serv_butone(cptr, ":%s RAKILL %s %s",
-			    IsServer(cptr) ? parv[0] : me.name, hostmask,
-			    usermask);
-			return 0;
-		}
-		sendto_one(sptr, ":%s NOTICE %s :*** AKill %s@%s does not exist.",
-		    me.name, sptr->name, usermask, hostmask);
-		return 0;
-		
-	}
-	if (bconf->flag.type2 != CONF_BAN_TYPE_AKILL)
-	{
-		sendto_one(sptr, ":%s NOTICE %s :*** Error: Cannot remove other ban types",
-			me.name, sptr->name);
-		return 0;
-	}
-	if (MyClient(sptr))
-	{
-		sendto_ops("%s removed akill for %s@%s",
-		    sptr->name, usermask, hostmask);
-		sendto_serv_butone(&me,
-		    ":%s GLOBOPS :%s removed akill for %s@%s",
-		    me.name, sptr->name, usermask, hostmask);
-	}
-	
-	/* Wipe it out. */
-	DelListItem(bconf, conf_ban);
-	MyFree(bconf->mask);
-	if (bconf->reason)
-		MyFree(bconf->reason);
-	MyFree(bconf);
-	
-	sendto_serv_butone(cptr, ":%s RAKILL %s %s",
-	    IsServer(cptr) ? parv[0] : me.name, hostmask, usermask);
-
+	tkllayer[3] = parv[1];
+	tkllayer[4] = parv[2];	
+	tkllayer[5] = sptr->name;
+	m_tkl(&me, &me, 6, tkllayer);
 	loop.do_bancheck = 1;
 	return 0;
 }
