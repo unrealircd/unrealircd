@@ -588,7 +588,7 @@ typedef struct {
 } aCtab;
 extern aCtab cFlagTab[];
 
-void set_channelmodes(char *modes, struct ChMode *store)
+void set_channelmodes(char *modes, struct ChMode *store, int warn)
 {
 	aCtab *tab;
 	char *param = strchr(modes, ' ');
@@ -621,8 +621,9 @@ void set_channelmodes(char *modes, struct ChMode *store)
 					break;
 				if (param[0] != '[')
 				{
-					config_status("set::modes-on-join: please use the new +f format: '10:5' becomes '[10t]:5' "
-					              "and '*10:5' becomes '[10t#b]:5'.");
+					if (warn)
+						config_status("set::modes-on-join: please use the new +f format: '10:5' becomes '[10t]:5' "
+					                  "and '*10:5' becomes '[10t#b]:5'.");
 				} else
 				{
 					char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
@@ -674,9 +675,9 @@ void set_channelmodes(char *modes, struct ChMode *store)
 							case 'j':
 								newf.l[FLD_JOIN] = v;
 								if (a == 'R')
-									newf.a[FLD_TEXT] = a;
+									newf.a[FLD_JOIN] = a;
 								else
-									newf.a[FLD_TEXT] = 'i';
+									newf.a[FLD_JOIN] = 'i';
 								break;
 							case 'k':
 								newf.l[FLD_KNOCK] = v;
@@ -5069,7 +5070,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			tempiConf.oper_modes = (long) set_usermode(cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "modes-on-join")) {
-			set_channelmodes(cep->ce_vardata, &tempiConf.modes_on_join);
+			set_channelmodes(cep->ce_vardata, &tempiConf.modes_on_join, 0);
 		}
 		else if (!strcmp(cep->ce_varname, "snomask-on-oper")) {
 			ircstrdup(tempiConf.oper_snomask, cep->ce_vardata);
@@ -5417,6 +5418,8 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckNull(cep);
 			for (c = cep->ce_vardata; *c; c++)
 			{
+				if (*c == ' ')
+					break; /* don't check the parameter ;p */
 				switch (*c)
 				{
 					case 'q':
@@ -5438,7 +5441,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						break;
 				}
 			}
-			set_channelmodes(cep->ce_vardata, &temp);
+			set_channelmodes(cep->ce_vardata, &temp, 1);
 			if (temp.mode & MODE_NOKNOCK && !(temp.mode & MODE_INVITEONLY))
 			{
 				config_error("%s:%i: set::modes-on-join has +K but not +i",

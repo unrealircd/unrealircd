@@ -2387,3 +2387,4 @@ seen. gmtime warning still there
 - Probably fixed a bug regarding 'setting mode' notice with +f (was sometimes sent to non-chanops).
 - Fixed multiple chmode +u bugs: remote join, netjoin, +mu relay between servers, kick and
   a part bug. Most of them reported by Lx (#0001097).
+- Fixed a bug in +f + modes-on-join + 't' subfloodtype, reported by Rocko (#0001228).
