@@ -51,6 +51,10 @@ DLLFUNC CMD_FUNC(_do_join);
 DLLFUNC int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[]);
 static int extended_operoverride(aClient *sptr, aChannel *chptr, char *key, int mval, char mchar);
 #define MAXBOUNCE   5 /** Most sensible */
+#ifdef JOINTHROTTLE
+static int isjthrottled(aClient *cptr, aChannel *chptr);
+static void cmodej_increase_usercounter(aClient *cptr, aChannel *chptr);
+#endif
 
 /* Externs */
 extern MODVAR int spamf_ugly_vchanoverride;
@@ -220,8 +224,96 @@ Ban *banned;
 #endif
 #endif
 
+#ifdef JOINTHROTTLE
+		if (!IsAnOper(cptr) &&
+		    (chptr->mode.extmode & EXTMODE_JOINTHROTTLE) && isjthrottled(cptr, chptr))
+			return ERR_TOOMANYJOINS;
+#endif
+
         return 0;
 }
+
+#ifdef JOINTHROTTLE
+static int isjthrottled(aClient *cptr, aChannel *chptr)
+{
+CmodeParam *m;
+aJFlood *e;
+int num=0, t=0;
+
+	if (!MyClient(cptr))
+		return 0;
+		
+	for (m = chptr->mode.extmodeparam; m; m=m->next)
+		if (m->flag == 'j')
+		{
+			num = ((aModejEntry *)m)->num;
+			t = ((aModejEntry *)m)->t;
+			break;
+		}
+
+	if (!num || !t)
+		return 0;
+
+	/* Grab user<->chan entry.. */
+	for (e = cptr->user->jflood; e; e=e->next_u)
+		if (e->chptr == chptr)
+			break;
+	
+	if (!e)
+		return 0; /* Not present, so cannot be throttled */
+
+	/* Ok... now the actual check:
+	 * if ([timer valid] && [one more join would exceed num])
+	 */
+	if (((TStime() - e->firstjoin) < t) && (e->numjoins == num))
+		return 1; /* Throttled */
+
+	return 0;
+}
+
+static void cmodej_increase_usercounter(aClient *cptr, aChannel *chptr)
+{
+CmodeParam *m;
+aJFlood *e;
+int num=0, t=0;
+
+	if (!MyClient(cptr))
+		return;
+		
+	for (m = chptr->mode.extmodeparam; m; m=m->next)
+		if (m->flag == 'j')
+		{
+			num = ((aModejEntry *)m)->num;
+			t = ((aModejEntry *)m)->t;
+			break;
+		}
+
+	if (!num || !t)
+		return;
+
+	/* Grab user<->chan entry.. */
+	for (e = cptr->user->jflood; e; e=e->next_u)
+		if (e->chptr == chptr)
+			break;
+	
+	if (!e)
+	{
+		/* Allocate one */
+		e = cmodej_addentry(cptr, chptr);
+		e->firstjoin = TStime();
+		e->numjoins = 1;
+	} else
+	if ((TStime() - e->firstjoin) < t) /* still valid? */
+	{
+		e->numjoins++;
+	} else {
+		/* reset :p */
+		e->firstjoin = TStime();
+		e->numjoins = 1;
+	}
+}
+
+#endif
 
 /*
 ** m_join
@@ -617,6 +709,9 @@ DLLFUNC CMD_FUNC(_do_join)
 					    me.name, parv[0], name);
 				continue;
 			}
+#ifdef JOINTHROTTLE
+			cmodej_increase_usercounter(cptr, chptr);
+#endif
 		}
 
 		join_channel(chptr, cptr, sptr, flags);

@@ -727,6 +727,9 @@ static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from, char *c
 			{
 				RunHook2(HOOKTYPE_REMOTE_QUIT, sptr, comment);
 			}
+#ifdef JOINTHROTTLE
+			cmodej_deluserentries(sptr);
+#endif
 			while ((mp = sptr->user->channel))
 				remove_user_from_channel(sptr, mp->chptr);
 

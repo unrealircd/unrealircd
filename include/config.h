@@ -431,6 +431,7 @@
 /*
  * Extended channel modes. This extends the channel modes with yet another
  * 32 possible modes which can also be used in modules.
+ * This is now pretty much required.
  */
 #define EXTCMODE
 
@@ -439,6 +440,13 @@
  * msgs, joins, ctcps, nickchanges and /knock.
  */
 #define NEWCHFLOODPROT
+
+/* JoinThrottle (chanmode +j): +j x:y throttles users to X joins per Y seconds (per-user).
+ * In peak situations (eg: just after a server restart with thousand clients joining
+ * hundreds of channels) it can use like ~200k, but in normal circumstances you should
+ * count on just ~10-50k.
+ */
+#define JOINTHROTTLE
 
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MOTD MPATH

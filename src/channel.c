@@ -1524,6 +1524,9 @@ void sub1_from_channel(aChannel *chptr)
 		if (chptr->mode.floodprot)
 			MyFree(chptr->mode.floodprot);
 #endif
+#ifdef JOINTHROTTLE
+		cmodej_delchannelentries(chptr);
+#endif
 		if (chptr->topic)
 			MyFree(chptr->topic);
 		if (chptr->topic_nick)

@@ -467,6 +467,7 @@ extern MODVAR Cmode_t EXTMODE_NONOTICE;
 #ifdef STRIPBADWORDS
 extern MODVAR Cmode_t EXTMODE_STRIPBADWORDS;
 #endif
+extern MODVAR Cmode_t EXTMODE_JOINTHROTTLE;
 #endif
 
 #ifndef HAVE_STRLCPY
@@ -739,3 +740,9 @@ extern char *clean_ban_mask(char *, int, aClient *);
 extern void chanfloodtimer_stopchantimers(aChannel *chptr);
 extern int find_invex(aChannel *chptr, aClient *sptr);
 extern void DoMD5(unsigned char *mdout, unsigned char *src, unsigned long n);
+#ifdef JOINTHROTTLE
+aJFlood *cmodej_addentry(aClient *cptr, aChannel *chptr);
+void cmodej_delentry(aJFlood *e);
+void cmodej_deluserentries(aClient *cptr);
+void cmodej_delchannelentries(aChannel *chptr);
+#endif

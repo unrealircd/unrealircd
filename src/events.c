@@ -45,6 +45,10 @@ ID_Copyright("(C) Carsten Munk 2001");
 
 MODVAR Event *events = NULL;
 
+#ifdef JOINTHROTTLE
+extern EVENT(cmodej_cleanup_structs);
+#endif
+
 void	LockEventSystem(void)
 {
 }
@@ -213,6 +217,9 @@ void	SetupEvents(void)
 	EventAddEx(NULL, "loop", 0, 0, loop_event, NULL);
 #ifndef NO_FDLIST
 	EventAddEx(NULL, "fdlistcheck", 1, 0, e_check_fdlists, NULL);
+#endif
+#ifdef JOINTHROTTLE
+	EventAddEx(NULL, "cmodej_cleanup_structs", 60, 0, cmodej_cleanup_structs, NULL);
 #endif
 	UnlockEventSystem();
 }

@@ -556,7 +556,7 @@ static char *replies[] = {
 /* 497 */ NULL, /* ircu */
 /* 498 */ NULL, /* ircu */
 /* 499    ERR_CHANOWNPRIVNEEDED */ ":%s 499 %s %s :You're not a channel owner",
-/* 500 */ NULL,
+/* 500    ERR_TOOMANYJOINS */ ":%s 500 %s %s :Too many join requests. Please wait a while and try again.",
 /* 501    ERR_UMODEUNKNOWNFLAG */ ":%s 501 %s :Unknown MODE flag",
 /* 502    ERR_USERSDONTMATCH */ ":%s 502 %s :Cant change mode for other users",
 /* 503 */ NULL, /* austhex */

@@ -143,6 +143,7 @@ typedef struct _cmdoverride Cmdoverride;
 typedef struct SMember Member;
 typedef struct SMembership Membership;
 typedef struct SMembershipL MembershipL;
+typedef struct JFlood aJFlood;
 
 #ifdef ZIP_LINKS
 typedef struct  Zdata   aZdata;
@@ -754,6 +755,9 @@ struct User {
 		unsigned char away_c;	/* number of times away has been set */
 #endif
 	} flood;
+#ifdef JOINTHROTTLE
+	aJFlood *jflood;
+#endif
 };
 
 struct Server {
@@ -872,6 +876,12 @@ extern void SnomaskDel(Snomask *sno);
 extern Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode);
 extern void CmodeDel(Cmode *cmode);
 #endif
+
+typedef struct {
+	EXTCM_PAR_HEADER
+	unsigned short num;
+	unsigned short t;
+} aModejEntry;
 
 #define LISTENER_NORMAL		0x000001
 #define LISTENER_CLIENTSONLY	0x000002
@@ -1486,6 +1496,9 @@ struct Channel {
 	Ban *banlist;
 	Ban *exlist;		/* exceptions */
 	Ban *invexlist;         /* invite list */
+#ifdef JOINTHROTTLE
+	aJFlood *jflood;
+#endif
 	char chname[1];
 };
 
@@ -1734,6 +1747,42 @@ typedef struct {
 	unsigned  halfop : 1;       /* 1 = yes 0 = no */
 	unsigned  parameters : 1;
 } aCtab;
+
+#ifdef JOINTHROTTLE
+/** A jointhrottle item, this is a double linked list.
+ * prev_u    Previous entry of user
+ * next_u    Next entry of user
+ * prev_c    Previous entry of channel
+ * next_c    Next entry of channel
+ * chptr     The channel this entry applies to
+ * cptr      The user this entry applies to
+ * firstjoin Timestamp of "first join" (since last timer reset)
+ * numjoin   Number of joins since that period
+ * CLARIFICATION:
+ * Why a double linked list? Well, the following operations need to be performed:
+ * - if user quits, entry must be removed
+ * - if channel is destroyed, entry must be removed
+ * (and of course, more, but these are the most important ones affecting this decision)
+ * While it would be possible to have a linked list only by user (for example),
+ * that would mean that upon channel destroy ALL entries would have to be searched
+ * trough, which might mean for example 800*8=6400 entries in a peak situation
+ * (such as after a server restart and hundreds of clients connecting&joining).
+ * For obvious reasons, that would be a very bad idea :).
+ * So this costs us 2 pointers (8b on ia32) per entry, but in case of channel destroy
+ * it means we only have for example 20 entries to scan trough rather than 2000.
+ * Worth the extra memory :). -- Syzop
+ * Note that in normal situations it won't be that bad since we will try to
+ * regulary free up some entries.
+ */
+struct JFlood {
+	aJFlood *prev_u, *next_u;
+	aJFlood *prev_c, *next_c;
+	aChannel *chptr;
+	aClient *cptr;
+	time_t firstjoin;
+	unsigned short numjoins;
+};
+#endif
 
 void	init_throttling_hash();
 int	hash_throttling(struct IN_ADDR *in);
