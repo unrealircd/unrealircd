@@ -350,6 +350,7 @@ ACX_PTHREAD
 CC="$PTHREAD_CC"
 CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 IRCDLIBS="$IRCDLIBS $PTHREAD_LIBS"
+AC_caolan_FUNC_WHICH_GETHOSTBYNAME_R
 AC_MSG_CHECKING(if FD_SETSIZE is large enough to allow $ac_fd file descriptors)
 AC_TRY_RUN([
 #include <sys/types.h>

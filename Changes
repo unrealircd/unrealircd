@@ -1298,3 +1298,4 @@ seen. gmtime warning still there
 - Removed obsolete network files
 - Added some new network files (hopefully I'll be able to get all the submissions added soon)
 *** beta10 released ***
+- Added a config check to see which (if any) gethostbyname_r exists (based on a macro by Caolan McNamara)

@@ -236,3 +236,12 @@
 
 /* Define if your system prepends an underscore to symbols */
 #undef UNDERSCORE
+
+/* Define if you have gethostbyname_r with 3 parameters */
+#undef HAVE_GETHOSTBYNAME_R_3
+
+/* Define if you have gethostbyname_r with 5 parameters */
+#undef HAVE_GETHOSTBYNAME_R_5
+
+/* Define if you have gethostbyname_r with 6 parameters */
+#undef HAVE_GETHOSTBYNAME_R_6
