@@ -616,6 +616,10 @@ init_dgram:
 
 	resfd = init_resolver(0x1f);
 	Debug((DEBUG_DNS, "resfd %d", resfd));
+#ifndef _WIN32
+	if (MAXCONNECTIONS > FD_SETSIZE)
+		abort();
+#endif
 	return;
 }
 
@@ -1541,8 +1545,9 @@ int  read_message(time_t delay)
 int  read_message(time_t delay, fdlist *listp)
 #endif
 {
-#define my_FD_SET(x,y) do { if (fcntl(x, F_GETFD, &sockerr) == -1) abort(); FD_SET(x,y); } while(0)
-	aClient *cptr;
+/* 
+   #undef FD_SET(x,y) do { if (fcntl(x, F_GETFD, &sockerr) == -1) abort(); FD_SET(x,y); } while(0)
+*/	aClient *cptr;
 	int  nfds;
 	struct timeval wait;
 #ifndef _WIN32
@@ -1592,12 +1597,12 @@ int  read_message(time_t delay, fdlist *listp)
 				Debug((DEBUG_NOTICE, "auth on %x %d", cptr, i));
 				if (cptr->authfd >= 0)
 				{
-					my_FD_SET(cptr->authfd, &read_set);
+					FD_SET(cptr->authfd, &read_set);
 #ifdef _WIN32
-					my_FD_SET(cptr->authfd, &excpt_set);
+					FD_SET(cptr->authfd, &excpt_set);
 #endif
 					if (cptr->flags & FLAGS_WRAUTH)
-						my_FD_SET(cptr->authfd, &write_set);
+						FD_SET(cptr->authfd, &write_set);
 				}
 			}
 			if (DoingDNS(cptr) || DoingAuth(cptr)
@@ -1606,28 +1611,28 @@ int  read_message(time_t delay, fdlist *listp)
 			if (IsMe(cptr) && IsListening(cptr))
 			{
 				if (cptr->fd >= 0)
-					my_FD_SET(cptr->fd, &read_set);
+					FD_SET(cptr->fd, &read_set);
 			}
 			else if (!IsMe(cptr))
 			{
 				if (DBufLength(&cptr->recvQ) && delay2 > 2)
 					delay2 = 1;
 				if ((cptr->fd >= 0) && (DBufLength(&cptr->recvQ) < 4088))
-					my_FD_SET(cptr->fd, &read_set);
+					FD_SET(cptr->fd, &read_set);
 			}
 			if ((cptr->fd >= 0) && (DBufLength(&cptr->sendQ) || IsConnecting(cptr) ||
 			    (DoList(cptr) && IsSendable(cptr))))
 			{
-				my_FD_SET(cptr->fd, &write_set);
+				FD_SET(cptr->fd, &write_set);
 			}
 		}
 
 #ifndef _WIN32
 		if (resfd >= 0)
-			my_FD_SET(resfd, &read_set);
+			FD_SET(resfd, &read_set);
 #endif
 		if (me.fd >= 0)
-			my_FD_SET(me.fd, &read_set);
+			FD_SET(me.fd, &read_set);
 
 		wait.tv_sec = MIN(delay, delay2);
 		wait.tv_usec = 0;
