@@ -23,7 +23,7 @@ CC=danger will robinson
 
 LINTFLAGS=-hba
 
-OBJS=agent.o aln.o badwords.o bsd.o channel.o class.o cloak.o crule.o dbuf.o dynconf.o \
+OBJS=agent.o aln.o badwords.o bsd.o channel.o cloak.o crule.o dbuf.o dynconf.o \
 	fdlist.o hash.o help.o ircd.o ircsprintf.o list.o lusers.o \
 	match.o packet.o parse.o $(REGEX) res.o $(RES) s_auth.o \
 	s_bsd.o s_conf.o s_debug.o s_err.o s_extra.o s_kline.o \
@@ -147,9 +147,6 @@ depend:
 
 channel.o: channel.c $(INCLUDES) ../include/channel.h
 	$(CC) $(CFLAGS) -c channel.c
-
-class.o: class.c $(INCLUDES) ../include/class.h
-	$(CC) $(CFLAGS) -c class.c
 
 ircd.o: ircd.c ../include/dbuf.h $(INCLUDES)
 	$(CC) $(CFLAGS) -c ircd.c
