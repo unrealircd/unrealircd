@@ -2514,3 +2514,4 @@ seen. gmtime warning still there
   Suggested by brentos. Note that we won't support /quit, or any other command, just this.
 - Module coders: Moved call to HOOKTYPE_LOCAL_JOIN down to where the JOIN, NAMES, etc
   are already sent... this seems to make more sense since we have a prejoin hook now.
+- Moved it a bit too far (outside the loop), should be fixed now.

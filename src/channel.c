@@ -3735,6 +3735,7 @@ CMD_FUNC(do_join)
 			}
 			parv[1] = chptr->chname;
 			(void)m_names(cptr, sptr, 2, parv);
+			RunHook4(HOOKTYPE_LOCAL_JOIN, cptr, sptr,chptr,parv);
 		}
 
 #ifdef NEWCHFLOODPROT
@@ -3753,9 +3754,6 @@ CMD_FUNC(do_join)
 		}
 #endif
 	}
-
-	if (MyClient(sptr))
-		RunHook4(HOOKTYPE_LOCAL_JOIN, cptr, sptr,chptr,parv);
 
 	RET(0)
 #undef RET
