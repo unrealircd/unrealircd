@@ -278,10 +278,17 @@ int  find_tkline_match(cptr, xx)
 			is_ip = 1;
 		else
 			is_ip = 0;
+		
 
-		if (xx != 2 ? is_ip == 0 ? (!match(lp->hostmask, chost)
-		    && !match(lp->usermask, cname)) :
-		    (!match(lp->hostmask, chost) || !match(lp->hostmask, cip))
+		if (xx != 2 ?
+		    /* xx != 2 */ 
+		    is_ip == 0 
+		      ? 
+		      (!match(lp->hostmask, chost)
+		      && !match(lp->usermask, cname))
+		      :
+		      (!match(lp->hostmask, chost) || !match(lp->hostmask, cip))
+		      && !match(lp->usermask, cname)
 		    : !match(lp->hostmask, chost))
 		{
 			if (lp->type & TKL_KILL)
@@ -365,6 +372,7 @@ int  find_tkline_match(cptr, xx)
 				if (IsAdmin(cptr))
 					return -1;
 				SetShunned(cptr);
+#ifdef SHUN_NOTICES
 #ifndef __OpenBSD__
 				strncpy(gmt2,
 				    asctime(gmtime((clock_t *) & lp->
@@ -377,6 +385,7 @@ int  find_tkline_match(cptr, xx)
 
 #endif
 				gmt2[strlen(gmt2) - 1] = '\0';
+#endif
 #ifdef SHUN_NOTICES
 				if (lp->expire_at)
 					sendto_one(cptr,

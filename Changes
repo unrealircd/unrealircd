@@ -571,7 +571,7 @@
 - Made /kick for opers only be possible for netadmin/techadmin
 - Fixed /server so it doesnt support SERVER name :info anymore..
 
-[ this is 4.0 ]
+[Unreal3.1.1-Darkshades]
 - Fixed /userhost showing "unknown" as username for a lot of people
 - Fixed ./update error
 - Fixed a NO_FDLIST define problem in send.c and channel.c
@@ -646,3 +646,4 @@
 - Fixed SJOIN (mp2parv) bug, that caused insane desynchs
 - Changed Cannot find server message to be to sendto_realops
 - Fixed a warning in CENSOR_QUIT
+- Fixed the G:Line user wrongly matching (ip-alike addys didnt check user)

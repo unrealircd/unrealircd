@@ -25,14 +25,14 @@
      /**/
 #define COMPILEINFO DEBUGMODESET DEBUGSET
 /*
- * Version Unreal3.1
+ * Version Unreal3.1-Silverheart+sf2
  */
-#define UnrealProtocol 		2301
+#define UnrealProtocol 		2302
 #define PATCH1  		"3"
 #define PATCH2  		".1"
-#define PATCH3  		"-Silverheart"
-#define PATCH4  		"+"
-#define PATCH5  		"sf"
+#define PATCH3  		".1"
+#define PATCH4  		"-Darkshades"
+#define PATCH5  		""
 #define PATCH6  		""
 #define PATCH7  		""
 #define PATCH8  		COMPILEINFO
