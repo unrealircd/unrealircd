@@ -112,7 +112,7 @@ int cleaned = 0;
 				/* Partial copy and return... */
 				memcpy(pnew, poldx, c_eol - pnew);
 				*c_eol = '\0';
-				return;
+				return 1;
 			}
 
 			memcpy(pnew, poldx, tmp_n);
@@ -125,7 +125,7 @@ int cleaned = 0;
 				/* Partial copy and return... */
 				memcpy(pnew, replacew, c_eol - pnew);
 				*c_eol = '\0';
-				return;
+				return 1;
 			}
 			memcpy(pnew, replacew, replacen);
 			pnew += replacen;

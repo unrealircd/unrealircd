@@ -1819,3 +1819,4 @@ seen. gmtime warning still there
   which has been reported by two users (#0000594).
 - Fixed halfop bug, ex: /mode -o+b user *!*@blah.com will get +b user!*@*. (#0000653)
 - Blah... forgot to remove some debugging code in badwords.c (new fast replace system).
+- Fixed yet another bug in new badwords replace system (should be almost finished now! ;P).
