@@ -96,6 +96,7 @@ typedef struct {
 #define MOBJ_VERSIONFLAG 0x0010
 #define MOBJ_SNOMASK 0x0020
 #define MOBJ_UMODE 0x0040
+#define MOBJ_CMDOVERRIDE 0x0080
 
 typedef struct {
         long mode;
@@ -238,6 +239,7 @@ typedef struct _ModuleObject {
 		Versionflag *versionflag;
 		Snomask *snomask;
 		Umode *umode;
+		Cmdoverride *cmdoverride;
 	} object;
 } ModuleObject;
 
@@ -265,6 +267,7 @@ struct _hooktype {
 #define MODERR_EXISTS  1
 #define MODERR_NOSPACE 2
 #define MODERR_INVALID 3
+#define MODERR_NOTFOUND 4
 
 unsigned int ModuleGetError(Module *module);
 const char *ModuleGetErrorStr(Module *module);
@@ -424,6 +427,9 @@ void HooktypeDel(Hooktype *hooktype, Module *module);
 Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigned char params, int flags);
 void CommandDel(Command *command);
 int CommandExists(char *name);
+Cmdoverride *CmdoverrideAdd(Module *module, char *cmd, iFP function);
+void CmdoverrideDel(Cmdoverride *ovr);
+int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Hook types */
 #define HOOKTYPE_LOCAL_QUIT	1

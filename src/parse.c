@@ -468,13 +468,22 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 	if (cmptr->flags & M_ALIAS)
 		return (*cmptr->func) (cptr, from, i, para, cmptr->cmd);
 	else
-		return (*cmptr->func) (cptr, from, i, para);
+	{
+		if (!cmptr->overriders)
+			return (*cmptr->func) (cptr, from, i, para);
+		return (*cmptr->overridetail->func) (cmptr->overridetail, cptr, from, i, para);
+	}
 #else
 	then = clock();
 	if (cmptr->flags & M_ALIAS)
 		retval = (*cmptr->func) (cptr, from, i, para, cmptr->cmd);
 	else 
-		retval = (*cmptr->func) (cptr, from, i, para);
+	{
+		if (!cmptr->overriders)
+			retval = (*cmptr->func) (cptr, from, i, para);
+		else
+			retval = (*cmptr->overridetail->func) (cmptr->overridetail, cptr, from, i, para);
+	}
 	if (retval != FLUSH_BUFFER)
 	{
 		ticks = (clock() - then);

@@ -129,6 +129,7 @@ typedef struct FloodOpt aFloodOpt;
 typedef struct MotdItem aMotd;
 typedef struct trecord aTrecord;
 typedef struct Command aCommand;
+typedef struct _cmdoverride Cmdoverride;
 typedef struct SMember Member;
 typedef struct SMembership Membership;
 typedef struct SMembershipL MembershipL;
@@ -1545,10 +1546,20 @@ struct Command {
 	unsigned		parameters : 5;
 	unsigned long   	bytes;
 	Module 			*owner;
+	aCommand		*friend; /* cmd if token, token if cmd */
+	Cmdoverride		*overriders;
+	Cmdoverride		*overridetail;
 #ifdef DEBUGMODE
 	unsigned long 		lticks;
 	unsigned long 		rticks;
 #endif
+};
+
+struct _cmdoverride {
+	Cmdoverride		*prev, *next;
+	Module			*owner;
+	aCommand		*command;
+	int			(*func)();
 };
 
 #ifdef THROTTLING

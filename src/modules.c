@@ -351,6 +351,9 @@ void Unload_all_loaded_modules(void)
 			else if (objs->type == MOBJ_UMODE) {
 				UmodeDel(objs->object.umode);
 			}
+			else if (objs->type == MOBJ_CMDOVERRIDE) {
+				CmdoverrideDel(objs->object.cmdoverride);
+			}
 		}
 		for (child = mi->children; child; child = childnext)
 		{
@@ -400,7 +403,9 @@ void Unload_all_testing_modules(void)
 			else if (objs->type == MOBJ_UMODE) {
 				UmodeDel(objs->object.umode);
 			}
-
+			else if (objs->type == MOBJ_CMDOVERRIDE) {
+				CmdoverrideDel(objs->object.cmdoverride);
+			}
 		}
 		for (child = mi->children; child; child = childnext)
 		{
@@ -455,6 +460,9 @@ int    Module_free(Module *mod)
 		}
 		else if (objs->type == MOBJ_UMODE) {
 			UmodeDel(objs->object.umode);
+		}
+		else if (objs->type == MOBJ_CMDOVERRIDE) {
+			CmdoverrideDel(objs->object.cmdoverride);
 		}
 	}
 	for (p = Modules; p; p = p->next)
@@ -953,6 +961,79 @@ Hook *HookDel(Hook *hook)
 		}
 	}
 	return NULL;
+}
+
+Cmdoverride *CmdoverrideAdd(Module *module, char *name, iFP function)
+{
+	aCommand *p;
+	Cmdoverride *ovr;
+	
+	if (!(p = find_Command_simple(name)))
+	{
+		if (module)
+			module->errorcode = MODERR_NOTFOUND;
+		return NULL;
+	}
+	ovr = MyMallocEx(sizeof(Cmdoverride));
+	ovr->func = function;
+	ovr->owner = module; /* TODO: module objects */
+	if (module)
+	{
+		ModuleObject *cmdoverobj = MyMallocEx(sizeof(ModuleObject));
+		cmdoverobj->type = MOBJ_CMDOVERRIDE;
+		cmdoverobj->object.cmdoverride = ovr;
+		AddListItem(cmdoverobj, module->objects);
+		module->errorcode = MODERR_NOERROR;
+	}
+	ovr->command = p;
+	if (!p->overriders)
+		p->overridetail = ovr;
+	AddListItem(ovr, p->overriders);
+	if (p->friend)
+	{
+		if (!p->friend->overriders)
+			p->friend->overridetail = ovr;
+		AddListItem(ovr, p->friend->overriders);
+	}
+	return ovr;
+}
+
+void CmdoverrideDel(Cmdoverride *cmd)
+{
+	if (!cmd->next)
+		cmd->command->overridetail = cmd->prev;
+	DelListItem(cmd, cmd->command->overriders);
+	if (!cmd->command->overriders)
+		cmd->command->overridetail = NULL;
+	if (cmd->command->friend)
+	{
+		if (!cmd->prev)
+			cmd->command->friend->overridetail = NULL;
+		DelListItem(cmd, cmd->command->friend->overriders);
+	}
+	if (cmd->owner)
+	{
+		ModuleObject *obj;
+		for (obj = cmd->owner->objects; obj; obj = obj->next)
+		{
+			if (obj->type != MOBJ_CMDOVERRIDE)
+				continue;
+			if (obj->object.cmdoverride == cmd)
+			{
+				DelListItem(obj, cmd->owner->objects);
+				MyFree(obj);
+				break;
+			}
+		}
+	}
+	MyFree(cmd);
+}
+
+int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[])
+{
+	if (ovr->prev)
+		return ovr->prev->func(ovr->prev, cptr, sptr, parc, parv);
+	return ovr->command->func(cptr, sptr, parc, parv);
 }
 
 EVENT(e_unload_module_delayed)

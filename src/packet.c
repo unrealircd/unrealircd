@@ -351,14 +351,26 @@ int CommandExists(char *name)
 }
 
 Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigned char params, int flags) {
-	Command *command = MyMallocEx(sizeof(Command));
+	Command *command;
+
+	if (find_Command_simple(cmd) || (tok && find_Command_simple(tok)))
+	{
+		if (module)
+			module->errorcode = MODERR_EXISTS;
+		return NULL;
+	}
+	command = MyMallocEx(sizeof(Command));
 	command->cmd = add_Command_backend(cmd,func,params, 0, flags);
 	command->tok = NULL;
 	command->cmd->owner = module;
 	if (tok) {
 		command->tok = add_Command_backend(tok,func,params,1,flags);
+		command->cmd->friend = command->tok;
+		command->tok->friend = command->cmd;
 		command->tok->owner = module;
 	}
+	else
+		command->cmd->friend = NULL;
 	if (module) {
 		ModuleObject *cmdobj = (ModuleObject *)MyMallocEx(sizeof(ModuleObject));
 		cmdobj->object.command = command;
@@ -371,6 +383,8 @@ Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigne
 
 
 void CommandDel(Command *command) {
+	Cmdoverride *ovr, *ovrnext;
+
 	DelListItem(command->cmd, CommandHash[toupper(*command->cmd->cmd)]);
 	if (command->tok)
 		DelListItem(command->tok, TokenHash[*command->tok->cmd]);
@@ -384,6 +398,11 @@ void CommandDel(Command *command) {
 			}
 		}
 	}
+	for (ovr = command->cmd->overriders; ovr; ovr = ovrnext)
+	{
+		ovrnext = ovr->next;
+		CmdoverrideDel(ovr);
+	}
 	MyFree(command->cmd->cmd);
 	MyFree(command->cmd);
 	if (command->tok) {
@@ -393,18 +412,32 @@ void CommandDel(Command *command) {
 	MyFree(command);
 }
 
-void	add_Command(char *cmd, char *token, int (*func)(), unsigned char parameters)
+void	add_Command(char *name, char *token, int (*func)(), unsigned char parameters)
 {
-	add_Command_backend(cmd, func, parameters, 0, 0);
+	aCommand *cmd, *tok;
+	cmd = add_Command_backend(name, func, parameters, 0, 0);
 	if (token)
-		add_Command_backend(token, func, parameters, 1, 0);
+	{
+		tok = add_Command_backend(token, func, parameters, 1, 0);
+		tok->friend = cmd;
+		cmd->friend = tok;
+	}
+	else
+		cmd->friend = NULL;
 }
 
-void    add_CommandX(char *cmd, char *token, int (*func)(), unsigned char parameters, int flags) 
+void    add_CommandX(char *name, char *token, int (*func)(), unsigned char parameters, int flags) 
 {
-	add_Command_backend(cmd, func, parameters, 0, flags);
+	aCommand *cmd, *tok;
+	cmd = add_Command_backend(name, func, parameters, 0, flags);
 	if (token != NULL)
-		add_Command_backend(token, func, parameters, 1, flags);
+	{
+		tok = add_Command_backend(token, func, parameters, 1, flags);
+		tok->friend = cmd;
+		cmd->friend = tok;
+	}
+	else
+		cmd->friend = NULL;
 }
 
 inline aCommand *find_CommandEx(char *cmd, int (*func)(), int token)
@@ -434,7 +467,14 @@ int del_Command(char *cmd, char *token, int (*func)())
 		i--;
 	else
 	{
+		Cmdoverride *ovr, *ovrnext;
 		DelListItem(p, CommandHash[toupper(*cmd)]);
+		for (ovr = p->overriders; ovr; ovr = ovrnext)
+		{
+			ovrnext = ovr->next;
+			CmdoverrideDel(ovr);
+		}
+
 		if (p->cmd)
 			MyFree(p->cmd);
 		MyFree(p);
