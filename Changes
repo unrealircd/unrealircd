@@ -20,7 +20,7 @@
  *                              
  */                             
                                 
-[ Unreal3.2 ]
+[ Unreal3.2-Selene ]
 - Fixed a _serious_ bug in SERVER command, reported by Valen, Forrester,
   M0rpheus, JK, and Hiten.
 - Fixed /botserv problem
@@ -59,6 +59,23 @@
 - Added TODO in top of s_conf2.c
 - Fixed a bug reported by S7 that affected chg* and set* as well as sdesc
 - Started work on the except parser
+- Made except parser use a specialized _configflag_except instead of wasting
+  a byte.
+- Changed version to "Unreal3.2-Selene" (Selene = female character in a
+     comic mag i found at my grandmas :P)
+- Finished _conf_vhost
+- Made _conf_listen understand listen <port> {}
+- Finished _conf_link
+- Added some _conf_link validity and added ->class option (forgot it)
+- Made ircd.c use the newconf with me.* setup. Uses the first and the best
+  as listener
+- Finished _conf_ban (try and attack us now idiots!)
+- Made "No response from", use GLOBOPS instead of GNOTICE. 
+  Fixes TODO Bugfixes Thu Dec 14 2000 Priority 10 added by Stskeeps
+- Fixed telnet close server thing, fixes Wed 20 Dec 2000 priority 9, 
+  added by codemastr
+- Fixed /whois shows what channels +S are in.
+  Closes stskeeps/Dec30-2000-10-Bugfixes =======
 - Fixed a STATS_ONLYOPER bug
 - Fixed a ircd.tune bug (the file may not write if it didn't exist)
 - Fixed a serious bug reported by Kanzen_Griever

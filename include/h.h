@@ -43,6 +43,26 @@ extern TS TSoffset;
 /* Prototype added to force errors -- Barubary */
 extern TS check_pings(TS now, int check_kills);
 extern TS TS2ts(char *s);
+/* newconf */
+/*
+ * Configuration linked lists
+*/
+extern ConfigItem_me		*conf_me;
+extern ConfigItem_class 	*conf_class;
+extern ConfigItem_admin 	*conf_admin;
+extern ConfigItem_drpass	*conf_drpass;
+extern ConfigItem_ulines	*conf_ulines;
+extern ConfigItem_tld		*conf_tld;
+extern ConfigItem_oper		*conf_oper;
+extern ConfigItem_listen	*conf_listen;
+extern ConfigItem_allow	*conf_allow;
+extern ConfigItem_except	*conf_except;
+extern ConfigItem_vhost	*conf_vhost;
+extern ConfigItem_link		*conf_link;
+
+ConfigItem_class	*Find_class(char *name);
+ConfigItem_oper		*Find_oper(char *name);
+ConfigItem_listen	*Find_listen(char *ipmask, int port);
 
 /* Remmed out for win32 compatibility.. as stated of 467leaf win32 port.. */
 

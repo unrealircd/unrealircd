@@ -224,6 +224,43 @@ void report_error(text, cptr)
 	return;
 }
 
+void report_baderror(text, cptr)
+	char *text;
+	aClient *cptr;
+{
+#ifndef _WIN32
+	int  errtmp = errno;	/* debug may change 'errno' */
+#else
+	int  errtmp = WSAGetLastError();	/* debug may change 'errno' */
+#endif
+	char *host;
+	int  err, len = sizeof(err);
+
+	host = (cptr) ? get_client_name(cptr, FALSE) : "";
+
+/*	fprintf(stderr, text, host, strerror(errtmp));
+	fputc('\n', stderr); */
+	Debug((DEBUG_ERROR, text, host, strerror(errtmp)));
+
+	/*
+	 * Get the *real* error from the socket (well try to anyway..).
+	 * This may only work when SO_DEBUG is enabled but its worth the
+	 * gamble anyway.
+	 */
+#ifdef	SO_ERROR
+	if (cptr && !IsMe(cptr) && cptr->fd >= 0)
+		if (!getsockopt(cptr->fd, SOL_SOCKET, SO_ERROR,
+		    (OPT_TYPE *)&err, &len))
+			if (err)
+				errtmp = err;
+#endif
+	sendto_umode(UMODE_OPER, text, host, strerror(errtmp));
+#ifdef USE_SYSLOG
+	syslog(LOG_WARNING, text, host, strerror(errtmp));
+#endif
+	return;
+}
+
 /*
  * inetport
  *
@@ -2225,7 +2262,7 @@ int  read_message(delay, listp)
 				    me.name, get_client_name(cptr, FALSE));
 			}
 			else
-				report_error("Lost connection to %s:%s", cptr);
+				report_baderror("Lost connection to %s:%s", cptr); 
 		}
 		if (length != FLUSH_BUFFER)
 			(void)exit_client(cptr, cptr, &me,

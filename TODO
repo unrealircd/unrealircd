@@ -3,8 +3,20 @@ TODO for Unreal Next:
 Write in entries in this form:
 ==============================
 
-* nick - date - priority - [ title ]:
+* nick - date - priority - [ title ] Flag:
   description
+
+Flags: 
+   CLOSED 
+     = Bug/Idea fixed/implemented. Bug/Idea is up for deletion
+   OPEN 
+     = Bug/Idea up for fixing
+   IN-REPAIR <nick>
+     = Bug/Idea In Progress/Repair by <nick>
+   NO-PRODUCE
+     = Bug/Idea is not able to be (re)produced
+   POSTPONED
+     = Bug/Idea is scheduled for another release/time
 
 If you think that a priority should be higher, make it++
 
@@ -13,31 +25,32 @@ If you think that a priority should be higher, make it++
 TODO :
 ----
 
-* stskeeps - Tue Dec 12 2000 - 1 - [ IPv6 ]:
+* stskeeps - Tue Dec 12 2000 - 1 - [ IPv6 ] OPEN:
     Add IPv6 compatiblity (requested by many people). Must allow :'s in
     hostnames, will kill backwards compatiblity when IPv6 is enabled
 
-* stskeeps - Tue Dec 12 2000 - 1 - [ Code ] :
+* stskeeps - Tue Dec 12 2000 - 1 - [ Code ] OPEN:
     Split up code, and make the placement of functions more logic
 
-* codemastr - Tue Dec 12 2000 - 4 - [ Zip_Links ]:
+* codemastr - Tue Dec 12 2000 - 4 - [ Zip_Links ] OPEN:
     Actually add this since it was planned for 3.0
 
-* codemastr - Tue Dec 12 2000 - 5 - [ Dynconf Recode ]:
+* codemastr - Tue Dec 12 2000 - 5 - [ Dynconf Recode ] IN-REPAIR stskeeps:
     Dynconf has a bunch of bugs that can be resolved with a recode
+    We are doing this with the newconf :) -stskeeps
 
 * codemastr - Tue Dec 12 2000 - 8 - [ +I Fixes ]:
     +I still has some bugs that may cause desync and show users
     that the +I user is actually on the channel.
 
-* stskeeps - Tue Dec 12 2000 - 1 - [ Bugfixes/Hash ]:
+* stskeeps - Tue Dec 12 2000 - 1 - [ Bugfixes/Hash ] CLOSED stskeeps:
     Check for possible hash bug with del_from_client_table or something
     People still complain about crashes
     We might have fixed this with recent SERVER passwd fix and other passwd
     fixes
 
 
-* stskeeps - Wed Dec 13 2000 - 10 - [ Bugfixes ]:
+* stskeeps - Wed Dec 13 2000 - 10 - [ Bugfixes ] NO-PRODUCE:
 [[r00t3d](~lok70@168.213.226.rox-62220)] The other one, is lets say you are on
           server (a), and you set +p to your channel. All the users on Server
           (b,c, etc..) when they do a /list can see the +p channel in the
@@ -77,6 +90,7 @@ InTe[_:#roxnet> -oxygen.phrozen.org- *** Global -- from Irc.LinuxFreakz.Net:
                  No response from dumper.roxnet.org[130.240.202.121], closing
                  link
              Users can see that using +g ???
+          FIXED: Sat Dec 30 2000 by stskeeps
 
 * stskeeps - Fri Dec 14 2000 - 1 - [ SSL ]
 	Challenge/Response kind of thing.
@@ -114,6 +128,7 @@ InTe[_:#roxnet> -oxygen.phrozen.org- *** Global -- from Irc.LinuxFreakz.Net:
           
          P:ip:W:*:port
            UnrealHTTPD!
+         Sat 30 Dec 2000 - stskeeps - *cough* listen::option http ;)
 
 * codemastr - Wed 20 Dec 2000 - 3 - [ General ]
 	
@@ -129,11 +144,20 @@ InTe[_:#roxnet> -oxygen.phrozen.org- *** Global -- from Irc.LinuxFreakz.Net:
  	send a SQUIT, the server displays no notice to opers that the server split.
           Stskeeps> +j? but yes, there's a bug there
 
+        FIXED Sat 30 Dec 2000 by Stskeeps
+
 * stskeeps - Sat Dec 23 2000 - 10 - [ Bugfixes ]
          There's some kind of bug that shows people being on same channel
          twice. I got a feeling its to do with JOIN/SJOIN as its only remote.
           [ Stskeeps  ] [@ChanServ  ] [@Fresh-Prin] [ Fresh-Prin] [@Fresh-Prin] 
          Same person 
 
+* codemastr - Tue Dec 26 2000 - 6 - [ Bugfixes ]
+	(too lazy to type it out)
+	http://sourceforge.net/bugs/?func=detailbug&bug_id=126645&group_id=1968
+	That fix will work except it needs to be modified so it checks remote
+	before denying because of not being oper
+* stskeeps  - Sun Dec 30 2000 - 10 - [ Bugfixes ]
+       /whois shows what channels +S are in
 * codemastr - Tue Jan 03 2001 - 1 - [ Idea ]
 	Add /kill logging option suggested by Cerb

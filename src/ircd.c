@@ -617,7 +617,7 @@ extern TS check_pings(TS currenttime, int check_kills)
 					    ("No response from %s, closing link",
 					    get_client_name(cptr, FALSE));
 					sendto_serv_butone(&me,
-					    ":%s GNOTICE :No response from %s, closing link",
+					    ":%s GLOBOPS :No response from %s, closing link",
 					    me.name, get_client_name(cptr,
 					    FALSE));
 				}
@@ -1082,17 +1082,16 @@ int  InitwIRCD(argc, argv)
 #endif
 		exit(-1);
 	}
-	if (1)
-	{
-		aConfItem *aconf;
-
-		if ((aconf = find_me()) && portarg <= 0 && aconf->port > 0)
-			portnum = aconf->port;
-		Debug((DEBUG_ERROR, "Port = %d", portnum));
-		if (inetport(&me, aconf->passwd, portnum))
-			exit(1);
-	}
-	else if (inetport(&me, "*", 0))
+	/* Put in our info */
+	strncpyzt(me.info, conf_me->info, sizeof(me.info);
+	strncpyzt(me.name, conf_me->name, sizeof(me.name);
+	 
+	/* We accept the first listen record */
+	portnum = conf_listen->port;
+	me.ip.S_ADDR = *conf_listen->ip != '*' ? inet_addr(conf_listen->ip) : INADDR_ANY;
+	
+	Debug((DEBUG_ERROR, "Port = %d", portnum));
+	if (inetport(&me, conf_listen->ip, portnum))
 		exit(1);
 	botmotd = (aMotd *) read_botmotd(BPATH);
 	rules = (aMotd *) read_rules(RPATH);
@@ -1114,6 +1113,7 @@ int  InitwIRCD(argc, argv)
 #endif
 	me_hash = find_or_add(me.name);
 	me.serv->up = me_hash;
+	me.serv->numeric = conf_me->numeric;
 	add_server_to_table(&me);
 	me.lasttime = me.since = me.firsttime = TStime();
 	(void)add_to_client_hash_table(me.name, &me);

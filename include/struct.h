@@ -69,6 +69,8 @@ typedef struct ConfItem aConfItem;
 typedef struct _configentry ConfigEntry;
 typedef struct _configfile ConfigFile;
 typedef struct _configflag ConfigFlag;
+typedef struct _configflag_except ConfigFlag_except;
+typedef struct _configflag_ban ConfigFlag_ban;
 typedef struct _configitem ConfigItem;
 typedef struct _configitem_me ConfigItem_me;
 typedef struct _configitem_admin ConfigItem_admin;
@@ -82,6 +84,8 @@ typedef struct _configitem_listen ConfigItem_listen;
 typedef struct _configitem_allow ConfigItem_allow;
 typedef struct _configitem_vhost ConfigItem_vhost;
 typedef struct _configitem_except ConfigItem_except;
+typedef struct _configitem_link	ConfigItem_link;
+typedef struct _configitem_ban ConfigItem_ban;
 
 typedef struct Notify aNotify;
 typedef struct Client aClient;
@@ -892,11 +896,6 @@ struct Client {
 */
 
 /* Config flags */
-#define CNF_ME		0x000001
-#define CNF_ADMIN	0x000002
-#define CNF_CLASS	0x000004
-#define CNF_ALLOW	0x000008
-#define CNF_OPER	0x000010
  
 struct _configfile
 {
@@ -928,6 +927,26 @@ struct _configflag
 {
 	unsigned	temporary : 1;
 };
+
+/* configflag specialized for except socks/ban -Stskeeps */
+
+struct _configflag_except
+{
+	unsigned	temporary : 1;
+	unsigned	type	  : 1;
+};
+
+struct _configflag_ban
+{
+	unsigned	temporary : 1;
+	unsigned	type	  : 4;
+};
+
+#define CONF_BAN_NICK		1
+#define CONF_BAN_IP			2
+#define CONF_BAN_SERVER		3
+#define CONF_BAN_USER   	4
+#define CONF_BAN_REALNAME 	5
 
 struct _configitem {
 	ConfigFlag flag;
@@ -1033,12 +1052,38 @@ struct _configitem_vhost {
 	char		*password;
 	char		*virthost;
 };
+
+struct _configitem_link {
+	ConfigFlag 		flag;
+	ConfigItem 		*prev;
+	ConfigItem		*next;
+	char			*servername;
+	char			*username;
+	char			*hostname;
+	char			*bindip;
+	short			port;
+	char			*hubmask;
+	char			*leafmask;
+	unsigned char 	leafdepth;
+	char			*connpwd;
+	char			*recvpwd;
+	ConfigItem_class *class;
+	short			options;
+};
+
 struct _configitem_except {
 	ConfigFlag      flag;
 	ConfigItem      *prev;
 	ConfigItem      *next;
-	unsigned	type :1;
 	char		*mask;
+};
+
+struct _configitem_ban {
+	ConfigFlag_ban	flag;
+	ConfigItem		*prev;
+	ConfigItem		*next;
+	char			*mask;
+	char			*reason;
 };
 
 
