@@ -29,7 +29,7 @@ Unreal3.2.2-pre1 Release Notes
   useful for example for a /SPAMREPORT command.
 - Added spamfilter 'user' ('u') target, this gets matched against the
   nick!user@host:realname mask of every user.
-  Ex: /spamfilter add u gzline 86400 Drone[0-9]+!.+@.+:Drone[0-9]
+  Ex: /spamfilter add u gzline 86400 Please_go_away Drone[0-9]+!.+@.+:Drone[0-9]
   This would gzline any users that have both a nick and realname with 'Drone'
   followed by digits.
 - Added spamfilter 'away' ('a') target.
