@@ -138,23 +138,20 @@ int  m_away(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
         }
 
 #ifdef NO_FLOOD_AWAY
-	if (MyClient(sptr) && AWAY_PERIOD)
+	if (MyClient(sptr) && AWAY_PERIOD && !IsAnOper(sptr))
 	{
 		if ((sptr->user->flood.away_t + AWAY_PERIOD) <= timeofday)
-			sptr->user->flood.away_c = 0;
-
-		if (!IsAnOper(sptr))
 		{
+			sptr->user->flood.away_c = 0;
 			sptr->user->flood.away_t = timeofday;
-			if (sptr->user->flood.away_c < AWAY_COUNT)
-				sptr->user->flood.away_c++;
-			if (sptr->user->flood.away_c >= AWAY_COUNT)
-			{
-				sendto_one(sptr, err_str(ERR_TOOMANYAWAY), me.name, parv[0]);
-				return 0;
-			}
 		}
-
+		if (sptr->user->flood.away_c <= AWAY_COUNT)
+			sptr->user->flood.away_c++;
+		if (sptr->user->flood.away_c > AWAY_COUNT)
+		{
+			sendto_one(sptr, err_str(ERR_TOOMANYAWAY), me.name, parv[0]);
+			return 0;
+		}
 	}
 #endif
         /* Marking as away */

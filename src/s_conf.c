@@ -1305,7 +1305,10 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->oper_snomask = strdup(SNO_DEFOPER);
 	i->ident_read_timeout = 30;
 	i->ident_connect_timeout = 10;
-	i->nick_count = 3; i->nick_period = 60; /* nickflood protection: 3 per 60s */
+	i->nick_count = 3; i->nick_period = 60; /* nickflood protection: max 3 per 60s */
+#ifdef NO_FLOOD_AWAY
+	i->away_count = 4; i->away_period = 120; /* awayflood protection: max 4 per 120s */
+#endif
 }
 
 int	init_conf(char *rootconf, int rehash)
