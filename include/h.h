@@ -80,8 +80,8 @@ extern int R_do_socks, R_good_socks, R_no_socks;
 #endif
 extern aChannel *find_channel PROTO((char *, aChannel *));
 extern void remove_user_from_channel PROTO((aClient *, aChannel *));
-extern char *base64enc PROTO((unsigned long));
-extern unsigned long base64dec PROTO((char *));
+extern char *base64enc PROTO((long));
+extern long base64dec PROTO((char *));
 extern void add_server_to_table PROTO((aClient *));
 extern void remove_server_from_tabel PROTO((aClient *));
 

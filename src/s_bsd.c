@@ -1269,6 +1269,47 @@ int  get_sockerr(cptr)
 	return errtmp;
 }
 
+/*
+ * set_blocking - Set the client connection into non-blocking mode. 
+ * If your system doesn't support this, you're screwed, ircd will run like
+ * crap.
+ * returns true (1) if successful, false (0) otherwise
+ */
+int set_blocking(int fd)
+{
+  /*
+   * NOTE: consult ALL your relevant manual pages *BEFORE* changing
+   * these ioctl's.  There are quite a few variations on them,
+   * as can be seen by the PCS one.  They are *NOT* all the same.
+   * Heed this well. - Avalon.
+   */
+  /* This portion of code might also apply to NeXT.  -LynX */
+#ifdef NBLOCK_SYSV
+  int res = 0;
+
+  if (ioctl(fd, FIONBIO, &res) == -1)
+    return 0;
+
+#else /* !NBLOCK_SYSV */
+  int nonb = 0;
+  int res;
+
+#ifdef NBLOCK_POSIX
+  nonb |= O_NONBLOCK;
+#endif
+#ifdef NBLOCK_BSD
+  nonb |= O_NDELAY;
+#endif
+
+  res = fcntl(fd, F_GETFL, 0);
+  if (!(res&nonb)) return 0;
+  if (-1 == res || fcntl(fd, F_SETFL, res ^ nonb) == -1)
+    return 0;
+#endif /* !NBLOCK_SYSV */
+  return 1;
+}
+
+
 
 
 /*

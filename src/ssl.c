@@ -119,7 +119,7 @@ int  ssl_client_handshake(struct Client *cptr)
 	cptr->ssl = (struct SSL *)SSL_new(ctx);
 	CHK_NULL(cptr->ssl);
 	SSL_set_fd((SSL *) cptr->ssl, cptr->fd);
-	// set_blocking(cptr->fd);
+	set_blocking(cptr->fd);
 	err = SSL_connect((SSL *) cptr->ssl);
 	set_non_blocking(cptr->fd);
 	if ((err) == -1)

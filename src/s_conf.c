@@ -1358,6 +1358,10 @@ int  initconf(opt)
 				} else
 					me.serv->numeric = atoi(tmp);
 			}
+			if ((tmp = getfield(NULL)) == NULL)
+			{
+				break;
+			}
 			if (aconf->status == CONF_CONNECT_SERVER)
 			{
 				char	*cp = tmp;

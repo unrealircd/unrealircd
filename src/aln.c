@@ -47,8 +47,8 @@
 ID_Copyright("(C) Carsten Munk 2000");
 #endif
 
-static inline char *int_to_base64(unsigned long);
-static inline unsigned long base64_to_int(char *);
+static inline char *int_to_base64(long);
+static inline long base64_to_int(char *);
 
 
 static Link *servers = NULL;
@@ -58,17 +58,17 @@ Link *return_servers(void)
 	return(servers);
 }
 
-char *base64enc(unsigned long i)
+char *base64enc(long i)
 {
 	return int_to_base64(i);
 }
 
-char *xbase64enc(unsigned long i)
+char *xbase64enc(long i)
 {
 	return int_to_base64(i);
 }
 
-unsigned long base64dec(char *b64)
+long base64dec(char *b64)
 {
 	if (b64)
 		return base64_to_int(b64);
@@ -76,9 +76,9 @@ unsigned long base64dec(char *b64)
 		return 0;
 }
 
-unsigned long xbase64dec(char *b64)
+long xbase64dec(char *b64)
 {
-	unsigned long r;
+	long r;
 	if (b64)
 	{
 		r = base64_to_int(b64);
@@ -88,7 +88,7 @@ unsigned long xbase64dec(char *b64)
 		return 0;
 }
 
-int  numeric_collides(unsigned long numeric)
+int  numeric_collides(long numeric)
 {
 	Link *lp;
 
@@ -137,7 +137,7 @@ void remove_server_from_table(aClient *what)
 	}
 }
 
-aClient *find_server_by_numeric(unsigned long value)
+aClient *find_server_by_numeric(long value)
 {
 	Link *lp;
 
@@ -234,13 +234,13 @@ char base64_to_int6_map[] = {
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
 };
 
-static inline char *int_to_base64(unsigned long val)
+static inline char *int_to_base64(long val)
 {
 	/* 32/6 == max 6 bytes for representation, 
 	 * +1 for the null, +1 for byte boundaries 
 	 */
 	static char base64buf[8];
-	unsigned long i = 7;
+	long i = 7;
 
 	base64buf[i] = '\0';
 
@@ -253,9 +253,9 @@ static inline char *int_to_base64(unsigned long val)
 	return base64buf + i;
 }
 
-static inline unsigned long base64_to_int(char *b64)
+static inline long base64_to_int(char *b64)
 {
-	unsigned int v = base64_to_int6_map[(u_char)*b64++];
+	int v = base64_to_int6_map[(u_char)*b64++];
 
 	if (!b64)
 		return 0;
