@@ -28,7 +28,7 @@ Spanish |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Versi&oacute;n: 3.2.2-CVS</font><br>
-  <b>&Uacute;ltima actualizaci&oacute;n del documento:</b> 2004-10-11</div>
+  <b>&Uacute;ltima actualizaci&oacute;n del documento:</b> 2004-12-01</div>
 <br>
   <b>Programadores:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contribuciones:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -495,6 +495,9 @@ Los m&oacute;dulos pueden a&ntilde;adir otros tipos de ban.
    </tr>
    <tr><td>d</td><td>dcc</td>
    <td>Archivo DCC </td>
+   </tr>
+   <tr><td>a</td><td>away</td>
+   <td>Mensaje away </td>
    </tr>
    <tr><td>u</td><td>user</td>
    <td>User ban, coincidir&aacute; con nick!user.@host:realname</td>
@@ -1958,7 +1961,9 @@ set {
   set { options { hide-ulines; no-stealth; }; };<br>
 </p>
 <p><font class="set">set::kline-address &lt;direci&oacute;n-email&gt;;</font><br>
-  La direcci&oacute;n email para cualquier referencia. Valor obligado.</p>
+  La direcci&oacute;n email para cualquier referencia debido a K-Line. Valor obligado.</p>
+<p><font class="set">set::gline-address &lt;direci&oacute;n-email&gt;;</font><br>
+  La direcci&oacute;n email para cualquier referencia debido a G-Line.</p>
 <p><font class="set">set::modes-on-connect &lt;+modos&gt;;</font><br>
   Los modos que se pondr&aacute;n al usuario al conectar.</p>
 <p><font class="set">set::snomask-on-connect &lt;+modos&gt;</font><br>
