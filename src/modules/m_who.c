@@ -294,7 +294,7 @@ static int parse_who_options(aClient *sptr, int argc, char **argv)
 	    }
 	  
 	  if (!IsAnOper(sptr))
-	    continue; /* oper-only */
+	    break; /* oper-only */
 
 	  wfl.gecos = argv[i];
 	  if (what == WHO_ADD)
