@@ -51,6 +51,9 @@ static ResRQ *last, *first;
 static void rem_cache(aCache *);
 static void rem_request(ResRQ *);
 static int do_query_name(Link *, char *, ResRQ *);
+/* revquery is used when looking up IP -> name -> IP to differentiate between
+ * IPv6 and IPv4, to make the proper request type --slePP */
+static int do_revquery_name(Link *, char *, ResRQ *, int is_ipv6_address);
 static int do_query_number(Link *, struct IN_ADDR *, ResRQ *);
 static void resend_query(ResRQ *);
 static int proc_answer(ResRQ *, HEADER *, char *, char *);
@@ -412,6 +415,20 @@ struct hostent *gethost_byname(char *name, Link *lp)
 	return NULL;
 }
 
+/* This is identical to gethost_byname, except it includes is_ipv6_address
+ * See do_revquery_name() */
+struct hostent *gethost_byname_revquery(char *name, Link *lp, int is_ipv6_address)
+{
+	aCache *cp;
+	reinfo.re_na_look++;
+	if ((cp = find_cache_name(name)))
+		return (struct hostent *)&(cp->he);
+	if (!lp)
+		return NULL;
+	(void)do_revquery_name(lp, name, NULL, is_ipv6_address);
+	return NULL;
+}
+
 struct hostent *gethost_byaddr(char *addr, Link *lp)
 {
 	aCache *cp;
@@ -427,18 +444,14 @@ struct hostent *gethost_byaddr(char *addr, Link *lp)
 
 static int do_query_name(Link *lp, char *name, ResRQ *rptr)
 {
-	char hname[HOSTLEN + 1];
-	int  len;
+char hname[HOSTLEN + 1];
 
-	strncpyzt(hname, name, sizeof(hname));
-	len = strlen(hname);
+	strlcpy(hname, name, sizeof(hname));
 
 	if (rptr && !index(hname, '.') && ircd_res.options & RES_DEFNAMES)
 	{
-		(void)strncat(hname, dot, sizeof(hname) - len - 1);
-		len++;
-		(void)strncat(hname, ircd_res.defdname,
-		    sizeof(hname) - len - 1);
+		strlcat(hname, dot, sizeof(hname));
+		strlcat(hname, ircd_res.defdname, sizeof(hname));
 	}
 
 	/*
@@ -453,8 +466,7 @@ static int do_query_name(Link *lp, char *name, ResRQ *rptr)
 #else
 		rptr->type = T_A;
 #endif
-		rptr->name = (char *)MyMalloc(strlen(name) + 1);
-		(void)strcpy(rptr->name, name);
+		rptr->name = strdup(name);
 	}
 	Debug((DEBUG_DNS, "do_query_name(): %s ", hname));
 #ifdef INET6
@@ -462,6 +474,45 @@ static int do_query_name(Link *lp, char *name, ResRQ *rptr)
 #else
 	return (query_name(hname, C_IN, T_A, rptr));
 #endif
+}
+
+/* If is_ipv6_address is set, look for AAAA records, if not,
+ * go looking for A records. This fixes a bug when talking to
+ * servers that do not provide any non-authoritative information
+ * to an ANY query (ie. dnscache). --slePP */
+static int do_revquery_name(Link *lp, char *name, ResRQ *rptr, int is_ipv6_address)
+{
+char hname[HOSTLEN + 1];
+
+	Debug((DEBUG_DNS, "do_revquery_name: looking for %s", (is_ipv6_address?"IPv6":"IPv4")));
+
+	strncpyzt(hname, name, sizeof(hname));
+
+	if (rptr && !index(hname, '.') && ircd_res.options & RES_DEFNAMES)
+	{
+		strlcat(hname, dot, sizeof(hname));
+		strlcat(hname, ircd_res.defdname, sizeof(hname));
+	}
+
+	/*
+	 * Store the name passed as the one to lookup and generate other host
+	 * names to pass onto the nameserver(s) for lookups.
+	 */
+	if (!rptr)
+	{
+		rptr = make_request(lp);
+		if(is_ipv6_address)
+			rptr->type = T_AAAA;
+		else
+			rptr->type = T_A;
+		rptr->name = strdup(name);
+	}
+	Debug((DEBUG_DNS, "do_revquery_name(): %s ", hname));
+
+	if(is_ipv6_address)
+		return (query_name(hname, C_IN, T_AAAA, rptr));
+	else
+		return (query_name(hname, C_IN, T_A, rptr));
 }
 
 /*
@@ -554,6 +605,7 @@ static int query_name(char *name, int class, int type, ResRQ *rptr)
 		return r;
 	}
 	hptr = (HEADER *) buf;
+        hptr->rd = 1;
 	do
 	{
 		hptr->id = htons(getrandom16());
@@ -900,6 +952,7 @@ struct hostent *get_res(char *lp)
 	if (a > 0 && rptr->type == T_PTR)
 	{
 		struct hostent *hp2 = NULL;
+		int is_ipv6_address = 0;
 
 		if (BadPtr(rptr->he.h_name))	/* Kludge!      960907/Vesa */
 			goto getres_err;
@@ -913,7 +966,11 @@ struct hostent *get_res(char *lp)
 		 * type we automatically gain the use of the cache with no
 		 * extra kludges.
 		 */
-		if ((hp2 = gethost_byname(rptr->he.h_name, &rptr->cinfo)))
+		/* We add this IPv6 check to query for T_AAAA or T_A respectively.
+		 * djbdns/dnscache doesn't return A or AAAA to a T_ANY (as it should)
+		 * --slePP */
+		is_ipv6_address = (strchr(Inet_ia2p((struct IN_ADDR *)&rptr->he.h_addr), ':') != NULL);
+		if ((hp2 = gethost_byname_revquery(rptr->he.h_name, &rptr->cinfo, is_ipv6_address)))
 			if (lp)
 				bcopy((char *)&rptr->cinfo, lp, sizeof(Link));
 		/*

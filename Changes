@@ -286,3 +286,5 @@
 - Added a missing error message for ModuleGetErrorStr. Additionally added error checking to
   ensure NULL is returned when an invalid error code is specified (#0001986) reported by
   AngryWolf.
+- Applied patch from slePP for bug #0001252: if IPv6 was enabled then in some cases names
+  were not properly resolved. Original bug reported by kormat.
