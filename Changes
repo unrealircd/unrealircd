@@ -2989,3 +2989,4 @@ seen. gmtime warning still there
 - Q comes after P. Thanks to Rocko for reminding us! (fixes /stats P bug ;p).
 - Added 90% of RC2 release notes.
 - Cosmetic doc updates (#0001596) reported by HERZ.
+- Updated SSL error for underlying syscall error a bit (#0001615).
