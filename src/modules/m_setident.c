@@ -171,7 +171,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (MyConnect(sptr))
 		{
 			sendto_one(sptr,
-			    ":%s NOTICE %s :*** Syntax: /SetIdent <new host>",
+			    ":%s NOTICE %s :*** Syntax: /SetIdent <new ident>",
 			    me.name, parv[0]);
 		}
 		return 1;

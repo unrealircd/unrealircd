@@ -1251,3 +1251,4 @@ seen. gmtime warning still there
 - Updated doc/conf.doc
 - Fix for desynch problem with the fix in /mode system, Thanks to Luke
 - One little patch for humanity, one giant step for science..
+- Cosmetic fix for /setident, found by juli ..
