@@ -38,42 +38,55 @@
   ---1.1.<a href="#notesonolder"> Notes on upgrading/mixing 3.1.x -&gt; 3.2.x</a><br>
   ---1.2.<a href="#notesonupgrade"> Notes on upgrading between 3.2.x versions</a><br>
   2. <a href="#installation">Installation</a><br>
-  3. <a href="#configuringyourunrealircdconf">Configuring your unrealircd.conf 
+  3. <a href="#features">Features</a><br>
+  -- 3.1.<a href="#feature_cloaking">Cloaking</a><br>
+  -- 3.2.<a href="#feature_modules">Modules</a><br>
+  -- 3.3.<a href="#feature_scanner">Proxy scanner</a><br>
+  -- 3.4.<a href="#feature_snomasks">Snomasks</a><br>
+  -- 3.5.<a href="#feature_aliases">Aliases</a><br>
+  -- 3.6.<a href="#feature_helpop">Helpop</a><br>
+  -- 3.7.<a href="#feature_operaccesslevels">Oper access levels</a><br>
+  -- 3.8.<a href="#feature_opercmds">Oper commands</a><br>
+  -- 3.9.<a href="#feature_ssl">SSL</a><br>
+  -- 3.10.<a href="#feature_ipv6">IPv6</a><br>
+  -- 3.11.<a href="#feature_ziplinks">Zip links</a><br>
+  -- 3.12.<a href="#feature_other">Other stuff</a><br>
+  4. <a href="#configuringyourunrealircdconf">Configuring your unrealircd.conf 
   file</a><br>
-  ---3.1.<a href="#configurationfileexplained">  Configuration file explained</a><br>
-  ---3.2.<a href="#meblock"> Me Block -=- (M:Line)</a><br>
-  ---3.3.<a href="#adminblock"> Admin Block -=- (A:Line)</a><br>
-  ---3.4. <a href="#classblock">Class Block -=- (Y:Line)</a><br>
-  ---3.5.<a href="#allowblock"> Allow Block -=- (I:Line)</a><br>
-  ---3.6. <a href="#listenblock">Listen Block -=- (P:Line)</a><br>
-  ---3.7.<a href="#operblock"> Oper Block -=- (O:Line)</a><br>
-  ---3.8. <a href="#drpassblock">DRpass Block -=-(X:Line)</a><br>
-  ---3.9. <a href="#includedirective">Include Directive</a><br>
-  ---3.10. <a href="#loadmoduledirective">Loadmodule Directive</a><br>
-  ---3.11. <a href="#logblock">Log Block</a><br>
-  ---3.12.<a href="#tldblock"> TLD Block -=- (T:Line)</a><br>
-  ---3.13. <a href="#bannickblock">Ban Nick Block -=- (Q:Line)</a><br>
-  ---3.14. <a href="#banuserblock">Ban User Block -=- (K:Line)</a><br>
-  ---3.15. <a href="#banipblock">Ban IP Block -=- (Z:Line)</a><br>
-  ---3.16. <a href="#banserverblock">Ban Server Block -=-(q:Line)</a><br>
-  ---3.17. <a href="#banrealnameblock">Ban Realname Block -=- (n:Line)</a><br>
-  ---3.18. <a href="#banexceptionblock">Ban Exception Block -=- (E:Line)</a><br>
-  ---3.19. <a href="#scanexceptionblock">Scan Exception Block -=- (e:Line)</a><br>
-  ---3.20. <a href="#denydccblock">Deny DCC Block -=- (dccdeny.conf)</a><br>
-  ---3.21. <a href="#denyversionblock">Deny Version Block -=- (V:Line)</a><br>
-  ---3.22. <a href="#denylinkblock">Deny Link Block -=- (D:Line / d:Line)</a><br>
-  ---3.23. <a href="#denychannelblock">Deny Channel Block -=- (chrestrict.conf)</a><br>
-  ---3.24. <a href="#allowchannelblock">Allow Channel Block</a><br>
-  ---3.25.<a href="#vhostblock"> Vhost Block Block -=- (vhost.conf)</a><br>
-  ---3.26. <a href="#badwordsblock">Badwords Block -=- (badwords.conf)</a><br>
-  ---3.27. <a href="#ulinesblock">Uline Block -=- (U:Line)</a><br>
-  ---3.28. <a href="#linkblock">Link Block -=- (C/N/H:Lines)</a><br>
-  ---3.29. <a href="#aliasblock">Alias Block</a><br>
-  ---3.30. <a href="#helpblock">Help Block</a><br>
-  ---3.31. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
-  4. <a href="#userchannelmodes">User &amp; Channel Modes</a><br>
-  5. <a href="#useropercommands">User &amp; Oper Commands</a><br>
-  6. <a href="#faq">Frequently Asked Questions (FAQ)</a><br> 
+  ---4.1.<a href="#configurationfileexplained">  Configuration file explained</a><br>
+  ---4.2.<a href="#meblock"> Me Block -=- (M:Line)</a><br>
+  ---4.3.<a href="#adminblock"> Admin Block -=- (A:Line)</a><br>
+  ---4.4. <a href="#classblock">Class Block -=- (Y:Line)</a><br>
+  ---4.5.<a href="#allowblock"> Allow Block -=- (I:Line)</a><br>
+  ---4.6. <a href="#listenblock">Listen Block -=- (P:Line)</a><br>
+  ---4.7.<a href="#operblock"> Oper Block -=- (O:Line)</a><br>
+  ---4.8. <a href="#drpassblock">DRpass Block -=-(X:Line)</a><br>
+  ---4.9. <a href="#includedirective">Include Directive</a><br>
+  ---4.10. <a href="#loadmoduledirective">Loadmodule Directive</a><br>
+  ---4.11. <a href="#logblock">Log Block</a><br>
+  ---4.12.<a href="#tldblock"> TLD Block -=- (T:Line)</a><br>
+  ---4.13. <a href="#bannickblock">Ban Nick Block -=- (Q:Line)</a><br>
+  ---4.14. <a href="#banuserblock">Ban User Block -=- (K:Line)</a><br>
+  ---4.15. <a href="#banipblock">Ban IP Block -=- (Z:Line)</a><br>
+  ---4.16. <a href="#banserverblock">Ban Server Block -=-(q:Line)</a><br>
+  ---4.17. <a href="#banrealnameblock">Ban Realname Block -=- (n:Line)</a><br>
+  ---4.18. <a href="#banexceptionblock">Ban Exception Block -=- (E:Line)</a><br>
+  ---4.19. <a href="#scanexceptionblock">Scan Exception Block -=- (e:Line)</a><br>
+  ---4.20. <a href="#denydccblock">Deny DCC Block -=- (dccdeny.conf)</a><br>
+  ---4.21. <a href="#denyversionblock">Deny Version Block -=- (V:Line)</a><br>
+  ---4.22. <a href="#denylinkblock">Deny Link Block -=- (D:Line / d:Line)</a><br>
+  ---4.23. <a href="#denychannelblock">Deny Channel Block -=- (chrestrict.conf)</a><br>
+  ---4.24. <a href="#allowchannelblock">Allow Channel Block</a><br>
+  ---4.25.<a href="#vhostblock"> Vhost Block Block -=- (vhost.conf)</a><br>
+  ---4.26. <a href="#badwordsblock">Badwords Block -=- (badwords.conf)</a><br>
+  ---4.27. <a href="#ulinesblock">Uline Block -=- (U:Line)</a><br>
+  ---4.28. <a href="#linkblock">Link Block -=- (C/N/H:Lines)</a><br>
+  ---4.29. <a href="#aliasblock">Alias Block</a><br>
+  ---4.30. <a href="#helpblock">Help Block</a><br>
+  ---4.31. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
+  5. <a href="#userchannelmodes">User &amp; Channel Modes</a><br>
+  6. <a href="#useropercommands">User &amp; Oper Commands</a><br>
+  7. <a href="#faq">Frequently Asked Questions (FAQ)</a><br> 
 </p>
 <p><strong><font size="+2">1.0 &#8211;Introduction &amp; Notes <a name="IntroductionNotes"></a></font></strong><br>
 </p>
@@ -88,20 +101,23 @@
    ask for support at irc.ircsystems.net (port 6667) channel #unreal-support (strict UnrealIrcd support, dont
    ask for help about services!). If you have a real bug (like a crash) then report it at 
    <a href="http://bugs.unrealircd.org">http://bugs.unrealircd.org</a>.</p>
-<p>We haven't a section about UnrealIrcd features yet (snomasks, modules, etc), in the meantime 
-   you might want to read <A HREF="Unreal31_to_32.html">this</A> which contains some scattered info.</p>
 
 <p><font size="+2"><strong>1.1 &#8211; Notes on upgrading/mixing 3.1.x -&gt; 3.2.x </strong></font><a name="notesonolder"></a><br>
 </p>
-<p>In case you are upgrading from Unreal3.1.x to Unreal3.2 please read <A HREF="Unreal31_to_32.html">this</A>. 
-   Also it's best not to mix/link 3.1.x with 3.2.x, but if you really want to, you need at least 3.1.4.</p>
+<p>In case you are upgrading from Unreal3.1.x to Unreal3.2 you'll notice the whole config file has changed,
+   you may find it hard at first, but once you switched you'll find it much better!</p>
+<p>Also don't forget to read section 3 about features, altough you know already some of them which are in 3.1.x there are new one's too!</p>
+<p>It's best not to mix/link 3.1.x with 3.2.x, but if you really want to, you need at least 3.1.4.</p>
 
 <p><font size="+2"><strong>1.2 &#8211; Notes on upgrading between 3.2.x versions</strong></font><a name="notesonupgrade"></a><br>
 </p>
-<p>The recommended way of upgrading is extracting to a new directory (or moving the old), compile and copy your old
-   files (config files, motd, rules, SSL certificates, etc) to the new version. Also check .RELEASE.NOTES or maybe 
-   even Changes to see what has been changed. _if you notice any differences between versions 
-   before reporting it as a bug READ THOSE FILES!!_.</p>
+<p>The recommended way of upgrading is:<br>
+   - Rename your old UnrealIrcd directory (or otherwise you'll overwrite it in the next step)<br>
+   - Extract the new UnrealIrcd version and run ./Config and make(*NIX).<br>
+   - Copy your old configuration files to the new directory (unrealircd.conf, motd, rules, server.* [SSL certs], network file, etc)<br></p>
+<p>Please also check .RELEASE.NOTES and maybe even Changes to see what has been changed. 
+   If you notice any changes (or bugs) between version, BE SURE TO READ THOSE FILES FIRST before reporting it as a bug!.</p>
+
 <p><font size="+2"><strong>2.0 - Installation</strong></font><a name="installation" id="installation"></a><br>
   <br>
   <strong>Tested &amp; Supported Operating Systems:</strong><br>
@@ -133,17 +149,117 @@
   5. Answer these questions to the best of your knowledge. Generally if your not 
   sure, the default will work just fine! <br>
   6. make<BR>
-  7. Now create your unrealircd.conf (and networkfile if you use one), see section 3.<br>
+  7. Now create your unrealircd.conf (and networkfile if you use one), see section 4.<br>
 </p>
 <p> </p>
-<p><font size="+2"><strong>3.0 - Configuring your unrealircd.conf</strong></font> 
+<p><font size="+2"><strong>3.0 - Features</strong></font> 
+  <a name="features"></a> </p>
+<p>Some major/nice features are explained in this section. It gives a general overview,
+   it will sometimes refer to the configfile (something which you maybe know nothing about yet).</p>
+<p>You can skip this section, or read it after installing... 
+   But it can be quite usefull usefull to read before you install... ;)</p>
+
+<p><font size="+2"><strong>3.1 - Cloaking</strong></font><a name="feature_cloaking"></a></p>
+<p>Cloaking is hiding the host of users, for example if your real host is <i>d5142341.cable.wanadoo.nl</i>,
+   it will be shown (in join, part, whois, etc) as <i>rox-2DCA3201.cable.wanadoo.nl</i>. 
+   This feature is usefull to prevent users flooding each other since they can't see the real host/IP.</p>
+<p>This is controlled by usermode +x (like: /mode yournix +x), admins can also force +x to be enabled 
+   by default, or make it so users can never do -x.</p>
+<p>The cloaked host is generated by some formula which uses 3 &quot;cloak keys&quot;, you are required
+   to set those 3 keys in your config file, they should be 3 random numbers between 10.000 and 4.294.967.296.
+   If someone else knows these keys they can decode the host a bit and discover the real host so you
+   have to keep them secret. They also should be the same at all servers!</p>
+
+<p><font size="+2"><strong>3.2 - Modules</strong></font><a name="feature_modules"></a></p>
+<p>UnrealIrcd supports modules (except on windows), modules are nice because:<br>
+   - You can decide not to load them (ex: not load the scanner module) and they wont use any memory/CPU<br>
+   - You can load/reload/unload them while the ircd is running (by /rehash)<br>
+   - Other people can create modules as well with new commands or usermodes for example.<br>
+   UnrealIrcd only comes with a few modules, if you want others take a look at www.unrealircd.com -&gt; modules
+   or use google or something ;). [note that you at least need to load the commands module].</p>
+
+<p><font size="+2"><strong>3.3 - Proxy scanner</strong></font><a name="feature_scanner"></a></p>
+<p>UnrealIrcd comes with proxy scanner modules: if a user connects it will check on some ports to see 
+   if the user is using an anonymous proxy. There's 1 main scanner module (scan.so) and two
+   modules which do the actual scanning: scan_socks and scan_http.</p>
+<p>This module is not required, but often usefull.. if you load them, you also have to fill in the set::scan block.</p>
+<p>You can also use something like <A HREF="http://www.blitzed.org/bopm/" TARGET="_blank">BOPM</A> which is a seperate
+   program designed for proxy scanning, in that case disable UnrealIrcd's own proxy scanner.</p>
+
+<p><font size="+2"><strong>3.4 - Snomasks</strong></font><a name="feature_snomasks"></a></p>
+<p>Snomasks are server notice masks, it's a special type of usermodes that controlls which 
+   server notices you will receive (mostly used by opers)</p>
+<p>It's set by: /mode yournick +s SNOMASK, for example: /mode yournick +s +cF<br>
+   You can ofcourse also remove certain snomasks by doing for example: /mode yournick +s -c<br>
+   Or you can remove all snomasks by doing: /mode yournick -s</p>
+<p>The current available snomasks are:<br>
+   c - local connects<br>
+   F - far connects<br>
+   f - flood notices<br>
+   k - kill notices<br>
+   e - 'eyes' notices<br>
+   j - 'junk' notices<br>
+   v - vhost notices<br>
+   G - gline/shun notices<br>
+   n - nick change notices<br>
+   q - deny nick (Q:line) rejection notices<br>
+   </p>
+<p>You can control which snomasks you automatically get on connect or if you use /oper.</p>
+
+<p><font size="+2"><strong>3.5 - Aliases</strong></font><a name="feature_aliases"></a></p>
+<p>With aliases you can configure things like: &quot;/ns identify blah&quot; will be forwarded
+   to nickserv as a privmsg (privmsg nickserv identify blah). They can be quite usefull ;).</p>
+<p>Aliases are configured by alias blocks in the configuration file, and you can also include
+   a file with default aliases for some services.</p>
+   
+<p><font size="+2"><strong>3.6 - Helpop</strong></font><a name="feature_helpop"></a></p>
+<p>UnrealIrcd has a build in help system accessable by /helpop.<br>
+   For example <i>/helpop chmodes</i> gives you a overview of all channel modes UnrealIrcd has.<br>
+   One important thing to remember is that if you are an ircop (helpop) you have the
+   prefix a ?, so <i>/helpop</i> becomes <i>/helpop ?</i> and 
+   <i>/helpop chmodes</i> becomes <i>/helpop ?chmodes</i> etc..</p>
+
+<p><font size="+2"><strong>3.7 - Oper access levels</strong></font><a name="feature_operaccesslevels"></a></p>
+<p>There are several oper levels in UnrealIrcd and you can add additional right (like to use /gline) to
+   each of them, that way you can give each oper the privileges they need.</p>
+<p>This is controlled by the oper flags in the oper block, see the oper block for more information.</p>
+
+<p><font size="+2"><strong>3.8 - Oper commands</strong></font><a name="feature_opercmds"></a></p>
+<p>UnrealIrcd has a lot of powerfull oper commands which are explained in section 6,
+   you probably want to read those after installing :).</p>
+
+<p><font size="+2"><strong>3.9 - SSL</strong></font><a name="feature_ssl"></a></p>
+<p>SSL stands for Secure Socket Layer, with SSL you can make secure (encrypted) connections. 
+   It can be used to encrypt server2server traffic, but clients can also use it if you want.
+   If set up right it can usefull again sniffing attacks, if you don't know what I'm talking
+   about then SSL is (not yet) for you ;).</p>
+<p>To setup a secure SSL port you need to add the ssl flag to the listen block.
+   NOTE: you cannot connect with non-ssl clients to a SSL port, so don't set port 6667 to SSl for example ;).</p>
+
+<p><font size="+2"><strong>3.10 - IPv6</strong></font><a name="feature_ipv6"></a></p>
+<p>UnrealIrcd supports IPv6, since beta15 it seems to work well altough there might be some
+   bugs in it. You need to compile with IPv6 support (answer yes to the ./Config question), ofcourse your
+   OS needs to have IPv6 support enabled too.</p>
+<p>Altough microsoft has an experimental IPv6 implementation for w2k/XP it is not (yet) supported by UnrealIrcd</p>
+
+<p><font size="+2"><strong>3.11 - Zip links</strong></font><a name="feature_ziplinks"></a></p>
+<p>Zip links can be turned on for server2server links, it compresses the data by using zlib.
+   It can save you 60-80% bandwidth... Can be quite usefull for low-bandwidth links or links with
+   many users, it can help a lot when you are linking since then a lot of data is sent about ever user/channel/etc.</p>
+<p>To compile with zip links support, you need to answer Yes to the zlib question in ./Config</p>
+
+<p><font size="+2"><strong>3.12 - Other stuff</strong></font><a name="feature_other"></a></p>
+<p>UnrealIrcd has a lot of features so not everything is covered here... You'll find that out by yourself</p>
+
+<p> </p>
+<p><font size="+2"><strong>4.0 - Configuring your unrealircd.conf</strong></font> 
   <a name="configuringyourunrealircdconf"></a> </p>
 <p>First of all, creating a good unrealircd.conf will take some time, probably
    something like 10 - 60m. You can try to get it booted up as quickly as you can and
    tweak later, or you can learn the major sections directly step-by-step which is 
    the recommended method ;P. If you have any problems, check your syntax, check the manual 
    and check the FAQ before asking for help/reporting a bug.</p>
-<p><strong><font size="+2">3.1 Configuration File Explained</font></strong><a name="configurationfileexplained"></a><br>
+<p><strong><font size="+2">4.1 Configuration File Explained</font></strong><a name="configurationfileexplained"></a><br>
 </p>
 <p>The new system uses a block-based system. Each entry, or block, in the new 
   format has a specific format. The format works like:</p>
@@ -183,7 +299,7 @@
    copy doc/example.conf and start editting. It's recommended to walk step by step
    trough all block types and use this manual as a reference.</p>
 <p> </p>
-<p><font class="block_section">3.2 - </font><font class="block_name">Me Block</font>
+<p><font class="block_section">4.2 - </font><font class="block_name">Me Block</font>
    <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as the M:Line)</font><a name="meblock"></a>
 </p>
 <p>Syntax:<br>
@@ -203,7 +319,7 @@
   numeric 1;<br>
   } ;</p>
 <p></p>
-<p><font class="block_section">3.3 - </font><font class="block_name">Admin Block</font>
+<p><font class="block_section">4.3 - </font><font class="block_name">Admin Block</font>
    <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as the A:Line)</font><a name="adminblock"></a>
 </p>
 <p>Syntax:<br>
@@ -224,7 +340,7 @@
   &quot;widely@used.name&quot;;<br>
   };</p>
 <p></p>
-<p><font class="block_section">3.4 - </font><font class="block_name">Class Block</font>
+<p><font class="block_section">4.4 - </font><font class="block_name">Class Block</font>
    <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as the Y:Line)</font><a name="classblock"></a>
 </p>
 <p>Syntax:<br>
@@ -260,7 +376,7 @@
   connfreq 100; /* How many seconds between each connection attempt */<br>
   };</p>
 <p> </p>
-<p><font class="block_section">3.5 - </font><font class="block_name">Allow Block</font>
+<p><font class="block_section">4.5 - </font><font class="block_name">Allow Block</font>
    <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as the I:Line)</font><a name="allowblock"></a>
 </p>
 <p>Syntax:<br>
@@ -317,7 +433,7 @@
   maxperip 1;<br>
   };</p>
 <p>&nbsp;</p>
-<p><font class="block_section">3.6 - </font><font class="block_name">Listen Block</font>
+<p><font class="block_section">4.6 - </font><font class="block_name">Listen Block</font>
    <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as the P:Line)</font><a name="listenblock"></a>
 </p>
 <p>Syntax:<br>
@@ -361,7 +477,7 @@
 <p>Or if there are no options:</p>
 <p>listen *:8067;<br>
   listen *:6667;</p>
-<p><font class="block_section">3.7 - </font><font class="block_name">Oper Block</font>
+<p><font class="block_section">4.7 - </font><font class="block_name">Oper Block</font>
    <font class="block_recommended">RECOMMENDED</font> <font class="block_old">(Previously known as the O:Line)</font><a name="operblock"></a>
 </p>
 <p>oper &lt;name&gt; {<br>
@@ -491,7 +607,7 @@
   <tr> 
     <td><div align="center">t</div></td>
     <td><div align="center">can_gkline</div></td>
-    <td>Can use /gline</td>
+    <td>Can use /gline and /shun</td>
   </tr>
   <tr> 
     <td><div align="center">n</div></td>
@@ -694,7 +810,7 @@
   snomask frebWqFv;<br>
   };</p>
 <p> </p>
-<p><font class="block_section">3.8 - </font><font class="block_name">DRpass Block</font>
+<p><font class="block_section">4.8 - </font><font class="block_name">DRpass Block</font>
    <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as the X:Line)</font><a name="drpassblock"></a>
 </p>
 <p>Syntax:<br>
@@ -712,7 +828,7 @@
   die &quot;die-you-stupid&quot;;<br>
   };</p>
 <p> </p>
-<p><font class="block_section">3.9 - </font><font class="block_name">Include Directive</font><a name="includedirective"></a>
+<p><font class="block_section">4.9 - </font><font class="block_name">Include Directive</font><a name="includedirective"></a>
 </p>
 <p>Syntax:<br>
   include &lt;file-name&gt;;</p>
@@ -738,7 +854,7 @@
    aliases/genericstats.conf (GeoStats, NeoStats)<br>
 </p>
 <p></p>
-<p><font class="block_section">3.10 - </font><font class="block_name">LoadModule Directive</font>
+<p><font class="block_section">4.10 - </font><font class="block_name">LoadModule Directive</font>
    <font class="block_required">REQUIRED</font><a name="loadmoduledirective"></a>
 </p>
 <p>Syntax:<br>
@@ -757,7 +873,7 @@ loadmodule "src/modules/scan.so";
 loadmodule "src/modules/scan_socks.so";
 loadmodule "src/modules/scan_http.so";
 </pre>
-<p><font class="block_section">3.11 - </font><font class="block_name">Log Block</font>
+<p><font class="block_section">4.11 - </font><font class="block_name">Log Block</font>
    <font class="block_optional">OPTIONAL</font><a name="logblock"></a>
 </p>
 <p>Syntax:<br>
@@ -798,7 +914,7 @@ loadmodule "src/modules/scan_http.so";
   };<br>
   };</p>
 <p></p>
-<p><font class="block_section">3.12 - </font><font class="block_name">TLD Block</font>
+<p><font class="block_section">4.12 - </font><font class="block_name">TLD Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the T:Line)</font><a name="tldblock"></a>
 </p>
 <p>Syntax:<br>
@@ -822,7 +938,7 @@ loadmodule "src/modules/scan_http.so";
   rules &quot;ircd.rules.fr&quot;;<br>
   };</p>
 <p></p>
-<p><font class="block_section">3.13 - </font><font class="block_name">Ban Nick Block</font>
+<p><font class="block_section">4.13 - </font><font class="block_name">Ban Nick Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the Q:Line)</font><a name="bannickblock"></a>
 </p>
 <p>Syntax:<br>
@@ -840,7 +956,7 @@ loadmodule "src/modules/scan_http.so";
   reason &quot;Reserved for Services&quot;;<br>
   };</p>
 <p></p>
-<p><font class="block_section">3.14 - </font><font class="block_name">Ban User Block</font>
+<p><font class="block_section">4.14 - </font><font class="block_name">Ban User Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the K:Line)</font><a name="banuserblock"></a>
 </p>
 <p>Syntax:<br>
@@ -858,7 +974,7 @@ loadmodule "src/modules/scan_http.so";
   reason &quot;Idiot&quot;;<br>
   };</p>
 <p></p>
-<p><font class="block_section">3.15 - </font><font class="block_name">Ban IP Block</font>
+<p><font class="block_section">4.15 - </font><font class="block_name">Ban IP Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the Z:Line)</font><a name="banipblock"></a>
 </p>
 <p>Syntax:<br>
@@ -876,7 +992,7 @@ loadmodule "src/modules/scan_http.so";
   reason &#8220;Get a real ip u lamer!&#8221;;<br>
   };</p>
 <p> </p>
-<p><font class="block_section">3.16 - </font><font class="block_name">Ban Server Block</font>
+<p><font class="block_section">4.16 - </font><font class="block_name">Ban Server Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the q:Line)</font><a name="banserverblock"></a>
 </p>
 <p>Syntax:<br>
@@ -893,7 +1009,7 @@ loadmodule "src/modules/scan_http.so";
   reason &#8220;Its broken!&#8221;;<br>
   };</p>
 <p> </p>
-<p><font class="block_section">3.17 - </font><font class="block_name">Ban RealName Block</font>
+<p><font class="block_section">4.17 - </font><font class="block_name">Ban RealName Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the n:Line)</font><a name="banrealnameblock"></a>
 </p>
 <p>Syntax:<br>
@@ -912,7 +1028,7 @@ loadmodule "src/modules/scan_http.so";
   reason &#8220;Bob sucks!&#8221;;<br>
   };</p>
 <p></p>
-<p><font class="block_section">3.18 - </font><font class="block_name">Ban Exceptions Block</font>
+<p><font class="block_section">4.18 - </font><font class="block_name">Ban Exceptions Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the E:Line)</font><a name="banexceptionblock""></a>
 </p>
 <p>Syntax:<br>
@@ -928,7 +1044,7 @@ loadmodule "src/modules/scan_http.so";
   mask myident@my.isp.com;<br>
   };</p>
 <p></p>
-<p><font class="block_section">3.19 - </font><font class="block_name">Scan Exceptions Block</font>
+<p><font class="block_section">4.19 - </font><font class="block_name">Scan Exceptions Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the e:Line)</font><a name="scanexceptionblock"></a>
 </p>
 <p>Syntax:<br>
@@ -944,7 +1060,7 @@ loadmodule "src/modules/scan_http.so";
   mask 192.168.1.*;<br>
   };</p>
 <p></p>
-<p><font class="block_section">3.20 - </font><font class="block_name">Deny DCC Block</font>
+<p><font class="block_section">4.20 - </font><font class="block_name">Deny DCC Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as dccdeny.conf)</font><a name="denydccblock"></a>
 </p>
 <p>Syntax:<br>
@@ -963,7 +1079,7 @@ loadmodule "src/modules/scan_http.so";
   reason &#8220;This is a GD Virus&#8221;;<br>
   };</p>
 <p></p>
-<p><font class="block_section">3.21 - </font><font class="block_name">Deny Version Block</font>
+<p><font class="block_section">4.21 - </font><font class="block_name">Deny Version Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the V:Line)</font><a name="denyversionblock"></a>
 </p>
 <p> Syntax:<br>
@@ -989,7 +1105,7 @@ loadmodule "src/modules/scan_http.so";
   flag compiled into it, if it does not have a ! prefix, then it means the server 
   must have this flag compiled.</p>
 <p></p>
-<p><font class="block_section">3.22 - </font><font class="block_name">Deny Link Block</font>
+<p><font class="block_section">4.22 - </font><font class="block_name">Deny Link Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the D/d:Line)</font><a name="denylinkblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1015,7 +1131,7 @@ loadmodule "src/modules/scan_http.so";
   auto (only applies to autoconnects, /connect will still work), and all (applies 
   to all connection attempts).</p>
 <p></p>
-<p><font class="block_section">3.23 - </font><font class="block_name">Deny Channel Block</font>
+<p><font class="block_section">4.23 - </font><font class="block_name">Deny Channel Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as chrestrict.conf)</font><a name="denychannelblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1034,7 +1150,7 @@ loadmodule "src/modules/scan_http.so";
   reason &#8220;No it don&#8217;t!&#8221;;<br>
   };</p>
 <p></p>
-<p><font class="block_section">3.24 - </font><font class="block_name">Allow Channel Block</font>
+<p><font class="block_section">4.24 - </font><font class="block_name">Allow Channel Block</font>
    <font class="block_optional">OPTIONAL</font><a name="allowchannelblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1049,7 +1165,7 @@ loadmodule "src/modules/scan_http.so";
   channel &#8220;#something&#8221;;<br>
   };</p>
 <p></p>
-<p><font class="block_section">3.25 - </font><font class="block_name">Vhost Block</font>
+<p><font class="block_section">4.25 - </font><font class="block_name">Vhost Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as vhosts.conf)</font><a name="vhostblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1086,7 +1202,7 @@ loadmodule "src/modules/scan_http.so";
   swhois &quot;Im Special&quot;;<br>
   };</p>
 <p></p>
-<p><font class="block_section">3.26 - </font><font class="block_name">Bad Word Block</font>
+<p><font class="block_section">4.26 - </font><font class="block_name">Bad Word Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as badwords.*.conf)</font><a name="badwordsblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1107,7 +1223,7 @@ loadmodule "src/modules/scan_http.so";
   replace shoot;<br>
   };</p>
 <p></p>
-<p><font class="block_section">3.27 - </font><font class="block_name">ULines Block</font>
+<p><font class="block_section">4.27 - </font><font class="block_name">ULines Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the U:Line)</font><a name="ulinesblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1126,7 +1242,7 @@ loadmodule "src/modules/scan_http.so";
   stats.mynetwork.com;<br>
   };</p>
 <p></p>
-<p><font class="block_section">3.28 - </font><font class="block_name">Link Block</font>
+<p><font class="block_section">4.28 - </font><font class="block_name">Link Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as C/N/H:Lines)</font><a name="linkblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1223,7 +1339,7 @@ loadmodule "src/modules/scan_http.so";
   };</p>
 <p> </p>
 <p> </p>
-<p><font class="block_section">3.29 - </font><font class="block_name">Alias Block</font>
+<p><font class="block_section">4.29 - </font><font class="block_name">Alias Block</font>
    <font class="block_optional">OPTIONAL</font><a name="aliasblock"></a>
 </p>
 <p>Syntax [standard alias]:<br>
@@ -1268,7 +1384,7 @@ loadmodule "src/modules/scan_http.so";
   from the second till the last. For examples of using the alias block in the 
   command format, consult doc/example.conf.</p>
 <p></p>
-<p><font class="block_section">3.30 - </font><font class="block_name">Help Block</font>
+<p><font class="block_section">4.30 - </font><font class="block_name">Help Block</font>
    <font class="block_optional">OPTIONAL</font><a name="helpblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1284,7 +1400,7 @@ loadmodule "src/modules/scan_http.so";
   for the help block are the text that will be displayed to the user when requesting 
   the /helpop.</p>
 <p></p>
-<p><font class="block_section">3.31 - </font><font class="block_name">Set Block</font>
+<p><font class="block_section">4.31 - </font><font class="block_name">Set Block</font>
    <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as unrealircd.conf/networks file)</font><a name="setblock"></a>
 </p>
 <p>The set file is what use to be our networks/unrealircd.conf and our networks 
@@ -1438,7 +1554,7 @@ loadmodule "src/modules/scan_http.so";
   than the above listed locations you may specify the filename of the UNIX Domain 
   Socket that an EGD is listening on.</p>
 <p></p>
-<p><strong><font size="+2">4 &#8211; User &amp; Channel Modes<a name="userchannelmodes"></a> 
+<p><strong><font size="+2">5 &#8211; User &amp; Channel Modes<a name="userchannelmodes"></a> 
   </font></strong></p>
 <table width="83%" border="1">
   <tr> 
@@ -1684,7 +1800,7 @@ loadmodule "src/modules/scan_http.so";
   </tr>
 </table>
 <p>&nbsp;</p>
-<p><font size="+2"><strong>5 &#8211; User &amp; Oper Commands Table<a name="useropercommands" id="useropercommands"></a></strong></font></p>
+<p><font size="+2"><strong>6 &#8211; User &amp; Oper Commands Table<a name="useropercommands" id="useropercommands"></a></strong></font></p>
 <table width="75%" border="1">
   <tr> 
     <td width="33%"><div align="center"><strong>Command</strong></div></td>
@@ -1873,7 +1989,7 @@ loadmodule "src/modules/scan_http.so";
   </tr>
   <tr> 
     <td height="39">mode &lt;chan/nick&gt; &lt;mode&gt;<br></td>
-    <td>Lets you set channel and user modes. Refer to section 4 for lists of modes<br></td>
+    <td>Lets you set channel and user modes. Refer to section 5 for lists of modes<br></td>
     <td>All</td>
   </tr>
   <tr> 
@@ -2197,7 +2313,7 @@ loadmodule "src/modules/scan_http.so";
 </table>
 
 <p>&nbsp;</p>
-<p><font size="+2"><strong>6 &#8211; Frequently Asked Questions (FAQ)<a name="faq"></a></strong></font></p>
+<p><font size="+2"><strong>7 &#8211; Frequently Asked Questions (FAQ)<a name="faq"></a></strong></font></p>
 <p>The FAQ is available online <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">here</a></p>
 
 <p>&nbsp;</p>

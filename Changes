@@ -1931,3 +1931,4 @@ seen. gmtime warning still there
 - Fixed win32 compile error
 - Fixed chmode +u again.
 - Fixed a bug reported by mQ where it was possible to include spaces in a TKL host
+- Documentation updates (added a section about features).

@@ -151,7 +151,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 	static char *err_cantsend[] = {
 		"You need voice (+v)",
 		"No external channel messages",
-		"Colour is not permitted in this channel",
+		"Color is not permitted in this channel",
 		"You are banned",
 		"CTCPs are not permitted in this channel",
 		"You must have a registered nick (+r) to talk on this channel",
