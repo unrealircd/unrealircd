@@ -411,7 +411,7 @@
 #define HelpServ "HelpServ"
 #define StatServ "StatServ"
 #define InfoServ "InfoServ"
-
+#define BotServ "BotServ"
 /*
  * How many seconds in between simultaneous nick changes?
  */

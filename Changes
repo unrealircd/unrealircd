@@ -687,3 +687,4 @@
 - Fixed a /list and /quit bug
 - Fixed the masskill bug with replacing "Server Exists" code.. i removed it
   accidentialy last time
+- Added /botserv /bs command, patch by ATHnet.de

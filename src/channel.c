@@ -2081,6 +2081,9 @@ void set_mode(chptr, cptr, parc, parv, pcount, pvar, bounce)
 	u_int what = MODE_ADD;
 	long modetype;
 	int  paracount;
+#ifdef DEVELOP
+	char *tmpo = NULL;
+#endif
 	aCtab *tab = &cFlagTab[0];
 	aCtab foundat;
 	int  found = 0;

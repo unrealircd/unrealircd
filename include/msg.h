@@ -319,6 +319,10 @@
 #define MSG_INFOSERV 	"INFOSERV"
 #define MSG_IS		"IS"
 #define TOK_INFOSERV	"BO"
+
+#define MSG_BOTSERV	"BOTSERV"
+#define TOK_BOTSERV	"BS"
+
 #define MAXPARA    	15
 
 extern int m_private(), m_topic(), m_join(), m_part(), m_mode(), m_svsmode();
@@ -333,8 +337,8 @@ extern int m_protoctl();
 extern int m_motd(), m_who(), m_whois(), m_user(), m_list();
 extern int m_server(), m_info(), m_links(), m_summon(), m_stats();
 extern int m_users(), m_version(), m_help();
-extern int m_nickserv(), m_operserv(), m_chanserv(), m_memoserv(),
-m_infoserv(), m_helpserv(), m_services(), m_identify();
+extern int m_nickserv(), m_operserv(), m_chanserv(), m_memoserv();
+extern int m_infoserv(), m_helpserv(), m_botserv(), m_services(), m_identify();
 extern int m_statserv();
 extern int m_squit(), m_away(), m_connect();
 extern int m_oper(), m_pass(), m_trace();
@@ -506,6 +510,8 @@ struct Message msgtab[] = {
 	{MSG_CRYPTO, m_crypto, 0, MAXPARA, TOK_CRYPTO, 0L},
 #endif
 	{MSG_NEWJOIN, m_join, 0, MAXPARA, TOK_JOIN, 0L},
+	{MSG_BOTSERV, m_botserv, 0, MAXPARA, TOK_BOTSERV,0L},
+	{TOK_BOTSERV, m_botserv, 0, MAXPARA, TOK_BOTSERV,0L},
 	{(char *)0, (int (*)())0, 0, 0, 0, 0L}
 };
 

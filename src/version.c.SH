@@ -156,6 +156,8 @@ char *unrealcredits[] =
 	"Skywalker     Chris Morley            skywalker@irc.ru.ac.za",
 	" - Helping me start up ROXnet at first (which brought me",
 	"   into IRCd business.. + Numerous kicks /Kills akills and alike;)",
+	"*             Alexander Over          alexander@over.de",
+	" - /botserv patch",
 	"zero9000      Kevin Alford",
 	" - UnrealIRCd logo, graphics, null desu ;), ideas etc.",
         "                   \2\37codemastr would like to thank:\2\37", 
