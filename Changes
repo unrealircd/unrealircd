@@ -279,3 +279,4 @@
 - Removed class.c, from the old conf
 - Removed dynconf.c, from the old dynconf
 - Fixed a deny version {} bug (oops)
+- Fixed a config_load win32 problem, found by Zogg, fixed by Stskeeps/codemastr

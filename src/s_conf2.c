@@ -619,7 +619,11 @@ ConfigFile *config_load(char *filename)
 	char		*buf = NULL;
 	ConfigFile	*cfptr;
 
+#ifndef _WIN32
 	fd = open(filename, O_RDONLY);
+#else
+	fd = open(filename, O_RDONLY|O_BINARY);
+#endif
 	if (fd == -1)
 	{
 		config_error("Couldn't open \"%s\": %s\n", filename, strerror(errno));
