@@ -691,7 +691,7 @@ struct User {
 	TS   last;
 	u_int32_t servicestamp;	/* Services' time stamp variable */
 	int  refcnt;		/* Number of times this block is referenced */
-	int  joined;		/* number of channels joined */
+	unsigned short joined;		/* number of channels joined */
 	char username[USERLEN + 1];
 	char realhost[HOSTLEN + 1];
 	char *virthost;
@@ -755,12 +755,12 @@ struct t_kline {
 struct ircstatsx {
 	int  clients;		/* total */
 	int  invisible;		/* invisible */
-	int  servers;		/* servers */
+	unsigned short  servers;		/* servers */
 	int  operators;		/* operators */
 	int  unknown;		/* unknown local connections */
 	int  channels;		/* channels */
 	int  me_clients;	/* my clients */
-	int  me_servers;	/* my servers */
+	unsigned short  me_servers;	/* my servers */
 	int  me_max;		/* local max */
 	int  global_max;	/* global max */
 };
