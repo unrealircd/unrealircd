@@ -1089,3 +1089,5 @@ seen. gmtime warning still there
 - Sts is going for a record here, fixed ANOTHER auth bug in the SAME function
 - Added hunt_server_token (the same as hunt_server except if the
   server supports tokens, the token is used)
+- Added the ability to go to a specific line in the win32 editor
+  by clicking the current line number in the status bar

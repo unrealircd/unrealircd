@@ -977,6 +977,43 @@ HWND DrawToolbar(HWND hwndParent, UINT iID) {
 	return hTool;
 }
 
+HWND DrawStatusbar(HWND hwndParent, UINT iID) {
+	HWND hStatus, hTip;
+	TOOLINFO ti;
+	RECT clrect;
+	hStatus = CreateStatusWindow(WS_CHILD|WS_VISIBLE|SBT_TOOLTIPS, NULL, hwndParent, iID);
+	hTip = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, NULL,
+ 		WS_POPUP|TTS_NOPREFIX|TTS_ALWAYSTIP, 0, 0, 0, 0, hwndParent, NULL, hInst, NULL);
+	GetClientRect(hStatus, &clrect);
+	ti.cbSize = sizeof(TOOLINFO);
+	ti.uFlags = TTF_SUBCLASS;
+	ti.hwnd = hStatus;
+	ti.uId = 1;
+	ti.hinst = hInst;
+	ti.rect = clrect;
+	ti.lpszText = "Go To";
+	SendMessage(hTip, TTM_ADDTOOL, 0, (LPARAM)&ti);
+	return hStatus;
+	
+}
+
+
+LRESULT CALLBACK GotoDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
+	if (message == WM_COMMAND) {
+		if (LOWORD(wParam) == IDCANCEL)
+			EndDialog(hDlg, TRUE);
+		if (LOWORD(wParam) == IDOK) {
+			HWND hWnd = GetDlgItem(GetParent(hDlg),IDC_TEXT);
+			int line = GetDlgItemInt(hDlg, IDC_GOTO, NULL, FALSE);
+			int pos = SendMessage(hWnd, EM_LINEINDEX, (WPARAM)--line, 0);
+			SendMessage(hWnd, EM_SETSEL, (WPARAM)pos, (LPARAM)pos);
+			SendMessage(hWnd, EM_SCROLLCARET, 0, 0);
+			EndDialog(hDlg, TRUE);
+		}
+	}
+	return FALSE;
+}
+
 LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 	HWND hWnd;
 	static FINDREPLACE find;
@@ -991,7 +1028,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			StreamIO *stream = malloc(sizeof(StreamIO));
 			char szText[256];
 			struct stat sb;
-			HWND hWnd = GetDlgItem(hDlg, IDC_TEXT);
+			HWND hWnd = GetDlgItem(hDlg, IDC_TEXT), hTip;
 			file = (char *)lParam;
 			if (file)
 				wsprintf(szText, "UnrealIRCd Editor - %s", file);
@@ -1000,7 +1037,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			SetWindowText(hDlg, szText);
 			lpfnOldWndProc = (FARPROC)SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)RESubClassFunc);
 			hTool = DrawToolbar(hDlg, IDC_TOOLBAR);
-			hStatus = CreateStatusWindow(WS_CHILD|WS_VISIBLE, NULL, hDlg, IDC_STATUS);
+			hStatus = DrawStatusbar(hDlg, IDC_STATUS);
 			SendMessage(hWnd, EM_SETEVENTMASK, 0, (LPARAM)ENM_SELCHANGE);
 			chars.cbSize = sizeof(CHARFORMAT2);
 			chars.dwMask = CFM_FACE;
@@ -1041,7 +1078,8 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			return (TRUE);
 			}
 		case WM_NOTIFY:
-			if (((NMHDR *)lParam)->code == EN_SELCHANGE) {
+			switch (((NMHDR *)lParam)->code) {
+				case EN_SELCHANGE: {
 				HWND hWnd = GetDlgItem(hDlg, IDC_TEXT);
 				DWORD start, end, currline;
 				static DWORD prevline = 0;
@@ -1080,9 +1118,10 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 					SetWindowText(hStatus, buffer);
 					prevline = currline;
 				}
+				}
 				return (TRUE);
-			}
-			if (((NMHDR *)lParam)->code == TTN_GETDISPINFO) {
+			
+			case TTN_GETDISPINFO: {
 				LPTOOLTIPTEXT lpttt = (LPTOOLTIPTEXT) lParam;
 				lpttt->hinst = NULL;
 				switch (lpttt->hdr.idFrom) {
@@ -1117,6 +1156,10 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 						strcpy(lpttt->szText, "Text Color");
 						break;
 				}
+				return (TRUE);
+			}
+			case NM_DBLCLK:
+				DialogBox(hInst, "GOTO", hDlg, (DLGPROC)GotoDLG);
 				return (TRUE);
 			}
 				

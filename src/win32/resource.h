@@ -3,7 +3,7 @@
 // Used by Win32GUI.rc
 //
 #define VER_UNREAL                      1
-#define MANIFEST_RESOURCE_ID 		2
+#define MANIFEST_RESOURCE_ID            2
 #define ICO_MAIN                        129
 #define BMP_LOGO                        130
 #define BMP_BAR                         133
@@ -16,7 +16,7 @@
 #define IDB_BITMAP1                     150
 #define IDC_BAR                         1103
 #define IDC_TOOLBAR                     1104
-#define IDC_STATUS			1105
+#define IDC_STATUS                      1105
 #define IDC_TEXT                        1107
 #define IDC_EMAIL                       1108
 #define IDC_URL                         1109
@@ -38,6 +38,7 @@
 #define IDC_FIND                        1132
 #define IDFIND                          1133
 #define IDC_FINDTEXT                    1135
+#define IDC_GOTO                        1135
 #define IDC_MATCHWHOLE                  1137
 #define IDC_MATCHCASE                   1138
 #define IDC_DIRUP                       1139
@@ -63,8 +64,8 @@
 #define IDM_DAL                         40028
 #define IDM_LICENSE                     40029
 #define IDM_HELP                        40030
-#define IDM_SAVE			40031
-#define IDM_REDO			40032
+#define IDM_SAVE                        40031
+#define IDM_REDO                        40032
 #define IDM_CONF                        40037
 #define IDM_MOTD                        40038
 #define IDM_BOTMOTD                     40039
@@ -97,7 +98,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        151
 #define _APS_NEXT_COMMAND_VALUE         40061
-#define _APS_NEXT_CONTROL_VALUE         1164
+#define _APS_NEXT_CONTROL_VALUE         1166
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -128,23 +128,15 @@ BEGIN
                     WS_VSCROLL
 END
 
-FIND DIALOGEX 0, 0, 240, 76
+GOTO DIALOG DISCARDABLE  0, 0, 124, 52
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Find"
-FONT 8, "MS Sans Serif", 0, 0, 0x1
+CAPTION "Goto"
+FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "Find Next",IDFIND,181,8,50,14,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "Cancel",IDCANCEL,181,25,50,14
-    LTEXT           "Fi&nd what: ",IDC_STATIC,9,12,36,8
-    EDITTEXT        IDC_FINDTEXT,45,9,125,14,ES_AUTOHSCROLL
-    CONTROL         "Match &whole word only",IDC_MATCHWHOLE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,9,30,89,10
-    CONTROL         "Match &case",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,9,42,53,10
-    GROUPBOX        "Direction",IDC_STATIC,99,26,71,30
-    CONTROL         "&Up",IDC_DIRUP,"Button",BS_AUTORADIOBUTTON,105,38,25,10
-    CONTROL         "&Down",IDC_DIRDOWN,"Button",BS_AUTORADIOBUTTON,133,38,
-                    35,10
+    LTEXT           "Line Number:",IDC_STATIC,9,12,43,8
+    EDITTEXT        IDC_GOTO,56,9,48,14,ES_AUTOHSCROLL | ES_NUMBER
+    PUSHBUTTON      "Cancel",IDCANCEL,66,31,50,14
+    DEFPUSHBUTTON   "Go To",IDOK,8,31,50,14
 END
 
 COLOR DIALOG DISCARDABLE  0, 0, 156, 37
@@ -185,7 +177,14 @@ BEGIN
                     12
 END
 
-CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "wircd.exe.manifest"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// 24
+//
+
+1                       24      MOVEABLE PURE   "wircd.exe.manifest"
+
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -269,12 +268,12 @@ BEGIN
         BOTTOMMARGIN, 171
     END
 
-    "FIND", DIALOG
+    "GOTO", DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 233
+        RIGHTMARGIN, 117
         TOPMARGIN, 7
-        BOTTOMMARGIN, 69
+        BOTTOMMARGIN, 45
     END
 
     "COLOR", DIALOG
