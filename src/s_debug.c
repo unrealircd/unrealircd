@@ -56,9 +56,6 @@ char serveropts[] = {
 #ifndef	NO_DEFAULT_INVISIBLE
 	'I',
 #endif
-#ifdef	LEAST_IDLE
-	'L',
-#endif
 #ifdef NOSPOOF
 	'n',
 #endif

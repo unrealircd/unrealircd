@@ -554,7 +554,6 @@
 #endif
 #endif
 
-#undef LEAST_IDLE
 
 #if defined(mips) || defined(PCS)
 #undef SYSV

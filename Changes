@@ -1505,3 +1505,5 @@ seen. gmtime warning still there
 - Converted cr/lf to just lf in doc/unrea32docs.html
 - Fixed a bug where set {} info wasn't cleared out at rehash
 - Removed .NEW_CONFIG referenced from the win32 installer scripts
+- Removed LEAST_IDLE, wtf did that do in the first place?
+
