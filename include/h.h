@@ -351,3 +351,5 @@ extern char *inetntop(int af, const void *in, char *local_dummy,
 char *crule_parse PROTO((char *));
 int crule_eval PROTO((char *));
 void crule_free PROTO((char **));
+
+#define HASH_CHECK BASE_VERSION

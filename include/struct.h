@@ -1254,3 +1254,5 @@ extern char *gnulicense[];
 #include "ssl.h"
 #endif
 #endif /* __struct_include__ */
+
+#define HASH_TEST HASH_CHECK
