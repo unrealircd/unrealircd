@@ -1473,7 +1473,7 @@ struct Command {
 
 struct ThrottlingBucket
 {
-	struct ThrottlingBucket *next, *prev;
+	struct ThrottlingBucket *prev, *next;
 	struct IN_ADDR	in;
 	time_t		since;
 };

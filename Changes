@@ -1866,3 +1866,4 @@ seen. gmtime warning still there
 - Added better (specific) link error messages (only on the "incomming" side) so you can easily
   see whether servername, hostname/ip or username is wrong.
 - Added recvq column to /stats y reply.
+- Fixed a throttling bug reported by Ely (#0000704)
