@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta15<br>
-  <b>Last doc update:</b> 2003-04-11 </div>
+  <b>Last doc update:</b> 2003-04-12 </div>
   <b>Head Coders:</b> Stskeeps / codemastr / Luke / McSkaf / Syzop<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -1782,7 +1782,10 @@ set {
 <p><font class="set">set::ssl::options::verify-certificate;</font><br>
   Makes Unreal determine if the SSL certificate is valid before allowing connection.</p>
 <p><font class="set">set::throttle::period &lt;timevalue&gt;</font><br>
-  How long a user must wait before reconnecting.</p>
+  How long a user must wait before reconnecting more than set::throttle::connections
+  times.</p>
+<p><font class="set">set::throttle::connections &lt;amount&gt;</font><br>
+  How many times a user must connect with the same host to be throttled.</p>
 <p><font class="set">set::anti-flood::unknown-flood-bantime &lt;timevalue&gt;</font><br>
   Specifies how long an unknown connection flooder is banned for.</p>
  <p><font class="set">set::anti-flood::unknown-flood-amount &ltamount&gt</font><br>

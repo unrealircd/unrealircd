@@ -784,6 +784,7 @@ void	add_throttling_bucket(struct IN_ADDR *in)
 	n->next = n->prev = NULL; 
 	bcopy(in, &n->in, sizeof(struct IN_ADDR));
 	n->since = TStime();
+	n->count = 1;
 	hash = hash_throttling(in);
 	AddListItem(n, ThrottlingHash[hash]);
 	return;
@@ -801,13 +802,17 @@ void	del_throttling_bucket(struct ThrottlingBucket *bucket)
 
 int	throttle_can_connect(struct IN_ADDR *in)
 {
-	if (!find_throttling_bucket(in))
+	struct ThrottlingBucket *b;
+	if (!(b = find_throttling_bucket(in)))
 		return 1;
 	else
 	{
 		if (Find_except(Inet_ia2p(in), CONF_EXCEPT_THROTTLE))
-			return 1;
-		return 0;
+			return 2;
+		b->count++;
+		if (b->count > (THROTTLING_COUNT ? THROTTLING_COUNT : 3))
+			return 0;
+		return 2;
 	}
 }
 

@@ -2272,6 +2272,8 @@ void report_dynconf(aClient *sptr)
 #ifdef THROTTLING
 	sendto_one(sptr, ":%s %i %s :throttle::period: %s", me.name, RPL_TEXT,
 			sptr->name, pretty_time_val(THROTTLING_PERIOD ? THROTTLING_PERIOD : 15));
+	sendto_one(sptr, ":%s %i %s :throttle::connections: %d", me.name, RPL_TEXT,
+			sptr->name, THROTTLING_COUNT ? THROTTLING_COUNT : 3);
 #endif
 	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-bantime: %s", me.name, RPL_TEXT,
 			sptr->name, pretty_time_val(UNKNOWN_FLOOD_BANTIME ? UNKNOWN_FLOOD_BANTIME : 600));
@@ -5068,6 +5070,8 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				if (!strcmp(cepp->ce_varname, "period")) 
 					tempiConf.throttle_period = config_checkval(cepp->ce_vardata,CFG_TIME);
+				else if (!strcmp(cepp->ce_varname, "connections"))
+					tempiConf.throttle_count = atoi(cepp->ce_vardata);
 			}
 		}
 #endif
@@ -5447,6 +5451,8 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				CheckNull(cepp);
 				if (!strcmp(cepp->ce_varname, "period")) {
+				}
+				else if (!strcmp(cepp->ce_varname, "connections")) {
 				}
 				else
 				{

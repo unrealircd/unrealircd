@@ -2040,3 +2040,5 @@ seen. gmtime warning still there
 - Improved IPv6 throttle hashing
 - Make the above actually work
 - Improved throttle hashing (both IPv4 and IPv6).
+- Changed throttling so it now bans after M connects in N seconds rather than 2 connects in N 
+  seconds. (set::throttle::connections).

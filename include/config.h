@@ -392,7 +392,7 @@
  * NO_FLOOD_AWAY - enables limiting of how frequently a client can set /away
  */
 
-#define NO_FLOOD_AWAY
+#undef NO_FLOOD_AWAY
 
 /*
  * Define your network service names here.

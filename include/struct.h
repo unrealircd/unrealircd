@@ -1506,6 +1506,7 @@ struct ThrottlingBucket
 	struct ThrottlingBucket *prev, *next;
 	struct IN_ADDR	in;
 	time_t		since;
+	char		count;
 };
 
 void	init_throttling_hash();

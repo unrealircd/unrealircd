@@ -75,6 +75,7 @@ struct zConfiguration {
 	char *name_server;
 #ifdef THROTTLING
 	long throttle_period;
+	char throttle_count;
 #endif
 	char *kline_address;
 	long conn_modes;
@@ -165,6 +166,7 @@ extern aConfiguration iConf;
 #define RESTRICT_CHANNELMODES		iConf.restrict_channelmodes
 #ifdef THROTTLING
 #define THROTTLING_PERIOD		iConf.throttle_period
+#define THROTTLING_COUNT		iConf.throttle_count
 #endif
 #define USE_BAN_VERSION			iConf.use_ban_version
 #define UNKNOWN_FLOOD_BANTIME		iConf.unknown_flood_bantime

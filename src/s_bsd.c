@@ -1262,20 +1262,24 @@ add_con_refuse:
 			goto add_con_refuse;
 		}
 #ifdef THROTTLING
-		else if (!throttle_can_connect(&acptr->ip))
-		{
-			ircsprintf(zlinebuf,
-				"ERROR :Closing Link: [%s] (Throttled: Reconnecting too fast) -"
-					"Email %s for more information.)\r\n",
-					Inet_ia2p(&acptr->ip),
-					KLINE_ADDRESS);
-			set_non_blocking(fd, acptr);
-			set_sock_opts(fd, acptr);
-			send(fd, zlinebuf, strlen(zlinebuf), 0);
-			goto add_con_refuse;
-		}
 		else
-			add_throttling_bucket(&acptr->ip);
+		{
+			int val;
+			if (!(val = throttle_can_connect(&acptr->ip)))
+			{
+				ircsprintf(zlinebuf,
+					"ERROR :Closing Link: [%s] (Throttled: Reconnecting too fast) -"
+						"Email %s for more information.)\r\n",
+						Inet_ia2p(&acptr->ip),
+						KLINE_ADDRESS);
+				set_non_blocking(fd, acptr);
+				set_sock_opts(fd, acptr);
+				send(fd, zlinebuf, strlen(zlinebuf), 0);
+				goto add_con_refuse;
+			}
+			else if (val == 1)
+				add_throttling_bucket(&acptr->ip);
+		}
 #endif
 		acptr->port = ntohs(addr.SIN_PORT);
 	}
