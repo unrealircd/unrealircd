@@ -455,13 +455,15 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 	{
 		sptr->since += TARGET_DELAY; /* lag them up */
 		sptr->nexttarget += TARGET_DELAY;
+		sendto_one(err_str(ERR_TARGETTOOFAST), me.name, sptr->name,
+			name);
 
 		return 1;
 	}
 
 	if (TStime() > sptr->nexttarget + TARGET_DELAY*MAXTARGETS)
 	{
-		sptr->nexttarget = TStime() + TARGET_DELAY*MAXTARGETS;
+		sptr->nexttarget = TStime() - TARGET_DELAY*MAXTARGETS;
 	}
 
 	sptr->nexttarget += TARGET_DELAY;

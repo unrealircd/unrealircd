@@ -1107,3 +1107,4 @@ v- Fixed some bugreport stuff
 - Added can_gzline to doc/conf.doc
 - Replaced EventModEvery with EventMod (allows broader modification)
 - Maybe (but I doubt it) fixed bug #0000040 (Win32 resolver crash) reported by Kyver
+- Hey everyone it's point release time... I completely screwed up check_for_target_limit
