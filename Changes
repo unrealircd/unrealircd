@@ -410,3 +410,8 @@ disabled in unrealircd.conf)
 rmed Config.c (broken, severely) and networks.ndx
 --Luke
 ===================================
+
+Added win32-compile-guide in doc/ for people wanting
+to compile their own version for windows.
+--Luke
+===================================
