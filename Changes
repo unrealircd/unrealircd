@@ -868,3 +868,4 @@ seen. gmtime warning still there
 - Added headers to all the new modules
 - Fixed a typo in config.h
 - Final changes to prepare for beta3
+- Fixed some bugreport stuff
