@@ -490,7 +490,7 @@ int   add_to_watch_hash_table(nick, cptr)
 char  *nick;
 aClient  *cptr;
 {
-	int   hashv;
+	unsigned int   hashv;
 	aWatch  *anptr;
 	Link  *lp;
 	
@@ -543,7 +543,7 @@ int   hash_check_watch(cptr, reply)
 aClient  *cptr;
 int   reply;
 {
-	int   hashv;
+	unsigned int   hashv;
 	aWatch  *anptr;
 	Link  *lp;
 	
@@ -580,7 +580,7 @@ int   reply;
 aWatch  *hash_get_watch(name)
 char  *name;
 {
-	int   hashv;
+	unsigned int   hashv;
 	aWatch  *anptr;
 	
 	
@@ -600,7 +600,7 @@ int   del_from_watch_hash_table(nick, cptr)
 char  *nick;
 aClient  *cptr;
 {
-	int   hashv;
+	unsigned int   hashv;
 	aWatch  *anptr, *nlast = NULL;
 	Link  *lp, *last = NULL;
 	
@@ -678,7 +678,7 @@ aClient  *cptr;
 int   hash_del_watch_list(cptr)
 aClient  *cptr;
 {
-	int   hashv;
+	unsigned int   hashv;
 	aWatch  *anptr;
 	Link  *np, *lp, *last;
 	
