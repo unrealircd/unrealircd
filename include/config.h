@@ -130,7 +130,7 @@
  *   channels, preventing them from "accidentally" joining random
  *   channels
  */
-#define OPEROVERRIDE_VERIFY 1
+#undef OPEROVERRIDE_VERIFY
 
 /*
  * Disable /sethost, /setident, /chgname, /chghost, /chgident 
