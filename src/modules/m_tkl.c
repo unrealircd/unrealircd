@@ -448,7 +448,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 			usermask = "*";
 		}
 		
-		if ((*type == 'z') || (*type == 'Z'))
+		if ((*type == 'z') || (*type == 'Z') && !whattodo)
 		{
 			/* It's a (G)ZLINE, make sure the user isn't specyfing a HOST.
 			 * Just a warning for now, but perhaps in 3.2.4 we should make this an error.
