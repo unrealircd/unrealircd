@@ -1642,6 +1642,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 #endif
 	  case MODE_NOCTCP:
 	  case MODE_ONLYSECURE:
+	  	if (what == MODE_ADD && modetype == MODE_ONLYSECURE && !(IsServer(cptr) || IsULine(cptr) || IsSecure(cptr)))
+			break;	  	
 	  case MODE_NONICKCHANGE:
 	  case MODE_NOINVITE:
 		setthephuckingmode:

@@ -324,3 +324,4 @@
 - Had to convert the connect messages back to strlen() because of a bug found by Bagge
   working on a way to make it better though
 - Added unknown connection flood protection (settable in config.h)
+- Made chmode +z only settable by umode +z users or U:lines or services.
