@@ -2118,31 +2118,6 @@ void set_mode(chptr, cptr, parc, parv, pcount, pvar, bounce)
 			  MyFree(tmpo);
 			  break;
 #endif
-		  case 'x':
-			  if (MyClient(cptr))
-			  {
-				  sendto_one(cptr,
-				      ":%s NOTICE %s :*** Mode not set - Please do not use mode +x as this is now named +c instead (Colorblock)",
-				      me.name, cptr->name);
-				  break;
-			  }
-			  else
-			  {
-				  /* compatiblity */
-				  *curchr = 'c';
-			  }
-			  goto jumpdammit;
-		  case 'I':
-			  if (MyClient(cptr))
-			  {
-				  break;
-			  }
-			  else
-			  {
-				  /* compatiblity */
-				  *curchr = 'V';
-			  }
-			jumpdammit:
 		  default:
 			  found = 0;
 			  tab = &cFlagTab[0];

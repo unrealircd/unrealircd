@@ -94,3 +94,4 @@
 - Fixed a +f bug reported by Enstyne
 - Fixed a SVSMODE/SVS2MODE bug that could cause an incorrect +i and +o count, reported by CaliMonk
 - Fixed another SVS2MODE bug that would make it send an empty MODE change
+- Removed the old chmode +x = +c and +I = +V support (3.x use +cV and 2.1.7 is obsolete)
