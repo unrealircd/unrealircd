@@ -157,8 +157,8 @@ char host[256], *mask, *x, *p, *q;
 	if (!curr)
 		return NULL;
 
-	strlcpy(host, curr, sizeof(curr));
-	for (p = curr, q = host; *p; p++, q++)
+	/* Convert host to lowercase and cut off at 255 bytes just to be sure */
+	for (p = curr, q = host; *p && (q < host+sizeof(host)-1); p++, q++)
 		*q =  tolower(*p);
 	*q = '\0';
 
