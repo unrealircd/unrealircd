@@ -27,6 +27,7 @@ AC_PATH_PROG(OPENSSLPATH,openssl)
 AC_PATH_PROG(INSTALL,install)
 AC_CHECK_PROG(MAKER, gmake, gmake, make)
 AC_PATH_PROG(GMAKE,gmake)
+AC_PATH_PROG(GUNZIP, gunzip)
 dnl Checks for libraries.
 AC_CHECK_LIB(descrypt, crypt, [AC_DEFINE(HAVE_CRYPT) IRCDLIBS="$IRCDLIBS-ldescrypt " MKPASSWDLIBS="-ldescrypt"],
 AC_CHECK_LIB(crypt, crypt,[ AC_DEFINE(HAVE_CRYPT) IRCDLIBS="$IRCDLIBS-lcrypt " MKPASSWDLIBS="-lcrypt"]))
@@ -364,7 +365,14 @@ esac
 AC_MSG_RESULT(extracting TRE regex library)
 cur_dir=`pwd`
 cd extras
-tar xfz tre.tar.gz
+if test "x$ac_cv_path_GUNZIP" = "x" ; then
+	tar xfz tre.tar.gz
+else
+	cp tre.tar.gz tre.tar.gz.bak
+	gunzip -f tre.tar.gz
+	cp tre.tar.gz.bak tre.tar.gz
+	tar xf tre.tar
+fi
 dnl REMEMBER TO CHANGE WITH A NEW RELEASE!
 AC_MSG_RESULT(configuring TRE regex library)
 cd tre-0.6.5

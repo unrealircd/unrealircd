@@ -3009,3 +3009,6 @@ seen. gmtime warning still there
 - Minor doc update.
 - Changed version to RC2
 *** RC2 release ***
+- Fixed a bug regarding the new HOOKTYPE_PRE_LOCAL_JOIN reported by bla
+- Fixed a compile problem on Solaris due to tar not supporting the z option
+*** RC2fix release ***
