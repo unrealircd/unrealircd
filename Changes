@@ -753,7 +753,7 @@ being bounced, so we're not sure why it happens.
 
 *** Unreal 3.1.5 Released ***
 
-[ Unreal 3.1.6 ]
+[ Unreal 3.1.5.1 ]
 --------------------------------------------------
 Had I only known what I was getting myself into...
 --------------------------------------------------
@@ -773,3 +773,10 @@ Fixed compilation error when NO_OPEROVERRIDE is defined,
 reported by Joe.
 --Luke
 ===================================
+
+Ummm, yea, you want to upgrade. There's a, um, bug that
+probably isn't a good thing
+--Luke
+===================================
+
+*** Unreal 3.1.5.1 Released ***

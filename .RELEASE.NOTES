@@ -1,10 +1,13 @@
 
-Unreal3.1.6-Noon Release Notes
+Unreal3.1.5.1-Valek Release Notes
 ===================================
 
-* Beta1
+* Um, yea, so we found this bug...
 
-* If you are upgrading from an earlier version (before 3.1.4),
+* If you are upgrading from Unreal3.1.4-Meadows, please read
+  doc/RELEASE-NOTES.3.1.5 as well.
+
+* If you are upgrading from an even earlier version (before 3.1.4),
   please read the doc/RELEASE-NOTES.3.1.4 file as well. There
   were numerous important/significant changes between 3.1.4 and
   earlier versions.
