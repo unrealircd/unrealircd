@@ -414,3 +414,4 @@
 - Added some more crypto stuff
     - /crypto <algoritm> <keyfile laying in keys/> <parameters>
 - Fixed a ->passwd bug caused by codemastr..
+- Added fclose() calls to the vhost, dccdeny, and chrestrict confs

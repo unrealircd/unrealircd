@@ -284,6 +284,7 @@ int  dcc_loadconf(void)
 				dcc_add_fline(y, z, 0);
 		}
 	}
+	fclose(f);
 	return 0;
 }
 
@@ -547,6 +548,7 @@ int  cr_loadconf(void)
 		}
 
 	}
+	fclose(f);
 	return 0;
 }
 
@@ -687,6 +689,7 @@ int  vhost_loadconf(void)
 			vhost_add(y, login, password, usermask, hostmask);
 		}
 	}
+	fclose(f);
 	return 0;
 }
 
