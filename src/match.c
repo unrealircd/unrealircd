@@ -95,6 +95,7 @@ static inline int match2(char *mask, char *name)
 			cm = *m;
 			if (cm == '\\')	/* don't do ? checking if a \ */
 			{
+				
 				cm = *(++m);	/* just skip this char, no ? checking */
 			}
 			else if (cm == '?')	/* if it's a ? */
@@ -139,6 +140,7 @@ static inline int match2(char *mask, char *name)
 		if (cm == '\\')	/* next char will not be a wildcard. */
 		{		/* skip wild checking, don't continue */
 			cm = lc(*(++m));
+			n++;
 		}
 		/* Complicated to read, but to save CPU time.  Every ounce counts. */
 		if (lc(*n) != cm)	/* if the current chars don't equal, */

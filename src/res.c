@@ -1155,6 +1155,7 @@ struct hostent *get_res(char *lp,long id)
 			bcopy((char *)&rptr->cinfo, lp, sizeof(Link));
 	}
 #else
+/* WIN32 */
         he = rptr->he;
          if (he && he->h_name && ((struct IN_ADDR *)he->h_addr)->S_ADDR &&
 	             rptr->locked < 2)
@@ -1367,13 +1368,8 @@ static void update_list(ResRQ *rptr, aCache *cachep)
 	/*
 	 * Do the same again for IP#'s.
 	 */
-#ifdef INET6
 	for (s = (char *)HE(rptr)->h_addr.S_ADDR;
-	    ((struct IN_ADDR *)s)->S_ADDR; s += sizeof(struct IN_ADDR))
-#else
-	for (s = (char *)&HE(rptr)->h_addr.S_ADDR;
-	    ((struct IN_ADDR *)s)->S_ADDR; s += sizeof(struct IN_ADDR))
-#endif
+	    WHOSTENTP(((struct IN_ADDR *)s)->S_ADDR); s += sizeof(struct IN_ADDR))
 	{
 #ifdef INET6
 		for (i = 0; (t = HE(cp)->h_addr_list[i]); i++)
@@ -1403,10 +1399,18 @@ static void update_list(ResRQ *rptr, aCache *cachep)
 			base = (char **)MyRealloc((char *)ab,
 			    (addrcount + 1) * sizeof(*ab));
 			HE(cp)->h_addr_list = base;
+			ab = (struct IN_ADDR **)HE(cp)->h_addr_list; /* Update after realloc -- Syzop */
 #ifdef	DEBUGMODE
+ #ifdef INET6
+			Debug((DEBUG_DNS, "u_l:add IP %s hal %x ac %d",
+				inet_ntop(((struct IN_ADDR *)s), mydummy,
+				          MYDUMMY_SIZE),
+				HE(cp)->h_addr_list, addrcount));
+ #else
 			Debug((DEBUG_DNS, "u_l:add IP %x hal %x ac %d",
 			    ntohl(((struct IN_ADDR *)s)->S_ADDR),
 			    HE(cp)->h_addr_list, addrcount));
+ #endif
 #endif
 			for (; addrcount; addrcount--)
 			{
@@ -1556,7 +1560,7 @@ static aCache *make_cache(ResRQ *rptr)
 	   ** shouldn't happen but it just might...
 	 */
 #ifndef _WIN32
-	if (!rptr->he.h_name || !rptr->he.h_addr.S_ADDR)
+	if (!rptr->he.h_name || !WHOSTENTP(rptr->he.h_addr.S_ADDR) )
 #else
 		if (!rptr->he->h_name || !((struct IN_ADDR *)rptr->he->h_addr)->S_ADDR)
 #endif

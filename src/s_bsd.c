@@ -750,8 +750,6 @@ int  check_client(aClient *cptr)
 
 	if ((i = AllowClient(cptr, hp, sockname)))
 	{
-		Debug((DEBUG_DNS, "ch_cl: access denied: %s[%s]",
-		    cptr->name, sockname));
 		return i;
 	}
 
@@ -1856,7 +1854,7 @@ deadsocket:
 			)
 			length = read_packet(cptr, &read_set);
 #ifdef USE_SSL
-		if ((cptr->ssl != NULL) && 
+		if ((length != FLUSH_BUFFER) && (cptr->ssl != NULL) && 
 			(IsSSLAcceptHandshake(cptr) || IsSSLConnectHandshake(cptr)) &&
 			FD_ISSET(cptr->fd, &read_set))
 		{

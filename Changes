@@ -1766,3 +1766,4 @@ seen. gmtime warning still there
 - Fixed bug #0000601 reported by cate where specifying just a :port number for set::scan::endpoint 
   caused a seg fault.
 - Added some patches by Syzop to fix a variety of different bugs
+- Added some bugfixes for IPv6 and others by Syzop
