@@ -762,3 +762,4 @@
 - Fixed /SAMODE with no can_override not always working with +G/+j/+T (extcmodes), reported
   by Ron2K (#0002398).
 - Added doc/example.de.conf
+** internal 3.2.3-pre3 release **
