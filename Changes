@@ -1923,3 +1923,4 @@ seen. gmtime warning still there
   an error.
 - Fixed some case insensitive checks in configfile parsing, fixed to be case sensitive.
 - Module changes: added two hooks: HOOKTYPE_USERMSG and HOOKTYPE_CHANMSG, changed umode_get.
+- Fixed bug with chmode +u: Quits/nick changes of other users were shown.
