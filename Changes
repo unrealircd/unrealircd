@@ -1702,3 +1702,4 @@ seen. gmtime warning still there
 - Changed .SICI to point to cacert.org instead (patch by evilbunny)
 - Fixed an oper count bug with SVS2MODE reported by confused (#0000490)
 - Removed m_kline.c and m_zline.c these are now implimented as part of m_tkl.c
+- Implemented a patch by poisoner to log vhosts in connect/disconnect logging (#0000487)

@@ -935,7 +935,12 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 	{
 		IRCstats.unknown--;
 		IRCstats.me_clients++;
-		ircd_log(LOG_CLIENT, "Connect - %s!%s@%s", nick, user->username, user->realhost);
+		if IsHidden(sptr)
+			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s [VHOST %s]", nick,
+				user->username, user->realhost, user->virthost);
+		else
+			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s", nick, user->username,
+				user->realhost);
 		sendto_one(sptr, rpl_str(RPL_WELCOME), me.name, nick,
 		    ircnetwork, nick, user->username, user->realhost);
 		/* This is a duplicate of the NOTICE but see below... */
