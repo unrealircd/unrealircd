@@ -620,3 +620,22 @@ Fixed OPEROVERRIDE_VERIFY Bug
 ===================================
 
 *** Unreal3.1.4 Released ***
+
+[ Unreal 3.1.5 ]
+
+------------------------------------------
+We begin this release with a stupid
+bug fix. Yes, I severely broke userhost.
+I'm sorry.
+------------------------------------------
+
+Beta1
+----------------------------
+
+Fixed userhost displaying * all the time
+--Luke
+===================================
+
+Fixed broken m_invite, thanks to codemastr
+--Luke
+===================================

@@ -4136,8 +4136,8 @@ int  m_userhost(cptr, sptr, parc, parv)
         {
           ircsprintf(response[i], "%s%s=%c%s@%s",
                      acptr->name,
-                     (IsAnOper(acptr) && (((acptr != sptr) && IsOper(sptr) && IsHideOper(acptr)))
-		          || (!IsHideOper(acptr)) || (acptr == sptr)) ? "*" : "",
+                     (IsAnOper(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
+		          ? "*" : "",
                      (acptr->user->away) ? '-' : '+',
                      acptr->user->username,
    			((acptr != sptr) && !IsOper(sptr) 
