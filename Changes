@@ -349,3 +349,4 @@
 - Removed networks/unrealircd.conf
 - Implimented new logging system using log {} (if you leave it out it reverts to the old ircd.log)
 - Added Hooks, only one working now is HOOKTYPE_LOCAL_QUIT 
+- Added log flag kline (accidentily forgot it)
