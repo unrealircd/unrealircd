@@ -1,7 +1,7 @@
 ###############################################################################
 ####               Unreal IRC Unix Daemon Installation Guide               ####
 ####                         UnrealIRCD ver 3.2                            ####
-####                    unreal-dev@lists.sourceforge.com                   ####
+####                     coders@lists.unrealircd.org                       ####
 ####                      http://www.unrealircd.com/                       ####
 ###############################################################################
 ####                       Unpackaging the IRCD                            ####
@@ -39,10 +39,9 @@
 ####                                                                       ####
 ####      ./Config                                                         ####
 ####                                                                       ####
-####   2a) Windows users: please read WIN32                                ####
 ####                                                                       ####
 ####   3) When in ./Config put in the best answers to your knowledge.      ####
-####      This is all pretty self explanatory. We suggest, to advoid       ####
+####      This is all pretty self explanatory. We suggest, to avoid        ####
 ####      problems later on, put the DPATH and SPATH as the default.       ####
 ####      (When it asks where the config files and binarys will be).       ####
 ####      Also, when it asks for max file connections, the default is      ####
@@ -66,22 +65,33 @@
 ####                     Configuring the Server                            ####
 ####                                                                       ####
 ####   1) ./makeconf                                                       ####
-####      This executable has been created to help with your ircd.conf     ####
-####      creation process. It walks you through the steps and makes the   ####
-####      file for you. Note: If you want to edit your ircd.conf you       ####
-####      should only need to: edit ircd.conf. If you ./makeconf again     ####
-####      it will delete the old ircd.conf and re-write a new one.         ####
+####      This will help you create an unrealircd.conf file for your ircd. ####
+####      It walks you through the steps and makes the file for you. Note: ####
+####      If you want to edit your unrealircd.conf you should only need    ####
+####      to: edit unrealircd.conf. If you ./makeconf again it will delete ####
+####      the old unrealircd.conf and re-write a new one.                  ####
+####                                                                       ####
+####   2) ./networks/makenet                                               ####
+####      This will guide you through the process of creating a network    ####
+####      file for use with your ircd. It will also give you the option of ####
+####      submitting your network file so it will be automatically         ####
+####      included in future releases. Please only submit the file once    ####
+####      per network.                                                     ####
+####                                                                       ####
+####   3) Review doc/example.conf and doc/conf.doc on other configuration  ####
+####      options you may want to set. Also review the others docs in this ####
+####      folder as they may help you get your IRCd going.                 ####
 ####                                                                       ####
 ###############################################################################
 ####                        Starting the Server                            ####
 ####                                                                       ####
-####   1) Make sure you're in the top level Unreal3.1.1 directory..        ####
+####   1) Make sure you're in the top level Unreal3.2 directory..          ####
 ####                                                                       ####
-####   2) ./ircd                                                           ####
+####   2) ./unreal start                                                   ####
 ####                                                                       ####
 ####   3) If you get the error screen, please go through and check each    ####
 ####      point presented, if you have no luck, go on IRC                  ####
-####      /server irc.ircsystems.net  #Unreal-support                      ####
+####      /server irc.ircsystems.net #Unreal-support                       ####
 ####                                                                       ####
 ####   4) /server yourserverip or domainname                               ####
 ####                                                                       ####
