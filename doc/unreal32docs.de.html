@@ -128,14 +128,13 @@ Konfigurationsdatei</a><br>
 ---A.2. <a href="#regexdot">Punkt Operator</a> 
 <br>
 ---A.3. <a href="#regexrep">Wiederholungs Operatoren</a><br>
----A.4. <a href="#regexbracket"> Bracket Ausdrücke</a> 
-</p>
-<p><br>
----A.5. Assertions<br>
----A.6. Alternation<br>
----A.7. Subexpressions<br>
----A.8. Back References<br>
----A.9. Case Sensitivity<br>
+---A.4. <a href="#regexbracket">Klammer Ausdrücke</a> 
+<br>
+---A.5. <a href="#regexassert"> Assertions</a><br>
+---A.6. <a href="#regexalt"> Alternation</a><br>
+---A.7. <a href="#regexsub">Unterausdrücke</a><br>
+---A.8. <a href="#regexbackref">Rückverweise</a><br>
+---A.9. <a href="#regexcase">Gross- und Kleinschreibung</a>
 <br>
 </p>
 <p><b><font size="+2"><a name="IntroductionNotes">1.0 &#8211; Einführung &amp;
@@ -4162,7 +4161,7 @@ Datei</a></b></font></p>
   charakteristische für diese Wiederholungs Operatoren ist. Regex "a*c" passt
   auf 0 oder mehrere a's denen ein &quot;c&quot; folgt. Z.B. passt "aaaaaac",
   aber nicht &quot;aaaaabc&quot;. Auch hier kann man, damit das Ganze wie
-  Wildcards funktioniert,&nbsp; "a.*c" verwenden.&nbsp;</p><p>Der + Opperator
+  Wildcards funktioniert,&nbsp; "a.*c" verwenden.&nbsp;</p><p>Der + Operator
   ist dem * sehr ähnlich. Allerdings passt er auf&nbsp; 1 mal oder mehr, statt
   0 mal oder mehr. Damit wird z.B.&nbsp; "a*c" auf &quot;c&quot; passen,&nbsp; (0 a's
   gefolgt von einem&nbsp; c), ein&nbsp; "a+c" dagegen nicht. Das "a+" gibt an,
@@ -4201,21 +4200,221 @@ Datei</a></b></font></p>
   ein ? hinter den Wiederholungs Operator setzt. Wird ein&nbsp; ".+?L" gesetzt,
   passt das .+? nun auf&nbsp; "HE" eher als auf "HEL". Das ? kann hinter alle
   Wiederholungs Operatoren gesetzt werden: ??, *?, +?, {M,N}?.</p></div>
-<br>
-<font size="+2"><b><a name="regexbracket">A.4. Bracket Ausdrücke</a></b></font>
+&nbsp;
+<p>
+<font size="+2"><b><a name="regexbracket">A.4. Klammer Ausdrücke</a></b></font>
+</p>
+<div class="desc">
+  <p>Klammer Ausdrücke bilden einen bequemen Weg für einen&nbsp; "oder" Operator
+  dar, wenn man z.B. festlegen will &quot;passt auf a oder b&quot;. Diese
+  Ausdrücke werden von eckigen Klammern ([]) eingeschlossen. (Dies Klammern
+  heißen im Englischen 'Brackets', daher die englische Bezeichnung 'Bracket
+  Expression'). In der einfachsten Syntax enthalten die Klammern eine Reihe von
+  Zeichen, die dann so behandelt werden, als stünde ein &quot;oder&quot;
+  zwischen ihnen. Beispielsweise passt der Ausdruck "[abc]" auf ein "a," ein "b,"
+  oder ein "c." Daher passt auf regexp "a[bd]c" zwar "abc" und "adc" aber nicht "acc."<br>
+  <br>
+  Sehr häufig wird auf Zeichen wie einen Buchstaben oder eine Ziffer geprüft,
+  aber der Klammer Ausdruck unterstützt auch Bereiche, wenn man z.B. so etwas
+  wie &quot;[0123456789]&quot; benötigt. Bereiche werden durch einen Anfangs-
+  und deinen Endwert definiert und dazwischen ein '-'. Daher ist ein einfacher
+  Weg, um auf eine Ziffer zu testen die Angaben von "[0-9]". Auf demselben Weg
+  kann auch auf Buchstaben getestet werden oder auch jeden anderen Bereich von
+  ASCII Werten. Um auf einen Buchstaben zu prüfe, gibt man also an: "[a-z]".
+  Und da Unreal 'case insensitive' ist, also nicht zwischen Groß- und
+  Kleinbuchstaben unterschieden wird, passt dies auf alle Buchstaben. Man kann
+  auch mehrere Bereiche innerhalb eines Ausdrucks angeben. Um auf eine Ziffer
+  oder einen Buchstaben (aber nicht auf Satzzeichen) zu testen, gibt man an: "[0-9a-z]".
+  Ein kleines Problem stellt dar, dass das Minuszeichen ('-') ja ein
+  Sonderzeichen innerhalb der Klammer ist. Muss auf dieses Zeichen getestet
+  werden, ist der einfachste Weg, es ganz zu Beginn oder ganz am Ende des
+  Ausdruckes anzugeben. Beispielsweise passt auf "[0-9-]" eine Ziffer oder ein -.<br>
+  <br>
+  Zur Vereinfachung von Definitionen gibt es eine Reihe von &quot;Zeichen
+  Klassen&quot;, die innerhalb eines Klammer Ausdrucks benutzt werden
+  können.Durch diese Zeichenklassen kann auf die Definitionen von Bereichen
+  verzichtet werden. Zeichenklassen werden durch ihren Namen, eingeschlossen in
+  Doppelpunkten spezifiziert. Ein Beispiel: "[0-9]" könnte auch als&nbsp; "[:isdigit:]&quot;
+  angegeben werden. Die nachfolgende Liste zeigt die verfügbaren Klassen an:<br>
+  </p>
+  <ul>
+    <li>
+      <p>alnum - alphanumerische Zeichen (a-z, 0-9)</p>
+    </li>
+    <li>
+      <p>alpha - alphabetische Zeichen (a-z)</p>
+    </li>
+    <li>
+      <p>blank - Leerzeichen</p>
+    </li>
+    <li>
+      <p>cntrl - Steuerungszeichen</p>
+    </li>
+    <li>
+      <p>digit - dezimale Ziffern (0 - 9)</p>
+    </li>
+    <li>
+      <p>graph - alle druckbaren Zeichen außer Leerzeichen</p>
+    </li>
+    <li>
+      <p>lower - Kleinbuchstaben</p>
+    </li>
+    <li>
+      <p>print - alle druckbaren Zeichen incl. Leerzeichen</p>
+    </li>
+    <li>
+      <p>punct - druckbare zeichen, die nicht Leerzeichen oder alphanumerisch
+      sind (%&amp;/+= etc.)</p>
+    </li>
+    <li>
+      <p>space - Leerzeichen</p>
+    </li>
+    <li>
+      <p>upper - Großbuchstaben</p>
+    </li>
+    <li>
+      <p>xdigit - Hexadezimale Ziffern (0-9, A-F)</p>
+    </li>
+  </ul>
+  <p><br>
+  Eine wichtige Anmerkung bei der Verwendung von Zeichenklassen ist, dass sie
+  das einzige Element in einem Ausdruck sein müssen. So ist z.B. [:isdigit:-]
+  NICHT gültig. Statt dessen kann man allerdings Ausdrücke schachteln und z.B. "[0-9-]"
+  unter Verwendung einer Zeichenklasse so darstellen: "[[:isdigit:]-]".<br>
+  <br>
+  Ein weiteres Feature der Klammer Ausdrücke ist die Negierung. Manchmal ist es
+  sinnvoll zu definieren "alles außer diesen Zeichen&quot;. Soll beispielsweise
+  auf &quot;kein Buchstabe&quot; geprüft werden, ist es einfacher a-z anzugeben
+  und zu sagen &quot;nicht diese&quot;, als sämtliche Nicht-Buchstaben
+  aufzulisten. Eine Negierung wird durch ein &quot;^&quot; als erstes Zeichen im
+  Ausdruck definiert. Somit würde "[^a-z]" auf jedes Nicht-Buxchstaben Zeichen
+  zutreffen. Ähnlich dem '-' darf man, falls man das '^' als Literal testen
+  möchte, dies nicht an erster Stelle angeben sondern so: "[a-z^]". Um eine
+  Zeichenklasse zu negieren, muss der Ausdruck ebenfalls verschachtelt werden.;
+  so würde "[^[:isdigit:]]" auf jedes Nicht-Ziffer Zeichen passen.</p>
+</div>
 <p>&nbsp;</p>
 <p>
----A.5. Assertions</p>
-<p><br>
----A.6. Alternation</p>
-<p><br>
----A.7. Subexpressions</p>
-<p><br>
----A.8. Back References</p>
-<p><br>
----A.9. Case Sensitivity</p>
-<p><br>
-<br>
+<font size="+2"><b><a name="regexassert">A.5. Assertions</a></b></font></p>
+<div class="desc"><p>Assertions gestatten es, auf bestimmte Bedingungen zu
+  testen, die nicht durch Zeichenstring dargestellt werden können und
+  ermöglichen Kurzformen für einige Klammerausdrücke.<br>
+  <br>
+  Das Zeichen ^ hat die Bedeutung &quot;linker Fixpunkt&quot; und legt den
+  Beginn eines Strings fest. Legt man eine einfache Regex &quot;test&quot; fest,
+  so passt dies z.B. auch auf&nbsp; &quot;dies ist ein test", da der String ja
+  &quot;test&quot; enthält. Manchmal ist es jedoch auch erforderlich, auf daruf
+  zu testen, dass ein String mit einem bestimmten Wort beginnt. Die kann durch
+  '^' bewirkt werden. "^test" bedeutet z.B., das der Text mit dem Wort&nbsp;
+  &quot;test&quot; beginnen muss. Des weiteren ist das Zeichen&nbsp; $ der
+  &quot;rechte Fixpunkt&quot; und bedeutet das Ende eines Strings. Analog wird
+  hier auf ein bestimmtes Wort am Ende des Strings getestet. Definiert man "^test$",
+  dann muss der String exakt das Wort &quot;test&quot; sein.<br>
+  <br>
+  Ähnlich wird auf die Existenz von Worten geprüft. Alle anderen Assertions
+  beginnen mit einem \ gefolgt von einem speziellen Zeichen. Z.B, würde man zu
+  Test auf Beginn oder Ende eines Wortes&nbsp; \&lt; bzw. \> benutzen.<br>
+  <br>
+  Die verbleibenden&nbsp; Assertions gibt es alle in zwei Formen, eine positive
+  und eine negative. Hier eine Auflistung:</p>
+  <ul>
+    <li>
+      <p>\b - Wortende</p>
+    </li>
+    <li>
+      <p>\B - Kein Wortende</p>
+    </li>
+    <li>
+      <p>\d - Zahlzeichen (analog zu [[:digit:]])</p>
+    </li>
+    <li>
+      <p>\D - Kein Zahlzeichen (analog zu [^[:digit:]])</p>
+    </li>
+    <li>
+      <p>\s - Leerzeichen (analog zu [[:space:]])</p>
+    </li>
+    <li>
+      <p>\S - Kein&nbsp; Leerzeichen (analog zu [^[:space:]])</p>
+    </li>
+    <li>
+      <p>\w - Wortzeichen (analog zu [[:alnum:]_])</p>
+    </li>
+    <li>
+      <p>\W - Kein Wortzeichen (analog zu [^[:alnum:]_])</p>
+    </li>
+  </ul>
+  <p>&nbsp;</p></div>
+<p>&nbsp;</p>
+<p><font size="+2"><b><a name="regexalt">A.6. Alternation</a></b></font></p>
+<div class="desc"><p>Alternation ist eine Methode, um &quot;oder&quot;
+  auszudrücken. Der Operator für die Alternation ist der senkrechte Strich&nbsp;
+  (' |'). Will man z.B. &quot;a oder b&quot; ausdrücken, würde man &quot;a|b&quot;
+  definieren. Bei normalen Buchstaben könnte dies auch durch Klammer Ausdruck
+  festgelegt werden, aber Alternation kann auch in Unterausdrücken (sihe weiter
+  unten) benutzt werden.</p></div>
+<p>&nbsp;</p>
+<p><font size="+2"><b><a name="regexsub">A.7. Unterausdrücke</a></b></font></p>
+<div class="desc"><p>Unterausdrücke sind ein Teil eines Regulären Ausdrucks,
+  der als einzelnes Element behandelt wird. Es gibt zwei Wege, um einen
+  Unterausdruck zu erstellen. Die zwei Methoden unterscheiden sich in bezug auf "back
+  references&quot;, die im nächsten Abschnitt erläutert werden. Zur
+  Deklaration eines Unterausdrucks, der&nbsp; back references benutzt, ist
+  dieser einfach in normale Klammern ( ) einzuschließen. Zur Deklaration eines
+  Unterausdrucks, der&nbsp; keine back references benutzt, wird die geöffnete
+  Klammer durch &quot;(?:&quot; ersetzt. Beispiele: "([a-z])" und "(?:[a-z])".
+  Unterausdrücke sind deswegen so nützlich, weil man den Ausdrücken
+  Operatoren hinzufügen kann. Beispielsweise können alle
+  Wiederholungsoperatoren mit der Bedeutung &quot;X oder mehr des vorherigen
+  Zeichens&quot; auch für &quot;X oder mehr des vorherigen Unterausdrucks&quot;
+  benutzt werden. Ein Beispiel: Hat man einen Regex von "[0-9][a-z][0-9]", um
+  auf die Folge &quot;Ziffer - Buchstabe - Ziffer&quot; zu testen und man
+  benötigt dies Folge nun doppelt, so müsste man angeben: "[0-9][a-z][0-9][0-9][a-z][0-9]".
+  Mit Unterausdrücken würde man das so angeben: "([0-9][a-z][0-9]){2}".</p></div>
+<p>&nbsp;</p>
+<p><font size="+2"><b><a name="regexbackref">A.8. Rückverweise</a></b></font></p>
+<div class="desc"><p>Rückverweise gestatten es, einen String zu bezeichnen, der
+  auf einen der Unterausdrücke einer Regex passt. Rückverweise werden durch
+  einen Backslash ( \ ), gefolgt von einer Ziffer 0-9Nummer festgelegt.
+  (Beispiel: \1). \0 ist ein spezieller Rückverweis, der den gesamten Regex
+  bezeichnet statt eines Unterausdrucks. Rückverweise können dann nützlich
+  sein, wenn derselbe String zwei mal zu testen ist..&nbsp;</p><p>Beispielsweise
+  sei angenommen, es gebe einen nick!user@host und es gebe einen Trojaner, der
+  Nickname und Username benutzt, die zu&nbsp; &quot;[0-9][a-z]{5}&quot; passen
+  und Nick. und Username sind identisch. Hier nun&nbsp; "[0-9][a-z]{5}![0-9][a-z]{5}@.+"
+  zu benutzen, wird nicht funktionieren, da es dabei erlaubt wäre, dass sich
+  Nick- und Username unterscheiden. Der Nickname könnte z.B.1abcde und
+  der&nbsp; Username 2fghij. Back references erlauben es nun, diese
+  Einschränkung zu umgehen. Der Eintrag "([0-9][a-z]{5})!\1@.+" wird exakt wie
+  erwartet funktionieren. Damit wird nach einem Nicknamen gesucht, auf den der
+  gegebene Unterausdruck passt und dann ein Rückverweis benutzt, um anzugeben,
+  dass der Username derselbe Text sein muss.<br>
+  <br>
+  Da man nur 9 Rückverweise definieren kann ist die Notation (?:) aus Abschnitt
+  A.7. so nützlich. Damit kann man Unterausdrücke ohne Verwendung von
+  Rückverweisen festlegen. Dies ist auch schneller und daher sollten Ausdrücke
+  ohne Rückverweise benutzt werden, wann immer dies möglich ist und
+  Rückverweise nicht erforderlich sind..</p></div>
+<p>&nbsp;</p>
+<p><font size="+2"><b><a name="regexcase">A.9. Gross- und Kleinschreibung</a></b></font></p>
+<div class="desc"><p>Es wurde schon erwähnt, dass Unreal bei allen Regexps per
+  Default nicht zwischen Groß- und Kleinschreibung unterscheidet. Hauptgrund
+  hierfür ist, dass es deutlich mehr Gründe für Suchen ohne Berücksichtigung
+  von Groß- und Kleinschreibung gibt, als dafür. Möchte man beispielsweise
+  den Text &quot;www.test.com&quot; blocken, soll dies im Allgemeinen auch für
+  &quot;WWW.TEST.COM&quot; gelten. Allerdings kann es auch erforderlich sein,
+  z.B. bei der Suche nach bestimmten Trojanern, sehr wohl zwischen Groß- und
+  Kleinschreibung zu unterscheiden. Deswegen gibt es die Möglichkeit, dynamisch
+  die Prüfung auf Groß- und Kleinschreibung ein oder auszuschalten. Es gibt
+  hierzu&nbsp; "(?-i)" und "(?i)".</p><p>?-i&nbsp;&nbsp;&nbsp; case insentivity
+  ist aus&nbsp;&nbsp;&nbsp;&nbsp; Unterscheidung, ob Groß- oder Kleinschreibung<br>
+  ?i&nbsp;&nbsp;&nbsp;&nbsp; case insentivity ist
+  an&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Keine Unterscheidung auf Groß und
+  Klein&nbsp;</p><p>Beispiel: &quot;(?-i)[a-z](?i)[a-z]&quot; prüft auf
+  Kleinbuchstaben (case insensitivity ist aus)&nbsp; gefolgt von entweder groß-
+  oder Kleinbuchstaven (case insensitivity ist an). Anstatt sich immer an den
+  Zustand des Flags erinnern zu müssen, kann man den Flagwechsel auch in
+  Unterausdrücken festlegen, wie z.B.: &quot;(?-i:[a-z])[a-z]&quot;.</p></div>
+<p>&nbsp;
 </p>
 </body>
 </html>
