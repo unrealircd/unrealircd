@@ -1806,7 +1806,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  if (MyClient(cptr))
 			  {
 				  sendto_one(cptr,
-				      ":%s %s %s :*** You cannot %s %s in %s, they are the channel owner (+q).",
+				      ":%s %s %s :*** You cannot %s %s in %s, (s)he is the channel owner (+q).",
 				      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name, xxx,
 				      member->cptr->name, chptr->chname);
 			  }
@@ -1820,7 +1820,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  if (MyClient(cptr))
 			  {
 				  sendto_one(cptr,
-				      ":%s %s %s :*** You cannot %s %s in %s, they are a protected user (+a).",
+				      ":%s %s %s :*** You cannot %s %s in %s, (s)he is a protected user (+a).",
 				      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name, xxx,
 				      member->cptr->name, chptr->chname);
 			  }
@@ -3473,6 +3473,15 @@ CMD_FUNC(m_kick)
 				{
 					sendto_one(sptr,
 					    ":%s %s %s :*** You cannot kick channel operators on %s if you only are halfop",
+					    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, chptr->chname);
+					goto deny;
+				}
+				if (is_halfop(who, chptr)
+				    && is_halfop(sptr,chptr)
+				    && !is_chan_op(sptr, chptr))
+				{
+					sendto_one(sptr,
+					    ":%s %s %s :*** You cannot kick channel halfops on %s if you only are halfop",
 					    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, chptr->chname);
 					goto deny;
 				}	/* halfop */

@@ -1509,3 +1509,5 @@ seen. gmtime warning still there
 - Added version flags (O and o) for oper override and oper override verify
 - FAKE_LAG_FOR_LOCOPS define added in config.h - enables local ops to
   override RFC1459 flood control
+- Fixed grammar error thanks to MorPheus
+- Fixed halfops kicking halfops bug thanks to Jim_
