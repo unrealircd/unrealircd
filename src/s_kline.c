@@ -873,8 +873,9 @@ int  m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	int  whattodo = 0;	/* 0 = add  1 = del */
 	int  found = 0;
 	int  i;
+	aClient *acptr;
 	char *mask = NULL;
-	char mo[1024], mo2[1024];
+	char mo[1024], mo2[1024], mo3[512];
 	char *p, *usermask, *hostmask;
 	char *tkllayer[9] = {
 		me.name,	/*0  server.name */
@@ -945,12 +946,25 @@ int  m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	p = strchr(mask, '@');
 	if (!p || (p == mask))
 	{
+		acptr = NULL;
+		if (!p && (whattodo == 0))
+		{
+			acptr = find_person(mask, NULL);
+			if (acptr)
+			{
+				ircsprintf(mo3, "*@%s", acptr->user->realhost);
+				mask = mo3;
+				goto mm;
+			}
+		}		
+
 		sendto_one(sptr,
-		    ":%s NOTICE %s :*** [Shun error] Please use a user@host mask.",
+		    ":%s NOTICE %s :*** [Shun error] Please use a user@host mask or an existing nickname.",
 		    me.name, sptr->name);
 		return 0;
 	}
-
+	
+	mm:
 	if (whattodo == 1)
 		goto nochecks;
 	if (p)
