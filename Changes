@@ -363,3 +363,4 @@
   by people who shouldn't have access. (set through ./Config)
 - Added oper::swhois idea by Robertsog (NOTE: since this is done before the mode change, a U:Line changing
   the SWHOIS after you /oper will override this)
+- Added a donation credit
