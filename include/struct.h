@@ -64,6 +64,8 @@ typedef struct t_vhost aVhost;
 typedef struct SqlineItem aSqlineItem;
 typedef struct aloopStruct LoopStruct;
 typedef struct ConfItem aConfItem;
+typedef struct _configentry ConfigEntry;
+typedef struct _configfile ConfigFile;
 typedef struct Notify aNotify;
 typedef struct Client aClient;
 typedef struct Channel aChannel;
@@ -864,8 +866,39 @@ struct Client {
 #endif
 };
 
+
 #define	CLIENT_LOCAL_SIZE sizeof(aClient)
 #define	CLIENT_REMOTE_SIZE offsetof(aClient,count)
+
+/*
+ * conf2 stuff -stskeeps
+*/ 
+struct _configfile
+{
+        char            *cf_filename;
+        ConfigEntry     *cf_entries;
+        ConfigFile     *cf_next;
+};
+
+struct _configentry
+{
+        ConfigFile     *ce_fileptr;
+
+        int                     ce_varlinenum;
+        char            *ce_varname;
+        char            *ce_vardata;
+        int                     ce_vardatanum;
+        int                     ce_fileposstart;
+        int                     ce_fileposend;
+
+        int                     ce_sectlinenum;
+        ConfigEntry     *ce_entries;
+
+        ConfigEntry     *ce_prevlevel;
+
+        ConfigEntry     *ce_next;
+};
+
 
 /*
  * statistics structures

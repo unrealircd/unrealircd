@@ -1001,6 +1001,7 @@ int  InitwIRCD(argc, argv)
 	initwhowas();
 	initstats();
 	booted = FALSE;
+	init_conf2("unrealircd.conf");
 	init_dynconf();
 	load_conf(ZCONF, 0);
 	doneconf(0);
