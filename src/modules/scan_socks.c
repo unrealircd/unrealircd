@@ -148,9 +148,9 @@ void scan_socks_scan(Scan_AddrStruct *h)
 	THREAD thread[2];
 	IRCMutexLock((h->lock));
 	h->refcnt++;
-	IRCCreateThread(thread[0], scan_socks4_scan, h);
+	IRCCreateThreadEx(thread[0], scan_socks4_scan, h);
 	h->refcnt++;
-	IRCCreateThread(thread[1], scan_socks5_scan, h);
+	IRCCreateThreadEx(thread[1], scan_socks5_scan, h);
 	IRCMutexUnlock((h->lock));
 	IRCJoinThread(thread[0], NULL);
 	IRCJoinThread(thread[1], NULL);
@@ -158,7 +158,6 @@ void scan_socks_scan(Scan_AddrStruct *h)
 	h->refcnt--;
 	IRCMutexUnlock((h->lock));
 	IRCDetachThread(IRCThreadSelf());
-	IRCExitThread(NULL);
 	return;
 }
 	

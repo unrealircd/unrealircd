@@ -1703,3 +1703,4 @@ seen. gmtime warning still there
 - Fixed an oper count bug with SVS2MODE reported by confused (#0000490)
 - Removed m_kline.c and m_zline.c these are now implimented as part of m_tkl.c
 - Implemented a patch by poisoner to log vhosts in connect/disconnect logging (#0000487)
+- Made some changes to the thread API to fix some win32 crashes

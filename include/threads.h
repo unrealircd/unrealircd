@@ -35,13 +35,15 @@
 #include <pthread.h>
 typedef pthread_t THREAD;
 typedef pthread_mutex_t MUTEX;
-#define IRCCreateThread(thread, start, arg) TDebug(CreateThread); pthread_create(&thread, NULL, (void*)start, arg)
+#define IRCCreateThreadEx(thread, start, arg) TDebug(CreateThread); pthread_create(&thread, NULL, (void*)start, arg)
+ #define IRCCreateThread(thread, start, arg) TDebug(CreateThread); pthread_create(&thread, NULL, (void*)start, arg)
 #define IRCMutexLock(mutex) TDebug(MutexLock); pthread_mutex_lock(&mutex)
 #define IRCMutexTryLock(mutex) TDebug(MutexTryLock); pthread_mutex_trylock(&mutex);
 #define IRCMutexUnlock(mutex) TDebug(MutexUnlcok); pthread_mutex_unlock(&mutex)
 #define IRCCreateMutex(mutex) TDebug(CreateMutex); pthread_mutex_init(&mutex, NULL)
 #define IRCMutexDestroy(mutex) TDebug(MutexDestroy); pthread_mutex_destroy(&mutex)
 #define IRCJoinThread(thread,return) TDebug(JoinThread); pthread_join(thread, return)
+#define IRCExitThreadEx(value) TDebug(ExitThread); pthread_exit(value)
 #define IRCExitThread(value) TDebug(ExitThread); pthread_exit(value)
 #define IRCDetachThread(value) TDebug(DetachThread); pthread_detach(value);
 #define IRCTerminateThread(thread, value) pthread_cancel(&thread)
@@ -50,13 +52,15 @@ typedef pthread_mutex_t MUTEX;
 #else
 typedef unsigned long THREAD;
 typedef HANDLE MUTEX;
+#define IRCCreateThreadEx(thread, start, arg) _beginthreadex(NULL, 0, (void *)start, arg, 0, &thread)
 #define IRCCreateThread(thread, start, arg) thread = _beginthread((void *)start, 0, arg)
 #define IRCMutexLock(mutex) WaitForSingleObject(mutex, INFINITE)
 #define IRCMutexTryLock(mutex) WaitForSingleObject(mutex, 0)
 #define IRCMutexUnlock(mutex) ReleaseMutex(mutex)
 #define IRCCreateMutex(mutex) mutex = CreateMutex(NULL, FALSE, NULL)
 #define IRCMutexDestroy(mutex) CloseHandle(mutex)
-#define IRCJoinThread(thread,return) WaitForSingleObject((HANDLE)thread, INFINITE); GetExitCodeThread((HANDLE)thread, (DWORD)return);
+#define IRCJoinThread(thread,return) { WaitForSingleObject((HANDLE)thread, INFINITE); GetExitCodeThread((HANDLE)thread, (DWORD)return); CloseHandle((HANDLE)thread); }
+#define IRCExitThreadEx(value) _endthreadex((unsigned int)value)
 #define IRCExitThread(value) _endthread()
 #define IRCTerminateThread(thread, value) TerminateThread((HANDLE)thread, value)
 #define IRCThreadSelf() GetCurrentThread()
