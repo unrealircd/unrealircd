@@ -1254,6 +1254,7 @@ add_con_refuse:
 	if (cptr->umodes & LISTENER_SSL)
 	{
 		SetSSLAcceptHandshake(acptr);
+		Debug((DEBUG_DEBUG, "Starting SSL accept handshake for %s", sptr->sockhost));
 		if ((acptr->ssl = SSL_new(ctx_server)) == NULL)
 		{
 			goto add_con_refuse;
@@ -1262,6 +1263,7 @@ add_con_refuse:
 		SSL_set_fd(acptr->ssl, fd);
 		SSL_set_nonblocking(acptr->ssl);
 		if (!ircd_SSL_accept(acptr, fd)) {
+			Debug((DEBUG_DEBUG, "Failed SSL accept handshake in instance 1: %s", sptr->sockhost));
 			SSL_set_shutdown(acptr->ssl, SSL_RECEIVED_SHUTDOWN);
 			SSL_smart_shutdown(acptr->ssl);
   	                SSL_free(acptr->ssl);
@@ -1808,6 +1810,7 @@ int  read_message(time_t delay, fdlist *listp)
 #ifdef USE_SSL
 				if ((cptr->serv) && (cptr->serv->conf->options & CONNECT_SSL))
 				{
+					Debug((DEBUG_DEBUG, "ircd_SSL_client_handshake(%s)", cptr->name));
 					write_err = ircd_SSL_client_handshake(cptr);
 				}
 				else
@@ -1857,9 +1860,15 @@ deadsocket:
 			else
 			{
 				if (IsSSLAcceptHandshake(cptr))
+				{
+					Debug((DEBUG_ERROR, "ssl: start_of_normal_client_handshake(%s)", cptr->sockhost));
 					start_of_normal_client_handshake(cptr);
+				}
 				else
+				{
+					Debug((DEBUG_ERROR, "ssl: completed_connection", cptr->name));
 					completed_connection(cptr);
+				}
 
 			}
 		}
