@@ -1194,7 +1194,11 @@ add_con_refuse:
 		for (i = LastSlot; i >= 0; i--)
 		{
 			if (local[i] && IsUnknown(local[i]) &&
+#ifndef INET6
 				local[i]->ip.S_ADDR == acptr->ip.S_ADDR)
+#else
+				!bcmp(local[i]->ip.S_ADDR, cptr->ip.S_ADDR, sizeof(cptr->ip.S_ADDR)))
+#endif
 			{
 				j++;
 				if (j > MAXUNKNOWNCONNECTIONSPERIP)

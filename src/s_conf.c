@@ -3977,7 +3977,11 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 			ii = 1;
 			for (i = LastSlot; i >= 0; i--)
 				if (local[i] && MyClient(local[i]) &&
+#ifndef INET6
 				    local[i]->ip.S_ADDR == cptr->ip.S_ADDR)
+#else
+				    !bcmp(local[i]->ip.S_ADDR, cptr->ip.S_ADDR, sizeof(cptr->ip.S_ADDR)))
+#endif
 				{
 					ii++;
 					if (ii > aconf->maxperip)

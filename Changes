@@ -1320,3 +1320,4 @@ seen. gmtime warning still there
   than by host the hostname is still used for the u@h, unless allow::options::useip is set
   (idea inspired by danielek)
 - Fixed a bug in the new allow system reported by danielek
+- Fixed a maxperip and a maxunknownconnectionsperip bug in IPv6 reported by danielek
