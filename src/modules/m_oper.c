@@ -193,7 +193,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		return 0;
 	}
 	strcpy(nuhhost, make_user_host(sptr->user->username, sptr->user->realhost));
-	strcpy(nuhhost2, make_user_host(sptr->user->username, (char *)inet_ntoa(sptr->ip)));
+	strcpy(nuhhost2, make_user_host(sptr->user->username, Inet_ia2p(&sptr->ip)));
 	for (oper_from = (ConfigItem_oper_from *) aconf->from;
 	    oper_from; oper_from = (ConfigItem_oper_from *) oper_from->next)
 		if (!match(oper_from->name, nuhhost) || !match(oper_from->name, nuhhost2))

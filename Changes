@@ -1220,3 +1220,4 @@ seen. gmtime warning still there
 - Removed my_name_for_link (unused)
 - Preparation for release
 - Changed to beta7
+- Fixed a IPv6 problem reported by Zerwas
