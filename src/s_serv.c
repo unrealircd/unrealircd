@@ -4825,8 +4825,6 @@ int  m_map(cptr, sptr, parc, parv)
 		if ((strlen(acptr->name) + acptr->hopcount * 2) > longest)
 			longest = strlen(acptr->name) + acptr->hopcount * 2;
 	}
-	for (acptr = client; acptr; acptr = acptr->next)
-
 	if (longest > 60)
 		longest = 60;
 	longest += 2;

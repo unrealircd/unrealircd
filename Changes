@@ -747,5 +747,6 @@
 - Removed CRYPTOIRCD (replaced by SSL)
 - Added support for some more SJB64 stuff
 - Added some more support for some even more SJB64 stuff
-- Added some network files
-- Added more network files
+- Added some network files and even more network files
+- Fixed some copyright stuff in ssl.c
+- Fixed a /map problem

@@ -1,7 +1,23 @@
-/* 
-  This was originally done by the hq.alert.sk implementation
-  Modified by Stskeeps
-*/
+/************************************************************************
+ *   Unreal Internet Relay Chat Daemon, src/ssl.c
+ *      (C) 2000 hq.alert.sk (base)
+ *      (C) 2000 Carsten V. Munk <stskeeps@tspre.org> 
+ *
+ *   This program is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 1, or (at your option)
+ *   any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program; if not, write to the Free Software
+ *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
 #include "config.h"
 #ifdef USE_SSL
 
@@ -96,19 +112,16 @@ int  ssl_handshake(aClient *cptr)
 	if ((err) == -1)
 	{
 		if (IsHandshake(cptr))
-			sendto_ops("Lost connection to %s:Error in SSL_accept()",
+			sendto_realops("Lost connection to %s:Error in SSL_accept()",
 			    get_client_name(cptr, TRUE));
 		return 0;
 	}
 
-	/* Get the cipher - opt */
-
-/*	ircd_log("SSL connection using %s\n",
-	    SSL_get_cipher((SSL *) cptr->ssl));
-*/
 	/* Get client's certificate (note: beware of dynamic
 	 * allocation) - opt */
+        /* We do not do this -Stskeeps */
 
+#ifdef NO_CERTCHECKING
 	cptr->client_cert =
 	    (struct X509 *)SSL_get_peer_certificate((SSL *) cptr->ssl);
 
@@ -140,11 +153,15 @@ int  ssl_handshake(aClient *cptr)
 	{
 		// log (L_DEBUG, "Client does not have certificate.\n");
 	}
+#endif
 	return 0;
 
 }
 /* 
    ssl_client_handshake
+        This will initiate a client SSL_connect
+        
+        -Stskeeps 
    
    Return values:
       -1  = Could not SSL_new
@@ -156,8 +173,9 @@ int  ssl_client_handshake(aClient *cptr)
 	cptr->ssl = (struct SSL *) SSL_new((SSL_CTX *)ctx_client);
 	if (!cptr->ssl)
 	{
-		sendto_realops("Couldn't SSL_new(ctx_client)");
-		return;
+		sendto_realops("Couldn't SSL_new(ctx_client) on %s",
+			get_client_name(cptr, FALSE));
+		return -1;
 	}
 	set_blocking(cptr->fd);
 	SSL_set_fd((SSL *)cptr->ssl, cptr->fd);
