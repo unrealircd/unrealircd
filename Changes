@@ -719,3 +719,4 @@ seen. gmtime warning still there
 - Added a 3d border to the color selector in the win32 editor
 - Fixed a win32 bug dealing with the new RTF parser
 - Fixed a scan_socks problem under win32
+- Fixed a MOTD rehash bug found by fryo

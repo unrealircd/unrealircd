@@ -60,7 +60,7 @@ struct tm *motd_tm;
 aMotd *read_file(char *filename, aMotd **list);
 aMotd *read_motd(char *filename);
 aMotd *read_rules(char *filename);
-
+extern aMotd *Find_file(char *, short);
 /*
 ** m_functions execute protocol messages on this server:
 **
@@ -3903,22 +3903,10 @@ int  m_rehash(cptr, sptr, parc, parv)
 				aMotd *amotd;
 				sendto_ops("%sRehashing everything on the request of %s",
 					cptr != sptr ? "Remotely " : "",sptr->name);
-#ifdef DEBUGMODE
-				sendto_ops("Rehashing opermotd [1/4]");
-#endif
 				opermotd = (aMotd *) read_file(OPATH, &opermotd);
-#ifdef DEBUGMODE
-				sendto_ops("Rehashing botmotd [2/4]");
-#endif
 				botmotd = (aMotd *) read_file(BPATH, &botmotd);
-#ifdef DEBUGMODE
-				sendto_ops("Rehashing motd [3/4]");
-#endif
 				motd = (aMotd *) read_motd(MPATH);
 				rules = (aMotd *) read_rules(RPATH);
-#ifdef DEBUGMODE
-				sendto_ops("Rehashing rules [4/4]");
-#endif
                                 for (tlds = conf_tld; tlds;
                                     tlds = (ConfigItem_tld *) tlds->next)
                                 {
@@ -3980,26 +3968,37 @@ int  m_rehash(cptr, sptr, parc, parv)
 				for (tlds = conf_tld; tlds;
 				    tlds = (ConfigItem_tld *) tlds->next)
 				{
-					while (tlds->motd)
-					{
-						amotd = tlds->motd->next;
-						MyFree(tlds->motd->line);
-						MyFree(tlds->motd);
-						tlds->motd = amotd;
+					if (!tlds->flag.motdptr) {
+						while (tlds->motd)
+						{
+							amotd = tlds->motd->next;
+							MyFree(tlds->motd->line);
+							MyFree(tlds->motd);
+							tlds->motd = amotd;
+						}
 					}
-					tlds->motd = read_motd(tlds->motd_file);
-					while (tlds->rules)
-					{
-						amotd = tlds->rules->next;
-						MyFree(tlds->rules->line);
-						MyFree(tlds->rules);
-						tlds->rules = amotd;
+					if (!tlds->flag.rulesptr) {
+						while (tlds->rules)
+						{
+							amotd = tlds->rules->next;
+							MyFree(tlds->rules->line);
+							MyFree(tlds->rules);
+							tlds->rules = amotd;
+						}
 					}
-					tlds->rules =
-					    read_rules(tlds->rules_file);
 				}
+				for (tlds = conf_tld; tlds;
+				    tlds = (ConfigItem_tld *) tlds->next) {
+					if (!(tlds->motd = Find_file(tlds->motd_file,0)))
+						tlds->motd = read_motd(tlds->motd_file);
+					else 
+						tlds->flag.motdptr = 1;
+					if (!(tlds->rules = Find_file(tlds->rules_file,0)))
+						tlds->rules = read_rules(tlds->rules_file);
+					else
+						tlds->flag.rulesptr = 1;
 
-
+				}
 				return 0;
 			}
 		}
