@@ -452,6 +452,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	HWND hWnd;
 	WSADATA WSAData;
 	HICON hIcon;
+	InitCommonControls();
 
 	WM_TASKBARCREATED = RegisterWindowMessage("TaskbarCreated");
 	atexit(CleanUp);
@@ -941,13 +942,46 @@ LRESULT CALLBACK HelpDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
 	return (FALSE);
 }
 
+HWND DrawToolbar(HWND hwndParent, UINT iID) {
+	HWND hTool;
+	TBADDBITMAP tbBit;
+	int newidx;
+	TBBUTTON tbButtons[7] = {
+		{ STD_FILENEW, IDM_NEW, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0L, 0},
+		{ STD_FILESAVE, IDM_SAVE, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0L, 0},
+		{ 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0}, 0L, 0},
+		{ STD_CUT, IDM_CUT, 0, TBSTYLE_BUTTON, {0}, 0L, 0},
+		{ STD_COPY, IDM_COPY, 0, TBSTYLE_BUTTON, {0}, 0L, 0},
+		{ STD_PASTE, IDM_PASTE, 0, TBSTYLE_BUTTON, {0}, 0L, 0},
+		{ 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0}, 0L, 0}
+	};
+		
+	TBBUTTON tbAddButtons[3] = {
+		{ 0, IDC_BOLD, TBSTATE_ENABLED, TBSTYLE_CHECK, {0}, 0L, 0},
+		{ 1, IDC_UNDERLINE, TBSTATE_ENABLED, TBSTYLE_CHECK, {0}, 0L, 0},
+		{ 2, IDC_COLOR, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0L, 0}
+	};
+	hTool = CreateToolbarEx(hwndParent, WS_VISIBLE|WS_CHILD|TBSTYLE_FLAT|TBSTYLE_TOOLTIPS, 
+				IDC_TOOLBAR, 0, HINST_COMMCTRL, IDB_STD_SMALL_COLOR,
+				tbButtons, 7, 0,0,100,30, sizeof(TBBUTTON));
+	tbBit.hInst = hInst;
+	tbBit.nID = IDB_BITMAP1;
+	newidx = SendMessage(hTool, TB_ADDBITMAP, (WPARAM)3, (LPARAM)&tbBit);
+	tbAddButtons[0].iBitmap += newidx;
+	tbAddButtons[1].iBitmap += newidx;
+	tbAddButtons[2].iBitmap += newidx;
+	SendMessage(hTool, TB_ADDBUTTONS, (WPARAM)3, (LPARAM)&tbAddButtons);
+	return hTool;
+}
+
 LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 	HWND hWnd;
-	CHARFORMAT2 chars;
 	static HFONT hFont, hFont2, hFont3;
 	static HBRUSH hBrush;
 	static FINDREPLACE find;
 	static char *file;
+	static HWND hTool, hClip;
+	CHARFORMAT2 chars;
 	switch (message) {
 		case WM_INITDIALOG: {
 			int fd,len;
@@ -961,8 +995,9 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				wsprintf(szText, "UnrealIRCd Editor - %s", file);
 			else 
 				strcpy(szText, "UnrealIRCd Editor - New File");
-			SetWindowText(hDlg, szText);			
+			SetWindowText(hDlg, szText);
 			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)RESubClassFunc);
+			hTool = DrawToolbar(hDlg, IDC_TOOLBAR);
 			hFont = CreateFont(8,0,0,0,FW_HEAVY,0,0,0,ANSI_CHARSET,0,0,PROOF_QUALITY,0,"MS Sans Serif");
 			hFont2 = CreateFont(8,0,0,0,FW_BOLD,0,1,0,ANSI_CHARSET,0,0,PROOF_QUALITY,0,"MS Sans Serif");
 			hFont3 = CreateFont(8,0,0,0,FW_BOLD,0,0,0,ANSI_CHARSET,0,0,PROOF_QUALITY,0,"MS Sans Serif");
@@ -996,74 +1031,87 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 					(WPARAM)SF_RTF|SFF_PLAINRTF, (LPARAM)&edit);
 				SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_SETMODIFY,
 					(WPARAM)FALSE, 0);
+
 				close(fd);
 				RTFBuf = NULL;
 				free(buffer);
 				free(string);
 				free(stream);
+				hClip = SetClipboardViewer(hDlg);
+				if (SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_CANPASTE, 0, 0)) 
+					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_PASTE, (LPARAM)MAKELONG(TRUE,0));
+				else
+					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_PASTE, (LPARAM)MAKELONG(FALSE,0));
 			}
 			return (TRUE);
 			}
 		case WM_NOTIFY:
 			if (((NMHDR *)lParam)->code == EN_SELCHANGE) {
+				HWND hWnd = GetDlgItem(hDlg, IDC_TEXT);
+				DWORD start, end;
 				chars.cbSize = sizeof(CHARFORMAT2);
-				SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_GETCHARFORMAT, (WPARAM)SCF_SELECTION, (LPARAM)&chars);
+				SendMessage(hWnd, EM_GETCHARFORMAT, (WPARAM)SCF_SELECTION, (LPARAM)&chars);
 				if (chars.dwMask & CFM_BOLD && chars.dwEffects & CFE_BOLD)
-					CheckDlgButton(hDlg, IDC_BOLD, BST_CHECKED);
+					SendMessage(hTool, TB_CHECKBUTTON, (WPARAM)IDC_BOLD, (LPARAM)MAKELONG(TRUE,0));
 				else
-					CheckDlgButton(hDlg, IDC_BOLD, BST_UNCHECKED);
+					SendMessage(hTool, TB_CHECKBUTTON, (WPARAM)IDC_BOLD, (LPARAM)MAKELONG(FALSE,0));
 				if (chars.dwMask & CFM_UNDERLINE && chars.dwEffects & CFE_UNDERLINE)
-					CheckDlgButton(hDlg, IDC_UNDERLINE, BST_CHECKED);
+					SendMessage(hTool, TB_CHECKBUTTON, (WPARAM)IDC_UNDERLINE, (LPARAM)MAKELONG(TRUE,0));
 				else
-					CheckDlgButton(hDlg, IDC_UNDERLINE, BST_UNCHECKED);
+					SendMessage(hTool, TB_CHECKBUTTON, (WPARAM)IDC_UNDERLINE, (LPARAM)MAKELONG(FALSE,0));
+				SendMessage(hWnd, EM_GETSEL,(WPARAM)&start, (LPARAM)&end);
+				if (start == end) {
+					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_COPY, (LPARAM)MAKELONG(FALSE,0));
+					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_CUT, (LPARAM)MAKELONG(FALSE,0));
+				}
+				else {
+					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_COPY, (LPARAM)MAKELONG(TRUE,0));
+					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_CUT, (LPARAM)MAKELONG(TRUE,0));
+				}
+		
 				return (TRUE);
 			}
-			return (TRUE);
-		case WM_DRAWITEM: {
-			LPDRAWITEMSTRUCT lpdis = (LPDRAWITEMSTRUCT)lParam;
-			if (wParam == IDC_COLOR) {
-				RECT focus, caption;
-				char text[5];
-				COLORREF oldcolor, oldbg;
-				GetWindowText(GetDlgItem(hDlg, IDC_COLOR), text, 5);
-				DrawFrameControl(lpdis->hDC, &lpdis->rcItem, DFC_BUTTON, DFCS_BUTTONPUSH);
-				oldcolor = SetTextColor(lpdis->hDC, RGB(0,0,255));
-				SetBkMode(lpdis->hDC, TRANSPARENT);
-				DrawText(lpdis->hDC, text, strlen(text), &lpdis->rcItem, DT_CENTER|DT_VCENTER|DT_SINGLELINE);
-				SetTextColor(lpdis->hDC, oldcolor);
-				if (lpdis->itemState & ODS_FOCUS) {
-					if (lpdis->itemState & ODS_SELECTED) {
-						DrawFrameControl(lpdis->hDC, &lpdis->rcItem, DFC_BUTTON, DFCS_BUTTONPUSH|DFCS_PUSHED);
-						CopyRect(&caption, &lpdis->rcItem);
-						caption.left += 1;
-						caption.top += 1;
-						oldcolor = SetTextColor(lpdis->hDC, RGB(0,0,255));
-						SetBkMode(lpdis->hDC, TRANSPARENT);
-						DrawText(lpdis->hDC, text, strlen(text), &caption, DT_CENTER|DT_VCENTER|DT_SINGLELINE);
-						SetTextColor(lpdis->hDC, oldcolor);
-					}
-					CopyRect(&focus, &lpdis->rcItem);
-					focus.left += 2;
-					focus.right -= 2;
-					focus.top += 2;
-					focus.bottom -= 2;
-					DrawFocusRect(lpdis->hDC, &focus);
+			if (((NMHDR *)lParam)->code == TTN_GETDISPINFO) {
+				LPTOOLTIPTEXT lpttt = (LPTOOLTIPTEXT) lParam;
+				lpttt->hinst = NULL;
+				switch (lpttt->hdr.idFrom) {
+					case IDM_NEW:
+						strcpy(lpttt->szText, "New");
+						break;
+					case IDM_SAVE:
+						strcpy(lpttt->szText, "Save");
+						break;
+					case IDM_CUT:
+						strcpy(lpttt->szText, "Cut");
+						break;
+					case IDM_COPY:
+						strcpy(lpttt->szText, "Copy");
+						break;
+					case IDM_PASTE:
+						strcpy(lpttt->szText, "Paste");
+						break;
+					case IDC_BOLD:
+						strcpy(lpttt->szText, "Bold");
+						break;
+					case IDC_UNDERLINE:
+						strcpy(lpttt->szText, "Underline");
+						break;
+					case IDC_COLOR:
+						strcpy(lpttt->szText, "Text Color");
+						break;
 				}
-				else if (lpdis->itemState & ODS_DISABLED) 
-					DrawFrameControl(lpdis->hDC, &lpdis->rcItem, DFC_BUTTON, DFCS_BUTTONPUSH|DFCS_INACTIVE);
-
-				return TRUE;
+				return (TRUE);
 			}
-		}
-
+				
+				return (TRUE);
 		case WM_COMMAND:
-			if (HIWORD(wParam) == BN_CLICKED && LOWORD(wParam) == IDC_BOLD) {
+			if (LOWORD(wParam) == IDC_BOLD) {
 				hWnd = GetDlgItem(hDlg, IDC_TEXT);
-				if (IsDlgButtonChecked(hDlg,IDC_BOLD) == BST_CHECKED) {
-					
+				if (SendMessage(hTool, TB_ISBUTTONCHECKED, (WPARAM)IDC_BOLD, (LPARAM)0) != 0) {
 					chars.cbSize = sizeof(CHARFORMAT2);
 					chars.dwMask = CFM_BOLD;
 					chars.dwEffects = CFE_BOLD;
+					chars.wWeight = FW_HEAVY;
 					SendMessage(hWnd, EM_SETCHARFORMAT, (WPARAM)SCF_SELECTION, (LPARAM)&chars);
 					SendMessage(hWnd, EM_HIDESELECTION, 0, 0);
 					SetFocus(hWnd);
@@ -1071,16 +1119,16 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				else {
 					chars.cbSize = sizeof(CHARFORMAT2);
 					chars.dwMask = CFM_BOLD;
+					chars.dwEffects = 0;
 					SendMessage(hWnd, EM_SETCHARFORMAT, (WPARAM)SCF_SELECTION, (LPARAM)&chars);
 					SendMessage(hWnd, EM_HIDESELECTION, 0, 0);
 					SetFocus(hWnd);
 				}
-				break;
-
+				return TRUE;
 			}
-			else if (HIWORD(wParam) == BN_CLICKED && LOWORD(wParam) == IDC_UNDERLINE) {
+			else if (LOWORD(wParam) == IDC_UNDERLINE) {
 				hWnd = GetDlgItem(hDlg, IDC_TEXT);
-				if (IsDlgButtonChecked(hDlg,IDC_UNDERLINE) == BST_CHECKED) {
+				if (SendMessage(hTool, TB_ISBUTTONCHECKED, (WPARAM)IDC_UNDERLINE, (LPARAM)0) != 0) {
 					chars.cbSize = sizeof(CHARFORMAT2);
 					chars.dwMask = CFM_UNDERLINETYPE;
 					chars.bUnderlineType = CFU_UNDERLINE;
@@ -1096,69 +1144,15 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 					SendMessage(hWnd, EM_HIDESELECTION, 0, 0);
 					SetFocus(hWnd);
 				}
-				break;
-
+				return TRUE;
 			}
 			if (LOWORD(wParam) == IDC_COLOR) 
 				DialogBoxParam(hInst, "Color", hDlg, (DLGPROC)ColorDLG, (LPARAM)WM_USER+10);
-			if (LOWORD(wParam) == IDCANCEL) {
-				char text[256];
-				int ans;
-				if (SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_GETMODIFY, 0, 0) != 0) {
-					sprintf(text, "The text in the %s file has changed.\r\n\r\nDo you want to save the changes?", file ? file : "new");
-					ans = MessageBox(hDlg, text, "UnrealIRCd", MB_YESNOCANCEL|MB_ICONWARNING);
-					if (ans == IDNO)
-						EndDialog(hDlg, TRUE);
-					if (ans == IDCANCEL)
-						break;
-					if (ans == IDYES)
-						SendMessage(hDlg, WM_COMMAND, MAKEWPARAM(IDOK,0), 0);
-				}
-				EndDialog(hDlg, TRUE);
-			}
-		if (LOWORD(wParam) == IDOK) {
-			int fd;
-			EDITSTREAM edit;
-			OPENFILENAME lpopen;
-			if (!file) {
-				char path[MAX_PATH];
-				path[0] = '\0';
-				lpopen.lStructSize = sizeof(OPENFILENAME);
-				lpopen.hwndOwner = hDlg;
-				lpopen.lpstrFilter = NULL;
-				lpopen.lpstrCustomFilter = NULL;
-				lpopen.nFilterIndex = 0;
-				lpopen.lpstrFile = path;
-				lpopen.nMaxFile = MAX_PATH;
-				lpopen.lpstrFileTitle = NULL;
-				lpopen.lpstrInitialDir = DPATH;
-				lpopen.lpstrTitle = NULL;
-				lpopen.Flags = (OFN_ENABLESIZING|OFN_NONETWORKBUTTON|
-						OFN_OVERWRITEPROMPT);
-				if (GetSaveFileName(&lpopen))
-					file = path;
-				else
-					break;
-			}
-
-			fd = open(file, _O_TRUNC|_O_CREAT|_O_WRONLY|_O_BINARY,_S_IWRITE);
-			edit.dwCookie = 0;
-			edit.pfnCallback = BufferIt;
-			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_SETSEL, -1, -1);
-			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_STREAMOUT, (WPARAM)SF_RTF|SFF_PLAINRTF, (LPARAM)&edit);
-			RTFToIRC(fd, RTFBuf, strlen(RTFBuf));
-			free(RTFBuf);
-			RTFBuf = NULL;
-			EndDialog(hDlg, TRUE);
-		}
 		hWnd = GetDlgItem(hDlg, IDC_TEXT);
-		if (LOWORD(wParam) == IDOK)
-			return EndDialog(hDlg, TRUE);
 		if (LOWORD(wParam) == IDM_COPY) {
 			SendMessage(hWnd, WM_COPY, 0, 0);
 			return 0;
 		}
-
 		if (LOWORD(wParam) == IDM_SELECTALL) {
 			SendMessage(hWnd, EM_SETSEL, 0, -1);
 			return 0;
@@ -1179,7 +1173,70 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			SendMessage(hWnd, WM_CLEAR, 0, 0);
 			return 0;
 		}
+		if (LOWORD(wParam) == IDM_SAVE) {
+			int fd;
+			EDITSTREAM edit;
+			OPENFILENAME lpopen;
+			if (!file) {
+				char path[MAX_PATH];
+				path[0] = '\0';
+				bzero(&lpopen, sizeof(OPENFILENAME));
+				lpopen.lStructSize = sizeof(OPENFILENAME);
+				lpopen.hwndOwner = hDlg;
+				lpopen.lpstrFilter = NULL;
+				lpopen.lpstrCustomFilter = NULL;
+				lpopen.nFilterIndex = 0;
+				lpopen.lpstrFile = path;
+				lpopen.nMaxFile = MAX_PATH;
+				lpopen.lpstrFileTitle = NULL;
+				lpopen.lpstrInitialDir = DPATH;
+				lpopen.lpstrTitle = NULL;
+				lpopen.Flags = (OFN_ENABLESIZING|OFN_NONETWORKBUTTON|
+						OFN_OVERWRITEPROMPT);
+				if (GetSaveFileName(&lpopen))
+					file = path;
+				else
+					break;
+			}
+			fd = open(file, _O_TRUNC|_O_CREAT|_O_WRONLY|_O_BINARY,_S_IWRITE);
+			edit.dwCookie = 0;
+			edit.pfnCallback = BufferIt;
+			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_STREAMOUT, (WPARAM)SF_RTF|SFF_PLAINRTF, (LPARAM)&edit);
+			RTFToIRC(fd, RTFBuf, strlen(RTFBuf));
+			free(RTFBuf);
+			RTFBuf = NULL;
+			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_SETMODIFY, (WPARAM)FALSE, 0);
 
+			return 0;
+		}
+		if (LOWORD(wParam) == IDM_NEW) {
+			char text[1024];
+			BOOL newfile = FALSE;
+			int ans;
+			if (SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_GETMODIFY, 0, 0) != 0) {
+				sprintf(text, "The text in the %s file has changed.\r\n\r\nDo you want to save the changes?", file ? file : "new");
+				ans = MessageBox(hDlg, text, "UnrealIRCd", MB_YESNOCANCEL|MB_ICONWARNING);
+				if (ans == IDNO)
+					newfile = TRUE;
+				if (ans == IDCANCEL)
+					return TRUE;
+				if (ans == IDYES) {
+					SendMessage(hDlg, WM_COMMAND, MAKEWPARAM(IDM_SAVE,0), 0);
+					newfile = TRUE;
+				}
+			}
+			else
+				newfile = TRUE;
+			if (newfile == TRUE) {
+				char szText[256];
+				file = NULL;
+				strcpy(szText, "UnrealIRCd Editor - New File");
+				SetWindowText(hDlg, szText);
+				SetWindowText(GetDlgItem(hDlg, IDC_TEXT), NULL);
+			}
+
+			break;
+		}			
 			break;
 		case WM_USER+10: {
 			HWND hWnd = GetDlgItem(hDlg, IDC_TEXT);
@@ -1192,7 +1249,19 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			SetFocus(hWnd);
 			break;
 		}
-	
+		case WM_CHANGECBCHAIN:
+			if ((HWND)wParam == hClip)
+				hClip = (HWND)lParam;
+			else
+				SendMessage(hClip, WM_CHANGECBCHAIN, wParam, lParam);
+			break;
+		case WM_DRAWCLIPBOARD:
+			if (SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_CANPASTE, 0, 0)) 
+				SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_PASTE, (LPARAM)MAKELONG(TRUE,0));
+			else
+				SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_PASTE, (LPARAM)MAKELONG(FALSE,0));
+			SendMessage(hClip, WM_DRAWCLIPBOARD, wParam, lParam);
+			break;
 		case WM_CLOSE: {
 			char text[256];
 			int ans;
@@ -1203,15 +1272,20 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 					EndDialog(hDlg, TRUE);
 				if (ans == IDCANCEL)
 					return TRUE;
-				if (ans == IDYES)
-					SendMessage(hDlg, WM_COMMAND, MAKEWPARAM(IDOK,0), 0);
+				if (ans == IDYES) {
+					SendMessage(hDlg, WM_COMMAND, MAKEWPARAM(IDM_SAVE,0), 0);
+					EndDialog(hDlg, TRUE);
+				}
 			}
+			else
+				EndDialog(hDlg, TRUE);
 		}
 		case WM_DESTROY:
 			DeleteObject(hFont);
 			DeleteObject(hFont2);
 			DeleteObject(hFont3);
 			DeleteObject(hBrush);
+			ChangeClipboardChain(hDlg, hClip);
 			break;
 		}
 
@@ -1582,7 +1656,7 @@ void IRCToRTF(char *buffer, char *string) {
 		}
 		string[i] = *tmp;
 	}
-	strcat(string, "\\par\r\n}");
+	strcat(string, "}");
 	return;
 }
 

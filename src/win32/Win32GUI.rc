@@ -48,8 +48,8 @@ CAPTION "UnrealIRCd License"
 FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,184,162,50,14
-    CONTROL         "",IDC_TEXT,"RichEdit20A",WS_BORDER | WS_VSCROLL | WS_HSCROLL |
-                    WS_TABSTOP | 0x18c4,8,7,402,149
+    CONTROL         "",IDC_TEXT,"RichEdit20A",WS_BORDER | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP | 0x18c4,8,7,402,149
 END
 
 HELP DIALOG DISCARDABLE  0, 0, 318, 94
@@ -74,20 +74,12 @@ END
 
 FROMFILE DIALOG DISCARDABLE  0, 0, 418, 212
 STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_VISIBLE | 
-    WS_CAPTION | WS_SYSMENU 
+    WS_CAPTION | WS_SYSMENU
 CAPTION "UnrealIRCd Configuration File"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "Save",IDOK,156,175,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,211,175,50,14
-    CONTROL         "",IDC_TEXT,"RichEdit20A",WS_BORDER | WS_VSCROLL | WS_HSCROLL |
-                    WS_TABSTOP | 0x1084,8,20,402,149
-    CONTROL         "B",IDC_BOLD,"Button",BS_AUTOCHECKBOX | BS_PUSHLIKE | 
-                    WS_TABSTOP,190,2,12,11
-    CONTROL         "U",IDC_UNDERLINE,"Button",BS_AUTOCHECKBOX | BS_PUSHLIKE | 
-                    WS_TABSTOP,202,2,12,11
-    CONTROL         "A",IDC_COLOR,"Button",BS_OWNERDRAW | WS_TABSTOP,214,2,
-                    12,11
+    CONTROL         "",IDC_TEXT,"RichEdit20A",WS_BORDER | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP | 0x1084,3,17,412,194
 END
 
 STATUS DIALOGEX 0, 0, 318, 169
@@ -139,7 +131,7 @@ END
 FIND DIALOGEX 0, 0, 240, 76
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Find"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "Find Next",IDFIND,181,8,50,14,0,WS_EX_TRANSPARENT
     PUSHBUTTON      "Cancel",IDCANCEL,181,25,50,14
@@ -193,7 +185,7 @@ BEGIN
                     12
 END
 
-
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "wircd.exe.manifest"
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -358,6 +350,7 @@ ICO_MAIN                ICON    DISCARDABLE     "icon1.ico"
 
 BMP_LOGO                BITMAP  DISCARDABLE     "unreal.bmp"
 BMP_BAR                 BITMAP  DISCARDABLE     "bar.bmp"
+IDB_BITMAP1             BITMAP  DISCARDABLE     "TBarMedm.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -395,12 +388,12 @@ MENU_REHASH MENU DISCARDABLE
 BEGIN
     POPUP "Rehash"
     BEGIN
-        MENUITEM "&All Files",                 IDM_RHALL
+        MENUITEM "&All Files",                  IDM_RHALL
         MENUITEM SEPARATOR
         MENUITEM "&Config file",                IDM_RHCONF
-        MENUITEM "&All MOTD and Rules",        IDM_RHMOTD
-        MENUITEM "&OperMOTD",                  IDM_RHOMOTD
-        MENUITEM "&BotMOTD",                   IDM_RHBMOTD
+        MENUITEM "&All MOTD and Rules",         IDM_RHMOTD
+        MENUITEM "&OperMOTD",                   IDM_RHOMOTD
+        MENUITEM "&BotMOTD",                    IDM_RHBMOTD
     END
 END
 

@@ -1076,3 +1076,5 @@ seen. gmtime warning still there
 - Fixed typo I made in previous fix causing non-compileness
 - Moved some members of the Client structure to the local section, should be
   a nice cutdown on memory.
+- Recoded the win32 editor to use a toolbar, and added support
+  for XP style controls
