@@ -89,3 +89,4 @@
 - X:line was replaced with drpass {} in /restart and /die (will make them faster as well)
 - Made +u do a auditorium/star chat feature, suggested by |Martin|=======
 - Fixed a G:line bug that would allow certain masks to be interpreted as *@*
+- Fixed the same bug in shun that affected G:line

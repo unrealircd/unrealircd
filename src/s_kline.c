@@ -1032,7 +1032,7 @@ int  m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
       nochecks:
 	usermask = strtok(mask, "@");
-	hostmask = strtok(NULL, "@");
+	hostmask = strtok(NULL, "");
 	tkl_check_expire();
 
 	for (tk = tklines; tk; tk = tk->next)
