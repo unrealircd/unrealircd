@@ -455,7 +455,19 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		if ((acptr = find_person(mask, NULL)))
 		{
 			usermask = "*";
-			hostmask = acptr->user->realhost;
+			if ((*type == 'z') || (*type == 'Z'))
+			{
+				/* Fill in IP */
+				hostmask = GetIP(acptr);
+				if (!hostmask)
+				{
+					sendnotice(sptr, "Could not get IP for user '%s'", acptr->name);
+					return 0;
+				}
+			} else {
+				/* Fill in host */
+				hostmask = acptr->user->realhost;
+			}
 			p = hostmask - 1;
 		}
 		else
