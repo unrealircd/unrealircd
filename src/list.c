@@ -156,7 +156,7 @@ void free_client(cptr)
 	aClient *cptr;
 {
 #ifdef CRYPTOIRCD
-	if (cptr->cryptinfo)
+	if (MyClient(cptr) && cptr->cryptinfo)
 		MyFree((char *)cptr->cryptinfo);
 #endif
 	MyFree((char *)cptr);

@@ -418,3 +418,4 @@
 - Some V:line stuff (added VL protoctl, and parsing of the SERVER command for the proto and flags)
 - Fixed so that in +c it shows if a user is connected securely
 - Backported the passwd stuff, not needed.
+- Fixed a crash problem on /quit or /squit
