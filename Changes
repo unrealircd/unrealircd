@@ -567,3 +567,4 @@
 - Made vhost strip too long vhosts
 - Removed INV_TRACK
 - Fixed a typo in /vhost
+- Fixed some problems/typos/notlookingsogood (TM) bugs, in the tkl code

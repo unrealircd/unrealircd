@@ -291,29 +291,59 @@ int  find_tkline_match(cptr, xx)
 				if (lp->type & TKL_GLOBAL)
 				{
 					ircstp->is_ref++;
-					sendto_one(cptr,
-					    "NOTICE %s :*** You are banned for %li seconds (%s)",
-					    cptr->name,
-					    lp->expire_at - TStime(),
-					    lp->reason);
-					ircsprintf(msge,
-					    "User has been banned from %s (%s)",
-					    ircnetwork, lp->reason);
-					return (exit_client(cptr, cptr, &me,
-					    msge));
+					if (lp->expire_at)
+					{
+						sendto_one(cptr,
+						    ":%s NOTICE %s :*** You are banned for %li seconds (%s)",
+						    me.name, cptr->name,
+						    lp->expire_at - TStime(),
+						    lp->reason);
+						ircsprintf(msge,
+						    "User has been banned from %s (%s)",
+						    ircnetwork, lp->reason);
+						return (exit_client(cptr, cptr, &me,
+						    msge));
+					}
+					else
+					{
+						sendto_one(cptr, 
+							":%s NOTICE %s :*** You have been banned permanently (%s)",
+							me.name, cptr->name,
+							lp->reason);
+						ircsprintf(msge, 
+							"User has been permanently banned from %s (%s)",
+							ircnetwork, lp->reason);
+						return(exit_client(cptr, cptr, &me, msge))
+					}
 				}
 				else
 				{
 					ircstp->is_ref++;
-					sendto_one(cptr,
-					    "NOTICE %s :*** You are banned for %li seconds (%s)",
-					    cptr->name,
-					    lp->expire_at - TStime(),
-					    lp->reason);
-					ircsprintf(msge, "User has banned (%s)",
-					    me.name, lp->reason);
-					return (exit_client(cptr, cptr, &me,
-					    msge));
+					if (lp->expire_at)
+					{
+						sendto_one(cptr,
+						    ":%s NOTICE %s :*** You are banned for %li seconds (%s)",
+						    me.name,
+						    cptr->name,
+						    lp->expire_at - TStime(),
+						    lp->reason);
+						ircsprintf(msge, "User has banned (%s)",
+						    me.name, lp->reason);
+						return (exit_client(cptr, cptr, &me,
+						    msge));
+					}
+					else
+					{
+						sendto_one(cptr,
+						    ":%s NOTICE %s :*** You have been permanently banned (%s)",
+						    me.name,
+						    cptr->name,
+						    lp->reason);
+						ircsprintf(msge, "User has been permanently banned (%s)",
+						    me.name, lp->reason);
+						return (exit_client(cptr, cptr, &me,
+						    msge));
+					}
 				}
 			}
 			else if (lp->type & (TKL_ZAP))
