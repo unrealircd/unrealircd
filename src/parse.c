@@ -148,6 +148,8 @@ aClient *find_person(char *name, aClient *cptr)
 
 void ban_flooder(aClient *cptr)
 {
+	int i;
+	aClient *acptr;
 	char hostip[128], mo[100], mo2[100];
 	char *tkllayer[9] = {
 		me.name,	/*0  server.name */
@@ -165,13 +167,44 @@ void ban_flooder(aClient *cptr)
 
 	tkllayer[4] = hostip;
 	tkllayer[5] = me.name;
-	ircsprintf(mo, "%li", 600 + TStime());
+	ircsprintf(mo, "%li", UNKNOWN_FLOOD_BANTIME + TStime());
 	ircsprintf(mo2, "%li", TStime());
 	tkllayer[6] = mo;
 	tkllayer[7] = mo2;
 	tkllayer[8] = "Flood from unknown connection";
+	/* This removes all unknown clients from the specified IP, it should prevent
+ 	 * duplicate notices about the flood */
+	for (i = 0; i <= LastSlot; i++)
+	{
+		if (!(acptr = local[i]))
+			continue;
+		if (!IsUnknown(acptr))
+			continue;
+#ifndef INET6
+		if (acptr->ip.S_ADDR == cptr->ip.S_ADDR)
+#else
+		if (!bcmp(acptr->ip.S_ADDR, cptr->ip.S_ADDR, sizeof(cptr->ip.S_ADDR)))
+#endif
+			exit_client(acptr, acptr, acptr, "Flood from unknown connection");
+	}
 	m_tkl(&me, &me, 9, tkllayer);
 	return;
+}
+
+/*
+ * This routine adds fake lag if needed.
+ */
+inline void parse_addlag(aClient *cptr, int cmdbytes)
+{
+	if (!IsServer(cptr) && 
+#ifdef FAKE_LAG_FOR_LOCOPS	
+	!IsAnOper(cptr))
+#else
+	!IsOper(cptr))
+#endif		
+	{
+		cptr->since += (1 + cmdbytes/90);
+	}		
 }
 
 /*
@@ -195,12 +228,12 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 	if (IsDead(cptr))
 		return 0;
 
-	if ((cptr->receiveK >= 4) && IsUnknown(cptr))
+	if ((cptr->receiveK >= UNKNOWN_FLOOD_AMOUNT) && IsUnknown(cptr))
 	{
-		sendto_realops("Flood from unknown connection %s detected",
-		    cptr->sockhost);
+		sendto_snomask(SNO_FLOOD, "Flood from unknown connection %s detected",
+			cptr->sockhost);
 		ban_flooder(cptr);
-		return 0;
+		return FLUSH_BUFFER;
 	}
 
 	/* this call is a bit obsolete? - takes up CPU */
@@ -312,6 +345,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 	else
 	{
 		int flags = 0;
+		int bytes = bufend - ch;
 		if (s)
 			*s++ = '\0';
 		if (!IsRegistered(from))
@@ -341,6 +375,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 			if (!IsRegistered(cptr) && stricmp(ch, "NOTICE")) {
 				sendto_one(from, ":%s %d %s :You have not registered",
 				    me.name, ERR_NOTREGISTERED, ch);
+				parse_addlag(cptr, bytes);
 				return -1;
 			}
 			if (IsShunned(cptr))
@@ -355,6 +390,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 					    from->name, ch);
 				Debug((DEBUG_ERROR, "Unknown (%s) from %s",
 				    ch, get_client_name(cptr, TRUE)));
+				parse_addlag(cptr, bytes);
 			}
 			ircstp->is_unco++;
 			return (-1);
@@ -370,23 +406,9 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 			return -1;
 		}
 		paramcount = cmptr->parameters;
-		i = bufend - ch;	/* Is this right? -Donwulff */
-		cmptr->bytes += i;
-		/* Changed this whole lag generating crap .. 
-		 * We only generate fake lag in HTM ..
-		 * --Stskeeps
-		*/
-		if (!IsServer(cptr) && 
-#ifdef FAKE_LAG_FOR_LOCOPS	
-		!IsAnOper(cptr)
-#else
-		!IsOper(cptr)
-#endif		
-		&& !(cmptr->flags & M_NOLAG))
-		{
-			cptr->since += (1 + i /90);
-			
-		}		
+		cmptr->bytes += bytes;
+		if (!(cmptr->flags & M_NOLAG))
+			parse_addlag(cptr, bytes);
 	}
 	/*
 	   ** Must the following loop really be so devious? On

@@ -168,6 +168,8 @@ int m_chgident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	/* illegal?! */
 	for (s = parv[2]; *s; s++)
 	{
+                if ((*s == '~') && (s == parv[2]))
+                        continue;
 		if (!isallowed(*s))
 		{
 			legalident = 0;

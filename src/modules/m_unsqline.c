@@ -123,7 +123,16 @@ DLLFUNC int m_unsqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	sendto_serv_butone_token(cptr, parv[0], MSG_UNSQLINE, TOK_UNSQLINE,
 	    "%s", parv[1]);
 
-	if ((bconf = Find_banEx(parv[1], CONF_BAN_NICK, CONF_BAN_TYPE_AKILL)))
+	for (bconf = conf_ban; bconf; bconf = (ConfigItem_ban *)bconf->next)
+	{
+		if (bconf->flag.type != CONF_BAN_NICK)
+			continue;
+		if (bconf->flag.type2 != CONF_BAN_TYPE_AKILL)
+			continue;
+		if (!stricmp(parv[1], bconf->mask))
+			break;
+	}
+	if (bconf)
 	{
 		DelListItem(bconf, conf_ban);
 		if (bconf->mask)

@@ -473,7 +473,11 @@ static char *replies[] = {
 /* 426 */ NULL,
 /* 427 */ NULL,
 /* 428 */ NULL,
+#ifdef NO_FLOOD_AWAY
+/* 429 ERR_TOOMANYAWAY */ ":%s 429 %s :Too Many aways - Flood Protection activated",
+#else
 /* 429 */ NULL,
+#endif
 /* 430 */ NULL,
 /* 431    ERR_NONICKNAMEGIVEN */ ":%s 431 %s :No nickname given",
 /* 432    ERR_ERRONEUSNICKNAME */ ":%s 432 %s %s :Erroneous Nickname: %s",
@@ -542,7 +546,7 @@ static char *replies[] = {
 /* 487    ERR_NOTFORUSERS */ ":%s 487 %s :%s is a server only command",
 /* 488    ERR_HTMDISABLED */ ":%s 488 %s :%s is currently disabled, please try again later.",
 /* 489    ERR_SECUREONLYCHAN */ ":%s 489 %s %s :Cannot join channel (+z)",
-/* 490 */ NULL,
+/* 490    ERR_NOSWEAR */ ":%s 490 %s :%s does not accept private messages containing swearing.",
 /* 491    ERR_NOOPERHOST */ ":%s 491 %s :No O-lines for your host",
 /* 492 */ NULL,
 /* 493 */ NULL,

@@ -20,8 +20,8 @@
 
 #include "config.h"
 #ifdef USE_SSL
-#include "common.h"
 #include "struct.h"
+#include "common.h"
 #include "h.h"
 #include "proto.h"
 #include "sys.h"
@@ -359,17 +359,7 @@ char	*ssl_get_cipher(SSL *ssl)
 	SSL_CIPHER *c; 
 	
 	buf[0] = '\0';
-	switch(ssl->session->ssl_version)
-	{
-		case SSL2_VERSION:
-			strcat(buf, "SSLv2"); break;
-		case SSL3_VERSION:
-			strcat(buf, "SSLv3"); break;
-		case TLS1_VERSION:
-			strcat(buf, "TLSv1"); break;
-		default:
-			strcat(buf, "UNKNOWN");
-	}
+	strcpy(buf, SSL_get_version(ssl));
 	strcat(buf, "-");
 	strcat(buf, SSL_get_cipher(ssl));
 	c = SSL_get_current_cipher(ssl);
@@ -602,9 +592,15 @@ static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
      */
     sendto_snomask(SNO_JUNK, "Exiting ssl client %s: %s: %s",
     	sptr->name, ssl_func, ssl_errstr);
-    SET_ERRNO(errtmp ? errtmp : P_EIO); /* Stick a generic I/O error */
     sptr->flags |= FLAGS_DEADSOCKET;
-    sptr->error_str = strdup(strerror(errtmp));
+	if (errtmp)
+	{
+		SET_ERRNO(errtmp);
+		sptr->error_str = strdup(strerror(errtmp));
+	} else {
+		SET_ERRNO(P_EIO);
+		sptr->error_str = strdup(ssl_errstr);
+	}
     return -1;
 }
 

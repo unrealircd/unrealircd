@@ -1957,3 +1957,161 @@ seen. gmtime warning still there
 - Changed version to beta15
 - Fixed /setident bug
 *** beta15 release **
+- Fixed a problem with modules not loading when #undef STRIPBADWORDS
+- Doc updates (SSL/stunnel example was wrong)
+- Fixed a buffer overflow that could be used against setuid setups, 
+  found by rave@dtors.net, reported by kokanin
+- Disabled CMDLINE_CONFIG(-f) by default
+- Fixed a bug in /list where opers could not see +s channels when doing /list #channel. 
+  Reported by _SciFi_ (#0000762)
+- Fixed a /who big which could make the server crash (oper only).
+- Fixed a match() bug
+- Fixed a /version bug
+- Improved fake lag stuff
+- Improved previous /version bugfix
+- Fixed some missing /helpop info reported by Jaw959 (#0000782)
+- Added set::throttle::period to allow you to change the throttling period 
+  (requires THROTTLING)
+- Updated some documentation
+- Fixed "proxyscan on quit" bug (#0000788)
+- Moved the "flood from unknown connection" notices to snomask +f
+- Fixed compile error
+- Fixed a restrict-usermodes bug reported by Rocko (#0000796)
+- Minor /die and /restart code cleanups
+- Added channel mode +M to 005 (#0000803) reported by jollino
+- Fixed a bug where +x would make hosts lowercase (#0000810) reported by rayman
+- Implemented a ban version {} (bans users based on CTCP VERSION). It works by sending out
+  a CTCP VERSION when a user connects then checking the reply. If you don't use any 
+  ban version{}'s then no version request is sent so users are not inconvenienced.
+- Rewrote the "flood from unknown connection" system to kill all matching users immediately
+  and also added set::anti-flood::unknown-flood-bantime and 
+  set::anti-flood::unknown-flood-amount to set the length of time an unknown connection
+  flooder is banned for and how much data (in KB) the user must send before being banned.
+  This should fix (#0000767) reported by ora.
+- Updated some documentation
+- (Hopefully) fixed some Ziplinks problems
+- Added missing except tkl {} documentation
+- Documentation update and cleanup
+- Added umode +p (hide channels in whois). For opers, channels are shown as "!#chan" to indicate
+  that the user is +p and the channel is only shown because you are an oper.
+- Fixed a typo in the docs for except throttle (#0000830) reported by CoNfOuNd
+- Added set::modes-on-join to set channel modes that are set when a new channel is created.
+- Fixed a typo in the HTM docs (#0000832) reported by CoNfOuNd
+- Added anti-away-flood code, based on Bahamut. This prevents users from repeatedly using /away.
+  This feature is disabled by default (see NO_FLOOD_AWAY in config.h). 
+- Added set::anti-flood::away-count and set::anti-flood::away-period to control the away flood
+  system.
+- Moved the "missing user in SJOIN" notice to snomask +j
+- Rewrote some of the set::allow-userhost-change code. Fixes (#000843) and (#0000791) reported
+  by |VIO|Maverick and Rocko
+- Made throttling use DelListItem and fixed some confusing regarding
+  undeffing of THROTTLING
+- Fixed a set::modes-on-join bug and fixed an oob read in config parser.
+- Fixed an oper bug with /names on a +s channel (#0000816).
+- Fixed 2 other oob reads in config parser (parsing of size and time).
+- Fixed yet another oob read in config parser (ie: #0000841).
+- Fixed a typo in the docs (#0000867) reported by tc
+- Fixed a fast badword replace crash (#0000834) reported by orga
+- Fixed a ban version {} bug with NOSPOOF (#0000872) reported by poisoner
+- Made gline/zline/kline take precedence over a shun in TKL (#0000870) reported by KnuX`
+- Fixed a long standing typo where doc/example.conf still mentioned oflag e (#0000638)
+  reported by twigboy.
+- Possibly fixed an SSL crash bug (#0000871 and #000784) reported by shotgun and comrade
+- Fixed opermode bug which could cause the ircd to crash a while later (#0000823).
+- Changed throttling errormsg so mIRC recognizes it and waits a while.
+- Added SSL quit error messages
+- Fixed an SQLINE bug with sqlines without a reason
+- Fixed a bug effecting additions/deletions of SQLINES and deletions of SVSNLINES (may be
+  the cause of #0000866)
+- Fixed MAJOR "messages are lost" bug which can cause various problems: ziplink corruption,
+  duplicate user entry in sjoin, etc etc. This would happen if BUFFERPOOL was set too low (like
+  the default) and you got a lot of traffic. It's now handled a bit better and you'll get
+  a nice warning, additionally the default BUFFERPOOL is now set to MAXSENDQLENGTH*18 instead of
+  *9. Thanks to ora and others which helped me tracing this down.
+- Added tld::options::ssl so you can have different motd/rules files if the user is using SSL.
+- Fixed cloaking bug reported by Rocko (#0000869).
+- Added set::restrict-channelmodes, works exactly the same as restrict-usermodes, you can for
+  example disallow using of channelmode u and L. Suggested by poisoner and others (#0000838).
+- Added allow::options::ssl and allow::options::nopasscont, requested by iguy and Scytale.
+- Removed usermode +b from docs (been gone for a long time) (#0000798) reported by Rocko
+- Fixed an SQLINE bug
+- code cleanup / misc minor bugfixes (MyMalloc, oper msgs)
+- Fixed a throttling bug where it could return negative numbers.
+- Improved IPv6 throttle hashing
+- Make the above actually work
+- Improved throttle hashing (both IPv4 and IPv6).
+- Changed throttling so it now bans after M connects in N seconds rather than 2 connects in N 
+  seconds. (set::throttle::connections).
+- Updated channelmode +f "algorithm", much better now. Reported by JimmyZ, Rocko, and others.
+- Added badword::action <replace|block>. (replace is default). If you specify block, instead
+  of replacing the word with "<censored>" it will block the message from ever being sent. 
+  (#0000557) suggested by paranomix
+- Made /stats b output badword quit {} (#0000883) reported by AngryWolf
+- Made except ban {} override ban ip {} (suggested by Lithium).
+- Removed some old defines for the old password encryption system (#0000765) reported by
+  AngryWolf
+- Made it so you can use a ~ as the first character of an ident with /chgident (#0000765)
+  reported by AngryWolf
+- badword::action::block should now be ok
+- Added some missing /stats flags to help.conf and the /stats ? output (#0000886) reported
+  by Rocko
+- Fix for set::restrict-channelmodes (eating parameters).
+- Made it so if someone /who's you and you are +p it doesn't show the channel you are on
+- Fixed a ban version {} bug where it would version remote clients
+- Added aliases/anope.conf (For Anope IRC Services)
+- Updated some documentation
+- Minor error msg improvements
+- Fixed a bug with wrong hub/leaf settings ("non-hub introduced leaf") causing a crash 
+  (#0000732).
+- Fixed a bug where an unknown set::dns directive wasn't reported as an error (#0000898)
+  reported by AngryWolf
+- Made it so /msg nick@server and /notice nick@server use tokens if the server supports it
+  (#0000895) reported by Troco
+- Added some information to the docs listing the file names for motd, rules, etc. (#0000519)
+  suggested a LONG time ago by Jaw959
+- Fixed a compile error with openssl enabled at redhat 9.
+- Added some temporarely SQLINE debugging/trace code
+- Fixed a PRIVMSG channelprefix bug reported by aragon (#0000902)
+- Fixed far connect (+s +F): connects from U-lined servers are now hidden again.
+- Added IP bans like *!*@194.109.* (#0000474).
+- Fixed usermode +S: was accidently a local usermode (#0000909) reported by DukePyrolator.
+- Enabled throttling support by default, you need to have a (correct) set::throttle block
+  to make it work, otherwise it's just turned off.
+- Some code cleanups (s_conf.c, now has a config_setdefaultsettings()).
+- Fixed minor badwords /rehash memleak.
+- Added link::options::nohostcheck which makes Unreal not to validate the incomming host/IP
+  against the link::hostname field, useful for dynamic DNS hosts.
+- Some documentation improvements regarding link::hostname.
+- Changed the module umode adding function to allow an 'is_allowed' function. This fuction
+  defines who may set the specified usermode.
+- Made it so Ulined servers can use a TS that is in the past for topics (#0000448) reported 
+  by thilo
+- Fixed a bug with ban version {} where some clients didn't like the request we were sending.
+- Usermode +q can now be set by services admins, as stated in docs (#0000923).
+- Preparing beta16: release notes ready, version updated in docs/text (except version.h).
+- Changed version to beta16
+- Various docs typo fixes, some reported by AngryWolf (#0000913)
+- Mm, let's see what this checkin brings: 
+  * Removed thread questions from Config, and autoconf code from
+    configure.in, leaving in the old macros though, but inactive
+    --enable-standardthreads is dead as of now
+  * Undefined HOOKTYPE_SCAN_INFO
+  * Removed CONF_EXCEPT_SCAN
+  * Removed locking in events, Lock/UnlockEventSystem still active for other
+    possible uses.
+  * Removed scanners, web server module
+  * Removed except scan {}
+  * Removed SCAN_API stuff from l_commands.c, win32 makefiles, etc
+  * Removed basically any mentions of threads in source tree, excepting
+    threads.h which Resolver uses on win32
+  * Documentation changes not done yet
+- Updated docs [unreal32docs/example.conf] (maybe not all yet), win zip makefile fixed
+- Module coders: I've changed HOOKTYPE_PRE_LOCAL_CONNECT, you must now return '0' to let
+  the client pass and anything else is threated like a return, so you must return
+  FLUSH_BUFFER if you just called exit_client, this fixes a read-already-freed-mem bug.
+- Added warning message if set::scan exists
+- Made SVSNOOP work. Reported by Lx (#0000933).
+- Removed some more html files.
+- Removed CREDITS.POTENTIAL
+- Removed 'bugreport'
+*** beta16 release ***

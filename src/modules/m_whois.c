@@ -124,6 +124,10 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		NULL,		/* invited */
 		NULL,		/* silence */
 		NULL,		/* away */
+#ifdef NO_FLOOD_AWAY
+		0,		/* last_away */
+		0,		/* away_count */
+#endif
 		0,		/* servicestamp */
 		1,		/* refcount */
 		0,		/* joined */
@@ -238,6 +242,8 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (IsAnOper(sptr))
 #endif
 					showchannel = 1;
+				if ((acptr->umodes & UMODE_HIDEWHOIS) && !IsMember(sptr, chptr) && !IsAnOper(sptr))
+					showchannel = 0;
 				if (IsServices(acptr) && !IsNetAdmin(sptr))
 					showchannel = 0;
 				if (acptr == sptr)
@@ -256,13 +262,15 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						len = 0;
 					}
 #ifdef SHOW_SECRET
-					if (!(acptr == sptr) && IsAnOper(sptr)
+					if (IsAnOper(sptr)
 #else
-					if (!(acptr == sptr)
-					    && IsNetAdmin(sptr)
+					if (IsNetAdmin(sptr)
 #endif
-					    && SecretChannel(chptr))
+					    && SecretChannel(chptr) && !IsMember(sptr, chptr))
 						*(buf + len++) = '~';
+					if (acptr->umodes & UMODE_HIDEWHOIS && !IsMember(sptr, chptr)
+						&& IsAnOper(sptr))
+						*(buf + len++) = '!';
 					if (is_chanowner(acptr, chptr))
 						*(buf + len++) = '*';
 					else if (is_chanprot(acptr, chptr))

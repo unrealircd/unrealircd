@@ -24,6 +24,20 @@
 #define __struct_include__
 
 #include "config.h"
+/* need to include ssl stuff here coz otherwise you get
+ * conflicting types with isalnum/isalpha/etc @ redhat. -- Syzop
+ */
+#if defined(USE_SSL)
+#define OPENSSL_NO_KRB5
+#include <openssl/rsa.h>       /* SSL stuff */
+#include <openssl/crypto.h>
+#include <openssl/x509.h>
+#include <openssl/pem.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>    
+#include <openssl/evp.h>
+#include <openssl/rand.h>
+#endif
 #include "common.h"
 #include "sys.h"
 #include "hash.h"
@@ -42,16 +56,6 @@
 # ifdef SYSSYSLOGH
 #  include <sys/syslog.h>
 # endif
-#endif
-#if defined(USE_SSL)
-#include <openssl/rsa.h>       /* SSL stuff */
-#include <openssl/crypto.h>
-#include <openssl/x509.h>
-#include <openssl/pem.h>
-#include <openssl/ssl.h>
-#include <openssl/err.h>    
-#include <openssl/evp.h>
-#include <openssl/rand.h>
 #endif
 #ifdef ZIP_LINKS
 #include "zip.h"
@@ -627,7 +631,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 
 struct FloodOpt {
 	unsigned short nmsg;
-	TS   lastmsg;
+	TS   firstmsg;
 };
 
 struct MotdItem {
@@ -667,6 +671,10 @@ struct User {
 	Link *invited;		/* chain of invite pointer blocks */
 	Link *silence;		/* chain of silence pointer blocks */
 	char *away;		/* pointer to away message */
+#ifdef NO_FLOOD_AWAY
+	time_t last_away;	/* last time the user set away */
+	unsigned char away_count;	/* number of times away has been set */
+#endif
 	u_int32_t servicestamp;	/* Services' time stamp variable */
 	signed char refcnt;	/* Number of times this block is referenced */
 	unsigned short joined;		/* number of channels joined */
@@ -744,6 +752,7 @@ extern ircstats IRCstats;
 typedef struct {
 	long	mode;
 	char	flag;
+	int	(*allowed)(aClient *sptr);
 } aUMtable;
 
 extern aUMtable *Usermode_Table;
@@ -764,6 +773,7 @@ extern short	 Usermode_highest;
 #define CONNECT_AUTO		0x000004
 #define CONNECT_QUARANTINE	0x000008
 #define CONNECT_NODNSCACHE	0x000010
+#define CONNECT_NOHOSTCHECK	0x000020
 
 #define SSLFLAG_FAILIFNOCERT 	0x1
 #define SSLFLAG_VERIFYCERT 	0x2
@@ -903,6 +913,7 @@ struct _configflag_tld
 #define CONF_BAN_SERVER		3
 #define CONF_BAN_USER   	4
 #define CONF_BAN_REALNAME 	5
+#define CONF_BAN_VERSION        6
 
 #define CONF_BAN_TYPE_CONF	0
 #define CONF_BAN_TYPE_AKILL	1
@@ -911,7 +922,6 @@ struct _configflag_tld
 #define CRULE_ALL		0
 #define CRULE_AUTO		1
 
-#define CONF_EXCEPT_SCAN	0
 #define CONF_EXCEPT_BAN		1
 #define CONF_EXCEPT_TKL		2
 #define CONF_EXCEPT_THROTTLE	3
@@ -943,6 +953,8 @@ struct _configitem_class {
 struct _configflag_allow {
 	unsigned	noident :1;
 	unsigned	useip :1;
+	unsigned	ssl :1;
+	unsigned	nopasscont :1;
 };
 
 struct _configitem_allow {
@@ -983,12 +995,16 @@ struct _configitem_ulines {
 	char 		 *servername;
 };
 
+#define TLD_SSL		0x1
+#define TLD_REMOTE	0x2
+
 struct _configitem_tld {
 	ConfigItem 	*prev, *next;
 	ConfigFlag_tld 	flag;
 	char 		*mask, *motd_file, *rules_file, *channel;
 	struct tm	*motd_tm;
 	aMotd		*rules, *motd;
+	u_short		options;
 };
 
 struct _configitem_listen {
@@ -1051,6 +1067,9 @@ struct _configitem_ban {
 #define BADW_TYPE_REGEX   0x8
 #endif
 
+#define BADWORD_REPLACE 1
+#define BADWORD_BLOCK 2
+
 struct _configitem_badword {
 	ConfigItem      *prev, *next;
 	ConfigFlag	flag;
@@ -1058,6 +1077,7 @@ struct _configitem_badword {
 #ifdef FAST_BADWORD_REPLACE
 	unsigned short	type;
 #endif
+	char		action;
 	regex_t 	expr;
 };
 
@@ -1495,6 +1515,7 @@ struct ThrottlingBucket
 	struct ThrottlingBucket *prev, *next;
 	struct IN_ADDR	in;
 	time_t		since;
+	char		count;
 };
 
 void	init_throttling_hash();

@@ -183,6 +183,10 @@ anUser *make_user(aClient *cptr)
 #endif
 		user->swhois = NULL;
 		user->away = NULL;
+#ifdef NO_FLOOD_AWAY
+		user->last_away = 0;
+		user->away_count = 0;
+#endif
 		user->refcnt = 1;
 		user->joined = 0;
 		user->channel = NULL;
@@ -241,7 +245,7 @@ void free_user(anUser *user, aClient *cptr)
 		 */
 		if (user->joined || user->refcnt < 0 ||
 		    user->invited || user->channel)
-			sendto_ops("* %#x user (%s!%s@%s) %#x %#x %#x %d %d *",
+			sendto_realops("* %#x user (%s!%s@%s) %#x %#x %#x %d %d *",
 			    cptr, cptr ? cptr->name : "<noname>",
 			    user->username, user->realhost, user,
 			    user->invited, user->channel, user->joined,

@@ -1007,6 +1007,23 @@ void sendto_channel_butserv(aChannel *chptr, aClient *from, char *pattern, ...)
 	return;
 }
 
+void sendto_channel_butserv_butone(aChannel *chptr, aClient *from, aClient *one, char *pattern, ...)
+{
+	va_list vl;
+	Member *lp;
+	aClient *acptr;
+
+	for (va_start(vl, pattern), lp = chptr->members; lp; lp = lp->next)
+	{
+		if (lp->cptr == one)
+			continue;
+		if (MyConnect(acptr = lp->cptr))
+			vsendto_prefix_one(acptr, from, pattern, vl);
+	}
+	va_end(vl);
+	return;
+}
+
 /*
 ** send a msg to all ppl on servers/hosts that match a specified mask
 ** (used for enhanced PRIVMSGs)
@@ -1525,9 +1542,9 @@ void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnec
 	char connectd[1024];
 	char connecth[1024];
 
-	RunHook(HOOKTYPE_LOCAL_CONNECT, sptr);
 	if (!disconnect)
 	{
+		RunHook(HOOKTYPE_LOCAL_CONNECT, sptr);
 		ircsprintf(connectd,
 		    "*** Notice -- Client connecting on port %d: %s (%s@%s) [%s] %s%s%s",
 		    sptr->listener->port, nick, user->username, user->realhost,

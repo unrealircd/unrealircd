@@ -281,10 +281,8 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		} 
 		if (aconf->snomask)
 			set_snomask(sptr, aconf->snomask);
-		else if (OPER_SNOMASK)
-			set_snomask(sptr, OPER_SNOMASK);
 		else
-			set_snomask(sptr, SNO_DEFOPER);
+			set_snomask(sptr, OPER_SNOMASK);
 		if (sptr->user->snomask)
 		{
 			sptr->user->snomask |= SNO_SNOTICE; /* set +s if needed */

@@ -1045,7 +1045,7 @@ void set_sock_opts(int fd, aClient *cptr)
 			for (*readbuf = '\0'; opt > 0; opt--, s += 3)
 				(void)ircsprintf(s, "%2.2x:", *t++);
 			*s = '\0';
-			sendto_ops("Connection %s using IP opts: (%s)",
+			sendto_realops("Connection %s using IP opts: (%s)",
 			    get_client_name(cptr, TRUE), readbuf);
 		}
 		if (setsockopt(fd, IPPROTO_IP, IP_OPTIONS, (OPT_TYPE *)NULL,
@@ -1262,20 +1262,24 @@ add_con_refuse:
 			goto add_con_refuse;
 		}
 #ifdef THROTTLING
-		else if (!throttle_can_connect(&acptr->ip))
-		{
-			ircsprintf(zlinebuf,
-				"ERROR :Closing Link: [%s] (Throttling: Reconnecting too fast) -"
-					"Email %s for more information.)\r\n",
-					Inet_ia2p(&acptr->ip),
-					KLINE_ADDRESS);
-			set_non_blocking(fd, acptr);
-			set_sock_opts(fd, acptr);
-			send(fd, zlinebuf, strlen(zlinebuf), 0);
-			goto add_con_refuse;
-		}
 		else
-			add_throttling_bucket(&acptr->ip);
+		{
+			int val;
+			if (!(val = throttle_can_connect(&acptr->ip)))
+			{
+				ircsprintf(zlinebuf,
+					"ERROR :Closing Link: [%s] (Throttled: Reconnecting too fast) -"
+						"Email %s for more information.)\r\n",
+						Inet_ia2p(&acptr->ip),
+						KLINE_ADDRESS);
+				set_non_blocking(fd, acptr);
+				set_sock_opts(fd, acptr);
+				send(fd, zlinebuf, strlen(zlinebuf), 0);
+				goto add_con_refuse;
+			}
+			else if (val == 1)
+				add_throttling_bucket(&acptr->ip);
+		}
 #endif
 		acptr->port = ntohs(addr.SIN_PORT);
 	}
@@ -1400,7 +1404,7 @@ static int read_packet(aClient *cptr, fd_set *rfd)
 		   ** it on the end of the receive queue and do it when its
 		   ** turn comes around.
 		 */
-		if (dbuf_put(&cptr->recvQ, readbuf, length) < 0)
+		if (!dbuf_put(&cptr->recvQ, readbuf, length))
 			return exit_client(cptr, cptr, cptr, "dbuf_put fail");
 
 		if (IsPerson(cptr) && DBufLength(&cptr->recvQ) > get_recvq(cptr))
@@ -1563,7 +1567,7 @@ static int read_packet(aClient *cptr)
 		 * Before we even think of parsing what we just read, stick
 		 * it on the end of the receive queue and do it when its turn
 		 * comes around. */
-		if (dbuf_put(&cptr->recvQ, readbuf, length) < 0)
+		if (!dbuf_put(&cptr->recvQ, readbuf, length))
 			return exit_client(cptr, cptr, cptr, "dbuf_put fail");
 
 		if (IsPerson(cptr) &&
@@ -1820,7 +1824,7 @@ int  read_message(time_t delay, fdlist *listp)
 			if (++OpenFiles >= MAXCLIENTS)
 			{
 				ircstp->is_ref++;
-				sendto_ops("All connections in use. (%s)",
+				sendto_realops("All connections in use. (%s)",
 				    get_client_name(cptr, TRUE));
 #ifndef INET6
 				(void)send(fd,
@@ -2221,7 +2225,7 @@ int  read_message(time_t delay, fdlist *listp)
 			if (fd >= MAXCLIENTS)
 			{
 				ircstp->is_ref++;
-				sendto_ops("All connections in use. (%s)",
+				sendto_realops("All connections in use. (%s)",
 				    get_client_name(cptr, TRUE));
 				(void)send(fd,
 				    "ERROR :All connections in use\r\n", 32, 0);

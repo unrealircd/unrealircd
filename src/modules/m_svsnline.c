@@ -188,7 +188,16 @@ DLLFUNC int m_svsnline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  if (parc < 3)
 			  return 0;
 		  
-		  if ((bconf = Find_banEx(parv[3], CONF_BAN_REALNAME, CONF_BAN_TYPE_AKILL)))
+		  for (bconf = conf_ban; bconf; bconf = (ConfigItem_ban *)bconf->next)
+		  {
+			if (bconf->flag.type != CONF_BAN_REALNAME)
+				continue;
+			if (bconf->flag.type2 != CONF_BAN_TYPE_AKILL)
+				continue;
+			if (!stricmp(bconf->mask, parv[3]))
+				break;
+		  }
+		  if (bconf)
 		  {
 		  	DelListItem(bconf, conf_ban);
 		  	

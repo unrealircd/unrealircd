@@ -42,26 +42,15 @@
 
 ID_Copyright("(C) Carsten Munk 2001");
 
-#ifndef HAVE_NO_THREADS
-#include "threads.h"
-MUTEX			sys_EventLock;
-#endif
-
 
 Event *events = NULL;
 
 void	LockEventSystem(void)
 {
-#ifndef HAVE_NO_THREADS
-	IRCMutexLock(sys_EventLock);
-#endif
 }
 
 void	UnlockEventSystem(void)
 {
-#ifndef HAVE_NO_THREADS
-	IRCMutexUnlock(sys_EventLock);
-#endif
 }
 
 
@@ -185,25 +174,24 @@ freeit:
 void	EventStatus(aClient *sptr)
 {
 	Event *eventptr;
-
+	time_t now = TStime();
+	
 	if (!events)
 	{
 		sendto_one(sptr, ":%s NOTICE %s :*** No events",
 				me.name, sptr->name);
+		return;
 	}
 	for (eventptr = events; eventptr; eventptr = eventptr->next)
 	{
 		sendto_one(sptr, ":%s NOTICE %s :*** Event %s: e/%i h/%i n/%i l/%i", me.name,
 			sptr->name, eventptr->name, eventptr->every, eventptr->howmany,
-				TStime() - eventptr->last, (eventptr->last + eventptr->every) - TStime());
+				now - eventptr->last, (eventptr->last + eventptr->every) - now);
 	}
 }
 
 void	SetupEvents(void)
 {
-#ifndef HAVE_NO_THREADS
-	IRCCreateMutex(sys_EventLock);
-#endif
 	LockEventSystem();
 
 	/* Start events */

@@ -47,10 +47,6 @@
 #undef DYNAMIC_LINKING
 #endif
 
-#ifdef SCAN_API
-extern ModuleHeader scan_socks_Header;
-extern ModuleHeader scan_http_Header;
-#endif
 extern ModuleHeader m_svsnoop_Header;
 ModuleInfo ModCmdsInfo;
 /* Place includes here */
@@ -74,9 +70,6 @@ ModuleHeader l_commands_Header
 */
 
 extern int m_htm_Test(ModuleInfo *modinfo);
-#ifdef SCAN_API
-extern int m_scan_Test(ModuleInfo *modinfo);
-#endif
 
 extern int m_sethost_Init(ModuleInfo *modinfo), m_setname_Init(ModuleInfo *modinfo), m_chghost_Init(ModuleInfo *modinfo);
 extern int m_chgident_Init(ModuleInfo *modinfo), m_setident_Init(ModuleInfo *modinfo), m_sdesc_Init(ModuleInfo *modinfo);
@@ -96,9 +89,6 @@ extern int m_svspart_Init(ModuleInfo *modinfo), m_svslusers_Init(ModuleInfo *mod
 extern int m_svswatch_Init(ModuleInfo *modinfo), m_svssilence_Init(ModuleInfo *modinfo);
 #ifdef GUEST
 extern int m_guest_Init(ModuleInfo *modinfo);
-#endif
-#ifdef SCAN_API
-extern int m_scan_Init(ModuleInfo *modinfo), scan_socks_Init(ModuleInfo *modinfo), scan_http_Init(ModuleInfo *modinfo);
 #endif
 
 extern int m_sethost_Load(int module_load), m_setname_Load(int module_load), m_chghost_Load(int module_load);
@@ -120,9 +110,6 @@ extern int m_svswatch_Load(int module_load), m_svssilence_Load(int module_load);
 #ifdef GUEST
 extern int m_guest_Load(int module_load);
 #endif
-#ifdef SCAN_API
-extern int m_scan_Load(int module_load), scan_socks_Load(int module_load), scan_http_Load(int module_load);
-#endif
 
 extern int m_sethost_Unload(), m_setname_Unload(), m_chghost_Unload(), m_chgident_Unload();
 extern int m_setident_Unload(), m_sdesc_Unload(), m_svsmode_Unload(), m_swhois_Unload();
@@ -139,9 +126,6 @@ extern int m_svswatch_Unload(), m_svssilence_Unload();
 #ifdef GUEST
 extern int m_guest_Unload();
 #endif
-#ifdef SCAN_API
-extern int m_scan_Unload(), scan_socks_Unload(), scan_http_Unload();
-#endif
 
 #ifdef DYNAMIC_LINKING
 DLLFUNC int Mod_Test(ModuleInfo *modinfo)
@@ -153,13 +137,6 @@ int l_commands_Test(ModuleInfo *modinfo)
 	Module p;
 #endif
 	bcopy(modinfo,&ModCmdsInfo,modinfo->size);
-#ifdef SCAN_API
-        p.header = &scan_socks_Header;
-        Module_Depend_Resolve(&p);
-        p.header = &scan_http_Header;
-        Module_Depend_Resolve(&p);
-	m_scan_Test(&ModCmdsInfo);
-#endif
 	m_htm_Test(&ModCmdsInfo);
 	return MOD_SUCCESS;
 }
@@ -227,11 +204,6 @@ int    l_commands_Init(ModuleInfo *modinfo)
 #ifdef GUEST
 	m_guest_Init(&ModCmdsInfo);
 #endif
-#ifdef SCAN_API
-	m_scan_Init(&ModCmdsInfo);
-	scan_socks_Init(&ModCmdsInfo);
-	scan_http_Init(&ModCmdsInfo);
-#endif
 	return MOD_SUCCESS;
 }
 #ifdef DYNAMIC_LINKING
@@ -286,11 +258,6 @@ int    l_commands_Load(int module_load)
 	m_svslusers_Load(module_load);
 #ifdef GUEST
 	m_guest_Load(module_load);
-#endif
-#ifdef SCAN_API
-	m_scan_Load(module_load);
-	scan_socks_Load(module_load);
-	scan_http_Load(module_load);
 #endif
 	return MOD_SUCCESS;
 }
@@ -347,11 +314,6 @@ int	l_commands_Unload(int module_unload)
 	m_svslusers_Unload();
 #ifdef GUEST
 	m_guest_Unload();
-#endif
-#ifdef SCAN_API
-	scan_socks_Unload();
-	scan_http_Unload();
-	m_scan_Unload();
 #endif
 	return MOD_SUCCESS;
 }

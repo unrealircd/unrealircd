@@ -261,7 +261,8 @@ int  find_tkline_match(aClient *cptr, int xx)
 	for (lp = tklines; lp; lp = lp->next)
 	{
 		points = 0;
-
+		if (lp->type & TKL_SHUN)
+			continue;
 		if (!match(lp->usermask, cname) && !match(lp->hostmask, chost))
 			points = 1;
 		if (!match(lp->usermask, cname) && !match(lp->hostmask, cip))
@@ -327,17 +328,66 @@ int  find_tkline_match(aClient *cptr, int xx)
 		    "Z:lined (%s)",lp->reason);
 		return exit_client(cptr, cptr, &me, msge);
 	}
-	if (lp->type & (TKL_SHUN))
-	{
-		if (IsShunned(cptr))
-			return 1;
-		if (IsAdmin(cptr))
-			return 1;
-		SetShunned(cptr);
-		return 2;
-	}
 
 	return 3;
+}
+
+int  find_shun(aClient *cptr)
+{
+	aTKline *lp;
+	char *chost, *cname, *cip;
+	TS   nowtime;
+	char msge[1024];
+	int	points = 0;
+	ConfigItem_except *excepts;
+	char host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
+	int match_type = 0;
+	if (IsServer(cptr) || IsMe(cptr))
+		return -1;
+
+	if (IsShunned(cptr))
+		return 1;
+	if (IsAdmin(cptr))
+		return 1;
+
+	nowtime = TStime();
+	chost = cptr->sockhost;
+	cname = cptr->user ? cptr->user->username : "unknown";
+	cip = (char *)Inet_ia2p(&cptr->ip);
+
+
+	for (lp = tklines; lp; lp = lp->next)
+	{
+		points = 0;
+		
+		if (!(lp->type & TKL_SHUN))
+			continue;
+
+		if (!match(lp->usermask, cname) && !match(lp->hostmask, chost))
+			points = 1;
+		if (!match(lp->usermask, cname) && !match(lp->hostmask, cip))
+			points = 1;
+		if (points == 1)
+			break;
+		else
+			points = 0;
+	}
+
+	if (points != 1)
+		return 1;
+	strcpy(host, make_user_host(cname, chost));
+	strcpy(host2, make_user_host(cname, cip));
+		match_type = CONF_EXCEPT_TKL;
+	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
+		if (excepts->flag.type != match_type || (match_type == CONF_EXCEPT_TKL && 
+		    excepts->type != lp->type))
+			continue;
+		if (!match(excepts->mask, host) || !match(excepts->mask, host2))
+			return 1;		
+	}
+	
+	SetShunned(cptr);
+	return 2;
 }
 
 int  find_tkline_match_zap(aClient *cptr)

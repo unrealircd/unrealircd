@@ -62,7 +62,7 @@ Module *Module_make(ModuleHeader *header,
        );
 #ifdef UNDERSCORE
 void *obsd_dlsym(void *handle, char *symbol) {
-    char *obsdsymbol = (char*)malloc(strlen(symbol) + 2);
+    char *obsdsymbol = (char*)MyMalloc(strlen(symbol) + 2);
     void *symaddr = NULL;
 
     if (obsdsymbol) {
@@ -127,7 +127,7 @@ char  *Module_Create(char *path_)
 
 	if(!strchr(path, '/'))
 	{
-		path = malloc(strlen(path) + 3);
+		path = MyMalloc(strlen(path) + 3);
 		strcpy(path, "./");
 		strcat(path, path_);
 	}
@@ -148,7 +148,7 @@ char  *Module_Create(char *path_)
 		}
 		if (sscanf(mod_header->modversion, "3.2-b%d-%d", &betaversion, &tag)) {
 			if (betaversion < 5 || betaversion >8) {
-				ircsprintf(errorbuf, "Unsupported version, we support %s, %s is %s",
+				snprintf(errorbuf, 1023, "Unsupported version, we support %s, %s is %s",
 					   MOD_WE_SUPPORT, path, mod_header->modversion);
 				irc_dlclose(Mod);
 				return(errorbuf);
@@ -210,7 +210,7 @@ char  *Module_Create(char *path_)
 			else {
 				if ((ret = (*Mod_Test)(0)) < MOD_SUCCESS)
 				{
-					ircsprintf(errorbuf, "Mod_Test returned %i",
+					snprintf(errorbuf, 1023, "Mod_Test returned %i",
 						   ret);
 					/* We EXPECT the module to have cleaned up it's mess */
 				        Module_free(mod);

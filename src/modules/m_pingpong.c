@@ -202,6 +202,10 @@ Debug((DEBUG_NOTICE, "NOSPOOF"));
 			goto temp;
 	}
 	sptr->nospoof = 0;
+	if (USE_BAN_VERSION && MyConnect(sptr))
+		sendto_one(sptr, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
+			   me.name, sptr->name);
+
 	if (sptr->user && sptr->name[0])
 		return register_user(cptr, sptr, sptr->name,
 		    sptr->user->username, NULL, NULL);

@@ -50,7 +50,33 @@ int hlength = strlen (haystack);
 	}
   return NULL; /* not found */
 }
+inline int fast_badword_match(ConfigItem_badword *badword, char *line)
+{
+ 	char *p;
+	int ret, bwlen = strlen(badword->word);
+	if ((badword->type & BADW_TYPE_FAST_L) && (badword->type & BADW_TYPE_FAST_R))
+		return (our_strcasestr(line, badword->word) ? 1 : 0);
 
+	p = line;
+	while((p = our_strcasestr(p, badword->word)))
+	{
+		if (!(badword->type & BADW_TYPE_FAST_L))
+		{
+			if ((p != line) && isalnum(*(p - 1))) /* aaBLA but no *BLA */
+				goto next;
+		}
+		if (!(badword->type & BADW_TYPE_FAST_R))
+		{
+			if (isalnum(*(p + bwlen)))  /* BLAaa but no BLA* */
+				goto next;
+		}
+		/* Looks like it matched */
+		return 1;
+next:
+		p += bwlen;
+	}
+	return 0;
+}
 /* fast_badword_replace:
  * a fast replace routine written by Syzop used for replacing badwords.
  * searches in line for huntw and replaces it with replacew,
@@ -83,9 +109,9 @@ int cleaned = 0;
 			searchn = strlen(badword->word);
 		/* Hunt for start of word */
  		if (pold > line) {
-			for (startw = pold; ((*startw != ' ') && (startw != line)); startw--);
-			if (*startw == ' ')
-				startw++; /* Don't point at the space but at the word! */
+			for (startw = pold; (isalnum(*startw) && (startw != line)); startw--);
+			if (!isalnum(*startw))
+				startw++; /* Don't point at the space/seperator but at the word! */
 		} else {
 			startw = pold;
 		}
@@ -153,7 +179,7 @@ void badwords_stats(aClient *sptr)
 {
 }
 
-char *stripbadwords(char *str, ConfigItem_badword *start_bw)
+char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
 {
 	regmatch_t pmatch[MAX_MATCH];
 	static char cleanstr[4096];
@@ -161,6 +187,8 @@ char *stripbadwords(char *str, ConfigItem_badword *start_bw)
 	char *ptr;
 	int  matchlen, stringlen, cleaned;
 	ConfigItem_badword *this_word;
+	
+	*blocked = 0;
 
 	if (!start_bw)
 		return str;
@@ -179,39 +207,61 @@ char *stripbadwords(char *str, ConfigItem_badword *start_bw)
 #ifdef FAST_BADWORD_REPLACE
 		if (this_word->type & BADW_TYPE_FAST)
 		{
-			int n;
-			/* fast_badword_replace() does size checking so we can use 512 here instead of 4096 */
-			n = fast_badword_replace(this_word, cleanstr, buf, 512);
-			if (!cleaned && n)
-				cleaned = n;
-			strcpy(cleanstr, buf);
-			memset(buf, 0, sizeof(buf)); /* regexp likes this somehow */
+			if (this_word->action == BADWORD_BLOCK)
+			{
+				if (fast_badword_match(this_word, cleanstr))
+				{
+					*blocked = 1;
+					return NULL;
+				}
+			}
+			else
+			{
+				int n;
+				/* fast_badword_replace() does size checking so we can use 512 here instead of 4096 */
+				n = fast_badword_replace(this_word, cleanstr, buf, 512);
+				if (!cleaned && n)
+					cleaned = n;
+				strcpy(cleanstr, buf);
+				memset(buf, 0, sizeof(buf)); /* regexp likes this somehow */
+			}
 		} else
 		if (this_word->type & BADW_TYPE_REGEX)
 		{
 #endif
-			ptr = cleanstr; /* set pointer to start of string */
-
-			while (regexec(&this_word->expr, ptr, MAX_MATCH, pmatch,0) != REG_NOMATCH)
+			if (this_word->action == BADWORD_BLOCK)
 			{
-				if (pmatch[0].rm_so == -1)
-					break;
-				cleaned = 1;
-				matchlen += pmatch[0].rm_eo - pmatch[0].rm_so;
-				strlncat(buf, ptr, sizeof buf, pmatch[0].rm_so);
-				if (this_word->replace)
-					strlcat(buf, this_word->replace, sizeof buf); 
-				else
-					strlcat(buf, REPLACEWORD, sizeof buf);
-				ptr += pmatch[0].rm_eo;	/* Set pointer after the match pos */
-				memset(&pmatch, 0, sizeof(pmatch));
+				if (!regexec(&this_word->expr, ptr, 0, NULL, 0))
+				{
+					*blocked = 1;
+					return NULL;
+				}
 			}
-			/* All the better to eat you with! */
-			strlcat(buf, ptr, sizeof buf);	
-			memcpy(cleanstr, buf, sizeof cleanstr);
-			memset(buf, 0, sizeof(buf));
-			if (matchlen == stringlen)
-				break;
+			else
+			{
+				ptr = cleanstr; /* set pointer to start of string */
+				while (regexec(&this_word->expr, ptr, MAX_MATCH, pmatch,0) != REG_NOMATCH)
+				{
+					if (pmatch[0].rm_so == -1)
+						break;
+					cleaned = 1;
+					matchlen += pmatch[0].rm_eo - pmatch[0].rm_so;
+					strlncat(buf, ptr, sizeof buf, pmatch[0].rm_so);
+					if (this_word->replace)
+						strlcat(buf, this_word->replace, sizeof buf); 
+					else
+						strlcat(buf, REPLACEWORD, sizeof buf);
+					ptr += pmatch[0].rm_eo;	/* Set pointer after the match pos */
+					memset(&pmatch, 0, sizeof(pmatch));
+				}
+
+				/* All the better to eat you with! */
+				strlcat(buf, ptr, sizeof buf);	
+				memcpy(cleanstr, buf, sizeof cleanstr);
+				memset(buf, 0, sizeof(buf));
+				if (matchlen == stringlen)
+					break;
+			}
 #ifdef FAST_BADWORD_REPLACE
 		}
 #endif
@@ -219,18 +269,18 @@ char *stripbadwords(char *str, ConfigItem_badword *start_bw)
 	return (cleaned) ? cleanstr : str;
 }
 
-char inline *stripbadwords_channel(char *str)
+char inline *stripbadwords_channel(char *str, int *blocked)
 {
-	return stripbadwords(str, conf_badword_channel);
+	return stripbadwords(str, conf_badword_channel, blocked);
 }
 
-char inline *stripbadwords_message(char *str)
+char inline *stripbadwords_message(char *str, int *blocked)
 {
-	return stripbadwords(str, conf_badword_message);
+	return stripbadwords(str, conf_badword_message, blocked);
 }
-char inline *stripbadwords_quit(char *str)
+char inline *stripbadwords_quit(char *str, int *blocked)
 {
-	return stripbadwords(str, conf_badword_quit);
+	return stripbadwords(str, conf_badword_quit, blocked);
 }
 
 #endif

@@ -741,7 +741,7 @@ struct	ThrottlingBucket	*ThrottlingHash[THROTTLING_HASH_SIZE+1];
 void	init_throttling_hash()
 {
 	bzero(ThrottlingHash, sizeof(ThrottlingHash));	
-	EventAddEx(NULL, "bucketcleaning", THROTTLING_PERIOD/2, 0,
+	EventAddEx(NULL, "bucketcleaning", (THROTTLING_PERIOD ? THROTTLING_PERIOD : 172800)/2, 0,
 		e_clean_out_throttling_buckets, NULL);		
 }
 
@@ -749,14 +749,15 @@ int	hash_throttling(struct IN_ADDR *in)
 {
 #ifdef INET6
 	u_char *cp;
+	unsigned int alpha, beta;
 #endif
 #ifndef INET6
-	return ((int)in->s_addr % THROTTLING_HASH_SIZE); 
+	return ((unsigned int)in->s_addr % THROTTLING_HASH_SIZE); 
 #else
 	cp = (u_char *) &in->s6_addr;
-	return (cp[0] ^ cp[1] ^ cp[2] ^ cp[3] ^ cp[4] ^ cp[5] ^
-		cp[6] ^ cp[7] ^ cp[8] ^ cp[9] ^ cp[10] ^ cp[11] ^ 
-		cp[12] ^ cp[13] ^ cp[14] ^ cp[15]);
+	memcpy(&alpha, cp + 8, sizeof(alpha));
+	memcpy(&beta, cp + 12, sizeof(beta));
+	return ((alpha ^ beta) % THROTTLING_HASH_SIZE);
 #endif
 }
 
@@ -779,10 +780,11 @@ void	add_throttling_bucket(struct IN_ADDR *in)
 	int	hash;
 	struct	ThrottlingBucket	*n;
 	
-	n = malloc(sizeof(struct ThrottlingBucket));	
+	n = MyMalloc(sizeof(struct ThrottlingBucket));	
 	n->next = n->prev = NULL; 
 	bcopy(in, &n->in, sizeof(struct IN_ADDR));
 	n->since = TStime();
+	n->count = 1;
 	hash = hash_throttling(in);
 	AddListItem(n, ThrottlingHash[hash]);
 	return;
@@ -798,15 +800,29 @@ void	del_throttling_bucket(struct ThrottlingBucket *bucket)
 	return;
 }
 
+/** Checks wether the user is connect-flooding.
+ * @retval 0 Denied, throttled.
+ * @retval 1 Allowed, but known in the list.
+ * @retval 2 Allowed, not in list or is an exception.
+ * @see add_connection()
+ */
 int	throttle_can_connect(struct IN_ADDR *in)
 {
-	if (!find_throttling_bucket(in))
+	struct ThrottlingBucket *b;
+
+	if (!THROTTLING_PERIOD || !THROTTLING_COUNT)
+		return 2;
+
+	if (!(b = find_throttling_bucket(in)))
 		return 1;
 	else
 	{
 		if (Find_except(Inet_ia2p(in), CONF_EXCEPT_THROTTLE))
-			return 1;
-		return 0;
+			return 2;
+		b->count++;
+		if (b->count > (THROTTLING_COUNT ? THROTTLING_COUNT : 3))
+			return 0;
+		return 2;
 	}
 }
 
@@ -818,15 +834,9 @@ EVENT(e_clean_out_throttling_buckets)
 		
 	for (i = 0; i < THROTTLING_HASH_SIZE; i++)
 		for (n = ThrottlingHash[i]; n; n = n->next)
-			if (TStime() - n->since > THROTTLING_PERIOD)
+			if ((TStime() - n->since) > (THROTTLING_PERIOD ? THROTTLING_PERIOD : 15))
 			{
-				if (n->prev)
-					n->prev->next = n->next;
-				else
-					ThrottlingHash[i] = n->next;
-				if (n->next)
-					n->next->prev = n->prev;	
-				z.next = n->next;
+				z.next = (struct ThrottlingBucket *) DelListItem(n, ThrottlingHash[i]);
 				MyFree(n);
 				n = &z;
 			}

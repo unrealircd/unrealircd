@@ -964,12 +964,14 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 			    "Your GECOS (real name) is banned from this server");
 		}
 		tkl_check_expire(NULL);
+		/* Check G/Z lines before shuns -- kill before quite -- codemastr */
 		if ((xx = find_tkline_match(sptr, 0)) < 0)
 		{
 			ircstp->is_ref++;
 			return xx;
 		}
-		RunHookReturn(HOOKTYPE_PRE_LOCAL_CONNECT, sptr, >0);
+		find_shun(sptr);
+		RunHookReturnInt(HOOKTYPE_PRE_LOCAL_CONNECT, sptr, !=0);
 	}
 	else
 	{
@@ -1724,7 +1726,6 @@ CMD_FUNC(m_nick)
 		    me.name, nick, sptr->nospoof, sptr->nospoof);
 		sendto_one(sptr, "PING :%X", sptr->nospoof);
 #endif /* NOSPOOF */
-
 #ifdef CONTACT_EMAIL
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** If you need assistance with a"
@@ -1762,11 +1763,17 @@ CMD_FUNC(m_nick)
 			   ** may reject the client and call exit_client for it
 			   ** --must test this and exit m_nick too!!!
 			 */
+#ifndef NOSPOOF
+			if (USE_BAN_VERSION && MyConnect(sptr))
+				sendto_one(sptr, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
+					me.name, nick);
+#endif
 			sptr->lastnick = TStime();	/* Always local client */
 			if (register_user(cptr, sptr, nick,
 			    sptr->user->username, NULL, NULL) == FLUSH_BUFFER)
 				return FLUSH_BUFFER;
 			update_watch = 0;
+
 		}
 	}
 	/*
@@ -1784,7 +1791,7 @@ CMD_FUNC(m_nick)
 	{
 		parv[3] = nick;
 		m_user(cptr, sptr, parc - 3, &parv[3]);
-		if (GotNetInfo(cptr))
+		if (GotNetInfo(cptr) && !IsULine(sptr))
 			sendto_snomask(SNO_FCLIENT,
 			    "*** Notice -- Client connecting at %s: %s (%s@%s)",
 			    sptr->user->server, sptr->name,
@@ -1978,6 +1985,10 @@ CMD_FUNC(m_user)
 	if (sptr->name[0] && (IsServer(cptr) ? 1 : IsNotSpoof(sptr)))
 		/* NICK and no-spoof already received, now we have USER... */
 	{
+		if (USE_BAN_VERSION && MyConnect(sptr))
+			sendto_one(sptr, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
+				me.name, sptr->name);
+
 		return(
 		    register_user(cptr, sptr, sptr->name, username, umodex,
 		    virthost));
@@ -2223,10 +2234,10 @@ CMD_FUNC(m_umode)
 	char **p, *m;
 	aClient *acptr;
 	int  what, setflags, setsnomask = 0;
-	short rpterror = 0, umode_restrict_err = 0;
+	short rpterror = 0, umode_restrict_err = 0, chk_restrict = 0, modex_err = 0;
 
 	what = MODE_ADD;
-
+	
 	if (parc < 2)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
@@ -2261,6 +2272,9 @@ CMD_FUNC(m_umode)
 		if ((sptr->umodes & Usermode_Table[i].mode))
 			setflags |= Usermode_Table[i].mode;
 
+	if (RESTRICT_USERMODES && MyClient(sptr) && !IsAnOper(sptr) && !IsServer(sptr))
+		chk_restrict = 1;
+
 	if (MyConnect(sptr))
 		setsnomask = sptr->user->snomask;
 	/*
@@ -2269,8 +2283,7 @@ CMD_FUNC(m_umode)
 	p = &parv[2];
 	for (m = *p; *m; m++)
 	{
-		if (MyClient(sptr) && RESTRICT_USERMODES &&
-		    !IsAnOper(sptr) && strchr(RESTRICT_USERMODES, *m))
+		if (chk_restrict && strchr(RESTRICT_USERMODES, *m))
 		{
 			if (!umode_restrict_err)
 			{
@@ -2332,25 +2345,28 @@ CMD_FUNC(m_umode)
 				case UHALLOW_NEVER:
 					if (MyClient(sptr))
 					{
-						sendto_one(sptr, ":%s NOTICE %s :*** Setting %cx is disabled", me.name, sptr->name, what == MODE_ADD ? '+' : '-');
-						return 0;
+						if (!modex_err) {
+							sendto_one(sptr, ":%s NOTICE %s :*** Setting %cx is disabled", me.name, sptr->name, what == MODE_ADD ? '+' : '-');
+							modex_err = 1;
+						}
+						break;
 					}
-					break;
+					goto def;
 				case UHALLOW_NOCHANS:
 					if (MyClient(sptr) && sptr->user->joined)
 					{
-						sendto_one(sptr, ":%s NOTICE %s :*** Setting %cx can not be done while you are on channels", me.name, sptr->name, what == MODE_ADD ? '+' : '-');
-						return 0;
+						if (!modex_err) {
+							sendto_one(sptr, ":%s NOTICE %s :*** Setting %cx can not be done while you are on channels", me.name, sptr->name, what == MODE_ADD ? '+' : '-');
+							modex_err = 1;
+						}
+						break;
 					}
-					break;
+					goto def;
 				case UHALLOW_REJOIN:
 					/* Handled later */
-					break;
+					goto def;
 			  }
-			  goto def;
-		  case 'B':
-			  if (what == MODE_ADD && MyClient(sptr))
-				  (void)m_botmotd(sptr, sptr, 1, parv);
+			  break;
 		  default:
 			def:
 			  
@@ -2359,7 +2375,12 @@ CMD_FUNC(m_umode)
 				  if (*m == Usermode_Table[i].flag)
 				  {
 					  if (what == MODE_ADD)
+					  {
+						  if (Usermode_Table[i].allowed)
+							if (!Usermode_Table[i].allowed(sptr))
+								break;
 						  sptr->umodes |= Usermode_Table[i].mode;
+					  }
 					  else
 						  sptr->umodes &= ~Usermode_Table[i].mode;
 					  break;
@@ -2431,7 +2452,7 @@ CMD_FUNC(m_umode)
 	   This is to remooove the kix bug.. and to protect some stuffie
 	   -techie
 	 */
-		if ((sptr->umodes & (UMODE_KIX)) && !IsNetAdmin(sptr))
+		if ((sptr->umodes & (UMODE_KIX)) && !IsNetAdmin(sptr) && !IsSAdmin(sptr))
 			sptr->umodes &= ~UMODE_KIX;
 
 		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
@@ -2530,6 +2551,13 @@ CMD_FUNC(m_umode)
 		if (sptr->user->snomask & SNO_QLINE)
 			sptr->user->snomask &= ~SNO_QLINE;
 	}
+
+	if ((sptr->umodes & UMODE_BOT) && !(setflags & UMODE_BOT))
+	{
+		/* now +B */
+	  (void)m_botmotd(sptr, sptr, 1, parv);
+	}
+
 	if (!(setflags & UMODE_OPER) && IsOper(sptr))
 		IRCstats.operators++;
 	if ((setflags & UMODE_OPER) && !IsOper(sptr))

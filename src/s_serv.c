@@ -135,6 +135,10 @@ CMD_FUNC(m_version)
 {
 	extern char serveropts[];
 
+	/* Only allow remote VERSIONs if registered -- Syzop */
+	if (!IsPerson(sptr) && !IsServer(cptr))
+		goto normal;
+
 	if (hunt_server_token(cptr, sptr, MSG_VERSION, TOK_VERSION, ":%s", 1, parc,
 	    parv) == HUNTED_ISME)
 	{
@@ -144,6 +148,7 @@ CMD_FUNC(m_version)
 		    tainted ? "3" : "",
 		    (IsAnOper(sptr) ? MYOSNAME : "*"), UnrealProtocol);
 		if (MyClient(sptr)) {
+normal:
 			sendto_one(sptr, ":%s 005 %s " PROTOCTL_CLIENT_1, me.name, sptr->name, PROTOCTL_PARAMETERS_1);
 			sendto_one(sptr, ":%s 005 %s " PROTOCTL_CLIENT_2, me.name, sptr->name, PROTOCTL_PARAMETERS_2);
 		}
@@ -659,8 +664,14 @@ CMD_FUNC(m_server)
 			 */
 			goto errlink;
 		}
-		/* For now, we don't check based on DNS, it is slow, and IPs
-		   are better */
+		/* For now, we don't check based on DNS, it is slow, and IPs are better.
+		 * We also skip checking if link::options::nohostcheck is set.
+		 */
+		if (link->options & CONNECT_NOHOSTCHECK)
+		{
+			aconf = link;
+			goto nohostcheck;
+		}
 		aconf = Find_link(cptr->username, cptr->sockhost, cptr->sockhost,
 		    servername);
 		
@@ -691,6 +702,7 @@ errlink:
 			return exit_client(cptr, sptr, &me,
 			    "Link denied (No matching link configuration)");
 		}
+nohostcheck:
 		/* Now for checking passwords */
 		if (Auth_Check(cptr, aconf->recvauth, cptr->passwd) == -1)
 		{
@@ -719,7 +731,7 @@ errlink:
 			    "ERROR :Server %s already exists from %s",
 			    servername,
 			    (ocptr->from ? ocptr->from->name : "<nobody>"));
-			sendto_ops
+			sendto_realops
 			    ("Link %s cancelled, server %s already exists from %s",
 			    get_client_name(acptr, TRUE), servername,
 			    (ocptr->from ? ocptr->from->name : "<nobody>"));
@@ -877,8 +889,7 @@ errlink:
 	}
 	else
 	{
-		m_server_remote(cptr, sptr, parc, parv);
-		return 0;
+		return m_server_remote(cptr, sptr, parc, parv);
 	}
 	return 0;
 }
@@ -906,12 +917,21 @@ CMD_FUNC(m_server_remote)
 		    "ERROR :Server %s already exists from %s",
 		    servername,
 		    (ocptr->from ? ocptr->from->name : "<nobody>"));
-		sendto_ops
+		sendto_realops
 		    ("Link %s cancelled, server %s already exists from %s",
 		    get_client_name(acptr, TRUE), servername,
 		    (ocptr->from ? ocptr->from->name : "<nobody>"));
-		return exit_client(acptr, acptr, acptr,
-		    "Server Exists");
+		if (acptr == cptr) {
+			return exit_client(acptr, acptr, acptr, "Server Exists");
+		} else {
+			/* AFAIK this can cause crashes if this happends remotely because
+			 * we will still receive msgs for some time because of lag.
+			 * Two possible solutions: unlink the directly connected server (cptr)
+			 * and/or fix all those commands which blindly trust server input. -- Syzop
+			 */
+			exit_client(acptr, acptr, acptr, "Server Exists");
+			return 0;
+		}
 	}
 	if ((bconf = Find_ban(servername, CONF_BAN_SERVER)))
 	{
@@ -1376,7 +1396,6 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 						sendto_one(cptr, "%s%s %s %s",
 						    ns ? "@" : ":",
 						    ns ? ns : me.name,
-						    me.name,
 						    (IsToken(cptr) ? TOK_SQLINE :
 						    MSG_SQLINE), bconf->mask);
 				}
@@ -2086,9 +2105,12 @@ CMD_FUNC(m_stats)
 			      (words->type & BADW_TYPE_FAST_L) ? "*" : "",
 			      words->word,
 			      (words->type & BADW_TYPE_FAST_R) ? "*" : "",
-			      words->replace ? words->replace : "<censored>");
+			      words->action == BADWORD_REPLACE ? 
+				(words->replace ? words->replace : "<censored>") : "");
  #else
-			  sendto_one(sptr, ":%s %i %s :c %s %s", me.name, RPL_TEXT, sptr->name,  words->word, words->replace ? words->replace : "<censored>");
+			  sendto_one(sptr, ":%s %i %s :c %s %s", me.name, RPL_TEXT, sptr->name,  words->word, 
+				words->action == BADWORD_REPLACE ? 
+				(words->replace ? words->replace : "<censored>") : "");
  #endif
 		  }
 		  for (words = conf_badword_message; words; words = (ConfigItem_badword *) words->next) {
@@ -2098,9 +2120,29 @@ CMD_FUNC(m_stats)
 			      (words->type & BADW_TYPE_FAST_L) ? "*" : "",
 			      words->word,
 			      (words->type & BADW_TYPE_FAST_R) ? "*" : "",
-			      words->replace ? words->replace : "<censored>");
+			      words->action == BADWORD_REPLACE ? 
+				(words->replace ? words->replace : "<censored>") : "");
  #else
-			  sendto_one(sptr, ":%s %i %s :m %s %s", me.name, RPL_TEXT, sptr->name, words->word, words->replace ? words->replace : "<censored>");
+			  sendto_one(sptr, ":%s %i %s :m %s %s", me.name, RPL_TEXT, sptr->name, words->word, 
+				words->action == BADWORD_REPLACE ? 
+				(words->replace ? words->replace : "<censored>") : "");
+
+ #endif
+		  }
+		  for (words = conf_badword_quit; words; words = (ConfigItem_badword *) words->next) {
+ #ifdef FAST_BADWORD_REPLACE
+			  sendto_one(sptr, ":%s %i %s :q %c %s%s%s %s",
+			      me.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
+			      (words->type & BADW_TYPE_FAST_L) ? "*" : "",
+			      words->word,
+			      (words->type & BADW_TYPE_FAST_R) ? "*" : "",
+			      words->action == BADWORD_REPLACE ? 
+				(words->replace ? words->replace : "<censored>") : "");
+ #else
+			  sendto_one(sptr, ":%s %i %s :q %s %s", me.name, RPL_TEXT, sptr->name, words->word, 
+				words->action == BADWORD_REPLACE ? 
+				(words->replace ? words->replace : "<censored>") : "");
+
  #endif
 		  }
 		  break;
@@ -2197,14 +2239,16 @@ CMD_FUNC(m_stats)
 	  case 'h':
 		  for (link_p = conf_link; link_p; link_p = (ConfigItem_link *) link_p->next)
 		  {
-			sendto_one(sptr, ":%s 213 %s C %s@%s * %s %i %s %s%s%s",
+			sendto_one(sptr, ":%s 213 %s C %s@%s * %s %i %s %s%s%s%s%s",
 				me.name, sptr->name, IsOper(sptr) ? link_p->username : "*",
 				IsOper(sptr) ? link_p->hostname : "*", link_p->servername,
 				link_p->port,
 				link_p->class->name,
 				(link_p->options & CONNECT_AUTO) ? "a" : "",
 				(link_p->options & CONNECT_SSL) ? "S" : "",
-				(link_p->options & CONNECT_ZIP) ? "z" : "");
+				(link_p->options & CONNECT_ZIP) ? "z" : "",
+				(link_p->options & CONNECT_NODNSCACHE) ? "d" : "",
+				(link_p->options & CONNECT_NOHOSTCHECK) ? "h" : "");
 			if (link_p->hubmask)
 			{
 				sendto_one(sptr, ":%s 244 %s H %s * %s",
@@ -2615,6 +2659,8 @@ CMD_FUNC(m_stats)
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "O - Send the oper block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
+		      "P - Send information about ports");
+		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "q - Send the SQLINE list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "Q - Send the ban nick block list");
@@ -2640,6 +2686,8 @@ CMD_FUNC(m_stats)
 		      "v - Send the deny version block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "V - Send the vhost block list");
+		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
+		      "X - Send a list of servers that are not currently linked");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "Y - Send the class block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
@@ -3704,10 +3752,6 @@ CMD_FUNC(m_restart)
 			    parv[0]);
 			return 0;
 		}
-		if (x == -2)
-		{
-			return 0;
-		}
 		if (x < 1)
 		{
 			return 0;
@@ -3963,11 +4007,7 @@ HUNTED_ISME)
 	}
 #endif
 	strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost), sizeof userhost);
-	for (ptr = conf_tld; ptr; ptr = (ConfigItem_tld *) ptr->next)
-	{
-		if (!match(ptr->mask, userhost))
-			break;
-	}
+	ptr = Find_tld(sptr, userhost);
 
 	if (ptr)
 	{
@@ -4258,11 +4298,7 @@ CMD_FUNC(m_rules)
 	}
 #endif
 	strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost), sizeof userhost);
-	for (ptr = conf_tld; ptr; ptr = (ConfigItem_tld *) ptr->next)
-	{
-		if (!match(ptr->mask, userhost))
-			break;
-	}
+	ptr = Find_tld(sptr, userhost);
 
 	if (ptr)
 	{
@@ -4354,10 +4390,6 @@ CMD_FUNC(m_die)
 		{
 			sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name,
 			    parv[0]);
-			return 0;
-		}
-		if (i == -2)
-		{
 			return 0;
 		}
 		if (i < 1)

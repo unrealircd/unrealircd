@@ -121,7 +121,7 @@ ConfigItem_oper		*Find_oper(char *name);
 ConfigItem_listen	*Find_listen(char *ipmask, int port);
 ConfigItem_ulines	*Find_uline(char *host);
 ConfigItem_except	*Find_except(char *host, short type);
-ConfigItem_tld		*Find_tld(char *host);
+ConfigItem_tld		*Find_tld(aClient *cptr, char *host);
 ConfigItem_link		*Find_link(char *username, char *hostname, char *ip, char *servername);
 ConfigItem_ban 		*Find_ban(char *host, short type);
 ConfigItem_ban 		*Find_banEx(char *host, short type, short type2);
@@ -286,6 +286,7 @@ extern void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChanne
     int prefix, char *cmd, char *tok, char *nick, char *text);
 extern void sendto_channel_butone(aClient *, aClient *, aChannel *, char *,
     ...);
+extern void sendto_channel_butserv_butone(aChannel *chptr, aClient *from, aClient *one, char *pattern, ...);
 extern void sendto_serv_butone(aClient *, char *, ...);
 extern void sendto_serv_butone_quit(aClient *, char *, ...);
 extern void sendto_serv_butone_sjoin(aClient *, char *, ...);
@@ -309,10 +310,10 @@ extern int writecalls, writeb[];
 extern int deliver_it(aClient *, char *, int);
 extern int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr);
 extern int  check_for_target_limit(aClient *sptr, void *target, const char *name);
-extern char *stripbadwords_message(char *str);
-extern char *stripbadwords_channel(char *str);
-extern char *stripbadwords_quit(char *str);
-extern char *stripbadwords(char *, ConfigItem_badword *);
+extern char *stripbadwords_message(char *str, int *);
+extern char *stripbadwords_channel(char *str, int *);
+extern char *stripbadwords_quit(char *str, int *);
+extern char *stripbadwords(char *, ConfigItem_badword *, int *);
 extern unsigned char *StripColors(unsigned char *);
 extern const char *StripControlCodes(unsigned char *text);
 extern char *canonize(char *buffer);
@@ -338,9 +339,13 @@ extern int m_umode(aClient *, aClient *, int, char **);
 extern int m_names(aClient *, aClient *, int, char **);
 extern int m_server_estab(aClient *);
 extern void umode_init(void);
-extern long umode_get(char, int);
-#define umode_lget(x) umode_get(x, 0);
-#define umode_gget(x) umode_get(x, 1);
+extern long umode_get(char, int, int (*)(aClient *));
+#define UMODE_GLOBAL 1
+#define UMODE_LOCAL 0
+#define umode_lget(x) umode_get(x, 0, 0);
+#define umode_gget(x) umode_get(x, 1, 0);
+extern int umode_allow_all(aClient *sptr);
+extern int umode_allow_opers(aClient *sptr);
 extern int  umode_delete(char ch, long val);
 extern void send_umode(aClient *, aClient *, long, long, char *);
 extern void send_umode_out(aClient *, aClient *, long);
@@ -429,7 +434,7 @@ extern long UMODE_DEAF;      /* 0x10000000       Deaf */
 extern long UMODE_HIDEOPER;  /* 0x20000000	 Hide oper mode */
 extern long UMODE_SETHOST;   /* 0x40000000	 used sethost */
 extern long UMODE_STRIPBADWORDS; /* 0x80000000	 */
-
+extern long UMODE_HIDEWHOIS; /* hides channels in /whois */
 extern long AllUmodes, SendUmodes;
 
 #ifndef HAVE_STRLCPY
@@ -515,6 +520,7 @@ extern int  channel_canjoin(aClient *sptr, char *name);
 extern char *collapse(char *pattern);
 extern void send_list(aClient *cptr, int numsend);
 extern int  find_tkline_match_zap(aClient *cptr);
+extern int  find_shun(aClient *cptr);
 extern void tkl_synch(aClient *sptr);
 extern void dcc_sync(aClient *sptr);
 extern void report_flines(aClient *sptr);
@@ -559,5 +565,7 @@ long config_checkval(char *value, unsigned short flags);
 void config_status(char *format, ...);
 void init_random();
 u_int32_t getrandom32();
+extern char trouble_info[1024];
 #define EVENT_DRUGS BASE_VERSION
-
+extern void rejoin_doparts(aClient *sptr);
+extern void rejoin_dojoinandmode(aClient *sptr);

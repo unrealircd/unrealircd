@@ -120,6 +120,7 @@ int  m_away(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	if (IsServer(sptr))
 		return 0;
         away = sptr->user->away;
+
         if (parc < 2 || !*awy2)
         {
                 /* Marking as not away */
@@ -127,23 +128,43 @@ int  m_away(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
                 {
                         MyFree(away);
                         sptr->user->away = NULL;
+			/* Only send this if they were actually away -- codemastr */
+	                sendto_serv_butone_token(cptr, parv[0], MSG_AWAY, TOK_AWAY, "");
                 }
                 /* hope this works XX */
-                sendto_serv_butone_token(cptr, parv[0], MSG_AWAY, TOK_AWAY, "");
                 if (MyConnect(sptr))
                         sendto_one(sptr, rpl_str(RPL_UNAWAY), me.name, parv[0]);
                 return 0;
         }
 
+#ifdef NO_FLOOD_AWAY
+	if (MyClient(sptr) && AWAY_PERIOD)
+	{
+		if ((sptr->user->last_away + AWAY_PERIOD) <= timeofday)
+			sptr->user->away_count = 0;
+
+		if (!IsAnOper(sptr))
+		{
+			sptr->user->last_away = timeofday;
+			if (sptr->user->away_count < AWAY_COUNT)
+				sptr->user->away_count++;
+			if (sptr->user->away_count >= AWAY_COUNT)
+			{
+				sendto_one(sptr, err_str(ERR_TOOMANYAWAY), me.name, parv[0]);
+				return 0;
+			}
+		}
+
+	}
+#endif
         /* Marking as away */
         if (strlen(awy2) > (size_t)TOPICLEN)
                 awy2[TOPICLEN] = '\0';
 
         if (away)
                 if (strcmp(away, parv[1]) == 0)
-                {
                         return 0;
-                }
+
         sendto_serv_butone_token(cptr, parv[0], MSG_AWAY, TOK_AWAY, ":%s",
             awy2);
 

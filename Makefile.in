@@ -33,7 +33,7 @@ FROMDOS=/home/cmunk/bin/4dos
 # IRCDLIBS blank.  If that fails, try recomendations below.
 #
 
-#XCFLAGS=-O -g -export-dynamic -pthread -DSCAN_API=1
+#XCFLAGS=-O -g -export-dynamic
 IRCDLIBS=@IRCDLIBS@
 CRYPTOLIB=@CRYPTOLIB@
 OPENSSLINCLUDES=

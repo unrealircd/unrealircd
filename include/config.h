@@ -142,11 +142,9 @@
 
 /*
  * THROTTLING
- *   This will only allow 1 connection per ip in THROTTLING_PERIOD time
- *   this will be adaptable using conf later
-*/
-#undef THROTTLING
-#define THROTTLING_PERIOD 15
+ *   This will only allow 1 connection per ip in set::throttle::period time
+ */
+#define THROTTLING
 
 /*
  * NAZIISH_CHBAN_HANDLING (formerly ANNOYING_BAN_THING)
@@ -341,7 +339,7 @@
  *       starts up the server with a new conf file that has some extra
  *       O-lines. So don't use this unless you're debugging.
  */
-#define	CMDLINE_CONFIG		/* allow conf-file to be specified on command line */
+#undef	CMDLINE_CONFIG		/* allow conf-file to be specified on command line */
 
 /*
  * Size of the LISTEN request.  Some machines handle this large
@@ -363,7 +361,7 @@
  *  Recommended value is 2 * MAXSENDQLENGTH, for hubs, 5 *.
  */
 #ifndef BUFFERPOOL
-#define	BUFFERPOOL     (9 * MAXSENDQLENGTH)
+#define	BUFFERPOOL     (18 * MAXSENDQLENGTH)
 #endif
 
 /*
@@ -389,6 +387,12 @@
  *       this default value will be used.
  */
 #define	CLIENT_FLOOD	8000
+
+/* Anti-Flood options
+ * NO_FLOOD_AWAY - enables limiting of how frequently a client can set /away
+ */
+
+#undef NO_FLOOD_AWAY
 
 /*
  * Define your network service names here.

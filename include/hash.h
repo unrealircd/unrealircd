@@ -64,7 +64,7 @@ typedef struct hashentry {
  * Throttling
 */
 #ifdef THROTTLING
-#define THROTTLING_HASH_SIZE	1024
+#define THROTTLING_HASH_SIZE	1019 /* prime number */
 #endif
 
 

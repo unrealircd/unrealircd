@@ -72,6 +72,7 @@ long UMODE_DEAF = 0L;          /* Deaf */
 long UMODE_HIDEOPER = 0L;      /* Hide oper mode */
 long UMODE_SETHOST = 0L;       /* Used sethost */
 long UMODE_STRIPBADWORDS = 0L; /* Strip badwords */
+long UMODE_HIDEWHOIS = 0L;     /* Hides channels in /whois */
 
 long AllUmodes;		/* All umodes */
 long SendUmodes;	/* All umodes which are sent to other servers (global umodes) */
@@ -101,7 +102,7 @@ void	umode_init(void)
 	UMODE_LOCOP = umode_lget('O');     /* 0x0200	 Local operator -- SRB */
 	UMODE_RGSTRONLY = umode_gget('R'); /* 0x0400  Only reg nick message */
 	UMODE_WEBTV = umode_gget('V');     /* 0x0800  WebTV Client */
-	UMODE_SERVICES = umode_lget('S');  /* 0x4000	 services */
+	UMODE_SERVICES = umode_gget('S');  /* 0x4000	 services */
 	UMODE_HIDE = umode_gget('x');	     /* 0x8000	 Hide from Nukes */
 	UMODE_NETADMIN = umode_gget('N');  /* 0x10000	 Network Admin */
 	UMODE_COADMIN = umode_gget('C');   /* 0x80000	 Co Admin */
@@ -114,6 +115,7 @@ void	umode_init(void)
 	UMODE_HIDEOPER = umode_gget('H');  /* 0x20000000	 Hide oper mode */
 	UMODE_SETHOST = umode_gget('t');   /* 0x40000000	 used sethost */
 	UMODE_STRIPBADWORDS = umode_gget('G'); /* 0x80000000	 */
+	UMODE_HIDEWHOIS = umode_gget('p'); /* Hides channels in /whois */
 }
 
 void make_umodestr(void)
@@ -134,7 +136,7 @@ void make_umodestr(void)
  * Add a usermode with character 'ch', if global is set to 1 the usermode is global
  * (sent to other servers) otherwise it's a local usermode
  */
-long	umode_get(char ch, int global)
+long	umode_get(char ch, int global, int (*allowed)(aClient *sptr))
 {
 	short	 i = 0;
 	short	 j = 0;
@@ -149,6 +151,7 @@ long	umode_get(char ch, int global)
 	if (i != UMODETABLESZ)
 	{
 		Usermode_Table[i].flag = ch;
+		Usermode_Table[i].allowed = allowed;
 		Debug((DEBUG_DEBUG, "umode_get(%c) returning %04x",
 			ch, Usermode_Table[i].mode));
 		/* Update usermode table highest */
@@ -189,3 +192,14 @@ int	umode_delete(char ch, long val)
 	}
 	return -1;
 }
+
+int umode_allow_all(aClient *sptr)
+{
+	return 1;
+}
+
+int umode_allow_opers(aClient *sptr)
+{
+	return IsAnOper(sptr) ? 1 : 0;
+}
+

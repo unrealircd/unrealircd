@@ -204,18 +204,6 @@
 /* Define the location of the executable */
 #undef SPATH
 
-/* Define if you want oper passwords crypted */
-#undef CRYPT_OPER_PASSWORD
-
-/* Define if you want link passwords crypted */
-#undef CRYPT_LINK_PASSWORD
-
-/* Define if you want die/restart passwords crypted */
-#undef CRYPT_XLINE_PASSWORD
-
-/* Define if you want allow passwords crypted */
-#undef CRYPT_ILINE_PASSWORD
-
 /* Set to the listen backlog size you want */
 #undef LISTEN_SIZE
 

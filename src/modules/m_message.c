@@ -145,6 +145,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 	char *nick, *server, *p, *cmd, *ctcp, *p2, *pc, *text;
 	int  cansend = 0;
 	int  prefix = 0;
+	char pfixchan[CHANNELLEN + 32];
 
 	/*
 	 * Reasons why someone can't send to a channel
@@ -156,6 +157,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 		"You are banned",
 		"CTCPs are not permitted in this channel",
 		"You must have a registered nick (+r) to talk on this channel",
+		"Swearing is not permitted in this channel",
 		NULL
 	};
 
@@ -299,6 +301,9 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 
 			if (!is_silenced(sptr, acptr))
 			{
+#ifdef STRIPBADWORDS
+				int blocked = 0;
+#endif
 				char *newcmd = cmd, *text;
 				Hook *tmphook;
 				
@@ -312,7 +317,16 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 
 #ifdef STRIPBADWORDS
 				if (!(IsULine(acptr) || IsULine(sptr)) && IsFilteringWords(acptr))
-					text = stripbadwords_message(parv[2]);
+				{
+					text = stripbadwords_message(parv[2], &blocked);
+					if (blocked)
+					{
+						if (!notice && MyClient(sptr))
+							sendto_one(sptr, rpl_str(ERR_NOSWEAR),
+								me.name, parv[0], acptr->name);
+						continue;
+					}
+				}
 				else
 #endif
 					text = parv[2];
@@ -336,27 +350,42 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 		if (p2 && (chptr = find_channel(p2, NullChn)))
 		{
 			if (p2 != nick)
+			{
+				int len = 0;
 				for (pc = nick; pc != p2; pc++)
 				{
 					switch (*pc)
 					{
 					  case '+':
+						  if (!(prefix & PREFIX_VOICE))
+						  	pfixchan[len++] = '+';
 						  prefix |= PREFIX_VOICE;
 						  break;
 					  case '%':
+						  if (!(prefix & PREFIX_HALFOP))
+						  	pfixchan[len++] = '%';
 						  prefix |= PREFIX_HALFOP;
 						  break;
 					  case '@':
+						  if (!(prefix & PREFIX_OP))
+						  	pfixchan[len++] = '@';
 						  prefix |= PREFIX_OP;
 						  break;
 					  default:
 						  break;	/* ignore it :P */
 					}
 				}
+				pfixchan[len] = '\0';
+				strlcat(pfixchan, p2, sizeof(pfixchan));
+				nick = pfixchan;
+			}
 			cansend =
 			    !IsULine(sptr) ? can_send(sptr, chptr, parv[2]) : 0;
 			if (!cansend)
 			{
+#ifdef STRIPBADWORDS
+				int blocked = 0;
+#endif
 				Hook *tmphook;
 				/*if (chptr->mode.mode & MODE_FLOODLIMIT) */
 				/* When we do it this way it appears to work? */
@@ -371,12 +400,28 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				    (char *)StripColors(parv[2]) : parv[2]);
 #ifdef STRIPBADWORDS
  #ifdef STRIPBADWORDS_CHAN_ALWAYS
-				text = stripbadwords_channel(text);
+				text = stripbadwords_channel(text,& blocked);
+				if (blocked)
+				{
+					if (!notice)
+						sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
+						    me.name, parv[0], parv[0],
+						    err_cantsend[6], p2);
+					continue;
+				}
  #else
-				text =
-				    (char *)(chptr->
-				    mode.mode & MODE_STRIPBADWORDS ? (char
-				    *)stripbadwords_channel(text) : text);
+				if (chptr->mode.mode & MODE_STRIPBADWORDS)
+				{
+					text = stripbadwords_channel(text, &blocked);
+					if (blocked)
+					{
+						if (!notice)
+							sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
+							    me.name, parv[0], parv[0],
+							    err_cantsend[6], p2);
+						continue;
+					}
+				}
  #endif
 #endif
 				for (tmphook = Hooks[HOOKTYPE_CHANMSG]; tmphook; tmphook = tmphook->next) {
@@ -463,9 +508,15 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 					 */
 					if (!IsMe(acptr))
 					{
-						sendto_one(acptr,
-						    ":%s %s %s :%s", parv[0],
-						    cmd, nick, parv[2]);
+						if (IsToken(acptr))
+							sendto_one(acptr,
+							    ":%s %s %s :%s", parv[0],
+							    notice ? TOK_NOTICE : TOK_PRIVATE,
+							    nick, parv[2]);
+						else
+							sendto_one(acptr,
+							    ":%s %s %s :%s", parv[0],
+							    cmd, nick, parv[2]);
 						continue;
 					}
 

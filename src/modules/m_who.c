@@ -684,6 +684,8 @@ int oper = IsAnOper(sptr);
 	  char *channel;
 	  int flg;
 
+	  if (!IsPerson(acptr))
+	  	continue;
 	  if (!oper) {
 		if (match(mask, acptr->name))
 			continue;
@@ -770,6 +772,8 @@ static char *first_visible_channel(aClient *sptr, aClient *acptr, int *flg)
       aChannel *chptr = lp->chptr;
       int cansee = ShowChannel(sptr, chptr);
 
+      if (cansee && (acptr->umodes & UMODE_HIDEWHOIS) && !IsMember(sptr, chptr))
+		cansee = 0;
       if (!cansee)
 	{
 	  if (IsAnOper(sptr))
