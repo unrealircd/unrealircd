@@ -1548,3 +1548,4 @@ seen. gmtime warning still there
   this allows the admin to decide a standard custom quit for users. so they
   won't be able to make their own quits. This affects set::prefix-quit and
   ANTI_SPAM_QUIT_TIME - it simply replaces it with the message if enabled
+- Make makecert.bat and encpem.bat show their use in titlebar when run
