@@ -141,7 +141,7 @@ int  m_sethost(cptr, sptr, parc, parv)
 			    me.name, sptr->name);
 	}
 	/* too large huh? */
-	if (strlen(parv[1]) > (HOSTLEN - 1))
+	if (strlen(parv[1]) > (HOSTLEN))
 	{
 		/* ignore us as well if we're not a child of 3k */
 		if (MyConnect(sptr))
@@ -242,7 +242,7 @@ int  m_chghost(cptr, sptr, parc, parv)
 		return 0;
 	}
 
-	if (strlen(parv[2]) > (HOSTLEN - 1))
+	if (strlen(parv[2]) > (HOSTLEN))
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** ChgHost Error: Too long hostname!!",
@@ -346,7 +346,7 @@ int  m_chgident(cptr, sptr, parc, parv)
 		return 0;
 	}
 
-	if (strlen(parv[2]) > (USERLEN - 1))
+	if (strlen(parv[2]) > (USERLEN))
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** ChgIdent Error: Too long ident!!",
@@ -479,7 +479,7 @@ int  m_setident(cptr, sptr, parc, parv)
 	}
 
 	/* too large huh? */
-	if (strlen(vident) > (USERLEN - 1))
+	if (strlen(vident) > (USERLEN))
 	{
 		/* ignore us as well if we're not a child of 3k */
 		if (MyConnect(sptr))
@@ -541,7 +541,7 @@ int  m_setname(cptr, sptr, parc, parv)
 {
 	if (parc < 2)
 		return;
-	if (strlen(parv[1]) > (REALLEN - 2))
+	if (strlen(parv[1]) > (REALLEN))
 	{
 		if (MyConnect(sptr))
 		{
@@ -617,7 +617,7 @@ int  m_sdesc(cptr, sptr, parc, parv)
 			    me.name, sptr->name);
 			return 0;
 		}
-	if (strlen(parv[1]) > (REALLEN - 1))
+	if (strlen(parv[1]) > (REALLEN))
 	{
 		if (MyConnect(sptr))
 		{
@@ -1464,7 +1464,7 @@ int  m_chgname(cptr, sptr, parc, parv)
 		return 0;
 	}
 
-	if (strlen(parv[2]) > (REALLEN - 1))
+	if (strlen(parv[2]) > (REALLEN))
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** ChgName Error: Too long !!", me.name,
