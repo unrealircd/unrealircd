@@ -2029,3 +2029,4 @@ seen. gmtime warning still there
   a nice warning, additionally the default BUFFERPOOL is now set to MAXSENDQLENGTH*18 instead of *9.
   Thanks to ora and others which helped me tracing this down.
 - Added tld::options::ssl so you can have different motd/rules files if the user is using SSL.
+- Fixed cloaking bug reported by Rocko (#0000869).

@@ -260,13 +260,18 @@ char *hidehost(char *rhost)
 		l[0] = ((our_crc32(host, strlen(host)) ^ KEY2) + KEY) ^ KEY3;
 		l[0] &= 0x3FFFFFFF;
 		if (*p) {
+			int len;
 			p++;
-			snprintf(cloaked, sizeof cloaked, "%s-%lX.%s", hidden_host,
-				l[0], p);
+			snprintf(cloaked, sizeof cloaked, "%s-%lX.", hidden_host, l[0]);
+			len = strlen(cloaked) + strlen(p);
+			if (len <= HOSTLEN)
+				strcat(cloaked, p);
+			else
+				strcat(cloaked, p + (len - HOSTLEN));
 		}
 		else
 			snprintf(cloaked, sizeof cloaked, "%s-%lX", hidden_host, l[0]);
-		free(host);	
+		free(host);
 		return cloaked;
 	}
 	/* Couldn't cloak, -WTF? */
