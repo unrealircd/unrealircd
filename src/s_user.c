@@ -365,23 +365,21 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 			return 0;
 		}
 
-	if (TStime() < sptr->user->nexttarget)
+	if (TSTime() < sptr->nexttarget)
 	{
-		if (sptr->user->nexttarget - TStime() < TARGET_DELAY + 8)
-		{
-			sptr->user->nexttarget += 2;
-			sendto_one(sptr, err_str(ERR_TARGETTOOFAST),
-			    me.name, sptr->name, name, sptr->user->nexttarget - TStime());
-		}
+		sptr->last += TARGET_DELAY; /* lag them up */
+		sptr->nexttarget += TARGET_DELAY;
+
 		return 1;
 	}
-	else
+
+	if (TSTime() > sptr->nexttarget + TARGET_DELAY*MAXTARGETS)
 	{
-		sptr->user->nexttarget += TARGET_DELAY;
-		if (sptr->user->nexttarget < TStime() - (TARGET_DELAY * (MAXTARGETS - 1)))
-			sptr->user->nexttarget =
-			    TStime() - (TARGET_DELAY * (MAXTARGETS - 1));
+		sptr->nexttarget = TSTime() + TARGET_DELAY*MAXTARGETS;
 	}
+
+	sptr->nexttarget += TARGET_DELAY;
+
 	memmove(&sptr->targets[1], &sptr->targets[0], MAXTARGETS - 1);
 	sptr->targets[0] = hash;
 #endif
