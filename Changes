@@ -2990,3 +2990,4 @@ seen. gmtime warning still there
 - Added 90% of RC2 release notes.
 - Cosmetic doc updates (#0001596) reported by HERZ.
 - Updated SSL error for underlying syscall error a bit (#0001615).
+- Minor doc updates on SSL (mIRC now supports SSL a bit).

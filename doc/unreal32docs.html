@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 RC1 *CVS*<br>
-  <b>Last doc update:</b> 2004-03-02</div>
+  <b>Last doc update:</b> 2004-03-03</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke / McSkaf<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -284,20 +284,23 @@ Windows:<br>
 <p>You cannot connect normally to a SSL port (so don't make port 6667 ssl!), you need a client or a tunnel
    that understands the SSL protocol.</p>
 <p>Clients that support SSL: <A HREF="http://www.xchat.org/" TARGET="_blank">XChat</a>,
-                             <A HREF="http://www.irssi.org/" TARGET="_blank">irssi</a></p>
-<p>For all other clients which don't support SSL (like mIRC) you can use a tunnel like
+                             <A HREF="http://www.irssi.org/" TARGET="_blank">irssi</a>,
+                             <A HREF="http://www.irssi.org/" TARGET="_blank">mIRC</a> (6.14 and up, 
+                             also requires some <a href="http://www.mirc.co.uk/ssl.html" target="_blank>additional steps</a>)</p>
+<p>For clients which do not support SSL you can use a tunnel like
    <A HREF="http://www.stunnel.org/" TARGET="_blank">stunnel</A>, here's a stunnel.conf example (for stunnel 4.x):<br>
    <pre>
    client = yes
    [irc]
    accept = 127.0.0.1:6667
-   connect = irc.myserv.com:6900
+   connect = irc.myserv.com:6697
 </pre>
    If you then connect to 127.0.0.1 port 6667, your traffic will be encrypted and forwarded to irc.myserv.com
-   port 6900 (an SSL port).</p>
-<p><a href="http://www.bovine.net/~jlawson/coding/stuntour/" target="_blank">StunTour</a> for mIRC might also be helpful to you.</p>
-<p>If you are really concerned about security/sniffing then you also need to validate certificates on the client end.
-   That's however way too off topic to explain here. Learn about SSL, don't ask us, it has nothing to do with UnrealIRCd.</p></div>
+   port 6697 (an SSL port).</p>
+<p>You should also validate certificates when you connect to servers and not blindly accept them (like in the stunnel example)
+   else you are still vulnerable to "active sniffing" attacks (ssl redirects), that's however too offtopic
+   to explain here (learn about SSL, don't ask us). [mIRC and xchat pop up a window asking you to allow/reject a certificate,
+   so that's good].</p></div>
 <p><font size="+2"><b>3.9 - IPv6</b></font><a name="feature_ipv6"></a></p><div class="desc">
 <p>UnrealIRCd supports IPv6, since beta15 it seems to be stable.<br> 
    Your OS needs to have IPv6 support and you need to enable IPv6 support in UnrealIRCd during ./Config as well.<br>
