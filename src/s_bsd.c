@@ -1032,7 +1032,7 @@ void set_sock_opts(fd, cptr)
 	    sizeof(opt)) < 0)
 		report_error("setsockopt(SO_SNDBUF) %s:%s", cptr);
 #endif
-#if defined(IP_OPTIONS) && defined(IPPROTO_IP) && !defined(_WIN32)
+#if defined(IP_OPTIONS) && defined(IPPROTO_IP) && !defined(_WIN32) && !defined(INET6)
 	{
 		char *s = readbuf, *t = readbuf + sizeof(readbuf) / 2;
 
