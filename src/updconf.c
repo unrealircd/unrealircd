@@ -498,7 +498,7 @@ int main(int argc, char *argv[]) {
 				break;
 			}
 			case 'e':
-				fprintf(fd2, "except socks {\n");
+				fprintf(fd2, "except scan {\n");
 				tmp = getfield(&buf[2]);
 				fprintf(fd2, "\tmask %s;\n", tmp);
 				fprintf(fd2, "};\n\n");

@@ -833,3 +833,4 @@ seen. gmtime warning still there
 - Made except socks become except scan, and made it actually WORK, and some
   bugreport fixes
 - HTTPd VFS fixes
+- Modified updconf to reflect the except socks -> except scan change
