@@ -211,7 +211,13 @@
 - Made tld {} get rehashed
 - Made listen/allow get validated
 - Finished up validate_conf()
+<<<<<<< Changes
+- Made badwords be in newconf (you can now specify a replace word for each word)
+- Made vhosts and badwords rehash
+- Fixed a bug in the rehash code
+- Made it so set::auto-join and set::oper-auto-join can be excluded to mean no auto join
+- Changed prefix_quit to prefix-quit (all others use - not _)
+- Fixed a minor bug causing a mode without any flags to be sent
 - Finished up deny dcc {}.
    TODOs: dcc_del_wild_match doesn't work. dcc_wipe_services() either
 - Made deny_dcc get rehashed
-  

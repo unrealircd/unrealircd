@@ -64,6 +64,8 @@ extern ConfigItem_except	*conf_except;
 extern ConfigItem_vhost		*conf_vhost;
 extern ConfigItem_link		*conf_link;
 extern ConfigItem_ban		*conf_ban;
+extern ConfigItem_badword	*conf_badword_channel;
+extern ConfigItem_badword       *conf_badword_message;
 extern ConfigItem_deny_dcc	*conf_deny_dcc;
 
 ConfigItem_class	*Find_class(char *name);

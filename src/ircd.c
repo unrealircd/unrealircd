@@ -1044,18 +1044,6 @@ int  InitwIRCD(argc, argv)
 	init_dynconf();
 	init_conf2(configfile);
 	validate_configuration();
-#ifdef STRIPBADWORDS
-	if (loadbadwords_message("badwords.message.conf"))
-	{
-		fprintf(stderr,
-		    "* Loaded badwords.message.conf (message filter words) ..\n");
-	}
-	if (loadbadwords_channel("badwords.channel.conf"))
-	{
-		fprintf(stderr,
-		    "* Loaded badwords.channel.conf (channel filter words) ..\n");
-	}
-#endif
 	booted = TRUE;
 	if (cr_loadconf() == 0)
 	{

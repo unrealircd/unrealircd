@@ -3883,21 +3883,6 @@ int  m_rehash(cptr, sptr, parc, parv)
 				return 0;
 			}
 #endif
-#ifdef STRIPBADWORDS
-			if (!strnicmp("-bad", parv[1], 4))
-			{
-				if (!IsAdmin(sptr))
-					return 0;
-				sendto_ops
-				    ("%sRehashing badword configuration on request of %s",
-				    cptr != sptr ? "Remotely " : "",
-				    sptr->name);
-				freebadwords();
-				loadbadwords_channel("badwords.channel.conf");
-				loadbadwords_message("badwords.message.conf");
-				return 0;
-			}
-#endif
 		}
 	}
 	else

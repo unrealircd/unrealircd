@@ -38,7 +38,9 @@
 #include <time.h>
 #endif
 #include <string.h>
-
+#ifdef STRIPBADWORDS
+#include "badwords.h"
+#endif
 #include "h.h"
 
 extern char *my_itoa(long i);
@@ -89,6 +91,9 @@ int	_conf_vhost		(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_link		(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_ban		(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_set		(ConfigFile *conf, ConfigEntry *ce);
+#ifdef STRIPBADWORDS
+int	_conf_badword		(ConfigFile *conf, ConfigEntry *ce);
+#endif
 int	_conf_deny		(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_deny_dcc		(ConfigFile *conf, ConfigEntry *ce);
 
@@ -110,6 +115,9 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "link", 		_conf_link },	
 	{ "ban", 		_conf_ban },
 	{ "set",		_conf_set },
+#ifdef STRIPBADWORDS
+	{ "badword",		_conf_badword },
+#endif
 	{ "deny",		_conf_deny },
 	{ NULL, 		NULL  }
 };
@@ -191,6 +199,10 @@ ConfigItem_except	*conf_except = NULL;
 ConfigItem_vhost	*conf_vhost = NULL;
 ConfigItem_link		*conf_link = NULL;
 ConfigItem_ban		*conf_ban = NULL;
+#ifdef STRIPBADWORDS
+ConfigItem_badword	*conf_badword_channel = NULL;
+ConfigItem_badword      *conf_badword_message = NULL;
+#endif
 ConfigItem_deny_dcc     *conf_deny_dcc = NULL;
 
 /*
@@ -1727,9 +1739,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "oper-auto-join")) {
 			ircstrdup(OPER_AUTO_JOIN_CHANS, cep->ce_vardata);
 		}
-		else if (!strcmp(cep->ce_varname, "auto-join")) {
-			ircstrdup(AUTO_JOIN_CHANS, cep->ce_vardata);
-		}
 		else if (!strcmp(cep->ce_varname, "socks")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				if (!strcmp(cepp->ce_varname, "ban-message")) {
@@ -1805,7 +1814,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "ftp-site")) {
 			ircstrdup(ftp_site, cep->ce_vardata);
 		}
-		else if (!strcmp(cep->ce_varname, "prefix_quit")) {
+		else if (!strcmp(cep->ce_varname, "prefix-quit")) {
 			ircstrdup(prefix_quit, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "hosts")) {
@@ -1841,6 +1850,73 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 	} 
 }
+#ifdef STRIPBADWORDS
+int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	ConfigItem_badword *ca;
+	char *tmp;
+	short regex = 0;
+
+	ca = MyMallocEx(sizeof(ConfigItem_badword));
+	if (!ce->ce_vardata) {
+		config_error("%s:%i: badword without type",
+			cep->ce_fileptr->cf_filename,
+			cep->ce_varlinenum);
+		return -1;
+	}
+		
+        for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+		{
+			config_error("%s:%i: blank badword item",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum);
+			continue;
+		}
+		if (!cep->ce_vardata)
+		{
+			config_error("%s:%i: missing parameter in badword::%s",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				cep->ce_varname);
+			continue;
+		}
+		
+		if (!strcmp(cep->ce_varname, "word")) {
+			for (tmp = cep->ce_vardata; *tmp; tmp++) {
+				if ((int)*tmp < 65 || (int)*tmp > 123) {
+					regex = 1;
+					break;
+				}
+			}
+			if (regex) {
+				ircstrdup(ca->word, cep->ce_vardata);
+			}
+			else {
+				ca->word = MyMalloc(strlen(cep->ce_vardata) + strlen(PATTERN) -1);
+				ircsprintf(ca->word, PATTERN, cep->ce_vardata);
+			}	
+		}
+		else if (!strcmp(cep->ce_varname, "replace")) {
+			ircstrdup(ca->replace, cep->ce_vardata);
+		}
+		else
+		{
+			config_status("%s:%i: unknown directive badword::%s",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				cep->ce_varname); 
+		}
+	}
+	if (!strcmp(ce->ce_vardata, "channel"))
+		add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_badword_channel);
+	else if (!strcmp(ce->ce_vardata, "message"))
+		add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_badword_message);
+
+
+}
+#endif
+
 /* deny {} function */
 int	_conf_deny(ConfigFile *conf, ConfigEntry *ce)
 {
@@ -2107,11 +2183,6 @@ void	validate_configuration(void)
 		    "set::maxchannelsperuser is an invalid value, must be > 0");
 	if ((iNAH < 0) || (iNAH > 1))
 		Error("set::host-on-oper-op is an invalid value");
-	if (AUTO_JOIN_CHANS == '\0')
-		Error("set::auto-join is an invalid value");
-	if (OPER_AUTO_JOIN_CHANS == '\0')
-		Error(
-		    "set::oper-auto-join is an invalid value");
 	if (HOST_TIMEOUT < 0 || HOST_TIMEOUT > 180)
 		Error("set::dns::timeout is an invalid value");
 	if (HOST_RETRIES < 0 || HOST_RETRIES > 10)
@@ -2272,6 +2343,8 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	ConfigItem_link 	*link_ptr;
 	ConfigItem_listen 	*listen_ptr;
 	ConfigItem_tld		*tld_ptr;
+	ConfigItem_vhost	*vhost_ptr;
+	ConfigItem_badword	*badword_ptr;
 	ConfigItem_deny_dcc	*deny_dcc_ptr;
 	ConfigItem 	t;
 
@@ -2297,7 +2370,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		for (oper_from = (ConfigItem_oper_from *) oper_ptr->from; oper_from; oper_from = (ConfigItem_oper_from *) oper_from->next)
 		{
 			ircfree(oper_from->name);
-			t.next = del_ConfigItem((ConfigItem *)oper_ptr, (ConfigItem **)&oper_ptr->from);
+			t.next = del_ConfigItem((ConfigItem *)oper_from, (ConfigItem **)&oper_ptr->from);
 			MyFree(oper_from);
 			oper_from = (ConfigItem_oper_from *) &t;
 		}
@@ -2391,6 +2464,43 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		MyFree(tld_ptr);
 		tld_ptr = (ConfigItem_tld *) &t;			
 	}
+	for (vhost_ptr = conf_vhost; vhost_ptr; vhost_ptr = (ConfigItem_vhost *) vhost_ptr->next)
+	{	
+		ConfigItem_oper_from *vhost_from;
+		
+		ircfree(vhost_ptr->login);
+		ircfree(vhost_ptr->password);
+		ircfree(vhost_ptr->virthost);
+		for (vhost_from = (ConfigItem_oper_from *) vhost_ptr->from; vhost_from; 
+			vhost_from = (ConfigItem_oper_from *) vhost_from->next)
+		{
+			ircfree(vhost_from->name);
+			t.next = del_ConfigItem((ConfigItem *)vhost_from, (ConfigItem **)&vhost_ptr->from);
+			MyFree(vhost_from);
+			vhost_from = (ConfigItem_oper_from *) &t;
+		}
+		t.next = del_ConfigItem((ConfigItem *)vhost_ptr, (ConfigItem **)&conf_vhost);
+		MyFree(vhost_ptr);
+		vhost_ptr = (ConfigItem_vhost *) &t;
+	}
+
+	for (badword_ptr = conf_badword_channel; badword_ptr; 
+		badword_ptr = (ConfigItem_badword *) badword_ptr->next) {
+		ircfree(badword_ptr->word);
+			ircfree(badword_ptr->replace);
+		t.next = del_ConfigItem((ConfigItem *) badword_ptr, (ConfigItem **)&conf_badword_channel);
+		MyFree(badword_ptr);
+		badword_ptr = (ConfigItem_badword *) &t;
+	}
+	for (badword_ptr = conf_badword_message; badword_ptr; 
+		badword_ptr = (ConfigItem_badword *) badword_ptr->next) {
+		ircfree(badword_ptr->word);
+			ircfree(badword_ptr->replace);
+		t.next = del_ConfigItem((ConfigItem *) badword_ptr, (ConfigItem **)&conf_badword_message);
+		MyFree(badword_ptr);
+		badword_ptr = (ConfigItem_badword *) &t;
+	}
+
 	for (deny_dcc_ptr = conf_deny_dcc; deny_dcc_ptr; deny_dcc_ptr = (ConfigItem_deny_dcc *) deny_dcc_ptr->next)
 	{
 		if (deny_dcc_ptr->flag.type2 == CONF_BAN_TYPE_CONF)
@@ -2402,7 +2512,6 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 			deny_dcc_ptr = (ConfigItem_deny_dcc *) &t;			
 		}
 	}
-	/* This space is for codemastr's upcoming vhost removal code. */
 	if (conf_drpass)
 	{
 		ircfree(conf_drpass->restart);

@@ -85,6 +85,7 @@ typedef struct _configitem_vhost ConfigItem_vhost;
 typedef struct _configitem_except ConfigItem_except;
 typedef struct _configitem_link	ConfigItem_link;
 typedef struct _configitem_ban ConfigItem_ban;
+typedef struct _configitem_badword ConfigItem_badword;
 typedef struct _configitem_deny_dcc ConfigItem_deny_dcc;
 
 typedef struct Notify aNotify;
@@ -950,6 +951,7 @@ struct _configflag_ban
 #define CONF_BAN_TYPE_TEMPORARY 2
 
 
+
 struct _configitem {
 	ConfigFlag flag;
 	ConfigItem *prev;
@@ -1094,6 +1096,14 @@ struct _configitem_ban {
 	ConfigItem		*next;
 	char			*mask;
 	char			*reason;
+};
+
+struct _configitem_badword {
+	ConfigFlag	flag;
+	ConfigItem      *prev;
+	ConfigItem      *next;
+	char		*word;
+	char 		*replace;
 };
 
 struct _configitem_deny_dcc {

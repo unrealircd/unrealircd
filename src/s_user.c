@@ -1056,10 +1056,10 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 				    (IsToken(nsptr->from) ? TOK_PRIVATE : MSG_PRIVATE), 
 				     NickServ, SERVICES_NAME, sptr->passwd);
 		/* Force the user to join the given chans -- codemastr */
-		if (buf[1] != '\0')
+		if (buf[0] != '\0' && buf[1] != '\0')
 			sendto_one(cptr,":%s MODE %s :%s", cptr->name, cptr->name, buf);
 		
-		if (strcmp(AUTO_JOIN_CHANS, "0"))
+		if (!BadPtr(AUTO_JOIN_CHANS) && strcmp(AUTO_JOIN_CHANS, "0"))
 		{
 			char *chans[3] = {
 				sptr->name,
@@ -4035,7 +4035,7 @@ int  m_oper(cptr, sptr, parc, parv)
 
 		if (SHOWOPERMOTD == 1)
 			m_opermotd(cptr, sptr, parc, parv);
-		if (strcmp(OPER_AUTO_JOIN_CHANS, "0"))
+		if (!BadPtr(OPER_AUTO_JOIN_CHANS) && strcmp(OPER_AUTO_JOIN_CHANS, "0"))
 		{
 			char *chans[3] = {
 				sptr->name,
