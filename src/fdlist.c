@@ -33,9 +33,14 @@ extern fdlist busycli_fdlist;
 extern fdlist serv_fdlist;
 extern fdlist oper_fdlist;
 
+#define FDLIST_DEBUG
+
 void addto_fdlist(int fd, fdlist * listp)
 {
 	int  index;
+#ifdef FDLIST_DEBUG
+	int i;
+#endif
 
 	/* I prefer this little 5-cpu-cycles-check over memory corruption. -- Syzop */
 	if ((fd < 0) || (fd >= MAXCONNECTIONS))
@@ -48,6 +53,21 @@ void addto_fdlist(int fd, fdlist * listp)
 			MAXCONNECTIONS);
 		return;
 	}
+
+#ifdef FDLIST_DEBUG
+	for (i = listp->last_entry; i; i--)
+	{
+		if (listp->entry[i] == fd)
+		{
+			char buf[2048];
+			ircsprintf(buf, "[BUG] addto_fdlist() called for duplicate entry! fd=%d, fdlist=%p, client=%s (%p/%p/%p/%p)",
+				fd, listp, local[fd] ? local[fd]->name : "<null>", &default_fdlist, &busycli_fdlist, &serv_fdlist, &oper_fdlist);
+			sendto_realops("%s", buf);
+			ircd_log(LOG_ERROR, "%s", buf);
+			return;
+		}
+	}
+#endif
 
 	if ((index = ++listp->last_entry) >= MAXCONNECTIONS)
 	{
@@ -66,6 +86,9 @@ void addto_fdlist(int fd, fdlist * listp)
 void delfrom_fdlist(int fd, fdlist * listp)
 {
 	int  i;
+#ifdef FDLIST_DEBUG
+	int cnt = 0;
+#endif
 
 	/* I prefer this little 5-cpu-cycles-check over memory corruption. -- Syzop */
 	if ((fd < 0) || (fd >= MAXCONNECTIONS))
@@ -78,6 +101,24 @@ void delfrom_fdlist(int fd, fdlist * listp)
 			MAXCONNECTIONS);
 		return;
 	}
+
+#ifdef FDLIST_DEBUG
+	for (i = listp->last_entry; i; i--)
+	{
+		if (listp->entry[i] == fd)
+			cnt++;
+	}
+	if (cnt > 1)
+	{
+		char buf[2048];
+		ircsprintf(buf, "[BUG] delfrom_fdlist() called, duplicate entries detected! fd=%d, fdlist=%p, client=%s (%p/%p/%p/%p)",
+			fd, listp, local[fd] ? local[fd]->name : "<null>", &default_fdlist, &busycli_fdlist, &serv_fdlist, &oper_fdlist);
+		sendto_realops("%s", buf);
+		ircd_log(LOG_ERROR, "%s", buf);
+		return;
+	}
+#endif
+
 
 	for (i = listp->last_entry; i; i--)
 	{

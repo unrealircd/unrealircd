@@ -2605,3 +2605,6 @@ seen. gmtime warning still there
   (#0001365)
 - Fixed a bug with SVSNLINE - reported by FreakyComputer and fixed by AngryWolf 
   (#0001399)
+- example.conf: added +i in modes-on-connect.
+- Temporarely added fdlist debugcode, please report any bugreports it gives,
+  it would especially be helpful if you know _what_ triggered the error :).

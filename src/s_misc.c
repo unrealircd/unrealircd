@@ -385,6 +385,29 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 	if (MyConnect(sptr))
 	{
 #ifndef NO_FDLIST
+#define FDLIST_DEBUG
+#ifdef FDLIST_DEBUG
+		{
+			int i;
+			int cnt = 0;
+			
+			if (!IsAnOper(sptr))
+			{
+				for (i = oper_fdlist.last_entry; i; i--)
+				{
+					if (oper_fdlist.entry[i] == sptr->slot)
+					{
+						sendto_realops("[BUG] exit_client: oper_fdlist entry while not oper, fd=%d, user='%s'",
+							sptr->slot, sptr->name);
+						ircd_log(LOG_ERROR, "[BUG] exit_client: oper_fdlist entry while not oper, fd=%d, user='%s'",
+							sptr->slot, sptr->name);
+						delfrom_fdlist(sptr->slot, &oper_fdlist); /* be kind of enough to fix the problem.. */
+						break; /* MUST break here */
+					}
+				}
+			}
+		}
+#endif
 		if (IsAnOper(sptr))
 			delfrom_fdlist(sptr->slot, &oper_fdlist);
 		if (IsServer(sptr))
