@@ -636,3 +636,8 @@
   the link will be rejected. Note that this will not prevent you from 3.2.2<->3.2.3/CVS
   charsets mistakes, but only with linking CVS/3.2.3+ servers. Suggested by Troco (#0002360)
   This might need some additional testing, but initial results are positive :).
+- NickChars:
+  - Got rid of 'latin7', tiny mistake ;)
+  - Removed e' accent from German (used in borrow-words only), reported by Dukat.
+  - Added 'swiss-german', which is just German without es-zett, reported by Dukat.
+  - Added 'turkish', supplied by Ayberk Yancatoral.

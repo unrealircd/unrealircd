@@ -569,14 +569,15 @@ A table of all possible choices:<br>
 <tr><td>dutch</td><td>Dutch characters</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>french</td><td>French characters</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>german</td><td>German characters</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>swiss-german</td><td>Swiss-German characters (no es-zett)</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>italian</td><td>Italian characters</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>spanish</td><td>Spanish characters</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>swedish</td><td>Swedish characters</td><td>iso8859-1 (latin1)</td></tr>
-<tr><td><b>latin1</b></td><td>dutch, french, german, spanish, italian, swedish</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td><b>latin1</b></td><td>dutch, french, german, swiss-german, spanish, italian, swedish</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>hungarian</td><td>Hungarian characters</td><td>iso8859-2 (latin2)</td></tr>
 <tr><td><b>latin2</b></td><td>hungarian</td><td>iso8859-2 (latin2)</td></tr>
 <tr><td>greek</td><td>Greek characters</td><td>iso8859-7</td></tr>
-<tr><td><b>latin7</b></td><td>greek</td><td>iso8859-7</td></tr>
+<tr><td>turkish</td><td>Turkish characters</td><td>iso8859-9</td></tr>
 <tr><td>chinese-simp</td><td>Simplified Chinese</td><td>Multibyte: GBK/GB2312</td></tr>
 <tr><td>chinese-trad</td><td>Tradditional Chinese</td><td>Multibyte: GBK</td></tr>
 <tr><td>chinese-ja</td><td>Japanese Hiragana/Pinyin</td><td>Multibyte: GBK</td></tr>
@@ -587,7 +588,7 @@ Please note that some combinations can cause problems.
 For example, combining latin* and chinese-* can not be properly handled by 
 the IRCd and Unreal will print an error. 
 Mixing of other charsets might cause display problems, so Unreal will print out 
-a warning if you try to mix latin1/latin2/latin7.<br><br>
+a warning if you try to mix latin1/latin2/greek.<br><br>
 
 Example 1, for people of western europe:<br>
 <pre>set { allowed-nickchars { latin1; }; };</pre>

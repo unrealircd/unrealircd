@@ -69,10 +69,11 @@ static int langav;
 char langsinuse[4096];
 
 /* bitmasks: */
-#define LANGAV_ASCII	0x0001 /* 8 bit ascii */
-#define LANGAV_LATIN1	0x0002 /* latin1 (western europe) */
-#define LANGAV_LATIN2	0x0004 /* latin2 (eastern europe, eg: hungarian) */
-#define LANGAV_LATIN7	0x0008 /* latin7 (greek) */
+#define LANGAV_ASCII		0x0001 /* 8 bit ascii */
+#define LANGAV_LATIN1		0x0002 /* latin1 (western europe) */
+#define LANGAV_LATIN2		0x0004 /* latin2 (eastern europe, eg: hungarian) */
+#define LANGAV_ISO8859_7	0x0008 /* greek */
+#define LANGAV_ISO8859_9	0x0010 /* turkish */
 #define LANGAV_GBK		0x1000 /* (Chinese) GBK encoding */
 
 typedef struct _langlist LangList;
@@ -83,25 +84,26 @@ struct _langlist
 	int setflags;
 };
 
-/* MUST be alphabetized */
+/* MUST be alphabetized (first column) */
 static LangList langlist[] = {
-	{ "catalan",    "cat", LANGAV_ASCII|LANGAV_LATIN1 },
-	{ "chinese",    "chi-s,chi-t,chi-j", LANGAV_GBK },
+	{ "catalan",      "cat", LANGAV_ASCII|LANGAV_LATIN1 },
+	{ "chinese",      "chi-s,chi-t,chi-j", LANGAV_GBK },
 	{ "chinese-simp", "chi-s", LANGAV_GBK },
 	{ "chinese-trad", "chi-t", LANGAV_GBK },
-	{ "chinese-ja", "chi-j", LANGAV_GBK },
-	{ "dutch",      "dut", LANGAV_ASCII|LANGAV_LATIN1 },
-	{ "french",     "fre", LANGAV_ASCII|LANGAV_LATIN1 },
-	{ "gbk",        "chi-s,chi-t,chi-j", LANGAV_GBK },
-	{ "german",     "ger", LANGAV_ASCII|LANGAV_LATIN1 },
-	{ "greek",      "gre", LANGAV_ASCII|LANGAV_LATIN7 },
-	{ "hungarian",  "hun", LANGAV_ASCII|LANGAV_LATIN2 },
-	{ "italian",    "ita", LANGAV_ASCII|LANGAV_LATIN1 },
-	{ "latin1",     "cat,dut,fre,ger,ita,spa,swe", LANGAV_ASCII|LANGAV_LATIN1 },
-	{ "latin2",     "hun", LANGAV_ASCII|LANGAV_LATIN2 },
-	{ "latin7",     "gre", LANGAV_ASCII|LANGAV_LATIN7 },
-	{ "spanish",    "spa", LANGAV_ASCII|LANGAV_LATIN1 },
-	{ "swedish",    "swe", LANGAV_ASCII|LANGAV_LATIN1 },
+	{ "chinese-ja",   "chi-j", LANGAV_GBK },
+	{ "dutch",        "dut", LANGAV_ASCII|LANGAV_LATIN1 },
+	{ "french",       "fre", LANGAV_ASCII|LANGAV_LATIN1 },
+	{ "gbk",          "chi-s,chi-t,chi-j", LANGAV_GBK },
+	{ "german",       "ger", LANGAV_ASCII|LANGAV_LATIN1 },
+	{ "greek",        "gre", LANGAV_ASCII|LANGAV_ISO8859_7 },
+	{ "hungarian",    "hun", LANGAV_ASCII|LANGAV_LATIN2 },
+	{ "italian",      "ita", LANGAV_ASCII|LANGAV_LATIN1 },
+	{ "latin1",       "cat,dut,fre,ger,ita,spa,swe", LANGAV_ASCII|LANGAV_LATIN1 },
+	{ "latin2",       "hun", LANGAV_ASCII|LANGAV_LATIN2 },
+	{ "spanish",      "spa", LANGAV_ASCII|LANGAV_LATIN1 },
+	{ "swedish",      "swe", LANGAV_ASCII|LANGAV_LATIN1 },
+	{ "swiss-german", "swg", LANGAV_ASCII|LANGAV_LATIN1 },
+	{ "turkish",      "tur", LANGAV_ASCII|LANGAV_ISO8859_9 },
 	{ NULL, NULL, 0 }
 };
 
@@ -319,12 +321,14 @@ int x=0;
 		x++;
 	if (langav & LANGAV_LATIN2)
 		x++;
-	if (langav & LANGAV_LATIN7)
-		x++;	
+	if (langav & LANGAV_ISO8859_7)
+		x++;
+	if (langav & LANGAV_ISO8859_9)
+		x++;
 	if (x > 1)
 	{
 		config_status("WARNING: set::accept-language: "
-		            "Mixing of charsets (eg: latin1+latin2+latin7) can cause display problems");
+		            "Mixing of charsets (eg: latin1+latin2) can cause display problems");
 	}
 	return 1;
 }
@@ -429,10 +433,16 @@ char latin1=0, latin2=0, chinese=0;
 	
 	/* INDIVIDUAL CHARSETS */
 
+	/* [LATIN1] */
 	if (latin1 || !strcmp(name, "german"))
 	{
-		/* a", A", e', o", O", u", U" and es-zett */
-		charsys_addallowed("äÄéöÖüÜß");
+		/* a", A", o", O", u", U" and es-zett */
+		charsys_addallowed("äÄöÖüÜß");
+	}
+	if (latin1 || !strcmp(name, "swiss-german"))
+	{
+		/* a", A", o", O", u", U"  */
+		charsys_addallowed("äÄöÖüÜ");
 	}
 	if (latin1 || !strcmp(name, "dutch"))
 	{
@@ -476,18 +486,30 @@ char latin1=0, latin2=0, chinese=0;
 		/* ao, Ao, a", A", o", O" */ 
 		charsys_addallowed("åÅäÄöÖ");
 	}
+
+	/* [LATIN2] */
 	if (latin2 || !strcmp(name, "hungarian"))
 	{
 		/* supplied by AngryWolf */
 		/* a', e', i', o', o", o~, u', u", u~, A', E', I', O', O", O~, U', U", U~ */
 		charsys_addallowed("áéíóöõúüûÁÉÍÓÖÕÚÜÛ");
 	}
-	if (!strcmp(name, "latin7") || !strcmp(name, "greek"))
+
+	/* [GREEK] */	
+	if (!strcmp(name, "greek"))
 	{
 		/* supplied by GSF */
 		/* ranges from rfc1947 / iso 8859-7 */
 		charsys_addallowed("¶¸¹º¼¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÓÔÕÖ×ØÙÚÛÜİŞßàáâãäåæçèéêëìíîïğñòóô");
 	}
+
+	if (!strcmp(name, "turkish"))
+	{
+		/* Supplied by Ayberk Yancatoral */
+		charsys_addallowed("öÖçÇşŞüÜğĞı");
+	}
+
+	/* [CHINESE] */
 	if (chinese || !strcmp(name, "chinese-ja"))
 	{
 		charsys_addmultibyterange(0xa4, 0xa4, 0xa1, 0xf3); /* JIS_PIN */
