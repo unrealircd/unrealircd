@@ -62,3 +62,6 @@ void 	httpd_standard_header(HTTPd_Request *request, char *type);
 void	httpd_badrequest(HTTPd_Request *request, char *reason);
 void	sockprintf(HTTPd_Request *r, char *format, ...);
 void	httpd_sendfile(HTTPd_Request *r, char *filename);
+
+
+
