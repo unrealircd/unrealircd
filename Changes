@@ -652,4 +652,4 @@ seen. gmtime warning still there
    SVSNLINE *                            - Wipes all global ban realname
 - Fixed FIXME dcc_deny_wipe_services
 - Fixed some IsToken / sendto_serv_butone screwups - Stskeeps(TM) coding
-   
+- Removed a bunch of unused coding

@@ -830,46 +830,6 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			u1 = NULL;
 #endif
 
-#ifdef OLD
-		if (!BadPtr(aconf->passwd) && !StrEq("ONE", aconf->passwd))
-		{
-/* I:line password encryption --codemastr */
-#ifdef CRYPT_ILINE_PASSWORD
-			if (sptr->passwd)
-			{
-				char salt[3];
-				extern char *crypt();
-
-				salt[0] = aconf->passwd[0];
-				salt[1] = aconf->passwd[1];
-				salt[3] = '\0';
-
-				encr = crypt(sptr->passwd, salt);
-			}
-			else
-				encr = "";
-#else
-			encr = sptr->passwd;
-#endif
-			if (!encr || !StrEq(encr, aconf->passwd))
-			{
-				ircstp->is_ref++;
-				sendto_one(sptr, err_str(ERR_PASSWDMISMATCH),
-				    me.name, parv[0]);
-				return exit_client(cptr, sptr, &me,
-				    "Bad Password");
-			}
-			/* .. Else password check was successful, clear the pass
-			 * so it doesn't get sent to NickServ.
-			 * - Wizzu
-			 */
-			else
-			{
-				MyFree(sptr->passwd);
-				sptr->passwd = NULL;
-			}
-		}
-#endif
 		/*
 		 * following block for the benefit of time-dependent K:-lines
 		 */
@@ -1286,11 +1246,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		    "Reserved for internal IRCd purposes");
 		return 0;
 	}
-	if (!IsULine(sptr) && ((aconf = Find_ban(nick, CONF_BAN_NICK))
-#ifdef OLD
-	    || (asqline = find_sqline_match(nick))
-#endif
-	    ))
+	if (!IsULine(sptr) && ((aconf = Find_ban(nick, CONF_BAN_NICK))))
 	{
 		if (IsServer(sptr))
 		{
@@ -1320,14 +1276,6 @@ int  m_nick(cptr, sptr, parc, parv)
 				    nick,
 				    BadPtr(aconf->reason) ? "reason unspecified"
 				    : aconf->reason);
-#ifdef OLD
-			else if (asqline)
-				sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
-				    me.name, BadPtr(parv[0]) ? "*" : parv[0],
-				    nick,
-				    BadPtr(asqline->reason) ?
-				    "reason unspecified" : asqline->reason);
-#endif
 			sendto_realops("Forbidding Q-lined nick %s from %s.",
 			    nick, get_client_name(cptr, FALSE));
 			return 0;	/* NICK message ignored */

@@ -2213,7 +2213,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 		}
-#ifndef OLD_CLOAK
 		else if (!strcmp(cep->ce_varname, "cloak-keys"))
 		{
 			/* Count number of numbers there .. */
@@ -2233,7 +2232,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				CLOAK_KEY2, CLOAK_KEY3);
 			CLOAK_KEYCRC = (long) crc32(temp, strlen(temp));
 		}
-#endif
 		else
 		{
 			ConfigItem_unknown_ext *ca2 = malloc(sizeof(ConfigItem_unknown_ext));
@@ -2906,7 +2904,6 @@ void	validate_configuration(void)
 		Warning("set::socks::quit-message is missing. Using default of \"Insecure SOCKS server\"");
 		ircstrdup(iConf.socksquitmessage, "Insecure SOCKS server");
 	}
-#ifndef OLD_CLOAK
 	if ((CLOAK_KEY1 < 10000) || (CLOAK_KEY2 < 10000) || (CLOAK_KEY3 < 10000))
 	{
 		if (!CLOAK_KEY1 || !CLOAK_KEY2 || !CLOAK_KEY3)
@@ -2918,7 +2915,6 @@ void	validate_configuration(void)
 		}
 		Error("set::cloak-keys are too easy to guess. Please select three other more absurd and crazy numbers - will increase security a lot");
 	}
-#endif
 	if (!conf_listen)
 	{
 		Error("No listeners defined");
