@@ -2624,14 +2624,14 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 					chptr->mode.floodprot = MyMalloc(sizeof(ChanFloodProt));
 				memcpy(chptr->mode.floodprot, &newf, sizeof(ChanFloodProt));
 			} /* !bounce */
-			ircsprintf(tmpbuf, channel_modef_string(chptr->mode.floodprot));
+			strcpy(tmpbuf, channel_modef_string(chptr->mode.floodprot));
 			tmpstr = tmpbuf;
 			retval = 1;
 		} else
 		{ /* MODE_DEL */
 			if (!chptr->mode.floodprot)
 				break; /* no change */
-			ircsprintf(tmpbuf, channel_modef_string(chptr->mode.floodprot));
+			strcpy(tmpbuf, channel_modef_string(chptr->mode.floodprot));
 			tmpstr = tmpbuf;
 			if (!bounce)
 			{

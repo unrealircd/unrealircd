@@ -2413,3 +2413,4 @@ seen. gmtime warning still there
 - Fixed Q:lined nickname msgs during linking and a debug fix.
 - Fixed a SVSMOTD crashbug (removing of motd).
 - Fix-for-fix-for-+mu-fix (it was still crashing)... don't ask.
+- Minor +f code tweaks.
