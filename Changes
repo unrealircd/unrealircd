@@ -1034,3 +1034,5 @@ seen. gmtime warning still there
 - Fixed a bug where certain oflags were ignored for new-style config flags
 - Actually enabled MD5, SHA1 methods when SSL was defined. (fix for drunk
   coding)
+- Fixed yet another Win32 editor bug affecting Windows 95/98/NT4,
+  found by HA|Raptor

@@ -64,6 +64,11 @@ LRESULT CALLBACK ColorDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK FromVarDLG(HWND, UINT, WPARAM, LPARAM, char *, char **);
 LRESULT CALLBACK FromFileDLG(HWND, UINT, WPARAM, LPARAM);
 
+typedef struct {
+	int *size;
+	char **buffer;
+} StreamIO;
+
 extern  void      SocketLoop(void *dummy), rehash(aClient *, aClient *, int);
 int CountRTFSize(char *);
 void IRCToRTF(char *, char *);
@@ -74,7 +79,7 @@ HTREEITEM AddItemToTree(HWND, LPSTR, int, short);
 void win_map(aClient *, HWND, short);
 extern Link *Servers;
 extern ircstats IRCstats;
-char *errors, *RTFBuf;
+char *errors = NULL, *RTFBuf = NULL;
 extern aMotd *botmotd, *opermotd, *motd, *rules;
 void CleanUp(void)
 {
@@ -212,6 +217,25 @@ void WipeColors() {
 	}
 
 }
+DWORD CALLBACK SplitIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) {
+	StreamIO *stream = (StreamIO*)dwCookie;
+	if (*stream->size == 0)
+		pcb = 0;
+	if (cb <= *stream->size) {
+		memcpy(pbBuff, *stream->buffer, cb);
+		*stream->buffer += cb;
+		*stream->size -= cb;
+		*pcb = cb;
+
+	}
+	else {
+		memcpy(pbBuff, *stream->buffer, *stream->size);
+		*pcb = *stream->size;
+		*stream->size = 0;
+	}
+	return 0;
+}
+
 DWORD CALLBACK BufferIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) {
 	char *buf2;
 	static long size = 0;
@@ -786,8 +810,10 @@ LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 	switch (message) {
 		case WM_INITDIALOG: {
 			char	String[16384];
-			char *RTFString;
 			int size;
+			char *RTFString;
+			StreamIO *stream = malloc(sizeof(StreamIO));
+			EDITSTREAM edit;
 			SetWindowText(hDlg, title);
 			bzero(String, 16384);
 			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)RESubClassFunc);
@@ -800,10 +826,16 @@ LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			RTFString = malloc(size);
 			bzero(RTFString, size);
 			IRCToRTF(String,RTFString);
-
-			SetDlgItemText(hDlg, IDC_TEXT, RTFString);
+			RTFBuf = RTFString;
+			size--;
+			stream->size = &size;
+			stream->buffer = &RTFBuf;
+			edit.dwCookie = (UINT)stream;
+			edit.pfnCallback = SplitIt;
+			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_STREAMIN,
+(WPARAM)SF_RTF|SFF_PLAINRTF, (LPARAM)&edit);
 			free(RTFString);	
-
+			free(stream);
 			return (TRUE);
 			}
 
@@ -920,6 +952,8 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 		case WM_INITDIALOG: {
 			int fd,len;
 			char *buffer = '\0', *string = '\0';
+			EDITSTREAM edit;
+			StreamIO *stream = malloc(sizeof(StreamIO));
 			char szText[256];
 			struct stat sb;
 			file = (char *)lParam;
@@ -952,10 +986,19 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				string = (char *)malloc(len);
 				bzero(string,len);
 				IRCToRTF(buffer,string);
-				SetDlgItemText(hDlg, IDC_TEXT, string);
+				RTFBuf = string;
+				len--;
+				stream->size = &len;
+				stream->buffer = &RTFBuf;
+				edit.dwCookie = (UINT)stream;
+				edit.pfnCallback = SplitIt;
+				SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_STREAMIN,
+					(WPARAM)SF_RTF|SFF_PLAINRTF, (LPARAM)&edit);
 				close(fd);
+				RTFBuf = NULL;
 				free(buffer);
 				free(string);
+				free(stream);
 			}
 			return (TRUE);
 			}
