@@ -57,6 +57,8 @@ anAuthStruct AuthTypes[] = {
 #endif
 #ifdef AUTHENABLE_RIPEMD160
 	{"ripemd160",	AUTHTYPE_RIPEMD160},
+	/* sure, this is ugly, but it's our fault. -- Syzop */
+	{"ripemd-160",	AUTHTYPE_RIPEMD160},
 #endif
 	{NULL,		0}
 };

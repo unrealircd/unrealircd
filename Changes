@@ -2130,3 +2130,4 @@ seen. gmtime warning still there
   same flag, new functions are VersionflagAdd and VersionflagDel they replace flag_add and
   flag_del
 - Fixed a local /kill bug during connection phase, reported by Gilou (#0000952).
+- Fixed ripemd-160 vs ripemd160 confusion, reported by thelight (#0000949).
