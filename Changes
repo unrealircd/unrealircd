@@ -654,3 +654,4 @@ seen. gmtime warning still there
 - Fixed some IsToken / sendto_serv_butone screwups - Stskeeps(TM) coding
 - Actually added m_svsnline.c
 - Removed a bunch of unused coding
+- Win32 fixes

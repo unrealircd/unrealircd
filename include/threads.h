@@ -53,11 +53,11 @@ typedef unsigned long THREAD;
 typedef HANDLE MUTEX;
 #define IRCCreateThread(thread, attr, start, arg) thread = _beginthread((void *)start, 0, arg)
 #define IRCMutexLock(mutex) WaitForSingleObject(mutex, INFINITE)
-#defune IRCMutexTryLock(mutex) WaitForSingleObject(mutex, 0)
+#define IRCMutexTryLock(mutex) WaitForSingleObject(mutex, 0)
 #define IRCMutexUnlock(mutex) ReleaseMutex(mutex)
 #define IRCCreateMutex(mutex) mutex = CreateMutex(NULL, FALSE, NULL)
 #define IRCMutexDestroy(mutex) CloseHandle(mutex)
-#define IRCJoinThread(thread) WaitForSingleObject((HANDLE)thread, INFINITE); GetExitCodeThread((HANDLE)thread, (DWORD)return);
+#define IRCJoinThread(thread,return) WaitForSingleObject((HANDLE)thread, INFINITE); GetExitCodeThread((HANDLE)thread, (DWORD)return);
 #define IRCExitThread(value) _endthread()
 #define IRCTerminateThread(thread, value) TerminateThread((HANDLE)thread, value)
 #define IRCThreadSelf() GetCurrentThread()

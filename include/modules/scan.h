@@ -53,7 +53,8 @@ struct _VHStruct
 #ifndef IS_SCAN_C
 extern HStruct			Hosts[SCAN_AT_ONCE];
 extern VHStruct		VHosts[SCAN_AT_ONCE];
-
+extern MUTEX	HSlock;
+extern MUTEX	VSlock;
 /* 
  * If it is legal to edit Hosts table
 */

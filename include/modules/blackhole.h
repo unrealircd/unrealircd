@@ -30,3 +30,4 @@ struct _conf_blackhole
 	short	port;
 };
 
+extern ConfigItem_blackhole blackhole_conf;

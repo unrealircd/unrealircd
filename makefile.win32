@@ -1,45 +1,26 @@
 #
-# Win32Gui Config File .. By DrBin
+# UnrealIRCd Makefile - codemastr
 #
 CC=cl
-COMPILERHELP=compilerhelp.exe
+LINK=link
+RC=rc
 # Here you put your settings
 FD_SETSIZE=/D FD_SETSIZE=16384
-NS_ADDRESS=/D NS_ADDRESS="\"nospoof@dal.net\""
-
-!IFNDEF DEBUG
-
-!IFNDEF DISTDEBUG
-CFLAGS=/MT /O2 /G5 /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D _WIN32GUI /D NOSPOOF=1 /c
-
+!IFNDEF DEBUG 
+CFLAGS=/MT /O2 /G5 /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D STATIC_LINKING /D _WIN32GUI /D NOSPOOF=1 /c
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib \
- oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /out:WIRCD2.EXE
-
+ oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /out:WIRCD.EXE
 !ELSE
-
-CFLAGS=  /MTd /Zi /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D _WIN32GUI /D NOSPOOF=1 /c
-#/Od /Yd /G5
+CFLAGS=  /MTd /Zi /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D STATIC_LINKING /D _WIN32GUI /D NOSPOOF=1 /c
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib \
  oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /debug /debugtype:BOTH /OUT:WIRCD.EXE
-
-
-!ENDIF
-
-
-!ELSE
-
-CFLAGS=  /MTd /Zi /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D DEBUG /D DEBUGMODE /D _DEBUG /D _WIN32GUI /D NOSPOOF=1 /c
-#/Od /Yd /G5
-LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib \
- oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /debug /debugtype:BOTH /OUT:WIRCD.EXE
-
 !ENDIF
 
 
 INCLUDES=./include/struct.h ./include/config.h ./include/sys.h \
  ./include/common.h ./include/version.h ./include/h.h ./include/numeric.h \
  ./include/msg.h ./include/setup.h ./include/dynconf.h
-LINK=link.exe
+
 OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/BSD.OBJ \
  SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ  \
  SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ \
@@ -52,9 +33,13 @@ OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/BSD.OBJ \
  SRC/S_SOCKS.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ \
  SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ \
  SRC/S_SVS.OBJ SRC/EVENTS.OBJ
-RC=rc.exe
 
-ALL: COMPILERHELP.EXE WIRCD.EXE
+MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OBJ \
+ SRC/M_SETNAME.OBJ SRC/M_SETHOST.OBJ SRC/M_CHGIDENT.OBJ SRC/M_SVSMOTD.OBJ \
+ SRC/M_SVSNLINE.OBJ SRC/M_SWHOIS.OBJ SRC/M_SVSMODE.OBJ SRC/SCAN.OBJ SRC/SCAN_SOCKS.OBJ 
+
+
+ALL: WIRCD.EXE
 
 CLEAN:
         -@erase src\*.exe 2>NUL
@@ -64,40 +49,19 @@ CLEAN:
         -@erase src\win32\*.obj 2>NUL
         -@erase .\*.exe 2>NUL
 
-#include/setup.h:
-#        @echo Hmm...doesn't look like you've run Config...
-#        @echo Doing so now.
-#        @config.exe
 
-#src/version.c: dummy
-#        @config.exe -v
 
-./COMPILERHELP.EXE:
-	cl src/win32/compilerhelp.c /link /out:compilerhelp.exe
-
-./WIRCD.EXE: $(OBJ_FILES) SRC/win32/WIN32.RES
-        $(LINK) $(LFLAGS) $(OBJ_FILES) SRC/win32/WIN32.RES SRC/WIN32/GNU_REGEX.LIB SRC/WIN32/DEBUG/STACKTRACE.LIB /MAPINFO:LINES /MAP
+./WIRCD.EXE: $(OBJ_FILES) $(MOD_FILES) SRC/win32/WIN32.RES
+        $(LINK) $(LFLAGS) $(OBJ_FILES) $(MOD_FILES) SRC/win32/WIN32.RES SRC/WIN32/GNU_REGEX.LIB SRC/WIN32/DEBUG/STACKTRACE.LIB /MAPINFO:LINES /MAP
 	-@erase src\win32\win32.res
 !IFNDEF DEBUG
-!IFNDEF DISTDEBUG
  @echo Non Debug version built 
-!ELSE
- @echo Distribution DEBUG Version Built
-!ENDIF
 !ELSE
  @echo Debug version built ... 
 !ENDIF
 
-./CHKCONF.EXE: ./include/struct.h ./include/config.h ./include/sys.h \
-                 ./include/common.h ./src/crule.c ./src/match.c ./src/chkconf.c
-        $(CC) /nologo /I ./include /D CR_CHKCONF /Fosrc/chkcrule.obj /c src/crule.c
-        $(CC) /nologo /I ./include /D CR_CHKCONF /Fosrc/chkmatch.obj /c src/match.c
-        $(CC) /nologo /I ./include /D CR_CHKCONF /Fosrc/chkconf.obj /c src/chkconf.c
-        $(LINK) /nologo /out:./chkconf.exe src/chkconf.obj src/chkmatch.obj \
-                src/chkcrule.obj
-
-src/version.obj: src/win32/version.c
-        $(CC) $(CFLAGS) src/win32/version.c
+src/version.obj: src/version.c
+        $(CC) $(CFLAGS) src/version.c
 
 src/parse.obj: src/parse.c $(INCLUDES)
         $(CC) $(CFLAGS) src/parse.c
@@ -232,12 +196,49 @@ src/modules.obj: src/modules.c $(INCLUDES)
 src/events.obj: src/events.c $(INCLUDES)
 	  $(CC) $(CFLAGS) src/events.c
 
+src/l_commands.obj: src/modules/l_commands.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/l_commands.c
+
+src/m_chghost.obj: src/modules/m_chghost.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_chghost.c
+
+src/m_chgident.obj: src/modules/m_chgident.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_chgident.c
+
+src/m_sdesc.obj: src/modules/m_sdesc.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_sdesc.c
+
+src/m_sethost.obj: src/modules/m_sethost.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_sethost.c
+
+src/m_setident.obj: src/modules/m_setident.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_setident.c
+
+src/m_setname.obj: src/modules/m_setname.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_setname.c
+
+src/m_svsmotd.obj: src/modules/m_svsmotd.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_svsmotd.c
+
+src/m_svsmode.obj: src/modules/m_svsmode.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_svsmode.c
+
+src/m_swhois.obj: src/modules/m_swhois.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_swhois.c
+
+src/m_svsnline.obj: src/modules/m_svsnline.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_svsnline.c
+
+src/scan.obj: src/modules/scan.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/scan.c
+
+src/scan_dummy.obj: src/modules/scan_dummy.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/scan_dummy.c
+
+src/scan_socks.obj: src/modules/scan_socks.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/scan_socks.c
+
 src/win32/win32.res: src/win32/win32gui.rc
-!IFNDEF DISTDEBUG
-	$(COMPILERHELP) src/win32/leavealone.h
-!ELSE
-	$(COMPILERHELP) src/win32/leavealone.h 0
-!ENDIF
         $(RC) /l 0x409 /fosrc/win32/win32.res /i ./include /i ./src \
               /d NDEBUG src/win32/win32gui.rc
 
