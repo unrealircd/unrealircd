@@ -368,3 +368,4 @@
 - Fixed a double definition (double m_chghost and m_chghost.so)
 - Moved /sdesc, /setident to modules.
 - allow { } now supports encrypted passwords -Syzop
+- Made static linking a little more possible

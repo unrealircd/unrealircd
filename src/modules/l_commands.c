@@ -17,9 +17,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
  */
-#define DYNAMIC_LINKING
 #include "config.h"
 #include "struct.h"
 #include "common.h"
@@ -43,6 +41,11 @@
 #endif
 #ifdef _WIN32
 #include "version.h"
+#endif
+#ifndef STATIC_LINKING
+#define DYNAMIC_LINKING
+#else
+#undef DYNAMIC_LINKING
 #endif
 
 /* Place includes here */

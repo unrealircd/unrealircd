@@ -54,6 +54,17 @@ build: ircd mods
 ircd: $(OBJS)
 	$(CC) $(CFLAGS) $(CRYPTOLIB) -o ircd $(OBJS) $(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
 
+staticircd: $(OBJS)
+	$(CC) $(CFLAGS) $(CRYPTOLIB) -DSTATIC_LINKING -o ircd.static $(OBJS) \
+	modules/l_commands.c \
+	modules/m_sethost.c \
+	modules/m_chghost.c \
+	modules/m_chgident.c \
+	modules/m_setname.c \
+	modules/m_setident.c \
+	modules/m_sdesc.c \
+	$(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
+
 mods:
 	@if [ ! -r include ] ; then \
 		ln -s ../include include; \
