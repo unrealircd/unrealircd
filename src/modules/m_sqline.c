@@ -105,7 +105,7 @@ int	m_sqline_Unload(int module_unload)
 {
 	if (del_Command(MSG_SQLINE, TOK_SQLINE, m_sqline) < 0)
 	{
-		sendto_realopers("Failed to delete commands when unloading %s",
+		sendto_realops("Failed to delete commands when unloading %s",
 				m_sqline_Header.name);
 	}
 	return MOD_SUCCESS;
@@ -142,7 +142,7 @@ DLLFUNC int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			continue;
 /*** Temporarely for tracing a bconf->mask being NULL issue. -- Syzop */
 		if (!bconf->mask) {
-			sendto_realopers("bconf->mask is null! %p/%d/%d/%d/'%s'",
+			sendto_realops("bconf->mask is null! %p/%d/%d/%d/'%s'",
 				bconf, bconf->flag.temporary, bconf->flag.type, bconf->flag.type2,
 				bconf->reason ? bconf->reason : "<NULL>");
 			continue; /* let's be nice and not make it crash too */
