@@ -794,8 +794,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			    i == -3 ? "Too many connections" :
 			    "Unauthorized connection", get_client_host(sptr));
 			ircstp->is_ref++;
-			ircsprintf(mo, "This server is full. Please try %s",
-			    defserv);
+			ircsprintf(mo, "This server is full.");
 			return
 			    exit_client(cptr, sptr, &me,
 			    i ==

@@ -39,7 +39,7 @@ static char *replies[] = {
 /* 007    RPL_MAPEND */   ":%s 007 %s :End of /MAP",
 /* 008 */ NULL,
 /* 009 */ NULL,
-/* 010 */ NULL,
+/* 010    RPL_REDIR */	  ":%s 010 %s %s %d :Please use this Server/Port instead",
 /* 011 */ NULL,
 /* 012 */ NULL,
 /* 013 */ NULL,
@@ -248,7 +248,7 @@ static char *replies[] = {
 #endif
 /* 213    RPL_STATSCLINE */ ":%s 213 %s %c %s * %s %d %d %s",
 /* 214    RPL_STATSOLDNLINE */ ":%s 214 %s %c %s * %s %d %d %s",
-/* 215    RPL_STATSILINE */ ":%s 215 %s I %s * %s %d %s",
+/* 215    RPL_STATSILINE */ ":%s 215 %s I %s * %s %d %s %s %d",
 /* 216    RPL_STATSKLINE */ ":%s 216 %s %s %s %s",
 /* 217    RPL_STATSQLINE */ ":%s 217 %s Q %s %s",
 /* 218    RPL_STATSYLINE */ ":%s 218 %s Y %s %d %d %d %ld",

@@ -1513,6 +1513,13 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_vardata);
 			}
 		}
+		else if (!strcmp(cep->ce_varname, "redirect-server"))
+		{
+			allow->server = strdup(cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "redirect-port")) {
+			allow->port = atoi(cep->ce_vardata);
+		}
 		else
 		{
 			config_status("%s:%i: unknown directive allow::%s",
@@ -3459,6 +3466,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 		}
 		else
 		{
+			sendto_one(cptr, rpl_str(RPL_REDIR), me.name, cptr->name, aconf->server ? aconf->server : defserv, aconf->port ? aconf->port : 6667);
 			return -3;
 		}
 		return 0;

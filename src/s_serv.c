@@ -2566,7 +2566,7 @@ int  m_stats(cptr, sptr, parc, parv)
 		  ConfigItem_allow *allows;
 		  for (allows = conf_allow; allows; allows = (ConfigItem_allow *) allows->next) {
 			  sendto_one(sptr, rpl_str(RPL_STATSILINE), me.name,
-				  parv[0], allows->ip, allows->hostname, allows->maxperip, allows->class->name);
+				  parv[0], allows->ip, allows->hostname, allows->maxperip, allows->class->name, allows->server ? allows->server : defserv, allows->port ? allows->port : 6667);
 		  }		  	
 		  break;
 	  }

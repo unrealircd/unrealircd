@@ -971,8 +971,9 @@ struct _configitem_class {
 struct _configitem_allow {
 	ConfigFlag 	 flag;
 	ConfigItem       *prev, *next;
-	char	         *ip, *hostname, *password;
+	char	         *ip, *hostname, *password, *server;
 	short		 maxperip;
+	int		 port;
 	ConfigItem_class *class;
 };
 
