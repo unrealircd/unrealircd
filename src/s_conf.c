@@ -7208,7 +7208,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				{
 					config_error_empty(cepp->ce_fileptr->cf_filename,
 						cepp->ce_varlinenum, "set::hosts",
-						cepp->ce_vardata);
+						cepp->ce_varname);
 					errors++;
 					continue;
 				} 

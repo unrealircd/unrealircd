@@ -469,5 +469,5 @@
 - Fixed bug in remote version reply, reported by DukePyrolator (#0002180).
 - Added set::dns::bind-ip (rarely ever needed, but might be useful for paranoid people).
 - Some unreal32docs->security section improvements.
-- Fixed a minor bug in the new config system when displaying link {} errors (#0002194) 
-  reported by AngryWolf.
+- Fixed a minor bug in the new config system when displaying link {} and set::hosts errors
+  (#0002194) reported by AngryWolf.
