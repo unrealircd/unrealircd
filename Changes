@@ -373,3 +373,5 @@
 - Fixed /htm giving wrong response when /htm to 1
 - Fixed /shun showing "1970" to permanently shunned users
 - Fixed ./Config showing freebsd 3.0 in freebsd 4
+- Made so badwords.*.conf accepts # comments
+- Added some default default badwords.message.conf and badwords.channel.conf

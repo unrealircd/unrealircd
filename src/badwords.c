@@ -158,7 +158,8 @@ int  loadbadwords_channel(char *wordfile)
 			*ptr = '\0';
 		if (buf[0] == '\0')
 			continue;
-
+		if (buf[0] == '#')
+			continue;
 		for (j = 0, isregex = 0; j < strlen(buf); j++)
 		{
 			if ((int)buf[j] < 65 || (int)buf[j] > 123)
@@ -213,6 +214,8 @@ int  loadbadwords_message(char *wordfile)
 		    || (ptr = strchr(buf, '\n')) != NULL)
 			*ptr = '\0';
 		if (buf[0] == '\0')
+			continue;
+		if (buf[0] == '#')
 			continue;
 
 		for (j = 0, isregex = 0; j < strlen(buf); j++)
