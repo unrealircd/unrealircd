@@ -209,7 +209,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					showchannel = 1;
 				if ((acptr->umodes & UMODE_HIDEWHOIS) && !IsMember(sptr, chptr) && !IsAnOper(sptr))
 					showchannel = 0;
-				if (IsServices(acptr) && !IsNetAdmin(sptr))
+				if (IsServices(acptr) && !IsNetAdmin(sptr) && !IsSAdmin(sptr))
 					showchannel = 0;
 				if (acptr == sptr)
 					showchannel = 1;
