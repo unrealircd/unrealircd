@@ -29,7 +29,7 @@
 #define UnrealProtocol 		2306
 #define PATCH1  		"3"
 #define PATCH2  		".2"
-#define PATCH3  		".2"
+#define PATCH3  		".3"
 #define PATCH4  		"-pre1"
 #define PATCH5  		""
 #define PATCH6  		""
