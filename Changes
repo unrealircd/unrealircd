@@ -548,4 +548,4 @@
   problem
 - Hopefully fixed the +x problem
 - Fixed a bug with mkpasswd on OpenBSD
-- Added desynch +e warning, and updated ./update enough ..
+- Added desynch +e warning, and updated ./update enough ...
