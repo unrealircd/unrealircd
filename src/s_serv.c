@@ -658,7 +658,7 @@ int  m_server(cptr, sptr, parc, parv)
 			    "Link denied (No matching link configuration)");
 		}
 		/* Now for checking passwords */
-		if (!Auth_Check(cptr, aconf->recvauth, password))
+		if (Auth_Check(cptr, aconf->recvauth, password) == -1)
 		{
 			sendto_one(cptr,
 			    "ERROR :Link denied (Authentication failed) %s",

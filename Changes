@@ -1084,3 +1084,5 @@ seen. gmtime warning still there
   Andy Church
 - Made even more changes to the win32 editor (undo/redo buttons,
   and current line number display)
+- Fixed yet another serious sts bug, we have to release beta6 soon :P~
+
