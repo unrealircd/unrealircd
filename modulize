@@ -1,4 +1,14 @@
 #!/bin/sh
+#
+# Syntax:
+# ./modulize m_template.c TOKEN CMD MAXPARA CMDFILE outfile.name(curdir) desc
+#
+# CMD = LOWERCASE
+#
+#
+#
+
+
 UCOMMAND=`echo $3 |tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
 cp $1 $1.tmp
 sed "s/%TOKEN%/$2/g" $1.tmp >$1.tmp.1

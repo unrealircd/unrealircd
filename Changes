@@ -838,3 +838,4 @@ seen. gmtime warning still there
 - Made the config a bit more sturdy (would have done more, but got boring :P)
 - Moved /svso and /svsnick to modules
 - Updated the win32 makefile
+- modulize documentation, some web server fixes, preparation for uabr

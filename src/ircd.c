@@ -271,29 +271,7 @@ VOIDSIG s_segv()
 #ifdef	POSIX_SIGNALS
 	struct sigaction act;
 #endif
-	int  i;
-	FILE *log;
-	int  p;
-	static TS segv_last = (TS)0;
-#ifdef RENAME_CORE
-	char corename[512];
-#else
-# define corename "core"
-#endif
-	if (!segv_last)
-	{
-		sendto_ops("Recieved first Segfault, doing re-enter test");
-		segv_last = TStime();
-		return;
-	}
-	if ((TStime() - segv_last) > 5)
-	{
-#ifdef USE_SYSLOG
-		(void)syslog(LOG_WARNING, "Possible fake segfault");
-#endif
-		segv_last = TStime();
-		return;
-	}
+
 #ifdef POSIX_SIGNALS
 	act.sa_flags = 0;
 	act.sa_handler = SIG_DFL;
@@ -302,46 +280,14 @@ VOIDSIG s_segv()
 #else
 	(void)signal(SIGSEGV, SIG_DFL);
 #endif
-
-#ifdef USE_SYSLOG
-	(void)syslog(LOG_WARNING, "Server terminating: Segmention fault!!!");
-	(void)closelog();
-#endif
-	sendto_realops
-	    ("Aieeee!!! Server terminating: Segmention fault (buf: %s)",
-	    backupbuf);
-	sendto_serv_butone(&me,
-	    ":%s GLOBOPS :AIEEE!!! Server Terminating: Segmention fault (buf: %s)",
-	    me.name, backupbuf);
-	sendto_all_butone(NULL, &me,
-	    "NOTICE ALL :SEGFAULT! I'm Meeeeellllting, what a world!");
-	log = fopen(lPATH, "a");
-	if (log)
-	{
-		fprintf(log,
-		    "%li - Aieeee!!! Server terminating: Segmention fault (buf: %s)\n",
-		    time(NULL), backupbuf);
-		fclose(log);
-	}
-
 #if !defined(_WIN32) && !defined(_AMIGA)
-	p = getpid();
 	if (fork())
 	{
 		return;
 	}
-	write_pidfile();
-#ifdef RENAME_CORE
-	(void)ircsprintf(corename, "core.%d", p);
-	(void)rename("core", corename);
-#endif
-	sendto_realops
-	    ("Dumped core to %s - please read Unreal.nfo on what to do!",
-	    corename);
-#endif
-	flush_connections(&me);
-	close_connections();
+	
 	exit(-1);
+#endif
 }
 
 void server_reboot(mesg)
