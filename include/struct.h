@@ -54,6 +54,9 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>    
 #endif
+extern int sendanyways;
+
+
 typedef struct aloopStruct LoopStruct;
 typedef struct ConfItem aConfItem;
 typedef struct t_kline aTKline;
@@ -88,6 +91,8 @@ typedef struct _configitem_deny_version ConfigItem_deny_version;
 typedef struct _configitem_log ConfigItem_log;
 typedef struct _configitem_unknown ConfigItem_unknown;
 typedef struct _configitem_unknown_ext ConfigItem_unknown_ext;
+typedef struct _configitem_alias ConfigItem_alias;
+typedef struct _configitem_alias_format ConfigItem_alias_format;
 
 typedef struct Watch aWatch;
 typedef struct Client aClient;
@@ -272,6 +277,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define UMODE_ADMIN	 0x0080	/* Admin */
 #define	UMODE_SERVNOTICE 0x0100	/* server notices such as kill */
 #define	UMODE_LOCOP      0x0200	/* Local operator -- SRB */
+#define UMODE_RGSTRONLY  0x0400 /* Only reg nick message */
+#define UMODE_WEBTV	 0x0800 /* WebTV Client */
 #define UMODE_SERVICES   0x4000	/* services */
 #define UMODE_HIDE	 0x8000	/* Hide from Nukes */
 #define UMODE_NETADMIN  0x10000	/* Network Admin */
@@ -301,7 +308,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SNO_DEFOPER "+kcfvG"
 #define SNO_DEFUSER "+k"
 
-#define	SEND_UMODES	(UMODE_INVISIBLE|UMODE_OPER|UMODE_WALLOP|UMODE_FAILOP|UMODE_HELPOP|UMODE_REGNICK|UMODE_SADMIN|UMODE_NETADMIN|UMODE_TECHADMIN|UMODE_COADMIN|UMODE_ADMIN|UMODE_SERVICES|UMODE_HIDE|UMODE_WHOIS|UMODE_KIX|UMODE_BOT|UMODE_SECURE|UMODE_FCLIENT|UMODE_HIDING|UMODE_DEAF|UMODE_VICTIM|UMODE_HIDEOPER|UMODE_SETHOST|UMODE_STRIPBADWORDS)
+#define	SEND_UMODES (UMODE_INVISIBLE|UMODE_OPER|UMODE_WALLOP|UMODE_FAILOP|UMODE_HELPOP|UMODE_RGSTRONLY|UMODE_REGNICK|UMODE_SADMIN|UMODE_NETADMIN|UMODE_TECHADMIN|UMODE_COADMIN|UMODE_ADMIN|UMODE_SERVICES|UMODE_HIDE|UMODE_WHOIS|UMODE_KIX|UMODE_BOT|UMODE_SECURE|UMODE_FCLIENT|UMODE_HIDING|UMODE_DEAF|UMODE_VICTIM|UMODE_HIDEOPER|UMODE_SETHOST|UMODE_STRIPBADWORDS|UMODE_WEBTV)
 #define	ALL_UMODES (SEND_UMODES|UMODE_SERVNOTICE|UMODE_LOCOP|UMODE_SERVICES)
 #define	FLAGS_ID	(FLAGS_DOID|FLAGS_GOTID)
 
@@ -349,6 +356,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	IsAnOper(x)		((x)->umodes & (UMODE_OPER|UMODE_LOCOP))
 #define IsARegNick(x)		((x)->umodes & (UMODE_REGNICK))
 #define IsRegNick(x)		((x)->umodes & UMODE_REGNICK)
+#define IsRegNickMsg(x)		((x)->umodes & UMODE_RGSTRONLY)
+#define IsWebTV(x)		((x)->umodes & UMODE_WEBTV)
 #define	IsPerson(x)		((x)->user && IsClient(x))
 #define	IsPrivileged(x)		(IsAnOper(x) || IsServer(x))
 #define	SendWallops(x)		(!IsMe(x) && ((x)->umodes & UMODE_WALLOP))
@@ -503,82 +512,82 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OFLAG_ISGLOBAL	(OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
 
 
-#define OPCanZline(x)   ((x)->oflag & OFLAG_ZLINE)
-#define OPCanRehash(x)	((x)->oflag & OFLAG_REHASH)
-#define OPCanDie(x)	((x)->oflag & OFLAG_DIE)
-#define OPCanRestart(x)	((x)->oflag & OFLAG_RESTART)
-#define OPCanHelpOp(x)	((x)->oflag & OFLAG_HELPOP)
-#define OPCanGlobOps(x)	((x)->oflag & OFLAG_GLOBOP)
-#define OPCanWallOps(x)	((x)->oflag & OFLAG_WALLOP)
-#define OPCanLocOps(x)	((x)->oflag & OFLAG_LOCOP)
-#define OPCanLRoute(x)	((x)->oflag & OFLAG_LROUTE)
-#define OPCanGRoute(x)	((x)->oflag & OFLAG_GROUTE)
-#define OPCanLKill(x)	((x)->oflag & OFLAG_LKILL)
-#define OPCanGKill(x)	((x)->oflag & OFLAG_GKILL)
-#define OPCanKline(x)	((x)->oflag & OFLAG_KLINE)
-#define OPCanUnKline(x)	((x)->oflag & OFLAG_UNKLINE)
-#define OPCanLNotice(x)	((x)->oflag & OFLAG_LNOTICE)
-#define OPCanGNotice(x)	((x)->oflag & OFLAG_GNOTICE)
-#define OPIsAdmin(x)	((x)->oflag & OFLAG_ADMIN)
-#define OPIsSAdmin(x)	((x)->oflag & OFLAG_SADMIN)
-#define OPIsNetAdmin(x) ((x)->oflag & OFLAG_NETADMIN)
-#define OPIsTechAdmin(x) ((x)->oflag & OFLAG_TECHADMIN)
-#define OPIsCoAdmin(x)	((x)->oflag & OFLAG_COADMIN)
-#define OPCanUModeC(x)	((x)->oflag & OFLAG_UMODEC)
-#define OPCanUModeF(x)	((x)->oflag & OFLAG_UMODEF)
-#define OPIsEyes(x)	((x)->oflag & OFLAG_EYES)
-#define OPIsWhois(x)    ((x)->oflag & OFLAG_WHOIS)
+#define OPCanZline(x)   ((x)->user->oflag & OFLAG_ZLINE)
+#define OPCanRehash(x)	((x)->user->oflag & OFLAG_REHASH)
+#define OPCanDie(x)	((x)->user->oflag & OFLAG_DIE)
+#define OPCanRestart(x)	((x)->user->oflag & OFLAG_RESTART)
+#define OPCanHelpOp(x)	((x)->user->oflag & OFLAG_HELPOP)
+#define OPCanGlobOps(x)	((x)->user->oflag & OFLAG_GLOBOP)
+#define OPCanWallOps(x)	((x)->user->oflag & OFLAG_WALLOP)
+#define OPCanLocOps(x)	((x)->user->oflag & OFLAG_LOCOP)
+#define OPCanLRoute(x)	((x)->user->oflag & OFLAG_LROUTE)
+#define OPCanGRoute(x)	((x)->user->oflag & OFLAG_GROUTE)
+#define OPCanLKill(x)	((x)->user->oflag & OFLAG_LKILL)
+#define OPCanGKill(x)	((x)->user->oflag & OFLAG_GKILL)
+#define OPCanKline(x)	((x)->user->oflag & OFLAG_KLINE)
+#define OPCanUnKline(x)	((x)->user->oflag & OFLAG_UNKLINE)
+#define OPCanLNotice(x)	((x)->user->oflag & OFLAG_LNOTICE)
+#define OPCanGNotice(x)	((x)->user->oflag & OFLAG_GNOTICE)
+#define OPIsAdmin(x)	((x)->user->oflag & OFLAG_ADMIN)
+#define OPIsSAdmin(x)	((x)->user->oflag & OFLAG_SADMIN)
+#define OPIsNetAdmin(x) ((x)->user->oflag & OFLAG_NETADMIN)
+#define OPIsTechAdmin(x) ((x)->user->oflag & OFLAG_TECHADMIN)
+#define OPIsCoAdmin(x)	((x)->user->oflag & OFLAG_COADMIN)
+#define OPCanUModeC(x)	((x)->user->oflag & OFLAG_UMODEC)
+#define OPCanUModeF(x)	((x)->user->oflag & OFLAG_UMODEF)
+#define OPIsEyes(x)	((x)->user->oflag & OFLAG_EYES)
+#define OPIsWhois(x)    ((x)->user->oflag & OFLAG_WHOIS)
 
-#define OPSetRehash(x)	((x)->oflag |= OFLAG_REHASH)
-#define OPSetDie(x)	((x)->oflag |= OFLAG_DIE)
-#define OPSetRestart(x)	((x)->oflag |= OFLAG_RESTART)
-#define OPSetHelpOp(x)	((x)->oflag |= OFLAG_HELPOP)
-#define OPSetGlobOps(x)	((x)->oflag |= OFLAG_GLOBOP)
-#define OPSetWallOps(x)	((x)->oflag |= OFLAG_WALLOP)
-#define OPSetLocOps(x)	((x)->oflag |= OFLAG_LOCOP)
-#define OPSetLRoute(x)	((x)->oflag |= OFLAG_LROUTE)
-#define OPSetGRoute(x)	((x)->oflag |= OFLAG_GROUTE)
-#define OPSetLKill(x)	((x)->oflag |= OFLAG_LKILL)
-#define OPSetGKill(x)	((x)->oflag |= OFLAG_GKILL)
-#define OPSetKline(x)	((x)->oflag |= OFLAG_KLINE)
-#define OPSetUnKline(x)	((x)->oflag |= OFLAG_UNKLINE)
-#define OPSetLNotice(x)	((x)->oflag |= OFLAG_LNOTICE)
-#define OPSetGNotice(x)	((x)->oflag |= OFLAG_GNOTICE)
-#define OPSSetAdmin(x)	((x)->oflag |= OFLAG_ADMIN)
-#define OPSSetSAdmin(x)	((x)->oflag |= OFLAG_SADMIN)
-#define OPSSetNetAdmin(x) ((x)-> oflag |= OFLAG_NETADMIN)
-#define OPSSetTechAdmin(x) ((x)-> oflag |= OFLAG_TECHADMIN)
-#define OPSSetCoAdmin(x) ((x)->oflag |= OFLAG_COADMIN)
-#define OPSetUModeC(x)	((x)->oflag |= OFLAG_UMODEC)
-#define OPSetUModeF(x)	((x)->oflag |= OFLAG_UMODEF)
-#define OPSetEyes(x)	((x)->oflag |= OFLAG_EYES)
-#define OPSetZLine(x)	((x)->oflag |= OFLAG_ZLINE)
-#define OPSetWhois(x)   ((x)->oflag |= OFLAG_WHOIS)
-#define OPClearRehash(x)	((x)->oflag &= ~OFLAG_REHASH)
-#define OPClearDie(x)		((x)->oflag &= ~OFLAG_DIE)
-#define OPClearRestart(x)	((x)->oflag &= ~OFLAG_RESTART)
-#define OPClearHelpOp(x)	((x)->oflag &= ~OFLAG_HELPOP)
-#define OPClearGlobOps(x)	((x)->oflag &= ~OFLAG_GLOBOP)
-#define OPClearWallOps(x)	((x)->oflag &= ~OFLAG_WALLOP)
-#define OPClearLocOps(x)	((x)->oflag &= ~OFLAG_LOCOP)
-#define OPClearLRoute(x)	((x)->oflag &= ~OFLAG_LROUTE)
-#define OPClearGRoute(x)	((x)->oflag &= ~OFLAG_GROUTE)
-#define OPClearLKill(x)		((x)->oflag &= ~OFLAG_LKILL)
-#define OPClearGKill(x)		((x)->oflag &= ~OFLAG_GKILL)
-#define OPClearKline(x)		((x)->oflag &= ~OFLAG_KLINE)
-#define OPClearUnKline(x)	((x)->oflag &= ~OFLAG_UNKLINE)
-#define OPClearLNotice(x)	((x)->oflag &= ~OFLAG_LNOTICE)
-#define OPClearGNotice(x)	((x)->oflag &= ~OFLAG_GNOTICE)
-#define OPClearAdmin(x)		((x)->oflag &= ~OFLAG_ADMIN)
-#define OPClearSAdmin(x)	((x)->oflag &= ~OFLAG_SADMIN)
-#define OPClearNetAdmin(x)	((x)->oflag &= ~OFLAG_NETADMIN)
-#define OPClearTechAdmin(x)	((x)->oflag &= ~OFLAG_TECHADMIN)
-#define OPClearCoAdmin(x)	((x)->oflag &= ~OFLAG_COADMIN)
-#define OPClearUModeC(x)	((x)->oflag &= ~OFLAG_UMODEC)
-#define OPClearUModeF(x)	((x)->oflag &= ~OFLAG_UMODEF)
-#define OPClearEyes(x)		((x)->oflag &= ~OFLAG_EYES)
-#define OPClearZLine(x)		((x)->oflag &= ~OFLAG_ZLINE)
-#define OPClearWhois(x)         ((x)->oflag &= ~OFLAG_WHOIS)
+#define OPSetRehash(x)	((x)->user->oflag |= OFLAG_REHASH)
+#define OPSetDie(x)	((x)->user->oflag |= OFLAG_DIE)
+#define OPSetRestart(x)	((x)->user->oflag |= OFLAG_RESTART)
+#define OPSetHelpOp(x)	((x)->user->oflag |= OFLAG_HELPOP)
+#define OPSetGlobOps(x)	((x)->user->oflag |= OFLAG_GLOBOP)
+#define OPSetWallOps(x)	((x)->user->oflag |= OFLAG_WALLOP)
+#define OPSetLocOps(x)	((x)->user->oflag |= OFLAG_LOCOP)
+#define OPSetLRoute(x)	((x)->user->oflag |= OFLAG_LROUTE)
+#define OPSetGRoute(x)	((x)->user->oflag |= OFLAG_GROUTE)
+#define OPSetLKill(x)	((x)->user->oflag |= OFLAG_LKILL)
+#define OPSetGKill(x)	((x)->user->oflag |= OFLAG_GKILL)
+#define OPSetKline(x)	((x)->user->oflag |= OFLAG_KLINE)
+#define OPSetUnKline(x)	((x)->user->oflag |= OFLAG_UNKLINE)
+#define OPSetLNotice(x)	((x)->user->oflag |= OFLAG_LNOTICE)
+#define OPSetGNotice(x)	((x)->user->oflag |= OFLAG_GNOTICE)
+#define OPSSetAdmin(x)	((x)->user->oflag |= OFLAG_ADMIN)
+#define OPSSetSAdmin(x)	((x)->user->oflag |= OFLAG_SADMIN)
+#define OPSSetNetAdmin(x) ((x)->user->oflag |= OFLAG_NETADMIN)
+#define OPSSetTechAdmin(x) ((x)->user->oflag |= OFLAG_TECHADMIN)
+#define OPSSetCoAdmin(x) ((x)->user->oflag |= OFLAG_COADMIN)
+#define OPSetUModeC(x)	((x)->user->oflag |= OFLAG_UMODEC)
+#define OPSetUModeF(x)	((x)->user->oflag |= OFLAG_UMODEF)
+#define OPSetEyes(x)	((x)->user->oflag |= OFLAG_EYES)
+#define OPSetZLine(x)	((x)->user->oflag |= OFLAG_ZLINE)
+#define OPSetWhois(x)   ((x)->user->oflag |= OFLAG_WHOIS)
+#define OPClearRehash(x)	((x)->user->oflag &= ~OFLAG_REHASH)
+#define OPClearDie(x)		((x)->user->oflag &= ~OFLAG_DIE)
+#define OPClearRestart(x)	((x)->user->oflag &= ~OFLAG_RESTART)
+#define OPClearHelpOp(x)	((x)->user->oflag &= ~OFLAG_HELPOP)
+#define OPClearGlobOps(x)	((x)->user->oflag &= ~OFLAG_GLOBOP)
+#define OPClearWallOps(x)	((x)->user->oflag &= ~OFLAG_WALLOP)
+#define OPClearLocOps(x)	((x)->user->oflag &= ~OFLAG_LOCOP)
+#define OPClearLRoute(x)	((x)->user->oflag &= ~OFLAG_LROUTE)
+#define OPClearGRoute(x)	((x)->user->oflag &= ~OFLAG_GROUTE)
+#define OPClearLKill(x)		((x)->user->oflag &= ~OFLAG_LKILL)
+#define OPClearGKill(x)		((x)->user->oflag &= ~OFLAG_GKILL)
+#define OPClearKline(x)		((x)->user->oflag &= ~OFLAG_KLINE)
+#define OPClearUnKline(x)	((x)->user->oflag &= ~OFLAG_UNKLINE)
+#define OPClearLNotice(x)	((x)->user->oflag &= ~OFLAG_LNOTICE)
+#define OPClearGNotice(x)	((x)->user->oflag &= ~OFLAG_GNOTICE)
+#define OPClearAdmin(x)		((x)->user->oflag &= ~OFLAG_ADMIN)
+#define OPClearSAdmin(x)	((x)->user->oflag &= ~OFLAG_SADMIN)
+#define OPClearNetAdmin(x)	((x)->user->oflag &= ~OFLAG_NETADMIN)
+#define OPClearTechAdmin(x)	((x)->user->oflag &= ~OFLAG_TECHADMIN)
+#define OPClearCoAdmin(x)	((x)->user->oflag &= ~OFLAG_COADMIN)
+#define OPClearUModeC(x)	((x)->user->oflag &= ~OFLAG_UMODEC)
+#define OPClearUModeF(x)	((x)->user->oflag &= ~OFLAG_UMODEF)
+#define OPClearEyes(x)		((x)->user->oflag &= ~OFLAG_EYES)
+#define OPClearZLine(x)		((x)->user->oflag &= ~OFLAG_ZLINE)
+#define OPClearWhois(x)         ((x)->user->oflag &= ~OFLAG_WHOIS)
 /*
  * defined debugging levels
  */
@@ -643,7 +652,9 @@ struct User {
 	Link *silence;		/* chain of silence pointer blocks */
 	char *away;		/* pointer to away message */
 	TS   last;
+	TS   nexttarget;	/* Time until a change in targets is allowed */
 	u_int32_t servicestamp;	/* Services' time stamp variable */
+	long oflag;		/* Operator access flags -Cabal95 */
 	signed char refcnt;	/* Number of times this block is referenced */
 	unsigned short joined;		/* number of channels joined */
 	char username[USERLEN + 1];
@@ -679,6 +690,8 @@ struct Server {
 #define M_SERVER 0x0004
 #define M_SHUN 0x0008
 #define M_NOLAG 0x0010
+#define M_ALIAS 0x0020
+
 struct Command {
 	aCommand		*next;
 	aCommand		*prev;
@@ -728,6 +741,9 @@ typedef struct ircstatsx {
 	int  global_max;	/* global max */
 } ircstats;
 
+extern ircstats IRCstats;
+
+
 #define LISTENER_NORMAL		0x000001
 #define LISTENER_CLIENTSONLY	0x000002
 #define LISTENER_SERVERSONLY	0x000004
@@ -751,7 +767,6 @@ struct Client {
 	TS   since;		/* last time we parsed something */
 	TS   lastnick;		/* TimeStamp on nick */
 	TS   nextnick;		/* Time the next nick change will be allowed */
-	TS   nexttarget;	/* Time until a change in targets is allowed */
 	u_char targets[MAXTARGETS];	/* Hash values of current targets */
 	long flags;		/* client flags */
 	long umodes;		/* client usermodes */
@@ -778,8 +793,7 @@ struct Client {
 #ifdef NOSPOOF
 	u_int32_t nospoof;	/* Anti-spoofing random number */
 #endif
-	long oflag;		/* Operator access flags -Cabal95 */
-	long proto;		/* ProtoCtl options */
+	short proto;		/* ProtoCtl options */
 	long sendM;		/* Statistics: protocol messages send */
 	long sendK;		/* Statistics: total k-bytes send */
 	long receiveM;		/* Statistics: protocol messages received */
@@ -1049,6 +1063,27 @@ struct _configitem_unknown_ext {
 	int             ce_varlinenum;
 	ConfigEntry     *ce_entries;
 };
+
+#define ALIAS_SERVICES 1
+#define ALIAS_STATS 2
+#define ALIAS_NORMAL 3
+#define ALIAS_COMMAND 4
+
+struct _configitem_alias {
+	ConfigFlag flag;
+	ConfigItem *prev, *next;
+	ConfigItem_alias_format *format;
+	char *alias, *nick;
+	short type;
+};
+
+struct _configitem_alias_format {
+	ConfigFlag flag;
+	ConfigItem *prev, *next;
+	ConfigItem_alias *alias;
+	char *format, *parameters;
+};
+	
 
 struct _irchook {
 	ConfigFlag flag;

@@ -98,6 +98,11 @@
  */
 #define ADMINCHAT 1
 
+/*
+ * If we should catch SIGSEGVs..
+*/
+#define PROPER_COREDUMP
+
 
 /*
  * Kill logging -otherguy
@@ -248,14 +253,6 @@
 #define VPATH		"ircd.svsmotd"	/* Services MOTD append. */
 #define BPATH		"bot.motd"	/* Bot MOTD */
 #define IRCDTUNE 	"ircd.tune"	/* tuning .. */
-
-/* FAILOPER_WARN
- *
- * When defined, warns users on a failed oper attempt that it was/is logged
- * Only works when FNAME_OPERLOG is defined, and a logfile exists.
- * NOTE: Failed oper attempts are logged regardless.
- */
-#define FAILOPER_WARN
 
 /* CHROOTDIR
  *
@@ -431,12 +428,6 @@
 
 #define MAXTARGETS		20
 #define TARGET_DELAY		120
-
-/*
- * Would you like all clients to see the progress of their connections?
- */
-
-#define SHOWCONNECTINFO
 
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
 

@@ -68,23 +68,28 @@ struct _vfs_table
 	char 	*filename;
 	char	*realfile;
 	char	*ct;
+	int	cachesize;
+	char	*cache;
 };
 
 VFStable	vfsTable[] =
 {
-	{"/sections/active.gif", "html/sections/active.gif", "image/gif"},
-	{"/sections/inactive.gif", "html/sections/inactive.gif", "image/gif"},
-	{"/html/main.html", "html/html/main.html", "text/html"},
-	{"/icons/conffiles.jpg", "html/icons/conffiles.jpg", "image/jpeg"},
-	{"/icons/modules.jpg", "html/icons/modules.jpg", "image/jpeg"},
-	{"/icons/opers.jpg", "html/icons/opers.jpg", "image/jpeg"},
-	{"/icons/settings.jpg", "html/icons/settings.jpg", "image/jpeg"},
-	{"/icons/stats.jpg", "html/icons/stats.jpg", "image/jpeg"},
-	{"/icons/users.jpg", "html/icons/users.jpg", "image/jpeg"},
-	{"/back/background.jpg", "html/back/background.jpg", "image/jpeg"},
-	{"/unrealircd.com/active.gif", "html/unrealircd.com/active.gif", "image/jpeg"},
-	{"/unrealircd.com/inactive.gif", "html/unrealircd.com/inactive.gif", "image/jpeg"},
-	{"/", "html/index.html", "text/html"},
+	{"/sections/active.gif", "html/sections/active.gif", "image/gif", 0, NULL},
+	{"/sections/inactive.gif", "html/sections/inactive.gif", "image/gif", 0, NULL},
+	{"/html/main.html", "html/html/main.html", "text/html", 0, NULL},
+	{"/icons/conffiles.jpg", "html/icons/conffiles.jpg", "image/jpeg", 0, NULL},
+	{"/icons/modules.jpg", "html/icons/modules.jpg", "image/jpeg", 0, NULL},
+	{"/icons/opers.jpg", "html/icons/opers.jpg", "image/jpeg", 0, NULL},
+	{"/icons/settings.jpg", "html/icons/settings.jpg", "image/jpeg", 0, NULL},
+	{"/icons/stats.jpg", "html/icons/stats.jpg", "image/jpeg", 0, NULL},
+	{"/icons/users.jpg", "html/icons/users.jpg", "image/jpeg", 0, NULL},
+	{"/back/background.jpg", "html/back/background.jpg", "image/jpeg", 0, NULL},
+	{"/unrealircd.com/active.gif", "html/unrealircd.com/active.gif", "image/jpeg", 0, NULL},
+	{"/unrealircd.com/inactive.gif", "html/unrealircd.com/inactive.gif", "image/jpeg", 0, NULL},
+	{"/back/grad.jpg", "html/back/grad.jpg", "image/jpeg", 0, NULL},
+	{"/back/line.gif", "html/back/line.gif", "image/gif", 0, NULL},
+	{"/sections/bg.gif", "html/sections/bg.gif", "image/gif", 0, NULL},
+	{"/", "html/index.html", "text/html", 0, NULL},
 	{NULL, NULL, NULL}	
 };
 #define soprintf sockprintf
@@ -95,8 +100,9 @@ DLLFUNC int h_u_vfs(HTTPd_Request *r)
 	struct stat statf;
 	char	*ims;
 	time_t	tmt;
-	char	*datebuf = NULL;
-
+	char	datebuf[100];
+	int	fd;
+	int	i, j;
 	ims = GetHeader(r, "if-modified-since");
 	while (p->filename)
 	{
@@ -107,7 +113,7 @@ DLLFUNC int h_u_vfs(HTTPd_Request *r)
 			{
 				if (tmt = rfc2time(ims) < 0)
 				{
-					httpd_400_header(r, "Bad date");
+					httpd_500_header(r, "Bad date");
 					return 1;	
 				}
 				if (statf.st_mtime < tmt)
@@ -116,14 +122,45 @@ DLLFUNC int h_u_vfs(HTTPd_Request *r)
 					return 1;
 				} 
 			}			
+			if (statf.st_size != p->cachesize)
+			{
+				if (p->cache)
+				{
+					MyFree(p->cache);
+					p->cache = NULL;
+				}
+				p->cache = MyMalloc(statf.st_size + 1);
+				fd = open(p->realfile, O_RDONLY);
+				j = read(fd, p->cache, statf.st_size);
+				if (j != statf.st_size)
+				{
+					httpd_500_header(r, j == -1 ? strerror(ERRNO) : strerror(EFAULT));
+					return 1;
+				}
+				p->cache[j + 1] = '\0';
+				close(fd);
+				p->cachesize = statf.st_size;
+			}
 			httpd_standard_headerX(r, p->ct, 1);
-			datebuf = MyMalloc(60);
 			soprintf(r, "Last-Modified: %s",
 				rfctime(statf.st_mtime, datebuf));
-			MyFree(datebuf);
+			soprintf(r, "Content-Length: %i",
+				statf.st_size);
 			soprintf(r, "");
-			
-			httpd_sendfile(r, p->realfile);
+			i = 0;
+			j = 0;
+			set_blocking(r->fd, NULL);
+			while (i != p->cachesize)
+			{
+				j = send(r->fd, &p->cache[i], p->cachesize - i, 0);
+				if (j == -1)
+				{
+					set_non_blocking(r->fd, NULL);
+					return 1;
+				}
+				i += j;
+			}
+			set_non_blocking(r->fd, NULL);
 			return 1;
 		}
 		p++;

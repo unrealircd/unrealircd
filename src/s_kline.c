@@ -801,6 +801,8 @@ int  m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
       nochecks:
 	usermask = strtok(mask, "@");
 	hostmask = strtok(NULL, "");
+	if (BadPtr(usermask) || BadPtr(hostmask))
+		return;
 	tkl_check_expire(NULL);
 
 	for (tk = tklines; tk; tk = tk->next)

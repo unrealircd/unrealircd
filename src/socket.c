@@ -1,5 +1,5 @@
-/************************************************************************
- *   Unreal Internet Relay Chat Daemon - src/bsd.c
+/*
+ *   Unreal Internet Relay Chat Daemon, src/socket.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
  *
@@ -23,11 +23,6 @@
 #include "sys.h"
 #include "h.h"
 #include <signal.h>
-
-ID_Copyright
-    ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
-
-
 #ifndef _WIN32
 extern int errno;		/* ...seems that errno.h doesn't define this everywhere */
 #endif
@@ -38,40 +33,7 @@ extern char *sys_errlist[];
 #ifdef DEBUGMODE
 int  writecalls = 0, writeb[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 #endif
-#ifndef _WIN32
-VOIDSIG dummy()
-{
-#ifndef HAVE_RELIABLE_SIGNALS
-	(void)signal(SIGALRM, dummy);
-	(void)signal(SIGPIPE, dummy);
-#ifndef HPUX			/* Only 9k/800 series require this, but don't know how to.. */
-# ifdef SIGWINCH
-	(void)signal(SIGWINCH, dummy);
-# endif
-#endif
-#else
-# ifdef POSIX_SIGNALS
-	struct sigaction act;
-
-	act.sa_handler = dummy;
-	act.sa_flags = 0;
-	(void)sigemptyset(&act.sa_mask);
-	(void)sigaddset(&act.sa_mask, SIGALRM);
-	(void)sigaddset(&act.sa_mask, SIGPIPE);
-#  ifdef SIGWINCH
-	(void)sigaddset(&act.sa_mask, SIGWINCH);
-#  endif
-	(void)sigaction(SIGALRM, &act, (struct sigaction *)NULL);
-	(void)sigaction(SIGPIPE, &act, (struct sigaction *)NULL);
-#  ifdef SIGWINCH
-	(void)sigaction(SIGWINCH, &act, (struct sigaction *)NULL);
-#  endif
-# endif
-#endif
-}
-
-#endif /* _WIN32 */
-
+	
 
 /*
 ** deliver_it
@@ -209,3 +171,35 @@ int  deliver_it(aClient *cptr, char *str, int len)
 	}
 	return (retval);
 }
+
+char	*Inet_si2pB(struct SOCKADDR_IN *sin, char *buf)
+{
+#ifdef INET6
+	u_char	*cp;
+	
+	cp = (u_char *)sin->SIN_ADDR.s6_addr;
+	if (cp[0] == 0 && cp[1] == 0 && cp[2] == 0 && cp[3] == 0 && cp[4] == 0
+	    && cp[5] == 0 && cp[6] == 0 && cp[7] == 0 && cp[8] == 0
+	    && cp[9] == 0 && cp[10] == 0xff
+	    && cp[11] == 0xff)
+	{
+		(void)ircsprintf(buf, "%u.%u.%u.%u",
+		    (u_int)(cp[12]), (u_int)(cp[13]),
+		    (u_int)(cp[14]), (u_int)(cp[15]));
+	
+		return (buf);
+	}
+	return ((char *)inetntop(sin->SIN_FAMILY, (void *)&sin->SIN_ADDR, buf, sizeof(buf)));
+#else
+	return ((char *)inet_ntoa(sin->SIN_ADDR));	
+#endif
+}
+
+char	*Inet_si2p(struct SOCKADDR_IN *sin)
+{
+	static char	buf[256];
+	
+	return (Inet_si2pB(sin, buf));
+}
+
+

@@ -5,6 +5,7 @@ CC=cl
 LINK=link
 RC=rc
 # Here you put your settings
+DEBUG=1
 FD_SETSIZE=/D SCAN_API=1 /D FD_SETSIZE=16384
 !IFNDEF DEBUG 
 CFLAGS=/MT /O2 /G5 /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D STATIC_LINKING /D _WIN32GUI /D NOSPOOF=1 /c
@@ -21,7 +22,7 @@ INCLUDES=./include/struct.h ./include/config.h ./include/sys.h \
  ./include/common.h ./include/version.h ./include/h.h ./include/numeric.h \
  ./include/msg.h ./include/setup.h ./include/dynconf.h
 
-OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/BSD.OBJ \
+OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ  \
  SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ \
  SRC/S_NUMERIC.OBJ SRC/WHOWAS.OBJ  SRC/S_AUTH.OBJ \
@@ -36,7 +37,14 @@ OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/BSD.OBJ \
 
 MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OBJ \
  SRC/M_SETNAME.OBJ SRC/M_SETHOST.OBJ SRC/M_CHGIDENT.OBJ SRC/M_SVSMOTD.OBJ \
- SRC/M_SVSNLINE.OBJ SRC/M_SWHOIS.OBJ SRC/M_SVSMODE.OBJ SRC/SCAN.OBJ SRC/SCAN_SOCKS.OBJ 
+ SRC/M_SVSNLINE.OBJ SRC/M_WHO.OBJ SRC/M_SWHOIS.OBJ SRC/M_SVSMODE.OBJ \
+ SRC/M_AWAY.OBJ SRC/M_SVSNOOP.OBJ SRC/M_MKPASSWD.OBJ SRC/M_SVSO.OBJ SRC/M_SVSNICK.OBJ \
+ SRC/M_ADMINCHAT.OBJ SRC/M_AKILL.OBJ SRC/M_CHGNAME.OBJ SRC/M_GUEST.OBJ SRC/M_HTM.OBJ \
+ SRC/M_KLINE.OBJ SRC/M_LAG.OBJ SRC/M_MESSAGE.OBJ SRC/M_NACHAT.OBJ SRC/M_OPER.OBJ \
+ SRC/M_PINGPONG.OBJ SRC/M_QUIT.OBJ SRC/M_RAKILL.OBJ SRC/M_RPING.OBJ SRC/M_SENDUMODE.OBJ \
+ SRC/M_SQLINE.OBJ SRC/M_KILL.OBJ SRC/M_TECHAT.OBJ SRC/M_TSCTL.OBJ SRC/M_UNKLINE.OBJ \
+ SRC/M_UNSQLINE.OBJ SRC/M_UNZLINE.OBJ SRC/M_WHOIS.OBJ SRC/M_ZLINE.OBJ \
+ SRC/SCAN.OBJ SRC/SCAN_SOCKS.OBJ SRC/SCAN_HTTP.OBJ
 
 
 ALL: WIRCD.EXE
@@ -72,8 +80,8 @@ src/badwords.obj: src/badwords.c $(INCLUDES)
 src/webtv.obj: src/webtv.c $(INCLUDES)
         $(CC) $(CFLAGS) src/webtv.c
 
-src/bsd.obj: src/bsd.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/bsd.c
+src/socket.obj: src/socket.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/socket.c
 
 src/dbuf.obj: src/dbuf.c $(INCLUDES) ./include/dbuf.h
         $(CC) $(CFLAGS) src/dbuf.c
@@ -229,6 +237,96 @@ src/m_swhois.obj: src/modules/m_swhois.c $(INCLUDES)
 src/m_svsnline.obj: src/modules/m_svsnline.c $(INCLUDES)
         $(CC) $(CFLAGS) src/modules/m_svsnline.c
 
+src/m_who.obj: src/modules/m_who.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_who.c
+
+src/m_away.obj: src/modules/m_away.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_away.c
+
+src/m_mkpasswd.obj: src/modules/m_mkpasswd.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_mkpasswd.c
+
+src/m_svsnoop.obj: src/modules/m_svsnoop.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_svsnoop.c
+
+src/m_svso.obj: src/modules/m_svso.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_svso.c
+
+src/m_svsnick.obj: src/modules/m_svsnick.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_svsnick.c
+
+src/m_adminchat.obj: src/modules/m_adminchat.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_adminchat.c
+
+src/m_akill.obj: src/modules/m_akill.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_akill.c
+
+src/m_chgname.obj: src/modules/m_chgname.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_chgname.c
+
+src/m_guest.obj: src/modules/m_guest.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_guest.c
+
+src/m_htm.obj: src/modules/m_htm.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_htm.c
+
+src/m_kill.obj: src/modules/m_kill.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_kill.c
+
+src/m_kline.obj: src/modules/m_kline.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_kline.c
+
+src/m_lag.obj: src/modules/m_lag.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_lag.c
+
+src/m_message.obj: src/modules/m_message.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_message.c
+
+src/m_nachat.obj: src/modules/m_nachat.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_nachat.c
+
+src/m_oper.obj: src/modules/m_oper.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_oper.c
+
+src/m_pingpong.obj: src/modules/m_pingpong.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_pingpong.c
+
+src/m_quit.obj: src/modules/m_quit.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_quit.c
+
+src/m_rakill.obj: src/modules/m_rakill.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_rakill.c
+
+src/m_rping.obj: src/modules/m_rping.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_rping.c
+
+src/m_sendumode.obj: src/modules/m_sendumode.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_sendumode.c
+
+src/m_sqline.obj: src/modules/m_sqline.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_sqline.c
+
+src/m_techat.obj: src/modules/m_techat.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_techat.c
+
+src/m_tsctl.obj: src/modules/m_tsctl.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_tsctl.c
+
+src/m_unkline.obj: src/modules/m_unkline.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_unkline.c
+
+src/m_unsqline.obj: src/modules/m_unsqline.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_unsqline.c
+
+src/m_unzline.obj: src/modules/m_unzline.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_unzline.c
+
+src/m_whois.obj: src/modules/m_whois.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_whois.c
+
+src/m_zline.obj: src/modules/m_zline.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_zline.c
+
 src/scan.obj: src/modules/scan.c $(INCLUDES)
         $(CC) $(CFLAGS) src/modules/scan.c
 
@@ -237,6 +335,9 @@ src/scan_dummy.obj: src/modules/scan_dummy.c $(INCLUDES)
 
 src/scan_socks.obj: src/modules/scan_socks.c $(INCLUDES)
         $(CC) $(CFLAGS) src/modules/scan_socks.c
+
+src/scan_http.obj: src/modules/scan_http.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/scan_http.c
 
 src/win32/win32.res: src/win32/win32gui.rc
         $(RC) /l 0x409 /fosrc/win32/win32.res /i ./include /i ./src \

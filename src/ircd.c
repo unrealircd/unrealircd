@@ -79,7 +79,7 @@ int  un_gid = 99;
 #ifndef _WIN32
 extern char unreallogo[];
 #endif
-
+extern char *buildid;
 time_t timeofday = 0;
 LoopStruct loop;
 extern aMotd *opermotd;
@@ -88,13 +88,11 @@ extern aMotd *motd;
 extern aMotd *rules;
 extern aMotd *botmotd;
 
-#ifdef SHOWCONNECTINFO
 int  R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
 
 char REPORT_DO_DNS[128], REPORT_FIN_DNS[128], REPORT_FIN_DNSC[128],
     REPORT_FAIL_DNS[128], REPORT_DO_ID[128], REPORT_FIN_ID[128],
     REPORT_FAIL_ID[128];
-#endif
 extern ircstats IRCstats;
 aClient me;			/* That's me */
 char *me_hash;
@@ -270,81 +268,53 @@ VOIDSIG s_restart()
 
 VOIDSIG s_segv()
 {
-#ifdef	POSIX_SIGNALS
-	struct sigaction act;
-#endif
-	int  i;
-	FILE *log;
-	int  p;
-	static TS segv_last = (TS)0;
-#ifdef RENAME_CORE
-	char corename[512];
-#else
-# define corename "core"
-#endif
-	if (!segv_last)
+	char	*argv[] = 
 	{
-		sendto_ops("Recieved first Segfault, doing re-enter test");
-		segv_last = TStime();
-		return;
-	}
-	if ((TStime() - segv_last) > 5)
-	{
-#ifdef USE_SYSLOG
-		(void)syslog(LOG_WARNING, "Possible fake segfault");
-#endif
-		segv_last = TStime();
-		return;
-	}
-#ifdef POSIX_SIGNALS
-	act.sa_flags = 0;
-	act.sa_handler = SIG_DFL;
-	(void)sigemptyset(&act.sa_mask);
-	(void)sigaction(SIGSEGV, &act, NULL);
-#else
-	(void)signal(SIGSEGV, SIG_DFL);
-#endif
-
-#ifdef USE_SYSLOG
-	(void)syslog(LOG_WARNING, "Server terminating: Segmention fault!!!");
-	(void)closelog();
-#endif
-	sendto_realops
-	    ("Aieeee!!! Server terminating: Segmention fault (buf: %s)",
-	    backupbuf);
-	sendto_serv_butone(&me,
-	    ":%s GLOBOPS :AIEEE!!! Server Terminating: Segmention fault (buf: %s)",
-	    me.name, backupbuf);
-	sendto_all_butone(NULL, &me,
-	    "NOTICE ALL :SEGFAULT! I'm Meeeeellllting, what a world!");
-	log = fopen(lPATH, "a");
-	if (log)
-	{
-		fprintf(log,
-		    "%li - Aieeee!!! Server terminating: Segmention fault (buf: %s)\n",
-		    time(NULL), backupbuf);
-		fclose(log);
-	}
-
+		"./.bugreport",
+		NULL
+	};
 #if !defined(_WIN32) && !defined(_AMIGA)
-	p = getpid();
 	if (fork())
-	{
-		return;
-	}
-	write_pidfile();
-#ifdef RENAME_CORE
-	(void)ircsprintf(corename, "core.%d", p);
-	(void)rename("core", corename);
+		abort();
+	execv("/bin/sh", argv);
+	return;
 #endif
-	sendto_realops
-	    ("Dumped core to %s - please read Unreal.nfo on what to do!",
-	    corename);
-#endif
-	flush_connections(&me);
-	close_connections();
-	exit(-1);
 }
+
+#ifndef _WIN32
+VOIDSIG dummy()
+{
+#ifndef HAVE_RELIABLE_SIGNALS
+	(void)signal(SIGALRM, dummy);
+	(void)signal(SIGPIPE, dummy);
+#ifndef HPUX			/* Only 9k/800 series require this, but don't know how to.. */
+# ifdef SIGWINCH
+	(void)signal(SIGWINCH, dummy);
+# endif
+#endif
+#else
+# ifdef POSIX_SIGNALS
+	struct sigaction act;
+
+	act.sa_handler = dummy;
+	act.sa_flags = 0;
+	(void)sigemptyset(&act.sa_mask);
+	(void)sigaddset(&act.sa_mask, SIGALRM);
+	(void)sigaddset(&act.sa_mask, SIGPIPE);
+#  ifdef SIGWINCH
+	(void)sigaddset(&act.sa_mask, SIGWINCH);
+#  endif
+	(void)sigaction(SIGALRM, &act, (struct sigaction *)NULL);
+	(void)sigaction(SIGPIPE, &act, (struct sigaction *)NULL);
+#  ifdef SIGWINCH
+	(void)sigaction(SIGWINCH, &act, (struct sigaction *)NULL);
+#  endif
+# endif
+#endif
+}
+
+#endif /* _WIN32 */
+
 
 void server_reboot(mesg)
 	char *mesg;
@@ -644,15 +614,14 @@ extern TS check_pings(TS currenttime, int check_kills)
 						cptr->count = 0;
 						*cptr->buffer = '\0';
 					}
-
-#ifdef SHOWCONNECTINFO
-					if (DoingDNS(cptr))
-						sendto_one(cptr,
-						    REPORT_FAIL_DNS);
-					else if (DoingAuth(cptr))
-						sendto_one(cptr,
-						    REPORT_FAIL_ID);
-#endif
+					if (SHOWCONNECTINFO) {
+						if (DoingDNS(cptr))
+							sendto_one(cptr,
+							    REPORT_FAIL_DNS);
+						else if (DoingAuth(cptr))
+							sendto_one(cptr,
+							    REPORT_FAIL_ID);
+					}
 					Debug((DEBUG_NOTICE,
 					    "DNS/AUTH timeout %s",
 					    get_client_name(cptr, TRUE)));
@@ -840,7 +809,7 @@ int  InitwIRCD(argc, argv)
 		perror("chdir");
 		exit(-1);
 	}
-	res_init();
+	ircd_res_init();
 	if (chroot(DPATH))
 	{
 		(void)fprintf(stderr, "ERROR:  Cannot chdir/chroot\n");
@@ -949,7 +918,7 @@ int  InitwIRCD(argc, argv)
 			  bootopt |= BOOT_TTY;
 			  break;
 		  case 'v':
-			  (void)printf("%s\n", version);
+			  (void)printf("%s build %s\n", version, buildid);
 #else
 		  case 'v':
 			  MessageBox(NULL, version,
@@ -1168,7 +1137,6 @@ int  InitwIRCD(argc, argv)
 		if (fork())
 			exit(0);
 #endif
-#ifdef SHOWCONNECTINFO
 	(void)ircsprintf(REPORT_DO_DNS, ":%s %s", me.name, BREPORT_DO_DNS);
 	(void)ircsprintf(REPORT_FIN_DNS, ":%s %s", me.name, BREPORT_FIN_DNS);
 	(void)ircsprintf(REPORT_FIN_DNSC, ":%s %s", me.name, BREPORT_FIN_DNSC);
@@ -1183,7 +1151,6 @@ int  InitwIRCD(argc, argv)
 	R_do_id = strlen(REPORT_DO_ID);
 	R_fin_id = strlen(REPORT_FIN_ID);
 	R_fail_id = strlen(REPORT_FAIL_ID);
-#endif
 	write_pidfile();
 #ifdef USE_SSL
 	init_ssl();

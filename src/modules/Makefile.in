@@ -26,12 +26,24 @@ INCLUDES = ../include/struct.h ../include/config.h \
 
 R_MODULES=m_sethost.so m_chghost.so m_chgident.so m_setname.so \
 		m_setident.so m_sdesc.so m_svsmode.so m_swhois.so\
-		m_svsmotd.so m_svsnline.so m_who.so \
-		scan.so scan_socks.so web/httpd.so
+		m_svsmotd.so m_svsnline.so m_who.so m_mkpasswd.so \
+		m_away.so m_svsnoop.so m_svso.so m_svsnick.so \
+	 m_adminchat.so m_akill.so m_chgname.so m_guest.so m_htm.so m_kill.so \
+ 	 m_kline.so m_lag.so m_message.so m_nachat.so m_oper.so m_pingpong.so \
+	 m_quit.so m_rakill.so m_rping.so m_sendumode.so m_sqline.so \
+	 m_techat.so m_tsctl.so m_unkline.so m_unsqline.so m_unzline.so m_whois.so \
+	 m_zline.so \
+		scan.so scan_socks.so scan_http.so web/httpd.so
 
 COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
          m_sdesc.c m_svsmode.c m_swhois.c m_svsmotd.c m_svsnline.c \
-	 m_who.c
+	 m_who.c m_mkpasswd.c m_away.c m_svsnoop.c m_svso.c m_svsnick.c \
+	 m_adminchat.c m_akill.c m_chgname.c m_guest.c m_htm.c m_kill.c \
+ 	 m_kline.c m_lag.c m_message.c m_nachat.c m_oper.c m_pingpong.c \
+	 m_quit.c m_rakill.c m_rping.c m_sendumode.c m_sqline.c \
+	 m_techat.c m_tsctl.c m_unkline.c m_unsqline.c m_unzline.c m_whois.c \
+	 m_zline.c
+
 
 MODULES=commands.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -43,6 +55,103 @@ build: $(MODULES)
 commands.so: l_commands.c $(COMMANDS) $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -o commands.so l_commands.c \
 	$(COMMANDS)
+
+m_adminchat.so: m_adminchat.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_adminchat.so m_adminchat.c
+
+m_akill.so: m_akill.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_akill.so m_akill.c
+
+m_chgname.so: m_chgname.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_chgname.so m_chgname.c
+
+m_guest.so: m_guest.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_guest.so m_guest.c
+
+m_htm.so: m_htm.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_htm.so m_htm.c
+
+m_kill.so: m_kill.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_kill.so m_kill.c
+
+m_kline.so: m_kline.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_kline.so m_kline.c
+
+m_lag.so: m_lag.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_lag.so m_lag.c
+
+m_message.so: m_message.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_message.so m_message.c
+
+m_nachat.so: m_nachat.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_nachat.so m_nachat.c
+
+m_oper.so: m_oper.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_oper.so m_oper.c
+
+m_pingpong.so: m_pingpong.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_pingpong.so m_pingpong.c
+
+m_quit.so: m_quit.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_quit.so m_quit.c
+
+m_rakill.so: m_rakill.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_rakill.so m_rakill.c
+
+m_rping.so: m_rping.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_rping.so m_rping.c
+
+m_sendumode.so: m_sendumode.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_sendumode.so m_sendumode.c
+
+m_sqline.so: m_sqline.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_sqline.so m_sqline.c
+
+m_techat.so: m_techat.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_techat.so m_techat.c
+
+m_tsctl.so: m_tsctl.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_tsctl.so m_tsctl.c
+
+m_unkline.so: m_unkline.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_unkline.so m_unkline.c
+
+m_unsqline.so: m_unsqline.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_unsqline.so m_unsqline.c
+
+m_unzline.so: m_unzline.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_unzline.so m_unzline.c
+
+m_whois.so: m_whois.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_whois.so m_whois.c
+
+m_zline.so: m_zline.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_zline.so m_zline.c
+
 
 m_sethost.so: m_sethost.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
@@ -88,6 +197,26 @@ m_who.so: m_who.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		 -o m_who.so m_who.c
 
+m_mkpasswd.so: m_mkpasswd.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_mkpasswd.so m_mkpasswd.c
+
+m_away.so: m_away.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_away.so m_away.c
+
+m_svsnoop.so: m_svsnoop.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_svsnoop.so m_svsnoop.c
+
+m_svso.so: m_svso.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_svso.so m_svso.c
+
+m_svsnick.so: m_svsnick.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_svsnick.so m_svsnick.c
+
 scan.so: scan.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		 -o scan.so scan.c
@@ -95,6 +224,10 @@ scan.so: scan.c $(INCLUDES)
 scan_socks.so: scan_socks.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		 -o scan_socks.so scan_socks.c
+
+scan_http.so: scan_http.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		 -o scan_http.so scan_http.c
 
 web/httpd.so: web/httpd.c web/u_stats.c web/vfs.c web/phtml.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \

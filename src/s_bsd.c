@@ -109,9 +109,10 @@ static struct SOCKADDR *connect_inet PROTO((ConfigItem_link *, aClient *, int *)
 static int completed_connection PROTO((aClient *));
 static int check_init PROTO((aClient *, char *));
 #ifndef _WIN32
-static void do_dns_async PROTO(()), set_sock_opts PROTO((int, aClient *));
+static void do_dns_async PROTO(());
+void set_sock_opts PROTO((int, aClient *));
 #else
-static void set_sock_opts PROTO((int, aClient *));
+void set_sock_opts PROTO((int, aClient *));
 #endif
 static char readbuf[8192];
 char zlinebuf[BUFSIZE];
@@ -267,11 +268,10 @@ void report_error(text, cptr)
 	int errtmp = ERRNO;
 	char *host;
 	int  err, len = sizeof(err);
+	
 
 	host = (cptr) ? get_client_name(cptr, FALSE) : "";
 
-/*	fprintf(stderr, text, host, strerror(errtmp));
-	fputc('\n', stderr); */
 	Debug((DEBUG_ERROR, text, host, strerror(errtmp)));
 
 	/*
@@ -403,10 +403,14 @@ int  inetport(cptr, name, port)
 	{
 		server.SIN_FAMILY = AFINET;
 		/* per-port bindings, fixes /stats l */
+		
 #ifndef INET6
 		server.SIN_ADDR.S_ADDR = inet_addr(ipname);
 #else
-		inet_pton(AFINET, ipname, server.SIN_ADDR.S_ADDR);
+		if (strchr(ipname, '.'))
+			inet_pton(AF_INET, ipname, server.SIN_ADDR.S_ADDR);
+		else
+			inet_pton(AF_INET6, ipname, server.SIN_ADDR.S_ADDR);
 #endif
 		server.SIN_PORT = htons(port);
 		/*
@@ -654,24 +658,6 @@ void write_pidfile()
 #endif
 }
 
-#ifdef INET6
-#undef IN6_IS_ADDR_LOOPBACK
-
-int  IN6_IS_ADDR_LOOPBACK(u_int32_t * f)
-{
-	if ((*f == 0) && (*(f + 1) == 0)
-	    && (*(f + 2) == 0) && (*(f + 3) == htonl(1)))
-		return 1;
-
-	return 0;
-}
-
-#define IN6_IS_ADDR_LOOPBACK(a) \
-	((u_int32_t) (a)[0] == 0) && \
-	((u_int32_t) (a)[1] == 0) && \
-	((u_int32_t) (a)[2] == 0) && \
-	((u_int32_t) (a)[3] == htonl(1))
-#endif
 /*
  * Initialize the various name strings used to store hostnames. This is set
  * from either the server's sockhost (if client fd is a tty or localhost)
@@ -700,21 +686,16 @@ static int check_init(cptr, sockn)
 		report_error("connect failure: %s %s", cptr);
 		return -1;
 	}
-#ifdef INET6
-	inetntop(AF_INET6, (char *)&sk.sin6_addr, sockn, MYDUMMY_SIZE);
-#else
-	(void)strcpy(sockn, (char *)inetntoa((char *)&sk.SIN_ADDR));
-#endif
+	(void)strcpy(sockn, (char *)Inet_si2p(&sk));
 
 #ifdef INET6
-#undef IN6_IS_ADDR_LOOPBACK
 	if (IN6_IS_ADDR_LOOPBACK(&sk.SIN_ADDR))
 #else
 	if (inet_netof(sk.SIN_ADDR) == IN_LOOPBACKNET)
 #endif
 	{
 		cptr->hostp = NULL;
-		strncpyzt(sockn, me.sockhost, HOSTLEN);
+		strncpyzt(sockn, "localhost", HOSTLEN);
 	}
 	bcopy((char *)&sk.SIN_ADDR, (char *)&cptr->ip, sizeof(struct IN_ADDR));
 
@@ -1006,7 +987,7 @@ void close_connection(cptr)
 /*
 ** set_sock_opts
 */
-static void set_sock_opts(fd, cptr)
+void set_sock_opts(fd, cptr)
 	int  fd;
 	aClient *cptr;
 {
@@ -1015,7 +996,7 @@ static void set_sock_opts(fd, cptr)
 	opt = 1;
 	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (OPT_TYPE *)&opt,
 	    sizeof(opt)) < 0)
-		report_error("setsockopt(SO_REUSEADDR) %s:%s", cptr);
+			report_error("setsockopt(SO_REUSEADDR) %s:%s", cptr);
 #endif
 #if  defined(SO_DEBUG) && defined(DEBUGMODE) && 0
 /* Solaris with SO_DEBUG writes to syslog by default */
@@ -1023,6 +1004,7 @@ static void set_sock_opts(fd, cptr)
 	opt = 1;
 	if (setsockopt(fd, SOL_SOCKET, SO_DEBUG, (OPT_TYPE *)&opt,
 	    sizeof(opt)) < 0)
+		
 		report_error("setsockopt(SO_DEBUG) %s:%s", cptr);
 #endif /* _SOLARIS */
 #endif
@@ -1227,13 +1209,7 @@ add_con_refuse:
 		/* Copy ascii address to 'sockhost' just in case. Then we
 		 * have something valid to put into error messages...
 		 */
-#ifdef INET6
-		inetntop(AF_INET6, (char *)&addr.sin6_addr, mydummy,
-		    MYDUMMY_SIZE);
-		get_sockhost(acptr, (char *)mydummy);
-#else
-		get_sockhost(acptr, (char *)inetntoa((char *)&addr.SIN_ADDR));
-#endif
+		get_sockhost(acptr, Inet_si2p(&addr));
 		bcopy((char *)&addr.SIN_ADDR, (char *)&acptr->ip, sizeof(struct IN_ADDR));
 		j = 1;
 		for (i = LastSlot; i >= 0; i--)
@@ -1256,7 +1232,7 @@ add_con_refuse:
 			}
 		}
 
-		if ((bconf = Find_ban(inetntoa((char *)&acptr->ip), CONF_BAN_IP)))
+		if ((bconf = Find_ban(acptr->sockhost, CONF_BAN_IP)))
 		{
 			ircsprintf(zlinebuf,
 				"ERROR :Closing Link: [%s] (You are not welcome on "
@@ -1277,26 +1253,24 @@ add_con_refuse:
 			goto add_con_refuse;
 		}
 		acptr->port = ntohs(addr.SIN_PORT);
-#ifdef SHOWCONNECTINFO
-		/* Start of the very first DNS check */
-		if (!(cptr->umodes & LISTENER_SSL))
-			FDwrite(fd, REPORT_DO_DNS, R_do_dns);
-#endif
+		if (SHOWCONNECTINFO) {
+			/* Start of the very first DNS check */
+			if (!(cptr->umodes & LISTENER_SSL))
+				FDwrite(fd, REPORT_DO_DNS, R_do_dns);
+		}
 		lin.flags = ASYNC_CLIENT;
 		lin.value.cptr = acptr;
-		Debug((DEBUG_DNS, "lookup %s", inetntoa((char *)&addr.SIN_ADDR)));
-
+		Debug((DEBUG_DNS, "lookup %s", acptr->sockhost));
 		acptr->hostp = gethost_byaddr((char *)&acptr->ip, &lin);
 
 		if (!acptr->hostp)
 			SetDNS(acptr);
-#ifdef SHOWCONNECTINFO
 		else
 		{
-			if (!(cptr->umodes & LISTENER_SSL))
-				FDwrite(fd, REPORT_FIN_DNSC, R_fin_dnsc);
+			if (SHOWCONNECTINFO)
+				if (!(cptr->umodes & LISTENER_SSL))
+					FDwrite(fd, REPORT_FIN_DNSC, R_fin_dnsc);
 		}
-#endif /*SHOWCONNECTINFO*/
 		nextdnscheck = 1;
 	}
 
@@ -2423,7 +2397,17 @@ static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
 #ifndef INET6
 		server.SIN_ADDR.S_ADDR = inet_addr(aconf->bindip);	
 #else
-		inet_pton(AFINET, aconf->bindip, server.SIN_ADDR.S_ADDR);
+		if (strchr(aconf->bindip, '.'))
+		{
+			inet_pton(AF_INET, aconf->bindip, server.SIN_ADDR.S_ADDR);
+			server.SIN_FAMILY = AF_INET;
+		}
+		else
+		{
+			inet_pton(AF_INET6, aconf->bindip, server.SIN_ADDR.S_ADDR);
+			server.SIN_FAMILY = AF_INET6;
+
+		}
 #endif
 	}
 	if (bind(cptr->fd, (struct SOCKADDR *)&server, sizeof(server)) == -1)
@@ -2511,9 +2495,9 @@ void do_dns_async(id)
 				del_queries((char *)cptr);
 				ClearDNS(cptr);
 				cptr->hostp = hp;
-#ifdef SHOWCONNECTINFO
-	          	        sendto_one(cptr, REPORT_FIN_DNS);
-#endif
+
+				if (SHOWCONNECTINFO)
+		          	        sendto_one(cptr, cptr->hostp ? REPORT_FIN_DNS : REPORT_FAIL_DNS);
 				  if (!DoingAuth(cptr))
 					  SetAccess(cptr);
 			    }

@@ -95,6 +95,7 @@ void free();
 
 #define TS time_t
 
+
 extern int match PROTO((char *, char *));
 #define mycmp(a,b) \
  ( (toupper((a)[0])!=toupper((b)[0])) || smycmp((a)+1,(b)+1) )

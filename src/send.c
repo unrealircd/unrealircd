@@ -41,7 +41,7 @@ static char sccsid[] =
 
 void vsendto_one(aClient *to, char *pattern, va_list vl);
 void sendbufto_one(aClient *to);
-extern int sendanyways;
+
 #ifndef NO_FDLIST
 extern fdlist serv_fdlist;
 extern fdlist oper_fdlist;
@@ -61,7 +61,7 @@ void vsendto_prefix_one(struct Client *to, struct Client *from,
     const char *pattern, va_list vl);
 
 int  sentalong_marker;
-
+int  sendanyways = 0;
 /*
 ** dead_link
 **	An error has been detected. The link *must* be closed,
@@ -81,6 +81,8 @@ static int dead_link(to, notice)
 	aClient *to;
 	char *notice;
 {
+	char	*error = NULL;
+	
 	to->flags |= FLAGS_DEADSOCKET;
 	/*
 	 * If because of BUFFERPOOL problem then clean dbuf's now so that
@@ -88,15 +90,16 @@ static int dead_link(to, notice)
 	 */
 	DBufClear(&to->recvQ);
 	DBufClear(&to->sendQ);
+	
+#ifndef _WIN32
+	error = strerror(errno);
+#else
+	error = strerror(WSAGetLastError());
+#endif	
 	if (!IsPerson(to) && !IsUnknown(to) && !(to->flags & FLAGS_CLOSING))
 		(void)sendto_failops_whoare_opers(notice, get_client_name(to, FALSE),
-#ifndef _WIN32
-		strerror(errno));
-#else
-		strerror(WSAGetLastError()));
-#endif
-
-	Debug((DEBUG_ERROR, notice, get_client_name(to, FALSE)));
+			error);
+	Debug((DEBUG_ERROR, notice, get_client_name(to, FALSE), error));
 	return -1;
 }
 

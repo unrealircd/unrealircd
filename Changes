@@ -792,3 +792,80 @@ seen. gmtime warning still there
 - Fixed a bug were operflag eyes didn't work
 - /who fixes regarding +I +H and crap
 - Preparation for beta2
+- Fixed sts on crack win32 code
+- Fixed a win2000 bug causing Unreal to crash on the credits dialog, thanks to llthangel and WildChild for 
+  helping fix the bug
+- Fixed a win32 bug that can cause unexpected crashes while using the editor
+- Some httpd stuff and a #define CHROOTDIR problem found by Zhadum
+- Added scan_http, scans on 80, 3128, 8080 in a threaded manner
+- Fixed a /gline crash bug found by DemOnBaBy
+- Http proxy scanner cleanup
+- Added SOCKS5 detection based on code in Epona
+- Cleaned up /mode a bit
+- Cleaned up command parsing a bit (faster)
+- Added config directive alias for services/bot aliases
+- Fixed some credits, recoded httpd (still in progress)
+- Disabled #undef PROPER_CORE
+- Added alias {} to doc/example.conf
+- Fixed a bug in alias {} found by RaYmAn
+- Fixed another alias {} bug
+- Added Bahamut usermode +R (only accept private messages from +r users)
+- Moved FAILOPER_WARN define to set::options::fail-oper-warn
+- Fixed an alias {} bug found by James-Bond
+- Moved SHOWCONNECTINFO define to set::options::show-connect-info
+- Added support for nested comments in the configuration file (by chasm)
+- Added chasm to /info
+- Started work on usermode +V (WebTV mode)
+- Some aClient cleanups to reduce memory usage
+- Made a bunch of messages check +V and if +V use PRIVMSG instead of NOTICE
+- Cleaned up NOSPOOF code a bit
+- Cleaned up /oper (a lot)
+- Fixed a bug where the /oper recode broke oper host masking (found by James-Bond)
+- Fixed something that could cause a possible bug in /oper ?
+- log::maxsize can now be entered in the format 1MB, 1MegaByte, 1MByte, etc (KB,MB,GB,TB are the only sizes 
+  recognized)
+- Fixed a bug where log::maxsize would say it started a new log file if the log file didn't exist
+- Converted /mkpasswd, /away, and /svsnoop to modules
+- Added the ability to add aliases like /identify (complex, so see example.conf for samples)
+- Added a bug reporting tool (still alpha)
+- Removed some win32 debug code that was left, reported by TheEggMan
+- Win32 cleanup
+- Made except socks become except scan, and made it actually WORK, and some
+  bugreport fixes
+- HTTPd VFS fixes
+- Modified updconf to reflect the except socks -> except scan change
+- Fixed a typo in the win32 makefile
+- Made the config a bit more sturdy (would have done more, but got boring :P)
+- Moved /svso and /svsnick to modules
+- Updated the win32 makefile
+- modulize documentation, some web server fixes, preparation for uabr
+- Some more VFS/PHTML fixes, it actually works now, thanks to butter
+- Fixed a IPv6 bindip problem
+- Removed bsd.c and made socket.c, moving signal stuff to ircd.c, possible 
+  fixing a IPv6 bug
+- Made Inet_si2p (sin to presensation), fixing the "*", bug, some debugging
+  fixes, fixed a lot of IPv6 bugs, hopefully - thanks to JK for borrowing
+  his box
+- Fixed a #undef INET6 bug
+- Made Link denied error a little more descriptive
+- Various coding regardign bugreport
+- Made port default to 6667 when options autoconnect in link {}
+- Made some changes to allow Unreal to compile on win32
+- Fixed a scan.c bug on win32
+- Made the http scanner work on win32
+- Fixed a bug where /userhost would report oper status regardless of +H
+- Added some stuff that should fix the bug in Windows when including files in other directories
+- Added aliases/ which contains config files for aliases to some popular IRC services (more will be added)
+- Made makeconf load scan_http.so
+- Fixed a /who bug, found by IXpfah
+- Updated makefile.win32 for all the new modules
+- Added in Fish's patches
+- Added bitching when you lack needed IRC commands
+- Removed REMGLINE
+- Fixed a typo in the win32 makefile
+- Really removed remgline (since sts didn't really do it)
+- Made changes so the new modules compile on win32
+- Added headers to all the new modules
+- Fixed a typo in config.h
+- Final changes to prepare for beta3
+- Fixed some bugreport stuff

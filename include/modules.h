@@ -105,6 +105,7 @@ void	del_HookX(int hooktype, int (*intfunc)(), void (*voidfunc)());
 #define HOOKTYPE_REHASH 7
 #define HOOKTYPE_PRE_LOCAL_CONNECT 8
 #define HOOKTYPE_HTTPD_URL 9
+#define HOOKTYPE_GUEST 10
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000

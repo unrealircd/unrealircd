@@ -103,6 +103,7 @@ int     _conf_deny_version      (ConfigFile *conf, ConfigEntry *ce);
 int	_conf_allow_channel	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_loadmodule	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_log		(ConfigFile *conf, ConfigEntry *ce);
+int	_conf_alias		(ConfigFile *conf, ConfigEntry *ce);
 aMotd *Find_file(char *, short);
 
 extern int conf_debuglevel;
@@ -129,6 +130,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "deny",		_conf_deny },
 	{ "loadmodule",		_conf_loadmodule },
 	{ "log",		_conf_log },
+	{ "alias",		_conf_alias },
 	{ NULL, 		NULL  }
 };
 
@@ -268,6 +270,7 @@ ConfigItem_deny_version *conf_deny_version = NULL;
 ConfigItem_log		*conf_log = NULL;
 ConfigItem_unknown	*conf_unknown = NULL;
 ConfigItem_unknown_ext  *conf_unknown_set = NULL;
+ConfigItem_alias	*conf_alias = NULL;
 #ifdef STRIPBADWORDS
 ConfigItem_badword	*conf_badword_channel = NULL;
 ConfigItem_badword      *conf_badword_message = NULL;
@@ -331,6 +334,46 @@ int conf_yesno(char *value) {
 
 	return -1;
 }
+
+#define KB 1024
+#define MB 1048576
+#define GB 1073741824
+#define TB 1099511627776
+
+long conf_size(char *value) {
+	char *numbuf;
+	char *buf = value;
+	int i;
+	long num = 0;
+	if (!buf)
+		return 0;
+
+	numbuf = malloc(strlen(value));
+
+	for (i = 0;*buf; *buf++) {
+		if (isdigit(*buf)) {
+			numbuf[i++] = *buf;
+			continue;
+		}
+		if (isalpha(*buf)) {
+			num = atol(numbuf);
+			if (tolower(*buf) == 't')
+				num *= TB;
+			else if (tolower(*buf) == 'g')
+				num *= GB;
+			else if (tolower(*buf) == 'm')
+				num *= MB;
+			else if (tolower(*buf) == 'k')
+				num *= MB;
+			break;
+		}
+	}
+	if (!num)
+		num = atol(numbuf);
+	free(numbuf);
+	return num;
+}
+		
 /*
  * This will link in a ConfigItem into a list of it
  * Example:
@@ -584,16 +627,27 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				else if (*(ptr+1) == '*')
 				{
 					int commentstart = linenumber;
+					int commentlevel = 1;
 
 					for(ptr+=2;*ptr;ptr++)
 					{
-						if ((*ptr == '*') && (*(ptr+1) == '/'))
+						if ((*ptr == '/') && (*(ptr+1) == '*'))
 						{
+							commentlevel++;
 							ptr++;
-							break;
 						}
+
+						else if ((*ptr == '*') && (*(ptr+1) == '/'))
+						{
+							commentlevel--;
+							ptr++;
+						}
+
 						else if (*ptr == '\n')
 							linenumber++;
+
+						if (!commentlevel)
+							break;
 					}
 					if (!*ptr)
 					{
@@ -928,6 +982,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 #elif defined(_WIN32)
 	HANDLE hFind;
 	WIN32_FIND_DATA FindData;
+	char cPath[MAX_PATH], *cSlash = NULL, *path;
 #endif
 	if (!ce->ce_vardata)
 	{
@@ -957,6 +1012,14 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 	}
 	globfree(&files);
 #elif defined(_WIN32)
+	bzero(cPath,MAX_PATH);
+	if (strchr(ce->ce_vardata, '/') || strchr(ce->ce_vardata, '\\')) {
+		strncpy(cPath,ce->ce_vardata,MAX_PATH);
+		cSlash=cPath+strlen(cPath);
+		while(*cSlash != '\\' && *cSlash != '/' && cSlash > cPath)
+			cSlash--; 
+		*(cSlash+1)=0;
+	}
 	hFind = FindFirstFile(ce->ce_vardata, &FindData);
 	if (!FindData.cFileName) {
 		config_status("%s:%i: include %s: invalid file given",
@@ -965,9 +1028,26 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 		FindClose(hFind);
 		return -1;
 	}
-	init_conf2(FindData.cFileName);
-	while (FindNextFile(hFind, &FindData) != 0) 
+	if (cPath) {
+		path = malloc(strlen(cPath) + strlen(FindData.cFileName)+1);
+		strcpy(path,cPath);
+		strcat(path,FindData.cFileName);
+		init_conf2(path);
+		free(path);
+	}
+	else
 		init_conf2(FindData.cFileName);
+	while (FindNextFile(hFind, &FindData) != 0) {
+		if (cPath) {
+			path = malloc(strlen(cPath) + strlen(FindData.cFileName)+1);
+			strcpy(path,cPath);
+			strcat(path,FindData.cFileName);
+			init_conf2(path);
+			free(path);
+		}
+		else
+			init_conf2(FindData.cFileName);
+	}
 
 	FindClose(hFind);
 #else
@@ -1899,14 +1979,14 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 		ca->flag.type = 1;
 		add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_except);
 	}
-	else if (!strcmp(ce->ce_vardata, "socks")) {
+	else if (!strcmp(ce->ce_vardata, "scan")) {
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 		{
 			if (!strcmp(cep->ce_varname, "mask")) {
 				ca->mask = strdup(cep->ce_vardata);
 			}
 			else {
-			config_status("%s:%i: unknown directive except::socks::%s",
+			config_status("%s:%i: unknown directive except::scan::%s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				cep->ce_varname);
 			}
@@ -2198,6 +2278,12 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->ce_varname, "identd-check")) {
 					IDENT_CHECK = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "fail-oper-warn")) {
+					FAILOPER_WARN = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "show-connect-info")) {
+					SHOWCONNECTINFO = 1;
 				}
 			}
 		}
@@ -2627,8 +2713,9 @@ int	_conf_log(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_varlinenum);
 			continue;
 		}
-		if (!strcmp(cep->ce_varname, "maxsize")) 
-			log->maxsize = atol(cep->ce_vardata);
+		if (!strcmp(cep->ce_varname, "maxsize")) {
+			log->maxsize = conf_size(cep->ce_vardata);
+		}
 		if (!strcmp(cep->ce_varname, "flags")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
@@ -2659,6 +2746,86 @@ int	_conf_log(ConfigFile *conf, ConfigEntry *ce)
 	}
 	add_ConfigItem((ConfigItem *)log, (ConfigItem **) &conf_log);
 }
+
+int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigItem_alias *alias = NULL;
+	ConfigItem_alias_format *format;
+	ConfigEntry 	    	*cep, *cepp;
+	aCommand *cmptr;
+
+	if (!ce->ce_vardata)
+	{
+		config_status("%s:%i: alias without name",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+	if ((cmptr = find_Command(ce->ce_vardata, 0, M_ALIAS)))
+		del_Command(ce->ce_vardata, NULL, cmptr->func);
+	else if (find_Command(ce->ce_vardata, 0, 0)) {
+		config_status("%s:%i: %s is an existing command, can not add alias",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+		return -1;
+	}
+	if ((alias = Find_alias(ce->ce_vardata)))
+		del_ConfigItem((ConfigItem *)alias, (ConfigItem **)&conf_alias);
+	alias = MyMallocEx(sizeof(ConfigItem_alias));
+	ircstrdup(alias->alias, ce->ce_vardata);
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+		{
+			config_status("%s:%i: blank alias item",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum);
+			continue;
+		}
+		if (!strcmp(cep->ce_varname, "format")) {
+			format = MyMallocEx(sizeof(ConfigItem_alias_format));
+			ircstrdup(format->format, cep->ce_vardata);
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				if (!strcmp(cepp->ce_varname, "alias")) {
+					if (!(format->alias = Find_alias(cepp->ce_vardata))) {
+						config_status("%s:%i: alias %s not found",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
+							cepp->ce_vardata);
+							return 0;
+					}
+				}
+				else if (!strcmp(cepp->ce_varname, "parameters")) {
+					ircstrdup(format->parameters, cepp->ce_vardata);
+				}
+			}
+			add_ConfigItem((ConfigItem *)format, (ConfigItem **) &alias->format);
+		}		
+				
+		else if (!strcmp(cep->ce_varname, "nick")) {
+			ircstrdup(alias->nick, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "type")) {
+			if (!strcmp(cep->ce_vardata, "services"))
+				alias->type = ALIAS_SERVICES;
+			else if (!strcmp(cep->ce_vardata, "stats"))
+				alias->type = ALIAS_STATS;
+			else if (!strcmp(cep->ce_vardata, "normal"))
+				alias->type = ALIAS_NORMAL;
+			else if (!strcmp(cep->ce_vardata, "command"))
+				alias->type = ALIAS_COMMAND;
+			else {
+				alias->type = ALIAS_SERVICES;
+				config_status("%s:%i: Invalid alias type, using default of 'services'",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			}
+		}
+			
+	}
+		if (BadPtr(alias->nick) && alias->type != ALIAS_COMMAND) {
+			ircstrdup(alias->nick, alias->alias); 
+		}
+		add_CommandX(alias->alias, NULL, m_alias, 1, M_USER|M_ALIAS);
+		add_ConfigItem((ConfigItem *)alias, (ConfigItem **) &conf_alias);
+}
+
 
 /*
  * Report functions
@@ -2841,6 +3008,7 @@ void	validate_configuration(void)
 	ConfigItem_link *link_ptr;
 	ConfigItem_vhost *vhost_ptr;
 	ConfigItem_log *log_ptr;
+	ConfigItem_alias *alias_ptr;
 	ConfigItem t;
 	short hide_host = 1;
 	char *s;
@@ -2887,6 +3055,7 @@ void	validate_configuration(void)
 	{
 		Warning("set::dns::nameserver is missing. Using 127.0.0.1 as default");
 		NAME_SERVER = strdup("127.0.0.1");
+		in.s_addr = inet_addr(NAME_SERVER);
 	}
 	else
 	{
@@ -2895,6 +3064,7 @@ void	validate_configuration(void)
 		{
 			Warning("set::dns::nameserver (%s) is not an valid IP. Using 127.0.0.1 as default", NAME_SERVER);
 			ircstrdup(NAME_SERVER, "127.0.0.1");
+			in.s_addr = inet_addr(NAME_SERVER);
 		}
 	}
 	if (HOST_TIMEOUT < 0 || HOST_TIMEOUT > 180) {
@@ -2980,9 +3150,9 @@ void	validate_configuration(void)
 	/* Now for the real config */
 	if (conf_me)
 	{
-		if (!conf_me->name)
+		if (BadPtr(conf_me->name))
 			Error("me::name is missing");
-		if (!conf_me->info)
+		if (BadPtr(conf_me->info))
 			Error("me::info is missing");
 		/* numeric is being checked in _conf_me */
 	}
@@ -2991,7 +3161,7 @@ void	validate_configuration(void)
 
 	for (class_ptr = conf_class; class_ptr; class_ptr = (ConfigItem_class *) class_ptr->next)
 	{
-		if (!class_ptr->name)
+		if (BadPtr(class_ptr->name))
 			Error("class without name");
 		else
 		{
@@ -3028,9 +3198,10 @@ void	validate_configuration(void)
 				oper_ptr->name);
 			oper_ptr->class = default_class;
 		}
-		if (!oper_ptr->password)
+		if (BadPtr(oper_ptr->password)) {
 			Error("oper %s::password is missing",
 				oper_ptr->name);
+		}
 		if (!oper_ptr->oflags) {
 			oper_ptr->oflags |= OFLAG_LOCAL;
 			Warning("oper %s without privileges",
@@ -3040,20 +3211,26 @@ void	validate_configuration(void)
 	
 	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)listen_ptr->next)
 	{
-		if (!listen_ptr->ip) {
+		if (BadPtr(listen_ptr->ip)) {
 			Warning("listen without ip, using default of *");
 			ircstrdup(listen_ptr->ip,"*");
 		}
-		if (!listen_ptr->port)
-			Error("listen with illegal port");
+		if (!listen_ptr->port) {
+			Warning("listen port illegal. Deleting listen {} block");
+			ircfree(listen_ptr->ip);
+			t.next = del_ConfigItem((ConfigItem *)listen_ptr, (ConfigItem **)&conf_listen);
+			MyFree(listen_ptr);
+			listen_ptr = (ConfigItem_listen *)&t;
+			continue;
+		}
 	}
 	for (allow_ptr = conf_allow; allow_ptr; allow_ptr = (ConfigItem_allow *) allow_ptr->next)
 	{
-		if (!allow_ptr->ip) {
+		if (BadPtr(allow_ptr->ip)) {
 			Warning("allow::ip, missing value, using default of *@*");
 			ircstrdup(allow_ptr->ip, "*@*");
 		}
-		if (!allow_ptr->hostname) {
+		if (BadPtr(allow_ptr->hostname)) {
 			Warning("allow::hostname, missing value, using default of *@*");
 			ircstrdup(allow_ptr->hostname, "*@*");
 		}
@@ -3078,45 +3255,94 @@ void	validate_configuration(void)
 	for (ban_ptr = conf_ban; ban_ptr; ban_ptr = (ConfigItem_ban *) ban_ptr->next)
 	{
 		if (BadPtr(ban_ptr->mask)) {
-			Warning("ban mask missing");
+			Warning("ban mask missing. Deleting ban {} block");
 			ircfree(ban_ptr->reason);
 			t.next = del_ConfigItem((ConfigItem *)ban_ptr, (ConfigItem **)&conf_ban);
 			MyFree(ban_ptr);
 			ban_ptr = (ConfigItem_ban *)&t;
+			continue;
 		}
+		if (BadPtr(ban_ptr->reason)) {
+			Warning("ban reason invalid, using default of 'no reason specified'");
+			ircstrdup(ban_ptr->reason, "No reason specified");
+		}
+			
 	}
 	for (link_ptr = conf_link; link_ptr; link_ptr = (ConfigItem_link *) link_ptr->next)
 	{
-		if (!link_ptr->servername)
+		if (BadPtr(link_ptr->servername))
 		{
-			Error("link: name missing");
+			Warning("link without name. Deleting link {} block");
+			t.next = del_ConfigItem((ConfigItem *)link_ptr, (ConfigItem **)&conf_link);
+			ircfree(link_ptr->username);
+			ircfree(link_ptr->hostname);
+			ircfree(link_ptr->connpwd);
+			ircfree(link_ptr->recvpwd);
+			MyFree(link_ptr);
+			link_ptr = (ConfigItem_link *)&t;
 		}
 		else
 		{
-			if (!link_ptr->username) {
+			if (BadPtr(link_ptr->username)) {
 				Warning("link %s::username is missing, using default of *", link_ptr->servername);
 				ircstrdup(link_ptr->username, "*");
 			}
-			if (!link_ptr->hostname)
-				Error("link %s::hostname is missing", link_ptr->servername);
-			if (!link_ptr->connpwd)
-				Error("link %s::password-connect is missing", link_ptr->servername);
-			if (!link_ptr->recvpwd)
-				Error("link %s::password-receive is missing", link_ptr->servername);
+			if (BadPtr(link_ptr->hostname)) {
+				Warning("link with invalid hostname. Deleting link {} block");
+				t.next = del_ConfigItem((ConfigItem *)link_ptr, (ConfigItem **)&conf_link);
+				ircfree(link_ptr->username);
+				ircfree(link_ptr->servername);
+				ircfree(link_ptr->connpwd);
+				ircfree(link_ptr->recvpwd);
+				MyFree(link_ptr);
+				link_ptr = (ConfigItem_link *)&t;
+				continue;
+			}
+			if (BadPtr(link_ptr->connpwd)) {
+				Warning("link with invalid password-connect. Deleting link {} block");
+				t.next = del_ConfigItem((ConfigItem *)link_ptr, (ConfigItem **)&conf_link);
+				ircfree(link_ptr->username);
+				ircfree(link_ptr->hostname);
+				ircfree(link_ptr->servername);
+				ircfree(link_ptr->recvpwd);
+				MyFree(link_ptr);
+				link_ptr = (ConfigItem_link *)&t;
+				continue;
+			}
+			if (BadPtr(link_ptr->recvpwd)) {
+				Warning("link with invalid password-receive. Deleting link {} block");
+				t.next = del_ConfigItem((ConfigItem *)link_ptr, (ConfigItem **)&conf_link);
+				ircfree(link_ptr->username);
+				ircfree(link_ptr->hostname);
+				ircfree(link_ptr->connpwd);
+				ircfree(link_ptr->servername);
+				MyFree(link_ptr);
+				link_ptr = (ConfigItem_link *)&t;
+				continue;
+			}
 			if (!link_ptr->class) {
 				Warning("link %s::class is missing, using default of class 'default'", link_ptr->servername);
 				link_ptr->class = default_class;
 			}
+			if (!link_ptr->port && (link_ptr->options & CONNECT_AUTO))
+			{
+				Warning("link %s::port is 0, and is set to autoconnect, using default of 6667",
+					link_ptr->servername);
+				link_ptr->port = 6667;
+			}
 		}
+		
 	}
 	for (tld_ptr = conf_tld; tld_ptr; tld_ptr = (ConfigItem_tld *) tld_ptr->next)
 	{
-		if (!tld_ptr->mask)
-			Error("tld {} without mask");
-		else
-		{
-			if (!tld_ptr->motd_file)
-				Error("tld %s::motd is missing", tld_ptr->mask);
+		if (BadPtr(tld_ptr->mask)) {
+			Warning("tld without mask. Deleting tld {} block");
+			t.next = del_ConfigItem((ConfigItem *)tld_ptr, (ConfigItem **)&conf_tld);
+			ircfree(tld_ptr->motd_file);
+			ircfree(tld_ptr->rules_file);
+			MyFree(tld_ptr);
+			tld_ptr = (ConfigItem_tld *)&t;
+			continue;
 		}
 	}
 	for (vhost_ptr = conf_vhost; vhost_ptr; vhost_ptr = (ConfigItem_vhost *)vhost_ptr->next) {
@@ -3168,6 +3394,50 @@ void	validate_configuration(void)
 		add_ConfigItem((ConfigItem *)log_ptr, (ConfigItem **) &conf_log);
 		Warning("No log {} found using ircd.log as default");
 	}
+	if (!conf_alias) {
+		alias_ptr = MyMallocEx(sizeof(ConfigItem_alias));
+		ircstrdup(alias_ptr->alias, "NickServ");
+		ircstrdup(alias_ptr->nick, "NickServ");
+		alias_ptr->type = ALIAS_SERVICES;
+		add_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **) &conf_alias);
+		add_CommandX("NickServ", NULL, m_alias, 1, M_USER|M_ALIAS);
+		alias_ptr = MyMallocEx(sizeof(ConfigItem_alias));
+		ircstrdup(alias_ptr->alias, "ChanServ");
+		ircstrdup(alias_ptr->nick, "ChanServ");
+		alias_ptr->type = ALIAS_SERVICES;
+		add_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **) &conf_alias);
+		add_CommandX("ChanServ", NULL, m_alias, 1, M_USER|M_ALIAS);
+		alias_ptr = MyMallocEx(sizeof(ConfigItem_alias));
+		ircstrdup(alias_ptr->alias, "MemoServ");
+		ircstrdup(alias_ptr->nick, "MemoServ");
+		alias_ptr->type = ALIAS_SERVICES;
+		add_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **) &conf_alias);
+		add_CommandX("MemoServ", NULL, m_alias, 1, M_USER|M_ALIAS);
+		alias_ptr = MyMallocEx(sizeof(ConfigItem_alias));
+		ircstrdup(alias_ptr->alias, "OperServ");
+		ircstrdup(alias_ptr->nick, "OperServ");
+		alias_ptr->type = ALIAS_SERVICES;
+		add_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **) &conf_alias);
+		add_CommandX("OperServ", NULL, m_alias, 1, M_USER|M_ALIAS);
+		alias_ptr = MyMallocEx(sizeof(ConfigItem_alias));
+		ircstrdup(alias_ptr->alias, "HelpServ");
+		ircstrdup(alias_ptr->nick, "HelpServ");
+		alias_ptr->type = ALIAS_SERVICES;
+		add_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **) &conf_alias);
+		add_CommandX("HelpServ", NULL, m_alias, 1, M_USER|M_ALIAS);
+		alias_ptr = MyMallocEx(sizeof(ConfigItem_alias));
+		ircstrdup(alias_ptr->alias, "StatServ");
+		ircstrdup(alias_ptr->nick, "StatServ");
+		alias_ptr->type = ALIAS_STATS;
+		add_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **) &conf_alias);
+		add_CommandX("StatServ", NULL, m_alias, 1, M_USER|M_ALIAS);
+		Warning("No alias{}'s found, using default of NickServ, ChanServ, MemoServ, OperServ, HelpServ, StatServ");
+	}
+	if (!find_Command_simple("AWAY") || !find_Command_simple("KILL") ||
+		!find_Command_simple("OPER") || !find_Command_simple("PING"))
+	{
+		Error("Someone forgot to load modules with proper commands in them. Read the documentation");
+	}
 #ifdef _WIN32
 	if (config_error_flag)
 		win_log("Errors in configuration, terminating program.");
@@ -3203,6 +3473,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	ConfigItem_admin		*admin_ptr;
 	ConfigItem_deny_version		*deny_version_ptr;
 	ConfigItem_log			*log_ptr;
+	ConfigItem_alias		*alias_ptr;
 	ConfigItem 	t;
 
 
@@ -3429,6 +3700,26 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		MyFree(log_ptr);
 		log_ptr = (ConfigItem_log *)&t;
 	}
+	for (alias_ptr = conf_alias; alias_ptr; alias_ptr = (ConfigItem_alias *)alias_ptr->next) {
+		aCommand *cmptr = find_Command(alias_ptr->alias, 0, 0);
+		ConfigItem_alias_format *fmt;
+		ircfree(alias_ptr->nick);
+		del_Command(alias_ptr->alias, NULL, cmptr->func);
+		ircfree(alias_ptr->alias);
+		if (alias_ptr->format && alias_ptr->type == ALIAS_COMMAND) {
+			for (fmt = (ConfigItem_alias_format *) alias_ptr->format; fmt; fmt = (ConfigItem_alias_format *) fmt->next)
+			{
+				ircfree(fmt->format);
+				ircfree(fmt->parameters);
+				t.next = del_ConfigItem((ConfigItem *)fmt, (ConfigItem **)&alias_ptr->format);
+				MyFree(fmt);
+				fmt = (ConfigItem_alias_format *) &t;
+			}
+		}
+		t.next = del_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **)&conf_alias);
+		MyFree(alias_ptr);
+		alias_ptr = (ConfigItem_alias *)&t;
+	}
 	/* rehash_modules */
 	init_conf2(configfile);
 	module_loadall(0);
@@ -3457,6 +3748,19 @@ ConfigItem_deny_dcc	*Find_deny_dcc(char *name)
 	{
 		if (!match(name, p->filename))
 			return (p);
+	}
+	return NULL;
+}
+
+ConfigItem_alias *Find_alias(char *name) {
+	ConfigItem_alias *alias;
+
+	if (!name)
+		return NULL;
+
+	for (alias = conf_alias; alias; alias = (ConfigItem_alias *)alias->next) {
+		if (!stricmp(alias->alias, name))
+			return alias;
 	}
 	return NULL;
 }
@@ -3525,7 +3829,7 @@ ConfigItem_ulines *Find_uline(char *host) {
 ConfigItem_except *Find_except(char *host, short type) {
 	ConfigItem_except *excepts;
 
-	if (!host || !type)
+	if (!host)
 		return NULL;
 
 	for(excepts = conf_except; excepts; excepts =(ConfigItem_except *) excepts->next) {
@@ -3816,6 +4120,10 @@ void report_dynconf(aClient *sptr)
 	    sptr->name, NO_OPER_HIDING);
 	sendto_one(sptr, ":%s %i %s :options::identd-check: %d", me.name, RPL_TEXT,
 	    sptr->name, IDENT_CHECK);
+	sendto_one(sptr, ":%s %i %s :options::fail-oper-warn: %d", me.name, RPL_TEXT,
+	    sptr->name, FAILOPER_WARN);
+	sendto_one(sptr, ":%s %i %s :options::show-connect-info: %d", me.name, RPL_TEXT,
+	    sptr->name, SHOWCONNECTINFO);
 	sendto_one(sptr, ":%s %i %s :socks::ban-message: %s", me.name, RPL_TEXT,
 	    sptr->name, iConf.socksbanmessage);
 	sendto_one(sptr, ":%s %i %s :socks::quit-message: %s", me.name, RPL_TEXT,
@@ -3872,4 +4180,5 @@ void report_network(aClient *sptr)
 	sendto_one(sptr, ":%s %i %s :cloak-keys: %X", me.name, RPL_TEXT, sptr->name,
 		CLOAK_KEYCRC);
 }
+
 

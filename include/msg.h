@@ -307,9 +307,7 @@ extern int m_protoctl();
 extern int m_motd(), m_whois(), m_user(), m_list();
 extern int m_server(), m_info(), m_links(), m_summon(), m_stats();
 extern int m_users(), m_version(), m_help();
-extern int m_nickserv(), m_operserv(), m_chanserv(), m_memoserv();
-extern int m_infoserv(), m_helpserv(), m_botserv(), m_services(), m_identify();
-extern int m_statserv();
+extern int m_services(), m_identify();
 extern int m_squit(), m_away(), m_connect();
 extern int m_oper(), m_pass(), m_trace();
 extern int m_time(), m_names(), m_admin();
@@ -332,9 +330,6 @@ extern int m_chgident(), m_swhois(), m_svso(), m_svsfline();
 extern int m_tkl(), m_vhost(), m_botmotd(), m_sjoin(), m_htm();
 extern int m_umode2(), m_dccdeny(), m_undccdeny();
 extern int m_chgname(), m_shun(), m_post(), m_cycle();
-extern int m_module();
-#ifdef GUEST
-extern int m_guest();
-#endif
+extern int m_module(), m_alias();
 #endif
 

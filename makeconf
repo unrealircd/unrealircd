@@ -537,6 +537,7 @@ include "badwords.message.conf";
 loadmodule "src/modules/commands.so";
 loadmodule "src/modules/scan.so";
 loadmodule "src/modules/scan_socks.so";
+loadmodule "src/modules/scan_http.so";
 /* Ports */
 listen $VIRTUAL:$PORT;
 __EOF__

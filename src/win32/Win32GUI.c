@@ -467,8 +467,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	hMainThread = (HANDLE)_beginthread(SocketLoop, 0, NULL);
 	while (GetMessage(&msg, NULL, 0, 0))
     {
-		if (hWndMod == msg.hwnd) 
-			MessageBox(NULL, "yea", "yea", MB_OK);
 		if (hWndMod == NULL || !IsDialogMessage(hWndMod, &msg)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
@@ -1268,11 +1266,11 @@ LRESULT CALLBACK ColorDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 /* find how big a buffer expansion we need for RTF transformation */
 int CountRTFSize(char *buffer) {
-	int size;
+	int size = 0;
 	short bold = 0, uline = 0, reverse = 0;
 	char *buf = buffer;
 
-	for (; *buf; buf++) {
+	for (; *buf; buf++, size++) {
 		if (*buf == '{' || *buf == '}' || *buf == '\\') {
 			size++;
 			continue;
@@ -1280,7 +1278,7 @@ int CountRTFSize(char *buffer) {
 		if (*buf == '\r') {
 			buf++;
 			if (*buf == '\n')
-				size += 4;
+				size += 5;
 		}
 		if (*buf == '\2') {
 			if (bold) 

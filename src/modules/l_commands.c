@@ -92,6 +92,37 @@ int    l_commands_init(int module_load)
 	m_svsmotd_init(module_load);
 	m_svsnline_init(module_load);
 	m_who_init(module_load);
+	m_mkpasswd_init(module_load);
+	m_away_init(module_load);
+	m_svsnoop_init(module_load);
+	m_svso_init(module_load);
+	m_svsnick_init(module_load);
+	m_adminchat_init(module_load);
+	m_techat_init(module_load);
+	m_nachat_init(module_load);
+	m_lag_init(module_load);
+	m_rping_init(module_load);
+	m_sendumode_init(module_load);
+	m_tsctl_init(module_load);
+	m_htm_init(module_load);
+	m_chgname_init(module_load);
+	m_message_init(module_load);
+	m_whois_init(module_load);
+	m_quit_init(module_load);
+	m_kill_init(module_load);
+	m_pingpong_init(module_load);
+	m_oper_init(module_load);
+	m_akill_init(module_load);
+	m_rakill_init(module_load);
+	m_zline_init(module_load);
+	m_unzline_init(module_load);
+	m_kline_init(module_load);
+	m_unkline_init(module_load);
+	m_sqline_init(module_load);
+	m_unsqline_init(module_load);
+#ifdef GUEST
+	m_guest_init(module_load);
+#endif
 #ifdef SCAN_API
 	module_depend_resolve(&scan_socks_depend[0]);
 	m_scan_init(module_load);
@@ -116,6 +147,37 @@ void    l_commands_load(int module_load)
 	m_svsmotd_load(module_load);
 	m_svsnline_load(module_load);
 	m_who_load(module_load);
+	m_mkpasswd_load(module_load);
+	m_away_load(module_load);
+	m_svsnoop_load(module_load);
+	m_svso_load(module_load);
+	m_svsnick_load(module_load);
+	m_adminchat_load(module_load);
+	m_techat_load(module_load);
+	m_nachat_load(module_load);
+	m_lag_load(module_load);
+	m_rping_load(module_load);
+	m_sendumode_load(module_load);
+	m_tsctl_load(module_load);
+	m_htm_load(module_load);
+	m_chgname_load(module_load);
+	m_message_load(module_load);
+	m_whois_load(module_load);
+	m_quit_load(module_load);
+	m_kill_load(module_load);
+	m_pingpong_load(module_load);
+	m_oper_load(module_load);
+	m_akill_load(module_load);
+	m_rakill_load(module_load);
+	m_zline_load(module_load);
+	m_unzline_load(module_load);
+	m_kline_load(module_load);
+	m_unkline_load(module_load);
+	m_sqline_load(module_load);
+	m_unsqline_load(module_load);
+#ifdef GUEST
+	m_guest_load(module_load);
+#endif
 #ifdef SCAN_API
 	m_scan_load(module_load);
 	scan_socks_load(module_load);
@@ -139,6 +201,37 @@ void	l_commands_unload(void)
 	m_svsmotd_unload();
 	m_svsnline_unload();
 	m_who_unload();
+	m_mkpasswd_unload();
+	m_away_unload();
+	m_svsnoop_unload();
+	m_svso_unload();
+	m_svsnick_unload();
+	m_adminchat_unload();
+	m_techat_unload();
+	m_nachat_unload();
+	m_lag_unload();
+	m_rping_unload();
+	m_sendumode_unload();
+	m_tsctl_unload();
+	m_htm_unload();
+	m_chgname_unload();
+	m_message_unload();
+	m_whois_unload();
+	m_quit_unload();
+	m_kill_unload();
+	m_pingpong_unload();
+	m_oper_unload();
+	m_akill_unload();
+	m_rakill_unload();
+	m_zline_unload();
+	m_unzline_unload();
+	m_kline_unload();
+	m_unkline_unload();
+	m_sqline_unload();
+	m_unsqline_unload();
+#ifdef GUEST
+	m_guest_unload();
+#endif
 #ifdef SCAN_API
 	scan_socks_unload();
 	m_scan_unload();

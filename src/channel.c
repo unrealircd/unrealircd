@@ -1593,8 +1593,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 		      && !is_chanowner(cptr, chptr))
 		  {
 			  sendto_one(cptr,
-			      ":%s NOTICE %s :*** Channel mode +u can only be set by the channel owner",
-			      me.name, cptr->name);
+			      ":%s %s %s :*** Channel mode +u can only be set by the channel owner",
+			      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
 			  break;
 		  }
 
@@ -1605,8 +1605,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 		      && !IsULine(cptr))
 		  {
 			  sendto_one(cptr,
-			      ":%s NOTICE %s :*** Only IRCops can set that mode",
-			      me.name, cptr->name);
+			      ":%s %s %s :*** Only IRCops can set that mode",
+			      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
 			  break;
 		  }
 		  goto setthephuckingmode;
@@ -1615,8 +1615,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 		      && !IsULine(cptr))
 		  {
 			  sendto_one(cptr,
-			      ":%s NOTICE %s :*** Only admins can set that mode",
-			      me.name, cptr->name);
+			      ":%s %s %s :*** Only admins can set that mode",
+			      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
 			  break;
 		  }
 		  goto setthephuckingmode;
@@ -1629,8 +1629,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 		      && !IsULine(cptr))
 		  {
 			  sendto_one(cptr,
-			      ":%s NOTICE %s :*** Only admins can set that mode",
-			      me.name, cptr->name);
+			      ":%s %s %s :*** Only admins can set that mode",
+			      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
 			  break;
 		  }
 		  goto setthephuckingmode;
@@ -1695,8 +1695,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 		      && !is_chanowner(cptr, chptr))
 		  {
 			  sendto_one(cptr,
-			      ":%s NOTICE %s :*** Protected users can only be set by the channel owner.",
-			      me.name, cptr->name);
+			      ":%s %s %s :*** Protected users can only be set by the channel owner.",
+			      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
 			  break;
 		  }
 
@@ -1760,8 +1760,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 			  if (MyClient(cptr))
 			  {
 				  sendto_one(cptr,
-				      ":%s NOTICE %s :*** You cannot %s because %s is %s channel owner (+q)",
-				      me.name, cptr->name, xxx,
+				      ":%s %s %s :*** You cannot %s because %s is %s channel owner (+q)",
+				      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name, xxx,
 				      member->cptr->name, chptr->chname);
 			  }
 			  break;
@@ -1774,8 +1774,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 			  if (MyClient(cptr))
 			  {
 				  sendto_one(cptr,
-				      ":%s NOTICE %s :*** You cannot %s because %s is %s protected user (+a)",
-				      me.name, cptr->name, xxx,
+				      ":%s %s %s :*** You cannot %s because %s is %s protected user (+a)",
+				      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name, xxx,
 				      member->cptr->name, chptr->chname);
 			  }
 			  break;
@@ -1928,8 +1928,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 		      && !is_chanowner(cptr, chptr))
 		  {
 			  sendto_one(cptr,
-			      ":%s NOTICE %s :*** Channel mode +L can only be set by the channel owner",
-			      me.name, cptr->name);
+			      ":%s %s %s :*** Channel mode +L can only be set by the channel owner",
+			      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
 			  break;
 		  }
 
@@ -1937,8 +1937,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 		  if (!chptr->mode.limit && what == MODE_ADD)
 		  {
 			  sendto_one(cptr,
-			      ":%s NOTICE %s :*** Channel mode +l <max> is requried for +L to be set",
-			      me.name, cptr->name);
+			      ":%s %s %s :*** Channel mode +l <max> is requried for +L to be set",
+			      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
 			  break;
 		  }
 		  retval = 1;
@@ -1965,8 +1965,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 			  {
 				  if (MyClient(cptr))
 					  sendto_one(cptr,
-					      ":%s NOTICE %s :*** You can't link %s to itself",
-					      me.name, cptr->name,
+					      ":%s %s %s :*** You can't link %s to itself",
+					      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name,
 					      chptr->chname);
 				  break;
 			  }
@@ -1974,8 +1974,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 			  {
 				  if (MyClient(cptr))
 					  sendto_one(cptr,
-					      ":%s NOTICE %s :*** You may only specify 1 channel to link to",
-					      me.name, cptr->name);
+					      ":%s %s %s :*** You may only specify 1 channel to link to",
+					      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
 				  break;
 			  }
 			  if (!IsChannelName(param))
@@ -2313,8 +2313,8 @@ static int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, ch
 	if ((chptr->mode.mode & MODE_ONLYSECURE) &&
 		!(sptr->umodes & UMODE_SECURE))
 	{
-		sendto_one(sptr, ":%s NOTICE %s :*** Cannot join: %s is a Secure-only channel (+z)",
-				me.name, sptr->name, chptr->chname); 
+		sendto_one(sptr, ":%s %s %s :*** Cannot join: %s is a Secure-only channel (+z)",
+				me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, chptr->chname); 
 		return (ERR_BANNEDFROMCHAN);	
 	}
 	if ((chptr->mode.mode & MODE_OPERONLY) && !IsOper(sptr))
@@ -2660,8 +2660,8 @@ int channel_link(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		/* bounced too many times */
 		sendto_one(sptr,
-		    ":%s NOTICE %s :*** Couldn't join %s ! - Link setting was too bouncy",
-		    me.name, sptr->name, parv[1]);
+		    ":%s %s %s :*** Couldn't join %s ! - Link setting was too bouncy",
+		    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, parv[1]);
 		return;
 	}
 	for (i = 0, name = strtoken(&p, parv[1], ","); name;
@@ -3394,8 +3394,8 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					    err_str(ERR_NOSUCHNICK),
 					    me.name, parv[0], user, name);
 					sendto_one(who,
-					    ":%s NOTICE %s :*** Hidden: %s tried to kick you from channel %s (%s)",
-					    me.name, who->name, parv[0],
+					    ":%s %s %s :*** Hidden: %s tried to kick you from channel %s (%s)",
+					    me.name, IsWebTV(who) ? "PRIVMSG" : "NOTICE", who->name, parv[0],
 					    chptr->chname, comment);
 					break;
 				}
@@ -3404,8 +3404,8 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				    && !IsULine(sptr))
 				{
 					sendto_one(sptr,
-					    ":%s NOTICE %s :*** You cannot kick people on %s",
-					    me.name, sptr->name, chptr->chname);
+					    ":%s %s %s :*** You cannot kick people on %s",
+					    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, chptr->chname);
 					goto deny;
 					continue;
 				}
@@ -3440,10 +3440,9 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					    && who != sptr)
 					{
 						sendto_one(sptr,
-						    ":%s NOTICE %s :*** You cannot kick %s from %s because %s is channel protected",
-						    me.name, sptr->name,
-						    who->name,
-						    chptr->chname, who->name);
+						    ":%s %s %s :*** You cannot kick %s from %s because %s is channel protected",
+						    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name,
+						    who->name, chptr->chname, who->name);
 						goto deny;
 						continue;
 					}	/* chanprot/chanowner */
@@ -3453,8 +3452,8 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				    && !IsULine(sptr))
 				{
 					sendto_one(sptr,
-					    ":%s NOTICE %s :*** You cannot kick channel operators on %s if you only are halfop",
-					    me.name, sptr->name, chptr->chname);
+					    ":%s %s %s :*** You cannot kick channel operators on %s if you only are halfop",
+					    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, chptr->chname);
 					goto deny;
 				}	/* halfop */
 
@@ -3464,12 +3463,12 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					    || IsTechAdmin(sptr)))
 					{
 						sendto_one(sptr,
-						    ":%s NOTICE %s :*** Cannot kick %s from channel %s (usermode +q)",
-						    me.name, sptr->name,
+						    ":%s %s %s :*** Cannot kick %s from channel %s (usermode +q)",
+						    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name,
 						    who->name, chptr->chname);
 						sendto_one(who,
-						    ":%s NOTICE %s :*** Q: %s tried to kick you from channel %s (%s)",
-						    me.name, who->name,
+						    ":%s %s %s :*** Q: %s tried to kick you from channel %s (%s)",
+						    me.name, IsWebTV(who) ? "PRIVMSG" : "NOTICE", who->name,
 						    parv[0],
 						    chptr->chname, comment);
 						goto deny;
@@ -4522,7 +4521,7 @@ int m_knock(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	    (IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost),
 	    parv[2] ? parv[2] : "no reason specified");
 
-	sendto_one(sptr, ":%s NOTICE %s :Knocked on %s", me.name,
+	sendto_one(sptr, ":%s %s %s :Knocked on %s", me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE",
 	    sptr->name, chptr->chname);
 	return 0;
 }

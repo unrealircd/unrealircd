@@ -336,7 +336,6 @@ int  parse(cptr, buffer, bufend)
 		if (IsShunned(from))
 			flags |= M_SHUN;
 		cmptr = find_Command(ch, IsServer(cptr) ? 1 : 0, flags);
-
 		if (!cmptr)
 		{
 			/*
@@ -440,14 +439,20 @@ int  parse(cptr, buffer, bufend)
 	if (cmptr == NULL)
 		return (do_numeric(numeric, cptr, from, i, para));
 	cmptr->count++;
-	if (IsRegisteredUser(cptr) && cmptr->func == m_private)
+	if (IsRegisteredUser(cptr) && (cmptr->cmd == MSG_PRIVATE) || (cmptr->cmd == TOK_PRIVATE))
 		from->user->last = TStime();
 
 #ifndef DEBUGMODE
-	return (*cmptr->func) (cptr, from, i, para);
+	if (cmptr->flags & M_ALIAS)
+		return (*cmptr->func) (cptr, from, i, para, cmptr->cmd);
+	else
+		return (*cmptr->func) (cptr, from, i, para);
 #else
 	then = clock();
-	retval = (*cmptr->func) (cptr, from, i, para);
+	if (cmptr->flags & M_ALIAS)
+		retval = (*cmptr->func) (cptr, from, i, para, cmptr->cmd);
+	else 
+		retval = (*cmptr->func) (cptr, from, i, para);
 	if (retval != FLUSH_BUFFER)
 	{
 		ticks = (clock() - then);
