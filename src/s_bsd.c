@@ -1857,7 +1857,7 @@ deadsocket:
 					length = -1;
 				}
 			}
-			else
+			if (SSL_is_init_finished(cptr->ssl))
 			{
 				if (IsSSLAcceptHandshake(cptr))
 				{

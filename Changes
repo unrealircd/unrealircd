@@ -1567,3 +1567,4 @@ seen. gmtime warning still there
 - SSL debugging stuff
 - Added some more debugging stuff, made check_pings a little more readable 
 - More SSL debugging stuff..
+- A minor fix in SSL_is_inited stuff in s_bsd
