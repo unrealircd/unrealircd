@@ -848,6 +848,44 @@ int InitwIRCD(int argc, char *argv[])
 		exit(-1);
 	}
 	ircd_res_init();
+	{
+		struct stat sb;
+		if (mkdir("dev", S_IRUSR|S_IWUSR|S_IXUSR|S_IXGRP|S_IXOTH) != 0 && errno != EEXIST)
+		{
+			fprintf(stderr, "ERROR: Cannot mkdir dev: %s\n", strerror(errno));
+			exit(5);
+		}
+		if (stat("/dev/urandom", &sb) != 0)
+		{
+			fprintf(stderr, "ERROR: Cannot stat /dev/urandom: %s\n", strerror(errno));
+			exit(5);
+		}
+		if (mknod("dev/urandom", sb.st_mode, sb.st_rdev) != 0 && errno != EEXIST)
+		{
+			fprintf(stderr, "ERROR: Cannot mknod dev/urandom: %s\n", strerror(errno));
+			exit(5);
+		}
+		if (stat("/dev/null", &sb) != 0)
+		{
+			fprintf(stderr, "ERROR: Cannot stat /dev/null: %s\n", strerror(errno));
+			exit(5);
+		}
+		if (mknod("dev/null", sb.st_mode, sb.st_rdev) != 0 && errno != EEXIST)
+		{
+			fprintf(stderr, "ERROR: Cannot mknod dev/null: %s\n", strerror(errno));
+			exit(5);
+		}
+		if (stat("/dev/tty", &sb) != 0)
+		{
+			fprintf(stderr, "ERROR: Cannot stat /dev/tty: %s\n", strerror(errno));
+			exit(5);
+		}
+		if (mknod("dev/tty", sb.st_mode, sb.st_rdev) != 0 && errno != EEXIST)
+		{
+			fprintf(stderr, "ERROR: Cannot mknod dev/tty: %s\n", strerror(errno));
+			exit(5);
+		}
+	}
 	if (chroot(DPATH)) {
 		(void)fprintf(stderr, "ERROR:  Cannot (chdir/)chroot to directory '%s'\n", dpath);
 		exit(5);
@@ -1230,7 +1268,6 @@ int InitwIRCD(int argc, char *argv[])
 	R_do_id = strlen(REPORT_DO_ID);
 	R_fin_id = strlen(REPORT_FIN_ID);
 	R_fail_id = strlen(REPORT_FAIL_ID);
-	write_pidfile();
 
 #if !defined(IRC_UID) && !defined(_WIN32)
 	if ((uid != euid) && !euid) {
@@ -1263,6 +1300,7 @@ int InitwIRCD(int argc, char *argv[])
 		}
 	}
 #endif
+	write_pidfile();
 	Debug((DEBUG_NOTICE, "Server ready..."));
 	SetupEvents();
 #ifdef THROTTLING

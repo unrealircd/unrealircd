@@ -2782,4 +2782,8 @@ seen. gmtime warning still there
 - Fixed possible compile bug (caused by HOOKTYPE_TKL_EXCEPT).
 - Cosmetic 'stats /zip' output change (#0001435).
 - Made services admins able to see on which channel services bots are, just
-  like a netadmins can, suggested by EviL_SmUrF (#0001481).
+  like netadmins can, suggested by EviL_SmUrF (#0001481).
+- Fixed problems with Unreal using devices in a chroot'ed environment and ircd.pid problems
+  with setuid/setgid, reported by thilo (#0001514).
+- Made /sajoin override modes (e.g. +bilk) reported by mcskaf (#0000518).
+

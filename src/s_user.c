@@ -63,6 +63,7 @@ void send_umode(aClient *, aClient *, long, long, char *);
 void set_snomask(aClient *, char *);
 void create_snomask(aClient *, anUser *, char *);
 extern int short_motd(aClient *sptr);
+extern aChannel *get_channel(aClient *cptr, char *chname, int flag);
 /* static  Link    *is_banned(aClient *, aChannel *); */
 int  dontspread = 0;
 extern char *me_hash;
@@ -2954,25 +2955,45 @@ CMD_FUNC(m_sajoin)
 		return 0;
 	}
 
+	if (MyClient(acptr))
+	{
+		int flags;
+		aChannel *chptr;
+		Membership *lp;
+		if (strlen(parv[2]) > CHANNELLEN)
+			parv[2][CHANNELLEN] = 0;
+		clean_channelname(parv[2]);
+		if (check_channelmask(sptr, cptr, parv[2]) == -1 || *parv[2] == '0' ||
+		    !IsChannelName(parv[2]))
+		{
+			sendto_one(sptr,
+			    err_str(ERR_NOSUCHCHANNEL), me.name,
+			    parv[0], parv[2]);
+			return 0;
+		}
+		flags = (ChannelExists(parv[2])) ? CHFL_DEOPPED : CHFL_CHANOP;
+		chptr = get_channel(sptr, parv[2], CREATE);
+		if (chptr && (lp = find_membership_link(acptr->user->channel, chptr)))
+		{
+			sendto_one(sptr, err_str(ERR_USERONCHANNEL), me.name, parv[0], 
+				   parv[1], parv[2]);
+			return 0;
+		}
+		sendto_one(acptr,
+		    ":%s %s %s :*** You were forced to join %s", me.name,
+		    IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, parv[2]);
+		join_channel(chptr, acptr, acptr, flags);
+	}
+	else
+		sendto_one(acptr, ":%s SAJOIN %s %s", parv[0],
+		    parv[1], parv[2]);
+
 	sendto_realops("%s used SAJOIN to make %s join %s", sptr->name, parv[1],
 	    parv[2]);
 
 	/* Logging function added by XeRXeS */
 	ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
 		sptr->name, parv[1], parv[2]);
-
-	if (MyClient(acptr))
-	{
-		parv[0] = parv[1];
-		parv[1] = parv[2];
-		sendto_one(acptr,
-		    ":%s %s %s :*** You were forced to join %s", me.name,
-		    IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, parv[2]);
-		(void)m_join(acptr, acptr, 2, parv);
-	}
-	else
-		sendto_one(acptr, ":%s SAJOIN %s %s", parv[0],
-		    parv[1], parv[2]);
 
 	return 0;
 }
