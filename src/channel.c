@@ -2964,7 +2964,7 @@ int  m_join(cptr, sptr, parc, parv)
 		}
 
 		sendto_serv_butone_token(cptr, parv[0], MSG_JOIN,
-		    TOK_JOIN, chptr->chname);
+		    TOK_JOIN, "%s", chptr->chname);
 
 		if (MyClient(sptr))
 		{
@@ -3059,7 +3059,7 @@ int  m_part(cptr, sptr, parc, parv)
 		 */
 		if (parc < 3)
 			sendto_serv_butone_token(cptr, parv[0],
-			    MSG_PART, TOK_PART, chptr->chname);
+			    MSG_PART, TOK_PART, "%s", chptr->chname);
 		else
 			sendto_serv_butone_token(cptr, parv[0],
 			    MSG_PART, TOK_PART, "%s :%s", chptr->chname,
@@ -4290,19 +4290,196 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
    **      that is based on the EFnet TS3 protocol.
    **                           -GZ (gz@starchat.net)
    **         
-   **  Modified for Unreal3.0 by Stskeeps
+   **  Modified for UnrealIRCd by Stskeeps
+   **  Recoded by Stskeeps
    **      parv[0] = sender prefix
    **      parv[1] = channel timestamp
    **      parv[2] = channel name
    **      parv[3] = channel modes
    **      parv[4] = channel mode parameters (key/limit)
-   **      parv[5] = nick names + modes - all in one parameter 
+   **      parv[parc - 1] = nick names + modes - all in one parameter 
  */
 #define FL_VOICE  0x1
 #define FL_HALFOP 0x2
 #define FL_CHANOP 0x4
 #define FL_PROT   0x8
 #define FL_FOUNDER  0x10
+
+#define Addit(x,y) modebuf[b] = x; strcat(parabuf, y); \
+  strcat(parabuf, " "); \
+  if (b == RESYNCMODES) \
+  { modebuf[b + 1] = '\0'; sendto_serv_butone_sjoin(cptr, \
+  	":%s MODE %s %s %s %lu", me.name, chptr->chname,  \
+  	modebuf, parabuf, chptr->creationtime); \
+  	sendto_channel_butserv(chptr, sptr, \
+  	"%s MODE %s %s %s", me.name, chptr->chname, \
+  	modebuf, parabuf); \
+  	parabuf[0] = '\0'; \
+  	b = 1; \
+  	} else b++
+
+#ifdef NEW_SJOIN
+int  m_sjoin(cptr, sptr, parc, parv)
+	aClient *cptr, *sptr;
+	int  parc;
+	char *parv[];
+{
+	unsigned short nopara;
+	unsigned short nomode;
+	unsigned short removeours;
+	unsigned short removetheirs;
+	unsigned short merge; /* same timestamp */
+	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
+	aClient *acptr, *tempptr;
+	aChannel *chptr;
+	aSynchList *synchptr;
+	Link	*lp;
+	Ban	*ban;
+	aParv	*ap;
+	int	ts,oldts, pcount; 
+	unsigned short	b;
+	
+	if (IsClient(sptr) || parc < 6 || !IsServer(sptr)) 
+		return 0;
+	
+	if (!IsChannelName(parv[2]))
+		return 0;
+		
+	nopara = nomode = removeours = removetheirs = 0;
+		
+	if (SupportSJOIN(sptr) && !strncmp(parv[4], "<none>", 6))
+			nopara = 1;
+	if (SupportSJOIN2(sptr) && !strncmp(parv[4], "<->", 6))
+			nopara = 1;
+	if (SupportSJ3(sptr) && !strcmp(parv[4], "*"))
+			nopara = 1;
+
+	if (parv[3][1] == '\0')
+		nomode = 1;
+		
+	chptr = get_channel(cptr, parv[2], CREATE);
+	
+	ts = atol(parv[1]);
+	
+	if (chptr->creationtime > ts)
+		removeours = 1;
+	else if ((chptr->creationtime < ts) && (chptr->creationtime != 0))
+		removetheirs = 1;
+	else if (chptr->creationtime == ts)
+		merge = 1;
+		
+	if (chptr->creationtime == 0 && (ts > 0))
+		oldts = -1;
+	else
+		oldts = chptr->creationtime;
+	
+	if (ts < 750000)
+		if (ts != 0)
+			sendto_ops("Warning! Possible desynch: SJOIN for channel %s has a fishy timestamp (%ld)",
+				chptr->chname, ts);
+	parabuf[0] = '\0';
+	modebuf[0] = '+';
+	modebuf[1] = '\0';
+	channel_modes(cptr, modebuf, parabuf, chptr);
+	if (removeours)
+	{
+		modebuf[0] = '-';
+		/* remove our modes if any */
+		if (modebuf[1] != '\0')
+		{
+			int	b;
+			Ban	*ban;
+
+			ap = mp2parv(modebuf, parabuf);
+			set_mode(chptr, cptr, ap->parc, ap->parv, &pcount,
+				pvar, 0);
+			sendto_serv_butone_sjoin(cptr, 
+				":%s MODE %s %s %s %lu",
+				me.name, chptr->chname, modebuf, parabuf,
+				chptr->creationtime);
+			sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
+				me.name, chptr->chname, modebuf, parabuf);
+			
+		}
+		/* remove bans */
+		b = 1;
+		parabuf[0] = '\0';
+		for (ban = chptr->banlist; ban; ban = ban->next)
+		{
+			Addit('b', ban->banstr);
+		}
+		for (ban = chptr->exlist; ban; ban = ban->next)
+		{
+			Addit('e', ban->banstr);
+		}
+		for (lp = chptr->members; lp; lp = lp->next)
+		{
+			if (lp->flags & MODE_CHANOWNER)
+			{
+				lp->flags &= ~MODE_CHANOWNER;
+				Addit('q', lp->value.cptr->name);
+			}
+			if (lp->flags & MODE_CHANPROT)
+			{
+				lp->flags &= ~MODE_CHANPROT;
+				Addit('a', lp->value.cptr->name);
+			}
+			if (lp->flags & MODE_CHANOP)
+			{
+				lp->flags &= ~MODE_CHANOP;
+				Addit('o', lp->value.cptr->name);
+			}
+			if (lp->flags & MODE_HALFOP)
+			{
+				lp->flags &= ~MODE_HALFOP;
+				Addit('h', lp->value.cptr->name);
+			}
+			if (lp->flags & MODE_VOICE)
+			{
+				lp->flags &= ~MODE_VOICE;
+				Addit('v', lp->value.cptr->name);
+			}
+		}
+		if(b > 1)
+		{
+			modebuf[b] = '\0';
+			sendto_serv_butone_sjoin(cptr,
+				":%s MODE %s %s %s %lu",
+				me.name, chptr->chname,
+				modebuf, parabuf,
+				chptr->creationtime);
+			sendto_channel_butserv(chptr,
+				sptr, ":%s MODE %s %s %s",
+				me.name, chptr->chname,
+				modebuf, parabuf);
+
+		}	
+	}	
+	if (!merge && removeours)
+	{
+			strcpy(modebuf, parv[3]);
+			parabuf[0] = '\0';
+			if (!nopara)
+				for (b = 4; b <= (parc - 2); b++)
+				{
+					strcat(parabuf, parv[b]);
+					strcat(parabuf, " ");
+				}
+					
+			ap = mp2parv(modebuf, parabuf);
+			set_mode(chptr, cptr, ap->parc, ap->parv, &pcount,
+				pvar, 0);
+			sendto_serv_butone_sjoin(cptr, 
+				":%s MODE %s %s %s %lu",
+				me.name, chptr->chname, modebuf, parabuf,
+				chptr->creationtime);
+			sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
+				me.name, chptr->chname, modebuf, parabuf);
+	}			
+	
+	
+}
+#else
 
 int  m_sjoin(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;
@@ -4403,7 +4580,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 		ap = mp2parv(modebuf, parabuf);
 		set_mode(chptr, cptr, ap->parc, ap->parv, &pcount, pvar, 0);
 		sendto_serv_butone_sjoin(cptr, ":%s %s %s %s %s %lu",
-		    me.name, MSG_MODE, chptr->chname, modebuf, parabuf,
+				    me.name, MSG_MODE, chptr->chname, modebuf, parabuf,
 		    chptr->creationtime);
 		sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
 		    me.name, chptr->chname, modebuf, parabuf);
@@ -4960,7 +5137,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 
 	return 0;
 }
-
+#endif
 static int send_ban_list(cptr, chname, creationtime, channel)
 	aClient *cptr;
 	char *chname;

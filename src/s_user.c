@@ -113,7 +113,7 @@ void iNAH_host(aClient *sptr, char *host)
 	ircsprintf(sptr->user->virthost, host);
 	if (MyConnect(sptr))
 		sendto_serv_butone_token(&me, sptr->name, MSG_SETHOST,
-		    TOK_SETHOST, sptr->user->virthost);
+		    TOK_SETHOST, "%s", sptr->user->virthost);
 	sptr->umodes |= UMODE_SETHOST;
 }
 
@@ -1502,45 +1502,8 @@ int  m_nick(cptr, sptr, parc, parv)
 		 * Client setting NICK the first time.
 		 *
 		 * Generate a random string for them to pong with.
-		 *
-		 * The first two are server specific.  The intent is to randomize
-		 * things well.
-		 *
-		 * We use lots of junk here, but only "low cost" things.
-		 */
-		md5data[0] = NOSPOOF_SEED01;
-		md5data[1] = NOSPOOF_SEED02;
-		md5data[2] = TStime();
-		md5data[3] = me.sendM;
-		md5data[4] = me.receiveM;
-		md5data[5] = 0;
-		md5data[6] = getpid();
-		md5data[7] = sptr->ip.S_ADDR;
-		md5data[8] = sptr->fd;
-		md5data[9] = 0;
-		md5data[10] = 0;
-		md5data[11] = 0;
-		md5data[12] = md5hash[0];	/* previous runs... */
-		md5data[13] = md5hash[1];
-		md5data[14] = md5hash[2];
-		md5data[15] = md5hash[3];
-
-		/*
-		 * initialize the md5 buffer to known values
-		 */
-		MD5Init(md5hash);
-
-		/*
-		 * transform the above information into gibberish
-		 */
-		MD5Transform(md5hash, md5data);
-
-		/*
-		 * Never release any internal state of our generator.  Instead,
-		 * use two parts of the returned hash and xor them to hide
-		 * both values.
-		 */
-		sptr->nospoof = (md5hash[0] ^ md5hash[1]);
+		*/
+		sptr->nospoof = 1+(int) (9000000.0*random()/(RAND_MAX+80000000.0));
 
 		/*
 		 * If on the odd chance it comes out zero, make it something
@@ -1551,7 +1514,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		sendto_one(sptr, ":%s NOTICE %s :*** If you are having problems"
 		    " connecting due to ping timeouts, please"
 		    " type /notice %X nospoof now.",
-		    me.name, nick, sptr->nospoof, sptr->nospoof);
+		    me.name, nick, sptr->nospoof);
 		sendto_one(sptr, "PING :%X", sptr->nospoof);
 #endif /* NOSPOOF */
 

@@ -2009,7 +2009,7 @@ int  m_sqline(cptr, sptr, parc, parv)
 		    "%s :%s", parv[1], parv[2]);
 	else
 		sendto_serv_butone_token(cptr, parv[0], MSG_SQLINE, TOK_SQLINE,
-		    parv[1]);
+		    "%s", parv[1]);
 
 	asqline = make_sqline();
 
@@ -2044,7 +2044,7 @@ int  m_unsqline(cptr, sptr, parc, parv)
 		return 0;
 
 	sendto_serv_butone_token(cptr, parv[0], MSG_UNSQLINE, TOK_UNSQLINE,
-	    parv[1]);
+	    "%s", parv[1]);
 
 	if (!(asqline = find_sqline_nick(parv[1])))
 		return;

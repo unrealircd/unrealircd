@@ -2568,7 +2568,7 @@ int  m_help(cptr, sptr, parc, parv)
 		}
 		if (message[1] == '!')
 			sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL,
-			    parv[0], MSG_HELP, TOK_HELP, message);
+			    parv[0], MSG_HELP, TOK_HELP, "%s", message);
 		if (!myncmp(message, "IGNORE ", 7))
 		{
 			tmpl = make_link();
@@ -2602,14 +2602,14 @@ int  m_help(cptr, sptr, parc, parv)
 			}
 
 		sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL,
-		    parv[0], MSG_HELP, TOK_HELP, message);
+		    parv[0], MSG_HELP, TOK_HELP, "%s", message);
 		sendto_helpops("from %s (Local): %s", parv[0], message);
 		sendto_one(sptr, rpl_str(RPL_HELPFWD), me.name, parv[0]);
 	}
 	else
 	{
 		sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL,
-		    parv[0], MSG_HELP, TOK_HELP, message);
+		    parv[0], MSG_HELP, TOK_HELP, "%s", message);
 		sendto_helpops("from %s: %s", parv[0], message);
 	}
 

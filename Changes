@@ -429,3 +429,4 @@
 - Added so stuff like Lost connection to, (report_error) only goes to realops
 - Added some more descriptive error messages
 - Added doc/crypto.doc describing the encrypted irc protocol
+- Fixed a sendto_serv_butone_token problem
