@@ -589,3 +589,4 @@ seen. gmtime warning still there
 - Fixed the keywalk bug reported by BaTmAn (?)
 - Fixed a few configure problems with sunos and amiga
 - Fixed an OpenBSD bug reported by perian
+- Moved config/ to autoconf/
