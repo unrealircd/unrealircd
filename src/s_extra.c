@@ -419,6 +419,11 @@ void ircd_log(int flags, char *format, ...)
 			write(fd, buf, strlen(buf));
 			close(fd);
 		}
+		else
+		{
+			/* anti-codemastr(TM) coding */
+			close(fd);
+		}
 	}
 	va_end(ap);
 }
