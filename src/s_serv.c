@@ -57,7 +57,6 @@ aMotd *rules;
 aMotd *motd;
 aMotd *svsmotd;
 aMotd *botmotd;
-aTrecord *tdata;
 struct tm *motd_tm;
 aMotd *read_file(char *filename, aMotd **list);
 aMotd *read_motd(char *filename);
@@ -2953,7 +2952,6 @@ int  m_lusers(cptr, sptr, parc, parv)
 	int  parc;
 	char *parv[];
 {
-	char mydom_mask[HOSTLEN + 1];
 
 /*	Doesn't work anyways --Stskeeps
 
@@ -2963,8 +2961,6 @@ int  m_lusers(cptr, sptr, parc, parv)
 			return 0;
 */
 
-	mydom_mask[0] = '*';
-	strncpy(&mydom_mask[1], DOMAINNAME, HOSTLEN - 1);
 	/* Just to correct results ---Stskeeps */
 	if (IRCstats.clients > IRCstats.global_max)
 		IRCstats.global_max = IRCstats.clients;
@@ -3648,7 +3644,7 @@ int  m_svskill(cptr, sptr, parc, parv)
 		return 0;
 */
 
-	if (parc < 1 || (!(acptr = find_client(parv[1], NULL))))
+	if (!(acptr = find_client(parv[1], NULL)))
 		return 0;
 
 	sendto_serv_butone_token(cptr, parv[0],
@@ -4178,7 +4174,7 @@ int  m_trace(cptr, sptr, parc, parv)
 		return 0;
 	}
 	for (cltmp = conf_class; doall && cltmp; cltmp = (ConfigItem_class *) cltmp->next)
-	//	if (cltmp->clients > 0)
+	/*	if (cltmp->clients > 0) */
 			sendto_one(sptr, rpl_str(RPL_TRACECLASS), me.name,
 			    parv[0], cltmp->name ? cltmp->name : "[noname]", cltmp->clients);
 	return 0;
