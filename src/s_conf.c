@@ -5380,7 +5380,7 @@ int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 			else
 			{
 				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-					target |= spamfilter_getconftargets(cep->ce_varname);
+					target |= spamfilter_getconftargets(cepp->ce_varname);
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "action"))

@@ -497,3 +497,5 @@
 - OperOverride INVITE notices are now also global (if you have the eyes snomask set) (#2212).
 - Module coders: New function: sendto_snomask_global().
 - Speedup sendto_snomask/sendto_connectnotice/sendto_fconnectnotice code.
+- spamfilter.conf: fixed mIRC exploit sigs
+- Fixed all spamfilters in configfile not working due to configrewrite (post-3.2.2).
