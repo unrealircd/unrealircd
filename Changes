@@ -695,3 +695,4 @@ seen. gmtime warning still there
 - Fixed *** nick has quit (no Days come, days go), by defaulting to "Quit: "
 - Fixed -nexus.nexusirc.org- *** Notice -- Trying to send [:Alzirr WALLOPS
   :test bug, found by Alzirr 
+- Fixed struct IN_ADDR problems on some OS'es

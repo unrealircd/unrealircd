@@ -37,7 +37,7 @@
 #ifdef	PARAMH
 #include <sys/param.h>
 #endif
-#if defined(__OpenBSD__) || defined(_SOLARIS)
+#if !defined(IN_ADDR)
 #include "sys.h"
 #endif
 
