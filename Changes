@@ -340,3 +340,4 @@
   registered users (#0002020) reported by crazy.
 - Made it so WATCH will not respond with an erroneous reply if the parameter was simply + or -
   (#0002017) reported by GouraudShading.
+- SVSO now removes +v (#0002023) reported by w00t and aquanight.
