@@ -123,8 +123,13 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				Member *cm;
 				for (cm = chptr->members; cm; cm = cm->next) {
 					if (cm->flags & CHFL_CHANOWNER) {
+						Membership *mb;
+						mb = find_membership_link(cm->cptr->user->channel,
+							chptr);
 						add_send_mode_param(chptr, sptr, '-', 'q', cm->cptr->name);
 						cm->flags &= ~CHFL_CHANOWNER;
+						if (mb)
+							mb->flags = cm->flags;
 					}
 				}
 			}
@@ -133,8 +138,13 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				Member *cm;
 				for (cm = chptr->members; cm; cm = cm->next) {
 					if (cm->flags & CHFL_CHANPROT) {
+						Membership *mb;
+						mb = find_membership_link(cm->cptr->user->channel,
+							chptr);
 						add_send_mode_param(chptr, sptr, '-', 'a', cm->cptr->name);
 						cm->flags &= ~CHFL_CHANPROT;
+						if (mb)
+							mb->flags = cm->flags;
 					}
 				}
 			}
@@ -143,8 +153,13 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				Member *cm;
 				for (cm = chptr->members; cm; cm = cm->next) {
 					if (cm->flags & CHFL_CHANOP) {
+						Membership *mb;
+						mb = find_membership_link(cm->cptr->user->channel,
+							chptr);
 						add_send_mode_param(chptr, sptr, '-', 'o', cm->cptr->name);
 						cm->flags &= ~CHFL_CHANOP;
+						if (mb)
+							mb->flags = cm->flags;
 					}
 				}
 			}
@@ -153,8 +168,13 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				Member *cm;
 				for (cm = chptr->members; cm; cm = cm->next) {
 					if (cm->flags & CHFL_HALFOP) {
+						Membership *mb;
+						mb = find_membership_link(cm->cptr->user->channel,
+							chptr);
 						add_send_mode_param(chptr, sptr, '-', 'h', cm->cptr->name);
 						cm->flags &= ~CHFL_HALFOP;
+						if (mb)
+							mb->flags = cm->flags;
 					}
 				}
 			}
@@ -163,8 +183,13 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				Member *cm;
 				for (cm = chptr->members; cm; cm = cm->next) {
 					if (cm->flags & CHFL_VOICE) {
+						Membership *mb;
+						mb = find_membership_link(cm->cptr->user->channel,
+							chptr);
 						add_send_mode_param(chptr, sptr, '-', 'v', cm->cptr->name);
 						cm->flags &= ~CHFL_VOICE;
+						if (mb)
+							mb->flags = cm->flags;
 					}
 				}
 			}
