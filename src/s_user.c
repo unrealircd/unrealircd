@@ -1155,7 +1155,7 @@ int  m_nick(cptr, sptr, parc, parv)
 	int  parc;
 	char *parv[];
 {
-	aConfItem *aconf;
+	ConfigItem_ban *aconf;
 	aSqlineItem *asqline;
 	aClient *acptr, *serv;
 	aClient *acptrs;
@@ -1276,10 +1276,12 @@ int  m_nick(cptr, sptr, parc, parv)
 		    "Reserved for internal IRCd purposes");
 		return 0;
 	}
-#ifdef OLD
 	if (!IsULine(sptr)
-	    && ((aconf = find_conf_name(nick, CONF_QUARANTINED_NICK))
-	    || (asqline = find_sqline_match(nick))))
+	    && ((aconf = Find_ban(nick, CONF_BAN_NICK))
+#ifdef OLD
+	    || (asqline = find_sqline_match(nick))
+#endif
+))
 	{
 		if (IsServer(sptr))
 		{
@@ -1305,20 +1307,21 @@ int  m_nick(cptr, sptr, parc, parv)
 				sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
 				    me.name, BadPtr(parv[0]) ? "*" : parv[0],
 				    nick,
-				    BadPtr(aconf->passwd) ? "reason unspecified"
-				    : aconf->passwd);
+				    BadPtr(aconf->reason) ? "reason unspecified"
+				    : aconf->reason);
+#ifdef OLD
 			else if (asqline)
 				sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
 				    me.name, BadPtr(parv[0]) ? "*" : parv[0],
 				    nick,
 				    BadPtr(asqline->reason) ?
 				    "reason unspecified" : asqline->reason);
+#endif
 			sendto_realops("Forbidding Q-lined nick %s from %s.",
 			    nick, get_client_name(cptr, FALSE));
 			return 0;	/* NICK message ignored */
 		}
 	}
-#endif
 	/*
 	   ** acptr already has result from previous find_server()
 	 */
