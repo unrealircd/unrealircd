@@ -3766,6 +3766,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		DelListItem(help_ptr, conf_help);
 		MyFree(help_ptr);
 	}
+	bzero(&iConf, sizeof(iConf));
 
 	/* rehash_modules */
 	init_conf2(configfile);
