@@ -163,7 +163,7 @@ int  deliver_it(aClient *cptr, char *str, int len)
 				acpt->sendB &= 0x03ff;
 			}
 		}
-		else if (me.sendB > 1023)
+		if (me.sendB > 1023)
 		{
 			me.sendK += (me.sendB >> 10);
 			me.sendB &= 0x03ff;

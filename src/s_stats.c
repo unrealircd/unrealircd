@@ -734,6 +734,12 @@ int stats_mem(aClient *sptr, char *para)
 	     rm = 0,		/* res memory used */
 	     totcl = 0, totch = 0, totww = 0, tot = 0;
 
+	if (!IsAnOper(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
+		return 0;
+	}
+
 	count_whowas_memory(&wwu, &wwam);
 	count_watch_memory(&wlh, &wlhm);
 	wwm = sizeof(aName) * NICKNAMEHISTORYLENGTH;
@@ -1049,6 +1055,13 @@ int stats_shun(aClient *sptr, char *para)
 int stats_set(aClient *sptr, char *para)
 {
 	char *uhallow;
+
+	if (!IsAnOper(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
+		return 0;
+	}
+
 	sendto_one(sptr, ":%s %i %s :*** Configuration Report ***",
 	    me.name, RPL_TEXT, sptr->name);
 	sendto_one(sptr, ":%s %i %s :network-name: %s", me.name, RPL_TEXT,

@@ -2329,4 +2329,9 @@ seen. gmtime warning still there
   can use them (they are not defined in the header files [yet] however).
 - fixed 2 minor oob write issues
 - Fixed a bug with stats l/L
-
+- Updated example.conf with a more strict default oper-only-stats.
+- Made '/stats S' and '/stats Z' oper only again (always).
+- Hopefully fixed incoming/outgoing rate in /stats T. Only the stats of the first
+  listener was counted instead of the total. This also explains why on some (many?)
+  ircd configurations it always showed 0.00 kb/s and why HTM (high traffic mode)
+  was never kicking in.
