@@ -475,3 +475,5 @@
 - Using /invite with no parameters now lists the channels you are invited to but have not
   yet joined (#0002190) suggested by sac.
 - Added some missing operflags to /stats O and SVSO (#0002193) reported by Bugz.
+- If a user is +b on a channel, and set::allow-userhost-change force-rejoin is used, a
+  part/join is not sent in order to prevent flooding (#0001933) suggested by Z3l3zT.

@@ -4937,6 +4937,11 @@ char *comment = "Rejoining because of user@host change";
 		chptr = tmp->chptr;
 		if (!chptr)
 			continue; /* Possible? */
+
+		/* If the user is banned, don't do it */
+		if (is_banned(sptr, chptr, BANCHK_JOIN))
+			continue;
+
 		if ((chptr->mode.mode & MODE_AUDITORIUM) &&
 		    !(tmp->flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP)))
 		{
@@ -4963,6 +4968,10 @@ char flagbuf[8]; /* For holding "qohva" and "*~@%+" */
 		chptr = tmp->chptr;
 		if (!chptr)
 			continue; /* Is it possible? */
+
+		/* If the user is banned, don't do it */
+		if (is_banned(sptr, chptr, BANCHK_JOIN))
+			continue;
 
 		if ((chptr->mode.mode & MODE_AUDITORIUM) && 
 		    !(flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP)))
