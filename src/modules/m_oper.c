@@ -293,8 +293,9 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		addto_fdlist(sptr->slot, &oper_fdlist);
 #endif
 		sendto_one(sptr, rpl_str(RPL_YOUREOPER), me.name, parv[0]);
-
-		if (IsOper(sptr))
+		if (IsInvisible(sptr) && !(old & UMODE_INVISIBLE))
+			IRCstats.invisible++;
+		if (IsOper(sptr) && !IsHideOper(sptr))
 			IRCstats.operators++;
 
 		if (SHOWOPERMOTD == 1)

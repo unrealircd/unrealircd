@@ -1345,3 +1345,6 @@ seen. gmtime warning still there
 - Updated INSTALL to no longer say 'make install is not needed' reported by wolfy
 - Fixed a oper count bug caused by +H (reported by dwd) [#0000203]
 - Fixed another oper count bug caused by +H and SVSMODE/SVS2MODE [#0000203]
+- Fixed yet another oper count bug caused by SVSO and +H and +O (local oper)
+- Fixed a modes-on-oper bug that could cause a negative invisible and/or oper count if +i
+  or +H was specified in modes-on-oper.
