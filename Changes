@@ -2109,3 +2109,5 @@ seen. gmtime warning still there
 - Module coders: I've changed HOOKTYPE_PRE_LOCAL_CONNECT, you must now return '0' to let
   the client pass and anything else is threated like a return, so you must return
   FLUSH_BUFFER if you just called exit_client, this fixes a read-already-freed-mem bug.
+- Added warning message if set::scan exists
+- Made SVSNOOP work. Reported by Lx (#0000933).
