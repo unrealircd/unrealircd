@@ -89,7 +89,8 @@ Module *Module_Find(char *name)
 	
 	for (p = Modules; p; p = p->next)
 	{
-		if (!(p->flags & MODFLAG_TESTING) || (p->flags & MODFLAG_DELAYED))
+		if (!p->permanent &&
+		    (!(p->flags & MODFLAG_TESTING) || (p->flags & MODFLAG_DELAYED)))
 			continue;
 		if (!strcmp(p->header->name, name))
 		{
@@ -120,6 +121,7 @@ char  *Module_Create(char *path_)
 	ModuleHeader    *mod_header;
 	int		ret = 0;
 	Module          *mod = NULL, **Mod_Handle = NULL;
+	int *x;
 	int betaversion,tag;
 	Debug((DEBUG_DEBUG, "Attempting to load module from %s",
 	       path_));
@@ -166,6 +168,10 @@ char  *Module_Create(char *path_)
 			return (NULL);
 		}
 		mod = (Module *)Module_make(mod_header, Mod);
+		irc_dlsym(Mod, "permanent_module", x);
+		if (x && (*x == 1))
+			mod->permanent = 1;
+		
 		irc_dlsym(Mod, "Mod_Init", Mod_Init);
 		if (!Mod_Init)
 		{
@@ -310,7 +316,7 @@ void Unload_all_loaded_modules(void)
 	for (mi = Modules; mi; mi = next)
 	{
 		next = mi->next;
-		if (!(mi->flags & MODFLAG_LOADED) || (mi->flags & MODFLAG_DELAYED))
+		if (!(mi->flags & MODFLAG_LOADED) || (mi->flags & MODFLAG_DELAYED) || mi->permanent)
 			continue;
 		irc_dlsym(mi->dll, "Mod_Unload", Mod_Unload);
 		if (Mod_Unload)
@@ -703,12 +709,14 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	for (mi = Modules; mi; mi = mi->next)
 	{
-		char delayed[32];
+		char tmp[256];
+		tmp[0] = '\0';
 		if (mi->flags & MODFLAG_DELAYED)
-			strcpy(delayed, "[Unloading]");
+			strcat(tmp, "[Unloading] ");
+		if (mi->permanent)
+			strcat(tmp, "[PERM] ");
 		sendto_one(sptr, ":%s NOTICE %s :*** %s - %s (%s) %s", me.name, sptr->name,
-			mi->header->name, mi->header->version, mi->header->description,
-			(mi->flags & MODFLAG_DELAYED) ? delayed : "");	
+			mi->header->name, mi->header->version, mi->header->description, tmp);
 	}
 	return 1;
 }

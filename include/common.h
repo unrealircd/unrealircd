@@ -226,6 +226,18 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 
 /* IRCu/Hybrid/Unreal way now :) -Stskeeps */
 
+#ifdef EXTCMODE
+ #define EXPAR1	extchmstr[0]
+ #define EXPAR2	extchmstr[1]
+ #define EXPAR3	extchmstr[2]
+ #define EXPAR4	extchmstr[3]
+#else
+ #define EXPAR1 ""
+ #define EXPAR2 ""
+ #define EXPAR3 ""
+ #define EXPAR4 ""
+#endif /* EXTCMODE */
+
 #define PROTOCTL_CLIENT_1         \
 		"MAP"             \
 		" KNOCK"          \
@@ -248,6 +260,18 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 		MAXTARGETS, \
 		TOPICLEN
 
+#ifdef PREFIX_AQ
+#define CHPFIX	"(qaohv)~&@%+"
+#define CHPAR1	"be"
+#else
+#define CHPFIX	"(ohv)@%+"
+#define CHPAR1	"beqa"
+#endif /* PREFIX_AQ */
+
+#define CHPAR2	"k"
+#define CHPAR3	"lfL"
+#define CHPAR4	"psmntirRcOAQKVGCuzNSM"
+
 #define PROTOCTL_CLIENT_2	  \
 		"WALLCHOPS"	  \
 		" WATCH=%i"	  \
@@ -255,39 +279,27 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 		" MODES=%i"	  \
 		" CHANTYPES=%s"   \
 		" PREFIX=%s"      \
-		" CHANMODES=%s,%s,%s,%s" \
+		" CHANMODES=%s%s,%s%s,%s%s,%s%s" \
 		" NETWORK=%s" 	  \
 		" CASEMAPPING=%s" \
 		" :are supported by this server"
 
-#ifndef PREFIX_AQ
 #define PROTOCTL_PARAMETERS_2	  \
-		 MAXWATCH, \
-                 MAXSILES, \
-                 MAXMODEPARAMS, \
-                 "#", \
-                 "(ohv)@%+", \
-                 "beqa", \
-                 "kfL", \
-		 "l", \
-		 "psmntirRcOAQKVGCuzNSM", \
-		 ircnet005, \
-		 "ascii"
-#else
-#define PROTOCTL_PARAMETERS_2     \
-		 MAXWATCH, \
-                 MAXSILES, \
-                 MAXMODEPARAMS, \
-                 "#", \
-                 "(qaohv)~&@%+", \
-                 "be", \
-                 "kfL", \
-		 "l", \
-		 "psmntirRcOAQKVGCuzNSM", \
-		 ircnet005, \
-		 "ascii"
-#endif		    
-/* Server-Server PROTOCTL -Stskeeps */
+		MAXWATCH, \
+		MAXSILES, \
+		MAXMODEPARAMS, \
+		"#", \
+		CHPFIX, \
+		CHPAR1, EXPAR1, \
+		CHPAR2, EXPAR2, \
+		CHPAR3, EXPAR3, \
+		"psmntirRcOAQKVGCuzNSM", EXPAR4, \
+		ircnet005, \
+		"ascii"
+
+/* Server-Server PROTOCTL -Stskeeps
+ * Please check send_proto() for more. -- Syzop
+ */
 #define PROTOCTL_SERVER "NOQUIT" \
                         " TOKEN" \
                         " NICKv2" \

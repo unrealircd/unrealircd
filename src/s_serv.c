@@ -1065,13 +1065,16 @@ CMD_FUNC(m_server_remote)
  */
 void send_proto(aClient *cptr, ConfigItem_link *aconf)
 {
+char buf[512];
+	sprintf(buf, "CHANMODES=%s%s,%s%s,%s%s,%s%s",
+		CHPAR1, EXPAR1, CHPAR2, EXPAR2, CHPAR3, EXPAR3, CHPAR4, EXPAR4);
 #ifdef ZIP_LINKS
 	if (aconf->options & CONNECT_ZIP)
 	{
-		sendto_one(cptr, "PROTOCTL %s ZIP", PROTOCTL_SERVER);
+		sendto_one(cptr, "PROTOCTL %s ZIP %s", PROTOCTL_SERVER, buf);
 	} else {
 #endif
-		sendto_one(cptr, "PROTOCTL %s", PROTOCTL_SERVER);
+		sendto_one(cptr, "PROTOCTL %s %s", PROTOCTL_SERVER, buf);
 #ifdef ZIP_LINKS
 	}
 #endif

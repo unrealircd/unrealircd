@@ -2280,3 +2280,24 @@ seen. gmtime warning still there
 - Will now error at too large cloak keys (2147483647 and greater) because it's dangerous
   and could cause cloak key differences (ex: mixed ia32&ia64 networks).
 - Some minor text/documentation fixes.
+- First big part of modulized extended channelmodes system:
+  - Adds room for at least 32 (new) channel modes.
+  - Supports both paramless and 1-parameter modes.
+  - Modulized: modules can add new channelmodes, but are unloadable (permanent).
+  - Everything is ifdef'd, and EXTCMODE is disabled by default in config.h
+  - It will send CHANMODES= in the PROTOCTL message on server link, this enables
+    servers and services to see which modes are supported and of what type
+    they are (1-parameter, paramless, etc).
+  And now the bad part:
+  - The system has not been fully tested, it will contain bugs (for example I'm
+    aware of some memory leaks).
+  - A few features are missing: warning/error on linking if chanmodes mismatch, unloading
+    of channel modes (not planned soon), 005 broadcasts on change and maybe more..
+  - The function (and maybe variable) names will be changed in the next weeks/months
+  - You should be carefull with parameter modes + services. Things will get desynced
+    if services don't recognize it's a parameter mode. This also applies to clients
+    without 005 CHANMODES= support.
+  - No documentation
+
+  I really suggest module coders to wait a few weeks till the system is ready..
+  In the meantime, don't report bugs or ask for support on this.

@@ -163,6 +163,7 @@ struct _Module
 	ModuleChild *children;
 	ModuleObject *objects;
 	ModuleInfo modinfo; /* Used to store handle info for module */
+	unsigned permanent:1; /* permanent module? (can't unload/reload) */
 };
 /*
  * Symbol table

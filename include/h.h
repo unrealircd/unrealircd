@@ -585,3 +585,16 @@ extern char trouble_info[1024];
 extern void rejoin_doparts(aClient *sptr);
 extern void rejoin_dojoinandmode(aClient *sptr);
 extern void ident_failed(aClient *cptr);
+
+extern char extchmstr[4][64];
+#ifdef EXTCMODE
+extern int extcmode_default_requirechop(aClient *, aChannel *, char *, int, int);
+extern int extcmode_default_requirehalfop(aClient *, aChannel *, char *, int, int);
+extern int extcmode_delete(char);
+extern ExtCMode extcmode_get(aExtCMtable *);
+extern void extcmode_init(void);
+extern aExtCMtableParam *extcmode_get_struct(aExtCMtableParam *, char);
+extern void make_extcmodestr();
+extern aExtCMtableParam *extcmode_duplicate_paramlist(aExtCMtableParam *);
+extern void extcmode_free_paramlist(aExtCMtableParam *);
+#endif

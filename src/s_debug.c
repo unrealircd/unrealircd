@@ -86,6 +86,9 @@ char serveropts[] = {
 #ifdef ZIP_LINKS
 	'Z',
 #endif
+#ifdef EXTCMODE
+	'E',
+#endif
 	'\0'
 };
 

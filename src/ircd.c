@@ -856,6 +856,9 @@ int InitwIRCD(int argc, char *argv[])
 	setup_signals();
 	init_ircstats();
 	umode_init();
+#ifdef EXTCMODE
+	extcmode_init();
+#endif
 	clear_scache_hash_table();
 #ifdef FORCE_CORE
 	corelim.rlim_cur = corelim.rlim_max = RLIM_INFINITY;
@@ -1096,6 +1099,9 @@ int InitwIRCD(int argc, char *argv[])
 	load_tunefile();
 	make_umodestr();
 	make_cmodestr();
+#ifdef EXTCMODE
+	make_extcmodestr();
+#endif
 	if (!find_Command_simple("AWAY") || !find_Command_simple("KILL") ||
 		!find_Command_simple("OPER") || !find_Command_simple("PING"))
 	{
