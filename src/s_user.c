@@ -4466,8 +4466,8 @@ int  m_umode(cptr, sptr, parc, parv)
 		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
 		    && !IsSecure(sptr))
 			sptr->umodes &= ~UMODE_SECURE;
-
-
+		if (IsTechAdmin(sptr) && IsNetAdmin(sptr))
+			ClearTechAdmin(sptr); 
 	}
 
 	/*
