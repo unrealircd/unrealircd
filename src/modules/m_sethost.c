@@ -123,6 +123,7 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	int  permit = 2;
 #endif
 	int  legalhost = 1;	/* is legal characters? */
+	int rejoin = 0;
 
 
 	if (!MyConnect(sptr))
@@ -177,6 +178,25 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 	/* uh uh .. too small */
+	switch (UHOST_ALLOWED)
+	{
+		case UHALLOW_NEVER:
+			if (MyClient(sptr))
+			{
+				sendto_one(sptr, ":%s NOTICE %s :*** /SetHost is disabled", me.name, sptr->name);
+				return 0;
+			}
+			break;
+		case UHALLOW_ALWAYS:
+			break;
+		case UHALLOW_NOCHANS:
+			if (MyClient(sptr) && sptr->user->joined)
+			{
+				sendto_one(sptr, ":%s NOTICE %s :*** /SetHost can not be used while you are on a channel", me.name, sptr->name);
+				return 0;
+			}
+			break;
+	}
 	if (strlen(parv[1]) < 1)
 	{
 		if (MyConnect(sptr))

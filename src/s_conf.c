@@ -2047,6 +2047,7 @@ char *pretty_time_val(long timeval)
 /* Report the unrealircd.conf info -codemastr*/
 void report_dynconf(aClient *sptr)
 {
+	char *uhallow;
 	sendto_one(sptr, ":%s %i %s :*** Dynamic Configuration Report ***",
 	    me.name, RPL_TEXT, sptr->name);
 	sendto_one(sptr, ":%s %i %s :kline-address: %s", me.name, RPL_TEXT,
@@ -2060,8 +2061,21 @@ void report_dynconf(aClient *sptr)
 	if (OPER_ONLY_STATS)
 		sendto_one(sptr, ":%s %i %s :oper-only-stats: %s", me.name, RPL_TEXT,
 			sptr->name, OPER_ONLY_STATS);
-	sendto_one(sptr, ":%s %i %s :anti-spam-quit-message-time: %s", me.name, RPL_TEXT,
+	switch (UHOST_ALLOWED)
+	{
+		case UHALLOW_ALWAYS:
+			uhallow = "always";
+			break;
+		case UHALLOW_NEVER:
+			uhallow = "never";
+			break;
+		case UHALLOW_NOCHANS:
+			uhallow = "not-on-channels";
+			break;
+	}
+	sendto_one(sptr, ":%s %i %s :anti-spam-quit-message-time: %s", me.name, RPL_TEXT, 
 		sptr->name, pretty_time_val(ANTI_SPAM_QUIT_MSG_TIME));
+	sendto_one(sptr, ":%s %i %s :allow-userhost-change: %s", me.name, RPL_TEXT, sptr->name, uhallow);
 #ifdef USE_SSL
 	sendto_one(sptr, ":%s %i %s :ssl::egd: %s", me.name, RPL_TEXT,
 		sptr->name, EGD_PATH ? EGD_PATH : (USE_EGD ? "1" : "0"));
@@ -4651,6 +4665,16 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "oper-auto-join")) {
 			ircstrdup(tempiConf.oper_auto_join_chans, cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "allow-userhost-change")) {
+			if (!stricmp(cep->ce_vardata, "always"))
+				tempiConf.userhost_allowed = UHALLOW_ALWAYS;
+			else if (!stricmp(cep->ce_vardata, "never"))
+				tempiConf.userhost_allowed = UHALLOW_NEVER;
+			else if (!stricmp(cep->ce_vardata, "not-on-channels"))
+				tempiConf.userhost_allowed = UHALLOW_NOCHANS;
+			else
+				tempiConf.userhost_allowed = UHALLOW_REJOIN;
+		}
 		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {
 			tempiConf.anti_spam_quit_message_time = config_checkval(cep->ce_vardata,CFG_TIME);
 		}
@@ -4887,6 +4911,20 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "oper-auto-join")) {
 			CheckNull(cep);
+		}
+		else if (!strcmp(cep->ce_varname, "allow-userhost-change")) {
+			CheckNull(cep);
+			if (stricmp(cep->ce_vardata, "always") && 
+			    stricmp(cep->ce_vardata, "never") &&
+			    stricmp(cep->ce_vardata, "not-on-channels") &&
+			    stricmp(cep->ce_vardata, "force-rejoin"))
+			{
+				config_error("%s:%i: set::allow-userhost-change is invalid",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum);
+				errors++;
+				continue;
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {
 			CheckNull(cep);

@@ -1845,3 +1845,4 @@ seen. gmtime warning still there
 - Fixed a bug with channel mode +A that could prevent admins from joining. Reported 
   by Maxsus (#0000678)
 - Added some missing stuff to the documentation. Reported by AngryWolf (#0000611)
+- Started work on set::allow-userhost-change

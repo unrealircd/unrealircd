@@ -2300,6 +2300,26 @@ CMD_FUNC(m_umode)
 			  if(sptr->from->flags & FLAGS_QUARANTINE)
 				break;
 			  goto def;
+		  case 'x':
+			  switch (UHOST_ALLOWED)
+			  {
+				case UHALLOW_ALWAYS:
+					goto def;
+				case UHALLOW_NEVER:
+					if (MyClient(sptr))
+					{
+						sendto_one(sptr, ":%s NOTICE %s :*** Setting %cx is disabled", me.name, sptr->name, what == MODE_ADD ? '+' : '-');
+						return 0;
+					}
+					break;
+				case UHALLOW_NOCHANS:
+					if (MyClient(sptr) && sptr->user->joined)
+					{
+						sendto_one(sptr, ":%s NOTICE %s :*** Setting %cx can not be done while you are on channels", me.name, sptr->name, what == MODE_ADD ? '+' : '-');
+						return 0;
+					}
+			  }
+			  goto def;
 		  case 'I':
 			  if (NO_OPER_HIDING == 1 && what == MODE_ADD
 			      && MyClient(sptr))

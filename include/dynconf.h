@@ -49,6 +49,8 @@ struct zNetwork {
 	char *x_stats_server;
 };
 
+enum UHAllowed { UHALLOW_ALWAYS, UHALLOW_NOCHANS, UHALLOW_REJOIN, UHALLOW_NEVER };
+
 typedef struct zConfiguration aConfiguration;
 struct zConfiguration {
 	unsigned som:1;
@@ -80,6 +82,7 @@ struct zConfiguration {
 	char *trusted_ca_file;
 	long ssl_options;
 #endif
+	enum UHAllowed userhost_allowed;
 	aNetwork network;
 };
 
@@ -134,4 +137,4 @@ extern aConfiguration iConf;
 #define CLOAK_KEY3			iConf.network.key3
 #define CLOAK_KEYCRC			iConf.network.keycrc
 #define STATIC_QUIT			iConf.static_quit
-
+#define UHOST_ALLOWED			iConf.userhost_allowed
