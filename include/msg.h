@@ -309,7 +309,6 @@ extern int m_service();
 extern int m_dalinfo();
 extern int m_credits();
 extern int m_license();
-extern int m_botmotd();
 extern int m_opermotd();
 extern int m_module(), m_alias(), m_tkl();
 extern int m_rehash(), m_die(), m_restart();
