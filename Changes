@@ -1907,3 +1907,6 @@ seen. gmtime warning still there
 - Added channel mode +M. Can't talk unless you are using a registered nick. Suggested by 
   CaliMonk
 - Fixed compile warning in ssl.c.
+- Updated docs, removed umode +I and cmode +H and added cmode +M
+- Removed some left over +I code
+- Added set::restrict-usermodes to /stats S (reported by AngryWolf)

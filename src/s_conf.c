@@ -2066,6 +2066,9 @@ void report_dynconf(aClient *sptr)
 	if (OPER_ONLY_STATS)
 		sendto_one(sptr, ":%s %i %s :oper-only-stats: %s", me.name, RPL_TEXT,
 			sptr->name, OPER_ONLY_STATS);
+	if (RESTRICT_USERMODES)
+		sendto_one(sptr, ":%s %i %s :restrict-usermodes: %s", me.name, RPL_TEXT,
+			sptr->name, RESTRICT_USERMODES);
 	switch (UHOST_ALLOWED)
 	{
 		case UHALLOW_ALWAYS:
@@ -2102,8 +2105,6 @@ void report_dynconf(aClient *sptr)
 	    sptr->name, HIDE_ULINES);
 	sendto_one(sptr, ":%s %i %s :options::webtv-support: %d", me.name, RPL_TEXT,
 	    sptr->name, WEBTV_SUPPORT);
-	sendto_one(sptr, ":%s %i %s :options::no-stealth: %d", me.name, RPL_TEXT,
-	    sptr->name, NO_OPER_HIDING);
 	sendto_one(sptr, ":%s %i %s :options::identd-check: %d", me.name, RPL_TEXT,
 	    sptr->name, IDENT_CHECK);
 	sendto_one(sptr, ":%s %i %s :options::fail-oper-warn: %d", me.name, RPL_TEXT,

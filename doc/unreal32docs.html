@@ -529,11 +529,6 @@
     <td>Sets your host to an oper host</td>
   </tr>
   <tr> 
-    <td><div align="center">^</div></td>
-    <td><div align="center">can_stealth</div></td>
-    <td>Can use +I</td>
-  </tr>
-  <tr> 
     <td><div align="center">v</div></td>
     <td><div align="center">can_override</div></td>
     <td>Can use OperOverride</td>
@@ -1362,8 +1357,6 @@ loadmodule "src/modules/scan_http.so";
   Specifies the number of channels a single user may be in at any one time.</p>
 <p><font class="set">set::options::hide-ulines;</font><br>
   If this is present, Ulined server will be hidden in a /links requested by non-opers.</p>
-<p><font class="set">set::options::no-stealth;</font><br>
-  If present usermode +I may not be used by anyone on this server.</p>
 <p><font class="set">set::options::show-opermotd;</font><br>
   If present the opermotd will be shown to users once they successfully /oper.</p>
 <p><font class="set">set::options::identd-check;</font><br>
@@ -1489,8 +1482,8 @@ loadmodule "src/modules/scan_http.so";
       and replaces them with the words specified</td>
   </tr>
   <tr> 
-    <td><div align="center">H</div></td>
-    <td>No +I users may join (only settable by admins)</td>
+    <td><div align="center">M</div></td>
+    <td>A registered nickname (+r) is required to talk</td>
   </tr>
   <tr> 
     <td><div align="center">h &lt;nick&gt;</div></td>
@@ -1651,10 +1644,6 @@ loadmodule "src/modules/scan_http.so";
     <td>Used to protect Services Daemons</td>
   </tr>
   <tr> 
-    <td><div align="center">I</div></td>
-    <td>Invisible Join/Part's. Makes you hidden in channels (requires the can_stealth/I flag, and  +I must also be enabled on the particular server.) (Set In Oper Block)</td>
-  </tr>
-  <tr> 
     <td><div align="center">t</div></td>
     <td>Says you are using a /vhost</td>
   </tr>
@@ -1712,7 +1701,7 @@ loadmodule "src/modules/scan_http.so";
   </tr>
   <tr> 
     <td height="39">who &lt;mask&gt;</td>
-    <td>Who allows you to search for users (who do not have mode +I set). Masks 
+    <td>Who allows you to search for users. Masks 
       include: nickname, #channel, hostmask (*.attbi.com)<br></td>
     <td>All</td>
   </tr>
@@ -1866,7 +1855,7 @@ loadmodule "src/modules/scan_http.so";
     <td height="39">Knock &lt;channel&gt; &lt;message&gt;<br></td>
     <td>Allows you to &#8216;knock&#8217; on an invite only channel and ask for 
       access. Will not work if channel has one of the following modes set: +K 
-      +I. Will also not work if you are banned<br></td>
+      +V. Will also not work if you are banned<br></td>
     <td>All</td>
   </tr>
   <tr> 

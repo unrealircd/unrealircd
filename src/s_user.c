@@ -2344,11 +2344,6 @@ CMD_FUNC(m_umode)
 					}
 			  }
 			  goto def;
-		  case 'I':
-			  if (NO_OPER_HIDING == 1 && what == MODE_ADD
-			      && MyClient(sptr))
-				  break;
-			  goto def;
 		  case 'B':
 			  if (what == MODE_ADD && MyClient(sptr))
 				  (void)m_botmotd(sptr, sptr, 1, parv);
