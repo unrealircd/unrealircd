@@ -3004,4 +3004,4 @@ seen. gmtime warning still there
   for it too (also added missing badwords.quit.conf file @ win32).
 - And some more spamfilter.conf rules (mirseed & fagot).
 - Updated /credits with a few more donators (listed in no particular order)
-
+- Fixed a little error in the spamfilter.conf
