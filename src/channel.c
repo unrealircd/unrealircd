@@ -4339,7 +4339,7 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
 /* Some ugly macros, but useful */
 #define Addit(x,y) modebuf[b] = x; strcat(parabuf, y); \
   strcat(parabuf, " "); \
-  if (b == RESYNCMODES) \
+  if (b >= RESYNCMODES) \
   { modebuf[b + 1] = '\0'; sendto_serv_butone_sjoin(cptr, \
   	":%s MODE %s %s %s %lu", sptr->name, chptr->chname,  \
   	modebuf, parabuf, chptr->creationtime); \
@@ -4349,6 +4349,8 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
   	parabuf[0] = '\0'; \
   	b = 1; \
   	} else b++
+
+
 
 #define Addsingle(x) modebuf[b] = x; b++
 #define CheckStatus(x,y) if (modeflags & (y)) { Addit((x), nick); }
@@ -4392,12 +4394,12 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	if (SupportSJOIN2(sptr) && !SupportSJ3(sptr) &&
 		!strncmp(parv[4], "<->", 6))
 			nopara = 1;
-	if (SupportSJ3(sptr) && (parc < 5))
+	if (SupportSJ3(sptr) && (parc < 6))
 		nopara = 1;
 
 	if (SupportSJ3(sptr))
 	{
-		if (parc < 4)
+		if (parc < 5)
 			nomode = 1;
 	}
 	else
@@ -4532,8 +4534,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	if (merge && !nomode)
 	{
 		aCtab *acp;
-
-		bcopy(&chptr->mode, &oldmode, sizeof(oldmode));
+		bcopy(&chptr->mode, &oldmode, sizeof(Mode));
 		/* merge the modes */
 		strcpy(modebuf, parv[3]);
 		parabuf[0] = '\0';
@@ -4543,7 +4544,6 @@ int  m_sjoin(cptr, sptr, parc, parv)
 				strcat(parabuf, parv[b]);
 				strcat(parabuf, " ");
 			}
-		strcpy(paraback, parabuf);
 		ap = mp2parv(modebuf, parabuf);
 		set_mode(chptr, cptr, ap->parc, ap->parv, &pcount, pvar, 0);
 
@@ -4722,7 +4722,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	            else
         	        strncpyzt(bp, (t - (c - 1)), c);        /* Put the nick in bp */
 		
-		    // sendto_ops("Got nick .. %s at %s", bp, chptr->chname);
+		    sendto_ops("Got nick .. %s at %s", bp, chptr->chname);
 		    c = f = 0;
 		    modeflags = 0;
 		    i = 0;
@@ -4764,12 +4764,10 @@ int  m_sjoin(cptr, sptr, parc, parv)
 			while ((*tp != ' ') && (*tp != '\0'))
 				nick[i++] = *(tp++);	/* get nick */
 			nick[i] = '\0';
-		//      sendto_ops("Nick is %s (?)", nick);
 			if (nick[0] == ' ')
 				continue;
 			if (nick[0] == '\0')
 				continue;
-		//	sendto_ops("Adding %s at %s", nick, chptr->chname);
 			if (!(modeflags & CHFL_BAN) 
 			    && !(modeflags & CHFL_EXCEPT))
 			{
@@ -4823,7 +4821,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 					Addit('b', nick);
 					sendto_serv_butone_token_opt(cptr, OPT_SJOIN2|OPT_NOT_SJ3,
 						sptr->name, MSG_MODE, TOK_MODE, "%s +b %s %li", chptr->chname,
-							nick, TStime());
+							nick, chptr->creationtime);
 				}
 				if (modeflags & CHFL_EXCEPT)
 				{
@@ -4831,7 +4829,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 					Addit('e', nick);
 					sendto_serv_butone_token_opt(cptr, OPT_SJOIN2|OPT_NOT_SJ3,
 						sptr->name, MSG_MODE, TOK_MODE, "%s +e %s %li", chptr->chname,
-							nick, TStime());
+							nick, chptr->creationtime);
 				}
 			}
 
@@ -4840,60 +4838,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	        c++;
 	}
 
-#ifdef moo
-	t = parv[parc - 1];
-	*(--t) = ' ';		
-	b = 1;
-	f = 1;
-	strcpy(modebuf, "+");
-	while (*t != '\0')
-	{
-		if (*t == ' ')
-		{
-			i = 0;
-			t++;
-			modeflags = 0;
-			while (
-			    (*t == '@') || (*t == '+') || (*t == '%')
-			    || (*t == '*') || (*t == '~') || (*t == '&')
-			    || (*t == '"'))
-			{
-				switch (*(t++))
-				{
-				  case '@':
-					  modeflags |= CHFL_CHANOP;
-					  break;
-				  case '%':
-					  modeflags |= CHFL_HALFOP;
-					  break;
-				  case '+':
-					  modeflags |= CHFL_VOICE;
-					  break;
-				  case '*':
-					  modeflags |= CHFL_CHANOWNER;
-					  break;
-				  case '~':
-					  modeflags |= CHFL_CHANPROT;
-					  break;
-				  case '&':
-					  modeflags |= CHFL_BAN;
-					  goto getnick;
-					  break;
-				  case '"':
-					  modeflags |= CHFL_EXCEPT;
-					  goto getnick;
-					  break;
-				}
-			}
-		      getnick:
-			i = 0;
-			while ((*t != ' ') && (*t != '\0'))
-				nick[i++] = *(t++);	/* get nick */
-			nick[i] = '\0';
-			sendto_ops("Ehm.. %s",nick);
-		}
-	}
-#endif
+
 	if (modebuf[1])
 	{
 		sendto_serv_butone_sjoin(cptr,
@@ -5208,21 +5153,19 @@ void send_channel_modes_sjoin3(cptr, chptr)
 		nopara = 1;
 	
 	
-	if (nomode)
+	if (nomode && nopara)
 	{
 		ircsprintf(buf, "%s %ld %s :",
 		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
 		    chptr->creationtime, chptr->chname);
 	}
-		else
-	if (nopara)
+	if (nopara && !nomode)
 	{
 		ircsprintf(buf, "%s %ld %s %s :",
 		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
 		    chptr->creationtime, chptr->chname, modebuf);
 
 	}
-		else
 	if (!nopara && !nomode)
 	{
 		ircsprintf(buf, "%s %ld %s %s %s :",
