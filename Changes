@@ -462,3 +462,5 @@
   hardly ever seen (unless you have +s +j set). For example a bad link::bind-ip only caused
   "Couldn't connect to xxxxxx" without any meaningful error message. Additionally, errors
   sent to report_baderror() are now logged.
+- Win32 installer: Apparently 'install as a service' was still not the default, reported
+  by fez (#0002191, #0002189).
