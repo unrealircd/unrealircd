@@ -112,6 +112,10 @@ void tkl_init(void)
  *	setby = whom set it
  *	expire_at = when to expire - 0 if not to expire
  *	set_at    = was set at
+ *  spamf_tkl_duration = duration of *line placed by spamfilter [1]
+ *  spamf_tkl_reason = escaped reason field for *lines placed by spamfilter [1]
+ *
+ *  [1]: only relevant for spamfilters, else ignored (eg 0, NULL).
 */
 
 int  tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *setby,
@@ -146,7 +150,7 @@ int  tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *
 			nl->spamf->tkl_reason = strdup(unreal_encodespace(SPAMFILTER_BAN_REASON));
 		} else {
 			nl->spamf->tkl_duration = spamf_tkl_duration;
-			nl->spamf->tkl_reason = strdup(unreal_encodespace(spamf_tkl_reason));
+			nl->spamf->tkl_reason = strdup(spamf_tkl_reason); /* already encoded */
 		}
 	}
 	index = tkl_hash(tkl_typetochar(type));
@@ -834,8 +838,11 @@ void tkl_synch(aClient *sptr)
  * parv[ 6]: expire_at            expire_at (0)  expire_at (0)      expire_at
  * parv[ 7]: set_at               set_at         set_at             set_at
  * parv[ 8]: reason               regex          tkl duration       reason
- * parv[ 9]:                                     tkl reason         
+ * parv[ 9]:                                     tkl reason [A]        
  * parv[10]:                                     regex              
+ *
+ * [A] tkl reason field must be escaped by caller [eg: use unreal_encodespace()
+ *     if m_tkl is called internally].
  *
  */
 int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])

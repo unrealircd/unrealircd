@@ -3041,3 +3041,6 @@ seen. gmtime warning still there
 - Fixed a little sqline recode memory leak
 - Fixed /spamfilter removal problem... often the wrong entry was removed [!] or
   nothing was removed at all. Reported by MiNdErAsR, RealCFC and others (#0001669).
+- Fixed /spamfilter reason field bug.. things were double escaped sometimes,
+  especially in post-RC2-cvs this was noticable. Reported by Fury (#0001670).
+- help.conf: updated snomasks section.

@@ -4860,7 +4860,7 @@ int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 	nl->spamf->action = action;
 
 	if ((cep = config_find_entry(ce->ce_entries, "reason")))
-		nl->spamf->tkl_reason = strdup(cep->ce_vardata);
+		nl->spamf->tkl_reason = strdup(unreal_encodespace(cep->ce_vardata));
 	else
 		nl->spamf->tkl_reason = strdup("<internally added by ircd>");
 
