@@ -400,3 +400,9 @@ Oper invisibility is no longer enabled by default
 but is a provided option in ./Config
 --Luke
 ===================================
+
+Changed information flag shown in /version. R now
+appears if invisibility is compiled in (even if
+disabled in unrealircd.conf)
+--Luke
+===================================

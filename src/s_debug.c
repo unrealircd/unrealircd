@@ -85,7 +85,7 @@ char serveropts[] = {
 	'Y',
 #endif
 #ifdef ENABLE_INVISOPER
-	'H',
+	'R',
 #endif
 #ifdef NO_IDENT_CHECKING
 	'K',
