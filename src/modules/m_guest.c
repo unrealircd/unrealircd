@@ -44,12 +44,12 @@
 #endif
 
 DLLFUNC int m_guest(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-
+static Hook *GuestHook = NULL;
 /* Place includes here */
 #ifdef DYNAMIC_LINKING
 Module *Mod_Handle = NULL;
 #else
-#define Mod_Handle NULl
+#define Mod_Handle NULL
 #endif
 #ifndef DYNAMIC_LINKING
 ModuleHeader m_guest_Header
@@ -81,7 +81,7 @@ int    m_guest_Init(int module_load)
 	 * We call our add_Command crap here
 	*/
 #ifdef GUEST
-	HookAddEx(Mod_Handle, HOOKTYPE_GUEST, m_guest);
+	GuestHook = HookAddEx(Mod_Handle, HOOKTYPE_GUEST, m_guest);
 #endif
 	return MOD_SUCCESS;
 	
@@ -107,7 +107,7 @@ int	m_guest_Unload(int module_unload)
 #endif
 {
 #ifdef GUEST
-	HookDel(HOOKTYPE_GUEST, m_guest);
+	HookDel(GuestHook);
 #endif
 	return MOD_SUCCESS;
 }

@@ -1120,3 +1120,4 @@ v- Fixed some bugreport stuff
 - Recoded hooks to take advantage of the module object code
 - Fixed a memory leak in hooks
 - Fixed a bug with module objects involving static linking
+- Recoded hooks to work just like events

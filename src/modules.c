@@ -258,8 +258,7 @@ int    Module_free(Module *mod)
 
 		}
 		else if (objs->type == MOBJ_HOOK) {
-			HookDelEx(objs->object.hook->type, objs->object.hook->func.intfunc,
-				objs->object.hook->func.voidfunc);
+			HookDel(objs->object.hook);
 		}
 	}
 	for (p = Modules; p; p = p->next)
@@ -603,7 +602,7 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return 1;
 }
 
-void	HookAddMain(Module *module, int hooktype, int (*func)(), void (*vfunc)())
+Hook	*HookAddMain(Module *module, int hooktype, int (*func)(), void (*vfunc)())
 {
 	Hook *p;
 	
@@ -621,30 +620,31 @@ void	HookAddMain(Module *module, int hooktype, int (*func)(), void (*vfunc)())
 		hookobj->type = MOBJ_HOOK;
 		AddListItem(hookobj, module->objects);
 	}
+	return p;
 }
 
-void	HookDelEx(int hooktype, int (*func)(), void (*vfunc)())
+Hook *HookDel(Hook *hook)
 {
-	Hook *p;
-	
-	for (p = Hooks[hooktype]; p; p = p->next)
-		if ((func && (p->func.intfunc == func)) || 
-			(vfunc && (p->func.voidfunc == vfunc)))
-		{
-			DelListItem(p, Hooks[hooktype]);
+	Hook *p, *q;
+	for (p = Hooks[hook->type]; p; p = p->next) {
+		if (p == hook) {
+			q = p->next;
+			DelListItem(p, Hooks[hook->type]);
 			if (p->owner) {
 				ModuleObject *hookobj;
 				for (hookobj = p->owner->objects; hookobj; hookobj = hookobj->next) {
 					if (hookobj->type == MOBJ_HOOK && hookobj->object.hook == p) {
-						DelListItem(hookobj, p->owner->objects);
+						DelListItem(hookobj, hook->owner->objects);
 						MyFree(hookobj);
 						break;
 					}
 				}
 			}
 			MyFree(p);
-			return;
+			return q;
 		}
+	}
+	return NULL;
 }
 
 EVENT(e_unload_module_delayed)

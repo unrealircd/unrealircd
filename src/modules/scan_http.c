@@ -63,7 +63,7 @@ struct _hsstruct
 
 static vFP			xEadd_scan = NULL;
 static struct SOCKADDR_IN	*xScan_endpoint = NULL;
-
+static Hook *HttpScanHost = NULL;
 #ifdef STATIC_LINKING
 extern void Eadd_scan();
 extern struct SOCKADDR_IN	Scan_endpoint;
@@ -111,7 +111,7 @@ int    scan_http_Init(int module_load)
 	/*
 	 * Add scanning hooks
 	*/
-	HookAddVoidEx(Mod_Handle, HOOKTYPE_SCAN_HOST, scan_http_scan); 
+	HttpScanHost = HookAddVoidEx(Mod_Handle, HOOKTYPE_SCAN_HOST, scan_http_scan); 
 	return MOD_SUCCESS;
 }
 
@@ -132,7 +132,7 @@ DLLFUNC int	Mod_Unload(int module_unload)
 int	scan_http_Unload(int module_unload)
 #endif
 {
-	HookDelVoid(HOOKTYPE_SCAN_HOST, scan_http_scan);
+	HookDel(HttpScanHost);
 }
 
 #define HICHAR(s)	(((unsigned short) s) >> 8)

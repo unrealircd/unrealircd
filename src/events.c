@@ -93,11 +93,8 @@ Event	*EventAddEx(Module *module, char *name, long every, long howmany,
 Event	*EventDel(Event *event)
 {
 	Event *p, *q;
-	Module *module;
-	for (p = events; p; p = p->next)
-	{
-		if (p == event)
-		{
+	for (p = events; p; p = p->next) {
+		if (p == event) {
 			q = p->next;
 			MyFree(p->name);
 			DelListItem(p, events);

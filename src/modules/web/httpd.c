@@ -72,6 +72,7 @@ void	httpd_badrequest(HTTPd_Request *request, char *reason);
 void	httpd_parse_final(HTTPd_Request *request);
 void 	httpd_404_header(HTTPd_Request *request, char *path);
 Module *Mod_Handle = NULL;
+static Hook *HttpdStats = NULL, *HttpdVfs = NULL, *HttpdPhtml = NULL;
 
 
 #ifndef DYNAMIC_LINKING
@@ -95,9 +96,9 @@ DLLFUNC int	Mod_Init(int module_load)
 int    httpd_Init(int module_load)
 #endif
 {
-	HookAddEx(Mod_Handle, HOOKTYPE_HTTPD_URL, h_u_stats);
-	HookAddEx(Mod_Handle, HOOKTYPE_HTTPD_URL, h_u_vfs);
-	HookAddEx(Mod_Handle, HOOKTYPE_HTTPD_URL, h_u_phtml);
+	HttpdStats = HookAddEx(Mod_Handle, HOOKTYPE_HTTPD_URL, h_u_stats);
+	HttpdVfs = HookAddEx(Mod_Handle, HOOKTYPE_HTTPD_URL, h_u_vfs);
+	HttpdPhtml = HookAddEx(Mod_Handle, HOOKTYPE_HTTPD_URL, h_u_phtml);
 	return 1;
 }
 
@@ -147,9 +148,9 @@ DLLFUNC int	mod_unload(int module_unload)
 int	httpd_Unload(int module_unload)
 #endif
 {
-	HookDelEx(HOOKTYPE_HTTPD_URL, h_u_stats, NULL);
-	HookDelEx(HOOKTYPE_HTTPD_URL, h_u_vfs, NULL);
-	HookDelEx(HOOKTYPE_HTTPD_URL, h_u_phtml, NULL);
+	HookDel(HttpdStats);
+	HookDel(HttpdVfs);
+	HookDel(HttpdPhtml);
 }
 
 

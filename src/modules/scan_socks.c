@@ -56,7 +56,7 @@
 #ifndef SCAN_ON_PORT
 #define SCAN_ON_PORT 1080
 #endif
-
+static Hook *SocksScanHost = NULL;
 static vFP			xEadd_scan = NULL;
 static struct SOCKADDR_IN	*xScan_endpoint = NULL;
 #ifdef STATIC_LINKING
@@ -108,7 +108,7 @@ int    scan_socks_Init(int module_load)
 	/*
 	 * Add scanning hooks
 	*/
-	HookAddVoidEx(Mod_Handle, HOOKTYPE_SCAN_HOST, scan_socks_scan); 
+	SocksScanHost = HookAddVoidEx(Mod_Handle, HOOKTYPE_SCAN_HOST, scan_socks_scan); 
 	return MOD_SUCCESS;
 }
 
@@ -129,7 +129,7 @@ DLLFUNC int	Mod_Unload(int module_unload)
 int	scan_socks_Unload(int module_unload)
 #endif
 {
-	HookDelVoid(HOOKTYPE_SCAN_HOST, scan_socks_scan);
+	HookDel(SocksScanHost);
 }
 
 #define HICHAR(s)	(((unsigned short) s) >> 8)
