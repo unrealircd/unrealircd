@@ -1580,22 +1580,16 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 	switch (modetype)
 	{
 	  case MODE_AUDITORIUM:
-		  if (IsULine(cptr) || IsServer(cptr))
-			  goto auditorium_ok;
-		  if (!IsNetAdmin(cptr)
-		      && !is_chanowner(cptr, chptr))
+		  if (!IsULine(cptr) && !IsServer(cptr) && !IsNetAdmin(cptr) && !is_chanowner(cptr,chptr))
 		  {
 			  sendto_one(cptr,
 			      ":%s NOTICE %s :*** Auditorium mode (+u) can only be set by the channel owner.",
 			      me.name, cptr->name);
 			  break;
 		  }
-
-		auditorium_ok:
 		  goto setthephuckingmode;
 	  case MODE_OPERONLY:
-		  if (!IsAnOper(cptr) && !IsServer(cptr)
-		      && !IsULine(cptr))
+		  if (!IsAnOper(cptr) && !IsServer(cptr) && !IsULine(cptr))
 		  {
 			  sendto_one(cptr,
 			      ":%s NOTICE %s :*** Opers Only mode (+O) can only be set by IRC Operators.",
@@ -1604,8 +1598,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		  }
 		  goto setthephuckingmode;
 	  case MODE_ADMONLY:
-		  if (!IsSkoAdmin(cptr) && !IsServer(cptr)
-		      && !IsULine(cptr))
+		  if (!IsSkoAdmin(cptr) && !IsServer(cptr) && !IsULine(cptr))
 		  {
 			  sendto_one(cptr,
 			      ":%s NOTICE %s :*** Admins Only mode (+A) can only be set by Administrators.",
@@ -1615,12 +1608,16 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		  goto setthephuckingmode;
 	  case MODE_RGSTR:
 		  if (!IsServer(cptr) && !IsULine(cptr))
+		  {
+			  sendto_one(cptr,
+			      ":%s NOTICE %s :*** Registered mode (+r) can only be set by Services.",
+			      me.name, cptr->name);
 			  break;
+		  }
 		  goto setthephuckingmode;
 #ifdef ENABLE_INVISOPER
 	  case MODE_NOHIDING:
-		  if (!IsSkoAdmin(cptr) && !IsServer(cptr)
-		      && !IsULine(cptr))
+		  if (!IsSkoAdmin(cptr) && !IsServer(cptr) && !IsULine(cptr))
 		  {
 			  sendto_one(cptr,
 			      ":%s NOTICE %s :*** No Hiding mode (+H) can only be set by Administrators.",
@@ -1643,7 +1640,12 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 	  case MODE_STRIP:
 	  case MODE_NOKNOCK:
 		if (what == MODE_ADD && modetype == MODE_NOKNOCK && !(chptr->mode.mode & MODE_INVITEONLY))
+		{
+			sendto_one(cptr,
+			    ":%s NOTICE %s :*** No Knocks mode (+K) can only be set when channel is invite only (+i)",
+			    me.name, cptr->name);
 			break;
+		}
 #ifdef STRIPBADWORDS
 	  case MODE_STRIPBADWORDS:
 #endif
@@ -1652,22 +1654,24 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 	  case MODE_NONICKCHANGE:
 	  case MODE_NOINVITE:
 		setthephuckingmode:
-		  /* +sp bugfix.. */
-		  if (modetype == MODE_SECRET
-		      && (chptr->mode.mode & MODE_PRIVATE))
-			  chptr->mode.mode &= ~MODE_PRIVATE;
-		  if (modetype == MODE_PRIVATE
-		      && (chptr->mode.mode & MODE_SECRET))
-			  chptr->mode.mode &= ~MODE_SECRET;
-		  if (modetype == MODE_NOCOLOR
-		      && (chptr->mode.mode & MODE_STRIP))
-			  chptr->mode.mode &= ~MODE_STRIP;
-		  if (modetype == MODE_STRIP
-		      && (chptr->mode.mode & MODE_NOCOLOR))
-			  chptr->mode.mode &= ~MODE_NOCOLOR;
 		  retval = 0;
 		  if (what == MODE_ADD)
+		  {
+			/* real +sp bufix :P --JK/Luke */
+			  if (modetype == MODE_SECRET
+			      && (chptr->mode.mode & MODE_PRIVATE))
+				  chptr->mode.mode &= ~MODE_PRIVATE;
+		 	  if (modetype == MODE_PRIVATE
+			      && (chptr->mode.mode & MODE_SECRET))
+				  chptr->mode.mode &= ~MODE_SECRET;
+			  if (modetype == MODE_NOCOLOR
+			      && (chptr->mode.mode & MODE_STRIP))
+				  chptr->mode.mode &= ~MODE_STRIP;
+			  if (modetype == MODE_STRIP
+			      && (chptr->mode.mode & MODE_NOCOLOR))
+				  chptr->mode.mode &= ~MODE_NOCOLOR; 
 			  chptr->mode.mode |= modetype;
+		  }
 		  else
 			  chptr->mode.mode &= ~modetype;
 		  break;
