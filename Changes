@@ -555,3 +555,4 @@ seen. gmtime warning still there
   or Unreal will return an unknown directive error for it.
 - Fixed problem with u_int32_t servicesstamps, with SVSMODE and SVS2MODE,
   found by Andrew Church
+- Unknown ban * {}, except * {}, deny * {}, allow * {} are accessible to modules

@@ -420,9 +420,26 @@ void clear_unknown() {
 	ConfigItem t;
 
 	for (p = conf_unknown; p; p = (ConfigItem_unknown *)p->next) {
-		config_status("%s:%i: unknown directive %s",
-			p->ce->ce_fileptr->cf_filename, p->ce->ce_varlinenum,
-			p->ce->ce_varname); 
+		if (!strcmp(p->ce->ce_varname, "ban")) 
+			config_status("%s:%i: unknown ban type %s",
+				p->ce->ce_fileptr->cf_filename, p->ce->ce_varlinenum,
+				p->ce->ce_vardata);
+		else if (!strcmp(p->ce->ce_varname, "except"))
+			config_status("%s:%i: unknown except type %s",
+				p->ce->ce_fileptr->cf_filename, p->ce->ce_varlinenum,
+				p->ce->ce_vardata);
+		else if (!strcmp(p->ce->ce_varname, "deny"))
+			config_status("%s:%i: unknown deny type %s",
+				p->ce->ce_fileptr->cf_filename, p->ce->ce_varlinenum,
+				p->ce->ce_vardata);
+		else if (!strcmp(p->ce->ce_varname, "allow"))
+			config_status("%s:%i: unknown allow type %s",
+				p->ce->ce_fileptr->cf_filename, p->ce->ce_varlinenum,
+				p->ce->ce_vardata);
+		else			
+			config_status("%s:%i: unknown directive %s",
+				p->ce->ce_fileptr->cf_filename, p->ce->ce_varlinenum,
+				p->ce->ce_varname); 
 		t.next = del_ConfigItem((ConfigItem *)p, (ConfigItem **)&conf_unknown);
 		MyFree(p);
 		p = (ConfigItem_unknown *)&t;
@@ -1527,8 +1544,9 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else
 		{
-			config_status("%s:%i: allow with unknown type",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			ConfigItem_unknown *ca2 = malloc(sizeof(ConfigItem_unknown));
+			ca2->ce = ce;
+			add_ConfigItem((ConfigItem *)ca2, (ConfigItem **)&conf_unknown);
 			return -1;
 		}
 	}
@@ -1774,9 +1792,10 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 
 	}
 	else {
-		config_error("%s:%i: unknown type except::%s",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			ce->ce_vardata);
+		ConfigItem_unknown *ca2 = malloc(sizeof(ConfigItem_unknown));
+		MyFree(ca);
+		ca2->ce = ce;
+		add_ConfigItem((ConfigItem *)ca2, (ConfigItem **)&conf_unknown);
 	}
 }
 
@@ -1808,10 +1827,10 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 		ca->flag.type = CONF_BAN_REALNAME;
 	else
 	{
+		ConfigItem_unknown *ca2 = malloc(sizeof(ConfigItem_unknown));
 		MyFree(ca);
-		config_error("%s:%i: unknown ban type %s",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			ce->ce_vardata);
+		ca2->ce = ce;
+		add_ConfigItem((ConfigItem *)ca2, (ConfigItem **)&conf_unknown);
 		return -1;
 	}
 
@@ -2233,8 +2252,9 @@ int	_conf_deny(ConfigFile *conf, ConfigEntry *ce)
 		_conf_deny_version(conf, ce);
 	else
 	{
-		config_status("%s:%i: deny with unknown type",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		ConfigItem_unknown *ca2 = malloc(sizeof(ConfigItem_unknown));
+		ca2->ce = ce;
+		add_ConfigItem((ConfigItem *)ca2, (ConfigItem **)&conf_unknown);
 		return -1;
 	}
 	return -1;
