@@ -964,7 +964,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			    cptr->name, bconf->reason ? bconf->reason : "",
 			    KLINE_ADDRESS);
 
-			exit_client(cptr, sptr, &me,
+			return exit_client(cptr, sptr, &me,
 			    "Your GECOS (real name) is banned from this server");
 		}
 		tkl_check_expire();
