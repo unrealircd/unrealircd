@@ -839,3 +839,4 @@ seen. gmtime warning still there
 - Moved /svso and /svsnick to modules
 - Updated the win32 makefile
 - modulize documentation, some web server fixes, preparation for uabr
+- Some more VFS/PHTML fixes, it actually works now, thanks to butter

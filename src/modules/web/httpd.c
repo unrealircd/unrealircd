@@ -386,7 +386,9 @@ void	sockprintf(HTTPd_Request *r, char *format, ...)
 	vsprintf(r->inbuf, format, ap);
 	strcat(r->inbuf, "\r\n");
 	va_end(ap);
-	send(r->fd, r->inbuf, strlen(r->inbuf), 0);
+	set_blocking(r->fd, NULL);
+	send(r->fd, r->inbuf, strlen(r->inbuf), 0),
+	set_non_blocking(r->fd, NULL);
 }
 
 

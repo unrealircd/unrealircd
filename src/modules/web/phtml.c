@@ -161,7 +161,6 @@ DLLFUNC int h_u_phtml(HTTPd_Request *r)
 					if (!strcmp(s, "DATA"))
 					{
 						time_t	tmpnow;
-						sockprintf(r, "%i<br>", section);
 						if (section == SECTION_STATS)
 						{
 							tmpnow = TStime() - me.since;

@@ -155,8 +155,6 @@ DLLFUNC int h_u_vfs(HTTPd_Request *r)
 				j = send(r->fd, &p->cache[i], p->cachesize - i, 0);
 				if (j == -1)
 				{
-					ircd_log(LOG_ERROR, "send() error: %s",
-						strerror(ERRNO));
 					set_non_blocking(r->fd, NULL);
 					return 1;
 				}
