@@ -483,3 +483,5 @@
 - Fixed Q:lined nick NickServ from <unregistered> on Nickname Server message
 - Fixed a problem in synch using acptr->name as info line
 - Introduced NS in SQLINE..
+- Fixed a problem in SVS2MODE not displaying mode changes, and well known
+  why

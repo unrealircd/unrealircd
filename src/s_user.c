@@ -4552,9 +4552,9 @@ setmodey:
 		sendto_serv_butone_token(cptr, parv[0], MSG_SVS2MODE,
 		    TOK_SVS2MODE, "%s %s", parv[1], parv[2]);
 
-	send_umode(NULL, sptr, setflags, ALL_UMODES, buf);
-	if (MyClient(sptr))
-		sendto_one(sptr, ":%s MODE %s :%s", parv[0], parv[1], buf);
+	send_umode(NULL, acptr, setflags, ALL_UMODES, buf);
+	if (MyClient(acptr))
+		sendto_one(acptr, ":%s MODE %s :%s", parv[0], parv[1], buf);
 	return 0;
 }
 
