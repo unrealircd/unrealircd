@@ -1149,6 +1149,7 @@ void close_connection(cptr)
 	/*
 	 * fd remap to keep local[i] filled at the bottom.
 	 */
+#ifdef NO_REMAPPING
 	if (empty > 0)
 		if ((j = highest_fd) > (i = empty) &&
 		    (local[j]->status != STAT_LOG))
@@ -1193,6 +1194,9 @@ void close_connection(cptr)
 			while (!local[highest_fd])
 				highest_fd--;
 		}
+#endif
+	while (!local[highest_fd])
+		highest_fd--;
 	return;
 }
 
@@ -1803,6 +1807,8 @@ static int read_packet(aClient *cptr)
  * processed. Also check for connections with data queued and whether we can
  * write it out.
  */
+
+#define HighscoreFD(x,y) if (x > y) y = x
 #ifndef USE_POLL
 #ifdef NO_FDLIST
 int  read_message(delay)
@@ -1828,7 +1834,9 @@ int  read_message(delay, listp)
 	time_t delay2 = delay, now;
 	u_long usec = 0;
 	int  res, length, fd, i;
+	int  rhighest_fd = 0;
 	int  auth = 0;
+	
 #ifdef SOCKSPORT
 	int  socks = 0;
 #endif
@@ -1863,10 +1871,13 @@ int  read_message(delay, listp)
 				continue;
 			if (IsLog(cptr))
 				continue;
+			
+			HighscoreFD(i, rhighest_fd);
 #ifdef SOCKSPORT
 			if (DoingSocks(cptr))
 			{
 				socks++;
+				HighscoreFD(cptr->socksfd, rhighest_fd);
 				FD_SET(cptr->socksfd, &read_set);
 #ifdef _WIN32
 				FD_SET(cptr->socksfd, &excpt_set);
@@ -1879,6 +1890,7 @@ int  read_message(delay, listp)
 			if (DoingAuth(cptr))
 			{
 				auth++;
+				HighscoreFD(cptr->authfd, rhighest_fd);
 				Debug((DEBUG_NOTICE, "auth on %x %d", cptr, i));
 				FD_SET(cptr->authfd, &read_set);
 #ifdef _WIN32
@@ -1916,24 +1928,32 @@ int  read_message(delay, listp)
 
 #ifdef SOCKSPORT
 		if (me.socksfd >= 0)
+		{
 			FD_SET(me.socksfd, &read_set);
+			HighscoreFD(me.socksfd, rhighest_fd);
+
+		}
 #endif
 #ifndef _WIN32
 		if (resfd >= 0)
+		{
+			HighscoreFD(resfd, rhighest_fd);
 			FD_SET(resfd, &read_set);
+
+		}
 #endif
 
 		wait.tv_sec = MIN(delay2, delay);
 		wait.tv_usec = usec;
 #ifdef	HPUX
-		nfds = select(FD_SETSIZE, (int *)&read_set, (int *)&write_set,
+		nfds = select(rhighest_fd + 1, (int *)&read_set, (int *)&write_set,
 		    0, &wait);
 #else
 # ifndef _WIN32
-		nfds = select(FD_SETSIZE, &read_set, &write_set, 0, &wait);
+		nfds = select(rhighest_fd + 1, &read_set, &write_set, 0, &wait);
 # else
 		nfds =
-		    select(FD_SETSIZE, &read_set, &write_set, &excpt_set,
+		    select(rhighest_fd + 1, &read_set, &write_set, &excpt_set,
 		    &wait);
 # endif
 #endif

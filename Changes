@@ -721,4 +721,6 @@
 - Fixed help.c bug reported by Curt|s
 - Different fixes, unreal.tspre.org -> unrealircd.com
 - Fixed-fixed-fixed the \r\n bug and removed some useless cpu wasting code
+- Removed remapping fds, and did a severe select() speedup, suggested by
+  Demiurgus. Should speed CPU a lot
 - Updated some messages
