@@ -3049,3 +3049,5 @@ seen. gmtime warning still there
 - Imported TRE 0.6.6 on Win32 and Linux
 - Made use of TRE's pkg-config support to solve a problem with libintl reported by
   raistlinmajere (#0001592)
+- Fixed a problem with /stats S and extended channel modes (#0001675) reported by
+  AngryWolf

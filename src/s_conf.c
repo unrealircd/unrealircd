@@ -891,11 +891,13 @@ void chmode_str(struct ChMode modes, char *mbuf, char *pbuf)
 			continue;
 	
 		if (modes.extmodes & Channelmode_Table[i].mode)
-			*mbuf++ = Channelmode_Table[i].flag;
-		if (Channelmode_Table[i].paracount)
 		{
-			strcat(pbuf, modes.extparams[i]);
-			strcat(pbuf, " ");
+			*mbuf++ = Channelmode_Table[i].flag;
+			if (Channelmode_Table[i].paracount)
+			{
+				strcat(pbuf, modes.extparams[i]);
+				strcat(pbuf, " ");
+			}
 		}
 	}
 #endif
