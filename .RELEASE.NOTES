@@ -78,6 +78,9 @@ and a _lot_ more).
 - win32: crash bugs in TRE on /rehash are probably fixed.
 - qlines (banned nicks) could cause crashes
 - (quickly) rehashing + autoconnect link blocks could cause a crash
+- The previous cloaking algorithm had some serious flaws by which the cloak keys
+  could be discovered. Thus, enabling an attacker to 'uncloak' any hosts (especially
+  unresolved IP's but probably also normal hosts with some more effort).
 
 ==[ MINOR BUGS FIXED ]==
 - GUEST support wasn't working
