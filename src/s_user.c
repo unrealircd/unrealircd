@@ -224,7 +224,7 @@ unsigned char *StripColors(unsigned char *text) {
 }
 
 
-char umodestring[512];
+char umodestring[UMODETABLESZ+1];
 
 /*
 ** next_client

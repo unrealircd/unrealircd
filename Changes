@@ -881,3 +881,4 @@ seen. gmtime warning still there
 - Added umodes.c, long val = get_umode('c');
 - Added new umode system to win32 makefile
 - Made umode_delete(flag, mode);
+- made the umodestring variable smaller to conserve memory

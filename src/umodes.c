@@ -41,9 +41,7 @@
 #include <fcntl.h>
 #include "h.h"
 
-#define UMODETABLESZ (sizeof(long) * 8)
-
-extern char umodestring[512];
+extern char umodestring[UMODETABLESZ+1];
 
 aUMtable *Usermode_Table = NULL;
 short	 Usermode_highest = 0;
