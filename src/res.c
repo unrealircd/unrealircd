@@ -118,9 +118,6 @@ int init_resolver(int op)
 	}
 #endif
 
-#ifdef	LRAND48
-	srand48(TStime());
-#endif
 	if (op & RES_INITLIST)
 	{
 		bzero((char *)&reinfo, sizeof(reinfo));
@@ -697,20 +694,19 @@ static int query_name(char *name, int class, int type, ResRQ *rptr)
 		return r;
 	}
 	hptr = (HEADER *) buf;
-#ifdef LRAND48
-	do
-	{
-		hptr->id = htons(ntohs(hptr->id) + k + lrand48() & 0xffff);
-#else
 	(void)gettimeofday(&tv, NULL);
 	do
 	{
 		/* htons/ntohs can be assembler macros, which cannot
 		   be nested. Thus two lines.   -Vesa               */
+#ifdef LRAND48
 		u_short nstmp = ntohs(hptr->id) + k +
-		    (u_short)(tv.tv_usec & 0xffff);
-		hptr->id = htons(nstmp);
+		    (u_short)(tv.tv_usec & 0xffff) + (u_short)(lrand48() & 0xffff);
+#else
+		u_short nstmp = ntohs(hptr->id) + k +
+		    (u_short)(tv.tv_usec & 0xffff) + (u_short)(rand() & 0xffff);
 #endif /* LRAND48 */
+		hptr->id = htons(nstmp);
 		k++;
 	}
 	while (find_id(ntohs(hptr->id)));

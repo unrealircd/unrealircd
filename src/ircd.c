@@ -1209,6 +1209,7 @@ int InitwIRCD(int argc, char *argv[])
 		}
 	}
 #endif
+	init_random();
 	Debug((DEBUG_NOTICE, "Server ready..."));
 	SetupEvents();
 	loop.do_bancheck = 0;

@@ -544,5 +544,7 @@ char  *ssl_get_cipher(SSL *ssl);
 #endif
 long config_checkval(char *value, unsigned short flags);
 void config_status(char *format, ...);
+void init_random();
+u_int32_t getrandom32();
 #define EVENT_DRUGS BASE_VERSION
 

@@ -1713,13 +1713,7 @@ CMD_FUNC(m_nick)
 		 *
 		 * Generate a random string for them to pong with.
 		 */
-#ifndef _WIN32
-		sptr->nospoof =
-		    1 + (int)(9000000.0 * random() / (RAND_MAX + 80000000.0));
-#else
-		sptr->nospoof =
-		    1 + (int)(9000000.0 * rand() / (RAND_MAX + 80000000.0));
-#endif
+		sptr->nospoof = getrandom32();
 		sendto_one(sptr, ":%s NOTICE %s :*** If you are having problems"
 		    " connecting due to ping timeouts, please"
 		    " type /quote pong %X or /raw pong %X now.",

@@ -322,6 +322,8 @@ extern void 	win_log(char *format, ...);
 extern void		win_error();
 #endif
 
+extern void add_entropy_configfile(struct stat st, char *buf);
+
 /*
  * Config parser (IRCd)
 */
@@ -576,6 +578,7 @@ ConfigFile *config_load(char *filename)
 	/* Just me or could this cause memory corrupted when ret <0 ? */
 	buf[ret] = '\0';
 	close(fd);
+	add_entropy_configfile(sb, buf);
 	cfptr = config_parse(filename, buf);
 	free(buf);
 	return cfptr;
