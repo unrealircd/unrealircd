@@ -411,3 +411,5 @@
 - Forgot to mention away spamfilter target in helpop, reported by Rocko.
 - Changed version to 3.2.2
 ** 3.2.2 release **
+- Fixed a typo in the makefile for USERIP
+- Made the WATCH command work for WebTV users (#0002121) suggested by White_Magic.

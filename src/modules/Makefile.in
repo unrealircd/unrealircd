@@ -719,7 +719,8 @@ m_dccallow.so: m_dccallow.c $(INCLUDES)
 		-o m_dccallow.so m_dccallow.c
 
 m_userip.so: m_userip.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_userip.c
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_userip.so m_userip.c
 
 #############################################################################
 #             and now the remaining modules...

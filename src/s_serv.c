@@ -397,14 +397,26 @@ static void show_watch(aClient *cptr, char *name, int rpl1, int rpl2)
 
 	if ((acptr = find_person(name, NULL)))
 	{
-		sendto_one(cptr, rpl_str(rpl1), me.name, cptr->name,
-		    acptr->name, acptr->user->username,
-		    IsHidden(acptr) ? acptr->user->virthost : acptr->user->
-		    realhost, acptr->lastnick);
+		if (IsWebTV(cptr))
+			sendto_one(cptr, ":IRC!IRC@%s PRIVMSG %s :%s (%s@%s) is on IRC", 
+			    me.name, cptr->name, acptr->name, acptr->user->username,
+			    IsHidden(acptr) ? acptr->user->virthost : acptr->user->
+			    realhost);
+		else
+			sendto_one(cptr, rpl_str(rpl1), me.name, cptr->name,
+			    acptr->name, acptr->user->username,
+			    IsHidden(acptr) ? acptr->user->virthost : acptr->user->
+			    realhost, acptr->lastnick);
 	}
 	else
-		sendto_one(cptr, rpl_str(rpl2), me.name, cptr->name,
-		    name, "*", "*", 0);
+	{
+		if (IsWebTV(cptr))
+			sendto_one(cptr, ":IRC!IRC@%s PRIVMSG %s :%s is not on IRC", me.name, 
+				cptr->name, name);
+		else	
+			sendto_one(cptr, rpl_str(rpl2), me.name, cptr->name,
+			    name, "*", "*", 0);
+	}
 }
 
 /*

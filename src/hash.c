@@ -553,13 +553,24 @@ int   hash_check_watch(aClient *cptr, int reply)
 	
 	/* Send notifies out to everybody on the list in header */
 	for (lp = anptr->watch; lp; lp = lp->next)
-	  sendto_one(lp->value.cptr, rpl_str(reply), me.name,
-		    lp->value.cptr->name, cptr->name,
-		    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
-		    (IsPerson(cptr) ?
-		    (IsHidden(cptr) ? cptr->user->virthost : cptr->
-		    user->realhost) : "<N/A>"), anptr->lasttime, cptr->info);
-
+	{
+		if (IsWebTV(lp->value.cptr))
+			sendto_one(lp->value.cptr, ":IRC!IRC@%s PRIVMSG %s :%s (%s@%s) "
+				" %s IRC",
+				me.name, lp->value.cptr->name, cptr->name,
+			    	(IsPerson(cptr) ? cptr->user->username : "<N/A>"),
+				(IsPerson(cptr) ?
+			    	(IsHidden(cptr) ? cptr->user->virthost : cptr->
+			    	user->realhost) : "<N/A>"), reply == RPL_LOGON ? 
+				"is now on" : "has left");
+		else
+			sendto_one(lp->value.cptr, rpl_str(reply), me.name,
+			    lp->value.cptr->name, cptr->name,
+			    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
+			    (IsPerson(cptr) ?
+			    (IsHidden(cptr) ? cptr->user->virthost : cptr->
+			    user->realhost) : "<N/A>"), anptr->lasttime, cptr->info);
+	}
 	
 	return 0;
 }
