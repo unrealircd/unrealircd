@@ -151,9 +151,16 @@ DLLFUNC int h_u_phtml(HTTPd_Request *r)
 					else
 					if (!strcmp(s, "DATA"))
 					{
+						time_t	tmpnow;
+						
 						if (section == SECTION_STATS)
 						{
-							sockprintf(r, "My name is %s<br>Been up for %lu", me.name, TStime()-me.since);
+							tmpnow = TStime() - me.since;
+							sockprintf(r, "My name is %s<br>", me.name);
+							sockprintf(r, 
+								"Been up for %lu days, %lu hours, %lu minutes, %lu seconds",
+									tmpnow / 86400, (tmpnow / 3600) % 24, (tmpnow /60) %60, 
+									tmpnow % 60);
 							
 						}
 					}
