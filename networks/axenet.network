@@ -1,3 +1,8 @@
+/*
+ * AXEnet (irc.axenet.org) Network Configuration File
+ * --------------------------------------------------
+ */
+
 set {
 	network-name		"Axenet";
 	default-server		"irc.axenet.org";

@@ -1,59 +1,35 @@
-# Networks index file - do not touch please 
-# 54 networks listed
-# Please report outdated entries to unreal-networks@lists.sourceforge.net
-networks/global-irc.network ......: Global-IRC (http://www.global-irc.net)
-networks/mp3fans.network .........: Mp3Fans.Net (http://www.mp3fans.net)
-networks/roxnet.network ..........: ROXnet (http://www.rox.za.net)
-networks/dragonwings.network .....: DragonWings (http://www.dragonwings.org)
-networks/megairc.network .........: MegaIRC (http://www.megairc.net)
-networks/neohorizon.network ......: NeoHorizon (http://www.nhn.net)
-networks/spynet.network ..........: SpyNet (http://www.spynet.org)
-networks/nevernet.network ........: NeverNET (http://www.nevernet.net)
-networks/altirc.network ..........: AlternativeNet IRC
+/* Networks index file - do not touch please
+ * Please report outdated entries to unreal-networks@lists.sourceforge.net
+ *
+ * NOTE: These networks are in no way affiliated with UnrealIRCd other than the fact
+ * that they use it. The UnrealIRCd Team takes no responsibility for the content
+ * of these networks.
+ */
+
+networks/axenet.network ..........: AXEnet (http://www.axenet.org)
 networks/bunker7.network .........: Bunker7 (http://www.bunker7.net)
-networks/realchat.network ........: RealChat.org (http://www.realchat.org)
-networks/newmilennium.network ....: NewMilennium (http://www.newmilennium.net)
-networks/solarxtreme.network .....: SolarXTreme (http://www.solarxtreme.net)
-networks/ss.network ..............: StarSpace (http://www.starspace.net)
-networks/uzaynet.network .........: UzayNet (http://www.uzaynet.nu)
-networks/infinity.network ........: Infinity-IRC.org (http://www.infinity-irc.org)
-networks/tspre.network ...........: TSpre (http://www.tspre.org)
-networks/solargalaxy.network .....: SolarGalaxy (http://www.solargalaxy.net)
-networks/digitalirc.network ......: DigitalIRC (http://www.digitalirc.net)
-networks/fireirc.network .........: FireIRC (http://www.fireirc.net)
-networks/stormdancing.network ....: StormDancing (http://www.stormdancing.net)
-networks/972-scripterz.network ...: 972-scripterz
-networks/v64net.network ..........: v64
-networks/treklink.network ........: Treklink (http://www.treklink.net)
-networks/axenet.network ..........: AXEnet
-networks/kammtech.network ........: KammTecH 
-networks/linuxactive.network .....: Linuxactive (http://www.linuxactive.net)
-networks/ircthai.network .........: IRCThai.com (http://www.ircthai.com)
-networks/chatplace.network .......: ChatPlace (http://www.chatplace.net)
-networks/interturk.network .......: InterTurk (http://www.interturk.net)
 networks/cc2.network .............: CC2 (http://www.cc2.org)
-networks/kissland.network ........: Kissland (http://www.kissland.com)
-networks/digital-irc.network .....: Digital-IRC (http://www.digital-irc.net)
-networks/seveneagle.network ......: SevenEagle.Com 
-networks/staticedge.network ......: StaticEdge
-networks/german-elite.network ....: German-Elite (http://www.german-elite.net)
-networks/thainet.network .........: Thai IRC Network
-networks/linuxsquare.network .....: LinuxSquare (http://www.linuxsquare.net)
-networks/chatstation.network .....: ChatStation
-networks/sparkhaven.network ......: SparkHaven (http://www.sparkhaven.com)
-networks/qkaka.network ...........: Qkaka (http://www.qkaka.com)
-networks/sheytoybox.network ......: SheyToyBox (http://www.sheytoybox.net)
+networks/dark-core.network .......: Dark Core Networks
 networks/darkfyre.network ........: Darkfyre (http://www.darkfyre.net)
-networks/israelnet.network .......: IsraelNet
-networks/tierrared.network .......: TierraRed (http://www.tierrared.com)
-networks/music-chatnet.network ...: Music-ChatNET
-networks/german-global-irc.network: German Global IRC (http://www.global-irc.de)
 networks/darkwar.network .........: Darkwar (http://www.darkwar.net)
-networks/lamenet.network .........: Lamenet (http://www.lamenet.net)
-networks/spin.network ............: SpiN
-networks/subtrexnet.network ......: Subtrex.net (http://www.subtrex.net)
-networks/data-storm.network ......: Data-Storm
-networks/tutkunet.network ........: TuTKu.Net
-networks/raptanet.network ........: RaptaNet (http://www.rapta.net)
-networks/irc-chat.network ........: IRC-Chat
-networks/auspice.network .........: auspice
+networks/digitalirc.network ......: DigitalIRC (http://www.digitalirc.net)
+networks/dragonwings.network .....: DragonWings (http://www.dragonwings.org)
+networks/fireirc.network .........: FireIRC (http://www.fireirc.net)
+networks/german-elite.network ....: German-Elite (http://www.german-elite.net)
+networks/german-global-irc.network: German Global IRC (http://www.global-irc.de)
+networks/global-irc.network ......: Global-IRC (http://www.global-irc.net)
+networks/infinity.network ........: Infinity-IRC.org (http://www.infinity-irc.org)
+networks/israelnet.network .......: IsraelNet (http://www.israel.net)
+networks/lcirc.network ...........: LCIrc (http://www.lcirc.net)
+networks/roxnet.network ..........: ROXnet (http://www.rox.za.net)
+networks/solargalaxy.network .....: SolarGalaxy (http://www.solargalaxy.net)
+netwrosk/spamnet.network .........: SpamNet (http://www.spamnet.org)
+networks/spin.network ............: SpiN (http://www.spinempire.com)
+networks/stormdancing.network ....: StormDancing (http://www.stormdancing.net)
+networks/thainet.network .........: Thai IRC Network
+networks/tspre.network ...........: TSpre (http://www.tspre.org)
+networks/unitedirc.network .......: UnitedIRC (http://www.unitedirc.com)
+networks/unitedirc-org.network ...: Unitedirc (http://www.unitedirc.org)
+networks/uzaynet.network .........: UzayNet (http://www.uzaynet.nu)
+networks/x-irc.network ...........: x-irc (http://www.x-irc.net)
+networks/zirc.network ............: ZiRC (http://www.zirc.org)

@@ -1,3 +1,12 @@
+/*
+ * SpamNet (irc.spamnet.org) Network Configuration File
+ * --------------------------------------------------
+ *  Added-at:     29 July 2000 00:00 GMT
+ *  Author:       cij (Brian Rogers)
+ *  E-Mail:       n1uro@n1uro.com
+ * -----------------------------------------
+ */
+
 set {
 	network-name		"SpamNet";
 	default-server		"irc.spamnet.org";

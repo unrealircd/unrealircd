@@ -1,3 +1,13 @@
+/*
+ * Bunker7.net Network Configuration File
+ * -----------------------------------------
+ *  Added-at:     17 August 1999 12:34 CT
+ *  Author:       Rogue
+ *  E-Mail:       rogue@bunker7.net
+ *  $Id$
+ *-----------------------------------------
+ */
+
 set {
 	network-name		"bunker7";
 	default-server		"irc.bunker7.net";

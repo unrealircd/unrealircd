@@ -1,3 +1,12 @@
+/*
+ * IsraelNet (irc.israel.net) Network Configuration File
+ * --------------------------------------------------
+ * Added-at: 14 September 2000 14:39
+ * Author: Web
+ * Email: dors@Nonstop.net.il
+ * -----------------------------------------
+ */
+
 set {
 	network-name		"IsraelNet";
 	default-server		"irc.israel.net";

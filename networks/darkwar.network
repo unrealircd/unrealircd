@@ -1,3 +1,12 @@
+/*
+ * Darkwar (irc.darkwar.net) Network Configuration File
+ * --------------------------------------------------
+ * Added-at: 22 October 2000 19:40
+ * Author: stryker
+ * Email: stryker@darkwar.net
+ * -----------------------------------------
+ */
+
 set {
 	network-name		"Darkwar";
 	default-server		"irc.darkwar.net";

@@ -1,65 +1,19 @@
-#
-# Network Configuration File Template
-# -----------------------------------------
-#  Added-at:     <day> <month> <year> <hh:dd> GMT
-#  Author:       Curt|s
-#  E-Mail:       <email>
-#  $Id$
-#
-# These two specify the name of the IRC network, set the same in both fields
-Network >..........: DigitalIRC.Net
-Set ircnetwork ....: DigitalIRC.Net
-
-# This is where your DNS pool is (like irc.dal.net)
-Set defserv .......: irc.digitalirc.net
-
-# This is the name of your Services Server
-Set SERVICES_NAME .: Services.DigitalIRC.Net
-
-# This is the virtual hostname IRCops will get if iNAH option is enabled
-# on oper up
-Set oper_host .....: Oper.DigitalIRC.Net
-
-# This is the virtual hostname Server Admins will get if iNAH option is enabled
-# on oper up
-Set admin_host ....: Admin.DigitalIRC.Net
-
-# This is the virtual hostname Local IRCops will get if iNAH option is enabled
-# on oper up
-
-Set locop_host ....: LocOper.DigitalIRC.Net
-
-# This is the virtual hostname Services Operators/Admins will get
-# if iNAH option is enabled on oper up
-
-Set sadmin_host ...: ServicesOp.DigitalIRC.Net
-
-# This is the virtual hostname NetAdmins will get
-# if iNAH option is enabled on oper up
-
-Set netadmin_host .: NetAdmin.DigitalIRC.Net
-
-# This is the virtual hostname CoAdmins will get
-# if iNAH option is enabled on oper up
-Set coadmin_host ..: NetAdmin.DigitalIRC.Net
-
-
-# This is the virtual hostname TechAdmins will get
-# if iNAH option is enabled on oper up
-Set techadmin_host : Tech.DigitalIRC.Net
-
-# This is the prefix of the hidden host (cloaking) hostname
-Set hidden_host ...: NN
-# This is the domain of the IRC network
-Set netdomain .....: DigtialIRC.Net
-#This is where people can go for help
-Set helpchan ......: #Digitalirc
-# This is the name of the stats server
-Set STATS_SERVER ..: Statistics.DigitalIRC.com
-# -- Not in use--
-Set HUB ...........: 1
-# This enables the auto-setting of f.x @netadmin.network.net 
-# on oper up
-Set iNAH ..........: 0
-# -- Not in use but still here --
-Set net_quit ......: ic
+set {
+	network-name		"DigitalIRC.Net";
+	default-server		"irc.digitalirc.net";
+	services-server		"Services.DigitalIRC.Net";
+	stats-server		"Statistics.DigitalIRC.com";
+	help-channel		"#Digitalirc";
+	hiddenhost-prefix	"NN";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"LocOper.DigitalIRC.Net";
+		global		"Oper.DigitalIRC.Net";
+		coadmin		"NetAdmin.DigitalIRC.Net";
+		admin		"Admin.DigitalIRC.Net";
+		servicesadmin	"ServicesOp.DigitalIRC.Net";
+		techadmin	"Tech.DigitalIRC.Net";
+		netadmin	"NetAdmin.DigitalIRC.Net";
+		host-on-oper-up	"off";
+	};
+};

@@ -1,3 +1,13 @@
+/*
+ * ROXnet (irc.rox.za.net) Network Configuration File
+ * --------------------------------------------------
+ *  Added-at:     14 July 1999 00:00 GMT
+ *  Author:       Stskeeps (Carsten Munk)
+ *  E-Mail:       stskeeps@roxnet.org
+ * $Id$
+ * -----------------------------------------
+ */
+
 set {
 	network-name		"ROXnet";
 	default-server		"irc.roxnet.org";
