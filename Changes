@@ -601,3 +601,5 @@ seen. gmtime warning still there
 - Made Unreal use FSU Pthreads if the pthreads on the system will show multiple copies of Unreal in ps
 - Fixed a /rehash bug dealing with echoing to stderr
 - Added MAXCONNECTIONS to configure
+- Added a little utility to make converting an m_* command to a module easier
+
