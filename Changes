@@ -693,3 +693,4 @@
   the transition period and the extra parameter would not be used by us anyway.
 - Added warning on using can_override/can_gkline/can_gzline in combination with locops,
   since these are global privileges they shouldn't be permitted (will be an error in 3.2.4).
+- Made the can_override one an error since it makes 0.0% sense.

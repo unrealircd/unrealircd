@@ -3393,12 +3393,29 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 		/* Check oper flags */
 		if (!(oper_flags & OFLAG_ISGLOBAL) && (oper_flags & OFLAG_OVERRIDE))
 		{
-			config_status("%s:%i: oper::oflags: WARNING: can_override (a global privilege) is incompatible with local oper",
+			/* Now this is just absolutely NOT logical... joining trough channel
+			 * modes etc is nothing a *LOCAL* operator should be able to do, so ERROR.
+			 */
+			config_status("%s:%i: oper::oflags: can_override (a global privilege) is incompatible with local oper "
+			              "(hint: add 'global;' in oper::flags)",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			errors++;
 		}
 		if (!(oper_flags & OFLAG_ISGLOBAL) && (oper_flags & (OFLAG_GZL|OFLAG_TKL)))
 		{
-			config_status("%s:%i: oper::oflags: WARNING: can_gzline/can_gkline (global privileges) are incompatible with local oper",
+			/* Ok, hmmm.. this is also not logical.. a local operator setting GLOBAL
+			 * NETWORK BANS?? But I figured I would just make it a warning for now
+			 * since some people might have configured a bopm oper block like this.
+			 * There's no good reason to make a local oper with can_gkline or can_gzline
+			 * if you ask me, since what a global oper has extra are can_globalroute/-
+			 * can_globalkill/can_globalnotice and some additional remote privs like
+			 * getting /stats. Now, compare that with the privilege of banning hundreds
+			 * or even thousands of clienst and you will understand why this doesn't
+			 * make any sense... and again, why should a LOCAL oper be allowed to place
+			 * network bans... aaaaaaargh.. -- Syzop
+			 */
+			config_status("%s:%i: oper::oflags: WARNING: can_gzline/can_gkline (global privileges) "
+			              "are incompatible with local oper (hint: add 'global;' in oper::flags)",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		}
 	}
