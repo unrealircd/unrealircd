@@ -829,3 +829,4 @@ seen. gmtime warning still there
 - Added the ability to add aliases like /identify (complex, so see example.conf for samples)
 - Added a bug reporting tool (still alpha)
 - Removed some win32 debug code that was left, reported by TheEggMan
+- Win32 cleanup
