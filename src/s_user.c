@@ -2355,6 +2355,8 @@ CMD_FUNC(m_umode)
 		}
 		sptr->user->virthost = (char *)make_virthost(sptr->user->realhost,
 		    sptr->user->virthost, 1);
+		sendto_serv_butone_token_opt(cptr, OPT_VHP, sptr->name,
+			MSG_SETHOST, TOK_SETHOST, "%s", sptr->user->virthost);
 	}
 	if (!IsHidden(sptr) && (setflags & UMODE_HIDE))
 	{

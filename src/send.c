@@ -793,6 +793,10 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 			continue;
 		if ((opt & OPT_NOT_SJB64) && (cptr->proto & PROTO_SJB64))
 			continue;
+		if ((opt & OPT_VHP) && !(cptr->proto & PROTO_VHP))
+			continue;
+		if ((opt & OPT_NOT_VHP) && (cptr->proto & PROTO_VHP))
+			continue;
 
 		if (IsToken(cptr))
 		{

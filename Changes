@@ -1,4 +1,4 @@
-/*                              
+
  * UnrealIRCd Changes File - (C) Carsten Munk 1999-2002 &
  *                               The UnrealIRCd Team
  *                              
@@ -1446,3 +1446,4 @@ seen. gmtime warning still there
   include/stamp.h, src/buildm4, src/chkconf.c, src/conftool.c
 - Removed doc/Etiquette
 - Compile error fix regarding version.h
+- Made +x send out a SETHOST to VHP servers, requested by PreZ@DarkerNet
