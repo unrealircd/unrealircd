@@ -1922,3 +1922,4 @@ seen. gmtime warning still there
 - Fixed an alias bug reported by darko`` where alias::format::type of "normal" produced
   an error.
 - Fixed some case insensitive checks in configfile parsing, fixed to be case sensitive.
+- Module changes: added two hooks: HOOKTYPE_USERMSG and HOOKTYPE_CHANMSG, changed umode_get.

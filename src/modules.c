@@ -782,7 +782,7 @@ void HooktypeDel(Hooktype *hooktype, Module *module) {
 }
 		
 	
-Hook	*HookAddMain(Module *module, int hooktype, int (*func)(), void (*vfunc)())
+Hook	*HookAddMain(Module *module, int hooktype, int (*func)(), void (*vfunc)(), char *(*cfunc)())
 {
 	Hook *p;
 	
@@ -791,6 +791,8 @@ Hook	*HookAddMain(Module *module, int hooktype, int (*func)(), void (*vfunc)())
 		p->func.intfunc = func;
 	if (vfunc)
 		p->func.voidfunc = vfunc;
+	if (cfunc)
+		p->func.pcharfunc = cfunc;
 	p->type = hooktype;
 	p->owner = module;
 	AddListItem(p, Hooks[hooktype]);

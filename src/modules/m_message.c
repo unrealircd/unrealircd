@@ -288,7 +288,9 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 
 			if (!is_silenced(sptr, acptr))
 			{
-				char *newcmd = cmd;
+				char *newcmd = cmd, *text;
+				Hook *tmphook;
+				
 				if (notice && IsWebTV(acptr) && *parv[2] != '\1')
 					newcmd = MSG_PRIVATE;
 				if (!notice && MyConnect(sptr) &&
@@ -296,16 +298,24 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 					sendto_one(sptr, rpl_str(RPL_AWAY),
 					    me.name, parv[0], acptr->name,
 					    acptr->user->away);
+
 #ifdef STRIPBADWORDS
-				if (!(IsULine(acptr) || IsULine(sptr)) &&
-				    IsFilteringWords(acptr))
-					sendto_message_one(acptr, sptr,
-					    parv[0], newcmd, nick,
-					    stripbadwords_message(parv[2]));
+				if (!(IsULine(acptr) || IsULine(sptr)) && IsFilteringWords(acptr))
+					text = stripbadwords_message(parv[2]);
 				else
 #endif
-					sendto_message_one(acptr,
-					    sptr, parv[0], newcmd, nick, parv[2]);
+					text = parv[2];
+
+				for (tmphook = Hooks[HOOKTYPE_USERMSG]; tmphook; tmphook = tmphook->next) {
+					text = (*(tmphook->func.pcharfunc))(cptr, sptr, acptr, text, (int)(newcmd == MSG_NOTICE ? 1 : 0) );
+					if (!text)
+						break;
+				}
+				if (!text)
+					continue;
+					
+				sendto_message_one(acptr,
+				    sptr, parv[0], newcmd, nick, text);
 			}
 			continue;
 		}
@@ -336,6 +346,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 			    !IsULine(sptr) ? can_send(sptr, chptr, parv[2]) : 0;
 			if (!cansend)
 			{
+				Hook *tmphook;
 				/*if (chptr->mode.mode & MODE_FLOODLIMIT) */
 				/* When we do it this way it appears to work? */
 				if (chptr->mode.per)
@@ -357,6 +368,15 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				    *)stripbadwords_channel(text) : text);
  #endif
 #endif
+				for (tmphook = Hooks[HOOKTYPE_CHANMSG]; tmphook; tmphook = tmphook->next) {
+					text = (*(tmphook->func.pcharfunc))(cptr, sptr, chptr, text, notice);
+					if (!text)
+						break;
+				}
+				
+				if (!text)
+					continue;
+
 				sendto_channelprefix_butone_tok(cptr,
 				    sptr, chptr,
 				    prefix,

@@ -335,7 +335,9 @@ extern int m_umode(aClient *, aClient *, int, char **);
 extern int m_names(aClient *, aClient *, int, char **);
 extern int m_server_estab(aClient *);
 extern void umode_init(void);
-extern long umode_get(char ch);
+extern long umode_get(char, int);
+#define umode_lget(x) umode_get(x, 0);
+#define umode_gget(x) umode_get(x, 1);
 extern int  umode_delete(char ch, long val);
 extern void send_umode(aClient *, aClient *, long, long, char *);
 extern void send_umode_out(aClient *, aClient *, long);
@@ -424,6 +426,8 @@ extern long UMODE_DEAF;      /* 0x10000000       Deaf */
 extern long UMODE_HIDEOPER;  /* 0x20000000	 Hide oper mode */
 extern long UMODE_SETHOST;   /* 0x40000000	 used sethost */
 extern long UMODE_STRIPBADWORDS; /* 0x80000000	 */
+
+extern long AllUmodes, SendUmodes;
 
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *dst, const char *src, size_t size);
