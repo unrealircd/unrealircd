@@ -684,3 +684,4 @@ seen. gmtime warning still there
 - Fixed u_intXX_t problem
 - Removed the redefining stuff in s_conf.c
 - Documentation (example.conf from Osiris)
+- Documentation bug fix

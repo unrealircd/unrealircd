@@ -272,7 +272,7 @@
 		leaf *;			   /* for connecting a leaf */
 		leaf-depth <leaf-depth>;   /* for connecting a leaf */
 		password-connect "<cpassword>";
-		password-recieve "<rpassword>";
+		password-receive "<rpassword>";
 		class <class>;
 		rsa-auth "<keypath>";
 		options {
@@ -290,7 +290,7 @@
 			what type of server you're linking to
 	<leaf-depth>	Number of servers below yours		(number)
 	<cpassword>	Password to send to the server		(password)
-	<rpassword>	Password you expect to recieve		(password)
+	<rpassword>	Password you expect to receive		(password)
 	<class>		Class for servers			(classname)
 	<keypath>	Path use for rsa-authentication		(keypath)
 	<option>	Option used for connecting		(see 9.3)
