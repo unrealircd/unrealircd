@@ -58,7 +58,7 @@ ModuleHeader m_svsnick_Header
 ModuleHeader Mod_Header
 #endif
   = {
-	"test",
+	"m_svsnick",
 	"$Id$",
 	"command /svsnick", 
 	"3.2-b5",

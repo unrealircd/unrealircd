@@ -145,7 +145,7 @@ inline void	DoEvents(void)
 				eventptr->howmany--;
 				if (eventptr->howmany == 0)
 				{
-					temp.next = EventDel(eventptr->name);
+					temp.next = EventDel(eventptr);
 					eventptr = &temp;
 					continue;
 				}

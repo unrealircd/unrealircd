@@ -50,8 +50,17 @@ DLLFUNC int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_SVSNOOP 	"SVSNOOP"	
 #define TOK_SVSNOOP 	"f"
 
-extern int SVSNOOP;	
+
 extern ircstats IRCstats;
+
+static int *xSVSNOOP = NULL;
+#ifdef STATIC_LINKING
+extern int SVSNOOP;
+#endif
+
+static Mod_SymbolDepTable modsymdep[] = {
+	MOD_Dep(SVSNOOP, xSVSNOOP, "src/modules/m_oper.so")
+	};
 
 #ifndef DYNAMIC_LINKING
 ModuleHeader m_svsnoop_Header
@@ -60,11 +69,11 @@ ModuleHeader m_svsnoop_Header
 ModuleHeader Mod_Header
 #endif
   = {
-	"test",
+	"m_svsnoop",
 	"$Id$",
 	"command /svsnoop", 
 	"3.2-b5",
-	NULL 
+	modsymdep 
     };
 
 #ifdef DYNAMIC_LINKING
@@ -111,7 +120,7 @@ int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[])
         {
                 if (parv[2][0] == '+')
                 {
-                        SVSNOOP = 1;
+                        *xSVSNOOP = 1;
                         sendto_ops("This server has been placed in NOOP mode");
                         for (acptr = &me; acptr; acptr = acptr->prev)
                         {
@@ -136,7 +145,7 @@ int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 }
                 else
                 {
-                        SVSNOOP = 0;
+                        *xSVSNOOP = 0;
                         sendto_ops("This server is no longer in NOOP mode");
                 }
         }

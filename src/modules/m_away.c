@@ -58,7 +58,7 @@ ModuleHeader m_away_Header
 ModuleHeader Mod_Header
 #endif
   = {
-	"test",
+	"m_away",
 	"$Id$",
 	"command /away", 
 	"3.2-b5",

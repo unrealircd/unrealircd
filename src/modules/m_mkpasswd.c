@@ -58,7 +58,7 @@ ModuleHeader m_mkpasswd_Header
 ModuleHeader Mod_Header
 #endif
   = {
-	"test",
+	"m_mkpasswd",
 	"$Id$",
 	"command /mkpasswd", 
 	"3.2-b5",

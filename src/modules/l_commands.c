@@ -50,8 +50,8 @@
 #ifdef SCAN_API
 extern ModuleHeader scan_socks_Header;
 extern ModuleHeader scan_http_Header;
-
 #endif
+extern ModuleHeader m_svsnoop_Header;
 
 /* Place includes here */
 /* replace this with a common name of your module */
@@ -82,9 +82,7 @@ int    l_commands_Init(int module_load)
 	/*
 	 * We call our add_Command crap here
 	*/
-#ifdef SCAN_API
         Module p;
-#endif
 	m_sethost_Init(module_load);
 	m_setname_Init(module_load);
 	m_chghost_Init(module_load);
@@ -98,6 +96,8 @@ int    l_commands_Init(int module_load)
 	m_who_Init(module_load);
 	m_mkpasswd_Init(module_load);
 	m_away_Init(module_load);
+	p.header = &m_svsnoop_Header;	
+	Module_Depend_Resolve(&p);
 	m_svsnoop_Init(module_load);
 	m_svso_Init(module_load);
 	m_svsnick_Init(module_load);

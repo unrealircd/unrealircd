@@ -1058,3 +1058,6 @@ seen. gmtime warning still there
 - C++ comment fix, lnxgk again.
 - Crash in scan_http fixed, h->in instead of &h->in = bad
 - Made tld::mask be user@host instead of just host
+- Fixed problem with EventDel, doing eventptr instead of eventptr->name
+- Fixed bug #0000019 reported by Syzop, and bug found by same to deal with
+  individual module loading
