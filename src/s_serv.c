@@ -723,25 +723,17 @@ int  m_server(cptr, sptr, parc, parv)
 	}
 	if ((acptr = find_server_quickx(host, NULL)))
 	{
-		aClient *ocptr;
-
 		/*
 		 * This link is trying feed me a server that I already have
 		 * access through another path -- multiple paths not accepted
 		 * currently, kill this link immeatedly!!
-		 *
-		 * Rather than KILL the link which introduced it, KILL the
-		 * youngest of the two links. -avalon
 		 */
-		acptr = acptr->from;
-		ocptr = (cptr->firsttime > acptr->firsttime) ? acptr : cptr;
-		acptr = (cptr->firsttime > acptr->firsttime) ? cptr : acptr;
-		sendto_one(acptr, "ERROR :Server %s already exists from %s",
-		    host, (ocptr->from ? ocptr->from->name : "<nobody>"));
+		sendto_one(cptr, "ERROR :Server %s already exists from %s",
+				host, acptr->from->name);
 		sendto_ops
 		    ("Link %s cancelled, server %s already exists from %s",
 		    get_client_name(acptr, TRUE), host,
-		    (ocptr->from ? ocptr->from->name : "<nobody>"));
+		    (acptr->from ? acptr->from->name : "<nobody>"));
 		return exit_client(acptr, acptr, acptr, "Server Exists");
 	}
 
@@ -1205,6 +1197,13 @@ int  m_server_estab(cptr)
 	cptr->serv->up = me.name;
 	cptr->srvptr = &me;
 	cptr->serv->nline = aconf;
+
+	if (numeric_collides(atoi(num)))
+	{
+		return exit_client(cptr, cptr, cptr,
+		    "Colliding server numeric (choose another in the M:line)");
+	}
+
 	if (num)
 	{
 		cptr->serv->numeric = atoi(num);
