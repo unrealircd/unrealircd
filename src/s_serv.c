@@ -2249,11 +2249,10 @@ int  m_stats(cptr, sptr, parc, parv)
 		  send_usage(sptr, parv[0]);
 #endif
 		  break;
-#ifdef DEVELOP
 	  case 's':
-		  list_scache(sptr);
+	  	  if (IsOper(sptr))
+	  	  	list_scache(sptr);
 		  break;
-#endif
 	  case 'S':
 		  if (IsOper(sptr))
 			  report_dynconf(sptr);
