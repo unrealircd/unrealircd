@@ -886,3 +886,4 @@ seen. gmtime warning still there
 - Fixed a bug with nickserv passwords found and fixed by Mathieu
 - Fixed a DEBUGMODE problem with umodes.c
 - Fixed a snomask bug found by Rob
+- Made the missing commands error a little more.. tardfriendly
