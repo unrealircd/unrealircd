@@ -2853,3 +2853,5 @@ seen. gmtime warning still there
 - We are having fun with Makefiles...
 - Updated the Donation file to talk about the PayPal address to make donating easier
   (hint hint.. ;)
+- Added missing lines to include/setup.h.in for snprintf, vsnprintf, strlcpy, strlcat,
+  and strlncat. Should fix #0001510 (for real this time).
