@@ -5030,6 +5030,7 @@ void send_umode_out_nickv2(cptr, sptr, old)
 		    && (acptr != sptr) && *buf)
 			sendto_one(acptr, ":%s MODE %s :%s", sptr->name,
 			    sptr->name, buf);
+
 	if (cptr && MyClient(cptr))
 		send_umode(cptr, sptr, old, ALL_UMODES, buf);
 

@@ -3949,7 +3949,7 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 	   and nummsg is higher than mode.msgs
 	   then kick 
 	 */
-	lp2 = (MembershipL *) lp2;
+	lp2 = (MembershipL *) lp;
 	Debug((DEBUG_ERROR, "Checking for flood +f: lastmsg: %li now: %li per: %li - nmsg: %li msgs: %li",
 		lp2->flood.lastmsg, TStime(), chptr->mode.per,lp2->flood.nmsg, chptr->mode.msgs));
 	if ((TStime() - (lp2->flood.lastmsg)) >=	/* current - lastmsgtime */
