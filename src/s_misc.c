@@ -808,11 +808,7 @@ void tstats(cptr, name)
 
 	sp = &tmp;
 	bcopy((char *)ircstp, (char *)sp, sizeof(*sp));
-#ifndef _WIN32
-	for (i = 0; i < MAXCONNECTIONS; i++)
-#else
 	for (i = 0; i <= LastSlot; i++)
-#endif
 	{
 		if (!(acptr = local[i]))
 			continue;

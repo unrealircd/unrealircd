@@ -1359,6 +1359,12 @@ void SocketLoop(void *dummy)
 		   ** have data in them (or at least try to flush)
 		   ** -avalon
 		 */
+
+#ifndef NO_FDLIST
+		/* check which clients are active */
+		if (timeofday > nextfdlistcheck)
+			nextfdlistcheck = check_fdlists(timeofday);
+#endif
 		flush_connections(&me);
 	}
 }

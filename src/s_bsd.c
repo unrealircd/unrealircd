@@ -1884,6 +1884,7 @@ int  read_message(delay, listp)
 	{
 		if (!(cptr = local[i]))
 			continue;
+
 		if (cptr->socksfd < 0 || IsMe(cptr))
 			continue;
 		socks--;
@@ -2021,7 +2022,7 @@ deadsocket:
 			flush_connections(cptr);
 		if ((length != FLUSH_BUFFER) && IsDead(cptr))
 			goto deadsocket;
-		if ((length > 0) && !FD_ISSET(cptr->fd, &read_set) && length > 0)
+		if ((length > 0) && !FD_ISSET(cptr->fd, &read_set))
 			continue;
 		nfds--;
 		readcalls++;
@@ -2037,7 +2038,8 @@ deadsocket:
 		   ** in due course, select() returns that fd as ready
 		   ** for reading even though it ends up being an EOF. -avalon
 		 */
-		Debug((DEBUG_ERROR, "READ ERROR: fd=%d, errno=%d, length=%d", cptr->fd, ERRNO, length));
+		Debug((DEBUG_ERROR, "READ ERROR: fd=%d, errno=%d, length=%d",
+			length == FLUSH_BUFFER ? -2 : cptr->fd, ERRNO, length));
 		/*
 		   ** NOTE: if length == -2 then cptr has already been freed!
 		 */
@@ -2151,8 +2153,7 @@ int  read_message(delay, listp)
 		socks_pfd = NULL;
 		auth = 0;
 		socks = 0;
-		for (i = listp->entry[j = 1]; j <= listp->last_entry;
-		    i = listp->entry[++j])
+		for (i = listp->entry[j = 1]; j <= listp->last_entry; i = listp->entry[++j])
 		{
 			if (!(cptr = local[i]))
 				continue;
