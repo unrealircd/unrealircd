@@ -723,7 +723,7 @@ seen. gmtime warning still there
 - Made CR compatilbity actually work, it autojoins now :)
 - Started updating network files (remove all the obsolete ones)
 - Fixed SQLINE problem 
-- More SQLINE fixes.. does it work now?
+- Added doc/coding-guidelines
 - Readded header info to network files which was lost in the update
 - Updated a few network files that managed to slip by the update process
 - Updated networks/networks.ndx and alphabetized it and added all network files submitted in 3.2 format
