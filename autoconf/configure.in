@@ -368,5 +368,14 @@ CFLAGS="$CFLAGS -D_SOLARIS"
 IRCDLIBS="$IRCDLIBS -lresolv "
 ;;
 esac
+AC_MSG_RESULT(configuring TRE regex library)
+cur_dir=`pwd`
+cd extras/tre
+./configure --disable-agrep --disable-system-abi --disable-wchar --disable-multibyte --prefix=$cur_dir/extras/regexp
+AC_MSG_RESULT(compiling TRE regex library)
+make
+AC_MSG_RESULT(installing TRE regex library)
+make install
+cd $cur_dir
 AC_OUTPUT(Makefile src/modules/Makefile unreal)
 chmod 0700 unreal

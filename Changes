@@ -2220,3 +2220,4 @@ seen. gmtime warning still there
 - Changed a few messages so that they use PRIVMSG when being sent to a WebTV user rather than
   using NOTICE.
 - Added the TRE regex library to extras/tre (minor modifications to reduce source size)
+- Made ./Config configure, compile, and install TRE
