@@ -537,6 +537,21 @@ int stats_oper(aClient *sptr, char *para)
 	return 0;
 }
 
+static char *stats_port_helper(aClient *listener)
+{
+static char buf[256];
+	buf[0] = '\0';
+	if (listener->umodes & LISTENER_CLIENTSONLY)
+		strcat(buf, "clientsonly ");
+	if (listener->umodes & LISTENER_SERVERSONLY)
+		strcat(buf, "serversonly ");
+	if (listener->umodes & LISTENER_JAVACLIENT)
+		strcat(buf, "java ");
+	if (listener->umodes & LISTENER_SSL)
+		strcat(buf, "SSL ");
+	return buf;
+}
+
 int stats_port(aClient *sptr, char *para)
 {
 	int i;
@@ -547,12 +562,13 @@ int stats_port(aClient *sptr, char *para)
 			continue;
 	  	if (!IsListening(acptr))
 	  		continue;
-	  	sendto_one(sptr, ":%s %s %s :*** Listener on %s:%i, clients %i. is %s",
+	  	sendto_one(sptr, ":%s %s %s :*** Listener on %s:%i, clients %i. is %s %s",
 	  		me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name,
 	  		((ConfigItem_listen *)acptr->class)->ip,
 			((ConfigItem_listen *)acptr->class)->port,
 			((ConfigItem_listen *)acptr->class)->clients,
-			((ConfigItem_listen *)acptr->class)->flag.temporary ? "TEMPORARY" : "PERM");
+			((ConfigItem_listen *)acptr->class)->flag.temporary ? "TEMPORARY" : "PERM",
+			stats_port_helper(acptr));
 	}
 	return 0;
 }
