@@ -624,3 +624,4 @@ seen. gmtime warning still there
 - Changed ALL MODULES to version 2
 - Commited the +k fix to +L
 - Made version.c depend on ../Changes
+- Made the ircd call mod_unload when it shuts down

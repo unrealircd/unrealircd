@@ -204,6 +204,7 @@ VOIDSIG s_die()
 #ifdef	USE_SYSLOG
 	(void)syslog(LOG_CRIT, "Server Killed By SIGTERM");
 #endif
+	unload_all_modules();
 	flush_connections(&me);
 #ifndef _WIN32
 	exit(-1);
