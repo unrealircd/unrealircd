@@ -211,8 +211,23 @@ void WipeColors() {
 	}
 
 }
-DWORD CALLBACK RTFToIRC(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) {
-	int fd = (int)dwCookie;
+DWORD CALLBACK BufferIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) {
+	char *buf2;
+	static long size = 0;
+	buf2 = MyMalloc(size+cb+1);
+	if (RTFBuf)
+		memcpy(buf2,RTFBuf,size);
+	else 
+		size = 0;
+	memcpy(buf2+size,pbBuff,cb);
+	size += cb;
+	MyFree(RTFBuf);
+	RTFBuf = buf2;
+	pcb = &cb;
+	return 0;
+}
+
+DWORD CALLBACK RTFToIRC(int fd, char *pbBuff, long cb) {
 	char *buffer = (char *)malloc(cb);
 	int i = 0, j = 0, k = 0, start = 0, end = 0;
 	int incolor = 0, bold = 0, uline = 0;
@@ -993,11 +1008,12 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			int fd;
 			EDITSTREAM edit;
 			fd = open(file, _O_TRUNC|_O_CREAT|_O_WRONLY|_O_BINARY,_S_IWRITE);
-			edit.dwCookie = (DWORD)fd;
-			edit.pfnCallback = RTFToIRC;
+			edit.dwCookie = 0;
+			edit.pfnCallback = BufferIt;
 			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_SETSEL, -1, -1);
 			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_STREAMOUT, (WPARAM)SF_RTF|SFF_PLAINRTF, (LPARAM)&edit);
-			close(fd);
+			RTFToIRC(fd, RTFBuf, strlen(RTFBuf));
+			free(RTFBuf);
 			EndDialog(hDlg, TRUE);
 		}
 		hWnd = GetDlgItem(hDlg, IDC_TEXT);

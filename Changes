@@ -891,3 +891,4 @@ seen. gmtime warning still there
 - Made some nameser.h changes to work win win32
 - Fixed a typo in makenet found by 'Eternal Bliss'
 - Updated module dependancies to allow a module to load the module containing the symbol
+- Fixed a win32 bug where the editor would cut off text, reported by Inter
