@@ -419,3 +419,4 @@
 - Fixed so that in +c it shows if a user is connected securely
 - Backported the passwd stuff, not needed.
 - Fixed a crash problem on /quit or /squit
+- Fixed some aligning in the VL PROTOCTL

@@ -572,13 +572,14 @@ int  m_server(cptr, sptr, parc, parv)
 			    inpath);
 			return exit_client(cptr, cptr, cptr, "Bad Password");
 		}
-		/*      bzero(cptr->passwd, sizeof(cptr->passwd)); */
+		bzero(cptr->passwd, sizeof(cptr->passwd));
 	}
 	f = (char *) does_servername_collide(parv[1]);
 	if (f)
 	{
 		ircsprintf(pp, "Servername %s collides with servername %s (similar hash). Change servername in some way (maybe change case)",
 			parv[1], f);		
+		sendto_realops("Link %s cancelled - %s", inpath, pp);
 		return exit_client(cptr, cptr, cptr, pp);
 	}
 	if ((acptr = find_name(host, NULL)))
