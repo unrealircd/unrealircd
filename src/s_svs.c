@@ -403,7 +403,7 @@ int  m_akill(cptr, sptr, parc, parv)
 		bconf = (ConfigItem_ban *) MyMallocEx(sizeof(ConfigItem_ban));
 		bconf->flag.type = CONF_BAN_USER;
 		bconf->mask = strdup(make_user_host(usermask, hostmask));
-		bconf->reason = comment;
+		bconf->reason = strdup(comment);
 		bconf->flag.type2 = CONF_BAN_TYPE_AKILL;
 		add_ConfigItem((ConfigItem *) bconf, (ConfigItem **) &conf_ban);
 	}
@@ -828,4 +828,128 @@ int  m_unzline(cptr, sptr, parc, parv)
 	MyFree(bconf);
 
 	return 0;
+}
+
+
+/*
+** m_kline;
+**	parv[0] = sender prefix
+**	parv[1] = nickname
+**	parv[2] = comment or filename
+*/
+int  m_kline(cptr, sptr, parc, parv)
+	aClient *cptr, *sptr;
+	int  parc;
+	char *parv[];
+{
+	char *host, *tmp, *hosttemp;
+	char uhost[80], name[80];
+	int  ip1, ip2, ip3, temp;
+	aClient *acptr;
+	ConfigItem_ban *bconf;
+
+	if (!MyClient(sptr) || !OPCanKline(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		return 0;
+	}
+
+
+	if (parc < 2)
+	{
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+		    me.name, parv[0], "KLINE");
+		return 0;
+	}
+
+
+/* This patch allows opers to quote kline by address as well as nick
+ * --Russell
+ */
+	if (hosttemp = (char *)strchr((char *)parv[1], '@'))
+	{
+		temp = 0;
+		while (temp <= 20)
+			name[temp++] = 0;
+		strcpy(uhost, ++hosttemp);
+		strncpy(name, parv[1], hosttemp - 1 - parv[1]);
+		if (name[0] == '\0' || uhost[0] == '\0')
+		{
+			Debug((DEBUG_INFO, "KLINE: Bad field!"));
+			sendto_one(sptr,
+			    "NOTICE %s :*** If you're going to add a userhost, at LEAST specify both fields",
+			    parv[0]);
+			return 0;
+		}
+		if (!strcmp(uhost, "*") || !strchr(uhost, '.'))
+		{
+			sendto_one(sptr,
+			    "NOTICE %s :*** What a sweeping K:Line.  If only your admin knew you tried that..",
+			    parv[0]);
+			sendto_realops("%s attempted to /kline *@*", parv[0]);
+			return 0;
+		}
+	}
+
+/* by nick */
+	else
+	{
+		if (!(acptr = find_client(parv[1], NULL)))
+		{
+			if (!(acptr =
+			    get_history(parv[1], (long)KILLCHASETIMELIMIT)))
+			{
+				sendto_one(sptr,
+				    "NOTICE %s :*** Can't find user %s to add KLINE",
+				    parv[0], parv[1]);
+				return 0;
+			}
+		}
+
+		if (!acptr->user)
+			return 0;
+
+		strcpy(name, acptr->user->username);
+		if (MyClient(acptr))
+			host = acptr->sockhost;
+		else
+			host = acptr->user->realhost;
+
+		/* Sanity checks */
+
+		if (name == '\0' || host == '\0')
+		{
+			Debug((DEBUG_INFO, "KLINE: Bad field"));
+			sendto_one(sptr, "NOTICE %s :*** Bad field!", parv[0]);
+			return 0;
+		}
+
+		/* Add some wildcards */
+
+
+		strcpy(uhost, host);
+		if (isdigit(host[strlen(host) - 1]))
+		{
+			if (sscanf(host, "%d.%d.%d.%*d", &ip1, &ip2, &ip3))
+				ircsprintf(uhost, "%d.%d.%d.*", ip1, ip2, ip3);
+		}
+		else if (sscanf(host, "%*[^.].%*[^.].%s", uhost))
+		{		/* Not really... */
+			tmp = (char *)strchr(host, '.');
+			ircsprintf(uhost, "*%s", tmp);
+		}
+	}
+
+	sendto_realops("%s added a temp k:line for %s@%s %s", parv[0], name, uhost,
+	    parv[2] ? parv[2] : "");
+	ircd_log("%s added a temp k:line for %s@%s %s",
+	   parv[0], name, uhost,
+	    parv[2] ? parv[2] : "");
+	bconf = (ConfigItem_ban *)MyMallocEx(sizeof(ConfigItem_ban));
+	bconf->flag.type = CONF_BAN_USER;
+	bconf->mask = strdup(make_user_host(name, uhost));
+	bconf->reason = parv[2] ? strdup(parv[2]) : NULL;
+	bconf->flag.type2 = CONF_BAN_TYPE_TEMPORARY;
+	add_ConfigItem((ConfigItem *) bconf, (ConfigItem **) &conf_ban);
+	check_pings(TStime(), 1);
 }
