@@ -23,8 +23,8 @@ English | <a href="unreal32docs.de.html">German</a><br><br>
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
-  <b>Current Version:</b> 3.2 pre1<br>
-  <b>Last doc update:</b> 2004-04-16</div>
+  <b>Current Version:</b> 3.2 *CVS*<br>
+  <b>Last doc update:</b> 2004-04-23</div>
 <br>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -2747,7 +2747,7 @@ to get more information on a command.</p>
   <tr> 
     <td height="39">gzline [+|-]&lt;ip&gt; &lt;time to ban&gt; :&lt;reason&gt;<br></td>
     <td>Adds a global zline. See kline for more syntax info.
-      Use /gzline -user@host to remove a gzline.<br></td>
+      Use /gzline -*@ip to remove a gzline.<br></td>
     <td>IRCop</td>
   </tr>
   <tr> 
@@ -2814,7 +2814,7 @@ to get more information on a command.</p>
     <td height="39">connect &lt;server&gt; &lt;port&gt; &lt;server&gt;</td>
     <td>If only one server is given, it will attempt to connect the server you 
       are ON to the given server. If 2 servers are given, it will attempt to connect 
-      the 2 servers together. Put the hub server as the first, and the leaf server 
+      the 2 servers together. Put the leaf server as the first, and the hub server 
       as the second.<br></td>
     <td>IRCop</td>
   </tr>

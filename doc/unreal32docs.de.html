@@ -22,10 +22,10 @@
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
-  <b>Aktuelle Version:</b> 3.2 pre1*<br>
-  <b>Letztes Dokumentation Update:</b> 2004-04-16</div>
+  <b>Aktuelle Version:</b> 3.2 *CVS*<br>
+  <b>Letztes Dokumentation Update:</b>    2004-04-23 </div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
-  <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
+  <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
 <b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
 <b>Deutsche Übersetzung:</b> Stylus740<br>
 <p>Aufgrund des wachsenden Umfangs der Dokumentation von UnrealIRCd3.2 wurde das
@@ -203,7 +203,7 @@ Bug gemeldet wird!</p></div>
 Linux:<br>
 <ol>
 <li>gunzip -d Unreal3.2-pre1.tar.gz
-<li>tar xvf Unreal3.2-pre1.tar.gz
+<li>tar xvf Unreal3.2-RC1-pre1.tar.gz
 <li>cd Unreal3.2
 <li>./Config
 <li>Die hierbei angezeigten Fragen nach bestem Wissen beantworten. Allgemein ist
@@ -320,7 +320,8 @@ genau die benötigten Rechte gegeben werden können..</p>
 für weitere Informationen.)</p></div>
 
 <p><font size="+2"><b><a name="feature_opercmds">3.7 - Oper Befehle</a></b></font></p><div class="desc">
-<p>UnrealIRCd hat eine Reihe mächtiger Befehle für Opers, die im Abschnitt 6
+<p>UnrealIRCd hat eine Reihe mächtiger Befehle für Opers, die im Abschnitt <a href="#useropercommands">User
+&amp; Oper Befehlsliste</a>
 erklärt werden. Es empfiehl sich, diese nach der Installation zu lesen :).</p></div>
 
 <p><font size="+2"><b><a name="feature_ssl">3.8 - SSL</a></b></font></p><div class="desc">
@@ -338,8 +339,10 @@ auf&nbsp; SSL einstellen!), sondern es wird ein Client oder ein Tunnel
 benötigt, der das SSL Protokoll unterstützt.</p>
 <p>Diese Clients unterstützen SSL: <A HREF="http://www.xchat.org/" TARGET="_blank">XChat</a>,
 <a href="http://www.irssi.org/">irssi</a>, <a href="http://www.mirc.com/"> mIRC</a> (6.14
-und höher, zusätzlicher <a href="http://www.mirc.co.uk/ssl.html">stunnel</a>
-erforderlich, hier ein stunnel.conf Beispiel (für stunnel 4.x):</p>
+und höher, weitere <a href="http://www.mirc.co.uk/ssl.html">zusätzliche
+Schritte</a> erforderlich)</p>
+<p>Für Clients, die kein SSL unterstützen, kann man einen Tunnel wie <a href="http://www.mirc.co.uk/ssl.html">stunnel</a>
+ benutzen. Hie ein Beispiel für eine stunnel.conf Beispiel (für stunnel 4.x):</p>
    <pre>
    client = yes
    [irc]
@@ -3364,43 +3367,45 @@ Befehlsliste</a></b></font></p><div class="desc">
     <td width="93" height="33">IRCop</td>
   </tr>
   <tr> 
-    <td height="57" width="267">kline +-&lt;hostmask&gt; &lt;time to ban&gt; &lt;reason&gt;</td>
+    <td height="57" width="267">kline [+-]&lt;user@host&gt; [&lt;time to ban&gt; &lt;reason&gt;]</td>
     <td width="486" height="57">Bannt die Host Mask von dem Server, auf dem die
-      Line gesetzt wurde. Es ist kein globaler Bann. &lt;time to ban&gt; ist in
-      Sekunden, oder man verwendet 1d für1 Tag. Wird der Host Mask ein '-'
-      vorangestellt, wird die kline gelöscht.</td>
+      Line gesetzt wurde. Eine kline ist kein globaler Bann. <b>time to ban</b> ist
+      entweder a) ein Wert in
+      Sekunden, b) ein Zeitwert, wie '1d' für1 Tag, oder c) '0' für permanent.
+      Zeit und Grund sind optional, falls nicht angegeben, werden der Werte aus
+      'set::default-bantime (Default: 0/permanent) und 'no reason' verwendet. Um
+      eine kline zu löschen, benutzt man den Befehl /kline -user@host.</td>
     <td width="93" height="57">IRCop</td>
   </tr>
   <tr> 
-    <td height="76" width="267">zline +-&lt;ip&gt; &lt;time to ban&gt; &lt;reason&gt;</td>
-    <td width="486" height="76">Bannt die IP Adresse von dem Server, auf dem die
-      Line gesetzt wurde. Es ist kein globaler Bann. &lt;time to ban&gt; ist in
-      Sekunden, oder man verwendet 1d für1 Tag. Wird der IP ein '-'
-      vorangestellt, wird die kline gelöscht..</td>
+    <td height="76" width="267">zline [+-]&lt;*@ip&gt; [&lt;time to ban&gt; &lt;reason&gt;]</td>
+    <td width="486" height="76">Bannt eine IP Adresse vom lokalen Server, auf dem die
+      Line gesetzt wurde (nicht global).&nbsp; Siehe bei kline für genauere
+      Informationen zur Syntax. Zum Löschen benutzt man /zline -*@ip.</td>
     <td width="93" height="76">IRCop</td>
   </tr>
   <tr> 
-    <td height="57" width="267">gline +-&lt;user@host&gt; &lt;time to ban&gt; :&lt;reason&gt;<br></td>
+    <td height="57" width="267">gline [+-]&lt;user@host&gt;| nick&gt; [&lt;time to ban&gt;
+      &lt;reason&gt;]<br></td>
     <td width="486" height="57">Setzt einen globalen Bann auf alle, auf die die
-      Maske zutrifft. &lt;time to ban&gt; ist in Sekunden, oder man verwendet 1d
-      für 1 Tag. Zum Löschen einer gline setzt man '-user@host'.</td>
+      Maske zutrifft. Siehe bei kline für genauere Informationen zur Syntax.
+      Zum Löschen benutzt man /gline -user@host.</td>
     <td width="93" height="57">IRCop</td>
   </tr>
   <tr> 
-    <td height="76" width="267">shun +-&lt;user@host&gt; &lt;time to shun&gt; :&lt;reason&gt;<br></td>
+    <td height="76" width="267">shun [+-]&lt;user@host | nick&gt; [&lt;time to shun&gt;
+      &lt;reason&gt;]<br></td>
     <td width="486" height="76">Bewirkt, dass der User KEINERLEI Befehle auf dem
-      Server mehr ausführen und auch nichts mehr schreiben kann. &lt;time to
-      shun&gt; ist in Sekunden, oder man verwendet 1d für 1 Tag. Zum Löschen
-      eines shun setzt man '-user@host'. Setzen der Zeit auf 0 macht den shun
-      permanent.</td>
+      Server mehr ausführen und auch nichts mehr schreiben kann. Shuns sind
+      global (wie glines) Siehe bei kline für genauere Informationen zur
+      Syntax. Zum Löschen benutzt man /shun -user@host..</td>
     <td width="93" height="76">IRCop</td>
   </tr>
   <tr> 
-    <td height="57" width="267">gzline +-&lt;ip&gt; &lt;time to ban&gt; :&lt;reason&gt;</td>
-    <td width="486" height="57">Setzt eine globale zline (Bann auf IP). &lt;time to ban&gt;
-      ist in Sekunden, oder man verwendet 1d für 1 Tag. Zum Löschen einer
-      gzline setzt man '-user@host'. Setzen der Zeit auf 0 macht die gzline
-      permanent.</td>
+    <td height="57" width="267">gzline [+-]&lt;ip&gt; &lt;time to ban&gt; :&lt;reason&gt;</td>
+    <td width="486" height="57">Setzt eine globale zline (Bann auf IP). Siehe
+      bei kline für genauere Informationen zur Syntax. Zum Löschen benutzt man
+      /gzline -*@ip.</td>
     <td width="93" height="57">IRCop</td>
   </tr>
   <tr> 
@@ -3478,7 +3483,7 @@ Befehlsliste</a></b></font></p><div class="desc">
     <td width="486" height="76">Wenn nur ein Server angegeben ist, wird
       versucht, den Server, auf dem man aktuell ist, zum zweiten Server zu
       verbinden. Sind 2 Server angegeben, wird versucht, die beiden Server
-      miteinander zu verbinden. Ein Hub ist an erster Stelle anzugeben, ein Leaf
+      miteinander zu verbinden. Ein Leaf ist an erster Stelle anzugeben, ein Hub
       an zweiter Stelle.</td>
     <td width="93" height="76">IRCop</td>
   </tr>
