@@ -254,3 +254,4 @@
 - Removed return_servers() and made servers be called Servers, and be a
   global variable. Done on request on Great Master codemastr.
 - Made crule.c use the server list rather than the whole client list for checking (faster)
+- Sped up some channel stuff a lot using a bahamut type user search

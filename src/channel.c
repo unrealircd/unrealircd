@@ -492,7 +492,7 @@ int  is_chan_op(aClient *cptr, aChannel *chptr)
 	Link *lp;
 /* chanop/halfop ? */
 	if (chptr)
-		if ((lp = find_user_link(chptr->members, cptr)))
+		if ((lp = find_channel_link(cptr->user->channel, chptr)))
 			return ((lp->flags & CHFL_CHANOP));
 
 	return 0;
@@ -504,7 +504,7 @@ int  has_voice(aClient *cptr, aChannel *chptr)
 	Link *lp;
 
 	if (chptr)
-		if ((lp = find_user_link(chptr->members, cptr)))
+		if ((lp = find_channel_link(cptr->user->channel, chptr)))
 			return (lp->flags & CHFL_VOICE);
 
 	return 0;
@@ -514,7 +514,7 @@ int  is_halfop(aClient *cptr, aChannel *chptr)
 	Link *lp;
 
 	if (chptr)
-		if ((lp = find_user_link(chptr->members, cptr)))
+		if ((lp = find_channel_link(cptr->user->channel, chptr)))
 			if (!is_chan_op(cptr, chptr))	/* excessive but needed */
 				return (lp->flags & CHFL_HALFOP);
 
@@ -526,7 +526,7 @@ int  is_chanowner(aClient *cptr, aChannel *chptr)
 	Link *lp;
 
 	if (chptr)
-		if ((lp = find_user_link(chptr->members, cptr)))
+		if ((lp = find_channel_link(cptr->user->channel, chptr)))
 			return (lp->flags & CHFL_CHANOWNER);
 
 	return 0;
@@ -536,7 +536,7 @@ int is_chanownprotop(aClient *cptr, aChannel *chptr) {
 	Link *lp;
 		
 	if (chptr)
-		if ((lp = find_user_link(chptr->members, cptr)))
+		if ((lp = find_channel_link(cptr->user->channel, chptr)))
 			if (lp->flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP))
 				return 1;
 	return 0;
@@ -547,7 +547,7 @@ int  is_chanprot(aClient *cptr, aChannel *chptr)
 	Link *lp;
 
 	if (chptr)
-		if ((lp = find_user_link(chptr->members, cptr)))
+		if ((lp = find_channel_link(cptr->user->channel, chptr)))
 			return (lp->flags & CHFL_CHANPROT);
 
 	return 0;
@@ -577,8 +577,7 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 	if (chptr->mode.mode & MODE_NOPRIVMSGS && !member)
 		return (CANNOT_SEND_NOPRIVMSGS);
 
-	lp = find_user_link(chptr->members, cptr);
-
+	lp = find_channel_link(cptr->user->channel, chptr);
 
 	if (chptr->mode.mode & MODE_MODERATED &&
 	    (!lp
@@ -1585,7 +1584,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 		  retval = 1;
 		  if (!(who = find_chasing(cptr, param, &chasing)))
 			  break;
-		  if (!(member = find_user_link(chptr->members, who)))
+		if (!(member = find_channel_link(who->user->channel, chptr)))
+/*		  if (!(member = find_user_link(chptr->members, who)))*/
 		  {
 			  sendto_one(cptr, err_str(ERR_USERNOTINCHANNEL),
 			      me.name, cptr->name, who->name, chptr->chname);
