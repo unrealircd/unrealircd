@@ -420,3 +420,4 @@
 - Backported the passwd stuff, not needed.
 - Fixed a crash problem on /quit or /squit
 - Fixed some aligning in the VL PROTOCTL
+- Fixed some fucked up passwd stuff again ..

@@ -572,7 +572,7 @@ int  m_server(cptr, sptr, parc, parv)
 			    inpath);
 			return exit_client(cptr, cptr, cptr, "Bad Password");
 		}
-		bzero(cptr->passwd, sizeof(cptr->passwd));
+		/* bzero(cptr->passwd, sizeof(cptr->passwd)); */
 	}
 	f = (char *) does_servername_collide(parv[1]);
 	if (f)
