@@ -42,10 +42,12 @@
 #undef  POSIX_SIGNALS
 #undef  TIMES_2
 #undef  GETRUSAGE_2
+#define HAVE_ALLOCA
 #define SPATH "."
 #define DPATH "."
 #define DOMAINNAME "irc.net"
 #define NO_U_TYPES
 #define NEED_U_INT32_T
 #define PREFIX_AQ
+#define LIST_SHOW_MODES
 #endif

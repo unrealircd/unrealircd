@@ -54,6 +54,25 @@ Cmode *Channelmode_Table = NULL;
 unsigned short Channelmode_highest = 0;
 
 Cmode_t EXTMODE_NONOTICE = 0L;
+#ifdef STRIPBADWORDS
+Cmode_t EXTMODE_STRIPBADWORDS = 0L;
+#endif
+
+#ifdef JOINTHROTTLE
+/* cmode j stuff... */
+Cmode_t EXTMODE_JOINTHROTTLE = 0L;
+int cmodej_is_ok(aClient *sptr, aChannel *chptr, char *para, int type, int what);
+CmodeParam *cmodej_put_param(CmodeParam *r_in, char *param);
+char *cmodej_get_param(CmodeParam *r_in);
+char *cmodej_conv_param(char *param_in);
+void cmodej_free_param(CmodeParam *r);
+CmodeParam *cmodej_dup_struct(CmodeParam *r_in);
+int cmodej_sjoin_check(aChannel *chptr, CmodeParam *ourx, CmodeParam *theirx);
+#endif
+int extcmode_cmodeT_requirechop(aClient *cptr, aChannel *chptr, char *para, int checkt, int what);
+#ifdef STRIPBADWORDS
+int extcmode_cmodeG_requirechop(aClient *cptr, aChannel *chptr, char *para, int checkt, int what);
+#endif
 
 void make_extcmodestr()
 {
@@ -89,9 +108,29 @@ static void load_extendedchanmodes(void)
 	memset(&req, 0, sizeof(req));
 	
 	req.paracount = 0;
-	req.is_ok = extcmode_default_requirechop;
+	req.is_ok = extcmode_cmodeT_requirechop;
 	req.flag = 'T';
 	CmodeAdd(NULL, req, &EXTMODE_NONOTICE);
+#ifdef STRIPBADWORDS
+	req.flag = 'G';
+	req.is_ok = extcmode_cmodeG_requirechop;
+	CmodeAdd(NULL, req, &EXTMODE_STRIPBADWORDS);
+#endif
+	
+#ifdef JOINTHROTTLE
+	/* +j */
+	memset(&req, 0, sizeof(req));
+	req.paracount = 1;
+	req.is_ok = cmodej_is_ok;
+	req.flag = 'j';
+	req.put_param = cmodej_put_param;
+	req.get_param = cmodej_get_param;
+	req.conv_param = cmodej_conv_param;
+	req.free_param = cmodej_free_param;
+	req.dup_struct = cmodej_dup_struct;
+	req.sjoin_check = cmodej_sjoin_check;
+	CmodeAdd(NULL, req, &EXTMODE_JOINTHROTTLE);
+#endif
 }
 
 void	extcmode_init(void)
@@ -246,10 +285,22 @@ void extcmode_free_paramlist(CmodeParam *lst)
 	}
 }
 
+/* Ok this is my mistake @ EXCHK_ACCESS_ERR error msg:
+ * the is_ok() thing does not know which mode it belongs to,
+ * this is normally redundant information of course but in
+ * case of a default handler like these, it's required to
+ * know which setting of mode failed (the mode char).
+ * I just return '?' for now, better than nothing.
+ * TO SUMMARIZE: Do not use extcmode_default_requirechop for new modules :p.
+ * Obviously in Unreal3.3* we should fix this. -- Syzop
+ */
+
 int extcmode_default_requirechop(aClient *cptr, aChannel *chptr, char *para, int checkt, int what)
 {
 	if (IsPerson(cptr) && is_chan_op(cptr, chptr))
 		return EX_ALLOW;
+	if (checkt == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
+		sendto_one(cptr, err_str(ERR_NOTFORHALFOPS), me.name, cptr->name, '?');
 	return EX_DENY;
 }
 
@@ -260,5 +311,173 @@ int extcmode_default_requirehalfop(aClient *cptr, aChannel *chptr, char *para, i
 		return EX_ALLOW;
 	return EX_DENY;
 }
+
+int extcmode_cmodeT_requirechop(aClient *cptr, aChannel *chptr, char *para, int checkt, int what)
+{
+	if (IsPerson(cptr) && is_chan_op(cptr, chptr))
+		return EX_ALLOW;
+	if (checkt == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
+		sendto_one(cptr, err_str(ERR_NOTFORHALFOPS), me.name, cptr->name, 'T');
+	return EX_DENY;
+}
+
+int extcmode_cmodeG_requirechop(aClient *cptr, aChannel *chptr, char *para, int checkt, int what)
+{
+	if (IsPerson(cptr) && is_chan_op(cptr, chptr))
+		return EX_ALLOW;
+	if (checkt == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
+		sendto_one(cptr, err_str(ERR_NOTFORHALFOPS), me.name, cptr->name, 'G');
+	return EX_DENY;
+}
+
+#ifdef JOINTHROTTLE
+/*** CHANNEL MODE +j STUFF ******/
+int cmodej_is_ok(aClient *sptr, aChannel *chptr, char *para, int type, int what)
+{
+	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
+	{
+		if (IsPerson(sptr) && is_chan_op(sptr, chptr))
+			return EX_ALLOW;
+		if (type == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
+			sendto_one(sptr, err_str(ERR_NOTFORHALFOPS), me.name, sptr->name, 'j');
+		return EX_DENY;
+	} else
+	if (type == EXCHK_PARAM)
+	{
+		/* Check parameter.. syntax should be X:Y, X should be 1-255, Y should be 1-999 */
+		char buf[32], *p;
+		int num, t, fail = 0;
+		
+		strlcpy(buf, para, sizeof(buf));
+		p = strchr(buf, ':');
+		if (!p)
+		{
+			fail = 1;
+		} else {
+			*p++ = '\0';
+			num = atoi(buf);
+			t = atoi(p);
+			if ((num < 1) || (num > 255) || (t < 1) || (t > 999))
+				fail = 1;
+		}
+		if (fail)
+		{
+			sendnotice(sptr, "Error in setting +j, syntax: +j <num>:<seconds>, where <num> must be 1-255, and <seconds> 1-999");
+			return EX_DENY;
+		}
+		return EX_ALLOW;
+	}
+
+	/* falltrough -- should not be used */
+	return EX_DENY;
+}
+
+CmodeParam *cmodej_put_param(CmodeParam *r_in, char *param)
+{
+aModejEntry *r = (aModejEntry *)r_in;
+char buf[32], *p;
+int num, t;
+
+	if (!r)
+	{
+		/* Need to create one */
+		r = (aModejEntry *)malloc(sizeof(aModejEntry));
+		memset(r, 0, sizeof(aModejEntry));
+		r->flag = 'j';
+	}
+	strlcpy(buf, param, sizeof(buf));
+	p = strchr(buf, ':');
+	if (p)
+	{
+		*p++ = '\0';
+		num = atoi(buf);
+		t = atoi(p);
+		if (num < 1) num = 1;
+		if (num > 255) num = 255;
+		if (t < 1) t = 1;
+		if (t > 999) t = 999;
+		r->num = num;
+		r->t = t;
+	} else {
+		r->num = 0;
+		r->t = 0;
+	}
+	return (CmodeParam *)r;
+}
+
+char *cmodej_get_param(CmodeParam *r_in)
+{
+aModejEntry *r = (aModejEntry *)r_in;
+static char retbuf[16];
+
+	if (!r)
+		return NULL;
+
+	snprintf(retbuf, sizeof(retbuf), "%hu:%hu", r->num, r->t);
+	return retbuf;
+}
+
+char *cmodej_conv_param(char *param_in)
+{
+static char retbuf[32];
+char param[32], *p;
+int num, t, fail = 0;
+		
+	strlcpy(param, param_in, sizeof(param));
+	p = strchr(param, ':');
+	if (!p)
+		return NULL;
+	*p++ = '\0';
+	num = atoi(param);
+	t = atoi(p);
+	if (num < 1)
+		num = 1;
+	if (num > 255)
+		num = 255;
+	if (t < 1)
+		t = 1;
+	if (t > 999)
+		t = 999;
+	
+	snprintf(retbuf, sizeof(retbuf), "%d:%d", num, t);
+	return retbuf;
+}
+
+void cmodej_free_param(CmodeParam *r)
+{
+	MyFree(r);
+}
+
+CmodeParam *cmodej_dup_struct(CmodeParam *r_in)
+{
+aModejEntry *r = (aModejEntry *)r_in;
+aModejEntry *w = (aModejEntry *)MyMalloc(sizeof(aModejEntry));
+
+	memcpy(w, r, sizeof(aModejEntry));
+	return (CmodeParam *)w;
+}
+
+int cmodej_sjoin_check(aChannel *chptr, CmodeParam *ourx, CmodeParam *theirx)
+{
+aModejEntry *our = (aModejEntry *)ourx;
+aModejEntry *their = (aModejEntry *)theirx;
+
+	if (our->t != their->t)
+	{
+		if (our->t > their->t)
+			return EXSJ_WEWON;
+		else
+			return EXSJ_THEYWON;
+	}
+	else if (our->num != their->num)
+	{
+		if (our->num > their->num)
+			return EXSJ_WEWON;
+		else
+			return EXSJ_THEYWON;
+	} else
+		return EXSJ_SAME;
+}
+#endif /* JOINTHROTTLE */
 
 #endif /* EXTCMODE */

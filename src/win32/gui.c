@@ -356,6 +356,7 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				case WM_RBUTTONUP: 
 				{
 					unsigned long i = 60000;
+					MENUITEMINFO mii;
 					GetCursorPos(&p);
 					DestroyMenu(hConfig);
 					hConfig = CreatePopupMenu();
@@ -410,7 +411,10 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 					}
 					AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
 					AppendMenu(hConfig, MF_STRING, IDM_NEW, "New File");
-					ModifyMenu(hTray, IDM_CONFIG, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT)hConfig, "&Config");
+					mii.cbSize = sizeof(MENUITEMINFO);
+					mii.fMask = MIIM_SUBMENU;
+					mii.hSubMenu = hConfig;
+					SetMenuItemInfo(hTray, IDM_CONFIG, MF_BYCOMMAND, &mii);
 					TrackPopupMenu(hTray, TPM_LEFTALIGN|TPM_LEFTBUTTON,p.x,p.y,0,hDlg,NULL);
 					/* Kludge for a win bug */
 					SendMessage(hDlg, WM_NULL, 0, 0);

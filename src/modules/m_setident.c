@@ -19,6 +19,7 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+#include "macros.h"
 #include "config.h"
 #include "struct.h"
 #include "common.h"
@@ -194,37 +195,43 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
-	switch (UHOST_ALLOWED)
 	{
-		case UHALLOW_ALWAYS:
-			break;
-		case UHALLOW_NEVER:
-			if (MyClient(sptr))
-			{
-				sendto_one(sptr, ":%s NOTICE %s :*** /SetIdent is disabled", me.name, sptr->name);
-				return 0;
-			}
-			break;
-		case UHALLOW_NOCHANS:
-			if (MyClient(sptr) && sptr->user->joined)
-			{
-				sendto_one(sptr, ":%s NOTICE %s :*** /SetIdent can not be used while you are on a channel", me.name, sptr->name);
-				return 0;
-			}
-			break;
-		case UHALLOW_REJOIN:
-			rejoin_doparts(sptr);
-			break;
+		DYN_LOCAL(char, did_parts, sptr->user->joined);
+		switch (UHOST_ALLOWED)
+		{
+			case UHALLOW_ALWAYS:
+				break;
+			case UHALLOW_NEVER:
+				if (MyClient(sptr))
+				{
+					sendto_one(sptr, ":%s NOTICE %s :*** /SetIdent is disabled", me.name, sptr->name);
+					DYN_FREE(did_parts);
+					return 0;
+				}
+				break;
+			case UHALLOW_NOCHANS:
+				if (MyClient(sptr) && sptr->user->joined)
+				{
+					sendto_one(sptr, ":%s NOTICE %s :*** /SetIdent can not be used while you are on a channel", me.name, sptr->name);
+					DYN_FREE(did_parts);
+					return 0;
+				}
+				break;
+			case UHALLOW_REJOIN:
+				rejoin_doparts(sptr, did_parts);
+				break;
+		}
+
+		/* get it in */
+		ircsprintf(sptr->user->username, "%s", vident);
+		/* spread it out */
+		sendto_serv_butone_token(cptr, sptr->name,
+		    MSG_SETIDENT, TOK_SETIDENT, "%s", parv[1]);
+
+		if (UHOST_ALLOWED == UHALLOW_REJOIN)
+			rejoin_dojoinandmode(sptr, did_parts);
+		DYN_FREE(did_parts);
 	}
-
-	/* get it in */
-	ircsprintf(sptr->user->username, "%s", vident);
-	/* spread it out */
-	sendto_serv_butone_token(cptr, sptr->name,
-	    MSG_SETIDENT, TOK_SETIDENT, "%s", parv[1]);
-
-	if (UHOST_ALLOWED == UHALLOW_REJOIN)
-		rejoin_dojoinandmode(sptr);
 
 	if (MyConnect(sptr))
 	{

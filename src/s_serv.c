@@ -187,9 +187,10 @@ char *num = NULL;
  */
 void send_proto(aClient *cptr, ConfigItem_link *aconf)
 {
-char buf[512];
-	sprintf(buf, "CHANMODES=%s%s,%s%s,%s%s,%s%s",
-		CHPAR1, EXPAR1, CHPAR2, EXPAR2, CHPAR3, EXPAR3, CHPAR4, EXPAR4);
+char buf[1024];
+
+	sprintf(buf, "CHANMODES=%s%s,%s%s,%s%s,%s%s NICKCHARS=%s",
+		CHPAR1, EXPAR1, CHPAR2, EXPAR2, CHPAR3, EXPAR3, CHPAR4, EXPAR4, langsinuse);
 #ifdef ZIP_LINKS
 	if (aconf->options & CONNECT_ZIP)
 	{
@@ -397,14 +398,26 @@ static void show_watch(aClient *cptr, char *name, int rpl1, int rpl2)
 
 	if ((acptr = find_person(name, NULL)))
 	{
-		sendto_one(cptr, rpl_str(rpl1), me.name, cptr->name,
-		    acptr->name, acptr->user->username,
-		    IsHidden(acptr) ? acptr->user->virthost : acptr->user->
-		    realhost, acptr->lastnick);
+		if (IsWebTV(cptr))
+			sendto_one(cptr, ":IRC!IRC@%s PRIVMSG %s :%s (%s@%s) is on IRC", 
+			    me.name, cptr->name, acptr->name, acptr->user->username,
+			    IsHidden(acptr) ? acptr->user->virthost : acptr->user->
+			    realhost);
+		else
+			sendto_one(cptr, rpl_str(rpl1), me.name, cptr->name,
+			    acptr->name, acptr->user->username,
+			    IsHidden(acptr) ? acptr->user->virthost : acptr->user->
+			    realhost, acptr->lastnick);
 	}
 	else
-		sendto_one(cptr, rpl_str(rpl2), me.name, cptr->name,
-		    name, "*", "*", 0);
+	{
+		if (IsWebTV(cptr))
+			sendto_one(cptr, ":IRC!IRC@%s PRIVMSG %s :%s is not on IRC", me.name, 
+				cptr->name, name);
+		else	
+			sendto_one(cptr, rpl_str(rpl2), me.name, cptr->name,
+			    name, "*", "*", 0);
+	}
 }
 
 /*
@@ -724,52 +737,6 @@ void reset_help(void)
 	free_str_list(helpign);
 }
 
-/*
- * parv[0] = sender
- * parv[1] = server to query
- */
-CMD_FUNC(m_lusers)
-{
-	if (hunt_server_token(cptr, sptr, MSG_LUSERS, TOK_LUSERS, ":%s", 1, parc,
-	    parv) != HUNTED_ISME)
-		return 0;
-	/* Just to correct results ---Stskeeps */
-	if (IRCstats.clients > IRCstats.global_max)
-		IRCstats.global_max = IRCstats.clients;
-	if (IRCstats.me_clients > IRCstats.me_max)
-		IRCstats.me_max = IRCstats.me_clients;
-
-	sendto_one(sptr, rpl_str(RPL_LUSERCLIENT), me.name, parv[0],
-	    IRCstats.clients - IRCstats.invisible, IRCstats.invisible,
-	    IRCstats.servers);
-
-	if (IRCstats.operators)
-		sendto_one(sptr, rpl_str(RPL_LUSEROP),
-		    me.name, parv[0], IRCstats.operators);
-	if (IRCstats.unknown)
-		sendto_one(sptr, rpl_str(RPL_LUSERUNKNOWN),
-		    me.name, parv[0], IRCstats.unknown);
-	if (IRCstats.channels)
-		sendto_one(sptr, rpl_str(RPL_LUSERCHANNELS),
-		    me.name, parv[0], IRCstats.channels);
-	sendto_one(sptr, rpl_str(RPL_LUSERME),
-	    me.name, parv[0], IRCstats.me_clients, IRCstats.me_servers);
-	sendto_one(sptr, rpl_str(RPL_LOCALUSERS),
-	    me.name, parv[0], IRCstats.me_clients, IRCstats.me_max);
-	sendto_one(sptr, rpl_str(RPL_GLOBALUSERS),
-	    me.name, parv[0], IRCstats.clients, IRCstats.global_max);
-	if ((IRCstats.me_clients + IRCstats.me_servers) > max_connection_count)
-	{
-		max_connection_count =
-		    IRCstats.me_clients + IRCstats.me_servers;
-		if (max_connection_count % 10 == 0)	/* only send on even tens */
-			sendto_ops("Maximum connections: %d (%d clients)",
-			    max_connection_count, IRCstats.me_clients);
-	}
-	return 0;
-}
-
-
 EVENT(save_tunefile)
 {
 	FILE *tunefile;
@@ -819,6 +786,10 @@ ConfigItem_tld *tlds;
 		tlds->rules = read_file(tlds->rules_file, &tlds->rules);
 		if (tlds->smotd_file)
 			tlds->smotd = read_file_ex(tlds->smotd_file, &tlds->smotd, &tlds->smotd_tm);
+		if (tlds->opermotd_file)
+			tlds->opermotd = read_file(tlds->opermotd_file, &tlds->opermotd);
+		if (tlds->botmotd_file)
+			tlds->botmotd = read_file(tlds->botmotd_file, &tlds->botmotd);
 	}
 }
 
@@ -1030,7 +1001,7 @@ CMD_FUNC(m_restart)
 		else 
 			reason = parv[1];
 	}
-	else if (parc == 3)
+	else if (parc > 2)
 	{
 		/* Syntax: /restart <pass> <reason> */
 		if (conf_drpass)
@@ -1059,7 +1030,7 @@ CMD_FUNC(m_restart)
  */
 int short_motd(aClient *sptr) {
 	ConfigItem_tld *ptr;
-	aMotd *temp, *temp2;
+	aMotd *temp;
 	struct tm *tm = &smotd_tm;
 	char userhost[HOSTLEN + USERLEN + 6];
 	char is_short = 1;
@@ -1202,6 +1173,20 @@ HUNTED_ISME)
 CMD_FUNC(m_opermotd)
 {
 	aMotd *temp;
+	ConfigItem_tld *ptr;
+	char userhost[HOSTLEN + USERLEN + 6];
+	strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost), sizeof userhost);
+	ptr = Find_tld(sptr, userhost);
+
+	if (ptr)
+	{
+		if (ptr->opermotd)
+			temp = ptr->opermotd;
+		else
+			temp = opermotd;
+	}
+	else
+		temp = opermotd;
 
 	if (!IsAnOper(sptr))
 	{
@@ -1209,16 +1194,15 @@ CMD_FUNC(m_opermotd)
 		return 0;
 	}
 
-	if (opermotd == (aMotd *) NULL)
+	if (!temp)
 	{
 		sendto_one(sptr, err_str(ERR_NOOPERMOTD), me.name, parv[0]);
 		return 0;
 	}
 	sendto_one(sptr, rpl_str(RPL_MOTDSTART), me.name, parv[0], me.name);
 	sendto_one(sptr, rpl_str(RPL_MOTD), me.name, parv[0],
-	    "\2IRC Operator Message of the Day\2");
+	    "IRC Operator Message of the Day");
 
-	temp = opermotd;
 	while (temp)
 	{
 		sendto_one(sptr, rpl_str(RPL_MOTD), me.name, parv[0],
@@ -1320,11 +1304,30 @@ aMotd *read_file_ex(char *filename, aMotd **list, struct tm *t)
 CMD_FUNC(m_botmotd)
 {
 	aMotd *temp;
+	ConfigItem_tld *ptr;
+	char userhost[HOSTLEN + USERLEN + 6];
+
 	if (hunt_server_token(cptr, sptr, MSG_BOTMOTD, TOK_BOTMOTD, ":%s", 1, parc,
 	    parv) != HUNTED_ISME)
 		return 0;
 
-	if (botmotd == (aMotd *) NULL)
+	if (!IsPerson(sptr))
+		return 0;
+
+	strlcpy(userhost,make_user_host(sptr->user->username, sptr->user->realhost), sizeof userhost);
+	ptr = Find_tld(sptr, userhost);
+
+	if (ptr)
+	{
+		if (ptr->botmotd)
+			temp = ptr->botmotd;
+		else
+			temp = botmotd;
+	}
+	else
+		temp = botmotd;
+
+	if (!temp)
 	{
 		sendto_one(sptr, ":%s NOTICE %s :BOTMOTD File not found",
 		    me.name, sptr->name);
@@ -1333,7 +1336,6 @@ CMD_FUNC(m_botmotd)
 	sendto_one(sptr, ":%s NOTICE %s :- %s Bot Message of the Day - ",
 	    me.name, sptr->name, me.name);
 
-	temp = botmotd;
 	while (temp)
 	{
 		sendto_one(sptr, ":%s NOTICE %s :- %s", me.name, sptr->name, temp->line);

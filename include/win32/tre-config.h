@@ -1,9 +1,9 @@
 /* tre-config.h.  This file defines all compile time definitions
    that are needed in `regex.h' for Win32. */
-
+#ifndef HAVE_ALLOCA
 /* Define to 1 if you have `alloca', as a function or macro. */
 #define HAVE_ALLOCA 1
-
+#endif
 /* Define to 1 if you have <alloca.h> and it should be used (not on Ultrix).
  */
 #define HAVE_ALLOCA_H 1
@@ -40,7 +40,7 @@
 #undef TRE_WCHAR
 
 /* TRE version string. */
-#define TRE_VERSION "0.7.0"
+#define TRE_VERSION "0.7.2"
 
 /* TRE version level 1. */
 #define TRE_VERSION_1 0
@@ -49,4 +49,4 @@
 #define TRE_VERSION_2 7
 
 /* TRE version level 3. */
-#define TRE_VERSION_3 0
+#define TRE_VERSION_3 2

@@ -109,11 +109,11 @@ CMD_FUNC(m_svsjoin)
 		if (parc == 3)
 		{
 			parv[2] = NULL;
-			(void)m_join(acptr, acptr, 2, parv);
+			do_cmd(acptr, acptr, "JOIN", 2, parv);
 		} else {
 			parv[2] = parv[3];
 			parv[3] = NULL;
-			(void)m_join(acptr, acptr, 3, parv);
+			do_cmd(acptr, acptr, "JOIN", 3, parv);
 		}
 	}
 	else

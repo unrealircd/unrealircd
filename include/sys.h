@@ -21,6 +21,25 @@
 
 #ifndef	__sys_include__
 #define __sys_include__
+
+/* alloca stuff */
+#ifdef _WIN32
+# include <malloc.h>
+# define alloca _alloca
+#else /* _WIN32 */
+# ifdef HAVE_ALLOCA
+#  if defined(_AIX) && !defined(__GNUC__)
+    #pragma alloca
+#  endif /* _AIX */
+#  if defined(HAVE_ALLOCA_H)
+#   include <alloca.h>
+#  endif /* HAVE_ALLOCA_H */
+#  if defined(__GNUC__) && !defined(HAVE_ALLOCA_H) && !defined(alloca)
+#   define alloca __builtin_alloca
+#  endif /* __GNUC__ */
+# endif /* HAVE_ALLOCA */
+#endif /* !_WIN32 */
+
 #ifdef ISC202
 #include <net/errno.h>
 #else

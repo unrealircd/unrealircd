@@ -194,7 +194,7 @@ DLLFUNC CMD_FUNC(m_netinfo)
 	if (*parv[4] != '*' && strcmp(buf, parv[4]))
 	{
 		sendto_realops
-			("Link %s is having a DIFFERENT CLOAK KEY - %s != %s. \002YOU SHOULD CORRECT THIS ASAP\002.",
+			("Link %s has a DIFFERENT CLOAK KEY - %s != %s. \002YOU SHOULD CORRECT THIS ASAP\002.",
 				cptr->name, parv[4], buf);
 	}
 	SetNetInfo(cptr);

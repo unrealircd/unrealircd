@@ -95,7 +95,7 @@ static void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_leng
 
 	if (prompt_length > 60)
 		sendto_one(cptr, rpl_str(RPL_MAPMORE), me.name, cptr->name,
-		    prompt, server->name);
+		    prompt, length, server->name);
 	else
 	{
 		sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, prompt,

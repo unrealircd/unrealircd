@@ -62,7 +62,6 @@ struct arc4_stream {
 	u_char s[256];
 };
 
-static int rs_initialized;
 static struct arc4_stream rs;
 
 static void arc4_init(void)
@@ -175,16 +174,12 @@ struct {
 #endif
 } rdat;
 
-unsigned int seed, egd = 0;
-time_t now = TStime();
 int n;
 
 #ifndef _WIN32
-struct timeval nowt;
 int fd;
 #else
 MEMORYSTATUS mstat;
-struct _timeb nowt;
 #endif
 
 	arc4_init();

@@ -173,7 +173,7 @@ int  debuglevel = 10;		/* Server debug level */
 int  bootopt = 0;		/* Server boot option flags */
 char *debugmode = "";		/*  -"-    -"-   -"-  */
 char *sbrk0;			/* initial sbrk(0) */
-static int dorehash = 0;
+static int dorehash = 0, dorestart = 0;
 static char *dpath = DPATH;
 MODVAR int  booted = FALSE;
 MODVAR TS   nextconnect = 1;		/* time for next try_connections call */
@@ -270,6 +270,8 @@ void restart(char *mesg)
 
 VOIDSIG s_restart()
 {
+	dorestart = 1;
+#if 0
 	static int restarting = 0;
 
 	if (restarting == 0) {
@@ -280,6 +282,7 @@ VOIDSIG s_restart()
 		restarting = 1;
 		server_reboot("SIGINT");
 	}
+#endif
 }
 
 
@@ -1003,6 +1006,7 @@ int InitwIRCD(int argc, char *argv[])
 	bzero((char *)&me, sizeof(me));
 	bzero(&StatsZ, sizeof(StatsZ));
 	setup_signals();
+	charsys_reset();
 	init_ircstats();
 #ifdef USE_LIBCURL
 	url_init();
@@ -1205,7 +1209,7 @@ int InitwIRCD(int argc, char *argv[])
 #ifndef _WIN32
 	fprintf(stderr, "%s", unreallogo);
 	fprintf(stderr, "                           v%s\n", VERSIONONLY);
-	fprintf(stderr, "                     using TRE %s\n", tre_version());
+	fprintf(stderr, "                     using %s\n", tre_version());
 #ifdef USE_SSL
 	fprintf(stderr, "                     using %s\n", OPENSSL_VERSION_TEXT);
 #endif
@@ -1579,10 +1583,16 @@ void SocketLoop(void *dummy)
 		if ((timeofday >= nextping && !lifesux) || loop.do_bancheck)
 #endif
 			nextping = check_pings(timeofday);
-		if (dorehash) {
+		if (dorehash) 
+		{
 			(void)rehash(&me, &me, 1);
 			dorehash = 0;
 		}
+		if (dorestart)
+		{
+			server_reboot("SIGINT");
+		}
+
 		/*
 		 * ** Flush output buffers on all connections timeofday if they
 		 * ** have data in them (or at least try to flush)

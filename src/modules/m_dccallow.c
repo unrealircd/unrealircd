@@ -82,7 +82,7 @@ DLLFUNC int m_dccallow(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 Link *lp;
 char *p, *s;
-aClient *acptr, *lastcptr = NULL;
+aClient *acptr;
 int didlist = 0, didhelp = 0, didanything = 0;
 char **ptr;
 static char *dcc_help[] =

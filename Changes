@@ -1,5 +1,5 @@
 /*
- * UnrealIRCd Changes File - (C) Carsten Munk 1999-2002 &
+ * UnrealIRCd Changes File - (C) Carsten Munk 1999-2005 &
  *                               The UnrealIRCd Team
  *                              
  * $Id$
@@ -411,5 +411,366 @@
 - Forgot to mention away spamfilter target in helpop, reported by Rocko.
 - Changed version to 3.2.2
 ** 3.2.2 release **
-- Fixed Jan-15-2005 crashbug (see .RELEASE.NOTES)
-** 3.2.2b release **
+- Fixed a typo in the makefile for USERIP
+- Made the WATCH command work for WebTV users (#0002121) suggested by White_Magic.
+- Some text updates... docs: now 3.2.2-CVS, also got rid of double version to avoid
+  confusion. credits: fixed typo.
+- Added updated auspice.conf from Rocko since previous one was outdated (#0002147).
+- Recoded the config parsing code 
+  - The new system is much faster, for the programmers out there, the
+    old system averaged O(MN) where N was the number of sub-directives for a block, and
+    M was the number of sub-directives actually contained in the block in the config file.
+    The new system averages O(N), so the number of sub-directives no longer has a significant
+    impact on performance.
+  - Added duplicate config entry detection (#0002126) suggested by brain2
+  - May have a few bugs (easily fixed)
+- Corrected numerous -Wall warnings
+- Fixed a bug with /rehash and classes due to the config parser rewrite
+- Modified the module symbol dependency code to do more accurate searching for the module
+  that contains the necessary symbol (#0002123) suggested by Xuefer.
+  - Unreal will now prepend the pathname to the module and append the appropriate extension
+    (.so or .dll) to the end)
+  - The new module system version is "3.2.3" to allow for backwards compatibility
+- Documented the default behavior of snomasks when /mode nick +s is used (#0002141) suggested
+  by Bugz.
+- Added "const" to the functions in match.c, (#0002116) suggested by Xuefer.
+- Made ./Config better handle command line arguments
+- Removed NAZIISH_CHBAN_HANDLING as it didn't do anything
+- Added -advanced flag to ./Config to configure advanced options (#0002145) suggested by
+  Bugz. As a result, some config.h options are now in ./Config -advanced.
+- Small fix for above
+- Added the ability to specify a botmotd and opermotd in a tld {} (#0000176) suggested by
+  swissSolaris.
+- Fixed crashbug on /rehash due to config rewrite, also made DEBUGMODE working again.
+- Removed an excess space from the SAMODE notice when a mode without a parameter was set
+  (#0002134) reported by Bugz.
+- Fixed small memory leak on /rehash (post-3.2.2).
+- Fixed botmotd crash due to last change (post-3.2.2).
+- Updated the Donation file
+- Added a 'B' flag to /who output for bots, and allowed normal users to /who +m B
+  (#0002096) suggested by White_Magic
+- Added support for using \\ in the config file to indicate a \ (#0002178) reported by
+  TimeFX
+- Added documentation for set::options::fail-oper-warn (#0002166) reported by Snake
+- Removed an extra ) in the Throttle disconnect message (#0002165) reported by Snake
+- Fixed a bug where the "looking up your hostname" message could still be displayed even
+  if hostname resolving was disabled (#0002161) reported by Xuefer
+- Made typing /kline, /shun, /zline, and /gzline correctly report the correct /stats flag,
+  and these commands now produce the same output as the respective /stats flag they emulate
+  (#0002149) reported by Snake
+- Renamed some calls from report_error() to report_baderror() since otherwise the errors are
+  hardly ever seen (unless you have +s +j set). For example a bad link::bind-ip only caused
+  "Couldn't connect to xxxxxx" without any meaningful error message. Additionally, errors
+  sent to report_baderror() are now logged.
+- Win32 installer: Apparently 'install as a service' was still not the default, reported
+  by fez (#0002191, #0002189).
+- Fixed the crule parser to treat - and : as valid 'word' characters rather than separators
+  (#0002188) reported by diskman1.
+- Fixed bug in remote version reply, reported by DukePyrolator (#0002180).
+- Added set::dns::bind-ip (rarely ever needed, but might be useful for paranoid people).
+- Some unreal32docs->security section improvements.
+- Fixed a minor bug in the new config system when displaying link {} and set::hosts errors
+  (#0002194) reported by AngryWolf.
+- Renamed RPL_INVITELIST/RPL_ENDOFINVITELIST to RPL_INVEXLIST/RPL_ENDOFINVEXLIST
+- Using /invite with no parameters now lists the channels you are invited to but have not
+  yet joined (#0002190) suggested by sac.
+- Added some missing operflags to /stats O and SVSO (#0002193) reported by Bugz.
+- If a user is +b on a channel, and set::allow-userhost-change force-rejoin is used, a
+  part/join is not sent in order to prevent flooding (#0001933) suggested by Z3l3zT.
+- Rewrote some of the previous change to deal with some strange issues found by aquanight
+  - Introduced two new macros DYN_LOCAL and DYN_FREE to allow creation/deletion of dynamically
+    sized arrays in the most efficient manner (C99 variable length, alloca, or malloc)
+- Changed the +z cannot join message to be a bit more descriptive (#0002148) suggested by cust.
+- Added a config.h options, IPV6_COMPRESSED to make Unreal use compressed IPv6 addresses where
+  possible (#0002107) suggested by Neo-Vortex.
+- Fixed alloca warning @ Linux (post-3.2.2)
+- Numeric audit: 15 small changes (int/long mismatches etc). This might have fixed some
+  bugs on architectures where 'long' and 'int' have different sizes (eg: opteron).
+- Added a set::gline-address which works like set::kline-address (#0001298) suggested by
+  Bugz.
+- Added missing documentation for spamfilter away target (#0002205) reported by Dukat.
+- Fixed dcc spamfilter problem reported by TimeFX and Deadalus (#2177, #2204).
+- Fixed Oper Override not giving a 'special join notice' if +z is set along with another mode
+  (eg: +i/+k), reported by tabrisnet (#0001487).
+- help.conf: Fixed a typo, updated *CMDS indexes a bit, reported crazy (#0002208),
+  added long flags to OFLAGS.
+- OperOverride INVITE notices are now also global (if you have the eyes snomask set) (#2212).
+- Module coders: New function: sendto_snomask_global().
+- Speedup sendto_snomask/sendto_connectnotice/sendto_fconnectnotice code.
+- spamfilter.conf: fixed mIRC exploit sigs
+- Fixed all spamfilters in configfile not working due to configrewrite (post-3.2.2).
+- Module coders: sendto_snomask* now only sends to opers, sendto_snomask_normal* can be used
+  to send to normal users w/the snomask set.
+- Fixed dcc filtering a bit more.
+- Made usermode 'g' operonly since it didn't do much, reported by DukePyrolator (#0002024).
+- Fixed tkl except { } not working (post-3.2.2).
+- Fixed bug where servers behind ulines were not ulined, causing for example juped servers to
+  show up if flat-map was enabled, reported by GSF19 (#0002230).
+- Some doc/ updates: removed: Unreal31_to_32.html & example.settings, updated: Authors &
+  translations.txt.
+- Added a basic regex tutorial to unreal32docs.html (#0000920)
+- Updated wircd.def
+- Made CIDR no longer accept bitmasks with less than 16bits for /*line commands (#0002240)
+  reported by aquanight.
+- Made the (?) kill message not show IP addresses (#0002227) reported by neothematrix.
+- Added some error checking to /sapart (#0002253) suggested by Troco.
+- Imported TRE 0.7.2 for Windows
+- Imported TRE 0.7.2 for *nix
+- Got rid of wma/wmv in dccallow.conf, better to require an explicit select here due to
+  recent DRM exploits (spyware etc).
+- Fixed /restart reasons, reported by SouL-FoRTuNe.
+- Partial (incomplete!) fix for alloca warnings during compile (especially w/SSL).
+- Fixed serious crashbug that can be triggered by users, released a hotfix and a seperate
+  version called 3.2.2b (which is just 3.2.2+patch+version change to '3.2.2b',
+  nothing else).
+- Fixed 'make install' error due to example.settings remove.
+- Fixed a minor typo in the "now an oper" announcement (#0002284) reported by Rocko.
+- Made SVSMODE -b and -e remove bans/excepts placed on IPs (#0002270) reported by Snake.
+- Fixed a couple of problems introduced with the ./Config -advanced changed (#0002239).
+- Made the win32 installer include the dccallow.conf (#0002269) reported by Ron2K.
+- Made the win32 installer work with the latest version of Inno Setup (5.0.6).
+- Made /sajoin support multiple channels and using 0 (#0002231) suggested by acemi.
+- Fixed a problem where doing ./unreal restart multiple times would not actually restart
+  the ircd (#0002120) reported by SineSwiper.
+- Made it so +f notices are sent to %#chan, not @%#chan (#0002248) reported by aquanight.
+- Hopefully fixed the last of the alloca warnings (#0002202) reported by Stoebi.
+- Fixed a problem with set::htm::incoming-rate being interpreted incorrectly (#0002266)
+  reported by tabrisnet.
+- Fixed a resolver cache bug regarding CNAME's. Thanks to insiderZ.DE for tracing down
+  this issue.
+- Fixed a bug related to the sajoin recode regarding notices displayed (#0002293) reported
+  by Troco.
+- Reworded a cloak-key error message to make it clearer (#0002297) reported by Bugz.
+- Fixed a bug where /whois notices were not sent to users who are +R if the sender is -r
+  and on a remote server (#0002288) reported by Freadon.
+- Made /stats E include tkl except stats as well (#0001524) suggested by Cnils.
+- Added an options member to the ExtbanInfo structure. This currently supports one flag,
+  EXTBOPT_CHSVSMODE. When set, this extban will be removed when an SVSMODE -b [nick] is
+  executed (#0002222) suggested by Snake.
+- Fixed a bug where specifying a reason to SVSPART would cause it to fail (#0002210) reported 
+  by tabrisnet.
+- Moved channel mode +G to extcmode to make room for invex.
+- Added debug code to trace proto-check bugs in DEBUGMODE [IsToken() etc]
+- [Module coders] Added new function: do_cmd(cptr, sptr, cmd, parc, parv) which is an
+  uniform method to call any other commands. For more info, see description in src/packet.c.
+  This will be used for any further modulization of commands that need to call other
+  commands, like NICK (will be done soon).
+- Added invite exceptions (+I). This prevents users from needing a /invite in for a +i
+  channel (#0002044) suggested by medice.
+- Updated help.conf's +f documentation for the new syntax
+- Fixed some problems with the /stats help and documentation (#0002299) reported by Rocko.
+- Corrected the help.conf documentation for /invite (#0002306) reported by White_Magic.
+- Fixed a documentation inconsistency with me::numeric (#0002290) reported by Bugz.
+- Fixed a problem when compiling Unreal with GUEST support (#0001758) dvzion.
+- Fixed a win32 GUI problem where the tray menu's config submenu was not updated when new
+  files were loaded or files were unloaded (#0002084) reported by Troco.
+- Made m_template.c use CommandAdd() and CMD_FUNC()
+- Modulized a lot of commands and related subfunctions: NICK (750 lines), USER (200),
+  MODE (2300), WATCH (250), JOIN (600), PART (250), MOTD (100), OPERMOTD (100),
+  BOTMOTD (100), LUSERS (100). More will follow soon (probably including more subfunctions
+  related to existing commands).
+- Various (important) fixes to above, also made win32 compile work again.
+- And some more.
+- Made unreal_copyfile try hardlinking first, if that fails.. it will try to copy
+  (perhaps this should be a different function?). Anyway, this means less diskspace
+  is needed (~1.5mb or more), and it also makes it a bit easier for RBAC (#2300).
+- Made a new function DoMD5() which is ssl/non-ssl independent. Also made the cloaking
+  module and the auth functions use it. Hopefully I didn't break anything ;). Suggested
+  by Bugz (#2298).
+- Fixed mode #chan +O set by locop causing a desynch, reported by Unim4trix0 (#0001946).
+- Added spamfilter topic support ('t' in /spamfilter, or 'topic' in conf), suggested
+  by Z3l3zT (#0001929).
+- Updated makefile to fix compile problem, reported by vonitsanet (#0002317) [?].
+  Also made loading m_*.so work again.
+- Added unreal_copyfileex() which works just like unreal_copyfile() but has an additional
+  param to try hardlinks first.
+- Win32 crash fixes due to modulizing
+- Made channel mode +c block RGB color codes.
+- Fixed a bug with channel alias{}'s where using the format syntax caused a crash (#0002323)
+  reported by Snake.
+- Made channel mode +S strip RGB color codes.
+- Added channelmode +j (jointhrottle), syntax: /mode #chan +j X:Y, and then it will
+  throttle the number of joins per-user to X in Y seconds. Idea from Angrywolf (who
+  wrote a module that did this before). This needs testing :).
+  It's enabled by default but can be #undef'ed in include/config.h (line 449).
+- Added a feature to +b ~c, ~c:[prefix]<#channel>, prefix can be +/%/@/&/~ and will
+  check if the user is voiced/halfoped/etc.. Especially useful for +e ~c. Idea from
+  Bugz (#0002198). Obviously all servers need to be upgraded to make this work.
+- Fixed SVSNOOP bug where remote servers still thought the opers had privileges, reported
+  by Zell (#0002185)
+- Docs: log { } from 'optional' -> 'recomended'
+- If no log { } block is present a warning will be printed out and we will fallback
+  to a default of logging errors to ircd.log. Suggested by w00t (#0002327).
+- Fixed shuns not working as target in spamfilter and ban version { }, reported by Bugz
+  (#0002223).
+- Fixed a bug where shuns placed on IP's did not take effect to currently connected users.
+- Fixed a small doc bug regarding shun in spamfilter, reported by KnuX (#0002338).
+- Added greek docs, translator: GSF.
+- Some help.conf/005.txt updates, reported by Ron2K (#0002354).
+- No longer cutoff nick upon illegal character -- just reject the whole nick. The nick is
+  still cutoff if the nick is too long. Basically this is the same way as Hybrid does it
+  so it should work ok :).
+- Added nick character system. This allows you to choose which (additional) characters
+  to allow in nicks via set::allowed-nickchars. See unreal32docs.html -> section 3.16
+  for a list of available languages and more info on how to use it.
+  Current list: dutch, french, german, italian, spanish, euro-west, chinese-trad,
+  chinese-simp, chinese-ja, chinese.
+  If you wonder why your language is not yet included or why a certain mistake is present,
+  then please understand that we are most likely not experienced (at all) in your language.
+  If you are a native of your language (or know the language well), and your language
+  is not included yet or you have some corrections, then contact syzop@vulnscan.org or
+  report it as a bug on http://bugs.unrealircd.org/
+- Added swedish support for nicks, supplied by Tank.
+- Various updates to unreal32docs from Ron2K (#0002354).
+- set::allowed-nickchars:
+  - Renamed 'euro-west' to 'latin1' since that's more descriptive/fair ;)
+  - Added 'hungarian' [supplied by AngryWolf]
+  - Added category 'latin2': just Hungarian for now
+  - Added 'catalan' [supplied by Trocotronic]
+  - Added 'greek' [supplied by GSF]
+  - Added category 'latin7': alias for 'greek'
+  - Added category 'gbk': alias for 'chinese'
+- Removed 2 unneeded characters from 'catalan'.
+- Added NICKCHARS= in PROTOCTL. This indicates which languages are accepted in nicks.
+  If 2 servers try to link and the allowed nick characters do not fully match, then
+  the link will be rejected. Note that this will not prevent you from 3.2.2<->3.2.3/CVS
+  charsets mistakes, but only with linking CVS/3.2.3+ servers. Suggested by Troco (#0002360)
+  This might need some additional testing, but initial results are positive :).
+- NickChars:
+  - Got rid of 'latin7', tiny mistake ;)
+  - Removed e' accent from German (used in borrow-words only), reported by Dukat.
+  - Added 'swiss-german', which is just German without es-zett, reported by Dukat.
+  - Added 'turkish', supplied by Ayberk Yancatoral.
+  - Build in some additional checks (especially for Chinese).
+  - Fixed a bug in chinese character range (affecting 3.2*)
+  - Relaxed nick character checking from remote servers (rely on NICKCHARS= PROTOCTL
+    to deal with problems). This is useful to prevent any kills in case we slightly
+    change the characters that are allowed in a language.
+  - Added 'polish' (latin2), supplied by k4be.
+  - Added 'hebrew' (iso8859-8I / windows-1255), supplied by PHANTOm.
+- Added French example.fr.conf and help.fr.conf, translated/maintained by Babass.
+- Fixed a doc typo, reported by SDF_of_BC.
+- NickChars: Updated polish a bit, and added polish-w1250 which is unfortunately more
+  common than real latin2 (iso-8859-2), supplied by k4be as well.
+- NickChars: Added 'icelandic', supplied by Saevar.
+- Updated wircd.def
+- Fixed a bug where USERIP would say USERHOST in the not-enough-parameters numeric
+  (#0002366) reported by vonitsanet.
+- Fixed a bug causing SVSNICK not to send out a snomask +n notice (#0002359) reported by
+  Rob_.
+- Fixed a bug where SAJOIN would list channels multiple times in the notices (#0002325)
+  reported by vonitsanet.
+- Fixed a bug in mode-skipping (eg '+qk a b' if not +q) and error msgs, reported by brain2
+  (#0002372).
+- Fixed bug where chanmode +f #t (per-user text kick[ban]) was also affecting halfops,
+  reported by seneces (#0002333).
+- Fixed doc bug reported by Dukat (#0002374). Also fixed 2 error msgs related to
+  the nickchars system printing out incorrect set:: directives.
+- spamfilter.conf and dccallow.conf are now also copied upon make install, reported by
+  TommyTheKid (#0002313).
+- Made CHGIDENT, CHGHOST and CHGNAME use more numerics (where possible) (#0002358).
+- Fixed halfop trying to set chanmode +G/+T/+j not getting an error message, reported
+  by Ron2K (#Ron2K).
+- Module coders: using extcmode_default_requirechop is now depricated, check src/extcmodes.c
+  ctrl+f extcmode_default_requirechop for more details (solution: copy+paste & fill in modechar).
+- Nicks with ~ are now also not cutoff anymore but rejected like any other illegal char (#0002074).
+- Fixed bug in +G where with not-really-matching-words color was needlessly stripped,
+  reported by SpeedFire (#0002375).
+- Changed the 'is a Secure Connection' msg/numeric in /whois from RPL_WHOISSPECIAL to
+  a slightly changed RPL_WHOISSECURE, namely: ':%s 671 %s %s :is using a Secure connection',
+  I'm sure some client coders will bitch at this, but the current way is brok in 2 ways:
+  - RPL_WHOISSPECIAL is meant for 1 line of additional whois info, usually an IRCOp title or
+    description. Having a dedicated numeric for it allows for client-side interpretations
+    and/or translations.
+  - The 'is a Secure Connection' was incorrect English, this has been reported numerous times.
+  The PRO's of this change are clear, the only CON is that in-window-/whois's are now
+  likely not to show this line properly in-window but rather in the status window, until client
+  coders implement this numeric.
+  If you wonder why we didn't use RPL_USINGSSL, that's because this numeric collides with
+  RPL_STATSDLINE (which we are already using for >5 years).
+  If you wonder why we didn't use the RPL_WHOISSECURE numeric as-is (even though I haven't
+  seen it in use anywhere), then that's because we wanted to minimize display problems in
+  the transition period and the extra parameter would not be used by us anyway.
+- If a locop now has can_override/can_gkline/can_gzline we will print out a warning and
+  convert it to globops. This is also what we always did for can_globalroute/can_gkill
+  (well, except the warning). Giving such NETWORK (GLOBAL) privileges to a LOCAL operator
+  does not make any sense and is therefore no longer allowed.
+- NickChars:
+  - Added 'russian-w1251', supplied by Roman Parkin. There are like 7 standards
+    in Russia (and like 2-3 main ones), so I didn't dare to call this one 'russian' ;).
+  - Added 'czech-w1250' and 'slovak-w1250' (both might miss a few characters).
+  - Added 'windows-1250' group which contains czech-w1250, slovak-w1250, polish-w1250
+    and hungarian.
+  - Hungarian characters show both fine in w1250 and latin2, hence hungarian is included
+    both in 'windows-1250' and 'latin2'.
+  - Fixed bug: polish was not included in latin2
+- Fixed various OperOverride issues:
+  - Opers with can_override can now +qa/-qa even if they are not netadmins,
+    and they can also (un)set L/u.
+  - Fixed several SAMODE bugs, such as not completely working for non-netadmins and
+    not working if you were halfop'ed, etc.
+  Bugs reported by pak, aquanight, niphler, Bugz, and more.
+  If there are still any bugs left, please report them on http://bugs.unrealircd.org/
+  NOTE: some of these enhancements will produce desynchs if your net is not 100%
+        on current CVS / Unreal3.2.3 and an oper tries to use these 'new features'.
+        So use with care on mixed-version nets.
+- Fixed /(G)ZLINE [nick] placing the *line on *@host instead of *@IP, reported by
+  Snake (#0002246).
+- A warning is now sent to the oper if (s)he tries to add a (G)ZLINE on *@host.
+  (G)ZLINES should have an ipmask, not a hostmask, because they are processed BEFORE
+  any dns lookups are done. Therefore any (g)zlines placed will probably work
+  (but not necessarily) for like an hour (or whatever TTL), but after that the
+  (ab)user can get in again so this is usually not what you want ;).
+  I suppose I'll add a FAQ entry about this.
+- Made badwords (+G) now work with hardcoded word boundaries. Also made the fastbadwords
+  system accept more characters. Basically what this means is that the (fast) badwords
+  system can now be used to properly block words with accents and things like that, just
+  the way you block English words. Bug reported by MJ12Helios (#0002311).
+- Fixed 'russian-w1251', was not working ok at all.
+- Made it so halfops can -h themselves, and chanadmins can -a themselves, reported
+  by fez (#0001503).
+- Made spamfilter 'u' also check nickchanges, reported by Gilou (#0002251).
+- Updated doc/technical/token.txt, reported by webfox (#0002373).
+- NickChars: Added 'romanian', supplied by crazytoon.
+- Added 3.2.3 release notes (expected to be changed later on).
+- Updated russian-w1251 (added 2 chars).
+- Made the (G)ZLINE warning only happen on add, as it should. Reported by crazy.
+- Made some (incorrect) -Wall warnings dissapear.
+- Renamed version to 3.2.3-pre1, for Thursday. I'll keep the doc version numbers
+  at 3.2.2-CVS to avoid confusion with the online semi-realtime docs ;).
+** internal 3.2.3-pre1 release **
+- Fixed a bug with /invite with no parameters (accidentily broken when +I was added)
+  (#0002383) reported by trystanscott.
+- Fixed a bug where /SAJOIN user 0 caused a desynch, reported by trystanscott (#0002384).
+- Merged NICKCHARS= in PROTOCTL for now, since a seperate one is not (yet!) needed,
+  reported by SolutechUK and psadi (#0002386).
+- Fixed various (major) problems that the '-h yourself' caused, reported by Trocotronic
+  (#0002387).
+- Fix for above, also reported by Trocotronic.
+** internal 3.2.3-pre2 release **
+- Fixed a couple of typos in doc/example.conf (#0002393) reported by AngryWolf.
+- Added documentation about channel mode +j (#0002392) suggested by Dukat.
+- Added doc/help.de.conf and doc/example.hu.conf
+- Fixed +s/+p and +c/+S desynch issue during netmerge, reported by Ron2K (#0002391).
+- Fixed a bug where an unknown operflag would cause a crash.
+- Windows versions will now be compiled with zlib 1.2.2 and curl 7.13.1.
+- Made windows installer also install doc\technical\*
+- Removed oldcloak cloaking module, everyone should be using the new cloak one by now.
+- Updated release notes (translated docs, zlib, doc\technical, sp/cS desynch).
+- Made +g get removed when an oper sets -o (#0002399) reported by Ron2K.
+- Made it so the win32 version shows channel modes in /list (#0002397) reported by Ron2K.
+- Fixed /SAMODE with no can_override not always working with +G/+j/+T (extcmodes), reported
+  by Ron2K (#0002398).
+- Added doc/example.de.conf
+** internal 3.2.3-pre3 release **
+- Some spelling fixes in unreal32docs.html, reported by alex323 (#2412).
+- Updated the list of donators
+- /SAMODE could cause 'fishy timestamp' if digit parameters were used (eg: SAMODE #chan +l 5),
+  this has now be fixed by sending an explicit TS 0.
+- Fixed an important channelmode +j memory corruption bug that would cause crashes, reported
+  by Bergee (#0002416).
+- Some clarifications on /RESTART, remote restarts were well never supported, so the docs
+  are now updated on that (no code changes).
+** internal 3.2.3-pre4 release **
+- Corrected small doc typo in unreal32docs, reported by arbiter.
+** 3.2.3 release **

@@ -50,7 +50,7 @@ char backupbuf[8192];
  * NOTE: parse() should not be called recursively by other functions!
  */
 extern int lifesux;
-static char *para[MAXPARA + 1];
+static char *para[MAXPARA + 2];
 
 static char sender[HOSTLEN + 1];
 static int cancel_clients(aClient *, aClient *, char *);
@@ -148,9 +148,6 @@ aClient *find_person(char *name, aClient *cptr)
 
 void ban_flooder(aClient *cptr)
 {
-	int i;
-	aClient *acptr;
-
 	/* place_host_ban also takes care of removing any other clients with same host/ip */
 	place_host_ban(cptr, BAN_ACT_ZLINE, "Flood from unknown connection", UNKNOWN_FLOOD_BANTIME);
 	return;
@@ -594,8 +591,7 @@ static void remove_unknown(aClient *cptr, char *sender)
 	 */
 	if (!index(sender, '.') && !nsprefix)
 		sendto_one(cptr, ":%s KILL %s :%s (%s(?) <- %s)",
-		    me.name, sender, me.name, sender,
-		    get_client_name(cptr, FALSE));
+		    me.name, sender, me.name, sender, cptr->name);
 	else
 		sendto_one(cptr, ":%s SQUIT %s :(Unknown from %s)",
 		    me.name, sender, get_client_name(cptr, FALSE));

@@ -113,6 +113,7 @@ void make_isupportstrings(void)
 void isupport_init(void)
 {
 	char tmpbuf[512];
+	IsupportAdd(NULL, "INVEX", NULL);
 	IsupportAdd(NULL, "EXCEPTS", NULL);
 #ifdef PREFIX_AQ
 	IsupportAdd(NULL, "STATUSMSG", "~&@%+");
@@ -139,7 +140,7 @@ void isupport_init(void)
 	IsupportAdd(NULL, "TOPICLEN", my_itoa(TOPICLEN));
 	IsupportAdd(NULL, "CHANNELLEN", my_itoa(CHANNELLEN));
 	IsupportAdd(NULL, "NICKLEN", my_itoa(NICKLEN));
-	ircsprintf(tmpbuf, "b:%d,e:%d", MAXBANS, MAXBANS);
+	ircsprintf(tmpbuf, "b:%d,e:%d,I:%d", MAXBANS, MAXBANS, MAXBANS);
 	IsupportAdd(NULL, "MAXLIST", tmpbuf);
 	ircsprintf(tmpbuf, "#:%d", MAXCHANNELSPERUSER);
 	IsupportAdd(NULL, "CHANLIMIT", tmpbuf);

@@ -105,7 +105,8 @@ CMD_FUNC(m_svswatch)
 	{
 		parv[0] = parv[1];
 		parv[1] = parv[2];
-		(void)m_watch(acptr, acptr, 2, parv);
+		parv[2] = NULL;
+		do_cmd(acptr, acptr, "WATCH", 2, parv);
 	}
 	else
 		sendto_one(acptr, ":%s SVSWATCH %s :%s", parv[0], parv[1], parv[2]);

@@ -1,4 +1,3 @@
-
 /*
  * SmartRoute phase 1
  * connection rule patch
@@ -295,12 +294,12 @@ int  crule_gettoken(int *next_tokp, char **ruleptr)
 			  (*ruleptr)--;
 			  *next_tokp = CR_END;
 			  break;
-		  case ':':
-			  *next_tokp = CR_END;
-			  break;
+		  /* Both - and : can appear in hostnames so they must not be 
+		   * treated as separators -- codemastr */
 		  default:
 			  if ((isalpha(*(--(*ruleptr)))) || (**ruleptr == '*')
-			      || (**ruleptr == '?') || (**ruleptr == '.'))
+			      || (**ruleptr == '?') || (**ruleptr == '.')
+			      || (**ruleptr == '-') || (**ruleptr == ':'))
 				  *next_tokp = CR_WORD;
 			  else
 				  return (CR_UNKNWTOK);
@@ -314,8 +313,12 @@ void crule_getword(char *word, int *wordlenp, int maxlen, char **ruleptr)
 	char *word_ptr;
 
 	word_ptr = word;
+	/* Both - and : can appear in hostnames so they must not be 
+	 * treated as separators -- codemastr */
+
 	while ((isalnum(**ruleptr)) || (**ruleptr == '*') ||
-	    (**ruleptr == '?') || (**ruleptr == '.'))
+	    (**ruleptr == '?') || (**ruleptr == '.') || (**ruleptr == '-') ||
+	    (**ruleptr == ':'))
 		*word_ptr++ = *(*ruleptr)++;
 	*word_ptr = '\0';
 	*wordlenp = word_ptr - word;
@@ -324,7 +327,7 @@ void crule_getword(char *word, int *wordlenp, int maxlen, char **ruleptr)
 /*
  * Grammar
  *   rule:
- *     orexpr END          END is end of input or :
+ *     orexpr END          END is end of input
  *   orexpr:
  *     andexpr
  *     andexpr || orexpr

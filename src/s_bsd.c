@@ -331,6 +331,7 @@ void report_baderror(char *text, aClient *cptr)
 				errtmp = err;
 #endif
 	sendto_umode(UMODE_OPER, text, host, STRERROR(errtmp));
+	ircd_log(LOG_ERROR, text, host, STRERROR(errtmp));
 	return;
 }
 
@@ -384,7 +385,7 @@ int  inetport(aClient *cptr, char *name, int port)
 	{
 #if !defined(DEBUGMODE) && !defined(_WIN32)
 #endif
-		report_error("Cannot open stream socket() %s:%s", cptr);
+		report_baderror("Cannot open stream socket() %s:%s", cptr);
 		return -1;
 	}
 	else if (++OpenFiles >= MAXCLIENTS)
@@ -425,7 +426,7 @@ int  inetport(aClient *cptr, char *name, int port)
 			ircsprintf(backupbuf, "Error binding stream socket to IP %s port %i",
 				ipname, port);
 			strlcat(backupbuf, " - %s:%s", sizeof backupbuf);
-			report_error(backupbuf, cptr);
+			report_baderror(backupbuf, cptr);
 #if !defined(_WIN32) && defined(INET6)
 			/* Check if ipv4-over-ipv6 (::ffff:a.b.c.d, RFC2553
 			 * section 3.7) is disabled, like at newer FreeBSD's. -- Syzop
@@ -1282,7 +1283,7 @@ add_con_refuse:
 			{
 				ircsprintf(zlinebuf,
 					"ERROR :Closing Link: [%s] (Throttled: Reconnecting too fast) -"
-						"Email %s for more information.)\r\n",
+						"Email %s for more information.\r\n",
 						Inet_ia2p(&acptr->ip),
 						KLINE_ADDRESS);
 				set_non_blocking(fd, acptr);
@@ -1342,13 +1343,12 @@ void	start_of_normal_client_handshake(aClient *acptr)
 {
 	Link	lin;
 	acptr->status = STAT_UNKNOWN;	
-	if (SHOWCONNECTINFO && !acptr->serv) {
-		sendto_one(acptr, "%s", REPORT_DO_DNS);
-	}
-	lin.flags = ASYNC_CLIENT;
-	lin.value.cptr = acptr;
 	if (DONT_RESOLVE)
 		goto skipdns;
+	if (SHOWCONNECTINFO && !acptr->serv)
+		sendto_one(acptr, "%s", REPORT_DO_DNS);
+	lin.flags = ASYNC_CLIENT;
+	lin.value.cptr = acptr;
 	Debug((DEBUG_DNS, "lookup %s", acptr->sockhost));
 	acptr->hostp = gethost_byaddr((char *)&acptr->ip, &lin);
 	
@@ -1741,7 +1741,7 @@ int  read_message(time_t delay, fdlist *listp)
 			return -1;
 		else if (nfds >= 0)
 			break;
-		report_error("select %s:%s", &me);
+		report_baderror("select %s:%s", &me);
 		res++;
 		if (res > 5)
 			restart("too many select errors");
@@ -1841,7 +1841,7 @@ int  read_message(time_t delay, fdlist *listp)
 			if ((fd = accept(cptr->fd, NULL, NULL)) < 0)
 			{
 		        if ((ERRNO != P_EWOULDBLOCK) && (ERRNO != P_ECONNABORTED))
-					report_error("Cannot accept connections %s:%s", cptr);
+					report_baderror("Cannot accept connections %s:%s", cptr);
 				break;
 			}
 			ircstp->is_ac++;
@@ -2493,7 +2493,7 @@ static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int 
 					 get_client_name(cptr, TRUE));
 		  return NULL;
 		}
-		report_error("opening stream socket to server %s:%s", cptr);
+		report_baderror("opening stream socket to server %s:%s", cptr);
 		return NULL;
 	}
 	if (++OpenFiles >= MAXCLIENTS)
@@ -2519,7 +2519,7 @@ static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int 
 	}
 	if (bind(cptr->fd, (struct SOCKADDR *)&server, sizeof(server)) == -1)
 	{
-		report_error("error binding to local port for %s:%s", cptr);
+		report_baderror("error binding to local port for %s:%s", cptr);
 		return NULL;
 	}
 	bzero((char *)&server, sizeof(server));

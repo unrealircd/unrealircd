@@ -126,6 +126,7 @@ DLLFUNC int m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc == 1)
 	{
 		tkl_stats(sptr, TKL_KILL|TKL_GLOBAL, NULL);
+		tkl_stats(sptr, TKL_ZAP|TKL_GLOBAL, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
 		return 0;
 	}
@@ -148,6 +149,7 @@ DLLFUNC int m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc == 1)
 	{
+		tkl_stats(sptr, TKL_GLOBAL|TKL_KILL, NULL);
 		tkl_stats(sptr, TKL_GLOBAL|TKL_ZAP, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
 		return 0;
@@ -172,7 +174,7 @@ DLLFUNC int m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc == 1)
 	{
 		tkl_stats(sptr, TKL_GLOBAL|TKL_SHUN, NULL);
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 's');
 		return 0;
 	}
 
@@ -268,8 +270,42 @@ DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc == 1)
 	{
+		/* Emulate /stats k */
+		ConfigItem_ban *bans;
+		ConfigItem_except *excepts;
+		char type[2];
+  		for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) 
+		{
+			if (bans->flag.type == CONF_BAN_USER) 
+			{
+				if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
+					type[0] = 'K';
+				type[1] = '\0';
+				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
+			 		me.name, sptr->name, type, bans->mask, bans->reason
+					? bans->reason : "<no reason>");
+			}
+			else if (bans->flag.type == CONF_BAN_IP) 
+			{
+				if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
+					type[0] = 'Z';
+				else if (bans->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
+					type[0] = 'z';
+				type[1] = '\0';
+				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
+					me.name, sptr->name, type, bans->mask, bans->reason 
+					? bans->reason : "<no reason>");
+			}
+		}		
 		tkl_stats(sptr, TKL_KILL, NULL);
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
+		tkl_stats(sptr, TKL_ZAP, NULL);
+		for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) 
+		{
+			if (excepts->flag.type == 1)
+				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
+					me.name, sptr->name, "E", excepts->mask, "");
+		}
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'k');
 		return 0;
 	}
 	if (!OPCanUnKline(sptr) && *parv[1] == '-')
@@ -295,8 +331,42 @@ DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc == 1)
 	{
+		/* Emulate /stats k */
+		ConfigItem_ban *bans;
+		ConfigItem_except *excepts;
+		char type[2];
+  		for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) 
+		{
+			if (bans->flag.type == CONF_BAN_USER) 
+			{
+				if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
+					type[0] = 'K';
+				type[1] = '\0';
+				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
+			 		me.name, sptr->name, type, bans->mask, bans->reason
+					? bans->reason : "<no reason>");
+			}
+			else if (bans->flag.type == CONF_BAN_IP) 
+			{
+				if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
+					type[0] = 'Z';
+				else if (bans->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
+					type[0] = 'z';
+				type[1] = '\0';
+				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
+					me.name, sptr->name, type, bans->mask, bans->reason 
+					? bans->reason : "<no reason>");
+			}
+		}		
+		tkl_stats(sptr, TKL_KILL, NULL);
 		tkl_stats(sptr, TKL_ZAP, NULL);
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
+		for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) 
+		{
+			if (excepts->flag.type == 1)
+				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
+					me.name, sptr->name, "E", excepts->mask, "");
+		}
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'k');
 		return 0;
 	}
 
@@ -377,6 +447,21 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 			hostmask = usermask;
 			usermask = "*";
 		}
+		
+		if (((*type == 'z') || (*type == 'Z')) && !whattodo)
+		{
+			/* It's a (G)ZLINE, make sure the user isn't specyfing a HOST.
+			 * Just a warning for now, but perhaps in 3.2.4 we should make this an error.
+			 */
+			for (p=hostmask; *p; p++)
+				if (isalpha(*p))
+				{
+					sendnotice(sptr, "WARNING: (g)zlines should be placed on user@IPMASK, not user@hostmask "
+					                 "(this is because (g)zlines are processed BEFORE a dns lookup is done)");
+					break;
+				}
+		}
+		/* set 'p' right for later... */
 		p = hostmask-1;
 	}
 	else
@@ -385,7 +470,19 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		if ((acptr = find_person(mask, NULL)))
 		{
 			usermask = "*";
-			hostmask = acptr->user->realhost;
+			if ((*type == 'z') || (*type == 'Z'))
+			{
+				/* Fill in IP */
+				hostmask = GetIP(acptr);
+				if (!hostmask)
+				{
+					sendnotice(sptr, "Could not get IP for user '%s'", acptr->name);
+					return 0;
+				}
+			} else {
+				/* Fill in host */
+				hostmask = acptr->user->realhost;
+			}
 			p = hostmask - 1;
 		}
 		else
@@ -396,6 +493,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	}	
 	if (!whattodo)
 	{
+		char c;
 		p++;
 		i = 0;
 		while (*p)
@@ -410,6 +508,21 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 			    ":%s NOTICE %s :*** [error] Too broad mask",
 			    me.name, sptr->name);
 			return 0;
+		}
+		c = tolower(*type);
+		if (c == 'k' || c == 'z' || *type == 'G' || *type == 's')
+		{
+			struct irc_netmask tmp;
+			if ((tmp.type = parse_netmask(hostmask, &tmp)) != HM_HOST)
+			{
+				if (tmp.bits < 16)
+				{
+					sendto_one(sptr,
+					    ":%s NOTICE %s :*** [error] Too broad mask",
+					    me.name, sptr->name);
+					return 0;
+				}
+			}
 		}
 	}
 
@@ -486,11 +599,8 @@ int spamfilter_usage(aClient *sptr)
 DLLFUNC int m_spamfilter(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 int  whattodo = 0;	/* 0 = add  1 = del */
-int  i;
-aClient *acptr = NULL;
-char *mask = NULL;
 char mo[32], mo2[32];
-char *p, *usermask, *hostmask;
+char *p;
 char *tkllayer[11] = {
 	me.name,	/*  0 server.name */
 	NULL,		/*  1 +|- */
@@ -504,7 +614,6 @@ char *tkllayer[11] = {
 	"",			/*  9 tkl reason */
 	""			/* 10 regex */
 };
-struct tm *t;
 int targets = 0, action = 0;
 char targetbuf[64], actionbuf[2];
 char reason[512]; 
@@ -556,11 +665,6 @@ char reason[512];
 	{
 		sendto_one(sptr, ":%s NOTICE %s :Invalid 'action' field (%s)", me.name, sptr->name, parv[3]);
 		return spamfilter_usage(sptr);
-	}
-	if ((action == BAN_ACT_DCCBLOCK) && (targets != SPAMF_DCC))
-	{
-		sendnotice(sptr, "action 'dccblock' is incompatible with non-dcc target(s) '%s'", targetbuf);
-		return 0;
 	}
 	actionbuf[0] = banact_valtochar(action);
 	actionbuf[1] = '\0';

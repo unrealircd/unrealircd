@@ -95,17 +95,21 @@ DLLFUNC int MOD_UNLOAD(m_cycle)(int module_unload)
 
 CMD_FUNC(m_cycle)
 {
-	char	channels[1024];
+char channels[BUFSIZE];
+int n;
 	
 	if (IsServer(sptr))
 		return 0;
 
-        if (parc < 2)
-                return 0;
-        parv[2] = "cycling";
-	strncpyzt(channels, parv[1], 1020);
-        (void)m_part(cptr, sptr, 3, parv);
+	if (parc < 2)
+		return 0;
+
+	parv[2] = "cycling";
+	strlcpy(channels, parv[1], sizeof(channels));
+	n = do_cmd(cptr, sptr, "PART", 3, parv);
+	if (n == FLUSH_BUFFER)
+		return n;
 	parv[1] = channels;
-        parv[2] = NULL;
-	return m_join(cptr, sptr, 2, parv);
+	parv[2] = NULL;
+	return do_cmd(cptr, sptr, "JOIN", 2, parv);
 }

@@ -96,12 +96,12 @@ void free();
 #define TS time_t
 
 
-extern int match(char *, char *);
+extern int match(const char *, const char *);
 #define mycmp(a,b) \
  ( (toupper(a[0])!=toupper(b[0])) || smycmp((a)+1,(b)+1) )
-extern int smycmp(char *, char *);
+extern int smycmp(const char *, const char *);
 #ifndef GLIBC2_x
-extern int myncmp(char *, char *, int);
+extern int myncmp(const char *, const char *, int);
 #endif
 
 #ifdef NEED_STRTOK
@@ -184,6 +184,7 @@ extern MODVAR unsigned char char_atribs[];
 #define DIGIT 16
 #define SPACE 32
 #define ALLOW 64
+#define ALLOWN 128
 
 #ifndef KLINE_TEMP
 #define KLINE_PERM 0
@@ -208,6 +209,7 @@ extern MODVAR unsigned char char_atribs[];
 #define isgraph(c) ((char_atribs[(u_char)(c)]&PRINT) && ((u_char)(c) != 0x32))
 #define ispunct(c) (!(char_atribs[(u_char)(c)]&(CNTRL|ALPHA|DIGIT)))
 #endif
+#define iswseperator(c) (!isalnum(c) && !((u_char)c >= 128))
 
 #ifndef MALLOCD
 #define MyFree free
@@ -251,10 +253,10 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 
 #ifdef PREFIX_AQ
 #define CHPFIX        "(qaohv)~&@%+"
-#define CHPAR1        "be"
+#define CHPAR1        "beI"
 #else
 #define CHPFIX        "(ohv)@%+"
-#define CHPAR1        "beqa"
+#define CHPAR1        "beIqa"
 #endif /* PREFIX_AQ */
 
 #define CHPAR2        "kfL"

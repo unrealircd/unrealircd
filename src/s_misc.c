@@ -432,7 +432,6 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 #ifdef FDLIST_DEBUG
 		{
 			int i;
-			int cnt = 0;
 			
 			if (!IsAnOper(sptr))
 			{
@@ -728,6 +727,9 @@ static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from, char *c
 			{
 				RunHook2(HOOKTYPE_REMOTE_QUIT, sptr, comment);
 			}
+#ifdef JOINTHROTTLE
+			cmodej_deluserentries(sptr);
+#endif
 			while ((mp = sptr->user->channel))
 				remove_user_from_channel(sptr, mp->chptr);
 
@@ -989,6 +991,7 @@ int flags = 0;
 			case 'd': flags |= SPAMF_DCC; break;
 			case 'u': flags |= SPAMF_USER; break;
 			case 'a': flags |= SPAMF_AWAY; break;
+			case 't': flags |= SPAMF_TOPIC; break;
 			default:
 				if (sptr)
 				{
@@ -1004,7 +1007,6 @@ int flags = 0;
 
 int spamfilter_getconftargets(char *s)
 {
-int flags = 0;
 	if (!strcmp(s, "channel"))
 		return SPAMF_CHANMSG;
 	if (!strcmp(s, "private"))
@@ -1023,6 +1025,8 @@ int flags = 0;
 		return SPAMF_USER;
 	if (!strcmp(s, "away"))
 		return SPAMF_AWAY;
+	if (!strcmp(s, "topic"))
+		return SPAMF_TOPIC;
 	return 0;
 }
 
@@ -1049,6 +1053,8 @@ char *p = buf;
 		*p++ = 'u';
 	if (v & SPAMF_AWAY)
 		*p++ = 'a';
+	if (v & SPAMF_TOPIC)
+		*p++ = 't';
 	*p = '\0';
 	return buf;
 }
@@ -1074,6 +1080,8 @@ char *spamfilter_inttostring_long(int v)
 			return "user";
 		case SPAMF_AWAY:
 			return "AWAY";
+		case SPAMF_TOPIC:
+			return "TOPIC";
 		default:
 			return "UNKNOWN";
 	}

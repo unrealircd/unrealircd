@@ -92,6 +92,8 @@ DLLFUNC int MOD_UNLOAD(m_sapart)(int module_unload)
 DLLFUNC CMD_FUNC(m_sapart)
 {
 	aClient *acptr;
+	aChannel *chptr;
+	Membership *lp;
 	char *comment = (parc > 3 && parv[3] ? parv[3] : NULL);
 	char commentx[512];
 	if (!IsSAdmin(sptr) && !IsULine(sptr))
@@ -109,6 +111,18 @@ DLLFUNC CMD_FUNC(m_sapart)
 	if (!(acptr = find_person(parv[1], NULL)))
 	{
 		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0], parv[1]);
+		return 0;
+	}
+	if (!(chptr = get_channel(acptr, parv[2], 0)))
+	{
+		sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, parv[0],
+			parv[2]);
+		return 0;
+	}
+	if (!(lp = find_membership_link(acptr->user->channel, chptr)))
+	{
+		sendto_one(sptr, err_str(ERR_USERNOTINCHANNEL), me.name, parv[0], 
+			   parv[1], parv[2]);
 		return 0;
 	}
 	
@@ -145,7 +159,7 @@ DLLFUNC CMD_FUNC(m_sapart)
 			sendto_one(acptr,
 			    ":%s %s %s :*** You were forced to part %s", me.name,
 			    IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, parv[1]);
-		(void)m_part(acptr, acptr, comment ? 3 : 2, parv);
+		do_cmd(acptr, acptr, "PART", comment ? 3 : 2, parv);
 	}
 	else
 	{

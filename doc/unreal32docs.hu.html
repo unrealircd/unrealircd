@@ -23,13 +23,13 @@
 <a href="unreal32docs.de.html">German</a> | 
 <a href="unreal32docs.es.html">Spanish</a> | 
 Hungarian | 
-<a href="unreal32docs.fr.html">French</a>
+<a href="unreal32docs.fr.html">French</a> | 
+<a href="unreal32docs.gr.html">Greek</a>
 <br><br>
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
-  <font size="4">Verzió: 3.2.2</font><br>
-  <b>Jelenlegi verzió:</b> 3.2.2<br>
-  <b>Utolsó dokumentáció módosítás:</b> 2004-10-11</div>
+  <font size="4">Verzió: 3.2.3</font><br>
+  <b>Utolsó dokumentáció módosítás:</b> 2005-03-13</div>
 <br>
   <b>Fõ fejlesztõk:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Munkatársak:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -67,49 +67,50 @@ Hungarian |
   -- 3.9. <a href="#feature_ipv6">IPv6</a><br>
   -- 3.10. <a href="#feature_ziplinks">Zip linkek</a><br>
   -- 3.11. <a href="#feature_dyndns">Dinamikus DNS-sel/IP-vel linkelések támogatása</a><br>
-  -- 3.12. <a href="#feature_antiflood">Anti-flood featúrák</a><br>
+  -- 3.12. <a href="#feature_antiflood">Árasztásvédelmi featúrák</a><br>
   -- 3.13. <a href="#feature_bantypes">Ban típusok</a><br>
   -- 3.14. <a href="#feature_spamfilter">A spamszûrõ</a><br>
   -- 3.15. <a href="#feature_cidr">CIDR</a><br>
-  -- 3.16. <a href="#feature_other">További featúrák</a><br>
+  -- 3.16. <a href="#feature_nickchars">Karakterkészletek nicknevekhez</a><br>
+  -- 3.17. <a href="#feature_other">További featúrák</a><br>
   4. <a href="#configuringyourunrealircdconf">Az unrealircd.conf fájlod
   beállítása</a><br>
   ---4.1. <a href="#configurationfileexplained">A konfigurációs formátumról</a><br>
-  ---4.2. <a href="#meblock"> Me Blokk -=- (M:Line)</a><br>
-  ---4.3. <a href="#adminblock">Admin Blokk -=- (A:Line)</a><br>
-  ---4.4. <a href="#classblock">Class Blokk -=- (Y:Line)</a><br>
-  ---4.5. <a href="#allowblock">Allow Blokk -=- (I:Line)</a><br>
-  ---4.6. <a href="#listenblock">Listen Blokk -=- (P:Line)</a><br>
-  ---4.7. <a href="#operblock">Oper Blokk -=- (O:Line)</a><br>
-  ---4.8. <a href="#drpassblock">DRpass Blokk -=-(X:Line)</a><br>
-  ---4.9. <a href="#includedirective">Include Direktíva</a><br>
-  ---4.10. <a href="#loadmoduledirective">Loadmodule Direktíva</a><br>
-  ---4.11. <a href="#logblock">Log Blokk</a><br>
-  ---4.12. <a href="#tldblock">TLD Blokk -=- (T:Line)</a><br>
-  ---4.13. <a href="#bannickblock">Ban Nick Blokk -=- (Q:Line)</a><br>
-  ---4.14. <a href="#banuserblock">Ban User Blokk -=- (K:Line)</a><br>
-  ---4.15. <a href="#banipblock">Ban IP Blokk -=- (Z:Line)</a><br>
-  ---4.16. <a href="#banserverblock">Ban Server Blokk -=-(q:Line)</a><br>
-  ---4.17. <a href="#banrealnameblock">Ban Realname Blokk -=- (n:Line)</a><br>
-  ---4.18. <a href="#banversionblock">Ban Version Blokk</a><br>
-  ---4.19. <a href="#banexceptionblock">Ban Exception Blokk -=- (E:Line)</a><br>
-  ---4.20. <a href="#tklexceptionblock">TKL Exception Blokk</a><br>
-  ---4.21. <a href="#throttleexceptionblock">Throttle Exception Blokk</a><br>
-  ---4.22. <a href="#denydccblock">Deny DCC Blokk -=- (dccdeny.conf)</a><br>
-  ---4.23. <a href="#denyversionblock">Deny Version Blokk -=- (V:Line)</a><br>
-  ---4.24. <a href="#denylinkblock">Deny Link Blokk -=- (D:Line / d:Line)</a><br>
-  ---4.25. <a href="#denychannelblock">Deny Channel Blokk -=- (chrestrict.conf)</a><br>
-  ---4.26. <a href="#allowchannelblock">Allow Channel Blokk</a><br>
-  ---4.27. <a href="#allowdccblock">Allow DCC Blokk</a><br>
-  ---4.28. <a href="#vhostblock">Vhost Blokk -=- (vhost.conf)</a><br>
-  ---4.29. <a href="#badwordsblock">Badword Blokk -=- (badwords.conf)</a><br>
-  ---4.30. <a href="#ulinesblock">Uline Block -=- (U:Line)</a><br>
-  ---4.31. <a href="#linkblock">Link Block -=- (C/N/H:Line-ok)</a><br>
-  ---4.32. <a href="#aliasblock">Alias Blokk</a><br>
-  ---4.33. <a href="#helpblock">Help Blokk</a><br>
-  ---4.34. <a href="#officialchannels">Official Channels Blokk</a><br>
-  ---4.35. <a href="#spamfilter">Spamfilter Blokk</a><br>
-  ---4.36. <a href="#setblock">Set Blokk -=- (networks/unrealircd.conf)</a><br>
+  ---4.2. <a href="#meblock"> Me blokk -=- (M:Line)</a><br>
+  ---4.3. <a href="#adminblock">Admin blokk -=- (A:Line)</a><br>
+  ---4.4. <a href="#classblock">Class blokk -=- (Y:Line)</a><br>
+  ---4.5. <a href="#allowblock">Allow blokk -=- (I:Line)</a><br>
+  ---4.6. <a href="#listenblock">Listen blokk -=- (P:Line)</a><br>
+  ---4.7. <a href="#operblock">Oper blokk -=- (O:Line)</a><br>
+  ---4.8. <a href="#drpassblock">DRpass blokk -=-(X:Line)</a><br>
+  ---4.9. <a href="#includedirective">Include direktíva</a><br>
+  ---4.10. <a href="#loadmoduledirective">Loadmodule direktíva</a><br>
+  ---4.11. <a href="#logblock">Log blokk</a><br>
+  ---4.12. <a href="#tldblock">TLD blokk -=- (T:Line)</a><br>
+  ---4.13. <a href="#bannickblock">Ban nick blokk -=- (Q:Line)</a><br>
+  ---4.14. <a href="#banuserblock">Ban user blokk -=- (K:Line)</a><br>
+  ---4.15. <a href="#banipblock">Ban IP blokk -=- (Z:Line)</a><br>
+  ---4.16. <a href="#banserverblock">Ban server blokk -=-(q:Line)</a><br>
+  ---4.17. <a href="#banrealnameblock">Ban realname blokk -=- (n:Line)</a><br>
+  ---4.18. <a href="#banversionblock">Ban version blokk</a><br>
+  ---4.19. <a href="#banexceptionblock">Ban exception blokk -=- (E:Line)</a><br>
+  ---4.20. <a href="#tklexceptionblock">TKL exception blokk</a><br>
+  ---4.21. <a href="#throttleexceptionblock">Throttle exception blokk</a><br>
+  ---4.22. <a href="#denydccblock">Deny DCC blokk -=- (dccdeny.conf)</a><br>
+  ---4.23. <a href="#denyversionblock">Deny version blokk -=- (V:Line)</a><br>
+  ---4.24. <a href="#denylinkblock">Deny link blokk -=- (D:Line / d:Line)</a><br>
+  ---4.25. <a href="#denychannelblock">Deny channel blokk -=- (chrestrict.conf)</a><br>
+  ---4.26. <a href="#allowchannelblock">Allow channel blokk</a><br>
+  ---4.27. <a href="#allowdccblock">Allow DCC blokk</a><br>
+  ---4.28. <a href="#vhostblock">Vhost blokk -=- (vhost.conf)</a><br>
+  ---4.29. <a href="#badwordsblock">Badword blokk -=- (badwords.conf)</a><br>
+  ---4.30. <a href="#ulinesblock">Uline block -=- (U:Line)</a><br>
+  ---4.31. <a href="#linkblock">Link block -=- (C/N/H:Line-ok)</a><br>
+  ---4.32. <a href="#aliasblock">Alias blokk</a><br>
+  ---4.33. <a href="#helpblock">Help blokk</a><br>
+  ---4.34. <a href="#officialchannels">Official channels blokk</a><br>
+  ---4.35. <a href="#spamfilter">Spamfilter blokk</a><br>
+  ---4.36. <a href="#setblock">Set blokk -=- (networks/unrealircd.conf)</a><br>
   5. <a href="#addtlfiles">További fájlok</a><br>
   6. <a href="#userchannelmodes">Felhasználói és csatornamódok</a><br>
   7. <a href="#useropercommands">Felhasználói és operátori parancsok</a><br>
@@ -124,6 +125,16 @@ Hungarian |
   ---8.8. <a href="#secantiexploit">Sebezhetõségek elleni védelem</a><br>
   ---8.9. <a href="#secsummary">Összegzés</a><br>
   9. <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">Gyakran Ismételt Kérdések (FAQ)</a><br>
+  A. <a href="#regex">Reguláris kifejezések</a><br>
+  ---A.1. <a href="#regexlit">Konstansok</a><br>
+  ---A.2. <a href="#regexdot">A pont operátor</a><br>
+  ---A.3. <a href="#regexrep">Ismétlõ operátorok</a><br>
+  ---A.4. <a href="#regexbracket">Zárójeles kifejezések</a><br>
+  ---A.5. <a href="#regexassert">Tesztek</a><br>
+  ---A.6. <a href="#regexalt">Alternálás</a><br>
+  ---A.7. <a href="#regexsub">Alkifejezések</a><br>
+  ---A.8. <a href="#regexbackref">Visszautalások</a><br>
+  ---A.9. <a href="#regexcase">Kis-nagybetû érzékenység</a><br>
 </p>
 <p><b><font size="+2">1.0 &#8211; Bevezetés és megjegyzések <a name="IntroductionNotes"></a></font></b><br>
 </p><div class="desc">
@@ -132,7 +143,7 @@ Hungarian |
   terjesztése szigorúan tilos az UnrealIRCd Fejlesztõi Csapat írásos engedélye nélkül.
   Ez a dokumentum másolható, nyomtatható, sokszorosítható és közzétehetõ
   tetszés szerinti alkalommal, feltéve, hogy azt az UnrealIRCD-hez használod, és
-  nem módosítod. &#8211; Copyright UnrealIRCd Fejlesztõi Csapat 2002-2004</p>
+  nem módosítod. &#8211; Copyright UnrealIRCd Fejlesztõi Csapat 2002-2005</p>
 <p>Kérlek, olvasd el ezt a kézikönyvet, mielõtt segítséget kérsz, és BIZTOSAN bele akarsz nézni a
    <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">GYIK</a>-ba is, mivel a kérdéseid/problémáid 80%-a meg van válaszolva benne. Ha az nem
    oldotta meg a problémádat, segítséget kérhetsz az irc.ircsystems.net-en (6667-es port) az #unreal-support csatornán. (Megjegyzendõ,
@@ -222,16 +233,13 @@ Windows:<br>
 <p><font size="+2"><b>3.1 - Álcázás</b></font><a name="feature_cloaking"></a></p><div class="desc">
 <p>Az álcázás (cloaking) egy módszer a felhasználók valós gazdaneveinek elrejtésére. Például, ha a valódi gazdaneved <i>d5142341.cable.wanadoo.nl</i>,
    (a join, part, whois stb. üzenetekben) <i>rox-2DCA3201.cable.wanadoo.nl</i>-ként lesz megjelenítve.
-   Ez a featúra hasznos annak a megelõzésére, hogy a felhasználók egymást floodolják, mivel nem látják a valódi gazdanevet ill. IP címet.</p>
+   Ez a featúra hasznos annak a megelõzésére, hogy a felhasználók egymást árasszák (floodolják), mivel így nem látják a valódi gazdanevet ill. IP címet.</p>
 <p>Ez a +x felhasználói móddal vezérelhetõ (például: /mode nickneved +x), az adminok erõltethetik a +x alapértelemzésbeli
    engedélyezését is, vagy beállíthatják, hogy a mód soha ne legyen eltávolítható.</p>
-<p>Az álcázott gazdanevet egy álcázó modul állítja elõ (egyet szükséges betöltened), jelenleg 2 ilyen hivatalos modul áll rendelkezésre:<br>
-   <b>cloak:</b> Ez az új, hivatalos álcázó modul, amely sokkal biztonságosabb, mint a korábbi;
+<p>Az álcázott gazdanevet egy álcázó modul állítja elõ (egyet szükséges betöltened), az Unreal jelenleg 1 ilyen hivatalos modult tartalmaz:<br>
+   <b>cloak:</b> Ez a hivatalos álcázó modul a 3.2.1 óta, sokkal biztonságosabb, mint a régi algoritmus;
    belsõleg használ md5-öt, és 3 kulcsot igényel (set::cloak-keys::), amelyek mindegyike kis- (a-z),
    nagybetû (A-Z) valamint szám (0-9) karakterekbõl áll [pl.: "AopAS6WQH2Os6hfosh4SFJHs"]. Az example.conf-ban találsz példát.<br>
-   <b>oldcloak:</b> Ez az Unreal3.2 és korábbi verziók által használt, régi álcázó algoritmus, és csak azért van itt,
-   hogy segédkezzen a frissítési folyamatban. Mostmár nem tartjuk biztonságosnak (kapsz egy figyelmeztést,
-   ha használod), és rögtön érdemes átváltanod a "cloak"-ra, amint frissítetted a szervereidet.</p>
 <p>Az álcázási kulcsoknak egy hálózat MINDEN SZERVERÉN azonosnak KELL lenniük. Továbbá a kulcsokat tartsd TITOKBAN,
    mert ha valaki ismeri a kulcsokat, visszafejtheti az eredeti gazdanevet (ami a +x felhasználói módot hasznavehetetlenné teszi).</p>
 </div>
@@ -255,7 +263,7 @@ Windows:<br>
 <p>A jelenleg rendelkezésre álló snomaskok az alábbiak:<br>
    c - helyi kapcsolódások<br>
    F - távoli kapcsolódások (kivéve U:line-os szerverekrõl)<br>
-   f - flood értesítések<br>
+   f - árasztásokról szóló értesítések<br>
    k - kill értesítések [*]<br>
    e - szem (eyes) értesítések<br>
    j - selejt (junk) értesítések <br>
@@ -270,7 +278,9 @@ Windows:<br>
    [*: ezt a snomaskot nem csak ircopok használhatják]<br>
    </p>
 <p>Beállíthatod, hogy milyen snomaskokat kapj meg automatikusan (set::snomask-on-connect) és melyeket operátorrá
-   váláskor (set::snomask-on-oper, oper::snomask)</p></div>
+   váláskor (set::snomask-on-oper, oper::snomask)</p>
+<p>Alapértelmezésben, ha a felhasználó egyszerûen csak a +s módot állítja be, bizonyos snomaszkok lesznek beállítva.
+Közönséges felhasználóknak a +ks, operátoroknak a +kscfvGqo snomaszkok.</p></div>
 
 <p><font size="+2"><b>3.4 - Álnevek</b></font><a name="feature_aliases"></a></p><div class="desc">
 <p>Az álnevek (alias) szolgálnak szerverszintû álparancsok beállítására.
@@ -340,20 +350,20 @@ Windows:<br>
    (mint a valami.dyndns.org). Ha két dinamikus DNS-sel rendelkezõ gépet linkelsz, állítsd be a link::options::nodnscache és a link::options::nohostcheck opciókat.
 </p></div>
 
-<p><font size="+2"><b>3.12 - Anti-Flood featúrák</b></font><a name="feature_antiflood"></a></p><div class="desc">
+<p><font size="+2"><b>3.12 - Árasztásvédelmi featúrák</b></font><a name="feature_antiflood"></a></p><div class="desc">
 <p>
 <b>Elfojtás</b><br>
 Az elfojtás (throttling) egy módszer annak korlátozására, hogy egy felhasználó milyen gyorsan bonthatja a kapcsolatot
 és kapcsolódhat újra szerveredre. Beállíthatod a set::throttle blokkban, hogy X kapcsolatot engedélyezzen YY másodperc alatt ugyanarról az IP-rõl.<br>
 <b>Csatornamódok</b><br>
-Vannak csatornamódok is, amelyek nagyon hatásosak lehetnek floodok ellen. Hogy néhányat megnevezzünk:<br>
-<b>K</b> = nincs /knock (bekopogás), <b>N</b> = nincsenek nickváltások, <b>C</b> = nincsenek CTCP-k, <b>M</b> = csak regisztált felhasználók beszélhetnek.<br>
+Vannak csatornamódok is, amelyek nagyon hatásosak lehetnek árasztások (floodok) ellen. Hogy néhányat megnevezzünk:<br>
+<b>K</b> = nincs /knock (bekopogás), <b>N</b> = nincsenek nickváltások, <b>C</b> = nincsenek CTCP-k, <b>M</b> = csak regisztrált felhasználók beszélhetnek, <b>j</b> = belépések számának szabályozása (felhasználónkénti alapon)<br>
 A beta18 óta egy sokkal fejlettebb, +f csatornamód is használható...<br>
 <b>Az f csatornamód</b><br>
 A csatornabeli áradatok elleni védelem most már beleépült az ircd-be ezen csatornamódként, hogy ne kelljen scripteket és a botokat használni.<br>
 Egy példa a +f módra: <i>*** Blah sets mode: +f [10j]:15</i><br>
 Ez azt jelenti, hogy 10 belépés engedélyezett a csatornára 15 másodpercenként. Ha a korlátot túllépik, a +i csatornamód lesz automatikusan beállítva.<br>
-A következõ floodtípusok állnak rendelkezésre:<br>
+A következõ árasztástípusok állnak rendelkezésre:<br>
 <table border=1 cellpadding=3 cellspacing=1>
 <tr><td>típus:</td><td>név:</td><td>alapért. tevékenység:</td><td>más elérhetõ<br>tevékenységek:</td><td>megjegyzés</td></tr>
 <tr><td>c</td><td>CTCP-k</td><td>automatikus +C</td><td>m, M</td><td>&nbsp;</td></tr>
@@ -397,7 +407,7 @@ Példa:
 </pre>
 
 Valójában sokkal haladóbb, bonyolultabb is lehet:<br>
-Bizonyos floodtípusoknál az alapértelmezett tevékenység helyett egy másikat is meghatározhatsz, például: <i>+f [20j#R,50m#M]:15</i><br>
+Bizonyos árasztástípusoknál az alapértelmezett tevékenység helyett egy másikat is meghatározhatsz, például: <i>+f [20j#R,50m#M]:15</i><br>
 Ez a csatornát +R-re állítja, ha a belépési határt elérték (&gt;20 belépés 15 másodperc alatt),
 és +M-re, ha a megengedett üzenetek számát elérték (&gt;50 üzenet 15 másodperc alatt).<br>
 <br>
@@ -425,9 +435,18 @@ az igényeid szerint:<br>
 Ha ez egy hatalmas felhasználói bázisú csatorna (&gt;75 felhasználóval?), a belépési érzékenységet jobb növelni (például 50-re), és az
 üzenethatárt is ugyanúgy (például 60-ra vagy 75-re).<br>
 A módtörlési idõk különösképpen egyéni ízlés dolgai.. olyasmire kellene gondolnod, mint.. mi van, ha nincs elérhetõ operátor a helyzet
-kezelésére? Szeretném-e a csatornát lezárni pl. 15 percre (=nem kellemes a felhasználóknak) vagy 5 percre (=feltehetõleg a floodolók
-csak várni fognak 5 percet, és árasztanak újra)? Függ a flood típusától is; ha a felhasználók képtelen belépni (+i) vagy beszélni (+m), az rosszabb, mint
+kezelésére? Szeretném-e a csatornát lezárni pl. 15 percre (=nem kellemes a felhasználóknak) vagy 5 percre (=feltehetõleg az árasztók
+csak várni fognak 5 percet, és árasztanak újra)? Függ az árasztás típusától is; ha a felhasználók képtelen belépni (+i) vagy beszélni (+m), az rosszabb, mint
 ha nem változtathatják meg a neveiket (+N) vagy nem küldhetnek ctcp-ket a csatornára (+C), tehát érdemesebb különbözõ törlési idõket használni.
+<br>
+<b>A j csatornamód</b><br>
+A +f módnak van egy olyan képessége, hogy megakadályozza a join árasztásokat, azonban ez a képesség "globális."
+Például ha 5:10-re van állítva, és belép 5 <u>különbözõ</u> felhasználó 10 másodperc alatt, az árasztásvédelem
+bekapcsol. A +j csatornamód más. Ez a mód felhasználónkénti alapon mûködik.
+Ahelyett, hogy a join árasztások ellen védne, arra van tervezve, hogy a join-part árasztásokat gátolja meg
+(forgóajtós árasztások). A mód egy X:Y alakú paramétert igényel, ahol X a belépések száma, és
+Y a másodpercek száma. Ha egy felhasználó túllépi ezt a korlátot, nem fog tudni belépni
+a csatornára.
 </p></div>
 
 <p><font size="+2"><b>3.13 - Ban típusok</b></font><a name="feature_bantypes"></a></p><div class="desc">
@@ -454,8 +473,10 @@ A kiterjesztett ban típusok ~[!]&lt;típus&gt;:&lt;valami&gt; alakúak. Jelenleg a
  hacsak nincs +v módjuk vagy annál magasabb. <i>Pl.: ~q:*!*@blah.blah.com</i></td></tr>
 <tr><td>~n</td><td>névváltás</td><td>Az erre a banra illõ emberek nem válthatnak nicknevet, 
  hacsak nincs +v módjuk vagy annál magasabb. <i>Pl.: ~n:*!*@*.aol.com</i></td></tr>
-<tr><td>~c</td><td>csatorna</td><td>Ha a felhasználó ezen a csatornán van, nem léphet be.
-<i>Pl.: ~c:#lamers</i></td></tr>
+<tr><td>~c</td><td>[elõtag]csatorna</td><td>Ha a felhasználó ezen a csatornán van, nem léphet be. 
+ Megadható egy elõtag is (+/%/@/&amp;/~), ami azt jelenti, hogy csak akkor fog illeszkedni, ha a felhasználónak
+ olyan vagy annál magasabb jogai vannak a megadott csatornán.
+<i>Pl.: +b ~c:#lamerek, +e ~c:@#megbizhatoak </i></td></tr>
 <tr><td>~r</td><td>valós név</td><td>Ha egy felhasználó valós neve illik a banra, nem léphet be.<br>
  <i>Pl.: ~r:*Stupid_bot_script*</i><br>
  MEGJEGYZÉS: az aláhúzás ('_') mind a szóközre (' ') és az aláhúzásra ('_') is illik, így ez a ban illik a
@@ -481,7 +502,9 @@ A modulok bõvíthetik is más típusokkal a kiterjesztett ban típusokat.<br>
    <tr><td>P</td><td>part</td><td>Csatornáról lelépés indoka</td></tr>
    <tr><td>q</td><td>quit</td><td>Kilépési indok</td></tr>
    <tr><td>d</td><td>dcc</td><td>DCC fájlnév</td></tr>
-   <tr><td>u</td><td>user</td><td>Felhasználó kitiltása, nick!user@host:valósnév alakú illeszkedési maszk</td></tr>
+   <tr><td>a</td><td>away</td><td>Távolléti üzenet</td></tr>
+   <tr><td>t</td><td>topic</td><td>Témabeállítás</td></tr>
+   <tr><td>u</td><td>user</td><td>Felhasználó kitiltása, nick!user@host:valósnév alakú illesztési maszk</td></tr>
    </table>
    Egyszerre több célpontot is megadhatsz, például így: cpNn</td></tr>
    <tr valign="top"><td><b>[tevékenység]</b></td><td> meghatározza az elvégzendõ tevékenységet (csak 1 tevékenység adható meg)<br>
@@ -498,9 +521,9 @@ A modulok bõvíthetik is más típusokkal a kiterjesztett ban típusokat.<br>
 <tr valign="top"><td>viruschan</td><td>lelépteti a felhasználót minden csatornáról, belépteti a <tt>set::spamfilter::virus-help-channel</tt> csatornára, letilt minden parancsot,
  kivéve a PONG-ot, az ADMIN-t és a <tt>set::spamfilter::virus-help-channel</tt> csatornára küldött üzeneteket/értesítéseket</td></tr>
 </table></td></tr>
-   <tr valign="top"><td><b>[idõtartam]</b></td><td> A szûrõ által felvett *line-ok idõtartama, használj kötõjelet ('-') az alapértelmezéshez vagy a kihagyáshoz
+   <tr valign="top"><td><b>[idõtartam]</b></td><td> A szûrõ által felvett *line-ok/shunok idõtartama, használj kötõjelet ('-') az alapértelmezéshez vagy a kihagyáshoz
    (pl.: ha a tevékenység = 'block')</td></tr>
-   <tr valign="top"><td><b>[indok]</b></td><td> a blokkolás vagy a *line indoka.. itt NEM használhatsz szóközöket, de az aláhúzásjelek ('_') szóközökké
+   <tr valign="top"><td><b>[indok]</b></td><td> a blokkolás/*line/shun indoka.. itt NEM használhatsz szóközöket, de az aláhúzásjelek ('_') szóközökké
 lesznek alakítva futásidõben. Egy dupla aláhúzás ('__') jelent egy aláhúzást ('_'). Itt is írj kötõjelet ('-') az alapértelmezett indok használatához.</td></tr>
    <tr valign="top"><td><b>[regex]</b></td><td> ez a tényleges regex vagy "csúnya szó", amelyre végezzük a blokkolást és a tevékenységet</td></tr>
    </table>
@@ -529,8 +552,8 @@ lesznek alakítva futásidõben. Egy dupla aláhúzás ('__') jelent egy aláhúzást ('_
 	action block;
 };</pre></p>
 
-<p>A <b>set::spamfilter::ban-time</b> lehetõvé teszi, hogy módosítsd a spamszûrõk által felvett *line-ok alapértelmezett kitiltási idejét (alapértelmezés: 1 nap)<br>
-   A <b>set::spamfilter::ban-reason</b>-nel meghatározhatsz egy alapértelmezett indokot a *line-okra (alapértelmezés: 'Spam/advertising')<br>
+<p>A <b>set::spamfilter::ban-time</b> lehetõvé teszi, hogy módosítsd a spamszûrõk által felvett *line-ok/shunok alapértelmezett kitiltási idejét (alapértelmezés: 1 nap)<br>
+   A <b>set::spamfilter::ban-reason</b>-nel meghatározhatsz egy alapértelmezett indokot (alapértelmezés: 'Spam/advertising')<br>
    A <b>set::spamfilter::virus-help-channel</b>-lel meghatározhatod, hogy milyen csatornára történjen a belépés a 'viruschan' tevékenység esetén (alapértelmezés: #help)<br>
    A <b>set::spamfilter::virus-help-channel-deny</b> segítségével pedig letilthatod a normál belépéseket a "virus-help-channel"-ben (alapértelmezés: no)<br>
 </p></div>
@@ -545,7 +568,53 @@ használhatóak az allow::ip, a ban user::mask, a ban ip::mask, az except ban::mas
 127.0.0.0/8 (illeszkedési tartománya 127.0.0.0 - 127.255.255.255) és fe80:0:0:123::/64 (illeszkedési tartománya
 fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p></div>
 
-<p><font size="+2"><b>3.16 - További featúrák</b></font><a name="feature_other"></a></p><div class="desc">
+<p><font size="+2"><b>3.16 - Karakterkészletek nicknevekhez</b></font><a name="feature_nickchars"></a></p><div class="desc">
+<p>Az UnrealIRCd-nek most már megvan az a képessége, hogy meghatározzuk, milyen karakterkészleteket/nyelveket szeretnénk engedélyezni
+a nicknevekben. Ezt a <b>set::allowed-nickchars</b> direktívával tehetjük meg.<br>
+Egy táblázat az összes választási lehetõségrõl:<br>
+<table border="1">
+<tr><td><b>Név:</b></td><td><b>Leírás:</b></td><td><b>Karakterkészlet/kódolás:</b></td></tr>
+<tr><td>catalan</td><td>Katalán karakterek</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>dutch</td><td>Holland karakterek</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>french</td><td>Francia karakterek</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>german</td><td>Német karakterek</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>swiss-german</td><td>Svájci német karakterek (nincs es-zett)</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>icelandic</td><td>Izlandi karakterek</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>italian</td><td>Olasz karakterek</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>spanish</td><td>Spanyol karakterek</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>swedish</td><td>Svéd karakterek</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td><b>latin1</b></td><td>catalan, dutch, french, german, swiss-german, spanish, icelandic, italian, swedish</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>hungarian</td><td>Magyar karakterek</td><td>iso8859-2 (latin2), windows-1250</td></tr>
+<tr><td>polish</td><td>Lengyel karakterek</td><td>iso8859-2 (latin2)</td></tr>
+<tr><td>romanian</td><td>Román karakterek</td><td>iso8859-2 (latin2), windows-1250, iso8859-16</td></tr>
+<tr><td><b>latin2</b></td><td>hungarian, polish, romanian</td><td>iso8859-2 (latin2)</td></tr>
+<tr><td>polish-w1250</td><td>Lengyel karakterek, windowsos változat (sajnos gyakoribb, mint az iso)</td><td>windows-1250</td></tr>
+<tr><td>slovak-w1250</td><td>Szlovák karakterek, windowsos változat</td><td>windows-1250</td></tr>
+<tr><td>czech-w1250</td><td>Cseh karakterek, windowsos változat</td><td>windows-1250</td></tr>
+<tr><td><b>windows-1250</b></td><td>polish-w1250, slovak-w1250, czech-w1250, hungarian, romanian</td><td>windows-1250</td></tr>
+<tr><td>greek</td><td>Görög karakterek</td><td>iso8859-7</td></tr>
+<tr><td>turkish</td><td>Török karakterek</td><td>iso8859-9</td></tr>
+<tr><td>russian-w1251</td><td>Orosz karakterek</td><td>windows-1251</td></tr>
+<tr><td>hebrew</td><td>Héber karakterek</td><td>iso8859-8-I/windows-1255</td></tr>
+<tr><td>chinese-simp</td><td>Egyszerûsített kínai</td><td>Több-bájtos: GBK/GB2312</td></tr>
+<tr><td>chinese-trad</td><td>Hagyományos kínai</td><td>Több-bájtos: GBK</td></tr>
+<tr><td>chinese-ja</td><td>Japán hiragana/pinyin</td><td>Több-bájtos: GBK</td></tr>
+<tr><td><b>chinese</b></td><td>chinese-*</td><td>Több-bájtos: GBK</td></tr>
+<tr><td><b>gbk</b></td><td>chinese-*</td><td>Több-bájtos: GBK</td></tr>
+</table>
+Ügyeljünk arra, hogy néhány kombináció problémákat okozhat. 
+Például ha keverjük a latin* és chinese-* nyelveket, azt IRCd nem tudja
+megfelelõen kezelni, és az Unreal hibaüzenetet fog kiírni.
+Más karakterkészletek együttes használata lehet, hogy megjelenítési problémákat okoz, ezért az Unreal
+figyelmeztetést fog adni, ha keverjük a latin1/latin2/greek karakterkészleteket.<br><br>
+
+1. Példa: nyugat-európai népeknek:<br>
+<pre>set { allowed-nickchars { latin1; }; };</pre>
+2. Példa: ha fõleg kínai felhasználóink vannak, és a "rendes" kínai karaktereket szeretnénk engedélyezni:<br>
+<pre>set { allowed-nickchars { chinese-simp; chinese-trad; }; };</pre>
+</p></div>
+
+<p><font size="+2"><b>3.17 - További featúrák</b></font><a name="feature_other"></a></p><div class="desc">
 <p>Az UnrealIRCd-nek rengeteg featúrája van, ezért itt nincs minden megemlítve... Rájössz majd magadtól is.</p></div>
 
 <p> </p>
@@ -589,8 +658,8 @@ fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p></div>
   ebben az esetben &lt;blokkérték&gt;-et jelent, vagy lehet egy alblokk
   névtelen bejegyzése is.</p>
 <p>Háromféle megjegyzéstípus támogatott:</p>
-<p> # Egy soros megjegyzés<br>
-    // Egy soros megjegyzés<br>
+<p> # Egysoros megjegyzés<br>
+    // Egysoros megjegyzés<br>
     /* Többsoros<br>
        &nbsp;&nbsp;&nbsp;&nbsp;megjegyzés */<br>
  </p>
@@ -598,7 +667,7 @@ fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p></div>
    másold le a doc/example.conf-ot, és kezdd el szerkeszteni. Javasolt, hogy lépésrõl lépésre haladj
    át az egyes blokktípusokon, és használd ezt a kézikönyvet segédletnek.</p>
 <p></p></div>
-<p><font class="block_section">4.2 - </font><font class="block_name">Me Blokk</font>
+<p><font class="block_section">4.2 - </font><font class="block_name">Me blokk</font>
    <font class="block_required">KÖTELEZÕ</font> <font class="block_old">(Elõzõleg M:Line néven ismert)</font><a name="meblock"></a></p><div class="desc">
 </p>
 <p>Szintaktika:<br>
@@ -606,23 +675,23 @@ fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p></div>
 me {
 	name &lt;szerver-neve&gt;;
 	info &lt;szerver-leírása&gt;;
-	numeric &lt;szerver-numericja&gt;;
+	numeric &lt;szerver-azonosítószáma&gt;;
 };
 </pre></p>
 <p>Ezek az értékek meglehetõsen egyértelmûek. A <b>name</b> beállítja a szerver nevét,
   az <b>info</b> a szerver info sorának (rövid leírásának) megadására szolgál, a <b>numeric</b> meghatározza a szerver
-  azonosítószámát. Ez utóbbi szám legyen 1 és 255 között, és minden szerveren EGYEDINEK kell
+  azonosítószámát. Ez utóbbi szám legyen 0 és 254 között, és minden szerveren EGYEDINEK kell
   lennie, vagyis ugyanazon a hálózaton SEMELYIK más szervernek nem lehet ugyanaz az azonosítószáma.</p>
 <p>Példa:<br>
 <pre>
 me {
-	name "irc.foonet.com";
-	info "FooNet Server";
+	name "irc.valaminet.com";
+	info "ValamiNet Szerver";
 	numeric 1;
 };
 </pre></p></div>
 <p></p>
-<p><font class="block_section">4.3 - </font><font class="block_name">Admin Blokk</font>
+<p><font class="block_section">4.3 - </font><font class="block_name">Admin blokk</font>
    <font class="block_required">KÖTELEZÕ</font> <font class="block_old">(Elõzõleg A:Line néven ismert)</font><a name="adminblock"></a><div class="desc">
 </p>
 <p>Szintaktika:<br>
@@ -647,7 +716,7 @@ admin {
 };
 </pre></p></div>
 <p></p>
-<p><font class="block_section">4.4 - </font><font class="block_name">Class Blokk</font>
+<p><font class="block_section">4.4 - </font><font class="block_name">Class blokk</font>
    <font class="block_required">KÖTELEZÕ</font> <font class="block_old">(Elõzõleg Y:Line néven ismert)</font><a name="classblock"></a><div class="desc">
 </p>
 <p>Szintaktika:<br>
@@ -661,7 +730,7 @@ class &lt;name&gt; {
 };
 </pre></p>
 <p> </p>
-<p>Class blokkok azok az osztályok, amelyekben a kapcsolatok elhelyezõdnek (például az allow blokkokból
+<p>A class blokkok olyan osztályok, amelyekben a kapcsolatok elhelyezõdnek (például az allow blokkokból
    vagy szerverek a link blokkokból); általában több class blokkot szokás beállítani (pl. egy-egy a szervereknek, klienseknek és az opereknek).</p>
 <p>A <b>name</b> egy leíró név, például "clients" (kliensek) vagy "servers" (szerverek), erre az osztálynévre hivatkoznak
    az allow, link, oper stb. blokkok.</p>
@@ -669,7 +738,7 @@ class &lt;name&gt; {
 <p>A <b>connfreq</b> csak szerverekre használható, és a kapcsolódási kísérletek közötti idõt jelenti másodpercekben, ha az autoconnect engedélyezve van.</p>
 <p>A <b>maxclients</b> meghatározza, hogy maximálisan (összesen) hány kliens/szerver tartozhat ebbe a kapcsolati osztályba.</p>
 <p>A <b>sendq</b> meghatározza azt az adatmennyiséget, amennyi megengedett a küldésre várakozó üzenetek sorában [send queue] (legyen nagyon magas alacsony sávszélességû szerverekhez, közepes a kliensekhez).</p>
-<p>A <b>recvq</b> meghatározza azt az adatmennyiséget, amennyi megengedett a fogadásra váró üzenetek sorában [receive queue], és ezt használjuk flood-szabályozásra
+<p>A <b>recvq</b> meghatározza azt az adatmennyiséget, amennyi megengedett a fogadásra váró üzenetek sorában [receive queue]; ezt használjuk az árasztások szabályozására
    (csak normál felhasználókra vonatkozik, 8000 ajánlott, ez az alapértelmezés is; kísérletezhetsz 3000-8000 közötti értékekkel).</p>
 <p>Példák:<br>
 <pre>
@@ -688,7 +757,7 @@ class servers{
 };
 </pre></p>
 <p> </p></div>
-<p><font class="block_section">4.5 - </font><font class="block_name">Allow Blokk</font>
+<p><font class="block_section">4.5 - </font><font class="block_name">Allow blokk</font>
    <font class="block_required">KÖTELEZÕ</font> <font class="block_old">(Elõzõleg I:Line néven ismert)</font><a name="allowblock"></a><div class="desc">
 </p>
 <p>Szintaktika:<br>
@@ -751,14 +820,14 @@ allow {
 
 allow {
 	ip *@*;
-	hostname *@*.jelszavas.csunya.emberek;
+	hostname *@*.jelszavas.csunya.emberkek;
 	class clients;
 	password "V4lami";
 	maxperip 1;
 };
 </pre></p></div>
 <p>&nbsp;</p>
-<p><font class="block_section">4.6 - </font><font class="block_name">Listen Blokk</font>
+<p><font class="block_section">4.6 - </font><font class="block_name">Listen blokk</font>
    <font class="block_required">KÖTELEZÕ</font> <font class="block_old">(Elõzõleg P:Line néven ismert)</font><a name="listenblock"></a><div class="desc">
 </p>
 <p>Szintaktika:<br>
@@ -809,7 +878,7 @@ listen *:6601 {
 <p>listen *:8067;<br>
   listen 213.12.31.126:6667;<br>
   listen *:6660-6669;</p></div>
-<p><font class="block_section">4.7 - </font><font class="block_name">Oper Blokk</font>
+<p><font class="block_section">4.7 - </font><font class="block_name">Oper blokk</font>
    <font class="block_recommended">AJÁNLOTT</font> <font class="block_old">(Elõzõleg O:Line néven ismert)</font><a name="operblock"></a><div class="desc">
 </p>
 <p>
@@ -1166,7 +1235,7 @@ opolni magad a csatornán, stb.<br>
 A can_override operflaget azért csináltuk, hogy megkísérelje megállítani az operátori visszaéléseket.
 Egyetlen operátor sem overrideolhat alapértelmezés szerint, ehhez kifejezetten a can_override flaget kell megadnod nekik.
 <p> </p></div>
-<p><font class="block_section">4.8 - </font><font class="block_name">DRpass Blokk</font>
+<p><font class="block_section">4.8 - </font><font class="block_name">DRpass blokk</font>
    <font class="block_recommended">AJÁNLOTT</font> <font class="block_old">(Elõzõleg X:Line néven ismert)</font><a name="drpassblock"></a><div class="desc">
 </p>
 <p>Szintaktika:<br>
@@ -1187,7 +1256,7 @@ drpass {
 };
 </pre></p>
 <p> </p></div>
-<p><font class="block_section">4.9 - </font><font class="block_name">Include Direktíva</font><a name="includedirective"></a><div class="desc">
+<p><font class="block_section">4.9 - </font><font class="block_name">Include direktíva</font><a name="includedirective"></a><div class="desc">
 </p>
 <p>Szintaktika:<br>
   include &lt;fájlnév&gt;;</p>
@@ -1217,7 +1286,7 @@ drpass {
 </ul>
 </p>
 <p></p></div>
-<p><font class="block_section">4.10 - </font><font class="block_name">LoadModule Direktíva</font>
+<p><font class="block_section">4.10 - </font><font class="block_name">LoadModule direktíva</font>
    <font class="block_required">KÖTELEZÕ</font><a name="loadmoduledirective"></a><div class="desc">
 </p>
 <p>Szintaktika:<br>
@@ -1237,8 +1306,8 @@ loadmodule "modules/commands.dll";
 loadmodule "modules/cloak.dll";
 </pre>
 </div>
-<p><font class="block_section">4.11 - </font><font class="block_name">Log Blokk</font>
-   <font class="block_optional">SZABADON VÁLASZTHATÓ</font><a name="logblock"></a><div class="desc">
+<p><font class="block_section">4.11 - </font><font class="block_name">Log blokk</font>
+   <font class="block_recommended">AJÁNLOTT</font><a name="logblock"></a><div class="desc">
 </p>
 <p>Szintaktika:<br>
 <pre>
@@ -1289,7 +1358,7 @@ log ircd.log {
 };
 </pre></p>
 <p></p></div>
-<p><font class="block_section">4.12 - </font><font class="block_name">TLD Blokk</font>
+<p><font class="block_section">4.12 - </font><font class="block_name">TLD blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font> <font class="block_old">(Elõzõleg T:Line néven ismert)</font><a name="tldblock"></a><div class="desc">
 </p>
 <p>Szintaktika:<br>
@@ -1299,6 +1368,8 @@ tld {
 	motd &lt;motd-fájl&gt;;
 	rules &lt;rules-fájl&gt;;
 	shortmotd &lt;rövid-motd-fájl&gt;;
+	opermotd &lt;oper-motd-fájl&gt;;
+	botmotd &lt;bot-motd-fájl&gt;;
 	channel &lt;csatornanév&gt;;
 	options {
 		ssl;
@@ -1307,11 +1378,12 @@ tld {
 <p>A tld blokkal motd-ket, szabályokat és egy csatornát rendelhetsz felhasználókhoz
   a hostjaik alapján. Ez hasznos, ha különbözõ motd-t szeretnél különbözõ nyelvekhez.
   A <b>tld::mask</b> egy user@host maszk, amire a felhasználó usernevének és hostnevének
-  illenie kell. A <b>tld::motd</b>, a <b>tld::shortmotd</b> és a <b>tld::rules</b> rendre
-  azokat az motd, shortmotd és rules fájlokat határozzák meg, amelyek erre a hostmaszkra vonatkoznak.
-  A tld::shortmotd szabadon választható. A <b>tld::channel</b> szintén, ez utóbbival egy olyan csatornanevet
-  határozhatsz meg, ahová a felhasználó kapcsolódáskor lesz beléptetve. Ha ez meg van adva,
-  felülbírálja az alapértelmezett auto join csatornát.
+  illenie kell. A <b>tld::motd</b>, a <b>tld::shortmotd</b>, a <b>tld::opermotd</b>,
+  a <b>tld::botmotd</b> és a <b>tld::rules</b> rendre azokat az motd, rövid motd, opermotd,
+  botmotd valamint rules fájlokat határozzák meg, amelyek erre a hostmaszkra vonatkoznak.
+  A tld::shortmotd, a tld::opermotd és a tld::botmotd szabadon választható. A <b>tld::channel</b>
+  szintén, ez utóbbival egy olyan csatornanevet határozhatsz meg, ahová a felhasználó kapcsolódáskor
+  lesz beléptetve. Ha ez meg van adva, felülbírálja az alapértelmezett auto join csatornát.
   A <b>tld::options</b> blokkal további követelményeket állíthatsz be;
   jelenleg csak a tld::options::ssl, ami a fájlokat csak SSL felhasználóknak jeleníti meg, és a
   tld::options::remote, ami a fájlokat csak távoli felhasználóknak jeleníti meg, állnak rendelkezésre.</p>
@@ -1319,12 +1391,12 @@ tld {
 <p>Példa:<br>
 <pre>
 tld {
-	mask *@*.fr;<
+	mask *@*.fr;
 	motd "ircd.motd.fr";
 	rules "ircd.rules.fr";
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.13 - </font><font class="block_name">Ban Nick Blokk</font>
+<p><font class="block_section">4.13 - </font><font class="block_name">Ban nick blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font> <font class="block_old">(Elõzõleg Q:Line néven ismert)</font><a name="bannickblock"></a><div class="desc">
 </p>
 <p>Szintaktika:<br>
@@ -1344,7 +1416,7 @@ ban nick {
 	reason "Fenntartva a szolgáltatásoknak";
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.14 - </font><font class="block_name">Ban User Blokk</font>
+<p><font class="block_section">4.14 - </font><font class="block_name">Ban user blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font> <font class="block_old">(Elõzõleg K:Line néven ismert)</font><a name="banuserblock"></a><div class="desc">
 </p>
 <p>Szintaktika:<br>
@@ -1364,7 +1436,7 @@ ban user {
 	reason "Idióta";
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.15 - </font><font class="block_name">Ban IP Blokk</font>
+<p><font class="block_section">4.15 - </font><font class="block_name">Ban IP blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font> <font class="block_old">(Elõzõleg Z:Line néven ismert)</font><a name="banipblock"></a><div class="desc">
 </p>
 <p>Szintaktika:<br>
@@ -1384,7 +1456,7 @@ ban ip {
 	reason "Szerezz egy valós IP-t, te béna!";
 };</pre></p>
 <p> </p></div>
-<p><font class="block_section">4.16 - </font><font class="block_name">Ban Server Blokk</font>
+<p><font class="block_section">4.16 - </font><font class="block_name">Ban server blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font> <font class="block_old">(Elõzõleg q:Line néven ismert)</font><a name="banserverblock"></a><div class="desc">
 </p>
 <p>Szintaktika:<br>
@@ -1405,7 +1477,7 @@ ban server {
 	reason "Törött!";
 };</pre></p>
 <p> </p></div>
-<p><font class="block_section">4.17 - </font><font class="block_name">Ban RealName Blokk</font>
+<p><font class="block_section">4.17 - </font><font class="block_name">Ban realname blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font> <font class="block_old">(Elõzõleg n:Line néven ismert)</font><a name="banrealnameblock"></a><div class="desc">
 </p>
 <p>Szintaktika:<br>
@@ -1426,7 +1498,7 @@ ban realname {
 	reason "Bob egy szívás!";
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.18 - </font><font class="block_name">Ban Version Blokk</font>
+<p><font class="block_section">4.18 - </font><font class="block_name">Ban version blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font> <a name="banversionblock"></a><div class="desc">
 </p>
 <p>Szintaktika:<br>
@@ -1460,7 +1532,7 @@ ban version {
 };</pre>
 </p>
 <p></p></div>
-<p><font class="block_section">4.19 - </font><font class="block_name">Ban Exceptions Blokk</font>
+<p><font class="block_section">4.19 - </font><font class="block_name">Ban exceptions blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font> <font class="block_old">(Elõzõleg E:Line néven ismert)</font><a name="banexceptionblock"></a><div class="desc">
 </p>
 <p>Szintaktika:<br>
@@ -1478,7 +1550,7 @@ except ban {
 	mask identnev@sajat.szolgaltatom.com;
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.20 - </font><font class="block_name">TKL Exceptions Blokk</font>
+<p><font class="block_section">4.20 - </font><font class="block_name">TKL exceptions blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font><a name="tklexceptionblock"></a><div class="desc">
 </p>
 <p>Szintaktika:<br>
@@ -1507,7 +1579,7 @@ except tkl {
 	type gline;
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.21 - </font><font class="block_name">Throttle Exceptions Blokk</font>
+<p><font class="block_section">4.21 - </font><font class="block_name">Throttle Exceptions blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font> <a name="throttleexceptionblock"></a>
 </p><div class="desc">
 <p>Szintaktika:<br>
@@ -1524,7 +1596,7 @@ except throttle {
 	mask 192.168.1.*;
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.22 - </font><font class="block_name">Deny DCC Blokk</font>
+<p><font class="block_section">4.22 - </font><font class="block_name">Deny DCC blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font> <font class="block_old">(Elõzõleg dccdeny.conf-ként ismert)</font><a name="denydccblock"></a>
 </p><div class="desc">
 <p>Szintaktika:<br>
@@ -1556,7 +1628,7 @@ deny dcc {
 };</pre>
 </p></div>
 <p></p>
-<p><font class="block_section">4.23 - </font><font class="block_name">Deny Version Blokk</font>
+<p><font class="block_section">4.23 - </font><font class="block_name">Deny version blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font> <font class="block_old">(Elõzõleg V:Line néven ismert)</font><a name="denyversionblock"></a><div class="desc">
 </p>
 <p> Szintaktika:<br>
@@ -1583,7 +1655,7 @@ deny version {
   fordítási flagjei között, ha pedig nincs elõtte ! prefix, akkor a szervernek kell, hogy
   legyen ilyen flagje.</p>
 <p></p></div>
-<p><font class="block_section">4.24 - </font><font class="block_name">Deny Link Blokk</font>
+<p><font class="block_section">4.24 - </font><font class="block_name">Deny link blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font> <font class="block_old">(Elõzõleg D/d:Line néven ismert)</font><a name="denylinkblock"></a><div class="desc">
 </p>
 <p>Szintaktika:<br>
@@ -1610,7 +1682,7 @@ deny link {
   auto (csak automatikus kapcsolódásokra vonatkozik, a /connect továbbra is mûködni fog) és all
   (minden kapcsolódási kísérletre érvényes).</p>
 <p></p></div>
-<p><font class="block_section">4.25 - </font><font class="block_name">Deny Channel Blokk</font>
+<p><font class="block_section">4.25 - </font><font class="block_name">Deny channel blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font> <font class="block_old">(Elõzõleg chrestrict.conf-ként ismert)</font><a name="denychannelblock"></a>
 </p><div class="desc">
 <p>Szintaktika:<br>
@@ -1650,7 +1722,7 @@ deny channel {
 };</pre></p>
 
 <p></p></div>
-<p><font class="block_section">4.26 - </font><font class="block_name">Allow Channel Blokk</font>
+<p><font class="block_section">4.26 - </font><font class="block_name">Allow channel blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font><a name="allowchannelblock"></a>
 </p><div class="desc">
 <p>Szintaktika:<br>
@@ -1667,7 +1739,7 @@ allow channel {
 	channel "#valami";
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.27 - </font><font class="block_name">Allow DCC Blokk</font>
+<p><font class="block_section">4.27 - </font><font class="block_name">Allow DCC blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font><a name="allowdccblock"></a>
 </p><div class="desc">
 <p>Szintaktika:<br>
@@ -1686,7 +1758,7 @@ allow dcc {
 	soft yes;
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.28 - </font><font class="block_name">Vhost Blokk</font>
+<p><font class="block_section">4.28 - </font><font class="block_name">Vhost blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font> <font class="block_old">(Elõzõleg vhosts.conf-ként ismert)</font><a name="vhostblock"></a>
 </p><div class="desc">
 <p>Szintaktika:<br>
@@ -1725,7 +1797,7 @@ vhost {
 	swhois "Én lenni különleges";
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.29 - </font><font class="block_name">Badword Blokk</font>
+<p><font class="block_section">4.29 - </font><font class="block_name">Badword blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font> <font class="block_old">(Elõzõleg badwords.*.conf-ként ismert)</font><a name="badwordsblock"></a>
 </p><div class="desc">
 <p>Szintaktika:<br>
@@ -1752,7 +1824,7 @@ badword channel {
 	replace sz@r;
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.30 - </font><font class="block_name">ULines Blokk</font>
+<p><font class="block_section">4.30 - </font><font class="block_name">ULines blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font> <font class="block_old">(Elõzõleg U:Line néven ismert)</font><a name="ulinesblock"></a><div class="desc">
 </p>
 <p>Szintaktika:<br>
@@ -1773,7 +1845,7 @@ ulines {
 	stats.sajátnet.com;
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.31 - </font><font class="block_name">Link Blokk</font>
+<p><font class="block_section">4.31 - </font><font class="block_name">Link blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font> <font class="block_old">(Elõzõleg C/N/H:Line-okként ismert)</font><a name="linkblock"></a>
 </p><div class="desc">
 <p>Szintaktika:<br>
@@ -1885,7 +1957,7 @@ link hub.sajatnet.com {
 	};
 };</pre></p>
 <p> </p></div>
-<p><font class="block_section">4.32 - </font><font class="block_name">Alias Blokk</font>
+<p><font class="block_section">4.32 - </font><font class="block_name">Alias blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font><a name="aliasblock"></a>
 </p><div class="desc">
 <p>Szintaktika [szabványos álparancsokra]:<br>
@@ -1934,7 +2006,7 @@ alias &lt;név&gt; {
   amit helyettesíteni fog annak a felhasználónak a neve, aki kiadta a parancsot. A formázott
   álparancsokra vonatkozóan példákat találhatsz a doc/example.conf-ban.</p>
 <p></p></div>
-<p><font class="block_section">4.33 - </font><font class="block_name">Help Blokk</font>
+<p><font class="block_section">4.33 - </font><font class="block_name">Help blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font><a name="helpblock"></a>
 </p><div class="desc">
 <p>Szintaktika:<br>
@@ -1952,7 +2024,7 @@ help &lt;név&gt; {
   /helpop parancsot adja ki.</p>
 <p></p></div>
 
-<p><font class="block_section">4.34 - </font><font class="block_name">Official Channels Blokk</font>
+<p><font class="block_section">4.34 - </font><font class="block_name">Official channels blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font><a name="officialchannels"></a>
 </p><div class="desc">
 <p>Szintaktika:<br>
@@ -1973,7 +2045,7 @@ official-channels {
 };</pre></p>
 </div>
 
-<p><font class="block_section">4.35 - </font><font class="block_name">Spamfilter Blokk</font>
+<p><font class="block_section">4.35 - </font><font class="block_name">Spamfilter blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font><a name="spamfilter"></a>
 </p><div class="desc">
 <p>
@@ -1993,7 +2065,7 @@ spamfilter {
    A <b>target</b> meghatározza, hol történjen a szûrés; lásd <a href="#feature_spamfilter">itt</a> a célpontok lehetséges típusait (példa: "channel").<br>
    Az <b>action</b> eldönti, mi történjen találat esetén, lásd <a href="#feature_spamfilter">itt</a> a lehetséges tevékenységek listáját (példa: "gline").<br>
    A <b>reason</b> kihagyható, a kitiltás vagy a blokkolás indoklószövegének beállítására szolgál; ha nincs megadva, az alapértelmezés lesz használatban.<br>
-   A <b>ban-time</b> sem kötelezõ, megadja a *line kitiltások lejárati idejét; ha kihagyod, az alapértelmezés lesz használatban (1 nap).<br>
+   A <b>ban-time</b> sem kötelezõ, megadja a *line kitiltás vagy shun lejárati idejét; ha kihagyod, az alapértelmezés lesz használatban (1 nap).<br>
 </p>
 
 <p>Példák:<br>
@@ -2016,7 +2088,7 @@ spamfilter {
 </pre></p>
 </div>
 
-<p><font class="block_section">4.36 - </font><font class="block_name">Set Blokk</font>
+<p><font class="block_section">4.36 - </font><font class="block_name">Set blokk</font>
    <font class="block_required">KÖTELEZÕ</font> <font class="block_old">(Elõzõleg unrealircd.conf-ként/hálózati fájlként ismert)</font><a name="setblock"></a>
 </p><div class="desc">
 <p>A set fájl az, ami régebben a networks/unrealircd.conf-unk és a hálózati
@@ -2062,9 +2134,11 @@ set {
   Példa:<br>
   set { options { hide-ulines; no-stealth; }; };<br>
 </p>
-<p><font class="set">set::kline-address &lt;email-address&gt;;</font><br>
+<p><font class="set">set::kline-address &lt;email-cím&gt;;</font><br>
   Az az email cím, ahová küldhetõk a K:line-nal kapcsolatos kérdések. Ezt az értéket
   kötelezõ megadni.</p>
+<p><font class="set">set::gline-address &lt;email-cím&gt;;</font><br>
+  Az az email cím, ahová küldhetõk a G:line-nal kapcsolatos kérdések.</p>
 <p><font class="set">set::modes-on-connect &lt;+módok&gt;;</font><br>
   Azok a módok, amelyek kapcsolódáskor lesznek beállítva a felhasználókon.</p>
 <p><font class="set">set::snomask-on-connect &lt;+módok&gt;</font><br>
@@ -2134,6 +2208,8 @@ set {
   Meghatározza a csatornabeli services parancsok elõtag karaktereit. Azok az üzenetek, amelyek az
   itt megadott karakterek bármelyikével kezdõdnek, még olyan kliensekhez is el lesznek küldve, amelyek
   a +d móddal rendelkeznek. Az alapérték "`".</p>
+<p><font class="set">set::allowed-nickchars { &lt;felsorolás&gt; };</font><br>
+  Nicknevekben engedélyezendõ karakterkészletek / nyelvek, lásd: <a href="#feature_nickchars">Karakterkészletek nicknevekben</a>.</p>
 <p><font class="set">set::allow-userhost-change [never|always|not-on-channels|force-rejoin]</font><br>
   Meghatározza, hogy mi történjen, ha az user@host megváltozik (+x/-x/chghost/chgident/setident/vhost/stb. esetén).<br>
   A <i>never</i> letiltja mindegyik parancsot, az <i>always</i> akkor is engedélyezi, ha a felhasználó csatorná(k) tagja (szinkronhibát
@@ -2164,6 +2240,8 @@ set {
   nem-oper használatáról értesítést küld az EYES snomaskra.</p>
 <p><font class="set">set::options::allow-part-if-shunned;</font><br>
   Engedélyezi a shunolt felhasználóknak a /part használatát.</p>
+<p><font class="set">set::options::fail-oper-warn;</font><br>
+  Ha jelen van, a felhasználók értesülni fognak arról, hogy a sikertelen /oper-elési kísérletük naplózva lett.</p>
 <p><font class="set">set::dns::timeout &lt;idõérték&gt;;</font><br>
   Egy idõérték azon idõhossz meghatározására, ami alatt a DNS szervernek válaszolni kell,
   mielõtt idõkifutás történik. Az idõérték egy numerikus sztring a napot jelentõ "d",
@@ -2174,6 +2252,8 @@ set {
   ha hiba fordul elõ.</p>
 <p><font class="set">set::dns::nameserver &lt;dns-szerver-neve&gt;;</font><br>
   Meghatározza a DNS lekérdezésekhez használt szerver gazdanevét.</p>
+<p><font class="set">set::dns::bind-ip &lt;ip&gt;;</font><br>
+  Meghatározza azt az IP címet, amelyre bindeljen a szerver a lekérdezésekhez; a lehetõ legritkábban van szükség rá.</p>
 <p><font class="set">set::network-name &lt;hálózat-neve&gt;;</font><br>
   Meghatározza azon hálózat nevét, amelyen ez a szerver fut. Ez az érték legyen a hálózat
   minden szerverén pontosan ugyanaz.</p>
@@ -2186,7 +2266,7 @@ set {
 <p><font class="set">set::stats-server &lt;szervernév&gt;;</font><br>
   Beállítja azon szerver nevét, ahol a statisztikai bot tartozkodik. Ha nem fut statisztikai szerver,
   ez az érték kihagyható.</p>
-<p><font class="set">set::help-channel &lt;network-help-channel&gt;;</font><br>
+<p><font class="set">set::help-channel &lt;hálózati-segélycsatorna&gt;;</font><br>
   Beállítja e hálózat segélycsatornájának nevét.</p>
 <p><font class="set">set::cloak-keys { &quot;kulcs1&quot;; &quot;kulcs2&quot;; &quot;kulcs3&quot;; };</font><br>
   Beállítja a +x gazdanevek generálásához használandó kulcsokat. Ezeknek a kulcsoknak a hálózat minden
@@ -2249,7 +2329,7 @@ set {
 <p><font class="set">set::ident::read-timeout &lt;idõérték&gt;;</font><br>
   Azon másodpercek száma, ami után az Unreal hagyjon fel az ident válaszra várakozással (alapértelmezés: 30s).</p>
 <p><font class="set">set::anti-flood::unknown-flood-bantime &lt;idõérték&gt;;</font><br>
-  Meghatározza, mennyi idõre legyen kitiltva egy ismeretlen kapcsolatú floodoló.</p>
+  Meghatározza, mennyi idõre legyen kitiltva egy ismeretlen kapcsolatú árasztó.</p>
  <p><font class="set">set::anti-flood::unknown-flood-amount &lt;szám&gt;;</font><br>
   Meghatározza azt az adatmennyiséget (kilobájtokban), amit egy ismeretlen kapcsolatnak
   el kell küldenie ahhoz, hogy ki legyen tiltva.</p>
@@ -2273,9 +2353,9 @@ set {
   Ha megadod az "action"-t (pl. zline, gline stb.) a ban version blokkban, itt beállíthatod, 
   mennyi idõre legyen az IP kitiltva. Az alapértelmezés 86400 (1 nap).</p>
  <p><font class="set">set::spamfilter::ban-time &lt;idõérték&gt;</font><br>
-  Ugyanaz, mint a fenti, de a spamszûrõk által beállított *line-okra.</p>
+  Ugyanaz, mint a fenti, de a spamszûrõk által beállított *line-okra/shunokra.</p>
  <p><font class="set">set::spamfilter::ban-reason &lt;indok&gt;</font><br>
-  A spamszûrõk által beállított *line-okhoz használt indoklószöveg.</p>
+  A spamszûrõk által beállított bejegyzésekhez használt indoklószöveg.</p>
  <p><font class="set">set::spamfilter::virus-help-channel &lt;csatorna&gt;</font><br>
   A spamszûrõ "viruschan" tevékenysége által használt csatorna neve.</p>
  <p><font class="set">set::spamfilter::virus-help-channel-deny &lt;yes|no&gt;</font><br>
@@ -2343,22 +2423,18 @@ set {
   </tr>
   <tr> 
     <td><div align="center">e &lt;nick!user@host&gt;</div></td>
-    <td>Kitiltás alóli kivétel &#8211; Ha valaki illik erre, akkor is beléphet a csatornára,
-      ha egy létezõ banra illik</td>
+    <td>Kitiltás alóli kivétel &#8211; Ha valakire ráillik ez a maszk, akkor is beléphet a csatornára,
+      ha egy létezõ kitiltás nem engedi be</td>
   </tr>
   <tr> 
-    <td><div align="center">f * &lt;sor:mp&gt;</div></td>
-    <td>Árasztásvédelem &#8211; Ha a * meg van adva, és egy felhasználó &lt;sor&gt; sornál többet küld
-      &lt;mp&gt; másodperc alatt, ki lesz rúgva és tiltva a csatornáról; * nélkül csak kirúgva</td>
+    <td><div align="center">f [&lt;szám&gt;&lt;típus&gt;]:&lt;mp&gt;</div></td>
+    <td>Árasztásvédelem csatornákra. Lásd a fenti <a href="#feature_antiflood">3.12-es szekciót</a>
+	egy részletesebb leíráshoz.</td>
   </tr>
   <tr> 
     <td><div align="center">G</div></td>
     <td>G-osztályúvá teszi a csatornát. Ellenõrzi a badword blokkokban felsorolt szavakat, 
       és kicseréli õket a megadott szavakkal</td>
-  </tr>
-  <tr> 
-    <td><div align="center">M</div></td>
-    <td>Egy regisztrált nicknév (+r) kell, hogy beszélhess</td>
   </tr>
   <tr> 
     <td><div align="center">h &lt;nick&gt;</div></td>
@@ -2367,6 +2443,15 @@ set {
   <tr> 
     <td><div align="center">i</div></td>
     <td>Meghívás szükséges</td>
+  </tr>
+  <tr> 
+    <td><div align="center">I &lt;nick!user@host&gt;<br></div></td>
+    <td>Meghívás alóli kivételek (invite exceptions avagy "invex") - ha valaki illik erre a maszkra, átugorhatja
+      a +i igényeit, hogy beléphessen a csatornára.</td>
+  </tr>
+  <tr> 
+    <td><div align="center">j &lt;belépés:mp&gt;</div></td>
+    <td>Leszabályozza a felhasználónkénti belépéseket legfeljebb <i>belépés</i> számú belépésre <i>mp</i> másodperc alatt</td>
   </tr>
   <tr> 
     <td><div align="center">K</div></td>
@@ -2383,6 +2468,10 @@ set {
   <tr> 
     <td><div align="center">L &lt;csatorna&gt;</div></td>
     <td>Ha a +l által beállított számot elérték, a felhasználók erre a csatornára lesznek küldve</td>
+  </tr>
+  <tr> 
+    <td><div align="center">M</div></td>
+    <td>Csak regisztrált nicknevû (+r) felhasználók beszélhetnek</td>
   </tr>
   <tr> 
     <td><div align="center">m</div></td>
@@ -2464,64 +2553,16 @@ set {
     <td colspan="2"><div align="center"><b>Felhasználói módok</b></div></td>
   </tr>
   <tr> 
-    <td><div align="center">r</div></td>
-    <td>Regisztráltnak tekinti nicknevet</td>
-  </tr>
-  <tr> 
-    <td><div align="center">s</div></td>
-    <td>Látja a szerver értesítéseit</td>
-  </tr>
-  <tr> 
-    <td><div align="center">v</div></td>
-    <td>Fogadja a fertõzött DCC-k küldésének elutasításáról szóló értesítéseket</td>
-  </tr>
-  <tr> 
-    <td><div align="center">o</div></td>
-    <td>Globális IRC operátor (az oper blokkban állítható be)</td>
-  </tr>
-  <tr>
-    <td><div align="center">O</div></td>
-    <td>Helyi IRC operátor (az oper blokkban állítható be)</td>
-  </tr>
-  <tr> 
-    <td><div align="center">B</div></td>
-    <td>Botként jelöl meg</td>
-  </tr>
-  <tr> 
-    <td><div align="center">i</div></td>
-    <td>Láthatatlan (nem jelenik meg a /who-ban)</td>
-  </tr>
-  <tr> 
     <td><div align="center">A</div></td>
     <td>Szerver admin (az oper blokkban állítható be)</td>
-  </tr>
-  <tr> 
-    <td><div align="center">x</div></td>
-    <td>Rejtett gazdanevet ad a felhasználónak</td>
-  </tr>
-  <tr> 
-    <td><div align="center">q</div></td>
-    <td>Csak U:Line-ok rúghatnak ki téged (csak Services adminoknak)</td>
   </tr>
   <tr> 
     <td><div align="center">a</div></td>
     <td>Services admin (az oper blokkban állítható be)</td>
   </tr>
   <tr> 
-    <td><div align="center">g</div></td>
-    <td>Küldhet és fogadhat globops és locops üzeneteket</td>
-  </tr>
-  <tr> 
-    <td><div align="center">H</div></td>
-    <td>Elrejti az IRCop beosztásodat (csak IRCopoknak)</td>
-  </tr>
-  <tr> 
-    <td><div align="center">S</div></td>
-    <td>Védelmet ad a services kiszolgálóknak</td>
-  </tr>
-  <tr> 
-    <td><div align="center">t</div></td>
-    <td>Jelzi, hogy /vhost-ot használsz</td>
+    <td><div align="center">B</div></td>
+    <td>Botként jelöl meg</td>
   </tr>
   <tr> 
     <td><div align="center">C</div></td>
@@ -2532,44 +2573,92 @@ set {
     <td>Nem fogadsz csatornabeli PRIVMSG-ket</td>
   </tr>
   <tr> 
-    <td><div align="center">N</div></td>
-    <td>Hálózati adminisztrátor (az oper blokkban állítható be)</td>
+    <td><div align="center">G</div></td>
+    <td>Kiszûr minden csúnya szót a beállítások szerint</td>
   </tr>
   <tr> 
-    <td><div align="center">w</div></td>
-    <td>Fogadja a wallop üzeneteket</td>
+    <td><div align="center">g</div></td>
+    <td>Küldhet és fogadhat globops és locops üzeneteket</td>
+  </tr>
+  <tr> 
+    <td><div align="center">H</div></td>
+    <td>Elrejti az IRCop beosztásodat (csak IRCopoknak)</td>
   </tr>
   <tr>
     <td><div align="center">h</div></td>
     <td>Segítségnyújtásra alkalmas (HelpOp) (az oper blokkban állítható be)</td>
   </tr>
   <tr> 
-    <td><div align="center">G</div></td>
-    <td>Kiszûr minden csúnya szót a konfiguráció szerint</td>
+    <td><div align="center">i</div></td>
+    <td>Láthatatlan (nem jelenik meg a /who-ban)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">N</div></td>
+    <td>Hálózati adminisztrátor (az oper blokkban állítható be)</td>
+  </tr>
+  <tr>
+    <td><div align="center">O</div></td>
+    <td>Helyi IRC operátor (az oper blokkban állítható be)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">o</div></td>
+    <td>Globális IRC operátor (az oper blokkban állítható be)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">p</div></td>
+    <td>Elrejti a /whois-odban azokat a csatornákat, ahová beléptél</td>
+  </tr>
+  <tr> 
+    <td><div align="center">q</div></td>
+    <td>Csak U:Line-ok rúghatnak ki (csak Services adminoknak)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">R</div></td>
+    <td>Csak regisztrált (+r) felhasználóktól fogadsz PRIVMSG/NOTICE üzeneteket</td>
+  </tr>
+  <tr> 
+    <td><div align="center">r</div></td>
+    <td>Regisztráltnak tekinti a nickneved</td>
+  </tr>
+  <tr> 
+    <td><div align="center">S</div></td>
+    <td>Védelmet ad a services kiszolgálóknak</td>
+  </tr>
+  <tr> 
+    <td><div align="center">s</div></td>
+    <td>Látod a szerver értesítéseit (lásd a <a href="#feature_snomasks">3.3-as szekciót</a> további információért)</td>
+  </tr>
+  <tr>
+    <td><div align="center">T</div></td>
+    <td>Nem fogadsz CTCP üzeneteket</td>
+  </tr>
+  <tr> 
+    <td><div align="center">t</div></td>
+    <td>Jelzi, hogy /vhost-ot használsz</td>
+  </tr>
+  <tr> 
+    <td><div align="center">V</div></td>
+    <td>WebTV felhasználóként jelöl meg</td>
+  </tr>
+  <tr> 
+    <td><div align="center">v</div></td>
+    <td>Fogadja a fertõzött DCC-k küldésének elutasításáról szóló értesítéseket</td>
   </tr>
   <tr> 
     <td><div align="center">W</div></td>
     <td>Láthatod, ha az emberek /whois-olnak téged (csak IRCopoknak)</td>
   </tr>
   <tr> 
-    <td><div align="center">p</div></td>
-    <td>Elrejti azon csatornákat a /whois-odból, amelyeknek tagja vagy</td>
+    <td><div align="center">w</div></td>
+    <td>Fogadja a wallop üzeneteket</td>
   </tr>
   <tr> 
-    <td><div align="center">R</div></td>
-    <td>PRIVMSG/NOTICE üzeneteket csak regisztrált (+r) felhasználóktól fogadsz</td>
-  </tr>
-  <tr> 
-    <td><div align="center">V</div></td>
-    <td>WebTV felhasználóként jelöl meg</td>
+    <td><div align="center">x</div></td>
+    <td>Rejtett gazdanevet ad a felhasználónak</td>
   </tr>
   <tr>
     <td><div align="center">z</div></td>
     <td>Jelzi, hogy SSL kliens vagy</td>
-  </tr>
-  <tr>
-    <td><div align="center">T</div></td>
-    <td>Megakadályozza, hogy CTCP üzeneteket fogadj</td>
   </tr>
 </table>
 <p></p></div>
@@ -2808,6 +2897,11 @@ további információt kapj.</p>
     <td>Mindenki</td>
   </tr>
   <tr> 
+    <td height="39">userip &lt;nick&gt;<br></td>
+    <td>Visszaadja a megadott felhasználó IP címét.</td>
+    <td>Mindenki</td>
+  </tr>
+  <tr> 
     <td height="39">oper &lt;azonosító&gt; &lt;jelszó&gt;<br></td>
     <td>Ez a parancs egy felhasználónak operátori beosztást ad, ha illik egy oper blokkra.<br></td>
     <td>IRCop</td>
@@ -2893,14 +2987,14 @@ további információt kapj.</p>
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">restart &lt;szerver&gt; &lt;jelszó&gt;<br></td>
-    <td>Újraindítja az IRCD processzust. Jelszó megadása szükséges. Szervernevet is
-      megadhatsz, hogy egy távoli szervert indíts újra.<br></td>
+    <td height="39">restart &lt;jelszó&gt; &lt;indok&gt;<br></td>
+    <td>Újraindítja az IRCD processzust. Jelszó akkor szükséges, ha van drpass { }. 
+        Megadhatsz indokot is.<br></td>
     <td>IRCop</td>
   </tr>
   <tr> 
     <td height="39">die &lt;jelszó&gt;<br></td>
-    <td>Leállítja az IRCD processzust. Jelszó megadása szükséges.</td>
+    <td>Leállítja az IRCD processzust. Jelszó akkor szükséges, ha van drpass { }.</td>
     <td>IRCop</td>
   </tr>
   <tr> 
@@ -3062,10 +3156,10 @@ további információt kapj.</p>
 	d - denylinkauto - Elküldi a deny link (auto) blokkok listáját<br>
 	D - denylinkall - Elküldi a deny link (all) blokkok listáját<br>
 	e - exceptthrottle - Elküldi az except throttle blokkok listáját<br>
-	E - exceptban - Elküldi az except ban blokkok listáját<br>
+	E - exceptban - Elküldi az except ban és except tkl blokkok listáját<br>
 	f - spamfilter - Elküldi a spamszûrõk listáját<br>
 	F - denydcc - Elküldi a deny dcc blokkok listáját<br>
-	G - gline - Elküldi a gline listát<br>
+	G - gline - Elküldi a gline és gzline listát<br>
 	&nbsp;&nbsp;Kiterjesztett flagek: [+/-mrs] [maszk] [indok] [beállító]<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;m&nbsp;&nbsp;Visszaadja azon gline-okat, amelyek illenek/nem illenek a megadott maszkra<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;r&nbsp;&nbsp;Visszaadja azon gline-okat, amelyek indokszövege illik/nem illik a megadott indokra<br>
@@ -3078,17 +3172,17 @@ további információt kapj.</p>
 	M - command - Listát küld arról, hányszor használtak minden parancsot<br>
 	n - banrealname - Elküldi a ban realname blokkok listáját<br>
 	O - oper - Elküldi az oper blokkok listáját<br>
+	P - port - Információt küld a portokról<br>
+	q - sqline - Elküldi az SQLINE listát<br>
+	Q - bannick - Elküldi a ban nick blokkok listáját<br>
+	r - chanrestrict - Elküldi a deny/allow channel blokkok listáját<br>
+	R - usage - Információt küld a szerver erõforrás-használatáról<br>
 	S - set - Elküldi a set blokkok listáját<br>
 	s - shun - Elküldi a shun listát<br>
 	&nbsp;&nbsp;Kiterjesztett flagek: [+/-mrs] [maszk] [indok] [beállító]<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;m&nbsp;&nbsp;Visszaadja azon shunokat, amelyek illenek/nem illenek a megadott maszkra<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;r&nbsp;&nbsp;Visszaadja azon shunokat, amelyek indokszövege illik/nem illik a megadott indokra<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;s&nbsp;&nbsp;Visszaadja azon shunokat, amelyek beállítóinak neve illik/nem illik a megadott névre<br>
-	P - port - Információt küld a portokról<br>
-	q - sqline - Elküldi az SQLINE listát<br>
-	Q - bannick - Elküldi a ban nick blokkok listáját<br>
-	r - chanrestrict - Elküldi a deny/allow channel blokkok listáját<br>
-	R - usage - Információt küld a szerver erõforrás-használatáról<br>
 	t - tld - Elküldi a tld blokkok listáját<br>
 	T - traffic - Információt küld a forgalomról<br>
 	u - uptime - Megjeleníti a szerver fennlétének idejét és a kapcsolatok legmagasabb számát<br>
@@ -3150,10 +3244,17 @@ További ilyen tanácsok: soha ne rakd az UnrealIRCd-t egy weben látható vagy egyé
 gondoskodj, hogy a biztonsági mentéseid is megkapják a megfelelõ engedélybeállításokat. (Elég gyakran megesik, hogy minden
 biztonságos, mégis megbújik valahol egy mindenki számára olvasható mentes.tar.gz.)<br>
 <br>
-Javasolt még, hogy használj titkosított jelszavakat, ahol lehetséges. 
-Megjegyzendõ, hogy ez is csak egy "újabb biztonsági szint", az 1-8 karakteres jelszavak
-feltörhetõek néhány óra/nap alatt, és egyébként is rendszeresen vannak más, nem titkosított, érdekes
-információk a konfigurációs fájlokban (mint pl. a link::password-connect).
+Erõsen ajánlott az is, hogy használj titkosított jelszavakat, ahol csak lehetséges. Ha OpenSSL támogatással
+fordítasz (és így is teszel, mivel érdekel téged a biztonság, igaz?), akkor javaslom, hogy
+titkosítsd a jelszavaidat <i>sha1</i> vagy <i>ripemd160</i> kódolással, különben <i>md5</i>-tel. Továbbá, ha
+még mindig vannak Unreal3.2.1 vagy késõbbi verziókból megmaradt titkosított (oper) blokkjaid, azt tanácsolom, hogy
+kódold újra ezeket (csak futtasd újra az /mkpasswd parancsot), mert a 3.2.1 bevezetett néhány számottevõ,
+feltörés elleni elõrelépést (alapvetõen az aktív feltöréseket 14-szeresen lelassítja, ezáltal lehetetlenné teszi
+a tárolt/nyílt/titkosított szöveges feltöréseket).
+Ennek ellenére vedd figyelembe, hogy ez csak "egy újabb szintje a biztonságnak", mivel ha gyenge
+jelszavaid vannak, még mindig feltörhetõek viszonylag könnyen, és ha valamely támadónak sikerül megszereznie
+a konfigurációs fájlodat, rendszerint más érdekes dolgokat is talál benne, amelyek segítségére lehetnek,
+például a link::password-connect.
 </div></p>
 
 <p><b><font size="+2">8.4. Felhasználószintû problémák</font></b><a name="secuser"></a><br><div class="desc">
@@ -3161,7 +3262,8 @@ Mint a legtöbb dolog, ez sem kimondottan az UnrealIRCd-vel kapcsolatos, de...<br
 Mindig figyelmesen válogasd meg az operátoraidat és az adminisztrátoraidat. És emlékezz a leggyengébb láncszem fogalmára is.
 Akkor is, ha óvatos voltál, és mindent megcsináltál, ami ebben a leírásban van, lehet, hogy a barátod, aki szintén operátor,
 elkövet valami hülyeséget. Például megosztja a merevlemezét valamilyen programmal, mint pl. a netbios/kazaa/morpheus/.., trójai
-vírust kap, túl egyszerû jelszót használ, stb. stb... Sajnos, ez nem mindig a te irányításod alatt van. 
+vírust kap, túl egyszerû jelszót használ, stb. stb... Sajnos, ez nem mindig a te irányításod alatt van.<br>
+Egy dolgot viszont megtehetsz, hogy gondosan megválogatod, kinek milyen jogra van szüksége (oper::flags).
 </div></p>
 
 <p><b><font size="+2">8.5. SSL/SSH és a szimatolások</font></b><a name="secsnif"></a><br><div class="desc">
@@ -3172,13 +3274,13 @@ Ugyanezen okból mindig használj SSL-t telnet helyett.
 </div></p>
 
 <p><b><font size="+2">8.6. Denial of Service támadások (DoS) [avagy: hogyan védd meg a hubodat]</font></b><a name="secDoS"></a><br><div class="desc">
-Rengeteg hálózat tapasztalta már, milyen jó "móka" egy flood vagy egy (D)DoS támadás, azonban tehetsz
+Rengeteg hálózat tapasztalta már, milyen jó "móka" egy árasztás vagy egy (D)DoS támadás, azonban tehetsz
 néhány óvintézkedést, hogy az általa okozott kárt lecsökkentsd. A legtöbb hálózatnak van hub szervere,
 de úgy tûnik, néhányan elfelejtik, hogy meglehetõsen könnyû megvédeni a hub szervert a támadásoktól.<br>
 Itt elmagyarázom:<br>
 1. Állítsd a hub nevét egy nemlétezõ gazdanévre, pl. "hub.sajátnet.com"-ra, de<br>
 &nbsp;&nbsp;&nbsp; de ne csinálj neki dns rekordot. Ily módon a támadó nem tudja feloldani a gazdanevet, és<br>
-&nbsp;&nbsp;&nbsp; nem is tudja floodoltatni. Ezután egyszerûen linkeld a szervereidet a hubra az<br>
+&nbsp;&nbsp;&nbsp; nem is tudja árasztani. Ezután egyszerûen linkeld a szervereidet a hubra az<br>
 &nbsp;&nbsp;&nbsp; IP cím vagy egyéb más, nem nyilvános gazdanév megadásával.<br>
 &nbsp;&nbsp;&nbsp; 1. Példa: <i>link lathatonev.sajatnet.com { hostname 194.15.123.16; [stb] };</i>.<br>
 &nbsp;&nbsp;&nbsp; 2. Példa: <i>link lathatonev.sajatnet.com { hostname mukodogazdanev.sajatnet.com; [stb] };</i>.<br>
@@ -3191,7 +3293,7 @@ bár ez is nagyon témánkívüli ;).<br>
 <br>
 Természetesen ezek a lépések kevésbé hasznosak, ha túl késõn történnek meg (pl.: egy hónap után), mintsem<br>
 a kezdetektõl fogva, mert lehet, hogy az IP címek már ismertek néhány gonosz fickó számára, de mégis... azért megéri megtenni.<br>
-Az is megjegyzendõ, hogy a támadók még így is lefloodolhatnak minden nem hub szervert, de az több erõfeszítést igényel,<br>
+Az is megjegyzendõ, hogy a támadók még így is eláraszthatnak minden nem hub szervert, de az több erõfeszítést igényel,<br>
 mint megtámadni csak 1-2 gyenge pontot (a hubokat), és így a hubjaid valamint a szolgáltatások
 életben maradnak :).<br>
 </div></p>
@@ -3230,9 +3332,9 @@ Ha történik egy szakadás (split), valaki még mindig láthatja, melyik szerver hov
 és ez érvényes még néhány más dologra is.<br>
 <br>
 <b>KÖZÖNSÉGES FELHASZNÁLÓK ÉS SNOMASKOK</b><br>
-Egy featúra, amit nem ismernek széles körben, az, hogy a közönséges felhasználók is beállíthatnak néhány korlátozott snomaskot,
-nevezetesen a "+s +sk"-t. Ezzel láthatnak olyan dolgokat, mint a beállítások újratöltése, operelések, killek és egyéb más üzenetek.<br>
-Ahhoz, hogy ezt letiltsd, használhatod "set::restrict-usermodes"-t a következõképpen: <i>set { restrict-usermodes "s"; };</i>.<br>
+Van egy featúra, amit nem ismernek széles körben; ez az, hogy közönséges felhasználók is beállíthatnak néhány korlátozott snomaskot,
+mégpedig azt, hogy "+s +sk". Ezzel láthatnak olyan dolgokat, mint a beállítások újratöltése, killek és egyéb más üzenetek.<br>
+Ennek letiltására használhatod a "set::restrict-usermodes"-t a következõképpen: <i>set { restrict-usermodes "s"; };</i>.<br>
 
 
 <br><br>
@@ -3249,11 +3351,11 @@ Van egy dolog viszont, amit meg kellene tenned, ez pedig az, hogy MINDIG HASZNÁL
 jelentkezz fel az <a href="http://mail1.sourceforge.net/mailman/listinfo/unreal-notify" target="_blank">unreal-notify levelezõlistára</a> most rögtön,
 hogy megkaphasd a a kiadási közleményeket (az unreal-notify csak kiadási közleményekre
 van, így csak 1 levelet jelent X havonta). A kiadási közleményben rendszerint világosan fel van tüntetve, ha
-a kiadás (nagyobb veszélyû) biztonsági hibák javítását tartalmazza.<br>
+a kiadás (nagyobb veszélyességû) biztonsági hibák javítását tartalmazza, de egyébként is jó, ha frissítesz.<br>
 </div></p>
 
 <p><b><font size="+2">8.9. Összefoglalás</font></b><a name="secsummary"></a><br><div class="desc">
-Mint mostmár remélhetõleg érted, soha nem lehetsz 100% biztonságban. Neked és nekünk is rentegeg biztonsági
+Mint most már remélhetõleg érted, soha nem lehetsz 100% biztonságban. Neked és nekünk is rentegeg biztonsági
 lyukat kell megtalálnunk odakint, miközben egy támadónak elég csak 1 szervert megtalálnia 1 lyukkal.
 Minden, amit itt elmagyaráztunk, azonban SEGÍT megfontoltan minimálissá tenni a veszélyeket.
 Áldozz egy kevés idõt arra, hogy a hálózatodat biztonságossá tedd, és oktasd az operátoraidat.
@@ -3264,5 +3366,85 @@ Nagyon sokan nem is törõdnek a biztonsággal, egészen addíg, amíg bajba nem kerül
 <p><font size="+2"><b>9 &#8211; Gyakran Ismételt Kérdések (FAQ)<a name="faq"></a></b></font></p>
 <div class="desc"><p>A FAQ online elérhetõ <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">innen</a>.</p></div>
 <p></p>
+
+<p><font size="+2"><b>A Reguláris kifejezések<a name="regex"></a></b></font></p>
+<div class="desc"><p>Reguláris kifejezéseket sok helyen használunk az Unrealben, beleértve a csúnyaszavakat, spamszûrõket és álparancsokat. Ezek segítségével nagyon összetett mintaillesztést tudunk végezni. Néha "regexp"-ként vagy "regex"-ként hivatkozunk rájuk. Az Unreal a TRE reguláris kifejezés könyvtárat használja a regexeihez. Ez a rutinkönyvtár néhány nagyon összetett és haladó kifejezést is támogat, ami zavaró lehet. Az alábbi információk segítenek megérteni, hogyan mûködnek a regexek. Ha szakmaibb és részletesebb információk érdekelnek az Unreal által használt regexp szintaktikával kapcsolatban, látogassunk el a <a href="http://www.laurikari.net/tre/syntax.html" target="_new">TRE honlapjára</a>.</p></div>
+
+<p><font size="+2"><b>A.1 Konstansok<a name="regexlit"></a></b></font></p>
+<div class="desc"><p>A konstansok a regexp legegyszerûbb elemei. Alapvetõen ezek olyan karaktek, amelyeket egyszerû szövegként kezelünk. Például a "teszt" minta öt konstansból, a "t", "e", "s", "z" és "t" karakterekbõl áll. Az Unrealben a konstansok a kis- és nagybetûkre nem érzékenyek, ezért az elõzõ regex illeszkedik a "teszt"-re valamint a "TESZT"-re is. Minden karakter, ami nem "metakarakter" (avagy különleges jelentésû karakter; ezeket a következõ szekciókban tárgyaljuk), konstansként lesz kezelve. Egy karaktert határozottan konstanssá is tehetsz a visszaper (\) jellel. Például a pont (.) egy metakarakter. Ha szeretnénk a mintánkba belevenni egy konstans pontot, használjuk a \. jelölést, és az Unreal ezt pontként (írásjelként) fogja kezelni. Az is lehetséges, hogy egy olyan karaktert akarsz vizsgálni, ami nem írható be könnyen, mondjuk az ASCII kódú 3-as karakter (szín). Inkább, mint hogy egy IRC klienst kelljen használnunk ennek a karakternek az elkészítéséhez, használhatunk egy különleges karaktersorozatot, a "\x"-et. Ha beírjuk, hogy \x3, úgy lesz értelmezve, hogy õ 3-as ASCII karakter. A \x utáni szám hexadecimális ábrázolású, és "\x0"-tól "\xFF"-ig terjedhet.</p></div>
+
+<p><font size="+2"><b>A.2 A pont operátor<a name="regexdot"></a></b></font></p>
+<div class="desc"><p>A pont (.) operátort "akármilyen karakter" egyeztetésére használjuk. Egyetlen karakterre illeszkedik, aminek bármilyen értéke van. Például az "a.c" regex illeszkedik a "abc"-re, "adc"-re stb. Viszont nem fog illeszkedni az "abd"-re, mert az "a" és "c" konstansok, amelyeknek pontosan kell illeszkedniük.</p></div>
+
+<p><font size="+2"><b>A.3 Ismétlõ operátorok<a name="regexrep"></a></b></font></p>
+<div class="desc"><p>Az egyik gyakori hiba, amit az emberek elkövetnek a regexekkel, hogy feltételezik, úgy mûködnek, mint a joker karakterek, vagyis hogy a * és ? karakterek pontosan úgy illeszkednek, mint egy joker karakterben. Noha ezeknek a karaktereknek valóban hasonló a jelentésük egy regexben, mégsem pontosan ugyanazok. Továbbá a reguláris kifejezések támogatnak más, haladóbb ismétlési módszereket is.
+<p>
+A legegyszerûbb ismétlõ operátor a ? operátor. Ez az operátor az elõzõ karakternek 0 vagy 1 elõfordulására illeszkedik. Ez az "elõzõ karakternek" az, amiben a reguláris kifejezésbeli ? különbözik a joker karaktertõl. Egy joker karakterben az "a?c" kifejezés illeszkedik egy "a"-ra, amelyet bármilyen karakter követ (vagy semmilyen), és ezt egy "c" karakter követi. Egy reguláris kifejezésben más jelentése van. Ott illeszkedik 0 vagy 1 egy "a" betûre, amelyet a "c" követ. Alaptvetõen a ? módosítja az "a"-t úgy, hogy megadja, hány "a" fordulhat elõ. Ahhoz, hogy a ?-et joker karakterként emuláljuk, a . operátort használjuk. A "a.?c" regex egyenértékû az elõzõleg említett joker karakterrel. Olyan "a" betûre illeszkedik, amelyet 0 vagy 1 bármilyen karakter követ (a "?" módosítja a "."-ot), és azt követi egy "c".
+<p>
+A következõ ismétlõ operátor a *. Ez az operátor szintén hasonlít egy joker karakterre. Az elõzõ karakternek 0 vagy több elõfordulására illeszkedik. Megjegyzendõ, hogy ez az "elõzõ karakternek" olyasvalami, ami minden ismétlõ operátor jellemzõje. Az "a*c" illeszkedik 0 vagy több "a"-ra, amelyet "c" követ. Például az "aaaaaac"-re illeszkedik. És mégegyszer, ahhoz, hogy ez az operátor joker karakterként mûködjön, használjuk az "a.*c" kifejezést, aminek hatására a "*" a "."-ot (bármilyen karakter) módosítja, inkább mint az "a"-t.
+<p>
+A + operátor nagyon hasonló a *-hoz. Viszont ahelyett, hogy 0 vagy több karakterre illeszkedne, illeszkedik 1 vagy több karakterre. Alapvetõen az "a*c" illeszkedik a "c"-re (0 "a", amelyet c követ), ugyanakkor az "a+c" nem. Az "a+" azt fejezi ki, hogy kell lennie "legalább" 1 "a"-nak. Így a "c"-re nem illeszkedik, de az "ac"-re és "aaaaaaaaac"-re igen.
+<p>
+A leghaladóbb ismétlõ operátor "intervallum" néven ismert. Egy intervallum operátorral pontos megszorítást tehetünk arra, hogy az elõzõ karakterbõl mennyinek kell lennie. Például lehet, hogy pontosan 8 "a" megkövetelésére van szükségünk, vagy legalább 8 "a"-ra vagy 3 és 5 közötti darabszámú "a"-ra. Egy intervallum operátorral ezek mindegyike megvalósítható. Az alapvetõ szintaktikája az "{M,N}", ahol M az alsó határ, és N a felsõ határ. Például 3 és 5 közötti darabszámú "a" egyeztetésére azt írjuk, hogy "a{3,5}". Mindamellett nem kötelezõ mindkét számot megadni. Ha "a{8}"-at írunk, az azt jelenti, hogy pontosan 8 darab "a"-nak kell lennie. Ezért az "a{8}" megegyezik az "aaaaaaaa"-val. Ahhoz, hogy a "legalább"-os példát valósítsuk meg, alapvetõen egy olyan intervallumot adunk meg, aminek csak alsó határa van. Eképpen a legalább 8 "a"-ra azt írjuk, hogy "a{8,}".
+<p>
+Alapértelmezésben mindegyik ismétlõ operátor "mohó". A mohóság egy kissé összetett fogalom. Alapvetõen azt jelenti, hogy az operátor annyi karakterre illeszkedik, amennyire csak tud. Ezt a legkönnyebb elmagyarázni egy példával. <p>Mondjuk, van a következõ szövegünk:<br>
+HELLO<br>
+És a következõ regexünk:<br>
+.+L<p>
+Ebben a példában, lehet, hogy azt gondoljuk, hogy a .+ a "HE"-re illeszkedik. Azonban ez helytelen. Mivel a + mohó, a "HEL"-re illeszkedik. Az indok az, hogy a beviteli szöveg legnagyobb egyeztethetõ részét választja, miközben mégis megengedi a teljes regexnek, hogy illeszkedjen. Ebben a példában azért választotta a "HEL"-t, mert az egyetlen másik követelmény csak az, hogy a ".+"-ra illeszkedõ szöveg utáni karakternek "L"-nek kell lennie. Mivel a szöveg "HELLO", a "HEL"-t "L" követi, ezért illeszkedik. Néha viszont jól jön, ha egy operátort nem mohóvá tudunk tenni. Ezt úgy tehetjük meg, hogy "?"-et teszünk az ismétlõ operátor után. A fentit módosítva ".+?L"-re, a .+? most már a "HE"-re illeszkedik, mintsem a "HEL"-re, mert nem mohó állapotba helyeztük. A ? bármilyen ismétlõ karakter után helyezhetõ: ??, *?, +?, {M,N}?.</p></div>
+
+<p><font size="+2"><b>A.4 Zárójeles kifejezések<a name="regexbracket"></a></b></font></p>
+<div class="desc">A zárójeles kifejezések kényelmes módot nyújtanak ahhoz, hogy "vagy" mûveletet végezzünk. Például ha azt szeretnénk mondani, hogy "illeszkedjen az a-ra vagy a b-re". A zárójeles kifejezés onnan kapja a nevét, hogy zárójelek ([]) közé tesszük. Az alapvetõ szintaktikája az, hogy ez a kifejezés magában foglal egy karaktersorozatot. Ezeket a karaktereket majd úgy kezeli, mintha "vagy" lenne közöttük. Például az "[abc]" kifejezés illeszkedik egy "a", egy "b" vagy egy "c" karakterre. Ezért az "a[bd]c" regex illeszkedik az "abc"-re és az "adc"-re, de az "acc"-re nem.
+<p>
+Nagyon gyakori, hogy olyan dolgokat vizsgálunk, mint egy betû vagy egy szám. Inkább, mint hogy például "[0123456789]"-et kelljen írnunk, a zárójel operátor támogat karaktertartományokat. Ezek a tartományok úgy mûködnek, hogy megadjuk a kezdõ- és végpontot, köztük egy kötõjellel. Például egy egyszerûbb módja egy számjegy vizsgálatának az, hogy azt írjuk, "[0-9]". Ugyanezt használhatjuk betûkre is vagy tulajdonképpen az ASCII értékek bármely tartományára. Ha egy betût szeretnénk egyeztetni, egyszerûen írjunk "[a-z]"-t, mert az Unreal a kis- és nagybetûkre nem érzékeny, ez minden betûre fog illeszkedni. Ugyanaz a kifejezés tartalmazhat több tartományt is. Egy betû vagy egy szám egyeztetésére a "[0-9a-z]"-t írhatjuk. Az egyetlen bonyodalmat az okozhatja, hogy a - egy különleges karakter a zárójeles kifejezésben. A konstans kötõjel egyeztetésére a legegyszerûbb mód az, hogy vagy legelsõ, vagy legutolsó karakterként tegyük a kifejezésbe. Például a "[0-9-]" illeszkedik egy számjegyre vagy a kötõjelre.
+<p>
+Hogy mégjobban leegyszerûsítsük a dolgokat, számos "karakterosztály" van, amiket zárójeles kifejezésben használhatunk. Ezek a karakterosztályok nélkülözhetõvé teszik bizonyos tartományok meghatározását. A karakterosztályokat kettõspontok közé zárva írjuk. Például a "[0-9]" úgy is írható, hogy "[:isdigit:]". Az alábbi lista megmutatja az összes rendelkezésre álló karakterosztályt, és amit csinálnak:
+<ul>
+<li><tt>alnum</tt> - alfanumerikus karakterek</li>
+<li><tt>alpha</tt> - alfabetikus karakterek</li>
+<li><tt>blank</tt> - üres karakterek</li>
+<li><tt>cntrl</tt> - vezérlõkarakterek</li>
+<li><tt>digit</tt> - decimális számjegyek (0-tól 9-ig)</li>
+<li><tt>graph</tt> - minden nyomtatható karakter, kivéve a szóközt</li>
+<li><tt>lower</tt> - kisbetûk</li>
+<li><tt>print</tt> - nyomtatható karakterek, beleértve a szóközt is</li>
+<li><tt>punct</tt> - nyomtatható karakterek, a szóköz és az alfanumerikusok kivételével</li>
+<li><tt>space</tt> - fehér szóközök</li>
+<li><tt>upper</tt> - nagybetûk</li>
+<li><tt>xdigit</tt> - hexadecimális számjegyek</li>
+</ul>
+Egy fontos dolog, amit meg kell jegyezni a karakterosztályokról, hogy CSAK egyedül állhatnak a zárójeles kifejezésben. Például az [:isdigit:-] NEM érvényes. Ehelyett ugyanezt a célt elérheted a kifejezések beágyazásával, például a "[0-9-]"-et karakterosztály használatával úgy írhatjuk, hogy "[[:isdigit:]-]".
+<p>
+A zárójeles kifejezés utolsó sajátossága a negálás. Néha hasznos, hogy azt mondhassuk, "bármilyen karaktert, csak ezeket ne". Például ha azt szeretnénk ellenõrizni, hogy a karakter "nem betû", egyszerûbb felsorolni az "a-z"-t, és azt mondani, "ne ezeket", mintsem felsorolni mindezeket a nem betûket. A zárójeles kifejezések lehetõvé teszik ennek a kezelését negálás útján. Azzal negáljuk a kifejezést, hogy megadunk egy "^" jelet elsõ karakterként. Például az "[^a-z]" minden nem betûre illeszkedik. Úgy, ahogy a kötõjellel is, ha konstans ^ jelet szeretnénk a kifejezésbe tenni, ne az elsõ pozícióba rakjuk: "[a-z^]". Karakterosztályt is negálhatunk, ehhez szintén beágyazást kell használnunk: például az "[^[:isdigit:]]" minden nem számjegy karakterre illeszkedik.</p></div>
+<p><font size="+2"><b>A.5 Tesztek<a name="regexassert"></a></b></font></p>
+<div class="desc">A tesztek (assertions) olyan feltételek vizsgálatára adnak lehetõséget, amelyek nem ábrázolhatók karaktersorozatokkal, valamint rövidítést adnak néhány gyakori zárójeles kifejezéshez.
+<p>
+A ^ karakterre úgy hivatkozunk, hogy õ a "bal horgony". Ez a karakter egy karaktersorozat elejére illeszkedik. Ha egyszerûen olyan regexet adunk meg, mint a "teszt", illeszkedni fog például az "ez egy teszt"-re, mivel ez a karaktersorozat tartalmaz "teszt"-et. Viszont néha hasznos, hogy biztosíthassuk, a karaktersorozat ténylegesen a mintával kezdõdik. Ezt a ^ segítségével tehetjük meg. Például a "^teszt" azt jelenti, hogy a szövegnek "teszt"-tel kell kezdõdnie. Továbbá a $ karakter a "jobb horgony". Ez a karakter a karaktersorozat végére illeszkedik. Így ha azt írjuk, hogy "^test$", akkor a karaktersorozatnak pontosan a "teszt" szónak kell lennie.
+<p>
+Hasonló ellenõrzések léteznek szavakra is. Minden más tesztet egy \ jellel és az azt követõ meghatározott karakterrel adunk meg. Például egy szó elejének és végének ellenõrzésére sorban a \< és \> jelöléseket használhatjuk. 
+<p>
+A többi teszt mindegyike két alakkal is rendelkezik: egy állítóval és egy tagadóval. Ezek a tesztek az alábbiak:
+<ul>
+<li><tt>\b</tt> - Szóhatár
+<li><tt>\B</tt> - Nem szóhatár
+<li><tt>\d</tt> - Számjegy karakter (azonos a <tt>[[:digit:]]</tt>-tel)</li>
+<li><tt>\D</tt> - Nem számjegy karakter (azonos a <tt>[^[:digit:]]</tt>-tel)</li>
+<li><tt>\s</tt> - Szóköz karakter (azonos a <tt>[[:space:]]</tt>-szel)</li>
+<li><tt>\S</tt> - Nem szóköz karakter (azonos a <tt>[^[:space:]]</tt>-szel)</li>
+<li><tt>\w</tt> - Szó karakter (azonos az <tt>[[:alnum:]_]</tt>-mal)</li>
+<li><tt>\W</tt> - Nem szó karakter (azonos az <tt>[^[:alnum:]_]</tt>-mal)</li>
+</ul>
+</div>
+<p><font size="+2"><b>A.6 Alternálás<a name="regexalt"></a></b></font></p>
+<div class="desc">Az alternálás egy módja annak, hogy "vagy"-ot mondjunk. Az alternáló operátor a függõleges vonás (|). Például ha azt akarjuk mondani, hogy "a vagy b", azt írhatjuk, "a|b". Közönséges betûk esetében ez helyettesíthetõ egy zárójeles kifejezéssel, de alternálást alkifejezésekkel együtt is használhatunk (amiket a következõ szekcióban tárgyalunk).
+</div>
+<p><font size="+2"><b>A.7 Alkifejezések<a name="regexsub"></a></b></font></p>
+<div class="desc">Alkifejezésnek nevezzük a regex egy olyan részét, amelyet egyetlen egyedként kezelünk. Alkifejezés létrehozására két lehetõség van. Ez a két módszer eltér egymástól, tekintettel a "visszautalásokra", amelyeket a következõ részben tárgyalunk. Ha olyan alkifejezést szeretnénk létrehozni, amely visszautalásokat használ, tegyük azt zárójelek () közé. Ha nem akarjuk, hogy visszautalásokat használjon, helyettesítsük a nyitó zárójelet a "(?:" jelöléssel. Például az "([a-z])" és "(?:[a-z])" alkifejezések. Azért hasznosak az alkifejezések, mert mûveleteket alkalmazhatsz rajtuk. Mindegyik ismétlõ operátor, például amelyeket úgy említettünk, hogy "X vagy több az elõzõ karakterbõl", használható úgy is, hogy "X vagy több az elõzõ alkifejezésbõl". Például ha van egy olyan regexünk, hogy "[0-9][a-z][0-9]", amellyel egy számot, egy azt követõ betût, majd megint egy számot egyeztetünk, és késõbb elhatározzunk, hogy ezt a sorozatot kétszer szeretnénk egyeztetni, közönséges módon azt írnánk, "[0-9][a-z][0-9][0-9][a-z][0-9]". Alkifejezésekkel azonban egyszerûen úgy írhatjuk, "([0-9][a-z][0-9]){2}".</div>
+<p><font size="+2"><b>A.8 Visszautalások<a name="regexbackref"></a></b></font></p>
+<div class="desc">Visszautalásokkal olyan karaktersorozatra hivatkozhatunk, amelyre a regexp egyik alkifejezése illeszkedik. Egy visszautalást úgy használunk, hogy megadunk egy visszaper (\) jelet és egy azt követõ számot 0 és 9 között, például \1. A \0 egy különleges visszautalás, amely az egész kifejezésre hivatkozik, mintsem egy alkifejezésre. A visszautalások akkor hasznosak, ha valami olyasmit akarunk egyeztetni, ami ugyanazt a karaktersorozatot kétszer tartalmazza. Például mondjuk, van egy "nick!user@host"-unk. Tudjuk, hogy van egy trójai program, amely egy olyan nicknevet és felhasználónevet használ, amely a "[0-9][a-z]{5}"-re illeszkedik, és mind a nicknév és felhasználónév ugyanaz. A "[0-9][a-z]{5}![0-9][a-z]{5}@.+" nem lenne jó, mert megengedné, hogy a nicknév és felhasználónév különbözzenek. Például a nicknév lehet 1abcde, és a felhasználónév 2fghij. Visszautalásokkal legyõzhetjük ezt a korlátozást. Ha a "([0-9][a-z]{5})!\1@.+" regexet használjuk, pontosan úgy fog mûködni, ahogy elvárjuk. Ez a regex megkeresi a megadott alkifejezésre illeszkedõ nicknevet, majd egy visszautalást használ arra, hogy a felhasználónévnek ugyannak a szövegnek kell lennie. 
+<p>
+Mivel egy reguláris kifejezés legfeljebb 9 visszautalást tartalmazhat, pont ezért hasznos a (?:) jelölés. Ezzel alkifejezést hozhatunk létre anélkül, hogy elpazarolnánk egy visszautalást. Továbbá, mivel a visszautalási információt nem szükséges eltárolni, még gyorsabb is. Emiatt érdemes mindig nem visszautalásos alkifejezéseket használni, amikor visszautalásokra nincs szükség.</div>
+<p><font size="+2"><b>A.9 Kis-nagybetû érzékenység<a name="regexcase"></a></b></font></p>
+<div class="desc">Ahogy említettük, az Unreal alapértelmezés szerint minden regexben a kis- és nagybetûket azonosnak tekinti. Ennek a fõ oka az, hogy valahogy sokkal többször fordul elõ, amikor kis- és nagybetûkre nem érzékeny keresést kívánunk végezni. Például ha a "www.test.com" szöveget blokkoljuk, feltehetõen a "WWW.TEST.COM"-ot is akarjuk. Mindamellett elõfordulhatnak olyan esetek is, hogy szükségünk van a kis-nagybetû érzékenységre, például bizonyos trójai programok egyeztetéséhez. Ezért adott egy módszer arra, hogy dinamikusan ki-be kapcsoljuk a kis-nagybetû érzékenységet. A kikapcsolásához egyszerûen azt írhatjuk, hogy "(?-i)", a bekapcsolásához pedig azt, hogy "(?i)". Például az "(?-i)[a-z](?i)[a-z]" illeszkedni fog egy kisbetûre (érzékenységet kikapcsoltuk), amelyet vagy egy kisbetû, vagy egy nagybetû követ (érzékenységet bekapcsoltuk). Továbbá, ahelyett, hogy mindig emlékezni kelljen a beállítás kikapcsolására, amikor végeztünk, megadhatjuk azt is, hogy a beállításváltoztatás csak egy alkifejezésre vonatkozzon, például az "(?-i:[a-z])[a-z]" megegyezik az elõzõ regexszel, mert a -i csak a megadott alkifejezésre vonatkozik.
 </body>
 </html>

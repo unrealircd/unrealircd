@@ -121,6 +121,9 @@ int  m_svsnick(aClient *cptr, aClient *sptr, int parc, char *parv[])
                         }
                         if (MyClient(acptr))
                         {
+				sendto_snomask(SNO_NICKCHANGE, "*** Notice -- %s (%s@%s) has changed his/her nickname to %s", 
+					acptr->name, acptr->user->username, acptr->user->realhost, parv[2]);
+				
                                 RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, acptr, parv[2]);
                         }
                         (void)strlcpy(acptr->name, parv[2], sizeof acptr->name);

@@ -44,7 +44,7 @@
 aTKline *tklines[TKLISTLEN];
 
 extern MODVAR char zlinebuf[BUFSIZE];
-int spamf_ugly_vchanoverride = 0;
+int MODVAR spamf_ugly_vchanoverride = 0;
 
 /** tkl hash method.
  * NOTE1: the input value 'c' is assumed to be in range a-z or A-Z!
@@ -232,21 +232,15 @@ aClient *acptr;
 	
 					cip = GetIP(acptr);
 
-					if (!(*tmp->hostmask < '0') && (*tmp->hostmask > '9'))
+					if ((*tmp->hostmask >= '0') && (*tmp->hostmask <= '9'))
 						is_ip = 1;
 					else
 						is_ip = 0;
 
-					if (is_ip ==
-					    0 ? (!match(tmp->hostmask,
-					    chost)
-					    && !match(tmp->usermask,
-					    cname)) : (!match(tmp->
-					    hostmask, chost)
-					    || !match(tmp->hostmask,
-					    cip))
-					    && !match(tmp->usermask,
-					    cname))
+					if (is_ip == 0 ?
+					    (!match(tmp->hostmask, chost) && !match(tmp->usermask, cname)) : 
+					    (!match(tmp->hostmask, chost) || !match(tmp->hostmask, cip))
+					    && !match(tmp->usermask, cname))
 					{
 						ClearShunned(acptr);
 #ifdef SHUN_NOTICES
@@ -440,38 +434,41 @@ int  find_tkline_match(aClient *cptr, int xx)
 		if (lp->type & TKL_GLOBAL)
 		{
 			ircstp->is_ref++;
-			sendto_one(cptr,
-				":%s NOTICE %s :*** You are %s from %s (%s)",
-					me.name, cptr->name,
-					(lp->expire_at ? "banned" : "permanently banned"),
-					ircnetwork, lp->reason);
+			if (GLINE_ADDRESS)
+				sendto_one(cptr, ":%s NOTICE %s :*** You are %s from %s (%s)"
+					   " Email %s for more information.",
+					   me.name, cptr->name,
+					   (lp->expire_at ? "banned" : "permanently banned"),
+					   ircnetwork, lp->reason, GLINE_ADDRESS);
+			else
+				sendto_one(cptr, ":%s NOTICE %s :*** You are %s from %s (%s)",
+					   me.name, cptr->name,
+					   (lp->expire_at ? "banned" : "permanently banned"),
+					   ircnetwork, lp->reason);
 			ircsprintf(msge, "User has been %s from %s (%s)",
-				(lp->expire_at ? "banned" : "permanently banned"),
-				ircnetwork, lp->reason);
-			return (exit_client(cptr, cptr, &me,
-				msge));
+				   (lp->expire_at ? "banned" : "permanently banned"),
+				   ircnetwork, lp->reason);
+			return (exit_client(cptr, cptr, &me, msge));
 		}
 		else
 		{
 			ircstp->is_ref++;
-			sendto_one(cptr,
-				":%s NOTICE %s :*** You are %s from %s (%s)",
-					me.name, cptr->name,
-					(lp->expire_at ? "banned" : "permanently banned"),
-				me.name, lp->reason);
+			sendto_one(cptr, ":%s NOTICE %s :*** You are %s from %s (%s)"
+				   " Email %s for more information.",
+				   me.name, cptr->name,
+				   (lp->expire_at ? "banned" : "permanently banned"),
+				   me.name, lp->reason, KLINE_ADDRESS);
 			ircsprintf(msge, "User is %s (%s)",
-				(lp->expire_at ? "banned" : "permanently banned"),
-				lp->reason);
-			return (exit_client(cptr, cptr, &me,
-				msge));
+				   (lp->expire_at ? "banned" : "permanently banned"),
+				   lp->reason);
+			return (exit_client(cptr, cptr, &me, msge));
 
 		}
 	}
 	if (lp->type & TKL_ZAP)
 	{
 		ircstp->is_ref++;
-		ircsprintf(msge,
-		    "Z:lined (%s)",lp->reason);
+		ircsprintf(msge, "Z:lined (%s)",lp->reason);
 		return exit_client(cptr, cptr, &me, msge);
 	}
 
@@ -951,7 +948,6 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	char gmt[256], gmt2[256];
 	char txt[256];
 	TS   expiry_1, setat_1, spamf_tklduration = 0;
-	int index;
 	char *reason = NULL;
 
 	if (!IsServer(sptr) && !IsOper(sptr) && !IsMe(sptr))
@@ -1414,7 +1410,7 @@ int place_host_ban(aClient *sptr, int action, char *reason, long duration)
 			else if (action == BAN_ACT_GLINE)
 				tkllayer[2] = "G";
 			else if (action == BAN_ACT_SHUN)
-				tkllayer[2] = "S";
+				tkllayer[2] = "s";
 			tkllayer[4] = hostip;
 			tkllayer[5] = me.name;
 			if (!duration)
@@ -1426,7 +1422,12 @@ int place_host_ban(aClient *sptr, int action, char *reason, long duration)
 			tkllayer[7] = mo2;
 			tkllayer[8] = reason;
 			m_tkl(&me, &me, 9, tkllayer);
-			return find_tkline_match(sptr, 0);
+			if (action == BAN_ACT_SHUN)
+			{
+				find_shun(sptr);
+				return -1;
+			} else
+				return find_tkline_match(sptr, 0);
 		}
 		case BAN_ACT_KILL:
 		default:
@@ -1463,7 +1464,6 @@ SpamExcept *e;
 int dospamfilter(aClient *sptr, char *str_in, int type, char *target)
 {
 aTKline *tk;
-int n;
 char *str;
 
 	if (type == SPAMF_USER)
@@ -1535,6 +1535,11 @@ char *str;
 							sendto_serv_butone_token(sptr, sptr->name, MSG_AWAY, TOK_AWAY, "");
 						}
 						break;
+					case SPAMF_TOPIC:
+						//...
+						sendnotice(sptr, "Setting of topic on %s to that text is blocked: %s",
+							target, unreal_decodespace(tk->ptr.spamf->tkl_reason));
+						break;
 					default:
 						break;
 				}
@@ -1566,7 +1571,7 @@ char *str;
 				xparv[2] = NULL;
 				/* RECURSIVE CAUTION in case we ever add blacklisted chans */
 				spamf_ugly_vchanoverride = 1;
-				ret = m_join(sptr, sptr, 2, xparv);
+				ret = do_cmd(sptr, sptr, "JOIN", 2, xparv);
 				spamf_ugly_vchanoverride = 0;
 				if (ret == FLUSH_BUFFER)
 					return FLUSH_BUFFER; /* don't ask me how we could have died... */

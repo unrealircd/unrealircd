@@ -1,5 +1,5 @@
-Numeric 005 Documentation (c) 2002-2004 codemastr (Dominick Meglio) [codemastr@unrealircd.com]
-(As of Unreal3.2.1)
+Numeric 005 Documentation (c) 2002-2005 codemastr (Dominick Meglio) [codemastr@unrealircd.com]
+(As of Unreal3.2.3)
 
 Numeric 005 allows the server to inform the client of any protocol specific features in the
 IRCd.  The numeric is sent at connection time immediately after numeric 004. Additionally
@@ -86,7 +86,7 @@ PREFIX        (modes)prefixes (qaohv)~&@%+                 Indicates the modes o
                                                            that corespond to the given
                                                            nickname prefixes.
 
-CHANMODES     A,B,C,D         be,kfL,l,                    Specifies how each channel mode is
+CHANMODES     A,B,C,D         be,kfL,lj,                   Specifies how each channel mode is
                               psmntirRcOAQKVHGCuzNSMT      set/unset. The A section specifies
                                                            modes that add a nick/mask to a
                                                            list. The B section specifies
@@ -142,7 +142,11 @@ STATUSMSG     flags            ~&@%+                       Specifies the mode fl
 EXCEPTS       none             none                        Indicates that channel ban exceptions
                                                            (+e) are supported by the server.
 
-MAXLIST       mode:num,...     b:60,e:60                   Specifies the maximum number of 
+INVEX         none             none                        Indicates that channel invite
+                                                           exceptions (+I) are supported by
+                                                           the server.
+
+MAXLIST       mode:num,...     b:60,e:60,I:60              Specifies the maximum number of 
                                                            entries that may be added to a 
                                                            particular mode list (type A modes).
                                                            This token replaces MAXBANS.

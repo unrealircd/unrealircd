@@ -463,7 +463,10 @@ DLLFUNC int htm_config_run(ConfigFile *cf, ConfigEntry *ce, int type) {
 					noisy_htm = 0;
 			}
 			else if (!strcmp(cep->ce_varname, "incoming-rate"))
+			{
 				LRV = config_checkval(cep->ce_vardata, CFG_SIZE);
+				LRV /= 1024;
+			}
 		}
 		return 1;		
 	}
@@ -474,7 +477,7 @@ DLLFUNC int htm_stats(aClient *sptr, char *stats) {
 	if (*stats == 'S') {
 		sendto_one(sptr, ":%s %i %s :htm::mode: %s", me.name, RPL_TEXT,
 			   sptr->name, noisy_htm ? "noisy" : "quiet");
-		sendto_one(sptr, ":%s %i %s :htm::incoming-rate: %d", me.name, RPL_TEXT,
+		sendto_one(sptr, ":%s %i %s :htm::incoming-rate: %d kb/s", me.name, RPL_TEXT,
 			   sptr->name, LRV);
 	}
         return 0;

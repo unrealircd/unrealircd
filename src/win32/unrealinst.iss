@@ -11,7 +11,7 @@
 
 [Setup]
 AppName=UnrealIRCd
-AppVerName=UnrealIRCd3.2.2b
+AppVerName=UnrealIRCd3.2.3
 AppPublisher=UnrealIRCd Team
 AppPublisherURL=http://www.unrealircd.com
 AppSupportURL=http://www.unrealircd.com
@@ -33,9 +33,9 @@ OutputDir=../../
 Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"
 Name: "quicklaunchicon"; Description: "Create a &Quick Launch icon"; GroupDescription: "Additional icons:"; Flags: unchecked
 Name: "installservice"; Description: "Install as a &service (not for beginners)"; GroupDescription: "Service support:"; Flags: unchecked; MinVersion: 0,4.0
-Name: "installservice/startboot"; Description: "S&tart UnrealIRCd when Windows starts"; GroupDescription: "Service support:"; MinVersion: 0,4.0; Flags: exclusive
-Name: "installservice/startdemand"; Description: "Start UnrealIRCd on &request"; GroupDescription: "Service support:"; MinVersion: 0,4.0; Flags: exclusive
-Name: "installservice/crashrestart"; Description: "Restart UnrealIRCd if it &crashes"; GroupDescription: "Service support:"; MinVersion: 0,5.0;
+Name: "installservice/startboot"; Description: "S&tart UnrealIRCd when Windows starts"; GroupDescription: "Service support:"; MinVersion: 0,4.0; Flags: exclusive unchecked
+Name: "installservice/startdemand"; Description: "Start UnrealIRCd on &request"; GroupDescription: "Service support:"; MinVersion: 0,4.0; Flags: exclusive unchecked
+Name: "installservice/crashrestart"; Description: "Restart UnrealIRCd if it &crashes"; GroupDescription: "Service support:"; Flags: unchecked; MinVersion: 0,5.0;
 #ifdef USE_SSL
 Name: "makecert"; Description: "&Create certificate"; GroupDescription: "SSL options:";
 Name: "enccert"; Description: "&Encrypt certificate"; GroupDescription: "SSL options:"; Flags: unchecked;
@@ -52,6 +52,7 @@ Source: "..\..\badwords.channel.conf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\badwords.message.conf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\badwords.quit.conf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\spamfilter.conf"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\dccallow.conf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\Changes"; DestDir: "{app}"; DestName: "Changes.txt"; Flags: ignoreversion
 Source: "..\..\Changes.old"; DestDir: "{app}"; DestName: "Changes.old.txt"; Flags: ignoreversion
 Source: "..\..\Donation"; DestDir: "{app}"; DestName: "Donation.txt"; Flags: ignoreversion
@@ -59,6 +60,7 @@ Source: "..\..\help.conf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
 Source: "..\..\Unreal.nfo"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\doc\*.*"; DestDir: "{app}\doc"; Flags: ignoreversion
+Source: "..\..\doc\technical\*.*"; DestDir: "{app}\doc\technical"; Flags: ignoreversion
 Source: "..\..\aliases\*"; DestDir: "{app}\aliases"; Flags: ignoreversion
 Source: "..\..\networks\*"; DestDir: "{app}\networks"; Flags: ignoreversion
 Source: "..\..\unreal.exe"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0,4.0
@@ -142,11 +144,11 @@ begin
   Result := true;
 end;
 
-procedure CurStepChanged(CurStep: Integer);
+procedure CurStepChanged(CurStep: TSetupStep);
 var
 input,output: String;
 begin
-  if (CurStep = csCopy) then begin
+  if (CurStep = ssPostInstall) then begin
     if (didDbgDl) then begin
       input := ExpandConstant('{tmp}\dbghelp.dll');
       output := ExpandConstant('{app}\dbghelp.dll');

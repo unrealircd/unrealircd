@@ -318,6 +318,10 @@ int  dgets(int fd, char *buf, int num)
  */
 char *inetntop(int af, const void *in, char *out, size_t the_size)
 {
+#ifdef IPV6_COMPRESSED
+	inet_ntop(af, in, out, the_size);
+	return out;
+#else
 	static char local_dummy[MYDUMMY_SIZE];
 
 	inet_ntop(af, in, local_dummy, the_size);
@@ -364,6 +368,7 @@ char *inetntop(int af, const void *in, char *out, size_t the_size)
 	else
 		bcopy(local_dummy, out, 64);
 	return out;
+#endif
 }
 
 /* Made by Potvin originally, i guess */
@@ -1693,6 +1698,32 @@ char *unreal_mktemp(char *dir, char *suffix)
 	return NULL; 
 }
 
+/* Returns the path portion of the given path/file
+ * in the specified location (must be at least PATH_MAX
+ * bytes).
+ */
+char *unreal_getpathname(char *filepath, char *path)
+{
+	char *end = filepath+strlen(filepath);
+
+	while (*end != '\\' && *end != '/' && end > filepath)
+		end--;
+	if (end == filepath)
+		path = NULL;
+	else
+	{
+		int size = end-filepath;
+		if (size >= PATH_MAX)
+			path = NULL;
+		else
+		{
+			memcpy(path, filepath, size);
+			path[size] = 0;
+		}
+	}
+	return path;
+}
+
 /* Returns the filename portion of the given path
  * The original string is not modified
  */
@@ -1723,15 +1754,16 @@ char *unreal_getfilename(char *path)
 int unreal_copyfile(char *src, char *dest)
 {
 	char buf[2048];
-	time_t mtime = unreal_getfilemodtime(src);
+	time_t mtime;
+	int srcfd, destfd, len;
+
+	mtime = unreal_getfilemodtime(src);
 
 #ifndef _WIN32
-	int srcfd = open(src, O_RDONLY);
+	srcfd = open(src, O_RDONLY);
 #else
-	int srcfd = open(src, _O_RDONLY|_O_BINARY);
+	srcfd = open(src, _O_RDONLY|_O_BINARY);
 #endif
-	int destfd;
-	int len;
 
 	if (srcfd < 0)
 		return 0;
@@ -1775,6 +1807,18 @@ fail:
 	unlink(dest); /* make sure our corrupt file isn't used */
 	return 0;
 }
+
+/* Same as unreal_copyfile, but with an option to try hardlinking first */
+int unreal_copyfileex(char *src, char *dest, int tryhardlink)
+{
+#ifndef _WIN32
+	/* Try a hardlink first... */
+	if (tryhardlink && !link(src, dest))
+		return 0; /* success */
+#endif
+	return unreal_copyfile(src, dest);
+}
+
 
 void unreal_setfilemodtime(char *filename, time_t mtime)
 {

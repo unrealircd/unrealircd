@@ -310,8 +310,8 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(sptr, rpl_str(RPL_WHOISBOT), me.name, parv[0], name, ircnetwork);
 
 			if (acptr->umodes & UMODE_SECURE)
-				sendto_one(sptr, ":%s %d %s %s :%s", me.name,
-				    RPL_WHOISSPECIAL, parv[0], name, "is a Secure Connection");
+				sendto_one(sptr, rpl_str(RPL_WHOISSECURE), me.name, parv[0], name,
+					"is using a Secure Connection");
 
 			if (!BadPtr(user->swhois) && !hideoper)
 					sendto_one(sptr, ":%s %d %s %s :%s",

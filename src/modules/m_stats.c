@@ -130,11 +130,6 @@ struct statstab {
 	int options;
 };
 
-//TODO:
-// module help
-// update docs
-// update module docs 
-
 /* Must be listed lexicographically */
 /* Long flags must be lowercase */
 struct statstab StatsTable[] = {
@@ -170,6 +165,7 @@ struct statstab StatsTable[] = {
 	{ 'j', "officialchans", stats_officialchannels, 0 		},
 	{ 'k', "kline",		stats_kline,		0 		},
 	{ 'l', "linkinfo",	stats_linkinfo,		SERVER_AS_PARA 	},
+	{ 'm', "command",	stats_command,		0 		},
 	{ 'n', "banrealname",	stats_banrealname,	0 		},
 	{ 'o', "oper",		stats_oper,		0 		},
 	{ 'q', "bannick",	stats_bannick,		FLAGS_AS_PARA	},
@@ -244,15 +240,15 @@ inline void stats_help(aClient *sptr)
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"D - denylinkall - Send the deny link (all) block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"e - exceptthrottle - Send the except trottle block list");
+		"e - exceptthrottle - Send the except throttle block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"E - exceptban - Send the except ban block list");
+		"E - exceptban - Send the except ban and except tkl block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"f - spamfilter - Send the spamfilter list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"F - denydcc - Send the deny dcc and allow dcc block lists");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"G - gline - Send the gline list");
+		"G - gline - Send the gline and gzline list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"  Extended flags: [+/-mrs] [mask] [reason] [setby]");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
@@ -278,18 +274,6 @@ inline void stats_help(aClient *sptr)
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"O - oper - Send the oper block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"S - set - Send the set block list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"s - shun - Send the shun list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"  Extended flags: [+/-mrs] [mask] [reason] [setby]");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"   m Return shuns matching/not matching the specified mask");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"   r Return shuns with a reason matching/not matching the specified reason");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"   s Return shuns set by/not set by clients matching the specified name");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"P - port - Send information about ports");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"q - bannick - Send the ban nick block list");
@@ -301,6 +285,18 @@ inline void stats_help(aClient *sptr)
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"R - usage - Send usage information");
 #endif
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+		"S - set - Send the set block list");
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+		"s - shun - Send the shun list");
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+		"  Extended flags: [+/-mrs] [mask] [reason] [setby]");
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+		"   m Return shuns matching/not matching the specified mask");
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+		"   r Return shuns with a reason matching/not matching the specified reason");
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+		"   s Return shuns set by/not set by clients matching the specified name");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"t - tld - Send the tld block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
@@ -536,7 +532,7 @@ int stats_denylinkall(aClient *sptr, char *para)
 	{
 		if (links->flag.type == CRULE_ALL)
 			sendto_one(sptr, rpl_str(RPL_STATSDLINE), me.name, sptr->name,
-			"D", links->mask, links->prettyrule);
+			'D', links->mask, links->prettyrule);
 	}
 	return 0;
 }
@@ -559,9 +555,14 @@ int stats_exceptban(aClient *sptr, char *para)
 {
 	ConfigItem_except *excepts;
 	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *) excepts->next)
-		if (excepts->flag.type == 1)
+	{
+		if (excepts->flag.type == CONF_EXCEPT_BAN)
 			sendto_one(sptr, rpl_str(RPL_STATSKLINE), me.name,
 				sptr->name, "E", excepts->mask, "");
+		else if (excepts->flag.type == CONF_EXCEPT_TKL)
+			sendto_one(sptr, rpl_str(RPL_STATSEXCEPTTKL), me.name,
+				sptr->name, tkl_typetochar(excepts->type), excepts->mask);
+	}
 	return 0;
 }
 
@@ -900,6 +901,18 @@ int stats_mem(aClient *sptr, char *para)
 			chbm += (strlen(ban->banstr) + 1 +
 			    strlen(ban->who) + 1 + sizeof(Ban));
 		}
+		for (ban = chptr->exlist; ban; ban = ban->next)
+		{
+			chb++;
+			chbm += (strlen(ban->banstr) + 1 +
+			    strlen(ban->who) + 1 + sizeof(Ban));
+		}
+		for (ban = chptr->invexlist; ban; ban = ban->next)
+		{
+			chb++;
+			chbm += (strlen(ban->banstr) + 1 +
+			    strlen(ban->who) + 1 + sizeof(Ban));
+		}
 	}
 
 	sendto_one(sptr, ":%s %d %s :Client Local %d(%ld) Remote %d(%ld)",
@@ -1049,7 +1062,7 @@ int stats_denylinkauto(aClient *sptr, char *para)
 	{
 		if (links->flag.type == CRULE_AUTO)
 			sendto_one(sptr, rpl_str(RPL_STATSDLINE), me.name, sptr->name,
-			"d", links->mask, links->prettyrule);
+			'd', links->mask, links->prettyrule);
 	}
 	return 0;
 }
@@ -1132,8 +1145,9 @@ int stats_kline(aClient *sptr, char *para)
 	}
 	tkl_stats(sptr, TKL_KILL, NULL);
 	tkl_stats(sptr, TKL_ZAP, NULL);
-	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
-		if (excepts->flag.type == 1)
+	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) 
+	{
+		if (excepts->flag.type == CONF_EXCEPT_BAN)
 			sendto_one(sptr, rpl_str(RPL_STATSKLINE),
 				me.name, sptr->name, "E", excepts->mask, "");
 	}
@@ -1214,6 +1228,9 @@ int stats_set(aClient *sptr, char *para)
 		CLOAK_KEYCRC);
 	sendto_one(sptr, ":%s %i %s :kline-address: %s", me.name, RPL_TEXT,
 	    sptr->name, KLINE_ADDRESS);
+	if (GLINE_ADDRESS)
+		sendto_one(sptr, ":%s %i %s :gline-address: %s", me.name, RPL_TEXT,
+		    sptr->name, GLINE_ADDRESS);
 	sendto_one(sptr, ":%s %i %s :modes-on-connect: %s", me.name, RPL_TEXT,
 	    sptr->name, get_modestr(CONN_MODES));
 	sendto_one(sptr, ":%s %i %s :modes-on-oper: %s", me.name, RPL_TEXT,
@@ -1312,6 +1329,9 @@ int stats_set(aClient *sptr, char *para)
 	    sptr->name, HOST_RETRIES);
 	sendto_one(sptr, ":%s %i %s :dns::nameserver: %s", me.name, RPL_TEXT,
 	    sptr->name, NAME_SERVER);
+	if (DNS_BINDIP)
+		sendto_one(sptr, ":%s %i %s :dns::bind-ip: %s", me.name, RPL_TEXT,
+		    sptr->name, DNS_BINDIP);
 	sendto_one(sptr, ":%s %i %s :ban-version-tkl-time: %s", me.name, RPL_TEXT,
 	    sptr->name, pretty_time_val(BAN_VERSION_TKL_TIME));
 #ifdef THROTTLING

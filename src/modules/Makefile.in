@@ -25,8 +25,8 @@ INCLUDES = ../include/struct.h ../include/config.h \
 	../include/h.h ../include/numeric.h ../include/msg.h \
 	../include/dynconf.h ../include/modules.h ../include/setup.h
 
-#just changing this to cloak.so oldcloak.so could be a ./Config option...
-#R_MODULES=cloak.so oldcloak.so
+#just changing this to cloak.so could be a ./Config option...
+#R_MODULES=cloak.so
 R_MODULES= \
 	 m_sethost.so m_chghost.so m_chgident.so m_setname.so \
 	 m_setident.so m_sdesc.so m_svsmode.so m_swhois.so\
@@ -46,7 +46,9 @@ R_MODULES= \
 	 m_trace.so m_netinfo.so m_links.so m_help.so m_rules.so \
 	 m_close.so m_map.so m_eos.so m_server.so m_stats.so \
 	 m_svsfline.so m_dccdeny.so m_undccdeny.so m_whowas.so \
-	 m_connect.so m_dccallow.so m_userip.so cloak.so oldcloak.so
+	 m_connect.so m_dccallow.so m_userip.so m_nick.so m_user.so \
+	 m_mode.so m_watch.so m_part.so m_join.so m_motd.so m_opermotd.so \
+	 m_botmotd.so m_lusers.so cloak.so 
 
 #note change of .c to .o
 COMMANDS=m_sethost.o m_chghost.o m_chgident.o m_setname.o m_setident.o \
@@ -66,7 +68,9 @@ COMMANDS=m_sethost.o m_chghost.o m_chgident.o m_setname.o m_setident.o \
 	 m_trace.o m_netinfo.o m_links.o m_help.o m_rules.o \
 	 m_close.o m_map.o m_eos.o m_server.o m_stats.o \
 	 m_svsfline.o m_dccdeny.o m_undccdeny.o m_whowas.o \
-	 m_connect.o m_dccallow.o m_userip.o
+	 m_connect.o m_dccallow.o m_userip.o m_nick.o m_user.o \
+	 m_mode.o m_watch.o m_part.o m_join.o m_motd.o m_opermotd.o \
+	 m_botmotd.o m_lusers.o
 
 
 MODULES=commands.so $(R_MODULES)
@@ -357,6 +361,36 @@ m_dccallow.o: m_dccallow.c $(INCLUDES)
 
 m_userip.o: m_userip.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_userip.c
+
+m_nick.o: m_nick.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_nick.c
+
+m_user.o: m_user.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_user.c
+
+m_mode.o: m_mode.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_mode.c
+
+m_watch.o: m_watch.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_watch.c
+
+m_part.o: m_part.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_part.c
+
+m_join.o: m_join.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_join.c
+
+m_motd.o: m_motd.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_motd.c
+
+m_opermotd.o: m_opermotd.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_opermotd.c
+
+m_botmotd.o: m_botmotd.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_botmotd.c
+
+m_lusers.o: m_lusers.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_lusers.c
 
 #############################################################################
 #             .so's section
@@ -719,7 +753,48 @@ m_dccallow.so: m_dccallow.c $(INCLUDES)
 		-o m_dccallow.so m_dccallow.c
 
 m_userip.so: m_userip.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_userip.c
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_userip.so m_userip.c
+
+m_nick.so: m_nick.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_nick.so m_nick.c
+
+m_user.so: m_user.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_user.so m_user.c
+
+m_mode.so: m_mode.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_mode.so m_mode.c
+
+m_watch.so: m_watch.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_watch.so m_watch.c
+
+m_part.so: m_part.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_part.so m_part.c
+
+m_join.so: m_join.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_join.so m_join.c
+
+m_motd.so: m_motd.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_motd.so m_motd.c
+
+m_opermotd.so: m_opermotd.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_opermotd.so m_opermotd.c
+
+m_botmotd.so: m_botmotd.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_botmotd.so m_botmotd.c
+
+m_lusers.so: m_lusers.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_lusers.so m_lusers.c
 
 #############################################################################
 #             and now the remaining modules...
@@ -729,11 +804,5 @@ cloak.so: cloak.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o cloak.so cloak.c
 
-oldcloak.so: oldcloak.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o oldcloak.so oldcloak.c
-
 clean:
 	$(RM) -f *.o *.so *~ core
-
-

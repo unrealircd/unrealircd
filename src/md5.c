@@ -272,4 +272,23 @@ void MD5_Final(unsigned char *result, MD5_CTX *ctx)
 	memset(ctx, 0, sizeof(ctx));
 }
 
+#else
+/* need these includes for DoMD5()... */
+#include "struct.h"
+#include "common.h"
 #endif
+
+/** Generates an MD5 checksum.
+ * @param mdout[out] Buffer to store result in, the result will be 16 bytes in binary
+ *                   (not ascii printable!).
+ * @param src[in]    The input data used to generate the checksum.
+ * @param n[in]      Length of data.
+ */
+void DoMD5(unsigned char *mdout, unsigned char *src, unsigned long n)
+{
+MD5_CTX hash;
+
+	MD5_Init(&hash);
+	MD5_Update(&hash, src, n);
+	MD5_Final(mdout, &hash);
+}

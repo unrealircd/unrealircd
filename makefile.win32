@@ -133,7 +133,7 @@ EXP_OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/HELP.OBJ SRC/S_MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ \
  SRC/S_DEBUG.OBJ  SRC/SUPPORT.OBJ SRC/LIST.OBJ \
  SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/S_BSD.OBJ \
- SRC/S_SERV.OBJ SRC/S_USER.OBJ \
+ SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/CHARSYS.OBJ \
  SRC/VERSION.OBJ SRC/RES_INIT.OBJ SRC/RES_COMP.OBJ SRC/RES_MKQUERY.OBJ SRC/RES_SKIPNAME.OBJ \
  SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ \
  SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ \
@@ -171,7 +171,11 @@ MOD_FILES=SRC/MODULES/L_COMMANDS.C SRC/MODULES/M_CHGHOST.C SRC/MODULES/M_SDESC.C
  SRC/MODULES/M_RULES.C SRC/MODULES/M_CLOSE.C SRC/MODULES/M_MAP.C SRC/MODULES/M_EOS.C \
  SRC/MODULES/M_SERVER.C SRC/MODULES/M_STATS.C SRC/MODULES/M_SVSFLINE.C \
  SRC/MODULES/M_DCCDENY.C SRC/MODULES/M_UNDCCDENY.C SRC/MODULES/M_WHOWAS.C \
- SRC/MODULES/M_CONNECT.C SRC/MODULES/M_DCCALLOW.C SRC/MODULES/M_USERIP.C
+ SRC/MODULES/M_CONNECT.C SRC/MODULES/M_DCCALLOW.C SRC/MODULES/M_USERIP.C \
+ SRC/MODULES/M_NICK.C SRC/MODULES/M_USER.C SRC/MODULES/M_MODE.C \
+ SRC/MODULES/M_WATCH.C SRC/MODULES/M_PART.C SRC/MODULES/M_JOIN.C \
+ SRC/MODULES/M_MOTD.C SRC/MODULES/M_OPERMOTD.C SRC/MODULES/M_BOTMOTD.C \
+ SRC/MODULES/M_LUSERS.C
 
 DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDENT.DLL \
  SRC/MODULES/M_SETNAME.DLL SRC/MODULES/M_SETHOST.DLL SRC/MODULES/M_CHGIDENT.DLL \
@@ -203,7 +207,11 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/M_SERVER.DLL SRC/MODULES/M_STATS.DLL SRC/MODULES/M_SVSFLINE.DLL \
  SRC/MODULES/M_DCCDENY.DLL SRC/MODULES/M_UNDCCDENY.DLL SRC/MODULES/M_WHOWAS.DLL \
  SRC/MODULES/M_CONNECT.DLL SRC/MODULES/M_DCCALLOW.DLL SRC/MODULES/M_USERIP.DLL \
- SRC/MODULES/CLOAK.DLL SRC/MODULES/OLDCLOAK.DLL
+ SRC/MODULES/M_NICK.DLL SRC/MODULES/M_USER.DLL SRC/MODULES/M_MODE.DLL \
+ SRC/MODULES/M_WATCH.DLL SRC/MODULES/M_PART.DLL SRC/MODULES/M_JOIN.DLL \
+ SRC/MODULES/M_MOTD.DLL SRC/MODULES/M_OPERMOTD.DLL SRC/MODULES/M_BOTMOTD.DLL \
+ SRC/MODULES/M_LUSERS.DLL \
+ SRC/MODULES/CLOAK.DLL
 
 
 ALL: CONF UNREAL.EXE WIRCD.EXE src/modules/commands.dll MODULES 
@@ -343,6 +351,10 @@ src/s_svs.obj: src/s_svs.c $(INCLUDES)
 src/s_user.obj: src/s_user.c $(INCLUDES) ./include/dbuf.h \
                 ./include/channel.h ./include/whowas.h
         $(CC) $(CFLAGS) src/s_user.c
+
+src/charsys.obj: src/charsys.c $(INCLUDES) ./include/dbuf.h \
+                ./include/channel.h ./include/whowas.h
+        $(CC) $(CFLAGS) src/charsys.c
 
 src/s_extra.obj: src/s_extra.c $(INCLUDES) ./include/dbuf.h \
                 ./include/channel.h ./include/whowas.h
@@ -732,11 +744,38 @@ src/modules/m_dccallow.dll: src/modules/m_dccallow.c $(INCLUDES)
 src/modules/m_userip.dll: src/modules/m_userip.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_userip.c $(MODLFLAGS)
 
+src/modules/m_nick.dll: src/modules/m_nick.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/m_nick.c $(MODLFLAGS)
+
+src/modules/m_user.dll: src/modules/m_user.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/m_user.c $(MODLFLAGS)
+
+src/modules/m_mode.dll: src/modules/m_mode.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/m_mode.c $(MODLFLAGS)
+
+src/modules/m_watch.dll: src/modules/m_watch.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/m_watch.c $(MODLFLAGS)
+
+src/modules/m_part.dll: src/modules/m_part.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/m_part.c $(MODLFLAGS)
+
+src/modules/m_join.dll: src/modules/m_join.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/m_join.c $(MODLFLAGS)
+
+src/modules/m_motd.dll: src/modules/m_motd.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/m_motd.c $(MODLFLAGS)
+
+src/modules/m_opermotd.dll: src/modules/m_opermotd.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/m_opermotd.c $(MODLFLAGS)
+
+src/modules/m_botmotd.dll: src/modules/m_botmotd.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/m_botmotd.c $(MODLFLAGS)
+
+src/modules/m_lusers.dll: src/modules/m_lusers.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/m_lusers.c $(MODLFLAGS)
+
 src/modules/cloak.dll: src/modules/cloak.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/cloak.c $(MODLFLAGS)
-
-src/modules/oldcloak.dll: src/modules/oldcloak.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/oldcloak.c $(MODLFLAGS)
 
 dummy:
 

@@ -220,30 +220,19 @@ void	init_CommandHash(void)
 	
 	bzero(CommandHash, sizeof(CommandHash));
 	bzero(TokenHash, sizeof(TokenHash));
-	add_Command(MSG_MODE, TOK_MODE, m_mode, MAXPARA);
-	add_Command(MSG_OPERMOTD, TOK_OPERMOTD, m_opermotd, MAXPARA);
-	add_CommandX(MSG_NICK, TOK_NICK, m_nick, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
-	add_CommandX(MSG_JOIN, TOK_JOIN, m_join, MAXPARA, M_USER);
-	add_CommandX(MSG_USER, TOK_USER, m_user, 4, M_UNREGISTERED|M_USER);
-	add_CommandX(MSG_PART, TOK_PART, m_part, 2, M_USER);
-	add_Command(MSG_WATCH, TOK_WATCH, m_watch, 1);
-	add_Command(MSG_LUSERS, TOK_LUSERS, m_lusers, MAXPARA);
 	add_CommandX(MSG_ERROR, TOK_ERROR, m_error, MAXPARA, M_UNREGISTERED|M_SERVER);
 	add_Command(MSG_NAMES, TOK_NAMES, m_names, MAXPARA);
 	add_CommandX(MSG_VERSION, TOK_VERSION, m_version, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
 	add_Command(MSG_SUMMON, NULL, m_summon, 1);
 	add_Command(MSG_USERS, NULL, m_users, MAXPARA);
 	add_Command(MSG_INFO, TOK_INFO, m_info, MAXPARA);
-	add_Command(MSG_MOTD, TOK_MOTD, m_motd, MAXPARA);
 	add_Command(MSG_DNS, TOK_DNS, m_dns, MAXPARA);
 	add_Command(MSG_REHASH, TOK_REHASH, m_rehash, MAXPARA);
-	add_Command(MSG_RESTART, TOK_RESTART, m_restart, MAXPARA);
+	add_Command(MSG_RESTART, TOK_RESTART, m_restart, 2);
 	add_Command(MSG_DIE, TOK_DIE, m_die, MAXPARA);
 	add_Command(MSG_DALINFO, TOK_DALINFO, m_dalinfo, MAXPARA);
 	add_Command(MSG_CREDITS, TOK_CREDITS, m_credits, MAXPARA);
 	add_Command(MSG_LICENSE, TOK_LICENSE, m_license, MAXPARA);
-	add_Command(MSG_BOTMOTD, TOK_BOTMOTD, m_botmotd, MAXPARA);
-	add_Command(MSG_NEWJOIN, TOK_JOIN, m_join, MAXPARA);
 	add_Command(MSG_MODULE, TOK_MODULE, m_module, MAXPARA);	
 	add_Command(MSG_TKL, TOK_TKL, m_tkl, MAXPARA);
 		
@@ -444,4 +433,37 @@ aCommand *find_Command_simple(char *cmd)
 				return p;
 	}
 	return NULL;
+}
+
+/** Calls the specified command.
+ * PURPOSE:
+ *  This function is especially meant for calling modulized commands,
+ *  both from the core and from (eg:) module A to a command in module B.
+ *  An alternative to this is MOD_Dep, but this requires a lot more
+ *  effort, is more error phrone and is not a general solution
+ *  (but it is slightly faster).
+ * PARAMETERS:
+ *  Parameters are clear.. the usual cptr, sptr, parc, parv stuff.
+ *  'cmd' is the command string, eg: "JOIN"
+ * RETURN VALUE:
+ *  The value returned by the command function, or -99 if command not found.
+ * IMPORTANT NOTES:
+ *  - make sure you terminate the last parv[] parameter with NULL,
+ *    this can easily be forgotten, but certain functions depend on it,
+ *    you risk crashes otherwise.
+ *  - be sure to check for FLUSH_BUFFER (-5) return value, especially
+ *    if you are calling functions that might cause an immediate kill
+ *    (eg: due to spamfilter).
+ *  - obvious, but... do not stuff in insane parameters, like a parameter
+ *    of 1024 bytes, most of the ircd code depends on the max size of the
+ *    total command being less than 512 bytes. Same for parc < MAXPARA.
+ */
+int do_cmd(aClient *cptr, aClient *sptr, char *cmd, int parc, char *parv[])
+{
+aCommand *cmptr;
+
+	cmptr = find_Command_simple(cmd);
+	if (!cmptr)
+		return -99;
+	return (*cmptr->func) (cptr, sptr, parc, parv);
 }

@@ -225,17 +225,26 @@
 /* Define if you want IPv6 enabled */
 #undef INET6
 
+/* Define if you want modes shown in /list */
+#undef LIST_SHOW_MODES
+
+/* Define if you want nick!user@host shown for the topic setter */
+#undef TOPIC_NICK_IS_NUHOST
+
+/* Define if you want users to be notified when their shun is removed */
+#undef SHUN_NOTICES
+
+/* Define if you want OperOverride disabled */
+#undef NO_OPEROVERRIDE
+
+/* Define if you want opers to have to use /invite to join +s/+p channels */
+#undef OPEROVERRIDE_VERIFY
+
+/* Define if you want to disable /set* and /chg* */
+#undef DISABLE_USERMOD
+
 /* Define if your system prepends an underscore to symbols */
 #undef UNDERSCORE
-
-/* Define if you have gethostbyname_r with 3 parameters */
-#undef HAVE_GETHOSTBYNAME_R_3
-
-/* Define if you have gethostbyname_r with 5 parameters */
-#undef HAVE_GETHOSTBYNAME_R_5
-
-/* Define if you have gethostbyname_r with 6 parameters */
-#undef HAVE_GETHOSTBYNAME_R_6
 
 /* Define if rlim_t is long long */
 #undef LONG_LONG_RLIM_T
@@ -260,3 +269,12 @@
 
 /* Define if you have inet_ntop */
 #undef HAVE_INET_NTOP
+
+/* Define if you have a compiler with C99 variable length array support */
+#undef HAVE_C99_VARLEN_ARRAY
+
+/* Define if you have alloca.h */
+#undef HAVE_ALLOCA_H
+
+/* Define if you have alloca */
+#undef HAVE_ALLOCA

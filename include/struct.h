@@ -143,6 +143,7 @@ typedef struct _cmdoverride Cmdoverride;
 typedef struct SMember Member;
 typedef struct SMembership Membership;
 typedef struct SMembershipL MembershipL;
+typedef struct JFlood aJFlood;
 
 #ifdef ZIP_LINKS
 typedef struct  Zdata   aZdata;
@@ -493,18 +494,24 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 /*
  * ProtoCtl options
  */
-#define DontSendQuit(x)		((x)->proto & PROTO_NOQUIT)
-#define IsToken(x)		((x)->proto & PROTO_TOKEN)
-#define SupportSJOIN(x)		((x)->proto & PROTO_SJOIN)
-#define SupportNICKv2(x)	((x)->proto & PROTO_NICKv2)
-#define SupportNICKIP(x)	((x)->proto & PROTO_NICKIP)
-#define SupportSJOIN2(x)	((x)->proto & PROTO_SJOIN2)
-#define SupportUMODE2(x)	((x)->proto & PROTO_UMODE2)
-#define SupportNS(x)		((x)->proto & PROTO_NS)
-#define SupportVL(x)		((x)->proto & PROTO_VL)
-#define SupportSJ3(x)		((x)->proto & PROTO_SJ3)
-#define SupportVHP(x)		((x)->proto & PROTO_VHP)
-#define SupportTKLEXT(x)	((x)->proto & PROTO_TKLEXT)
+#ifndef DEBUGMODE
+#define CHECKPROTO(x,y)	((x)->proto & y)
+#else
+#define CHECKPROTO(x,y) (checkprotoflags(x, y, __FILE__, __LINE__))
+#endif
+
+#define DontSendQuit(x)		(CHECKPROTO(x, PROTO_NOQUIT))
+#define IsToken(x)		(CHECKPROTO(x, PROTO_TOKEN))
+#define SupportSJOIN(x)		(CHECKPROTO(x, PROTO_SJOIN))
+#define SupportNICKv2(x)	(CHECKPROTO(x, PROTO_NICKv2))
+#define SupportNICKIP(x)	(CHECKPROTO(x, PROTO_NICKIP))
+#define SupportSJOIN2(x)	(CHECKPROTO(x, PROTO_SJOIN2))
+#define SupportUMODE2(x)	(CHECKPROTO(x, PROTO_UMODE2))
+#define SupportNS(x)		(CHECKPROTO(x, PROTO_NS))
+#define SupportVL(x)		(CHECKPROTO(x, PROTO_VL))
+#define SupportSJ3(x)		(CHECKPROTO(x, PROTO_SJ3))
+#define SupportVHP(x)		(CHECKPROTO(x, PROTO_VHP))
+#define SupportTKLEXT(x)	(CHECKPROTO(x, PROTO_TKLEXT))
 
 #define SetSJOIN(x)		((x)->proto |= PROTO_SJOIN)
 #define SetNoQuit(x)		((x)->proto |= PROTO_NOQUIT)
@@ -561,7 +568,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OFLAG_UMODEQ	0x80000000	/* can set +q */
 #define OFLAG_LOCAL	(OFLAG_REHASH|OFLAG_HELPOP|OFLAG_GLOBOP|OFLAG_WALLOP|OFLAG_LOCOP|OFLAG_LROUTE|OFLAG_LKILL|OFLAG_KLINE|OFLAG_UNKLINE|OFLAG_LNOTICE)
 #define OFLAG_GLOBAL	(OFLAG_LOCAL|OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
-#define OFLAG_ISGLOBAL	(OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
+#define OFLAG_ISGLOBAL	(OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE|OFLAG_TKL|OFLAG_GZL|OFLAG_OVERRIDE)
 #define OFLAG_NADMIN	(OFLAG_NETADMIN | OFLAG_SADMIN | OFLAG_ADMIN | OFLAG_GLOBAL | OFLAG_UMODEQ | OFLAG_DCCDENY)
 #define OFLAG_ADMIN_	(OFLAG_ADMIN | OFLAG_GLOBAL | OFLAG_DCCDENY)
 #define OFLAG_COADMIN_	(OFLAG_COADMIN | OFLAG_GLOBAL | OFLAG_DCCDENY)
@@ -650,6 +657,9 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	DEBUG_DEBUG  8		/* anything to do with debugging, ie unimportant :) */
 #define	DEBUG_MALLOC 9		/* malloc/free calls */
 #define	DEBUG_LIST  10		/* debug list use */
+
+/* blah */
+#define IsSkoAdmin(sptr) (IsAdmin(sptr) || IsNetAdmin(sptr) || IsSAdmin(sptr))
 
 /*
  * defines for curses in client
@@ -745,6 +755,9 @@ struct User {
 		unsigned char away_c;	/* number of times away has been set */
 #endif
 	} flood;
+#ifdef JOINTHROTTLE
+	aJFlood *jflood;
+#endif
 };
 
 struct Server {
@@ -798,6 +811,7 @@ struct Server {
 #define SPAMF_DCC			0x0040 /* d */
 #define SPAMF_USER			0x0080 /* u */
 #define SPAMF_AWAY			0x0100 /* a */
+#define SPAMF_TOPIC			0x0200 /* t */
 
 struct _spamfilter {
 	unsigned short action; /* see BAN_ACT* */
@@ -862,6 +876,12 @@ extern void SnomaskDel(Snomask *sno);
 extern Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode);
 extern void CmodeDel(Cmode *cmode);
 #endif
+
+typedef struct {
+	EXTCM_PAR_HEADER
+	unsigned short num;
+	unsigned short t;
+} aModejEntry;
 
 #define LISTENER_NORMAL		0x000001
 #define LISTENER_CLIENTSONLY	0x000002
@@ -1128,9 +1148,10 @@ struct _configitem_ulines {
 struct _configitem_tld {
 	ConfigItem 	*prev, *next;
 	ConfigFlag_tld 	flag;
-	char 		*mask, *motd_file, *rules_file, *smotd_file, *channel;
+	char 		*mask, *motd_file, *rules_file, *smotd_file;
+	char 		*botmotd_file, *opermotd_file, *channel;
 	struct tm	motd_tm, smotd_tm;
-	aMotd		*rules, *motd, *smotd;
+	aMotd		*rules, *motd, *smotd, *botmotd, *opermotd;
 	u_short		options;
 };
 
@@ -1474,6 +1495,10 @@ struct Channel {
 	Link *invites;
 	Ban *banlist;
 	Ban *exlist;		/* exceptions */
+	Ban *invexlist;         /* invite list */
+#ifdef JOINTHROTTLE
+	aJFlood *jflood;
+#endif
 	char chname[1];
 };
 
@@ -1538,8 +1563,9 @@ struct liststruct {
 #define	CHFL_BAN     	0x0020	/* ban channel flag */
 #define CHFL_CHANOWNER 	0x0040	/* channel owner */
 #define CHFL_CHANPROT  	0x0080	/* chan op protection */
-#define CHFL_HALFOP		0x0100	/* halfop */
-#define CHFL_EXCEPT		0x0200	/* phase this out ? +e */
+#define CHFL_HALFOP	0x0100	/* halfop */
+#define CHFL_EXCEPT	0x0200	/* phase this out ? +e */
+#define CHFL_INVEX	0x0400  /* invite exception */
 
 #define	CHFL_OVERLAP    (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP|CHFL_VOICE|CHFL_HALFOP)
 
@@ -1548,21 +1574,21 @@ struct liststruct {
 #define	MODE_CHANOP		CHFL_CHANOP
 #define	MODE_VOICE		CHFL_VOICE
 #define	MODE_PRIVATE		0x0004
-#define	MODE_SECRET			0x0008
+#define	MODE_SECRET		0x0008
 #define	MODE_MODERATED  	0x0010
 #define	MODE_TOPICLIMIT 	0x0020
 #define MODE_CHANOWNER		0x0040
 #define MODE_CHANPROT		0x0080
-#define	MODE_HALFOP			0x0100
-#define MODE_EXCEPT			0x0200
-#define	MODE_BAN			0x0400
+#define	MODE_HALFOP		0x0100
+#define MODE_EXCEPT		0x0200
+#define	MODE_BAN		0x0400
 #define	MODE_INVITEONLY 	0x0800
 #define	MODE_NOPRIVMSGS 	0x1000
-#define	MODE_KEY			0x2000
-#define	MODE_LIMIT			0x4000
-#define MODE_RGSTR			0x8000
-#define MODE_RGSTRONLY 		 	0x10000
-#define MODE_LINK			0x20000
+#define	MODE_KEY		0x2000
+#define	MODE_LIMIT		0x4000
+#define MODE_RGSTR		0x8000
+#define MODE_RGSTRONLY 		0x10000
+#define MODE_LINK		0x20000
 #define MODE_NOCOLOR		0x40000
 #define MODE_OPERONLY   	0x80000
 #define MODE_ADMONLY   		0x100000
@@ -1572,9 +1598,7 @@ struct liststruct {
 #define MODE_NOINVITE  		0x1000000
 #define MODE_FLOODLIMIT		0x2000000
 #define MODE_MODREG		0x4000000
-#ifdef STRIPBADWORDS
-#define MODE_STRIPBADWORDS	0x8000000
-#endif
+#define MODE_INVEX		0x8000000
 #define MODE_NOCTCP		0x10000000
 #define MODE_AUDITORIUM		0x20000000
 #define MODE_ONLYSECURE		0x40000000
@@ -1584,7 +1608,7 @@ struct liststruct {
 /*
  * mode flags which take another parameter (With PARAmeterS)
  */
-#define	MODE_WPARAS	(MODE_HALFOP|MODE_CHANOP|MODE_VOICE|MODE_CHANOWNER|MODE_CHANPROT|MODE_BAN|MODE_KEY|MODE_LINK|MODE_LIMIT|MODE_EXCEPT)
+#define	MODE_WPARAS (MODE_HALFOP|MODE_CHANOP|MODE_VOICE|MODE_CHANOWNER|MODE_CHANPROT|MODE_BAN|MODE_KEY|MODE_LINK|MODE_LIMIT|MODE_EXCEPT|MODE_INVEX)
 /*
  * Undefined here, these are used in conjunction with the above modes in
  * the source.
@@ -1612,7 +1636,8 @@ struct liststruct {
 
 #define	BadPtr(x) (!(x) || (*(x) == '\0'))
 
-#define	isvalid(c) (((c) >= 'A' && (c) <= '~') || isdigit(c) || (c) == '-')
+/** Is valid character in nick? [not for external usage, use do_check_nickname instead!] */
+#define isvalid(c)   (char_atribs[(u_char)(c)]&ALLOWN)
 
 /* remote fds are set to -256, else its a local fd (a local fd
  * can get -1 or -2 in case it has been closed). -- Syzop
@@ -1674,6 +1699,9 @@ extern MODVAR char *gnulicense[];
 #define	FLUSH_BUFFER	-2
 #define	COMMA		","
 
+#define PARTFMT		":%s PART %s"
+#define PARTFMT2	":%s PART %s :%s"
+
 #ifdef USE_SSL
 #include "ssl.h"
 #endif
@@ -1720,6 +1748,42 @@ typedef struct {
 	unsigned  halfop : 1;       /* 1 = yes 0 = no */
 	unsigned  parameters : 1;
 } aCtab;
+
+#ifdef JOINTHROTTLE
+/** A jointhrottle item, this is a double linked list.
+ * prev_u    Previous entry of user
+ * next_u    Next entry of user
+ * prev_c    Previous entry of channel
+ * next_c    Next entry of channel
+ * chptr     The channel this entry applies to
+ * cptr      The user this entry applies to
+ * firstjoin Timestamp of "first join" (since last timer reset)
+ * numjoin   Number of joins since that period
+ * CLARIFICATION:
+ * Why a double linked list? Well, the following operations need to be performed:
+ * - if user quits, entry must be removed
+ * - if channel is destroyed, entry must be removed
+ * (and of course, more, but these are the most important ones affecting this decision)
+ * While it would be possible to have a linked list only by user (for example),
+ * that would mean that upon channel destroy ALL entries would have to be searched
+ * trough, which might mean for example 800*8=6400 entries in a peak situation
+ * (such as after a server restart and hundreds of clients connecting&joining).
+ * For obvious reasons, that would be a very bad idea :).
+ * So this costs us 2 pointers (8b on ia32) per entry, but in case of channel destroy
+ * it means we only have for example 20 entries to scan trough rather than 2000.
+ * Worth the extra memory :). -- Syzop
+ * Note that in normal situations it won't be that bad since we will try to
+ * regulary free up some entries.
+ */
+struct JFlood {
+	aJFlood *prev_u, *next_u;
+	aJFlood *prev_c, *next_c;
+	aChannel *chptr;
+	aClient *cptr;
+	time_t firstjoin;
+	unsigned short numjoins;
+};
+#endif
 
 void	init_throttling_hash();
 int	hash_throttling(struct IN_ADDR *in);
