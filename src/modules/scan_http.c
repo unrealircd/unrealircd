@@ -150,31 +150,39 @@ int	scan_http_Unload(int module_unload)
 void 	scan_http_scan(Scan_AddrStruct *h)
 {
 	THREAD	thread[3];
+	unsigned id[3];
+	/* note: on windows dwRc holds the thread return code.  on unix
+	** its a void pointer
+	*/
+	DWORD   dwRc[3];
 	HSStruct *p = NULL;
 	
 	IRCMutexLock((h->lock));
+
 	/* First we take 3128 .. */
 	h->refcnt++;
 	p = MyMalloc(sizeof(HSStruct));
 	p->hs = h;
 	p->port = 3128;
-	IRCCreateThreadEx(thread[0], scan_http_scan_port, p);
+	IRCCreateThreadEx(thread[0], scan_http_scan_port, p, &id[0]);
 	/* Then we take 8080 .. */
 	h->refcnt++;
 	p = MyMalloc(sizeof(HSStruct));
 	p->hs = h;
 	p->port = 8080;
-	IRCCreateThreadEx(thread[1], scan_http_scan_port, p);
+	IRCCreateThreadEx(thread[1], scan_http_scan_port, p, &id[1]);
 	/* And then we try to infect them with Code Red .. */
 	h->refcnt++;
 	p = MyMalloc(sizeof(HSStruct));
 	p->hs = h;
 	p->port = 80;
-	IRCCreateThreadEx(thread[2], scan_http_scan_port, p);
+	IRCCreateThreadEx(thread[2], scan_http_scan_port, p, &id[2]);
+	
 	IRCMutexUnlock((h->lock));
-	IRCJoinThread(thread[0], NULL);		
-	IRCJoinThread(thread[1], NULL);		
-	IRCJoinThread(thread[2], NULL);	
+
+	IRCJoinThread(thread[0], &dwRc[0]);		
+	IRCJoinThread(thread[1], &dwRc[1]);		
+	IRCJoinThread(thread[2], &dwRc[2]);	
 	IRCMutexLock((h->lock));
 	h->refcnt--;
 	IRCMutexUnlock((h->lock));
