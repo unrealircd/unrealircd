@@ -656,3 +656,5 @@
 - Updated wircd.def
 - Fixed a bug where USERIP would say USERHOST in the not-enough-parameters numeric
   (#0002366) reported by vonitsanet.
+- Fixed a bug causing SVSNICK not to send out a snomask +n notice (#0002359) reported by
+  Rob_.
