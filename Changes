@@ -791,3 +791,4 @@ seen. gmtime warning still there
 - Another /who fix, what crashed it I assume - helped by narf to find this
 - Fixed a bug were operflag eyes didn't work
 - /who fixes regarding +I +H and crap
+- Preparation for beta2
