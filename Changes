@@ -1138,3 +1138,5 @@ v- Fixed some bugreport stuff
 - Fixed a t.next recode typo
 - Added a ./Config check to see if gcc supports -pipe (speeds up compilation)
 - Made SHOW_SECRET (allow opers to see +s chans in /whois) defined by default, suggested by Sid-V (#0000037)
+- Added except tkl to allow exceptions from tklines, tzlines, shuns, glines, and gzlines, suggested by
+  funraiser [still need to design a way to report in /stats] (#0000044)

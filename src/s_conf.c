@@ -1948,12 +1948,12 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 				ca->mask = strdup(cep->ce_vardata);
 			}
 			else {
-				config_status("%s:%i: unknown directive except::ban::%s",
+				config_status("%s:%i: unknown directive except ban::%s",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 					cep->ce_varname);
 			}
 		}
-		ca->flag.type = 1;
+		ca->flag.type = CONF_EXCEPT_BAN;
 		AddListItem(ca, conf_except);
 	}
 	else if (!strcmp(ce->ce_vardata, "scan")) {
@@ -1963,14 +1963,44 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 				ca->mask = strdup(cep->ce_vardata);
 			}
 			else {
-			config_status("%s:%i: unknown directive except::scan::%s",
+			config_status("%s:%i: unknown directive except scan::%s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				cep->ce_varname);
 			}
 		}
-		ca->flag.type = 0;
+		ca->flag.type = CONF_EXCEPT_SCAN;
 		AddListItem(ca, conf_except);
 
+	}
+	else if (!strcmp(ce->ce_vardata, "tkl")) {
+		for (cep = ce->ce_entries; cep; cep = cep->ce_next) {
+			if (!strcmp(cep->ce_varname, "mask")) {
+				ca->mask = strdup(cep->ce_vardata);
+			}
+			else if (!strcmp(cep->ce_varname, "type")) {
+				if (!strcmp(cep->ce_vardata, "gline"))
+					ca->type = TKL_KILL|TKL_GLOBAL;
+				else if (!strcmp(cep->ce_vardata, "gzline"))
+					ca->type = TKL_ZAP|TKL_GLOBAL;
+				else if (!strcmp(cep->ce_vardata, "shun"))
+					ca->type = TKL_SHUN|TKL_GLOBAL;
+				else if (!strcmp(cep->ce_vardata, "tkline"))
+					ca->type = TKL_KILL;
+				else if (!strcmp(cep->ce_vardata, "tzline"))
+					ca->type = TKL_ZAP;
+				else 
+					config_status("%s:%i: unknown except tkl type %s",
+						ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+						cep->ce_varname);
+			}
+			else
+					config_status("%s:%i: unknown directive except tkl::%s",
+						ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+						cep->ce_varname);
+
+		}
+		ca->flag.type = CONF_EXCEPT_TKL;
+		AddListItem(ca, conf_except);
 	}
 	else {
 		ConfigItem_unknown *ca2 = malloc(sizeof(ConfigItem_unknown));

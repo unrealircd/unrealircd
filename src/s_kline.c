@@ -238,6 +238,8 @@ int  find_tkline_match(aClient *cptr, int xx)
 	char msge[1024];
 	char gmt2[256];
 	int	points = 0;
+	ConfigItem_except *excepts;
+	char host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
 	if (IsServer(cptr) || IsMe(cptr))
 		return -1;
 
@@ -264,7 +266,15 @@ int  find_tkline_match(aClient *cptr, int xx)
 
 	if (points != 1)
 		return -1;
-
+	strcpy(host, make_user_host(cname, chost));
+	strcpy(host2, make_user_host(cname, cip));
+	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
+		if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != lp->type)
+			continue;
+		if (!match(excepts->mask, host) || !match(excepts->mask, host2))
+			return -1;		
+	}
+	
 	if ((lp->type & TKL_KILL) && (xx != 2))
 	{
 		if (lp->type & TKL_GLOBAL)
@@ -323,7 +333,7 @@ int  find_tkline_match_zap(aClient *cptr)
 	char *cip;
 	TS   nowtime;
 	char msge[1024];
-
+	ConfigItem_except *excepts;
 	if (IsServer(cptr) || IsMe(cptr))
 		return -1;
 
@@ -335,8 +345,15 @@ int  find_tkline_match_zap(aClient *cptr)
 	{
 		if (lp->type & TKL_ZAP)
 		{
+
 			if (!match(lp->hostmask, cip))
 			{
+				for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
+					if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != lp->type)
+						continue;
+					if (!match(excepts->mask, cip))
+						return -1;		
+				}
 				ircstp->is_ref++;
 				ircsprintf(msge,
 				    "ERROR :Closing Link: [%s] Z:Lined (%s)\r\n",

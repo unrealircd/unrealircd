@@ -840,7 +840,7 @@ struct _configflag
 struct _configflag_except
 {
 	unsigned	temporary : 1;
-	unsigned	type	  : 1;
+	unsigned	type	  : 2;
 };
 
 struct _configflag_ban
@@ -870,6 +870,9 @@ struct _configflag_tld
 #define CRULE_ALL		0
 #define CRULE_AUTO		1
 
+#define CONF_EXCEPT_SCAN	0
+#define CONF_EXCEPT_BAN		1
+#define CONF_EXCEPT_TKL		2
 
 
 struct _configitem {
@@ -975,6 +978,7 @@ struct _configitem_link {
 struct _configitem_except {
 	ConfigItem      *prev, *next;
 	ConfigFlag_except      flag;
+	int type;
 	char		*mask;
 };
 
