@@ -29,6 +29,11 @@
 #include "fdlist.h"
 #endif
 
+/* for the new s_err.c */
+extern char *getreply(int);
+#define rpl_str(x) getreply(x)
+#define err_str(x) getreply(x)
+
 extern	time_t	nextconnect, nextdnscheck, nextping;
 extern	aClient	*client, me, *local[];
 extern	aChannel *channel;
@@ -137,7 +142,6 @@ extern	char	*MyMalloc PROTO((int)), *MyRealloc PROTO((char *, int));
 extern	char	*debugmode, *configfile, *sbrk0;
 extern	char	*getfield PROTO((char *));
 extern	void	get_sockhost PROTO((aClient *, char *));
-extern	char	*rpl_str PROTO((int)), *err_str PROTO((int));
 extern	char	*strerror PROTO((int));
 extern	int	dgets PROTO((int, char *, int));
 extern	char	*inetntoa PROTO((char *));

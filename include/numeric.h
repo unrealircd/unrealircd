@@ -314,3 +314,5 @@
 #define RPL_DUMPING			 640
 #define RPL_DUMPRPL			 641
 #define RPL_EODUMP           642
+
+#define ERR_NUMERICERR       999

@@ -400,3 +400,5 @@
   on (from bahamut)
 - Added find_uline (from bahamut) for the new U:line code
 - Modified /map to work with the new U:line code
+- Redid s_err.c to be ALOT faster, based on bahamut's s_err.c (ALOT of
+  work)
