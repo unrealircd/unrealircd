@@ -6489,6 +6489,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "nameserver")) {
 					ircstrdup(tempiConf.name_server, cepp->ce_vardata);
 				}
+				else if (!strcmp(cepp->ce_varname, "bind-ip")) {
+					ircstrdup(tempiConf.dns_bindip, cepp->ce_vardata);
+				}
 			}
 		}
 #ifdef THROTTLING
@@ -7007,6 +7010,22 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 							cepp->ce_vardata);
 						errors++;
 						continue;
+					}
+				}
+				else if (!strcmp(cepp->ce_varname, "bind-ip")) {
+					struct in_addr in;
+					CheckDuplicate(cepp, dns_retries, "dns::bind-ip");
+					if (strcmp(cepp->ce_vardata, "*"))
+					{
+						in.s_addr = inet_addr(cepp->ce_vardata);
+						if (strcmp((char *)inet_ntoa(in), cepp->ce_vardata))
+						{
+							config_error("%s:%i: set::dns::bind-ip (%s) is not a valid IP",
+								cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
+								cepp->ce_vardata);
+							errors++;
+							continue;
+						}
 					}
 				}
 				else

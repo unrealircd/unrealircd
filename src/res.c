@@ -144,8 +144,13 @@ int init_resolver(int op)
 		bzero(&sa, sizeof(sa));
 		sa.sin_family = AF_INET;
 		sa.sin_port = 0;
-		sa.sin_addr.s_addr = INADDR_ANY;
-		bind(resfd, (struct sockaddr *) &sa, sizeof(sa));
+		if (!DNS_BINDIP || !strcmp(DNS_BINDIP, "*"))
+			sa.sin_addr.s_addr = INADDR_ANY;
+		else
+			sa.sin_addr.s_addr = inet_addr(DNS_BINDIP);
+		if (bind(resfd, (struct sockaddr *) &sa, sizeof(sa)))
+			ircd_log(LOG_ERROR, "resolver socket: error while bind()'ing to %s",
+				(DNS_BINDIP || !strcmp(DNS_BINDIP, "*")) ? "ANY" : DNS_BINDIP);
 
 		(void)setsockopt(ret, SOL_SOCKET, SO_BROADCAST, &on, on);
 	}

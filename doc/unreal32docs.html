@@ -2177,6 +2177,8 @@ set {
   if failure occurs.</p>
 <p><font class="set">set::dns::nameserver &lt;name-of-dns-server&gt;;</font><br>
   Specifies the hostname of the server that will be used for DNS lookups.</p>
+<p><font class="set">set::dns::bind-ip &lt;ip&gt;;</font><br>
+  Specifies the IP to bind to for the resolver, rarely ever needed.</p>
 <p><font class="set">set::network-name &lt;name-of-network&gt;;</font><br>
   Specifies the name of the network on which this server is run. This value should 
   be exactly the same on all servers on a network.</p>
@@ -3153,10 +3155,17 @@ kind of shared directory. And for backups, make sure they get the correct permis
 (it happens quite frequently everything is secured fine but there's a backup.tar.gz lying 
 around readable by everyone).<br>
 <br>
-You probably also want to use encrypted passwords were possible. 
-Note however that this is just 'yet another layer of security', a lot 1-8 char passwords
-can be cracked within a few hours/days, and usually there's other unencrypted interesting
-information in the configfile anyway (like link::password-connect).
+You also want to use encrypted passwords wherever possible, if you compile with OpenSSL 
+support (which you do, since you are concerned with security, right?) then I suggest to 
+use <i>sha1</i> or <i>ripemd160</i> password encryption, else use <i>md5</i>. Also if 
+you still have encrypted (oper) blocks left from Unreal3.2.1 or before I suggest you to 
+re-enrypt these (just re-run /mkpasswd), because 3.2.1 introduced some considerable 
+anti-crack improvements (basically a 14x slowdown of active cracks, and making 
+stored-plain-ciphertext cracks impossible).<br>
+Still, do note that this is just 'yet another layer of security', since if you have weak 
+passwords they can still be cracked relatively easily and if someone manages to get your 
+configfile there are usually other interesting things in it that may aid an attacker, 
+like link::password-connect.
 </div></p>
 
 <p><b><font size="+2">8.4 User-related problems</font></b><a name="secuser"></a><br><div class="desc">
@@ -3164,7 +3173,8 @@ Just like most of these things, this is not UnrealIRCd-specific, but..<br>
 Always choose your opers and admins wisely. And do remember the concept of weakest-link. 
 Even though you are careful and did everything in this doc, maybe your friend which is an
 oper too did something stupid. Like share his harddrive via netbios/kazaa/morpheus/..,
-got a trojan, used an obvious password, etc etc.. Unfortunately, it's not always in your control. 
+got a trojan, used an obvious password, etc etc.. Unfortunately, it's not always in your control.<br>
+One thing you could do however is carefuly choose which privileges someone needs (oper::flags).
 </div></p>
 
 <p><b><font size="+2">8.5 SSL/SSH &amp; sniffing</font></b><a name="secsnif"></a><br><div class="desc">
@@ -3234,7 +3244,7 @@ can still see which server was linked to which, and this is also true for some o
 <br>
 <b>NORMAL USERS &amp; SNOMASKS</b><br>
 A feature that isn't widely known is that normal users can also set some limited snomasks, 
-namely +s +sk. By this they can see things like rehashes, oper ups, kills and various other messages.<br>
+namely +s +sk. By this they can see things like rehashes, kills and various other messages.<br>
 To disable this you can use set::restrict-usermodes like this: <i>set { restrict-usermodes "s"; };</i>.<br>
 
 
@@ -3252,7 +3262,7 @@ There's one thing you should do however, which is to ALWAYS USE THE LATEST VERSI
 subscribe to the <a href="http://mail1.sourceforge.net/mailman/listinfo/unreal-notify" target="_blank">unreal-notify mailinglist</a> 
 right now so you receive the release announcements (unreal-notify is for release announcements only, 
 so only 1 mail per X months). Usually it's explicitly mentioned in the release announcement if the 
-release contains (high risk) security fixes.<br> 
+release contains (high risk) security fixes, but it's good to upgrade anyway.<br> 
 </div></p>
 
 <p><b><font size="+2">8.9 Summary</font></b><a name="secsummary"></a><br><div class="desc">
