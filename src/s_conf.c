@@ -127,10 +127,10 @@ static int	_test_set		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_badword		(ConfigFile *conf, ConfigEntry *ce);
 #endif
 static int	_test_deny		(ConfigFile *conf, ConfigEntry *ce);
-static int	_test_deny_dcc		(ConfigFile *conf, ConfigEntry *ce);
-static int	_test_deny_link		(ConfigFile *conf, ConfigEntry *ce);
-static int	_test_deny_channel	(ConfigFile *conf, ConfigEntry *ce);
-static int	_test_deny_version	(ConfigFile *conf, ConfigEntry *ce);
+/* static int	_test_deny_dcc		(ConfigFile *conf, ConfigEntry *ce); ** TODO? */
+/* static int	_test_deny_link		(ConfigFile *conf, ConfigEntry *ce); ** TODO? */
+/* static int	_test_deny_channel	(ConfigFile *conf, ConfigEntry *ce); ** TODO? */
+/* static int	_test_deny_version	(ConfigFile *conf, ConfigEntry *ce); ** TODO? */
 static int	_test_allow_channel	(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_loadmodule	(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_log		(ConfigFile *conf, ConfigEntry *ce);
@@ -1236,7 +1236,6 @@ void	config_rehash()
 	ConfigItem_deny_version		*deny_version_ptr;
 	ConfigItem_log			*log_ptr;
 	ConfigItem_alias		*alias_ptr;
-	ConfigItem_include		*include_ptr;
 	ConfigItem_help			*help_ptr;
 	ListStruct 	*next, *next2;
 
@@ -2042,13 +2041,13 @@ char *pretty_time_val(long timeval)
 	buf[0] = 0;
 
 	if (timeval/86400)
-		sprintf(buf, "%d day%s ", timeval/86400, timeval/86400 != 1 ? "s" : "");
+		sprintf(buf, "%ld day%s ", timeval/86400, timeval/86400 != 1 ? "s" : "");
 	if ((timeval/3600) % 24)
-		sprintf(buf, "%s%d hour%s ", buf, (timeval/3600)%24, (timeval/3600)%24 != 1 ? "s" : "");
+		sprintf(buf, "%s%ld hour%s ", buf, (timeval/3600)%24, (timeval/3600)%24 != 1 ? "s" : "");
 	if ((timeval/60)%60)
-		sprintf(buf, "%s%d minute%s ", buf, (timeval/60)%60, (timeval/60)%60 != 1 ? "s" : "");
+		sprintf(buf, "%s%ld minute%s ", buf, (timeval/60)%60, (timeval/60)%60 != 1 ? "s" : "");
 	if ((timeval%60))
-		sprintf(buf, "%s%d second%s", buf, timeval%60, timeval%60 != 1 ? "s" : "");
+		sprintf(buf, "%s%ld second%s", buf, timeval%60, timeval%60 != 1 ? "s" : "");
 	return buf;
 }
 
@@ -2523,10 +2522,6 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
-	ConfigItem_oper *oper = NULL;
-	ConfigItem_oper_from *from;
-	OperFlag *ofp = NULL;
-	unsigned char	isnew = 0;
 	int	errors = 0;
 	if (!ce->ce_vardata)
 	{
@@ -3153,8 +3148,6 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
-	ConfigItem_listen *listen = NULL;
-	OperFlag    *ofp;
 	char	    copy[256];
 	char	    *ip;
 	char	    *port;
@@ -3336,8 +3329,6 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp;
-	ConfigItem_allow *allow;
-	unsigned char isnew = 0;
 	int		errors = 0;
 	if (ce->ce_vardata)
 	{
@@ -3655,7 +3646,7 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 {
 
-	ConfigEntry *cep, *cep2, *cep3;
+	ConfigEntry *cep, *cep3;
 	int	    errors = 0;
 
 	if (!ce->ce_vardata)
@@ -4244,7 +4235,6 @@ int     _conf_log(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp;
 	ConfigItem_log *ca;
-	aMotd *last = NULL, *temp;
 	OperFlag *ofp = NULL;
 
 	ca = MyMallocEx(sizeof(ConfigItem_log));
@@ -4271,7 +4261,6 @@ int     _conf_log(ConfigFile *conf, ConfigEntry *ce)
 int _test_log(ConfigFile *conf, ConfigEntry *ce) { 
 	int errors = 0;
 	ConfigEntry *cep, *flags, *maxsize, *cepp;
-	OperFlag *ofp = NULL;
 
 	if (!ce->ce_vardata)
 	{
@@ -4352,7 +4341,6 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cepp;
 	ConfigItem_link *link = NULL;
 	OperFlag    *ofp;
-	unsigned char	isnew = 0;
 
 	link = (ConfigItem_link *) MyMallocEx(sizeof(ConfigItem_link));
 	link->servername = strdup(ce->ce_vardata);
@@ -4709,7 +4697,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep, *cepp, *ceppp;
 	OperFlag 	*ofl = NULL;
 	char	    temp[512];
-	int	    i;
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -4940,7 +4927,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 	OperFlag 	*ofl = NULL;
 	long		templong, l1, l2,l3;
 	int		tempi;
-	char	    temp[512];
 	int	    i;
 	int	    errors = 0;
 #define CheckNull(x) if ((!(x)->ce_vardata) || (!(*((x)->ce_vardata)))) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }

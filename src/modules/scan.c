@@ -441,7 +441,6 @@ DLLFUNC int h_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs) 
 
 DLLFUNC int h_config_run(ConfigFile *cf, ConfigEntry *ce, int type) {
 	ConfigEntry *cep;
-	int errors = 0;
 
 	if (type != CONFIG_SET)
 		return 0;

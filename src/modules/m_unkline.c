@@ -117,11 +117,6 @@ int	m_unkline_Unload(int module_unload)
 
 DLLFUNC int m_unkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-
-	char *hosttemp = parv[1], host[80], name[80];
-	ConfigItem_ban *bconf;
-	
-	
 	if (!MyClient(sptr) || !OPCanUnKline(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);

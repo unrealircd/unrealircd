@@ -674,8 +674,6 @@ int	Module_Depend_Resolve(Module *p)
 
 int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	int		i;
-	char 		*ret;
 	Module          *mi;
 	
 	if (!IsAdmin(sptr))

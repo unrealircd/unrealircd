@@ -1939,3 +1939,4 @@ seen. gmtime warning still there
   censor several badwords by default. Based on suggestions by Gargo
 - Fixed two ident bugs (multihomed&connect), both resulted in ident not working.
 - Added set::options::dont-resolve (=hostnames of incomming clients won't be resolved).
+- Code cleanup (gcc 3.2 warnings with -Wall).

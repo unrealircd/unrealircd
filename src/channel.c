@@ -1058,7 +1058,6 @@ CMD_FUNC(m_mode)
 {
 	long unsigned sendts = 0;
 	Ban *ban;
-	aClient *user;
 	aChannel *chptr;
 
 
@@ -3932,7 +3931,6 @@ void send_list(aClient *cptr, int numsend)
 	/* All done */
 	if (hashnum == CH_MAX)
 	{
-		Link *lp, *next;
 		sendto_one(cptr, rpl_str(RPL_LISTEND), me.name, cptr->name);
 		free_str_list(cptr->user->lopt->yeslist);
 		free_str_list(cptr->user->lopt->nolist);
@@ -4031,7 +4029,7 @@ CMD_FUNC(m_list)
 	TS   currenttime = TStime();
 	char *name, *p = NULL;
 	LOpts *lopt = NULL;
-	Link *lp, *next;
+	Link *lp;
 	int  usermax, usermin, error = 0, doall = 0;
 	TS   chantimemin, chantimemax;
 	TS   topictimemin, topictimemax;

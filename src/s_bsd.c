@@ -1035,10 +1035,11 @@ void set_sock_opts(int fd, aClient *cptr)
 		char *s = readbuf, *t = readbuf + sizeof(readbuf) / 2;
 
 		opt = sizeof(readbuf) / 8;
-		if (getsockopt(fd, IPPROTO_IP, IP_OPTIONS, (OPT_TYPE *)t,
-		    &opt) < 0)
+		if (getsockopt(fd, IPPROTO_IP, IP_OPTIONS, (OPT_TYPE *)t, &opt) < 0)
+		{
 		    if (ERRNO != P_ECONNRESET) /* FreeBSD can generate this -- Syzop */
 		        report_error("getsockopt(IP_OPTIONS) %s:%s", cptr);
+		}
 		else if (opt > 0 && opt != sizeof(readbuf) / 8)
 		{
 			for (*readbuf = '\0'; opt > 0; opt--, s += 3)
@@ -2592,7 +2593,7 @@ void do_dns_async(int id)
 						break;
 					case -2:
 						/* Should not happen since hp is not NULL */
-						sendto_realops("Hostname %s is unknown for server %s (???).", aconf->hostname, aconf->servername);
+						sendto_realops("Hostname %s is unknown for server %s (!?).", aconf->hostname, aconf->servername);
 						break;
 					default:
 						sendto_realops("Connection to %s failed: %s", aconf->servername, strerror(n));

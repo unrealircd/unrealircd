@@ -40,6 +40,7 @@
 #include "common.h"
 #include "sys.h"
 #include "h.h"
+#include "proto.h"
 #include "numeric.h"
 #ifdef	DBMALLOC
 #include "malloc.h"

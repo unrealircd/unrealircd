@@ -25,6 +25,7 @@
 #include "msg.h"
 #include "channel.h"
 #include "version.h"
+#include "proto.h"
 
 #include <string.h>
 #include <stdlib.h>

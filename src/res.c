@@ -55,7 +55,9 @@ static ResRQ *last, *first;
 ** Currently the list is only protected on Windows because we don't use 
 ** threads to access it on Unix
 */
+#ifdef _WIN32
 static MUTEX g_hResMutex;
+#endif
 static int lock_request();
 static int unlock_request();
 

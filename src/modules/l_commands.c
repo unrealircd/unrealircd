@@ -146,7 +146,9 @@ DLLFUNC int Mod_Test(ModuleInfo *modinfo)
 int l_commands_Test(ModuleInfo *modinfo)
 #endif
 {
+#ifdef SCAN_API
 	Module p;
+#endif
 	bcopy(modinfo,&ModCmdsInfo,modinfo->size);
 #ifdef SCAN_API
         p.header = &scan_socks_Header;
