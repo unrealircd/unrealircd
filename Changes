@@ -411,3 +411,5 @@
 - Redid K:line and n:line checking to be alot faster
 - Fixed crypto stuff 100% :))
 - Added CRYPTOIRCd ('r') to version string
+- Added some more crypto stuff
+    - /crypto <algoritm> <keyfile laying in keys/> <parameters>
