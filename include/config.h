@@ -686,6 +686,9 @@ error You stuffed up config.h signals
 #ifdef NEED_BZERO
 #define bzero(a,b) memset(a,0,b)
 #endif
+#ifdef HAVE_CRYPT
+#define AUTHENABLE_UNIXCRYPT
+#endif
 #if defined(AIX) && defined(_XOPEN_SOURCE_EXTENDED) && _XOPEN_SOURCE_EXTENDED
 # define SOCK_LEN_TYPE size_t
 #else

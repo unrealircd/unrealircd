@@ -932,3 +932,5 @@ seen. gmtime warning still there
   /connect, TODO: code in new SSL error handling (Griever)
 - Fixed password crash bug, found by \dev\NULL-Z-[Zap]
 - Added new auth.c API and a lot of different crap .. will document later
+- Made make install copy modules (oops)
+- Added configure code to get the Auth crypt working
