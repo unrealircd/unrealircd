@@ -235,3 +235,5 @@
 - Fixed a chinese nick thing, thanks to miCro and RexHsu
 - Fixed a typo in config.h
 - Fixed a bug in sendto_channel_prefix_tok reported by Strider@ChatCircuit
+- Fixed P:line bug, caused by codemastr(tm) coding, (masskills), reported by
+  sidv@sid-kitty-land.org
