@@ -841,13 +841,13 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 }
 
 /* [just a helper for channel_modef_string()] */
-static inline char *chmodefstrhelper(char *buf, char t, unsigned short l, unsigned char a)
+static inline char *chmodefstrhelper(char *buf, char t, char tdef, unsigned short l, unsigned char a)
 {
 char *p;
 	ircsprintf(buf, "%hd", l);
 	p = buf + strlen(buf);
 	*p++ = t;
-	if (a)
+	if (a && (a != tdef))
 	{
 		*p++ = '#';
 		*p++ = a;
@@ -865,17 +865,17 @@ char *p = retbuf;
 
 	/* (alphabetized) */
 	if (x->l[FLD_CTCP])
-		p = chmodefstrhelper(p, 'c', x->l[FLD_CTCP], x->a[FLD_CTCP]);
+		p = chmodefstrhelper(p, 'c', 'C', x->l[FLD_CTCP], x->a[FLD_CTCP]);
 	if (x->l[FLD_JOIN])
-		p = chmodefstrhelper(p, 'j', x->l[FLD_JOIN], x->a[FLD_JOIN]);
+		p = chmodefstrhelper(p, 'j', 'i', x->l[FLD_JOIN], x->a[FLD_JOIN]);
 	if (x->l[FLD_KNOCK])
-		p = chmodefstrhelper(p, 'k', x->l[FLD_KNOCK], x->a[FLD_KNOCK]);
+		p = chmodefstrhelper(p, 'k', 'K', x->l[FLD_KNOCK], x->a[FLD_KNOCK]);
 	if (x->l[FLD_MSG])
-		p = chmodefstrhelper(p, 'm', x->l[FLD_MSG], x->a[FLD_MSG]);
+		p = chmodefstrhelper(p, 'm', 'm', x->l[FLD_MSG], x->a[FLD_MSG]);
 	if (x->l[FLD_NICK])
-		p = chmodefstrhelper(p, 'n', x->l[FLD_NICK], x->a[FLD_NICK]);
+		p = chmodefstrhelper(p, 'n', 'N', x->l[FLD_NICK], x->a[FLD_NICK]);
 	if (x->l[FLD_TEXT])
-		p = chmodefstrhelper(p, 't', x->l[FLD_TEXT], x->a[FLD_TEXT]);
+		p = chmodefstrhelper(p, 't', '\0', x->l[FLD_TEXT], x->a[FLD_TEXT]);
 
 	if (*(p - 1) == ',')
 		p--;
@@ -2517,23 +2517,37 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 						{
 							case 'c':
 								newf.l[FLD_CTCP] = v;
+								if ((a == 'm') || (a == 'M'))
+									newf.a[FLD_CTCP] = a;
+								else
+									newf.a[FLD_CTCP] = 'C';
 								break;
 							case 'j':
 								newf.l[FLD_JOIN] = v;
+								if (a == 'R')
+									newf.a[FLD_JOIN] = a;
+								else
+									newf.a[FLD_JOIN] = 'i';
 								break;
 							case 'k':
 								newf.l[FLD_KNOCK] = v;
+								newf.a[FLD_KNOCK] = 'K';
 								break;
 							case 'm':
 								newf.l[FLD_MSG] = v;
+								if (a == 'M')
+									newf.a[FLD_MSG] = a;
+								else
+									newf.a[FLD_MSG] = 'm';
 								break;
 							case 'n':
 								newf.l[FLD_NICK] = v;
+								newf.a[FLD_NICK] = 'N';
 								break;
 							case 't':
 								newf.l[FLD_TEXT] = v;
 								if (a == 'b')
-									newf.a[FLD_TEXT] = 'b';
+									newf.a[FLD_TEXT] = a;
 								break;
 							default:
 								breakit=1;
@@ -3622,7 +3636,7 @@ CMD_FUNC(do_join)
 		if (chptr->mode.floodprot && (MyClient(sptr) || sptr->serv->flags.synced) && 
 		    do_chanflood(chptr->mode.floodprot, FLD_JOIN) && MyClient(sptr))
 		{
-			do_chanflood_action(chptr, FLD_JOIN, "join", 'i', MODE_INVITEONLY);
+			do_chanflood_action(chptr, FLD_JOIN, "join");
 		}
 #endif
 	}
@@ -5115,7 +5129,7 @@ CMD_FUNC(m_knock)
 
 #ifdef NEWCHFLOODPROT
 	if (chptr->mode.floodprot && do_chanflood(chptr->mode.floodprot, FLD_KNOCK) && MyClient(sptr))
-		do_chanflood_action(chptr, FLD_KNOCK, "knock", 'K', MODE_NOKNOCK);
+		do_chanflood_action(chptr, FLD_KNOCK, "knock");
 #endif
 	return 0;
 }
@@ -6434,8 +6448,31 @@ int do_chanflood(ChanFloodProt *chp, int what)
 	return 0;
 }
 
-void do_chanflood_action(aChannel *chptr, int what, char *text, char m, long modeflag)
+void do_chanflood_action(aChannel *chptr, int what, char *text)
 {
+long modeflag = 0;
+aCtab *tab = &cFlagTab[0];
+char m;
+
+	m = chptr->mode.floodprot->a[what];
+	if (!m)
+		return;
+
+	/* [TODO: add extended channel mode support] */
+	
+	while(tab->mode != 0x0)
+	{
+		if (tab->flag == m)
+		{
+			modeflag = tab->mode;
+			break;
+		}
+		tab++;
+	}
+
+	if (!modeflag)
+		return;
+		
 	if (!(chptr->mode.mode & modeflag))
 	{
 		char comment[1024];

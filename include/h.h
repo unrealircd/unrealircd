@@ -596,7 +596,7 @@ extern void extcmode_free_paramlist(CmodeParam *);
 #endif
 extern CMD_FUNC(m_eos);
 extern int do_chanflood(ChanFloodProt *, int);
-extern void do_chanflood_action(aChannel *, int, char *, char, long);
+extern void do_chanflood_action(aChannel *, int, char *);
 extern char *channel_modef_string(ChanFloodProt *);
 extern void chmode_str(struct ChMode, char *, char *);
 extern char *get_cptr_status(aClient *);

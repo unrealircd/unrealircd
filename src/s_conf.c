@@ -666,18 +666,32 @@ void set_channelmodes(char *modes, struct ChMode *store)
 						{
 							case 'c':
 								newf.l[FLD_CTCP] = v;
+								if ((a == 'm') || (a == 'M'))
+									newf.a[FLD_CTCP] = a;
+								else
+									newf.a[FLD_CTCP] = 'C';
 								break;
 							case 'j':
 								newf.l[FLD_JOIN] = v;
+								if (a == 'R')
+									newf.a[FLD_TEXT] = a;
+								else
+									newf.a[FLD_TEXT] = 'i';
 								break;
 							case 'k':
 								newf.l[FLD_KNOCK] = v;
+								newf.a[FLD_KNOCK] = 'K';
 								break;
 							case 'm':
 								newf.l[FLD_MSG] = v;
+								if (a == 'M')
+									newf.a[FLD_CTCP] = a;
+								else
+									newf.a[FLD_CTCP] = 'm';
 								break;
 							case 'n':
 								newf.l[FLD_NICK] = v;
+								newf.a[FLD_NICK] = 'N';
 								break;
 							case 't':
 								newf.l[FLD_TEXT] = v;

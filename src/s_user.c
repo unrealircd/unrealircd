@@ -1817,7 +1817,7 @@ CMD_FUNC(m_nick)
 			if (chptr && !(mp->flags & (CHFL_CHANOP|CHFL_VOICE|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_CHANPROT)) &&
 			    chptr->mode.floodprot && do_chanflood(chptr->mode.floodprot, FLD_NICK) && MyClient(sptr))
 			{
-				do_chanflood_action(chptr, FLD_NICK, "nick", 'N', MODE_NONICKCHANGE);
+				do_chanflood_action(chptr, FLD_NICK, "nick");
 			}
 		}	
 	}

@@ -463,14 +463,14 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				    !IsULine(sptr) && do_chanflood(chptr->mode.floodprot, FLD_MSG) &&
 				    MyClient(sptr))
 				{
-					do_chanflood_action(chptr, FLD_MSG, "msg/notice", 'm', MODE_MODERATED);
+					do_chanflood_action(chptr, FLD_MSG, "msg/notice");
 				}
 				
 				if (chptr->mode.floodprot && !is_skochanop(sptr, chptr) &&
 				    (text[0] == '\001') && strncmp(text+1, "ACTION ", 7) &&
 				    do_chanflood(chptr->mode.floodprot, FLD_CTCP) && MyClient(sptr))
 				{
-					do_chanflood_action(chptr, FLD_CTCP, "CTCP", 'C', MODE_NOCTCP);
+					do_chanflood_action(chptr, FLD_CTCP, "CTCP");
 				}
 #endif
 				sendanyways = 0;

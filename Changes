@@ -2381,3 +2381,6 @@ seen. gmtime warning still there
 - Made SSL users unable to -z themselves, also added 2 flags to /stats S,
   reported by Joolz (#0001200).
 - Fixed problem with opers having both 'admin' and 'coadmin' causing double-notices (#0001043).
+- +f now also allows you to specify an 'action'. For example +f [30j#R]:15 will set the
+  channel +R (instead of +i) if more than 30 joins in 15 seconds are reached.
+  The following combinations are allowed: c#m, c#M, j#R and m#M. (docs will be updated later)
