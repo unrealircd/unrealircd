@@ -2380,3 +2380,4 @@ seen. gmtime warning still there
 - Fixed bug regarding hidden opers + m_whois cleanup (#0001208).
 - Made SSL users unable to -z themselves, also added 2 flags to /stats S,
   reported by Joolz (#0001200).
+- Fixed problem with opers having both 'admin' and 'coadmin' causing double-notices (#0001043).

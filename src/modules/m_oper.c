@@ -290,6 +290,12 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 			sptr->user->snomask |= SNO_SNOTICE; /* set +s if needed */
 			sptr->umodes |= UMODE_SERVNOTICE;
 		}
+		/* This is for users who have both 'admin' and 'coadmin' in their conf */
+		if (IsCoAdmin(sptr) && IsAdmin(sptr))
+		{
+			sptr->umodes &= ~UMODE_COADMIN;
+			sptr->oflag &= ~OFLAG_COADMIN;
+		}
 		send_umode_out(cptr, sptr, old);
 		sendto_one(sptr, rpl_str(RPL_SNOMASK),
 			me.name, parv[0], get_sno_str(sptr));
