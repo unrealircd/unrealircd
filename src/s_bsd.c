@@ -1085,16 +1085,22 @@ void close_connection(cptr)
 		if (nextconnect > aconf->hold)
 			nextconnect = aconf->hold;
 	}
+#ifdef USE_SSL
+	if (cptr->flags & FLAGS_SSL)
+	{
+		if (cptr->ssl)
+		{
+			SSL_shutdown((SSL *)cptr->ssl);
+			SSL_free((SSL *)cptr->ssl);
+		}
+	}	
+#endif
 
 	if (cptr->authfd >= 0)
 #ifndef _WIN32
 		(void)close(cptr->authfd);
 #else
 		(void)closesocket(cptr->authfd);
-#endif
-#ifdef USE_SSL
-	if (cptr->flags & FLAGS_SSL)
-		SSL_shutdown((SSL *)cptr->ssl);
 #endif
 #ifdef SOCKSPORT
 	if (cptr->socksfd >= 0)
@@ -1151,6 +1157,16 @@ void close_connection(cptr)
 				return;
 			local[i] = local[j];
 			local[i]->fd = i;
+#ifdef USE_SSL
+			/* I didn't know the code above existed, which
+			   fucked up SSL -Stskeeps
+			*/
+			if ((local[i]->flags & FLAGS_SSL) && local[i]->ssl)
+			{
+				/* !! RISKY !! --Stskeeps */
+				SSL_change_fd((SSL *) local[i]->ssl, local[i]->fd);
+			}
+#endif
 			local[j] = NULL;
 #ifndef NO_FDLIST
 			/* update server list */

@@ -707,3 +707,9 @@
 - Removed some leftovers from the &channel code (which fixed a minor bug as well)
 - Fixed a SJOIN3<->services problem
 - Fixed a typo where it still said +I instead of +V in an error message
+- Fixed the "Bad file descriptor" bug in SSL. This bugfix may be a bit risky
+  as it is manipulating BIO fds. The reason openssl freaked at this, was
+  that when a fd is closed, we change fds from 4 to 3 etc, in other words,
+  we renumber fds. SSL didn't know this and if you would call SSL_set_fd it
+  would close the connection/crash. Added SSL_change_fd() to change the FD
+  directly through BIO_set_fd.  

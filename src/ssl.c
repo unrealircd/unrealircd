@@ -220,4 +220,13 @@ int  ssl_client_handshake(struct Client *cptr)
 	return -1;
 
 }
+
+/* This is a bit homemade to fix IRCd's cleaning madness -- Stskeeps */
+int	SSL_change_fd(SSL *s, int fd)
+{
+	BIO_set_fd(SSL_get_rbio(s), fd, BIO_NOCLOSE);
+	BIO_set_fd(SSL_get_wbio(s), fd, BIO_NOCLOSE);
+	return 1;
+}
+
 #endif
