@@ -1472,6 +1472,8 @@ void m_info_send(aClient *sptr)
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| * chasm     <chasm@unrealircd.org>",
 	    me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :| * McSkaf    <mcskaf@unrealircd.org>",
+	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| Previous versions:",
 	    me.name, RPL_INFO, sptr->name);
@@ -1479,8 +1481,6 @@ void m_info_send(aClient *sptr)
 	sendto_one(sptr, ":%s %d %s :| * DrBin        <drbin@unrealircd.com>",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| * llthangel    <llthangel@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * McSkaf    <mcskaf@unrealircd.org>",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| Credits - Type /Credits",

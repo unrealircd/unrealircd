@@ -32,4 +32,4 @@ if [ "$cc" == "no" ] ; then
 	./makenet
 fi
 echo "Now just edit your unrealircd.conf and you should be ready to run"
-echo "UnrealIRCd with ./ircd"
+echo "UnrealIRCd with ./unreal start"

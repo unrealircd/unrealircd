@@ -9543,6 +9543,7 @@ ac_cv_underscore=no
 else
 ac_cv_underscore=yes
 fi
+rm -f uscore uscore.c
 
 fi
 echo "$as_me:$LINENO: result: $ac_cv_underscore" >&5

@@ -104,6 +104,7 @@ ac_cv_underscore=no
 else
 ac_cv_underscore=yes
 fi
+rm -f uscore uscore.c
 ])
 if test "$ac_cv_underscore" = "yes"; then
 AC_DEFINE(UNDERSCORE)

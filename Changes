@@ -1400,3 +1400,5 @@ seen. gmtime warning still there
 - Removed s_segv handler
 - Changed ./update to use update.unrealircd.com
 - Made ./configure check if it has parameters, and error if it don't.
+- Made ./configure remove uscore.c and uscore binary after test
+- Removed mutex.c
