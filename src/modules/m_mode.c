@@ -727,26 +727,34 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	if (is_half_op(cptr, chptr) && !is_chan_op(cptr, chptr) && !IsULine(cptr)
 	    && !op_can_override(cptr) && !samode_in_progress)
 	{
-		/* Ugly halfop hack --sts 
-		   - this allows halfops to do +b +e +v and so on */
-		/* (Syzop/20040413: Allow remote halfop modes */
-		if ((Halfop_mode(modetype) == FALSE) && MyClient(cptr))
+		if (MyClient(cptr) && (modetype == MODE_HALFOP) && (what == MODE_DEL) &&
+		    param && (find_client(param, NULL) == cptr))
 		{
-			int eaten = 0;
-			while (tab->mode != 0x0)
+			/* halfop -h'ing him/herself */
+			/* ALLOW */
+		} else
+		{
+			/* Ugly halfop hack --sts 
+			   - this allows halfops to do +b +e +v and so on */
+			/* (Syzop/20040413: Allow remote halfop modes */
+			if ((Halfop_mode(modetype) == FALSE) && MyClient(cptr))
 			{
-				if (tab->mode == modetype)
+				int eaten = 0;
+				while (tab->mode != 0x0)
 				{
-					sendto_one(cptr,
-					    err_str(ERR_NOTFORHALFOPS), me.name,
-					    cptr->name, tab->flag);
-					eaten = tab->parameters;
-					break;
+					if (tab->mode == modetype)
+					{
+						sendto_one(cptr,
+						    err_str(ERR_NOTFORHALFOPS), me.name,
+						    cptr->name, tab->flag);
+						eaten = tab->parameters;
+						break;
+					}
+					tab++;
 				}
-				tab++;
+				return eaten;
 			}
-			return eaten;
-		}
+		} /* not -h self */
 	}
 	switch (modetype)
 	{
@@ -915,7 +923,9 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  }
 	  case MODE_CHANPROT:
 		  REQUIRE_PARAMETER()
-		  if (!IsULine(cptr) && !IsServer(cptr) && !is_chanowner(cptr, chptr) && !samode_in_progress)
+		  /* not uline, not server, not chanowner, not an samode, not -a'ing yourself... */
+		  if (!IsULine(cptr) && !IsServer(cptr) && !is_chanowner(cptr, chptr) && !samode_in_progress &&
+		      !(param && (what == MODE_DEL) && (find_client(param, NULL) == cptr)))
 		  {
 		  	  if (MyClient(cptr) && !op_can_override(cptr))
 		  	  {

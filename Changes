@@ -727,3 +727,5 @@
   system can now be used to properly block words with accents and things like that, just
   the way you block English words. Bug reported by MJ12Helios (#0002311).
 - Fixed 'russian-w1251', was not working ok at all.
+- Made it so halfops can -h themselves, and chanadmins can -a themselves, reported
+  by fez (#0001503).
