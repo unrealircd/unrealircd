@@ -130,7 +130,7 @@ int  load_module(char *module)
 				return 1;
 			}
 		
-		for (i = 0; i <= MAXMODULES; i++)
+		for (i = 0; i < MAXMODULES; i++)
 		{
 			if (!Modules[i])
 			{
@@ -165,7 +165,7 @@ int	unload_module(char *name)
 {
 	int	i;
 	
-	for (i = 0; i <= MAXMODULES; i++)
+	for (i = 0; i < MAXMODULES; i++)
 		if (Modules[i])
 			if (!strcmp(Modules[i]->name, name))
 				break;		
