@@ -38,6 +38,9 @@
 #include <time.h>
 #endif
 #include <string.h>
+#ifdef GLOBH
+#include <glob.h>
+#endif
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -906,6 +909,10 @@ int	ConfigParse(ConfigFile *cfptr)
 /* include comment */
 int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 {
+#ifdef GLOBH
+	glob_t files;
+	int i;
+#endif
 	if (!ce->ce_vardata)
 	{
 		config_error("%s:%i: include: no filename given",
@@ -916,7 +923,22 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 #if !defined(_WIN32) && !defined(_AMIGA) && defined(DEFAULT_PERMISSIONS)
 	chmod(ce->ce_vardata, DEFAULT_PERMISSIONS);
 #endif
+#ifdef GLOBH
+	glob(ce->ce_vardata, GLOB_NOSORT|GLOB_NOCHECK, NULL, &files);
+	if (!files.gl_pathc) {
+		globfree(&files);
+		config_error("%s:%i: include %s: invalid file given",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			ce->ce_vardata);
+		return -1;
+	}	
+	for (i = 0; i < files.gl_pathc; i++) {
+		init_conf2(files.gl_pathv[i]);
+	}
+	globfree(&files);
+#else
 	return (init_conf2(ce->ce_vardata));
+#endif
 }
 /*
  * The admin {} block parser
@@ -1123,19 +1145,42 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 
 int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 {
+#ifdef GLOBH
+	glob_t files;
+	int i;
+#endif
+
 	if (!ce->ce_vardata)
 	{
 		config_error("%s:%i: loadmodule without filename",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return -1;
 	}
-	if (load_module(ce->ce_vardata) != 1)
-	{
+#ifdef GLOBH
+	glob(ce->ce_vardata, GLOB_NOSORT|GLOB_NOCHECK, NULL, &files);
+	if (!files.gl_pathc) {
+		globfree(&files);
 		config_error("%s:%i: loadmodule %s: failed to load",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			ce->ce_vardata);
 		return -1;
+	}	
+	for (i = 0; i < files.gl_pathc; i++) {
+		if (load_module(files.gl_pathv[i]) != 1) {
+			config_error("%s:%i: loadmodule %s: failed to load",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+				files.gl_pathv[i]);
+		}
 	}
+	globfree(&files);
+#else
+	if (load_module(ce->ce_vardata) != 1) {
+			config_error("%s:%i: loadmodule %s: failed to load",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+				ce->ce_vardata);
+				return -1;
+	}
+#endif
 	return 1;
 }
 /*

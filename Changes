@@ -611,3 +611,4 @@ seen. gmtime warning still there
 - Made mod_depend a bit cleaner to use
 - Removed some remnants of umode +b
 - Added configure check for glob.h
+- Added the ability to use file globs in loadmodule and include (only if your system has glob)
