@@ -1068,6 +1068,13 @@ int InitwIRCD(int argc, char *argv[])
 	load_tunefile();
 	make_umodestr();
 	make_cmodestr();
+	if (!find_Command_simple("AWAY") || !find_Command_simple("KILL") ||
+		!find_Command_simple("OPER") || !find_Command_simple("PING"))
+	{
+		config_error("Someone forgot to load modules with proper commands in them. READ THE DOCUMENTATION");
+		exit(-4);
+	}
+
 #ifdef USE_SSL
 #ifndef _WIN32
 	fprintf(stderr, "* Initializing SSL.\n");

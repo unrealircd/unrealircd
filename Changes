@@ -1712,3 +1712,5 @@ seen. gmtime warning still there
 - Changed version to beta13, updated docs
 - Check for connect() success/failure in scanners on all OSs.
 - Documentation updates
+- Added back the commands check that didn't get added in conf3 (lamers
+  beware)
