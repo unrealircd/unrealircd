@@ -507,3 +507,5 @@
 - Fixed a /mode (umode) typo where it said no such channel rather than no such nick,
   reported by llthangel
 - Disabled anything with time in /list options temporary, causes bugs
+- Fixed a little /chghost bug
+

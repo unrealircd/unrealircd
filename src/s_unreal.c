@@ -278,8 +278,7 @@ int  m_chghost(cptr, sptr, parc, parv)
 			sendto_umode(UMODE_EYES,
 			    "%s changed the virtual hostname of %s (%s@%s) to be %s",
 			    sptr->name, acptr->name, acptr->user->username,
-			    (acptr->umodes & UMODE_HIDE ? acptr->
-			    user->virthost : acptr->user->realhost), parv[2]);
+			    acptr->user->realhost, parv[2]);
 		}
 		acptr->umodes |= UMODE_HIDE;
 		acptr->umodes |= UMODE_SETHOST;
@@ -1605,4 +1604,4 @@ int  m_crypto(cptr, sptr, parc, parv)
 	}
 	sendto_one(sptr, "CRYPTO ERROR :No such method/command %s", parv[1]);
 }
-#endif 
+#endif
