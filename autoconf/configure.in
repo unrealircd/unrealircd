@@ -364,9 +364,13 @@ IRCDLIBS="$IRCDLIBS -lresolv "
 ;;
 esac
 
+dnl REMEMBER TO CHANGE WITH A NEW RELEASE!
+tre_version="0.6.6"
 AC_MSG_RESULT(extracting TRE regex library)
 cur_dir=`pwd`
 cd extras
+dnl remove old tre directory to force a recompile...
+rm -rf tre-$tre_version
 if test "x$ac_cv_path_GUNZIP" = "x" ; then
 	tar xfz tre.tar.gz
 else
@@ -375,8 +379,6 @@ else
 	cp tre.tar.gz.bak tre.tar.gz
 	tar xf tre.tar
 fi
-dnl REMEMBER TO CHANGE WITH A NEW RELEASE!
-tre_version="0.6.6"
 AC_MSG_RESULT(configuring TRE regex library)
 cd tre-$tre_version
 ./configure --disable-agrep --disable-shared --disable-system-abi --disable-wchar --disable-multibyte --prefix=$cur_dir/extras/regexp

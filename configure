@@ -10026,10 +10026,12 @@ IRCDLIBS="$IRCDLIBS -lresolv "
 ;;
 esac
 
+tre_version="0.6.6"
 echo "$as_me:$LINENO: result: extracting TRE regex library" >&5
 echo "${ECHO_T}extracting TRE regex library" >&6
 cur_dir=`pwd`
 cd extras
+rm -rf tre-$tre_version
 if test "x$ac_cv_path_GUNZIP" = "x" ; then
 	tar xfz tre.tar.gz
 else
@@ -10038,7 +10040,6 @@ else
 	cp tre.tar.gz.bak tre.tar.gz
 	tar xf tre.tar
 fi
-tre_version="0.6.6"
 echo "$as_me:$LINENO: result: configuring TRE regex library" >&5
 echo "${ECHO_T}configuring TRE regex library" >&6
 cd tre-$tre_version
