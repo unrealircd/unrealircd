@@ -86,14 +86,8 @@ int  deliver_it(aClient *cptr, char *str, int len)
 	if (cptr->flags & FLAGS_SSL)
 		 retval = SSL_write((SSL *)cptr->ssl, str, len);	
 	else
+#endif
 		retval = send(cptr->fd, str, len, 0);
-#else
-#ifndef INET6
-	retval = send(cptr->fd, str, len, 0);
-#else
-	retval = sendto(cptr->fd, str, len, 0, 0, 0);
-#endif
-#endif
 	/*
 	   ** Convert WOULDBLOCK to a return of "0 bytes moved". This
 	   ** should occur only if socket was non-blocking. Note, that

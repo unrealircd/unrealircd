@@ -1300,20 +1300,12 @@ static int read_packet(aClient *cptr, fd_set *rfd)
 	    !(IsPerson(cptr) && DBufLength(&cptr->recvQ) > 6090))
 	{
 		SET_ERRNO(0);
-#ifdef INET6
-		length = recvfrom(cptr->fd, readbuf, sizeof(readbuf), 0, 0, 0);
-#else
-#ifndef USE_SSL
-		length = recv(cptr->fd, readbuf, sizeof(readbuf), 0);
-#else
+#ifdef USE_SSL
 		if (cptr->flags & FLAGS_SSL)
 	    		length = SSL_read((SSL *)cptr->ssl, readbuf, sizeof(readbuf));
 		else
+#endif
 			length = recv(cptr->fd, readbuf, sizeof(readbuf), 0);
-
-#endif
-#endif
-
 		cptr->lasttime = now;
 		if (cptr->lasttime > cptr->since)
 			cptr->since = cptr->lasttime;
@@ -1471,15 +1463,12 @@ static int read_packet(aClient *cptr)
 	{
 		errno = 0;
 
-#ifndef USE_SSL
-		length = recv(cptr->fd, readbuf, sizeof(readbuf), 0);
-#else
+#ifdef USE_SSL
 		if (cptr->flags & FLAGS_SSL)
 	    		length = SSL_read((SSL *)cptr->ssl, readbuf, sizeof(readbuf));
 		else
-			length = recv(cptr->fd, readbuf, sizeof(readbuf), 0);
-
 #endif
+			length = recv(cptr->fd, readbuf, sizeof(readbuf), 0);
 		cptr->lasttime = now;
 		if (cptr->lasttime > cptr->since)
 			cptr->since = cptr->lasttime;
