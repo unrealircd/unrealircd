@@ -2112,3 +2112,4 @@ seen. gmtime warning still there
 - Added warning message if set::scan exists
 - Made SVSNOOP work. Reported by Lx (#0000933).
 - Removed some more html files.
+- Removed CREDITS.POTENTIAL
