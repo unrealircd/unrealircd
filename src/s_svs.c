@@ -392,7 +392,7 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 				else if (format->type == ALIAS_CHANNEL)
 				{
 					aChannel *chptr;
-					if ((chptr = find_channel(alias->nick, NULL)))
+					if ((chptr = find_channel(format->nick, NULL)))
 					{
 						if (!can_send(sptr, chptr, parv[1], 0))
 						{

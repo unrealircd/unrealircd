@@ -751,9 +751,15 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 	}
 
 	if (chptr->mode.mode & MODE_NOCOLOR)
-		if (strchr((char *)msgtext, 3) || strchr((char *)msgtext, 27))
-			return (CANNOT_SEND_NOCOLOR);
-
+	{
+		/* A bit faster */
+		char *c;
+		for (c = msgtext; *c; c++)
+		{
+			if (*c == 3 || *c == 27 || *c == 4)
+				return (CANNOT_SEND_NOCOLOR);
+		}
+	}
 	member = IsMember(cptr, chptr);
 	if (chptr->mode.mode & MODE_NOPRIVMSGS && !member)
 		return (CANNOT_SEND_NOPRIVMSGS);

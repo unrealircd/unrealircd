@@ -585,3 +585,6 @@
 - Added unreal_copyfileex() which works just like unreal_copyfile() but has an additional
   param to try hardlinks first.
 - Win32 crash fixes due to modulizing
+- Made channel mode +c block RGB color codes.
+- Fixed a bug with channel alias{}'s where using the format syntax caused a crash (#0002323)
+  reported by Snake.

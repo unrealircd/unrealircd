@@ -28,9 +28,13 @@ EXPORTS
 	DCCdeny_del
 	DeleteTempModules
 	DoEvents
+	DoMD5
 	DoesOp
 	EXTMODE_NONOTICE
 	EXTMODE_STRIPBADWORDS
+	EfunctionAddMain
+	EfunctionDel
+	Efunctions
 	EventAddEx
 	EventDel
 	EventFind
@@ -242,7 +246,6 @@ EXPORTS
 	booted
 	bootopt
 	botmotd
-	bounce_mode
 	buildid
 	busycli_fdlist
 	cFlagTab
@@ -260,7 +263,6 @@ EXPORTS
 	channel_modef_string
 	channel_modes
 	char_atribs
-	chbounce
 	check_channelmask
 	check_client
 	check_fdlists
@@ -272,7 +274,6 @@ EXPORTS
 	check_string
 	checklist
 	chess
-	chlbounce
 	chmode_str
 	clean_ban_mask
 	clean_channelname
@@ -408,10 +409,9 @@ EXPORTS
 	dn_skipname
 	do_chanflood
 	do_chanflood_action
-	do_extmode_char
+	do_cmd
 	do_join
 	do_mode
-	do_mode_char
 	do_nick_name
 	do_numeric
 	dontspread
@@ -420,6 +420,8 @@ EXPORTS
 	e_check_fdlists
 	e_clean_out_throttling_buckets
 	e_unload_module_delayed
+	efunctions_check
+	efunctions_switchover
 	encode_ip
 	events
 	exit_client
@@ -440,7 +442,6 @@ EXPORTS
 	extcmode_free_paramlist
 	extcmode_get_struct
 	extcmode_init
-	extended_operoverride
 	extraflags
 	fast_badword_match
 	fast_badword_replace
@@ -450,6 +451,7 @@ EXPORTS
 	find_by_hash
 	find_chasing
 	find_client
+	find_invex
 	find_match_server
 	find_member_link
 	find_membership_link
@@ -620,22 +622,16 @@ EXPORTS
 	m_error
 	m_info
 	m_info_send
-	m_join
 	m_license
-	m_lusers
-	m_mode
 	m_module
 	m_motd
 	m_names
-	m_nick
 	m_opermotd
-	m_part
 	m_rehash
 	m_restart
 	m_summon
 	m_tkl
 	m_umode
-	m_user
 	m_users
 	m_version
 	m_watch
@@ -649,7 +645,6 @@ EXPORTS
 	make_link
 	make_member
 	make_membership
-	make_mode_str
 	make_nick_user_host
 	make_server
 	make_synchlist
@@ -873,6 +868,7 @@ EXPORTS
 	unreal_buildspamfilter
 	unreal_checkregex
 	unreal_copyfile
+	unreal_copyfileex
 	unreal_decodespace
 	unreal_encodespace
 	unreal_getfilemodtime
@@ -893,3 +889,4 @@ EXPORTS
 	webtv_parse
 	whowas_next
 	write_pidfile
+	??_C@_0L@PKJOOFPP@?$DMcensored?$DO?$AA@
