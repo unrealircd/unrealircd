@@ -274,7 +274,7 @@ Membership	*make_membership(int local)
 	{
 		if (freemembership == NULL)
 		{
-			for (i = 1; i <= (4072/sizeof(Membership)); i++)		
+			for (i = 1; i <= (4072/sizeof(Membership)); i++)
 			{
 				lp = (Membership *)MyMalloc(sizeof(Membership));
 				lp->next = freemembership;
@@ -288,6 +288,7 @@ Membership	*make_membership(int local)
 			lp = freemembership;
 			freemembership = freemembership->next;
 		}
+		bzero(lp, sizeof(Membership));
 	}
 	else
 	{
@@ -310,7 +311,7 @@ Membership	*make_membership(int local)
 			Debug((DEBUG_ERROR, "floodmode::freelist gotone"));
 		}
 		Debug((DEBUG_ERROR, "floodmode:: bzeroing"));	
-		bzero(&lp2->flood, sizeof(lp2->flood));
+		bzero(&lp2, sizeof(MembershipL));
 	}
 	if (local)
 	{

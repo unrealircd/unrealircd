@@ -455,3 +455,4 @@
 - Made the rehash button work in Win32
 - Fixed up some CHANMODES= support and added WALLCHOPS support
 - Added keyboard shortcuts to the win32 config and about popup menus
+- Possible fixed a buggie in +f
