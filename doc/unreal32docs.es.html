@@ -2026,12 +2026,16 @@ set {
   Todos los usuarios pueden usar /mkpasswd.</p>
 <p><font class="set">set::options::allow-part-if-shunned;</font><br>
   Permite usar /part a los usuarios con shun.</p>
+<p><font class="set">set::options::fail-oper-warn;</font><br>
+  Si est&aacute; presente, se notificar&aacute; al usuario de que su intento de /oper ha fallado y se ha logueado.</p>
 <p><font class="set">set::dns::timeout &lt;timevalue&gt;;</font><br>
   Tiempo de espera del servidor DNS si no obtiene respuesta. Si el valor es una cadena alfanum&eacute;rica, use d para d&iacute;as, h para horas, m para minutos y s para segundos. Por ejemplo 1d2h3m significa 1 d&iacute;a, 2 horas y 3 minutos.</p>
 <p><font class="set">set::dns::retries &lt;n&ordm;-intentos&gt;;</font><br>
   N&uacute;mero de intentos si el servidor DNS no obtiene respuesta.</p>
 <p><font class="set">set::dns::nameserver &lt;name-of-dns-server&gt;;</font><br>
   Especifica el host del servidor a usar en las b&uacute;squedas DNS. </p>
+<p><font class="set">set::dns::bind-ip &lt;ip&gt;;</font><br>
+  Especifica la IP a enlazar para el resolver. Raras veces se usa.</p>
 <p><font class="set">set::network-name &lt;nombre-de-red&gt;;</font><br>
   Fija el nombre de la red. Debe ser el mismo en todos los servidores.</p>
 <p><font class="set">set::default-server &lt;nombre-servidor&gt;;</font><br>
@@ -2899,16 +2903,19 @@ Hay varios aspectos que no est&aacute;n relacionados con el ircd pero que pueden
 
 <p><b><font size="+2">8.3 Permisos y archivo de configuraci&oacute;n </font></b><a name="secpermissions"></a><br>
 <div class="desc">
-Cerci&oacute;rese de que su directorio home y UnrealIRCd tienen los permisos correctos. Por otro lado, un usuario local puede coger su archivo para ver las contrase&ntilde;as. Para evitar esto: <i>chmod -R go-rwx /path/to/Unreal3.2</i> si no est&aacute; seguro de ello. <br>
-M&aacute;s aspectos. Nunca ponga su UnrealIRCd en un webroot o cualquier otro directorio compartido. Para las copias de seguridad, aseg&uacute;rese de los permisos.<br>
-<br>
-Use siempre que pueda contrase&ntilde;as encriptadas. La mayor&iacute;a de contrase&ntilde;as de 1-8 caracteres se descifran en cuesti&oacute;n de horas o pocos d&iacute;as, sobretodo las contrase&ntilde;as link::password-connect</div>
-</p>
-
-<p><b><font size="+2">8.4 Problemas de usuario</font><a name="secuser"></a></b><br>
+  <p>Cerci&oacute;rese de que su directorio home y UnrealIRCd tienen los permisos correctos. Por otro lado, un usuario local puede coger su archivo para ver las contrase&ntilde;as. Para evitar esto: <i>chmod -R go-rwx /path/to/Unreal3.2</i> si no est&aacute; seguro de ello. <br>
+    M&aacute;s aspectos. Nunca ponga su UnrealIRCd en un webroot o cualquier otro directorio compartido. Para las copias de seguridad, aseg&uacute;rese de los permisos.<br>
+    <br>
+Use siempre que pueda contrase&ntilde;as encriptadas. Si tiene una versi&oacute;n con soporte OpenSSL es recomendable usar los cifrados <i>sha1</i> o <i>ripemd160</i>, si no, use <i>md5</i>. Incluso si todav&iacute;a utiliza contrase&ntilde;as encriptadas desde los bloques de operador de Unreal3.2.1 o antes, se sugiere que las reencripte (ejecute de nuevo /mkpasswd), puesto que 3.2.1 introduce cuantiosas mejoras anti-crack.<br>
+    Vea que sigue siendo otra medida de seguridad, puesto que una contrase&ntilde;a sencilla puede ser r&aacute;pidamente descubierta e incluso puede dejar al descubierto su archivo de configuraci&oacute;n, siendo muy f&aacute;cil encontrar contrase&ntilde;as como link::password-connect. <br>
+  </p>
+  <p><b><font size="+2">8.4 Problemas de usuario</font><a name="secuser"></a></b><br>
+  </p>
+</div>
 <div class="desc">
 Muchos de estos problemas no est&aacute;n en esta tem&aacute;tica.<br>
-Escoja siempre operadores y administradoers de confianza. L&eacute;ase todo detenidamente. Nunca comparta sus discos mediante netbios/kazaa/morpheus/etc. puede coger troyanos. Est&aacute; bajo su responsabilidad.</div>
+Escoja siempre operadores y administradoers de confianza. L&eacute;ase todo detenidamente. Nunca comparta sus discos mediante netbios/kazaa/morpheus/etc. puede coger troyanos, y obviamente que le roben sus contrase&ntilde;as. Est&aacute; bajo su responsabilidad escogerlos a consciencia.<br> 
+Restrinja sus privilegios con cuidado seg&uacute;n lo que cada operador necesite y est&eacute; dispuesto a permitirle. Para ello use oper::flags. </div>
 </p>
 
 <p><b><font size="+2">8.5 SSL/SSH y an&aacute;lisis de conexi&oacute;n</font></b><a name="secsnif"></a><br>
@@ -2948,7 +2955,7 @@ Mucha gente ha preguntado si hay alguna forma de deshabilitar /map o /links. Pen
 Para ello puede usar la opci&oacute;n flat-map (set::options::flat-map) para mostrar los servidores directamente unidos en /map y /link pero sin saber d&oacute;nde est&aacute;n conectado. Puede ser una medida m&aacute;s para prevenir los ataques a los puntos clave de la red. Obviamente si ocurre un split alguien podr&aacute; darse cuenta qu&eacute; servidores est&aacute;n conectados entre s&iacute;.<br>
 <br>
 <b>USUARIOS NORMALES Y SNOMASKS</b><br>
-Una caracter&iacute;stica no muy conocida es que los usuarios pueden ponerse snomasks limitados: s&oacute;lo +s y +sk. Aun as&iacute; pueden ver rehasehs, identificaciones de opers, kills y otros mensajes.<br>
+Una caracter&iacute;stica no muy conocida es que los usuarios pueden ponerse snomasks limitados: s&oacute;lo +s y +sk. Aun as&iacute; pueden ver refrescos,  kills y otros mensajes.<br>
 Para deshabilitarlo puede usar set::restrict-usermodes para usarlo con el modo s: <i>set { restrict-usermodes &quot;s&quot;;};</i>.<br>
 
 
@@ -2961,7 +2968,7 @@ Por supuesto toda esta informaci&oacute;n oculta no es altamente segura, pero di
 Existen varias actualizaciones para los sistemas operativos que hacen m&aacute;s dif&iacute;cil las vulnerabilidades del sistema. No suele ser lo m&aacute;s importante, pero es importante tenerlas al d&iacute;a por varias razones.<br>
 <br>
 Use siempre la &uacute;ltima versi&oacute;n de UnrealIRCd. Subscr&iacute;base a <a href="http://mail1.sourceforge.net/mailman/listinfo/unreal-notify" target="_blank">unreal-notify mailinglist</a> 
-para recibir las actualizaciones (unreal-notify es tan s&oacute;lo para anuncios, 1 email cada X meses). Usualmente se explica detalladamente en el anuncio si contiene fallos de seguridad.<br> 
+para recibir las actualizaciones (unreal-notify es tan s&oacute;lo para anuncios, 1 email cada X meses). Usualmente se explica detalladamente en el anuncio si contiene fallos de seguridad, sin embargo es bueno actualizar en la medida que se pueda.<br> 
 </div></p>
 
 <p><b><font size="+2">8.9 Sumario</font></b><a name="secsummary"></a><br>
