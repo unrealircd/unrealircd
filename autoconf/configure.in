@@ -284,16 +284,6 @@ AC_SUBST(REGEX)
 AC_SUBST(STRTOUL)
 AC_SUBST(CRYPTOLIB)
 AC_SUBST(MODULEFLAGS)
-AC_ARG_WITH(crypt-oper, [ --with-crypt-oper     Specify whether oper passwords should be crypted],
-AC_DEFINE(CRYPT_OPER_PASSWORD))
-AC_ARG_WITH(crypt-iline, [ --with-crypt-iline     Specify whether allow
-passwords should be crypted],
-AC_DEFINE(CRYPT_ILINE_PASSWORD))
-AC_ARG_WITH(crypt-link, [ --with-crypt-link     Specify whether link
-passwords should be crypted],
-AC_DEFINE(CRYPT_LINK_PASSWORD))
-AC_ARG_WITH(crypt-xline, [ --with-crypt-xline     Specify whether die/restart  passwords should be
-crypted], AC_DEFINE(CRYPT_XLINE_PASSWORD))
 AC_ARG_WITH(listen, [ --with-listen=backlog     Specify the listen backlog value],
 AC_DEFINE_UNQUOTED(LISTEN_SIZE,$withval),AC_DEFINE(LISTEN_SIZE,5))
 AC_ARG_WITH(nick-history, [ --with-nick-history=length     Specify the length of the nickname history],

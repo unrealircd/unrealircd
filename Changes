@@ -946,3 +946,4 @@ seen. gmtime warning still there
   add_HookX, del_HookX to HookAdd, HookDel, HookAddEx, HookDelEx
   so the names are more standard.
 - Added host54.net to /credits
+- Fixed a FSU Pthreads bug that caused it not to work on Slackware (help from Frank Mueller)
