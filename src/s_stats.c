@@ -1367,7 +1367,7 @@ int stats_zip(aClient *sptr, char *para)
 		} 
 		else 
 			sendto_one(sptr, ":%s %i %s :Zipstats for link to %s: unavailable", 
-				me.name, RPL_TEXT, sptr->name);
+				me.name, RPL_TEXT, sptr->name, acptr->name);
 	}
 #endif
 	return 0;

@@ -2832,3 +2832,5 @@ seen. gmtime warning still there
   somewhere by mistake, therefore crashing after upgrades... this should fix this
   (in the future). Module coders don't have to do anything for making this work,
   it's done automatically (via modules.h).
+- Forgot to add src/modules/m_sendsno.c to CVS, also fixed 2 compile warnings
+  and a crashbug related to previous commit.. bug hunting will continue ;).
