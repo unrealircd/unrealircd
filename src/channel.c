@@ -4378,10 +4378,12 @@ int  m_sjoin(cptr, sptr, parc, parv)
 
 	merge = nopara = nomode = removeours = removetheirs = 0;
 
-	if (SupportSJOIN(sptr) && !strncmp(parv[4], "<none>", 6))
-		nopara = 1;
-	if (SupportSJOIN2(sptr) && !strncmp(parv[4], "<->", 6))
-		nopara = 1;
+	if (SupportSJOIN(sptr) && !SupportSJ3(sptr) &&
+		!strncmp(parv[4], "<none>", 6))
+			nopara = 1;
+	if (SupportSJOIN2(sptr) && !SupportSJ3(sptr) &&
+		!strncmp(parv[4], "<->", 6))
+			nopara = 1;
 	if (SupportSJ3(sptr) && (parc < 5))
 		nopara = 1;
 
