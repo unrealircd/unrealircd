@@ -163,7 +163,7 @@ int errors = 0;
 		config_error("set::cloak-keys missing!");
 		errors++;
 	}
-	config_status("oldcloak: WARNING: The 'oldcloak' module should *ONLY* be used temporary "
+	config_status("oldcloak: WARNING: The 'oldcloak' module should *ONLY* be used temporarily "
 	              "for upgrading purposes since it is considered INSECURE, "
 	              "upgrade to 'cloak' AS SOON AS YOU CAN.");
 
