@@ -1470,12 +1470,6 @@ void m_info_send(sptr)
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| Coder team:", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * McSkaf    <mcskaf@unrealircd.org>",
-	    me.name, RPL_INFO, sptr->name);
-#if 0
-	sendto_one(sptr, ":%s %d %s :| * Griever   <griever@unrealircd.org>",
-	    me.name, RPL_INFO, sptr->name);
-#endif
 	sendto_one(sptr, ":%s %d %s :| * Zogg      <zogg@unrealircd.org>",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| * NiQuiL    <niquil@unrealircd.org>",
@@ -1491,6 +1485,8 @@ void m_info_send(sptr)
 	sendto_one(sptr, ":%s %d %s :| * DrBin        <drbin@unrealircd.com>",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| * llthangel    <llthangel@unrealircd.com>",
+	    me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :| * McSkaf    <mcskaf@unrealircd.org>",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| Credits - Type /Credits",
