@@ -184,7 +184,7 @@ char *inetntoa(char *in)
 **
 */
 
-int  inet_netof(istruct IN_ADDR n)
+int  inet_netof(struct IN_ADDR in)
 {
 	int  addr = in.s_net;
 
