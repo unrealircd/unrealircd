@@ -78,14 +78,6 @@ char *malloc_options = "h" MALLOC_FLAGS_EXTRA;
 #endif
 time_t TSoffset = 0;
 
-/* Added DrBin */
-#ifndef BIG_SECURITY_HOLE
-int  un_uid = 99;
-int  un_gid = 99;
-#endif
-/* End */
-
-
 #ifndef _WIN32
 extern char unreallogo[];
 #endif
@@ -1012,58 +1004,6 @@ int InitwIRCD(int argc, char *argv[])
 	}
 #endif
 
-#if !defined(IRC_UID) && !defined(_WIN32)
-	if ((uid != euid) && !euid) {
-		(void)fprintf(stderr,
-		    "ERROR: do not run ircd setuid root. Make it setuid a\
- normal user.\n");
-		exit(-1);
-	}
-#endif
-
-#if (!defined(CHROOTDIR) || (defined(IRC_UID) && defined(IRC_GID))) \
-    && !defined(_WIN32)
-# ifndef	AIX
-	(void)setuid((uid_t) uid);
-	(void)setuid((uid_t) euid);
-# endif
-/*
- * Modified 13/2000 DrBin
- * We need to have better controll over running as root ... see config.h
- */
-	if ((int)getuid() == 0) {
-#ifndef BIG_SECURITY_HOLE
-		if ((IRC_UID == 0) || (IRC_GID == 0)) {
-			(void)fprintf(stderr,
-			    "ERROR: SETUID and SETGID have not been set properly"
-			    "\nPlease read your documentation\n(HINT:SETUID or SETGID can not be 0)\n");
-			exit(-1);
-		} else {
-			/*
-			 * run as a specified user 
-			 */
-
-			(void)fprintf(stderr,
-			    "WARNING: ircd invoked as root\n");
-			(void)fprintf(stderr, "         changing to uid %d\n",
-			    IRC_UID);
-			(void)fprintf(stderr, "         changing to gid %d\n",
-			    IRC_GID);
-			(void)setgid(IRC_GID);
-			(void)setuid(IRC_UID);
-		}
-#else
-		/*
-		 * check for setuid root as usual 
-		 */
-		(void)fprintf(stderr,
-		    "ERROR: do not run ircd setuid root. Make it setuid a\
- normal user.\n");
-		exit(-1);
-# endif
-	}
-#endif				/*CHROOTDIR/UID/GID/_WIN32 */
-
 #ifndef _WIN32
 	/*
 	 * didn't set debuglevel 
@@ -1228,6 +1168,38 @@ int InitwIRCD(int argc, char *argv[])
 	R_fin_id = strlen(REPORT_FIN_ID);
 	R_fail_id = strlen(REPORT_FAIL_ID);
 	write_pidfile();
+
+#if !defined(IRC_UID) && !defined(_WIN32)
+	if ((uid != euid) && !euid) {
+		(void)fprintf(stderr,
+		    "ERROR: do not run ircd setuid root. Make it setuid a normal user.\n");
+		exit(-1);
+	}
+#endif
+
+	if ((int)getuid() == 0) {
+#if defined(IRC_UID) && defined(IRC_GID)
+		if ((IRC_UID == 0) || (IRC_GID == 0)) {
+			(void)fprintf(stderr,
+			    "ERROR: SETUID and SETGID have not been set properly"
+			    "\nPlease read your documentation\n(HINT:SETUID or SETGID can not be 0)\n");
+			exit(-1);
+		} else {
+			/*
+			 * run as a specified user 
+			 */
+
+			(void)fprintf(stderr,
+			    "WARNING: ircd invoked as root\n");
+			(void)fprintf(stderr, "         changing to uid %d\n",
+			    IRC_UID);
+			(void)fprintf(stderr, "         changing to gid %d\n",
+			    IRC_GID);
+			(void)setgid(IRC_GID);
+			(void)setuid(IRC_UID);
+		}
+	}
+#endif
 	Debug((DEBUG_NOTICE, "Server ready..."));
 	SetupEvents();
 	loop.do_bancheck = 0;

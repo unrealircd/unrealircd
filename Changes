@@ -1578,3 +1578,4 @@ seen. gmtime warning still there
 - Fixed a /who bug where /who +c #chan wouldn't display the name of the channel
   requested reported by aproxity (#0000304)
 - Fixed a bug where /who +c #chan would let you see users in a +s channel
+- Added Nugget's setuid patch

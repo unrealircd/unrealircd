@@ -360,27 +360,9 @@
  * define IRC_UID to that UID.  This should only be defined if you are running
  * as root and even then perhaps not.
  */
-
-/*
- * Ok this one is being changed. it is advisable never to run anything that
- * uses sockets etc. and has the potential for the outside world to connect to it
- * to run as root... Hackers do things like buffer overruns, and get dumped on
- * a shell with root access effectivley ... so DONT do it.. if a program uses a
- * port <1024 it will run as root, once the program has binded to the socket it
- * will set its uid to something OTHER than root ... you set that in unrealircd.conf
- *
- * If you _must_ insist on running as root and not wanting the program to change its
- * UID, then define BIG_SECURITY_HOLE below
- */
-#if !defined(_WIN32)
-/* Change This Line Below \/ */
-#define BIG_SECURITY_HOLE
-/* Its the one above ^^^^^^^ */
-#ifndef BIG_SECURITY_HOLE
-#define	IRC_UID un_uid
-#define	IRC_GID un_gid
-#endif
-#endif
+ 
+#undef	IRC_UID 72
+#undef	IRC_GID 72
 
 /*
  * CLIENT_FLOOD
