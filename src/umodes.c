@@ -181,11 +181,20 @@ Umode *UmodeAdd(Module *module, char ch, int global, int (*allowed)(aClient *spt
 	{
 		if (!Usermode_Table[i].flag && save == -1)
 			save = i;
-		else if (Usermode_Table[i].flag == ch && Usermode_Table[i].unloaded)
+		else if (Usermode_Table[i].flag == ch)
 		{
-			save = i;
-			Usermode_Table[i].unloaded = 0;
-			break;
+			if (Usermode_Table[i].unloaded)
+			{
+				save = i;
+				Usermode_Table[i].unloaded = 0;
+				break;
+			}
+			else
+			{
+				if (module)
+					module->errorcode = MODERR_EXISTS;
+				return NULL;
+			}
 		}
 		i++;
 	}
@@ -213,12 +222,15 @@ Umode *UmodeAdd(Module *module, char ch, int global, int (*allowed)(aClient *spt
 			umodeobj->object.umode = &(Usermode_Table[i]);
 			umodeobj->type = MOBJ_UMODE;
 			AddListItem(umodeobj, module->objects);
+			module->errorcode = MODERR_NOERROR;
 		}
 		return &(Usermode_Table[i]);
 	}
 	else
 	{
 		Debug((DEBUG_DEBUG, "UmodeAdd failed, no space"));
+		if (module)
+			module->errorcode = MODERR_NOSPACE;
 		return NULL;
 	}
 }
@@ -269,11 +281,20 @@ Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr), long
 	{
 		if (!Snomask_Table[i].flag && save == -1)
 			save = i;
-		else if (Snomask_Table[i].flag == ch && Snomask_Table[i].unloaded)
+		else if (Snomask_Table[i].flag == ch)
 		{
-			save = i;
-			Snomask_Table[i].unloaded = 0;
-			break;
+			if (Snomask_Table[i].unloaded)
+			{
+				save = i;
+				Snomask_Table[i].unloaded = 0;
+				break;
+			}
+			else
+			{
+				if (module)
+					module->errorcode = MODERR_EXISTS;
+				return NULL;
+			}
 		}
 		i++;
 	}
@@ -295,6 +316,7 @@ Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr), long
 			snoobj->object.snomask = &(Snomask_Table[i]);
 			snoobj->type = MOBJ_SNOMASK;
 			AddListItem(snoobj, module->objects);
+			module->errorcode = MODERR_NOERROR;
 		}
 		return &(Snomask_Table[i]);
 	}
@@ -302,6 +324,8 @@ Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr), long
 	{
 		Debug((DEBUG_DEBUG, "SnomaskAdd failed, no space"));
 		*mode = 0;
+		if (module)
+			module->errorcode = MODERR_NOSPACE;
 		return NULL;
 	}
 }

@@ -261,6 +261,16 @@ struct _hooktype {
  * What we use to keep track internally of the modules
 */
 
+#define MODERR_NOERROR 0
+#define MODERR_EXISTS  1
+#define MODERR_NOSPACE 2
+#define MODERR_INVALID 3
+
+unsigned int ModuleGetError(Module *module);
+const char *ModuleGetErrorStr(Module *module);
+unsigned int ModuleGetOptions(Module *module);
+unsigned int ModuleSetOptions(Module *module, unsigned int options);
+
 struct _Module
 {
 	struct _Module *prev, *next;
@@ -277,6 +287,7 @@ struct _Module
 	ModuleObject *objects;
 	ModuleInfo modinfo; /* Used to store handle info for module */
 	unsigned char options;
+	unsigned char errorcode;
 };
 /*
  * Symbol table

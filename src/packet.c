@@ -345,6 +345,7 @@ Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigne
 		cmdobj->object.command = command;
 		cmdobj->type = MOBJ_COMMAND;
 		AddListItem(cmdobj, module->objects);
+		module->errorcode = MODERR_NOERROR;
 	}
 	return command;
 }

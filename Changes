@@ -2362,3 +2362,5 @@ seen. gmtime warning still there
   code is based on the ircu Windows NT port by run.
 - Fixed a problem with /quote dns i
 - Rewrote a whole bunch of stuff in the extcmode code
+- Extended the module system to allow better error reporting using ModuleGetError and
+  ModuleGetErrorStr

@@ -261,6 +261,7 @@ Module *Module_make(ModuleHeader *header,
 	modp->dll = mod;
 	modp->flags = MODFLAG_NONE;
 	modp->options = 0;
+	modp->errorcode = MODERR_NOERROR;
 	modp->children = NULL;
 	modp->modinfo.size = sizeof(ModuleInfo);
 	modp->modinfo.module_load = 0;
@@ -768,6 +769,7 @@ Versionflag *VersionflagAdd(Module *module, char flag)
 				vflagobj->type = MOBJ_VERSIONFLAG;
 				vflagobj->object.versionflag = vflag;
 				AddListItem(vflagobj, module->objects);
+				module->errorcode = MODERR_NOERROR;
 			}
 			AddListItem(parent,vflag->parents);
 		}
@@ -784,6 +786,7 @@ Versionflag *VersionflagAdd(Module *module, char flag)
 		vflagobj->type = MOBJ_VERSIONFLAG;
 		vflagobj->object.versionflag = vflag;
 		AddListItem(vflagobj, module->objects);
+		module->errorcode = MODERR_NOERROR;
 	}
 	flag_add(flag);
 	AddListItem(parent,vflag->parents);
@@ -796,6 +799,7 @@ void VersionflagDel(Versionflag *vflag, Module *module)
 	ModuleChild *owner;
 	if (!vflag)
 		return;
+
 	for (owner = vflag->parents; owner; owner = owner->next)
 	{
 		if (owner->child == module)
@@ -843,6 +847,7 @@ Hooktype *HooktypeAdd(Module *module, char *string, int *type) {
 				hooktypeobj->type = MOBJ_HOOKTYPE;
 				hooktypeobj->object.hooktype = hooktype;
 				AddListItem(hooktypeobj, module->objects);
+				module->errorcode = MODERR_NOERROR;
 			}
 			AddListItem(parent,hooktype->parents);
 		}
@@ -852,7 +857,11 @@ Hooktype *HooktypeAdd(Module *module, char *string, int *type) {
 	for (hooktype = Hooktypes, i = 0; hooktype->string; hooktype++, i++) ;
 
 	if (i >= 29)
+	{
+		if (module)
+			module->errorcode = MODERR_NOSPACE;
 		return NULL;
+	}
 
 	Hooktypes[i].id = i+31;
 	Hooktypes[i].string = strdup(string);
@@ -863,6 +872,7 @@ Hooktype *HooktypeAdd(Module *module, char *string, int *type) {
 		hooktypeobj->type = MOBJ_HOOKTYPE;
 		hooktypeobj->object.hooktype = &Hooktypes[i];
 		AddListItem(hooktypeobj,module->objects);
+		module->errorcode = MODERR_NOERROR;
 	}
 	AddListItem(parent,Hooktypes[i].parents);
 	*type = i+31;
@@ -916,6 +926,7 @@ Hook	*HookAddMain(Module *module, int hooktype, int (*func)(), void (*vfunc)(), 
 		hookobj->object.hook = p;
 		hookobj->type = MOBJ_HOOK;
 		AddListItem(hookobj, module->objects);
+		module->errorcode = MODERR_NOERROR;
 	}
 	return p;
 }
@@ -984,4 +995,21 @@ unsigned int ModuleSetOptions(Module *module, unsigned int options)
 unsigned int ModuleGetOptions(Module *module)
 {
 	return module->options;
+}
+
+unsigned int ModuleGetError(Module *module)
+{
+	return module->errorcode;
+}
+
+static const char *module_error_str[] = {
+	"No error",
+	"Object already exists",
+	"No space available",
+	"Invalid parameter(s)"
+};
+
+const char *ModuleGetErrorStr(Module *module)
+{
+	return module_error_str[module->errorcode];
 }
