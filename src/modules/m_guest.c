@@ -46,8 +46,11 @@
 DLLFUNC int m_guest(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
-
+#ifdef DYNAMIC_LINKING
 Module *Mod_Handle = NULL;
+#else
+#define Mod_Handle NULl
+#endif
 #ifndef DYNAMIC_LINKING
 ModuleHeader m_guest_Header
 #else

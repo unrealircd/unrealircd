@@ -1119,3 +1119,4 @@ v- Fixed some bugreport stuff
 - Fixed bug in m_tkl_line and various m_line functions (was checking for wrong # of paras)
 - Recoded hooks to take advantage of the module object code
 - Fixed a memory leak in hooks
+- Fixed a bug with module objects involving static linking

@@ -68,7 +68,11 @@ static struct SOCKADDR_IN	*xScan_endpoint = NULL;
 extern void Eadd_scan();
 extern struct SOCKADDR_IN	Scan_endpoint;
 #endif
+#ifdef DYNAMIC_LINKING
 Module *Mod_Handle = NULL;
+#else 
+#define Mod_Handle NULL
+#endif
 static Mod_SymbolDepTable modsymdep[] = 
 {
 	MOD_Dep(Eadd_scan, xEadd_scan, "src/modules/scan.so"),

@@ -52,7 +52,11 @@
 #endif
 #include "modules/scan.h"
 /* IRCd will fill with a pointer to this module */
+#ifdef DYNAMIC_LINKING
 Module *Mod_Handle = NULL;
+#else
+#define Mod_Handle NULL
+#endif
 struct SOCKADDR_IN Scan_endpoint;
 
 static Scan_AddrStruct *Scannings = NULL;
