@@ -31,7 +31,7 @@ Computing Center and Jarkko Oikarinen";
 #include "numeric.h"
 #include "h.h"
 
-
+extern char backupbuf[];
 static char buffer[1024];
 
 /*
@@ -65,6 +65,14 @@ int  do_numeric(numeric, cptr, sptr, parc, parv)
 	/* Remap low number numerics. */
 	if (numeric < 100)
 		numeric += 100;
+
+	if (numeric == ERR_NOTONCHANNEL)
+		if (!MyClient(sptr) && IsServer(sptr))
+		{
+			sendto_umode(UMODE_EYES, "Recieved ERR_NOTONCHANNEL from remote server %s. Possible desynch, contact UnrealIRCd Team (%s)",
+				sptr->name, backupbuf);
+		}
+	
 	/*
 	   ** Prepare the parameter portion of the message into 'buffer'.
 	   ** (Because the buffer is twice as large as the message buffer

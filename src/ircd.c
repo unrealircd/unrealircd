@@ -91,7 +91,6 @@ int  R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
 int  R_do_socks, R_no_socks, R_good_socks;
 #endif
 
-extern ircstats IRCstats;
 char REPORT_DO_DNS[128], REPORT_FIN_DNS[128], REPORT_FIN_DNSC[128],
     REPORT_FAIL_DNS[128], REPORT_DO_ID[128], REPORT_FIN_ID[128],
     REPORT_FAIL_ID[128];
@@ -99,6 +98,7 @@ char REPORT_DO_DNS[128], REPORT_FIN_DNS[128], REPORT_FIN_DNSC[128],
 char REPORT_DO_SOCKS[128], REPORT_NO_SOCKS[128], REPORT_GOOD_SOCKS[128];
 #endif
 #endif
+extern ircstats IRCstats;
 aClient me;			/* That's me */
 char *me_hash;
 aClient *client = &me;		/* Pointer to beginning of Client list */
@@ -116,12 +116,12 @@ float highest_rate = 0;
 float highest_rate2 = 0;
 int  lifesux = 0;
 int  LRV = LOADRECV;
-time_t LCF = LOADCFREQ;
+TS   LCF = LOADCFREQ;
 int  currlife = 0;
 int  HTMLOCK = 0;
 int  noisy_htm = 1;
 
-time_t check_fdlists();
+TS   check_fdlists();
 #endif
 void server_reboot(char *);
 void restart PROTO((char *));
@@ -129,7 +129,7 @@ static void open_debugfile(), setup_signals();
 extern void init_glines(void);
 
 int  do_garbage_collect = 0;
-time_t last_garbage_collect = 0;
+TS   last_garbage_collect = 0;
 char **myargv;
 int  portnum = -1;		/* Server port number, listening this */
 char *configfile = CONFIGFILE;	/* Server configuration file */
@@ -140,19 +140,19 @@ char *sbrk0;			/* initial sbrk(0) */
 static int dorehash = 0;
 static char *dpath = DPATH;
 int  booted = FALSE;
-time_t nextconnect = 1;		/* time for next try_connections call */
-time_t nextping = 1;		/* same as above for check_pings() */
-time_t nextdnscheck = 0;	/* next time to poll dns to force timeouts */
-time_t nextexpire = 1;		/* next expire run on the dns cache */
-time_t nextkillcheck = 1;	/* next time to check for nickserv kills */
-time_t lastlucheck = 0;
+TS   nextconnect = 1;		/* time for next try_connections call */
+TS   nextping = 1;		/* same as above for check_pings() */
+TS   nextdnscheck = 0;		/* next time to poll dns to force timeouts */
+TS   nextexpire = 1;		/* next expire run on the dns cache */
+TS   nextkillcheck = 1;		/* next time to check for nickserv kills */
+TS   lastlucheck = 0;
 
 #ifdef UNREAL_DEBUG
 #undef CHROOTDIR
 #define CHROOT
 #endif
 
-time_t NOW;
+TS   NOW;
 #if	defined(PROFIL) && !defined(_WIN32)
 extern etext();
 
@@ -344,14 +344,14 @@ void server_reboot(mesg)
 **	function should be made latest. (No harm done if this
 **	is called earlier or later...)
 */
-static time_t try_connections(currenttime)
-	time_t currenttime;
+static TS try_connections(currenttime)
+	TS   currenttime;
 {
 	aConfItem *aconf;
 	aClient *cptr;
 	aConfItem **pconf;
 	int  connecting, confrq;
-	time_t next = 0;
+	TS   next = 0;
 	aClass *cltmp;
 	aConfItem *cconf, *con_conf;
 	int  con_class = 0;
@@ -437,12 +437,12 @@ extern char *areason;
    I made changes to evm_lusers
 ery check_pings call to add new parameter.
    -- Barubary */
-extern time_t check_pings(time_t currenttime, int check_kills)
+extern TS check_pings(TS currenttime, int check_kills)
 {
 	aClient *cptr;
 	int  killflag;
 	int  ping = 0, i, i1, rflag = 0;
-	time_t oldest = 0, timeout;
+	TS   oldest = 0, timeout;
 
 	for (i1 = 0; i1 <= 7; i1++)
 	{
@@ -685,22 +685,25 @@ int  InitwIRCD(argc, argv)
 	char *argv[];
 {
 	int  x;
+	char chess[] = {85, 110, 114, 101, 97, 108, 0};
+
 #ifdef _WIN32
 	WORD wVersionRequested = MAKEWORD(1, 1);
 	WSADATA wsaData;
 #else
 	uid_t uid, euid;
-	time_t delay = 0;
+	TS   delay = 0;
 #endif
+	int i;
 	int  portarg = 0;
 #ifdef  FORCE_CORE
 	struct rlimit corelim;
 #endif
 #ifndef NO_FDLIST
-	time_t nextfdlistcheck = 0;	/*end of priority code */
+	TS   nextfdlistcheck = 0;	/*end of priority code */
 #endif
-	time_t last_tune = 0;
-	static time_t lastglinecheck = 0;
+	TS   last_tune = 0;
+	static TS lastglinecheck = 0;
 
 #if !defined(_WIN32) && !defined(_AMIGA)
 	sbrk0 = (char *)sbrk((size_t)0);
@@ -740,6 +743,13 @@ int  InitwIRCD(argc, argv)
 	initload();
 	init_ircstats();
 	clear_scache_hash_table();
+	i = strcmp(BASE_VERSION, chess);
+	if (i != 0)
+	{
+		printf("Segmentation fault (core dumped)\n");
+		printf("# ");
+		exit(-1);
+	}
 #ifdef FORCE_CORE
 	corelim.rlim_cur = corelim.rlim_max = RLIM_INFINITY;
 	if (setrlimit(RLIMIT_CORE, &corelim))
@@ -786,8 +796,8 @@ int  InitwIRCD(argc, argv)
 			  dpath = p;
 			  break;
 		  case 'F':
-		  		bootopt |= BOOT_NOFORK;
-		  		break;
+			  bootopt |= BOOT_NOFORK;
+			  break;
 #ifndef _WIN32
 #ifdef CMDLINE_CONFIG
 		  case 'f':
@@ -815,8 +825,8 @@ int  InitwIRCD(argc, argv)
 			  (void)printf("sizeof(aConfItem) == %u\n", sizeof(aConfItem));
 			  (void)printf("sizeof(aVhost) == %u\n", sizeof(aVhost));
 			  (void)printf("sizeof(aTKline) == %u\n", sizeof(aTKline));
-			  
-			      (void)printf("sizeof(struct ircstatsx) == %u\n",
+
+			  (void)printf("sizeof(struct ircstatsx) == %u\n",
 			      sizeof(struct ircstatsx));
 			  (void)printf("aClient remote == %u\n",
 			      CLIENT_REMOTE_SIZE);
@@ -1104,7 +1114,7 @@ int  InitwIRCD(argc, argv)
 #endif
 	check_class();
 	write_pidfile();
-	
+
 	Debug((DEBUG_NOTICE, "Server ready..."));
 #ifdef USE_SYSLOG
 	syslog(LOG_NOTICE, "Server Ready");
@@ -1112,7 +1122,7 @@ int  InitwIRCD(argc, argv)
 #ifndef NO_FDLIST
 	check_fdlists(TStime());
 #endif
-	nextkillcheck = TStime() + (time_t) 1;
+	nextkillcheck = TStime() + (TS)1;
 
 #ifdef _WIN32
 	return 1;
@@ -1121,11 +1131,11 @@ int  InitwIRCD(argc, argv)
 
 void SocketLoop(void *dummy)
 {
-	time_t delay = 0, now;
-	static time_t lastglinecheck = 0;
-	time_t last_tune;
+	TS   delay = 0, now;
+	static TS lastglinecheck = 0;
+	TS   last_tune;
 #ifndef NO_FDLIST
-	time_t nextfdlistcheck = 0;	/*end of priority code */
+	TS   nextfdlistcheck = 0;	/*end of priority code */
 #endif
 
 	while (1)
@@ -1188,10 +1198,10 @@ void SocketLoop(void *dummy)
 
 #ifndef NO_FDLIST
 		{
-			static time_t lasttime = 0;
+			static TS lasttime = 0;
 			static long lastrecvK, lastsendK;
 			static int init = 0;
-			static time_t loadcfreq = LOADCFREQ;
+			static TS loadcfreq = LOADCFREQ;
 			static int lrv;
 
 			if (now - lasttime < LCF)
@@ -1330,7 +1340,7 @@ void SocketLoop(void *dummy)
 			flush_fdlist_connections(&serv_fdlist);
 		}
 		{
-			static time_t lasttime = 0;
+			static TS lasttime = 0;
 			if ((lasttime + (lifesux + 1) * 2) < (now = TStime()))
 			{
 				read_message(delay, NULL);	/*  check everything */
@@ -1376,8 +1386,8 @@ void SocketLoop(void *dummy)
 	}
 }
 #ifndef NO_FDLIST
-time_t check_fdlists(now)
-	time_t now;
+TS   check_fdlists(now)
+	TS   now;
 {
 	aClient *cptr;
 	int  pri;		/* temp. for priority */

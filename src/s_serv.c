@@ -575,7 +575,7 @@ int  m_server(cptr, sptr, parc, parv)
 {
 	char *ch;
 	int  i;
-	char info[REALLEN + 1], *inpath, *host, *encr, *f;
+	char info[REALLEN + 61], *inpath, *host, *encr, *f;
 	char pp[512];
 	aClient *acptr, *bcptr;
 	aConfItem *aconf, *cconf;
@@ -596,18 +596,22 @@ int  m_server(cptr, sptr, parc, parv)
 	{
 		numeric = atoi(parv[3]);
 		hop = atoi(parv[2]);
-		(void)strncpy(info, parv[4], REALLEN);
+		(void)strncpy(info, parv[4], REALLEN + 60);
 		info[REALLEN] = '\0';
 	}
 	else if (parc > 3 && atoi(parv[2]))
 	{
 		hop = atoi(parv[2]);
-		(void)strncpy(info, parv[3], REALLEN);
+		(void)strncpy(info, parv[3], REALLEN + 60);
 		info[REALLEN] = '\0';
 	}
+/*
+	We do not support "SERVER server :desc" anymore, this is an ugly hack 
+	too
+	
 	else if (parc > 2)
 	{
-		(void)strncpy(info, parv[2], REALLEN);
+		(void)strncpy(info, parv[2], REALLEN + 60);
 		if (parc > 3 && ((i = strlen(info)) < (REALLEN - 2)))
 		{
 			(void)strcat(info, " ");
@@ -615,6 +619,7 @@ int  m_server(cptr, sptr, parc, parv)
 			info[REALLEN] = '\0';
 		}
 	}
+*/
 	/*
 	   ** Check for "FRENCH " infection ;-) (actually this should
 	   ** be replaced with routine to check the hostname syntax in
@@ -1440,49 +1445,34 @@ int  m_server_estab(cptr)
 /*
 ** m_links
 **	parv[0] = sender prefix
-**	parv[1] = servername mask
 ** or
 **	parv[0] = sender prefix
-**	parv[1] = server to query 
-**      parv[2] = servername mask
+**
+** Recoded by Stskeeps
 */
 int  m_links(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;
 	int  parc;
 	char *parv[];
 {
-	char *mask;
+	Link *lp;
 	aClient *acptr;
 
-	if (parc > 2 && IsOper(cptr))
+	for (lp = (Link *) return_servers(); lp; lp = lp->next)
 	{
-		if (hunt_server(cptr, sptr, ":%s LINKS %s :%s", 1, parc, parv)
-		    != HUNTED_ISME)
-			return 0;
-		mask = parv[2];
-	}
-	else
-		mask = parc < 2 ? NULL : parv[1];
-
-	for (acptr = client, (void)collapse(mask); acptr; acptr = acptr->next)
-	{
-		if (!IsServer(acptr) && !IsMe(acptr))
-			continue;
-		if (!BadPtr(mask) && match(mask, acptr->name))
-			continue;
-		if (HIDE_ULINES == 1)
-		{
-			if (IsULine(acptr, acptr) && !IsAnOper(sptr))
-				continue;
-		}
+		acptr = lp->value.cptr;
+		
+		/* Some checks */
+		if (HIDE_ULINES && IsULine(acptr, acptr) && !IsAnOper(sptr))
+			continue;	
 		sendto_one(sptr, rpl_str(RPL_LINKS),
 		    me.name, parv[0], acptr->name, acptr->serv->up,
 		    acptr->hopcount, (acptr->info[0] ? acptr->info :
 		    "(Unknown Location)"));
-	}
+	}	
 
 	sendto_one(sptr, rpl_str(RPL_ENDOFLINKS), me.name, parv[0],
-	    BadPtr(mask) ? "*" : mask);
+	    "*");
 	return 0;
 }
 
@@ -2392,9 +2382,11 @@ int  m_stats(cptr, sptr, parc, parv)
 
 	switch (stat)
 	{
+#ifdef STRIPBADWORDS
 	  case 'b':
 		  badwords_stats();
 		  break;
+#endif
 	  case 'L':
 	  case 'l':
 		  /*
@@ -2889,7 +2881,6 @@ int  m_lusers(cptr, sptr, parc, parv)
 	return 0;
 }
 
-extern int Rha;
 
 void save_tunefile(void)
 {
@@ -2907,7 +2898,6 @@ void save_tunefile(void)
 	}
 	fprintf(tunefile, "%li\n", TSoffset);
 	fprintf(tunefile, "%li\n", IRCstats.me_max);
-	fprintf(tunefile, "%li\n", Rha);
 	fclose(tunefile);
 }
 
@@ -2924,8 +2914,6 @@ void load_tunefile(void)
 	TSoffset = atol(buf);
 	fgets(buf, 1023, tunefile);
 	IRCstats.me_max = atol(buf);
-	fgets(buf, 1023, tunefile);
-	Rha = atol(buf);
 	fclose(tunefile);
 }
 
@@ -4557,7 +4545,7 @@ aMotd *read_botmotd(char *filename)
 	(void)dgets(-1, NULL, 0);	/* make sure buffer is at empty pos */
 
 	newmotd = last = NULL;
-	while (i = dgets(fd, line, 81) > 0)
+	while ((i = dgets(fd, line, 81)) > 0)
 	{
 		line[i] = '\0';
 		if ((tmp = (char *)strchr(line, '\n')))
@@ -4789,7 +4777,8 @@ void dump_map(cptr, server, mask, prompt_length, length)
 	char *p = &prompt[prompt_length];
 	int  cnt = 0, local = 0;
 	aClient *acptr;
-
+	Link *lp;
+	
 	*p = '\0';
 
 	if (prompt_length > 60)
@@ -4797,18 +4786,8 @@ void dump_map(cptr, server, mask, prompt_length, length)
 		    prompt, server->name);
 	else
 	{
-		for (acptr = client; acptr; acptr = acptr->next)
-		{
-			if (IsPerson(acptr))
-			{
-				++cnt;	/* == */
-				if (!strcmp(acptr->user->server, server->name))
-					++local;
-			}
-		}
-
 		sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, prompt,
-		    length, server->name, local,
+		    length, server->name, server->serv->users,
 		    (server->serv->numeric ? (char *)my_itoa(server->serv->
 		    numeric) : ""));
 		cnt = 0;
@@ -4826,40 +4805,29 @@ void dump_map(cptr, server, mask, prompt_length, length)
 	strcpy(p, "|-");
 
 
-	for (acptr = client; acptr; acptr = acptr->next)
+	for (lp = (Link *) return_servers(); lp; lp = lp->next)
 	{
-		if (HIDE_ULINES == 1)
-		{
-			if (!IsServer(acptr)
-			    || strcmp(acptr->serv->up, server->name))
-				continue;
-
-			if (IsULine(acptr, acptr) && !IsAnOper(cptr))
-				continue;
-		}
-
-		if (match(mask, acptr->name))
-			acptr->flags &= ~FLAGS_MAP;
-		else
-		{
-			acptr->flags |= FLAGS_MAP;
-			cnt++;
-		}
+		acptr = lp->value.cptr;
+		if (acptr->srvptr != server)
+			continue;
+			
+		if (IsULine(acptr, acptr) && HIDE_ULINES && !IsAnOper(cptr))
+			continue;
+		acptr->flags |= FLAGS_MAP;
+		cnt++;
 	}
 
-	for (acptr = client; acptr; acptr = acptr->next)
+	for (lp = (Link *) return_servers(); lp; lp = lp->next)
 	{
-		if (!(acptr->flags & FLAGS_MAP) ||	/* != */
-		    !IsServer(acptr) || strcmp(acptr->serv->up, server->name))
+		acptr = lp->value.cptr;
+		if (acptr->srvptr != server)
 			continue;
-		if (HIDE_ULINES == 1)
-		{
-			if (IsULine(acptr, acptr) && !IsAnOper(cptr))
-				continue;
-		}
+		if (!acptr->flags & FLAGS_MAP)
+			continue;
 		if (--cnt == 0)
 			*p = '`';
 		dump_map(cptr, acptr, mask, prompt_length + 2, length - 2);
+		
 	}
 
 	if (prompt_length > 0)
@@ -4878,16 +4846,20 @@ int  m_map(cptr, sptr, parc, parv)
 	int  parc;
 	char *parv[];
 {
+	Link *lp;
 	aClient *acptr;
 	int  longest = strlen(me.name);
 
 
 	if (parc < 2)
 		parv[1] = "*";
-	for (acptr = client; acptr; acptr = acptr->next)
-		if (IsServer(acptr)
-		    && (strlen(acptr->name) + acptr->hopcount * 2) > longest)
+	for (lp = (Link *) return_servers(); lp; lp = lp->next)
+	{
+		acptr = lp->value.cptr;
+		if ((strlen(acptr->name) + acptr->hopcount * 2) > longest)
 			longest = strlen(acptr->name) + acptr->hopcount * 2;
+	}
+	for (acptr = client; acptr; acptr = acptr->next)
 
 	if (longest > 60)
 		longest = 60;

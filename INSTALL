@@ -60,8 +60,8 @@ recap:
 The UnrealIRCD server comes tarred and gziped. To uncompress it and expand
 it, use the following commands at the Unix prompt:
 
-gzip -d Unreal3.0.tar.gz
-tar -xvf Unreal3.0.tar
+gzip -d Unreal3.1.tar.gz
+tar -xvf Unreal3.1.tar
 
 This will create a new directory called Unreal3.0 and unpack the source
 into it.

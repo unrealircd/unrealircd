@@ -34,14 +34,14 @@ extern char *getreply(int);
 #define rpl_str(x) getreply(x)
 #define err_str(x) getreply(x)
 
-extern time_t nextconnect, nextdnscheck, nextping;
+extern TS nextconnect, nextdnscheck, nextping;
 extern aClient *client, me, *local[];
 extern aChannel *channel;
 extern struct stats *ircstp;
 extern int bootopt;
-extern time_t TSoffset;
+extern TS TSoffset;
 /* Prototype added to force errors -- Barubary */
-extern time_t check_pings(time_t now, int check_kills);
+extern TS check_pings(TS now, int check_kills);
 
 /* Remmed out for win32 compatibility.. as stated of 467leaf win32 port.. */
 
@@ -171,9 +171,9 @@ extern int inetport PROTO((aClient *, char *, int));
 extern void init_sys PROTO(());
 
 #ifdef NO_FDLIST
-extern int read_message PROTO((time_t));
+extern int read_message PROTO((TS));
 #else
-extern int read_message PROTO((time_t, fdlist *));
+extern int read_message PROTO((TS, fdlist *));
 #endif
 
 extern void report_error PROTO((char *, aClient *));
@@ -254,7 +254,7 @@ extern int check_registered_user PROTO((aClient *));
 extern char *get_client_name PROTO((aClient *, int));
 extern char *get_client_host PROTO((aClient *));
 extern char *my_name_for_link PROTO((char *, aConfItem *));
-extern char *myctime PROTO((time_t)), *date PROTO((time_t));
+extern char *myctime PROTO((TS)), *date PROTO((TS));
 extern int exit_client PROTO((aClient *, aClient *, aClient *, char *));
 extern void initstats PROTO(()), tstats PROTO((aClient *, char *));
 extern char *check_string PROTO((char *));
@@ -308,8 +308,8 @@ extern struct hostent *gethost_byaddr PROTO((char *, Link *));
 extern struct hostent *gethost_byname PROTO((char *, Link *));
 extern void flush_cache PROTO(());
 extern int init_resolver PROTO((int));
-extern time_t timeout_query_list PROTO((time_t));
-extern time_t expire_cache PROTO((time_t));
+extern TS timeout_query_list PROTO((TS));
+extern TS expire_cache PROTO((TS));
 extern void del_queries PROTO((char *));
 
 extern void clear_channel_hash_table PROTO(());

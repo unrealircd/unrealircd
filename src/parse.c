@@ -62,7 +62,7 @@ static char nsprefix = 0;
 **	the old. 'name' is now assumed to be a null terminated
 **	string and the search is the for server and user.
 */
-aClient *find_client(name, cptr)
+aClient inline *find_client(name, cptr)
 	char *name;
 	aClient *cptr;
 {
@@ -75,7 +75,7 @@ aClient *find_client(name, cptr)
 	return cptr;
 }
 
-aClient *find_nickserv(name, cptr)
+aClient inline *find_nickserv(name, cptr)
 	char *name;
 	aClient *cptr;
 {
@@ -99,7 +99,7 @@ aClient *find_nickserv(name, cptr)
 **	the old. 'name' is now assumed to be a null terminated
 **	string.
 */
-aClient *find_server(name, cptr)
+aClient inline *find_server(name, cptr)
 	char *name;
 	aClient *cptr;
 {
@@ -112,7 +112,7 @@ aClient *find_server(name, cptr)
 }
 
 
-aClient *find_name(name, cptr)
+aClient inline *find_name(name, cptr)
 	char *name;
 	aClient *cptr;
 {
@@ -184,8 +184,6 @@ void ban_flooder(aClient *cptr)
 	m_tkl(&me, &me, 9, tkllayer);
 	return;
 }
-
-int  Rha = 0;
 
 /*
  * parse a buffer.
@@ -282,9 +280,6 @@ int  parse(cptr, buffer, bufend, mptr)
 			 * prefix just wasn't there...) --msa
 			 */
 
-			/* debugging tool */
-			if (Rha == 1)
-				from = NULL;
 			if (!from)
 			{
 				Debug((DEBUG_ERROR,
