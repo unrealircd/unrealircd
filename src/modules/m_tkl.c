@@ -30,6 +30,7 @@
 
 DLLFUNC int m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+DLLFUNC int m_tempshun(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
@@ -46,6 +47,8 @@ DLLFUNC int m_spamfilter(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_ZLINE "ZLINE"
 #define MSG_SPAMFILTER	"SPAMFILTER"
 #define TOK_NONE ""
+#define MSG_TEMPSHUN "TEMPSHUN"
+#define TOK_TEMPSHUN "Tz"
 
 ModuleHeader MOD_HEADER(m_tkl)
   = {
@@ -65,6 +68,7 @@ DLLFUNC int MOD_INIT(m_tkl)(ModuleInfo *modinfo)
 	*/
 	add_Command(MSG_GLINE, TOK_GLINE, m_gline, 3);
 	add_Command(MSG_SHUN, TOK_SHUN, m_shun, 3);
+	add_Command(MSG_TEMPSHUN, TOK_TEMPSHUN, m_tempshun, 2);
 	add_Command(MSG_ZLINE, TOK_NONE, m_tzline, 3);
 	add_Command(MSG_KLINE, TOK_NONE, m_tkline, 3);
 	add_Command(MSG_GZLINE, TOK_NONE, m_gzline, 3);
@@ -172,6 +176,80 @@ DLLFUNC int m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	return m_tkl_line(cptr, sptr, parc, parv, "s");
 
+}
+
+DLLFUNC int m_tempshun(aClient *cptr, aClient *sptr, int parc, char *parv[])
+{
+aClient *acptr;
+char *comment = ((parc > 2) && !BadPtr(parv[2])) ? parv[2] : "no reason";
+char *name;
+int remove = 0;
+
+	if (MyClient(sptr) && (!OPCanTKL(sptr) || !IsOper(sptr)))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+		sptr->name);
+		return 0;
+	}
+	if ((parc < 2) || BadPtr(parv[1]))
+	{
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "TEMPSHUN");
+		return 0;
+	}
+	if (parv[1][0] == '+')
+		name = parv[1]+1;
+	else if (parv[1][0] == '-')
+	{
+		name = parv[1]+1;
+		remove = 1;
+	} else
+		name = parv[1];
+
+	acptr = find_person(name, NULL);
+	if (!acptr)
+	{
+		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name, name);
+		return 0;
+	}
+	if (!MyClient(acptr))
+	{
+		sendto_one(acptr->from, ":%s %s %s :%s",
+			sptr->name, IsToken(acptr->from) ? TOK_TEMPSHUN : MSG_TEMPSHUN,
+			parv[1], comment);
+	} else {
+		char buf[1024];
+		if (!remove)
+		{
+			if (IsShunned(acptr))
+			{
+				sendnotice(sptr, "User '%s' already shunned", acptr->name);
+			} else if (IsAnOper(acptr))
+			{
+				sendnotice(sptr, "You cannot tempshun '%s' because (s)he is an oper", acptr->name);
+			} else
+			{
+				SetShunned(acptr);
+				ircsprintf(buf, "Temporary shun added on user %s (%s@%s) by %s [%s]",
+					acptr->name, acptr->user->username, acptr->user->realhost,
+					sptr->name, comment);
+				sendto_snomask(SNO_TKL, "%s", buf);
+				sendto_serv_butone_token(NULL, me.name, MSG_SENDSNO, TOK_SENDSNO, "G :%s", buf);
+			}
+		} else {
+			if (!IsShunned(acptr))
+			{
+				sendnotice(sptr, "User '%s' is not shunned", acptr->name);
+			} else {
+				ClearShunned(acptr);
+				ircsprintf(buf, "Removed temporary shun on user %s (%s@%s) by %s",
+					acptr->name, acptr->user->username, acptr->user->realhost,
+					sptr->name);
+				sendto_snomask(SNO_TKL, "%s", buf);
+				sendto_serv_butone_token(NULL, me.name, MSG_SENDSNO, TOK_SENDSNO, "G :%s", buf);
+			}
+		}
+	}
+	return 0;
 }
 
 DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[])

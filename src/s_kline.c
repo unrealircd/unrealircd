@@ -134,7 +134,7 @@ int  tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *
 		nl->subtype = spamfilter_gettargets(usermask, NULL);
 		nl->spamf = unreal_buildspamfilter(reason);
 		nl->spamf->action = banact_chartoval(*hostmask);
-		nl->expire_at = 0; /* temporarely spamfilters are NOT supported! (makes no sense) */
+		nl->expire_at = 0; /* temporary spamfilters are NOT supported! (makes no sense) */
 		if (!spamf_tkl_reason)
 		{
 			/* no exttkl support, use default values... */
@@ -1102,7 +1102,7 @@ int place_host_ban(aClient *sptr, int action, char *reason, long duration)
 	{
 		case BAN_ACT_TEMPSHUN:
 			/* We simply mark this connection as shunned and do not add a ban record */
-			sendto_snomask(SNO_TKL, "Temporarely shun added at user %s (%s@%s) [%s]",
+			sendto_snomask(SNO_TKL, "Temporary shun added at user %s (%s@%s) [%s]",
 				sptr->name,
 				sptr->user ? sptr->user->username : "unknown",
 				sptr->user ? sptr->user->realhost : Inet_ia2p(&sptr->ip),

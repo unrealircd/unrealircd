@@ -2934,3 +2934,6 @@ seen. gmtime warning still there
 - Fixed a bug in 'Flood from unknown connection' (#0001566).
 - Rewrote a great deal of the remote include code to make it work on Windows
   due to Microsoft insanity. 
+- Added /tempshun, temporary shuns the current session of specified nick
+  (just like the 'tempshun' in spamfilter and ban version). Suggested by
+  Cnils (#0001526). [docs/help.conf will be updated later]
