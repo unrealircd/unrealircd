@@ -1,6 +1,6 @@
 # create RSA certs - Server
 
-RANDFILE = src/ssl.rnd
+RANDFILE = ssl.rnd
 
 [ req ]
 default_bits = 1024

@@ -1541,3 +1541,4 @@ seen. gmtime warning still there
 - Fixed +O/+A ban implementation issues
 - Reformated unreal32docs.html in something other than MS Word 93k now!
 - Corrected release date in doc/unreal32.docs
+- Removed ssl.rnd as it was not supposed to be provided by CVS
