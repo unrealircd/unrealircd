@@ -162,6 +162,30 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (i > 0)
 	{
 		char olduser[USERLEN+1];
+		
+		switch (UHOST_ALLOWED)
+		{
+			case UHALLOW_NEVER:
+				if (MyClient(sptr))
+				{
+					sendto_one(sptr, ":%s NOTICE %s :*** /vhost is disabled", me.name, sptr->name);
+					return 0;
+				}
+				break;
+			case UHALLOW_ALWAYS:
+				break;
+			case UHALLOW_NOCHANS:
+				if (MyClient(sptr) && sptr->user->joined)
+				{
+					sendto_one(sptr, ":%s NOTICE %s :*** /vhost can not be used while you are on a channel", me.name, sptr->name);
+					return 0;
+				}
+				break;
+			case UHALLOW_REJOIN:
+				rejoin_doparts(sptr);
+				/* join sent later when the host has been changed */
+				break;
+		}
 		if (sptr->user->virthost)
 		{
 			MyFree(sptr->user->virthost);
@@ -200,6 +224,8 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    vhost->virtuser ? olduser : sptr->user->username,
 		    sptr->user->realhost, vhost->virtuser ? vhost->virtuser : "", 
 		    	vhost->virtuser ? "@" : "", vhost->virthost);
+		if (UHOST_ALLOWED == UHALLOW_REJOIN)
+			rejoin_dojoinandmode(sptr);
 		return 0;
 	}
 	if (i == -1)

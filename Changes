@@ -1945,5 +1945,6 @@ seen. gmtime warning still there
 - Fixed /rehash stall caused by delayed unloading of the scan module (deadlock).
 - Added feature that if the chan is +m AND +u (so both!) and you ban IRC!*@* then ops
   will no longer see the "relayed" message from IRC.
-- Made set::allow-userhost-change forced-rejoin work.
+- Made set::allow-userhost-change force-rejoin work.
 - Fixed chmode +u bug when chanop was parting but wasn't sent to normal users.
+- Added allow-userhost-change checks to /vhost.
