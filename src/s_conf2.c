@@ -1160,10 +1160,13 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 			ca->mask = strdup(cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "motd")) {
-			ca->motd = strdup(cep->ce_vardata);
+			ca->motd = read_motd(cep->ce_vardata);
+			ca->motd_file = strdup(cep->ce_vardata);
+			ca->motd_tm = motd_tm;
 		}
 		else if (!strcmp(cep->ce_varname, "rules")) {
-			ca->rules = strdup(cep->ce_vardata);
+			ca->rules = read_rules(cep->ce_vardata);
+			ca->rules_file = strdup(cep->ce_vardata);
 		}
 		else
 		{
@@ -1749,8 +1752,8 @@ void	report_configuration(void)
 		for (tld_ptr = conf_tld; tld_ptr; tld_ptr = (ConfigItem_tld *) tld_ptr->next)
 			printf("       * %s (motd=%s) (rules=%s)\n",
 					tld_ptr->mask,
-					(tld_ptr->motd ? tld_ptr->motd : "no motd"),		
-					(tld_ptr->rules ? tld_ptr->rules : "no rules"));
+					(tld_ptr->motd_file ? tld_ptr->motd_file : "no motd"),		
+					(tld_ptr->rules_file ? tld_ptr->rules_file : "no rules"));
 	}
 	if (conf_listen)
 	{
@@ -1872,4 +1875,31 @@ ConfigItem_ulines *Find_uline(char *host) {
 	return NULL;
 }
 
+
+ConfigItem_except *Find_except(char *host, short type) {
+	ConfigItem_except *excepts;	
+
+	if (!host || !type)
+		return NULL;
+	
+	for(excepts = conf_except; excepts; excepts =(ConfigItem_except *) excepts->next) {
+		if (excepts->flag.type == type)
+			if (!stricmp(host, excepts->mask))
+			return excepts;
+	}
+	return NULL;
+}
+
+ConfigItem_tld *Find_tld(char *host) {
+	ConfigItem_tld *tld;	
+
+	if (!host)
+		return NULL;
+	
+	for(tld = conf_tld; tld; tld = (ConfigItem_tld *) tld->next) {
+			if (!match(tld->mask, host))
+			return tld;
+	}
+	return NULL;
+}
 

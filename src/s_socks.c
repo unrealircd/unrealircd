@@ -131,10 +131,9 @@ void start_socks(cptr)
 	}
 #endif
 #ifndef INET6
-	if (find_socksexcept((char *)inetntoa((char *)&cptr->ip)))
+	if (Find_except((char *)inetntoa((char *)&cptr->ip),0))
 #else
-	if (find_socksexcept((char *)inet_ntop(AF_INET6, (char *)&cptr->ip,
-	    mydummy, MYDUMMY_SIZE)))
+	if (Find_except((char *)inet_ntop(AF_INET6, (char *)&cptr->ip, mydummy, MYDUMMY_SIZE),0))
 #endif
 		goto skip_socks;
 

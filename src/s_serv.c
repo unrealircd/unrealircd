@@ -2508,9 +2508,14 @@ int  m_stats(cptr, sptr, parc, parv)
 	  case 'E':
 		  report_configured_links(sptr, CONF_EXCEPT);
 		  break;
-	  case 'e':
-		  report_configured_links(sptr, CONF_SOCKSEXCEPT);
+	  case 'e': {
+		  ConfigItem_except *excepts;
+		  for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
+			if (excepts->flag.type == 0)
+			sendto_one(sptr, rpl_str(RPL_STATSELINE), me.name, parv[0], excepts->mask);
+		  }
 		  break;
+	  }
 	  case 'K':
 	  case 'k':
 		  report_configured_links(sptr,
@@ -4220,7 +4225,7 @@ int  m_trace(cptr, sptr, parc, parv)
  */
 int  m_motd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	aTrecord *ptr;
+	ConfigItem_tld *ptr;
 	aMotd *temp, *temp2;
 	struct tm *tm = motd_tm;
 	int  svsnofile = 0;
@@ -4235,16 +4240,16 @@ int  m_motd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		goto playmotd;
 	}
 #endif
-	for (ptr = tdata; ptr; ptr = ptr->next)
+	for (ptr = conf_tld; ptr; ptr = (ConfigItem_tld *)ptr->next)
 	{
-		if (!match(ptr->hostmask, cptr->user->realhost))
+		if (!match(ptr->mask, cptr->user->realhost))
 			break;
 	}
 
 	if (ptr)
 	{
-		temp = ptr->tmotd;
-		tm = ptr->tmotd_tm;
+		temp = ptr->motd;
+		tm = ptr->motd_tm;
 	}
 	else
 		temp = motd;
@@ -4666,7 +4671,7 @@ int  m_botmotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
  */
 int  m_rules(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	aTrecord *ptr;
+	ConfigItem_tld	*ptr;
 	aMotd *temp;
 
 	if (hunt_server(cptr, sptr, ":%s RULES :%s", 1, parc,
@@ -4679,15 +4684,15 @@ int  m_rules(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		goto playrules;
 	}
 #endif
-	for (ptr = tdata; ptr; ptr = ptr->next)
+	for (ptr = conf_tld; ptr; ptr = (ConfigItem_tld *)ptr->next)
 	{
-		if (!match(ptr->hostmask, cptr->user->realhost))
+		if (!match(ptr->mask, cptr->user->realhost))
 			break;
 	}
 
 	if (ptr)
 	{
-		temp = ptr->trules;
+		temp = ptr->rules;
 
 	}
 	else

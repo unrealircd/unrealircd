@@ -65,6 +65,13 @@ ConfigItem_class	*Find_class(char *name);
 ConfigItem_oper		*Find_oper(char *name);
 ConfigItem_listen	*Find_listen(char *ipmask, int port);
 ConfigItem_ulines	*Find_uline(char *host);
+ConfigItem_except	*Find_except(char *host, short type);
+ConfigItem_tld		*Find_tld(char *host);
+
+
+aMotd *read_motd(char *filename);
+aMotd *read_rules(char *filename);
+extern struct tm *motd_tm;
 
 /* Remmed out for win32 compatibility.. as stated of 467leaf win32 port.. */
 

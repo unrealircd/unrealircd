@@ -1031,8 +1031,11 @@ struct _configitem_tld {
 	ConfigItem 	*prev;
 	ConfigItem	*next;
 	char 		*mask;
-	char		*motd;
-	char		*rules;
+	char 		*motd_file;
+	char		*rules_file;
+	struct tm	*motd_tm;
+	aMotd		*rules;
+	aMotd 		*motd;
 };
 
 struct _configitem_listen {
