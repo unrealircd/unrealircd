@@ -52,6 +52,7 @@ extern fdlist oper_fdlist;
 static char sendbuf[2048];
 static char tcmd[1024];
 static char ccmd[1024];
+static char xcmd[1024];
 
 /* this array is used to ensure we send a msg only once to a remote 
 ** server.  like, when we are sending a message to all channel members
@@ -389,6 +390,7 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 
 	sprintf(tcmd, ":%s %s %s :%s", from->name, tok, nick, text);
 	sprintf(ccmd, ":%s %s %s :%s", from->name, cmd, nick, text);
+	sprintf(xcmd, "%s %s :%s", cmd, nick, text);
 
 	++sentalong_marker;
 	for (lp = chptr->members; lp; lp = lp->next)
@@ -413,8 +415,8 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 			continue;
 		if (MyConnect(acptr) && IsRegisteredUser(acptr))
 		{
-			sendto_prefix_one(acptr, from, ":%s %s %s :%s",
-				from->name, cmd, nick, text);
+			sendto_prefix_one(acptr, from, ":%s %s",
+				from->name, xcmd);
 			sentalong[i] = sentalong_marker;
 		}
 		else
@@ -1436,7 +1438,10 @@ void vsendto_prefix_one(struct Client *to, struct Client *from,
 		*sendbuf = ':';
 		strcpy(&sendbuf[1], sender);
 		/* Assuming 'pattern' always starts with ":%s ..." */
-		ircvsprintf(sendbuf + strlen(sendbuf), &pattern[3], vl);
+		if (!strcmp(&pattern[3], "%s"))
+			strcpy(sendbuf + strlen(sendbuf), va_arg(vl, char *)); /* This can speed things up by 30% -- Syzop */
+		else
+			ircvsprintf(sendbuf + strlen(sendbuf), &pattern[3], vl);
 	}
 	else
 		ircvsprintf(sendbuf, pattern, vl);
