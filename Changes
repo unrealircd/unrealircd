@@ -579,3 +579,4 @@ seen. gmtime warning still there
 - Fixed some scan-socks and blackhole fuckups
 - Added ./configure, autoconf generated configure script, (still need to update ./Config)
 - Config fixes, settings.h and Makefile.dist are now dead. RIP.
+- Fixed a typo in configure

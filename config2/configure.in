@@ -258,9 +258,9 @@ AC_SUBST(NEED_U_INT32_T)
 AC_SUBST(CRYPTOLIB)
 AC_ARG_WITH(crypt-oper, [ --with-crypt-oper     Specify whether oper passwords should be crypted],
 AC_DEFINE(CRYPT_OPER_PASSWORD))
-AC_ARG_WITH(crypt-oper, [ --with-crypt-iline     Specify whether allow passwords should be crypted],
+AC_ARG_WITH(crypt-iline, [ --with-crypt-iline     Specify whether allow passwords should be crypted],
 AC_DEFINE(CRYPT_ILINE_PASSWORD))
-AC_ARG_WITH(crypt-oper, [ --with-crypt-link     Specify whether link passwords should be crypted],
+AC_ARG_WITH(crypt-link, [ --with-crypt-link     Specify whether link passwords should be crypted],
 AC_DEFINE(CRYPT_LINK_PASSWORD))
 AC_ARG_WITH(crypt-xline, [ --with-crypt-xline     Specify whether die/restart  passwords should be
 crypted], AC_DEFINE(CRYPT_XLINE_PASSWORD))
