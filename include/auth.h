@@ -24,15 +24,16 @@ typedef	struct {
 	short	type;
 } anAuthStruct;
 
-#define AUTHTYPE_PLAINTEXT 0
-#define AUTHTYPE_UNIXCRYPT 1
-#define AUTHTYPE_MD5       2
-#define AUTHTYPE_SHA1	   3
-
+#define AUTHTYPE_PLAINTEXT  0
+#define AUTHTYPE_UNIXCRYPT  1
+#define AUTHTYPE_MD5        2
+#define AUTHTYPE_SHA1	    3 
+#define AUTHTYPE_SSL_PUBKEY 4
 
 #ifdef USE_SSL
 #define AUTHENABLE_MD5
 #define AUTHENABLE_SHA1
+#define AUTHENABLE_SSL_PUBKEY
 /* OpenSSL provides a crypt() */
 #ifndef AUTHENABLE_UNIXCRYPT
 #define AUTHENABLE_UNIXCRYPT

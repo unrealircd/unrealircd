@@ -52,6 +52,9 @@ anAuthStruct AuthTypes[] = {
 #ifdef AUTHENABLE_SHA1
 	{"sha1",	AUTHTYPE_SHA1},
 #endif
+#ifdef AUTHENABLE_SSL_PUBKEY
+	{"sslpubkey",   AUTHTYPE_SSL_PUBKEY},
+#endif
 	{NULL,		0}
 };
 
@@ -145,6 +148,12 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 #ifdef  AUTHENABLE_SHA1
         SHA_CTX sha1_ctx;
 #endif
+#ifdef AUTHENABLE_SSL_PUBKEY
+	EVP_PKEY *evp_pkey = NULL;
+	EVP_PKEY *evp_pkeyfile = NULL;
+	X509 *x509_client = NULL;
+	FILE *key_file = NULL;
+#endif
 	int	i = 0; /* We can always use this .. */
 	
 	if (!as)
@@ -211,7 +220,45 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 				return -1;
 		        break;
 #endif
-
+#ifdef AUTHENABLE_SSL_PUBKEY
+		case AUTHTYPE_SSL_PUBKEY:
+			if (!para)
+				return -1;
+			if (!cptr->ssl)
+				return -1;
+			x509_client = SSL_get_peer_certificate(cptr->ssl);
+			if (!x509_client)
+				return -1;
+			evp_pkey = X509_get_pubkey(x509_client);
+			if (!(key_file = fopen(para, "r")))
+			{
+				EVP_PKEY_free(evp_pkey);
+				X509_free(x509_client);
+				return -1;
+			}
+			evp_pkeyfile = PEM_read_PUBKEY(key_file, NULL,
+				NULL, NULL);
+			if (!evp_pkeyfile)
+			{
+				fclose(key_file);
+				EVP_PKEY_free(evp_pkey);
+				X509_free(x509_client);
+				return -1;
+			}
+			if (!(EVP_PKEY_cmp_parameters(evp_pkeyfile, evp_pkey))
+			{
+				fclose(key_file);
+				EVP_PKEY_free(evp_pkey);
+				EVP_PKEY_free(evp_pkeyfile);
+				X509_free(x509_client);
+				return -1;
+			}
+			fclose(key_file);
+			EVP_PKEY_free(evp_pkey);
+			EVP_PKEY_free(evp_pkeyfile);
+			X509_free(x509_client);
+			return 2;	
+#endif
 	}
 }
 

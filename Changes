@@ -959,3 +959,4 @@ seen. gmtime warning still there
   makefile.win32?. If SSL is enabled, we can use MD5, SHA1, and crypt()
   even on win32
 - Added ssl.c and cidr.c to the win32 makefile
+- Added ssl-pubkey auth method (parameter = pem file for public key)
