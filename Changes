@@ -1259,3 +1259,4 @@ seen. gmtime warning still there
 - Made +I once again work in win32
 *** beta9 released ***
 - Fixed a stupid m_oper bug
+- Fixed a win32 editor bug causing a crash when you click save multiple times

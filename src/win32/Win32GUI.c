@@ -175,23 +175,19 @@ LRESULT RESubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
  * (c) 2001 codemastr
  */
 typedef struct colorlist {
+	struct colorlist *prev,*next;
 	char *color;
-	struct colorlist *next, *prev;
 } ColorList;
 
 ColorList *TextColors = NULL;
 void AddColor(char *color) {
 	ColorList *clist;
 
-	clist = MyMalloc(sizeof(ColorList));
+	clist = MyMallocEx(sizeof(ColorList));
 	if (!clist)
 		return;
 	clist->color = strdup(color);
-	clist->prev = NULL;
-	clist->next = TextColors;
-	if (TextColors)
-		TextColors->prev = clist;
-	TextColors = clist;
+	AddListItem(clist,TextColors);
 }
 
 ColorList *DelNewestColor() {
@@ -207,14 +203,13 @@ ColorList *DelNewestColor() {
 }
 
 void WipeColors() {
-	ColorList *clist, q;
+	ColorList *clist, *next;
 
-	for (clist = TextColors; clist; clist = clist->next)
+	for (clist = TextColors; clist; clist = next)
 	{
-			q.next = clist->next;
+			next = clist->next;
 			MyFree(clist->color);
 			MyFree(clist);
-			clist = &q;
 	}
 
 }
@@ -267,6 +262,7 @@ DWORD CALLBACK RTFToIRC(int fd, char *pbBuff, long cb) {
 	char cmd[15], value[500], color[25], colorbuf[4];
 	char colors[16];
 	pbBuff++;
+	TextColors = NULL;
 	bzero(buffer, cb);
 	for (; *pbBuff; pbBuff++) {
 		if (*pbBuff == '\r' || *pbBuff == '\n')
