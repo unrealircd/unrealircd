@@ -285,8 +285,9 @@ LRESULT CALLBACK LicenseDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 				if (*s)
 					strcat(String, "\\par\r\n");
 			    }
+			strcat(String, "\\f1\\par\r\n}");
 			SetDlgItemText(hDlg, IDC_TEXT, String);
-			strcat(String, "\\f1\\par\r\n");
+			
 			return (TRUE);
 			}
 		case WM_COMMAND:
@@ -350,8 +351,9 @@ LRESULT CALLBACK DalDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 				if (*s)
 					strcat(String, "\\par\r\n");
 			    }
+			strcat(String, "\\f1\\par\r\n}");
 			SetDlgItemText(hDlg, IDC_TEXT, String);
-			strcat(String, "\\f1\\par\r\n");
+			
 
 			return (TRUE);
 			}
@@ -748,13 +750,70 @@ LRESULT CALLBACK StatusDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 static char *ParseCodes(char *buffer)
 {
 	static char tmp[512], out[512];
-	int  i = 0, j = 0, hascomma = 0, bold = 0, underline = 0, reverse = 0;
+	int  i = 0, j = 0, hascomma = 0, bold = 0, underline = 0, reverse = 0, firstcolordigit;
 
 	bzero((char *)out, sizeof(out));
 	memcpy(tmp, buffer, 512);
 
 	while (tmp[i])
 	{
+		if (tmp[i] == '\3') {
+			i++;
+			if (!isdigit(tmp[i])) {
+				j += 14;
+				strcat(out,"\\cf");
+				strcat(out,"\\highlight1");
+				continue;
+			}
+			strcat(out,"\\cf");
+			j += 3;
+			firstcolordigit = 1;
+			while (isdigit(tmp[i]))
+			{
+				if (firstcolordigit)
+				{
+					// need to reverse black and white color numbers
+					// mirc uses 0=white, 1=black but rtf is just the opposite
+					if (tmp[i] == '0')
+						tmp[i] = '1';
+					else if (tmp[i] == '1' && !isdigit(tmp[i+1]))
+						tmp[i] = '0';
+				}
+				firstcolordigit = 0;
+				out[j++] = tmp[i++];
+			}
+			// look for background color
+			if (tmp[i] == ',')
+			{
+				// prepare for background color
+				strcat(out, "\\highlight");
+				j += 10;
+				++i;
+				firstcolordigit = 1;
+				while (isdigit(tmp[i]))
+				{
+					if (firstcolordigit)
+					{
+						// need to reverse black and white color numbers
+						// mirc uses 0=white, 1=black but for background colors 
+						// rtf uses 0=off (white), 1=white so our color table
+						// specifies color number 16 as black.
+						if (tmp[i] == '0')	// white
+							tmp[i] = '1';
+						else if (tmp[i] == '1' && !isdigit(tmp[i+1]))  // black
+						{
+							tmp[i] = '6';
+							out[j++] = '1';
+						}
+					}
+					firstcolordigit = 0;
+					out[j++] = tmp[i++];
+				}
+			}
+			out[j++] = ' ';
+			continue;
+		}
+
 		if (tmp[i] == '\022') {
 			reverse = ~reverse;
 			if (reverse) {
@@ -816,6 +875,7 @@ static char *ParseCodes(char *buffer)
 		j++;
 	}
 	return out;
+
 }
 
 

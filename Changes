@@ -505,3 +505,4 @@ seen. gmtime warning still there
 - Fixed to winlocal by McSkaf
 - More fixes
 - Made /die not show admins IP (fixed by Stskeeps after his users nuked him..)
+- Added McSkaf's mIRC color parse patch
