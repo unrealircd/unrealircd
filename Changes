@@ -1933,3 +1933,4 @@ seen. gmtime warning still there
 - Fixed a bug reported by mQ where it was possible to include spaces in a TKL host
 - Documentation updates (added a section about features).
 - Fixed remote /rehash bug (#0000600).
+- Documentation updates (unreal32docs.html, example.conf).
