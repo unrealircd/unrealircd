@@ -1,4 +1,4 @@
-
+/*
  *   Unreal Internet Relay Chat Daemon, src/channel.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Co Center
@@ -4778,20 +4778,19 @@ int  m_sjoin(cptr, sptr, parc, parv)
 					    backupbuf);
 					continue;
 				}
-				if (acptr->from != sptr)
+/*				if (acptr->from != sptr->from)
 				{
-					/* The client is not from the server, send a kick for it */
 					sendto_one(sptr,
 					    ":%s KICK %s %s :Fake direction",
-					    me.name,chptr->name, acptr->name);
+					    me.name,chptr->chname, acptr->name);
 					sendto_ops
-					    ("Fake direction from user %s in SJOIN from %s at %s",
+					    ("Fake direction from user %s in SJOIN from %s(%s) at %s",
 					    nick,
-					    acptr->from, sptr->name,
+					    acptr->from->name, sptr->name,
 					    chptr->chname);
 					continue;
 				}
-
+*/
 				if (removetheirs)
 				{
 					modeflags = 0;
