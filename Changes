@@ -1966,3 +1966,4 @@ seen. gmtime warning still there
   Reported by _SciFi_ (#0000762)
 - Fixed a /who big which could make the server crash (oper only).
 - Fixed a match() bug
+- Fixed a /version bug

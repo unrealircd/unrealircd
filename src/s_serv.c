@@ -135,6 +135,10 @@ CMD_FUNC(m_version)
 {
 	extern char serveropts[];
 
+	/* Only allow remote VERSIONs if registered -- Syzop */
+	if (MyClient(sptr) && (!IsPerson(sptr) && !IsServer(cptr)))
+		goto normal;
+
 	if (hunt_server_token(cptr, sptr, MSG_VERSION, TOK_VERSION, ":%s", 1, parc,
 	    parv) == HUNTED_ISME)
 	{
@@ -144,6 +148,7 @@ CMD_FUNC(m_version)
 		    tainted ? "3" : "",
 		    (IsAnOper(sptr) ? MYOSNAME : "*"), UnrealProtocol);
 		if (MyClient(sptr)) {
+normal:
 			sendto_one(sptr, ":%s 005 %s " PROTOCTL_CLIENT_1, me.name, sptr->name, PROTOCTL_PARAMETERS_1);
 			sendto_one(sptr, ":%s 005 %s " PROTOCTL_CLIENT_2, me.name, sptr->name, PROTOCTL_PARAMETERS_2);
 		}
