@@ -3070,3 +3070,4 @@ seen. gmtime warning still there
 - Added german translation of unreal32docs (doc/unreal32docs.de.html), translated
   by Stylus740 which will also maintain it.
 - Patched TRE 0.6.6 to fix known crashbug (#0001684), testing is welcomed.
+- Applied the above patch to the win32 TRE dll/lib files.
