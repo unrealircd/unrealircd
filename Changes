@@ -1001,3 +1001,4 @@ seen. gmtime warning still there
   avail forthcoming
 - SMO recoded but wierd because sendto_umode and sendto_snomask are wierd
 - chatops actually checks if sender is an oper, why did no one notice this?
+- bugs in SMO ironed out, now sends to someone with ANY of the umodes/snomasks

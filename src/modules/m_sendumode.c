@@ -134,6 +134,7 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	long snomask = 0;
 	int and = 0;
 
+	aClient* acptr;
 
 	message = (parc > 3) ? parv[3] : parv[2];
 
@@ -190,10 +191,11 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 	}
 
-	sendto_umode(umode_s, "%s", message);
-
-	if (snomask) {
-		sendto_snomask(snomask, "%s", message);
+	for(i = 0; i <= LastSlot; i++)
+	    if((acptr = local[i]) && IsPerson(acptr) && ((acptr->user->snomask & snomask) ||
+		(acptr->umodes & umode_s)))
+	{
+		sendto_one(acptr, ":%s NOTICE %s :%s", me.name, acptr->name, message);
 	}
 
 	return 0;
