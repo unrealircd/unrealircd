@@ -107,7 +107,7 @@ int  ssl_handshake(aClient *cptr)
 	cptr->ssl = (struct SSL *)SSL_new(ctx_server);
 	CHK_NULL(cptr->ssl);
 	SSL_set_fd((SSL *) cptr->ssl, cptr->fd);
-
+	set_non_blocking(cptr->fd, cptr);
 	err = SSL_accept((SSL *) cptr->ssl);
 	if ((err) == -1)
 	{

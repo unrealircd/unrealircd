@@ -216,3 +216,5 @@
 - Fixed a real bad  /whois bug, reported by BiGi
 - Fixed a problem with /sajoin .. atleast possible
 - Added infofield in /stats L for clients/listeners
+- Fixed a blocking socket thing
+- Fixed up /stats L bug

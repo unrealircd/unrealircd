@@ -2421,10 +2421,10 @@ int  m_stats(cptr, sptr, parc, parv)
 				  continue;
 			  if (!doall && wilds && match(name, acptr->name))
 				  continue;
-/*			  if (!(parc == 2 && IsServer(acptr)) &&
+			  if (!(parc == 2 && (IsServer(acptr) || (acptr->flags & FLAGS_LISTEN))) &&
 			      !(doall || wilds) && mycmp(name, acptr->name))
 				  continue;
-*/
+
 #ifdef DEBUGMODE
 			  ircsprintf(pbuf, "%d :%d", acptr->cputime,
 			      (acptr->user && MyConnect(acptr)) ?
