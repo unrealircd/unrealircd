@@ -10,7 +10,6 @@ dnl Checks for libraries.
 AC_CHECK_LIB(descrypt, crypt, IRCDLIBS="$IRCDLIBS-ldescrypt " MKPASSWDLIBS="-ldescrypt",
 AC_CHECK_LIB(crypt, crypt,IRCDLIBS="$IRCDLIBS-lcrypt " MKPASSWDLIBS="-lcrypt"))
 AC_CHECK_LIB(socket, socket,IRCDLIBS="$IRCDLIBS-lsocket ")
-AC_CHECK_LIB(dl, dlopen,IRCDLIBS="$IRCDLIBS -ldl ")
 AC_SUBST(IRCDLIBS)
 AC_SUBST(MKPASSWDLIBS)
 AC_DEFUN(AC_INSTALL_REGEX,
@@ -36,7 +35,7 @@ fi
 dnl module checking based on Hyb7's module checking code
 AC_DEFUN(AC_ENABLE_DYN,
 [
-AC_CHECK_FUNC(dlopen,, AC_CHECK_LIB(dl, dlopen,,AC_MSG_WARN(Dynamic linking is not enabled because dlopen was not found) AC_DEFINE(STATIC_LINKING)))
+AC_CHECK_FUNC(dlopen,, AC_CHECK_LIB(dl, dlopen,$IRCDLIBS="$IRCDLIBS-ldl",AC_MSG_WARN(Dynamic linking is not enabled because dlopen was not found) AC_DEFINE(STATIC_LINKING)))
 hold_cflags=$CFLAGS
 CFLAGS="$CFLAGS -export-dynamic"
 AC_CACHE_CHECK(if we need the -export-dynamic flag, ac_cv_export_dynamic, [
