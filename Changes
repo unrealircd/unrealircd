@@ -545,5 +545,4 @@ seen. gmtime warning still there
 - Added scan_socks.c, added and moved some stuff to
   include/modules/scan.h (the dir too)
 - Converted threads to IRC*Thread by codemastr. 
-
-
+- Updated the win32 thread code (maybe it will work now?)

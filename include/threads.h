@@ -30,25 +30,23 @@
 #include <pthread.h>
 typedef pthread_attr_t THREAD_ATTR;
 typedef pthread_t THREAD;
-typedef short THREAD_ID; /* not needed, but makes porting easier */
 typedef pthread_mutex_t MUTEX;
-#define IRCCreateThread(threadid, thread, attr, start, arg) pthread_attr_init(&attr); pthread_create(&thread, &attr, (void*)start, arg)
+#define IRCCreateThread(thread, attr, start, arg) pthread_attr_init(&attr); pthread_create(&thread, &attr, (void*)start, arg)
 #define IRCMutexLock(mutex) pthread_mutex_lock(&mutex)
 #define IRCMutexUnlock(mutex) pthread_mutex_unlock(&mutex)
 #define IRCCreateMutex(mutex) pthread_mutex_init(&mutex, NULL)
 #define IRCMutexDestroy(mutex) pthread_mutex_destroy(&mutex)
 #define IRCExitThread(x) pthread_exit(x)
 #else
-typedef SECURITY_ATTRIBUTES THREAD_ATTR;
-typedef HANDLE THREAD;
-typedef PULONG THREAD_ID;
+typedef short THREAD_ATTR; /* Not needed but makes porting easier */
+typedef unsigned long THREAD;
 typedef HANDLE MUTEX;
-#define IRCCreateThread(threadid, thread, attr, start, arg) thread = CreateThread(&attr, 0, (LPTHREAD_START_ROUTINE)start, arg, 0, &threadid)
+#define IRCCreateThread(thread, attr, start, arg) thread = _beginthread((void *)start, 0, arg)
 #define IRCMutexLock(mutex) WaitForSingleObject(mutex, INFINITE)
 #define IRCMutexUnlock(mutex) ReleaseMutex(mutex)
 #define IRCCreateMutex(mutex) mutex = CreateMutex(NULL, TRUE, NULL)
 #define IRCMutexDestroy(mutex) CloseHandle(mutex)
-#define IRCExitThread(x) ExitThread(x)
+#define IRCExitThread(x) _endthread(x)
 #endif
 
 #endif

@@ -255,10 +255,9 @@ DLLFUNC int h_scan_connect(aClient *sptr)
 {
 	Hook			*hook;
 	HStruct			*h;
-	vFP				*vfp;
+	vFP			*vfp;
 	THREAD			thread;
-    THREAD_ATTR		thread_attr;
-	THREAD_ID		id;
+	THREAD_ATTR		thread_attr;
 
 	IRCMutexLock(HSlock);
 	HS_Cleanup((void *)1);
@@ -276,7 +275,7 @@ DLLFUNC int h_scan_connect(aClient *sptr)
 		{
 	        h->refcnt++;
 			/* Create thread for connection */
-			IRCCreateThread(id, thread, thread_attr, (hook->func.voidfunc), h); 
+			IRCCreateThread(thread, thread_attr, (hook->func.voidfunc), h); 
 		}
 		IRCMutexUnlock(HSlock);
 		return 1;
