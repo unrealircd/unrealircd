@@ -25,6 +25,7 @@
 #define IDC_LSERVERS                    1123
 #define IDC_LMAXCLIENTS                 1124
 #define IDC_UPTIME                      1125
+#define IDC_CONFIGERROR                 1126
 #define IDM_CREDITS                     40027
 #define IDM_DAL                         40028
 #define IDM_LICENSE                     40029

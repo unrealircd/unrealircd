@@ -842,12 +842,12 @@ void win_log(char *format, ...) {
         ircvsprintf(buf, format, ap);
 	strcat(buf, "\r\n");
 	if (errors) {
-		buf2 = MyMalloc(strlen(errors)+strlen(buf));
+		buf2 = MyMalloc(strlen(errors)+strlen(buf)+1);
 		sprintf(buf2, "%s%s",errors,buf);
 		MyFree(errors);
 	}
 	else {
-		buf2 = MyMalloc(strlen(buf));
+		buf2 = MyMalloc(strlen(buf)+1);
 		sprintf(buf2, "%s",buf);
 	}
 	errors = buf2;
