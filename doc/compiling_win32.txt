@@ -21,7 +21,7 @@ is not supported.
 3. Go to your UnrealIrcd dir (like: cd \dev\unreal3.2) and then compile with:
    nmake -f makefile.win32
    This will generate a wircd.exe and unreal.exe
-4. Copy the src\win32\gnu_regex.dll to your UnrealIrcd main dir.
+4. Copy the src\win32\tre.dll to your UnrealIrcd main dir.
 5. Done!
 
 == VC++ 7.x (.NET) ==
@@ -29,7 +29,7 @@ is not supported.
 2. Go to your UnrealIrcd dir (like: cd \dev\unreal3.2) and then compile with:
    nmake -f makefile.win32
    This will generate a wircd.exe and unreal.exe
-3. Copy the src\win32\gnu_regex.dll to your UnrealIrcd main dir.
+3. Copy the src\win32\tre.dll to your UnrealIrcd main dir.
 4. Done!
 
 ==[ HOW TO COMPILE UNREALIRCD WITH SSL AT WINDOWS ]==

@@ -2719,3 +2719,7 @@ seen. gmtime warning still there
 - Disabled talk-trough-+m/+M for opers if NO_OPEROVERRIDE is defined
 - Display zlib/SSL version in /version (oper only)... will prolly be improved later.
 - updated doc/compiling_win32.txt
+- updated doc/compiling_win32.txt some more (tre.dll, not gnu_regex.dll)
+- Added a patch by AngryWolf to display libcurl info at startup. Also added support to 
+  display in /version
+- Added a patch by AngryWolf to add ./unreal version (displays the Unreal version)

@@ -70,6 +70,9 @@ Computing Center and Jarkko Oikarinen";
 #ifdef _WIN32
 extern BOOL IsService;
 #endif
+#ifdef USE_LIBCURL
+#include <curl/curl.h>
+#endif
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
 ID_Notes("2.48 3/9/94");
@@ -1061,11 +1064,15 @@ int InitwIRCD(int argc, char *argv[])
 	fprintf(stderr, "%s", unreallogo);
 	fprintf(stderr, "                           v%s\n", VERSIONONLY);
 #ifdef USE_SSL
-	fprintf(stderr, "                     using %s\n\n", OPENSSL_VERSION_TEXT);
+	fprintf(stderr, "                     using %s\n", OPENSSL_VERSION_TEXT);
 #endif
 #ifdef ZIP_LINKS
-	fprintf(stderr, "                     using zlib %s\n\n", zlibVersion());
+	fprintf(stderr, "                     using zlib %s\n", zlibVersion());
 #endif
+#ifdef USE_LIBCURL
+	fprintf(stderr, "                     using %s\n", curl_version());
+#endif
+	fprintf(stderr, "\n");
 #endif
 	clear_client_hash_table();
 	clear_channel_hash_table();

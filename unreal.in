@@ -29,6 +29,8 @@ elif [ "$1" = "restart" ] ; then
 	kill -2 `cat $PID_FILE`
 elif [ "$1" = "mkpasswd" ] ; then
 	@BINDIR@ -P $2 $3
+elif [ "$1" = "version" ] ; then
+	@BINDIR@ -v
 else
-	echo "Usage: unreal start|stop|rehash|restart|mkpasswd"
+	echo "Usage: unreal start|stop|rehash|restart|mkpasswd|version"
 fi

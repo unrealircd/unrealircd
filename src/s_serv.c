@@ -43,6 +43,9 @@ static char sccsid[] =
 #include "h.h"
 #include "proto.h"
 #include <string.h>
+#ifdef USE_LIBCURL
+#include <curl/curl.h>
+#endif
 extern VOIDSIG s_die();
 
 static char buf[BUFSIZE];
@@ -155,6 +158,10 @@ CMD_FUNC(m_version)
 #ifdef ZIP_LINKS
 		if (IsAnOper(sptr))
 			sendto_one(sptr, ":%s NOTICE %s :zlib %s", me.name, sptr->name, zlibVersion());
+#endif
+#ifdef USE_LIBCURL
+		if (IsAnOper(sptr))
+			sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, curl_version());
 #endif
 		if (MyClient(sptr)) {
 normal:
