@@ -18,6 +18,8 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ * $Id$
  */
 
 #include "struct.h"
@@ -36,6 +38,7 @@
 #ifdef _WIN32
 #include <io.h>
 #define RTLD_NOW 0
+const char *our_dlerror(void);
 #elif defined(HPUX)
 #include <dl.h>
 #define RTLD_NOW BIND_IMMEDIATE
@@ -54,8 +57,10 @@
 
 Hook	   	*Hooks[MAXHOOKTYPES];
 Hooktype	Hooktypes[MAXCUSTOMHOOKS];
-Module          *Modules = NULL;
-Versionflag     *Versionflags = NULL;
+Callback	*Callbacks[MAXCALLBACKS];	/* Callback objects for modules, used for rehashing etc (can be multiple) */
+Callback	*RCallbacks[MAXCALLBACKS];	/* 'Real' callback function, used for callback function calls */
+MODVAR Module          *Modules = NULL;
+MODVAR Versionflag     *Versionflags = NULL;
 int     Module_Depend_Resolve(Module *p);
 Module *Module_make(ModuleHeader *header, 
 #ifdef _WIN32
@@ -90,7 +95,7 @@ void DeleteTempModules(void)
 	if (!fd) /* Ouch.. this is NOT good!! */
 	{
 		config_error("Unable to open 'tmp' directory: %s, please create one with the appropriate permissions",
-			strerror(ERRNO));
+			strerror(errno));
 		if (!loop.ircd_booted)
 			exit(7);
 		return; 
@@ -133,6 +138,8 @@ void Module_Init(void)
 {
 	bzero(Hooks, sizeof(Hooks));
 	bzero(Hooktypes, sizeof(Hooktypes));
+	bzero(Callbacks, sizeof(Callback));
+	bzero(RCallbacks, sizeof(Callback));
 }
 
 Module *Module_Find(char *name)
@@ -151,6 +158,16 @@ Module *Module_Find(char *name)
 	}
 	return NULL;
 	
+}
+
+static char *our_mod_version()
+{
+static char retbuf[128];
+	strlcpy(retbuf, version, sizeof(retbuf));
+#if defined(USE_SSL) && !defined(_WIN32)
+	strlcat(retbuf, "/SSL", sizeof(retbuf));
+#endif
+	return retbuf;
 }
 
 /*
@@ -176,6 +193,7 @@ char  *Module_Create(char *path_)
 	Module          *mod = NULL, **Mod_Handle = NULL;
 	int *x;
 	int betaversion,tag;
+	char *expectedmodversion = our_mod_version();
 	Debug((DEBUG_DEBUG, "Attempting to load module from %s",
 	       path_));
 	path = path_;
@@ -195,11 +213,19 @@ char  *Module_Create(char *path_)
 	{
 		/* We have engaged the borg cube. Scan for lifesigns. */
 		irc_dlsym(Mod, "Mod_Version", Mod_Version);
-		if (Mod_Version && strcmp(version, Mod_Version))
+		if (Mod_Version && strcmp(Mod_Version, expectedmodversion))
 		{
 			snprintf(errorbuf, sizeof(errorbuf),
 			         "Module was compiled for '%s', we are '%s', please recompile the module",
-			         Mod_Version, version);
+			         Mod_Version, expectedmodversion);
+			irc_dlclose(Mod);
+			remove(tmppath);
+			return errorbuf;
+		}
+		if (!Mod_Version)
+		{
+			snprintf(errorbuf, sizeof(errorbuf),
+				"Module is lacking Mod_Version. Perhaps a very old one you forgot to recompile?");
 			irc_dlclose(Mod);
 			remove(tmppath);
 			return errorbuf;
@@ -241,8 +267,6 @@ char  *Module_Create(char *path_)
 		}
 		mod = (Module *)Module_make(mod_header, Mod);
 		mod->tmp_file = strdup(tmppath);
-		if (Mod_Version)
-			mod->compilecheck = 1;
 		irc_dlsym(Mod, "Mod_Init", Mod_Init);
 		if (!Mod_Init)
 		{
@@ -432,6 +456,9 @@ void Unload_all_loaded_modules(void)
 			else if (objs->type == MOBJ_EXTBAN) {
 				ExtbanDel(objs->object.extban);
 			}
+			else if (objs->type == MOBJ_CALLBACK) {
+				CallbackDel(objs->object.callback);
+			}
 		}
 		for (child = mi->children; child; child = childnext)
 		{
@@ -488,6 +515,9 @@ void Unload_all_testing_modules(void)
 			}
 			else if (objs->type == MOBJ_EXTBAN) {
 				ExtbanDel(objs->object.extban);
+			}
+			else if (objs->type == MOBJ_CALLBACK) {
+				CallbackDel(objs->object.callback);
 			}
 		}
 		for (child = mi->children; child; child = childnext)
@@ -551,6 +581,9 @@ int    Module_free(Module *mod)
 		}
 		else if (objs->type == MOBJ_EXTBAN) {
 			ExtbanDel(objs->object.extban);
+		}
+		else if (objs->type == MOBJ_CALLBACK) {
+			CallbackDel(objs->object.callback);
 		}
 	}
 	for (p = Modules; p; p = p->next)
@@ -710,14 +743,6 @@ void	module_loadall(int module_load)
 		if (mi->flags & MODFLAG_LOADED)
 			continue;
 		irc_dlsym(mi->dll, "Mod_Load", fp);
-		irc_dlsym(mi->dll, "_Mod_Load", fpp);
-		if (fp);
-		else if (fpp) { fp = fpp; }
-		else
-		{
-			/* else, we didn't find it */
-			continue;
-		}
 		/* Call the module_load */
 		if ((*fp)(module_load) != MOD_SUCCESS)
 		{
@@ -726,7 +751,6 @@ void	module_loadall(int module_load)
 		}
 		else
 			mi->flags = MODFLAG_LOADED;
-		
 	}
 #endif
 }
@@ -831,8 +855,6 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			strcat(tmp, "[PERM] ");
 		if (!(mi->options & MOD_OPT_OFFICIAL))
 			strcat(tmp, "[3RD] ");
-		if (!mi->compilecheck)
-			strcat(tmp, "[OLD?] ");
 		if (!IsOper(sptr))
 			sendto_one(sptr, ":%s NOTICE %s :*** %s (%s)%s", me.name, sptr->name,
 				mi->header->name, mi->header->description,
@@ -1111,6 +1133,56 @@ Hook *HookDel(Hook *hook)
 	return NULL;
 }
 
+Callback	*CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfunc)(), char *(*cfunc)())
+{
+	Callback *p;
+	
+	p = (Callback *) MyMallocEx(sizeof(Callback));
+	if (func)
+		p->func.intfunc = func;
+	if (vfunc)
+		p->func.voidfunc = vfunc;
+	if (cfunc)
+		p->func.pcharfunc = cfunc;
+	p->type = cbtype;
+	p->owner = module;
+	AddListItem(p, Callbacks[cbtype]);
+	if (module) {
+		ModuleObject *cbobj = (ModuleObject *)MyMallocEx(sizeof(ModuleObject));
+		cbobj->object.callback = p;
+		cbobj->type = MOBJ_CALLBACK;
+		AddListItem(cbobj, module->objects);
+		module->errorcode = MODERR_NOERROR;
+	}
+	return p;
+}
+
+Callback *CallbackDel(Callback *cb)
+{
+	Callback *p, *q;
+	for (p = Callbacks[cb->type]; p; p = p->next) {
+		if (p == cb) {
+			q = p->next;
+			DelListItem(p, Callbacks[cb->type]);
+			if (RCallbacks[cb->type] == p)
+				RCallbacks[cb->type] = NULL;
+			if (p->owner) {
+				ModuleObject *cbobj;
+				for (cbobj = p->owner->objects; cbobj; cbobj = cbobj->next) {
+					if ((cbobj->type == MOBJ_CALLBACK) && (cbobj->object.callback == p)) {
+						DelListItem(cbobj, cb->owner->objects);
+						MyFree(cbobj);
+						break;
+					}
+				}
+			}
+			MyFree(p);
+			return q;
+		}
+	}
+	return NULL;
+}
+
 Cmdoverride *CmdoverrideAdd(Module *module, char *name, iFP function)
 {
 	aCommand *p;
@@ -1121,6 +1193,15 @@ Cmdoverride *CmdoverrideAdd(Module *module, char *name, iFP function)
 		if (module)
 			module->errorcode = MODERR_NOTFOUND;
 		return NULL;
+	}
+	for (ovr=p->overriders; ovr; ovr=ovr->next)
+	{
+		if ((ovr->owner == module) && (ovr->func == function))
+		{
+			if (module)
+				module->errorcode = MODERR_EXISTS;
+			return NULL;
+		}
 	}
 	ovr = MyMallocEx(sizeof(Cmdoverride));
 	ovr->func = function;
@@ -1244,3 +1325,80 @@ const char *ModuleGetErrorStr(Module *module)
 	return module_error_str[module->errorcode];
 }
 
+static int num_callbacks(int cbtype)
+{
+Callback *e;
+int cnt = 0;
+
+	for (e = Callbacks[cbtype]; e; e = e->next)
+		if (!e->willberemoved)
+			cnt++;
+			
+	return cnt;
+}
+
+/** Ensure that all required callbacks are in place and meet
+ * all specified requirements (eg: a cloaking module should
+ * be loaded).
+ */
+int callbacks_check(void)
+{
+int i;
+
+	if (!num_callbacks(CALLBACKTYPE_CLOAK) || !num_callbacks(CALLBACKTYPE_CLOAKKEYCSUM))
+	{
+#ifndef _WIN32
+		config_error("ERROR: No cloaking module loaded. (hint: you probably want to load cloak.so)");
+#else
+		config_error("ERROR: No cloaking module loaded. (hint: you probably want to load modules\\cloak.dll)");
+#endif
+		/* TEMPORARY! */
+		config_error("If you are upgrading from 3.2 (or any older version), be sure to read the release notes "
+		             "or www.vulnscan.org/tmp/newcloak.txt regarding the cloaking change!");
+		return -1;
+	}
+
+	for (i=0; i < MAXCALLBACKS; i++)
+	{
+		if (num_callbacks(i) > 1)
+		{
+			config_error("ERROR: Multiple callbacks loaded for type %d. "
+			             "Make sure you only load 1 module of 1 type (eg: only 1 cloaking module)",
+			             i); /* TODO: make more clear? */
+			return -1;
+		}
+	}
+		
+	return 0;
+}
+
+void callbacks_switchover(void)
+{
+Callback *e;
+int i;
+
+	/* Now set the real callback, and tag the new one
+	 * as 'willberemoved' if needed.
+	 */
+
+	for (i=0; i < MAXCALLBACKS; i++)
+		for (e = Callbacks[i]; e; e = e->next)
+			if (!e->willberemoved)
+			{
+				RCallbacks[i] = e; /* This is the new one. */
+				if (!(e->owner->options & MOD_OPT_PERM))
+					e->willberemoved = 1;
+				break;
+			}
+}
+
+#ifdef _WIN32
+const char *our_dlerror(void)
+{
+	static char errbuf[513];
+	DWORD err = GetLastError();
+	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS, NULL, err,
+		0, errbuf, 512, NULL);
+	return errbuf;
+}
+#endif

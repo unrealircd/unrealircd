@@ -254,3 +254,9 @@
 
 /* Define if you have strlncat */
 #undef HAVE_STRLNCAT
+
+/* Define if you have inet_pton */
+#undef HAVE_INET_PTON
+
+/* Define if you have inet_ntop */
+#undef HAVE_INET_NTOP

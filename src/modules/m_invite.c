@@ -193,6 +193,15 @@ DLLFUNC CMD_FUNC(m_invite)
                 }
         }
 
+		if (MyClient(sptr) && SPAMFILTER_VIRUSCHANDENY && SPAMFILTER_VIRUSCHAN &&
+		    !strcasecmp(chptr->chname, SPAMFILTER_VIRUSCHAN) &&
+		    !is_chan_op(sptr, chptr) && !IsAnOper(sptr) && !IsULine(sptr))
+		{
+			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
+				me.name, parv[0], chptr->chname);
+			return -1;
+		}
+
         if (MyConnect(sptr))
         {
                 if (check_for_target_limit(sptr, acptr, acptr->name))
@@ -302,11 +311,11 @@ DLLFUNC CMD_FUNC(m_invite)
 		    )) {
 		        if (over == 1)
                 		sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-		                  ":%s NOTICE " CHANOPPFX "%s :OperOverride -- %s invited him/herself into the channel.",
+		                  ":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
                 		  me.name, chptr->chname, sptr->name);
 		        else if (over == 0)
 		                sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-                		  ":%s NOTICE " CHANOPPFX "%s :%s invited %s into the channel.",
+                		  ":%s NOTICE @%s :%s invited %s into the channel.",
 		                  me.name, chptr->chname, sptr->name, acptr->name);
 
 		        add_invite(acptr, chptr);

@@ -24,28 +24,29 @@
 #define MOD_VERSION	"3.2-b5-1"
 #define MOD_WE_SUPPORT  "3.2-b5*"
 #define MAXCUSTOMHOOKS  30
-#define MAXHOOKTYPES	70
+#define MAXHOOKTYPES	100
+#define MAXCALLBACKS	30
 #if defined(_WIN32)
-#define DLLFUNC	_declspec(dllexport)
-#define irc_dlopen(x,y) LoadLibrary(x)
-#define irc_dlclose FreeLibrary
-#define irc_dlsym(x,y,z) z = (void *)GetProcAddress(x,y)
-#undef irc_dlerror
+ #define DLLFUNC	_declspec(dllexport)
+ #define irc_dlopen(x,y) LoadLibrary(x)
+ #define irc_dlclose FreeLibrary
+ #define irc_dlsym(x,y,z) z = (void *)GetProcAddress(x,y)
+ #define irc_dlerror our_dlerror
 #elif defined(HPUX)
-#define irc_dlopen(x,y) shl_load(x,y,0L)
-#define irc_dlsym(x,y,z) shl_findsym(x,y,z)
-#define irc_dlclose shl_unload
-#define irc_dlerror() strerror(errno)
+ #define irc_dlopen(x,y) shl_load(x,y,0L)
+ #define irc_dlsym(x,y,z) shl_findsym(x,y,z)
+ #define irc_dlclose shl_unload
+ #define irc_dlerror() strerror(errno)
 #else
-#define irc_dlopen dlopen
-#define irc_dlclose dlclose
-#if defined(UNDERSCORE)
-#define irc_dlsym(x,y,z) z = obsd_dlsym(x,y)
-#else
-#define irc_dlsym(x,y,z) z = dlsym(x,y)
-#endif
-#define irc_dlerror dlerror
-#define DLLFUNC 
+ #define irc_dlopen dlopen
+ #define irc_dlclose dlclose
+ #if defined(UNDERSCORE)
+  #define irc_dlsym(x,y,z) z = obsd_dlsym(x,y)
+ #else
+  #define irc_dlsym(x,y,z) z = dlsym(x,y)
+ #endif
+ #define irc_dlerror dlerror
+ #define DLLFUNC 
 #endif
 
 #define EVENT(x) void (x) (void *data)
@@ -55,6 +56,7 @@ typedef struct _event Event;
 typedef struct _eventinfo EventInfo;
 typedef struct _irchook Hook;
 typedef struct _hooktype Hooktype;
+typedef struct _irccallback Callback;
 
 /*
  * Module header that every module must include, with the name of
@@ -87,15 +89,16 @@ typedef struct {
 } ModuleInfo;
 
 
-#define MOBJ_EVENT   0x0001
-#define MOBJ_HOOK    0x0002
-#define MOBJ_COMMAND 0x0004
-#define MOBJ_HOOKTYPE 0x0008
-#define MOBJ_VERSIONFLAG 0x0010
-#define MOBJ_SNOMASK 0x0020
-#define MOBJ_UMODE 0x0040
-#define MOBJ_CMDOVERRIDE 0x0080
-#define MOBJ_EXTBAN 0x0100
+#define MOBJ_EVENT        0x0001
+#define MOBJ_HOOK         0x0002
+#define MOBJ_COMMAND      0x0004
+#define MOBJ_HOOKTYPE     0x0008
+#define MOBJ_VERSIONFLAG  0x0010
+#define MOBJ_SNOMASK      0x0020
+#define MOBJ_UMODE        0x0040
+#define MOBJ_CMDOVERRIDE  0x0080
+#define MOBJ_EXTBAN       0x0100
+#define MOBJ_CALLBACK     0x0200
 
 typedef struct {
         long mode;
@@ -304,6 +307,7 @@ typedef struct _ModuleObject {
 		Umode *umode;
 		Cmdoverride *cmdoverride;
 		Extban *extban;
+		Callback *callback;
 	} object;
 } ModuleObject;
 
@@ -316,6 +320,18 @@ struct _irchook {
 		char *(*pcharfunc)();
 	} func;
 	Module *owner;
+};
+
+struct _irccallback {
+	Callback *prev, *next;
+	short type;
+	union {
+		int (*intfunc)();
+		void (*voidfunc)();
+		char *(*pcharfunc)();
+	} func;
+	Module *owner;
+	char willberemoved; /* will be removed on next rehash? (eg the 'old'/'current' one) */
 };
 
 struct _hooktype {
@@ -356,7 +372,6 @@ struct _Module
 	unsigned char options;
 	unsigned char errorcode;
 	char *tmp_file;
-	unsigned char compilecheck; /* feel free to rename this mess, but mod->flags sucks :[. */
 };
 /*
  * Symbol table
@@ -425,8 +440,9 @@ void    EventStatus(aClient *sptr);
 void    SetupEvents(void);
 void	LockEventSystem(void);
 void	UnlockEventSystem(void);
-extern Hook		*Hooks[MAXHOOKTYPES];
-extern Hooktype		Hooktypes[MAXCUSTOMHOOKS];
+extern MODVAR Hook		*Hooks[MAXHOOKTYPES];
+extern MODVAR Hooktype		Hooktypes[MAXCUSTOMHOOKS];
+extern MODVAR Callback *Callbacks[MAXCALLBACKS], *RCallbacks[MAXCALLBACKS];
 
 void    Module_Init(void);
 char    *Module_Create(char *path);
@@ -492,6 +508,16 @@ void HooktypeDel(Hooktype *hooktype, Module *module);
 #define RunHook6(hooktype,a,b,c,d,e,f) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(a,b,c,d,e,f); } while(0)
 #define RunHook7(hooktype,a,b,c,d,e,f,g) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(a,b,c,d,e,f,g); } while(0)
 
+#define CallbackAdd(cbtype, func) CallbackAddMain(NULL, cbtype, func, NULL, NULL)
+#define CallbackAddEx(module, cbtype, func) CallbackAddMain(module, cbtype, func, NULL, NULL)
+#define CallbackAddVoid(cbtype, func) CallbackAddMain(NULL, cbtype, NULL, func, NULL)
+#define CallbackAddVoidEx(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, func, NULL)
+#define CallbackAddPChar(cbtype, func) CallbackAddMain(NULL, cbtype, NULL, NULL, func)
+#define CallbackAddPCharEx(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, NULL, func)
+
+extern Callback	*CallbackAddMain(Module *module, int cbtype, int (*intfunc)(), void (*voidfunc)(), char *(*pcharfunc)());
+extern Callback	*CallbackDel(Callback *cb);
+
 Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigned char params, int flags);
 void CommandDel(Command *command);
 int CommandExists(char *name);
@@ -539,11 +565,19 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_UMODE_CHANGE 36
 #define HOOKTYPE_TOPIC 37
 #define HOOKTYPE_REHASH_COMPLETE 38
+#define HOOKTYPE_TKL_ADD 39
+#define HOOKTYPE_TKL_DEL 40
+#define HOOKTYPE_LOCAL_KILL 41
+#define HOOKTYPE_LOG 42
 
 /* Hook return values */
 #define HOOK_CONTINUE 0
 #define HOOK_ALLOW -1
 #define HOOK_DENY 1
+
+/* Callback types */
+#define CALLBACKTYPE_CLOAK 1
+#define CALLBACKTYPE_CLOAKKEYCSUM 2
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000
@@ -563,25 +597,34 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define CONFIG_EXCEPT 4
 #define CONFIG_DENY 5
 #define CONFIG_ALLOW 6
+#define CONFIG_CLOAKKEYS 7
 
 #ifdef DYNAMIC_LINKING
-#define MOD_HEADER(name) Mod_Header
-#define MOD_TEST(name) Mod_Test
-#define MOD_INIT(name) Mod_Init
-#define MOD_LOAD(name) Mod_Load
-#define MOD_UNLOAD(name) Mod_Unload
+ #define MOD_HEADER(name) Mod_Header
+ #define MOD_TEST(name) Mod_Test
+ #define MOD_INIT(name) Mod_Init
+ #define MOD_LOAD(name) Mod_Load
+ #define MOD_UNLOAD(name) Mod_Unload
 #else
-#define MOD_HEADER(name) name##_Header
-#define MOD_TEST(name) name##_Test
-#define MOD_INIT(name) name##_Init
-#define MOD_LOAD(name) name##_Load
-#define MOD_UNLOAD(name) name##_Unload
+ #define MOD_HEADER(name) name##_Header
+ #define MOD_TEST(name) name##_Test
+ #define MOD_INIT(name) name##_Init
+ #define MOD_LOAD(name) name##_Load
+ #define MOD_UNLOAD(name) name##_Unload
 #endif
+
+#define CLOAK_KEYCRC	RCallbacks[CALLBACKTYPE_CLOAKKEYCSUM]->func.pcharfunc()
 
 #ifdef DYNAMIC_LINKING
 /* ugly alert!!!! */
 #include "version.h"
-char Mod_Version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9;
-#endif
+ #if defined(USE_SSL) && !defined(_WIN32)
+  DLLFUNC char Mod_Version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9 "/SSL";
+ #else
+  DLLFUNC char Mod_Version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9;
+ #endif /* USE_SSL && !WIN_32 */
+#endif /* DYNAMIC_LINKING */
+
 
 #endif
+

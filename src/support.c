@@ -15,6 +15,8 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ * $Id$
  */
 
 #ifndef CLEAN_COMPILE
@@ -28,12 +30,14 @@ static char sccsid[] = "@(#)support.c	2.21 4/13/94 1990, 1991 Armin Gruner;\
 #include "sys.h"
 #include "version.h"
 #include "h.h"
+#include "inet.h"
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <limits.h>
 #ifdef _WIN32
 #include <io.h>
 #else
+#include <sys/socket.h>
 #include <string.h>
 #include <utime.h>
 extern int errno;		/* ...seems that errno.h doesn't define this everywhere */
@@ -67,8 +71,6 @@ char	*my_itoa(int i)
 ** 	strtoken.c --  	walk through a string of tokens, using a set
 **			of separators
 **			argv 9/90
-**
-**	$Id$
 */
 
 char *strtoken(char **save, char *str, char *fs)
@@ -119,9 +121,7 @@ char *strtok2(char *str, char *fs)
 **	strerror - return an appropriate system error string to a given errno
 **
 **		   argv 11/90
-**	$Id$
 */
-
 char *strerror(int err_no)
 {
 	extern char *sys_errlist[];	/* Sigh... hopefully on all systems */
@@ -135,19 +135,8 @@ char *strerror(int err_no)
 	if (errp == (char *)NULL)
 	{
 		errp = buff;
-#ifndef _WIN32
 		(void)ircsprintf(errp, "Unknown Error %d", err_no);
-#else
-		switch (err_no)
-		{
-		  case WSAECONNRESET:
-			  ircsprintf(errp, "Connection reset by peer");
-			  break;
-		  default:
-			  ircsprintf(errp, "Unknown Error %d", err_no);
-			  break;
-		}
-#endif
+
 	}
 	return errp;
 }
@@ -162,7 +151,6 @@ char *strerror(int err_no)
 **			internet number (some ULTRIX don't have this)
 **			argv 11/90).
 **	inet_ntoa --	its broken on some Ultrix/Dynix too. -avalon
-**	$Id$
 */
 
 char *inetntoa(char *in)
@@ -184,8 +172,6 @@ char *inetntoa(char *in)
 /*
 **	inet_netof --	return the net portion of an internet number
 **			argv 11/90
-**	$Id$
-**
 */
 
 int  inet_netof(struct IN_ADDR in)
@@ -326,9 +312,6 @@ int  dgets(int fd, char *buf, int num)
 	}
 }
 
-#ifdef INET6
-
-
 /*
  * inetntop: return the : notation of a given IPv6 internet number.
  *           make sure the compressed representation (rfc 1884) isn't used.
@@ -382,7 +365,6 @@ char *inetntop(int af, const void *in, char *out, size_t the_size)
 		bcopy(local_dummy, out, 64);
 	return out;
 }
-#endif
 
 /* Made by Potvin originally, i guess */
 time_t	atime_exp(char *base, char *ptr)
@@ -1707,7 +1689,7 @@ char *unreal_mktemp(char *dir, char *suffix)
 		fclose(fd);
 	}
 	config_error("Unable to create temporary file in directory '%s': %s",
-		dir, strerror(ERRNO)); /* eg: permission denied :p */
+		dir, strerror(errno)); /* eg: permission denied :p */
 	return NULL; 
 }
 
@@ -1746,7 +1728,7 @@ int unreal_copyfile(char *src, char *dest)
 #ifndef _WIN32
 	int srcfd = open(src, O_RDONLY);
 #else
-	int srcfd = open(src, _O_RDONLY);
+	int srcfd = open(src, _O_RDONLY|_O_BINARY);
 #endif
 	int destfd;
 	int len;
@@ -1757,11 +1739,11 @@ int unreal_copyfile(char *src, char *dest)
 #ifndef _WIN32
 	destfd  = open(dest, O_WRONLY|O_CREAT, DEFAULT_PERMISSIONS);
 #else
-	destfd = open(dest, _O_WRONLY|_O_CREAT, _S_IWRITE);
+	destfd = open(dest, _O_BINARY|_O_WRONLY|_O_CREAT, _S_IWRITE);
 #endif
 	if (destfd < 0)
 	{
-		config_error("Unable to create file '%s': %s", dest, strerror(ERRNO));
+		config_error("Unable to create file '%s': %s", dest, strerror(errno));
 		return 0;
 	}
 
@@ -1775,7 +1757,7 @@ int unreal_copyfile(char *src, char *dest)
 
 	if (len < 0) /* very unusual.. perhaps an I/O error */
 	{
-		config_error("Read error from file '%s': %s", src, strerror(ERRNO));
+		config_error("Read error from file '%s': %s", src, strerror(errno));
 		goto fail;
 	}
 
@@ -1850,3 +1832,531 @@ time_t unreal_getfilemodtime(char *filename)
 	return fullTime.LowPart;	
 #endif
 }
+
+#ifndef	AF_INET6
+#define	AF_INET6	AF_MAX+1	/* just to let this compile */
+#endif
+
+char	*encode_ip(u_char *ip)
+{
+	static char buf[25];
+	u_char *cp;
+	struct in_addr ia; /* For IPv4 */
+	u_char ia6[16]; /* For IPv6 */
+
+	if (!ip)
+		return "*";
+
+	if (strchr(ip, ':'))
+	{
+		inet_pton(AF_INET6, ip, ia6);
+		cp = (u_char *)ia6;
+		if (cp[0] == 0 && cp[1] == 0 && cp[2] == 0 && cp[3] == 0 && cp[4] == 0
+		    && cp[5] == 0 && cp[6] == 0 && cp[7] == 0 && cp[8] == 0
+		    && cp[9] == 0 && cp[10] == 0xff
+		    && cp[11] == 0xff)
+			b64_encode((char *)&cp[12], sizeof(struct in_addr), buf, 25);
+		else
+			b64_encode((char *)cp, 16, buf, 25);
+	}
+	else
+	{
+		ia.s_addr = inet_addr(ip);
+		cp = (u_char *)ia.s_addr;
+		b64_encode((char *)&cp, sizeof(struct in_addr), buf, 25);
+	}
+	return buf;
+}
+
+char *decode_ip(char *buf)
+{
+	int len = strlen(buf);
+	char targ[25];
+
+	b64_decode(buf, targ, 25);
+	if (len == 24) /* IPv6 */
+	{
+		static char result[64];
+		return inetntop(AF_INET6, targ, result, 64);
+	}
+	else if (len == 8) /* IPv4 */
+		return inet_ntoa(*(struct in_addr *)targ);
+	else /* Error?? */
+		abort();
+}
+
+/* IPv6 stuff */
+
+#ifndef IN6ADDRSZ
+#define	IN6ADDRSZ	16
+#endif
+
+#ifndef INT16SZ
+#define	INT16SZ		 2
+#endif
+
+#ifndef INADDRSZ
+#define	INADDRSZ	 4
+#endif
+
+/* Copyright (c) 1996 by Internet Software Consortium.
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND INTERNET SOFTWARE CONSORTIUM DISCLAIMS
+ * ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL INTERNET SOFTWARE
+ * CONSORTIUM BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+ * DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+ * PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS
+ * ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+ * SOFTWARE.
+ */
+
+#ifndef HAVE_INET_NTOP
+/*
+ * WARNING: Don't even consider trying to compile this on a system where
+ * sizeof(int) < 4.  sizeof(int) > 4 is fine; all the world's not a VAX.
+ */
+
+static const char *inet_ntop4(const u_char *src, char *dst, size_t size);
+static const char *inet_ntop6(const u_char *src, char *dst, size_t size);
+
+/* char *
+ * inet_ntop(af, src, dst, size)
+ *	convert a network format address to presentation format.
+ * return:
+ *	pointer to presentation format address (`dst'), or NULL (see errno).
+ * author:
+ *	Paul Vixie, 1996.
+ */
+const char *inet_ntop(int af, const void *src, char *dst, size_t size)
+{
+	switch (af) {
+	case AF_INET:
+		return (inet_ntop4(src, dst, size));
+	case AF_INET6:
+		return (inet_ntop6(src, dst, size));
+	default:
+#ifndef _WIN32
+		errno = EAFNOSUPPORT;
+#else
+		WSASetLastError(WSAEAFNOSUPPORT);
+#endif
+		return (NULL);
+	}
+	/* NOTREACHED */
+}
+
+/* const char *
+ * inet_ntop4(src, dst, size)
+ *	format an IPv4 address, more or less like inet_ntoa()
+ * return:
+ *	`dst' (as a const)
+ * notes:
+ *	(1) uses no statics
+ *	(2) takes a u_char* not an in_addr as input
+ * author:
+ *	Paul Vixie, 1996.
+ */
+static const char *inet_ntop4(const u_char *src, char *dst, size_t size)
+{
+	static const char fmt[] = "%u.%u.%u.%u";
+	char tmp[sizeof "255.255.255.255"];
+
+	sprintf(tmp, fmt, src[0], src[1], src[2], src[3]);
+	if ((size_t)strlen(tmp) > size) {
+#ifndef _WIN32
+		errno = ENOSPC;
+#else
+		WSASetLastError(WSAENOBUFS);
+#endif
+		return (NULL);
+	}
+	strcpy(dst, tmp);
+	return (dst);
+}
+
+/* const char *
+ * inet_ntop6(src, dst, size)
+ *	convert IPv6 binary address into presentation (printable) format
+ * author:
+ *	Paul Vixie, 1996.
+ */
+static const char *inet_ntop6(const u_char *src, char *dst, size_t size)
+{
+	/*
+	 * Note that int32_t and int16_t need only be "at least" large enough
+	 * to contain a value of the specified size.  On some systems, like
+	 * Crays, there is no such thing as an integer variable with 16 bits.
+	 * Keep this in mind if you think this function should have been coded
+	 * to use pointer overlays.  All the world's not a VAX.
+	 */
+	char tmp[sizeof "ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255"], *tp;
+	struct { int base, len; } best, cur;
+	u_int32_t words[IN6ADDRSZ / INT16SZ];
+	int i;
+
+	/*
+	 * Preprocess:
+	 *	Copy the input (bytewise) array into a wordwise array.
+	 *	Find the longest run of 0x00's in src[] for :: shorthanding.
+	 */
+	memset(words, 0, sizeof words);
+	for (i = 0; i < IN6ADDRSZ; i++)
+		words[i / 2] |= (src[i] << ((1 - (i % 2)) << 3));
+	best.base = -1;
+	cur.base = -1;
+	for (i = 0; i < (IN6ADDRSZ / INT16SZ); i++) {
+		if (words[i] == 0) {
+			if (cur.base == -1)
+				cur.base = i, cur.len = 1;
+			else
+				cur.len++;
+		} else {
+			if (cur.base != -1) {
+				if (best.base == -1 || cur.len > best.len)
+					best = cur;
+				cur.base = -1;
+			}
+		}
+	}
+	if (cur.base != -1) {
+		if (best.base == -1 || cur.len > best.len)
+			best = cur;
+	}
+	if (best.base != -1 && best.len < 2)
+		best.base = -1;
+
+	/*
+	 * Format the result.
+	 */
+	tp = tmp;
+	for (i = 0; i < (IN6ADDRSZ / INT16SZ); i++) {
+		/* Are we inside the best run of 0x00's? */
+		if (best.base != -1 && i >= best.base &&
+		    i < (best.base + best.len)) {
+			if (i == best.base)
+				*tp++ = ':';
+			continue;
+		}
+		/* Are we following an initial run of 0x00s or any real hex? */
+		if (i != 0)
+			*tp++ = ':';
+		/* Is this address an encapsulated IPv4? */
+		if (i == 6 && best.base == 0 &&
+		    (best.len == 6 || (best.len == 5 && words[5] == 0xffff))) {
+			if (!inet_ntop4(src+12, tp, sizeof tmp - (tp - tmp)))
+				return (NULL);
+			tp += strlen(tp);
+			break;
+		}
+		sprintf(tp, "%x", words[i]);
+		tp += strlen(tp);
+	}
+	/* Was it a trailing run of 0x00's? */
+	if (best.base != -1 && (best.base + best.len) == (IN6ADDRSZ / INT16SZ))
+		*tp++ = ':';
+	*tp++ = '\0';
+
+	/*
+	 * Check for overflow, copy, and we're done.
+	 */
+	if ((size_t) (tp - tmp) > size) {
+#ifndef _WIN32
+		errno = ENOSPC;
+#else
+		WSASetLastError(WSAENOBUFS);
+#endif
+		return (NULL);
+	}
+	strcpy(dst, tmp);
+	return (dst);
+}
+
+#endif /* !HAVE_INET_NTOP */
+
+#ifndef HAVE_INET_PTON
+/*
+ * WARNING: Don't even consider trying to compile this on a system where
+ * sizeof(int) < 4.  sizeof(int) > 4 is fine; all the world's not a VAX.
+ */
+
+static int	inet_pton4(const char *src, unsigned char *dst);
+static int	inet_pton6(const char *src, unsigned char *dst);
+
+/* int
+ * inet_pton(af, src, dst)
+ *	convert from presentation format (which usually means ASCII printable)
+ *	to network format (which is usually some kind of binary format).
+ * return:
+ *	1 if the address was valid for the specified address family
+ *	0 if the address wasn't valid (`dst' is untouched in this case)
+ *	-1 if some other error occurred (`dst' is untouched in this case, too)
+ * author:
+ *	Paul Vixie, 1996.
+ */
+int inet_pton(int af, const char *src, void *dst)
+{
+	switch (af) {
+	case AF_INET:
+		return (inet_pton4(src, dst));
+	case AF_INET6:
+		return (inet_pton6(src, dst));
+	default:
+#ifndef _WIN32
+		errno = EAFNOSUPPORT;
+#else
+		WSASetLastError(WSAEAFNOSUPPORT);
+#endif
+		return (-1);
+	}
+	/* NOTREACHED */
+}
+
+/* int
+ * inet_pton4(src, dst)
+ *	like inet_aton() but without all the hexadecimal and shorthand.
+ * return:
+ *	1 if `src' is a valid dotted quad, else 0.
+ * notice:
+ *	does not touch `dst' unless it's returning 1.
+ * author:
+ *	Paul Vixie, 1996.
+ */
+static int
+inet_pton4(const char *src, unsigned char *dst)
+{
+	static const char digits[] = "0123456789";
+	int saw_digit, octets, ch;
+	unsigned char tmp[INADDRSZ], *tp;
+
+	saw_digit = 0;
+	octets = 0;
+	*(tp = tmp) = 0;
+	while ((ch = *src++) != '\0') {
+		const char *pch;
+
+		if ((pch = strchr(digits, ch)) != NULL) {
+			u_int new = *tp * 10 + (pch - digits);
+
+			if (new > 255)
+				return (0);
+			*tp = new;
+			if (! saw_digit) {
+				if (++octets > 4)
+					return (0);
+				saw_digit = 1;
+			}
+		} else if (ch == '.' && saw_digit) {
+			if (octets == 4)
+				return (0);
+			*++tp = 0;
+			saw_digit = 0;
+		} else
+			return (0);
+	}
+	if (octets < 4)
+		return (0);
+	/* bcopy(tmp, dst, INADDRSZ); */
+	memcpy(dst, tmp, INADDRSZ);
+	return (1);
+}
+
+/* int
+ * inet_pton6(src, dst)
+ *	convert presentation level address to network order binary form.
+ * return:
+ *	1 if `src' is a valid [RFC1884 2.2] address, else 0.
+ * notice:
+ *	(1) does not touch `dst' unless it's returning 1.
+ *	(2) :: in a full address is silently ignored.
+ * credit:
+ *	inspired by Mark Andrews.
+ * author:
+ *	Paul Vixie, 1996.
+ */
+static int
+inet_pton6(const char *src, unsigned char *dst)
+{
+	static const char xdigits_l[] = "0123456789abcdef",
+			  xdigits_u[] = "0123456789ABCDEF";
+	unsigned char tmp[IN6ADDRSZ], *tp, *endp, *colonp;
+	const char *xdigits, *curtok;
+	int ch, saw_xdigit;
+	u_int val;
+
+	memset((tp = tmp), 0, IN6ADDRSZ);
+	endp = tp + IN6ADDRSZ;
+	colonp = NULL;
+	/* Leading :: requires some special handling. */
+	if (*src == ':')
+		if (*++src != ':')
+			return (0);
+	curtok = src;
+	saw_xdigit = 0;
+	val = 0;
+	while ((ch = *src++) != '\0') {
+		const char *pch;
+
+		if ((pch = strchr((xdigits = xdigits_l), ch)) == NULL)
+			pch = strchr((xdigits = xdigits_u), ch);
+		if (pch != NULL) {
+			val <<= 4;
+			val |= (pch - xdigits);
+			if (val > 0xffff)
+				return (0);
+			saw_xdigit = 1;
+			continue;
+		}
+		if (ch == ':') {
+			curtok = src;
+			if (!saw_xdigit) {
+				if (colonp)
+					return (0);
+				colonp = tp;
+				continue;
+			}
+			if (tp + INT16SZ > endp)
+				return (0);
+			*tp++ = (unsigned char) (val >> 8) & 0xff;
+			*tp++ = (unsigned char) val & 0xff;
+			saw_xdigit = 0;
+			val = 0;
+			continue;
+		}
+		if (ch == '.' && ((tp + INADDRSZ) <= endp) &&
+		    inet_pton4(curtok, tp) > 0) {
+			tp += INADDRSZ;
+			saw_xdigit = 0;
+			break;	/* '\0' was seen by inet_pton4(). */
+		}
+		return (0);
+	}
+	if (saw_xdigit) {
+		if (tp + INT16SZ > endp)
+			return (0);
+		*tp++ = (unsigned char) (val >> 8) & 0xff;
+		*tp++ = (unsigned char) val & 0xff;
+	}
+	if (colonp != NULL) {
+		/*
+		 * Since some memmove()'s erroneously fail to handle
+		 * overlapping regions, we'll do the shift by hand.
+		 */
+		const int n = tp - colonp;
+		int i;
+
+		for (i = 1; i <= n; i++) {
+			endp[- i] = colonp[n - i];
+			colonp[n - i] = 0;
+		}
+		tp = endp;
+	}
+	if (tp != endp)
+		return (0);
+	/* bcopy(tmp, dst, IN6ADDRSZ); */
+	memcpy(dst, tmp, IN6ADDRSZ);
+	return (1);
+}
+#endif /* !HAVE_INET_PTON */
+
+
+#ifdef _WIN32
+/* Microsoft makes things nice and fun for us! */
+struct u_WSA_errors {
+	int error_code;
+	char *error_string;
+};
+
+/* Must be sorted ascending by error code */
+struct u_WSA_errors WSAErrors[] = {
+ { WSAEINTR,              "Interrupted system call" },
+ { WSAEBADF,              "Bad file number" },
+ { WSAEACCES,             "Permission denied" },
+ { WSAEFAULT,             "Bad address" },
+ { WSAEINVAL,             "Invalid argument" },
+ { WSAEMFILE,             "Too many open sockets" },
+ { WSAEWOULDBLOCK,        "Operation would block" },
+ { WSAEINPROGRESS,        "Operation now in progress" },
+ { WSAEALREADY,           "Operation already in progress" },
+ { WSAENOTSOCK,           "Socket operation on non-socket" },
+ { WSAEDESTADDRREQ,       "Destination address required" },
+ { WSAEMSGSIZE,           "Message too long" },
+ { WSAEPROTOTYPE,         "Protocol wrong type for socket" },
+ { WSAENOPROTOOPT,        "Bad protocol option" },
+ { WSAEPROTONOSUPPORT,    "Protocol not supported" },
+ { WSAESOCKTNOSUPPORT,    "Socket type not supported" },
+ { WSAEOPNOTSUPP,         "Operation not supported on socket" },
+ { WSAEPFNOSUPPORT,       "Protocol family not supported" },
+ { WSAEAFNOSUPPORT,       "Address family not supported" },
+ { WSAEADDRINUSE,         "Address already in use" },
+ { WSAEADDRNOTAVAIL,      "Can't assign requested address" },
+ { WSAENETDOWN,           "Network is down" },
+ { WSAENETUNREACH,        "Network is unreachable" },
+ { WSAENETRESET,          "Net connection reset" },
+ { WSAECONNABORTED,       "Software caused connection abort" },
+ { WSAECONNRESET,         "Connection reset by peer" },
+ { WSAENOBUFS,            "No buffer space available" },
+ { WSAEISCONN,            "Socket is already connected" },
+ { WSAENOTCONN,           "Socket is not connected" },
+ { WSAESHUTDOWN,          "Can't send after socket shutdown" },
+ { WSAETOOMANYREFS,       "Too many references, can't splice" },
+ { WSAETIMEDOUT,          "Connection timed out" },
+ { WSAECONNREFUSED,       "Connection refused" },
+ { WSAELOOP,              "Too many levels of symbolic links" },
+ { WSAENAMETOOLONG,       "File name too long" },
+ { WSAEHOSTDOWN,          "Host is down" },
+ { WSAEHOSTUNREACH,       "No route to host" },
+ { WSAENOTEMPTY,          "Directory not empty" },
+ { WSAEPROCLIM,           "Too many processes" },
+ { WSAEUSERS,             "Too many users" },
+ { WSAEDQUOT,             "Disc quota exceeded" },
+ { WSAESTALE,             "Stale NFS file handle" },
+ { WSAEREMOTE,            "Too many levels of remote in path" },
+ { WSASYSNOTREADY,        "Network subsystem is unavailable" },
+ { WSAVERNOTSUPPORTED,    "Winsock version not supported" },
+ { WSANOTINITIALISED,     "Winsock not yet initialized" },
+ { WSAHOST_NOT_FOUND,     "Host not found" },
+ { WSATRY_AGAIN,          "Non-authoritative host not found" },
+ { WSANO_RECOVERY,        "Non-recoverable errors" },
+ { WSANO_DATA,            "Valid name, no data record of requested type" },
+ { WSAEDISCON,            "Graceful disconnect in progress" },
+ { WSASYSCALLFAILURE,     "System call failure" },
+ { 0,NULL}
+};
+
+char *sock_strerror(int error)
+{
+	static char unkerr[64];
+	int start = 0;
+	int stop = sizeof(WSAErrors)/sizeof(WSAErrors[0])-1;
+	int mid;
+	
+	if (!error) /* strerror compatibility */
+		return NULL;
+
+	if (error < WSABASEERR) /* Just a regular error code */
+		return strerror(error);
+
+	/* Microsoft decided not to use sequential numbers for the error codes,
+	 * so we can't just use the array index for the code. But, at least
+	 * use a binary search to make it as fast as possible. 
+	 */
+	while (start <= stop)
+	{
+		mid = (start+stop)/2;
+		if (WSAErrors[mid].error_code > error)
+			stop = mid-1;
+		
+		else if (WSAErrors[mid].error_code < error)
+			start = mid+1;
+		else
+			return WSAErrors[mid].error_string;	
+	}
+	sprintf(unkerr, "Unknown Error: %d", error);
+	return unkerr;
+}
+#endif

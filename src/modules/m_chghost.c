@@ -198,12 +198,12 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    "%s changed the virtual hostname of %s (%s@%s) to be %s",
 			    sptr->name, acptr->name, acptr->user->username,
 			    acptr->user->realhost, parv[2]);
+			/* Logging added by XeRXeS */
+ 		      	ircd_log(LOG_CHGCMDS,                                         
+				"CHGHOST: %s changed the virtual hostname of %s (%s@%s) to be %s",
+				sptr->name, acptr->name, acptr->user->username, acptr->user->realhost, parv[2]); 
 		}
  
-		/* Logging added by XeRXeS */
- 	      	ircd_log(LOG_CHGCMDS,                                         
-			"CHGHOST: %s changed the virtual hostname of %s (%s@%s) to be %s",            
-			sptr->name, acptr->name, acptr->user->username, acptr->user->realhost, parv[2]); 
                   
 		acptr->umodes |= UMODE_HIDE;
 		acptr->umodes |= UMODE_SETHOST;

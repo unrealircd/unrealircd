@@ -39,7 +39,7 @@
 
 #include "h.h"
 #include "proto.h"
-extern int SVSNOOP;
+
 extern ircstats IRCstats;
 
 aConfiguration iConf;
@@ -47,7 +47,7 @@ aConfiguration iConf;
 #define STAR1 OFLAG_SADMIN|OFLAG_ADMIN|OFLAG_NETADMIN|OFLAG_COADMIN
 #define STAR2 OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
 
-int oper_access[] = {
+MODVAR int oper_access[] = {
 	~(STAR1 | STAR2), '*',
 	OFLAG_LOCAL, 'o',
 	OFLAG_GLOBAL, 'O',
@@ -79,7 +79,7 @@ int oper_access[] = {
 	0, 0
 };
 
-char oflagbuf[128];
+MODVAR char oflagbuf[128];
 
 char *oflagstr(long oflag)
 {

@@ -13,7 +13,7 @@ void delfrom_fdlist(int a, fdlist * b);
 void init_fdlist(fdlist * b);
 
 #ifndef NO_FDLIST
-extern fdlist oper_fdlist;
+extern MODVAR fdlist oper_fdlist;
 #endif
 
 

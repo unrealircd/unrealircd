@@ -241,7 +241,11 @@
  *       the maintainer.
  */
 
-/* #undef	DEBUGMODE	   define DEBUGMODE to enable debugging mode.*/
+/* DEBUGMODE: This should only be used when tracing a problem. It creates
+ * an insane amount of log output which can be very useful for debugging.
+ * You should *NEVER* enable this setting on production servers.
+ */
+/* #undef	DEBUGMODE */
 
 /*
  * Full pathnames and defaults of irc system's support files. Please note that
@@ -255,7 +259,6 @@
 #define OPATH   	"oper.motd"	/* Operators MOTD file */
 #define	LPATH		"debug.log"	/* Where the debug file lives, if DEBUGMODE */
 #define	PPATH		"ircd.pid"	/* file for server pid */
-#define lPATH		"ircd.log"	/* server log file */
 #define VPATH		"ircd.svsmotd"	/* Services MOTD append. */
 #define BPATH		"bot.motd"	/* Bot MOTD */
 #define IRCDTUNE 	"ircd.tune"	/* tuning .. */

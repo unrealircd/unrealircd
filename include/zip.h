@@ -54,7 +54,7 @@ struct Zdata {
 #endif /* ZIP_LINKS */
 
 
-extern int zip_init(struct Client *, int);
-extern void zip_free(struct Client *);
-extern char *unzip_packet(struct Client *, char *, int *);
-extern char *zip_buffer(struct Client *, char *, int *, int);
+extern MODFUNC int zip_init(struct Client *, int);
+extern MODFUNC void zip_free(struct Client *);
+extern MODFUNC char *unzip_packet(struct Client *, char *, int *);
+extern MODFUNC char *zip_buffer(struct Client *, char *, int *, int);

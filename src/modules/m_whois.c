@@ -169,7 +169,6 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				    me.name, IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, sptr->name,
 				    sptr->user->username, sptr->user->realhost);
 			}
-
 			sendto_one(sptr, rpl_str(RPL_WHOISUSER), me.name,
 			    parv[0], name,
 			    user->username,
@@ -183,11 +182,11 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				    me.name, parv[0], name,
 				    get_mode_str(acptr));
 			}
-			if (IsHidden(acptr) && ((acptr == sptr) || IsAnOper(sptr))) 
+			if ((acptr == sptr) || IsAnOper(sptr))
 			{
 				sendto_one(sptr, rpl_str(RPL_WHOISHOST),
 				    me.name, parv[0], acptr->name,
-				    user->realhost);
+				    user->realhost, user->ip_str ? user->ip_str : "");
 			}
 
 			if (IsARegNick(acptr))
@@ -266,7 +265,8 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			}
 
 			if (buf[0] != '\0')
-				sendto_one(sptr, rpl_str(RPL_WHOISCHANNELS), me.name, parv[0], name, buf);
+				sendto_one(sptr, rpl_str(RPL_WHOISCHANNELS), me.name, parv[0], name, buf); 
+
                         if (!(IsULine(acptr) && !IsOper(sptr) && HIDE_ULINES))
 				sendto_one(sptr, rpl_str(RPL_WHOISSERVER),
 				    me.name, parv[0], name, user->server,
@@ -278,13 +278,14 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			/* makesure they aren't +H (we'll also check
 			   before we display a helpop or IRCD Coder msg)
 			   -- codemastr */
+
 			if ((IsAnOper(acptr) || IsServices(acptr)) && !hideoper)
 			{
 				buf[0] = '\0';
 				if (IsNetAdmin(acptr))
 					strlcat(buf, "a Network Administrator", sizeof buf);
 				else if (IsSAdmin(acptr))
-					strlcat(buf, "a Services Operator", sizeof buf);
+					strlcat(buf, "a Services Administrator", sizeof buf);
 				else if (IsAdmin(acptr) && !IsCoAdmin(acptr))
 					strlcat(buf, "a Server Administrator", sizeof buf);
 				else if (IsCoAdmin(acptr))

@@ -161,10 +161,11 @@ CMD_FUNC(m_kick)
 				{
 					if (!IsNetAdmin(sptr))
 					{
-						sendto_one(sptr,
-						    ":%s %s %s :*** Cannot kick %s from channel %s (usermode +q)",
-						    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name,
-						    who->name, chptr->chname);
+						char errbuf[NICKLEN+10];
+						ircsprintf(errbuf, "%s is +q", who->name);
+						sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), 
+							   me.name, sptr->name, "KICK", 
+							   errbuf);
 						sendto_one(who,
 						    ":%s %s %s :*** Q: %s tried to kick you from channel %s (%s)",
 						    me.name, IsWebTV(who) ? "PRIVMSG" : "NOTICE", who->name,
@@ -178,10 +179,9 @@ CMD_FUNC(m_kick)
 				{
 					if (!op_can_override(sptr))
 					{
-						sendto_one(sptr,
-						    ":%s %s %s :*** You cannot kick people on %s",
-						    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, 
-						    chptr->chname);
+						sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND),
+							   me.name, sptr->name, "KICK",
+							   "channel is +Q");
 						goto deny;
 					}
 					sendto_snomask(SNO_EYES,
@@ -208,7 +208,7 @@ CMD_FUNC(m_kick)
 						    chptr->chname, who->name, comment);
 
 						/* Logging Implementation added by XeRXeS */
-						ircd_log(LOG_OVERRIDE,"OVERRIDE %s (%s@%s) KICK %s %s (%s)",
+						ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) KICK %s %s (%s)",
 							sptr->name, sptr->user->username, sptr->user->realhost,
 							chptr->chname, who->name, comment);
 
@@ -235,10 +235,16 @@ CMD_FUNC(m_kick)
 					}
 					else if (!IsULine(sptr) && (who != sptr) && MyClient(sptr))
 					{
-						sendto_one(sptr,
-						    ":%s %s %s :*** You cannot kick %s from %s because %s is channel admin",
-						    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name,
-						    who->name, chptr->chname, who->name);
+						char errbuf[NICKLEN+25];
+						if (who_flags & CHFL_CHANOWNER)
+							ircsprintf(errbuf, "%s is a channel owner", 
+								   who->name);
+						else
+							ircsprintf(errbuf, "%s is a channel admin", 
+								   who->name);
+						sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND),
+							   me.name, sptr->name, "KICK",
+							   errbuf);
 						goto deny;
 						continue;
 					}	/* chanprot/chanowner */
@@ -248,9 +254,11 @@ CMD_FUNC(m_kick)
 				if ((who_flags & CHFL_ISOP) && (sptr_flags & CHFL_HALFOP)
 				    && !(sptr_flags & CHFL_ISOP) && !IsULine(sptr) && MyClient(sptr))
 				{
-					sendto_one(sptr,
-					    ":%s %s %s :*** You cannot kick channel operators on %s if you only are halfop",
-					    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, chptr->chname);
+					char errbuf[NICKLEN+30];
+					ircsprintf(errbuf, "%s is a channel operator", who->name);
+					sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND),
+						   me.name, sptr->name, "KICK",
+						   errbuf);
 					goto deny;
 				}
 
@@ -258,9 +266,11 @@ CMD_FUNC(m_kick)
 				if ((who_flags & CHFL_HALFOP) && (sptr_flags & CHFL_HALFOP)
 				    && !(sptr_flags & CHFL_ISOP) && MyClient(sptr))
 				{
-					sendto_one(sptr,
-					    ":%s %s %s :*** You cannot kick channel halfops on %s if you only are halfop",
-					    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, chptr->chname);
+					char errbuf[NICKLEN+15];
+					ircsprintf(errbuf, "%s is a halfop", who->name);
+					sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND),
+						   me.name, sptr->name, "KICK",
+						   errbuf);
 					goto deny;
 				}	/* halfop */
 
@@ -268,9 +278,6 @@ CMD_FUNC(m_kick)
 				goto attack;
 
 			      deny:
-				sendto_one(sptr,
-				    err_str(ERR_ATTACKDENY), me.name,
-				    parv[0], chptr->chname, user);
 				continue;
 
 			      attack:

@@ -209,7 +209,7 @@ DLLFUNC CMD_FUNC(m_connect)
 	  default:
 		  sendto_one(sptr,
 		      ":%s %s %s :*** Connection to %s failed: %s",
-		      me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], aconf->servername, strerror(retval));
+		      me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], aconf->servername, STRERROR(retval));
 	}
 	aconf->port = tmpport;
 	return 0;

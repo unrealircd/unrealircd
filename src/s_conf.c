@@ -101,6 +101,7 @@ static int	_conf_deny_link		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_deny_channel	(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_deny_version	(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_allow_channel	(ConfigFile *conf, ConfigEntry *ce);
+static int	_conf_allow_dcc		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_loadmodule	(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_log		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_alias		(ConfigFile *conf, ConfigEntry *ce);
@@ -136,6 +137,7 @@ static int	_test_deny		(ConfigFile *conf, ConfigEntry *ce);
 /* static int	_test_deny_channel	(ConfigFile *conf, ConfigEntry *ce); ** TODO? */
 /* static int	_test_deny_version	(ConfigFile *conf, ConfigEntry *ce); ** TODO? */
 static int	_test_allow_channel	(ConfigFile *conf, ConfigEntry *ce);
+static int	_test_allow_dcc		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_loadmodule	(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_log		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_alias		(ConfigFile *conf, ConfigEntry *ce);
@@ -202,12 +204,14 @@ static int _OldOperFlags[] = {
 	OFLAG_OVERRIDE, 'v',
 	OFLAG_UMODEQ, 'q',
 	OFLAG_DCCDENY, 'd',
+	OFLAG_ADDLINE, 'X',
 	0, 0
 };
 
 /* This MUST be alphabetized */
 static OperFlag _OperFlags[] = {
 	{ OFLAG_ADMIN_,		"admin"},
+	{ OFLAG_ADDLINE,	"can_addline"},
 	{ OFLAG_DCCDENY,	"can_dccdeny"},
 	{ OFLAG_DIE,		"can_die" },
 	{ OFLAG_TKL,		"can_gkline"},
@@ -270,6 +274,7 @@ static OperFlag _LogFlags[] = {
 	{ LOG_OVERRIDE, "oper-override" },
 	{ LOG_SACMDS, "sadmin-commands" },
 	{ LOG_SERVER, "server-connects" },
+	{ LOG_SPAMFILTER, "spamfilter" },
 	{ LOG_TKL, "tkl" },
 };
 
@@ -302,7 +307,6 @@ struct {
 		unsigned sadminhost : 1;
 		unsigned netadminhost : 1;
 		unsigned coadminhost : 1;
-		unsigned cloakkeys : 1;
 		unsigned hlpchan : 1;
 		unsigned hidhost : 1;
 	} settings;
@@ -374,6 +378,7 @@ ConfigItem_ban		*conf_ban = NULL;
 ConfigItem_deny_dcc     *conf_deny_dcc = NULL;
 ConfigItem_deny_channel *conf_deny_channel = NULL;
 ConfigItem_allow_channel *conf_allow_channel = NULL;
+ConfigItem_allow_dcc    *conf_allow_dcc = NULL;
 ConfigItem_deny_link	*conf_deny_link = NULL;
 ConfigItem_deny_version *conf_deny_version = NULL;
 ConfigItem_log		*conf_log = NULL;
@@ -388,10 +393,10 @@ ConfigItem_badword	*conf_badword_quit = NULL;
 ConfigItem_offchans	*conf_offchans = NULL;
 
 aConfiguration		iConf;
-aConfiguration		tempiConf;
-ConfigFile		*conf = NULL;
+MODVAR aConfiguration		tempiConf;
+MODVAR ConfigFile		*conf = NULL;
 
-int			config_error_flag = 0;
+MODVAR int			config_error_flag = 0;
 int			config_verbose = 0;
 
 void add_include(char *);
@@ -1392,6 +1397,7 @@ void	free_iConf(aConfiguration *i)
 #endif	
 	ircfree(i->restrict_usermodes);
 	ircfree(i->restrict_channelmodes);
+	ircfree(i->restrict_extendedbans);
 	ircfree(i->network.x_ircnetwork);
 	ircfree(i->network.x_ircnet005);	
 	ircfree(i->network.x_defserv);
@@ -1432,6 +1438,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->spamfilter_ban_time = 86400; /* 1d */
 	i->spamfilter_ban_reason = strdup("Spam/advertising");
 	i->spamfilter_virus_help_channel = strdup("#help");
+	i->maxdccallow = 10;
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -1475,11 +1482,11 @@ char *encoded;
 	{
 		if (tk->type != TKL_SPAMF)
 			continue; /* global entry or something else.. */
-		if (!strcmp(tk->spamf->tkl_reason, "<internally added by ircd>"))
+		if (!strcmp(tk->ptr.spamf->tkl_reason, "<internally added by ircd>"))
 		{
-			MyFree(tk->spamf->tkl_reason);
-			tk->spamf->tkl_reason = strdup(encoded);
-			tk->spamf->tkl_duration = SPAMFILTER_BAN_TIME;
+			MyFree(tk->ptr.spamf->tkl_reason);
+			tk->ptr.spamf->tkl_reason = strdup(encoded);
+			tk->ptr.spamf->tkl_duration = SPAMFILTER_BAN_TIME;
 		}
 		/* This one is even more ugly, but our config crap is VERY confusing :[ */
 		if (!tk->setby)
@@ -1505,7 +1512,7 @@ int	init_conf(char *rootconf, int rehash)
 	config_setdefaultsettings(&tempiConf);
 	if (load_conf(rootconf) > 0)
 	{
-		if (config_test() < 0)
+		if ((config_test() < 0) || (callbacks_check() < 0))
 		{
 			config_error("IRCd configuration failed to pass testing");
 #ifdef _WIN32
@@ -1521,7 +1528,7 @@ int	init_conf(char *rootconf, int rehash)
 			free_iConf(&tempiConf);
 			return -1;
 		}
-		
+		callbacks_switchover();
 		if (rehash)
 		{
 			Hook *h;
@@ -1610,7 +1617,6 @@ int	load_conf(char *filename)
 		for (cfptr3 = &conf, cfptr2 = conf; cfptr2; cfptr2 = cfptr2->cf_next)
 			cfptr3 = &cfptr2->cf_next;
 		*cfptr3 = cfptr;
-#ifndef _WIN32
 		if (config_verbose > 1)
 			config_status("Loading modules in %s", filename);
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
@@ -1620,7 +1626,6 @@ int	load_conf(char *filename)
 				 if (ret < 0) 
 					 	return ret;
 			}
-#endif
 		if (config_verbose > 1)
 			config_status("Searching through %s for include files..", filename);
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
@@ -1653,6 +1658,7 @@ void	config_rehash()
 	ConfigItem_vhost		*vhost_ptr;
 	ConfigItem_badword		*badword_ptr;
 	ConfigItem_deny_dcc		*deny_dcc_ptr;
+	ConfigItem_allow_dcc		*allow_dcc_ptr;
 	ConfigItem_deny_link		*deny_link_ptr;
 	ConfigItem_deny_channel		*deny_channel_ptr;
 	ConfigItem_allow_channel	*allow_channel_ptr;
@@ -1696,6 +1702,21 @@ void	config_rehash()
 		DelListItem(oper_ptr, conf_oper);
 		MyFree(oper_ptr);
 	}
+	for (link_ptr = conf_link; link_ptr; link_ptr = (ConfigItem_link *) next)
+	{
+		next = (ListStruct *)link_ptr->next;
+		if (link_ptr->refcount == 0)
+		{
+			Debug((DEBUG_ERROR, "s_conf: deleting block %s (refcount 0)", link_ptr->servername));
+			delete_linkblock(link_ptr);
+		}
+		else
+		{
+			Debug((DEBUG_ERROR, "s_conf: marking block %s (refcount %d) as temporary",
+				link_ptr->servername, link_ptr->refcount));
+			link_ptr->flag.temporary = 1;
+		}
+	}
 	for (class_ptr = conf_class; class_ptr; class_ptr = (ConfigItem_class *) next)
 	{
 		next = (ListStruct *)class_ptr->next;
@@ -1703,11 +1724,9 @@ void	config_rehash()
 			continue;
 		class_ptr->flag.temporary = 1;
 		/* We'll wipe it out when it has no clients */
-		if (!class_ptr->clients)
+		if (!class_ptr->clients && !class_ptr->xrefcount)
 		{
-			ircfree(class_ptr->name);
-			DelListItem(class_ptr, conf_class);
-			MyFree(class_ptr);
+			delete_classblock(class_ptr);
 		}
 	}
 	for (uline_ptr = conf_ulines; uline_ptr; uline_ptr = (ConfigItem_ulines *) next)
@@ -1723,6 +1742,8 @@ void	config_rehash()
 		next = (ListStruct *)allow_ptr->next;
 		ircfree(allow_ptr->ip);
 		ircfree(allow_ptr->hostname);
+		if (allow_ptr->netmask)
+			MyFree(allow_ptr->netmask);
 		Auth_DeleteAuthStruct(allow_ptr->auth);
 		DelListItem(allow_ptr, conf_allow);
 		MyFree(allow_ptr);
@@ -1731,6 +1752,8 @@ void	config_rehash()
 	{
 		next = (ListStruct *)except_ptr->next;
 		ircfree(except_ptr->mask);
+		if (except_ptr->netmask)
+			MyFree(except_ptr->netmask);
 		DelListItem(except_ptr, conf_except);
 		MyFree(except_ptr);
 	}
@@ -1741,22 +1764,10 @@ void	config_rehash()
 		{
 			ircfree(ban_ptr->mask);
 			ircfree(ban_ptr->reason);
+			if (ban_ptr->netmask)
+				MyFree(ban_ptr->netmask);
 			DelListItem(ban_ptr, conf_ban);
 			MyFree(ban_ptr);
-		}
-	}
-	for (link_ptr = conf_link; link_ptr; link_ptr = (ConfigItem_link *) next)
-	{
-		next = (ListStruct *)link_ptr->next;
-		if (link_ptr->refcount == 0)
-		{
-			link_cleanup(link_ptr);
-			DelListItem(link_ptr, conf_link);
-			MyFree(link_ptr);
-		}
-		else
-		{
-			link_ptr->flag.temporary = 1;
 		}
 	}
 	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)listen_ptr->next)
@@ -1893,7 +1904,6 @@ void	config_rehash()
 		DelListItem(deny_version_ptr, conf_deny_version);
 		MyFree(deny_version_ptr);
 	}
-
 	for (deny_channel_ptr = conf_deny_channel; deny_channel_ptr; deny_channel_ptr = (ConfigItem_deny_channel *) next)
 	{
 		next = (ListStruct *)deny_channel_ptr->next;
@@ -1910,6 +1920,16 @@ void	config_rehash()
 		ircfree(allow_channel_ptr->channel);
 		DelListItem(allow_channel_ptr, conf_allow_channel);
 		MyFree(allow_channel_ptr);
+	}
+	for (allow_dcc_ptr = conf_allow_dcc; allow_dcc_ptr; allow_dcc_ptr = (ConfigItem_allow_dcc *)next)
+	{
+		next = (ListStruct *)allow_dcc_ptr->next;
+		if (allow_dcc_ptr->flag.type2 == CONF_BAN_TYPE_CONF)
+		{
+			ircfree(allow_dcc_ptr->filename);
+			DelListItem(allow_dcc_ptr, conf_allow_dcc);
+			MyFree(allow_dcc_ptr);
+		}
 	}
 
 	if (conf_drpass)
@@ -2028,8 +2048,6 @@ int	config_post_test()
 		Error("set::hosts::netadmin missing");
 	if (!requiredstuff.settings.coadminhost)
 		Error("set::hosts::coadmin missing");
-	if (!requiredstuff.settings.cloakkeys)
-		Error("set::cloak-keys missing");
 	if (!requiredstuff.settings.hlpchan)
 		Error("set::help-channel missing");
 	if (!requiredstuff.settings.hidhost)
@@ -2309,7 +2327,7 @@ ConfigItem_ulines *Find_uline(char *host) {
 }
 
 
-ConfigItem_except *Find_except(char *host, short type) {
+ConfigItem_except *Find_except(aClient *sptr, char *host, short type) {
 	ConfigItem_except *excepts;
 
 	if (!host)
@@ -2317,8 +2335,10 @@ ConfigItem_except *Find_except(char *host, short type) {
 
 	for(excepts = conf_except; excepts; excepts =(ConfigItem_except *) excepts->next) {
 		if (excepts->flag.type == type)
-			if (!match(excepts->mask, host))
+		{
+			if (match_ip(sptr->ip, host, excepts->mask, excepts->netmask))
 				return excepts;
+		}
 	}
 	return NULL;
 }
@@ -2365,7 +2385,7 @@ ConfigItem_link *Find_link(char *username,
 
 }
 
-ConfigItem_ban 	*Find_ban(char *host, short type)
+ConfigItem_ban 	*Find_ban(aClient *sptr, char *host, short type)
 {
 	ConfigItem_ban *ban;
 
@@ -2375,18 +2395,28 @@ ConfigItem_ban 	*Find_ban(char *host, short type)
 	 */
 
 	for (ban = conf_ban; ban; ban = (ConfigItem_ban *) ban->next)
+	{
 		if (ban->flag.type == type)
-			if (!match(ban->mask, host)) {
-				/* Person got a exception */
-				if ((type == CONF_BAN_USER || type == CONF_BAN_IP)
-				    && Find_except(host, CONF_EXCEPT_BAN))
-					return NULL;
-				return ban;
+		{
+			if (sptr)
+			{
+				if (match_ip(sptr->ip, host, ban->mask, ban->netmask))
+				{
+					/* Person got a exception */
+					if ((type == CONF_BAN_USER || type == CONF_BAN_IP)
+					    && Find_except(sptr, host, CONF_EXCEPT_BAN))
+						return NULL;
+					return ban;
+				}
 			}
+			else if (!match(ban->mask, host)) /* We don't worry about exceptions */
+				return ban;
+		}
+	}
 	return NULL;
 }
 
-ConfigItem_ban 	*Find_banEx(char *host, short type, short type2)
+ConfigItem_ban 	*Find_banEx(aClient *sptr, char *host, short type, short type2)
 {
 	ConfigItem_ban *ban;
 
@@ -2396,13 +2426,22 @@ ConfigItem_ban 	*Find_banEx(char *host, short type, short type2)
 	 */
 
 	for (ban = conf_ban; ban; ban = (ConfigItem_ban *) ban->next)
+	{
 		if ((ban->flag.type == type) && (ban->flag.type2 == type2))
-			if (!match(ban->mask, host)) {
-				/* Person got a exception */
-				if (Find_except(host, type))
-					return NULL;
-				return ban;
+		{
+			if (sptr)
+			{
+				if (match_ip(sptr->ip, host, ban->mask, ban->netmask)) {
+					/* Person got a exception */
+					if (Find_except(sptr, host, type))
+						return NULL;
+					return ban;
+				}
 			}
+			else if (!match(ban->mask, host)) /* We don't worry about exceptions */
+				return ban;
+		}
+	}
 	return NULL;
 }
 
@@ -2469,7 +2508,8 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 		else
 			*uhost = '\0';
 		(void)strncat(uhost, sockhost, sizeof(uhost) - strlen(uhost));
-		if (!match(aconf->ip, uhost))
+		/* Check the IP */
+		if (match_ip(cptr->ip, uhost, aconf->ip, aconf->netmask))
 			goto attach;
 
 		/* Hmm, localhost is a special case, hp == NULL and sockhost contains
@@ -3182,6 +3222,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 	else
 	{
 		isnew = 0;
+		class->flag.temporary = 0; /* clear!!! damnit */
 	}
 	cep = config_find_entry(ce->ce_entries, "pingfreq");
 	class->pingfreq = atol(cep->ce_vardata);
@@ -3817,13 +3858,13 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep, *cepp;
 	ConfigItem_allow *allow;
 	Hook *h;
-
+	struct irc_netmask tmp;
 	if (ce->ce_vardata)
 	{
 		if (!strcmp(ce->ce_vardata, "channel"))
-		{
 			return (_conf_allow_channel(conf, ce));
-		}
+		else if (!strcmp(ce->ce_vardata, "dcc"))
+			return (_conf_allow_dcc(conf, ce));
 		else
 		{
 			int value;
@@ -3836,10 +3877,17 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 			return 0;
 		}
 	}
-
 	allow = MyMallocEx(sizeof(ConfigItem_allow));
 	cep = config_find_entry(ce->ce_entries, "ip");
 	allow->ip = strdup(cep->ce_vardata);
+	/* CIDR */
+	tmp.type = parse_netmask(allow->ip, &tmp);
+	if (tmp.type != HM_HOST)
+	{
+		allow->netmask = MyMallocEx(sizeof(struct irc_netmask));
+		bcopy(&tmp, allow->netmask, sizeof(struct irc_netmask));
+	}
+	
 	cep = config_find_entry(ce->ce_entries, "hostname");
 	allow->hostname = strdup(cep->ce_vardata);
 	if ((cep = config_find_entry(ce->ce_entries, "password")))
@@ -3895,16 +3943,17 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 	if (ce->ce_vardata)
 	{
 		if (!strcmp(ce->ce_vardata, "channel"))
-		{
 			return (_test_allow_channel(conf, ce));
-		}
+		else if (!strcmp(ce->ce_vardata, "dcc"))
+			return (_test_allow_dcc(conf, ce));
 		else
 		{
 			int used = 0;
 			for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
 			{
 				int value, errs = 0;
-				if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
+				if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+				    && !(h->owner->options & MOD_OPT_PERM))
 					continue;
 				value = (*(h->func.intfunc))(conf,ce,CONFIG_ALLOW,&errs);
 				if (value == 2)
@@ -4145,12 +4194,69 @@ int	_test_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 	return errors;
 }
 
+int	_conf_allow_dcc(ConfigFile *conf, ConfigEntry *ce)
+{
+ConfigItem_allow_dcc *allow = NULL;
+ConfigEntry *cep;
+
+	allow = MyMallocEx(sizeof(ConfigItem_allow_dcc));
+	
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "filename"))
+			ircstrdup(allow->filename, cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "soft"))
+		{
+			int x = config_checkval(cep->ce_vardata,CFG_YESNO);
+			if (x)
+				allow->flag.type = DCCDENY_SOFT;
+		}
+	}
+	AddListItem(allow, conf_allow_dcc);
+	return 1;
+}
+
+int	_test_allow_dcc(ConfigFile *conf, ConfigEntry *ce)
+{
+ConfigEntry *cep;
+int errors = 0, gotfilename=0;
+	
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname || !cep->ce_vardata)
+		{
+			config_error("%s:%i: allow dcc item without contents",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++; continue;
+		}
+		if (!strcmp(cep->ce_varname, "filename"))
+			gotfilename=1;
+		else if (!strcmp(cep->ce_varname, "soft"))
+			;
+		else
+		{
+			config_error("%s:%i: unknown allow dcc directive %s",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, 
+				cep->ce_varname);
+			errors++;
+		}
+	}
+	if (!gotfilename)
+	{
+		config_error("%s:%i: allow dcc: no 'filename' specified.",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	}
+	return errors;
+}
+
 int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 {
 
 	ConfigEntry *cep, *cep2, *cep3;
 	ConfigItem_except *ca;
 	Hook *h;
+	struct irc_netmask tmp;
 
 	if (!strcmp(ce->ce_vardata, "ban")) {
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -4158,6 +4264,12 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 			if (!strcmp(cep->ce_varname, "mask")) {
 				ca = MyMallocEx(sizeof(ConfigItem_except));
 				ca->mask = strdup(cep->ce_vardata);
+				tmp.type = parse_netmask(ca->mask, &tmp);
+				if (tmp.type != HM_HOST)
+				{
+					ca->netmask = MyMallocEx(sizeof(struct irc_netmask));
+					bcopy(&tmp, ca->netmask, sizeof(struct irc_netmask));
+				}
 				ca->flag.type = CONF_EXCEPT_BAN;
 				AddListItem(ca, conf_except);
 			}
@@ -4172,6 +4284,12 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 			if (!strcmp(cep->ce_varname, "mask")) {
 				ca = MyMallocEx(sizeof(ConfigItem_except));
 				ca->mask = strdup(cep->ce_vardata);
+				tmp.type = parse_netmask(ca->mask, &tmp);
+				if (tmp.type != HM_HOST)
+				{
+					ca->netmask = MyMallocEx(sizeof(struct irc_netmask));
+					bcopy(&tmp, ca->netmask, sizeof(struct irc_netmask));
+				}
 				ca->flag.type = CONF_EXCEPT_THROTTLE;
 				AddListItem(ca, conf_except);
 			}
@@ -4199,6 +4317,15 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 		else 
 		{}
 		
+		if (ca->type & TKL_KILL || ca->type & TKL_ZAP || ca->type & TKL_SHUN)
+		{
+			tmp.type = parse_netmask(ca->mask, &tmp);
+			if (tmp.type != HM_HOST)
+			{
+				ca->netmask = MyMallocEx(sizeof(struct irc_netmask));
+				bcopy(&tmp, ca->netmask, sizeof(struct irc_netmask));
+			}
+		}
 		ca->flag.type = CONF_EXCEPT_TKL;
 		AddListItem(ca, conf_except);
 	}
@@ -4352,7 +4479,8 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 		for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
 		{
 			int value, errs = 0;
-			if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
+			if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+			    && !(h->owner->options & MOD_OPT_PERM))
 				continue;
 			value = (*(h->func.intfunc))(conf,ce,CONFIG_EXCEPT,&errs);
 			if (value == 2)
@@ -4862,18 +4990,18 @@ int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 	nl->hostmask = strdup(cep->ce_vardata);
 	nl->setby = BadPtr(me.name) ? NULL : strdup(me.name); /* Hmm! */
 	
-	nl->spamf = unreal_buildspamfilter(word);
-	nl->spamf->action = action;
+	nl->ptr.spamf = unreal_buildspamfilter(word);
+	nl->ptr.spamf->action = action;
 
 	if ((cep = config_find_entry(ce->ce_entries, "reason")))
-		nl->spamf->tkl_reason = strdup(unreal_encodespace(cep->ce_vardata));
+		nl->ptr.spamf->tkl_reason = strdup(unreal_encodespace(cep->ce_vardata));
 	else
-		nl->spamf->tkl_reason = strdup("<internally added by ircd>");
+		nl->ptr.spamf->tkl_reason = strdup("<internally added by ircd>");
 
 	if ((cep = config_find_entry(ce->ce_entries, "ban-time")))
-		nl->spamf->tkl_duration = config_checkval(cep->ce_vardata, CFG_TIME);
+		nl->ptr.spamf->tkl_duration = config_checkval(cep->ce_vardata, CFG_TIME);
 	else
-		nl->spamf->tkl_duration = (SPAMFILTER_BAN_TIME ? SPAMFILTER_BAN_TIME : 86400);
+		nl->ptr.spamf->tkl_duration = (SPAMFILTER_BAN_TIME ? SPAMFILTER_BAN_TIME : 86400);
 		
 	AddListItem(nl, tklines[tkl_hash('f')]);
 	return 1;
@@ -5170,6 +5298,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 			cep->ce_vardata);
 		link->class = default_class;
 	}
+	link->class->xrefcount++;
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "options"))
@@ -5432,8 +5561,17 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 	}
 	cep = config_find_entry(ce->ce_entries, "mask");	
 	ca->mask = strdup(cep->ce_vardata);
-	if (ca->flag.type == CONF_BAN_IP)
-		ca->masktype = parse_netmask(ca->mask, &ca->netmask, &ca->bits);
+	if (ca->flag.type == CONF_BAN_IP || ca->flag.type == CONF_BAN_USER)
+	{
+		struct irc_netmask tmp;
+		tmp.type = parse_netmask(ca->mask, &tmp);
+		if (tmp.type != HM_HOST)
+		{
+			ca->netmask = MyMallocEx(sizeof(struct irc_netmask));
+			bcopy(&tmp, ca->netmask, sizeof(struct irc_netmask));
+		}
+	}
+
 	cep = config_find_entry(ce->ce_entries, "reason");
 	ca->reason = strdup(cep->ce_vardata);
 	cep = config_find_entry(ce->ce_entries, "action");
@@ -5473,7 +5611,8 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 		for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
 		{
 			int value, errs = 0;
-			if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
+			if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+			    && !(h->owner->options & MOD_OPT_PERM))
 				continue;
 			value = (*(h->func.intfunc))(conf,ce,CONFIG_BAN, &errs);
 			if (value == 2)
@@ -5633,6 +5772,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			*x = '\0';
 			tempiConf.restrict_channelmodes = p;
 		}
+		else if (!strcmp(cep->ce_varname, "restrict-extendedbans")) {
+			ircstrdup(tempiConf.restrict_extendedbans, cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {
 			tempiConf.anti_spam_quit_message_time = config_checkval(cep->ce_vardata,CFG_TIME);
 		}
@@ -5653,6 +5795,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "maxchannelsperuser")) {
 			tempiConf.maxchannelsperuser = atoi(cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "maxdccallow")) {
+			tempiConf.maxdccallow = atoi(cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "network-name")) {
 			char *tmp;
@@ -5747,6 +5892,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "hide-ulines")) {
 					tempiConf.hide_ulines = 1;
 				}
+				else if (!strcmp(cepp->ce_varname, "flat-map")) {
+					tempiConf.flat_map = 1;
+				}
 				else if (!strcmp(cepp->ce_varname, "no-stealth")) {
 					tempiConf.no_oper_hiding = 1;
 				}
@@ -5801,12 +5949,13 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "cloak-keys"))
 		{
-			tempiConf.network.key = ircabs(atol(cep->ce_entries->ce_varname));
-			tempiConf.network.key2 = ircabs(atol(cep->ce_entries->ce_next->ce_varname));
-			tempiConf.network.key3 = ircabs(atol(cep->ce_entries->ce_next->ce_next->ce_varname));
-			ircsprintf(temp, "%li.%li.%li", tempiConf.network.key,
-				tempiConf.network.key2, tempiConf.network.key3);
-			tempiConf.network.keycrc = (long) our_crc32(temp, strlen(temp));
+			for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
+			{
+				int value;
+				value = (*(h->func.intfunc))(conf, cep, CONFIG_CLOAKKEYS);
+				if (value == 1)
+					break;
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "ident"))
 		{
@@ -5828,6 +5977,8 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					ircstrdup(tempiConf.spamfilter_ban_reason, cepp->ce_vardata);
 				if (!strcmp(cepp->ce_varname, "virus-help-channel"))
 					ircstrdup(tempiConf.spamfilter_virus_help_channel, cepp->ce_vardata);
+				if (!strcmp(cepp->ce_varname, "virus-help-channel-deny"))
+					tempiConf.spamfilter_vchan_deny = config_checkval(cepp->ce_vardata,CFG_YESNO);
 				if (!strcmp(cepp->ce_varname, "except"))
 				{
 					char *name, *p;
@@ -6098,6 +6249,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			}
 			requiredstuff.settings.maxchannelsperuser = 1;
 		}
+		else if (!strcmp(cep->ce_varname, "maxdccallow")) {
+			CheckNull(cep);
+		}
 		else if (!strcmp(cep->ce_varname, "network-name")) {
 			CheckNull(cep);
 			requiredstuff.settings.irc_network = 1;
@@ -6160,6 +6314,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				}
 			}
+		}
+		else if (!strcmp(cep->ce_varname, "restrict-extendedbans"))
+		{
+			CheckNull(cep);
 		}
 		else if (!strcmp(cep->ce_varname, "dns")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
@@ -6299,6 +6457,8 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->ce_varname, "hide-ulines")) {
 				}
+				else if (!strcmp(cepp->ce_varname, "flat-map")) {
+				}
 				else if (!strcmp(cepp->ce_varname, "no-stealth")) {
 				}
 				else if (!strcmp(cepp->ce_varname, "show-opermotd")) {
@@ -6370,42 +6530,24 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "cloak-keys"))
 		{
-			/* Count number of numbers there .. */
-			for (cepp = cep->ce_entries, i = 0; cepp; cepp = cepp->ce_next, i++) { }
-			if (i != 3)
+			for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
 			{
-				config_error("%s:%i: set::cloak-keys: we want 3 values, not %i!",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-					i);
-				errors++;
-				continue;
+				int value, errs = 0;
+				if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+				    && !(h->owner->options & MOD_OPT_PERM))
+					continue;
+				value = (*(h->func.intfunc))(conf, cep, CONFIG_CLOAKKEYS, &errs);
+
+				if (value == 1)
+					break;
+				if (value == -1)
+				{
+					errors += errs;
+					break;
+				}
+				if (value == -2) 
+					errors += errs;
 			}
-			/* i == 3 SHOULD make this true .. */
-			l1 = ircabs(atol(cep->ce_entries->ce_varname));
-			l2 = ircabs(atol(cep->ce_entries->ce_next->ce_varname));
-			l3  = ircabs(atol(cep->ce_entries->ce_next->ce_next->ce_varname));
-			if ((l1 < 10000) || (l2 < 10000) || (l3 < 10000))
-			{
-				config_error("%s:%i: set::cloak-keys: values must be over 10000",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-				errors++;
-				continue;
-			}		
-			/* values which are >LONG_MAX are (re)set to LONG_MAX, problem is
-			 * that 'long' could be 32 or 64 bits resulting in different limits (LONG_MAX),
-			 * which then again results in different cloak keys.
-			 * We could warn/error here or silently reset them to 2147483647...
-			 * IMO it's best to error because the value 2147483647 would be predictable
-			 * (actually that's even unrelated to this 64bit problem).
-			 */
-			if ((l1 >= 2147483647) || (l2 >= 2147483647) || (l3 >= 2147483647))
-			{
-				config_error("%s:%i: set::cloak-keys: values must be below 2147483647 (2^31-1)",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-				errors++;
-				continue;
-			}
-			requiredstuff.settings.cloakkeys = 1;	
 		}
 		else if (!strcmp(cep->ce_varname, "scan")) {
 			config_status("%s:%i: set::scan: WARNING: scanner support has been removed, "
@@ -6464,6 +6606,8 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						continue;
 					}
 				} else 
+				if (!strcmp(cepp->ce_varname, "virus-help-channel-deny"))
+				{ } else
 				if (!strcmp(cepp->ce_varname, "except"))
 				{ } else
 				{
@@ -6534,7 +6678,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 							}
 						}
 					}
-					if (!ofl->name)
+					if (ofl && !ofl->name)
 					{
 						config_error("%s:%i: unknown SSL flag '%s'",
 							ceppp->ce_fileptr->cf_filename, 
@@ -6593,6 +6737,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 #elif defined(_WIN32)
 	HANDLE hFind;
 	WIN32_FIND_DATA FindData;
+	char cPath[MAX_PATH], *cSlash = NULL, *path;
 #endif
 	char *ret;
 	if (!ce->ce_vardata)
@@ -6624,6 +6769,14 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 	}
 	globfree(&files);
 #elif defined(_WIN32)
+	bzero(cPath,MAX_PATH);
+	if (strchr(ce->ce_vardata, '/') || strchr(ce->ce_vardata, '\\')) {
+		strncpyzt(cPath,ce->ce_vardata,MAX_PATH);
+		cSlash=cPath+strlen(cPath);
+		while(*cSlash != '\\' && *cSlash != '/' && cSlash > cPath)
+			cSlash--; 
+		*(cSlash+1)=0;
+	}
 	hFind = FindFirstFile(ce->ce_vardata, &FindData);
 	if (!FindData.cFileName) {
 		config_status("%s:%i: loadmodule %s: failed to load",
@@ -6632,19 +6785,53 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 		FindClose(hFind);
 		return -1;
 	}
-	if ((ret = Module_Create(FindData.cFileName))) {
-		config_status("%s:%i: loadmodule %s: failed to load: %s",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			FindData.cFileName, ret);
-		return -1;
+
+	if (cPath) {
+		path = MyMalloc(strlen(cPath) + strlen(FindData.cFileName)+1);
+		strcpy(path,cPath);
+		strcat(path,FindData.cFileName);
+		if ((ret = Module_Create(path))) {
+			config_status("%s:%i: loadmodule %s: failed to load: %s",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+				FindData.cFileName, ret);
+			free(path);
+			return -1;
+		}
+		free(path);
 	}
-	while (FindNextFile(hFind, &FindData) != 0) {
-		if ((ret = Module_Create(FindData.cFileName)))
-		{
+	else
+	{
+		if ((ret = Module_Create(FindData.cFileName))) {
 			config_status("%s:%i: loadmodule %s: failed to load: %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				FindData.cFileName, ret);
 			return -1;
+		}
+	}
+	while (FindNextFile(hFind, &FindData) != 0) {
+		if (cPath) {
+			path = MyMalloc(strlen(cPath) + strlen(FindData.cFileName)+1);
+			strcpy(path,cPath);
+			strcat(path,FindData.cFileName);		
+			if ((ret = Module_Create(path)))
+			{
+				config_status("%s:%i: loadmodule %s: failed to load: %s",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+					FindData.cFileName, ret);
+				free(path);
+				return -1;
+			}
+			free(path);
+		}
+		else
+		{
+			if ((ret = Module_Create(FindData.cFileName)))
+			{
+				config_status("%s:%i: loadmodule %s: failed to load: %s",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+					FindData.cFileName, ret);
+				return -1;
+			}
 		}
 	}
 	FindClose(hFind);
@@ -7018,6 +7205,19 @@ int	_conf_deny_dcc(ConfigFile *conf, ConfigEntry *ce)
 		{
 			ircstrdup(deny->reason, cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "soft"))
+		{
+			int x = config_checkval(cep->ce_vardata,CFG_YESNO);
+			if (x == 1)
+				deny->flag.type = DCCDENY_SOFT;
+		}
+	}
+	if (!deny->reason)
+	{
+		if (deny->flag.type == DCCDENY_HARD)
+			ircstrdup(deny->reason, "Possible infected virus file");
+		else
+			ircstrdup(deny->reason, "Possible executable content");
 	}
 	AddListItem(deny, conf_deny_dcc);
 	return 0;
@@ -7137,6 +7337,8 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 			if (!strcmp(cep->ce_varname, "filename"))
 			;
 			else if (!strcmp(cep->ce_varname, "reason"))
+			;
+			else if (!strcmp(cep->ce_varname, "soft"))
 			;
 			else 
 			{
@@ -7334,7 +7536,8 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 		for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
 		{
 			int value, errs = 0;
-			if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
+			if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+			    && !(h->owner->options & MOD_OPT_PERM))
 				continue;
 			value = (*(h->func.intfunc))(conf,ce,CONFIG_DENY, &errs);
 			if (value == 2)
@@ -7490,6 +7693,34 @@ void	link_cleanup(ConfigItem_link *link_ptr)
 	link_ptr->recvauth = NULL;
 }
 
+void delete_linkblock(ConfigItem_link *link_ptr)
+{
+	Debug((DEBUG_ERROR, "delete_linkblock: deleting %s, refcount=%d",
+		link_ptr->servername, link_ptr->refcount));
+	if (link_ptr->class)
+	{
+		link_ptr->class->xrefcount--;
+		/* Perhaps the class is temporary too and we need to free it... */
+		if (link_ptr->class->flag.temporary && 
+		    !link_ptr->class->clients && !link_ptr->class->xrefcount)
+		{
+			delete_classblock(link_ptr->class);
+			link_ptr->class = NULL;
+		}
+	}
+	link_cleanup(link_ptr);
+	DelListItem(link_ptr, conf_link);
+	MyFree(link_ptr);
+}
+
+void delete_classblock(ConfigItem_class *class_ptr)
+{
+	Debug((DEBUG_ERROR, "delete_classblock: deleting %s, clients=%d, xrefcount=%d",
+		class_ptr->name, class_ptr->clients, class_ptr->xrefcount));
+	ircfree(class_ptr->name);
+	DelListItem(class_ptr, conf_class);
+	MyFree(class_ptr);
+}
 
 void	listen_cleanup()
 {
@@ -7623,7 +7854,10 @@ void add_remote_include(char *file, char *url, int flags, char *errorbuf)
 		if (!(inc->flag.type & INCLUDE_NOTLOADED))
 			continue;
 		if (!stricmp(url, inc->url))
+		{
+			inc->flag.type |= flags;
 			return;
+		}
 	}
 
 	inc = MyMallocEx(sizeof(ConfigItem_include));

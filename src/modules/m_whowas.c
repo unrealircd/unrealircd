@@ -83,8 +83,8 @@ DLLFUNC int MOD_UNLOAD(m_whowas)(int module_unload)
 
 /* externally defined functions */
 extern unsigned int hash_whowas_name(char *);
-extern aWhowas WHOWAS[NICKNAMEHISTORYLENGTH];
-extern aWhowas *WHOWASHASH[WW_MAX];
+extern MODVAR aWhowas WHOWAS[NICKNAMEHISTORYLENGTH];
+extern MODVAR aWhowas *WHOWASHASH[WW_MAX];
 
 /*
 ** m_whowas

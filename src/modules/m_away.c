@@ -51,7 +51,7 @@ DLLFUNC int m_away(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_AWAY 	"AWAY"	
 #define TOK_AWAY 	"6"	
 
-ModuleHeader MOD_HEADER(m_away)
+DLLFUNC ModuleHeader MOD_HEADER(m_away)
   = {
 	"m_away",
 	"$Id$",

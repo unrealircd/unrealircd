@@ -127,12 +127,16 @@
 #define ERR_NOOPERHOST       491
 #define ERR_NOCTCP	     492
 
+#define ERR_CHANOWNPRIVNEEDED 499
+
 #define ERR_UMODEUNKNOWNFLAG 501
 #define ERR_USERSDONTMATCH   502
 
 #define ERR_SILELISTFULL     511
 #define ERR_TOOMANYWATCH     512
 #define ERR_NEEDPONG         513
+
+#define ERR_TOOMANYDCC       514
 
 #define ERR_NOINVITE		 518
 #define ERR_ADMONLY			 519
@@ -332,8 +336,16 @@
 #define RPL_NOWOFF           605
 #define RPL_WATCHLIST        606
 #define RPL_ENDOFWATCHLIST   607
+
+#define RPL_DCCSTATUS        617
+#define RPL_DCCLIST          618
+#define RPL_ENDOFDCCLIST     619
+#define RPL_DCCINFO          620
+
 #define RPL_DUMPING			 640
 #define RPL_DUMPRPL			 641
 #define RPL_EODUMP           642
 
+#define ERR_CANNOTDOCOMMAND 972
+#define ERR_CANNOTCHANGECHANMODE 974
 #define ERR_NUMERICERR       999

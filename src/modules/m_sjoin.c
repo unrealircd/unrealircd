@@ -166,7 +166,7 @@ else {\
 	sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", sptr->name, chptr->chname,\
 		modebuf, parabuf);\
 	strcpy(parabuf,param);\
-	modebuf[0] = '+';\
+	/* modebuf[0] should stay what it was ('+' or '-') */ \
 	modebuf[1] = mode;\
 	modebuf[2] = '\0';\
 	b = 2;\

@@ -50,6 +50,8 @@ AC_DEFINE(STATIC_LINKING)
 
 hold_cflags=$CFLAGS
 CFLAGS="$CFLAGS -export-dynamic"
+AC_CACHE_CHECK(if we need a flag to export symbols, ac_export_dynamic, [
+
 AC_CACHE_CHECK(if we need the -export-dynamic flag, ac_cv_export_dynamic, [
 AC_TRY_LINK(, [int i];, ac_cv_export_dynamic=yes, ac_cv_export_dynamic=no)])
 if test "$ac_cv_export_dynamic" = "no"; then
@@ -62,6 +64,9 @@ if test "$ac_cv_prog_gcc" = "yes"; then
 	case `uname -s` in
 		Darwin*[)]
 		ac_cv_pic="-bundle -flat_namespace -undefined suppress"
+		;;
+		HP-UX*[)]
+		ac_cv_pic="-fPIC"
 		;;
 	esac
 else
@@ -229,6 +234,8 @@ AC_CHECK_FUNCS(vsnprintf,AC_DEFINE(HAVE_VSNPRINTF))
 AC_CHECK_FUNCS(strlcpy, AC_DEFINE(HAVE_STRLCPY))
 AC_CHECK_FUNCS(strlcat, AC_DEFINE(HAVE_STRLCAT))
 AC_CHECK_FUNCS(strlncat, AC_DEFINE(HAVE_STRLNCAT))
+AC_CHECK_FUNCS(inet_pton, AC_DEFINE(HAVE_INET_PTON))
+AC_CHECK_FUNCS(inet_ntop, AC_DEFINE(HAVE_INET_NTOP))
 
 AC_CACHE_CHECK(if we can set the core size to unlimited, ac_cv_force_core,[
 AC_TRY_RUN([
@@ -323,7 +330,7 @@ AC_DEFINE_UNQUOTED(MYOSNAME,"`uname -a`")
 AC_ARG_WITH(permissions, [AC_HELP_STRING([--with-permissions=permissions],[Specify the default permissions for
 configuration files])], AC_DEFINE_UNQUOTED(DEFAULT_PERMISSIONS,$withval), AC_DEFINE(DEFAULT_PERMISSIONS, 0600)) 
 AC_ARG_WITH(dpath, [AC_HELP_STRING([--with-dpath=path],[Specify the path where configuration files are stored])],
-AC_DEFINE_UNQUOTED(DPATH, "$withval") IRCDDIR="$withval"; mkdir $withval/tmp, AC_DEFINE_UNQUOTED(DPATH,"`pwd`") IRCDDIR="`pwd`" mkdir `pwd`/tmp)
+AC_DEFINE_UNQUOTED(DPATH, "$withval") IRCDDIR="$withval", AC_DEFINE_UNQUOTED(DPATH,"`pwd`") IRCDDIR="`pwd`")
 AC_ARG_WITH(fd-setsize, [AC_HELP_STRING([--with-fd-setsize=size],[Specify the max file descriptors to use])],
 ac_fd=$withval, ac_fd=1024)
 AC_DEFINE_UNQUOTED(MAXCONNECTIONS, $ac_fd)
@@ -365,7 +372,7 @@ IRCDLIBS="$IRCDLIBS -lresolv "
 esac
 
 dnl REMEMBER TO CHANGE WITH A NEW RELEASE!
-tre_version="0.6.6"
+tre_version="0.6.8"
 AC_MSG_RESULT(extracting TRE regex library)
 cur_dir=`pwd`
 cd extras

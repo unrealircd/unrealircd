@@ -54,7 +54,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[]);
  */
 int	ban_version(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
-aMessage	webtv_cmds[] = 
+MODVAR aMessage	webtv_cmds[] = 
 {
 	{"WHOIS", w_whois, 15},
 	{"\1VERSION", ban_version, 1},
@@ -346,7 +346,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (IsNetAdmin(acptr))
 					strcat(buf, "a Network Administrator");
 				else if (IsSAdmin(acptr))
-					strcat(buf, "a Services Operator");
+					strcat(buf, "a Services Administrator");
 				else if (IsAdmin(acptr) && !IsCoAdmin(acptr))
 					strcat(buf, "a Server Administrator");
 				else if (IsCoAdmin(acptr))
@@ -417,7 +417,7 @@ int	ban_version(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	if (parv[1][len-1] == '\1')
 		parv[1][len-1] = '\0';
-	if ((ban = Find_ban(parv[1], CONF_BAN_VERSION)))
+	if ((ban = Find_ban(NULL, parv[1], CONF_BAN_VERSION)))
 		return place_host_ban(sptr, ban->action, ban->reason, BAN_VERSION_TKL_TIME);
 	return 0;
 }

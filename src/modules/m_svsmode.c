@@ -49,7 +49,6 @@
 DLLFUNC int m_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int m_svs2mode(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
-extern ircstats IRCstats;
 #define MSG_SVSMODE 	"SVSMODE"	
 #define TOK_SVSMODE 	"n"	
 #define MSG_SVS2MODE    "SVS2MODE"

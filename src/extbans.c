@@ -42,10 +42,10 @@
 #include <fcntl.h>
 #include "h.h"
 
-Extban ExtBan_Table[EXTBANTABLESZ]; /* this should be fastest */
-unsigned short ExtBan_highest = 0;
+Extban MODVAR ExtBan_Table[EXTBANTABLESZ]; /* this should be fastest */
+unsigned MODVAR short ExtBan_highest = 0;
 
-char extbanstr[EXTBANTABLESZ+1];
+char MODVAR extbanstr[EXTBANTABLESZ+1];
 
 void make_extbanstr(void)
 {
@@ -189,6 +189,21 @@ char *ban = banin + 3;
 	return 0;
 }
 
+int extban_moden_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type)
+{
+char *ban = banin + 3;
+
+	if (type != BANCHK_NICK)
+		return 0;
+	
+	if ((ban_realhost && !match(ban, ban_realhost)) ||
+	     (ban_virthost && !match(ban, ban_virthost)) ||
+	     (ban_ip && !match(ban, ban_ip)))
+		return 1;
+
+	return 0;
+}
+
 /** Some kind of general conv_param routine,
  * to ensure the parameter is nick!user@host.
  * most of the code is just copied from clean_ban_mask.
@@ -255,6 +270,10 @@ void extban_init(void)
 	req.flag = 'q';
 	req.conv_param = extban_conv_param_nuh;
 	req.is_banned = extban_modeq_is_banned;
+	ExtbanAdd(NULL, req);
+	req.flag = 'n';
+	req.conv_param = extban_conv_param_nuh;
+	req.is_banned = extban_moden_is_banned;
 	ExtbanAdd(NULL, req);
 	req.flag = 'r';
 	req.conv_param = extban_moder_conv_param;

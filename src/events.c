@@ -43,7 +43,7 @@
 ID_Copyright("(C) Carsten Munk 2001");
 
 
-Event *events = NULL;
+MODVAR Event *events = NULL;
 
 void	LockEventSystem(void)
 {
@@ -58,7 +58,6 @@ Event	*EventAddEx(Module *module, char *name, long every, long howmany,
 		  vFP event, void *data)
 {
 	Event *newevent;
-	
 	if (!name || (every < 0) || (howmany < 0) || !event)
 	{
 		if (module)
@@ -152,7 +151,11 @@ int EventMod(Event *event, EventInfo *mods) {
 	return 0;
 }
 
+#ifndef _WIN32
 inline void	DoEvents(void)
+#else
+void DoEvents(void)
+#endif
 {
 	Event *eventptr;
 	Event temp;

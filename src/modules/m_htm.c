@@ -44,18 +44,6 @@
 #endif
 
 
-#ifndef NO_FDLIST
-extern float currentrate;
-extern float currentrate2;
-extern float highest_rate;
-extern float highest_rate2;
-extern int lifesux;
-extern int noisy_htm;
-extern time_t LCF;
-extern int LRV;
-#endif
-
-
 DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 EVENT(lcf_check);
 EVENT(htm_calc);

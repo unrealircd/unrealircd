@@ -352,6 +352,49 @@ void get_sockhost(aClient *cptr, char *host)
 	strncpyzt(cptr->sockhost, s, sizeof(cptr->sockhost));
 }
 
+void remove_dcc_references(aClient *sptr)
+{
+aClient *acptr;
+Link *lp, *nextlp;
+Link **lpp, *tmp;
+int found;
+
+	lp = sptr->user->dccallow;
+	while(lp)
+	{
+		nextlp = lp->next;
+		acptr = lp->value.cptr;
+		for(found = 0, lpp = &(acptr->user->dccallow); *lpp; lpp=&((*lpp)->next))
+		{
+			if(lp->flags == (*lpp)->flags)
+				continue; /* match only opposite types for sanity */
+			if((*lpp)->value.cptr == sptr)
+			{
+				if((*lpp)->flags == DCC_LINK_ME)
+				{
+					sendto_one(acptr, ":%s %d %s :%s has been removed from "
+						"your DCC allow list for signing off",
+						me.name, RPL_DCCINFO, acptr->name, sptr->name);
+				}
+				tmp = *lpp;
+				*lpp = tmp->next;
+				free_link(tmp);
+				found++;
+				break;
+			}
+		}
+
+		if(!found)
+			sendto_realops("[BUG] remove_dcc_references:  %s was in dccallowme "
+				"list[%d] of %s but not in dccallowrem list!",
+				acptr->name, lp->flags, sptr->name);
+
+		free_link(lp);
+		lp = nextlp;
+	}
+}
+
+
 /*
 ** exit_client
 **	This is old "m_bye". Name  changed, because this is not a
@@ -414,26 +457,36 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 			delfrom_fdlist(sptr->slot, &serv_fdlist);
 #endif
 		if (sptr->class)
+		{
 			sptr->class->clients--;
+			if ((sptr->class->flag.temporary) && !sptr->class->clients && !sptr->class->xrefcount)
+			{
+				delete_classblock(sptr->class);
+				sptr->class = NULL;
+			}
+		}
 		if (IsClient(sptr))
 			IRCstats.me_clients--;
-		if (IsServer(sptr))
+		if (sptr->serv && sptr->serv->conf)
 		{
-			IRCstats.me_servers--;
 			sptr->serv->conf->refcount--;
+			Debug((DEBUG_ERROR, "reference count for %s (%s) is now %d",
+				sptr->name, sptr->serv->conf->servername, sptr->serv->conf->refcount));
 			if (!sptr->serv->conf->refcount
 			  && sptr->serv->conf->flag.temporary)
 			{
-				/* Due for deletion */
-				DelListItem(sptr->serv->conf, conf_link);
-				link_cleanup(sptr->serv->conf);
-				MyFree(sptr->serv->conf);
+				Debug((DEBUG_ERROR, "deleting temporary block %s", sptr->serv->conf->servername));
+				delete_linkblock(sptr->serv->conf);
 			}
+		}
+		if (IsServer(sptr))
+		{
+			IRCstats.me_servers--;
 			ircd_log(LOG_SERVER, "SQUIT %s (%s)", sptr->name, comment);
 		}
 
 		if (sptr->listener)
-			if (sptr->listener->class)
+			if (sptr->listener->class && !IsOutgoing(sptr))
 			{
 				listen_conf = (ConfigItem_listen *) sptr->listener->class;
 				listen_conf->clients--;
@@ -673,11 +726,7 @@ static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from, char *c
 
 			if (!IsULine(sptr) && !split)
 				if (sptr->user->server != me_hash)
-					sendto_snomask(SNO_FCLIENT,
-					    "*** Notice -- Client exiting at %s: %s!%s@%s (%s)",
-					    sptr->user->server, sptr->name,
-					    sptr->user->username,
-					    sptr->user->realhost, comment);
+					sendto_fconnectnotice(sptr->name, sptr->user, sptr, 1, comment);
 			if (!MyClient(sptr))
 			{
 				RunHook2(HOOKTYPE_REMOTE_QUIT, sptr, comment);
@@ -693,6 +742,11 @@ static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from, char *c
 			/* Clean up silencefield */
 			while ((lp = sptr->user->silence))
 				(void)del_silence(sptr, lp->value.cp);
+
+			/* Clean up dccallow list and (if needed) notify other clients
+			 * that have this person on DCCALLOW that the user just left/got removed.
+			 */
+			remove_dcc_references(sptr);
 		}
 	}
 

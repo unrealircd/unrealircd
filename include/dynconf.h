@@ -27,10 +27,6 @@
 
 typedef struct zNetwork aNetwork;
 struct zNetwork {
-	long	key;
-	long	key2;
-	long	key3;
-	long	keycrc;
 	unsigned x_inah:1;
 	char *x_ircnetwork;
 	char *x_ircnet005;
@@ -74,6 +70,7 @@ typedef struct zConfiguration aConfiguration;
 struct zConfiguration {
 	unsigned som:1;
 	unsigned hide_ulines:1;
+	unsigned flat_map:1;
 	unsigned allow_chatops:1;
 	unsigned webtv_support:1;
 	unsigned no_oper_hiding:1;
@@ -102,6 +99,7 @@ struct zConfiguration {
 	char *oper_only_stats;
 	OperStat *oper_only_stats_ext;
 	int  maxchannelsperuser;
+	int  maxdccallow;
 	int  anti_spam_quit_message_time;
 	char *egd_path;
 	char *static_quit;
@@ -111,10 +109,14 @@ struct zConfiguration {
 	char *x_server_key_pem;
 	char *trusted_ca_file;
 	long ssl_options;
+#elif defined(_WIN32)
+	void *bogus1, *bogus2, *bogus3;
+	long bogus4;
 #endif
 	enum UHAllowed userhost_allowed;
 	char *restrict_usermodes;
 	char *restrict_channelmodes;
+	char *restrict_extendedbans;
 	char *channel_command_prefix;
 	long unknown_flood_bantime;
 	long unknown_flood_amount;
@@ -138,13 +140,14 @@ struct zConfiguration {
 	long spamfilter_ban_time;
 	char *spamfilter_ban_reason;
 	char *spamfilter_virus_help_channel;
+	char spamfilter_vchan_deny;
 	SpamExcept *spamexcept;
 	char *spamexcept_line;
 	aNetwork network;
 };
 
 #ifndef DYNCONF_C
-extern aConfiguration iConf;
+extern MODVAR aConfiguration iConf;
 #endif
 
 #define KLINE_ADDRESS		iConf.kline_address
@@ -154,8 +157,10 @@ extern aConfiguration iConf;
 #define CONNECT_SNOMASK			iConf.user_snomask
 #define SHOWOPERMOTD			iConf.som
 #define HIDE_ULINES			iConf.hide_ulines
+#define FLAT_MAP			iConf.flat_map
 #define ALLOW_CHATOPS			iConf.allow_chatops
 #define MAXCHANNELSPERUSER		iConf.maxchannelsperuser
+#define MAXDCCALLOW			iConf.maxdccallow
 #define WEBTV_SUPPORT			iConf.webtv_support
 #define NO_OPER_HIDING			iConf.no_oper_hiding
 #define DONT_RESOLVE			iConf.dont_resolve
@@ -191,15 +196,12 @@ extern aConfiguration iConf;
 #define SSL_SERVER_CERT_PEM		(iConf.x_server_cert_pem ? iConf.x_server_cert_pem : "server.cert.pem")
 #define SSL_SERVER_KEY_PEM		(iConf.x_server_key_pem ? iConf.x_server_key_pem : "server.key.pem")
 
-#define CLOAK_KEY1			iConf.network.key
-#define CLOAK_KEY2			iConf.network.key2
-#define CLOAK_KEY3			iConf.network.key3
-#define CLOAK_KEYCRC			iConf.network.keycrc
 #define STATIC_QUIT			iConf.static_quit
 #define STATIC_PART			iConf.static_part
 #define UHOST_ALLOWED			iConf.userhost_allowed
 #define RESTRICT_USERMODES		iConf.restrict_usermodes
 #define RESTRICT_CHANNELMODES		iConf.restrict_channelmodes
+#define RESTRICT_EXTENDEDBANS		iConf.restrict_extendedbans
 #ifdef THROTTLING
 #define THROTTLING_PERIOD		iConf.throttle_period
 #define THROTTLING_COUNT		iConf.throttle_count
@@ -238,4 +240,5 @@ extern aConfiguration iConf;
 #define SPAMFILTER_BAN_TIME		iConf.spamfilter_ban_time
 #define SPAMFILTER_BAN_REASON	iConf.spamfilter_ban_reason
 #define SPAMFILTER_VIRUSCHAN	iConf.spamfilter_virus_help_channel
+#define SPAMFILTER_VIRUSCHANDENY	iConf.spamfilter_vchan_deny
 #define SPAMFILTER_EXCEPT		iConf.spamexcept_line

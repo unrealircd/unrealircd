@@ -374,7 +374,7 @@ static int send_res_msg(char *msg, int len, int rcount)
 #endif
 
 		{
-			Debug((DEBUG_DNS, "send_res_msg, errno = %s",strerror(ERRNO)));
+			Debug((DEBUG_DNS, "send_res_msg, errno = %s",STRERROR(ERRNO)));
 			reinfo.re_sent++;
 			sent++;
 		}
@@ -1204,7 +1204,7 @@ static void update_list(ResRQ *rptr, aCache *cachep)
 #ifdef	DEBUGMODE
  #ifdef INET6
 			Debug((DEBUG_DNS, "u_l:add IP %s hal %x ac %d",
-				inet_ntop(((struct IN_ADDR *)s), mydummy,
+				inet_ntop(AF_INET6, ((struct IN_ADDR *)s), mydummy,
 				          MYDUMMY_SIZE),
 				HE(cp)->h_addr_list, addrcount));
  #else
@@ -1662,6 +1662,13 @@ int m_dns(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr, "NOTICE %s :retrans=%d s, retry=%d times", sptr->name, ircd_res.retrans, ircd_res.retry);
 		sendto_one(sptr, "NOTICE %s :Default domain name: %s", sptr->name, ircd_res.defdname);
 		sendto_one(sptr, "NOTICE %s :End of info.", sptr->name);
+		return 2;
+	}
+	if (parv[1] && *parv[1] == 'c')
+	{
+		flush_cache();
+		sendto_realops("%s cleared the DNS cache", sptr->name);
+		sendto_one(sptr, "NOTICE %s :DNS cache cleared", sptr->name);
 		return 2;
 	}
 	sendto_one(sptr, "NOTICE %s :Ca %d Cd %d Ce %d Cl %d Ch %d:%d Cu %d",

@@ -52,9 +52,6 @@ DLLFUNC int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define TOK_SVSNOOP 	"f"
 
 
-extern ircstats IRCstats;
-extern int SVSNOOP;
-
 ModuleHeader MOD_HEADER(m_svsnoop)
   = {
 	"m_svsnoop",

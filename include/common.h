@@ -36,7 +36,7 @@
 #include <process.h>
 #include <io.h>
 #endif
-//#include "dynconf.h"
+#include "types.h"
 #include "config.h"
 #ifdef	PARAMH
 #include <sys/param.h>
@@ -125,7 +125,15 @@ extern char *inet_ntoa(struct IN_ADDR);
 extern int inet_netof(struct IN_ADDR);
 #endif
 
-int  global_count, max_global_count;
+#ifndef HAVE_INET_NTOP
+const char *inet_ntop(int, const void *, char *, size_t);
+#endif
+
+#ifndef HAVE_INET_PTON
+int inet_pton(int af, const char *src, void *dst);
+#endif
+
+MODVAR int  global_count, max_global_count;
 extern char *myctime(time_t);
 extern char *strtoken(char **, char *, char *);
 
@@ -140,7 +148,7 @@ extern char *strtoken(char **, char *, char *);
 
 #define DupString(x,y) do{int l=strlen(y);x=MyMalloc(l+1);(void)memcpy(x,y, l+1);}while(0)
 
-extern u_char tolowertab[], touppertab[];
+extern MODVAR u_char tolowertab[], touppertab[];
 
 #if defined(CHINESE_NICK) || defined(JAPANESE_NICK)
 #define USE_LOCALE
@@ -166,7 +174,7 @@ extern u_char tolowertab[], touppertab[];
 #undef isspace
 #undef iscntrl
 #endif
-extern unsigned char char_atribs[];
+extern MODVAR unsigned char char_atribs[];
 
 #define PRINT 1
 #define CNTRL 2
@@ -285,6 +293,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 		" NETWORK=%s" 	  \
 		" CASEMAPPING=%s" \
 		" EXTBAN=~,%s" \
+		" ELIST=MNUCT" \
 		" :are supported by this server"
 
 #define PROTOCTL_PARAMETERS_2	  \
@@ -314,7 +323,8 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                         " SJ3" \
                         " NS" \
                         " SJB64" \
-                        " TKLEXT"
+                        " TKLEXT" \
+			" NICKIP"
 
 #ifdef _WIN32
 /*
@@ -322,7 +332,6 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
  * Windows' internal strerror() function doesn't work with socket errors.
  */
 extern int DisplayString(HWND hWnd, char *InBuf, ...);
-#undef	strerror
 #else
 typedef int SOCKET;
 #define INVALID_SOCKET -1
@@ -336,8 +345,9 @@ extern int lu_noninv, lu_inv, lu_serv, lu_oper,
     lu_unknown, lu_channel, lu_lu, lu_lulocal, lu_lserv,
     lu_clu, lu_mlu, lu_cglobalu, lu_mglobalu;
 
-TS   now;
+MODVAR TS   now;
 
+#ifndef _WIN32
 #if defined(__STDC__)
 #define __const         const
 #define __signed        signed
@@ -359,6 +369,9 @@ TS   now;
 #define volatile
 #endif
 #endif
+#endif
+#else
+#define inline __inline
 #endif
 
 #define READBUF_SIZE 8192

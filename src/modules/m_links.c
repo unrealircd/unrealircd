@@ -92,6 +92,7 @@ DLLFUNC CMD_FUNC(m_links)
 {
 	Link *lp;
 	aClient *acptr;
+	int flat = (FLAT_MAP && !IsAnOper(sptr)) ? 1 : 0;
 
 	for (lp = Servers; lp; lp = lp->next)
 	{
@@ -100,10 +101,14 @@ DLLFUNC CMD_FUNC(m_links)
 		/* Some checks */
 		if (HIDE_ULINES && IsULine(acptr) && !IsAnOper(sptr))
 			continue;
-		sendto_one(sptr, rpl_str(RPL_LINKS),
-		    me.name, parv[0], acptr->name, acptr->serv->up,
-		    acptr->hopcount, (acptr->info[0] ? acptr->info :
-		    "(Unknown Location)"));
+		if (flat)
+			sendto_one(sptr, rpl_str(RPL_LINKS),
+			    me.name, parv[0], acptr->name, me.name,
+			    (acptr != &me) ? 1 : 1, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
+		else
+			sendto_one(sptr, rpl_str(RPL_LINKS),
+			    me.name, parv[0], acptr->name, acptr->serv->up,
+			    acptr->hopcount, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
 	}
 
 	sendto_one(sptr, rpl_str(RPL_ENDOFLINKS), me.name, parv[0], "*");

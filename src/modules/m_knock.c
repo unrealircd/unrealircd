@@ -169,7 +169,7 @@ CMD_FUNC(m_knock)
 		return 0;
 	}
 
-	ircsprintf(chbuf, "%s%s", CHANOPPFX, chptr->chname);
+	ircsprintf(chbuf, "@%s", chptr->chname);
 	ircsprintf(buf, "[Knock] by %s!%s@%s (%s)",
 		sptr->name, sptr->user->username, GetHost(sptr),
 		parv[2] ? parv[2] : "no reason specified");

@@ -1,0 +1,32 @@
+==[ Translations ]============================================================
+
+Starting with the release of Unreal 3.2 we have begun accepting translated
+documentation files. For now, only translations of unreal32docs.html are
+accepted but this might change in the future (we'll see how this goes first).
+
+There a few requirements however:
+- When you submit your translation it should be a translation of the
+  very latest doc... So be sure to translate the cvs version of
+  unreal32docs.html (www.vulnscan.org/UnrealIrcd/unreal32docs.html).
+- Of course the translation should be correct.. So also 'technically',
+  it's therefore recommended that have some real experience with Unreal ;)
+- Someone (usually the person who translated it) needs to be willing
+  to actively maintain the docs. This is very important! If docs are
+  out of date (out-of-synch) there will be confusion among users.
+  Translators will receive once a week (and right before every release)
+  all changes that were made in unreal32docs.html. Then the translator
+  should update his/her doc and send it in (or commit it via cvs).
+  Count on an average of 15 minutes a week (it varies).
+
+Now why would you do all this? The first-time translation of unreal32docs.html
+is definitely a lot of work, but... once you are done it's just a matter
+of updating once a week, many users will be happy with your translation,
+and you just helped UnrealIRCd becoming a bit more 'international' :).
+
+If you want to start translating a document, please send a mail to the
+coders mailing list (coders@lists.unrealircd.org) and mention the language
+you are willing to translate to...
+You'll then receive an email back saying you can go ahead (or not).
+This is mainly to avoid multiple persons working on the same translation.
+
+==============================================================================

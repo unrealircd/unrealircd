@@ -736,7 +736,7 @@ int   hash_del_watch_list(aClient *cptr)
 
 #ifdef THROTTLING
 
-struct	ThrottlingBucket	*ThrottlingHash[THROTTLING_HASH_SIZE+1];
+struct	MODVAR ThrottlingBucket	*ThrottlingHash[THROTTLING_HASH_SIZE+1];
 
 void	init_throttling_hash()
 {
@@ -846,7 +846,7 @@ void	del_throttling_bucket(struct ThrottlingBucket *bucket)
  * @retval 2 Allowed, not in list or is an exception.
  * @see add_connection()
  */
-int	throttle_can_connect(struct IN_ADDR *in)
+int	throttle_can_connect(aClient *sptr, struct IN_ADDR *in)
 {
 	struct ThrottlingBucket *b;
 
@@ -857,7 +857,7 @@ int	throttle_can_connect(struct IN_ADDR *in)
 		return 1;
 	else
 	{
-		if (Find_except(Inet_ia2p(in), CONF_EXCEPT_THROTTLE))
+		if (Find_except(sptr, Inet_ia2p(in), CONF_EXCEPT_THROTTLE))
 			return 2;
 		b->count++;
 		if (b->count > (THROTTLING_COUNT ? THROTTLING_COUNT : 3))
