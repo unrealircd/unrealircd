@@ -645,7 +645,7 @@ extern char *canonize(char *buffer)
 
 extern char cmodestring[512];
 
-int  m_post(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_post)
 {
 	char *tkllayer[9] = {
 		me.name,	/*0  server.name */
@@ -1090,7 +1090,7 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 **	parv[9] = virthost, * if none
 **	parv[10] = info
 */
-int  m_nick(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_nick)
 {
 	ConfigItem_ban *aconf;
 	aClient *acptr, *serv = NULL;
@@ -1772,7 +1772,7 @@ char *get_modestr(long umodes)
 **	parv[3] = server host name (used only from other servers)
 **	parv[4] = users real name info
 */
-int  m_user(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_user)
 {
 #define	UFLAGS	(UMODE_INVISIBLE|UMODE_WALLOP|UMODE_SERVNOTICE)
 	char *username, *host, *server, *realname, *umodex = NULL, *virthost =
@@ -1899,7 +1899,7 @@ int  m_user(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **	parv[0] = sender prefix
 **	parv[1] = password
 */
-int  m_pass(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_pass)
 {
 	char *password = parc > 1 ? parv[1] : NULL;
 	int  PassLen = 0;
@@ -1931,7 +1931,7 @@ int  m_pass(aClient *cptr, aClient *sptr, int parc, char *parv[])
  * information only (no spurious AWAY labels or channels).
  * Re-written by Dianora 1999
  */
-int  m_userhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_userhost)
 {
 
 	char *p;		/* scratch end pointer */
@@ -1998,7 +1998,7 @@ int  m_userhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
  * ISON :nicklist
  */
 
-int  m_ison(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_ison)
 {
 	char namebuf[USERLEN + HOSTLEN + 4];
 	aClient *acptr;
@@ -2084,7 +2084,7 @@ void set_snomask(aClient *sptr, char *snomask) {
  * parv[1] - username to change mode for
  * parv[2] - modes to change
  */
-int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_umode)
 {
 	int  flag = 0;
 	int  i;
@@ -2414,7 +2414,7 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
     Small wrapper to bandwidth save
 */
 
-int  m_umode2(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_umode2)
 {
 	char *xparv[5] = {
 		parv[0],
@@ -2596,7 +2596,7 @@ static int add_silence(aClient *sptr, char *mask)
 **      parv[2] = mask
 */
 
-int  m_silence(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_silence)
 {
 	Link *lp;
 	aClient *acptr;
@@ -2679,7 +2679,7 @@ int  m_silence(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	parv[1] - nick to make join
 	parv[2] - channel(s) to join
 */
-int  m_svsjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_svsjoin)
 {
 	aClient *acptr;
 	if (!IsULine(sptr))
@@ -2709,7 +2709,7 @@ int  m_svsjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	parv[1] - nick to make join
 	parv[2] - channel(s) to join
 */
-int  m_sajoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_sajoin)
 {
 	aClient *acptr;
 	if (!IsSAdmin(sptr) && !IsULine(sptr))
@@ -2755,7 +2755,7 @@ int  m_sajoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	parv[1] - nick to make part
 	parv[2] - channel(s) to part
 */
-int  m_svspart(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_svspart)
 {
 	aClient *acptr;
 	if (!IsULine(sptr))
@@ -2784,7 +2784,7 @@ int  m_svspart(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	parv[1] - nick to make part
 	parv[2] - channel(s) to part
 */
-int  m_sapart(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_sapart)
 {
 	aClient *acptr;
 	if (!IsSAdmin(sptr) && !IsULine(sptr))

@@ -51,6 +51,7 @@ extern time_t timeofday;
 /* newconf */
 #define get_sendq(x) ((x)->class ? (x)->class->sendq : MAXSENDQLENGTH) 
 
+#define CMD_FUNC(x) int (x) (aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 #ifndef NO_FDLIST
 extern float currentrate;

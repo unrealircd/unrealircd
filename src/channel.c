@@ -1000,9 +1000,9 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
  * parv[0] = sender
  * parv[1] = channel
  * parv[2] = modes
- * -taz
+ * -t
  */
-int m_samode(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_samode)
 {
 	aChannel *chptr;
 
@@ -1041,7 +1041,7 @@ int m_samode(aClient *cptr, aClient *sptr, int parc, char *parv[])
  * parv[0] - sender
  * parv[1] - channel
  */
-int m_mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_mode)
 {
 	static char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
 	long unsigned sendts = 0;
@@ -2645,7 +2645,8 @@ static void sub1_from_channel(aChannel *chptr)
 /*
  * Channel Link
  */
-int channel_link(aClient *cptr, aClient *sptr, int parc, char *parv[])
+
+CMD_FUNC(channel_link)
 {
 	static char jbuf[BUFSIZE];
 	Membership *lp;
@@ -2858,7 +2859,7 @@ int channel_link(aClient *cptr, aClient *sptr, int parc, char *parv[])
  * parv[1] = channels
 */
 
-int  m_cycle(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_cycle)
 {
 	char	channels[1024];
 	
@@ -2879,7 +2880,7 @@ int  m_cycle(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **	parv[1] = channel
 **	parv[2] = channel password (key)
 */
-int m_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_join)
 {
 	static char jbuf[BUFSIZE];
 	Membership *lp;
@@ -3139,7 +3140,7 @@ int m_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **	parv[1] = channel
 **	parv[2] = comment (added by Lefler)
 */
-int m_part(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_part)
 {
 	aChannel *chptr;
 	Membership *lp;
@@ -3341,7 +3342,7 @@ int m_part(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **	parv[2] = client to kick
 **	parv[3] = kick comment
 */
-int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_kick)
 {
 	aClient *who;
 	aChannel *chptr;
@@ -3535,7 +3536,7 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **	parv[3] = topic time
 **	parv[4] = topic text
 */
-int m_topic(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_topic)
 {
 	aChannel *chptr = NullChn;
 	char *topic = NULL, *name, *tnick = NULL;
@@ -3712,7 +3713,7 @@ int m_topic(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **	parv[1] - user to invite
 **	parv[2] - channel number
 */
-int m_invite(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_invite)
 {
 	aClient *acptr;
 	aChannel *chptr;
@@ -4030,7 +4031,7 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 /*
  * * m_list *      parv[0] = sender prefix *      parv[1] = channel
  */
-int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_list)
 {
 	aChannel *chptr;
 	TS   currenttime = TStime();
@@ -4281,7 +4282,7 @@ int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **	parv[1] = channel
 */
 #define TRUNCATED_NAMES 64
-int m_names(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_names)
 {
 	int  mlen = strlen(me.name) + NICKLEN + 7;
 	aChannel *chptr;
@@ -4453,7 +4454,7 @@ void send_user_joins(aClient *cptr, aClient *user)
 ** (C) codemastr & Stskeeps
 ** 
 */
-int m_knock(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_knock)
 {
 	aChannel *chptr;
 
@@ -4634,7 +4635,7 @@ else if (b == MAXMODEPARAMS) {\
 #define AddEx(x) strcat(exbuf, x); strcat(exbuf, " ");
 
 
-int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_sjoin)
 {
 	unsigned short nopara;
 	unsigned short nomode;
