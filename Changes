@@ -316,3 +316,4 @@
 - Some doc/example.conf clarifications, mainly for modules @ win32.
 - Made /whois show the user's modes to opers regardless of +e
 - Added snomask to the /whois umode output
+- Added a patch by rocafella to fix a crash when installing Unreal on Win2003 (#0001949).

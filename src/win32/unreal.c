@@ -21,8 +21,10 @@
 #include <string.h>
 #include <stdio.h>
 static 	OSVERSIONINFO VerInfo;
+typedef BOOL (*UCHANGESERVICECONFIG2)(SC_HANDLE, DWORD, LPVOID);
 HMODULE hAdvapi;
-BOOL (*uChangeServiceConfig2)();
+UCHANGESERVICECONFIG2 uChangeServiceConfig2;
+
 #define IRCD_SERVICE_CONTROL_REHASH 128
 void show_usage() {
 	fprintf(stderr, "unreal start|stop|rehash|restart|install|uninstall|config <option> <value>");
@@ -47,7 +49,7 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 	hAdvapi = LoadLibrary("advapi32.dll");
-	(FARPROC)uChangeServiceConfig2 = GetProcAddress(hAdvapi, "ChangeServiceConfig2A");
+	uChangeServiceConfig2 = (UCHANGESERVICECONFIG2)GetProcAddress(hAdvapi, "ChangeServiceConfig2A");
 	if (!stricmp(argv[1], "install")) {
 		SC_HANDLE hService, hSCManager;
 		char path[MAX_PATH+1];
