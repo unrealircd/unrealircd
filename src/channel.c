@@ -3330,7 +3330,7 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			if (!(who = find_chasing(sptr, user, &chasing)))
 				continue;	/* No such user left! */
-			if (IsServer(who))
+			if (!who->user)
 				continue;
 			if ((lp = find_membership_link(who->user->channel, chptr)))
 			{
