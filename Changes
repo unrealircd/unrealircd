@@ -492,4 +492,5 @@
 - Fixed dcc spamfilter problem reported by TimeFX and Deadalus (#2177, #2204).
 - Fixed Oper Override not giving a 'special join notice' if +z is set along with another mode
   (eg: +i/+k), reported by tabrisnet (#0001487).
-- help.conf: Fixed a typo, updated *CMDS indexes a bit, reported crazy (#0002208).
+- help.conf: Fixed a typo, updated *CMDS indexes a bit, reported crazy (#0002208),
+  added long flags to OFLAGS.
