@@ -2378,8 +2378,6 @@ static int check_channelmask(sptr, cptr, chname)
 {
 	char *s;
 
-	if (*chname == '&')
-		return -1;
 	s = rindex(chname, ':');
 	if (!s)
 		return 0;
@@ -2829,8 +2827,6 @@ int  m_join(cptr, sptr, parc, parv)
 		if (MyConnect(sptr))
 			clean_channelname(name);
 		if (check_channelmask(sptr, cptr, name) == -1)
-			continue;
-		if (*name == '&')
 			continue;
 		if (*name == '0' && !atoi(name))
 		{

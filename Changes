@@ -703,3 +703,4 @@
        <local servers>
        <local max clients>
        <global max clients>
+- Removed some leftovers from the &channel code (which fixed a minor bug as well)
