@@ -2227,4 +2227,5 @@ seen. gmtime warning still there
 - Yet another resolver fix
 - Fixed a bug with using crontab
 - Docs update
+- Temporarily disabled compiling TRE 
 *** Unreal3.2-beta17 release *** (god save us)

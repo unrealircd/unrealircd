@@ -9956,18 +9956,6 @@ CFLAGS="$CFLAGS -D_SOLARIS"
 IRCDLIBS="$IRCDLIBS -lresolv "
 ;;
 esac
-echo "$as_me:$LINENO: result: configuring TRE regex library" >&5
-echo "${ECHO_T}configuring TRE regex library" >&6
-cur_dir=`pwd`
-cd extras/tre
-./configure --disable-agrep --disable-system-abi --disable-wchar --disable-multibyte --prefix=$cur_dir/extras/regexp
-echo "$as_me:$LINENO: result: compiling TRE regex library" >&5
-echo "${ECHO_T}compiling TRE regex library" >&6
-make
-echo "$as_me:$LINENO: result: installing TRE regex library" >&5
-echo "${ECHO_T}installing TRE regex library" >&6
-make install
-cd $cur_dir
 ac_config_files="$ac_config_files Makefile src/modules/Makefile unreal"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
