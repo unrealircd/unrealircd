@@ -1108,6 +1108,7 @@ int InitwIRCD(int argc, char *argv[])
 #ifndef _WIN32
 	fprintf(stderr, "%s", unreallogo);
 	fprintf(stderr, "                           v%s\n", VERSIONONLY);
+	fprintf(stderr, "                     using TRE %s\n", tre_version());
 #ifdef USE_SSL
 	fprintf(stderr, "                     using %s\n", OPENSSL_VERSION_TEXT);
 #endif

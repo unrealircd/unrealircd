@@ -3169,3 +3169,5 @@ This is the 3.2 fixes branch.
 - Fixed a remote include bug that would cause unnecessary blocking
 - Fixed a /credits typo
 - Imported TRE 0.6.7 for win32
+- Imported TRE 0.6.7 for *nix and made use of tre_version to report the version of TRE
+  in use at startup
