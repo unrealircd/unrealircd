@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, include/config.h
+ *   Unreal Internet Relay Chat Daemon, include/config.h
  *   Copyright (C) 1990 Jarkko Oikarinen
  *
  *   $Id$
@@ -81,37 +81,12 @@
 */
 #undef CONFROOM_JAVA_PORT
 
-/* 
-   REMOVE_ADVERTISING -ice
-      If you send a text to a user like "irc.roxnet.org" it will show up as "irc.******.org"
-   Off by default --stskeeps
-*/
-#undef REMOVE_ADVERTISING
-
-/* 
-     UnrealIRCd WebTV support
-*/
-#undef WEBTV
-
-#ifdef WEBTV
-/* enable /msg irc user */
-#define WEBTV_IRCUSER
-/* NOTICE's dont exist (except from server) */
-#define WEBTV_NONOTICE
-#endif
-
 /*
     dog3/comstud ircd fdlists
     undef this to make them work
 */
 
 #undef NO_FDLIST
-/*
-   OPER_NO_HIDING
-      This makes +I an unexisting mode
-   On by default --stskeeps
-*/
-#undef OPER_NO_HIDING
 
 /*
  * Admin's chat...
@@ -122,6 +97,12 @@
   Remote rehash
 */
 #define REMOTE_REHASH
+
+/* 
+  Ident checking
+  #define this to disable ident checking
+*/
+#undef NO_IDENT_CHECKING
 
 /*
  * No spoof code
@@ -181,6 +162,18 @@
 */
 
 #define NICK_DELAY 15                   /* recommended value 15 */
+
+/*
+** Freelinks garbage collector -Stskeeps
+**
+** GARBAGE_COLLECT_EVERY - how many seconds between every garbage collect
+** HOW_MANY_FREELINKS_ALLOWED - how many freelinks allowed
+*/
+#ifndef GARBAGE_COLLECT_EVERY
+#define GARBAGE_COLLECT_EVERY 		600 /* default: 600 (10 mins) */
+#endif
+
+#define HOW_MANY_FREELINKS_ALLOWED 	200 /* default: 200 */
 
 /*
  * Define this if you wish to output a *file* to a K lined client rather
@@ -244,6 +237,7 @@
 #define	PPATH		"ircd.pid"	/* file for server pid */
 #define lPATH		"ircd.log"	/* server log file */
 #define VPATH		"ircd.svsmotd"  /* Services MOTD append. */
+#define BPATH		"bot.motd"	/* Bot MOTD */
 #define IRCDTUNE 	"ircd.tune" 	/* tuning .. */
 
 /*
@@ -407,8 +401,27 @@
  * define IRC_UID to that UID.  This should only be defined if you are running
  * as root and even then perhaps not.
  */
-/* #undef	IRC_UID /* */
-/* #undef	IRC_GID /* */
+
+/*
+ * Ok this one is being changed. it is advisable never to run anything that
+ * uses sockets etc. and has the potential for the outside world to connect to it 
+ * to run as root... Hackers do things like buffer overruns, and get dumped on
+ * a shell with root access effectivley ... so DONT do it.. if a program uses a
+ * port <1024 it will run as root, once the program has binded to the socket it
+ * will set its uid to something OTHER than root ... you set that in unrealircd.conf
+ *
+ * If you _must_ insist on running as root and not wanting the program to change its
+ * UID, then define BIG_SECURITY_HOLE below
+ */
+#if !defined(_WIN32) && !defined(_AMIGA)
+/* Change This Line Below \/ */ 
+#define BIG_SECURITY_HOLE 
+/* Its the one above ^^^^^^^ */
+#ifndef BIG_SECUTIRY_HOLE
+ #define	IRC_UID un_uid
+ #define	IRC_GID un_gid
+#endif
+#endif
 
 /*
  * CLIENT_FLOOD
@@ -568,7 +581,7 @@
  * CONNECTTIMEOUT - 10 seconds for its host to respond to an ident lookup
  * query and for a DNS answer to be retrieved.
  */
-#define	CONNECTTIMEOUT	90	/* Recommended value: 90 */
+#define	CONNECTTIMEOUT	60	/* Recommended value: 60 */
 
 /*
  * Max time from the nickname change that still causes KILL
@@ -576,10 +589,6 @@
  */
 #define KILLCHASETIMELIMIT 90   /* Recommended value: 90 */
 
-/*
- * Max number of channels a user is allowed to join.
- */
-#define MAXCHANNELSPERUSER  10	/* Recommended value: 10 */
 
 /*
  * SendQ-Always causes the server to put all outbound data into the sendq and
@@ -717,6 +726,7 @@ error CLIENT_FLOOD needs redefining.
 #else
 error CLIENT_FLOOD undefined
 #endif
+
 #if (NICKNAMEHISTORYLENGTH < 100)
 #  define NICKNAMEHISTORYLENGTH 100
 #endif
@@ -737,6 +747,13 @@ error CLIENT_FLOOD undefined
  */
 # define BSD_INCLUDES
 #endif
+/*
+ * This is just to make Solaris porting easier -- codemastr 
+ */
+#if defined(SOL20) || defined(SOL25) || defined(SOL26) || defined(SOL27)
+#define _SOLARIS
+#endif
+
 
 /*
  * Cleaup for WIN32 platform.

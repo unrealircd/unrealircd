@@ -23,7 +23,7 @@ struct	hent {
 	int	h_addrtype;	/* host address type */
 	int	h_length;	/* length of address */
 	/* list of addresses from name server */
-	struct	in_addr	h_addr_list[MAXADDRS];
+	struct	IN_ADDR	h_addr_list[MAXADDRS];
 #define	h_addr	h_addr_list[0]	/* address, for backward compatiblity */
 };
 
@@ -38,7 +38,7 @@ typedef	struct	reslist {
 	char	resend;	/* send flag. 0 == dont resend */
 	time_t	sentat;
 	time_t	timeout;
-	struct	in_addr	addr;
+	struct	IN_ADDR	addr;
 	char	*name;
 	struct	reslist	*next;
 	Link	cinfo;

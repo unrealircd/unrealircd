@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, common/packet.c
+ *   Unreal Internet Relay Chat Daemon, src/packet.c
  *   Copyright (C) 1990  Jarkko Oikarinen and
  *                       University of Oulu, Computing Center
  *
@@ -25,7 +25,8 @@
 #include "h.h"
 
 ID_CVS("$Id$");
-ID_Copyright("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
+ID_Copyright
+    ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
 ID_Notes("2.12 1/30/94");
 /*
  * inittoken
@@ -33,22 +34,22 @@ ID_Notes("2.12 1/30/94");
  * call them msgmap's. Called in main() with other inits.
  * Yes, I know this is not the right module, but I said I cheat ;)
  */
-void	inittoken(void)
+void inittoken(void)
 {
-	Reg1	int	loopy;
-	Reg2	int	final;
+	int  loopy;
+	int  final;
 
 	/* Find the zero-entry */
 	for (final = 0; msgtab[final].cmd; final++)
 		;
 	/* Point all entries to it */
-	for (loopy = 0; loopy<256; loopy++)
+	for (loopy = 0; loopy < 256; loopy++)
 		msgmap[loopy] = &msgtab[final];
 	/* Build references to existing commands */
 	for (loopy = 0; msgtab[loopy].cmd; loopy++)
 		msgmap[msgtab[loopy].token[0]] = &msgtab[loopy];
 }
- 
+
 /*
 ** dopacket
 **	cptr - pointer to client structure for which the buffer data
@@ -61,42 +62,42 @@ void	inittoken(void)
 **	with cptr of "local" variation, which contains all the
 **	necessary fields (buffer etc..)
 */
-int	dopacket(cptr, buffer, length)
-Reg3	aClient *cptr;
-char	*buffer;
-Reg4	int	length;
+int  dopacket(cptr, buffer, length)
+	aClient *cptr;
+	char *buffer;
+	int  length;
 {
-	register char	*ch1;
-	register char	*ch2;	
-	aClient	*acpt = cptr->acpt;
+	char *ch1;
+	char *ch2;
+	aClient *acpt = cptr->acpt;
 
-	me.receiveB += length; /* Update bytes received */
+	me.receiveB += length;	/* Update bytes received */
 	cptr->receiveB += length;
 	if (cptr->receiveB > 1023)
-	    {
+	{
 		cptr->receiveK += (cptr->receiveB >> 10);
 		cptr->receiveB &= 0x03ff;	/* 2^10 = 1024, 3ff = 1023 */
-	    }
+	}
 	if (acpt != &me)
-	    {
+	{
 		acpt->receiveB += length;
 		if (acpt->receiveB > 1023)
-		    {
+		{
 			acpt->receiveK += (acpt->receiveB >> 10);
 			acpt->receiveB &= 0x03ff;
-		    }
-	    }
+		}
+	}
 	else if (me.receiveB > 1023)
-	    {
+	{
 		me.receiveK += (me.receiveB >> 10);
 		me.receiveB &= 0x03ff;
-	    }
+	}
 	ch1 = cptr->buffer + cptr->count;
 	ch2 = buffer;
 
 	while (--length >= 0)
-	    {
-		register char g=(*ch1 = *ch2++);
+	{
+		char g = (*ch1 = *ch2++);
 		/*
 		 * Yuck.  Stuck.  To make sure we stay backward compatible,
 		 * we must assume that either CR or LF terminates the message
@@ -104,38 +105,38 @@ Reg4	int	length;
 		 * of messages, backward compatibility is lost and major
 		 * problems will arise. - Avalon
 		 */
-		if (g<'\16' && (g == '\n' || g == '\r'))
-		    {
+		if (g < '\16' && (g == '\n' || g == '\r'))
+		{
 			if (ch1 == cptr->buffer)
-				continue; /* Skip extra LF/CR's */
+				continue;	/* Skip extra LF/CR's */
 			*ch1 = '\0';
-			me.receiveM += 1; /* Update messages received */
+			me.receiveM += 1;	/* Update messages received */
 			cptr->receiveM += 1;
 			if (cptr->acpt != &me)
 				cptr->acpt->receiveM += 1;
-			cptr->count = 0; /* ...just in case parse returns with
-					 ** FLUSH_BUFFER without removing the
-					 ** structure pointed by cptr... --msa
-					 */
+			cptr->count = 0;	/* ...just in case parse returns with
+						   ** FLUSH_BUFFER without removing the
+						   ** structure pointed by cptr... --msa
+						 */
 			if (parse(cptr, cptr->buffer, ch1, msgtab) ==
 			    FLUSH_BUFFER)
 				/*
-				** FLUSH_BUFFER means actually that cptr
-				** structure *does* not exist anymore!!! --msa
-				*/
+				   ** FLUSH_BUFFER means actually that cptr
+				   ** structure *does* not exist anymore!!! --msa
+				 */
 				return FLUSH_BUFFER;
 			/*
-			** Socket is dead so exit (which always returns with
-			** FLUSH_BUFFER here).  - avalon
-			*/
+			   ** Socket is dead so exit (which always returns with
+			   ** FLUSH_BUFFER here).  - avalon
+			 */
 			if (cptr->flags & FLAGS_DEADSOCKET)
 				return exit_client(cptr, cptr, &me,
-						   "Dead Socket");
+				    "Dead Socket");
 			ch1 = cptr->buffer;
-		    }
-		else if (ch1 < cptr->buffer + (sizeof(cptr->buffer)-1))
-			ch1++; /* There is always room for the null */
-	    }
+		}
+		else if (ch1 < cptr->buffer + (sizeof(cptr->buffer) - 1))
+			ch1++;	/* There is always room for the null */
+	}
 	cptr->count = ch1 - cptr->buffer;
 	return 0;
 }

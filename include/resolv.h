@@ -46,7 +46,7 @@ struct state {
 	int	retry;			/* number of times to retransmit */
 	long	options;		/* option flags - see below. */
 	int	nscount;		/* number of name servers */
-	struct	sockaddr_in nsaddr_list[MAXNS];	/* address of name server */
+	struct	SOCKADDR_IN nsaddr_list[MAXNS];	/* address of name server */
 #define	nsaddr	nsaddr_list[0]		/* for backward compatibility */
 	unsigned short	id;			/* current packet id */
 	char	defdname[MAXDNAME];	/* default domain */

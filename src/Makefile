@@ -23,12 +23,19 @@ CC=danger will robinson
 
 LINTFLAGS=-hba
 
-OBJS=bsd.o dbuf.o packet.o send.o match.o parse.o support.o channel.o \
-	class.o hash.o ircd.o list.o res.o cloak.o s_auth.o s_bsd.o s_conf.o \
-	s_debug.o s_err.o s_extra.o s_misc.o s_numeric.o s_serv.o s_user.o s_unreal.o \
-	whowas.o userload.o crule.o help.o md5.o version.o dynconf.o \
-        s_socks.o s_kline.o fdlist.o \
-	$(RES) $(STRTOUL)
+OBJS=agent.o aln.o badwords.o bsd.o channel.o class.o cloak.o crule.o dbuf.o dynconf.o \
+	fdlist.o hash.o help.o ircd.o ircsprintf.o list.o lusers.o \
+	match.o md5.o packet.o parse.o res.o $(RES) s_auth.o \
+	s_bsd.o s_conf.o s_debug.o s_err.o s_extra.o s_kline.o \
+	s_misc.o s_numeric.o s_serv.o s_socks.o $(STRTOUL) s_unreal.o \
+	s_user.o scache.o send.o support.o userload.o version.o whowas.o
+
+# OBJS=bsd.o dbuf.o packet.o send.o match.o parse.o support.o channel.o \
+#	class.o hash.o ircd.o list.o res.o cloak.o s_auth.o s_bsd.o s_conf.o \
+#	s_debug.o s_err.o s_extra.o s_misc.o s_numeric.o s_serv.o s_user.o s_unreal.o \
+#	whowas.o userload.o crule.o help.o md5.o dynconf.o \
+#        s_socks.o s_kline.o fdlist.o ircsprintf.o agent.o lusers.o version.o \
+#	$(RES) $(STRTOUL)
 
 SRC=$(OBJS:%.o=%.c)
 
@@ -44,14 +51,14 @@ all: build
 
 build: ircd chkconf
 
-version.c:
+version.c: version.c.SH
 	$(SHELL) version.c.SH
 
 version.o: version.c ../include/version.h
 	$(CC) $(CFLAGS) -c version.c
 
 ircd: $(OBJS) 
-	$(CC) $(CFLAGS) $(OBJS) $(LDFLAGS) $(IRCDLIBS) -o ircd
+	$(CC) $(CFLAGS) -o ircd $(OBJS) $(LDFLAGS) $(IRCDLIBS)
 	chmod $(IRCDMODE) ircd
 
 chkconf: ../include/struct.h ../include/config.h ../include/settings.h ../include/sys.h \
@@ -68,12 +75,40 @@ lint:
 	lint $(LINTFLAGS) -I../include $(SRC) | egrep -v 'sendto_|debug'
 
 parse.o: parse.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c parse.c
+
 bsd.o: bsd.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c bsd.c
+
 dbuf.o: dbuf.c $(INCLUDES) ../include/dbuf.h
+	$(CC) $(CFLAGS) -c dbuf.c
+
 packet.o: packet.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c packet.c
+
+badwords.o: badwords.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c badwords.c
+
+aln.o: aln.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c aln.c
+
 send.o: send.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c send.c
+
 match.o: match.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c match.c
+
 support.o: support.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c support.c
+
+userload.o: userload.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c userload.c
+
+help.o: help.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c help.c
+
+md5.o: md5.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c md5.c
 
 #install: all
 #	-if [ ! -d ${IRCDDIR} -a ! -f ${IRCDDIR} ] ; then \
@@ -108,6 +143,9 @@ ircd.o: ircd.c ../include/dbuf.h $(INCLUDES)
 list.o: list.c ../include/dbuf.h $(INCLUDES)
 	$(CC) $(CFLAGS) -c list.c
 
+lusers.o: lusers.c ../include/dbuf.h $(INCLUDES)
+	$(CC) $(CFLAGS) -c lusers.c
+
 res.o: res.c ../include/res.h $(INCLUDES)
 	$(CC) $(CFLAGS) -c res.c
 
@@ -137,6 +175,15 @@ s_err.o: ../include/msg.h s_err.c $(INCLUDES)
 
 s_misc.o: s_misc.c ../include/dbuf.h $(INCLUDES)
 	$(CC) $(CFLAGS) -c s_misc.c
+
+scache.o: scache.c ../include/dbuf.h $(INCLUDES)
+	$(CC) $(CFLAGS) -c scache.c
+
+ircsprintf.o: ircsprintf.c ../include/dbuf.h $(INCLUDES)
+	$(CC) $(CFLAGS) -c ircsprintf.c
+
+agent.o: agent.c ../include/dbuf.h $(INCLUDES)
+	$(CC) $(CFLAGS) -c agent.c
 
 s_user.o: s_user.c $(INCLUDES) \
 	  ../include/dbuf.h ../include/channel.h ../include/whowas.h

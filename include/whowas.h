@@ -18,57 +18,22 @@
  */
 
 /*
- * $Id$
+ * from original rcs 
+ * $ Id: whowas.h,v 6.1 1991/07/04 21:04:39 gruner stable gruner $
  *
- * $Log$
- * Revision 1.1.1.1  2000/01/30 12:16:34  stskeeps
- * Begin of CVS at cvs.unreal.sourceforge.net
- *
- *
- * Revision 1.1.1.1  1999/09/01 23:20:37  stskeeps
- *
- * Revision 1.1.1.1  1999/07/22 13:56:41  stskeeps
- * 16:56 22-07-99 techie
- * - Started on using CVS to develop Unreal
- *
- *
- * Revision 1.1.1.1  1999/07/21 10:48:18  stskeeps
- * 12:47 GMT+2 21 July 1999 - Techie
- * Starting Unreal with CVS.. 
- *
- *
- * Revision 1.2  1997/12/29 07:17:35  wd
- * df4.6.2
- * ee CHANGES for updates
- * -wd
- *
- * Revision 1.1.1.1  1997/08/22 17:23:01  donwulff
- * Original import from the "deadlined" version.
- *
- * Revision 1.1.1.1  1996/11/18 07:53:42  explorer
- * ircd 4.3.3 -- about time
- *
- * Revision 1.1.1.1.4.1  1996/09/16 02:45:41  donwulff
- * *** empty log message ***
- *
+ * $ Log: whowas.h,v $
  * Revision 6.1  1991/07/04  21:04:39  gruner
  * Revision 2.6.1 [released]
  *
  * Revision 6.0  1991/07/04  18:05:08  gruner
  * frozen beta revision 2.6.1
  *
+ * th+hybrid rcs version
+ * $Id$
  */
 
 #ifndef	__whowas_include__
 #define __whowas_include__
-
-#ifndef PROTO
-#if __STDC__
-#	define PROTO(x)	x
-#else
-#	define PROTO(x) ()
-#endif /* __STDC__ */
-#endif /* ! PROTO */
 
 /*
 ** WHOWAS structure moved here from whowas.c
@@ -77,10 +42,11 @@ typedef struct aname {
 	anUser	*ww_user;
 	aClient	*ww_online;
 	time_t	ww_logout;
-        long    ww_umodes;
+	long	ww_umodes;
 	char	ww_nick[NICKLEN+1];
 	char	ww_info[REALLEN+1];
 } aName;
+
 
 /*
 ** add_history
@@ -89,7 +55,7 @@ typedef struct aname {
 **	Client must be a fully registered user (specifically,
 **	the user structure must have been allocated).
 */
-void	add_history PROTO((aClient *));
+void	add_history (aClient *, int);
 
 /*
 ** off_history
@@ -98,7 +64,7 @@ void	add_history PROTO((aClient *));
 **	structures and it must know when they cease to exist. This
 **	also implicitly calls AddHistory.
 */
-void	off_history PROTO((aClient *));
+void	off_history (aClient *);
 
 /*
 ** get_history
@@ -106,15 +72,15 @@ void	off_history PROTO((aClient *));
 **	nickname within the timelimit. Returns NULL, if no
 **	one found...
 */
-aClient	*get_history PROTO((char *, time_t));
+aClient	*get_history (char *, time_t);
 					/* Nick name */
 					/* Time limit in seconds */
 
-int	m_whowas PROTO((aClient *, aClient *, int, char *[]));
+int	m_whowas (aClient *, aClient *, int, char *[]);
 
 /*
 ** for debugging...counts related structures stored in whowas array.
 */
-void	count_whowas_memory PROTO((int *, int *, u_long *));
+void	count_whowas_memory (int *, u_long *);
 
 #endif /* __whowas_include__ */

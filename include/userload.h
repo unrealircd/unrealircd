@@ -2,7 +2,7 @@
  *  Userload module by Michael L. VanLoon (mlv) <michaelv@iastate.edu>
  *  Written 2/93.  Originally grafted into irc2.7.2g 4/93.
  *
- *   IRC - Internet Relay Chat, ircd/userload.h
+ *   Unreal Internet Relay Chat Daemon, ircd/userload.h
  *   Copyright (C) 1990 University of Oulu, Computing Center
  *
  *   This program is free software; you can redistribute it and/or modify

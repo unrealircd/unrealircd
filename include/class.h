@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, include/class.h
+ *   Unreal Internet Relay Chat Daemon, include/class.h
  *   Copyright (C) 1990 Darren Reed
  *
  *   This program is free software; you can redistribute it and/or modify
