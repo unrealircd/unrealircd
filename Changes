@@ -735,3 +735,4 @@ seen. gmtime warning still there
 - Added SVSMODE #channel -qaohv to remove all users of that respective level, and made all the # SVSMODE 
   flags work in SVS2MODE
 - Made a bunch of config errors non fatal
+- Added 2 more network files (yea, I'm slow)
