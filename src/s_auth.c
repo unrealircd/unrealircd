@@ -81,7 +81,7 @@ void start_auth(aClient *cptr)
 		return;
 	}
 
-	if (SHOWCONNECTINFO)
+	if (SHOWCONNECTINFO && !cptr->serv)
 		sendto_one(cptr, "%s", REPORT_DO_ID);
 
 	set_non_blocking(cptr->authfd, cptr);
@@ -114,7 +114,7 @@ void start_auth(aClient *cptr)
 		cptr->authfd = -1;
 		if (!DoingDNS(cptr))
 			SetAccess(cptr);
-		if (SHOWCONNECTINFO) 
+		if (SHOWCONNECTINFO && !cptr->serv) 
 			sendto_one(cptr, "%s", REPORT_FAIL_ID);
 		return;
 	}
@@ -162,7 +162,7 @@ authsenderr:
 		--OpenFiles;
 		cptr->authfd = -1;
 		cptr->flags &= ~FLAGS_AUTH;
-		if (SHOWCONNECTINFO)
+		if (SHOWCONNECTINFO && !cptr->serv)
 			sendto_one(cptr, "%s", REPORT_FAIL_ID);
 		if (!DoingDNS(cptr))
 			SetAccess(cptr);
@@ -238,7 +238,7 @@ void read_authports(aClient *cptr)
 	if (len > 0)
 		Debug((DEBUG_INFO, "ident reply: [%s]", cptr->buffer));
 
-	if (SHOWCONNECTINFO)
+	if (SHOWCONNECTINFO && !cptr->serv)
 		sendto_one(cptr, "%s", REPORT_FIN_ID);
 
 	if (!locp || !remp || !*ruser)

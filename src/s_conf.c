@@ -4506,6 +4506,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 					{
 						config_status("%s:%i: link %s with ZIP option enabled on a non-ZIP compile",
 							cep->ce_fileptr->cf_filename, cep->ce_varlinenum, ce->ce_vardata);
+						errors++;
 					}
 #endif
 				}

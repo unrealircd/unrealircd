@@ -1021,6 +1021,25 @@ CMD_FUNC(m_server_remote)
 	return 0;
 }
 
+/*
+ * send_proto:
+ * sends PROTOCTL message to server, taking care of whether ZIP
+ * should be enabled or not.
+ */
+void send_proto(aClient *cptr, ConfigItem_link *aconf)
+{
+#ifdef ZIP_LINKS
+	if (aconf->options & CONNECT_ZIP)
+	{
+		sendto_one(cptr, "PROTOCTL %s ZIP", PROTOCTL_SERVER);
+	} else {
+#endif
+		sendto_one(cptr, "PROTOCTL %s", PROTOCTL_SERVER);
+#ifdef ZIP_LINKS
+	}
+#endif
+}
+
 int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 {
 	char		*inpath = get_client_name(cptr, TRUE);
@@ -1036,7 +1055,10 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	}
 	if (IsUnknown(cptr))
 	{
-		sendto_one(cptr, "PROTOCTL %s", PROTOCTL_SERVER);
+		/* If this is an incomming connection, then we have just received
+		 * their stuff and now send our stuff back.
+		 */
+		send_proto(cptr, aconf);
 		sendto_one(cptr, "PASS :%s", aconf->connpwd);
 		sendto_one(cptr, "SERVER %s 1 :U%d-%s-%i %s",
 			    me.name, UnrealProtocol,
@@ -1046,14 +1068,31 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 #ifdef ZIP_LINKS
 	if (aconf->options & CONNECT_ZIP)
 	{
-		if (zip_init(cptr) == -1)
+		if (cptr->proto & PROTO_ZIP)
 		{
-			zip_free(cptr);
-			sendto_realops("Unable to setup compressed link for %s", get_client_name(cptr, TRUE));
-			return exit_client(cptr, cptr, &me, "zip_init() failed");
+			if (zip_init(cptr) == -1)
+			{
+				zip_free(cptr);
+				sendto_realops("Unable to setup compressed link for %s", get_client_name(cptr, TRUE));
+				return exit_client(cptr, cptr, &me, "zip_init() failed");
+			}
+			SetZipped(cptr);
+			cptr->zip->first = 1;
+		} else {
+			sendto_realops("WARNING: Remote doesnt have link::options::zip set. Compression disabled.");
 		}
-		SetZipped(cptr);
-		cptr->zip->first = 1;
+	}
+#endif
+
+#if 0
+/* Disabled because it may generate false warning when linking with cvs versions between b14 en b15 -- Syzop */
+	if ((cptr->proto & PROTO_ZIP) && !(aconf->options & CONNECT_ZIP))
+	{
+#ifdef ZIP_LINKS
+		sendto_realops("WARNING: Remote requested compressed link, but we don't have link::options::zip set. Compression disabled.");
+#else
+		sendto_realops("WARNING: Remote requested compressed link, but we don't have zip links support compiled in. Compression disabled.");
+#endif
 	}
 #endif
 	/* Set up server structure */
@@ -1074,10 +1113,10 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	{
 		sendto_serv_butone(&me, ":%s SMO o :(\2link\2) Secure %slink %s -> %s established (%s)",
 			me.name,
-			(aconf->options & CONNECT_ZIP) ? "ZIP" : "",
+			IsZipped(cptr) ? "ZIP" : "",
 			me.name, inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
 		sendto_realops("(\2link\2) Secure %slink %s -> %s established (%s)",
-			(aconf->options & CONNECT_ZIP) ? "ZIP" : "",
+			IsZipped(cptr) ? "ZIP" : "",
 			me.name, inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
 	}
 	else
@@ -1085,10 +1124,10 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	{
 		sendto_serv_butone(&me, ":%s SMO o :(\2link\2) %sLink %s -> %s established",
 			me.name,
-			(aconf->options & CONNECT_ZIP) ? "ZIP" : "",
+			IsZipped(cptr) ? "ZIP" : "",
 			me.name, inpath);
 		sendto_realops("(\2link\2) %sLink %s -> %s established",
-			(aconf->options & CONNECT_ZIP) ? "ZIP" : "",
+			IsZipped(cptr) ? "ZIP" : "",
 			me.name, inpath);
 	}
 	(void)add_to_client_hash_table(cptr->name, cptr);

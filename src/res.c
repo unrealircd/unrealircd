@@ -357,7 +357,7 @@ time_t timeout_query_list(time_t now)
 				switch (rptr->cinfo.flags)
 				{
 				  case ASYNC_CLIENT:
-					  if (SHOWCONNECTINFO)
+					  if (SHOWCONNECTINFO && !cptr->serv)
 						  sendto_one(cptr, "%s", REPORT_FAIL_DNS);
 					  ClearDNS(cptr);
                       if (!DoingAuth(cptr))

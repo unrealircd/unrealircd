@@ -312,7 +312,7 @@ DLLFUNC int h_scan_connect(aClient *sptr)
 	
 	if (Scan_IsBeingChecked(&sptr->ip))
 		return 0;
-	if (scan_message)
+	if (scan_message && !sptr->serv)
 		sendto_one(sptr, ":%s NOTICE %s :%s",
 			me.name, sptr->name, scan_message);
 	sr = MyMalloc(sizeof(Scan_AddrStruct));

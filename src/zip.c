@@ -117,7 +117,6 @@ int     zip_init(aClient *cptr)
 void    zip_free(aClient *cptr)
 {
   ircd_log(LOG_ERROR, "Hi! This is a debug message generated from zip_free");
-  SetZipped(cptr);
   if (cptr->zip)
     {
       if (cptr->zip->in) {

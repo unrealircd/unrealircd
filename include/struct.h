@@ -395,6 +395,9 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #ifdef ZIP_LINKS
 #define IsZipped(x) 	((x)->flags & FLAGS_ZIP)
 #define IsZipStart(x)	(((x)->flags & FLAGS_ZIP) && ((x)->zip->first == 1))
+#else
+#define IsZipped(x)		(0)
+#define IsZipStart(x)	(0)
 #endif
 
 #define IsHybNotice(x)		((x)->flags & FLAGS_HYBNOTICE)

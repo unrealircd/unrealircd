@@ -1886,3 +1886,4 @@ seen. gmtime warning still there
 - Code (comments) cleanup
 - Fixed an ident bug, maybe it actually works now.. (#0000709) reported by marviiin.
 - Added config error if link::options::zip was enabled at a non-zip compiled server.
+- Fixed a bug with ZIP_LINKS + show-connect-info, also added fallback to uncompressed link.

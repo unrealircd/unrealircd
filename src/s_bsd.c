@@ -811,7 +811,7 @@ int completed_connection(aClient *cptr)
 	if (!BadPtr(aconf->connpwd))
 		sendto_one(cptr, "PASS :%s", aconf->connpwd);
 
-	sendto_one(cptr, "PROTOCTL %s", PROTOCTL_SERVER);
+	send_proto(cptr, aconf);
 	sendto_one(cptr, "SERVER %s 1 :U%d-%s%s-%i %s",
 	    me.name, UnrealProtocol, serveropts, extraflags ? extraflags : "", me.serv->numeric,
 	    me.info);
@@ -1324,7 +1324,7 @@ void	start_of_normal_client_handshake(aClient *acptr)
 {
 	Link	lin;
 	acptr->status = STAT_UNKNOWN;	
-	if (SHOWCONNECTINFO) {
+	if (SHOWCONNECTINFO && !acptr->serv) {
 		sendto_one(acptr, "%s", REPORT_DO_DNS);
 	}
 	lin.flags = ASYNC_CLIENT;
@@ -1336,7 +1336,7 @@ void	start_of_normal_client_handshake(aClient *acptr)
 		SetDNS(acptr);
 	else
 	{
-		if (SHOWCONNECTINFO)
+		if (SHOWCONNECTINFO && !acptr->serv)
 			sendto_one(acptr, "%s", REPORT_FIN_DNSC);
 	}
 	nextdnscheck = 1;
@@ -2552,7 +2552,7 @@ void do_dns_async(int id)
 				ClearDNS(cptr);
 				cptr->hostp = hp;
 
-				if (SHOWCONNECTINFO)
+				if (SHOWCONNECTINFO && !cptr->serv)
 		          	        sendto_one(cptr, "%s", cptr->hostp ? REPORT_FIN_DNS : REPORT_FAIL_DNS);
 				  if (!DoingAuth(cptr))
 					  SetAccess(cptr);

@@ -538,6 +538,7 @@ extern void       validate_configuration(void);
 extern void       run_configuration(void);
 extern aMotd *read_file(char *filename, aMotd **list);
 CMD_FUNC(m_server_remote);
+extern void send_proto(aClient *, ConfigItem_link *);
 extern char *xbase64enc(long i);
 extern void unload_all_modules(void);
 extern void flush_fdlist_connections(fdlist * listp);

@@ -600,7 +600,7 @@ extern TS check_pings(TS currenttime)
 						cptr->count = 0;
 						*cptr->buffer = '\0';
 					}
-					if (SHOWCONNECTINFO) {
+					if (SHOWCONNECTINFO && !cptr->serv) {
 						if (DoingDNS(cptr))
 							sendto_one(cptr,
 							    REPORT_FAIL_DNS);
