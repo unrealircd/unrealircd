@@ -3233,3 +3233,7 @@ This is the 3.2 fixes branch.
 - Added a doc/translations.txt which describes the (current) translation process
   and requirements a bit.
 - Fixed a synch bug, reported by Troco (#0001857).
+- Split up the /who oper and user help messages
+- Added /who +i (search by IP) and /who +I (show IP), oper only.
+- Made it so /who +m doesn't default to /who if a user uses modes they aren't allowed to
+  use (#0001858) reported by Bugz

@@ -96,6 +96,7 @@ static int has_common_channels(aClient *, aClient *);
 #define WF_ONCHANNEL 0x02 /**< we're on the channel we're /who'ing */
 #define WF_WILDCARD  0x04 /**< a wildcard /who */
 #define WF_REALHOST  0x08 /**< want real hostnames */
+#define WF_IP	     0x10 /**< want IP addresses */
 
 static int who_flags;
 
@@ -123,6 +124,8 @@ struct {
 	char *nick;
 	int want_user;
 	char *user;
+	int want_ip;
+	char *ip;
 	int want_umode;
 	int umodes_dontwant;
 	int umodes_want;
@@ -194,19 +197,17 @@ int i = 0;
 static void who_sendhelp(aClient *sptr)
 {
   char *who_help[] = {
-    "/WHO [+|-][acghmnsuCM] [args]",
-    "Flags are specified like channel modes, the flags cgmnsu all have arguments",
+    "/WHO [+|-][achmnsuM] [args]",
+    "Flags are specified like channel modes, the flags chmnsu all have arguments",
     "Flags are set to a positive check by +, a negative check by -",
     "The flags work as follows:",
     "Flag a: user is away",
     "Flag c <channel>:       user is on <channel>,",
     "                        no wildcards accepted",
-    "Flag g <gcos/realname>: user has string <gcos> in their GCOS,",
-    "                        wildcards accepted, oper only",
     "Flag h <host>:          user has string <host> in their hostname,",
     "                        wildcards accepted",
     "Flag m <usermodes>:     user has <usermodes> set on them,",
-    "                        only o/A/a for nonopers",
+    "                        only O/o/C/A/a/N are allowed",
     "Flag n <nick>:          user has string <nick> in their nickname,",
     "                        wildcards accepted",
     "Flag s <server>:        user is on server <server>,",
@@ -215,13 +216,45 @@ static void who_sendhelp(aClient *sptr)
     "                        wildcards accepted",
     "Behavior flags:",
     "Flag M: check for user in channels I am a member of",
-    "Flag R: show users' real hostnames (oper only.)",
+    NULL
+  };
+
+  char *who_oper_help[] = {
+    "/WHO [+|-][acghimnsuMRI] [args]",
+    "Flags are specified like channel modes, the flags chigmnsu all have arguments",
+    "Flags are set to a positive check by +, a negative check by -",
+    "The flags work as follows:",
+    "Flag a: user is away",
+    "Flag c <channel>:       user is on <channel>,",
+    "                        no wildcards accepted",
+    "Flag g <gcos/realname>: user has string <gcos> in their GCOS,",
+    "                        wildcards accepted",
+    "Flag h <host>:          user has string <host> in their hostname,",
+    "                        wildcards accepted",
+    "Flag i <ip>:            user has string <ip> in their hostname,",
+    "                        wildcards accepted",
+    "Flag m <usermodes>:     user has <usermodes> set on them",
+    "Flag n <nick>:          user has string <nick> in their nickname,",
+    "                        wildcards accepted",
+    "Flag s <server>:        user is on server <server>,",
+    "                        wildcards not accepted",
+    "Flag u <user>:          user has string <user> in their username,",
+    "                        wildcards accepted",
+    "Behavior flags:",
+    "Flag M: check for user in channels I am a member of",
+    "Flag R: show users' real hostnames",
+    "Flag I: show user's IP address",
     NULL
   };
   char **s;
 
-  for (s = who_help; *s; s++)
-    sendto_one(sptr, getreply(RPL_LISTSYNTAX), me.name, sptr->name, *s);
+	if (IsAnOper(sptr))
+		s = who_oper_help;
+	else
+		s = who_help;
+
+	for (; *s; s++)
+		sendto_one(sptr, getreply(RPL_LISTSYNTAX), me.name, sptr->name, *s);
 }
 
 #define WHO_ADD 1
@@ -282,6 +315,14 @@ int i = 1;
 			case 'h':
 				DOIT(wfl.host, wfl.want_host);
 				break;
+			case 'i':
+				REQUIRE_PARAM()
+				if (!IsAnOper(sptr))
+					break; /* oper-only */
+				wfl.ip = argv[i];
+				SET_OPTION(wfl.want_ip);
+				i++;
+				break;
 			case 'n':
 				DOIT(wfl.nick, wfl.want_nick);
 				break;
@@ -312,7 +353,9 @@ int i = 1;
 					}
 
 					if (!IsAnOper(sptr))
-						*umodes = *umodes & (UMODE_OPER | UMODE_LOCOP | UMODE_SADMIN | UMODE_ADMIN);
+						*umodes = *umodes & (UMODE_OPER | UMODE_LOCOP | UMODE_SADMIN | UMODE_ADMIN | UMODE_COADMIN | UMODE_NETADMIN);
+					if (*umodes == 0)
+						return -1;
 				}
 				i++;
 				break;
@@ -326,6 +369,15 @@ int i = 1;
 					who_flags |= WF_REALHOST;
 				else
 					who_flags &= ~WF_REALHOST;
+				break;
+			case 'I':
+				if (!IsAnOper(sptr))
+					break;
+				if (what == WHO_ADD)
+					who_flags |= WF_IP;
+				
+				else
+					who_flags &= ~WF_IP;
 				break;
 			default:
 				who_sendhelp(sptr);
@@ -411,6 +463,22 @@ char has_common_chan = 0;
 
 			if (((wfl.want_host == WHO_WANT) && match(wfl.host, host)) ||
 			    ((wfl.want_host == WHO_DONTWANT) && !match(wfl.host, host)))
+			{
+				return WHO_CANTSEE;
+			}
+		}
+
+		/* if they only want people with a certain IP */
+		if (wfl.want_ip != WHO_DONTCARE)
+		{
+			char *ip;
+
+			ip = acptr->user->ip_str;
+			if (!ip)
+				return WHO_CANTSEE;
+
+			if (((wfl.want_ip == WHO_WANT) && match(wfl.ip, ip)) ||
+			    ((wfl.want_ip == WHO_DONTWANT) && !match(wfl.ip, ip)))
 			{
 				return WHO_CANTSEE;
 			}
@@ -596,13 +664,15 @@ int oper = IsAnOper(sptr);
 				if (match(mask, acptr->name))
 					continue;
 			} else {
-				/* opers can search on name, ident, virthost and realhost.
+				/* opers can search on name, ident, virthost, ip and realhost.
 				 * Yes, I like readable if's -- Syzop.
 				 */
 				if (!match(mask, acptr->name) || !match(mask, acptr->user->realhost) ||
 				    !match(mask, acptr->user->username))
 					goto matchok;
 				if (IsHidden(acptr) && !match(mask, acptr->user->virthost))
+					goto matchok;
+				if (acptr->user->ip_str && !match(mask, acptr->user->ip_str))
 					goto matchok;
 				/* nothing matched... */
 				continue;
@@ -646,18 +716,31 @@ static void send_who_reply(aClient *sptr, aClient *acptr,
 			   char *channel, char *status, char *xstat)
 {
 	char *stat;
+	char *host;
 	int flat = (FLAT_MAP && !IsAnOper(sptr)) ? 1 : 0;
 
 	stat = malloc(strlen(status) + strlen(xstat) + 1);
 	sprintf(stat, "%s%s", status, xstat);
 
+	if (IsAnOper(sptr))
+	{
+		if (who_flags & WF_REALHOST)
+			host = acptr->user->realhost;
+		else if (who_flags & WF_IP)
+			host = (acptr->user->ip_str ? acptr->user->ip_str : 
+			        acptr->user->realhost);
+		else
+			host = GetHost(acptr);
+	}
+	else
+		host = GetHost(acptr);
+					
+
 	if (IsULine(acptr) && !IsOper(sptr) && HIDE_ULINES)
 	        sendto_one(sptr, getreply(RPL_WHOREPLY), me.name, sptr->name,
         	     channel,       /* channel name */
 	             acptr->user->username, /* user name */
-        	     (IsHidden(acptr) && !(who_flags & WF_REALHOST)) ?
-	             acptr->user->virthost :
-        	     acptr->user->realhost, /* hostname */
+        	     host,		    /* hostname */
 	             "hidden",              /* let's hide the server from normal users if the server is a uline and HIDE_ULINES is on */
         	     acptr->name,           /* nick */
 	             stat,                  /* status */
@@ -669,9 +752,7 @@ static void send_who_reply(aClient *sptr, aClient *acptr,
 		sendto_one(sptr, getreply(RPL_WHOREPLY), me.name, sptr->name,      
 		     channel,       /* channel name */
 		     acptr->user->username,      /* user name */
-		     (IsHidden(acptr) && !(who_flags & WF_REALHOST)) ?
-		     acptr->user->virthost :
-		     acptr->user->realhost,      /* hostname */
+		     host,		         /* hostname */
 		     acptr->user->server,        /* server name */
 		     acptr->name,                /* nick */
 		     stat,                       /* status */
