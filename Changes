@@ -769,3 +769,5 @@
   this has now be fixed by sending an explicit TS 0.
 - Fixed an important channelmode +j memory corruption bug that would cause crashes, reported
   by Bergee (#0002416).
+- Some clarifications on /RESTART, remote restarts were well never supported, so the docs
+  are now updated on that (no code changes).
