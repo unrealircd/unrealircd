@@ -52,10 +52,10 @@ Computing Center and Jarkko Oikarinen";
 #include "version.h"
 #endif
 
-void send_umode_out PROTO((aClient *, aClient *, int));
-void send_umode_out_nickv2 PROTO((aClient *, aClient *, int));
-void send_svsmode_out PROTO((aClient *, aClient *, aClient *, int));
-void send_umode PROTO((aClient *, aClient *, int, int, char *));
+void send_umode_out PROTO((aClient *, aClient *, long));
+void send_umode_out_nickv2 PROTO((aClient *, aClient *, long));
+void send_svsmode_out PROTO((aClient *, aClient *, aClient *, long));
+void send_umode PROTO((aClient *, aClient *, long, long, char *));
 static is_silenced PROTO((aClient *, aClient *));
 /* static  Link    *is_banned PROTO((aClient *, aChannel *)); */
 
@@ -85,7 +85,6 @@ static int user_modes[] = { UMODE_OPER, 'o',
 	UMODE_REGNICK, 'r',
 	UMODE_HIDE, 'x',
 	UMODE_EYES, 'e',
-	UMODE_CHATOP, 'b',
 	UMODE_WHOIS, 'W',
 	UMODE_KIX, 'q',
 	UMODE_BOT, 'B',
@@ -98,6 +97,7 @@ static int user_modes[] = { UMODE_OPER, 'o',
 #ifdef STRIPBADWORDS
 	UMODE_STRIPBADWORDS, 'G',
 #endif
+	UMODE_JUNK, 'j',
 	0, 0
 };
 
@@ -1803,6 +1803,7 @@ static int m_message(cptr, sptr, parc, parv, notice)
 						    "%s tried to send forbidden file %s (%s) to %s",
 						    sptr->name, file,
 						    fl->reason, acptr->name);
+	
 						continue;
 					}
 					/* if it went here it was a legal send .. */
@@ -2971,6 +2972,9 @@ int  m_quit(cptr, sptr, parc, parv)
 	if (!IsServer(cptr))
 	{
 		ircsprintf(comment, "Quit: ");
+#ifdef CENSOR_QUIT
+		ocomment = stripbadwords_channel(ocomment);
+#endif
 		strncpy(comment + 6, ocomment, TOPICLEN - 7);
 		comment[TOPICLEN] = '\0';
 		return exit_client(cptr, sptr, sptr, comment);
@@ -3762,9 +3766,6 @@ int  m_oper(cptr, sptr, parc, parv)
 		sptr->umodes |=
 		    (UMODE_SERVNOTICE | UMODE_WALLOP | UMODE_FAILOP |
 		    UMODE_FLOOD | UMODE_CLIENT | UMODE_KILLS);
-		if (ALLOW_CHATOPS == 1)
-			sptr->umodes |= UMODE_CHATOP;
-
 		send_umode_out(cptr, sptr, old);
 #ifndef NO_FDLIST
 		addto_fdlist(sptr->fd, &oper_fdlist);
@@ -4306,12 +4307,6 @@ int  m_umode(cptr, sptr, parc, parv)
 			ClearTechAdmin(sptr);
 		if (IsEyes(sptr))
 			ClearEyes(sptr);
-		if (ALLOW_CHATOPS == 1)
-		{
-			if (SendChatops(sptr))
-				ClearChatops(sptr);
-		}
-
 	}
 
 	/*
@@ -4403,6 +4398,9 @@ int  m_umode(cptr, sptr, parc, parv)
 			    me.name, sptr->name);
 			sendto_channels_inviso_part(sptr);
 		}
+		if ((sptr->umodes & UMODE_JUNK) && !IsOper(sptr))
+			sptr->umodes &= ~UMODE_JUNK;
+			
 		if (!(sptr->umodes & (UMODE_HIDING)))
 		{
 			if (setflags & UMODE_HIDING)
@@ -4703,7 +4701,7 @@ setmodex:
  */
 void send_umode(cptr, sptr, old, sendmask, umode_buf)
 	aClient *cptr, *sptr;
-	int  old, sendmask;
+	long  old, sendmask;
 	char *umode_buf;
 {
 	int *s, flag;
@@ -4755,7 +4753,7 @@ void send_umode(cptr, sptr, old, sendmask, umode_buf)
  */
 void send_umode_out(cptr, sptr, old)
 	aClient *cptr, *sptr;
-	int  old;
+	long  old;
 {
 	int  i;
 	aClient *acptr;
@@ -4784,7 +4782,7 @@ void send_umode_out(cptr, sptr, old)
 
 void send_umode_out_nickv2(cptr, sptr, old)
 	aClient *cptr, *sptr;
-	int  old;
+	long old;
 {
 	int  i;
 	aClient *acptr;
@@ -4809,7 +4807,7 @@ void send_umode_out_nickv2(cptr, sptr, old)
 void send_svsmode_out(cptr, sptr, bsptr, old)
 	aClient *cptr, *sptr, *bsptr;
 
-	int  old;
+	long  old;
 {
 	aClient *acptr;
 

@@ -540,6 +540,7 @@ aConfItem *make_conf()
 	aconf->clients = 0;
 	aconf->port = 0;
 	aconf->hold = 0;
+	aconf->options = 0;
 	Class(aconf) = 0;
 	return (aconf);
 }

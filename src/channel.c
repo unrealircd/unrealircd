@@ -1330,7 +1330,7 @@ void do_mode(chptr, cptr, sptr, parc, parv, sendts, samode)
 		    mode_buf, parabuf, sendts);
 	else
 		sendto_serv_butone_token(cptr, sptr->name, MSG_MODE, TOK_MODE,
-		    "%s %s%s %s 0", chptr->chname, isbounce ? "&" : "",
+		    "%s %s%s %s", chptr->chname, isbounce ? "&" : "",
 		    mode_buf, parabuf);
 	/* tell them it's not a timestamp, in case the last param
 	   ** is a number. */

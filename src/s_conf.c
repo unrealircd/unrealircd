@@ -871,7 +871,7 @@ int  m_svsnoop(cptr, sptr, parc, parv)
 					    UMODE_SADMIN | UMODE_ADMIN);
 					acptr->umodes &=
 		    				~(UMODE_NETADMIN | UMODE_TECHADMIN | UMODE_CLIENT |
-		 			   UMODE_FLOOD | UMODE_EYES | UMODE_CHATOP | UMODE_WHOIS);
+		 			   UMODE_FLOOD | UMODE_EYES | UMODE_WHOIS);
 					acptr->umodes &=
 					    ~(UMODE_KIX | UMODE_FCLIENT | UMODE_HIDING |
 					    UMODE_DEAF | UMODE_HIDEOPER);
@@ -1357,7 +1357,20 @@ int  initconf(opt)
 					}
 				} else
 					me.serv->numeric = atoi(tmp);
-			}			
+			}
+			if (aconf->status == CONF_CONNECT_SERVER)
+			{
+				char	*cp = tmp;
+				
+				aconf->options = 0;
+				for (; *cp; cp++)
+				{
+					if (*cp == 'S')
+						aconf->options |= CONNECT_SSL;
+					else if (*cp == 'Z')
+						aconf->options |= CONNECT_ZIP;
+				}
+			}
 			break;
 		}
 		/*

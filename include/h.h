@@ -262,8 +262,8 @@ extern aClient *next_client PROTO((aClient *, char *));
 extern int m_umode PROTO((aClient *, aClient *, int, char **));
 extern int m_names PROTO((aClient *, aClient *, int, char **));
 extern int m_server_estab PROTO((aClient *));
-extern void send_umode PROTO((aClient *, aClient *, int, int, char *));
-extern void send_umode_out PROTO((aClient *, aClient *, int));
+extern void send_umode PROTO((aClient *, aClient *, long, long, char *));
+extern void send_umode_out PROTO((aClient *, aClient *, long));
 
 extern void free_client PROTO((aClient *));
 extern void free_link PROTO((Link *));

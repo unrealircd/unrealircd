@@ -736,12 +736,13 @@ static void exit_one_client_backend(cptr, sptr, from, comment, split)
 	}
 
 	/* Remove sptr from the client list */
-	if (del_from_client_hash_table(sptr->name, sptr) != 1)
-		Debug((DEBUG_ERROR, "%#x !in tab %s[%s] %#x %#x %#x %d %d %#x",
-		    sptr, sptr->name,
-		    sptr->from ? sptr->from->sockhost : "??host",
-		    sptr->from, sptr->next, sptr->prev, sptr->fd,
-		    sptr->status, sptr->user));
+	if (sptr->name[0])
+		if (del_from_client_hash_table(sptr->name, sptr) != 1)
+			Debug((DEBUG_ERROR, "%#x !in tab %s[%s] %#x %#x %#x %d %d %#x",
+			    sptr, sptr->name,
+			    sptr->from ? sptr->from->sockhost : "??host",
+			    sptr->from, sptr->next, sptr->prev, sptr->fd,
+			    sptr->status, sptr->user));
 	if (IsRegisteredUser(sptr))
 		hash_check_notify(sptr, RPL_LOGOFF);
 	remove_client_from_list(sptr);

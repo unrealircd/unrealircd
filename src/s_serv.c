@@ -3277,7 +3277,7 @@ int  m_locops(cptr, sptr, parc, parv)
 }
 
 /*
-** m_chatops (write to opers who are +b currently online)
+** m_chatops (write to opers who are currently online)
 **      parv[0] = sender prefix
 **      parv[1] = message text
 */
@@ -3298,7 +3298,7 @@ int  m_chatops(cptr, sptr, parc, parv)
 	}
 	if (ALLOW_CHATOPS == 1)
 	{
-		if (MyClient(sptr) && !SendChatops(sptr))
+		if (MyClient(sptr) && !IsAnOper(sptr))
 		{
 			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 			    parv[0]);
@@ -3317,8 +3317,12 @@ int  m_chatops(cptr, sptr, parc, parv)
 	sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL,
 	    parv[0], MSG_CHATOPS, TOK_CHATOPS, ":%s", message);
 	if (ALLOW_CHATOPS == 1)
-		sendto_umode(UMODE_CHATOP, "*** ChatOps -- from %s: %s",
+	{
+		sendto_umode(UMODE_OPER, "*** ChatOps -- from %s: %s",
 		    parv[0], message);
+		sendto_umode(UMODE_LOCOP, "*** ChatOps -- from %s: %s",
+		    parv[0], message);
+	}
 
 	return 0;
 }

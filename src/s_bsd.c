@@ -216,7 +216,7 @@ void report_error(text, cptr)
 			if (err)
 				errtmp = err;
 #endif
-	sendto_realops(text, host, strerror(errtmp));
+	sendto_umode(UMODE_JUNK, text, host, strerror(errtmp));
 	ircd_log(text,host,strerror(errtmp));
 #ifdef USE_SYSLOG
 	syslog(LOG_WARNING, text, host, strerror(errtmp));
@@ -956,11 +956,12 @@ int  check_server(cptr, hp, c_conf, n_conf, estab)
 static int completed_connection(cptr)
 	aClient *cptr;
 {
-	aConfItem *aconf;
+	aConfItem *aconf, *cline;
 	extern char serveropts[];
 	SetHandshake(cptr);
 
 	aconf = find_conf(cptr->confs, cptr->name, CONF_CONNECT_SERVER);
+	cline = aconf;
 	if (!aconf)
 	{
 		sendto_ops("Lost C-Line for %s", get_client_name(cptr, FALSE));
@@ -975,6 +976,17 @@ static int completed_connection(cptr)
 		sendto_ops("Lost N-Line for %s", get_client_name(cptr, FALSE));
 		return -1;
 	}
+	if (cline->options & CONNECT_SSL)
+		if (!ssl_client_handshake(cptr))
+		{
+			sendto_realops("Could not handshake SSL with %s", get_client_name(cptr, FALSE));
+			return -1;
+		}
+		else
+		{
+			cptr->flags |= FLAGS_SSL;
+		}
+	
 	sendto_one(cptr, "PROTOCTL %s", PROTOCTL_SERVER);
 	sendto_one(cptr, "SERVER %s 1 :U%d-%s-%i %s",
 	    my_name_for_link(me.name, aconf), UnrealProtocol, serveropts, me.serv->numeric,
@@ -2570,7 +2582,7 @@ int  connect_server(aconf, by, hp)
 		    aconf->name, get_client_name(c2ptr, TRUE));
 		if (by && IsPerson(by) && !MyClient(by))
 			sendto_one(by,
-			    ":%s NOTICE %s :Server %s already present from %s",
+			    ":%s NOTICE %s :*** Server %s already present from %s",
 			    me.name, by->name, aconf->name,
 			    get_client_name(c2ptr, TRUE));
 		return -1;

@@ -45,8 +45,8 @@ void init_ssl()
 }
 
 #define CHK_NULL(x) if ((x)==NULL) {\
-        /*ircd_log("Lost connection to %s:Error in SSL", \
-                     get_client_name(cptr, TRUE)); \ */
+        sendto_umode(UMODE_JUNK, "Lost connection to %s:Error in SSL", \
+                     get_client_name(cptr, TRUE)); \
 	return 0;\
 	}
 
@@ -61,8 +61,9 @@ int  ssl_handshake(aClient *cptr)
 	err = SSL_accept((SSL *) cptr->ssl);
 	if ((err) == -1)
 	{
-		ircd_log("Lost connection to %s:Error in SSL_accept()",
-		    get_client_name(cptr, TRUE));
+		if (IsHandshake(cptr))
+			sendto_ops("Lost connection to %s:Error in SSL_accept()",
+			    get_client_name(cptr, TRUE));
 		return 0;
 	}
 

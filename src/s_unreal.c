@@ -1295,7 +1295,7 @@ int  m_svso(cptr, sptr, parc, parv)
 		    UMODE_SADMIN | UMODE_ADMIN);
 		acptr->umodes &=
 		    ~(UMODE_NETADMIN | UMODE_TECHADMIN | UMODE_CLIENT |
-		    UMODE_FLOOD | UMODE_EYES | UMODE_CHATOP | UMODE_WHOIS);
+		    UMODE_FLOOD | UMODE_EYES | UMODE_WHOIS);
 		acptr->umodes &=
 		    ~(UMODE_KIX | UMODE_FCLIENT | UMODE_HIDING |
 		    UMODE_DEAF | UMODE_HIDEOPER);

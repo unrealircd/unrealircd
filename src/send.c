@@ -1234,35 +1234,6 @@ void sendto_failops(char *pattern, ...)
 }
 
 /*
- * sendto_chatops
- *
- *      Send to *local* mode +b ops only.
- */
-/*
-sendto_umode does just as good a job -- codemastr
-  void    sendto_chatops(char *pattern, ...)
-{
-        va_list vl;
-        aClient *cptr;
-        int     i;
-        char    nbuf[1024];
-
-        va_start(vl,pattern);
-        for (i = 0; i <= highest_fd; i++)
-                if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-                    SendChatops(cptr))
-                    {
-                        (void)ircsprintf(nbuf, ":%s NOTICE %s :*** ChatOps -- ", 
-                                        me.name, cptr->name);
-                        (void)strncat(nbuf, pattern,
-                                        sizeof(nbuf) - strlen(nbuf));
-                        vsendto_one(cptr, nbuf, vl);
-                    }
-	va_end(vl);
-        return;
-} */
-
-/*
  * sendto_helpops
  *
  *	Send to mode +h people

@@ -251,7 +251,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define UMODE_KILLS	 0x0400	/* Show server-kills... */
 #define UMODE_CLIENT	 0x0800	/* Show client information */
 #define UMODE_FLOOD	 0x1000	/* Receive flood warnings */
-#define UMODE_CHATOP	 0x2000	/* can receive chatops */
+#define UMODE_JUNK	 0x2000	/* can junk */
 #define UMODE_SERVICES   0x4000	/* services */
 #define UMODE_HIDE	 0x8000	/* Hide from Nukes */
 #define UMODE_NETADMIN  0x10000	/* Network Admin */
@@ -267,11 +267,11 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	UMODE_VICTIM   0x8000000	/* Intentional Victim */
 #define UMODE_DEAF     0x10000000
 #define UMODE_HIDEOPER 0x20000000	/* Hide oper mode */
-#define UMODE_SETHOST    0x40000000	/* used sethost */
+#define UMODE_SETHOST  0x40000000	/* used sethost */
 #define UMODE_STRIPBADWORDS 0x80000000	/* */
 
-#define	SEND_UMODES	(UMODE_INVISIBLE|UMODE_OPER|UMODE_WALLOP|UMODE_FAILOP|UMODE_HELPOP|UMODE_REGNICK|UMODE_SADMIN|UMODE_NETADMIN|UMODE_TECHADMIN|UMODE_COADMIN|UMODE_ADMIN|UMODE_SERVICES|UMODE_HIDE|UMODE_EYES|UMODE_WHOIS|UMODE_KIX|UMODE_BOT|UMODE_SECURE|UMODE_FCLIENT|UMODE_HIDING|UMODE_DEAF|UMODE_VICTIM|UMODE_HIDEOPER|UMODE_SETHOST|UMODE_STRIPBADWORDS)
-#define	ALL_UMODES (SEND_UMODES|UMODE_SERVNOTICE|UMODE_LOCOP|UMODE_KILLS|UMODE_CLIENT|UMODE_FLOOD|UMODE_CHATOP|UMODE_SERVICES|UMODE_EYES)
+#define	SEND_UMODES	(UMODE_INVISIBLE|UMODE_OPER|UMODE_WALLOP|UMODE_FAILOP|UMODE_HELPOP|UMODE_REGNICK|UMODE_SADMIN|UMODE_NETADMIN|UMODE_TECHADMIN|UMODE_COADMIN|UMODE_ADMIN|UMODE_SERVICES|UMODE_HIDE|UMODE_EYES|UMODE_WHOIS|UMODE_KIX|UMODE_BOT|UMODE_SECURE|UMODE_FCLIENT|UMODE_HIDING|UMODE_DEAF|UMODE_VICTIM|UMODE_HIDEOPER|UMODE_SETHOST|UMODE_STRIPBADWORDS|UMODE_JUNK)
+#define	ALL_UMODES (SEND_UMODES|UMODE_SERVNOTICE|UMODE_LOCOP|UMODE_KILLS|UMODE_CLIENT|UMODE_FLOOD|UMODE_SERVICES|UMODE_EYES)
 #define	FLAGS_ID	(FLAGS_DOID|FLAGS_GOTID)
 
 #define PROTO_NOQUIT	0x1	/* Negotiated NOQUIT protocol */
@@ -310,7 +310,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsCoAdmin(x)		((x)->umodes & UMODE_COADMIN)
 #define IsSAdmin(x)		((x)->umodes & UMODE_SADMIN)
 #define SendFailops(x)		((x)->umodes & UMODE_FAILOP)
-#define SendChatops(x)		((x)->umodes & UMODE_CHATOP)
 #define	IsOper(x)		((x)->umodes & UMODE_OPER)
 #define	IsLocOp(x)		((x)->umodes & UMODE_LOCOP)
 #define	IsInvisible(x)		((x)->umodes & UMODE_INVISIBLE)
@@ -319,7 +318,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsARegNick(x)		((x)->umodes & (UMODE_REGNICK))
 #define IsRegNick(x)		((x)->umodes & UMODE_REGNICK)
 #define	IsPerson(x)		((x)->user && IsClient(x))
-#define IsPasser(x)		((x)->user & UMODE_PASSER)
 #define	IsPrivileged(x)		(IsAnOper(x) || IsServer(x))
 #define	SendWallops(x)		((x)->umodes & UMODE_WALLOP)
 #define	SendServNotice(x)	((x)->umodes & UMODE_SERVNOTICE)
@@ -398,7 +396,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define ClearEyes(x)		((x)->umodes &= ~UMODE_EYES)
 #define ClearHelpOp(x)		((x)->umodes &= ~UMODE_HELPOP)
 #define ClearFailops(x)		((x)->umodes &= ~UMODE_FAILOP)
-#define ClearChatops(x)		((x)->umodes &= ~UMODE_CHATOP)
 #define	ClearOper(x)		((x)->umodes &= ~UMODE_OPER)
 #define	ClearInvisible(x)	((x)->umodes &= ~UMODE_INVISIBLE)
 #define ClearServices(x)	((x)->umodes &= ~UMODE_SERVICES)
@@ -537,7 +534,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPSetEyes(x)	((x)->oflag |= OFLAG_EYES)
 #define OPSetZLine(x)	((x)->oflag |= OFLAG_ZLINE)
 #define OPSetWhois(x)   ((x)->oflag |= OFLAG_WHOIS)
-#define OPSetPasser(x)  ((x)->oflag |= OFLAG_ISPASSER)
 #define OPClearRehash(x)	((x)->oflag &= ~OFLAG_REHASH)
 #define OPClearDie(x)		((x)->oflag &= ~OFLAG_DIE)
 #define OPClearRestart(x)	((x)->oflag &= ~OFLAG_RESTART)
@@ -553,7 +549,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPClearUnKline(x)	((x)->oflag &= ~OFLAG_UNKLINE)
 #define OPClearLNotice(x)	((x)->oflag &= ~OFLAG_LNOTICE)
 #define OPClearGNotice(x)	((x)->oflag &= ~OFLAG_GNOTICE)
-#define OPClearPasser(x)    ((x)->oflag &= ~OFLAG_PASSER)
 #define OPClearAdmin(x)		((x)->oflag &= ~OFLAG_ADMIN)
 #define OPClearSAdmin(x)	((x)->oflag &= ~OFLAG_SADMIN)
 #define OPClearNetAdmin(x)	((x)->oflag &= ~OFLAG_NETADMIN)
@@ -648,6 +643,7 @@ struct ConfItem {
 #ifndef VMSP
 	aClass *class;		/* Class of connection */
 #endif
+	short options;
 	struct ConfItem *next;
 };
 
@@ -809,6 +805,10 @@ struct t_vhline {
 #define LISTENER_JAVACLIENT	0x000010
 #define LISTENER_MASK		0x000020
 #define LISTENER_SSL		0x000040
+
+#define CONNECT_SSL		0x000001
+#define CONNECT_ZIP		0x000002 
+
 
 struct Client {
 	struct Client *next, *prev, *hnext;

@@ -82,7 +82,9 @@ aFline *dcc_isforbidden(cptr, sptr, target, filename)
 	for (p = flines; p; p = p->next)
 	{
 		if (!match(p->mask, filename))
+		{
 			return p;
+		}
 	}
 
 	/* no target found */
