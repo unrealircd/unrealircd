@@ -2898,3 +2898,5 @@ seen. gmtime warning still there
 - Added support for single-target specifiction like spamfilter { regex "blah";
   action kill; target private; }; previously it didn't warn/error on this
   but it didn't work either.
+- Fixed a bug in the unreal_checkregex() routine which could cause a crash
+  if you added an invalid regex. Reported by Tony (#0001556).

@@ -806,7 +806,7 @@ Ilovegotos:
 			errtmp = MyMalloc(errorbufsize);
 			regerror(errorcode, &expr, errtmp, errorbufsize);
 			strncpyzt(errorbuf, errtmp, sizeof(errorbuf));
-			free(errorbuf);
+			free(errtmp);
 			regfree(&expr);
 			return errorbuf;
 		}
