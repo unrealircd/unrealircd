@@ -1221,3 +1221,4 @@ seen. gmtime warning still there
 - Preparation for release
 - Changed to beta7
 - Fixed a IPv6 problem reported by Zerwas
+- Fixed -Wall warnings for TStime
