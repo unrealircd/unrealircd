@@ -1,0 +1,28 @@
+/*
+ * CynicNet (irc.cynicnet.org) Network Configuration File
+ * --------------------------------------------------
+ *  Added-at:     29 March 2001 01:02
+ *  Author: MaTRiX
+ *  Email: admin@cynicnet.org
+ * -----------------------------------------
+ */
+
+set {
+        network-name            "CynicNet";
+        default-server          "irc.cynicnet.org";
+        services-server         "services.cynicnet.org";
+        stats-server            "stats.cynicnet.org";
+        help-channel            "#help";
+        hiddenhost-prefix       "CynicNet";
+        prefix-quit             "Quit:";
+        hosts {
+                local           "Locop.CynicNet.org";
+                global          "Oper.CynicNet.org";
+                coadmin         "Coadmin.CynicNet.org";
+                admin           "Admin.CynicNet.org";
+                servicesadmin   "CSOP.CynicNet.org";
+                techadmin       "Techadmin.CynicNet.org";
+                netadmin        "Netadmin.CynicNet.org";
+                host-on-oper-up "on";
+        };
+};

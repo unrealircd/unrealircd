@@ -2984,8 +2984,8 @@ void	validate_configuration(void)
 			Error("me::info is missing");
 		/* numeric is being checked in _conf_me */
 	}
-		else
-			Error("me {} is missing");
+	else
+		Error("me {} is missing");
 
 	for (class_ptr = conf_class; class_ptr; class_ptr = (ConfigItem_class *) class_ptr->next)
 	{
@@ -2993,27 +2993,39 @@ void	validate_configuration(void)
 			Error("class without name");
 		else
 		{
-			if (!class_ptr->pingfreq)
-				Error("class %s::pingfreq with illegal value",
+			if (!class_ptr->pingfreq) {
+				Warning("class %s::pingfreq with illegal value, using default of %d",
+					class_ptr->name, PINGFREQUENCY);
+				class_ptr->pingfreq = PINGFREQUENCY;
+			}
+			if (!class_ptr->sendq) {
+				Warning("class %s::sendq with illegal value, using default of %d",
+					class_ptr->name, MAXSENDQLENGTH);
+				class_ptr->sendq = MAXSENDQLENGTH;
+			}
+			if (class_ptr->maxclients < 0) {
+				Warning("class %s:maxclients with illegal (negative) value, using default of 100",
 					class_ptr->name);
-			if (!class_ptr->sendq)
-				Error("class %s::sendq with illegal value",
-					class_ptr->name);
-			if (class_ptr->maxclients < 0)
-				Error("class %s:maxclients with illegal (negative) value",
-					class_ptr->name);
+				class->maxclients = 100;
+			}
 		}
 	}
 	for (oper_ptr = conf_oper; oper_ptr; oper_ptr = (ConfigItem_oper *) oper_ptr->next)
 	{
 		ConfigItem_oper_from *oper_from;
 
-		if (!oper_ptr->from)
-			Error("oper %s: does not have a from record",
+		if (!oper_ptr->from) {
+			Warning("oper %s: does not have a from record, using (unsafe) default of *@*",
 				oper_ptr->name);
-		if (!oper_ptr->class)
-			Error("oper %s::class is missing or unknown",
+			oper_from = (ConfigItem_oper_from *)MyMallocEx(sizeof(ConfigItem_oper_from));
+			ircstrdup(from->name, "*@*");
+			add_ConfigItem((ConfigItem *) oper_from, (ConfigItem **)&oper_ptr->from);	
+		}
+		if (!oper_ptr->class) {
+			Warning("oper %s::class is missing or unknown, using default of class 'default'",
 				oper_ptr->name);
+			oper_ptr->class = default_class;
+		}
 		if (!oper_ptr->password)
 			Error("oper %s::password is missing",
 				oper_ptr->name);
@@ -3026,25 +3038,35 @@ void	validate_configuration(void)
 	
 	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)listen_ptr->next)
 	{
-		if (!listen_ptr->ip)
-			Error("listen without ip");
+		if (!listen_ptr->ip) {
+			Warning("listen without ip, using default of *");
+			ircstrdup(listen_ptr->ip,"*");
+		}
 		if (!listen_ptr->port)
 			Error("listen with illegal port");
 	}
 	for (allow_ptr = conf_allow; allow_ptr; allow_ptr = (ConfigItem_allow *) allow_ptr->next)
 	{
-		if (!allow_ptr->ip)
-			Error("allow::ip, missing value");
-		if (!allow_ptr->hostname)
-			Error("allow::hostname, missing value");
-		if (allow_ptr->maxperip < 0)
-			Error("allow::maxperip, must be positive or 0");
-		if (!allow_ptr->class)
-			Error("allow::class, unknown class");
+		if (!allow_ptr->ip) {
+			Warning("allow::ip, missing value, using default of *@*");
+			ircstrdup(allow_ptr->ip, "*@*");
+		}
+		if (!allow_ptr->hostname) {
+			Warning("allow::hostname, missing value, using default of *@*");
+			ircstrdup(allow_ptr->hostname, "*@*");
+		}
+		if (allow_ptr->maxperip < 0) {
+			Warning("allow::maxperip, must be positive or 0, using default of 1");
+			allow_ptr->maxperip = 1;
+		}
+		if (!allow_ptr->class) {
+			Warning("allow::class, unknown class, using default of class 'default'");
+			allow_ptr->class = default_class;
+		}
 	}
 	for (except_ptr = conf_except; except_ptr; except_ptr = (ConfigItem_except *) except_ptr->next)
 	{
-		if (!except_ptr->mask) {
+		if (BadPtr(except_ptr->mask)) {
 			Warning("except mask missing. Deleting except {} block");
 			t.next = del_ConfigItem((ConfigItem *)except_ptr, (ConfigItem **)&conf_except);
 			MyFree(except_ptr);
@@ -3053,7 +3075,7 @@ void	validate_configuration(void)
 	}
 	for (ban_ptr = conf_ban; ban_ptr; ban_ptr = (ConfigItem_ban *) ban_ptr->next)
 	{
-		if (!ban_ptr->mask) {
+		if (BadPtr(ban_ptr->mask)) {
 			Warning("ban mask missing");
 			ircfree(ban_ptr->reason);
 			t.next = del_ConfigItem((ConfigItem *)ban_ptr, (ConfigItem **)&conf_ban);
@@ -3069,16 +3091,20 @@ void	validate_configuration(void)
 		}
 		else
 		{
-			if (!link_ptr->username)
-				Error("link %s::username is missing", link_ptr->servername);
+			if (!link_ptr->username) {
+				Warning("link %s::username is missing, using default of *", link_ptr->servername);
+				ircstrdup(link_ptr->username, "*");
+			}
 			if (!link_ptr->hostname)
 				Error("link %s::hostname is missing", link_ptr->servername);
 			if (!link_ptr->connpwd)
 				Error("link %s::password-connect is missing", link_ptr->servername);
 			if (!link_ptr->recvpwd)
 				Error("link %s::password-receive is missing", link_ptr->servername);
-			if (!link_ptr->class)
-				Error("link %s::class is missing", link_ptr->servername);
+			if (!link_ptr->class) {
+				Warning("link %s::class is missing, using default of class 'default'", link_ptr->servername);
+				link_ptr->class = default_class;
+			}
 		}
 	}
 	for (tld_ptr = conf_tld; tld_ptr; tld_ptr = (ConfigItem_tld *) tld_ptr->next)

@@ -764,3 +764,5 @@ seen. gmtime warning still there
 - Made Unreal be able to recover from a bunch of config errors
 - Added stats flag r to the stats help list
 - Fixed bindip problem with it not being made
+- Made even more config errors recoverable
+- Added more network files
