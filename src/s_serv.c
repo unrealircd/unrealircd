@@ -597,6 +597,14 @@ int  m_server(cptr, sptr, parc, parv)
 		sendto_one(cptr, "ERROR :No servername");
 		return 0;
 	}
+
+	if (!cptr->passwd) {
+		sendto_one(cptr,
+			"ERROR :No Access (passwd mismatch) %s", inpath);
+		sendto_locfailops("Access denied (passwd mismatch) %s",
+			inpath);
+		return exit_client(cptr, cptr, cptr, "Bad Password");
+	}		
 	if (MyConnect(sptr) && (sptr->acpt->umodes & LISTENER_CLIENTSONLY))
 	{
 		 return exit_client(cptr, sptr, sptr, "This port is for clients only");
@@ -709,6 +717,13 @@ int  m_server(cptr, sptr, parc, parv)
 #else
 		encr = cptr->passwd;
 #endif /* CRYPT_LINK_PASSWORD */
+		if (!encr || !aconf->passwd) {
+			sendto_one(cptr,
+				"ERROR :No Access (passwd mismatch) %s", inpath);
+			sendto_locfailops("Access denied (passwd mismatch) %s",
+				inpath);
+			return exit_client(cptr, cptr, cptr, "Bad Password");
+		}
 		if (aconf->passwd && encr && *aconf->passwd && !StrEq(aconf->passwd, encr))
 		{
 			sendto_one(cptr,

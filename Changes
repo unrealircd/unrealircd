@@ -61,3 +61,4 @@
 - Started work on the except parser
 - Fixed a STATS_ONLYOPER bug
 - Fixed a ircd.tune bug (the file may not write if it didn't exist)
+- Fixed a serious bug reported by Kanzen_Griever
