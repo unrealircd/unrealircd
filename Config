@@ -38,7 +38,7 @@ if [ "$DISABLEUSERMOD" = "1" ] ; then
 	ARG="$ARG--with-disableusermod "
 fi
 if [ "$OPEROVERRIDEVERIFY" = "1" ] ; then
-	ARG="$arg--with-operoverride-verify "
+	ARG="$ARG--with-operoverride-verify "
 fi
 fi
 if [ "$NOSPOOF" = "1" ] ; then
