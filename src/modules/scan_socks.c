@@ -137,33 +137,32 @@ void	scan_socks_scan(HStruct *h)
 {
 	int			retval;
 	char			host[SCAN_HOSTLENGTH];
-	struct			SOCKADDR_IN sin;
+	struct			sockaddr_in sin;
 	SOCKET				fd;
-	int				sinlen = sizeof(struct SOCKADDR_IN);
+	int				sinlen = sizeof(struct sockaddr_in);
 	unsigned short	sport = blackh_conf->port;
 	unsigned char   socksbuf[12];
 	unsigned long   theip;
 	fd_set			rfds;
-	struct timeval  tv;
+	struct timeval  	tv;
 	int				len;
 	/* Get host */
 	IRCMutexLock((*xHSlock));
 	strcpy(host, h->host);
 	IRCMutexUnlock((*xHSlock));
-	
-#ifndef INET6
-	sin.SIN_ADDR.S_ADDR = inet_addr(host);
-#else
-	inet_pton(AF_INET6, host, sin.SIN_ADDR.S_ADDR);
-#endif 
+	/* IPv6 ?*/
+	if (strchr(host, ':'))
+		goto exituniverse;
+		
+	sin.sin_addr.s_addr = inet_addr(host);
 	if ((fd = socket(AFINET, SOCK_STREAM, 0)) < 0)
 	{
 		goto exituniverse;
 		return;
 	}
 
-	sin.SIN_PORT = htons(SCAN_ON_PORT);
-	sin.SIN_FAMILY = AFINET;
+	sin.sin_port = htons(SCAN_ON_PORT);
+	sin.sin_family = AF_INET;
 	/* We do this non-blocking to prevent a hang of the entire ircd with newer
 	 * versions of glibc.  Don't you just love new "features?"
 	 * Passing null to this is probably bad, a better method is needed. 
@@ -202,8 +201,8 @@ void	scan_socks_scan(HStruct *h)
 		goto exituniverse;
 	}
 				
-	sin.SIN_ADDR.S_ADDR = inet_addr(blackh_conf->outip ? blackh_conf->outip : blackh_conf->ip);
-	theip = htonl(sin.SIN_ADDR.S_ADDR);
+	sin.sin_addr.s_addr = inet_addr(blackh_conf->outip ? blackh_conf->outip : blackh_conf->ip);
+	theip = htonl(sin.sin_addr.s_addr);
 	bzero(socksbuf, sizeof(socksbuf));
 	socksbuf[0] = 4;
 	socksbuf[1] = 1;

@@ -149,7 +149,12 @@ int    m_scan_load(int module_load)
 		blackholefd = -1;
 		return -1;
 	}		
+#ifndef INET6
 	blackholesin.SIN_ADDR.S_ADDR = inet_addr(blackhole_conf.ip);
+#else
+	inet_pton(AFINET, blackhole_conf.ip, &blackholesin.SIN_ADDR);
+#endif
+	
 	blackholesin.SIN_PORT = htons(blackhole_conf.port);
 	blackholesin.SIN_FAMILY = AFINET;
 	blackhole_stop = 0;
@@ -350,7 +355,9 @@ DLLFUNC int h_scan_connect(aClient *sptr)
 	vFP			*vfp;
 	THREAD			thread;
 	THREAD_ATTR		thread_attr;
-
+#ifdef INET6 
+	char			addrbuf[1024];
+#endif
 	IRCMutexLock(HSlock);
 	HS_Cleanup((void *)1);
 	if (HS_Find((char *)inet_ntoa(sptr->ip)))
@@ -359,7 +366,12 @@ DLLFUNC int h_scan_connect(aClient *sptr)
 		IRCMutexUnlock(HSlock);
 		return 0;
 	}
+#ifndef INET6
 	if (h = HS_Add((char *)inet_ntoa(sptr->ip)))
+#else
+	if (h = HS_Add((char *) inet_ntop(AFINET, (void *)&sptr->ip,
+	            addrbuf, sizeof(addrbuf))))
+#endif
 	{
 		/* Run scanning threads, refcnt++ for each thread that uses the struct */
 		/* Use hooks, making it easy, remember to convert to vFP */
