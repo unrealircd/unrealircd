@@ -1368,7 +1368,11 @@ static void update_list(ResRQ *rptr, aCache *cachep)
 	/*
 	 * Do the same again for IP#'s.
 	 */
+#ifdef INET6
 	for (s = (char *)HE(rptr)->h_addr.S_ADDR;
+#else
+	for (s = (char *)&HE(rptr)->h_addr.S_ADDR;
+#endif
 	    WHOSTENTP(((struct IN_ADDR *)s)->S_ADDR); s += sizeof(struct IN_ADDR))
 	{
 #ifdef INET6

@@ -1776,3 +1776,4 @@ seen. gmtime warning still there
   we reached max size.
 - Fixed a bug where helpop would pass on a null pointer
 - One more fix to the above
+- Patch by Syzop to fix a bug in the resolver
