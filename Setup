@@ -1,0 +1,25 @@
+#!/bin/sh
+echo "Starting up Setup"
+echo "Press enter to proceed to setup..."
+read cc
+more Unreal.nfo
+echo "Press enter to proceed to FAQ..."
+read cc 
+more doc/faq
+echo "Press enter to proceed to configuration..."
+read cc
+./Config
+echo "Press enter to proceed to compiling..."
+read cc
+make
+echo "Press enter to proceed to ircd.conf making..."
+read cc
+./makeconf
+echo "Press enter to proceed to network configuration..."
+read cc
+cd networks
+./makenet
+echo "Press enter to proceed to dynamic ircd configuration..."
+read cc
+pico unrealircd.conf
+echo "You should be able to run UnrealIRCd using ./ircd now".

@@ -526,3 +526,5 @@
   well
 - Removed the : in :nick NICK newnick :timestamp
 - Added script ./update to help update, uses pull technology (wget, cvs)
+- Added script ./Setup which makes the user forced through Unreal.nfo, FAQ,
+  Config, and all the things we want them to read/do to compile the IRCd
