@@ -2765,3 +2765,4 @@ seen. gmtime warning still there
 - Fixed a problem with /stats [G|s] extended flags parsing.
 - internal: added sendnotice()
 - win32 compile fix (typo)
+- added set::spamfilter::* to docs
