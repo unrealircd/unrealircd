@@ -2055,3 +2055,4 @@ seen. gmtime warning still there
 - badword::action::block should now be ok
 - Added some missing /stats flags to help.conf and the /stats ? output (#0000886) reported
   by Rocko
+- Fix for set::restrict-channelmodes (eating parameters).
