@@ -1,16 +1,16 @@
 ###############################################################################
 ####               Unreal IRC Unix Daemon Installation Guide               ####
-####                         UnrealIRCD ver 3.1.1                          ####
+####                         UnrealIRCD ver 3.2                            ####
 ####                    unreal-dev@lists.sourceforge.com                   ####
 ####                      http://www.unrealircd.com/                       ####
 ###############################################################################
 ####                       Unpackaging the IRCD                            ####
 ####                                                                       ####
-####   1) gzip -d Unreal3.1.1.tar.gz                                       ####
+####   1) gzip -d Unreal3.<version>.tar.gz                                 ####
 ####                                                                       ####
-####   2) tar xvf Unreal3.1.1.tar                                          ####
+####   2) tar xvf Unreal3.<version>.tar                                    ####
 ####                                                                       ####
-####   3) cd Unreal3.1.1/                                                  ####
+####   3) cd Unreal3.<version>/                                            ####
 ###############################################################################
 ####                        Compiling the IRCD                             ####
 ####                                                                       ####
@@ -19,7 +19,7 @@
 ####   OS and Version     Compiler and Version           Comments          ####
 ####   --------------- ------------------------ ------------------------   ####
 ####   NetBSD 1.2B       gcc 2.7.2                                         ####
-####   FreeBSD 2.1.0     gcc 2.6.3                Don't use crypt at all   ####
+####   FreeBSD 4.5-R     gcc 2.95.3                                        ####
 ####   SunOS 4.1.4       gcc 2.7-96q1 (Cygnus)                             ####
 ####   Solaris 2.4       gcc 2.7-96q1 (Cygnus)    (SunOS 5.4)              ####
 ####   Solaris 2.5       SunWorks Pro C           (SunOS 5.5.1)            ####
@@ -81,7 +81,7 @@
 ####                                                                       ####
 ####   3) If you get the error screen, please go through and check each    ####
 ####      point presented, if you have no luck, go on IRC                  ####
-####      /server irc.ircsystems.net  #UnrealIRCD                          ####
+####      /server irc.ircsystems.net  #Unreal-support                      ####
 ####                                                                       ####
 ####   4) /server yourserverip or domainname                               ####
 ####                                                                       ####
@@ -94,6 +94,3 @@
 ####      to upgrade to.                                                   ####
 ####                                                                       ####
 ###############################################################################
-
-
-

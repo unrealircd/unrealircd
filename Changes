@@ -1341,3 +1341,4 @@ seen. gmtime warning still there
 - [nighthawk 2002-06-17] Changed m_quit.c slightly, removed a redundant strlen,
                          made prefix-quit of "no" not use one at all, since this
                          is in example.conf and is sensicle..
+- Couple of updates to INSTALL.
