@@ -677,3 +677,4 @@
 - Autodetects /usr/sbin/openssl now, thanks trinity
 - Tokenized PING and PONG
 - Fixes a missing : in SJOIN
+- Possible fixed a internal server list bug

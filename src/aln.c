@@ -169,6 +169,20 @@ aClient *find_server_quick_search(char *name)
 			return (lp->value.cptr);
 	return NULL;
 }
+
+
+aClient *find_server_quick_straight(char *name)
+{
+	Link *lp;
+
+	for (lp = servers; lp; lp = lp->next)
+		if (!strcmp(name, lp->value.cptr->name))
+			return (lp->value.cptr);
+	return NULL;
+}
+
+
+
 aClient *find_server_quickx(char *name, aClient *cptr)
 {
 	if (name)
@@ -196,7 +210,7 @@ aClient *find_server_b64_or_real(char *name)
 	}
 		else
 	{
-		return find_server_quick(name);
+		return find_server_quick_straight(name);
 	}
 	return NULL;
 	
