@@ -4295,7 +4295,6 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 	} else {
 		char *tmpw;
 		ca->type = BADW_TYPE_FAST;
-		ircstrdup(ca->word, cep->ce_vardata);
 		ca->word = tmpw = MyMalloc(strlen(cep->ce_vardata) - ast_l - ast_r + 1);
 		/* Copy except for asterisks */
 		for (tmp = cep->ce_vardata; *tmp; tmp++)

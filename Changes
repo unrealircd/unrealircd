@@ -2078,3 +2078,4 @@ seen. gmtime warning still there
 - Enabled throttling support by default, you need to have a (correct) set::throttle block
   to make it work, otherwise it's just turned off.
 - Some code cleanups (s_conf.c, now has a config_setdefaultsettings()).
+- Fixed minor badwords /rehash memleak.
