@@ -301,7 +301,6 @@
 #define MAXPARA    	15
 
 extern int m_join(), m_part(), m_mode();
-extern int m_wallops();
 extern int m_nick(), m_error();
 extern int m_chatops(), m_dns();
 extern int m_gnotice(), m_goper(), m_globops(), m_locops();
