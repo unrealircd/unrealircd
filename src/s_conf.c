@@ -335,6 +335,7 @@ extern int charsys_test_language(char *name);
 extern void charsys_add_language(char *name);
 extern void charsys_reset_pretest(void);
 int charsys_postconftest(void);
+void charsys_finish(void);
 
 /* Stuff we only need here for spamfilter, so not in h.h... */
 extern aTKline *tklines[TKLISTLEN];
@@ -1664,6 +1665,7 @@ int	init_conf(char *rootconf, int rehash)
 #endif
 			abort();
 		}
+		charsys_finish();
 			
 	}
 	else	

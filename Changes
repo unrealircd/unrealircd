@@ -631,3 +631,8 @@
   - Added category 'latin7': alias for 'greek'
   - Added category 'gbk': alias for 'chinese'
 - Removed 2 unneeded characters from 'catalan'.
+- Added NICKCHARS= in PROTOCTL. This indicates which languages are accepted in nicks.
+  If 2 servers try to link and the allowed nick characters do not fully match, then
+  the link will be rejected. Note that this will not prevent you from 3.2.2<->3.2.3/CVS
+  charsets mistakes, but only with linking CVS/3.2.3+ servers. Suggested by Troco (#0002360)
+  This might need some additional testing, but initial results are positive :).

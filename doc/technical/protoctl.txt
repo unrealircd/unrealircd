@@ -132,3 +132,10 @@ TKLEXT        This allows 10 instead of 8 parameters in TKL's for spamfilter, se
 NICKIP        This token indicates that a (standard) base64 encoded IP address is included
               in the NICK command. The IP is in binary network byte order formated and
               encoded using the standard base64 algorithm. '*' is used if no IP is available.
+
+NICKCHARS     This specifies a list of language characters that are allowed in nicks.
+              USMARC codes are used, with a suffix if needed. See src/charsys.c for the full
+              list (ctrl+f, static LangList) of possible languages (2nd column).
+              The items in the list sent as NICKCHARS=.. must always be sorted.
+              If a server sends NICKCHARS= and if the remote parameters do not match the
+              charsets in use locally, then the server link is rejected.

@@ -750,3 +750,4 @@ extern void charsys_reset(void);
 extern void charsys_addmultibyterange(char s1, char e1, char s2, char e2);
 extern void charsys_addallowed(char *s);
 extern void charsys_reset(void);
+extern MODVAR char langsinuse[4096];

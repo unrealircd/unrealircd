@@ -188,6 +188,9 @@ char *num = NULL;
 void send_proto(aClient *cptr, ConfigItem_link *aconf)
 {
 char buf[512];
+
+	sendto_one(cptr, "PROTOCTL NICKCHARS=%s", langsinuse);
+
 	sprintf(buf, "CHANMODES=%s%s,%s%s,%s%s,%s%s",
 		CHPAR1, EXPAR1, CHPAR2, EXPAR2, CHPAR3, EXPAR3, CHPAR4, EXPAR4);
 #ifdef ZIP_LINKS

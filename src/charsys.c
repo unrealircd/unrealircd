@@ -62,19 +62,60 @@ struct _mblist
 };
 MBList *mblist = NULL, *mblist_tail = NULL;
 
-static int do_nick_name_multibyte(char *nick);
-static int do_nick_name_standard(char *nick);
-
 /* Use this to prevent mixing of certain combinations
  * (such as GBK & high-ascii, etc)
  */
 static int langav;
+char langsinuse[4096];
+
 /* bitmasks: */
 #define LANGAV_ASCII	0x0001 /* 8 bit ascii */
 #define LANGAV_LATIN1	0x0002 /* latin1 (western europe) */
 #define LANGAV_LATIN2	0x0004 /* latin2 (eastern europe, eg: hungarian) */
 #define LANGAV_LATIN7	0x0008 /* latin7 (greek) */
 #define LANGAV_GBK		0x1000 /* (Chinese) GBK encoding */
+
+typedef struct _langlist LangList;
+struct _langlist
+{
+	char *directive;
+	char *code;
+	int setflags;
+};
+
+/* MUST be alphabetized */
+static LangList langlist[] = {
+	{ "catalan",    "cat", LANGAV_ASCII|LANGAV_LATIN1 },
+	{ "chinese",    "chi-s,chi-t,chi-j", LANGAV_GBK },
+	{ "chinese-simp", "chi-s", LANGAV_GBK },
+	{ "chinese-trad", "chi-t", LANGAV_GBK },
+	{ "chinese-ja", "chi-j", LANGAV_GBK },
+	{ "dutch",      "dut", LANGAV_ASCII|LANGAV_LATIN1 },
+	{ "french",     "fre", LANGAV_ASCII|LANGAV_LATIN1 },
+	{ "gbk",        "chi-s,chi-t,chi-j", LANGAV_GBK },
+	{ "german",     "ger", LANGAV_ASCII|LANGAV_LATIN1 },
+	{ "greek",      "gre", LANGAV_ASCII|LANGAV_LATIN7 },
+	{ "hungarian",  "hun", LANGAV_ASCII|LANGAV_LATIN2 },
+	{ "italian",    "ita", LANGAV_ASCII|LANGAV_LATIN1 },
+	{ "latin1",     "cat,dut,fre,ger,ita,spa,swe", LANGAV_ASCII|LANGAV_LATIN1 },
+	{ "latin2",     "hun", LANGAV_ASCII|LANGAV_LATIN2 },
+	{ "latin7",     "gre", LANGAV_ASCII|LANGAV_LATIN7 },
+	{ "spanish",    "spa", LANGAV_ASCII|LANGAV_LATIN1 },
+	{ "swedish",    "swe", LANGAV_ASCII|LANGAV_LATIN1 },
+	{ NULL, NULL, 0 }
+};
+
+/* For temporary use during config_run */
+typedef struct _ilanglist ILangList;
+struct _ilanglist
+{
+	ILangList *prev, *next;
+	char *name;
+};
+ILangList *ilanglist = NULL;
+
+static int do_nick_name_multibyte(char *nick);
+static int do_nick_name_standard(char *nick);
 
 /** Called on boot and just before config run */
 void charsys_reset(void)
@@ -94,11 +135,72 @@ MBList *m, *m_next;
 	/* Then add the default which will always be allowed */
 	charsys_addallowed("0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyzy{|}");
 	langav = 0;
+	langsinuse[0] = '\0';
+#ifdef DEBUGMODE
+	if (ilanglist)
+		abort();
+#endif
 }
 
 void charsys_reset_pretest(void)
 {
 	langav = 0;
+}
+
+static inline void ilang_swap(ILangList *one, ILangList *two)
+{
+char *tmp = one->name;
+	one->name = two->name;
+	two->name = tmp;
+}
+
+static void ilang_sort(void)
+{
+ILangList *outer, *inner;
+char *tmp;
+
+	/* Selection sort -- perhaps optimize to qsort/whatever if
+     * possible? ;)
+     */
+	for (outer=ilanglist; outer; outer=outer->next)
+	{
+		for (inner=outer->next; inner; inner=inner->next)
+		{
+			if (strcmp(outer->name, inner->name) > 0)
+				ilang_swap(outer, inner);
+		}
+	}
+}
+
+void charsys_finish(void)
+{
+ILangList *e, *e_next;
+
+	/* Sort alphabetically */
+	ilang_sort();
+
+	/* [note: this can be optimized] */
+	langsinuse[0] = '\0';
+	for (e=ilanglist; e; e=e->next)
+	{
+		strlcat(langsinuse, e->name, sizeof(langsinuse));
+		if (e->next)
+			strlcat(langsinuse, ",", sizeof(langsinuse));
+	}
+	
+	/* Free everything */
+	for (e=ilanglist; e; e=e_next)
+	{
+		e_next=e->next;
+		MyFree(e->name);
+		MyFree(e);
+	}
+	ilanglist = NULL;
+#ifdef DEBUGMODE
+	ircd_log(LOG_ERROR, "[Debug] langsinuse: '%s'", langsinuse);
+	if (strlen(langsinuse) > 490)
+		abort();
+#endif
 }
 
 /** Add a character range to the multibyte list.
@@ -227,37 +329,78 @@ int x=0;
 	return 1;
 }
 
+static LangList *charsys_find_language(char *name)
+{
+int start = 0;
+int stop = ARRAY_SIZEOF(langlist)-1;
+int mid;
+
+	while (start <= stop)
+	{
+		mid = (start+stop)/2;
+		if (smycmp(name, langlist[mid].directive) < 0)
+			stop = mid-1;
+		else if (strcmp(name, langlist[mid].directive) == 0)
+			return &langlist[mid];
+		else
+			start = mid+1;
+	}
+	return NULL;
+}
+
 /** Check if language is available. */
 int charsys_test_language(char *name)
 {
-	if (!strcmp(name, "latin1") || !strcmp(name, "german") ||
-	    !strcmp(name, "dutch") || !strcmp(name, "swedish") ||
-	    !strcmp(name, "french") || !strcmp(name, "spanish") ||
-	    !strcmp(name, "catalan"))
+LangList *l = charsys_find_language(name);
+
+	if (l)
 	{
-		langav |= (LANGAV_ASCII|LANGAV_LATIN1);
-	} else
-	if (!strcmp(name, "latin2") || !strcmp(name, "hungarian"))
-	{
-		langav |= (LANGAV_ASCII|LANGAV_LATIN2);
-	} else
-	if (!strcmp(name, "latin7") || !strcmp(name, "greek"))
-	{
-		langav |= (LANGAV_ASCII|LANGAV_LATIN7);
-	} else
-	if (!strcmp(name, "chinese") || !strcmp(name, "gbk") ||
-	    !strcmp(name, "chinese-trad") || !strcmp(name, "chinese-simp") ||
-	    !strcmp(name, "chinese-ja"))
-	{
-		langav |= LANGAV_GBK;
-	} else
+		langav |= l->setflags;
+		return 1;
+	}
 	if (!strcmp(name, "euro-west"))
 	{
 		config_error("set::accept-language: ERROR: 'euro-west' got renamed to 'latin1'");
 		return 0;
-	} else
-		return 0;
-	return 1;
+	}
+	return 0;
+}
+
+static void charsys_doadd_language(char *name)
+{
+LangList *l;
+ILangList *li;
+int found;
+char tmp[512], *lang, *p;
+
+	l = charsys_find_language(name);
+	if (!l)
+	{
+#ifdef DEBUGMODE
+		abort();
+#endif
+		return;
+	}
+
+	strlcpy(tmp, l->code, sizeof(tmp));
+	for (lang = strtoken(&p, tmp, ","); lang; lang = strtoken(&p, NULL, ","))
+	{
+		/* Check if present... */
+		found=0;
+		for (li=ilanglist; li; li=li->next)
+			if (!strcmp(li->name, lang))
+			{
+				found = 1;
+				break;
+			}
+		if (!found)
+		{
+			/* Add... */
+			li = MyMallocEx(sizeof(ILangList));
+			li->name = strdup(lang);
+			AddListItem(li, ilanglist);
+		}
+	}
 }
 
 void charsys_add_language(char *name)
@@ -272,6 +415,9 @@ char latin1=0, latin2=0, chinese=0;
 	 *        suggestions about characters that should be added (or removed)
 	 *        of course. -- Syzop
 	 */
+
+	/* Add our language to our list */
+	charsys_doadd_language(name);
 
 	/* GROUPS */
 	if (!strcmp(name, "latin1"))

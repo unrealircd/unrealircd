@@ -315,6 +315,18 @@ CMD_FUNC(m_protoctl)
 			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
 			cptr->proto |= PROTO_NICKIP;
 		}
+		else if (strncmp(s, "NICKCHARS=", 10) == 0)
+		{
+			/* Compare... */
+			if (strcmp(s+10, langsinuse))
+			{
+				sendto_one(cptr, "ERROR :My nick charset='%s', yours='%s'",
+					langsinuse, s+10);
+				sendto_realops("Link error %s: Nick charset mismatch, our='%s', theirs='%s'",
+					get_client_name(cptr, FALSE), langsinuse, s+10);
+				return exit_client(cptr, cptr, &me, "Nick charset mismatch");
+			}
+		}
 		/*
 		 * Add other protocol extensions here, with proto
 		 * containing the base option, and options containing
