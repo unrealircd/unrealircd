@@ -274,7 +274,9 @@ Windows:<br>
    [*: ces snomasks sont autoris&eacute;s aux non-op&eacute;rateurs]<br>
    </p>
 <p>Vous pouvez rendre automatique le don de snomasks (set::snomask-on-connect) et aussi 
-   ceux que vous souhaitez quand vous vous /oper  (set::snomask-on-oper, oper::snomask)</p></div>
+   ceux que vous souhaitez quand vous vous /oper  (set::snomask-on-oper, oper::snomask)</p>
+<p>Par défaut, si un utilisateur applique uniquement le mode +s, certains snomasks sont appliqués.
+   Pour les non-opers, snomask +ks, et pour les opers, snomasks +kscfvGqo.</p></div>
 
 <p><font size="+2"><b>3.4 - Aliases</b></font><a name="feature_aliases"></a></p><div class="desc">
 <p>Avec les aliases vous pouvez configurer des commandes rapides. Par exemple "/ns identify blah" 
@@ -996,7 +998,7 @@ allow {
     <td>Peut utiliser /dccdeny et /undccdeny</td>
   </tr>
 </tbody></table>
-<p>Certain flags give you other flags by default:</p>
+<p>Certains flags vous en donnent d'autres par défaut:</p>
 <table border="1" width="59%">
   <tbody><tr> 
     <td width="19%"><b>local</b></td>
