@@ -336,20 +336,14 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 
 /* new oper code */
 
-		sptr->umodes |= UMODE_SERVNOTICE;
+		sptr->umodes |= OPER_MODES;
 
 /* handle oflags that trigger umodes */
 		
 		while(oper_oflags[j].umode) {
-#if 1
-
-#endif
 			if(aconf->oflags & oper_oflags[j].oflag) {	/* we match this oflag */
 				if (!announce && oper_oflags[j].announce) { /* we haven't matched an oper_type yet */
 					host = *oper_oflags[j].host;	/* set the iNAH host */
-#if 0
-					oper_type = oper_oflags[j].oflag; /* set the oper_type */
-#endif
 					announce = oper_oflags[j].announce; /* set the announcement */
 				}
 				sptr->umodes |= 

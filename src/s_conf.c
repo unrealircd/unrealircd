@@ -154,8 +154,8 @@ static int _OldOperFlags[] = {
 	OFLAG_UNKLINE, 'B',
 	OFLAG_LNOTICE, 'n',
 	OFLAG_GNOTICE, 'G',
-	OFLAG_ADMIN, 'A',
-	OFLAG_SADMIN, 'a',
+	OFLAG_ADMIN_, 'A',
+	OFLAG_SADMIN_, 'a',
 	OFLAG_NADMIN, 'N',
 	OFLAG_COADMIN, 'C',
 	OFLAG_ZLINE, 'z',
@@ -185,8 +185,8 @@ static OperFlag _OperFlags[] = {
 	{ OFLAG_UNKLINE,	"can_unkline" },
 	{ OFLAG_LNOTICE,	"can_localnotice" },
 	{ OFLAG_GNOTICE,	"can_globalnotice" },
-	{ OFLAG_ADMIN,		"admin"},
-	{ OFLAG_SADMIN,		"services-admin"},
+	{ OFLAG_ADMIN_,		"admin"},
+	{ OFLAG_SADMIN_,	"services-admin"},
 	{ OFLAG_NADMIN,		"netadmin"},
 	{ OFLAG_COADMIN,	"coadmin"},
 	{ OFLAG_ZLINE,		"can_zline"},
@@ -2205,6 +2205,11 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 						cep->ce_varlinenum);
 					CONN_MODES &= ~UMODE_OPER;
 				}
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "modes-on-oper")) {
+			if (cep->ce_vardata) {
+				OPER_MODES = (long) set_usermode(cep->ce_vardata);
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "auto-join")) {
