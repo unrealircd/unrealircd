@@ -427,3 +427,5 @@
 - Removed __P, windows doesn't like it, and only old compilers need it
 - Fixed a ban realname {} bug that _may_ have something to do with the negative user count bug
 - Fixed do_dns_async problem with new res.c
+- Removed doc/ADD-TO-IRCRC, doc/INSTALL, doc/Manual, doc/Operators,
+  doc/irc.1, doc/ircd.8, doc/server-compile-guide
