@@ -321,8 +321,8 @@ char latin1=0, latin2=0, chinese=0;
 	if (latin1 || !strcmp(name, "catalan"))
 	{
 		/* supplied by Trocotronic */
-		/* a`, A`, a', A', e`, E`, e', E', i', I', o`, O`, o', O', u', U', i", I", u", U" */
-		charsys_addallowed("àÀáÁèÈéÉíÍòÒóÓúÚïÏüÜ");
+		/* a`, A`, e`, E`, e', E', i', I', o`, O`, o', O', u', U', i", I", u", U" */
+		charsys_addallowed("àÀèÈéÉíÍòÒóÓúÚïÏüÜ");
 	}
 	if (latin1 || !strcmp(name, "swedish"))
 	{

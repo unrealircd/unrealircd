@@ -630,3 +630,4 @@
   - Added 'greek' [supplied by GSF]
   - Added category 'latin7': alias for 'greek'
   - Added category 'gbk': alias for 'chinese'
+- Removed 2 unneeded characters from 'catalan'.
