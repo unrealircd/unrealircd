@@ -1292,3 +1292,5 @@ seen. gmtime warning still there
 - Fixed a number of bugs in the upper patch. 
 - Fixed an OpenBSD bug reported by RaYmAn, k0adh, and numerous others (#0000104)
 - Credits changes
+- Fixed problem in dopm (short and char should NEVER be passed to va_arg)
+- Fixed HCN so it uses IP instead of sockhost.
