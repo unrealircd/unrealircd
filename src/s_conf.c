@@ -930,7 +930,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				start = ptr;
 				for(;*ptr;ptr++)
 				{
-					if ((*ptr == ' ') || (*ptr == '=') || (*ptr == '\t') || (*ptr == '\n') || (*ptr == ';'))
+					if ((*ptr == ' ') || (*ptr == '=') || (*ptr == '\t') || (*ptr == '\n') || (*ptr == ';') || (*ptr == '\0'))
 						break;
 				}
 				if (!*ptr)
@@ -5194,6 +5194,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "modes-on-join")) {
 			char *c;
 			struct ChMode temp;
+			bzero(&temp, sizeof(temp));
 			CheckNull(cep);
 			for (c = cep->ce_vardata; *c; c++)
 			{

@@ -2006,3 +2006,4 @@ seen. gmtime warning still there
   by |VIO|Maverick and Rocko
 - Made throttling use DelListItem and fixed some confusing regarding
   undeffing of THROTTLING
+- Fixed a set::modes-on-join bug and fixed an oob read in config parser.
