@@ -895,3 +895,4 @@ seen. gmtime warning still there
 - Added make install to copy files for you when you install unreal
 - Replaced killircd, ircd, and rehash with ./unreal start|stop|rehash
 - Fixed a bug where the win32 help dialog links were plain text
+- IPv6 fixes to Inet_si2p & Inet_si2pB

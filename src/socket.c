@@ -172,7 +172,7 @@ int  deliver_it(aClient *cptr, char *str, int len)
 	return (retval);
 }
 
-char	*Inet_si2pB(struct SOCKADDR_IN *sin, char *buf)
+char	*Inet_si2pB(struct SOCKADDR_IN *sin, char *buf, int sz)
 {
 #ifdef INET6
 	u_char	*cp;
@@ -189,7 +189,7 @@ char	*Inet_si2pB(struct SOCKADDR_IN *sin, char *buf)
 	
 		return (buf);
 	}
-	return ((char *)inetntop(sin->SIN_FAMILY, (void *)&sin->SIN_ADDR, buf, sizeof(buf)));
+	return ((char *)inetntop(AFINET, &sin->SIN_ADDR.s6_addr, buf, sz));
 #else
 	return ((char *)inet_ntoa(sin->SIN_ADDR));	
 #endif
@@ -199,7 +199,7 @@ char	*Inet_si2p(struct SOCKADDR_IN *sin)
 {
 	static char	buf[256];
 	
-	return (Inet_si2pB(sin, buf));
+	return (Inet_si2pB(sin, buf, sizeof(buf)));
 }
 
 
