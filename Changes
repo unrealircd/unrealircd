@@ -786,3 +786,5 @@ seen. gmtime warning still there
 - /who fix .. removed nick matching functionality..
 - Fixed a SNOMASK problem found by Arantis
 - Fixed a umode2 bug that crashed the server
+- Fixed vhost bug that forgot to add a \0 in the end of the string
+- /who fix

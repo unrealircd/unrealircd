@@ -381,7 +381,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		len = strlen(vhost->virthost);
 		length =  len > HOSTLEN ? HOSTLEN : len;
 		sptr->user->virthost = MyMalloc(length + 1);
-		strncpy(sptr->user->virthost, vhost->virthost, length);
+		strncpy(sptr->user->virthost, vhost->virthost, length + 1);
 		if (vhost->virtuser) {
 			strcpy(olduser, sptr->user->username);
 			strncpy(sptr->user->username, vhost->virtuser, USERLEN);
