@@ -2375,7 +2375,12 @@ CMD_FUNC(m_umode)
 				  if (*m == Usermode_Table[i].flag)
 				  {
 					  if (what == MODE_ADD)
+					  {
+						  if (Usermode_Table[i].allowed)
+							if (!Usermode_Table[i].allowed(sptr))
+								break;
 						  sptr->umodes |= Usermode_Table[i].mode;
+					  }
 					  else
 						  sptr->umodes &= ~Usermode_Table[i].mode;
 					  break;

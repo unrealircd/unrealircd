@@ -752,6 +752,7 @@ extern ircstats IRCstats;
 typedef struct {
 	long	mode;
 	char	flag;
+	int	(*allowed)(aClient *sptr);
 } aUMtable;
 
 extern aUMtable *Usermode_Table;

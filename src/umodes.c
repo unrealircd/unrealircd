@@ -136,7 +136,7 @@ void make_umodestr(void)
  * Add a usermode with character 'ch', if global is set to 1 the usermode is global
  * (sent to other servers) otherwise it's a local usermode
  */
-long	umode_get(char ch, int global)
+long	umode_get(char ch, int global, int (*allowed)(aClient *sptr))
 {
 	short	 i = 0;
 	short	 j = 0;
@@ -151,6 +151,7 @@ long	umode_get(char ch, int global)
 	if (i != UMODETABLESZ)
 	{
 		Usermode_Table[i].flag = ch;
+		Usermode_Table[i].allowed = allowed;
 		Debug((DEBUG_DEBUG, "umode_get(%c) returning %04x",
 			ch, Usermode_Table[i].mode));
 		/* Update usermode table highest */
@@ -191,3 +192,14 @@ int	umode_delete(char ch, long val)
 	}
 	return -1;
 }
+
+int umode_allow_all(aClient *sptr)
+{
+	return 1;
+}
+
+int umode_allow_opers(aClient *sptr)
+{
+	return IsAnOper(sptr) ? 1 : 0;
+}
+

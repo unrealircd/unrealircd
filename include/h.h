@@ -339,9 +339,13 @@ extern int m_umode(aClient *, aClient *, int, char **);
 extern int m_names(aClient *, aClient *, int, char **);
 extern int m_server_estab(aClient *);
 extern void umode_init(void);
-extern long umode_get(char, int);
-#define umode_lget(x) umode_get(x, 0);
-#define umode_gget(x) umode_get(x, 1);
+extern long umode_get(char, int, int (*)(aClient *));
+#define UMODE_GLOBAL 1
+#define UMODE_LOCAL 0
+#define umode_lget(x) umode_get(x, 0, 0);
+#define umode_gget(x) umode_get(x, 1, 0);
+extern int umode_allow_all(aClient *sptr);
+extern int umode_allow_opers(aClient *sptr);
 extern int  umode_delete(char ch, long val);
 extern void send_umode(aClient *, aClient *, long, long, char *);
 extern void send_umode_out(aClient *, aClient *, long);
