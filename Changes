@@ -773,5 +773,5 @@
   are now updated on that (no code changes).
 ** internal 3.2.3-pre4 release **
 - Corrected small doc typo in unreal32docs, reported by arbiter.
-- (repack) Fixed incorrect badword { } in conf causing a crash (should give an error).
 ** 3.2.3 release **
+- Fixed incorrect badword { } in conf causing a crash (should give an error).
