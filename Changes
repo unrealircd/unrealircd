@@ -748,3 +748,4 @@
   (#0002387).
 - Fix for above, also reported by Trocotronic.
 ** internal 3.2.3-pre2 release **
+- Fixed a couple of typos in doc/example.conf (#0002393) reported by AngryWolf.
