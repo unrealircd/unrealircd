@@ -1751,11 +1751,11 @@ int  read_message(delay, listp)
 			{
 				if (DBufLength(&cptr->recvQ) && delay2 > 2)
 					delay2 = 1;
-				if (DBufLength(&cptr->recvQ) < 4088)
+				if ((cptr->fd >= 0) && (DBufLength(&cptr->recvQ) < 4088))
 					FD_SET(cptr->fd, &read_set);
 			}
-			if (DBufLength(&cptr->sendQ) || IsConnecting(cptr) ||
-			    (DoList(cptr) && IsSendable(cptr)))
+			if ((cptr->fd >= 0) && (DBufLength(&cptr->sendQ) || IsConnecting(cptr) ||
+			    (DoList(cptr) && IsSendable(cptr))))
 				FD_SET(cptr->fd, &write_set);
 		}
 
