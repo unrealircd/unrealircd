@@ -2395,6 +2395,8 @@ int  m_who(cptr, sptr, parc, parv)
 			if (member || !SecretChannel(chptr))
 				for (lp = chptr->members; lp; lp = lp->next)
 				{
+					if (IsHiding(lp->value.cptr))
+						continue;
 					if (oper && (!IsAnOper(lp->value.cptr)
 					    ))
 						continue;
