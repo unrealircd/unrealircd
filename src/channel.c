@@ -2045,9 +2045,9 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  }
 			  if (!bounce)	/* don't do the mode at all. */
 			  {
-				  char *tmp; 
-				  if ((tmp = strchr(param, ' ')))
-					*tmp = '\0';
+				  char *tmp;
+				  clean_channelname(param);
+				  /* This may same like duplicate code, but it's not. -- Syzop */
 				  if ((tmp = strchr(param, ':')))
 					*tmp = '\0';
 				  if (strlen(param) > CHANNELLEN)

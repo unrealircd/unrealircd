@@ -2152,3 +2152,4 @@ seen. gmtime warning still there
 - Made it so it is no longer necessary to copy the ModuleInfo structure passed to Mod_Test
   and Mod_Init. Unreal now does this internally.
 - Code cleanup/merge m_join/channel_link: fixed multiple channelmode +L problems.
+- And another minor +L fix.
