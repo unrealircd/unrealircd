@@ -545,37 +545,15 @@ if [ -r /usr/include/openssl/ssl.h ] ; then
        elif [ -r /usr/local/ssl/bin/openssl ] ; then
                OPENSSLPATH=/usr/local/ssl/bin/openssl
                echo $OPENSSLPATH
-       else
-               echo "Couldn't find it! (bad)"
-               OPENSSLPATH=/bin/false
-               OPENSSLPATH=/bin/false
-       fi
-else
-if [  -r /usr/local/ssl/include/openssl/ssl.h ] ; then
-       echo $n "...Looking where you got the openssl binary...$c"
-       if [ -r /bin/openssl ] ; then
-               OPENSSLPATH=/bin/openssl
-               echo $OPENSSLPATH
-       elif [ -r /usr/bin/openssl ] ; then
-               OPENSSLPATH=/usr/bin/openssl
-               echo $OPENSSLPATH
-       elif [ -r /usr/sbin/openssl ] ; then
-               OPENSSLPATH=/usr/sbin/openssl
-               echo $OPENSSLPATH
-       elif [ -r /usr/local/bin/openssl ] ; then
-               OPENSSLPATH=/usr/local/bin/openssl
-               echo $OPENSSLPATH
-       elif [ -r /usr/local/ssl/bin/openssl ] ; then
-               OPENSSLPATH=/usr/local/ssl/bin/openssl
-               echo $OPENSSLPATH
+       elif [ -r `which openssl` ] ; then
+		OPENSSLPATH=`which openssl`
+		echo $OPENSSLPATH
        else
                echo "Couldn't find it! (bad)"
                OPENSSLPATH=/bin/false
                OPENSSLPATH=/bin/false
        fi
 fi
-fi
-
 
 #
 # to b or not to b

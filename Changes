@@ -247,3 +247,6 @@
 - Fix-fixed " Fixed /whois to not show idle times of global opers to
      anyone" patch
 - Fixed a recently found exploit involving reverse DNS (fix from bahamut)
+- Made more openssl binary detection using 'which'
+- Added message when trying to join a +z channel
+- New segmentation fault code by Kanzen_Greiver

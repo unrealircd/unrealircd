@@ -2267,6 +2267,8 @@ static int can_join(cptr, sptr, chptr, key, link, parv)
 	if ((chptr->mode.mode & MODE_ONLYSECURE) &&
 		!(sptr->umodes & UMODE_SECURE))
 	{
+		sendto_one(sptr, ":%s NOTICE %s :*** Cannot join: %s is a Secure-only channel (+z)",
+				me.name, sptr->name, chptr->chname); 
 		return (ERR_BANNEDFROMCHAN);	
 	}
 	if ((chptr->mode.mode & MODE_OPERONLY) && !IsOper(sptr))

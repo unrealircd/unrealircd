@@ -111,7 +111,7 @@ int  ssl_handshake(aClient *cptr)
 	err = SSL_accept((SSL *) cptr->ssl);
 	if ((err) == -1)
 	{
-		sendto_umode(UMODE_JUNK, "Lost connection to %s:Error in SSL_accept()",
+		sendto_umode(UMODE_JUNK, "Lost connection to %s:Error in SSL_accept()",			
 			    get_client_name(cptr, TRUE));
 		return 0;
 	}
