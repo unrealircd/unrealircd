@@ -90,3 +90,5 @@
 - Made +u do a auditorium/star chat feature, suggested by |Martin|=======
 - Fixed a G:line bug that would allow certain masks to be interpreted as *@*
 - Fixed the same bug in shun that affected G:line
+- Made +f faster by replacing 2 strchr()s and a strrchr() with a if () inside an existing loop
+- Fixed a +f bug reported by Enstyne

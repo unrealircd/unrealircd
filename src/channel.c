@@ -1513,7 +1513,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 	char tmpbuf[512], *tmpstr;
 	char tc = ' ';		/* */
 	int  chasing, x;
-	int  xxi, xyi, xzi;
+	int  xxi, xyi, xzi, hascolon;
 	char *xxx;
 	char *xp;
 
@@ -1971,27 +1971,25 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 				  }
 				  /* may not contain other chars 
 				     than 0123456789: & NULL */
+				  hascolon = 0;
 				  for (xp = param; *xp; xp++)
 				  {
+					  if (*xp == ':')
+						hascolon++;
 					  /* fast alpha check */
-					  if ((*xp < '0')
-					      && (*xp > '9')
-					      && (*xp != '\0')
+					  if (((*xp < '0') || (*xp > '9'))
 					      && (*xp != ':')
-					      && (*xp == '*' && xp != param))
-
-						  break;
+					      && (*xp != '*'))
+						goto break_flood;
+					  /* uh oh, not the first char */
+					  if (*xp == '*' && *param != '*')
+						goto break_flood;
 				  }
-				  /* haven't got a : .. oh well */
-				  if (!strchr(param, ':'))
-				  {
-					  break;
-				  }
-				  /* got multiple :'s .. omg */
-				  if (strchr(param, ':') != strrchr(param, ':'))
-				  {
-					  break;
-				  }
+				  /* We can avoid 2 strchr() and a strrchr() like this
+				   * it should be much faster. -- codemastr
+				   */
+				  if (hascolon != 1)
+					break;
 				  if (*param == '*')
 				  {
 					  xzi = 1;
@@ -2044,6 +2042,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		  (void)ircsprintf(pvar[*pcount], "%cf%s",
 		      what == MODE_ADD ? '+' : '-', tmpstr);
 		  (*pcount)++;
+		  break_flood:
 		  break;
 	}
 	return retval;
