@@ -1888,3 +1888,4 @@ seen. gmtime warning still there
 - Added config error if link::options::zip was enabled at a non-zip compiled server.
 - Fixed a bug with ZIP_LINKS + show-connect-info, also added fallback to uncompressed link.
 - Updated protoctl.txt (added ZIP).
+- Added USE_ZIP stuff to win32 installer script.

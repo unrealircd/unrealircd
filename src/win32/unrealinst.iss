@@ -3,6 +3,8 @@
 
 ; #define USE_SSL
 ; Uncomment the above line to package an SSL build
+; #define USE_ZIP
+; Uncomment the above line to package with ZIP support
 
 
 [Setup]
@@ -64,6 +66,9 @@ Source: "c:\openssl\bin\libeay32.dll"; DestDir: "{app}"; CopyMode: alwaysoverwri
 Source: ".\makecert.bat"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: ".\encpem.bat"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\ssl.cnf"; DestDir: "{app}"; CopyMode: alwaysoverwrite
+#endif
+#ifdef USE_ZIP
+Source: "c:\dev\zlib\dll32\zlib.dll"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 #endif
 Source: isxdl.dll; DestDir: {tmp}; CopyMode: dontcopy
 
