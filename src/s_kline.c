@@ -706,6 +706,9 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					      "%s removed %s %s@%s (set at %s - reason: %s)",
 					      parv[5], txt, tk->usermask,
 					      tk->hostmask, gmt, tk->reason);
+					  ircd_log(LOG_TKL, "%s removed %s %s@%s (set at %s - reason: %s)",
+					      parv[5], txt, tk->usermask, tk->hostmask,
+					      gmt, tk->reason);
 					  if (type & TKL_SHUN)
 					      tkl_check_local_remove_shun(tk);
 					  tkl_del_line(tk);

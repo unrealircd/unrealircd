@@ -1019,6 +1019,7 @@ CMD_FUNC(m_server_remote)
 	strncpyzt(acptr->info, info, sizeof(acptr->info));
 	acptr->serv->up = find_or_add(parv[0]);
 	SetServer(acptr);
+	ircd_log(LOG_SERVER, "SERVER %s", acptr->name);
 	/* Taken from bahamut makes it so all servers behind a U:lined
 	 * server are also U:lined, very helpful if HIDE_ULINES is on
 	 */
@@ -1083,6 +1084,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	aClient		*acptr;
 	int		i;
 
+	ircd_log(LOG_SERVER, "SERVER %s", cptr->name);
 
 	if (cptr->passwd)
 	{

@@ -202,6 +202,8 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		sendto_realops
 		    ("Failed OPER attempt by %s (%s@%s) [host doesnt match]",
 		    parv[0], sptr->user->username, sptr->sockhost);
+		ircd_log(LOG_OPER, "OPER NOHOSTMATCH (%s) by (%s!%s@%s)", name, parv[0],
+			sptr->user->username, sptr->sockhost);
 		sptr->since += 7;
 		return 0;
 	}
@@ -325,6 +327,8 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 			sendto_one(sptr,
 			    ":%s %s %s :*** Your attempt has been logged.", me.name,
 			    IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name);
+		ircd_log(LOG_OPER, "OPER FAILEDAUTH (%s) by (%s!%s@%s)", name, parv[0],
+			sptr->user->username, sptr->sockhost);
 		sendto_realops
 		    ("Failed OPER attempt by %s (%s@%s) using UID %s [FAILEDAUTH]",
 		    parv[0], sptr->user->username, sptr->sockhost, name);

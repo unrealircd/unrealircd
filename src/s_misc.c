@@ -406,6 +406,7 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 				link_cleanup(sptr->serv->conf);
 				MyFree(sptr->serv->conf);
 			}
+			ircd_log(LOG_SERVER, "SQUIT %s (%s)", sptr->name, comment);
 		}
 
 		if (sptr->listener)
