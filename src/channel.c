@@ -67,6 +67,7 @@ extern char backupbuf[];
 extern aCRline *crlines;
 extern char *cannotjoin_msg;
 extern ircstats IRCstats;
+extern char *StripColors(char *);
 
 #ifndef NO_FDLIST
 extern int lifesux;
@@ -3052,7 +3053,7 @@ int  m_part(cptr, sptr, parc, parv)
 	aChannel *chptr;
 	Link *lp;
 	char *p = NULL, *name;
-	register char *comment = (parc > 2 && parv[2]) ? parv[2] : NULL;
+	char *comment = (parc > 2 && parv[2]) ? parv[2] : NULL;
 
 	sptr->flags &= ~FLAGS_TS8;
 
@@ -3071,6 +3072,10 @@ int  m_part(cptr, sptr, parc, parv)
 			sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL),
 			    me.name, parv[0], name);
 			continue;
+		}
+		if (parv[2] && !comment) {
+			comment = parv[2];
+			parc = 3;
 		}
 		if (check_channelmask(sptr, cptr, name))
 			continue;
@@ -3096,6 +3101,32 @@ int  m_part(cptr, sptr, parc, parv)
 			sendto_serv_butone_token(cptr, parv[0],
 			    MSG_PART, TOK_PART, "%s :%s", chptr->chname,
 			    comment);
+
+		if (!IsAnOper(sptr) && !is_chanownprotop(sptr, chptr)) {
+			if ((chptr->mode.mode & MODE_NOCOLOR) && comment) {
+				if (strchr((char *)comment, 3) || strchr((char *)comment, 27)) {
+					comment = NULL;
+					parc = 2;
+				}
+			}
+			if ((chptr->mode.mode & MODE_MODERATED) && comment &&
+				 !has_voice(sptr, chptr) && !is_halfop(sptr, chptr))
+			{
+				comment = NULL;
+				parc = 2;
+			}
+			if ((chptr->mode.mode & MODE_STRIP) && comment) {
+				comment = (char *)StripColors(parv[2]);
+				parc = 3;
+			}
+#ifdef STRIPBADWORDS
+			if ((chptr->mode.mode & MODE_STRIPBADWORDS) && comment) {
+				comment = (char *)stripbadwords_channel(comment);
+				parc = 3;
+			}
+#endif
+			
+		}
 
 		if (1)
 		{

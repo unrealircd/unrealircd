@@ -102,3 +102,4 @@
 - Made /rehash -motd/rules use tld {} 
 - Heavily recoded /rehash (removed a ton of coding)
 - Updated match() to have some optimizations from bahamut
+- +GScm now affect /part msgs (requested by SegFault and others)

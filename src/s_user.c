@@ -187,7 +187,7 @@ extern fdlist oper_fdlist;
  * -- codemastr 
  */
 
-static char *StripColors(char *buffer)
+char *StripColors(char *buffer)
 {
 	static char tmp[512], out[512];
 	int  i = 0, j = 0, hascomma = 0;
