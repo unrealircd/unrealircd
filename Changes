@@ -1280,3 +1280,4 @@ seen. gmtime warning still there
 - Fixed a typo in /stats ? where T/t were reversed, reported by Zer0
 - Fixed a typo displaying a message to edit config.h after compiling reported by dimplesx
   (#0000133)
+- Fixed a bug where except ban didn't work (reported by Hercules)

@@ -3857,7 +3857,7 @@ ConfigItem_ban 	*Find_ban(char *host, short type)
 		if (ban->flag.type == type)
 			if (!match(ban->mask, host)) {
 				/* Person got a exception */
-				if (Find_except(host, type))
+				if (type == CONF_BAN_USER && Find_except(host, CONF_EXCEPT_BAN))
 					return NULL;
 				return ban;
 			}
