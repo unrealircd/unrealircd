@@ -196,6 +196,10 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					return 0;
 				}
 				break;
+			case UHALLOW_REJOIN:
+				rejoin_doparts(acptr);
+				/* join sent later when the host has been changed */
+				break;
 		}
 				
 		if (!IsULine(sptr))
@@ -215,6 +219,8 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			acptr->user->virthost = 0;
 		}
 		acptr->user->virthost = strdup(parv[2]);
+		if (UHOST_ALLOWED == UHALLOW_REJOIN)
+			rejoin_dojoinandmode(acptr);
 		return 0;
 	}
 	else

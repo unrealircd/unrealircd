@@ -202,6 +202,10 @@ int m_chgident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					return 0;
 				}
 				break;
+			case UHALLOW_REJOIN:
+				rejoin_doparts(acptr);
+				/* join sent later when the ident has been changed */
+				break;
 		}
 		if (!IsULine(sptr))
 		{
@@ -214,6 +218,8 @@ int m_chgident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    MSG_CHGIDENT,
 		    TOK_CHGIDENT, "%s %s", acptr->name, parv[2]);
 		ircsprintf(acptr->user->username, "%s", parv[2]);
+		if (UHOST_ALLOWED == UHALLOW_REJOIN)
+			rejoin_dojoinandmode(acptr);
 		return 0;
 	}
 	else

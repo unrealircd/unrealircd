@@ -2094,6 +2094,9 @@ void report_dynconf(aClient *sptr)
 		case UHALLOW_NOCHANS:
 			uhallow = "not-on-channels";
 			break;
+		case UHALLOW_REJOIN:
+			uhallow = "force-rejoin";
+			break;
 	}
 	sendto_one(sptr, ":%s %i %s :anti-spam-quit-message-time: %s", me.name, RPL_TEXT, 
 		sptr->name, pretty_time_val(ANTI_SPAM_QUIT_MSG_TIME));

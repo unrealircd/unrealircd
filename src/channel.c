@@ -576,7 +576,7 @@ static int is_irc_banned(aChannel *chptr)
 {
 	Ban *tmp;
 	/* Check for this user, ident/host are "illegal" on purpose */
-	const char *check = "IRC!\001@\001";
+	char *check = "IRC!\001@\001";
 	
 	for (tmp = chptr->banlist; tmp; tmp = tmp->next)
 		if (match(tmp->banstr, check) == 0)
@@ -3211,7 +3211,7 @@ CMD_FUNC(m_part)
 
 		if (1)
 		{
-			if (chptr->mode.mode & MODE_AUDITORIUM)
+			if ((chptr->mode.mode & MODE_AUDITORIUM) && !is_chanownprotop(sptr, chptr))
 			{
 				if (MyClient(sptr))
 				{
@@ -5582,6 +5582,104 @@ void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, c
 		*modes = 0;
 	}
 }
-		
-	
-	
+
+/*
+ * rejoin_doparts:
+ * sends a PART to all channels (to local users only)
+ */
+void rejoin_doparts(aClient *sptr)
+{
+Membership *tmp;
+aChannel *chptr;
+char *comment = "Rejoining because of user@host change";
+	for (tmp = sptr->user->channel; tmp; tmp = tmp->next)
+	{
+		chptr = tmp->chptr;
+		if (!chptr)
+			continue; /* Possible? */
+		if ((chptr->mode.mode & MODE_AUDITORIUM) &&
+		    !(tmp->flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP)))
+		{
+			if (MyClient(sptr))
+				sendto_one(sptr, ":%s PART %s :%s", sptr->name, chptr->chname, comment);
+			sendto_chanops_butone(sptr, chptr, ":%s PART %s :%s", sptr->name, chptr->chname, comment);
+		} else
+			sendto_channel_butserv(chptr, sptr, ":%s PART %s :%s", sptr->name, chptr->chname, comment);
+	}
+}
+
+/*
+ * rejoin_dojoinandmode:
+ * sends a JOIN and a MODE (if needed) to restore qaohv modes (to local users only)
+ */
+void rejoin_dojoinandmode(aClient *sptr)
+{
+Membership *tmp;
+aChannel *chptr;
+int i, n, flags;
+char flagbuf[8]; /* For holding "qohva" and "*~@%+" */
+
+	for (tmp = sptr->user->channel; tmp; tmp = tmp->next)
+	{
+		flags = tmp->flags;
+		chptr = tmp->chptr;
+		if (!chptr)
+			continue; /* Is it possible? */
+
+		if ((chptr->mode.mode & MODE_AUDITORIUM) && 
+		    !(flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP)))
+		{
+			if (MyClient(sptr))
+				sendto_one(sptr, ":%s JOIN :%s", sptr->name, chptr->chname);
+			sendto_chanops_butone(sptr, chptr, ":%s JOIN :%s", sptr->name, chptr->chname);
+		} else
+			sendto_channel_butserv(chptr, sptr, ":%s JOIN :%s", sptr->name, chptr->chname);
+
+		if (MyClient(sptr))
+		{
+			/* Send names to the client.
+			 * Note: the strcpy'ing to a 2nd buffer might not be needed, but many
+			 * functions assume they can modify/frag the parameters at will,
+			 * better safe than sorry. -- Syzop
+			 */
+			char *xpara[3];
+			char nick[NICKLEN + 1];
+			char chan[CHANNELLEN + 1];
+			strcpy(nick, sptr->name);
+			strcpy(chan, chptr->chname);
+			xpara[0] = nick;
+			xpara[1] = chan;
+			xpara[3] = NULL;
+			(void)m_names(sptr, sptr, 2, xpara);
+		}
+		/* Set the modes (if any) */
+		if (flags)
+		{
+			char *p = flagbuf;
+			if (flags & MODE_CHANOP)
+				*p++ = 'o';
+			if (flags & MODE_VOICE)
+				*p++ = 'v';
+			if (flags & MODE_HALFOP)
+				*p++ = 'h';
+			if (flags & MODE_CHANOWNER)
+				*p++ = 'q';
+			if (flags & MODE_CHANPROT)
+				*p++ = 'a';
+			*p = '\0';
+			parabuf[0] = '\0';
+			n = strlen(flagbuf);
+			if (n)
+			{
+				for (i=0; i < n; i++)
+				{
+					strcat(parabuf, sptr->name);
+					if (i < n - 1)
+						strcat(parabuf, " ");
+				}
+				sendto_channel_butserv(chptr, &me, ":%s MODE %s +%s %s",
+					me.name, chptr->chname, flagbuf, parabuf);
+			}
+		}
+	}
+}

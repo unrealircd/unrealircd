@@ -2342,6 +2342,10 @@ CMD_FUNC(m_umode)
 						sendto_one(sptr, ":%s NOTICE %s :*** Setting %cx can not be done while you are on channels", me.name, sptr->name, what == MODE_ADD ? '+' : '-');
 						return 0;
 					}
+					break;
+				case UHALLOW_REJOIN:
+					/* Handled later */
+					break;
 			  }
 			  goto def;
 		  case 'B':
@@ -2456,20 +2460,40 @@ CMD_FUNC(m_umode)
 		    sptr->user->virthost, 1);
 		sendto_serv_butone_token_opt(cptr, OPT_VHP, sptr->name,
 			MSG_SETHOST, TOK_SETHOST, "%s", sptr->user->virthost);
+		if (UHOST_ALLOWED == UHALLOW_REJOIN)
+		{
+			/* LOL, this is ugly ;) */
+			sptr->umodes &= ~UMODE_HIDE;
+			rejoin_doparts(sptr);
+			sptr->umodes |= UMODE_HIDE;
+			rejoin_dojoinandmode(sptr);
+			if (MyClient(sptr))
+				sptr->since += 7; /* Add fake lag */
+		}
 	}
 
 	if (!IsHidden(sptr) && (setflags & UMODE_HIDE))
 	{
-			if (sptr->user->virthost)
-			{
-				MyFree(sptr->user->virthost);
-				sptr->user->virthost = NULL;
-			}
-			/* (Re)create the cloaked virthost, because it will be used
-			 * for ban-checking... free+recreate here because it could have
-			 * been a vhost for example. -- Syzop
-			 */
-			sptr->user->virthost = (char *)make_virthost(sptr->user->realhost, sptr->user->virthost, 1);
+		if (UHOST_ALLOWED == UHALLOW_REJOIN)
+		{
+			/* LOL, this is ugly ;) */
+			sptr->umodes |= UMODE_HIDE;
+			rejoin_doparts(sptr);
+			sptr->umodes &= ~UMODE_HIDE;
+			rejoin_dojoinandmode(sptr);
+			if (MyClient(sptr))
+				sptr->since += 7; /* Add fake lag */
+		}
+		if (sptr->user->virthost)
+		{
+			MyFree(sptr->user->virthost);
+			sptr->user->virthost = NULL;
+		}
+		/* (Re)create the cloaked virthost, because it will be used
+		 * for ban-checking... free+recreate here because it could have
+		 * been a vhost for example. -- Syzop
+		 */
+		sptr->user->virthost = (char *)make_virthost(sptr->user->realhost, sptr->user->virthost, 1);
 	}
 	/*
 	 * If I understand what this code is doing correctly...
@@ -2529,7 +2553,6 @@ CMD_FUNC(m_umode)
 	if (MyConnect(sptr) && setsnomask != sptr->user->snomask)
 		sendto_one(sptr, rpl_str(RPL_SNOMASK),
 			me.name, parv[0], get_sno_str(sptr));
-
 
 	return 0;
 }

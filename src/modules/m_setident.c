@@ -176,25 +176,6 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 		return 1;
 	}
-	switch (UHOST_ALLOWED)
-	{
-		case UHALLOW_ALWAYS:
-			break;
-		case UHALLOW_NEVER:
-			if (MyClient(sptr))
-			{
-				sendto_one(sptr, ":%s NOTICE %s :*** /SetIdent is disabled", me.name, sptr->name);
-				return 0;
-			}
-			break;
-		case UHALLOW_NOCHANS:
-			if (MyClient(sptr) && sptr->user->joined)
-			{
-				sendto_one(sptr, ":%s NOTICE %s :*** /SetIdent can not be used while you are on a channel", me.name, sptr->name);
-				return 0;
-			}
-			break;
-	}
 	if (strlen(parv[1]) < 1)
 	{
 		if (MyConnect(sptr))
@@ -235,11 +216,37 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
+	switch (UHOST_ALLOWED)
+	{
+		case UHALLOW_ALWAYS:
+			break;
+		case UHALLOW_NEVER:
+			if (MyClient(sptr))
+			{
+				sendto_one(sptr, ":%s NOTICE %s :*** /SetIdent is disabled", me.name, sptr->name);
+				return 0;
+			}
+			break;
+		case UHALLOW_NOCHANS:
+			if (MyClient(sptr) && sptr->user->joined)
+			{
+				sendto_one(sptr, ":%s NOTICE %s :*** /SetIdent can not be used while you are on a channel", me.name, sptr->name);
+				return 0;
+			}
+			break;
+		case UHALLOW_REJOIN:
+			rejoin_doparts(sptr);
+			break;
+	}
+
 	/* get it in */
 	ircsprintf(sptr->user->username, "%s", vident);
 	/* spread it out */
 	sendto_serv_butone_token(cptr, sptr->name,
 	    MSG_SETIDENT, TOK_SETIDENT, "%s", parv[1]);
+
+	if (UHOST_ALLOWED == UHALLOW_REJOIN)
+		rejoin_dojoinandmode(sptr);
 
 	if (MyConnect(sptr))
 	{
