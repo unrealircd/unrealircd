@@ -37,20 +37,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifndef _WIN32
-#include <utmp.h>
-#else
+#ifdef PIPEDEBUG
+#include <signal.h>
+#endif
+#ifdef _WIN32
 #include <io.h>
 #endif
 #include <fcntl.h>
 #ifndef STANDALONE
 #include "h.h"
-
+#include "proto.h"
 ID_Copyright("(C) Carsten Munk 2000");
 #endif
 
-static inline char *int_to_base64(unsigned long);
-static inline unsigned long base64_to_int(char *);
+static inline char *int_to_base64(long);
+static inline long base64_to_int(char *);
 
 
 static Link *servers = NULL;
@@ -60,17 +61,37 @@ Link *return_servers(void)
 	return(servers);
 }
 
-char *base64enc(unsigned long i)
+char *base64enc(long i)
 {
 	return int_to_base64(i);
 }
 
-unsigned long base64dec(char *b64)
+char *xbase64enc(long i)
 {
-	return base64_to_int(b64);
+	return int_to_base64(i);
 }
 
-int  numeric_collides(unsigned long numeric)
+long base64dec(char *b64)
+{
+	if (b64)
+		return base64_to_int(b64);
+	else
+		return 0;
+}
+
+long xbase64dec(char *b64)
+{
+	long r;
+	if (b64)
+	{
+		r = base64_to_int(b64);
+		return r;
+	}
+	else
+		return 0;
+}
+
+int  numeric_collides(long numeric)
 {
 	Link *lp;
 
@@ -119,19 +140,30 @@ void remove_server_from_table(aClient *what)
 	}
 }
 
-aClient *find_server_by_numeric(unsigned long value)
+aClient *find_server_by_numeric(long value)
 {
 	Link *lp;
 
 	for (lp = servers; lp; lp = lp->next)
 		if (lp->value.cptr->serv->numeric == value)
 			return (lp->value.cptr);
+#ifdef PIPEDEBUG
+	kill(getpid(), SIGPIPE);
+#endif PIPEDEBUG
 	return NULL;
 }
 
 aClient *find_server_by_base64(char *b64)
 {
-	return find_server_by_numeric(base64dec(b64));
+	if (b64)
+		return find_server_by_numeric(base64dec(b64));
+	else
+	{
+#ifdef PIPEDEBUG
+		kill(getpid(), SIGPIPE);
+#endif
+		return NULL;
+	}
 }
 
 char *find_server_id(aClient *which)
@@ -139,30 +171,67 @@ char *find_server_id(aClient *which)
 	return (base64enc(which->serv->numeric));
 }
 
-aClient *find_server_quick(char *name)
+aClient *find_server_quick_search(char *name)
 {
 	Link *lp;
 
 	for (lp = servers; lp; lp = lp->next)
 		if (!match(name, lp->value.cptr->name))
 			return (lp->value.cptr);
+#ifdef PIPEDEBUG
+	kill(getpid(), SIGPIPE);
+#endif
 	return NULL;
 }
+
+
+aClient *find_server_quick_straight(char *name)
+{
+	Link *lp;
+
+	for (lp = servers; lp; lp = lp->next)
+		if (!strcmp(name, lp->value.cptr->name))
+			return (lp->value.cptr);
+#ifdef PIPEDEBUG
+	kill(getpid(), SIGPIPE);
+#endif
+	return NULL;
+}
+
+
+
+aClient *find_server_quickx(char *name, aClient *cptr)
+{
+	if (name)
+	{
+		cptr = (aClient *)find_server_quick_search(name);
+	}
+	return cptr;
+}
+
 
 aClient *find_server_b64_or_real(char *name)
 {
 	Link *lp;
-
-	if (strlen(name) < 4)
+	long  namebase64;
+	
+	if (!name)
+		return NULL;
+	
+	if (strlen(name) < 3)
 	{
+		namebase64 = base64dec(name);	
 		for (lp = servers; lp; lp = lp->next)
-			if (!strcmp(base64enc(lp->value.cptr->serv->numeric), name))
+			if (lp->value.cptr->serv->numeric == namebase64)
 				return (lp->value.cptr);
 	}
 		else
 	{
-		return find_server_quick(name);
+		return find_server_quick_straight(name);
 	}
+#ifdef PIPEDEBUG
+	kill(getpid(), SIGPIPE);
+#endif
 	return NULL;
 	
 }
@@ -199,13 +268,13 @@ char base64_to_int6_map[] = {
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
 };
 
-static inline char *int_to_base64(unsigned long val)
+static inline char *int_to_base64(long val)
 {
 	/* 32/6 == max 6 bytes for representation, 
 	 * +1 for the null, +1 for byte boundaries 
 	 */
 	static char base64buf[8];
-	unsigned long i = 7;
+	long i = 7;
 
 	base64buf[i] = '\0';
 
@@ -218,10 +287,13 @@ static inline char *int_to_base64(unsigned long val)
 	return base64buf + i;
 }
 
-static inline unsigned long base64_to_int(char *b64)
+static inline long base64_to_int(char *b64)
 {
-	unsigned int v = base64_to_int6_map[(u_char)*b64++];
+	int v = base64_to_int6_map[(u_char)*b64++];
 
+	if (!b64)
+		return 0;
+		
 	while (*b64)
 	{
 		v <<= 6;
@@ -240,9 +312,9 @@ void ns_stats(aClient *cptr)
 	{
 		sptr = lp->value.cptr;
 		sendto_one(cptr,
-		    ":%s NOTICE %s :*** server=%s numeric=%i b64=%s", me.name,
+		    ":%s NOTICE %s :*** server=%s numeric=%i b64=%s [%s]", me.name,
 		    cptr->name, sptr->name, sptr->serv->numeric,
-		    find_server_id(sptr));
+		    find_server_id(sptr), find_server_b64_or_real(find_server_id(sptr)) == sptr ? "SANE" : "INSANE");
 	}
 }
 

@@ -22,6 +22,7 @@
 #include "common.h"
 #include "numeric.h"
 #include "h.h"
+#include "proto.h"
 
 ID_Copyright("(C) 1990 Darren Reed");
 ID_Notes("1.4 6/28/93");
@@ -66,7 +67,7 @@ int  get_client_class(acptr)
 {
 	Link *tmp;
 	aClass *cl;
-	int  i = 0, retc = BAD_CLIENT_CLASS;
+	int retc = BAD_CLIENT_CLASS;
 
 	if (acptr && !IsMe(acptr) && (acptr->confs))
 		for (tmp = acptr->confs; tmp; tmp = tmp->next)

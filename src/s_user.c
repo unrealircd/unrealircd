@@ -39,9 +39,7 @@ Computing Center and Jarkko Oikarinen";
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifndef _WIN32
-#include <utmp.h>
-#else
+#ifdef _WIN32
 #include <io.h>
 #endif
 #include <fcntl.h>
@@ -54,10 +52,10 @@ Computing Center and Jarkko Oikarinen";
 #include "version.h"
 #endif
 
-void send_umode_out PROTO((aClient *, aClient *, int));
-void send_umode_out_nickv2 PROTO((aClient *, aClient *, int));
-void send_svsmode_out PROTO((aClient *, aClient *, aClient *, int));
-void send_umode PROTO((aClient *, aClient *, int, int, char *));
+void send_umode_out PROTO((aClient *, aClient *, long));
+void send_umode_out_nickv2 PROTO((aClient *, aClient *, long));
+void send_svsmode_out PROTO((aClient *, aClient *, aClient *, long));
+void send_umode PROTO((aClient *, aClient *, long, long, char *));
 static is_silenced PROTO((aClient *, aClient *));
 /* static  Link    *is_banned PROTO((aClient *, aChannel *)); */
 
@@ -87,20 +85,19 @@ static int user_modes[] = { UMODE_OPER, 'o',
 	UMODE_REGNICK, 'r',
 	UMODE_HIDE, 'x',
 	UMODE_EYES, 'e',
-	UMODE_CHATOP, 'b',
 	UMODE_WHOIS, 'W',
 	UMODE_KIX, 'q',
 	UMODE_BOT, 'B',
 	UMODE_FCLIENT, 'F',
 	UMODE_HIDING, 'I',
-	/* UMODE_AGENT,   'Z', */
-	UMODE_CODER, '1',
+	UMODE_SECURE, 'z',
 	UMODE_DEAF, 'd',
 	UMODE_VICTIM, 'v',
 	UMODE_SETHOST, 't',
 #ifdef STRIPBADWORDS
 	UMODE_STRIPBADWORDS, 'G',
 #endif
+	UMODE_JUNK, 'j',
 	0, 0
 };
 
@@ -438,7 +435,86 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 **	a change should be global, some confusion would
 **	result if only few servers allowed it...
 */
+#if defined(CHINESE_NICK) || defined(JAPANESE_NICK)
+/* Chinese Nick Verification Code - Added by RexHsu on 08/09/00 (beta2) 
+ * Now Support All GBK Words,Thanks to Mr.WebBar <climb@guomai.sh.cn>!
+ * Special Char Bugs Fixed by RexHsu 09/01/00 I dont know whether it is
+ * okay now?May I am right ;p
+ * Thanks dilly for providing me Japanese code range!
+ * Now I am meeting a nickname conflicting problem....
+ * 
+ * GBK Libary Reference:
+ * 1. GBK2312·Çºº×Ö·ûºÅÇø(A1A1----A9FE)
+ * 2. GBK2312ºº×ÖÇø(B0A1----F7FE)
+ * 3. GBKÀ©³äºº×ÖÇø(8140----A0FE)
+ * 4. GBKÀ©³äºº×ÖÇø(AA40----FEA0)
+ * 5. GBKÀ©³ä·Çºº×ÖÇø(A840----A9A0)
+ * 6. ÈÕÎÄÆ½¼ÙÃû±àÂëÇø(a4a1-a4f3) -->work correctly?maybe...
+ * 7. ÈÕÎÄÆ¬¼ÙÃû±àÂëÇø(a5a1-a5f7) -->work correctly?maybe...
+ * 8. º«ÎÄ±àÂëÇø(xxxx-yyyy)
+ */
+int isvalidChinese(const unsigned char c1, const unsigned char c2)
+{ 
+     const unsigned int GBK_S = 0xb0a1;
+     const unsigned int GBK_E = 0xf7fe;
+     const unsigned int GBK_2_S = 0x8140;
+     const unsigned int GBK_2_E = 0xa0fe;
+     const unsigned int GBK_3_S = 0xaa40;
+     const unsigned int GBK_3_E = 0xfea0;          
+     const unsigned int JPN_PING_S = 0xa4a1;
+     const unsigned int JPN_PING_E = 0xa4f3;
+     const unsigned int JPN_PIAN_S = 0xa5a1;
+     const unsigned int JPN_PIAN_E = 0xa5f7;
+     unsigned int AWord = c1 * 256 + c2;
+#if defined(CHINESE_NICK) && defined(JAPANESE_NICK)
+     return (AWord >= GBK_S && AWord <= GBK_E || AWord >= GBK_2_S && AWord <= GBK_2_E 
+     	 || AWord >= JPN_PING_S && AWord <= JPN_PING_E || AWord >= JPN_PIAN_S && AWord <= JPN_PIAN_E) ? 1 : 0;
+#endif
+#if defined(CHINESE_NICK) && !defined(JAPANESE_NICK)
+     return (AWord >= GBK_S && AWord <= GBK_E || AWord >= GBK_2_S && AWord <= GBK_2_E ? 1 : 0);
+#endif
+#if !defined(CHINESE_NICK) && defined(JAPANESE_NICK)
+     return (AWord >= JPN_PING_S && AWord <= JPN_PING_E || AWord >= JPN_PIAN_S && AWord <= JPN_PIAN_E) ? 1 : 0;
+#endif
 
+}
+
+/* Chinese Nick Supporting Code (Switch Mode) - Modified by RexHsu on 08/09/00 */
+int do_nick_name(char *pnick)
+{
+  unsigned char *ch;
+  unsigned char *nick=pnick;
+  int          firstChineseChar=0;
+  char         lastChar;
+
+  if (*nick == '-' || isdigit(*nick))	/* first character in [0..9-] */
+    return 0;
+
+  for (ch = nick; *ch && (ch - nick) < NICKLEN; ch++)
+  {
+    if ((!isvalid(*ch) && !((*ch)&0x80) ) || isspace(*ch) || (*ch)=='@' || (*ch)=='!' || (*ch)==':' || (*ch)==' ')
+      break;
+    if(firstChineseChar)
+    {
+      if (!isvalidChinese(lastChar,*ch))
+        break;
+      firstChineseChar=0;
+    }
+    else if((*ch)&0x80)
+      firstChineseChar=1;
+    lastChar=*ch;
+  }
+
+  if(firstChineseChar)
+     ch--;
+
+  *ch = '\0';
+
+  return (ch - nick);
+}
+
+
+#else
 int  do_nick_name(nick)
 	char *nick;
 {
@@ -455,7 +531,7 @@ int  do_nick_name(nick)
 
 	return (ch - nick);
 }
-
+#endif
 
 /*
 ** canonize
@@ -581,12 +657,11 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	char *nick, *username, *virthost, *umode;
 {
 	aConfItem *aconf;
-	char *parv[3], *tmpstr, c, *encr;
+	char *parv[3], *tmpstr, *encr;
 #ifdef HOSTILENAME
 	char stripuser[USERLEN + 1], *u1 = stripuser, *u2, olduser[USERLEN + 1],
 	    userbad[USERLEN * 2 + 1], *ubad = userbad, noident = 0;
 #endif
-	short oldstatus = sptr->status, upper = 0, lower = 0, special = 0;
 	int  xx;
 	anUser *user = sptr->user;
 	aClient *nsptr;
@@ -775,7 +850,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		{
 /* I:line password encryption --codemastr */
 #ifdef CRYPT_ILINE_PASSWORD
-		if (*sptr->passwd) {
+		if (sptr->passwd) {
 			char salt[3];
 			extern char *crypt();
 
@@ -788,9 +863,9 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		else
 			encr = "";
 #else
-		encr = sptr->passwd;
+			encr = sptr->passwd;
 #endif
-			if (!StrEq(encr, aconf->passwd))
+			if (!encr || !StrEq(encr, aconf->passwd))
 			{
 				ircstp->is_ref++;
 				sendto_one(sptr, err_str(ERR_PASSWDMISMATCH),
@@ -803,7 +878,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			 * - Wizzu
 			 */
 			else
-				sptr->passwd[0] = '\0';
+			MyFree(sptr->passwd);
 		}
 
 		/*
@@ -857,10 +932,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		sendto_one(sptr, rpl_str(RPL_YOURHOST), me.name, nick,
 		    me.name, version);
 		sendto_one(sptr, rpl_str(RPL_CREATED), me.name, nick, creation);
-#ifdef CONFROOM_JAVA_PORT
-		if (!(sptr->acpt->port == CONFROOM_JAVA_PORT))
-#endif
-
+		if (!(sptr->acpt->umodes & LISTENER_JAVACLIENT))
 #ifndef _WIN32
 			sendto_one(sptr, rpl_str(RPL_MYINFO), me.name, parv[0],
 			    me.name, version, umodestring, cmodestring);
@@ -890,6 +962,8 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 #endif
 		nextping = TStime();
 		sendto_connectnotice(nick, user, sptr);
+		if (IsSecure(sptr))
+			sptr->umodes |= UMODE_SECURE;
 	}
 	else if (IsServer(cptr))
 	{
@@ -921,7 +995,8 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		else
 			sptr->flags |= (acptr->flags & FLAGS_TS8);
 		/* *FINALL* this gets in ircd... -- Barubary */
-		if ((find_uline(cptr->confs, sptr->user->server)))
+                /* We change this a bit .. */
+		if (IsULine(sptr->srvptr))
 			sptr->flags |= FLAGS_ULINE;
 	}
 	if (sptr->umodes & UMODE_INVISIBLE)
@@ -963,7 +1038,8 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	 */
 	if (MyConnect(sptr))
 	{
-		if (sptr->passwd[0] && (nsptr = find_person(NickServ, NULL)))
+	if (sptr->passwd) 
+		if (sptr->passwd && (nsptr = find_person(NickServ, NULL)))
 			sendto_one(nsptr, ":%s PRIVMSG %s@%s :IDENTIFY %s",
 			    sptr->name, NickServ, SERVICES_NAME, sptr->passwd);
 		/* Force the user to join the given chans -- codemastr */
@@ -981,9 +1057,8 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		}
 	}
 
-	if (MyConnect(sptr) && !BadPtr(sptr->passwd))
-		bzero(sptr->passwd, sizeof(sptr->passwd));
-
+	if (MyConnect(sptr) && !BadPtr(sptr->passwd)) 
+		MyFree(sptr->passwd);
 
 	return 0;
 }
@@ -1002,7 +1077,7 @@ int  m_svsnick(cptr, sptr, parc, parv)
 {
 	aClient *acptr;
 
-	if (!IsULine(cptr, sptr) || parc < 4 || (strlen(parv[2]) > NICKLEN))
+	if (!IsULine(sptr) || parc < 4 || (strlen(parv[2]) > NICKLEN))
 		return -1;	/* This looks like an error anyway -Studded */
 
 	if (!hunt_server(cptr, sptr, ":%s SVSNICK %s %s :%s", 1, parc,
@@ -1018,13 +1093,13 @@ int  m_svsnick(cptr, sptr, parc, parv)
 				return exit_client(cptr, acptr, sptr,
 				    "SVSNICK Collide (nick changed to be server)");
 			acptr->umodes &= ~UMODE_REGNICK;
-			acptr->lastnick = atoi(parv[3]);
+			acptr->lastnick = TS2ts(parv[3]);
 			sendto_common_channels(acptr, ":%s NICK :%s", parv[1],
 			    parv[2]);
 			if (IsPerson(acptr))
 				add_history(acptr, 1);
 			sendto_serv_butone_token(NULL, parv[1], MSG_NICK,
-			    TOK_NICK, "%s :%i", parv[2], atoi(parv[3]));
+			    TOK_NICK, "%s :%i", parv[2], TS2ts(parv[3]));
 			if (acptr->name[0])
 			{
 				(void)del_from_client_hash_table(acptr->name, acptr);
@@ -1074,9 +1149,6 @@ int  m_nick(cptr, sptr, parc, parv)
 	Link *lp;
 	time_t lastnick = (time_t) 0;
 	int  differ = 1;
-
-	u_int32_t md5data[16];
-	static u_int32_t md5hash[4];
 
 	/*
 	 * If the user didn't specify a nickname, complain
@@ -1143,7 +1215,7 @@ int  m_nick(cptr, sptr, parc, parv)
 	    (parc > 7 && (!(serv = (aClient *)find_server_b64_or_real(parv[6], NULL)) ||
 	    serv->from != cptr->from)))
 	{
-		sendto_ops("Cannot find server (%s)", backupbuf);
+		sendto_realops("Cannot find server %s (%s)", parv[6], backupbuf);
 		return 0;
 	}
 	/*
@@ -1154,7 +1226,8 @@ int  m_nick(cptr, sptr, parc, parv)
 	   ** is present in the nicklist (due to the way the below for loop is
 	   ** constructed). -avalon
 	 */
-	if ((acptr = find_server_quick(nick)))
+	/* I managed to fuck this up i guess --stskeeps */
+	if ((acptr = find_server(nick, NULL)))
 	{
 		if (MyConnect(sptr))
 		{
@@ -1175,6 +1248,13 @@ int  m_nick(cptr, sptr, parc, parv)
 	   ** client, just reject it. -Lefler
 	   ** Allow opers to use Q-lined nicknames. -Russell
 	 */
+	if (!stricmp("ircd", nick))
+	{
+		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME), me.name,
+		    BadPtr(parv[0]) ? "*" : parv[0], nick,
+		    "Reserved for internal IRCd purposes");
+		return 0;
+	}
 	if (!stricmp("irc", nick))
 	{
 		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME), me.name,
@@ -1182,7 +1262,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		    "Reserved for internal IRCd purposes");
 		return 0;
 	}
-	if (!IsULine(cptr, sptr)
+	if (!IsULine(sptr)
 	    && ((aconf = find_conf_name(nick, CONF_QUARANTINED_NICK))
 	    || (asqline = find_sqline_match(nick))))
 	{
@@ -1359,7 +1439,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		 */
 		if (parc > 3)
 		{
-			lastnick = atoi(parv[3]);
+			lastnick = TS2ts(parv[3]);
 			if (parc > 5)
 				differ = (mycmp(acptr->user->username, parv[4])
 				    || mycmp(acptr->user->realhost, parv[5]));
@@ -1440,7 +1520,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		   ** A NICK change has collided (e.g. message type ":old NICK new").
 		 */
 		if (parc > 2)
-			lastnick = atoi(parv[2]);
+			lastnick = TS2ts(parv[2]);
 		differ = (mycmp(acptr->user->username, sptr->user->username) ||
 		    mycmp(acptr->user->realhost, sptr->user->realhost));
 		sendto_failops
@@ -1523,9 +1603,9 @@ int  m_nick(cptr, sptr, parc, parv)
 		sptr = make_client(cptr, serv);
 		add_client_to_list(sptr);
 		if (parc > 2)
-			sptr->hopcount = atoi(parv[2]);
+			sptr->hopcount = TS2ts(parv[2]);
 		if (parc > 3)
-			sptr->lastnick = atoi(parv[3]);
+			sptr->lastnick = TS2ts(parv[3]);
 		else		/* Little bit better, as long as not all upgraded */
 			sptr->lastnick = TStime();
 	}
@@ -1539,7 +1619,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		   ** Also set 'lastnick' to current time, if changed.
 		 */
 		if (MyClient(sptr))
-			for (lp = cptr->user->channel; lp; lp = lp->next)
+			for (lp = cptr->user->channel; lp; lp = lp->next) {
 				if (is_banned(cptr, &me, lp->value.chptr))
 				{
 					sendto_one(cptr,
@@ -1548,7 +1628,15 @@ int  m_nick(cptr, sptr, parc, parv)
 					    lp->value.chptr->chname);
 					return 0;
 				}
-
+				if (!IsOper(cptr) && !IsULine(cptr) && lp->value.chptr->mode.mode &
+				   MODE_NONICKCHANGE && !is_chanownprotop(cptr, lp->value.chptr)) {
+					sendto_one(cptr,
+					   err_str(ERR_NONICKCHANGE),
+					   me.name, parv[0],
+					   lp->value.chptr->chname);
+					return 0;
+				}
+			}
 		/*
 		 * Client just changing his/her nick. If he/she is
 		 * on a channel, send note of change to all clients
@@ -1557,9 +1645,9 @@ int  m_nick(cptr, sptr, parc, parv)
 		if (mycmp(parv[0], nick) ||
 		    /* Next line can be removed when all upgraded  --Run */
 		    !MyClient(sptr) && parc > 2
-		    && atoi(parv[2]) < sptr->lastnick)
+		    && TS2ts(parv[2]) < sptr->lastnick)
 			sptr->lastnick = (MyClient(sptr)
-			    || parc < 3) ? TStime() : atoi(parv[2]);
+			    || parc < 3) ? TStime() : TS2ts(parv[2]);
 		add_history(sptr, 1);
 		sendto_common_channels(sptr, ":%s NICK :%s", parv[0], nick);
 		sendto_serv_butone_token(cptr, parv[0], MSG_NICK, TOK_NICK,
@@ -1573,8 +1661,11 @@ int  m_nick(cptr, sptr, parc, parv)
 		 *
 		 * Generate a random string for them to pong with.
 		*/
+#ifndef _WIN32
 		sptr->nospoof = 1+(int) (9000000.0*random()/(RAND_MAX+80000000.0));
-
+#else
+		sptr->nospoof = 1+(int) (9000000.0*rand()/(RAND_MAX+80000000.0));
+#endif
 		/*
 		 * If on the odd chance it comes out zero, make it something
 		 * non-zero.
@@ -1583,8 +1674,8 @@ int  m_nick(cptr, sptr, parc, parv)
 			sptr->nospoof = 0xa123b789;
 		sendto_one(sptr, ":%s NOTICE %s :*** If you are having problems"
 		    " connecting due to ping timeouts, please"
-		    " type /notice %X nospoof now.",
-		    me.name, nick, sptr->nospoof);
+		    " type /quote pong %X or /raw pong %X now.",
+		    me.name, nick, sptr->nospoof, sptr->nospoof);
 		sendto_one(sptr, "PING :%X", sptr->nospoof);
 #endif /* NOSPOOF */
 
@@ -1607,8 +1698,12 @@ int  m_nick(cptr, sptr, parc, parv)
 		 * - originally by taz, modified by Wizzu
 		 */
 		if ((parc > 2) && (strlen(parv[2]) < sizeof(sptr->passwd)))
+		{
+			if (sptr->passwd)
+				MyFree(sptr->passwd);
+			sptr->passwd = MyMalloc(strlen(parv[2]) + 1);
 			(void)strcpy(sptr->passwd, parv[2]);
-
+		}
 		/* This had to be copied here to avoid problems.. */
 		(void)strcpy(sptr->name, nick);
 		if (sptr->user && IsNotSpoof(sptr))
@@ -1679,7 +1774,7 @@ static int m_message(cptr, sptr, parc, parv, notice)
 	aClient *acptr;
 	char *s;
 	aChannel *chptr;
-	char *nick, *server, *p, *cmd, *host, *ctcp, *p2, *pc, *text;
+	char *nick, *server, *p, *cmd, *ctcp, *p2, *pc, *text;
 	int  cansend = 0;
 	int  prefix = 0;
 
@@ -1733,12 +1828,20 @@ static int m_message(cptr, sptr, parc, parv, notice)
 		/*
 		   ** nickname addressed?
 		 */
-			if (!strcasecmp(nick, "irc") && MyClient(sptr))
+		if (!strcasecmp(nick, "ircd") && MyClient(sptr))
+		{
+			parse(sptr, parv[2],
+			    (parv[2] + strlen(parv[2])), msgtab);
+			continue;
+		}
+		if (!strcasecmp(nick, "irc") && MyClient(sptr))
+		{
+			if (webtv_parse(sptr, parv[2]) == -2)
 			{
-				parse(sptr, parv[2],
-				    (parv[2] + strlen(parv[2])), msgtab);
-				continue;
+				parse(sptr, parv[2], (parv[2] + strlen(parv[2])), msgtab);
 			}
+			continue;
+		}
 		if (*nick != '#' && (acptr = find_person(nick, NULL)))
 		{
 			/* F:Line stuff by _Jozeph_ added by Stskeeps with comments */
@@ -1792,6 +1895,7 @@ static int m_message(cptr, sptr, parc, parv, notice)
 						    "%s tried to send forbidden file %s (%s) to %s",
 						    sptr->name, file,
 						    fl->reason, acptr->name);
+	
 						continue;
 					}
 					/* if it went here it was a legal send .. */
@@ -1811,10 +1915,10 @@ static int m_message(cptr, sptr, parc, parv, notice)
 					    me.name, parv[0], acptr->name,
 					    acptr->user->away);
 #ifdef STRIPBADWORDS
-				if (!(IsULine(acptr, acptr) || IsULine(cptr, sptr)) && 
+				if (!(IsULine(acptr) || IsULine(sptr)) && 
 					IsFilteringWords(acptr))
-						sendto_prefix_one(acptr, sptr,
-						    ":%s %s %s :%s", parv[0], cmd, nick,
+						sendto_message_one(acptr, sptr,
+						    parv[0], cmd, nick, 
 							    stripbadwords_message(parv[2]));
 				else
 #endif
@@ -1848,7 +1952,7 @@ static int m_message(cptr, sptr, parc, parv, notice)
 					}
 				}
 			cansend =
-			    !IsULine(cptr, sptr) ? can_send(sptr, chptr,
+			    !IsULine(sptr) ? can_send(sptr, chptr,
 			    parv[2]) : 0;
 			if (!cansend)
 			{
@@ -1869,20 +1973,21 @@ static int m_message(cptr, sptr, parc, parv, notice)
 				    mode & MODE_STRIPBADWORDS ? (char *)
 				    stripbadwords_channel(text) : text);
 #endif
-				if (!prefix)
+/*				if (!prefix)
 				{
 					sendto_channel_butone(cptr, sptr, chptr,
 					    ":%s %s %s :%s",
 					    parv[0], cmd, nick, text);
 				}
 				else
-				{
-					sendto_channelprefix_butone(cptr,
+				{ */
+					sendto_channelprefix_butone_tok(cptr,
 					    sptr, chptr,
 					    prefix,
-					    ":%s %s %s :%s", parv[0],
-					    cmd, nick, text);
-				}
+					    notice ? MSG_NOTICE : MSG_PRIVATE,
+					    notice ? TOK_NOTICE : TOK_PRIVATE,
+					     nick, text);
+/*				}*/
 				sendanyways = 0;
 				continue;
 			}
@@ -1907,9 +2012,9 @@ static int m_message(cptr, sptr, parc, parv, notice)
 		   ** Armin, 8Jun90 (gruner@informatik.tu-muenchen.de)
 		 */
 		if ((*nick == '$' || *nick == '#') && (IsAnOper(sptr)
-		    || IsULine(cptr, sptr)))
+		    || IsULine(sptr)))
 		{
-			if (IsULine(cptr, sptr))
+			if (IsULine(sptr))
 				goto itsokay;
 			if (!(s = (char *)rindex(nick, '.')))
 			{
@@ -2082,6 +2187,28 @@ int  m_nickserv(cptr, sptr, parc, parv)
 		    parv[0], NickServ);
 }
 
+int  m_botserv(cptr, sptr, parc, parv)
+	aClient *cptr, *sptr;
+	int  parc;
+	char *parv[];
+{
+	aClient *acptr;
+
+
+	if (parc < 2 || *parv[1] == '\0')
+	{
+		sendto_one(sptr, err_str(ERR_NOTEXTTOSEND), me.name, parv[0]);
+		return -1;
+	}
+
+	if ((acptr = find_person(BotServ, NULL)))
+		sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", parv[0],
+		    BotServ, SERVICES_NAME, parv[1]);
+	else
+		sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
+		    parv[0], BotServ);
+}
+
 int m_infoserv(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;
 	int  parc;
@@ -2244,7 +2371,6 @@ int  m_services(cptr, sptr, parc, parv)
 	int  parc;
 	char *parv[];
 {
-	aClient *acptr;
 	char *tmps;
 
 
@@ -2297,21 +2423,6 @@ int  m_notice(cptr, sptr, parc, parv)
 	int  parc;
 	char *parv[];
 {
-	if (!IsRegistered(cptr) && (cptr->name[0]) && !IsNotSpoof(cptr))
-	{
-		if (BadPtr(parv[1]))
-			return 0;
-#ifdef NOSPOOF
-		if (strtoul(parv[1], NULL, 16) != cptr->nospoof)
-			goto temp;
-		sptr->nospoof = 0;
-#endif
-		if (sptr->user && sptr->name[0])
-			return register_user(cptr, sptr, sptr->name,
-			    sptr->user->username, NULL, NULL);
-		return 0;
-	}
-      temp:
 	return m_message(cptr, sptr, parc, parv, 1);
 }
 
@@ -2321,7 +2432,7 @@ static void do_who(sptr, acptr, repchan)
 	aClient *sptr, *acptr;
 	aChannel *repchan;
 {
-	char status[5];
+	char status[8];
 	int  i = 0;
 
 	/* auditoriums only show @'s */
@@ -2333,6 +2444,9 @@ static void do_who(sptr, acptr, repchan)
 		status[i++] = 'G';
 	else
 		status[i++] = 'H';
+	if (IsARegNick(acptr))
+		status[i++] = 'r';
+
 	/* Check for +H here too -- codemastr */
 	if (IsAnOper(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
 		status[i++] = '*';
@@ -2394,7 +2508,7 @@ int  m_who(cptr, sptr, parc, parv)
 	mychannel = NullChn;
 	if (oper)
 	{
-		sendto_helpops("from %s: [Did a /who 0 o]", parv[0]);
+		sendto_umode(UMODE_HELPOP, "*** HelpOp -- from %s: [Did a /who 0 o]", parv[0]);		
 		sendto_serv_butone(&me, ":%s HELP :[Did a /who 0 o]", parv[0]);
 	}
 	if (sptr->user)
@@ -2438,7 +2552,7 @@ int  m_who(cptr, sptr, parc, parv)
 		chptr = find_channel(channame, NULL);
 		if (chptr)
 		{
-			member = IsMember(sptr, chptr);
+			member = IsMember(sptr, chptr) || IsOper(sptr);
 			if (member || !SecretChannel(chptr))
 				for (lp = chptr->members; lp; lp = lp->next)
 				{
@@ -2447,9 +2561,9 @@ int  m_who(cptr, sptr, parc, parv)
 					if (oper && (!IsAnOper(lp->value.cptr)
 					    ))
 						continue;
-					if (lp->value.cptr != sptr
+					if ((lp->value.cptr != sptr
 					    && IsInvisible(lp->value.cptr)
-					    && !member)
+					    && !member) && !IsOper(sptr))
 						continue;
 					channelwho = 1;
 					do_who(sptr, lp->value.cptr, chptr);
@@ -2480,7 +2594,7 @@ int  m_who(cptr, sptr, parc, parv)
 			for (lp = acptr->user->channel; lp; lp = lp->next)
 			{
 				chptr = lp->value.chptr;
-				member = IsMember(sptr, chptr);
+				member = IsMember(sptr, chptr) || IsOper(sptr);
 				if (isinvis && !member)
 					continue;
 				if (IsAnOper(sptr))
@@ -2570,9 +2684,9 @@ int  m_whois(cptr, sptr, parc, parv)
 	anUser *user;
 	aClient *acptr, *a2cptr;
 	aChannel *chptr;
-	char *nick, *tmp, *name, *temp;
+	char *nick, *tmp, *name;
 	char *p = NULL;
-	int  found, len, mlen, t;
+	int  found, len, mlen;
 
 
 
@@ -2637,7 +2751,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			for (lp = user->channel; lp; lp = lp->next)
 			{
 				chptr = lp->value.chptr;
-				member = IsMember(sptr, chptr);
+				member = IsMember(sptr, chptr) || IsOper(sptr);
 				if (invis && !member)
 					continue;
 				if (member || (!invis && PubChannel(chptr)))
@@ -2676,7 +2790,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			    IsHidden(acptr) ? user->virthost : user->realhost,
 			    acptr->info);
 
-			if (IsEyes(sptr))
+			if (IsEyes(sptr) && IsOper(sptr))
 			{
 				/* send the target user's modes */
 				sendto_one(sptr, rpl_str(RPL_WHOISMODES),
@@ -2688,7 +2802,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			{
 				sendto_one(sptr, rpl_str(RPL_WHOISHOST),
 				    me.name, parv[0], acptr->name,
-				    acptr->user->realhost);
+				    user->realhost);
 			}
 			if (IsARegNick(acptr))
 				sendto_one(sptr, rpl_str(RPL_WHOISREGNICK),
@@ -2713,7 +2827,11 @@ int  m_whois(cptr, sptr, parc, parv)
 						*buf = '\0';
 						len = 0;
 					}
+#ifdef SHOW_SECRET
 					if (!(acptr == sptr) && IsAnOper(sptr)
+#else
+					if (!(acptr == sptr) && (IsNetAdmin(sptr) || IsTechAdmin(sptr))
+#endif
 					&& (showsecret == 1) && SecretChannel(chptr))
 						*(buf + len++) = '~';
 					if (is_chanowner(acptr, chptr))
@@ -2735,8 +2853,7 @@ int  m_whois(cptr, sptr, parc, parv)
 				}
 			}
 
-			if (buf[0] != '\0' && !IsULine(acptr, acptr) && (!IsHiding(acptr) ||
-				IsNetAdmin(sptr) || IsTechAdmin(sptr) || sptr == acptr))
+			if (buf[0] != '\0')
 				sendto_one(sptr, rpl_str(RPL_WHOISCHANNELS),
 				    me.name, parv[0], name, buf);
 
@@ -2775,11 +2892,11 @@ int  m_whois(cptr, sptr, parc, parv)
 				if (buf[0])
 					sendto_one(sptr,
 					    rpl_str(RPL_WHOISOPERATOR), me.name,
-					    parv[0], name, buf, ircnetwork);
+					    parv[0], name, buf);
 			}
 
 			if (IsHelpOp(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
-				if (!acptr->user->away)
+				if (!user->away)
 					sendto_one(sptr,
 					    rpl_str(RPL_WHOISHELPOP), me.name,
 					    parv[0], name);
@@ -2789,21 +2906,26 @@ int  m_whois(cptr, sptr, parc, parv)
 				sendto_one(sptr, rpl_str(RPL_WHOISBOT),
 				    me.name, parv[0], name, ircnetwork);
 			}
-			if (acptr->umodes & UMODE_CODER && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
+			if (acptr->umodes & UMODE_SECURE)
 			{
-				sendto_one(sptr, rpl_str(RPL_WHOISOPERATOR),
-				    me.name, parv[0], name, "a Coder",
-				    ircnetwork);
+				sendto_one(sptr, ":%s %d %s %s :%s",me.name, 
+				RPL_WHOISSPECIAL,
+				parv[0], name, "is a \2Secure Connection\2");
 			}
-			if (acptr->user->swhois)
+			if (user->swhois && !IsHideOper(acptr))
 			{
-				if (*acptr->user->swhois != '\0')
+				if (*user->swhois != '\0')
 					sendto_one(sptr, ":%s %d %s %s :%s",
 					    me.name, RPL_WHOISSPECIAL, parv[0],
 					    name, acptr->user->swhois);
 			}
-
-			if (acptr->user && MyConnect(acptr))
+			/* 
+			 * Fix /whois to not show idle times of
+			 * global opers to anyone except another
+			 * global oper or services.
+			 * -CodeM/Barubary
+			 */
+			if (MyConnect(acptr) && (IsOper(sptr) || (acptr->user && MyConnect(acptr) && !IsOper(acptr))))
 				sendto_one(sptr, rpl_str(RPL_WHOISIDLE),
 				    me.name, parv[0], name,
 				    TStime() - user->last, acptr->firsttime);
@@ -2838,11 +2960,14 @@ int  m_user(cptr, sptr, parc, parv)
 	u_int32_t sstamp = 0;
 	anUser *user;
 	aClient *acptr;
-	char *mparv[] = { sptr->name, sptr->name, NULL };
 
 	if (IsServer(cptr) && !IsUnknown(sptr))
 		return 0;
 
+	if (MyClient(sptr) && (sptr->acpt->umodes & LISTENER_SERVERSONLY)) {
+		return exit_client(cptr, sptr, sptr, "This port is for servers only");
+	}
+		
 	if (parc > 2 && (username = (char *)index(parv[1], '@')))
 		*username = '\0';
 	if (parc < 5 || *parv[1] == '\0' || *parv[2] == '\0' ||
@@ -2856,6 +2981,7 @@ int  m_user(cptr, sptr, parc, parv)
 		else
 			return 0;
 	}
+	
 
 	/* Copy parameters into better documenting variables */
 
@@ -2968,6 +3094,9 @@ int  m_quit(cptr, sptr, parc, parv)
 	if (!IsServer(cptr))
 	{
 		ircsprintf(comment, "Quit: ");
+#ifdef CENSOR_QUIT
+		ocomment = (char *) stripbadwords_channel(ocomment);
+#endif
 		strncpy(comment + 6, ocomment, TOPICLEN - 7);
 		comment[TOPICLEN] = '\0';
 		return exit_client(cptr, sptr, sptr, comment);
@@ -3091,15 +3220,15 @@ int  m_kill(cptr, sptr, parc, parv)
 		}
 
 		if (IsServices(acptr) && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)
-		    || IsULine(cptr, sptr)))
+		    || IsULine(sptr)))
 		{
 			sendto_one(sptr, err_str(ERR_KILLDENY), me.name,
 			    parv[0], parv[1]);
 			return 0;
 		}
-/*        if (IsULine(cptr, sptr) || (IsSAdmin(sptr) && !IsSAdmin(acptr)) || (IsNetAdmin(sptr)) || (IsTechAdmin(sptr) || (IsCoAdmin(sptr)))) {
+/*        if (IsULine(sptr) || (IsSAdmin(sptr) && !IsSAdmin(acptr)) || (IsNetAdmin(sptr)) || (IsTechAdmin(sptr) || (IsCoAdmin(sptr)))) {
         goto aftermath;
-        } else if (IsULine(cptr, acptr)) {
+        } else if (IsULine(acptr)) {
                 goto error;
         } else {
                 goto aftermath;
@@ -3340,7 +3469,7 @@ int  m_ping(cptr, sptr, parc, parv)
 		}
 	}
 	else
-		sendto_one(sptr, ":%s PONG %s :%s", me.name,
+		sendto_one(sptr, ":%s %s %s :%s", me.name, IsToken(sptr) ? TOK_PONG : MSG_PONG,
 		    (destination) ? destination : me.name, origin);
 	return 0;
 }
@@ -3464,7 +3593,6 @@ int  m_mkpasswd(cptr, sptr, parc, parv)
 	    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./";
 	char salt[3];
 	extern char *crypt();
-	int  i;
 	int  useable = 0;
 
 	if (!IsAnOper(sptr))
@@ -3483,10 +3611,15 @@ int  m_mkpasswd(cptr, sptr, parc, parv)
 		return 0;
 	}
 	srandom(time(0));
+#ifndef _WIN32
 	salt[0] = saltChars[random() % 64];
 	salt[1] = saltChars[random() % 64];
 	salt[2] = 0;
-
+#else
+	salt[0] = saltChars[rand() % 64];
+	salt[1] = saltChars[rand() % 64];
+	salt[2] = 0;
+#endif
 	if ((strchr(saltChars, salt[0]) == NULL)
 	    || (strchr(saltChars, salt[1]) == NULL))
 	{
@@ -3529,9 +3662,7 @@ int  m_oper(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	aConfItem *aconf;
-	aClient *acptr;
 	char *name, *password, *encr;
-	anUser *user = sptr->user;
 #ifdef CRYPT_OPER_PASSWORD
 	char salt[3];
 	extern char *crypt();
@@ -3757,9 +3888,6 @@ int  m_oper(cptr, sptr, parc, parv)
 		sptr->umodes |=
 		    (UMODE_SERVNOTICE | UMODE_WALLOP | UMODE_FAILOP |
 		    UMODE_FLOOD | UMODE_CLIENT | UMODE_KILLS);
-		if (ALLOW_CHATOPS == 1)
-			sptr->umodes |= UMODE_CHATOP;
-
 		send_umode_out(cptr, sptr, old);
 #ifndef NO_FDLIST
 		addto_fdlist(sptr->fd, &oper_fdlist);
@@ -3928,7 +4056,8 @@ int  m_oper(cptr, sptr, parc, parv)
 		sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name, parv[0]);
 #ifdef  FAILOPER_WARN
 		sendto_one(sptr,
-		    ":%s NOTICE :*** Your attempt has been logged.", me.name);
+		    ":%s NOTICE %s :*** Your attempt has been logged.", me.name, 
+		    	sptr->name);
 #endif
 		sendto_realops
 		    ("Failed OPER attempt by %s (%s@%s) using UID %s [NOPASSWORD]",
@@ -3985,7 +4114,7 @@ int  m_pass(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	char *password = parc > 1 ? parv[1] : NULL;
-
+	int PassLen = 0;
 	if (BadPtr(password))
 	{
 		sendto_one(cptr, err_str(ERR_NEEDMOREPARAMS),
@@ -3998,7 +4127,13 @@ int  m_pass(cptr, sptr, parc, parv)
 		    me.name, parv[0]);
 		return 0;
 	}
-	strncpyzt(cptr->passwd, password, sizeof(cptr->passwd));
+	PassLen = strlen(password);
+	if (cptr->passwd)
+		MyFree(cptr->passwd);
+	if (PassLen > (PASSWDLEN))
+		PassLen = PASSWDLEN;
+	cptr->passwd = MyMalloc(PassLen + 1);
+	strncpyzt(cptr->passwd, password, PassLen +1);
 	return 0;
 }
 
@@ -4049,7 +4184,7 @@ int  m_userhost(cptr, sptr, parc, parv)
                      acptr->name,
                      IsAnOper(acptr) ? "*" : "",
                      (acptr->user->away) ? '-' : '+',
-                     acptr->username,
+                     acptr->user->username,
    			((acptr != sptr) && !IsOper(sptr) 
    			  && IsHidden(acptr) ? acptr->user->virthost : 
    			  acptr->user->realhost));
@@ -4143,8 +4278,6 @@ int  m_umode(cptr, sptr, parc, parv)
 	int *s;
 	char **p, *m;
 	aClient *acptr;
-	anUser *user = sptr->user;
-	aConfItem *aconf;
 	int  what, setflags;
 
 
@@ -4297,12 +4430,6 @@ int  m_umode(cptr, sptr, parc, parv)
 			ClearTechAdmin(sptr);
 		if (IsEyes(sptr))
 			ClearEyes(sptr);
-		if (ALLOW_CHATOPS == 1)
-		{
-			if (SendChatops(sptr))
-				ClearChatops(sptr);
-		}
-
 	}
 
 	/*
@@ -4329,9 +4456,9 @@ int  m_umode(cptr, sptr, parc, parv)
 		if ((sptr->umodes & UMODE_HIDING)
 		    && !(sptr->oflag & OFLAG_INVISIBLE))
 			sptr->umodes &= ~UMODE_HIDING;
-		if (MyClient(sptr) && (sptr->umodes & UMODE_CODER)
-		    && !IsAnOper(sptr))
-			sptr->umodes &= ~UMODE_CODER;
+		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
+		    && !IsSecure(sptr))
+			sptr->umodes &= ~UMODE_SECURE;
 
 
 	}
@@ -4339,7 +4466,7 @@ int  m_umode(cptr, sptr, parc, parv)
 	/*
 	 * For Services Protection...
 	 */
-	if (!IsServer(cptr) && !IsULine(cptr, sptr))
+	if (!IsServer(cptr) && !IsULine(sptr))
 	{
 		if (IsServices(sptr))
 			ClearServices(sptr);
@@ -4379,9 +4506,9 @@ int  m_umode(cptr, sptr, parc, parv)
 		if ((sptr->umodes & UMODE_HIDING)
 		    && !(sptr->oflag & OFLAG_INVISIBLE))
 			sptr->umodes &= ~UMODE_HIDING;
-		if (MyClient(sptr) && (sptr->umodes & UMODE_CODER)
-		    && !IsAnOper(sptr))
-			sptr->umodes &= ~UMODE_CODER;
+		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
+		    && !IsSecure(sptr))
+			sptr->umodes &= ~UMODE_SECURE;
 
 		if ((sptr->umodes & (UMODE_HIDING))
 		    && !(setflags & UMODE_HIDING))
@@ -4392,7 +4519,11 @@ int  m_umode(cptr, sptr, parc, parv)
 			sendto_serv_butone(cptr,
 			    ":%s SMO A :[+I] Activated total invisibility mode on %s",
 			    me.name, sptr->name);
+			sendto_channels_inviso_part(sptr);
 		}
+		if ((sptr->umodes & UMODE_JUNK) && !IsOper(sptr))
+			sptr->umodes &= ~UMODE_JUNK;
+			
 		if (!(sptr->umodes & (UMODE_HIDING)))
 		{
 			if (setflags & UMODE_HIDING)
@@ -4403,6 +4534,8 @@ int  m_umode(cptr, sptr, parc, parv)
 				sendto_serv_butone(cptr,
 				    ":%s SMO A :[+I] De-activated total invisibility mode on %s",
 				    me.name, sptr->name);
+				sendto_channels_inviso_join(sptr);
+
 			}
 		}
 	}
@@ -4429,9 +4562,10 @@ int  m_umode(cptr, sptr, parc, parv)
 	if ((setflags & UMODE_OPER) && !IsOper(sptr))
 	{
 		IRCstats.operators--;
+#ifndef NO_FDLIST
 		if (MyConnect(sptr))
 			delfrom_fdlist(sptr->fd, &oper_fdlist);
-		                         
+#endif		                         
 	}
 	if (!(setflags & UMODE_INVISIBLE) && IsInvisible(sptr))
 	{
@@ -4492,7 +4626,7 @@ int  m_svs2mode(cptr, sptr, parc, parv)
 	aClient *acptr;
 	int  what, setflags;
 
-	if (!IsULine(cptr, sptr))
+	if (!IsULine(sptr))
 		return 0;
 
 	what = MODE_ADD;
@@ -4533,9 +4667,9 @@ int  m_svs2mode(cptr, sptr, parc, parv)
 					  max_global_count = atoi(parv[3]);
 				  break;
 			  case 'd':
-				  if (parv[3] && isdigit(*parv[3]))
+				  if (parv[3] && (isdigit(*parv[3]) || (*parv[3] == '!')))
 					  acptr->user->servicestamp =
-					      atol(parv[3]);
+					      TS2ts(parv[3]);
 				  break;
 			  case 'i':
 				  if (what == MODE_ADD)
@@ -4598,7 +4732,7 @@ int  m_svsmode(cptr, sptr, parc, parv)
 	aClient *acptr;
 	int  what, setflags;
 
-	if (!IsULine(cptr, sptr))
+	if (!IsULine(sptr))
 		return 0;
 
 	what = MODE_ADD;
@@ -4690,7 +4824,7 @@ setmodex:
  */
 void send_umode(cptr, sptr, old, sendmask, umode_buf)
 	aClient *cptr, *sptr;
-	int  old, sendmask;
+	long  old, sendmask;
 	char *umode_buf;
 {
 	int *s, flag;
@@ -4742,7 +4876,7 @@ void send_umode(cptr, sptr, old, sendmask, umode_buf)
  */
 void send_umode_out(cptr, sptr, old)
 	aClient *cptr, *sptr;
-	int  old;
+	long  old;
 {
 	int  i;
 	aClient *acptr;
@@ -4771,7 +4905,7 @@ void send_umode_out(cptr, sptr, old)
 
 void send_umode_out_nickv2(cptr, sptr, old)
 	aClient *cptr, *sptr;
-	int  old;
+	long old;
 {
 	int  i;
 	aClient *acptr;
@@ -4796,9 +4930,8 @@ void send_umode_out_nickv2(cptr, sptr, old)
 void send_svsmode_out(cptr, sptr, bsptr, old)
 	aClient *cptr, *sptr, *bsptr;
 
-	int  old;
+	long  old;
 {
-	int  i;
 	aClient *acptr;
 
 	send_umode(NULL, sptr, old, SEND_UMODES, buf);
@@ -5007,7 +5140,7 @@ int  m_svsjoin(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	aClient *acptr;
-	if (!IsULine(cptr, sptr))
+	if (!IsULine(sptr))
 		return 0;
 
 	if (parc != 3 || !(acptr = find_person(parv[1], NULL)))
@@ -5020,7 +5153,7 @@ int  m_svsjoin(cptr, sptr, parc, parv)
 		(void)m_join(acptr, acptr, 2, parv);
 	}
 	else
-		sendto_serv_butone(cptr, ":%s SVSJOIN %s %s", parv[0],
+		sendto_one(acptr, ":%s SVSJOIN %s %s", parv[0],
 		    parv[1], parv[2]);
 
 	return 0;
@@ -5039,7 +5172,7 @@ int  m_sajoin(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	aClient *acptr;
-	if (!IsSAdmin(sptr) && !IsULine(cptr, sptr))
+	if (!IsSAdmin(sptr) && !IsULine(sptr))
 		return 0;
 
 	if (parc != 3 || !(acptr = find_person(parv[1], NULL)))
@@ -5058,7 +5191,7 @@ int  m_sajoin(cptr, sptr, parc, parv)
 		(void)m_join(acptr, acptr, 2, parv);
 	}
 	else
-		sendto_serv_butone(cptr, ":%s SAJOIN %s %s", parv[0],
+		sendto_one(acptr, ":%s SAJOIN %s %s", parv[0],
 		    parv[1], parv[2]);
 
 	return 0;
@@ -5076,7 +5209,7 @@ int  m_svspart(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	aClient *acptr;
-	if (!IsULine(cptr, sptr))
+	if (!IsULine(sptr))
 		return 0;
 
 	if (parc != 3 || !(acptr = find_person(parv[1], NULL)))
@@ -5089,7 +5222,7 @@ int  m_svspart(cptr, sptr, parc, parv)
 		(void)m_part(acptr, acptr, 2, parv);
 	}
 	else
-		sendto_serv_butone(cptr, ":%s SVSPART %s %s", parv[0],
+		sendto_one(acptr, ":%s SVSPART %s %s", parv[0],
 		    parv[1], parv[2]);
 
 	return 0;
@@ -5108,7 +5241,7 @@ int  m_sapart(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	aClient *acptr;
-	if (!IsSAdmin(sptr) && !IsULine(cptr, sptr))
+	if (!IsSAdmin(sptr) && !IsULine(sptr))
 		return 0;
 
 	if (parc != 3 || !(acptr = find_person(parv[1], NULL)))
@@ -5127,7 +5260,7 @@ int  m_sapart(cptr, sptr, parc, parv)
 		(void)m_part(acptr, acptr, 2, parv);
 	}
 	else
-		sendto_serv_butone(cptr, ":%s SAPART %s %s", parv[0],
+		sendto_one(acptr, ":%s SAPART %s %s", parv[0],
 		    parv[1], parv[2]);
 
 	return 0;

@@ -1,14 +1,13 @@
 ===============================================
-=            UnrealIRCd v3.1                  =
+=            UnrealIRCd v3.1.1                =
 ===============================================
  Was brought to you by:
   * Stskeeps  <stskeeps@tspre.org>
-  * codemastr <codemastr@tspre.org>
-  * DrBin     <drbin@tspre.org>
+  * codemastr <codemastr@unrealircd.com>
+  * DrBin     <drbin@unrealircd.com>
   
  Precenses on the Internet:
-  * http://unreal.tspre.org or http://unreal.sourceforge.net
-  * ftp://unreal.sourceforge.net/pub/unreal
+  * http://www.unrealircd.com
  
  CVS:
 To get anonymous access: (read only)

@@ -76,6 +76,7 @@
 #define ERR_NOLOGIN          444
 #define	ERR_SUMMONDISABLED   445
 #define ERR_USERSDISABLED    446
+#define ERR_NONICKCHANGE     447
 
 #define ERR_NOTREGISTERED    451
 

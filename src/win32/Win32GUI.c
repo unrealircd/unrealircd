@@ -132,6 +132,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     WSADATA WSAData;
 	char meep[MAX_PATH];
 
+	/*First ... Start Debuger !!!*/
+
+	InitStackTraceLibrary();
+	
 	GetOSVersion();
 
 	if ((debugfile = fopen("debugout.log","ac"))==NULL)

@@ -139,11 +139,7 @@ void start_socks(cptr)
 		goto skip_socks;
 
 #ifdef SHOWCONNECTINFO
-#ifndef _WIN32
-	write(cptr->fd, REPORT_DO_SOCKS, R_do_socks);
-#else
-	send(cptr->fd, REPORT_DO_SOCKS, R_do_socks, 0);
-#endif
+	sendto_one(cptr, REPORT_DO_SOCKS);
 #endif
 
 	set_non_blocking(cptr->socksfd, cptr);
@@ -168,11 +164,7 @@ void start_socks(cptr)
 #endif
 		cptr->socksfd = -1;
 #ifdef SHOWCONNECTINFO
-#ifndef _WIN32
-		write(cptr->fd, REPORT_NO_SOCKS, R_no_socks);
-#else
-		send(cptr->fd, REPORT_NO_SOCKS, R_no_socks, 0);
-#endif
+		sendto_one(cptr, REPORT_NO_SOCKS);
 #endif
 		return;
 	}
@@ -190,11 +182,7 @@ void start_socks(cptr)
 	cptr->socksfd = -1;
 	cptr->socksfd = -1;
 #ifdef SHOWCONNECTINFO
-#ifndef _WIN32
-	write(cptr->fd, REPORT_NO_SOCKS, R_no_socks);
-#else
-	send(cptr->fd, REPORT_NO_SOCKS, R_no_socks, 0);
-#endif
+	sendto_one(cptr, REPORT_NO_SOCKS);
 #endif
 	return;
 }
@@ -236,11 +224,7 @@ void send_socksquery(cptr)
 		cptr->socksfd = -1;
 		cptr->flags &= ~FLAGS_SOCKS;
 #ifdef SHOWCONNECTINFO
-#ifndef _WIN32
-		write(cptr->fd, REPORT_NO_SOCKS, R_no_socks);
-#else
-		send(cptr->fd, REPORT_NO_SOCKS, R_no_socks, 0);
-#endif
+		sendto_one(cptr, REPORT_NO_SOCKS);
 #endif
 	}
 	cptr->flags &= ~FLAGS_WRSOCKS;
@@ -275,11 +259,7 @@ void read_socks(cptr)
 	if (len < 4)
 	{
 #ifdef SHOWCONNECTINFO
-#ifndef _WIN32
-		write(cptr->fd, REPORT_NO_SOCKS, R_no_socks);
-#else
-		send(cptr->fd, REPORT_NO_SOCKS, R_no_socks, 0);
-#endif
+		sendto_one(cptr, REPORT_NO_SOCKS);
 #endif
 		return;
 	}
@@ -291,11 +271,7 @@ void read_socks(cptr)
 	}
 
 #ifdef SHOWCONNECTINFO
-#ifndef _WIN32
-	write(cptr->fd, REPORT_GOOD_SOCKS, R_good_socks);
-#else
-	send(cptr->fd, REPORT_GOOD_SOCKS, R_good_socks, 0);
-#endif
+	sendto_one(cptr, REPORT_GOOD_SOCKS);
 #endif
 	return;
 }

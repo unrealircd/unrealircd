@@ -10,16 +10,9 @@ Scheduled for 4.0:
 ----------------
 
 * B:Lines or ircu i:lines
-* Raising PING bug
 * Config Remote access 
 
 -----------------------------------------------------------
-* Add svsvline for global vlines
----------------
-Assigned to codemastr:
-* Remove some of the _little_ config.h defines and replace with
-  unrealircd.conf lines, ex ADMINCHAT, REMOTE_REHASH
-* Documentation documentation AND DOCUMENTATION
 
 Assigned to DrBin:
 ------------------
@@ -39,18 +32,16 @@ Assigned to DrBin:
   (from irc2.10.3)
 * CTCP flood protection(?)
 * A /who flag system, like bahamut's
-* Something like bahamut/hybrids P:line system where you can specify
-  which IPs can you a specific port, maybe port specific passwords too?
-* add -SIGTERM support, /restarts on SIGTERM
 * Recode dynconf and all the other new confs
 * Make proxy scanner scan port 23 also  (postponed)
 * #define for auto oflag +H
 * Port to MacOS 7-9, 68k architecture and PPC
 * Port to BeOS
-* +N (no nickname changes chmode)
-* Chmodes in /list possbility
-* Make cached MOTDs more memory friendly (dynamic allocation)
 * Fix up the flag and proto system
-* Make a is_chan_op, is_chanprot, is_chanowner all-in-one function
 * Split up Link (SLink)
 * Add Dlink (DSLink)
+* Option to allow color striping of QUIT/PART msgs in +S channels
+* Option to hide QUIT/PART msgs in +c channels (if it has color) or in +m channels (if not +v)
+
+
+-----------------------------------------------------

@@ -1,56 +1,25 @@
 ver^2.2
+#
+# AXEnet (irc.axenet.org) Network Configuration File
+# --------------------------------------------------
+#
 
-# These two specify the name of the IRC network, set the same in both fields
 Network >..........: Axenet
 Set ircnetwork ....: Axenet
-
-# This is where your DNS pool is (like irc.dal.net)
 Set defserv .......: irc.axenet.org
-
-# This is the name of your Services Server
 Set SERVICES_NAME .: services.axenet.org
-
-# This is the virtual hostname IRCops will get if iNAH option is enabled
-# on oper up
-Set oper_host .....: Oper.axenet.org
-
-# This is the virtual hostname Server Admins will get if iNAH option is enabled
-# on oper up
-Set admin_host ....: Admin.axenet.org
-
-# This is the virtual hostname Local IRCops will get if iNAH option is enabled
-# on oper up
-
-Set locop_host ....: Locop.axenet.org
-
-# This is the virtual hostname Services Operators/Admins will get
-# if iNAH option is enabled on oper up
-
-Set sadmin_host ...: Csop.axenet.org
-
-# This is the virtual hostname NetAdmins will get
-# if iNAH option is enabled on oper up
-
-Set netadmin_host .: Netadmin.axenet.org
-
-# This is the virtual hostname CoAdmins will get
-# if iNAH option is enabled on oper up
-Set coadmin_host ..: Coadmin.axenet.org
-
-
-# This is the virtual hostname TechAdmins will get
-# if iNAH option is enabled on oper up
-Set techadmin_host : Techadmin.axenet.org
-
-# This is the prefix of the hidden host (cloaking) hostname
+Set oper_host .....: ircop.axenet.org
+Set admin_host ....: admin.axenet.org
+Set locop_host ....: locop.axenet.org
+Set sadmin_host ...: csop.axenet.org
+Set netadmin_host .: netadmin.axenet.org
+Set coadmin_host ..: coadmin.axenet.org
+Set techadmin_host : techadmin.axenet.org
 Set hidden_host ...: axe
-# This is the domain of the IRC network
-Set netdomain .....: Axenet.org
-# This is where people can go for help
-Set helpchan ......: #Axenethelp
-# This is the name of the stats server
+Set netdomain .....: axenet.org
+Set helpchan ......: #axenethelp
 Set STATS_SERVER ..: stats.axenet.org
-# This enables the auto-setting of f.x @netadmin.network.net 
-# on oper up
+Set HUB ...........: 1
 Set iNAH ..........: 1
+Set net_quit ......: axe
 

@@ -43,6 +43,7 @@ static char sccsid[] = "@(#)s_auth.c	1.18 4/18/94 (C) 1992 Darren Reed";
 #include "sock.h"		/* If FD_ZERO isn't define up to this point,  */
 			/* define it (BSD4.2 needs this) */
 #include "h.h"
+#include <string.h>
 
 /*
  * start_auth
@@ -89,11 +90,7 @@ void start_auth(cptr)
 #endif
 
 #ifdef SHOWCONNECTINFO
-#ifndef _WIN32
-	write(cptr->fd, REPORT_DO_ID, R_do_id);
-#else
-	send(cptr->fd, REPORT_DO_ID, R_do_id, 0);
-#endif
+	sendto_one(cptr, REPORT_DO_ID);
 #endif
 
 	set_non_blocking(cptr->authfd, cptr);
@@ -130,11 +127,7 @@ void start_auth(cptr)
 		if (!DoingDNS(cptr))
 			SetAccess(cptr);
 #ifdef SHOWCONNECTINFO
-#ifndef _WIN32
-		write(cptr->fd, REPORT_FAIL_ID, R_fail_id);
-#else
-		send(cptr->fd, REPORT_FAIL_ID, R_fail_id, 0);
-#endif
+	sendto_one(cptr, REPORT_FAIL_ID);
 #endif
 		return;
 	}
@@ -199,11 +192,7 @@ void send_authports(cptr)
 		cptr->authfd = -1;
 		cptr->flags &= ~FLAGS_AUTH;
 #ifdef SHOWCONNECTINFO
-#ifndef _WIN32
-		write(cptr->fd, REPORT_FAIL_ID, R_fail_id);
-#else
-		send(cptr->fd, REPORT_FAIL_ID, R_fail_id, 0);
-#endif
+		sendto_one(cptr, REPORT_FAIL_ID);
 #endif
 		if (!DoingDNS(cptr))
 			SetAccess(cptr);
@@ -292,11 +281,7 @@ void read_authports(cptr)
 		Debug((DEBUG_INFO, "ident reply: [%s]", cptr->buffer));
 
 #ifdef SHOWCONNECTINFO
-#ifndef _WIN32
-	write(cptr->fd, REPORT_FIN_ID, R_fin_id);
-#else
-	send(cptr->fd, REPORT_FIN_ID, R_fin_id, 0);
-#endif
+	sendto_one(cptr, REPORT_FIN_ID);
 #endif
 
 	if (!locp || !remp || !*ruser)

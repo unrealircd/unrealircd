@@ -20,6 +20,7 @@
 #endif
 #include "nameser.h"
 #include "resolv.h"
+#include <string.h>
 
 #ifndef lint
 static  char sccsid[] = "@(#)res.c	2.38 4/13/94 (C) 1992 Darren Reed";
@@ -277,13 +278,7 @@ time_t	now;
 				{
 				case ASYNC_CLIENT :
 #ifdef SHOWCONNECTINFO
-#ifndef _WIN32
-					write(cptr->fd, REPORT_FAIL_DNS,
-						R_fail_dns);
-#else
-					send(cptr->fd, REPORT_FAIL_DNS,
-						R_fail_dns, 0);
-#endif
+					sendto_one(cptr, REPORT_FAIL_DNS);
 #endif
 					ClearDNS(cptr);
 					if (!DoingAuth(cptr))
@@ -676,8 +671,19 @@ HEADER	*hptr;
 			if (ans == 1)
 				hp->h_addrtype =  (class == C_IN) ?
 							AFINET : AF_UNSPEC;
-			bcopy(cp, (char *)&dr, dlen);
+			
+			/* Fix for a recently found exploit, fix by Christophe Kalt <kalt@stealth.net>
+			 * Taken from bahamut
+  			 */
 
+			if (dlen != sizeof(dr)) {
+				sendto_realops("Bad IP length (%d) returned for %s", dlen, hostbuf);
+				Debug((DEBUG_DNS, "Bad IP length (%d) returned for %s", dlen, hostbuf));  
+				return(-2);			
+			}
+
+			bcopy(cp, (char *)&dr, dlen);
+			
 			adr->S_ADDR = dr.S_ADDR;
 			Debug((DEBUG_INFO,"got ip # %s for %s",
 				inetntoa((char *)adr), hostbuf));

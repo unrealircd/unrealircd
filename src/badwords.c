@@ -15,7 +15,9 @@
  *   too much pepsi.
  */
 
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include "config.h"
 #include "struct.h"
 #include "common.h"
@@ -44,7 +46,6 @@ char *stripbadwords_channel(char *str)
 	regex_t pcomp;
 	static char cleanstr[4096];
 	char buf[4096];
-	char errbuf[2048];
 	char *ptr;
 	int  errorcode, matchlen, stringlen, this_word;
 
@@ -94,7 +95,6 @@ char *stripbadwords_message(char *str)
 	regex_t pcomp;
 	static char cleanstr[4096];
 	char buf[4096];
-	char errbuf[2048];
 	char *ptr;
 	int  errorcode, matchlen, stringlen, this_word;
 
@@ -197,7 +197,7 @@ int  loadbadwords_channel(char *wordfile)
 			 */
 			channelword[i] =
 			    (char *)MyMalloc(strlen(buf) + strlen(PATTERN) - 1);
-			sprintf(channelword[i], PATTERN, buf);
+			ircsprintf(channelword[i], PATTERN, buf);
 		}
 		channel_wordlist++;
 	}
@@ -261,7 +261,7 @@ int  loadbadwords_message(char *wordfile)
 			 */
 			messageword[i] =
 			    (char *)MyMalloc(strlen(buf) + strlen(PATTERN) - 1);
-			sprintf(messageword[i], PATTERN, buf);
+			ircsprintf(messageword[i], PATTERN, buf);
 		}
 		message_wordlist++;
 	}

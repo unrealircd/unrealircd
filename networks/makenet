@@ -265,6 +265,12 @@ case "$SUBMIT" in
 		;;
 	esac
 
+if [ "$NETWORK" == "My IRC Network" ] ; then
+echo ""
+echo "You may not submit a network file that uses default values"
+exit
+fi
+
 cat |sendmail -t << __EOF__&
 To: unreal-networks@lists.sourceforge.net
 From: $EMAIL

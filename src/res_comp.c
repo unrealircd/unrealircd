@@ -1,6 +1,4 @@
 /*
-/*
-/*
  * Copyright (c) 1985 Regents of the University of California.
  * All rights reserved.
  *
@@ -30,7 +28,7 @@ static char sccsid[] = "@(#)res_comp.c	6.18 (Berkeley) 6/27/90";
 #include "nameser.h"
 
 
-ID_CVS("$Id$");
+//ID_CVS("$Id$");
 
 static dn_find();
 

@@ -1,0 +1,33 @@
+ver^2.2
+#
+# TuTKu.Net (irc.tutku.net) Network Configuration File
+# --------------------------------------------------
+# Added-at: 30 October 2000 15:29
+# Author: MurathaN
+# Email: Murat_haN@GmX.Net
+# -----------------------------------------
+#
+
+Network >..........: TuTKu.Net
+Set ircnetwork ....: TuTKu.Net
+Set defserv .......: irc.tutku.net
+Set SERVICES_NAME .: services.tutku.net
+Set oper_host .....: IrCoP.TuTKu.NeT
+Set admin_host ....: AdmiN.TuTKu.NeT
+Set locop_host ....: LoCoP.TuTKu.NeT
+Set sadmin_host ...: Csop.TuTKu.Net
+Set netadmin_host .: NetAdmiN.TuTKu.NeT
+Set coadmin_host ..: CoAdmiN.TuTKu.NeT
+Set techadmin_host : TecHAdmiN.TuTKu.NeT
+Set hidden_host ...: TuTKu
+Set netdomain .....: TuTKu.Net
+Set helpchan ......: #HeLp
+Set STATS_SERVER ..: Stats.TuTKu.Net
+Set HUB ...........: not_in_use
+Set iNAH ..........: 1
+Set net_quit ......: not_in_use
+
+
+
+
+

@@ -53,7 +53,9 @@
 # include <string.h>
 # endif
 #endif
-
+#ifdef SSL
+#include <openssl/ssl.h>
+#endif
 #ifndef GOT_STRCASECMP
 #define	strcasecmp	mycmp
 #define	strncasecmp	myncmp
@@ -84,6 +86,7 @@ extern	char	*rindex PROTO((char *, char));
 #else
 #include <sys/time.h>
 #endif
+#ifndef DMALLOC
 #if !defined(DEBUGMODE)
 # ifndef _WIN32
 #  define MyFree(x)	if ((x) != NULL) free(x)
@@ -92,6 +95,7 @@ extern	char	*rindex PROTO((char *, char));
 # endif
 #else
 #define	free(x)		MyFree(x)
+#endif
 #endif
 #ifdef NEXT
 #define VOIDSIG int		/* whether signal() returns int of void */
@@ -127,8 +131,8 @@ typedef unsigned int u_int;
 #define MYOSNAME "Win32"
 #endif
 #ifdef DEBUGMODE
-#define ircsprintf sprintf
-#define ircvsprintf vsprintf
+// #define ircsprintf sprintf
+//#define ircvsprintf vsprintf
 #endif
 
 

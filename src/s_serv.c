@@ -25,7 +25,7 @@
 static char sccsid[] =
     "@(#)s_serv.c	2.55 2/7/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen";
 #endif
-
+#define AllocCpy(x,y) x  = (char *) MyMalloc(strlen(y) + 1); strcpy(x,y)
 
 #include "struct.h"
 #include "common.h"
@@ -40,14 +40,12 @@ static char sccsid[] =
 #endif
 #include <sys/stat.h>
 #include <fcntl.h>
-#ifndef _WIN32
-#include <utmp.h>
-#else
+#ifdef _WIN32
 #include <io.h>
 #endif
 #include <time.h>
 #include "h.h"
-
+#include <string.h>
 
 
 static char buf[BUFSIZE];
@@ -546,6 +544,20 @@ int  m_protoctl(cptr, sptr, parc, parv)
 			    proto, cptr->name));
 			SetSJ3(cptr);
 		}
+		else if (strcmp(s, "SJB64") == 0)
+		{
+#ifndef PROTOCTL_MADNESS
+			if (remove)
+			{
+				cptr->proto &=~ PROTO_SJB64;
+				continue;
+			}
+#endif
+			Debug((DEBUG_ERROR,
+			    "Chose protocol %s for link %s",
+			    proto, cptr->name));
+			cptr->proto |= PROTO_SJB64;
+		}
 		/*
 		 * Add other protocol extensions here, with proto
 		 * containing the base option, and options containing
@@ -575,12 +587,10 @@ int  m_server(cptr, sptr, parc, parv)
 {
 	char *ch;
 	int  i;
-	char info[REALLEN + 61], *inpath, *host, *encr, *f;
-	char pp[512];
-	aClient *acptr, *bcptr;
+	char info[REALLEN + 61], *inpath, *host, *encr;
+	aClient *acptr, *bcptr, *ocptr;
 	aConfItem *aconf, *cconf;
 	int  hop, numeric = 0;
-	int  ts = 0;
 	char *flags = NULL, *protocol = NULL, *inf = NULL;
 
 	info[0] = '\0';
@@ -590,20 +600,25 @@ int  m_server(cptr, sptr, parc, parv)
 		sendto_one(cptr, "ERROR :No servername");
 		return 0;
 	}
+	if (MyConnect(sptr) && (sptr->acpt->umodes & LISTENER_CLIENTSONLY))
+	{
+		 return exit_client(cptr, sptr, sptr, "This port is for clients only");
+	}
+		
 	hop = 0;
 	host = parv[1];
 	if (parc > 4)
 	{
-		numeric = atoi(parv[3]);
-		hop = atoi(parv[2]);
+		numeric = TS2ts(parv[3]);
+		hop = TS2ts(parv[2]);
 		(void)strncpy(info, parv[4], REALLEN + 60);
-		info[REALLEN] = '\0';
+		info[REALLEN + 60] = '\0';
 	}
-	else if (parc > 3 && atoi(parv[2]))
+	else if (parc > 3 && TS2ts(parv[2]))
 	{
-		hop = atoi(parv[2]);
+		hop = TS2ts(parv[2]);
 		(void)strncpy(info, parv[3], REALLEN + 60);
-		info[REALLEN] = '\0';
+		info[REALLEN + 60] = '\0';
 	}
 /*
 	We do not support "SERVER server :desc" anymore, this is an ugly hack 
@@ -637,9 +652,10 @@ int  m_server(cptr, sptr, parc, parv)
 	{
 		sendto_one(sptr, "ERROR :Bogus server name (%s)",
 		    sptr->name, host);
-		sendto_ops
-		    ("WARNING: Bogus server name (%s) from %s (maybe just a fishy client)",
+		sendto_umode
+		    (UMODE_JUNK,"WARNING: Bogus server name (%s) from %s (maybe just a fishy client)",
 		    host, get_client_name(cptr, TRUE));
+
 		sptr->since += 7;
 		return 0;
 	}
@@ -706,37 +722,26 @@ int  m_server(cptr, sptr, parc, parv)
 		}
 		/* bzero(cptr->passwd, sizeof(cptr->passwd)); */
 	}
-	if ((acptr = find_name(host, NULL)))
+	if ((acptr = find_server/*_quickx*/(host, NULL)))
 	{
-		aClient *ocptr;
-
 		/*
 		 * This link is trying feed me a server that I already have
 		 * access through another path -- multiple paths not accepted
 		 * currently, kill this link immeatedly!!
-		 *
-		 * Rather than KILL the link which introduced it, KILL the
-		 * youngest of the two links. -avalon
 		 */
 		acptr = acptr->from;
-		ocptr = (cptr->firsttime > acptr->firsttime) ? acptr : cptr;
-		acptr = (cptr->firsttime > acptr->firsttime) ? cptr : acptr;
-		sendto_one(acptr, "ERROR :Server %s already exists from %s",
-		    host, (ocptr->from ? ocptr->from->name : "<nobody>"));
-		sendto_ops
-		    ("Link %s cancelled, server %s already exists from %s",
-		    get_client_name(acptr, TRUE), host,
-		    (ocptr->from ? ocptr->from->name : "<nobody>"));
-		return exit_client(acptr, acptr, acptr, "Server Exists");
+                ocptr = (cptr->firsttime > acptr->firsttime) ? acptr : cptr;
+                acptr = (cptr->firsttime > acptr->firsttime) ? cptr : acptr;
+                sendto_one(acptr,"ERROR :Server %s already exists from %s",
+                           host,
+                           (ocptr->from ? ocptr->from->name : "<nobody>"));
+                sendto_ops("Link %s cancelled, server %s already exists from %s",
+                	get_client_name(acptr, TRUE), host,
+                           (ocptr->from ? ocptr->from->name : "<nobody>"));
+                return exit_client(acptr, acptr, acptr, "Server Exists");       
 	}
-
-	if ((acptr = find_client(host, NULL)))
+/*	if ((acptr = find_client(host, NULL)))
 	{
-		/*
-		   ** Server trying to use the same name as a person. Would
-		   ** cause a fair bit of confusion. Enough to make it hellish
-		   ** for a while and servers to send stuff to the wrong place.
-		 */
 		sendto_one(cptr, "ERROR :Nickname %s already exists!", host);
 		sendto_locfailops
 		    ("Link %s cancelled: Server/nick collision on %s", inpath,
@@ -745,7 +750,7 @@ int  m_server(cptr, sptr, parc, parv)
 		    ":%s GLOBOPS :Link %s cancelled: Server/nick collision on %s",
 		    parv[0], inpath, host);
 		return exit_client(cptr, cptr, cptr, "Nick as Server");
-	}
+	} */
 
 	if (IsServer(cptr))
 	{
@@ -832,7 +837,7 @@ int  m_server(cptr, sptr, parc, parv)
 		/* Taken from bahamut makes it so all servers behind a U:lined
 		 * server are also U:lined, very helpful if HIDE_ULINES is on
 		 */
-		if (IsULine(sptr, sptr)
+		if (IsULine(sptr)
 		    || (find_uline(cptr->confs, acptr->name)))
 			acptr->flags |= FLAGS_ULINE;
 		add_server_to_table(acptr);
@@ -1111,7 +1116,8 @@ int  m_server_estab(cptr)
 		sendto_ops("Access denied (passwd mismatch) %s", inpath);
 		return exit_client(cptr, cptr, cptr, "Bad Password");
 	}
-	bzero(cptr->passwd, sizeof(cptr->passwd));
+	if (cptr->passwd)
+	MyFree(cptr->passwd);
 #ifndef	HUB
 	for (i = 0; i <= highest_fd; i++)
 		if (local[i] && IsServer(local[i]))
@@ -1181,9 +1187,26 @@ int  m_server_estab(cptr)
 	nextping = TStime();
 	(void)find_or_add(cptr->name);
 	if (TRUEHUB == 1)
-		sendto_serv_butone(&me,
-		    ":%s GLOBOPS :Link with %s established.", me.name, inpath);
-	sendto_locfailops("Link with %s established.", inpath);
+	{
+#ifdef USE_SSL
+		if (IsSecure(cptr))
+			sendto_serv_butone(&me,
+			    ":%s GLOBOPS :Secure link with %s established (%s).", me.name, 
+			    inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
+		else
+#endif
+			sendto_serv_butone(&me,
+			    ":%s GLOBOPS :Link with %s established.", me.name, 
+			    inpath);
+	}
+#ifdef USE_SSL
+	if (IsSecure(cptr))
+		sendto_locfailops("Secure Link with %s established (%s).", inpath,
+			(char *) ssl_get_cipher((SSL *)cptr->ssl));
+
+	else
+#endif
+		sendto_locfailops("Link with %s established.", inpath);
 	/* Insert here */
 	(void)add_to_client_hash_table(cptr->name, cptr);
 	/* doesnt duplicate cptr->serv if allocted this struct already */
@@ -1191,9 +1214,20 @@ int  m_server_estab(cptr)
 	cptr->serv->up = me.name;
 	cptr->srvptr = &me;
 	cptr->serv->nline = aconf;
+
+	if (num && numeric_collides(TS2ts(num)))
+	{
+		sendto_serv_butone(&me,
+		    ":%s GLOBOPS :Cancelling link %s, colliding numeric", me.name, 
+		    inpath);
+		sendto_locfailops("Cancelling link %s, colliding numeric", inpath);
+		return exit_client(cptr, cptr, cptr,
+		    "Colliding server numeric (choose another in the M:line)");
+	}
+
 	if (num)
 	{
-		cptr->serv->numeric = atoi(num);
+		cptr->serv->numeric = TS2ts(num);
 		num = NULL;
 	}
 	add_server_to_table(cptr);
@@ -1284,6 +1318,7 @@ int  m_server_estab(cptr)
 		}
 	}
 
+	
 	for (acptr = &me; acptr; acptr = acptr->prev)
 	{
 		/* acptr->from == acptr for acptr == cptr */
@@ -1298,18 +1333,16 @@ int  m_server_estab(cptr)
 			   ** Apparently USER command was forgotten... -Donwulff
 			 */
 
-
+			
 			if (!SupportNICKv2(cptr))
 			{
-				sendto_one(cptr, "%s %s %d %d %s %s %s %lu :%s",
+				sendto_one(cptr, 
+				  "%s %s %d %d %s %s %s %lu :%s",
 				    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 				    acptr->name, acptr->hopcount + 1,
 				    acptr->lastnick, acptr->user->username,
 				    acptr->user->realhost,
-				    (SupportNS(cptr) ?
-				     (acptr->srvptr->serv->numeric ?		    
-				     base64enc(acptr->srvptr->serv->numeric) : 
-				     acptr->user->server) : acptr->user->server),
+				     acptr->user->server,
 				    acptr->user->servicestamp, acptr->info);
 				send_umode(cptr, acptr, 0, SEND_UMODES, buf);
 				if (IsHidden(acptr) && acptr->user->virthost)
@@ -1322,25 +1355,52 @@ int  m_server_estab(cptr)
 			else
 			{
 				send_umode(NULL, acptr, 0, SEND_UMODES, buf);
+								
 				if (!SupportVHP(cptr))
-					sendto_one(cptr,
-					    "%s %s %d %d %s %s %s %lu %s %s :%s",
-					    (IsToken(cptr) ? TOK_NICK :
-					    MSG_NICK), acptr->name,
-					    acptr->hopcount + 1,
-					    acptr->lastnick,
-					    acptr->user->username,
-					    acptr->user->realhost,
-					    (SupportNS(cptr) ?
-					     (acptr->srvptr->serv->numeric ?		    
-					     base64enc(acptr->srvptr->serv->numeric) : 
-					     acptr->user->server) : acptr->user->server),
-					    acptr->user->servicestamp, (!buf
-					    || *buf == '\0' ? "+" : buf),
-					    ((IsHidden(acptr)
-					    && (acptr->
-					    umodes & UMODE_SETHOST)) ? acptr->
-					    user->virthost : "*"), acptr->info);
+				{
+					if (SupportNS(cptr) && acptr->srvptr->serv->numeric)
+					{
+						sendto_one(cptr,
+							cptr->proto & PROTO_SJB64 ?
+							"%s %s %d %B %s %s %b %lu %s %s :%s"
+							:
+							"%s %s %d %d %s %s %b %lu %s %s :%s"
+							,
+						    (IsToken(cptr) ? TOK_NICK :
+						    MSG_NICK), acptr->name,
+						    acptr->hopcount + 1,
+						    acptr->lastnick,
+						    acptr->user->username,
+						    acptr->user->realhost,
+						     acptr->srvptr->serv->numeric,
+						    acptr->user->servicestamp, (!buf
+						    || *buf == '\0' ? "+" : buf),
+						    ((IsHidden(acptr)
+						    && (acptr->
+						    umodes & UMODE_SETHOST)) ? acptr->
+						    user->virthost : "*"), acptr->info);
+					}
+					else
+					{
+						sendto_one(cptr,
+						    (cptr->proto & PROTO_SJB64 ?
+						    "%s %s %d %B %s %s %s %lu %s %s :%s"
+						    : "%s %s %d %d %s %s %s %lu %s %s :%s"),
+						    (IsToken(cptr) ? TOK_NICK :
+						    MSG_NICK), acptr->name,
+						    acptr->hopcount + 1,
+						    acptr->lastnick,
+						    acptr->user->username,
+						    acptr->user->realhost,
+					     		acptr->user->server,
+						    acptr->user->servicestamp, (!buf
+						    || *buf == '\0' ? "+" : buf),
+						    ((IsHidden(acptr)
+						    && (acptr->
+						    umodes & UMODE_SETHOST)) ? acptr->
+						    user->virthost : "*"), acptr->info);
+					}
+				}
 				else
 					sendto_one(cptr,
 					    "%s %s %d %d %s %s %s %lu %s %s :%s",
@@ -1392,7 +1452,11 @@ int  m_server_estab(cptr)
 			else
 				send_channel_modes_sjoin3(cptr, chptr);
 			if (chptr->topic_time)
-				sendto_one(cptr, "%s %s %s %lu :%s",
+				sendto_one(cptr, 
+				   (cptr->proto & PROTO_SJB64 ? 
+				     "%s %s %s %B :%s" 
+				     :
+				     "%s %s %s %lu :%s"),
 				    (IsToken(cptr) ? TOK_TOPIC : MSG_TOPIC),
 				    chptr->chname, chptr->topic_nick,
 				    chptr->topic_time, chptr->topic);
@@ -1463,7 +1527,7 @@ int  m_links(cptr, sptr, parc, parv)
 		acptr = lp->value.cptr;
 		
 		/* Some checks */
-		if (HIDE_ULINES && IsULine(acptr, acptr) && !IsAnOper(sptr))
+		if (HIDE_ULINES && IsULine(acptr) && !IsAnOper(sptr))
 			continue;	
 		sendto_one(sptr, rpl_str(RPL_LINKS),
 		    me.name, parv[0], acptr->name, acptr->serv->up,
@@ -1519,7 +1583,7 @@ int  m_netinfo(cptr, sptr, parc, parv)
 			sendto_one(cptr,
 			    "ERROR :unProtocol 2090 is not compatible with unProtocol %li",
 			    UnrealProtocol);
-			exit_client(cptr, cptr, cptr,
+			return exit_client(cptr, cptr, cptr,
 			    "Link using unProtocol 2090");
 		}
 		return 0;
@@ -1536,7 +1600,7 @@ int  m_netinfo(cptr, sptr, parc, parv)
 	}
 	/* is a long therefore not ATOI */
 	lmax = atol(parv[1]);
-	endsync = atol(parv[2]);
+	endsync = TS2ts(parv[2]);
 	protocol = atol(parv[3]);
 
 	/* max global count != max_global_count --sts */
@@ -1626,7 +1690,7 @@ void m_info_send(sptr)
 	    me.name, RPL_INFO, sptr->name);
 
 	sendto_one(sptr,
-	    ":%s %d %s :| UnrealIRCd Homepage: http://unreal.tspre.org",
+	    ":%s %d %s :| UnrealIRCd Homepage: http://www.unrealircd.com",
 	    me.name, RPL_INFO, sptr->name);
 
 #ifdef _WIN32
@@ -1974,114 +2038,6 @@ int  m_watch(cptr, sptr, parc, parv)
 
 
 
-/*
-** m_summon should be redefined to ":prefix SUMMON host user" so
-** that "hunt_server"-function could be used for this too!!! --msa
-** As of 2.7.1e, this was the case. -avalon
-**
-**	parv[0] = sender prefix
-**	parv[1] = user
-**	parv[2] = server
-**	parv[3] = channel (optional)
-*/
-int  m_summon(cptr, sptr, parc, parv)
-	aClient *sptr, *cptr;
-	int  parc;
-	char *parv[];
-{
-	char *host, *user, *chname;
-#ifdef	ENABLE_SUMMON
-	char hostbuf[17], namebuf[10], linebuf[10];
-#  ifdef LEAST_IDLE
-	char linetmp[10], ttyname[15];	/* Ack */
-	struct stat stb;
-	time_t ltime = (time_t) 0;
-#  endif
-	int  fd, flag = 0;
-#endif
-
-	if (parc < 2 || *parv[1] == '\0')
-	{
-		sendto_one(sptr, err_str(ERR_NORECIPIENT),
-		    me.name, parv[0], "SUMMON");
-		return 0;
-	}
-	user = parv[1];
-	host = (parc < 3 || BadPtr(parv[2])) ? me.name : parv[2];
-	chname = (parc > 3) ? parv[3] : "*";
-	/*
-	   ** Summoning someone on remote server, find out which link to
-	   ** use and pass the message there...
-	 */
-	parv[1] = user;
-	parv[2] = host;
-	parv[3] = chname;
-	parv[4] = NULL;
-	if (hunt_server(cptr, sptr, ":%s SUMMON %s %s %s", 2, parc, parv) ==
-	    HUNTED_ISME)
-	{
-#ifdef ENABLE_SUMMON
-		if ((fd = utmp_open()) == -1)
-		{
-			sendto_one(sptr, err_str(ERR_FILEERROR),
-			    me.name, parv[0], "open", UTMP);
-			return 0;
-		}
-#  ifndef LEAST_IDLE
-		while ((flag = utmp_read(fd, namebuf, linebuf, hostbuf,
-		    sizeof(hostbuf))) == 0)
-			if (StrEq(namebuf, user))
-				break;
-#  else
-		/* use least-idle tty, not the first
-		 * one we find in utmp. 10/9/90 Spike@world.std.com
-		 * (loosely based on Jim Frost jimf@saber.com code)
-		 */
-
-		while ((flag = utmp_read(fd, namebuf, linetmp, hostbuf,
-		    sizeof(hostbuf))) == 0)
-		{
-			if (StrEq(namebuf, user))
-			{
-				(void)ircsprintf(ttyname, "/dev/%s", linetmp);
-				if (stat(ttyname, &stb) == -1)
-				{
-					sendto_one(sptr,
-					    err_str(ERR_FILEERROR),
-					    me.name, sptr->name,
-					    "stat", ttyname);
-					return 0;
-				}
-				if (!ltime)
-				{
-					ltime = stb.st_mtime;
-					(void)strcpy(linebuf, linetmp);
-				}
-				else if (stb.st_mtime > ltime)	/* less idle */
-				{
-					ltime = stb.st_mtime;
-					(void)strcpy(linebuf, linetmp);
-				}
-			}
-		}
-#  endif
-		(void)utmp_close(fd);
-#  ifdef LEAST_IDLE
-		if (ltime == 0)
-#  else
-			if (flag == -1)
-#  endif
-				sendto_one(sptr, err_str(ERR_NOLOGIN),
-				    me.name, parv[0], user);
-			else
-				summon(sptr, user, linebuf, chname);
-#else
-		sendto_one(sptr, err_str(ERR_SUMMONDISABLED), me.name, parv[0]);
-#endif /* ENABLE_SUMMON */
-	}
-	return 0;
-}
-
 
 /*
 ** m_stats
@@ -2153,8 +2109,8 @@ static void report_configured_links(sptr, mask)
 {
 	static char null[] = "<NULL>";
 	aConfItem *tmp;
-	int *p, port, tmpmask;
-	char c, *host, *pass, *name;
+	int *p, port, tmpmask, options;
+	char c, *host, *pass, *name, optbuf[5];
 	tmpmask = (mask == CONF_MISSING) ? CONF_CONNECT_SERVER : mask;
 
 	for (tmp = conf; tmp; tmp = tmp->next)
@@ -2170,6 +2126,7 @@ static void report_configured_links(sptr, mask)
 			pass = BadPtr(tmp->passwd) ? null : tmp->passwd;
 			name = BadPtr(tmp->name) ? null : tmp->name;
 			port = (int)tmp->port;
+			options = tmp->options;
 			/*
 			 * On K line the passwd contents can be
 			 * displayed on STATS reply.    -Vesa
@@ -2294,17 +2251,67 @@ static void report_configured_links(sptr, mask)
 				    || mask & CONF_CONNECT_SERVER))
 					sendto_one(sptr, rpl_str(p[1]), me.name,
 					    sptr->name, c, "*", name, port,
-					    get_conf_class(tmp));
-				else
+					    get_conf_class(tmp), "*");
+				else {
+					int cnt = 0;
+					if (options) {
+						if (options & CONNECT_SSL) {
+							optbuf[cnt] = 'S';
+							cnt++;
+						}
+						if (options & CONNECT_ZIP) {
+							optbuf[cnt] = 'Z';
+							cnt++;
+						}
+						optbuf[cnt] = '\0';
+					}
+						
 					sendto_one(sptr, rpl_str(p[1]), me.name,
 					    sptr->name, c, host, name, port,
-					    get_conf_class(tmp));
+					    get_conf_class(tmp), options ? optbuf : "*");
+					optbuf[0] = '\0';
+					}
 			}
 		}
 	return;
 }
 
 
+char *get_cptr_status(aClient *acptr)
+{
+	static char buf[10];
+	char *p = buf;
+	
+	*p = '\0';
+	*p++ = '[';
+	if (acptr->flags & FLAGS_LISTEN)
+	{
+		if (acptr->umodes & LISTENER_NORMAL)
+			*p++ = '*';
+		if (acptr->umodes & LISTENER_SERVERSONLY)
+			*p++ = 'S';
+		if (acptr->umodes & LISTENER_CLIENTSONLY)
+			*p++ = 'C';
+#ifdef USE_SSL
+		if (acptr->umodes & LISTENER_SSL)
+			*p++ = 's';
+#endif
+		if (acptr->umodes & LISTENER_REMOTEADMIN)
+			*p++ = 'R';
+		if (acptr->umodes & LISTENER_JAVACLIENT)
+			*p++ = 'J';
+	}
+	else
+	{
+#ifdef USE_SSL
+		if (acptr->flags & FLAGS_SSL)
+			*p++ = 's';
+#endif
+	}
+	*p++ = ']';
+	*p++ = '\0';
+	return (buf);
+}
 
 /* Used to blank out ports -- Barubary */
 char *get_client_name2(aClient *acptr, int showports)
@@ -2330,11 +2337,11 @@ int  m_stats(cptr, sptr, parc, parv)
 #ifndef DEBUGMODE
 	static char Sformat[] =
 	    ":%s %d %s SendQ SendM SendBytes RcveM RcveBytes Open_since :Idle";
-	static char Lformat[] = ":%s %d %s %s %u %u %u %u %u %u :%u";
+	static char Lformat[] = ":%s %d %s %s%s %u %u %u %u %u %u :%u";
 #else
 	static char Sformat[] =
 	    ":%s %d %s SendQ SendM SendBytes RcveM RcveBytes Open_since CPU :Idle";
-	static char Lformat[] = ":%s %d %s %s %u %u %u %u %u %u %s";
+	static char Lformat[] = ":%s %d %s %s%s %u %u %u %u %u %u %s";
 	char pbuf[96];		/* Should be enough for to ints */
 #endif
 	struct Message *mptr;
@@ -2417,9 +2424,10 @@ int  m_stats(cptr, sptr, parc, parv)
 				  continue;
 			  if (!doall && wilds && match(name, acptr->name))
 				  continue;
-			  if (!(parc == 2 && IsServer(acptr)) &&
+			  if (!(parc == 2 && (IsServer(acptr) || (acptr->flags & FLAGS_LISTEN))) &&
 			      !(doall || wilds) && mycmp(name, acptr->name))
 				  continue;
+
 #ifdef DEBUGMODE
 			  ircsprintf(pbuf, "%d :%d", acptr->cputime,
 			      (acptr->user && MyConnect(acptr)) ?
@@ -2432,6 +2440,7 @@ int  m_stats(cptr, sptr, parc, parv)
 				      (isupper(stat)) ?
 				      get_client_name2(acptr, showports) :
 				      get_client_name(acptr, FALSE),
+				      get_cptr_status(acptr),
 				      (int)DBufLength(&acptr->sendQ),
 				      (int)acptr->sendM, (int)acptr->sendK,
 				      (int)acptr->receiveM,
@@ -2455,6 +2464,7 @@ int  m_stats(cptr, sptr, parc, parv)
 				      (isupper(stat)) ?	/* Potvin - PreZ */
 				      get_client_name2(acptr, showports) :
 				      get_client_name(acptr, FALSE),
+				      get_cptr_status(acptr),
 				      (int)DBufLength(&acptr->sendQ),
 				      (int)acptr->sendM, (int)acptr->sendK,
 				      (int)acptr->receiveM,
@@ -2634,49 +2644,28 @@ int  m_stats(cptr, sptr, parc, parv)
 }
 
 /*
+** m_summon
+** parv[0] = sender prefix
+*/
+int m_summon(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
+	/* /summon is old and out dated, we just return an error as
+         * required by RFC1459 -- codemastr
+	 */
+	sendto_one(sptr, err_str(ERR_SUMMONDISABLED), me.name, parv[0]);
+	return 0;
+}
+
+/*
 ** m_users
 **	parv[0] = sender prefix
 **	parv[1] = servername
 */
-int  m_users(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_users(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-#ifdef ENABLE_USERS
-	char namebuf[10], linebuf[10], hostbuf[17];
-	int  fd, flag = 0;
-#endif
-
-	if (hunt_server(cptr, sptr, ":%s USERS :%s", 1, parc,
-	    parv) == HUNTED_ISME)
-	{
-#ifdef ENABLE_USERS
-		if ((fd = utmp_open()) == -1)
-		{
-			sendto_one(sptr, err_str(ERR_FILEERROR),
-			    me.name, parv[0], "open", UTMP);
-			return 0;
-		}
-
-		sendto_one(sptr, rpl_str(RPL_USERSSTART), me.name, parv[0]);
-		while (utmp_read(fd, namebuf, linebuf,
-		    hostbuf, sizeof(hostbuf)) == 0)
-		{
-			flag = 1;
-			sendto_one(sptr, rpl_str(RPL_USERS), me.name, parv[0],
-			    namebuf, linebuf, hostbuf);
-		}
-		if (flag == 0)
-			sendto_one(sptr, rpl_str(RPL_NOUSERS),
-			    me.name, parv[0]);
-
-		sendto_one(sptr, rpl_str(RPL_ENDOFUSERS), me.name, parv[0]);
-		(void)utmp_close(fd);
-#else
-		sendto_one(sptr, err_str(ERR_USERSDISABLED), me.name, parv[0]);
-#endif
-	}
+	/* /users is out of date, just return an error as  required by
+	 * RFC1459 -- codemastr
+	 */
+	sendto_one(sptr, err_str(ERR_USERSDISABLED), me.name, parv[0]);
 	return 0;
 }
 
@@ -2780,7 +2769,7 @@ int  m_help(cptr, sptr, parc, parv)
 			tmpl->next = helpign;
 			helpign = tmpl;
 		}
-		sendto_helpops("from %s (HelpOp): %s", parv[0], message);
+		sendto_umode(UMODE_HELPOP, "*** HelpOp -- from %s (HelpOp): %s", parv[0], message);		
 	}
 	else if (MyConnect(sptr))
 	{
@@ -2807,14 +2796,14 @@ int  m_help(cptr, sptr, parc, parv)
 
 		sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL,
 		    parv[0], MSG_HELP, TOK_HELP, "%s", message);
-		sendto_helpops("from %s (Local): %s", parv[0], message);
+		sendto_umode(UMODE_HELPOP, "*** HelpOp -- from %s (Local): %s", parv[0], message);		
 		sendto_one(sptr, rpl_str(RPL_HELPFWD), me.name, parv[0]);
 	}
 	else
 	{
 		sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL,
 		    parv[0], MSG_HELP, TOK_HELP, "%s", message);
-		sendto_helpops("from %s: %s", parv[0], message);
+		sendto_umode(UMODE_HELPOP, "*** HelpOp -- from %s: %s", parv[0], message);		
 	}
 
 	return 0;
@@ -3235,7 +3224,7 @@ int  m_svsmotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	FILE *conf = NULL;
 
-	if (!IsULine(cptr, sptr))
+	if (!IsULine(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
@@ -3402,7 +3391,7 @@ int  m_locops(cptr, sptr, parc, parv)
 }
 
 /*
-** m_chatops (write to opers who are +b currently online)
+** m_chatops (write to opers who are currently online)
 **      parv[0] = sender prefix
 **      parv[1] = message text
 */
@@ -3423,7 +3412,7 @@ int  m_chatops(cptr, sptr, parc, parv)
 	}
 	if (ALLOW_CHATOPS == 1)
 	{
-		if (MyClient(sptr) && !SendChatops(sptr))
+		if (MyClient(sptr) && !IsAnOper(sptr))
 		{
 			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 			    parv[0]);
@@ -3442,8 +3431,12 @@ int  m_chatops(cptr, sptr, parc, parv)
 	sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL,
 	    parv[0], MSG_CHATOPS, TOK_CHATOPS, ":%s", message);
 	if (ALLOW_CHATOPS == 1)
-		sendto_umode(UMODE_CHATOP, "*** ChatOps -- from %s: %s",
+	{
+		sendto_umode(UMODE_OPER, "*** ChatOps -- from %s: %s",
 		    parv[0], message);
+		sendto_umode(UMODE_LOCOP, "*** ChatOps -- from %s: %s",
+		    parv[0], message);
+	}
 
 	return 0;
 }
@@ -3471,7 +3464,7 @@ int  m_goper(cptr, sptr, parc, parv)
 		return 0;
 	}
 /*      if (!IsServer(sptr) && MyConnect(sptr) && !IsAnOper(sptr))*/
-	if (!IsServer(sptr) || !IsULine(cptr, sptr))
+	if (!IsServer(sptr) || !IsULine(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
@@ -3524,7 +3517,7 @@ int  m_svskill(cptr, sptr, parc, parv)
 	if (parc == 2)
 		comment = "SVS Killed";
 
-	if (!IsULine(cptr, sptr))
+	if (!IsULine(sptr))
 		return -1;
 
 /*	if (hunt_server(cptr,sptr,":%s SVSKILL %s :%s",1,parc,parv) != HUNTED_ISME)
@@ -3533,8 +3526,9 @@ int  m_svskill(cptr, sptr, parc, parv)
 
 	if (parc < 1 || (!(acptr = find_client(parv[1], NULL))))
 		return 0;
-	sendto_serv_butone(cptr, ":%s SVSKILL %s :%s", parv[0], parv[1],
-	    comment);
+	
+	sendto_serv_butone_token(cptr, parv[0],
+	   MSG_SVSKILL, TOK_SVSKILL, "%s :%s", parv[1], comment);
 
 	return exit_client(cptr, acptr, sptr, comment);
 
@@ -3596,7 +3590,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 		return 0;
 	}
 	if (!MyClient(sptr) && !(IsTechAdmin(sptr) || IsNetAdmin(sptr))
-	    && !IsULine(cptr, sptr))
+	    && !IsULine(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
@@ -3629,7 +3623,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 			{
 				if (!IsAdmin(sptr))
 					return 0;
-				do_garbage_collect = 1;
+				loop.do_garbage_collect = 1;
 				return 0;
 			}
 			if (!match("-rest*", parv[1]))
@@ -3888,12 +3882,12 @@ int  m_restart(cptr, sptr, parc, parv)
 		return 0;
 	}
 	if (!MyClient(sptr) && !(IsTechAdmin(sptr) || IsNetAdmin(sptr))
-	    && !IsULine(cptr, sptr))
+	    && !IsULine(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	if (parc > 2)
+	if (parc > 3)
 	{
 		/* Remote restart. */
 		if (MyClient(sptr) && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
@@ -4281,6 +4275,7 @@ void read_tlines()
 		while (tdata->tmotd)
 		{
 			amotd = tdata->tmotd->next;
+			MyFree(tdata->tmotd->line);
 			MyFree(tdata->tmotd);
 			tdata->tmotd = amotd;
 		}
@@ -4288,6 +4283,7 @@ void read_tlines()
 		while (tdata->trules)
 		{
 			arules = tdata->trules->next;
+			MyFree(tdata->trules->line);
 			MyFree(tdata->trules);
 			tdata->trules = arules;
 		}
@@ -4334,6 +4330,7 @@ aMotd *read_svsmotd(char *filename)
 	while (svsmotd)
 	{
 		old = svsmotd->next;
+		MyFree(svsmotd->line);
 		MyFree(svsmotd);
 		svsmotd = old;
 	}
@@ -4351,7 +4348,7 @@ aMotd *read_svsmotd(char *filename)
 		temp = (aMotd *) MyMalloc(sizeof(aMotd));
 		if (!temp)
 			outofmemory();
-		strcpy(temp->line, line);
+		AllocCpy(temp->line, line);
 		temp->next = NULL;
 		if (!newmotd)
 			newmotd = temp;
@@ -4383,6 +4380,7 @@ aMotd *read_rules(char *filename)
 		while (rules)
 		{
 			old = rules->next;
+			MyFree(rules->line);
 			MyFree(rules);
 			rules = old;
 		}
@@ -4402,7 +4400,7 @@ aMotd *read_rules(char *filename)
 		temp = (aMotd *) MyMalloc(sizeof(aMotd));
 		if (!temp)
 			outofmemory();
-		strcpy(temp->line, line);
+		AllocCpy(temp->line, line);
 		temp->next = NULL;
 		if (!newmotd)
 			newmotd = temp;
@@ -4420,7 +4418,7 @@ aMotd *read_rules(char *filename)
  */
 
 aMotd *read_motd(char *filename)
-{
+{ 
 	int  fd = open(filename, O_RDONLY);
 	aMotd *temp, *newmotd, *last, *old;
 	struct stat sb;
@@ -4438,8 +4436,9 @@ aMotd *read_motd(char *filename)
 		while (motd)
 		{
 			old = motd->next;
+			MyFree(motd->line);
 			MyFree(motd);
-			motd = old;
+		motd = old;
 		}
 		/* We also wanna set it's last changed value -- codemastr */
 		motd_tm = localtime(&sb.st_mtime);
@@ -4459,7 +4458,7 @@ aMotd *read_motd(char *filename)
 		temp = (aMotd *) MyMalloc(sizeof(aMotd));
 		if (!temp)
 			outofmemory();
-		strcpy(temp->line, line);
+		AllocCpy(temp->line, line);
 		temp->next = NULL;
 		if (!newmotd)
 			newmotd = temp;
@@ -4469,6 +4468,7 @@ aMotd *read_motd(char *filename)
 	}
 	close(fd);
 	return newmotd;
+
 }
 
 
@@ -4478,6 +4478,7 @@ aMotd *read_motd(char *filename)
 
 aMotd *read_opermotd(char *filename)
 {
+
 	int  fd = open(filename, O_RDONLY);
 	aMotd *temp, *newmotd, *last, *old;
 	char line[82];
@@ -4490,6 +4491,7 @@ aMotd *read_opermotd(char *filename)
 	while (opermotd)
 	{
 		old = opermotd->next;
+		MyFree(opermotd->line);
 		MyFree(opermotd);
 		opermotd = old;
 	}
@@ -4507,7 +4509,7 @@ aMotd *read_opermotd(char *filename)
 		temp = (aMotd *) MyMalloc(sizeof(aMotd));
 		if (!temp)
 			outofmemory();
-		strcpy(temp->line, line);
+		AllocCpy(temp->line, line);
 		temp->next = NULL;
 		if (!newmotd)
 			newmotd = temp;
@@ -4517,6 +4519,7 @@ aMotd *read_opermotd(char *filename)
 	}
 	close(fd);
 	return newmotd;
+
 }
 
 
@@ -4538,6 +4541,8 @@ aMotd *read_botmotd(char *filename)
 	while (botmotd)
 	{
 		old = botmotd->next;
+		
+		MyFree(botmotd->line);
 		MyFree(botmotd);
 		botmotd = old;
 	}
@@ -4555,7 +4560,7 @@ aMotd *read_botmotd(char *filename)
 		temp = (aMotd *) MyMalloc(sizeof(aMotd));
 		if (!temp)
 			outofmemory();
-		strcpy(temp->line, line);
+		AllocCpy(temp->line, line);
 		temp->next = NULL;
 		if (!newmotd)
 			newmotd = temp;
@@ -4775,7 +4780,7 @@ void dump_map(cptr, server, mask, prompt_length, length)
 {
 	static char prompt[64];
 	char *p = &prompt[prompt_length];
-	int  cnt = 0, local = 0;
+	int  cnt = 0;
 	aClient *acptr;
 	Link *lp;
 	
@@ -4810,9 +4815,6 @@ void dump_map(cptr, server, mask, prompt_length, length)
 		acptr = lp->value.cptr;
 		if (acptr->srvptr != server)
 			continue;
-			
-		if (IsULine(acptr, acptr) && HIDE_ULINES && !IsAnOper(cptr))
-			continue;
 		acptr->flags |= FLAGS_MAP;
 		cnt++;
 	}
@@ -4820,6 +4822,8 @@ void dump_map(cptr, server, mask, prompt_length, length)
 	for (lp = (Link *) return_servers(); lp; lp = lp->next)
 	{
 		acptr = lp->value.cptr;
+		if (IsULine(acptr) && HIDE_ULINES && !IsAnOper(cptr))
+			continue;		
 		if (acptr->srvptr != server)
 			continue;
 		if (!acptr->flags & FLAGS_MAP)
@@ -4859,8 +4863,6 @@ int  m_map(cptr, sptr, parc, parv)
 		if ((strlen(acptr->name) + acptr->hopcount * 2) > longest)
 			longest = strlen(acptr->name) + acptr->hopcount * 2;
 	}
-	for (acptr = client; acptr; acptr = acptr->next)
-
 	if (longest > 60)
 		longest = 60;
 	longest += 2;

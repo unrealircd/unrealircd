@@ -132,6 +132,7 @@ aClient *make_client(from, servr)
 	cptr->srvptr = servr;
 	cptr->status = STAT_UNKNOWN;
 	cptr->fd = -1;
+	cptr->passwd;
 	(void)strcpy(cptr->username, "unknown");
 	if (size == CLIENT_LOCAL_SIZE)
 	{
@@ -141,9 +142,6 @@ aClient *make_client(from, servr)
 		cptr->sockhost[0] = '\0';
 		cptr->buffer[0] = '\0';
 		cptr->authfd = -1;
-#ifdef CRYPTOIRCD
-		cptr->cryptinfo = NULL;
-#endif
 #ifdef SOCKSPORT
 		cptr->socksfd = -1;
 #endif
@@ -154,10 +152,8 @@ aClient *make_client(from, servr)
 void free_client(cptr)
 	aClient *cptr;
 {
-#ifdef CRYPTOIRCD
-	if (MyClient(cptr) && cptr->cryptinfo)
-		MyFree((char *)cptr->cryptinfo);
-#endif
+	if (MyClient(cptr) && cptr->passwd)
+		MyFree((char *)cptr->passwd);
 	MyFree((char *)cptr);
 }
 
@@ -185,7 +181,10 @@ anUser *make_user(cptr)
 		user->invited = NULL;
 		user->silence = NULL;
 		user->server = NULL;
-		user->virthost = NULL;
+		user->lopt = NULL;
+		user->whowas = NULL;
+		user->virthost = MyMalloc(5);
+		*user->virthost = '\0';
 		cptr->user = user;
 	}
 	return user;
@@ -371,34 +370,14 @@ Link *find_channel_link(lp, ptr)
 	return NULL;
 }
 
-
-
-/*
- * Look for a match in a list of strings. Go through the list, and run
- * match() on it. Side effect: if found, this link is moved to the top of
- * the list.
- */
-int  find_str_match_link(lp, str)
-	Link **lp;		/* Two **'s, since we might modify the original *lp */
-	char *str;
+/* Based on find_str_link() from bahamut -- codemastr */
+int find_str_match_link(Link *lp, char *charptr)
 {
-	Link **head = lp;
-	if (!str || !lp)
+	if (!charptr)
 		return 0;
-	if (lp && *lp)
-	{
-		if (!match((*lp)->value.cp, str))
+	for (; lp; lp = lp->next) {
+		if(!match(lp->value.cp, charptr))
 			return 1;
-		for (; (*lp)->next; *lp = (*lp)->next)
-			if (!match((*lp)->next->value.cp, str))
-			{
-				Link *temp = (*lp)->next;
-				*lp = (*lp)->next->next;
-				temp->next = *head;
-				*head = temp;
-				return 1;
-			}
-		return 0;
 	}
 	return 0;
 }
@@ -425,7 +404,7 @@ void free_str_list(lp)
 
 Link *make_link()
 {
-	Link *lp, *lp1;
+	Link *lp;
 	int  i;
 
 	/* "caching" slab-allocator... ie. we're allocating one pages
@@ -539,6 +518,7 @@ aConfItem *make_conf()
 	aconf->clients = 0;
 	aconf->port = 0;
 	aconf->hold = 0;
+	aconf->options = 0;
 	Class(aconf) = 0;
 	return (aconf);
 }
@@ -562,7 +542,9 @@ void delist_conf(aconf)
 void free_sqline(asqline)
 	aSqlineItem *asqline;
 {
+#ifndef NEWDNS
 	del_queries((char *)asqline);
+#endif /*NEWDNS*/
 	MyFree(asqline->sqline);
 	MyFree(asqline->reason);
 	MyFree((char *)asqline);
@@ -572,7 +554,9 @@ void free_sqline(asqline)
 void free_conf(aconf)
 	aConfItem *aconf;
 {
+#ifndef NEWDNS
 	del_queries((char *)aconf);
+#endif /*NEWDNS*/
 	MyFree(aconf->host);
 	if (aconf->passwd)
 		bzero(aconf->passwd, strlen(aconf->passwd));

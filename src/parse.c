@@ -44,9 +44,11 @@ char backupbuf[8192];
 #include "numeric.h"
 #include "h.h"
 
+
 /*
  * NOTE: parse() should not be called recursively by other functions!
  */
+extern int lifesux;
 static char *para[MAXPARA + 1];
 
 static char sender[HOSTLEN + 1];
@@ -66,7 +68,6 @@ aClient inline *find_client(name, cptr)
 	char *name;
 	aClient *cptr;
 {
-	char *newname;
 
 	if (name)
 	{
@@ -103,7 +104,6 @@ aClient inline *find_server(name, cptr)
 	char *name;
 	aClient *cptr;
 {
-	char *newname;
 	if (name)
 	{
 		cptr = hash_find_server(name, cptr);
@@ -172,7 +172,7 @@ void ban_flooder(aClient *cptr)
 	};
 
 	strcpy(hostip, (char *)inetntoa((char *)&cptr->ip));
-	exit_client(cptr, cptr, &me, "Flooding");
+//	exit_client(cptr, cptr, &me, "Flooding");
 
 	tkllayer[4] = hostip;
 	tkllayer[5] = me.name;
@@ -196,7 +196,7 @@ int  parse(cptr, buffer, bufend, mptr)
 	struct Message *mptr;
 {
 	aClient *from = cptr;
-	char *ch, *s, *p;
+	char *ch, *s;
 	int  len, i, numeric, paramcount, noprefix = 0;
 	int  token, mfound;
 #ifdef DEBUGMODE
@@ -210,9 +210,7 @@ int  parse(cptr, buffer, bufend, mptr)
 	if (IsDead(cptr))
 		return 0;
 
-#ifdef RAWDEBUG
-	sendto_ops("Debug: parse(): %s", buffer);
-#endif
+//	sendto_realops("Debug: parse(): %s", buffer);
 
 	if ((cptr->receiveK >= 4) && IsUnknown(cptr))
 	{
@@ -397,19 +395,15 @@ int  parse(cptr, buffer, bufend, mptr)
 		paramcount = mptr->parameters;
 		i = bufend - ch;	/* Is this right? -Donwulff */
 		mptr->bytes += i;
-		if ((mptr->flags & 1) && !(IsServer(cptr) || IsOper(cptr)))
-			cptr->since += (2 + i / 90);
-		/* Allow only 1 msg per 2 seconds
-		 * (on average) to prevent dumping.
-		 * to keep the response rate up,
-		 * bursts of up to 5 msgs are allowed
-		 * -SRB
-		 * 
-		 * Not applying to opers now
-		 * -techie
-		 * 
-		 * 1 msg per 1.5 second i'd say now
-		 */
+		/* Changed this whole lag generating crap .. 
+		 * We only generate fake lag in HTM ..
+		 * --Stskeeps
+		*/
+		if (!IsServer(cptr) && !IsOper(cptr))
+		{
+			if (lifesux)
+				cptr->since += (2 + i / 90);
+		}		
 	}
 	/*
 	   ** Must the following loop really be so devious? On
@@ -471,12 +465,6 @@ int  parse(cptr, buffer, bufend, mptr)
 	    (mptr->func != m_pass) && (mptr->func != m_quit) &&
 	    (mptr->func != m_protoctl) && (mptr->func != m_error) &&
 	    (mptr->func != m_admin) && (mptr->func != m_version)
-#ifdef CRYPTOIRCD
-	    && (mptr->func != m_crypto)
-#endif
-#ifdef NOSPOOF
-	    && (mptr->func != m_notice)
-#endif
 	    )))
 	{
 		sendto_one(from, ":%s %d %s :You have not registered",
