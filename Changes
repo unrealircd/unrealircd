@@ -1319,3 +1319,4 @@ seen. gmtime warning still there
   unless allow::options::noident is set, also if the user matches an allow by IP rather
   than by host the hostname is still used for the u@h, unless allow::options::useip is set
   (idea inspired by danielek)
+- Fixed a bug in the new allow system reported by danielek
