@@ -946,13 +946,16 @@ HWND DrawToolbar(HWND hwndParent, UINT iID) {
 	HWND hTool;
 	TBADDBITMAP tbBit;
 	int newidx;
-	TBBUTTON tbButtons[7] = {
+	TBBUTTON tbButtons[10] = {
 		{ STD_FILENEW, IDM_NEW, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0L, 0},
 		{ STD_FILESAVE, IDM_SAVE, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0L, 0},
 		{ 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0}, 0L, 0},
 		{ STD_CUT, IDM_CUT, 0, TBSTYLE_BUTTON, {0}, 0L, 0},
 		{ STD_COPY, IDM_COPY, 0, TBSTYLE_BUTTON, {0}, 0L, 0},
 		{ STD_PASTE, IDM_PASTE, 0, TBSTYLE_BUTTON, {0}, 0L, 0},
+		{ 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0}, 0L, 0},
+		{ STD_UNDO, IDM_UNDO, 0, TBSTYLE_BUTTON, {0}, 0L, 0},
+		{ STD_REDOW, IDM_REDO, 0, TBSTYLE_BUTTON, {0}, 0L, 0},
 		{ 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0}, 0L, 0}
 	};
 		
@@ -963,7 +966,7 @@ HWND DrawToolbar(HWND hwndParent, UINT iID) {
 	};
 	hTool = CreateToolbarEx(hwndParent, WS_VISIBLE|WS_CHILD|TBSTYLE_FLAT|TBSTYLE_TOOLTIPS, 
 				IDC_TOOLBAR, 0, HINST_COMMCTRL, IDB_STD_SMALL_COLOR,
-				tbButtons, 7, 0,0,100,30, sizeof(TBBUTTON));
+				tbButtons, 10, 0,0,100,30, sizeof(TBBUTTON));
 	tbBit.hInst = hInst;
 	tbBit.nID = IDB_BITMAP1;
 	newidx = SendMessage(hTool, TB_ADDBITMAP, (WPARAM)3, (LPARAM)&tbBit);
@@ -978,7 +981,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 	HWND hWnd;
 	static FINDREPLACE find;
 	static char *file;
-	static HWND hTool, hClip;
+	static HWND hTool, hClip, hStatus;
 	CHARFORMAT2 chars;
 	switch (message) {
 		case WM_INITDIALOG: {
@@ -988,19 +991,21 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			StreamIO *stream = malloc(sizeof(StreamIO));
 			char szText[256];
 			struct stat sb;
+			HWND hWnd = GetDlgItem(hDlg, IDC_TEXT);
 			file = (char *)lParam;
 			if (file)
 				wsprintf(szText, "UnrealIRCd Editor - %s", file);
 			else 
 				strcpy(szText, "UnrealIRCd Editor - New File");
 			SetWindowText(hDlg, szText);
-			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)RESubClassFunc);
+			lpfnOldWndProc = (FARPROC)SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)RESubClassFunc);
 			hTool = DrawToolbar(hDlg, IDC_TOOLBAR);
-			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_SETEVENTMASK, 0, (LPARAM)ENM_SELCHANGE);
+			hStatus = CreateStatusWindow(WS_CHILD|WS_VISIBLE, NULL, hDlg, IDC_STATUS);
+			SendMessage(hWnd, EM_SETEVENTMASK, 0, (LPARAM)ENM_SELCHANGE);
 			chars.cbSize = sizeof(CHARFORMAT2);
 			chars.dwMask = CFM_FACE;
 			strcpy(chars.szFaceName,"Fixedsys");
-			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_SETCHARFORMAT, (WPARAM)SCF_ALL, (LPARAM)&chars);
+			SendMessage(hWnd, EM_SETCHARFORMAT, (WPARAM)SCF_ALL, (LPARAM)&chars);
 			if ((fd = open(file, _O_RDONLY|_O_BINARY)) != -1) {
 				fstat(fd,&sb);
 				/* Only allocate the amount we need */
@@ -1018,28 +1023,29 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				stream->buffer = &RTFBuf;
 				edit.dwCookie = (UINT)stream;
 				edit.pfnCallback = SplitIt;
-				SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_STREAMIN,
-					(WPARAM)SF_RTF|SFF_PLAINRTF, (LPARAM)&edit);
-				SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_SETMODIFY,
-					(WPARAM)FALSE, 0);
-
+				SendMessage(hWnd, EM_STREAMIN, (WPARAM)SF_RTF|SFF_PLAINRTF, (LPARAM)&edit);
+				SendMessage(hWnd, EM_SETMODIFY, (WPARAM)FALSE, 0);
+				SendMessage(hWnd, EM_EMPTYUNDOBUFFER, 0, 0);
 				close(fd);
 				RTFBuf = NULL;
 				free(buffer);
 				free(string);
 				free(stream);
 				hClip = SetClipboardViewer(hDlg);
-				if (SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_CANPASTE, 0, 0)) 
+				if (SendMessage(hWnd, EM_CANPASTE, 0, 0)) 
 					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_PASTE, (LPARAM)MAKELONG(TRUE,0));
 				else
 					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_PASTE, (LPARAM)MAKELONG(FALSE,0));
+				SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_UNDO, (LPARAM)MAKELONG(FALSE,0));
 			}
 			return (TRUE);
 			}
 		case WM_NOTIFY:
 			if (((NMHDR *)lParam)->code == EN_SELCHANGE) {
 				HWND hWnd = GetDlgItem(hDlg, IDC_TEXT);
-				DWORD start, end;
+				DWORD start, end, currline;
+				static DWORD prevline = 0;
+				char buffer[512];
 				chars.cbSize = sizeof(CHARFORMAT2);
 				SendMessage(hWnd, EM_GETCHARFORMAT, (WPARAM)SCF_SELECTION, (LPARAM)&chars);
 				if (chars.dwMask & CFM_BOLD && chars.dwEffects & CFE_BOLD)
@@ -1059,7 +1065,21 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_COPY, (LPARAM)MAKELONG(TRUE,0));
 					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_CUT, (LPARAM)MAKELONG(TRUE,0));
 				}
-		
+				if (SendMessage(hWnd, EM_CANUNDO, 0, 0)) 
+					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_UNDO, (LPARAM)MAKELONG(TRUE,0));
+				else
+					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_UNDO, (LPARAM)MAKELONG(FALSE,0));
+				if (SendMessage(hWnd, EM_CANREDO, 0, 0)) 
+					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_REDO, (LPARAM)MAKELONG(TRUE,0));
+				else
+					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_REDO, (LPARAM)MAKELONG(FALSE,0));
+				currline = SendMessage(hWnd, EM_LINEFROMCHAR, (WPARAM)-1, 0);
+				currline++;
+				if (currline != prevline) {
+					wsprintf(buffer, "Line: %d", currline);
+					SetWindowText(hStatus, buffer);
+					prevline = currline;
+				}
 				return (TRUE);
 			}
 			if (((NMHDR *)lParam)->code == TTN_GETDISPINFO) {
@@ -1080,6 +1100,12 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 						break;
 					case IDM_PASTE:
 						strcpy(lpttt->szText, "Paste");
+						break;
+					case IDM_UNDO:
+						strcpy(lpttt->szText, "Undo");
+						break;
+					case IDM_REDO:
+						strcpy(lpttt->szText, "Redo");
 						break;
 					case IDC_BOLD:
 						strcpy(lpttt->szText, "Bold");
@@ -1102,7 +1128,6 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 					chars.cbSize = sizeof(CHARFORMAT2);
 					chars.dwMask = CFM_BOLD;
 					chars.dwEffects = CFE_BOLD;
-					chars.wWeight = FW_HEAVY;
 					SendMessage(hWnd, EM_SETCHARFORMAT, (WPARAM)SCF_SELECTION, (LPARAM)&chars);
 					SendMessage(hWnd, EM_HIDESELECTION, 0, 0);
 					SetFocus(hWnd);
@@ -1158,6 +1183,10 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 		}
 		if (LOWORD(wParam) == IDM_UNDO) {
 			SendMessage(hWnd, EM_UNDO, 0, 0);
+			return 0;
+		}
+		if (LOWORD(wParam) == IDM_REDO) {
+			SendMessage(hWnd, EM_REDO, 0, 0);
 			return 0;
 		}
 		if (LOWORD(wParam) == IDM_DELETE) {

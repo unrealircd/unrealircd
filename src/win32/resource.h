@@ -16,6 +16,7 @@
 #define IDB_BITMAP1                     150
 #define IDC_BAR                         1103
 #define IDC_TOOLBAR                     1104
+#define IDC_STATUS			1105
 #define IDC_TEXT                        1107
 #define IDC_EMAIL                       1108
 #define IDC_URL                         1109
@@ -63,6 +64,7 @@
 #define IDM_LICENSE                     40029
 #define IDM_HELP                        40030
 #define IDM_SAVE			40031
+#define IDM_REDO			40032
 #define IDM_CONF                        40037
 #define IDM_MOTD                        40038
 #define IDM_BOTMOTD                     40039

@@ -1082,3 +1082,5 @@ seen. gmtime warning still there
 - // comments are not supported by many compilers and should not be used
 - Fixed a bug where teh SAJOIN/SAPART/SVSJOIN/SVSPART tokens were screwed up found by 
   Andy Church
+- Made even more changes to the win32 editor (undo/redo buttons,
+  and current line number display)
