@@ -1317,6 +1317,10 @@ void do_mode(chptr, cptr, sptr, parc, parv, sendts, samode)
 		sptr = &me;
 		sendts = 0;
 	}
+	/* Should stop null modes */
+	if (*(mode_buf + 1) == '\0')
+		return;
+	
 	sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
 	    sptr->name, chptr->chname, mode_buf, parabuf);
 	if (IsServer(sptr) && sendts != -1)
