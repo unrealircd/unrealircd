@@ -777,3 +777,4 @@ seen. gmtime warning still there
 - Implimented snomask (similar to IRCu) and moved several usermodes to it
 - Added a config check to detect what order we should specify the SSL libraries in
 - Fixed bug with SSL, detected properly and fixed by Chawmp
+- Fixed an oper-only-stats bug

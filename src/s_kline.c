@@ -397,7 +397,7 @@ void tkl_stats(aClient *cptr)
 	   Character:
 	   G, Z, K, z
 	 */
-	if (!IsAnOper(cptr) && (strchr(OPER_ONLY_STATS, 'G') || strchr(OPER_ONLY_STATS, 'g'))) {
+	if (!IsAnOper(cptr) && OPER_ONLY_STATS && (strchr(OPER_ONLY_STATS, 'G') || strchr(OPER_ONLY_STATS, 'g'))) {
 		sendto_one(cptr, err_str(ERR_NOPRIVILEGES), me.name, cptr->name);
 		return;
 	}
