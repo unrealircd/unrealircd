@@ -147,9 +147,6 @@ aCtab cFlagTab[] = {
 	{MODE_NOINVITE, 'V', 0, 0},	/* no invites */
 	{MODE_FLOODLIMIT, 'f', 0, 1},	/* flood limiter */
 	{MODE_MODREG, 'M', 0, 0},	/* Need umode +r to talk */
-#ifdef STRIPBADWORDS
-	{MODE_STRIPBADWORDS, 'G', 0, 0},	/* no badwords */
-#endif
 	{MODE_NOCTCP, 'C', 0, 0},	/* no CTCPs */
 	{MODE_AUDITORIUM, 'u', 0, 0},
 	{MODE_ONLYSECURE, 'z', 0, 0},
@@ -1921,9 +1918,6 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  if (notsecure == 1) break;
 		}
 		goto setthephuckingmode;
-#ifdef STRIPBADWORDS
-	  case MODE_STRIPBADWORDS:
-#endif
 	  case MODE_NOCTCP:
 	  case MODE_NONICKCHANGE:
 	  case MODE_NOINVITE:
@@ -4053,7 +4047,7 @@ CMD_FUNC(m_part)
 				comment = (char *)stripbadwords_channel(comment, &blocked);
 			}
  #else
-			if ((chptr->mode.mode & MODE_STRIPBADWORDS) && comment) {
+			if ((chptr->mode.extmode & EXTMODE_STRIPBADWORDS) && comment) {
 				comment = (char *)stripbadwords_channel(comment, &blocked);
 			}
  #endif

@@ -430,7 +430,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 						continue;
 					}
  #else
-					if (chptr->mode.mode & MODE_STRIPBADWORDS)
+					if (chptr->mode.extmode & EXTMODE_STRIPBADWORDS)
 					{
 						text = stripbadwords_channel(text, &blocked);
 						if (blocked)

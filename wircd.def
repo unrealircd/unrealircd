@@ -30,6 +30,7 @@ EXPORTS
 	DoEvents
 	DoesOp
 	EXTMODE_NONOTICE
+	EXTMODE_STRIPBADWORDS
 	EventAddEx
 	EventDel
 	EventFind

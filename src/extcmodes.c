@@ -54,6 +54,9 @@ Cmode *Channelmode_Table = NULL;
 unsigned short Channelmode_highest = 0;
 
 Cmode_t EXTMODE_NONOTICE = 0L;
+#ifdef STRIPBADWORDS
+Cmode_t EXTMODE_STRIPBADWORDS = 0L;
+#endif
 
 void make_extcmodestr()
 {
@@ -92,6 +95,10 @@ static void load_extendedchanmodes(void)
 	req.is_ok = extcmode_default_requirechop;
 	req.flag = 'T';
 	CmodeAdd(NULL, req, &EXTMODE_NONOTICE);
+#ifdef STRIPBADWORDS
+	req.flag = 'G';
+	CmodeAdd(NULL, req, &EXTMODE_STRIPBADWORDS);
+#endif
 }
 
 void	extcmode_init(void)

@@ -1539,8 +1539,9 @@ struct liststruct {
 #define	CHFL_BAN     	0x0020	/* ban channel flag */
 #define CHFL_CHANOWNER 	0x0040	/* channel owner */
 #define CHFL_CHANPROT  	0x0080	/* chan op protection */
-#define CHFL_HALFOP		0x0100	/* halfop */
-#define CHFL_EXCEPT		0x0200	/* phase this out ? +e */
+#define CHFL_HALFOP	0x0100	/* halfop */
+#define CHFL_EXCEPT	0x0200	/* phase this out ? +e */
+#define CHFL_INVEX	0x0400  /* invite exception */
 
 #define	CHFL_OVERLAP    (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP|CHFL_VOICE|CHFL_HALFOP)
 
@@ -1549,21 +1550,21 @@ struct liststruct {
 #define	MODE_CHANOP		CHFL_CHANOP
 #define	MODE_VOICE		CHFL_VOICE
 #define	MODE_PRIVATE		0x0004
-#define	MODE_SECRET			0x0008
+#define	MODE_SECRET		0x0008
 #define	MODE_MODERATED  	0x0010
 #define	MODE_TOPICLIMIT 	0x0020
 #define MODE_CHANOWNER		0x0040
 #define MODE_CHANPROT		0x0080
-#define	MODE_HALFOP			0x0100
-#define MODE_EXCEPT			0x0200
-#define	MODE_BAN			0x0400
+#define	MODE_HALFOP		0x0100
+#define MODE_EXCEPT		0x0200
+#define	MODE_BAN		0x0400
 #define	MODE_INVITEONLY 	0x0800
 #define	MODE_NOPRIVMSGS 	0x1000
-#define	MODE_KEY			0x2000
-#define	MODE_LIMIT			0x4000
-#define MODE_RGSTR			0x8000
-#define MODE_RGSTRONLY 		 	0x10000
-#define MODE_LINK			0x20000
+#define	MODE_KEY		0x2000
+#define	MODE_LIMIT		0x4000
+#define MODE_RGSTR		0x8000
+#define MODE_RGSTRONLY 		0x10000
+#define MODE_LINK		0x20000
 #define MODE_NOCOLOR		0x40000
 #define MODE_OPERONLY   	0x80000
 #define MODE_ADMONLY   		0x100000
@@ -1573,9 +1574,7 @@ struct liststruct {
 #define MODE_NOINVITE  		0x1000000
 #define MODE_FLOODLIMIT		0x2000000
 #define MODE_MODREG		0x4000000
-#ifdef STRIPBADWORDS
-#define MODE_STRIPBADWORDS	0x8000000
-#endif
+#define MODE_INVEX		0x8000000
 #define MODE_NOCTCP		0x10000000
 #define MODE_AUDITORIUM		0x20000000
 #define MODE_ONLYSECURE		0x40000000
@@ -1585,7 +1584,7 @@ struct liststruct {
 /*
  * mode flags which take another parameter (With PARAmeterS)
  */
-#define	MODE_WPARAS	(MODE_HALFOP|MODE_CHANOP|MODE_VOICE|MODE_CHANOWNER|MODE_CHANPROT|MODE_BAN|MODE_KEY|MODE_LINK|MODE_LIMIT|MODE_EXCEPT)
+#define	MODE_WPARAS (MODE_HALFOP|MODE_CHANOP|MODE_VOICE|MODE_CHANOWNER|MODE_CHANPROT|MODE_BAN|MODE_KEY|MODE_LINK|MODE_LIMIT|MODE_EXCEPT|MODE_INVEX)
 /*
  * Undefined here, these are used in conjunction with the above modes in
  * the source.

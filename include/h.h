@@ -465,6 +465,9 @@ extern MODVAR long SNO_OPER;
 #ifdef EXTCMODE
 /* Extended chanmodes... */
 extern MODVAR Cmode_t EXTMODE_NONOTICE;
+#ifdef STRIPBADWORDS
+extern MODVAR Cmode_t EXTMODE_STRIPBADWORDS;
+#endif
 #endif
 
 #ifndef HAVE_STRLCPY
