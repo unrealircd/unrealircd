@@ -65,7 +65,10 @@ char *base64enc(unsigned long i)
 
 unsigned long base64dec(char *b64)
 {
-	return base64_to_int(b64);
+	if (b64)
+		return base64_to_int(b64);
+	else
+		return 0;
 }
 
 int  numeric_collides(unsigned long numeric)
@@ -129,7 +132,10 @@ aClient *find_server_by_numeric(unsigned long value)
 
 aClient *find_server_by_base64(char *b64)
 {
-	return find_server_by_numeric(base64dec(b64));
+	if (b64)
+		return find_server_by_numeric(base64dec(b64));
+	else
+		return NULL;
 }
 
 char *find_server_id(aClient *which)
@@ -137,7 +143,7 @@ char *find_server_id(aClient *which)
 	return (base64enc(which->serv->numeric));
 }
 
-aClient *find_server_quick(char *name)
+aClient *find_server_quick_search(char *name)
 {
 	Link *lp;
 
@@ -146,11 +152,23 @@ aClient *find_server_quick(char *name)
 			return (lp->value.cptr);
 	return NULL;
 }
+aClient *find_server_quickx(char *name, aClient *cptr)
+{
+	if (name)
+	{
+		cptr = (aClient *)find_server_quick_search(name);
+	}
+	return cptr;
+}
+
 
 aClient *find_server_b64_or_real(char *name)
 {
 	Link *lp;
 
+	if (!name)
+		return NULL;
+		
 	if (strlen(name) < 4)
 	{
 		for (lp = servers; lp; lp = lp->next)
@@ -220,6 +238,9 @@ static inline unsigned long base64_to_int(char *b64)
 {
 	unsigned int v = base64_to_int6_map[(u_char)*b64++];
 
+	if (!b64)
+		return 0;
+		
 	while (*b64)
 	{
 		v <<= 6;

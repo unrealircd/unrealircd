@@ -106,8 +106,9 @@ extern aClient *find_name PROTO((char *, aClient *));
 extern aClient *find_nickserv PROTO((char *, aClient *));
 extern aClient *find_person PROTO((char *, aClient *));
 extern aClient *find_server PROTO((char *, aClient *));
+extern aClient *find_server_quickx PROTO((char *, aClient *));
 extern aClient *find_service PROTO((char *, aClient *));
-extern aClient *find_server_quick PROTO((char *));
+#define find_server_quick(x) find_server_quickx(x, NULL)
 extern char *find_or_add PROTO((char *));
 extern int attach_conf PROTO((aClient *, aConfItem *));
 extern aConfItem *attach_confs PROTO((aClient *, char *, int));

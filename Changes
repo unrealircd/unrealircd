@@ -608,3 +608,4 @@
   it stopped the server crashing !
 - Made Code revisions so that we can compile on Win32, and fixed some of sts's late nite 
   coding sessions(dbin)
+- Fixed some REAL dumb find_server_quick bugs
