@@ -964,6 +964,7 @@ struct _configitem_listen {
 	char		*ip;
 	int		port;
 	long		options, clients;
+	aClient		*listener;
 };
 
 struct _configitem_vhost {

@@ -470,6 +470,7 @@ int add_listener2(ConfigItem_listen *conf)
 	{	
 		cptr->umodes |= LISTENER_BOUND;
 		conf->options |= LISTENER_BOUND;
+		conf->listener = cptr;
 		set_non_blocking(cptr->fd, cptr);
 		return 1;
 	}

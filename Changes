@@ -1697,3 +1697,5 @@ seen. gmtime warning still there
 - Changed set::scan:ban-time to set::scan::bantime and added set::scan::timeout in 
   unreal32docs.html
 - Fixed some logical module rehash issues
+- Made config actually add listeners when rehashing (...) also you can now
+  change listener flags using /rehash

@@ -1123,6 +1123,7 @@ int InitwIRCD(int argc, char *argv[])
 		exit(1);
 	conf_listen->options |= LISTENER_BOUND;
 	me.umodes = conf_listen->options;
+	conf_listen->listener = &me;
 	run_configuration();
 	botmotd = (aMotd *) read_file(BPATH, &botmotd);
 	rules = (aMotd *) read_rules(RPATH);

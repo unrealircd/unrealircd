@@ -1490,6 +1490,7 @@ int	config_run()
 			}
 		}
 	}
+
 	close_listeners();
 	listen_cleanup();
 	close_listeners();
@@ -2928,12 +2929,18 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 		isnew = 0;
 	}
 
+	if (listen->options & LISTENER_BOUND)
+	{
+		listen->options = 0;
+		listen->options |= LISTENER_BOUND;
+	}
+	else
+		listen->options = 0;
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "options"))
 		{
-			listen->options = 0;
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
 				if ((ofp = config_binary_flags_search(_ListenerFlags, cepp->ce_varname, sizeof(_ListenerFlags)/sizeof(_ListenerFlags[0]))))
@@ -2948,6 +2955,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 				listen->options &= ~LISTENER_SSL;
 			}
 #endif
+		
 		}
 
 	}
@@ -4959,6 +4967,15 @@ void	run_configuration(void)
 			{
 			}
 		}
+		else
+		{
+			if (listenptr->listener)
+			{
+				listenptr->listener->umodes = 
+					(listenptr->options & ~LISTENER_BOUND) ? listenptr->options : LISTENER_NORMAL;
+				listenptr->listener->umodes |= LISTENER_BOUND;
+			}
+		}
 	}
 }
 
@@ -5537,7 +5554,9 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		write_pidfile();
 #endif
 	}
-	init_conf(configfile, 1);
+	if (init_conf(configfile, 1) == 0)
+		run_configuration();
+	
 	return 1;
 }
 
