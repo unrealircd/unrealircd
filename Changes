@@ -1679,3 +1679,5 @@ seen. gmtime warning still there
 - Fixed sendto_ routines to use slot number as index into sentalong array
 - Fixed a conf3 bug
 - Made alias {}'s get rehashed
+- Made modules correctly rehash, this involves adding a Mod_Test function to modules that
+  need to perform configuration tests. This is currently only implimented for dynamic linking

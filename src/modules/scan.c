@@ -98,6 +98,18 @@ static Hook	*ConfPostTest = NULL;
 static Hooktype *ScanHost = NULL;
 static int HOOKTYPE_SCAN_HOST;
 ModuleInfo ScanModInfo;
+
+#ifdef DYNAMIC_LINKING
+DLLFUNC int	Mod_Test(ModuleInfo *modinfo)
+#else
+int    m_scan_Test(ModuleInfo *modinfo)
+#endif
+{
+	bcopy(modinfo,&ScanModInfo,modinfo->size);
+	ConfTest = HookAddEx(ScanModInfo.handle, HOOKTYPE_CONFIGTEST, h_config_test);
+	ConfPostTest = HookAddEx(ScanModInfo.handle, HOOKTYPE_CONFIGPOSTTEST, h_config_posttest);
+}
+
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
@@ -110,9 +122,7 @@ int    m_scan_Init(ModuleInfo *modinfo)
 	bzero(&ReqConf, sizeof(ReqConf));
 	ScanHost = (Hooktype *)HooktypeAdd(modinfo->handle, "HOOKTYPE_SCAN_HOST", &HOOKTYPE_SCAN_HOST);
 	LocConnect = HookAddEx(ScanModInfo.handle, HOOKTYPE_LOCAL_CONNECT, h_scan_connect);
-	ConfTest = HookAddEx(ScanModInfo.handle, HOOKTYPE_CONFIGTEST, h_config_test);
 	ConfRun = HookAddEx(ScanModInfo.handle, HOOKTYPE_CONFIGRUN, h_config_run);
-	ConfPostTest = HookAddEx(ScanModInfo.handle, HOOKTYPE_CONFIGPOSTTEST, h_config_posttest);
 	ServerStats = HookAddEx(ScanModInfo.handle, HOOKTYPE_STATS, h_stats_scan);
 	bzero(&Scan_bind, sizeof(Scan_bind));
 	IRCCreateMutex(Scannings_lock);

@@ -1011,6 +1011,9 @@ int	init_conf(char *rootconf, int rehash)
 			if (!rehash)
 				win_error();
 #endif
+#ifdef DYNAMIC_LINKING
+			Unload_all_testing_modules();
+#endif
 			config_free(conf);
 			conf = NULL;
 			free_iConf(&tempiConf);
@@ -1018,7 +1021,15 @@ int	init_conf(char *rootconf, int rehash)
 		}
 		
 		if (rehash)
+		{
 			config_rehash();
+#ifdef DYNAMIC_LINKING
+			Unload_all_loaded_modules();
+#endif
+		}
+#ifdef DYNAMIC_LINKING
+		Init_all_testing_modules();
+#endif
 		if (config_run() < 0)
 		{
 			config_error("Bad case of config errors. Server will now die. This really shouldn't happen");
@@ -1044,6 +1055,10 @@ int	init_conf(char *rootconf, int rehash)
 	}
 	config_free(conf);
 	conf = NULL;
+#ifdef DYNAMIC_LINKING
+	if (rehash)
+		module_loadall(0);
+#endif
 	config_status("Configuration loaded without any problems ..");
 	return 0;
 }
@@ -1422,6 +1437,8 @@ int	config_post_test()
 		global_i = global_i->next) 
 	{
 		int value;
+		if (!(global_i->owner->flags & MODFLAG_TESTING))
+			continue;
 		value = (*(global_i->func.intfunc))();
 		if (value == -1)
 		{
@@ -1528,6 +1545,8 @@ int	config_test()
 					global_i = global_i->next) 
 				{
 					int value;
+					if (!(global_i->owner->flags & MODFLAG_TESTING))
+						continue;
 					value = (*(global_i->func.intfunc))(cfptr,ce,CONFIG_MAIN);
 					if (value == 2)
 						used = 1;
@@ -3116,6 +3135,8 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 				global_i = global_i->next) 
 			{
 				int value;
+				if (!(global_i->owner->flags & MODFLAG_TESTING))
+					continue;
 				value = (*(global_i->func.intfunc))(conf,ce,CONFIG_ALLOW);
 				if (value == 2)
 					used = 1;
@@ -3552,6 +3573,8 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 			global_i = global_i->next) 
 		{
 			int value;
+			if (!(global_i->owner->flags & MODFLAG_TESTING))
+				continue;
 			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_EXCEPT);
 			if (value == 2)
 				used = 1;
@@ -4267,6 +4290,8 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 			global_i = global_i->next) 
 		{
 			int value;
+			if (!(global_i->owner->flags & MODFLAG_TESTING))
+				continue;
 			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_BAN);
 			if (value == 2)
 				used = 1;
@@ -4810,6 +4835,8 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				global_i = global_i->next) 
 			{
 				int value;
+				if (!(global_i->owner->flags & MODFLAG_TESTING))
+					continue;
 				value = (*(global_i->func.intfunc))(conf,cep,CONFIG_SET);
 				if (value == 2)
 					used = 1;
@@ -4871,7 +4898,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 		return -1;
 	}	
 	for (i = 0; i < files.gl_pathc; i++) {
-		if ((ret = Module_Load(files.gl_pathv[i],0))) {
+		if ((ret = Module_Create(files.gl_pathv[i]))) {
 			config_status("%s:%i: loadmodule %s: failed to load: %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				files.gl_pathv[i], ret);
@@ -4887,20 +4914,20 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 		FindClose(hFind);
 		return -1;
 	}
-	if ((ret = Module_Load(FindData.cFileName,0))) {
+	if ((ret = Module_Create(FindData.cFileName))) {
 			config_status("%s:%i: loadmodule %s: failed to load: %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				FindData.cFileName, ret);
 	}
 	while (FindNextFile(hFind, &FindData) != 0) {
-		if (((ret = Module_Load(FindData.cFileName,0)))) 
+		if (((ret = Module_Create(FindData.cFileName)))) 
 			config_status("%s:%i: loadmodule %s: failed to load: %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				FindData.cFileName, ret);
 	}
 	FindClose(hFind);
 #else
-	if ((ret = Module_Load(ce->ce_vardata,0))) {
+	if ((ret = Module_Create(ce->ce_vardata))) {
 			config_status("%s:%i: loadmodule %s: failed to load: %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				ce->ce_vardata, ret);
@@ -5473,6 +5500,8 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 			global_i = global_i->next) 
 		{
 			int value;
+			if (!(global_i->owner->flags & MODFLAG_TESTING))
+				continue;
 			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_DENY);
 			if (value == 2)
 				used = 1;

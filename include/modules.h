@@ -210,7 +210,10 @@ extern Hooktype		Hooktypes[MAXCUSTOMHOOKS];
 extern Hook		*global_i;
 
 void    Module_Init(void);
-char    *Module_Load(char *path, int load);
+char    *Module_Create(char *path);
+void    Init_all_testing_modules(void);
+void    Unload_all_loaded_modules(void);
+void    Unload_all_testing_modules(void);
 int     Module_Unload(char *name, int unload);
 vFP     Module_Sym(char *name);
 vFP     Module_SymX(char *name, Module **mptr);
@@ -261,7 +264,9 @@ void CommandDel(Command *command);
 #define HOOKTYPE_CONFIGRUN 16
 /* Module flags */
 #define MODFLAG_NONE	0x0000
-#define MODFLAG_LOADED	0x0001 /* (mod_load has been called and suceeded) */
+#define MODFLAG_LOADED	0x0001 /* Fully loaded */
+#define MODFLAG_TESTING 0x0002 /* Not yet initialized */
+#define MODFLAG_INIT	0x0004 /* Initialized */
 
 /* Module function return values */
 #define MOD_SUCCESS 0
