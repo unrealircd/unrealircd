@@ -35,3 +35,5 @@
 - You can no longer specify an *@unrealircd.com/org, or unreal-*@lists.sourceforge.net email
   as your KLINE_ADDRESS (the "Why am I K:lined?" messages got too annoying)
 - Removed some irc.flirt.org references.
+- Made it so if a channel is +O or +A and you are not +O or +A and not in the channel, you can not
+  /topic #channel same for +b if not +o or on the channel. Suggested by Sysop_Mars

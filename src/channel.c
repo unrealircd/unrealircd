@@ -3487,6 +3487,12 @@ int  m_topic(cptr, sptr, parc, parv)
 
 		if (!topic)	/* only asking  for topic  */
 		{
+			if ((chptr->mode.mode & MODE_OPERONLY && !IsAnOper(sptr) && !IsMember(sptr, chptr)) ||
+			    (chptr->mode.mode & MODE_ADMONLY && !IsAdmin(sptr) && !IsMember(sptr, chptr)) ||
+			    (is_banned(sptr,sptr,chptr) && !IsAnOper(sptr) && !IsMember(sptr, chptr))) {
+				sendto_one(sptr, err_str(ERR_NOTONCHANNEL), me.name, parv[0], name);
+				return;
+			}
 			if (!chptr->topic)
 				sendto_one(sptr, rpl_str(RPL_NOTOPIC),
 				    me.name, parv[0], chptr->chname);
