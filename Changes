@@ -236,3 +236,4 @@
         allow channel { channel "channelmask"; };. Replaces chrestrict
 - Made those above get rehashed
 - Killed ircdupstr and called it ircstrdup
+- Made link { options { work OK again. Had a dead loop as well

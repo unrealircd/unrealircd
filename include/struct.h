@@ -808,7 +808,7 @@ struct t_vhline {
 
 #define CONNECT_SSL		0x000001
 #define CONNECT_ZIP		0x000002 
-
+#define CONNECT_AUTO		0x000004
 
 struct Client {
 	struct Client *next, *prev, *hnext;

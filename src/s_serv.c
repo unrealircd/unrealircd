@@ -3053,9 +3053,6 @@ void load_tunefile(void)
 	char *parv[];
 {
 	int  port, tmpport, retval;
-#ifdef OLD
-	aConfItem *cconf;
-#endif
 	ConfigItem_link	*aconf;
 	aClient *acptr;
 

@@ -163,9 +163,10 @@ static OperFlag _ListenerFlags[] = {
 };
 
 static OperFlag _LinkFlags[] = {
-	{ 0x0001,	"autoconnect" },
-	{ 0x0002,	"ssl"		  },
-	{ 0x0004,	"zip"		  }	
+	{ CONNECT_AUTO,	"autoconnect" },
+	{ CONNECT_SSL,	"ssl"		  },
+	{ CONNECT_ZIP,	"zip"		  },
+	{ 0L, 		NULL }
 }; 
 
 /*
@@ -1688,6 +1689,8 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 		}
 		if (!strcmp(cep->ce_varname, "options"))
 		{
+			/* remove options */
+			link->options = 0;
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
 				if (!cepp->ce_varname)
