@@ -10,7 +10,7 @@ NS_ADDRESS=/D NS_ADDRESS="\"nospoof@dal.net\""
 !IFNDEF DEBUG
 
 !IFNDEF DISTDEBUG
-CFLAGS=/MT /O2 /G5 /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D _WIN32GUI /D USENEWDNS /D NOSPOOF=1 /c
+CFLAGS=/MT /O2 /G5 /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D _WIN32GUI /D NOSPOOF=1 /c
 
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib \
  oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /out:WIRCD2.EXE
@@ -40,18 +40,18 @@ INCLUDES=./include/struct.h ./include/config.h ./include/sys.h \
  ./include/common.h ./include/version.h ./include/h.h ./include/numeric.h \
  ./include/msg.h ./include/setup.h ./include/dynconf.h
 LINK=link.exe
-# SRC/RES.OBJ SRC/RES_INIT.OBJ SRC/RES_COMP.OBJ
 OBJ_FILES=SRC/CHANNEL.OBJ SRC/USERLOAD.OBJ SRC/SEND.OBJ SRC/BSD.OBJ \
  SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ  \
  SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ \
  SRC/S_NUMERIC.OBJ SRC/WHOWAS.OBJ  SRC/S_AUTH.OBJ \
  SRC/HELP.OBJ SRC/S_MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ \
  SRC/S_DEBUG.OBJ  SRC/SUPPORT.OBJ SRC/LIST.OBJ \
- SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/CLASS.OBJ SRC/S_BSD.OBJ \
+ SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/S_BSD.OBJ \
  SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/WIN32GUI.OBJ \
- SRC/VERSION.OBJ SRC/S_UNREAL.OBJ SRC/DYNCONF.OBJ \
+ SRC/VERSION.OBJ SRC/S_UNREAL.OBJ SRC/RES_INIT.OBJ \
  SRC/S_SOCKS.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ \
- SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/NEWDNS.OBJ src/version.obj
+ SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ \
+ SRC/S_SVS.OBJ
 RC=rc.exe
 
 ALL: COMPILERHELP.EXE WIRCD.EXE
@@ -187,6 +187,9 @@ src/scache.obj: src/scache.c $(INCLUDES) ./include/dbuf.h
 src/s_socks.obj: src/s_socks.c $(INCLUDES)
         $(CC) $(CFLAGS) src/s_socks.c
 
+src/s_svs.obj: src/s_svs.c $(INCLUDES)
+	  $(CC) $(CFLAGS) src/s_svs.c
+
 src/s_user.obj: src/s_user.c $(INCLUDES) ./include/dbuf.h \
                 ./include/channel.h ./include/whowas.h
         $(CC) $(CFLAGS) src/s_user.c
@@ -214,8 +217,7 @@ src/hash.obj: src/hash.c $(INCLUDES) ./include/hash.h
 src/crule.obj: src/crule.c $(INCLUDES)
         $(CC) $(CFLAGS) src/crule.c
 
-src/win32gui.obj: src/win32/win32gui.c $(INCLUDES) ./src/win32/resource.h
-#./include/resource.h
+src/win32gui.obj: src/win32/win32gui.c $(INCLUDES) ./include/resource.h
         $(CC) $(CFLAGS) src/win32/win32gui.c
 
 src/res_comp.obj: src/res_comp.c $(INCLUDES)
@@ -227,8 +229,8 @@ src/res_init.obj: src/res_init.c $(INCLUDES)
 src/help.obj: src/help.c $(INCLUDES)
         $(CC) $(CFLAGS) src/help.c
 
-src/md5.obj: src/md5.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/md5.c
+src/modules.obj: src/modules.c $(INCLUDES)
+	  $(CC) $(CFLAGS) src/modules.c
 
 src/win32/win32.res: src/win32/win32gui.rc
 !IFNDEF DISTDEBUG

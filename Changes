@@ -405,5 +405,7 @@
 - added temporary define #define OLD_CLOAK
 - Fixed up some codemastr(TM) coding regarding M_*
 - Implimented a cloak fix based on code by Zogg (just used a #define ircabs rather than abs())
+- Expanded the chmod() security fix to files added via include filename;
 - Possible FD leak in ircd_log, caused by some codemastr coding(TM)
 - #define HELP_WHO for the "did a /who 0 o"
+- Added a new Win32 GUI does it work, no one knows

@@ -812,6 +812,9 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_varlinenum);
 		return -1;
 	}
+#if !defined(_WIN32) && !defined(_AMIGA) && defined(DEFAULT_PERMISSIONS)
+	chmod(ce->ce_vardata, DEFAULT_PERMISSIONS);
+#endif
 	return (init_conf2(ce->ce_vardata));
 }
 /* 
