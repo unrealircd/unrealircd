@@ -74,6 +74,10 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
+EVENT(e_scannings_clean);
+
+static Event	*Scannings_clean = NULL;
+
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Init(int module_load)
@@ -94,6 +98,7 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_scan_Load(int module_load)
 #endif
 {
+	Scannings_clean = EventAdd("e_scannings_clean", 0, 0, e_scannings_clean, NULL);
 	return MOD_SUCCESS;
 }
 
@@ -105,7 +110,24 @@ DLLFUNC int	Mod_Unload(void)
 int	m_scan_Unload(void)
 #endif
 {
-	return MOD_SUCCESS;
+	int	ret = MOD_SUCCESS
+	IRCMutexLock(Scannings_lock);
+	if (Scannings)	
+	{
+		sendto_realops("scan: some scannings still in progress, delaying unload");
+		EventAdd("scan_unload", 
+			2, /* Should be enough */
+			1,
+			e_unload_module_delayed,
+			(void *)m_scan_Header.name);
+		ret = MOD_DELAY;
+	}	
+	IRCMutexUnlock(Scannings_lock);	
+	if (ret != MOD_DELAY)
+	{
+		EventDel(Scannings_clean);
+	}
+	return ret;
 }
 
 /*
@@ -325,6 +347,10 @@ DLLFUNC int	h_config_set_scan(void)
 			del_ConfigItem(sets, conf_unknown_set);
 			continue;
 		}	
+	}
+	if (Scan_endpoint.SIN_PORT == 0)
+	{
+		config_error("scan: no set::scan::endpoint made");
 	}
 	return 0;
 }

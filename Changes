@@ -990,3 +990,4 @@ seen. gmtime warning still there
   added it to yet *giggles and twirls around*" bug, do to with config_set_unknown
 - Fixed events bug, added recoded scan module, got a lot of stuff to fix so
   far. Problems, unloading, (delay), tkl doesn't always sweep it all, 
+- Some scan unloading stuff
