@@ -241,11 +241,11 @@
 #define MSG_TSCTL 	"TSCTL"
 #define TOK_TSCTL 	"AW"
 #define MSG_SVSJOIN 	"SVSJOIN"
-#define TOK_SVSJOIN 	"AX"
+#define TOK_SVSJOIN 	"BR"
 #define MSG_SAJOIN 	"SAJOIN"
-#define TOK_SAJOIN 	"AY"
+#define TOK_SAJOIN 	"AX"
 #define MSG_SVSPART 	"SVSPART"
-#define TOK_SVSPART 	"AX"
+#define TOK_SVSPART 	"BT"
 #define MSG_SAPART 	"SAPART"
 #define TOK_SAPART 	"AY"
 #define MSG_CHGIDENT 	"CHGIDENT"
@@ -292,6 +292,7 @@
 
 #define MSG_MODULE	"MODULE"
 #define TOK_MODULE	"BQ"
+/* BR and BT are in use */
 
 #define MAXPARA    	15
 

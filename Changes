@@ -1080,3 +1080,5 @@ seen. gmtime warning still there
   for XP style controls
 - Made a few additional cleanups to the win32 code
 - // comments are not supported by many compilers and should not be used
+- Fixed a bug where teh SAJOIN/SAPART/SVSJOIN/SVSPART tokens were screwed up found by 
+  Andy Church
