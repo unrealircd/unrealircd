@@ -60,6 +60,7 @@ Computing Center and Jarkko Oikarinen";
 #include "badwords.h"
 #endif
 #include "version.h"
+#include "proto.h"
 
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");

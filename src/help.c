@@ -25,6 +25,7 @@
 #include "common.h"
 #include "sys.h"
 #include "h.h"
+#include "proto.h"
 
 ID_Copyright("DALnet & Techie");
 ID_Notes("6.20 7/5/99");

@@ -46,6 +46,7 @@
 #include "msg.h"		/* For TOK_*** and MSG_*** strings  */
 #include "hash.h"		/* For CHANNELHASHSIZE */
 #include "h.h"
+#include "proto.h"
 
 ID_Copyright
     ("(C) 1990 University of Oulu, Computing Center and Jarkko Oikarinen");

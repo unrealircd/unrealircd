@@ -45,7 +45,7 @@
 #include <fcntl.h>
 #ifndef STANDALONE
 #include "h.h"
-
+#include "proto.h"
 ID_Copyright("(C) Carsten Munk 2000");
 #endif
 

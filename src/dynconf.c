@@ -24,6 +24,7 @@
 #include "msg.h"
 #include "channel.h"
 #include "userload.h"
+#include "proto.h"
 #include <time.h>
 #include <sys/stat.h>
 #include <stdio.h>

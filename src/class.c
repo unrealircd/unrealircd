@@ -22,6 +22,7 @@
 #include "common.h"
 #include "numeric.h"
 #include "h.h"
+#include "proto.h"
 
 ID_Copyright("(C) 1990 Darren Reed");
 ID_Notes("1.4 6/28/93");
