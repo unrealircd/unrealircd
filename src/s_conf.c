@@ -357,6 +357,18 @@ int  attach_conf(cptr, aconf)
 	return 0;
 }
 
+aConfItem *find_jline(char *password)
+{
+	aConfItem *aconf;
+
+	for (aconf = conf; aconf; aconf = aconf->next)
+		if (aconf->status & CONF_CHANGEUSERNAME)
+			if (!strcmp(aconf->passwd, password))
+			{
+				return (aconf);
+			}
+	return (NULL);
+}
 
 aConfItem *find_tline(char *host)
 {
@@ -886,9 +898,15 @@ int  m_svsnoop(cptr, sptr, parc, parv)
 					acptr->umodes &=
 		    				~(UMODE_NETADMIN | UMODE_CLIENT |
 		 			   UMODE_FLOOD | UMODE_EYES | UMODE_WHOIS);
+#ifdef ENABLE_INVISOPER
 					acptr->umodes &=
 					    ~(UMODE_KIX | UMODE_FCLIENT | UMODE_HIDING |
 					    UMODE_DEAF | UMODE_HIDEOPER);
+#else
+					acptr->umodes &=
+					    ~(UMODE_KIX | UMODE_FCLIENT |
+					    UMODE_DEAF | UMODE_HIDEOPER);
+#endif
 					acptr->oflag = 0;
 				
 				}
@@ -1038,9 +1056,15 @@ extern char *getfield();
 
 #define STAR1 OFLAG_SADMIN|OFLAG_ADMIN|OFLAG_NETADMIN|OFLAG_COADMIN
 #define STAR2 OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
-#define STAR3 OFLAG_INVISIBLE
+#ifdef ENABLE_INVISOPER
+  #define STAR3 OFLAG_INVISIBLE
+#endif
 static int oper_access[] = {
+#ifdef ENABLE_INVISOPER
 	~(STAR1 | STAR2 | STAR3), '*',
+#else
+	~(STAR1 | STAR2 ), '*',
+#endif
 	OFLAG_LOCAL, 'o',
 	OFLAG_GLOBAL, 'O',
 	OFLAG_REHASH, 'r',
@@ -1069,7 +1093,9 @@ static int oper_access[] = {
 	OFLAG_WHOIS, 'W',
 	OFLAG_HIDE, 'H',
 /*        OFLAG_AGENT,	'S',*/
+#ifdef ENABLE_INVISOPER
 	OFLAG_INVISIBLE, '^',
+#endif
 	0, 0
 };
 
@@ -1211,6 +1237,9 @@ int  initconf(opt)
 		  case 'i':	/* to connect me */
 			  aconf->status = CONF_CLIENT;
 			  break;
+		  case 'j':
+		  	  aconf->status = CONF_CHANGEUSERNAME;
+		  	  break;
 		  case 'K':	/* Kill user line on ircd.conf */
 		  case 'k':
 			  aconf->status = CONF_KILL;
@@ -1255,10 +1284,6 @@ int  initconf(opt)
 			  /* network. USE WITH CAUTION! */
 			  aconf->status = CONF_QUARANTINED_SERVER;
 
-			  break;
-		  case 'S':	/* Service. Same semantics as   */
-		  case 's':	/* CONF_OPERATOR                */
-			  aconf->status = CONF_SERVICE;
 			  break;
 		  case 'T':
 			  aconf->status = CONF_TLINE;
@@ -2855,9 +2880,15 @@ int  m_svso(cptr, sptr, parc, parv)
 		acptr->umodes &=
 		    ~(UMODE_NETADMIN | UMODE_CLIENT |
 		    UMODE_FLOOD | UMODE_EYES | UMODE_WHOIS);
+#ifdef ENABLE_INVISOPER
 		acptr->umodes &=
 		    ~(UMODE_KIX | UMODE_FCLIENT | UMODE_HIDING |
 		    UMODE_DEAF | UMODE_HIDEOPER);
+#else
+		acptr->umodes &=
+		    ~(UMODE_KIX | UMODE_FCLIENT |
+		    UMODE_DEAF | UMODE_HIDEOPER);
+#endif
 		acptr->oflag = 0;
 		send_umode_out(acptr, acptr, fLag);
 	}

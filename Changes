@@ -339,7 +339,7 @@ done, but whatever.)
 --Luke
 ===================================
 
-Moved cloak key definitions to unrealircd.conf
+Moved cloak key definitions to .network file
 --Luke
 ===================================
 
@@ -393,5 +393,31 @@ to the o flag that you can append on the end
 for opers, so for instance say you /who *bob* h
 it will display real hosts instead of masked ones
 in the replies.
+--Luke
+===================================
+
+Oper invisibility is no longer enabled by default
+but is a provided option in ./Config
+--Luke
+===================================
+
+Changed information flag shown in /version. R now
+appears if invisibility is compiled in (even if
+disabled in unrealircd.conf)
+--Luke
+===================================
+
+rmed Config.c (broken, severely) and networks.ndx
+--Luke
+===================================
+
+Added win32-compile-guide in doc/ for people wanting
+to compile their own version for windows.
+--Luke
+===================================
+
+Once again we global when anyone that's not a local
+oper opers. I like this, if you don't email me and
+maybe I'll add a conf option for it.
 --Luke
 ===================================

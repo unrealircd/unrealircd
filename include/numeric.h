@@ -82,7 +82,10 @@
 
 #define ERR_HOSTILENAME      455
 
-#define ERR_NOHIDING	     459
+#ifdef ENABLE_INVISOPER
+  #define ERR_NOHIDING	     459
+#endif
+
 #define ERR_NOTFORHALFOPS	 460
 #define ERR_NEEDMOREPARAMS   461
 #define ERR_ALREADYREGISTRED 462

@@ -88,7 +88,9 @@ static int user_modes[] = { UMODE_OPER, 'o',
 	UMODE_KIX, 'q',
 	UMODE_BOT, 'B',
 	UMODE_FCLIENT, 'F',
+#ifdef ENABLE_INVISOPER
 	UMODE_HIDING, 'I',
+#endif
 	UMODE_SECURE, 'z',
 	UMODE_DEAF, 'd',
 	UMODE_VICTIM, 'v',
@@ -642,7 +644,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	aClient *sptr;
 	char *nick, *username, *virthost, *umode;
 {
-	aConfItem *aconf;
+	aConfItem *aconf, *ac2;
 	char *parv[3], *tmpstr, *encr;
 #ifdef HOSTILENAME
 	char stripuser[USERLEN + 1], *u1 = stripuser, *u2, olduser[USERLEN + 1],
@@ -763,24 +765,18 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		 *
 		 * Moved the noident stuff here. -OnyxDragon
 		 */
-		if (!(sptr->flags & FLAGS_DOID))
-			strncpyzt(user->username, username, USERLEN + 1);
-		else if (sptr->flags & FLAGS_GOTID)
-			strncpyzt(user->username, sptr->username, USERLEN + 1);
+		if (sptr->passwd && ((ac2 = (aConfItem *)find_jline(sptr->passwd))))
+		{
+			strncpyzt(user->username, ac2->host, USERLEN + 1);
+		}
 		else
 		{
-			/* because username may point to user->username */
 			char temp[USERLEN + 1];
 
 			strncpyzt(temp, username, USERLEN + 1);
-#ifdef NO_IDENT_CHECKING
-			strncpy(user->username, temp, USERLEN);
-			user->username[USERLEN] = '\0';
-#else
 			*user->username = '~';
 			(void)strncpy(&user->username[1], temp, USERLEN);
 			user->username[USERLEN] = '\0';
-#endif
 #ifdef HOSTILENAME
 			noident = 1;
 #endif
@@ -2452,8 +2448,10 @@ static void do_who(sptr, acptr, repchan)
 	/* checks for channel /who's and nonopers */
 	if (channelwho && !IsOper(sptr) && sptr != acptr)
 	{
+#ifdef ENABLE_INVISOPER
 		if IsHiding(acptr)
 			return;
+#endif
 		if (IsAuditorium(repchan) && !is_chan_op(acptr,repchan)
 		    && !is_chan_op(sptr,repchan))
 			return;
@@ -2462,10 +2460,10 @@ static void do_who(sptr, acptr, repchan)
 		if (IsInvisible(acptr) && !IsMember(sptr,repchan))
 			return;
 	}
-	
+#ifdef ENABLE_INVISOPER	
 	if (channelwho && IsHiding(acptr) && !IsNetAdmin(sptr))
 		return;
-
+#endif
 	if (acptr->user->away)
 		status[i++] = 'G';
 	else
@@ -2484,11 +2482,19 @@ static void do_who(sptr, acptr, repchan)
 	 * simply because they are an oper. (adds ! to the who "flags")
 	 */
 	if (IsAnOper(sptr) && sptr != acptr)
+#ifdef ENABLE_INVISOPER
 		if (channelwho && IsHiding(acptr) && IsNetAdmin(sptr) ||
-		    IsInvisible(acptr) ||
+		    IsInvisible(acptr) && !IsMember(sptr,repchan) ||
 		    IsAuditorium(repchan) && !is_chan_op(acptr,repchan) ||
 		    !ShowChannel(sptr,repchan)) 
 			status[i++] = '!';
+#else
+		if (channelwho && IsNetAdmin(sptr) ||
+		    IsInvisible(acptr) && !IsMember(sptr,repchan) ||
+                    IsAuditorium(repchan) && !is_chan_op(acptr,repchan) ||
+                    !ShowChannel(sptr,repchan))
+                        status[i++] = '!';
+#endif
 
 	/* Channel operator */
 	if (repchan && is_chan_op(acptr, repchan))
@@ -2509,8 +2515,10 @@ static void do_who(sptr, acptr, repchan)
 		    ":%s NOTICE %s :*** %s either did a /who or a specific /who on you",
 		    me.name, acptr->name, sptr->name);
 	}
+#ifdef ENABLE_INVISOPER
 	if (IsHiding(acptr) && sptr != acptr && !IsNetAdmin(sptr))
 		repchan = NULL;
+#endif
 
 	sendto_one(sptr, rpl_str(RPL_WHOREPLY), me.name, sptr->name,
 	    (repchan) ? (repchan->chname) : "*", acptr->user->username,
@@ -2525,7 +2533,7 @@ static void do_who(sptr, acptr, repchan)
 ** m_who
 **	parv[0] = sender prefix
 **	parv[1] = nickname mask list
-**	parv[2] = additional selection flag, only 'o' for now.
+**	parv[2] = additional selection flag, 'o' and 'h' for now.
 */
 int  m_who(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;
@@ -3894,12 +3902,6 @@ int  m_oper(cptr, sptr, parc, parv)
 				iNAH_host(sptr, locop_host);
 			sptr->umodes &= ~UMODE_OPER;
 		}
-/*        	else
-        if ((aconf->port & OFLAG_AGENT))
-        {
-			sendto_ops("%s (%s@%s) is now an IRCd Agent (S)", parv[0],
-				sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost);
-        }*/
 		else if (aconf->port & OFLAG_NETADMIN)
 		{
 			sendto_ops
@@ -3921,22 +3923,22 @@ int  m_oper(cptr, sptr, parc, parv)
 		}
 		else if (aconf->port & OFLAG_COADMIN)
 		{
-			sendto_ops("%s (%s@%s) is now a co administrator (C)",
+			sendto_ops("%s (%s@%s) is now a co administrator (C) on %s",
 			    parv[0], sptr->user->username,
 			    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
-			    realhost);
+			    realhost,me.name);
 			if (MyClient(sptr))
 			{
-				/*      sendto_serv_butone(&me, ":%s GLOBOPS :%s (%s@%s) is now a co administrator (C)", me.name, parv[0],
-				   sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost);
-				 */
+				sendto_serv_butone(&me, ":%s GLOBOPS :%s (%s@%s) is now a co administrator (C) on %s",
+				me.name, parv[0], sptr->user->username,
+				IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost, me.name);
 			}
 			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
 				iNAH_host(sptr, coadmin_host);
 		}
 		else if (aconf->port & OFLAG_SADMIN)
 		{
-			sendto_ops("%s (%s@%s) is now a services admin (a)",
+			sendto_ops("%s (%s@%s) is now a services administrator (a)",
 			    parv[0], sptr->user->username,
 			    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
 			    realhost);
@@ -3953,19 +3955,33 @@ int  m_oper(cptr, sptr, parc, parv)
 		}
 		else if (aconf->port & OFLAG_ADMIN)
 		{
-			sendto_ops("%s (%s@%s) is now a server admin (A)",
+			sendto_ops("%s (%s@%s) is now a server administrator (A) on %s",
 			    parv[0], sptr->user->username,
 			    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
-			    realhost);
+			    realhost,me.name);
+			if (MyClient(sptr))
+			{
+				sendto_serv_butone(&me,
+				    ":%s GLOBOPS :%s (%s@%s) is now a server administrator (A) on %s",
+				    me.name, parv[0], sptr->user->username,
+				    IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost,me.name);
+			}
 			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
 				iNAH_host(sptr, admin_host);
 		}
 		else
 		{
-			sendto_ops("%s (%s@%s) is now an operator (O)", parv[0],
+			sendto_ops("%s (%s@%s) is now an operator (O) on %s", parv[0],
 			    sptr->user->username,
 			    IsHidden(sptr) ? sptr->user->virthost : sptr->user->
-			    realhost);
+			    realhost,me.name);
+			if (MyClient(sptr))
+			{
+				sendto_serv_butone(&me,
+				    ":%s GLOBOPS :%s (%s@%s) is now an operator (O) on %s",
+				    me.name, parv[0], sptr->user->username,
+				    IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost,me.name);
+			}
 			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
 				iNAH_host(sptr, oper_host);
 		}
@@ -4329,11 +4345,13 @@ int  m_umode(cptr, sptr, parc, parv)
 				      && MyClient(sptr))
 					  break;
 				  goto def;
+#ifdef ENABLE_INVISOPER
 			  case 'I':
 				  if (NO_OPER_HIDING == 1 && what == MODE_ADD
 				      && MyClient(sptr))
 					  break;
 				  goto def;
+#endif
 			  case 'B':
 				  if (what == MODE_ADD && MyClient(sptr))
 					  (void)m_botmotd(sptr, sptr, 1, parv);
@@ -4422,9 +4440,11 @@ int  m_umode(cptr, sptr, parc, parv)
 			ClearNetAdmin(sptr);
 		if (IsCoAdmin(sptr) && !OPIsCoAdmin(sptr))
 			ClearCoAdmin(sptr);
+#ifdef ENABLE_INVISOPER
 		if ((sptr->umodes & UMODE_HIDING)
 		    && !(sptr->oflag & OFLAG_INVISIBLE))
 			sptr->umodes &= ~UMODE_HIDING;
+#endif
 		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
 		    && !IsSecure(sptr))
 			sptr->umodes &= ~UMODE_SECURE;
@@ -4468,17 +4488,17 @@ int  m_umode(cptr, sptr, parc, parv)
 		/* Agents 
 		   if ((sptr->umodes & (UMODE_AGENT)) && !(sptr->oflag & OFLAG_AGENT))
 		   sptr->umodes &= ~UMODE_AGENT; */
+#ifdef ENABLE_INVISOPER
 		if ((sptr->umodes & UMODE_HIDING) && !IsAnOper(sptr))
 			sptr->umodes &= ~UMODE_HIDING;
-
-
 		if ((sptr->umodes & UMODE_HIDING)
 		    && !(sptr->oflag & OFLAG_INVISIBLE))
 			sptr->umodes &= ~UMODE_HIDING;
+#endif
 		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
 		    && !IsSecure(sptr))
 			sptr->umodes &= ~UMODE_SECURE;
-
+#ifdef ENABLE_INVISOPER
 		if ((sptr->umodes & (UMODE_HIDING))
 		    && !(setflags & UMODE_HIDING))
 		{
@@ -4490,9 +4510,11 @@ int  m_umode(cptr, sptr, parc, parv)
 			    me.name, sptr->name);
 			sendto_channels_inviso_part(sptr);
 		}
+#endif
 		if ((sptr->umodes & UMODE_JUNK) && !IsOper(sptr))
 			sptr->umodes &= ~UMODE_JUNK;
 			
+#ifdef ENABLE_INVISOPER
 		if (!(sptr->umodes & (UMODE_HIDING)))
 		{
 			if (setflags & UMODE_HIDING)
@@ -4507,6 +4529,7 @@ int  m_umode(cptr, sptr, parc, parv)
 
 			}
 		}
+#endif
 	}
 	/*
 	 * If I understand what this code is doing correctly...

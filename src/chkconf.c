@@ -315,10 +315,6 @@ static aConfItem *initconf(opt)
 		  case 'q':	/* network. USE WITH CAUTION! */
 			  aconf->status = CONF_QUARANTINED_SERVER;
 			  break;
-		  case 'S':	/* Service. Same semantics as   */
-		  case 's':	/* CONF_OPERATOR                */
-			  aconf->status = CONF_SERVICE;
-			  break;
 		  case 'T':
 			  aconf->status = CONF_TLINE;
 			  break;

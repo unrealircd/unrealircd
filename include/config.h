@@ -133,7 +133,7 @@
   Ident checking
   #define this to disable ident checking
 */
-#undef NO_IDENT_CHECKING
+#define NO_IDENT_CHECKING
 
 /*
  * No spoof code
