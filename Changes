@@ -255,3 +255,4 @@
   of the purpose of it was defeated @$#&@#). Reported by Rocko.
 - Fixed a bug where an ident in a vhost {} was never sent out to other servers and added
   user@host support for set::hosts (#0001834) reported/suggested by bleepy.
+- Fixed defizzer module. Reported by Rocko and netrixtardis.
