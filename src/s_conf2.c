@@ -56,6 +56,11 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_oper(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_class(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_drpass(ConfigFile *conf, ConfigEntry *ce);
+int	_conf_ulines(ConfigFile *conf, ConfigEntry *ce);
+
+extern int conf_debuglevel;
+
+#define ConfigDebug(x) if (conf_debuglevel) config_status((x))
 
 static ConfigCommand _ConfigCommands[] = {
 	{ "admin", _conf_admin },
@@ -63,6 +68,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "oper", _conf_oper },
 	{ "class", _conf_class },
 	{ "drpass", _conf_drpass },
+	{ "ulines", _conf_ulines },
 	{ NULL, NULL  }
 };
 
@@ -84,6 +90,7 @@ ConfigItem_me		*conf_me = NULL;
 ConfigItem_class 	*conf_class = NULL;
 ConfigItem_admin 	*conf_admin = NULL;
 ConfigItem_drpass	*conf_drpass = NULL;
+ConfigItem_ulines	*conf_ulines = NULL;
 /*
  * MyMalloc with the only difference that it clears the memory too
  * -Stskeeps
@@ -636,6 +643,29 @@ int	_conf_admin(ConfigFile *conf, ConfigEntry *ce)
 	} 
 }
 
+/* 
+ * The ulines {} block parser
+*/
+int	_conf_ulines(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	ConfigItem_ulines *ca;
+	
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+		{
+			config_error("%s:%i: blank uline item",
+				ce->ce_fileptr->cf_filename,
+				ce->ce_varlinenum);
+			continue;	
+		}
+		ca = MyMallocEx(sizeof(ConfigItem_ulines));
+		ca->servername = strdup(cep->ce_varname);
+		add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_ulines);
+	} 
+}
+
 /*
  * The class {} block parser
 */
@@ -670,6 +700,11 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->ce_varname, "pingfreq"))
 		{
 			class->pingfreq = atol(ce->ce_vardata);
+			if (!class->pingfreq)
+			{
+				config_error("%s:%i: class::pingfreq with illegal value",
+					ce->ce_fileptr->cf_filename, ce->ce_varlineum);
+			}
 		} else
 		if (!strcmp(cep->ce_varname, "maxclients"))
 		{
@@ -678,6 +713,11 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->ce_varname, "sendq"))
 		{
 			class->sendq = atol(ce->ce_vardata);
+			if (!class->sendq)
+			{
+				config_error("%s:%i: class:sendq with illegal value",
+					ce->ce_fileptr->cf_filename, ce->ce_varlineum);
+			}
 		}
 	}
 	add_ConfigItem((ConfigItem *) class, (ConfigItem **) &conf_class);
@@ -699,7 +739,17 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!cep->ce_varname)
 		{
-			config_error("Blank me line");
+			config_error("%s:%i: blank me line",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum);
+			continue;	
+		}
+		if (!cep->ce_vardata)
+		{
+			config_error("%s:%i: me::%s without parameter",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum,
+				cep->ce_varname);
 			continue;	
 		}
 		config_status("[me] Set %s to %s",
@@ -709,19 +759,35 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 			if (conf_me->name)
 				MyFree(conf_me->name);
 			conf_me->name = strdup(cep->ce_vardata);
-			config_status("Set me->name to %s :)", conf_me->name);
+			if (!strchr(conf_me->name, '.'))
+			{
+				config_error("%s:%i: illegal me::name, missing .",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			}
 		} else
 		if (!strcmp(cep->ce_varname, "info"))
 		{
 			if (conf_me->info)
 				MyFree(conf_me->info);
 			conf_me->info = strdup(cep->ce_vardata);
-			config_status("Set me->info to %s :)", conf_me->info);
 		} else
 		if (!strcmp(cep->ce_varname, "numeric"))
 		{
 			conf_me->numeric = atol(cep->ce_vardata);
-			config_status("Set me->numeric to %i (i) :))", conf_me->numeric);
+			if ((conf_me->numeric < 0) && (conf_me->numeric > 254))
+			{
+				config_error("%s:%i: illegal me::numeric error (must be between 0 and 254). Setting to 0",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum);
+				conf_me->numeric = 0;
+			}
+		}
+		else
+		{
+			config_error("%s:%i: unknown directive me::%s",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum, 
+				cep->ce_varname);
 		}
 	}
 }
@@ -773,7 +839,15 @@ int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!cep->ce_varname)
 		{
-			config_error("Blank drpass line");
+			config_error("s:%i: blank drpass line", 
+			 cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			continue;
+		}
+		if (!cep->ce_vardata)
+		{
+			config_error("%s:%i: missing parameter in drpass:%s", 
+			 cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+			 	cep->ce_varname);
 			continue;
 		}
 		config_status("[drpass] Set %s to %s",
@@ -793,5 +867,9 @@ int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
 			conf_drpass->die = strdup(cep->ce_vardata);
 			config_status("Set drpass->die to %s :)", conf_drpass->die);
 		}
+		else 
+			config_error("%s:%i: warning: unknown drpass directive '%s'",
+				 cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				 cep->ce_varname);
 	}
 }

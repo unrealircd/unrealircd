@@ -73,6 +73,7 @@ typedef struct _configitem_admin ConfigItem_admin;
 typedef struct _configitem_class ConfigItem_class;
 typedef struct _configitem_oper ConfigItem_oper;
 typedef struct _configitem_drpass ConfigItem_drpass;
+typedef struct _configitem_ulines ConfigItem_ulines;
 
 typedef struct Notify aNotify;
 typedef struct Client aClient;
@@ -974,6 +975,11 @@ struct _configitem_drpass {
 	char		 *die;
 };
 
+struct _configitem_ulines {
+	ConfigItem       *prev;
+	ConfigItem       *next;
+	char 		 *servername;
+};
 
 /*
  * statistics structures

@@ -126,6 +126,7 @@ int  noisy_htm = 1;
 
 TS   check_fdlists();
 #endif
+unsigned char conf_debuglevel = 0;
 
 void save_stats(void)
 {
@@ -880,6 +881,9 @@ int  InitwIRCD(argc, argv)
 			      MB_OK);
 #endif
 			  exit(0);
+	          case 'C':
+	          	conf_debuglevel = atoi(p);
+	          	break;
 		  case 'x':
 #ifdef	DEBUGMODE
 # ifndef _WIN32
