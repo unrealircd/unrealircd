@@ -88,7 +88,11 @@ void start_auth(aClient *cptr)
 
 
 	/* Use the listener that the user got in on, dah? */
+#ifndef INET6
 	sock.SIN_ADDR = cptr->listener->ip; 
+#else
+	bcopy((char *)&cptr->listener->ip, (char *)&sock.SIN_ADDR, sizeof(struct IN_ADDR));
+#endif
 	sock.SIN_PORT = 0;
 	sock.SIN_FAMILY = AFINET;	/* redundant? */
 	(void)bind(cptr->authfd, (struct SOCKADDR *)&sock, sizeof(sock));
