@@ -237,7 +237,7 @@ static char *replies[] = {
 /* 205    RPL_TRACEUSER */       ":%s 205 %s User %s %s [%s] %ld",
 /* 206    RPL_TRACESERVER */     ":%s 206 %s Server %s %dS %dC %s %s!%s@%s %ld",
 /* 207    RPL_TRACESERVICE */    ":%s 207 %s Service %s %s",
-/* 208    RPL_TRACENEWTYPE */    ":%s 208 %s <newtype> 0 %s",
+/* 208    RPL_TRACENEWTYPE */    ":%s 208 %s %s 0 %s",
 /* 209    RPL_TRACECLASS */      ":%s 209 %s Class %s %d",
 /* 210    RPL_STATSHELP */       ":%s 210 %s :%s",
 /* 211 */ NULL, /* Used */

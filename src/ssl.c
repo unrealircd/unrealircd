@@ -376,8 +376,8 @@ int ircd_SSL_write(aClient *acptr, const void *buf, int sz)
     {
        switch(ssl_err = SSL_get_error((SSL *)acptr->ssl, len)) {
            case SSL_ERROR_SYSCALL:
-               if (ERRNO == EWOULDBLOCK || ERRNO == EAGAIN ||
-                       ERRNO == EINTR)
+               if (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN ||
+                       ERRNO == P_EINTR)
 		{
 			SET_ERRNO(P_EWOULDBLOCK);
 			return -1;
