@@ -197,6 +197,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				Ban *ban, *bnext;
 				if (parc >= i) {
 					char uhost[NICKLEN+USERLEN+HOSTLEN+6], vhost[NICKLEN+USERLEN+HOSTLEN+6];
+					char ihost[NICKLEN+USERLEN+HOSTLEN+6];
 					if (!(acptr = find_person(parv[i-1], NULL))) {
 						i++;
 						break;
@@ -213,10 +214,13 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					strlcpy(vhost, make_nick_user_host(acptr->name,
 						acptr->user->username, GetHost(acptr)),
 						sizeof vhost);
+					strlcpy(ihost, make_nick_user_host(acptr->name,
+						acptr->user->username, GetIP(acptr)),
+						sizeof ihost);
 					ban = chptr->banlist;
 					while (ban) {
 						bnext = ban->next;
-						if (!match(ban->banstr, uhost) || !match(ban->banstr, vhost)) {
+						if (!match(ban->banstr, uhost) || !match(ban->banstr, vhost) || !match(ban->banstr, ihost)) {
 							add_send_mode_param(chptr, sptr, '-',  'b', 
 								ban->banstr);
 							del_banid(chptr, ban->banstr);
@@ -239,6 +243,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				Ban *ban, *bnext;
 				if (parc >= i) {
 					char uhost[NICKLEN+USERLEN+HOSTLEN+6], vhost[NICKLEN+USERLEN+HOSTLEN+6];
+					char ihost[NICKLEN+USERLEN+HOSTLEN+6];
 					if (!(acptr = find_person(parv[i-1], NULL))) {
 						i++;
 						break;
@@ -255,10 +260,14 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					strlcpy(vhost, make_nick_user_host(acptr->name,
 						acptr->user->username, GetHost(acptr)),
 						sizeof vhost);
+					strlcpy(ihost, make_nick_user_host(acptr->name,
+						acptr->user->username, GetIP(acptr)),
+						sizeof ihost);
+
 					ban = chptr->exlist;
 					while (ban) {
 						bnext = ban->next;
-						if (!match(ban->banstr, uhost) || !match(ban->banstr, vhost)) {
+						if (!match(ban->banstr, uhost) || !match(ban->banstr, vhost) || !match(ban->banstr, ihost)) {
 							add_send_mode_param(chptr, sptr, '-',  'e', 
 								ban->banstr);
 							del_exbanid(chptr, ban->banstr);
