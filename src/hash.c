@@ -741,7 +741,7 @@ struct	ThrottlingBucket	*ThrottlingHash[THROTTLING_HASH_SIZE+1];
 void	init_throttling_hash()
 {
 	bzero(ThrottlingHash, sizeof(ThrottlingHash));	
-	EventAddEx(NULL, "bucketcleaning", (THROTTLING_PERIOD ? THROTTLING_PERIOD : 15)/2, 0,
+	EventAddEx(NULL, "bucketcleaning", (THROTTLING_PERIOD ? THROTTLING_PERIOD : 172800)/2, 0,
 		e_clean_out_throttling_buckets, NULL);		
 }
 
@@ -800,9 +800,19 @@ void	del_throttling_bucket(struct ThrottlingBucket *bucket)
 	return;
 }
 
+/** Checks wether the user is connect-flooding.
+ * @retval 0 Denied, throttled.
+ * @retval 1 Allowed, but known in the list.
+ * @retval 2 Allowed, not in list or is an exception.
+ * @see add_connection()
+ */
 int	throttle_can_connect(struct IN_ADDR *in)
 {
 	struct ThrottlingBucket *b;
+
+	if (!THROTTLING_PERIOD || !THROTTLING_COUNT)
+		return 2;
+
 	if (!(b = find_throttling_bucket(in)))
 		return 1;
 	else

@@ -167,7 +167,7 @@ void ban_flooder(aClient *cptr)
 
 	tkllayer[4] = hostip;
 	tkllayer[5] = me.name;
-	ircsprintf(mo, "%li", (UNKNOWN_FLOOD_BANTIME ? UNKNOWN_FLOOD_BANTIME : 600) + TStime());
+	ircsprintf(mo, "%li", UNKNOWN_FLOOD_BANTIME + TStime());
 	ircsprintf(mo2, "%li", TStime());
 	tkllayer[6] = mo;
 	tkllayer[7] = mo2;
@@ -228,7 +228,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 	if (IsDead(cptr))
 		return 0;
 
-	if ((cptr->receiveK >= (UNKNOWN_FLOOD_AMOUNT ? UNKNOWN_FLOOD_AMOUNT : 4)) && IsUnknown(cptr))
+	if ((cptr->receiveK >= UNKNOWN_FLOOD_AMOUNT) && IsUnknown(cptr))
 	{
 		sendto_snomask(SNO_FLOOD, "Flood from unknown connection %s detected",
 			cptr->sockhost);

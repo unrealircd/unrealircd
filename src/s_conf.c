@@ -1143,6 +1143,12 @@ void	free_iConf(aConfiguration *i)
 
 int	config_test();
 
+void config_setdefaultsettings(aConfiguration *i)
+{
+	i->unknown_flood_amount = 4;
+	i->unknown_flood_bantime = 600;
+}
+
 int	init_conf(char *rootconf, int rehash)
 {
 	ConfigItem_include *inc, *next;
@@ -1155,6 +1161,7 @@ int	init_conf(char *rootconf, int rehash)
 	}
 	bzero(&tempiConf, sizeof(iConf));
 	bzero(&requiredstuff, sizeof(requiredstuff));
+	config_setdefaultsettings(&tempiConf);
 	if (load_conf(rootconf) > 0)
 	{
 		if (config_test() < 0)
@@ -1712,7 +1719,7 @@ int	config_run()
 	{
 		EventInfo eInfo;
 		eInfo.flags = EMOD_EVERY;
-		eInfo.every = THROTTLING_PERIOD ? THROTTLING_PERIOD/2 : 7;
+		eInfo.every = THROTTLING_PERIOD ? THROTTLING_PERIOD/2 : 86400;
 		EventMod(EventFind("bucketcleaning"), &eInfo);
 	}
 #endif
@@ -2272,14 +2279,14 @@ void report_dynconf(aClient *sptr)
 	    sptr->name, NAME_SERVER);
 #ifdef THROTTLING
 	sendto_one(sptr, ":%s %i %s :throttle::period: %s", me.name, RPL_TEXT,
-			sptr->name, pretty_time_val(THROTTLING_PERIOD ? THROTTLING_PERIOD : 15));
+			sptr->name, THROTTLING_PERIOD ? pretty_time_val(THROTTLING_PERIOD) : "disabled");
 	sendto_one(sptr, ":%s %i %s :throttle::connections: %d", me.name, RPL_TEXT,
-			sptr->name, THROTTLING_COUNT ? THROTTLING_COUNT : 3);
+			sptr->name, THROTTLING_COUNT ? THROTTLING_COUNT : -1);
 #endif
 	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-bantime: %s", me.name, RPL_TEXT,
-			sptr->name, pretty_time_val(UNKNOWN_FLOOD_BANTIME ? UNKNOWN_FLOOD_BANTIME : 600));
+			sptr->name, pretty_time_val(UNKNOWN_FLOOD_BANTIME));
 	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-amount: %dKB", me.name, RPL_TEXT,
-			sptr->name, UNKNOWN_FLOOD_AMOUNT ? UNKNOWN_FLOOD_AMOUNT : 4);
+			sptr->name, UNKNOWN_FLOOD_AMOUNT);
 #ifdef NO_FLOOD_AWAY
 	if (AWAY_PERIOD)
 	{
