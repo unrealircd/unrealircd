@@ -1010,7 +1010,7 @@ struct _configitem_link {
 	ConfigFlag	flag;
 	char		*servername, *username, *hostname, *bindip, *hubmask, *leafmask, *connpwd;
 	anAuthStruct	*recvauth;
-	short		port, options;
+	u_short		port, options;
 	unsigned char 	leafdepth;
 	int		refcount;
 	ConfigItem_class	*class;
