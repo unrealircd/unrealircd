@@ -565,3 +565,5 @@ seen. gmtime warning still there
 - Added some pthread checking support
 - Fixed double dependicies bug.. stupid dlsym
 - Added /version using numeric 105 for remove clients to show protoctl (idea from hybrid)
+- Added HOOKTYPE_PRE_LOCAL_CONNECT to allow banning before connection. If the module parsing 
+  this hook returns >0 the register_user exits

@@ -945,6 +945,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			ircstp->is_ref++;
 			return xx;
 		}
+		RunHookReturn(HOOKTYPE_PRE_LOCAL_CONNECT, sptr, >0);
 	}
 	else
 	{
