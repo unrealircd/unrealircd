@@ -582,4 +582,6 @@
   by Z3l3zT (#0001929).
 - Updated makefile to fix compile problem, reported by vonitsanet (#0002317) [?].
   Also made loading m_*.so work again.
-
+- Added unreal_copyfileex() which works just like unreal_copyfile() but has an additional
+  param to try hardlinks first.
+- Win32 crash fixes due to modulizing

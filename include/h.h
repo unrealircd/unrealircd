@@ -648,6 +648,7 @@ extern char *unreal_mktemp(char *dir, char *suffix);
 extern char *unreal_getpathname(char *filepath, char *path);
 extern char *unreal_getfilename(char *path);
 extern int unreal_copyfile(char *src, char *dest);
+extern int unreal_copyfileex(char *src, char *dest, int tryhardlink);
 extern time_t unreal_getfilemodtime(char *filename);
 extern void unreal_setfilemodtime(char *filename, time_t mtime);
 extern void DeleteTempModules(void);
@@ -718,13 +719,13 @@ extern void create_snomask(aClient *sptr, anUser *user, char *snomask);
 extern MODVAR char *me_hash;
 extern MODVAR int dontspread;
 /* Efuncs */
-extern int (*do_join)(aClient *, aClient *, int, char **);
-extern void (*join_channel)(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
-extern int (*can_join)(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[]);
-extern void (*do_mode)(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode);
-extern void (*set_mode)(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
+extern MODVAR int (*do_join)(aClient *, aClient *, int, char **);
+extern MODVAR void (*join_channel)(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
+extern MODVAR int (*can_join)(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[]);
+extern MODVAR void (*do_mode)(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode);
+extern MODVAR void (*set_mode)(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
-extern int (*m_umode)(aClient *, aClient *, int, char **);
+extern MODVAR int (*m_umode)(aClient *, aClient *, int, char **);
 /* /Efuncs */
 extern MODVAR aMotd *opermotd, *svsmotd, *motd, *botmotd, *smotd;
 extern MODVAR int max_connection_count;

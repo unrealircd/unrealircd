@@ -283,7 +283,7 @@ char  *Module_Create(char *path_)
 		strcpy(path, "./");
 		strcat(path, path_);
 	}
-	unreal_copyfile(path, tmppath);
+	unreal_copyfileex(path, tmppath, 1);
 	if ((Mod = irc_dlopen(tmppath, RTLD_NOW)))
 	{
 		/* We have engaged the borg cube. Scan for lifesigns. */

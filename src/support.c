@@ -1757,12 +1757,6 @@ int unreal_copyfile(char *src, char *dest)
 	time_t mtime;
 	int srcfd, destfd, len;
 
-#ifndef _WIN32
-	/* Try a hardlink first... */
-	if (!link(src, dest))
-		return 0; /* success */
-#endif
-
 	mtime = unreal_getfilemodtime(src);
 
 #ifndef _WIN32
@@ -1813,6 +1807,18 @@ fail:
 	unlink(dest); /* make sure our corrupt file isn't used */
 	return 0;
 }
+
+/* Same as unreal_copyfile, but with an option to try hardlinking first */
+int unreal_copyfileex(char *src, char *dest, int tryhardlink)
+{
+#ifndef _WIN32
+	/* Try a hardlink first... */
+	if (tryhardlink && !link(src, dest))
+		return 0; /* success */
+#endif
+	return unreal_copyfile(src, dest);
+}
+
 
 void unreal_setfilemodtime(char *filename, time_t mtime)
 {

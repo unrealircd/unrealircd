@@ -46,9 +46,9 @@
 
 /* Forward declarations */
 DLLFUNC CMD_FUNC(m_join);
-void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
-CMD_FUNC(_do_join);
-int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[]);
+DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
+DLLFUNC CMD_FUNC(_do_join);
+DLLFUNC int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[]);
 static int extended_operoverride(aClient *sptr, aChannel *chptr, char *key, int mval, char mchar);
 #define MAXBOUNCE   5 /** Most sensible */
 
@@ -143,7 +143,7 @@ Link *lp;
  * a user won't have invites on him anyway. -Donwulff
  */
 
-int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[])
+DLLFUNC int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[])
 {
 Link *lp;
 Ban *banned;
@@ -246,7 +246,7 @@ int r;
 /* Routine that actually makes a user join the channel
  * this does no actual checking (banned, etc.) it just adds the user
  */
-void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
+DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
 {
 	char *parv[] = { 0, 0 };
 	/*
@@ -398,7 +398,7 @@ void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
  * is set to 0 in m_join, increased every time we enter this loop and decreased
  * anytime we leave the loop. So be carefull ;p.
  */
-CMD_FUNC(_do_join)
+DLLFUNC CMD_FUNC(_do_join)
 {
 	char jbuf[BUFSIZE];
 	Membership *lp;

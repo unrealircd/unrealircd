@@ -8561,7 +8561,7 @@ static void conf_download_complete(char *url, char *file, char *errorbuf, int ca
 			char *urlfile = url_getfilename(url);
 			char *file = unreal_getfilename(urlfile);
 			char *tmp = unreal_mktemp("tmp", file);
-			unreal_copyfile(inc->file, tmp);
+			unreal_copyfileex(inc->file, tmp, 1);
 			add_remote_include(tmp, url, 0, NULL);
 			free(urlfile);
 		}

@@ -47,8 +47,8 @@
 
 /* Forward declarations */
 DLLFUNC CMD_FUNC(m_mode);
-void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode);
-void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
+DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode);
+DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
 DLLFUNC CMD_FUNC(_m_umode);
 
@@ -367,7 +367,7 @@ static void bounce_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[])
  *	User or server is authorized to do the mode.  This takes care of
  * setting the mode and relaying it to other users and servers.
  */
-void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode)
+DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode)
 {
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
 	int  pcount;
@@ -1787,7 +1787,7 @@ char *ListBits(long bits, long length)
 /* set_mode
  *	written by binary
  */
-void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount, 
+DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount, 
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce)
 {
 	char *curchr;
