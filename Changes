@@ -1798,3 +1798,5 @@ seen. gmtime warning still there
 - Fixed time calculation bug. (#0000634)
 - Made netadmins able to see users in all chans by using /who #chan or /names #chan.
 - Fixed crash when +x is in modes-on-oper, user has -x and then /oper's. (#0000578/#0000624/0000637)
+- Removed ircdreg, bug (#0000614), outdated
+
