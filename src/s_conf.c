@@ -4664,7 +4664,7 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
-	aTKline *nl = MyMallocEx(sizeof(aTKline));;
+	aTKline *nl = MyMallocEx(sizeof(aTKline));
 	int target = 0, action = 0;
 	char *word;
 	

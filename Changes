@@ -2764,3 +2764,4 @@ seen. gmtime warning still there
   This system needs some additional testing, I'm sure there will be bugs ;).
 - Fixed a problem with /stats [G|s] extended flags parsing.
 - internal: added sendnotice()
+- win32 compile fix (typo)
