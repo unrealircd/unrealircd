@@ -408,3 +408,4 @@
 - Fixed some doc & release notes typos. Reported by Rocko, HiT.
 - French doc updates, hopefully synched now.
 - (revert of badsyntax fix)
+- Forgot to mention away spamfilter target in helpop, reported by Rocko.
