@@ -267,7 +267,7 @@ void	init_CommandHash(void)
 	add_Command(MSG_NEWJOIN, TOK_JOIN, m_join, MAXPARA);
 	add_Command(MSG_BOTSERV, TOK_BOTSERV, m_botserv, 1);
 	add_Command(TOK_BOTSERV, TOK_BOTSERV, m_botserv, 1);
-	
+	add_Command(MSG_CYCLE, TOK_CYCLE, m_cycle, MAXPARA);	
 #ifdef DEVELOP_DEBUG
 	for (i = 0; i <= 255; i++)
 	{

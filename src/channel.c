@@ -2784,6 +2784,30 @@ int channel_link(aClient *cptr, aClient *sptr, int parc, char *parv[])
 }
 
 /*
+ * m_cycle() - Stskeeps
+ * parv[0] = prefix
+ * parv[1] = channels
+*/
+
+int  m_cycle(cptr, sptr, parc, parv)
+        aClient *cptr, *sptr;
+        int  parc;
+        char *parv[];
+{
+	char	channels[1024];
+	
+        if (parc < 2)
+                return 0;
+        parv[2] = "cycling";
+	strncpy(channels, parv[1], 1020);
+        (void)m_part(cptr, sptr, 3, parv);
+	parv[1] = channels;
+        parv[2] = NULL;
+        (void)m_join(cptr, sptr, 2, parv);
+}
+
+
+/*
 ** m_join
 **	parv[0] = sender prefix
 **	parv[1] = channel
