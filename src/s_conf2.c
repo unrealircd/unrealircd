@@ -332,6 +332,11 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 	lastce = &(curcf->cf_entries);
 	curce = NULL;
 	cursection = NULL;
+	/* Replace \r's with spaces .. ugly ugly -Stskeeps */
+	for (ptr=confdata; *ptr; ptr++)
+		if (*ptr == '\r')
+			*ptr = ' ';
+			
 	for(ptr=confdata;*ptr;ptr++)
 	{
 		switch(*ptr)
