@@ -3526,11 +3526,6 @@ int  m_topic(cptr, sptr, parc, parv)
 	TS   ttime = 0;
 	int  topiClen = 0;
 	int  nicKlen = 0;
-	char *smo[3] = {
-	       me.name,
-	       "e",
-	       NULL
-	};	       
 	
 	if (parc < 2)
 	{
