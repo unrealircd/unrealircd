@@ -726,4 +726,4 @@
   system accept more characters. Basically what this means is that the (fast) badwords
   system can now be used to properly block words with accents and things like that, just
   the way you block English words. Bug reported by MJ12Helios (#0002311).
-- Fixed 'russian-w1250', was not ok at all.
+- Fixed 'russian-w1251', was not working ok at all.
