@@ -1,17 +1,265 @@
 
-Unreal3.1.5.1-Valek Release Notes
-===================================
+Unreal3.2-beta17 Release Notes
+======================================
 
-* Um, yea, so we found this bug...
+==[ GENERAL INFORMATION ]==
+* If you are upgrading, make sure you run ./Config and make clean before doing make
+* The official UnrealIRCd documentation is doc/unreal32docs.html (also contains a FAQ),
+  read it before asking for help.
+* Report bugs at http://bugs.unrealircd.org/
+* This is a forced release because of a security bug, so not many new features.
 
-* If you are upgrading from Unreal3.1.4-Meadows, please read
-  doc/RELEASE-NOTES.3.1.5 as well.
+==[ REMOVED ]==
+Nothing.
 
-* If you are upgrading from an even earlier version (before 3.1.4),
-  please read the doc/RELEASE-NOTES.3.1.4 file as well. There
-  were numerous important/significant changes between 3.1.4 and
-  earlier versions.
+== [NEW FEATURES (see unreal32docs.html for more information) ]==
+* Implemented short motds (ircd.smotd). When a user connects ircd.smotd is displayed 
+  (or a tld::shortmotd). This file contains brief text. Alternatively, ircd.motd (or
+  tld::motd) is displayed when a user types /motd. The idea behind this is instead of
+  displaying huge ASCII art, and tons of text to every user when they connect (since
+  most users will ignore it anyway) you only show that stuff to users who specifically
+  request it. If you choose not to use short motds, everything will function as it used to.
+* Added set::ident::connect-timeout (default 10s) and set::ident::read-timeout (default 30s) to
+  give much more control over ident timeouts, this should also fix connection timeout problems
+  during connecting.
+* Added deny channel::redirect, which allows you to forward a client to another channel
+  if the one he/she joined is not allowed. can also be used for channel "aliases" like
+  #operhelp sends people to #help.
+* Added set::options::mkpasswd-for-everyone to let normal users use /mkpasswd.
+* MacOS X support, you need dlcompat package installed in /usr for this to work
 
-* Finally, read Unreal.nfo as usual AND THE DOCS in doc/.
+==[ UPDATED ]==
+* ban version {} now also checks for SCRIPT replies
+* module updates (module coders should check Changes)
+* Renamed channel mode +a to "channel admin"
+* IPv6: UnrealIRCd can now lookup ip6.arpa addresses too
 
-- Luke (luke@unrealircd.com)
+==[ MAJOR BUGS FIXED ]==
+* Security fixes, including a bug which allows any user to crash the ircd
+* Several win32 resolver fixes
+* "make install" fixed, was broken in beta16
+* badword::action block with regex (non-fast) badwords could cause a crash
+* misc /whois and webtv fixes
+* /who cleanup & bugfixes
+* /join cleanup: multiple chanmode +L fixes
+* IPv6 resolver
+* SVS* bug which could cause server notices to be sent to random users
+* Solaris/SunOS compile fixes
+* MOTD cleanup: fixes remote MOTD gone after rehash etc
+
+==[ ADDITIONAL INFO ]==
+* There's experimental "+a/+q with symbol" support in this version (you need to enable it
+  in config.h explicitly). Full support will be in next release.
+* See Changelog
+
+============================= (old release notes below) ==============================
+[this has been editted a bit]
+
+* Unreal3.2 is a lot different than Unreal3.1.1. Forget all you have
+  learned about setting up Unreal3.1.1 - this is a lot different. We have got
+  a new configuration format that integrates all the former config files,
+  ircd.conf, vhost.conf, chrestrict.conf, unrealircd.conf, into to one new
+  unrealircd.conf (what the ircd.conf is called now). See doc/ for more
+  information on the configuration format
+
+* THIS IS A BETA VERSION, REPORT BUGS ON http://bugs.unrealircd.org
+
+* We have introduced a new cloaking algoritm (+x), which makes it
+  incompatible with Unreal3.1.1 - these can however still link, but the
+  hostname will look different. This is made of three big numbers,
+  configured in the config file - and these MUST be the same on all servers
+  on the network. Keep these numbers secret, and the cloaking algorithm is
+  uncrackable (within 55 years, that is). The +x algorithm was changed slightly
+  to fix a method of cracking that was found. #define COMPAT_BETA4_KEYS to use the beta4
+  system for compatibility with older betas.
+
+* If you use Linux and have problems where the IRCd complains that
+  MAXCONNECTIONS is larger than FD_SETSIZE, you need to get your root to
+  edit /usr/include/bits/types.h - #define __FD_SETSIZE 1024 to be some
+  number that is equal or higher than MAXCONNECTIONS. This is a problem with
+  Linux that it is hardcoded and non overrideable in some distributions. We
+  recommend you use FreeBSD or the variants of this if you need to run high
+  load IRC servers. 
+
+* We use autoconf to help with compiliation, and this should make us able
+  to a lot more platform (we have even ported to BeOS). 
+
+* The IRCd is now modularized, and you load modules with the loadmodule
+  command. You will most likely want to add this line:
+ 
+  loadmodule "src/modules/commands.so";
+   
+  If you would like to code a module, doc/ will contain a module guide,
+  and we got an example module in src/modules/m_dummy.c.
+
+* We have some IPv6 support, and there are some minor bugs in it. 
+
+* The documentation is NOT yet 100% complete
+
+* We have added snomask (similar to ircu), basically this allowed us to remove several modes. Modes +cfFkje 
+  are gone, but don't worry, you can still use them. They are now added like this:
+ 
+  /mode yournick +s +cF
+
+  You set the flags in the second parameter of the mode command for a mode change +s, setting -s with no 
+  parameters removes all your snomask. You can remove a specific snomask by doing:
+
+  /mode yournick -s -c
+
+  The current snomasks are:
+
+  c - local connects
+  F - far connects
+  f - flood notices
+  k - kill notices
+  e - 'eyes' notices
+  j - 'junk' notices
+  v - vhost notices
+  G - gline/shun notices
+  n - nick change notices
+  q - deny nick (Q:line) rejection notices
+
+  It shouldn't be too hard to figure out, just play around with it a bit :)
+
+* /who needs testing it was recoded and may contain bugs
+
+* We have added alias {} which allows you to dynamically create commands such as /nickserv
+  Read example.conf for more information on how to create your own. To use standard ones include
+  one of the following files
+
+  aliases/ircservices.conf (IRCServices, Daylight)
+  aliases/epona.conf (Epona)
+  aliases/auspice.conf (Auspice)
+  aliases/generic.conf (Magick, Sirius, Wrecked)
+  aliases/operstats.conf (OperStats)
+  aliases/genericstats.conf (GeoStats, NeoStats)
+
+* You can now use an IP in the oper::from and vhost::from fields even if the host resolves
+
+* Added oper::snomask to specify default oper snomask modes
+
+* /helpop text has been moved to a config directive, help {}. To keep the standard help
+  text you need to include help.conf so add
+
+  include "help.conf";
+
+  to your config file.
+
+* To be able to use G:lines you must now have the can_gkline flag (or t if old style flags)
+
+* Usermode +T (Tech Admin) has been removed, since it is 100% useless
+
+* Added a make install to copy files to the installation location
+
+* Removed ./ircd, ./killircd, crypt/mkpasswd, ./rehash and merged them into a new
+  ./unreal [start|stop|rehash|mkpasswd]
+  for mkpasswd the format is
+  ./unreal mkpasswd [method] [password]
+
+* Added a new system for crypting passwords. You now do for example
+  password "my password" { crypt; };
+  This allows you to have some crypted passwords and others not. If you have SSL enabled
+  you may also use the md5 and sha1 methods.
+
+* You can now specify a cipher list for SSL links (read doc/unreal32docs.html for more info)
+
+* log {} syslog support added (read doc/unreal32docs.html for more info)
+
+* Added ripemd-160 password encryption support
+
+* Enabled sha1 and md5 password encryption on Win32 regardless of whether SSL is used.
+
+* Added WinNT/2k/XP service support (experimental)
+  To use this you use the unreal.exe utility:
+    unreal install -installs the service
+    unreal uninstall -uninstalls the service
+    unreal start -starts the service
+    unreal stop -stops the service
+    unreal restart -restarts the service
+    unreal rehash -rehashes the config file
+  Config errors and crashes are now logged to service.log when in service mode.
+
+* Implimented a new win32 debugger to make fixing bugs much easier.
+
+* Added a win32 installer to simplify installing under Windows.
+
+* AKILL/RAKILL is depricated. Server command still works but will be removed eventually
+  (aliases to TKL G). For normal opers it notices that the commands are depricated.
+
+* Made the config parser smarter when it comes to time values and size values. Entries are
+  no longer limited to 1d2h1m. You can now enter "1day 2 hours 1 minute" for example. See
+  doc/unreal32docs.html for more information.
+
+* The operoverride code has been rewritten to be less intrusive. You can now no longer
+  automatically join a channel for which you must override a mode. You must /invite
+  yourself to the channel. The idea behind this is it prevents the accidental "rejoin on
+  kick" ban override and joining a +s channel without realizing it is +s and therefore you
+  shouldn't know it exists.
+
+* If you use the SSL features of Unreal, you should use OpenSSL 0.9.6g or later. This is
+  important as the older versions may make the program exploitable. See 
+  http://www.openssl.org for more information
+
+* We have made a lot of changes to deal with SSL, and if you find any flaws or problems,
+  please contact the coder team. We however think that the changes will make SSL
+  more transparent and make it work more efficiently.
+
+* Added technical documentation in doc/technical. This directory will contain information
+  about the protocol used by Unreal.
+
+* Added EGD support for SSL. EGD allows entropy to be gathered on systems that do not
+  have a random device (/dev/random or /dev/urandom) or have an unreliable random device.
+  Unreal has been tested using EGADS (http://www.securesoftware.com/egads.php) [With EGD 
+  support enabled], PRNGD 
+  (http://www.aet.tu-cottbus.de/personen/jaenicke/postfix_tls/prngd.html), and EGD
+  (http://egd.sourceforge.net). Other EGD compatible programs should work as well.
+
+* Added Authentication method 'sslclientcert', the "password" parameter is
+  used as a filename which it loads a X509 client certificate from and
+  compares with the SSL client certificate (if provided). Example in an
+   oper {}:
+     password "clientcertificate.stskeeps.pem" { sslclientcert; };
+  In this event, the parameter of /oper login is not used, but must be
+  provided anyway, so for example do OPER login *
+
+* We have created a new complete set of docs!  doc/unreal32docs.html is now a complete
+  set of docs!  It is still not finished, however it contains atleast what was already
+  avail. in the other doc files.  
+  It can also be view online @ http://www.unrealircd.com/unreal32docs.html
+
+* We have removed ./Setup - Please read the new docs for information on configuring &
+  setting up Unreal3.2
+
+* Removed makeconf - Read the docs to make a config file
+
+* Added set::ssl::options with the following options:
+    fail-if-no-clientcert   - If SSL client connects and doesn't provide a client
+                              certificate, abort connection immediately
+    verify-certificate      - Check the certificate's validity using X509 methods, check if
+                              we trust CA's, etc. 
+                              It however does slip self signed certificates through UNLESS
+    no-self-signed          - Don't allow self-signed certificates through (requires
+                              verify-certificate)
+
+* Added the ability specify which CA's are trusted using set::ssl::trusted-ca-file
+
+* A new configuration system has been added. The system is a bit more strict (meaning it
+  will complain more often) but it will never crash due to configuration errors, just
+  display a message saying errors exist.
+
+* SVSLUSERS was added to all U:lines to change local and global max user counts (this is
+  NOT meant so you can make the max count higher than it really should be.)
+
+* A new oper flag, can_override/v has been added. This is an attempt to stop oper abuse.
+  All opers can no longer use oper-override, this oflag MUST be in place for oper-override
+  to be allowed. Can_override is NOT assumed to be present no matter what your flags,
+  meaning you could be +N but still not be allowed to use oper-override.
+
+* UNKLINE and UNZLINE have been removed in favor of a system like G:lines, to remove you
+  now /kline -user@host or /zline -user@host
+
+* We now support ranges in listen blocks, for example listen *:6660-6669;
+
+* If you want throttling protection, read include/config.h
+
+* MAKE SURE YOU RERUN ./Config AND RUN make clean BEFORE USING THIS VERSION!!!

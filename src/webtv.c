@@ -23,7 +23,6 @@
 #include "numeric.h"
 #include "msg.h"
 #include "channel.h"
-#include "userload.h"
 #include "version.h"
 #include <time.h>
 #include <sys/stat.h>
@@ -50,10 +49,16 @@ struct zMessage {
 
 
 int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+/* This really has nothing to do with WebTV yet, but eventually it will, so I figured
+ * it's easiest to put it here so why not? -- codemastr
+ */
+int	ban_version(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 aMessage	webtv_cmds[] = 
 {
 	{"WHOIS", w_whois, 15},
+	{"\1VERSION", ban_version, 1},
+	{"\1SCRIPT", ban_version, 1},
 	{NULL, 0, 15}
 };
 
@@ -61,16 +66,17 @@ aMessage	webtv_cmds[] =
 int	webtv_parse(aClient *sptr, char *string)
 {
 	char *cmd = NULL, *s = NULL;
-	int i;
+	int i, n;
 	aMessage *message = webtv_cmds;
 	static char *para[16];
 	
 	if (!string || !*string)
 	{
 		sendto_one(sptr, ":IRC %s %s :No command given", MSG_PRIVATE, sptr->name);
-		return;
+		return 0;
 	}
-	
+
+	n = strlen(string);
 	cmd = strtok(string, " ");
 	if (!cmd)
 		return -2;	
@@ -84,7 +90,8 @@ int	webtv_parse(aClient *sptr, char *string)
 /*		sendto_one(sptr, ":IRC %s %s :Sorry, \"%s\" is an unknown command to me",
 			MSG_PRIVATE, sptr->name, cmd); */
 		/* restore the string*/
-		cmd[strlen(cmd)]= ' ';
+		if (strlen(cmd) < n)
+			cmd[strlen(cmd)]= ' ';
 		return -2;
 	}
 
@@ -130,25 +137,22 @@ int	webtv_parse(aClient *sptr, char *string)
 int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	static anUser UnknownUser = {
-                "<Unknown>",    /* host */
-                "<Unknown>",    /* username */
-                NULL,           /* nextu */
-                NULL,           /* channel */
-                NULL,           /* invited */
-                NULL,           /* silence */
-                NULL,           /* away */
-                NULL,           /* virthost */ 
-                NULL,           /* server */
-                NULL,           /* swhois */
-                NULL,           /* serv */
-                NULL,           /* Lopts */
-                NULL,           /* whowas */
-                0,              /* last */
-                0,              /* servicestamp */
-                0,              /* joined */
-                1               /* refcount */
+		NULL,		/* channel */
+		NULL,		/* invited */
+		NULL,		/* silence */
+		NULL,		/* away */
+#ifdef NO_FLOOD_AWAY
+		0,		/* last_away */
+		0,		/* away_count */
+#endif
+		0,		/* servicestamp */
+		1,		/* refcount */
+		0,		/* joined */
+		"<Unknown>",	/* username */
+		"<Unknown>",	/* host */
+		"<Unknown>"	/* server */
 	};
-	Link *lp;
+	Membership *lp;
 	anUser *user;
 	aClient *acptr, *a2cptr;
 	aChannel *chptr;
@@ -166,7 +170,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	for (tmp = parv[1]; (nick = strtoken(&p, tmp, ",")); tmp = NULL)
 	{
-		int  invis, showsecret, showperson, member, wilds;
+		int  invis, showsecret = 0, showchannel, showperson, member, wilds;
 
 		found = 0;
 		(void)collapse(nick);
@@ -209,7 +213,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 			for (lp = user->channel; lp; lp = lp->next)
 			{
-				chptr = lp->value.chptr;
+				chptr = lp->chptr;
 				member = IsMember(sptr, chptr);
 				if (invis && !member)
 					continue;
@@ -254,8 +258,8 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(sptr, ":IRC PRIVMSG %s :%s uses modes %s",
 					sptr->name, acptr->name, get_mode_str(acptr));
 			}
-			if (IsAnOper(sptr) && IsHidden(acptr) ||
-			    acptr == sptr && IsHidden(sptr))
+			if ((IsAnOper(sptr) && IsHidden(acptr)) ||
+			    (acptr == sptr && IsHidden(sptr)))
 			{
 				sendto_one(sptr, ":IRC PRIVMSG %s :%s is connecting from %s",
 				    sptr->name, acptr->name,
@@ -265,14 +269,30 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(sptr, ":IRC PRIVMSG %s :%s is a registered nick",
 					sptr->name, name);
 			found = 1;
-			mlen = strlen(me.name) + strlen(sptr->name) + 6 +
-			    strlen(name);
+			mlen = 24 + strlen(sptr->name) + strlen(name);
 			for (len = 0, *buf = '\0', lp = user->channel; lp;
 			    lp = lp->next)
 			{
-				chptr = lp->value.chptr;
-				if (IsAnOper(sptr) || ShowChannel(sptr, chptr) || (acptr == sptr))
+				chptr = lp->chptr;
+				showchannel = 0;
+				if (ShowChannel(sptr, chptr))
+					showchannel = 1;
+#ifndef SHOW_SECRET
+				if (IsAnOper(sptr) && !SecretChannel(chptr))
+#else
+				if (IsAnOper(sptr))
+#endif
+					showchannel = 1;
+				if ((acptr->umodes & UMODE_HIDEWHOIS) && !IsMember(sptr, chptr) && !IsAnOper(sptr))
+					showchannel = 0;
+				if (IsServices(acptr) && !IsNetAdmin(sptr))
+					showchannel = 0;
+				if (acptr == sptr)
+					showchannel = 1;
+					
+				if (showchannel)
 				{
+					long access;
 					if (len + strlen(chptr->chname)
 					    > (size_t)BUFSIZE - 4 - mlen)
 					{
@@ -282,18 +302,33 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						*buf = '\0';
 						len = 0;
 					}
-					if (!(acptr == sptr) && IsAnOper(sptr)
-					&& (showsecret == 1) && SecretChannel(chptr))
-						*(buf + len++) = '~';
-					if (is_chanowner(acptr, chptr))
+#ifdef SHOW_SECRET
+					if (IsAnOper(sptr)
+#else
+					if (IsNetAdmin(sptr)
+#endif
+					    && SecretChannel(chptr) && !IsMember(sptr, chptr))
+						*(buf + len++) = '?';
+					if (acptr->umodes & UMODE_HIDEWHOIS && !IsMember(sptr, chptr)
+						&& IsAnOper(sptr))
+						*(buf + len++) = '!';
+					access = get_access(acptr, chptr);
+#ifndef PREFIX_AQ
+					if (access & CHFL_CHANOWNER)
 						*(buf + len++) = '*';
-					else if (is_chanprot(acptr, chptr))
+					else if (access & CHFL_CHANPROT)
 						*(buf + len++) = '^';
-					else if (is_chan_op(acptr, chptr))
+#else
+					if (access & CHFL_CHANOWNER)
+						*(buf + len++) = '~';
+					else if (access & CHFL_CHANPROT)
+						*(buf + len++) = '&';
+#endif
+					else if (access & CHFL_CHANOP)
 						*(buf + len++) = '@';
-					else if (is_half_op(acptr, chptr))
+					else if (access & CHFL_HALFOP)
 						*(buf + len++) = '%';
-					else if (has_voice(acptr, chptr))
+					else if (access & CHFL_VOICE)
 						*(buf + len++) = '+';
 					if (len)
 						*(buf + len) = '\0';
@@ -304,12 +339,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				}
 			}
 
-#ifdef ENABLE_INVISOPER
-			if (buf[0] != '\0' && !IsULine(acptr) && (!IsHiding(acptr) ||
-				IsNetAdmin(sptr) || sptr == acptr))
-#else
-			if (buf[0] != '\0' && !IsULine(acptr))
-#endif
+			if (buf[0] != '\0')
 				sendto_one(sptr, 
 					":IRC PRIVMSG %s :%s is on %s",
 						sptr->name, name, buf);
@@ -356,7 +386,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 			if (acptr->umodes & UMODE_BOT)
 			{
-				sendto_one(sptr, ":IRC PRIVMSG %s :%s is a bot on %s",
+				sendto_one(sptr, ":IRC PRIVMSG %s :%s is an Bot on %s",
 					sptr->name, name, ircnetwork);
 			}
 			if (acptr->umodes & UMODE_SECURE)
@@ -375,7 +405,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			if (acptr->user && MyConnect(acptr))
 				sendto_one(sptr, ":IRC PRIVMSG %s :%s has been idle for %s signed on at %s",
 					sptr->name, acptr->name,
-					(char *)convert_time(TStime() - user->last),
+					(char *)convert_time(TStime() - acptr->last),
 					date(acptr->firsttime));
 		}
 		if (!found)
@@ -389,5 +419,20 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	sendto_one(sptr, ":IRC PRIVMSG %s :End of whois information for %s",
 		sptr->name, parv[1]);
 
+	return 0;
+}
+int	ban_version(aClient *cptr, aClient *sptr, int parc, char *parv[])
+{	
+	int len;
+	ConfigItem_ban *ban;
+	if (parc < 2)
+		return 0;
+	len = strlen(parv[1]);
+	if (!len)
+		return 0;
+	if (parv[1][len-1] == '\1')
+		parv[1][len-1] = '\0';
+	if ((ban = Find_ban(parv[1], CONF_BAN_VERSION)))
+		return exit_client(cptr, sptr, sptr, ban->reason);
 	return 0;
 }

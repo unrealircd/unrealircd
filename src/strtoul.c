@@ -52,10 +52,7 @@ static char *rcsid = "$NetBSD: strtoul.c,v 1.9 1996/07/20 01:00:57 jtc Exp $";
  * Ignores `locale' stuff.  Assumes that the upper and lower case
  * alphabets and digits are each contiguous.
  */
-unsigned long strtoul(nptr, endptr, base)
-	char *nptr;
-	char **endptr;
-	int  base;
+unsigned long strtoul(char *nptr, char **endptr, int base)
 {
 	char *s;
 	unsigned long acc, cutoff;

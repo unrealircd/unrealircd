@@ -28,7 +28,6 @@
 #include "numeric.h"
 #include "msg.h"
 #include "channel.h"
-#include "userload.h"
 #include "version.h"
 #endif
 
@@ -37,9 +36,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef PIPEDEBUG
-#include <signal.h>
-#endif
 #ifdef _WIN32
 #include <io.h>
 #endif
@@ -54,20 +50,12 @@ static inline char *int_to_base64(long);
 static inline long base64_to_int(char *);
 
 
-static Link *servers = NULL;
-
-Link *return_servers(void) 
-{
-	return(servers);
-}
+Link *Servers = NULL;
 
 char *base64enc(long i)
 {
-	return int_to_base64(i);
-}
-
-char *xbase64enc(long i)
-{
+	if (i < 0)
+		return ("0");
 	return int_to_base64(i);
 }
 
@@ -79,18 +67,6 @@ long base64dec(char *b64)
 		return 0;
 }
 
-long xbase64dec(char *b64)
-{
-	long r;
-	if (b64)
-	{
-		r = base64_to_int(b64);
-		return r;
-	}
-	else
-		return 0;
-}
-
 int  numeric_collides(long numeric)
 {
 	Link *lp;
@@ -98,7 +74,7 @@ int  numeric_collides(long numeric)
 	if (!numeric)
 		return 0;
 
-	for (lp = servers; lp; lp = lp->next)
+	for (lp = Servers; lp; lp = lp->next)
 		if (numeric == lp->value.cptr->serv->numeric)
 			return 1;
 	return 0;
@@ -113,9 +89,8 @@ void add_server_to_table(aClient *what)
 		ptr = make_link();
 		ptr->value.cptr = what;
 		ptr->flags = what->serv->numeric;
-		ptr->flood = NULL;
-		ptr->next = servers;
-		servers = ptr;
+		ptr->next = Servers;
+		Servers = ptr;
 	}
 }
 
@@ -123,12 +98,12 @@ void remove_server_from_table(aClient *what)
 {
 	Link **curr;
 	Link *tmp;
-	Link *lp = servers;
+	Link *lp = Servers;
 
 	for (; lp && (lp->value.cptr == what); lp = lp->next);
 	for (;;)
 	{
-		for (curr = &servers; (tmp = *curr); curr = &tmp->next)
+		for (curr = &Servers; (tmp = *curr); curr = &tmp->next)
 			if (tmp->value.cptr == what)
 			{
 				*curr = tmp->next;
@@ -144,12 +119,9 @@ aClient *find_server_by_numeric(long value)
 {
 	Link *lp;
 
-	for (lp = servers; lp; lp = lp->next)
+	for (lp = Servers; lp; lp = lp->next)
 		if (lp->value.cptr->serv->numeric == value)
 			return (lp->value.cptr);
-#ifdef PIPEDEBUG
-	kill(getpid(), SIGPIPE);
-#endif
 	return NULL;
 }
 
@@ -158,12 +130,7 @@ aClient *find_server_by_base64(char *b64)
 	if (b64)
 		return find_server_by_numeric(base64dec(b64));
 	else
-	{
-#ifdef PIPEDEBUG
-		kill(getpid(), SIGPIPE);
-#endif
 		return NULL;
-	}
 }
 
 char *find_server_id(aClient *which)
@@ -175,12 +142,9 @@ aClient *find_server_quick_search(char *name)
 {
 	Link *lp;
 
-	for (lp = servers; lp; lp = lp->next)
+	for (lp = Servers; lp; lp = lp->next)
 		if (!match(name, lp->value.cptr->name))
 			return (lp->value.cptr);
-#ifdef PIPEDEBUG
-	kill(getpid(), SIGPIPE);
-#endif
 	return NULL;
 }
 
@@ -189,12 +153,9 @@ aClient *find_server_quick_straight(char *name)
 {
 	Link *lp;
 
-	for (lp = servers; lp; lp = lp->next)
+	for (lp = Servers; lp; lp = lp->next)
 		if (!strcmp(name, lp->value.cptr->name))
 			return (lp->value.cptr);
-#ifdef PIPEDEBUG
-	kill(getpid(), SIGPIPE);
-#endif
 	return NULL;
 }
 
@@ -203,9 +164,7 @@ aClient *find_server_quick_straight(char *name)
 aClient *find_server_quickx(char *name, aClient *cptr)
 {
 	if (name)
-	{
 		cptr = (aClient *)find_server_quick_search(name);
-	}
 	return cptr;
 }
 
@@ -221,17 +180,12 @@ aClient *find_server_b64_or_real(char *name)
 	if (strlen(name) < 3)
 	{
 		namebase64 = base64dec(name);	
-		for (lp = servers; lp; lp = lp->next)
+		for (lp = Servers; lp; lp = lp->next)
 			if (lp->value.cptr->serv->numeric == namebase64)
 				return (lp->value.cptr);
 	}
-		else
-	{
+	else
 		return find_server_quick_straight(name);
-	}
-#ifdef PIPEDEBUG
-	kill(getpid(), SIGPIPE);
-#endif
 	return NULL;
 	
 }
@@ -308,7 +262,7 @@ void ns_stats(aClient *cptr)
 {
 	Link *lp;
 	aClient *sptr;
-	for (lp = servers; lp; lp = lp->next)
+	for (lp = Servers; lp; lp = lp->next)
 	{
 		sptr = lp->value.cptr;
 		sendto_one(cptr,

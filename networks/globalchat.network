@@ -1,0 +1,27 @@
+/*
+ * GlobalChat (irc.Globalchat.ca) Network Configuration File
+ * --------------------------------------------------
+ *  Added-at:     13 March 2001 19:38
+ *  Author: WebbyBoy
+ *  Email: nykoo@singnet.com
+ * -----------------------------------------
+ */
+
+set {
+        network-name            "GlobalChat";
+        default-server          "irc.Globalchat.ca";
+        services-server         "services.globalchat.ca";
+        stats-server            "services.globalchat.ca";
+        help-channel            "#help";
+        hiddenhost-prefix       "GC";
+        prefix-quit             "Quit:";
+        hosts {
+                local           "Locop.AsiaCom.GlobalChat.ca";
+                global          "Oper.AsiaCom.GlobalChat.ca";
+                coadmin         "CoAdmin.AsiaCom.GlobalChat.ca";
+                admin           "Admin.AsiaCom.GlobalChat.ca";
+                servicesadmin   "Csop.AsiaCom.GlobalChat.ca";
+                netadmin        "NetAdmin.AsiaCom.GlobalChat.ca";
+                host-on-oper-up "on";
+        };
+};

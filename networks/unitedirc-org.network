@@ -1,0 +1,26 @@
+/*
+ * Unitedirc (irc.unitedirc.org) Network Configuration File
+ *
+ * Added-at:     09 May 2001 12:25
+ * Author: sjowie
+ * Email: sjowie@unitedirc.org
+ */
+
+set {
+	network-name "Unitedirc";
+	default-server "irc.unitedirc.org"; 
+	services-server "cservices.unitedirc.org";
+	stats-server "stats.unitedirc.org";
+	help-channel "#help";
+	hiddenhost-prefix "unhide";
+	hosts {
+		local "locop.unitedirc.org";
+		global "oper.unitedirc.org";
+		coadmin "coadmin.unitedirc.prg";
+		admin "admin.unitedirc.org";
+		servicesadmin "csop.unitedirc.org";
+		netadmin "netadmin.unitedirc.org";
+		host-on-oper yes;
+	};
+};
+

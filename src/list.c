@@ -40,15 +40,15 @@
 #include "common.h"
 #include "sys.h"
 #include "h.h"
+#include "proto.h"
 #include "numeric.h"
-#include <string.h>
 #ifdef	DBMALLOC
 #include "malloc.h"
 #endif
-void free_link PROTO((Link *));
-Link *make_link PROTO(());
+#include <string.h>
+void free_link(Link *);
+Link *make_link();
 extern ircstats IRCstats;
-extern void remove_server_from_table(aClient *what);
 
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
@@ -66,11 +66,12 @@ void outofmemory();
 int  flinks = 0;
 int  freelinks = 0;
 Link *freelink = NULL;
-
-
+Member *freemember = NULL;
+Membership *freemembership = NULL;
+MembershipL *freemembershipL = NULL;
 int  numclients = 0;
 
-void initlists()
+void initlists(void)
 {
 #ifdef	DEBUGMODE
 	bzero((char *)&cloc, sizeof(cloc));
@@ -79,11 +80,10 @@ void initlists()
 	bzero((char *)&servs, sizeof(servs));
 	bzero((char *)&links, sizeof(links));
 	bzero((char *)&classs, sizeof(classs));
-	bzero((char *)&aconfs, sizeof(aconfs));
 #endif
 }
 
-void outofmemory()
+void outofmemory(void)
 {
 	Debug((DEBUG_FATAL, "Out of memory: restarting server..."));
 	restart("Out of Memory");
@@ -100,8 +100,7 @@ void outofmemory()
 **			associated with the client defined by
 **			'from'). ('from' is a local client!!).
 */
-aClient *make_client(from, servr)
-	aClient *from, *servr;
+aClient *make_client(aClient *from, aClient *servr)
 {
 	aClient *cptr = NULL;
 	unsigned size = CLIENT_REMOTE_SIZE;
@@ -133,29 +132,37 @@ aClient *make_client(from, servr)
 	cptr->serv = NULL;
 	cptr->srvptr = servr;
 	cptr->status = STAT_UNKNOWN;
-	cptr->fd = -1;
+	
 	(void)strcpy(cptr->username, "unknown");
 	if (size == CLIENT_LOCAL_SIZE)
 	{
 		cptr->since = cptr->lasttime =
 		    cptr->lastnick = cptr->firsttime = TStime();
-		cptr->confs = NULL;
+		cptr->class = NULL;
+		cptr->passwd = NULL;
 		cptr->sockhost[0] = '\0';
 		cptr->buffer[0] = '\0';
 		cptr->authfd = -1;
-		cptr->passwd = NULL;
-#ifdef SOCKSPORT
-		cptr->socksfd = -1;
-#endif
+		cptr->fd = -1;
+	} else {
+		cptr->fd = -256;
 	}
 	return (cptr);
 }
 
-void free_client(cptr)
-	aClient *cptr;
+void free_client(aClient *cptr)
 {
-	if (MyClient(cptr) && cptr->passwd)
-		MyFree((char *)cptr->passwd);
+	if (MyConnect(cptr))
+	{
+		if (cptr->passwd)
+			MyFree((char *)cptr->passwd);
+		if (cptr->error_str)
+			MyFree(cptr->error_str);
+#ifdef ZIP_LINKS
+		if (cptr->zip)
+			zip_free(cptr);
+#endif
+	}
 	MyFree((char *)cptr);
 }
 
@@ -163,8 +170,7 @@ void free_client(cptr)
 ** 'make_user' add's an User information block to a client
 ** if it was not previously allocated.
 */
-anUser *make_user(cptr)
-	aClient *cptr;
+anUser *make_user(aClient *cptr)
 {
 	anUser *user;
 
@@ -177,23 +183,28 @@ anUser *make_user(cptr)
 #endif
 		user->swhois = NULL;
 		user->away = NULL;
+#ifdef NO_FLOOD_AWAY
+		user->last_away = 0;
+		user->away_count = 0;
+#endif
 		user->refcnt = 1;
 		user->joined = 0;
 		user->channel = NULL;
 		user->invited = NULL;
 		user->silence = NULL;
 		user->server = NULL;
+		user->servicestamp = 0;
 		user->lopt = NULL;
 		user->whowas = NULL;
-		user->virthost = MyMalloc(5);
-		*user->virthost = '\0';
-		cptr->user = user;
+		user->snomask = 0;
+		*user->realhost = '\0';
+		user->virthost = NULL;
+		cptr->user = user;		
 	}
 	return user;
 }
 
-aServer *make_server(cptr)
-	aClient *cptr;
+aServer *make_server(aClient *cptr)
 {
 
 	aServer *serv = cptr->serv;
@@ -205,7 +216,6 @@ aServer *make_server(cptr)
 		servs.inuse++;
 #endif
 		serv->user = NULL;
-		serv->nexts = NULL;
 		*serv->by = '\0';
 		serv->numeric = 0;
 		serv->users = 0;
@@ -220,9 +230,7 @@ aServer *make_server(cptr)
 **	Decrease user reference count by one and realease block,
 **	if count reaches 0
 */
-void free_user(user, cptr)
-	anUser *user;
-	aClient *cptr;
+void free_user(anUser *user, aClient *cptr)
 {
 	if (--user->refcnt <= 0)
 	{
@@ -237,19 +245,11 @@ void free_user(user, cptr)
 		 */
 		if (user->joined || user->refcnt < 0 ||
 		    user->invited || user->channel)
-#ifdef DEBUGMODE
-			dumpcore("%#x user (%s!%s@%s) %#x %#x %#x %d %d",
+			sendto_realops("* %#x user (%s!%s@%s) %#x %#x %#x %d %d *",
 			    cptr, cptr ? cptr->name : "<noname>",
 			    user->username, user->realhost, user,
 			    user->invited, user->channel, user->joined,
 			    user->refcnt);
-#else
-			sendto_ops("* %#x user (%s!%s@%s) %#x %#x %#x %d %d *",
-			    cptr, cptr ? cptr->name : "<noname>",
-			    user->username, user->realhost, user,
-			    user->invited, user->channel, user->joined,
-			    user->refcnt);
-#endif
 		MyFree((char *)user);
 #ifdef	DEBUGMODE
 		users.inuse--;
@@ -261,8 +261,7 @@ void free_user(user, cptr)
  * taken the code from ExitOneClient() for this and placed it here.
  * - avalon
  */
-void remove_client_from_list(cptr)
-	aClient *cptr;
+void remove_client_from_list(aClient *cptr)
 {
 	if (IsServer(cptr))
 	{
@@ -275,13 +274,17 @@ void remove_client_from_list(cptr)
 		{
 			IRCstats.invisible--;
 		}
-		if (IsOper(cptr))
+		if (IsOper(cptr) && !IsHideOper(cptr))
 			IRCstats.operators--;
 		IRCstats.clients--;
 		if (cptr->srvptr && cptr->srvptr->serv)
 			cptr->srvptr->serv->users--;
 	}
-	if (IsUnknown(cptr) || IsConnecting(cptr) || IsHandshake(cptr))
+	if (IsUnknown(cptr) || IsConnecting(cptr) || IsHandshake(cptr)
+#ifdef USE_SSL
+		|| IsSSLHandshake(cptr)
+#endif
+	)
 		IRCstats.unknown--;
 	checklist();
 	if (cptr->prev)
@@ -299,6 +302,7 @@ void remove_client_from_list(cptr)
 		add_history(cptr, 0);
 		off_history(cptr);	/* Remove all pointers to cptr */
 	}
+	
 	if (cptr->user)
 		(void)free_user(cptr->user, cptr);
 	if (cptr->serv)
@@ -327,8 +331,7 @@ void remove_client_from_list(cptr)
  * in this file, shouldnt they ?  after all, this is list.c, isnt it ?
  * -avalon
  */
-void add_client_to_list(cptr)
-	aClient *cptr;
+void add_client_to_list(aClient *cptr)
 {
 	/*
 	 * since we always insert new clients to the top of the list,
@@ -344,28 +347,12 @@ void add_client_to_list(cptr)
 /*
  * Look for ptr in the linked listed pointed to by link.
  */
-Link *find_user_link(lp, ptr)
-	Link *lp;
-	aClient *ptr;
+Link *find_user_link(Link *lp, aClient *ptr)
 {
 	if (ptr)
 		while (lp)
 		{
 			if (lp->value.cptr == ptr)
-				return (lp);
-			lp = lp->next;
-		}
-	return NULL;
-}
-
-Link *find_channel_link(lp, ptr)
-	Link *lp;
-	aChannel *ptr;
-{
-	if (ptr)
-		while (lp)
-		{
-			if (lp->value.chptr == ptr)
 				return (lp);
 			lp = lp->next;
 		}
@@ -384,8 +371,7 @@ int find_str_match_link(Link *lp, char *charptr)
 	return 0;
 }
 
-void free_str_list(lp)
-	Link *lp;
+void free_str_list(Link *lp)
 {
 	Link *next;
 
@@ -404,7 +390,7 @@ void free_str_list(lp)
 
 #define	LINKSIZE	(4072/sizeof(Link))
 
-Link *make_link()
+Link *make_link(void)
 {
 	Link *lp;
 	int  i;
@@ -442,8 +428,7 @@ Link *make_link()
 	return lp;
 }
 
-void free_link(lp)
-	Link *lp;
+void free_link(Link *lp)
 {
 	lp->next = freelink;
 	freelink = lp;
@@ -454,7 +439,7 @@ void free_link(lp)
 #endif
 }
 
-Ban *make_ban()
+Ban *make_ban(void)
 {
 	Ban *lp;
 
@@ -465,8 +450,7 @@ Ban *make_ban()
 	return lp;
 }
 
-void free_ban(lp)
-	Ban *lp;
+void free_ban(Ban *lp)
 {
 	MyFree((char *)lp);
 #ifdef	DEBUGMODE
@@ -474,7 +458,7 @@ void free_ban(lp)
 #endif
 }
 
-aClass *make_class()
+aClass *make_class(void)
 {
 	aClass *tmp;
 
@@ -485,8 +469,7 @@ aClass *make_class()
 	return tmp;
 }
 
-void free_class(tmp)
-	aClass *tmp;
+void free_class(aClass *tmp)
 {
 	MyFree((char *)tmp);
 #ifdef	DEBUGMODE
@@ -494,87 +477,8 @@ void free_class(tmp)
 #endif
 }
 
-aSqlineItem *make_sqline()
-{
-	aSqlineItem *asqline;
-
-	asqline = (struct SqlineItem *)MyMalloc(sizeof(aSqlineItem));
-	asqline->next = NULL;
-	asqline->sqline = asqline->reason = NULL;
-
-	return (asqline);
-}
-
-aConfItem *make_conf()
-{
-	aConfItem *aconf;
-
-	aconf = (struct ConfItem *)MyMalloc(sizeof(aConfItem));
 #ifdef	DEBUGMODE
-	aconfs.inuse++;
-#endif
-	bzero((char *)&aconf->ipnum, sizeof(struct IN_ADDR));
-	aconf->next = NULL;
-	aconf->host = aconf->passwd = aconf->name = NULL;
-	aconf->status = CONF_ILLEGAL;
-	aconf->clients = 0;
-	aconf->port = 0;
-	aconf->hold = 0;
-	aconf->options = 0;
-	Class(aconf) = 0;
-	return (aconf);
-}
-
-void delist_conf(aconf)
-	aConfItem *aconf;
-{
-	if (aconf == conf)
-		conf = conf->next;
-	else
-	{
-		aConfItem *bconf;
-
-		for (bconf = conf; aconf != bconf->next; bconf = bconf->next)
-			;
-		bconf->next = aconf->next;
-	}
-	aconf->next = NULL;
-}
-
-void free_sqline(asqline)
-	aSqlineItem *asqline;
-{
-#ifndef NEWDNS
-	del_queries((char *)asqline);
-#endif /*NEWDNS*/
-	MyFree(asqline->sqline);
-	MyFree(asqline->reason);
-	MyFree((char *)asqline);
-	return;
-}
-
-void free_conf(aconf)
-	aConfItem *aconf;
-{
-#ifndef NEWDNS
-	del_queries((char *)aconf);
-#endif /*NEWDNS*/
-	MyFree(aconf->host);
-	if (aconf->passwd)
-		bzero(aconf->passwd, strlen(aconf->passwd));
-	MyFree(aconf->passwd);
-	MyFree(aconf->name);
-	MyFree((char *)aconf);
-#ifdef	DEBUGMODE
-	aconfs.inuse--;
-#endif
-	return;
-}
-
-#ifdef	DEBUGMODE
-void send_listinfo(cptr, name)
-	aClient *cptr;
-	char *name;
+void send_listinfo(aClient *cptr, char *name)
 {
 	int  inuse = 0, mem = 0, tmp = 0;
 
@@ -606,14 +510,37 @@ void send_listinfo(cptr, name)
 	    me.name, RPL_STATSDEBUG, name, classs.inuse,
 	    tmp = classs.inuse * sizeof(aClass));
 	mem += tmp;
-	inuse += classs.inuse,
-	    sendto_one(cptr, ":%s %d %s :Confs: inuse: %d(%d)",
-	    me.name, RPL_STATSDEBUG, name, aconfs.inuse,
-	    tmp = aconfs.inuse * sizeof(aConfItem));
-	mem += tmp;
 	inuse += aconfs.inuse,
 	    sendto_one(cptr, ":%s %d %s :Totals: inuse %d %d",
 	    me.name, RPL_STATSDEBUG, name, inuse, mem);
 }
 
 #endif
+
+void add_ListItem(ListStruct *item, ListStruct **list) {
+	item->next = *list;
+	item->prev = NULL;
+	if (*list)
+		(*list)->prev = item;
+	*list = item;
+}
+
+ListStruct *del_ListItem(ListStruct *item, ListStruct **list) {
+	ListStruct *l, *ret;
+
+	for (l = *list; l; l = l->next) {
+		if (l == item) {
+			ret = item->next;
+			if (l->prev)
+				l->prev->next = l->next;
+			else
+				*list = l->next;
+			if (l->next)
+				l->next->prev = l->prev;
+			return ret;
+		}
+	}
+	return NULL;
+}
+		
+	

@@ -1,0 +1,38 @@
+/* Networks index file - do not touch please
+ * Please report outdated entries to unreal-networks@lists.sourceforge.net
+ *
+ * NOTE: These networks are in no way affiliated with UnrealIRCd other than the fact
+ * that they use it. The UnrealIRCd Team takes no responsibility for the content
+ * of these networks.
+ */
+
+networks/awesomechristians.network: Awesome Christians Chat Network (http://www.awesomechristians.com)
+networks/axenet.network ..........: AXEnet (http://www.axenet.org)
+networks/bunker7.network .........: Bunker7 (http://www.bunker7.net)
+networks/burnnet.network .........: BuRnNET (http://www.burncycl.net)
+networks/cabonet.network .........: CaboNet (http://www.cabonet.org)
+networks/chatcrap.network ........: ChatCrap (http://www.chatcrap.com)
+networks/chatuniverse.network ....: ChatUniverse (http://www.chatuniverse.net)
+networks/ctcp.network ............: CTCP Networks (http://www.ctcp.net)
+networks/darkkaos.network ........: Dark Kaos Network (http://www.darkkaos.net)
+networks/digitalirc.network ......: DigitalIRC (http://www.digitalirc.net)
+networks/discussioni.network .....: Discussioni.org (http://www.discussioni.org)
+networks/dragonwings.network .....: DragonWings (http://www.dragonwings.org)
+networks/gamescafe.network .......: GamesCafe (http://www.gamerscafe.net)
+networks/german-elite.network ....: German-Elite (http://www.german-elite.net)
+networks/german-global-irc.network: German Global IRC (http://www.global-irc.de)
+networks/globalchat.network ......: GlobalChat (http://www.globalchat.ca)
+networks/global-irc.network ......: Global-IRC (http://www.global-irc.net)
+networks/icechat.network .........: IceChat (http://www.icechat.net)
+networks/infinity.network ........: Infinity-IRC.org (http://www.infinity-irc.org)
+networks/isno.network ............: Isno (http://www.isno.net)
+networks/l33t-irc.network ........: L33T-IRC (http://www.l33t-irc.com)
+networks/lcirc.network ...........: LCIrc (http://www.lcirc.net)
+networks/outsiderz.network .......: Outsiderz (http://www.outsiderz.com)
+networks/phazenet.network ........: PhazeNet (http://www.phazenet.com)
+networks/stormdancing.network ....: StormDancing (http://www.stormdancing.net)
+networks/thainet.network .........: Thai IRC Network
+networks/unitedirc-org.network ...: Unitedirc (http://www.unitedirc.org)
+networks/wazzza.network ..........: wazZza (http://www.wazzza.org)
+networks/x-irc.network ...........: x-irc (http://www.x-irc.net)
+networks/zirc.network ............: ZiRC (http://www.zirc.org)

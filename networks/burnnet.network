@@ -1,0 +1,27 @@
+/*
+ * BuRnNET (irc.burncycl.net) Network Configuration File
+ * --------------------------------------------------
+ *  Added-at:     03 April 2001 03:31
+ *  Author: BuRnCycL
+ *  Email: burncycl@burncycl.net
+ * -----------------------------------------
+ */
+
+set {
+        network-name            "BuRnNET";
+        default-server          "irc.burncycl.net";
+        services-server         "services.burncycl.net";
+        stats-server            "stats.burncycl.net";
+        help-channel            "#help";
+        hiddenhost-prefix       "hide";
+        prefix-quit             "Quit:";
+        hosts {
+                local           "locop.burncycl.net";
+                global          "oper.burncycl.net";
+                coadmin         "coadmin.burncycl.net";
+                admin           "admin.burncycl.net";
+                servicesadmin   "csop.burncycl.net";
+                netadmin        "netadmin.burncycl.net";
+                host-on-oper-up "on";
+        };
+};

@@ -45,7 +45,6 @@
 #ifdef	STDLIBH
 #include <stdlib.h>
 #endif
-
 #ifdef	STRINGSH
 #include <strings.h>
 #else
@@ -56,6 +55,15 @@
 #ifdef SSL
 #include <openssl/ssl.h>
 #endif
+#ifdef INET6
+#ifndef _WIN32
+#include <netinet/in.h>
+#include <sys/socket.h>
+#else
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#endif
+#endif
 #ifndef GOT_STRCASECMP
 #define	strcasecmp	mycmp
 #define	strncasecmp	myncmp
@@ -65,8 +73,8 @@
 #define   index   strchr
 #define   rindex  strrchr
 /*
-extern	char	*index PROTO((char *, char));
-extern	char	*rindex PROTO((char *, char));
+extern	char	*index(char *, char);
+extern	char	*rindex(char *, char);
 */
 #endif
 #ifdef NOBCOPY
@@ -85,17 +93,6 @@ extern	char	*rindex PROTO((char *, char));
 #endif
 #else
 #include <sys/time.h>
-#endif
-#ifndef DMALLOC
-#if !defined(DEBUGMODE)
-# ifndef _WIN32
-#  define MyFree(x)	if ((x) != NULL) free(x)
-# else
-#  define MyFree(x)       if ((x) != NULL) GlobalFree(x)
-# endif
-#else
-#define	free(x)		MyFree(x)
-#endif
 #endif
 #ifdef NEXT
 #define VOIDSIG int		/* whether signal() returns int of void */
@@ -128,7 +125,8 @@ typedef unsigned int u_int;
 #endif
 
 #ifdef _WIN32
-#define MYOSNAME "Win32"
+#define MYOSNAME OSName
+extern char OSName[256];
 #endif
 #ifdef DEBUGMODE
 // #define ircsprintf sprintf
@@ -143,11 +141,6 @@ typedef unsigned int u_int;
 #ifdef INET6
 
 # define AND16(x) ((x)[0]&(x)[1]&(x)[2]&(x)[3]&(x)[4]&(x)[5]&(x)[6]&(x)[7]&(x)[8]&(x)[9]&(x)[10]&(x)[11]&(x)[12]&(x)[13]&(x)[14]&(x)[15])
-static unsigned char minus_one[] =
-    { 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 0
-};
-
 # define WHOSTENTP(x) ((x)[0]|(x)[1]|(x)[2]|(x)[3]|(x)[4]|(x)[5]|(x)[6]|(x)[7]|(x)[8]|(x)[9]|(x)[10]|(x)[11]|(x)[12]|(x)[13]|(x)[14]|(x)[15])
 
 # define	AFINET		AF_INET6
@@ -159,9 +152,9 @@ static unsigned char minus_one[] =
 # define	S_ADDR		s6_addr
 # define	IN_ADDR		in6_addr
 
-# ifndef uint32_t
-#  define uint32_t __u32
-# endif
+// # ifndef uint32_t
+//#  define uint32_t __u32
+// # endif
 
 # define MYDUMMY_SIZE 128
 char mydummy[MYDUMMY_SIZE];
@@ -194,6 +187,58 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 # define WHOSTENTP(x) (x)
 # define IRCDCONF_DELIMITER ':'
+#endif
+
+/*
+ * Socket, File, and Error portability macros
+ */
+#ifndef _WIN32
+#define SET_ERRNO(x) errno = x
+#define READ_SOCK(fd, buf, len) read((fd), (buf), (len))
+#define WRITE_SOCK(fd, buf, len) write((fd), (buf), (len))
+#define CLOSE_SOCK(fd) close(fd)
+#define IOCTL(x, y, z) ioctl((x), (y), (z))
+#define ERRNO errno
+#define STRERROR(x) strerror(x)
+
+/* error constant portability */
+#define P_EMFILE        EMFILE
+#define P_ENOBUFS       ENOBUFS
+#define P_EWOULDBLOCK   EWOULDBLOCK
+#define P_EAGAIN        EAGAIN
+#define P_EINPROGRESS   EINPROGRESS
+#define P_EWORKING		EINPROGRESS
+#define P_EINTR         EINTR
+#define P_ETIMEDOUT     ETIMEDOUT
+#define P_ENOTSOCK	ENOTSOCK
+#define P_EIO		EIO
+#define P_ECONNABORTED	ECONNABORTED
+#define P_ECONNRESET	ECONNRESET
+#define P_ENOTCONN	ENOTCONN
+#else
+
+/* IO and Error portability macros */
+#define READ_SOCK(fd, buf, len) recv((fd), (buf), (len), 0)
+#define WRITE_SOCK(fd, buf, len) send((fd), (buf), (len), 0)
+#define CLOSE_SOCK(fd) closesocket(fd)
+#define IOCTL(x, y, z) ioctlsocket((x), (y), (z))
+#define ERRNO WSAGetLastError()
+#define STRERROR(x) nt_strerror(x)
+#define SET_ERRNO(x) WSASetLastError(x)
+/* Error constant portability */
+#define P_EMFILE        WSAEMFILE
+#define P_ENOBUFS       WSAENOBUFS
+#define P_EWOULDBLOCK   WSAEWOULDBLOCK
+#define P_EAGAIN        WSAEWOULDBLOCK
+#define P_EINPROGRESS   WSAEINPROGRESS
+#define P_EWORKING		WSAEWOULDBLOCK
+#define P_EINTR         WSAEINTR
+#define P_ETIMEDOUT     WSAETIMEDOUT
+#define P_ENOTSOCK	WSAENOTSOCK
+#define P_EIO		EIO
+#define P_ECONNABORTED	WSAECONNABORTED
+#define P_ECONNRESET	WSAECONNRESET
+#define P_ENOTCONN	WSAENOTCONN
 #endif
 
 #endif /* __sys_include__ */

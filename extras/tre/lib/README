@@ -1,0 +1,49 @@
+This code is structured roughly as follows:
+
+regcomp.c:
+  - Regexp parser.  Parses a POSIX regexp (with TRE extensions) into
+    an abstract syntax tree (AST).
+  - TNFA constructor.
+    * routine that adds appropriate minimized or maximized tags to an
+      AST to keep track of submatches
+    * conversion of tagged ASTs to tagged nondeterministic state
+      machines (TNFAs)
+  - Implements the regfree() function.
+
+tre-match-parallel.c:
+  - Parallel TNFA matcher.
+    * The matcher basically takes a string and a TNFA and finds the
+      leftmost longest match and submatches in one pass over the input
+      string (typically only the beginning of the input string is
+      scanned until a leftmost match and longest match is found).
+    * The matcher cannot handle back references, but the worst case
+      time consumption is always directly proportional to the length
+      of the input string.
+
+tre-match-backtrack.c:
+  - A traditional backtracking matcher.
+    * Like the parallel matcher, takes a string and a TNFA and finds
+      the leftmost longest match and submatches.  Portions of the
+      input string may (and usually are) scanned multiple times.
+    * Can handle back references.  The worst case time consumption,
+      however, is O(k^l) where k is some constant and l is the length
+      of the input string.
+
+tre-match-approx.c:
+  - Approximate TNFA matcher.
+    * Finds the leftmost and longest match and submatches in one pass
+      over the input string.  The match may contain errors.  Each
+      missing, substituted, or extra character in the match increases
+      the cost of the match.  A maximum cost for the returned match
+      can be given.  The cost of the found match is returned.
+    * Cannot handle back references.  Like the parallel exact matcher,
+      the worst case time consumption is directly proportional to the
+      length of the input string.
+
+regexec.c:
+  - Stubs for the regexec() family of functions.
+    * If the TNFA contains back referencing nodes, the backtracking
+      matcher is used.  Otherwise the parallel matcher is used.
+
+regerror.c:
+  - Implements the regerror() function.

@@ -1,0 +1,18 @@
+set {
+	network-name		"DigitalIRC.Net";
+	default-server		"irc.digitalirc.net";
+	services-server		"Services.DigitalIRC.Net";
+	stats-server		"Statistics.DigitalIRC.com";
+	help-channel		"#Digitalirc";
+	hiddenhost-prefix	"NN";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"LocOper.DigitalIRC.Net";
+		global		"Oper.DigitalIRC.Net";
+		coadmin		"NetAdmin.DigitalIRC.Net";
+		admin		"Admin.DigitalIRC.Net";
+		servicesadmin	"ServicesOp.DigitalIRC.Net";
+		netadmin	"NetAdmin.DigitalIRC.Net";
+		host-on-oper-up	"off";
+	};
+};

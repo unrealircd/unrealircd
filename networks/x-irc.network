@@ -1,0 +1,26 @@
+/*
+ * x-irc.net (irc.x-irc.net) Network Configuration File
+ *
+ * Added-at:     14 July 2001 19:40
+ * Author: TheDarkOne
+ * Email: admin@x-irc.net
+ */
+
+set {
+	network-name "x-irc.net";
+	default-server "irc.x-irc.net"; 
+	services-server "services.x-irc.net";
+	stats-server "stats.x-irc.net";
+	help-channel "#x-irc";
+	hiddenhost-prefix "x-irc";
+	hosts {
+		local "locop.x-irc.net";
+		global "globop.x-irc.net";
+		coadmin "coadmin.x-irc.net";
+		admin "admin.x-irc.net";
+		servicesadmin "csop.x-irc.net";
+		netadmin "netadmin.x-irc.net";
+		host-on-oper no;
+	};
+};
+

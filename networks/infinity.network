@@ -1,0 +1,18 @@
+set {
+	network-name		"Infinity-IRC.org";
+	default-server		"irc.infinity-irc.org";
+	services-server		"services.infinity-irc.org";
+	stats-server		"stats.infinity-irc.org";
+	help-channel		"#Infinity";
+	hiddenhost-prefix	"Infinity";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"LOCop.Infinity-IRC.org";
+		global		"IRCop.Infinity-IRC.org";
+		coadmin		"IRCop-CoAdmin.Infinity-IRC.org";
+		admin		"IRCop-Admin.Infinity-IRC.org";
+		servicesadmin	"IRCop-ServiceAdmin.Infinity-IRC.org";
+		netadmin	"IRCop-NetAdmin.Infinity-IRC.org";
+		host-on-oper-up	"on";
+	};
+};

@@ -1,0 +1,28 @@
+/*
+ * Unreal-Team () Network Configuration File
+ * --------------------------------------------------
+ *  Added-at:     14 July 1999 00:00 GMT
+ *  Author:       Stskeeps (Carsten Munk)
+ *  E-Mail:       stskeeps@tspre.org
+ *  $Id$
+ * -----------------------------------------
+ */
+
+set {
+	network-name		"TESTnet";
+	default-server		"irc.testnet.ircsystems.net";
+	services-server		"services.testnet.ircsystems.net";
+	stats-server		"stats.testnet.ircsystems.net";
+	help-channel		"#testnet";
+	hiddenhost-prefix	"unreal";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"locop.testnet.ircsystems.net";
+		global		"ircop.testnet.ircsystems.net";
+		coadmin		"coadmin.testnet.ircsystems.net";
+		admin		"admin.testnet.ircsystems.net";
+		servicesadmin	"csops.testnet.ircsystems.net";
+		netadmin	"netadmin.testnet.ircsystems.net";
+		host-on-oper-up	"on";
+	};
+};

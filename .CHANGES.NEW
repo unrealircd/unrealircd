@@ -1,19 +1,20 @@
-Welcome to the UnrealIRCd configuration program. This program
-will help you compile your IRC server by asking you questions
-regarding your system and how you want the ircd to function.
 
-If you need help setting up your server, mail
-supporters@lists.unrealircd.org or ask on IRC:
-/server irc.ircsystems.net, /join #unreal-support
+ _   _                      _ ___________  _____     _
+| | | |                    | |_   _| ___ \/  __ \   | |
+| | | |_ __  _ __ ___  __ _| | | | | |_/ /| /  \/ __| |
+| | | | '_ \| '__/ _ \/  _ | | | | |    / | |    /  _ |
+| |_| | | | | | |  __/ (_| | |_| |_| |\ \ | \__/\ (_| |
+ \___/|_| |_|_|  \___|\__,_|_|\___/\_| \_| \____/\__,_|
 
-Regardless, please read Unreal.nfo first along with all documentation
-and FAQ's in doc/. If you do not do this, we will NOT help you!
- 
-If the code is changed in any way, or the version string is modified,
-we will _NOT_ support the product. (Unless of course you got explicit
-permission from one of the UnrealIRCd coders.)
+                               Configuration Program
+                                for Unreal3.2-beta17
+                                    
+This program will help you to compile your IRC server, and ask you
+questions regarding the compile-time settings of it during the process. 
+regarding the setup of it, during the process.
 
-Finally, unofficial UnrealIRCd/32 builds (if it doesn't say "genuine"
-in the display) are _NOT_ supported.
+If you have problems regarding the setup & compile, read Unreal.nfo to get
+more information on where to get help. Please, before running this setup,
+read the documentation in the "doc" folder. Docs are also avail online @
+http://www.unrealircd.com/unreal32docs.html
 
-- Luke (luke@unrealircd.com)

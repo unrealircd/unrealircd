@@ -1,4 +1,3 @@
-
 /************************************************************************
  *   Unreal Internet Relay Chat Daemon, src/fdlist.c
  *   Copyright (C) Mika Nystrom
@@ -38,10 +37,7 @@ void addto_fdlist(int fd, fdlist * listp)
 		 * list too big.. must exit 
 		 */
 		--listp->last_entry;
-		ircd_log("fdlist.c list too big, must exit...");
-#ifdef	USE_SYSLOG
-		(void)syslog(LOG_CRIT, "fdlist.c list too big.. must exit");
-#endif
+		ircd_log(LOG_ERROR, "fdlist.c list too big, must exit...");
 		abort();
 	}
 	else
@@ -86,3 +82,4 @@ void init_fdlist(fdlist * listp)
 	memset((char *)listp->entry, '\0', sizeof(listp->entry));
 	return;
 }
+
