@@ -543,7 +543,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	char *nick, *username, *virthost, *umode;
 {
 	aConfItem *aconf;
-	char *parv[3], *tmpstr, c;
+	char *parv[3], *tmpstr, c, *encr;
 #ifdef HOSTILENAME
 	char stripuser[USERLEN + 1], *u1 = stripuser, *u2, olduser[USERLEN + 1],
 	    userbad[USERLEN * 2 + 1], *ubad = userbad, noident = 0;
@@ -735,7 +735,24 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 
 		if (!BadPtr(aconf->passwd) && !StrEq("ONE", aconf->passwd))
 		{
-			if (!StrEq(sptr->passwd, aconf->passwd))
+/* I:line password encryption --codemastr */
+#ifdef CRYPT_ILINE_PASSWORD
+		if (*sptr->passwd) {
+			char salt[3];
+			extern char *crypt();
+
+			salt[0]=aconf->passwd[0];
+			salt[1]=aconf->passwd[1];
+			salt[3]='\0';
+			
+			encr = crypt(sptr->passwd, salt);
+		}
+		else
+			encr = "";
+#else
+		encr = sptr->passwd;
+#endif
+			if (!StrEq(encr, aconf->passwd))
 			{
 				ircstp->is_ref++;
 				sendto_one(sptr, err_str(ERR_PASSWDMISMATCH),

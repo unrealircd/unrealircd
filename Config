@@ -72,6 +72,7 @@ MODE_X=""
 TRUEHUB=""
 CRYPT_OPER_PASSWORD=""
 CRYPT_LINK_PASSWORD=""
+CRYPT_ILINE_PASSWORD=""
 LISTEN_SIZE="5"
 MAXSENDQLENGTH="3000000"
 BUFFERPOOL="(9 * MAXSENDQLENGTH)"
@@ -132,6 +133,7 @@ case "$OS" in
         OSNAME="FreeBSD 2.2.x"
         CRYPT_OPER_PASSWORD=""
         CRYPT_LINK_PASSWORD=""
+	CRYPT_ILINE_PASSWORD=""
        echo "You are using FreeBSD 2.2.x; do NOT crypt passwords at this time"
         ;;
     *FreeBSD*2.2*)
@@ -140,7 +142,8 @@ case "$OS" in
         OSNAME="FreeBSD 2.2"
         CRYPT_OPER_PASSWORD=""
         CRYPT_LINK_PASSWORD=""
-        echo "You are using FreeBSD 2.2; do NOT crypt passwords at this time"
+        CRYPT_ILINE_PASSWORD=""
+	echo "You are using FreeBSD 2.2; do NOT crypt passwords at this time"
         ;;
     *FreeBSD*4.0*)
         DEFCFLAGS="$DEFOPT"
@@ -148,6 +151,7 @@ case "$OS" in
         OSNAME="FreeBSD 4.0"
         CRYPT_OPER_PASSWORD=""
         CRYPT_LINK_PASSWORD=""
+	CRYPT_ILINE_PASSWORD=""
         echo "You are using FreeBSD 4.0; You can use encrypted passwords now."
         ;;
     *FreeBSD*3*)
@@ -156,6 +160,7 @@ case "$OS" in
         OSNAME="FreeBSD 3.x"
         CRYPT_OPER_PASSWORD=""
         CRYPT_LINK_PASSWORD=""
+	CRYPT_ILINE_PASSWORD=""
         echo "You are using FreeBSD 3.x; You can use encrypted passwords now."
         ;;
     *FreeBSD*)
@@ -164,6 +169,7 @@ case "$OS" in
         OSNAME="FreeBSD"
         CRYPT_OPER_PASSWORD=""
         CRYPT_LINK_PASSWORD=""
+	CRYPT_ILINE_PASSWORD=""
         echo "You are using FreeBSD ; do NOT crypt passwords at this time"
         ;;
     *SCO_SV*)
@@ -1326,6 +1332,42 @@ done
 FOO=""
 runonce=""
 while [ -z "$FOO" ] ; do
+if [ -n "$CRYPT_ILINE_PASSWORD" ] ; then
+	FOO="Yes"
+else
+	FOO="No"
+fi
+echo ""
+echo "Do you want to use encrypted I:line passwords?"
+echo $n "[$FOO] -> $c"
+if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+	read cc
+else
+	cc=""
+	runonce=Yes
+fi
+if [ -z "$cc" ] ; then
+	cc=$FOO
+fi
+	case "$cc" in
+		[Yy]*)
+			CRYPT_ILINE_PASSWORD="1"
+			;;
+		[Nn]*) 
+			CRYPT_ILINE_PASSWORD=""
+			;;
+		*)
+			echo ""
+			echo "You need to enter either Yes or No here..."
+			echo ""
+			FOO=""
+			;;
+		esac
+done		
+
+FOO=""
+runonce=""
+while [ -z "$FOO" ] ; do
     FOO="$LISTEN_SIZE"
     echo ""
     echo "What listen() backlog value do you wish to use?  Some servers"
@@ -1603,6 +1645,11 @@ if [ -n "$CRYPT_LINK_PASSWORD" ] ; then
     echo "#define CRYPT_LINK_PASSWORD 1" >> $OPTIONS_H
 else
     echo "#undef CRYPT_LINK_PASSWORD" >> $OPTIONS_H
+fi
+if [ -n "$CRYPT_ILINE_PASSWORD" ] ; then
+    echo "#define CRYPT_ILINE_PASSWORD 1" >> $OPTIONS_H
+else
+    echo "#undef CRYPT_ILINE_PASSWORD" >> $OPTIONS_H
 fi
 if [ -n "$HUB" ] ; then
     echo "#define HUB 1" >> $OPTIONS_H

@@ -400,3 +400,5 @@
   better encryption
 - Fixed a typo in /stats z
 - Some more crypto stuff, will work on the new engine tommorow
+- You can now encrypt the I:line passwords using mkpasswd (must have CRYPT_ILINE_PASSWORD defined)
+- Editted Config to ask if you want encrypted I:line passwords
