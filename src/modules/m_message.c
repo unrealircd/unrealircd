@@ -373,6 +373,9 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 						abort();
 					strlcpy(pfixchan+1, p2, sizeof(pfixchan)-1);
 					nick = pfixchan;
+				} else {
+					strlcpy(pfixchan, p2, sizeof(pfixchan));
+					nick = pfixchan;
 				}
 			}
 			
