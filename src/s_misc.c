@@ -97,7 +97,7 @@ char *date(clock)
 	bcopy((char *)gm, (char *)&gmbuf, sizeof(gmbuf));
 	gm = &gmbuf;
 	lt = localtime(&clock);
-
+#ifndef _WIN32
 	if (lt->tm_yday == gm->tm_yday)
 		minswest = (gm->tm_hour - lt->tm_hour) * 60 +
 		    (gm->tm_min - lt->tm_min);
@@ -105,11 +105,12 @@ char *date(clock)
 		minswest = (gm->tm_hour - (lt->tm_hour + 24)) * 60;
 	else
 		minswest = ((gm->tm_hour + 24) - lt->tm_hour) * 60;
-
+#else
+	minswest = (_timezone / 60);
+#endif
 	plus = (minswest > 0) ? '-' : '+';
 	if (minswest < 0)
 		minswest = -minswest;
-
 	(void)ircsprintf(buf, "%s %s %d %d -- %02d:%02d %c%02d:%02d",
 	    weekdays[lt->tm_wday], months[lt->tm_mon], lt->tm_mday,
 	    1900 + lt->tm_year,
