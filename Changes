@@ -2348,6 +2348,10 @@ seen. gmtime warning still there
 - Internal code cleanups: EOS var rename, got rid of old UnknownUser structs, moved
   anti away flood to new flood struct.
 - Changed away flood configuration to set::anti-flood::away-flood <count>:<period>.
-- Added nickflood protection, can be set in set::anti-flood::away-flood <count>:<period>
+- Added nickflood protection, can be set in set::anti-flood::nick-flood <count>:<period>
   to allow max 'count' nickchanges per 'period' seconds. The default is 3 per 60s.
   As usual, the nickchange limiting does not apply to ircops.
+- Allow o/a/q'd users to nickchange if banned (#0001150).
+- Added badword all { }, this will add the badword to the badword channel, badword message
+  and badword quit lists... could be useful :p.
+- Little config.h cleanup (removed obsolete non-working defines).

@@ -4149,6 +4149,17 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 }
 
 #ifdef STRIPBADWORDS
+
+static ConfigItem_badword *copy_badword_struct(ConfigItem_badword *ca)
+{
+	ConfigItem_badword *x = MyMalloc(sizeof(ConfigItem_badword));
+	memcpy(x, ca, sizeof(ConfigItem_badword));
+	x->word = strdup(ca->word);
+	if (ca->replace)
+		x->replace = strdup(ca->replace);
+	return x;
+}
+
 int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
@@ -4239,10 +4250,15 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 		AddListItem(ca, conf_badword_channel);
 	else if (!strcmp(ce->ce_vardata, "message"))
 		AddListItem(ca, conf_badword_message);
-	else
+	else if (!strcmp(ce->ce_vardata, "quit"))
 		AddListItem(ca, conf_badword_quit);
+	else if (!strcmp(ce->ce_vardata, "all"))
+	{
+		AddListItem(copy_badword_struct(ca), conf_badword_channel);
+		AddListItem(copy_badword_struct(ca), conf_badword_message);
+		AddListItem(copy_badword_struct(ca), conf_badword_quit);
+	}
 	return 1;
-
 }
 
 int _test_badword(ConfigFile *conf, ConfigEntry *ce) { 
@@ -4261,7 +4277,8 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return 1;
 	}
-	else if (strcmp(ce->ce_vardata, "channel") && strcmp(ce->ce_vardata, "message") && strcmp(ce->ce_vardata, "quit")) {
+	else if (strcmp(ce->ce_vardata, "channel") && strcmp(ce->ce_vardata, "message") && 
+	         strcmp(ce->ce_vardata, "quit") && strcmp(ce->ce_vardata, "all")) {
 			config_error("%s:%i: badword with unknown type",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return 1;

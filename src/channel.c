@@ -798,21 +798,15 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 	    CHFL_HALFOP | CHFL_CHANPROT))))
 		return CANNOT_SEND_MODREG;
-	if (chptr->mode.mode & MODE_MODERATED &&
+	if (chptr->mode.mode & MODE_MODERATED && /* !IsOper(cptr) && */
 	    (!lp
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 	    CHFL_HALFOP | CHFL_CHANPROT))))
 	    {
-		if (!(chptr->mode.mode & MODE_AUDITORIUM))
-		{
-			return (CANNOT_SEND_MODERATED);
-		} 
-		{
-			if (!is_irc_banned(chptr))
+			if ((chptr->mode.mode & MODE_AUDITORIUM) && !is_irc_banned(chptr))
 				sendto_chanops_butone(cptr, chptr, ":IRC PRIVMSG %s :%s: %s",
 						chptr->chname, cptr->name, msgtext);
 			return (CANNOT_SEND_MODERATED);
-		}
 	    }
 
 	if (chptr->mode.mode & MODE_NOCTCP &&

@@ -1350,9 +1350,9 @@ badword &lt;type&gt; {
 };</pre></p>
 <p>The badword block allows you to manipulate the list used for user and channel 
   mode +G to strip "badwords". The badword:: specifies the type, valid 
-  types are channel, message, and quit, channel is for the channel +G list, message 
-  is for the user +G list, and quit is for quit message censoring. The badword::word
-  can be a simple word or a regular expression we should search for. The 
+  types are channel, message, quit, and all. channel is for the channel +G list, message 
+  is for the user +G list, quit is for quit message censoring, and all adds it to all three lists. 
+  The badword::word can be a simple word or a regular expression we should search for. The 
   badword::replace is what we should replace this match with. If badword::replace 
   is left out, the word is replaced with &lt;censored&gt;. The badword::action defines
   what action should be taken if this badword is found. If you specify replace, then the

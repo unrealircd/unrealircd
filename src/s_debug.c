@@ -62,9 +62,6 @@ char serveropts[] = {
 #ifdef	USE_SYSLOG
 	'Y',
 #endif
-#ifdef NO_IDENT_CHECKING
-	'K',
-#endif
 #ifdef INET6
 	'6',
 #endif

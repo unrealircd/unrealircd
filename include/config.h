@@ -170,12 +170,6 @@
 #undef DISABLE_USERMOD
 
 /*
-  Ident checking
-  #define this to disable ident checking
-*/
-#undef NO_IDENT_CHECKING
-
-/*
  * No spoof code
  *
  * This enables the spoof protection.
@@ -192,17 +186,7 @@
  * HOSTILENAME - Define this if you want the hostile username patch included,
  *		 it will strip characters that are not 0-9,a-z,A-Z,_,- or .
  */
-#define HOSTILENAME		/* */
-
-/*
-** Nick flood limit
-** Minimum time between nick changes.
-** (The first two changes are allowed quickly after another however).
-**
-** Define NICK_DELAY if you want this feature.
-*/
-
-#define NICK_DELAY 15		/* recommended value 15 */
+#define HOSTILENAME		/* [DO NOT CHANGE!] */
 
 /*
  * This makes topics include nick!user@host instead of nick in topic whoset, 
@@ -227,12 +211,6 @@
 #endif
 
 #define HOW_MANY_FREELINKS_ALLOWED 	200	/* default: 200 */
-
-/*
- * Define this if you wish to output a *file* to a K lined client rather
- * than the K line comment (the comment field is treated as a filename)
- */
-#undef	COMMENT_IS_FILE
 
 /*
  * MAXUNKNOWNCONNECTIONSPERIP
@@ -312,36 +290,6 @@
  */
 #define	SHOW_INVISIBLE_LUSERS
 
-/* MAXIMUM LINKS
- *
- * This define is useful for leaf nodes and gateways. It keeps you from
- * connecting to too many places. It works by keeping you from
- * connecting to more than "n" nodes which you have C:blah::blah:6667
- * lines for.
- *
- * Note that any number of nodes can still connect to you. This only
- * limits the number that you actively reach out to connect to.
- *
- * Leaf nodes are nodes which are on the edge of the tree. If you want
- * to have a backup link, then sometimes you end up connected to both
- * your primary and backup, routing traffic between them. To prevent
- * this, #define MAXIMUM_LINKS 1 and set up both primary and
- * secondary with C:blah::blah:6667 lines. THEY SHOULD NOT TRY TO
- * CONNECT TO YOU, YOU SHOULD CONNECT TO THEM.
- *
- * Gateways such as the server which connects Australia to the US can
- * do a similar thing. Put the American nodes you want to connect to
- * in with C:blah::blah:6667 lines, and the Australian nodes with
- * C:blah::blah lines. Have the Americans put you in with C:blah::blah
- * lines. Then you will only connect to one of the Americans.
- *
- * This value is only used if you don't have server classes defined, and
- * a server is in class 0 (the default class if none is set).
- *
- */
-
-#define MAXIMUM_LINKS 1
-
 /*
  * NOTE: defining CMDLINE_CONFIG and installing ircd SUID or SGID is a MAJOR
  *       security problem - they can use the "-f" option to read any files
@@ -416,10 +364,6 @@
 #define StatServ "StatServ"
 #define InfoServ "InfoServ"
 #define BotServ "BotServ"
-/*
- * How many seconds in between simultaneous nick changes?
- */
-#define NICK_CHANGE_DELAY	30
 
 /*
  * How many open targets can one nick have for messaging nicks and
