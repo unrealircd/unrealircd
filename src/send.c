@@ -1,5 +1,4 @@
 /*
-/*
  *   Unreal Internet Relay Chat Daemon, src/send.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *		      University of Oulu, Computing Center
@@ -555,6 +554,7 @@ void sendto_serv_butone_token(aClient *one, char *prefix, char *command,
 	va_list vl;
 	int  i;
 	aClient *cptr;
+	aClient *acptr;
 #ifndef NO_FDLIST
 	int  j;
 #endif
@@ -565,6 +565,14 @@ void sendto_serv_butone_token(aClient *one, char *prefix, char *command,
 	va_start(vl, pattern);
 
 	pref[0] = '\0';
+	if (strchr(prefix, '.'))
+	{
+		acptr = (aClient *) find_server_quick(prefix);
+		if (acptr->serv->numeric)
+		{
+			strcpy(pref, base64enc(acptr->serv->numeric));
+		}
+	}
 	strcpy(tcmd, token);
 	strcpy(ccmd, command);
 	strcat(tcmd, " ");
@@ -587,12 +595,29 @@ void sendto_serv_butone_token(aClient *one, char *prefix, char *command,
 #endif
 			if (IsToken(cptr))
 			{
-				sendto_one(cptr, ":%s %s", prefix, tcmd);
+				if (SupportNS(cptr) && pref[0])
+				{
+					sendto_one(cptr, "@%s %s",	
+						pref, tcmd);
+				}
+					else
+				{
+					sendto_one(cptr, ":%s %s", 
+						prefix, tcmd);
+				}
 			}
 			else
 			{
-				sendto_one(cptr, ":%s %s", prefix,
+				if (SupportNS(cptr) && pref[0])
+				{
+					sendto_one(cptr, "@%s %s",
+						pref, ccmd);
+				}
+				else
+				{
+					sendto_one(cptr, ":%s %s", prefix,
 					    ccmd);
+				}
 			}
 	}
 	va_end(vl);
@@ -612,6 +637,7 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 	va_list vl;
 	int  i;
 	aClient *cptr;
+	aClient *acptr;
 #ifndef NO_FDLIST
 	int  j;
 #endif
@@ -624,6 +650,14 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 	va_start(vl, pattern);
 	
 	pref[0] = '\0';
+	if (strchr(prefix, '.'))
+	{
+		acptr = (aClient *) find_server_quick(prefix);
+		if (acptr->serv->numeric)
+		{
+			strcpy(pref, base64enc(acptr->serv->numeric));
+		}
+	}
 
 	strcpy(tcmd, token);
 	strcpy(ccmd, command);
@@ -667,15 +701,31 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 		if ((opt & OPT_SJ3) && !SupportSJ3(cptr))
 			continue;
 		if (IsToken(cptr))
+		{
+			if (SupportNS(cptr) && pref[0])
 			{
-					sendto_one(cptr, ":%s %s", prefix,
-					    tcmd);
+				sendto_one(cptr, "@%s %s",	
+					pref, tcmd);
+			}
+				else
+			{
+				sendto_one(cptr, ":%s %s", 
+					prefix, tcmd);
+			}
+		}
+		else
+		{
+			if (SupportNS(cptr) && pref[0])
+			{
+				sendto_one(cptr, "@%s %s",
+					pref, ccmd);
 			}
 			else
 			{
-					sendto_one(cptr, ":%s %s", prefix,
-					    ccmd);
+				sendto_one(cptr, ":%s %s", prefix,
+				    ccmd);
 			}
+		}
 	}
 	va_end(vl);
 	return;

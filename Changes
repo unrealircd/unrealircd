@@ -479,3 +479,4 @@
 - Changed find_server_quick to work with masks too ..
 - Removed UPING UDP socket. Only resfd opens a udp fd now
 - Small memory cleanup
+- NS introduction in sendto_serv_butone_token
