@@ -201,7 +201,7 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 				char buf2[512];
 				DWORD size = 512;
 				if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL,
-				    CRYPT_NEWKEYSET))
+				    CRYPT_VERIFYCONTEXT))
 					return -1;
 				if (!CryptCreateHash(hProv, CALG_MD5, 0, 0, &hHash))
 					return -1;
@@ -245,7 +245,7 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 				char buf2[512];
 				DWORD size = 512;
 				if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL,
-				     CRYPT_NEWKEYSET))
+				     CRYPT_VERIFYCONTEXT))
 					return -1;
 				if (!CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash))
 					return -1;
@@ -373,7 +373,8 @@ char	*Auth_Make(short type, char *para)
 				HCRYPTPROV hProv;
 				HCRYPTHASH hHash;
 				DWORD size = 512;
-				if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL, 0))
+				if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL, 
+				     CRYPT_VERIFYCONTEXT))
 					return NULL;
 				if (!CryptCreateHash(hProv, CALG_MD5, 0, 0, &hHash))
 					return NULL;
@@ -407,7 +408,8 @@ char	*Auth_Make(short type, char *para)
 				HCRYPTPROV hProv;
 				HCRYPTHASH hHash;
 				DWORD size = 512;
-				if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL, 0))
+				if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL,
+				     CRYPT_VERIFYCONTEXT))
 					return NULL;
 				if (!CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash))
 					return NULL;
