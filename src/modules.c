@@ -139,6 +139,13 @@ char  *Module_Load (char *path, int load)
 			Module_free(mod);
 			return ("Unable to locate Mod_Unload");
 		}
+			if (!(Mod_Load = irc_dlsym(Mod, "Mod_Load")))
+			{
+				/* We cannot do delayed unloading if this happens */
+				(*Mod_Unload)();
+				Module_free(mod);
+				return ("Unable to locate Mod_Load"); 
+			}
 		if ((ret = (*Mod_Init)(load)) < MOD_SUCCESS)
 		{
 			ircsprintf(errorbuf, "Mod_Init returned %i",

@@ -973,3 +973,4 @@ seen. gmtime warning still there
 - Small v3 fix with no dependency problem
 - Fixed some more module v3 problems and upgrade all modules
 - Fixed a ton of module v3 problems (cause: Stskeeps is an idiot)
+- Yes, even more module v3 bugfixes

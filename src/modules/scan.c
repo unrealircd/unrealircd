@@ -127,6 +127,7 @@ int    m_scan_Init(int module_load)
 	bzero(&blackhole_conf, sizeof(blackhole_conf));
 	add_Hook(HOOKTYPE_CONFIG_UNKNOWN, h_config_set_blackhole);
 	add_Hook(HOOKTYPE_REHASH, h_config_set_blackhole_rehash);
+	return MOD_SUCCESS;
 }
 
 /* Is first run when server is 100% ready */
@@ -170,7 +171,7 @@ int    m_scan_Load(int module_load)
 	listen(blackholefd, LISTEN_SIZE);
 	/* Create blackhole accept() thread */
 	IRCCreateThread(acceptthread, acceptthread_attr, blackhole, NULL);
-	return 0;
+	return MOD_SUCCESS;
 }
 
 
