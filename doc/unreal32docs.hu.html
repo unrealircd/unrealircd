@@ -29,7 +29,7 @@ Hungarian |
   <font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
   <font size="4">Verzió: 3.2.1</font><br>
   <b>Jelenlegi verzió:</b> 3.2.1<br>
-  <b>Utolsó dokumentáció módosítás:</b> 2004-07-03</div>
+  <b>Utolsó dokumentáció módosítás:</b> 2004-10-11</div>
 <br>
   <b>Fõ fejlesztõk:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Munkatársak:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -1486,6 +1486,11 @@ except ban {
 except tkl {
 	mask &lt;hostmaszk&gt;;
 	type &lt;típus&gt;;
+	type { 
+		&lt;típus&gt;;
+		&lt;típus&gt;;
+		...
+	};
 };</pre></p>
 <p>Az except tkl blokkal szélesebb hostra illõ maszkon beállított tkl banok felülbírálását
   engedélyezeted bizonyos user@host-okra. Hasznos, ha egy Internet szolgáltató ki van tiltva,
@@ -1493,7 +1498,8 @@ except tkl {
   Az except::mask direktíva a kapcsolódásra engedélyezett felhasználó user@host maszkja.
   Az except::type meghatározza, hogy milyen letiltást bírálhat felül a kliens. Érvényes típusok:
   gline, gzline, qline, gqline és shun, amelyek kivételt képeznek a Gline-okra, globális Zline-okra,
-  Qline-okra, globális Qline-okra és shunokra.</p>
+  Qline-okra, globális Qline-okra és shunokra. Ha a type {} formátumot használod,
+  több típust is megadhatsz.</p>
 <p>Példa:<br>
 <pre>
 except tkl {
