@@ -2868,3 +2868,5 @@ seen. gmtime warning still there
   to everyone!
 - Fixed a bug in "unkickable users" (umode +q), they could still be kicked
   by non-netadmin ircops in some (many) cases, reported by Zell (#0001541).
+- Removed reference to SVSTIME from help.conf (it's actually /tsctl svstime)
+  (#0001540) reported by penna and DukePyrolator.
