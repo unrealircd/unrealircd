@@ -59,7 +59,7 @@ extern int SVSNOOP;
 #endif
 
 static Mod_SymbolDepTable modsymdep[] = {
-	MOD_Dep(SVSNOOP, xSVSNOOP, "src/modules/m_oper.so")
+	MOD_Dep(SVSNOOP, xSVSNOOP, "src/modules/m_oper.so"),
 	NULL
 	};
 

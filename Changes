@@ -1062,3 +1062,4 @@ seen. gmtime warning still there
 - Fixed bug #0000019 reported by Syzop, and bug found by same to deal with
   individual module loading
 - Fix for svsnoop symdep problem
+- Fixed sts's fix for svsnoop (since he failed to test his fix)
