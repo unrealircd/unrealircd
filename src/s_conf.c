@@ -5711,6 +5711,20 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 				continue;
 			}		
+			/* values which are >LONG_MAX are (re)set to LONG_MAX, problem is
+			 * that 'long' could be 32 or 64 bits resulting in different limits (LONG_MAX),
+			 * which then again results in different cloak keys.
+			 * We could warn/error here or silently reset them to 2147483647...
+			 * IMO it's best to error because the value 2147483647 would be predictable
+			 * (actually that's even unrelated to this 64bit problem).
+			 */
+			if ((l1 >= 2147483647) || (l2 >= 2147483647) || (l3 >= 2147483647))
+			{
+				config_error("%s:%i: set::cloak-keys: values must be below 2147483647 (2^31-1)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+				continue;
+			}
 			requiredstuff.settings.cloakkeys = 1;	
 		}
 		else if (!strcmp(cep->ce_varname, "scan")) {

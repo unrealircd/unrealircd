@@ -2277,3 +2277,5 @@ seen. gmtime warning still there
 - Clarified what ban server {} does, suggested by Joolz (#0001110)
 - Fixed a problem related to crontab reported by LRL (#0001034)
 - Fixed a problem in PPC detection
+- Will now error at too large cloak keys (2147483647 and greater) because it's dangerous
+  and could cause cloak key differences (ex: mixed ia32&ia64 networks).
