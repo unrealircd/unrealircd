@@ -2708,3 +2708,4 @@ seen. gmtime warning still there
 - Fixed a bug in /kick reported by rav2k (#0001490)
 - Made /who +M show +i users since they are already visible (#0001489) reported by penna
 - Made /who +M take chmode +u (auditorium) into account
+- Corrected the SVSNLINE documentation in help.conf (reported by Certus)
