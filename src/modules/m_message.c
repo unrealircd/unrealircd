@@ -270,7 +270,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 
 				if (MyClient(sptr))
 				{
-					ret = dospamfilter(sptr, text, notice, acptr->name);
+					ret = dospamfilter(sptr, text, (notice ? SPAMF_USERNOTICE : SPAMF_USERMSG), acptr->name);
 					if (ret < 0)
 						return FLUSH_BUFFER;
 				}
