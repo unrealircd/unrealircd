@@ -1536,6 +1536,11 @@ char *str;
 							sendto_serv_butone_token(sptr, sptr->name, MSG_AWAY, TOK_AWAY, "");
 						}
 						break;
+					case SPAMF_TOPIC:
+						//...
+						sendnotice(sptr, "Setting of topic on %s to that text is blocked: %s",
+							target, unreal_decodespace(tk->ptr.spamf->tkl_reason));
+						break;
 					default:
 						break;
 				}

@@ -807,6 +807,7 @@ struct Server {
 #define SPAMF_DCC			0x0040 /* d */
 #define SPAMF_USER			0x0080 /* u */
 #define SPAMF_AWAY			0x0100 /* a */
+#define SPAMF_TOPIC			0x0200 /* t */
 
 struct _spamfilter {
 	unsigned short action; /* see BAN_ACT* */

@@ -578,3 +578,5 @@
   module and the auth functions use it. Hopefully I didn't break anything ;). Suggested
   by Bugz (#2298).
 - Fixed mode #chan +O set by locop causing a desynch, reported by Unim4trix0 (#0001946).
+- Added spamfilter topic support ('t' in /spamfilter, or 'topic' in conf), suggested
+  by Z3l3zT (#0001929).
