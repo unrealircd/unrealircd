@@ -343,7 +343,7 @@ int i = 1;
 static int can_see(aClient *sptr, aClient *acptr, aChannel *channel)
 {
 int ret = 0;
-
+char has_common_chan = 0;
 	do {
 		/* can only see people */
 		if (!IsPerson(acptr))
@@ -454,6 +454,7 @@ int ret = 0;
 		{
 			if (!has_common_channels(sptr, acptr))
 				return WHO_CANTSEE;
+			has_common_chan = 1;
 		}
 
 		if (channel)
@@ -475,7 +476,7 @@ int ret = 0;
 		else
 		{
 			/* a user/mask who */
-			if (IsInvisible(acptr))
+			if (IsInvisible(acptr) && !has_common_chan)
 			{
 				/* don't show them unless it's an exact match */
 				if ((who_flags & WF_WILDCARD))
@@ -713,7 +714,16 @@ static int has_common_channels(aClient *c1, aClient *c2)
 	for (lp = c1->user->channel; lp; lp = lp->next)
 	{
 		if (IsMember(c2, lp->chptr))
+		{
+			if (c1 == c2)
+				return 1;
+			/* We must ensure that c1 is allowed to "see" c2 */
+                        if ((lp->chptr->mode.mode & MODE_AUDITORIUM) &&
+                            !is_chan_op(c2, lp->chptr) && !is_chan_op(c1, lp->chptr))
+                                break;
+
 			return 1;
+		}
 	}
 	return 0;
 }

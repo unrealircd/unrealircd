@@ -2706,3 +2706,5 @@ seen. gmtime warning still there
 - Fixed some compile warnings
 - Made CmodeAdd set MODERR_NOERROR when no error occurs (#0001484) reported by AngryWolf
 - Fixed a bug in /kick reported by rav2k (#0001490)
+- Made /who +M show +i users since they are already visible (#0001489) reported by penna
+- Made /who +M take chmode +u (auditorium) into account
