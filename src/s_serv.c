@@ -2639,7 +2639,8 @@ int  m_stats(cptr, sptr, parc, parv)
 	  case 'd':
 		  break;
 	  case 'r':
-		  cr_report(sptr);
+
+			/* FIXME:	  cr_report(sptr); */
 		  break;
 	  case 't':
 	  {
@@ -3799,13 +3800,9 @@ int  m_rehash(cptr, sptr, parc, parv)
 			}
 			if (!strnicmp("-rest", parv[1], 5))
 			{
-				if (!IsAdmin(sptr))
-					return 0;
-				sendto_ops
-				    ("%sRehashing channel restrict configuration on request of %s",
-				    cptr != sptr ? "Remotely " : "",
-				    sptr->name);
-				cr_rehash();
+				sendto_one
+				    (":%s NOTICE %s :*** Chrestrict rehash is now done in the main /rehash",
+				   	me.name, sptr->name);
 				return 0;
 			}
 			if (!_match("-o*motd", parv[1]))

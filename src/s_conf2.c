@@ -96,6 +96,8 @@ int	_conf_badword		(ConfigFile *conf, ConfigEntry *ce);
 #endif
 int	_conf_deny		(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_deny_dcc		(ConfigFile *conf, ConfigEntry *ce);
+int	_conf_deny_channel	(ConfigFile *conf, ConfigEntry *ce);
+int	_conf_allow_channel	(ConfigFile *conf, ConfigEntry *ce);
 
 extern int conf_debuglevel;
 
@@ -199,11 +201,14 @@ ConfigItem_except	*conf_except = NULL;
 ConfigItem_vhost	*conf_vhost = NULL;
 ConfigItem_link		*conf_link = NULL;
 ConfigItem_ban		*conf_ban = NULL;
+ConfigItem_deny_dcc     *conf_deny_dcc = NULL;
+ConfigItem_deny_channel *conf_deny_channel = NULL;
+ConfigItem_allow_channel *conf_allow_channel = NULL;
+
 #ifdef STRIPBADWORDS
 ConfigItem_badword	*conf_badword_channel = NULL;
 ConfigItem_badword      *conf_badword_message = NULL;
 #endif
-ConfigItem_deny_dcc     *conf_deny_dcc = NULL;
 
 /*
  * MyMalloc with the only difference that it clears the memory too
@@ -1337,6 +1342,21 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_allow *allow;
 	unsigned char isnew = 0;
 	
+	if (ce->ce_vardata)
+	{
+		if (!strcmp(ce->ce_vardata, "channel"))
+		{
+			_conf_allow_channel(conf, ce);
+			return 0;
+		}
+		else
+		{
+			config_status("%s:%i: allow with unknown type",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			return -1;
+		}
+	}
+	
 	allow = (ConfigItem_allow *) MyMallocEx(sizeof(ConfigItem_allow));
 	isnew = 1;
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -1391,6 +1411,50 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 	if (isnew)
 		add_ConfigItem((ConfigItem *) allow, (ConfigItem **) &conf_allow);
 }
+
+int	_conf_allow_channel(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigItem_allow_channel 	*allow = NULL;
+	ConfigEntry 	    	*cep;
+	
+	allow = MyMallocEx(sizeof(ConfigItem_allow_channel));
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname || !cep->ce_vardata)
+		{
+			config_error("%s:%i: blank allow channel item",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum);
+			continue;	
+		}
+		if (!strcmp(cep->ce_varname, "channel"))
+		{
+			ircstrdup(allow->channel, cep->ce_vardata);	
+		}
+		else
+		{
+			config_status("%s:%i: unknown directive allow channel::%s",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum, cep->ce_varname);
+		}
+	}	
+	if (!allow->channel)
+	{
+		config_status("%s:%i: allow channel {} without channel, ignoring",
+			cep->ce_fileptr->cf_filename,
+			cep->ce_varlinenum);
+		ircfree(allow->channel);
+		ircfree(allow);
+		return -1;
+	}
+	else
+	{
+		add_ConfigItem((ConfigItem *)allow, (ConfigItem **)&conf_allow_channel);
+		return 0;
+	}
+}
+
+
 
 /*
  * vhost {} block parser
@@ -1928,6 +1992,8 @@ int	_conf_deny(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if (!strcmp(ce->ce_vardata, "dcc"))
 		_conf_deny_dcc(conf, ce);
+	else if (!strcmp(ce->ce_vardata, "channel"))
+		_conf_deny_channel(conf, ce);
 	else
 	{
 		config_status("%s:%i: deny with unknown type",
@@ -1980,6 +2046,53 @@ int	_conf_deny_dcc(ConfigFile *conf, ConfigEntry *ce)
 	else
 	{
 		add_ConfigItem((ConfigItem *)deny, (ConfigItem **)&conf_deny_dcc);
+		return 0;
+	}
+}
+
+int	_conf_deny_channel(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigItem_deny_channel 	*deny = NULL;
+	ConfigEntry 	    	*cep;
+	
+	deny = MyMallocEx(sizeof(ConfigItem_deny_channel));
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname || !cep->ce_vardata)
+		{
+			config_error("%s:%i: blank deny channel item",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum);
+			continue;	
+		}
+		if (!strcmp(cep->ce_varname, "channel"))
+		{
+			ircstrdup(deny->channel, cep->ce_vardata);	
+		}
+		else if (!strcmp(cep->ce_varname, "reason"))
+		{
+			ircstrdup(deny->reason, cep->ce_vardata);
+		}
+		else
+		{
+			config_status("%s:%i: unknown directive deny channel::%s",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum, cep->ce_varname);
+		}
+	}	
+	if (!deny->channel || !deny->reason)
+	{
+		config_status("%s:%i: deny channel {} without channel/reason, ignoring",
+			cep->ce_fileptr->cf_filename,
+			cep->ce_varlinenum);
+		ircfree(deny->channel);
+		ircfree(deny->reason);
+		ircfree(deny);
+		return -1;
+	}
+	else
+	{
+		add_ConfigItem((ConfigItem *)deny, (ConfigItem **)&conf_deny_channel);
 		return 0;
 	}
 }
@@ -2375,18 +2488,21 @@ void	validate_configuration(void)
 
 int     rehash(aClient *cptr, aClient *sptr, int sig)
 {
-	ConfigItem_oper		*oper_ptr;
-	ConfigItem_class 	*class_ptr;
-	ConfigItem_ulines 	*uline_ptr;
-	ConfigItem_allow 	*allow_ptr;
-	ConfigItem_except 	*except_ptr;
-	ConfigItem_ban 		*ban_ptr;
-	ConfigItem_link 	*link_ptr;
-	ConfigItem_listen 	*listen_ptr;
-	ConfigItem_tld		*tld_ptr;
-	ConfigItem_vhost	*vhost_ptr;
-	ConfigItem_badword	*badword_ptr;
-	ConfigItem_deny_dcc	*deny_dcc_ptr;
+	ConfigItem_oper			*oper_ptr;
+	ConfigItem_class 		*class_ptr;
+	ConfigItem_ulines 		*uline_ptr;
+	ConfigItem_allow 		*allow_ptr;
+	ConfigItem_except 		*except_ptr;
+	ConfigItem_ban 			*ban_ptr;
+	ConfigItem_link 		*link_ptr;
+	ConfigItem_listen	 	*listen_ptr;
+	ConfigItem_tld			*tld_ptr;
+	ConfigItem_vhost		*vhost_ptr;
+	ConfigItem_badword		*badword_ptr;
+	ConfigItem_deny_dcc		*deny_dcc_ptr;
+	ConfigItem_deny_channel		*deny_channel_ptr;
+	ConfigItem_allow_channel	*allow_channel_ptr;
+
 	ConfigItem 	t;
 
 	
@@ -2553,6 +2669,24 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 			deny_dcc_ptr = (ConfigItem_deny_dcc *) &t;			
 		}
 	}
+
+	for (deny_channel_ptr = conf_deny_channel; deny_channel_ptr; deny_channel_ptr = (ConfigItem_deny_channel *) deny_channel_ptr->next)
+	{
+		ircfree(deny_channel_ptr->channel);
+		ircfree(deny_channel_ptr->reason);
+		t.next = del_ConfigItem((ConfigItem *) deny_channel_ptr, (ConfigItem **)&conf_deny_channel);
+		MyFree(deny_channel_ptr);
+		deny_channel_ptr = (ConfigItem_deny_channel *) &t;
+	}
+
+	for (allow_channel_ptr = conf_allow_channel; allow_channel_ptr; allow_channel_ptr = (ConfigItem_allow_channel *) allow_channel_ptr->next)
+	{
+		ircfree(allow_channel_ptr->channel);
+		t.next = del_ConfigItem((ConfigItem *) allow_channel_ptr, (ConfigItem **)&conf_allow_channel);
+		MyFree(allow_channel_ptr);
+		allow_channel_ptr = (ConfigItem_allow_channel *) &t;
+	}
+	
 	if (conf_drpass)
 	{
 		ircfree(conf_drpass->restart);
@@ -2850,3 +2984,27 @@ ConfigItem_vhost *Find_vhost(char *name) {
 }
 
 
+ConfigItem_deny_channel *Find_channel_allowed(char *name)
+{
+	ConfigItem_deny_channel *dchannel;
+	ConfigItem_allow_channel *achannel;
+	
+	for (dchannel = conf_deny_channel; dchannel; dchannel = (ConfigItem_deny_channel *)dchannel->next)
+	{
+		if (!match(dchannel->channel, name))
+			break;
+	}
+	if (dchannel)
+	{
+		for (achannel = conf_allow_channel; achannel; achannel = (ConfigItem_allow_channel *)achannel->next)
+		{
+			if (!match(achannel->channel, name))
+				break;
+		}
+		if (achannel)
+			return NULL;
+		else
+			return (dchannel);
+	}
+	return NULL;
+}

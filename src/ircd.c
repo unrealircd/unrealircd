@@ -1045,11 +1045,6 @@ int  InitwIRCD(argc, argv)
 	init_conf2(configfile);
 	validate_configuration();
 	booted = TRUE;
-	if (cr_loadconf() == 0)
-	{
-		fprintf(stderr,
-		    "* Loaded Channel Restrict configuration file..\n");
-	}
 	load_tunefile();
 	make_umodestr();
 	make_cmodestr();

@@ -2889,7 +2889,7 @@ int  m_join(cptr, sptr, parc, parv)
 					return 0;
 				}
 /* RESTRICTCHAN */
-			if (crlines)
+			if (conf_deny_channel)
 			{
 				if (channel_canjoin(sptr, name) != 1)
 				{

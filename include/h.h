@@ -67,6 +67,8 @@ extern ConfigItem_ban		*conf_ban;
 extern ConfigItem_badword	*conf_badword_channel;
 extern ConfigItem_badword       *conf_badword_message;
 extern ConfigItem_deny_dcc	*conf_deny_dcc;
+extern ConfigItem_deny_channel  *conf_deny_channel;
+extern ConfigItem_allow_channel *conf_allow_channel;
 
 ConfigItem_class	*Find_class(char *name);
 ConfigItem_deny_dcc	*Find_deny_dcc(char *name);
@@ -79,7 +81,7 @@ ConfigItem_link		*Find_link(char *username, char *hostname, char *ip, char *serv
 ConfigItem_ban 		*Find_ban(char *host, short type);
 ConfigItem_ban 		*Find_banEx(char *host, short type, short type2);
 ConfigItem_vhost	*Find_vhost(char *name);
-
+ConfigItem_deny_channel *Find_channel_allowed(char *name);
 int			AllowClient(aClient *cptr, struct hostent *hp, char *sockhost);
 
 

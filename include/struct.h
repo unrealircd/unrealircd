@@ -81,12 +81,14 @@ typedef struct _configitem_ulines ConfigItem_ulines;
 typedef struct _configitem_tld ConfigItem_tld;
 typedef struct _configitem_listen ConfigItem_listen;
 typedef struct _configitem_allow ConfigItem_allow;
+typedef struct _configitem_allow_channel ConfigItem_allow_channel;
 typedef struct _configitem_vhost ConfigItem_vhost;
 typedef struct _configitem_except ConfigItem_except;
 typedef struct _configitem_link	ConfigItem_link;
 typedef struct _configitem_ban ConfigItem_ban;
 typedef struct _configitem_badword ConfigItem_badword;
 typedef struct _configitem_deny_dcc ConfigItem_deny_dcc;
+typedef struct _configitem_deny_channel ConfigItem_deny_channel;
 
 typedef struct Notify aNotify;
 typedef struct Client aClient;
@@ -1114,6 +1116,20 @@ struct _configitem_deny_dcc {
 	char			*reason;
 };
 
+struct _configitem_deny_channel {
+	ConfigFlag		flag;
+	ConfigItem		*prev;
+	ConfigItem		*next;
+	char			*channel;
+	char			*reason;
+};
+
+struct _configitem_allow_channel {
+	ConfigFlag		flag;
+	ConfigItem		*prev;
+	ConfigItem		*next;
+	char			*channel;
+};
 
 /*
  * statistics structures

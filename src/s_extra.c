@@ -309,155 +309,22 @@ int  channel_canjoin(sptr, name)
 	aClient *sptr;
 	char *name;
 {
-	aCRline *p;
+	ConfigItem_deny_channel *p;
 
 	if (IsOper(sptr))
 		return 1;
 	if (IsULine(sptr))
 		return 1;
-	if (!crlines)
+	if (!conf_deny_channel)
 		return 1;
-	for (p = crlines; p; p = p->next)
+	p = Find_channel_allowed(name);
+	if (p)
 	{
-		if (!match(p->channel, name))
-			return 1;
+		sendto_one(sptr, ":%s NOTICE %s :*** %s",
+			me.name, sptr->name, p->reason);
+		return 0;
 	}
-	return 0;
-}
-
-int  cr_add(channel, type)
-	char *channel;
-	int  type;
-{
-	aCRline *fl;
-
-	fl = (aCRline *) MyMalloc(sizeof(aCRline));
-
-	AllocCpy(fl->channel, channel);
-	fl->type = type;
-	fl->next = crlines;
-	fl->prev = NULL;
-	if (crlines)
-		crlines->prev = fl;
-	crlines = fl;
-}
-
-aCRline *cr_del(fl)
-	aCRline *fl;
-{
-	aCRline *p, *q;
-	for (p = crlines; p; p = p->next)
-	{
-		if (p == fl)
-		{
-			q = p->next;
-			MyFree((char *)p->channel);
-			/* chain1 to chain3 */
-			if (p->prev)
-			{
-				p->prev->next = p->next;
-			}
-			else
-			{
-				crlines = p->next;
-			}
-			if (p->next)
-			{
-				p->next->prev = p->prev;
-			}
-			MyFree((aCRline *) p);
-			return q;
-		}
-	}
-	return NULL;
-}
-
-/* 
-   chrestrict.conf
-   ------------
-allow #cafe
-allow #teens
-*/
-int  cr_loadconf(void)
-{
-	char buf[2048];
-	char *x, *y;
-	FILE *f;
-
-	f = fopen(IRCD_RESTRICT, "r");
-	if (!f)
-		return -1;
-
-	while (fgets(buf, 2048, f))
-	{
-		if (buf[0] == '#' || buf[0] == '/' || buf[0] == '\0')
-			continue;
-		iCstrip(buf);
-		if (buf[0] == '#' || buf[0] == '/' || buf[0] == '\0')
-			continue;
-		x = strtok(buf, " ");
-		if (strcmp("allow", x) == 0)
-		{
-			y = strtok(NULL, " ");
-			if (!y)
-				continue;
-			cr_add(y, 0);
-		}
-		else if (strcmp("msg", x) == 0)
-		{
-			y = strtok(NULL, "");
-			if (!y)
-				continue;
-			if (cannotjoin_msg)
-				MyFree((char *)cannotjoin_msg);
-			cannotjoin_msg = MyMalloc(strlen(y) + 1);
-			strcpy(cannotjoin_msg, y);
-		}
-
-	}
-	fclose(f);
-	return 0;
-}
-
-void cr_rehash(void)
-{
-	aCRline *p, q;
-
-	for (p = crlines; p; p = p->next)
-	{
-		if ((p->type == 0) || (p->type == 2))
-		{
-			q.next = cr_del(p);
-			p = &q;
-		}
-	}
-	cr_loadconf();
-}
-
-void cr_report(sptr)
-	aClient *sptr;
-{
-	aCRline *tmp;
-	char *filemask;
-	char a;
-
-	if (crlines)
-	{
-	}
-	for (tmp = crlines; tmp; tmp = tmp->next)
-	{
-		filemask = BadPtr(tmp->channel) ? "<NULL>" : tmp->channel;
-		if (tmp->type == 0)
-			a = 'c';
-		if (tmp->type == 1)
-			a = 's';
-		if (tmp->type == 2)
-			a = 'o';
-		sendto_one(sptr, ":%s %i %s :%c %s", me.name, RPL_TEXT,
-		    sptr->name, a, filemask);
-//              sendto_one(sptr, ":%s NOTICE %s :*** (allow) [%c] %s", me.name, sptr->name, a, filemask);
-	}
-
+	return 1;
 }
 
 void vhost_report(sptr)
