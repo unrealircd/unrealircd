@@ -55,12 +55,14 @@ int	_conf_admin(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_me(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_oper(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_class(ConfigFile *conf, ConfigEntry *ce);
+int	_conf_drpass(ConfigFile *conf, ConfigEntry *ce);
 
 static ConfigCommand _ConfigCommands[] = {
 	{ "admin", _conf_admin },
 	{ "me", _conf_me },
 	{ "oper", _conf_oper },
 	{ "class", _conf_class },
+	{ "drpass", _conf_drpass },
 	{ NULL, NULL  }
 };
 
@@ -81,7 +83,7 @@ int			ConfigParse(ConfigFile *cfptr);
 ConfigItem_me		*conf_me = NULL;
 ConfigItem_class 	*conf_class = NULL;
 ConfigItem_admin 	*conf_admin = NULL;
-
+ConfigItem_drpass	*conf_drpass = NULL;
 /*
  * MyMalloc with the only difference that it clears the memory too
  * -Stskeeps
@@ -759,3 +761,37 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 	} 
 }
 
+int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	
+	if (!conf_drpass) {
+		conf_drpass = (ConfigItem_drpass *) MyMallocEx(sizeof(ConfigItem_drpass));
+	}
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+		{
+			config_error("Blank drpass line");
+			continue;
+		}
+		config_status("[drpass] Set %s to %s",
+				cep->ce_varname, cep->ce_vardata);
+
+		if (!strcmp(cep->ce_varname, "restart"))
+		{
+			if (conf_drpass->restart)
+				MyFree(conf_drpass->restart);
+			conf_drpass->restart = strdup(cep->ce_vardata);
+			config_status("Set drpass->restart to %s :)", conf_drpass->restart);
+		}
+		else if (!strcmp(cep->ce_varname, "die"))
+		{
+			if (conf_drpass->die)
+				MyFree(conf_drpass->die);
+			conf_drpass->die = strdup(cep->ce_vardata);
+			config_status("Set drpass->die to %s :)", conf_drpass->die);
+		}
+	}
+}

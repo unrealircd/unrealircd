@@ -72,6 +72,7 @@ typedef struct _configitem_me ConfigItem_me;
 typedef struct _configitem_admin ConfigItem_admin;
 typedef struct _configitem_class ConfigItem_class;
 typedef struct _configitem_oper ConfigItem_oper;
+typedef struct _configitem_drpass ConfigItem_drpass;
 
 typedef struct Notify aNotify;
 typedef struct Client aClient;
@@ -964,6 +965,13 @@ struct _configitem_oper {
 	ConfigItem	 *from;
 	long		 oflags;
 	char		 *password;
+};
+
+struct _configitem_drpass {
+	ConfigItem       *prev;
+	ConfigItem       *next;
+	char 		 *restart;
+	char		 *die;
 };
 
 

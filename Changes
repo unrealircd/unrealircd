@@ -46,4 +46,4 @@
 - Typing /stats or /stats invalid-flag will return a list of valid flags
 - You no longer receive a /stats +e notice when no flag is specified, or an invalid flag is specified
 - Some more newconf code, and some more
-
+- Added drpass (X:line) to the config code
