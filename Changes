@@ -1067,4 +1067,4 @@ seen. gmtime warning still there
   was modified even if it wasn't
 - Fixed .1081 problem, see bug #0000020 for more information about how
   it REALLY should be fixed
-
+- Fixed a typo reported by Tracer (bug #0000022)
