@@ -29,7 +29,7 @@ Spanish |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Versi&oacute;n: 3.2.2-CVS</font><br>
-  <b>&Uacute;ltima actualizaci&oacute;n del documento:</b> 2005-01-29</div>
+  <b>&Uacute;ltima actualizaci&oacute;n del documento:</b> 2005-02-13</div>
 <br>
   <b>Programadores:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contribuciones:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -456,9 +456,9 @@ Si pone +b *!*@*.303AEBC6.IP estar&aacute; baneando a *!*@1.2.*<br>
 <td>Los usuarios que coincidan con este ban no podr&aacute;n cambiarse el nick, 
  a menos que tenga +v o superior. <i>Ej: ~n:*!*@*.aol.com</i></td>
 </tr>
-<tr><td>~c</td><td>channel</td>
-<td>Si el usuario est&aacute; en ese canal no podr&aacute; entrar. 
-<i>Ej: ~c:#lamers</i></td>
+<tr><td>~c</td>
+<td>[prefijo]canal</td>
+<td>Si el usuario est&aacute; en este canal entonces no podr&aacute; entrar. Puede especificar un prefijo (+/%/@/&amp;/~) con el que coincidir&aacute; si adem&aacute;s tiene este estado o superior. <i>Ej: +b ~c:#lamers, +e ~c:@#trusted </i></td>
 </tr>
 <tr><td>~r</td><td>realname</td>
 <td>Si su realname coincide no podr&aacute; entrar <br>
@@ -556,11 +556,11 @@ Los m&oacute;dulos pueden a&ntilde;adir otros tipos de ban.
 </table></tr></td>
    <tr valign="top">
      <td><b>[tkltiempo]</b></td>
-     <td> Duraci&oacute;n de la *line a&ntilde;adida por el filtro, use '-' para el valor por defecto o para saltarlo (ej: si la acci&oacute;n es 'block')</td>
+     <td> Duraci&oacute;n de la *line/shun a&ntilde;adida por el filtro, use '-' para el valor por defecto o para saltarlo (ej: si la acci&oacute;n es 'block')</td>
    </tr>
    <tr valign="top">
      <td><b>[raz&oacute;n]</b></td>
-     <td> Motivo de la *line. No puede usar espacios, pero los guiones bajos ('_') se transforman en espacios. Los guiones bajos dobles ('__') en simples ('_'). Use '-' para una raz&oacute;n por defecto.</td>
+     <td> Motivo de la *line/shun. No puede usar espacios, pero los guiones bajos ('_') se transforman en espacios. Los guiones bajos dobles ('__') en simples ('_'). Use '-' para una raz&oacute;n por defecto.</td>
    </tr>
    <tr valign="top"><td><b>[regex]</b></td>
    <td> expresi&oacute;n regular que debe ser filtrada</td>
@@ -1235,7 +1235,7 @@ loadmodule "modules/cloak.dll";
 </pre>
 </div>
 <p><font class="block_section">4.11 - </font><font class="block_name">Bloque log </font>
-   <font class="block_optional">OPCIONAL</font><a name="logblock"></a>
+   <font class="block_recommended">RECOMENDADO</font><a name="logblock"></a>
 <div class="desc">
 </p>
 <p>Sintaxis:<br>
@@ -1918,7 +1918,7 @@ spamfilter {
    <b>target</b> especifica los destinos, vea <a href="#feature_spamfilter">aqu&iacute;</a> para los tipos posibles (ej: 'channel').<br>
    <b>action</b> define la acci&oacute;n a tomar, vea <a href="#feature_spamfilter">aqu&iacute;</a> para las acciones posibles (ej: 'gline'). <br>
    <b>reason</b> opcional: especifica la raz&oacute;n.<br>
-   <b>ban-time</b> opcional: especifica la durada de la *line..<br>
+   <b>ban-time</b> opcional: especifica la durada de la *line o shun..<br>
 </p>
 
 <p>Ejemplos:<br>
@@ -2065,6 +2065,9 @@ set {
   Especifica el nombre del servidor de est&aacute;disticas. Si no dispone de ellas, puede omitir este valor.</p>
 <p><font class="set">set::help-channel &lt;canal-ayuda&gt;;</font><br>
   Canal de ayuda. </p>
+<p><font class="set">set::allowed-characters { &lt;lista&gt;; };</font><br>
+  Lista de caracteres (lenguajes) que aceptan los nicks. Opciones posibles: 
+  <i>german</i>, <i>french</i>, <i>dutch</i>, <i>spanish</i>.</p>
 <p><font class="set">set::cloak-keys { &quot;clave1&quot;; &quot;clave2&quot;; &quot;clave3&quot;; };</font><br>
   Fija las claves de cifrado para generar los hosts virtuales. Deben ser las mismas en toda la red. Deben ser cadenas de 5 a 100 caracteres (con 10-20 es suficiente) alfanum&eacute;ricas: a-z, A-Z y 0-9. Seg&uacute;n el m&oacute;dulo de cifrado cargado, usar&aacute; otras reglas.</p>
 <p><font class="set">set::hiddenhost-prefix &lt;prefijo&gt;;</font><br>
