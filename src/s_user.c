@@ -2438,13 +2438,14 @@ int  m_who(cptr, sptr, parc, parv)
 		for (acptr = client; acptr; acptr = acptr->next)
 		{
 			aChannel *ch2ptr = NULL;
-			int  showperson, isinvis;
+			int  showsecret, showperson, isinvis;
 
 			if (!IsPerson(acptr))
 				continue;
 			if (oper && (!IsAnOper(acptr) || (IsHideOper(acptr) && sptr != acptr && !IsAnOper(sptr))))
 				continue;
 			showperson = 0;
+			showsecret = 0;
 			/*
 			 * Show user if they are on the same channel, or not
 			 * invisible and on a non secret channel (if any).
@@ -2570,7 +2571,7 @@ int  m_whois(cptr, sptr, parc, parv)
 
 	for (tmp = parv[1]; (nick = strtoken(&p, tmp, ",")); tmp = NULL)
 	{
-		int  invis, showperson, member, wilds;
+		int  invis, showsecret, showperson, member, wilds;
 
 		found = 0;
 		(void)collapse(nick);
@@ -2625,6 +2626,10 @@ int  m_whois(cptr, sptr, parc, parv)
 				if (!invis && HiddenChannel(chptr) &&
 				    !SecretChannel(chptr))
 					showperson = 1;
+				else if (IsAnOper(sptr) && SecretChannel(chptr)) {
+					showperson = 1;
+					showsecret = 1;
+				}
 			}
 			if (!showperson)
 				continue;
@@ -2673,7 +2678,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			    lp = lp->next)
 			{
 				chptr = lp->value.chptr;
-				if (ShowChannel(sptr, chptr) || (acptr == sptr))
+				if (IsAnOper(sptr) || ShowChannel(sptr, chptr) || (acptr == sptr))
 				{
 					if (len + strlen(chptr->chname)
 					    > (size_t)BUFSIZE - 4 - mlen)
@@ -2686,6 +2691,9 @@ int  m_whois(cptr, sptr, parc, parv)
 						*buf = '\0';
 						len = 0;
 					}
+					if (!(acptr == sptr) && IsAnOper(sptr)
+					&& (showsecret == 1) && SecretChannel(chptr))
+						*(buf + len++) = '~';
 					if (is_chanowner(acptr, chptr))
 						*(buf + len++) = '*';
 					else if (is_chanprot(acptr, chptr))

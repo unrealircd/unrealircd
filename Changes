@@ -503,6 +503,8 @@
 - Fixed a egcs problem in Config, the strtok bug
 - Fixed the 'ulimit core size failed' bug (now checks whether it should
   set the core size to unlimited in ./Config
+- Changed s_user.c so that Opers will see +s channels in /whois
+  (patch by llthangel)
 - +u now lists +a and +q people, and sends JOINs/PARTs to +a and +q people
 - Fixed a /mode (umode) typo where it said no such channel rather than no such nick,
   reported by llthangel
