@@ -1972,3 +1972,4 @@ seen. gmtime warning still there
 - Fixed some missing /helpop info reported by Jaw959 (#0000782)
 - Added set::throttle::period to allow you to change the throttling period 
   (requires THROTTLING)
+- Updated some documentation

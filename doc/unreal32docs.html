@@ -53,18 +53,18 @@
   -- 3.12.<a href="#feature_other">Other stuff</a><br>
   4. <a href="#configuringyourunrealircdconf">Configuring your unrealircd.conf 
   file</a><br>
-  ---4.1.<a href="#configurationfileexplained">  Configuration file explained</a><br>
-  ---4.2.<a href="#meblock"> Me Block -=- (M:Line)</a><br>
-  ---4.3.<a href="#adminblock"> Admin Block -=- (A:Line)</a><br>
+  ---4.1. <a href="#configurationfileexplained">Configuration file explained</a><br>
+  ---4.2. <a href="#meblock"> Me Block -=- (M:Line)</a><br>
+  ---4.3. <a href="#adminblock">Admin Block -=- (A:Line)</a><br>
   ---4.4. <a href="#classblock">Class Block -=- (Y:Line)</a><br>
-  ---4.5.<a href="#allowblock"> Allow Block -=- (I:Line)</a><br>
+  ---4.5. <a href="#allowblock">Allow Block -=- (I:Line)</a><br>
   ---4.6. <a href="#listenblock">Listen Block -=- (P:Line)</a><br>
-  ---4.7.<a href="#operblock"> Oper Block -=- (O:Line)</a><br>
+  ---4.7. <a href="#operblock">Oper Block -=- (O:Line)</a><br>
   ---4.8. <a href="#drpassblock">DRpass Block -=-(X:Line)</a><br>
   ---4.9. <a href="#includedirective">Include Directive</a><br>
   ---4.10. <a href="#loadmoduledirective">Loadmodule Directive</a><br>
   ---4.11. <a href="#logblock">Log Block</a><br>
-  ---4.12.<a href="#tldblock"> TLD Block -=- (T:Line)</a><br>
+  ---4.12. <a href="#tldblock">TLD Block -=- (T:Line)</a><br>
   ---4.13. <a href="#bannickblock">Ban Nick Block -=- (Q:Line)</a><br>
   ---4.14. <a href="#banuserblock">Ban User Block -=- (K:Line)</a><br>
   ---4.15. <a href="#banipblock">Ban IP Block -=- (Z:Line)</a><br>
@@ -72,18 +72,19 @@
   ---4.17. <a href="#banrealnameblock">Ban Realname Block -=- (n:Line)</a><br>
   ---4.18. <a href="#banexceptionblock">Ban Exception Block -=- (E:Line)</a><br>
   ---4.19. <a href="#scanexceptionblock">Scan Exception Block -=- (e:Line)</a><br>
-  ---4.20. <a href="#denydccblock">Deny DCC Block -=- (dccdeny.conf)</a><br>
-  ---4.21. <a href="#denyversionblock">Deny Version Block -=- (V:Line)</a><br>
-  ---4.22. <a href="#denylinkblock">Deny Link Block -=- (D:Line / d:Line)</a><br>
-  ---4.23. <a href="#denychannelblock">Deny Channel Block -=- (chrestrict.conf)</a><br>
-  ---4.24. <a href="#allowchannelblock">Allow Channel Block</a><br>
-  ---4.25.<a href="#vhostblock"> Vhost Block Block -=- (vhost.conf)</a><br>
-  ---4.26. <a href="#badwordsblock">Badwords Block -=- (badwords.conf)</a><br>
-  ---4.27. <a href="#ulinesblock">Uline Block -=- (U:Line)</a><br>
-  ---4.28. <a href="#linkblock">Link Block -=- (C/N/H:Lines)</a><br>
-  ---4.29. <a href="#aliasblock">Alias Block</a><br>
-  ---4.30. <a href="#helpblock">Help Block</a><br>
-  ---4.31. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
+  ---4.20. <a href="#throttleexceptionblock">Throttle Exception Block -=-</a><br>
+  ---4.21. <a href="#denydccblock">Deny DCC Block -=- (dccdeny.conf)</a><br>
+  ---4.22. <a href="#denyversionblock">Deny Version Block -=- (V:Line)</a><br>
+  ---4.23. <a href="#denylinkblock">Deny Link Block -=- (D:Line / d:Line)</a><br>
+  ---4.24. <a href="#denychannelblock">Deny Channel Block -=- (chrestrict.conf)</a><br>
+  ---4.25. <a href="#allowchannelblock">Allow Channel Block</a><br>
+  ---4.26. <a href="#vhostblock">Vhost Block Block -=- (vhost.conf)</a><br>
+  ---4.27. <a href="#badwordsblock">Badwords Block -=- (badwords.conf)</a><br>
+  ---4.28. <a href="#ulinesblock">Uline Block -=- (U:Line)</a><br>
+  ---4.29. <a href="#linkblock">Link Block -=- (C/N/H:Lines)</a><br>
+  ---4.30. <a href="#aliasblock">Alias Block</a><br>
+  ---4.31. <a href="#helpblock">Help Block</a><br>
+  ---4.32. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
   5. <a href="#userchannelmodes">User &amp; Channel Modes</a><br>
   6. <a href="#useropercommands">User &amp; Oper Commands</a><br>
   7. <a href="#faq">Frequently Asked Questions (FAQ)</a><br> 
@@ -1074,7 +1075,22 @@ loadmodule "src/modules/scan_http.so";
   mask 192.168.1.*;<br>
   };</p>
 <p></p>
-<p><font class="block_section">4.20 - </font><font class="block_name">Deny DCC Block</font>
+<p><font class="block_section">4.20 - </font><font class="block_name">Throttle Exceptions Block</font>
+   <font class="block_optional">OPTIONAL</font> <a name="throttleexceptionblock"></a>
+</p>
+<p>Syntax:<br>
+  except throttle {<br>
+  mask &lt;ipmask&gt;;<br>
+  };</p>
+<p>The except throttle block allows you to specify an IP mask that will override the 
+  throttling system. This only works if you have chosen to enable throttling. The 
+  except::mask specifies an IP mask that will not be banned because of throttling.</p>
+<p>Example<br>
+  except throtte {<br>
+  mask 192.168.1.*;<br>
+  };</p>
+<p></p>
+<p><font class="block_section">4.21 - </font><font class="block_name">Deny DCC Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as dccdeny.conf)</font><a name="denydccblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1093,7 +1109,7 @@ loadmodule "src/modules/scan_http.so";
   reason &#8220;This is a GD Virus&#8221;;<br>
   };</p>
 <p></p>
-<p><font class="block_section">4.21 - </font><font class="block_name">Deny Version Block</font>
+<p><font class="block_section">4.22 - </font><font class="block_name">Deny Version Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the V:Line)</font><a name="denyversionblock"></a>
 </p>
 <p> Syntax:<br>
@@ -1119,7 +1135,7 @@ loadmodule "src/modules/scan_http.so";
   flag compiled into it, if it does not have a ! prefix, then it means the server 
   must have this flag compiled.</p>
 <p></p>
-<p><font class="block_section">4.22 - </font><font class="block_name">Deny Link Block</font>
+<p><font class="block_section">4.23 - </font><font class="block_name">Deny Link Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the D/d:Line)</font><a name="denylinkblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1145,7 +1161,7 @@ loadmodule "src/modules/scan_http.so";
   auto (only applies to autoconnects, /connect will still work), and all (applies 
   to all connection attempts).</p>
 <p></p>
-<p><font class="block_section">4.23 - </font><font class="block_name">Deny Channel Block</font>
+<p><font class="block_section">4.24 - </font><font class="block_name">Deny Channel Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as chrestrict.conf)</font><a name="denychannelblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1164,7 +1180,7 @@ loadmodule "src/modules/scan_http.so";
   reason &#8220;No it don&#8217;t!&#8221;;<br>
   };</p>
 <p></p>
-<p><font class="block_section">4.24 - </font><font class="block_name">Allow Channel Block</font>
+<p><font class="block_section">4.25 - </font><font class="block_name">Allow Channel Block</font>
    <font class="block_optional">OPTIONAL</font><a name="allowchannelblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1179,7 +1195,7 @@ loadmodule "src/modules/scan_http.so";
   channel &#8220;#something&#8221;;<br>
   };</p>
 <p></p>
-<p><font class="block_section">4.25 - </font><font class="block_name">Vhost Block</font>
+<p><font class="block_section">4.26 - </font><font class="block_name">Vhost Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as vhosts.conf)</font><a name="vhostblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1216,7 +1232,7 @@ loadmodule "src/modules/scan_http.so";
   swhois &quot;Im Special&quot;;<br>
   };</p>
 <p></p>
-<p><font class="block_section">4.26 - </font><font class="block_name">Bad Word Block</font>
+<p><font class="block_section">4.27 - </font><font class="block_name">Bad Word Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as badwords.*.conf)</font><a name="badwordsblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1237,7 +1253,7 @@ loadmodule "src/modules/scan_http.so";
   replace shoot;<br>
   };</p>
 <p></p>
-<p><font class="block_section">4.27 - </font><font class="block_name">ULines Block</font>
+<p><font class="block_section">4.28 - </font><font class="block_name">ULines Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the U:Line)</font><a name="ulinesblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1256,7 +1272,7 @@ loadmodule "src/modules/scan_http.so";
   stats.mynetwork.com;<br>
   };</p>
 <p></p>
-<p><font class="block_section">4.28 - </font><font class="block_name">Link Block</font>
+<p><font class="block_section">4.29 - </font><font class="block_name">Link Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as C/N/H:Lines)</font><a name="linkblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1353,7 +1369,7 @@ loadmodule "src/modules/scan_http.so";
   };</p>
 <p> </p>
 <p> </p>
-<p><font class="block_section">4.29 - </font><font class="block_name">Alias Block</font>
+<p><font class="block_section">4.30 - </font><font class="block_name">Alias Block</font>
    <font class="block_optional">OPTIONAL</font><a name="aliasblock"></a>
 </p>
 <p>Syntax [standard alias]:<br>
@@ -1398,7 +1414,7 @@ loadmodule "src/modules/scan_http.so";
   from the second till the last. For examples of using the alias block in the 
   command format, consult doc/example.conf.</p>
 <p></p>
-<p><font class="block_section">4.30 - </font><font class="block_name">Help Block</font>
+<p><font class="block_section">4.31 - </font><font class="block_name">Help Block</font>
    <font class="block_optional">OPTIONAL</font><a name="helpblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1414,7 +1430,7 @@ loadmodule "src/modules/scan_http.so";
   for the help block are the text that will be displayed to the user when requesting 
   the /helpop.</p>
 <p></p>
-<p><font class="block_section">4.31 - </font><font class="block_name">Set Block</font>
+<p><font class="block_section">4.32 - </font><font class="block_name">Set Block</font>
    <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as unrealircd.conf/networks file)</font><a name="setblock"></a>
 </p>
 <p>The set file is what use to be our networks/unrealircd.conf and our networks 
@@ -1586,6 +1602,20 @@ loadmodule "src/modules/scan_http.so";
   OpenSSL prior to 0.9.7 or you want to use a EGD socket located somewhere other 
   than the above listed locations you may specify the filename of the UNIX Domain 
   Socket that an EGD is listening on.</p>
+<p><font class="set">set::ssl::certificate &lt;filename&gt;;</font><br>
+  Specifies the filename where the server's SSL certificate is located.</p>
+<p><font class="set">set::ssl::key &lt;filename&gt;;</font><br>
+  Specifies the filename where the server's SSL private key is located.</p>
+<p><font class="set">set::ssl::trusted-ca-file &lt;filename&gt;;</font><br>
+  Specifies the filename where the certificates of the trusted CAs are located.</p>
+<p><font class="set">set::ssl::options::fail-if-no-clientcert;</font><br>
+  Forces clients that do not have a certificate to be denied.</p>
+<p><font class="set">set::ssl::options::no-self-signed;</font><br>
+  Disallows connections from people with self-signed certificates.</p>
+<p><font class="set">set::ssl::options::verify-certificate;</font><br>
+  Makes Unreal determine if the SSL certificate is valid before allowing connection.</p>
+<p><font class="set">set::throttle::period {time}</font><br>
+  How long a user must wait before reconnecting.</p>
 <p></p>
 <p><strong><font size="+2">5 &#8211; User &amp; Channel Modes<a name="userchannelmodes"></a> 
   </font></strong></p>
