@@ -24,6 +24,7 @@
 #include <h.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <limits.h>
 
 #ifdef USE_SSL
 extern char *SSLKeyPasswd;
@@ -217,6 +218,7 @@ void download_file_async(char *url, time_t cachetime, vFP callback)
 {
 	static char errorbuf[CURL_ERROR_SIZE];
 	CURL *curl = curl_easy_init();
+
 	if (curl)
 	{
 	    char *file = url_getfilename(url);

@@ -2903,3 +2903,5 @@ seen. gmtime warning still there
 - Fixed the problem with services and SETHOST for unknown user errors
   (#0000893) reported by vorte[x]
 - Made allow::options::noident work correctly (#0001416) reported by Zifnab
+- Made some files include limits.h to find PATH_MAX on Solaris (#0001561)
+  reported by lunytune
