@@ -29,7 +29,7 @@ Spanish |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Versi&oacute;n: 3.2.2-CVS</font><br>
-  <b>&Uacute;ltima actualizaci&oacute;n del documento:</b> 2005-02-13</div>
+  <b>&Uacute;ltima actualizaci&oacute;n del documento:</b> 05-03-2005</div>
 <br>
   <b>Programadores:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contribuciones:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -237,9 +237,10 @@ Windows:<br>
    se mostrar&aacute; (en join, part, whois, etc) como <i>rox-2DCA3201.cable.wanadoo.nl</i>. 
    Esta medida es muy &uacute;til para prevenir ataques entre usuarios.</p>
 <p>Est&aacute; controlado por el modo de usuario +x (uso: /mode tunick +x). Los administradores pueden forzar el uso por defecto, o restringir su uso.</p>
-<p>Un host cifrado est&aacute; generado por un m&oacute;dulo (requerido). Actualmente existen dos m&oacute;dulos oficiales:<br>
-   <b>cloak:</b> Este es el nuevo m&oacute;dulo de cifrado que es mucho m&aacute;s seguro que el viejo. Usa md5 internamente y requiere la especificaci&oacute;n de tres claves  set::cloak-keys:: alfanum&eacute;ricas [ej: "AopAS6WQH2Os6hfosh4SFJHs"]. Mire el archivo example.conf para hacerse una idea. <br>
-  <b>oldcloak:</b> Es el viejo cifrado usado por Unreal3.2 y anteriores. S&oacute;lo se recomienda su uso en procesos de migraci&oacute;n y actualizaci&oacute;n. No se considera seguro (se le avisar&aacute; de ello si lo usa) y deber&aacute; utilizar 'cloak' tan pronto como sus servidores puedan.</p>
+<p>Un host cifrado se genera a partir de un m&oacute;dulo de cifrados, que requiere ser cargado. Actualmente s&oacute;lo hay 1 m&oacute;dulo inclu&iacute;do:<br>
+   <b>cloak:</b> Este es el m&oacute;dulo oficial desde la versi&oacute;n 3.2.1. Es mucho m&aacute;s seguro que su anterior algoritmo. 
+   Usa md5 internamentee y requiere 3 par&aacute;metros set::cloak-keys:: consistentes en mezclar min&uacute;sculas, may&uacute;sculas y d&iacute;gitos decimales, 
+   (ej: "AopAS6WQH2Os6hfosh4SFJHs"). Vea example.conf para un ejemplo.<br></p>
 <p>Las claves de cifrado (en adelante &quot;cloak keys&quot;) deben ser las mismas en todos los servidores de la red. Procure que estas claves sean secretas. Si alguien las conociera, podr&iacute;a decodificar el host original, lo que provocar&iacute;a la p&eacute;rdida de efectividad del modo de usuario +x.</p>
 </div>
 <p><font size="+2"><b>3.2 - M&oacute;dulos</b></font><a name="feature_modules"></a></p>
@@ -422,7 +423,13 @@ El viejo modo +f  todav&iacute;a est&aacute; disponible como 't', +f 10:6 pasa a
 7 ctcps en 15 segundos, si se supera el l&iacute;mite se pone el modo +C durante 15 minutos <br>
 10 cambios de nick en 15 segundos, si se supera el l&iacute;mite se pone el modo +N durante 15 minutos <br>
 30 knocks en 15 segundos, si se supera el l&iacute;mite se pone el modo +K durante 10 minutos <br>
-Especialmente, quitar los modos es importante. Imag&iacute;nese un canal sin operadores, el modo estar&iacute;a durante 15 minutos, en el que la gente no podr&iacute;a hablar, dependiendo del tipo de flood.</div>
+Especialmente, quitar los modos es importante. Imag&iacute;nese un canal sin operadores, el modo estar&iacute;a durante 15 minutos, en el que la gente no podr&iacute;a hablar, dependiendo del tipo de flood.
+<b>Modo de canal j</b><br>
+El modo +f incluye una característica para prevenir el flood de joins. Sin embargo, este aspecto es "global".
+Por ejemplo, si está puesto a 5:10 y 5 usuarios <u>diferentes</u> entran en 10 segundos, saltará la protección de flood.
+El modo de canal actúa de forma distinta. Lo hace partiendo de un sólo usuario. Más que proteger del flood de entradas, 
+protege contra el flood de entrada-salida. El modo coge el parámetro del patrón X:Y, donde X corresponde al número de entradas e Y al número de segundos. 
+Si un usuario excede este límite, se le prohibe la entrada al canal.</p></div>
 
 <p><font size="+2"><b>3.13 - Tipos de ban</b></font><a name="feature_bantypes"></a></p>
 <div class="desc">
@@ -2756,13 +2763,13 @@ set {
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">restart &lt;servidor &lt;contrase&ntilde;a&gt;<br></td>
-    <td>Reinicia el servidor. Se requiere una contrase&ntilde;a. Puede especificar qu&eacute; servidor quiere reiniciar<br></td>
+    <td height="39">restart &lt;contrase&ntilde;a&gt; &lt;raz&oacute;n&gt;<br></td>
+    <td>Reinicia el servidor. Se requiere una contrase&ntilde;a si est&aacute; presente el bloque drpass { }. Puede especificar una raz&oacute;n.<br></td>
     <td>IRCop</td>
   </tr>
   <tr> 
     <td height="39">die &lt;contrase&ntilde;a&gt;<br></td>
-    <td>Cierra el servidor. Requiere contrase&ntilde;a</td>
+    <td>Cierra el servidor. Requiere contrase&ntilde;a si est&aacute; presente el bloque drpass { }.</td>
     <td>IRCop</td>
   </tr>
   <tr> 
