@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta17<br>
-  <b>Last doc update:</b> 2003-06-15 </div>
+  <b>Last doc update:</b> 2003-06-22 </div>
   <b>Head Coders:</b> Stskeeps / codemastr / Luke / McSkaf / Syzop<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -1647,6 +1647,10 @@ set {
   specify * for users to be able to use no flags.</p>
 <p><font class="set">set::maxchannelsperuser &lt;amount-of-channels&gt;;</font><br>
   Specifies the number of channels a single user may be in at any one time.</p>
+<p><font class="set">set::channel-command-prefix &lt;command-prefixes&gt;;</font><br>
+  Specifies the prefix characters for services "in channel commands". Messages starting with 
+  any of the specified characters will still be sent even if the client is +d. The default 
+  value is "`".</p>
 <p><font class="set">set::allow-userhost-change [never|always|not-on-channels|force-rejoin]</font><br>
   Specifies what happens when the user@host changes (+x/-x/chghost/chgident/setident/vhost/etc).<br>
   <i>never</i> disables all the commands, <i>always</i> does always allow it even when in channels 

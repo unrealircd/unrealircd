@@ -406,7 +406,10 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 					    chptr) == 1)
 						continue;
 
-				sendanyways = (parv[2][0] == '`' ? 1 : 0);
+				if (!CHANCMDPFX)
+					sendanyways = (parv[2][0] == '`' ? 1 : 0);
+				else
+					sendanyways = (strchr(CHANCMDPFX,parv[2][0]) ? 1 : 0);
 				text =
 				    (chptr->mode.mode & MODE_STRIP ?
 				    (char *)StripColors(parv[2]) : parv[2]);

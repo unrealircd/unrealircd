@@ -1113,6 +1113,7 @@ void	free_iConf(aConfiguration *i)
 	ircfree(i->auto_join_chans);
 	ircfree(i->oper_auto_join_chans);
 	ircfree(i->oper_only_stats);
+	ircfree(i->channel_command_prefix);
 	ircfree(i->oper_snomask);
 	ircfree(i->user_snomask);
 	ircfree(i->egd_path);
@@ -2245,7 +2246,7 @@ void report_dynconf(aClient *sptr)
 	}
 	sendto_one(sptr, ":%s %i %s :anti-spam-quit-message-time: %s", me.name, RPL_TEXT, 
 		sptr->name, pretty_time_val(ANTI_SPAM_QUIT_MSG_TIME));
-	sendto_one(sptr, ":%s %i %s :allow-userhost-change: %s", me.name, RPL_TEXT, sptr->name, uhallow);
+	sendto_one(sptr, ":%s %i %s :channel-command-prefix: %s", me.name, RPL_TEXT, sptr->name, CHANCMDPFX ? CHANCMDPFX : "`");
 #ifdef USE_SSL
 	sendto_one(sptr, ":%s %i %s :ssl::egd: %s", me.name, RPL_TEXT,
 		sptr->name, EGD_PATH ? EGD_PATH : (USE_EGD ? "1" : "0"));
@@ -5067,6 +5068,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			else
 				tempiConf.userhost_allowed = UHALLOW_REJOIN;
 		}
+		else if (!strcmp(cep->ce_varname, "channel-command-prefix")) {
+			ircstrdup(tempiConf.channel_command_prefix, cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "restrict-usermodes")) {
 			int i;
 			char *p = MyMalloc(strlen(cep->ce_vardata) + 1), *x = p;
@@ -5417,6 +5421,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckNull(cep);
 		}
 		else if (!strcmp(cep->ce_varname, "oper-auto-join")) {
+			CheckNull(cep);
+		}
+		else if (!strcmp(cep->ce_varname, "channel-command-prefix")) {
 			CheckNull(cep);
 		}
 		else if (!strcmp(cep->ce_varname, "allow-userhost-change")) {

@@ -99,6 +99,7 @@ struct zConfiguration {
 	enum UHAllowed userhost_allowed;
 	char *restrict_usermodes;
 	char *restrict_channelmodes;
+	char *channel_command_prefix;
 	long unknown_flood_bantime;
 	long unknown_flood_amount;
 	struct ChMode modes_on_join;
@@ -185,3 +186,4 @@ extern aConfiguration iConf;
 #define IDENT_READ_TIMEOUT		iConf.ident_read_timeout
 
 #define MKPASSWD_FOR_EVERYONE	iConf.mkpasswd_for_everyone
+#define CHANCMDPFX iConf.channel_command_prefix
