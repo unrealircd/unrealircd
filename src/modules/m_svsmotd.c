@@ -62,14 +62,14 @@ ModuleHeader Mod_Header
 	"m_svsmotd",
 	"$Id$",
 	"command /svsmotd", 
-	"3.2-b5",
+	"3.2-b8-1",
 	NULL 
     };
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(int module_load)
+DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
 #else
-int    m_svsmotd_Init(int module_load)
+int    m_svsmotd_Init(ModuleInfo *modinfo)
 #endif
 {
 	add_Command(MSG_SVSMOTD, TOK_SVSMOTD, m_svsmotd, MAXPARA);

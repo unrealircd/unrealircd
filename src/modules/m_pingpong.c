@@ -67,7 +67,7 @@ ModuleHeader Mod_Header
 	"pingpong",	/* Name of module */
 	"$Id$", /* Version */
 	"ping, pong and nospoof", /* Short description of module */
-	"3.2-b5",
+	"3.2-b8-1",
 	NULL 
     };
 
@@ -78,9 +78,9 @@ ModuleHeader Mod_Header
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(int module_load)
+DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
 #else
-int    m_pingpong_Init(int module_load)
+int    m_pingpong_Init(ModuleInfo *modinfo)
 #endif
 {
 	/*

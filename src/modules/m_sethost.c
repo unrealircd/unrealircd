@@ -59,7 +59,7 @@ ModuleHeader Mod_Header
 	"sethost",	/* Name of module */
 	"$Id$", /* Version */
 	"command /sethost", /* Short description of module */
-	"3.2-b5",
+	"3.2-b8-1",
 	NULL 
     };
 
@@ -69,9 +69,9 @@ ModuleHeader Mod_Header
 */
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(int module_load)
+DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
 #else
-int    m_sethost_Init(int module_load)
+int    m_sethost_Init(ModuleInfo *modinfo)
 #endif
 {
 	/*

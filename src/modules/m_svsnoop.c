@@ -66,14 +66,14 @@ ModuleHeader Mod_Header
 	"m_svsnoop",
 	"$Id$",
 	"command /svsnoop", 
-	"3.2-b5",
+	"3.2-b8-1",
 	NULL
     };
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(int module_load)
+DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
 #else
-int    m_svsnoop_Init(int module_load)
+int    m_svsnoop_Init(ModuleInfo *modinfo)
 #endif
 {
 	add_Command(MSG_SVSNOOP, TOK_SVSNOOP, m_svsnoop, MAXPARA);
