@@ -798,7 +798,7 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 	    CHFL_HALFOP | CHFL_CHANPROT))))
 		return CANNOT_SEND_MODREG;
-	if (chptr->mode.mode & MODE_MODERATED && /* !IsOper(cptr) && */
+	if (chptr->mode.mode & MODE_MODERATED && !IsOper(cptr) &&
 	    (!lp
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 	    CHFL_HALFOP | CHFL_CHANPROT))))

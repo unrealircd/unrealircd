@@ -2355,3 +2355,4 @@ seen. gmtime warning still there
 - Added badword all { }, this will add the badword to the badword channel, badword message
   and badword quit lists... could be useful :p.
 - Little config.h cleanup (removed obsolete non-working defines).
+- Allow opers to talk in channel even if +m (#0001109).
