@@ -188,7 +188,7 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	/* illegal?! */
 	for (s = vhost; *s; s++)
 	{
-		if (!isallowed(*s))
+		if (!isallowed(*s) && !(*s == ':'))
 		{
 			legalhost = 0;
 		}

@@ -173,12 +173,42 @@ char *hidehost(char *host)
 	char		*p;
 
 	/* Find out what kind of host we're dealing with here */
-	
+	/* IPv6 ? */	
+	if (strchr(host, ':'))
+	{
+		/* Do IPv6 cloaking here */
+		/* FIXME: what the hell to do with :FFFF:192.168.1.5? 
+		*/
+		/*
+		 * a:b:c:d:e:f:g:h
+		 * 
+		 * crc(a.b.c.d)
+		 * crc(a.b.c.d.e.f.g)
+		 * crc(a.b.c.d.e.f.g.h)
+		 */
+		sscanf(host, "%x:%x:%x:%x:%x:%x:%x:%x",
+		         &l[0], &l[1], &l[2], &l[3],
+		         &l[4], &l[5], &l[6], &l[7]);
+		ircsprintf(h3, "%x:%x:%x:%x",
+			l[0], l[1], l[2], l[3]);
+		l[0] = crc32(h3, strlen(h3));
+		ircsprintf(h3, "%x:%x:%x:%x:%x:%x:%x",
+			l[0], l[1], l[2], l[3],
+			l[4], l[5], l[6]);
+		l[1] = crc32(h3, strlen(h3));
+		l[2] = crc32(host, strlen(host));
+		for (i = 0; i <= 2; i++)
+		{
+		        l[i] = ((l[i] + KEY2) ^ KEY) ^ KEY3;
+		        l[i] <<= 2; l[i] >>= 2;
+	        }
+		ircsprintf(cloaked, "%x:%x:%x:IP",
+			l[2], l[1], l[0]);
+		return cloaked;
+	}
 	/* Is this a IPv4 IP? */
 	for (p = host; *p; p++)
 	{
-		if (*p == ':')
-			break;
 		if (!isdigit(*p) && !(*p == '.'))
 		{
 				break;
@@ -202,25 +232,6 @@ char *hidehost(char *host)
 		l[2] <<= 2; l[2] >>= 2;
 		l[0] <<= 1; l[0] >>= 1;
 		ircsprintf(cloaked, "%X.%X.%X.IP", l[2], l[1], l[0]);
-		return cloaked;
-	}
-	else if (*p == ':')
-	{
-		/* Do IPv6 cloaking here */
-		/* FIXME: what the hell to do with :FFFF:192.168.1.5? 
-		*/
-		sscanf(host, "%x:%x:%x:%x:%x:%x:%x:%x",
-		         &l[0], &l[1], &l[2], &l[3],
-		         &l[4], &l[5], &l[6], &l[7]);
-		for (i = 0; i <= 7; i++)
-		{
-		        l[i] = ((l[i] + KEY2) ^ KEY) ^ KEY3;
-		        l[i] <<= 2; l[i] >>= 2;
-	        	l[i] %= 65535;
-	        }
-		ircsprintf(cloaked, "%x:%x:%x:%x:%x:%x:%x:%x.IP",
-			l[0], l[1], l[2], l[3],
-			l[4], l[5], l[6], l[7]);
 		return cloaked;
 	}
 	else

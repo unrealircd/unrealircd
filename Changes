@@ -473,3 +473,4 @@ seen. gmtime warning still there
 - Made you able to bind to specific IPv6 IPs (we don't have FFFF::*
   functionality yet)
 - Made a crazed out IPv6 cloaking
+- Made chghost/chgident able to do :'s
