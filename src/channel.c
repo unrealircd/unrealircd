@@ -4159,7 +4159,7 @@ CMD_FUNC(m_list)
 				  nolist = lp;
 				  DupString(lp->value.cp, name + 1);
 			  }
-			  else if (strchr(name, '*') || strchr(name, '*'))
+			  else if (strchr(name, '*') || strchr(name, '?'))
 			  {
 				  doall = 1;
 				  lp = make_link();

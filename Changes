@@ -2229,3 +2229,5 @@ seen. gmtime warning still there
 - Docs update
 - Temporarily disabled compiling TRE 
 *** Unreal3.2-beta17 release *** (god save us)
+- Modified './update', now points to docs until we have a new update thingy.
+- Fixed bug with /list and '?' wildcard, reported by maGGus.
