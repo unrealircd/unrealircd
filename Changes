@@ -2603,3 +2603,5 @@ seen. gmtime warning still there
   requested by AngryWolf (#0001365)
 - Added HOOKTYPE_PRE_LOCAL_PART to allow changing of part messages suggested by AngryWolf
   (#0001365)
+- Fixed a bug with SVSNLINE - reported by FreakyComputer and fixed by AngryWolf 
+  (#0001399)
