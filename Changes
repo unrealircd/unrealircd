@@ -2561,3 +2561,4 @@ seen. gmtime warning still there
   which checks for invalid characters.
 - Added hostname check for me::name since this could cause mysterious trouble.
 - Removed references to tkline/tzline from help.conf. Reported by penna22 (#0001340)
+- Fix for permanent modules w/ config hooks (they were not called).

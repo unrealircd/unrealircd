@@ -1896,7 +1896,8 @@ int	config_post_test()
 	for (h = Hooks[HOOKTYPE_CONFIGPOSTTEST]; h; h = h->next) 
 	{
 		int value, errs = 0;
-		if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
+		if (h->owner && !(h->owner->flags & MODFLAG_TESTING) &&
+		                !(h->owner->options & MOD_OPT_PERM))
 			continue;
 		value = (*(h->func.intfunc))(&errs);
 		if (value == -1)
@@ -6086,7 +6087,8 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
 			{
 				int value, errs = 0;
-				if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
+				if (h->owner && !(h->owner->flags & MODFLAG_TESTING) &&
+				                !(h->owner->options & MOD_OPT_PERM))
 					continue;
 				value = (*(h->func.intfunc))(conf,cep,CONFIG_SET, &errs);
 				if (value == 2)
