@@ -52,20 +52,30 @@ int hlength = strlen (haystack);
 }
 inline int fast_badword_match(ConfigItem_badword *badword, char *line)
 {
-	char *temp;
-	int ret;
-	if (!(badword->type & (BADW_TYPE_FAST_R|BADW_TYPE_FAST_L)))
-		return (our_strcasestr(line, badword->word) ? 0 : 1);
-	/* This can be made faster, but for now I just want it to work */
-	temp = MyMallocEx(strlen(badword->word)+3);
-	if (badword->type & BADW_TYPE_FAST_L)
-		strcat(temp, "*");
-	strcat(temp, badword->word);
-	if (badword->type & BADW_TYPE_FAST_R)
-		strcat(temp, "*");
-	ret = match(temp, line);
-	free(temp);
-	return ret;
+ 	char *p;
+	int ret, bwlen = strlen(badword->word);
+	if ((badword->type & BADW_TYPE_FAST_L) && (badword->type & BADW_TYPE_FAST_R))
+		return (our_strcasestr(line, badword->word) ? 1 : 0);
+
+	p = line;
+	while((p = our_strcasestr(p, badword->word)))
+	{
+		if (!(badword->type & BADW_TYPE_FAST_L))
+		{
+			if ((p != line) && isalnum(*(p - 1))) /* aaBLA but no *BLA */
+				goto next;
+		}
+		if (!(badword->type & BADW_TYPE_FAST_R))
+		{
+			if (isalnum(*(p + bwlen)))  /* BLAaa but no BLA* */
+				goto next;
+		}
+		/* Looks like it matched */
+		return 1;
+next:
+		p += bwlen;
+	}
+	return 0;
 }
 /* fast_badword_replace:
  * a fast replace routine written by Syzop used for replacing badwords.
@@ -199,7 +209,7 @@ char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
 		{
 			if (this_word->action == BADWORD_BLOCK)
 			{
-				if (!fast_badword_match(this_word, cleanstr))
+				if (fast_badword_match(this_word, cleanstr))
 				{
 					*blocked = 1;
 					return NULL;

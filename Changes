@@ -2052,3 +2052,4 @@ seen. gmtime warning still there
   AngryWolf
 - Made it so you can use a ~ as the first character of an ident with /chgident (#0000765)
   reported by AngryWolf
+- badword::action::block should now be ok
