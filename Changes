@@ -1676,3 +1676,4 @@ seen. gmtime warning still there
 - Fixed several conf3 errors
 - Converted deny {} to conf3, in the process added some extra crule functions to help
   report errors better
+- Fixed sendto_ routines to use slot number as index into sentalong array
