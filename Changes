@@ -1800,3 +1800,4 @@ seen. gmtime warning still there
 - Fixed crash when +x is in modes-on-oper, user has -x and then /oper's. (#0000578/#0000624/0000637)
 - Removed ircdreg, bug (#0000614), outdated
 - Fixed win32 compile error because of report_error patch (oops..)
+- Minor documentation fixes reported by Jollino (LUSERS, OFLAGS mode h).
