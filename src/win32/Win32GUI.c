@@ -96,7 +96,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	HKEY hKey;
 	char regbuf[128];
 	atexit(CleanUp);
-	LoadLibrary("riched32.dll");
+	if (!LoadLibrary("riched20.dll"))
+		LoadLibrary("riched32.dll");
 	InitStackTraceLibrary();
     if (WSAStartup(MAKEWORD(1, 1), &WSAData) != 0)
     {

@@ -485,3 +485,4 @@ seen. gmtime warning still there
   (zyrol, edited a bit by stskeeps)
 - Added richedit 1.0 support so Credits,License, etc show the bold and underline formats in win32
   code by codemastr with help from McSkaf (still needs work to support reverse and color)
+- Added code so the rich edit _should_ work with any version of the richedit dll

@@ -12,6 +12,7 @@
 #undef APSTUDIO_HIDDEN_SYMBOLS
 #include "resource.h"
 #include "winver.h"
+#include "richedit.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -48,7 +49,7 @@ CAPTION "UnrealIRCd License"
 FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,184,162,50,14
-    CONTROL         "",IDC_TEXT,"RICHEDIT20A",ES_MULTILINE | ES_AUTOVSCROLL | 
+    CONTROL         "",IDC_TEXT,RICHEDIT_CLASS,ES_MULTILINE | ES_AUTOVSCROLL | 
                     ES_AUTOHSCROLL | ES_READONLY | ES_WANTRETURN | WS_BORDER | 
                     WS_VSCROLL | WS_TABSTOP,8,7,402,149
 END
