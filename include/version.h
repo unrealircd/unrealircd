@@ -32,7 +32,7 @@
 #define PATCH2  		".1"
 #define PATCH3  		".5"
 #define PATCH4  		"-Valek"
-#define PATCH5  		""
+#define PATCH5  		"[beta3]"
 #define PATCH6  		""
 #define PATCH7  		""
 #define PATCH8  		COMPILEINFO

@@ -383,7 +383,7 @@ larne
 --Luke
 ===================================
 
-Rewrote all of /who, fuck everyone's patches
+Rewrote all of /who, screw everyone's patches
 mine are better!
 --Luke
 ===================================
@@ -706,4 +706,13 @@ shown to normal +s lusers (thanks to MrAllthat)
 --Luke
 ===================================
 
-*** Unreal3.1.5 Released ***
+Added prefixes for channel owner/protected to
+/who and /whois. They probably should never
+have been removed. Still to be implemented
+are actual prefixes in /names.
+--Luke
+===================================
+
+Small m_who bug with opers fixed.
+--Luke
+===================================

@@ -2527,13 +2527,13 @@ static void do_who(sptr, acptr, repchan)
 #endif
 	
 	/* Channel owner */
-/*	if (repchan && is_chanowner(acptr, repchan))
-		status[i++] = '~';  */
+	if (repchan && is_chanowner(acptr, repchan))
+		status[i++] = '~'; 
 	/* Channel protected */
-/*	else if (repchan && is_chanprot(acptr, repchan))
-		status[i++] = '&';  */
+	else if (repchan && is_chanprot(acptr, repchan))
+		status[i++] = '&';
 	/* Channel operator */
-	if (repchan && is_chan_op(acptr, repchan))
+	else if (repchan && is_chan_op(acptr, repchan))
 		status[i++] = '@';
 
 	/* Channel halfop */
@@ -2672,7 +2672,10 @@ int  m_who(cptr, sptr, parc, parv)
 
 #ifndef NO_OPEROVERRIDE
 			if (IsOper(sptr))
+			{
 				g2g = 1;
+				if (acptr->user->channel) ch2ptr = acptr->user->channel->value.chptr;
+			}
 			else
 #endif
 			for (lp = acptr->user->channel; lp; lp = lp->next)
@@ -2933,11 +2936,11 @@ int  m_whois(cptr, sptr, parc, parv)
 #endif
 																                                                && SecretChannel(chptr))
                                                         *(buf + len++) = '!';
-		/*				if (is_chanowner(acptr, chptr))
+						if (is_chanowner(acptr, chptr))
 							*(buf + len++) = '~';
 						else if (is_chanprot(acptr, chptr))
-							*(buf + len++) = '&';  */
-						if (is_chan_op(acptr, chptr))
+							*(buf + len++) = '&';
+						else if (is_chan_op(acptr, chptr))
 							*(buf + len++) = '@';
 						else if (is_half_op(acptr, chptr))
 							*(buf + len++) = '%';
