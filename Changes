@@ -2027,3 +2027,4 @@ seen. gmtime warning still there
   duplicate user entry in sjoin, etc etc. This would happen if BUFFERPOOL was set too low (like
   the default) and you got a lot of traffic. It's now handled a bit better and you'll get
   a nice warning, additionally the default BUFFERPOOL is now set to MAXSENDQLENGTH*18 instead of *9.
+  Thanks to ora and others which helped me tracing this down.
