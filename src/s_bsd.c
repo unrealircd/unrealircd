@@ -1282,7 +1282,7 @@ add_con_refuse:
 			{
 				ircsprintf(zlinebuf,
 					"ERROR :Closing Link: [%s] (Throttled: Reconnecting too fast) -"
-						"Email %s for more information.)\r\n",
+						"Email %s for more information.\r\n",
 						Inet_ia2p(&acptr->ip),
 						KLINE_ADDRESS);
 				set_non_blocking(fd, acptr);
@@ -1342,13 +1342,12 @@ void	start_of_normal_client_handshake(aClient *acptr)
 {
 	Link	lin;
 	acptr->status = STAT_UNKNOWN;	
-	if (SHOWCONNECTINFO && !acptr->serv) {
-		sendto_one(acptr, "%s", REPORT_DO_DNS);
-	}
-	lin.flags = ASYNC_CLIENT;
-	lin.value.cptr = acptr;
 	if (DONT_RESOLVE)
 		goto skipdns;
+	if (SHOWCONNECTINFO && !acptr->serv)
+		sendto_one(acptr, "%s", REPORT_DO_DNS);
+	lin.flags = ASYNC_CLIENT;
+	lin.value.cptr = acptr;
 	Debug((DEBUG_DNS, "lookup %s", acptr->sockhost));
 	acptr->hostp = gethost_byaddr((char *)&acptr->ip, &lin);
 	

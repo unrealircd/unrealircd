@@ -451,3 +451,7 @@
   (#0002096) suggested by White_Magic
 - Added support for using \\ in the config file to indicate a \ (#0002178) reported by
   TimeFX
+- Added documentation for set::options::fail-oper-warn (#0002166) reported by Snake
+- Removed an extra ) in the Throttle disconnect message (#0002165) reported by Snake
+- Fixed a bug where the "looking up your hostname" message could still be displayed even
+  if hostname resolving was disabled (#0002161) reported by Xuefer
