@@ -382,3 +382,6 @@
   to 50
 - Small fix with ./Config showing incorrect path of stddef.h
 - Made operkick be part of NO_OPEROVERRIDE
+- Made admins unable to be shunned
+- Made some socket errors which normally only showed up in DEBUGMODE, show
+  up in ircd.log as well

@@ -321,6 +321,8 @@ int  find_tkline_match(cptr, xx)
 			{
 				if (IsShunned(cptr))
 					return -1;
+				if (IsAdmin(cptr))
+					return -1;
 				SetShunned(cptr);
 				strncpy(gmt2, asctime(gmtime((clock_t *) &lp->expire_at)),
 				      sizeof(gmt2));

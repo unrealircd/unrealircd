@@ -20,13 +20,14 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include <sys/types.h>
 #include <sys/socket.h>
 main() 
 {
 	int	i;
 	int	s;
 	
-	for (i = 1; i <= 2048; i++)
+	for (i = 1; i <= 10000; i++)
 	{
 		s = socket(AF_INET, SOCK_STREAM, 0);
 		if (s < 0)

@@ -92,6 +92,7 @@ ID_CVS("$Id$");
 #ifdef _WIN32
 extern HWND hwIRCDWnd;
 #endif
+extern char backupbuf[8192];
 aClient *local[MAXCONNECTIONS];
 int  highest_fd = 0, readcalls = 0, udpfd = -1, resfd = -1;
 static struct SOCKADDR_IN mysk;
@@ -215,6 +216,7 @@ void report_error(text, cptr)
 				errtmp = err;
 #endif
 	sendto_ops(text, host, strerror(errtmp));
+	ircd_log(text,host,strerror(errtmp));
 #ifdef USE_SYSLOG
 	syslog(LOG_WARNING, text, host, strerror(errtmp));
 #endif
@@ -266,7 +268,7 @@ int  inetport(cptr, name, port)
 	{
 #if !defined(DEBUGMODE) && !defined(_WIN32)
 #endif
-		report_error("opening stream socket %s:%s", cptr);
+		report_error("Cannot open stream socket() %s:%s", cptr);
 		return -1;
 	}
 	else if (cptr->fd >= MAXCLIENTS)
@@ -305,7 +307,10 @@ int  inetport(cptr, name, port)
 		if (bind(cptr->fd, (struct SOCKADDR *)&server,
 		    sizeof(server)) == -1)
 		{
-			report_error("binding stream socket %s:%s", cptr);
+			ircsprintf(backupbuf, "Error binding stream socket to IP %s port %i",
+				ipname, port);
+			strcat(backupbuf, "- %s:%s");
+			report_error(backupbuf, cptr);
 #ifndef _WIN32
 			(void)close(cptr->fd);
 #else
