@@ -47,15 +47,10 @@ extern char *my_itoa(long i);
 
 /*
  * TODO:
- *  - allow channel {} (chrestrict)
- *  - deny channel {} (chrestrict)
  *  - deny version {} (V:lines)
  *  - allow {} connfreq (Y:lines)
- *  - badword { }
- *  - converter
 */
-#define ircdupstr(x,y) if (x) MyFree(x); if (!y) x = NULL; else x = strdup(y)
-#define ircstrdup ircdupstr
+#define ircstrdup(x,y) if (x) MyFree(x); if (!y) x = NULL; else x = strdup(y)
 #define ircfree(x) if (x) MyFree(x); x = NULL
 
 typedef struct _confcommand ConfigCommand;

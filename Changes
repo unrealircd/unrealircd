@@ -235,3 +235,4 @@
 - Added deny channel { channel "channelmask"; reason "why"; }; and
         allow channel { channel "channelmask"; };. Replaces chrestrict
 - Made those above get rehashed
+- Killed ircdupstr and called it ircstrdup
