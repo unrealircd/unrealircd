@@ -29,5 +29,5 @@ fi
 
 chmod +x update.sh
 export CURRENT_VERSION
-./update.sh
+./update.sh $1-
 exit 1

@@ -703,4 +703,6 @@
        <local servers>
        <local max clients>
        <global max clients>
+- Fixed +d (deaf) so it works again
 - Removed some leftovers from the &channel code (which fixed a minor bug as well)
+- Fixed a SJOIN3<->services problem
