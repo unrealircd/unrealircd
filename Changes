@@ -253,4 +253,4 @@
   to lucas.
 - Removed return_servers() and made servers be called Servers, and be a
   global variable. Done on request on Great Master codemastr.
-
+- Made crule.c use the server list rather than the whole client list for checking (faster)
