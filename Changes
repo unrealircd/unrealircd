@@ -3021,3 +3021,4 @@ seen. gmtime warning still there
 - Updated docs to mention except tkl {} type qline/gqline
 - spamfilter.conf: added soex trojan. Sig provided by Jay.
 - Fixed a spamfilter memory leak
+- Added '__' -> '_' decoding for spamfilter reason field.
