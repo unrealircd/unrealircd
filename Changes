@@ -2163,3 +2163,4 @@ seen. gmtime warning still there
 - Updated example.conf (added throttle block).
 - Made some fixes to the resolver code under Win32
 - Fixed a bug in del_throttling_bucket 
+- Code cleanup (sys_errlist[])

@@ -258,7 +258,7 @@ void add_local_domain(char *hname, int size)
 **	text	is a *format* string for outputting error. It must
 **		contain only two '%s', the first will be replaced
 **		by the sockhost from the cptr, and the latter will
-**		be taken from sys_errlist[errno].
+**		be taken from strerror(errno).
 **
 **	cptr	if not NULL, is the *LOCAL* client associated with
 **		the error.
