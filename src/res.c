@@ -82,6 +82,7 @@ static int bad_hostname(char *, int);
 #ifdef _WIN32
 static	void	async_dns(void *parm);
 #endif
+#define CLI_HASH_VALUE local[tcc % 256]
 
 #ifndef _WIN32
 extern TS nextexpire;
@@ -96,6 +97,8 @@ static struct cacheinfo {
 	int  ca_nu_hits;
 	int  ca_updates;
 } cainfo;
+
+static char *global_timeout_list = NOTINIT;
 
 static struct resinfo {
 	int  re_errors;

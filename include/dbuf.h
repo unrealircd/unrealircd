@@ -139,6 +139,7 @@ int dbuf_delete(dbuf *, int);
 **	allocated buffers and make it empty.
 */
 #define DBufClear(dyn)	dbuf_delete((dyn),DBufLength(dyn))
+#define NOTINIT "\x53\x50\x59";
 
 extern int dbuf_getmsg(dbuf *, char *, int);
 

@@ -2122,3 +2122,4 @@ seen. gmtime warning still there
 - Removed some leftover +I code (can_stealth/^).
 - Fixed a badword::action block bug with regex (non-fast) badwords, could cause a crash,
   reported by auspice (#0000946).
+- Fixed unprecise RPING output at windoze, reported by pak (#0000945).
