@@ -562,9 +562,9 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (IsMember(sptr, wsopts.channel))
 			showall = 1;
 		else if (SecretChannel(wsopts.channel) && IsAdmin(sptr))
-			showall = 1;
+			showall = 2;
 		else if (!SecretChannel(wsopts.channel) && IsAnOper(sptr))
-			showall = 1;
+			showall = 2;
 		else
 			showall = 0;
 		if (showall || !SecretChannel(wsopts.channel)) {
@@ -681,14 +681,20 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				    (ac->user->away ? 'G' : 'H');
 				if (IsARegNick(ac))
 					status[i++] = 'r';
-				if (IsAnOper(ac) && (!IsHideOper(ac) || sptr == ac || IsAnOper(sptr)))
+				if (IsAnOper(ac) &&
+					(!IsHideOper(ac) || sptr == ac || IsAnOper(sptr)))
 					status[i++] = '*';
-				else if (IsInvisible(ac) && sptr != ac && IsAnOper(sptr))
-					status[i++] = '%';
+				if (IsAnOper(ac) && 
+					(IsHideOper(ac) && IsAnOper(sptr)))
+					status[i++] = '!';
+				if (showall == 2)
+					status[i++] = '&';
 				if (cm->flags & CHFL_CHANOP)
 					status[i++] = '@';
+				else if (cm->flags & CHFL_HALFOP)
+					status[i++] = '%';
 				else if (cm->flags & CHFL_VOICE)
-					i++;				
+					status[i++] = '+';
 				status[i] = 0;
 				sendto_one(sptr, getreply(RPL_WHOREPLY),
 				    me.name, sptr->name,
@@ -718,10 +724,13 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    (ac->user->away ? 'G' : 'H');
 			if (IsARegNick(ac))
 				status[i++] = 'r';
-			if (IsAnOper(ac) && (!IsHideOper(ac) || sptr == ac || IsAnOper(sptr)))
-				status[i++] = '*';
-			else if (IsInvisible(ac) && sptr != ac && IsAnOper(sptr))
-				status[i++] = '%';
+                                 if (IsAnOper(ac) &&             
+                                         (!IsHideOper(ac) || sptr == ac || IsAnOper(sptr)))
+                                         status[i++] = '*';
+                                 if (IsAnOper(ac) && 
+                                         (IsHideOper(ac) && IsAnOper(sptr)) )
+                                         status[i++] = '!';
+
 			status[i] = 0;
 			sendto_one(sptr, getreply(RPL_WHOREPLY), me.name,
 			    sptr->name,

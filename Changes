@@ -1329,3 +1329,4 @@ seen. gmtime warning still there
 - Converted the status window in the win32 GUI to a modeless dialog
 - Fixed a win32 bug where the tray config menu didn't contain anything, reported by Jens (#0000127)
 - Fixed a /who bug where + wasn't shown for voices, reported by Wcc (#0000202)
+- Included larne's /who patch, adding a multitude of symbols? :P
