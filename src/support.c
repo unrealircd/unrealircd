@@ -2330,12 +2330,16 @@ struct u_WSA_errors WSAErrors[] = {
 
 char *sock_strerror(int error)
 {
+	static char unkerr[64];
 	int start = 0;
 	int stop = sizeof(WSAErrors)/sizeof(WSAErrors[0])-1;
 	int mid;
 	
 	if (!error) /* strerror compatibility */
 		return NULL;
+
+	if (error < WSABASEERR) /* Just a regular error code */
+		return strerror(error);
 
 	/* Microsoft decided not to use sequential numbers for the error codes,
 	 * so we can't just use the array index for the code. But, at least
@@ -2352,6 +2356,7 @@ char *sock_strerror(int error)
 		else
 			return WSAErrors[mid].error_string;	
 	}
-	return NULL;
+	sprintf(unkerr, "Unknown Error: %d", error);
+	return unkerr;
 }
 #endif

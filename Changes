@@ -3228,3 +3228,5 @@ This is the 3.2 fixes branch.
   LinDevel
 - Added /dns c to clear the DNS cache (#0001852) suggested by samson.
 - Seems I forgot to del_Command() SPAMFILTER and TEMPSHUN.
+- Made the win32 socket error reporting also handle regular system errors (#0001851) 
+  reported by Troco
