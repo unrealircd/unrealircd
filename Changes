@@ -1213,3 +1213,4 @@ seen. gmtime warning still there
 - Readded examples to doc/conf.doc by request of several users
 - Clean compile with -Wall
 - Win32 cleanup of the -Wall cleanup
+- REALLY clean compile with -Wall (except for wierd TStime stuff)

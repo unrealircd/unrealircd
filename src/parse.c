@@ -27,6 +27,7 @@ static char sccsid[] =
     "@(#)parse.c	2.33 1/30/94 (C) 1988 University of Oulu, \
 Computing Center and Jarkko Oikarinen";
 #endif
+#include <string.h>
 #include "struct.h"
 #include "common.h"
 

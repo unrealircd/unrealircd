@@ -44,6 +44,7 @@
 #ifdef	DBMALLOC
 #include "malloc.h"
 #endif
+#include <string.h>
 void free_link PROTO((Link *));
 Link *make_link PROTO(());
 extern ircstats IRCstats;

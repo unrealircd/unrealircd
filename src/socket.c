@@ -30,6 +30,8 @@ extern int errno;		/* ...seems that errno.h doesn't define this everywhere */
 #if !defined(__FreeBSD__) && !defined(__NetBSD__) && !defined(__linux__)
 extern char *sys_errlist[];
 #endif
+#include <sys/types.h>
+#include <sys/socket.h>
 
 #ifdef DEBUGMODE
 int  writecalls = 0, writeb[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
