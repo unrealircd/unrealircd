@@ -64,6 +64,7 @@ Please READ this carefully, otherwise your ircd won't boot!
 - '/dns c' will clear the DNS cache
 - Added new logtype 'spamfilter' to log spamfilter matches.
 - Added 'can_addline' operflag, this is now required in order to use /addline.
+- Spanish and Hungarian translations of unreal32docs were added.
 
 ==[ MAJOR BUGS FIXED ]==
 - win32: crash bugs in TRE on /rehash are probably fixed.
