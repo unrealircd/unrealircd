@@ -164,5 +164,8 @@ Unreal3.2-Selene (BETA11) RELEASE NOTES
   please contact the coder team. We however think that the changes will make SSL
   more transparent and make it work more efficiently.
 
+* Added technical documentation in doc/technical. This directory will contain information
+  about the protocol used by Unreal.
+
 * MAKE SURE YOU RERUN ./Config AND RUN make clean BEFORE USING THIS VERSION!!!
 
