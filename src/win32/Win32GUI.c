@@ -1832,8 +1832,8 @@ void IRCToRTF(unsigned char *buffer, unsigned char *string) {
 			strcat(string, "\\cf");
 			i += 3;
 			if (!isdigit(*(tmp+1))) {
-				strcat(string, "0\\highlight0");
-				i += 12;
+				strcat(string, "0");
+				i++;
 			}
 			else {
 				color[0] = *(++tmp);

@@ -2203,3 +2203,4 @@ seen. gmtime warning still there
 - Changed the /whois "secret channel" flag from '~' to '?'
 - Fixed some MOTD problems: remote MOTD gone after rehash (#0001007) and motd time, etc...
 - Fixed _some_ gcc3.3 + -Wall warnings.
+- Fixed a bug where the win32 config editor could crash if the file contained color codes.
