@@ -38,9 +38,6 @@ char serveropts[] = {
 #ifdef	CMDLINE_CONFIG
 	'C',
 #endif
-#ifdef	DO_ID
-	'd',
-#endif
 #ifdef	DEBUGMODE
 	'D',
 #endif
@@ -53,17 +50,8 @@ char serveropts[] = {
 #ifdef	SHOW_INVISIBLE_LUSERS
 	'i',
 #endif
-#ifndef	NO_DEFAULT_INVISIBLE
-	'I',
-#endif
 #ifdef NOSPOOF
 	'n',
-#endif
-#ifdef	NPATH
-	'N',
-#endif
-#ifdef	ENABLE_USERS
-	'U',
 #endif
 #ifdef	VALLOC
 	'V',
@@ -73,9 +61,6 @@ char serveropts[] = {
 #endif
 #ifdef	USE_SYSLOG
 	'Y',
-#endif
-#ifdef OPER_NO_HIDING
-	'H',
 #endif
 #ifdef NO_IDENT_CHECKING
 	'K',
@@ -97,6 +82,9 @@ char serveropts[] = {
 #endif
 #ifndef OPEROVERRIDE_VERIFY
 	'o',
+#endif
+#ifdef ZIP_LINKS
+	'Z',
 #endif
 	'\0'
 };

@@ -10,11 +10,21 @@ Protocol       Version
 
 Flag           Description
 ------------------------------------------------------------------------------------------------
-6              IPv6 is supported
-e              SSL is supported
+c              Server is chrooted
+C              command line config enabled
 D              Server is in debugmode
-h              Server is a hub
-n              NoSpoof is enabled
-R              Usermode +I is enabled
-W              System is running Windows
-X              Channel mode and Usermode +G is supported
+F              Using file descriptor lists
+h              Compiled as a hub
+i              Shows invisible users in /trace
+n              NOSPOOF enabled
+V              Uses valloc()
+W              Windows version
+Y              Syslog logging enabled
+K              No ident checking (?)
+6              IPv6 supported
+X              STRIPBADWORDS enabled (chmode/umode +G)
+P              Uses poll()
+e              SSL supported
+O              OperOverride enabled
+o              OperOverride without verify
+Z              Zip links supported
