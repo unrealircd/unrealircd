@@ -56,7 +56,11 @@ extern int LRV;
 #endif
 
 
-Module *Mod_Handle;
+#ifdef DYNAMIC_LINKING
+Module *Mod_Handle = NULL;
+#else
+#define Mod_Handle NULL
+#endif
 DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 EVENT(lcf_check);
 EVENT(htm_calc);

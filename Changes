@@ -1193,3 +1193,5 @@ v- Fixed some bugreport stuff
 - Possibly fixed the /who flags bug reported by sbalmos (#0000063)
 - lack of time sucks. openbsd problem
 - Fixed a typo in the docs found by TheEggMan
+- Fixed a m_htm.c problem
+- Updated supporters list in /credits
