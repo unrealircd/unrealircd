@@ -492,3 +492,4 @@
 (rc2)
 - Fixed SVS2MODE bug with illegal modes
 - Fixed /notice @%+ bug, where it didnt work at all
+- Fixed a small chmode +u bug

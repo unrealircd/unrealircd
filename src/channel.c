@@ -4105,7 +4105,7 @@ int  m_names(cptr, sptr, parc, parv)
 			continue;
 		if (chptr->mode.mode & MODE_AUDITORIUM)
 			if (!is_chan_op(sptr, chptr))
-				if (!(cm->flags & CHFL_CHANOP))
+				if (!(cm->flags & CHFL_CHANOP) && acptr != sptr)
 					continue;
 
 		if (cm->flags & CHFL_CHANOP)
