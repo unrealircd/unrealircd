@@ -1187,4 +1187,4 @@ v- Fixed some bugreport stuff
 - Added andi's OpenBSD fix for the symbol issue with prefix _
 - Added SJOIN fix so it won't accept NULL channels
 - Fixed a problem with Mod_Handler being **, found by andi
-
+- Fixed an issue with -x and /quit and whowas, found by RaYmAn
