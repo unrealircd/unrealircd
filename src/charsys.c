@@ -100,6 +100,7 @@ static LangList langlist[] = {
 	{ "italian",      "ita", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "latin1",       "cat,dut,fre,ger,ita,spa,swe", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "latin2",       "hun", LANGAV_ASCII|LANGAV_LATIN2 },
+	{ "polish",       "pol", LANGAV_ASCII|LANGAV_LATIN2 },
 	{ "spanish",      "spa", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "swedish",      "swe", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "swiss-german", "swg", LANGAV_ASCII|LANGAV_LATIN1 },
@@ -537,7 +538,11 @@ char latin1=0, latin2=0, chinese=0;
 		/* a', e', i', o', o", o~, u', u", u~, A', E', I', O', O", O~, U', U", U~ */
 		charsys_addallowed("·ÈÌÛˆı˙¸˚¡…Õ”÷’⁄‹€");
 	}
-
+	if (latin2 || !strcmp(name, "polish"))
+	{
+		/* supplied by k4be */
+		charsys_addallowed("±ÊÍ≥ÒÛ∂øº°∆ £—”Ø¨");
+	}
 	/* [GREEK] */	
 	if (!strcmp(name, "greek"))
 	{
