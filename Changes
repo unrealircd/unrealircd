@@ -345,7 +345,8 @@ Moved cloak key definitions to unrealircd.conf
 
 omfg, a patch that resolved some really interesting
 problems with really long parameter modes has been
-applied.
+applied. (this in itself is a great reason to
+upgrade)
 --Luke
 ===================================
 
