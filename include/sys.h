@@ -45,7 +45,6 @@
 #ifdef	STDLIBH
 #include <stdlib.h>
 #endif
-
 #ifdef	STRINGSH
 #include <strings.h>
 #else

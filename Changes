@@ -1449,3 +1449,7 @@ seen. gmtime warning still there
 - Made +x send out a SETHOST to VHP servers, requested by PreZ@DarkerNet
 - Removed support for SSLv2 (SSLv2 is obsolete and insecure)
 - .RELEASE.NOTES change
+- Cleaned out Credits (i'll fix the web part of it later), made doug lea malloc default
+  on Linux FSU Pthread installs. (When we got a better way, we will have full doug lea malloc..)
+
+  
