@@ -2708,7 +2708,11 @@ int  m_whois(cptr, sptr, parc, parv)
 						*buf = '\0';
 						len = 0;
 					}
+#ifdef SHOW_SECRET
 					if (!(acptr == sptr) && IsAnOper(sptr)
+#else
+					if (!(acptr == sptr) && (IsNetAdmin(sptr) || IsTechAdmin(sptr))
+#endif
 					&& (showsecret == 1) && SecretChannel(chptr))
 						*(buf + len++) = '~';
 					if (is_chanowner(acptr, chptr))

@@ -1,29 +1,29 @@
-/*
+/*                              
  * UnrealIRCd Changes File - (C) Carsten Munk 1999-2000 &
  *                               The UnrealIRCd Team
- *
+ *                              
  * $Id$
- * 
+ *                              
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 1, or (at your option)
- * any later version.
- * 
+ * any later version.           
+ *                              
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *                              
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- */
-
-*** Unreal3.1 *** (final)
+ *                              
+ */                             
+                                
+*** Unreal3.1 *** (final)       
 - Moved REMOVE_ADVERTISE a little
 - Fixed bug where you could /mode #test +L #test (link a channel to
-  itself)
+  itself)                       
 - Fixed a bug where a +L channel didn't have to be valid ex /mode #test
   +L blah would work, dangerous if 0 is used
 - Fixed /map showing U:lines even if HIDE_ULINES was set oops :)
@@ -31,13 +31,13 @@
 - Fixed a bug where /mode #test +f *N:N was recognized the same as +f N:N
   (if *2:3 was set then /mode #chan +f 2:3 it wouldn't set, thought it was the same)
 - Removed src/cio_init.c src/cio_main.c src/win32.c src/win32.rc as we don't
-  use that anymore
+  use that anymore              
 - Added ircsprintf() (ircsprintf.c and ircsprintf.h)
-- Converted to use ircsprintf
+- Converted to use ircsprintf   
 - Now using sprintf_irc from ircu, as %li would screw up the hybrid variant
 - Some fdlist updates from bahamut
-- Header change
-- Some more Header change
+- Header change                 
+- Some more Header change       
 - Added agent.c for IRCd Agents (remote control etc)
 - Fixed up some make misalignments
 - Fixed +I /names
@@ -168,8 +168,7 @@
   more channels on connect, read networks/unrealircd.conf for more info
 - Added networks/axenet.network
 - Possible change in the -1 operator bug
-- /info changes
-- Unreal3.1-beta1 release
+- /info changes- Unreal3.1-beta1 release
 - Added a bunch of networks
 - Updated doc/conf.doc
 - Updated networks/networks.ndx cause someone *cough* sts *cough* forgot
@@ -618,8 +617,7 @@
 - Made major changes to +I (may need debugging)
   - When you set +I while on a chan it sends a PART to the rest of the channel
   - When you set -I which on a chan it sends a JOIN to the rest of the channel
-  - Net/TechAdmins now receive a JOIN/PART when you JOIN/PART a channel
-  - Net/TechAdmins can now see +I users in /names
+  - Net/TechAdmins now receive a JOIN/PART when you JOIN/PART a channel  - Net/TechAdmins can now see +I users in /names
 - Fixed a typo in s_err.c reported by TRON
 - Fixed more -Wall warnings
 - Added #define LIST_SHOW_MODES to show channel modes in a /list (NOTE: only shows modes, not params)
@@ -639,3 +637,4 @@
 - Removed some annoying logging in ssl.c
 - Merged in changes from TEMPcvs branch
 - Fixed a /UNSQLINE para problem, found by Joe
+- #define SHOW_SECRET now allows all ircops to see +s channels in /whois.  If not defined, only net/tech admins can.

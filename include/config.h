@@ -88,6 +88,13 @@
 #undef NO_FDLIST
 
 /*
+ * Defining this will allow all ircops to see people in +s channels
+ * By default, only net/tech admins can see this
+ */
+#undef SEE_SECRET
+
+
+/*
  * Admin's chat...
  */
 #define ADMINCHAT 1
