@@ -569,7 +569,7 @@ int	ConfigCmd(ConfigFile *cf, ConfigEntry *ce, ConfigCommand *cc)
 int	ConfigParse(ConfigFile *cfptr)
 {
 	ConfigEntry	*ce = NULL;
-	
+		
 	ConfigCmd(cfptr, cfptr->cf_entries, _ConfigCommands);
 }
 
@@ -626,7 +626,9 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 		}
 		config_status("Set class %s->%s as %s",
 				class->name, cep->ce_varname, cep->ce_vardata);
-	}	
+	}
+	config_status("Adding to conf_class .. ");
+	add_ConfigItem((ConfigItem *) class, (ConfigItem **) &conf_class);
 }
 
 int	_conf_me(ConfigFile *conf, ConfigEntry *ce)

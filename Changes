@@ -42,5 +42,6 @@
 - Added the next part of the new config parser, and some even more
 - Fixed a missing : on numeric 379 found by script0r
 - Added some a bit functional _conf_class code
+- Some more _conf_class code
 - Typing /stats or /stats invalid-flag will return a list of valid flags
 - You no longer receive a /stats +e notice when no flag is specified, or an invalid flag is specified
