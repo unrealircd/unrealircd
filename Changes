@@ -1878,4 +1878,5 @@ seen. gmtime warning still there
 - Fixed bug in ISON
 - Code cleanup
 - Fixed a bug in m_part
-- Currently it's not possible to compile with ZIP_LINKS _and_ SSL without changing zlib.h :(.
+- Fixed a bug where compiling with ZIP_LINKS and SSL wouldn't work (#0000707) reported by 
+  Ravage.

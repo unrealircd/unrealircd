@@ -29,9 +29,6 @@
 #include "hash.h"
 #include <stdio.h>
 #include <sys/types.h>
-#ifdef ZIP_LINKS
-#include "zip.h"
-#endif
 #ifndef _WIN32
 #include <netinet/in.h>
 #include <netdb.h>
@@ -55,6 +52,9 @@
 #include <openssl/err.h>    
 #include <openssl/evp.h>
 #include <openssl/rand.h>
+#endif
+#ifdef ZIP_LINKS
+#include "zip.h"
 #endif
 #include "auth.h" 
 #ifdef HAVE_REGEX
