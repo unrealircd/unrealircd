@@ -131,7 +131,6 @@ int cleaned = 0;
 			pnew += replacen;
 		}
 		poldx = pold = endw;
-		printf("pold=%p, char='%d'/'%c'\n", pold, *pold, *pold);
 	}
 	/* Copy the last part */
 	if (*poldx) {
