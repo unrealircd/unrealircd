@@ -20,8 +20,8 @@
 
 #include "config.h"
 #ifdef USE_SSL
-#include "common.h"
 #include "struct.h"
+#include "common.h"
 #include "h.h"
 #include "proto.h"
 #include "sys.h"

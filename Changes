@@ -2069,3 +2069,4 @@ seen. gmtime warning still there
   (#0000895) reported by Troco
 - Added some information to the docs listing the file names for motd, rules, etc. (#0000519)
   suggested a LONG time ago by Jaw959
+- Fixed a compile error with openssl enabled at redhat 9.

@@ -24,6 +24,19 @@
 #define __struct_include__
 
 #include "config.h"
+/* need to include ssl stuff here coz otherwise you get
+ * conflicting types with isalnum/isalpha/etc @ redhat. -- Syzop
+ */
+#if defined(USE_SSL)
+#include <openssl/rsa.h>       /* SSL stuff */
+#include <openssl/crypto.h>
+#include <openssl/x509.h>
+#include <openssl/pem.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>    
+#include <openssl/evp.h>
+#include <openssl/rand.h>
+#endif
 #include "common.h"
 #include "sys.h"
 #include "hash.h"
@@ -42,16 +55,6 @@
 # ifdef SYSSYSLOGH
 #  include <sys/syslog.h>
 # endif
-#endif
-#if defined(USE_SSL)
-#include <openssl/rsa.h>       /* SSL stuff */
-#include <openssl/crypto.h>
-#include <openssl/x509.h>
-#include <openssl/pem.h>
-#include <openssl/ssl.h>
-#include <openssl/err.h>    
-#include <openssl/evp.h>
-#include <openssl/rand.h>
 #endif
 #ifdef ZIP_LINKS
 #include "zip.h"
