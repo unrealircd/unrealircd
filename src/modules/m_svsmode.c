@@ -480,6 +480,7 @@ int  m_svs2mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
                                   if (what == MODE_DEL
                                       && (acptr->umodes & UMODE_OPER))
                                           IRCstats.operators--;
+				  goto setmodey;
 			  case 'H':
 				  if (what == MODE_ADD && !(acptr->umodes & UMODE_HIDEOPER))
 					IRCstats.operators--;

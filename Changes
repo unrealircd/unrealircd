@@ -1700,3 +1700,4 @@ seen. gmtime warning still there
 - Made config actually add listeners when rehashing (...) also you can now
   change listener flags using /rehash
 - Changed .SICI to point to cacert.org instead (patch by evilbunny)
+- Fixed an oper count bug with SVS2MODE reported by confused (#0000490)
