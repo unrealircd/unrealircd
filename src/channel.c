@@ -1141,28 +1141,15 @@ CMD_FUNC(m_mode)
 		{
 			Member *member;
 			/* send chanowner list */
-			/* For our future reference i think there is a 
-			   problem doing this the way i am ... i think
-			   the way i commented out would work better as
-			   the members->value.cptr points to a user in
-			   the linked list of users ... however, by doing
-			   it the way i have there is risk of missing ppl
-			   out ... but doing it the other way seems to bugger
-			   it all up ... DrBin */
-			/* BTW: i was right =) */
-
-			/* For prosperity ... keep this line, and give it to any new coders to 
-			   see if they can a) spot whats wrong and[in both cases] b) correct it
-			   *devilish grin* -- DrBin ... after 1 hr of debugging ... realised he
-			   was lookin at the same piece of data... many times */
-			for (member = chptr->members, user = member->cptr;
-			    member->next;
-			    member = member->next, user = member->cptr)
+			/* [Whole story about bad loops removed, sorry ;)]
+			 * Now rewritten so it works (was: bad logic) -- Syzop
+			 */
+			for (member = chptr->members; member; member = member->next)
 			{
-				if (is_chanowner(user, chptr))
+				if (is_chanowner(member->cptr, chptr))
 					sendto_one(sptr, rpl_str(RPL_QLIST),
 					    me.name, sptr->name, chptr->chname,
-					    user->name);
+					    member->cptr->name);
 			}
 			sendto_one(cptr,
 			    rpl_str(RPL_ENDOFQLIST), me.name, sptr->name,
@@ -1180,28 +1167,15 @@ CMD_FUNC(m_mode)
 		{
 			Member *member;
 			/* send chanowner list */
-			/* For our future reference i think there is a 
-			   problem doing this the way i am ... i think
-			   the way i commented out would work better as
-			   the members->value.cptr points to a user in
-			   the linked list of users ... however, by doing
-			   it the way i have there is risk of missing ppl
-			   out ... but doing it the other way seems to bugger
-			   it all up ... DrBin */
-			/* BTW: i was right =) */
-
-			/* For prosperity ... keep this line, and give it to any new coders to 
-			   see if they can a) spot whats wrong and[in both cases] b) correct it
-			   *devilish grin* -- DrBin ... after 1 hr of debugging ... realised he
-			   was lookin at the same piece of data... many times */
-			for (member = chptr->members, user = member->cptr;
-			    member->next;
-			    member = member->next, user = member->cptr)
+			/* [Whole story about bad loops removed, sorry ;)]
+			 * Now rewritten so it works (was: bad logic) -- Syzop
+			 */
+			for (member = chptr->members; member; member = member->next)
 			{
-				if (is_chanprot(user, chptr))
+				if (is_chanprot(member->cptr, chptr))
 					sendto_one(sptr, rpl_str(RPL_ALIST),
 					    me.name, sptr->name, chptr->chname,
-					    user->name);
+					    member->cptr->name);
 			}
 			sendto_one(cptr,
 			    rpl_str(RPL_ENDOFALIST), me.name, sptr->name,
@@ -1810,7 +1784,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  if (is_chanowner(member->cptr, chptr)
 		      && member->cptr != cptr
 		      && !is_chanowner(cptr, chptr) && !IsServer(cptr)
-		      && !IsULine(cptr) && (what == MODE_DEL))
+		      && !IsULine(cptr) && !opermode && (what == MODE_DEL))
 		  {
 			  if (MyClient(cptr))
 			  {
@@ -1823,7 +1797,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  }
 		  if (is_chanprot(member->cptr, chptr)
 		      && member->cptr != cptr
-		      && !is_chanowner(cptr, chptr) && !IsServer(cptr)
+		      && !is_chanowner(cptr, chptr) && !IsServer(cptr) && !opermode
 		      && modetype != MODE_CHANOWNER && (what == MODE_DEL))
 		  {
 			  if (MyClient(cptr))
