@@ -176,9 +176,8 @@ int	m_scan_Unload(void)
 		HookDel(ConfRun);
 		HookDel(ConfPostTest);
 		HookDel(ServerStats);
-		LockEventSystem();
-		EventDel(Scannings_clean);
-		UnlockEventSystem();
+		/* Mark for deletion */
+		EventMarkDel(Scannings_clean);
 		IRCMutexDestroy(Scannings_lock);
 		if (scan_message)
 			free(scan_message);

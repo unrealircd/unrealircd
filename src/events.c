@@ -94,6 +94,12 @@ Event	*EventAddEx(Module *module, char *name, long every, long howmany,
 	
 }
 
+Event	*EventMarkDel(Event *event)
+{
+	event->howmany = -1;
+	return event;
+}
+
 Event	*EventDel(Event *event)
 {
 	Event *p, *q;
@@ -154,6 +160,9 @@ inline void	DoEvents(void)
 	Event temp;
 
 	for (eventptr = events; eventptr; eventptr = eventptr->next)
+	{
+		if (eventptr->howmany == -1)
+			goto freeit;
 		if ((eventptr->every == 0) || ((TStime() - eventptr->last) >= eventptr->every))
 		{
 			eventptr->last = TStime();
@@ -163,13 +172,14 @@ inline void	DoEvents(void)
 				eventptr->howmany--;
 				if (eventptr->howmany == 0)
 				{
+freeit:
 					temp.next = EventDel(eventptr);
 					eventptr = &temp;
 					continue;
 				}
 			}
-
 		}
+	}
 }
 
 void	EventStatus(aClient *sptr)

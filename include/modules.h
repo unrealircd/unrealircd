@@ -195,10 +195,13 @@ struct _eventinfo {
 };
 
 
+/* Huh? Why are those not marked as extern?? -- Syzop */
+
 #define EventAdd(name, every, howmany, event, data) EventAddEx(NULL, name, every, howmany, event, data)
 Event   *EventAddEx(Module *, char *name, long every, long howmany,
                   vFP event, void *data);
 Event   *EventDel(Event *event);
+Event   *EventMarkDel(Event *event);
 Event   *EventFind(char *name);
 int     EventMod(Event *event, EventInfo *mods);
 void    DoEvents(void);

@@ -1941,3 +1941,5 @@ seen. gmtime warning still there
 - Added set::options::dont-resolve (=hostnames of incomming clients won't be resolved).
 - Code cleanup (gcc 3.2 warnings with -Wall).
 - Removed/updated some NS stuff
+- Added EventMarkDel which marks an event for deletion for the (next) DoEvents() call.
+- Fixed /rehash stall caused by delayed unloading of the scan module (deadlock).
