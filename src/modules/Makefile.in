@@ -355,6 +355,9 @@ m_connect.o: m_connect.c $(INCLUDES)
 m_dccallow.o: m_dccallow.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_dccallow.c
 
+m_userip.o: m_userip.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_userip.c
+
 #############################################################################
 #             .so's section
 #############################################################################
@@ -715,7 +718,7 @@ m_dccallow.so: m_dccallow.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_dccallow.so m_dccallow.c
 
-m_userip.o: m_userip.c $(INCLUDES)
+m_userip.so: m_userip.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_userip.c
 
 #############################################################################

@@ -345,3 +345,4 @@
 - Added a new snomask, +o to show oper-up notices (oper only), (#0001965) suggested by 
   vonitsanet.
 - Added a /userip command that works just like ircu's.
+- Fixed a typo in the *nix Makefile reported by Troco (#0002059)
