@@ -2667,3 +2667,5 @@ seen. gmtime warning still there
 - Made it possible to compile the win32 version with libcurl support
 - Updated the win32 TRE lib/dll to the latest version (0.6.3)
 - Fixed a PATH_MAX vs MAX_PATH problem
+- Fixed a bug where if a Mod_Load returned MOD_FAILED, the module was not removed (#0001426)
+  reported by AngryWolf

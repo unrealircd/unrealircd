@@ -653,7 +653,7 @@ void	module_loadall(int module_load)
 {
 #ifndef STATIC_LINKING
 	iFP	fp, fpp;
-	Module *mi;
+	Module *mi, *next;
 	
 	if (!loop.ircd_booted)
 	{
@@ -661,8 +661,9 @@ void	module_loadall(int module_load)
 		return ;
 	}
 	/* Run through all modules and check for module load */
-	for (mi = Modules; mi; mi = mi->next)
+	for (mi = Modules; mi; mi = next)
 	{
+		next = mi->next;
 		if (mi->flags & MODFLAG_LOADED)
 			continue;
 		irc_dlsym(mi->dll, "Mod_Load", fp);
@@ -678,11 +679,10 @@ void	module_loadall(int module_load)
 		if ((*fp)(module_load) != MOD_SUCCESS)
 		{
 			config_status("cannot load module %s", mi->header->name);
+			Module_free(mi);
 		}
 		else
-		{
 			mi->flags = MODFLAG_LOADED;
-		}
 		
 	}
 #endif
