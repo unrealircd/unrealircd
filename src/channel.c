@@ -5724,7 +5724,6 @@ void send_channel_modes_sjoin(cptr, chptr)
 			bufptr = buf + strlen(buf);
 		}
 	}
-
 	if (n)
 	{
 		*bufptr++ = '\0';
@@ -5745,4 +5744,155 @@ void send_channel_modes_sjoin(cptr, chptr)
 		    chptr->chname, modebuf, parabuf, chptr->creationtime);
 
 	return;
+}
+
+/* 
+ * This will send "cptr" a full list of the modes for channel chptr,
+ */
+
+
+void send_channel_modes_sjoin3(cptr, chptr)
+	aClient *cptr;
+	aChannel *chptr;
+{
+	Link *members;
+	Link *lp;
+	Ban *ban;
+	char *name;
+	char *bufptr;
+	short	nomode, nopara;
+	char bbuf[1024];
+	int  n = 0;
+
+	if (*chptr->chname != '#')
+		return;
+
+	nomode = 0;
+	nopara = 1;
+	members = chptr->members;
+
+	/* First we'll send channel, channel modes and members and status */
+
+	*modebuf = *parabuf = '\0';
+	channel_modes(cptr, modebuf, parabuf, chptr);
+	
+	if (!modebuf[1])
+		nomode = 1;
+	if (!(*parabuf))
+		nopara = 1;
+	
+	
+	if (nomode)
+	{
+		ircsprintf(buf, "%s %ld %s :",
+		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
+		    chptr->creationtime, chptr->chname);
+	}
+		else
+	if (nopara)
+	{
+		ircsprintf(buf, "%s %ld %s %s",
+		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
+		    chptr->creationtime, chptr->chname, modebuf);
+
+	}
+		else
+	if (!nopara && !nomode)
+	{
+		ircsprintf(buf, "%s %ld %s %s %s",
+			    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
+		    chptr->creationtime, chptr->chname, modebuf, parabuf);
+	}
+	strcpy(bbuf, buf);
+	
+	bufptr = buf + strlen(buf);
+
+	for (lp = members; lp; lp = lp->next)
+	{
+
+		if (lp->flags & MODE_CHANOP)
+			*bufptr++ = '@';
+
+		if (lp->flags & MODE_VOICE)
+			*bufptr++ = '+';
+
+		if (lp->flags & MODE_HALFOP)
+			*bufptr++ = '%';
+		if (lp->flags & MODE_CHANOWNER)
+			*bufptr++ = '*';
+		if (lp->flags & MODE_CHANPROT)
+			*bufptr++ = '~';
+
+
+
+		name = lp->value.cptr->name;
+
+		strcpy(bufptr, name);
+		bufptr += strlen(bufptr);
+		*bufptr++ = ' ';
+		n++;
+
+		if (bufptr - buf > BUFSIZE - 80)
+		{
+			*bufptr++ = '\0';
+			if (bufptr[-1] == ' ')
+				bufptr[-1] = '\0';
+			sendto_one(cptr, "%s", buf);
+
+			strcpy(buf, bbuf);
+			n = 0;
+
+			bufptr = buf + strlen(buf);
+		}
+	}
+	for (ban = chptr->banlist; ban; ban = ban->next)
+	{
+		*bufptr++ = '&';
+		strcpy(bufptr, ban->banstr);
+		bufptr += strlen(bufptr);
+		*bufptr++ = ' ';
+		n++;
+		if (bufptr - buf > BUFSIZE - 80)
+		{
+			*bufptr++ = '\0';
+			if (bufptr[-1] == ' ')
+				bufptr[-1] = '\0';
+			sendto_one(cptr, "%s", buf);
+
+			strcpy(buf, bbuf);
+			n = 0;
+
+			bufptr = buf + strlen(buf);
+		}
+		
+	}
+	for (ban = chptr->exlist; ban; ban = ban->next)
+	{
+		*bufptr++ = '"';
+		strcpy(bufptr, ban->banstr);
+		bufptr += strlen(bufptr);
+		*bufptr++ = ' ';
+		n++;
+		if (bufptr - buf > BUFSIZE - 80)
+		{
+			*bufptr++ = '\0';
+			if (bufptr[-1] == ' ')
+				bufptr[-1] = '\0';
+			sendto_one(cptr, "%s", buf);
+
+			strcpy(buf, bbuf);
+			n = 0;
+
+			bufptr = buf + strlen(buf);
+		}
+		
+	}
+	
+	if (n)
+	{
+		*bufptr++ = '\0';
+		if (bufptr[-1] == ' ')
+			bufptr[-1] = '\0';
+		sendto_one(cptr, "%s", buf);
+	}
 }
