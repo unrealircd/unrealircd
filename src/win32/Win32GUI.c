@@ -215,15 +215,22 @@ void WipeColors() {
 DWORD CALLBACK BufferIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) {
 	char *buf2;
 	static long size = 0;
+	if (!RTFBuf)
+		size = 0;
+
 	buf2 = MyMalloc(size+cb+1);
+
 	if (RTFBuf)
 		memcpy(buf2,RTFBuf,size);
-	else 
-		size = 0;
+
 	memcpy(buf2+size,pbBuff,cb);
+
 	size += cb;
-	MyFree(RTFBuf);
+	if (RTFBuf)
+		MyFree(RTFBuf);
+
 	RTFBuf = buf2;
+
 	pcb = &cb;
 	return 0;
 }
@@ -1087,8 +1094,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				else
 					break;
 			}
-				
-			
+
 			fd = open(file, _O_TRUNC|_O_CREAT|_O_WRONLY|_O_BINARY,_S_IWRITE);
 			edit.dwCookie = 0;
 			edit.pfnCallback = BufferIt;
@@ -1096,6 +1102,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_STREAMOUT, (WPARAM)SF_RTF|SFF_PLAINRTF, (LPARAM)&edit);
 			RTFToIRC(fd, RTFBuf, strlen(RTFBuf));
 			free(RTFBuf);
+			RTFBuf = NULL;
 			EndDialog(hDlg, TRUE);
 		}
 		hWnd = GetDlgItem(hDlg, IDC_TEXT);

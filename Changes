@@ -926,3 +926,4 @@ seen. gmtime warning still there
 - Recoded the way the editor menu works (hopefully this is much
   better?)
 - Added the ability to create new files via the win32 editor
+- Fixed a win32 editor bug caused by me being drunk or something :P
