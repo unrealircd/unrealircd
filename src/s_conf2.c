@@ -1275,10 +1275,11 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	else
 	{
 		isnew = 0;
-		config_status("%s:%i: warning: redefining a record in listen %s",
+		/* 
+		  config_status("%s:%i: warning: redefining a record in listen %s",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			ce->ce_vardata);
-
+		*/
 	}
 
 	
@@ -2578,7 +2579,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	ConfigItem_deny_dcc		*deny_dcc_ptr;
 	ConfigItem_deny_channel		*deny_channel_ptr;
 	ConfigItem_allow_channel	*allow_channel_ptr;
-
+	ConfigItem_admin		*admin_ptr;
 	ConfigItem 	t;
 
 	
@@ -2593,6 +2594,13 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 #endif
 	}
 	
+	for (admin_ptr = conf_admin; admin_ptr; admin_ptr = (ConfigItem_admin *) admin_ptr->next)
+	{
+		ircfree(admin_ptr->line);
+		t.next = del_ConfigItem((ConfigItem *) admin_ptr, (ConfigItem **)&conf_admin);
+		MyFree(admin_ptr);
+		admin_ptr = (ConfigItem_admin *) &t;			
+	}
 	/* wipe the fckers out ..*/
 	for (oper_ptr = conf_oper; oper_ptr; oper_ptr = (ConfigItem_oper *) oper_ptr->next)
 	{	

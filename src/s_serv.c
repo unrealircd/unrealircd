@@ -2699,6 +2699,15 @@ int  m_stats(cptr, sptr, parc, parv)
 		  break;
 	  case 'X':
 	  case 'x':
+		  for (link_p = conf_link; link_p; link_p = (ConfigItem_link *) link_p->next)
+		  {
+			if (!find_server_quick(link_p->servername))
+			{
+				sendto_one(sptr, rpl_str(RPL_STATSXLINE),
+					me.name, sptr->name, link_p->servername,
+					link_p->port);
+			}	
+		  } 
 		  break;
 	  case 'Y':
 	  case 'y':
