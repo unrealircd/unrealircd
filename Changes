@@ -2440,4 +2440,4 @@ seen. gmtime warning still there
 - Updated .CHANGES.NEW to read Beta18
 - Minor doc update.
 - Updated all the modules to use the new macros
-
+- Changed version to 'beta18'
