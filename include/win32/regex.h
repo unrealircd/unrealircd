@@ -51,8 +51,11 @@ extern "C" {
 typedef int reg_errcode_t;
 #endif /* !HAVE_REG_ERRCODE_T */
 
+#if !defined(REG_NOSPEC) && !defined(REG_LITERAL)
+#define REG_LITERAL 0x1000
+#endif
+
 /* Extra regcomp() flags. */
-#define REG_LITERAL	0x1000
 #define REG_RIGHT_ASSOC (REG_LITERAL << 1)
 
 /* Extra regexec() flags. */
@@ -117,7 +120,7 @@ typedef enum {
 #endif /* !TRE_USE_SYSTEM_REGEX_H */
 
 /* REG_NOSPEC and REG_LITERAL mean the same thing. */
-#if defined(REG_LITERAL)
+#ifdef REG_LITERAL
 #define REG_NOSPEC	REG_LITERAL
 #elif defined(REG_NOSPEC)
 #define REG_LITERAL	REG_NOSPEC
