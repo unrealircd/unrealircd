@@ -2478,9 +2478,9 @@ int  m_who(cptr, sptr, parc, parv)
 					if (oper && (!IsAnOper(lp->value.cptr)
 					    ))
 						continue;
-					if (lp->value.cptr != sptr
+					if ((lp->value.cptr != sptr
 					    && IsInvisible(lp->value.cptr)
-					    && !member)
+					    && !member) && !IsOper(sptr))
 						continue;
 					channelwho = 1;
 					do_who(sptr, lp->value.cptr, chptr);

@@ -688,3 +688,5 @@
 - Fixed the masskill bug with replacing "Server Exists" code.. i removed it
   accidentialy last time
 - Added /botserv /bs command, patch by ATHnet.de
+- /who's now show +i users for opers in channels, idea by
+  Strider@ChatCircuit
