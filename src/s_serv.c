@@ -571,7 +571,7 @@ int  m_server(cptr, sptr, parc, parv)
 	{
 		ircsprintf(pp, "Servername %s collides with servername %s (similar hash). Change servername in some way (maybe change case)",
 			parv[1], f);		
-		return exit_client(cptr, cptr, cptr, f);
+		return exit_client(cptr, cptr, cptr, pp);
 	}
 	if ((acptr = find_name(host, NULL)))
 	{

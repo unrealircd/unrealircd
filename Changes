@@ -385,3 +385,4 @@
 - Made admins unable to be shunned
 - Made some socket errors which normally only showed up in DEBUGMODE, show
   up in ircd.log as well
+- Fixed a wrongly outputted message (in hash collision detect)
