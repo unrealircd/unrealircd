@@ -2187,7 +2187,7 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
 	aCtab *tab = &cFlagTab[0];
 	aCtab foundat;
 	int  found = 0;
-	int  paracount = 0;
+	int  paracount = 1;
 	*pcount = 0;
 	for (curchr = parv[0]; *curchr; curchr++)
 	{
