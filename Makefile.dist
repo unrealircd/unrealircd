@@ -175,7 +175,7 @@ cleandir: clean
 	rm -rf include/networks.h include/setup.h include/settings.h Makefile Settings
 
 makex:
-	chmod +x Config newnet bsdinstall ircd ircdcron/ircdchk killircd
+	chmod +x Config newnet ircd ircdcron/ircdchk killircd
 	chmod +x makeconf rehash ircdreg
 
 fromdos: cleandir
