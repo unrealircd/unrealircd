@@ -2421,10 +2421,12 @@ static int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, ch
         if (is_banned(sptr, sptr, chptr))
                 return (ERR_BANNEDFROMCHAN);
 
+#ifndef NO_OPEROVERRIDE
 #ifdef OPEROVERRIDE_VERIFY
         if (IsOper(sptr) && (chptr->mode.mode & MODE_SECRET ||
             chptr->mode.mode & MODE_PRIVATE))
                 return (ERR_OPERSPVERIFY);
+#endif
 #endif
 
 
