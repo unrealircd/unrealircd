@@ -593,3 +593,6 @@
   throttle the number of joins per-user to X in Y seconds. Idea from Angrywolf (who
   wrote a module that did this before). This needs testing :).
   It's enabled by default but can be #undef'ed in include/config.h (line 449).
+- Added a feature to +b ~c, ~c:[prefix]<#channel>, prefix can be +/%/@/&/~ and will
+  check if the user is voiced/halfoped/etc.. Especially useful for +e ~c. Idea from
+  Bugz (#0002198). Obviously all servers need to be upgraded to make this work.
