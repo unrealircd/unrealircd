@@ -1,25 +1,25 @@
-/*   UltimateIRCd - Ultimate Internet Relay Chat Daemon, src/s_socks.c
-**
-**   Written for UltimateIRCd by ShadowRealm Creations.
-**   Copyright (C) 1997-1999 Infomedia Inc.
-**
-**   This program is free software; you can redistribute it and/or modify
-**   it under the terms of the GNU General Public License as published by
-**   the Free Software Foundation; either version 1, or (at your option)
-**   any later version.
-**
-**   This program is distributed in the hope that it will be useful,
-**   but WITHOUT ANY WARRANTY; without even the implied warranty of
-**   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**   GNU General Public License for more details.
-**
-**   You should have received a copy of the GNU General Public License
-**   along with this program; if not, write to the Free Software
-**   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-*/
+/************************************************************************
+/************************************************************************
+ *   Unreal Internet Relay Chat Daemon, src/s_socks.c
+ *   Copyright (C) 1998 Lucas Madar
+ *
+ *   This program is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 1, or (at your option)
+ *   any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program; if not, write to the Free Software
+ *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 
 #ifndef lint
-static  char sccsid[] = "@(#)s_socks.c	1.0 28/9/98 (C) 1998 InfoMedia Inc.";
+static char sccsid[] = "@(#)s_socks.c	1.0 28/9/98 ";
 #endif
 
 
@@ -45,7 +45,7 @@ static  char sccsid[] = "@(#)s_socks.c	1.0 28/9/98 (C) 1998 InfoMedia Inc.";
 #include <io.h>
 #endif
 #include <fcntl.h>
-#include "sock.h"	/* If FD_ZERO isn't define up to this point,  */
+#include "sock.h"		/* If FD_ZERO isn't define up to this point,  */
 			/* define it (BSD4.2 needs this) */
 #include "h.h"
 #ifdef SOCKSPORT
@@ -63,7 +63,7 @@ static unsigned char socksid[12];
 void init_socks(aClient *cptr)
 {
 	unsigned short sport = SOCKSPORT;
-	struct sockaddr_in sin;
+	struct SOCKADDR_IN sin;
 
 	socksid[0] = 4;
 	socksid[1] = 1;
@@ -71,16 +71,20 @@ void init_socks(aClient *cptr)
 	socksid[3] = LOCHAR(sport);
 	socksid[8] = 0;
 
-	if ((cptr->socksfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+	if ((cptr->socksfd = socket(AFINET, SOCK_STREAM, 0)) == -1)
 		return;
 
 	set_non_blocking(cptr->socksfd, cptr);
 
-	sin.sin_addr.s_addr = INADDR_ANY;
-	sin.sin_port = htons(sport);
-	sin.sin_family = AF_INET;
+#ifdef INET6
+	sin.SIN_ADDR = in6addr_any;
+#else
+	sin.SIN_ADDR.S_ADDR = INADDR_ANY;
+#endif
+	sin.SIN_PORT = htons(sport);
+	sin.SIN_FAMILY = AFINET;
 
-	if(bind(cptr->socksfd, (struct sockaddr *)&sin, sizeof(sin)))
+	if (bind(cptr->socksfd, (struct SOCKADDR *)&sin, sizeof(sin)))
 	{
 #ifdef _WIN32
 		closesocket(cptr->socksfd);
@@ -94,7 +98,7 @@ void init_socks(aClient *cptr)
 	listen(cptr->socksfd, LISTEN_SIZE);
 
 	/* Socks lietening port is now set up */
-	/* Similar to discard port */ 
+	/* Similar to discard port */
 }
 
 /*
@@ -105,53 +109,56 @@ void init_socks(aClient *cptr)
  * otherwise, the connection is checked to see if it is a "secure"
  * socks4+ server
  */
-void	start_socks(cptr)
-aClient	*cptr;
+void start_socks(cptr)
+	aClient *cptr;
 {
-	struct sockaddr_in sin;
-	int sinlen = sizeof(struct sockaddr_in);
+	struct SOCKADDR_IN sin;
+	int  sinlen = sizeof(struct SOCKADDR_IN);
 
-	if ((cptr->socksfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+	if ((cptr->socksfd = socket(AFINET, SOCK_STREAM, 0)) == -1)
 	{
-                Debug((DEBUG_ERROR, "Unable to create socks socket for %s:%s",
-                        get_client_name(cptr, TRUE),
-                        strerror(get_sockerr(cptr))));
+		Debug((DEBUG_ERROR, "Unable to create socks socket for %s:%s",
+		    get_client_name(cptr, TRUE), strerror(get_sockerr(cptr))));
 		return;
 	}
-#ifndef _WIN32 /* this is here in s_auth.c, so I guess it breaks win */
+#ifndef _WIN32			/* this is here in s_auth.c, so I guess it breaks win */
 	if (cptr->socksfd >= (MAXCONNECTIONS - 3))
-	    {
+	{
 		sendto_ops("Can't allocate fd for socks on %s",
-			   get_client_name(cptr, TRUE));
+		    get_client_name(cptr, TRUE));
 		close(cptr->socksfd);
 		cptr->socksfd = -1;
 		return;
-	   }
+	}
 #endif
-	if (find_socksexcept((char *)inetntoa((char *) &cptr->ip)))
+#ifndef INET6
+	if (find_socksexcept((char *)inetntoa((char *)&cptr->ip)))
+#else
+	if (find_socksexcept((char *)inet_ntop(AF_INET6, (char *)&cptr->ip,
+	    mydummy, MYDUMMY_SIZE)))
+#endif
 		goto skip_socks;
-	
+
 #ifdef SHOWCONNECTINFO
 #ifndef _WIN32
 	write(cptr->fd, REPORT_DO_SOCKS, R_do_socks);
 #else
-	send(cptr->fd, REPORT_DO_SOCKS, R_do_socks,0);
+	send(cptr->fd, REPORT_DO_SOCKS, R_do_socks, 0);
 #endif
 #endif
 
 	set_non_blocking(cptr->socksfd, cptr);
 
-	sin.sin_port = htons(1080);
-	sin.sin_family = AF_INET;
-	bcopy((char *)&cptr->ip, (char *)&sin.sin_addr,
-		sizeof(struct in_addr));
+	sin.SIN_PORT = htons(1080);
+	sin.SIN_FAMILY = AFINET;
+	bcopy((char *)&cptr->ip, (char *)&sin.SIN_ADDR, sizeof(struct IN_ADDR));
 
-	if (connect(cptr->socksfd, (struct sockaddr *)&sin,
+	if (connect(cptr->socksfd, (struct SOCKADDR *)&sin,
 #ifndef _WIN32
-		    sinlen) == -1 && errno != EINPROGRESS)
+	    sinlen) == -1 && errno != EINPROGRESS)
 #else
-		    sinlen) == -1 && (WSAGetLastError() !=
-		WSAEINPROGRESS && WSAGetLastError() != WSAEWOULDBLOCK))
+	    sinlen) == -1 && (WSAGetLastError() !=
+	    WSAEINPROGRESS && WSAGetLastError() != WSAEWOULDBLOCK))
 #endif
 	{
 		/* we have no socks server! */
@@ -165,17 +172,17 @@ aClient	*cptr;
 #ifndef _WIN32
 		write(cptr->fd, REPORT_NO_SOCKS, R_no_socks);
 #else
-		send(cptr->fd, REPORT_NO_SOCKS, R_no_socks,0);
+		send(cptr->fd, REPORT_NO_SOCKS, R_no_socks, 0);
 #endif
 #endif
 		return;
-	    }
-	cptr->flags |= (FLAGS_WRSOCKS|FLAGS_SOCKS);
+	}
+	cptr->flags |= (FLAGS_WRSOCKS | FLAGS_SOCKS);
 	if (cptr->socksfd > highest_fd)
 		highest_fd = cptr->socksfd;
 	return;
 
-skip_socks:
+      skip_socks:
 #ifndef _WIN32
 	close(cptr->socksfd);
 #else
@@ -187,7 +194,7 @@ skip_socks:
 #ifndef _WIN32
 	write(cptr->fd, REPORT_NO_SOCKS, R_no_socks);
 #else
-	send(cptr->fd, REPORT_NO_SOCKS, R_no_socks,0);
+	send(cptr->fd, REPORT_NO_SOCKS, R_no_socks, 0);
 #endif
 #endif
 	return;
@@ -198,20 +205,20 @@ skip_socks:
  *
  * send the socks server a query to see if it's open.
  */
-void	send_socksquery(cptr)
-aClient	*cptr;
+void send_socksquery(cptr)
+	aClient *cptr;
 {
-	struct sockaddr_in sin;
-	int sinlen = sizeof(struct sockaddr_in);
+	struct SOCKADDR_IN sin;
+	int  sinlen = sizeof(struct SOCKADDR_IN);
 	unsigned char socksbuf[12];
 	unsigned long theip;
 
 	bcopy((char *)&socksid, (char *)&socksbuf, 9);
 
-	getsockname(cptr->fd, (struct sockaddr *)&sin, &sinlen);
+	getsockname(cptr->fd, (struct SOCKADDR *)&sin, &sinlen);
 
-	theip = htonl(sin.sin_addr.s_addr);
-	
+	theip = htonl(sin.SIN_ADDR.S_ADDR);
+
 	socksbuf[4] = (theip >> 24);
 	socksbuf[5] = (theip >> 16) & 0xFF;
 	socksbuf[6] = (theip >> 8) & 0xFF;
@@ -233,7 +240,7 @@ aClient	*cptr;
 #ifndef _WIN32
 		write(cptr->fd, REPORT_NO_SOCKS, R_no_socks);
 #else
-		send(cptr->fd, REPORT_NO_SOCKS, R_no_socks,0);
+		send(cptr->fd, REPORT_NO_SOCKS, R_no_socks, 0);
 #endif
 #endif
 	}
@@ -247,11 +254,11 @@ aClient	*cptr;
  * process the socks reply.
  */
 
-void	read_socks(cptr)
-aClient	*cptr;
+void read_socks(cptr)
+	aClient *cptr;
 {
 	unsigned char socksbuf[12];
-	int len;
+	int  len;
 
 	len = recv(cptr->socksfd, socksbuf, 9, 0);
 
@@ -266,19 +273,19 @@ aClient	*cptr;
 	cptr->socksfd = -1;
 	ClearSocks(cptr);
 
-	if(len < 4)
+	if (len < 4)
 	{
 #ifdef SHOWCONNECTINFO
 #ifndef _WIN32
 		write(cptr->fd, REPORT_NO_SOCKS, R_no_socks);
 #else
-		send(cptr->fd, REPORT_NO_SOCKS, R_no_socks,0);
+		send(cptr->fd, REPORT_NO_SOCKS, R_no_socks, 0);
 #endif
 #endif
 		return;
 	}
 
-	if(socksbuf[1] == 90)
+	if (socksbuf[1] == 90)
 	{
 		cptr->flags |= FLAGS_GOTSOCKS;
 		return;
@@ -288,7 +295,7 @@ aClient	*cptr;
 #ifndef _WIN32
 	write(cptr->fd, REPORT_GOOD_SOCKS, R_good_socks);
 #else
-	send(cptr->fd, REPORT_GOOD_SOCKS, R_good_socks,0);
+	send(cptr->fd, REPORT_GOOD_SOCKS, R_good_socks, 0);
 #endif
 #endif
 	return;

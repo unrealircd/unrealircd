@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, include/license.h
+ *   Unreal Internet Relay Chat Daemon, include/license.h
  *   Copyright (C) 1999 Carsten Munk
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -17,8 +17,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * 
  *   This file may not be removed from the IRCd package.
- *   It will be a violation of copyright. This program must always
- *   stay free and not be sold, or charged. 
+ *   It will be a violation of copyright. 
  * 
  *   $Id$
  */

@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, include/sjoin.h
+ *   Unreal Internet Relay Chat Daemon, include/sjoin.h
  *   (C) Carsten Munk 2000
  *   Contains code from StarChat IRCd, (C) their respective authors
  *

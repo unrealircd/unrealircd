@@ -1,0 +1,29 @@
+ver^2.2
+#
+# DragonWings.org Network Configuration File
+# -----------------------------------------
+#  Added-at:     14 July 1999 00:00 GMT
+#  Author:       Stskeeps (Carsten Munk)
+#  E-Mail:       stskeeps@global-irc.net
+#  $Id$
+# -----------------------------------------
+#
+
+Network >..........: Treklink
+Set ircnetwork ....: Treklink
+Set defserv .......: irc.treklink.net
+Set SERVICES_NAME .: services.uip.org
+Set oper_host .....: ircop.treklink.net
+Set admin_host ....: admin.treklink.net
+Set locop_host ....: locop.treklink.net
+Set sadmin_host ...: serviceop.treklink.net
+Set netadmin_host .: netadmin.treklink.net
+Set coadmin_host ..: coadmin.treklink.net
+Set techadmin_host : techadmin.treklink.net
+Set hidden_host ...: TL
+Set netdomain .....: treklink.net
+Set helpchan ......: #uip
+Set STATS_SERVER ..: stats.treklink.net
+Set HUB ...........: 1
+Set iNAH ..........: 1
+Set net_quit ......: TL

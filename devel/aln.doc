@@ -1,0 +1,26 @@
+
+ALN, Alphanumeric System
+(C) Stskeeps 2000
+
+ALN is a quick hack to short down usage of bandwidth-using servernames
+in prefixes, NICK commands, etc etc. It replaces the name with a 
+1 or 2 byte prefix in a system, look at src/aln.c for the prefix
+types/values. It will be an PROTOCTL, and used in NICK messages and so on, 
+and introduce a new prefix server<->server called |server. The value of the
+server is calculated by a hash value, the scache system, so that the server
+can lookup with a new scache function, scache_find_by_hash(int i). The
+question of it will conflict in similar-hash server names, is a wonder to me
+:P, we will find out, but scache will fail at same time then. 
+
+
+Examples: 
+& Medb 4 957458466 ~Medb bservice.org D2 0 +iwrx *
+:BotService Bot - bservice.org - Owner:  terri{J}
+
+where D2 is the hash value of oxygen.phrozen.org (/stats s on a
+#define DEVELOP server). irc.flirt.org has hash 96 (ALN code AX) for
+instance. 
+
+@D2 GLOBOPS :message
+will be a message from server with hash D2, found find-by-hash(256) 
+

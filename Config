@@ -11,7 +11,7 @@
 # distribution without the author's prior consent.
 #
 # $Id$
-IRCD_VERSION="Unreal3.0"
+IRCD_VERSION="Unreal3.1-beta3"
 CONF_DATE=`date`
 LAST_VERSION="very very old"
 #
@@ -165,7 +165,7 @@ case "$OS" in
         DEFLIBS="-lsocket"
         OSNAME="SCO Openserver"
         NEEDSKIPNAME="Yep"
-        echo "You're using SCO Unix. For more support, contact potvin@eliteircd.on.ca"
+        echo "You're using SCO Unix. For more support, stskeeps@tspre.org"
         ;;
     *Apple*)
     	DEFCFLAGS="$DEFOPT"
@@ -1672,5 +1672,6 @@ cat << __EOF__
 | - The UnrealIRCd Team -                                             |
 | * Stskeeps  stskeeps@tspre.org
 | * codemastr codemastr@tspre.org
+| * DrBin     drbin@tspre.org
 |_____________________________________________________________________|
 __EOF__

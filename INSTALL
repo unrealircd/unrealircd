@@ -48,6 +48,9 @@ AmigaOS 3.0         GCC egcs-2.91.66         (compile with -D_AMIGA)
 Windows NT/95       MSVC++ 4.0	             
 
 Linux Mandrake                                Read FAQ 
+
+Linux 2.3.x         gcc 2.95.2                glibc 2.1.3                  
+
 =======================================================================
 Unpacking the Distribution
 

@@ -154,8 +154,8 @@ build:
 	@echo '| to do the dynamic configuration :)               |'
 	@echo '|                                                  |'
 	@echo '| Thanks for using Unreal IRCd! If you are in need |' 
-	@echo '| for any kind of help regarding the IRCd email us |'
-	@echo '| at unreal-dev@lists.sourceforge.net              |' 
+	@echo '| for any kind of help regarding the IRCd please   |'
+	@echo '| read the Unreal.nfo file.                        |' 
 	@echo '|__________________________________________________|'
 
 clean:

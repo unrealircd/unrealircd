@@ -21,7 +21,7 @@ ENCRYPT="Yes"
 FLAGS="OAZHWe"
 RESTARTPASS="restartpass"
 DIEPASS="diepass"
-SERVICES="Services.ShadowNet.Org"
+SERVICES="Services.IRC-Net.Org"
 
 # these are so I can use stuff like $1 without it replacing it...like by
 # using $dlrsgn$uno for $1
@@ -320,7 +320,7 @@ A:$ADMIN:$ADMNICK:$ADMADDR
 
 ############ Y-lines #############
 # Client Y:lines
-Y:1:90:0:$MAXCONNECTIONS:100000
+Y:1:90:0:245:100000
 # Server Y:lines
 Y:50:300:600:1:1000000
 ##################################

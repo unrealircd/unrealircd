@@ -21,7 +21,6 @@ else
 fi
 
 generation=`expr $generation + 1`
-
 creation=`date | \
 awk '{if (NF == 6) \
          { print $1 " "  $2 " " $3 " "  $6 " at " $4 " " $5 } \
@@ -81,10 +80,6 @@ char *unrealcredits[] =
 	"  about IRC stuff, getting me more and more into IRCd business",
 	"  thanks for the *.tspre.org domain as well :)",
 	"",
-	"\37Local Irelands (http://www.local.ie)\37",
-	"- Thanks for sponsoring UnrealIRCd, test facilities,",
-	"  supporting UnrealIRCd, many new ideas, thanks for making",
-	"  Unreal what it is today:)",
 	"Mick and Sp^",
 	"- Amiga port of Unreal (UnrealIRCd/Amiga), continually strange",
 	"  comments on #UnrealIRCd, being great supporters of Unreal",
@@ -92,6 +87,13 @@ char *unrealcredits[] =
 	"DrBin (Dave) drbin@tspre.org",
 	"- Recoded & made the new UnrealIRCd/32 code, support,"
 	"  finding bugs, and tonnes of other stuff:)",
+	"Headbang (Melle Visser)",
+	"- Donation of ircsystems.net, hardware for Stskeeps, and for",
+	"  being a great supporter of Unreal, and helping out at the",
+	"  support channel",
+	"WonderWal (Alan Wolff)",
+	"- Sending Stskeeps Slackware 7, and Visual Studio",
+	"  helping out in the help channel, and a lot of other stuff",
 	"{X} (Laurie) x@tspre.org",
 	"- Making the main code/design of UnrealIRCd/32 gui",
 	"  bugfounds, etc",
@@ -102,6 +104,8 @@ char *unrealcredits[] =
 	"                         \37Donations to Unreal:\37",
 	"BlueFlame^",
 	" - the first UnrealIRCd donation :)",
+	"Thanks to Headbang and WonderWal too for hardware+software",
+	"donations",
 	"   (yes your name can be here too;)",
 	"",
 	"              \37These people have helped alpha/betatesting\37",
@@ -127,9 +131,12 @@ char *unrealcredits[] =
 	"   and many other stuff. You'll always be in my heart,",
 	"   sorry for all the things I did or maybe didn't",
 	"   love you :(",
-	"KUFO          John MacKenzie",
-	" - Support, helping me always with getting through my life",
-	"   shells, etc etc ;)",
+        "SL7          Steve Lake               sl7@global-irc.net",
+        " - Bug testing, comments, lotsa ideas, wierd reactions,",
+        "   making Apollo, supporting Unreal and other freakout",
+        "   thingies, being a general wierdoe etc. ",
+	"Dark-Prince",
+	" - Systray code, sharing ideas, code, bugs, and a lot of stuff",
 	"Sporty_McFly  Cedric",
 	" - Comments, helping me when I got problems with my life and so on",
         "   *toh* to him - Thanks!",
@@ -158,11 +165,11 @@ char *unrealcredits[] =
 	"Enforcer, Andy Church, Mick, Sp^, ShadowMastr, Almaris",
 	"}{, Erik/Dr|zzt, Hedge, Kyle, MissKel, jfc, Fish, kore, Syndicate, Bagge,",
 	"#Coder-Com@Undernet, ^NeVeR^, flygirl^, DannyM, JuliuZ, wah-wah^, Lisa,",
-	"Melisa, NonMortal, Andryan, TomaHawk, Lushes, Skywalker, Merlin, Sporty_McFly,", 
+	"Melisa, Dukemaster, NonMortal, Andryan, TomaHawk, Lushes, Skywalker, Merlin, Sporty_McFly,", 
 	"zero9000, #wIRCd@DALnet, comstud, dog3, Dianora, Isomer, and others who arent listed here:)",
 	"",
 	"------------------------------------------------------",
-	"Unreal 3.0 and up is dedicated to Morrigan - Julie Frederiksen",
+	"Unreal 3.0, and 3.1 and up is dedicated to Morrigan - Julie Frederiksen",
 	"- a girl who have helped me through anything in my life, hugging",
 	"me at the right times, a definate dedication. Thanks for the kisses",
 	"long phonetalks, waste of my mobilephone ;), crying together",
@@ -174,21 +181,39 @@ char *unrealcredits[] =
 	"when I was down",
 	0
 };
-char *unrealcreditsold[] = 
+char unreallogo[] = 
 {
-	"------------------------------------------------------",
-	"Unreal 3.0 and up is dedicated to Morrigan - Julie Frederiksen",
-	"- a girl who have helped me through anything in my life, hugging",
-	"me at the right times, a definate dedication. Thanks for the kisses",
-	"long phonetalks, waste of my mobilephone ;), crying together",
-	"and making life go on for us both. I will never forget you",
-	"never leave you, love ya forever",
-	"------------------------------------------------------",
-	"This IRCd is dedicated to the love that has always been",
-	"and will always be there - Thanks to the girls & friends that kept me up",
-	"when I was down",
-	0
-};
+32,95,32,32,32,95,32,32,32,32,32,
+32,32,32,32,32,32,32,32,32,32,32,
+32,32,32,32,32,32,95,32,95,95,95,
+95,95,95,95,95,95,95,95,32,32,95,
+95,95,95,95,32,32,32,32,32,95,32,
+10,124,32,124,32,124,32,124,32,32,32,
+32,32,32,32,32,32,32,32,32,32,32,
+32,32,32,32,32,32,124,32,124,95,32,
+32,32,95,124,32,95,95,95,32,92,47,
+32,32,95,95,32,92,32,32,32,124,32,
+124,10,124,32,124,32,124,32,124,95,32,
+95,95,32,32,95,32,95,95,32,95,95,
+95,32,32,95,95,32,95,124,32,124,32,
+124,32,124,32,124,32,124,95,47,32,47,
+124,32,47,32,32,92,47,32,95,95,124,
+32,124,10,124,32,124,32,124,32,124,32,
+39,95,32,92,124,32,39,95,95,47,32,
+95,32,92,47,32,95,96,32,124,32,124,
+32,124,32,124,32,124,32,32,32,32,47,
+32,124,32,124,32,32,32,32,47,32,95,
+96,32,124,10,124,32,124,95,124,32,124,
+32,124,32,124,32,124,32,124,32,124,32,
+32,95,95,47,32,40,95,124,32,124,32,
+124,95,124,32,124,95,124,32,124,92,32,
+92,32,124,32,92,95,95,47,92,32,40,
+95,124,32,124,10,32,92,95,95,95,47,
+124,95,124,32,124,95,124,95,124,32,32,
+92,95,95,95,124,92,95,95,44,95,124,
+95,124,92,95,95,95,47,92,95,124,32,
+92,95,124,32,92,95,95,95,95,47,92,
+95,95,44,95,124,10,0};
 
 char *dalinfotext[] =
     {
@@ -206,7 +231,8 @@ char *dalinfotext[] =
 	"Potvin       Chris Wolkowski          potvin@acestar.org",
 	"RogerY       Roger Y.                 rogery@austnet.org",
 	"GZ                                    gz@starchat.net",
-	"binary",
+	"binary                                ",
+	"Roar Thronaas <roart@nvg.ntnu.no> added IPv6 support.",
 	"",
 	"",
 	"The following people have helped in making the DALnet ircd",

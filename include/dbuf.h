@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, include/dbuf.h
+ *   Unreal Internet Relay Chat Daemon, include/dbuf.h
  *   Copyright (C) 1990 Markku Savela
  *
  *   This program is free software; you can redistribute it and/or modify

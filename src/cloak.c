@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, src/cloak.c
+ *   Unreal Internet Relay Chat Daemon, src/cloak.c
  *   (C) VirtualWorld code made originally by RogerY (rogery@austnet.org)
  *   Some coding by Potvin (potvin@shadownet.org)
  *   Modified by Stskeeps with some TerraX codebits 
@@ -25,6 +25,7 @@
 static char sccxid[] = "@(#)cloak.c		9.00 7/12/99 UnrealIRCd";
 #endif
 */
+
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
@@ -48,56 +49,57 @@ ID_CVS("$Id$");
 #define HASHVAL_TOTAL   30011
 #define HASHVAL_PARTIAL 211
 
-extern  aClient me;
-extern  int     seed;
-int     match(char *, char *), find_exception(char *);
+extern aClient me;
+extern int seed;
+int  match(char *, char *), find_exception(char *);
 
 extern unsigned char tolowertab[];
 
-int str2array(char **pparv, char *string, char *delim)
+int  str2array(char **pparv, char *string, char *delim)
 {
-    char *tok;
-    int pparc=0;
+	char *tok;
+	int  pparc = 0;
 
-    tok=(char *) strtok((char *) string,delim);
-    while(tok != NULL)
-    {
-        pparv[pparc++]=tok;
-        tok= (char *) strtok((char *) NULL,(char *) delim);
-    }
+	tok = (char *)strtok((char *)string, delim);
+	while (tok != NULL)
+	{
+		pparv[pparc++] = tok;
+		tok = (char *)strtok((char *)NULL, (char *)delim);
+	}
 
-    return pparc;
+	return pparc;
 }
 
 
-void truncstring(char *stringvar, int firstlast, int amount){
-   if (firstlast)
-   {
-    stringvar+=amount;
-    *stringvar=0;
-    stringvar-=amount;
-   }
-    else
-   {
-    stringvar+=strlen(stringvar);
-    stringvar-=amount;
-   }
+void truncstring(char *stringvar, int firstlast, int amount)
+{
+	if (firstlast)
+	{
+		stringvar += amount;
+		*stringvar = 0;
+		stringvar -= amount;
+	}
+	else
+	{
+		stringvar += strlen(stringvar);
+		stringvar -= amount;
+	}
 }
 
 #define B_BASE                  1000
 
-int Maskchecksum (char *data, int len)
+int  Maskchecksum(char *data, int len)
 {
-	int                     i;
-	int                     j;
+	int  i;
+	int  j;
 
-	j=0;
-	for (i=0 ; i<len ; i++)
+	j = 0;
+	for (i = 0; i < len; i++)
 	{
-	  j += *data++ * (i < 16 ? (i+1)*(i+1) : i*(i-15));
+		j += *data++ * (i < 16 ? (i + 1) * (i + 1) : i * (i - 15));
 	}
 
-	return (j+B_BASE)%0xffff;
+	return (j + B_BASE) % 0xffff;
 }
 
 
@@ -107,218 +109,124 @@ int Maskchecksum (char *data, int len)
  * new hidehost by vmlinuz
  * added some extra fixes by stskeeps
  * originally based on TerraIRCd
+ * Fixed serious memory leak
  */
 
-char *hidehost (char *s, int useless)
+char *hidehost(char *s, int useless)
 {
-//	static char mask[128];
-	char		*mask;
+	static char mask[128];
 	static char ipmask[64];
-	int         csum;
-	char        *dot,*tmp;
-    char	    *cp;
-	int			i, isdns;
-    int 		dots = 0;
-	
-	mask = MyMalloc(129);
-	memset (mask, 0, 128);
+	int  csum;
+	char *dot;
+	char *cp;
+	int  i, isdns;
+	int  dots = 0;
 
-	csum = Maskchecksum (s, strlen(s));
+	memset(mask, 0, 128);
 
-	if (strlen (s) > 127)           /* this isn't likely to happen: s is limited to HOSTLEN+1 (64) */
+	csum = Maskchecksum(s, strlen(s));
+
+	if (strlen(s) > 127)	/* this isn't likely to happen: s is limited to HOSTLEN+1 (64) */
 	{
 		s[128] = 0;
 	}
 
 	isdns = 0;
 	cp = s;
-	for (i=0; i < strlen(s); i++)
+	for (i = 0; i < strlen(s); i++)
 	{
-		if (*cp == '.') {
+		if (*cp == '.')
+		{
 			dots++;
 		}
-        cp++;
+		cp++;
 	}
 
-	for (i=0 ; i<strlen(s) ; i++)
+	for (i = 0; i < strlen(s); i++)
 	{
-		if (s[i] == '.') {
-    	  	continue;
-        }
-		
-		if (isalpha(s[i])) 
+		if (s[i] == '.')
+		{
+			continue;
+		}
+
+		if (isalpha(s[i]))
 		{
 			isdns = 1;
 			break;
 		}
 	}
-	
+
 	if (isdns)
 	{
 		/* it is a resolved yes.. */
-		if (dots == 1) {       /* mystro.org f.x */
-			sprintf(mask, "%s%c%d.%s",
-							hidden_host,
-       	                 	(csum < 0 ? '=' : '-'),
-			 				(csum < 0 ? -csum : csum), s);
-        }
-		if (dots == 0) {       /* localhost */
-			sprintf(mask, "%s%c%d",
-							s,
-                        	(csum < 0 ? '=' : '-'),
-						(csum < 0 ? -csum : csum));
+		if (dots == 1)
+		{		/* mystro.org f.x */
+			ircsprintf(mask, "%s%c%d.%s",
+			    hidden_host,
+			    (csum < 0 ? '=' : '-'),
+			    (csum < 0 ? -csum : csum), s);
+		}
+		if (dots == 0)
+		{		/* localhost */
+			ircsprintf(mask, "%s%c%d",
+			    s,
+			    (csum < 0 ? '=' : '-'), (csum < 0 ? -csum : csum));
 		}
 
-		if (dots > 1) {
-			dot = (char *) strchr((char *) s, '.');
-			
+		if (dots > 1)
+		{
+			dot = (char *)strchr((char *)s, '.');
+
 			/* mask like *<first dot> */
-			sprintf(mask, "%s%c%d.%s",
-						hidden_host,
-                        (csum < 0 ? '=' : '-'),
-						(csum < 0 ? -csum : csum), dot+1);
-        }
- 	}
-	else 
+			ircsprintf(mask, "%s%c%d.%s",
+			    hidden_host,
+			    (csum < 0 ? '=' : '-'),
+			    (csum < 0 ? -csum : csum), dot + 1);
+		}
+	}
+	else
 	{
 		strncpy(ipmask, s, sizeof(ipmask));
-		ipmask[sizeof(ipmask)-1]='\0';      /* safety check */
-		dot = (char *) strrchr((char *) ipmask, '.');
+		ipmask[sizeof(ipmask) - 1] = '\0';	/* safety check */
+		dot = (char *)strrchr((char *)ipmask, '.');
 		*dot = '\0';
-		
-		if (dot == NULL)     /* dot should never be NULL: IP needs dots */
-			  sprintf (mask, "%s%c%i",
-			  		hidden_host,
-				 	(csum < 0 ? '=' : '-'),
-		 		 	(csum < 0 ? -csum : csum));
-			  else
-		  			sprintf (mask, "%s.%s%c%i",
-		  							ipmask,
-									hidden_host,
-									(csum < 0 ? '=' : '-'),
-									(csum < 0 ? -csum : csum));
-	}
 
-ok1:		
+		if (dot == NULL)	/* dot should never be NULL: IP needs dots */
+			ircsprintf(mask, "%s%c%i",
+			    hidden_host,
+			    (csum < 0 ? '=' : '-'), (csum < 0 ? -csum : csum));
+		else
+			ircsprintf(mask, "%s.%s%c%i",
+			    ipmask,
+			    hidden_host,
+			    (csum < 0 ? '=' : '-'), (csum < 0 ? -csum : csum));
+	}
 	return mask;
 }
 
-						  		      				        	        									      								                					                	                																						       	                 			                 					                        																                        			                 				  				  		    		  			   														  		  		  				  								
+
 /* Regular user host */
-void    make_virthost(char *curr, char *new)
+/* mode = 0, just use strncpyzt, 1 = Realloc new and return new pointer */
+char *make_virthost(char *curr, char *new, int mode)
 {
 	char *mask;
+	char *x;
+	int  i;
 	if (curr == NULL)
 		return;
 	if (new == NULL)
 		return;
-		
+
 	mask = hidehost(curr, 0);
-	
-	strncpyzt(new, mask, HOSTLEN); /* */
-	return;
-}
-
-/* Netadmin host */
-void	make_netadminhost(char *new)
-{
-    char     tmpnew[HOSTLEN];
-
-#ifndef iNAH2
-        sprintf(tmpnew, "%s", netadmin_host);
-        strncpyzt(new, tmpnew, HOSTLEN);
-#endif
-        return;
-
-}
-/* Coadmin host */
-void    make_coadminhost(char *new)
-{
-    char     tmpnew[HOSTLEN];
-
-#ifndef iNAH2
-        sprintf(tmpnew, "%s", coadmin_host);
-        strncpyzt(new, tmpnew, HOSTLEN);
-#endif
-        return;
-}
-/* Techadmin host */
-void    make_techadminhost(char *new)
-{
-    char     tmpnew[HOSTLEN];
-#ifndef iNAH2
-        sprintf(tmpnew, "%s", techadmin_host);
-        strncpyzt(new, tmpnew, HOSTLEN);
-#endif
-        return;
-}
-/* Server admin host */
-void    make_adminhost(char *new)
-{
-    char     tmpnew[HOSTLEN];
-#ifndef iNAH2
-        sprintf(tmpnew, "%s", admin_host);
-        strncpyzt(new, tmpnew, HOSTLEN);
-#endif
-        return;
-}
-/* Service admin host */
-void    make_sadminhost(char *new)
-{
-    char     tmpnew[HOSTLEN];
-#ifndef iNAH2
-        sprintf(tmpnew, "%s", sadmin_host);
-        strncpyzt(new, tmpnew, HOSTLEN);
-#endif
-        return;
-}
-/* Global Oper host */
-void    make_operhost(char *new)
-{
-    char     tmpnew[HOSTLEN];
-#ifndef iNAH2
-        sprintf(tmpnew, "%s", oper_host);
-        strncpyzt(new, tmpnew, HOSTLEN);
-#endif
-        return;
-}
-/* Local Oper host */
-void    make_locophost(char *new)
-{
-    char     tmpnew[HOSTLEN];
-#ifndef iNAH2
-        sprintf(tmpnew, "%s", locop_host);
-        strncpyzt(new, tmpnew, HOSTLEN);
-#endif
-        return;
-}
-
-/* Make SETHOST */
-
-void	make_sethost(char *new, char *new2)
-{
-		char	tmpnew[HOSTLEN];
-		
-		sprintf(tmpnew,"%s", new2);
-		strncpyzt(new, tmpnew, HOSTLEN);
-		return;
-}
-/* make setname */
-void	make_setname(char *new, char *new2)
-{
-		char	tmpnew[REALLEN];
-		
-		sprintf(tmpnew,"%s", new2);
-		strncpyzt(new, tmpnew, REALLEN);
-		return;
-}
-/* make setident */
-
-void	make_setident(char *new, char *new2)
-{
-		char	tmpnew[USERLEN];
-		
-		sprintf(tmpnew, "%s", new2);
-		strncpyzt(new, tmpnew, USERLEN);
-		return;
+	if (mode == 0)
+	{
+		strncpyzt(new, mask, HOSTLEN);	/* */
+		return NULL;
+	}
+	i = strlen(mask) + 1;
+	if (new)
+		MyFree(new);
+	x = MyMalloc(i);
+	strcpy(x, mask);
+	return x;
 }

@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, include/msg.h
+ *   Unreal Internet Relay Chat Daemon, include/msg.h
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
  *
@@ -91,7 +91,6 @@
 #define TOK_USERS	"3"		/* 51 */
 #define MSG_HELP	"HELP"		/* HELP */
 #define MSG_HELPOP	"HELPOP"	/* HELP */
-#define MSG_IRCDHELP "IRCDHELP" /* HELP */
 #define TOK_HELP	"4"		/* 52 */
 #define MSG_ERROR	"ERROR"		/* ERRO */
 #define TOK_ERROR	"5"		/* 53 */
@@ -266,8 +265,6 @@
 #define TOK_ADDOMOTD	"AR"
 #define MSG_SVSMOTD	"SVSMOTD"
 #define TOK_SVSMOTD	"AS"
-#define MSG_DUSERS	"DUSERS"
-#define TOK_DUSERS	"AT"
 #define MSG_SMO 	"SMO"
 #define TOK_SMO 	"AU"
 #define MSG_OPERMOTD 	"OPERMOTD"
@@ -300,8 +297,17 @@
 #define TOK_REMGLINE	"BG"		
 #define MSG_HTM		"HTM"
 #define TOK_HTM		"BH"
-#define MAXPARA    	15 
+#define MSG_UMODE2	"UMODE2"
+#define TOK_UMODE2	"|"
+#define MSG_DCCDENY	"DCCDENY"
+#define TOK_DCCDENY	"BI"
+#define MSG_UNDCCDENY   "UNDCCDENY"
+#define TOK_UNDCCDENY   "BJ"
+#define MSG_CHGNAME	"CHGNAME"
+#define MSG_SVSNAME	"SVSNAME"
+#define TOK_CHGNAME	"BK"
 
+#define MAXPARA    	15 
 
 extern int m_private(), m_topic(), m_join(), m_part(), m_mode(), m_svsmode();
 extern int m_ping(), m_pong(), m_wallops(), m_kick(), m_svsnick();
@@ -332,45 +338,51 @@ extern int m_sethost(), m_nachat(), m_techat(), m_setident(), m_setname();
 extern int m_lag(), m_sdesc(), m_knock(), m_credits();
 extern int m_license(), m_chghost(), m_rping(), m_rpong();
 extern int m_netinfo(), m_sendumode(), m_addmotd(), m_addomotd();
-extern int m_svsmotd(), m_dusers(), m_opermotd(), m_tsctl();
+extern int m_svsmotd(),  m_opermotd(), m_tsctl();
 extern int m_svsjoin(), m_sajoin(), m_svspart(), m_sapart();
 extern int m_chgident(), m_swhois(), m_svso(), m_svsfline();
 extern int m_tkl(), m_vhost(), m_botmotd(), m_sjoin(), m_htm();
+extern int m_umode2(), m_dccdeny(), m_undccdeny();
+extern int m_chgname();
 
 #ifdef MSGTAB
 struct Message *msgmap[256];
 struct Message msgtab[] = {
   { MSG_PRIVATE, m_private,  0, MAXPARA, 1, TOK_PRIVATE, 0L },
-  { MSG_NICK,    m_nick,     0, MAXPARA, 1, TOK_NICK,    0L },
   { MSG_NOTICE,  m_notice,   0, MAXPARA, 1, TOK_NOTICE,  0L },
-  { MSG_JOIN,    m_join,     0, MAXPARA, 1, TOK_JOIN,    0L },
   { MSG_MODE,    m_mode,     0, MAXPARA, 1, TOK_MODE,    0L },
-  { MSG_QUIT,    m_quit,     0, MAXPARA, 1, TOK_QUIT,    0L },
+  { MSG_NICK,    m_nick,     0, MAXPARA, 1, TOK_NICK,    0L },
+  { MSG_JOIN,    m_join,     0, MAXPARA, 1, TOK_JOIN,    0L },
+  { MSG_PING,    m_ping,     0, MAXPARA, 1, TOK_PING,    0L },
+  { MSG_WHOIS,   m_whois,    0, MAXPARA, 1, TOK_WHOIS,   0L },
+  { MSG_ISON,    m_ison,     0, 1,       1, TOK_ISON,    0L },
+  { MSG_USER,    m_user,     0, MAXPARA, 1, TOK_USER,    0L },
+  { MSG_PONG,    m_pong,     0, MAXPARA, 1, TOK_PONG,    0L },
   { MSG_PART,    m_part,     0, MAXPARA, 1, TOK_PART,    0L },
+  { MSG_QUIT,    m_quit,     0, MAXPARA, 1, TOK_QUIT,    0L },
+  { MSG_WATCH,   m_watch,    0, 1,       1, TOK_WATCH,   0L }, 
+  { MSG_USERHOST,m_userhost, 0, 1,       1, TOK_USERHOST,0L },
+  { MSG_SVSNICK, m_svsnick,  0, MAXPARA, 1, TOK_SVSNICK, 0L },
+  { MSG_SVSMODE, m_svsmode,  0, MAXPARA, 1, TOK_SVSMODE, 0L },
+  { MSG_LUSERS,  m_lusers,   0, MAXPARA, 1, TOK_LUSERS,  0L },
+  { MSG_IDENTIFY,m_identify, 0, 1,       1, TOK_IDENTIFY,0L },
+  { MSG_CHANSERV,m_chanserv, 0, 1,       1, TOK_CHANSERV,0L },
   { MSG_TOPIC,   m_topic,    0, MAXPARA, 1, TOK_TOPIC,   0L },
   { MSG_INVITE,  m_invite,   0, MAXPARA, 1, TOK_INVITE,  0L },
   { MSG_KICK,    m_kick,     0, MAXPARA, 1, TOK_KICK,    0L },
   { MSG_WALLOPS, m_wallops,  0, 1,       1, TOK_WALLOPS, 0L },
-  { MSG_PING,    m_ping,     0, MAXPARA, 1, TOK_PING,    0L },
-  { MSG_PONG,    m_pong,     0, MAXPARA, 1, TOK_PONG,    0L },
   { MSG_ERROR,   m_error,    0, MAXPARA, 1, TOK_ERROR,   0L },
   { MSG_KILL,    m_kill,     0, MAXPARA, 1, TOK_KILL,    0L },
   { MSG_PROTOCTL,m_protoctl, 0, MAXPARA, 1, TOK_PROTOCTL,0L },
-  { MSG_USER,    m_user,     0, MAXPARA, 1, TOK_USER,    0L },
   { MSG_AWAY,    m_away,     0, MAXPARA, 1, TOK_AWAY,    0L },
-  { MSG_ISON,    m_ison,     0, 1,       1, TOK_ISON,    0L },
-  { MSG_WATCH,   m_watch,    0, 1,       1, TOK_WATCH,   0L }, 
   { MSG_SERVER,  m_server,   0, MAXPARA, 1, TOK_SERVER,  0L },
   { MSG_SQUIT,   m_squit,    0, MAXPARA, 1, TOK_SQUIT,   0L },
-  { MSG_WHOIS,   m_whois,    0, MAXPARA, 1, TOK_WHOIS,   0L },
   { MSG_WHO,     m_who,      0, MAXPARA, 1, TOK_WHO,     0L },
   { MSG_WHOWAS,  m_whowas,   0, MAXPARA, 1, TOK_WHOWAS,  0L },
   { MSG_LIST,    m_list,     0, MAXPARA, 1, TOK_LIST,    0L },
   { MSG_NAMES,   m_names,    0, MAXPARA, 1, TOK_NAMES,   0L },
-  { MSG_USERHOST,m_userhost, 0, 1,       1, TOK_USERHOST,0L },
   { MSG_TRACE,   m_trace,    0, MAXPARA, 1, TOK_TRACE,   0L },
   { MSG_PASS,    m_pass,     0, MAXPARA, 1, TOK_PASS,    0L },
-  { MSG_LUSERS,  m_lusers,   0, MAXPARA, 1, TOK_LUSERS,  0L },
   { MSG_TIME,    m_time,     0, MAXPARA, 1, TOK_TIME,    0L },
   { MSG_OPER,    m_oper,     0, MAXPARA, 1, TOK_OPER,    0L },
   { MSG_CONNECT, m_connect,  0, MAXPARA, 1, TOK_CONNECT, 0L },
@@ -379,23 +391,19 @@ struct Message msgtab[] = {
   { MSG_LINKS,   m_links,    0, MAXPARA, 1, TOK_LINKS,   0L },
   { MSG_ADMIN,   m_admin,    0, MAXPARA, 1, TOK_ADMIN,   0L },
   { MSG_USERS,   m_users,    0, MAXPARA, 1, TOK_USERS,   0L },
-  { MSG_SVSMODE, m_svsmode,  0, MAXPARA, 1, TOK_SVSMODE, 0L },
   { MSG_SAMODE,  m_samode,   0, MAXPARA, 1, TOK_SAMODE,  0L },
   { MSG_SVSKILL, m_svskill,  0, MAXPARA, 1, TOK_SVSKILL, 0L },
-  { MSG_SVSNICK, m_svsnick,  0, MAXPARA, 1, TOK_SVSNICK, 0L },
   { MSG_SVSNOOP, m_svsnoop,  0, MAXPARA, 1, TOK_SVSNOOP, 0L },
-  { MSG_CHANSERV,m_chanserv, 0, 1,       1, TOK_CHANSERV,0L },
- /* { MSG_CS,	 m_noshortc, 0, 1,	 1, TOK_CHANSERV,0L }, */
+  { MSG_CS,	 m_chanserv, 0, 1,	 1, TOK_CHANSERV,0L }, 
   { MSG_NICKSERV,m_nickserv, 0, 1,       1, TOK_NICKSERV,0L },
- /* { MSG_NS,	 m_noshortn, 0, 1,	 1, TOK_NICKSERV,0L }, */
+  { MSG_NS,	 m_nickserv, 0, 1,	 1, TOK_NICKSERV,0L }, 
   { MSG_OPERSERV,m_operserv, 0, 1,       1, TOK_OPERSERV,0L },
- /* { MSG_OS,	 m_noshorto, 0, 1,	 1, TOK_OPERSERV,0L }, */
+  { MSG_OS,	 m_operserv, 0, 1,	 1, TOK_OPERSERV,0L }, 
   { MSG_MEMOSERV,m_memoserv, 0, 1,       1, TOK_MEMOSERV,0L },
-  /*{ MSG_MS,	 m_noshortm, 0, 1,	 1, TOK_MEMOSERV,0L }, */
+  { MSG_MS,	 m_memoserv, 0, 1,	 1, TOK_MEMOSERV,0L }, 
   { MSG_HELPSERV,m_helpserv, 0, 1,	 1, TOK_HELPSERV,0L },
- /* { MSG_HS,	 m_noshorth, 0, 1,	 1, TOK_HELPSERV,0L }, */
+  { MSG_HS,	 m_helpserv, 0, 1,	 1, TOK_HELPSERV,0L }, 
   { MSG_SERVICES,m_services, 0, 1,       1, TOK_SERVICES,0L },
-  { MSG_IDENTIFY,m_identify, 0, 1,       1, TOK_IDENTIFY,0L },
   { MSG_SUMMON,  m_summon,   0, MAXPARA, 1, TOK_SUMMON,  0L },
   { MSG_HELP,    m_help,     0, 1,       1, TOK_HELP,    0L },
   { MSG_HELPOP,  m_help,     0, 1,       1, TOK_HELP,    0L },
@@ -450,7 +458,6 @@ struct Message msgtab[] = {
   { MSG_ADDMOTD, m_addmotd, 0, 1, 1, TOK_ADDMOTD, 0L},
   { MSG_ADDOMOTD, m_addomotd, 0, 1, 1, TOK_ADDOMOTD, 0L},
   { MSG_SVSMOTD, m_svsmotd, 0, MAXPARA, 1, TOK_SVSMOTD, 0L},
-  { MSG_DUSERS, m_dusers, 0, MAXPARA, 1, TOK_DUSERS, 0L},
   { MSG_OPERMOTD, m_opermotd, 0, MAXPARA, 1, TOK_OPERMOTD, 0L},
   { MSG_TSCTL, m_tsctl, 0, MAXPARA, 1, TOK_TSCTL, 0L},
   { MSG_SVSJOIN, m_svsjoin, 0, MAXPARA, 1, TOK_SVSJOIN, 0L},
@@ -466,6 +473,11 @@ struct Message msgtab[] = {
   { MSG_BOTMOTD, m_botmotd, 0, MAXPARA,1,TOK_BOTMOTD,0L},
   { MSG_SJOIN, m_sjoin, 0, MAXPARA, 1, TOK_SJOIN,0L},
   { MSG_HTM, m_htm, 0, MAXPARA, 1, TOK_HTM, 0L},
+  { MSG_UMODE2, m_umode2, 0, MAXPARA, 1, TOK_UMODE2, 0L},
+  { MSG_DCCDENY,m_dccdeny, 0, 2,       1, TOK_DCCDENY,0L },
+  { MSG_UNDCCDENY,m_undccdeny, 0, MAXPARA,       1, TOK_UNDCCDENY,0L },
+  { MSG_CHGNAME, m_chgname, 0, MAXPARA, 1, TOK_CHGNAME, 0L},
+  { MSG_SVSNAME, m_chgname, 0, MAXPARA, 1, TOK_CHGNAME, 0L},
   { (char *) 0, (int (*)()) 0 , 0, 0, 0, 0, 0L}
 };
 

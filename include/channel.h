@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, ircd/channel.h
+ *   Unreal Internet Relay Chat Daemon, ircd/channel.h
  *   Copyright (C) 1990 Jarkko Oikarinen
  *
  *   This program is free software; you can redistribute it and/or modify

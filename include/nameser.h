@@ -88,6 +88,26 @@
 #define T_MINFO		14		/* mailbox information */
 #define T_MX		15		/* mail routing information */
 #define T_TXT		16		/* text strings */
+#define T_RP            17              /* responsible person */
+#define T_AFSDB         18              /* AFS cell database */
+#define T_X25           19              /* X_25 calling address */
+#define T_ISDN          20              /* ISDN calling address */
+#define T_RT            21              /* router */
+#define T_NSAP          22              /* NSAP address */
+#define T_NSAP_PTR      23              /* reverse NSAP lookup (deprecated) */
+#define T_SIG           24              /* security signature */
+#define T_KEY           25              /* security key */
+#define T_PX            26              /* X.400 mail mapping */
+#define T_GPOS          27              /* geographical position (withdrawn) */
+#define T_AAAA          28              /* IP6 Address */
+#define T_LOC           29              /* Location Information */
+#define T_NXT           30              /* Next Valid Name in Zone */
+#define T_EID           31              /* Endpoint identifier */
+#define T_NIMLOC        32              /* Nimrod locator */
+#define T_SRV           33              /* Server selection */
+#define T_ATMA          34              /* ATM Address */
+#define T_NAPTR         35              /* Naming Authority PoinTeR */
+
 	/* non standard */
 #define T_UINFO		100		/* user (finger) information */
 #define T_UID		101		/* user ID */
@@ -130,10 +150,10 @@
 #define BYTE_ORDER	LITTLE_ENDIAN
 
 #endif
-#if defined(sel) || defined(pyr) || defined(mc68000) || defined(sparc) || \
+#if defined(sel) || defined(mc68000) || defined(sparc) || \
     defined(is68k) || defined(tahoe) || defined(ibm032) || defined(ibm370) || \
     defined(MIPSEB) || defined(__hpux) || defined(__convex__) || \
-    defined(__pyr__) || defined(__mc68000__) || defined(__sparc__) ||\
+    defined(__mc68000__) || defined(__sparc__) ||\
     defined(_IBMR2) || defined (BIT_ZERO_ON_LEFT)
 #define BYTE_ORDER	BIG_ENDIAN
 #endif

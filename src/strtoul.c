@@ -52,34 +52,38 @@ static char *rcsid = "$NetBSD: strtoul.c,v 1.9 1996/07/20 01:00:57 jtc Exp $";
  * Ignores `locale' stuff.  Assumes that the upper and lower case
  * alphabets and digits are each contiguous.
  */
-unsigned long
-strtoul(nptr, endptr, base)
+unsigned long strtoul(nptr, endptr, base)
 	char *nptr;
 	char **endptr;
-	int base;
+	int  base;
 {
 	char *s;
 	unsigned long acc, cutoff;
-	int c;
-	int neg, any, cutlim;
+	int  c;
+	int  neg, any, cutlim;
 
 	/*
 	 * See strtol for comments as to the logic used.
 	 */
 	s = nptr;
-	do {
-		c = (unsigned char) *s++;
-	} while (isspace(c));
-	if (c == '-') {
+	do
+	{
+		c = (unsigned char)*s++;
+	}
+	while (isspace(c));
+	if (c == '-')
+	{
 		neg = 1;
 		c = *s++;
-	} else {
+	}
+	else
+	{
 		neg = 0;
 		if (c == '+')
 			c = *s++;
 	}
-	if ((base == 0 || base == 16) &&
-	    c == '0' && (*s == 'x' || *s == 'X')) {
+	if ((base == 0 || base == 16) && c == '0' && (*s == 'x' || *s == 'X'))
+	{
 		c = s[1];
 		s += 2;
 		base = 16;
@@ -89,7 +93,8 @@ strtoul(nptr, endptr, base)
 
 	cutoff = ULONG_MAX / (unsigned long)base;
 	cutlim = ULONG_MAX % (unsigned long)base;
-	for (acc = 0, any = 0;; c = (unsigned char) *s++) {
+	for (acc = 0, any = 0;; c = (unsigned char)*s++)
+	{
 		if (isdigit(c))
 			c -= '0';
 		else if (isalpha(c))
@@ -100,11 +105,14 @@ strtoul(nptr, endptr, base)
 			break;
 		if (any < 0)
 			continue;
-		if (acc > cutoff || acc == cutoff && c > cutlim) {
+		if (acc > cutoff || acc == cutoff && c > cutlim)
+		{
 			any = -1;
 			acc = ULONG_MAX;
 			errno = ERANGE;
-		} else {
+		}
+		else
+		{
 			any = 1;
 			acc *= (unsigned long)base;
 			acc += c;
@@ -113,6 +121,6 @@ strtoul(nptr, endptr, base)
 	if (neg && any > 0)
 		acc = -acc;
 	if (endptr != 0)
-		*endptr = (char *) (any ? s - 1 : nptr);
+		*endptr = (char *)(any ? s - 1 : nptr);
 	return (acc);
 }

@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, include/sock.h
+ *   Unreal Internet Relay Chat Daemon, include/sock.h
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
  *
@@ -22,6 +22,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.2  2000/03/02 21:22:37  stskeeps
+ * ...........
+ *
  * Revision 1.1.1.1  2000/01/30 12:16:33  stskeeps
  * Begin of CVS at cvs.unreal.sourceforge.net
  *

@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, include/h.h
+ *   Unreal Internet Relay Chat Daemon, include/h.h
  *   Copyright (C) 1992 Darren Reed
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -74,6 +74,7 @@ extern int R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns,
 		extern int R_do_socks,
                 R_good_socks, R_no_socks;
 #endif
+
 #endif
 extern	aChannel *find_channel PROTO((char *, aChannel *));
 extern	void	remove_user_from_channel PROTO((aClient *, aChannel *));
@@ -100,6 +101,7 @@ extern	aClient	*find_person PROTO((char *, aClient *));
 extern	aClient	*find_server PROTO((char *, aClient *));
 extern	aClient	*find_service PROTO((char *, aClient *));
 
+extern  char	*find_or_add PROTO((char *));
 extern	int	attach_conf PROTO((aClient *, aConfItem *));
 extern	aConfItem *attach_confs PROTO((aClient*, char *, int));
 extern	aConfItem *attach_confs_host PROTO((aClient*, char *, int));
@@ -132,6 +134,7 @@ extern	void	reset_help PROTO(());
 extern	int	find_exception(char *); /* hidden host */
 
 extern	char	*MyMalloc PROTO((int)), *MyRealloc PROTO((char *, int));
+
 extern	char	*debugmode, *configfile, *sbrk0;
 extern	char	*getfield PROTO((char *));
 extern	void	get_sockhost PROTO((aClient *, char *));
@@ -315,16 +318,13 @@ extern	int	hash_del_notify_list PROTO((aClient  *));
 extern	void	count_watch_memory PROTO((int *, u_long *));
 extern	aNotify	*hash_get_notify PROTO((char *));
 extern	aChannel *hash_get_chan_bucket PROTO((int));
-extern	aChannel *hash_find_channel PROTO((char *, aChannel *));
 extern	aClient	*hash_find_client PROTO((char *, aClient *));
 extern	aClient	*hash_find_nickserver PROTO((char *, aClient *));
 extern	aClient	*hash_find_server PROTO((char *, aClient *));
-
-extern	void	add_history PROTO((aClient *));
-extern	aClient	*get_history PROTO((char *, time_t));
-extern	void	initwhowas PROTO(());
-extern	void	off_history PROTO((aClient *));
-
+extern	char	*find_by_aln PROTO((char *));
+extern  char	*convert2aln PROTO((int));
+extern  int	convertfromaln PROTO((char *));
+extern  char	*find_server_aln PROTO((char *));
 extern	int	dopacket PROTO((aClient *, char *, int));
 
 /*VARARGS2*/
@@ -333,6 +333,10 @@ extern	void	debug();
 extern	void	send_usage PROTO((aClient *, char *));
 extern	void	send_listinfo PROTO((aClient *, char *));
 extern	void	count_memory PROTO((aClient *, char *));
+#endif
+
+#ifdef INET6
+extern char *inetntop(int af, const void *in, char *local_dummy, size_t the_size);
 #endif
 
 char *crule_parse PROTO((char *));

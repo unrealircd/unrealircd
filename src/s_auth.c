@@ -1,5 +1,6 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, ircd/s_auth.c
+/************************************************************************
+ *   Unreal Internet Relay Chat Daemon, src/s_auth.c
  *   Copyright (C) 1992 Darren Reed
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -18,7 +19,7 @@
  */
 
 #ifndef lint
-static  char sccsid[] = "@(#)s_auth.c	1.18 4/18/94 (C) 1992 Darren Reed";
+static char sccsid[] = "@(#)s_auth.c	1.18 4/18/94 (C) 1992 Darren Reed";
 #endif
 
 #include "struct.h"
@@ -38,7 +39,7 @@ static  char sccsid[] = "@(#)s_auth.c	1.18 4/18/94 (C) 1992 Darren Reed";
 #include <io.h>
 #endif
 #include <fcntl.h>
-#include "sock.h"	/* If FD_ZERO isn't define up to this point,  */
+#include "sock.h"		/* If FD_ZERO isn't define up to this point,  */
 			/* define it (BSD4.2 needs this) */
 #include "h.h"
 
@@ -52,68 +53,71 @@ ID_CVS("$Id$");
  * identifing process fail, it is aborted and the user is given a username
  * of "unknown".
  */
-void	start_auth(cptr)
-Reg1	aClient	*cptr;
+void start_auth(cptr)
+	aClient *cptr;
 {
-	struct	sockaddr_in	sock;
-	int	addrlen = sizeof(struct sockaddr_in);
+	struct SOCKADDR_IN sock;
+	int  addrlen = sizeof(struct SOCKADDR_IN);
 
-	Debug((DEBUG_NOTICE,"start_auth(%x) fd %d status %d",
-		cptr, cptr->fd, cptr->status));
-	if ((cptr->authfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-	    {
+#ifdef NO_IDENT_CHECKING
+	cptr->flags &= ~(FLAGS_WRAUTH | FLAGS_AUTH);
+	return;
+#endif
+	Debug((DEBUG_NOTICE, "start_auth(%x) fd %d status %d",
+	    cptr, cptr->fd, cptr->status));
+	if ((cptr->authfd = socket(AFINET, SOCK_STREAM, 0)) == -1)
+	{
 #ifdef	USE_SYSLOG
 		syslog(LOG_ERR, "Unable to create auth socket for %s:%m",
-			get_client_name(cptr,TRUE));
+		    get_client_name(cptr, TRUE));
 #endif
-                Debug((DEBUG_ERROR, "Unable to create auth socket for %s:%s",
-                        get_client_name(cptr, TRUE),
-                        strerror(get_sockerr(cptr))));
+		Debug((DEBUG_ERROR, "Unable to create auth socket for %s:%s",
+		    get_client_name(cptr, TRUE), strerror(get_sockerr(cptr))));
 		if (!DoingDNS(cptr))
 			SetAccess(cptr);
 		ircstp->is_abad++;
 		return;
-	    }
+	}
 #ifndef _WIN32
 	if (cptr->authfd >= (MAXCONNECTIONS - 3))
-	    {
+	{
 		sendto_ops("Can't allocate fd for auth on %s",
-			   get_client_name(cptr, TRUE));
+		    get_client_name(cptr, TRUE));
 		(void)close(cptr->authfd);
 		return;
-	    }
+	}
 #endif
 
-        
+
 #ifdef SHOWCONNECTINFO
 #ifndef _WIN32
-      write(cptr->fd, REPORT_DO_ID, R_do_id);
+	write(cptr->fd, REPORT_DO_ID, R_do_id);
 #else
-      send(cptr->fd, REPORT_DO_ID, R_do_id,0);
+	send(cptr->fd, REPORT_DO_ID, R_do_id, 0);
 #endif
 #endif
 
 	set_non_blocking(cptr->authfd, cptr);
 
-	getsockname(cptr->fd, (struct sockaddr *)&sock, &addrlen);
-	sock.sin_port = 0;
-	sock.sin_family = AF_INET; /* redundant? */
-	(void)bind(cptr->authfd, (struct sockaddr *)&sock, sizeof(sock));
+	getsockname(cptr->fd, (struct SOCKADDR *)&sock, &addrlen);
+	sock.SIN_PORT = 0;
+	sock.SIN_FAMILY = AFINET;	/* redundant? */
+	(void)bind(cptr->authfd, (struct SOCKADDR *)&sock, sizeof(sock));
 
-	bcopy((char *)&cptr->ip, (char *)&sock.sin_addr,
-		sizeof(struct in_addr));
+	bcopy((char *)&cptr->ip, (char *)&sock.SIN_ADDR,
+	    sizeof(struct IN_ADDR));
 
-	sock.sin_port = htons(113);
-	sock.sin_family = AF_INET;
+	sock.SIN_PORT = htons(113);
+	sock.SIN_FAMILY = AFINET;
 
-	if (connect(cptr->authfd, (struct sockaddr *)&sock,
+	if (connect(cptr->authfd, (struct SOCKADDR *)&sock,
 #ifndef _WIN32
-		    sizeof(sock)) == -1 && errno != EINPROGRESS)
+	    sizeof(sock)) == -1 && errno != EINPROGRESS)
 #else
-		    sizeof(sock)) == -1 && (WSAGetLastError() !=
-		WSAEINPROGRESS && WSAGetLastError() != WSAEWOULDBLOCK))
+	    sizeof(sock)) == -1 && (WSAGetLastError() !=
+	    WSAEINPROGRESS && WSAGetLastError() != WSAEWOULDBLOCK))
 #endif
-	    {
+	{
 		ircstp->is_abad++;
 		/*
 		 * No error report from this...
@@ -134,8 +138,8 @@ Reg1	aClient	*cptr;
 #endif
 #endif
 		return;
-	    }
-	cptr->flags |= (FLAGS_WRAUTH|FLAGS_AUTH);
+	}
+	cptr->flags |= (FLAGS_WRAUTH | FLAGS_AUTH);
 	if (cptr->authfd > highest_fd)
 		highest_fd = cptr->authfd;
 	return;
@@ -150,39 +154,40 @@ Reg1	aClient	*cptr;
  * problem since the socket should have a write buffer far greater than
  * this message to store it in should problems arise. -avalon
  */
-void	send_authports(cptr)
-aClient	*cptr;
+void send_authports(cptr)
+	aClient *cptr;
 {
-	struct	sockaddr_in	us, them;
-	char	authbuf[32];
-	int	ulen, tlen;
+	struct SOCKADDR_IN us, them;
+	char authbuf[32];
+	int  ulen, tlen;
 
-	Debug((DEBUG_NOTICE,"write_authports(%x) fd %d authfd %d stat %d",
-		cptr, cptr->fd, cptr->authfd, cptr->status));
+	Debug((DEBUG_NOTICE, "write_authports(%x) fd %d authfd %d stat %d",
+	    cptr, cptr->fd, cptr->authfd, cptr->status));
 	tlen = ulen = sizeof(us);
-	if (getsockname(cptr->fd, (struct sockaddr *)&us, &ulen) ||
-	    getpeername(cptr->fd, (struct sockaddr *)&them, &tlen))
-	    {
+	if (getsockname(cptr->fd, (struct SOCKADDR *)&us, &ulen) ||
+	    getpeername(cptr->fd, (struct SOCKADDR *)&them, &tlen))
+	{
 #ifdef	USE_SYSLOG
 		syslog(LOG_ERR, "auth get{sock,peer}name error for %s:%m",
-			get_client_name(cptr, TRUE));
+		    get_client_name(cptr, TRUE));
 #endif
 		goto authsenderr;
-	    }
+	}
 
-	(void)sprintf(authbuf, "%u , %u\r\n",
-		(unsigned int)ntohs(them.sin_port),
-		(unsigned int)ntohs(us.sin_port));
+	(void)ircsprintf(authbuf, "%u , %u\r\n",
+	    (unsigned int)ntohs(them.SIN_PORT),
+	    (unsigned int)ntohs(us.SIN_PORT));
 
 	Debug((DEBUG_SEND, "sending [%s] to auth port %s.113",
-		authbuf, inetntoa((char *)&them.sin_addr)));
+	    authbuf, inetntoa((char *)&them.SIN_ADDR)));
 #ifndef _WIN32
 	if (write(cptr->authfd, authbuf, strlen(authbuf)) != strlen(authbuf))
 #else
-	if (send(cptr->authfd, authbuf, strlen(authbuf), 0) != (int)strlen(authbuf))
+	if (send(cptr->authfd, authbuf, strlen(authbuf),
+	    0) != (int)strlen(authbuf))
 #endif
-	    {
-authsenderr:
+	{
+	      authsenderr:
 		ircstp->is_abad++;
 #ifndef _WIN32
 		(void)close(cptr->authfd);
@@ -203,7 +208,7 @@ authsenderr:
 #endif
 		if (!DoingDNS(cptr))
 			SetAccess(cptr);
-	    }
+	}
 	cptr->flags &= ~FLAGS_WRAUTH;
 	return;
 }
@@ -215,17 +220,17 @@ authsenderr:
  * The actual read processijng here is pretty weak - no handling of the reply
  * if it is fragmented by IP.
  */
-void	read_authports(cptr)
-Reg1	aClient	*cptr;
+void read_authports(cptr)
+	aClient *cptr;
 {
-	Reg1	char	*s, *t;
-	Reg2	int	len;
-	char	ruser[USERLEN+1], system[8];
-	u_short	remp = 0, locp = 0;
+	char *s, *t;
+	int  len;
+	char ruser[USERLEN + 1], system[8];
+	u_short remp = 0, locp = 0;
 
 	*system = *ruser = '\0';
-	Debug((DEBUG_NOTICE,"read_authports(%x) fd %d authfd %d stat %d",
-		cptr, cptr->fd, cptr->authfd, cptr->status));
+	Debug((DEBUG_NOTICE, "read_authports(%x) fd %d authfd %d stat %d",
+	    cptr, cptr->fd, cptr->authfd, cptr->status));
 	/*
 	 * Nasty.  Cant allow any other reads from client fd while we're
 	 * waiting on the authfd to return a full valid string.  Use the
@@ -235,41 +240,42 @@ Reg1	aClient	*cptr;
 	 */
 #ifndef _WIN32
 	if ((len = read(cptr->authfd, cptr->buffer + cptr->count,
-			sizeof(cptr->buffer) - 1 - cptr->count)) >= 0)
+	    sizeof(cptr->buffer) - 1 - cptr->count)) >= 0)
 #else
 	if ((len = recv(cptr->authfd, cptr->buffer + cptr->count,
-			sizeof(cptr->buffer) - 1 - cptr->count, 0)) >= 0)
+	    sizeof(cptr->buffer) - 1 - cptr->count, 0)) >= 0)
 #endif
-	    {
+	{
 		cptr->count += len;
 		cptr->buffer[cptr->count] = '\0';
-	    }
+	}
 
 	cptr->lasttime = TStime();
 	if ((len > 0) && (cptr->count != (sizeof(cptr->buffer) - 1)) &&
 	    (sscanf(cptr->buffer, "%hd , %hd : USERID : %*[^:]: %10s",
-		    &remp, &locp, ruser) == 3))
-	    {
+	    &remp, &locp, ruser) == 3))
+	{
 		s = rindex(cptr->buffer, ':');
 		*s++ = '\0';
 		for (t = (rindex(cptr->buffer, ':') + 1); *t; t++)
 			if (!isspace(*t))
 				break;
 		strncpyzt(system, t, sizeof(system));
-                for (t = ruser; *s && *s != '@' && (t < ruser + sizeof(ruser)); s++)
+		for (t = ruser; *s && *s != '@' && (t < ruser + sizeof(ruser));
+		    s++)
 			if (!isspace(*s) && *s != ':')
 				*t++ = *s;
 		*t = '\0';
-		Debug((DEBUG_INFO,"auth reply ok [%s] [%s]", system, ruser));
-	    }
+		Debug((DEBUG_INFO, "auth reply ok [%s] [%s]", system, ruser));
+	}
 	else if (len != 0)
-	    {
+	{
 		if (!index(cptr->buffer, '\n') && !index(cptr->buffer, '\r'))
 			return;
-		Debug((DEBUG_ERROR,"local %d remote %d", locp, remp));
-		Debug((DEBUG_ERROR,"bad auth reply in [%s]", cptr->buffer));
+		Debug((DEBUG_ERROR, "local %d remote %d", locp, remp));
+		Debug((DEBUG_ERROR, "bad auth reply in [%s]", cptr->buffer));
 		*ruser = '\0';
-	    }
+	}
 #ifndef _WIN32
 	(void)close(cptr->authfd);
 #else
@@ -284,7 +290,7 @@ Reg1	aClient	*cptr;
 	if (!DoingDNS(cptr))
 		SetAccess(cptr);
 	if (len > 0)
-		Debug((DEBUG_INFO,"ident reply: [%s]", cptr->buffer));
+		Debug((DEBUG_INFO, "ident reply: [%s]", cptr->buffer));
 
 #ifdef SHOWCONNECTINFO
 #ifndef _WIN32
@@ -295,14 +301,14 @@ Reg1	aClient	*cptr;
 #endif
 
 	if (!locp || !remp || !*ruser)
-	    {
+	{
 		ircstp->is_abad++;
 		return;
-	    }
+	}
 	ircstp->is_asuc++;
-	strncpyzt(cptr->username, ruser, USERLEN+1);
+	strncpyzt(cptr->username, ruser, USERLEN + 1);
 /*	if (strncmp(system, "OTHER", 5))
-*/		cptr->flags |= FLAGS_GOTID;
+*/ cptr->flags |= FLAGS_GOTID;
 	Debug((DEBUG_INFO, "got username [%s]", ruser));
 	return;
 }

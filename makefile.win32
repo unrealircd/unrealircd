@@ -21,7 +21,8 @@ OBJ_FILES=SRC/CHANNEL.OBJ SRC/USERLOAD.OBJ SRC/SEND.OBJ SRC/BSD.OBJ \
  SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/CLASS.OBJ SRC/S_BSD.OBJ \
  SRC/MD5.OBJ SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/WIN32GUI.OBJ \
  SRC/VERSION.OBJ SRC/win32/WIN32.RES SRC/S_UNREAL.OBJ SRC/DYNCONF.OBJ \
- SRC/S_SOCKS.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ
+ SRC/S_SOCKS.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ \
+ SRC/SCACHE.OBJ
 RC=rc.exe
 
 ALL: WIRCD.EXE CHKCONF.EXE
@@ -67,6 +68,9 @@ src/bsd.obj: src/bsd.c $(INCLUDES)
 src/dbuf.obj: src/dbuf.c $(INCLUDES) ./include/dbuf.h
         $(CC) $(CFLAGS) src/dbuf.c
 
+src/ircsprintf.obj: src/ircsprintf.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/ircsprintf.c
+
 src/packet.obj: src/packet.c $(INCLUDES)
         $(CC) $(CFLAGS) src/packet.c
 
@@ -91,6 +95,9 @@ src/channel.obj: src/channel.c $(INCLUDES) ./include/channel.h
 
 src/class.obj: src/class.c $(INCLUDES) ./include/class.h
         $(CC) $(CFLAGS) src/class.c
+
+src/lusers.obj: src/lusers.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/lusers.c
 
 src/ircd.obj: src/ircd.c $(INCLUDES)
         $(CC) $(CFLAGS) src/ircd.c
@@ -121,6 +128,9 @@ src/s_kline.obj: src/s_kline.c $(INCLUDES)
 
 src/s_misc.obj: src/s_misc.c $(INCLUDES) ./include/dbuf.h
         $(CC) $(CFLAGS) src/s_misc.c
+
+src/scache.obj: src/scache.c $(INCLUDES) ./include/dbuf.h
+        $(CC) $(CFLAGS) src/scache.c
 
 src/s_socks.obj: src/s_socks.c $(INCLUDES)
         $(CC) $(CFLAGS) src/s_socks.c

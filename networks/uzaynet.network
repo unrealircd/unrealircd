@@ -25,40 +25,40 @@ Set SERVICES_NAME .: service.uzaynet.com
 
 # This is the virtual hostname IRCops will get if iNAH option is enabled
 # on oper up
-Set oper_host .....: ircop.silverserver.nu
+Set oper_host .....: ircop.uzaynet.com
 
 # This is the virtual hostname Server Admins will get if iNAH option is enabled
 # on oper up
-Set admin_host ....: admin.uzaynet.nu
+Set admin_host ....: admin.uzaynet.com
 
 # This is the virtual hostname Local IRCops will get if iNAH option is enabled
 # on oper up
 
-Set locop_host ....: locop.uzaynet.nu
+Set locop_host ....: locop.uzaynet.com
 
 # This is the virtual hostname Services Operators/Admins will get
 # if iNAH option is enabled on oper up
 
-Set sadmin_host ...: serviceop.uzaynet.nu
+Set sadmin_host ...: serviceop.uzaynet.com
 
 # This is the virtual hostname NetAdmins will get
 # if iNAH option is enabled on oper up
 
-Set netadmin_host .: netadmin.uzaynet.nu
+Set netadmin_host .: netadmin.uzaynet.com
 
 # This is the virtual hostname CoAdmins will get
 # if iNAH option is enabled on oper up
-Set coadmin_host ..: coadmin.uzaynet.nu
+Set coadmin_host ..: coadmin.uzaynet.com
 
 
 # This is the virtual hostname TechAdmins will get
 # if iNAH option is enabled on oper up
-Set techadmin_host : techadmin.uzaynet.nu
+Set techadmin_host : techadmin.uzaynet.com
 
 # This is the prefix of the hidden host (cloaking) hostname
 Set hidden_host ...: UzayNet
 # This is the domain of the IRC network
-Set netdomain .....: uzaynet.nu
+Set netdomain .....: uzaynet.com
 # This is where people can go for help
 Set helpchan ......: #Help
 # This is the name of the stats server

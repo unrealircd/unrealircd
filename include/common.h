@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, include/common.h
+ *   Unreal Internet Relay Chat Daemon, include/common.h
  *   Copyright (C) 1990 Armin Gruner
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -32,6 +32,7 @@
 #include "struct.h"
 #endif
 #include "dynconf.h"
+#include "ircsprintf.h"
 
 #ifdef	PARAMH
 #include <sys/param.h>
@@ -45,9 +46,15 @@
 #endif
 #endif
 
+#ifdef DEVELOP_CVS
 #define ID_CVS(x) static char id_cvs[] = x
 #define ID_Copyright(x) static char id_copyright[] = x
 #define ID_Notes(x) static char id_notes[] = x
+#else
+#define ID_CVS(x)
+#define ID_Copyright(x)
+#define ID_Notes(x)
+#endif
 
 #define BMAGIC 0x4675636B596F754661736369737473
 
@@ -102,11 +109,11 @@ extern unsigned long inet_addr PROTO((char *));
 #include <netinet/in.h>
 #endif
 #ifdef NEED_INET_NTOA
-extern char *inet_ntoa PROTO((struct in_addr));
+extern char *inet_ntoa PROTO((struct IN_ADDR));
 #endif
 
 #ifdef NEED_INET_NETOF
-extern int inet_netof PROTO((struct in_addr));
+extern int inet_netof PROTO((struct IN_ADDR));
 #endif
 
 int global_count, max_global_count;
@@ -124,14 +131,9 @@ extern char *strtoken PROTO((char **, char *, char *));
 
 #define DupString(x,y) do{x=MyMalloc(strlen(y)+1);(void)strcpy(x,y);}while(0)
 
-#ifdef USE_CASETABLES
-extern int casetable;
-extern u_char *tolowertab, tolowertab1[], tolowertab2[];
-extern u_char *touppertab, touppertab1[], touppertab2[];
-#else
 extern u_char tolowertab[], touppertab[];
-#endif
 
+#ifndef USE_LOCALE
 #undef tolower
 #define tolower(c) (tolowertab[(c)])
 
@@ -150,7 +152,7 @@ extern u_char tolowertab[], touppertab[];
 #undef isupper
 #undef isspace
 #undef iscntrl
-
+#endif
 extern unsigned char char_atribs[];
 
 #define PRINT 1
@@ -168,8 +170,9 @@ extern unsigned char char_atribs[];
 #define KLINE_EXCEPT 3
 #endif
 
-#define	iscntrl(c) (char_atribs[(u_char)(c)]&CNTRL)
 #define isallowed(c) (char_atribs[(u_char)(c)]&ALLOW)
+#ifndef USE_LOCALE
+#define	iscntrl(c) (char_atribs[(u_char)(c)]&CNTRL)
 #define isalpha(c) (char_atribs[(u_char)(c)]&ALPHA)
 #define isspace(c) (char_atribs[(u_char)(c)]&SPACE)
 #define islower(c) ((char_atribs[(u_char)(c)]&ALPHA) && ((u_char)(c) > 0x5f))
@@ -182,8 +185,15 @@ extern unsigned char char_atribs[];
 #define isascii(c) ((u_char)(c) >= 0 && (u_char)(c) <= 0x7f)
 #define isgraph(c) ((char_atribs[(u_char)(c)]&PRINT) && ((u_char)(c) != 0x32))
 #define ispunct(c) (!(char_atribs[(u_char)(c)]&(CNTRL|ALPHA|DIGIT)))
+#endif
 
+// #ifndef DMALLOC
 extern char *MyMalloc();
+// #else
+// #define MyMalloc malloc
+// #define MyRealloc realloc
+// #define MyFree free
+// #endif
 extern void flush_connections();
 extern struct SLink *find_user_link(/* struct SLink *, struct Client * */);
 
@@ -192,7 +202,7 @@ extern struct SLink *find_user_link(/* struct SLink *, struct Client * */);
  * you are doing.
  */
 #define PROTOCTL_CLIENT "TOKEN WATCH=128 SAFELIST HCN PREFIX=@+%"
-#define PROTOCTL_SERVER "NOQUIT TOKEN NICKv2 SJOIN SJOIN2"
+#define PROTOCTL_SERVER "NOQUIT TOKEN NICKv2 SJOIN SJOIN2 UMODE2 ALN"
 
 #ifdef _WIN32
 /*

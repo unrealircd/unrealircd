@@ -24,24 +24,19 @@
 #endif 
 /**/
 #define COMPILEINFO DEBUGMODESET DEBUGSET
-#ifndef WEBTV
-#define XTRAINFO ""
-#else
-#define XTRAINFO "(WebTV)"
-#endif
 /*
- * Version Unreal3.0
+ * Version Unreal3.1
  */
-#define UnrealProtocol 		2300
+#define UnrealProtocol 		2301
 #define PATCH1  		"3"
-#define PATCH2  		".0"
-#define PATCH3  		"-Morrigan"
-#define PATCH4  		"(fix)"
+#define PATCH2  		".1"
+#define PATCH3  		"-Silverheart"
+#define PATCH4  		"(beta3)"
 #define PATCH5  		""
 #define PATCH6  		""
 #define PATCH7  		""
 #define PATCH8  		COMPILEINFO
-#define PATCH9  		XTRAINFO
+#define PATCH9  		""
 
 #ifndef _WIN32
 #define BASE_VERSION "Unreal"

@@ -1,266 +1,272 @@
+
 /************************************************************************
- *   IRC - Internet Relay Chat, ircd/whowas.c
- *   Copyright (C) 1990 Markku Savela
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 1, or (at your option)
- *   any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with this program; if not, write to the Free Software
- *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-
-/*
- * --- avalon --- 6th April 1992
- * rewritten to scrap linked lists and use a table of structures which
- * is referenced like a circular loop. Should be faster and more efficient.
- */
-
-#ifndef lint
-static  char sccsid[] = "@(#)whowas.c	2.16 08 Nov 1993 (C) 1988 Markku Savela";
-#endif
+*   IRC - Internet Relay Chat, src/whowas.c
+*   Copyright (C) 1990 Markku Savela
+*
+*   This program is free software; you can redistribute it and/or modify
+*   it under the terms of the GNU General Public License as published by
+*   the Free Software Foundation; either version 1, or (at your option)
+*   any later version.
+*
+*   This program is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*   GNU General Public License for more details.
+*
+*   You should have received a copy of the GNU General Public License
+*   along with this program; if not, write to the Free Software
+*   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
 
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
 #include "numeric.h"
-#include "whowas.h"
 #include "h.h"
+#include "hash.h"
+#ifndef lint
+static char *rcs_version =
+    "$Id$";
+#endif
 
-ID_CVS("$Id$");
+/* externally defined functions */
+unsigned int hash_whowas_name(char *);	/* defined in hash.c */
 
-static	aName	was[NICKNAMEHISTORYLENGTH];
-static	int	ww_index = 0;
+/* internally defined function */
+static void add_whowas_to_clist(aWhowas **, aWhowas *);
+static void del_whowas_from_clist(aWhowas **, aWhowas *);
+static void add_whowas_to_list(aWhowas **, aWhowas *);
+static void del_whowas_from_list(aWhowas **, aWhowas *);
 
-void	add_history(cptr)
-Reg1	aClient	*cptr;
+aWhowas WHOWAS[NICKNAMEHISTORYLENGTH];
+aWhowas *WHOWASHASH[WW_MAX];
+
+int  whowas_next = 0;
+#define AllocCpy(x,y) x = (char *) MyMalloc(strlen(y) + 1); strcpy(x,y)
+#define SafeFree(x) if (x) { MyFree((x)); (x) = NULL; }
+
+void add_history(aClient *cptr, int online)
 {
-	aName	ntmp;
-	Reg2	aName	*np = &ntmp, *np2;
-	Link	*lp;
+	aWhowas *new;
 
-	strncpyzt(np->ww_nick, cptr->name, NICKLEN+1);
-	strncpyzt(np->ww_info, cptr->info, REALLEN+1);
-	np->ww_user = cptr->user;
-	np->ww_logout = TStime();
-	np->ww_online = (cptr->from != NULL) ? cptr : NULL;
-	np->ww_user->refcnt++;
+	new = &WHOWAS[whowas_next];
 
-	np2 = &was[ww_index];
-	if (np2->ww_user)
-		free_user(np2->ww_user, np2->ww_online);
-	/*
-	 * New whowas handling, we keep a list of what whowas entries
-	 * are "used" by a client, in its cptr structure.  This means
-	 * that when we overwrite a whowas entry, we have to remove the
-	 * relative pointer in the client. -Cabal95
-	 */
-	if (np2->ww_online) {
-		Link	*last = NULL;
+	if (new->hashv != -1)
+	{
+		SafeFree(new->name);
+		SafeFree(new->hostname);
+		SafeFree(new->virthost);
+		SafeFree(new->realname);
+		SafeFree(new->username);
+		SafeFree(new->away);
+		new->servername = NULL;
 
-		for (lp = np2->ww_online->history; lp;
-		     last = lp, lp = lp->next)
-			if (lp->value.whowas == np2)
-				break;
-
-		if (lp) {	/* Sanity check, never trust anything */
-			if (last)
-				last->next = lp->next;
-			else
-				np2->ww_online->history = lp->next;
-
-			free_link(lp);
-		}
+		if (new->online)
+			del_whowas_from_clist(&(new->online->whowas), new);
+		del_whowas_from_list(&WHOWASHASH[new->hashv], new);
 	}
+	new->hashv = hash_whowas_name(cptr->name);
+	new->logoff = TStime();
+	new->umodes = cptr->umodes;
+	AllocCpy(new->name, cptr->name);
+	AllocCpy(new->username, cptr->user->username);
+	AllocCpy(new->hostname, cptr->user->realhost);
+	AllocCpy(new->virthost, cptr->user->virthost);
+	if (cptr->user->away)
+	{
+		AllocCpy(new->away, cptr->user->away);
+	}
+	else
+		new->away = NULL;
+	new->servername = cptr->user->server;
+	AllocCpy(new->realname, cptr->info);
 
-	bcopy((char *)&ntmp, (char *)np2, sizeof(aName));
-
-	/*
-	 * Add this whowas entry into the clients history list
+	/* Its not string copied, a pointer to the scache hash is copied
+	   -Dianora
 	 */
-	lp = make_link();
-	lp->value.whowas = np2;
-	lp->next = cptr->history;
-	cptr->history = lp;
+	/*  strncpyzt(new->servername, cptr->user->server,HOSTLEN); */
+	new->servername = cptr->user->server;
 
-	ww_index++;
-	if (ww_index >= NICKNAMEHISTORYLENGTH)
-		ww_index = 0;
-	return;
+	if (online)
+	{
+		new->online = cptr;
+		add_whowas_to_clist(&(cptr->whowas), new);
+	}
+	else
+		new->online = NULL;
+	add_whowas_to_list(&WHOWASHASH[new->hashv], new);
+	whowas_next++;
+	if (whowas_next == NICKNAMEHISTORYLENGTH)
+		whowas_next = 0;
 }
 
-/*
-** get_history
-**      Return the current client that was using the given
-**      nickname within the timelimit. Returns NULL, if no
-**      one found...
-*/
-aClient *get_history(nick, timelimit)
-char    *nick;
-time_t  timelimit;
+void off_history(aClient *cptr)
 {
-        Reg1    aName   *wp, *wp2;
-        Reg2    int     i = 0;
+	aWhowas *temp, *next;
 
-	if (ww_index == 0)
-	  wp = wp2 = &was[NICKNAMEHISTORYLENGTH - 1];
-	  else
-	  wp = wp2 = &was[ww_index - 1];
-        timelimit = TStime()-timelimit;
+	for (temp = cptr->whowas; temp; temp = next)
+	{
+		next = temp->cnext;
+		temp->online = NULL;
+		del_whowas_from_clist(&(cptr->whowas), temp);
+	}
+}
 
-	do {
-		if (!mycmp(nick, wp->ww_nick) && wp->ww_logout >= timelimit)
-			break;
-		if (wp == was)
+aClient *get_history(char *nick, time_t timelimit)
+{
+	aWhowas *temp;
+	int  blah;
+
+	timelimit = TStime() - timelimit;
+	blah = hash_whowas_name(nick);
+	temp = WHOWASHASH[blah];
+	for (; temp; temp = temp->next)
+	{
+		if (mycmp(nick, temp->name))
+			continue;
+		if (temp->logoff < timelimit)
+			continue;
+		return temp->online;
+	}
+	return NULL;
+}
+
+void count_whowas_memory(int *wwu, u_long *wwum)
+{
+	aWhowas *tmp;
+	int  i;
+	int  u = 0;
+	u_long um = 0;
+	u_long uam = 0;
+	/* count the number of used whowas structs in 'u' */
+	/* count up the memory used of whowas structs in um */
+
+	for (i = 0, tmp = &WHOWAS[0]; i < NICKNAMEHISTORYLENGTH; i++, tmp++)
+		if (tmp->hashv != -1)
 		{
-		  i = 1;
-		  wp = &was[NICKNAMEHISTORYLENGTH - 1];
+			u++;
+			um += sizeof(aWhowas);
+			if (tmp->away)
+				uam += (strlen(tmp->away) + 1);
 		}
-		else
-		  wp--;
-	} while (wp != wp2);
-
-	if (wp != wp2 || !i)
-		return (wp->ww_online);
-	return (NULL);
-}
-
-void	off_history(cptr)
-Reg3	aClient	*cptr;
-{
-	Reg1	Link	*lp;
-	Reg2	Link	*next;
-
-
-	for (lp = cptr->history; lp; lp = next) {
-		next = lp->next;
-		lp->value.whowas->ww_online = NULL;
-		free_link(lp);
-	}
-
-	cptr->history = NULL;
-
+	*wwu = u;
+	*wwum = um;
 	return;
 }
-
-void	initwhowas()
-{
-	Reg1	int	i;
-
-	for (i = 0; i < NICKNAMEHISTORYLENGTH; i++)
-		bzero((char *)&was[i], sizeof(aName));
-	return;
-}
-
-
 /*
 ** m_whowas
-**	parv[0] = sender prefix
-**	parv[1] = nickname queried
+**      parv[0] = sender prefix
+**      parv[1] = nickname queried
 */
-int	m_whowas(cptr, sptr, parc, parv)
-aClient	*cptr, *sptr;
-int	parc;
-char	*parv[];
+int  m_whowas(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	Reg1	aName	*wp, *wp2 = NULL;
-	Reg2	int	j = 0;
-	Reg3	anUser	*up = NULL;
-	int	max = -1;
-	char	*p, *nick, *s;
+	aWhowas *temp;
+	int  cur = 0;
+	int  max = -1, found = 0;
+	char *p, *nick, *s;
+	static time_t last_used = 0L;
+	static int last_count = 0;
 
- 	if (parc < 2)
-	    {
+	if (parc < 2)
+	{
 		sendto_one(sptr, err_str(ERR_NONICKNAMEGIVEN),
-			   me.name, parv[0]);
+		    me.name, parv[0]);
 		return 0;
-	    }
+	}
 	if (parc > 2)
 		max = atoi(parv[2]);
 	if (parc > 3)
-		if (hunt_server(cptr,sptr,":%s WHOWAS %s %s :%s", 3,parc,parv))
+		if (hunt_server(cptr, sptr, ":%s WHOWAS %s %s :%s", 3, parc,
+		    parv))
 			return 0;
 
-	for (s = parv[1]; (nick = strtoken(&p, s, ",")); s = NULL)
-	    {
-		wp = wp2 = &was[ww_index - 1];
+	if (!MyConnect(sptr) && (max > 20))
+		max = 20;
 
-		do {
-			if (wp < was)
-				wp = &was[NICKNAMEHISTORYLENGTH - 1];
-			if (mycmp(nick, wp->ww_nick) == 0)
-			    {
-				up = wp->ww_user;
-				sendto_one(sptr, rpl_str(RPL_WHOWASUSER),
-					   me.name, parv[0], wp->ww_nick,
-					   up->username,
-				(IsOper(sptr) ? 
-				 up->realhost     :
-				  (up->virthost[0] != '\0') ?
-				    up->virthost : up->realhost), 
-					    wp->ww_info);
-				sendto_one(sptr, rpl_str(RPL_WHOISSERVER),
-					   me.name, parv[0], wp->ww_nick,
-					   up->server, myctime(wp->ww_logout));
-				if (up->away)
-					sendto_one(sptr, rpl_str(RPL_AWAY),
-						   me.name, parv[0],
-						   wp->ww_nick, up->away);
-				j++;
-			    }
-			if (max > 0 && j >= max)
-				break;
-			wp--;
-		} while (wp != wp2);
+	p = (char *)strchr(parv[1], ',');
+	if (p)
+		*p = '\0';
+	nick = parv[1];
+	temp = WHOWASHASH[hash_whowas_name(nick)];
+	found = 0;
+	for (; temp; temp = temp->next)
+	{
+		if (!mycmp(nick, temp->name))
+		{
+			sendto_one(sptr, rpl_str(RPL_WHOWASUSER),
+			    me.name, parv[0], temp->name,
+			    temp->username,
+			    (IsOper(sptr) ? temp->hostname :
+			    (*temp->virthost !=
+			    '\0') ? temp->virthost : temp->hostname),
+			    temp->realname);
+			sendto_one(sptr, rpl_str(RPL_WHOISSERVER), me.name,
+			    parv[0], temp->name, temp->servername,
+			    myctime(temp->logoff));
+			if (temp->away)
+				sendto_one(sptr, rpl_str(RPL_AWAY),
+				    me.name, parv[0], temp->name, temp->away);
+			cur++;
+			found++;
+		}
+		if (max > 0 && cur >= max)
+			break;
+	}
+	if (!found)
+		sendto_one(sptr, err_str(ERR_WASNOSUCHNICK),
+		    me.name, parv[0], nick);
 
-		if (up == NULL)
-			sendto_one(sptr, err_str(ERR_WASNOSUCHNICK),
-				   me.name, parv[0], nick);
-		up=NULL;
-
-		if (p)
-			p[-1] = ',';
-	    }
 	sendto_one(sptr, rpl_str(RPL_ENDOFWHOWAS), me.name, parv[0], parv[1]);
 	return 0;
-    }
+}
 
-
-void	count_whowas_memory(wwu, wwa, wwam)
-int	*wwu, *wwa;
-u_long	*wwam;
+void initwhowas()
 {
-	Reg1	anUser	*tmp;
-	Reg2	int	i, j;
-	int	u = 0, a = 0;
-	u_long	am = 0;
+	int  i;
 
 	for (i = 0; i < NICKNAMEHISTORYLENGTH; i++)
-		if ((tmp = was[i].ww_user))
-			if (!was[i].ww_online)
-			    {
-				for (j = 0; j < i; j++)
-					if (was[j].ww_user == tmp)
-						break;
-				if (j < i)
-					continue;
-				u++;
-				if (tmp->away)
-				    {
-					a++;
-					am += (strlen(tmp->away)+1);
-				    }
-			    }
-	*wwu = u;
-	*wwa = a;
-	*wwam = am;
+	{
+		bzero((char *)&WHOWAS[i], sizeof(aWhowas));
+		WHOWAS[i].hashv = -1;
+	}
+	for (i = 0; i < WW_MAX; i++)
+		WHOWASHASH[i] = NULL;
+}
 
-	return;
+
+static void add_whowas_to_clist(aWhowas ** bucket, aWhowas * whowas)
+{
+	whowas->cprev = NULL;
+	if ((whowas->cnext = *bucket) != NULL)
+		whowas->cnext->cprev = whowas;
+	*bucket = whowas;
+}
+
+static void del_whowas_from_clist(aWhowas ** bucket, aWhowas * whowas)
+{
+	if (whowas->cprev)
+		whowas->cprev->cnext = whowas->cnext;
+	else
+		*bucket = whowas->cnext;
+	if (whowas->cnext)
+		whowas->cnext->cprev = whowas->cprev;
+}
+
+static void add_whowas_to_list(aWhowas ** bucket, aWhowas * whowas)
+{
+	whowas->prev = NULL;
+	if ((whowas->next = *bucket) != NULL)
+		whowas->next->prev = whowas;
+	*bucket = whowas;
+}
+
+static void del_whowas_from_list(aWhowas ** bucket, aWhowas * whowas)
+{
+
+	if (whowas->prev)
+		whowas->prev->next = whowas->next;
+	else
+		*bucket = whowas->next;
+	if (whowas->next)
+		whowas->next->prev = whowas->prev;
 }
