@@ -2053,3 +2053,5 @@ seen. gmtime warning still there
 - Made it so you can use a ~ as the first character of an ident with /chgident (#0000765)
   reported by AngryWolf
 - badword::action::block should now be ok
+- Added some missing /stats flags to help.conf and the /stats ? output (#0000886) reported
+  by Rocko

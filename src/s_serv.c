@@ -2642,6 +2642,8 @@ CMD_FUNC(m_stats)
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "O - Send the oper block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
+		      "P - Send information about ports");
+		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "q - Send the SQLINE list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "Q - Send the ban nick block list");
@@ -2667,6 +2669,8 @@ CMD_FUNC(m_stats)
 		      "v - Send the deny version block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "V - Send the vhost block list");
+		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
+		      "X - Send a list of servers that are not currently linked");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "Y - Send the class block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
