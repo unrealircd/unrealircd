@@ -91,6 +91,7 @@ int	_conf_badword		(ConfigFile *conf, ConfigEntry *ce);
 #endif
 int	_conf_deny		(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_deny_dcc		(ConfigFile *conf, ConfigEntry *ce);
+int     _conf_deny_link         (ConfigFile *conf, ConfigEntry *ce);
 int	_conf_deny_channel	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_allow_channel	(ConfigFile *conf, ConfigEntry *ce);
 
@@ -200,6 +201,7 @@ ConfigItem_ban		*conf_ban = NULL;
 ConfigItem_deny_dcc     *conf_deny_dcc = NULL;
 ConfigItem_deny_channel *conf_deny_channel = NULL;
 ConfigItem_allow_channel *conf_allow_channel = NULL;
+ConfigItem_deny_link	*conf_deny_link = NULL;
 
 #ifdef STRIPBADWORDS
 ConfigItem_badword	*conf_badword_channel = NULL;
@@ -2001,6 +2003,8 @@ int	_conf_deny(ConfigFile *conf, ConfigEntry *ce)
 		_conf_deny_dcc(conf, ce);
 	else if (!strcmp(ce->ce_vardata, "channel"))
 		_conf_deny_channel(conf, ce);
+	else if (!strcmp(ce->ce_vardata, "link"))
+		_conf_deny_link(conf, ce);
 	else
 	{
 		config_status("%s:%i: deny with unknown type",
@@ -2103,6 +2107,71 @@ int	_conf_deny_channel(ConfigFile *conf, ConfigEntry *ce)
 		return 0;
 	}
 }
+int	_conf_deny_link(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigItem_deny_link 	*deny = NULL;
+	ConfigEntry 	    	*cep;
+	
+	deny = MyMallocEx(sizeof(ConfigItem_deny_dcc));
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname || !cep->ce_vardata)
+		{
+			config_error("%s:%i: blank deny link item",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum);
+			continue;	
+		}
+		if (!strcmp(cep->ce_varname, "mask"))
+		{
+			ircstrdup(deny->mask, cep->ce_vardata);	
+		}
+		else if (!strcmp(cep->ce_varname, "rule"))
+		{
+			if (!(deny->rule = (char *)crule_parse(cep->ce_vardata))) {
+				config_status("%s:%i: deny link::rule contains an invalid expression",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum);
+				ircfree(deny->mask);
+				ircfree(deny->prettyrule);
+				ircfree(deny);
+				return -1;
+			}
+			ircstrdup(deny->prettyrule, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "type")) {
+			if (!strcmp(cep->ce_vardata, "all"))
+				deny->flag.type = CRULE_ALL;
+			else if (!strcmp(cep->ce_vardata, "auto"))
+				deny->flag.type = CRULE_AUTO;
+		}
+		else
+		{
+			config_status("%s:%i: unknown directive deny link::%s",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum, cep->ce_varname);
+		}
+	}	
+	if (!deny->rule || !deny->prettyrule || !deny->mask)
+	{
+		config_status("%s:%i: deny link {} without mask/rule, ignoring",
+			cep->ce_fileptr->cf_filename,
+			cep->ce_varlinenum);
+		ircfree(deny->mask);
+		ircfree(deny->prettyrule);
+		if (deny->rule)
+			crule_free(&deny->rule);
+		ircfree(deny);
+		return -1;
+	}
+	else
+	{
+		add_ConfigItem((ConfigItem *)deny, (ConfigItem **)&conf_deny_link);
+		return 0;
+	}
+}
+
+
 /*
  * Report functions
 */

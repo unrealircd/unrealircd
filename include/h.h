@@ -68,6 +68,7 @@ extern ConfigItem_badword	*conf_badword_channel;
 extern ConfigItem_badword       *conf_badword_message;
 extern ConfigItem_deny_dcc	*conf_deny_dcc;
 extern ConfigItem_deny_channel  *conf_deny_channel;
+extern ConfigItem_deny_link	*conf_deny_link;
 extern ConfigItem_allow_channel *conf_allow_channel;
 
 ConfigItem_class	*Find_class(char *name);

@@ -412,6 +412,7 @@ static TS try_connections(currenttime)
 	TS   currenttime;
 {
 	ConfigItem_link *aconf;
+	ConfigItem_deny_link *deny;
 	aClient *cptr;
 	int  connecting, confrq;
 	TS   next = 0;
@@ -453,14 +454,10 @@ static TS try_connections(currenttime)
 		if (!cptr && (cltmp->clients < cltmp->maxclients))
 		{
 			/* Check connect rules to see if we're allowed to try */
-#ifdef FIXME
-			for (cconf = conf; cconf; cconf = cconf->next)
-				if ((cconf->status & CONF_CRULE) &&
-				    (match(cconf->host, aconf->name) == 0))
-					if (crule_eval(cconf->passwd))
+			for (deny = conf_deny_link; deny; deny = (ConfigItem_deny_link *) deny->next) 
+				if (!match(deny->mask, aconf->servername) && crule_eval(deny->rule)) 
 						break;
 			
-#endif
 			if (connect_server(aconf, (aClient *)NULL,
 			    (struct hostent *)NULL) == 0)
 				sendto_ops("Connection to %s[%s] activated.",

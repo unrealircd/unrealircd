@@ -246,3 +246,4 @@
 - bsd.c, channel.c, s_svs.c, s_unreal.c, s_kline.c, and s_extra.c now use ANSI 
   standards for naming function params
 - Made connfreq unable to less than 10
+- Added deny link { mask "servermask"; rule "connectionrule"; type all/auto; }; (equivilant of D/dlines)

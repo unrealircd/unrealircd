@@ -88,6 +88,7 @@ typedef struct _configitem_link	ConfigItem_link;
 typedef struct _configitem_ban ConfigItem_ban;
 typedef struct _configitem_badword ConfigItem_badword;
 typedef struct _configitem_deny_dcc ConfigItem_deny_dcc;
+typedef struct _configitem_deny_link ConfigItem_deny_link;
 typedef struct _configitem_deny_channel ConfigItem_deny_channel;
 
 typedef struct Notify aNotify;
@@ -952,6 +953,8 @@ struct _configflag_ban
 #define CONF_BAN_TYPE_AKILL	1
 #define CONF_BAN_TYPE_TEMPORARY 2
 
+#define CRULE_ALL		0
+#define CRULE_AUTO		1
 
 
 struct _configitem {
@@ -1116,6 +1119,15 @@ struct _configitem_deny_dcc {
 	ConfigItem		*next;
 	char			*filename;
 	char			*reason;
+};
+
+struct _configitem_deny_link {
+	ConfigFlag_except       flag;
+	ConfigItem              *prev;
+	ConfigItem              *next;
+	char			*mask;
+	char			*rule;
+	char			*prettyrule;
 };
 
 struct _configitem_deny_channel {

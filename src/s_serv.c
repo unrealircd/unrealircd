@@ -580,6 +580,7 @@ int  m_server(cptr, sptr, parc, parv)
 	int  hop = 0, numeric = 0;
 	char info[REALLEN + 61];
 	ConfigItem_link *aconf = NULL;
+	ConfigItem_deny_link *deny;
 	char *flags = NULL, *protocol = NULL, *inf = NULL;
 
 
@@ -772,6 +773,16 @@ int  m_server(cptr, sptr, parc, parv)
 				    "Colliding server numeric (choose another)");
 			}
 		}
+		for (deny = conf_deny_link; deny; deny = (ConfigItem_deny_link *) deny->next) {
+			if (deny->flag.type == CRULE_ALL && !match(deny->mask, servername) 
+				&& crule_eval(deny->rule)) {
+				sendto_ops("Refused connection from %s.",
+					get_client_host(cptr));
+				return exit_client(cptr, cptr, cptr,
+					"Disallowed by connection rule");
+			}
+		}  
+				
 		/* Start synch now */
 		m_server_synch(cptr, numeric, aconf);
 	}
@@ -3050,6 +3061,7 @@ void load_tunefile(void)
 {
 	int  port, tmpport, retval;
 	ConfigItem_link	*aconf;
+	ConfigItem_deny_link *deny;
 	aClient *acptr;
 
 
@@ -3124,23 +3136,16 @@ void load_tunefile(void)
 		return 0;
 	}
 
-	/*
-	   ** Evaluate connection rules...  If no rules found, allow the
-	   ** connect.  Otherwise stop with the first true rule (ie: rules
-	   ** are ored together.  Oper connects are effected only by D
-	   ** lines (CRULEALL) not d lines (CRULEAUTO).
-	 */
-/*	for (cconf = conf; cconf; cconf = cconf->next)
-		if ((cconf->status == CONF_CRULEALL) &&
-		    (match(cconf->host, aconf->servername) == 0))
-			if (crule_eval(cconf->passwd))
-			{
-				sendto_one(sptr,
-				    "NOTICE %s :Connect: Disallowed by rule: %s",
-				    parv[0], cconf->name);
-				return 0;
-			} */
-
+/* Evaluate deny link */
+	for (deny = conf_deny_link; deny; deny = (ConfigItem_deny_link *) deny->next) {
+		if (deny->flag.type == CRULE_ALL && !match(deny->mask, aconf->servername) 
+			&& crule_eval(deny->rule)) {
+			sendto_one(sptr,
+				"NOTICE %s :Connect: Disallowed by connection rule",
+				parv[0]);
+			return 0;
+		}
+	}
 	/*
 	   ** Notify all operators about remote connect requests
 	 */
