@@ -57,6 +57,7 @@ typedef struct t_kline aTKline;
 typedef struct t_vhost aVhost;
 
 typedef struct SqlineItem aSqlineItem;
+typedef struct aloopStruct LoopStruct;
 typedef struct ConfItem aConfItem;
 typedef struct Notify aNotify;
 typedef struct Client aClient;
@@ -582,6 +583,10 @@ struct trecord {
 	struct trecord *next;
 };
 
+struct aloopStruct {
+	unsigned do_garbage_collect : 1;
+	unsigned do_tkl_sweep : 1;
+};
 
 typedef struct Whowas {
 	int  hashv;

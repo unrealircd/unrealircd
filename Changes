@@ -578,4 +578,4 @@
 - Fixed a NO_FDLIST define problem in send.c and channel.c
 - Added define PROPER_COREDUMP, will not launch s_segv when done and make
   proper coredumps
-
+- Fixed the G:line bugs, i hope - moved tkl_sweep into a loopstruct

@@ -398,6 +398,46 @@ int  find_tkline_match(cptr, xx)
 	return -1;
 }
 
+int  find_tkline_match_zap(cptr)
+	aClient *cptr;
+{
+	aTKline *lp;
+	char *chost, *cname, *cip;
+	TS   nowtime;
+	int  is_ip;
+	char msge[1024];
+	char gmt2[256];
+
+	if (IsServer(cptr) || IsMe(cptr))
+		return -1;
+
+
+	nowtime = TStime();
+	cip = (char *)inet_ntoa(cptr->ip);
+
+	for (lp = tklines; lp; lp = lp->next)
+	{
+		if (lp->type & (TKL_ZAP|TKL_GLOBAL))
+		{
+			if (!match(lp->hostmask, cip))
+			{
+				ircstp->is_ref++;
+				ircsprintf(msge,
+				    "ERROR :Closing Link: [%s] Z:Lined (%s)\r\n",
+#ifndef INET6
+				    inetntoa((char *)&cptr->ip), lp->reason);
+#else
+				    inet_ntop(AF_INET6, (char *)&cptr->ip,
+				    mydummy, MYDUMMY_SIZE));
+#endif
+				strcpy(zlinebuf, msge);
+				return (1);
+			}
+		}
+	}
+	return -1;
+}
+
 
 int  tkl_sweep()
 {
@@ -406,14 +446,10 @@ int  tkl_sweep()
 	long i, i1;
 
 	tkl_check_expire();
-	for (i1 = 0; i1 <= 5; i1++)
+	for (i = 0; i <= (MAXCONNECTIONS - 1); i++)
 	{
-		for (i = 0; i <= (MAXCONNECTIONS - 1); i++)
-		{
-			if (acptr = local[i])
-				if (MyClient(acptr))
-					find_tkline_match(acptr, 0);
-		}
+		if (acptr = local[i])
+			find_tkline_match(acptr, 0);
 	}
 	return 1;
 }
@@ -639,7 +675,7 @@ int  m_tkl(cptr, sptr, parc, parv)
 			      ("Permanent %s added for %s@%s on %s GMT (from %s: %s)",
 			      txt, parv[3], parv[4], gmt, parv[5], parv[8]);
 		  }
-		  tkl_sweep();
+		  loop.do_tkl_sweep = 1;
 		  if (type & TKL_GLOBAL)
 		  {
 			  sendto_serv_butone(cptr,

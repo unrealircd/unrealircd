@@ -48,6 +48,7 @@ extern TS check_pings(TS now, int check_kills);
 #ifdef _WIN32
 // extern       void    *hCio;
 #endif
+extern LoopStruct loop;
 
 #ifdef SHOWCONNECTINFO
 

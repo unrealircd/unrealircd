@@ -1351,7 +1351,7 @@ aClient *add_connection(cptr, fd)
 			send(fd, zlinebuf, strlen(zlinebuf), 0);
 			goto add_con_refuse;
 		}
-		else if (find_tkline_match(acptr, 2) != -1)
+		else if (find_tkline_match_zap(acptr) != -1)
 		{
 			set_non_blocking(fd, acptr);
 			set_sock_opts(fd, acptr);

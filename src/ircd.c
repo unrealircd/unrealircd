@@ -79,6 +79,7 @@ int  un_gid = 99;
 extern char unreallogo[];
 #endif
 
+LoopStruct loop;
 extern aMotd *opermotd;
 extern aMotd *svsmotd;
 extern aMotd *motd;
@@ -962,6 +963,7 @@ int  InitwIRCD(argc, argv)
 	clear_client_hash_table();
 	clear_channel_hash_table();
 	clear_notify_hash_table();
+	bzero(&loop, sizeof(loop));
 	inittoken();
 	initlists();
 	initclass();
@@ -1151,6 +1153,11 @@ void SocketLoop(void *dummy)
 			tkl_check_expire();
 			lastglinecheck = now;
 		}
+		if (loop.do_tkl_sweep)
+		{
+			tkl_sweep();
+			loop.do_tkl_sweep = 0;
+		}
 		/* we want accuarte time here not the fucked up TStime() :P -Stskeeps */
 		if ((time(NULL) - last_tune) > 300)
 		{
@@ -1159,14 +1166,14 @@ void SocketLoop(void *dummy)
 		}
 
 		if (((now - last_garbage_collect) > GARBAGE_COLLECT_EVERY
-		    || (do_garbage_collect == 1)))
+		    || (loop.do_garbage_collect == 1)))
 		{
 			extern int freelinks;
 			extern Link *freelink;
 			Link p, *lpp;
 			int  ii;
 
-			if (do_garbage_collect == 1)
+			if (loop.do_garbage_collect == 1)
 				sendto_realops("Doing garbage collection ..");
 			if (freelinks > HOW_MANY_FREELINKS_ALLOWED)
 			{
@@ -1179,16 +1186,16 @@ void SocketLoop(void *dummy)
 					freelink = freelink->next;
 					MyFree(p.next);
 				}
-				if (do_garbage_collect == 1)
+				if (loop.do_garbage_collect == 1)
 				{
-					do_garbage_collect = 0;
+					loop.do_garbage_collect = 0;
 					sendto_realops
 					    ("Cleaned up %i garbage blocks",
 					    (ii - freelinks));
 				}
 			}
-			if (do_garbage_collect == 1)
-				do_garbage_collect = 0;
+			if (loop.do_garbage_collect == 1)
+				loop.do_garbage_collect = 0;
 
 			last_garbage_collect = now;
 		}

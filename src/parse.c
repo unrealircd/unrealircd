@@ -172,7 +172,7 @@ void ban_flooder(aClient *cptr)
 	};
 
 	strcpy(hostip, (char *)inetntoa((char *)&cptr->ip));
-	exit_client(cptr, cptr, &me, "Flooding");
+//	exit_client(cptr, cptr, &me, "Flooding");
 
 	tkllayer[4] = hostip;
 	tkllayer[5] = me.name;
