@@ -148,7 +148,7 @@ DLLFUNC int m_akill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		if (IsOper(sptr))
 		{
-			sendto_one(sptr, ":%s NOTICE %s :*** AKILL is depricated and should not be used. Please use /gline instead",
+			sendto_one(sptr, ":%s NOTICE %s :*** AKILL is depreciated and should not be used. Please use /gline instead",
 				me.name, sptr->name);
 		}
 		else

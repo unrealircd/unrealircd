@@ -152,7 +152,7 @@ DLLFUNC int m_rakill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 		else
 		{
-			sendto_one(sptr, ":%s NOTICE %s :*** RAKILL is depricated and should not be used. Please use /gline -user@host instead", 
+			sendto_one(sptr, ":%s NOTICE %s :*** RAKILL is depreciated and should not be used. Please use /gline -user@host instead", 
 				me.name, sptr->name);
 		}
 		return 0;

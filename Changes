@@ -1511,3 +1511,4 @@ seen. gmtime warning still there
   override RFC1459 flood control
 - Fixed grammar error thanks to MorPheus
 - Fixed halfops kicking halfops bug thanks to Jim_
+- Fixed a typo in /akill and /rakill obsolete depreciation notices reported by zak (#0000272)
