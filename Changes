@@ -1336,4 +1336,5 @@ seen. gmtime warning still there
 - [nighthawk 2002-06-16] Added myself to s_serv.c:m_info().
 - Fixed a doc/conf.doc typo reported by SciFi
 - Documented the new allow::options in doc/conf.doc
-
+- [nighthawk 2002-06-17] Rewrote m_who.c from scratch.  It's slightly different,
+                         help.conf explains exactly how.
