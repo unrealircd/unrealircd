@@ -156,6 +156,7 @@ void server_reboot(char *);
 void restart(char *);
 static void open_debugfile(), setup_signals();
 extern void init_glines(void);
+extern void tkl_init(void);
 
 TS   last_garbage_collect = 0;
 char **myargv;
@@ -858,6 +859,7 @@ int InitwIRCD(int argc, char *argv[])
 #ifdef USE_LIBCURL
 	url_init();
 #endif
+	tkl_init();
 	umode_init();
 #ifdef EXTCMODE
 	extcmode_init();

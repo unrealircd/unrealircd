@@ -40,17 +40,66 @@
 #include "h.h"
 #include "proto.h"
 
+aTKline *tklines[TKLISTLEN];
 
-aTKline *tklines = NULL;
-
-#define AllocCpy(x,y) x = (char *) MyMalloc(strlen(y) + 1); strcpy(x,y)
-#define GFreeStr(x) MyFree((char *) x)
-#define GFreeGline(x) MyFree((aGline *) x)
 extern char zlinebuf[BUFSIZE];
 
-/*
+/** tkl hash method.
+ * NOTE1: the input value 'c' is assumed to be in range a-z or A-Z!
+ * NOTE2: don't blindly change the hashmethod, some things depend on
+ *        'z'/'Z' getting the same bucket.
+ */
+inline int tkl_hash(char c)
+{
+#ifdef DEBUGMODE
+	if ((c >= 'a') && (c <= 'z'))
+		return c-'a';
+	else if ((c >= 'A') && (c <= 'Z'))
+		return c-'A';
+	else {
+		sendto_realops("[BUG] tkl_hash() called with out of range parameter (c = '%c') !!!", c);
+		ircd_log(LOG_ERROR, "[BUG] tkl_hash() called with out of range parameter (c = '%c') !!!", c);
+		return 0;
+	}
+#else
+	return (isupper(c) ? c-'A' : c-'a');
+#endif
+}
 
- *     type =  TKL_*
+/** tkl type to tkl character.
+ * NOTE: type is assumed to be valid.
+ */
+char tkl_typetochar(int type)
+{
+	if (type & TKL_GLOBAL)
+	{
+		if (type & TKL_KILL)
+			return 'G';
+		if (type & TKL_ZAP)
+			return 'Z';
+		if (type & TKL_SHUN)
+			return 's';
+		if (type & TKL_KILL)
+			return 'G';
+	} else {
+		if (type & TKL_ZAP)
+			return 'z';
+		if (type & TKL_KILL)
+			return 'k';
+	}
+	sendto_realops("[BUG]: tkl_typetochar(): unknown type 0x%x !!!", type);
+	ircd_log(LOG_ERROR, "[BUG] tkl_typetochar(): unknown type 0x%x !!!", type);
+	return 0;
+}
+
+
+void tkl_init(void)
+{
+	memset(tklines, 0, sizeof(tklines));
+}
+
+/*
+ *  type =  TKL_*
  *	usermask@hostmask
  *	reason
  *	setby = whom set it
@@ -61,6 +110,7 @@ extern char zlinebuf[BUFSIZE];
 int  tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *setby, TS expire_at, TS set_at)
 {
 	aTKline *nl;
+	int index;
 
 	nl = (aTKline *) MyMalloc(sizeof(aTKline));
 
@@ -70,34 +120,36 @@ int  tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *
 	nl->type = type;
 	nl->expire_at = expire_at;
 	nl->set_at = set_at;
-	AllocCpy(nl->usermask, usermask);
-	AllocCpy(nl->hostmask, hostmask);
-	AllocCpy(nl->reason, reason);
-	AllocCpy(nl->setby, setby);
-	AddListItem(nl, tklines);
+	strncpyzt(nl->usermask, usermask, sizeof(nl->usermask));
+	nl->hostmask = strdup(hostmask);
+	nl->reason = strdup(reason);
+	nl->setby = strdup(setby);
+	index = tkl_hash(tkl_typetochar(type));
+	AddListItem(nl, tklines[index]);
 	return 0;
 }
 
 aTKline *tkl_del_line(aTKline *tkl)
 {
 	aTKline *p, *q;
+	int i;
 
-	for (p = tklines; p; p = p->next)
-	{
-		if (p == tkl)
+	/* perhaps speed this up -- syz/'04 */
+	for (i = 0; i < TKLISTLEN; i++)
+		for (p = tklines[i]; p; p = p->next)
 		{
-			q = p->next;
-			GFreeStr(p->hostmask);
-			GFreeStr(p->usermask);
-			GFreeStr(p->reason);
-			GFreeStr(p->setby);
-			DelListItem(p, tklines);
-			MyFree((aTKline *) p);
-			return q;
+			if (p == tkl)
+			{
+				q = p->next;
+				MyFree(p->hostmask);
+				MyFree(p->reason);
+				MyFree(p->setby);
+				DelListItem(p, tklines[i]);
+				MyFree(p);
+				return q;
+			}
 		}
-	}
 	return NULL;
-
 }
 
 /*
@@ -219,17 +271,19 @@ EVENT(tkl_check_expire)
 {
 	aTKline *gp, *next;
 	TS   nowtime;
-
+	int index;
+	
 	nowtime = TStime();
 
-	for (gp = tklines; gp; gp = next)
-	{
-		next = gp->next;
-		if (gp->expire_at <= nowtime && !(gp->expire_at == 0))
+	for (index = 0; index < TKLISTLEN; index++)
+		for (gp = tklines[index]; gp; gp = next)
 		{
-			tkl_expire(gp);
+			next = gp->next;
+			if (gp->expire_at <= nowtime && !(gp->expire_at == 0))
+			{
+				tkl_expire(gp);
+			}
 		}
-	}
 }
 
 
@@ -249,6 +303,7 @@ int  find_tkline_match(aClient *cptr, int xx)
 	ConfigItem_except *excepts;
 	char host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
 	int match_type = 0;
+	int index;
 	if (IsServer(cptr) || IsMe(cptr))
 		return -1;
 
@@ -257,20 +312,22 @@ int  find_tkline_match(aClient *cptr, int xx)
 	cname = cptr->user ? cptr->user->username : "unknown";
 	cip = (char *)Inet_ia2p(&cptr->ip);
 
-
-	for (lp = tklines; lp; lp = lp->next)
+	points = 0;
+	for (index = 0; index < TKLISTLEN; index++)
 	{
-		points = 0;
-		if (lp->type & TKL_SHUN)
-			continue;
-		if (!match(lp->usermask, cname) && !match(lp->hostmask, chost))
-			points = 1;
-		if (!match(lp->usermask, cname) && !match(lp->hostmask, cip))
-			points = 1;
-		if (points == 1)
+		for (lp = tklines[index]; lp; lp = lp->next)
+		{
+			if (lp->type & TKL_SHUN)
+				continue;
+			if (!match(lp->usermask, cname) && !match(lp->hostmask, chost))
+				points = 1;
+			if (!match(lp->usermask, cname) && !match(lp->hostmask, cip))
+				points = 1;
+			if (points)
+				break;
+		}
+		if (points)
 			break;
-		else
-			points = 0;
 	}
 
 	if (points != 1)
@@ -355,7 +412,7 @@ int  find_shun(aClient *cptr)
 	cip = (char *)Inet_ia2p(&cptr->ip);
 
 
-	for (lp = tklines; lp; lp = lp->next)
+	for (lp = tklines[tkl_hash('s')]; lp; lp = lp->next)
 	{
 		points = 0;
 		
@@ -403,7 +460,7 @@ int  find_tkline_match_zap(aClient *cptr)
 	nowtime = TStime();
 	cip = (char *)Inet_ia2p(&cptr->ip);
 
-	for (lp = tklines; lp; lp = lp->next)
+	for (lp = tklines[tkl_hash('z')]; lp; lp = lp->next)
 	{
 		if (lp->type & TKL_ZAP)
 		{
@@ -500,6 +557,7 @@ void tkl_stats(aClient *cptr, int type, char *para)
 	aTKline *tk;
 	TS   curtime;
 	TKLFlag tklflags;
+	int index;
 	/*
 	   We output in this row:
 	   Glines,GZlines,KLine, ZLIne
@@ -511,8 +569,9 @@ void tkl_stats(aClient *cptr, int type, char *para)
 		parse_tkl_para(para, &tklflags);
 	tkl_check_expire(NULL);
 	curtime = TStime();
-	for (tk = tklines; tk; tk = tk->next)
-	{
+	for (index = 0; index < TKLISTLEN; index++)
+	 for (tk = tklines[index]; tk; tk = tk->next)
+	 {
 		if (type && tk->type != type)
 			continue;
 		if (!BadPtr(para))
@@ -578,7 +637,7 @@ void tkl_stats(aClient *cptr, int type, char *para)
 			    0) ? (tk->expire_at - curtime) : 0,
 			    (curtime - tk->set_at), tk->setby, tk->reason);
 		}
-	}
+	 }
 
 }
 
@@ -586,25 +645,27 @@ void tkl_synch(aClient *sptr)
 {
 	aTKline *tk;
 	char typ = 0;
-
-	for (tk = tklines; tk; tk = tk->next)
-	{
-		if (tk->type & TKL_GLOBAL)
+	int index;
+	
+	for (index = 0; index < TKLISTLEN; index++)
+		for (tk = tklines[index]; tk; tk = tk->next)
 		{
-			if (tk->type & TKL_KILL)
-				typ = 'G';
-			if (tk->type & TKL_ZAP)
-				typ = 'Z';
-			if (tk->type & TKL_SHUN)
-				typ = 's';
-			sendto_one(sptr,
-			    ":%s %s + %c %s %s %s %li %li :%s", me.name,
-			    IsToken(sptr) ? TOK_TKL : MSG_TKL,
-			    typ,
-			    tk->usermask, tk->hostmask, tk->setby,
-			    tk->expire_at, tk->set_at, tk->reason);
+			if (tk->type & TKL_GLOBAL)
+			{
+				if (tk->type & TKL_KILL)
+					typ = 'G';
+				if (tk->type & TKL_ZAP)
+					typ = 'Z';
+				if (tk->type & TKL_SHUN)
+					typ = 's';
+				sendto_one(sptr,
+				    ":%s %s + %c %s %s %s %li %li :%s", me.name,
+				    IsToken(sptr) ? TOK_TKL : MSG_TKL,
+				    typ,
+				    tk->usermask, tk->hostmask, tk->setby,
+				    tk->expire_at, tk->set_at, tk->reason);
+			}
 		}
-	}
 }
 
 /*
@@ -627,6 +688,7 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	char gmt[256], gmt2[256];
 	char txt[256];
 	TS   expiry_1, setat_1;
+	int index;
 
 
 	if (!IsServer(sptr) && !IsOper(sptr) && !IsMe(sptr))
@@ -660,12 +722,11 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			  return 0;
 
 		  found = 0;
-		  for (tk = tklines; tk; tk = tk->next)
+		  for (tk = tklines[tkl_hash(parv[2][0])]; tk; tk = tk->next)
 		  {
 			  if (tk->type == type)
 			  {
-				  if (!strcmp(tk->hostmask, parv[4])
-				      && !strcmp(tk->usermask, parv[3]))
+				  if (!strcmp(tk->hostmask, parv[4]) && !strcmp(tk->usermask, parv[3]))
 				  {
 					  found = 1;
 					  break;
@@ -776,7 +837,7 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  }
 
 		  found = 0;
-		  for (tk = tklines; tk; tk = tk->next)
+		  for (tk = tklines[tkl_hash(parv[2][0])]; tk; tk = tk->next)
 		  {
 			  if (tk->type == type)
 			  {

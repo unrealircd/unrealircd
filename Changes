@@ -2683,4 +2683,8 @@ seen. gmtime warning still there
 - Added some additional warnings for insane large values for allow::maxperip, and class::*
   stuff. Reported by Erik_Rana (#0001463).
 - Fixed a bug with /rehash and cached remote includes reported by mustapha88
-
+- internal: Modified TKL system (getting ready for anti-spam system):
+  Instead of 1 big list of *lines, it's now an array to easily distinct between types.
+  Also made tk->usermask static (USERLEN+2) instead of dynamic.
+  These changes should give enough speed improvement to make the new anti-spam/anti-ads
+  feature fast enough.

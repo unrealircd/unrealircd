@@ -729,8 +729,11 @@ struct Server {
 
 struct t_kline {
 	aTKline *prev, *next;
-	int  type;
-	char *usermask, *hostmask, *reason, *setby;
+	int type;
+	unsigned short subtype; /* these 2 are only used.. */
+	unsigned short action;  /* ..for anti-spam TKL's */ 
+	char usermask[USERLEN+2]; /* room for '*' and a nul byte [usually 10+2=12] */
+	char *hostmask, *reason, *setby;
 	TS expire_at, set_at;
 };
 
@@ -1623,6 +1626,8 @@ int	throttle_can_connect(struct IN_ADDR *in);
 #define BANCHK_JOIN		0	/* checking if a ban forbids the person from joining */
 #define BANCHK_MSG		1	/* checking if a ban forbids the person from sending messages */
 #define BANCHK_NICK		2	/* checking if a ban forbids the person from changing his/her nick */
+
+#define TKLISTLEN 26
 
 #endif /* __struct_include__ */
 
