@@ -1842,3 +1842,5 @@ seen. gmtime warning still there
 - Added makefiles to compile with zip links @ windows (zlib needed).
 - Added '/stats zip' (Oper only, only usefull if ZIP_LINKS is defined).
 - Fixed missing 's' flag in oper::snomask causing not receiving any server notices.
+- Fixed a bug with channel mode +A that could prevent admins from joining. Reported 
+  by Maxsus (#0000678)

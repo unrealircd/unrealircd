@@ -2374,6 +2374,7 @@ char *pretty_mask(char *mask)
 static int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[])
 {
         Link *lp;
+	Ban *banned;
 
         if ((chptr->mode.mode & MODE_ONLYSECURE) &&
                 !(sptr->umodes & UMODE_SECURE))
@@ -2389,14 +2390,15 @@ static int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, ch
                 return (ERR_NOHIDING);
 
 	/* Admin, Coadmin, Netadmin, and SAdmin can still walk +b in +O */
+	banned = is_banned(cptr, sptr, chptr);
         if (IsOper(sptr) && !IsAdmin(sptr) && !IsCoAdmin(sptr) && !IsNetAdmin(sptr)
-	    && !IsSAdmin(sptr) && is_banned(cptr, sptr, chptr)
+	    && !IsSAdmin(sptr) && banned
             && (chptr->mode.mode & MODE_OPERONLY))
                 return (ERR_BANNEDFROMCHAN);
 
 	/* Only NetAdmin/SAdmin can walk +b in +A */
 	if (IsOper(sptr) && !IsNetAdmin(sptr) && !IsSAdmin(sptr)
-	    && (chptr->mode.mode & MODE_ADMONLY))
+	    && banned && (chptr->mode.mode & MODE_ADMONLY))
 	    	return (ERR_BANNEDFROMCHAN);
 
         for (lp = sptr->user->invited; lp; lp = lp->next)
@@ -2435,7 +2437,7 @@ static int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, ch
         if ((chptr->mode.limit && chptr->users >= chptr->mode.limit))
                 return (ERR_CHANNELISFULL);
 
-        if (is_banned(sptr, sptr, chptr))
+        if (banned)
                 return (ERR_BANNEDFROMCHAN);
 
 #ifndef NO_OPEROVERRIDE
