@@ -439,7 +439,7 @@ int  parse(cptr, buffer, bufend)
 	if (cmptr == NULL)
 		return (do_numeric(numeric, cptr, from, i, para));
 	cmptr->count++;
-	if (IsRegisteredUser(cptr) && (cmptr->cmd == MSG_PRIVATE) || (cmptr->cmd == TOK_PRIVATE))
+	if (IsRegisteredUser(cptr) && (cmptr->flags & M_RESETIDLE))
 		from->user->last = TStime();
 
 #ifndef DEBUGMODE

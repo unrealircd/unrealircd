@@ -664,6 +664,7 @@ struct Server {
 #define M_SHUN 0x0008
 #define M_NOLAG 0x0010
 #define M_ALIAS 0x0020
+#define M_RESETIDLE 0x0040
 
 struct Command {
 	aCommand		*next;

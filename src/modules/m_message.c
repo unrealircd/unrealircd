@@ -85,7 +85,7 @@ int    m_message_init(int module_load)
 	/*
 	 * We call our add_Command crap here
 	*/
-	add_Command(MSG_PRIVATE, TOK_PRIVATE, m_private, MAXPARA);
+	add_CommandX(MSG_PRIVATE, TOK_PRIVATE, m_private, MAXPARA, M_USER|M_SERVER|M_RESETIDLE);
 	add_Command(MSG_NOTICE, TOK_NOTICE, m_notice, MAXPARA);
 }
 
