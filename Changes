@@ -3329,3 +3329,5 @@ This is the 3.2 fixes branch.
   the clientcount for a class reached 0 (due to quits) it would crash.
 ** internal 3.2.1-pre2 release **
 - Added hungarian docs, translated by AngryWolf.
+- Fixed a problem with the win32 installer as a result of MSVCR70D.DLL, reported by
+  aquanight

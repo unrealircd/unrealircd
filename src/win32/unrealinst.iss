@@ -142,19 +142,21 @@ begin
   Result := true;
 end;
 
-procedure DeInitializeSetup();
+procedure CurStepChanged(CurStep: Integer);
 var
 input,output: String;
 begin
-  if (didDbgDl) then begin
-    input := ExpandConstant('{tmp}\dbghelp.dll');
-    output := ExpandConstant('{app}\dbghelp.dll');
-    FileCopy(input, output, true);
-  end;
-  if (didCrtDl) then begin
-    input := ExpandConstant('{tmp}\msvcr70d.dll');
-    output := ExpandConstant('{sys}\msvcr70d.dll');
-    FileCopy(input, output, true);
+  if (CurStep = csCopy) then begin
+    if (didDbgDl) then begin
+      input := ExpandConstant('{tmp}\dbghelp.dll');
+      output := ExpandConstant('{app}\dbghelp.dll');
+      FileCopy(input, output, true);
+    end;
+    if (didCrtDl) then begin
+      input := ExpandConstant('{tmp}\msvcr70d.dll');
+      output := ExpandConstant('{sys}\msvcr70d.dll');
+      FileCopy(input, output, true);
+    end;
   end;
 end;
 
