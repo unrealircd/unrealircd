@@ -375,3 +375,4 @@
 - Fixed ./Config showing freebsd 3.0 in freebsd 4
 - Made so badwords.*.conf accepts # comments
 - Added some default default badwords.message.conf and badwords.channel.conf
+- Made so auditorium mode shows users to @'s 

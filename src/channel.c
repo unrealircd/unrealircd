@@ -4100,8 +4100,9 @@ int  m_names(cptr, sptr, parc, parv)
 		if (IsHiding(acptr))
 			continue;
 		if (chptr->mode.mode & MODE_AUDITORIUM)
-			if (!(cm->flags & CHFL_CHANOP))
-				continue;
+			if (!is_chan_op(sptr, chptr))
+				if (!(cm->flags & CHFL_CHANOP))
+					continue;
 				
 		if (cm->flags & CHFL_CHANOP)
 			buf[idx++] = '@';
