@@ -1358,10 +1358,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		 */
 		if (parc > 3)
 		{
-			if (*parv[3] != '!')
-				lastnick = atoi(parv[3]);
-			else
-				lastnick = xbase64dec(parv[3] + 1);
+			lastnick = TS2ts(parv[3]);
 			if (parc > 5)
 				differ = (mycmp(acptr->user->username, parv[4])
 				    || mycmp(acptr->user->realhost, parv[5]));
@@ -1442,7 +1439,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		   ** A NICK change has collided (e.g. message type ":old NICK new").
 		 */
 		if (parc > 2)
-			lastnick = atoi(parv[2]);
+			lastnick = TS2ts(parv[2]);
 		differ = (mycmp(acptr->user->username, sptr->user->username) ||
 		    mycmp(acptr->user->realhost, sptr->user->realhost));
 		sendto_failops
@@ -1527,7 +1524,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		if (parc > 2)
 			sptr->hopcount = atoi(parv[2]);
 		if (parc > 3)
-			sptr->lastnick = atoi(parv[3]);
+			sptr->lastnick = TS2ts(parv[3]);
 		else		/* Little bit better, as long as not all upgraded */
 			sptr->lastnick = TStime();
 	}
@@ -1569,7 +1566,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		    !MyClient(sptr) && parc > 2
 		    && atoi(parv[2]) < sptr->lastnick)
 			sptr->lastnick = (MyClient(sptr)
-			    || parc < 3) ? TStime() : atoi(parv[2]);
+			    || parc < 3) ? TStime() : TS2ts(parv[2]);
 		add_history(sptr, 1);
 		sendto_common_channels(sptr, ":%s NICK :%s", parv[0], nick);
 		sendto_serv_butone_token(cptr, parv[0], MSG_NICK, TOK_NICK,

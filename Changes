@@ -670,3 +670,4 @@
 - Fixed the hashing bug (thank you ROXnet ...)
 - Fixed a wierd channel message bug ||
 - Fixed a bug where non-NS servers would crash when linking
+- Added TS2ts (supporting the SJB64 stuff), and fixed the !0 timestamp bug

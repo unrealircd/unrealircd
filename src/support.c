@@ -39,6 +39,14 @@ extern void outofmemory();
 
 #define is_enabled match
 
+long	TS2ts(char *s)
+{
+	if (*s == '!')
+		return (xbase64dec(s + 1));
+	else
+		return (atoi(s));	
+}
+
 char	*my_itoa(int i)
 {
 	static char buf[128];
