@@ -2430,7 +2430,7 @@ static int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, ch
                                     chptr->mode.link);
                                 parv[0] = sptr->name;
                                 parv[1] = (chptr->mode.link);
-                                channel_link(cptr, sptr, 2, parv);
+                                do_join(cptr, sptr, 2, parv);
                                 return -1;
                         }
                 }
@@ -2677,233 +2677,6 @@ static void sub1_from_channel(aChannel *chptr)
 	}
 }
 
-
-/*
- * Channel Link
- */
-
-CMD_FUNC(channel_link)
-{
-	static char jbuf[BUFSIZE];
-	Membership *lp;
-	aChannel *chptr;
-	char *name, *key = NULL, *link = NULL;
-	int  i, i1, flags = 0;
-	char *p = NULL, *p2 = NULL;
-
-	if (parc < 2 || *parv[1] == '\0')
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "JOIN");
-		return 0;
-	}
-
-	*jbuf = '\0';
-	/*
-	   ** Rebuild list of channels joined to be the actual result of the
-	   ** JOIN.  Note that "JOIN 0" is the destructive problem.
-	 */
-	bouncedtimes++;
-	if (bouncedtimes > MAXBOUNCE)
-	{
-		/* bounced too many times */
-		sendto_one(sptr,
-		    ":%s %s %s :*** Couldn't join %s ! - Link setting was too bouncy",
-		    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, parv[1]);
-		return 0;
-	}
-	for (i = 0, name = strtoken(&p, parv[1], ","); name;
-	    name = strtoken(&p, NULL, ","))
-	{
-		/* pathological case only on longest channel name.
-		   ** If not dealt with here, causes desynced channel ops
-		   ** since ChannelExists() doesn't see the same channel
-		   ** as one being joined. cute bug. Oct 11 1997, Dianora/comstud
-		   ** Copied from Dianora's "hybrid 5" ircd.
-		 */
-
-		if (strlen(name) > CHANNELLEN)	/* same thing is done in get_channel() */
-			name[CHANNELLEN] = '\0';
-
-		if (MyConnect(sptr))
-			clean_channelname(name);
-		if (check_channelmask(sptr, cptr, name) == -1)
-			continue;
-		if (*name == '&')
-			continue;
-		if (*name == '0' && !atoi(name))
-		{
-			(void)strcpy(jbuf, "0");
-			i = 1;
-			continue;
-		}
-		else if (!IsChannelName(name))
-		{
-			if (MyClient(sptr))
-				sendto_one(sptr,
-				    err_str(ERR_NOSUCHCHANNEL), me.name,
-				    parv[0], name);
-			continue;
-		}
-		if (*jbuf)
-			(void)strlcat(jbuf, ",", sizeof jbuf);
-		(void)strlncat(jbuf, name, sizeof jbuf, sizeof(jbuf) - i - 1);
-		i += strlen(name) + 1;
-	}
-	/*
-	 * FIXME: Hopefully parv[1] is long enough?
-	*/
-	(void)strcpy(parv[1], jbuf);
-
-	p = NULL;
-	if (parv[2])
-		if (parv[2])
-			key = strtoken(&p2, parv[2], ",");
-	parv[2] = NULL;		/* for m_names call later, parv[parc] must == NULL */
-	for (name = strtoken(&p, jbuf, ","); name;
-	    key = (key) ? strtoken(&p2, NULL, ",") : NULL,
-	    name = strtoken(&p, NULL, ","))
-	{
-		/*
-		   ** JOIN 0 sends out a part for all channels a user
-		   ** has joined.
-		 */
-		if (*name == '0' && !atoi(name))
-		{
-			while ((lp = sptr->user->channel))
-			{
-				chptr = lp->chptr;
-				sendto_channel_butserv(chptr, sptr,
-				    PartFmt, parv[0], chptr->chname);
-				remove_user_from_channel(sptr, chptr);
-			}
-			sendto_serv_butone_token(cptr, parv[0],
-			    MSG_JOIN, TOK_JOIN, "0");
-			continue;
-		}
-
-		if (MyConnect(sptr))
-		{
-			/*
-			   ** local client is first to enter previously nonexistant
-			   ** channel so make them (rightfully) the Channel
-			   ** Operator.
-			 */
-			flags =
-			    (ChannelExists(name)) ? CHFL_DEOPPED : CHFL_CHANOP;
-
-			if (sptr->user->joined >= MAXCHANNELSPERUSER)
-			{
-				sendto_one(sptr,
-				    err_str(ERR_TOOMANYCHANNELS),
-				    me.name, parv[0], name);
-				return 0;
-			}
-		}
-
-		chptr = get_channel(sptr, name, CREATE);
-
-		/* Faster this way */
-		if (chptr && (lp = find_membership_link(sptr->user->channel, chptr)))
-			continue;
-
-		if (!MyConnect(sptr))
-			flags = CHFL_DEOPPED;
-#if 0
-	/*	if (sptr->flags & FLAGS_TS8)
-			flags |= CHFL_SERVOPOK; */
-#endif
-
-		i1 = 0;
-		if (chptr == NULL)
-			return 0;
-
-		if (!chptr ||
-		    (MyConnect(sptr)
-		    && (i = can_join(cptr, sptr, chptr, key, link, parv))))
-		{
-			if (i != -1)
-			{
-				sendto_one(sptr, err_str(i),
-				    me.name, parv[0], name);
-			}
-			continue;
-		}
-		if (MyConnect(sptr)) {
-			int breakit = 0;
-			for (global_i = Hooks[HOOKTYPE_LOCAL_JOIN]; global_i; global_i = global_i->next) {
-				if((*(global_i->func.intfunc))(cptr, sptr, chptr, parv) > 0) {
-					breakit = 1;
-					break;
-				}
-			}
-			if (breakit)
-				continue;
-		}
-		/*
-		   **  Complete user entry to the new channel (if any)
-		 */
-		add_user_to_channel(chptr, sptr, flags);
-		/*
-		   ** notify all other users on the new channel
-		 */
-		sendto_channel_butserv(chptr, sptr,
-		    ":%s JOIN :%s", parv[0], name);
-		sendto_serv_butone_token(cptr, parv[0], MSG_JOIN,
-		    TOK_JOIN, name);
-
-		if (MyClient(sptr))
-		{
-			/*
-			   ** Make a (temporal) creationtime, if someone joins
-			   ** during a net.reconnect : between remote join and
-			   ** the mode with TS. --Run
-			 */
-			if (chptr->creationtime == 0)
-			{
-				chptr->creationtime = TStime();
-				sendto_serv_butone_token(cptr, me.name,
-				    MSG_MODE, TOK_MODE, "%s + %lu",
-				    name, chptr->creationtime);
-			}
-			del_invite(sptr, chptr);
-			if (flags & CHFL_CHANOP)
-				sendto_serv_butone_token(cptr, me.name,
-				    MSG_MODE, TOK_MODE,
-				    "%s +o %s %lu",
-				    name, parv[0], chptr->creationtime);
-			if (chptr->topic)
-			{
-				sendto_one(sptr, rpl_str(RPL_TOPIC),
-				    me.name, parv[0], name, chptr->topic);
-				sendto_one(sptr,
-				    rpl_str(RPL_TOPICWHOTIME), me.name,
-				    parv[0], name, chptr->topic_nick,
-				    chptr->topic_time);
-			}
-			if (chptr->users == 1 && MODES_ON_JOIN)
-			{
-				chptr->mode.mode = MODES_ON_JOIN;
-				chptr->mode.kmode = iConf.modes_on_join.kmode;
-				chptr->mode.per = iConf.modes_on_join.per;
-				chptr->mode.msgs = iConf.modes_on_join.msgs;
-				*modebuf = *parabuf = 0;
-				channel_modes(sptr, modebuf, parabuf, chptr);
-				/* This should probably be in the SJOIN stuff */
-				sendto_serv_butone_token(&me, me.name, MSG_MODE, TOK_MODE, 
-					"%s %s %s %lu", chptr->chname, modebuf, parabuf, 
-					chptr->creationtime);
-				sendto_one(sptr, ":%s MODE %s %s %s", me.name, chptr->chname, modebuf, parabuf);
-			}
-			parv[1] = name;
-			(void)m_names(cptr, sptr, 2, parv);
-			bouncedtimes = 0;
-		}
-
-	}
-	return 0;
-}
-
 /*
 ** m_join
 **	parv[0] = sender prefix
@@ -2912,22 +2685,51 @@ CMD_FUNC(channel_link)
 */
 CMD_FUNC(m_join)
 {
-	static char jbuf[BUFSIZE];
+int r;
+
+	if (bouncedtimes)
+		sendto_realops("m_join: bouncedtimes=%d??? [please report at http://bugs.unrealircd.org/]", bouncedtimes);
+	bouncedtimes = 0;
+	if (IsServer(sptr))
+		return 0;
+	r = do_join(cptr, sptr, parc, parv);
+	bouncedtimes = 0;
+	return r;
+}
+
+/** User request to join a channel.
+ * This routine can be called from both m_join or via do_join->can_join->do_join
+ * if the channel is 'linked' (chmode +L). We use a counter 'bouncedtimes' which
+ * is set to 0 in m_join, increased every time we enter this loop and decreased
+ * anytime we leave the loop. So be carefull ;p.
+ */
+CMD_FUNC(do_join)
+{
+	char jbuf[BUFSIZE];
 	Membership *lp;
 	aChannel *chptr;
 	char *name, *key = NULL, *link = NULL;
 	int  i, flags = 0;
 	char *p = NULL, *p2 = NULL;
 
-	bouncedtimes = 0;
-	if (IsServer(sptr))
-		return 0;
-		
+#define RET(x) { bouncedtimes--; return x; }
+
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
 		    me.name, parv[0], "JOIN");
 		return 0;
+	}
+	bouncedtimes++;
+	/* don't use 'return x;' but 'RET(x)' from here ;p */
+
+	if (bouncedtimes > MAXBOUNCE)
+	{
+		/* bounced too many times */
+		sendto_one(sptr,
+		    ":%s %s %s :*** Couldn't join %s ! - Link setting was too bouncy",
+		    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, parv[1]);
+		RET(0)
 	}
 
 	*jbuf = '\0';
@@ -2971,6 +2773,9 @@ CMD_FUNC(m_join)
 		(void)strlncat(jbuf, name, sizeof jbuf, sizeof(jbuf) - i - 1);
 		i += strlen(name) + 1;
 	}
+	/* This strcpy should be safe since jbuf contains the "filtered"
+	 * result of parv[1] which should never be larger than the source.
+	 */
 	(void)strcpy(parv[1], jbuf);
 
 	p = NULL;
@@ -3023,13 +2828,13 @@ CMD_FUNC(m_join)
 					    err_str
 					    (ERR_TOOMANYCHANNELS),
 					    me.name, parv[0], name);
-					return 0;
+					RET(0)
 				}
 /* RESTRICTCHAN */
 			if (conf_deny_channel)
 			{
 				if (channel_canjoin(sptr, name) != 1)
-					return 0;
+					RET(0)
 			}
 		}
 
@@ -3044,6 +2849,7 @@ CMD_FUNC(m_join)
 			flags |= CHFL_SERVOPOK;
 #endif
 
+		i = -1;
 		if (!chptr ||
 		    (MyConnect(sptr)
 		    && (i = can_join(cptr, sptr, chptr, key, link, parv))))
@@ -3052,11 +2858,9 @@ CMD_FUNC(m_join)
 			if (i != -1)
 				sendto_one(sptr, err_str(i),
 				    me.name, parv[0], name);
-
-			/* uhm? was *chptr ??? *NULL = dangerous */
 			continue;
-
 		}
+
 		if (MyConnect(sptr)) {
 			int breakit = 0;
 			for (global_i = Hooks[HOOKTYPE_LOCAL_JOIN]; global_i; global_i = global_i->next) {
@@ -3165,8 +2969,8 @@ CMD_FUNC(m_join)
 
 	}
 
-	bouncedtimes = 0;
-	return 0;
+	RET(0)
+#undef RET
 }
 
 
