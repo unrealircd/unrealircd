@@ -750,7 +750,7 @@ int	ConfigCmd(ConfigFile *cf, ConfigEntry *ce, ConfigCommand *cc)
 	ConfigCommand *ccp;
 	if (!ce)
 	{
-		config_error("ConfigCmd: Got !ce");
+		config_status("%s: empty file", cf->cf_filename);
 		return -1;
 	}
 	if (!cc)

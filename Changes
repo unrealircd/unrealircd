@@ -327,3 +327,4 @@
 - Made chmode +z only settable by umode +z users or U:lines or services.
 - Updated badwords.channel.conf and badwords.message.conf to use newconf (requires an include in 
   the config file)
+- Made conf2 able to load empty files as well
