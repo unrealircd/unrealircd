@@ -1841,3 +1841,4 @@ seen. gmtime warning still there
   and "Socket is not connected"). (#0000677)
 - Added makefiles to compile with zip links @ windows (zlib needed).
 - Added '/stats zip' (Oper only, only usefull if ZIP_LINKS is defined).
+- Fixed missing 's' flag in oper::snomask causing not receiving any server notices.
