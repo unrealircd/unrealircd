@@ -1381,3 +1381,4 @@ seen. gmtime warning still there
     unreal restart -restarts the service
     unreal rehash -rehashes the config file
   Config errors are now logged to service.log when in service mode.
+- Added a win32 installer script (for Inno Setup with ISX)
