@@ -2754,7 +2754,7 @@ int  m_stats(cptr, sptr, parc, parv)
 		  ConfigItem_ban *bans;
 
 		  for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) {
-			  if (bans->flag.type == CONF_BAN_NICK && bans->flag.type2 != CONF_BAN_TYPE_AKILL)
+			  if (bans->flag.type == CONF_BAN_NICK && (bans->flag.type2 != CONF_BAN_TYPE_AKILL))
 				sendto_one(sptr, rpl_str(RPL_STATSQLINE),
 				    me.name, parv[0],  bans->reason, bans->mask);
 		  }
@@ -2765,7 +2765,7 @@ int  m_stats(cptr, sptr, parc, parv)
 		  ConfigItem_ban *bans;
 
 		  for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) {
-			  if (bans->flag.type == CONF_BAN_NICK && bans->flag.type2 == CONF_BAN_TYPE_AKILL)
+			  if (bans->flag.type == CONF_BAN_NICK && (bans->flag.type2 == CONF_BAN_TYPE_AKILL))
 				sendto_one(sptr, rpl_str(RPL_SQLINE_NICK),
 				    me.name, parv[0], bans->mask, bans->reason);
 		  }

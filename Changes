@@ -736,3 +736,4 @@ seen. gmtime warning still there
   flags work in SVS2MODE
 - Made a bunch of config errors non fatal
 - Added 2 more network files (yea, I'm slow)
+- Fixed SQLINE bug, FINALLY. (forgot to set type ..oops..)
