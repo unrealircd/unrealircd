@@ -311,27 +311,27 @@ DLLFUNC int	h_config_set_scan(void)
 					{
 						config_error("%s:%i: set::scan::endpoint: syntax [ip]:port",
 							     ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-						goto deleteconf;
+						break;
 					}
 					ipport_seperate(ce->ce_vardata, &ip, &port);
 					if (!ip || !*ip)
 					{
 						config_error("%s:%i: set::scan::endpoint: illegal ip",
 							     ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-						goto deleteconf;
+						break;
 					}
 				        if (!port || !*port)
 					{
 						config_error("%s:%i: set::scan::endpoint: missing/invalid port",
 							    ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-					        goto deleteconf;
+					        break;
 					}
 					iport = atol(port);
 					if ((iport < 0) || (iport > 65535))
 					{
 						config_error("%s:%i: set::scan::endpoint: illegal port",
 							     ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-						goto deleteconf;
+						break;
 					}
 #ifndef INET6
 					Scan_endpoint.SIN_ADDR.S_ADDR = inet_addr(ip);
@@ -344,9 +344,7 @@ DLLFUNC int	h_config_set_scan(void)
 				
 				
 			}
-			deleteconf:
 			del_ConfigItem(sets, conf_unknown_set);
-			continue;
 		}	
 	}
 	if (Scan_endpoint.SIN_PORT == 0)

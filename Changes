@@ -1005,3 +1005,4 @@ seen. gmtime warning still there
 - Added #undef SECURECHANMSGSONLYGOTOSECURE - send only channel msgs to +z
   people on +z channels
 - win32 fixes
+- Scan API cleanup (You don't use goto when break works just as good)
