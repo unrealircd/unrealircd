@@ -534,6 +534,9 @@ if [ -r /usr/include/openssl/ssl.h ] ; then
        elif [ -r /usr/bin/openssl ] ; then
                OPENSSLPATH=/usr/bin/openssl
                echo $OPENSSLPATH
+       elif [ -r /usr/sbin/openssl ] ; then
+               OPENSSLPATH=/usr/sbin/openssl
+               echo $OPENSSLPATH
        elif [ -r /usr/local/bin/openssl ] ; then
                OPENSSLPATH=/usr/local/bin/openssl
                echo $OPENSSLPATH

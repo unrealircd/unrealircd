@@ -4474,7 +4474,7 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
   	":%s MODE %s %s %s %lu", sptr->name, chptr->chname,  \
   	modebuf, parabuf, chptr->creationtime); \
   	sendto_channel_butserv(chptr, sptr, \
-  	"%s MODE %s %s %s", sptr->name, chptr->chname, \
+  	":%s MODE %s %s %s", sptr->name, chptr->chname, \
   	modebuf, parabuf); \
   	parabuf[0] = '\0'; \
   	b = 1; \

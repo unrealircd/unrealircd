@@ -674,4 +674,6 @@
 - Fixed the /list only showing 64 channels bug! Also sped /list up in the process
 - Probably fixed the hash bug, again.
 - Possible fixed some b64 bugs
+- Autodetects /usr/sbin/openssl now, thanks trinity
 - Tokenized PING and PONG
+- Fixes a missing : in SJOIN
