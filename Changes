@@ -846,3 +846,4 @@ seen. gmtime warning still there
 - Made Inet_si2p (sin to presensation), fixing the "*", bug, some debugging
   fixes, fixed a lot of IPv6 bugs, hopefully - thanks to JK for borrowing
   his box
+- Fixed a #undef INET6 bug

@@ -189,9 +189,10 @@ char	*Inet_si2pB(struct SOCKADDR_IN *sin, char *buf)
 	
 		return (buf);
 	}
-#endif
 	return ((char *)inetntop(sin->SIN_FAMILY, (void *)&sin->SIN_ADDR, buf, sizeof(buf)));
-
+#else
+	return ((char *)inet_ntoa(sin->SIN_ADDR));	
+#endif
 }
 
 char	*Inet_si2p(struct SOCKADDR_IN *sin)
