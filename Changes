@@ -468,3 +468,4 @@
 - Added /infoserv (you can stop bugging us now skold ;P)
 - Removed ALN, and the ALN system.
 - Added base64 encoding instead, for ALN v2 (NS)
+- Removed a SJ3 debug msg

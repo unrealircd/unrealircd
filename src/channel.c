@@ -4722,7 +4722,6 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	            else
         	        strncpyzt(bp, (t - (c - 1)), c);        /* Put the nick in bp */
 		
-		    sendto_ops("Got nick .. %s at %s", bp, chptr->chname);
 		    c = f = 0;
 		    modeflags = 0;
 		    i = 0;
