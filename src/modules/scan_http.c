@@ -63,7 +63,7 @@ struct _hsstruct
 
 static vFP			xEadd_scan = NULL;
 static struct SOCKADDR_IN	*xScan_endpoint = NULL;
-static int xScan_TimeOut = 0;
+static int *xScan_TimeOut = 0;
 static Hook *HttpScanHost = NULL;
 static int HOOKTYPE_SCAN_HOST;
 static Hooktype *ScanHost;
@@ -249,7 +249,7 @@ void	scan_http_scan_port(HSStruct *z)
 	}
 	
 	/* We wait for write-ready */
-	tv.tv_sec = xScan_TimeOut;
+	tv.tv_sec = *xScan_TimeOut;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
@@ -268,7 +268,7 @@ void	scan_http_scan_port(HSStruct *z)
 		goto exituniverse;
 	}
 	/* Now we wait for data. 10 secs ought to be enough  */
-	tv.tv_sec = xScan_TimeOut;
+	tv.tv_sec = *xScan_TimeOut;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);

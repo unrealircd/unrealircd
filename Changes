@@ -1321,3 +1321,4 @@ seen. gmtime warning still there
   (idea inspired by danielek)
 - Fixed a bug in the new allow system reported by danielek
 - Fixed a maxperip and a maxunknownconnectionsperip bug in IPv6 reported by danielek
+- Fixed another scanner bug causing the scanner to never timeout
