@@ -247,6 +247,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 		" KICKLEN=%i"     \
 		" CHANTYPES=%s"    \
 		" PREFIX=%s"     \
+		" CHANMODES=%s,%s,%s,%s" \
 		" :are supported by this server"
 
 #define PROTOCTL_PARAMETERS MAXWATCH, \
@@ -258,8 +259,12 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                             TOPICLEN, \
                             TOPICLEN, \
                             "#",      \
-                            "(ohv)@%+"
-
+                            "(ohv)@%+", \
+                            "ohvLbefqa", \
+                            "fLk", \
+			    "l", \
+			    "psmntirRcOAQKVHGCuzN"
+			    
 /* Server-Server PROTOCTL -Stskeeps */
 #define PROTOCTL_SERVER "NOQUIT" \
                         " TOKEN" \
