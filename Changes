@@ -206,3 +206,5 @@
 - Fixed some /whois channels code, which may break +I /whois
 - Fixed overflow in SJOIN
 - Added SMO *, all users
+- If a +r user is /who'ed, it shows a "r" in flags field. Suggested by
+  Mirar.

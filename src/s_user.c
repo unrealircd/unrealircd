@@ -2353,7 +2353,7 @@ static void do_who(sptr, acptr, repchan)
 	aClient *sptr, *acptr;
 	aChannel *repchan;
 {
-	char status[5];
+	char status[8];
 	int  i = 0;
 
 	/* auditoriums only show @'s */
@@ -2365,6 +2365,9 @@ static void do_who(sptr, acptr, repchan)
 		status[i++] = 'G';
 	else
 		status[i++] = 'H';
+	if (IsARegNick(acptr))
+		status[i++] = 'r';
+
 	/* Check for +H here too -- codemastr */
 	if (IsAnOper(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
 		status[i++] = '*';
