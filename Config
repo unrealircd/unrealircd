@@ -395,7 +395,7 @@ if [ -r /usr/include/stdlib.h ] ; then
 else
         echo 'not found :('
 fi
-echo $n "...Looking for stddef.h...$c"
+echo $n "...Looking for /usr/include/stddef.h...$c"
 if [ -r /usr/include/stddef.h ] ; then
         STDDEFH=define
         echo  'found!'

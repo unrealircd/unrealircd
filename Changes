@@ -380,3 +380,4 @@
   because _someone_ aka sts told it to check against HOSTLEN rather than USERLEN... reported by wshs
 - Fixed a bug in badwords not loading words correctly, and upped word limit
   to 50
+- Small fix with ./Config showing incorrect path of stddef.h
