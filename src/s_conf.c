@@ -1979,6 +1979,26 @@ void init_dynconf(void)
 	bzero(&tempiConf, sizeof(iConf));
 }
 
+char *pretty_time_val(long timeval)
+{
+	static char buf[512];
+
+	if (timeval == 0)
+		return "0";
+
+	buf[0] = 0;
+
+	if (timeval/86400)
+		sprintf(buf, "%d day%s ", timeval/86400, timeval/86400 != 1 ? "s" : "");
+	if ((timeval/3600) % 24)
+		sprintf(buf, "%s%d hour%s ", buf, (timeval/3600)%24, (timeval/3600)%24 != 1 ? "s" : "");
+	if ((timeval/60)%60)
+		sprintf(buf, "%s%d minute%s ", buf, (timeval/60)%60, (timeval/60)%60 != 1 ? "s" : "");
+	if ((timeval%60))
+		sprintf(buf, "%s%d second%s", buf, timeval%60, timeval%60 != 1 ? "s" : "");
+	return buf;
+}
+
 /* Report the unrealircd.conf info -codemastr*/
 void report_dynconf(aClient *sptr)
 {
@@ -1995,8 +2015,8 @@ void report_dynconf(aClient *sptr)
 	if (OPER_ONLY_STATS)
 		sendto_one(sptr, ":%s %i %s :oper-only-stats: %s", me.name, RPL_TEXT,
 			sptr->name, OPER_ONLY_STATS);
-	sendto_one(sptr, ":%s %i %s :anti-spam-quit-message-time: %d", me.name, RPL_TEXT,
-		sptr->name, ANTI_SPAM_QUIT_MSG_TIME);
+	sendto_one(sptr, ":%s %i %s :anti-spam-quit-message-time: %s", me.name, RPL_TEXT,
+		sptr->name, pretty_time_val(ANTI_SPAM_QUIT_MSG_TIME));
 #ifdef USE_SSL
 	sendto_one(sptr, ":%s %i %s :ssl::egd: %s", me.name, RPL_TEXT,
 		sptr->name, EGD_PATH ? EGD_PATH : (USE_EGD ? "1" : "0"));
@@ -2034,8 +2054,8 @@ void report_dynconf(aClient *sptr)
 	    RPL_TEXT, sptr->name, OPER_AUTO_JOIN_CHANS ? OPER_AUTO_JOIN_CHANS : "0");
 	sendto_one(sptr, ":%s %i %s :static-quit: %s", me.name, 
 		RPL_TEXT, sptr->name, STATIC_QUIT ? STATIC_QUIT : "<none>");	
-	sendto_one(sptr, ":%s %i %s :dns::timeout: %li", me.name, RPL_TEXT,
-	    sptr->name, HOST_TIMEOUT);
+	sendto_one(sptr, ":%s %i %s :dns::timeout: %s", me.name, RPL_TEXT,
+	    sptr->name, pretty_time_val(HOST_TIMEOUT));
 	sendto_one(sptr, ":%s %i %s :dns::retries: %d", me.name, RPL_TEXT,
 	    sptr->name, HOST_RETRIES);
 	sendto_one(sptr, ":%s %i %s :dns::nameserver: %s", me.name, RPL_TEXT,

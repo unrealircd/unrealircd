@@ -1745,3 +1745,5 @@ seen. gmtime warning still there
   overrides this)
 - Fixed a bug reported by AngryWolf where setting umode -o didn't remove umode
   h. (#0000556)
+- Added a pretty_time_val function, this converts a number such as 86400 to "1 day"
+  to make it easier to read.
