@@ -2925,7 +2925,7 @@ int  m_stats(cptr, sptr, parc, parv)
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "E - Send the except ban block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "F - Send the deny dcc block list list");
+		      "F - Send the deny dcc block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "G - Report TKL information (G:lines/Shuns)");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
@@ -3667,23 +3667,11 @@ int  m_chatops(cptr, sptr, parc, parv)
 		    me.name, parv[0], "CHATOPS");
 		return 0;
 	}
-	if (ALLOW_CHATOPS == 1)
+	if (MyClient(sptr))
 	{
-		if (MyClient(sptr) && !IsAnOper(sptr))
-		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			    parv[0]);
-			return 0;
-		}
-	}
-	else
-	{
-		if (MyClient(sptr))
-		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			    parv[0]);
-			return 0;
-		}
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+		    parv[0]);
+		return 0;
 	}
 	sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL,
 	    parv[0], MSG_CHATOPS, TOK_CHATOPS, ":%s", message);

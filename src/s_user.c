@@ -3653,7 +3653,7 @@ int  m_oper(cptr, sptr, parc, parv)
 {
 	ConfigItem_oper *aconf;
 	ConfigItem_oper_from *oper_from;
-	char *name, *password, *encr, *nuhhost;
+	char *name, *password, *encr, *nuhhost, *nuhhost2;
 #ifdef CRYPT_OPER_PASSWORD
 	char salt[3];
 	extern char *crypt();
@@ -3709,9 +3709,10 @@ int  m_oper(cptr, sptr, parc, parv)
 		return 0;
 	}
 	nuhhost = make_user_host(sptr->user->username, sptr->user->realhost);
+	nuhhost2 = make_user_host(sptr->user->username, (char *)inet_ntoa(sptr->ip));
 	for (oper_from = (ConfigItem_oper_from *) aconf->from;
 	    oper_from; oper_from = (ConfigItem_oper_from *) oper_from->next)
-		if (!match(oper_from->name, nuhhost))
+		if (!match(oper_from->name, nuhhost) || !match(oper_from->name, nuhhost2))
 			break;
 	if (!oper_from)
 	{

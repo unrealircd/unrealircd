@@ -702,3 +702,5 @@ seen. gmtime warning still there
 - Made it so unreal searches harder for SSL headers and libraries
 - Fixed possible bug with allowing :'s in +k/+L .. 
 - Added a credit
+- Fixed a typo in /stats and a /chatops bug found by Cas 
+- Made oper {} (and vhost {}) allow you to enter an IP even if your host resolves by request of Cas
