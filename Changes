@@ -1434,3 +1434,4 @@ seen. gmtime warning still there
 - Send +f and +L in correct part of 005.
 - Fixed SSL linking, again..
 - SSL compile error fix in s_bsd.c
+- Added some OpenSSL version showing

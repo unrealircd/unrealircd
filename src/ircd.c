@@ -1050,7 +1050,10 @@ int InitwIRCD(int argc, char *argv[])
 		return bad_command();	/* This should exit out */
 #ifndef _WIN32
 	fprintf(stderr, "%s", unreallogo);
-	fprintf(stderr, "                           v%s\n\n", VERSIONONLY);
+	fprintf(stderr, "                           v%s\n", VERSIONONLY);
+#ifdef USE_SSL
+	fprintf(stderr, "                     using %s\n\n", OPENSSL_VERSION_TEXT);
+#endif
 #endif
 	clear_client_hash_table();
 	clear_channel_hash_table();
