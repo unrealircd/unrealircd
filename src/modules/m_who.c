@@ -556,10 +556,10 @@ int i = 0;
 		status[i++] = '!';
   
 	if (cansee & WHO_OPERSEE)
-		status[i++] = '&';
+		status[i++] = '?';
 
 	if (cm)
-    {
+        {
 		if (cm->flags & CHFL_CHANOP)
 			status[i++] = '@';
 		else if (cm->flags & CHFL_HALFOP)
