@@ -150,5 +150,13 @@ Unreal3.2-Selene (BETA11) RELEASE NOTES
   no longer limited to 1d2h1m. You can now enter "1day 2 hours 1 minute" for example. See
   doc/conf.doc for more information.
 
+* If you use the SSL features of Unreal, you should use OpenSSL 0.9.6e or later. This is
+  important as the older versions may make the program exploitable. See 
+  http://www.openssl.org for more information
+
+* We have made a lot of changes to deal with SSL, and if you find any flaws or problems,
+  please contact the coder team. We however think that the changes will make SSL
+  more transparent and make it work more efficiently.
+
 * MAKE SURE YOU RERUN ./Config AND RUN make clean BEFORE USING THIS VERSION!!!
 

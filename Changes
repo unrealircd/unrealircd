@@ -1437,3 +1437,4 @@ seen. gmtime warning still there
 - Added some OpenSSL version showing
 - Win32 SSL compile fixes
 - Made /trace show correct for SSL handshake(s)
+- RELEASENOTES stuff
