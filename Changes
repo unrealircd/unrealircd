@@ -628,3 +628,4 @@
 - Added NEW DNS resolver (Win32 Only atm)  ... use by defining NEWDNS
 - FIXED "BUG" caused by NEWDNS *shrug*
 - Fixed the passwd NICK problem
+- Fixed the problem with NewDNS (ive always known about it but never known how it happens) [a pointer prob]
