@@ -117,7 +117,7 @@ DLLFUNC int m_unsqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	ConfigItem_ban *bconf;
 
-	if (!IsServer(sptr) || parc < 2)
+	if (!(IsServer(sptr) || IsUline(sptr)) || parc < 2)
 		return 0;
 
 	sendto_serv_butone_token(cptr, parv[0], MSG_UNSQLINE, TOK_UNSQLINE,
