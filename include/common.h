@@ -140,7 +140,7 @@ extern char *strtoken(char **, char *, char *);
 
 #define DupString(x,y) do{int l=strlen(y);x=MyMalloc(l+1);(void)memcpy(x,y, l+1);}while(0)
 
-extern u_char tolowertab[], touppertab[];
+extern MODVAR u_char tolowertab[], touppertab[];
 
 #if defined(CHINESE_NICK) || defined(JAPANESE_NICK)
 #define USE_LOCALE

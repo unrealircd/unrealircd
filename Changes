@@ -3186,3 +3186,4 @@ This is the 3.2 fixes branch.
 - spamfilter.conf: Added yet another sig for a site that causes Backdoor.Delf.lq
   infection (reported by nexus), also changed LOI trojan and Bloodhound.Exploit.6
   action to gline.
+- Fixed a win32 module bug that broke strcasecmp/stricmp
