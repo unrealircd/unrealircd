@@ -977,7 +977,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 
 		if (SupportNS(acptr))
 		{
-			sendto_one(cptr, "%c%s %s %s 2 %i :%s",
+			sendto_one(acptr, "%c%s %s %s 2 %i :%s",
 			    (me.serv->numeric ? '@' : ':'),
 			    (me.serv->numeric ? base64enc(me.
 			    serv->numeric) : me.name),
@@ -986,7 +986,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 		}
 		else
 		{
-			sendto_one(cptr, ":%s %s %s 2 :%s",
+			sendto_one(acptr, ":%s %s %s 2 :%s",
 			    me.name,
 			    (IsToken(acptr) ? TOK_SERVER : MSG_SERVER),
 			    cptr->name, cptr->info);

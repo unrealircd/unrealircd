@@ -1963,6 +1963,7 @@ int     rehash(cptr, sptr, sig)
 	ConfigItem_oper	*oper_ptr;
 	ConfigItem_class *class_ptr;
 	ConfigItem_ulines *uline_ptr;
+	ConfigItem_allow *allow_ptr;
 	
 	ConfigItem 	t;
 	for (oper_ptr = conf_oper; oper_ptr; oper_ptr = (ConfigItem_oper *) oper_ptr->next)
@@ -2002,7 +2003,16 @@ int     rehash(cptr, sptr, sig)
 		MyFree(uline_ptr);
 		uline_ptr = (ConfigItem_ulines *) &t;			
 	}
-		
+	for (allow_ptr = conf_allow; allow_ptr; allow_ptr = (ConfigItem_allow *) allow_ptr->next)
+	{
+		ircfree(allow_ptr->ip);
+		ircfree(allow_ptr->hostname);
+		ircfree(allow_ptr->password);
+		t.next = del_ConfigItem((ConfigItem *) allow_ptr, (ConfigItem **)conf_allow);
+		MyFree(allow_ptr);
+		allow_ptr = (ConfigItem_allow *) &t;			
+	}
+	
 }
 
 

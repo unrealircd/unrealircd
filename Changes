@@ -185,4 +185,5 @@
 - Started some rehash work
 - Made full class work on servers too
 - Fixed a refcount bug
+- Fixed a spread server bug
  
