@@ -2633,6 +2633,8 @@ CMD_FUNC(m_umode)
 	 * compare new flags with old flags and send string which
 	 * will cause servers to update correctly.
 	 */
+	if (setflags != sptr->umodes)
+		RunHook3(HOOKTYPE_UMODE_CHANGE, sptr, setflags, sptr->umodes);
 	if (dontspread == 0)
 		send_umode_out(cptr, sptr, setflags);
 

@@ -528,6 +528,7 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_CHANNEL_DESTROY 33
 #define HOOKTYPE_REMOTE_CHANMODE 34
 #define HOOKTYPE_TKL_EXCEPT 35
+#define HOOKTYPE_UMODE_CHANGE 36
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000

@@ -2870,3 +2870,5 @@ seen. gmtime warning still there
   by non-netadmin ircops in some (many) cases, reported by Zell (#0001541).
 - Removed reference to SVSTIME from help.conf (it's actually /tsctl svstime)
   (#0001540) reported by penna and DukePyrolator.
+- Added HOOKTYPE_UMODE_CHANGE (sptr, oldflags, newflags) - this may 
+  not be accurate as umode changes are done manually many places.
