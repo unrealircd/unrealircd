@@ -3203,3 +3203,4 @@ This is the 3.2 fixes branch.
   is linked to which ("hopcount"). This can make it a bit harder for kiddies to find
   any 'weak spots' (which server to attack/[D]DoS). Obviously opers will always
   see the real map.
+- unreal32docs.html: added flat-map and set::restrict-usermodes "s"; security tips.

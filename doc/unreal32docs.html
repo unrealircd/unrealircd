@@ -24,7 +24,7 @@ English | <a href="unreal32docs.de.html">German</a><br><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2 *CVS*</font><br>
   <b>Current Version:</b> 3.2<br>
-  <b>Last doc update:</b> 2004-05-18</div>
+  <b>Last doc update:</b> 2004-05-28</div>
 <br>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -3092,11 +3092,12 @@ will stay alive :).<br>
 </div></p>
 
 <p><b><font size="+2">8.7 Information disclosure</font></b><a name="secinformation"></a><br><div class="desc">
+<b>STATS</b><br>
 The /stats command is very informative, you probably want to restrict it's usage as much 
 as possible. A question you should ask yourself is "what do I want my users to see?". 
 Most big networks choose "nothing", while others prefer their clients to be able to do 
 '/stats g' and '/stats k'.<br>
-I suggest you to use set <i>{ oper-only-stats "*"; };</i> to deny all /stats for non-opers, but if you don't
+I suggest you to use <i>set { oper-only-stats "*"; };</i> to deny all /stats for non-opers, but if you don't
 want that, step trough the '/stats' list (gives an overview of all available options) and
 block everything except what you want to allow.. (if in doubt, just deny.. why should they
 really need to know all this?).<br>
@@ -3110,6 +3111,26 @@ To give you a few examples:<br>
 - /stats P: helps him find serveronly ports<br>
 etc etc...<br>
 <br>
+<b>MAP / LINKS</b><br>
+Several people have asked if there was some way to disable /map or /links. 
+Our position on this is that it's silly and gives a false sense of security, let me explain... 
+Hiding servers that are actually used by users is useless since they already know 
+about your servers (how else could they get on them in the first place?). For any servers that you 
+don't want users on, see section 8.6.<br>
+Now what CAN you do? Since 3.2.1 there's an option called 'flat map' (set::options::flat-map), 
+this will make all servers appear as 'directly linked' in /map and /links, thus normal users 
+can no longer see which server is linked to which... This can be a nice additional layer 
+of protection because this way a kiddie cannot easily spot any 'weak points' with /map or /links. 
+So, use of this is recommended. Note that this is not foolproof... If any split happends someone 
+can still see which server was linked to which, and this is also true for some other things as well.<br>
+<br>
+<b>NORMAL USERS &amp; SNOMASKS</b><br>
+A feature that isn't widely known is that normal users can also set some limited snomasks, 
+namely +s +sk. By this they can see things like rehashes, oper ups, kills and various other messages.<br>
+To disable this you can use set::restrict-usermodes like this: <i>set { restrict-usermodes "s"; };</i>.<br>
+
+
+<br><br>
 Of course all of this is "information hiding", so it's not "true" security. 
 It will however make it more difficult / increase the effort needed to attack/hack.<br>
 </div></p>
