@@ -168,7 +168,7 @@ char *hidehost(char *host)
 	static char	h1[512];
 	static char	h2[4][4];
 	static char	h3[300];
-	unsigned long		l[5];
+	unsigned long		l[8];
 	int		i;
 	char		*p;
 
@@ -207,7 +207,20 @@ char *hidehost(char *host)
 	else if (*p == ':')
 	{
 		/* Do IPv6 cloaking here */
-			
+		/* FIXME: what the hell to do with :FFFF:192.168.1.5? 
+		*/
+		sscanf(host, "%x:%x:%x:%x:%x:%x:%x:%x",
+		         &l[0], &l[1], &l[2], &l[3],
+		         &l[4], &l[5], &l[6], &l[7]);
+		for (i = 0; i <= 7; i++)
+		{
+		        l[i] = ((l[i] + KEY2) ^ KEY) ^ KEY3;
+		        l[i] <<= 2; l[i] >>= 2;
+	        	l[i] %= 65535;
+	        }
+		ircsprintf(cloaked, "%x:%x:%x:%x:%x:%x:%x:%x.IP",
+			l[0], l[1], l[2], l[3],
+			l[4], l[5], l[6], l[7]);
 		return cloaked;
 	}
 	else
