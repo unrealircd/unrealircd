@@ -1181,10 +1181,15 @@ int  m_svsnick(cptr, sptr, parc, parv)
 				if (IsPerson(acptr))
 					hash_check_notify(acptr, RPL_LOGOFF);
 			}
+			if (MyClient(acptr))
+			{
+				RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, acptr, parv[2]);
+			}
 			(void)strcpy(acptr->name, parv[2]);
 			(void)add_to_client_hash_table(parv[2], acptr);
 			if (IsPerson(acptr))
 				hash_check_notify(acptr, RPL_LOGON);
+			
 		}
 	}
 	return 0;
@@ -1708,6 +1713,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		   ** Also set 'lastnick' to current time, if changed.
 		 */
 		if (MyClient(sptr))
+		{
 			for (mp = cptr->user->channel; mp; mp = mp->next)
 			{
 				if (is_banned(cptr, &me, mp->chptr))
@@ -1729,6 +1735,8 @@ int  m_nick(cptr, sptr, parc, parv)
 					return 0;
 				}
 			}
+			RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, sptr, nick);
+		}
 		/*
 		 * Client just changing his/her nick. If he/she is
 		 * on a channel, send note of change to all clients
