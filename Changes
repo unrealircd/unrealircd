@@ -2441,3 +2441,4 @@ seen. gmtime warning still there
 - Minor doc update.
 - Updated all the modules to use the new macros
 - Changed version to 'beta18'
+- Fixed a problem with tre.dll
