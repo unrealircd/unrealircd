@@ -569,8 +569,12 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 				return 0;
 			}
 			case WM_CLOSE: {
+				if (MessageBox(hDlg, "Close UnrealIRCd?", "Are you sure?", MB_YESNO|MB_ICONQUESTION) == IDNO)
+					return 0;
+				else {
 					DestroyWindow(hDlg);
 					exit(0);
+				}
 			}
 
 			case WM_USER: {
