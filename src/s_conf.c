@@ -5226,6 +5226,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			}
 			
 		}
+		else if (!strcmp(cep->ce_varname, "modes-on-oper")) {
+			CheckNull(cep);
+			templong = (long) set_usermode(cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "snomask-on-oper")) {
 			CheckNull(cep);
 		}
