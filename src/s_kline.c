@@ -1345,10 +1345,11 @@ char *str = (char *)StripControlCodes(str_in);
 				strlcpy(targetbuf+1, target, sizeof(targetbuf)-1); /* cut it off */
 			} else
 				targetbuf[0] = '\0';
-			ircsprintf(buf, "[Spamfilter] %s!%s@%s matches filter '%s': [%s%s: '%s']",
+			ircsprintf(buf, "[Spamfilter] %s!%s@%s matches filter '%s': [%s%s: '%s'] [%s]",
 				sptr->name, sptr->user->username, sptr->user->realhost,
 				tk->reason,
-				spamfilter_inttostring_long(type), targetbuf, str);
+				spamfilter_inttostring_long(type), targetbuf, str,
+				unreal_decodespace(tk->spamf->tkl_reason));
 
 			sendto_snomask(SNO_SPAMF, "%s", buf);
 			sendto_serv_butone_token(NULL, me.name, MSG_SENDSNO, TOK_SENDSNO, "S :%s", buf);
@@ -1391,7 +1392,11 @@ char *str = (char *)StripControlCodes(str_in);
 			} else
 			if (tk->spamf->action == BAN_ACT_VIRUSCHAN)
 			{
-				char *xparv[3], buf[CHANNELLEN+16];
+				char *xparv[3], chbuf[CHANNELLEN + 16];
+				aChannel *chptr;
+				
+				if (IsVirus(sptr)) /* Already tagged */
+					return 0;
 				ircsprintf(buf, "0,%s", SPAMFILTER_VIRUSCHAN);
 				xparv[0] = sptr->name;
 				xparv[1] = buf;
@@ -1399,9 +1404,21 @@ char *str = (char *)StripControlCodes(str_in);
 				/* RECURSIVE CAUTION in case we ever add blacklisted chans */
 				if (m_join(sptr, sptr, 2, xparv) == FLUSH_BUFFER)
 					return FLUSH_BUFFER; /* don't ask me how we could have died... */
-				sendnotice(sptr, "You are now in %s: %s",
+				sendnotice(sptr, "You are now restricted to talking in %s: %s",
 					SPAMFILTER_VIRUSCHAN, unreal_decodespace(tk->spamf->tkl_reason));
-				return 0;
+				/* todo: send notice to channel? */
+				chptr = find_channel(SPAMFILTER_VIRUSCHAN, NULL);
+				if (chptr)
+				{
+					ircsprintf(chbuf, "%s%s", CHANOPPFX, chptr->chname);
+					ircsprintf(buf, "[Spamfilter] %s matched filter '%s' [%s%s] [%s]",
+						sptr->name, tk->reason, spamfilter_inttostring_long(type), targetbuf,
+						unreal_decodespace(tk->spamf->tkl_reason));
+					sendto_channelprefix_butone_tok(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+						MSG_NOTICE, TOK_NOTICE, chbuf, buf, 0);
+				}
+				SetVirus(sptr);
+				return -1;
 			} else
 				return place_host_ban(sptr, tk->spamf->action,
 					unreal_decodespace(tk->spamf->tkl_reason), tk->spamf->tkl_duration);

@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_admin)
 
 DLLFUNC int MOD_INIT(m_admin)(ModuleInfo *modinfo)
 {
-	add_CommandX(MSG_ADMIN, TOK_ADMIN, m_admin, MAXPARA, M_UNREGISTERED|M_USER|M_SHUN);
+	add_CommandX(MSG_ADMIN, TOK_ADMIN, m_admin, MAXPARA, M_UNREGISTERED|M_USER|M_SHUN|M_VIRUS);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

@@ -460,6 +460,8 @@ static inline aCommand *find_Token(char *cmd, int flags)
 			continue;
 		if ((flags & M_SHUN) && !(p->flags & M_SHUN))
 			continue;
+		if ((flags & M_VIRUS) && !(p->flags & M_VIRUS))
+			continue;
 		if ((flags & M_ALIAS) && !(p->flags & M_ALIAS))
 			continue;
 		if (!strcmp(p->cmd, cmd))
@@ -475,6 +477,8 @@ static inline aCommand *find_Cmd(char *cmd, int flags)
 		if ((flags & M_UNREGISTERED) && !(p->flags & M_UNREGISTERED))
 			continue;
 		if ((flags & M_SHUN) && !(p->flags & M_SHUN))
+			continue;
+		if ((flags & M_VIRUS) && !(p->flags & M_VIRUS))
 			continue;
 		if ((flags & M_ALIAS) && !(p->flags & M_ALIAS))
 			continue;

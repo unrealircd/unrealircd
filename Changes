@@ -2951,3 +2951,14 @@ seen. gmtime warning still there
   Reported by Fury (#0001575).
 - Moved the SQLINE system (and ban nick) to TKL and introduced "holds"
   suggested by Certus
+- Minor fix for previous.
+- Improved 'viruschan' spamfilter target:
+  - better msg after the forced join
+  - +oaq's in set::spamfilter::virus-help-channel receive a notice about
+    which filter the user matched.
+  - it disables all commands except PONG, ADMIN, and msg/notices to
+    set::spamfilter::virus-help-channel.
+- Made snomask +S also show the spamfilter reason field.
+- Added class::pingfreq checking, should be 30-600 now.. else you might
+  get mysterious (mass) disconnect issues.
+- Lol, I made /connect dissapear during modulizing ;).

@@ -306,7 +306,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #endif
 #define FLAGS_UNOCCUP2   0x2000000 /* [FREE] */
 #define FLAGS_SHUNNED    0x4000000
-#define FLAGS_UNOCCUP3   0x8000000 /* [FREE] */
+#define FLAGS_VIRUS      0x8000000 /* tagged by spamfilter */
 #ifdef USE_SSL
 #define FLAGS_SSL        0x10000000
 #endif
@@ -391,6 +391,9 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsShunned(x)		((x)->flags & FLAGS_SHUNNED)
 #define SetShunned(x)		((x)->flags |= FLAGS_SHUNNED)
 #define ClearShunned(x)		((x)->flags &= ~FLAGS_SHUNNED)
+#define IsVirus(x)			((x)->flags & FLAGS_VIRUS)
+#define SetVirus(x)			((x)->flags |= FLAGS_VIRUS)
+#define ClearVirus(x)		((x)->flags |= FLAGS_VIRUS)
 
 #ifdef USE_SSL
 #define IsSecure(x)		((x)->flags & FLAGS_SSL)
@@ -723,14 +726,14 @@ struct Server {
 	} flags;
 };
 
-#define M_UNREGISTERED 0x0001
-#define M_USER 0x0002
-#define M_SERVER 0x0004
-#define M_SHUN 0x0008
-#define M_NOLAG 0x0010
-#define M_ALIAS 0x0020
-#define M_RESETIDLE 0x0040
-
+#define M_UNREGISTERED	0x0001
+#define M_USER			0x0002
+#define M_SERVER		0x0004
+#define M_SHUN			0x0008
+#define M_NOLAG			0x0010
+#define M_ALIAS			0x0020
+#define M_RESETIDLE		0x0040
+#define M_VIRUS			0x0080
 
 
 /* tkl:

@@ -70,7 +70,7 @@ DLLFUNC int MOD_INIT(m_message)(ModuleInfo *modinfo)
 	/*
 	 * We call our add_Command crap here
 	*/
-	add_CommandX(MSG_PRIVATE, TOK_PRIVATE, m_private, 2, M_USER|M_SERVER|M_RESETIDLE);
+	add_CommandX(MSG_PRIVATE, TOK_PRIVATE, m_private, 2, M_USER|M_SERVER|M_RESETIDLE|M_VIRUS);
 	add_Command(MSG_NOTICE, TOK_NOTICE, m_notice, 2);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
@@ -162,6 +162,11 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 	for (p = NULL, nick = strtoken(&p, parv[1], ","); nick;
 	    nick = strtoken(&p, NULL, ","))
 	{
+		if (IsVirus(sptr) && (!strcasecmp(nick, "ircd") || !strcasecmp(nick, "irc")))
+		{
+			sendnotice(sptr, "IRC command(s) unavailable because you are suspected to have a virus");
+			continue;
+		}
 		/*
 		   ** nickname addressed?
 		 */
@@ -193,6 +198,11 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 		}
 		if (*nick != '#' && (acptr = find_person(nick, NULL)))
 		{
+			if (IsVirus(sptr))
+			{
+				sendnotice(sptr, "You are only allowed to talk in '%s'", SPAMFILTER_VIRUSCHAN);
+				continue;
+			}
 			/* Umode +R (idea from Bahamut) */
 			if (IsRegNickMsg(acptr) && !IsRegNick(sptr) && !IsULine(sptr) && !IsOper(sptr)) {
 				sendto_one(sptr, err_str(ERR_NONONREG), me.name, parv[0],
@@ -381,6 +391,12 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				pfixchan[len] = '\0';
 				strlcat(pfixchan, p2, sizeof(pfixchan));
 				nick = pfixchan;
+			}
+			
+			if (IsVirus(sptr) && strcasecmp(chptr->chname, SPAMFILTER_VIRUSCHAN))
+			{
+				sendnotice(sptr, "You are only allowed to talk in '%s'", SPAMFILTER_VIRUSCHAN);
+				continue;
 			}
 			
 			cansend =

@@ -3139,7 +3139,15 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 			errors++; continue;
 		}
 		if (!strcmp(cep->ce_varname, "pingfreq"))
-		{} else
+		{
+			int v = atol(cep->ce_vardata);
+			if ((v < 30) || (v > 600))
+			{
+				config_error("%s:%i: class::pingfreq should be a reasonable value (30-600)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++; continue;
+			}
+		} else
 		if (!strcmp(cep->ce_varname, "maxclients"))
 		{} else
 		if (!strcmp(cep->ce_varname, "connfreq"))
@@ -4755,7 +4763,7 @@ int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 	cep = config_find_entry(ce->ce_entries, "action");
 	action = banact_stringtoval(cep->ce_vardata);
 	nl->hostmask = strdup(cep->ce_vardata);
-	nl->setby = strdup(BadPtr(me.name) ? NULL : me.name); /* Hmm! */
+	nl->setby = BadPtr(me.name) ? NULL : strdup(me.name); /* Hmm! */
 	
 	nl->spamf = unreal_buildspamfilter(word);
 	nl->spamf->action = action;

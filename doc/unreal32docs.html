@@ -457,7 +457,8 @@ Modules can also add other extended ban types.<br>
 <tr><td>gzline</td><td>puts a gzline (global zline) on the host</td></tr>
 <tr><td>block</td><td>block the message only</td></tr>
 <tr><td>dccblock</td><td>mark the user so (s)he's unable to send any DCCs</td></tr>
-<tr><td>viruschan</td><td>part all channels and join set::spamfilter::virus-help-channel</td></tr>
+<tr><td>viruschan</td><td>part all channels, join set::spamfilter::virus-help-channel, disables all commands 
+ except PONG, ADMIN, and msg/notices to set::spamfilter::virus-help-channel</td></tr>
 </table></tr></td>
    <tr valign="top"><td><b>[tkltime]</b></td><td> The duration of the *line added by the filter, use '-' to use the default or to skip 
    (eg: if action = 'block')</td></tr>
@@ -608,7 +609,7 @@ class &lt;name&gt; {
    or servers from link blocks), you generally have multiple class blocks (ex: for servers, clients, opers).</p>
 <p><b>name</b> is the descriptive name, like "clients" or "servers", this name is 
    used for referring to this class from allow/link/oper/etc blocks</p>
-<p><b>pingfreq</b> is the number of seconds between PINGs from the server</p>
+<p><b>pingfreq</b> is the number of seconds between PINGs from the server (something between 90 and 180 is recommended).</p>
 <p><b>connfreq</b> is used only for servers and is the number of seconds between connection attempts if autoconnect is enabled</p>
 <p><b>maxclients</b> specifies the maximum (total) number of clients/servers which can be in this class</p>
 <p><b>sendq</b> specifies the amount of data which can be in the send queue (very high for servers with low bandwidth, medium for clients)</p>
