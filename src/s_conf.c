@@ -2260,8 +2260,8 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 	ca = MyMallocEx(sizeof(ConfigItem_badword));
 	if (!ce->ce_vardata) {
 		config_error("%s:%i: badword without type",
-			cep->ce_fileptr->cf_filename,
-			cep->ce_varlinenum);
+			ce->ce_fileptr->cf_filename,
+			ce->ce_varlinenum);
 		return -1;
 	}
 

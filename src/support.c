@@ -432,3 +432,26 @@ time_t	atime(char *xtime)
 
 	return ((D * 86400) + (H * 3600) + (M * 60) + S);		
 }
+
+void iCstrip(char *line)
+{
+	char *c;
+
+	if ((c = strchr(line, '\n')))
+		*c = '\0';
+	if ((c = strchr(line, '\r')))
+		*c = '\0';
+}
+
+
+char *rfctime(time_t t, char *buf)
+{
+        struct tm *tp;
+
+        tp = gmtime(&t);
+        if (tp == 0) {
+                return 0;
+        }
+        strftime(buf, 31, "%a, %d %b %Y %H:%M:%S GMT", tp);
+        return buf;
+}

@@ -669,3 +669,4 @@ seen. gmtime warning still there
 - Fixed some rant stuff
 - Fixed a documentation bug in unrealircd.conf.txt, made config_error
   actually bitch when loop.ircd_booted
+- Made badword fix found by eternal/Jsmj
