@@ -1299,9 +1299,14 @@ void do_mode(chptr, cptr, sptr, parc, parv, sendts, samode)
 	    || *mode_buf == '-')))
 	{
 		if (tschange || isbounce)	/* relay bounce time changes */
-			sendto_serv_butone_token(cptr, me.name, MSG_MODE,
-			    TOK_MODE, "%s %s+ %lu", chptr->chname,
-			    isbounce ? "&" : "", chptr->creationtime);
+			if (chptr->creationtime)
+				sendto_serv_butone_token(cptr, me.name, MSG_MODE,
+				    TOK_MODE, "%s %s+ %lu", chptr->chname,
+				    isbounce ? "&" : "", chptr->creationtime);
+			else
+				sendto_serv_butone_token(cptr, me.name, MSG_MODE,
+				    TOK_MODE, "%s %s+ ", chptr->chname,
+				    isbounce ? "&" : "");
 		return;		/* nothing to send */
 	}
 	/* opermode for twimodesystem --sts */
