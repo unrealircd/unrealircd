@@ -1,4 +1,5 @@
 /************************************************************************
+
  *   Unreal Internet Relay Chat Daemon, src/updconf.c
  *   Copyright (C) 2001 UnrealIRCd Team
  *
@@ -22,7 +23,7 @@
 #include "../include/config.h"
 
 #define	BadPtr(x) (!(x) || (*(x) == '\0'))
-#define AllocCpy(x,y) x = (char *) malloc(strlen(y) + 1); strcpy(x,y)
+#define AllocCpy(x,y) if (x) free(x);  x = (char *) malloc(strlen(y) + 1); strcpy(x,y)
 
 struct flags {
 	char oldflag;
@@ -32,6 +33,7 @@ struct flags {
 struct class *classes = NULL;
 struct uline *ulines = NULL;
 struct link  *links = NULL;
+struct oper *opers = NULL;
 
 struct flags oflags[] = {
 	{ 'o', "local" },
@@ -124,6 +126,20 @@ char *getfield(char *newline)
 
 /* Allow naming of classes */
 
+struct oper {
+	char *login;
+	char *pass;
+	char *flags;
+	char *class;
+	struct host *hosts;
+	struct oper *next;
+};
+
+struct host {
+	char *host;
+	struct host *next;
+};
+
 struct class {
 	int number;
 	char *name;
@@ -189,6 +205,52 @@ struct class *find_class(int number) {
 	return NULL;
 }	
 
+struct host *add_host(struct oper *oper, char *mask) {
+	struct host *host = (struct host *)malloc(sizeof(struct host));
+
+	if (!host)
+		return NULL;
+
+	AllocCpy(host->host, mask);
+
+		host->next = oper->hosts;
+
+	oper->hosts = host;
+
+	return host;
+}
+
+int find_host(struct oper *oper, char *mask) {
+	struct host *host;
+
+	for (host = oper->hosts; host; host = oper->hosts->next) {
+		if (!stricmp(host->host, mask))
+			return 1;
+	}
+	return 0;
+}
+struct oper *add_oper(char *name) {
+	struct oper *op = (struct oper *)malloc(sizeof(struct oper));
+
+	if (!op)
+		return NULL;
+	AllocCpy(op->login, name);
+
+	op->next = opers;
+	opers = op;
+	return op;
+}
+
+struct oper *find_oper(char *name, char *pass) {
+	struct oper *op;
+
+	for (op = opers; op; op = op->next) {
+		if (!stricmp(op->login, name) && !stricmp(op->pass, pass))
+			return op;
+	}
+	return NULL;
+}	
+
 struct link *add_server(char *name) {
 	struct link *lk = (struct link *)malloc(sizeof(struct link));
 
@@ -232,6 +294,9 @@ int main (int argc, char *argv[]) {
 	struct class *cl;
 	struct uline *ul;
 	struct link *lk;
+	struct oper *op;
+	struct host *operhost;
+	struct flags *_flags;
 	fd = fopen("ircd.conf", "r");
 	fd2 = fopen("ircd.conf.new", "w");
 	for (i=1; i < argc; i++) {
@@ -333,27 +398,37 @@ int main (int argc, char *argv[]) {
 	{
 		char host[256], pass[32];
 		struct flags *_oflags;
+		char rebuild[128];
+		int i = 0;
 		strcpy(host, getfield(&buf[2]));
 		strcpy(pass, getfield(NULL));
 		tmp = getfield(NULL);
-		fprintf(fd2,"oper %s {\n", tmp);
-		fprintf(fd2, "\tfrom {\n \t\tuserhost %s;\n\t};\n",host);
-		fprintf(fd2, "\tpassword \"%s\";\n",pass);
+		if (!(op = find_oper(tmp, pass)))
+			op = add_oper(tmp);
+		AllocCpy(op->pass, pass);
 		tmp = getfield(NULL);
-		fprintf(fd2, "\tflags {\n");
-		for (; *tmp; tmp++) {
-		for(_oflags = oflags; _oflags->oldflag;_oflags++) {
-			if (*tmp == _oflags->oldflag)
-				fprintf(fd2, "\t\t%s;\n",_oflags->newflag);
+		if (!find_host(op, host))
+			add_host(op, host);
+		if (!BadPtr(op->flags)) {
+			memset(rebuild, 0, 128);
+			for(_oflags = oflags; _oflags->oldflag;_oflags++) {
+				if (strchr(op->flags, _oflags->oldflag) || strchr(tmp, _oflags->oldflag)) {
+					rebuild[i] = _oflags->oldflag;
+					i++;
+				}
+			}
+			AllocCpy(op->flags, rebuild);
 		}
+		else {
+			AllocCpy(op->flags, tmp);
 		}
-		fprintf(fd2, "\t};\n");
 		tmp = getfield(NULL);
-		if ((cl = find_class(atoi(tmp))))
-			fprintf(fd2, "\tclass %s;\n", cl->name);
-		else
-			fprintf(fd2, "\tclass %s;\n", tmp);
-		fprintf(fd2, "};\n\n");
+		if ((cl = find_class(atoi(tmp)))) {
+			AllocCpy(op->class, cl->name);
+		}
+		else {
+			AllocCpy(op->class, tmp);
+		}
 		break;
 	}
 	case 'U':
@@ -575,6 +650,26 @@ int main (int argc, char *argv[]) {
 	}
 	/* Old M:line bind */
 	fprintf(fd2, "listen %s:%d;\n\n", mainip, mainport);
+
+	for (op = opers; op; op = op->next) {
+		fprintf(fd2, "oper %s {\n", op->login);
+		fprintf(fd2, "\tfrom {\n");
+		for (operhost = op->hosts; operhost; operhost = operhost->next) {
+			fprintf(fd2, "\t\tuserhost %s;\n", operhost->host);
+		}
+		fprintf(fd2, "\t};\n");
+		fprintf(fd2, "\tpassword \"%s\";\n", op->pass);
+		fprintf(fd2, "\tflags {\n");
+		for (; *op->flags; op->flags++) {
+			for (_flags = oflags; _flags->oldflag; _flags++) {
+				if (*op->flags == _flags->oldflag)
+					fprintf(fd2, "\t\t%s;\n", _flags->newflag);
+			}
+		}
+		fprintf(fd2, "\t};\n");
+		fprintf(fd2, "\tclass %s;\n", op->class);
+		fprintf(fd2, "};\n\n");
+	}
 
 	for (lk = links; lk; lk = lk->next) {
 		char *user, *host;
