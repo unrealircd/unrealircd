@@ -579,7 +579,7 @@ Ban *is_banned(aClient *sptr, aChannel *chptr, int type)
 	static char virthost[NICKLEN + USERLEN + HOSTLEN + 6];
 	static char     nuip[NICKLEN + USERLEN + HOSTLEN + 6];
 	int dovirt = 0, mine = 0;
-	ExtbanInfo *extban;
+	Extban *extban;
 
 	if (!IsPerson(sptr))
 		return NULL;

@@ -72,15 +72,15 @@ int i;
 	 return NULL;
 }
 
-Extban *ExtbanAdd(Module *reserved, ExtbanInfo req)
+Extban *ExtbanAdd(Module *module, ExtbanInfo req)
 {
 Extban *tmp;
 int slot;
 
 	if (findmod_by_bantype(req.flag))
 	{
-		if (reserved)
-			reserved->errorcode = MODERR_EXISTS;
+		if (module)
+			module->errorcode = MODERR_EXISTS;
 		return NULL; 
 	}
 
@@ -90,15 +90,23 @@ int slot;
 			break;
 	if (slot == EXTBANTABLESZ - 1)
 	{
-		if (reserved)
-			reserved->errorcode = MODERR_NOSPACE;
+		if (module)
+			module->errorcode = MODERR_NOSPACE;
 		return NULL;
 	}
 	ExtBan_Table[slot].flag = req.flag;
 	ExtBan_Table[slot].is_ok = req.is_ok;
 	ExtBan_Table[slot].conv_param = req.conv_param;
 	ExtBan_Table[slot].is_banned = req.is_banned;
-
+	ExtBan_Table[slot].owner = module;
+	if (module)
+	{
+		ModuleObject *banobj = MyMallocEx(sizeof(ModuleObject));
+		banobj->object.extban = banobj;
+		banobj->type = MOBJ_EXTBAN;
+		AddListItem(banobj, module->objects);
+		module->errorcode = MODERR_NOERROR;
+	}
 	ExtBan_highest = slot;
 	make_extbanstr();
 	return &ExtBan_Table[slot];
@@ -107,6 +115,20 @@ int slot;
 void ExtbanDel(Extban *eb)
 {
 	/* Just zero it all away.. */
+
+	if (eb->owner)
+	{
+		ModuleObject *banobj;
+		for (banobj = eb->owner->objects; banobj; banobj = banobj->next)
+		{
+			if (banobj->type == MOBJ_EXTBAN && banobj->object.extban == eb)
+			{
+				DelListItem(banobj, eb->owner->objects);
+				MyFree(banobj);
+				break;
+			}
+		}
+	}
 	memset(eb, 0, sizeof(Extban));
 	make_extbanstr();
 	/* Hmm do we want to go trough all chans and remove the bans?
@@ -223,7 +245,7 @@ char *ban = banin+3;
 
 void extban_init(void)
 {
-Extban req;
+	ExtbanInfo req;
 
 	memset(&req, 0, sizeof(ExtbanInfo));
 	req.flag = 'c';

@@ -95,6 +95,7 @@ typedef struct {
 #define MOBJ_SNOMASK 0x0020
 #define MOBJ_UMODE 0x0040
 #define MOBJ_CMDOVERRIDE 0x0080
+#define MOBJ_EXTBAN 0x0100
 
 typedef struct {
         long mode;
@@ -226,6 +227,8 @@ typedef struct {
 #define EXTBANTABLESZ		32
 
 typedef struct {
+	/** extbans module */
+	Module *owner;
 	/** extended ban character */
 	char	flag;
 
@@ -259,8 +262,14 @@ typedef struct {
 	 * int: a value of BANCHK_* (see struct.h)
 	 */
 	int			(*is_banned)(aClient *, aChannel *, char *, int);
+} Extban;
+
+typedef struct {
+	char	flag;
+	int			(*is_ok)(aClient *, aChannel *, char *para, int, int, int);
+	char *		(*conv_param)(char *);
+	int			(*is_banned)(aClient *, aChannel *, char *, int);
 } ExtbanInfo;
-typedef ExtbanInfo Extban; /* Just to be consistent */
 
 
 typedef struct _command {
@@ -286,6 +295,7 @@ typedef struct _ModuleObject {
 		Snomask *snomask;
 		Umode *umode;
 		Cmdoverride *cmdoverride;
+		Extban *extban;
 	} object;
 } ModuleObject;
 
