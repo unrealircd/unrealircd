@@ -51,7 +51,6 @@ Source: "..\..\badwords.message.conf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\Changes"; DestDir: "{app}"; DestName: "Changes.txt"; Flags: ignoreversion
 Source: "..\..\Changes.old"; DestDir: "{app}"; DestName: "Changes.old.txt"; Flags: ignoreversion
 Source: "..\..\Donation"; DestDir: "{app}"; DestName: "Donation.txt"; Flags: ignoreversion
-Source: ".\gnu_regex.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\help.conf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
 Source: "..\..\Unreal.nfo"; DestDir: "{app}"; Flags: ignoreversion

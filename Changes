@@ -2419,3 +2419,5 @@ seen. gmtime warning still there
 - Fixed a problem in the new win32 resolver code
 - Added HOOKTYPE_UNKUSER_QUIT (disconnects of unregistered clients).
 - Fixed a Linux PPC problem (#0001242)
+- Made the win32 version use libtre for regex rather than GNU regex
+  libtre is smaller, faster, and more feature rich.
