@@ -1759,3 +1759,4 @@ seen. gmtime warning still there
   reported by AngryWolf (#0000596)
 - Fixed whole bunch of users in empty channel bug (probably)
 - Added a patch by Syzop to increase the "randomness" of well... the random numbers
+- Fixed a bug in the empty channel fix
