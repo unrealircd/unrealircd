@@ -28,7 +28,7 @@ Hungarian |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
   <font size="4">Verzió: 3.2.2-CVS</font><br>
-  <b>Utolsó dokumentáció módosítás:</b> 2004-10-11</div>
+  <b>Utolsó dokumentáció módosítás:</b> 2004-10-13</div>
 <br>
   <b>Fõ fejlesztõk:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Munkatársak:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -2168,6 +2168,8 @@ set {
   nem-oper használatáról értesítést küld az EYES snomaskra.</p>
 <p><font class="set">set::options::allow-part-if-shunned;</font><br>
   Engedélyezi a shunolt felhasználóknak a /part használatát.</p>
+<p><font class="set">set::options::fail-oper-warn;</font><br>
+  Ha jelen van, a felhasználók értesülni fognak arról, hogy a sikertelen /oper-elési kísérletük naplózva lett.</p>
 <p><font class="set">set::dns::timeout &lt;idõérték&gt;;</font><br>
   Egy idõérték azon idõhossz meghatározására, ami alatt a DNS szervernek válaszolni kell,
   mielõtt idõkifutás történik. Az idõérték egy numerikus sztring a napot jelentõ "d",
@@ -2178,6 +2180,8 @@ set {
   ha hiba fordul elõ.</p>
 <p><font class="set">set::dns::nameserver &lt;dns-szerver-neve&gt;;</font><br>
   Meghatározza a DNS lekérdezésekhez használt szerver gazdanevét.</p>
+<p><font class="set">set::dns::bind-ip &lt;ip&gt;;</font><br>
+  Meghatározza azt az IP címet, amelyre bindeljen a szerver a lekérdezésekhez; a lehetõ legritkábban van szükség rá.</p>
 <p><font class="set">set::network-name &lt;hálózat-neve&gt;;</font><br>
   Meghatározza azon hálózat nevét, amelyen ez a szerver fut. Ez az érték legyen a hálózat
   minden szerverén pontosan ugyanaz.</p>
@@ -3154,10 +3158,17 @@ További ilyen tanácsok: soha ne rakd az UnrealIRCd-t egy weben látható vagy egyé
 gondoskodj, hogy a biztonsági mentéseid is megkapják a megfelelõ engedélybeállításokat. (Elég gyakran megesik, hogy minden
 biztonságos, mégis megbújik valahol egy mindenki számára olvasható mentes.tar.gz.)<br>
 <br>
-Javasolt még, hogy használj titkosított jelszavakat, ahol lehetséges. 
-Megjegyzendõ, hogy ez is csak egy "újabb biztonsági szint", az 1-8 karakteres jelszavak
-feltörhetõek néhány óra/nap alatt, és egyébként is rendszeresen vannak más, nem titkosított, érdekes
-információk a konfigurációs fájlokban (mint pl. a link::password-connect).
+Erõsen ajánlott az is, hogy használj titkosított jelszavakat, ahol csak lehetséges. Ha OpenSSL támogatással
+fordítasz (és így is teszel, mivel érdekel téged a biztonság, igaz?), akkor javaslom, hogy
+titkosítsd a jelszavaidat <i>sha1</i> vagy <i>ripemd160</i> kódolással, különben <i>md5</i>-tel. Továbbá, ha
+még mindig vannak Unreal3.2.1 vagy késõbbi verziókból megmaradt titkosított (oper) blokkjaid, azt tanácsolom, hogy
+kódold újra ezeket (csak futtasd újra az /mkpasswd parancsot), mert a 3.2.1 bevezetett néhány számottevõ,
+feltörés elleni elõrelépést (alapvetõen az aktív feltöréseket 14-szeresen lelassítja, ezáltal lehetetlenné teszi
+a tárolt/nyílt/titkosított szöveges feltöréseket).
+Ennek ellenére vedd figyelembe, hogy ez csak "egy újabb szintje a biztonságnak", mivel ha gyenge
+jelszavaid vannak, még mindig feltörhetõek viszonylag könnyen, és ha valamely támadónak sikerül megszereznie
+a konfigurációs fájlodat, rendszerint más érdekes dolgokat is talál benne, amelyek segítségére lehetnek,
+például a link::password-connect.
 </div></p>
 
 <p><b><font size="+2">8.4. Felhasználószintû problémák</font></b><a name="secuser"></a><br><div class="desc">
@@ -3165,7 +3176,8 @@ Mint a legtöbb dolog, ez sem kimondottan az UnrealIRCd-vel kapcsolatos, de...<br
 Mindig figyelmesen válogasd meg az operátoraidat és az adminisztrátoraidat. És emlékezz a leggyengébb láncszem fogalmára is.
 Akkor is, ha óvatos voltál, és mindent megcsináltál, ami ebben a leírásban van, lehet, hogy a barátod, aki szintén operátor,
 elkövet valami hülyeséget. Például megosztja a merevlemezét valamilyen programmal, mint pl. a netbios/kazaa/morpheus/.., trójai
-vírust kap, túl egyszerû jelszót használ, stb. stb... Sajnos, ez nem mindig a te irányításod alatt van. 
+vírust kap, túl egyszerû jelszót használ, stb. stb... Sajnos, ez nem mindig a te irányításod alatt van.<br>
+Egy dolgot viszont megtehetsz, hogy gondosan megválogatod, kinek milyen jogra van szüksége (oper::flags).
 </div></p>
 
 <p><b><font size="+2">8.5. SSL/SSH és a szimatolások</font></b><a name="secsnif"></a><br><div class="desc">
@@ -3234,9 +3246,9 @@ Ha történik egy szakadás (split), valaki még mindig láthatja, melyik szerver hov
 és ez érvényes még néhány más dologra is.<br>
 <br>
 <b>KÖZÖNSÉGES FELHASZNÁLÓK ÉS SNOMASKOK</b><br>
-Egy featúra, amit nem ismernek széles körben, az, hogy a közönséges felhasználók is beállíthatnak néhány korlátozott snomaskot,
-nevezetesen a "+s +sk"-t. Ezzel láthatnak olyan dolgokat, mint a beállítások újratöltése, operelések, killek és egyéb más üzenetek.<br>
-Ahhoz, hogy ezt letiltsd, használhatod "set::restrict-usermodes"-t a következõképpen: <i>set { restrict-usermodes "s"; };</i>.<br>
+Van egy featúra, amit nem ismernek széles körben; ez az, hogy közönséges felhasználók is beállíthatnak néhány korlátozott snomaskot,
+mégpedig azt, hogy "+s +sk". Ezzel láthatnak olyan dolgokat, mint a beállítások újratöltése, killek és egyéb más üzenetek.<br>
+Ennek letiltására használhatod a "set::restrict-usermodes"-t a következõképpen: <i>set { restrict-usermodes "s"; };</i>.<br>
 
 
 <br><br>
@@ -3253,7 +3265,7 @@ Van egy dolog viszont, amit meg kellene tenned, ez pedig az, hogy MINDIG HASZNÁL
 jelentkezz fel az <a href="http://mail1.sourceforge.net/mailman/listinfo/unreal-notify" target="_blank">unreal-notify levelezõlistára</a> most rögtön,
 hogy megkaphasd a a kiadási közleményeket (az unreal-notify csak kiadási közleményekre
 van, így csak 1 levelet jelent X havonta). A kiadási közleményben rendszerint világosan fel van tüntetve, ha
-a kiadás (nagyobb veszélyû) biztonsági hibák javítását tartalmazza.<br>
+a kiadás (nagyobb veszélyességû) biztonsági hibák javítását tartalmazza, de egyébként is jó, ha frissítesz.<br>
 </div></p>
 
 <p><b><font size="+2">8.9. Összefoglalás</font></b><a name="secsummary"></a><br><div class="desc">
