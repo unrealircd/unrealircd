@@ -703,7 +703,6 @@ int  InitwIRCD(argc, argv)
 	char *argv[];
 {
 	char chess[] = {85, 110, 114, 101, 97, 108, 0};
-
 #ifdef _WIN32
 	WORD wVersionRequested = MAKEWORD(1, 1);
 	WSADATA wsaData;
@@ -732,7 +731,6 @@ int  InitwIRCD(argc, argv)
 	(void)signal(SIGUSR1, s_monitor);
 # endif
 #endif
-
 #ifdef	CHROOTDIR
 	if (chdir(dpath))
 	{

@@ -218,9 +218,9 @@ aClient *find_server_b64_or_real(char *name)
 	if (!name)
 		return NULL;
 	
-	namebase64 = base64dec(name);	
-	if ((namebase64 < 257) && (namebase64 > 0))
+	if (strlen(name) < 3)
 	{
+		namebase64 = base64dec(name);	
 		for (lp = servers; lp; lp = lp->next)
 			if (lp->value.cptr->serv->numeric == namebase64)
 				return (lp->value.cptr);

@@ -743,3 +743,4 @@
 - Fixed a couple of SJOIN/Link problems detected by Curt|s
 - Made /stats C show SSL/Zip flags
 - Fixed the Stskeeps "mass G:line on /rehash" (tm) bug
+- Removed last point of confusion in ALN/NS
