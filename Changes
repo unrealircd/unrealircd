@@ -2447,3 +2447,9 @@ seen. gmtime warning still there
 - Added a "command override" system for modules (experimental)
 - Fixed some documentation typos (#0001273) reported by AngryWolf
 - Fixed a bug where SVSNOOP could cause negative oper counts
+- Fixed even more negative oper count bugs:
+  1) if services would do a '-o' via svsmode/svs2mode on a +H person (instead of -oH)
+  2) services setting +H on a non-oper
+  3) services making someone a global oper while he's already local op might cause confusion.
+  4) if local opers would do /mode nick +H
+  5) Some false warnings (negative opercount) if services would do -Ho (-oH went fine)

@@ -2611,11 +2611,15 @@ CMD_FUNC(m_umode)
 	/* FIXME: This breaks something */
 	if (!(setflags & UMODE_HIDEOPER) && IsHideOper(sptr))
 	{
-		IRCstats.operators--;
+		if (IsOper(sptr)) /* decrease, but only if GLOBAL oper */
+			IRCstats.operators--;
 		VERIFY_OPERCOUNT(sptr, "umode2");
 	}
 	if ((setflags & UMODE_HIDEOPER) && !IsHideOper(sptr))
-		IRCstats.operators++;
+	{
+		if (IsOper(sptr)) /* increase, but only if GLOBAL oper */
+			IRCstats.operators++;
+	}
 	if (!(setflags & UMODE_INVISIBLE) && IsInvisible(sptr))
 		IRCstats.invisible++;
 	if ((setflags & UMODE_INVISIBLE) && !IsInvisible(sptr))

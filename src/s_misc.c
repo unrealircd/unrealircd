@@ -719,7 +719,7 @@ char text[2048];
 
 	for (acptr = client; acptr; acptr = acptr->next)
 	{
-		if (IsAnOper(acptr) && !IsHideOper(acptr))
+		if (IsOper(acptr) && !IsHideOper(acptr))
 			counted++;
 	}
 	if (counted == IRCstats.operators)

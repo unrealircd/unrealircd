@@ -265,6 +265,153 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 }
 
 /*
+ * do_svsmode() [merge from svsmode/svs2mode]
+ * parv[0] - sender
+ * parv[1] - username to change mode for
+ * parv[2] - modes to change
+ * parv[3] - Service Stamp (if mode == d)
+ *
+ * show_change can be 0 (for svsmode) or 1 (for svs2mode).
+ */
+int  do_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_change)
+{
+int i;
+char **p, *m;
+aClient *acptr;
+int  what, setflags;
+char *xmsg = show_change ? MSG_SVS2MODE : MSG_SVSMODE;
+char *xtok = show_change ? TOK_SVS2MODE : TOK_SVSMODE;
+
+	if (!IsULine(sptr))
+		return 0;
+
+	what = MODE_ADD;
+
+	if (parc < 3)
+		return 0;
+
+	if (parv[1][0] == '#') 
+		return channel_svsmode(cptr, sptr, parc, parv);
+
+	if (!(acptr = find_person(parv[1], NULL)))
+		return 0;
+
+	setflags = 0;
+	for (i = 0; i <= Usermode_highest; i++)
+	if (Usermode_Table[i].flag && (acptr->umodes & Usermode_Table[i].mode))
+		setflags |= Usermode_Table[i].mode;
+
+	/* parse mode change string(s) */
+	for (m = parv[2]; *m; m++)
+		switch (*m)
+		{
+			case '+':
+				what = MODE_ADD;
+				break;
+			case '-':
+				what = MODE_DEL;
+				break;
+
+			/* we may not get these, but they shouldnt be in default */
+			case ' ':
+			case '\n':
+			case '\r':
+			case '\t':
+				break;
+			case 'i':
+				if ((what == MODE_ADD) && !(acptr->umodes & UMODE_INVISIBLE))
+					IRCstats.invisible++;
+				if ((what == MODE_DEL) && (acptr->umodes & UMODE_INVISIBLE))
+					IRCstats.invisible--;
+				goto setmodex;
+			case 'o':
+				if ((what == MODE_ADD) && !(acptr->umodes & UMODE_OPER))
+				{
+					if (IsLocOp(acptr))
+						acptr->umodes &= ~UMODE_LOCOP; /* can't be both local and global */
+					IRCstats.operators++;
+#ifndef NO_FDLIST
+					if (MyClient(acptr))
+						addto_fdlist(acptr->slot, &oper_fdlist);
+#endif
+				}
+				if ((what == MODE_DEL) && (acptr->umodes & UMODE_OPER))
+				{
+					if (acptr->umodes & UMODE_HIDEOPER)
+					{
+						/* clear 'H' too, and opercount stays the same.. */
+						acptr->umodes &= ~UMODE_HIDEOPER;
+					} else {
+						IRCstats.operators--;
+					}
+#ifndef NO_FDLIST
+					if (MyClient(acptr))
+						delfrom_fdlist(acptr->slot, &oper_fdlist);
+#endif
+				}
+				goto setmodex;
+			case 'H':
+				if (what == MODE_ADD && !(acptr->umodes & UMODE_HIDEOPER))
+				{
+					if (!IsAnOper(acptr) && !strchr(parv[2], 'o')) /* (ofcoz this strchr() is flawed) */
+					{
+						/* isn't an oper, and would not become one either.. abort! */
+						sendto_realops(
+							"[BUG] server %s tried to set +H while user not an oper, para=%s/%s, "
+							"umodes=%ld, please fix your services or if you think it's our fault, "
+							"report at http://bugs.unrealircd.org/", sptr->name, parv[1], parv[2], acptr->umodes);
+						break; /* abort! */
+					}
+					if (!IsLocOp(acptr))
+						IRCstats.operators--;
+				}
+				if (what == MODE_DEL && (acptr->umodes & UMODE_HIDEOPER) && !IsLocOp(acptr))
+					IRCstats.operators++;
+				goto setmodex;
+			case 'd':
+				if (parv[3] && isdigit(*parv[3]))
+				{
+					acptr->user->servicestamp = strtoul(parv[3], NULL, 10);
+					break;
+				}
+			default:
+				setmodex:
+				for (i = 0; i <= Usermode_highest; i++)
+				{
+					if (!Usermode_Table[i].flag)
+						continue;
+					if (*m == Usermode_Table[i].flag)
+					{
+						if (what == MODE_ADD)
+							acptr->umodes |= Usermode_Table[i].mode;
+						else
+							acptr->umodes &= ~Usermode_Table[i].mode;
+						break;
+					}
+				}
+				break;
+		} /*switch*/
+
+	if (parc > 3)
+		sendto_serv_butone_token(cptr, parv[0], xmsg, xtok,
+			"%s %s %s", parv[1], parv[2], parv[3]);
+	else
+		sendto_serv_butone_token(cptr, parv[0], xmsg, xtok,
+			"%s %s", parv[1], parv[2]);
+
+	if (show_change)
+	{
+		char buf[BUFSIZE];
+		send_umode(NULL, acptr, setflags, ALL_UMODES, buf);
+		if (MyClient(acptr) && buf[0] && buf[1])
+			sendto_one(acptr, ":%s MODE %s :%s", parv[0], parv[1], buf);
+	}
+
+	VERIFY_OPERCOUNT(acptr, "svsmodeX");
+	return 0;
+}
+
+/*
  * m_svsmode() added by taz
  * parv[0] - sender
  * parv[1] - username to change mode for
@@ -273,126 +420,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
  */
 int  m_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	int i;
-        char **p, *m;
-        aClient *acptr;
-        int  what, setflags;
-
-        if (!IsULine(sptr))
-                return 0;
-
-        what = MODE_ADD;
-
-        if (parc < 3)
-                return 0;
-
-	if (parv[1][0] == '#') 
-		return channel_svsmode(cptr, sptr, parc, parv);
-
-        if (!(acptr = find_person(parv[1], NULL)))
-                return 0;
-        setflags = 0;
-        for (i = 0; i <= Usermode_highest; i++)
-                if (Usermode_Table[i].flag && (acptr->umodes & Usermode_Table[i].mode))
-                        setflags |= Usermode_Table[i].mode;
-        /*
-         * parse mode change string(s)
-         */
-        for (p = &parv[2]; p && *p; p++)
-                for (m = *p; *m; m++)
-                        switch (*m)
-                        {
-                          case '+':
-                                  what = MODE_ADD;
-                                  break;
-                          case '-':
-                                  what = MODE_DEL;
-                                  break;
-                                  /* we may not get these,
-                                   * but they shouldnt be in default
-                                   */
-                          case ' ':
-                          case '\n':
-                          case '\r':
-                          case '\t':
-                                  break;
-                          case 'i':
-                                  if (what == MODE_ADD
-                                      && !(acptr->umodes & UMODE_INVISIBLE))
-                                  {
-                                          IRCstats.invisible++;
-                                  }
-                                  if (what == MODE_DEL
-                                      && (acptr->umodes & UMODE_INVISIBLE))
-                                  {
-
-                                          IRCstats.invisible--;
-                                  }
-                                  goto setmodex;
-                          case 'o':
-                                  if (what == MODE_ADD
-                                      && !(acptr->umodes & UMODE_OPER))
-                                  {
-                                          IRCstats.operators++;
-#ifndef NO_FDLIST
-					  if (MyClient(acptr))
-	                                          addto_fdlist(acptr->slot, &oper_fdlist);
-#endif
-                                  }
-                                  if (what == MODE_DEL
-                                      && (acptr->umodes & UMODE_OPER))
-                                  {
-                                          IRCstats.operators--;
-                                          VERIFY_OPERCOUNT(acptr, "svsmode1");
-#ifndef NO_FDLIST
-					  if (MyClient(acptr))
-	                                          delfrom_fdlist(acptr->slot, &oper_fdlist);
-#endif
-                                  }
-                                  goto setmodex;
-			  case 'H':
-				  if (what == MODE_ADD && !(acptr->umodes & UMODE_HIDEOPER))
-				  {
-					IRCstats.operators--;
-					VERIFY_OPERCOUNT(acptr, "svsmode2");
-				  }
-				  if (what == MODE_DEL && (acptr->umodes & UMODE_HIDEOPER))
-					IRCstats.operators++;
-				  goto setmodex;
-                          case 'd':
-                                  if (parv[3] && isdigit(*parv[3]))
-                                  {
-                                          acptr->user->servicestamp =
-                                                strtoul(parv[3], NULL, 10);
-
-                                          break;
-                                  }
-                          default:
-                                setmodex:
-                                  for (i = 0; i <= Usermode_highest; i++)
-                                  {
-                                  	  if (!Usermode_Table[i].flag)
-                                  	  	continue;
-                                          if (*m == Usermode_Table[i].flag)
-                                          {
-                                                  if (what == MODE_ADD)
-                                                          acptr->umodes |= Usermode_Table[i].mode;
-                                                  else
-                                                          acptr->umodes &=
-                                                              ~Usermode_Table[i].mode;
-                                                  break;
-                                          }
-                                  }
-                                  break;
-                        }
-        if (parc > 3)
-                sendto_serv_butone_token(cptr, parv[0], MSG_SVSMODE,
-                    TOK_SVSMODE, "%s %s %s", parv[1], parv[2], parv[3]);
-        else
-                sendto_serv_butone_token(cptr, parv[0], MSG_SVSMODE,
-                    TOK_SVSMODE, "%s %s", parv[1], parv[2]);
-
-        return 0;
+	return do_svsmode(cptr, sptr, parc, parv, 0);
 }
 
 /*
@@ -404,132 +432,5 @@ int  m_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
  */
 int  m_svs2mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-        int  i;
-        char **p, *m;
-        aClient *acptr;
-        int  what, setflags;
-	char buf[BUFSIZE];
-
-
-        if (!IsULine(sptr))
-                return 0;
-
-        what = MODE_ADD;
-
-        if (parc < 3)
-                return 0;
-
-	if (parv[1][0] == '#') 
-		return channel_svsmode(cptr, sptr, parc, parv);
-
-        if (!(acptr = find_person(parv[1], NULL)))
-                return 0;
-
-        setflags = 0;
-        for (i = 0; i <= Usermode_highest; i++)
-                if (Usermode_Table[i].flag && (acptr->umodes & Usermode_Table[i].mode))
-                        setflags |= Usermode_Table[i].mode;
-         /*
-         * parse mode change string(s)
-         */
-        for (p = &parv[2]; p && *p; p++)
-                for (m = *p; *m; m++)
-                        switch (*m)
-                        {
-                          case '+':
-                                  what = MODE_ADD;
-                                  break;
-                          case '-':
-                                  what = MODE_DEL;
-                                  break;
-                                  /* we may not get these,
-                                   * but they shouldnt be in default
-				   */
-                          case ' ':
-                          case '\n':
-                          case '\r':
-                          case '\t':
-                                  break;
-                          case 'd':
-                                  if (parv[3] && (isdigit(*parv[3])))
-                                  {
-                                        acptr->user->servicestamp =
-                                               strtoul(parv[3], NULL, 10);
-                                  }
-                                  break;
-                          case 'i':
-                                  if (what == MODE_ADD
-                                      && !(acptr->umodes & UMODE_INVISIBLE))
-                                  {
-                                          IRCstats.invisible++;
-                                  }
-                                  if (what == MODE_DEL
-                                      && (acptr->umodes & UMODE_INVISIBLE))
-                                  {
-                                          IRCstats.invisible--;
-                                  }
-                                  goto setmodey;
-                          case 'o':
-                                  if (acptr->srvptr->flags & FLAGS_QUARANTINE)
-                                        break;
-                                  if (what == MODE_ADD
-                                      && !(acptr->umodes & UMODE_OPER))
-                                  {
-                                          IRCstats.operators++;
-#ifndef NO_FDLIST
-					  if (MyClient(acptr))
-	                                          addto_fdlist(acptr->slot, &oper_fdlist);
-#endif
-                                  }
-                                  if (what == MODE_DEL
-                                      && (acptr->umodes & UMODE_OPER))
-                                  {
-                                          IRCstats.operators--;
-                                          VERIFY_OPERCOUNT(acptr, "svsmode3");
-#ifndef NO_FDLIST
-					  if (MyClient(acptr))
-	                                          delfrom_fdlist(acptr->slot, &oper_fdlist);
-#endif
-                                  }
-				  goto setmodey;
-			  case 'H':
-				  if (what == MODE_ADD && !(acptr->umodes & UMODE_HIDEOPER))
-				  {
-					IRCstats.operators--;
-					VERIFY_OPERCOUNT(acptr, "svsmode4");
-				  }
-				  if (what == MODE_DEL && (acptr->umodes & UMODE_HIDEOPER))
-					IRCstats.operators++;
-				  goto setmodey;
-                          default:
-                                setmodey:
-                                  for (i = 0; i <= Usermode_highest; i++)
-                                  {
-                                  	  if (!Usermode_Table[i].flag)
-                                  	  	continue;
-                                          if (*m == Usermode_Table[i].flag)
-                                          {
-                                                  if (what == MODE_ADD)
-                                                          acptr->umodes |= Usermode_Table[i].mode;
-                                                  else
-                                                          acptr->umodes &=
-                                                              ~Usermode_Table[i].mode;
-                                                  break;
-                                            
-                                          }
-                                  }
-                                  break;
-                        }
-
-        if (parc > 3)
-                sendto_serv_butone_token(cptr, parv[0], MSG_SVS2MODE,
-                    TOK_SVS2MODE, "%s %s %s", parv[1], parv[2], parv[3]);
-        else
-                sendto_serv_butone_token(cptr, parv[0], MSG_SVS2MODE,
-                    TOK_SVS2MODE, "%s %s", parv[1], parv[2]);
-
-        send_umode(NULL, acptr, setflags, ALL_UMODES, buf);
-        if (MyClient(acptr) && buf[0] && buf[1])
-                sendto_one(acptr, ":%s MODE %s :%s", parv[0], parv[1], buf);
-        return 0;
+	return do_svsmode(cptr, sptr, parc, parv, 1);
 }
