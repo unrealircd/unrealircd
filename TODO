@@ -129,3 +129,7 @@ InTe[_:#roxnet> -oxygen.phrozen.org- *** Global -- from Irc.LinuxFreakz.Net:
  	send a SQUIT, the server displays no notice to opers that the server split.
           Stskeeps> +j? but yes, there's a bug there
 
+* stskeeps - Sat Dec 23 2000 - 10 - [ Bugfixes ]
+         There's some kind of bug that shows people being on same channel
+         twice. I got a feeling its to do with JOIN/SJOIN as its only remote.
+ 
