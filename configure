@@ -9963,7 +9963,7 @@ if test `uname -p` = "ppc" ; then
  fi
 fi
 
-ac_config_files="$ac_config_files Makefile src/modules/Makefile unreal"
+ac_config_files="$ac_config_files Makefile src/modules/Makefile unreal ircdcron/ircdchk"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -10437,6 +10437,7 @@ do
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "src/modules/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/modules/Makefile" ;;
   "unreal" ) CONFIG_FILES="$CONFIG_FILES unreal" ;;
+  "ircdcron/ircdchk" ) CONFIG_FILES="$CONFIG_FILES ircdcron/ircdchk" ;;
   "include/setup.h" ) CONFIG_HEADERS="$CONFIG_HEADERS include/setup.h" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
@@ -10982,3 +10983,4 @@ if test "$no_create" != yes; then
 fi
 
 chmod 0700 unreal
+chmod 0700 ircdcron/ircdchk
