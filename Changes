@@ -1900,3 +1900,5 @@ seen. gmtime warning still there
 - Made ".. did a /whois on you" always show the real host (#0000705).
 - Removed usermode +I (invisibility)
 - Fixed link::port bug reported by AngryWolf: was signed so ports >32767 had problems
+- Fixed a win32 bug that could cause crashes when editting files. Reported by camje_lemon
+  (#0000717)

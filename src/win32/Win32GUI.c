@@ -231,8 +231,11 @@ void WipeColors() {
 DWORD CALLBACK SplitIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) {
 	StreamIO *stream = (StreamIO*)dwCookie;
 	if (*stream->size == 0)
+	{
 		pcb = 0;
-	if (cb <= *stream->size) {
+		*stream->buffer = 0;
+	}
+	else if (cb <= *stream->size) {
 		memcpy(pbBuff, *stream->buffer, cb);
 		*stream->buffer += cb;
 		*stream->size -= cb;
