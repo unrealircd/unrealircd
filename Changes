@@ -2217,3 +2217,5 @@ seen. gmtime warning still there
    (since most users will ignore it anyway) you only show that stuff to users who specifically
    request it. Also, if you choose not to use short motds, everything will function as it used
    to the ircd.motd (or tld::motd) will be displayed both when users connect and /motd.
+- Changed a few messages so that they use PRIVMSG when being sent to a WebTV user rather than
+  using NOTICE.

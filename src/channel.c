@@ -2311,8 +2311,8 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
 			  {
 				  if (warnrestr)
 				  {
-					sendto_one(cptr, ":%s NOTICE %s :Setting/removing of channelmode(s) '%s' has been disabled.",
-						me.name, cptr->name, RESTRICT_CHANNELMODES);
+					sendto_one(cptr, ":%s %s %s :Setting/removing of channelmode(s) '%s' has been disabled.",
+						me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name, RESTRICT_CHANNELMODES);
 					warnrestr = 0;
 				  }
 				  paracount += foundat.parameters;
@@ -2861,13 +2861,13 @@ CMD_FUNC(do_join)
 					{
 						if (d->reason)
 							sendto_one(sptr, 
-							":%s NOTICE %s :*** Can not join %s: %s",
-							me.name, sptr->name, name, d->reason);
+							":%s %s %s :*** Can not join %s: %s",
+							me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, name, d->reason);
 						if (d->redirect)
 						{
 							sendto_one(sptr,
-							":%s NOTICE %s :*** Redirecting you to %s",
-							me.name, sptr->name, d->redirect);
+							":%s %s %s :*** Redirecting you to %s",
+							me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, d->redirect);
 							parv[0] = sptr->name;
 							parv[1] = d->redirect;
 							do_join(cptr, sptr, 2, parv);
