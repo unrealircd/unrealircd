@@ -19,12 +19,12 @@ OutputDir=../../
 Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"
 Name: "quicklaunchicon"; Description: "Create a &Quick Launch icon"; GroupDescription: "Additional icons:"; Flags: unchecked
 Name: "installservice"; Description: "Install &Service"; GroupDescription: "Service support:"; MinVersion: 0,4.0
-Name: "makecert"; Description: "Create &Certificate"; GrouptDescription: "SSL options:";
+Name: "makecert"; Description: "Create &Certificate"; GroupDescription: "SSL options:";
 
 [Files]
 Source: "..\..\wircd.exe"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\..\WIRCD.pdb"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\..\.CHANGES.NEW"; DestDir: "{app}"; DestName: "CHANGES.NEW.txt";CopyMode: alwaysoverwrite
+Source: "..\..\.CHANGES.NEW"; DestDir: "{app}"; DestName: "CHANGES.NEW.txt"; CopyMode: alwaysoverwrite
 Source: "..\..\.CONFIG.RANT"; DestDir: "{app}"; DestName: "CONFIG.RANT.txt"; CopyMode: alwaysoverwrite
 Source: "..\..\.NEW_CONFIG"; DestDir: "{app}"; DestName: "NEW_CONFIG.txt"; CopyMode: alwaysoverwrite
 Source: "..\..\.RELEASE.NOTES"; DestDir: "{app}"; DestName: "RELEASE.NOTES.txt"; CopyMode: alwaysoverwrite
@@ -106,7 +106,7 @@ Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\UnrealIRCd"; Filen
 [Run]
 Filename: "notepad"; Description: "View example.conf"; Parameters: "{app}\doc\example.conf"; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "notepad"; Description: "View conf.doc"; Parameters: "{app}\doc\conf.doc"; Flags: postinstall skipifsilent shellexec runmaximized
-Filename: "notepad"; Description: "View Release Notes"; Parameters: "{app}\.RELEASE.NOTES"; Flags: postinstall skipifsilent shellexec runmaximized
+Filename: "notepad"; Description: "View Release Notes"; Parameters: "{app}\RELEASE.NOTES.txt"; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "notepad"; Description: "View Changes"; Parameters: "{app}\Changes"; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "{app}\unreal.exe"; Parameters: "install"; Flags: runminimized nowait; Tasks: installservice
 Filename: "{app}\makecert.bat"; Tasks: makecert
