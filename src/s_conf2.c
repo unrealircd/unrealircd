@@ -246,6 +246,7 @@ ConfigItem *del_ConfigItem(ConfigItem *item, ConfigItem **list)
 	return NULL;
 }
 
+int	config_error_flag = 0;
 /* Small function to bitch about stuff */
 static void config_error(char *format, ...)
 {
@@ -260,6 +261,8 @@ static void config_error(char *format, ...)
 		*ptr = '\0';
 	fprintf(stderr, "[error] %s\n", buffer);
 	sendto_realops("error: %s", buffer);
+	/* We cannot live with this */
+	config_error_flag = 1;
 }
 
 /* Like above */
@@ -850,7 +853,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else
 		{
-			config_error("%s:%i: unknown directive class::%s",
+			config_status("%s:%i: unknown directive class::%s",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 					cep->ce_varname);
 			continue;								
@@ -916,7 +919,7 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else
 		{
-			config_error("%s:%i: unknown directive me::%s",
+			config_status("%s:%i: unknown directive me::%s",
 				cep->ce_fileptr->cf_filename,
 				cep->ce_varlinenum, 
 				cep->ce_varname);
@@ -1000,7 +1003,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 				}
 			} else
 			{
-				config_error("%s:%i: unknown directive oper::%s",
+				config_status("%s:%i: unknown directive oper::%s",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 						cep->ce_varname);
 				continue;								
@@ -1066,7 +1069,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 					}
 					else
 					{
-						config_error("%s:%i: unknown directive oper::from::%s",
+						config_status("%s:%i: unknown directive oper::from::%s",
 							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
 							cepp->ce_varname);
 						continue;								
@@ -1076,7 +1079,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 			}
 			else
 			{
-				config_error("%s:%i: unknown directive oper::%s (section)",
+				config_status("%s:%i: unknown directive oper::%s (section)",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 						cep->ce_varname);
 				continue;								
@@ -1167,7 +1170,7 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else
 		{
-			config_error("%s:%i: unknown directive tld::%s",
+			config_status("%s:%i: unknown directive tld::%s",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 				cep->ce_varname); 
 		}
@@ -1298,7 +1301,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else
 		{
-			config_error("%s:%i: unknown directive listen::%s",
+			config_status("%s:%i: unknown directive listen::%s",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 					cep->ce_varname);
 			continue;								
@@ -1364,7 +1367,7 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else
 		{
-			config_error("%s:%i: unknown directive allow::%s",
+			config_status("%s:%i: unknown directive allow::%s",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 					cep->ce_varname);
 			continue;								
@@ -1423,7 +1426,7 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 					}
 					else
 					{
-						config_error("%s:%i: unknown directive vhost::from::%s",
+						config_status("%s:%i: unknown directive vhost::from::%s",
 							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
 							cepp->ce_varname);
 						continue;		
@@ -1442,7 +1445,7 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else
 		{
-			config_error("%s:%i: unknown directive vhost::%s",
+			config_status("%s:%i: unknown directive vhost::%s",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 					cep->ce_varname);
 			continue;								
@@ -1476,7 +1479,7 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 				ca->mask = strdup(cep->ce_vardata);
 			}
 			else {
-				config_error("%s:%i: unknown directive except::ban::%s",
+				config_status("%s:%i: unknown directive except::ban::%s",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 					cep->ce_varname);
 			}
@@ -1485,14 +1488,13 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 		add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_except);				
 	}
 	else if (!strcmp(ce->ce_vardata, "socks")) {
-		config_status("Got except socks");
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 		{
 			if (!strcmp(cep->ce_varname, "mask")) {
 				ca->mask = strdup(cep->ce_vardata);
 			}
 			else {
-			config_error("%s:%i: unknown directive except::socks::%s",		
+			config_status("%s:%i: unknown directive except::socks::%s",		
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				cep->ce_varname);
 			}
@@ -1559,7 +1561,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 			ca->reason = strdup(cep->ce_vardata);
 		} 
 		else {
-				config_error("%s:%i: unknown directive ban %s::%s",
+				config_status("%s:%i: unknown directive ban %s::%s",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 					ce->ce_vardata, cep->ce_varname);
 		}
@@ -1686,7 +1688,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 			}
 		} else
 		{
-			config_error("%s:%i: unknown directive link::%s",
+			config_status("%s:%i: unknown directive link::%s",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 					cep->ce_varname);
 			continue;								
@@ -1959,14 +1961,12 @@ void	run_configuration(void)
 	{
 		if (!(listenptr->options & LISTENER_BOUND))
 		{
-			ircd_log("Binding to %s:%i", listenptr->ip, listenptr->port);
 			if (add_listener2(listenptr) == -1)
 			{
 				ircd_log("Failed to bind to %s:%i", listenptr->ip, listenptr->port);
 			}
 				else
 			{
-				ircd_log("Bound to %s:%i", listenptr->ip, listenptr->port);
 			}
 		}
 	}
@@ -2008,6 +2008,7 @@ void	listen_cleanup()
 #define Error config_error
 #define Status config_progress
 #define Warning config_status
+
 void	validate_configuration(void)
 {
 	ConfigItem_class *class_ptr;
@@ -2015,6 +2016,9 @@ void	validate_configuration(void)
 	ConfigItem_tld   *tld_ptr;
 	ConfigItem_allow *allow_ptr;
 	ConfigItem_listen *listen_ptr;
+	ConfigItem_except *except_ptr;
+	ConfigItem_ban *ban_ptr;
+	ConfigItem_link *link_ptr;
 	
 	/* Let us validate dynconf first */
 	if (!KLINE_ADDRESS || (*KLINE_ADDRESS == '\0'))
@@ -2140,7 +2144,51 @@ void	validate_configuration(void)
 		if (!allow_ptr->class)
 			Error("allow::class, unknown class");	
 	}
-	
+	for (except_ptr = conf_except; except_ptr; except_ptr = (ConfigItem_except *) except_ptr->next)
+	{
+		if (!except_ptr->mask)
+			Error("except mask missing");
+	}
+	for (ban_ptr = conf_ban; ban_ptr; ban_ptr = (ConfigItem_ban *) ban_ptr->next)
+	{
+		if (!ban_ptr->mask)
+			Error("ban mask missing");
+	}	
+	for (link_ptr = conf_link; link_ptr; link_ptr = (ConfigItem_link *) link_ptr->next)
+	{
+		if (!link_ptr->servername)
+		{
+			Error("link: name missing");
+		}
+		else
+		{
+			if (!link_ptr->username)
+				Error("link %s::username is missing", link_ptr->servername);
+			if (!link_ptr->hostname)
+				Error("link %s::hostname is missing", link_ptr->servername);
+			if (!link_ptr->connpwd)
+				Error("link %s::password-connect is missing", link_ptr->servername);
+			if (!link_ptr->recvpwd)
+				Error("link %s::password-receive is missing", link_ptr->servername);
+			if (!link_ptr->class)
+				Error("link %s::class is missing", link_ptr->servername);
+		}
+	}
+	for (tld_ptr = conf_tld; tld_ptr; tld_ptr = (ConfigItem_tld *) tld_ptr->next)
+	{
+		if (!tld_ptr->mask)
+			Error("tld {} without mask");
+		else
+		{
+			if (!tld_ptr->motd_file)
+				Error("tld %s::motd is missing", tld_ptr->mask);
+		}
+	}
+	if (config_error_flag)
+	{
+		Error("Errors in configuration, terminating program.");
+		exit(5);
+	}	
 }
 #undef Error
 #undef Status
