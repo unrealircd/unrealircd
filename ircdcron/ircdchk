@@ -22,7 +22,7 @@ MAIL=me
 dir="../"
 
 # change this to the name of your ircd's file in that directory:
-ircdexe="ircd"
+ircdexe="src/ircd"
 
 # I wouldn't touch this if I were you.
 ircdname="ircd.pid"
