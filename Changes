@@ -671,3 +671,4 @@
 - Fixed a wierd channel message bug ||
 - Fixed a bug where non-NS servers would crash when linking
 - Added TS2ts (supporting the SJB64 stuff), and fixed the !0 timestamp bug
+- Fixed the /list only showing 64 channels bug! Also sped /list up in the process

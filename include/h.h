@@ -272,7 +272,7 @@ extern void free_ban PROTO((Ban *));
 extern void free_conf PROTO((aConfItem *));
 extern void free_class PROTO((aClass *));
 extern void free_user PROTO((anUser *, aClient *));
-extern int find_str_match_link PROTO((Link **, char *));
+extern int find_str_match_link PROTO((Link *, char *));
 extern void free_str_list PROTO((Link *));
 extern Link *make_link PROTO(());
 extern Ban *make_ban PROTO(());

@@ -375,34 +375,14 @@ Link *find_channel_link(lp, ptr)
 	return NULL;
 }
 
-
-
-/*
- * Look for a match in a list of strings. Go through the list, and run
- * match() on it. Side effect: if found, this link is moved to the top of
- * the list.
- */
-int  find_str_match_link(lp, str)
-	Link **lp;		/* Two **'s, since we might modify the original *lp */
-	char *str;
+/* Based on find_str_link() from bahamut -- codemastr */
+int find_str_match_link(Link *lp, char *charptr)
 {
-	Link **head = lp;
-	if (!str || !lp)
+	if (!charptr)
 		return 0;
-	if (lp && *lp)
-	{
-		if (!match((*lp)->value.cp, str))
+	for (; lp; lp = lp->next) {
+		if(!match(lp->value.cp, charptr))
 			return 1;
-		for (; (*lp)->next; *lp = (*lp)->next)
-			if (!match((*lp)->next->value.cp, str))
-			{
-				Link *temp = (*lp)->next;
-				*lp = (*lp)->next->next;
-				temp->next = *head;
-				*head = temp;
-				return 1;
-			}
-		return 0;
 	}
 	return 0;
 }

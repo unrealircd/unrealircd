@@ -3747,18 +3747,18 @@ char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
 					continue;
 
 				if (lopt->nolist &&
-				    (find_str_match_link(&
-				    (lopt->nolist), chptr->chname)
+				    (find_str_match_link(lopt->nolist,
+				    chptr->chname)
 				    || (chptr->topic ?
-				    find_str_match_link(&(lopt->nolist),
+				    find_str_match_link(lopt->nolist,
 				    chptr->topic) : 0)))
 					continue;
 				if (lopt->yeslist &&
-				    (!find_str_match_link(&
-				    (lopt->yeslist), chptr->chname)
+				    (!find_str_match_link(
+				    lopt->yeslist, chptr->chname)
 				    &&
-				    !find_str_match_link(&
-				    (lopt->yeslist), chptr->topic)))
+				    !find_str_match_link(
+				    lopt->yeslist, chptr->topic)))
 					continue;
 #ifdef LIST_SHOW_MODES
 				mode_buf[0] = '[';
@@ -3798,7 +3798,7 @@ char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
 	}
 
 	/* All done */
-	if (hashnum == CH_MAX);
+	if (hashnum == CH_MAX)
 	{
 		Link *lp, *next;
 		sendto_one(cptr, rpl_str(RPL_LISTEND), me.name, cptr->name);
