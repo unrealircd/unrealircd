@@ -415,21 +415,21 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 			return 0;
 		}
 
-	if (TStime() < sptr->nexttarget)
+	if (TStime() < sptr->user->nexttarget)
 	{
-		if (sptr->nexttarget - TStime() < TARGET_DELAY + 8)
+		if (sptr->user->nexttarget - TStime() < TARGET_DELAY + 8)
 		{
-			sptr->nexttarget += 2;
+			sptr->user->nexttarget += 2;
 			sendto_one(sptr, err_str(ERR_TARGETTOOFAST),
-			    me.name, sptr->name, name, sptr->nexttarget - TStime());
+			    me.name, sptr->name, name, sptr->user->nexttarget - TStime());
 		}
 		return 1;
 	}
 	else
 	{
-		sptr->nexttarget += TARGET_DELAY;
-		if (sptr->nexttarget < TStime() - (TARGET_DELAY * (MAXTARGETS - 1)))
-			sptr->nexttarget =
+		sptr->user->nexttarget += TARGET_DELAY;
+		if (sptr->user->nexttarget < TStime() - (TARGET_DELAY * (MAXTARGETS - 1)))
+			sptr->user->nexttarget =
 			    TStime() - (TARGET_DELAY * (MAXTARGETS - 1));
 	}
 	memmove(&sptr->targets[1], &sptr->targets[0], MAXTARGETS - 1);
@@ -2300,7 +2300,9 @@ int  m_whois(cptr, sptr, parc, parv)
 		NULL,		/* silence */
 		NULL,		/* away */
 		0,		/* last */
+		0,		/* nexttarget */
 		0,		/* servicestamp */
+		0,		/* oflag */
 		1,		/* refcount */
 		0,		/* joined */
 		"<Unknown>",	/* username */
@@ -2728,7 +2730,9 @@ int  m_kill(cptr, sptr, parc, parv)
 		NULL,		/* silence */
 		NULL,		/* away */
 		0,		/* last */
+		0,		/* nexttarget */
 		0,		/* servicestamp */
+		0,		/* oflag */
 		1,		/* refcount */
 		0,		/* joined */
 		"<Unknown>",	/* username */
@@ -3502,7 +3506,7 @@ int  m_oper(cptr, sptr, parc, parv)
 			sptr->umodes |= (UMODE_HIDE);
 		}
 
-		sptr->oflag = aconf->oflags;
+		sptr->user->oflag = aconf->oflags;
 
 		sptr->umodes |=
 		    (UMODE_SERVNOTICE | UMODE_WALLOP | UMODE_FAILOP);
@@ -3524,16 +3528,10 @@ int  m_oper(cptr, sptr, parc, parv)
 			    parv[0], sptr->user->username,
 			    IsHidden(sptr) ? sptr->user->virthost : sptr->
 			    user->realhost);
-			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
+			if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
 				iNAH_host(sptr, locop_host);
 			sptr->umodes &= ~UMODE_OPER;
 		}
-/*        	else
-        if ((aconf->oflags & OFLAG_AGENT))
-        {
-			sendto_ops("%s (%s@%s) is now an IRCd Agent (S)", parv[0],
-				sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost);
-        }*/
 		else if (aconf->oflags & OFLAG_NETADMIN)
 		{
 			sendto_ops
@@ -3550,7 +3548,7 @@ int  m_oper(cptr, sptr, parc, parv)
 				    user->virthost : sptr->user->realhost);
 			}
 
-			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
+			if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
 				iNAH_host(sptr, netadmin_host);
 		}
 		else if (aconf->oflags & OFLAG_COADMIN)
@@ -3565,7 +3563,7 @@ int  m_oper(cptr, sptr, parc, parv)
 				   sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost);
 				 */
 			}
-			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
+			if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
 				iNAH_host(sptr, coadmin_host);
 		}
 		else if (aconf->oflags & OFLAG_TECHADMIN)
@@ -3583,7 +3581,7 @@ int  m_oper(cptr, sptr, parc, parv)
 				    IsHidden(sptr) ? sptr->
 				    user->virthost : sptr->user->realhost);
 			}
-			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
+			if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
 				iNAH_host(sptr, techadmin_host);
 		}
 		else if (aconf->oflags & OFLAG_SADMIN)
@@ -3600,7 +3598,7 @@ int  m_oper(cptr, sptr, parc, parv)
 				    IsHidden(sptr) ? sptr->
 				    user->virthost : sptr->user->realhost);
 			}
-			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
+			if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
 				iNAH_host(sptr, sadmin_host);
 		}
 		else if (aconf->oflags & OFLAG_ADMIN)
@@ -3609,7 +3607,7 @@ int  m_oper(cptr, sptr, parc, parv)
 			    parv[0], sptr->user->username,
 			    IsHidden(sptr) ? sptr->user->virthost : sptr->
 			    user->realhost);
-			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
+			if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
 				iNAH_host(sptr, admin_host);
 		}
 		else
@@ -3618,7 +3616,7 @@ int  m_oper(cptr, sptr, parc, parv)
 			    sptr->user->username,
 			    IsHidden(sptr) ? sptr->user->virthost : sptr->
 			    user->realhost);
-			if (iNAH == 1 && (sptr->oflag & OFLAG_HIDE))
+			if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
 				iNAH_host(sptr, oper_host);
 		}
 
@@ -4092,7 +4090,7 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			if (IsTechAdmin(sptr) && !OPIsTechAdmin(sptr))
 				ClearTechAdmin(sptr);
 			if ((sptr->umodes & UMODE_HIDING)
-			    && !(sptr->oflag & OFLAG_INVISIBLE))
+			    && !(sptr->user->oflag & OFLAG_INVISIBLE))
 				sptr->umodes &= ~UMODE_HIDING;
 			if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
 			    && !IsSecure(sptr))
@@ -4112,7 +4110,7 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sptr->umodes &= ~UMODE_HIDING;
 
 		if ((sptr->umodes & UMODE_HIDING)
-		    && !(sptr->oflag & OFLAG_INVISIBLE))
+		    && !(sptr->user->oflag & OFLAG_INVISIBLE))
 			sptr->umodes &= ~UMODE_HIDING;
 		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
 		    && !IsSecure(sptr))
@@ -4178,7 +4176,7 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifndef NO_FDLIST
 		delfrom_fdlist(sptr->slot, &oper_fdlist);
 #endif
-		sptr->oflag = 0;
+		sptr->user->oflag = 0;
 		if (sptr->user->snomask & SNO_CLIENT)
 			sptr->user->snomask &= ~SNO_CLIENT;
 		if (sptr->user->snomask & SNO_FCLIENT)
