@@ -781,9 +781,6 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			ircstp->is_ref++;
 			return xx;
 		}
-
-		if (oldstatus == STAT_MASTER && MyConnect(sptr))
-			(void)m_oper(&me, sptr, 1, parv);
 	}
 	else
 	{

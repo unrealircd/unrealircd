@@ -3796,11 +3796,6 @@ int  m_trace(cptr, sptr, parc, parv)
 				      now - acptr->lasttime);
 			  cnt++;
 			  break;
-		  case STAT_SERVICE:
-			  sendto_one(sptr, rpl_str(RPL_TRACESERVICE),
-			      me.name, parv[0], class, name);
-			  cnt++;
-			  break;
 		  case STAT_LOG:
 			  sendto_one(sptr, rpl_str(RPL_TRACELOG), me.name,
 			      parv[0], LOGFILE, acptr->port);

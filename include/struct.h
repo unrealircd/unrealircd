@@ -82,17 +82,10 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 #define	HOSTLEN		63	/* Length of hostname.  Updated to         */
 				/* comply with RFC1123                     */
 
-#define	NICKLEN		30	/* Necessary to put 9 here instead of 10
-				** if s_msg.c/m_nick has been corrected.
-				** This preserves compatibility with old
-				** servers --msa
-				*/
+#define	NICKLEN		30
 #define	USERLEN		10
 #define	REALLEN	 	50
 #define	TOPICLEN	307
-/* DAL MADE ME PUT THIS IN THE FIEND:  --Russell
- * This number will be expanded to 200 in the near future
- */
 #define	CHANNELLEN	32
 #define	PASSWDLEN 	32	/* orig. 20, changed to 32 for nickpasswords */
 #define	KEYLEN		23
@@ -140,14 +133,12 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 #define	BOOT_AUTODIE	64
 
 #define	STAT_LOG	-6	/* logfile for -x */
-#define	STAT_MASTER	-5	/* Local ircd master before identification */
 #define	STAT_CONNECTING	-4
 #define	STAT_HANDSHAKE	-3
 #define	STAT_ME		-2
 #define	STAT_UNKNOWN	-1
 #define	STAT_SERVER	0
 #define	STAT_CLIENT	1
-#define	STAT_SERVICE	2	/* Services not implemented yet */
 
 /*
  * status macros.
@@ -157,13 +148,11 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 #define	IsConnecting(x)		((x)->status == STAT_CONNECTING)
 #define	IsHandshake(x)		((x)->status == STAT_HANDSHAKE)
 #define	IsMe(x)			((x)->status == STAT_ME)
-#define	IsUnknown(x)		((x)->status == STAT_UNKNOWN || \
-				 (x)->status == STAT_MASTER)
+#define	IsUnknown(x)		((x)->status == STAT_UNKNOWN)
 #define	IsServer(x)		((x)->status == STAT_SERVER)
 #define	IsClient(x)		((x)->status == STAT_CLIENT)
 #define	IsLog(x)		((x)->status == STAT_LOG)
 
-#define	SetMaster(x)		((x)->status = STAT_MASTER)
 #define	SetConnecting(x)	((x)->status = STAT_CONNECTING)
 #define	SetHandshake(x)		((x)->status = STAT_HANDSHAKE)
 #define	SetMe(x)		((x)->status = STAT_ME)
@@ -171,7 +160,6 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 #define	SetServer(x)		((x)->status = STAT_SERVER)
 #define	SetClient(x)		((x)->status = STAT_CLIENT)
 #define	SetLog(x)		((x)->status = STAT_LOG)
-#define	SetService(x)		((x)->status = STAT_SERVICE)
 
 /* opt.. */
 #define OPT_SJOIN	0x0001
