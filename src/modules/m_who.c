@@ -510,7 +510,7 @@ static int can_see(aClient *sptr, aClient *acptr, aChannel *channel)
 	  host = acptr->user->realhost;
 	else
 	  {
-	    if (IsHidden(sptr))
+	    if (IsHidden(acptr))
 	      host = acptr->user->virthost;
 	    else
 	      host = acptr->user->realhost;

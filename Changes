@@ -1586,3 +1586,4 @@ seen. gmtime warning still there
 - Added Syzop's various zero-terminate patches and fixes for crashes when
   you send commands like JOIN from a server directly
 - Made channel keys be case sensitive
+- Fixed a bug with /who -h in some cases, found by Zer0, fixed by butter (#0000361)
