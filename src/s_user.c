@@ -2392,9 +2392,10 @@ CMD_FUNC(m_umode)
 				goto def;
 			  }
 		  case 'o':
+		  case 'O':
 			  if(sptr->from->flags & FLAGS_QUARANTINE)
 				break;
-			  /* A local user trying to set himself +o is denied here.
+			  /* A local user trying to set himself +o/+O is denied here.
 			   * A while later (outside this loop) it is handled as well (and +C, +N, etc too)
 			   * but we need to take care here too because it might cause problems
 			   * since otherwise all IsOper()/IsAnOper() calls cannot be trusted,
