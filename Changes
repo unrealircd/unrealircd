@@ -3108,3 +3108,5 @@ seen. gmtime warning still there
   now no longer be frozen if the site is unreachable. Reported by Ron2K (#0001751).
 - Changed version to 3.2 already
 ** internal pre2 release **
+- Added temporary fix for include "http://www.blah.com/"; crashbug...although I doubt
+  many people would use it. Reported by Angrywolf (#0001757).

@@ -62,7 +62,7 @@ int url_is_valid(char *string)
 /*
  * Returns the filename portion of the URL. The returned string
  * is malloc()'ed and must be freed by the caller. If the specified
- * URL does not contain a filename, NULL is returned.
+ * URL does not contain a filename, a '-' is allocated and returned.
  */
 char *url_getfilename(char *url)
 {
@@ -80,7 +80,7 @@ char *url_getfilename(char *url)
         {
                 c++;
                 if (!*c || *c == '?')
-                        return NULL;
+                        return strdup("-");
                 start = c;
                 while (*c && *c != '?')
                         c++;
@@ -92,10 +92,10 @@ char *url_getfilename(char *url)
                         strlcpy(file, start, c-start+1);
                         return file;
                 }
-                return NULL;
+                return strdup("-");
 
         }
-        return NULL;
+        return strdup("-");
 }
 
 #ifdef USE_SSL
