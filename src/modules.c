@@ -59,7 +59,6 @@ Module *Module_make(ModuleHeader *header,
        void *mod
 #endif
        );
-
 #ifdef UNDERSCORE
 void *obsd_dlsym(void *handle, char *symbol) {
     char *obsdsymbol = (char*)malloc(strlen(symbol) + 2);
@@ -115,6 +114,8 @@ char  *Module_Load (char *path_, int load)
 	ModuleHeader    *mod_header;
 	int		ret = 0;
 	Module          *mod = NULL, **Mod_Handle = NULL;
+	int betaversion,tag;
+	ModuleInfo modinfo;
 	Debug((DEBUG_DEBUG, "Attempting to load module from %s",
 	       path_));
 	path = path_;
@@ -140,12 +141,13 @@ char  *Module_Load (char *path_, int load)
 			irc_dlclose(Mod);
 			return ("Lacking mod_header->modversion");
 		}
-		if (match(MOD_WE_SUPPORT, mod_header->modversion))
-		{
-			ircsprintf(errorbuf, "Unsupported version, we support %s, %s is %s",
-				   MOD_WE_SUPPORT, path, mod_header->modversion);
-			irc_dlclose(Mod);
-			return(errorbuf);
+		if (sscanf(mod_header->modversion, "3.2-b%d-%d", &betaversion, &tag)) {
+			if (betaversion < 5 || betaversion >8) {
+				ircsprintf(errorbuf, "Unsupported version, we support %s, %s is %s",
+					   MOD_WE_SUPPORT, path, mod_header->modversion);
+				irc_dlclose(Mod);
+				return(errorbuf);
+			}
 		}
 		if (!mod_header->name || !mod_header->version ||
 		    !mod_header->description)
@@ -185,13 +187,27 @@ char  *Module_Load (char *path_, int load)
 		irc_dlsym(Mod, "Mod_Handle", Mod_Handle);
 		if (Mod_Handle)
 			*Mod_Handle = mod;
-		if ((ret = (*Mod_Init)(load)) < MOD_SUCCESS)
-		{
-			ircsprintf(errorbuf, "Mod_Init returned %i",
-				   ret);
-			/* We EXPECT the module to have cleaned up it's mess */
-		        Module_free(mod);
-			return (errorbuf);
+		if (betaversion >= 8) {
+			modinfo.size = sizeof(ModuleInfo);
+			modinfo.module_load = load;
+			modinfo.handle = mod;
+			if ((ret = (*Mod_Init)(&modinfo)) < MOD_SUCCESS) {
+				ircsprintf(errorbuf, "Mod_Init returned %i",
+					   ret);
+				/* We EXPECT the module to have cleaned up it's mess */
+		        	Module_free(mod);
+				return (errorbuf);
+			}
+		}
+		else {
+			if ((ret = (*Mod_Init)(load)) < MOD_SUCCESS)
+			{
+				ircsprintf(errorbuf, "Mod_Init returned %i",
+					   ret);
+				/* We EXPECT the module to have cleaned up it's mess */
+			        Module_free(mod);
+				return (errorbuf);
+			}
 		}
 		
 		if (load)
@@ -276,6 +292,9 @@ int    Module_free(Module *mod)
 		}
 		else if (objs->type == MOBJ_HOOK) {
 			HookDel(objs->object.hook);
+		}
+		else if (objs->type == MOBJ_COMMAND) {
+			CommandDel(objs->object.command);
 		}
 	}
 	for (p = Modules; p; p = p->next)

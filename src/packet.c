@@ -218,7 +218,7 @@ void	init_CommandHash(void)
 #endif
 }
 
-void	add_Command_backend(char *cmd, int (*func)(), unsigned char parameters, unsigned char token, int flags)
+aCommand *add_Command_backend(char *cmd, int (*func)(), unsigned char parameters, unsigned char token, int flags)
 {
 	aCommand	*newcmd = (aCommand *) MyMalloc(sizeof(aCommand));
 	
@@ -232,6 +232,49 @@ void	add_Command_backend(char *cmd, int (*func)(), unsigned char parameters, uns
 	
 	/* Add in hash with hash value = first byte */
 	AddListItem(newcmd, CommandHash[toupper(*cmd)]);
+	return newcmd;
+}
+
+Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigned char params, int flags) {
+	Command *command = MyMallocEx(sizeof(Command));
+	command->cmd = add_Command_backend(cmd,func,params, 0, flags);
+	command->tok = NULL;
+	command->cmd->owner = module;
+	if (tok) {
+		command->tok = add_Command_backend(tok,func,params,1,flags);
+		command->tok->owner = module;
+	}
+	if (module) {
+		ModuleObject *cmdobj = (ModuleObject *)MyMallocEx(sizeof(ModuleObject));
+		cmdobj->object.command = command;
+		cmdobj->type = MOBJ_COMMAND;
+		AddListItem(cmdobj, module->objects);
+	}
+	return command;
+}
+
+
+void CommandDel(Command *command) {
+	DelListItem(command->cmd, CommandHash[toupper(*command->cmd->cmd)]);
+	if (command->tok)
+		DelListItem(command->tok, CommandHash[toupper(*command->tok->cmd)]);
+	if (command->cmd->owner) {
+		ModuleObject *cmdobj;
+		for (cmdobj = command->cmd->owner->objects; cmdobj; cmdobj = (ModuleObject *)cmdobj->next) {
+			if (cmdobj->type == MOBJ_COMMAND && cmdobj->object.command == command) {
+				DelListItem(cmdobj,command->cmd->owner->objects);
+				MyFree(cmdobj);
+				break;
+			}
+		}
+	}
+	MyFree(command->cmd->cmd);
+	MyFree(command->cmd);
+	if (command->tok) {
+		MyFree(command->tok->cmd);
+		MyFree(command->tok);
+	}
+	MyFree(command);
 }
 
 void	add_Command(char *cmd, char *token, int (*func)(), unsigned char parameters)

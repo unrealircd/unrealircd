@@ -3420,7 +3420,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	flush_connections(&me);
 	if (sig == 1)
 	{
-		sendto_ops("Got signal SIGHUP, reloading ircd conf. file");
+		sendto_ops("Got signal SIGHUP, reloading %s file", configfile);
 #ifdef	ULTRIX
 		if (fork() > 0)
 			exit(0);

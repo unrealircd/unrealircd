@@ -1869,7 +1869,7 @@ char *get_client_name2(aClient *acptr, int showports)
 */
 /*
 **    Note:   The info is reported in the order the server uses
-**            it--not reversed as in ircd.conf!
+**            it--not reversed as in unrealircd.conf!
 */
 
 CMD_FUNC(m_stats)
@@ -2912,7 +2912,7 @@ CMD_FUNC(m_gnotice)
 }
 
 /*
-** m_addline (write a line to ircd.conf)
+** m_addline (write a line to unrealircd.conf)
 **
 ** De-Potvinized by codemastr
 */
@@ -2940,8 +2940,8 @@ CMD_FUNC(m_addline)
 		return 0;
 	}
 	/* Display what they wrote too */
-	sendto_one(sptr, ":%s %s %s :*** Wrote (%s) to ircd.conf",
-	    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], text);
+	sendto_one(sptr, ":%s %s %s :*** Wrote (%s) to %s",
+	    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], text, configfile);
 	fprintf(conf, "// Added by %s\n", make_nick_user_host(sptr->name,
 	    sptr->user->username, sptr->user->realhost));
 /*	for (i=1 ; i<parc ; i++)

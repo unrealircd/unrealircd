@@ -1224,3 +1224,24 @@ seen. gmtime warning still there
 - Fixed -Wall warnings for TStime
 - Compile fix for TS2ts 
 - Small release tricks
+*** beta7 released ***
+- Fixed a win32 editor bug where the line count didn't display right away (reported by
+  iDW-badSol)
+- Module Insanity Recode (part 1) if the module version is 3.2-b8* we now pass a ModuleInfo struct
+  to Mod_Init which contains extended information. This replaces the Mod_Handle method in beta7
+- Module Insanity prototype fix
+- Fixed a listen::options::serversonly bug reported by swissSolaris (#0000084)
+- Fixed leftovers of non- char *configfile compliance. Thanks to ace and
+  various other people ..
+- Fixed a /mkpasswd typo and added the updated /mkpasswd syntax to doc/unrealircd.doc, both
+  reported by peck
+- Made the command system use module objects (haven't yet converted modules to use it)
+- Fix with DEBUGMODE
+- Fixed a Chinese nick bug found and fixed by Xuefer
+- Fix with status needed for remote clients too. Found by
+  Craig/FrostyCoolSlug <Craig@e-tidalwave.org>
+- Fixed m_oper setting +O on globops
+- Fixed bug with mode buffer overflow .. I'm not 100% positive it works..
+  Thanks to larne, Luke, SciFi, panda, ^Tux^.. Syzop .. and the countless
+  people bitching about their servers going down.
+*** beta8 released ***

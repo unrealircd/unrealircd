@@ -655,20 +655,6 @@ struct Server {
 #define M_ALIAS 0x0020
 #define M_RESETIDLE 0x0040
 
-struct Command {
-	aCommand		*prev, *next;
-	char 			*cmd;
-	int			(*func) ();
-	int			flags;
-	unsigned int    	count;
-	unsigned		parameters : 5;
-	unsigned		token : 1;
-	unsigned long   	bytes;
-#ifdef DEBUGMODE
-	unsigned long 		lticks;
-	unsigned long 		rticks;
-#endif
-};
 
 
 /* tkl:
@@ -742,6 +728,7 @@ struct Client {
 	char username[USERLEN + 1];	/* username here now for auth stuff */
 	char info[REALLEN + 1];	/* Free form additional client information */
 	aClient *srvptr;	/* Server introducing this.  May be &me */
+	short status;		/* client type */
 	/*
 	   ** The following fields are allocated only for local clients
 	   ** (directly connected to *this* server with a socket.
@@ -752,7 +739,6 @@ struct Client {
 	int  count;		/* Amount of data in buffer */
 #if 1
 	int  oflag;		/* oper access flags (removed from anUser for mem considerations) */
-	short status;		/* client type */
 	TS   since;		/* time they will next be allowed to send something */
 	TS   firsttime;		/* Time it was created */
 	TS   lasttime;		/* last time any message was received */
@@ -1401,6 +1387,21 @@ extern char *gnulicense[];
 #define EVENT_HASHES EVENT_DRUGS
 #include "modules.h"
 #include "events.h"
+struct Command {
+	aCommand		*prev, *next;
+	char 			*cmd;
+	int			(*func) ();
+	int			flags;
+	unsigned int    	count;
+	unsigned		parameters : 5;
+	unsigned		token : 1;
+	unsigned long   	bytes;
+	Module 			*owner;
+#ifdef DEBUGMODE
+	unsigned long 		lticks;
+	unsigned long 		rticks;
+#endif
+};
 
 #endif /* __struct_include__ */
 

@@ -1086,7 +1086,13 @@ int  InitwIRCD(int argc, char *argv[])
 #endif
 	init_dynconf();
 #ifdef STATIC_LINKING	
-        l_commands_Init();
+	{
+		ModuleInfo ModCoreInfo;
+		ModCoreInfo.size = sizeof(ModuleInfo);
+		ModCoreInfo.module_load = 0;
+		ModCoreInfo.handle = NULL;
+	        l_commands_Init(&ModCoreInfo);
+	}
 #endif
 	/* Add default class */
 	default_class = (ConfigItem_class *) MyMallocEx(sizeof(ConfigItem_class));

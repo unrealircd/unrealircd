@@ -388,8 +388,6 @@ static int send_res_msg(char *msg, int len, int rcount)
 	{
 		Debug((DEBUG_DNS, "Sending to nameserver %i",
 			i));
-		Debug((DEBUG_DNS, "IP: %s",
-		 inet_ntoa(ircd_res.nsaddr_list[0].s_addr)));
 #ifdef INET6
 		/* still IPv4 */
 		ircd_res.nsaddr_list[i].sin_family = AF_INET;

@@ -48,11 +48,6 @@ DLLFUNC int m_guest(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 static Hook *GuestHook = NULL;
 #endif
 /* Place includes here */
-#ifdef DYNAMIC_LINKING
-Module *Mod_Handle = NULL;
-#else
-#define Mod_Handle NULL
-#endif
 #ifndef DYNAMIC_LINKING
 ModuleHeader m_guest_Header
 #else
@@ -63,27 +58,28 @@ ModuleHeader Mod_Header
 	"guest",	/* Name of module */
 	"$Id$", /* Version */
 	"command /guest", /* Short description of module */
-	"3.2-b5",
+	"3.2-b8-1",
 	NULL 
     };
 
-
+ModuleInfo ModGuestInfo;
 /* The purpose of these ifdefs, are that we can "static" link the ircd if we
  * want to
 */
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(int module_load)
+DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
 #else
-int    m_guest_Init(int module_load)
+int    m_guest_Init(ModuleInfo *modinfo)
 #endif
 {
 	/*
 	 * We call our add_Command crap here
 	*/
 #ifdef GUEST
-	GuestHook = HookAddEx(Mod_Handle, HOOKTYPE_GUEST, m_guest);
+	bcopy(modinfo,&ModGuestInfo,modinfo.size);
+	GuestHook = HookAddEx(ModGuestInfo.handle, HOOKTYPE_GUEST, m_guest);
 #endif
 	return MOD_SUCCESS;
 	

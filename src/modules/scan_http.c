@@ -70,11 +70,6 @@ extern void Eadd_scan();
 extern struct SOCKADDR_IN	Scan_endpoint;
 extern int Scan_TimeOut;
 #endif
-#ifdef DYNAMIC_LINKING
-Module *Mod_Handle = NULL;
-#else 
-#define Mod_Handle NULL
-#endif
 static Mod_SymbolDepTable modsymdep[] = 
 {
 	MOD_Dep(Eadd_scan, xEadd_scan, "src/modules/scan.so"),
@@ -82,7 +77,7 @@ static Mod_SymbolDepTable modsymdep[] =
 	MOD_Dep(Scan_TimeOut, xScan_TimeOut, "src/modules/scan.so"),
 	{NULL, NULL}
 };
-
+ModuleInfo ScanHttpModInfo;
 
 #ifndef DYNAMIC_LINKING
 ModuleHeader scan_http_Header
@@ -93,7 +88,7 @@ ModuleHeader Mod_Header
 	"scan_http",	/* Name of module */
 	"$Id$", /* Version */
 	"scanning API: http proxies", /* Short description of module */
-	"3.2-b5",
+	"3.2-b8-1",
 	modsymdep
     };
 
@@ -106,15 +101,16 @@ void	scan_http_scan_port(HSStruct *z);
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(int module_load)
+DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
 #else
-int    scan_http_Init(int module_load)
+int    scan_http_Init(ModuleInfo *modinfo)
 #endif
 {
 	/*
 	 * Add scanning hooks
 	*/
-	HttpScanHost = HookAddVoidEx(Mod_Handle, HOOKTYPE_SCAN_HOST, scan_http_scan); 
+	bcopy(modinfo, &ScanHttpModInfo, modinfo->size);
+	HttpScanHost = HookAddVoidEx(ScanHttpModInfo.handle, HOOKTYPE_SCAN_HOST, scan_http_scan); 
 	return MOD_SUCCESS;
 }
 

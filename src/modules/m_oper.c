@@ -69,8 +69,8 @@ static oper_oflag_t oper_oflags[] = {
 		"is now a co administrator (C)" },
 	{ OFLAG_ISGLOBAL,	&UMODE_OPER,		&oper_host,
 		"is now an operator (O)" },
-	{ 0xFFFFFFFF,		&UMODE_LOCOP,		&locop_host,
-		"is now a local operator (o)" },
+/*	{ 0xFFFFFFFF,		&UMODE_LOCOP,		&locop_host,
+		"is now a local operator (o)" }, */
 	{ OFLAG_HELPOP,		&UMODE_HELPOP,		0 ,
 		0 },
 	{ OFLAG_GLOBOP,		&UMODE_FAILOP,		0 ,
@@ -258,28 +258,29 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 			iNAH_host(sptr, host);
 		}
 
-		if (announce != NULL) {
+		if (!IsOper(sptr))
+		{
+			sptr->umodes |= UMODE_LOCOP;
+			sendto_ops("%s (%s@%s) is now a local operator (o)",
+			    parv[0], sptr->user->username,
+			    IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost);
+				
+		}
 
+
+		if (announce != NULL) {
 			sendto_ops
 			    ("%s (%s@%s) %s",
 			    parv[0], sptr->user->username,
 			    IsHidden(sptr) ? sptr->user->virthost : sptr->
 			    user->realhost, announce);
-			if (aconf->oflags & (OFLAG_SADMIN | OFLAG_NETADMIN)) {
 				sendto_serv_butone(&me,
 				    ":%s GLOBOPS :%s (%s@%s) %s",
 				    me.name, parv[0], sptr->user->username,
 				    IsHidden(sptr) ? sptr->
 				    user->virthost : sptr->user->realhost, announce);
-			}
 
-		} else {
-			sendto_ops
-			    ("%s (%s@%s) opered but announce is NULL!",
-			    parv[0], sptr->user->username,
-			    IsHidden(sptr) ? sptr->user->virthost : sptr->
-			    user->realhost, announce);
-		}
+		} 
 
 #endif
 

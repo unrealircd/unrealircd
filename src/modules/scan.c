@@ -54,11 +54,6 @@
 #endif
 #include "modules/scan.h"
 /* IRCd will fill with a pointer to this module */
-#ifdef DYNAMIC_LINKING
-Module *Mod_Handle = NULL;
-#else
-#define Mod_Handle NULL
-#endif
 struct SOCKADDR_IN Scan_endpoint;
 int Scan_BanTime = 0, Scan_TimeOut = 0;
 static Scan_AddrStruct *Scannings = NULL;
@@ -78,7 +73,7 @@ ModuleHeader Mod_Header
 	"scan",	/* Name of module */
 	"$Id$", /* Version */
 	"Scanning API", /* Short description of module */
-	"3.2-b5",
+	"3.2-b8-1",
 	NULL 
     };
 
@@ -86,17 +81,18 @@ EVENT(e_scannings_clean);
 
 static Event	*Scannings_clean = NULL;
 static Hook 	*LocConnect = NULL, *ConfUnknown = NULL, *ServerStats = NULL;
-
+ModuleInfo ScanModInfo;
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(int module_load)
+DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
 #else
-int    m_scan_Init(int module_load)
+int    m_scan_Init(ModuleInfo *modinfo)
 #endif
 {
-	LocConnect = HookAddEx(Mod_Handle, HOOKTYPE_LOCAL_CONNECT, h_scan_connect);
-	ConfUnknown = HookAddEx(Mod_Handle, HOOKTYPE_CONFIG_UNKNOWN, h_config_set_scan);
-	ServerStats = HookAddEx(Mod_Handle, HOOKTYPE_STATS, h_stats_scan);
+	bcopy(modinfo,&ScanModInfo,modinfo->size);
+	LocConnect = HookAddEx(ScanModInfo.handle, HOOKTYPE_LOCAL_CONNECT, h_scan_connect);
+	ConfUnknown = HookAddEx(ScanModInfo.handle, HOOKTYPE_CONFIG_UNKNOWN, h_config_set_scan);
+	ServerStats = HookAddEx(ScanModInfo.handle, HOOKTYPE_STATS, h_stats_scan);
 	IRCCreateMutex(Scannings_lock);
 	return MOD_SUCCESS;
 }
@@ -125,7 +121,8 @@ int    m_scan_Load(int module_load)
 	if (Scan_TimeOut == 0)
 		Scan_TimeOut = 20;
 	LockEventSystem();
-	Scannings_clean = EventAddEx(Mod_Handle, "e_scannings_clean", 0, 0, e_scannings_clean, NULL);
+	Scannings_clean = EventAddEx(ScanModInfo.handle, "e_scannings_clean", 0, 0, e_scannings_clean,
+NULL);
 	UnlockEventSystem();
 	return MOD_SUCCESS;
 }
@@ -144,7 +141,7 @@ int	m_scan_Unload(void)
 	if (Scannings)	
 	{
 		LockEventSystem();
-		EventAddEx(Mod_Handle, "scan_unload", 
+		EventAddEx(ScanModInfo.handle, "scan_unload", 
 			2, /* Should be enough */
 			1,
 			e_unload_module_delayed,
@@ -266,7 +263,7 @@ void	Eadd_scan(struct IN_ADDR *in, char *reason)
 	sr->in = *in;
 	strcpy(sr->reason, reason);
 	LockEventSystem();
-	EventAddEx(Mod_Handle, "scan_ban", 0, 1, e_scan_ban, (void *)sr);
+	EventAddEx(ScanModInfo.handle, "scan_ban", 0, 1, e_scan_ban, (void *)sr);
 	UnlockEventSystem();
 	return;
 }
