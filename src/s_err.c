@@ -570,7 +570,7 @@ static char *replies[] = {
 /* 515 */ NULL,
 /* 516 */ NULL,
 /* 517 */ NULL,
-/* 518    518 */ ":%s 518 %s :Cannot invite (+I) at channel",
+/* 518    518 */ ":%s 518 %s :Cannot invite (+V) at channel",
 /* 519    519 */ ":%s 519 %s :Cannot join channel (Admin only)",
 /* 520    520 */ ":%s 520 %s :Cannot join channel (IRCops only)",
 /* 521    ERR_LISTSYNTAX */ ":%s 521 %s Bad list syntax, type /quote list ? or /raw list ?",

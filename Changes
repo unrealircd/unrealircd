@@ -706,3 +706,4 @@
 - Fixed +d (deaf) so it works again
 - Removed some leftovers from the &channel code (which fixed a minor bug as well)
 - Fixed a SJOIN3<->services problem
+- Fixed a typo where it still said +I instead of +V in an error message
