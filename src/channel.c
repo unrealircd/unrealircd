@@ -246,7 +246,7 @@ static aClient *find_chasing(sptr, user, chasing)
 static int add_exbanid(aClient *cptr, aChannel *chptr, char *banid)
 {
         Ban *ban;
-        int  cnt = 0, len = 0;
+        int  cnt = 0;
 
         if (MyClient(cptr))
                 (void)collapse(banid);
@@ -337,7 +337,7 @@ static int del_exbanid(chptr, banid)
 static int add_banid(aClient *cptr, aChannel *chptr, char *banid)
 {
         Ban *ban;
-        int  cnt = 0, len = 0;
+        int  cnt = 0;
         
         if (MyClient(cptr))
                 (void)collapse(banid);
