@@ -41,8 +41,8 @@ DLLFUNC int m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], cha
 #define MSG_SHUN "SHUN"
 #define TOK_SHUN "BL"
 #define MSG_GZLINE "GZLINE"
-#define MSG_TKLINE "TKLINE"
-#define MSG_TZLINE "TZLINE"
+#define MSG_KLINE "KLINE"
+#define MSG_ZLINE "ZLINE"
 #define TOK_NONE ""
 
 #ifndef DYNAMIC_LINKING
@@ -76,8 +76,8 @@ int    m_tkl_Init(ModuleInfo *modinfo)
 	*/
 	add_Command(MSG_GLINE, TOK_GLINE, m_gline, 3);
 	add_Command(MSG_SHUN, TOK_SHUN, m_shun, 3);
-	add_Command(MSG_TZLINE, TOK_NONE, m_tzline, 3);
-	add_Command(MSG_TKLINE, TOK_NONE, m_tkline, 3);
+	add_Command(MSG_ZLINE, TOK_NONE, m_tzline, 3);
+	add_Command(MSG_KLINE, TOK_NONE, m_tkline, 3);
 	add_Command(MSG_GZLINE, TOK_NONE, m_gzline, 3);
 	return MOD_SUCCESS;
 }
@@ -102,9 +102,9 @@ int	m_tkl_Unload(int module_unload)
 {
 	if ((del_Command(MSG_GLINE, TOK_GLINE, m_gline) < 0) ||
 	    (del_Command(MSG_SHUN, TOK_SHUN, m_shun) < 0 ) ||
-	    (del_Command(MSG_TZLINE, TOK_NONE, m_tzline) < 0) ||
+	    (del_Command(MSG_ZLINE, TOK_NONE, m_tzline) < 0) ||
 	    (del_Command(MSG_GZLINE, TOK_NONE, m_gzline) < 0) ||
-	    (del_Command(MSG_TKLINE, TOK_NONE, m_tkline) < 0))
+	    (del_Command(MSG_KLINE, TOK_NONE, m_tkline) < 0))
 
 	{
 		sendto_realops("Failed to delete commands when unloading %s",

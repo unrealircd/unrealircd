@@ -124,112 +124,13 @@ DLLFUNC int m_unzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	ConfigItem_ban *bconf;
 	uline = IsULine(sptr) ? 1 : 0;
 
-	if (parc < 2)
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "UNZLINE");
-		return -1;
-	}
+        if (!MyClient(sptr) || !OPCanZline(sptr))
+        {
+                sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+                return 0;
+        }
 
-
-	if (parc < 3 || !uline)
-	{
-		mask = parv[parc - 1];
-		server = NULL;
-	}
-	else if (parc == 3)
-	{
-		mask = parv[parc - 2];
-		server = parv[parc - 1];
-	}
-
-	if (!uline && (!MyConnect(sptr) || !OPCanZline(sptr) || !IsOper(sptr)))
-	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-		return -1;
-	}
-
-	/* before we even check ourselves we need to do the uline checks
-	   because we aren't supposed to add a z:line if the message is
-	   destined to be passed on... */
-
-	if (uline)
-	{
-		if (parc == 3 && server)
-		{
-			if (hunt_server_token(cptr, sptr, MSG_UNZLINE, TOK_UNZLINE, "%s %s", 2,
-			    parc, parv) != HUNTED_ISME)
-				return 0;
-			else;
-		}
-		else
-			sendto_serv_butone(cptr, ":%s UNZLINE %s", parv[0],
-			    parv[1]);
-
-	}
-
-
-	/* parse the removal mask the same way so an oper can just use
-	   the same thing to remove it if they specified *@ or something... */
-	if ((in = index(parv[1], '@')))
-	{
-		strlcpy(userhost, in + 1, sizeof userhost);
-		in = &userhost[0];
-		while (*in)
-		{
-			if (!isdigit(*in) && !ispunct(*in))
-			{
-				sendto_one(sptr,
-				    ":%s NOTICE %s :*** it's not possible to have a z:line that's not an ip addresss...",
-				    me.name, sptr->name);
-				return 0;
-			}
-			in++;
-		}
-	}
-	else
-	{
-		strlcpy(userhost, parv[1], sizeof userhost);
-		in = &userhost[0];
-		while (*in)
-		{
-			if (!isdigit(*in) && !ispunct(*in))
-			{
-				sendto_one(sptr,
-				    ":%s NOTICE %s :*** it's not possible to have a z:line that's not an ip addresss...",
-				    me.name, sptr->name);
-				return 0;
-			}
-			in++;
-		}
-	}
-
-	akill = 0;
-	bconf = Find_ban(userhost, CONF_BAN_IP);
-	if (!bconf)
-	{
-		if (MyClient(sptr))
-			sendto_one(sptr, ":%s NOTICE %s :*** Cannot find z:line %s",
-				me.name, sptr->name, userhost);
-		return 0;
-	}
-	
-	if (uline == 0)
-	{
-		if (bconf->flag.type2 != CONF_BAN_TYPE_TEMPORARY)
-		{
-			sendto_one(sptr, ":%s NOTICE %s :*** You may not remove permanent z:lines.",
-				me.name, sptr->name);
-			return 0;
-		}			
-	}
-	DelListItem(bconf, conf_ban);
-	sendto_realops("%s removed z:line %s", parv[0], userhost);
-	if (bconf->mask)
-		MyFree(bconf->mask);
-	if (bconf->reason)
-		MyFree(bconf->reason);
-	MyFree(bconf);
+        sendto_one(sptr, ":%s NOTICE %s :Please use /zline -user@host", me.name, parv[0]);
 
 	return 0;
 }

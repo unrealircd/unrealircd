@@ -39,10 +39,10 @@ COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
          m_sdesc.c m_svsmode.c m_swhois.c m_svsmotd.c m_svsnline.c \
 	 m_who.c m_mkpasswd.c m_away.c m_svsnoop.c m_svso.c m_svsnick.c \
 	 m_adminchat.c m_akill.c m_chgname.c m_guest.c m_htm.c m_kill.c \
- 	 m_kline.c m_lag.c m_message.c m_nachat.c m_oper.c m_pingpong.c \
+ 	 m_lag.c m_message.c m_nachat.c m_oper.c m_pingpong.c \
 	 m_quit.c m_rakill.c m_rping.c m_sendumode.c m_sqline.c \
 	 m_tsctl.c m_unkline.c m_unsqline.c m_unzline.c m_whois.c \
-	 m_zline.c m_tkl.c m_vhost.c m_cycle.c m_svsjoin.c m_svspart.c
+	 m_tkl.c m_vhost.c m_cycle.c m_svsjoin.c m_svspart.c
 
 
 MODULES=commands.so $(R_MODULES)

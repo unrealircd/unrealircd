@@ -127,61 +127,7 @@ DLLFUNC int m_unkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	if (parc < 2)
-	{
-		sendto_one(sptr, ":%s NOTICE %s :*** Not enough parameters", me.name, parv[0]);
-		return 0;
-	}
-	if ((hosttemp = (char *)strchr((char *)parv[1], '@')))
-	{
-		*hosttemp = 0;
-		hosttemp++;
-		bzero(name, sizeof(name));
-		bzero(host, sizeof(host));
-		
-		strncpy(name, parv[1], sizeof(name) - 1);
-		strncpy(host, hosttemp, sizeof(host) - 1);
-		if (name[0] == '\0' || host[0] == '\0')
-		{
-			Debug((DEBUG_INFO, "UNKLINE: Bad field"));
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** Both user and host fields must be non-null",
-			    me.name, parv[0]);
-			return 0;
-		}
-		if (!(bconf = Find_banEx(make_user_host(name, host), CONF_BAN_USER, CONF_BAN_TYPE_TEMPORARY)))
-		{
-			sendto_one(sptr, ":%s NOTICE %s :*** Cannot find user ban %s@%s",
-				me.name, parv[0], name, host);
-			return 0;
-		}
-		if (bconf->flag.type2 != CONF_BAN_TYPE_TEMPORARY)
-		{
-			sendto_one(sptr, ":%s NOTICE %s :*** You cannot remove permament user bans",
-				me.name, sptr->name);
-			return 0;
-		}
-		
-		DelListItem(bconf, conf_ban);
-		if (bconf->mask)
-			MyFree(bconf->mask);
-		if (bconf->reason)
-			MyFree(bconf->reason);
-		MyFree(bconf);
-		
-		sendto_one(sptr,
-			":%s NOTICE %s :*** Temporary user ban %s@%s is now removed.",
-			    me.name, parv[0], name, host);
-		sendto_realops("%s removed temporary user ban %s@%s", parv[0],
-		    name, host);
-		ircd_log(LOG_KLINE,
-		    "%s removed temporary user ban %s@%s",
-		    parv[0], name, host);
-		return 0;
-	}
-	/* This wasn't here before -- Barubary */
-	/* check_pings crap */
-	/* No, and it shouldn't have been, dork. It crashes the IRCd randomly. -Stskeeps */ 
-	loop.do_bancheck = 1;
+	sendto_one(sptr, ":%s NOTICE %s :Please use /kline -user@host", me.name, parv[0]);
+
 	return 0;
 }
