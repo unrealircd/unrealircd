@@ -31,9 +31,6 @@ Computing Center and Jarkko Oikarinen";
  * Option string.  Must be before #ifdef DEBUGMODE.
  */
 char serveropts[] = {
-#ifdef	SENDQ_ALWAYS
-	'A',
-#endif
 #ifdef	CHROOTDIR
 	'c',
 #endif
@@ -60,9 +57,6 @@ char serveropts[] = {
 #endif
 #ifdef	LEAST_IDLE
 	'L',
-#endif
-#ifdef	IDLE_FROM_MSG
-	'M',
 #endif
 #ifdef	CRYPT_OPER_PASSWORD
 	'p',
@@ -106,6 +100,12 @@ char serveropts[] = {
 #ifdef STRIPBADWORDS
 	'X',
 #endif
+#ifdef USE_POLL
+	'P',
+#endif
+#ifdef CRYPTOIRCD
+	'r',
+#endif
 	'\0'
 };
 
@@ -120,7 +120,7 @@ char serveropts[] = {
 #ifdef HPUX
 #include <fcntl.h>
 #endif
-#if !defined(ULTRIX) && !defined(SGI) && !defined(sequent) && \
+#if !defined(ULTRIX) && !defined(SGI) && \
     !defined(__convex__) && !defined(_WIN32)
 # include <sys/param.h>
 #endif
@@ -146,10 +146,6 @@ char serveropts[] = {
 #endif
 #ifdef HPUX
 #include <unistd.h>
-#ifdef DYNIXPTX
-#include <sys/types.h>
-#include <time.h>
-#endif
 #endif
 #include "h.h"
 
@@ -468,7 +464,7 @@ void count_memory(cptr, nick)
 
 	sendto_one(cptr, ":%s %d %s :Channels %d(%d) Bans %d(%d)",
 	    me.name, RPL_STATSDEBUG, nick, ch, chm, chb, chbm);
-	sendto_one(cptr, ":%s %d %s :Channel membrs %d(%d) invite %d(%d)",
+	sendto_one(cptr, ":%s %d %s :Channel members %d(%d) invite %d(%d)",
 	    me.name, RPL_STATSDEBUG, nick, chu, chu * sizeof(Link),
 	    chi, chi * sizeof(Link));
 

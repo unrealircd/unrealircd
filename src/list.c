@@ -142,6 +142,9 @@ aClient *make_client(from, servr)
 		cptr->sockhost[0] = '\0';
 		cptr->buffer[0] = '\0';
 		cptr->authfd = -1;
+#ifdef CRYPTOIRCD
+		cptr->cryptinfo = NULL;
+#endif
 #ifdef SOCKSPORT
 		cptr->socksfd = -1;
 #endif
@@ -152,6 +155,10 @@ aClient *make_client(from, servr)
 void free_client(cptr)
 	aClient *cptr;
 {
+#ifdef CRYPTOIRCD
+	if (MyClient(cptr) && cptr->cryptinfo)
+		MyFree((char *)cptr->cryptinfo);
+#endif
 	MyFree((char *)cptr);
 }
 
@@ -265,6 +272,8 @@ void remove_client_from_list(cptr)
 			IRCstats.operators--;
 		IRCstats.clients--;
 	}
+	if (IsUnknown(cptr) || IsConnecting(cptr) || IsHandshake(cptr))
+		IRCstats.unknown--;
 	checklist();
 	if (cptr->prev)
 		cptr->prev->next = cptr->next;

@@ -60,7 +60,6 @@ ID_Copyright("(C) Carsten Munk 1999");
 aFline *flines = NULL;
 aCRline *crlines = NULL;
 aVhost *vhosts = NULL;
-aHush *hushes = NULL;
 
 char *cannotjoin_msg = NULL;
 
@@ -285,6 +284,7 @@ int  dcc_loadconf(void)
 				dcc_add_fline(y, z, 0);
 		}
 	}
+	fclose(f);
 	return 0;
 }
 
@@ -548,6 +548,7 @@ int  cr_loadconf(void)
 		}
 
 	}
+	fclose(f);
 	return 0;
 }
 
@@ -688,6 +689,7 @@ int  vhost_loadconf(void)
 			vhost_add(y, login, password, usermask, hostmask);
 		}
 	}
+	fclose(f);
 	return 0;
 }
 
@@ -796,61 +798,6 @@ int  m_vhost(cptr, sptr, parc, parv)
 	return 0;
 }
 
-/* hush */
-#ifdef MOO
-int  hush_add(vhost, login, password, usermask, hostmask)
-	char *vhost, *login, *password, *usermask, *hostmask;
-{
-	aHush *fl;
-
-	fl = (aHush *) MyMalloc(sizeof(aHush));
-
-	AllocCpy(fl->virthost, vhost);
-	AllocCpy(fl->usermask, usermask);
-	AllocCpy(fl->hostmask, hostmask);
-	AllocCpy(fl->login, login);
-	AllocCpy(fl->password, password);
-	fl->next = vhosts;
-	fl->prev = NULL;
-	if (vhosts)
-		vhosts->prev = fl;
-	vhosts = fl;
-}
-
-aVhost *vhost_del(fl)
-	aVhost *fl;
-{
-	aVhost *p, *q;
-	for (p = vhosts; p; p = p->next)
-	{
-		if (p == fl)
-		{
-			q = p->next;
-			MyFree((char *)(fl->virthost));
-			MyFree((char *)(fl->usermask));
-			MyFree((char *)(fl->hostmask));
-			MyFree((char *)(fl->login));
-			MyFree((char *)(fl->password));
-			/* chain1 to chain3 */
-			if (p->prev)
-			{
-				p->prev->next = p->next;
-			}
-			else
-			{
-				vhosts = p->next;
-			}
-			if (p->next)
-			{
-				p->next->prev = p->prev;
-			}
-			MyFree((aVhost *) p);
-			return q;
-		}
-	}
-	return NULL;
-}
-#endif
 /* irc logs.. */
 void ircd_log(char *format, ...)
 {

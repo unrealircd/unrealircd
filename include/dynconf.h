@@ -26,62 +26,60 @@
 #define DYNCONF_CONF_VERSION "1.5"
 #define DYNCONF_NETWORK_VERSION "2.2"
 
-typedef struct zNetwork		aNetwork;
-struct	zNetwork {
-	unsigned	x_inah : 1;
-	char		*x_ircnetwork;
-	char		*x_defserv;
-	char		*x_services_name;
-	char		*x_oper_host;
-	char		*x_admin_host;
-	char		*x_locop_host;
-	char		*x_sadmin_host;
-	char		*x_netadmin_host;
-	char		*x_coadmin_host;
-	char		*x_techadmin_host;
-	char		*x_hidden_host;
-	char		*x_netdomain;
-	char		*x_helpchan;
-	char		*x_stats_server;
+typedef struct zNetwork aNetwork;
+struct zNetwork {
+	unsigned x_inah:1;
+	char *x_ircnetwork;
+	char *x_defserv;
+	char *x_services_name;
+	char *x_oper_host;
+	char *x_admin_host;
+	char *x_locop_host;
+	char *x_sadmin_host;
+	char *x_netadmin_host;
+	char *x_coadmin_host;
+	char *x_techadmin_host;
+	char *x_hidden_host;
+	char *x_netdomain;
+	char *x_helpchan;
+	char *x_stats_server;
 };
 
 typedef struct zConfiguration aConfiguration;
-struct	zConfiguration {
-	unsigned	som : 1;
-	unsigned  	mode_x : 1;
-	unsigned 	mode_i : 1;
-	unsigned	mode_stripbadwords : 1;
-	unsigned 	truehub : 1;
-	unsigned	stop : 1;
-	unsigned	showopers : 1;
-	unsigned	killdiff : 1;
-	unsigned	hide_ulines : 1;
-	unsigned	allow_chatops : 1;
-	unsigned	webtv_support : 1;
-	unsigned	no_oper_hiding : 1;
+struct zConfiguration {
+	unsigned som:1;
+	unsigned mode_x:1;
+	unsigned mode_i:1;
+	unsigned mode_stripbadwords:1;
+	unsigned truehub:1;
+	unsigned stop:1;
+	unsigned showopers:1;
+	unsigned killdiff:1;
+	unsigned hide_ulines:1;
+	unsigned allow_chatops:1;
+	unsigned webtv_support:1;
+	unsigned no_oper_hiding:1;
 /*	long		nospoof_seed01;
 	long		nospoof_seed02; */
-	long		host_timeout;
-	int		host_retries;
-	char		*kline_address;
-	char    	*include;
-	char		*domainname;
-	char		*domainmask; /* '*' + domainname */
-	char		*auto_join_chans;
-	char		*oper_auto_join_chans;
-	int		socksbantime;
-	int		maxchannelsperuser;
-	char		*socksbanmessage;
-	char		*socksquitmessage;	
-	aNetwork	network;
+	long host_timeout;
+	int  host_retries;
+	char *kline_address;
+	char *include;
+	char *domainname;
+	char *domainmask;	/* '*' + domainname */
+	char *auto_join_chans;
+	char *oper_auto_join_chans;
+	int  socksbantime;
+	int  maxchannelsperuser;
+	char *socksbanmessage;
+	char *socksquitmessage;
+	aNetwork network;
 };
 
 #ifndef DYNCONF_C
-extern	aConfiguration iConf;
+extern aConfiguration iConf;
 #endif
 
-// #define NOSPOOF_SEED01		iConf.nospoof_seed01
-// #define NOSPOOF_SEED02		iConf.nospoof_seed02
 #define KLINE_ADDRESS		iConf.kline_address
 #define INCLUDE				iConf.include
 #define DOMAINNAMEMASK		"*" DOMAINNAME

@@ -24,10 +24,6 @@
 #include "numeric.h"
 #include "h.h"
 #include "hash.h"
-#ifndef lint
-static char *rcs_version =
-    "$Id$";
-#endif
 
 /* externally defined functions */
 unsigned int hash_whowas_name(char *);	/* defined in hash.c */

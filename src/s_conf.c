@@ -1,4 +1,3 @@
-
 /*
  *   Unreal Internet Relay Chat Daemon, src/s_conf.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
@@ -50,7 +49,7 @@ Computing Center and Jarkko Oikarinen";
 #ifdef __hpux
 #include "inet.h"
 #endif
-#if defined(PCS) || defined(AIX) || defined(DYNIXPTX) || defined(SVR3)
+#if defined(PCS) || defined(AIX) || defined(SVR3)
 #include <time.h>
 #endif
 
@@ -58,7 +57,6 @@ ID_CVS("$Id$");
 ID_Notes("O:line flags in here");
 #include "h.h"
 #define IN6ADDRSZ (sizeof(struct IN_ADDR))
-static int check_time_interval PROTO((char *, char *));
 static int lookup_confhost PROTO((aConfItem *));
 static int is_comment PROTO((char *));
 static int advanced_check(char *, int);
@@ -370,24 +368,24 @@ aConfItem *find_tline(char *host)
 
 int  find_nline(aClient *cptr)
 {
-	aConfItem *aconf;
-	for (aconf = conf; aconf; aconf = aconf->next)
-		if ((aconf->status == CONF_EXCEPT) &&
-		    aconf->host && aconf->name
-		    && (match(aconf->host, cptr->sockhost) == 0)
-		    && (!cptr->user->username
-		    || match(aconf->name, cptr->user->username) == 0))
-			break;
+	aConfItem *aconf, *aconf2;
 
-	if (aconf)
-		return 0;
+	/* Only check for an E:line if an n:line was found */
 
-	for (aconf = conf; aconf; aconf = aconf->next)
+		for (aconf = conf; aconf; aconf = aconf->next)
 	{
 		if (aconf->status & CONF_NLINE
-		    && (match(aconf->host, cptr->info) == 0))
+		&& (match(aconf->host, cptr->info) == 0)) {
+			for (aconf2 = conf; aconf2; aconf2 = aconf2->next)
+		if ((aconf2->status == CONF_EXCEPT) &&
+		    aconf2->host && aconf2->name
+		    && (match(aconf2->host, cptr->sockhost) == 0)
+		    && (!cptr->user->username
+		    || match(aconf2->name, cptr->user->username) == 0))
+			return 0;
 			break;
 	}
+		}
 	if (aconf)
 	{
 		if (BadPtr(aconf->passwd))
@@ -660,6 +658,21 @@ aConfItem *find_conf_host(lp, host, statmask)
 	return NULL;
 }
 
+/* Written by Raistlin for bahamut */
+
+aConfItem *find_uline(Link *lp, char *host) {
+	aConfItem *tmp;
+	int         hostlen = host ? strlen(host) : 0;
+	
+	if (hostlen > HOSTLEN || BadPtr(host))
+		return ((aConfItem *) NULL);
+	for (; lp; lp = lp->next) {
+		tmp = lp->value.aconf;
+		if (tmp->status & CONF_UWORLD && (tmp->host && !mycmp(tmp->host, host)))
+			return tmp;
+	}
+	return ((aConfItem *) NULL);
+}
 /* find_exception        
 ** find a virtual exception
 */
@@ -1228,6 +1241,10 @@ int  initconf(opt)
 		  case 'u':	/* *Every* server on the net must define the same !!! */
 			  aconf->status = CONF_UWORLD;
 			  break;
+		  case 'V':
+		  case 'v':
+			  aconf->status = CONF_VERSION;
+			  break;
 		  case 'Y':
 		  case 'y':
 			  aconf->status = CONF_CLASS;
@@ -1574,7 +1591,7 @@ int  find_kill(cptr)
 	aClient *cptr;
 {
 	char reply[256], *host, *name;
-	aConfItem *tmp;
+	aConfItem *tmp, *tmp2;
 
 	if (!cptr->user)
 		return 0;
@@ -1588,35 +1605,25 @@ int  find_kill(cptr)
 
 	reply[0] = '\0';
 
-	for (tmp = conf; tmp; tmp = tmp->next)
-		if ((tmp->status == CONF_EXCEPT) && tmp->host && tmp->name &&
-		    (match(tmp->host, host) == 0) &&
-		    (!name || match(tmp->name, name) == 0) &&
-		    (!tmp->port || (tmp->port == cptr->acpt->port)))
-			break;
-
-	if (tmp)
-	{
-		/* This is an E:Line */
-		return 0;
-	}
+	/* Only search for E:lines if a K:line was found -- codemastr */
 
 	for (tmp = conf; tmp; tmp = tmp->next)
 		if ((tmp->status == CONF_KILL) && tmp->host && tmp->name &&
 		    (match(tmp->host, host) == 0) &&
 		    (!name || match(tmp->name, name) == 0) &&
-		    (!tmp->port || (tmp->port == cptr->acpt->port)))
-			/* can short-circuit evaluation - not taking chances
-			   cos check_time_interval destroys tmp->passwd
-			   - Mmmm
-			 */
+			(!tmp->port || (tmp->port == cptr->acpt->port))) {
+		for (tmp2 = conf; tmp2; tmp2 = tmp2->next)
+		if ((tmp2->status == CONF_EXCEPT) && tmp2->host && tmp2->name &&
+		    (match(tmp2->host, host) == 0) &&
+		    (!name || match(tmp2->name, name) == 0) &&
+		    (!tmp2->port || (tmp2->port == cptr->acpt->port)))
+			return 0;
+
 			if (BadPtr(tmp->passwd))
 				break;
 			else if (is_comment(tmp->passwd))
 				break;
-			else if (check_time_interval(tmp->passwd, reply))
-				break;
-
+		}
 
 	if (reply[0])
 		sendto_one(cptr, reply,
@@ -1779,67 +1786,6 @@ static int is_comment(comment)
 }
 
 
-/*
-** check against a set of time intervals
-*/
-
-static int check_time_interval(interval, reply)
-	char *interval, *reply;
-{
-	struct tm *tptr;
-	time_t tick;
-	char *p;
-	int  perm_min_hours, perm_min_minutes, perm_max_hours, perm_max_minutes;
-	int  now, perm_min, perm_max;
-
-	tick = TStime();
-	tptr = localtime(&tick);
-	now = tptr->tm_hour * 60 + tptr->tm_min;
-
-	while (interval)
-	{
-		p = (char *)index(interval, ',');
-		if (p)
-			*p = '\0';
-		if (sscanf(interval, "%2d%2d-%2d%2d",
-		    &perm_min_hours, &perm_min_minutes,
-		    &perm_max_hours, &perm_max_minutes) != 4)
-		{
-			if (p)
-				*p = ',';
-			return (0);
-		}
-		if (p)
-			*(p++) = ',';
-		perm_min = 60 * perm_min_hours + perm_min_minutes;
-		perm_max = 60 * perm_max_hours + perm_max_minutes;
-		/*
-		   ** The following check allows intervals over midnight ...
-		 */
-		if ((perm_min < perm_max)
-		    ? (perm_min <= now && now <= perm_max)
-		    : (perm_min <= now || now <= perm_max))
-		{
-			(void)ircsprintf(reply,
-			    ":%%s %%d %%s :%s %d:%02d to %d:%02d.",
-			    "You are not allowed to connect from",
-			    perm_min_hours, perm_min_minutes,
-			    perm_max_hours, perm_max_minutes);
-			return (ERR_YOUREBANNEDCREEP);
-		}
-		if ((perm_min < perm_max)
-		    ? (perm_min <= now + 5 && now + 5 <= perm_max)
-		    : (perm_min <= now + 5 || now + 5 <= perm_max))
-		{
-			(void)ircsprintf(reply, ":%%s %%d %%s :%d minute%s%s",
-			    perm_min - now, (perm_min - now) > 1 ? "s " : " ",
-			    "and you will be denied for further access");
-			return (ERR_YOUWILLBEBANNED);
-		}
-		interval = p;
-	}
-	return (0);
-}
 
 /*
 ** m_rakill;
@@ -2063,7 +2009,7 @@ int  m_sqline(cptr, sptr, parc, parv)
 		    "%s :%s", parv[1], parv[2]);
 	else
 		sendto_serv_butone_token(cptr, parv[0], MSG_SQLINE, TOK_SQLINE,
-		    parv[1]);
+		    "%s", parv[1]);
 
 	asqline = make_sqline();
 
@@ -2098,7 +2044,7 @@ int  m_unsqline(cptr, sptr, parc, parv)
 		return 0;
 
 	sendto_serv_butone_token(cptr, parv[0], MSG_UNSQLINE, TOK_UNSQLINE,
-	    parv[1]);
+	    "%s", parv[1]);
 
 	if (!(asqline = find_sqline_nick(parv[1])))
 		return;
@@ -2694,7 +2640,7 @@ int  m_unzline(cptr, sptr, parc, parv)
  *        UNSURE == [unused] something went wrong
  */
 
-advanced_check(char *userhost, int ipstat)
+int advanced_check(char *userhost, int ipstat)
 {
 	register int retval = TRUE;
 	char *up, *p, *thisseg;
@@ -2747,7 +2693,8 @@ advanced_check(char *userhost, int ipstat)
 			if (!IP_WILDS_OK(i) && index(ipseg[i], '*')
 			    || index(ipseg[i], '?'))
 				retval = FALSE;
-			MyFree(ipseg[i]);
+			/* The person who wrote this function was braindead --Stskeeps */
+			/* MyFree(ipseg[i]); */
 		}
 	else
 	{
@@ -2765,7 +2712,7 @@ advanced_check(char *userhost, int ipstat)
 			{
 				retval = FALSE;
 			}
-			MyFree(ipseg[i]);
+			/* MyFree(ipseg[i]); */
 		}
 
 

@@ -24,13 +24,10 @@ static char sccsid[] = "@(#)support.c	2.21 4/13/94 1990, 1991 Armin Gruner;\
 #endif
 
 #include "config.h"
-#ifdef DYNIXPTX
-#include <sys/timers.h>
-#include <stddef.h>
-#endif
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
+#include "version.h"
 #ifdef _WIN32
 #include <io.h>
 #else
@@ -40,6 +37,16 @@ ID_CVS("$Id$");
 extern int errno;		/* ...seems that errno.h doesn't define this everywhere */
 #endif
 extern void outofmemory();
+
+#define is_enabled match
+
+char	*my_itoa(int i)
+{
+	static char buf[128];
+	
+	ircsprintf(buf, "%i", i);
+	return (buf);
+}
 
 #ifdef NEED_STRTOKEN
 /*
@@ -576,3 +583,33 @@ char *inetntop(af, in, out, the_size)
 	return out;
 }
 #endif
+
+extern int Rha;
+/*
+ * Disconnect all users connected to local server incase of /restart slow 
+ * (development tool to test load conditions, should be turned off in releases)
+*/
+int	rh(void)
+{
+	int	fd;
+	
+	/* test if this is an development release, just for security - 
+	   we test if there is a Unreal*l, as it would be Unreal3.1-Silverheart(devel)
+	
+	   should really be an define, but i need it to be !DEVELOP as well,
+	   for testing phases at irc.ircsystems.net
+	   
+	*/
+	return 0;
+	if (!is_enabled("Unreal*l*", Rh VERSIONONLY))
+		return 0;
+		
+	
+	for (fd = 0; fd < MAXCONNECTIONS; fd++)
+	{
+		close(fd);
+	}
+
+	Rha = 1;			
+	save_tunefile();
+}

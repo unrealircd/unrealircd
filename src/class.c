@@ -142,10 +142,9 @@ void add_class(class, ping, confreq, maxli, sendq)
 
 	if (maxli > (MAXCONNECTIONS - 15))
 	{
-		Debug((DEBUG_DEBUG, "Not adding Class %d as maxli is > MAXCONNECTIONS - 15",
-			class));
-		badclass = class;
-		return;
+		Debug((DEBUG_DEBUG, "Reducing class %d to %i",
+			class, (MAXCONNECTIONS - 15)));
+		maxli = MAXCONNECTIONS - 15;
 	}
 	t = find_class(class);
 	if ((t == classes) && (class != 0))

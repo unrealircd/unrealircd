@@ -11,7 +11,7 @@
 # distribution without the author's prior consent.
 #
 # $Id$
-IRCD_VERSION="Unreal3.1-beta3"
+IRCD_VERSION="Unreal3.1"
 CONF_DATE=`date`
 LAST_VERSION="very very old"
 #
@@ -42,7 +42,11 @@ NINETNETOF=undef
 GETTIMEOFDAY=undef
 LRAND48=undef
 STRTOUL=undef
+OPENSSL=""
+REGEXP=""
 NEEDSKIPNAME=""
+CRYPTOLIB=""
+CRYPTOIRCD=""
 CCPATH=''
 SIGNAL=''
 BLOCKING=''
@@ -63,8 +67,6 @@ OSNAME="an unrecgonized operating system"
 #
 IRCNET=""
 NOSPOOF="1"
-NOSPOOF_SEED01="0x12345678"
-NOSPOOF_SEED02="0x9abcdef0"
 KLINE_ADDRESS=""
 DPATH="$DIR"
 SPATH="$DIR/src/ircd"
@@ -72,6 +74,8 @@ MODE_X=""
 TRUEHUB=""
 CRYPT_OPER_PASSWORD=""
 CRYPT_LINK_PASSWORD=""
+CRYPT_ILINE_PASSWORD=""
+CRYPT_XLINE_PASSWORD=""
 LISTEN_SIZE="5"
 MAXSENDQLENGTH="3000000"
 BUFFERPOOL="(9 * MAXSENDQLENGTH)"
@@ -96,13 +100,11 @@ fi
 
 clear
 
-if [ "$LAST_VERSION" != "$IRCD_VERSION" ] ; then
     if [ -r .CHANGES.NEW ] ; then
         more .CHANGES.NEW
         echo $n "[Enter to begin]"
         read cc
     fi
-fi
 
 if [ "$1" = "-n" ] ; then
     if [ "$LAST_VERSION" != "$IRCD_VERSION" ] ; then
@@ -134,6 +136,8 @@ case "$OS" in
         OSNAME="FreeBSD 2.2.x"
         CRYPT_OPER_PASSWORD=""
         CRYPT_LINK_PASSWORD=""
+	CRYPT_ILINE_PASSWORD=""
+	CRYPT_XLINE_PASSWORD=""
        echo "You are using FreeBSD 2.2.x; do NOT crypt passwords at this time"
         ;;
     *FreeBSD*2.2*)
@@ -142,7 +146,19 @@ case "$OS" in
         OSNAME="FreeBSD 2.2"
         CRYPT_OPER_PASSWORD=""
         CRYPT_LINK_PASSWORD=""
-        echo "You are using FreeBSD 2.2; do NOT crypt passwords at this time"
+        CRYPT_ILINE_PASSWORD=""
+	CRYPT_XLINE_PASSWORD=""
+	echo "You are using FreeBSD 2.2; do NOT crypt passwords at this time"
+        ;;
+    *FreeBSD*4.0*)
+        DEFCFLAGS="$DEFOPT"
+        DEFLIBS="-lcrypt"
+        OSNAME="FreeBSD 4.0"
+        CRYPT_OPER_PASSWORD=""
+        CRYPT_LINK_PASSWORD=""
+	CRYPT_ILINE_PASSWORD=""
+	CRYPT+XLINE_PASSWORD=""
+        echo "You are using FreeBSD 4.0; You can use encrypted passwords now."
         ;;
     *FreeBSD*3*)
         DEFCFLAGS="$DEFOPT"
@@ -150,6 +166,8 @@ case "$OS" in
         OSNAME="FreeBSD 3.x"
         CRYPT_OPER_PASSWORD=""
         CRYPT_LINK_PASSWORD=""
+	CRYPT_ILINE_PASSWORD=""
+	CRYPT_XLINE_PASSWORD=""
         echo "You are using FreeBSD 3.x; You can use encrypted passwords now."
         ;;
     *FreeBSD*)
@@ -158,8 +176,19 @@ case "$OS" in
         OSNAME="FreeBSD"
         CRYPT_OPER_PASSWORD=""
         CRYPT_LINK_PASSWORD=""
+	CRYPT_ILINE_PASSWORD=""
+	CRYPT_XLINE_PASSWORD=""
         echo "You are using FreeBSD ; do NOT crypt passwords at this time"
         ;;
+    *OpenBSD*2*)
+	DEFCFLAGS="$DEFOPT"
+	DEFLIBS="none"
+	OSNAME="OpenBSD 2.x"
+	CRYPT_OPER_PASSWORD=""
+	CRYPT_LINK_PASSWORD=""
+	CRYPT_ILINE_PASSWORD=""
+	CRYPT_XLINE_PASSWORD=""
+	;;
     *SCO_SV*)
         DEFCFLAGS="$DEFOPT -DSCOUNIX"
         DEFLIBS="-lsocket"
@@ -389,7 +418,7 @@ if [ -r /usr/include/stdlib.h ] ; then
 else
         echo 'not found :('
 fi
-echo $n "...Looking for stddef.h...$c"
+echo $n "...Looking for /usr/include/stddef.h...$c"
 if [ -r /usr/include/stddef.h ] ; then
         STDDEFH=define
         echo  'found!'
@@ -450,6 +479,28 @@ if [ -r /usr/include/sys/rusage.h ] ; then
 else
 	echo 'not found (good!)'
 fi
+
+echo $n "...Looking for /usr/include/openssl/blowfish.h...$c"
+if [ -r /usr/include/openssl/blowfish.h ] ; then
+	OPENSSL=define
+	echo 'found!'
+else
+	echo 'not found (you will not be able to do secure connections)'
+fi
+
+echo $n "...Looking for /usr/include/regex.h...$c"
+if [ -r /usr/include/regex.h ] ; then
+	REGEX=define
+	echo 'found!'
+else
+	echo 'not found :('
+	echo $n '*** configuring regex package ***' $n
+	cd extras/regex
+	./configure
+	make
+	cd ../..
+fi
+
 #
 # to b or not to b
 #
@@ -1066,87 +1117,6 @@ while [ -z "$FOO" ] ; do
     esac
 done
 
-if [ -n "$NOSPOOF" ] ; then
-
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    FOO="$NOSPOOF_SEED01"
-    echo "For security, the nospoof code uses two special values, called"
-    echo "seeds.  Here, please enter one of them.  The values are in"
-    echo "hexidecimal (base 16) using the digits 0123456789abcdef.  Each"
-    echo "value can contain up to 8 digits, and should be specified in the"
-    echo "form 0x12345678.  If you use the defaults, that should be ok, but"
-    echo "it is more secure if you choose your own special values and keep"
-    echo "them secret."
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
-	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
-    if [ -z "$cc" ] ; then
-	cc=$FOO
-    fi
-    case "$cc" in
-	0x[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])
-	    NOSPOOF_SEED01=$cc
-	    ;;
-	[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])
-	    NOSPOOF_SEED01=0x$cc
-	    ;;
-	*)
-	    echo " "
-	    echo "Read the instructions and try again...  You did not enter the"
-	    echo "value correctly."
-	    echo ""
-	    FOO=""
-	    ;;
-    esac
-done
-
-FOO=""
-runonce=""
-while [ -z "$FOO" ] ; do
-    FOO="$NOSPOOF_SEED02"
-    echo "For security, the nospoof code uses two special values, called"
-    echo "seeds.  Here, please enter one of them.  The values are in"
-    echo "hexidecimal (base 16) using the digits 0123456789abcdef.  Each"
-    echo "value can contain up to 8 digits, and should be specified in the"
-    echo "form 0x12345678.  If you use the defaults, that should be ok, but"
-    echo "it is more secure if you choose your own special values and keep"
-    echo "them secret."
-    echo $n "[$FOO] -> $c"
-    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
-	read cc
-    else
-	cc=""
-	runonce=Yes
-    fi
-    if [ -z "$cc" ] ; then
-	cc=$FOO
-    fi
-    case "$cc" in
-	0x[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])
-	    NOSPOOF_SEED02=$cc
-	    ;;
-	[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])
-	    NOSPOOF_SEED02=0x$cc
-	    ;;
-	*)
-	    echo " "
-	    echo "Read the instructions and try again...  You did not enter the"
-	    echo "value correctly."
-	    echo ""
-	    FOO=""
-	    ;;
-    esac
-done
-
-# this matches a NOSPOOF check waaaaaay up there
-fi
-
 FOO=""
 runonce=""
 while [ -z "$FOO" ] ; do
@@ -1224,7 +1194,7 @@ while [ -z "$FOO" ] ; do
     esac
 done
 
-DOMAINNAME="box.name"
+DOMAINNAME=`hostname -f`
 FOO=""
 runonce=""
 while [ -z "$FOO" ] ; do
@@ -1243,6 +1213,45 @@ while [ -z "$FOO" ] ; do
     fi
 done
 DOMAINNAME=$cc
+
+if [ -n "$OPENSSL" ] ; then
+FOO=""
+runonce=""
+while [ -z "$FOO" ] ; do
+    if [ -n "$CRYPTOIRCD" ] ; then
+	FOO="Yes"
+    else
+	FOO="No"
+    fi
+    echo ""
+    echo "Do you want to support encrypted connections"
+    echo $n "[$FOO] -> $c"
+    if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+	read cc
+    else
+	cc=""
+	runonce=Yes
+    fi
+    if [ -z "$cc" ] ; then
+	cc=$FOO
+    fi
+    case "$cc" in
+	[Yy]*)
+	    CRYPTOIRCD="1"
+	    CRYPTOLIB="-lcrypto"
+	    ;;
+	[Nn]*)
+	    CRYPTOIRCD=""
+	    ;;
+	*)
+	    echo ""
+	    echo "You need to enter either Yes or No here..."
+	    echo ""
+	    FOO=""
+	    ;;
+    esac
+done
+fi
 
 FOO=""
 runonce=""
@@ -1316,6 +1325,77 @@ while [ -z "$FOO" ] ; do
 	    ;;
     esac
 done
+
+FOO=""
+runonce=""
+while [ -z "$FOO" ] ; do
+if [ -n "$CRYPT_XLINE_PASSWORD" ] ; then
+	FOO="yes"
+else 
+	FOO="No"
+fi
+echo ""
+echo "Do you want to use encrypted Restart/Die passwords?"
+echo $n "[$FOO] -> $c"
+if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+	read cc
+else
+	cc=""
+runonce=Yes
+fi
+if [ -z "$cc" ] ; then
+	cc=$FOO
+fi
+	case "$cc" in
+		[Yy]*)
+			CRYPT_XLINE_PASSWORD="1"
+			;;
+		[Nn]*) 
+			CRYPT_XLINE_PASSWORD=""
+			;;
+		*)
+			echo ""
+			echo "You need to enter either Yes or No here..."
+			echo ""
+			FOO=""
+			;;
+		esac
+done
+FOO=""
+runonce=""
+while [ -z "$FOO" ] ; do
+if [ -n "$CRYPT_ILINE_PASSWORD" ] ; then
+	FOO="Yes"
+else
+	FOO="No"
+fi
+echo ""
+echo "Do you want to use encrypted I:line passwords?"
+echo $n "[$FOO] -> $c"
+if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
+	read cc
+else
+	cc=""
+	runonce=Yes
+fi
+if [ -z "$cc" ] ; then
+	cc=$FOO
+fi
+	case "$cc" in
+		[Yy]*)
+			CRYPT_ILINE_PASSWORD="1"
+			;;
+		[Nn]*) 
+			CRYPT_ILINE_PASSWORD=""
+			;;
+		*)
+			echo ""
+			echo "You need to enter either Yes or No here..."
+			echo ""
+			FOO=""
+			;;
+		esac
+done		
 
 FOO=""
 runonce=""
@@ -1437,7 +1517,10 @@ while [ -z "$FOO" ] ; do
 	    ;;
     esac
 done
-
+echo ""
+echo ""
+$CCPATH -o src/fdmaxcounter src/fdmaxcounter.c
+src/fdmaxcounter
 FOO=""
 runonce=""
 while [ -z "$FOO" ] ; do
@@ -1450,6 +1533,8 @@ else
 fi
     echo ""
     echo "How many file descriptors (or sockets) can the irc server use?"
+    echo "(The result above, if any - shows how many sockets that the ircd can use",
+    echo " and can be used as an answer here)"
     echo $n "[$FOO] -> $c"
     if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
 	read cc
@@ -1554,6 +1639,31 @@ else
     $RM -f Makefile.tmp
 fi
 
+if [ -n "$CRYPTOLIB" ] ; then
+	$RM -f Makefile.tmp
+	sed -e "s@^CRYPTOLIB=\(.*\)@CRYPTOLIB=$CRYPTOLIB@" Makefile > Makefile.tmp
+	cp Makefile.tmp Makefile
+	$RM -f Makefile.tmp
+else
+    $RM -f Makefile.tmp
+    sed -e "s@^CRYPTOLIB=\(.*\)@CRYPTOLIB=@" Makefile > Makefile.tmp
+    cp Makefile.tmp Makefile
+    $RM -f Makefile.tmp
+	
+fi
+
+if [ -n "$REGEX" ] ; then
+    $RM -f Makefile.tmp
+    sed -e "s@^REGEX=\(.*\)@REGEX=@" Makefile > Makefile.tmp
+    cp Makefile.tmp Makefile
+    $RM -f Makefile.tmp
+else
+	$RM -f Makefile.tmp
+	sed -e "s@^REGEX=\(.*\)@REGEX=../extras/regex/regex.o@" Makefile > Makefile.tmp
+	cp Makefile.tmp Makefile
+	$RM -f Makefile.tmp
+fi	
+
 $RM -f $EXEC $TMP
 
 $RM -f ./core
@@ -1588,10 +1698,25 @@ if [ -n "$CRYPT_OPER_PASSWORD" ] ; then
 else
     echo "#undef CRYPT_OPER_PASSWORD" >> $OPTIONS_H
 fi
+if [ -n "$CRYPTOIRCD" ] ; then
+    echo "#define CRYPTOIRCD 1" >> $OPTIONS_H
+else
+    echo "#undef CRYPTOIRCD" >> $OPTIONS_H
+fi
 if [ -n "$CRYPT_LINK_PASSWORD" ] ; then
     echo "#define CRYPT_LINK_PASSWORD 1" >> $OPTIONS_H
 else
     echo "#undef CRYPT_LINK_PASSWORD" >> $OPTIONS_H
+fi
+if [ -n "$CRYPT_ILINE_PASSWORD" ] ; then
+    echo "#define CRYPT_ILINE_PASSWORD 1" >> $OPTIONS_H
+else
+    echo "#undef CRYPT_ILINE_PASSWORD" >> $OPTIONS_H
+fi
+if [ -n "$CRYPT_XLINE_PASSWORD" ] ; then
+    echo "#define CRYPT_XLINE_PASSWORD 1" >> $OPTIONS_H
+else
+    echo "#undef CRYPT_XLINE_PASSWORD" >> $OPTIONS_H
 fi
 if [ -n "$HUB" ] ; then
     echo "#define HUB 1" >> $OPTIONS_H
@@ -1599,16 +1724,16 @@ else
     echo "#undef HUB" >> $OPTIONS_H
 fi
 
+if [ -n "$REGEX" ] ; then
+	echo "#define HAVE_REGEX 1" >> $OPTIONS_H
+else
+	echo "#undef HAVE_REGEX" >> $OPTIONS_H
+fi
+
 if [ -n "$NOSPOOF" ] ; then
     echo "#define NOSPOOF 1" >> $OPTIONS_H
 else
     echo "#undef NOSPOOF" >> $OPTIONS_H
-fi
-if [ -n "$NOSPOOF_SEED01" ] ; then
-    echo "#define NOSPOOF_SEED01 $NOSPOOF_SEED01" >> $OPTIONS_H
-fi
-if [ -n "$NOSPOOF_SEED02" ] ; then
-    echo "#define NOSPOOF_SEED02 $NOSPOOF_SEED02" >> $OPTIONS_H
 fi
 
 if [ "$OSNAME" = "Linux (with GLIBC 2.x or greater)" ]; then
@@ -1632,12 +1757,12 @@ cat > $OPTIONS << __EOF__
 IRCNET="$IRCNET"
 LAST_VERSION="$IRCD_VERSION"
 NOSPOOF="$NOSPOOF"
-NOSPOOF_SEED01="$NOSPOOF_SEED01"
-NOSPOOF_SEED02="$NOSPOOF_SEED02"
 DPATH="$DPATH"
 SPATH="$SPATH"
 CRYPT_OPER_PASSWORD="$CRYPT_OPER_PASSWORD"
 CRYPT_LINK_PASSWORD="$CRYPT_LINK_PASSWORD"
+CRYPT_ILINE_PASSWORD="$CRYPT_ILINE_PASSWORD"
+CRYPT_XLINE_PASSWORD="$CRYPT_XLINE_PASSWORD"
 LISTEN_SIZE="$LISTEN_SIZE"
 MAXSENDQLENGTH="$MAXSENDQLENGTH"
 BUFFERPOOL="$BUFFERPOOL"
@@ -1670,8 +1795,8 @@ cat << __EOF__
 |_____________________________________________________________________|
 |_____________________________________________________________________|
 | - The UnrealIRCd Team -                                             |
-| * Stskeeps  stskeeps@tspre.org
-| * codemastr codemastr@tspre.org
-| * DrBin     drbin@tspre.org
+| * Stskeeps  stskeeps@tspre.org                                      |
+| * codemastr codemastr@tspre.org                                     |
+| * DrBin     drbin@tspre.org                                         |
 |_____________________________________________________________________|
 __EOF__

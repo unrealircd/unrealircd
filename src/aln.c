@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, aln.c
+ *   Unreal Internet Relay Chat Daemo, src/aln.c
  *   (C) 2000 Carsten Munk (Techie/Stskeeps) <stskeeps@tspre.org>
  *
  *   See file AUTHORS in IRC package for additional names of

@@ -24,10 +24,6 @@ static char sccsid[] =
 Computing Center and Jarkko Oikarinen";
 #endif
 
-
-/* debug --sts (chdir kludge) */
-// #define UNREAL_DEBUG
-
 #include "config.h"
 #include "struct.h"
 #include "common.h"
@@ -64,6 +60,7 @@ Computing Center and Jarkko Oikarinen";
 #include "badwords.h"
 #endif
 #include "version.h"
+
 ID_CVS("$Id$");
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
@@ -79,7 +76,10 @@ int  un_gid = 99;
 #endif
 /* End */
 
+#ifndef _WIN32
 extern char unreallogo[];
+#endif
+
 extern aMotd *opermotd;
 extern aMotd *svsmotd;
 extern aMotd *motd;
@@ -101,6 +101,7 @@ char REPORT_DO_SOCKS[128], REPORT_NO_SOCKS[128], REPORT_GOOD_SOCKS[128];
 #endif
 #endif
 aClient me;			/* That's me */
+char	*me_hash;
 aClient *client = &me;		/* Pointer to beginning of Client list */
 extern char backupbuf[8192];
 
@@ -147,28 +148,9 @@ time_t nextexpire = 1;		/* next expire run on the dns cache */
 time_t nextkillcheck = 1;	/* next time to check for nickserv kills */
 time_t lastlucheck = 0;
 
-/* int	lu_noninv = 0, 
-	lu_inv = 0,
-	lu_serv = 0,
-	lu_oper = 0,
-	lu_unknown = 0,
-	lu_channel = 0,
-	lu_lu = 0,
-	lu_lulocal = 0,
-	lu_lserv = 0,
-	lu_clu = 0,
-	lu_mlu = 0,
-	lu_cglobalu = 0,
-	lu_mglobalu;
-*/
-/* */
 #ifdef UNREAL_DEBUG
 #undef CHROOTDIR
 #define CHROOT
-#endif
-#ifdef CLONE_CHECK
-aClone *Clones = NULL;
-char clonekillhost[100];
 #endif
 
 time_t NOW;
@@ -330,8 +312,7 @@ void server_reboot(mesg)
 	(void)close(1);
 	if ((bootopt & BOOT_CONSOLE) || isatty(0))
 		(void)close(0);
-	if (!(bootopt & (BOOT_OPER)))
-		(void)execv(MYNAME, myargv);
+	(void)execv(MYNAME, myargv);
 #else
 	for (i = 0; i < highest_fd; i++)
 		if (closesocket(i) == -1)
@@ -804,10 +785,6 @@ int  InitwIRCD(argc, argv)
 			  dpath = p;
 			  break;
 #ifndef _WIN32
-		  case 'o':	/* Per user local daemon... */
-			  (void)setuid((uid_t) uid);
-			  bootopt |= BOOT_OPER;
-			  break;
 #ifdef CMDLINE_CONFIG
 		  case 'f':
 			  (void)setuid((uid_t) uid);
@@ -951,7 +928,9 @@ int  InitwIRCD(argc, argv)
 		return bad_command();	/* This should exit out */
 
 
+#ifndef _WIN32
 	fprintf(stderr, unreallogo);
+#endif
 	fprintf(stderr, "                           v%s\n\n", VERSIONONLY);
 	clear_client_hash_table();
 	clear_channel_hash_table();
@@ -1068,8 +1047,8 @@ int  InitwIRCD(argc, argv)
 #endif
 	SetMe(&me);
 	make_server(&me);
-	(void)find_or_add(me.name);
-	me.serv->up = find_or_add(me.name);
+	me_hash = find_or_add(me.name);
+	me.serv->up = me_hash;
 
 	me.lasttime = me.since = me.firsttime = TStime();
 	(void)add_to_client_hash_table(me.name, &me);
@@ -1110,16 +1089,7 @@ int  InitwIRCD(argc, argv)
 #endif
 
 	check_class();
-	if (bootopt & BOOT_OPER)
-	{
-		aClient *tmp = add_connection(&me, 0);
-
-		if (!tmp)
-			exit(1);
-		SetMaster(tmp);
-	}
-	else
-		write_pidfile();
+	write_pidfile();
 
 	Debug((DEBUG_NOTICE, "Server ready..."));
 #ifdef USE_SYSLOG
@@ -1190,6 +1160,9 @@ void SocketLoop(void *dummy)
 					    (ii - freelinks));
 				}
 			}
+			if (do_garbage_collect == 1)
+				do_garbage_collect = 0;
+				
 			last_garbage_collect = now;
 		}
 		/*

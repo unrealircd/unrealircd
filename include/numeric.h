@@ -143,7 +143,7 @@
 #define RPL_WHOISREGNICK     307
 #define RPL_RULESSTART       308
 #define RPL_ENDOFRULES       309
-#define RPL_WHOISHELPOP      310 /* -Donwulff */
+#define RPL_WHOISHELPOP      310	/* -Donwulff */
 
 #define RPL_WHOISUSER        311
 #define RPL_WHOISSERVER      312
@@ -153,7 +153,7 @@
 /* rpl_endofwho below (315) */
 #define	RPL_ENDOFWHOWAS      369
 
-#define RPL_WHOISCHANOP      316 /* redundant and not needed but reserved */
+#define RPL_WHOISCHANOP      316	/* redundant and not needed but reserved */
 #define RPL_WHOISIDLE        317
 
 #define RPL_ENDOFWHOIS       318
@@ -234,6 +234,8 @@
 #define RPL_STATSLINKINFO    211
 #define RPL_STATSCOMMANDS    212
 #define RPL_STATSCLINE       213
+#define RPL_STATSOLDNLINE    214
+
 #define RPL_STATSILINE       215
 #define RPL_STATSKLINE       216
 #define RPL_STATSQLINE       217
@@ -248,6 +250,7 @@
 #define RPL_STATSTLINE		 224
 #define RPL_STATSELINE	     225
 #define RPL_STATSNLINE	     226
+#define RPL_STATSVLINE	     227
 #define RPL_SERVICEINFO      231
 #define RPL_RULES            232
 #define	RPL_SERVICE          233
@@ -260,7 +263,7 @@
 #define	RPL_STATSHLINE       244
 #define	RPL_STATSSLINE       245
 #define RPL_STATSXLINE	     247
-#define RPL_STATSULINE       248	
+#define RPL_STATSULINE       248
 #define	RPL_STATSDEBUG	     249
 #define RPL_STATSCONN        250
 
@@ -312,3 +315,5 @@
 #define RPL_DUMPING			 640
 #define RPL_DUMPRPL			 641
 #define RPL_EODUMP           642
+
+#define ERR_NUMERICERR       999

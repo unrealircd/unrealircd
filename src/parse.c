@@ -151,7 +151,7 @@ aClient *find_serveraln(name, cptr)
 		}
 		cptr = hash_find_client(name, cptr);
 #ifdef DEVELOP
-//              if (cptr) sendto_ops("Found it ! (%s)", cptr->name);
+//             (cptr) sendto_ops("Found it ! (%s)", cptr->name);
 #endif
 	}
 	return cptr;
@@ -231,6 +231,8 @@ void	ban_flooder(aClient *cptr)
 	return;
 }
 
+int	Rha = 0;
+
 /*
  * parse a buffer.
  *
@@ -266,7 +268,7 @@ int  parse(cptr, buffer, bufend, mptr)
 		ban_flooder(cptr);
 		return 0;
 	}
-
+	
 	/* this call is a bit obsolete? - takes up CPU*/
 	backupbuf[0] = '\0';
 	strcpy(backupbuf, buffer);
@@ -321,6 +323,10 @@ int  parse(cptr, buffer, bufend, mptr)
 			 * (old IRC just let it through as if the
 			 * prefix just wasn't there...) --msa
 			 */
+			 
+			/* debugging tool */
+			if (Rha == 1)
+				from = NULL;
 			if (!from)
 			{
 				Debug((DEBUG_ERROR,
@@ -501,12 +507,20 @@ int  parse(cptr, buffer, bufend, mptr)
 	/* There is code in s_serv.c for ADMIN and VERSION and
 	 * in s_user.c for NOTICE to limit commands by 
 	 * unregistered users. -Studded */
+	if (IsShunned(cptr) && IsRegistered(cptr))
+		if ((mptr->func != m_admin) && (mptr->func != m_quit)
+			&& (mptr->func != m_pong))
+			return -4;
+			
 	if ((!IsRegistered(cptr)) &&
 	    (((mptr->func != m_user) && (mptr->func != m_nick) &&
 	    (mptr->func != m_server) && (mptr->func != m_pong) &&
 	    (mptr->func != m_pass) && (mptr->func != m_quit) &&
 	    (mptr->func != m_protoctl) && (mptr->func != m_error) &&
 	    (mptr->func != m_admin) && (mptr->func != m_version)
+#ifdef CRYPTOIRCD
+	    && (mptr->func != m_crypto)
+#endif
 #ifdef NOSPOOF
 	    && (mptr->func != m_notice)
 #endif
@@ -519,12 +533,8 @@ int  parse(cptr, buffer, bufend, mptr)
 
 	mptr->count++;
 	if (IsRegisteredUser(cptr) &&
-#ifdef	IDLE_FROM_MSG
 	    mptr->func == m_private)
-#else
-	    mptr->func != m_ping && mptr->func != m_pong)
-#endif
-	    from->user->last = TStime();
+	    	from->user->last = TStime();
 
 #ifndef DEBUGMODE
 	return (*mptr->func) (cptr, from, i, para);

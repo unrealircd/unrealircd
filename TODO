@@ -38,12 +38,9 @@ Assigned to DrBin:
     or something :P
   (from irc2.10.3)
 * CTCP flood protection(?)
-* More /HTM stuff, when HTM is active certain features are disabled
 * A /who flag system, like bahamut's
-* More unrealircd.conf options
 * Something like bahamut/hybrids P:line system where you can specify
   which IPs can you a specific port, maybe port specific passwords too?
-* /hush or /shun (shun most likely)
 * add -SIGTERM support, /restarts on SIGTERM
 * Recode dynconf and all the other new confs
 * Make proxy scanner scan port 23 also  (postponed)

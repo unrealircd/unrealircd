@@ -50,6 +50,10 @@ Computing Center and Jarkko Oikarinen";
 #include "badwords.h"
 #endif
 
+#ifdef _WIN32
+#include "version.h"
+#endif
+
 ID_CVS("$Id$");
 void send_umode_out PROTO((aClient *, aClient *, int));
 void send_umode_out_nickv2 PROTO((aClient *, aClient *, int));
@@ -60,6 +64,7 @@ static is_silenced PROTO((aClient *, aClient *));
 
 int  sendanyways = 0;
 int  dontspread = 0;
+extern char *me_hash;
 extern ircstats IRCstats;
 
 static char buf[BUFSIZE], buf2[BUFSIZE];
@@ -105,9 +110,10 @@ void iNAH_host(aClient *sptr, char *host)
 	if (sptr->user->virthost)
 		MyFree(sptr->user->virthost);
 	sptr->user->virthost = MyMalloc(strlen(host) + 1);
+	ircsprintf(sptr->user->virthost, host);
 	if (MyConnect(sptr))
 		sendto_serv_butone_token(&me, sptr->name, MSG_SETHOST,
-		    TOK_SETHOST, sptr->user->virthost);
+		    TOK_SETHOST, "%s", sptr->user->virthost);
 	sptr->umodes |= UMODE_SETHOST;
 }
 
@@ -269,8 +275,6 @@ aClient *next_client(next, ch)
 		return next;
 	for (; next; next = next->next)
 	{
-		if (IsService(next))
-			continue;
 		if (!match(ch, next->name) || !match(next->name, ch))
 			break;
 	}
@@ -509,6 +513,43 @@ int  m_remgline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 extern char cmodestring[512];
 
+int	m_post(aClient *cptr, aClient *sptr, int parc, char *parv[])
+{
+	char *tkllayer[9] = {
+		me.name,	/*0  server.name */
+		"+",		/*1  +|- */
+		"z",		/*2  G   */
+		"*",		/*3  user */
+		NULL,		/*4  host */
+		NULL,
+		NULL,		/*6  expire_at */
+		NULL,		/*7  set_at */
+		NULL		/*8  reason */
+	};
+	char	hostip[128], mo[128], mo2[128];
+
+	if (!MyClient(sptr))
+		return 0;
+		
+	if (IsRegistered(sptr))
+		return 0;
+
+	strcpy(hostip, (char *)inetntoa((char *)&sptr->ip));
+		
+	sendto_one(sptr, ":%s NOTICE AUTH :*** Proxy connection detected (bad!)", me.name);
+	sendto_umode(UMODE_EYES, "Attempted WWW Proxy connect from client %s", get_client_host(sptr));
+	exit_client(cptr, sptr, &me, "HTTP proxy connection");
+	
+	tkllayer[4] = hostip;
+	tkllayer[5] = me.name;
+	ircsprintf(mo, "%li", iConf.socksbantime + TStime());
+	ircsprintf(mo2, "%li", TStime());
+	tkllayer[6] = mo;
+	tkllayer[7] = mo2;
+	tkllayer[8] = "HTTP Proxy";
+	return m_tkl(&me,&me, 9,tkllayer);
+}
+
 /*
 ** register_user
 **	This function is called when both NICK and USER messages
@@ -539,7 +580,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	char *nick, *username, *virthost, *umode;
 {
 	aConfItem *aconf;
-	char *parv[3], *tmpstr, c;
+	char *parv[3], *tmpstr, c, *encr;
 #ifdef HOSTILENAME
 	char stripuser[USERLEN + 1], *u1 = stripuser, *u2, olduser[USERLEN + 1],
 	    userbad[USERLEN * 2 + 1], *ubad = userbad, noident = 0;
@@ -571,13 +612,6 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 
 	if (MyConnect(sptr))
 	{
-		if (badclass)
-		{
-			ircsprintf(mo2, "ircd.conf Y:line class number %i is bad (contains too many max clients (> %i). Get your IRC admin to fix this",
-				badclass, MAXCONNECTIONS - 15);
-			exit_client(cptr, sptr, &me, mo2);
-			return 0;
-		}
 #ifdef SOCKSPORT
 		if (sptr->flags & FLAGS_GOTSOCKS)
 		{
@@ -635,10 +669,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			MyFree(tmpx);
 			return xx;
 		}
-		if (IsUnixSocket(sptr))
-			strncpyzt(user->realhost, me.sockhost,
-			    sizeof(user->realhost));
-		else if (sptr->hostp)
+		if (sptr->hostp)
 		{
 			/* No control-chars or ip-like dns replies... I cheat :)
 			   -- OnyxDragon */
@@ -741,7 +772,24 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 
 		if (!BadPtr(aconf->passwd) && !StrEq("ONE", aconf->passwd))
 		{
-			if (!StrEq(sptr->passwd, aconf->passwd))
+/* I:line password encryption --codemastr */
+#ifdef CRYPT_ILINE_PASSWORD
+		if (*sptr->passwd) {
+			char salt[3];
+			extern char *crypt();
+
+			salt[0]=aconf->passwd[0];
+			salt[1]=aconf->passwd[1];
+			salt[3]='\0';
+			
+			encr = crypt(sptr->passwd, salt);
+		}
+		else
+			encr = "";
+#else
+		encr = sptr->passwd;
+#endif
+			if (!StrEq(encr, aconf->passwd))
 			{
 				ircstp->is_ref++;
 				sendto_one(sptr, err_str(ERR_PASSWDMISMATCH),
@@ -787,46 +835,6 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			ircstp->is_ref++;
 			return xx;
 		}
-
-#ifdef                DISALLOW_MIXED_CASE
-/* check for mixed case usernames, meaning probably hacked   Jon2 3-94
-*/
-#ifdef        IGNORE_CASE_FIRST_CHAR
-		tmpstr = (username[0] == '~' ? &username[2] : &username[1]);
-#else
-		tmpstr = (username[0] == '~' ? &username[1] : username);
-#endif /* IGNORE_CASE_FIRST_CHAR */
-		while (*tmpstr && !(lower && upper || special))
-		{
-			c = *tmpstr;
-			tmpstr++;
-			if (islower(c))
-			{
-				lower++;
-				continue;	/* bypass rest of tests */
-			}
-			if (isupper(c))
-			{
-				upper++;
-				continue;
-			}
-			if (c == '-' || c == '_' || c == '.' || isdigit(c))
-				continue;
-			special++;
-		}
-		if (lower && upper || special)
-		{
-			sendto_ops("Invalid username: %s",
-			    get_client_name(sptr, FALSE));
-			ircstp->is_ref++;
-			return exit_client(cptr, sptr, sptr,
-			    "Invalid username");
-		}
-
-#endif /* DISALLOW_MIXED_CASE */
-
-		if (oldstatus == STAT_MASTER && MyConnect(sptr))
-			(void)m_oper(&me, sptr, 1, parv);
 	}
 	else
 	{
@@ -863,9 +871,11 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		(void)m_lusers(sptr, sptr, 1, parv);
 		update_load();
 		(void)m_motd(sptr, sptr, 1, parv);
+#ifdef EXPERIMENTAL
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** \2NOTE:\2 This server (%s) is running experimental IRC server software. If you find any bugs or problems, please mail unreal-dev@lists.sourceforge.net about it",
 		    me.name, sptr->name, me.name);
+#endif
 #ifdef HOSTILENAME
 		/*
 		 * Now send a numeric to the user telling them what, if
@@ -908,9 +918,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		else
 			sptr->flags |= (acptr->flags & FLAGS_TS8);
 		/* *FINALL* this gets in ircd... -- Barubary */
-		if (find_conf_host(cptr->confs, sptr->name, CONF_UWORLD)
-		    || (sptr->user && find_conf_host(cptr->confs,
-		    sptr->user->server, CONF_UWORLD)))
+		if ((find_uline(cptr->confs, sptr->user->server)))
 			sptr->flags |= FLAGS_ULINE;
 	}
 
@@ -927,14 +935,14 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			if (sptr->user->virthost)
 				MyFree(sptr->user->virthost);
 			sptr->user->virthost =
-			    MyMalloc(strlen(sptr->user->virthost) + 1);
+			    MyMalloc(strlen(virthost) + 1);
 			ircsprintf(sptr->user->virthost, virthost);
 		}
 	}
 	hash_check_notify(sptr, RPL_LOGON);	/* Uglier hack */
 	send_umode(NULL, sptr, 0, SEND_UMODES, buf);
 	/* NICKv2 Servers ! */
-	sendto_serv_butone_nickcmd(cptr, nick,
+	sendto_serv_butone_nickcmd(cptr, sptr, nick,
 	    sptr->hopcount + 1, sptr->lastnick, user->username, user->realhost,
 	    user->server, user->servicestamp, sptr->info,
 	    (!buf || *buf == '\0' ? "+" : buf),
@@ -951,6 +959,8 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			sendto_one(nsptr, ":%s PRIVMSG %s@%s :IDENTIFY %s",
 			    sptr->name, NickServ, SERVICES_NAME, sptr->passwd);
 		/* Force the user to join the given chans -- codemastr */
+		sendto_one(cptr,":%s MODE %s :%s", cptr->name, cptr->name, buf);
+		
 		if (strcmp(AUTO_JOIN_CHANS, "0"))
 		{
 			char *chans[3] = {
@@ -1341,9 +1351,8 @@ int  m_nick(cptr, sptr, parc, parv)
 		{
 			ircstp->is_kill++;
 			sendto_serv_butone(NULL,
-			    ":%s KILL %s :%s (Nick Collision: %s <- %s)",
-			    me.name, acptr->name, me.name, acptr->from->name,
-			    parc > 5 ? parv[5] : get_client_name(cptr, FALSE));
+			    ":%s KILL %s :%s (Nick Collision)",
+			    me.name, acptr->name, me.name);
 			acptr->flags |= FLAGS_KILLED;
 			(void)exit_client(NULL, acptr, &me,
 			    "Nick collision with no timestamp/equal timestamps");
@@ -1355,9 +1364,8 @@ int  m_nick(cptr, sptr, parc, parv)
 		{
 			ircstp->is_kill++;
 			sendto_serv_butone(cptr,
-			    ":%s KILL %s :%s (Nick Collision: %s <- %s)",
-			    me.name, acptr->name, me.name, acptr->from->name,
-			    parc > 5 ? parv[5] : get_client_name(cptr, FALSE));
+			    ":%s KILL %s :%s (Nick Collision)",
+			    me.name, acptr->name, me.name);
 			acptr->flags |= FLAGS_KILLED;
 			(void)exit_client(NULL, acptr, &me, "Nick collision");
 			goto nickkilldone;	/* OK, we got rid of the "wrong" user,
@@ -1531,45 +1539,8 @@ int  m_nick(cptr, sptr, parc, parv)
 		 * Client setting NICK the first time.
 		 *
 		 * Generate a random string for them to pong with.
-		 *
-		 * The first two are server specific.  The intent is to randomize
-		 * things well.
-		 *
-		 * We use lots of junk here, but only "low cost" things.
-		 */
-		md5data[0] = NOSPOOF_SEED01;
-		md5data[1] = NOSPOOF_SEED02;
-		md5data[2] = TStime();
-		md5data[3] = me.sendM;
-		md5data[4] = me.receiveM;
-		md5data[5] = 0;
-		md5data[6] = getpid();
-		md5data[7] = sptr->ip.S_ADDR;
-		md5data[8] = sptr->fd;
-		md5data[9] = 0;
-		md5data[10] = 0;
-		md5data[11] = 0;
-		md5data[12] = md5hash[0];	/* previous runs... */
-		md5data[13] = md5hash[1];
-		md5data[14] = md5hash[2];
-		md5data[15] = md5hash[3];
-
-		/*
-		 * initialize the md5 buffer to known values
-		 */
-		MD5Init(md5hash);
-
-		/*
-		 * transform the above information into gibberish
-		 */
-		MD5Transform(md5hash, md5data);
-
-		/*
-		 * Never release any internal state of our generator.  Instead,
-		 * use two parts of the returned hash and xor them to hide
-		 * both values.
-		 */
-		sptr->nospoof = (md5hash[0] ^ md5hash[1]);
+		*/
+		sptr->nospoof = 1+(int) (9000000.0*random()/(RAND_MAX+80000000.0));
 
 		/*
 		 * If on the odd chance it comes out zero, make it something
@@ -1580,7 +1551,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		sendto_one(sptr, ":%s NOTICE %s :*** If you are having problems"
 		    " connecting due to ping timeouts, please"
 		    " type /notice %X nospoof now.",
-		    me.name, nick, sptr->nospoof, sptr->nospoof);
+		    me.name, nick, sptr->nospoof);
 		sendto_one(sptr, "PING :%X", sptr->nospoof);
 #endif /* NOSPOOF */
 
@@ -1687,6 +1658,7 @@ static int m_message(cptr, sptr, parc, parv, notice)
 		"No external channel messages",
 		"Colour is not permitted in this channel",
 		"You are banned",
+		"CTCPs are not permitted in this channel",
 		NULL
 	};
 
@@ -1728,15 +1700,12 @@ static int m_message(cptr, sptr, parc, parv, notice)
 		/*
 		   ** nickname addressed?
 		 */
-		if (WEBTV_SUPPORT == 1)
-		{
 			if (!strcasecmp(nick, "irc") && MyClient(sptr))
 			{
 				parse(sptr, parv[2],
 				    (parv[2] + strlen(parv[2])), msgtab);
 				continue;
 			}
-		}
 		if (*nick != '#' && (acptr = find_person(nick, NULL)))
 		{
 			/* F:Line stuff by _Jozeph_ added by Stskeeps with comments */
@@ -1815,9 +1784,9 @@ static int m_message(cptr, sptr, parc, parv, notice)
 					    stripbadwords_message(parv[2]));
 				else
 #endif
-					sendto_prefix_one(acptr, sptr,
-					    ":%s %s %s :%s", parv[0], cmd, nick,
-					    parv[2]);
+					sendto_message_one(acptr,
+						sptr, parv[0], cmd,
+						nick, parv[2]);
 			}
 			continue;
 		}
@@ -1874,21 +1843,11 @@ static int m_message(cptr, sptr, parc, parv, notice)
 				}
 				else
 				{
-					if (prefix & PREFIX_VOICE)
-						sendto_channelvoice_butone(cptr,
-						    sptr, chptr,
-						    ":%s %s %s :%s", parv[0],
-						    cmd, nick, text);
-					if (prefix & PREFIX_HALFOP)
-						sendto_channelhalfop_butone
-						    (cptr, sptr, chptr,
-						    ":%s %s %s :%s", parv[0],
-						    cmd, nick, text);
-					if (prefix & PREFIX_OP)
-						sendto_channelops_butone(cptr,
-						    sptr, chptr,
-						    ":%s %s %s :%s", parv[0],
-						    cmd, nick, text);
+					sendto_channelprefix_butone(cptr,
+					    sptr, chptr,
+					    prefix,
+					    ":%s %s %s :%s", parv[0],
+					    cmd, nick, text);
 				}
 				sendanyways = 0;
 				continue;
@@ -2310,12 +2269,17 @@ static void do_who(sptr, acptr, repchan)
 	char status[5];
 	int  i = 0;
 
+	/* auditoriums only show @'s */
+	if (repchan && (repchan->mode.mode & MODE_AUDITORIUM) &&
+		!is_chan_op(acptr, repchan))
+			return;
+			
 	if (acptr->user->away)
 		status[i++] = 'G';
 	else
 		status[i++] = 'H';
 	/* Check for +H here too -- codemastr */
-	if (IsAnOper(acptr) && !IsHideOper(acptr))
+	if (IsAnOper(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
 		status[i++] = '*';
 	else if (IsInvisible(acptr) && sptr != acptr && IsAnOper(sptr))
 		status[i++] = '%';
@@ -2330,6 +2294,8 @@ static void do_who(sptr, acptr, repchan)
 		    ":%s NOTICE %s :*** %s either did a /who or a specific /who on you",
 		    me.name, acptr->name, sptr->name);
 	}
+	if (IsHiding(acptr) && sptr != acptr && !IsNetAdmin(sptr) && !IsTechAdmin(sptr))
+	repchan = NULL;
 	sendto_one(sptr, rpl_str(RPL_WHOREPLY), me.name, sptr->name,
 	    (repchan) ? (repchan->chname) : "*", acptr->user->username,
 	    IsHidden(acptr) ? acptr->user->virthost : acptr->user->realhost,
@@ -2421,12 +2387,10 @@ int  m_who(cptr, sptr, parc, parv)
 			if (member || !SecretChannel(chptr))
 				for (lp = chptr->members; lp; lp = lp->next)
 				{
-					if (oper && (!IsAnOper(lp->value.cptr)
-					    || IsHideOper(lp->value.cptr)))
+					if (IsHiding(lp->value.cptr))
 						continue;
-					if (IsHiding(lp->value.cptr)
-					    && !(IsNetAdmin(sptr)
-					    || IsTechAdmin(sptr)))
+					if (oper && (!IsAnOper(lp->value.cptr)
+					    ))
 						continue;
 					if (lp->value.cptr != sptr
 					    && IsInvisible(lp->value.cptr)
@@ -2445,7 +2409,7 @@ int  m_who(cptr, sptr, parc, parv)
 
 			if (!IsPerson(acptr))
 				continue;
-			if (oper && (!IsAnOper(acptr) || IsHideOper(acptr)))
+			if (oper && (!IsAnOper(acptr) || (IsHideOper(acptr) && sptr != acptr && !IsAnOper(sptr))))
 				continue;
 			showperson = 0;
 			/*
@@ -2708,18 +2672,11 @@ int  m_whois(cptr, sptr, parc, parv)
 				}
 			}
 
-			if (IsULine(acptr, acptr))
-				goto next;
-
-			if (IsHiding(acptr) && sptr != acptr
-			    && !IsNetAdmin(sptr) && !IsTechAdmin(sptr))
-				goto next;
-
-			if (buf[0] != '\0')
+			if (buf[0] != '\0' && !IsULine(acptr, acptr) && (!IsHiding(acptr) ||
+				IsNetAdmin(sptr) || IsTechAdmin(sptr) || sptr == acptr))
 				sendto_one(sptr, rpl_str(RPL_WHOISCHANNELS),
 				    me.name, parv[0], name, buf);
 
-		      next:
 			sendto_one(sptr, rpl_str(RPL_WHOISSERVER),
 			    me.name, parv[0], name, user->server,
 			    a2cptr ? a2cptr->info : "*Not On This Net*");
@@ -2731,7 +2688,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			   before we display a helpop or IRCD Coder msg) 
 			   -- codemastr */
 			if ((IsAnOper(acptr) || IsServices(acptr))
-			    && !IsHideOper(acptr))
+			    && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
 			{
 				buf[0] = '\0';
 				if (IsNetAdmin(acptr))
@@ -2758,7 +2715,7 @@ int  m_whois(cptr, sptr, parc, parv)
 					    parv[0], name, buf, ircnetwork);
 			}
 
-			if (IsHelpOp(acptr) && !IsHideOper(acptr))
+			if (IsHelpOp(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
 				if (!acptr->user->away)
 					sendto_one(sptr,
 					    rpl_str(RPL_WHOISHELPOP), me.name,
@@ -2769,7 +2726,7 @@ int  m_whois(cptr, sptr, parc, parv)
 				sendto_one(sptr, rpl_str(RPL_WHOISBOT),
 				    me.name, parv[0], name, ircnetwork);
 			}
-			if (acptr->umodes & UMODE_CODER && !IsHideOper(acptr))
+			if (acptr->umodes & UMODE_CODER && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
 			{
 				sendto_one(sptr, rpl_str(RPL_WHOISOPERATOR),
 				    me.name, parv[0], name, "a Coder",
@@ -2924,7 +2881,7 @@ int  m_user(cptr, sptr, parc, parv)
 	}
 
 	strncpyzt(user->realhost, host, sizeof(user->realhost));
-	user->server = me.name;
+	user->server = me_hash;
       user_finish:
 	user->servicestamp = sstamp;
 	strncpyzt(sptr->info, realname, sizeof(sptr->info));
@@ -3124,12 +3081,9 @@ int  m_kill(cptr, sptr, parc, parv)
 			   **   ...!operhost!oper
 			   **   ...!operhost!oper (comment)
 			 */
-			if (IsUnixSocket(cptr))	/* Don't use get_client_name syntax */
-				strcpy(inpath, me.name);
-			else
-				strcpy(inpath,
-				    IsHidden(cptr) ? cptr->user->
-				    virthost : cptr->user->realhost);
+			strcpy(inpath,
+			    IsHidden(cptr) ? cptr->user->
+			    virthost : cptr->user->realhost);
 			if (kcount < 2)	/* Only check the path the first time 
 					   around, or it gets appended to itself. */
 				if (!BadPtr(path))
@@ -4050,9 +4004,11 @@ int  m_userhost(cptr, sptr, parc, parv)
 				    virthost : acptr->user->realhost)));
 				if (IsWhois(acptr) && IsOper(sptr))
 				{
+/*
 					sendto_one(acptr,
 					    ":%s NOTICE %s :*** %s did a /userhost on you.",
 					    me.name, sptr->name, sptr->name);
+*/
 				}
 				resid -= catsize;
 			}
@@ -4369,8 +4325,7 @@ int  m_umode(cptr, sptr, parc, parv)
 		if ((sptr->umodes & (UMODE_KIX)) && !(IsNetAdmin(sptr)
 		    || IsTechAdmin(sptr)))
 			sptr->umodes &= ~UMODE_KIX;
-		if ((sptr->umodes & (UMODE_FCLIENT)) && !(IsNetAdmin(sptr)
-		    || IsTechAdmin(sptr)))
+		if ((sptr->umodes & (UMODE_FCLIENT)) && !IsOper(sptr))
 			sptr->umodes &= ~UMODE_FCLIENT;
 
 		/* Agents 
@@ -4378,6 +4333,7 @@ int  m_umode(cptr, sptr, parc, parv)
 		   sptr->umodes &= ~UMODE_AGENT; */
 		if ((sptr->umodes & UMODE_HIDING) && !IsAnOper(sptr))
 			sptr->umodes &= ~UMODE_HIDING;
+
 
 		if ((sptr->umodes & UMODE_HIDING)
 		    && !(sptr->oflag & OFLAG_INVISIBLE))
@@ -4570,8 +4526,9 @@ setmodey:
 		sendto_serv_butone_token(cptr, parv[0], MSG_SVS2MODE,
 		    TOK_SVS2MODE, "%s %s", parv[1], parv[2]);
 
-	sendto_one(acptr, ":%s MODE %s :%s", parv[0], parv[1], parv[2]);
-
+	send_umode(NULL, sptr, setflags, ALL_UMODES, buf);
+	if (MyClient(sptr))
+		sendto_one(sptr, ":%s MODE %s :%s", parv[0], parv[1], buf);
 	return 0;
 }
 

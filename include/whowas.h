@@ -39,12 +39,12 @@
 ** WHOWAS structure moved here from whowas.c
 */
 typedef struct aname {
-	anUser	*ww_user;
-	aClient	*ww_online;
-	time_t	ww_logout;
-	long	ww_umodes;
-	char	ww_nick[NICKLEN+1];
-	char	ww_info[REALLEN+1];
+	anUser *ww_user;
+	aClient *ww_online;
+	time_t ww_logout;
+	long ww_umodes;
+	char ww_nick[NICKLEN + 1];
+	char ww_info[REALLEN + 1];
 } aName;
 
 
@@ -55,7 +55,7 @@ typedef struct aname {
 **	Client must be a fully registered user (specifically,
 **	the user structure must have been allocated).
 */
-void	add_history (aClient *, int);
+void add_history(aClient *, int);
 
 /*
 ** off_history
@@ -64,7 +64,7 @@ void	add_history (aClient *, int);
 **	structures and it must know when they cease to exist. This
 **	also implicitly calls AddHistory.
 */
-void	off_history (aClient *);
+void off_history(aClient *);
 
 /*
 ** get_history
@@ -72,15 +72,15 @@ void	off_history (aClient *);
 **	nickname within the timelimit. Returns NULL, if no
 **	one found...
 */
-aClient	*get_history (char *, time_t);
+aClient *get_history(char *, time_t);
 					/* Nick name */
 					/* Time limit in seconds */
 
-int	m_whowas (aClient *, aClient *, int, char *[]);
+int  m_whowas(aClient *, aClient *, int, char *[]);
 
 /*
 ** for debugging...counts related structures stored in whowas array.
 */
-void	count_whowas_memory (int *, u_long *);
+void count_whowas_memory(int *, u_long *);
 
 #endif /* __whowas_include__ */

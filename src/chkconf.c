@@ -38,11 +38,6 @@ ID_CVS("$Id$");
 ID_Copyright("(C) 1993 Darren Reed");
 ID_Notes("DF version was 1.9 1/30/94");
 
-#ifdef DYNIXPTX
-#include <sys/types.h>
-#include <time.h>
-#endif
-
 /* for the connect rule patch..  these really should be in a header,
 ** but i see h.h isn't included for some reason..  so they're here */
 char *crule_parse PROTO((char *rule));

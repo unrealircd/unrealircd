@@ -10,7 +10,7 @@ case $CONFIG in
 	 ;;
 esac
 
-echo "Extracting $package/ircd/version.c..."
+echo "Extracting src/version.c..."
 
 if test -r version.c
 then
@@ -101,9 +101,14 @@ char *unrealcredits[] =
 	"- Good hosting, CVS hosting, FTP etc etc:) - thanks for",
 	"  supporting opensource projects",
 	"",
+	"noriko noriko@linuxsquare.net",
+	"- Giving us an OpenBSD shell to develop on :)",
+	"",
 	"                         \37Donations to Unreal:\37",
 	"BlueFlame^",
 	" - the first UnrealIRCd donation :)",
+	"[Real] from ChatFIRST.com",
+	" - donation to UnrealIRCd project :)",
 	"Thanks to Headbang and WonderWal too for hardware+software",
 	"donations",
 	"   (yes your name can be here too;)",
@@ -112,7 +117,8 @@ char *unrealcredits[] =
 	"zshack, Headbang, Mick, Sp^, WonderWal, bomb, BullFrog, JacobD,",
 	"SirDeath, l33, EiniD, uo, RevPsych and the subgenius.net network,",
 	"^RavenX^, Mich[a]el, {X}, Fish, Shmad, Killer, BrainSCAN, RevNull,",
-	"GoNiS (irc.coreplex.org), Mikey, DrBin, and others",
+	"GoNiS, Mikey, DrBin, rapta, crow, SevenEagle, Curt|s, Scooter,",
+	"auspice",
 	"",
 	"",
         "                   \2\37Stskeeps would like to thank:\2\37", 
@@ -151,13 +157,10 @@ char *unrealcredits[] =
 	"zero9000      Kevin Alford",
 	" - UnrealIRCd logo, graphics, null desu ;), ideas etc.",
         "                   \2\37codemastr would like to thank:\2\37", 
-	"CaliMonk      Ivo Teel                calimonk@nhn.net",
+	"CaliMonk      Ivo Teel                calimonk@axenet.org",
 	" - Getting me started at NeoHorizon which basically got me",
 	"   started coding IRCd",
-	"Kenpo         Ian Ricci               ianr@nhn.net",
-	" - Starting me out learning *nix and giving me a place",
-	"   to develop Unreal",
-	"[FBI]         Corey Lang              *unknown*",
+	"[FBI]         Corey Lang              fbi@dal.net",
 	" - Being a good IRC friend and getting me started with",
 	"   IRC through our old little wIRCd net :)",
 	"",                     

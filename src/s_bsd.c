@@ -1,5 +1,4 @@
 /*
-/*
  *   Unreal Internet Relay Chat Daemon, src/s_bsd.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
@@ -25,7 +24,6 @@
 
 /* -- Armin -- Jun 18 1990
  * Added setdtablesize() for more socket connections
- * (sequent OS Dynix only) -- maybe select()-call must be changed ...
  */
 
 /* -- Jto -- 13 May 1990
@@ -94,6 +92,7 @@ ID_CVS("$Id$");
 #ifdef _WIN32
 extern HWND hwIRCDWnd;
 #endif
+extern char backupbuf[8192];
 aClient *local[MAXCONNECTIONS];
 int  highest_fd = 0, readcalls = 0, udpfd = -1, resfd = -1;
 static struct SOCKADDR_IN mysk;
@@ -216,7 +215,8 @@ void report_error(text, cptr)
 			if (err)
 				errtmp = err;
 #endif
-	sendto_ops(text, host, strerror(errtmp));
+	sendto_realops(text, host, strerror(errtmp));
+	ircd_log(text,host,strerror(errtmp));
 #ifdef USE_SYSLOG
 	syslog(LOG_WARNING, text, host, strerror(errtmp));
 #endif
@@ -266,10 +266,9 @@ int  inetport(cptr, name, port)
 
 	if (cptr->fd < 0)
 	{
-//              fprintf(
 #if !defined(DEBUGMODE) && !defined(_WIN32)
 #endif
-		report_error("opening stream socket %s:%s", cptr);
+		report_error("Cannot open stream socket() %s:%s", cptr);
 		return -1;
 	}
 	else if (cptr->fd >= MAXCLIENTS)
@@ -308,7 +307,10 @@ int  inetport(cptr, name, port)
 		if (bind(cptr->fd, (struct SOCKADDR *)&server,
 		    sizeof(server)) == -1)
 		{
-			report_error("binding stream socket %s:%s", cptr);
+			ircsprintf(backupbuf, "Error binding stream socket to IP %s port %i",
+				ipname, port);
+			strcat(backupbuf, "- %s:%s");
+			report_error(backupbuf, cptr);
 #ifndef _WIN32
 			(void)close(cptr->fd);
 #else
@@ -421,8 +423,7 @@ int  add_listener(aconf)
  * close_listeners
  *
  * Close and free all clients which are marked as having their socket open
- * and in a state where they can accept connections.  Unix sockets have
- * the path to the socket unlinked for cleanliness.
+ * and in a state where they can accept connections. 
  */
 void close_listeners()
 {
@@ -431,8 +432,7 @@ void close_listeners()
 	aConfItem *aconf;
 
 	/*
-	 * close all 'extra' listening ports we have and unlink the file
-	 * name if it was a unix socket.
+	 * close all 'extra' listening ports we have
 	 */
 	for (i = highest_fd; i >= 0; i--)
 	{
@@ -490,24 +490,7 @@ void init_sys()
 	   fprintf(stderr, "| MAXCONNECTIONS set at %d\n", MAXCONNECTIONS);
 	   fprintf(stderr, "| Process ID: %d\n", pid);
 	   fprintf(stderr, "|---------------------------------------------\n"); */
-#ifndef USE_POLL
-#ifdef sequent
-# ifndef	DYNIXPTX
-int  fd_limit;
-
-fd_limit = setdtablesize(MAXCONNECTIONS + 1);
-if (fd_limit < MAXCONNECTIONS)
-{
-	(void)fprintf(stderr, "ircd fd table too big\n");
-	(void)fprintf(stderr, "Hard Limit: %d IRC max: %d\n",
-	    fd_limit, MAXCONNECTIONS);
-	(void)fprintf(stderr, "Fix MAXCONNECTIONS\n");
-	exit(-1);
-}
-# endif
-#endif
-#endif
-#if defined(PCS) || defined(DYNIXPTX) || defined(SVR3)
+#if defined(PCS) || defined(SVR3)
 char logbuf[BUFSIZ];
 
 (void)setvbuf(stderr, logbuf, _IOLBF, sizeof(logbuf));
@@ -535,8 +518,7 @@ if (bootopt & BOOT_TTY)		/* debugging is going to a tty */
 if (!(bootopt & BOOT_DEBUG))
 	(void)close(2);
 
-if (((bootopt & BOOT_CONSOLE) || isatty(0)) &&
-    !(bootopt & (BOOT_INETD | BOOT_OPER)))
+if ((bootopt & BOOT_CONSOLE) || isatty(0))
 {
 #ifndef _AMIGA
 /*		if (fork())
@@ -551,7 +533,7 @@ if (((bootopt & BOOT_CONSOLE) || isatty(0)) &&
 	}
 #endif
 
-#if defined(HPUX) || defined(_SOLARIS) || defined(DYNIXPTX) || \
+#if defined(HPUX) || defined(_SOLARIS) || \
     defined(_POSIX_SOURCE) || defined(SVR4) || defined(SGI)
 	(void)setsid();
 #else
@@ -679,8 +661,7 @@ int  check_client(cptr)
 	if (check_init(cptr, sockname))
 		return -2;
 
-	if (!IsUnixSocket(cptr))
-		hp = cptr->hostp;
+	hp = cptr->hostp;
 	/*
 	 * Verify that the host to ip mapping is correct both ways and that
 	 * the ip#(s) for the socket is listed for the host.
@@ -782,7 +763,7 @@ int  check_server_init(cptr)
 	   ** real name, then check with it as the host. Use gethostbyname()
 	   ** to check for servername as hostname.
 	 */
-	if (!IsUnixSocket(cptr) && !cptr->hostp)
+	if (!cptr->hostp)
 	{
 		aConfItem *aconf;
 
@@ -935,14 +916,13 @@ int  check_server(cptr, hp, c_conf, n_conf, estab)
 	(void)attach_conf(cptr, c_conf);
 	(void)attach_confs(cptr, name, CONF_HUB | CONF_LEAF | CONF_UWORLD);
 #ifdef INET6
-	if ((AND16(c_conf->ipnum.s6_addr) == 255) && !IsUnixSocket(cptr))
+	if ((AND16(c_conf->ipnum.s6_addr) == 255))
 #else
-	if ((c_conf->ipnum.S_ADDR == -1) && !IsUnixSocket(cptr))
+	if (c_conf->ipnum.S_ADDR == -1)
 #endif
 		bcopy((char *)&cptr->ip, (char *)&c_conf->ipnum,
 		    sizeof(struct IN_ADDR));
-	if (!IsUnixSocket(cptr))
-		get_sockhost(cptr, c_conf->host);
+	get_sockhost(cptr, c_conf->host);
 
 	Debug((DEBUG_DNS, "sv_cl: access ok: %s[%s]", name, cptr->sockhost));
 	if (estab)
@@ -1104,7 +1084,7 @@ void close_connection(cptr)
 		cptr->fd = -2;
 		DBufClear(&cptr->sendQ);
 		DBufClear(&cptr->recvQ);
-		bzero(cptr->passwd, sizeof(cptr->passwd));
+	
 		/*
 		 * clean up extra sockets from P-lines which have been
 		 * discarded.
@@ -1439,6 +1419,7 @@ aClient *add_connection(cptr, fd)
 	set_sock_opts(acptr->fd, acptr);
 	IRCstats.unknown++;
 	start_auth(acptr);
+
 #ifdef SOCKSPORT
 
 	start_socks(acptr);
@@ -1493,13 +1474,15 @@ static int read_packet(cptr, rfd)
 		if (length <= 0)
 			return length;
 	}
-
 	/*
 	   ** For server connections, we process as many as we can without
 	   ** worrying about the time of day or anything :)
 	 */
-	if (IsServer(cptr) || IsConnecting(cptr) || IsHandshake(cptr) ||
-	    IsService(cptr))
+	if (IsServer(cptr) || IsConnecting(cptr) || IsHandshake(cptr) 
+#ifdef CRYPTOIRCD
+		|| IsSecure(cptr)
+#endif	
+		)
 	{
 		if (length > 0)
 			if ((done = dopacket(cptr, readbuf, length)))
@@ -1533,7 +1516,11 @@ static int read_packet(cptr, rfd)
 			   ** If it has become registered as a Service or Server
 			   ** then skip the per-message parsing below.
 			 */
-			if (IsService(cptr) || IsServer(cptr))
+			if (IsServer(cptr) 
+#ifdef CRYPTOIRCD
+				|| IsSecure(cptr)
+#endif
+				) 
 			{
 				dolen = dbuf_get(&cptr->recvQ, readbuf,
 				    sizeof(readbuf));
@@ -1585,7 +1572,11 @@ static int do_client_queue(aClient *cptr)
 	    ((cptr->status < STAT_UNKNOWN) || (cptr->since - now < 10)))
 	{
 		/* If it's become registered as a server, just parse the whole block */
-		if (IsServer(cptr))
+		if (IsServer(cptr) 
+#ifdef CRYPTOIRCD
+			|| IsSecure(cptr)
+#endif
+		)
 		{
 			dolen =
 			    dbuf_get(&cptr->recvQ, readbuf, sizeof(readbuf));
@@ -2286,8 +2277,8 @@ int  read_message(delay, listp)
 			}
 			else if (!IsMe(cptr))
 			{
-				if (DBufLength(&cptr->recvQ) && delay2 > 2)
-					delay2 = 1;
+/*				if (DBufLength(&cptr->recvQ) && delay2 > 2)
+					delay2 = 1; */
 				if (DBufLength(&cptr->recvQ) < 4088)
 					PFD_SETR(i);
 			}
@@ -2569,7 +2560,6 @@ int  connect_server(aconf, by, hp)
 		}
 	}
 	cptr = make_client(NULL, NULL);
-	IRCstats.unknown++;
 	cptr->hostp = hp;
 	/*
 	 * Copy these in so we have something for error detection.
@@ -2587,7 +2577,6 @@ int  connect_server(aconf, by, hp)
 #else
 			(void)closesocket(cptr->fd);
 #endif
-		IRCstats.unknown--;
 		cptr->fd = -2;
 		free_client(cptr);
 		return -1;
@@ -2607,7 +2596,6 @@ int  connect_server(aconf, by, hp)
 	{
 		errtmp = WSAGetLastError();	/* other system calls may eat errno */
 #endif
-		IRCstats.unknown--;
 		report_error("Connect to host %s failed: %s", cptr);
 		if (by && IsPerson(by) && !MyClient(by))
 			sendto_one(by,
@@ -2659,7 +2647,6 @@ int  connect_server(aconf, by, hp)
 #endif
 		cptr->fd = -2;
 		free_client(cptr);
-		IRCstats.unknown--;
 		return (-1);
 	}
 	/*
@@ -2687,7 +2674,7 @@ int  connect_server(aconf, by, hp)
 	local[cptr->fd] = cptr;
 	cptr->acpt = &me;
 	SetConnecting(cptr);
-
+	IRCstats.unknown++;
 	get_sockhost(cptr, aconf->host);
 	add_client_to_list(cptr);
 	nextping = TStime();
@@ -2905,7 +2892,8 @@ Chat on\n\r");
 		sendto_one(who, wrerr, who->name);
 		return;
 	}
-	(void)ircsprintf(line, "ircd: Channel %s, by %s@%s (%s) %s\n\r",
+/*	(void)ircsprintf(line, "ircd: Channel %s, by %s@%s (%s) %s\n\r", */
+	(void)snprintf(line, sizeof(line), "ircd: Channel %s, by %s@%s (%s) %s\n\r",
 	    chname, who->user->username, who->user->host, who->name, who->info);
 	if (write(fd, line, strlen(line)) != strlen(line))
 	{

@@ -1,6 +1,7 @@
 /*
  * UnrealIRCd Changes File - (C) Carsten Munk 1999-2000 &
  *                               The UnrealIRCd Team
+ *
  * $Id$
  * 
  * This program is free software; you can redistribute it and/or modify
@@ -17,20 +18,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
-*/
+ */
 
-*** BUGS ***
-* /map has a few little display problems (fixable? sts: no not the hide ulines, already fixed)
-* You can make the server flood off opers if you clone with > MAXCLIENTS
-  fix: make a unknown connection clone defense:P
-* -ex-2.routing.md.us.exchat.org- *** Notice -- Aieeee!!! Server terminating: Segmention fault (buf:
-  :Methos PRIVMSG #exchat :for the * flag)
-
-*** FIXED -- we think ***
-- Potential problem with die/restart from 3.0(fix) ... peopl can not restart/kill servers even
-  if they have the neseccery O:Lines -- it seems towork in 3.1
-
-*** Unreal3.1 *** (state: beta third state)
+*** Unreal3.1 *** (final)
 - Moved REMOVE_ADVERTISE a little
 - Fixed bug where you could /mode #test +L #test (link a channel to
   itself)
@@ -319,3 +309,152 @@
 - Fixed a bug with /chgname with incorrect parameters to other servers
 - "Fixed" the /stats u bug?
 - Fixed +f not working (?)
+- Made the Own-protection just reduce the class maxli instead of bitching..
+- Did a dirty hack on ALN problem with colliding hash (will deny linking in
+  wrong servers)
+- Fixed /stats C not showing N:lines, reported by auspice
+- Fixed codemastr (possible) fucked up the shell ircd script with
+  overwriting it ...
+- Created /shun, /gline style. /shun +user@host time reason /shun -user@host
+  will extend it so you can /shun +nick later
+- A little anti-0 fix in channel.c
+- Made MODE_X, MODE_I etc show mode change to user
+- Added channel mode +C to disallow channel CTCPs, /me (CTCP ACTION) is still allowed
+- Fixed a bunch of +H bugs
+- Fixed a bug where the channel was still shown in /who for +I users
+- First part of ZIP_LINKS
+- Fixed a typo in ./newnet
+- Made /close reset IRCstats.unknown ..
+- Made SVSO (ofcourse) IRCstats.operators--;
+- Another IRCstats.unknown fix. Hope this works (hacked from undernet code)
+- NETINFO protocol 0 is accepted as valid protocool (for services etc)
+- /stats s is now avail only for opers in mainstream
+- Took out "nick did a /userhost on you"
+- Reduced hashtable size
+- Took out sequent/dynix support
+- Fixed a bug that prolly was fixed by Potvin, but was "not fixed correctly"
+- Fixed a crash problem in register_user and most likely fixed the "strange
+  vhost" thing, (was a dumb bug, mising ircsprintf)
+- Fixed the *** NickServ sets mode +creep SVS2MODE bug..
+- sendto_serv_butone_token_opt ()..
+- Small testing stuff
+- In ./Config it runs a quick test to see how many socket()s you can do
+- Fixed the double +cF notice on local connections exiting, ugly hack
+- Removed the last traces of unix sockets, flag 0x10 free now
+- Made all ircops able to use +F (totally this time)
+- /quote close do not show realhost of caller anymore
+- /shun accepts nick in add mode now (adds *@host)
+- Allowed /shunned users to use /pong now
+- Fixed (by DrBin) Shun and Gline bug, where they replaced eachothers ->type
+  .... Learn that (= != ==) /me looks at Sts
+- You can now specify 0 as the time for any TKL (ex Glines, Shun) for it to be perm
+- Fixed a +L bug, (3.1 only) where any op could set +L
+- Added channel mode +u, "Auditorium". Makes /names and /who #channel only
+  show @'s
+- Added config.h setting to disable oper overrides, NO_OPEROVERRIDE
+- Added Debug support to win32 makefile ... compile with syntax
+  NMAKE -f makefile.win32 DEBUG=1
+  inorder to have debug support ... leave the DEBUG=1 out for normal builds
+- Fixed ircsprintf.h ... we do want it to compile in debug mode yes ?
+- Made /addline write to correct place when you use -f
+- Made /zline not memory corrupt/crash, bad df bug
+- Fixed a counting bug with unknown connections, very hopefully
+- Fixed /htm giving wrong response when /htm to 1
+- Fixed /shun showing "1970" to permanently shunned users
+- Fixed ./Config showing freebsd 3.0 in freebsd 4
+- Made so badwords.*.conf accepts # comments
+- Added some default default badwords.message.conf and badwords.channel.conf
+- Made so auditorium mode shows users to @'s 
+- Fixed a bug where /chgident would overflow into the *real* host if it where greater than USERLEN
+  because _someone_ aka sts told it to check against HOSTLEN rather than USERLEN... reported by wshs
+- Fixed a bug in badwords not loading words correctly, and upped word limit
+  to 50
+- Small fix with ./Config showing incorrect path of stddef.h
+- Made operkick be part of NO_OPEROVERRIDE
+- Made admins unable to be shunned
+- Made some socket errors which normally only showed up in DEBUGMODE, show
+  up in ircd.log as well
+- Fixed a wrongly outputted message (in hash collision detect)
+- Removed aHush, not in use
+- Removed DISALLOW_MIXED_CASE and IGNORE_FIRST_CHAR, waste of space
+- Made IDLE_FROM_MSG stock define
+- Made IRCII_KLUDGE disappear :P
+- Fixed SENDQ_ALWAYS to be mainstream define (as always)
+- Removed s_gline, not in use, removed some modeless channel checks (not needed), removed an old zombie
+  code, and removed a line from aHush that was missed
+- Added networks/seveneagle.network
+- /msg irc <command> now works whether or not WEBTV_SUPPORT is on
+- Moved /mode #channel ^ and ListBits() to #ifdef DEVELOP
+- Made it so servers behind a U:lined server (ex Juped Server) are U:lined too, helpful if HIDE_ULINES is
+  on (from bahamut)
+- Added find_uline (from bahamut) for the new U:line code
+- Modified /map to work with the new U:line code
+- Redid s_err.c to be ALOT faster, based on bahamut's s_err.c (ALOT of
+  work)
+- Fixed last R_LINE stuff (check_time_interval)
+- Fixed /setname desynch
+- Removed IsService(), and some wierd stuff
+- Broken INETD support removed
+- Removed some odd Clone stuff(?)
+- Added Blowfish encryption ability (SetSecure()), will extend to more
+  better encryption
+- Fixed a typo in /stats z
+- Some more crypto stuff, will work on the new engine tommorow
+- You can now encrypt the I:line passwords using mkpasswd (must have CRYPT_ILINE_PASSWORD defined)
+- Editted Config to ask if you want encrypted I:line passwords
+- Made it so you can encrypt restart/die passwords (same as I:line passwords)
+- Editted Config to ask about encrypted restart/die passwords
+- Made it so you can *view* a channel topic using /topic #channel without being a member
+- Removed , support from /topic (not needed)
+- Removed count_channels (not in use)
+- Made a major is_banned speed up
+- Redid K:line and n:line checking to be alot faster
+- Fixed crypto stuff 100% :))
+- Added CRYPTOIRCd ('r') to version string
+- Added some more crypto stuff
+    - /crypto <algoritm> <keyfile laying in keys/> <parameters>
+- Fixed a ->passwd bug caused by codemastr..
+- Added fclose() calls to the vhost, dccdeny, and chrestrict confs
+- Some V:line stuff (added VL protoctl, and parsing of the SERVER command for the proto and flags)
+- Fixed so that in +c it shows if a user is connected securely
+- Backported the passwd stuff, not needed.
+- Fixed a crash problem on /quit or /squit
+- Fixed some aligning in the VL PROTOCTL
+- Fixed some fucked up passwd stuff again ..
+- Fixed a little Client Protoctl problem
+- Fixed a crypto problem (forgot an #ifdef bad sts!)
+- Fully added V:lines (doesn't really do much till the next version, since old versions don't support it)
+- Added /stats v to list V:lines (/stats V still does vhost.conf)
+- Added OpenBSD 2.x support, thanks to noriko for donating the development shell
+- Added so stuff like Lost connection to, (report_error) only goes to realops
+- Added some more descriptive error messages
+- Added doc/crypto.doc describing the encrypted irc protocol
+- Fixed a sendto_serv_butone_token problem
+- Removed any trace of MD5, we use random() for nospoof now, this fixed a
+  license problem too
+- Removed NOSPOOF_SEED01 and 02
+- Added VHP protoctl, (not in use in the synch). This makes virthost field
+  in NICKv2 use the real virthost even if its +t. (Thanks to SL7)
+- Added support for the CR Java Chat auto join feature
+- Fixed a msg.h location problem ..
+- Added secure connections and openssl tracing to Config
+- Added regex portablity and checks in Config
+- Added a #define capability to config.h (DISABLE_USERMOD),
+  disables /sethost, /setident, /chgname, /chghost, /chgident
+- Fixed a /rehash -garbage bug reported by Curt|s
+- Added networks/makenet (generates a network configuration file)
+- Added networks/staticedge.network
+- Fixed some host revealing nick collision stuff
+- Tokenized nick->nick PRIVMSG and NOTICE
+- Made it so you can remove a protoctl by putting a - in front
+- Fixed a bug in summon
+- Added protection against webproxies
+- Fixed TKL?
+- Added SJ3, removed the old
+- SJ3 bugfix, and another
+- Hopefully a res.c fix.
+- Fixed a +I bug
+- Fixed a more SJ3 bug
+- Updated networks/networks.ndx (bad sts!)
+- Added networks/linuxsquare.network
+- Added networks/chatstation.network

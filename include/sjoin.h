@@ -21,45 +21,31 @@
  */
 
 
-typedef struct  SynchList aSynchList;
+typedef struct SynchList aSynchList;
 
 /* SJOIN synch structure */
 struct SynchList {
-        char            nick[NICKLEN];
-        int             deop;
-        int             devoice;
-	int		dehalf;
- 	int		deown;
- 	int		deprot;
-        int             op;
-        int             voice;
-	int		half;
-	int		own;
-	int		prot;
-        aSynchList      *next, *prev;
+	aClient *cptr;
+	long setflags;
+	aSynchList *next, *prev;
 };
 
 aSynchList *SJSynchList = NULL;
 
 aSynchList *make_synchlist()
 {
-    Reg1 aSynchList *synchptr;
+	Reg1 aSynchList *synchptr;
 
-    synchptr = (aSynchList *) MyMalloc(sizeof(aSynchList));
+	synchptr = (aSynchList *) MyMalloc(sizeof(aSynchList));
+	synchptr->cptr = NULL;
+	synchptr->setflags = 0;
+	synchptr->prev = synchptr->next = NULL;
 
-    synchptr->nick[0] = 0;
-    synchptr->deop = synchptr->dehalf = synchptr->deown = synchptr->deprot = 0;
-    synchptr->devoice = 0;
-    synchptr->op = 0;
-    synchptr->voice = synchptr->half = synchptr->own = synchptr->prot = 0;
-    synchptr->prev = synchptr->next = NULL;
-
-    return synchptr;
+	return synchptr;
 }
 
 void free_synchlist(synchptr)
-    aSynchList *synchptr;
+	aSynchList *synchptr;
 {
-    MyFree((char *) synchptr);
+	MyFree((char *)synchptr);
 }
-

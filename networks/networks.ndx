@@ -32,3 +32,9 @@ networks/interturk.network .......: InterTurk (http://www.interturk.net)
 networks/cc2.network .............: CC2 (http://www.cc2.org)
 networks/kissland.network ........: Kissland (http://www.kissland.com)
 networks/digital-irc.network .....: Digital-IRC (http://www.digital-irc.net)
+networks/seveneagle.network ......: SevenEagle.Com 
+networks/staticedge.network ......: StaticEdge
+networks/german-elite.network ....: German-Elite (http://www.german-elite.net)
+networks/thainet.network .........: Thai IRC Network
+networks/linuxsquare.network .....: LinuxSquare (http://www.linuxsquare.net)
+networks/chatstation.network .....: ChatStation

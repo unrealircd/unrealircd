@@ -38,7 +38,7 @@ Computing Center and Jarkko Oikarinen";
 #include "userload.h"
 #include <sys/stat.h>
 #include <fcntl.h>
-#if !defined(ULTRIX) && !defined(SGI) && !defined(sequent) && \
+#if !defined(ULTRIX) && !defined(SGI) && \
     !defined(__convex__) && !defined(_WIN32)
 # include <sys/param.h>
 #endif
@@ -47,10 +47,6 @@ Computing Center and Jarkko Oikarinen";
 #endif
 #ifdef HPUX
 #include <unistd.h>
-#endif
-#ifdef DYNIXPTX
-#include <sys/types.h>
-#include <time.h>
 #endif
 #ifdef _WIN32
 # include <io.h>
@@ -65,6 +61,7 @@ extern float currentrate;
 extern float currentrate2;
 #endif
 extern ircstats IRCstats;
+extern char	*me_hash;
 
 ID_CVS("$Id$");
 static void exit_one_client PROTO((aClient *, aClient *, aClient *, char *));
@@ -270,37 +267,25 @@ char *get_client_name(sptr, showip)
 
 	if (MyConnect(sptr))
 	{
-		if (IsUnixSocket(sptr))
+		if (showip)
+			(void)ircsprintf(nbuf, "%s[%s@%s.%u]",
+			    sptr->name,
+			    (!(sptr->flags & FLAGS_GOTID)) ? "" :
+			    sptr->username,
+#ifdef INET6
+			    inetntop(AF_INET6,
+			    (char *)&sptr->ip, mydummy, MYDUMMY_SIZE),
+#else
+			    inetntoa((char *)&sptr->ip),
+#endif
+			    (unsigned int)sptr->port);
+		else
 		{
-			if (showip)
+			if (mycmp(sptr->name, sptr->sockhost))
 				(void)ircsprintf(nbuf, "%s[%s]",
 				    sptr->name, sptr->sockhost);
 			else
-				(void)ircsprintf(nbuf, "%s[%s]",
-				    sptr->name, me.sockhost);
-		}
-		else
-		{
-			if (showip)
-				(void)ircsprintf(nbuf, "%s[%s@%s.%u]",
-				    sptr->name,
-				    (!(sptr->flags & FLAGS_GOTID)) ? "" :
-				    sptr->username,
-#ifdef INET6
-				    inetntop(AF_INET6,
-				    (char *)&sptr->ip, mydummy, MYDUMMY_SIZE),
-#else
-				    inetntoa((char *)&sptr->ip),
-#endif
-				    (unsigned int)sptr->port);
-			else
-			{
-				if (mycmp(sptr->name, sptr->sockhost))
-					(void)ircsprintf(nbuf, "%s[%s]",
-					    sptr->name, sptr->sockhost);
-				else
-					return sptr->name;
-			}
+				return sptr->name;
 		}
 		return nbuf;
 	}
@@ -316,13 +301,10 @@ char *get_client_host(cptr)
 		return cptr->name;
 	if (!cptr->hostp)
 		return get_client_name(cptr, FALSE);
-	if (IsUnixSocket(cptr))
-		(void)ircsprintf(nbuf, "%s[%s]", cptr->name, me.name);
-	else
-		(void)ircsprintf(nbuf, "%s[%-.*s@%-.*s]",
-		    cptr->name, USERLEN,
-		    (!(cptr->flags & FLAGS_GOTID)) ? "" : cptr->username,
-		    HOSTLEN, cptr->hostp->h_name);
+	(void)ircsprintf(nbuf, "%s[%-.*s@%-.*s]",
+	    cptr->name, USERLEN,
+	    (!(cptr->flags & FLAGS_GOTID)) ? "" : cptr->username,
+	    HOSTLEN, cptr->hostp->h_name);
 	return nbuf;
 }
 
@@ -423,8 +405,7 @@ int  exit_client(cptr, sptr, from, comment)
 			IRCstats.me_clients--;
 		if (IsServer(sptr))
 			IRCstats.me_servers--;
-		if (IsUnknown(sptr))
-			IRCstats.unknown--;
+		
 		sptr->flags |= FLAGS_CLOSING;
 		if (IsPerson(sptr))
 		{
@@ -604,6 +585,7 @@ int  exit_client(cptr, sptr, from, comment)
 		}
 		recurse--;
 	}
+	
 
 	/*
 	 * Finally, clear out the server we lost itself
@@ -675,7 +657,7 @@ static void exit_one_client_backend(cptr, sptr, from, comment, split)
 			}
 		}
 	}
-	else if (!(IsPerson(sptr) || IsService(sptr)))
+	else if (!(IsPerson(sptr)))
 		/* ...this test is *dubious*, would need
 		   ** some thougth.. but for now it plugs a
 		   ** nasty hole in the server... --msa
@@ -713,8 +695,8 @@ static void exit_one_client_backend(cptr, sptr, from, comment, split)
 			sendto_common_channels(sptr, ":%s QUIT :%s",
 			    sptr->name, comment);
 
-			if (!IsULine(cptr, sptr) && !MyClient(sptr) && !split)
-				if (!MyClient(sptr))
+			if (!IsULine(cptr, sptr) && !split)
+				if (sptr->user->server != me_hash)
 					sendto_umode(UMODE_FCLIENT,
 					    "*** Notice -- Client exiting at %s: %s!%s@%s (%s)",
 					    sptr->user->server, sptr->name,

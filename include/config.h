@@ -49,8 +49,8 @@
 #endif
 
  /*
- * Define this if you're testing/debugging/programming.
- */
+    * Define this if you're testing/debugging/programming.
+  */
 #undef DEBUG
 
 /* Type of host. These should be made redundant somehow. -avalon */
@@ -72,7 +72,7 @@
 /* Additional flags to give FreeBSD's malloc, only play with this if you
  * know what you're doing.
  */
- 
+
 #define MALLOC_FLAGS_EXTRA ""
 /* 
    ConferenceRoom Java Client Hack -Fish
@@ -93,10 +93,27 @@
  */
 #define ADMINCHAT 1
 
+
 /*
   Remote rehash
 */
 #define REMOTE_REHASH
+
+/*
+  Stripbadwords patch
+*/
+#define STRIPBADWORDS
+
+/*
+ * NO_OPEROVERRIDE
+ *   This will disable OperMode, OperTopic and Banwalks
+*/
+#undef NO_OPEROVERRIDE
+
+/*
+ * Disable /sethost, /setident, /chgname, /chghost, /chgident 
+*/
+#undef DISABLE_USERMOD
 
 /* 
   Ident checking
@@ -112,46 +129,10 @@
 /* #define NOSPOOF 1 /* */
 
 /*
- *
- * This controls the "nospoof" system.  These numbers are "seeds" of the
- * "random" number generating formula.  Choose any number you like in the
- * range of 0x00000000 to 0xFFFFFFFF.  Don't tell anyone these numbers, and
- * don't use the default ones.  Change both #define NOSPOOF... lines below.
- *
- * Other data is mixed in as well, but these guarantee a per-server secret.
- * Also, these values need not remain constant over compilations...  Change
- * them as often as you like.
- */
-#ifdef NOSPOOF
-
-#ifndef NOSPOOF_SEED01
-#define NOSPOOF_SEED01 0x12345678
-#endif
-
-#ifndef NOSPOOF_SEED02
-#define NOSPOOF_SEED02 0x87654321
-#endif
-
-#endif /* NOSPOOF */
-
-/*
  * HOSTILENAME - Define this if you want the hostile username patch included,
  *		 it will strip characters that are not 0-9,a-z,A-Z,_,- or .
  */
-#define HOSTILENAME	/* */
-
-/*
- * Define this to prevent mixed case userids that clonebots use. However
- * this affects the servers running telclients WLD* FIN*  etc.
- */
-#undef	DISALLOW_MIXED_CASE
-
-/*
- * Define this if you wish to ignore the case of the first character of
- * the user id when disallowing mixed case. This allows PC users to
- * enter the more intuitive first name with the first letter capitalised
- */
-#define	IGNORE_CASE_FIRST_CHAR
+#define HOSTILENAME		/* */
 
 /*
 ** Nick flood limit
@@ -161,7 +142,7 @@
 ** Define NICK_DELAY if you want this feature.
 */
 
-#define NICK_DELAY 15                   /* recommended value 15 */
+#define NICK_DELAY 15		/* recommended value 15 */
 
 /*
 ** Freelinks garbage collector -Stskeeps
@@ -170,10 +151,10 @@
 ** HOW_MANY_FREELINKS_ALLOWED - how many freelinks allowed
 */
 #ifndef GARBAGE_COLLECT_EVERY
-#define GARBAGE_COLLECT_EVERY 		600 /* default: 600 (10 mins) */
+#define GARBAGE_COLLECT_EVERY 		600	/* default: 600 (10 mins) */
 #endif
 
-#define HOW_MANY_FREELINKS_ALLOWED 	200 /* default: 200 */
+#define HOW_MANY_FREELINKS_ALLOWED 	200	/* default: 200 */
 
 /*
  * Define this if you wish to output a *file* to a K lined client rather
@@ -229,16 +210,16 @@
  */
 #define	CPATH		"ircd.conf"	/* server configuration file */
 #define	MPATH		"ircd.motd"	/* server MOTD file */
-#define RPATH   	"ircd.rules"    /* server rules file */
+#define RPATH   	"ircd.rules"	/* server rules file */
 #define ZPATH		"ircd.notes"	/* server notes */
-#define ZCONF   	"networks/unrealircd.conf" /* ircd configuration .. */
-#define OPATH   	"oper.motd"     /* Operators MOTD file */
+#define ZCONF   	"networks/unrealircd.conf"	/* ircd configuration .. */
+#define OPATH   	"oper.motd"	/* Operators MOTD file */
 #define	LPATH		"debug.log"	/* Where the debug file lives, if DEBUGMODE */
 #define	PPATH		"ircd.pid"	/* file for server pid */
 #define lPATH		"ircd.log"	/* server log file */
-#define VPATH		"ircd.svsmotd"  /* Services MOTD append. */
+#define VPATH		"ircd.svsmotd"	/* Services MOTD append. */
 #define BPATH		"bot.motd"	/* Bot MOTD */
-#define IRCDTUNE 	"ircd.tune" 	/* tuning .. */
+#define IRCDTUNE 	"ircd.tune"	/* tuning .. */
 
 /*
  * Define this filename to maintain a list of persons who log
@@ -278,13 +259,6 @@
  */
 #define	SHOW_INVISIBLE_LUSERS
 
-
-/* OPER_* defines
- *
- * See ./docs/example.conf for examples of how to restrict access for
- * your IRC Operators
- */
-
 /* MAXIMUM LINKS
  *
  * This define is useful for leaf nodes and gateways. It keeps you from
@@ -323,14 +297,7 @@
  *       starts up the server with a new conf file that has some extra
  *       O-lines. So don't use this unless you're debugging.
  */
-#define	CMDLINE_CONFIG /* allow conf-file to be specified on command line */
-
-/*
- * To use m4 as a preprocessor on the ircd.conf file, define M4_PREPROC.
- * The server will then call m4 each time it reads the ircd.conf file,
- * reading m4 output as the server's ircd.conf file.
- */
-#undef	M4_PREPROC
+#define	CMDLINE_CONFIG		/* allow conf-file to be specified on command line */
 
 /*
  * If you wish to have the server send 'vital' messages about server
@@ -349,11 +316,11 @@
  * If you use syslog above, you may want to turn some (none) of the
  * spurious log messages for KILL/SQUIT off.
  */
-#undef	SYSLOG_KILL	/* log all operator kills to syslog */
-#undef  SYSLOG_SQUIT	/* log all remote squits for all servers to syslog */
-#undef	SYSLOG_CONNECT	/* log remote connect messages for other all servs */
-#undef	SYSLOG_USERS	/* send userlog stuff to syslog */
-#undef	SYSLOG_OPER	/* log all users who successfully become an Op */
+#undef	SYSLOG_KILL		/* log all operator kills to syslog */
+#undef  SYSLOG_SQUIT		/* log all remote squits for all servers to syslog */
+#undef	SYSLOG_CONNECT		/* log remote connect messages for other all servs */
+#undef	SYSLOG_USERS		/* send userlog stuff to syslog */
+#undef	SYSLOG_OPER		/* log all users who successfully become an Op */
 
 /*
  * If you want to log to a different facility than DAEMON, change
@@ -361,15 +328,6 @@
  */
 #define LOG_FACILITY LOG_DAEMON
 #endif /* USE_SYSLOG */
-
-/*
- * IDLE_FROM_MSG
- *
- * Idle-time nullified only from privmsg, if undefined idle-time
- * is nullified from everything except ping/pong.
- * Added 3.8.1992, kny@cs.hut.fi (nam)
- */
-#define IDLE_FROM_MSG
 
 /* 
  * Size of the LISTEN request.  Some machines handle this large
@@ -413,13 +371,13 @@
  * If you _must_ insist on running as root and not wanting the program to change its
  * UID, then define BIG_SECURITY_HOLE below
  */
-#if !defined(_WIN32) && !defined(_AMIGA)
-/* Change This Line Below \/ */ 
-#define BIG_SECURITY_HOLE 
+#if !defined(_WIN32)
+/* Change This Line Below \/ */
+#define BIG_SECURITY_HOLE
 /* Its the one above ^^^^^^^ */
-#ifndef BIG_SECUTIRY_HOLE
- #define	IRC_UID un_uid
- #define	IRC_GID un_gid
+#ifndef BIG_SECURITY_HOLE
+#define	IRC_UID un_uid
+#define	IRC_GID un_gid
 #endif
 #endif
 
@@ -431,10 +389,6 @@
  * flooding it.  Values greater than 8000 make no difference to the server.
  */
 #define	CLIENT_FLOOD	8000
-
-/* Define this if you want the server to accomplish ircII standard */
-/* Sends an extra NOTICE in the beginning of client connection     */
-#undef	IRCII_KLUDGE
 
 /* 
  * Define your network service names here.
@@ -483,9 +437,6 @@
  */
 #define SOCKSPORT 6013
 
-/* Define default Z:line time for SOCKS   -taz */
-#define ZLINE_TIME     300
-
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
 
 /* You shouldn't change anything below this line, unless absolutely needed. */
@@ -494,7 +445,7 @@
  * Port where ircd resides. NOTE: This *MUST* be greater than 1024 if you
  * plan to run ircd under any other uid than root.
  */
-#define PORTNUM 6667 		/* 6667 is default */
+#define PORTNUM 6667		/* 6667 is default */
 
 /*
  * Maximum number of network connections your server will allow.  This should
@@ -535,7 +486,7 @@
  *       chasing possible for mode and kick.
  */
 #ifndef NICKNAMEHISTORYLENGTH
-#define NICKNAMEHISTORYLENGTH 2000 
+#define NICKNAMEHISTORYLENGTH 2000
 #endif
 
 /*
@@ -587,17 +538,7 @@
  * Max time from the nickname change that still causes KILL
  * automaticly to switch for the current nick of that user. (seconds)
  */
-#define KILLCHASETIMELIMIT 90   /* Recommended value: 90 */
-
-
-/*
- * SendQ-Always causes the server to put all outbound data into the sendq and
- * flushing the sendq at the end of input processing. This should cause more
- * efficient write's to be made to the network.
- * There *shouldn't* be any problems with this method.
- * -avalon
- */
-#define	SENDQ_ALWAYS
+#define KILLCHASETIMELIMIT 90	/* Recommended value: 90 */
 
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MOTD MPATH
@@ -616,11 +557,6 @@
 #ifndef BSD
 #define BSD
 #endif
-#endif
-
-#ifdef _SEQUENT_		/* Dynix 1.4 or 2.0 Generic Define.. */
-#undef BSD
-#define SYSV			/* Also #define SYSV */
 #endif
 
 #ifdef	ultrix
@@ -643,7 +579,7 @@
 #endif
 
 #ifdef DEBUGMODE
-extern	void	debug();
+extern void debug();
 # define Debug(x) debug x
 # define LOGFILE LPATH
 #else
@@ -665,72 +601,57 @@ extern	void	debug();
 
 #ifdef MIPS
 #undef BSD
-#define BSD             1       /* mips only works in bsd43 environment */
-#endif
-
-#ifdef sequent                   /* Dynix (sequent OS) */
-#define SEQ_NOFILE    128        /* set to your current kernel impl, */
-#endif                           /* max number of socket connections */
-
-#ifdef _SEQUENT_
-#define	DYNIXPTX
+#define BSD             1	/* mips only works in bsd43 environment */
 #endif
 
 #ifdef	BSD_RELIABLE_SIGNALS
 # if defined(SYSV_UNRELIABLE_SIGNALS) || defined(POSIX_SIGNALS)
-error You stuffed up config.h signals #defines use only one.
+error You stuffed up config.h signals
+#defines use only one.
 # endif
 #define	HAVE_RELIABLE_SIGNALS
 #endif
-
 #ifdef	SYSV_UNRELIABLE_SIGNALS
 # ifdef	POSIX_SIGNALS
-error You stuffed up config.h signals #defines use only one.
+     error You stuffed up config.h signals
+#defines use only one.
 # endif
 #undef	HAVE_RELIABLE_SIGNALS
 #endif
-
 #ifdef	POSIX_SIGNALS
 #define	HAVE_RELIABLE_SIGNALS
 #endif
-
 /*
  * safety margin so we can always have one spare fd, for motd/authd or
  * whatever else.  -4 allows "safety" margin of 1 and space reserved.
  */
 #define	MAXCLIENTS	(MAXCONNECTIONS-4)
-
 #ifdef HAVECURSES
 # define DOCURSES
 #else
 # undef DOCURSES
 #endif
-
 #ifdef HAVETERMCAP
 # define DOTERMCAP
 #else
 # undef DOTERMCAP
 #endif
-
 # define stricmp strcasecmp
 # define strnicmp strncasecmp
-
 #if defined(CLIENT_FLOOD)
 #  if	(CLIENT_FLOOD > 8000)
 #    define CLIENT_FLOOD 8000
 #  else
 #    if (CLIENT_FLOOD < 512)
-error CLIENT_FLOOD needs redefining.
+     error CLIENT_FLOOD needs redefining.
 #    endif
 #  endif
 #else
-error CLIENT_FLOOD undefined
+     error CLIENT_FLOOD undefined
 #endif
-
 #if (NICKNAMEHISTORYLENGTH < 100)
 #  define NICKNAMEHISTORYLENGTH 100
 #endif
-
 /*
  * Some ugliness for AIX platforms.
  */
@@ -753,8 +674,6 @@ error CLIENT_FLOOD undefined
 #if defined(SOL20) || defined(SOL25) || defined(SOL26) || defined(SOL27)
 #define _SOLARIS
 #endif
-
-
 /*
  * Cleaup for WIN32 platform.
  */
@@ -773,7 +692,4 @@ error CLIENT_FLOOD undefined
 #define Reg8 register
 #define Reg9 register
 #define Reg10 register
-
-#endif /* __config_include__ */
-
-
+#endif				/* __config_include__ */

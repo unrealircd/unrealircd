@@ -51,6 +51,7 @@ extern fdlist oper_fdlist;
 #define NEWLINE	"\r\n"
 
 static char sendbuf[2048];
+
 static int send_message PROTO((aClient *, char *, int));
 
 static int sentalong[MAXCONNECTIONS];
@@ -159,11 +160,7 @@ int  send_queued(to)
 		   ** not working correct if send_queued is called for a
 		   ** dead socket... --msa
 		 */
-#ifndef SENDQ_ALWAYS
-		return dead_link(to, "send_queued called for a DEADSOCKET:%s");
-#else
 		return -1;
-#endif
 	}
 	while (DBufLength(&to->sendQ) > 0)
 	{
@@ -202,9 +199,12 @@ void vsendto_one(aClient *to, char *pattern, va_list vl)
 	sendbufto_one(to);
 }
 
+
 void sendbufto_one(aClient *to)
 {
 	int  len;
+	char *s;
+	int  i;
 
 	Debug((DEBUG_ERROR, "Sending [%s] to %s", sendbuf, to->name));
 
@@ -243,7 +243,13 @@ void sendbufto_one(aClient *to)
 		sendto_ops("Trying to send [%s] to myself!", tmp_sendbuf);
 		return;
 	}
-
+#ifdef CRYPTOIRCD	
+	if (IsSecure(to))
+	{
+		s = (char *) ep_encrypt(to, sendbuf, &len);
+		bcopy(s, sendbuf, len);
+	}
+#endif
 	if (DBufLength(&to->sendQ) > get_sendq(to))
 	{
 		if (IsServer(to))
@@ -255,7 +261,7 @@ void sendbufto_one(aClient *to)
 		return;
 	}
 
-	else if (!dbuf_put(&to->sendQ, sendbuf, len))
+	if (!dbuf_put(&to->sendQ, sendbuf, len))
 	{
 		dead_link(to, "Buffer allocation error");
 		return;
@@ -312,6 +318,54 @@ void sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
 	}
 	va_end(vl);
 }
+
+void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
+	int	prefix,
+    char *pattern, ...)
+{
+	va_list vl;
+	Link *lp;
+	aClient *acptr;
+	int  i;
+
+	va_start(vl, pattern);
+	for (i = 0; i < MAXCONNECTIONS; i++)
+		sentalong[i] = 0;
+	for (lp = chptr->members; lp; lp = lp->next)
+	{
+		acptr = lp->value.cptr;
+		if (acptr->from == one)
+			continue;	/* ...was the one I should skip
+					   or user not not a channel op */
+		if ((prefix & 0x1) && !(lp->flags & CHFL_HALFOP))
+			continue;
+		if ((prefix & 0x2) && !(lp->flags & CHFL_VOICE))
+			continue;
+		if ((prefix & 0x4) && !(lp->flags & CHFL_CHANOP))
+			continue;
+		
+		i = acptr->from->fd;
+		if (MyConnect(acptr) && IsRegisteredUser(acptr))
+		{
+			vsendto_prefix_one(acptr, from, pattern, vl);
+			sentalong[i] = 1;
+		}
+		else
+		{
+			/* Now check whether a message has been sent to this
+			 * remote link already */
+			if (sentalong[i] == 0)
+			{
+				vsendto_prefix_one(acptr, from, pattern, vl);
+				sentalong[i] = 1;
+			}
+		}
+	}
+	va_end(vl);
+	return;
+}
+
+
 
 /*
  * sendto_channelops_butone Added 1 Sep 1996 by Cabal95.
@@ -534,6 +588,96 @@ void sendto_serv_butone_token(aClient *one, char *prefix, char *command,
 		if (IsServer(cptr))
 #endif
 			if (IsToken(cptr))
+			{
+				if ((pref[0] != '\0') && SupportALN(cptr))
+					sendto_one(cptr, "%s %s", pref, tcmd);
+				else
+					sendto_one(cptr, ":%s %s", prefix,
+					    tcmd);
+			}
+			else
+			{
+				if ((pref[0] != '\0') && SupportALN(cptr))
+					sendto_one(cptr, "%s %s", pref, ccmd);
+				else
+					sendto_one(cptr, ":%s %s", prefix,
+					    ccmd);
+			}
+	}
+	va_end(vl);
+	return;
+}
+
+/*
+ * sendto_server_butone_token_opt
+ *
+ * Send a message to all connected servers except the client 'one'.
+ * with capab to tokenize, opt
+ */
+
+void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *command,
+    char *token, char *pattern, ...)
+{
+	va_list vl;
+	int  i;
+	aClient *cptr;
+#ifndef NO_FDLIST
+	int  j;
+#endif
+	char	*p;
+	static char tcmd[1024];
+	static char ccmd[1024];
+	static char buff[1024];
+	static char pref[100];
+
+	va_start(vl, pattern);
+	
+	pref[0] = '\0';
+	if (strchr(prefix, '.'))
+		ircsprintf(pref, "@%s", find_server_aln(prefix));
+
+	strcpy(tcmd, token);
+	strcpy(ccmd, command);
+	strcat(tcmd, " ");
+	strcat(ccmd, " ");
+	ircvsprintf(buff, pattern, vl);
+	strcat(tcmd, buff);
+	strcat(ccmd, buff);
+
+#ifdef NO_FDLIST
+	for (i = 0; i <= highest_fd; i++)
+#else
+	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry;
+	    i = serv_fdlist.entry[++j])
+#endif
+	{
+		if (!(cptr = local[i]) || (one && cptr == one->from))
+			continue;
+#ifdef NO_FDLIST
+		if (IsServer(cptr))
+#endif
+		
+		if ((opt & OPT_NOT_SJOIN) && SupportSJOIN(cptr))
+			continue;
+		if ((opt & OPT_NOT_NICKv2) && SupportNICKv2(cptr))
+			continue;
+		if ((opt & OPT_NOT_SJOIN2) && SupportSJOIN2(cptr))
+			continue;
+		if ((opt & OPT_NOT_UMODE2) && SupportUMODE2(cptr))
+			continue;
+		if ((opt & OPT_NOT_SJ3) && SupportSJ3(cptr))
+			continue;
+		if ((opt & OPT_NICKv2) && !SupportNICKv2(cptr))
+			continue;
+		if ((opt & OPT_SJOIN) && !SupportSJOIN(cptr))
+			continue;
+		if ((opt & OPT_SJOIN2) && !SupportSJOIN2(cptr))
+			continue;
+		if ((opt & OPT_UMODE2) && !SupportUMODE2(cptr))
+			continue;
+		if ((opt & OPT_SJ3) && !SupportSJ3(cptr))
+			continue;
+		if (IsToken(cptr))
 			{
 				if ((pref[0] != '\0') && SupportALN(cptr))
 					sendto_one(cptr, "%s %s", pref, tcmd);
@@ -1422,8 +1566,13 @@ void sendto_connectnotice(nick, user, sptr)
 	char connectd[1024];
 	char connecth[1024];
 	ircsprintf(connectd,
-	    "*** Notice -- Client connecting on port %d: %s (%s@%s)",
-	    sptr->acpt->port, nick, user->username, user->realhost);
+	    "*** Notice -- Client connecting on port %d: %s (%s@%s) %s",
+	    sptr->acpt->port, nick, user->username, user->realhost,
+#ifdef CRYPTOIRCD    
+	IsSecure(sptr) ? "[secure]" : "");
+#else
+	"");
+#endif
 	ircsprintf(connecth,
 	    "*** Notice -- Client connecting: %s (%s@%s) [%s] {%d}", nick,
 	    user->username, user->realhost, sptr->sockhost,
@@ -1448,7 +1597,8 @@ void sendto_connectnotice(nick, user, sptr)
  *
  * Send a message to all connected servers except the client 'one'.
  */
-void sendto_serv_butone_nickcmd(aClient *one, char *nick, int hopcount,
+void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
+			char *nick, int hopcount,
     int lastnick, char *username, char *realhost, char *server,
     long servicestamp, char *info, char *umodes, char *virthost)
 {
@@ -1479,8 +1629,9 @@ void sendto_serv_butone_nickcmd(aClient *one, char *nick, int hopcount,
 				    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
 				    hopcount, lastnick, username, realhost,
 				    (SupportALN(cptr) ? find_server_aln(server)
-				    : server), servicestamp, umodes, virthost,
-				    info);
+				    : server), servicestamp, umodes, 
+					  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : virthost),
+					    info);
 			}
 			else
 			{
@@ -1509,4 +1660,15 @@ void sendto_serv_butone_nickcmd(aClient *one, char *nick, int hopcount,
 	}
 	va_end(vl);
 	return;
+}
+
+void	sendto_message_one(aClient *to, aClient *from, char *sender,
+			char *cmd, char *nick, char *msg)
+{
+        if(IsServer(to->from) && IsToken(to->from)) {
+          if(*cmd == 'P') cmd = TOK_PRIVATE;
+          if(*cmd == 'N') cmd = TOK_NOTICE;
+        }
+        sendto_prefix_one(to, from, ":%s %s %s :%s",
+                         sender, cmd, nick, msg);
 }

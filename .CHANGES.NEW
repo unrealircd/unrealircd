@@ -10,5 +10,20 @@ unreal-support@lists.sourceforge.net or ask at IRC:
 
 For any sake, read Unreal.nfo and read doc/faq before asking questions
 
-Press Escape now if you want to abort the setup, or press Enter
-to continue.
+NOTE: If the code is changed in any way, or the version string is changed, 
+      we do _NOT_ support the product, except if you got explicit permission
+      from one of the UnrealIRCd coders. If it fails and you messed with it, 
+      you can't blame noone but yourself. Also, non-official UnrealIRCd/32 
+      builds (if it doesn't say "geniune" in the display) are _NOT_
+      supported.
+
+It has been a year since I made the first UnrealIRCd release, Unreal2.1. 
+A lot of things have happened since. I started Unreal as a hobby project,
+but it has turned into a community, where people ask for help, and give help
+too - people like the program (as the first I've made actually :>). So I
+am happy you have followed all this way - Thanks to Shmad, Nutcais,
+Sporty_McFly, DjBoxy, zero9000, and all the people following the product
+for the time it has existed. So - enjoy this release - we have tried to do
+our best, and if its not - we'll make the next our best. So - Seeya in 2001
+
+-Stskeeps (Head coder of UnrealIRCd)
