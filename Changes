@@ -869,3 +869,4 @@ seen. gmtime warning still there
 - Fixed a typo in config.h
 - Final changes to prepare for beta3
 - Fixed some bugreport stuff
+- Fixed codemastr-on-crack bug regarding oflag
