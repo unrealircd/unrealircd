@@ -650,3 +650,5 @@
   - Added 'hebrew' (iso8859-8I / windows-1255), supplied by PHANTOm.
 - Added French example.fr.conf and help.fr.conf, translated/maintained by Babass.
 - Fixed a doc typo, reported by SDF_of_BC.
+- NickChars: Updated polish a bit, and added polish-w1250 which is unfortunately more
+  common than real latin2 (iso-8859-2), supplied by k4be as well.
