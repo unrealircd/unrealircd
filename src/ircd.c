@@ -1250,6 +1250,9 @@ int InitwIRCD(int argc, char *argv[])
 #ifdef THROTTLING
 	init_throttling_hash();
 #endif
+#ifdef NEWCHFLOODPROT
+	init_modef();
+#endif
 	loop.do_bancheck = 0;
 	loop.ircd_booted = 1;
 #if defined(HAVE_SETPROCTITLE)

@@ -2472,3 +2472,21 @@ seen. gmtime warning still there
 - Optimized send code re-enabled, I disabled it 6h ago due a bug-triggering-a-bug (see next).
 - Fixed a PING bug resulting in 'trying to send .. to myself' msg.
 - Some spelling corrections in unreal32docs.html.
+- Added checks for /sethost&/chghost to same host.
+- Added remove-chanmode-after-X-minutes in +f.
+  The format is +f [30j#R5]:15, where 5 is the "do -R after 5 minutes". For a default
+  action like +i you would have to do the same: +f [30j#i5]:15 (remove 'i' after 5 minutes).
+  Additionally, 2 config items are added:
+  - set::modef-default-unsettime, if this is set to for example '5' then things like
+    +f [30j]:15 will be transormed into +f [30j#i5]:15. It's just a default, the user can still
+    override it. By default this feature is not used.
+  - set::modef-max-unsettime, specifies the maximum amount of time for the <time> parameter,
+    by default this is set to 60 (=1 hour), the value should be between 0 and 255.
+  I didn't do the extended tests I usually do but it seems stable, also the docs are updated
+  but are probably updated again later to make it a bit more readable.
+  Feel free to report any bugs as soon as you discover them.
+  The only thing I could think of is: _usually_ only 1 server will have the -i/-R/.. timer
+  running, so if that server splits (or even worse dies) it will only be -i/-R/.. at that server
+  and when they sync back they merge chanmodes so +i/+R is set again.
+  I don't consider this a huge problem but maybe it can be inconveniently, if people have
+  a lot of trouble with this I'll have to consider a 50% recode of the +f system :/.

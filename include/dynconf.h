@@ -123,6 +123,10 @@ struct zConfiguration {
 	int ident_read_timeout;
 	long default_bantime;
 	int who_limit;
+#ifdef NEWCHFLOODPROT
+	unsigned char modef_default_unsettime;
+	unsigned char modef_max_unsettime;
+#endif
 	aNetwork network;
 };
 
@@ -206,3 +210,8 @@ extern aConfiguration iConf;
 
 #define DEFAULT_BANTIME			iConf.default_bantime
 #define WHOLIMIT			iConf.who_limit
+
+#ifdef NEWCHFLOODPROT
+#define MODEF_DEFAULT_UNSETTIME	iConf.modef_default_unsettime
+#define MODEF_MAX_UNSETTIME		iConf.modef_max_unsettime
+#endif

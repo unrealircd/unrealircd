@@ -189,6 +189,14 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
+	if (!strcmp(GetHost(sptr), vhost))
+	{
+		sendto_one(sptr,
+		    ":%s NOTICE %s :*** /SetHost Error: requested host is same as current host.",
+		    me.name, parv[0]);
+		return 0;
+	}
+
 	/* uh uh .. too small */
 	switch (UHOST_ALLOWED)
 	{

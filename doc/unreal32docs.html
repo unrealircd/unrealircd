@@ -21,8 +21,8 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta18<br>
-  <b>Last doc update:</b> 2003-10-03</div>
-  <b>Head Coders:</b> Stskeeps / codemastr / Luke / McSkaf / Syzop<br>
+  <b>Last doc update:</b> 2003-10-18</div>
+  <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke / McSkaf<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
 <p>Due to the increasing complexity of UnrealIRCd3.2 We have switched to an easier 
@@ -310,11 +310,11 @@ There are also some channel modes which can be very effective against floods. To
 As of beta18 there's also a much more advanced channelmode +f...<br>
 <b>Channel mode f</b><br>
 Instead of using scripts and bots to protect against channel floods it is now build into the ircd.<br>
-This is an example +f mode: <i>*** Blah sets mode: +f [10j]:15</i><br>
+An example +f mode is: <i>*** Blah sets mode: +f [10j]:15</i><br>
 This means 10 joins per 15 seconds are allowed in the channel, if the limit is hit, the channel will be set +i automatically.<br>
 The following floodtypes are available:<br>
 <table border=1 cellpadding=3 cellspacing=1>
-<tr><td>mode:</td><td>name:</td><td>default action:</td><td>other avail. actions:</td><td>comments</td></tr>
+<tr><td>type:</td><td>name:</td><td>default action:</td><td>other avail. actions:</td><td>comments</td></tr>
 <tr><td>c</td><td>CTCPs</td><td>auto +C</td><td>m, M</td><td>&nbsp;</td></tr>
 <tr><td>j</td><td>joins</td><td>auto +i</td><td>R</td><td>&nbsp;</td></tr>
 <tr><td>k</td><td>knocks</td><td>auto +K</td><td>&nbsp;</td><td><font size=-1>(counted for local clients only)</font></td></tr>
@@ -355,13 +355,38 @@ Example:
 <font color=green>*** server1.test.net sets mode: +N</font>
 </pre>
 
+In fact, it can get even more advanced/complicated:<br>
 Instead of the default action, you can for some floodtypes specify another one, for example: <i>+f [20j#R,50m#M]:15</i><br>
 This will set the channel +R if the joinlimit is reached (&gt;20 joins in 15 seconds),
 and will set the channel +M if the msg limit is reached (&gt;50 messages in 15 seconds).<br>
-Look at the table above to see more options.<br>
+<br>
+There's also a &quot;remove mode after X minutes&quot; feature: <i>+f [20j#R5]:15</i> will set the channel +R if the 
+limit is reached and will set -R after 5 minutes.<br>
+A server can have a default unsettime (set::modef-default-unsettime), so if you type <i>+f [20j]:15</i> it could get 
+transformed into <i>+f [20j#i10]:15</i>, it's just a default, you can still set [20j#i2]:15 or something like that, 
+and you can also disable the remove-chanmode completely by doing a +f [20j#i0]:15 (an explicit 0).<br>
 <br>
 The old +f mode (msgflood per-user) is also still available as 't', +f 10:6 is now called +f [10t]:6 and 
-+f *20:10 is now +f [20t#b]:10. Currently the ircd will automatically convert old +f mode types to new ones.<br>
++f *20:10 is now +f [20t#b]:10. Currently the ircd will automatically convert old +f mode types to new ones. 
+Note that there's no unsettime feature available for 't' bans ([20t#b30]:15 does not work).<br>
+<br>
+What the best +f mode is heavily depends on the channel... how many users does it have? do you have a game that makes users 
+msg a lot (eg: trivia) or do users often use popups? is it some kind of mainchannel or in auto-join? etc..<br>
+There's no perfect channelmode +f that is good for all channels, but to get you started have a look at the next example and modify 
+it to suit your needs:<br>
++f [30j#i10,40m#m10,7c#C15,10n#N15,30k#K10]:15<br>
+30 joins per 15 seconds, if limit is reached set channel +i for 10 minutes<br>
+40 messages per 15 seconds, if limit is reached set channel +m for 10 minutes<br>
+7 ctcps per 15 seconds, if limit is reached set channel +C for 15 minutes<br>
+10 nickchanges per 15 seconds, if limit is reached set channel +N for 15 minutes<br>
+30 knocks per 15 seconds, if limit is reached set channel +K for 5 minutes<br>
+
+If it's some kind of large user channel (&gt;75 users?) you will want to increase the join sensitivity (to eg: 50) and the 
+message limit as well (to eg: 60 or 75).<br>
+Especially the remove-mode times are a matter of taste.. you should think like.. what if no op is available to handle 
+the situation, do I want to have the channel locked for like 15 minutes (=not nice for users) or 5 minutes (=likely the flooders 
+will just wait 5m and flood again). It also depends on the floodtype, users unable to join (+i) or speak (+m) is worse than 
+having them unable to change their nick (+N) or send ctcps to the channel (+C) so you might want to use different removal times.
 </p></div>
 
 <p><font size="+2"><b>3.13 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
@@ -1899,6 +1924,12 @@ set {
  <p><font class="set">set::default-bantime &lt;time&gt;</font><br>
   Default bantime when doing /kline, /gline, /zline, /shun, etc without time parameter 
   (like /gline *@some.nasty.isp), the default is permanent (0). Example: <i>default-bantime 90d;</i></p>
+ <p><font class="set">set::modef-default-unsettime &lt;value&gt;</font><br>
+  For channelmode +f you can specify a default unsettime, if you specify 10 for example then 
+  +f [5j]:15 will be transformed to [5j#i10]:15. The default is no default unsettime.</p>
+ <p><font class="set">set::modef-max-unsettime &lt;value&gt;</font><br>
+  The maximum amount of minutes for a mode +f unsettime (in +f [5j#i&lt;TIME&gt;]:15), this is a 
+  value between 0 and 255. The default is 60 (= 1 hour).</p>
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; Additional Files<a name="addtlfiles"></a>
   </font></b></p><div class="desc">

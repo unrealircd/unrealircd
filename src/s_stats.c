@@ -1237,6 +1237,12 @@ int stats_set(aClient *sptr, char *para)
 			sptr->name, pretty_time_val(IDENT_CONNECT_TIMEOUT));
 	sendto_one(sptr, ":%s %i %s :ident::read-timeout: %s", me.name, RPL_TEXT,
 			sptr->name, pretty_time_val(IDENT_READ_TIMEOUT));
+#ifdef NEWCHFLOODPROT
+	sendto_one(sptr, ":%s %i %s :modef-default-unsettime: %hd", me.name, RPL_TEXT,
+			sptr->name, (unsigned short)MODEF_DEFAULT_UNSETTIME);
+	sendto_one(sptr, ":%s %i %s :modef-max-unsettime: %hd", me.name, RPL_TEXT,
+			sptr->name, (unsigned short)MODEF_MAX_UNSETTIME);
+#endif
 	sendto_one(sptr, ":%s %i %s :hosts::global: %s", me.name, RPL_TEXT,
 	    sptr->name, oper_host);
 	sendto_one(sptr, ":%s %i %s :hosts::admin: %s", me.name, RPL_TEXT,

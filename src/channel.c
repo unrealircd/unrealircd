@@ -103,6 +103,11 @@ void sub1_from_channel(aChannel *);
 void clean_channelname(char *);
 void del_invite(aClient *, aChannel *);
 
+#ifdef NEWCHFLOODPROT
+void chanfloodtimer_del(aChannel *chptr, char mflag, long mbit);
+void chanfloodtimer_stopchantimers(aChannel *chptr);
+#endif
+
 static char *PartFmt = ":%s PART %s";
 static char *PartFmt2 = ":%s PART %s :%s";
 /*
@@ -857,16 +862,24 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 }
 
 /* [just a helper for channel_modef_string()] */
-static inline char *chmodefstrhelper(char *buf, char t, char tdef, unsigned short l, unsigned char a)
+static inline char *chmodefstrhelper(char *buf, char t, char tdef, unsigned short l, unsigned char a, unsigned char r)
 {
 char *p;
+char tmpbuf[16], *p2 = tmpbuf;
+
 	ircsprintf(buf, "%hd", l);
 	p = buf + strlen(buf);
 	*p++ = t;
-	if (a && (a != tdef))
+	if (a && ((a != tdef) || r))
 	{
 		*p++ = '#';
 		*p++ = a;
+		if (r)
+		{
+			sprintf(tmpbuf, "%hd", (short)r);
+			while ((*p = *p2++))
+				p++;
+		}
 	}
 	*p++ = ',';
 	return p;
@@ -881,17 +894,17 @@ char *p = retbuf;
 
 	/* (alphabetized) */
 	if (x->l[FLD_CTCP])
-		p = chmodefstrhelper(p, 'c', 'C', x->l[FLD_CTCP], x->a[FLD_CTCP]);
+		p = chmodefstrhelper(p, 'c', 'C', x->l[FLD_CTCP], x->a[FLD_CTCP], x->r[FLD_CTCP]);
 	if (x->l[FLD_JOIN])
-		p = chmodefstrhelper(p, 'j', 'i', x->l[FLD_JOIN], x->a[FLD_JOIN]);
+		p = chmodefstrhelper(p, 'j', 'i', x->l[FLD_JOIN], x->a[FLD_JOIN], x->r[FLD_JOIN]);
 	if (x->l[FLD_KNOCK])
-		p = chmodefstrhelper(p, 'k', 'K', x->l[FLD_KNOCK], x->a[FLD_KNOCK]);
+		p = chmodefstrhelper(p, 'k', 'K', x->l[FLD_KNOCK], x->a[FLD_KNOCK], x->r[FLD_KNOCK]);
 	if (x->l[FLD_MSG])
-		p = chmodefstrhelper(p, 'm', 'm', x->l[FLD_MSG], x->a[FLD_MSG]);
+		p = chmodefstrhelper(p, 'm', 'm', x->l[FLD_MSG], x->a[FLD_MSG], x->r[FLD_MSG]);
 	if (x->l[FLD_NICK])
-		p = chmodefstrhelper(p, 'n', 'N', x->l[FLD_NICK], x->a[FLD_NICK]);
+		p = chmodefstrhelper(p, 'n', 'N', x->l[FLD_NICK], x->a[FLD_NICK], x->r[FLD_NICK]);
 	if (x->l[FLD_TEXT])
-		p = chmodefstrhelper(p, 't', '\0', x->l[FLD_TEXT], x->a[FLD_TEXT]);
+		p = chmodefstrhelper(p, 't', '\0', x->l[FLD_TEXT], x->a[FLD_TEXT], x->r[FLD_TEXT]);
 
 	if (*(p - 1) == ',')
 		p--;
@@ -1912,26 +1925,33 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				{
 				case MODE_NOCTCP:
 					chptr->mode.floodprot->c[FLD_CTCP] = 0;
+					chanfloodtimer_del(chptr, 'C', MODE_NOCTCP);
 					break;
 				case MODE_NONICKCHANGE:
 					chptr->mode.floodprot->c[FLD_NICK] = 0;
+					chanfloodtimer_del(chptr, 'N', MODE_NONICKCHANGE);
 					break;
 				case MODE_MODERATED:
 					chptr->mode.floodprot->c[FLD_MSG] = 0;
 					chptr->mode.floodprot->c[FLD_CTCP] = 0;
+					chanfloodtimer_del(chptr, 'm', MODE_MODERATED);
 					break;
 				case MODE_NOKNOCK:
 					chptr->mode.floodprot->c[FLD_KNOCK] = 0;
+					chanfloodtimer_del(chptr, 'K', MODE_NOKNOCK);
 					break;
 				case MODE_INVITEONLY:
 					chptr->mode.floodprot->c[FLD_JOIN] = 0;
+					chanfloodtimer_del(chptr, 'i', MODE_INVITEONLY);
 					break;
 				case MODE_MODREG:
 					chptr->mode.floodprot->c[FLD_MSG] = 0;
 					chptr->mode.floodprot->c[FLD_CTCP] = 0;
+					chanfloodtimer_del(chptr, 'M', MODE_MODREG);
 					break;
 				case MODE_RGSTRONLY:
 					chptr->mode.floodprot->c[FLD_JOIN] = 0;
+					chanfloodtimer_del(chptr, 'R', MODE_RGSTRONLY);
 					break;
 				default:
 					break;
@@ -2494,6 +2514,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 					char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
 					int v, i;
 					unsigned short warnings = 0, breakit;
+					unsigned char r;
 
 					/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
 					strlcpy(xbuf, param, sizeof(xbuf));
@@ -2542,12 +2563,24 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 						}
 						p++;
 						a = '\0';
+						r = MyClient(cptr) ? MODEF_DEFAULT_UNSETTIME : 0;
 						if (*p != '\0')
 						{
 							if (*p == '#')
 							{
 								p++;
 								a = *p;
+								p++;
+								if (*p != '\0')
+								{
+									int tv;
+									tv = atoi(p);
+									if (tv <= 0)
+										tv = 0; /* (ignored) */
+									if (tv > (MyClient(cptr) ? MODEF_MAX_UNSETTIME : 255))
+										tv = (MyClient(cptr) ? MODEF_MAX_UNSETTIME : 255); /* set to max */
+									r = (unsigned char)tv;
+								}
 							}
 						}
 
@@ -2559,6 +2592,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 									newf.a[FLD_CTCP] = a;
 								else
 									newf.a[FLD_CTCP] = 'C';
+								newf.r[FLD_CTCP] = r;
 								break;
 							case 'j':
 								newf.l[FLD_JOIN] = v;
@@ -2566,10 +2600,12 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 									newf.a[FLD_JOIN] = a;
 								else
 									newf.a[FLD_JOIN] = 'i';
+								newf.r[FLD_JOIN] = r;
 								break;
 							case 'k':
 								newf.l[FLD_KNOCK] = v;
 								newf.a[FLD_KNOCK] = 'K';
+								newf.r[FLD_KNOCK] = r;
 								break;
 							case 'm':
 								newf.l[FLD_MSG] = v;
@@ -2577,15 +2613,18 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 									newf.a[FLD_MSG] = a;
 								else
 									newf.a[FLD_MSG] = 'm';
+								newf.r[FLD_MSG] = r;
 								break;
 							case 'n':
 								newf.l[FLD_NICK] = v;
 								newf.a[FLD_NICK] = 'N';
+								newf.r[FLD_NICK] = r;
 								break;
 							case 't':
 								newf.l[FLD_TEXT] = v;
 								if (a == 'b')
 									newf.a[FLD_TEXT] = a;
+								/** newf.r[FLD_TEXT] ** not supported */
 								break;
 							default:
 								breakit=1;
@@ -2654,6 +2693,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				free(chptr->mode.floodprot);
 				chptr->mode.floodprot = NULL;
 			}
+			chanfloodtimer_stopchantimers(chptr);
 			retval = 0; /* ??? copied from previous +f code. */
 		}
 #endif
@@ -3339,6 +3379,11 @@ void sub1_from_channel(aChannel *chptr)
 		/* free extcmode params */
 		extcmode_free_paramlist(chptr->mode.extmodeparam);
 		chptr->mode.extmodeparam = NULL;
+#endif
+#ifdef NEWCHFLOODPROT
+		chanfloodtimer_stopchantimers(chptr);
+		if (chptr->mode.floodprot)
+			MyFree(chptr->mode.floodprot);
 #endif
 		if (chptr->topic)
 			MyFree(chptr->topic);
@@ -5908,9 +5953,11 @@ CMD_FUNC(m_sjoin)
 			{
 				chptr->mode.floodprot->per = MAX(chptr->mode.floodprot->per, oldmode.floodprot->per);
 				for (i=0; i < NUMFLD; i++)
+				{
 					chptr->mode.floodprot->l[i] = MAX(chptr->mode.floodprot->l[i], oldmode.floodprot->l[i]);
-				for (i=0; i < NUMFLD; i++)
 					chptr->mode.floodprot->a[i] = MAX(chptr->mode.floodprot->a[i], oldmode.floodprot->a[i]);
+					chptr->mode.floodprot->r[i] = MAX(chptr->mode.floodprot->r[i], oldmode.floodprot->r[i]);
+				}
 				x = channel_modef_string(chptr->mode.floodprot);
 				Addit('f', x);
 			}
@@ -6519,6 +6566,142 @@ char flagbuf[8]; /* For holding "qohva" and "*~@%+" */
 }
 
 #ifdef NEWCHFLOODPROT
+RemoveFld *removefld_list = NULL;
+
+RemoveFld *chanfloodtimer_find(aChannel *chptr, char mflag)
+{
+RemoveFld *e;
+
+	for (e=removefld_list; e; e=e->next)
+	{
+		if ((e->chptr == chptr) && (e->m == mflag))
+			return e;
+	}
+	return NULL;
+}
+
+/*
+ * Adds a "remove channelmode set by +f" timer.
+ * chptr	Channel
+ * mflag	Mode flag, eg 'C'
+ * mbit		Mode bitflag, eg MODE_NOCTCP
+ * when		when it should be removed
+ * NOTES:
+ * - This function takes care of overwriting of any previous timer
+ *   for the same modechar.
+ * - The function takes care of chptr->mode.floodprot->timer_flags,
+ *   do not modify it yourself.
+ * - chptr->mode.floodprot is asumed to be non-NULL.
+ */
+void chanfloodtimer_add(aChannel *chptr, char mflag, long mbit, time_t when)
+{
+RemoveFld *e;
+unsigned char add=1;
+
+	if (chptr->mode.floodprot->timer_flags & mbit)
+	{
+		/* Already exists... */
+		e = chanfloodtimer_find(chptr, mflag);
+		if (e)
+			add = 0;
+	}
+
+	if (add)
+		e = MyMallocEx(sizeof(RemoveFld));
+
+	e->chptr = chptr;
+	e->m = mflag;
+	e->when = when;
+
+	if (add)
+		AddListItem(e, removefld_list);
+
+	chptr->mode.floodprot->timer_flags |= mbit;
+}
+
+void chanfloodtimer_del(aChannel *chptr, char mflag, long mbit)
+{
+RemoveFld *e;
+
+	if (chptr->mode.floodprot && !(chptr->mode.floodprot->timer_flags & mbit))
+		return; /* nothing to remove.. */
+	e = chanfloodtimer_find(chptr, mflag);
+	if (!e)
+		return;
+
+	DelListItem(e, removefld_list);
+
+	if (chptr->mode.floodprot)
+		chptr->mode.floodprot->timer_flags &= ~mbit;
+}
+
+long get_chanbitbychar(char m)
+{
+aCtab *tab = &cFlagTab[0];
+	while(tab->mode != 0x0)
+	{
+		if (tab->flag == m)
+			return tab->mode;
+		tab++;;
+	}
+	return 0;
+}
+
+EVENT(modef_event)
+{
+RemoveFld *e = removefld_list;
+time_t now;
+long mode;
+
+	now = TStime();
+	
+	while(e)
+	{
+		if (e->when <= now)
+		{
+			/* Remove chanmode... */
+#ifdef NEWFLDDBG
+			sendto_realops("modef_event: chan %s mode -%c EXPIRED", e->chptr->chname, e->m);
+#endif
+			mode = get_chanbitbychar(e->m);
+			if (e->chptr->mode.mode & mode)
+			{
+				sendto_serv_butone(&me, ":%s MODE %s -%c 0", me.name, e->chptr->chname, e->m);
+				sendto_channel_butserv(e->chptr, &me, ":%s MODE %s -%c", me.name, e->chptr->chname, e->m);
+				e->chptr->mode.mode &= ~mode;
+			}
+			
+			/* And delete... */
+			e = (RemoveFld *)DelListItem(e, removefld_list);
+		} else {
+#ifdef NEWFLDDBG
+			sendto_realops("modef_event: chan %s mode -%c about %d seconds",
+				e->chptr->chname, e->m, e->when - now);
+#endif
+			e = e->next;
+		}
+	}
+}
+
+void init_modef()
+{
+	EventAddEx(NULL, "modef_event", 10, 0, modef_event, NULL);
+}
+
+void chanfloodtimer_stopchantimers(aChannel *chptr)
+{
+RemoveFld *e = removefld_list;
+	while(e)
+	{
+		if (e->chptr == chptr)
+			e = (RemoveFld *)DelListItem(e, removefld_list);
+		else
+			e = e->next;
+	}
+}
+
+
+
 int do_chanflood(ChanFloodProt *chp, int what)
 {
 
@@ -6585,6 +6768,13 @@ char m;
 		sendto_serv_butone(&me, ":%s MODE %s +%c 0", me.name, chptr->chname, m);
 		sendto_channel_butserv(chptr, &me, ":%s MODE %s +%c", me.name, chptr->chname, m);
 		chptr->mode.mode |= modeflag;
+		if (chptr->mode.floodprot->r[what]) /* Add remove-chanmode timer... */
+		{
+			chanfloodtimer_add(chptr, m, modeflag, TStime() + ((long)chptr->mode.floodprot->r[what] * 60) - 5);
+			/* (since the chanflood timer event is called every 10s, we do -5 here so the accurancy will
+			 *  be -5..+5, without it it would be 0..+10.)
+			 */
+		}
 	}
 }
 #endif

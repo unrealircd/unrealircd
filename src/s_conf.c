@@ -631,8 +631,9 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 				} else
 				{
 					char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
-					int v, i;
-					unsigned short warnings = 0, breakit;
+					int v;
+					unsigned short breakit;
+					unsigned char r;
 					
 					/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
 					strlcpy(xbuf, param, sizeof(xbuf));
@@ -665,8 +666,20 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 							{
 								p++;
 								a = *p;
+								p++;
+								if (*p != '\0')
+								{
+									int tv;
+									tv = atoi(p);
+									if (tv <= 0)
+										tv = 0; /* (ignored) */
+									if (tv > 255)
+										tv = 255; /* set to max */
+									r = tv;
+								}
 							}
 						}
+
 						switch(c)
 						{
 							case 'c':
@@ -675,6 +688,7 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 									newf.a[FLD_CTCP] = a;
 								else
 									newf.a[FLD_CTCP] = 'C';
+								newf.r[FLD_CTCP] = r;
 								break;
 							case 'j':
 								newf.l[FLD_JOIN] = v;
@@ -682,10 +696,12 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 									newf.a[FLD_JOIN] = a;
 								else
 									newf.a[FLD_JOIN] = 'i';
+								newf.r[FLD_JOIN] = r;
 								break;
 							case 'k':
 								newf.l[FLD_KNOCK] = v;
 								newf.a[FLD_KNOCK] = 'K';
+								newf.r[FLD_KNOCK] = r;
 								break;
 							case 'm':
 								newf.l[FLD_MSG] = v;
@@ -693,15 +709,18 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 									newf.a[FLD_MSG] = a;
 								else
 									newf.a[FLD_MSG] = 'm';
+								newf.r[FLD_MSG] = r;
 								break;
 							case 'n':
 								newf.l[FLD_NICK] = v;
 								newf.a[FLD_NICK] = 'N';
+								newf.r[FLD_NICK] = r;
 								break;
 							case 't':
 								newf.l[FLD_TEXT] = v;
 								if (a == 'b')
 									newf.a[FLD_TEXT] = 'b';
+								/** newf.r[FLD_TEXT] ** not supported */
 								break;
 							default:
 								breakit=1;
@@ -1312,6 +1331,10 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->nick_count = 3; i->nick_period = 60; /* nickflood protection: max 3 per 60s */
 #ifdef NO_FLOOD_AWAY
 	i->away_count = 4; i->away_period = 120; /* awayflood protection: max 4 per 120s */
+#endif
+#ifdef NEWCHFLOODPROT
+	i->modef_default_unsettime = 0;
+	i->modef_max_unsettime = 60; /* 1 hour seems enough :p */
 #endif
 }
 
@@ -5362,6 +5385,16 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		{
 			tempiConf.default_bantime = config_checkval(cep->ce_vardata,CFG_TIME);
 		}
+#ifdef NEWCHFLOODPROT
+		else if (!strcmp(cep->ce_varname, "modef-default-unsettime")) {
+			int v = atoi(cep->ce_vardata);
+			tempiConf.modef_default_unsettime = (unsigned char)v;
+		}
+		else if (!strcmp(cep->ce_varname, "modef-max-unsettime")) {
+			int v = atoi(cep->ce_vardata);
+			tempiConf.modef_max_unsettime = (unsigned char)v;
+		}
+#endif
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 #ifdef USE_SSL
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
@@ -5920,6 +5953,26 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 			}
 		}
+#ifdef NEWCHFLOODPROT
+		else if (!strcmp(cep->ce_varname, "modef-default-unsettime")) {
+			int v = atoi(cep->ce_vardata);
+			if ((v <= 0) || (v > 255))
+			{
+				config_error("%s:%i: set::modef-default-unsettime: value '%d' out of range (should be 1-255)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, v);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "modef-max-unsettime")) {
+			int v = atoi(cep->ce_vardata);
+			if ((v <= 0) || (v > 255))
+			{
+				config_error("%s:%i: set::modef-max-unsettime: value '%d' out of range (should be 1-255)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, v);
+				errors++;
+			}
+		}
+#endif
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 #ifdef USE_SSL
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {

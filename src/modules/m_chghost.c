@@ -159,6 +159,13 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if ((acptr = find_person(parv[1], NULL)))
 	{
+		if (!strcmp(GetHost(acptr), parv[2]))
+		{
+			sendto_one(sptr,
+			    ":%s NOTICE %s :*** /ChgHost Error: requested host is same as current host.",
+			    me.name, parv[0]);
+			return 0;
+		}
 		switch (UHOST_ALLOWED)
 		{
 			case UHALLOW_NEVER:

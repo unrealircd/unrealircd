@@ -428,8 +428,13 @@
 /*
  * Time interval to wait and if no messages have been received, then check for
  * PINGFREQUENCY and CONNECTFREQUENCY
+ * Imo this is quite useless nowdays, it only saves _some_ cpu on tiny networks
+ * with like 10 users all of them being inactive. On a normal network with >30
+ * users this value is completely irrelevant.
+ * The original value here was 60 (which was [hopefuly] never reached and was
+ * stupid anyway), changed to 2.
  */
-#define TIMESEC  60		/* Recommended value: 60 */
+#define TIMESEC  2
 
 /*
  * If daemon doesn't receive anything from any of its links within
