@@ -355,3 +355,16 @@ inline aCommand *find_Command(char *cmd, short token, int flags)
 	}
 	return NULL;
 }
+
+
+aCommand *find_Command_simple(char *cmd)
+{
+	aCommand	*p;
+	
+	for (p = CommandHash[toupper(*cmd)]; p; p = p->next) {
+		if (!stricmp(p->cmd, cmd))
+				return (p);
+	}
+	return NULL;
+	
+}

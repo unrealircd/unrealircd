@@ -30,7 +30,7 @@ R_MODULES=m_sethost.so m_chghost.so m_chgident.so m_setname.so \
 		m_away.so m_svsnoop.so m_svso.so m_svsnick.so \
 	 m_adminchat.so m_akill.so m_chgname.so m_guest.so m_htm.so m_kill.so \
  	 m_kline.so m_lag.so m_message.so m_nachat.so m_oper.so m_pingpong.so \
-	 m_quit.so m_rakill.so m_remgline.so m_rping.so m_sendumode.so m_sqline.so \
+	 m_quit.so m_rakill.so m_rping.so m_sendumode.so m_sqline.so \
 	 m_techat.so m_tsctl.so m_unkline.so m_unsqline.so m_unzline.so m_whois.so \
 	 m_zline.so \
 		scan.so scan_socks.so scan_http.so web/httpd.so
@@ -40,7 +40,7 @@ COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
 	 m_who.c m_mkpasswd.c m_away.c m_svsnoop.c m_svso.c m_svsnick.c \
 	 m_adminchat.c m_akill.c m_chgname.c m_guest.c m_htm.c m_kill.c \
  	 m_kline.c m_lag.c m_message.c m_nachat.c m_oper.c m_pingpong.c \
-	 m_quit.c m_rakill.c m_remgline.c m_rping.c m_sendumode.c m_sqline.c \
+	 m_quit.c m_rakill.c m_rping.c m_sendumode.c m_sqline.c \
 	 m_techat.c m_tsctl.c m_unkline.c m_unsqline.c m_unzline.c m_whois.c \
 	 m_zline.c
 
@@ -111,10 +111,6 @@ m_quit.so: m_quit.c $(INCLUDES)
 m_rakill.so: m_rakill.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_rakill.so m_rakill.c
-
-m_remgline.so: m_remgline.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o m_remgline.so m_remgline.c
 
 m_rping.so: m_rping.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \

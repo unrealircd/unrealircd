@@ -3433,6 +3433,11 @@ void	validate_configuration(void)
 		add_CommandX("StatServ", NULL, m_alias, 1, M_USER|M_ALIAS);
 		Warning("No alias{}'s found, using default of NickServ, ChanServ, MemoServ, OperServ, HelpServ, StatServ");
 	}
+	if (!find_Command_simple("AWAY") || !find_Command_simple("KILL") ||
+		!find_Command_simple("OPER") || !find_Command_simple("PING"))
+	{
+		Error("Someone forgot to load modules with proper commands in them. Read the documentation");
+	}
 #ifdef _WIN32
 	if (config_error_flag)
 		win_log("Errors in configuration, terminating program.");

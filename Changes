@@ -859,3 +859,6 @@ seen. gmtime warning still there
 - Made makeconf load scan_http.so
 - Fixed a /who bug, found by IXpfah
 - Updated makefile.win32 for all the new modules
+- Added in Fish's patches
+- Added bitching when you lack needed IRC commands
+- Removed REMGLINE

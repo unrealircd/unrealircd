@@ -142,6 +142,7 @@ extern int R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns,
 
 #endif
 extern inline aCommand *find_Command(char *cmd, short token, int flags);
+extern aCommand *find_Command_simple(char *cmd);
 extern aChannel *find_channel(char *, aChannel *);
 extern Member *find_member_link(Member *, aClient *);
 extern void remove_user_from_channel(aClient *, aChannel *);
