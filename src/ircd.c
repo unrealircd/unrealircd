@@ -786,6 +786,47 @@ static int bad_command()
 char chess[] = {
 	85, 110, 114, 101, 97, 108, 0
 };
+#ifndef NO_FDLIST
+inline TS   check_fdlists(now)
+	TS   now;
+{
+	aClient *cptr;
+	int  pri;		/* temp. for priority */
+	int  i, j;
+	j = 0;
+	for (i = highest_fd; i >= 0; i--)
+	{
+		if (!(cptr = local[i]))
+			continue;
+		if (IsServer(cptr) || IsListening(cptr)
+		    || IsOper(cptr) || DoingAuth(cptr))
+		{
+			busycli_fdlist.entry[++j] = i;
+			continue;
+		}
+		pri = cptr->priority;
+		if (cptr->receiveM == cptr->lastrecvM)
+			pri += 2;	/* lower a bit */
+		else
+			pri -= 30;
+		if (pri < 0)
+			pri = 0;
+		if (pri > 80)
+			pri = 80;
+		cptr->lastrecvM = cptr->receiveM;
+		cptr->priority = pri;
+		if ((pri < 10) || (!lifesux && (pri < 25)))
+			busycli_fdlist.entry[++j] = i;
+	}
+	busycli_fdlist.last_entry = j;	/* rest of the fdlist is garbage */
+	return (now + FDLISTCHKFREQ + lifesux * FDLISTCHKFREQ);
+}
+EVENT(e_check_fdlists)
+{
+	check_fdlists(TStime());
+}
+
+#endif
 
 extern time_t TSoffset;
 
@@ -1402,47 +1443,6 @@ void SocketLoop(void *dummy)
 		flush_connections(me.fd);
 	}
 }
-#ifndef NO_FDLIST
-EVENT(e_check_fdlists)
-{
-	check_fdlists(TStime());
-}
-
-inline TS   check_fdlists(now)
-	TS   now;
-{
-	aClient *cptr;
-	int  pri;		/* temp. for priority */
-	int  i, j;
-	j = 0;
-	for (i = highest_fd; i >= 0; i--)
-	{
-		if (!(cptr = local[i]))
-			continue;
-		if (IsServer(cptr) || IsListening(cptr)
-		    || IsOper(cptr) || DoingAuth(cptr))
-		{
-			busycli_fdlist.entry[++j] = i;
-			continue;
-		}
-		pri = cptr->priority;
-		if (cptr->receiveM == cptr->lastrecvM)
-			pri += 2;	/* lower a bit */
-		else
-			pri -= 30;
-		if (pri < 0)
-			pri = 0;
-		if (pri > 80)
-			pri = 80;
-		cptr->lastrecvM = cptr->receiveM;
-		cptr->priority = pri;
-		if ((pri < 10) || (!lifesux && (pri < 25)))
-			busycli_fdlist.entry[++j] = i;
-	}
-	busycli_fdlist.last_entry = j;	/* rest of the fdlist is garbage */
-	return (now + FDLISTCHKFREQ + lifesux * FDLISTCHKFREQ);
-}
-#endif
 
 /*
  * open_debugfile
