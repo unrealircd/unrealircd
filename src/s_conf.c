@@ -3960,10 +3960,50 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_badword *ca;
 	char *tmp;
 	short regex = 0;
+#ifdef FAST_BADWORD_REPLACE
+	int ast_l = 0, ast_r = 0;
+#endif
 
 	ca = MyMallocEx(sizeof(ConfigItem_badword));
 
 	cep = config_find_entry(ce->ce_entries, "word");
+#ifdef FAST_BADWORD_REPLACE
+	/* The fast badwords routine can do: "blah" "*blah" "blah*" and "*blah*",
+	 * in all other cases use regex.
+	 */
+	for (tmp = cep->ce_vardata; *tmp; tmp++) {
+		if ((int)*tmp < 65 || (int)*tmp > 123) {
+			if ((cep->ce_vardata == tmp) && (*tmp == '*')) {
+				ast_l = 1; /* Asterisk at the left */
+				continue;
+			}
+			if ((*(tmp + 1) == '\0') && (*tmp == '*')) {
+				ast_r = 1; /* Asterisk at the right */
+				continue;
+			}
+			regex = 1;
+			break;
+		}
+	}
+	if (regex) {
+		ca->type = BADW_TYPE_REGEX;
+		ircstrdup(ca->word, cep->ce_vardata);
+		regcomp(&ca->expr, ca->word, REG_ICASE);
+	} else {
+		char *tmpw;
+		ca->type = BADW_TYPE_FAST;
+		ca->word = tmpw = MyMalloc(strlen(cep->ce_vardata) - ast_l - ast_r + 1);
+		/* Copy except for asterisks */
+		for (tmp = cep->ce_vardata; *tmp; tmp++)
+			if (*tmp != '*')
+				*tmpw++ = *tmp;
+		*tmpw = '\0';
+		if (ast_l)
+			ca->type |= BADW_TYPE_FAST_L;
+		if (ast_r)
+			ca->type |= BADW_TYPE_FAST_R;
+	}
+#else
 	for (tmp = cep->ce_vardata; *tmp; tmp++) {
 		if ((int)*tmp < 65 || (int)*tmp > 123) {
 			regex = 1;
@@ -3981,6 +4021,7 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 	   faster than calling it each time a message is received like before. -- codemastr
 	 */
 	regcomp(&ca->expr, ca->word, REG_ICASE);
+#endif
 	if ((cep = config_find_entry(ce->ce_entries, "replace"))) {
 		ircstrdup(ca->replace, cep->ce_vardata);
 	}

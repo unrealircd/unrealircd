@@ -1971,10 +1971,28 @@ CMD_FUNC(m_stats)
 		  ConfigItem_badword *words;
 
 		  for (words = conf_badword_channel; words; words = (ConfigItem_badword *) words->next) {
+ #ifdef FAST_BADWORD_REPLACE
+			  sendto_one(sptr, ":%s %i %s :c %c %s%s%s %s",
+			      me.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
+			      (words->type & BADW_TYPE_FAST_L) ? "*" : "",
+			      words->word,
+			      (words->type & BADW_TYPE_FAST_R) ? "*" : "",
+			      words->replace ? words->replace : "<censored>");
+ #else
 			  sendto_one(sptr, ":%s %i %s :c %s %s", me.name, RPL_TEXT, sptr->name,  words->word, words->replace ? words->replace : "<censored>");
+ #endif
 		  }
 		  for (words = conf_badword_message; words; words = (ConfigItem_badword *) words->next) {
+ #ifdef FAST_BADWORD_REPLACE
+			  sendto_one(sptr, ":%s %i %s :m %c %s%s%s %s",
+			      me.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
+			      (words->type & BADW_TYPE_FAST_L) ? "*" : "",
+			      words->word,
+			      (words->type & BADW_TYPE_FAST_R) ? "*" : "",
+			      words->replace ? words->replace : "<censored>");
+ #else
 			  sendto_one(sptr, ":%s %i %s :m %s %s", me.name, RPL_TEXT, sptr->name, words->word, words->replace ? words->replace : "<censored>");
+ #endif
 		  }
 		  break;
 	  }

@@ -1013,10 +1013,20 @@ struct _configitem_ban {
 
 };
 
+#ifdef FAST_BADWORD_REPLACE
+#define BADW_TYPE_FAST    0x1
+#define BADW_TYPE_FAST_L  0x2
+#define BADW_TYPE_FAST_R  0x4
+#define BADW_TYPE_REGEX   0x8
+#endif
+
 struct _configitem_badword {
 	ConfigItem      *prev, *next;
 	ConfigFlag	flag;
 	char		*word, *replace;
+#ifdef FAST_BADWORD_REPLACE
+	unsigned short	type;
+#endif
 	regex_t 	expr;
 };
 

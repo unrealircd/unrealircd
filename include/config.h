@@ -510,6 +510,12 @@
  */
 #define KILLCHASETIMELIMIT 90	/* Recommended value: 90 */
 
+/*
+ * Use much faster badwords replace routine?
+ * Change #undef to #define to enable
+ */
+#undef FAST_BADWORD_REPLACE
+
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MOTD MPATH
 #define RULES RPATH
