@@ -688,6 +688,9 @@ struct Server {
 #ifdef	LIST_DEBUG
 	aClient *bcptr;
 #endif
+	struct {
+		unsigned linked:1;		/* Server linked? (3.2beta18+) */
+	} flags;
 };
 
 #define M_UNREGISTERED 0x0001

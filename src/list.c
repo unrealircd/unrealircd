@@ -177,7 +177,7 @@ anUser *make_user(aClient *cptr)
 	user = cptr->user;
 	if (!user)
 	{
-		user = (anUser *)MyMalloc(sizeof(anUser));
+		user = (anUser *)MyMallocEx(sizeof(anUser));
 #ifdef	DEBUGMODE
 		users.inuse++;
 #endif
@@ -211,7 +211,7 @@ aServer *make_server(aClient *cptr)
 
 	if (!serv)
 	{
-		serv = (aServer *)MyMalloc(sizeof(aServer));
+		serv = (aServer *)MyMallocEx(sizeof(aServer));
 #ifdef	DEBUGMODE
 		servs.inuse++;
 #endif

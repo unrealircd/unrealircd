@@ -2335,3 +2335,12 @@ seen. gmtime warning still there
   listener was counted instead of the total. This also explains why on some (many?)
   ircd configurations it always showed 0.00 kb/s and why HTM (high traffic mode)
   was never kicking in.
+- A few doc updates (example.conf).
+- Added EOS command (End Of Sync), which is sent between servers after a server has
+  succesfully synced (after introducing of channels, users, etc). This way we can
+  easily distinct between linked servers and a connecting server.
+  This is needed / very helpful for: snomask +F, new +f anti flood system, prolly
+  other things as well. Services don't support this command, but it's not
+  needed atm since +F/+f both ignore U lines.
+- Internal: changed 2 MyMalloc's to MyMallocEx (mem zerofill).. nothing was currently
+  affected by this but it's easy to forget if you add new stuff.

@@ -562,7 +562,7 @@ extern void       run_configuration(void);
 extern void rehash_motdrules();
 extern aMotd *read_file(char *filename, aMotd **list);
 extern aMotd *read_file_ex(char *filename, aMotd **list, struct tm *);
-CMD_FUNC(m_server_remote);
+extern CMD_FUNC(m_server_remote);
 extern void send_proto(aClient *, ConfigItem_link *);
 extern char *xbase64enc(long i);
 extern void unload_all_modules(void);
@@ -598,3 +598,4 @@ extern void make_extcmodestr();
 extern aExtCMtableParam *extcmode_duplicate_paramlist(aExtCMtableParam *);
 extern void extcmode_free_paramlist(aExtCMtableParam *);
 #endif
+extern CMD_FUNC(m_eos);

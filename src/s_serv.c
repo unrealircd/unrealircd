@@ -1235,6 +1235,22 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 				    acptr->name, acptr->hopcount + 1,
 				    acptr->info);
 
+			/* Also signal to the just-linked server which
+			 * servers are fully linked.
+			 * Now you might ask yourself "Why don't we just
+			 * assume every server you get during link phase
+			 * is fully linked?", well.. there's a race condition
+			 * if 2 servers link (almost) at the same time,
+			 * then you would think the other one is fully linked
+			 * while in fact he was not.. -- Syzop.
+			 */
+			if (acptr->serv->flags.linked)
+			{
+				sendto_one(cptr, ":%s %s", acptr->name,
+					(IsToken(cptr) ? TOK_EOS : MSG_EOS));
+				ircd_log(LOG_ERROR, "[EOSDBG] m_server_synch: sending to uplink '%s' with src %s...",
+					cptr->name, acptr->name);
+			}
 		}
 	}
 	/* Synching nick information */
@@ -1429,6 +1445,13 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	    IRCstats.global_max, TStime(), UnrealProtocol,
 	    CLOAK_KEYCRC,
 	    ircnetwork);
+
+	/* Send EOS (End Of Sync) to the just linked server... */
+	sendto_one(cptr, ":%s %s", me.name,
+		(IsToken(cptr) ? TOK_EOS : MSG_EOS));
+	ircd_log(LOG_ERROR, "[EOSDBG] m_server_synch: sending to justlinked '%s' with src ME...",
+			cptr->name);
+
 	return 0;
 
 }
@@ -3848,4 +3871,23 @@ aClient *find_match_server(char *mask)
 		continue;
 	}
 	return acptr;
+}
+
+/*
+ * EOS (End Of Sync) command.
+ * Type: Broadcast
+ * Purpose: Broadcasted over a network if a server is synced (after the users, channels,
+ *          etc are introduced). Makes us able to know if a server is linked.
+ * History: Added in beta18 (in cvs since 2003-08-11) by Syzop
+ */
+CMD_FUNC(m_eos)
+{
+	if (!IsServer(sptr))
+		return 0;
+	sptr->serv->flags.linked = 1;
+	/* pass it on ^_- */
+	ircd_log(LOG_ERROR, "[EOSDBG] m_eos: got sync from %s (path:%s)", sptr->name, cptr->name);
+	ircd_log(LOG_ERROR, "[EOSDBG] m_eos: broadcasting it back to everyone except route from %s", cptr->name);
+	sendto_serv_butone_token(cptr,
+		parv[0], MSG_EOS, TOK_EOS, "", NULL);
 }

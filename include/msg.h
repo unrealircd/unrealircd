@@ -292,6 +292,9 @@
 #define TOK_MODULE	"BQ"
 /* BR and BT are in use */
 
+#define MSG_EOS		"EOS"
+#define TOK_EOS		"ES"
+
 #define MAXPARA    	15
 
 extern int m_topic(), m_join(), m_part(), m_mode();
