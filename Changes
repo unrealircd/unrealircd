@@ -1914,3 +1914,6 @@ seen. gmtime warning still there
 - set::services-server is now required to be set (#0000730).
 - Fixed /list memory leak.
 - Fixed MyConnect()/MyClient() bug causing memory leak.
+- Fixed a bug with TKL and rehash
+- Recoded aliases (regex style) to be much faster.
+

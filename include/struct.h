@@ -1130,6 +1130,7 @@ struct _configitem_alias_format {
 	char *nick;
 	short type;
 	char *format, *parameters;
+	regex_t expr;
 };
 
 #define INCLUDE_NOTLOADED 1

@@ -326,6 +326,7 @@ int	l_commands_Unload(int module_unload)
 	m_rakill_Unload();
 	m_unzline_Unload();
 	m_unkline_Unload();
+	m_tkl_Unload();
 	m_sqline_Unload();
 	m_unsqline_Unload();
 	m_vhost_Unload();

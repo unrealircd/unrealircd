@@ -1475,6 +1475,7 @@ void	config_rehash()
 				ircfree(fmt->format);
 				ircfree(fmt->nick);
 				ircfree(fmt->parameters);
+				regfree(&fmt->expr);
 				DelListItem(fmt, alias_ptr->format);
 				MyFree(fmt);
 			}
@@ -5405,6 +5406,7 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->ce_varname, "format")) {
 			format = MyMallocEx(sizeof(ConfigItem_alias_format));
 			ircstrdup(format->format, cep->ce_vardata);
+			regcomp(&format->expr, cep->ce_vardata, REG_ICASE|REG_EXTENDED);
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				if (!strcmp(cepp->ce_varname, "nick")) {
 					ircstrdup(format->nick, cepp->ce_vardata);
@@ -5492,6 +5494,23 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 		}
 
 		if (!strcmp(cep->ce_varname, "format")) {
+			int errorcode, errorbufsize;
+			char *errorbuf;
+			regex_t expr;
+			errorcode = regcomp(&expr, cep->ce_vardata, REG_ICASE|REG_EXTENDED);
+                        if (errorcode > 0)
+                        {
+                                errorbufsize = regerror(errorcode, &expr, NULL, 0)+1;
+                                errorbuf = malloc(errorbufsize);
+                                regerror(errorcode, &expr, errorbuf, errorbufsize);
+                                config_error("%s:%i: alias::format contains an invalid regex: %s",
+ 					cep->ce_fileptr->cf_filename,
+ 					cep->ce_varlinenum,
+ 					errorbuf);
+                                errors++;
+                                free(errorbuf);
+                        }
+			regfree(&expr);	
 			if (!config_find_entry(cep->ce_entries, "type"))
 			{
 				config_error("%s:%i: alias::format::type missing", cep->ce_fileptr->cf_filename,
