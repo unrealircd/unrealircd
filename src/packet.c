@@ -166,31 +166,31 @@ int  dopacket(cptr, buffer, length)
 				lengthweneed = ((unsigned char) *cptr->buffer) * 256 
 					+ ((unsigned char) *(cptr->buffer + 1));
 				lengthbackup = ch1 - cptr->buffer;
-				if (lengthbackup >= lengthweneed + 2)
+				if (lengthbackup >= (lengthweneed + 1))
 				{
+					ch1 = cptr->buffer;
+					cptr->count = 0;
+					Debug((DEBUG_ERROR, "packet recieved len %i", lengthweneed));
 					s = (char *) ep_decrypt(cptr, cptr->buffer);
 					me.receiveM += 1;
 					cptr->receiveM += 1;
-					cptr->count = 0;
-					ch1 = cptr->buffer;
-					Debug((DEBUG_ERROR, "Length: %i/%i", strlen(s), li));
 					if (cptr->acpt != &me)
 						cptr->acpt->receiveM += 1;
 					if (parse(cptr, s, s + lengthweneed, msgtab) == FLUSH_BUFFER)
 						return FLUSH_BUFFER;
 					if (cptr->flags & FLAGS_DEADSOCKET)
 						return exit_client(cptr, cptr, &me, "Dead socket");
-				}
-					else
+				 }
+				 else
 					if (ch1 < cptr->buffer + (sizeof(cptr->buffer) - 1))
-						ch1++;
-
+					ch1++;
 			}
-				else
-			if (ch1 < cptr->buffer + (sizeof(cptr->buffer) - 1))
-				ch1++;
-			
+			else
+				if (ch1 < cptr->buffer + (sizeof(cptr->buffer) - 1))
+					ch1++;
+				
 		}
+		
 	}
 		else
 #endif
