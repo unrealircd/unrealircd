@@ -2666,7 +2666,7 @@ int  m_who(cptr, sptr, parc, parv)
 			    || match(mask, acptr->user->realhost)) == 0
 			    || match(mask, acptr->user->server) == 0
 			    || match(mask, acptr->info) == 0))
-				do_who(sptr, cptr, ch2ptr);
+				do_who(sptr, acptr, ch2ptr);
 		}
 	sendto_one(sptr, rpl_str(RPL_ENDOFWHO), me.name, parv[0],
 	    BadPtr(mask) ? "*" : mask);
