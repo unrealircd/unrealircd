@@ -212,6 +212,8 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 #define P_ETIMEDOUT     ETIMEDOUT
 #define P_ENOTSOCK	ENOTSOCK
 #define P_EIO		EIO
+#define P_ECONNABORTED	ECONNABORTED
+#define P_ECONNRESET	ECONNRESET
 #else
 
 /* IO and Error portability macros */
@@ -233,6 +235,8 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 #define P_ETIMEDOUT     WSAETIMEDOUT
 #define P_ENOTSOCK	WSAENOTSOCK
 #define P_EIO		EIO
+#define P_ECONNABORTED	WSAECONNABORTED
+#define P_ECONNRESET	WSAECONNRESET
 #endif
 
 #endif /* __sys_include__ */

@@ -1033,7 +1033,7 @@ void set_sock_opts(int fd, aClient *cptr)
 		opt = sizeof(readbuf) / 8;
 		if (getsockopt(fd, IPPROTO_IP, IP_OPTIONS, (OPT_TYPE *)t,
 		    &opt) < 0)
-		    if (ERRNO != ECONNRESET) /* FreeBSD can generate this -- Syzop */
+		    if (ERRNO != P_ECONNRESET) /* FreeBSD can generate this -- Syzop */
 		        report_error("getsockopt(IP_OPTIONS) %s:%s", cptr);
 		else if (opt > 0 && opt != sizeof(readbuf) / 8)
 		{
@@ -1045,7 +1045,7 @@ void set_sock_opts(int fd, aClient *cptr)
 		}
 		if (setsockopt(fd, IPPROTO_IP, IP_OPTIONS, (OPT_TYPE *)NULL,
 		    0) < 0)
-		    if (ERRNO != ECONNRESET) /* FreeBSD can generate this -- Syzop */
+		    if (ERRNO != P_ECONNRESET) /* FreeBSD can generate this -- Syzop */
 			    report_error("setsockopt(IP_OPTIONS) %s:%s", cptr);
 	}
 #endif
@@ -1796,7 +1796,7 @@ int  read_message(time_t delay, fdlist *listp)
 			 */
 			if ((fd = accept(cptr->fd, NULL, NULL)) < 0)
 			{
-		        if ((ERRNO != P_EWOULDBLOCK) && (ERRNO != ECONNABORTED))
+		        if ((ERRNO != P_EWOULDBLOCK) && (ERRNO != P_ECONNABORTED))
 					report_error("Cannot accept connections %s:%s", cptr);
 				break;
 			}
