@@ -1539,3 +1539,4 @@ seen. gmtime warning still there
   install in license - GPL + the notes from openssl
 - Made minor changes to help.conf
 - Fixed +O/+A ban implementation issues
+- Reformated unreal32docs.html in something other than MS Word 93k now!
