@@ -26,7 +26,7 @@ French
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2.2-CVS</font><br>
-  <b>Derni&egrave;re mise &agrave; jour de la documentation:</b> 2004-10-11</div>
+  <b>Derni&egrave;re mise &agrave; jour de la documentation:</b> 2004-12-01</div>
 <br>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -488,6 +488,7 @@ Certains modules peuvent ajouter d'autres types de ban &eacute;tendus.<br>
    <tr><td>P</td><td>part</td><td>Part reason</td></tr>
    <tr><td>q</td><td>quit</td><td>Quit reason</td></tr>
    <tr><td>d</td><td>dcc</td><td>DCC filename</td></tr>
+   <tr><td>a</td><td>away</td><td>Away message</td></tr>
    <tr><td>u</td><td>user</td><td>Ban utilisateur, serra compar&eacute; &agrave; nick!user@host:realname</td></tr>
    </tbody></table>
    Vous pouvez sp&eacute;cifier plusieurs cibles, comme : cpNn</td></tr>
@@ -2002,6 +2003,8 @@ spamfilter {
 <p><font class="set">set::kline-address &lt;email-address&gt;;</font><br>
   L'adresse email &agrave; laquelle doivent être envoy&eacute;s les questions sur les K:line. 
   Cette valeur doit être sp&eacute;cifi&eacute;e.</p>
+<p><font class="set">set::gline-address &lt;email-address&gt;;</font><br>
+  L'adresse email &agrave; laquelle doivent être envoy&eacute;s les questions sur les G:line.</p>
 <p><font class="set">set::modes-on-connect &lt;+modes&gt;;</font><br>
   Les modes qui seront appliqu&eacute;s &agrave; un utilisateur &agrave; la connexion.</p>
 <p><font class="set">set::snomask-on-connect &lt;+modes&gt;</font><br>
@@ -2108,6 +2111,8 @@ spamfilter {
   l'usage de cette commande par les non-opers est envoy&eacute; aux EYES snomask.</p>
 <p><font class="set">set::options::allow-part-if-shunned;</font><br>
   Permet aux utilisateurs shun d'utiliser /part.</p>
+<p><font class="set">set::options::fail-oper-warn;</font><br>
+  Si il est pr&eacute;sent, un utilisateur sera pr&eacute;venu que ca tentative de /oper manquée a &eacute;t&eacute; enregistr&eacute;e.</p>
 <p><font class="set">set::dns::timeout &lt;timevalue&gt;;</font><br>
   Une valeur de temps sp&eacute;cifie la dur&eacute;e qu'un serveur DNS a pour r&eacute;pondre. 
   Une valeur de temps est un num&eacute;rique avec d pour jour, h pour heure, 
@@ -2116,6 +2121,8 @@ spamfilter {
   Une valeur num&eacute;rique sp&eacute;cifie le nombre de fois que la r&eacute;solution de DNS reprendra en cas d'&eacute;chec.</p>
 <p><font class="set">set::dns::nameserver &lt;name-of-dns-server&gt;;</font><br>
   Sp&eacute;cifie l'hostname du serveur qui sera utilis&eacute; pour la r&eacute;solution de DNS.</p>
+<p><font class="set">set::dns::bind-ip &lt;ip&gt;;</font><br>
+  Sp&eacute;cifie l'ip à relier au r&eacute;solveur; presque jamais requis</p>
 <p><font class="set">set::network-name &lt;name-of-network&gt;;</font><br>
   Sp&eacute;cifie le nom du r&eacute;seau sur lequel ce serveur tourne. 
   Cette valeur devrait être exactement la même sur tous les serveurs d'un r&eacute;seau.</p>
@@ -3095,10 +3102,15 @@ Autres choses dans le même style : ne mettez jamais votre UnrealIRCd dans un web
 Et pour les backups (sauvegardes), assurez vous qu'elles aient les bonnes permissions &eacute;galement (il arrive assez souvent 
 que tout est bien s&eacute;curis&eacute; mais qu'il y a un backup.tar.gz quelque part lisible par tout le monde).<br>
 <br>
-Vous pourrez &eacute;galement vouloir crypter les mots de passe lorsque ce sera possible. 
-Notez que même si ceci n'est "qu'une autre couche de s&eacute;curit&eacute;", beaucoup de mots de passe de 1 &agrave; 8 caract&egrave;res 
-peuvent être craqu&eacute;s en moins de quelques heures, et il y a souvent d'autres informations int&eacute;ressantes non 
-crypt&eacute;es dans le configfile (comme link::password-connect).
+Vous voulez probablement &eacute;galement crypter les mots de passe lorsque ce sera possible, si vous compilez avec le support de OpenSSL 
+(Ce que vous faites depuis que vous êtes interess&eacute; par les probl&agrave;mes de s&eacute;curit&eacute;, n'est-ce pas ?)
+je vous sugg&agrave;re donc d'utiliser l'encrytion des mots de passe en <i>sha1</i> ou <i>ripemd160</i>, ou encore <i>md5</i>.
+Si il vous reste encore des oper block encrypté avec Unreal3.2.1 ou avant, je vous sugg&agrave;re de r&eacute;-encrypter ceux-ci
+(r&eacute;utilisez juste /mkpasswd), car 3.2.1 introduit certaines caract&eacute;ristiques anti-cracks int&eacute;r&eacute;ssantes
+(basiquement une diminution de 14x la vitesse de crack et rend impossible le crack par stored-plain-ciphertext)<br>
+Notez que même si ceci n'est "qu'une autre couche de s&eacute;curit&eacute;", beaucoup de mots de passe faibles
+peuvent être craqu&eacute;s facilement, et si quelqu'un s'empare de votre fichier de configuration, il pourra y trouver des
+choses int&eacute;r&eacute;ssante pour planifier une attaque comme link::password-connect.
 </div><p></p>
 
 <p><b><font size="+2">8.4 Probl&egrave;mes li&eacute;s aux utilisateurs</font></b><a name="secuser"></a><br></p><div class="desc">
@@ -3106,8 +3118,9 @@ Tout comme beaucoup des choses dites ici, ceci n'est pas sp&eacute;cifique &agra
 Choisissez toujours bien vos opers et admins. Et rappelez-vous le concept du maillon faible. 
 Même si vous êtes prudents et suivez la documentation, peut-être qu'un de vos amis oper fera quelque chose de stupide. 
 Comme partager son disque dur via netbios/kazaa/morpheus/..., avoir un trojan, utiliser un mauvais mot de passe, etc etc ... 
-Malheureusement, ce n'est pas toujours sous votre contrôle.
-</div><p></p>
+Malheureusement, ce n'est pas toujours sous votre contrôle.<br>
+Une chause que vous pouvez tout de fois faire est choisir soigneusement quels privilèges dont chacun a besoin (oper::flags).
+</div></p>
 
 <p><b><font size="+2">8.5 SSL/SSH &amp; sniffing</font></b><a name="secsnif"></a><br></p><div class="desc">
 Utilisez des connections SSL entre les serveurs et pour les opers, cela vous prot&egrave;gera cointre le "sniffing". 
@@ -3173,7 +3186,7 @@ Si un split arrive, quelqu'un peut toujours voir quel serveur est link&eacute; a
 <br>
 <b>UTILISATEURS NORMAUX ET SNOMASKS</b><br>
 Une chose qui n'est pas toujours connues est que les utilisateurs normaux peuvent &eacute;galement s'appliquer certains snomask limit&eacute;s, 
-appel&eacute; +s +sk. Grâce &agrave; cela, ils peuvent voir des choses comme les rehashes, l'identification d'opers, les kills et d'autres messages vari&eacute;s.<br>
+appel&eacute; +s +sk. Grâce &agrave; cela, ils peuvent voir des choses comme les rehashes, les kills et d'autres messages vari&eacute;s.<br>
 Pour d&eacute;sactiver cela, vous pouvez utiliser set::restrict-usermodes comme ceci : <i>set { restrict-usermodes "s"; };</i>.<br>
 <br>
 Évidement tout ceci n'est que de la "dissimulation d'informations", ce n'est pas de la "vraie" s&eacute;curit&eacute;. 
@@ -3188,7 +3201,7 @@ Il y a en tout cas une chose que vous devez faire, qui est TOUJOURS UTILISER LA 
 inscrivez vous &agrave; la <a href="http://mail1.sourceforge.net/mailman/listinfo/unreal-notify" target="_blank">unreal-notify mailinglist</a> 
 tout de suite et vous recevrez les annonces de release (la unreal-notify est pour les annonces de release uniquement, 
 d'où seulement 1 mail tout les X mois). En g&eacute;n&eacute;ral il est explicitement mentionn&eacute; dans l'annonce si la release permet 
-de fixer (de hauts risques) de s&eacute;curit&eacute;.<br> 
+de fixer (de hauts risques) de s&eacute;curit&eacute;, mais il est malgré tout bon d'upgrader.<br> 
 </div><p></p>
 
 <p><b><font size="+2">8.9 Conclusion</font></b><a name="secsummary"></a><br></p><div class="desc">
