@@ -1032,3 +1032,5 @@ seen. gmtime warning still there
 - Fixed a possible segfault in m_stats
 - Bug with crypt not working for /oper fixed
 - Fixed a bug where certain oflags were ignored for new-style config flags
+- Actually enabled MD5, SHA1 methods when SSL was defined. (fix for drunk
+  coding)
