@@ -132,7 +132,7 @@ aClient *make_client(aClient *from, aClient *servr)
 	cptr->status = STAT_UNKNOWN;
 	cptr->fd = -1;
 	
-	cptr->passwd;
+	cptr->passwd = NULL;
 	(void)strcpy(cptr->username, "unknown");
 	if (size == CLIENT_LOCAL_SIZE)
 	{

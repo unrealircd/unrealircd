@@ -57,7 +57,6 @@ static char sccsid[] = "@(#)s_auth.c	1.18 4/18/94 (C) 1992 Darren Reed";
 void start_auth(aClient *cptr)
 {
 	struct SOCKADDR_IN sock;
-	int  addrlen = sizeof(struct SOCKADDR_IN);
 
 	if (IDENT_CHECK == 0) {
 		cptr->flags &= ~(FLAGS_WRAUTH | FLAGS_AUTH);

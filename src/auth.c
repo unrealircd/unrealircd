@@ -135,7 +135,6 @@ void	Auth_DeleteAuthStruct(anAuthStruct *as)
 int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 {
 #ifdef	AUTHENABLE_UNIXCRYPT
-	char	salt[3];
 	extern	char *crypt();
 #endif
 #if defined(AUTHENABLE_MD5) || defined(AUTHENABLE_SHA1)

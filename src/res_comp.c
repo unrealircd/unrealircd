@@ -564,7 +564,7 @@ static int ns_name_unpack(const u_char *msg, const u_char *eom, const u_char *sr
 {
 	const u_char *srcp, *dstlim;
 	u_char *dstp;
-	int  n, c, len, checked;
+	int  n, len, checked;
 
 	len = -1;
 	checked = 0;

@@ -60,7 +60,7 @@ void set_snomask(aClient *, char *);
 int  dontspread = 0;
 extern char *me_hash;
 extern char backupbuf[];
-static char buf[BUFSIZE], buf2[BUFSIZE];
+static char buf[BUFSIZE];
 
 int sno_mask[] = { 
 	SNO_KILLS, 'k',

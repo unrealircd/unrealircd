@@ -353,8 +353,6 @@ void send_usage(aClient *cptr, char *nick)
 void count_memory(aClient *cptr, char *nick)
 {
 	extern aChannel *channel;
-	extern aClass *classes;
-	extern aConfItem *conf;
 	extern int flinks;
 	extern Link *freelink;
 
@@ -362,8 +360,6 @@ void count_memory(aClient *cptr, char *nick)
 	Ban *ban;
 	Link *link;
 	aChannel *chptr;
-	aConfItem *aconf;
-	aClass *cltmp;
 
 	int  lc = 0,		/* local clients */
 	     ch = 0,		/* channels */

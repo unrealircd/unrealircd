@@ -350,7 +350,7 @@ long conf_size(char *value) {
 		return 0;
 
 	numbuf = MyMalloc(strlen(value));
-	for (i = 0;*buf; *buf++) {
+	for (i = 0;*buf; buf++) {
 		if (isdigit(*buf)) {
 			numbuf[i++] = *buf;
 			continue;

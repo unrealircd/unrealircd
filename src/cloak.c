@@ -278,7 +278,6 @@ char *make_virthost(char *curr, char *new, int mode)
 {
 	char *mask;
 	char *x;
-	int  i;
 	if (curr == NULL)
 		return (char *)NULL;
 
