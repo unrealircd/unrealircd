@@ -394,3 +394,7 @@
 - Added file: include/macros.h and a new macro, ARRAY_SIZEOF.
 - Added the ability to specify multiple types in a tkl except, suggested by Bugz (#0002085).
 - Added spamfilter 'away' ('a') target (#0002057).
+- Fixed a qline duplicate msg bug I think
+- Windows version can now hold ~4096 connections instead of ~1024
+- help.conf: clarified MKPASSWD documentation, reported by hypnetric (#0001926).
+- Some modeskip handling for future versions

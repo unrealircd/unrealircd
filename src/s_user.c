@@ -1372,13 +1372,6 @@ CMD_FUNC(m_nick)
 				    && !IsServer(sptr) ? sptr->name : "<unregistered>"),
 				    acptrs ? acptrs->name : "unknown server");
 		}
-		else if (!ishold)
-		{
-			sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s",
-			    nick,
-			    *sptr->name ? sptr->name : "<unregistered>",
-			    me.name);
-		}
 
 		if (!IsServer(cptr))
 		{

@@ -34,6 +34,7 @@ Unreal3.2.1-almost-3.2.2-but-not-yet-!!!!!! Release Notes
   followed by digits.
 - Added spamfilter 'away' ('a') target.
 - Oper-up notices moved to a new snomask 'o'
+- Win32: can now handle (near) 4096 connections instead of 1024.
 - French docs
 - Module coders: HOOKTYPE_REMOTE_JOIN, HOOKTYPE_REMOTE_PART, HOOKTYPE_REMOTE_KICK
 

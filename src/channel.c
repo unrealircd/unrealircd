@@ -2974,14 +2974,17 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
 					}
 #endif
 			  }
-			  if (found == 0)
+			  if (found == 0) /* Mode char unknown */
 			  {
-				  if (!MyClient(cptr))
-					  break;
-				  /* don't flood other servers */
-				  sendto_one(cptr,
-				      err_str(ERR_UNKNOWNMODE),
-				      me.name, cptr->name, *curchr);
+			      /* temporary hack: eat parameters of certain future chanmodes.. */
+			      if (*curchr == 'I')
+				      paracount++;
+				  if ((*curchr == 'j') && (what == MODE_ADD))
+					  paracount++;
+
+				  if (MyClient(cptr))
+					  sendto_one(cptr, err_str(ERR_UNKNOWNMODE),
+					     me.name, cptr->name, *curchr);
 				  break;
 			  }
 
