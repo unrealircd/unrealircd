@@ -33,5 +33,5 @@
 #define DYN_FREE(name)
 #else
 #define DYN_LOCAL(type, name, size) type *name = (size ? malloc(size) : NULL)
-#define DYN_FREE(name) (name ? free(name))
+#define DYN_FREE(name) (name ? free(name) : 0)
 #endif
