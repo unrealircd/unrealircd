@@ -2388,7 +2388,7 @@ void over_notice(aClient *cptr, aClient *sptr, aChannel *chptr, char *key)
 	 if (lp->value.chptr == chptr)
 	  break;
 
-	if (is_banned(cptr, sptr, chptr) && IsOper(sptr))
+	if (is_banned(cptr, sptr, chptr) && IsOper(sptr) && !IsULine(sptr))
 	{
 		sendto_umode(UMODE_EYES, "*** Banwalk [IRCop: %s] [Channel: %s]",sptr->name,chptr->chname);
 	} else if (*chptr->mode.key && (BadPtr(key) || mycmp(chptr->mode.key, key))) {

@@ -199,8 +199,8 @@ char *hidehost(char *host)
 		l[1] = ((KEY2 + crc32(h3, strlen(h3))) ^ KEY) ^ KEY3;
 		l[4] = crc32(host, strlen(host));
 		l[2] = ((l[4] + KEY2) ^ KEY)^ KEY3;
-		l[2] << 2; l[2] >> 2;
-		l[0] >> 1; l[0] << 1;
+		l[2] <<= 2; l[2] >>= 2;
+		l[0] >>= 1; l[0] >>= 1;
 		ircsprintf(cloaked, "%X.%X.%X.IP", l[2], l[1], l[0]);
 		return cloaked;
 	}
