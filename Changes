@@ -657,3 +657,5 @@ seen. gmtime warning still there
 - Win32 fixes
 - Made a /scan fix, and fixed some version numbers found by Morbid
 - Updated m_template.c to use module version 2
+- Removed a // comment in src/ircd.c
+- Fixed a bunch of updconf bugs reported by DarkSypher

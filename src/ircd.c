@@ -1291,7 +1291,7 @@ void SocketLoop(void *dummy)
 		}
 
 #endif
-		//Debug((DEBUG_DEBUG, "Got message(s)"));
+		/*Debug((DEBUG_DEBUG, "Got message(s)")); */
 		/*
 		   ** ...perhaps should not do these loops every time,
 		   ** but only if there is some chance of something

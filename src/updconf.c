@@ -337,10 +337,9 @@ int main(int argc, char *argv[]) {
 	fprintf(fd2, "/* Created using the UnrealIRCd configuration file updater */\n\n");
 
 	while (fgets(buf, 1023, fd)) {
-		if (buf[0] == '#')
+		if (buf[0] == '#' || buf[0] == '\n' || buf[0] == '\r')
 			continue;
 		iCstrip(buf);
-	
 		if (buf[1] == ':') {
 			/* Regular config line, switch! */
 			switch(buf[0]) {
@@ -664,32 +663,34 @@ int main(int argc, char *argv[]) {
 				break;
 			}
 		}
-	tmp = strtok(buf, " ");
-	if (!strcmp(tmp, "deny")) {
-		fprintf(fd2, "deny dcc {\n");
-		fprintf(fd2, "\tmask \"%s\";\n",strtok(NULL, " "));
-		fprintf(fd2, "\treason \"%s\"\n};\n",strtok(NULL,""));
-		continue;
-	}
-	if (!strcmp(tmp, "allow")) {
-		fprintf(fd2, "allow channel {\n");
-		fprintf(fd2, "\tchannel \"%s\";\n",strtok(NULL, " "));
-		continue;
-	}
-	if (!strcmp(tmp, "vhost")) {
-		char host[100];
-		tmp = strtok(&buf[2]," ");
-		vh = add_vhost(strtok(NULL, " "));	
-		AllocCpy(vh->vhost,tmp);
-		AllocCpy(vh->pass,strtok(NULL," "));
-		tmp = strtok(NULL, "");
-		strcpy(host,tmp);
-		if (!strchr(tmp,'@'))
-			sprintf(host, "*@%s",tmp);
-		else
-			strcpy(host, tmp);
-		if (!find_vhost_host(vh, host))
-			add_vhost_host(vh, host);
+		else {
+		tmp = strtok(buf, " ");
+		if (!strcmp(tmp, "deny")) {
+			fprintf(fd2, "deny dcc {\n");
+			fprintf(fd2, "\tmask \"%s\";\n",strtok(NULL, " "));
+			fprintf(fd2, "\treason \"%s\"\n};\n",strtok(NULL,""));
+			continue;
+		}
+		else if (!strcmp(tmp, "allow")) {
+			fprintf(fd2, "allow channel {\n");
+			fprintf(fd2, "\tchannel \"%s\";\n",strtok(NULL, " "));
+			continue;
+		}
+		else if (!strcmp(tmp, "vhost")) {
+			char host[100];
+			tmp = strtok(NULL," ");
+			vh = add_vhost(tmp);	
+			AllocCpy(vh->vhost,tmp);
+			AllocCpy(vh->pass,strtok(NULL," "));
+			tmp = strtok(NULL, "");
+			strcpy(host,tmp);
+			if (!strchr(tmp,'@'))
+				sprintf(host, "*@%s",tmp);
+			else
+				strcpy(host, tmp);
+			if (!find_vhost_host(vh, host))
+				add_vhost_host(vh, host);
+		}
 	}
 
 	}
