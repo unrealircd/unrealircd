@@ -512,3 +512,4 @@ seen. gmtime warning still there
 - Fixed /trace problem with slots (idea from ircu2.10.01+winnt)
 - Fixed listener problem, reported by McSkaf
 - Minor Win32 bug fix
+- Fixed problem with addto_fdlist(cptr->fd) caused by slotpatch

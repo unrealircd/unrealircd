@@ -1422,7 +1422,7 @@ int  m_server_estab(cptr)
 	IRCstats.servers++;
 	IRCstats.unknown--;
 #ifndef NO_FDLIST
-	addto_fdlist(cptr->fd, &serv_fdlist);
+	addto_fdlist(cptr->slot, &serv_fdlist);
 #endif
 	if ((Find_uline(cptr->name)))
 		cptr->flags |= FLAGS_ULINE;
