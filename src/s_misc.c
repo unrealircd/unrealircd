@@ -132,7 +132,8 @@ char *convert_time (time_t ltime)
 	ltime = (ltime - minutes) / 60;
 	hours = ltime % 24;
 	days = (ltime - hours) / 24;
-	ircsprintf(buffer, "%ludays %luhours %lumonths %lusecs", days, hours, minutes, seconds);
+	ircsprintf(buffer, "%ludays %luhours %luminutes %lusecs",
+days, hours, minutes, seconds);
 	return(*buffer ? buffer : "");
 }
 
