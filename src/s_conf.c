@@ -4077,12 +4077,51 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else
 	{
+		char *at, *tmp, *host;
 		if (!vhost->ce_vardata)
 		{
 			config_error("%s:%i: vhost::vhost without contents",
 				vhost->ce_fileptr->cf_filename, vhost->ce_varlinenum);
 			errors++;
 		}	
+		if ((at = strchr(vhost->ce_vardata, '@')))
+		{
+			for (tmp = vhost->ce_vardata; tmp != at; tmp++)
+			{
+				if (*tmp == '~' && tmp == vhost->ce_vardata)
+					continue;
+				if (!isallowed(*tmp))
+					break;
+			}
+			if (tmp != at)
+			{
+				config_error("%s:%i: vhost::vhost contains an invalid ident",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+				errors++;
+			}
+			host = at+1;
+		}
+		else
+			host = vhost->ce_vardata;
+		if (!*host)
+		{
+			config_error("%s:%i: vhost::vhost does not have a host set",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			errors++;
+		}
+		else
+		{
+			for (; *host; host++)
+			{
+				if (!isallowed(*host) && *host != ':')
+				{
+					config_error("%s:%i: vhost::vhost contains an invalid host",
+						ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+					errors++;
+					break;
+				}
+			}
+		}
 	}
 	if (!(login = config_find_entry(ce->ce_entries, "login")))
 	{

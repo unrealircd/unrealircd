@@ -3642,21 +3642,29 @@ CMD_FUNC(m_topic)
 		    || IsULine(sptr) || is_halfop(sptr, chptr)) && topic)
 		{
 			/* setting a topic */
-			if ((MyClient(sptr) ? (IsOper(sptr) &&
-			     OPCanOverride(sptr)) : IsOper(sptr)) && 
-			     !(is_halfop(sptr, chptr)
-			     || IsULine(sptr)
-			     || is_chan_op(sptr, chptr))
-			     && (chptr->mode.mode & MODE_TOPICLIMIT))
+			if (chptr->mode.mode & MODE_TOPICLIMIT)
 			{
-#ifdef NO_OPEROVERRIDE
-				return 0;
+				if (!is_halfop(sptr, chptr) && !IsULine(sptr) && !
+					is_chan_op(sptr, chptr))
+				{
+#ifndef NO_OPEROVERRIDE
+					if ((MyClient(sptr) ? (!IsOper(sptr) || !OPCanOverride(sptr)) : !IsOper(sptr)))
+					{
 #endif
-				sendto_snomask(SNO_EYES,
-				    "*** OperOverride -- %s (%s@%s) TOPIC %s \'%s\'",
-				    sptr->name, sptr->user->username, sptr->user->realhost,
-				    chptr->chname, topic);
-			}
+					sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
+					    me.name, parv[0], chptr->chname);
+					return 0;
+#ifndef NO_OPEROVERRIDE
+					}
+					else
+						sendto_snomask(SNO_EYES,
+						    "*** OperOverride -- %s (%s@%s) TOPIC %s \'%s\'",
+						    sptr->name, sptr->user->username, sptr->user->realhost,
+						    chptr->chname, topic);
+#endif
+				}
+			}				
+					
 			/* setting a topic */
 			topiClen = strlen(topic);
 #ifndef TOPIC_NICK_IS_NUHOST
