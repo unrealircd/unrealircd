@@ -1493,7 +1493,7 @@ void win_map(aClient *server, HWND hwTreeView, short remap)
                 acptr = lp->value.cptr;
                 if (acptr->srvptr != server)
                         continue;
-                win_map(acptr, hwTreeView, remap);
+                win_map(acptr, hwTreeView, 0);
         }
 }
 

@@ -714,3 +714,4 @@ seen. gmtime warning still there
 - Added in Ossie's example.conf v2
 - Major changes to the win32 editor
 - Fixed a bug in the new editor, hopefully now it works flawlessly (?)
+- Fixed a bug in the win32 status dialog causing it to get screwed up, found by Auspice
