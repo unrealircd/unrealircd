@@ -98,6 +98,18 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_scan_Load(int module_load)
 #endif
 {
+	if (Scan_endpoint.SIN_PORT == 0)
+	{
+		
+#ifndef INET6
+		Scan_endpoint.SIN_ADDR.S_ADDR = inet_addr("127.0.0.1");
+#else
+	        inet_pton(AFINET, "127.0.0.1", Scan_endpoint.SIN_ADDR.S_ADDR);
+#endif
+		Scan_endpoint.SIN_PORT = htons(2121);
+		Scan_endpoint.SIN_FAMILY = AFINET;
+	}
+
 	Scannings_clean = EventAdd("e_scannings_clean", 0, 0, e_scannings_clean, NULL);
 	return MOD_SUCCESS;
 }
@@ -126,6 +138,8 @@ int	m_scan_Unload(void)
 	IRCMutexUnlock(Scannings_lock);	
 	if (ret != MOD_DELAY)
 	{
+		del_Hook(HOOKTYPE_LOCAL_CONNECT, h_scan_connect);
+		del_Hook(HOOKTYPE_CONFIG_UNKNOWN, h_config_set_scan);
 		EventDel(Scannings_clean);
 	}
 	return ret;
@@ -346,10 +360,6 @@ DLLFUNC int	h_config_set_scan(void)
 			}
 			del_ConfigItem(sets, conf_unknown_set);
 		}	
-	}
-	if (Scan_endpoint.SIN_PORT == 0)
-	{
-		config_error("scan: no set::scan::endpoint made");
 	}
 	return 0;
 }

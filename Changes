@@ -1006,3 +1006,4 @@ seen. gmtime warning still there
   people on +z channels
 - win32 fixes
 - Scan API cleanup (You don't use goto when break works just as good)
+- Fixed other scanner bugs (hopefully it 100% works now?)
