@@ -26,7 +26,6 @@ Source: "..\..\wircd.exe"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\..\WIRCD.pdb"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\..\.CHANGES.NEW"; DestDir: "{app}"; DestName: "CHANGES.NEW.txt"; CopyMode: alwaysoverwrite
 Source: "..\..\.CONFIG.RANT"; DestDir: "{app}"; DestName: "CONFIG.RANT.txt"; CopyMode: alwaysoverwrite
-Source: "..\..\.NEW_CONFIG"; DestDir: "{app}"; DestName: "NEW_CONFIG.txt"; CopyMode: alwaysoverwrite
 Source: "..\..\.RELEASE.NOTES"; DestDir: "{app}"; DestName: "RELEASE.NOTES.txt"; CopyMode: alwaysoverwrite
 Source: "..\..\.SICI"; DestDir: "{app}"; DestName: "SICI.txt"; CopyMode: alwaysoverwrite
 Source: "..\..\badwords.channel.conf"; DestDir: "{app}"; CopyMode: alwaysoverwrite
