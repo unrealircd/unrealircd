@@ -3972,7 +3972,7 @@ int  m_restart(cptr, sptr, parc, parv)
 
 	}
 
-	if ((pass = find_restartpass()))
+	if ((pass = conf_drpass->restart))
 	{
 		if (parc < 2)
 		{
@@ -4777,7 +4777,7 @@ int  m_die(cptr, sptr, parc, parv)
 		return 0;
 	}
 
-	if ((pass = find_diepass()))	/* See if we have and DIE/RESTART password */
+	if ((pass = conf_drpass->die))	/* See if we have and DIE/RESTART password */
 	{
 		if (parc < 2)	/* And if so, require a password :) */
 		{

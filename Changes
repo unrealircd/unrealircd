@@ -86,3 +86,4 @@
 - Made U:lines loaded from the newconf, also made /stats U read the U:lines from the newconf
 - Added listen {} runtime-configuration code work :))
 - Removed unrealircd.com from the stock
+- X:line was replaced with drpass {} in /restart and /die (will make them faster as well)
