@@ -237,7 +237,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                             TOPICLEN, \
                             TOPICLEN, \
                             "#",      \
-                            "@%+"       
+                            "(ohv)@%+"       
 
 /* Server-Server PROTOCTL -Stskeeps */
 #define PROTOCTL_SERVER "NOQUIT TOKEN NICKv2 SJOIN SJOIN2 UMODE2 VL SJ3 NS" ZIPSTUFF
