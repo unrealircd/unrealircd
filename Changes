@@ -1230,3 +1230,5 @@ seen. gmtime warning still there
   to Mod_Init which contains extended information. This replaces the Mod_Handle method in beta7
 - Module Insanity prototype fix
 - Fixed a listen::options::serversonly bug reported by swissSolaris (#0000084)
+- Fixed leftovers of non- char *configfile compliance. Thanks to ace and
+  various other people ..
