@@ -140,13 +140,6 @@ DLLFUNC int m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
-	if (parc < 2)
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name,
-				sptr->name, "GLINE");
-		return 0;
-	}
-
 	return m_tkl_line(cptr, sptr, parc, parv, "G");
 
 }
@@ -166,13 +159,6 @@ DLLFUNC int m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc == 1)
 	{
 		tkl_stats(sptr);
-		return 0;
-	}
-
-	if (parc < 2)
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name,
-				sptr->name, "GZLINE");
 		return 0;
 	}
 
@@ -198,13 +184,6 @@ DLLFUNC int m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
-	if (parc < 2)
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name,
-				sptr->name, "GLINE");
-		return 0;
-	}
-
 	return m_tkl_line(cptr, sptr, parc, parv, "s");
 
 }
@@ -227,13 +206,6 @@ DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
-	if (parc < 2)
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name,
-				sptr->name, "TKLINE");
-		return 0;
-	}
-
 	return m_tkl_line(cptr, sptr, parc, parv, "k");
 
 }
@@ -253,13 +225,6 @@ DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc == 1)
 	{
 		tkl_stats(sptr);
-		return 0;
-	}
-
-	if (parc < 2)
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name,
-				sptr->name, "TZLINE");
 		return 0;
 	}
 
@@ -303,11 +268,6 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	if (parc == 1)
 	{
 		tkl_stats(sptr);
-		return 0;
-	}
-
-	if (parc < 2)
-	{
 		return 0;
 	}
 

@@ -1122,3 +1122,4 @@ v- Fixed some bugreport stuff
 - Fixed a bug with module objects involving static linking
 - Recoded hooks to work just like events
 - Fixed a listener bug reported by Dragon974
+- Removed some useless tkl code
