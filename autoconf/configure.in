@@ -371,6 +371,8 @@ AC_MSG_RESULT(compiling TRE regex library)
 make 
 AC_MSG_RESULT(installing TRE regex library)
 make install
+TREINCDIR="$cur_dir/extras/regexp/include"
+AC_SUBST(TREINCDIR)
 cd $cur_dir
 AC_OUTPUT(Makefile src/modules/Makefile unreal ircdcron/ircdchk)
 chmod 0700 unreal

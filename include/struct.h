@@ -61,7 +61,7 @@
 #include "zip.h"
 #endif
 #include "auth.h" 
-#include "../extras/regexp/include/tre/regex.h"
+#include "tre/regex.h"
 extern int sendanyways;
 
 

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../extras/regexp/include/tre/regex.h"
+#include "tre/regex.h"
 
 #define MAX_MATCH       1
 #define MAX_WORDLEN	64

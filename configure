@@ -9881,6 +9881,8 @@ make
 echo "$as_me:$LINENO: result: installing TRE regex library" >&5
 echo "${ECHO_T}installing TRE regex library" >&6
 make install
+TREINCDIR="$cur_dir/extras/regexp/include"
+
 cd $cur_dir
 ac_config_files="$ac_config_files Makefile src/modules/Makefile unreal ircdcron/ircdchk"
 cat >confcache <<\_ACEOF
@@ -10462,6 +10464,7 @@ s,@URL@,$URL,;t t
 s,@IRCDDIR@,$IRCDDIR,;t t
 s,@BINDIR@,$BINDIR,;t t
 s,@FD_SETSIZE@,$FD_SETSIZE,;t t
+s,@TREINCDIR@,$TREINCDIR,;t t
 CEOF
 
 _ACEOF
