@@ -3852,16 +3852,8 @@ CMD_FUNC(m_invite)
          *       less people on channel.
          */
 
-        /* Yes, it's crack induced. This checks if we should even bother going further */
-        if (!(MyConnect(acptr) && chptr && sptr->user &&
-            (is_chan_op(sptr,chptr) || IsULine(sptr)
-#ifndef NO_OPEROVERRIDE
-             || IsOper(sptr)
-#endif
-            )))
-               return 0;
 
-	if (over) {
+	if (over && MyConnect(acptr)) {
 	        if (is_banned(acptr, sptr, chptr))
         	{
                         sendto_snomask(SNO_EYES,
@@ -3899,17 +3891,26 @@ CMD_FUNC(m_invite)
         	else
                 	return 0;
 	}
-        if (over == 1)
-                sendto_channelops_butone(NULL, &me, chptr,
-                  ":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
-                  me.name, chptr->chname, sptr->name);
-        else if (over == 0)
-                sendto_channelops_butone(NULL, &me, chptr,
-                  ":%s NOTICE @%s :%s invited %s into the channel.",
-                  me.name, chptr->chname, sptr->name, acptr->name);
+	if (MyConnect(acptr)) {
+		if (chptr && sptr->user
+		    && (is_chan_op(sptr, chptr)
+		    || IsULine(sptr)
+#ifndef NO_OPEROVERRIDE
+		    || IsOper(sptr)
+#endif
+		    )) {
+		        if (over == 1)
+                		sendto_channelops_butone(NULL, &me, chptr,
+		                  ":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
+                		  me.name, chptr->chname, sptr->name);
+		        else if (over == 0)
+		                sendto_channelops_butone(NULL, &me, chptr,
+                		  ":%s NOTICE @%s :%s invited %s into the channel.",
+		                  me.name, chptr->chname, sptr->name, acptr->name);
 
-        add_invite(acptr, chptr);
-
+		        add_invite(acptr, chptr);
+			}
+	}
         sendto_prefix_one(acptr, sptr, ":%s INVITE %s :%s", parv[0],
             acptr->name, ((chptr) ? (chptr->chname) : parv[2]));
 
