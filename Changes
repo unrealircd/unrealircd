@@ -559,3 +559,4 @@
   channel (#0002044) suggested by medice.
 - Updated help.conf's +f documentation for the new syntax
 - Fixed some problems with the /stats help and documentation (#0002299) reported by Rocko.
+- Corrected the help.conf documentation for /invite (#0002306) reported by White_Magic.
