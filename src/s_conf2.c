@@ -51,25 +51,25 @@ struct	_confcommand
 /* 
  * Top-level configuration commands -Stskeeps
  */
-int	_conf_admin(ConfigFile *conf, ConfigEntry *ce);
-int	_conf_me(ConfigFile *conf, ConfigEntry *ce);
-int	_conf_oper(ConfigFile *conf, ConfigEntry *ce);
-int	_conf_class(ConfigFile *conf, ConfigEntry *ce);
-int	_conf_drpass(ConfigFile *conf, ConfigEntry *ce);
-int	_conf_ulines(ConfigFile *conf, ConfigEntry *ce);
+int	_conf_admin	(ConfigFile *conf, ConfigEntry *ce);
+int	_conf_me	(ConfigFile *conf, ConfigEntry *ce);
+int	_conf_oper	(ConfigFile *conf, ConfigEntry *ce);
+int	_conf_class	(ConfigFile *conf, ConfigEntry *ce);
+int	_conf_drpass	(ConfigFile *conf, ConfigEntry *ce);
+int	_conf_ulines	(ConfigFile *conf, ConfigEntry *ce);
+int	_conf_include	(ConfigFile *conf, ConfigEntry *ce);
 
 extern int conf_debuglevel;
 
-#define ConfigDebug(x) if (conf_debuglevel) config_status((x))
-
 static ConfigCommand _ConfigCommands[] = {
-	{ "admin", _conf_admin },
-	{ "me", _conf_me },
-	{ "oper", _conf_oper },
-	{ "class", _conf_class },
-	{ "drpass", _conf_drpass },
-	{ "ulines", _conf_ulines },
-	{ NULL, NULL  }
+	{ "admin", 	_conf_admin },
+	{ "me", 	_conf_me },
+	{ "oper", 	_conf_oper },
+	{ "class", 	_conf_class },
+	{ "drpass", 	_conf_drpass },
+	{ "ulines", 	_conf_ulines },
+	{ "include", 	_conf_include },
+	{ NULL, 	NULL  }
 };
 
 /*
@@ -205,6 +205,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 						filename, linenumber);
 					break;
 				}
+/*
 				if (!strcmp(curce->ce_varname, "include"))
 				{
 					ConfigFile	*cfptr;
@@ -229,6 +230,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					curce = NULL;
 					continue;
 				}
+*/
 				*lastce = curce;
 				lastce = &(curce->ce_next);
 				curce->ce_fileposend = (ptr - confdata);
@@ -558,7 +560,8 @@ int	init_conf2(char *filename)
 	config_status("Opening config file %s .. ", filename);
 	if (cfptr = config_load(filename))
 	{
-		config_status("Config file loaded without problems");
+		config_status("Config file %s loaded without problems",
+			filename);
 		i = ConfigParse(cfptr);
 		config_free(cfptr);
 		return i;
@@ -619,6 +622,18 @@ int	ConfigParse(ConfigFile *cfptr)
 
 /* Here is the command parsing instructions */
 
+/* include comment */
+int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
+{
+	if (!ce->ce_vardata)
+	{
+		config_error("%s:%i: include: no filename given",
+			ce->ce_fileptr->cf_filename, 
+			ce->ce_varlinenum);
+		return -1;
+	}
+	return (init_conf2(ce->ce_vardata));
+}
 /* 
  * The admin {} block parser
 */
@@ -699,8 +714,8 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 		}
 		if (!strcmp(cep->ce_varname, "pingfreq"))
 		{
-			class->pingfreq = atol(ce->ce_vardata);
-			if (!class->pingfreq)
+			class->pingfreq = atol(cep->ce_vardata);
+			if (class->pingfreq < 1)
 			{
 				config_error("%s:%i: class::pingfreq with illegal value",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
@@ -708,14 +723,14 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 		} else
 		if (!strcmp(cep->ce_varname, "maxclients"))
 		{
-			class->maxclients = atol(ce->ce_vardata);
+			class->maxclients = atol(cep->ce_vardata);
 		} else
 		if (!strcmp(cep->ce_varname, "sendq"))
 		{
-			class->sendq = atol(ce->ce_vardata);
-			if (!class->sendq)
+			class->sendq = atol(cep->ce_vardata);
+			if (class->sendq < 1)
 			{
-				config_error("%s:%i: class:sendq with illegal value",
+				config_error("%s:%i: class::sendq with illegal value",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 			}
 		}
@@ -850,22 +865,17 @@ int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
 			 	cep->ce_varname);
 			continue;
 		}
-		config_status("[drpass] Set %s to %s",
-				cep->ce_varname, cep->ce_vardata);
-
 		if (!strcmp(cep->ce_varname, "restart"))
 		{
 			if (conf_drpass->restart)
 				MyFree(conf_drpass->restart);
 			conf_drpass->restart = strdup(cep->ce_vardata);
-			config_status("Set drpass->restart to %s :)", conf_drpass->restart);
 		}
 		else if (!strcmp(cep->ce_varname, "die"))
 		{
 			if (conf_drpass->die)
 				MyFree(conf_drpass->die);
 			conf_drpass->die = strdup(cep->ce_vardata);
-			config_status("Set drpass->die to %s :)", conf_drpass->die);
 		}
 		else 
 			config_error("%s:%i: warning: unknown drpass directive '%s'",
