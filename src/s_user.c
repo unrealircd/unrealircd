@@ -1761,9 +1761,11 @@ CMD_FUNC(m_nick)
 			   ** may reject the client and call exit_client for it
 			   ** --must test this and exit m_nick too!!!
 			 */
+#ifndef NOSPOOF
 			if (USE_BAN_VERSION)
 				sendto_one(sptr, ":IRC PRIVMSG %s :\1VERSION\1",
 					nick);
+#endif
 			sptr->lastnick = TStime();	/* Always local client */
 			if (register_user(cptr, sptr, nick,
 			    sptr->user->username, NULL, NULL) == FLUSH_BUFFER)

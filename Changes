@@ -2012,3 +2012,4 @@ seen. gmtime warning still there
 - Fixed yet another oob read in config parser (ie: #0000841).
 - Fixed a typo in the docs (#0000867) reported by tc
 - Fixed a fast badword replace crash (#0000834) reported by orga
+- Fixed a ban version {} bug with NOSPOOF (#0000872) reported by poisoner
