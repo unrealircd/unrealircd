@@ -41,6 +41,22 @@
 
 #include "h.h"
 
+
+/*
+ * TODO:
+ *  - link {} parser
+ *  - ban [realname, server, nick, ip, user] {} parser
+ *  - except [socks, ban] {} parser
+ *  - vhost {} parser
+ *  - allow channel {} (chrestrict)
+ *  - deny channel {} (chrestrict)
+ *  - deny version {} (V:lines)
+ *  - deny dcc {} (dccdeny)
+ *  - set {} lines (unrealircd.conf, network files)
+ *  - allow {} connfreq (Y:lines)
+ *  - converter
+*/
+
 typedef struct _confcommand ConfigCommand;
 struct	_confcommand
 {

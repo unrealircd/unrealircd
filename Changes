@@ -56,3 +56,4 @@
 - A report_configuration code (showoff)
 - Finished _conf_listen
 - Finished _conf_allow
+- Added TODO in top of s_conf2.c
