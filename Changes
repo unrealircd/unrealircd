@@ -532,3 +532,6 @@
 - Added ^MrMike^'s command list, this one will be updated
 - Removed ID_CVS, hopefully fixing some bastard stuff
 - Fixed a last minute SJOIN bug
+[ last fixes ]
+- Re-added res_comp.c and win32.c and res_mkquery.c, which was damaged by
+  the ID_CVS remove
