@@ -2953,6 +2953,8 @@ int  m_stats(cptr, sptr, parc, parv)
 		      "q - Send the SQLINE list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "Q - Send the ban nick block list");
+		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
+		      "r - Send the channel deny/allow block list");
 #ifdef DEBUGMODE
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "R - Send the usage list");

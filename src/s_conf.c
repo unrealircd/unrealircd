@@ -247,6 +247,7 @@ extern void win_error();
 */
 ConfigItem_me		*conf_me = NULL;
 ConfigItem_class 	*conf_class = NULL;
+ConfigItem_class	*default_class = NULL;
 ConfigItem_admin 	*conf_admin = NULL;
 ConfigItem_admin	*conf_admin_tail = NULL;
 ConfigItem_drpass	*conf_drpass = NULL;
@@ -1097,7 +1098,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 			class->sendq = atol(cep->ce_vardata);
 			if (!class->sendq)
 			{
-				config_error("%s:%i: class::sendq with illegal value, using default of %d",
+				config_status("%s:%i: class::sendq with illegal value, using default of %d",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, MAXSENDQLENGTH);
 				class->sendq = MAXSENDQLENGTH;
 			}
@@ -1307,10 +1308,11 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 				oper->class = Find_class(cep->ce_vardata);
 				if (!oper->class)
 				{
-					config_error("%s:%i: illegal oper::class, unknown class '%s'",
+					config_status("%s:%i: illegal oper::class, unknown class '%s' using default of class 'default'",
 						cep->ce_fileptr->cf_filename,
 						cep->ce_varlinenum,
 						cep->ce_vardata);
+					oper->class = default_class;
 				}
 			} else
 			if (!strcmp(cep->ce_varname, "password"))
@@ -1357,7 +1359,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 				{
 					if (!cepp->ce_varname)
 					{
-						config_error("%s:%i: oper::flags item without variable name",
+						config_status("%s:%i: oper::flags item without variable name",
 							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 						continue;
 					}
@@ -1373,7 +1375,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 					}
 					if (!ofp->name)
 					{
-						config_error("%s:%i: unknown oper flag '%s'",
+						config_status("%s:%i: unknown oper flag '%s'",
 							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
 							cepp->ce_varname);
 						continue;
@@ -1388,13 +1390,13 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 				{
 					if (!cepp->ce_varname)
 					{
-						config_error("%s:%i: oper::from item without variable name",
+						config_status("%s:%i: oper::from item without variable name",
 							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 						continue;
 					}
 					if (!cepp->ce_vardata)
 					{
-						config_error("%s:%i: oper::from::%s without parameter",
+						config_status("%s:%i: oper::from::%s without parameter",
 							cepp->ce_fileptr->cf_filename,
 							cepp->ce_varlinenum,
 							cepp->ce_varname);
@@ -1443,13 +1445,13 @@ int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!cep->ce_varname)
 		{
-			config_error("%s:%i: drpass item without variable name",
+			config_status("%s:%i: drpass item without variable name",
 			 cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			continue;
 		}
 		if (!cep->ce_vardata)
 		{
-			config_error("%s:%i: missing parameter in drpass:%s",
+			config_status("%s:%i: missing parameter in drpass:%s",
 			 cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 			 	cep->ce_varname);
 			continue;
@@ -1466,7 +1468,7 @@ int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
 			conf_drpass->die = strdup(cep->ce_vardata);
 		}
 		else
-			config_error("%s:%i: warning: unknown drpass directive '%s'",
+			config_status("%s:%i: warning: unknown drpass directive '%s'",
 				 cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 				 cep->ce_varname);
 	}
@@ -1482,14 +1484,14 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!cep->ce_varname)
 		{
-			config_error("%s:%i: blank tld item",
+			config_status("%s:%i: blank tld item",
 				cep->ce_fileptr->cf_filename,
 				cep->ce_varlinenum);
 			continue;
 		}
 		if (!cep->ce_vardata)
 		{
-			config_error("%s:%i: missing parameter in tld::%s",
+			config_status("%s:%i: missing parameter in tld::%s",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 				cep->ce_varname);
 			continue;
@@ -1543,7 +1545,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 
 	if (!ce->ce_vardata)
 	{
-		config_error("%s:%i: listen without ip:port",
+		config_status("%s:%i: listen without ip:port",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return -1;
 	}
@@ -1553,26 +1555,26 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	ipport_seperate(copy, &ip, &port);
 	if (!ip || !*ip)
 	{
-		config_error("%s:%i: listen: illegal ip:port mask",
+		config_status("%s:%i: listen: illegal ip:port mask",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return -1;
 	}
 	if (strchr(ip, '*') && strcmp(ip, "*"))
 	{
-		config_error("%s:%i: listen: illegal ip, (mask, and not '*')",
+		config_status("%s:%i: listen: illegal ip, (mask, and not '*')",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return -1;
 	}
 	if (!port || !*port)
 	{
-		config_error("%s:%i: listen: missing port in mask",
+		config_status("%s:%i: listen: missing port in mask",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return -1;
 	}
 	iport = atol(port);
 	if ((iport < 0) || (iport > 65535))
 	{
-		config_error("%s:%i: listen: illegal port (must be 0..65536)",
+		config_status("%s:%i: listen: illegal port (must be 0..65536)",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return;
 	}
@@ -1593,13 +1595,13 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!cep->ce_varname)
 		{
-			config_error("%s:%i: listen item without variable name",
+			config_status("%s:%i: listen item without variable name",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			continue;
 		}
 		if (!cep->ce_vardata && !cep->ce_entries)
 		{
-			config_error("%s:%i: listen::%s without parameter",
+			config_status("%s:%i: listen::%s without parameter",
 				cep->ce_fileptr->cf_filename,
 				cep->ce_varlinenum,
 				cep->ce_varname);
@@ -1611,7 +1613,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 			{
 				if (!cepp->ce_varname)
 				{
-					config_error("%s:%i: listen::options item without variable name",
+					config_status("%s:%i: listen::options item without variable name",
 						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 					continue;
 				}
@@ -1626,7 +1628,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 				}
 				if (!ofp->name)
 				{
-					config_error("%s:%i: unknown listen option '%s'",
+					config_status("%s:%i: unknown listen option '%s'",
 						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
 						cepp->ce_varname);
 					continue;
@@ -1678,13 +1680,13 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!cep->ce_varname)
 		{
-			config_error("%s:%i: allow item without variable name",
+			config_status("%s:%i: allow item without variable name",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			continue;
 		}
 		if (!cep->ce_vardata)
 		{
-			config_error("%s:%i: allow item without parameter",
+			config_status("%s:%i: allow item without parameter",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			continue;
 		}
@@ -1709,10 +1711,11 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 			allow->class = Find_class(cep->ce_vardata);
 			if (!allow->class)
 			{
-				config_error("%s:%i: illegal allow::class, unknown class '%s'",
+				config_status("%s:%i: illegal allow::class, unknown class '%s' using default of class 'default'",
 					cep->ce_fileptr->cf_filename,
 					cep->ce_varlinenum,
 					cep->ce_vardata);
+				allow->class = default_class;
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "redirect-server"))
@@ -1744,7 +1747,7 @@ int	_conf_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!cep->ce_varname || !cep->ce_vardata)
 		{
-			config_error("%s:%i: blank allow channel item",
+			config_status("%s:%i: blank allow channel item",
 				cep->ce_fileptr->cf_filename,
 				cep->ce_varlinenum);
 			continue;
@@ -1793,7 +1796,7 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!cep->ce_varname)
 		{
-			config_error("%s:%i: vhost item without variable name",
+			config_status("%s:%i: vhost item without variable name",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			continue;
 		}
@@ -1815,13 +1818,13 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 				{
 					if (!cepp->ce_varname)
 					{
-						config_error("%s:%i: vhost::from item without variable name",
+						config_status("%s:%i: vhost::from item without variable name",
 							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 						continue;
 					}
 					if (!cepp->ce_vardata)
 					{
-						config_error("%s:%i: vhost::from::%s without parameter",
+						config_status("%s:%i: vhost::from::%s without parameter",
 							cepp->ce_fileptr->cf_filename,
 							cepp->ce_varlinenum,
 							cepp->ce_varname);
@@ -1876,7 +1879,7 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 
 	if (!ce->ce_vardata)
 	{
-		config_error("%s:%i: except without type",
+		config_status("%s:%i: except without type",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return -1;
 	}
@@ -1932,7 +1935,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 
 	if (!ce->ce_vardata)
 	{
-		config_error("%s:%i: ban without type",
+		config_status("%s:%i: ban without type",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return -1;
 	}
@@ -1959,7 +1962,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!cep->ce_vardata)
 		{
-			config_error("%s:%i: ban %s::%s without parameter",
+			config_status("%s:%i: ban %s::%s without parameter",
 				cep->ce_fileptr->cf_filename,
 				cep->ce_varlinenum, ce->ce_vardata, cep->ce_varname);
 			continue;
@@ -1989,14 +1992,14 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 
 	if (!ce->ce_vardata)
 	{
-		config_error("%s:%i: link without servername",
+		config_status("%s:%i: link without servername",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return -1;
 	}
 
 	if (!strchr(ce->ce_vardata, '.'))
 	{
-		config_error("%s:%i: link: bogus server name",
+		config_status("%s:%i: link: bogus server name",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return -1;
 	}
@@ -2010,13 +2013,13 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!cep->ce_varname)
 		{
-			config_error("%s:%i: link item without variable name",
+			config_status("%s:%i: link item without variable name",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			continue;
 		}
 		if (!cep->ce_vardata && !cep->ce_entries)
 		{
-			config_error("%s:%i: link::%s without parameter",
+			config_status("%s:%i: link::%s without parameter",
 				cep->ce_fileptr->cf_filename,
 				cep->ce_varlinenum,
 				cep->ce_varname);
@@ -2030,7 +2033,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 			{
 				if (!cepp->ce_varname)
 				{
-					config_error("%s:%i: link::flag item without variable name",
+					config_status("%s:%i: link::flag item without variable name",
 						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 					continue;
 				}
@@ -2045,7 +2048,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 				}
 				if (!ofp->name)
 				{
-					config_error("%s:%i: unknown link option '%s'",
+					config_status("%s:%i: unknown link option '%s'",
 						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
 						cepp->ce_varname);
 					continue;
@@ -2093,10 +2096,11 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 			link->class = Find_class(cep->ce_vardata);
 			if (!link->class)
 			{
-				config_error("%s:%i: illegal link::class, unknown class '%s'",
+				config_status("%s:%i: illegal link::class, unknown class '%s' using default of class 'default'",
 					cep->ce_fileptr->cf_filename,
 					cep->ce_varlinenum,
 					cep->ce_vardata);
+				link->class = default_class;
 			}
 		} else
 		{
@@ -2122,7 +2126,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!cep->ce_varname)
 		{
-			config_error("%s:%i: blank set item",
+			config_status("%s:%i: blank set item",
 				cep->ce_fileptr->cf_filename,
 				cep->ce_varlinenum);
 			continue;
@@ -2269,7 +2273,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			for (cepp = cep->ce_entries, i = 0; cepp; cepp = cepp->ce_next, i++) { }
 			if (i != 3)
 			{
-				config_error("%s:%i: set::cloak-keys: we want 3 values, not %i!",
+				config_status("%s:%i: set::cloak-keys: we want 3 values, not %i!",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 					i);
 				return 0;
@@ -2307,7 +2311,7 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 
 	ca = MyMallocEx(sizeof(ConfigItem_badword));
 	if (!ce->ce_vardata) {
-		config_error("%s:%i: badword without type",
+		config_status("%s:%i: badword without type",
 			ce->ce_fileptr->cf_filename,
 			ce->ce_varlinenum);
 		return -1;
@@ -2317,14 +2321,14 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!cep->ce_varname)
 		{
-			config_error("%s:%i: blank badword item",
+			config_status("%s:%i: blank badword item",
 				cep->ce_fileptr->cf_filename,
 				cep->ce_varlinenum);
 			continue;
 		}
 		if (!cep->ce_vardata)
 		{
-			config_error("%s:%i: missing parameter in badword::%s",
+			config_status("%s:%i: missing parameter in badword::%s",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 				cep->ce_varname);
 			continue;
@@ -2369,7 +2373,7 @@ int	_conf_deny(ConfigFile *conf, ConfigEntry *ce)
 {
 	if (!ce->ce_vardata)
 	{
-		config_error("%s:%i: deny without type",
+		config_status("%s:%i: deny without type",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return -1;
 	}
@@ -2401,7 +2405,7 @@ int	_conf_deny_dcc(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!cep->ce_varname || !cep->ce_vardata)
 		{
-			config_error("%s:%i: blank deny dcc item",
+			config_status("%s:%i: blank deny dcc item",
 				cep->ce_fileptr->cf_filename,
 				cep->ce_varlinenum);
 			continue;
@@ -2448,7 +2452,7 @@ int	_conf_deny_channel(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!cep->ce_varname || !cep->ce_vardata)
 		{
-			config_error("%s:%i: blank deny channel item",
+			config_status("%s:%i: blank deny channel item",
 				cep->ce_fileptr->cf_filename,
 				cep->ce_varlinenum);
 			continue;
@@ -2494,7 +2498,7 @@ int	_conf_deny_link(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!cep->ce_varname || !cep->ce_vardata)
 		{
-			config_error("%s:%i: blank deny link item",
+			config_status("%s:%i: blank deny link item",
 				cep->ce_fileptr->cf_filename,
 				cep->ce_varlinenum);
 			continue;
@@ -2558,7 +2562,7 @@ int	_conf_deny_version(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!cep->ce_varname || !cep->ce_vardata)
 		{
-			config_error("%s:%i: blank deny version item",
+			config_status("%s:%i: blank deny version item",
 				cep->ce_fileptr->cf_filename,
 				cep->ce_varlinenum);
 			continue;
@@ -2608,7 +2612,7 @@ int	_conf_log(ConfigFile *conf, ConfigEntry *ce)
 
 	if (!ce->ce_vardata)
 	{
-		config_error("%s:%i: log without filename",
+		config_status("%s:%i: log without filename",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return -1;
 	}
@@ -2618,7 +2622,7 @@ int	_conf_log(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!cep->ce_varname)
 		{
-			config_error("%s:%i: blank log item",
+			config_status("%s:%i: blank log item",
 				cep->ce_fileptr->cf_filename,
 				cep->ce_varlinenum);
 			continue;
@@ -2628,7 +2632,7 @@ int	_conf_log(ConfigFile *conf, ConfigEntry *ce)
 			{
 				if (!cepp->ce_varname)
 				{
-					config_error("%s:%i: log::flags item without variable name",
+					config_status("%s:%i: log::flags item without variable name",
 						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 					continue;
 				}
@@ -2642,7 +2646,7 @@ int	_conf_log(ConfigFile *conf, ConfigEntry *ce)
 				}
 				if (!ofl->name)
 				{
-					config_error("%s:%i: unknown log flag '%s'",
+					config_status("%s:%i: unknown log flag '%s'",
 						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
 						cepp->ce_varname);
 					continue;
@@ -3212,6 +3216,8 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	}
 	for (class_ptr = conf_class; class_ptr; class_ptr = (ConfigItem_class *) class_ptr->next)
 	{
+		if (class_ptr->flag.permanent == 1)
+			continue;
 		class_ptr->flag.temporary = 1;
 		/* We'll wipe it out when it has no clients */
 		if (!class_ptr->clients)

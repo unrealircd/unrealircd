@@ -835,6 +835,7 @@ struct _configentry
 struct _configflag 
 {
 	unsigned	temporary : 1;
+	unsigned	permanent : 1;
 };
 
 /* configflag specialized for except socks/ban -Stskeeps */

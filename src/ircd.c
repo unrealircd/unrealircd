@@ -1081,6 +1081,14 @@ int  InitwIRCD(argc, argv)
 #ifdef STATIC_LINKING	
 	l_commands_init();
 #endif
+	/* Add default class */
+	default_class = (ConfigItem_class *) MyMallocEx(sizeof(ConfigItem_class));
+	default_class->flag.permanent = 1;
+	default_class->pingfreq = PINGFREQUENCY;
+	default_class->maxclients = 100;
+	default_class->sendq = MAXSENDQLENGTH;
+	default_class->name = "default";
+	add_ConfigItem((ConfigItem *) default_class, (ConfigItem **) &conf_class);
 	init_conf2(configfile);
 	validate_configuration();
 	booted = TRUE;

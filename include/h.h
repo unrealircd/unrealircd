@@ -70,6 +70,7 @@ extern long lastsendK, lastrecvK;
 */
 extern ConfigItem_me		*conf_me;
 extern ConfigItem_class 	*conf_class;
+extern ConfigItem_class		*default_class;
 extern ConfigItem_admin 	*conf_admin;
 extern ConfigItem_admin		*conf_admin_tail;
 extern ConfigItem_drpass	*conf_drpass;
