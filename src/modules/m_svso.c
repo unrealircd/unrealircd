@@ -53,7 +53,7 @@ DLLFUNC int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define STAR1 OFLAG_SADMIN|OFLAG_ADMIN|OFLAG_NETADMIN|OFLAG_COADMIN
 #define STAR2 OFLAG_TECHADMIN|OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
 #define STAR3 OFLAG_INVISIBLE
-int oper_access[] = {
+static int oper_access[] = {
         ~(STAR1 | STAR2 | STAR3), '*',
         OFLAG_LOCAL, 'o',
         OFLAG_GLOBAL, 'O',

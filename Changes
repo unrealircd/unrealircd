@@ -850,3 +850,4 @@ seen. gmtime warning still there
 - Made Link denied error a little more descriptive
 - Various coding regardign bugreport
 - Made port default to 6667 when options autoconnect in link {}
+- Made some changes to allow Unreal to compile on win32
