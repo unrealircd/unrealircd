@@ -4021,27 +4021,23 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 	if ((chptr->mode.msgs < 1) || (chptr->mode.per < 1))
 		return 0;
 
-	/* Theory here is 
-	   If current - lastmsgtime <= mode.per
-	   and nummsg is higher than mode.msgs
-	   then kick 
-	 */
 	lp2 = (MembershipL *) lp;
-	Debug((DEBUG_ERROR, "Checking for flood +f: lastmsg: %li now: %li per: %li - nmsg: %li msgs: %li",
-		lp2->flood.lastmsg, TStime(), chptr->mode.per,lp2->flood.nmsg, chptr->mode.msgs));
-	if ((TStime() - (lp2->flood.lastmsg)) >=	/* current - lastmsgtime */
-	    chptr->mode.per)	/* mode.per */
+	/* if current - firstmsgtime >= mode.per, then reset,
+	 * if nummsg > mode.msgs then kick/ban
+	 */
+	Debug((DEBUG_ERROR, "Checking for flood +f: firstmsg=%d (%ds ago), new nmsgs: %d, limit is: %d:%d",
+		lp2->flood.firstmsg, TStime() - lp2->flood.firstmsg, lp2->flood.nmsg + 1,
+		chptr->mode.msgs, chptr->mode.per));
+	if ((TStime() - lp2->flood.firstmsg) >= chptr->mode.per)
 	{
-		/* reset the message counter */
-		Debug((DEBUG_ERROR, "reset flood message counter for %s", sptr->name));
-		lp2->flood.lastmsg = TStime();
+		/* reset */
+		lp2->flood.firstmsg = TStime();
 		lp2->flood.nmsg = 1;
-		return 0;	/* forget about it.. */
+		return 0; /* forget about it.. */
 	}
 
 	/* increase msgs */
 	lp2->flood.nmsg++;
-	lp2->flood.lastmsg = TStime();
 
 	if ((lp2->flood.nmsg) > chptr->mode.msgs)
 	{

@@ -627,7 +627,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 
 struct FloodOpt {
 	unsigned short nmsg;
-	TS   lastmsg;
+	TS   firstmsg;
 };
 
 struct MotdItem {
