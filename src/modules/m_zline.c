@@ -146,7 +146,7 @@ DLLFUNC int m_zline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		if (parc >= 4 && server)
 		{
-			if (hunt_server(cptr, sptr, ":%s ZLINE %s %s :%s", 2,
+			if (hunt_server_token(cptr, sptr, MSG_ZLINE, TOK_ZLINE, "%s %s :%s", 2,
 			    parc, parv) != HUNTED_ISME)
 				return 0;
 			else;

@@ -137,7 +137,7 @@ DLLFUNC int m_lag(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    me.name, parv[0], "LAG");
 		return 0;
 	}
-	if (hunt_server(cptr, sptr, ":%s LAG :%s", 1, parc,
+	if (hunt_server_token(cptr, sptr, MSG_LAG, TOK_LAG, ":%s", 1, parc,
 	    parv) == HUNTED_NOSUCH)
 	{
 		return 0;

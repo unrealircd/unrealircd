@@ -110,7 +110,8 @@ int  m_svsnick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
         if (!IsULine(sptr) || parc < 4 || (strlen(parv[2]) > NICKLEN))
 		return -1;        /* This looks like an error anyway -Studded */
-        if (!hunt_server(cptr, sptr, ":%s SVSNICK %s %s :%s", 1, parc, parv) != HUNTED_ISME)
+        if (!hunt_server_token(cptr, sptr, MSG_SVSNICK, TOK_SVSNICK, "%s %s :%s", 1, parc,
+		parv) != HUNTED_ISME)
         {
                 if ((acptr = find_person(parv[1], NULL)))
                 {
