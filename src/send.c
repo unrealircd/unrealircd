@@ -1288,33 +1288,6 @@ void sendto_failops(char *pattern, ...)
 }
 
 /*
- * sendto_helpops
- *
- *	Send to mode +h people
- */
-void sendto_helpops(char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-	int  i;
-	char nbuf[1024];
-
-	va_start(vl, pattern);
-	for (i = 0; i <= highest_fd; i++)
-		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-		    IsHelpOp(cptr))
-		{
-			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** HelpOp -- ",
-			    me.name, cptr->name);
-			(void)strncat(nbuf, pattern,
-			    sizeof(nbuf) - strlen(nbuf));
-			vsendto_one(cptr, nbuf, vl);
-		}
-	va_end(vl);
-	return;
-}
-
-/*
  * sendto_umode
  *
  *  Send to specified umode

@@ -2699,7 +2699,7 @@ int  m_help(cptr, sptr, parc, parv)
 			tmpl->next = helpign;
 			helpign = tmpl;
 		}
-		sendto_helpops("from %s (HelpOp): %s", parv[0], message);
+		sendto_umode(UMODE_HELPOP, "*** HelpOp -- from %s (HelpOp): %s", parv[0], message);		
 	}
 	else if (MyConnect(sptr))
 	{
@@ -2726,14 +2726,14 @@ int  m_help(cptr, sptr, parc, parv)
 
 		sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL,
 		    parv[0], MSG_HELP, TOK_HELP, "%s", message);
-		sendto_helpops("from %s (Local): %s", parv[0], message);
+		sendto_umode(UMODE_HELPOP, "*** HelpOp -- from %s (Local): %s", parv[0], message);		
 		sendto_one(sptr, rpl_str(RPL_HELPFWD), me.name, parv[0]);
 	}
 	else
 	{
 		sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL,
 		    parv[0], MSG_HELP, TOK_HELP, "%s", message);
-		sendto_helpops("from %s: %s", parv[0], message);
+		sendto_umode(UMODE_HELPOP, "*** HelpOp -- from %s: %s", parv[0], message);		
 	}
 
 	return 0;
