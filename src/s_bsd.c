@@ -286,8 +286,15 @@ int  inetport(cptr, name, port)
 	 * byte requires endian knowledge or some nasty messing. Also means
 	 * easy conversion of "*" 0.0.0.0 or 134.* to 134.0.0.0 :-)
 	 */
+#ifndef INET6
 	(void)sscanf(name, "%d.%d.%d.%d", &ad[0], &ad[1], &ad[2], &ad[3]);
 	(void)ircsprintf(ipname, "%d.%d.%d.%d", ad[0], ad[1], ad[2], ad[3]);
+#else
+	if (*name == '*')
+		ircsprintf(ipname, "::");
+	else
+		ircsprintf(ipname, "%s", name);
+#endif
 
 	if (cptr != &me)
 	{

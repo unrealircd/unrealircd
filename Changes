@@ -470,5 +470,6 @@ seen. gmtime warning still there
 - Added a new StripColors heavily based on the one from xchat by Peter Zelezny
 - Fixed doc error in s_conf.c
 - Made IPv6 compile atleast, and work. Current problems:
-  * Cannot bind to a specific IP
   * IPv6 cloaking doesn't work
+- Made you able to bind to specific IPv6 IPs (we don't have FFFF::*
+  functionality yet)
