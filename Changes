@@ -280,7 +280,8 @@
   set::modes-on-oper), suggested by parker182 (#0001899).
 - doc/example.conf now simply refers to unreal32docs.html for oper flags (#0001973)
   reported by vonitsanet and AngryWolf.
-- Fixed an MacOS X crash-on-first-connect if SSL was enabled (#0001982), reported by bit.
+- Fixed crash-on-first-connect if SSL was enabled. This seemed to happen on Mac OS X,
+  Sun Solaris, and perhaps others (#0001982, #0001984), reported by bit and lion.
 - Fixed a bug if me::info was set to "".
 - Added a missing error message for ModuleGetErrorStr. Additionally added error checking to
   ensure NULL is returned when an invalid error code is specified (#0001986) reported by
