@@ -2688,6 +2688,10 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 	class->maxclients = atol(cep->ce_vardata);
 	cep = config_find_entry(ce->ce_entries, "sendq");
 	class->sendq = atol(cep->ce_vardata);
+	if ((cep = config_find_entry(ce->ce_entries, "recvq")))
+	{
+		class->recvq = atol(cep->ce_vardata);
+	}
 	if ((cep = config_find_entry(ce->ce_entries, "connfreq")))
 	{
 		class->connfreq = atol(cep->ce_vardata);
@@ -2729,6 +2733,8 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->ce_varname, "connfreq"))
 		{} else
 		if (!strcmp(cep->ce_varname, "sendq"))
+		{} else
+		if (!strcmp(cep->ce_varname, "recvq"))
 		{}
 		else
 		{
@@ -2803,6 +2809,19 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 			if (l < 10)
 			{
 				config_error("%s:%i: class::connfreq with illegal value (<10)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+		}
+	}
+	if ((cep = config_find_entry(ce->ce_entries, "recvq")))
+	{
+		if (cep->ce_vardata)
+		{	
+			l = atol(cep->ce_vardata);
+			if (l < 512)
+			{
+				config_error("%s:%i: class::recvq with illegal value (<512)",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 			}

@@ -925,7 +925,7 @@ struct _configitem_class {
 	ConfigItem *prev, *next;
 	ConfigFlag flag;
 	char	   *name;
-	int	   pingfreq, connfreq, maxclients, sendq, clients;
+	int	   pingfreq, connfreq, maxclients, sendq, recvq, clients;
 };
 
 struct _configflag_allow {

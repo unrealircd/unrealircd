@@ -1399,14 +1399,14 @@ static int read_packet(aClient *cptr, fd_set *rfd)
 		if (dbuf_put(&cptr->recvQ, readbuf, length) < 0)
 			return exit_client(cptr, cptr, cptr, "dbuf_put fail");
 
-		if (IsPerson(cptr) && DBufLength(&cptr->recvQ) > CLIENT_FLOOD)
+		if (IsPerson(cptr) && DBufLength(&cptr->recvQ) > get_recvq(cptr))
 		{
 			sendto_snomask(SNO_FLOOD,
 			    "*** Flood -- %s!%s@%s (%d) exceeds %d recvQ",
 			    cptr->name[0] ? cptr->name : "*",
 			    cptr->user ? cptr->user->username : "*",
 			    cptr->user ? cptr->user->realhost : "*",
-			    DBufLength(&cptr->recvQ), CLIENT_FLOOD);
+			    DBufLength(&cptr->recvQ), get_recvq(cptr));
 			return exit_client(cptr, cptr, cptr, "Excess Flood");
 		}
 
@@ -1566,14 +1566,14 @@ static int read_packet(aClient *cptr)
 #ifdef NO_OPER_FLOOD
 		    !IsAnOper(cptr) &&
 #endif
-		    DBufLength(&cptr->recvQ) > CLIENT_FLOOD)
+		    DBufLength(&cptr->recvQ) > get_recvq(cptr))
 		{
 			sendto_snomask(SNO_FLOOD,
 			    "Flood -- %s!%s@%s (%d) Exceeds %d RecvQ",
 			    cptr->name[0] ? cptr->name : "*",
 			    cptr->user ? cptr->user->username : "*",
 			    cptr->user ? cptr->user->realhost : "*",
-			    DBufLength(&cptr->recvQ), CLIENT_FLOOD);
+			    DBufLength(&cptr->recvQ), get_recvq(cptr));
 			return exit_client(cptr, cptr, cptr, "Excess Flood");
 		}
 		return do_client_queue(cptr);

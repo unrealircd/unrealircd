@@ -385,6 +385,8 @@
  * this controls the number of bytes the server will allow a client to
  * send to the server without processing before disconnecting the client for
  * flooding it.  Values greater than 8000 make no difference to the server.
+ * NOTE: you can now also set this in class::recvq, if that's not present,
+ *       this default value will be used.
  */
 #define	CLIENT_FLOOD	8000
 
