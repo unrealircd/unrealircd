@@ -1509,7 +1509,7 @@ CMD_FUNC(m_nick)
 #ifdef GUEST
 		if (IsUnknown(sptr))
 		{
-			m_guest(cptr, sptr, parc, parv);
+			RunHook4(HOOKTYPE_GUEST, cptr, sptr, parc, parv);
 			return 0;
 		}
 #endif
