@@ -2874,6 +2874,9 @@ int  m_whois(cptr, sptr, parc, parv)
 			{
 				chptr = lp->chptr;
 				member = IsMember(sptr, chptr) || IsOper(sptr);
+				if (!IsServices(acptr)) {
+					break;
+				}
 				if (invis && !member)
 					continue;
 				if (member || (!invis && PubChannel(chptr)))

@@ -297,3 +297,6 @@
 - Made MembershipL->flood get bzero on out delegation
 - Removed stskeeps's lazy add_CommandX (tm) code
 - Made IRCd not crash on /kick from servers
+- Fixed a typo in makeconf
+- Made /whois not return channels for services
+

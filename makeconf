@@ -293,7 +293,6 @@ echo "What do you want your restart password to be?"
 echo $n " [$RESTARTPASS] -> $c"
 read cc
 if [ ! -z "$cc" ]; then
-else
 	        RESTARTPASS="$cc"
 fi
 if [ "$CRYPT_XLINE_PASSWORD" != "" ]; then
