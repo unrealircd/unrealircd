@@ -798,3 +798,4 @@ seen. gmtime warning still there
 - Fixed a win32 bug that can cause unexpected crashes while using the editor
 - Some httpd stuff and a #define CHROOTDIR problem found by Zhadum
 - Added scan_http, scans on 80, 3128, 8080 in a threaded manner
+- Fixed a /gline crash bug found by DemOnBaBy
