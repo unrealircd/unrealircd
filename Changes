@@ -2882,3 +2882,4 @@ seen. gmtime warning still there
   command overrides. (#0001553) reported by AngryWolf
 - Modulized: time, svskill
 - Modulized: sjoin, pass, userhost, ison, silence
+- Modulized: knock, umode2, squit, protoctl

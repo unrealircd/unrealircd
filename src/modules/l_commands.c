@@ -98,6 +98,8 @@ extern int m_samode_Init(ModuleInfo *modinfo), m_time_Init(ModuleInfo *modinfo);
 extern int m_svskill_Init(ModuleInfo *modinfo), m_sjoin_Init(ModuleInfo *modinfo);
 extern int m_pass_Init(ModuleInfo *modinfo), m_userhost_Init(ModuleInfo *modinfo);
 extern int m_ison_Init(ModuleInfo *modinfo), m_silence_Init(ModuleInfo *modinfo);
+extern int m_knock_Init(ModuleInfo *modinfo), m_umode2_Init(ModuleInfo *modinfo);
+extern int m_squit_Init(ModuleInfo *modinfo), m_protoctl_Init(ModuleInfo *modinfo);
 #ifdef GUEST
 extern int m_guest_Init(ModuleInfo *modinfo);
 #endif
@@ -126,6 +128,8 @@ extern int m_samode_Load(int module_load), m_time_Load(int module_load);
 extern int m_svskill_Load(int module_load), m_sjoin_Load(int module_load);
 extern int m_pass_Load(int module_load), m_userhost_Load(int module_load);
 extern int m_ison_Load(int module_load), m_silence_Load(int module_load);
+extern int m_knock_Load(int module_load), m_umode2_Load(int module_load);
+extern int m_squit_Load(int module_load), m_protoctl_Load(int module_load);
 #ifdef GUEST
 extern int m_guest_Load(int module_load);
 #endif
@@ -143,10 +147,10 @@ extern int m_sqline_Unload(), m_unsqline_Unload(), m_tkl_Unload(), m_vhost_Unloa
 extern int m_cycle_Unload(), m_svsjoin_Unload(), m_svspart_Unload(), m_svslusers_Unload();
 extern int m_svswatch_Unload(), m_svssilence_Unload(), m_svskill_Unload();
 extern int m_sendsno_Unload(), m_svssno_Unload(), m_time_Unload();
-extern int m_sajoin_Unload(), m_sapart_Unload();
-extern int m_kick_Unload(), m_topic_Unload();
-extern int m_invite_Unload(), m_list_Unload();
-extern int m_samode_Unload(), m_sjoin_Unload();
+extern int m_sajoin_Unload(), m_sapart_Unload(), m_knock_Umload();
+extern int m_kick_Unload(), m_topic_Unload(), m_umode2_Unload();
+extern int m_invite_Unload(), m_list_Unload(), m_squit_Unload();
+extern int m_samode_Unload(), m_sjoin_Unload(), m_protoctl_Unload();
 extern int m_pass_Unload(), m_userhost_Unload();
 extern int m_ison_Unload(), m_silence_Unload();
 #ifdef GUEST
@@ -242,6 +246,10 @@ int    l_commands_Init(ModuleInfo *modinfo)
 	m_ison_Init(ModCmdsInfo);
 	m_silence_Init(ModCmdsInfo);
 	m_svskill_Init(ModCmdsInfo);
+	m_knock_Init(ModCmdsInfo);
+	m_umode2_Init(ModCmdsInfo);
+	m_squit_Init(ModCmdsInfo);
+	m_protoctl_Init(ModCmdsInfo);
 #ifdef GUEST
 	m_guest_Init(ModCmdsInfo);
 #endif
@@ -314,6 +322,10 @@ int    l_commands_Load(int module_load)
 	m_userhost_Load(module_load);
 	m_ison_Load(module_load);
 	m_silence_Load(module_load);
+	m_knock_Load(module_load);
+	m_umode2_Load(module_load);
+	m_squit_Load(module_load);
+	m_protoctl_Load(module_load);
 #ifdef GUEST
 	m_guest_Load(module_load);
 #endif
@@ -386,6 +398,10 @@ int	l_commands_Unload(int module_unload)
 	m_userhost_Unload();
 	m_ison_Unload();
 	m_silence_Unload();
+	m_knock_Unload();
+	m_umode2_Unload();
+	m_squit_Unload();
+	m_protoctl_Unload();
 #ifdef GUEST
 	m_guest_Unload();
 #endif

@@ -2480,30 +2480,6 @@ CMD_FUNC(m_umode)
 }
 
 /*
-    m_umode2 added by Stskeeps
-    parv[0] - sender
-    parv[1] - modes to change
-
-    Small wrapper to bandwidth save
-*/
-
-CMD_FUNC(m_umode2)
-{
-	char *xparv[5] = {
-		parv[0],
-		parv[0],
-		parv[1],
-		(parc > 3) ? parv[3] : NULL,
-		NULL
-	};
-
-	if (!parv[1])
-		return 0;
-	return m_umode(cptr, sptr, (parc > 3) ? 4 : 3, xparv);
-}
-
-
-/*
  * send the MODE string for user (user) to connection cptr
  * -avalon
  */

@@ -148,8 +148,9 @@ MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OB
  SRC/M_CYCLE.OBJ SRC/M_SVSJOIN.OBJ SRC/M_SVSPART.OBJ SRC/M_SVSLUSERS.OBJ \
  SRC/M_SVSWATCH.OBJ SRC/M_SVSSILENCE.OBJ SRC/M_SENDSNO.OBJ SRC/M_SVSSNO.OBJ \
  SRC/M_SAJOIN.OBJ SRC/M_SAPART.OBJ SRC/M_SAMODE.OBJ SRC/M_KICK.OBJ SRC/M_TOPIC.OBJ \
- SRC/M_INVITE.OBJ SRC/M_LIST.OBJ SRC/M_TIME.OBJ SRC/M_SVSKILL.OBJ \
- SRC/M_SJOIN.OBJ SRC/M_PASS.OBJ SRC/M_USERHOST.OBJ SRC/M_ISON.OBJ SRC/M_SILENCE.OBJ
+ SRC/M_INVITE.OBJ SRC/M_LIST.OBJ SRC/M_TIME.OBJ SRC/M_SVSKILL.OBJ SRC/M_KNOCK.OBJ \
+ SRC/M_UMODE2.OBJ SRC/M_SQUIT.OBJ SRC/M_PROTOCTL.OBJ SRC/M_SJOIN.OBJ SRC/M_PASS.OBJ \ 
+ SRC/M_USERHOST.OBJ SRC/M_ISON.OBJ SRC/M_SILENCE.OBJ
 
 ALL: CONF UNREAL.EXE WIRCD.EXE
 
@@ -541,6 +542,18 @@ src/m_ison.obj: src/modules/m_ison.c $(INCLUDES)
 
 src/m_silence.obj: src/modules/m_silence.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/modules/m_silence.c
+
+src/m_knock.obj: src/modules/m_knock.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_knock.c
+
+src/m_umode2.obj: src/modules/m_umode2.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_umode2.c
+
+src/m_squit.obj: src/modules/m_squit.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_squit.c
+
+src/m_protoctl.obj: src/modules/m_protoctl.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_protoctl.c
 
 src/win32/win32.res: src/win32/win32gui.rc
         $(RC) /l 0x409 /fosrc/win32/win32.res /i ./include /i ./src \

@@ -36,7 +36,8 @@ R_MODULES=m_sethost.so m_chghost.so m_chgident.so m_setname.so \
 	 m_svswatch.so m_svssilence.so m_sendsno.so m_svssno.so \
 	 m_sajoin.so m_sapart.so m_samode.so m_kick.so m_topic.so \
 	 m_invite.so m_list.so m_time.so m_svskill.so m_sjoin.so \
-	 m_pass.so m_userhost.so m_ison.so m_silence.so
+	 m_pass.so m_userhost.so m_ison.so m_silence.so m_knock.so \
+	 m_umode2.so m_squit.so m_protoctl.so
 
 COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
          m_sdesc.c m_svsmode.c m_swhois.c m_svsmotd.c m_svsnline.c \
@@ -49,7 +50,8 @@ COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
 	 m_svslusers.c m_svswatch.c m_svssilence.c m_sendsno.c \
 	 m_svssno.c m_sajoin.c m_sapart.c m_samode.c m_kick.c m_topic.c \
 	 m_invite.c m_list.c m_time.c m_svskill.c m_sjoin.c \
-	 m_pass.c m_userhost.c m_ison.c m_silence.c
+	 m_pass.c m_userhost.c m_ison.c m_silence.c m_knock.c m_umode2.c \
+	 m_squit.c m_protoctl.c
 
 
 MODULES=commands.so $(R_MODULES)
@@ -310,6 +312,22 @@ m_ison.so: m_ison.c $(INCLUDES)
 m_silence.so: m_silence.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_silence.so m_silence.c
+
+m_knock.so: m_knock.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_knock.so m_knock.c
+
+m_umode2.so: m_umode2.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_umode2.so m_umode2.c
+
+m_squit.so: m_squit.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_squit.so m_squit.c
+
+m_protoctl.so: m_protoctl.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_protoctl.so m_protoctl.c
 
 clean:
 	$(RM) -f *.o *.so *~ core
