@@ -48,8 +48,6 @@ extern char *my_itoa(long i);
  *  - allow channel {} (chrestrict)
  *  - deny channel {} (chrestrict)
  *  - deny version {} (V:lines)
- *  - deny dcc {} (dccdeny)
- *  - set {} lines (unrealircd.conf, network files)
  *  - allow {} connfreq (Y:lines)
  *  - badword { }
  *  - converter
@@ -2274,6 +2272,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	ConfigItem_link 	*link_ptr;
 	ConfigItem_listen 	*listen_ptr;
 	ConfigItem_tld		*tld_ptr;
+	ConfigItem_deny_dcc	*deny_dcc_ptr;
 	ConfigItem 	t;
 
 	
@@ -2392,7 +2391,18 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		MyFree(tld_ptr);
 		tld_ptr = (ConfigItem_tld *) &t;			
 	}
-	/* This space is for codemastr's upcoming tld & vhost removal code. */
+	for (deny_dcc_ptr = conf_deny_dcc; deny_dcc_ptr; deny_dcc_ptr = (ConfigItem_deny_dcc *) deny_dcc_ptr->next)
+	{
+		if (deny_dcc_ptr->flag.type2 == CONF_BAN_TYPE_CONF)
+		{
+			ircfree(deny_dcc_ptr->filename);
+			ircfree(deny_dcc_ptr->reason);
+			t.next = del_ConfigItem((ConfigItem *) deny_dcc_ptr, (ConfigItem **)&conf_deny_dcc);
+			MyFree(deny_dcc_ptr);
+			deny_dcc_ptr = (ConfigItem_deny_dcc *) &t;			
+		}
+	}
+	/* This space is for codemastr's upcoming vhost removal code. */
 	if (conf_drpass)
 	{
 		ircfree(conf_drpass->restart);
