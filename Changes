@@ -2622,3 +2622,8 @@ seen. gmtime warning still there
 - Added error checking/error messages to new module reloading system, to catch errors like
   insufficient hd space, permission denied, etc..
 - Made it compile at windows again
+- Added set::static-part: similar to static-quit, default 'no' (static-part disabled).
+  If set to 'yes' or '1' it will strip all part comments,
+  if set to something else it will use that as a part comment.
+- Partial cleanup of m_part (hopefully I didn't destroy anything).
+- Minor stats compile warning fixed

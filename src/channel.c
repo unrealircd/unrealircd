@@ -3839,7 +3839,8 @@ CMD_FUNC(m_part)
 	aChannel *chptr;
 	Membership *lp;
 	char *p = NULL, *name;
-	char *comment = (parc > 2 && parv[2]) ? parv[2] : NULL;
+	char *commentx = (parc > 2 && parv[2]) ? parv[2] : NULL;
+	char *comment;
 
   /*	sptr->flags &= ~FLAGS_TS8; */
 
@@ -3850,8 +3851,18 @@ CMD_FUNC(m_part)
 		return 0;
 	}
 
-	if (MyClient(sptr) && IsShunned(sptr))
-		comment = NULL;
+	if (MyClient(sptr))
+	{
+		if (IsShunned(sptr))
+			commentx = NULL;
+		if (STATIC_PART)
+		{
+			if (!strcasecmp(STATIC_PART, "yes") || !strcmp(STATIC_PART, "1"))
+				commentx = NULL;
+			else
+				commentx = STATIC_PART;
+		}
+	}
 
 	for (; (name = strtoken(&p, parv[1], ",")); parv[1] = NULL)
 	{
@@ -3862,12 +3873,15 @@ CMD_FUNC(m_part)
 			    me.name, parv[0], name);
 			continue;
 		}
-		if (parv[2] && !comment && !(MyClient(sptr) && IsShunned(sptr))) {
-			comment = parv[2];
-			parc = 3;
-		}
 		if (check_channelmask(sptr, cptr, name))
 			continue;
+
+		/* 'commentx' is the general part msg, but it can be changed
+		 * per-channel (eg some chans block badwords, strip colors, etc)
+		 * so we copy it to 'comment' and use that in this for loop :)
+		 */
+		comment = commentx;
+
 		if (!(lp = find_membership_link(sptr->user->channel, chptr)))
 		{
 			/* Normal to get get when our client did a kick
@@ -3880,16 +3894,6 @@ CMD_FUNC(m_part)
 				    parv[0], name);
 			continue;
 		}
-		/*
-		   **  Remove user from the old channel (if any)
-		 */
-		if (!comment)
-			sendto_serv_butone_token(cptr, parv[0],
-			    MSG_PART, TOK_PART, "%s", chptr->chname);
-		else
-			sendto_serv_butone_token(cptr, parv[0],
-			    MSG_PART, TOK_PART, "%s :%s", chptr->chname,
-			    comment);
 
 		if (!IsAnOper(sptr) && !is_chanownprotop(sptr, chptr)) {
 #ifdef STRIPBADWORDS
@@ -3898,36 +3902,25 @@ CMD_FUNC(m_part)
 			if ((chptr->mode.mode & MODE_NOCOLOR) && comment) {
 				if (strchr((char *)comment, 3) || strchr((char *)comment, 27)) {
 					comment = NULL;
-					parc = 2;
 				}
 			}
 			if ((chptr->mode.mode & MODE_MODERATED) && comment &&
 				 !has_voice(sptr, chptr) && !is_halfop(sptr, chptr))
 			{
 				comment = NULL;
-				parc = 2;
 			}
 			if ((chptr->mode.mode & MODE_STRIP) && comment) {
-				comment = (char *)StripColors(parv[2]);
-				parc = 3;
+				comment = (char *)StripColors(comment);
 			}
 #ifdef STRIPBADWORDS
  #ifdef STRIPBADWORDS_CHAN_ALWAYS
 			if (comment)
 			{
 				comment = (char *)stripbadwords_channel(comment, &blocked);
-				if (blocked)
-					parc = 2;
-				else
-					parc = 3;
 			}
  #else
 			if ((chptr->mode.mode & MODE_STRIPBADWORDS) && comment) {
 				comment = (char *)stripbadwords_channel(comment, &blocked);
-				if (blocked)
-					parc = 2;
-				else
-					parc = 3;
 			}
  #endif
 #endif
@@ -3935,10 +3928,8 @@ CMD_FUNC(m_part)
 		}
 		/* +M and not +r? */
 		if ((chptr->mode.mode & MODE_MODREG) && !IsRegNick(sptr) && !IsAnOper(sptr))
-		{
 			comment = NULL;
-			parc = 2;
-		}
+
 		if (MyConnect(sptr))
 		{
 			Hook *tmphook;
@@ -3948,6 +3939,16 @@ CMD_FUNC(m_part)
 					break;
 			}
 		}
+
+		/* Send to other servers... */
+		if (!comment)
+			sendto_serv_butone_token(cptr, parv[0],
+			    MSG_PART, TOK_PART, "%s", chptr->chname);
+		else
+			sendto_serv_butone_token(cptr, parv[0],
+			    MSG_PART, TOK_PART, "%s :%s", chptr->chname,
+			    comment);
+
 		if (1)
 		{
 			if ((chptr->mode.mode & MODE_AUDITORIUM) && !is_chanownprotop(sptr, chptr))

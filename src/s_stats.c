@@ -279,9 +279,10 @@ inline int stats_operonly_short(char c)
 	}
 	/* Hack for c/C/H/h */
 	if (l == 'c')
+	{
 		if (strpbrk(OPER_ONLY_STATS, "hH"))
 			return 1;
-	else if (l == 'h')
+	} else if (l == 'h')
 		if (strpbrk(OPER_ONLY_STATS, "cC"))
 			return 1;
 	return 0;
@@ -1208,6 +1209,8 @@ int stats_set(aClient *sptr, char *para)
 	    RPL_TEXT, sptr->name, OPER_AUTO_JOIN_CHANS ? OPER_AUTO_JOIN_CHANS : "0");
 	sendto_one(sptr, ":%s %i %s :static-quit: %s", me.name, 
 		RPL_TEXT, sptr->name, STATIC_QUIT ? STATIC_QUIT : "<none>");	
+	sendto_one(sptr, ":%s %i %s :static-part: %s", me.name, 
+		RPL_TEXT, sptr->name, STATIC_PART ? STATIC_PART : "<none>");	
 	sendto_one(sptr, ":%s %i %s :who-limit: %d", me.name, RPL_TEXT,
 		sptr->name, WHOLIMIT);
 	sendto_one(sptr, ":%s %i %s :dns::timeout: %s", me.name, RPL_TEXT,

@@ -101,6 +101,7 @@ struct zConfiguration {
 	int  anti_spam_quit_message_time;
 	char *egd_path;
 	char *static_quit;
+	char *static_part;
 #ifdef USE_SSL
 	char *x_server_cert_pem;
 	char *x_server_key_pem;
@@ -185,6 +186,7 @@ extern aConfiguration iConf;
 #define CLOAK_KEY3			iConf.network.key3
 #define CLOAK_KEYCRC			iConf.network.keycrc
 #define STATIC_QUIT			iConf.static_quit
+#define STATIC_PART			iConf.static_part
 #define UHOST_ALLOWED			iConf.userhost_allowed
 #define RESTRICT_USERMODES		iConf.restrict_usermodes
 #define RESTRICT_CHANNELMODES		iConf.restrict_channelmodes

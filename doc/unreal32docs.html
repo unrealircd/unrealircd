@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta19-CVS<br>
-  <b>Last doc update:</b> 2003-12-06</div>
+  <b>Last doc update:</b> 2003-12-10</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke / McSkaf<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -1820,6 +1820,10 @@ set {
   Sets a static quit message that will be sent whenever a client logs off the 
   network. This eliminates the need for anti-spam-quit-message-time, as well as 
   the set::prefix-quit. It will NOT replace ERRORS with the static-quit message.</p>
+<p><font class="set">set::static-part &lt;no|yes|part message&gt;;</font><br>
+  A value of 'yes' strips all part comments, a value of 'no' makes part just work
+  as usual, anything else will be used as a part comment (eg: static-part "Bye!") 
+  but this can be quite annoying, so use with care.</p>
 <p><font class="set">set::who-limit &lt;limit&gt;;</font><br>
   Sets the limit for the maximum number of matches that will be returned for a /who.
   If this option is left out, no limit is enforced.</p>

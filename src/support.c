@@ -1704,7 +1704,7 @@ static char tempbuf[PATH_MAX+1];
 			return tempbuf;
 		fclose(fd);
 	}
-	config_error("Unable to create temporarely file in directory '%s': %s",
+	config_error("Unable to create temporary file in directory '%s': %s",
 		dir, strerror(ERRNO)); /* eg: permission denied :p */
 	return NULL;
 #else

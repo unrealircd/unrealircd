@@ -630,3 +630,4 @@ extern int count_oper_sessions(char *);
 extern char *unreal_mktemp(char *dir, char *suffix);
 extern char *unreal_getfilename(char *path);
 extern int unreal_copyfile(char *src, char *dest);
+extern void DeleteTempModules(void);
