@@ -1,7 +1,7 @@
 /*
  *   Unreal Internet Relay Chat Daemon, src/s_conf2.c
- *   (C) 1998-2000 Chris Behrens & Fred Jacobs
- *   Modified by the UnrealIRCd team
+ *   (C) 1998-2000 Chris Behrens & Fred Jacobs (comstud, moogle)
+ *   (C) 2000-2001 Carsten V. Munk and the UnrealIRCd Team
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -48,6 +48,13 @@ struct	_confcommand
 	int	(*func)(ConfigFile *conf, ConfigEntry *ce);
 };
 
+typedef struct _conf_operflag OperFlag;
+struct _conf_operflag 
+{
+	long	flag;
+	char	*name;
+};
+
 /* 
  * Top-level configuration commands -Stskeeps
  */
@@ -59,6 +66,7 @@ int	_conf_drpass	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_ulines	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_include	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_tld	(ConfigFile *conf, ConfigEntry *ce);
+
 extern int conf_debuglevel;
 
 static ConfigCommand _ConfigCommands[] = {
@@ -71,6 +79,39 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "include", 	_conf_include },
 	{ "tld",	_conf_tld },
 	{ NULL, 	NULL  }
+};
+
+static OperFlag _OperFlags[] = {
+	{ OFLAG_LOCAL,		"local" },
+	{ OFLAG_GLOBAL,		"global" },
+	{ OFLAG_REHASH,		"can_rehash" },
+	{ OFLAG_EYES,		"eyes" },
+	{ OFLAG_DIE,		"can_die" },
+	{ OFLAG_RESTART,        "can_restart" },
+	{ OFLAG_HELPOP,         "helpop" },
+	{ OFLAG_GLOBOP,         "can_globops" },
+	{ OFLAG_WALLOP,         "can_wallops" },
+	{ OFLAG_RESTART,        "can_restart" },
+	{ OFLAG_LOCOP,		"locop"},
+	{ OFLAG_LROUTE,		"can_localroute" },
+	{ OFLAG_GROUTE,		"can_globalroute" },
+	{ OFLAG_LKILL,		"can_localkill" },
+	{ OFLAG_GKILL,		"can_globalkill" },
+	{ OFLAG_KLINE,		"can_kline" },
+	{ OFLAG_UNKLINE,	"can_unkline" },
+	{ OFLAG_LNOTICE,	"can_localnotice" },
+	{ OFLAG_GNOTICE,	"can_globalnotice" },
+	{ OFLAG_ADMIN,		"admin"},
+	{ OFLAG_SADMIN,		"services-admin"},
+	{ OFLAG_NETADMIN,	"netadmin"},
+	{ OFLAG_TECHADMIN,	"techadmin"},
+	{ OFLAG_COADMIN,	"coadmin"},
+	{ OFLAG_UMODEC,		"get_umodec"},
+	{ OFLAG_UMODEF,		"get_umodef"}, 
+	{ OFLAG_ZLINE,		"can_zline"},
+	{ OFLAG_WHOIS,		"get_umodew"},
+	{ OFLAG_INVISIBLE,	"can_stealth"},
+	{ 0L, 	NULL  }
 };
 
 /*
@@ -86,6 +127,7 @@ int			ConfigParse(ConfigFile *cfptr);
 
 /* Lookup prototypes, to be moved to some .h */
 ConfigItem_class	*Find_class(char *name);
+ConfigItem_oper		*Find_oper(char *name);
 
 
 /*
@@ -97,6 +139,7 @@ ConfigItem_admin 	*conf_admin = NULL;
 ConfigItem_drpass	*conf_drpass = NULL;
 ConfigItem_ulines	*conf_ulines = NULL;
 ConfigItem_tld		*conf_tld = NULL;
+ConfigItem_oper		*conf_oper = NULL;
 
 /*
  * MyMalloc with the only difference that it clears the memory too
@@ -839,34 +882,163 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
-	ConfigItem_oper *oper;
+	ConfigItem_oper *oper = NULL;
+	ConfigItem_oper_from *from;
+	OperFlag *ofp = NULL;
+	unsigned char	isnew = 0;
 	
 	if (!ce->ce_vardata)
-		return;	
+	{
+		config_error("%s:%i: oper without name",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+	
+	if (!(oper = Find_oper(ce->ce_vardata)))
+	{
+		oper = (ConfigItem_oper *) MyMallocEx(sizeof(ConfigItem_oper));
+		oper->name = strdup(ce->ce_vardata);
+		isnew = 1;
+	}
+	else
+	{
+		isnew = 0;
+		config_status("%s:%i: warning: redefining a record in oper %s",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			ce->ce_vardata);
+	}
+
 	
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!cep->ce_varname)
 		{
-			config_error("Blank oper line");
+			config_error("%s:%i: oper item without variable name",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			continue;
 		}
 		if (!cep->ce_entries)
 		{
-			
+			/* standard variable */
+			if (!cep->ce_vardata)
+			{
+				config_error("%s:%i: oper::%s without parameter",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum,
+					cep->ce_varname);
+				continue;	
+			}
+			if (!strcmp(cep->ce_varname, "class"))
+			{
+				oper->class = Find_class(cep->ce_vardata);
+				if (!oper->class)
+				{
+					config_error("%s:%i: illegal oper::class, unknown class '%s'",
+						cep->ce_fileptr->cf_filename,
+						cep->ce_varlinenum,
+						cep->ce_vardata);
+				}
+			} else
+			if (!strcmp(cep->ce_varname, "password"))
+			{
+				oper->password = strdup(cep->ce_vardata);
+				if (!(*oper->password))
+				{
+					config_error("%s:%i: illegal password, please write something",
+						cep->ce_fileptr->cf_filename,
+						cep->ce_varlinenum);
+				}
+			} else
+			{
+				config_error("%s:%i: unknown directive oper::%s",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+						cep->ce_varname);
+				continue;								
+			}
 		}
 		else
 		{
+			/* Section */
 			if (!strcmp(cep->ce_varname, "flags"))
 			{
 				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 				{
+					if (!cepp->ce_varname)
+					{
+						config_error("%s:%i: oper::flags item without variable name",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+						continue;
+					}
+					/* this should have been olp ;) -Stskeeps */
+					for (ofp = _OperFlags; ofp->name; ofp++)
+					{
+						if (!strcmp(ofp->name, cepp->ce_varname))
+						{
+							oper->oflags |= ofp->flag;
+							config_status("%s:%i: setting flag %s",
+								cepp->ce_fileptr->cf_filename,
+								cepp->ce_varlinenum,
+								ofp->name);
+							break;
+						} 
+					}
+					if (!ofp->name)
+					{
+						config_error("%s:%i: unknown oper flag '%s'",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
+							cepp->ce_varname);
+						continue;								
+					}			
 				}	
 				continue;
+			}
+			else
+			if (!strcmp(cep->ce_varname, "from"))
+			{
+				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				{
+					if (!cepp->ce_varname)
+					{
+						config_error("%s:%i: oper::from item without variable name",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+						continue;
+					}
+					if (!cepp->ce_vardata)
+					{
+						config_error("%s:%i: oper::from::%s without parameter",
+							cepp->ce_fileptr->cf_filename,
+							cepp->ce_varlinenum,
+							cepp->ce_varname);
+						continue;
+					}
+					if (!strcmp(cepp->ce_varname, "userhost"))
+					{
+						from = (ConfigItem_oper_from *)MyMallocEx(sizeof(ConfigItem_oper_from));
+						from->name = strdup(cepp->ce_vardata);
+						add_ConfigItem((ConfigItem *) from, (ConfigItem **)&oper->from);
+					}
+					else
+					{
+						config_error("%s:%i: unknown directive oper::from::%s",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
+							cepp->ce_varname);
+						continue;								
+					}			
+				}	
+				continue;
+			}
+			else
+			{
+				config_error("%s:%i: unknown directive oper::%s (section)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+						cep->ce_varname);
+				continue;								
 			}
 		}
 
 	} 
+	if (isnew)
+		add_ConfigItem((ConfigItem *)oper, (ConfigItem **)&conf_oper);
 }
 
 int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
@@ -881,7 +1053,7 @@ int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!cep->ce_varname)
 		{
-			config_error("s:%i: blank drpass line", 
+			config_error("%s:%i: blank drpass line", 
 			 cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			continue;
 		}
@@ -966,6 +1138,21 @@ ConfigItem_class	*Find_class(char *name)
 		return NULL;
 		
 	for (p = conf_class; p; p = (ConfigItem_class *) p->next)
+	{
+		if (!strcmp(name, p->name))
+			return (p);
+	}
+	return NULL;
+}
+
+ConfigItem_oper	*Find_oper(char *name)
+{
+	ConfigItem_oper	*p;
+	
+	if (!name)
+		return NULL;
+		
+	for (p = conf_oper; p; p = (ConfigItem_oper *) p->next)
 	{
 		if (!strcmp(name, p->name))
 			return (p);

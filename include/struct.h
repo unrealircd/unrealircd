@@ -74,6 +74,7 @@ typedef struct _configitem_me ConfigItem_me;
 typedef struct _configitem_admin ConfigItem_admin;
 typedef struct _configitem_class ConfigItem_class;
 typedef struct _configitem_oper ConfigItem_oper;
+typedef struct _configitem_oper_from ConfigItem_oper_from;
 typedef struct _configitem_drpass ConfigItem_drpass;
 typedef struct _configitem_ulines ConfigItem_ulines;
 typedef struct _configitem_tld ConfigItem_tld;
@@ -969,9 +970,18 @@ struct _configitem_oper {
 	ConfigFlag 	 flag;
 	ConfigItem       *prev;
 	ConfigItem       *next;
+	char		 *name;
+	ConfigItem_class *class;
 	ConfigItem	 *from;
 	long		 oflags;
 	char		 *password;
+};
+
+struct _configitem_oper_from {
+	ConfigFlag 	 flag;
+	ConfigItem       *prev;
+	ConfigItem       *next;
+	char		 *name;
 };
 
 struct _configitem_drpass {
