@@ -2879,12 +2879,27 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 
 		if (cep->ce_vardata)
 		{
+			int valid = 0;
+			char *p;
 			if (strlen(cep->ce_vardata) > (REALLEN-1))
 			{
 				config_error("%s:%i: too long me::info, must be max. %i characters",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum, REALLEN-1);
 				errors++;
 		
+			}
+			/* Valid me::info? Any data except spaces is ok */
+			for (p=cep->ce_vardata; *p; p++)
+				if (*p != ' ')
+				{
+					valid = 1;
+					break;
+				}
+			if (!valid)
+			{
+				config_error("%s:%i: empty me::info, should be a server description.",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+				errors++;
 			}
 		}
 	}
