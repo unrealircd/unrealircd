@@ -1569,3 +1569,5 @@ seen. gmtime warning still there
 - More SSL debugging stuff..
 - A minor fix in SSL_is_inited stuff in s_bsd
 - Fixed a bug with installing unreal as a services under NT4 reported by peter (#0000295)
+- Added the oper login the user has /oper'ed to in the 'is now an operator'
+  notice. Suggested by havlaz (#0000287)
