@@ -751,3 +751,4 @@
 - Fixed a couple of typos in doc/example.conf (#0002393) reported by AngryWolf.
 - Added documentation about channel mode +j (#0002392) suggested by Dukat.
 - Added doc/help.de.conf and doc/example.hu.conf
+- Fixed +s/+p and +c/+S desynch issue during netmerge, reported by Ron2K (#0002391).

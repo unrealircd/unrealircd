@@ -355,7 +355,7 @@ CMD_FUNC(m_mode)
  */
 static void mode_cutoff(char *s)
 {
-unsigned short modesleft = MAXMODEPARAMS;
+unsigned short modesleft = MAXMODEPARAMS * 2; /* be generous... */
 
 	for (; *s && modesleft; s++)
 		if ((*s != '-') && (*s != '+'))

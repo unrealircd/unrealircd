@@ -171,11 +171,11 @@ else {\
 	modebuf[2] = '\0';\
 	b = 2;\
 }
-#define Addsingle(x) modebuf[b] = x; b++; modebuf[b] = '\0'
-#define CheckStatus(x,y) if (modeflags & (y)) { Addit((x), nick); }
-#define AddBan(x) strlcat(banbuf, x, sizeof banbuf); strlcat(banbuf, " ", sizeof banbuf);
-#define AddEx(x) strlcat(exbuf, x, sizeof exbuf); strlcat(exbuf, " ", sizeof exbuf);
-#define AddInvex(x) strlcat(invexbuf, x, sizeof invexbuf); strlcat(invexbuf, " ", sizeof invexbuf);
+#define Addsingle(x) do { modebuf[b] = x; b++; modebuf[b] = '\0'; } while(0)
+#define CheckStatus(x,y) do { if (modeflags & (y)) { Addit((x), nick); } } while(0)
+#define AddBan(x) do { strlcat(banbuf, x, sizeof banbuf); strlcat(banbuf, " ", sizeof banbuf); } while(0)
+#define AddEx(x) do { strlcat(exbuf, x, sizeof exbuf); strlcat(exbuf, " ", sizeof exbuf); } while(0)
+#define AddInvex(x) do { strlcat(invexbuf, x, sizeof invexbuf); strlcat(invexbuf, " ", sizeof invexbuf); } while(0)
 
 CMD_FUNC(m_sjoin)
 {
@@ -209,6 +209,8 @@ CMD_FUNC(m_sjoin)
 	 char *s0 = NULL;
 	long modeflags;
 	Ban *ban=NULL;
+	char queue_s=0, queue_c=0; /* oh this is soooooo ugly :p */
+	
 	if (IsClient(sptr) || parc < 3 || !IsServer(sptr))
 		return 0;
 
@@ -668,6 +670,23 @@ docontinue:
 			}
 		}
 #endif
+		/* Check if we had +s and it became +p, then revert it... */
+		if ((oldmode.mode & MODE_SECRET) && (chptr->mode.mode & MODE_PRIVATE))
+		{
+			/* stay +s ! */
+			chptr->mode.mode &= ~MODE_PRIVATE;
+			chptr->mode.mode |= MODE_SECRET;
+			Addsingle('p'); /* - */
+			queue_s = 1;
+		}
+		/* Check if we had +c and it became +S, then revert it... */
+		if ((oldmode.mode & MODE_NOCOLOR) && (chptr->mode.mode & MODE_STRIP))
+		{
+			chptr->mode.mode &= ~MODE_STRIP;
+			chptr->mode.mode |= MODE_NOCOLOR;
+			Addsingle('S'); /* - */
+			queue_c = 1;
+		}
 		/* Add single char modes... */
 		for (acp = cFlagTab; acp->mode; acp++)
 		{
@@ -686,6 +705,10 @@ docontinue:
 			strlcpy(modebuf, "+", sizeof modebuf);
 			b = 1;
 		}
+		if (queue_s)
+			Addsingle('s');
+		if (queue_c)
+			Addsingle('c');
 		for (acp = cFlagTab; acp->mode; acp++)
 		{
 			if (!(oldmode.mode & acp->mode) &&
