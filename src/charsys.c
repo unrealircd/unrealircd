@@ -106,16 +106,17 @@ static LangList langlist[] = {
 	{ "icelandic",    "ice", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "italian",      "ita", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "latin1",       "cat,dut,fre,ger,ita,spa,swe", LANGAV_ASCII|LANGAV_LATIN1 },
-	{ "latin2",       "hun,pol", LANGAV_ASCII|LANGAV_LATIN2 },
+	{ "latin2",       "hun,pol,rum", LANGAV_ASCII|LANGAV_LATIN2 },
 	{ "polish",       "pol", LANGAV_ASCII|LANGAV_LATIN2 },
 	{ "polish-w1250", "pol-m", LANGAV_ASCII|LANGAV_W1250 },
+	{ "romanian",     "rum", LANGAV_ASCII|LANGAV_LATIN2W1250 },
 	{ "russian-w1251","rus", LANGAV_ASCII|LANGAV_W1251 },
 	{ "slovak",       "slo-m", LANGAV_ASCII|LANGAV_W1250 },
 	{ "spanish",      "spa", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "swedish",      "swe", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "swiss-german", "swg", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "turkish",      "tur", LANGAV_ASCII|LANGAV_ISO8859_9 },
-	{ "windows-1250", "cze-m,pol-m,slo-m,hun",  LANGAV_ASCII|LANGAV_W1250 },
+	{ "windows-1250", "cze-m,pol-m,rum,slo-m,hun",  LANGAV_ASCII|LANGAV_W1250 },
 	{ NULL, NULL, 0 }
 };
 
@@ -563,6 +564,14 @@ char latin1=0, latin2=0, w1250=0, chinese=0;
 		/* a', e', i', o', o", o~, u', u", u~, A', E', I', O', O", O~, U', U", U~ */
 		charsys_addallowed("·ÈÌÛˆı˙¸˚¡…Õ”÷’⁄‹€");
 	}
+	/* same is true for romanian: latin2 & w1250 compatible */
+	if (latin2 || w1250 || !strcmp(name, "romanian"))
+	{
+		/* With some help from crazytoon */
+		/* 'S,' 's,' 'A^' 'A<' 'I^' 'T,' 'a^' 'a<' 'i^' 't,' */
+		charsys_addallowed("™∫¬√Œﬁ‚„Ó˛");
+	}
+	
 	if (latin2 || !strcmp(name, "polish"))
 	{
 		/* supplied by k4be */
