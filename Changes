@@ -755,3 +755,5 @@ seen. gmtime warning still there
 - Fixed a typo in the win32 makefile
 - Rewrote Addit, hopefully it fixes the SJOIN problems?
 - Fixed fence post marker overwrite in /vhost, found and fixed by tgf
+- Made the Win32 version report the actual OS to opers in /version rather than just say 'Win32'
+

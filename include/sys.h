@@ -121,7 +121,8 @@ typedef unsigned int u_int;
 #endif
 
 #ifdef _WIN32
-#define MYOSNAME "Win32"
+#define MYOSNAME OSName
+extern char OSName[256];
 #endif
 #ifdef DEBUGMODE
 // #define ircsprintf sprintf

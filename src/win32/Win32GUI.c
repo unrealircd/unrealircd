@@ -90,6 +90,8 @@ HANDLE hMainThread = 0;
 UINT WM_TASKBARCREATED;
 FARPROC lpfnOldWndProc;
 HMENU hContext;
+OSVERSIONINFO VerInfo;
+char OSName[256];
 
 void TaskBarCreated() {
 	HICON hIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(ICO_MAIN), IMAGE_ICON,16, 16, 0);
@@ -409,11 +411,46 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	if(!LoadLibrary("riched20.dll"))
 		LoadLibrary("riched32.dll");
 	InitStackTraceLibrary();
-    if (WSAStartup(MAKEWORD(1, 1), &WSAData) != 0)
-    {
+	VerInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	GetVersionEx(&VerInfo);
+	strcpy(OSName, "Windows ");
+	if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
+		if (VerInfo.dwMajorVersion == 4) {
+			if (VerInfo.dwMinorVersion == 0) {
+				strcat(OSName, "95 ");
+				if (!strcmp(VerInfo.szCSDVersion," C"))
+					strcat(OSName, "OSR2 ");
+			}
+			else if (VerInfo.dwMinorVersion == 10) {
+				strcat(OSName, "98 ");
+				if (!strcmp(VerInfo.szCSDVersion, " A"))
+					strcat(OSName, "SE ");
+			}
+			else if (VerInfo.dwMinorVersion == 90)
+				strcat(OSName, "Me ");
+		}
+	}
+	else if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
+		if (VerInfo.dwMajorVersion == 3 && VerInfo.dwMinorVersion == 51)
+			strcat(OSName, "NT 3.51 ");
+		else if (VerInfo.dwMajorVersion == 4 && VerInfo.dwMinorVersion == 0)
+			strcat(OSName, "NT 4.0 ");
+		else if (VerInfo.dwMajorVersion == 5) {
+			if (VerInfo.dwMinorVersion == 0)
+				strcat(OSName, "2000 ");
+			else if (VerInfo.dwMinorVersion == 1)
+				strcat(OSName, "XP ");
+		}
+		strcat(OSName, VerInfo.szCSDVersion);
+	}
+	if (OSName[strlen(OSName)-1] == ' ')
+		OSName[strlen(OSName)-1] = 0;
+
+	if (WSAStartup(MAKEWORD(1, 1), &WSAData) != 0)
+    	{
         MessageBox(NULL, "Unable to initialize WinSock", "UnrealIRCD Initalization Error", MB_OK);
         return FALSE;
-    }
+	}
 	hInst = hInstance; 
     
 	hWnd = CreateDialog(hInstance, "WIRCD", 0, (DLGPROC)MainDLG); 
