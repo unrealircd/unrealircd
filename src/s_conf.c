@@ -2155,6 +2155,8 @@ void report_network(aClient *sptr)
 	    sptr->name, defserv);
 	sendto_one(sptr, ":%s %i %s :services-server: %s", me.name, RPL_TEXT,
 	    sptr->name, SERVICES_NAME);
+	sendto_one(sptr, ":%s %i %s :stats-server: %s", me.name, RPL_TEXT,
+	    sptr->name, STATS_SERVER);
 	sendto_one(sptr, ":%s %i %s :hosts::global: %s", me.name, RPL_TEXT,
 	    sptr->name, oper_host);
 	sendto_one(sptr, ":%s %i %s :hosts::admin: %s", me.name, RPL_TEXT,
@@ -2171,8 +2173,6 @@ void report_network(aClient *sptr)
 	    sptr->name, hidden_host);
 	sendto_one(sptr, ":%s %i %s :help-channel: %s", me.name, RPL_TEXT,
 	    sptr->name, helpchan);
-	sendto_one(sptr, ":%s %i %s :stats-server: %s", me.name, RPL_TEXT,
-	    sptr->name, STATS_SERVER);
 	sendto_one(sptr, ":%s %i %s :hosts::host-on-oper-up: %i", me.name, RPL_TEXT, sptr->name,
 	    iNAH);
 	sendto_one(sptr, ":%s %i %s :cloak-keys: %X", me.name, RPL_TEXT, sptr->name,

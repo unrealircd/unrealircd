@@ -19,14 +19,14 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <strong>Current Version:</strong> 3.2 Beta15<br>
-  <strong>Last doc update:</strong> 2002-02-21 </div>
+  <strong>Last doc update:</strong> 2002-02-28 </div>
   <strong>Head Coders:</strong> Stskeeps / Codemastr / Luke / McSkaf / Syzop<br>
   <strong>Contributors:</strong> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <strong>Documentation:</strong> CKnight^ / Syzop<br>
 <p>Due to the increasing complexity of UnrealIRCd3.2 We have switched to a easier 
   to navigate, more inclusive documentation set. To view this documentation you 
   must have a compatible browser, which are listed below. Up to date docs are 
-  available @ <a href="http://www.unrealircd.com/unreal32docs.html">http://www.unrealircd.com/unreal32docs.html</a></p>
+  available @ <a href="http://www.vulnscan.org/UnrealIrcd/unreal32docs.html">http://www.vulnscan.org/UnrealIrcd/unreal32docs.html</a></p>
 <p><strong>Compatible Browsers: </strong><br>
   Opera 6.02<br>
   Microsoft Internet Explorer 6.X / 5.5<br>
@@ -100,7 +100,7 @@
    at the <a href="#faq">FAQ</a> for common problems. If that didn't help you can
    ask for support at irc.ircsystems.net (port 6667) channel #unreal-support (strict UnrealIRCd support, dont
    ask for help about services!). If you have a real bug (like a crash) then report it at 
-   <a href="http://bugs.unrealircd.org">http://bugs.unrealircd.org</a>.</p>
+   <a href="http://bugs.unrealircd.org" TARGET="_blank">http://bugs.unrealircd.org</a>.</p>
 
 <p><font size="+2"><strong>1.1 &#8211; Notes on upgrading/mixing 3.1.x -&gt; 3.2.x </strong></font><a name="notesonolder"></a><br>
 </p>
@@ -227,7 +227,7 @@
 <p>This is controlled by the oper flags in the oper block, see the oper block for more information.</p>
 
 <p><font size="+2"><strong>3.8 - Oper commands</strong></font><a name="feature_opercmds"></a></p>
-<p>UnrealIRCd has a lot of powerfull oper commands which are explained in section 6,
+<p>UnrealIRCd has a lot of powerful oper commands which are explained in section 6,
    you probably want to read those after installing :).</p>
 
 <p><font size="+2"><strong>3.9 - SSL</strong></font><a name="feature_ssl"></a></p>
@@ -1031,7 +1031,7 @@ loadmodule "src/modules/scan_http.so";
   };</p>
 <p></p>
 <p><font class="block_section">4.18 - </font><font class="block_name">Ban Exceptions Block</font>
-   <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the E:Line)</font><a name="banexceptionblock""></a>
+   <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the E:Line)</font><a name="banexceptionblock"></a>
 </p>
 <p>Syntax:<br>
   except ban {<br>
@@ -1450,14 +1450,24 @@ loadmodule "src/modules/scan_http.so";
   specified.</p>
 <p><font class="set">set::modes-on-connect &lt;+modes&gt;;</font><br>
   The modes that will be set on a user at connection.</p>
+<p><font class="set">set::snomask-on-connect &lt;+modes&gt;</font><br>
+  The snomask that will be set on a user at connection.</p>
 <p><font class="set">set::modes-on-oper &lt;+modes&gt;;</font><br>
   The modes that will be set on a user when they /oper.</p>
+<p><font class="set">set::snomask-on-oper &lt;+modes&gt;;</font><br>
+  The snomask that will be set on a user when they /oper.</p>
+<p><font class="set">set::restrict-usermodes &lt;modes&gt;</font><br>
+  Restrict users to set/unset the modes listed here (don't use + or -).<br>
+  For example you can set +G in modes-on-connect and G in restrict-usermodes,
+  that way you can force all users to be +G and unable to do -G.</p>
 <p><font class="set">set::auto-join &lt;channels&gt;;</font><br>
   The channel(s) a user will be forced to join at connection. To specify more 
-  than one channel use a comma seperated list.</p>
+  than one channel use a comma seperated list.<br>
+  [Note: don't forget to add quotes, like: auto-join "#chan";]</p>
 <p><font class="set">set::oper-auto-join &lt;channels&gt;;</font><br>
   The channel(s) a user will be forced to join when they /oper. To specify more 
-  than one channel use a comma seperated list.</p>
+  than one channel use a comma seperated list.<br>
+  [Note: don't forget to add quotes, like: oper-auto-join "#chan";]</p>
 <p><font class="set">set::anti-spam-quit-message-time &lt;timevalue&gt;;</font><br>
   A time value specifying the length of time a user must be connected for before 
   a /quit message will be displayed. Used to prevent spam. A time value is a numeric 
@@ -1476,6 +1486,11 @@ loadmodule "src/modules/scan_http.so";
   specify * for users to be able to use no flags.</p>
 <p><font class="set">set::maxchannelsperuser &lt;amount-of-channels&gt;;</font><br>
   Specifies the number of channels a single user may be in at any one time.</p>
+<p><font class="set">set::allow-userhost-change [never|always|not-on-channels|force-rejoin]</font><br>
+  Specifies what happens when the user@host changes (+x/-x/chghost/chgident/setident/vhost/etc).<br>
+  <i>never</i> disables all the commands, <i>always</i> does always allow it even when in channels 
+  (may cause client desyncs) [default], <i>not-on-channels</i> means it's only allowed when the 
+  user is not on any channel, <i>force-rejoin</i> will force a rejoin in all channels and re-op/voice/etc if needed.</p>
 <p><font class="set">set::options::hide-ulines;</font><br>
   If this is present, Ulined server will be hidden in a /links requested by non-opers.</p>
 <p><font class="set">set::options::show-opermotd;</font><br>
@@ -1489,7 +1504,7 @@ loadmodule "src/modules/scan_http.so";
   If present notices showing &quot;ident request&quot;, &quot;hostname lookup&quot;, 
   etc. will be displayed when a user connects.</p>
 <p><font class="set">set::options::dont-resolve;</font><br>
-  If present hosts of incomming users are not resolved, can be usefull if many of your
+  If present hosts of incomming users are not resolved, can be useful if many of your
   users don't have a host to speed up connecting.<br>
   Note that since no resolving is done you also can't have host based allow blocks.</p>
 <p><font class="set">set::dns::timeout &lt;timevalue&gt;;</font><br>
@@ -1807,6 +1822,9 @@ loadmodule "src/modules/scan_http.so";
 </table>
 <p>&nbsp;</p>
 <p><font size="+2"><strong>6 &#8211; User &amp; Oper Commands Table<a name="useropercommands" id="useropercommands"></a></strong></font></p>
+<p>NOTE: the /helpop documentation is more up to date, use <i>/helpop command</i> (or <i>/helpop ?command</i> if you are oper) 
+to get more information on a command.</p>
+
 <table width="75%" border="1">
   <tr> 
     <td width="33%"><div align="center"><strong>Command</strong></div></td>

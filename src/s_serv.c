@@ -2568,6 +2568,9 @@ CMD_FUNC(m_stats)
 				}
 			}
 #endif
+			sendto_snomask(SNO_EYES, "Stats 'zip' requested by %s (%s@%s)",
+		    	sptr->name, sptr->user->username, GetHost(sptr));
+			stat = '*';
 			break;
 		  } /* 'zip' */
 		  if (IsAnOper(sptr))

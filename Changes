@@ -1950,3 +1950,4 @@ seen. gmtime warning still there
 - Added allow-userhost-change checks to /vhost.
 - Added SVSWATCH: allows U-lined server to modify the watch list of a user.
 - Added SVSSILENCE: allows U-lined server to modify the silence list of a user.
+- Documentation/text updates.
