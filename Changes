@@ -536,8 +536,8 @@
 - Hopefully fixed the last of the alloca warnings (#0002202) reported by Stoebi.
 - Fixed a problem with set::htm::incoming-rate being interpreted incorrectly (#0002266)
   reported by tabrisnet.
-- Fixed a resolver cache bug regarding CNAME's. This needs some more testing.
-  [this description will be updated after testing]
+- Fixed a resolver cache bug regarding CNAME's. Thanks to insiderZ.DE for tracing down
+  this issue.
 - Fixed a bug related to the sajoin recode regarding notices displayed (#0002293) reported
   by Troco.
 - Reworded a cloak-key error message to make it clearer (#0002297) reported by Bugz.
