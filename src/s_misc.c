@@ -653,10 +653,6 @@ static void exit_one_client_backend(cptr, sptr, from, comment, split)
 			if (!(acptr = local[i]) || !IsServer(acptr) ||
 			    acptr == cptr || IsMe(acptr))
 				continue;
-			if ((aconf = acptr->serv->nline) &&
-			    (match(my_name_for_link(me.name, aconf),
-			    sptr->name) == 0))
-				continue;
 			/*
 			   ** SQUIT going "upstream". This is the remote
 			   ** squit still hunting for the target. Use prefixed

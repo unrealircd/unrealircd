@@ -103,3 +103,6 @@
 - Heavily recoded /rehash (removed a ton of coding)
 - Updated match() to have some optimizations from bahamut
 - +GScm now affect /part msgs (requested by SegFault and others)
+- Added Find_link, serv->conf, did a Find_tld fixup, removed serv->nline, 
+  removing a lot of my_name_for_link crap, indented s_serv.c
+- Recoded m_server(YES!) -stskeeps

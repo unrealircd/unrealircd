@@ -717,14 +717,14 @@ struct User {
 };
 
 struct Server {
-	struct Server *nexts;
-	anUser *user;		/* who activated this connection */
-	char *up;		/* uplink for this server */
-	char by[NICKLEN + 1];
-	aConfItem *nline;	/* N-line pointer for this server */
-	TS   timestamp;		/* Remotely determined connect try time */
-	unsigned short numeric;	/* NS numeric, 0 if none */
-	long users;
+	struct Server 	*nexts;
+	anUser 		*user;		/* who activated this connection */
+	char 		*up;		/* uplink for this server */
+	char 		by[NICKLEN + 1];
+	ConfigItem_link *conf;
+	TS   		timestamp;		/* Remotely determined connect try time */
+	unsigned short  numeric;	/* NS numeric, 0 if none */
+	long		 users;
 #ifdef	LIST_DEBUG
 	aClient *bcptr;
 #endif
@@ -1068,10 +1068,11 @@ struct _configitem_link {
 	short			port;
 	char			*hubmask;
 	char			*leafmask;
-	unsigned char 	leafdepth;
+	unsigned char 		leafdepth;
 	char			*connpwd;
 	char			*recvpwd;
-	ConfigItem_class *class;
+	int			refcount;
+	ConfigItem_class 	*class;
 	short			options;
 };
 

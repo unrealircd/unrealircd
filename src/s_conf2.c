@@ -1871,10 +1871,32 @@ ConfigItem_tld *Find_tld(char *host) {
 	if (!host)
 		return NULL;
 	
-	for(tld = conf_tld; tld; tld = (ConfigItem_tld *) tld->next) {
-			if (!match(tld->mask, host))
+	for(tld = conf_tld; tld; tld = (ConfigItem_tld *) tld->next)
+	{
+		if (!match(tld->mask, host))
 			return tld;
 	}
 	return NULL;
 }
 
+
+ConfigItem_link *Find_link(char *username,
+			   char *hostname, 
+			   char *ip,
+			   char *servername)
+{
+	ConfigItem_link	*link;
+	
+	if (!username || !hostname || !servername || !ip)
+		return NULL;
+	
+	for(link = conf_link; link; link = (ConfigItem_link *) link->next)
+	{
+		if (!match(link->servername, servername) &&
+		    !match(link->username, username) &&
+		    (!match(link->hostname, hostname) || !match(link->hostname, ip)))
+			return link;
+	}
+	return NULL;
+		
+}
