@@ -23,7 +23,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2 </font><br>
   <b>Aktuelle Version:</b> 3.2 *CVS*<br>
-  <b>Letztes Dokumentation Update:</b> 2004-05-18</div>
+  <b>Letztes Dokumentation Update:</b>  2004-05-28</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
 <b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
@@ -2639,6 +2639,12 @@ re-op/voice/etc falls notwendig.</p>
 <p><font class="set">set::options::hide-ulines;</font><br>
 Wenn dies eingestellt ist, werden Ulined Server bei&nbsp; /links von Nicht-Opers
 nicht angezeigt.</p>
+<p><b>set::options::flat-map;</b><br>
+Wenn dies eingestellt ist, werden alle Server bei /map und /links als direkt
+gelinkt angezeigt. Dadurch kann man nicht mehr erkennen, welcher Server mit
+welchem gelinkt ist. Das ist eine kleine Hilfe gegen (D)DoS Attacken, weil
+potentielle Angreifer jetzt nicht mehr länger mögliche
+&quot;Schwachpunkte&quot; erkennen können.</p>
 <p><font class="set">set::options::show-opermotd;</font><br>
 Falls eingestellt wird die opermotd den Usern angezeigt, die erfolgreich /oper
 benutzen.</p>
@@ -3811,13 +3817,14 @@ Datei</a></b></font></p>
   Schwachpunkte (die Hubs) anzugreifen. Das trägt damit ebenso zum Überleben
   von Hubs &amp; Services bei :).</div>
 <p><font size="+2"><b><a name="secinformation">8.7 Informationsbeschaffung</a></b></font></p>
-<div class="desc">Der /stats Befehl ist sehr informativ und es ist vielleicht
+<div class="desc"><b>STATS<br>
+  </b>Der /stats Befehl ist sehr informativ und es ist vielleicht
   sinnvoll, dessen Verwendung so weit wie möglich einzuschränken. Man sollte
   sich dabei von der frage leiten lassen: &quot;Was möchte ich, dass meine User
   es sehen können?&quot;. Die meisten großen Netzwerke stellen hier
   &quot;nichts&quot; ein, während in anderen Netzwerken den Usern erlaubt
   wird,&nbsp; '/stats g' und '/stats k' zu benutzen.<br>
-  Ich empfehle die Einstellung { oper-only-stats "*"; }; zu setzen und damit
+  Ich empfehle die Einstellung '<i>set { oper-only-stats "*"; };'&nbsp;</i> zu setzen und damit
   sämtliche /stats Aufrufe für Nicht-Opers zu verbieten. Ist dies nicht
   gewollt, sollte mit <i>/stats list</i> die gesamte Liste möglicher /stats
   Parameter angezeigt werden und alles geblockt werden, was man nicht
@@ -3835,7 +3842,31 @@ Datei</a></b></font></p>
   - /stats i, /stats y: könnte einem Angreifer helfen, Hosts zu finden, welche
   viele Verbindungen gestatten.<br>
   - /stats P: hilft dem Angreifer, serveronly Ports zu finden<br>
-  etc etc...<br>
+  etc etc...
+  <p><b>MAP / LINKS</b><br>
+  Es wurde häufig gefragt, ob es möglich sei,&nbsp; /map oder /links zu
+  deaktivieren. Unnsere Position hier zu ist, dass dies leichtfertig wäre und
+  ein falsches Gefühl von Sicherheit gäbe. Um das zu erklären: Server zu
+  verbergen, die aktuell von Usern benutzt werden, ist sinnlos, da die Server
+  den Usern ja schon bekannt sind. Für alle anderen Server, auf denen man keine
+  User möchte, siehe Abschnitt 8.6.<br>
+  Nun, was KANN man tun? Seit der Version 3.2.1 gibt es eine Option namens 'flat
+  map' (set::options::flat-map), die bewirkt, dass bei /map und /links Befehlen
+  alle Server als direkt gelinkt erscheinen lässt. Dadurch können normale User
+  nicht mehr erkennen, welcher Server zu welchem gelinkt ist. Dies kann ein
+  netter zusätzlicher Schutz sein, weil dadurch nicht mehr irgendwelche Kiddies
+  irgendwelche &quot;Schwachpunkte&quot; per /map und /links erkennen können.
+  Somit ist es empfehlenswert, diese Option zu benutzen. Zu beachten ist, dass
+  das nicht narrensicher ist. Denn bei einem Netsplit kann man noch erkennen,
+  welcher Server mit welchem gelinkt war und dies gilt auch für einige andere
+  Dinge genauso.<br>
+  <br>
+  <b>NORMAL USERS &amp; SNOMASKS</b><br>
+  Ein nicht allgemein beakanntes Feature ist, dass normale User ebenfalls einige
+  eingeschränkte snomasks gesetzt haben können, insbesondere +s +sk. Dadurch
+  können sie Dinge wie rehashs, oper ups, kills und verschiedene andere
+  Meldungen lesen.<br>
+  Um das zu deaktivieren, kann man set::restrict-usermodes benutzten, wie hier: set { restrict-usermodes "s"; };.<br>
   <br>
   Das ganze &quot;Verbergen von Informationen&quot; ist natürlich keine
   &quot;echte&quot; Sicherheit. Allerdings macht es Angriffe schwieriger und
