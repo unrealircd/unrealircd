@@ -744,9 +744,7 @@ struct Server {
 #define SPAMF_DCC			0x0040 /* d */
 
 struct _spamfilter {
-	unsigned short type; /* see BADW_TYPE* */
 	unsigned short action; /* see BAN_ACT* */
-	char *word; /* the word in case of BADW_TYPE_FAST* type, else NULL */
 	regex_t expr;
 };
 

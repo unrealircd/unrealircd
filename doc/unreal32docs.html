@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta19-CVS<br>
-  <b>Last doc update:</b> 2004-02-05</div>
+  <b>Last doc update:</b> 2004-02-06</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke / McSkaf<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -440,9 +440,11 @@ Modules can also add other extended ban types.<br>
           'kline', 'gline', 'zline', 'gzline', 'block' (blocks only)<br>
    <i>[regex]</i> this is the actual regex or 'bad word' where we should block on and perform the action at<br>
    <br>
-   Here's an example: <i>/spamfilter add pc gline *Come watch me on my webcam*</i><br>
+   Here's an example: <i>/spamfilter add pc gline Come watch me on my webcam</i><br>
    If the text <i>come watch me on my webcam</i> is found in either a private msg or a channel msg 
    then the message will be blocked and a gline will be added immediately.<br>
+   Another example: <i>/spamfilter add pc block come to irc\..+\..+</i><br>
+   This is a regex that will match on <i>Hi, come to irc.blah.net</i> etc....<br>
    <br>
    Spamfilters added with /spamfilter are network-wide. They work regardless of whether the user/channel
    has mode +G set, only opers and ulines (services) are exempted from filtering.
@@ -1830,23 +1832,30 @@ See <a href="#feature_spamfilter">Features - Spamfilter</a> for more information
 <p>Syntax:<br>
 <pre>
 spamfilter {
-	word &lt;word&gt;;
+	regex &lt;word&gt;;
 	target { &lt;target(s)&gt; };
 	action &lt;action&gt;;
 };</pre></p>
-<p><b>word</b> is the word/regex to match on.<br>
+<p><b>regex</b> is the regex to be matched.<br>
    <b>target</b> specifies the targets, possible targets are: channel, private, private-notice, channel-notice, 
    part, quit, dcc.<br>
    <b>action</b> specifies the action to be taken, possible values are: kill, tempshun, shun, kline, gline, zline, gzline, block<br>
 </p>
 
-<p>Example:<br>
+<p>Examples:<br>
 <pre>
 spamfilter {
-	word "*Come watch me on my webcam*";
+	regex "Come watch me on my webcam";
 	target { private; channel; };
 	action gline;
-};</pre></p>
+};
+
+spamfilter {
+	regex "come to irc\..+\..+";
+	target { private; channel; };
+	action gline;
+};
+</pre></p>
 </div>
 
 <p><font class="block_section">4.35 - </font><font class="block_name">Set Block</font>

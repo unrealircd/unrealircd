@@ -4596,7 +4596,7 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 		}
 		else 
 		{
-			char *errbuf = unreal_checkregex(word->ce_vardata);
+			char *errbuf = unreal_checkregex(word->ce_vardata,1);
 			if (errbuf)
 			{
 				config_error("%s:%i: badword::%s contains an invalid regex: %s",
@@ -4672,7 +4672,7 @@ int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 	int target = 0, action = 0;
 	char *word;
 	
-	cep = config_find_entry(ce->ce_entries, "word");
+	cep = config_find_entry(ce->ce_entries, "regex");
 	word = cep->ce_vardata;
 		
 	nl->type = TKL_SPAMF;
@@ -4720,7 +4720,7 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
 			errors++; continue;
 		}
-		if (!strcmp(cep->ce_varname, "word") || !strcmp(cep->ce_varname, "action"))
+		if (!strcmp(cep->ce_varname, "regex") || !strcmp(cep->ce_varname, "action"))
 			continue;
 		
 		config_error("%s:%i: unknown directive spamfilter::%s",
@@ -4728,17 +4728,17 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 		errors++;
 	}
 
-	if (!(cep = config_find_entry(ce->ce_entries, "word")))
+	if (!(cep = config_find_entry(ce->ce_entries, "regex")))
 	{
-		config_error("%s:%i: spamfilter::word missing",
+		config_error("%s:%i: spamfilter::regex missing",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
 	} else if (cep->ce_vardata) {
 		/* Check if it's a valid one */
-		char *errbuf = unreal_checkregex(cep->ce_vardata);
+		char *errbuf = unreal_checkregex(cep->ce_vardata,0);
 		if (errbuf)
 		{
-			config_error("%s:%i: spamfilter::word contains an invalid regex: %s",
+			config_error("%s:%i: spamfilter::regex contains an invalid regex: %s",
 				cep->ce_fileptr->cf_filename,
 				cep->ce_varlinenum,
 				errbuf);

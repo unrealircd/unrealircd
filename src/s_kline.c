@@ -154,11 +154,7 @@ aTKline *tkl_del_line(aTKline *tkl)
 			MyFree(p->reason);
 			MyFree(p->setby);
 			if (p->spamf)
-			{
-				if (p->spamf->word)
-					MyFree(p->spamf->word);
 				MyFree(p->spamf);
-			}
 			DelListItem(p, tklines[index]);
 			MyFree(p);
 			return q;
@@ -1084,35 +1080,6 @@ int place_host_ban(aClient *sptr, int action, char *reason, long duration)
 	return -1;
 }
 
-static int fast_spamfilter_match(Spamfilter *entry, char *line)
-{
- 	char *p;
-	int bwlen = strlen(entry->word);
-	if ((entry->type & BADW_TYPE_FAST_L) && (entry->type & BADW_TYPE_FAST_R))
-		return (our_strcasestr(line, entry->word) ? 1 : 0);
-
-	p = line;
-	while((p = our_strcasestr(p, entry->word)))
-	{
-		if (!(entry->type & BADW_TYPE_FAST_L))
-		{
-			if ((p != line) && isalnum(*(p - 1))) /* aaBLA but no *BLA */
-				goto next2;
-		}
-		if (!(entry->type & BADW_TYPE_FAST_R))
-		{
-			if (isalnum(*(p + bwlen)))  /* BLAaa but no BLA* */
-				goto next2;
-		}
-		/* Looks like it matched */
-		return 1;
-next2:
-		p += bwlen;
-	}
-	return 0;
-}
-
-
 /** dospamfilter: executes the spamfilter onto the string.
  * str:		the text (eg msg text, notice text, part text, quit text, etc
  * type:	the spamfilter type (SPAMF_*)
@@ -1136,8 +1103,7 @@ char *str = (char *)StripControlCodes(str_in);
 	{
 		if (!(tk->subtype & type))
 			continue;
-		if (((tk->spamf->type & BADW_TYPE_FAST) && fast_spamfilter_match(tk->spamf, str)) ||
-			((tk->spamf->type & BADW_TYPE_REGEX) && !regexec(&tk->spamf->expr, str, 0, NULL, 0)))
+		if (!regexec(&tk->spamf->expr, str, 0, NULL, 0))
 		{
 			/* matched! */
 			if (tk->spamf->action != BAN_ACT_BLOCK)

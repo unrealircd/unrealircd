@@ -643,7 +643,7 @@ extern void extban_init(void);
 extern char *trim_str(char *str, int len);
 extern char *ban_realhost, *ban_virthost, *ban_ip;
 extern void join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
-extern char *unreal_checkregex(char *regex);
+extern char *unreal_checkregex(char *s, int fastsupport);
 extern int banact_stringtoval(char *s);
 extern char *banact_valtostring(int val);
 extern int banact_chartoval(char c);

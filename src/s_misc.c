@@ -776,12 +776,15 @@ char *p;
  * returns NULL in case of success [!],
  * pointer to buffer with error message otherwise
  */
-char *unreal_checkregex(char *s)
+char *unreal_checkregex(char *s, int fastsupport)
 {
 int errorcode, errorbufsize, regex=0;
 char *errtmp, *tmp;
 static char errorbuf[512];
 regex_t expr;
+
+	if (!fastsupport)
+		goto Ilovegotos;
 
 	for (tmp = s; *tmp; tmp++) {
 		if ((int)*tmp < 65 || (int)*tmp > 123) {
@@ -795,6 +798,7 @@ regex_t expr;
 	}
 	if (regex)
 	{
+Ilovegotos:
 		errorcode = regcomp(&expr, s, REG_ICASE|REG_EXTENDED);
 		if (errorcode > 0)
 		{
@@ -841,62 +845,8 @@ int banact_stringtoval(char *s)
 Spamfilter *unreal_buildspamfilter(char *s)
 {
 Spamfilter *e = MyMallocEx(sizeof(Spamfilter));
-char *tmp;
-char regex = 0;
-#ifdef FAST_BADWORD_REPLACE
-int ast_l = 0, ast_r = 0;
 
-	/* The fast badwords routine can do: "blah" "*blah" "blah*" and "*blah*",
-	 * in all other cases use regex.
-	 */
-	for (tmp = s; *tmp; tmp++) {
-		if ((int)*tmp < 65 || (int)*tmp > 123) {
-			if ((s == tmp) && (*tmp == '*')) {
-				ast_l = 1; /* Asterisk at the left */
-				continue;
-			}
-			if ((*(tmp + 1) == '\0') && (*tmp == '*')) {
-				ast_r = 1; /* Asterisk at the right */
-				continue;
-			}
-			regex = 1;
-			break;
-		}
-	}
-	if (regex) {
-		e->type = BADW_TYPE_REGEX;
-		regcomp(&e->expr, s, SPF_REGEX_FLAGS);
-	} else {
-		char *tmpw;
-		e->type = BADW_TYPE_FAST;
-		e->word = tmpw = MyMalloc(strlen(s) - ast_l - ast_r + 1);
-		/* Copy except for asterisks */
-		for (tmp = s; *tmp; tmp++)
-			if (*tmp != '*')
-				*tmpw++ = *tmp;
-		*tmpw = '\0';
-		if (ast_l)
-			e->type |= BADW_TYPE_FAST_L;
-		if (ast_r)
-			e->type |= BADW_TYPE_FAST_R;
-	}
-#else
-	for (tmp = s; *tmp; tmp++) {
-		if ((int)*tmp < 65 || (int)*tmp > 123) {
-			regex = 1;
-			break;
-		}
-	}
-	if (regex) {
-		e->word = strdup(s);
-	}
-	else {
-		e->word = MyMalloc(strlen(s) + strlen(PATTERN) -1);
-		ircsprintf(e->word, PATTERN, s);
-	}
-	regcomp(&e->expr, e->word, SPF_REGEX_FLAGS);
-#endif
-
+	regcomp(&e->expr, s, SPF_REGEX_FLAGS);
 	return e;
 }
 

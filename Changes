@@ -2817,3 +2817,7 @@ seen. gmtime warning still there
   requested by several people (#0001323).
 - Made setting of -qaohv etc on services (+S) not possible unless you are a netadmin (purpose
   is to prevent people from deoping BotServ bots). Suggested by shiny (#0000917)
+- Ripped out fast (bad)words support out of spamfilter to avoid confusion, also renamed
+  spamfilter::word to spamfilter::regex to make it even more clear (since we match
+  on the whole line and have nothing to do with words.. 'word' doesn't make sense).
+- Updated docs with some better regex examples, reported by AngryWolf (#0001520).

@@ -476,7 +476,7 @@ char targetbuf[64], actionbuf[2];
 	actionbuf[1] = '\0';
 	
 	/* now check the regex... */
-	p = unreal_checkregex(parv[4]);
+	p = unreal_checkregex(parv[4],0);
 	if (p)
 	{
 		sendto_one(sptr, ":%s NOTICE %s :Error in regex '%s': %s",
