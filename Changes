@@ -1038,3 +1038,5 @@ seen. gmtime warning still there
   found by HA|Raptor
 - If host == null, don't set it (m_oper, was setting it to "eek.host.is.null.pointer")
 - Small fix for #427583 mode bug
+- Fixed it so /module load doesnt require you to do ./module.so if the module is in
+  current dir
