@@ -4286,22 +4286,13 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 	} else {
 		char *tmpw;
 		ca->type = BADW_TYPE_FAST;
-		if (ca->action == BADWORD_BLOCK)
-		{
-			/* If it is set to block, we'll just use a match() or an
-			 * our_strcasestr as necessary 
-			 */
-			ircstrdup(ca->word, cep->ce_vardata);
-		}
-		else
-		{
-			ca->word = tmpw = MyMalloc(strlen(cep->ce_vardata) - ast_l - ast_r + 1);
-			/* Copy except for asterisks */
-			for (tmp = cep->ce_vardata; *tmp; tmp++)
-				if (*tmp != '*')
-					*tmpw++ = *tmp;
-			*tmpw = '\0';
-		}
+		ircstrdup(ca->word, cep->ce_vardata);
+		ca->word = tmpw = MyMalloc(strlen(cep->ce_vardata) - ast_l - ast_r + 1);
+		/* Copy except for asterisks */
+		for (tmp = cep->ce_vardata; *tmp; tmp++)
+			if (*tmp != '*')
+				*tmpw++ = *tmp;
+		*tmpw = '\0';
 		if (ast_l)
 			ca->type |= BADW_TYPE_FAST_L;
 		if (ast_r)
