@@ -442,13 +442,6 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 				MyFree(sptr->user->lopt);
 			}
 			on_for = TStime() - sptr->firsttime;
-# if defined(USE_SYSLOG) && defined(SYSLOG_USERS)
-			syslog(LOG_NOTICE, "%s (%3d:%02d:%02d): %s@%s (%s)\n",
-			    myctime(sptr->firsttime),
-			    on_for / 3600, (on_for % 3600) / 60,
-			    on_for % 60, sptr->user->username,
-			    sptr->sockhost, sptr->name);
-#endif
 			ircd_log(LOG_CLIENT, "Disconnect - (%d:%d:%d) %s!%s@%s",
 				on_for / 3600, (on_for % 3600) / 60, on_for % 60,
 				sptr->name, sptr->user->username, sptr->user->realhost);
@@ -696,9 +689,6 @@ void checklist(void)
 			j++;
 	if (!j)
 	{
-#ifdef	USE_SYSLOG
-		syslog(LOG_WARNING, "ircd exiting: autodie");
-#endif
 		exit(0);
 	}
 	return;

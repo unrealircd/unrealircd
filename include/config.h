@@ -337,36 +337,6 @@
 #define	CMDLINE_CONFIG		/* allow conf-file to be specified on command line */
 
 /*
- * If you wish to have the server send 'vital' messages about server
- * through syslog, define USE_SYSLOG. Only system errors and events critical
- * to the server are logged although if this is defined with FNAME_USERLOG,
- * syslog() is used instead of the above file. It is not recommended that
- * this option is used unless you tell the system administrator beforehand
- * and obtain their permission to send messages to the system log files.
- */
-#ifndef _WIN32
-#undef	USE_SYSLOG
-#endif
-
-#ifdef	USE_SYSLOG
-/*
- * If you use syslog above, you may want to turn some (none) of the
- * spurious log messages for KILL/SQUIT off.
- */
-#undef	SYSLOG_KILL		/* log all operator kills to syslog */
-#undef  SYSLOG_SQUIT		/* log all remote squits for all servers to syslog */
-#undef	SYSLOG_CONNECT		/* log remote connect messages for other all servs */
-#undef	SYSLOG_USERS		/* send userlog stuff to syslog */
-#undef	SYSLOG_OPER		/* log all users who successfully become an Op */
-
-/*
- * If you want to log to a different facility than DAEMON, change
- * this define.
- */
-#define LOG_FACILITY LOG_DAEMON
-#endif /* USE_SYSLOG */
-
-/*
  * Size of the LISTEN request.  Some machines handle this large
  * without problem, but not all.  It defaults to 5, but can be
  * raised if you know your machine handles it.

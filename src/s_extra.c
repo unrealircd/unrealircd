@@ -446,6 +446,17 @@ void ircd_log(int flags, char *format, ...)
 	strcat(buf, "\n");
 	sprintf(timebuf, "[%s] - ", myctime(TStime()));
 	for (logs = conf_log; logs; logs = (ConfigItem_log *) logs->next) {
+#ifdef HAVE_SYSLOG
+		if (!stricmp(logs->file, "syslog") && logs->flags & flags) {
+#ifdef HAVE_VSYSLOG
+			vsyslog(LOG_INFO, format, ap);
+#else
+			/* %s just to be safe */
+			syslog(LOG_INFO, "%s", buf);
+#endif
+			continue;
+		}
+#endif
 		if (logs->flags & flags) {
 			if (stat(logs->file, &fstats) != -1 && logs->maxsize && fstats.st_size >= logs->maxsize) {
 #ifndef _WIN32

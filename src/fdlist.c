@@ -38,9 +38,6 @@ void addto_fdlist(int fd, fdlist * listp)
 		 */
 		--listp->last_entry;
 		ircd_log(LOG_ERROR, "fdlist.c list too big, must exit...");
-#ifdef	USE_SYSLOG
-		(void)syslog(LOG_CRIT, "fdlist.c list too big.. must exit");
-#endif
 		abort();
 	}
 	else

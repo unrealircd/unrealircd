@@ -65,10 +65,6 @@ void start_auth(aClient *cptr)
 	    cptr, cptr->slot, cptr->fd, cptr->status));
 	if ((cptr->authfd = socket(AFINET, SOCK_STREAM, 0)) == -1)
 	{
-#ifdef	USE_SYSLOG
-		syslog(LOG_ERR, "Unable to create auth socket for %s:%m",
-		    get_client_name(cptr, TRUE));
-#endif
 		Debug((DEBUG_ERROR, "Unable to create auth socket for %s:%s",
 		    get_client_name(cptr, TRUE), strerror(get_sockerr(cptr))));
 		if (!DoingDNS(cptr))
@@ -145,10 +141,6 @@ void send_authports(aClient *cptr)
 	if (getsockname(cptr->fd, (struct SOCKADDR *)&us, &ulen) ||
 	    getpeername(cptr->fd, (struct SOCKADDR *)&them, &tlen))
 	{
-#ifdef	USE_SYSLOG
-		syslog(LOG_ERR, "auth get{sock,peer}name error for %s:%m",
-		    get_client_name(cptr, TRUE));
-#endif
 		goto authsenderr;
 	}
 

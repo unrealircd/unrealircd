@@ -1245,3 +1245,4 @@ seen. gmtime warning still there
   Thanks to larne, Luke, SciFi, panda, ^Tux^.. Syzop .. and the countless
   people bitching about their servers going down.
 *** beta8 released ***
+- Added log {} syslog support (appears to work fine) [#0000099]
