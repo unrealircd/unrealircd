@@ -37,8 +37,11 @@ typedef pthread_mutex_t MUTEX;
 #define IRCMutexUnlock(mutex) pthread_mutex_unlock(&mutex)
 #define IRCCreateMutex(mutex) pthread_mutex_init(&mutex, NULL)
 #define IRCMutexDestroy(mutex) pthread_mutex_destroy(&mutex)
+#define IRCJoinThread(thread,return) pthread_join(thread, return)
 #define IRCExitThread(value) pthread_exit(value)
 #define IRCTerminateThread(thread, value) pthread_cancel(&thread)
+#define IRCThreadSelf() pthread_self()
+#define IRCThreadEqual(thread1, thread2) pthread_equal(thread1,thread2)
 #else
 typedef short THREAD_ATTR; /* Not needed but makes porting easier */
 typedef unsigned long THREAD;
@@ -49,8 +52,11 @@ typedef HANDLE MUTEX;
 #define IRCMutexUnlock(mutex) ReleaseMutex(mutex)
 #define IRCCreateMutex(mutex) mutex = CreateMutex(NULL, FALSE, NULL)
 #define IRCMutexDestroy(mutex) CloseHandle(mutex)
+#define IRCJoinThread(thread) WaitForSingleObject((HANDLE)thread, INFINITE); GetExitCodeThread((HANDLE)thread, (DWORD)return);
 #define IRCExitThread(value) _endthread()
 #define IRCTerminateThread(thread, value) TerminateThread((HANDLE)thread, value)
+#define IRCThreadSelf() GetCurrentThread()
+#define IRCThreadEqual(thread1, thread2) thread1 == thread2 ? 1 : 0
 #endif
 
 #endif

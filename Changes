@@ -629,3 +629,5 @@ seen. gmtime warning still there
 - Fixed a module bug where loading == unloading
 - Moved blackhole into scan.c and removed blackhole.c, and fixed some
   blackhole bugs.
+- Updated thread porting code to support more functions
+
