@@ -22,7 +22,7 @@ OBJ_FILES=SRC/CHANNEL.OBJ SRC/USERLOAD.OBJ SRC/SEND.OBJ SRC/BSD.OBJ \
  SRC/MD5.OBJ SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/WIN32GUI.OBJ \
  SRC/VERSION.OBJ SRC/win32/WIN32.RES SRC/S_UNREAL.OBJ SRC/DYNCONF.OBJ \
  SRC/S_SOCKS.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ \
- SRC/SCACHE.OBJ
+ SRC/SCACHE.OBJ SRC/ALN.OBJ
 RC=rc.exe
 
 ALL: WIRCD.EXE CHKCONF.EXE
@@ -98,6 +98,9 @@ src/class.obj: src/class.c $(INCLUDES) ./include/class.h
 
 src/lusers.obj: src/lusers.c $(INCLUDES)
         $(CC) $(CFLAGS) src/lusers.c
+
+src/aln.obj: src/aln.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/aln.c
 
 src/ircd.obj: src/ircd.c $(INCLUDES)
         $(CC) $(CFLAGS) src/ircd.c
