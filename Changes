@@ -2167,3 +2167,5 @@ seen. gmtime warning still there
 - Fixed a crash in SVSMOTD that could occur if invalid parameters were used. Reported by 
   emigrant
 - Committed little de-Fizzer module to extras/
+- Check in autoconf for MacOS X that will make compiling and running on it 
+  to work

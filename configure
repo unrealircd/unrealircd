@@ -9878,6 +9878,11 @@ else
 
 if test "$ac_cv_c_compiler_gnu" = "yes"; then
 	ac_cv_pic="-fPIC -DPIC -shared"
+	case `uname -s` in
+		Darwin*)
+		ac_cv_pic="-bundle -flat_namespace -undefined suppress"
+		;;
+	esac
 else
 case `uname -s` in
 	SunOS*)
