@@ -19,6 +19,7 @@ OutputDir=../../
 Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"
 Name: "quicklaunchicon"; Description: "Create a &Quick Launch icon"; GroupDescription: "Additional icons:"; Flags: unchecked
 Name: "installservice"; Description: "Install &Service"; GroupDescription: "Service support:"; MinVersion: 0,4.0
+Name: "makecert"; Description: "Create &Certificate"; GrouptDescription: "SSL options:";
 
 [Files]
 Source: "..\..\wircd.exe"; DestDir: "{app}"; CopyMode: alwaysoverwrite
@@ -41,6 +42,12 @@ Source: "..\..\doc\*.*"; DestDir: "{app}\doc"; CopyMode: alwaysoverwrite
 Source: "..\..\aliases\*"; DestDir: "{app}\aliases"; CopyMode: alwaysoverwrite
 Source: "..\..\networks\*"; DestDir: "{app}\networks"; CopyMode: alwaysoverwrite
 Source: "..\..\unreal.exe"; DestDir: "{app}"; CopyMode: alwaysoverwrite; MinVersion: 0,4.0
+Source: "..\..\openssl.exe"; DestDir: "{app}"; CopyMode: alwaysoverwrite
+Source: "..\..\ssleay32.dll"; DestDir: "{app}"; CopyMode: alwaysoverwrite
+Source: "..\..\libeay32.dll"; DestDir: "{app}"; CopyMode: alwaysoverwrite
+Source: ".\makecert.bat"; DestDir: "{app}"; CopyMode: alwaysoverwrite
+Source: ".\encpem.bat"; DestDir: "{app}"; CopyMode: alwaysoverwrite
+Source: "..\ssl.cnf"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: isxdl.dll; DestDir: {tmp}; CopyMode: dontcopy
 
 [UninstallDelete]
@@ -89,6 +96,8 @@ end;
 [Icons]
 Name: "{group}\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"
 Name: "{group}\Uninstall UnrealIRCd"; Filename: "{uninstallexe}"; WorkingDir: "{app}"
+Name: "{group}\Makecert"; Filename: "{app}\makecert.bat"; WorkingDir: "{app}"
+Name: "{group}\Encpem"; Filename: "{app}\encpem.bat"; WorkingDir: "{app}"
 Name: "{userdesktop}\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"; Tasks: quicklaunchicon
 
@@ -98,6 +107,7 @@ Filename: "notepad"; Description: "View conf.doc"; Parameters: "{app}\doc\conf.d
 Filename: "notepad"; Description: "View Release Notes"; Parameters: "{app}\.RELEASE.NOTES"; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "notepad"; Description: "View Changes"; Parameters: "{app}\Changes"; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "{app}\unreal.exe"; Parameters: "install"; Flags: runminimized nowait; Tasks: installservice
+Filename: "{app}\makecert.bat"; Tasks: makecert
 
 [UninstallRun]
 Filename: "{app}\unreal.exe"; Parameters: "uninstall"; Flags: runminimized; RunOnceID: "DelService"; Tasks: installservice
