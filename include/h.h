@@ -519,7 +519,7 @@ extern u_long cres_mem(aClient *sptr, char *nick);
 extern void      flag_add(char *ch);
 extern void      flag_del(char ch);
 extern void init_dynconf(void);
-extern int        init_conf2(char *filename);
+extern int        init_conf(char *filename, int rehash);
 extern void       validate_configuration(void);
 extern void       run_configuration(void);
 extern aMotd *read_file(char *filename, aMotd **list);
@@ -532,6 +532,7 @@ extern void set_sock_opts(int fd, aClient *cptr);
 extern void iCstrip(char *line);
 extern time_t rfc2time(char *s);
 extern char *rfctime(time_t t, char *buf);
+extern void *MyMallocEx(size_t size);
 #ifdef USE_SSL
 char  *ssl_get_cipher(SSL *ssl);
 #endif

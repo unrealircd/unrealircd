@@ -639,6 +639,7 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					  strncpyzt(gmt,
 					      asctime(gmtime((TS *)&tk->
 					      set_at)), sizeof(gmt));
+					  iCstrip(gmt);
 					  sendto_snomask(SNO_TKL,
 					      "%s removed %s %s@%s (set at %s - reason: %s)",
 					      parv[5], txt, tk->usermask,

@@ -1629,3 +1629,5 @@ seen. gmtime warning still there
 - Documentation - Corrected Spelling mistake in HTM mode - Reported by CoNfOuNd (#0000387)
 - Documentation - Added coadmin to table of oper types - Reported by FrostByghte (#0000359)
 - Documentation - Corrected several HTML formating problems
+- Commited first 20% of conf3, if anyone runs devel, DO NOT, it is BROKEN and will most likely NOT FUNCTION
+  and it WILL burn, DIE, and WILL NOT WORK

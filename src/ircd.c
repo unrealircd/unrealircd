@@ -1060,8 +1060,10 @@ int InitwIRCD(int argc, char *argv[])
 	default_class->sendq = MAXSENDQLENGTH;
 	default_class->name = "default";
 	AddListItem(default_class, conf_class);
-	init_conf2(configfile);
-	validate_configuration();
+	if (init_conf(configfile, 0) < 0)
+	{
+		exit(-1);
+	}
 	booted = TRUE;
 	load_tunefile();
 	make_umodestr();
