@@ -3177,3 +3177,5 @@ This is the 3.2 fixes branch.
   accidental (or tricked) joining of the virus-help-channel and becomming infected.
   This feature is disabled by default. Requested by bleepy (#0001811).
 - German doc updates (week 20).
+- Added optional parameter to SVSJOIN to deal with channel keys. Reported by 
+  DukePyrolator (#0001822).
