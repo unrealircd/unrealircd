@@ -25,7 +25,7 @@ REGEX="../extras/regex/regex.o"
 openssl=no
 AC_DEFUN(AC_ENABLE_SSL, 
 [
-if test $openssl = yes; then
+if test "$openssl" = "yes"; then
 AC_DEFINE(USE_SSL)
 CRYPTOLIB="-lcrypto -lssl"
 else

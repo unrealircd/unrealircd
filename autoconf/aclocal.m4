@@ -105,7 +105,6 @@ esac
 result=none
 if test "$acx_pthread_ok" = "no"; then
 AC_CACHE_CHECK(what flags pthreads needs,ac_cv_pthreadflag,[
-dnl AC_MSG_CHECKING([what flags pthreads needs])
 for flag in $acx_pthread_flags; do
 
         case $flag in
@@ -215,6 +214,43 @@ esac
         AC_CHECK_PROG(PTHREAD_CC, cc_r, cc_r, ${CC})
 else
         PTHREAD_CC="$CC"
+fi
+if test "x$ac_cv_pthreadflag"!=x; then
+AC_CACHE_CHECK(if pthreads uses one thread per process, ac_cv_thread_multi, [
+save_LIBS="$LIBS"
+LIBS="$PTHREAD_LIBS $LIBS"
+save_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+AC_TRY_RUN([
+#include <pthread.h>
+int pid;
+void testthreads() {
+if (getpid() == pid)
+	exit(0);
+exit(1);
+}
+int main() {
+pthread_t thread;
+pthread_attr_t attrs;
+pid = getpid();
+pthread_attr_init(&attrs);
+pthread_create(&thread, &attrs, (void*)testthreads, NULL);
+while (1);
+}
+],ac_cv_thread_multi=no, ac_cv_thread_multi=yes)
+LIBS="$save_LIBS"
+CFLAGS="$save_CFLAGS"
+])
+if test "$ac_cv_thread_multi" = "yes"; then
+AC_MSG_RESULT(Ok we'll install FSU Pthreads)
+cd extras
+tar xfz pthreads.tar.gz
+cd threads/src
+./configure
+cd ../../../
+PTHREAD_CFLAGS="-I=../extras/threads/include $ac_cv_pthreadspecial"
+PTHREAD_LIBS="../extras/lib/libgthreads.a ../extras/lib/libmalloc.a"
+fi
 fi
 
 AC_SUBST(PTHREAD_LIBS)
