@@ -3653,6 +3653,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 
 	/* rehash_modules */
 	init_conf2(configfile);
+	validate_configuration();
 	module_loadall(0);
 	/* Clean up listen records */
 	close_listeners();
