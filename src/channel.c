@@ -618,7 +618,7 @@ int  can_send(cptr, chptr, msgtext)
 
 	/* Moved check here, kinda faster.
 	 * Note IsULine only uses the other parameter. -Donwulff */
-	if (IsULine(cptr, cptr) || IsServer(cptr))
+	if (IsULine(cptr) || IsServer(cptr))
 		return 0;
 
 	if (chptr->mode.mode & MODE_NOCOLOR)
@@ -690,14 +690,14 @@ static void channel_modes(cptr, mbuf, pbuf, chptr)
 	{
 		*mbuf++ = 'l';
 		if (IsMember(cptr, chptr) || IsServer(cptr)
-		    || IsULine(cptr, cptr))
+		    || IsULine(cptr))
 			(void)ircsprintf(pbuf, "%d ", chptr->mode.limit);
 	}
 	if (*chptr->mode.key)
 	{
 		*mbuf++ = 'k';
 		if (IsMember(cptr, chptr) || IsServer(cptr)
-		    || IsULine(cptr, cptr))
+		    || IsULine(cptr))
 		{
 			(void)ircsprintf(bcbuf, "%s ", chptr->mode.key);
 			(void)strcat(pbuf, bcbuf);
@@ -707,7 +707,7 @@ static void channel_modes(cptr, mbuf, pbuf, chptr)
 	{
 		*mbuf++ = 'L';
 		if (IsMember(cptr, chptr) || IsServer(cptr)
-		    || IsULine(cptr, cptr))
+		    || IsULine(cptr))
 		{
 			(void)ircsprintf(bcbuf, "%s ", chptr->mode.link);
 			(void)strcat(pbuf, bcbuf);
@@ -718,7 +718,7 @@ static void channel_modes(cptr, mbuf, pbuf, chptr)
 	{
 		*mbuf++ = 'f';
 		if (IsMember(cptr, chptr) || IsServer(cptr)
-		    || IsULine(cptr, cptr))
+		    || IsULine(cptr))
 		{
 			if (chptr->mode.kmode == 1)
 				ircsprintf(bcbuf, "*%i:%i ", chptr->mode.msgs,
@@ -1123,7 +1123,7 @@ int  m_mode(cptr, sptr, parc, parv)
 	opermode = 0;
 	/* opermode stuff --sts */
 #ifndef NO_OPEROVERRIDE
-	if (IsPerson(sptr) && !IsULine(cptr, sptr) && !is_chan_op(sptr, chptr))
+	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr))
 		if (IsOper(sptr))
 		{
 			sendts = 0;
@@ -1139,7 +1139,7 @@ int  m_mode(cptr, sptr, parc, parv)
 		opermode = 2;
 		goto aftercheck;
 	}
-	if (IsPerson(sptr) && !IsULine(cptr, sptr) && !is_chan_op(sptr, chptr)
+	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
 	    && !is_half_op(sptr, chptr)
 	    && (cptr == sptr || !IsSAdmin(sptr) || !IsOper(sptr)))
 	{
@@ -1158,7 +1158,7 @@ int  m_mode(cptr, sptr, parc, parv)
 	}
 
 	if (IsServer(sptr) && (sendts = atoi(parv[parc - 1]))
-	    && !IsULine(cptr, sptr) && chptr->creationtime
+	    && !IsULine(sptr) && chptr->creationtime
 	    && sendts > chptr->creationtime)
 	{
 		if (!(*parv[2] == '&'))	/* & denotes a bounce */
@@ -1180,7 +1180,7 @@ int  m_mode(cptr, sptr, parc, parv)
       aftercheck:
 /*	if (IsPerson(sptr) && IsOper(sptr)) {
 		if (!is_chan_op(sptr, chptr)) {
-			if (MyClient(sptr) && !IsULine(cptr, cptr) && mode_buf[1])
+			if (MyClient(sptr) && !IsULine(cptr) && mode_buf[1])
 				sendto_umode(UMODE_EYES, "*** OperMode [IRCop: %s] - [Channel: %s] - [Mode: %s %s]",
         	 		   sptr->name, chptr->chname, mode_buf, parabuf);
 			sendts = 0;
@@ -1497,7 +1497,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 	char *xp;
 
 	chasing = 0;
-	if (opermode == 2 && !is_chan_op(cptr, chptr) && !IsULine(cptr,cptr))
+	if (opermode == 2 && !is_chan_op(cptr, chptr) && !IsULine(cptr))
 	{
 		/* Ugly halfop hack --sts 
 		   - this allows halfops to do +b +e +v and so on */
@@ -1519,7 +1519,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 	switch (modetype)
 	{
 	  case MODE_AUDITORIUM:
-		  if (IsULine(cptr, cptr) || IsServer(cptr))
+		  if (IsULine(cptr) || IsServer(cptr))
 			  goto auditorium_ok;
 		  if (!IsNetAdmin(cptr) && !IsTechAdmin(cptr)
 		      && !is_chanowner(cptr, chptr))
@@ -1534,7 +1534,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		  goto setthephuckingmode;
 	  case MODE_OPERONLY:
 		  if (!IsAnOper(cptr) && !IsServer(cptr)
-		      && !IsULine(cptr, cptr))
+		      && !IsULine(cptr))
 		  {
 			  sendto_one(cptr,
 			      ":%s NOTICE %s :*** Only IRCops can set that mode",
@@ -1544,7 +1544,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		  goto setthephuckingmode;
 	  case MODE_ADMONLY:
 		  if (!IsSkoAdmin(cptr) && !IsServer(cptr)
-		      && !IsULine(cptr, cptr))
+		      && !IsULine(cptr))
 		  {
 			  sendto_one(cptr,
 			      ":%s NOTICE %s :*** Only admins can set that mode",
@@ -1553,12 +1553,12 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		  }
 		  goto setthephuckingmode;
 	  case MODE_RGSTR:
-		  if (!IsServer(cptr) && !IsULine(cptr, cptr))
+		  if (!IsServer(cptr) && !IsULine(cptr))
 			  break;
 		  goto setthephuckingmode;
 	  case MODE_NOHIDING:
 		  if (!IsSkoAdmin(cptr) && !IsServer(cptr)
-		      && !IsULine(cptr, cptr))
+		      && !IsULine(cptr))
 		  {
 			  sendto_one(cptr,
 			      ":%s NOTICE %s :*** Only admins can set that mode",
@@ -1610,7 +1610,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 
 /* do pro-opping here (popping) */
 	  case MODE_CHANOWNER:
-		  if (!IsULine(cptr, cptr) && !IsServer(cptr)
+		  if (!IsULine(cptr) && !IsServer(cptr)
 		      && !IsNetAdmin(cptr) && !IsTechAdmin(cptr)
 		      && !is_chanowner(cptr, chptr))
 		  {
@@ -1619,7 +1619,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 			  break;
 		  }
 	  case MODE_CHANPROT:
-		  if (!IsULine(cptr, cptr) && !IsServer(cptr)
+		  if (!IsULine(cptr) && !IsServer(cptr)
 		      && !IsNetAdmin(cptr) && !IsTechAdmin(cptr)
 		      && !is_chanowner(cptr, chptr))
 		  {
@@ -1667,13 +1667,13 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 			  break;
 		  }
 		  /* we make the rules, we bend the rules */
-		  if (IsServer(cptr) || IsULine(cptr, cptr))
+		  if (IsServer(cptr) || IsULine(cptr))
 			  goto breaktherules;
 
 		  if (is_chanowner(member->value.cptr, chptr)
 		      && member->value.cptr != cptr
 		      && !is_chanowner(cptr, chptr) && !IsServer(cptr)
-		      && !IsULine(cptr, cptr) && (what == MODE_DEL))
+		      && !IsULine(cptr) && (what == MODE_DEL))
 		  {
 			  if (MyClient(cptr))
 			  {
@@ -1704,7 +1704,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 			  member->flags |= modetype;
 		  else
 			  member->flags &= ~modetype;
-		  if (tmp == member->flags && (bounce || !IsULine(cptr, cptr)))
+		  if (tmp == member->flags && (bounce || !IsULine(cptr)))
 			  break;
 		  /* It's easier to undo the mode here instead of later
 		   * when you call make_mode_str for a bounce string.
@@ -1830,7 +1830,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		  (*pcount)++;
 		  break;
 	  case MODE_LINK:
-		  if (IsULine(cptr, cptr) || IsServer(cptr))
+		  if (IsULine(cptr) || IsServer(cptr))
 		  {
 			  goto linkok;
 		  }
@@ -2175,7 +2175,7 @@ int  sendmodeto_one(cptr, from, name, mode, param, creationtime)
 	TS   creationtime;
 {
 	if ((IsServer(cptr) && DoesOp(mode) && creationtime) ||
-	    IsULine(cptr, cptr))
+	    IsULine(cptr))
 		sendto_one(cptr, ":%s %s %s %s %s %lu", from,
 		    (IsToken(cptr) ? TOK_MODE : MSG_MODE), name, mode,
 		    param, creationtime);
@@ -3241,7 +3241,7 @@ int  m_kick(cptr, sptr, parc, parv)
 #ifndef NO_OPEROVERRIDE
 		    && !IsOper(sptr)
 #endif
-		    && !IsULine(cptr, sptr) && !is_chan_op(sptr, chptr)
+		    && !IsULine(sptr) && !is_chan_op(sptr, chptr)
 		    && !is_halfop(sptr, chptr))
 		{
 			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
@@ -3256,7 +3256,7 @@ int  m_kick(cptr, sptr, parc, parv)
 				continue;	/* No such user left! */
 			if ((lp = find_user_link(chptr->members, who)))
 			{
-				if (IsULine(cptr, sptr))
+				if (IsULine(sptr))
 					goto attack;
 				if (IsServer(sptr))
 					goto attack;
@@ -3274,7 +3274,7 @@ int  m_kick(cptr, sptr, parc, parv)
 				}
 
 				if ((chptr->mode.mode & MODE_NOKICKS)
-				    && !IsULine(cptr, sptr))
+				    && !IsULine(sptr))
 				{
 					sendto_one(sptr,
 					    ":%s NOTICE %s :*** You cannot kick people on %s",
@@ -3309,7 +3309,7 @@ int  m_kick(cptr, sptr, parc, parv)
 						    who->name, comment);
 						goto attack;
 					}
-					else if (!IsULine(cptr, sptr)
+					else if (!IsULine(sptr)
 					    && who != sptr)
 					{
 						sendto_one(sptr,
@@ -3323,7 +3323,7 @@ int  m_kick(cptr, sptr, parc, parv)
 				if (is_chan_op(who, chptr)
 				    && is_halfop(sptr, chptr)
 				    && !is_chan_op(sptr, chptr)
-				    && !IsULine(cptr, sptr))
+				    && !IsULine(sptr))
 				{
 					sendto_one(sptr,
 					    ":%s NOTICE %s :*** You cannot kick channel operators on %s if you only are halfop",
@@ -3331,7 +3331,7 @@ int  m_kick(cptr, sptr, parc, parv)
 					goto deny;
 				}	/* halfop */
 
-				if (IsKix(who) && !IsULine(cptr, sptr))
+				if (IsKix(who) && !IsULine(sptr))
 				{
 					if (!(IsNetAdmin(sptr)
 					    || IsTechAdmin(sptr)))
@@ -3374,10 +3374,10 @@ int  m_kick(cptr, sptr, parc, parv)
 				sendto_one(sptr,
 				    err_str(ERR_USERNOTINCHANNEL),
 				    me.name, parv[0], user, name);
-			if (!IsServer(cptr) || !IsULine(cptr, sptr))
+			if (!IsServer(cptr) || !IsULine(sptr))
 				break;
 		}		/* loop on parv[2] */
-		if (!IsServer(cptr) || !IsULine(cptr, sptr))
+		if (!IsServer(cptr) || !IsULine(sptr))
 			break;
 	}			/* loop on parv[1] */
 
@@ -3421,7 +3421,7 @@ int  m_topic(cptr, sptr, parc, parv)
 		chptr = find_channel(parv[1], NullChn);
 		if (!chptr)
 		{
-			if (!MyClient(sptr) && !IsULine(cptr, sptr))
+			if (!MyClient(sptr) && !IsULine(sptr))
 			{
 				sendto_umode
 				    (UMODE_JUNK,"Remote TOPIC for unknown channel %s (%s)",
@@ -3434,7 +3434,7 @@ int  m_topic(cptr, sptr, parc, parv)
 		if (parc > 2)
 		{
 			if (!IsMember(sptr, chptr) && !IsServer(sptr)
-			    && !IsULine(cptr, sptr))
+			    && !IsULine(sptr))
 			{
 				sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
 				    me.name, parv[0], name);
@@ -3467,7 +3467,7 @@ int  m_topic(cptr, sptr, parc, parv)
 			}
 		}
 		else if (ttime && topic && (IsServer(sptr)
-		    || IsULine(cptr, sptr)))
+		    || IsULine(sptr)))
 		{
 			if (!chptr->topic_time || ttime < chptr->topic_time)
 			{
@@ -3508,11 +3508,11 @@ int  m_topic(cptr, sptr, parc, parv)
 		}
 		else if (((chptr->mode.mode & MODE_TOPICLIMIT) == 0 ||
 		    is_chan_op(sptr, chptr)) || IsOper(sptr)
-		    || IsULine(cptr, sptr) || is_halfop(sptr, chptr) && topic)
+		    || IsULine(sptr) || is_halfop(sptr, chptr) && topic)
 		{
 			/* setting a topic */
 			if (IsOper(sptr) && !(is_halfop(sptr, chptr)
-			    || IsULine(cptr, sptr)
+			    || IsULine(sptr)
 			    || is_chan_op(sptr, chptr))
 			    && (chptr->mode.mode & MODE_TOPICLIMIT))
 			{
@@ -3606,13 +3606,13 @@ int  m_invite(cptr, sptr, parc, parv)
 		return 0;
 	}
 	if (chptr->mode.mode & MODE_NOINVITE)
-		if (!IsULine(cptr, sptr))
+		if (!IsULine(sptr))
 		{
 			sendto_one(sptr, err_str(ERR_NOINVITE),
 			    me.name, parv[0], parv[2]);
 			return -1;
 		}
-	if (chptr && !IsMember(sptr, chptr) && !IsULine(cptr, sptr))
+	if (chptr && !IsMember(sptr, chptr) && !IsULine(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
 		    me.name, parv[0], parv[2]);
@@ -3627,13 +3627,13 @@ int  m_invite(cptr, sptr, parc, parv)
 	}
 	if (chptr && (chptr->mode.mode & MODE_INVITEONLY))
 	{
-		if (!is_chan_op(sptr, chptr) && !IsULine(cptr, sptr))
+		if (!is_chan_op(sptr, chptr) && !IsULine(sptr))
 		{
 			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
 			    me.name, parv[0], chptr->chname);
 			return -1;
 		}
-		else if (!IsMember(sptr, chptr) && !IsULine(cptr, sptr))
+		else if (!IsMember(sptr, chptr) && !IsULine(sptr))
 		{
 			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
 			    me.name, parv[0],
@@ -3664,7 +3664,7 @@ int  m_invite(cptr, sptr, parc, parv)
 		    && (is_banned(acptr, sptr, chptr)
 		    || (chptr->mode.mode & MODE_INVITEONLY)
 		    || chptr->mode.limit) && (is_chan_op(sptr, chptr)
-		    || IsULine(cptr, sptr)))
+		    || IsULine(sptr)))
 		{
 			add_invite(acptr, chptr);
 			sendto_channelops_butone(NULL, &me, chptr,
@@ -3819,7 +3819,7 @@ int  check_for_chan_flood(cptr, sptr, chptr)
 
 	if (!MyClient(sptr))
 		return 0;
-	if (IsOper(sptr) || IsULine(cptr, sptr))
+	if (IsOper(sptr) || IsULine(sptr))
 		return 0;
 	if (is_chan_op(sptr, chptr))
 		return 0;

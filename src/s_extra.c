@@ -70,7 +70,7 @@ aFline *dcc_isforbidden(cptr, sptr, target, filename)
 	if (!flines || !target || !filename)
 		return NULL;
 
-	if (IsOper(sptr) || IsULine(cptr, sptr))
+	if (IsOper(sptr) || IsULine(sptr))
 		return NULL;
 
 	if (IsOper(target))
@@ -405,7 +405,7 @@ int  m_svsfline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			  return 0;
 		  if (!dcc_find(parv[2]))
 			  dcc_add_fline(parv[2], parv[3], 1);
-		  if (IsULine(cptr, sptr))
+		  if (IsULine(sptr))
 			  sendto_serv_butone(cptr, ":%s %s + %s :%s",
 			      sptr->name,
 			      (IsToken(cptr) ? TOK_SVSFLINE : MSG_SVSFLINE),
@@ -414,7 +414,7 @@ int  m_svsfline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	  }
 	  case '-':
 	  {
-		  if (!IsULine(cptr, sptr))
+		  if (!IsULine(sptr))
 			  return 0;
 		  if (parc < 3)
 			  return 0;
@@ -426,7 +426,7 @@ int  m_svsfline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	  }
 	  case '*':
 	  {
-		  if (!IsULine(cptr, sptr))
+		  if (!IsULine(sptr))
 			  return 0;
 		  dcc_wipe_services();
 		  sendto_serv_butone(cptr, ":%s %s *", sptr->name,
@@ -448,7 +448,7 @@ int  channel_canjoin(sptr, name)
 
 	if (IsOper(sptr))
 		return 1;
-	if (IsULine(sptr, sptr))
+	if (IsULine(sptr))
 		return 1;
 	if (!crlines)
 		return 1;

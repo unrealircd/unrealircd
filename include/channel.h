@@ -30,7 +30,7 @@
 
 #define ChannelExists(n)	(find_channel(n, NullChn) != NullChn)
 
-#define IsULine(cptr,sptr)	(sptr->flags & FLAGS_ULINE)
+#define IsULine(sptr)	(sptr->flags & FLAGS_ULINE)
 
 /* NOTE: Timestamps will be added to MODE-commands, so never make
  * RESYNCMODES and MODEPARAMS higher than MAXPARA-3. DALnet servers

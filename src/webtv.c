@@ -297,7 +297,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				}
 			}
 
-			if (buf[0] != '\0' && !IsULine(acptr, acptr) && (!IsHiding(acptr) ||
+			if (buf[0] != '\0' && !IsULine(acptr) && (!IsHiding(acptr) ||
 				IsNetAdmin(sptr) || IsTechAdmin(sptr) || sptr == acptr))
 				sendto_one(sptr, 
 					":IRC PRIVMSG %s :%s is on %s",

@@ -269,7 +269,7 @@ int  m_chghost(cptr, sptr, parc, parv)
 
 	if ((acptr = find_person(parv[1], NULL)))
 	{
-		if (!IsULine(cptr, sptr))
+		if (!IsULine(sptr))
 		{
 			sendto_umode(UMODE_EYES,
 			    "%s changed the virtual hostname of %s (%s@%s) to be %s",
@@ -373,7 +373,7 @@ int  m_chgident(cptr, sptr, parc, parv)
 
 	if ((acptr = find_person(parv[1], NULL)))
 	{
-		if (!IsULine(cptr, sptr))
+		if (!IsULine(sptr))
 		{
 			sendto_umode(UMODE_EYES,
 			    "%s changed the virtual ident of %s (%s@%s) to be %s",
@@ -1020,11 +1020,7 @@ int  m_swhois(cptr, sptr, parc, parv)
 {
 	aClient *acptr;
 
-/*	if (!IsServer(sptr) && !IsULine(cptr, sptr) && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
-	{
-		return 0;
-	}*/
-	if (!IsServer(sptr) && !IsULine(cptr, sptr))
+	if (!IsServer(sptr) && !IsULine(sptr))
 		return 0;
 	if (parc < 3)
 		return 0;
@@ -1236,7 +1232,7 @@ int  m_tsctl(cptr, sptr, parc, parv)
 			{
 				return 0;
 			}
-			if (!IsULine(cptr, sptr))
+			if (!IsULine(sptr))
 			{
 				return 0;
 			}
@@ -1270,7 +1266,7 @@ int  m_svso(cptr, sptr, parc, parv)
 	aClient *acptr;
 	long fLag;
 
-	if (!IsULine(cptr, sptr))
+	if (!IsULine(sptr))
 		return 0;
 
 	if (parc < 3)
@@ -1531,7 +1527,7 @@ int  m_chgname(cptr, sptr, parc, parv)
 			   "Your GECOS (real name) is banned from this server");
 			return xx;
 		}
-		if (!IsULine(cptr, sptr))
+		if (!IsULine(sptr))
 		{
 			sendto_umode(UMODE_EYES,
 			    "%s changed the GECOS of %s (%s@%s) to be %s",

@@ -656,3 +656,4 @@
 - Fixed a bug where the Found your hostname (cached) message was messed up
 - Fixed a memory leak in the new password code
 - Fixed a sptr->passwd bug
+- Removed the unnecessary param from IsULine() it is now just IsULine(sptr)

@@ -850,7 +850,7 @@ int  m_svsnoop(cptr, sptr, parc, parv)
 {
 	aClient *acptr;
 
-	if (!(check_registered(sptr) && IsULine(cptr, sptr) && parc > 2))
+	if (!(check_registered(sptr) && IsULine(sptr) && parc > 2))
 		return 0;
 	/* svsnoop bugfix --binary */
 	if (hunt_server(cptr, sptr, ":%s SVSNOOP %s :%s", 1, parc,
@@ -2366,7 +2366,7 @@ int  m_zline(cptr, sptr, parc, parv)
 		reason = parv[parc - 1];
 	}
 
-	uline = IsULine(cptr, sptr) ? 1 : 0;
+	uline = IsULine(sptr) ? 1 : 0;
 
 	if (!uline && (!MyConnect(sptr) || !OPCanZline(sptr) || !IsOper(sptr)))
 	{
@@ -2556,7 +2556,7 @@ int  m_unzline(cptr, sptr, parc, parv)
 	int  result = 0, uline = 0, akill = 0;
 	char *mask, *server;
 
-	uline = IsULine(cptr, sptr) ? 1 : 0;
+	uline = IsULine(sptr) ? 1 : 0;
 
 	if (parc < 2)
 	{

@@ -714,7 +714,7 @@ static void exit_one_client_backend(cptr, sptr, from, comment, split)
 			sendto_common_channels(sptr, ":%s QUIT :%s",
 			    sptr->name, comment);
 
-			if (!IsULine(cptr, sptr) && !split)
+			if (!IsULine(sptr) && !split)
 				if (sptr->user->server != me_hash)
 					sendto_umode(UMODE_FCLIENT,
 					    "*** Notice -- Client exiting at %s: %s!%s@%s (%s)",

@@ -846,7 +846,7 @@ int  m_server(cptr, sptr, parc, parv)
 		/* Taken from bahamut makes it so all servers behind a U:lined
 		 * server are also U:lined, very helpful if HIDE_ULINES is on
 		 */
-		if (IsULine(sptr, sptr)
+		if (IsULine(sptr)
 		    || (find_uline(cptr->confs, acptr->name)))
 			acptr->flags |= FLAGS_ULINE;
 		add_server_to_table(acptr);
@@ -1489,7 +1489,7 @@ int  m_links(cptr, sptr, parc, parv)
 		acptr = lp->value.cptr;
 		
 		/* Some checks */
-		if (HIDE_ULINES && IsULine(acptr, acptr) && !IsAnOper(sptr))
+		if (HIDE_ULINES && IsULine(acptr) && !IsAnOper(sptr))
 			continue;	
 		sendto_one(sptr, rpl_str(RPL_LINKS),
 		    me.name, parv[0], acptr->name, acptr->serv->up,
@@ -3132,7 +3132,7 @@ int  m_svsmotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	FILE *conf = NULL;
 
-	if (!IsULine(cptr, sptr))
+	if (!IsULine(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
@@ -3372,7 +3372,7 @@ int  m_goper(cptr, sptr, parc, parv)
 		return 0;
 	}
 /*      if (!IsServer(sptr) && MyConnect(sptr) && !IsAnOper(sptr))*/
-	if (!IsServer(sptr) || !IsULine(cptr, sptr))
+	if (!IsServer(sptr) || !IsULine(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
@@ -3425,7 +3425,7 @@ int  m_svskill(cptr, sptr, parc, parv)
 	if (parc == 2)
 		comment = "SVS Killed";
 
-	if (!IsULine(cptr, sptr))
+	if (!IsULine(sptr))
 		return -1;
 
 /*	if (hunt_server(cptr,sptr,":%s SVSKILL %s :%s",1,parc,parv) != HUNTED_ISME)
@@ -3498,7 +3498,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 		return 0;
 	}
 	if (!MyClient(sptr) && !(IsTechAdmin(sptr) || IsNetAdmin(sptr))
-	    && !IsULine(cptr, sptr))
+	    && !IsULine(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
@@ -3790,7 +3790,7 @@ int  m_restart(cptr, sptr, parc, parv)
 		return 0;
 	}
 	if (!MyClient(sptr) && !(IsTechAdmin(sptr) || IsNetAdmin(sptr))
-	    && !IsULine(cptr, sptr))
+	    && !IsULine(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
@@ -4724,7 +4724,7 @@ void dump_map(cptr, server, mask, prompt_length, length)
 		if (acptr->srvptr != server)
 			continue;
 			
-		if (IsULine(acptr, acptr) && HIDE_ULINES && !IsAnOper(cptr))
+		if (IsULine(acptr) && HIDE_ULINES && !IsAnOper(cptr))
 			continue;
 		acptr->flags |= FLAGS_MAP;
 		cnt++;

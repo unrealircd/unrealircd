@@ -997,7 +997,7 @@ int  m_svsnick(cptr, sptr, parc, parv)
 {
 	aClient *acptr;
 
-	if (!IsULine(cptr, sptr) || parc < 4 || (strlen(parv[2]) > NICKLEN))
+	if (!IsULine(sptr) || parc < 4 || (strlen(parv[2]) > NICKLEN))
 		return -1;	/* This looks like an error anyway -Studded */
 
 	if (!hunt_server(cptr, sptr, ":%s SVSNICK %s %s :%s", 1, parc,
@@ -1181,7 +1181,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		    "Reserved for internal IRCd purposes");
 		return 0;
 	}
-	if (!IsULine(cptr, sptr)
+	if (!IsULine(sptr)
 	    && ((aconf = find_conf_name(nick, CONF_QUARANTINED_NICK))
 	    || (asqline = find_sqline_match(nick))))
 	{
@@ -1826,7 +1826,7 @@ static int m_message(cptr, sptr, parc, parv, notice)
 					    me.name, parv[0], acptr->name,
 					    acptr->user->away);
 #ifdef STRIPBADWORDS
-				if (!(IsULine(acptr, acptr) || IsULine(cptr, sptr)) && 
+				if (!(IsULine(acptr) || IsULine(sptr)) && 
 					IsFilteringWords(acptr))
 						sendto_prefix_one(acptr, sptr,
 						    ":%s %s %s :%s", parv[0], cmd, nick,
@@ -1863,7 +1863,7 @@ static int m_message(cptr, sptr, parc, parv, notice)
 					}
 				}
 			cansend =
-			    !IsULine(cptr, sptr) ? can_send(sptr, chptr,
+			    !IsULine(sptr) ? can_send(sptr, chptr,
 			    parv[2]) : 0;
 			if (!cansend)
 			{
@@ -1922,9 +1922,9 @@ static int m_message(cptr, sptr, parc, parv, notice)
 		   ** Armin, 8Jun90 (gruner@informatik.tu-muenchen.de)
 		 */
 		if ((*nick == '$' || *nick == '#') && (IsAnOper(sptr)
-		    || IsULine(cptr, sptr)))
+		    || IsULine(sptr)))
 		{
-			if (IsULine(cptr, sptr))
+			if (IsULine(sptr))
 				goto itsokay;
 			if (!(s = (char *)rindex(nick, '.')))
 			{
@@ -2738,7 +2738,7 @@ int  m_whois(cptr, sptr, parc, parv)
 				}
 			}
 
-			if (buf[0] != '\0' && !IsULine(acptr, acptr) && (!IsHiding(acptr) ||
+			if (buf[0] != '\0' && !IsULine(acptr) && (!IsHiding(acptr) ||
 				IsNetAdmin(sptr) || IsTechAdmin(sptr) || sptr == acptr))
 				sendto_one(sptr, rpl_str(RPL_WHOISCHANNELS),
 				    me.name, parv[0], name, buf);
@@ -3101,15 +3101,15 @@ int  m_kill(cptr, sptr, parc, parv)
 		}
 
 		if (IsServices(acptr) && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)
-		    || IsULine(cptr, sptr)))
+		    || IsULine(sptr)))
 		{
 			sendto_one(sptr, err_str(ERR_KILLDENY), me.name,
 			    parv[0], parv[1]);
 			return 0;
 		}
-/*        if (IsULine(cptr, sptr) || (IsSAdmin(sptr) && !IsSAdmin(acptr)) || (IsNetAdmin(sptr)) || (IsTechAdmin(sptr) || (IsCoAdmin(sptr)))) {
+/*        if (IsULine(sptr) || (IsSAdmin(sptr) && !IsSAdmin(acptr)) || (IsNetAdmin(sptr)) || (IsTechAdmin(sptr) || (IsCoAdmin(sptr)))) {
         goto aftermath;
-        } else if (IsULine(cptr, acptr)) {
+        } else if (IsULine(acptr)) {
                 goto error;
         } else {
                 goto aftermath;
@@ -4346,7 +4346,7 @@ int  m_umode(cptr, sptr, parc, parv)
 	/*
 	 * For Services Protection...
 	 */
-	if (!IsServer(cptr) && !IsULine(cptr, sptr))
+	if (!IsServer(cptr) && !IsULine(sptr))
 	{
 		if (IsServices(sptr))
 			ClearServices(sptr);
@@ -4506,7 +4506,7 @@ int  m_svs2mode(cptr, sptr, parc, parv)
 	aClient *acptr;
 	int  what, setflags;
 
-	if (!IsULine(cptr, sptr))
+	if (!IsULine(sptr))
 		return 0;
 
 	what = MODE_ADD;
@@ -4612,7 +4612,7 @@ int  m_svsmode(cptr, sptr, parc, parv)
 	aClient *acptr;
 	int  what, setflags;
 
-	if (!IsULine(cptr, sptr))
+	if (!IsULine(sptr))
 		return 0;
 
 	what = MODE_ADD;
@@ -5020,7 +5020,7 @@ int  m_svsjoin(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	aClient *acptr;
-	if (!IsULine(cptr, sptr))
+	if (!IsULine(sptr))
 		return 0;
 
 	if (parc != 3 || !(acptr = find_person(parv[1], NULL)))
@@ -5052,7 +5052,7 @@ int  m_sajoin(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	aClient *acptr;
-	if (!IsSAdmin(sptr) && !IsULine(cptr, sptr))
+	if (!IsSAdmin(sptr) && !IsULine(sptr))
 		return 0;
 
 	if (parc != 3 || !(acptr = find_person(parv[1], NULL)))
@@ -5089,7 +5089,7 @@ int  m_svspart(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	aClient *acptr;
-	if (!IsULine(cptr, sptr))
+	if (!IsULine(sptr))
 		return 0;
 
 	if (parc != 3 || !(acptr = find_person(parv[1], NULL)))
@@ -5121,7 +5121,7 @@ int  m_sapart(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	aClient *acptr;
-	if (!IsSAdmin(sptr) && !IsULine(cptr, sptr))
+	if (!IsSAdmin(sptr) && !IsULine(sptr))
 		return 0;
 
 	if (parc != 3 || !(acptr = find_person(parv[1], NULL)))
