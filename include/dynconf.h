@@ -242,3 +242,102 @@ extern MODVAR aConfiguration iConf;
 #define SPAMFILTER_VIRUSCHAN	iConf.spamfilter_virus_help_channel
 #define SPAMFILTER_VIRUSCHANDENY	iConf.spamfilter_vchan_deny
 #define SPAMFILTER_EXCEPT		iConf.spamexcept_line
+
+/* Used for duplicate checking */
+struct SetCheck {
+	unsigned has_show_opermotd:1;
+	unsigned has_hide_ulines:1;
+	unsigned has_flat_map:1;
+	unsigned has_allow_chatops:1;
+	unsigned has_webtv_support:1;
+	unsigned has_no_oper_hiding:1;
+	unsigned has_ident_check:1;
+	unsigned has_fail_oper_warn:1;
+	unsigned has_show_connect_info:1;
+	unsigned has_dont_resolve:1;
+	unsigned has_mkpasswd_for_everyone:1;
+	unsigned has_allow_part_if_shunned:1;
+	unsigned has_ssl_egd:1;
+	unsigned has_dns_timeout:1;
+	unsigned has_dns_retries:1;
+	unsigned has_dns_nameserver:1;
+#ifdef THROTTLING
+	unsigned has_throttle_period:1;
+	unsigned has_throttle_connections:1;
+#endif
+	unsigned has_kline_address:1;
+	unsigned has_modes_on_connect:1;
+	unsigned has_modes_on_oper:1;
+	unsigned has_snomask_on_connect:1;
+	unsigned has_snomask_on_oper:1;
+	unsigned has_auto_join:1;
+	unsigned has_oper_auto_join:1;
+	unsigned has_oper_only_stats:1;
+	unsigned has_maxchannelsperuser:1;
+	unsigned has_maxdccallow:1;
+	unsigned has_anti_spam_quit_message_time:1;
+	unsigned has_egd_path:1;
+	unsigned has_static_quit:1;
+	unsigned has_static_part:1;
+#ifdef USE_SSL
+	unsigned has_ssl_certificate:1;
+	unsigned has_ssl_key:1;
+	unsigned has_ssl_trusted_ca_file:1;
+	unsigned has_ssl_options:1;
+#endif
+	unsigned has_allow_userhost_change:1;
+	unsigned has_restrict_usermodes:1;
+	unsigned has_restrict_channelmodes:1;
+	unsigned has_restrict_extendedbans:1;
+	unsigned has_channel_command_prefix:1;
+	unsigned has_anti_flood_unknown_flood_bantime:1;
+	unsigned has_anti_flood_unknown_flood_amount:1;
+	unsigned has_modes_on_join:1;
+#ifdef NO_FLOOD_AWAY
+	unsigned has_anti_flood_away_count:1;
+	unsigned has_anti_flood_away_period:1;
+#endif
+	unsigned has_anti_flood_nick_flood:1;
+	unsigned has_ident_connect_timeout:1;
+	unsigned has_ident_read_timeout:1;
+	unsigned has_default_bantime:1;
+	unsigned has_who_limit:1;
+	unsigned has_silence_limit:1;
+#ifdef NEWCHFLOODPROT
+	unsigned has_modef_default_unsettime:1;
+	unsigned has_modef_max_unsettime:1;
+#endif
+	unsigned has_ban_version_tkl_time:1;
+	unsigned has_spamfilter_ban_time:1;
+	unsigned has_spamfilter_ban_reason:1;
+	unsigned has_spamfilter_virus_help_channel:1;
+	unsigned has_spamfilter_virus_help_channel_deny:1;
+	unsigned has_spamfilter_except:1;
+	unsigned has_hosts_host_on_oper_up:1;
+	unsigned has_network_name:1;
+	unsigned has_default_server:1;
+	unsigned has_services_server:1;
+	unsigned has_hosts_global:1;
+	unsigned has_hosts_admin:1;
+	unsigned has_hosts_local:1;
+	unsigned has_hosts_servicesadmin:1;
+	unsigned has_hosts_netadmin:1;
+	unsigned has_hosts_coadmin:1;
+	unsigned has_hiddenhost_prefix:1;
+	unsigned has_prefix_quit:1;
+	unsigned has_help_channel:1;
+	unsigned has_stats_server:1;
+	unsigned has_cloak_keys:1;
+	unsigned has_options_webtv_support:1;
+	unsigned has_options_hide_ulines:1;
+	unsigned has_options_flat_map:1;
+	unsigned has_options_show_opermotd:1;
+	unsigned has_options_identd_check:1;
+	unsigned has_options_fail_oper_warn:1;
+	unsigned has_options_dont_resolve:1;
+	unsigned has_options_show_connect_info:1;
+	unsigned has_options_mkpasswd_for_everyone:1;
+	unsigned has_options_allow_part_if_shunned:1;
+};
+
+

@@ -416,3 +416,12 @@
 - Some text updates... docs: now 3.2.2-CVS, lso got rid of double version to avoid
   confusion. credits: fixed typo.
 - Added updated auspice.conf from Rocko since previous one was outdated (#0002147).
+- Recoded the config parsing code 
+  - The new system is much faster, for the programmers out there, the
+    old system averaged O(MN) where N was the number of sub-directives for a block, and
+    M was the number of sub-directives actually contained in the block in the config file.
+    The new system averages O(N), so the number of sub-directives no longer has a significant
+    impact on performance.
+  - Added duplicate config entry detection (#0002126) suggested by brain2
+  - May have a few bugs (easily fixed)
+  
