@@ -1189,3 +1189,4 @@ v- Fixed some bugreport stuff
 - Fixed a problem with Mod_Handler being **, found by andi
 - Fixed an issue with -x and /quit and whowas, found by RaYmAn
 - Modified the OpenBSD fix to work for all OSes that add an _
+- Fixed m_rawto.c problem found by TheDarkOne

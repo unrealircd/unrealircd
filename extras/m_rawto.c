@@ -140,7 +140,7 @@ DLLFUNC int m_rawto(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	if ((acptr = find_client(parv[1], NULL)))
 	{
-		if (MyClient(acptr))
+		if (MyConnect(acptr))
 		{
 			sendto_one(acptr, "%s", parv[2]);
 			return 0;
