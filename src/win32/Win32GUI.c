@@ -667,14 +667,18 @@ LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 		case WM_INITDIALOG: {
 			char	String[16384];
 			char *RTFString;
+			int size;
 			SetWindowText(hDlg, title);
+			bzero(String, 16384);
 			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)RESubClassFunc);
 			while (*s) {
 				strcat(String, *s++);
 				if (*s)
 					strcat(String, "\r\n");
 			    }
-			RTFString = malloc(CountRTFSize(String)+1);
+			size = CountRTFSize(String)+1;
+			RTFString = malloc(size);
+			bzero(RTFString, size);
 			IRCToRTF(String,RTFString);
 
 			SetDlgItemText(hDlg, IDC_TEXT, RTFString);
