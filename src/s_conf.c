@@ -382,6 +382,8 @@ void config_error(char *format, ...)
 #else
 		win_log("[error] %s", buffer);
 #endif
+	else
+		ircd_log("config error: %s", buffer);
 	sendto_realops("error: %s", buffer);
 	/* We cannot live with this */
 	config_error_flag = 1;

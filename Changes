@@ -667,3 +667,5 @@ seen. gmtime warning still there
 - Fixed a little scan.so bug
 - Fixed so we compile without symbols in win32 .. 
 - Fixed some rant stuff
+- Fixed a documentation bug in unrealircd.conf.txt, made config_error
+  actually bitch when loop.ircd_booted

@@ -417,7 +417,9 @@
 
 	vhost {
 		vhost		<vhost>;
-		userhost	<mask>;
+		from {
+			userhost	<mask>;
+		};
 		login		<login>;
 		password	<password>;
 	};
