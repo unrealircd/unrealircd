@@ -334,6 +334,46 @@ int conf_yesno(char *value) {
 
 	return -1;
 }
+
+#define KB 1024
+#define MB 1048576
+#define GB 1073741824
+#define TB 1099511627776
+
+long conf_size(char *value) {
+	char *numbuf;
+	char *buf = value;
+	int i;
+	long num = 0;
+	if (!buf)
+		return 0;
+
+	numbuf = malloc(strlen(value));
+
+	for (i = 0;*buf; *buf++) {
+		if (isdigit(*buf)) {
+			numbuf[i++] = *buf;
+			continue;
+		}
+		if (isalpha(*buf)) {
+			num = atol(numbuf);
+			if (tolower(*buf) == 't')
+				num *= TB;
+			else if (tolower(*buf) == 'g')
+				num *= GB;
+			else if (tolower(*buf) == 'm')
+				num *= MB;
+			else if (tolower(*buf) == 'k')
+				num *= MB;
+			break;
+		}
+	}
+	if (!num)
+		num = atol(numbuf);
+	free(numbuf);
+	return num;
+}
+		
 /*
  * This will link in a ConfigItem into a list of it
  * Example:
@@ -2647,8 +2687,9 @@ int	_conf_log(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_varlinenum);
 			continue;
 		}
-		if (!strcmp(cep->ce_varname, "maxsize")) 
-			log->maxsize = atol(cep->ce_vardata);
+		if (!strcmp(cep->ce_varname, "maxsize")) {
+			log->maxsize = conf_size(cep->ce_vardata);
+		}
 		if (!strcmp(cep->ce_varname, "flags")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{

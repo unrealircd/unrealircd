@@ -822,3 +822,5 @@ seen. gmtime warning still there
 - Cleaned up /oper (a lot)
 - Fixed a bug where the /oper recode broke oper host masking (found by James-Bond)
 - Fixed something that could cause a possible bug in /oper ?
+- log::maxsize can now be entered in the format 1MB, 1MegaByte, 1MByte, etc (KB,MB,GB,TB are the only sizes 
+  recognized)
