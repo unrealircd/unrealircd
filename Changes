@@ -1261,3 +1261,5 @@ seen. gmtime warning still there
 - Fixed a stupid m_oper bug
 - Fixed a win32 editor bug causing a crash when you click save multiple times
 - Fixed a /stats q bug where it would crash if there was an sqline with no reason, reported by toji (#0000120)
+- Fixed a bug that caused locops to see client exiting but not client connecting notices while +s +c,
+  reported and fixed by cmx (#0000123)
