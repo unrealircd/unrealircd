@@ -1889,3 +1889,5 @@ seen. gmtime warning still there
 - Fixed a bug with ZIP_LINKS + show-connect-info, also added fallback to uncompressed link.
 - Updated protoctl.txt (added ZIP).
 - Added USE_ZIP stuff to win32 installer script.
+- Fixed a bug with except ban {} reported by Gargo (#0000604). As a result except tkl {} of
+  type tkline and tzline have been removed since they are now handled by except ban {}

@@ -3626,10 +3626,6 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 			ca->type = TKL_ZAP|TKL_GLOBAL;
 		else if (!strcmp(cep3->ce_vardata, "shun"))
 			ca->type = TKL_SHUN|TKL_GLOBAL;
-		else if (!strcmp(cep3->ce_vardata, "tkline"))
-			ca->type = TKL_KILL;
-		else if (!strcmp(cep3->ce_vardata, "tzline"))
-			ca->type = TKL_ZAP;
 		else 
 		{}
 		
@@ -3757,8 +3753,16 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep3->ce_vardata, "gline")) {}
 		else if (!strcmp(cep3->ce_vardata, "gzline")){}
 		else if (!strcmp(cep3->ce_vardata, "shun")) {}
-		else if (!strcmp(cep3->ce_vardata, "tkline")) {}
-		else if (!strcmp(cep3->ce_vardata, "tzline")) {}
+		else if (!strcmp(cep3->ce_vardata, "tkline")) {
+			config_error("%s:%i: except tkl of type tkline is deprecated. Use except ban {} instead", 
+				cep3->ce_fileptr->cf_filename, cep3->ce_varlinenum);
+			errors++;
+		}
+		else if (!strcmp(cep3->ce_vardata, "tzline")) {
+			config_error("%s:%i: except tkl of type tzline is deprecated. Use except ban {} instead", 
+				cep3->ce_fileptr->cf_filename, cep3->ce_varlinenum);
+			errors++;
+		}
 		else 
 		{
 			config_error("%s:%i: unknown except tkl type %s",

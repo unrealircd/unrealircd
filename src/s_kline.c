@@ -248,9 +248,9 @@ int  find_tkline_match(aClient *cptr, int xx)
 	int	points = 0;
 	ConfigItem_except *excepts;
 	char host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
+	int match_type = 0;
 	if (IsServer(cptr) || IsMe(cptr))
 		return -1;
-
 
 	nowtime = TStime();
 	chost = cptr->sockhost;
@@ -276,8 +276,13 @@ int  find_tkline_match(aClient *cptr, int xx)
 		return 1;
 	strcpy(host, make_user_host(cname, chost));
 	strcpy(host2, make_user_host(cname, cip));
+	if (((lp->type & TKL_KILL) || (lp->type & TKL_ZAP)) && !(lp->type & TKL_GLOBAL))
+		match_type = CONF_EXCEPT_BAN;
+	else
+		match_type = CONF_EXCEPT_TKL;
 	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
-		if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != lp->type)
+		if (excepts->flag.type != match_type || (match_type == CONF_EXCEPT_TKL && 
+		    excepts->type != lp->type))
 			continue;
 		if (!match(excepts->mask, host) || !match(excepts->mask, host2))
 			return 1;		
