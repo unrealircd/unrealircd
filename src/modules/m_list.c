@@ -202,10 +202,7 @@ DLLFUNC CMD_FUNC(m_list)
 				    doall = 1;
 				    break;
 			    default:
-				    sendto_one(sptr,
-					err_str(ERR_LISTSYNTAX),
-					me.name, cptr->name,
-					"Bad list syntax, type /list ?");
+				    sendto_one(sptr, err_str(ERR_LISTSYNTAX), me.name, cptr->name);
 				    error = 1;
 			  }
 			  break;

@@ -483,3 +483,6 @@
 - Changed the +z cannot join message to be a bit more descriptive (#0002148) suggested by cust.
 - Added a config.h options, IPV6_COMPRESSED to make Unreal use compressed IPv6 addresses where
   possible (#0002107) suggested by Neo-Vortex.
+- Fixed alloca warning @ Linux (post-3.2.2)
+- Numeric audit: 15 small changes (int/long mismatches etc). This might have fixed some
+  bugs on architectures where 'long' and 'int' have different sizes (eg: opteron).

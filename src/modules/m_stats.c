@@ -536,7 +536,7 @@ int stats_denylinkall(aClient *sptr, char *para)
 	{
 		if (links->flag.type == CRULE_ALL)
 			sendto_one(sptr, rpl_str(RPL_STATSDLINE), me.name, sptr->name,
-			"D", links->mask, links->prettyrule);
+			'D', links->mask, links->prettyrule);
 	}
 	return 0;
 }
@@ -1049,7 +1049,7 @@ int stats_denylinkauto(aClient *sptr, char *para)
 	{
 		if (links->flag.type == CRULE_AUTO)
 			sendto_one(sptr, rpl_str(RPL_STATSDLINE), me.name, sptr->name,
-			"d", links->mask, links->prettyrule);
+			'd', links->mask, links->prettyrule);
 	}
 	return 0;
 }
