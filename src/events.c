@@ -60,7 +60,7 @@ void	LockEventSystem(void)
 void	UnlockEventSystem(void)
 {
 #ifndef HAVE_NO_THREADS
-	IRCMutexUnLock(sys_EventLock);
+	IRCMutexUnlock(sys_EventLock);
 #endif
 }
 
