@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_%COMMAND%)
 	"m_%COMMAND%",
 	"$Id$",
 	"command /%COMMAND%", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 
