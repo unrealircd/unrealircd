@@ -500,8 +500,8 @@ struct Message msgtab[] = {
 	{MSG_SVSNAME, m_chgname, 0, MAXPARA, TOK_CHGNAME, 0L},
 	{MSG_SHUN, m_shun, 0, MAXPARA, TOK_SHUN, 0L},
 	{MSG_NEWJOIN, m_join, 0, MAXPARA, TOK_JOIN, 0L},
-	{MSG_BOTSERV, m_botserv, 0, MAXPARA, TOK_BOTSERV,0L},
-	{TOK_BOTSERV, m_botserv, 0, MAXPARA, TOK_BOTSERV,0L},
+	{MSG_BOTSERV, m_botserv, 0, 1, TOK_BOTSERV,0L},
+	{TOK_BOTSERV, m_botserv, 0, 1, TOK_BOTSERV,0L},
 	{(char *)0, (int (*)())0, 0, 0, 0, 0L}
 };
 
