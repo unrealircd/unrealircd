@@ -68,7 +68,8 @@ Spanish |
   -- 3.13. <a href="#feature_bantypes">Tipos de ban </a><br>
   -- 3.14. <a href="#feature_spamfilter">Filtro de spam </a><br>
   -- 3.15. <a href="#feature_cidr">CIDR</a><br>
-  -- 3.16. <a href="#feature_other">Otras caracter&iacute;sticas</a><br>
+  -- 3.16. <a href="#feature_nickchars">Configuraci&oacute;n de caracteres para nicks</a><br>
+  -- 3.17. <a href="#feature_other">Otras caracter&iacute;sticas</a><br>
   4. <a href="#configuringyourunrealircdconf">Configurando su fichero unrealircd.conf</a><br>
   ---4.1. <a href="#configurationfileexplained">Explicaci&oacute;n del archivo</a><br>
   ---4.2. <a href="#meblock"> Bloque me  -=- (M:Line)</a><br>
@@ -345,7 +346,7 @@ Windows:<br>
 Throttling es un m&eacute;todo que le permite fijar un l&iacute;mite de cu&aacute;ntas veces pueden los usuarios conectarse y desconectarse de su servidor. Puede configurarlo en el bloque set::throttle para permitir X conexiones en YY segundos para la misma IP.<br>
 <b>Modos de canal </b><br>
 Existen varios modos de canal para prevenir ataques. Algunos son:<br>
-<b>K</b> = no /knock, <b>N</b> = no cambios de nick, <b>C</b> = no CTCPs, <b>M</b> = s&oacute;lo usuarios reigstrados (+r) pueden hablar. <br>
+<b>K</b> = no /knock, <b>N</b> = no cambios de nick, <b>C</b> = no CTCPs, <b>M</b> = s&oacute;lo usuarios reigstrados (+r) pueden hablar <b>j</b> = join throttling (por usuario)<br>
 Desde la versi&oacute;n beta18 eixste el modo +f que es mucho m&aacute;s avanzado...<br>
 <b>Modo de canal f </b><br>
 En vez de usar scripts y bots para proteger un canal contra floods ahora se incluye en el propio ircd.<br>
@@ -594,8 +595,49 @@ Los m&oacute;dulos pueden a&ntilde;adir otros tipos de ban.
 <p>UnrealIRCd dispone de soporte para CIDR (Classless Interdomain Routing). CIDR te permite banear rangos de IPs. Todas las IPs se localizan en los ISPs usando CIDR. As&iacute; pues, pudiendo banear f&aacute;cilmente un ISP. Unreal soporta CIDR para IPv4 y IPv6. Las m&aacute;scaras CIDR se pueden usar en allow::ip, ban user::mask, ban ip::mask, except ban::mask, except throttle::mask y except tkl::mask (para gzline, gline y shun). Adem&aacute;s, se puede utilizar CIDR en /kline, /gline, /gzline, /zline y /sun. Se utiliza el est&aacute;ndar de IP/bits, por ejemplo, 12.0.0.0/8 (es 127.0.0.0 - 127.255.255.255) y fe80:0:0:123::/64 (es 
 fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p>
 </div>
+<p><font size="+2"><b>3.16 - Configuraci&oacute;n de caracteres para nicks </b></font><a name="feature_nickchars"></a></p>
+<div class="desc">
+<p>UnrealIRCd ahora tiene la habilidad de permitir qué juegos de caracteres o lenguajes pueden permitirse
+en los nicks. Se especifica en <b>set::allowed-nickchars</b>.<br>
+Aquí tiene una tabla con todas las posibilidades:<br>
+<table border="1">
+<tr><td><b>Nombre:</b></td><td><b>Descripci&oacute;n:</b></td><td><b>Juego de caracteres:</b></td></tr>
+<tr><td>catalan</td><td>Caracteres catalanes</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>dutch</td><td>Caracteres daneses</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>french</td><td>Caracteres franceses</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>swiss-german</td><td>Caracteres suizo-germánicos (no es-zett)</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>icelandic</td><td>Caracteres islándios</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>german</td><td>Caracteres alemanes</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>italian</td><td>Caracteres italianos</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>spanish</td><td>Caracteres castellanos</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>swedish</td><td>Caracteres suízos</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td><b>latin1</b></td><td>danés, francés, alemán, suizo-germánic, castellano, suízo, catalán, italiano</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>hungarian</td><td>Caracteres húngaros</td><td>iso8859-2 (latin2)</td></tr>
+<tr><td>polish</td><td>Caracteres polacos</td><td>iso8859-2 (latin2)</td></tr>
+<tr><td><b>latin2</b></td><td>húngaro, polaco</td><td>iso8859-2 (latin2)</td></tr>
+<tr><td>polish-w1250</td><td>Caracteres polcaos, variante windows</td><td>windows-1250 (cp1250)</td></tr>
+<tr><td>greek</td><td>Caracteres griegos</td><td>iso8859-7</td></tr>
+<tr><td>turkish</td><td>Caracteres turcos</td><td>iso8859-9</td></tr>
+<tr><td>hebrew</td><td>Caracteres hebreos</td><td>iso8859-8-I/windows-1255</td></tr>
+<tr><td>chinese-simp</td><td>Chino simple</td><td>Multibyte: GBK/GB2312</td></tr>
+<tr><td>chinese-trad</td><td>Chino tradicional</td><td>Multibyte: GBK</td></tr>
+<tr><td>chinese-ja</td><td>Japonés Hiragana/Pinyin</td><td>Multibyte: GBK</td></tr>
+<tr><td><b>chinese</b></td><td>chino-*</td><td>Multibyte: GBK</td></tr>
+<tr><td><b>gbk</b></td><td>chino-*</td><td>Multibyte: GBK</td></tr>
+</table>
+Note que algunas combinaciones pueden causar problemas. 
+Por ejemplo, combinando latin* y chinese-* pueden no ser procesados 
+por el programa y emitirán un error. 
+Mezclando otros lenguajes pueden mostrar problemas, así que Unreal le notificará una advertencia si mezcla 
+latin1/latin2/greek.<br><br>
 
-<p><font size="+2"><b>3.16 - Otras caracter&iacute;sticas</b></font><a name="feature_other"></p>
+Ejemplo 1, para gente del oeste de europa:<br>
+<pre>set { allowed-nickchars { latin1; }; };</pre>
+Ejemplo 2, si tiene usuarios chinos principalmente y quiere permitir caracteres chinos "normales":<br>
+<pre>set { allowed-nickchars { chinese-simp; chinese-trad; }; };</pre>
+</p></div>
+
+<p><font size="+2"><b>3.17 - Otras caracter&iacute;sticas</b></font><a name="feature_other"></p>
 <div class="desc">
 <p>UnrealIRCd tiene much&iacute;simas m&aacute;s caracter&iacute;sticas que no se detallan... Deber&aacute; encontrarlas por usted mismo.</p>
 </div>
@@ -2025,6 +2067,8 @@ set {
   L&iacute;mite de entradas en la lista dccallow.</p>
 <p><font class="set">set::channel-command-prefix &lt;prefijo&gt;;</font><br>
   Especifica el prefijo para mostrar el mensaje a los usuarios que est&eacute;n con +d. Suele usarse para bots. Si se omite, el prefijo es &quot;`&quot;. </p>
+  <p><font class="set">set::allowed-nickchars { &lt;list&gt; };</font><br>
+  Juego de caracteres / lenguajes permitidos en los nicks, vea <a href="#feature_nickchars">Configuraci&oacute;n de caracteres para nicks</a>.</p>
 <p><font class="set">set::allow-userhost-change [never|always|not-on-channels|force-rejoin]</font><br>
   Especifica qu&eacute; hacer cuando el user@host cambia (+x/-x/chghost/chgident/setident/vhost/etc.).<br>
   <i>never</i> deshabilita todos los comandos, <i>always</i> los permite aunque est&eacute;n en canales (causa desincronizaci&oacute;n) [por defecto],<i> not-on-channels</i> si el usuario no est&aacute; en ning&uacute;n canal, <i>force-rejoin</i> forzar&aacute; al usuario a reentrar en los canales y se le dar&aacute; op/voz, etc. si fuera necesario.</p>
@@ -2202,20 +2246,13 @@ set {
     <td>Exception ban &#8211; si alguien coincide, siempre podr&aacute; entrar al canal aunque est&eacute; baneado </td>
   </tr>
   <tr> 
-    <td><div align="center">f * &lt;l&iacute;neas:segundos&gt;</div></td>
-    <td>Protecci&oacute;n flood. Si se especifica * el usuario ser&aacute; baneado y expulsado si env&iacute;a m&aacute;s de l&iacute;neas en menos de segundos. Si no se usa *, s&oacute;lo se expulsa</td>
+    <td><div align="center">f [&lt;n&uacute;mero&gt;&lt;tipo&gt;]:&lt;segs&gt;</div></td>
+    <td>Protección flood canal. Vea <a href="#feature_antiflood">secci&oacute;n 3.12</a>
+	para una descripci&oacute;n detallada.</td>
   </tr>
   <tr> 
     <td><div align="center">G</div></td>
     <td>Marca el canal con la lista de &quot;badwords&quot;</td>
-  </tr>
-   <tr> 
-    <td><div align="center">j &lt;X:Y&gt;</div></td>
-    <td>Impide la entrada por usuario si sobrepasa los <em>X</em> intentos en menos de <em>Y</em> segundos</td>
-  </tr>
-  <tr> 
-    <td><div align="center">M</div></td>
-    <td>S&oacute;lo pueden hablar los usuarios registrados (+r) </td>
   </tr>
   <tr> 
     <td><div align="center">h &lt;nick&gt;</div></td>
@@ -2224,6 +2261,15 @@ set {
   <tr> 
     <td><div align="center">i</div></td>
     <td>Se precisa invitaci&oacute;n</td>
+  </tr>
+  <tr> 
+    <td><div align="center">I &lt;nick!user@host&gt;<br></div></td>
+    <td>Excepciones invite ("invex") - si alguien relaciona con esta m&aacute;scara, no necesita 
+      invitaci&oacute;n para entrar.</td>
+  </tr>
+   <tr> 
+    <td><div align="center">j &lt;X:Y&gt;</div></td>
+    <td>Impide la entrada por usuario si sobrepasa los <em>X</em> intentos en menos de <em>Y</em> segundos</td>
   </tr>
   <tr> 
     <td><div align="center">K</div></td>
@@ -2240,6 +2286,10 @@ set {
   <tr> 
     <td><div align="center">L &lt;#canal&gt;</div></td>
     <td>Si se pasa el l&iacute;mite del +l, los usuarios son enviados directamente a este canal</td>
+  </tr>
+  <tr> 
+    <td><div align="center">M</div></td>
+    <td>S&oacute;lo pueden hablar los usuarios registrados (+r) </td>
   </tr>
   <tr> 
     <td><div align="center">m</div></td>
@@ -2320,64 +2370,16 @@ set {
     <td colspan="2"><div align="center"><b>Modos de usuario </b></div></td>
   </tr>
   <tr> 
-    <td><div align="center">r</div></td>
-    <td>Identifica al nick como registrado</td>
-  </tr>
-  <tr> 
-    <td><div align="center">s</div></td>
-    <td>Puede escuchar las notificaciones del servidor </td>
-  </tr>
-  <tr> 
-    <td><div align="center">v</div></td>
-    <td>Rechaza los DCC infectados autom&aacute;ticamente</td>
-  </tr>
-  <tr> 
-    <td><div align="center">o</div></td>
-    <td>Operador de red global</td>
-  </tr>
-  <tr> 
-    <td><div align="center">O</div></td>
-    <td>Operador de red local</td>
-  </tr>
-  <tr> 
-    <td><div align="center">B</div></td>
-    <td>Es un bot </td>
-  </tr>
-  <tr> 
-    <td><div align="center">i</div></td>
-    <td>Invisible (no se muestra en /who) </td>
-  </tr>
-  <tr> 
     <td><div align="center">A</div></td>
     <td>Administrador de servidor</td>
-  </tr>
-  <tr> 
-    <td><div align="center">x</div></td>
-    <td>Da al usuario un host virtual </td>
-  </tr>
-  <tr> 
-    <td><div align="center">q</div></td>
-    <td>S&oacute;lo ulines pueden expulsarle (s&oacute;lo administradores de servicios)</td>
   </tr>
   <tr> 
     <td><div align="center">a</div></td>
     <td>Administrador de servicios </td>
   </tr>
   <tr> 
-    <td><div align="center">g</div></td>
-    <td>Puede leer y escribir globops y locops</td>
-  </tr>
-  <tr> 
-    <td><div align="center">H</div></td>
-    <td>Oculta el estado de operador de red </td>
-  </tr>
-  <tr> 
-    <td><div align="center">S</div></td>
-    <td>Protege a los servicios de red </td>
-  </tr>
-  <tr> 
-    <td><div align="center">t</div></td>
-    <td>Nota que el usuario usa un host virtual </td>
+    <td><div align="center">B</div></td>
+    <td>Es un bot </td>
   </tr>
   <tr> 
     <td><div align="center">C</div></td>
@@ -2388,44 +2390,92 @@ set {
     <td>No recibe mensajes de canal </td>
   </tr>
   <tr> 
-    <td><div align="center">N</div></td>
-    <td>Administrador de Red </td>
+    <td><div align="center">G</div></td>
+    <td>Filtra las palabras con la lista &quot;badwords&quot; </td>
   </tr>
   <tr> 
-    <td><div align="center">w</div></td>
-    <td>Puede recibir wallops </td>
+    <td><div align="center">g</div></td>
+    <td>Puede leer y escribir globops y locops</td>
+  </tr>
+  <tr> 
+    <td><div align="center">H</div></td>
+    <td>Oculta el estado de operador de red </td>
   </tr>
   <tr> 
     <td><div align="center">h</div></td>
     <td>Disponible para ayuda (HelpOp) </td>
   </tr>
   <tr> 
-    <td><div align="center">G</div></td>
-    <td>Filtra las palabras con la lista &quot;badwords&quot; </td>
+    <td><div align="center">i</div></td>
+    <td>Invisible (no se muestra en /who) </td>
   </tr>
   <tr> 
-    <td><div align="center">W</div></td>
-    <td>Le permite ver cuando le hacen /whois</td>
+    <td><div align="center">N</div></td>
+    <td>Administrador de Red </td>
+  </tr>
+  <tr> 
+    <td><div align="center">O</div></td>
+    <td>Operador de red local</td>
+  </tr>
+  <tr> 
+    <td><div align="center">o</div></td>
+    <td>Operador de red global</td>
   </tr>
   <tr> 
     <td><div align="center">p</div></td>
     <td>Oculta sus canales de /whois</td>
   </tr>
   <tr> 
+    <td><div align="center">q</div></td>
+    <td>S&oacute;lo ulines pueden expulsarle (s&oacute;lo administradores de servicios)</td>
+  </tr>
+  <tr> 
     <td><div align="center">R</div></td>
     <td>Le permite recibir mensajes de usuarios registrados (+r)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">r</div></td>
+    <td>Identifica al nick como registrado</td>
+  </tr>
+  <tr> 
+    <td><div align="center">S</div></td>
+    <td>Protege a los servicios de red </td>
+  </tr>
+  <tr> 
+    <td><div align="center">s</div></td>
+    <td>Puede escuchar las notificaciones del servidor (vea <a href="#feature_snomasks">section 3.3</a> para m&aacute;s informaci&oacute;n)</td>
+  </tr>
+  <tr>
+    <td><div align="center">T</div></td>
+    <td>Le previene de recibir CTCPs </td>
+  </tr>
+  <tr> 
+    <td><div align="center">t</div></td>
+    <td>Nota que el usuario usa un host virtual </td>
   </tr>
   <tr> 
     <td><div align="center">V</div></td>
     <td>Usuario WebTV </td>
   </tr>
+  <tr> 
+    <td><div align="center">v</div></td>
+    <td>Rechaza los DCC infectados autom&aacute;ticamente</td>
+  </tr>
+  <tr> 
+    <td><div align="center">W</div></td>
+    <td>Le permite ver cuando le hacen /whois</td>
+  </tr>
+  <tr> 
+    <td><div align="center">w</div></td>
+    <td>Puede recibir wallops </td>
+  </tr>
+  <tr> 
+    <td><div align="center">x</div></td>
+    <td>Da al usuario un host virtual </td>
+  </tr>
   <tr>
     <td><div align="center">z</div></td>
     <td>Cliente SSL</td>
-  </tr>
-  <tr>
-    <td><div align="center">T</div></td>
-    <td>Le previene de recibir CTCPs </td>
   </tr>
 </table>
 <p></p></div>
@@ -2622,6 +2672,11 @@ set {
     <td height="39">dns &lt;opci&oacute;n&gt;</td>
     <td>Devuelve informaci&oacute;n sobre el cach&eacute; DNS de los servidores. Muchos clientes llevan este comando inclu&iacute;do, por ello se recomienda usar /raw DNS. Los operadores pueden especificar una l en el primer par&aacute;metro para recibir la lista de entradas DNS</td>
     <td>Todos</td>
+  </tr>
+  <tr> 
+    <td height="39">userip &lt;nick&gt;<br></td>
+    <td>Devuelve la direcci&oacute;n IP del usuario en cuesti&oacute;n.</td>
+    <td>All</td>
   </tr>
   <tr> 
     <td height="39">oper &lt;userid&gt; &lt;contrase&ntilde;a&gt;<br></td>
@@ -3045,7 +3100,7 @@ Por defecto, los operadores de repetici&oacute;n tienden a coger la porci&oacute
 Un aspecto muy usual es hacerlo con un rango de letras o d&iacute;gitos. Por ejemplo, &quot;[012456789]&quot; ser&iacute;a lo mismo que usar &quot;[0-9]&quot;, puesto que el &quot;-&quot; indica un rango. Puesto que Unreal no contempla may&uacute;sculas/min&uacute;sculas, el uso de &quot;[a-z]&quot; seria lo mismo que &quot;[A-Z]&quot;. Tambi&eacute;n puede incluir varios rangos en la misma expresi&oacute;n. Para relacionar con una letra o un d&iacute;gito puede usar &quot;[0-9a-z]&quot;. Para usar el caracter &quot;-&quot; como literal deber&aacute; ponerlo al final o al principio de los corchetes. Por ejemplo, &quot;[0-9-]&quot; relacionar&iacute;a con un d&iacute;gito o con -.
   <p>
 Para simplificar tareas, existen unos cuantas &quot;clases de caracteres&quot; que pueden usarse entre los corchetes. Esta clase de caracteres suprimen la necesidad de definir varios rangos. Las clases de caracteres se notan encerrando su nombre entre dos puntos :. Por ejemplo, &quot;[0-9]&quot; es lo mismo que &quot;[:isdigit:]&quot;. Aqu&iacute; tiene una lista de las clases de caracteres disponibles y su uso:
-    <ul>
+  <ul>
 <li><tt>alnum</tt> - caracteres alfanum&eacute;ricos</li>
 <li><tt>alpha</tt> - caracteres alfab&eacute;ticos</li>
 <li><tt>blank</tt> - caracteres blancos</li>
@@ -3067,11 +3122,11 @@ La &uacute;ltima caracter&iacute;stica de los corchetes es la negaci&oacute;n. A
 <div class="desc">Las aserciones le permiten comprobar ciertas condiciones que no se pueden representar con cadenas de caracteres.
   <p>
 El caracter ^ se refiere al &quot;ancho izquierdo&quot;. Este caracter relaciona con el principio de una cadena. Por ejemplo, si tan s&oacute;lo usa la expresi&oacute;n &quot;test&quot; relacionar&iacute;a con &quot;esto es un test&quot; puesto que contiene la expresi&oacute;n &quot;test&quot;. En cambio, la expresi&oacute;n &quot;^test&quot; no lo har&iacute;a, puesto que indicar&iacute;a que DEBE empezar por &quot;test&quot;. An&aacute;logamente, el caracter $ le indicar&aacute; el ancho derecho, que debe terminar con esto. Por ejemplo, &quot;test$&quot; relacionar&iacute;a con cualquier palabra que acabara en &quot;test&quot;. Asimismo puede combinarlos. Por ejemplo, &quot;^test$&quot; relacionar&iacute;a con las palabras que fueran &quot;test&quot; exactamente.
-    <p>
+  <p>
 Existen varias aserciones para palabras. Todas las dem&aacute;s se especifican usando \ seguida del caracter en cuesti&oacute;n. Por ejemplo, para probar el inicio y final de una palabra, puede usar \&lt; y \&gt; respectivamente.
-      <p>
+  <p>
 El resto de aserciones se definen de dos formas: positivas y negativas. Estas son:
-        <ul>
+  <ul>
 <li><tt>\b</tt> - Palabra l&iacute;mite
 <li><tt>\B</tt> - No palabra l&iacute;mite
 <li><tt>\d</tt> - D&iacute;gito (equivalente a <tt>[[:digit:]]</tt>)</li>
