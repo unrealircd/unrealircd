@@ -40,7 +40,11 @@ typedef char			(*cFP)();	/* char * function pointer */
 #else
 #define irc_dlopen dlopen
 #define irc_dlclose dlclose
+#if defined(__OpenBSD__)
+#define irc_dlsym(x,y,z) z = obsd_dlsym(x,y)
+#else
 #define irc_dlsym(x,y,z) z = dlsym(x,y)
+#endif
 #define irc_dlerror dlerror
 #define DLLFUNC 
 #endif
@@ -168,6 +172,7 @@ struct _eventinfo {
 	void *data;
 };
 
+
 #define EventAdd(name, every, howmany, event, data) EventAddEx(NULL, name, every, howmany, event, data)
 Event   *EventAddEx(Module *, char *name, long every, long howmany,
                   vFP event, void *data);
@@ -188,6 +193,10 @@ int     Module_Unload(char *name, int unload);
 vFP     Module_Sym(char *name);
 vFP     Module_SymX(char *name, Module **mptr);
 int	Module_free(Module *mod);
+
+#ifdef __OpenBSD__
+void *obsd_dlsym(void *handle, char *symbol);
+#endif
 
 #define add_Hook(hooktype, func) HookAddMain(NULL, hooktype, func, NULL)
 #define HookAdd(hooktype, func) HookAddMain(NULL, hooktype, func, NULL)

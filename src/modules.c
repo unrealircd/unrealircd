@@ -60,6 +60,22 @@ Module *Module_make(ModuleHeader *header,
 #endif
        );
 
+#ifdef __OpenBSD__
+void *obsd_dlsym(void *handle, char *symbol) {
+    char *obsdsymbol = (char*)malloc(strlen(symbol) + 2);
+    void *symaddr = NULL;
+
+    if (obsdsymbol) {
+       sprintf(obsdsymbol, "_%s", symbol);
+       symaddr = dlsym(handle, obsdsymbol);
+       free(obsdsymbol);
+    }
+
+    return symaddr;
+}
+#endif
+
+
 void Module_Init(void)
 {
 	bzero(Hooks, sizeof(Hooks));
