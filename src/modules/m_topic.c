@@ -197,6 +197,7 @@ DLLFUNC CMD_FUNC(m_topic)
 				    nicKlen + 1);
 
 				chptr->topic_time = ttime;
+				RunHook4(HOOKTYPE_TOPIC, cptr, sptr, chptr, topic);
 				sendto_serv_butone_token
 				    (cptr, parv[0], MSG_TOPIC,
 				    TOK_TOPIC, "%s %s %lu :%s",
