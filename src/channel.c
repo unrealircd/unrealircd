@@ -109,44 +109,45 @@ static char modebuf[MODEBUFLEN], parabuf[MODEBUFLEN];
 typedef struct {
 	long mode;
 	char flag;
-	int  halfop;		/* 1 = yes 0 = no */
+	unsigned  halfop : 1;		/* 1 = yes 0 = no */
+	unsigned  parameters : 1; 
 } aCtab;
 
 // typedef struct CFlagTab aCtab;
 #define MODESYS_LINKOK		/* We do this for a TEST  */
 aCtab cFlagTab[] = {
-	{MODE_LIMIT, 'l', 0},
-	{MODE_VOICE, 'v', 1},
-	{MODE_HALFOP, 'h', 0},
-	{MODE_CHANOP, 'o', 0},
-	{MODE_PRIVATE, 'p', 0},
-	{MODE_SECRET, 's', 0},
-	{MODE_MODERATED, 'm', 1},
-	{MODE_NOPRIVMSGS, 'n', 1},
-	{MODE_TOPICLIMIT, 't', 1},
-	{MODE_INVITEONLY, 'i', 1},
-	{MODE_KEY, 'k', 1},
-	{MODE_RGSTR, 'r', 0},
-	{MODE_RGSTRONLY, 'R', 0},
-	{MODE_NOCOLOR, 'c', 0},
-	{MODE_CHANPROT, 'a', 0},
-	{MODE_CHANOWNER, 'q', 0},
-	{MODE_OPERONLY, 'O', 0},
-	{MODE_ADMONLY, 'A', 0},
-	{MODE_LINK, 'L', 0},
-	{MODE_NOKICKS, 'Q', 0},
-	{MODE_BAN, 'b', 1},
-	{MODE_STRIP, 'S', 0},	/* works? */
-	{MODE_EXCEPT, 'e', 1},	/* exception ban */
-	{MODE_NOKNOCK, 'K', 0},	/* knock knock (no way!) */
-	{MODE_NOINVITE, 'V', 0},	/* no invites */
-	{MODE_FLOODLIMIT, 'f', 0},	/* flood limiter */
-	{MODE_NOHIDING, 'H', 0},	/* no +I joiners */
+	{MODE_LIMIT, 'l', 0, 1},
+	{MODE_VOICE, 'v', 1, 1},
+	{MODE_HALFOP, 'h', 0, 1},
+	{MODE_CHANOP, 'o', 0, 1},
+	{MODE_PRIVATE, 'p', 0, 0},
+	{MODE_SECRET, 's', 0, 0},
+	{MODE_MODERATED, 'm', 1, 0},
+	{MODE_NOPRIVMSGS, 'n', 1, 0},
+	{MODE_TOPICLIMIT, 't', 1, 0},
+	{MODE_INVITEONLY, 'i', 1, 0},
+	{MODE_KEY, 'k', 1, 1},
+	{MODE_RGSTR, 'r', 0, 0},
+	{MODE_RGSTRONLY, 'R', 0, 0},
+	{MODE_NOCOLOR, 'c', 0, 0},
+	{MODE_CHANPROT, 'a', 0, 1},
+	{MODE_CHANOWNER, 'q', 0, 1},
+	{MODE_OPERONLY, 'O', 0, 0},
+	{MODE_ADMONLY, 'A', 0, 0},
+	{MODE_LINK, 'L', 0, 1},
+	{MODE_NOKICKS, 'Q', 0, 0},
+	{MODE_BAN, 'b', 1, 1},
+	{MODE_STRIP, 'S', 0, 0},	/* works? */
+	{MODE_EXCEPT, 'e', 1, 0},	/* exception ban */
+	{MODE_NOKNOCK, 'K', 0, 0},	/* knock knock (no way!) */
+	{MODE_NOINVITE, 'V', 0, 0},	/* no invites */
+	{MODE_FLOODLIMIT, 'f', 0, 1},	/* flood limiter */
+	{MODE_NOHIDING, 'H', 0, 0},	/* no +I joiners */
 #ifdef STRIPBADWORDS
-	{MODE_STRIPBADWORDS, 'G', 0},	/* no badwords */
+	{MODE_STRIPBADWORDS, 'G', 0, 0},	/* no badwords */
 #endif
-	{MODE_NOCTCP, 'C', 0},	/* no CTCPs */
-	{MODE_AUDITORIUM, 'u', 0},
+	{MODE_NOCTCP, 'C', 0, 0},	/* no CTCPs */
+	{MODE_AUDITORIUM, 'u', 0, 0},
 	{0x0, 0x0, 0x0}
 };
 #endif
@@ -4667,7 +4668,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 		for (acp = cFlagTab; acp->mode; acp++)
 		{
 			if ((oldmode.mode & acp->mode) &&
-			    !(chptr->mode.mode & acp->mode))
+			    !(chptr->mode.mode & acp->mode) && !acp->parameters)
 			{
 				Addsingle(acp->flag);
 			}
@@ -4684,7 +4685,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 		for (acp = cFlagTab; acp->mode; acp++)
 		{
 			if (!(oldmode.mode & acp->mode) &&
-			    (chptr->mode.mode & acp->mode))
+			    (chptr->mode.mode & acp->mode) && !acp->parameters)
 			{
 				Addsingle(acp->flag);
 			}
@@ -4928,6 +4929,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 
 	if (modebuf[1])
 	{
+		modebuf[b] = '\0';
 		sendto_serv_butone_sjoin(cptr,
 		    ":%s MODE %s %s %s %lu",
 		    sptr->name, chptr->chname, modebuf, parabuf,
