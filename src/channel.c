@@ -4438,7 +4438,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	aClient *acptr, *tempptr;
 	aChannel *chptr;
 	Link *lp;
-	Ban *ban;
+	Ban *ban; 
 	aParv *ap;
 	int  ts, oldts, pcount, x, y, z, i, f;
 	unsigned short b, c;
@@ -4854,7 +4854,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 					sendto_ops
 					    ("Fake direction from user %s in SJOIN from %s(%s) at %s",
 					    nick,
-					    acptr->from->name, sptr->name,
+					    sptr->from->name, sptr->name,
 					    chptr->chname);
 					goto nextnick;
 				}
@@ -4922,6 +4922,11 @@ nextnick:
 	strcpy(parabuf, "");
 	for (i = 1; i <= (parc - 2); i++)
 	{
+		if (!parv[i])
+		{
+			sendto_ops("Got null parv in SJ3 code");
+			continue;			
+		}
 		strcat(parabuf, parv[i]);
 		if (((i + 1) <= (parc - 2)))
 			strcat(parabuf, " ");
@@ -4937,6 +4942,11 @@ nextnick:
 	ap = mp2parv("*", t);
 	for (i = 1; i < ap->parc; i++)
 	{
+		if (!ap->parv[i])
+		{
+			sendto_ops("Got null parv in SJ2 code");
+			continue;
+		}
 		if (*ap->parv[i] == '&')
 			continue;
 		if (*ap->parv[i] == '"')

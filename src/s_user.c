@@ -1544,7 +1544,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		add_history(sptr, 1);
 		sendto_common_channels(sptr, ":%s NICK :%s", parv[0], nick);
 		sendto_serv_butone_token(cptr, parv[0], MSG_NICK, TOK_NICK,
-		    "%s :%d", nick, sptr->lastnick);
+		    "%s %d", nick, sptr->lastnick);
 	}
 	else if (!sptr->name[0])
 	{
