@@ -395,3 +395,4 @@
   but not required
 - # comments can be used anywhere in a line now (just like // comments) for compatibility with other
   IRCds
+- Added sajoin/sapart error message patch by NiQuiL (modified slightly by codemastr)

@@ -5345,6 +5345,7 @@ int  m_svsjoin(cptr, sptr, parc, parv)
 /* m_sajoin() - Lamego - Wed Jul 21 20:04:48 1999
    Copied off PTlink IRCd (C) PTlink coders team.
    Coded for Sadmin by Stskeeps
+   also Modified by NiQuiL (niquil@programmer.net)
 	parv[0] - sender
 	parv[1] - nick to make join
 	parv[2] - channel(s) to join
@@ -5356,10 +5357,22 @@ int  m_sajoin(cptr, sptr, parc, parv)
 {
 	aClient *acptr;
 	if (!IsSAdmin(sptr) && !IsULine(sptr))
-		return 0;
+	{
+	 sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+	 return 0;
+	}
 
-	if (parc != 3 || !(acptr = find_person(parv[1], NULL)))
+	if (parc != 3)
+	{
+	 sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "SAJOIN");
+	 return 0;
+	}
+
+	if (!(acptr = find_person(parv[1], NULL)))
+	{
+		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0], parv[1]);
 		return 0;
+	}
 
 	sendto_realops("%s used SAJOIN to make %s join %s", sptr->name, parv[1],
 	    parv[2]);
@@ -5395,8 +5408,7 @@ int  m_svspart(cptr, sptr, parc, parv)
 	if (!IsULine(sptr))
 		return 0;
 
-	if (parc != 3 || !(acptr = find_person(parv[1], NULL)))
-		return 0;
+	if (parc != 3 || !(acptr = find_person(parv[1], NULL))) return 0;
 
 	if (MyClient(acptr))
 	{
@@ -5414,6 +5426,7 @@ int  m_svspart(cptr, sptr, parc, parv)
 /* m_sapart() - Lamego - Wed Jul 21 20:04:48 1999
    Copied off PTlink IRCd (C) PTlink coders team.
    Coded for Sadmin by Stskeeps
+   also Modified by NiQuiL (niquil@programmer.net)
 	parv[0] - sender
 	parv[1] - nick to make part
 	parv[2] - channel(s) to part
@@ -5425,10 +5438,22 @@ int  m_sapart(cptr, sptr, parc, parv)
 {
 	aClient *acptr;
 	if (!IsSAdmin(sptr) && !IsULine(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
+	}
 
-	if (parc != 3 || !(acptr = find_person(parv[1], NULL)))
+	if (parc != 3)
+	{
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "SAPART");
 		return 0;
+	}
+
+	if (!(acptr = find_person(parv[1], NULL)))
+	{
+		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0], parv[1]);
+		return 0;
+	}
 
 	sendto_realops("%s used SAPART to make %s part %s", sptr->name, parv[1],
 	    parv[2]);
