@@ -17,6 +17,7 @@
 
 extern int  max_connection_count;
 extern char modebuf[MAXMODEPARAMS*2+1], parabuf[504];
+extern char *get_client_name2(aClient *, int);
 
 int stats_banversion(aClient *, char *);
 int stats_links(aClient *, char *);
@@ -1251,6 +1252,8 @@ int stats_class(aClient *sptr, char *para)
 int stats_zip(aClient *sptr, char *para)
 {
 #ifdef ZIP_LINKS
+	int i;
+	aClient *acptr;
 	for (i=0; i <= LastSlot; i++)
 	{
 		if (!(acptr = local[i]))
@@ -1261,7 +1264,7 @@ int stats_zip(aClient *sptr, char *para)
 		{
 			sendto_one(sptr,
 				":%s %i %s :Zipstats for link to %s (compresslevel %d): decompressed (in): %01lu/%01lu (%3.1f%%), compressed (out): %01lu/%01lu (%3.1f%%)",
-				me.name, RPL_TEXT, parv[0], get_client_name(acptr, TRUE),
+				me.name, RPL_TEXT, sptr->name, get_client_name(acptr, TRUE),
 				acptr->serv->conf->compression_level ? 
 				acptr->serv->conf->compression_level : ZIP_DEFAULT_LEVEL,
 				acptr->zip->in->total_in, acptr->zip->in->total_out,
@@ -1271,7 +1274,7 @@ int stats_zip(aClient *sptr, char *para)
 		} 
 		else 
 			sendto_one(sptr, ":%s %i %s :Zipstats for link to %s: unavailable", 
-				me.name, RPL_TEXT, parv[0]);
+				me.name, RPL_TEXT, sptr->name);
 	}
 #endif
 	return 0;
@@ -1354,8 +1357,8 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 			sendto_one(sptr, Lformat, me.name,
 				RPL_STATSLINKINFO, sptr->name, 
 				all ?
-				get_client_name2(acptr, showports) :
-				get_client_name(acptr, FALSE),
+				(get_client_name2(acptr, showports)) :
+				(get_client_name(acptr, FALSE)),
 				get_cptr_status(acptr),
 				(int)DBufLength(&acptr->sendQ),
 				(int)acptr->sendM, (int)acptr->sendK,
