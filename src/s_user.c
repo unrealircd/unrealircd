@@ -1060,7 +1060,7 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 			    "USER server wrong direction");
 		}
 		else
-			sptr->flags |= (acptr->flags /* & FLAGS_TS8 */);
+			sptr->flags |= acptr->flags;
 		/* *FINALL* this gets in ircd... -- Barubary */
 		/* We change this a bit .. */
 		if (IsULine(sptr->srvptr))

@@ -1292,8 +1292,6 @@ CMD_FUNC(m_mode)
 		return 0;
 	}
 
-   /*	sptr->flags &= ~FLAGS_TS8; */
-
 	if (MyConnect(sptr))
 		clean_channelname(parv[1]);
 	if (check_channelmask(sptr, cptr, parv[1]))
@@ -3928,8 +3926,6 @@ CMD_FUNC(m_part)
 	char *commentx = (parc > 2 && parv[2]) ? parv[2] : NULL;
 	char *comment;
 
-  /*	sptr->flags &= ~FLAGS_TS8; */
-
 	if (parc < 2 || parv[1][0] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
@@ -4102,9 +4098,6 @@ CMD_FUNC(m_kick)
 	int  chasing = 0;
 	char *comment, *name, *p = NULL, *user, *p2 = NULL;
 	Membership *lp;
-
-
-   /*	sptr->flags &= ~FLAGS_TS8;  */
 
 	if (parc < 3 || *parv[1] == '\0')
 	{
