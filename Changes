@@ -2993,3 +2993,7 @@ seen. gmtime warning still there
 - Minor doc updates on SSL (mIRC now supports SSL a bit).
 - Fixed yet another fun remote includes memory corruption crash bug due
   to curl strangeness (took me 2 hours to trace down, great!). Reported by Matridom.
+- Redesigned the HOOKTYPE_PRE_LOCAL_JOIN to support return types of HOOK_DENY,
+  HOOK_ALLOW, and HOOK_CONTINUE to prevent a user from joining, to immediately allow
+  a user to join, and to proceed on to see if other modules will deny the user.
+  Based on a suggestion by satmd (#0001604)

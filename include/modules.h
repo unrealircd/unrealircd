@@ -540,6 +540,11 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_TOPIC 37
 #define HOOKTYPE_REHASH_COMPLETE 38
 
+/* Hook return values */
+#define HOOK_CONTINUE 0
+#define HOOK_ALLOW -1
+#define HOOK_DENY 1
+
 /* Module flags */
 #define MODFLAG_NONE	0x0000
 #define MODFLAG_LOADED	0x0001 /* Fully loaded */

@@ -3894,35 +3894,36 @@ CMD_FUNC(do_join)
 		if (chptr && (lp = find_membership_link(sptr->user->channel, chptr)))
 			continue;
 
-		if (!MyConnect(sptr))
-			flags = CHFL_DEOPPED;
+		if (!chptr)
+			continue;
 
 		i = -1;
-		if (!chptr ||
-		    (MyConnect(sptr)
-		    && (i = can_join(cptr, sptr, chptr, key, link, parv))))
+		if (!MyConnect(sptr))
+			flags = CHFL_DEOPPED;
+		else
 		{
-
-			if (i != -1)
-				sendto_one(sptr, err_str(i),
-				    me.name, parv[0], name);
-			continue;
-		}
-
-		if (MyConnect(sptr)) {
-			int breakit = 0;
 			Hook *h;
-			for (h = Hooks[HOOKTYPE_PRE_LOCAL_JOIN]; h; h = h->next) {
-				if((*(h->func.intfunc))(sptr,chptr,parv) > 0) {
-					breakit = 1;
+			for (h = Hooks[HOOKTYPE_PRE_LOCAL_JOIN]; h; h = h->next) 
+			{
+				i = (*(h->func.intfunc))(sptr,chptr,parv);
+				if (i == HOOK_DENY || i == HOOK_ALLOW)
 					break;
-				}
 			}
-			if (breakit)
+			/* Denied, get out now! */
+			if (i == HOOK_DENY)
 			{
 				/* Rejected... if we just created a new chan we should destroy it too. -- Syzop */
 				if (!chptr->users)
 					sub1_from_channel(chptr);
+				continue;
+			}
+			/* If they are allowed, don't check can_join */
+			if (i != HOOK_ALLOW && 
+			   (i = can_join(cptr, sptr, chptr, key, link, parv)))
+			{
+				if (i != -1)
+					sendto_one(sptr, err_str(i),
+					    me.name, parv[0], name);
 				continue;
 			}
 		}
