@@ -373,3 +373,4 @@
 - Fixed a problem with users opping servers.. Found by Morbid
 - Fixed a problem with SDESC module token being wrong - Found by eternal
 - If no oper flags are found, default to locop (suggested by devdev)
+- Added tld::channel so you can make people join a channel based on hostmask

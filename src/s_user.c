@@ -738,6 +738,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		NULL,		/*7  set_at */
 		NULL		/*8  reason */
 	};
+	ConfigItem_tld *tlds;
 	user->last = TStime();
 	parv[0] = sptr->name;
 	parv[1] = parv[2] = NULL;
@@ -1119,8 +1120,20 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		if (buf[0] != '\0' && buf[1] != '\0')
 			sendto_one(cptr, ":%s MODE %s :%s", cptr->name,
 			    cptr->name, buf);
-
-		if (!BadPtr(AUTO_JOIN_CHANS) && strcmp(AUTO_JOIN_CHANS, "0"))
+		
+		for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *) tlds->next) {
+			if (!match(tlds->mask, cptr->user->realhost)) 
+				break;
+		}
+		if (tlds && !BadPtr(tlds->channel)) {
+			char *chans[3] = {
+				sptr->name,
+				tlds->channel,
+				NULL
+			};
+			(void)m_join(sptr, sptr, 3, chans);
+		}
+		else if (!BadPtr(AUTO_JOIN_CHANS) && strcmp(AUTO_JOIN_CHANS, "0"))
 		{
 			char *chans[3] = {
 				sptr->name,

@@ -1292,6 +1292,9 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 			ca->rules = read_rules(cep->ce_vardata);
 			ca->rules_file = strdup(cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "channel")) {
+			ca->channel = strdup(cep->ce_vardata);
+		}
 		else
 		{
 			config_status("%s:%i: unknown directive tld::%s",

@@ -999,7 +999,7 @@ struct _configitem_ulines {
 struct _configitem_tld {
 	ConfigFlag 	flag;
 	ConfigItem 	*prev, *next;
-	char 		*mask, *motd_file, *rules_file;
+	char 		*mask, *motd_file, *rules_file, *channel;
 	struct tm	*motd_tm;
 	aMotd		*rules, *motd;
 };
