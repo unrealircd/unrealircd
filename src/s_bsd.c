@@ -1014,14 +1014,6 @@ void close_connection(cptr)
 		cptr->authfd = -1;
 		--OpenFiles;
 	}
-#ifdef SOCKSPORT
-	if (cptr->socksfd >= 0)
-	{
-		CLOSE_SOCK(cptr->socksfd);
-		cptr->socksfd = -1;
-		--OpenFiles;
-	}
-#endif /* SOCKSPORT */
 
 	if (cptr->fd >= 0)
 	{
@@ -1407,9 +1399,6 @@ add_con_refuse:
 	IRCstats.unknown++;
 	start_auth(acptr);
 
-#ifdef SOCKSPORT
-	start_socks(acptr);
-#endif
 	return acptr;
 }
 
@@ -1701,9 +1690,6 @@ int  read_message(delay, listp)
 	int  res, length, fd, i;
 	int  auth = 0;
 
-#ifdef SOCKSPORT
-	int  socks = 0;
-#endif
 	int  sockerr;
 
 #ifndef NO_FDLIST
@@ -1735,23 +1721,6 @@ int  read_message(delay, listp)
 			if (IsLog(cptr))
 				continue;
 
-#ifdef SOCKSPORT
-			if (DoingSocks(cptr))
-			{
-				socks++;
-				if (cptr->socksfd >= 0)
-				{
-					FD_SET(cptr->socksfd, &read_set);
-#ifdef _WIN32
-					FD_SET(cptr->socksfd, &excpt_set);
-#endif
-				
-					if (cptr->flags & FLAGS_WRSOCKS)
-						FD_SET(cptr->socksfd, &write_set);
-				}
-			}
-#endif /* SOCKSPORT */
-
 			if (DoingAuth(cptr))
 			{
 				auth++;
@@ -1767,9 +1736,6 @@ int  read_message(delay, listp)
 				}
 			}
 			if (DoingDNS(cptr) || DoingAuth(cptr)
-#ifdef SOCKSPORT
-			    || DoingSocks(cptr)
-#endif
 			    )
 				continue;
 			if (IsMe(cptr) && IsListening(cptr))
@@ -1789,10 +1755,6 @@ int  read_message(delay, listp)
 				FD_SET(cptr->fd, &write_set);
 		}
 
-#ifdef SOCKSPORT
-		if (me.socksfd >= 0)
-			FD_SET(me.socksfd, &read_set);
-#endif
 #ifndef _WIN32
 		if (resfd >= 0)
 			FD_SET(resfd, &read_set);
@@ -1824,18 +1786,6 @@ int  read_message(delay, listp)
 		Sleep(10);
 #endif
 	}
-#ifdef SOCKSPORT
-	if (me.socksfd >= 0 && FD_ISSET(me.socksfd, &read_set))
-	{
-		int  tmpsock;
-
-		tmpsock = accept(me.socksfd, NULL, NULL);
-		if (tmpsock >= 0)
-			CLOSE_SOCK(tmpsock);
-		FD_CLR(me.socksfd, &read_set);
-		nfds--;
-	}
-#endif /* SOCKSPORT */
 #ifndef _WIN32
 	if (resfd >= 0 && FD_ISSET(resfd, &read_set))
 	{
@@ -1901,63 +1851,6 @@ int  read_message(delay, listp)
 			}
 		}
 	}
-#ifdef SOCKSPORT
-	/*
-	 * I really hate to do this.. but another loop
-	 * to check to see if we have any socks fd's.. - darkrot
-	 */
-#ifdef NO_FDLIST
-	for (i = LastSlot; (socks > 0) && (i >= 0); i--)
-#else
-	for (i = listp->entry[j = 1];  (socks > 0) && (j <= listp->last_entry); i = listp->entry[++j])
-#endif
-	{
-		if (!(cptr = local[i]))
-			continue;
-
-		if (cptr->socksfd < 0 || IsMe(cptr))
-			continue;
-		socks--;
-#ifdef _WIN32
-		/*
-		 * Because of the way windows uses select(), we have to use
-		 * the exception FD set to find out when a connection is
-		 * refused.  ie Auth ports and /connect's.  -Cabal95
-		 */
-		if (FD_ISSET(cptr->socksfd, &excpt_set))
-		{
-			int  err, len = sizeof(err);
-
-			if (getsockopt(cptr->socksfd, SOL_SOCKET, SO_ERROR,
-			    (OPT_TYPE *)&err, &len) || err)
-			{
-				ircstp->is_abad++;
-				closesocket(cptr->socksfd);
-				--OpenFiles;
-				cptr->socksfd = -1;
-				cptr->flags &= ~(FLAGS_SOCKS | FLAGS_WRSOCKS);
-				if (nfds > 0)
-					nfds--;
-				continue;
-			}
-		}
-#endif /* _WIN32 */
-		if (nfds > 0)
-		{
-			if (FD_ISSET(cptr->socksfd, &read_set) ||
-				FD_ISSET(cptr->socksfd, &write_set))
-				nfds--;
-			if ((cptr->socksfd > 0) && FD_ISSET(cptr->socksfd, &read_set))
-			{
-				read_socks(cptr);
-			}
-			if ((cptr->socksfd > 0) && FD_ISSET(cptr->socksfd, &write_set))
-			{
-				send_socksquery(cptr);
-			}
-		}
-	}
-#endif /* SOCKSPORT */
 
 #ifdef NO_FDLIST
 	for (i = LastSlot; i >= 0; i--)
@@ -2209,26 +2102,7 @@ int  read_message(delay, listp)
 				authclnts[cptr->authfd] = cptr;
 				continue;
 			}
-#ifdef SOCKSPORT
-			if (DoingSocks(cptr))
-			{
-				if (socks == 0)
-					memset((char *)&socksclnts, '\0',
-					    sizeof(authclnts));
-				socks++;
-				Debug((DEBUG_NOTICE, "socks on %x %d", cptr,
-				    i));
-				PFD_SETR(cptr->socksfd);
-				if (cptr->flags & FLAGS_WRSOCKS)
-					PFD_SETW(cptr->socksfd);
-				socksclnts[cptr->socksfd] = cptr;
-				continue;
-			}
-#endif
 			if (DoingDNS(cptr) || DoingAuth(cptr)
-#ifdef SOCKSPORT
-			    || DoingSocks(cptr)
-#endif
 			    )
 				continue;
 			if (IsMe(cptr) && IsListening(cptr))
@@ -2339,23 +2213,6 @@ int  read_message(delay, listp)
 				send_authports(cptr);
 			continue;
 		}
-#ifdef SOCKSPORT
-		if ((socks > 0) && ((cptr = socksclnts[fd]) != NULL) &&
-		    (cptr->socksfd == fd))
-		{
-			socks--;
-			if (rr)
-			{
-				read_socks(cptr);
-				continue;
-			}
-			if (rw)
-			{
-				send_socksquery(cptr);
-			}
-			continue;
-		}
-#endif
 		if (!(cptr = local[fd]))
 			continue;
 		if (rr && IsListening(cptr))

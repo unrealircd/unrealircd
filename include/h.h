@@ -121,11 +121,6 @@ extern LoopStruct loop;
 
 #ifdef SHOWCONNECTINFO
 
-#ifdef SOCKSPORT
-#define BREPORT_DO_SOCKS "NOTICE AUTH :*** Checking for open socks server...\r\n"
-#define BREPORT_GOOD_SOCKS "NOTICE AUTH :*** Secure socks found (good!)...\r\n"
-#define BREPORT_NO_SOCKS "NOTICE AUTH :*** No socks server found (good!)...\r\n"
-#endif
 
 #define BREPORT_DO_DNS	"NOTICE AUTH :*** Looking up your hostname...\r\n"
 #define BREPORT_FIN_DNS	"NOTICE AUTH :*** Found your hostname\r\n"
@@ -138,15 +133,9 @@ extern LoopStruct loop;
 extern char REPORT_DO_DNS[128], REPORT_FIN_DNS[128], REPORT_FIN_DNSC[128],
     REPORT_FAIL_DNS[128], REPORT_DO_ID[128], REPORT_FIN_ID[128],
     REPORT_FAIL_ID[128];
-#ifdef SOCKSPORT
-extern char REPORT_DO_SOCKS[128], REPORT_GOOD_SOCKS[128], REPORT_NO_SOCKS[128];
-#endif
 
 extern int R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns,
     R_do_id, R_fin_id, R_fail_id;
-#ifdef SOCKSPORT
-extern int R_do_socks, R_good_socks, R_no_socks;
-#endif
 
 #endif
 extern inline aCommand *find_Command(char *cmd, short token, int flags);
@@ -230,12 +219,6 @@ extern void start_auth(aClient *);
 extern void read_authports(aClient *);
 extern void send_authports(aClient *);
 
-#ifdef SOCKSPORT
-extern void init_socks(aClient *);
-extern void start_socks(aClient *);
-extern void send_socksquery(aClient *);
-extern void read_socks(aClient *);
-#endif
 
 extern void restart(char *);
 extern void send_channel_modes(aClient *, aChannel *);

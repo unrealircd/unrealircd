@@ -128,7 +128,6 @@ DLLFUNC int	h_config_set_blackhole(void)
 	char	*ip;
 	char	*port;
 	int	iport;
-		
 	for (sets = conf_unknown_set; sets; 
 		sets = (ConfigItem_unknown_ext *)sets->next)
 	{

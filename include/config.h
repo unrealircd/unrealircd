@@ -438,24 +438,6 @@
 
 #define SHOWCONNECTINFO
 
-/*
- * SOCKS proxy checker
- *
- * At the moment this isn't an ideal solution, however it's better
- * than nothing. Smaller servers shouldn't notice much of a performance
- * hit, larger servers might have to reduce their Y-lines. In either
- * case it's advisable to increase the number of FD's you define by
- * about 10%.
- *
- * This determines the port on the local ircd machine that the open
- * SOCKS server test attempts to connect back to. The default should
- * be fine except for those unusual situations where the default
- * port is in use for some reason.
- *
- * Undefining this will eliminate the checker from ircd.
- */
-#undef SOCKSPORT 6013
-
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
 
 /* You shouldn't change anything below this line, unless absolutely needed. */

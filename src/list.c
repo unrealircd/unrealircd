@@ -142,9 +142,6 @@ aClient *make_client(from, servr)
 		cptr->sockhost[0] = '\0';
 		cptr->buffer[0] = '\0';
 		cptr->authfd = -1;
-#ifdef SOCKSPORT
-		cptr->socksfd = -1;
-#endif
 	}
 	return (cptr);
 }

@@ -90,16 +90,10 @@ extern aMotd *botmotd;
 
 #ifdef SHOWCONNECTINFO
 int  R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
-#ifdef SOCKSPORT
-int  R_do_socks, R_no_socks, R_good_socks;
-#endif
 
 char REPORT_DO_DNS[128], REPORT_FIN_DNS[128], REPORT_FIN_DNSC[128],
     REPORT_FAIL_DNS[128], REPORT_DO_ID[128], REPORT_FIN_ID[128],
     REPORT_FAIL_ID[128];
-#ifdef SOCKSPORT
-char REPORT_DO_SOCKS[128], REPORT_NO_SOCKS[128], REPORT_GOOD_SOCKS[128];
-#endif
 #endif
 extern ircstats IRCstats;
 aClient me;			/* That's me */
@@ -621,9 +615,6 @@ extern TS check_pings(TS currenttime, int check_kills)
 			{
 				if (!IsRegistered(cptr) &&
 				    (DoingDNS(cptr) || DoingAuth(cptr)
-#ifdef SOCKSPORT
-				    || DoingSocks(cptr)
-#endif
 				    ))
 				{
 					if (cptr->authfd >= 0)
@@ -635,16 +626,6 @@ extern TS check_pings(TS currenttime, int check_kills)
 						*cptr->buffer = '\0';
 					}
 
-#ifdef SOCKSPORT
-					if (cptr->socksfd >= 0)
-					{
-						CLOSE_SOCK(cptr->socksfd);
-						--OpenFiles;
-						cptr->socksfd = -1;
-					}
-#endif /* SOCKSPORT */
-
-
 #ifdef SHOWCONNECTINFO
 					if (DoingDNS(cptr))
 						sendto_one(cptr,
@@ -652,11 +633,6 @@ extern TS check_pings(TS currenttime, int check_kills)
 					else if (DoingAuth(cptr))
 						sendto_one(cptr,
 						    REPORT_FAIL_ID);
-#ifdef SOCKSPORT
-					else
-						sendto_one(cptr,
-						    REPORT_NO_SOCKS);
-#endif /* SOCKSPORT */
 #endif
 					Debug((DEBUG_NOTICE,
 					    "DNS/AUTH timeout %s",
@@ -664,9 +640,6 @@ extern TS check_pings(TS currenttime, int check_kills)
 					del_queries((char *)cptr);
 					    ClearAuth(cptr);
 					ClearDNS(cptr);
-#ifdef SOCKSPORT
-					ClearSocks(cptr);
-#endif
 					SetAccess(cptr);
 					cptr->firsttime = currenttime;
 					cptr->lasttime = currenttime;
@@ -1160,9 +1133,6 @@ int  InitwIRCD(argc, argv)
 	me.class = (ConfigItem_class *) conf_listen;
 	/* This listener will never go away */
 	conf_listen->clients++;
-#ifdef SOCKSPORT
-	me.socksfd = -1;
-#endif
 	me_hash = find_or_add(me.name);
 	me.serv->up = me_hash;
 	me.serv->numeric = conf_me->numeric;
@@ -1183,12 +1153,6 @@ int  InitwIRCD(argc, argv)
 	(void)ircsprintf(REPORT_DO_ID, ":%s %s", me.name, BREPORT_DO_ID);
 	(void)ircsprintf(REPORT_FIN_ID, ":%s %s", me.name, BREPORT_FIN_ID);
 	(void)ircsprintf(REPORT_FAIL_ID, ":%s %s", me.name, BREPORT_FAIL_ID);
-#ifdef SOCKSPORT
-	(void)ircsprintf(REPORT_DO_SOCKS, ":%s %s", me.name, BREPORT_DO_SOCKS);
-	(void)ircsprintf(REPORT_NO_SOCKS, ":%s %s", me.name, BREPORT_NO_SOCKS);
-	(void)ircsprintf(REPORT_GOOD_SOCKS, ":%s %s",
-	    me.name, BREPORT_GOOD_SOCKS);
-#endif
 	R_do_dns = strlen(REPORT_DO_DNS);
 	R_fin_dns = strlen(REPORT_FIN_DNS);
 	R_fin_dnsc = strlen(REPORT_FIN_DNSC);
@@ -1196,14 +1160,6 @@ int  InitwIRCD(argc, argv)
 	R_do_id = strlen(REPORT_DO_ID);
 	R_fin_id = strlen(REPORT_FIN_ID);
 	R_fail_id = strlen(REPORT_FAIL_ID);
-#ifdef SOCKSPORT
-	R_do_socks = strlen(REPORT_DO_SOCKS);
-	R_no_socks = strlen(REPORT_NO_SOCKS);
-	R_good_socks = strlen(REPORT_GOOD_SOCKS);
-#endif /* SOCKSPORT */
-#endif
-#ifdef SOCKSPORT
-	init_socks(&me);
 #endif
 	write_pidfile();
 #ifdef USE_SSL

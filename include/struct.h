@@ -245,11 +245,9 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define FLAGS_ASKEDPING 0x100000
 #define FLAGS_NETINFO   0x200000
 #define FLAGS_HYBNOTICE 0x400000
-#ifdef SOCKSPORT
-#define FLAGS_SOCKS     0x800000
-#define FLAGS_WRSOCKS   0x1000000
-#define FLAGS_GOTSOCKS  0x2000000
-#endif
+#define FLAGS_QUARANTINE     0x800000
+#define FLAGS_UNOCCUP2   0x1000000
+#define FLAGS_UNOCCUP3   0x2000000
 #define FLAGS_SHUNNED    0x4000000
 #ifdef USE_SSL
 #define FLAGS_SSL	 0x10000000
@@ -257,7 +255,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #endif
 #define FLAGS_DCCBLOCK	0x40000000
 #define FLAGS_MAP       0x80000000	/* Show this entry in /map */
-#define FLAGS_QUARANTINE 0x100000000
 /* Dec 26th, 1997 - added flags2 when I ran out of room in flags -DuffJ */
 
 /* Dec 26th, 1997 - having a go at
@@ -399,9 +396,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	SetAccess(x)		((x)->flags |= FLAGS_CHKACCESS)
 #define SetBlocked(x)		((x)->flags |= FLAGS_BLOCKED)
 #define	DoingAuth(x)		((x)->flags & FLAGS_AUTH)
-#ifdef SOCKSPORT
-#define DoingSocks(x)           ((x)->flags & FLAGS_SOCKS)
-#endif
 #define	NoNewLine(x)		((x)->flags & FLAGS_NONL)
 #define SetRegNick(x)		((x)->umodes & UMODE_REGNICK)
 #define SetHidden(x)            ((x)->umodes |= UMODE_HIDE)
@@ -429,9 +423,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define ClearHidden(x)          ((x)->umodes &= ~UMODE_HIDE)
 #define ClearHideOper(x)    ((x)->umodes &= ~UMODE_HIDEOPER)
 
-#ifdef SOCKSPORT
-#define ClearSocks(x) ((x)->flags &= ~FLAGS_SOCKS)
-#endif
 
 /*
  * ProtoCtl options
@@ -863,10 +854,7 @@ struct Client {
 	aClient *listener;
 	ConfigItem_class *class;		/* Configuration record associated */
 	int authfd;		/* fd for rfc931 authentication */
-    short slot;         /* my offset in the local fd table */
-#ifdef SOCKSPORT
-	int socksfd;
-#endif
+        short slot;         /* my offset in the local fd table */
 	struct IN_ADDR ip;	/* keep real ip# too */
 	u_short port;		/* and the remote port# too :-) */
 	struct hostent *hostp;

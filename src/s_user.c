@@ -713,47 +713,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 
 	if (MyConnect(sptr))
 	{
-#ifdef SOCKSPORT
-		if (sptr->flags & FLAGS_GOTSOCKS)
-		{
-			char hostip[128];
-#ifndef INET6
-			strcpy(hostip, (char *)inetntoa((char *)&sptr->ip));
-#else
-			strcpy(hostip,
-			    (char *)inetntop(AF_INET6,
-			    (char *)&sptr->ip, mydummy, MYDUMMY_SIZE));
-#endif
-
-			sendto_one(sptr,
-			    ":%s NOTICE AUTH :*** Found open SOCKS server (bad)",
-			    me.name);
-
-			sendto_umode(UMODE_EYES,
-			    "Open SOCKS server from client %s",
-			    get_client_host(sptr));
-
-
-
-			i =
-			    exit_client(cptr, sptr, &me,
-			    iConf.socksquitmessage);
-
-			tkllayer[4] = hostip;
-			tkllayer[5] = me.name;
-			ircsprintf(mo, "%li", iConf.socksbantime + TStime());
-			ircsprintf(mo2, "%li", TStime());
-			tkllayer[6] = mo;
-			tkllayer[7] = mo2;
-			tkllayer[8] = iConf.socksbanmessage;
-			m_tkl(&me, &me, 9, tkllayer);
-			return i;
-		}
-
-#endif /* SOCKSPORT */
-
-		if ((i = check_client(sptr)))
-		{
+		if ((i = check_client(sptr))) {
 			/* This had return i; before -McSkaf */
 			if (i == -5)
 				return FLUSH_BUFFER;
