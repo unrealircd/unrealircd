@@ -513,3 +513,4 @@
 - Made CIDR no longer accept bitmasks with less than 16bits for /*line commands (#0002240)
   reported by aquanight.
 - Made the (?) kill message not show IP addresses (#0002227) reported by neothematrix.
+- Added some error checking to /sapart (#0002253) suggested by Troco.
