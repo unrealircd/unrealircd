@@ -4590,15 +4590,6 @@ int  m_svsmode(cptr, sptr, parc, parv)
 			  case '\r':
 			  case '\t':
 				  break;
-			  case 'l':
-				  if (parv[3] && isdigit(*parv[3]))
-					  max_global_count = atoi(parv[3]);
-				  break;
-			  case 'd':
-				  if (parv[3] && isdigit(*parv[3]))
-					  acptr->user->servicestamp =
-					      atol(parv[3]);
-				  break;
 			  case 'i':
 				  if (what == MODE_ADD)
 					  IRCstats.invisible++;
@@ -4610,6 +4601,13 @@ int  m_svsmode(cptr, sptr, parc, parv)
 					  IRCstats.operators++;
 				  if (what == MODE_DEL)
 					  IRCstats.operators--;
+			  case 'd':
+				  if (parv[3] && isdigit(*parv[3]))
+				  {
+					  acptr->user->servicestamp =
+					      atol(parv[3]);
+					  break;
+				  }
 			  default:
 setmodex:
 				  for (s = user_modes; (flag = *s); s += 2)

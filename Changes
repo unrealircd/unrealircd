@@ -469,3 +469,4 @@
 - Removed ALN, and the ALN system.
 - Added base64 encoding instead, for ALN v2 (NS)
 - Removed a SJ3 debug msg
+- Removed SVSMODE +l support, and fixed servicestamp and +d support
