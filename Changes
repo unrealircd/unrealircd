@@ -3298,3 +3298,4 @@ This is the 3.2 fixes branch.
 - Made Mod_Version required (this should be no problem since it's done automatically).
 - Added HOOKTYPE_LOG [int type, char *timebuf, char *logbuf]
 - Updated the release notes.
+- Fixed a CIDR bug reported by poisoner (#0001892)

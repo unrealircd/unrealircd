@@ -2395,15 +2395,24 @@ ConfigItem_ban 	*Find_ban(aClient *sptr, char *host, short type)
 	 */
 
 	for (ban = conf_ban; ban; ban = (ConfigItem_ban *) ban->next)
+	{
 		if (ban->flag.type == type)
-			if (match_ip(sptr->ip, host, ban->mask, ban->netmask))
+		{
+			if (sptr)
 			{
-				/* Person got a exception */
-				if ((type == CONF_BAN_USER || type == CONF_BAN_IP)
-				    && Find_except(sptr, host, CONF_EXCEPT_BAN))
-					return NULL;
-				return ban;
+				if (match_ip(sptr->ip, host, ban->mask, ban->netmask))
+				{
+					/* Person got a exception */
+					if ((type == CONF_BAN_USER || type == CONF_BAN_IP)
+					    && Find_except(sptr, host, CONF_EXCEPT_BAN))
+						return NULL;
+					return ban;
+				}
 			}
+			else if (!match(ban->mask, host)) /* We don't worry about exceptions */
+				return ban;
+		}
+	}
 	return NULL;
 }
 
@@ -2417,13 +2426,22 @@ ConfigItem_ban 	*Find_banEx(aClient *sptr, char *host, short type, short type2)
 	 */
 
 	for (ban = conf_ban; ban; ban = (ConfigItem_ban *) ban->next)
+	{
 		if ((ban->flag.type == type) && (ban->flag.type2 == type2))
-			if (match_ip(sptr->ip, host, ban->mask, ban->netmask)) {
-				/* Person got a exception */
-				if (Find_except(sptr, host, type))
-					return NULL;
-				return ban;
+		{
+			if (sptr)
+			{
+				if (match_ip(sptr->ip, host, ban->mask, ban->netmask)) {
+					/* Person got a exception */
+					if (Find_except(sptr, host, type))
+						return NULL;
+					return ban;
+				}
 			}
+			else if (!match(ban->mask, host)) /* We don't worry about exceptions */
+				return ban;
+		}
+	}
 	return NULL;
 }
 
