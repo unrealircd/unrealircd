@@ -1123,7 +1123,7 @@ int  InitwIRCD(argc, argv)
 	opermotd = (aMotd *) read_file(OPATH, &opermotd);
 	motd = (aMotd *) read_motd(MPATH);
 	svsmotd = (aMotd *) read_file(VPATH, &svsmotd);
-	strcpy(me.sockhost, conf_listen->ip, sizeof(me.sockhost) - 1);
+	strncpy(me.sockhost, conf_listen->ip, sizeof(me.sockhost) - 1);
 	if (me.name[0] == '\0')
 		strncpyzt(me.name, me.sockhost, sizeof(me.name));
 	me.hopcount = 0;

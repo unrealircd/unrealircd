@@ -33,7 +33,7 @@
 #ifdef __STDC__
 # ifndef _WIN32
 extern __u_l inet_addr(char *);
-extern char *inet_ntoa(char *);
+extern char *inet_ntoa(struct IN_ADDR);
 # endif
 extern __u_l inet_makeaddr(int, int);
 extern __u_l inet_network(char *);
