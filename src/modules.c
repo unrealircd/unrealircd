@@ -89,7 +89,7 @@ Module *Module_Find(char *name)
 	
 	for (p = Modules; p; p = p->next)
 	{
-		if (!p->permanent &&
+		if (!(p->options & MOD_OPT_PERM) &&
 		    (!(p->flags & MODFLAG_TESTING) || (p->flags & MODFLAG_DELAYED)))
 			continue;
 		if (!strcmp(p->header->name, name))
@@ -168,10 +168,6 @@ char  *Module_Create(char *path_)
 			return (NULL);
 		}
 		mod = (Module *)Module_make(mod_header, Mod);
-		irc_dlsym(Mod, "permanent_module", x);
-		if (x && (*x == 1))
-			mod->permanent = 1;
-		
 		irc_dlsym(Mod, "Mod_Init", Mod_Init);
 		if (!Mod_Init)
 		{
@@ -316,7 +312,7 @@ void Unload_all_loaded_modules(void)
 	for (mi = Modules; mi; mi = next)
 	{
 		next = mi->next;
-		if (!(mi->flags & MODFLAG_LOADED) || (mi->flags & MODFLAG_DELAYED) || mi->permanent)
+		if (!(mi->flags & MODFLAG_LOADED) || (mi->flags & MODFLAG_DELAYED) || (mi->options & MOD_OPT_PERM))
 			continue;
 		irc_dlsym(mi->dll, "Mod_Unload", Mod_Unload);
 		if (Mod_Unload)
@@ -722,7 +718,7 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		tmp[0] = '\0';
 		if (mi->flags & MODFLAG_DELAYED)
 			strcat(tmp, "[Unloading] ");
-		if (mi->permanent)
+		if (mi->options & MOD_OPT_PERM)
 			strcat(tmp, "[PERM] ");
 		sendto_one(sptr, ":%s NOTICE %s :*** %s - %s (%s) %s", me.name, sptr->name,
 			mi->header->name, mi->header->version, mi->header->description, tmp);
@@ -976,3 +972,15 @@ void	unload_all_modules(void)
 	}
 }
 
+unsigned int ModuleSetOptions(Module *module, unsigned int options)
+{
+	unsigned int oldopts = module->options;
+
+	module->options = options;
+	return oldopts;
+}
+
+unsigned int ModuleGetOptions(Module *module)
+{
+	return module->options;
+}

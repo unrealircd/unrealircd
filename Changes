@@ -2319,3 +2319,5 @@ seen. gmtime warning still there
   module functions. New functions are UmodeAdd and UmodeDel (backwards compatibility
   is available for the old functions).
 - Fixed a bug in the snomask and umode system dealing with removing flags
+- Added two module functions ModuleGetOptions and ModuleSetOptions to retrieve/toggle
+  module options

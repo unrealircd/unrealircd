@@ -48,8 +48,6 @@ ModuleHeader Mod_Header
 ExtCMode EXTCMODE_TEST = 0L; /* Just for testing */
 ExtCMode EXTCMODE_TEST2 = 0L; /* Just for testing */
 
-int permanent_module = 1;
-
 int modey_is_ok(aClient *sptr, aChannel *chptr, char *para, int checkt, int what);
 aExtCMtableParam * modey_put_param(aExtCMtableParam *lst, char *para);
 char *modey_get_param(aExtCMtableParam *lst);
@@ -78,6 +76,7 @@ int    m_dummy_Init(ModuleInfo *modinfo)
 {
 aExtCMtable req;
 	ircd_log(LOG_ERROR, "debug: mod_init called from chmodetst module");
+	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM);
 	sendto_realops("chmodetst loading...");
 	/* TODO: load mode here */
 	/* +w doesn't do anything, it's just for testing */
