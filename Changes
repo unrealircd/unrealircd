@@ -621,3 +621,4 @@
   is not included yet or you have some corrections, then contact syzop@vulnscan.org or
   report it as a bug on http://bugs.unrealircd.org/
 - Added swedish support for nicks, supplied by Tank.
+- Various updates to unreal32docs from Ron2K (#0002354).

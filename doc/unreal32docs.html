@@ -357,7 +357,7 @@ Throttling is a method that allows you to limit how fast a user can disconnect a
  You can config it in your set::throttle block to allow X connections in YY seconds from the same IP.<br>
 <b>Channel modes</b><br>
 There are also some channel modes which can be very effective against floods. To name a few:<br>
-<b>K</b> = no /knock, <b>N</b> = no nickchanges, <b>C</b> = no CTCPs, <b>M</b> = only registered users can talk.<br>
+<b>K</b> = no /knock, <b>N</b> = no nickchanges, <b>C</b> = no CTCPs, <b>M</b> = only registered users can talk, <b>j</b> = join throttling (per-user basis)<br>
 As of beta18 there's also a much more advanced channelmode +f...<br>
 <b>Channel mode f</b><br>
 Instead of using scripts and bots to protect against channel floods it is now build into the ircd.<br>
@@ -2403,22 +2403,14 @@ set {
       even if they match an existing ban</td>
   </tr>
   <tr> 
-    <td><div align="center">f * &lt;lines:seconds&gt;</div></td>
-    <td>Flood protection, if the * is given a user will kick banned when they 
-      send &lt;lines:seconds&gt; if no * they are just kicked</td>
+    <td><div align="center">f [&lt;number&gt;&lt;type&gt;]:&lt;seconds&gt;</div></td>
+    <td>Channel flood protection. See <a href="#feature_antiflood">section 3.12</a>
+	above for an extended description.</td>
   </tr>
   <tr> 
     <td><div align="center">G</div></td>
     <td>Makes channel G rated. Checks for words listed in the Badword Blocks, 
       and replaces them with the words specified</td>
-  </tr>
-  <tr> 
-    <td><div align="center">j &lt;joins:seconds&gt;</div></td>
-    <td>Throttles joins per-user to <i>joins</i> per <i>seconds</i> seconds</td>
-  </tr>
-  <tr> 
-    <td><div align="center">M</div></td>
-    <td>A registered nickname (+r) is required to talk</td>
   </tr>
   <tr> 
     <td><div align="center">h &lt;nick&gt;</div></td>
@@ -2427,6 +2419,15 @@ set {
   <tr> 
     <td><div align="center">i</div></td>
     <td>Invite required</td>
+  </tr>
+  <tr> 
+    <td><div align="center">I &lt;nick!user@host&gt;<br></div></td>
+    <td>Invite exceptions ("invex") - if someone matches this, they can bypass
+      +i requirements to enter the channel.</td>
+  </tr>
+  <tr> 
+    <td><div align="center">j &lt;joins:seconds&gt;</div></td>
+    <td>Throttles joins per-user to <i>joins</i> per <i>seconds</i> seconds</td>
   </tr>
   <tr> 
     <td><div align="center">K</div></td>
@@ -2443,6 +2444,10 @@ set {
   <tr> 
     <td><div align="center">L &lt;Chan&gt;</div></td>
     <td>If the amount set by +l has been reached, users will be sent to this channel</td>
+  </tr>
+  <tr> 
+    <td><div align="center">M</div></td>
+    <td>A registered nickname (+r) is required to talk</td>
   </tr>
   <tr> 
     <td><div align="center">m</div></td>
@@ -2524,64 +2529,16 @@ set {
     <td colspan="2"><div align="center"><b>User Modes</b></div></td>
   </tr>
   <tr> 
-    <td><div align="center">r</div></td>
-    <td>Identifies the nick as being registered</td>
-  </tr>
-  <tr> 
-    <td><div align="center">s</div></td>
-    <td>Can listen to server notices</td>
-  </tr>
-  <tr> 
-    <td><div align="center">v</div></td>
-    <td>Receives infected DCC Send Rejection notices</td>
-  </tr>
-  <tr> 
-    <td><div align="center">o</div></td>
-    <td>Global IRC Operator (Set in Oper Block)</td>
-  </tr>
-  <tr> 
-    <td><div align="center">O</div></td>
-    <td>Local IRC Operator (Set in Oper Block)</td>
-  </tr>
-  <tr> 
-    <td><div align="center">B</div></td>
-    <td>Marks you as being a Bot</td>
-  </tr>
-  <tr> 
-    <td><div align="center">i</div></td>
-    <td>Invisible (not shown in /who)</td>
-  </tr>
-  <tr> 
     <td><div align="center">A</div></td>
     <td>Server Admin (Set in Oper Block)</td>
-  </tr>
-  <tr> 
-    <td><div align="center">x</div></td>
-    <td>Gives user a hidden hostname </td>
-  </tr>
-  <tr> 
-    <td><div align="center">q</div></td>
-    <td>Only U:Lines can kick you (Services Admins Only)</td>
   </tr>
   <tr> 
     <td><div align="center">a</div></td>
     <td>Services Admin (Set in Oper Block)</td>
   </tr>
   <tr> 
-    <td><div align="center">g</div></td>
-    <td>Can send & read globops and locops</td>
-  </tr>
-  <tr> 
-    <td><div align="center">H</div></td>
-    <td>Hide IRCop Status (IRCop Only)</td>
-  </tr>
-  <tr> 
-    <td><div align="center">S</div></td>
-    <td>Used to protect Services Daemons</td>
-  </tr>
-  <tr> 
-    <td><div align="center">t</div></td>
-    <td>Says you are using a /vhost</td>
+    <td><div align="center">B</div></td>
+    <td>Marks you as being a Bot</td>
   </tr>
   <tr> 
     <td><div align="center">C</div></td>
@@ -2592,44 +2549,92 @@ set {
     <td>Makes it so you can not receive channel PRIVMSGs</td>
   </tr>
   <tr> 
-    <td><div align="center">N</div></td>
-    <td>Network Administrator (Set in Oper Block)</td>
+    <td><div align="center">G</div></td>
+    <td>Filters out all the bad words per configuration</td>
   </tr>
   <tr> 
-    <td><div align="center">w</div></td>
-    <td>Can listen to wallop messages</td>
+    <td><div align="center">g</div></td>
+    <td>Can send & read globops and locops</td>
+  </tr>
+  <tr> 
+    <td><div align="center">H</div></td>
+    <td>Hide IRCop Status (IRCop Only)</td>
   </tr>
   <tr> 
     <td><div align="center">h</div></td>
     <td>Available for help (HelpOp) (Set in OperBlock)</td>
   </tr>
   <tr> 
-    <td><div align="center">G</div></td>
-    <td>Filters out all the bad words per configuration</td>
+    <td><div align="center">i</div></td>
+    <td>Invisible (not shown in /who)</td>
   </tr>
   <tr> 
-    <td><div align="center">W</div></td>
-    <td>Lets you see when people do a /whois on you (IRCops Only)</td>
+    <td><div align="center">N</div></td>
+    <td>Network Administrator (Set in Oper Block)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">O</div></td>
+    <td>Local IRC Operator (Set in Oper Block)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">o</div></td>
+    <td>Global IRC Operator (Set in Oper Block)</td>
   </tr>
   <tr> 
     <td><div align="center">p</div></td>
     <td>Hides the channels you are in from /whois</td>
   </tr>
   <tr> 
+    <td><div align="center">q</div></td>
+    <td>Only U:Lines can kick you (Services Admins Only)</td>
+  </tr>
+  <tr> 
     <td><div align="center">R</div></td>
     <td>Allows you to only receive PRIVMSGs/NOTICEs from registered (+r) users</td>
+  </tr>
+  <tr> 
+    <td><div align="center">r</div></td>
+    <td>Identifies the nick as being registered</td>
+  </tr>
+  <tr> 
+    <td><div align="center">S</div></td>
+    <td>Used to protect Services Daemons</td>
+  </tr>
+  <tr> 
+    <td><div align="center">s</div></td>
+    <td>Can listen to server notices (see <a href="#feature_snomasks">section 3.3</a> above for more information)</td>
+  </tr>
+  <tr>
+    <td><div align="center">T</div></td>
+    <td>Prevents you from receiving CTCPs</td>
+  </tr>
+  <tr> 
+    <td><div align="center">t</div></td>
+    <td>Says you are using a /vhost</td>
   </tr>
   <tr> 
     <td><div align="center">V</div></td>
     <td>Marks you as a WebTV user</td>
   </tr>
+  <tr> 
+    <td><div align="center">v</div></td>
+    <td>Receives infected DCC Send Rejection notices</td>
+  </tr>
+  <tr> 
+    <td><div align="center">W</div></td>
+    <td>Lets you see when people do a /whois on you (IRCops Only)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">w</div></td>
+    <td>Can listen to wallop messages</td>
+  </tr>
+  <tr> 
+    <td><div align="center">x</div></td>
+    <td>Gives user a hidden hostname </td>
+  </tr>
   <tr>
     <td><div align="center">z</div></td>
     <td>Indicates that you are an SSL client</td>
-  </tr>
-  <tr>
-    <td><div align="center">T</div></td>
-    <td>Prevents you from receiving CTCPs</td>
   </tr>
 </table>
 <p></p></div>
@@ -2865,6 +2870,11 @@ to get more information on a command.</p>
         you will most likely need to use /raw DNS to use this.
         Opers may specify an l as the first parameter to the command
         to receive a list of entries in the DNS cache.</td>
+    <td>All</td>
+  </tr>
+  <tr> 
+    <td height="39">userip &lt;nick&gt;<br></td>
+    <td>Returns the IP address of the user in question.</td>
     <td>All</td>
   </tr>
   <tr> 
