@@ -924,6 +924,14 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		if ((find_uline(cptr->confs, sptr->user->server)))
 			sptr->flags |= FLAGS_ULINE;
 	}
+	if (sptr->umodes & UMODE_INVISIBLE)
+	{
+#ifdef INV_TRACK
+		ircd_log("invisible++ in %s:%s for %s client", 
+			__FILE__, __LINE__, MyClient(sptr) ? "MY" : "REMOTE");
+#endif
+		IRCstats.invisible++;
+	}
 
 	if (virthost && umode)
 	{
@@ -942,6 +950,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			ircsprintf(sptr->user->virthost, virthost);
 		}
 	}
+	
 	hash_check_notify(sptr, RPL_LOGON);	/* Uglier hack */
 	send_umode(NULL, sptr, 0, SEND_UMODES, buf);
 	/* NICKv2 Servers ! */
@@ -2924,14 +2933,6 @@ int  m_user(cptr, sptr, parc, parv)
 	}
 
 
-	if (sptr->umodes & UMODE_INVISIBLE)
-	{
-#ifdef INV_TRACK
-		ircd_log("invisible++ in %s:%s for %s client", 
-			__FILE__, __LINE__, MyClient(sptr) ? "MY" : "REMOTE");
-#endif
-		IRCstats.invisible++;
-	}
 
 	strncpyzt(user->realhost, host, sizeof(user->realhost));
 	user->server = me_hash;
