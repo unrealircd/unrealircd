@@ -736,7 +736,7 @@ static void exit_one_client_backend(cptr, sptr, from, comment, split)
 	}
 
 	/* Remove sptr from the client list */
-	if (IsRegistered(sptr))
+	if (!MyClient(sptr) || IsRegistered(sptr))
 		if (del_from_client_hash_table(sptr->name, sptr) != 1)
 			Debug((DEBUG_ERROR, "%#x !in tab %s[%s] %#x %#x %#x %d %d %#x",
 			    sptr, sptr->name,
