@@ -340,7 +340,7 @@ int ircd_SSL_read(aClient *acptr, void *buf, int sz)
                if(errno == EAGAIN)
                    return 0;
            default:
-		return 0;        
+		return -1;        
        }
     }
     return len;
@@ -368,7 +368,7 @@ int ircd_SSL_write(aClient *acptr, const void *buf, int sz)
                if(errno == EAGAIN)
                    return 0;
            default:
-		return 0;
+		return -1;
        }
     }
     return len;
