@@ -161,7 +161,7 @@ void ban_flooder(aClient *cptr)
 		NULL		/*8  reason */
 	};
 
-	strlcpy(hostip, (char *)inetntoa((char *)&cptr->ip), sizeof(hostip));
+	strlcpy(hostip, Inet_ia2p(&cptr->ip), sizeof(hostip));
 
 	tkllayer[4] = hostip;
 	tkllayer[5] = me.name;
