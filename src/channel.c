@@ -793,19 +793,22 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 	 * #0000053 by |savage|, speedup 
 	*/
 	
-	if (!MyClient(cptr) && IsClient(cptr))
+	if (!MyClient(cptr))
 	{
-		/* channelmode +mu is a special case.. sux!. -- Syzop */		
+		if (IsClient(cptr))
+		{
+			/* channelmode +mu is a special case.. sux!. -- Syzop */		
 
-		lp = find_membership_link(cptr->user->channel, chptr);
-		if ((chptr->mode.mode & MODE_MODERATED) && (chptr->mode.mode & MODE_AUDITORIUM) &&
-		    !IsOper(cptr) &&
-	        (!lp || !(lp->flags & (CHFL_CHANOP|CHFL_VOICE|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_CHANPROT))) &&
-	        !is_irc_banned(chptr))
-	    {
-			sendto_chanops_butone(cptr, chptr, ":IRC PRIVMSG %s :%s: %s",
-				chptr->chname, cptr->name, msgtext);
-			return (CANNOT_SEND_MODERATED);
+			lp = find_membership_link(cptr->user->channel, chptr);
+			if ((chptr->mode.mode & MODE_MODERATED) && (chptr->mode.mode & MODE_AUDITORIUM) &&
+			    !IsOper(cptr) &&
+		        (!lp || !(lp->flags & (CHFL_CHANOP|CHFL_VOICE|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_CHANPROT))) &&
+		        !is_irc_banned(chptr))
+		    {
+				sendto_chanops_butone(cptr, chptr, ":IRC PRIVMSG %s :%s: %s",
+					chptr->chname, cptr->name, msgtext);
+				return (CANNOT_SEND_MODERATED);
+			}
 		}
 		return 0;
 	}

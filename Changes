@@ -2412,3 +2412,4 @@ seen. gmtime warning still there
 - Improved SSL error msg sent to junk snomask.
 - Fixed Q:lined nickname msgs during linking and a debug fix.
 - Fixed a SVSMOTD crashbug (removing of motd).
+- Fix-for-fix-for-+mu-fix (it was still crashing)... don't ask.
