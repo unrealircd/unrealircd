@@ -1441,3 +1441,4 @@ seen. gmtime warning still there
 - Win32 installer fixes (changed version to beta11)
 - Changed version to beta11
 - updated .RELEASE.NOTES to explain operinvite
+- Fixed SSL compile error wrt to /trace

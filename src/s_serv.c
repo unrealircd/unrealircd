@@ -3706,12 +3706,12 @@ CMD_FUNC(m_trace)
 			  break;
 #ifdef USE_SSL
 		  case STAT_SSL_CONNECT_HANDSHAKE:
-		  	sendto_one(sptr, rpl_str(RPL_NEWTYPE), me.name,
+		  	sendto_one(sptr, rpl_str(RPL_TRACENEWTYPE), me.name,
 		  	 parv[0], "SSL-Connect-Handshake", name); 
 			cnt++;
 			break;
 		  case STAT_SSL_ACCEPT_HANDSHAKE:
-		  	sendto_one(sptr, rpl_str(RPL_NEWTYPE), me.name,
+		  	sendto_one(sptr, rpl_str(RPL_TRACENEWTYPE), me.name,
 		  	 parv[0], "SSL-Accept-Handshake", name); 
 			cnt++;
 			break;
