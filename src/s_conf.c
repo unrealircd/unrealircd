@@ -1584,7 +1584,7 @@ int	init_conf(char *rootconf, int rehash)
 	config_setdefaultsettings(&tempiConf);
 	if (load_conf(rootconf) > 0)
 	{
-		if ((config_test() < 0) || (callbacks_check() < 0))
+		if ((config_test() < 0) || (callbacks_check() < 0) || (efunctions_check() < 0))
 		{
 			config_error("IRCd configuration failed to pass testing");
 #ifdef _WIN32
@@ -1601,6 +1601,7 @@ int	init_conf(char *rootconf, int rehash)
 			return -1;
 		}
 		callbacks_switchover();
+		efunctions_switchover();
 		if (rehash)
 		{
 			Hook *h;

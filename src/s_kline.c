@@ -44,7 +44,7 @@
 aTKline *tklines[TKLISTLEN];
 
 extern MODVAR char zlinebuf[BUFSIZE];
-int spamf_ugly_vchanoverride = 0;
+int MODVAR spamf_ugly_vchanoverride = 0;
 
 /** tkl hash method.
  * NOTE1: the input value 'c' is assumed to be in range a-z or A-Z!
@@ -1567,7 +1567,7 @@ char *str;
 				xparv[2] = NULL;
 				/* RECURSIVE CAUTION in case we ever add blacklisted chans */
 				spamf_ugly_vchanoverride = 1;
-				ret = m_join(sptr, sptr, 2, xparv);
+				ret = do_cmd(sptr, sptr, "JOIN", 2, xparv);
 				spamf_ugly_vchanoverride = 0;
 				if (ret == FLUSH_BUFFER)
 					return FLUSH_BUFFER; /* don't ask me how we could have died... */

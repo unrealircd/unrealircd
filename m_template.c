@@ -1,6 +1,6 @@
 /*
  *   IRC - Internet Relay Chat, src/modules/%FILE%
- *   (C) 2004 The UnrealIRCd Team
+ *   (C) 2005 The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers.
@@ -44,7 +44,7 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_%COMMAND%(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+DLLFUNC CMD_FUNC(m_%COMMAND%);
 
 #define MSG_%UCOMMAND% 	"%UCOMMAND%"	
 #define TOK_%UCOMMAND% 	"%TOKEN%"	
@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_%COMMAND%)
 
 DLLFUNC int MOD_INIT(m_%COMMAND%)(ModuleInfo *modinfo)
 {
-	add_Command(MSG_%UCOMMAND%, TOK_%UCOMMAND%, m_%COMMAND%, %MAXPARA%);
+	CommandAdd(modinfo->handle, MSG_%UCOMMAND%, TOK_%UCOMMAND%, m_%COMMAND%, %MAXPARA%, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -72,11 +72,6 @@ DLLFUNC int MOD_LOAD(m_%COMMAND%)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(m_%COMMAND%)(int module_unload)
 {
-	if (del_Command(MSG_%UCOMMAND%, TOK_%UCOMMAND%, m_%COMMAND%) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-			MOD_HEADER(m_%COMMAND%).name);
-	}
 	return MOD_SUCCESS;
 }
 

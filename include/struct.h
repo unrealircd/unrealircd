@@ -657,6 +657,9 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	DEBUG_MALLOC 9		/* malloc/free calls */
 #define	DEBUG_LIST  10		/* debug list use */
 
+/* blah */
+#define IsSkoAdmin(sptr) (IsAdmin(sptr) || IsNetAdmin(sptr) || IsSAdmin(sptr))
+
 /*
  * defines for curses in client
  */
@@ -1680,6 +1683,9 @@ extern MODVAR char *gnulicense[];
 
 #define	FLUSH_BUFFER	-2
 #define	COMMA		","
+
+#define PARTFMT		":%s PART %s"
+#define PARTFMT2	":%s PART %s :%s"
 
 #ifdef USE_SSL
 #include "ssl.h"

@@ -59,6 +59,7 @@ Hook	   	*Hooks[MAXHOOKTYPES];
 Hooktype	Hooktypes[MAXCUSTOMHOOKS];
 Callback	*Callbacks[MAXCALLBACKS];	/* Callback objects for modules, used for rehashing etc (can be multiple) */
 Callback	*RCallbacks[MAXCALLBACKS];	/* 'Real' callback function, used for callback function calls */
+Efunction	*Efunctions[MAXEFUNCTIONS];	/* Efunction objects (used for rehashing) */
 MODVAR Module          *Modules = NULL;
 MODVAR Versionflag     *Versionflags = NULL;
 
@@ -70,6 +71,54 @@ Module *Module_make(ModuleHeader *header,
        void *mod
 #endif
        );
+
+typedef struct {
+	char *name;
+	void **funcptr;
+} EfunctionsList;
+
+/* Efuncs */
+int (*do_join)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+void (*join_channel)(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
+int (*can_join)(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[]);
+void (*do_mode)(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode);
+void (*set_mode)(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
+    char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
+
+static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
+/* 00 */	{NULL, NULL},
+/* 01 */	{"do_join", (void *)&do_join},
+/* 02 */	{"join_channel", (void *)&join_channel},
+/* 03 */	{"can_join", (void *)&can_join},
+/* 04 */	{"do_mode", (void *)&do_mode},
+/* 05 */	{"set_mode", (void *)&set_mode},
+/* 06 */	{NULL, NULL},
+/* 07 */	{NULL, NULL},
+/* 08 */	{NULL, NULL},
+/* 09 */	{NULL, NULL},
+/* 10 */	{NULL, NULL},
+/* 11 */	{NULL, NULL},
+/* 12 */	{NULL, NULL},
+/* 13 */	{NULL, NULL},
+/* 14 */	{NULL, NULL},
+/* 15 */	{NULL, NULL},
+/* 16 */	{NULL, NULL},
+/* 17 */	{NULL, NULL},
+/* 18 */	{NULL, NULL},
+/* 19 */	{NULL, NULL},
+/* 20 */	{NULL, NULL},
+/* 21 */	{NULL, NULL},
+/* 22 */	{NULL, NULL},
+/* 23 */	{NULL, NULL},
+/* 24 */	{NULL, NULL},
+/* 25 */	{NULL, NULL},
+/* 26 */	{NULL, NULL},
+/* 27 */	{NULL, NULL},
+/* 28 */	{NULL, NULL},
+/* 29 */	{NULL, NULL}
+};
+
+
 #ifdef UNDERSCORE
 void *obsd_dlsym(void *handle, char *symbol) {
     char *obsdsymbol = (char*)MyMalloc(strlen(symbol) + 2);
@@ -141,6 +190,7 @@ void Module_Init(void)
 	bzero(Hooktypes, sizeof(Hooktypes));
 	bzero(Callbacks, sizeof(Callback));
 	bzero(RCallbacks, sizeof(Callback));
+	bzero(Efunctions, sizeof(Efunction));
 }
 
 Module *Module_Find(char *name)
@@ -483,6 +533,9 @@ void Unload_all_loaded_modules(void)
 			else if (objs->type == MOBJ_CALLBACK) {
 				CallbackDel(objs->object.callback);
 			}
+			else if (objs->type == MOBJ_EFUNCTION) {
+				EfunctionDel(objs->object.efunction);
+			}
 			else if (objs->type == MOBJ_ISUPPORT) {
 				IsupportDel(objs->object.isupport);
 			}
@@ -545,6 +598,9 @@ void Unload_all_testing_modules(void)
 			}
 			else if (objs->type == MOBJ_CALLBACK) {
 				CallbackDel(objs->object.callback);
+			}
+			else if (objs->type == MOBJ_EFUNCTION) {
+				EfunctionDel(objs->object.efunction);
 			}
 			else if (objs->type == MOBJ_ISUPPORT) {
 				IsupportDel(objs->object.isupport);
@@ -614,6 +670,9 @@ int    Module_free(Module *mod)
 		}
 		else if (objs->type == MOBJ_CALLBACK) {
 			CallbackDel(objs->object.callback);
+		}
+		else if (objs->type == MOBJ_EFUNCTION) {
+			EfunctionDel(objs->object.efunction);
 		}
 		else if (objs->type == MOBJ_ISUPPORT) {
 			IsupportDel(objs->object.isupport);
@@ -867,13 +926,13 @@ int	Module_Depend_Resolve(Module *p, char *path)
 }
 
 /* m_module.
- * originally by ?? (codemastr?)
- * I (Syzop) changed it so it's now public for users too,
- * as quite some people (and users) requested they should have the
- * right to see what kind of weird modules are loaded on the server,
- * especially since people like to load spy modules these days.
+ * by Stskeeps, codemastr, Syzop.
+ * Changed it so it's now public for users too, as quite some people
+ * (and users) requested they should have the right to see what kind 
+ * of weird modules are loaded on the server, especially since people
+ * like to load spy modules these days.
  * I do not consider this sensitive information, but just in case
- * I stripped the version string for non-admins (eg: normal users).
+ * I stripped the version string for non-admins (eg: normal users). -- Syzop
  */
 int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
@@ -881,6 +940,9 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	int i;
 	char tmp[1024], *p;
 	aCommand *mptr;
+#ifdef DEBUGMODE
+	Efunction *e;
+#endif
 
 	/* Opers can do /module <servername> */
 	if ((parc > 1) && (IsServer(cptr) || IsOper(sptr)) &&
@@ -948,6 +1010,20 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			}
 	}
 	sendto_one(sptr, ":%s NOTICE %s :Override: %s", me.name, sptr->name, tmp);
+
+#ifdef DEBUGMODE
+	sendnotice(sptr, "Efunctions dump:");
+	for (i=0; i < MAXEFUNCTIONS; i++)
+		if ((e = Efunctions[i]))
+		{
+			sendnotice(sptr, "type=%d, name=%s, pointer=%p %s, owner=%s",
+				e->type,
+				efunction_table[e->type].name ? efunction_table[e->type].name : "<null>",
+				e->func.voidfunc,
+				*efunction_table[e->type].funcptr == e->func.voidfunc ? " [ACTIVE]" : "",
+				e->owner ? e->owner->header->name : "<null>");
+		}
+#endif
 	
 	return 1;
 }
@@ -1229,6 +1305,64 @@ Callback *CallbackDel(Callback *cb)
 	return NULL;
 }
 
+Efunction	*EfunctionAddMain(Module *module, int eftype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*cfunc)())
+{
+Efunction *p;
+
+	if (!module || !(module->options & MOD_OPT_OFFICIAL))
+	{
+		module->errorcode = MODERR_INVALID;
+		return NULL;
+	}
+	
+	p = (Efunction *) MyMallocEx(sizeof(Efunction));
+	if (func)
+		p->func.intfunc = func;
+	if (vfunc)
+		p->func.voidfunc = vfunc;
+	if (pvfunc)
+		p->func.pvoidfunc = pvfunc;
+	if (cfunc)
+		p->func.pcharfunc = cfunc;
+	p->type = eftype;
+	p->owner = module;
+	AddListItem(p, Efunctions[eftype]);
+	if (module) {
+		ModuleObject *cbobj = (ModuleObject *)MyMallocEx(sizeof(ModuleObject));
+		cbobj->object.efunction = p;
+		cbobj->type = MOBJ_EFUNCTION;
+		AddListItem(cbobj, module->objects);
+		module->errorcode = MODERR_NOERROR;
+	}
+	return p;
+}
+
+Efunction *EfunctionDel(Efunction *cb)
+{
+Efunction *p, *q;
+	for (p = Efunctions[cb->type]; p; p = p->next) {
+		if (p == cb) {
+			q = p->next;
+			DelListItem(p, Efunctions[cb->type]);
+			if (*efunction_table[cb->type].funcptr == p)
+				*efunction_table[cb->type].funcptr = NULL;
+			if (p->owner) {
+				ModuleObject *cbobj;
+				for (cbobj = p->owner->objects; cbobj; cbobj = cbobj->next) {
+					if ((cbobj->type == MOBJ_EFUNCTION) && (cbobj->object.efunction == p)) {
+						DelListItem(cbobj, cb->owner->objects);
+						MyFree(cbobj);
+						break;
+					}
+				}
+			}
+			MyFree(p);
+			return q;
+		}
+	}
+	return NULL;
+}
+
 Cmdoverride *CmdoverrideAdd(Module *module, char *name, iFP function)
 {
 	aCommand *p;
@@ -1436,6 +1570,76 @@ int i;
 			if (!e->willberemoved)
 			{
 				RCallbacks[i] = e; /* This is the new one. */
+				if (!(e->owner->options & MOD_OPT_PERM))
+					e->willberemoved = 1;
+				break;
+			}
+}
+
+static int num_efunctions(int eftype)
+{
+Efunction *e;
+int cnt = 0;
+
+#ifdef DEBUGMODE
+	if ((eftype < 0) || (eftype >= MAXEFUNCTIONS))
+		abort();
+#endif
+
+	for (e = Efunctions[eftype]; e; e = e->next)
+		if (!e->willberemoved)
+			cnt++;
+			
+	return cnt;
+}
+
+
+/** Ensure that all efunctions are present. */
+int efunctions_check(void)
+{
+int i, n, errors=0;
+
+	for (i=0; i < MAXEFUNCTIONS; i++)
+		if (efunction_table[i].name)
+		{
+			n = num_efunctions(i);
+			if ((n != 1) && (errors > 10))
+			{
+				config_error("[--efunction errors truncated to prevent flooding--]");
+				break;
+			}
+			if (n < 1)
+			{
+				config_error("ERROR: efunction '%s' not found, you probably did not "
+				             "load commands.so properly (or not all required m_* modules)",
+				             efunction_table[i].name);
+				errors++;
+			} else
+			if (n > 1)
+			{
+				config_error("ERROR: efunction '%s' was found %d times, perhaps you "
+				             "loaded commands.so twice or commands.so and a/the m_*.so module(s)",
+				             efunction_table[i].name, n);
+				errors++;
+			}
+		}
+	return errors ? -1 : 0;
+}
+
+void efunctions_switchover(void)
+{
+Efunction *e;
+int i;
+
+	/* Now set the real efunction, and tag the new one
+	 * as 'willberemoved' if needed.
+	 */
+
+	for (i=0; i < MAXEFUNCTIONS; i++)
+		for (e = Efunctions[i]; e; e = e->next)
+			if (!e->willberemoved)
+			{
+				*efunction_table[i].funcptr = e->func.voidfunc;  /* This is the new one. */
 				if (!(e->owner->options & MOD_OPT_PERM))
 					e->willberemoved = 1;
 				break;

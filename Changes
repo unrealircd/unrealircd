@@ -564,3 +564,8 @@
 - Fixed a problem when compiling Unreal with GUEST support (#0001758) dvzion.
 - Fixed a win32 GUI problem where the tray menu's config submenu was not updated when new
   files were loaded or files were unloaded (#0002084) reported by Troco.
+- Made m_template.c use CommandAdd() and CMD_FUNC()
+- Modulized a lot of commands and related subfunctions: NICK (750 lines), USER (200),
+  MODE (2300), WATCH (250), JOIN (600), PART (250), MOTD (100), OPERMOTD (100),
+  BOTMOTD (100), LUSERS (100). More will follow soon (probably including more subfunctions
+  related to existing commands).

@@ -109,7 +109,8 @@ CMD_FUNC(m_svspart)
 		parv[0] = parv[1];
 		parv[1] = parv[2];
 		parv[2] = comment;
-		(void)m_part(acptr, acptr, comment ? 3 : 2, parv);
+		parv[3] = NULL;
+		do_cmd(acptr, acptr, "PART", comment ? 3 : 2, parv);
 	}
 	else
 	{

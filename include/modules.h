@@ -24,6 +24,7 @@
 #define MAXCUSTOMHOOKS  30
 #define MAXHOOKTYPES	100
 #define MAXCALLBACKS	30
+#define MAXEFUNCTIONS	30
 #if defined(_WIN32)
  #define MOD_EXTENSION "dll"
  #define DLLFUNC	_declspec(dllexport)
@@ -58,6 +59,7 @@ typedef struct _eventinfo EventInfo;
 typedef struct _irchook Hook;
 typedef struct _hooktype Hooktype;
 typedef struct _irccallback Callback;
+typedef struct _ircefunction Efunction;
 
 /*
  * Module header that every module must include, with the name of
@@ -101,6 +103,7 @@ typedef struct {
 #define MOBJ_EXTBAN       0x0100
 #define MOBJ_CALLBACK     0x0200
 #define MOBJ_ISUPPORT	  0x0400
+#define MOBJ_EFUNCTION    0x0800
 
 typedef struct {
         long mode;
@@ -323,6 +326,7 @@ typedef struct _ModuleObject {
 		Cmdoverride *cmdoverride;
 		Extban *extban;
 		Callback *callback;
+		Efunction *efunction;
 		Isupport *isupport;
 	} object;
 } ModuleObject;
@@ -344,6 +348,27 @@ struct _irccallback {
 	union {
 		int (*intfunc)();
 		void (*voidfunc)();
+		char *(*pcharfunc)();
+	} func;
+	Module *owner;
+	char willberemoved; /* will be removed on next rehash? (eg the 'old'/'current' one) */
+};
+
+/* Definition of an efunction: a MANDATORY Extern Function (in a module),
+ * for things like do_join, join_channel, etc.
+ * The difference between callbacks and efunctions are:
+ * - efunctions are mandatory, while callbacks can be optional (depends!)
+ * - efunctions are ment for internal usage, so 3rd party modules are not allowed
+ *   to add them.
+ * - all efunctions are declared as function pointers in modules.c
+ */
+struct _ircefunction {
+	Efunction *prev, *next;
+	short type;
+	union {
+		int (*intfunc)();
+		void (*voidfunc)();
+		void *(*pvoidfunc)();
 		char *(*pcharfunc)();
 	} func;
 	Module *owner;
@@ -460,6 +485,7 @@ void	UnlockEventSystem(void);
 extern MODVAR Hook		*Hooks[MAXHOOKTYPES];
 extern MODVAR Hooktype		Hooktypes[MAXCUSTOMHOOKS];
 extern MODVAR Callback *Callbacks[MAXCALLBACKS], *RCallbacks[MAXCALLBACKS];
+extern MODVAR Efunction *Efunctions[MAXEFUNCTIONS];
 
 void    Module_Init(void);
 char    *Module_Create(char *path);
@@ -540,6 +566,14 @@ void HooktypeDel(Hooktype *hooktype, Module *module);
 extern Callback	*CallbackAddMain(Module *module, int cbtype, int (*intfunc)(), void (*voidfunc)(), char *(*pcharfunc)());
 extern Callback	*CallbackDel(Callback *cb);
 
+#define EfunctionAdd(module, cbtype, func) EfunctionAddMain(module, cbtype, func, NULL, NULL, NULL)
+#define EfunctionAddVoid(module, cbtype, func) EfunctionAddMain(module, cbtype, NULL, func, NULL, NULL)
+#define EfunctionAddPVoid(module, cbtype, func) EfunctionAddMain(module, cbtype, NULL, NULL, func, NULL)
+#define EfunctionAddPChar(module, cbtype, func) EfunctionAddMain(module, cbtype, NULL, NULL, NULL, func)
+
+extern Efunction	*EfunctionAddMain(Module *module, int eftype, int (*intfunc)(), void (*voidfunc)(), void *(*pvoidfunc)(), char *(*pcharfunc)());
+extern Efunction	*EfunctionDel(Efunction *cb);
+
 Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigned char params, int flags);
 void CommandDel(Command *command);
 int CommandExists(char *name);
@@ -603,6 +637,13 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 /* Callback types */
 #define CALLBACKTYPE_CLOAK 1
 #define CALLBACKTYPE_CLOAKKEYCSUM 2
+
+/* Efunction types */
+#define EFUNC_DO_JOIN       1
+#define EFUNC_JOIN_CHANNEL  2
+#define EFUNC_CAN_JOIN      3
+#define EFUNC_DO_MODE       4
+#define EFUNC_SET_MODE      5
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000

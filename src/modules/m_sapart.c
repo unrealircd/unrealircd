@@ -159,7 +159,7 @@ DLLFUNC CMD_FUNC(m_sapart)
 			sendto_one(acptr,
 			    ":%s %s %s :*** You were forced to part %s", me.name,
 			    IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, parv[1]);
-		(void)m_part(acptr, acptr, comment ? 3 : 2, parv);
+		do_cmd(acptr, acptr, "PART", comment ? 3 : 2, parv);
 	}
 	else
 	{

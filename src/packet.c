@@ -220,13 +220,7 @@ void	init_CommandHash(void)
 	
 	bzero(CommandHash, sizeof(CommandHash));
 	bzero(TokenHash, sizeof(TokenHash));
-	add_Command(MSG_MODE, TOK_MODE, m_mode, MAXPARA);
 	add_Command(MSG_OPERMOTD, TOK_OPERMOTD, m_opermotd, MAXPARA);
-	add_CommandX(MSG_NICK, TOK_NICK, m_nick, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
-	add_CommandX(MSG_JOIN, TOK_JOIN, m_join, MAXPARA, M_USER);
-	add_CommandX(MSG_USER, TOK_USER, m_user, 4, M_UNREGISTERED|M_USER);
-	add_CommandX(MSG_PART, TOK_PART, m_part, 2, M_USER);
-	add_Command(MSG_WATCH, TOK_WATCH, m_watch, 1);
 	add_Command(MSG_LUSERS, TOK_LUSERS, m_lusers, MAXPARA);
 	add_CommandX(MSG_ERROR, TOK_ERROR, m_error, MAXPARA, M_UNREGISTERED|M_SERVER);
 	add_Command(MSG_NAMES, TOK_NAMES, m_names, MAXPARA);
@@ -243,7 +237,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_CREDITS, TOK_CREDITS, m_credits, MAXPARA);
 	add_Command(MSG_LICENSE, TOK_LICENSE, m_license, MAXPARA);
 	add_Command(MSG_BOTMOTD, TOK_BOTMOTD, m_botmotd, MAXPARA);
-	add_Command(MSG_NEWJOIN, TOK_JOIN, m_join, MAXPARA);
 	add_Command(MSG_MODULE, TOK_MODULE, m_module, MAXPARA);	
 	add_Command(MSG_TKL, TOK_TKL, m_tkl, MAXPARA);
 		
