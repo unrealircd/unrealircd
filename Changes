@@ -455,3 +455,6 @@
 - Removed an extra ) in the Throttle disconnect message (#0002165) reported by Snake
 - Fixed a bug where the "looking up your hostname" message could still be displayed even
   if hostname resolving was disabled (#0002161) reported by Xuefer
+- Made typing /kline, /shun, /zline, and /gzline correctly report the correct /stats flag,
+  and these commands now produce the same output as the respective /stats flag they emulate
+  (#0002149) reported by Snake

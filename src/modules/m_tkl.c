@@ -126,6 +126,7 @@ DLLFUNC int m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc == 1)
 	{
 		tkl_stats(sptr, TKL_KILL|TKL_GLOBAL, NULL);
+		tkl_stats(sptr, TKL_ZAP|TKL_GLOBAL, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
 		return 0;
 	}
@@ -148,6 +149,7 @@ DLLFUNC int m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc == 1)
 	{
+		tkl_stats(sptr, TKL_GLOBAL|TKL_KILL, NULL);
 		tkl_stats(sptr, TKL_GLOBAL|TKL_ZAP, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
 		return 0;
@@ -172,7 +174,7 @@ DLLFUNC int m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc == 1)
 	{
 		tkl_stats(sptr, TKL_GLOBAL|TKL_SHUN, NULL);
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 's');
 		return 0;
 	}
 
@@ -268,8 +270,42 @@ DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc == 1)
 	{
+		/* Emulate /stats k */
+		ConfigItem_ban *bans;
+		ConfigItem_except *excepts;
+		char type[2];
+  		for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) 
+		{
+			if (bans->flag.type == CONF_BAN_USER) 
+			{
+				if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
+					type[0] = 'K';
+				type[1] = '\0';
+				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
+			 		me.name, sptr->name, type, bans->mask, bans->reason
+					? bans->reason : "<no reason>");
+			}
+			else if (bans->flag.type == CONF_BAN_IP) 
+			{
+				if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
+					type[0] = 'Z';
+				else if (bans->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
+					type[0] = 'z';
+				type[1] = '\0';
+				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
+					me.name, sptr->name, type, bans->mask, bans->reason 
+					? bans->reason : "<no reason>");
+			}
+		}		
 		tkl_stats(sptr, TKL_KILL, NULL);
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
+		tkl_stats(sptr, TKL_ZAP, NULL);
+		for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) 
+		{
+			if (excepts->flag.type == 1)
+				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
+					me.name, sptr->name, "E", excepts->mask, "");
+		}
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'k');
 		return 0;
 	}
 	if (!OPCanUnKline(sptr) && *parv[1] == '-')
@@ -295,8 +331,42 @@ DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc == 1)
 	{
+		/* Emulate /stats k */
+		ConfigItem_ban *bans;
+		ConfigItem_except *excepts;
+		char type[2];
+  		for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) 
+		{
+			if (bans->flag.type == CONF_BAN_USER) 
+			{
+				if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
+					type[0] = 'K';
+				type[1] = '\0';
+				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
+			 		me.name, sptr->name, type, bans->mask, bans->reason
+					? bans->reason : "<no reason>");
+			}
+			else if (bans->flag.type == CONF_BAN_IP) 
+			{
+				if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
+					type[0] = 'Z';
+				else if (bans->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
+					type[0] = 'z';
+				type[1] = '\0';
+				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
+					me.name, sptr->name, type, bans->mask, bans->reason 
+					? bans->reason : "<no reason>");
+			}
+		}		
+		tkl_stats(sptr, TKL_KILL, NULL);
 		tkl_stats(sptr, TKL_ZAP, NULL);
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
+		for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) 
+		{
+			if (excepts->flag.type == 1)
+				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
+					me.name, sptr->name, "E", excepts->mask, "");
+		}
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'k');
 		return 0;
 	}
 
