@@ -294,4 +294,6 @@
 - Removed a lot of vars and stuff from the old config, also made some cleanups to reduce source size
 - Made del_Command(). 
 - Rewrote makeconf and makenet to use newconf (added some new features to makeconf as well)
+- Made MembershipL->flood get bzero on out delegation
 - Removed stskeeps's lazy add_CommandX (tm) code
+- Made IRCd not crash on /kick from servers

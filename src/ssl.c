@@ -226,7 +226,7 @@ char	*ssl_get_cipher(SSL *ssl)
 	c = SSL_get_current_cipher(ssl);
 	SSL_CIPHER_get_bits(c, &bits);
 	strcat(buf, "-");
-	strcat(buf, my_itoa(bits));
+	strcat(buf, (char *)my_itoa(bits));
 	strcat(buf, "bits");
 	return (buf);
 }

@@ -306,6 +306,7 @@ Membership	*make_membership(int local)
 			lp2 = freemembershipL;
 			freemembershipL = (MembershipL *) freemembershipL->next;
 		}
+		bzero(&lp2->flood, sizeof(lp2->flood));
 	}
 	if (local)
 	{
@@ -3299,7 +3300,6 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			continue;
 		}
 
-		lp2 = find_membership_link(sptr->user->channel, chptr);
 		for (; (user = strtoken(&p2, parv[2], ",")); parv[2] = NULL)
 		{
 			if (!(who = find_chasing(sptr, user, &chasing)))
