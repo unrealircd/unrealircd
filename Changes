@@ -1027,3 +1027,6 @@ seen. gmtime warning still there
 - Fixed a last minute bug in win32
 - Fixed a bug affecting DEFAULT_PERMISSIONS reported by ashukmin
 - Fixes for ->user structures
+- beta5 released
+- Fixed a bug causing /map to give away Ulines
+- Fixed a possible segfault in m_stats

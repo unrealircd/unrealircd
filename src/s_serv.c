@@ -2241,14 +2241,14 @@ int  m_stats(cptr, sptr, parc, parv)
 		  			me.name, sptr->name, 
 		  			'O', "(none)", oper_p->name,
 		  			oflagstr(oper_p->oflags),
-		  			oper_p->class->name);
+		  			oper_p->class->name ? oper_p->class->name : "");
 			else
 				for (oper_p_from = (ConfigItem_oper_from *) oper_p->from; oper_p_from; oper_p_from = (ConfigItem_oper_from *) oper_p_from->next)
 			  		sendto_one(sptr, rpl_str(RPL_STATSOLINE),
 			  			me.name, sptr->name, 
 			  			'O', oper_p_from->name, oper_p->name,
 			  			oflagstr(oper_p->oflags),
-			  			oper_p->class->name);
+			  			oper_p->class->name? oper_p->class->name : "");
 		  }
 		  break;
 	  case 'P':
