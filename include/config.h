@@ -341,7 +341,7 @@
  *       starts up the server with a new conf file that has some extra
  *       O-lines. So don't use this unless you're debugging.
  */
-#define	CMDLINE_CONFIG		/* allow conf-file to be specified on command line */
+#undef	CMDLINE_CONFIG		/* allow conf-file to be specified on command line */
 
 /*
  * Size of the LISTEN request.  Some machines handle this large

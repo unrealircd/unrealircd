@@ -957,7 +957,7 @@ void config_status(char *format, ...)
 	char		*ptr;
 
 	va_start(ap, format);
-	vsprintf(buffer, format, ap);
+	vsnprintf(buffer, 1023, format, ap);
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
@@ -977,7 +977,7 @@ void config_progress(char *format, ...)
 	char		*ptr;
 
 	va_start(ap, format);
-	vsprintf(buffer, format, ap);
+	vsnprintf(buffer, 1023, format, ap);
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';

@@ -1959,3 +1959,6 @@ seen. gmtime warning still there
 *** beta15 release **
 - Fixed a problem with modules not loading when #undef STRIPBADWORDS
 - Doc updates (SSL/stunnel example was wrong)
+- Fixed a buffer overflow that could be used against setuid setups, 
+  found by rave@dtors.net, reported by kokanin
+- Disabled CMDLINE_CONFIG(-f) by default
