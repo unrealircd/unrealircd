@@ -473,11 +473,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	VerInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	GetVersionEx(&VerInfo);
 	if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
-		SC_HANDLE hService, hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
-		if ((hService = OpenService(hSCManager, "UnrealIRCd", GENERIC_READ))) {
+		SC_HANDLE hService, hSCManager = OpenSCManager(NULL, NULL, GENERIC_EXECUTE);
+		if ((hService = OpenService(hSCManager, "UnrealIRCd", GENERIC_EXECUTE))) {
+			StartServiceCtrlDispatcher(DispatchTable);
+			if (GetLastError() == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT)
+				StartService(hService, 0, NULL);
 			CloseServiceHandle(hService);
 			CloseServiceHandle(hSCManager);
-			StartServiceCtrlDispatcher(DispatchTable);
 			exit(0);
 		}
 	}
