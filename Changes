@@ -691,6 +691,7 @@
   If you wonder why we didn't use the RPL_WHOISSECURE numeric as-is (even though I haven't
   seen it in use anywhere), then that's because we wanted to minimize display problems in
   the transition period and the extra parameter would not be used by us anyway.
-- Added warning on using can_override/can_gkline/can_gzline in combination with locops,
-  since these are global privileges they shouldn't be permitted (will be an error in 3.2.4).
-- Made the can_override one an error since it makes 0.0% sense.
+- If a locop now has can_override/can_gkline/can_gzline we will print out a warning and
+  convert it to globops. This is also what we always did for can_globalroute/can_gkill
+  (well, except the warning). Giving such NETWORK (GLOBAL) privileges to a LOCAL operator
+  does not make any sense and is therefore no longer allowed.
