@@ -2680,3 +2680,5 @@ seen. gmtime warning still there
 - Fixed a remote include compile bug on Linux regarding url.h
 - Fixed a remote include compile bug regarding ares (#0001458) reported by mustapha88
 - Made the tmp/ directory cleaned up better
+- Added some additional warnings for insane large values for allow::maxperip, and class::*
+  stuff. Reported by Erik_Rana (#0001463).

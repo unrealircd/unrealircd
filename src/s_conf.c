@@ -3060,7 +3060,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 		if (cep->ce_vardata)
 		{
 			l = atol(cep->ce_vardata);
-			if (l < 1)
+			if ((l < 1) || (l > 1000000))
 			{
 				config_error("%s:%i: class::pingfreq with illegal value",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
@@ -3079,7 +3079,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 		if (cep->ce_vardata)
 		{
 			l = atol(cep->ce_vardata);
-			if (!l)
+			if ((l < 1) || (l > 1000000))
 			{
 				config_error("%s:%i: class::maxclients with illegal value",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
@@ -3098,7 +3098,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 		if (cep->ce_vardata)
 		{	
 			l = atol(cep->ce_vardata);
-			if (!l)
+			if ((l < 0) || (l > 2000000000))
 			{
 				config_error("%s:%i: class::sendq with illegal value",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
@@ -3117,9 +3117,9 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 		if (cep->ce_vardata)
 		{
 			l = atol(cep->ce_vardata);
-			if (l < 10)
+			if ((l < 10) || (l > 604800))
 			{
-				config_error("%s:%i: class::connfreq with illegal value (<10)",
+				config_error("%s:%i: class::connfreq with illegal value (must be >10 and <7d)",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 			}
@@ -3130,9 +3130,9 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 		if (cep->ce_vardata)
 		{	
 			l = atol(cep->ce_vardata);
-			if (l < 512)
+			if ((l < 512) || (l > 32768))
 			{
-				config_error("%s:%i: class::recvq with illegal value (<512)",
+				config_error("%s:%i: class::recvq with illegal value (must be >512 and <32k)",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 			}
@@ -3854,9 +3854,10 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (cep->ce_vardata)
 		{
-			if (atoi(cep->ce_vardata) <= 0)
+			int v = atoi(cep->ce_vardata);
+			if ((v <= 0) || (v > 65535))
 			{
-				config_error("%s:%i: allow::maxperip with illegal value (must be >0)",
+				config_error("%s:%i: allow::maxperip with illegal value (must be 1-65535)",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 			}

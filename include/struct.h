@@ -980,14 +980,14 @@ struct _configflag_allow {
 };
 
 struct _configitem_allow {
-	ConfigItem       *prev, *next;
-	ConfigFlag 	 flag;
-	char	         *ip, *hostname, *server;
-	anAuthStruct	 *auth;	
-	short		 maxperip;
-	int		 port;
-	ConfigItem_class *class;
-	ConfigFlag_allow flags;
+	ConfigItem			*prev, *next;
+	ConfigFlag			flag;
+	char				*ip, *hostname, *server;
+	anAuthStruct		*auth;	
+	unsigned short		maxperip;
+	int					port;
+	ConfigItem_class	*class;
+	ConfigFlag_allow	flags;
 };
 
 struct _configitem_oper {
