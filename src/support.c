@@ -1693,11 +1693,11 @@ char *unreal_mktemp(char *dir, char *suffix)
 {
 	FILE *fd;
 	unsigned int i;
-	static char tempbuf[MAX_PATH+1];
+	static char tempbuf[PATH_MAX+1];
 
 	for (i = 500; i > 0; i--)
 	{
-		snprintf(tempbuf, MAX_PATH, "%s/%X.%s", dir, rand(), suffix);
+		snprintf(tempbuf, PATH_MAX, "%s/%X.%s", dir, rand(), suffix);
 		fd = fopen(tempbuf, "r");
 		if (!fd)
 			return tempbuf;

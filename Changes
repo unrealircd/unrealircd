@@ -2665,3 +2665,5 @@ seen. gmtime warning still there
 - Added a function join_channel which will make it easier for module coders to force users
   to join a channel
 - Made it possible to compile the win32 version with libcurl support
+- Updated the win32 TRE lib/dll to the latest version (0.6.3)
+- Fixed a PATH_MAX vs MAX_PATH problem

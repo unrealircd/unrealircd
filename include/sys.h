@@ -127,6 +127,7 @@ typedef unsigned int u_int;
 #ifdef _WIN32
 #define MYOSNAME OSName
 extern char OSName[256];
+#define PATH_MAX MAX_PATH
 #endif
 #ifdef DEBUGMODE
 // #define ircsprintf sprintf
