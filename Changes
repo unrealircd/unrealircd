@@ -1125,4 +1125,5 @@ v- Fixed some bugreport stuff
 - Removed some useless tkl code
 - Fixed #0000046 regarding Module_free memory leak
 - Added patch in #0000053 by |savage|, speedup in can_send
-
+- Possible fix of #0000042 regarding duplicate scans at same time causing
+  one to slip through, reported by Zogg

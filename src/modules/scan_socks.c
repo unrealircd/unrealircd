@@ -216,7 +216,8 @@ void	scan_socks4_scan(Scan_AddrStruct *h)
 	 */
 	set_non_blocking(fd, NULL);
 	if ((retval = connect(fd, (struct sockaddr *)&sin,
-                sizeof(sin))) == -1 && ERRNO != P_EINPROGRESS)
+                sizeof(sin))) == -1 && !((ERRNO == P_EWOULDBLOCK)
+		 || (ERRNO == P_EINPROGRESS)))
 	{
 		/* we have no socks server! */
 		CLOSE_SOCK(fd);	
@@ -350,7 +351,9 @@ void	scan_socks5_scan(Scan_AddrStruct *h)
 	 */
 	set_non_blocking(fd, NULL);
 	if ((retval = connect(fd, (struct sockaddr *)&sin,
-                sizeof(sin))) == -1 && ERRNO != P_EINPROGRESS)
+                sizeof(sin))) == -1 && 
+                !((ERRNO == P_EWOULDBLOCK)
+		 || (ERRNO == P_EINPROGRESS)))
 	{
 		/* we have no socks server! */
 		CLOSE_SOCK(fd);	
