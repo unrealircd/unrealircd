@@ -42,6 +42,7 @@
 #include <dlfcn.h>
 #endif
 #include <fcntl.h>
+#include <dirent.h>
 #include "h.h"
 #include "proto.h"
 #ifndef RTLD_NOW
@@ -75,6 +76,25 @@ void *obsd_dlsym(void *handle, char *symbol) {
 }
 #endif
 
+
+void DeleteTempModules(void)
+{
+#ifndef _WIN32
+	DIR *fd = opendir("tmp");
+	struct dirent *dir;
+	char tempbuf[PATH_MAX+1];
+	while ((dir = readdir(fd)))
+	{
+		if (!match("*.so", dir->d_name))
+		{
+			strcpy(tempbuf, "tmp/");
+			strcat(tempbuf, dir->d_name);
+			remove(tempbuf);
+		}
+	}
+	closedir(fd);
+#endif
+}
 
 void Module_Init(void)
 {
@@ -116,7 +136,7 @@ char  *Module_Create(char *path_)
 	int             (*Mod_Load)();
 	int             (*Mod_Unload)();
 	static char 	errorbuf[1024];
-	char 		*path;
+	char 		*path, *tmppath;
 	ModuleHeader    *mod_header;
 	int		ret = 0;
 	Module          *mod = NULL, **Mod_Handle = NULL;
@@ -126,14 +146,16 @@ char  *Module_Create(char *path_)
 	       path_));
 	path = path_;
 
+	
+	tmppath = unreal_mktemp("tmp", unreal_getfilename(path));
 	if(!strchr(path, '/'))
 	{
 		path = MyMalloc(strlen(path) + 3);
 		strcpy(path, "./");
 		strcat(path, path_);
 	}
-	
-	if ((Mod = irc_dlopen(path, RTLD_NOW)))
+	unreal_copyfile(path, tmppath);
+	if ((Mod = irc_dlopen(tmppath, RTLD_NOW)))
 	{
 		/* We have engaged the borg cube. Scan for lifesigns. */
 		irc_dlsym(Mod, "Mod_Header", mod_header);
@@ -167,6 +189,7 @@ char  *Module_Create(char *path_)
 			return (NULL);
 		}
 		mod = (Module *)Module_make(mod_header, Mod);
+		mod->tmp_file = strdup(tmppath);
 		irc_dlsym(Mod, "Mod_Init", Mod_Init);
 		if (!Mod_Init)
 		{
@@ -362,6 +385,8 @@ void Unload_all_loaded_modules(void)
 		}
 		DelListItem(mi,Modules);
 		irc_dlclose(mi->dll);
+		remove(mi->tmp_file);
+		MyFree(mi->tmp_file);
 		MyFree(mi);
 	}
 }
@@ -414,6 +439,8 @@ void Unload_all_testing_modules(void)
 		}
 		DelListItem(mi,Modules);
 		irc_dlclose(mi->dll);
+		remove(mi->tmp_file);
+		MyFree(mi->tmp_file);
 		MyFree(mi);
 	}
 }
@@ -480,6 +507,7 @@ int    Module_free(Module *mod)
 	}
 	DelListItem(mod, Modules);
 	irc_dlclose(mod->dll);
+	MyFree(mod->tmp_file);
 	MyFree(mod);
 	return 1;
 }
@@ -1118,6 +1146,7 @@ void	unload_all_modules(void)
 		irc_dlsym(m->dll, "Mod_Unload", Mod_Unload);
 		if (Mod_Unload)
 			(*Mod_Unload)(0);
+		remove(m->tmp_file);
 	}
 }
 
@@ -1150,3 +1179,4 @@ const char *ModuleGetErrorStr(Module *module)
 {
 	return module_error_str[module->errorcode];
 }
+

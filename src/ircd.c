@@ -1065,6 +1065,7 @@ int InitwIRCD(int argc, char *argv[])
 	initlists();
 	initwhowas();
 	initstats();
+	DeleteTempModules();
 	booted = FALSE;
 /* Hack to stop people from being able to read the config file */
 #if !defined(_WIN32) && !defined(_AMIGA) && DEFAULT_PERMISSIONS != 0

@@ -32,8 +32,8 @@ static char sccsid[] = "@(#)support.c	2.21 4/13/94 1990, 1991 Armin Gruner;\
 #include <io.h>
 #else
 #include <string.h>
-
-
+#include <fcntl.h>
+#include <sys/stat.h>
 extern int errno;		/* ...seems that errno.h doesn't define this everywhere */
 #endif
 extern void outofmemory();
@@ -1685,3 +1685,60 @@ void	*MyMallocEx(size_t size)
 	return (p);
 }
 
+/* Returns a unique filename in the specified directory
+ * using the specified suffix. The returned value will
+ * be of the form <dir>/<random-hex>.<suffix>
+ */
+char *unreal_mktemp(char *dir, char *suffix)
+{
+        static char tempbuf[PATH_MAX+1];
+
+        while (1)
+        {
+                snprintf(tempbuf, PATH_MAX, "%s/%X.%s", dir, rand(), suffix);
+                if (!fopen(tempbuf, "r"))
+                        break;
+        }
+        return tempbuf;
+}
+
+/* Returns the filename portion of the given path
+ * The original string is not modified
+ */
+char *unreal_getfilename(char *path)
+{
+        int len = strlen(path);
+        char *end;
+        if (!len)
+                return NULL;
+        end = path+len-1;
+	if (*end == '\\' || *end == '/')
+		return NULL;
+        while (end > path)
+        {
+                if (*end == '\\' || *end == '/')
+                {
+                        end++;
+                        break;
+                }
+                end--;
+        }
+        return end;
+}
+
+/* Copys the contents of the src file to the dest file.
+ * The dest file will have permissions r-x------
+ */
+void unreal_copyfile(char *src, char *dest)
+{
+	char buf[2048];
+	int srcfd = open(src, O_RDONLY);
+	int destfd = open(dest, O_WRONLY|O_CREAT, S_IRUSR|S_IXUSR);
+	int len;
+
+	while ((len = read(srcfd, buf, 1023)) > 0)
+		write(destfd, buf, len);
+
+	close(src);
+	close(dest);
+}

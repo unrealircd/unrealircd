@@ -291,6 +291,7 @@ struct _Module
 	ModuleInfo modinfo; /* Used to store handle info for module */
 	unsigned char options;
 	unsigned char errorcode;
+	char *tmp_file;
 };
 /*
  * Symbol table
