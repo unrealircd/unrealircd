@@ -88,15 +88,24 @@ void CleanUpSegv(int sig)
 HWND hwIRCDWnd=NULL/* hwnd=NULL*/;
 HWND hwTreeView;
 HANDLE hMainThread = 0;
+
+FARPROC lpfnOldWndProc;
+
+LRESULT ECSubClassFunc(HWND hWnd,UINT Message,WPARAM wParam,LPARAM lParam)
+{
+   if (Message == WM_GETDLGCODE)
+       return DLGC_WANTALLKEYS;
+
+   return CallWindowProc((WNDPROC)lpfnOldWndProc, hWnd, Message, wParam, lParam);
+}
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	MSG msg;
-	int argc=0;
-	char *s, *argv[20];
+	char *s;
 	HWND hWnd;
     WSADATA WSAData;
 	HICON hIcon;
-	HKEY hKey;
 	char regbuf[128];
 	atexit(CleanUp);
 	if(!LoadLibrary("riched20.dll"))
@@ -122,10 +131,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	lstrcpy(SysTray.szTip, WIN32_VERSION);
 	Shell_NotifyIcon(NIM_ADD ,&SysTray);
 
-	    
-	argv[argc] = NULL;
-
-	if (InitwIRCD(argc, argv) != 1)
+	if (InitwIRCD(__argc, __argv) != 1)
 	{
 		MessageBox(NULL,"UnrealIRCd has failed to initialize in InitwIRCD()","Error:",MB_OK);
 		return FALSE;
@@ -484,6 +490,8 @@ LRESULT CALLBACK ConfigDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 			char *buffer = '\0';
 			struct stat sb;
 			SetWindowText(hDlg, "UnrealIRCd Configuration File");
+			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)ECSubClassFunc);
+
 			if ((fd = open(CPATH, _O_RDONLY|_O_BINARY)) != -1) {
 				fstat(fd,&sb);
 				/* Only allocate the amount we need */
@@ -508,7 +516,7 @@ LRESULT CALLBACK ConfigDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 				/* Again, only allocate the amount we need */
 				buffer = (char *)malloc(len);
 				GetDlgItemText(hDlg, IDC_TEXT, buffer, len);
-				fd = open(CPATH, _O_TRUNC|_O_CREAT|_O_RDWR|_O_BINARY);
+				fd = open(CPATH, _O_TRUNC|_O_CREAT|_O_WRONLY|_O_BINARY,_S_IWRITE);
 				write(fd, buffer, len);
 				close(fd);
 				free(buffer);
@@ -530,6 +538,7 @@ LRESULT CALLBACK MotdDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
 			int fd,len;
 			char *buffer = '\0';
 			SetWindowText(hDlg, "UnrealIRCd MOTD File");
+			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)ECSubClassFunc);
 			if ((fd = open(MPATH, _O_RDONLY|_O_BINARY)) != -1) {
 				fstat(fd,&sb);
 				/* Only allocate the amount we need */
@@ -554,7 +563,7 @@ LRESULT CALLBACK MotdDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
 				/* Again, only allocate the amount we need */
 				buffer = (char *)malloc(len);
 				GetDlgItemText(hDlg, IDC_TEXT, buffer, len);
-				fd = open(MPATH, _O_TRUNC|_O_CREAT|_O_RDWR|_O_BINARY);
+				fd = open(MPATH, _O_TRUNC|_O_CREAT|_O_WRONLY|_O_BINARY,_S_IWRITE);
 				write(fd, buffer, len);
 				close(fd);
 				free(buffer);
@@ -576,6 +585,7 @@ LRESULT CALLBACK OperMotdDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			int fd,len;
 			char *buffer = '\0';
 			SetWindowText(hDlg, "UnrealIRCd OperMOTD File");
+			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)ECSubClassFunc);
 			if ((fd = open(OPATH, _O_RDONLY|_O_BINARY)) != -1) {
 				fstat(fd,&sb);
 				/* Only allocate the amount we need */
@@ -600,7 +610,7 @@ LRESULT CALLBACK OperMotdDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				/* Again, only allocate the amount we need */
 				buffer = (char *)malloc(len);
 				GetDlgItemText(hDlg, IDC_TEXT, buffer, len);
-				fd = open(OPATH, _O_TRUNC|_O_CREAT|_O_RDWR|_O_BINARY);
+				fd = open(OPATH, _O_TRUNC|_O_CREAT|_O_WRONLY|_O_BINARY,_S_IWRITE);
 				write(fd, buffer, len);
 				close(fd);
 				free(buffer);
@@ -622,6 +632,7 @@ LRESULT CALLBACK BotMotdDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			int fd,len;
 			char *buffer = '\0';
 			SetWindowText(hDlg, "UnrealIRCd BotMOTD File");
+			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)ECSubClassFunc);
 			if ((fd = open(BPATH, _O_RDONLY|_O_BINARY)) != -1) {
 				fstat(fd,&sb);
 				/* Only allocate the amount we need */
@@ -646,7 +657,7 @@ LRESULT CALLBACK BotMotdDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 				/* Again, only allocate the amount we need */
 				buffer = (char *)malloc(len);
 				GetDlgItemText(hDlg, IDC_TEXT, buffer, len);
-				fd = open(BPATH, _O_TRUNC|_O_CREAT|_O_RDWR|_O_BINARY);
+				fd = open(BPATH, _O_TRUNC|_O_CREAT|_O_WRONLY|_O_BINARY,_S_IWRITE);
 				write(fd, buffer, len);
 				close(fd);
 				free(buffer);
@@ -668,6 +679,7 @@ LRESULT CALLBACK RulesDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			int fd,len;
 			char *buffer = '\0';
 			SetWindowText(hDlg, "UnrealIRCd Rules File");
+			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)ECSubClassFunc);
 			if ((fd = open(RPATH, _O_RDONLY|_O_BINARY)) != -1) {
 				fstat(fd,&sb);
 				/* Only allocate the amount we need */
@@ -692,7 +704,7 @@ LRESULT CALLBACK RulesDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				/* Again, only allocate the amount we need */
 				buffer = (char *)malloc(len);
 				GetDlgItemText(hDlg, IDC_TEXT, buffer, len);
-				fd = open(RPATH, _O_TRUNC|_O_CREAT|_O_RDWR|_O_BINARY);
+				fd = open(RPATH, _O_TRUNC|_O_CREAT|_O_WRONLY|_O_BINARY,_S_IWRITE);
 				write(fd, buffer, len);
 				close(fd);
 				free(buffer);

@@ -515,3 +515,4 @@ seen. gmtime warning still there
 - Fixed problem with addto_fdlist(cptr->fd) caused by slotpatch
 - Fixed minor socksfd problem in read_message
 - Fixed identd problem
+- Commited McSkaf's tab patch for win32
