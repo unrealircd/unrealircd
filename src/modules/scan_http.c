@@ -175,7 +175,7 @@ void	scan_http_scan_port(HSStruct *z)
 {
 	Scan_AddrStruct		*h = z->hs;
 	int			retval;
-	char			*cp;
+	unsigned char			*cp;
 	struct			SOCKADDR_IN sin;
 	struct			in_addr ia4;
 	SOCKET			fd;
@@ -187,12 +187,16 @@ void	scan_http_scan_port(HSStruct *z)
 	int			len;
 
 	IRCMutexLock((h->lock));
+#ifndef INET6
 	sin.SIN_ADDR.S_ADDR = h->in.S_ADDR;
+#else
+	bcopy(sin.SIN_ADDR.S_ADDR, h->in.S_ADDR, sizeof(h->in.S_ADDR));
+#endif
 	IRCMutexUnlock((h->lock));
 	/* IPv6 ?*/
 #ifdef INET6
 	/* ::ffff:ip hack */
-	cp = (u_char)&h->in->s6_addr;
+	cp = (u_char *)&h->in.s6_addr;
 	if (!(cp[0] == 0 && cp[1] == 0 && cp[2] == 0 && cp[3] == 0 && cp[4] == 0
 	    && cp[5] == 0 && cp[6] == 0 && cp[7] == 0 && cp[8] == 0
 	    && cp[9] == 0 && ((cp[10] == 0 && cp[11] == 0) || (cp[10] == 0xff
@@ -200,7 +204,6 @@ void	scan_http_scan_port(HSStruct *z)
 
 		goto exituniverse;
 #endif
-	sin.SIN_ADDR.S_ADDR = h->in.S_ADDR;
 
 	if ((fd = socket(AFINET, SOCK_STREAM, 0)) < 0)
 	{
@@ -208,8 +211,8 @@ void	scan_http_scan_port(HSStruct *z)
 		return;
 	}
 
-	sin.sin_port = htons((unsigned short)z->port);
-	sin.sin_family = AFINET;
+	sin.SIN_PORT = htons((unsigned short)z->port);
+	sin.SIN_FAMILY = AFINET;
 	/* We do this non-blocking to prevent a hang of the entire ircd with newer
 	 * versions of glibc.  Don't you just love new "features?"
 	 * Passing null to this is probably bad, a better method is needed. 

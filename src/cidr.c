@@ -58,7 +58,7 @@ parse_v6_netmask(const char *text, struct IN_ADDR *addr, int *b)
   short dc[8];
 
   for (p = text; (c = *p); p++)
-    if (IsXDigit(c))
+    if (isxdigit(c))
     {
       if (nyble == 0)
         return HM_HOST;
@@ -137,7 +137,7 @@ parse_v6_netmask(const char *text, struct IN_ADDR *addr, int *b)
   if (addr)
     for (dp = 0; dp < 8; dp++)
       /* The cast is a kludge to make netbsd work. */
-      ((unsigned short *)&addr->sin6)[dp] = htons(dc[dp]);
+      ((unsigned short *)&addr->s6_addr)[dp] = htons(dc[dp]);
   if (b)
     *b = bits;
   return HM_IPV6;
@@ -154,6 +154,7 @@ parse_v6_netmask(const char *text, struct IN_ADDR *addr, int *b)
 static int
 parse_v4_netmask(const char *text, struct IN_ADDR *addr, int *b)
 {
+#ifndef INET6
   const char *p;
   const char *digits[4];
   unsigned char addb[4];
@@ -211,6 +212,76 @@ parse_v4_netmask(const char *text, struct IN_ADDR *addr, int *b)
   if (b)
     *b = bits;
   return HM_IPV4;
+#else
+  u_char *cp;
+  const char *p;
+  const char *digits[4];
+  unsigned char addb[4];
+  int n = 0, bits = 0;
+  char c;
+
+  digits[n++] = text;
+
+  for (p = text; (c = *p); p++)
+    if (c >= '0' && c <= '9')   /* empty */
+      ;
+    else if (c == '.')
+    {
+      if (n >= 4)
+        return HM_HOST;
+      digits[n++] = p + 1;
+    }
+    else if (c == '*')
+    {
+      if (*(p + 1) || n == 0 || *(p - 1) != '.')
+        return HM_HOST;
+      bits = (n - 1) * 8;
+      break;
+    }
+    else if (c == '/')
+    {
+      char *after;
+      bits = strtoul(p + 1, &after, 10);
+      if (!bits || *after)
+        return HM_HOST;
+      if (bits > n * 8)
+        return HM_HOST;
+      break;
+    }
+    else
+      return HM_HOST;
+
+  if (n < 4 && bits == 0)
+    bits = n * 8;
+  if (bits)
+    while (n < 4)
+      digits[n++] = "0";
+  for (n = 0; n < 4; n++)
+    addb[n] = strtoul(digits[n], NULL, 10);
+  if (bits == 0)
+    bits = 32;
+  /* Set unused bits to 0... -A1kmm */
+  if (bits < 32 && bits % 8)
+    addb[bits / 8] &= ~((1 << (8 - bits % 8)) - 1);
+  for (n = bits / 8 + (bits % 8 ? 1 : 0); n < 8; n++)
+    addb[n] = 0;
+  if (addr)
+  {  
+    cp = (u_char *)addr->s6_addr;
+    for (n = 0; n <= 9; n++)
+    	cp[n] = 0;
+    cp[10] = 0xff;
+    cp[11] = 0xff;
+    cp[12] = addb[0];
+    cp[13] = addb[1];
+    cp[14] = addb[2];
+    cp[15] = addb[3];
+  }
+  if (b)
+    *b = bits;
+  return HM_IPV4;
+  
+#endif
 }
 
 /* int parse_netmask(const char *, struct IN_ADDR *, int *);
@@ -264,10 +335,24 @@ match_ipv6(struct IN_ADDR *addr, struct IN_ADDR *mask, int bits)
 int
 match_ipv4(struct IN_ADDR *addr, struct IN_ADDR *mask, int bits)
 {
+#ifndef INET6
   if ((ntohl(addr->S_ADDR) & ~((1 << (32 - bits)) - 1)) !=
       ntohl(mask->S_ADDR))
+
     return 1;
   return 0;
+#else
+  struct in_addr ipv4addr, ipv4mask;
+  
+  ipv4addr.s_addr = inet_addr((char *)Inet_ia2p(addr));
+  ipv4mask.s_addr = inet_addr((char *)Inet_ia2p(mask));
+  if ((ntohl(ipv4addr.s_addr) & ~((1 << (32 - bits)) - 1)) !=
+      ntohl(ipv4mask.s_addr))
+
+    return 1;
+  return 0;
+  
+#endif
 }
 
 

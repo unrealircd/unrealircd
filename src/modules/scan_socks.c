@@ -154,7 +154,7 @@ void scan_socks_scan(Scan_AddrStruct *h)
 void	scan_socks4_scan(Scan_AddrStruct *h)
 {
 	int			retval;
-	char			*cp;
+	unsigned char		*cp;
 	struct			SOCKADDR_IN sin;
 	struct			in_addr ia4;
 	SOCKET			fd;
@@ -167,12 +167,17 @@ void	scan_socks4_scan(Scan_AddrStruct *h)
 	/* Get host */
 
 	IRCMutexLock((h->lock));
+
+#ifndef INET6
 	sin.SIN_ADDR.S_ADDR = h->in.S_ADDR;
+#else
+	bcopy(sin.SIN_ADDR.S_ADDR, h->in.S_ADDR, sizeof(h->in.S_ADDR));
+#endif
 	IRCMutexUnlock((h->lock));
 	/* IPv6 ?*/
 #ifdef INET6
 	/* ::ffff:ip hack */
-	cp = (u_char)&h->in->s6_addr;
+	cp = (u_char *)&h->in.s6_addr;
 	if (!(cp[0] == 0 && cp[1] == 0 && cp[2] == 0 && cp[3] == 0 && cp[4] == 0
 	    && cp[5] == 0 && cp[6] == 0 && cp[7] == 0 && cp[8] == 0
 	    && cp[9] == 0 && ((cp[10] == 0 && cp[11] == 0) || (cp[10] == 0xff
@@ -180,16 +185,14 @@ void	scan_socks4_scan(Scan_AddrStruct *h)
 
 		goto exituniverse;
 #endif
-	sin.SIN_ADDR.S_ADDR = h->in.S_ADDR;
-
 	if ((fd = socket(AFINET, SOCK_STREAM, 0)) < 0)
 	{
 		goto exituniverse;
 		return;
 	}
 
-	sin.sin_port = htons((unsigned short)SCAN_ON_PORT);
-	sin.sin_family = AFINET;
+	sin.SIN_PORT = htons((unsigned short)SCAN_ON_PORT);
+	sin.SIN_FAMILY = AFINET;
 	/* We do this non-blocking to prevent a hang of the entire ircd with newer
 	 * versions of glibc.  Don't you just love new "features?"
 	 * Passing null to this is probably bad, a better method is needed. 
@@ -228,7 +231,7 @@ void	scan_socks4_scan(Scan_AddrStruct *h)
 		goto exituniverse;
 	}
 #ifdef INET6
-	ia4.s_addr = inet_aton(Inet_ia2p(xScan_endpoint));
+	ia4.s_addr = inet_aton((char *)Inet_ia2p(&xScan_endpoint->SIN_ADDR));
 #else
 	bcopy(&xScan_endpoint->sin_addr, &ia4, sizeof(struct IN_ADDR));
 #endif
@@ -236,8 +239,8 @@ void	scan_socks4_scan(Scan_AddrStruct *h)
 	bzero(socksbuf, sizeof(socksbuf));
 	socksbuf[0] = 4;
 	socksbuf[1] = 1;
-	socksbuf[2] = LOCHAR(xScan_endpoint->sin_port);
-	socksbuf[3] = HICHAR(xScan_endpoint->sin_port);
+	socksbuf[2] = LOCHAR(xScan_endpoint->SIN_PORT);
+	socksbuf[3] = HICHAR(xScan_endpoint->SIN_PORT);
 	socksbuf[4] = (theip >> 24);
 	socksbuf[5] = (theip >> 16) & 0xFF;
 	socksbuf[6] = (theip >> 8) & 0xFF;
@@ -286,7 +289,7 @@ exituniverse:
 void	scan_socks5_scan(Scan_AddrStruct *h)
 {
 	int			retval;
-	char			*cp;
+	unsigned char			*cp;
 	struct			SOCKADDR_IN sin;
 	struct			in_addr ia4;
 	SOCKET			fd;
@@ -297,14 +300,18 @@ void	scan_socks5_scan(Scan_AddrStruct *h)
 	int			len;
 	unsigned char		socksbuf[10];
 	/* Get host */
-
 	IRCMutexLock((h->lock));
+
+#ifndef INET6
 	sin.SIN_ADDR.S_ADDR = h->in.S_ADDR;
+#else
+	bcopy(sin.SIN_ADDR.S_ADDR, h->in.S_ADDR, sizeof(h->in.S_ADDR));
+#endif
 	IRCMutexUnlock((h->lock));
 	/* IPv6 ?*/
 #ifdef INET6
 	/* ::ffff:ip hack */
-	cp = (u_char)&h->in->s6_addr;
+	cp = (u_char *)&h->in.s6_addr;
 	if (!(cp[0] == 0 && cp[1] == 0 && cp[2] == 0 && cp[3] == 0 && cp[4] == 0
 	    && cp[5] == 0 && cp[6] == 0 && cp[7] == 0 && cp[8] == 0
 	    && cp[9] == 0 && ((cp[10] == 0 && cp[11] == 0) || (cp[10] == 0xff
@@ -312,16 +319,14 @@ void	scan_socks5_scan(Scan_AddrStruct *h)
 
 		goto exituniverse;
 #endif
-	sin.SIN_ADDR.S_ADDR = h->in.S_ADDR;
-
 	if ((fd = socket(AFINET, SOCK_STREAM, 0)) < 0)
 	{
 		goto exituniverse;
 		return;
 	}
 
-	sin.sin_port = htons((unsigned short)SCAN_ON_PORT);
-	sin.sin_family = AFINET;
+	sin.SIN_PORT = htons((unsigned short)SCAN_ON_PORT);
+	sin.SIN_FAMILY = AFINET;
 	/* We do this non-blocking to prevent a hang of the entire ircd with newer
 	 * versions of glibc.  Don't you just love new "features?"
 	 * Passing null to this is probably bad, a better method is needed. 
@@ -360,7 +365,7 @@ void	scan_socks5_scan(Scan_AddrStruct *h)
 		goto exituniverse;
 	}
 #ifdef INET6
-	ia4.s_addr = inet_aton(Inet_ia2p(xScan_endpoint));
+	ia4.s_addr = inet_aton((char *)Inet_ia2p(&xScan_endpoint->SIN_ADDR));
 #else
 	bcopy(&xScan_endpoint->sin_addr, &ia4, sizeof(struct IN_ADDR));
 #endif
@@ -399,8 +404,8 @@ void	scan_socks5_scan(Scan_AddrStruct *h)
 	socksbuf[5] = (theip >> 16) & 0xFF;
 	socksbuf[6] = (theip >> 8) & 0xFF;
 	socksbuf[7] = theip & 0xFF;
-	socksbuf[8] = HICHAR(xScan_endpoint->sin_port);
-	socksbuf[9] = LOCHAR(xScan_endpoint->sin_port);
+	socksbuf[8] = HICHAR(xScan_endpoint->SIN_PORT);
+	socksbuf[9] = LOCHAR(xScan_endpoint->SIN_PORT);
 	
 	if ((retval = send(fd, socksbuf, 10, 0)) != 10)
 	{
