@@ -65,7 +65,7 @@ LRESULT CALLBACK RulesDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK StatusDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK ConfigErrorDLG(HWND, UINT, WPARAM, LPARAM);
 extern  void      SocketLoop(void *dummy), rehash(aClient *, aClient *, int);
-static char *StripCodes(char *);
+static char *ParseCodes(char *);
 HINSTANCE hInst;
 NOTIFYICONDATA SysTray;
 void CleanUp(void);
@@ -74,6 +74,7 @@ void win_map(aClient *, HWND);
 extern Link *Servers;
 extern ircstats IRCstats;
 char *errors;
+int Showtray, Minimizetray;
 void CleanUp(void)
 {
 	Shell_NotifyIcon(NIM_DELETE ,&SysTray);
@@ -93,8 +94,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	HWND hWnd;
     WSADATA WSAData;
 	HICON hIcon;
-
+	HKEY hKey;
+	char regbuf[128];
 	atexit(CleanUp);
+	LoadLibrary("riched32.dll");
 	InitStackTraceLibrary();
     if (WSAStartup(MAKEWORD(1, 1), &WSAData) != 0)
     {
@@ -115,6 +118,19 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	SysTray.uID = 0;
 	lstrcpy(SysTray.szTip, WIN32_VERSION);
 	Shell_NotifyIcon(NIM_ADD ,&SysTray);
+	RegCreateKey(HKEY_LOCAL_MACHINE, "\\Software\\UnrealIRCd\\", &hKey);
+	if (RegQueryValue(hKey, "Showtray", regbuf, NULL) != 0) {
+		RegSetValueEx(hKey, "Showtray", 0, REG_SZ, "1", 2);
+		Showtray = 1;
+	}
+	else 
+		Showtray = atoi(regbuf);
+	if (RegQueryValue(hKey, "Minimizetray", regbuf, NULL) != 0) {
+		RegSetValueEx(hKey, "Minimizetray", 0, REG_SZ, "1", 2);
+		Minimizetray = 1;
+	}
+	else 
+		Minimizetray = atoi(regbuf);
 	if ((s =  GetCommandLine()))
 		argv[argc++] = s;
 	    
@@ -139,7 +155,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 static HCURSOR hCursor;
-static HMENU hAbout, hConfig;
+static HMENU hAbout, hConfig, hOptions;
 	int wmId, wmEvent;
 	
 	switch (message)
@@ -148,6 +164,9 @@ static HMENU hAbout, hConfig;
 				hCursor = LoadCursor(hInst, MAKEINTRESOURCE(CUR_HAND));
 				hAbout = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_ABOUT)),0);
 				hConfig = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_CONFIG)),0);
+				hOptions = GetSubMenu(hConfig, 5);
+				if (Showtray)
+					CheckMenuItem(hOptions, IDM_SHOWICON, MF_CHECKED);
 				SetWindowText(hDlg, WIN32_VERSION);
 				SendMessage(hDlg, WM_SETICON, (WPARAM)ICON_SMALL, 
 					(LPARAM)(HICON)LoadImage(hInst, MAKEINTRESOURCE(ICO_MAIN), IMAGE_ICON,16, 16, 0));
@@ -198,10 +217,10 @@ static HMENU hAbout, hConfig;
 	         p.x = LOWORD(lParam);
 		     p.y = HIWORD(lParam);
 			 if ((p.x >= 24) && (p.x <= 78) && (p.y >= 178) && (p.y <= 190))
-        	     {
+             {
 				 MessageBox(hDlg, "Rehashing the wIRCd", "Rehashing", MB_OK);
- 				 sendto_realops("server config file is being rehashed from the console");
-	         		 rehash(&me, &me, 0);
+				 sendto_realops("server config file is being rehashed from the console");
+         		 rehash(&me, &me, 0);
 				 return 0;
 			 }
 			 else if ((p.x >= 85) && (p.x <= 132) && (p.y >= 178) && (p.y <= 190))  {
@@ -265,22 +284,22 @@ static HMENU hAbout, hConfig;
 }
 
 LRESULT CALLBACK LicenseDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
-static HFONT hFont;
 	switch (message) {
 		case WM_INITDIALOG: {
 			char	String[16384], **s = gnulicense;
-			hFont = CreateFont(8,0,0,0,0,0,0,0,ANSI_CHARSET,0,0,PROOF_QUALITY,0,"fixedsys");
-			SendMessage(GetDlgItem(hDlg, IDC_TEXT), WM_SETFONT, (WPARAM)hFont,TRUE);
 			SetWindowText(hDlg, "UnrealIRCd License");
 			String[0] = 0;
+			sprintf(String, "{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fmodern\\fprq1\\"
+				"fcharset0 Fixedsys;} {\\f1\\fnil\\fcharset0 Times New Roman;}}\r\n\\viewkind4"
+				"\\uc1\\pard\\lang1033\\f0\\fs20");
 			while (*s)
 			    {
-				strcat(String, StripCodes(*s++));
+				strcat(String, ParseCodes(*s++));
 				if (*s)
-					strcat(String, "\r\n");
+					strcat(String, "\\par\r\n");
 			    }
 			SetDlgItemText(hDlg, IDC_TEXT, String);
-
+			strcat(String, "\\f1\\par\r\n");
 			return (TRUE);
 			}
 		case WM_COMMAND:
@@ -291,29 +310,28 @@ static HFONT hFont;
 			EndDialog(hDlg, TRUE);
 			break;
 		case WM_DESTROY:
-			DeleteObject(hFont);
 			break;
 		}
 	return (FALSE);
 }
 
 LRESULT CALLBACK CreditsDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
-static HFONT hFont;
 	switch (message) {
 		case WM_INITDIALOG: {
 			char	String[16384], **s = unrealcredits;
-			hFont = CreateFont(8,0,0,0,0,0,0,0,ANSI_CHARSET,0,0,PROOF_QUALITY,0,"fixedsys");
-			SendMessage(GetDlgItem(hDlg, IDC_TEXT), WM_SETFONT, (WPARAM)hFont,TRUE);
 			SetWindowText(hDlg, "UnrealIRCd Credits");
-			String[0] = 0;
+			sprintf(String, "{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fmodern\\fprq1\\"
+				"fcharset0 Fixedsys;} {\\f1\\fnil\\fcharset0 Times New Roman;}}\r\n"
+				"\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20");
 			while (*s)
 			    {
-				strcat(String, StripCodes(*s++));
+				strcat(String, ParseCodes(*s++));
 				if (*s)
-					strcat(String, "\r\n");
+					strcat(String, "\\par\r\n");
 			    }
+			strcat(String, "\\f1\\par\r\n}");
+			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_SETLIMITTEXT, 0, 0);
 			SetDlgItemText(hDlg, IDC_TEXT, String);
-
 			return (TRUE);
 			}
 		case WM_COMMAND:
@@ -324,28 +342,28 @@ static HFONT hFont;
 			EndDialog(hDlg, TRUE);
 			break;
 		case WM_DESTROY:
-			DeleteObject(hFont);
 			break;
 		}
 	return (FALSE);
 }
 
 LRESULT CALLBACK DalDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
-static HFONT hFont;
 	switch (message) {
 		case WM_INITDIALOG: {
 			char	String[16384], **s = dalinfotext;
-			hFont = CreateFont(8,0,0,0,0,0,0,0,ANSI_CHARSET,0,0,PROOF_QUALITY,0,"fixedsys");
-			SendMessage(GetDlgItem(hDlg, IDC_TEXT), WM_SETFONT, (WPARAM)hFont,TRUE);
 			SetWindowText(hDlg, "UnrealIRCd DALnet Credits");
 			String[0] = 0;
+			sprintf(String, "{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fmodern\\fprq1\\"
+				"fcharset0 Fixedsys;} {\\f1\\fnil\\fcharset0 Times New Roman;}}\r\n\\viewkind4"
+				"\\uc1\\pard\\lang1033\\f0\\fs20");
 			while (*s)
 			    {
-				strcat(String, StripCodes(*s++));
+				strcat(String, ParseCodes(*s++));
 				if (*s)
-					strcat(String, "\r\n");
+					strcat(String, "\\par\r\n");
 			    }
 			SetDlgItemText(hDlg, IDC_TEXT, String);
+			strcat(String, "\\f1\\par\r\n");
 
 			return (TRUE);
 			}
@@ -357,7 +375,6 @@ static HFONT hFont;
 			EndDialog(hDlg, TRUE);
 			break;
 		case WM_DESTROY:
-			DeleteObject(hFont);
 			break;
 		}
 	return (FALSE);
@@ -735,49 +752,62 @@ LRESULT CALLBACK StatusDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 }
 
 
-/* Modified StripColors that also strips bold reverse and underline. Makes sure we dont
- * Display any codes in the edit boxes -- codemastr
+
+/* Parse bold and underline codes, also change { and } to RTF safe \{ and \}
+ * (c) 2001 codemastr & McSkaf
  */
 
-static char *StripCodes(char *buffer)
+static char *ParseCodes(char *buffer)
 {
 	static char tmp[512], out[512];
-	int  i = 0, j = 0, hascomma = 0;
+	int  i = 0, j = 0, hascomma = 0, bold = 0, underline = 0, reverse = 0;
 
 	bzero((char *)out, sizeof(out));
 	memcpy(tmp, buffer, 512);
 
 	while (tmp[i])
 	{
-		/* Strip other codes stuff */
-		while (tmp[i] == '\002' || tmp[i] == '\031' || tmp[i] == '\022' || tmp[i] == '\015' || tmp[i] == '\037') {
-			i++;
-		}
-
-		/* Color code found, so parse */
-		if (tmp[i] == '\003')
-		{
-			hascomma = 0;
-
-			/* Increase it by 1 so we can see if it is valid */
-			i++;
-			/* It's fake, so continue */
-			if (!isdigit(tmp[i]))
-				continue;
-
-			while (isdigit(tmp[i]) || (isdigit(tmp[i - 1])
-			    && tmp[i] == ',' && isdigit(tmp[i + 1])
-			    && hascomma == 0))
-			{
-				if (tmp[i] == ',' && hascomma == 1)
-					break;
-
-				if (tmp[i] == ',' && hascomma == 0)
-					hascomma = 1;
-				i++;
+		if (tmp[i] == '\037' || tmp[i] == '\031') {
+			if (!underline) {
+				strcat(out,"\\ul ");
+				j += 4;
+				underline = 1;
 			}
+			else if (underline) {
+				strcat(out, "\\ulnone ");
+				j += 8;
+				underline = 0;
+			}
+			i++;
 			continue;
 		}
+		if (tmp[i] == '\2') {
+			if (!bold) {
+				strcat(out, "\\b ");
+				j += 3;
+				bold = 1;
+			}
+			else if (bold) {
+				strcat(out, "\\b0 ");
+				j += 4;
+				bold = 0;
+			}
+			i++;
+			continue;
+		}
+		if (tmp[i] == '{') {
+			strcat(out,"\\{");
+			j += 2;
+			i++;
+			continue;
+		}
+		if (tmp[i] == '}') {
+			strcat(out,"\\}");
+			j += 2;
+			i++;
+			continue;
+		}
+
 		out[j] = tmp[i];
 		i++;
 		j++;
@@ -785,6 +815,7 @@ static char *StripCodes(char *buffer)
 	return out;
 
 }
+
 
 /* This was made by DrBin but I cleaned it up a bunch to make it work better */
 

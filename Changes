@@ -483,3 +483,5 @@ seen. gmtime warning still there
 - Possible fixed some +d bug(s)
 - Added doc/unrealircd.conf.txt (by devdev), doc/services-install-guide
   (zyrol, edited a bit by stskeeps)
+- Added richedit 1.0 support so Credits,License, etc show the bold and underline formats in win32
+  code by codemastr with help from McSkaf (still needs work to support reverse and color)
