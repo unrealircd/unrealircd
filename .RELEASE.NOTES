@@ -1,66 +1,83 @@
 
-Unreal3.2-beta19 Release Notes
-======================================
+Unreal3.2RC1 Release Notes
+============================
 
 ==[ GENERAL INFORMATION ]==
+>> TODO << 
 * If you are upgrading, make sure you run ./Config and make clean before doing make
 * The official UnrealIRCd documentation is doc/unreal32docs.html
   online version at: http://www.vulnscan.org/UnrealIrcd/unreal32docs.html
   FAQ: http://www.vulnscan.org/UnrealIrcd/faq/
   Read them before asking for help.
 * Report bugs at http://bugs.unrealircd.org/
-* This is a RECOMMENDED release. It fixes several security issues and crash bugs.
-* As usual, if you are using mixed versions you could get desync issues.
-  This is especially true for OperOverride KICK this time.
+* This is a recommended release due to security fixes.
 
 == [NEW FEATURES (see unreal32docs.html for more information) ]==
-* /who output limit (amount of lines) settable in set::who-limit
-* usermode +T: No CTCP (except ACTION and DCC)
-* Added 'action' field to ban version { } so it will kill,zline,gline,shun,..
-* Added "remove channelmode after X minutes" in mode f:
-  The format is +f [30j#R5]:15, where 5 is the "do -R after 5 minutes". For a default
-  action like +i you would have to do the same: +f [30j#i5]:15 (remove 'i' after 5 minutes).
-  Additionally, 2 config items are added:
-  * set::modef-default-unsettime, if this is set to for example '5' then things like
-    +f [30j]:15 will be transformed into +f [30j#i5]:15. It's just a default, the user can still
-    override it. By default this feature is not used.
-  * set::modef-max-unsettime, specifies the maximum amount of time for the <time> parameter,
-    by default this is set to 60 (=1 hour), the value should be between 0 and 255.
-* Added set::options::allow-part-if-shunned (allows shunned users to use /part)
-* Added oper::maxlogins by which you can limit the number of concurrent oper sessions.
-* OperOverride support for +Q/+z.
-* PREFIX_AQ is enabled by default on windows and asked in ./Config on *NIX:
-  Just like +o has '@', this will give +a (chanadmin) '&' and +q (chanowner) the '~' prefix.
-  This is supported by the major clients (mIRC, xchat, epic, eggdrop, Klient, PJIRC and more)
-  with the notable exceptions of irssi, KVIrc and CGI:IRC.
-  If enabled, it also means setting someone +a/+q is enough, no extra +o (+oa/+oq) is needed.
-  This feature should be enabled/disabled network-wide.
+* set::static-part: similar to static-quit (default 'no'), if set to 'yes' all
+  part comments will be stripped.
+* Added "extended bans". These bans look like ~<type>:<stuff> :
+  ~q: quiet bans (ex: ~q:*!*@blah.blah.com). People matching these bans can join
+      but are unable to speak, unless they have +v or higher.
+  ~c: channel bans (ex: ~c:#idiots). People in #idiots are unable to join the channel.
+  ~r: gecos (realname) bans (ex: ~r:*Stupid_bot_script*). If the realname of a user
+      matches this then (s)he is unable to join.
+      NOTE: an underscore ('_') matches both a space (' ') and an underscore ('_'),
+            so this ban would match 'Stupid bot script v1.4'.
+  These bantypes can also be used in the channel exception list (+e).
+  +e ~r:*w00t* makes anyone with 'w00t' in their realname able to join,
+  and +e ~c:#admin makes anyone in #admin able to join, etc..
+  Additionally, the system is fully modulized so modules can add other extbantypes too.
+* Remote includes support! i.e.: include "http://www.blah.net/conf/network.conf";
+  This requires libcurl and ares, see INSTALL.REMOTEINC for more details.
+  The windows versions have remote includes support compiled in.
+* Added spamfilter system. This is an attempt to fight spam, advertising, worms, etc..
+  It's much like badwords but allows you to choose multiple targets (eg: private,
+  channel, notice, etc) and various actions (eg: block, kline, gline, kill, etc).
+  You can use the /spamfilter command to add network-wide spamfilters, but you
+  can also use spamfilter { } config blocks to create local spamfilters.
+  Additionally, set::spamfilter::ban-time (duration of *lines added by spamfilter)
+  and set::spamfilter::ban-reason (*line reason if banned) are added.
+  See documentation, section 3.14 for more information.
+* snomask +S: notifications of spamfilter matches are send to this.
+* snomask +N: nick changes on remote servers.
+* channel mode +T: no notices allowed in channel
+* set::silence-limit: max amount of entries in the SILENCE list.
+* changed module system so modules are now truely reloaded on /rehash
+* can_setq operflag: makes it possible for an oper to set usermode +q (unkickable).
+* can_dccdeny operflag: makes it possible to use /dccdeny and /undccdeny.
+* Switched over to TRE, a much faster regex library.
+* Optional /sa* and /set* logging
 
 ==[ CHANGED ]==
-* The /module command can now be used by users to get a (less detailed) module list,
-  also opers can use /module [servername] to get a remote module list.
-  Both is to protect against abusive admins a bit, see Changes for details.
-* Optimized the channel msg code, now ~33% faster.
-* modules: changed a few things, added new hooks, added cmd override system
-* Made /rehash reload botmotd and opermotd
+* WebTV support has been improved a bit (channel notices).
+* made /sajoin go trough modes (eg: +bilk)
+* 'All Connections in Use' messages will now only be sent once every 15s
+* '/rehash -all' is depricated and now acts as '/rehash', on '/rehash' everything
+  is already reloaded so the '-all' made no longer sense.
+* Made blocked dcc notices (sent to umode +v) global
+* Made setting of -qaohv etc on services (+S) not possible unless you are a netadmin
+* Added 'compiled for' versioning system.
+* Enabled talk-trough-+M (just like +m) for opers
+* Some NO_OPEROVERRIDE improvements regarding talk-trough-+m/+M.
+* Made it so chanops can invite in a +V channel.
+* As usual, several new hooks for modules.
+* a tmp/ directory in the unreal directory is used for temporary storage
+  such as modules and remote include files.
+* Various doc updates, also added section "Security tips/checklist".
+* Removed remote /restart support. There are too many security issues that
+  can not be overcome.
 
 ==[ MAJOR BUGS FIXED ]==
-* serious bug by which users can crash the ircd
-* a serious snomask issue
-* +f bounce mode could crash the ircd
-* various bugs discovered after security audit
+>> TODO <<
 
 ==[ MINOR BUGS FIXED ]==
-* link::autoconnect sometimes wasn't working
-* multiple negative opercounts issues
-* Yet another HTM problem
-* weird /gline command crashing windows
-* +L desynch bug
-* extended channelmode desynch bug
-* a bug where colorquits were stripped when they shouldn't be
-* multiple oper override bugs (kick, chmode +z)
-* weird-ban problem
-* more..
+* fdlist bugs regarding local operators.
+* operoverride bug regarding halfops
+* Various module system fixes: handling of "failure to load" problems,
+  permanent modules, 
+* /stats [G|s] extended flags parsing
+* Fixed annoying '/SetHost Error' flood from all servers (eg: when re-opering).
+* Lots of fixes for running UnrealIRCd in a chrooted environment.
 
 ==[ ADDITIONAL INFO ]==
 * See Changelog
