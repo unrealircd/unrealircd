@@ -358,3 +358,4 @@
   also caused a good bit of CPU.
 - Fixed a globops bug that required it to have a : found by ROXnet
 - Removed KILL_LOGGING replaced by log {}, found by Morbid
+- Removed PROTO() and general h.h/proto.h cleanups (made source 3.14K smaller)
