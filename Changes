@@ -3022,3 +3022,7 @@ seen. gmtime warning still there
 - spamfilter.conf: added soex trojan. Sig provided by Jay.
 - Fixed a spamfilter memory leak
 - Added '__' -> '_' decoding for spamfilter reason field.
+- Made it so set::modes-on-join correctly works with extcmodes. Note: to 
+  correctly work with modes created by modules, the module _must_ call CmodeAdd
+  from Mod_Test (#0001624) reported by thunderbirdjl
+

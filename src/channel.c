@@ -3678,8 +3678,28 @@ void join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
 			    sptr->name, chptr->chname, chptr->topic_nick,
 			    chptr->topic_time);
 		}
-		if (chptr->users == 1 && MODES_ON_JOIN)
+		if (chptr->users == 1 && (MODES_ON_JOIN
+#ifdef EXTCMODE
+		    || iConf.modes_on_join.extmodes)
+#endif
+		)
 		{
+#ifdef EXTCMODE
+			int i;
+			chptr->mode.extmode =  iConf.modes_on_join.extmodes;
+			/* Param fun */
+			for (i = 0; i <= Channelmode_highest; i++)
+			{
+				if (!Channelmode_Table[i].flag || !Channelmode_Table[i].paracount)
+					continue;
+				if (chptr->mode.extmode & Channelmode_Table[i].mode)
+				{
+					CmodeParam *p;
+					p = Channelmode_Table[i].put_param(NULL, iConf.modes_on_join.extparams[i]);
+					AddListItem(p, chptr->mode.extmodeparam);
+				}
+			}
+#endif
 			chptr->mode.mode = MODES_ON_JOIN;
 #ifdef NEWCHFLOODPROT
 			if (iConf.modes_on_join.floodprot.per)

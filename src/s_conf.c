@@ -614,9 +614,16 @@ long config_checkval(char *orig, unsigned short flags) {
 void set_channelmodes(char *modes, struct ChMode *store, int warn)
 {
 	aCtab *tab;
-	char *param = strchr(modes, ' ');
-	if (param)
-		param++;
+	char *params = strchr(modes, ' ');
+	char *parambuf = NULL;
+	char *param = NULL;
+	if (params)
+	{
+		params++;
+		parambuf = MyMalloc(strlen(params)+1);
+		strcpy(parambuf, params);
+		param = strtok(parambuf, " ");
+	}		
 
 	for (; *modes && *modes != ' '; modes++)
 	{
@@ -636,13 +643,18 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 			case 'f':
 			{
 #ifdef NEWCHFLOODPROT
+				char *myparam = param;
+
 				/* TODO */
 				ChanFloodProt newf;
 				
 				memset(&newf, 0, sizeof(newf));
-				if (!param)
+				if (!myparam)
 					break;
-				if (param[0] != '[')
+				/* Go to next parameter */
+				param = strtok(NULL, " ");
+
+				if (myparam[0] != '[')
 				{
 					if (warn)
 						config_status("set::modes-on-join: please use the new +f format: '10:5' becomes '[10t]:5' "
@@ -655,7 +667,7 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 					unsigned char r;
 					
 					/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
-					strlcpy(xbuf, param, sizeof(xbuf));
+					strlcpy(xbuf, myparam, sizeof(xbuf));
 					p2 = strchr(xbuf+1, ']');
 					if (!p2)
 						break;
@@ -776,15 +788,19 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 					break;
 				}
 #else
+				char *myparam = param;
 				char kmode = 0;
 				char *xp;
 				int msgs=0, per=0;
 				int hascolon = 0;
-				if (!param)
+				if (!myparam)
 					break;
-				if (*param == '*')
+				/* Go to next parameter */
+				param = strtok(NULL, " ");
+
+				if (*myparam == '*')
 					kmode = 1;
-				for (xp = param; *xp; xp++)
+				for (xp = myparam; *xp; xp++)
 				{
 					if (*xp == ':')
 					{
@@ -793,14 +809,14 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 					}
 					if (((*xp < '0') || (*xp > '9')) && *xp != '*')
 						break;
-					if (*xp == '*' && *param != '*')
+					if (*xp == '*' && *myparam != '*')
 						break;
 				}
 				if (hascolon != 1)
 					break;
-				xp = strchr(param, ':');
+				xp = strchr(myparam, ':');
 					*xp = 0;
-				msgs = atoi((*param == '*') ? (param+1) : param);
+				msgs = atoi((*myparam == '*') ? (myparam+1) : myparam);
 				xp++;
 				per = atoi(xp);
 				xp--;
@@ -818,15 +834,47 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 				for (tab = &cFlagTab[0]; tab->mode; tab++)
 				{
 					if (tab->flag == *modes)
+					{
 						store->mode |= tab->mode;
+						break;
+					}
 				}
+#ifdef EXTCMODE
+				/* Try extcmodes */
+				if (!tab->mode)
+				{
+					int i;
+					for (i=0; i <= Channelmode_highest; i++)
+					{
+						if (!(Channelmode_Table[i].flag))
+							continue;
+						if (*modes == Channelmode_Table[i].flag)
+						{
+							if (Channelmode_Table[i].paracount)
+							{
+								if (!param)
+									break;
+								store->extparams[i] = strdup(Channelmode_Table[i].conv_param(param));
+								/* Get next parameter */
+								param = strtok(NULL, " ");
+							}
+							store->extmodes |= Channelmode_Table[i].mode;
+							break;
+						}
+					}
+				}
+#endif
 		}
 	}
+	if (parambuf)
+		free(parambuf);
 }
 
 void chmode_str(struct ChMode modes, char *mbuf, char *pbuf)
 {
 	aCtab *tab;
+	int i;
+	*pbuf = 0;
 	*mbuf++ = '+';
 	for (tab = &cFlagTab[0]; tab->mode; tab++)
 	{
@@ -836,17 +884,36 @@ void chmode_str(struct ChMode modes, char *mbuf, char *pbuf)
 				*mbuf++ = tab->flag;
 		}
 	}
+#ifdef EXTCMODE
+	for (i=0; i <= Channelmode_highest; i++)
+	{
+		if (!(Channelmode_Table[i].flag))
+			continue;
+	
+		if (modes.extmodes & Channelmode_Table[i].mode)
+			*mbuf++ = Channelmode_Table[i].flag;
+		if (Channelmode_Table[i].paracount)
+		{
+			strcat(pbuf, modes.extparams[i]);
+			strcat(pbuf, " ");
+		}
+	}
+#endif
 #ifdef NEWCHFLOODPROT
 	if (modes.floodprot.per)
 	{
 		*mbuf++ = 'f';
-		sprintf(pbuf, "%s", channel_modef_string(&modes.floodprot));
+		strcat(pbuf, channel_modef_string(&modes.floodprot));
 	}
 #else
 	if (modes.per)
 	{
 		*mbuf++ = 'f';
-		sprintf(pbuf, "%s%d:%d", modes.kmode ? "*" : "", modes.msgs, modes.per);
+		if (modes.kmode)
+			strcat(pbuf, "*");
+		strcat(pbuf, my_itoa(modes.msgs));
+		strcat(pbuf, ":");
+		strcat(pbuf, my_itoa(modes.per));
 	}
 #endif
 	*mbuf++=0;
@@ -1593,6 +1660,7 @@ void	config_rehash()
 	ListStruct 	*next, *next2;
 	aTKline *tk, *tk_next;
 	SpamExcept *spamex_ptr;
+	int i;
 
 	USE_BAN_VERSION = 0;
 	/* clean out stuff that we don't use */	
@@ -1906,6 +1974,13 @@ void	config_rehash()
 		ircfree(of_ptr->topic);
 		MyFree(of_ptr);
 	}
+#ifdef EXTCMODE
+	for (i = 0; i < EXTCMODETABLESZ; i++)
+	{
+		if (iConf.modes_on_join.extparams[i])
+			free(iConf.modes_on_join.extparams[i]);
+	}
+#endif
 	conf_offchans = NULL;
 }
 
