@@ -737,3 +737,4 @@
 - Added so /gline and /shun accepts time periods in 1d2h3s etc. a recode of
   some potvin stuff
 - Added so blocking is only effective when SSL_connect()'ing
+- Fixed a couple of SJOIN/Link problems detected by Curt|s

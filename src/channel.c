@@ -4520,7 +4520,6 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	unsigned short removetheirs;
 	unsigned short merge;	/* same timestamp */
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
-	char tsbuf[100];
 	char paraback[1024], modeback[1024];
 	char banbuf[1024];
 	char exbuf[1024];
@@ -4570,8 +4569,6 @@ int  m_sjoin(cptr, sptr, parc, parv)
 		ts = atol(parv[1]);
 	else
 		ts = base64dec(parv[1] + 1);
-	ircsprintf(tsbuf, "%li", ts);
-	parv[1] = (char *)ts;
 
 	if (chptr->creationtime > ts)
 	{
@@ -5040,14 +5037,14 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	}
 
 	/* This sends out to SJ3 servers .. */
-	Debug((DEBUG_DEBUG, "Sending '%s %s :%s' to sj3-!sjb64", parv[1], parabuf,
+	Debug((DEBUG_DEBUG, "Sending '%li %s :%s' to sj3-!sjb64", ts, parabuf,
 	    parv[parc - 1]));
 	sendto_serv_butone_token_opt(cptr, OPT_SJOIN | OPT_SJ3 | OPT_NOT_SJB64, sptr->name,
-	    MSG_SJOIN, TOK_SJOIN, "%s %s :%s", parv[1], parabuf, parv[parc - 1]);
-	Debug((DEBUG_DEBUG, "Sending '%B %s :%s' to sj3-sjb64", atol(parv[1]), parabuf,
+	    MSG_SJOIN, TOK_SJOIN, "%li %s :%s", ts, parabuf, parv[parc - 1]);
+	Debug((DEBUG_DEBUG, "Sending '%B %s :%s' to sj3-sjb64", ts, parabuf,
 	    parv[parc - 1]));
 	sendto_serv_butone_token_opt(cptr, OPT_SJOIN | OPT_SJ3 | OPT_SJB64, sptr->name,
-	    MSG_SJOIN, TOK_SJOIN, "%B %s :%s", atol(parv[1]), parabuf, parv[parc - 1]);
+	    MSG_SJOIN, TOK_SJOIN, "%B %s :%s", ts, parabuf, parv[parc - 1]);
 	 
 	/* We strip out & and " here, for SJ2 */
 	strcpy(parabuf, "");

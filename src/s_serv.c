@@ -1205,7 +1205,7 @@ int  m_server_estab(cptr)
 
 	else
 #endif
-		sendto_locfailops("%sLink with %s established.", inpath);
+		sendto_locfailops("Link with %s established.", inpath);
 	/* Insert here */
 	(void)add_to_client_hash_table(cptr->name, cptr);
 	/* doesnt duplicate cptr->serv if allocted this struct already */
