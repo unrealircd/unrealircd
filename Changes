@@ -1190,3 +1190,4 @@ v- Fixed some bugreport stuff
 - Fixed an issue with -x and /quit and whowas, found by RaYmAn
 - Modified the OpenBSD fix to work for all OSes that add an _
 - Fixed m_rawto.c problem found by TheDarkOne
+- Possibly fixed the /who flags bug reported by sbalmos (#0000063)

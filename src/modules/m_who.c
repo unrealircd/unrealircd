@@ -584,20 +584,18 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				 * * IF they haven't reached the max, or they're an oper 
 				 */
 				status[i++] =
-				    (ac->user->away == NULL ? 'H' : 'G');
-				
-				status[i++] =
-				    (IsAnOper(ac) && !(IsHideOper(ac) && !IsOper(ac) && (ac != sptr)) ? '*' : ((IsInvisible(ac)
-				    && IsOper(sptr)) ? '%' : 0));
-				/* Little hack */
-				i = (!status[i - 1] ? i - 1 : i);
+				    (ac->user->away ? 'G' : 'H');
 				if (IsARegNick(ac))
 					status[i++] = 'r';
-				
-				status[((status[i]) ? ++i : i)] =
-				    ((cm->flags & CHFL_CHANOP) ? '@' : ((cm->
-				    flags & CHFL_VOICE) ? '+' : 0));
-				status[++i] = 0;
+				if (IsAnOper(ac) && (!IsHideOper(ac) || sptr == ac || IsAnOper(sptr)))
+					status[i++] = '*';
+				else if (IsInvisible(ac) && sptr != ac && IsAnOper(sptr))
+					status[i++] = '%';
+				if (cm->flags & CHFL_CHANOP)
+					status[i++] = '@';
+				else if (cm->flags & CHFL_VOICE)
+					status[i++];				
+				status[i] = 0;
 				sendto_one(sptr, getreply(RPL_WHOREPLY),
 				    me.name, sptr->name, wsopts.channel->chname,
 				    ac->user->username, 
@@ -627,15 +625,14 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			} else {
 				i = 0;
 				status[i++] =
-				    (ac->user->away == NULL ? 'H' : 'G');
-				status[i++] =
-				    (IsAnOper(ac) && !(IsHideOper(ac) && !IsOper(ac) && (ac != sptr)) ? '*' : ((IsInvisible(ac)
-				    && IsOper(sptr)) ? '%' : 0));
-				i = (!status[i - 1] ? i - 1 : i);
-
+				    (ac->user->away ? 'G' : 'H');
 				if (IsARegNick(ac))
 					status[i++] = 'r';
-				status[i++ ] = 0;
+				if (IsAnOper(ac) && (!IsHideOper(ac) || sptr == ac || IsAnOper(sptr)))
+					status[i++] = '*';
+				else if (IsInvisible(ac) && sptr != ac && IsAnOper(sptr))
+					status[i++] = '%';
+				status[i] = 0;
 				sendto_one(sptr, getreply(RPL_WHOREPLY),
 				    me.name, sptr->name,
 				    wsopts.show_chan ? first_visible_channel(ac,
@@ -681,18 +678,18 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				
 				i = 0;
 				status[i++] =
-				    (ac->user->away == NULL ? 'H' : 'G');
-				status[i++] =
-				    (IsAnOper(ac) && !(IsHideOper(ac) && !IsOper(ac) && (ac != sptr)) ? '*' : ((IsInvisible(ac)
-				    && IsOper(sptr)) ? '%' : 0));
-				i = (!status[i - 1] ? i - 1 : i);
+				    (ac->user->away ? 'G' : 'H');
 				if (IsARegNick(ac))
 					status[i++] = 'r';
-				status[((status[i]) ? ++i : i)] =
-				    ((cm->flags & CHFL_CHANOP) ? '@' : ((cm->
-				    flags & CHFL_VOICE) ? '+' : 0));
-				
-				status[++i] = 0;
+				if (IsAnOper(ac) && (!IsHideOper(ac) || sptr == ac || IsAnOper(sptr)))
+					status[i++] = '*';
+				else if (IsInvisible(ac) && sptr != ac && IsAnOper(sptr))
+					status[i++] = '%';
+				if (cm->flags & CHFL_CHANOP)
+					status[i++] = '@';
+				else if (cm->flags & CHFL_VOICE)
+					status[i++];				
+				status[i] = 0;
 				sendto_one(sptr, getreply(RPL_WHOREPLY),
 				    me.name, sptr->name,
 				    lp->chptr->chname, ac->user->username,
@@ -718,14 +715,14 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			}
 			i = 0;
 			status[i++] =
-			    (ac->user->away == NULL ? 'H' : 'G');
+			    (ac->user->away ? 'G' : 'H');
 			if (IsARegNick(ac))
 				status[i++] = 'r';
-			status[i++] =
-			    (IsAnOper(ac) ? '*' : ((IsInvisible(ac)
-			    && IsOper(sptr)) ? '%' : 0));
-			status[i++ ] = 0;
-
+			if (IsAnOper(ac) && (!IsHideOper(ac) || sptr == ac || IsAnOper(sptr)))
+				status[i++] = '*';
+			else if (IsInvisible(ac) && sptr != ac && IsAnOper(sptr))
+				status[i++] = '%';
+			status[i] = 0;
 			sendto_one(sptr, getreply(RPL_WHOREPLY), me.name,
 			    sptr->name,
 			    wsopts.show_chan ? first_visible_channel(ac,
