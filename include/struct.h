@@ -61,7 +61,11 @@
 #include "zip.h"
 #endif
 #include "auth.h" 
+#ifndef _WIN32
 #include "tre/regex.h"
+#else
+#include "win32/regex.h"
+#endif
 extern int sendanyways;
 
 

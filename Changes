@@ -2700,3 +2700,4 @@ seen. gmtime warning still there
 - Added an EXTBAN 005 token (see doc/technical/005.txt for info)
 - Fixed a bug with the dynamic umode and cmode systems
 - Made CmodeAdd return MODERR_EXISTS if the mode already exists
+- Fixes for TRE under win32
