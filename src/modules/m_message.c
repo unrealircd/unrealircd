@@ -614,14 +614,29 @@ static int is_silenced(aClient *sptr, aClient *acptr)
 	Link *lp;
 	anUser *user;
 	static char sender[HOSTLEN + NICKLEN + USERLEN + 5];
-
+	static char senderx[HOSTLEN + NICKLEN + USERLEN + 5];
+	char checkv = 0;
+	
 	if (!(acptr->user) || !(lp = acptr->user->silence) ||
 	    !(user = sptr->user)) return 0;
+
 	ircsprintf(sender, "%s!%s@%s", sptr->name, user->username,
 	    user->realhost);
+	/* We also check for matches against sptr->user->virthost if present,
+	 * this is checked regardless of mode +x so you can't do tricks like:
+	 * evil has +x and msgs, victim places silence on +x host, evil does -x
+	 * and can msg again. -- Syzop
+	 */
+	if (sptr->user->virthost)
+	{
+		ircsprintf(senderx, "%s!%s@%s", sptr->name, user->username,
+		    sptr->user->virthost);
+		checkv = 1;
+	}
+
 	for (; lp; lp = lp->next)
 	{
-		if (!match(lp->value.cp, sender))
+		if (!match(lp->value.cp, sender) || (checkv && !match(lp->value.cp, senderx)))
 		{
 			if (!MyConnect(sptr))
 			{

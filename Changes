@@ -2304,3 +2304,4 @@ seen. gmtime warning still there
 - Fixed bug with SWHOIS: oper::swhois wasn't broadcasted correctly which made it
   only show up in local (or server) /whois, reported by format (#0001141).
 - minor m_kick tweak.
+- Fixed bug in /silence regarding cloaked hosts, reported by kuwatog (#0001157).
