@@ -1211,3 +1211,4 @@ seen. gmtime warning still there
 - Made the server pass extraflags at linking for deny version validation
 - Added a patch by Syzop to fix a bug preventing +I from being used (fixes #0000073)
 - Readded examples to doc/conf.doc by request of several users
+- Clean compile with -Wall

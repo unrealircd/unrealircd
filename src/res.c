@@ -23,6 +23,7 @@
 #include "res.h"
 #include "numeric.h"
 #include "h.h"
+#include "proto.h"
 #include <signal.h>
 #ifndef _WIN32
 #include <sys/time.h>
@@ -30,6 +31,7 @@
 #endif
 #include "nameser.h"
 #include "resolv.h"
+#include "inet.h"
 #include <string.h>
 #ifndef CLEAN_COMPILE
 static char rcsid[] = "@(#)$Id$";
@@ -752,9 +754,6 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 			  if (dlen != sizeof(dr))
 #endif
 			  {
-				  sendto_one
-				      ("Bad IP length (%d) returned for %s",
-				      dlen, hostbuf);
 				  Debug((DEBUG_DNS,
 				      "Bad IP length (%d) returned for %s",
 				      dlen, hostbuf));

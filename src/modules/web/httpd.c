@@ -35,6 +35,7 @@
 #include "numeric.h"
 #include "msg.h"
 #include "channel.h"
+#include "inet.h"
 #include <time.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -99,12 +100,12 @@ int    httpd_Init(int module_load)
 	HttpdStats = HookAddEx(Mod_Handle, HOOKTYPE_HTTPD_URL, h_u_stats);
 	HttpdVfs = HookAddEx(Mod_Handle, HOOKTYPE_HTTPD_URL, h_u_vfs);
 	HttpdPhtml = HookAddEx(Mod_Handle, HOOKTYPE_HTTPD_URL, h_u_phtml);
-	return 1;
+	return MOD_SUCCESS;
 }
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_Load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
 int    httpd_Load(int module_load)
 #endif
@@ -115,7 +116,7 @@ int    httpd_Load(int module_load)
 	{
 		config_error("httpd: could not create socket: %s", strerror(ERRNO));
 		httpdfd = -1;
-		return -1;
+		return MOD_FAILED;
 	}
 	set_non_blocking(httpdfd, NULL);
 	set_sock_opts(httpdfd, NULL);		
@@ -133,17 +134,17 @@ int    httpd_Load(int module_load)
 			strerror(ERRNO));
 		CLOSE_SOCK(httpdfd);
 		httpdfd = -1;
-		return -1;
+		return MOD_FAILED;
 	}
 	listen(httpdfd, LISTEN_SIZE);
 	httpd_setup_acceptthread();
-	return 1;
+	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_unload(int module_unload)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
 int	httpd_Unload(int module_unload)
 #endif
@@ -151,6 +152,7 @@ int	httpd_Unload(int module_unload)
 	HookDel(HttpdStats);
 	HookDel(HttpdVfs);
 	HookDel(HttpdPhtml);
+	return MOD_SUCCESS;
 }
 
 
@@ -180,7 +182,7 @@ void	httpd_acceptthread(void	*p)
 	{
 		FD_ZERO(&rfds);
 		FD_SET(httpdfd, &rfds);
-		if (retval = select(httpdfd + 1, &rfds, NULL, NULL, NULL))
+		if ((retval = select(httpdfd + 1, &rfds, NULL, NULL, NULL)))
 		{
 			callerfd = accept(httpdfd, NULL, NULL);
 			if (callerfd >= 0)
@@ -365,7 +367,7 @@ int	httpd_parse(HTTPd_Request *request)
 	{
 		if (parse_urlenc(request))
 		{
-			RunHookReturn(HOOKTYPE_HTTPD_URL, request, >0) -1;
+			RunHookReturn(HOOKTYPE_HTTPD_URL, request, >0);
 			httpd_404_header(request, request->url);
 			return -1;
 		}
@@ -375,18 +377,18 @@ int	httpd_parse(HTTPd_Request *request)
 		}
 		return -1;
 	}
+	return 1;
 }
 
 void	sockprintf(HTTPd_Request *r, char *format, ...)
 {
 	va_list		ap;
-	char		*ptr;
 
 	va_start(ap, format);
 	vsprintf(r->inbuf, format, ap);
 	strcat(r->inbuf, "\r\n");
 	va_end(ap);
-	set_blocking(r->fd, NULL);
+	set_blocking(r->fd);
 	send(r->fd, r->inbuf, strlen(r->inbuf), 0),
 	set_non_blocking(r->fd, NULL);
 }
@@ -437,11 +439,11 @@ static int urldecode(char *s)
 int parse_urlenc(HTTPd_Request *request)
 {
   unsigned int i;
-  unsigned int p;
+  unsigned int p = 0;
   int   param_count;
   int	content_length;
-  char  **tempheaders;
-  char  **tempvalues;
+  char  **tempheaders = '\0';
+  char  **tempvalues = '\0';
   HTTPd_Header *h;
   char *buf;
 
@@ -603,7 +605,7 @@ void	httpd_parse_final(HTTPd_Request *request)
 	}
 	else
 	{
-		RunHookReturn(HOOKTYPE_HTTPD_URL, request, >0);
+		RunHookReturnVoid(HOOKTYPE_HTTPD_URL, request, >0);
 		httpd_404_header(request, request->url);
 		return;
 	}
@@ -613,8 +615,6 @@ void	httpd_sendfile(HTTPd_Request *r, char *filename)
 {
 	int	xfd = open(filename, O_RDONLY);
 	int	len = 0, ret = 0;
-	fd_set	wfd;
-	struct timeval tv;
 	
 	if (xfd)
 	{

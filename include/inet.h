@@ -34,6 +34,8 @@
 # ifndef _WIN32
 extern __u_l inet_addr(char *);
 extern char *inet_ntoa(struct IN_ADDR);
+extern int inet_aton(const char *, struct IN_ADDR *);
+extern int  inet_netof(struct IN_ADDR);
 # endif
 extern __u_l inet_makeaddr(int, int);
 extern __u_l inet_network(char *);

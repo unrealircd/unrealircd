@@ -28,8 +28,8 @@
  */
 #include "ircsprintf.h"
 #include <stdio.h>
-
-
+#include "struct.h"
+#include "h.h"
 /* *INDENT-OFF* */
 
 const char atoi_tab[4000] = {

@@ -64,7 +64,7 @@ static char rcsid[] = "$Id$";
 #include "res.h"
 #include "numeric.h"
 #include "h.h"
-
+#include "inet.h"
 #include <signal.h>
 #ifndef _WIN32
 #include <sys/time.h>

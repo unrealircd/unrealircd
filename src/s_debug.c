@@ -26,6 +26,8 @@ Computing Center and Jarkko Oikarinen";
 #endif
 
 #include "struct.h"
+#include <string.h>
+#include "proto.h"
 /*
  * Option string.  Must be before #ifdef DEBUGMODE.
  */
