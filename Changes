@@ -520,3 +520,5 @@
   recent DRM exploits (spyware etc).
 - Fixed /restart reasons, reported by SouL-FoRTuNe.
 - Partial (incomplete!) fix for alloca warnings during compile (especially w/SSL).
+- Fixed serious crashbug
+- Fixed 'make install' error due to example.settings remove.
