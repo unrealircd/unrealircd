@@ -199,8 +199,8 @@ void report_error(text, cptr)
 
 	host = (cptr) ? get_client_name(cptr, FALSE) : "";
 
-	fprintf(stderr, text, host, strerror(errtmp));
-	fputc('\n', stderr);
+/*	fprintf(stderr, text, host, strerror(errtmp));
+	fputc('\n', stderr); */
 	Debug((DEBUG_ERROR, text, host, strerror(errtmp)));
 
 	/*
