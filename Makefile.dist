@@ -164,6 +164,8 @@ build:
 	@echo '| file "dynconf" using your favourite viewer or    |'
 	@echo '| editor. The file will contain instructions on how|'
 	@echo '| to do the dynamic configuration :)               |'
+	@echo '| You might want to see include/config.h to adjust |'
+	@echo '| some settings                                    |'
 	@echo '|                                                  |'
 	@echo '| If you really like UnrealIRCd, and would like to |'
 	@echo '| make a donation, please read the Donation file in|'

@@ -93,6 +93,10 @@
  */
 #undef SEE_SECRET
 
+/*
+ * This allows you to see modes in /list
+*/
+#define LIST_SHOW_MODES
 
 /*
  * Admin's chat...
@@ -103,6 +107,12 @@
   If you want SHUN_NOTICES, define this 
 */
 #undef SHUN_NOTICES
+
+/*
+   If you want to support chinese and/or japanese nicks
+*/
+#undef CHINESE_NICKS
+#undef JAPANESE_NICKS
 
 /*
   Remote rehash

@@ -435,7 +435,7 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 **	a change should be global, some confusion would
 **	result if only few servers allowed it...
 */
-#ifdef CHINESE_NICK
+#if defined(CHINESE_NICK) || defined(JAPANESE_NICK)
 /* Chinese Nick Verification Code - Added by RexHsu on 08/09/00 (beta2) 
  * Now Support All GBK Words,Thanks to Mr.WebBar <climb@guomai.sh.cn>!
  * Special Char Bugs Fixed by RexHsu 09/01/00 I dont know whether it is
@@ -466,8 +466,17 @@ int isvalidChinese(const unsigned char c1, const unsigned char c2)
      const unsigned int JPN_PIAN_S = 0xa5a1;
      const unsigned int JPN_PIAN_E = 0xa5f7;
      unsigned int AWord = c1 * 256 + c2;
-     return (AWord >= GBK_S && AWord <= GBK_E || AWord >= GBK_2_S && AWord <= GBK_2_E || AWord >= GBK_3_S && AWord <= GBK_3_E || AWord >= JPN_PING_S && AWord <= JPN_PING_E || AWord >= JPN_PIAN_S && AWord <= JPN_PIAN_E) ? 1 : 0;
-     //return (AWord >= GBK_S && AWord <= GBK_E) ? 1 : 0;
+#if defined(CHINESE_NICK) && defined(JAPANESE_NICK)
+     return (AWord >= GBK_S && AWord <= GBK_E || AWord >= GBK_2_S && AWord <= GBK_2_E || AWord >= GBK_3_S && AWord <= GBK_3_E 
+     	 || AWord >= JPN_PING_S && AWord <= JPN_PING_E || AWord >= JPN_PIAN_S && AWord <= JPN_PIAN_E) ? 1 : 0;
+#endif
+#if defined(CHINESE_NICK) && !defined(JAPANESE_NICK)
+     return (AWord >= GBK_S && AWord <= GBK_E || AWord >= GBK_2_S && AWord <= GBK_2_E || AWord >= GBK_3_S && AWord <= GBK_3_E ? 1 : 0);
+#endif
+#if !defined(CHINESE_NICK) && defined(JAPANESE_NICK)
+     return (AWord >= JPN_PING_S && AWord <= JPN_PING_E || AWord >= JPN_PIAN_S && AWord <= JPN_PIAN_E) ? 1 : 0;
+#endif
+
 }
 
 /* Chinese Nick Supporting Code (Switch Mode) - Modified by RexHsu on 08/09/00 */
