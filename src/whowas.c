@@ -192,9 +192,10 @@ int  m_whowas(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    (*temp->virthost !=
 			    '\0') ? temp->virthost : temp->hostname),
 			    temp->realname);
-			sendto_one(sptr, rpl_str(RPL_WHOISSERVER), me.name,
-			    parv[0], temp->name, temp->servername,
-			    myctime(temp->logoff));
+                	if (!((Find_uline(temp->servername)) && !IsOper(sptr) && HIDE_ULINES))
+				sendto_one(sptr, rpl_str(RPL_WHOISSERVER), me.name,
+				    parv[0], temp->name, temp->servername,
+				    myctime(temp->logoff));
 			cur++;
 			found++;
 		}

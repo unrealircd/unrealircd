@@ -2634,3 +2634,5 @@ seen. gmtime warning still there
 - Made the ./configure --help display a bit cleaner
 - Added include/types.h to hold any new datatypes we create
 - A lot more work on the remote include system
+- Added a patch by Certus to make it so hide-ulines also hides the server name from a
+  /who /whois and /whowas
