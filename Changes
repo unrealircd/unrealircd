@@ -354,3 +354,5 @@
 - Made MyMalloc be MyMallocEx in codemastr's log {} code. Fixes junk pointer
   problem - discovered by sts/Morbid
 - Removed the old /rehash flags, reported by Morbid
+- Reverted Demigurus's select() speedup patch, did speedup, but it 
+  also caused a good bit of CPU.

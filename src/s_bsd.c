@@ -1626,7 +1626,6 @@ static int read_packet(aClient *cptr)
  * write it out.
  */
 
-#define HighscoreFD(x,y) if (x > y) y = x
 #ifndef USE_POLL
 #ifdef NO_FDLIST
 int  read_message(delay)
@@ -1690,12 +1689,10 @@ int  read_message(delay, listp)
 			if (IsLog(cptr))
 				continue;
 			
-			HighscoreFD(i, rhighest_fd);
 #ifdef SOCKSPORT
 			if (DoingSocks(cptr))
 			{
 				socks++;
-				HighscoreFD(cptr->socksfd, rhighest_fd);
 				FD_SET(cptr->socksfd, &read_set);
 #ifdef _WIN32
 				FD_SET(cptr->socksfd, &excpt_set);
@@ -1708,7 +1705,6 @@ int  read_message(delay, listp)
 			if (DoingAuth(cptr))
 			{
 				auth++;
-				HighscoreFD(cptr->authfd, rhighest_fd);
 				Debug((DEBUG_NOTICE, "auth on %x %d", cptr, i));
 				FD_SET(cptr->authfd, &read_set);
 #ifdef _WIN32
@@ -1745,14 +1741,12 @@ int  read_message(delay, listp)
 		if (me.socksfd >= 0)
 		{
 			FD_SET(me.socksfd, &read_set);
-			HighscoreFD(me.socksfd, rhighest_fd);
 
 		}
 #endif
 #ifndef _WIN32
 		if (resfd >= 0)
 		{
-			HighscoreFD(resfd, rhighest_fd);
 			FD_SET(resfd, &read_set);
 
 		}
@@ -1761,14 +1755,14 @@ int  read_message(delay, listp)
 		wait.tv_sec = MIN(delay2, delay);
 		wait.tv_usec = usec;
 #ifdef	HPUX
-		nfds = select(rhighest_fd + 1, (int *)&read_set, (int *)&write_set,
+		nfds = select(FD_SETSIZE, (int *)&read_set, (int *)&write_set,
 		    0, &wait);
 #else
 # ifndef _WIN32
-		nfds = select(rhighest_fd + 1, &read_set, &write_set, 0, &wait);
+		nfds = select(FD_SETSIZE, &read_set, &write_set, 0, &wait);
 # else
 		nfds =
-		    select(rhighest_fd + 1, &read_set, &write_set, &excpt_set,
+		    select(FD_SETSIZE, &read_set, &write_set, &excpt_set,
 		    &wait);
 # endif
 #endif
