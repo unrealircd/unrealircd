@@ -902,6 +902,7 @@ int  m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	int  whattodo = 0;	/* 0 = add  1 = del */
 	int  found = 0;
 	int  i;
+	int quiet = 0;
 	aClient *acptr;
 	char *mask = NULL;
 	char mo[1024], mo2[1024], mo3[512];
@@ -959,6 +960,11 @@ int  m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			return;
 		}
 		whattodo = 0;
+		if (*(mask + 1) == '!')
+		{
+			quiet = 1;
+			mask++;
+		}
 		mask++;
 	}
 	if (whattodo == 0)

@@ -732,7 +732,7 @@ struct t_vhost {
 #define TKL_ZAP		0x0002
 #define TKL_GLOBAL	0x0004
 #define TKL_SHUN	0x0008
-
+#define TKL_QUIET	0x0010
 
 struct t_kline {
 	int  type;

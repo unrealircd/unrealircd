@@ -3990,84 +3990,65 @@ int  m_pass(cptr, sptr, parc, parv)
  * m_userhost added by Darren Reed 13/8/91 to aid clients and reduce
  * the need for complicated requests like WHOIS. It returns user/host
  * information only (no spurious AWAY labels or channels).
+ * Re-written by Dianora 1999
  */
 int  m_userhost(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;
 	int  parc;
 	char *parv[];
 {
-	int  catsize;
-	char *p = NULL;
-	aClient *acptr;
-	char *s;
-	char *curpos;
-	int  resid;
 
+  char  *p;            /* scratch end pointer */
+  char  *cn;           /* current name */
+  struct Client *acptr;
+  char response[5][NICKLEN*2+CHANNELLEN+USERLEN+HOSTLEN+30];
+  int i;               /* loop counter */
 
-	if (parc > 2)
-		(void)m_userhost(cptr, sptr, parc - 1, parv + 1);
+  if (parc < 2)
+    {
+      sendto_one(sptr, rpl_str(ERR_NEEDMOREPARAMS),
+                 me.name, parv[0], "USERHOST");
+      return 0;
+    }
 
-	if (parc < 2)
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "USERHOST");
-		return 0;
-	}
+  /* The idea is to build up the response string out of pieces
+   * none of this strlen() nonsense.
+   * 5 * (NICKLEN*2+CHANNELLEN+USERLEN+HOSTLEN+30) is still << sizeof(buf)
+   * and our ircsprintf() truncates it to fit anyway. There is
+   * no danger of an overflow here. -Dianora
+   */
+  response[0][0] = response[1][0] = response[2][0] =
+    response[3][0] = response[4][0] = '\0';
 
-	/*
-	 * use curpos to keep track of where we are in the output buffer,
-	 * and use resid to keep track of the remaining space in the
-	 * buffer
-	 */
-	curpos = buf;
-	curpos += sprintf(curpos, rpl_str(RPL_USERHOST), me.name, parv[0]);
-	resid = sizeof(buf) - (curpos - buf) - 1;	/* remaining space */
+  cn = parv[1];
 
-	/*
-	 * for each user found, print an entry if it fits.
-	 */
-	for (s = strtoken(&p, parv[1], " "); s;
-	    s = strtoken(&p, (char *)NULL, " "))
-		if ((acptr = find_person(s, NULL)))
-		{
-			catsize = strlen(acptr->name)
-			    + (IsAnOper(acptr) ? 1 : 0)
-			    + 3
-			    + strlen(acptr->user->username)
-			    + strlen(acptr->user->realhost) + 1;
-			if (catsize <= resid)
-			{
-				curpos += sprintf(curpos, "%s%s=%c%s@%s ",
-				    acptr->name,
-				    IsAnOper(acptr) ? "*" : "",
-				    (acptr->user->away) ? '-' : '+',
-				    acptr->user->username,
-				    ((IsOper(sptr) || acptr == sptr) ?
-				    acptr->user->realhost :
-				    (IsHidden(acptr) ? acptr->user->
-				    virthost : acptr->user->realhost)));
-				if (IsWhois(acptr) && IsOper(sptr))
-				{
-/*
-					sendto_one(acptr,
-					    ":%s NOTICE %s :*** %s did a /userhost on you.",
-					    me.name, sptr->name, sptr->name);
-*/
-				}
-				resid -= catsize;
-			}
-		}
+  for(i=0; (i < 5) && cn; i++ )
+    {
+      if((p = strchr(cn, ' ')))
+        *p = '\0';
 
-	/*
-	 * because of some trickery here, we might have the string end in
-	 * "...:" or "foo " (note the trailing space)
-	 * If we have a trailing space, nuke it here.
-	 */
-	curpos--;
-	if (*curpos != ':')
-		*curpos = '\0';
-	sendto_one(sptr, "%s", buf);
-	return 0;
+      if ((acptr = find_person(cn, NULL)))
+        {
+          ircsprintf(response[i], "%s%s=%c%s@%s",
+                     acptr->name,
+                     IsAnOper(acptr) ? "*" : "",
+                     (acptr->user->away) ? '-' : '+',
+                     acptr->username,
+   			((acptr != sptr) && !IsOper(sptr) 
+   			  && IsHidden(acptr) ? acptr->user->virthost : 
+   			  acptr->user->realhost));
+        }
+      if(p)
+        p++;
+      cn = p;
+    }
+
+  ircsprintf(buf, "%s%s %s %s %s %s",
+    rpl_str(RPL_USERHOST),
+    response[0], response[1], response[2], response[3], response[4] );
+  sendto_one(sptr, buf, me.name, parv[0]);
+
+  return 0;
 }
 
 /*
