@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta16<br>
-  <b>Last doc update:</b> 2003-04-19 </div>
+  <b>Last doc update:</b> 2003-04-28 </div>
   <b>Head Coders:</b> Stskeeps / codemastr / Luke / McSkaf / Syzop<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -1488,7 +1488,7 @@ link &lt;server-name&gt; {
 <tr><td><b>zip</b></td><td> if you want compressed links, needs to be compiled in + set at both ends</td></tr>
 <tr><td><b>nodnscache</b></td><td> don't cache IP for outgoing server connection, use this if it's an often 
  changing host (like dyndns.org)</td></tr>
-<tr><td><b>nohostcheck</b></td><td> don't validate the remote host (link::host), use this if it's an often
+<tr><td><b>nohostcheck</b></td><td> don't validate the remote host (link::hostname), use this if it's an often
  changing host (like dyndns.org)</td></tr>
 <tr><td><b>quarantine</b></td><td> opers on this server will maintain locop status</td></tr>
 </table>
@@ -1785,7 +1785,7 @@ set {
   Specifies the amount of time in which the set::anti-flood::away-count of /aways must be
   executed for flood protection to be triggered. This requires NO_FLOOD_AWAY to be defined.</p>
 <p></p> </div>
-<p><b><font size="+2">7 &#8211; Additional Files<a name="addtlfiles"></a>
+<p><b><font size="+2">5 &#8211; Additional Files<a name="addtlfiles"></a>
   </font></b></p><div class="desc">
   In addition to the configuration files, Unreal has a few other files, such as MOTD, OperMOTD, 
   BotMOTD, and Rules. Listed below are the names of these files and their uses.
@@ -2202,13 +2202,8 @@ to get more information on a command.</p>
   </tr>
   <tr> 
     <td height="39">list &lt;search string&gt;</td>
-    <td>Lists all channels on the network. If a search string is supplied, it 
-      will apply that to the search. Wildcards are supported</td>
-    <td>All</td>
-  </tr>
-  <tr> 
-    <td height="39">quote</td>
-    <td>If you don't include any options, the default is to send you the entire 
+    <td>
+      If you don't include a search string, the default is to send you the entire 
       unfiltered list of channels. Below are the options you can use, and what 
       channels LIST will return when you use them.<br> &gt;number List channels 
       with more than &lt;number&gt; people.<br> &lt;number List channels with 
@@ -2221,7 +2216,7 @@ to get more information on a command.</p>
       T&lt;number List channels whose topics are newer than &lt;number&gt; minutes.<br>
       *mask* List channels that match *mask*<br>
       !*mask* List channels that do not match *mask*<br> </td>
-    <td>All</td>
+      <td>All</td>
   </tr>
   <tr> 
     <td height="39">Knock &lt;channel&gt; &lt;message&gt;<br></td>
