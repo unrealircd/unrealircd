@@ -4433,6 +4433,7 @@ int  m_umode(cptr, sptr, parc, parv)
 			  case 'o':
 				  if(sptr->srvptr->flags & FLAGS_QUARANTINE)
 					break;
+				  goto def;
 			  case 'b':
 				  if (ALLOW_CHATOPS == 0 && what == MODE_ADD
 				      && MyClient(sptr))

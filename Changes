@@ -572,3 +572,4 @@ seen. gmtime warning still there
 - Added link::options::quarantine suggested by DumbFish
 - Made blackhole.so work
 - Fixed a set_non_blocking bug
+- Fixed a codemastr screwup in quarantine code
