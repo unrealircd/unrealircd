@@ -132,8 +132,8 @@ char	*does_servername_collide(char *s)
 	
 	if (scache_hash[i])
 	{
-		if (strcmp(s, scache_hash[i])
-			return scache_hash[i];
+		if (strcmp(s, scache_hash[i]->name))
+			return scache_hash[i]->name;
 		else
 			return NULL;
 	}

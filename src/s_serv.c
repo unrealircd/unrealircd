@@ -567,7 +567,7 @@ int  m_server(cptr, sptr, parc, parv)
 		}
 		/*      bzero(cptr->passwd, sizeof(cptr->passwd)); */
 	}
-	f = does_servername_collide(parv[1]);
+	f = (char *) does_servername_collide(parv[1]);
 	if (f)
 	{
 		ircsprintf(pp, "Servername %s collides with servername %s (similar hash). Change servername in some way (maybe change case)",
