@@ -598,7 +598,7 @@ Make sure you double check for errors in $IRCDCONF. We recommend that
 you take a look at your $IRCDCONF right now. Thanks for using UnrealIRCd
 
 __EOF__
-		rm crypter.tmp
+		rm -f crypter.tmp
 		echo "Have a nice day."
 		echo ""
 		exit 1

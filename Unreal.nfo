@@ -43,7 +43,7 @@ latest beta:
              READ THE TOPIC before you ask anything. We do this on a free
              base so we are volunteeringly helping you, but we are humans
              like you, and we got to have peace at times as well.]
-    * Mailing list: unreal-support@lists.sourceforge.net (for support)
+    * Mailing list: supporters@lists.unrealircd.org (for support)
     * READ doc/faq BEFORE ASKING QUESTIONS!
  
   * Got a bug to report? 
@@ -56,18 +56,18 @@ latest beta:
          the program (type "quit" to get out again)
         
          The output coming out there please mail it to 
-         unreal-dev@lists.sourceforge.net, along with OS type,
+         coders@lists.unrealircd.org , along with OS type,
          what "uname -a" says, any clues what it is, if you did anything etc
          etc. Please keep the core dump files if we ask you to mail us them 
          if needed
 
     * If you experince any wierdnesses (that doesnt crash the server)
-      please mail unreal-dev@lists.sourceforge.net with any clues on what
+      please mail coders@lists.unrealircd.org with any clues on what
       you did, what you experinced etc.
 
   * Got a suggestion?
   ===================
-    * Mail it to unreal-dev@lists.sourceforge.net :) or catch one from
+    * Mail it to coders@lists.unrealircd.org :) or catch one from
       the Unreal team online on IRC:)
 
  

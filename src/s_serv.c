@@ -1992,7 +1992,7 @@ void m_info_send(sptr)
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| If you find any bugs, please mail",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|  unreal-dev@lists.sourceforge.net",
+	sendto_one(sptr, ":%s %d %s :|  bugs@lists.unrealircd.org",
 	    me.name, RPL_INFO, sptr->name);
 
 	sendto_one(sptr,

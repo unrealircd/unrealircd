@@ -641,3 +641,4 @@ seen. gmtime warning still there
 - Some /info stuff, updated docs, .CHANGES.NEW, .RELEASENOTES
 - /htm fix by Griever
 - Fixed a bunch of warnings reported by Red Hat 7
+- Random cosmetic fixes
