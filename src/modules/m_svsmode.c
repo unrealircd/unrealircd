@@ -245,7 +245,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					strcpy(vhost, make_nick_user_host(acptr->name,
 						acptr->user->username, acptr->user->virthost
 						? acptr->user->virthost : 
-					: acptr->user->realhost));
+					 acptr->user->realhost));
 					ban = chptr->exlist;
 					while (ban) {
 						bnext = ban->next;

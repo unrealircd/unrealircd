@@ -1,4 +1,4 @@
- go /*
+ /*
  *   Unreal Internet Relay Chat Daemon, src/s_err.c
  *   Copyright (C) 1992 Darren Reed
  *
