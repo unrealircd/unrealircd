@@ -682,6 +682,39 @@ void crule_free(char **elem)
 	*elem = NULL;
 }
 
+char *crule_errstring(int errcode)
+{
+	return crule_errstr[errcode-1];
+}
+
+int crule_test(char *rule)
+{
+	char *ruleptr = rule;
+	int  next_tok;
+	crule_treeptr ruleroot = NULL;
+	int  errcode = CR_NOERR;
+
+	if ((errcode = crule_gettoken(&next_tok, &ruleptr)) == CR_NOERR) {
+		if ((errcode = crule_parseorexpr(&ruleroot, &next_tok,
+		    &ruleptr)) == CR_NOERR) {
+			if (ruleroot != NULL) {
+				if (next_tok == CR_END)
+				{
+					crule_free((char **)&ruleroot);
+					return 0;
+				}
+				else
+					errcode = CR_UNEXPCTTOK;
+			}
+			else
+				errcode = CR_EXPCTOR;
+		}
+	}
+	if (ruleroot != NULL)
+		crule_free((char **)&ruleroot);
+	return errcode+1;
+}
+
 #ifdef CR_DEBUG
 void print_tree(crule_treeptr printelem)
 {

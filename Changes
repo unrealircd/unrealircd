@@ -1674,3 +1674,5 @@ seen. gmtime warning still there
 - /rehash for conf3 (that works) :)
 - Fixed win32 compile error with default: ;
 - Fixed several conf3 errors
+- Converted deny {} to conf3, in the process added some extra crule functions to help
+  report errors better

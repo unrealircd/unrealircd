@@ -466,6 +466,8 @@ extern void    add_CommandX(char *cmd, char *token, int (*func)(), unsigned char
 
 /* CRULE */
 char *crule_parse(char *);
+int crule_test(char *);
+char *crule_errstring(int);
 int crule_eval(char *);
 void crule_free(char **);
 

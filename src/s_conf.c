@@ -146,6 +146,7 @@ static ConfigCommand _ConfigCommands[] = {
 #endif
 	{ "ban", 		_conf_ban,		_test_ban	},
 	{ "class", 		_conf_class,		_test_class	},
+	{ "deny",		_conf_deny,		_test_deny	},
 	{ "drpass",		_conf_drpass,		_test_drpass	},
 	{ "except",		_conf_except,		_test_except	},
 	{ "help",		_conf_help,		_test_help	},
@@ -160,8 +161,6 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "tld",		_conf_tld,		_test_tld	},
 	{ "ulines",		_conf_ulines,		_test_ulines	},
 	{ "vhost", 		_conf_vhost,		_test_vhost	},
-/*
-	{ "deny",		_conf_deny,		_test_deny	},*/
 };
 
 static int _OldOperFlags[] = {
@@ -5130,6 +5129,382 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 		}
 	}
 	return (errors > 0 ? -1 : 1); 
+}
+
+int	_conf_deny(ConfigFile *conf, ConfigEntry *ce)
+{
+	if (!strcmp(ce->ce_vardata, "dcc"))
+		_conf_deny_dcc(conf, ce);
+	else if (!strcmp(ce->ce_vardata, "channel"))
+		_conf_deny_channel(conf, ce);
+	else if (!strcmp(ce->ce_vardata, "link"))
+		_conf_deny_link(conf, ce);
+	else if (!strcmp(ce->ce_vardata, "version"))
+		_conf_deny_version(conf, ce);
+	else
+	{
+		int value;
+		for (global_i = Hooks[HOOKTYPE_CONFIGRUN]; global_i;
+		     global_i = global_i->next)
+		{
+			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_DENY);
+			if (value == 1)
+				break;
+		}
+		return 0;
+	}
+	return 0;
+}
+
+int	_conf_deny_dcc(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigItem_deny_dcc 	*deny = NULL;
+	ConfigEntry 	    	*cep;
+
+	deny = MyMallocEx(sizeof(ConfigItem_deny_dcc));
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "filename"))
+		{
+			ircstrdup(deny->filename, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "reason"))
+		{
+			ircstrdup(deny->reason, cep->ce_vardata);
+		}
+	}
+	AddListItem(deny, conf_deny_dcc);
+	return 0;
+}
+
+int	_conf_deny_channel(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigItem_deny_channel 	*deny = NULL;
+	ConfigEntry 	    	*cep;
+
+	deny = MyMallocEx(sizeof(ConfigItem_deny_channel));
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "channel"))
+		{
+			ircstrdup(deny->channel, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "reason"))
+		{
+			ircstrdup(deny->reason, cep->ce_vardata);
+		}
+	}
+	AddListItem(deny, conf_deny_channel);
+	return 0;
+}
+int	_conf_deny_link(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigItem_deny_link 	*deny = NULL;
+	ConfigEntry 	    	*cep;
+
+	deny = MyMallocEx(sizeof(ConfigItem_deny_link));
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "mask"))
+		{
+			ircstrdup(deny->mask, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "rule"))
+		{
+			deny->rule = (char *)crule_parse(cep->ce_vardata);
+			ircstrdup(deny->prettyrule, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "type")) {
+			if (!strcmp(cep->ce_vardata, "all"))
+				deny->flag.type = CRULE_ALL;
+			else if (!strcmp(cep->ce_vardata, "auto"))
+				deny->flag.type = CRULE_AUTO;
+		}
+	}
+	AddListItem(deny, conf_deny_link);
+	return 0;
+}
+
+int	_conf_deny_version(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigItem_deny_version *deny = NULL;
+	ConfigEntry 	    	*cep;
+
+	deny = MyMallocEx(sizeof(ConfigItem_deny_version));
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "mask"))
+		{
+			ircstrdup(deny->mask, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "version"))
+		{
+			ircstrdup(deny->version, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "flags"))
+		{
+			ircstrdup(deny->flags, cep->ce_vardata);
+		}
+	}
+	AddListItem(deny, conf_deny_version);
+	return 0;
+}
+
+int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	int	    errors = 0;
+	if (!ce->ce_vardata)
+	{
+		config_error("%s:%i: deny without type",	
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+	if (!strcmp(ce->ce_vardata, "dcc"))
+	{
+		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+		{
+			if (!cep->ce_varname)
+			{
+				config_error("%s:%i: blank deny item",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++; continue;
+			}
+			if (!cep->ce_vardata)
+			{
+				config_error("%s:%i: deny::%s without contents",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum,
+					cep->ce_varname);
+				errors++; continue;
+			}
+			if (!strcmp(cep->ce_varname, "filename"))
+			;
+			else if (!strcmp(cep->ce_varname, "reason"))
+			;
+			else 
+			{
+				config_error("%s:%i: unknown directive deny::%s",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					cep->ce_varname);
+				errors++;
+			}
+		}
+		if (!(cep = config_find_entry(ce->ce_entries, "filename")))
+		{
+			config_error("%s:%i: deny %s::filename missing",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+			errors++;
+		}
+		if (!(cep = config_find_entry(ce->ce_entries, "reason")))
+		{
+			config_error("%s:%i: deny %s::reason missing",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+			errors++;
+		}
+	}
+	else if (!strcmp(ce->ce_vardata, "channel"))
+	{
+		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+		{
+			if (!cep->ce_varname)
+			{
+				config_error("%s:%i: blank deny item",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++; continue;
+			}
+			if (!cep->ce_vardata)
+			{
+				config_error("%s:%i: deny::%s without contents",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum,
+					cep->ce_varname);
+				errors++; continue;
+			}
+			if (!strcmp(cep->ce_varname, "channel"))
+			;
+			else if (!strcmp(cep->ce_varname, "reason"))
+			;
+			else 
+			{
+				config_error("%s:%i: unknown directive deny::%s",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					cep->ce_varname);
+				errors++;
+			}
+		}
+		if (!(cep = config_find_entry(ce->ce_entries, "channel")))
+		{
+			config_error("%s:%i: deny %s::channel missing",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+			errors++;
+		}
+		if (!(cep = config_find_entry(ce->ce_entries, "reason")))
+		{
+			config_error("%s:%i: deny %s::reason missing",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+			errors++;
+		}
+	}
+	else if (!strcmp(ce->ce_vardata, "link"))
+	{
+		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+		{
+			if (!cep->ce_varname)
+			{
+				config_error("%s:%i: blank deny item",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++; continue;
+			}
+			if (!cep->ce_vardata)
+			{
+				config_error("%s:%i: deny::%s without contents",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum,
+					cep->ce_varname);
+				errors++; continue;
+			}
+			if (!strcmp(cep->ce_varname, "mask"))
+			;
+			else if (!strcmp(cep->ce_varname, "rule"))
+			{
+				int val = 0;
+				if ((val = crule_test(cep->ce_vardata)))
+				{
+					config_error("%s:%i: deny::%s contains an invalid expression: %s",
+						cep->ce_fileptr->cf_filename,
+						cep->ce_varlinenum,
+						cep->ce_varname, crule_errstring(val));
+					errors++;
+				}
+			}
+			else if (!strcmp(cep->ce_varname, "type"))
+			{
+				if (!strcmp(cep->ce_vardata, "auto"))
+				;
+				else if (!strcmp(cep->ce_vardata, "all"))
+				;
+				else {
+					config_status("%s:%i: unknown deny link type",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+					errors++;
+				}
+			}	
+			else 
+			{
+				config_error("%s:%i: unknown directive deny::%s",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					cep->ce_varname);
+				errors++;
+			}
+		}
+		if (!(cep = config_find_entry(ce->ce_entries, "mask")))
+		{
+			config_error("%s:%i: deny %s::mask missing",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+			errors++;
+		}	
+		if (!(cep = config_find_entry(ce->ce_entries, "rule")))
+		{
+			config_error("%s:%i: deny %s::rule missing",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+			errors++;
+		}
+		if (!(cep = config_find_entry(ce->ce_entries, "type")))
+		{
+			config_error("%s:%i: deny %s::type missing",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+			errors++;
+		}
+	}
+	else if (!strcmp(ce->ce_vardata, "version"))
+	{
+		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+		{
+			if (!cep->ce_varname)
+			{
+				config_error("%s:%i: blank deny item",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++; continue;
+			}
+			if (!cep->ce_vardata)
+			{
+				config_error("%s:%i: deny::%s without contents",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum,
+					cep->ce_varname);
+				errors++; continue;
+			}
+			if (!strcmp(cep->ce_varname, "mask"))
+			;
+			else if (!strcmp(cep->ce_varname, "version"))
+			;
+			else if (!strcmp(cep->ce_varname, "flags"))
+			;
+			else 
+			{
+				config_error("%s:%i: unknown directive deny::%s",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					cep->ce_varname);
+				errors++;
+			}
+		}
+		if (!(cep = config_find_entry(ce->ce_entries, "mask")))
+		{
+			config_error("%s:%i: deny %s::mask missing",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+			errors++;
+		}
+		if (!(cep = config_find_entry(ce->ce_entries, "version")))
+		{
+			config_error("%s:%i: deny %s::version missing",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+			errors++;
+		}
+		if (!(cep = config_find_entry(ce->ce_entries, "flags")))
+		{
+			config_error("%s:%i: deny %s::flags missing",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+			errors++;
+		}
+	}
+	else
+	{
+		int used = 0;
+		for (global_i = Hooks[HOOKTYPE_CONFIGTEST]; global_i; 
+			global_i = global_i->next) 
+		{
+			int value;
+			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_DENY);
+			if (value == 2)
+				used = 1;
+			if (value == 1)
+			{
+				used = 1;
+				break;
+			}
+			if (value == -1)
+			{
+				used = 1;
+				errors++;
+				break;
+			}
+			if (value == -2)
+			{
+				used = 1;
+				errors++;
+			}
+		}
+		if (!used) {
+			config_error("%s:%i: unknown deny type %s",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+				ce->ce_vardata);
+			return -1;
+		}
+		return (errors ? -1 : 1);
+	}
+
+	return (errors > 0 ? -1 : 1);	
 }
 
 
