@@ -499,3 +499,7 @@
 - Speedup sendto_snomask/sendto_connectnotice/sendto_fconnectnotice code.
 - spamfilter.conf: fixed mIRC exploit sigs
 - Fixed all spamfilters in configfile not working due to configrewrite (post-3.2.2).
+- Module coders: sendto_snomask* now only sends to opers, sendto_snomask_normal* can be used
+  to send to normal users w/the snomask set.
+- Fixed dcc filtering a bit more.
+- Made usermode 'g' operonly since it didn't do much, reported by DukePyrolator (#0002024).

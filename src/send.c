@@ -1449,9 +1449,10 @@ void sendto_umode_raw(int umodes, char *pattern, ...)
 	va_end(vl);
 	return;
 }
-/** Send to specified snomask - local
+/** Send to specified snomask - local / operonly.
  * @param snomask Snomask to send to (can be a bitmask [AND])
- * @param pattern printf-style pattern, followed by parameters
+ * @param pattern printf-style pattern, followed by parameters.
+ * This function does not send snomasks to non-opers.
  */
 void sendto_snomask(int snomask, char *pattern, ...)
 {
@@ -1469,9 +1470,10 @@ void sendto_snomask(int snomask, char *pattern, ...)
 			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
 }
 
-/** Send to specified snomask - global
+/** Send to specified snomask - global / operonly.
  * @param snomask Snomask to send to (can be a bitmask [AND])
  * @param pattern printf-style pattern, followed by parameters
+ * This function does not send snomasks to non-opers.
  */
 void sendto_snomask_global(int snomask, char *pattern, ...)
 {
@@ -1498,6 +1500,59 @@ void sendto_snomask_global(int snomask, char *pattern, ...)
 	sendto_serv_butone_token(NULL, me.name, MSG_SENDSNO, TOK_SENDSNO,
 		"%s :%s", snobuf, nbuf);
 }
+
+/** Send to specified snomask - local.
+ * @param snomask Snomask to send to (can be a bitmask [AND])
+ * @param pattern printf-style pattern, followed by parameters.
+ * This function also delivers to non-opers w/the snomask if needed.
+ */
+void sendto_snomask_normal(int snomask, char *pattern, ...)
+{
+	va_list vl;
+	aClient *cptr;
+	int  i;
+	char nbuf[2048];
+
+	va_start(vl, pattern);
+	ircvsprintf(nbuf, pattern, vl);
+	va_end(vl);
+
+	for (i = LastSlot; i >= 0; i--)
+		if ((cptr = local[i]) && IsPerson(cptr) && (cptr->user->snomask & snomask))
+			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
+}
+
+/** Send to specified snomask - global.
+ * @param snomask Snomask to send to (can be a bitmask [AND])
+ * @param pattern printf-style pattern, followed by parameters
+ * This function also delivers to non-opers w/the snomask if needed.
+ */
+void sendto_snomask_normal_global(int snomask, char *pattern, ...)
+{
+	va_list vl;
+	aClient *cptr;
+	int  i;
+	char nbuf[2048], snobuf[32], *p;
+
+	va_start(vl, pattern);
+	ircvsprintf(nbuf, pattern, vl);
+	va_end(vl);
+
+	for (i = LastSlot; i >= 0; i--)
+		if ((cptr = local[i]) && IsPerson(cptr) && (cptr->user->snomask & snomask))
+			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
+
+	/* Build snomasks-to-send-to buffer */
+	snobuf[0] = '\0';
+	for (i = 0, p=snobuf; i<= Snomask_highest; i++)
+		if (snomask & Snomask_Table[i].mode)
+			*p++ = Snomask_Table[i].flag;
+	*p = '\0';
+
+	sendto_serv_butone_token(NULL, me.name, MSG_SENDSNO, TOK_SENDSNO,
+		"%s :%s", snobuf, nbuf);
+}
+
 
 /*
  * sendto_failops_whoare_opers

@@ -246,13 +246,13 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		auser = acptr->user;
 
 		if (index(parv[0], '.'))
-			sendto_snomask(SNO_KILLS,
+			sendto_snomask_normal(SNO_KILLS,
 			    "*** Notice -- Received KILL message for %s!%s@%s from %s Path: %s!%s",
 			    acptr->name, auser->username,
 			    IsHidden(acptr) ? auser->virthost : auser->realhost,
 			    parv[0], inpath, path);
 		else
-			sendto_snomask(SNO_KILLS,
+			sendto_snomask_normal(SNO_KILLS,
 			    "*** Notice -- Received KILL message for %s!%s@%s from %s Path: %s!%s",
 			    acptr->name, auser->username,
 			    IsHidden(acptr) ? auser->virthost : auser->realhost,

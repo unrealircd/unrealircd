@@ -761,6 +761,8 @@ int size_string, ret;
 			me.name, sptr->name);
 		return 0;
 	}
+	for (; (*ctcp == ' '); ctcp++); /* skip leading spaces */
+
 	if (*ctcp == '"' && *(ctcp+1))
 		end = index(ctcp+1, '"');
 	else
