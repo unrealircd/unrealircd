@@ -1060,7 +1060,8 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				 			parv[1], parv[2], parv[3], parv[4],
 				 			tk->setby, tk->expire_at, tk->set_at, tk->ptr.spamf->tkl_duration,
 				 			tk->ptr.spamf->tkl_reason, tk->reason);
-				 	} else
+				 	} 
+					else if (type & TKL_GLOBAL)
 				 		sendto_serv_butone(cptr,
 				 			":%s TKL %s %s %s %s %s %ld %ld :%s", sptr->name,
 				 			parv[1], parv[2], parv[3], parv[4],
