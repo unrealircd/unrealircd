@@ -1038,8 +1038,8 @@ int stats_chanrestrict(aClient *sptr, char *para)
 	ConfigItem_deny_channel *dchans;
 	ConfigItem_allow_channel *achans;
 	for (dchans = conf_deny_channel; dchans; dchans = (ConfigItem_deny_channel *) dchans->next) 
-		sendto_one(sptr, ":%s %i %s :deny %s %s", me.name, RPL_TEXT, sptr->name,
-			dchans->channel, dchans->reason);
+		sendto_one(sptr, ":%s %i %s :deny %s %c %s", me.name, RPL_TEXT, sptr->name,
+			dchans->channel, dchans->warn ? 'w' : '-', dchans->reason);
   	for (achans = conf_allow_channel; achans; achans = (ConfigItem_allow_channel *) achans->next) 
 		sendto_one(sptr, ":%s %i %s :allow %s", me.name, RPL_TEXT, sptr->name,
 			achans->channel);

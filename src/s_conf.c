@@ -2331,6 +2331,7 @@ ConfigItem_vhost *Find_vhost(char *name) {
 }
 
 
+/** returns NULL if allowed and struct if denied */
 ConfigItem_deny_channel *Find_channel_allowed(char *name)
 {
 	ConfigItem_deny_channel *dchannel;
@@ -6330,6 +6331,10 @@ int	_conf_deny_channel(ConfigFile *conf, ConfigEntry *ce)
 		{
 			ircstrdup(deny->reason, cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "warn"))
+		{
+			deny->warn = config_checkval(cep->ce_vardata,CFG_YESNO);
+		}
 	}
 	AddListItem(deny, conf_deny_channel);
 	return 0;
@@ -6463,6 +6468,8 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 			else if (!strcmp(cep->ce_varname, "redirect"))
 				;
 			else if (!strcmp(cep->ce_varname, "reason"))
+				;
+			else if (!strcmp(cep->ce_varname, "warn"))
 				;
 			else 
 			{

@@ -3482,6 +3482,11 @@ CMD_FUNC(do_join)
 					ConfigItem_deny_channel *d;
 					if ((d = Find_channel_allowed(name)))
 					{
+						if (d->warn)
+						{
+							sendto_snomask(SNO_EYES, "*** %s tried to join forbidden channel %s",
+								get_client_name(sptr, 1), name);
+						}
 						if (d->reason)
 							sendto_one(sptr, 
 							":%s %s %s :*** Can not join %s: %s",

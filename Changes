@@ -2403,3 +2403,5 @@ seen. gmtime warning still there
 - Temporarely added trace code for hunting down negative operator counts (#0001155).
 - Made it so that with +M and user not +r and not voice/halfop/ops/etc the part message isn't
   shown, just like with +m.
+- Added warn option to deny channel, this will send a notice to the eyes snomask when a user
+  attempts to join. Suggested by Joolz (#0000992).

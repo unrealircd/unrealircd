@@ -1314,19 +1314,28 @@ deny channel {
 	channel "&lt;channel-mask&gt;";
 	reason &lt;reason-for-ban&gt;;
 	redirect "&lt;channel-name&gt;";
+	warn [on|off];
 };</pre></p>
 <p> </p>
 <p>The deny channel block allows you to disallow users from joining specific channels. 
-  The deny::channel directive specifies a wildcard mask of channels the users 
-  may not join, and the deny::reason specifies the reason why the channel may 
-  not be joined. Additionally, you may specify a deny::redirect. If this is specified,
+  The <b>deny::channel</b> directive specifies a wildcard mask of channels the users 
+  may not join, and the <b>deny::reason</b> specifies the reason why the channel may 
+  not be joined. Additionally, you may specify a <b>deny::redirect</b>. If this is specified,
   when a user tries to join a channel that matches deny::channel, he/she will be redirected
-  to deny::redirect.</p>
+  to deny::redirect. And there's also <b>deny::warn</b> which (if set to on) will send an
+  opernotice (to EYES snomask) if the user tries to join.
+</p>
 <p>Example</p>
 <pre>
 deny channel {
 	channel "#unrealsucks";
 	reason "No it don't!";
+};
+
+deny channel {
+	channel "#*teen*sex*";
+	reason "You == dead";
+	warn on;
 };
 
 deny channel {

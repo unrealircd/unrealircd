@@ -1110,6 +1110,7 @@ struct _configitem_deny_channel {
 	ConfigItem		*prev, *next;
 	ConfigFlag		flag;
 	char			*channel, *reason, *redirect;
+	unsigned char	warn;
 };
 
 struct _configitem_allow_channel {
