@@ -681,7 +681,7 @@ int  parse_help(sptr, name, help)
 	}
 	if (sptr)
 		sendto_one(sptr,
-			"***** Go to %s if you have any further questions *****",
+			":%s %i %s :***** Go to %s if you have any further questions *****",
 	    me.name, 292, sptr->name, helpchan);
 
 	return 1;

@@ -1675,7 +1675,7 @@ void m_info_send(sptr)
 	    me.name, RPL_INFO, sptr->name);
 
 	sendto_one(sptr,
-	    ":%s %d %s :| UnrealIRCd Homepage: http://unreal.tspre.org",
+	    ":%s %d %s :| UnrealIRCd Homepage: http://www.unrealircd.com",
 	    me.name, RPL_INFO, sptr->name);
 
 #ifdef _WIN32

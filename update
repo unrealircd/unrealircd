@@ -7,16 +7,19 @@
 # or included in any package without permission from the author.
 #
 # NO WARRANTY IS INCLUDED
-CURRENT_VERSION="Unreal3.1-Silverheart"
+CURRENT_VERSION="Unreal3.1.1-Darkshades"
 WHATYAWANT="wget"
 clear
 cat .UPDATE
 cd src
 rm -f update.sh
+
 read $WHATYAWANT
+
 if [ "$WHATYAWANT" == "wget" ] ; then
 TMP=`which wget`
 TMP2=`echo $TMP | cut -c1`
+
 if [ "$TMP2" == "/" ] ; then
 	wget http://unreal.tspre.org/update.sh
 else
@@ -29,5 +32,5 @@ fi
 
 chmod +x update.sh
 export CURRENT_VERSION
-./update.sh $1-
+./update.sh $*
 exit 1

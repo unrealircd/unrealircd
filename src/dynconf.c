@@ -131,7 +131,7 @@ int  load_conf(char *filename, int type)
 				    ("[error] %s got a non-compatible version (%s) !",
 				    filename, version);
 				sendto_ops
-				    ("[error] Please go to http://unreal.tspre.org and learn how to upgrade");
+				    ("[error] Please go to http://www.unrealircd.com and learn how to upgrade");
 				return -1;
 			}
 			else
@@ -165,7 +165,7 @@ int  load_conf(char *filename, int type)
 				    ("[error] %s got a non-compatible network file version (%s) !",
 				    filename, version);
 				sendto_ops
-				    ("[error] Please go to http://unreal.tspre.org and learn how to upgrade");
+				    ("[error] Please go to http://www.unrealircd.com and learn how to upgrade");
 				return -1;
 			}
 			else

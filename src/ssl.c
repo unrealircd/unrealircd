@@ -49,12 +49,12 @@ void init_ctx_client(void)
 		exit(2);
 	}
 
-	if (SSL_CTX_use_certificate_file(ctx_client, "client.pem", SSL_FILETYPE_PEM) <= 0)
+	if (SSL_CTX_use_certificate_file(ctx_client, CERTF, SSL_FILETYPE_PEM) <= 0)
 	{
 		ircd_log("Failed to load SSL certificate %s (client)", "client.pem");
 		exit(3);
 	}
-	if (SSL_CTX_use_PrivateKey_file(ctx_client, "client.pem", SSL_FILETYPE_PEM) <= 0)
+	if (SSL_CTX_use_PrivateKey_file(ctx_client, CERTF, SSL_FILETYPE_PEM) <= 0)
 	{
 		ircd_log("Failed to load SSL private key %s (client)", KEYF);
 		exit(4);

@@ -716,3 +716,7 @@
 - Fixed the masskill bug, hopefully. Was a delimiter/number array bug in
   find_server_b64_or_real, causing negative base64 to be accepted (bad).
   value 1-256 will never be able to be in two letters (a server name)
+- Fixed \r\n bug, hopefully
+- made SSL use same cert client/server
+- Fixed help.c bug reported by Curt|s
+- Different fixes, unreal.tspre.org -> unrealircd.com
