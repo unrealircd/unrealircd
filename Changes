@@ -980,3 +980,5 @@ seen. gmtime warning still there
   now (you still get them, they just dont do shit). Remove them for me 
   please, as well as the +T usermode. I haven't tested this completely but 
   I see nowhere a bug could happen.
+- Removed umode +T (useless) and the fue oflags since
+  oper::snomask supercedes them.

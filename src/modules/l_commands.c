@@ -99,7 +99,6 @@ int    l_commands_Init(int module_load)
 	m_svso_Init(module_load);
 	m_svsnick_Init(module_load);
 	m_adminchat_Init(module_load);
-	m_techat_Init(module_load);
 	m_nachat_Init(module_load);
 	m_lag_Init(module_load);
 	m_rping_Init(module_load);
@@ -156,7 +155,6 @@ int    l_commands_Load(int module_load)
 	m_svso_Load(module_load);
 	m_svsnick_Load(module_load);
 	m_adminchat_Load(module_load);
-	m_techat_Load(module_load);
 	m_nachat_Load(module_load);
 	m_lag_Load(module_load);
 	m_rping_Load(module_load);
@@ -211,7 +209,6 @@ int	l_commands_Unload(int module_unload)
 	m_svso_Unload();
 	m_svsnick_Unload();
 	m_adminchat_Unload();
-	m_techat_Unload();
 	m_nachat_Unload();
 	m_lag_Unload();
 	m_rping_Unload();

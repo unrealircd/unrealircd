@@ -120,7 +120,7 @@ int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[])
                                             ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP | UMODE_SERVICES |
                                             UMODE_SADMIN | UMODE_ADMIN);
                                         acptr->umodes &=
-                                                ~(UMODE_NETADMIN | UMODE_TECHADMIN | UMODE_WHOIS);
+                                                ~(UMODE_NETADMIN | UMODE_WHOIS);
                                         acptr->umodes &=
                                             ~(UMODE_KIX | UMODE_HIDING | UMODE_DEAF | UMODE_HIDEOPER);
                                         acptr->user->oflag = 0;

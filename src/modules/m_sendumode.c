@@ -164,7 +164,7 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			  sendto_umode(UMODE_HELPOP, "%s", parv[2]);
 			  break;
 		  case 'N':
-			  sendto_umode(UMODE_NETADMIN | UMODE_TECHADMIN, "%s",
+			  sendto_umode(UMODE_NETADMIN, "%s",
 			      parv[2]);
 			  break;
 		  case 'A':
@@ -182,9 +182,6 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			  break;
 		  case 's':
 			  sendto_umode(UMODE_SERVNOTICE, "%s", parv[2]);
-			  break;
-		  case 'T':
-			  sendto_umode(UMODE_TECHADMIN, "%s", parv[2]);
 			  break;
 		  case '*':
 		  	  sendto_all_butone(NULL, &me, ":%s NOTICE :%s", 

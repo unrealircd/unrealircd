@@ -43,7 +43,6 @@ struct zNetwork {
 	char *x_sadmin_host;
 	char *x_netadmin_host;
 	char *x_coadmin_host;
-	char *x_techadmin_host;
 	char *x_hidden_host;
 	char *x_prefix_quit;
 	char *x_helpchan;

@@ -124,7 +124,7 @@ DLLFUNC int m_nachat(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 #ifdef ADMINCHAT
 	if (MyClient(sptr))
-		if (!(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
+		if (!IsNetAdmin(sptr))
 #else
 	if (MyClient(sptr))
 #endif
@@ -137,8 +137,6 @@ DLLFUNC int m_nachat(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	   MSG_NACHAT, TOK_NACHAT, ":%s", message);
 #ifdef ADMINCHAT
 	sendto_umode(UMODE_NETADMIN, "*** NetAdmin.Chat -- from %s: %s",
-	    parv[0], message);
-	sendto_umode(UMODE_TECHADMIN, "*** NetAdmin.Chat -- from %s: %s",
 	    parv[0], message);
 #endif
 	return 0;

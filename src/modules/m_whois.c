@@ -240,7 +240,7 @@ DLLFUNC int  m_whois(cptr, sptr, parc, parv)
 				if (IsAnOper(sptr))
 #endif
 					showchannel = 1;
-				if (IsServices(acptr) && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
+				if (IsServices(acptr) && !IsNetAdmin(sptr))
 					showchannel = 0;
 				if (acptr == sptr)
 					showchannel = 1;
@@ -261,8 +261,7 @@ DLLFUNC int  m_whois(cptr, sptr, parc, parv)
 					if (!(acptr == sptr) && IsAnOper(sptr)
 #else
 					if (!(acptr == sptr)
-					    && (IsNetAdmin(sptr)
-					    || IsTechAdmin(sptr))
+					    && IsNetAdmin(sptr)
 #endif
 					    && SecretChannel(chptr))
 						*(buf + len++) = '~';
@@ -305,9 +304,6 @@ DLLFUNC int  m_whois(cptr, sptr, parc, parv)
 				buf[0] = '\0';
 				if (IsNetAdmin(acptr))
 					strcat(buf, "a Network Administrator");
-				else if (IsTechAdmin(acptr))
-					strcat(buf,
-					    "a Technical Administrator");
 				else if (IsSAdmin(acptr))
 					strcat(buf, "a Services Operator");
 				else if (IsAdmin(acptr) && !IsCoAdmin(acptr))

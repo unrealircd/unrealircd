@@ -287,7 +287,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SNO_DEFOPER "+kcfvGq"
 #define SNO_DEFUSER "+k"
 
-#define	SEND_UMODES (UMODE_INVISIBLE|UMODE_OPER|UMODE_WALLOP|UMODE_FAILOP|UMODE_HELPOP|UMODE_RGSTRONLY|UMODE_REGNICK|UMODE_SADMIN|UMODE_NETADMIN|UMODE_TECHADMIN|UMODE_COADMIN|UMODE_ADMIN|UMODE_SERVICES|UMODE_HIDE|UMODE_WHOIS|UMODE_KIX|UMODE_BOT|UMODE_SECURE|UMODE_HIDING|UMODE_DEAF|UMODE_VICTIM|UMODE_HIDEOPER|UMODE_SETHOST|UMODE_STRIPBADWORDS|UMODE_WEBTV)
+#define	SEND_UMODES (UMODE_INVISIBLE|UMODE_OPER|UMODE_WALLOP|UMODE_FAILOP|UMODE_HELPOP|UMODE_RGSTRONLY|UMODE_REGNICK|UMODE_SADMIN|UMODE_NETADMIN|UMODE_COADMIN|UMODE_ADMIN|UMODE_SERVICES|UMODE_HIDE|UMODE_WHOIS|UMODE_KIX|UMODE_BOT|UMODE_SECURE|UMODE_HIDING|UMODE_DEAF|UMODE_VICTIM|UMODE_HIDEOPER|UMODE_SETHOST|UMODE_STRIPBADWORDS|UMODE_WEBTV)
 #define	ALL_UMODES (SEND_UMODES|UMODE_SERVNOTICE|UMODE_LOCOP|UMODE_SERVICES)
 #define	FLAGS_ID	(FLAGS_DOID|FLAGS_GOTID)
 
@@ -324,7 +324,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #endif
 
 #define IsNetAdmin(x)		((x)->umodes & UMODE_NETADMIN)
-#define IsTechAdmin(x)		((x)->umodes & UMODE_TECHADMIN)
 #define IsCoAdmin(x)		((x)->umodes & UMODE_COADMIN)
 #define IsSAdmin(x)		((x)->umodes & UMODE_SADMIN)
 #define SendFailops(x)		((x)->umodes & UMODE_FAILOP)
@@ -381,7 +380,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SetAdmin(x)		((x)->umodes |= UMODE_ADMIN)
 #define SetSAdmin(x)		((x)->umodes |= UMODE_SADMIN)
 #define SetNetAdmin(x)		((x)->umodes |= UMODE_NETADMIN)
-#define SetTechAdmin(x)		((x)->umodes |= UMODE_TECHADMIN)
 #define SetCoAdmin(x)		((x)->umodes |= UMODE_COADMIN)
 #define	SetInvisible(x)		((x)->umodes |= UMODE_INVISIBLE)
 #define SetEyes(x)		((x)->user->snomask |= SNO_EYES)
@@ -398,7 +396,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 
 #define ClearAdmin(x)		((x)->umodes &= ~UMODE_ADMIN)
 #define ClearNetAdmin(x)	((x)->umodes &= ~UMODE_NETADMIN)
-#define ClearTechAdmin(x)	((x)->umodes &= ~UMODE_TECHADMIN)
 #define ClearCoAdmin(x)		((x)->umodes &= ~UMODE_COADMIN)
 #define ClearSAdmin(x)		((x)->umodes &= ~UMODE_SADMIN)
 #define ClearKillsF(x)		((x)->user->snomask &= ~SNO_KILLS)
@@ -472,12 +469,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OFLAG_LNOTICE	0x00004000	/* Oper can send local serv notices */
 #define OFLAG_GNOTICE	0x00008000	/* Oper can send global notices */
 #define OFLAG_ADMIN	0x00010000	/* Admin */
-#define OFLAG_UMODEC	0x00020000	/* Oper can set umode +c */
-#define OFLAG_UMODEF	0x00040000	/* Oper can set umode +f */
 #define OFLAG_ZLINE	0x00080000	/* Oper can use /zline and /unzline */
-#define OFLAG_EYES      0x00100000	/* Oper auto gets +e */
 #define OFLAG_NETADMIN  0x00200000	/* netadmin gets +N */
-#define OFLAG_TECHADMIN 0x00400000	/* tech admin gets +T */
 #define OFLAG_COADMIN	0x00800000	/* co admin gets +C */
 #define OFLAG_SADMIN	0x01000000	/* services admin gets +a */
 #define OFLAG_WHOIS     0x02000000	/* gets auto +W on oper up */
@@ -486,7 +479,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OFLAG_GZL       0x20000000	/* can use global Z:lines */
 #define OFLAG_WMASTER	0x40000000
 #define OFLAG_INVISIBLE 0x80000000
-#define OFLAG_LOCAL	(OFLAG_REHASH|OFLAG_HELPOP|OFLAG_GLOBOP|OFLAG_WALLOP|OFLAG_LOCOP|OFLAG_LROUTE|OFLAG_LKILL|OFLAG_KLINE|OFLAG_UNKLINE|OFLAG_LNOTICE|OFLAG_UMODEC|OFLAG_UMODEF)
+#define OFLAG_LOCAL	(OFLAG_REHASH|OFLAG_HELPOP|OFLAG_GLOBOP|OFLAG_WALLOP|OFLAG_LOCOP|OFLAG_LROUTE|OFLAG_LKILL|OFLAG_KLINE|OFLAG_UNKLINE|OFLAG_LNOTICE)
 #define OFLAG_GLOBAL	(OFLAG_LOCAL|OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
 #define OFLAG_ISGLOBAL	(OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
 
@@ -512,11 +505,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPIsAdmin(x)	((x)->user->oflag & OFLAG_ADMIN)
 #define OPIsSAdmin(x)	((x)->user->oflag & OFLAG_SADMIN)
 #define OPIsNetAdmin(x) ((x)->user->oflag & OFLAG_NETADMIN)
-#define OPIsTechAdmin(x) ((x)->user->oflag & OFLAG_TECHADMIN)
 #define OPIsCoAdmin(x)	((x)->user->oflag & OFLAG_COADMIN)
-#define OPCanUModeC(x)	((x)->user->oflag & OFLAG_UMODEC)
-#define OPCanUModeF(x)	((x)->user->oflag & OFLAG_UMODEF)
-#define OPIsEyes(x)	((x)->user->oflag & OFLAG_EYES)
 #define OPIsWhois(x)    ((x)->user->oflag & OFLAG_WHOIS)
 
 #define OPSetRehash(x)	((x)->user->oflag |= OFLAG_REHASH)
@@ -537,11 +526,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPSSetAdmin(x)	((x)->user->oflag |= OFLAG_ADMIN)
 #define OPSSetSAdmin(x)	((x)->user->oflag |= OFLAG_SADMIN)
 #define OPSSetNetAdmin(x) ((x)->user->oflag |= OFLAG_NETADMIN)
-#define OPSSetTechAdmin(x) ((x)->user->oflag |= OFLAG_TECHADMIN)
 #define OPSSetCoAdmin(x) ((x)->user->oflag |= OFLAG_COADMIN)
-#define OPSetUModeC(x)	((x)->user->oflag |= OFLAG_UMODEC)
-#define OPSetUModeF(x)	((x)->user->oflag |= OFLAG_UMODEF)
-#define OPSetEyes(x)	((x)->user->oflag |= OFLAG_EYES)
 #define OPSetZLine(x)	((x)->user->oflag |= OFLAG_ZLINE)
 #define OPSetWhois(x)   ((x)->user->oflag |= OFLAG_WHOIS)
 #define OPClearRehash(x)	((x)->user->oflag &= ~OFLAG_REHASH)
@@ -562,11 +547,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPClearAdmin(x)		((x)->user->oflag &= ~OFLAG_ADMIN)
 #define OPClearSAdmin(x)	((x)->user->oflag &= ~OFLAG_SADMIN)
 #define OPClearNetAdmin(x)	((x)->user->oflag &= ~OFLAG_NETADMIN)
-#define OPClearTechAdmin(x)	((x)->user->oflag &= ~OFLAG_TECHADMIN)
 #define OPClearCoAdmin(x)	((x)->user->oflag &= ~OFLAG_COADMIN)
-#define OPClearUModeC(x)	((x)->user->oflag &= ~OFLAG_UMODEC)
-#define OPClearUModeF(x)	((x)->user->oflag &= ~OFLAG_UMODEF)
-#define OPClearEyes(x)		((x)->user->oflag &= ~OFLAG_EYES)
 #define OPClearZLine(x)		((x)->user->oflag &= ~OFLAG_ZLINE)
 #define OPClearWhois(x)         ((x)->user->oflag &= ~OFLAG_WHOIS)
 /*

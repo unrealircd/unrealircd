@@ -357,7 +357,6 @@ extern long UMODE_WEBTV;     /* 0x0800  WebTV Client */
 extern long UMODE_SERVICES;  /* 0x4000	 services */
 extern long UMODE_HIDE;	     /* 0x8000	 Hide from Nukes */
 extern long UMODE_NETADMIN;  /* 0x10000	 Network Admin */
-extern long UMODE_TECHADMIN; /* 0x40000	 Tech Admin */
 extern long UMODE_COADMIN;   /* 0x80000	 Co Admin */
 extern long UMODE_WHOIS;     /* 0x100000	 gets notice on /whois */
 extern long UMODE_KIX;       /* 0x200000	 usermode +q */

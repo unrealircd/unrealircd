@@ -61,7 +61,6 @@ long UMODE_WEBTV = 0L;     /* 0x0800  WebTV Client */
 long UMODE_SERVICES = 0L;  /* 0x4000	 services */
 long UMODE_HIDE = 0L;	     /* 0x8000	 Hide from Nukes */
 long UMODE_NETADMIN = 0L;  /* 0x10000	 Network Admin */
-long UMODE_TECHADMIN = 0L; /* 0x40000	 Tech Admin */
 long UMODE_COADMIN = 0L;   /* 0x80000	 Co Admin */
 long UMODE_WHOIS = 0L;     /* 0x100000	 gets notice on /whois */
 long UMODE_KIX = 0L;       /* 0x200000	 usermode +q */
@@ -104,7 +103,6 @@ void	umode_init(void)
 	UMODE_SERVICES = umode_get('S');  /* 0x4000	 services */
 	UMODE_HIDE = umode_get('x');	     /* 0x8000	 Hide from Nukes */
 	UMODE_NETADMIN = umode_get('N');  /* 0x10000	 Network Admin */
-	UMODE_TECHADMIN = umode_get('T'); /* 0x40000	 Tech Admin */
 	UMODE_COADMIN = umode_get('C');   /* 0x80000	 Co Admin */
 	UMODE_WHOIS = umode_get('W');     /* 0x100000	 gets notice on /whois */
 	UMODE_KIX = umode_get('q');       /* 0x200000	 usermode +q */

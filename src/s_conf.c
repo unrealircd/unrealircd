@@ -138,7 +138,6 @@ static int _OldOperFlags[] = {
 	OFLAG_LOCAL, 'o',
 	OFLAG_GLOBAL, 'O',
 	OFLAG_REHASH, 'r',
-	OFLAG_EYES, 'e',
 	OFLAG_DIE, 'D',
 	OFLAG_RESTART, 'R',
 	OFLAG_HELPOP, 'h',
@@ -157,9 +156,6 @@ static int _OldOperFlags[] = {
 	OFLAG_SADMIN, 'a',
 	OFLAG_NETADMIN, 'N',
 	OFLAG_COADMIN, 'C',
-	OFLAG_TECHADMIN, 'T',
-	OFLAG_UMODEC, 'u',
-	OFLAG_UMODEF, 'f',
 	OFLAG_ZLINE, 'z',
 	OFLAG_WHOIS, 'W',
 	OFLAG_HIDE, 'H',
@@ -173,7 +169,6 @@ static OperFlag _OperFlags[] = {
 	{ OFLAG_LOCAL,		"local" },
 	{ OFLAG_GLOBAL,		"global" },
 	{ OFLAG_REHASH,		"can_rehash" },
-	{ OFLAG_EYES,		"eyes" },
 	{ OFLAG_DIE,		"can_die" },
 	{ OFLAG_RESTART,        "can_restart" },
 	{ OFLAG_HELPOP,         "helpop" },
@@ -191,10 +186,7 @@ static OperFlag _OperFlags[] = {
 	{ OFLAG_ADMIN,		"admin"},
 	{ OFLAG_SADMIN,		"services-admin"},
 	{ OFLAG_NETADMIN,	"netadmin"},
-	{ OFLAG_TECHADMIN,	"techadmin"},
 	{ OFLAG_COADMIN,	"coadmin"},
-	{ OFLAG_UMODEC,		"get_umodec"},
-	{ OFLAG_UMODEF,		"get_umodef"},
 	{ OFLAG_ZLINE,		"can_zline"},
 	{ OFLAG_WHOIS,		"get_umodew"},
 	{ OFLAG_INVISIBLE,	"can_stealth"},
@@ -2327,9 +2319,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "servicesadmin")) {
 					ircstrdup(sadmin_host, cepp->ce_vardata);
 				}
-				else if (!strcmp(cepp->ce_varname, "techadmin")) {
-					ircstrdup(techadmin_host, cepp->ce_vardata);
-				}
 				else if (!strcmp(cepp->ce_varname, "netadmin")) {
 					ircstrdup(netadmin_host, cepp->ce_vardata);
 				}
@@ -2986,10 +2975,6 @@ void	validate_configuration(void)
 	}
 	if (Missing(coadmin_host)) {
 		Warning("set::hosts::coadmin is missing");
-		hide_host = 0;
-	}
-	if (Missing(techadmin_host)) {
-		Warning("set::hosts::techadmin is missing");
 		hide_host = 0;
 	}
 	if (hide_host == 0) {
@@ -4007,8 +3992,6 @@ void report_network(aClient *sptr)
 	    sptr->name, netadmin_host);
 	sendto_one(sptr, ":%s %i %s :hosts::coadmin: %s", me.name, RPL_TEXT,
 	    sptr->name, coadmin_host);
-	sendto_one(sptr, ":%s %i %s :hosts::techadmin: %s", me.name, RPL_TEXT,
-	    sptr->name, techadmin_host);
 	sendto_one(sptr, ":%s %i %s :hiddenhost-prefix: %s", me.name, RPL_TEXT,
 	    sptr->name, hidden_host);
 	sendto_one(sptr, ":%s %i %s :help-channel: %s", me.name, RPL_TEXT,

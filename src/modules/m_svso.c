@@ -51,14 +51,13 @@ DLLFUNC int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define TOK_SVSO 	"BB"	
 
 #define STAR1 OFLAG_SADMIN|OFLAG_ADMIN|OFLAG_NETADMIN|OFLAG_COADMIN
-#define STAR2 OFLAG_TECHADMIN|OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
+#define STAR2 OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
 #define STAR3 OFLAG_INVISIBLE
 static int oper_access[] = {
         ~(STAR1 | STAR2 | STAR3), '*',
         OFLAG_LOCAL, 'o',
         OFLAG_GLOBAL, 'O',
         OFLAG_REHASH, 'r',
-        OFLAG_EYES, 'e',
         OFLAG_DIE, 'D',
         OFLAG_RESTART, 'R',
         OFLAG_HELPOP, 'h',
@@ -77,9 +76,6 @@ static int oper_access[] = {
         OFLAG_SADMIN, 'a',
         OFLAG_NETADMIN, 'N',
         OFLAG_COADMIN, 'C',
-        OFLAG_TECHADMIN, 'T',
-        OFLAG_UMODEC, 'u',
-        OFLAG_UMODEF, 'f',
         OFLAG_ZLINE, 'z',
         OFLAG_WHOIS, 'W',
         OFLAG_HIDE, 'H',
@@ -184,7 +180,7 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
                     ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP |UMODE_SERVICES |
                     UMODE_SADMIN | UMODE_ADMIN);
                 acptr->umodes &=
-                    ~(UMODE_NETADMIN | UMODE_TECHADMIN | UMODE_WHOIS);
+                    ~(UMODE_NETADMIN | UMODE_WHOIS);
                 acptr->umodes &=
                     ~(UMODE_KIX | UMODE_HIDING | UMODE_DEAF | UMODE_HIDEOPER);
                 acptr->user->oflag = 0;

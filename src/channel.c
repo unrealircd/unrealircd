@@ -2802,7 +2802,7 @@ int channel_link(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				    (IsHidden(sptr) ? sptr->
 				    user->virthost : sptr->user->realhost),
 				    name);
-			sendto_umode(UMODE_NETADMIN | UMODE_TECHADMIN,
+			sendto_umode(UMODE_NETADMIN,
 			    "*** Invisible(+I) user %s joined %s", sptr->name,
 			    chptr->chname);
 		}
