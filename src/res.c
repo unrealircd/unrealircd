@@ -1583,7 +1583,9 @@ char	*parv[];
 
 	if (IsOper(sptr))
 		if (parv[1] && *parv[1] == 'l') {
-			for(cp = cachetop; cp; cp = cp->list_next)
+			sendto_realops("%s did a DNS cache list",
+				sptr->name);
+			   for(cp = cachetop; cp; cp = cp->list_next)
 			    {
 				sendto_one(sptr, "NOTICE %s :Ex %d ttl %d host %s(%s)",
 					   parv[0], cp->expireat - TStime(), cp->ttl,
@@ -1610,6 +1612,7 @@ char	*parv[];
 #endif
 			    }
 		return 0;
+	
 	}
 	sendto_one(sptr,"NOTICE %s :Ca %d Cd %d Ce %d Cl %d Ch %d:%d Cu %d",
 		   sptr->name,

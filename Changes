@@ -272,3 +272,4 @@
 - Fixed the 9-month old win32 DNS bug, caused by Stskeeps's incidential
   delete. Found by Zogg and CVSweb
 - Made autoconnect msgs only go to +os
+- Made DNS cache list show a notice to other ops
