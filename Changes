@@ -747,3 +747,4 @@
 - Removed CRYPTOIRCD (replaced by SSL)
 - Added support for some more SJB64 stuff
 - Added some more support for some even more SJB64 stuff
+- Added some network files

@@ -1,0 +1,30 @@
+ver^2.2
+#
+# IsraelNet (irc.israel.net) Network Configuration File
+# --------------------------------------------------
+# Added-at: 14 September 2000 14:39
+# Author: Web
+# Email: dors@Nonstop.net.il
+# -----------------------------------------
+#
+
+Network >..........: IsraelNet
+Set ircnetwork ....: IsraelNet
+Set defserv .......: irc.israel.net
+Set SERVICES_NAME .: services.israel.net
+Set oper_host .....: Oper.Israel.Net
+Set admin_host ....: Admin.Israel.Net
+Set locop_host ....: LocOP.Israel.Net
+Set sadmin_host ...: CSop.Israel.Net
+Set netadmin_host .: NetAdmin.Israel.Net
+Set coadmin_host ..: CoAdmin.Israel.Net
+Set techadmin_host : TechAdmin.Israel.Net
+Set hidden_host ...: israel
+Set netdomain .....: irc.israel.net
+Set helpchan ......: #OperHelp
+Set STATS_SERVER ..: stats.israel.net
+Set HUB ...........: not_in_use
+Set iNAH ..........: 1
+Set net_quit ......: not_in_use
+
+
