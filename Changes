@@ -237,3 +237,9 @@
 - Fixed a bug in sendto_channel_prefix_tok reported by Strider@ChatCircuit
 - Fixed P:line bug, caused by codemastr(tm) coding, (masskills), reported by
   sidv@sid-kitty-land.org
+- Some few fixes from CodeM and Barubary:
+  - Fixed /whois to show users for opers when not in the channel. 
+  - Fixed /whois to allow only global eyes opers to see user modes.  
+  - Fixed /whois to not show idle times of global opers to anyone except
+    another global oper or services.
+  - Fixed /who to show users for opers when not in the channel. 

@@ -2552,7 +2552,7 @@ int  m_who(cptr, sptr, parc, parv)
 		chptr = find_channel(channame, NULL);
 		if (chptr)
 		{
-			member = IsMember(sptr, chptr);
+			member = IsMember(sptr, chptr) || IsOper(sptr);
 			if (member || !SecretChannel(chptr))
 				for (lp = chptr->members; lp; lp = lp->next)
 				{
@@ -2594,7 +2594,7 @@ int  m_who(cptr, sptr, parc, parv)
 			for (lp = acptr->user->channel; lp; lp = lp->next)
 			{
 				chptr = lp->value.chptr;
-				member = IsMember(sptr, chptr);
+				member = IsMember(sptr, chptr) || IsOper(sptr);
 				if (isinvis && !member)
 					continue;
 				if (IsAnOper(sptr))
@@ -2751,7 +2751,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			for (lp = user->channel; lp; lp = lp->next)
 			{
 				chptr = lp->value.chptr;
-				member = IsMember(sptr, chptr);
+				member = IsMember(sptr, chptr) || IsOper(sptr);
 				if (invis && !member)
 					continue;
 				if (member || (!invis && PubChannel(chptr)))
@@ -2790,7 +2790,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			    IsHidden(acptr) ? user->virthost : user->realhost,
 			    acptr->info);
 
-			if (IsEyes(sptr))
+			if (IsEyes(sptr) && IsOper(sptr))
 			{
 				/* send the target user's modes */
 				sendto_one(sptr, rpl_str(RPL_WHOISMODES),
@@ -2919,8 +2919,13 @@ int  m_whois(cptr, sptr, parc, parv)
 					    me.name, RPL_WHOISSPECIAL, parv[0],
 					    name, acptr->user->swhois);
 			}
-
-			if (acptr->user && MyConnect(acptr))
+			/* 
+			 * Fix /whois to not show idle times of
+			 * global opers to anyone except another
+			 * global oper or services.
+			 * -CodeM/Barubary
+			 */
+			if (IsOper(sptr) || (acptr->user && MyConnect(acptr) && !IsOper(acptr)))
 				sendto_one(sptr, rpl_str(RPL_WHOISIDLE),
 				    me.name, parv[0], name,
 				    TStime() - user->last, acptr->firsttime);
