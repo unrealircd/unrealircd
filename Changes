@@ -781,3 +781,4 @@ seen. gmtime warning still there
 - Updated some documentation to prepar for release
 - Docs prepare
 - Fixed a major snomask bug found by narf
+- Using bahamut /who now, this needs some testing..

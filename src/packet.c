@@ -161,7 +161,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_AWAY, TOK_AWAY, m_away, MAXPARA);
 	add_CommandX(MSG_SERVER, TOK_SERVER, m_server, MAXPARA, M_UNREGISTERED|M_SERVER);
 	add_Command(MSG_SQUIT, TOK_SQUIT, m_squit, MAXPARA);
-	add_Command(MSG_WHO, TOK_WHO, m_who, MAXPARA);
 	add_Command(MSG_WHOWAS, TOK_WHOWAS, m_whowas, MAXPARA);
 	add_Command(MSG_LIST, TOK_LIST, m_list, MAXPARA);
 	add_Command(MSG_NAMES, TOK_NAMES, m_names, MAXPARA);

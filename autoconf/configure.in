@@ -44,10 +44,10 @@ if test "$openssl" = "yes"; then
 AC_DEFINE(USE_SSL)
 AC_CACHE_CHECK(what order we should supply the SSL libraries in, ac_cv_ssl_libs, [
 save_libs="$LIBS"
-LIBS="$LIBS -lcrypto -lssl"
+LIBS="$LIBS -lssl -lcrypto -lssl"
 AC_TRY_LINK([#include <openssl/ssl.h>], [
 SSL_write(NULL, NULL, NULL);
-], ac_cv_ssl_libs="-lcrypto -lssl" LIBS="$save_libs", ac_cv_ssl_libs="-lssl -lcrypto" LIBS="$save_libs")])
+], ac_cv_ssl_libs="-lssl -lcrypto -lssl" LIBS="$save_libs", ac_cv_ssl_libs="-lssl -lcrypto -lssl" LIBS="$save_libs")])
 CRYPTOLIB="$ac_cv_ssl_libs"
 CFLAGS="$CFLAGS -I/usr/local/include -I/usr/local/ssl/include -L/usr/local/lib -L/usr/local/ssl/lib"
 else

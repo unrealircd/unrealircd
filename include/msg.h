@@ -26,8 +26,6 @@
 
 #define MSG_PRIVATE	"PRIVMSG"	/* PRIV */
 #define TOK_PRIVATE	"!"	/* 33 */
-#define MSG_WHO		"WHO"	/* WHO  -> WHOC */
-#define TOK_WHO		"\""	/* 34 */
 #define MSG_WHOIS	"WHOIS"	/* WHOI */
 #define TOK_WHOIS	"#"	/* 35 */
 #define MSG_WHOWAS	"WHOWAS"	/* WHOW */
@@ -306,7 +304,7 @@ extern int m_zline(), m_unzline();
 extern int m_gnotice(), m_goper(), m_globops(), m_locops(), m_unsqline(),
 m_chatops();
 extern int m_protoctl();
-extern int m_motd(), m_who(), m_whois(), m_user(), m_list();
+extern int m_motd(), m_whois(), m_user(), m_list();
 extern int m_server(), m_info(), m_links(), m_summon(), m_stats();
 extern int m_users(), m_version(), m_help();
 extern int m_nickserv(), m_operserv(), m_chanserv(), m_memoserv();
