@@ -54,7 +54,6 @@ void xx(sptr, str, num)
 #define FTR(str) xx(sptr, str, 292)
 #define HLP(str) xx(sptr, str, 293)
 
-extern struct Message msgtab[];
 int  parse_help(sptr, name, help)
 	aClient *sptr;
 	char *name;
@@ -1674,26 +1673,7 @@ int  parse_help(sptr, name, help)
 		/* Send the command list (with tokens)
 		   * -Wizzu
 		 */
-		for (i = 0; msgtab[i].cmd; i++)
-			/* The following command is (almost) the same as the SND
-			 * macro, but includes variables.  -Wizzu
-			 */
-			if (sptr != NULL)
-				sendto_one(sptr, ":%s 291 %s :%s %s",
-				    me.name, name, msgtab[i].cmd,
-				    msgtab[i].token);
-			else
-				printf("%s %s\n", msgtab[i].cmd,
-				    msgtab[i].token);
-
-		if (sptr != NULL)
-			sendto_one(sptr,
-			    ":%s 291 %s :End of Command list - %i commands shown",
-			    me.name, name, (i - 1));
-		else
-			printf("End of Command list - %i commands shown\n",
-			    (i - 1));
-
+		/* Replace with CommandHash code. FIXME*/
 	}
 
 	else          /* When no argument is specified .. - hAtbLaDe */

@@ -257,3 +257,7 @@
 - Sped up some channel stuff a lot using a bahamut type user search
 - Added CommandHash optimation .. this is not done 100% yet. uses msgtab as
   reference
+- Removed msgtab part of parse, removed the bigass hashtable msgtab,
+  removed inittoken, made command initalization happen in init_CommandHash
+- Adapted /stats M to it. Removed /helpop ?commands temporary. Confirming
+  hashtable works.

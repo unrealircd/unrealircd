@@ -2237,10 +2237,6 @@ int  m_watch(cptr, sptr, parc, parv)
 **	parv[1] = statistics selector (defaults to Message frequency)
 **	parv[2] = server name (current server defaulted, if omitted)
 **
-**	Currently supported are:
-**		M = Message frequency (the old stat behaviour)
-**		L = Local Link statistics
-**              C = Report C and N configuration lines
 */
 /*
 **    Note:   The info is reported in the order the server uses
@@ -2316,7 +2312,7 @@ int  m_stats(cptr, sptr, parc, parv)
 	char pbuf[96];		/* Should be enough for to ints */
 #endif
 	ConfigItem_link *link_p;
-	struct Message *mptr;
+	aCommand *mptr;
 	aClient *acptr;
 	char stat = parc > 1 ? parv[1][0] : '\0';
 	int  i;
@@ -2545,20 +2541,21 @@ int  m_stats(cptr, sptr, parc, parv)
 	  }
 	  case 'M':
 	  case 'm':
-		  for (mptr = msgtab; mptr->cmd; mptr++)
-			  if (mptr->count)
+		  for (i = 0; i <= 255; i++)  
+			  for (mptr = CommandHash[i]; mptr; mptr = mptr->next)
+				  if (mptr->count)
 #ifndef DEBUGMODE
-				  sendto_one(sptr, rpl_str(RPL_STATSCOMMANDS),
-				      me.name, parv[0], mptr->cmd,
-				      mptr->count, mptr->bytes);
-#else
-				  sendto_one(sptr, rpl_str(RPL_STATSCOMMANDS),
-				      me.name, parv[0], mptr->cmd,
-				      mptr->count, mptr->bytes,
-				      mptr->lticks,
-				      mptr->lticks / CLOCKS_PER_SEC,
-				      mptr->rticks,
-				      mptr->rticks / CLOCKS_PER_SEC);
+					  sendto_one(sptr, rpl_str(RPL_STATSCOMMANDS),
+					      me.name, parv[0], mptr->cmd,
+					      mptr->count, mptr->bytes);
+#else	
+					  sendto_one(sptr, rpl_str(RPL_STATSCOMMANDS),
+					      me.name, parv[0], mptr->cmd,
+					      mptr->count, mptr->bytes,
+					      mptr->lticks,
+					      mptr->lticks / CLOCKS_PER_SEC,
+					      mptr->rticks,
+					      mptr->rticks / CLOCKS_PER_SEC);
 #endif
 		  break;
 	  case 'n': 

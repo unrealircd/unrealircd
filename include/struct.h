@@ -1222,21 +1222,6 @@ struct SMode {
 	unsigned char	 kmode;	/* mode  0 = kick  1 = ban */
 };
 
-/* Message table structure */
-
-struct Message {
-	char *cmd;
-	int  (*func) ();
-	unsigned int count;
-	unsigned parameters : 5;
-	u_char token[3];	/* Cheat for tokenized value */
-	unsigned long bytes;
-#ifdef DEBUGMODE
-	unsigned long lticks;
-	unsigned long rticks;
-#endif
-};
-
 /* Used for notify-hash buckets... -Donwulff */
 
 struct Notify {

@@ -1864,14 +1864,14 @@ static int m_message(cptr, sptr, parc, parv, notice)
 		if (!strcasecmp(nick, "ircd") && MyClient(sptr))
 		{
 			parse(sptr, parv[2],
-			    (parv[2] + strlen(parv[2])), msgtab);
+			    (parv[2] + strlen(parv[2])));
 			continue;
 		}
 		if (!strcasecmp(nick, "irc") && MyClient(sptr))
 		{
 			if (webtv_parse(sptr, parv[2]) == -2)
 			{
-				parse(sptr, parv[2], (parv[2] + strlen(parv[2])), msgtab);
+				parse(sptr, parv[2], (parv[2] + strlen(parv[2])));
 			}
 			continue;
 		}

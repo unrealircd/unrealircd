@@ -205,10 +205,9 @@ inline aCommand *find_Command(char *cmd, int token)
  *
  * NOTE: parse() should not be called recusively by any other fucntions!
  */
-int  parse(cptr, buffer, bufend, mptr)
+int  parse(cptr, buffer, bufend)
 	aClient *cptr;
 	char *buffer, *bufend;
-	struct Message *mptr;
 {
 	aClient *from = cptr;
 	char *ch, *s;

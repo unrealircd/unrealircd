@@ -298,7 +298,7 @@ extern void initstats PROTO(()), tstats PROTO((aClient *, char *));
 extern char *check_string PROTO((char *));
 extern char *make_nick_user_host PROTO((char *, char *, char *));
 extern char *make_user_host PROTO((char *, char *));
-extern int parse PROTO((aClient *, char *, char *, struct Message *));
+extern int parse PROTO((aClient *, char *, char *));
 extern int do_numeric PROTO((int, aClient *, aClient *, int, char **));
 extern int hunt_server PROTO((aClient *, aClient *, char *, int, int, char **));
 extern aClient *next_client PROTO((aClient *, char *));

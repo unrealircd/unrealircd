@@ -1017,7 +1017,7 @@ int  InitwIRCD(argc, argv)
 	clear_channel_hash_table();
 	clear_notify_hash_table();
 	bzero(&loop, sizeof(loop));
-	inittoken();
+	init_CommandHash();
 	initlists();
 	initwhowas();
 	initstats();
