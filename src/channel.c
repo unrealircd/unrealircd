@@ -2236,6 +2236,9 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
 				      me.name, cptr->name, *curchr);
 				  break;
 			  }
+			  if (paracount > parc)
+			  	break;
+			  
 			  if (parv[paracount] && ((strlen(parv[paracount]) >= MODEBUFLEN)))
 				  parv[paracount][MODEBUFLEN - 1] = '\0';
 			  paracount +=

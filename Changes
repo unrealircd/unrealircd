@@ -1241,3 +1241,6 @@ seen. gmtime warning still there
 - Fix with status needed for remote clients too. Found by
   Craig/FrostyCoolSlug <Craig@e-tidalwave.org>
 - Fixed m_oper setting +O on globops
+- Fixed bug with mode buffer overflow .. I'm not 100% positive it works..
+  Thanks to larne, Luke, SciFi, panda, ^Tux^.. Syzop .. and the countless
+  people bitching about their servers going down.
