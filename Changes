@@ -3071,3 +3071,5 @@ seen. gmtime warning still there
   by Stylus740 which will also maintain it.
 - Patched TRE 0.6.6 to fix known crashbug (#0001684), testing is welcomed.
 - Applied the above patch to the win32 TRE dll/lib files.
+- Fixed a problem with vhost::swhois not being displayed remotely (#0001702) reported by 
+  medice.
