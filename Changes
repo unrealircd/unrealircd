@@ -1918,3 +1918,4 @@ seen. gmtime warning still there
 - Recoded aliases (regex style) to be much faster.
 - Removed some leftover +I code
 - Fixed a bug in /who where +s was case sensitive. Reported by jollino (#0000736)
+- Removed some debugging messages

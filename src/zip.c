@@ -116,7 +116,6 @@ int     zip_init(aClient *cptr, int compressionlevel)
 */
 void    zip_free(aClient *cptr)
 {
-  ircd_log(LOG_ERROR, "Hi! This is a debug message generated from zip_free");
   if (cptr->zip)
     {
       if (cptr->zip->in) {
@@ -132,7 +131,6 @@ void    zip_free(aClient *cptr)
       MyFree(cptr->zip);
       cptr->zip = NULL;
     }
-  ircd_log(LOG_ERROR, "Hi! This is a debug message generated from zip_free, we are done!");
 }
 
 /*

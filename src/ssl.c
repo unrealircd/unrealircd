@@ -153,7 +153,6 @@ static int ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 	int verify_err = 0;
 
 	verify_err = X509_STORE_CTX_get_error(ctx);
-	ircd_log(LOG_ERROR, "%i", verify_err);	
 	if (preverify_ok)
 		return 1;
 	if (iConf.ssl_options & SSLFLAG_VERIFYCERT)
