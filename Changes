@@ -806,3 +806,4 @@ seen. gmtime warning still there
 - Added config directive alias for services/bot aliases
 - Fixed some credits, recoded httpd (still in progress)
 - Disabled #undef PROPER_CORE
+- Added alias {} to doc/example.conf
