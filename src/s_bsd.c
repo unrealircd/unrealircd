@@ -424,7 +424,7 @@ int  inetport(aClient *cptr, char *name, int port)
 		{
 			ircsprintf(backupbuf, "Error binding stream socket to IP %s port %i",
 				ipname, port);
-			strlcat(backupbuf, "- %s:%s", sizeof backupbuf);
+			strlcat(backupbuf, " - %s:%s", sizeof backupbuf);
 			report_error(backupbuf, cptr);
 			CLOSE_SOCK(cptr->fd);
 			cptr->fd = -1;

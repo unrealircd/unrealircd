@@ -266,7 +266,7 @@ void sendbufto_one(aClient *to)
 	}
 
 	len = strlen(sendbuf);
-	if (sendbuf[len - 1] != '\n')
+	if (!len || (sendbuf[len - 1] != '\n'))
 	{
 		if (len > 510)
 			len = 510;
@@ -280,6 +280,8 @@ void sendbufto_one(aClient *to)
 		char tmp_sendbuf[sizeof(sendbuf)];
 
 		strcpy(tmp_sendbuf, sendbuf);
+		if (len >= 2)
+			tmp_sendbuf[len - 2]  = '\0'; /* strip CRLF */
 		sendto_ops("Trying to send [%s] to myself!", tmp_sendbuf);
 		return;
 	}
