@@ -4900,15 +4900,21 @@ int  m_sjoin(cptr, sptr, parc, parv)
 					goto nextnick;
 				if (modeflags & CHFL_BAN)
 				{
-					add_banid(sptr, chptr, nick);
-					Addit('b', nick);
-					AddBan(nick);
+					f = add_banid(sptr, chptr, nick);
+					if (f != -1)
+					{
+						Addit('b', nick);
+						AddBan(nick);
+					}
 				}
 				if (modeflags & CHFL_EXCEPT)
 				{
-					add_exbanid(sptr, chptr, nick);
-					Addit('e', nick);
-					AddEx(nick);
+					f = add_exbanid(sptr, chptr, nick);
+					if (f != -1)
+					{
+						Addit('e', nick);
+						AddEx(nick);
+					}
 				}
 			}
 

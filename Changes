@@ -568,3 +568,4 @@
 - Removed INV_TRACK
 - Fixed a typo in /vhost
 - Fixed some problems/typos/notlookingsogood (TM) bugs, in the tkl code
+- Fixed ban merging/similar bug in SJOIN

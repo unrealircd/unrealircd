@@ -313,7 +313,7 @@ int  find_tkline_match(cptr, xx)
 						ircsprintf(msge, 
 							"User has been permanently banned from %s (%s)",
 							ircnetwork, lp->reason);
-						return(exit_client(cptr, cptr, &me, msge))
+						return(exit_client(cptr, cptr, &me, msge));
 					}
 				}
 				else
