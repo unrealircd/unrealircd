@@ -3646,7 +3646,7 @@ CMD_FUNC(do_join)
 		 * Nr 4 is done because otherwise you would have a noticeflood with 'joinflood detected'
 		 * from all servers.
 		 */
-		if (chptr->mode.floodprot && (MyClient(sptr) || sptr->serv->flags.synced) && 
+		if (chptr->mode.floodprot && (MyClient(sptr) || sptr->srvptr->serv->flags.synced) && 
 		    do_chanflood(chptr->mode.floodprot, FLD_JOIN) && MyClient(sptr))
 		{
 			do_chanflood_action(chptr, FLD_JOIN, "join");
