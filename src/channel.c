@@ -529,11 +529,17 @@ extern Ban *is_banned(aClient *cptr, aClient *sptr, aChannel *chptr)
 	char *s;
 	static char realhost[NICKLEN + USERLEN + HOSTLEN + 6];
 	static char virthost[NICKLEN + USERLEN + HOSTLEN + 6];
-
-	int  dovirt = 0;
+	static char     nuip[NICKLEN + USERLEN + HOSTLEN + 6];
+	int dovirt = 0, mine = 0;
 
 	if (!IsPerson(cptr))
 		return NULL;
+
+	if (MyConnect(cptr)) { /* MyClient()... but we already know it's a person.. */
+		mine = 1;
+		s = make_nick_user_host(cptr->name, cptr->user->username, Inet_ia2p(&cptr->ip));
+		strlcpy(nuip, s, sizeof nuip);
+	}
 
 	if (cptr->user->virthost)
 		if (strcmp(cptr->user->realhost, cptr->user->virthost))
@@ -554,13 +560,14 @@ extern Ban *is_banned(aClient *cptr, aClient *sptr, aChannel *chptr)
  */
 	for (tmp = chptr->banlist; tmp; tmp = tmp->next)
 		if ((match(tmp->banstr, realhost) == 0) ||
-		    (dovirt && (match(tmp->banstr, virthost) == 0)))
+		    (dovirt && (match(tmp->banstr, virthost) == 0)) ||
+		    (mine && (match(tmp->banstr, nuip) == 0)))
 		{
 			/* Ban found, now check for +e */
 			for (tmp2 = chptr->exlist; tmp2; tmp2 = tmp2->next)
 				if ((match(tmp2->banstr, realhost) == 0) ||
-				    (dovirt
-				    && (match(tmp2->banstr, virthost) == 0)))
+				    (dovirt && (match(tmp2->banstr, virthost) == 0)) ||
+				    (mine && (match(tmp2->banstr, nuip) == 0)) )
 					return (NULL);
 
 			break;
