@@ -397,7 +397,7 @@ int  parse(cptr, buffer, bufend, mptr)
 		paramcount = mptr->parameters;
 		i = bufend - ch;	/* Is this right? -Donwulff */
 		mptr->bytes += i;
-		if ((mptr->flags & 1) && !(IsServer(cptr) || IsOper(cptr)))
+		if (!(IsServer(cptr) || IsOper(cptr)))
 			cptr->since += (2 + i / 90);
 		/* Allow only 1 msg per 2 seconds
 		 * (on average) to prevent dumping.

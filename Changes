@@ -580,3 +580,4 @@
   proper coredumps
 - Fixed the G:line bugs, i hope - moved tkl_sweep into a loopstruct
 - Removed the ERR_NOTONCHANNEL message =P
+- Made some memory cleanups on the command list (saved 268 bytes)

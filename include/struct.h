@@ -943,8 +943,7 @@ struct Message {
 	char *cmd;
 	int  (*func) ();
 	unsigned int count;
-	int  parameters;
-	char flags;
+	short  parameters;
 	/* bit 0 set means that this command is allowed to be used
 	 * only on the average of once per 2 seconds -SRB */
 	u_char token[2];	/* Cheat for tokenized value */
