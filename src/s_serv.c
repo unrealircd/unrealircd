@@ -3667,12 +3667,6 @@ int  m_chatops(cptr, sptr, parc, parv)
 		    me.name, parv[0], "CHATOPS");
 		return 0;
 	}
-	if (MyClient(sptr))
-	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-		    parv[0]);
-		return 0;
-	}
 	sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL,
 	    parv[0], MSG_CHATOPS, TOK_CHATOPS, ":%s", message);
 	if (ALLOW_CHATOPS == 1)
