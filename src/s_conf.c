@@ -280,6 +280,41 @@ void	*MyMallocEx(size_t size)
 	return (p);
 }
 
+void	ipport_seperate(char *string, char **ip, char **port)
+{
+	char *f; 
+	
+	if (*string == '[')
+	{
+		f = strrchr(string, ':');
+	        if (f) 
+	        {
+	        	*f = '\0';
+	        }
+	        else
+	        {
+	 		*ip = NULL;
+	        	*port = NULL;
+	        }
+	        
+	        *port = (f + 1);
+	        f = strrchr(string, ']');
+	        if (f) *f = '\0';
+	        *ip = string;
+	}
+	else if (strchr(string, ':'))
+	{
+		*ip = strtok(string, ":");
+		*port = strtok(NULL, "");
+	}
+	else if (!strcmp(string, my_itoa(atoi(string))))
+	{
+		*ip = "*";
+		*port = string;
+	}
+}
+
+
 /*
  * This will link in a ConfigItem into a list of it
  * Example:
@@ -1336,7 +1371,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_listen *listen = NULL;
 	OperFlag    *ofp;
 	char	    copy[256];
-	char	    *ip;
+	char	    *ip, *p;
 	char	    *port;
 	int	    iport;
 	unsigned char	isnew = 0;
@@ -1350,36 +1385,20 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	
 	strcpy(copy, ce->ce_vardata);
 	/* Seriously cheap hack to make listen <port> work -Stskeeps */
-	if (!strcmp(copy, my_itoa(atoi(copy))))
+	ipport_seperate(copy, &ip, &port);
+	if (!ip || !*ip)
 	{
-		ip = "*";
-		port = copy;	
+		config_error("%s:%i: listen: illegal ip:port mask",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
 	}
-	else
+	if (strchr(ip, '*') && strcmp(ip, "*"))
 	{
-		if (*copy == '[')
-		{
-			ip = strtok(copy, "]");
-		}
-		else
-			ip = strtok(copy, ":");
-			
-		if (!ip)
-		{
-			config_error("%s:%i: listen: illegal ip:port mask",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			return -1;
-		}
-		if (strchr(ip, '*') && strcmp(ip, "*"))
-		{
-			config_error("%s:%i: listen: illegal ip, (mask, and not '*')",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			return -1;
-		
-		}
-		port = strtok(NULL, ":");
+		config_error("%s:%i: listen: illegal ip, (mask, and not '*')",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
 	}
-	if (!port)
+	if (!port || !*port)
 	{
 		config_error("%s:%i: listen: missing port in mask",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
