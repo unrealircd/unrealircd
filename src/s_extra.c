@@ -133,64 +133,7 @@ void dcc_wipe_services(void)
 
 }
 
-int  m_svsfline(aClient *cptr, aClient *sptr, int parc, char *parv[])
-{
-	if (!IsServer(sptr))
-		return 0;
-
-	if (parc < 2)
-		return 0;
-
-	switch (*parv[1])
-	{
-		  /* Allow non-U:lines to send ONLY SVSFLINE +, but don't send it out
-		   * unless it is from a U:line -- codemastr */
-	  case '+':
-	  {
-		  if (parc < 4)
-			  return 0;
-		  if (!Find_deny_dcc(parv[2]))
-			  DCCdeny_add(parv[2], parv[3], CONF_BAN_TYPE_AKILL);
-		  if (IsULine(sptr))
-			  sendto_serv_butone_token(cptr,
-			      sptr->name,
-			      MSG_SVSFLINE, TOK_SVSFLINE,
-			      "+ %s :%s",
-			      parv[2], parv[3]);
-		  break;
-	  }
-	  case '-':
-	  {
-		  ConfigItem_deny_dcc *deny;
-		  if (!IsULine(sptr))
-			  return 0;
-		  if (parc < 3)
-			  return 0;
-		  if (!(deny = Find_deny_dcc(parv[2])))
-			break;
-		  DCCdeny_del(deny);
-		  sendto_serv_butone_token(cptr, sptr->name,
-		 	MSG_SVSFLINE, TOK_SVSFLINE, "%s",
-			      parv[2]);
-		  break;
-	  }
-	  case '*':
-	  {
-		  if (!IsULine(sptr))
-			  return 0;
-		  dcc_wipe_services();
-		  sendto_serv_butone_token(cptr, sptr->name,
-		      MSG_SVSFLINE, TOK_SVSFLINE,
-		      	"*");
-		  break;
-	  }
-
-	}
-	return 0;
-}
-
 /* restrict channel stuff */
-
 
 int  channel_canjoin(aClient *sptr, char *name)
 {
