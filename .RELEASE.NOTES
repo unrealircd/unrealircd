@@ -31,11 +31,12 @@ Unreal3.2-Selene (BETA2) RELEASE NOTES
   loadmodule "src/modules/commands.so";
   loadmodule "src/modules/scan.so";
   loadmodule "src/modules/scan_socks.so";
+  loadmodule "src/modules/scan_http.so";
    
   If you would like to code a module, doc/ will contain a module guide,
   and we got an example module in src/modules/m_dummy.c.
 
-* We have limited IPv6 support, and there are some minor bugs in it. 
+* We have some IPv6 support, and there are some minor bugs in it. 
 
 * The documentation is NOT yet 100% complete
 
@@ -60,9 +61,25 @@ Unreal3.2-Selene (BETA2) RELEASE NOTES
   v - vhost notices
   G - gline/shun notices
 
-  It shouldn't be too ahrd to figure out, just play around with it a bit :)
+  It shouldn't be too hard to figure out, just play around with it a bit :)
 
 * /who needs testing it was recoded and may contain bugs
+
+* We have added alias {} which allows you to dynamically create commands such as /nickserv
+  Read example.conf for more information on how to create your own. To use standard ones include
+  one of the following files
+
+  aliases/ircservices.conf (IRCServices, Daylight)
+  aliases/epona.conf (Epona)
+  aliases/generic.conf (Magick, Sirius, Wrecked)
+  aliases/operstats.conf (OperStats)
+  aliases/genericstats.conf (GeoStats, NeoStats)
+
+* You can now use an IP in the oper::from and vhost::from fields even if the host resolves
+
+* Added an http proxy scanner (scan_http.so)
+
+* MAKE SURE YOU RERUN ./Config AND RUN make clean BEFORE USING THIS VERSION!!!
 
 * THIS IS A BETA VERSION. THINGS MAY NOT WORK. REPORT ANY BUGS TO THESE 
   ADDRESSES:
