@@ -28,7 +28,7 @@ English | <a href="unreal32docs.de.html">German</a> |
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2.1</font><br>
   <b>Current Version:</b> 3.2.1<br>
-  <b>Last doc update:</b> 2004-07-03</div>
+  <b>Last doc update:</b> 2004-10-11</div>
 <br>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -1484,6 +1484,11 @@ except ban {
 except tkl {
 	mask &lt;hostmask&gt;;
 	type &lt;type&gt;;
+	type { 
+		&lt;type&gt;;
+		&lt;type&gt;;
+		...
+	};
 };</pre></p>
 <p>The except tkl block allows you to specify a user@host that will override a 
   tkl ban placed on a broader host. This is useful when you want an ISP banned, but 
@@ -1491,7 +1496,8 @@ except tkl {
   specifies the user@host mask of the client who will be allowed to connect. The 
   except::type specifies which type of ban this should override. Valid types are
   gline, gzline, qline, gqline, and shun, which make an exception from Glines, 
-  Global Zlines, Qlines, Global Qlines, and shuns.</p>
+  Global Zlines, Qlines, Global Qlines, and shuns. If the type {} format is used,
+  multiple types may be specified.</p>
 <p>Example:<br>
 <pre>
 except tkl {

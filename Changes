@@ -391,3 +391,5 @@
 - Fixed some tiny memory leaks (~100 bytes) on rehash.
 - Updated chinese&japanese GBK nick code, fix supplied by Xuefer (#0002051).
 - Added release notes (unfinished).
+- Added file: include/macros.h and a new macro, ARRAY_SIZEOF.
+- Added the ability to specify multiple types in a tkl except, suggested by Bugz (#0002085).
