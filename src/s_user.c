@@ -1608,19 +1608,44 @@ int  m_nick(cptr, sptr, parc, parv)
 			for (lp = cptr->user->channel; lp; lp = lp->next) {
 				if (is_banned(cptr, &me, lp->value.chptr))
 				{
-					sendto_one(cptr,
-					    err_str(ERR_BANNICKCHANGE),
-					    me.name, parv[0],
-					    lp->value.chptr->chname);
-					return 0;
+/* Horrible hack to add operoverride notification for +N channels --Luke */
+#ifndef NO_OPEROVERRIDE
+					if (IsOper(cptr))
+					{
+						sendto_umode(UMODE_EYES, "*** OperOverride -- %s (%s@%s) BANWALK %s",
+							cptr->name, cptr->user->username, cptr->user->realhost,
+							lp->value.chptr->chname);
+					}
+					else {
+#endif
+						sendto_one(cptr,
+						    err_str(ERR_BANNICKCHANGE),
+						    me.name, parv[0],
+						    lp->value.chptr->chname);
+						return 0;
+#ifndef NO_OPEROVERRIDE
+					}
+#endif
 				}
-				if (!IsOper(cptr) && !IsULine(cptr) && lp->value.chptr->mode.mode &
+				if (!IsULine(cptr) && lp->value.chptr->mode.mode &
 				   MODE_NONICKCHANGE && !is_chanownprotop(cptr, lp->value.chptr)) {
-					sendto_one(cptr,
-					   err_str(ERR_NONICKCHANGE),
-					   me.name, parv[0],
-					   lp->value.chptr->chname);
-					return 0;
+#ifndef NO_OPEROVERRIDE
+					if (IsOper(cptr))
+					{
+						sendto_umode(UMODE_EYES, "*** OperOverride -- %s (%s@%s) NICKWALK %s",
+							cptr->name, cptr->user->username, cptr->user->realhost,
+							lp->value.chptr->chname);
+					}
+					else {
+#endif
+						sendto_one(cptr,
+						   err_str(ERR_NONICKCHANGE),
+						   me.name, parv[0],
+						   lp->value.chptr->chname);
+						return 0;
+#ifndef NO_OPEROVERRIDE
+					}
+#endif
 				}
 			}
 		/*
