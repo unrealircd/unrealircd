@@ -913,3 +913,5 @@ seen. gmtime warning still there
 - Webserver caching fix
 - A little bug fix that prevented the G:line hostmask checker from checking ?
 - Made the /kline hostmask checker work like the G:line checker, (it was too easy to K:line *@*)
+- Fixed a bug where ./unreal rehash would kill the IRCd instead of rehashing :P
+- Made ./unreal restart (to restart Unreal) and made the pid file location more accurate
