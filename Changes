@@ -894,3 +894,4 @@ seen. gmtime warning still there
 - Fixed a win32 bug where the editor would cut off text, reported by Inter
 - Added make install to copy files for you when you install unreal
 - Replaced killircd, ircd, and rehash with ./unreal start|stop|rehash
+- Fixed a bug where the win32 help dialog links were plain text
