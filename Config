@@ -477,6 +477,7 @@ NICKNAMEHISTORYLENGTH="$NICKNAMEHISTORYLENGTH"
 HUB="$HUB"
 DOMAINNAME="$DOMAINNAME"
 DEFPERM="$DEFPERM"
+CRYPTOIRCD="$CRYPTOIRCD"
 __EOF__
 ARG=""
 if [ "$NOSPOOF" = "1" ] ; then
@@ -513,6 +514,16 @@ ARG="$ARG--enable-dynamic-linking "
 CONF="./configure $ARG"
 echo $CONF
 $CONF
+if [  "$CRYPTOIRCD" = "1" ] ; then
+if [ ! -f server.req.pem ]; then
+export OPENSSLPATH
+make pem
+cat .SICI
+read cc
+else
+echo "SSL certificate already existing, no need to regenerate"
+fi
+fi
 cat << __EOF__
 
  _______________________________________________________________________
