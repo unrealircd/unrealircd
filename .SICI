@@ -4,17 +4,14 @@
 | some kind of Certification Authority (CA), so your users can check that |
 | they are really connected to the real server, so they feel secure?      |
 |                                                                         |
-| A initiative have been started, to help this problem, as more and more  |
+| An initiative has been started, to help this problem, as more and more  |
 | SSL-enabled IRC servers will be started in the future, and people will  |
 | have trouble authenticating that they are really at the right server.   |
-| This initiative is called SICI (Secure IRC Certification Initiative. We |
-| sign your certificates for free, using the simple way of authenticating |
-| you by going to your IRC server and testing if it's really you.         |
-|                                                                         |
-| You can send in your "server.req.pem" file to us at our email           |
-| certs@sici.ircsystems.net, with contact info on you (IRC network, nick, |
-| status). We will then contact you, and check if you have provided true  |
-| information. If you need more information about SICI, visit our website |
-| http://sici.ircsystems.net, where you can download our root certificate,|
-| and read even more about this project.        | Press enter to continue |
+| This initiative is called OpenIRC CA - They offer you to sign           |
+| SSL certificates for use with your IRCd for free,                       |
+| so your users can be sure that they can trust you and your server.      |     
+| To get a signed certificate from them please visit the website  	  |
+| http://www.openirc-ca.eu.org						  |
+| 	                                       	| Press enter to continue |
 ---------------------------------------------------------------------------
+

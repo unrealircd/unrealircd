@@ -197,4 +197,426 @@ deled cptr->passwd; above (line 135ish)
 --Luke
 ===================================
 
-final release next? possibly!
+*** 3.1.3 Released ***
+
+[ Unreal 3.1.4 ]
+--------------------------------------------------
+The fixes and backports continue. Strange how much
+time maintaining Unreal can eat up...
+
+Beta1
+--------------------------------------------------
+
+Removed tech admin.
+This feature is useless bloat. If you want it back
+do NOT complain to any of the Unreal coders, feel
+free to reimplement it yourself. Do note, however,
+that if you modify the code in any way, shape, or
+form you immediately give up your ability to
+receive any type of support from us.
+--Luke
+===================================
+
+Line 703 in ircd.c fixed...breaks
+gcc3 compatibility (thanks to shellz.net's
+NuC for reporting)
+--Luke
+===================================
+
+Fixed issue in s_user.c where +H opers
+could be identified by normal users in
+a trivial manner (thanks to Magnet from
+epiknet)
+--Luke
+===================================
+
+s_user.c fixes
+basically, /whois doesn't display snotice
+if you're +W and do it to yourself
+/who the same
+and "is a secure connection" is no longer
+bold (it was lame)
+--Luke
+===================================
+
+s_serv.c fixes
+fixed map bug that allowed you to trivially
+find a hidden U lined server (hopefully)
+--Luke
+===================================
+
+rmed zip.c (not used at all.)
+and zip.h and anything related to zip
+--Luke
+===================================
+
+E lines now match glines, zlines, shuns
+(if you say yes in config)
+--Luke
+===================================
+
+map bug still exists (earlier fix made it
+worse)...removed.
+--Luke
+===================================
+
+/adchat bug that sends it to coadmins twice
+(coadmins are actually server admins as far
+as the ircd is concerned for most purposes, no
+need to send to both UMODES)
+--Luke
+===================================
+
+rewrote m_kick almost entirely (it sucked)
+--Luke
+===================================
+
+newdns.c removed - another useless file
+--Luke
+===================================
+
+------------------------------------------------
+Beta2 Released
+------------------------------------------------
+
+ripped cloak.c from 3.2, and added Config
+options as needed.
+--Luke
+===================================
+
+Fixed 3 svsnoops bugs, so it appears to be
+actually working now...
+--Luke
+===================================
+
++S users no longer show channels in /whois
+--Luke
+===================================
+
+Added a gzline command. I use it with bopm on
+my network all the time, and am getting
+sick of readding it after each new release.
+Additionally, I think it's a useful command
+for anyone to have.
+--Luke
+===================================
+
+Revamped operoverride stuff so it's consistent
+and somewhat sane. (also made NetAdmin.Chat
+NetAdminChat to keep with other forms)
+--Luke
+===================================
+
+Fixed m_kick more
+--Luke
+===================================
+
+Made "is a bot.." not bold
+--Luke
+===================================
+
+Fixed a bug with \r\n being mistakenly parsed
+wrong. Thanks to John_z
+--Luke
+===================================
+
+Added temp patch to m_kline to stop segfault
+--Luke
+===================================
+
+------------------------------------------------
+Beta3 Released
+------------------------------------------------
+
+Backported check_pings with loop.do_ban_check from 3.2
+--Stskeeps
+===================================
+
+Added nice fix to HCN so that BOPM works natively
+(it would still be wise to mod bopm yourself
+and have it scan all clients by using +F, as I've
+done, but whatever.)
+--Luke
+===================================
+
+Moved cloak key definitions to .network file
+--Luke
+===================================
+
+omfg, a patch that resolved some really interesting
+problems with really long parameter modes has been
+applied. (this in itself is a great reason to
+upgrade)
+--Luke
+===================================
+
+Moved exempt_all option to unrealircd.conf, no longer
+a #define in settings.h & ./Config option.
+--Luke
+===================================
+
+Made stop code error more stupid-people friendly
+--Luke
+===================================
+
+Added code that shows nick changes on entire net
+when umode +j (JUNK). Also, went through channel.c
+and made all snotices look "nicer"
+--Luke
+===================================
+
+Moved cloak keys to unrealircd.conf, since the
+.network files are public domain (in general).
+Go lynch Stskeeps if you don't like it.
+--Luke
+===================================
+
+Actually added sample lines to unrealircd.conf
+for EXEMPT_ALL and CLOAK_KEY_n. Also, changed
+version number on both that and the .network
+file, as both have changed since 3.1.3.
+--Luke
+===================================
+
+Useful /who patch incorporated, thanks to
+larne
+--Luke
+===================================
+
+Rewrote all of /who, fuck everyone's patches
+mine are better!
+--Luke
+===================================
+
+More /who madness! I've added an h flag, similar
+to the o flag that you can append on the end
+for opers, so for instance say you /who *bob* h
+it will display real hosts instead of masked ones
+in the replies.
+--Luke
+===================================
+
+Oper invisibility is no longer enabled by default
+but is a provided option in ./Config
+--Luke
+===================================
+
+Changed information flag shown in /version. R now
+appears if invisibility is compiled in (even if
+disabled in unrealircd.conf)
+--Luke
+===================================
+
+rmed Config.c (broken, severely) and networks.ndx
+--Luke
+===================================
+
+Added win32-compile-guide in doc/ for people wanting
+to compile their own version for windows.
+--Luke
+===================================
+
+Once again we global when anyone that's not a local
+oper opers. I like this, if you don't email me and
+maybe I'll add a conf option for it.
+--Luke
+===================================
+
+Deprecated /akill and /rakill. Please stop using
+these commands. They're old and will be removed in
+future releases. For now they simply add/remove a
+permanent gline, which is essentially what an akill
+is anyway (yes, I know they disappear when you rehash)
+--Luke
+===================================
+
+Rewrote m_oper, massive mods to most set* and chg* functions
+--Luke
+===================================
+
+Reintroduced original patch in channel.c with mode overflow
+(saves char * for each function call)
+-- Luke
+===================================
+
+Fixed a seriously stupid bug introduced by myself with SAMODE
+globops. (Thanks to Zerwas)
+--Luke
+===================================
+
+Added additional operoverride capabilities (namely
+ability to view banlists, exemptlists, etc.)
+--Luke
+===================================
+
+Played with I line password bug for a while
+--Luke
+===================================
+
+Fixed (maybe?) an implementation with MAXBANLENGTH
+--Luke
+===================================
+
+Thanks a TON to JK, applied patch he developed to
+resolve desynch problem with mode +,-p/s.
+--Luke
+===================================
+
+Fixed I line segfault bug...lots of fun. Thanks again
+to JK for helping :)
+--Luke
+===================================
+
+---------------------------------------------
+Beta4 Released
+---------------------------------------------
+
+Incorporated STATS_ONLY_OPER patch thanks to
+psycho
+--Luke
+===================================
+
+Added JK /map patch to resolve hidden U lines
+being trivially found.
+--Luke
+===================================
+
+Fixed clients able to connect on server-only port
+bug. (thanks to worf for reporting)
+--Luke
+===================================
+
+Resolved halfops + operoverride issues
+--Luke
+===================================
+
+Fixed problem where normal users could view topics of
++s/+p channels. (removed /topic functionality for
+non channel members altogether. Channel topics can
+still be obtained via /list)
+--Luke
+===================================
+
+Finally fixed *all* mode problems that are known
+at this time. Long parameters no longer create
+desynchs, everything is happy! Fear.
+--Luke
+===================================
+
+Thanks to Zerwas, added numeric 489 for SECUREONLYCHAN
+so +z channels no longer respond with you're banned.
+--Luke
+===================================
+
+Revamped operoverride again to better handle mode walks
+--Luke
+===================================
+
+Fixed a SERIOUS security problem with c/n line passwords
+Thanks a bunch to node357 for reporting!
+--Luke
+===================================
+
+----------------------------------------------
+Beta5 Released
+----------------------------------------------
+
+Fixed bug with mirc where +a/+q were misinterpreted as modes
+without nick parameters.
+--Luke
+===================================
+
+Implemented actual prefixes for +q and +a (~ and &)
+--Luke
+===================================
+
+Modified is_chan_op and is_chanprot functions to better
+respect hierarchy (chanowner is chanprot as well as chanop)
+chanprot is chanop.
+--Luke
+===================================
+
+Fixed m_gline and m_gzline bugs. (Thanks to nighthawk for
+noticing)
+--Luke
+===================================
+
+Fixed sjoin bug with ban propagation
+--Luke
+===================================
+
+Fixed m_who bug with normal users using masks
+--Luke
+===================================
+
+Rearranged structs in struct.h to be more memory efficient
+(saved 4 bytes in User, in preparation for new operoverride
+system.)
+--Luke
+===================================
+
+Decided channel owners can deown themsleves, implemented
+as such
+--Luke
+===================================
+
+Revised operoverride system further, now default prompting
+before permitting opers to walk channel modes.
+--Luke
+===================================
+
+Scratch previous revision, redid override system altogether.
+Now done via /invite. Sts' response to those of you that
+don't like it: "fuck them"
+--Luke
+===================================
+
+Fixed lowercase host errors with cloaking (sts' patch)
+--Luke
+===================================
+
+do_mode_char fixes (mostly from sts)
+--Luke
+===================================
+
+SJ3 fixes from codemastr for possible desynch
+--Luke
+===================================
+
+Fixed prefix problem as per nighthawk
+--Luke
+===================================
+
+Temp removed +q/+a prefixes to give client coders
+chance to implement PREFIX= sanely
+--Luke
+===================================
+
+Added a nice little win32 fix to cloak.c to stop snprintf
+from breaking things all over the place
+--Luke
+===================================
+
+Fixed win32 settings.h for the few who actually recompile
+their own win32 version.
+--Luke
+===================================
+
+Minor issue with +I and new invite system resolved.
+We should remove +I altogether...
+--Luke
+===================================
+
+Rmed a bunch of files in doc/ redid some other documentation.
+--Luke
+===================================
+
+Finally redid /credits thanks to sts :P
+--Luke
+===================================
+
+Fixed OPEROVERRIDE_VERIFY Bug
+--Luke
+===================================
+
+*** Unreal3.1.4 Released ***
