@@ -3221,3 +3221,4 @@ This is the 3.2 fixes branch.
 - Made socket errors correctly reported under Win32. Thanks to Microsoft for deciding 
   that having a way to get a socket error string was unnecessary.
 - Fixed a NICKIP bug regarding passing along IPs (#0001846) reported by Troco
+- And another one, should be fixed now.

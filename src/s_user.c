@@ -1089,7 +1089,7 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 			/* Here pig.. yeah you .. -Stskeeps */
 			sptr->user->virthost = strdup(virthost);
 		}
-		if (ip)
+		if (ip && (*ip != '*'))
 			sptr->user->ip_str = strdup(decode_ip(ip));
 	}
 

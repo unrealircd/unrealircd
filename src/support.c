@@ -1882,7 +1882,7 @@ char *decode_ip(char *buf)
 	else if (len == 8) /* IPv4 */
 		return inet_ntoa(*(struct in_addr *)targ);
 	else /* Error?? */
-		return NULL;
+		abort();
 }
 
 /* IPv6 stuff */
