@@ -1774,6 +1774,4 @@ seen. gmtime warning still there
   the idea
 - Fixed bug #000613 reported by AngryWolf where we were writing a null to the log file when 
   we reached max size.
-- Fixed a bug where helpop would pass on a null pointer if it was a remote
-  client (this needs more investigating, could someone find out how the fuck
-  it can get a remote helpop that's blank anyhow?). 
+- Fixed a bug where helpop would pass on a null pointer
