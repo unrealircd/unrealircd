@@ -336,3 +336,5 @@
 - Fixed a problem where a local TKL could be sent to remote servers when it is being changed
   (#0002048) reported by AngryWolf.
 - Added documentation for link::ciphers to unreal32docs.html (#0002019) reported by Bugz.
+- Updated documentation to reflect that cmode +M allows voiced users to talk, not just
+  registered users (#0002020) reported by crazy.
