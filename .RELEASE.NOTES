@@ -39,7 +39,8 @@ Unreal3.2.3-pre2 Release Notes
 - Added a feature to +b/+e ~c: ~c:[prefix]<#channel>. This can be used if you for
   example trust all ops of #leet: mode #x +e ~c:@#leet.
 - Various translated documents in doc/: unreal32docs.gr.html (Greek), help.fr.conf
-  and example.fr.conf (French), help.de.conf (German), example.hu.conf (Hungarian).
+  and example.fr.conf (French), help.de.conf & example.de.conf (German), and
+  example.hu.conf (Hungarian).
 
 ==[ CHANGED ]==
 - Updated auspice.conf
