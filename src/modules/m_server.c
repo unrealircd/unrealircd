@@ -807,7 +807,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 						    acptr->lastnick,
 						    acptr->user->username,
 						    acptr->user->realhost,
-						    acptr->srvptr->serv->numeric,
+						    (long)(acptr->srvptr->serv->numeric),
 						    (unsigned long)acptr->user->servicestamp,
 						    (!buf || *buf == '\0' ? "+" : buf),
 						    ((IsHidden(acptr) && (acptr->umodes & UMODE_SETHOST)) ? acptr->user->virthost : "*"),

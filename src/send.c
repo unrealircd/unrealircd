@@ -1847,7 +1847,7 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 					    ,
 					    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
 					    hopcount, lastnick, username, realhost,
-					    sptr->srvptr->serv->numeric,
+					    (long)(sptr->srvptr->serv->numeric),
 					    servicestamp, umodes,
 						  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : virthost),
 						    info);

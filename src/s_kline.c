@@ -845,9 +845,9 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	int  found = 0;
 	char gmt[256], gmt2[256];
 	char txt[256];
-	TS   expiry_1, setat_1, spamf_tklduration;
+	TS   expiry_1, setat_1, spamf_tklduration = 0;
 	int index;
-	char *reason;
+	char *reason = NULL;
 
 	if (!IsServer(sptr) && !IsOper(sptr) && !IsMe(sptr))
 		return 0;
