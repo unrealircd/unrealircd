@@ -1254,7 +1254,7 @@ add_con_refuse:
 	if (cptr->umodes & LISTENER_SSL)
 	{
 		SetSSLAcceptHandshake(acptr);
-		Debug((DEBUG_DEBUG, "Starting SSL accept handshake for %s", sptr->sockhost));
+		Debug((DEBUG_DEBUG, "Starting SSL accept handshake for %s", acptr->sockhost));
 		if ((acptr->ssl = SSL_new(ctx_server)) == NULL)
 		{
 			goto add_con_refuse;
