@@ -1057,7 +1057,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		if (sptr->passwd && (nsptr = find_person(NickServ, NULL)))
 				sendto_one(nsptr, ":%s %s %s@%s :IDENTIFY %s",
 				    sptr->name,
-				    (IsToken(nsptr->from) ? TOK_PRIVATE : MSG_PRIVATE, 
+				    (IsToken(nsptr->from) ? TOK_PRIVATE : MSG_PRIVATE), 
 				     NickServ, SERVICES_NAME, sptr->passwd);
 		/* Force the user to join the given chans -- codemastr */
 		if (buf[1] != '\0')
