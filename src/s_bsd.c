@@ -1583,11 +1583,7 @@ static int read_packet(cptr, rfd)
 	   ** For server connections, we process as many as we can without
 	   ** worrying about the time of day or anything :)
 	 */
-	if (IsServer(cptr) || IsConnecting(cptr) || IsHandshake(cptr) 
-#ifdef CRYPTOIRCD
-		|| IsSecure(cptr)
-#endif	
-		)
+	if (IsServer(cptr) || IsConnecting(cptr) || IsHandshake(cptr))
 	{
 		if (length > 0)
 			if ((done = dopacket(cptr, readbuf, length)))
@@ -1621,11 +1617,7 @@ static int read_packet(cptr, rfd)
 			   ** If it has become registered as a Service or Server
 			   ** then skip the per-message parsing below.
 			 */
-			if (IsServer(cptr) 
-#ifdef CRYPTOIRCD
-				|| IsSecure(cptr)
-#endif
-				) 
+			if (IsServer(cptr)) 
 			{
 				dolen = dbuf_get(&cptr->recvQ, readbuf,
 				    sizeof(readbuf));
@@ -1677,11 +1669,7 @@ static int do_client_queue(aClient *cptr)
 	    ((cptr->status < STAT_UNKNOWN) || (cptr->since - now < 10)))
 	{
 		/* If it's become registered as a server, just parse the whole block */
-		if (IsServer(cptr) 
-#ifdef CRYPTOIRCD
-			|| IsSecure(cptr)
-#endif
-		)
+		if (IsServer(cptr))
 		{
 			dolen =
 			    dbuf_get(&cptr->recvQ, readbuf, sizeof(readbuf));

@@ -309,10 +309,6 @@
 #define TOK_CHGNAME	"BK"
 #define MSG_SHUN	"SHUN"
 #define TOK_SHUN	"BL"
-#ifdef CRYPTOIRCD
-#define MSG_CRYPTO	"CRYPTO"
-#define TOK_CRYPTO	"BM"
-#endif
 #define MSG_NEWJOIN 	"NEWJOIN"	/* For CR Java Chat */
 #define MSG_POST	"POST"
 #define TOK_POST	"BN"
@@ -363,9 +359,6 @@ extern int m_chgident(), m_swhois(), m_svso(), m_svsfline();
 extern int m_tkl(), m_vhost(), m_botmotd(), m_sjoin(), m_htm();
 extern int m_umode2(), m_dccdeny(), m_undccdeny();
 extern int m_chgname(), m_shun(), m_post();
-#ifdef CRYPTOIRCD
-extern int m_crypto();
-#endif
 #ifdef GUEST
 extern int m_guest();
 #endif
@@ -506,9 +499,6 @@ struct Message msgtab[] = {
 	{MSG_CHGNAME, m_chgname, 0, MAXPARA, TOK_CHGNAME, 0L},
 	{MSG_SVSNAME, m_chgname, 0, MAXPARA, TOK_CHGNAME, 0L},
 	{MSG_SHUN, m_shun, 0, MAXPARA, TOK_SHUN, 0L},
-#ifdef CRYPTOIRCD
-	{MSG_CRYPTO, m_crypto, 0, MAXPARA, TOK_CRYPTO, 0L},
-#endif
 	{MSG_NEWJOIN, m_join, 0, MAXPARA, TOK_JOIN, 0L},
 	{MSG_BOTSERV, m_botserv, 0, MAXPARA, TOK_BOTSERV,0L},
 	{TOK_BOTSERV, m_botserv, 0, MAXPARA, TOK_BOTSERV,0L},

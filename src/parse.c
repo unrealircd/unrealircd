@@ -465,9 +465,6 @@ int  parse(cptr, buffer, bufend, mptr)
 	    (mptr->func != m_pass) && (mptr->func != m_quit) &&
 	    (mptr->func != m_protoctl) && (mptr->func != m_error) &&
 	    (mptr->func != m_admin) && (mptr->func != m_version)
-#ifdef CRYPTOIRCD
-	    && (mptr->func != m_crypto)
-#endif
 	    )))
 	{
 		sendto_one(from, ":%s %d %s :You have not registered",

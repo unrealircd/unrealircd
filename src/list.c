@@ -142,9 +142,6 @@ aClient *make_client(from, servr)
 		cptr->sockhost[0] = '\0';
 		cptr->buffer[0] = '\0';
 		cptr->authfd = -1;
-#ifdef CRYPTOIRCD
-		cptr->cryptinfo = NULL;
-#endif
 #ifdef SOCKSPORT
 		cptr->socksfd = -1;
 #endif
@@ -155,10 +152,6 @@ aClient *make_client(from, servr)
 void free_client(cptr)
 	aClient *cptr;
 {
-#ifdef CRYPTOIRCD
-	if (MyClient(cptr) && cptr->cryptinfo)
-		MyFree((char *)cptr->cryptinfo);
-#endif
 	if (MyClient(cptr) && cptr->passwd)
 		MyFree((char *)cptr->passwd);
 	MyFree((char *)cptr);

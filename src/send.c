@@ -211,9 +211,6 @@ void vsendto_one(aClient *to, char *pattern, va_list vl)
 void sendbufto_one(aClient *to)
 {
 	int  len;
-#ifdef CRYPTOIRCD
-	char *s;
-#endif
 
 	Debug((DEBUG_ERROR, "Sending [%s] to %s", sendbuf, to->name));
 
@@ -252,16 +249,6 @@ void sendbufto_one(aClient *to)
 		sendto_ops("Trying to send [%s] to myself!", tmp_sendbuf);
 		return;
 	}
-#ifdef CRYPTOIRCD	
-	if (IsSecure(to))
-	{
-		s = (char *) ep_encrypt(to, sendbuf, &len);
-		bcopy(s, sendbuf, len);
-#ifdef DEVELOP
-		sendto_ops("Sent off encrypted packet len %i", len);
-#endif
-	}
-#endif
 	if (DBufLength(&to->sendQ) > get_sendq(to))
 	{
 		if (IsServer(to))
@@ -1640,7 +1627,7 @@ void sendto_connectnotice(nick, user, sptr)
 	ircsprintf(connectd,
 	    "*** Notice -- Client connecting on port %d: %s (%s@%s) %s%s%s",
 	    sptr->acpt->port, nick, user->username, user->realhost,
-#if defined(CRYPTOIRCD) || defined(USE_SSL)
+#ifdef USE_SSL
 	IsSecure(sptr) ? "[secure " : "", 
 	IsSecure(sptr) ? SSL_get_cipher((SSL *)sptr->ssl) : "",
 	IsSecure(sptr) ? "]" : "");

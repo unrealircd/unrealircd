@@ -47,9 +47,6 @@
 #  include <sys/syslog.h>
 # endif
 #endif
-#ifdef CRYPTOIRCD
-#include <openssl/blowfish.h>
-#endif
 #ifdef USE_SSL
 #include <openssl/rsa.h>       /* SSL stuff */
 #include <openssl/crypto.h>
@@ -131,13 +128,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #endif
 
 #define	elementsof(x) (sizeof(x)/sizeof(x[0]))
-
-/*
-** Flags for encryption
-*/
-#ifdef CRYPTOIRCD
-#define METHOD_BLOWFISH	1
-#endif
 
 /*
 ** flags for bootup options (command line flags)
@@ -223,10 +213,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define FLAGS_GOTSOCKS  0x2000000
 #endif
 #define FLAGS_SHUNNED    0x4000000
-
-#ifdef CRYPTOIRCD
-#define FLAGS_SECURE	0x8000000
-#endif
 #ifdef USE_SSL
 #define FLAGS_SSL	 0x10000000
 #define FLAGS_SSL_HSHAKE 0x20000000
@@ -337,16 +323,10 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SetShunned(x)		((x)->flags |= FLAGS_SHUNNED)
 #define ClearShunned(x)		((x)->flags &= ~FLAGS_SHUNNED)
 
-#ifdef CRYPTOIRCD
-#define IsSecure(x)		((x)->flags & FLAGS_SECURE)
-#define SetSecure(x)		((x)->flags |= FLAGS_SECURE)
-#define ClearSecure(x)		((x)->flags &= ~FLAGS_SECURE)
-#else
 #ifdef USE_SSL
 #define IsSecure(x)		((x)->flags & FLAGS_SSL)
 #else
 #define IsSecure(x)		(0)
-#endif
 #endif
 
 #define IsHybNotice(x)		((x)->flags & FLAGS_HYBNOTICE)
@@ -619,12 +599,6 @@ typedef struct Whowas {
 	struct Whowas *cprev;	/* for client struct linked list */
 } aWhowas;
 
-#ifdef CRYPTOIRCD
-typedef struct CryptInfo {
-	short method;
-	void *key;
-} aCryptInfo;
-#endif
 
 struct SqlineItem {
 	unsigned int status;
@@ -857,9 +831,6 @@ struct Client {
 	long receiveM;		/* Statistics: protocol messages received */
 #ifdef ZIP_LINKS
 	struct Zdata *zip;	/* zip data */
-#endif
-#ifdef CRYPTOIRCD
-	aCryptInfo *cryptinfo;	/* crypt */
 #endif
 #ifdef USE_SSL
 	struct	SSL	*ssl;
