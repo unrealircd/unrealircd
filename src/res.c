@@ -1204,7 +1204,7 @@ static void update_list(ResRQ *rptr, aCache *cachep)
 #ifdef	DEBUGMODE
  #ifdef INET6
 			Debug((DEBUG_DNS, "u_l:add IP %s hal %x ac %d",
-				inet_ntop(((struct IN_ADDR *)s), mydummy,
+				inet_ntop(AF_INET6, ((struct IN_ADDR *)s), mydummy,
 				          MYDUMMY_SIZE),
 				HE(cp)->h_addr_list, addrcount));
  #else

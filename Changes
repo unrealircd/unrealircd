@@ -3271,3 +3271,4 @@ This is the 3.2 fixes branch.
 - Minor doc tweakers, reported by AngryWolf (#0001871).
 - Win32: Readded /J compiler flag (was accidentally lost in December). This could cause
   some weird issues. Reported by Troco (#0001877).
+- Fixed compile problem with debugmode + ipv6
