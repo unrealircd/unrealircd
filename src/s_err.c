@@ -1,4 +1,4 @@
-/*
+ /*
  *   Unreal Internet Relay Chat Daemon, src/s_err.c
  *   Copyright (C) 1992 Darren Reed
  *
@@ -21,7 +21,7 @@
 #include "numeric.h"
 #include "common.h"
 
-#ifndef lint
+#ifndef CLEAN_COMPILE
 static char sccsid[] = "@(#)s_err.c	1.12 11/1/93 (C) 1992 Darren Reed";
 #endif
 
@@ -388,7 +388,7 @@ static char *replies[] = {
 /* 348    RPL_EXLIST */ ":%s 348 %s %s %s %s %lu",
 /* 349    RPL_ENDOFEXLIST */ ":%s 349 %s %s :End of Channel Exception List",
 /* 350 */ NULL,
-/* 351    RPL_VERSION */ ":%s 351 %s %s(%s).%s %s :%s [%s=%li]",
+/* 351    RPL_VERSION */ ":%s 351 %s %s.%s %s :%s%s%s [%s=%li]",
 /* 352    RPL_WHOREPLY */ ":%s 352 %s %s %s %s %s %s %s :%d %s",
 /* 353    RPL_NAMREPLY */ ":%s 353 %s %s",
 /* 354 */ NULL, /* Reserved for Undernet */

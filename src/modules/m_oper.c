@@ -35,6 +35,8 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
+#include "inet.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -67,7 +69,7 @@ static oper_oflag_t oper_oflags[] = {
 		"is now a co administrator (C)" },
 	{ OFLAG_ISGLOBAL,	&UMODE_OPER,		&oper_host,
 		"is now an operator (O)" },
-	{ 0,			&UMODE_LOCOP,		&locop_host,
+	{ 0xFFFFFFFF,		&UMODE_LOCOP,		&locop_host,
 		"is now a local operator (o)" },
 	{ OFLAG_HELPOP,		&UMODE_HELPOP,		0 ,
 		0 },
@@ -155,8 +157,7 @@ extern int  SVSNOOP;
 DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	ConfigItem_oper *aconf;
 	ConfigItem_oper_from *oper_from;
-	char *name, *password, *encr, nuhhost[NICKLEN+USERLEN+HOSTLEN+6], nuhhost2[NICKLEN+USERLEN+HOSTLEN+6];
-	unsigned long oper_type = 0;
+	char *name, *password, nuhhost[NICKLEN+USERLEN+HOSTLEN+6], nuhhost2[NICKLEN+USERLEN+HOSTLEN+6];
 	char* host = 0;
 	int i = 0, j = 0;
 	char* announce = 0;
@@ -192,7 +193,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		return 0;
 	}
 	strcpy(nuhhost, make_user_host(sptr->user->username, sptr->user->realhost));
-	strcpy(nuhhost2, make_user_host(sptr->user->username, (char *)inet_ntoa(sptr->ip)));
+	strcpy(nuhhost2, make_user_host(sptr->user->username, Inet_ia2p(&sptr->ip)));
 	for (oper_from = (ConfigItem_oper_from *) aconf->from;
 	    oper_from; oper_from = (ConfigItem_oper_from *) oper_from->next)
 		if (!match(oper_from->name, nuhhost) || !match(oper_from->name, nuhhost2))
@@ -210,7 +211,6 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	if (i > 1)
 	{
 		int  old = (sptr->umodes & ALL_UMODES);
-		char *s;
 
 		/* Put in the right class */
 		if (sptr->class)
@@ -255,7 +255,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		sptr->oflag = aconf->oflags;
 
 		if ((aconf->oflags & OFLAG_HIDE) && iNAH && !BadPtr(host)) {
-			iNAH_host(sptr, (host != NULL) ? host : "eek.host.is.null.pointer");
+			iNAH_host(sptr, host);
 		}
 
 		if (announce != NULL) {

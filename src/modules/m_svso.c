@@ -38,6 +38,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -164,7 +165,7 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 char *m = NULL;
                 for (m = (parv[2] + 1); *m; m++)
                 {
-                        for (i = oper_access; flag = *i; i += 2)
+                        for (i = oper_access; (flag = *i); i += 2)
                         {
                                 if (*m == (char) *(i + 1))
                                 {
@@ -190,4 +191,5 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 acptr->user->snomask &= ~(SNO_CLIENT|SNO_FLOOD|SNO_FCLIENT|SNO_EYES|SNO_VHOST);
                 send_umode_out(acptr, acptr, fLag);
         }
+	return 0;
 }

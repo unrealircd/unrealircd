@@ -137,6 +137,9 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 		'CRYPTOLIB=${CRYPTOLIB}' 'REGEX=${REGEX}' \
 		'CRYPTOINCLUDES=${CRYPTOINCLUDES}'
 
+custommodule:
+	cd src; ${MAKE} ${MAKEARGS} MODULEFILE=${MODULEFILE} custommodule
+
 server:
 build:
 	-@if [ ! -f include/setup.h ] ; then \
@@ -149,11 +152,7 @@ build:
 		( cd $$i; ${MAKE} ${MAKEARGS} build; ) \
 	done
 	@echo ' __________________________________________________ '
-	@echo '| Compile is now complete. Now you have to go do   |'
-	@echo '| The load-time configuration - try go read the    |'
-	@echo '| file "dynconf" using your favourite viewer or    |'
-	@echo '| editor. The file will contain instructions on how|'
-	@echo '| to do the dynamic configuration :)               |'
+	@echo '| Compile is now complete.                         |'
 	@echo '| You might want to see include/config.h to adjust |'
 	@echo '| some settings                                    |'
 	@echo '|                                                  |'

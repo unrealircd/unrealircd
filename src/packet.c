@@ -24,7 +24,7 @@
 #include "sys.h"
 #include "msg.h"
 #include "h.h"
-
+#include <string.h>
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
 ID_Notes("2.12 1/30/94");
@@ -45,10 +45,7 @@ aCommand	*CommandHash[256];
 */
 void    add_CommandX(char *cmd, char *token, int (*func)(), unsigned char parameters, int flags) ;
 
-int  dopacket(cptr, buffer, length)
-	aClient *cptr;
-	char *buffer;
-	int  length;
+int  dopacket(aClient *cptr, char *buffer, int length)
 {
 	char *ch1;
 	char *ch2;
@@ -129,8 +126,8 @@ void	init_CommandHash(void)
 #ifdef DEVELOP_DEBUG
 	aCommand	 *p;
 	int		 i;
-#endif
 	long		chainlength;
+#endif
 	
 	bzero(CommandHash, sizeof(CommandHash));
 	add_Command(MSG_MODE, TOK_MODE, m_mode, MAXPARA);
@@ -138,24 +135,24 @@ void	init_CommandHash(void)
 	add_CommandX(MSG_NICK, TOK_NICK, m_nick, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
 	add_CommandX(MSG_JOIN, TOK_JOIN, m_join, MAXPARA, M_USER);
 	add_Command(MSG_ISON, TOK_ISON, m_ison, 1);
-	add_CommandX(MSG_USER, TOK_USER, m_user, MAXPARA, M_UNREGISTERED|M_USER);
-	add_CommandX(MSG_PART, TOK_PART, m_part, MAXPARA, M_USER);
+	add_CommandX(MSG_USER, TOK_USER, m_user, 4, M_UNREGISTERED|M_USER);
+	add_CommandX(MSG_PART, TOK_PART, m_part, 2, M_USER);
 	add_Command(MSG_WATCH, TOK_WATCH, m_watch, 1);
 	add_Command(MSG_USERHOST, TOK_USERHOST, m_userhost, 1);
 	add_Command(MSG_LUSERS, TOK_LUSERS, m_lusers, MAXPARA);
-	add_Command(MSG_TOPIC, TOK_TOPIC, m_topic, MAXPARA);
+	add_Command(MSG_TOPIC, TOK_TOPIC, m_topic, 4);
 	add_Command(MSG_INVITE, TOK_INVITE, m_invite, MAXPARA);
-	add_Command(MSG_KICK, TOK_KICK, m_kick, MAXPARA);
+	add_Command(MSG_KICK, TOK_KICK, m_kick, 3);
 	add_Command(MSG_WALLOPS, TOK_WALLOPS, m_wallops, 1);
 	add_CommandX(MSG_ERROR, TOK_ERROR, m_error, MAXPARA, M_UNREGISTERED|M_SERVER);
 	add_CommandX(MSG_PROTOCTL, TOK_PROTOCTL, m_protoctl, MAXPARA, M_UNREGISTERED|M_SERVER|M_USER);
 	add_CommandX(MSG_SERVER, TOK_SERVER, m_server, MAXPARA, M_UNREGISTERED|M_SERVER);
-	add_Command(MSG_SQUIT, TOK_SQUIT, m_squit, MAXPARA);
+	add_Command(MSG_SQUIT, TOK_SQUIT, m_squit, 2);
 	add_Command(MSG_WHOWAS, TOK_WHOWAS, m_whowas, MAXPARA);
 	add_Command(MSG_LIST, TOK_LIST, m_list, MAXPARA);
 	add_Command(MSG_NAMES, TOK_NAMES, m_names, MAXPARA);
 	add_Command(MSG_TRACE, TOK_TRACE, m_trace, MAXPARA);
-	add_CommandX(MSG_PASS, TOK_PASS, m_pass, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
+	add_CommandX(MSG_PASS, TOK_PASS, m_pass, 1, M_UNREGISTERED|M_USER|M_SERVER);
 	add_Command(MSG_TIME, TOK_TIME, m_time, MAXPARA);
 	add_Command(MSG_CONNECT, TOK_CONNECT, m_connect, MAXPARA);
 	add_CommandX(MSG_VERSION, TOK_VERSION, m_version, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);

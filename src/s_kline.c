@@ -38,6 +38,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 
 
 aTKline *tklines = NULL;
@@ -74,6 +75,7 @@ int  tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *
 	AllocCpy(nl->reason, reason);
 	AllocCpy(nl->setby, setby);
 	AddListItem(nl, tklines);
+	return 0;
 }
 
 aTKline *tkl_del_line(aTKline *tkl)
@@ -163,7 +165,7 @@ aTKline *tkl_expire(aTKline * tmp)
 			*/
 			for (i = 0; i <= LastSlot; ++i)
 			{
-				if (acptr = local[i])
+				if ((acptr = local[i]))
 					if (MyClient(acptr) && IsShunned(acptr))
 					{
 						chost = acptr->sockhost;
@@ -207,17 +209,17 @@ aTKline *tkl_expire(aTKline * tmp)
 
 EVENT(tkl_check_expire)
 {
-	aTKline *gp, t;
+	aTKline *gp, *next;
 	TS   nowtime;
 
 	nowtime = TStime();
 
-	for (gp = tklines; gp; gp = gp->next)
+	for (gp = tklines; gp; gp = next)
 	{
+		next = gp->next;
 		if (gp->expire_at <= nowtime && !(gp->expire_at == 0))
 		{
-			t.next = tkl_expire(gp);
-			gp = &t;
+			tkl_expire(gp);
 		}
 	}
 }
@@ -234,10 +236,10 @@ int  find_tkline_match(aClient *cptr, int xx)
 	aTKline *lp;
 	char *chost, *cname, *cip;
 	TS   nowtime;
-	int  is_ip;
 	char msge[1024];
-	char gmt2[256];
 	int	points = 0;
+	ConfigItem_except *excepts;
+	char host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
 	if (IsServer(cptr) || IsMe(cptr))
 		return -1;
 
@@ -264,7 +266,15 @@ int  find_tkline_match(aClient *cptr, int xx)
 
 	if (points != 1)
 		return -1;
-
+	strcpy(host, make_user_host(cname, chost));
+	strcpy(host2, make_user_host(cname, cip));
+	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
+		if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != lp->type)
+			continue;
+		if (!match(excepts->mask, host) || !match(excepts->mask, host2))
+			return -1;		
+	}
+	
 	if ((lp->type & TKL_KILL) && (xx != 2))
 	{
 		if (lp->type & TKL_GLOBAL)
@@ -323,7 +333,7 @@ int  find_tkline_match_zap(aClient *cptr)
 	char *cip;
 	TS   nowtime;
 	char msge[1024];
-
+	ConfigItem_except *excepts;
 	if (IsServer(cptr) || IsMe(cptr))
 		return -1;
 
@@ -335,8 +345,15 @@ int  find_tkline_match_zap(aClient *cptr)
 	{
 		if (lp->type & TKL_ZAP)
 		{
+
 			if (!match(lp->hostmask, cip))
 			{
+				for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
+					if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != lp->type)
+						continue;
+					if (!match(excepts->mask, cip))
+						return -1;		
+				}
 				ircstp->is_ref++;
 				ircsprintf(msge,
 				    "ERROR :Closing Link: [%s] Z:Lined (%s)\r\n",
@@ -355,7 +372,7 @@ int  find_tkline_match_zap(aClient *cptr)
 }
 
 
-int  tkl_sweep()
+int  tkl_sweep(void)
 {
 	/* just sweeps local for people that should be killed */
 	aClient *acptr;
@@ -364,7 +381,7 @@ int  tkl_sweep()
 	tkl_check_expire(NULL);
 	for (i = 0; i <= (MAXCONNECTIONS - 1); i++)
 	{
-		if (acptr = local[i])
+		if ((acptr = local[i]))
 			find_tkline_match(acptr, 0);
 	}
 	return 1;
@@ -437,7 +454,7 @@ void tkl_stats(aClient *cptr)
 void tkl_synch(aClient *sptr)
 {
 	aTKline *tk;
-	char typ;
+	char typ = 0;
 
 	for (tk = tklines; tk; tk = tk->next)
 	{
@@ -661,5 +678,6 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  if (IsAnOper(sptr))
 			  tkl_stats(sptr);
 	}
+	return 0;
 }
 

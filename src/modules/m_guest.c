@@ -44,9 +44,15 @@
 #endif
 
 DLLFUNC int m_guest(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-
+#ifdef GUEST
+static Hook *GuestHook = NULL;
+#endif
 /* Place includes here */
-
+#ifdef DYNAMIC_LINKING
+Module *Mod_Handle = NULL;
+#else
+#define Mod_Handle NULL
+#endif
 #ifndef DYNAMIC_LINKING
 ModuleHeader m_guest_Header
 #else
@@ -77,7 +83,7 @@ int    m_guest_Init(int module_load)
 	 * We call our add_Command crap here
 	*/
 #ifdef GUEST
-	add_Hook(HOOKTYPE_GUEST, m_guest);
+	GuestHook = HookAddEx(Mod_Handle, HOOKTYPE_GUEST, m_guest);
 #endif
 	return MOD_SUCCESS;
 	
@@ -103,7 +109,7 @@ int	m_guest_Unload(int module_unload)
 #endif
 {
 #ifdef GUEST
-	del_Hook(HOOKTYPE_GUEST, m_guest);
+	HookDel(GuestHook);
 #endif
 	return MOD_SUCCESS;
 }
@@ -117,14 +123,15 @@ char guestnick[NICKLEN];
 char *param[2];
 
 randnum = 1+(int) (99999.0*rand()/(RAND_MAX+10000.0));
-snprintf(guestnick, NICKLEN, "Guest%li", randnum);
+snprintf(guestnick, NICKLEN, "Guest%d", randnum);
 
 while(find_client(guestnick, (aClient *)NULL))
 { 
 randnum = 1+(int) (99999.0*rand()/(RAND_MAX+10000.0));
-snprintf(guestnick, NICKLEN, "Guest%li", randnum);
+snprintf(guestnick, NICKLEN, "Guest%d", randnum);
 }
 param[0] = sptr->name;
 param[1] = guestnick;
 m_nick(sptr,cptr,2,param);
+	return 0;
 }

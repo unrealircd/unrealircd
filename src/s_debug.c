@@ -19,13 +19,15 @@
  */
 
 
-#ifndef lint
+#ifndef CLEAN_COMPILE
 static char sccsid[] =
     "@(#)s_debug.c	2.30 1/3/94 (C) 1988 University of Oulu, \
 Computing Center and Jarkko Oikarinen";
 #endif
 
 #include "struct.h"
+#include <string.h>
+#include "proto.h"
 /*
  * Option string.  Must be before #ifdef DEBUGMODE.
  */
@@ -69,9 +71,6 @@ char serveropts[] = {
 #ifdef	VALLOC
 	'V',
 #endif
-#ifdef REMOVE_ADVERTISING
-	'R',
-#endif
 #ifdef	_WIN32
 	'W',
 #endif
@@ -96,11 +95,10 @@ char serveropts[] = {
 #ifdef USE_SSL
 	'e',
 #endif
-/* we are a stable ircd */
-	'S',
-	's',
 	'\0'
 };
+
+char *extraflags = NULL;
 
 #include "numeric.h"
 #include "common.h"
@@ -145,6 +143,41 @@ char serveropts[] = {
 #ifndef ssize_t
 #define ssize_t unsigned int
 #endif
+
+void	flag_add(char *ch)
+{
+	char *newextra;
+	if (extraflags)
+	{
+		newextra = (char *)MyMalloc(strlen(extraflags) + 1 + strlen(ch));
+		strcpy(newextra, extraflags);
+		strcat(newextra, ch);
+		MyFree(extraflags);
+		extraflags = newextra;
+	}
+	else
+		extraflags = (char *)strdup(ch);
+}
+
+void	flag_del(char ch)
+{
+	int newsz;
+	char *p, *op;
+	char *newflags;
+	newsz = 0;	
+	p = extraflags;
+	for (newsz = 0, p = extraflags; *p; p++)
+		if (*p != ch)
+			newsz++;
+	newflags = MyMalloc(newsz + 1);
+	for (p = newflags, op = extraflags; (*op) && (newsz); newsz--, op++)
+		if (*op != ch)
+			*p++ = *op;
+	*p = '\0';
+	MyFree(extraflags);
+	extraflags = newflags;
+}
+
 
 
 #ifdef DEBUGMODE
@@ -214,9 +247,7 @@ void debug(int level, char *form, ...)
  * different field names for "struct rusage".
  * -avalon
  */
-void send_usage(cptr, nick)
-	aClient *cptr;
-	char *nick;
+void send_usage(aClient *cptr, char *nick)
 {
 
 #ifdef GETRUSAGE_2
@@ -321,13 +352,9 @@ void send_usage(cptr, nick)
 }
 #endif
 
-void count_memory(cptr, nick)
-	aClient *cptr;
-	char *nick;
+void count_memory(aClient *cptr, char *nick)
 {
 	extern aChannel *channel;
-	extern aClass *classes;
-	extern aConfItem *conf;
 	extern int flinks;
 	extern Link *freelink;
 
@@ -335,8 +362,6 @@ void count_memory(cptr, nick)
 	Ban *ban;
 	Link *link;
 	aChannel *chptr;
-	aConfItem *aconf;
-	aClass *cltmp;
 
 	int  lc = 0,		/* local clients */
 	     ch = 0,		/* channels */
@@ -485,7 +510,7 @@ void count_memory(cptr, nick)
 	    me.name, RPL_STATSDEBUG, nick, dbufblocks, db);
 
 	link = freelink;
-	while (link = link->next)
+	while ((link = link->next))
 		fl++;
 	fl++;
 	sendto_one(cptr, ":%s %d %s :Link blocks free %d(%d) total %d(%d)",

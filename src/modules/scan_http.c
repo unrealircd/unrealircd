@@ -63,16 +63,23 @@ struct _hsstruct
 
 static vFP			xEadd_scan = NULL;
 static struct SOCKADDR_IN	*xScan_endpoint = NULL;
-
+static int xScan_TimeOut = 0;
+static Hook *HttpScanHost = NULL;
 #ifdef STATIC_LINKING
 extern void Eadd_scan();
 extern struct SOCKADDR_IN	Scan_endpoint;
+extern int Scan_TimeOut;
 #endif
-
+#ifdef DYNAMIC_LINKING
+Module *Mod_Handle = NULL;
+#else 
+#define Mod_Handle NULL
+#endif
 static Mod_SymbolDepTable modsymdep[] = 
 {
 	MOD_Dep(Eadd_scan, xEadd_scan, "src/modules/scan.so"),
 	MOD_Dep(Scan_endpoint, xScan_endpoint, "src/modules/scan.so"),
+	MOD_Dep(Scan_TimeOut, xScan_TimeOut, "src/modules/scan.so"),
 	{NULL, NULL}
 };
 
@@ -107,7 +114,7 @@ int    scan_http_Init(int module_load)
 	/*
 	 * Add scanning hooks
 	*/
-	HookAddEx(HOOKTYPE_SCAN_HOST, NULL, scan_http_scan); 
+	HttpScanHost = HookAddVoidEx(Mod_Handle, HOOKTYPE_SCAN_HOST, scan_http_scan); 
 	return MOD_SUCCESS;
 }
 
@@ -118,6 +125,7 @@ DLLFUNC int	Mod_Load(int module_load)
 int    scan_http_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 
@@ -128,7 +136,8 @@ DLLFUNC int	Mod_Unload(int module_unload)
 int	scan_http_Unload(int module_unload)
 #endif
 {
-	HookDelEx(HOOKTYPE_SCAN_HOST, NULL, scan_http_scan);
+	HookDel(HttpScanHost);
+	return MOD_SUCCESS;
 }
 
 #define HICHAR(s)	(((unsigned short) s) >> 8)
@@ -175,13 +184,12 @@ void	scan_http_scan_port(HSStruct *z)
 {
 	Scan_AddrStruct		*h = z->hs;
 	int			retval;
+#ifdef INET6
 	unsigned char			*cp;
+#endif
 	struct			SOCKADDR_IN sin;
-	struct			in_addr ia4;
 	SOCKET			fd;
 	unsigned char		httpbuf[160];
-	int			sinlen = sizeof(struct SOCKADDR_IN);
-	unsigned long   	theip;
 	fd_set			rfds;
 	struct timeval  	tv;
 	int			len;
@@ -232,7 +240,8 @@ void	scan_http_scan_port(HSStruct *z)
 	 */
 	set_non_blocking(fd, NULL);
 	if ((retval = connect(fd, (struct sockaddr *)&sin,
-                sizeof(sin))) == -1 && ERRNO != P_EINPROGRESS)
+                sizeof(sin))) == -1 && !((ERRNO == P_EWOULDBLOCK)
+		 || (ERRNO == P_EINPROGRESS)))
 	{
 		/* we have no socks server! */
 		CLOSE_SOCK(fd);	
@@ -241,7 +250,7 @@ void	scan_http_scan_port(HSStruct *z)
 	}
 	
 	/* We wait for write-ready */
-	tv.tv_sec = 40;
+	tv.tv_sec = xScan_TimeOut;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
@@ -260,19 +269,17 @@ void	scan_http_scan_port(HSStruct *z)
 		goto exituniverse;
 	}
 	/* Now we wait for data. 10 secs ought to be enough  */
-	tv.tv_sec = 10;
+	tv.tv_sec = xScan_TimeOut;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
-	if (retval = select(fd + 1, &rfds, NULL, NULL, &tv))
+	if ((retval = select(fd + 1, &rfds, NULL, NULL, &tv)))
 	{
 		/* There's data in the jar. Let's read it */
 		len = recv(fd, httpbuf, 13, 0);
 		CLOSE_SOCK(fd);
 		if (len < 4)
-		{
 			goto exituniverse;
-		}
 		if (!strncmp(httpbuf, "HTTP/1.0 200", 12))
 		{
 			/* Gotcha */

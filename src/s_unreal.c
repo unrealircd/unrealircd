@@ -82,36 +82,6 @@ void unrealmanual(void)
 	MyFree(str);
 }
 
-static char *militime(char *sec, char *usec)
-{
-/* Now just as accurate on win as on linux -- codemastr */
-#ifndef _WIN32
-	struct timeval tv;
-#else
-	struct _timeb tv;
-#endif
-	static char timebuf[18];
-#ifndef _WIN32
-	gettimeofday(&tv, NULL);
-#else
-	_ftime(&tv);
-#endif
-	if (sec && usec)
-		ircsprintf(timebuf, "%ld",
-#ifndef _WIN32
-		    (tv.tv_sec - atoi(sec)) * 1000 + (tv.tv_usec - atoi(usec)) / 1000);
-#else
-		    (tv.time - atoi(sec)) * 1000 + (tv.millitm - atoi(usec)) / 1000);
-#endif
-	else
-#ifndef _WIN32
-		ircsprintf(timebuf, "%ld %ld", tv.tv_sec, tv.tv_usec);
-#else
-		ircsprintf(timebuf, "%ld %ld", tv.time, tv.millitm);
-#endif
-	return timebuf;
-}
-
 aClient *find_match_server(char *mask)
 {
 	aClient *acptr;

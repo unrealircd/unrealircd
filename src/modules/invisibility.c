@@ -1,8 +1,6 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/m_swhois.c
- *   (C) 2001 The UnrealIRCd Team
- *
- *   SWHOIS command
+ *   IRC - Internet Relay Chat, Invisiblitity (+I)
+ *   (C) 2002 The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers.
@@ -38,29 +36,23 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
-#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
 #ifdef _WIN32
 #include "version.h"
 #endif
-
-DLLFUNC int m_swhois(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-
-#define MSG_SWHOIS 	"SWHOIS"	
-#define TOK_SWHOIS 	"BA"	
-
+extern long UMODE_HIDING;
 #ifndef DYNAMIC_LINKING
-ModuleHeader m_swhois_Header
+ModuleHeader invisibility_Header
 #else
-#define m_swhois_Header Mod_Header
+#define invisibility_Header Mod_Header
 ModuleHeader Mod_Header
 #endif
   = {
-	"m_swhois",
+	"invisibility",
 	"$Id$",
-	"command /swhois", 
+	"+I mode", 
 	"3.2-b5",
 	NULL 
     };
@@ -68,17 +60,18 @@ ModuleHeader Mod_Header
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_swhois_Init(int module_load)
+int    invisibility_Init(int module_load)
 #endif
 {
-	add_Command(MSG_SWHOIS, TOK_SWHOIS, m_swhois, MAXPARA);
+	UMODE_HIDING = umode_get('I');	
+	flag_add("R");
 	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_swhois_Load(int module_load)
+int    invisibility_Load(int module_load)
 #endif
 {
 	return MOD_SUCCESS;
@@ -87,40 +80,10 @@ int    m_swhois_Load(int module_load)
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Unload(int module_unload)
 #else
-int	m_swhois_Unload(int module_unload)
+int	invisibility_Unload(int module_unload)
 #endif
 {
-	if (del_Command(MSG_SWHOIS, TOK_SWHOIS, m_swhois) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-				m_swhois_Header.name);
-	}
+	umode_delete('I', UMODE_HIDING);
+	flag_del('R');
 	return MOD_SUCCESS;
-}
-/*
- * m_swhois
- * parv[1] = nickname
- * parv[2] = new swhois
- *
-*/
-
-int m_swhois(aClient *cptr, aClient *sptr, int parc, char *parv[])
-{
-        aClient *acptr;
-
-        if (!IsServer(sptr) && !IsULine(sptr))
-                return 0;
-        if (parc < 3)
-                return 0;
-        acptr = find_person(parv[1], (aClient *)NULL);
-        if (!acptr)
-                return 0;
-
-        if (acptr->user->swhois)
-                MyFree(acptr->user->swhois);
-        acptr->user->swhois = MyMalloc(strlen(parv[2]) + 1);
-        strcpy(acptr->user->swhois, parv[2]);
-        sendto_serv_butone_token(cptr, sptr->name,
-           MSG_SWHOIS, TOK_SWHOIS, "%s :%s", parv[1], parv[2]);
-        return 0;
 }

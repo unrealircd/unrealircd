@@ -115,7 +115,6 @@ typedef struct Command aCommand;
 typedef struct SMember Member;
 typedef struct SMembership Membership;
 typedef struct SMembershipL MembershipL;
-typedef struct _irchook Hook;
 
 #ifdef NEED_U_INT32_T
 typedef unsigned int u_int32_t;	/* XXX Hope this works! */
@@ -284,9 +283,12 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SNO_TKL        0x0080
 #define SNO_NICKCHANGE 0x0100
 #define SNO_QLINE      0x0200
+#define SNO_SNOTICE    0x0400
 
-#define SNO_DEFOPER "+kcfvGq"
-#define SNO_DEFUSER "+k"
+#define SNO_DEFOPER "+kscfvGq"
+#define SNO_DEFUSER "+ks"
+
+#define SNO_NONOPERS (SNO_KILLS | SNO_SNOTICE)
 
 #define	SEND_UMODES (UMODE_INVISIBLE|UMODE_OPER|UMODE_WALLOP|UMODE_FAILOP|UMODE_HELPOP|UMODE_RGSTRONLY|UMODE_REGNICK|UMODE_SADMIN|UMODE_NETADMIN|UMODE_COADMIN|UMODE_ADMIN|UMODE_SERVICES|UMODE_HIDE|UMODE_WHOIS|UMODE_KIX|UMODE_BOT|UMODE_SECURE|UMODE_HIDING|UMODE_DEAF|UMODE_VICTIM|UMODE_HIDEOPER|UMODE_SETHOST|UMODE_STRIPBADWORDS|UMODE_WEBTV)
 #define	ALL_UMODES (SEND_UMODES|UMODE_SERVNOTICE|UMODE_LOCOP|UMODE_SERVICES)
@@ -340,7 +342,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	IsPerson(x)		((x)->user && IsClient(x))
 #define	IsPrivileged(x)		(IsAnOper(x) || IsServer(x))
 #define	SendWallops(x)		(!IsMe(x) && ((x)->umodes & UMODE_WALLOP))
-#define	SendServNotice(x)	((x)->umodes & UMODE_SERVNOTICE)
+#define	SendServNotice(x)	(((x)->user) && ((x)->user->snomask & SNO_SNOTICE))
 #define	IsListening(x)		((x)->flags & FLAGS_LISTEN)
 #define	DoAccess(x)		((x)->flags & FLAGS_CHKACCESS)
 #define	IsLocal(x)		((x)->flags & FLAGS_LOCAL)
@@ -838,7 +840,7 @@ struct _configflag
 struct _configflag_except
 {
 	unsigned	temporary : 1;
-	unsigned	type	  : 1;
+	unsigned	type	  : 2;
 };
 
 struct _configflag_ban
@@ -868,6 +870,9 @@ struct _configflag_tld
 #define CRULE_ALL		0
 #define CRULE_AUTO		1
 
+#define CONF_EXCEPT_SCAN	0
+#define CONF_EXCEPT_BAN		1
+#define CONF_EXCEPT_TKL		2
 
 
 struct _configitem {
@@ -965,11 +970,15 @@ struct _configitem_link {
 	ConfigItem_class	*class;
 	struct IN_ADDR 		ipnum;
 	time_t			hold;
+#ifdef USE_SSL
+	char		*ciphers;
+#endif
 };
 
 struct _configitem_except {
 	ConfigItem      *prev, *next;
 	ConfigFlag_except      flag;
+	int type;
 	char		*mask;
 };
 
@@ -1075,16 +1084,6 @@ struct _configitem_help {
 	aMotd *text;
 };
 
-struct _irchook {
-	Hook *prev, *next;
-	ConfigFlag flag;
-	union
-	{
-		int (*intfunc)();
-		void (*voidfunc)();
-	} func;
-};
-
 #define HM_HOST 1
 #define HM_IPV4 2
 #define HM_IPV6 3
@@ -1124,7 +1123,7 @@ struct stats {
 struct ListOptions {
 	LOpts *next;
 	Link *yeslist, *nolist;
-	int  starthash;
+	unsigned int  starthash;
 	short int showall;
 	unsigned short usermin;
 	int  usermax;
@@ -1343,7 +1342,11 @@ struct liststruct {
 #define	MyClient(x)			(MyConnect(x) && IsClient(x))
 #define	MyOper(x)			(MyConnect(x) && IsOper(x))
 
-#define TStime() (timeofday == 0 ? (timeofday = time(NULL) + TSoffset) : timeofday)
+#ifdef CLEAN_COMPILE
+#define TStime() (time(NULL) + TSoffset)
+#else
+#define TStime() (0, timeofday == 0 ? (timeofday = time(NULL) + TSoffset) : timeofday)
+#endif
 
 /* Lifted somewhat from Undernet code --Rak */
 

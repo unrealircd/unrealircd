@@ -22,7 +22,7 @@
  * Added Armin's PRIVMSG patches...
  */
 
-#ifndef lint
+#ifndef CLEAN_COMPILE
 static char sccsid[] =
     "@(#)send.c	2.32 2/28/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen";
 #endif
@@ -53,8 +53,6 @@ static char sendbuf[2048];
 static char tcmd[1024];
 static char ccmd[1024];
 
-static int send_message PROTO((aClient *, char *, int));
-
 static int sentalong[MAXCONNECTIONS];
 
 void vsendto_prefix_one(struct Client *to, struct Client *from,
@@ -77,9 +75,7 @@ int  sendanyways = 0;
 **	Also, the notice is skipped for "uninteresting" cases,
 **	like Persons and yet unknown connections...
 */
-static int dead_link(to, notice)
-	aClient *to;
-	char *notice;
+static int dead_link(aClient *to, char *notice)
 {
 	char	*error = NULL;
 	
@@ -150,14 +146,13 @@ void flush_fdlist_connections(fdlist * listp)
 **	when there is a chance the some output would be possible. This
 **	attempts to empty the send queue as far as possible...
 */
-int  send_queued(to)
-	aClient *to;
+int  send_queued(aClient *to)
 {
 	char *msg;
 	int  len, rlen;
 
 	if (IsBlocked(to))
-		return;		/* Can't write to already blocked socket */
+		return -1;		/* Can't write to already blocked socket */
 
 	/*
 	   ** Once socket is marked dead, we cannot start writing to it,
@@ -344,7 +339,6 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 			goto good;
 		if ((prefix & 0x4) && (lp->flags & CHFL_CHANOP))
 			goto good;
-		bad:
 			continue;
 		good:
 
@@ -406,7 +400,6 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 			goto good;
 		if ((prefix & 0x4) && (lp->flags & CHFL_CHANOP))
 			goto good;
-		bad:
 			continue;
 		good:
 
@@ -1145,7 +1138,7 @@ void sendto_match_servs(aChannel *chptr, aClient *from, char *format, ...)
 	{
 		if (*chptr->chname == '&')
 			return;
-		if (mask = (char *)rindex(chptr->chname, ':'))
+		if ((mask = (char *)rindex(chptr->chname, ':')))
 			mask++;
 	}
 	else
@@ -1301,7 +1294,6 @@ void sendto_umode(int umodes, char *pattern, ...)
 	aClient *cptr;
 	int  i;
 	char nbuf[1024];
-	int  w;
 	va_start(vl, pattern);
 	for (i = 0; i <= LastSlot; i++)
 		if ((cptr = local[i]) && IsPerson(cptr) && (cptr->umodes & umodes) == umodes)
@@ -1326,7 +1318,6 @@ void sendto_snomask(int snomask, char *pattern, ...)
 	aClient *cptr;
 	int  i;
 	char nbuf[1024];
-	int  w;
 	va_start(vl, pattern);
 	for (i = 0; i <= LastSlot; i++)
 		if ((cptr = local[i]) && IsPerson(cptr) && (cptr->user->snomask & snomask))
@@ -1647,10 +1638,7 @@ void sendto_realops(char *pattern, ...)
 	return;
 }
 
-void sendto_connectnotice(nick, user, sptr)
-	char *nick;
-	anUser *user;
-	aClient *sptr;
+void sendto_connectnotice(char *nick, anUser *user, aClient *sptr)
 {
 	aClient *cptr;
 	int  i;

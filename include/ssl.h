@@ -7,4 +7,4 @@ extern   SSL_CTX * ctx;
 extern   SSL_METHOD *meth;
 extern   void init_ssl();
 extern   int ssl_handshake(aClient *);   /* Handshake the accpeted con.*/
-extern   int ssl_client_handshake(aClient *); /* and the initiated con.*/
+extern   int ssl_client_handshake(aClient *, ConfigItem_link *); /* and the initiated con.*/

@@ -67,7 +67,7 @@ int	webtv_parse(aClient *sptr, char *string)
 	if (!string || !*string)
 	{
 		sendto_one(sptr, ":IRC %s %s :No command given", MSG_PRIVATE, sptr->name);
-		return;
+		return 0;
 	}
 	
 	cmd = strtok(string, " ");
@@ -158,7 +158,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	for (tmp = parv[1]; (nick = strtoken(&p, tmp, ",")); tmp = NULL)
 	{
-		int  invis, showsecret, showperson, member, wilds;
+		int  invis, showsecret = 0, showperson, member, wilds;
 
 		found = 0;
 		(void)collapse(nick);
@@ -246,8 +246,8 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(sptr, ":IRC PRIVMSG %s :%s uses modes %s",
 					sptr->name, acptr->name, get_mode_str(acptr));
 			}
-			if (IsAnOper(sptr) && IsHidden(acptr) ||
-			    acptr == sptr && IsHidden(sptr))
+			if ((IsAnOper(sptr) && IsHidden(acptr)) ||
+			    (acptr == sptr && IsHidden(sptr)))
 			{
 				sendto_one(sptr, ":IRC PRIVMSG %s :%s is connecting from %s",
 				    sptr->name, acptr->name,

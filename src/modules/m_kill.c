@@ -35,6 +35,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -79,7 +80,7 @@ int    m_kill_Init(int module_load)
 	/*
 	 * We call our add_Command crap here
 	*/
-	add_Command(MSG_KILL, TOK_KILL, m_kill, MAXPARA);
+	add_Command(MSG_KILL, TOK_KILL, m_kill, 2);
 	return MOD_SUCCESS;
 }
 
@@ -117,10 +118,7 @@ int	m_kill_Unload(int module_unload)
 **	parv[1] = kill victim(s) - comma separated list
 **	parv[2] = kill path
 */
-DLLFUNC int  m_kill(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	static anUser UnknownUser = {
 		NULL,		/* channel */
@@ -226,8 +224,6 @@ DLLFUNC int  m_kill(cptr, sptr, parc, parv)
 			    parv[0], parv[1]);
 			return 0;
 		}
-	      aftermath:
-
 		/* From here on, the kill is probably going to be successful. */
 
 		kcount++;
@@ -252,7 +248,7 @@ DLLFUNC int  m_kill(cptr, sptr, parc, parv)
 			strcpy(inpath,
 			    IsHidden(cptr) ? cptr->user->virthost : cptr->user->
 			    realhost);
-			if (kcount < 2)	/* Only check the path the first time
+			if (kcount < 2) {	/* Only check the path the first time
 					   around, or it gets appended to itself. */
 				if (!BadPtr(path))
 				{
@@ -263,6 +259,7 @@ DLLFUNC int  m_kill(cptr, sptr, parc, parv)
 				}
 				else
 					path = cptr->name;
+			}
 		}
 		else if (BadPtr(path))
 			path = "*no-path*";	/* Bogus server sending??? */

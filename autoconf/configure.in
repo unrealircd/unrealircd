@@ -13,6 +13,15 @@ fi
 if test "$ac_cv_gcc3" = "yes"; then
 CFLAGS="$CFLAGS -Wnone"
 fi
+AC_CACHE_CHECK(if gcc has a working -pipe, ac_cv_pipe, [
+	save_cflags="$CFLAGS"
+	CFLAGS="$CFLAGS -pipe"
+	AC_TRY_COMPILE(,, ac_cv_pipe="yes", ac_cv_pipe="no")
+	CFLAGS="$save_cflags"
+])
+if test "$ac_cv_pipe" = "yes"; then
+CFLAGS="-pipe $CFLAGS"
+fi
 fi
 
 AC_PATH_PROG(RM,rm)
@@ -78,6 +87,23 @@ case `uname -s` in
 esac
 fi
 ])
+AC_CACHE_CHECK(if your system prepends an underscore on symbols,ac_cv_underscore,[
+cat >uscore.c << __EOF__
+int main() {
+	return 0;
+}
+__EOF__
+$CC -o uscore $CFLAGS uscore.c 1>&5
+if test -z "`strings -a uscore |grep '^_main$'`"; then
+ac_cv_underscore=no
+else
+ac_cv_underscore=yes
+fi
+if test "$ac_cv_underscore" = "yes"; then
+AC_DEFINE(UNDERSCORE)
+fi
+])
+
 MODULEFLAGS=$ac_cv_pic
 AC_DEFINE(DYNAMIC_LINKING)
 ])

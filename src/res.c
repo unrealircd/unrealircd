@@ -23,6 +23,7 @@
 #include "res.h"
 #include "numeric.h"
 #include "h.h"
+#include "proto.h"
 #include <signal.h>
 #ifndef _WIN32
 #include <sys/time.h>
@@ -30,11 +31,14 @@
 #endif
 #include "nameser.h"
 #include "resolv.h"
+#include "inet.h"
 #include <string.h>
-#ifndef lint
+#ifndef CLEAN_COMPILE
 static char rcsid[] = "@(#)$Id$";
 #endif
-/* #undef	DEBUG	/* because there is a lot of debug code in here :-) */
+#if 0
+#undef	DEBUG	/* because there is a lot of debug code in here :-) */
+#endif
 #ifdef _WIN32
 #define HE(x) (x)->he
 #else
@@ -92,8 +96,7 @@ static struct resinfo {
 	int  re_unkrep;
 } reinfo;
 
-int init_resolver(op)
-	int op;
+int init_resolver(int op)
 {
 	int  ret = 0;
 
@@ -153,8 +156,7 @@ int init_resolver(op)
 	return ret;
 }
 
-static int add_request(new)
-	ResRQ *new;
+static int add_request(ResRQ *new)
 {
 	if (!new)
 		return -1;
@@ -174,8 +176,7 @@ static int add_request(new)
  * remove a request from the list. This must also free any memory that has
  * been allocated for temporary storage of DNS results.
  */
-static void rem_request(old)
-	ResRQ *old;
+static void rem_request(ResRQ *old)
 {
 	ResRQ **rptr, *r2ptr = NULL;
 	int  i;
@@ -220,8 +221,7 @@ static void rem_request(old)
 /*
  * Create a DNS request record for the server.
  */
-static ResRQ *make_request(lp)
-	Link *lp;
+static ResRQ *make_request(Link *lp)
 {
 	ResRQ *nreq;
 
@@ -255,8 +255,7 @@ static ResRQ *make_request(lp)
  * Remove queries from the list which have been there too long without
  * being resolved.
  */
-time_t timeout_query_list(now)
-	time_t now;
+time_t timeout_query_list(time_t now)
 {
 	ResRQ *rptr, *r2ptr;
 	time_t next = 0, tout;
@@ -272,6 +271,7 @@ time_t timeout_query_list(now)
 #else
 		if (now >= tout && !rptr->locked)
 #endif
+		{
 			if (--rptr->retries <= 0)
 			{
 #ifdef DEBUGMODE
@@ -311,6 +311,7 @@ time_t timeout_query_list(now)
 				    rptr->cinfo.value.cptr));
 #endif
 			}
+		}
 		if (!next || tout < next)
 			next = tout;
 	}
@@ -321,8 +322,7 @@ time_t timeout_query_list(now)
  * del_queries - called by the server to cleanup outstanding queries for
  * which there no longer exist clients or conf lines.
  */
-void del_queries(cp)
-	char *cp;
+void del_queries(char *cp)
 {
 	ResRQ *rptr, *r2ptr;
 
@@ -342,9 +342,7 @@ void del_queries(cp)
  * nameservers or -1 if no successful sends.
  */
 #ifndef _WIN32
-static int send_res_msg(msg, len, rcount)
-	char *msg;
-	int len, rcount;
+static int send_res_msg(char *msg, int len, int rcount)
 {
 #ifdef DEBUGMODE
 	char debbuffer[50];
@@ -426,8 +424,7 @@ static int send_res_msg(msg, len, rcount)
 /*
  * find a dns request id (id is determined by dn_mkquery)
  */
-static ResRQ *find_id(id)
-	int id;
+static ResRQ *find_id(int id)
 {
 	ResRQ *rptr;
 
@@ -437,9 +434,7 @@ static ResRQ *find_id(id)
 	return NULL;
 }
 
-struct hostent *gethost_byname(name, lp)
-	char *name;
-	Link *lp;
+struct hostent *gethost_byname(char *name, Link *lp)
 {
 	aCache *cp;
 
@@ -460,9 +455,7 @@ struct hostent *gethost_byname(name, lp)
 #endif
 }
 
-struct hostent *gethost_byaddr(addr, lp)
-	char *addr;
-	Link *lp;
+struct hostent *gethost_byaddr(char *addr, Link *lp)
 {
 	aCache *cp;
 
@@ -479,10 +472,7 @@ struct hostent *gethost_byaddr(addr, lp)
 	return NULL;
 }
 
-static int do_query_name(lp, name, rptr)
-	Link *lp;
-	char *name;
-	ResRQ *rptr;
+static int do_query_name(Link *lp, char *name, ResRQ *rptr)
 {
 //#ifndef _WIN32
 	char hname[HOSTLEN + 1];
@@ -531,10 +521,7 @@ static int do_query_name(lp, name, rptr)
 /*
  * Use this to do reverse IP# lookups.
  */
-static int do_query_number(lp, numb, rptr)
-	Link *lp;
-	struct IN_ADDR *numb;
-	ResRQ *rptr;
+static int do_query_number(Link *lp, struct IN_ADDR *numb, ResRQ *rptr)
 {
 	char ipbuf[128];
 	u_char *cp;
@@ -619,10 +606,7 @@ static int do_query_number(lp, numb, rptr)
 /*
  * generate a query based on class, type and name.
  */
-static int query_name(name, class, type, rptr)
-	char *name;
-	int class, type;
-	ResRQ *rptr;
+static int query_name(char *name, int class, int type, ResRQ *rptr)
 {
 	struct timeval tv;
 	char buf[MAXPACKET];
@@ -670,8 +654,7 @@ static int query_name(name, class, type, rptr)
 	return 0;
 }
 
-static void resend_query(rptr)
-	ResRQ *rptr;
+static void resend_query(ResRQ *rptr)
 {
 	if (rptr->resend == 0)
 		return;
@@ -696,10 +679,7 @@ static void resend_query(rptr)
 /*
  * process name server reply.
  */
-static int proc_answer(rptr, hptr, buf, eob)
-	ResRQ *rptr;
-	char *buf, *eob;
-	HEADER *hptr;
+static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 {
 	char *cp, **alias;
 	struct hent *hp;
@@ -774,9 +754,6 @@ static int proc_answer(rptr, hptr, buf, eob)
 			  if (dlen != sizeof(dr))
 #endif
 			  {
-				  sendto_one
-				      ("Bad IP length (%d) returned for %s",
-				      dlen, hostbuf);
 				  Debug((DEBUG_DNS,
 				      "Bad IP length (%d) returned for %s",
 				      dlen, hostbuf));
@@ -876,12 +853,9 @@ static int proc_answer(rptr, hptr, buf, eob)
  * read a dns reply from the nameserver and process it.
  */
 #ifndef _WIN32
-struct hostent *get_res(lp)
-	char *lp;
+struct hostent *get_res(char *lp)
 #else
-struct hostent *get_res(lp,id)
-	char *lp;
-	long id;
+struct hostent *get_res(char *lp,long id)
 #endif
 {
 
@@ -1153,8 +1127,7 @@ struct hostent *get_res(lp,id)
 	return (struct hostent *)NULL;
 }
 
-static int hash_number(ip)
-	u_char *ip;
+static int hash_number(u_char *ip)
 {
 	u_int hashv = 0;
 
@@ -1181,8 +1154,7 @@ static int hash_number(ip)
 	return (hashv);
 }
 
-static int hash_name(name)
-	register char *name;
+static int hash_name(char *name)
 {
 	u_int hashv = 0;
 
@@ -1195,8 +1167,7 @@ static int hash_name(name)
 /*
 ** Add a new cache item to the queue and hash table.
 */
-static aCache *add_to_cache(ocp)
-	aCache *ocp;
+static aCache *add_to_cache(aCache *ocp)
 {
 	aCache *cp = NULL;
 	int  hashv;
@@ -1255,9 +1226,7 @@ static aCache *add_to_cache(ocp)
 ** it already contains the correct expire time, if it is a new entry. Old
 ** entries have the expirey time updated.
 */
-static void update_list(rptr, cachep)
-	ResRQ *rptr;
-	aCache *cachep;
+static void update_list(ResRQ *rptr, aCache *cachep)
 {
 	aCache **cpp, *cp = cachep;
 	char *s, *t, **base;
@@ -1382,8 +1351,7 @@ static void update_list(rptr, cachep)
 	return;
 }
 
-static aCache *find_cache_name(name)
-	char *name;
+static aCache *find_cache_name(char *name)
 {
 	aCache *cp;
 	char *s;
@@ -1429,9 +1397,7 @@ static aCache *find_cache_name(name)
 /*
  * find a cache entry by ip# and update its expire time
  */
-static aCache *find_cache_number(rptr, numb)
-	ResRQ *rptr;
-	char *numb;
+static aCache *find_cache_number(ResRQ *rptr, char *numb)
 {
 	aCache *cp;
 	int  hashv, i;
@@ -1509,8 +1475,7 @@ static aCache *find_cache_number(rptr, numb)
 	return NULL;
 }
 
-static aCache *make_cache(rptr)
-	ResRQ *rptr;
+static aCache *make_cache(ResRQ *rptr)
 {
 	aCache *cp;
 	int  i, n;
@@ -1616,8 +1581,7 @@ static aCache *make_cache(rptr)
 /*
  * rem_list
  */
-static aCache *rem_list(cp)
-	aCache *cp;
+static aCache *rem_list(aCache *cp)
 {
 	aCache **cpp, *cr = cp->list_next;
 
@@ -1640,8 +1604,7 @@ static aCache *rem_list(cp)
  *     delete a cache entry from the cache structures and lists and return
  *     all memory used for the cache back to the memory pool.
  */
-static void rem_cache(ocp)
-	aCache *ocp;
+static void rem_cache(aCache *ocp)
 {
 	aCache **cp;
 #ifndef _WIN32
@@ -1745,8 +1708,7 @@ static void rem_cache(ocp)
  * removes entries from the cache which are older than their expirey times.
  * returns the time at which the server should next poll the cache.
  */
-time_t expire_cache(now)
-	time_t now;
+time_t expire_cache(time_t now)
 {
 	aCache *cp, *cp2;
 	time_t next = 0;
@@ -1769,7 +1731,7 @@ time_t expire_cache(now)
 /*
  * remove all dns cache entries.
  */
-void flush_cache()
+void flush_cache(void)
 {
 	aCache *cp;
 
@@ -1777,10 +1739,7 @@ void flush_cache()
 		rem_cache(cp);
 }
 
-int m_dns(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int parc;
-	char *parv[];
+int m_dns(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aCache *cp;
 	int  i;
@@ -1837,9 +1796,7 @@ int m_dns(cptr, sptr, parc, parv)
 	return 2;
 }
 
-u_long cres_mem(sptr, nick)
-	aClient *sptr;
-	char *nick;
+u_long cres_mem(aClient *sptr, char *nick)
 {
 	register aCache *c = cachetop;
 	register struct hostent *h;
@@ -1883,9 +1840,7 @@ u_long cres_mem(sptr, nick)
 }
 
 
-static int bad_hostname(name, len)
-	char *name;
-	int len;
+static int bad_hostname(char *name, int len)
 {
 	char *s, c;
 

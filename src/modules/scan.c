@@ -28,6 +28,7 @@
 #include "numeric.h"
 #include "msg.h"
 #include "channel.h"
+#include "inet.h"
 #include <time.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -44,6 +45,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -51,14 +53,20 @@
 #include "version.h"
 #endif
 #include "modules/scan.h"
-
+/* IRCd will fill with a pointer to this module */
+#ifdef DYNAMIC_LINKING
+Module *Mod_Handle = NULL;
+#else
+#define Mod_Handle NULL
+#endif
 struct SOCKADDR_IN Scan_endpoint;
-
+int Scan_BanTime = 0, Scan_TimeOut = 0;
 static Scan_AddrStruct *Scannings = NULL;
 MUTEX Scannings_lock;
 
 DLLFUNC int h_scan_connect(aClient *sptr);
 DLLFUNC int	h_config_set_scan(void);
+DLLFUNC int h_stats_scan(aClient *sptr, char *stats);
 
 #ifndef DYNAMIC_LINKING
 ModuleHeader m_scan_Header
@@ -77,6 +85,7 @@ ModuleHeader Mod_Header
 EVENT(e_scannings_clean);
 
 static Event	*Scannings_clean = NULL;
+static Hook 	*LocConnect = NULL, *ConfUnknown = NULL, *ServerStats = NULL;
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
@@ -85,8 +94,9 @@ DLLFUNC int	Mod_Init(int module_load)
 int    m_scan_Init(int module_load)
 #endif
 {
-	add_Hook(HOOKTYPE_LOCAL_CONNECT, h_scan_connect);
-	add_Hook(HOOKTYPE_CONFIG_UNKNOWN, h_config_set_scan);
+	LocConnect = HookAddEx(Mod_Handle, HOOKTYPE_LOCAL_CONNECT, h_scan_connect);
+	ConfUnknown = HookAddEx(Mod_Handle, HOOKTYPE_CONFIG_UNKNOWN, h_config_set_scan);
+	ServerStats = HookAddEx(Mod_Handle, HOOKTYPE_STATS, h_stats_scan);
 	IRCCreateMutex(Scannings_lock);
 	return MOD_SUCCESS;
 }
@@ -109,8 +119,14 @@ int    m_scan_Load(int module_load)
 		Scan_endpoint.SIN_PORT = htons(2121);
 		Scan_endpoint.SIN_FAMILY = AFINET;
 	}
+	if (Scan_BanTime == 0)
+		Scan_BanTime = 86400;
 
-	Scannings_clean = EventAdd("e_scannings_clean", 0, 0, e_scannings_clean, NULL);
+	if (Scan_TimeOut == 0)
+		Scan_TimeOut = 20;
+	LockEventSystem();
+	Scannings_clean = EventAddEx(Mod_Handle, "e_scannings_clean", 0, 0, e_scannings_clean, NULL);
+	UnlockEventSystem();
 	return MOD_SUCCESS;
 }
 
@@ -127,20 +143,23 @@ int	m_scan_Unload(void)
 	IRCMutexLock(Scannings_lock);
 	if (Scannings)	
 	{
-		sendto_realops("scan: some scannings still in progress, delaying unload");
-		EventAdd("scan_unload", 
+		LockEventSystem();
+		EventAddEx(Mod_Handle, "scan_unload", 
 			2, /* Should be enough */
 			1,
 			e_unload_module_delayed,
 			(void *)m_scan_Header.name);
+		UnlockEventSystem();
 		ret = MOD_DELAY;
 	}	
 	IRCMutexUnlock(Scannings_lock);	
 	if (ret != MOD_DELAY)
 	{
-		del_Hook(HOOKTYPE_LOCAL_CONNECT, h_scan_connect);
-		del_Hook(HOOKTYPE_CONFIG_UNKNOWN, h_config_set_scan);
+		HookDel(LocConnect);
+		HookDel(ConfUnknown);
+		LockEventSystem();
 		EventDel(Scannings_clean);
+		UnlockEventSystem();
 	}
 	return ret;
 }
@@ -212,7 +231,7 @@ EVENT(e_scannings_clean)
 EVENT(e_scan_ban)
 {
 	Scan_Result *sr = (Scan_Result *) data;
-	char hostip[128], mo[100], mo2[100], reason[256];
+	char hostip[128], mo[100], mo2[100];
 	char *tkllayer[9] = {
 		me.name,	/*0  server.name */
 		"+",		/*1  +|- */
@@ -231,7 +250,7 @@ EVENT(e_scan_ban)
 	strcpy(hostip, Inet_ia2p(&sr->in));
 	tkllayer[4] = hostip;
 	tkllayer[5] = me.name;
-	ircsprintf(mo, "%li", SOCKSBANTIME + TStime());
+	ircsprintf(mo, "%li", Scan_BanTime + TStime());
 	ircsprintf(mo2, "%li", TStime());
 	tkllayer[6] = mo;
 	tkllayer[7] = mo2;
@@ -246,7 +265,9 @@ void	Eadd_scan(struct IN_ADDR *in, char *reason)
 	Scan_Result *sr = (Scan_Result *) MyMalloc(sizeof(Scan_Result));
 	sr->in = *in;
 	strcpy(sr->reason, reason);
-	EventAdd("scan_ban", 0, 1, e_scan_ban, (void *)sr);
+	LockEventSystem();
+	EventAddEx(Mod_Handle, "scan_ban", 0, 1, e_scan_ban, (void *)sr);
+	UnlockEventSystem();
 	return;
 }
 
@@ -262,7 +283,6 @@ DLLFUNC int h_scan_connect(aClient *sptr)
 {
 	Scan_AddrStruct *sr = NULL;
 	Hook		*hook = NULL;
-	vFP		*vfp;
 	THREAD		thread;
 	THREAD_ATTR	thread_attr;
 	
@@ -319,6 +339,23 @@ DLLFUNC int	h_config_set_scan(void)
 		{
 		        for (ce = sets->ce_entries; ce; ce = (ConfigEntry *)ce->ce_next)
 			{
+				if (!strcmp(ce->ce_varname, "bantime")) {
+					if (!ce->ce_vardata) {
+						config_error("%s:%i: set::scan::bantime has no value",
+								ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+						break;
+					}
+					Scan_BanTime = atime(ce->ce_vardata);
+				}
+				if (!strcmp(ce->ce_varname, "timeout")) {
+					if (!ce->ce_vardata) {
+						config_error("%s:%i: set::scan::timeout has no value",
+								ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+						break;
+					}
+					Scan_TimeOut = atime(ce->ce_vardata);
+				}
+
 				if (!strcmp(ce->ce_varname, "endpoint"))
 				{
 					if (!ce->ce_vardata)
@@ -364,3 +401,14 @@ DLLFUNC int	h_config_set_scan(void)
 	return 0;
 }
 
+DLLFUNC int h_stats_scan(aClient *sptr, char *stats) {
+	if (*stats == 'S') {
+		sendto_one(sptr, ":%s %i %s :scan::endpoint: %s:%d", me.name, RPL_TEXT, sptr->name,
+			Inet_si2p(&Scan_endpoint), ntohs(Scan_endpoint.SIN_PORT));
+		sendto_one(sptr, ":%s %i %s :scan::bantime: %d", me.name, RPL_TEXT, sptr->name,
+				Scan_BanTime);
+		sendto_one(sptr, ":%s %i %s :scan::timeout: %d", me.name, RPL_TEXT, sptr->name,
+				Scan_TimeOut);
+	}
+        return 0;
+}

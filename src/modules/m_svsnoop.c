@@ -38,6 +38,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -142,4 +143,5 @@ int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[])
                         sendto_ops("This server is no longer in NOOP mode");
                 }
         }
+	return 0;
 }

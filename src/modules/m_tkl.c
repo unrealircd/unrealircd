@@ -20,6 +20,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -140,13 +141,6 @@ DLLFUNC int m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
-	if (parc < 4)
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name,
-				sptr->name, "GLINE");
-		return 0;
-	}
-
 	return m_tkl_line(cptr, sptr, parc, parv, "G");
 
 }
@@ -166,13 +160,6 @@ DLLFUNC int m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc == 1)
 	{
 		tkl_stats(sptr);
-		return 0;
-	}
-
-	if (parc < 4)
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name,
-				sptr->name, "GZLINE");
 		return 0;
 	}
 
@@ -198,13 +185,6 @@ DLLFUNC int m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
-	if (parc < 4)
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name,
-				sptr->name, "GLINE");
-		return 0;
-	}
-
 	return m_tkl_line(cptr, sptr, parc, parv, "s");
 
 }
@@ -224,13 +204,6 @@ DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc == 1)
 	{
 		tkl_stats(sptr);
-		return 0;
-	}
-
-	if (parc < 4)
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name,
-				sptr->name, "TKLINE");
 		return 0;
 	}
 
@@ -256,13 +229,6 @@ DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
-	if (parc < 4)
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name,
-				sptr->name, "TZLINE");
-		return 0;
-	}
-
 	return m_tkl_line(cptr, sptr, parc, parv, "z");
 
 }
@@ -280,10 +246,8 @@ DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 */
 
 DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type) {
-	aTKline *tk;
 	TS   secs;
 	int  whattodo = 0;	/* 0 = add  1 = del */
-	int  found = 0;
 	int  i;
 	char *mask = NULL;
 	char mo[1024], mo2[1024];
@@ -306,11 +270,6 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		return 0;
 	}
 
-	if (parc < 4)
-	{
-		return 0;
-	}
-
 	mask = parv[1];
 	if (*mask == '-')
 	{
@@ -321,6 +280,13 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	{
 		whattodo = 0;
 		mask++;
+	}
+
+	if (strchr(mask, '!'))
+	{
+		sendto_one(sptr, ":%s NOTICE %s :[error] Cannot have ! in masks.", me.name,
+		    sptr->name);
+		return 0;
 	}
 
 	/* Check if its a hostmask and legal .. */
@@ -345,7 +311,6 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		}
 	}
 
-      nochecks:
 	usermask = strtok(mask, "@");
 	hostmask = strtok(NULL, "");
 	if (BadPtr(hostmask)) {
@@ -399,6 +364,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		m_tkl(&me, &me, 6, tkllayer);
 
 	}
+	return 0;
 }
 
 

@@ -35,6 +35,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -123,7 +124,6 @@ DLLFUNC int m_rakill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *hostmask, *usermask;
 	ConfigItem_ban  *bconf;
-	int  result;
 
 	if (parc < 2 && IsPerson(sptr))
 	{
@@ -214,4 +214,5 @@ DLLFUNC int m_rakill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	    IsServer(cptr) ? parv[0] : me.name, hostmask, usermask);
 
 	check_pings(TStime(), 1);
+	return 0;
 }

@@ -35,6 +35,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -55,7 +56,11 @@ extern int LRV;
 #endif
 
 
-
+#ifdef DYNAMIC_LINKING
+Module *Mod_Handle = NULL;
+#else
+#define Mod_Handle NULL
+#endif
 DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 EVENT(lcf_check);
 EVENT(htm_calc);
@@ -97,8 +102,10 @@ int    m_htm_Init(int module_load)
 	*/
 	add_Command(MSG_HTM, TOK_HTM, m_htm, MAXPARA);
 #ifndef NO_FDLIST
-	e_lcf = EventAdd("lcf", LCF, 0, lcf_check, NULL);
-	e_htmcalc = EventAdd("htmcalc", 1, 0, htm_calc, NULL);
+	LockEventSystem();
+	e_lcf = EventAddEx(Mod_Handle, "lcf", LCF, 0, lcf_check, NULL);
+	e_htmcalc = EventAddEx(Mod_Handle, "htmcalc", 1, 0, htm_calc, NULL);
+	UnlockEventSystem();
 #endif
 	return MOD_SUCCESS;
 }
@@ -127,8 +134,10 @@ int	m_htm_Unload(int module_unload)
 				m_htm_Header.name);
 	}
 #ifndef NO_FDLIST
+	LockEventSystem();
 	EventDel(e_lcf);
 	EventDel(e_htmcalc);
+	UnlockEventSystem();
 #endif
 	return MOD_SUCCESS;
 }
@@ -215,6 +224,7 @@ DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #endif
 		if (!stricmp(command, "ON"))
 		{
+			EventInfo mod;
 			lifesux = 1;
 			sendto_one(sptr,
 			    ":%s NOTICE %s :High traffic mode is now ON.",
@@ -224,13 +234,22 @@ DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    parv[0], sptr->user->username,
 			    sptr->user->realhost);
 			LCF = 60;	/* 60 seconds */
-			EventModEvery(e_lcf, LCF);
+			mod.flags = EMOD_EVERY;
+			mod.every = LCF;
+			LockEventSystem();
+			EventMod(e_lcf, &mod);
+			UnlockEventSystem();
 		}
 		else if (!stricmp(command, "OFF"))
 		{
+			EventInfo mod;
 			lifesux = 0;
 			LCF = LOADCFREQ;
-			EventModEvery(e_lcf, LCF);
+			mod.flags = EMOD_EVERY;
+			mod.every = LCF;
+			LockEventSystem();
+			EventMod(e_lcf, &mod);
+			UnlockEventSystem();
 			sendto_one(sptr,
 			    ":%s NOTICE %s :High traffic mode is now OFF.",
 			    me.name, parv[0]);
@@ -292,12 +311,12 @@ DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 
 
-
 #else
 	sendto_one(sptr,
 	    ":%s NOTICE %s :*** High traffic mode and fdlists are not enabled on this server",
 	    me.name, sptr->name);
 #endif
+	return 0;
 }
 
 #ifndef NO_FDLIST
@@ -320,9 +339,12 @@ EVENT(lcf_check)
 						   currentrate2);}
 			else
 			{
+				EventInfo mod;
 				lifesux++;	/* Ok, life really sucks! */
 				LCF += 2;	/* wait even longer */
-				EventModEvery(e_lcf, LCF);
+				mod.flags = EMOD_EVERY;
+				mod.every = LCF;
+				EventMod(e_lcf, &mod);
 				if (noisy_htm)
 					sendto_realops
 					    ("Still high-traffic mode %d%s (%d delay): %0.2f kb/s",
@@ -334,12 +356,15 @@ EVENT(lcf_check)
 				 * Bad Things(tm) tend to happen with HTM on too long -epi */
 				if (lifesux > 15)
 				{
+					EventInfo mod;
 					if (noisy_htm)
 						sendto_realops
 						    ("Resetting HTM and raising limit to: %dk/s\n",
 						    LRV + 5);
 					LCF = LOADCFREQ;
-					EventModEvery(e_lcf, LCF);
+					mod.flags = EMOD_EVERY;
+					mod.every = LCF;
+					EventMod(e_lcf, &mod);
 					lifesux = 0;
 					LRV += 5;
 				}
@@ -347,8 +372,11 @@ EVENT(lcf_check)
 		}
 		else
 		{
+			EventInfo mod;
 			LCF = LOADCFREQ;
-			EventModEvery(e_lcf, LCF);
+			mod.flags = EMOD_EVERY;
+			mod.every = LCF;
+			EventMod(e_lcf, &mod);
 			if (lifesux)
 			{
 				lifesux = 0;

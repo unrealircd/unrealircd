@@ -69,8 +69,8 @@
 #define   index   strchr
 #define   rindex  strrchr
 /*
-extern	char	*index PROTO((char *, char));
-extern	char	*rindex PROTO((char *, char));
+extern	char	*index(char *, char);
+extern	char	*rindex(char *, char);
 */
 #endif
 #ifdef NOBCOPY

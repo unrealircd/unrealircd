@@ -21,7 +21,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef lint
+#ifndef CLEAN_COMPILE
 static char sccsid[] =
     "@(#)s_user.c	2.74 2/8/94 (C) 1988 University of Oulu, \
 Computing Center and Jarkko Oikarinen";
@@ -43,6 +43,7 @@ Computing Center and Jarkko Oikarinen";
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -51,15 +52,15 @@ Computing Center and Jarkko Oikarinen";
 #include "version.h"
 #endif
 
-void send_umode_out PROTO((aClient *, aClient *, long));
-void send_umode_out_nickv2 PROTO((aClient *, aClient *, long));
-void send_umode PROTO((aClient *, aClient *, long, long, char *));
+void send_umode_out(aClient *, aClient *, long);
+void send_umode_out_nickv2(aClient *, aClient *, long);
+void send_umode(aClient *, aClient *, long, long, char *);
 void set_snomask(aClient *, char *);
-/* static  Link    *is_banned PROTO((aClient *, aChannel *)); */
+/* static  Link    *is_banned(aClient *, aChannel *); */
 int  dontspread = 0;
 extern char *me_hash;
 extern char backupbuf[];
-static char buf[BUFSIZE], buf2[BUFSIZE];
+static char buf[BUFSIZE];
 
 int sno_mask[] = { 
 	SNO_KILLS, 'k',
@@ -72,6 +73,7 @@ int sno_mask[] = {
 	SNO_TKL, 'G',
 	SNO_NICKCHANGE, 'n',
 	SNO_QLINE, 'q',
+	SNO_SNOTICE, 's',
 	0, 0
 };
 
@@ -79,10 +81,12 @@ void iNAH_host(aClient *sptr, char *host)
 {
 	if (!sptr->user)
 		return;
-	if (IsHidden(sptr) && sptr->user->virthost)
+	if (sptr->user->virthost)
+	{
 		MyFree(sptr->user->virthost);
-	sptr->user->virthost = MyMalloc(strlen(host) + 1);
-	ircsprintf(sptr->user->virthost, "%s", host);
+		sptr->user->virthost = NULL;
+	}
+	sptr->user->virthost = strdup(host);
 	if (MyConnect(sptr))
 		sendto_serv_butone_token(&me, sptr->name, MSG_SETHOST,
 		    TOK_SETHOST, "%s", sptr->user->virthost);
@@ -93,7 +97,7 @@ long set_usermode(char *umode)
 {
 	int  newumode;
 	int  what;
-	char **p, *m;
+	char *m;
 	int i;
 
 	newumode = 0;
@@ -198,8 +202,7 @@ long set_usermode(char *umode)
 
 unsigned char *StripColors(unsigned char *text) {
 	int nc = 0, col = 0, i = 0, len = strlen(text);
-	unsigned char *new_str = malloc(len + 2);
-
+	static unsigned char new_str[4096];
 	while (len > 0) {
 		if ((col && isdigit(*text) && nc < 2) || (col && *text == ',' && nc < 3)) {
 			nc++;
@@ -238,9 +241,7 @@ char umodestring[UMODETABLESZ+1];
 **		HandleMatchingClient;
 **
 */
-aClient *next_client(next, ch)
-	aClient *next;		/* First client to check */
-	char *ch;		/* search string (may include wilds) */
+aClient *next_client(aClient *next, char *ch)
 {
 	aClient *tmp = next;
 
@@ -398,11 +399,10 @@ int  hunt_server_token(aClient *cptr, aClient *sptr, char *command, char *token,
 			return HUNTED_ISME;
 		if (match(acptr->name, parv[server]))
 			parv[server] = acptr->name;
-		if (IsToken(acptr)) {
+		if (IsToken(acptr->from)) {
 			sprintf(buff, ":%s %s ", parv[0], token);
 			strcat(buff, params);
-			sendto_one(acptr, buff, parv[1], parv[2],
-			parv[3], parv[4], parv[5], parv[6], parv[7], parv[8]);
+			sendto_one(acptr, buff, parv[1], parv[2], parv[3], parv[4], parv[5], parv[6], parv[7], parv[8]);
 		}
 		else {
 			sprintf(buff, ":%s %s ", parv[0], command);
@@ -455,13 +455,15 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 	{
 		sptr->since += TARGET_DELAY; /* lag them up */
 		sptr->nexttarget += TARGET_DELAY;
+		sendto_one(sptr, err_str(ERR_TARGETTOOFAST), me.name, sptr->name,
+			name);
 
 		return 1;
 	}
 
 	if (TStime() > sptr->nexttarget + TARGET_DELAY*MAXTARGETS)
 	{
-		sptr->nexttarget = TStime() + TARGET_DELAY*MAXTARGETS;
+		sptr->nexttarget = TStime() - TARGET_DELAY*MAXTARGETS;
 	}
 
 	sptr->nexttarget += TARGET_DELAY;
@@ -579,8 +581,7 @@ int  do_nick_name(char *pnick)
 
 
 #else
-int  do_nick_name(nick)
-	char *nick;
+int  do_nick_name(char *nick)
 {
 	char *ch;
 
@@ -603,8 +604,7 @@ int  do_nick_name(nick)
 ** reduce a string of duplicate list entries to contain only the unique
 ** items.  Unavoidably O(n^2).
 */
-extern char *canonize(buffer)
-	char *buffer;
+extern char *canonize(char *buffer)
 {
 	static char cbuf[BUFSIZ];
 	char *s, *t, *cp = cbuf;
@@ -645,7 +645,7 @@ extern char *canonize(buffer)
 
 extern char cmodestring[512];
 
-int  m_post(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_post)
 {
 	char *tkllayer[9] = {
 		me.name,	/*0  server.name */
@@ -676,7 +676,7 @@ int  m_post(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	tkllayer[4] = hostip;
 	tkllayer[5] = me.name;
-	ircsprintf(mo, "%li", iConf.socksbantime + TStime());
+	ircsprintf(mo, "%li", 0 + TStime());
 	ircsprintf(mo2, "%li", TStime());
 	tkllayer[6] = mo;
 	tkllayer[7] = mo2;
@@ -708,13 +708,10 @@ int  m_post(aClient *cptr, aClient *sptr, int parc, char *parv[])
 extern aTKline *tklines;
 extern int badclass;
 
-extern int register_user(cptr, sptr, nick, username, umode, virthost)
-	aClient *cptr;
-	aClient *sptr;
-	char *nick, *username, *virthost, *umode;
+extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost)
 {
 	ConfigItem_ban *bconf;
-	char *parv[3], *tmpstr, *encr;
+	char *parv[3], *tmpstr;
 #ifdef HOSTILENAME
 	char stripuser[USERLEN + 1], *u1 = stripuser, *u2, olduser[USERLEN + 1],
 	    userbad[USERLEN * 2 + 1], *ubad = userbad, noident = 0;
@@ -723,8 +720,7 @@ extern int register_user(cptr, sptr, nick, username, umode, virthost)
 	anUser *user = sptr->user;
 	aClient *nsptr;
 	int  i;
-	char mo[256], mo2[256];
-	char *tmpx;
+	char mo[256];
 	char *tkllayer[9] = {
 		me.name,	/*0  server.name */
 		"+",		/*1  +|- */
@@ -1008,9 +1004,12 @@ extern int register_user(cptr, sptr, nick, username, umode, virthost)
 		if (virthost && *virthost != '*')
 		{
 			if (sptr->user->virthost)
+			{
 				MyFree(sptr->user->virthost);
-			sptr->user->virthost = MyMalloc(strlen(virthost) + 1);
-			ircsprintf(sptr->user->virthost, virthost);
+				sptr->user->virthost = NULL;
+			}
+			/* Here pig.. yeah you .. -Stskeeps */
+			sptr->user->virthost = strdup(virthost);
 		}
 	}
 
@@ -1094,13 +1093,10 @@ extern int register_user(cptr, sptr, nick, username, umode, virthost)
 **	parv[9] = virthost, * if none
 **	parv[10] = info
 */
-int  m_nick(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_nick)
 {
 	ConfigItem_ban *aconf;
-	aClient *acptr, *serv;
+	aClient *acptr, *serv = NULL;
 	aClient *acptrs;
 	char nick[NICKLEN + 2], *s;
 	Membership *mp;
@@ -1170,7 +1166,7 @@ int  m_nick(cptr, sptr, parc, parv)
 	 */
 	if (IsServer(cptr) &&
 	    (parc > 7
-	    && (!(serv = (aClient *)find_server_b64_or_real(parv[6], NULL))
+	    && (!(serv = (aClient *)find_server_b64_or_real(parv[6]))
 	    || serv->from != cptr->from)))
 	{
 		sendto_realops("Cannot find server %s (%s)", parv[6],
@@ -1612,8 +1608,8 @@ int  m_nick(cptr, sptr, parc, parv)
 		 */
 		if (mycmp(parv[0], nick) ||
 		    /* Next line can be removed when all upgraded  --Run */
-		    !MyClient(sptr) && parc > 2
-		    && TS2ts(parv[2]) < sptr->lastnick)
+		    (!MyClient(sptr) && parc > 2
+		    && TS2ts(parv[2]) < sptr->lastnick))
 			sptr->lastnick = (MyClient(sptr)
 			    || parc < 3) ? TStime() : TS2ts(parv[2]);
 		if (sptr->lastnick < 0)
@@ -1779,10 +1775,7 @@ char *get_modestr(long umodes)
 **	parv[3] = server host name (used only from other servers)
 **	parv[4] = users real name info
 */
-int  m_user(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_user)
 {
 #define	UFLAGS	(UMODE_INVISIBLE|UMODE_WALLOP|UMODE_SERVNOTICE)
 	char *username, *host, *server, *realname, *umodex = NULL, *virthost =
@@ -1883,12 +1876,9 @@ int  m_user(cptr, sptr, parc, parv)
 	if (sptr->name[0] && (IsServer(cptr) ? 1 : IsNotSpoof(sptr)))
 		/* NICK and no-spoof already received, now we have USER... */
 	{
-		int  xx;
-
-		xx =
+		return(
 		    register_user(cptr, sptr, sptr->name, username, umodex,
-		    virthost);
-		return xx;
+		    virthost));
 	}
 	else
 		strncpyzt(sptr->user->username, username, USERLEN + 1);
@@ -1909,10 +1899,7 @@ int  m_user(cptr, sptr, parc, parv)
 **	parv[0] = sender prefix
 **	parv[1] = password
 */
-int  m_pass(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_pass)
 {
 	char *password = parc > 1 ? parv[1] : NULL;
 	int  PassLen = 0;
@@ -1944,10 +1931,7 @@ int  m_pass(cptr, sptr, parc, parv)
  * information only (no spurious AWAY labels or channels).
  * Re-written by Dianora 1999
  */
-int  m_userhost(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_userhost)
 {
 
 	char *p;		/* scratch end pointer */
@@ -2014,10 +1998,7 @@ int  m_userhost(cptr, sptr, parc, parv)
  * ISON :nicklist
  */
 
-int  m_ison(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_ison)
 {
 	char namebuf[USERLEN + HOSTLEN + 4];
 	aClient *acptr;
@@ -2040,7 +2021,7 @@ int  m_ison(cptr, sptr, parc, parv)
 #endif
 	for (s = strtoken(&p, *++pav, " "); s; s = strtoken(&p, NULL, " "))
 	{
-		if (user = index(s, '!'))
+		if ((user = index(s, '!')))
 			*user++ = '\0';
 		if ((acptr = find_person(s, NULL)))
 		{
@@ -2093,24 +2074,7 @@ void set_snomask(aClient *sptr, char *snomask) {
 		}
 	}
 	if (!IsAnOper(sptr)) {
-		if (sptr->user->snomask & SNO_CLIENT)
-			sptr->user->snomask &= ~SNO_CLIENT;
-		if (sptr->user->snomask & SNO_FCLIENT)
-			sptr->user->snomask &= ~SNO_FCLIENT;
-		if (sptr->user->snomask & SNO_FLOOD)
-			sptr->user->snomask &= ~SNO_FLOOD;
-		if (sptr->user->snomask & SNO_JUNK)
-			sptr->user->snomask &= ~SNO_JUNK;
-		if (sptr->user->snomask & SNO_EYES)
-			sptr->user->snomask &= ~SNO_EYES;
-		if (sptr->user->snomask & SNO_VHOST)
-			sptr->user->snomask &= ~SNO_VHOST;
-		if (sptr->user->snomask & SNO_TKL)
-			sptr->user->snomask &= ~SNO_TKL;
-		if (sptr->user->snomask & SNO_NICKCHANGE)
-			sptr->user->snomask &= ~SNO_NICKCHANGE;
-		if (sptr->user->snomask & SNO_QLINE)
-			sptr->user->snomask &= ~SNO_QLINE;
+		sptr->user->snomask &= (SNO_NONOPERS);
 	}
 }
 
@@ -2120,13 +2084,12 @@ void set_snomask(aClient *sptr, char *snomask) {
  * parv[1] - username to change mode for
  * parv[2] - modes to change
  */
-int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_umode)
 {
-	int  flag;
 	int  i;
 	char **p, *m;
 	aClient *acptr;
-	int  what, setflags, setsnomask;
+	int  what, setflags, setsnomask = 0;
 	short rpterror = 0;
 
 	what = MODE_ADD;
@@ -2234,11 +2197,11 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						  sptr->umodes &= ~Usermode_Table[i].mode;
 					  break;
 				  }
-				  if (flag == 0 && MyConnect(sptr) && !rpterror)
-				  {
-					  sendto_one(sptr,
-					      err_str(ERR_UMODEUNKNOWNFLAG),
-					      me.name, parv[0]);
+			  	  else if (i == Usermode_highest && MyConnect(sptr) && !rpterror)
+  			  	  {
+				  	sendto_one(sptr,
+				      		err_str(ERR_UMODEUNKNOWNFLAG),
+				      		me.name, parv[0]);
 					  rpterror = 1;
 				  }
 			  }
@@ -2380,9 +2343,21 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (IsHidden(sptr) && !(setflags & UMODE_HIDE))
 	{
-		sptr->user->virthost =
-		    (char *)make_virthost(sptr->user->realhost,
+		if (sptr->user->virthost)
+		{
+			MyFree(sptr->user->virthost);
+			sptr->user->virthost = NULL;
+		}
+		sptr->user->virthost = (char *)make_virthost(sptr->user->realhost,
 		    sptr->user->virthost, 1);
+	}
+	if (!IsHidden(sptr) && (setflags & UMODE_HIDE))
+	{
+			if (sptr->user->virthost)
+			{
+				MyFree(sptr->user->virthost);
+				sptr->user->virthost = NULL;
+			}
 	}
 	/*
 	 * If I understand what this code is doing correctly...
@@ -2450,10 +2425,7 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
     Small wrapper to bandwidth save
 */
 
-int  m_umode2(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_umode2)
 {
 	char *xparv[5] = {
 		parv[0],
@@ -2465,7 +2437,7 @@ int  m_umode2(cptr, sptr, parc, parv)
 
 	if (!parv[1])
 		return 0;
-	m_umode(cptr, sptr, parv[3] ? 4 : 3, xparv);
+	return m_umode(cptr, sptr, parv[3] ? 4 : 3, xparv);
 }
 
 
@@ -2473,10 +2445,7 @@ int  m_umode2(cptr, sptr, parc, parv)
  * send the MODE string for user (user) to connection cptr
  * -avalon
  */
-void send_umode(cptr, sptr, old, sendmask, umode_buf)
-	aClient *cptr, *sptr;
-	long old, sendmask;
-	char *umode_buf;
+void send_umode(aClient *cptr, aClient *sptr, long old, long sendmask, char *umode_buf)
 {
 	int i;
 	long flag;
@@ -2529,9 +2498,7 @@ void send_umode(cptr, sptr, old, sendmask, umode_buf)
 /*
  * added Sat Jul 25 07:30:42 EST 1992
  */
-void send_umode_out(cptr, sptr, old)
-	aClient *cptr, *sptr;
-	long old;
+void send_umode_out(aClient *cptr, aClient *sptr, long old)
 {
 	int  i;
 	aClient *acptr;
@@ -2540,7 +2507,7 @@ void send_umode_out(cptr, sptr, old)
 
 	for (i = LastSlot; i >= 0; i--)
 		if ((acptr = local[i]) && IsServer(acptr) &&
-		    (acptr != cptr) && (acptr != sptr) && *buf)
+		    (acptr != cptr) && (acptr != sptr) && *buf) {
 			if (!SupportUMODE2(acptr))
 			{
 				sendto_one(acptr, ":%s MODE %s :%s",
@@ -2553,14 +2520,13 @@ void send_umode_out(cptr, sptr, old)
 				    (IsToken(acptr) ? TOK_UMODE2 : MSG_UMODE2),
 				    buf);
 			}
+		}
 	if (cptr && MyClient(cptr))
 		send_umode(cptr, sptr, old, ALL_UMODES, buf);
 
 }
 
-void send_umode_out_nickv2(cptr, sptr, old)
-	aClient *cptr, *sptr;
-	long old;
+void send_umode_out_nickv2(aClient *cptr, aClient *sptr, long old)
 {
 	int  i;
 	aClient *acptr;
@@ -2582,9 +2548,7 @@ void send_umode_out_nickv2(cptr, sptr, old)
 
 
 
-int  del_silence(sptr, mask)
-	aClient *sptr;
-	char *mask;
+int  del_silence(aClient *sptr, char *mask)
 {
 	Link **lp;
 	Link *tmp;
@@ -2601,9 +2565,7 @@ int  del_silence(sptr, mask)
 	return -1;
 }
 
-static int add_silence(sptr, mask)
-	aClient *sptr;
-	char *mask;
+static int add_silence(aClient *sptr, char *mask)
 {
 	Link *lp;
 	int  cnt = 0, len = 0;
@@ -2645,19 +2607,16 @@ static int add_silence(sptr, mask)
 **      parv[2] = mask
 */
 
-int  m_silence(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_silence)
 {
 	Link *lp;
 	aClient *acptr;
 	char c, *cp;
 
+	acptr = sptr;
 
 	if (MyClient(sptr))
 	{
-		acptr = sptr;
 		if (parc < 2 || *parv[1] == '\0'
 		    || (acptr = find_person(parv[1], NULL)))
 		{
@@ -2731,10 +2690,7 @@ int  m_silence(cptr, sptr, parc, parv)
 	parv[1] - nick to make join
 	parv[2] - channel(s) to join
 */
-int  m_svsjoin(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_svsjoin)
 {
 	aClient *acptr;
 	if (!IsULine(sptr))
@@ -2764,10 +2720,7 @@ int  m_svsjoin(cptr, sptr, parc, parv)
 	parv[1] - nick to make join
 	parv[2] - channel(s) to join
 */
-int  m_sajoin(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_sajoin)
 {
 	aClient *acptr;
 	if (!IsSAdmin(sptr) && !IsULine(sptr))
@@ -2813,10 +2766,7 @@ int  m_sajoin(cptr, sptr, parc, parv)
 	parv[1] - nick to make part
 	parv[2] - channel(s) to part
 */
-int  m_svspart(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_svspart)
 {
 	aClient *acptr;
 	if (!IsULine(sptr))
@@ -2845,10 +2795,7 @@ int  m_svspart(cptr, sptr, parc, parv)
 	parv[1] - nick to make part
 	parv[2] - channel(s) to part
 */
-int  m_sapart(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_sapart)
 {
 	aClient *acptr;
 	if (!IsSAdmin(sptr) && !IsULine(sptr))

@@ -37,6 +37,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 
 ID_Copyright("(C) Carsten Munk 1999");
 
@@ -95,7 +96,7 @@ void report_flines(aClient *sptr)
 {
 	ConfigItem_deny_dcc *tmp;
 	char *filemask, *reason;
-	char a;
+	char a = 0;
 
 	for (tmp = conf_deny_dcc; tmp; tmp = (ConfigItem_deny_dcc *) tmp->next)
 	{
@@ -143,7 +144,6 @@ void	DCCdeny_del(ConfigItem_deny_dcc *deny)
 
 int m_dccdeny(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	ConfigItem_deny_dcc	*deny;
 	if (!MyClient(sptr))
 		return 0;
 
@@ -176,6 +176,7 @@ int m_dccdeny(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	else
 		sendto_one(sptr, "NOTICE %s :*** %s already has a dccdeny", parv[0],
 		    parv[1]);
+	return 0;
 }
 
 /* Remove a temporary dccdeny line
@@ -227,24 +228,25 @@ int m_undccdeny(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr,
 		    "NOTICE %s :*** Unable to find a temp dccdeny matching %s",
 		    parv[0], parv[1]);
+	return 0;
 
 }
 
 void dcc_wipe_services(void)
 {
-	ConfigItem_deny_dcc *dconf, t;
+	ConfigItem_deny_dcc *dconf, *next;
 	
-	for (dconf = conf_deny_dcc; dconf; dconf = (ConfigItem_deny_dcc *) dconf->next)
+	for (dconf = conf_deny_dcc; dconf; dconf = (ConfigItem_deny_dcc *) next)
 	{
+		next = (ConfigItem_deny_dcc *)dconf->next;
 		if ((dconf->flag.type2 == CONF_BAN_TYPE_AKILL))
 		{
-			t.next = (ConfigItem *)DelListItem(dconf, conf_deny_dcc);
+			DelListItem(dconf, conf_deny_dcc);
 			if (dconf->filename)
 				MyFree(dconf->filename);
 			if (dconf->reason)
 				MyFree(dconf->reason);
 			MyFree(dconf);
-			dconf = &t;
 		}
 	}
 
@@ -303,6 +305,7 @@ int  m_svsfline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	  }
 
 	}
+	return 0;
 }
 
 /* restrict channel stuff */
@@ -348,6 +351,8 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	user = parv[1];
 	pwd = parv[2];
+	if (strlen(user) > HOSTLEN)
+		*(user + HOSTLEN) = '\0';
 
 	if (!(vhost = Find_vhost(user))) {
 		sendto_snomask(SNO_VHOST,
@@ -380,7 +385,10 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		char olduser[USERLEN+1];
 		if (sptr->user->virthost)
+		{
 			MyFree(sptr->user->virthost);
+			sptr->user->virthost = NULL;
+		}
 		len = strlen(vhost->virthost);
 		length =  len > HOSTLEN ? HOSTLEN : len;
 		sptr->user->virthost = MyMalloc(length + 1);
@@ -443,7 +451,7 @@ void ircd_log(int flags, char *format, ...)
 #ifndef _WIN32
 				fd = open(logs->file, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR);
 #else
-				fd = open(logs->file, O_CREAT|O_WRONLY|O_TRUNC);
+				fd = open(logs->file, O_CREAT|O_WRONLY|O_TRUNC, S_IREAD|S_IWRITE);
 #endif
 				if (fd == -1)
 					continue;
@@ -453,7 +461,7 @@ void ircd_log(int flags, char *format, ...)
 #ifndef _WIN32
 			fd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY, S_IRUSR|S_IWUSR);
 #else
-			fd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY);
+			fd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY, S_IREAD|S_IWRITE);
 #endif
 			if (fd == -1)
 				continue;

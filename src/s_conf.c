@@ -45,11 +45,12 @@
 #include "badwords.h"
 #endif
 #include "h.h"
+#include "inet.h"
+#include "proto.h"
 #ifdef _WIN32
 #undef GLOBH
 #endif
 
-extern char *my_itoa(long i);
 /*
  * TODO:
  *  - deny version {} (V:lines)
@@ -343,14 +344,13 @@ int conf_yesno(char *value) {
 long conf_size(char *value) {
 	char *numbuf;
 	char *buf = value;
-	int i;
 	long num = 0;
+	int i;
 	if (!buf)
 		return 0;
 
-	numbuf = malloc(strlen(value));
-
-	for (i = 0;*buf; *buf++) {
+	numbuf = MyMalloc(strlen(value));
+	for (i = 0;*buf; buf++) {
 		if (isdigit(*buf)) {
 			numbuf[i++] = *buf;
 			continue;
@@ -440,10 +440,11 @@ void config_progress(char *format, ...)
 
 void clear_unknown() {
 	ConfigItem_unknown *p;
-	ListStruct t;
+	ListStruct *next;
 	ConfigItem_unknown_ext *q;
 
-	for (p = conf_unknown; p; p = (ConfigItem_unknown *)p->next) {
+	for (p = conf_unknown; p; p = (ConfigItem_unknown *)next) {
+		next = (ListStruct *)p->next;
 		if (!strcmp(p->ce->ce_varname, "ban")) 
 			config_status("%s:%i: unknown ban type %s",
 				p->ce->ce_fileptr->cf_filename, p->ce->ce_varlinenum,
@@ -465,17 +466,16 @@ void clear_unknown() {
 				p->ce->ce_fileptr->cf_filename, p->ce->ce_varlinenum,
 				p->ce->ce_varname); 
 
-		t.next = DelListItem(p, conf_unknown);
+		DelListItem(p, conf_unknown);
 		MyFree(p);
-		p = (ConfigItem_unknown *)&t;
 	}
-	for (q = conf_unknown_set; q; q = (ConfigItem_unknown_ext *)q->next) {
+	for (q = conf_unknown_set; q; q = (ConfigItem_unknown_ext *)next) {
+		next = (ListStruct *)q->next;
 		config_status("%s:%i: unknown directive set::%s",
 			q->ce_fileptr->cf_filename, q->ce_varlinenum,
 			q->ce_varname);
-		t.next = DelListItem(q, conf_unknown_set);
+		DelListItem(q, conf_unknown_set);
 		MyFree(q);
-		q = (ConfigItem_unknown_ext *)&t;
 	}
 }
 
@@ -492,7 +492,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 	ConfigFile	*curcf;
 	ConfigFile	*lastcf;
 
-	lastcf = curcf = (ConfigFile *)malloc(sizeof(ConfigFile));
+	lastcf = curcf = MyMalloc(sizeof(ConfigFile));
 	memset(curcf, 0, sizeof(ConfigFile));
 	curcf->cf_filename = strdup(filename);
 	lastce = &(curcf->cf_entries);
@@ -647,16 +647,16 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					}
 					else
 					{
-						curce->ce_vardata = (char *)malloc(ptr-start+1);
+						curce->ce_vardata = MyMalloc(ptr-start+1);
 						strncpy(curce->ce_vardata, start, ptr-start);
 						curce->ce_vardata[ptr-start] = '\0';
 					}
 				}
 				else
 				{
-					curce = (ConfigEntry *)malloc(sizeof(ConfigEntry));
+					curce = MyMalloc(sizeof(ConfigEntry));
 					memset(curce, 0, sizeof(ConfigEntry));
-					curce->ce_varname = (char *)malloc((ptr-start)+1);
+					curce->ce_varname = MyMalloc((ptr-start)+1);
 					strncpy(curce->ce_varname, start, ptr-start);
 					curce->ce_varname[ptr-start] = '\0';
 					curce->ce_varlinenum = linenumber;
@@ -710,16 +710,16 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					}
 					else
 					{
-						curce->ce_vardata = (char *)malloc(ptr-start+1);
+						curce->ce_vardata = MyMalloc(ptr-start+1);
 						strncpy(curce->ce_vardata, start, ptr-start);
 						curce->ce_vardata[ptr-start] = '\0';
 					}
 				}
 				else
 				{
-					curce = (ConfigEntry *)malloc(sizeof(ConfigEntry));
+					curce = MyMalloc(sizeof(ConfigEntry));
 					memset(curce, 0, sizeof(ConfigEntry));
-					curce->ce_varname = (char *)malloc((ptr-start)+1);
+					curce->ce_varname = MyMalloc((ptr-start)+1);
 					strncpy(curce->ce_varname, start, ptr-start);
 					curce->ce_varname[ptr-start] = '\0';
 					curce->ce_varlinenum = linenumber;
@@ -811,7 +811,7 @@ ConfigFile *config_load(char *filename)
 		close(fd);
 		return NULL;
 	}
-	buf = (char *)malloc(sb.st_size+1);
+	buf = MyMalloc(sb.st_size+1);
 	if (buf == NULL)
 	{
 		config_error("Out of memory trying to load \"%s\"\n", filename);
@@ -857,7 +857,7 @@ int	init_conf2(char *filename)
 
 
 	config_progress("Opening config file %s .. ", filename);
-	if (cfptr = config_load(filename))
+	if ((cfptr = config_load(filename)))
 	{
 		ConfigItem_include *includes;
 		config_progress("Config file %s loaded without problems",
@@ -923,12 +923,13 @@ int	ConfigCmd(ConfigFile *cf, ConfigEntry *ce, ConfigCommand *cc)
 		}
 		if (!ccp->name)
 		{
-			ConfigItem_unknown *ca = (ConfigItem_unknown *)malloc(sizeof(ConfigItem_unknown));
+			ConfigItem_unknown *ca = MyMalloc(sizeof(ConfigItem_unknown));
 			ca->ce = cep;			
 			/* Add to the unknown list */
 			DelListItem(ca, conf_unknown);
 		}
 	}
+	return 0;
 }
 
 /* This simply starts the parsing of a config file from top level
@@ -936,9 +937,8 @@ int	ConfigCmd(ConfigFile *cf, ConfigEntry *ce, ConfigCommand *cc)
 */
 int	ConfigParse(ConfigFile *cfptr)
 {
-	ConfigEntry	*ce = NULL;
-
 	ConfigCmd(cfptr, cfptr->cf_entries, _ConfigCommands);
+	return 0;
 }
 
 /* Here is the command parsing instructions */
@@ -999,7 +999,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 		return -1;
 	}
 	if (cPath) {
-		path = malloc(strlen(cPath) + strlen(FindData.cFileName)+1);
+		path = MyMalloc(strlen(cPath) + strlen(FindData.cFileName)+1);
 		strcpy(path,cPath);
 		strcat(path,FindData.cFileName);
 		init_conf2(path);
@@ -1009,7 +1009,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 		init_conf2(FindData.cFileName);
 	while (FindNextFile(hFind, &FindData) != 0) {
 		if (cPath) {
-			path = malloc(strlen(cPath) + strlen(FindData.cFileName)+1);
+			path = MyMalloc(strlen(cPath) + strlen(FindData.cFileName)+1);
 			strcpy(path,cPath);
 			strcat(path,FindData.cFileName);
 			init_conf2(path);
@@ -1023,6 +1023,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 #else
 	return (init_conf2(ce->ce_vardata));
 #endif
+	return 0;
 }
 /*
  * The admin {} block parser
@@ -1047,6 +1048,7 @@ int	_conf_admin(ConfigFile *conf, ConfigEntry *ce)
 		ircstrdup(ca->line, cep->ce_varname);
 		AddListItem(ca, conf_admin);
 	}
+	return 0;
 }
 
 /*
@@ -1070,6 +1072,7 @@ int	_conf_ulines(ConfigFile *conf, ConfigEntry *ce)
 		ircstrdup(ca->servername, cep->ce_varname);
 		AddListItem(ca, conf_ulines);
 	}
+	return 0;
 }
 
 /*
@@ -1090,7 +1093,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 
 	if (!(class = Find_class(ce->ce_vardata)))
 	{
-		class = (ConfigItem_class *) MyMallocEx(sizeof(ConfigItem_class));
+		class = MyMallocEx(sizeof(ConfigItem_class));
 		ircstrdup(class->name, ce->ce_vardata);
 		isnew = 1;
 	}
@@ -1163,6 +1166,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if (isnew)
 		AddListItem(class, conf_class);
+	return 0;
 }
 
 /*
@@ -1174,7 +1178,7 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 
 	if (!conf_me)
 	{
-		conf_me = (ConfigItem_me *) MyMallocEx(sizeof(ConfigItem_me));
+		conf_me = MyMallocEx(sizeof(ConfigItem_me));
 	}
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -1200,7 +1204,7 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 			ircstrdup(conf_me->name, cep->ce_vardata);
 			if (!strchr(conf_me->name, '.'))
 			{
-				fixedname = malloc(strlen(conf_me->name)+5);
+				fixedname = MyMalloc(strlen(conf_me->name)+5);
 				ircsprintf(fixedname, "irc.%s.com", conf_me->name);
 				config_status("%s:%i: illegal me::name, missing ., using default of %s",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, fixedname);
@@ -1233,6 +1237,7 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_varname);
 		}
 	}
+	return 0;
 }
 
 int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
@@ -1325,7 +1330,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 
 	if (!(oper = Find_oper(ce->ce_vardata)))
 	{
-		oper = (ConfigItem_oper *) MyMallocEx(sizeof(ConfigItem_oper));
+		oper =  MyMallocEx(sizeof(ConfigItem_oper));
 		oper->name = strdup(ce->ce_vardata);
 		isnew = 1;
 	}
@@ -1451,7 +1456,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 					}
 					if (!strcmp(cepp->ce_varname, "userhost"))
 					{
-						from = (ConfigItem_oper_from *)MyMallocEx(sizeof(ConfigItem_oper_from));
+						from = MyMallocEx(sizeof(ConfigItem_oper_from));
 						ircstrdup(from->name, cepp->ce_vardata);
 						AddListItem(from, oper->from);
 					}
@@ -1477,6 +1482,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if (isnew)
 		AddListItem(oper, conf_oper);
+	return 0;
 }
 
 
@@ -1485,7 +1491,7 @@ int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 
 	if (!conf_drpass) {
-		conf_drpass = (ConfigItem_drpass *) MyMallocEx(sizeof(ConfigItem_drpass));
+		conf_drpass =  MyMallocEx(sizeof(ConfigItem_drpass));
 	}
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -1522,6 +1528,7 @@ int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
 				 cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 				 cep->ce_varname);
 	}
+	return 0;
 }
 
 int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
@@ -1576,6 +1583,7 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 	AddListItem(ca, conf_tld);
+	return 0;
 }
 
 /*
@@ -1588,7 +1596,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_listen *listen = NULL;
 	OperFlag    *ofp;
 	char	    copy[256];
-	char	    *ip, *p;
+	char	    *ip;
 	char	    *port;
 	int	    iport;
 	unsigned char	isnew = 0;
@@ -1626,11 +1634,11 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_status("%s:%i: listen: illegal port (must be 0..65536)",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return;
+		return -1;
 	}
 	if (!(listen = Find_listen(ip, iport)))
 	{
-		listen = (ConfigItem_listen *) MyMallocEx(sizeof(ConfigItem_listen));
+		listen = MyMallocEx(sizeof(ConfigItem_listen));
 		listen->ip = strdup(ip);
 		listen->port = iport;
 		isnew = 1;
@@ -1697,6 +1705,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	if (isnew)
 		AddListItem(listen, conf_listen);
 	listen->flag.temporary = 0;
+	return 0;
 }
 
 /*
@@ -1717,14 +1726,14 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else
 		{
-			ConfigItem_unknown *ca2 = malloc(sizeof(ConfigItem_unknown));
+			ConfigItem_unknown *ca2 = MyMalloc(sizeof(ConfigItem_unknown));
 			ca2->ce = ce;
 			AddListItem(ca2, conf_unknown);
 			return -1;
 		}
 	}
 
-	allow = (ConfigItem_allow *) MyMallocEx(sizeof(ConfigItem_allow));
+	allow =  MyMallocEx(sizeof(ConfigItem_allow));
 	isnew = 1;
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -1785,6 +1794,7 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if (isnew)
 		AddListItem(allow, conf_allow);
+	return 0;
 }
 
 int	_conf_allow_channel(ConfigFile *conf, ConfigEntry *ce)
@@ -1827,6 +1837,7 @@ int	_conf_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 		AddListItem(allow, conf_allow_channel);
 		return 0;
 	}
+	return 0;
 }
 
 
@@ -1840,7 +1851,7 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_vhost *vhost;
 	unsigned char isnew = 0;
 	ConfigItem_oper_from *from;
-	vhost = (ConfigItem_vhost *) MyMallocEx(sizeof(ConfigItem_vhost));
+	vhost = MyMallocEx(sizeof(ConfigItem_vhost));
 	isnew = 1;
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -1882,7 +1893,7 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 					}
 					if (!strcmp(cepp->ce_varname, "userhost"))
 					{
-						from = (ConfigItem_oper_from *)MyMallocEx(sizeof(ConfigItem_oper_from));
+						from = MyMallocEx(sizeof(ConfigItem_oper_from));
 						ircstrdup(from->name, cepp->ce_vardata);
 						AddListItem(from, vhost->from);
 					}
@@ -1922,6 +1933,7 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if (isnew)
 		AddListItem(vhost, conf_vhost);
+	return 0;
 }
 
 int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
@@ -1931,7 +1943,7 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_except *ca;
 	unsigned char isnew = 0;
 
-	ca = (ConfigItem_except *) MyMallocEx(sizeof(ConfigItem_except));
+	ca = MyMallocEx(sizeof(ConfigItem_except));
 	isnew = 1;
 
 	if (!ce->ce_vardata)
@@ -1948,12 +1960,12 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 				ca->mask = strdup(cep->ce_vardata);
 			}
 			else {
-				config_status("%s:%i: unknown directive except::ban::%s",
+				config_status("%s:%i: unknown directive except ban::%s",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 					cep->ce_varname);
 			}
 		}
-		ca->flag.type = 1;
+		ca->flag.type = CONF_EXCEPT_BAN;
 		AddListItem(ca, conf_except);
 	}
 	else if (!strcmp(ce->ce_vardata, "scan")) {
@@ -1963,21 +1975,52 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 				ca->mask = strdup(cep->ce_vardata);
 			}
 			else {
-			config_status("%s:%i: unknown directive except::scan::%s",
+			config_status("%s:%i: unknown directive except scan::%s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				cep->ce_varname);
 			}
 		}
-		ca->flag.type = 0;
+		ca->flag.type = CONF_EXCEPT_SCAN;
 		AddListItem(ca, conf_except);
 
 	}
+	else if (!strcmp(ce->ce_vardata, "tkl")) {
+		for (cep = ce->ce_entries; cep; cep = cep->ce_next) {
+			if (!strcmp(cep->ce_varname, "mask")) {
+				ca->mask = strdup(cep->ce_vardata);
+			}
+			else if (!strcmp(cep->ce_varname, "type")) {
+				if (!strcmp(cep->ce_vardata, "gline"))
+					ca->type = TKL_KILL|TKL_GLOBAL;
+				else if (!strcmp(cep->ce_vardata, "gzline"))
+					ca->type = TKL_ZAP|TKL_GLOBAL;
+				else if (!strcmp(cep->ce_vardata, "shun"))
+					ca->type = TKL_SHUN|TKL_GLOBAL;
+				else if (!strcmp(cep->ce_vardata, "tkline"))
+					ca->type = TKL_KILL;
+				else if (!strcmp(cep->ce_vardata, "tzline"))
+					ca->type = TKL_ZAP;
+				else 
+					config_status("%s:%i: unknown except tkl type %s",
+						ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+						cep->ce_varname);
+			}
+			else
+					config_status("%s:%i: unknown directive except tkl::%s",
+						ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+						cep->ce_varname);
+
+		}
+		ca->flag.type = CONF_EXCEPT_TKL;
+		AddListItem(ca, conf_except);
+	}
 	else {
-		ConfigItem_unknown *ca2 = malloc(sizeof(ConfigItem_unknown));
+		ConfigItem_unknown *ca2 = MyMalloc(sizeof(ConfigItem_unknown));
 		MyFree(ca);
 		ca2->ce = ce;
 		AddListItem(ca2, conf_unknown);
 	}
+	return 0;
 }
 
 int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
@@ -1987,7 +2030,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_ban *ca;
 	unsigned char isnew = 0;
 
-	ca = (ConfigItem_ban *) MyMallocEx(sizeof(ConfigItem_ban));
+	ca = MyMallocEx(sizeof(ConfigItem_ban));
 	isnew = 1;
 
 	if (!ce->ce_vardata)
@@ -2008,7 +2051,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 		ca->flag.type = CONF_BAN_REALNAME;
 	else
 	{
-		ConfigItem_unknown *ca2 = malloc(sizeof(ConfigItem_unknown));
+		ConfigItem_unknown *ca2 = MyMalloc(sizeof(ConfigItem_unknown));
 		MyFree(ca);
 		ca2->ce = ce;
 		AddListItem(ca2, conf_unknown);
@@ -2040,6 +2083,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 	AddListItem(ca, conf_ban);
+	return 0;
 }
 
 int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
@@ -2147,6 +2191,13 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 		{
 			link->connpwd = strdup(cep->ce_vardata);
 		} else
+#ifdef USE_SSL
+		if (!strcmp(cep->ce_varname, "ciphers"))
+		{
+			link->ciphers = strdup(cep->ce_vardata);
+		}
+		else
+#endif
 		if (!strcmp(cep->ce_varname, "password-receive"))
 		{
 			link->recvauth = Auth_ConvertConf2AuthStruct(cep);
@@ -2173,6 +2224,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if (isnew)
 		AddListItem(link, conf_link);
+	return 0;
 }
 int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 {
@@ -2270,21 +2322,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			}
 			ircstrdup(prefix_quit, cep->ce_vardata);
 		}
-		else
-		if (!strcmp(cep->ce_varname, "socks")) {
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
-				CheckNull(cepp);
-				if (!strcmp(cepp->ce_varname, "ban-message")) {
-					ircstrdup(SOCKSBANMSG, cepp->ce_vardata);
-				}
-				else if (!strcmp(cepp->ce_varname, "quit-message")) {
-					ircstrdup(SOCKSQUITMSG, cepp->ce_vardata);
-				}
-				else if (!strcmp(cepp->ce_varname, "ban-time")) {
-					SOCKSBANTIME = atime(cepp->ce_vardata);
-				}
-			}
-		}
 		else if (!strcmp(cep->ce_varname, "dns")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				CheckNull(cepp);
@@ -2373,7 +2410,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else
 		{
-			ConfigItem_unknown_ext *ca2 = malloc(sizeof(ConfigItem_unknown_ext));
+			ConfigItem_unknown_ext *ca2 = MyMalloc(sizeof(ConfigItem_unknown_ext));
 			ca2->ce_fileptr = cep->ce_fileptr;
 			ca2->ce_varlinenum = cep->ce_varlinenum;
 			ca2->ce_vardata = cep->ce_vardata;
@@ -2385,6 +2422,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_varname); */
 		}
 	}
+	return 0;
 }
 #ifdef STRIPBADWORDS
 int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
@@ -2448,7 +2486,7 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 		AddListItem(ca, conf_badword_channel);
 	else if (!strcmp(ce->ce_vardata, "message"))
 		AddListItem(ca, conf_badword_message);
-
+	return 0;
 
 }
 #endif
@@ -2472,12 +2510,12 @@ int	_conf_deny(ConfigFile *conf, ConfigEntry *ce)
 		_conf_deny_version(conf, ce);
 	else
 	{
-		ConfigItem_unknown *ca2 = malloc(sizeof(ConfigItem_unknown));
+		ConfigItem_unknown *ca2 = MyMalloc(sizeof(ConfigItem_unknown));
 		ca2->ce = ce;
 		AddListItem(ca2, conf_unknown);
 		return -1;
 	}
-	return -1;
+	return 0;
 }
 
 int	_conf_deny_dcc(ConfigFile *conf, ConfigEntry *ce)
@@ -2525,6 +2563,7 @@ int	_conf_deny_dcc(ConfigFile *conf, ConfigEntry *ce)
 		AddListItem(deny, conf_deny_dcc);
 		return 0;
 	}
+	return 0;
 }
 
 int	_conf_deny_channel(ConfigFile *conf, ConfigEntry *ce)
@@ -2572,6 +2611,7 @@ int	_conf_deny_channel(ConfigFile *conf, ConfigEntry *ce)
 		AddListItem(deny, conf_deny_channel);
 		return 0;
 	}
+	return 0;
 }
 int	_conf_deny_link(ConfigFile *conf, ConfigEntry *ce)
 {
@@ -2635,6 +2675,7 @@ int	_conf_deny_link(ConfigFile *conf, ConfigEntry *ce)
 		AddListItem(deny, conf_deny_link);
 		return 0;
 	}
+	return 0;
 }
 
 int	_conf_deny_version(ConfigFile *conf, ConfigEntry *ce)
@@ -2687,6 +2728,7 @@ int	_conf_deny_version(ConfigFile *conf, ConfigEntry *ce)
 		AddListItem(deny, conf_deny_version);
 		return 0;
 	}
+	return 0;
 }
 
 int	_conf_log(ConfigFile *conf, ConfigEntry *ce)
@@ -2744,6 +2786,7 @@ int	_conf_log(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 	AddListItem(log, conf_log);
+	return 0;
 }
 
 int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
@@ -2818,28 +2861,29 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 		}
 			
 	}
-		if (BadPtr(alias->nick) && alias->type != ALIAS_COMMAND) {
-			ircstrdup(alias->nick, alias->alias); 
-		}
-		add_CommandX(alias->alias, NULL, m_alias, 1, M_USER|M_ALIAS);
-		AddListItem(alias, conf_alias);
+	if (BadPtr(alias->nick) && alias->type != ALIAS_COMMAND) {
+		ircstrdup(alias->nick, alias->alias); 
+	}
+	add_CommandX(alias->alias, NULL, m_alias, 1, M_USER|M_ALIAS);
+	AddListItem(alias, conf_alias);
+	return 0;
 }
 
 int	_conf_help(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigItem_help *help = NULL;
 	ConfigEntry 	    	*cep;
-	aMotd *last, *temp;
+	aMotd *last = NULL, *temp;
 
 	if (!ce->ce_entries) {
 		config_status("%s:%i: help entry without text",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return 0;
+		return -1;
 	}
 	if (Find_Help(ce->ce_vardata)) {
 		config_status("%s:%i: help for %s already exists",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata ? ce->ce_vardata : "index");
-		return 0;
+		return -1;
 	}
 	help = MyMalloc(sizeof(ConfigItem_help));
 	if (!ce->ce_vardata)
@@ -2860,6 +2904,7 @@ int	_conf_help(ConfigFile *conf, ConfigEntry *ce)
 		last = temp;
 	}
 	AddListItem(help, conf_help);
+	return 0;
 }
 
 
@@ -2900,6 +2945,9 @@ void	link_cleanup(ConfigItem_link *link_ptr)
 	ircfree(link_ptr->hubmask);
 	ircfree(link_ptr->leafmask);
 	ircfree(link_ptr->connpwd);
+#ifdef USE_SSL
+	ircfree(link_ptr->ciphers);
+#endif
 	Auth_DeleteAuthStruct(link_ptr->recvauth);
 	link_ptr->recvauth = NULL;
 }
@@ -2909,15 +2957,15 @@ void	listen_cleanup()
 {
 	int	i = 0;
 	ConfigItem_listen *listen_ptr;
-	ListStruct t;
-	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)listen_ptr->next)
+	ListStruct *next;
+	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)next)
 	{
+		next = (ListStruct *)listen_ptr->next;
 		if (listen_ptr->flag.temporary && !listen_ptr->clients)
 		{
 			ircfree(listen_ptr->ip);
-			t.next = DelListItem(listen_ptr, conf_listen);
+			DelListItem(listen_ptr, conf_listen);
 			MyFree(listen_ptr);
-			listen_ptr = (ConfigItem_listen *) &t;
 			i++;
 		}
 	}
@@ -2942,7 +2990,7 @@ void	validate_configuration(void)
 	ConfigItem_vhost *vhost_ptr;
 	ConfigItem_log *log_ptr;
 	ConfigItem_alias *alias_ptr;
-	ListStruct t;
+	ListStruct *next, *next2;
 	short hide_host = 1;
 	char *s;
 	struct in_addr in;
@@ -2965,16 +3013,16 @@ void	validate_configuration(void)
 	if (!KLINE_ADDRESS || (*KLINE_ADDRESS == '\0'))
 		Error("set::kline-address is missing");
 #ifndef DEVELOP
-	if (KLINE_ADDRESS) 
+	if (KLINE_ADDRESS) {
 		if (!strchr(KLINE_ADDRESS, '@') && !strchr(KLINE_ADDRESS, ':'))
 		{
 			Error(
-			    "set::kline-address is not an e-mail or an URL");
+			    "set::kline-address must be an e-mail or an URL");
 		}
 		else if (!match("*@unrealircd.com", KLINE_ADDRESS) || !match("*@unrealircd.org",KLINE_ADDRESS) || !match("unreal-*@lists.sourceforge.net",KLINE_ADDRESS)) 
 			Error(
 			   "set::kline-address may not be an UnrealIRCd Team address");
-	
+	}
 #endif
 	if ((MAXCHANNELSPERUSER < 1)) {
 		MAXCHANNELSPERUSER = 10;
@@ -3049,18 +3097,6 @@ void	validate_configuration(void)
 		Error("set::help-channel is missing");
 	if (Missing(STATS_SERVER))
 		Warning("set::stats-server is missing. /statserv is being disabled");
-	if (iConf.socksbantime < 10) {
-		Warning("set::socks::ban-time is invalid. Using default of 1 day");
-		iConf.socksbantime = 86400;
-	}
-	if (Missing(iConf.socksbanmessage)) {
-		Warning("set::socks::ban-message is missing. Using default of \"Insecure SOCKS server\"");
-		ircstrdup(iConf.socksbanmessage, "Insecure SOCKS server");
-	}
-	if (Missing(iConf.socksquitmessage)) {
-		Warning("set::socks::quit-message is missing. Using default of \"Insecure SOCKS server\"");
-		ircstrdup(iConf.socksquitmessage, "Insecure SOCKS server");
-	}
 	if ((CLOAK_KEY1 < 10000) || (CLOAK_KEY2 < 10000) || (CLOAK_KEY3 < 10000))
 	{
 		if (!CLOAK_KEY1 || !CLOAK_KEY2 || !CLOAK_KEY3)
@@ -3118,7 +3154,7 @@ void	validate_configuration(void)
 		if (!oper_ptr->from) {
 			Warning("oper %s: does not have a from record, using (unsafe) default of *@*",
 				oper_ptr->name);
-			oper_from = (ConfigItem_oper_from *)MyMallocEx(sizeof(ConfigItem_oper_from));
+			oper_from = MyMallocEx(sizeof(ConfigItem_oper_from));
 			ircstrdup(oper_from->name, "*@*");
 			AddListItem(oper_from, oper_ptr->from);	
 		}
@@ -3134,8 +3170,9 @@ void	validate_configuration(void)
 		}
 	}
 	
-	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)listen_ptr->next)
+	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)next)
 	{
+		next = (ListStruct *)listen_ptr->next;
 		if (BadPtr(listen_ptr->ip)) {
 			Warning("listen without ip, using default of *");
 			ircstrdup(listen_ptr->ip,"*");
@@ -3143,9 +3180,8 @@ void	validate_configuration(void)
 		if (!listen_ptr->port) {
 			Warning("listen port illegal. Deleting listen {} block");
 			ircfree(listen_ptr->ip);
-			t.next = DelListItem(listen_ptr, conf_listen);
+			DelListItem(listen_ptr, conf_listen);
 			MyFree(listen_ptr);
-			listen_ptr = (ConfigItem_listen *)&t;
 			continue;
 		}
 	}
@@ -3168,23 +3204,23 @@ void	validate_configuration(void)
 			allow_ptr->class = default_class;
 		}
 	}
-	for (except_ptr = conf_except; except_ptr; except_ptr = (ConfigItem_except *) except_ptr->next)
+	for (except_ptr = conf_except; except_ptr; except_ptr = (ConfigItem_except *)next)
 	{
+		next = (ListStruct *)except_ptr->next;
 		if (BadPtr(except_ptr->mask)) {
 			Warning("except mask missing. Deleting except {} block");
-			t.next = DelListItem(except_ptr, conf_except);
+			DelListItem(except_ptr, conf_except);
 			MyFree(except_ptr);
-			except_ptr = (ConfigItem_except *)&t;
 		}
 	}
-	for (ban_ptr = conf_ban; ban_ptr; ban_ptr = (ConfigItem_ban *) ban_ptr->next)
+	for (ban_ptr = conf_ban; ban_ptr; ban_ptr = (ConfigItem_ban *) next)
 	{
+		next = (ListStruct *)ban_ptr->next;
 		if (BadPtr(ban_ptr->mask)) {
 			Warning("ban mask missing. Deleting ban {} block");
 			ircfree(ban_ptr->reason);
-			t.next = DelListItem(ban_ptr, conf_ban);
+			DelListItem(ban_ptr, conf_ban);
 			MyFree(ban_ptr);
-			ban_ptr = (ConfigItem_ban *)&t;
 			continue;
 		}
 		if (BadPtr(ban_ptr->reason)) {
@@ -3193,15 +3229,15 @@ void	validate_configuration(void)
 		}
 			
 	}
-	for (link_ptr = conf_link; link_ptr; link_ptr = (ConfigItem_link *) link_ptr->next)
+	for (link_ptr = conf_link; link_ptr; link_ptr = (ConfigItem_link *) next)
 	{
+		next = (ListStruct *)link_ptr->next;
 		if (BadPtr(link_ptr->servername))
 		{
 			Warning("link without name. Deleting link {} block");
-			t.next = DelListItem(link_ptr, conf_link);
+			DelListItem(link_ptr, conf_link);
 			link_cleanup(link_ptr);
 			MyFree(link_ptr);
-			link_ptr = (ConfigItem_link *)&t;
 		}
 		else
 		{
@@ -3211,18 +3247,16 @@ void	validate_configuration(void)
 			}
 			if (BadPtr(link_ptr->hostname)) {
 				Warning("link with invalid hostname. Deleting link {} block");
-				t.next = DelListItem(link_ptr, conf_link);
+				DelListItem(link_ptr, conf_link);
 				link_cleanup(link_ptr);
 				MyFree(link_ptr);
-				link_ptr = (ConfigItem_link *)&t;
 				continue;
 			}
 			if (BadPtr(link_ptr->connpwd)) {
 				Warning("link with invalid password-connect. Deleting link {} block");
-				t.next = DelListItem(link_ptr, conf_link);
+				DelListItem(link_ptr, conf_link);
 				link_cleanup(link_ptr);
 				MyFree(link_ptr);
-				link_ptr = (ConfigItem_link *)&t;
 				continue;
 			}
 			if (!link_ptr->class) {
@@ -3238,22 +3272,22 @@ void	validate_configuration(void)
 		}
 		
 	}
-	for (tld_ptr = conf_tld; tld_ptr; tld_ptr = (ConfigItem_tld *) tld_ptr->next)
+	for (tld_ptr = conf_tld; tld_ptr; tld_ptr = (ConfigItem_tld *) next)
 	{
+		next = (ListStruct *)tld_ptr->next;
 		if (BadPtr(tld_ptr->mask)) {
 			Warning("tld without mask. Deleting tld {} block");
-			t.next = DelListItem(tld_ptr, conf_tld);
+			DelListItem(tld_ptr, conf_tld);
 			ircfree(tld_ptr->motd_file);
 			ircfree(tld_ptr->rules_file);
 			MyFree(tld_ptr);
-			tld_ptr = (ConfigItem_tld *)&t;
 			continue;
 		}
 	}
-	for (vhost_ptr = conf_vhost; vhost_ptr; vhost_ptr = (ConfigItem_vhost *)vhost_ptr->next) {
+	for (vhost_ptr = conf_vhost; vhost_ptr; vhost_ptr = (ConfigItem_vhost *)next) {
 		int nope = 0;
 		ConfigItem_oper_from *vhost_from;
-
+		next = (ListStruct *)vhost_ptr->next;
 		for (s = vhost_ptr->virthost; *s; s++)
 		{
 			if (!isallowed(*s)) {
@@ -3276,16 +3310,15 @@ void	validate_configuration(void)
 			ircfree(vhost_ptr->virthost);
 			ircfree(vhost_ptr->virtuser);
 			Auth_DeleteAuthStruct(vhost_ptr->auth);
-			for (vhost_from = (ConfigItem_oper_from *) vhost_ptr->from; vhost_from; vhost_from = (ConfigItem_oper_from *) vhost_from->next)
+			for (vhost_from = (ConfigItem_oper_from *) vhost_ptr->from; vhost_from; vhost_from = (ConfigItem_oper_from *) next2)
 			{
+				next2 = (ListStruct *)vhost_from->next;
 				ircfree(vhost_from->name);
-				t.next = DelListItem(vhost_from, vhost_ptr->from);
+				DelListItem(vhost_from, vhost_ptr->from);
 				MyFree(vhost_from);
-				vhost_from = (ConfigItem_oper_from *) &t;
 			}
-			t.next = DelListItem(vhost_ptr, conf_vhost);
+			DelListItem(vhost_ptr, conf_vhost);
 			MyFree(vhost_ptr);
-			vhost_ptr = (ConfigItem_vhost *)&t;
 		}
 
 	}
@@ -3381,7 +3414,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	ConfigItem_alias		*alias_ptr;
 	ConfigItem_include		*include_ptr;
 	ConfigItem_help			*help_ptr;
-	ListStruct 	t;
+	ListStruct 	*next, *next2;
 
 
 	flush_connections(&me);
@@ -3395,35 +3428,35 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 #endif
 	}
 	RunHook0(HOOKTYPE_REHASH);
-	for (admin_ptr = conf_admin; admin_ptr; admin_ptr = (ConfigItem_admin *) admin_ptr->next)
+	for (admin_ptr = conf_admin; admin_ptr; admin_ptr = (ConfigItem_admin *)next)
 	{
+		next = (ListStruct *)admin_ptr->next;
 		ircfree(admin_ptr->line);
-		t.next = DelListItem(admin_ptr, conf_admin);
+		DelListItem(admin_ptr, conf_admin);
 		MyFree(admin_ptr);
-		admin_ptr = (ConfigItem_admin *) &t;
 	}
 	/* wipe the fckers out ..*/
-	for (oper_ptr = conf_oper; oper_ptr; oper_ptr = (ConfigItem_oper *) oper_ptr->next)
+	for (oper_ptr = conf_oper; oper_ptr; oper_ptr = (ConfigItem_oper *)next)
 	{
 		ConfigItem_oper_from *oper_from;
-
+		next = (ListStruct *)oper_ptr->next;
 		ircfree(oper_ptr->name);
 		ircfree(oper_ptr->swhois);
 		ircfree(oper_ptr->snomask);
 		Auth_DeleteAuthStruct(oper_ptr->auth);
-		for (oper_from = (ConfigItem_oper_from *) oper_ptr->from; oper_from; oper_from = (ConfigItem_oper_from *) oper_from->next)
+		for (oper_from = (ConfigItem_oper_from *) oper_ptr->from; oper_from; oper_from = (ConfigItem_oper_from *) next2)
 		{
+			next2 = (ListStruct *)oper_from->next;
 			ircfree(oper_from->name);
-			t.next = DelListItem(oper_from, oper_ptr->from);
+			DelListItem(oper_from, oper_ptr->from);
 			MyFree(oper_from);
-			oper_from = (ConfigItem_oper_from *) &t;
 		}
-		t.next = DelListItem(oper_ptr, conf_oper);
+		DelListItem(oper_ptr, conf_oper);
 		MyFree(oper_ptr);
-		oper_ptr = (ConfigItem_oper *) &t;
 	}
-	for (class_ptr = conf_class; class_ptr; class_ptr = (ConfigItem_class *) class_ptr->next)
+	for (class_ptr = conf_class; class_ptr; class_ptr = (ConfigItem_class *) next)
 	{
+		next = (ListStruct *)class_ptr->next;
 		if (class_ptr->flag.permanent == 1)
 			continue;
 		class_ptr->flag.temporary = 1;
@@ -3431,54 +3464,53 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		if (!class_ptr->clients)
 		{
 			ircfree(class_ptr->name);
-			t.next = DelListItem(class_ptr, conf_class);
+			DelListItem(class_ptr, conf_class);
 			MyFree(class_ptr);
-			class_ptr = (ConfigItem_class *) &t;
 		}
 	}
-	for (uline_ptr = conf_ulines; uline_ptr; uline_ptr = (ConfigItem_ulines *) uline_ptr->next)
+	for (uline_ptr = conf_ulines; uline_ptr; uline_ptr = (ConfigItem_ulines *) next)
 	{
+		next = (ListStruct *)uline_ptr->next;
 		/* We'll wipe it out when it has no clients */
 		ircfree(uline_ptr->servername);
-		t.next = DelListItem(uline_ptr, conf_ulines);
+		DelListItem(uline_ptr, conf_ulines);
 		MyFree(uline_ptr);
-		uline_ptr = (ConfigItem_ulines *) &t;
 	}
-	for (allow_ptr = conf_allow; allow_ptr; allow_ptr = (ConfigItem_allow *) allow_ptr->next)
+	for (allow_ptr = conf_allow; allow_ptr; allow_ptr = (ConfigItem_allow *) next)
 	{
+		next = (ListStruct *)allow_ptr->next;
 		ircfree(allow_ptr->ip);
 		ircfree(allow_ptr->hostname);
 		Auth_DeleteAuthStruct(allow_ptr->auth);
-		t.next = DelListItem(allow_ptr, conf_allow);
+		DelListItem(allow_ptr, conf_allow);
 		MyFree(allow_ptr);
-		allow_ptr = (ConfigItem_allow *) &t;
 	}
-	for (except_ptr = conf_except; except_ptr; except_ptr = (ConfigItem_except *) except_ptr->next)
+	for (except_ptr = conf_except; except_ptr; except_ptr = (ConfigItem_except *) next)
 	{
+		next = (ListStruct *)except_ptr->next;
 		ircfree(except_ptr->mask);
-		t.next = DelListItem(except_ptr, conf_except);
+		DelListItem(except_ptr, conf_except);
 		MyFree(except_ptr);
-		except_ptr = (ConfigItem_except *) &t;
 	}
-	for (ban_ptr = conf_ban; ban_ptr; ban_ptr = (ConfigItem_ban *) ban_ptr->next)
+	for (ban_ptr = conf_ban; ban_ptr; ban_ptr = (ConfigItem_ban *) next)
 	{
+		next = (ListStruct *)ban_ptr->next;
 		if (ban_ptr->flag.type2 == CONF_BAN_TYPE_CONF || ban_ptr->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
 		{
 			ircfree(ban_ptr->mask);
 			ircfree(ban_ptr->reason);
-			t.next = DelListItem(ban_ptr, conf_ban);
+			DelListItem(ban_ptr, conf_ban);
 			MyFree(ban_ptr);
-			ban_ptr = (ConfigItem_ban *) &t;
 		}
 	}
-	for (link_ptr = conf_link; link_ptr; link_ptr = (ConfigItem_link *) link_ptr->next)
+	for (link_ptr = conf_link; link_ptr; link_ptr = (ConfigItem_link *) next)
 	{
+		next = (ListStruct *)link_ptr->next;
 		if (link_ptr->refcount == 0)
 		{
 			link_cleanup(link_ptr);
-			t.next = DelListItem(link_ptr, conf_link);
+			DelListItem(link_ptr, conf_link);
 			MyFree(link_ptr);
-			link_ptr = (ConfigItem_link *) &t;
 		}
 		else
 		{
@@ -3489,9 +3521,10 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	{
 		listen_ptr->flag.temporary = 1;
 	}
-	for (tld_ptr = conf_tld; tld_ptr; tld_ptr = (ConfigItem_tld *) tld_ptr->next)
+	for (tld_ptr = conf_tld; tld_ptr; tld_ptr = (ConfigItem_tld *) next)
 	{
 		aMotd *motd;
+		next = (ListStruct *)tld_ptr->next;
 		ircfree(tld_ptr->motd_file);
 		ircfree(tld_ptr->rules_file);
 		if (!tld_ptr->flag.motdptr) {
@@ -3510,91 +3543,92 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 				tld_ptr->rules = motd;
 			}
 		}
-		t.next = DelListItem(tld_ptr, conf_tld);
+		DelListItem(tld_ptr, conf_tld);
 		MyFree(tld_ptr);
-		tld_ptr = (ConfigItem_tld *) &t;
 	}
-	for (vhost_ptr = conf_vhost; vhost_ptr; vhost_ptr = (ConfigItem_vhost *) vhost_ptr->next)
+	for (vhost_ptr = conf_vhost; vhost_ptr; vhost_ptr = (ConfigItem_vhost *) next)
 	{
 		ConfigItem_oper_from *vhost_from;
-
+		
+		next = (ListStruct *)vhost_ptr->next;
+		
 		ircfree(vhost_ptr->login);
 		Auth_DeleteAuthStruct(vhost_ptr->auth);
 		ircfree(vhost_ptr->virthost);
 		ircfree(vhost_ptr->virtuser);
 		for (vhost_from = (ConfigItem_oper_from *) vhost_ptr->from; vhost_from;
-			vhost_from = (ConfigItem_oper_from *) vhost_from->next)
+			vhost_from = (ConfigItem_oper_from *) next2)
 		{
+			next2 = (ListStruct *)vhost_from->next;
 			ircfree(vhost_from->name);
-			t.next = DelListItem(vhost_from, vhost_ptr->from);
+			DelListItem(vhost_from, vhost_ptr->from);
 			MyFree(vhost_from);
-			vhost_from = (ConfigItem_oper_from *) &t;
 		}
-		t.next = DelListItem(vhost_ptr, conf_vhost);
+		DelListItem(vhost_ptr, conf_vhost);
 		MyFree(vhost_ptr);
-		vhost_ptr = (ConfigItem_vhost *) &t;
 	}
 
+#ifdef STRIPBADWORDS
 	for (badword_ptr = conf_badword_channel; badword_ptr;
-		badword_ptr = (ConfigItem_badword *) badword_ptr->next) {
+		badword_ptr = (ConfigItem_badword *) next) {
+		next = (ListStruct *)badword_ptr->next;
 		ircfree(badword_ptr->word);
 			ircfree(badword_ptr->replace);
-		t.next = DelListItem(badword_ptr, conf_badword_channel);
+		DelListItem(badword_ptr, conf_badword_channel);
 		MyFree(badword_ptr);
-		badword_ptr = (ConfigItem_badword *) &t;
 	}
 	for (badword_ptr = conf_badword_message; badword_ptr;
-		badword_ptr = (ConfigItem_badword *) badword_ptr->next) {
+		badword_ptr = (ConfigItem_badword *) next) {
+		next = (ListStruct *)badword_ptr->next;
 		ircfree(badword_ptr->word);
 			ircfree(badword_ptr->replace);
-		t.next = DelListItem(badword_ptr, conf_badword_message);
+		DelListItem(badword_ptr, conf_badword_message);
 		MyFree(badword_ptr);
-		badword_ptr = (ConfigItem_badword *) &t;
 	}
-
-	for (deny_dcc_ptr = conf_deny_dcc; deny_dcc_ptr; deny_dcc_ptr = (ConfigItem_deny_dcc *) deny_dcc_ptr->next)
+#endif
+	for (deny_dcc_ptr = conf_deny_dcc; deny_dcc_ptr; deny_dcc_ptr = (ConfigItem_deny_dcc *)next)
 	{
+		next = (ListStruct *)deny_dcc_ptr->next;
 		if (deny_dcc_ptr->flag.type2 == CONF_BAN_TYPE_CONF)
 		{
 			ircfree(deny_dcc_ptr->filename);
 			ircfree(deny_dcc_ptr->reason);
-			t.next = DelListItem(deny_dcc_ptr, conf_deny_dcc);
+			DelListItem(deny_dcc_ptr, conf_deny_dcc);
 			MyFree(deny_dcc_ptr);
-			deny_dcc_ptr = (ConfigItem_deny_dcc *) &t;
 		}
 	}
-	for (deny_link_ptr = conf_deny_link; deny_link_ptr; deny_link_ptr = (ConfigItem_deny_link *) deny_link_ptr->next) {
+	for (deny_link_ptr = conf_deny_link; deny_link_ptr; deny_link_ptr = (ConfigItem_deny_link *) next) {
+		next = (ListStruct *)deny_link_ptr->next;
 		ircfree(deny_link_ptr->prettyrule);
 		ircfree(deny_link_ptr->mask);
 		crule_free(&deny_link_ptr->rule);
-		t.next = DelListItem(deny_link_ptr, conf_deny_link);
+		DelListItem(deny_link_ptr, conf_deny_link);
 		MyFree(deny_link_ptr);
-		deny_link_ptr = (ConfigItem_deny_link *) &t;
 	}
-	for (deny_version_ptr = conf_deny_version; deny_version_ptr; deny_version_ptr = (ConfigItem_deny_version *) deny_version_ptr->next) {
+	for (deny_version_ptr = conf_deny_version; deny_version_ptr; deny_version_ptr = (ConfigItem_deny_version *) next) {
+		next = (ListStruct *)deny_version_ptr->next;
 		ircfree(deny_version_ptr->mask);
 		ircfree(deny_version_ptr->version);
 		ircfree(deny_version_ptr->flags);
-		t.next = DelListItem(deny_version_ptr, conf_deny_version);
+		DelListItem(deny_version_ptr, conf_deny_version);
 		MyFree(deny_version_ptr);
-		deny_version_ptr = (ConfigItem_deny_version *) &t;
 	}
 
-	for (deny_channel_ptr = conf_deny_channel; deny_channel_ptr; deny_channel_ptr = (ConfigItem_deny_channel *) deny_channel_ptr->next)
+	for (deny_channel_ptr = conf_deny_channel; deny_channel_ptr; deny_channel_ptr = (ConfigItem_deny_channel *) next)
 	{
+		next = (ListStruct *)deny_channel_ptr->next;
 		ircfree(deny_channel_ptr->channel);
 		ircfree(deny_channel_ptr->reason);
-		t.next = DelListItem(deny_channel_ptr, conf_deny_channel);
+		DelListItem(deny_channel_ptr, conf_deny_channel);
 		MyFree(deny_channel_ptr);
-		deny_channel_ptr = (ConfigItem_deny_channel *) &t;
 	}
 
-	for (allow_channel_ptr = conf_allow_channel; allow_channel_ptr; allow_channel_ptr = (ConfigItem_allow_channel *) allow_channel_ptr->next)
+	for (allow_channel_ptr = conf_allow_channel; allow_channel_ptr; allow_channel_ptr = (ConfigItem_allow_channel *) next)
 	{
+		next = (ListStruct *)allow_channel_ptr->next;
 		ircfree(allow_channel_ptr->channel);
-		t.next = DelListItem(allow_channel_ptr, conf_allow_channel);
+		DelListItem(allow_channel_ptr, conf_allow_channel);
 		MyFree(allow_channel_ptr);
-		allow_channel_ptr = (ConfigItem_allow_channel *) &t;
 	}
 
 	if (conf_drpass)
@@ -3605,40 +3639,42 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		conf_drpass->dieauth = NULL;
 		ircfree(conf_drpass);
 	}
-	for (log_ptr = conf_log; log_ptr; log_ptr = (ConfigItem_log *)log_ptr->next) {
+	for (log_ptr = conf_log; log_ptr; log_ptr = (ConfigItem_log *)next) {
+		next = (ListStruct *)log_ptr->next;
 		ircfree(log_ptr->file);
-		t.next = DelListItem(log_ptr, conf_log);
+		DelListItem(log_ptr, conf_log);
 		MyFree(log_ptr);
-		log_ptr = (ConfigItem_log *)&t;
 	}
-	for (alias_ptr = conf_alias; alias_ptr; alias_ptr = (ConfigItem_alias *)alias_ptr->next) {
+	for (alias_ptr = conf_alias; alias_ptr; alias_ptr = (ConfigItem_alias *)next) {
 		aCommand *cmptr = find_Command(alias_ptr->alias, 0, 0);
 		ConfigItem_alias_format *fmt;
+		next = (ListStruct *)alias_ptr->next;		
 		ircfree(alias_ptr->nick);
 		del_Command(alias_ptr->alias, NULL, cmptr->func);
 		ircfree(alias_ptr->alias);
 		if (alias_ptr->format && alias_ptr->type == ALIAS_COMMAND) {
-			for (fmt = (ConfigItem_alias_format *) alias_ptr->format; fmt; fmt = (ConfigItem_alias_format *) fmt->next)
+			for (fmt = (ConfigItem_alias_format *) alias_ptr->format; fmt; fmt = (ConfigItem_alias_format *) next2)
 			{
+				next2 = (ListStruct *)fmt->next;
 				ircfree(fmt->format);
 				ircfree(fmt->parameters);
-				t.next = DelListItem(fmt, alias_ptr->format);
+				DelListItem(fmt, alias_ptr->format);
 				MyFree(fmt);
-				fmt = (ConfigItem_alias_format *) &t;
 			}
 		}
-		t.next = DelListItem(alias_ptr, conf_alias);
+		DelListItem(alias_ptr, conf_alias);
 		MyFree(alias_ptr);
-		alias_ptr = (ConfigItem_alias *)&t;
 	}
-	for (include_ptr = conf_include; include_ptr; include_ptr = (ConfigItem_include *)include_ptr->next) {
+	for (include_ptr = conf_include; include_ptr; include_ptr = (ConfigItem_include *)next)
+	{
+		next = (ListStruct *)include_ptr->next;	 
 		ircfree(include_ptr->file);
-		t.next = DelListItem(include_ptr, conf_include);
+		DelListItem(include_ptr, conf_include);
 		MyFree(include_ptr);
-		include_ptr = (ConfigItem_include *)&t;
 	}
-	for (help_ptr = conf_help; help_ptr; help_ptr = (ConfigItem_help *)help_ptr->next) {
+	for (help_ptr = conf_help; help_ptr; help_ptr = (ConfigItem_help *)next) {
 		aMotd *text;
+		next = (ListStruct *)help_ptr->next;
 		ircfree(help_ptr->command);
 		while (help_ptr->text) {
 			text = help_ptr->text->next;
@@ -3646,9 +3682,8 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 			ircfree(help_ptr->text);
 			help_ptr->text = text;
 		}
-		t.next = DelListItem(help_ptr, conf_help);
+		DelListItem(help_ptr, conf_help);
 		MyFree(help_ptr);
-		help_ptr = (ConfigItem_help *)&t;
 	}
 
 	/* rehash_modules */
@@ -3662,6 +3697,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	run_configuration();
 	check_pings(TStime(), 1);
 	sendto_realops("Completed rehash");
+	return 0;
 }
 
 
@@ -4027,12 +4063,6 @@ void report_dynconf(aClient *sptr)
 	    sptr->name, FAILOPER_WARN);
 	sendto_one(sptr, ":%s %i %s :options::show-connect-info: %d", me.name, RPL_TEXT,
 	    sptr->name, SHOWCONNECTINFO);
-	sendto_one(sptr, ":%s %i %s :socks::ban-message: %s", me.name, RPL_TEXT,
-	    sptr->name, iConf.socksbanmessage);
-	sendto_one(sptr, ":%s %i %s :socks::quit-message: %s", me.name, RPL_TEXT,
-	    sptr->name, iConf.socksquitmessage);
-	sendto_one(sptr, ":%s %i %s :socks::ban-time: %i", me.name, RPL_TEXT,
-	    sptr->name, iConf.socksbantime);
 	sendto_one(sptr, ":%s %i %s :maxchannelsperuser: %i", me.name, RPL_TEXT,
 	    sptr->name, MAXCHANNELSPERUSER);
 	sendto_one(sptr, ":%s %i %s :auto-join: %s", me.name, RPL_TEXT,

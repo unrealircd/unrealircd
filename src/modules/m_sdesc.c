@@ -36,6 +36,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -115,15 +116,11 @@ int	m_sdesc_Unload(int module_unload)
 
 int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	if (IsCoAdmin(sptr))
-		goto sdescok;
-	/* ignoring */
-	if (!IsAdmin(sptr))
-		return;
-      sdescok:
+	if (!IsAdmin(sptr) && !IsCoAdmin(sptr))
+		return 0;
 
 	if (parc < 2)
-		return;
+		return 0;
 
 	if (strlen(parv[1]) < 1)
 		if (MyConnect(sptr))
@@ -158,4 +155,5 @@ int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	sendto_ops("Server description for %s is now '%s' changed by %s",
 	    sptr->srvptr->name, sptr->srvptr->info, parv[0]);
+	return 0;
 }

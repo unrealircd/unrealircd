@@ -36,6 +36,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -229,5 +230,5 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    IsHidden(sptr) ? sptr->user->virthost : sptr->
 		    user->realhost);
 	}
-	return;
+	return 0;
 }

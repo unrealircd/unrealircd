@@ -22,26 +22,77 @@
 #ifdef USE_SSL
 
 #include "struct.h"
+#ifdef _WIN32
+#include <windows.h>
 
+#define IDC_PASS                        1166
+extern HINSTANCE hInst;
+extern HWND hwIRCDWnd;
+#endif
 /* The SSL structures */
 SSL_CTX *ctx_server;
 SSL_CTX *ctx_client;
 
-#define CHK_SSL(err) if ((err)==-1) { ERR_print_errors_fp(stderr); }
+typedef struct {
+	int *size;
+	char **buffer;
+} StreamIO;
 
+static StreamIO *streamp;
+#define CHK_SSL(err) if ((err)==-1) { ERR_print_errors_fp(stderr); }
+#ifdef _WIN32
+LRESULT SSLPassDLG(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam) {
+	StreamIO *stream;
+	switch (Message) {
+		case WM_INITDIALOG:
+			return TRUE;
+		case WM_COMMAND:
+			stream = (StreamIO *)streamp;
+			if (LOWORD(wParam) == IDCANCEL) {
+				*stream->buffer = NULL;
+				EndDialog(hDlg, TRUE);
+			}
+			else if (LOWORD(wParam) == IDOK) {
+				GetDlgItemText(hDlg, IDC_PASS, *stream->buffer, *stream->size);
+				EndDialog(hDlg, TRUE);
+			}
+			return FALSE;
+		case WM_CLOSE:
+			if (stream)
+				*stream->buffer = NULL;
+			EndDialog(hDlg, TRUE);
+		default:
+			return FALSE;
+	}
+}
+#endif				
+				
+				
 int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 {
-#ifndef _WIN32
 	char *pass;
 	static int before = 0;
 	static char beforebuf[1024];
+#ifdef _WIN32
+	StreamIO stream;
+	char passbuf[512];	
+	int passsize = 512;
+#endif
 	if (before)
 	{
 		strncpy(buf, (char *)beforebuf, size);
 		buf[size - 1] = '\0';
 		return (strlen(buf));
 	}
+#ifndef _WIN32
 	pass = getpass("Password for SSL private key: ");
+#else
+	pass = passbuf;
+	stream.buffer = &pass;
+	stream.size = &passsize;
+	streamp = &stream;
+	DialogBoxParam(hInst, "SSLPass", hwIRCDWnd, (DLGPROC)SSLPassDLG, (LPARAM)NULL); 
+#endif
 	if (pass)
 	{
 		strncpy(buf, (char *)pass, size);
@@ -52,7 +103,6 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 		return (strlen(buf));
 	}
 	return 0;
-#endif
 }
 
 void init_ctx_server(void)
@@ -63,9 +113,7 @@ void init_ctx_server(void)
 		ircd_log(LOG_ERROR, "Failed to do SSL CTX new");
 		exit(2);
 	}
-#ifndef _WIN32
 	SSL_CTX_set_default_passwd_cb(ctx_server, ssl_pem_passwd_cb);
-#endif
 
 	if (SSL_CTX_use_certificate_file(ctx_server, CERTF, SSL_FILETYPE_PEM) <= 0)
 	{
@@ -93,9 +141,7 @@ void init_ctx_client(void)
 		ircd_log(LOG_ERROR, "Failed to do SSL CTX new client");
 		exit(2);
 	}
-#ifndef _WIN32
 	SSL_CTX_set_default_passwd_cb(ctx_client, ssl_pem_passwd_cb);
-#endif
 	if (SSL_CTX_use_certificate_file(ctx_client, CERTF, SSL_FILETYPE_PEM) <= 0)
 	{
 		ircd_log(LOG_ERROR, "Failed to load SSL certificate %s (client)", CERTF);
@@ -114,7 +160,7 @@ void init_ctx_client(void)
 	}
 }
 
-void init_ssl()
+void init_ssl(void)
 {
 	/* SSL preliminaries. We keep the certificate and key with the context. */
 
@@ -204,7 +250,7 @@ int  ssl_handshake(aClient *cptr)
       -2  = Error doing SSL_connect
       -3  = Try again 
 */
-int  ssl_client_handshake(aClient *cptr)
+int  ssl_client_handshake(aClient *cptr, ConfigItem_link *l)
 {
 	cptr->ssl = (struct SSL *) SSL_new((SSL_CTX *)ctx_client);
 	if (!cptr->ssl)
@@ -216,6 +262,17 @@ int  ssl_client_handshake(aClient *cptr)
 /*	set_blocking(cptr->fd); */
 	SSL_set_fd((SSL *)cptr->ssl, cptr->fd);
 	SSL_set_connect_state((SSL *)cptr->ssl);
+	if (l && l->ciphers)
+	{
+		if (SSL_set_cipher_list((SSL *)cptr->ssl, 
+			l->ciphers) == 0)
+		{
+			/* We abort */
+			sendto_realops("SSL cipher selecting for %s was unsuccesful (%s)",
+				l->servername, l->ciphers);
+			return -2;
+		}
+	}
 	if (SSL_connect((SSL *)cptr->ssl) <= 0)
 	{
 #if 0

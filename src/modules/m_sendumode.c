@@ -35,6 +35,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -136,7 +137,6 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	int i;
 	long umode_s = 0;
 	long snomask = 0;
-	int and = 0;
 
 	aClient* acptr;
 

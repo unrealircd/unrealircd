@@ -73,16 +73,75 @@ ModuleHeader l_commands_Header
  * want to
 */
 
+extern int m_sethost_Init(int module_load), m_setname_Init(int module_load), m_chghost_Init(int module_load);
+extern int m_chgident_Init(int module_load), m_setident_Init(int module_load), m_sdesc_Init(int module_load);
+extern int m_svsmode_Init(int module_load), m_swhois_Init(int module_load), m_svsmotd_Init(int module_load);
+extern int m_svsnline_Init(int module_load), m_who_Init(int module_load), m_mkpasswd_Init(int module_load);
+extern int m_away_Init(int module_load), m_svsnoop_Init(int module_load), m_svso_Init(int module_load);
+extern int m_svsnick_Init(int module_load), m_adminchat_Init(int module_load), m_nachat_Init(int module_load);
+extern int m_lag_Init(int module_load), m_rping_Init(int module_load), m_sendumode_Init(int module_load);
+extern int m_tsctl_Init(int module_load), m_htm_Init(int module_load), m_chgname_Init(int module_load);
+extern int m_message_Init(int module_load), m_whois_Init(int module_load), m_quit_Init(int module_load);
+extern int m_kill_Init(int module_load), m_pingpong_Init(int module_load), m_oper_Init(int module_load);
+extern int m_akill_Init(int module_load), m_rakill_Init(int module_load), m_zline_Init(int module_load);
+extern int m_unzline_Init(int module_load), m_kline_Init(int module_load), m_unkline_Init(int module_load);
+extern int m_sqline_Init(int module_load), m_unsqline_Init(int module_load), m_tkl_Init(int module_load);
+#ifdef GUEST
+extern int m_guest_Init(int module_load);
+#endif
+#ifdef SCAN_API
+extern int m_scan_Init(int module_load), scan_socks_Init(int module_load), scan_http_Init(int module_load);
+#endif
+
+extern int m_sethost_Load(int module_load), m_setname_Load(int module_load), m_chghost_Load(int module_load);
+extern int m_chgident_Load(int module_load), m_setident_Load(int module_load), m_sdesc_Load(int module_load);
+extern int m_svsmode_Load(int module_load), m_swhois_Load(int module_load), m_svsmotd_Load(int module_load);
+extern int m_svsnline_Load(int module_load), m_who_Load(int module_load), m_mkpasswd_Load(int module_load);
+extern int m_away_Load(int module_load), m_svsnoop_Load(int module_load), m_svso_Load(int module_load);
+extern int m_svsnick_Load(int module_load), m_adminchat_Load(int module_load), m_nachat_Load(int module_load);
+extern int m_lag_Load(int module_load), m_rping_Load(int module_load), m_sendumode_Load(int module_load);
+extern int m_tsctl_Load(int module_load), m_htm_Load(int module_load), m_chgname_Load(int module_load);
+extern int m_message_Load(int module_load), m_whois_Load(int module_load), m_quit_Load(int module_load);
+extern int m_kill_Load(int module_load), m_pingpong_Load(int module_load), m_oper_Load(int module_load);
+extern int m_akill_Load(int module_load), m_rakill_Load(int module_load), m_zline_Load(int module_load);
+extern int m_unzline_Load(int module_load), m_kline_Load(int module_load), m_unkline_Load(int module_load);
+extern int m_sqline_Load(int module_load), m_unsqline_Load(int module_load), m_tkl_Load(int module_load);
+#ifdef GUEST
+extern int m_guest_Load(int module_load);
+#endif
+#ifdef SCAN_API
+extern int m_scan_Load(int module_load), scan_socks_Load(int module_load), scan_http_Load(int module_load);
+#endif
+
+extern int m_sethost_Unload(), m_setname_Unload(), m_chghost_Unload(), m_chgident_Unload();
+extern int m_setident_Unload(), m_sdesc_Unload(), m_svsmode_Unload(), m_swhois_Unload();
+extern int m_svsmotd_Unload(), m_svsnline_Unload(), m_who_Unload(), m_mkpasswd_Unload();
+extern int m_away_Unload(), m_svsnoop_Unload(), m_svso_Unload(), m_svsnick_Unload();
+extern int m_adminchat_Unload(), m_nachat_Unload(), m_lag_Unload(), m_rping_Unload(); 
+extern int m_sendumode_Unload(), m_tsctl_Unload(), m_htm_Unload(), m_chgname_Unload();
+extern int m_message_Unload(), m_whois_Unload(), m_quit_Unload(), m_kill_Unload();
+extern int m_pingpong_Unload(), m_oper_Unload(), m_akill_Unload(), m_rakill_Unload();
+extern int m_zline_Unload(), m_unzline_Unload(), m_kline_Unload(), m_unkline_Unload();
+extern int m_sqline_Unload(), m_unsqline_Unload(), m_tkl_Unload();
+#ifdef GUEST
+extern int m_guest_Unload();
+#endif
+#ifdef SCAN_API
+extern int m_scan_Unload(), scan_socks_Unload(), scan_http_Unload();
+#endif
+
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Init(int module_load)
 #else
 int    l_commands_Init(int module_load)
 #endif
 {
+#ifdef SCAN_API
+	Module p;
+#endif
 	/*
 	 * We call our add_Command crap here
 	*/
-        Module p;
 	m_sethost_Init(module_load);
 	m_setname_Init(module_load);
 	m_chghost_Init(module_load);
@@ -134,7 +193,7 @@ int    l_commands_Init(int module_load)
 	scan_socks_Init(module_load);
 	scan_http_Init(module_load);
 #endif
-
+	return MOD_SUCCESS;
 }
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Load(int module_load)
@@ -189,6 +248,7 @@ int    l_commands_Load(int module_load)
 	scan_socks_Load(module_load);
 	scan_http_Load(module_load);
 #endif
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
@@ -243,5 +303,6 @@ int	l_commands_Unload(int module_unload)
 	scan_http_Unload();
 	m_scan_Unload();
 #endif
+	return MOD_SUCCESS;
 }
 

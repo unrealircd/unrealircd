@@ -43,7 +43,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
-
+#include "proto.h"
 #ifndef RTLD_NOW
 #define RTLD_NOW RTLD_LAZY
 #endif
@@ -51,7 +51,7 @@
 Hook	   	*Hooks[MAXHOOKTYPES];
 Hook 	   	*global_i = NULL;
 Module          *Modules = NULL;
-
+int     Module_Depend_Resolve(Module *p);
 Module *Module_make(ModuleHeader *header, 
 #ifdef _WIN32
        HMODULE mod
@@ -59,6 +59,22 @@ Module *Module_make(ModuleHeader *header,
        void *mod
 #endif
        );
+
+#ifdef UNDERSCORE
+void *obsd_dlsym(void *handle, char *symbol) {
+    char *obsdsymbol = (char*)malloc(strlen(symbol) + 2);
+    void *symaddr = NULL;
+
+    if (obsdsymbol) {
+       sprintf(obsdsymbol, "_%s", symbol);
+       symaddr = dlsym(handle, obsdsymbol);
+       free(obsdsymbol);
+    }
+
+    return symaddr;
+}
+#endif
+
 
 void Module_Init(void)
 {
@@ -98,7 +114,7 @@ char  *Module_Load (char *path_, int load)
 	char 		*path;
 	ModuleHeader    *mod_header;
 	int		ret = 0;
-	Module          *mod = NULL;
+	Module          *mod = NULL, **Mod_Handle = NULL;
 	Debug((DEBUG_DEBUG, "Attempting to load module from %s",
 	       path_));
 	path = path_;
@@ -166,6 +182,9 @@ char  *Module_Load (char *path_, int load)
 			Module_free(mod);
 			return ("Dependancy problem");
 		}
+		irc_dlsym(Mod, "Mod_Handle", Mod_Handle);
+		if (Mod_Handle)
+			*Mod_Handle = mod;
 		if ((ret = (*Mod_Init)(load)) < MOD_SUCCESS)
 		{
 			ircsprintf(errorbuf, "Mod_Init returned %i",
@@ -238,25 +257,36 @@ Module *Module_make(ModuleHeader *header,
 int    Module_free(Module *mod)
 {
 	Module *p;
-	ModuleChild *cp;
+	ModuleChild *cp, *cpnext;
+	ModuleObject *objs, *next;
 	/* Do not kill parent if children still alive */
 
-	if (mod->children)
-        {
-		for (cp = mod->children; cp; cp = cp->next)
-		{
-			sendto_realops("Unloading child module %s",
-				      cp->child->header->name);
-			Module_Unload(cp->child->header->name, 0);
+	for (cp = mod->children; cp; cp = cp->next)
+	{
+		sendto_realops("Unloading child module %s",
+			      cp->child->header->name);
+		Module_Unload(cp->child->header->name, 0);
+	}
+	for (objs = mod->objects; objs; objs = next) {
+		next = objs->next;
+		if (objs->type == MOBJ_EVENT) {
+			LockEventSystem();
+			EventDel(objs->object.event);
+			UnlockEventSystem();
+		}
+		else if (objs->type == MOBJ_HOOK) {
+			HookDel(objs->object.hook);
 		}
 	}
 	for (p = Modules; p; p = p->next)
 	{
-		for (cp = p->children; cp; cp = cp->next)
+		for (cp = p->children; cp; cp = cpnext)
 		{
+			cpnext = cp->next;
 			if (cp->child == mod)
 			{
 				DelListItem(mod, p->children);
+				MyFree(cp);
 				/* We can assume there can be only one. */
 				break;
 			}
@@ -322,7 +352,6 @@ vFP Module_SymEx(
 #ifndef STATIC_LINKING
 	vFP	fp;
 	char	buf[512];
-	int	i;
 
 	if (!name)
 		return NULL;
@@ -346,7 +375,6 @@ vFP Module_Sym(char *name)
 #ifndef STATIC_LINKING
 	vFP	fp;
 	char	buf[512];
-	int	i;
 	Module *mi;
 	
 	if (!name)
@@ -373,7 +401,6 @@ vFP Module_SymX(char *name, Module **mptr)
 #ifndef STATIC_LINKING
 	vFP	fp;
 	char	buf[512];
-	int	i;
 	Module *mi;
 	
 	if (!name)
@@ -409,7 +436,6 @@ void	module_loadall(int module_load)
 {
 #ifndef STATIC_LINKING
 	iFP	fp, fpp;
-	int	i;
 	Module *mi;
 	
 	if (!loop.ircd_booted)
@@ -539,7 +565,7 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (!(ret = Module_Load(parv[2], 1)))
 		{
 			sendto_realops("Loaded module %s", parv[2]);
-			return;
+			return 0;
 		}
 		else
 		{
@@ -591,7 +617,7 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return 1;
 }
 
-void	HookAddEx(int hooktype, int (*func)(), void (*vfunc)())
+Hook	*HookAddMain(Module *module, int hooktype, int (*func)(), void (*vfunc)())
 {
 	Hook *p;
 	
@@ -600,39 +626,47 @@ void	HookAddEx(int hooktype, int (*func)(), void (*vfunc)())
 		p->func.intfunc = func;
 	if (vfunc)
 		p->func.voidfunc = vfunc;
+	p->type = hooktype;
+	p->owner = module;
 	AddListItem(p, Hooks[hooktype]);
+	if (module) {
+		ModuleObject *hookobj = (ModuleObject *)MyMallocEx(sizeof(ModuleObject));
+		hookobj->object.hook = p;
+		hookobj->type = MOBJ_HOOK;
+		AddListItem(hookobj, module->objects);
+	}
+	return p;
 }
 
-void	HookDelEx(int hooktype, int (*func)(), void (*vfunc)())
+Hook *HookDel(Hook *hook)
 {
-	Hook *p;
-	
-	for (p = Hooks[hooktype]; p; p = p->next)
-		if ((func && (p->func.intfunc == func)) || 
-			(vfunc && (p->func.voidfunc == vfunc)))
-		{
-			DelListItem(p, Hooks[hooktype]);
-			return;
+	Hook *p, *q;
+	for (p = Hooks[hook->type]; p; p = p->next) {
+		if (p == hook) {
+			q = p->next;
+			DelListItem(p, Hooks[hook->type]);
+			if (p->owner) {
+				ModuleObject *hookobj;
+				for (hookobj = p->owner->objects; hookobj; hookobj = hookobj->next) {
+					if (hookobj->type == MOBJ_HOOK && hookobj->object.hook == p) {
+						DelListItem(hookobj, hook->owner->objects);
+						MyFree(hookobj);
+						break;
+					}
+				}
+			}
+			MyFree(p);
+			return q;
 		}
+	}
+	return NULL;
 }
 
 EVENT(e_unload_module_delayed)
 {
-	char	*name = (char *) data;
+	char	*name = strdup(data);
 	int	i; 
-	sendto_realops("Delayed unload of module %s in progress",
-		name);
-	
 	i = Module_Unload(name, 0);
-	if (i == 2)
-	{
-		sendto_realops("Delayed unload of %s, again",
-			name);
-	}
-        if (i == -2)
-	{
-		
-	}
 	if (i == -1)
 	{
 		sendto_realops("Failed to unload '%s'", name);
@@ -641,6 +675,7 @@ EVENT(e_unload_module_delayed)
 	{
 		sendto_realops("Unloaded module %s", name);
 	}
+	free(name);
 	return;
 }
 

@@ -1,9 +1,9 @@
 
-Unreal3.2-Selene (BETA4) RELEASE NOTES
+Unreal3.2-Selene (BETA7) RELEASE NOTES
 ======================================
     
      I M P O R T A N T   R E A D I N G
-
+(YES, YOU WILL NEED TO READ ALL OF THIS)
 
 * Unreal3.2-Selene is a lot different than Unreal3.1.1. Forget all you have
   learned about setting up Unreal3.1.1 - this is a lot different. We have got
@@ -111,6 +111,10 @@ Unreal3.2-Selene (BETA4) RELEASE NOTES
 
 * The old blackhole is now set::scan::endpoint and specifies an IP and port to tell
   proxies to connect to.
+
+* You can now specify a cipher list for SSL links (read doc/conf.doc for more info)
+
+* +I is now in invisibility.so so it is easily disabled
 
 * MAKE SURE YOU RERUN ./Config AND RUN make clean BEFORE USING THIS VERSION!!!
 

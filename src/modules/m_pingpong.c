@@ -35,12 +35,15 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
 #ifdef _WIN32
 #include "version.h"
 #endif
+
+int register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost);
 
 DLLFUNC int m_ping(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int m_pong(aClient *cptr, aClient *sptr, int parc, char *parv[]);
@@ -129,10 +132,7 @@ int	m_pingpong_Unload(int module_unload)
 **	parv[1] = origin
 **	parv[2] = destination
 */
-DLLFUNC int  m_ping(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+DLLFUNC int  m_ping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 	char *origin, *destination;
@@ -175,12 +175,11 @@ DLLFUNC int  m_ping(cptr, sptr, parc, parv)
 **	parv[0] = prefix
 **	parv[1] = code
 */
-DLLFUNC int  m_nospoof(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+DLLFUNC int  m_nospoof(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
+#ifdef NOSPOOF
 	unsigned long result;
+#endif
 Debug((DEBUG_NOTICE, "NOSPOOF"));
 
 #ifdef NOSPOOF
@@ -221,10 +220,7 @@ Debug((DEBUG_NOTICE, "NOSPOOF"));
 **	parv[1] = origin
 **	parv[2] = destination
 */
-DLLFUNC int m_pong(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+DLLFUNC int m_pong(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 	char *origin, *destination;

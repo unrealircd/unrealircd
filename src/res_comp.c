@@ -94,12 +94,7 @@ static int ns_name_skip(const u_char **, const u_char *);
  * 'exp_dn' is a pointer to a buffer of size 'length' for the result.
  * Return size of compressed name or -1 if there was an error.
  */
-int ircd_dn_expand(msg, eom, src, dst, dstsiz)
-	const u_char *msg;
-	const u_char *eom;
-	const u_char *src;
-	char *dst;
-	int dstsiz;
+int ircd_dn_expand(const u_char *msg, const u_char *eom, const u_char *src, char *dst, int dstsiz)
 {
 	int  n = ns_name_uncompress(msg, eom, src, dst, (size_t)dstsiz);
 
@@ -113,12 +108,7 @@ int ircd_dn_expand(msg, eom, src, dst, dstsiz)
  * Return the size of the compressed name or -1.
  * 'length' is the size of the array pointed to by 'comp_dn'.
  */
-int ircd_dn_comp(src, dst, dstsiz, dnptrs, lastdnptr)
-	const char *src;
-	u_char *dst;
-	int dstsiz;
-	u_char **dnptrs;
-	u_char **lastdnptr;
+int ircd_dn_comp(const char *src, u_char *dst, int dstsiz, u_char **dnptrs, u_char **lastdnptr)
 {
 	return (ns_name_compress(src, dst, (size_t)dstsiz,
 	    (const u_char **)dnptrs, (const u_char **)lastdnptr));
@@ -127,9 +117,7 @@ int ircd_dn_comp(src, dst, dstsiz, dnptrs, lastdnptr)
 /*
  * Skip over a compressed domain name. Return the size or -1.
  */
-int __ircd_dn_skipname(ptr, eom)
-	const u_char *ptr;
-	const u_char *eom;
+int __ircd_dn_skipname(const u_char *ptr, const u_char *eom)
 {
 	const u_char *saveptr = ptr;
 
@@ -164,8 +152,7 @@ int __ircd_dn_skipname(ptr, eom)
 #if 0
 /* it seems that we don't need these -krys */
 
-int res_hnok(dn)
-	const char *dn;
+int res_hnok(const char *dn)
 {
 	int  ppch = '\0', pch = PERIOD, ch = *dn++;
 
@@ -201,8 +188,7 @@ int res_hnok(dn)
  * hostname-like (A, MX, WKS) owners can have "*" as their first label
  * but must otherwise be as a host name.
  */
-int res_ownok(dn)
-	const char *dn;
+int res_ownok(const char *dn)
 {
 	if (asterchar(dn[0]))
 	{
@@ -218,8 +204,7 @@ int res_ownok(dn)
  * SOA RNAMEs and RP RNAMEs can have any printable character in their first
  * label, but the rest of the name has to look like a host name.
  */
-int res_mailok(dn)
-	const char *dn;
+int res_mailok(const char *dn)
 {
 	int  ch, escaped = 0;
 
@@ -248,8 +233,7 @@ int res_mailok(dn)
  * This function is quite liberal, since RFC 1034's character sets are only
  * recommendations.
  */
-int res_dnok(dn)
-	const char *dn;
+int res_dnok(const char *dn)
 {
 	int  ch;
 
@@ -264,8 +248,7 @@ int res_dnok(dn)
  * Routines to insert/extract short/long's.
  */
 
-u_int16_t ircd_getshort(msgp)
-	register const u_char *msgp;
+u_int16_t ircd_getshort(const u_char *msgp)
 {
 	register u_int16_t u;
 
@@ -273,8 +256,7 @@ u_int16_t ircd_getshort(msgp)
 	return (u);
 }
 
-u_int32_t ircd_getlong(msgp)
-	register const u_char *msgp;
+u_int32_t ircd_getlong(const u_char *msgp)
 {
 	register u_int32_t u;
 
@@ -351,10 +333,7 @@ static int dn_find(const u_char *, const u_char *,
  *	The root is returned as "."
  *	All other domains are returned in non absolute form
  */
-static int ns_name_ntop(src, dst, dstsiz)
-	const u_char *src;
-	char *dst;
-	size_t dstsiz;
+static int ns_name_ntop(const u_char *src, char *dst, size_t dstsiz)
 {
 	const u_char *cp;
 	char *dn, *eom;
@@ -452,10 +431,7 @@ static int ns_name_ntop(src, dst, dstsiz)
  *	Enforces label and domain length limits.
  */
 
-static int ns_name_pton(src, dst, dstsiz)
-	const char *src;
-	u_char *dst;
-	size_t dstsiz;
+static int ns_name_pton(const char *src, u_char *dst, size_t dstsiz)
 {
 	u_char *label, *bp, *eom;
 	int  c, n, escaped;
@@ -584,16 +560,11 @@ static int ns_name_pton(src, dst, dstsiz)
  * return:
  *	-1 if it fails, or consumed octets if it succeeds.
  */
-static int ns_name_unpack(msg, eom, src, dst, dstsiz)
-	const u_char *msg;
-	const u_char *eom;
-	const u_char *src;
-	u_char *dst;
-	size_t dstsiz;
+static int ns_name_unpack(const u_char *msg, const u_char *eom, const u_char *src, u_char *dst, size_t dstsiz)
 {
 	const u_char *srcp, *dstlim;
 	u_char *dstp;
-	int  n, c, len, checked;
+	int  n, len, checked;
 
 	len = -1;
 	checked = 0;
@@ -680,12 +651,7 @@ static int ns_name_unpack(msg, eom, src, dst, dstsiz)
  *	try to compress names. If 'lastdnptr' is NULL, we don't update the
  *	list.
  */
-static int ns_name_pack(src, dst, dstsiz, dnptrs, lastdnptr)
-	const u_char *src;
-	u_char *dst;
-	int dstsiz;
-	const u_char **dnptrs;
-	const u_char **lastdnptr;
+static int ns_name_pack(const u_char *src, u_char *dst, int dstsiz, const u_char **dnptrs, const u_char **lastdnptr)
 {
 	u_char *dstp;
 	const u_char **cpp, **lpp, *eob, *msg;
@@ -791,12 +757,7 @@ static int ns_name_pack(src, dst, dstsiz, dnptrs, lastdnptr)
  * note:
  *	Root domain returns as "." not "".
  */
-static int ns_name_uncompress(msg, eom, src, dst, dstsiz)
-	const u_char *msg;
-	const u_char *eom;
-	const u_char *src;
-	char *dst;
-	size_t dstsiz;
+static int ns_name_uncompress(const u_char *msg, const u_char *eom, const u_char *src, char *dst, size_t dstsiz)
 {
 	u_char tmp[NS_MAXCDNAME];
 	int  n;
@@ -822,12 +783,8 @@ static int ns_name_uncompress(msg, eom, src, dst, dstsiz)
  *	If 'dnptr' is NULL, we don't try to compress names. If 'lastdnptr'
  *	is NULL, we don't update the list.
  */
-static int ns_name_compress(src, dst, dstsiz, dnptrs, lastdnptr)
-	const char *src;
-	u_char *dst;
-	size_t dstsiz;
-	const u_char **dnptrs;
-	const u_char **lastdnptr;
+static int ns_name_compress(const char *src, u_char *dst, size_t dstsiz, const u_char **dnptrs, 
+				const u_char **lastdnptr)
 {
 	u_char tmp[NS_MAXCDNAME];
 
@@ -842,9 +799,7 @@ static int ns_name_compress(src, dst, dstsiz, dnptrs, lastdnptr)
  * return:
  *	0 on success, -1 (with errno set) on failure.
  */
-static int ns_name_skip(ptrptr, eom)
-	const u_char **ptrptr;
-	const u_char *eom;
+static int ns_name_skip(const u_char **ptrptr, const u_char *eom)
 {
 	const u_char *cp;
 	u_int n;
@@ -885,8 +840,7 @@ static int ns_name_skip(ptrptr, eom)
  * return:
  *	boolean.
  */
-static int special(ch)
-	int ch;
+static int special(int ch)
 {
 	switch (ch)
 	{
@@ -910,8 +864,7 @@ static int special(ch)
  * return:
  *	boolean.
  */
-static int printable(ch)
-	int ch;
+static int printable(int ch)
 {
 	return (ch > 0x20 && ch < 0x7f);
 }
@@ -920,8 +873,7 @@ static int printable(ch)
  *	Thinking in noninternationalized USASCII (per the DNS spec),
  *	convert this character to lower case if it's upper case.
  */
-static int mklower(ch)
-	int ch;
+static int mklower(int ch)
 {
 	if (ch >= 0x41 && ch <= 0x5A)
 		return (ch + 0x20);
@@ -937,11 +889,8 @@ static int mklower(ch)
  *	dnptrs is the pointer to the first name on the list,
  *	not the pointer to the start of the message.
  */
-static int dn_find(domain, msg, dnptrs, lastdnptr)
-	const u_char *domain;
-	const u_char *msg;
-	const u_char *const *dnptrs;
-	const u_char *const *lastdnptr;
+static int dn_find(const u_char *domain, const u_char *msg, const u_char *const *dnptrs, 
+		  const u_char *const *lastdnptr)
 {
 	const u_char *dn, *cp, *sp;
 	const u_char *const *cpp;

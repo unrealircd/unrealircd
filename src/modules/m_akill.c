@@ -35,6 +35,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -212,5 +213,5 @@ DLLFUNC int m_akill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 
 	check_pings(TStime(), 1);
-
+	return 0;
 }

@@ -48,6 +48,7 @@
 #define IDC_BLACK                       1164
 #define IDC_DARKBLUE                    1165
 #define IDC_DARKGREEN                   1166
+#define IDC_PASS                        1166
 #define IDC_RED                         1167
 #define IDC_DARKRED                     1168
 #define IDC_PURPLE                      1169
@@ -96,9 +97,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        151
+#define _APS_NEXT_RESOURCE_VALUE        152
 #define _APS_NEXT_COMMAND_VALUE         40061
-#define _APS_NEXT_CONTROL_VALUE         1166
+#define _APS_NEXT_CONTROL_VALUE         1167
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

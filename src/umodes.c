@@ -88,7 +88,7 @@ void	umode_init(void)
 	}
 	Usermode_highest = 0;
 	/* Set up modes */
-	UMODE_INVISIBLE = umode_get('i'); /*  0x0001	/* makes user invisible */
+	UMODE_INVISIBLE = umode_get('i'); /*  0x0001	 makes user invisible */
 	UMODE_OPER = umode_get('o');      /*  0x0002	 Operator */
 	UMODE_WALLOP = umode_get('w');    /*  0x0004	 send wallops to them */
 	UMODE_FAILOP = umode_get('g');    /*  0x0008	 Shows some global messages */
@@ -108,7 +108,6 @@ void	umode_init(void)
 	UMODE_KIX = umode_get('q');       /* 0x200000	 usermode +q */
 	UMODE_BOT = umode_get('B');       /* 0x400000	 User is a bot */
 	UMODE_SECURE = umode_get('z');    /*	0x800000	 User is a secure connect */
-	UMODE_HIDING = umode_get('I');    /* 0x2000000	 Totally invisible .. */
 	UMODE_VICTIM = umode_get('v');    /* 0x8000000	 Intentional Victim */
 	UMODE_DEAF = umode_get('d');      /* 0x10000000       Deaf */
 	UMODE_HIDEOPER = umode_get('H');  /* 0x20000000	 Hide oper mode */

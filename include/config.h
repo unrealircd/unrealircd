@@ -86,7 +86,7 @@
  * Defining this will allow all ircops to see people in +s channels
  * By default, only net/tech admins can see this
  */
-#undef SEE_SECRET
+#define SHOW_SECRET
 
 /*
  * This allows you to see modes in /list

@@ -1101,3 +1101,126 @@ seen. gmtime warning still there
 - Moved around a lot of aClient/anUser members, hopefully wont cause
   segfaults
 - Fixed res.c not managing to pass the proper type of parameter to inet_ntoa ONCE
+- Lots of commands were using MAXPARA when they shouldnt have been
+- passworded allow{} in example.conf doesnt match anyone anymore
+- Fixed oper{} locop stuff
+- Added can_gzline to doc/conf.doc
+- Replaced EventModEvery with EventMod (allows broader modification)
+- Maybe (but I doubt it) fixed bug #0000040 (Win32 resolver crash) reported by Kyver
+- Hey everyone it's point release time... I completely screwed up check_for_target_limit
+- Made the kline-address error easier to understand (must be instead of is not)
+- Made a SNOMASK for the +s notices, so you arent forced into hearing them if you just
+  want say +k
+- Fixed some return values, can't gline masks with a ! in them anymore
+- ARGH
+- Recoded the module system somewhat, events are now 'stable' meaning if a module doesn't unload an 
+  event the IRCd will not crash. Also fixed a crash involving delayed unloads and cleaned up notices
+- Problem with sendto_ops and !aClient->user  fix
+- Fixed bug in m_tkl_line and various m_line functions (was checking for wrong # of paras)
+- Recoded hooks to take advantage of the module object code
+- Fixed a memory leak in hooks
+- Fixed a bug with module objects involving static linking
+- Recoded hooks to work just like events
+- Fixed a listener bug reported by Dragon974
+- Removed some useless tkl code
+- Fixed #0000046 regarding Module_free memory leak
+- Added patch in #0000053 by |savage|, speedup in can_send
+- Possible fix of #0000042 regarding duplicate scans at same time causing
+  one to slip through, reported by Zogg
+- Fixed a win32 editor bug reported by Jens that limited text additions to 32KB
+- Really fixed bug #0000011 reported by Dragon974 (listener bug)
+- Added link::cipher for #define USE_SSL, use this to select
+  ciphers, read example.conf for more. Closes #000016. Suggested by narf
+- Added a dialog interface to .pem SSL passwords. (Suggestion #0000025)
+- Fixed some minor issues with dialog interface for .pem SSL passwords
+- Added makecert.bat / encpem.bat to src/win32, which are used in SSL release
+- Fixed some t.next's and replaced with codemastr method(tm)
+- Fixed a t.next recode typo
+- Added a ./Config check to see if gcc supports -pipe (speeds up compilation)
+- Made SHOW_SECRET (allow opers to see +s chans in /whois) defined by default, suggested by Sid-V (#0000037)
+- Added except tkl to allow exceptions from tklines, tzlines, shuns, glines, and gzlines, suggested by
+  funraiser [still need to design a way to report in /stats] (#0000044)
+- Documented link::cipher and except tkl in doc/conf.doc
+- Changed umode +I behavoiur to you have to be loading invisibility.so to have
+  the +I functionality. Code is still in IRCd, but isn't used until module
+  is loaded. Loading of this will cause an "R" to be added to /version
+  flags. Hopefully this will satisify some people's thoughts about a so 
+  called spy tool being enabled by default. Also added flag_add(char *) 
+  and flag_del(char) for modules to add to flags string. -Sts
+- Removed -win32 postfix for wircds, look in /version for "W" instead
+- Removed ircnetwork part of /version
+- Cleaned up a bunch of -Wall warnings (unused variables, etc)
+- -Wall cleanup cleanup with SSL AUTH problem
+- Fix for /version crash, reported by RaYmAn
+- Made all functions use new-style parameter lists
+- Moved set::socks::ban-time to set::scan::bantime, and remove the other set::socks::* (not used)
+  also added set::scan::timeout to specify how long the scanner should wait for a response 
+  before giving up
+- Added HOOKTYPE_STATS - allows modules to respond to certain /stats (so far only S is supported)
+- Changed some m_ functions into CMD_FUNC(m_*)
+- Fixed a win32 bug with the scanner code changes
+- Added a win32 menu item that lets you view log files
+- Documented the net set::scan::* directives in doc/conf.doc
+- Fixed a bug in the new usermode system that caused odd Unknown mode flag reporting.
+- Added a shutdown confirm message box to the X button on the win32 GUI 
+  (suggested by dimplesx #0000058
+- Made the win32 version set log files to writable if they are
+  read only (reported by dimplesx #0000057)
+- Removed useless stuff in m_oper (null ptr thing, just dont set them)
+- Fixed auth.c to use random salt
+- Fixed loadmodule invisibility.so: undefined symbol: 
+  get_umode bug, reported by James-Bond, #0000060)
+- BEFORE you use event functions, LockEventSystem(), after,
+  UnlockEventSystem(). In EVENT() functions, the system _is_ locked.
+  This might fix the double recursion mutex problem we got.
+- More -Wall cleanups
+- Fixed hunt_server_token (use IsToken on acptr->from, not acptr)
+- Unbroken Griever's broken hunt_server_token broken token fix
+- Various fixes to virthost system, may fix some memory corruptions,
+  and potential exploits.
+- Made makefile ability to "make custommodule MODULEFILE=m_zline"
+  if m_zline.c is in src/modules/, it will get compiled. This SHOULD
+  help 3rd party modules atleast
+- Added "tainted" variable. 3rd party modules must ++ this upon load,
+  -- upon unload. Will show a "3" in flags.
+- Added extras/m_rawto.c - 3rd party module. Fixed some documentation
+- Added andi's OpenBSD fix for the symbol issue with prefix _
+- Added SJOIN fix so it won't accept NULL channels
+- Fixed a problem with Mod_Handler being **, found by andi
+- Fixed an issue with -x and /quit and whowas, found by RaYmAn
+- Modified the OpenBSD fix to work for all OSes that add an _
+- Fixed m_rawto.c problem found by TheDarkOne
+- Possibly fixed the /who flags bug reported by sbalmos (#0000063)
+- lack of time sucks. openbsd problem
+- Fixed a typo in the docs found by TheEggMan
+- Fixed a m_htm.c problem
+- Updated supporters list in /credits
+- Fixed s_conf.c so a) It uses MyMalloc b) It doesn't cast the return
+  from MyMalloc!
+- Clean compile under -Wunused
+- Clean compile under -Wformat
+- Clean compile under -Wparentheses
+- Clean compile under -Wall -Wno-implicit
+- Fixed #undef STRIPBADWORDS problem, patch by light
+- Blah blah new cloaking shit blah
+- Added a patch by Syzop fixing a memory leak in StripColors
+- Added a patch by Syzop fixing a +k issue using a key with a , and when using long keys
+- Added a patch by Syzop to fix a MyMalloc/MyFree debugmode error
+- Added yet another patch by Syzop to fix a /vhost bug when using very long args
+- Added a patch by Syzop to fix a possible hash bug with /list
+- Made the server pass extraflags at linking for deny version validation
+- Added a patch by Syzop to fix a bug preventing +I from being used (fixes #0000073)
+- Readded examples to doc/conf.doc by request of several users
+- Clean compile with -Wall
+- Win32 cleanup of the -Wall cleanup
+- REALLY clean compile with -Wall (except for wierd TStime stuff)
+- Removed all remnants of PROTO()
+- Removed src/cio_main.c, src/cio_init.c, include/cio.h, include/ciofunc.h extremely old unused code
+- Win32 fix with u_int16_t
+- Removed my_name_for_link (unused)
+- Preparation for release
+- Changed to beta7
+- Fixed a IPv6 problem reported by Zerwas
+- Fixed -Wall warnings for TStime
+- Compile fix for TS2ts 
+- Small release tricks

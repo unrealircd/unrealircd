@@ -36,6 +36,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -189,9 +190,11 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_serv_butone_token(cptr, sptr->name,
 		    MSG_CHGHOST, TOK_CHGHOST, "%s %s", acptr->name, parv[2]);
 		if (acptr->user->virthost)
+		{
 			MyFree(acptr->user->virthost);
-		acptr->user->virthost = MyMalloc(strlen(parv[2]) + 1);
-		ircsprintf(acptr->user->virthost, "%s", parv[2]);
+			acptr->user->virthost = 0;
+		}
+		acptr->user->virthost = strdup(parv[2]);
 		return 0;
 	}
 	else

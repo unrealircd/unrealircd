@@ -228,4 +228,5 @@
 /* Define if you want IPv6 enabled */
 #undef INET6
 
-
+/* Define if your system prepends an underscore to symbols */
+#undef UNDERSCORE

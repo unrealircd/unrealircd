@@ -66,7 +66,7 @@ static dbufbuf *freelist = NULL;
 ** dbuf_alloc - allocates a dbufbuf structure either from freelist or
 ** creates a new one.
 */
-static dbufbuf *dbuf_alloc()
+static dbufbuf *dbuf_alloc(void)
 {
 #if defined(VALLOC) && !defined(DEBUGMODE)
 	dbufbuf *dbptr, *db2ptr;
@@ -119,8 +119,7 @@ static dbufbuf *dbuf_alloc()
 /*
 ** dbuf_free - return a dbufbuf structure to the freelist
 */
-static void dbuf_free(ptr)
-	dbufbuf *ptr;
+static void dbuf_free(dbufbuf *ptr)
 {
 	dbufalloc--;
 	ptr->next = freelist;
@@ -133,8 +132,7 @@ static void dbuf_free(ptr)
 ** there is no reason to continue this buffer...). After this
 ** the "dbuf" has consistent EMPTY status... ;)
 */
-static int dbuf_malloc_error(dyn)
-	dbuf *dyn;
+static int dbuf_malloc_error(dbuf *dyn)
 {
 	dbufbuf *p;
 
@@ -150,10 +148,7 @@ static int dbuf_malloc_error(dyn)
 }
 
 
-int  dbuf_put(dyn, buf, length)
-	dbuf *dyn;
-	char *buf;
-	int  length;
+int  dbuf_put(dbuf *dyn, char *buf, int length)
 {
 	dbufbuf **h, *d;
 	int  off;
@@ -205,9 +200,7 @@ int  dbuf_put(dyn, buf, length)
 }
 
 
-char *dbuf_map(dyn, length)
-	dbuf *dyn;
-	int *length;
+char *dbuf_map(dbuf *dyn, int *length)
 {
 	if (dyn->head == NULL)
 	{
@@ -221,9 +214,7 @@ char *dbuf_map(dyn, length)
 	return (dyn->head->data + dyn->offset);
 }
 
-int  dbuf_delete(dyn, length)
-	dbuf *dyn;
-	int  length;
+int  dbuf_delete(dbuf *dyn, int length)
 {
 	dbufbuf *d;
 	int  chunk;
@@ -255,10 +246,7 @@ int  dbuf_delete(dyn, length)
 	return 0;
 }
 
-int  dbuf_get(dyn, buf, length)
-	dbuf *dyn;
-	char *buf;
-	int  length;
+int  dbuf_get(dbuf *dyn, char *buf, int length)
 {
 	int  moved = 0;
 	int  chunk;
@@ -284,10 +272,7 @@ int  dbuf_get(dyn, buf, length)
 ** either a \r or \n prsent.  If so, copy as much as possible (determined by
 ** length) into buf and return the amount copied - else return 0.
 */
-int  dbuf_getmsg(dyn, buf, length)
-	dbuf *dyn;
-	char *buf;
-	int  length;
+int  dbuf_getmsg(dbuf *dyn, char *buf, int length)
 {
 	dbufbuf *d;
 	char *s;

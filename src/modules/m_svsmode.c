@@ -38,6 +38,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -202,7 +203,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					strcpy(uhost, make_nick_user_host(acptr->name, 
 						acptr->user->username, acptr->user->realhost));
 					strcpy(vhost, make_nick_user_host(acptr->name,
-						acptr->user->username, acptr->user->virthost));
+						acptr->user->username, acptr->user->virthost ? acptr->user->virthost : acptr->user->realhost));
 					ban = chptr->banlist;
 					while (ban) {
 						bnext = ban->next;
@@ -242,7 +243,9 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					strcpy(uhost, make_nick_user_host(acptr->name, 
 						acptr->user->username, acptr->user->realhost));
 					strcpy(vhost, make_nick_user_host(acptr->name,
-						acptr->user->username, acptr->user->virthost));
+						acptr->user->username, acptr->user->virthost
+						? acptr->user->virthost : 
+					 acptr->user->realhost));
 					ban = chptr->exlist;
 					while (ban) {
 						bnext = ban->next;
@@ -273,6 +276,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_serv_butone(NULL, ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf);
 		*parabuf = 0;
 	}
+	return 0;
 }
 
 /*
@@ -282,10 +286,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
  * parv[2] - modes to change
  * parv[3] - Service Stamp (if mode == d)
  */
-int  m_svsmode(cptr, sptr, parc, parv)
-        aClient *cptr, *sptr;
-        int  parc;
-        char *parv[];
+int  m_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	int i;
         char **p, *m;
@@ -394,10 +395,7 @@ int  m_svsmode(cptr, sptr, parc, parv)
  * parv[2] - modes to change
  * parv[3] - Service Stamp (if mode == d)
  */
-int  m_svs2mode(cptr, sptr, parc, parv)
-        aClient *cptr, *sptr;
-        int  parc;
-        char *parv[];
+int  m_svs2mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
         int  i;
         char **p, *m;

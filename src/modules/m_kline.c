@@ -35,6 +35,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -79,7 +80,7 @@ int    m_kline_Init(int module_load)
 	/*
 	 * We call our add_Command crap here
 	*/
-	add_Command(MSG_KLINE, TOK_KLINE, m_kline, MAXPARA);
+	add_Command(MSG_KLINE, TOK_KLINE, m_kline, 2);
 	return MOD_SUCCESS;
 	
 }
@@ -121,7 +122,7 @@ DLLFUNC int m_kline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *host, *tmp, *hosttemp;
 	char uhost[80], name[80];
-	int  ip1, ip2, ip3, temp, i;
+	int  ip1, ip2, ip3, i;
 	aClient *acptr;
 	ConfigItem_ban *bconf;
 
@@ -143,7 +144,7 @@ DLLFUNC int m_kline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 /* This patch allows opers to quote kline by address as well as nick
  * --Russell
  */
-	if (hosttemp = (char *)strchr((char *)parv[1], '@'))
+	if ((hosttemp = (char *)strchr((char *)parv[1], '@')))
 	{
 		*hosttemp = 0;
 		hosttemp++;
@@ -242,4 +243,5 @@ DLLFUNC int m_kline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	bconf->flag.type2 = CONF_BAN_TYPE_TEMPORARY;
 	AddListItem(bconf, conf_ban);
 	check_pings(TStime(), 1);
+	return 0;
 }

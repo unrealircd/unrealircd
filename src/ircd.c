@@ -18,7 +18,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef lint
+#ifndef CLEAN_COMPILE
 static char sccsid[] =
     "@(#)ircd.c	2.48 3/9/94 (C) 1988 University of Oulu, \
 Computing Center and Jarkko Oikarinen";
@@ -88,6 +88,7 @@ extern char unreallogo[];
 int SVSNOOP = 0;
 extern char *buildid;
 time_t timeofday = 0;
+int tainted = 0;
 LoopStruct loop;
 extern aMotd *opermotd;
 extern aMotd *svsmotd;
@@ -137,21 +138,21 @@ void save_stats(void)
 	FILE *stats = fopen("ircd.stats", "w");
 	if (!stats)
 		return;
-	fprintf(stats, "%li\n", IRCstats.clients);
-	fprintf(stats, "%li\n", IRCstats.invisible);
-	fprintf(stats, "%li\n", IRCstats.servers);
-	fprintf(stats, "%li\n", IRCstats.operators);
-	fprintf(stats, "%li\n", IRCstats.unknown);
-	fprintf(stats, "%li\n", IRCstats.me_clients);
-	fprintf(stats, "%li\n", IRCstats.me_servers);
-	fprintf(stats, "%li\n", IRCstats.me_max);
-	fprintf(stats, "%li\n", IRCstats.global_max);
+	fprintf(stats, "%i\n", IRCstats.clients);
+	fprintf(stats, "%i\n", IRCstats.invisible);
+	fprintf(stats, "%i\n", IRCstats.servers);
+	fprintf(stats, "%i\n", IRCstats.operators);
+	fprintf(stats, "%i\n", IRCstats.unknown);
+	fprintf(stats, "%i\n", IRCstats.me_clients);
+	fprintf(stats, "%i\n", IRCstats.me_servers);
+	fprintf(stats, "%i\n", IRCstats.me_max);
+	fprintf(stats, "%i\n", IRCstats.global_max);
 	fclose(stats);
 }
 
 
 void server_reboot(char *);
-void restart PROTO((char *));
+void restart(char *);
 static void open_debugfile(), setup_signals();
 extern void init_glines(void);
 
@@ -182,7 +183,7 @@ TS   NOW;
 #if	defined(PROFIL) && !defined(_WIN32)
 extern etext();
 
-VOIDSIG s_monitor()
+VOIDSIG s_monitor(void)
 {
 	static int mon = 0;
 #ifdef	POSIX_SIGNALS
@@ -247,8 +248,7 @@ VOIDSIG s_rehash()
 #endif
 }
 
-void restart(mesg)
-	char *mesg;
+void restart(char *mesg)
 {
 #ifdef	USE_SYSLOG
 	(void)syslog(LOG_WARNING, "Restarting Server because: %s", mesg);
@@ -273,7 +273,7 @@ VOIDSIG s_restart()
 }
 
 
-VOIDSIG s_segv()
+VOIDSIG s_segv(void)
 {
 	char	*argv[] = 
 	{
@@ -323,8 +323,7 @@ VOIDSIG dummy()
 #endif /* _WIN32 */
 
 
-void server_reboot(mesg)
-	char *mesg;
+void server_reboot(char *mesg)
 {
 	int  i;
 #ifdef _WIN32
@@ -432,8 +431,7 @@ EVENT(garbage_collect)
 **	function should be made latest. (No harm done if this
 **	is called earlier or later...)
 */
-static TS try_connections(currenttime)
-	TS   currenttime;
+static TS try_connections(TS currenttime)
 {
 	ConfigItem_link *aconf;
 	ConfigItem_deny_link *deny;
@@ -547,8 +545,8 @@ extern TS check_pings(TS currenttime, int check_kills)
 
 		if (check_kills && !killflag && IsPerson(cptr))
 		{
-			if (bconf =
-			    Find_ban(inetntoa((char *)&cptr->ip), CONF_BAN_IP))
+			if ((bconf =
+			    Find_ban(inetntoa((char *)&cptr->ip), CONF_BAN_IP)))
 			{
 				killflag = 1;
 			} 
@@ -711,7 +709,7 @@ extern TS check_pings(TS currenttime, int check_kills)
 **	This is called when the commandline is not acceptable.
 **	Give error message and exit without starting anything.
 */
-static int bad_command()
+static int bad_command(void)
 {
 #ifndef _WIN32
 #ifdef CMDLINE_CONFIG
@@ -734,8 +732,7 @@ char chess[] = {
 	85, 110, 114, 101, 97, 108, 0
 };
 #ifndef NO_FDLIST
-inline TS   check_fdlists(now)
-	TS   now;
+inline TS   check_fdlists(TS now)
 {
 	aClient *cptr;
 	int  pri;		/* temp. for priority */
@@ -778,12 +775,10 @@ EVENT(e_check_fdlists)
 extern time_t TSoffset;
 
 #ifndef _WIN32
-int  main(argc, argv)
+int  main(int argc, char *argv[])
 #else
-int  InitwIRCD(argc, argv)
+int  InitwIRCD(int argc, char *argv[])
 #endif
-	int  argc;
-	char *argv[];
 {
 #ifdef _WIN32
 	WORD wVersionRequested = MAKEWORD(1, 1);
@@ -795,7 +790,6 @@ int  InitwIRCD(argc, argv)
 #ifdef HAVE_PSTAT
 	union pstun pstats;
 #endif
-	int  i, ggg;
 	int  portarg = 0;
 #ifdef  FORCE_CORE
 	struct rlimit corelim;
@@ -803,8 +797,6 @@ int  InitwIRCD(argc, argv)
 #ifndef NO_FDLIST
 	TS   nextfdlistcheck = 0;	/*end of priority code */
 #endif
-	TS   last_tune = 0;
-	static TS lastglinecheck = 0;
 #if !defined(_WIN32) && !defined(_AMIGA)
 	sbrk0 = (char *)sbrk((size_t)0);
 	uid = getuid();
@@ -855,6 +847,7 @@ int  InitwIRCD(argc, argv)
 		char *p = argv[0] + 1;
 		int  flag = *p++;
 		if (flag == '\0' || *p == '\0')
+		{
 			if (argc > 1 && argv[1][0] != '-')
 			{
 				p = *++argv;
@@ -862,6 +855,7 @@ int  InitwIRCD(argc, argv)
 			}
 			else
 				p = "";
+		}
 		switch (flag)
 		{
 #ifndef _WIN32
@@ -959,7 +953,13 @@ int  InitwIRCD(argc, argv)
 			struct IN_ADDR bah;
 			int bit;
 			parse_netmask("255.255.255.255/8", &bah, &bit);
-			printf("%s - %d",Inet_ia2p(&bah), bit);
+			printf("%s - %d\n",Inet_ia2p(&bah), bit);
+			flag_add("m");
+			flag_del('m');
+			flag_add("n");
+			flag_add("m");
+			flag_del('m');
+			printf("%s\n", extraflags);
 			exit(0);
 		}
 		  case 'C':
@@ -1208,7 +1208,7 @@ int  InitwIRCD(argc, argv)
 	PS_STRINGS->ps_nargvstr = 1;
 	PS_STRINGS->ps_argvstr = me.name;
 #endif
-	module_loadall();
+	module_loadall(0);
 #ifdef STATIC_LINKING
         l_commands_Load(0);
 #endif
@@ -1246,7 +1246,9 @@ void SocketLoop(void *dummy)
 		{
 			sendto_realops("Time running backwards! %i-%i<0", timeofday, oldtimeofday);
 		}
+		LockEventSystem();
 		DoEvents();
+		UnlockEventSystem();
 		/*
 		   ** Run through the hashes and check lusers every
 		   ** second
@@ -1376,7 +1378,7 @@ void SocketLoop(void *dummy)
  * set from the command line by -x, use /dev/null as the dummy logfile as long
  * as DEBUGMODE has been defined, else dont waste the fd.
  */
-static void open_debugfile()
+static void open_debugfile(void)
 {
 #ifdef	DEBUGMODE
 	int  fd;

@@ -35,6 +35,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -133,7 +134,7 @@ DLLFUNC int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    "%s", parv[1]);
 
 	/* Only replaces AKILL (global ban nick)'s */
-	if (bconf = Find_banEx(parv[1], CONF_BAN_NICK, CONF_BAN_TYPE_AKILL))
+	if ((bconf = Find_banEx(parv[1], CONF_BAN_NICK, CONF_BAN_TYPE_AKILL)))
 	{
 		if (bconf->mask)
 			MyFree(bconf->mask);
@@ -158,5 +159,5 @@ DLLFUNC int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	bconf->flag.type2 = CONF_BAN_TYPE_AKILL;
 	if (addit == 1)
 		AddListItem(bconf, conf_ban);
-
+	return 0;
 }

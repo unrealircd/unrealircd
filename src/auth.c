@@ -135,11 +135,11 @@ void	Auth_DeleteAuthStruct(anAuthStruct *as)
 int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 {
 #ifdef	AUTHENABLE_UNIXCRYPT
-	char	salt[3];
 	extern	char *crypt();
 #endif
 #if defined(AUTHENABLE_MD5) || defined(AUTHENABLE_SHA1)
         static char    buf[512];
+        int		i;
 #endif
 
 #ifdef  AUTHENABLE_MD5
@@ -154,8 +154,6 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 	X509 *x509_client = NULL;
 	FILE *key_file = NULL;
 #endif
-	int	i = 0; /* We can always use this .. */
-	
 	if (!as)
 		return 1;
 		
@@ -177,10 +175,7 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 			/* If our data is like 1 or none, we just let em through .. */
 			if (!(as->data[0] && as->data[1]))
 				return 1;
-			salt[0] = as->data[0];
-			salt[1] = as->data[1];
-			salt[2] = '\0';
-			if (!strcmp(crypt(para, salt), as->data))
+			if (!strcmp(crypt(para, as->data), as->data))
 				return 2;
 			else
 				return -1;
@@ -260,6 +255,7 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 			return 2;	
 #endif
 	}
+	return -1;
 }
 
 char	*Auth_Make(short type, char *para)
@@ -270,6 +266,7 @@ char	*Auth_Make(short type, char *para)
 #endif
 #if defined(AUTHENABLE_MD5) || defined(AUTHENABLE_SHA1)
         static char    buf[512];
+	int		i;
 #endif
 
 #ifdef  AUTHENABLE_MD5
@@ -278,7 +275,6 @@ char	*Auth_Make(short type, char *para)
 #ifdef  AUTHENABLE_SHA1
         SHA_CTX sha1_ctx;
 #endif
-        int i;
 
 	switch (type)
 	{
@@ -292,9 +288,7 @@ char	*Auth_Make(short type, char *para)
 			/* If our data is like 1 or none, we just let em through .. */
 			if (!(para[0] && para[1]))
 				return NULL;
-			salt[0] = para[0];
-			salt[1] = para[1];
-			salt[2] = '\0';
+			sprintf(salt, "%02X", (rand() >> 24) & 0xFF);
 			return(crypt(para, salt));
 			break;
 #endif

@@ -36,16 +36,9 @@
 #ifdef	PARAMH
 #include <sys/param.h>
 #endif
+
 #if !defined(IN_ADDR)
 #include "sys.h"
-#endif
-
-#ifndef PROTO
-#if __STDC__
-#	define PROTO(x)	x
-#else
-#	define PROTO(x)	()
-#endif
 #endif
 
 #ifdef DEVELOP_CVS
@@ -95,38 +88,38 @@ void free();
 #define TS time_t
 
 
-extern int match PROTO((char *, char *));
+extern int match(char *, char *);
 #define mycmp(a,b) \
- ( (toupper((a)[0])!=toupper((b)[0])) || smycmp((a)+1,(b)+1) )
-extern int smycmp PROTO((char *, char *));
+ ( (toupper(a[0])!=toupper(b[0])) || smycmp((a)+1,(b)+1) )
+extern int smycmp(char *, char *);
 #ifndef GLIBC2_x
-extern int myncmp PROTO((char *, char *, int));
+extern int myncmp(char *, char *, int);
 #endif
 
 #ifdef NEED_STRTOK
-extern char *strtok2 PROTO((char *, char *));
+extern char *strtok2(char *, char *);
 #endif
 #ifdef NEED_STRTOKEN
-extern char *strtoken PROTO((char **, char *, char *));
+extern char *strtoken(char **, char *, char *);
 #endif
 #ifdef NEED_INET_ADDR
-extern unsigned long inet_addr PROTO((char *));
+extern unsigned long inet_addr(char *);
 #endif
 
 #if defined(NEED_INET_NTOA) || defined(NEED_INET_NETOF) && !defined(_WIN32)
 #include <netinet/in.h>
 #endif
 #ifdef NEED_INET_NTOA
-extern char *inet_ntoa PROTO((struct IN_ADDR));
+extern char *inet_ntoa(struct IN_ADDR);
 #endif
 
 #ifdef NEED_INET_NETOF
-extern int inet_netof PROTO((struct IN_ADDR));
+extern int inet_netof(struct IN_ADDR);
 #endif
 
 int  global_count, max_global_count;
-extern char *myctime PROTO((time_t));
-extern char *strtoken PROTO((char **, char *, char *));
+extern char *myctime(time_t);
+extern char *strtoken(char **, char *, char *);
 
 #define PRECISE_CHECK
 
@@ -147,10 +140,10 @@ extern u_char tolowertab[], touppertab[];
 
 #ifndef USE_LOCALE
 #undef tolower
-#define tolower(c) (tolowertab[(c)])
+#define tolower(c) (tolowertab[(int)(c)])
 
 #undef toupper
-#define toupper(c) (touppertab[(c)])
+#define toupper(c) (touppertab[(int)(c)])
 
 #undef isalpha
 #undef isdigit
@@ -190,8 +183,8 @@ extern unsigned char char_atribs[];
 #define islower(c) ((char_atribs[(u_char)(c)]&ALPHA) && ((u_char)(c) > 0x5f))
 #define isupper(c) ((char_atribs[(u_char)(c)]&ALPHA) && ((u_char)(c) < 0x60))
 #define isdigit(c) (char_atribs[(u_char)(c)]&DIGIT)
-#define	isxdigit(c) (isdigit(c) || 'a' <= (c) && (c) <= 'f' || \
-		     'A' <= (c) && (c) <= 'F')
+#define	isxdigit(c) (isdigit(c) || ('a' <= (c) && (c) <= 'f') || \
+		     ('A' <= (c) && (c) <= 'F'))
 #define isalnum(c) (char_atribs[(u_char)(c)]&(DIGIT|ALPHA))
 #define isprint(c) (char_atribs[(u_char)(c)]&PRINT)
 #define isascii(c) ((u_char)(c) >= 0 && (u_char)(c) <= 0x7f)
@@ -204,7 +197,7 @@ extern unsigned char char_atribs[];
 #define MyMalloc malloc
 #define MyRealloc realloc
 #else
-#define MyFree(x) ircd_log("%s:%i: free %02x", __FILE__, __LINE__, x); free(x)
+#define MyFree(x) do {debug(DEBUG_MALLOC, "%s:%i: free %02x", __FILE__, __LINE__, x); free(x); } while(0)
 #define MyMalloc(x) StsMalloc(x, __FILE__, __LINE__)
 #define MyRealloc realloc
 static char *StsMalloc(size_t size, char *file, long line)
@@ -212,7 +205,7 @@ static char *StsMalloc(size_t size, char *file, long line)
 	void *x;
 	
 	x = malloc(size);
-	ircd_log("%s:%i: malloc %02x", file, line, x);	
+	debug(DEBUG_MALLOC, "%s:%i: malloc %02x", file, line, x);
 	return x;
 }
 

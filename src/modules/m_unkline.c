@@ -35,6 +35,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -117,7 +118,6 @@ int	m_unkline_Unload(int module_unload)
 DLLFUNC int m_unkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 
-	int  result, temp;
 	char *hosttemp = parv[1], host[80], name[80];
 	ConfigItem_ban *bconf;
 	
@@ -132,7 +132,7 @@ DLLFUNC int m_unkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr, ":%s NOTICE %s :*** Not enough parameters", me.name, parv[0]);
 		return 0;
 	}
-	if (hosttemp = (char *)strchr((char *)parv[1], '@'))
+	if ((hosttemp = (char *)strchr((char *)parv[1], '@')))
 	{
 		*hosttemp = 0;
 		hosttemp++;
@@ -181,4 +181,5 @@ DLLFUNC int m_unkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	/* This wasn't here before -- Barubary */
 	check_pings(TStime(), 1);
+	return 0;
 }

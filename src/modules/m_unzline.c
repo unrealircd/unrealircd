@@ -35,6 +35,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -118,8 +119,8 @@ int	m_unzline_Unload(int module_unload)
 DLLFUNC int m_unzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char userhost[512 + 2] = "", *in;
-	int  result = 0, uline = 0, akill = 0;
-	char *mask, *server;
+	int  uline = 0, akill = 0;
+	char *mask, *server = NULL;
 	ConfigItem_ban *bconf;
 	uline = IsULine(sptr) ? 1 : 0;
 
@@ -181,7 +182,7 @@ DLLFUNC int m_unzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(sptr,
 				    ":%s NOTICE %s :*** it's not possible to have a z:line that's not an ip addresss...",
 				    me.name, sptr->name);
-				return;
+				return 0;
 			}
 			in++;
 		}
@@ -197,15 +198,13 @@ DLLFUNC int m_unzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(sptr,
 				    ":%s NOTICE %s :*** it's not possible to have a z:line that's not an ip addresss...",
 				    me.name, sptr->name);
-				return;
+				return 0;
 			}
 			in++;
 		}
 	}
 
 	akill = 0;
-      retry_unzline:
-
 	bconf = Find_ban(userhost, CONF_BAN_IP);
 	if (!bconf)
 	{

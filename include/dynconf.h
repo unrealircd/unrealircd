@@ -68,11 +68,8 @@ struct zConfiguration {
 	char *auto_join_chans;
 	char *oper_auto_join_chans;
 	char *oper_only_stats;
-	int  socksbantime;
 	int  maxchannelsperuser;
 	int  anti_spam_quit_message_time;
-	char *socksbanmessage;
-	char *socksquitmessage;
 	aNetwork network;
 };
 
@@ -93,9 +90,6 @@ extern aConfiguration iConf;
 #define OPER_AUTO_JOIN_CHANS		iConf.oper_auto_join_chans
 #define HOST_TIMEOUT			iConf.host_timeout
 #define HOST_RETRIES			iConf.host_retries
-#define SOCKSBANMSG			iConf.socksbanmessage
-#define SOCKSQUITMSG			iConf.socksquitmessage
-#define SOCKSBANTIME			iConf.socksbantime
 #define NAME_SERVER			iConf.name_server
 #define IDENT_CHECK			iConf.ident_check
 #define FAILOPER_WARN			iConf.fail_oper_warn

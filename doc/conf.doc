@@ -21,6 +21,7 @@ Table of Contents
 13.4 Ban server block (q:line)
 14.0 Except ban block (E:line)
 14.1 Except scan block (e:line)
+14.2 Except tkl block (N/A)
 15.0 Deny dcc block (dccdeny.conf)
 15.1 Deny version block (V:line)
 15.2 Deny link block (D:line and d:line)
@@ -83,6 +84,13 @@ me {
 	numeric <server-numeric>;
 };
 
+Example:
+me {
+	name irc.unrealircd.com;
+	info "UnrealIRCd Development Server";
+	numeric 21;
+};
+
 These values are pretty obvious. The me::name specifies the name of the server, me::info 
 specifies the server's info line, me::numeric specifies a numeric to identify the server. This 
 must be a value between 1 and 255 that is unique to the server meaning no other servers on the 
@@ -95,6 +103,12 @@ admin {
 	<text-line>;
 	<text-line>;
 	...
+};
+
+Example:
+admin {
+	"codemastr";
+	"codemastr@unrealircd.com";
 };
 
 The admin block defines the text displayed in a /admin request. You can specify as many lines 
@@ -110,6 +124,13 @@ class <name> {
 	connfreq <connect-frequency>;
 	maxclients <maximum-clients>;
 	sendq <send-queue>;
+};
+
+Example:
+class clients {
+	pingfreq 90;
+	maxclients 100;
+	sendq 50000;
 };
 
 The class block is a vastly simplified version of the Y:lines. You are no longer limited to 
@@ -133,6 +154,16 @@ allow {
 	redirect-port <port-to-forward-to>;
 };
 
+Example:
+allow {
+	ip *@*;
+	hostname *@*;
+	class clients;
+	maxperip 2;
+	redirect-server irc2.unrealircd.com;
+	redirect-port 6667;
+};
+
 The allow class is similar to an I:line but provides more features. The allow::ip specifies a 
 user@ip hostmask for a user to match to connect and allow::hostname specifies a user@host to 
 match to connect, allow::class is the name of a preexisting (appears before this block in the 
@@ -150,6 +181,15 @@ listen <ip:port> {
 		<option>;
 		<option>;
 		...
+	};
+};
+
+Examples:
+listen 192.168.1.1:6667;
+
+listen 192.168.1.1:6697 {
+	options {
+		ssl;
 	};
 };
 
@@ -174,12 +214,25 @@ oper <name> {
 	};
 	password <password> { <auth-type>; };
 	class <class-name>;
+	snomask <snomask>;
 	flags <flags>;
 	flags {
 		<flag>;
 		<flag>;
 		...
 	};
+};
+
+Example:
+oper codemastr {
+	from {
+		userhost codemastr@staff.unrealircd.info;
+		userhost codemastr@unrealircd.com;
+	};
+	password "testpass";
+	class clients;
+	snomask "+kfc";
+	flags OAaRDNz^t;
 };
 
 The oper block allows you to assign IRC Operators for your server. The oper:: specifies the 
@@ -189,10 +242,11 @@ The oper::password is the password the user must specify, oper::password:: allow
 specify an authentication method for this password, valid auth-types are crypt, md5, and sha1. 
 If you want to use a plain-text password leave this sub-block out. The oper::class directive 
 specifies the name of a preexisting (appears before this in the config file) class name that 
-the oper block will use. The oper::flags directive has two formats. If you wish to use the old 
-style oper flags i.e., OAa, you use the flags <flags> method, if you want to use the new style,
-i.e., services-admin, then you use the flags { <flag>; } method. Below is a list of all the 
-flags (in both formats) and what they do.
+the oper block will use. The oper::snomask directive lets you specify the default snomask the oper will
+receive, this overrides the standard snomask that is normally set. The oper::flags directive has two
+formats. If you wish to use the old style oper flags i.e., OAa, you use the flags <flags> method, 
+if you want to use the new style, i.e., services-admin, then you use the flags { <flag>; } method. 
+Below is a list of all the flags (in both formats) and what they do.
 
 o	local			Makes you a local operator (contains rhgwlckbBn)
 O	global			Makes you a global operator (contains oLKG)
@@ -212,7 +266,8 @@ k	can_localkill		Can /kill local users
 K	can_globalkill		Can /kill global users
 b	can_kline		Can use /kline
 B	can_unkline		Can use /unkline
-t	can_gkline		Can use /gline
+t	can_gkline		Can use /gline and /shun
+Z	can_gzline		Can use /gzline
 n	can_localnotice		Can send local server notices
 G	can_globalnotice	Can send global server notices
 z	can_zline		Can use /zline
@@ -228,6 +283,12 @@ drpass {
 	die <die-password> { <auth-type>; };
 };
 
+Example:
+drpass {
+	restart "0CvoXHMDB45pY" { crypt; };
+	die "0BMFSJ6FWd23s" { crypt; };
+};
+
 This block sets the /restart and /die passwords with drpass::restart and drpass::die 
 respectively. The drpass::restart:: and drpass::die:: allow you to specify the type of 
 authentication used by this item. The currently supported authentication types are crypt, md5, 
@@ -238,6 +299,9 @@ and sha1.
 Syntax:
 include <file-name>;
 
+Example:
+include "badwords.channel.conf";
+
 This directive specifies a filename to be loaded as a seperate configuration file. This file 
 may contain any type of config block and can even include other files. Wildcards are supported 
 in the file name to allow you to load multiple files at once.
@@ -246,6 +310,9 @@ in the file name to allow you to load multiple files at once.
 
 Syntax:
 loadmodule <file-name>;
+
+Example:
+include "src/modules/commands.so";
 
 This directive specifies a filename to be loaded as a module. Some modules may have there own 
 documentation which should be consulted when setting it up. Loadmodule also supports wildcards 
@@ -262,6 +329,12 @@ log <file-name> {
 		<flag>;
 		...
 	};
+};
+
+Example:
+log ircd.log {
+	maxsize 200KB;
+	flags { errors; tkl; kline; };
 };
 
 The log block allows you to assign different log files for different purposes. The log:: 
@@ -281,6 +354,14 @@ tld {
 	channel <channel-name>;
 };
 
+Example:
+tld {
+	mask *@*.es;
+	motd motd.spanish;
+	rules rules.spanish;
+	channel #help-spanish;
+};
+
 The tld block allows you to specify a motd, rules, and channel for a user based on their host. 
 This is useful if you want different motds for different languages. The tld::mask is a
 user@host mask that the user's username and hostname must match. The tld::motd and tld::rules 
@@ -296,6 +377,12 @@ ban nick {
 	reason <reason-for-ban>;
 };
 
+Example:
+ban nick {
+	mask "*Serv";
+	reason "Reserved for services";
+};
+
 The ban nick block allows you to disable use of a nickname on the server. The ban::mask allows 
 wildcard masks to match multiple nicks, and ban::reason allows you to specify the reason for 
 which this ban is placed. Most commonly these blocks are used to ban usage of the nicknames 
@@ -307,6 +394,12 @@ Syntax:
 ban user {
 	mask <hostmask>;
 	reason <reason-for-ban>;
+};
+
+Example:
+ban user {
+	mask *@*.bobs.com;
+	reason "Abuse from domain";
 };
 
 This block allows you to ban a user@host mask from connecting to the server. The ban::mask is a
@@ -322,6 +415,12 @@ ban ip {
 	reason <reason-for-ban>;
 };
 
+Example:
+ban ip {
+	mask 127.0.0.1;
+	reason "No local connections allowed";
+};
+
 The ban ip block bans an IP from accessing the server. This includes both users and servers 
 attempting to link. The ban::mask parameter is an IP which may contain wildcard characters, and
 ban::reason is the reason why this ban is being placed. Since this ban affects servers it should
@@ -333,6 +432,12 @@ Syntax:
 ban realname {
 	mask <realname-mask>;
 	reason <reason-for-ban>;
+};
+
+Example:
+ban realname {
+	mask "*sub7*";
+	reason "Sub7 Drones are not allowed";
 };
 
 The ban realname block allows you to ban a client based on the GECOS (realname) field. This is 
@@ -348,6 +453,12 @@ ban server {
 	reason <reason-for-ban>;
 };
 
+Example:
+ban server {
+	mask irc.lamerland.com;
+	reason "Too many lamers";
+};
+
 This block disables a server's ability to connect to your server. The ban::mask field specifies
 a wildcard mask to match against the server attempting to connect's name, and ban::reason 
 specifies the reason for which this ban has been placed.
@@ -357,6 +468,11 @@ specifies the reason for which this ban has been placed.
 Syntax:
 except ban {
 	mask <hostmask>;
+};
+
+Example:
+except ban {
+	mask *@*.unrealircd.com;
 };
 
 The except ban block allows you to specify a user@host that will override a ban placed on a 
@@ -371,9 +487,33 @@ except scan {
 	mask <ipmask>;
 };
 
+Example:
+except scan {
+	mask 192.168.1.23;
+};
+
 The except scan block allows you to specify an IP mask that will override the scanners. This 
 only works if you have chosen to load the scanner modules. The except::mask specifies an IP 
 mask that will not be banned because of any type of scanner problem.
+
+14.2 Except tkl block (N/A)
+
+Syntax:
+except tkl {
+	type <type>;
+	mask <hostmask>;
+};
+
+Example:
+except tkl {
+	type gline;
+	mask *@*.unrealircd.com;
+};
+
+The except tkl block lets you set a host as being exempt from certain types of tkls. The
+except::type specifies the type of tkl the mask will be exempt from. Valid entries are gline,
+gzline, tkline, tzline, or shun. The except::mask specifies a user@host that will be exempt
+from the ban.
 
 15.0 Deny dcc block (dccdeny.conf)
 
@@ -381,6 +521,12 @@ Syntax:
 deny dcc {
 	filename <file-to-block>;
 	reason <reason-for-ban>;
+};
+
+Example:
+deny dcc {
+	filename "dmsetup.exe";
+	reason "Dmsetup is a trojan";
 };
 
 The deny dcc block allows you to specify a filename which will not be allowed to be sent via 
@@ -397,6 +543,13 @@ deny version {
 	flags <compile-flags>;
 };
 
+Example:
+deny version {
+	mask *;
+	version *;
+	flags !R;
+};
+	
 This block allows you to deny a server from linking based on the version of Unreal it is running
 and what compile time options it has. The format for this block is somewhat complex but isn't 
 too hard to figure out. The deny::mask directive specifies a wildcard mask of the server name 
@@ -409,7 +562,8 @@ that version is denied, and if it is a ! then all versions except the specified 
 deny::flags directive allows you to specify what compile time flags the server may or may not 
 have. The flags are arranged one after the other with no seperation between, if a character is 
 prefixed by a ! then it means the server may not have this flag compiled into it, if it does not
-have a ! prefix, then it means the server must have this flag compiled.
+have a ! prefix, then it means the server must have this flag compiled. An * can be specified for both
+the version and the flags to indicate that all are allowed.
 
 15.2 Deny link block (D:line and d:line)
 
@@ -418,6 +572,13 @@ deny link {
 	mask <server-name>;
 	rule <crule-expression>;
 	type <type-of-denial>;
+};
+
+Example:
+deny link {
+	mask *.ca;
+	rule "connected(hub.irc.net)";
+	type all;
 };
 
 This block allows you to use specific rules to deny a server from linking. The deny::mask 
@@ -442,6 +603,12 @@ deny channel {
 	reason <reason-for-ban>;
 };
 
+Example:
+deny channel {
+	channel "#*hack*";
+	reason "Hacking channels are not allowed";
+};
+
 The deny channel block allows you to disallow users from joining specific channels. The 
 deny::channel directive specifies a wildcard mask of channels the users may not join, and the 
 deny::reason specifies the reason why the channel may not be joined. 
@@ -451,6 +618,11 @@ deny::reason specifies the reason why the channel may not be joined.
 Syntax:
 allow channel {
 	channel <channel-mask>;
+};
+
+Example:
+allow channel {
+	channel "#help";
 };
 
 The allow channel block allows you to specify specific channels that users may join. The 
@@ -470,6 +642,16 @@ vhost {
 	password <password> { <auth-type>; };
 };
 
+Example:
+vhost {
+	vhost "i.love.unrealircd.com";
+	from {
+		userhost "*@unrealircd.com";
+	};
+	login "codemastr";
+	password "hjddfsre";
+};
+
 The vhost block allows you to specify a login/password that can be used with the /vhost command
 to obtain a fake hostname. The vhost::vhost parameter can be either a user@host or just a host 
 that the user will receive upon successful /vhost. The vhost::from::userhost contains a 
@@ -487,6 +669,12 @@ badword <type> {
 	replace <replace-with>;
 };
 
+Example:
+badword channel {
+	word "ass";
+	replace "butt";
+};
+
 The badword block allows you to manipulate the list used for user and channel mode +G to strip 
 "badwords". The badword:: specifies the type, valid types are channel and messages, channel is 
 for the channel +G list, and message is for the user +G list. The badword::word is a regular 
@@ -500,6 +688,11 @@ ulines {
 	<server-name>;
 	<server-name>;
 	...
+};
+
+Example:
+ulines {
+	services.unrealircd.com;
 };
 
 The ulines block lets you define certain servers as having extra abilities. This should only be 
@@ -520,11 +713,24 @@ link <server-name> {
 	leaf <leaf-mask>;
 	leafdepth <depth>;
 	class <class-name>;
+	ciphers <ciphers>;
 	options {
 		<option>;
 		<option>;
 		...
 	};
+};
+
+Example:
+link irc2.unrealircd.com {
+	username *;
+	hostname 127.0.0.1;
+	bind-ip *;
+	port 7018;
+	password-connect "tstlnk";
+	password-receive "tstlnk";
+	hub *;
+	class servers;
 };
 
 The link block is a simplified way to link servers. The link:: should be the name of the server 
@@ -546,7 +752,12 @@ before this in the config) class block that will be used for the server connecti
 link block. The link::options is a list of one or more options you wish this server to use, 
 valid options are ssl (the server will connect using SSL encryption), autoconnect (the server 
 will be autoconnected based on the value in the specified link::class), quarantine (opers on 
-this server will maintain locop status).
+this server will maintain locop status). If the server is set to link via SSL, the
+link::ciphers directive may be used. This allows you to specify the ciphers that will be
+used for this link. The ciphers are specified as a : seperated list in the order of preference. 
+Different systems support different ciphers, so the best way to get a list of available ciphers
+for your system is to execute the openssl ciphers command. This will return a : seperated list
+of the available ciphers.
 
 21.0 Alias block (N/A)
 
@@ -554,6 +765,12 @@ Syntax [standard alias]:
 alias <name> {
 	nick <nick-to-forward-to>;
 	type <type-of-alias>;
+};
+
+Example:
+alias nickserv {
+	nick "nickserv";
+	type services;
 };
 
 The alias block [standard alias] allows you to forward a command to a user, for example 
@@ -574,6 +791,14 @@ alias <name> {
 		...
 	};
 	type command;
+};
+
+Example:
+alias ghost {
+	format "*" {
+		alias nickserv;
+		parameters "GHOST %1-";
+	};
 };
 
 When the alias block is used in this format, it allows you a much broader range of usage. For 
@@ -599,6 +824,11 @@ help <name> {
 	...
 };
 
+Example:
+help oper {
+	"The oper command gives you IRC operator access";
+};
+
 The help block allows you to create entries for use in /helpop. The help:: is the value that 
 must be passed to /helpop as a parameter, if the help:: is left out, then it will be used when 
 no parameter is passed to /helpop. The entries for the help block are the text that will be 
@@ -611,6 +841,11 @@ set {
 	<entry> <value>;
 	<entry> <value>;
 	...
+};
+
+Example:
+set {
+	kline-address "codemastr@unrealircd.com";
 };
 
 The set block sets options for individual server features. Each entry does something different 
@@ -731,6 +966,17 @@ If set to no, the user must set +x manually to receive the oper host.
 
 set::scan::endpoint <ip:port>;
 Specifies the IP and port that the server will tell an incomming open proxy to connect to.
+
+set::scan::bantime <timevalue>;
+A time value that defines the length of time that a user caught by the scanner will be
+banned for. A time value is a numeric string with d meaning days, h meaning hours, m
+meaning minutes, and s meaning seconds, for example 1d2h3m means 1 day, 2 hours, 3 minutes.
+
+set::scan::timeout <timevalue>;
+A time value specifying the amount of time that is spent waiting for a proxy to respond to
+the scanner's request.  A time value is a numeric string with d meaning days, h meaning
+hours, m meaning minutes, and s meaning seconds, for example 1d2h3m means 1 day, 2 hours, 
+3 minutes.
 
 24.0 Conclusion
 Well hopefully that cleared up some of the issues you had with the new config file format. 

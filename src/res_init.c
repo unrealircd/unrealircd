@@ -64,7 +64,7 @@ static char rcsid[] = "$Id$";
 #include "res.h"
 #include "numeric.h"
 #include "h.h"
-
+#include "inet.h"
 #include <signal.h>
 #ifndef _WIN32
 #include <sys/time.h>
@@ -153,7 +153,7 @@ struct __res_state ircd_res
  *
  * Return 0 if completes successfully, -1 on error
  */
-int ircd_res_init()
+int ircd_res_init(void)
 {
 	register FILE *fp;
 	register char *cp, **pp;
@@ -505,8 +505,7 @@ int ircd_res_init()
 	return (0);
 }
 
-static void ircd_res_setoptions(options, source)
-	char *options, *source;
+static void ircd_res_setoptions(char *options, char *source)
 {
 	char *cp = options;
 	int  i;
@@ -557,8 +556,7 @@ static void ircd_res_setoptions(options, source)
 
 #ifdef RESOLVSORT
 /* XXX - should really support CIDR which means explicit masks always. */
-static u_int32_t ircd_net_mask(in)	/* XXX - should really use system's version of this */
-	struct in_addr in;
+static u_int32_t ircd_net_mask(struct in_addr in)	/* XXX - should really use system's version of this */
 {
 	register u_int32_t i = ntohl(in.s_addr);
 
@@ -571,9 +569,7 @@ static u_int32_t ircd_net_mask(in)	/* XXX - should really use system's version o
 #endif
 
 #ifdef	NEXT
-static int ircd_netinfo_res_init(haveenv, havesearch)
-	int *haveenv;
-	int *havesearch;
+static int ircd_netinfo_res_init(int *haveenv, int *havesearch)
 {
 	register int n;
 	void *domain, *parent;

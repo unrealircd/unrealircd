@@ -18,32 +18,4 @@
  *
  *   $Id$
  */
-
-#define EVENT(x) void (x) (void *data)
-
-typedef struct _event Event;
-
-struct _event {
-	Event   *prev, *next;
-	char	*name;
-	time_t	every;
-	long	howmany;
-	vFP		event;
-	void	*data;
-	time_t	last;
-};
-
-Event	*EventAdd(char *name, long every, long howmany,
-		  vFP event, void *data);
-Event	*EventDel(Event *event);
-
-Event	*EventFind(char *name);
-
-void	EventModEvery(Event *event, long every);
-
-void	DoEvents(void);
-
-void	EventStatus(aClient *sptr);
-
-void	SetupEvents(void);
-
+#include "modules.h"

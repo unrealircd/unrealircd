@@ -111,7 +111,7 @@ DLLFUNC int h_u_vfs(HTTPd_Request *r)
 			stat(p->realfile, &statf);
 			if (ims)
 			{
-				if (tmt = rfc2time(ims) < 0)
+				if ((tmt = rfc2time(ims)) < 0)
 				{
 					httpd_500_header(r, "Bad date");
 					return 1;	
@@ -149,7 +149,7 @@ DLLFUNC int h_u_vfs(HTTPd_Request *r)
 			soprintf(r, "");
 			i = 0;
 			j = 0;
-			set_blocking(r->fd, NULL);
+			set_blocking(r->fd);
 			while (i != p->cachesize)
 			{
 				j = send(r->fd, &p->cache[i], p->cachesize - i, 0);

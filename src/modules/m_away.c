@@ -38,6 +38,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -71,7 +72,7 @@ DLLFUNC int	Mod_Init(int module_load)
 int    m_away_Init(int module_load)
 #endif
 {
-	add_Command(MSG_AWAY, TOK_AWAY, m_away, MAXPARA);
+	add_Command(MSG_AWAY, TOK_AWAY, m_away, 1);
 	return MOD_SUCCESS;
 }
 

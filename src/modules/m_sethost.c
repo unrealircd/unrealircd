@@ -36,6 +36,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -217,9 +218,11 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	sptr->umodes |= UMODE_SETHOST;
 	/* get it in */
 	if (sptr->user->virthost)
+	{
 		MyFree(sptr->user->virthost);
-	sptr->user->virthost = MyMalloc(strlen(vhost) + 1);
-	ircsprintf(sptr->user->virthost, "%s", vhost);
+		sptr->user->virthost = NULL;
+	}
+	sptr->user->virthost = strdup(vhost);
 	/* spread it out */
 	sendto_serv_butone_token(cptr, sptr->name, MSG_SETHOST, TOK_SETHOST,
 	    "%s", parv[1]);

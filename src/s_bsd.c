@@ -33,7 +33,7 @@
  * Added SO_REUSEADDR fix from zessel@informatik.uni-kl.de
  */
 
-#ifndef lint
+#ifndef CLEAN_COMPILE
 static char sccsid[] =
     "@(#)s_bsd.c	2.78 2/7/94 (C) 1988 University of Oulu, \
 Computing Center and Jarkko Oikarinen";
@@ -104,14 +104,14 @@ int      OpenFiles = 0;    /* GLOBAL - number of files currently open */
 int readcalls = 0, resfd = -1;
 static struct SOCKADDR_IN mysk;
 
-static struct SOCKADDR *connect_inet PROTO((ConfigItem_link *, aClient *, int *));
-static int completed_connection PROTO((aClient *));
-static int check_init PROTO((aClient *, char *));
+static struct SOCKADDR *connect_inet(ConfigItem_link *, aClient *, int *);
+static int completed_connection(aClient *);
+static int check_init(aClient *, char *);
 #ifndef _WIN32
-static void do_dns_async PROTO(());
-void set_sock_opts PROTO((int, aClient *));
+static void do_dns_async();
+void set_sock_opts(int, aClient *);
 #else
-void set_sock_opts PROTO((int, aClient *));
+void set_sock_opts(int, aClient *);
 #endif
 static char readbuf[8192];
 char zlinebuf[BUFSIZE];
@@ -166,7 +166,6 @@ void add_local_client(aClient* cptr)
 
 void remove_local_client(aClient* cptr)
 {
-	short i;
 
 	if (LastSlot < 0)
 	{
@@ -218,9 +217,7 @@ void close_connections(void)
 ** (as suggested by eps@TOASTER.SFSU.EDU)
 */
 
-void add_local_domain(hname, size)
-	char *hname;
-	int  size;
+void add_local_domain(char *hname, int size)
 {
 #ifdef RES_INIT
 	/* try to fix up unqualified names */
@@ -260,9 +257,7 @@ void add_local_domain(hname, size)
 **	cptr	if not NULL, is the *LOCAL* client associated with
 **		the error.
 */
-void report_error(text, cptr)
-	char *text;
-	aClient *cptr;
+void report_error(char *text, aClient *cptr)
 {
 	int errtmp = ERRNO;
 	char *host;
@@ -293,9 +288,7 @@ void report_error(text, cptr)
 	return;
 }
 
-void report_baderror(text, cptr)
-	char *text;
-	aClient *cptr;
+void report_baderror(char *text, aClient *cptr)
 {
 #ifndef _WIN32
 	int  errtmp = errno;	/* debug may change 'errno' */
@@ -338,10 +331,7 @@ void report_baderror(text, cptr)
  * depending on the IP# mask given by 'name'.  Returns the fd of the
  * socket created or -1 on error.
  */
-int  inetport(cptr, name, port)
-	aClient *cptr;
-	char *name;
-	int  port;
+int  inetport(aClient *cptr, char *name, int port)
 {
 	static struct SOCKADDR_IN server;
 	int  ad[4], len = sizeof(server);
@@ -477,7 +467,9 @@ int add_listener2(ConfigItem_listen *conf)
 	cptr->class = (ConfigItem_class *)conf;
 	cptr->umodes = conf->options ? conf->options : LISTENER_NORMAL;
 	if (cptr->fd >= 0)
-	{
+	{	
+		cptr->umodes |= LISTENER_BOUND;
+		conf->options |= LISTENER_BOUND;
 		set_non_blocking(cptr->fd, cptr);
 		return 1;
 	}
@@ -496,7 +488,7 @@ int add_listener2(ConfigItem_listen *conf)
  * and in a state where they can accept connections.
  */
 
-void close_listeners()
+void close_listeners(void)
 {
 	aClient *cptr;
 	int  i, reloop = 1;
@@ -531,7 +523,7 @@ void close_listeners()
 /*
  * init_sys
  */
-void init_sys()
+void init_sys(void)
 {
 	int  fd;
 #ifndef USE_POLL
@@ -543,7 +535,7 @@ void init_sys()
 		if (limit.rlim_max < MAXCONNECTIONS)
 		{
 			(void)fprintf(stderr, "ircd fd table too big\n");
-			(void)fprintf(stderr, "Hard Limit: %d IRC max: %d\n",
+			(void)fprintf(stderr, "Hard Limit: %ld IRC max: %d\n",
 			    limit.rlim_max, MAXCONNECTIONS);
 			(void)fprintf(stderr, "Fix MAXCONNECTIONS\n");
 			exit(-1);
@@ -551,7 +543,7 @@ void init_sys()
 	limit.rlim_cur = limit.rlim_max;	/* make soft limit the max */
 	if (setrlimit(RLIMIT_FD_MAX, &limit) == -1)
 	{
-		(void)fprintf(stderr, "error setting max fd's to %d\n",
+		(void)fprintf(stderr, "error setting max fd's to %ld\n",
 		    limit.rlim_cur);
 		exit(-1);
 	}
@@ -633,7 +625,7 @@ init_dgram:
 	return;
 }
 
-void write_pidfile()
+void write_pidfile(void)
 {
 #ifdef IRCD_PIDFILE
 	int  fd;
@@ -661,9 +653,7 @@ void write_pidfile()
  * from either the server's sockhost (if client fd is a tty or localhost)
  * or from the ip# converted into a string. 0 = success, -1 = fail.
  */
-static int check_init(cptr, sockn)
-	aClient *cptr;
-	char *sockn;
+static int check_init(aClient *cptr, char *sockn)
 {
 	struct SOCKADDR_IN sk;
 	int  len = sizeof(struct SOCKADDR_IN);
@@ -709,8 +699,7 @@ static int check_init(cptr, sockn)
  * -1 = Access denied
  * -2 = Bad socket.
  */
-int  check_client(cptr)
-	aClient *cptr;
+int  check_client(aClient *cptr)
 {
 	static char sockname[HOSTLEN + 1];
 	struct hostent *hp = NULL;
@@ -779,8 +768,7 @@ int  check_client(cptr)
 **	Return	TRUE, if successfully completed
 **		FALSE, if failed and ClientExit
 */
-static int completed_connection(cptr)
-	aClient *cptr;
+static int completed_connection(aClient *cptr)
 {
 	ConfigItem_link *aconf = cptr->serv ? cptr->serv->conf : NULL;
 	extern char serveropts[];
@@ -793,7 +781,7 @@ static int completed_connection(cptr)
 	}
 #ifdef USE_SSL
 	if ((aconf->options & CONNECT_SSL))
-		if (ssl_client_handshake(cptr) == -2)
+		if (ssl_client_handshake(cptr, aconf) == -2)
 		{
 			sendto_realops("Could not handshake SSL with %s", get_client_name(cptr, FALSE));
 			return FALSE;
@@ -809,8 +797,8 @@ static int completed_connection(cptr)
 		sendto_one(cptr, "PASS :%s", aconf->connpwd);
 
 	sendto_one(cptr, "PROTOCTL %s", PROTOCTL_SERVER);
-	sendto_one(cptr, "SERVER %s 1 :U%d-%s-%i %s",
-	    me.name, UnrealProtocol, serveropts, me.serv->numeric,
+	sendto_one(cptr, "SERVER %s 1 :U%d-%s%s-%i %s",
+	    me.name, UnrealProtocol, serveropts, extraflags ? extraflags : "", me.serv->numeric,
 	    me.info);
 	if (!IsDead(cptr))
 		start_auth(cptr);
@@ -823,12 +811,13 @@ static int completed_connection(cptr)
 **	Close the physical connection. This function must make
 **	MyConnect(cptr) == FALSE, and set cptr->from == NULL.
 */
-void close_connection(cptr)
-	aClient *cptr;
+void close_connection(aClient *cptr)
 {
 	ConfigItem_link *aconf;
+#ifdef DO_REMAPPING
 	int  i, j;
 	int  empty = cptr->fd;
+#endif
 
 	if (IsServer(cptr))
 	{
@@ -985,9 +974,7 @@ void close_connection(cptr)
 /*
 ** set_sock_opts
 */
-void set_sock_opts(fd, cptr)
-	int  fd;
-	aClient *cptr;
+void set_sock_opts(int fd, aClient *cptr)
 {
 	int  opt;
 #ifdef SO_REUSEADDR
@@ -1042,7 +1029,7 @@ void set_sock_opts(fd, cptr)
 		else if (opt > 0 && opt != sizeof(readbuf) / 8)
 		{
 			for (*readbuf = '\0'; opt > 0; opt--, s += 3)
-				(void)ircsprintf(s, "%02.2x:", *t++);
+				(void)ircsprintf(s, "%2.2x:", *t++);
 			*s = '\0';
 			sendto_ops("Connection %s using IP opts: (%s)",
 			    get_client_name(cptr, TRUE), readbuf);
@@ -1055,8 +1042,7 @@ void set_sock_opts(fd, cptr)
 }
 
 
-int  get_sockerr(cptr)
-	aClient *cptr;
+int  get_sockerr(aClient *cptr)
 {
 #ifndef _WIN32
 	int  errtmp = errno, err = 0, len = sizeof(err);
@@ -1081,7 +1067,10 @@ int  get_sockerr(cptr)
  */
 int set_blocking(int fd)
 {
-   int flags, nonb;
+   int flags;
+#ifdef _WIN32
+   int nonb;
+#endif
 
 #ifndef _WIN32
     if ((flags = fcntl(fd, F_GETFL, 0)) < 0
@@ -1105,9 +1094,7 @@ int set_blocking(int fd)
 **	blocking version of IRC--not a problem if you are a
 **	lightly loaded node...)
 */
-void set_non_blocking(fd, cptr)
-	int  fd;
-	aClient *cptr;
+void set_non_blocking(int fd, aClient *cptr)
 {
 	int  res, nonb = 0;
 
@@ -1230,19 +1217,20 @@ add_con_refuse:
 			}
 		}
 
-		if ((bconf = Find_ban(acptr->sockhost, CONF_BAN_IP))) 
-		if (bconf)
-		{
-			ircsprintf(zlinebuf,
-				"ERROR :Closing Link: [%s] (You are not welcome on "
-				"this server: %s. Email %s for more information.)\r\n",
-				inetntoa((char *)&acptr->ip),
-				bconf->reason ? bconf->reason : "no reason",
-				KLINE_ADDRESS);
-			set_non_blocking(fd, acptr);
-			set_sock_opts(fd, acptr);
-			send(fd, zlinebuf, strlen(zlinebuf), 0);
-			goto add_con_refuse;
+		if ((bconf = Find_ban(acptr->sockhost, CONF_BAN_IP))) {
+			if (bconf)
+			{
+				ircsprintf(zlinebuf,
+					"ERROR :Closing Link: [%s] (You are not welcome on "
+					"this server: %s. Email %s for more information.)\r\n",
+					inetntoa((char *)&acptr->ip),
+					bconf->reason ? bconf->reason : "no reason",
+					KLINE_ADDRESS);
+				set_non_blocking(fd, acptr);
+				set_sock_opts(fd, acptr);
+				send(fd, zlinebuf, strlen(zlinebuf), 0);
+				goto add_con_refuse;
+			}
 		}
 		else if (find_tkline_match_zap(acptr) != -1)
 		{
@@ -1310,9 +1298,7 @@ add_con_refuse:
 */
 
 #ifndef USE_POLL
-static int read_packet(cptr, rfd)
-	aClient *cptr;
-	fd_set *rfd;
+static int read_packet(aClient *cptr, fd_set *rfd)
 {
 	int  dolen = 0, length = 0, done;
 	time_t now = TStime();
@@ -1563,15 +1549,9 @@ static int read_packet(aClient *cptr)
 
 #ifndef USE_POLL
 #ifdef NO_FDLIST
-int  read_message(delay)
+int  read_message(time_t delay)
 #else
-int  read_message(delay, listp)
-#endif
-	time_t delay;		/* Don't ever use ZERO here, unless you mean to poll and then
-				 * you have to have sleep/wait somewhere else in the code.--msa
-				 */
-#ifndef NO_FDLIST
-	fdlist *listp;
+int  read_message(time_t delay, fdlist *listp)
 #endif
 {
 	aClient *cptr;
@@ -1584,7 +1564,6 @@ int  read_message(delay, listp)
 #endif
 	int  j;
 	time_t delay2 = delay, now;
-	u_long usec = 0;
 	int  res, length, fd, i;
 	int  auth = 0;
 
@@ -1945,12 +1924,8 @@ deadsocket:
 #ifdef NO_FDLIST
 #error You cannot set NO_FDLIST and USE_POLL at same time!
 #else
-int  read_message(delay, listp)
+int  read_message(time_t delay, fdlist *listp)
 #endif
-	time_t delay;		/* Don't ever use ZERO here, unless you mean to poll and then
-				 * you have to have sleep/wait somewhere else in the code.--msa
-				 */
-	fdlist *listp;
 {
 	aClient *cptr;
 	int  nfds;
@@ -2234,13 +2209,10 @@ int  read_message(delay, listp)
 /*
  * connect_server
  */
-int  connect_server(aconf, by, hp)
-	ConfigItem_link *aconf;
-	aClient *by;
-	struct hostent *hp;
+int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 {
 	struct SOCKADDR *svp;
-	aClient *cptr, *c2ptr;
+	aClient *cptr;
 	char *s;
 	int  errtmp, len;
 
@@ -2353,10 +2325,7 @@ int  connect_server(aconf, by, hp)
 	return 0;
 }
 
-static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
-	ConfigItem_link *aconf;
-	aClient *cptr;
-	int *lenp;
+static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int *lenp)
 {
 	static struct SOCKADDR_IN server;
 	struct hostent *hp;
@@ -2444,10 +2413,9 @@ static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
  */
 
 #ifndef _WIN32
-static void do_dns_async()
+static void do_dns_async(void)
 #else
-void do_dns_async(id)
-	int  id;
+void do_dns_async(int id)
 #endif
 {
 	static	Link	ln;

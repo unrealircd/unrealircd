@@ -69,7 +69,12 @@ void add_history(aClient *cptr, int online)
 	AllocCpy(new->name, cptr->name);
 	AllocCpy(new->username, cptr->user->username);
 	AllocCpy(new->hostname, cptr->user->realhost);
-	AllocCpy(new->virthost, cptr->user->virthost);
+	if (cptr->user->virthost)
+	{
+		AllocCpy(new->virthost, cptr->user->virthost);
+	}
+	else
+		new->virthost = strdup("");
 	new->servername = cptr->user->server;
 	AllocCpy(new->realname, cptr->info);
 

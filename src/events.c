@@ -38,6 +38,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "modules.h"
 
 ID_Copyright("(C) Carsten Munk 2001");
 
@@ -49,22 +50,28 @@ MUTEX			sys_EventLock;
 
 Event *events = NULL;
 
-
-Event	*EventAdd(char *name, long every, long howmany,
-		  vFP event, void *data)
+void	LockEventSystem(void)
 {
-	Event *newevent;
-
 #ifndef HAVE_NO_THREADS
 	IRCMutexLock(sys_EventLock);
 #endif
+}
+
+void	UnlockEventSystem(void)
+{
+#ifndef HAVE_NO_THREADS
+	IRCMutexUnlock(sys_EventLock);
+#endif
+}
+
+
+Event	*EventAddEx(Module *module, char *name, long every, long howmany,
+		  vFP event, void *data)
+{
+	Event *newevent;
 	
 	if (!name || (every < 0) || (howmany < 0) || !event)
 	{
-#ifndef HAVE_NO_THREADS
-		IRCMutexUnlock(sys_EventLock);
-#endif
-
 		return NULL;
 	}
 	newevent = (Event *) MyMallocEx(sizeof(Event));
@@ -75,10 +82,14 @@ Event	*EventAdd(char *name, long every, long howmany,
 	newevent->data = data;
 	/* We don't want a quick execution */
 	newevent->last = TStime();
+	newevent->owner = module;
 	AddListItem(newevent,events);
-#ifndef HAVE_NO_THREADS
-	IRCMutexUnlock(sys_EventLock);
-#endif
+	if (module) {
+		ModuleObject *eventobj = (ModuleObject *)MyMallocEx(sizeof(ModuleObject));
+		eventobj->object.event = newevent;
+		eventobj->type = MOBJ_EVENT;
+		AddListItem(eventobj, module->objects);
+	}
 	return newevent;
 	
 }
@@ -86,14 +97,21 @@ Event	*EventAdd(char *name, long every, long howmany,
 Event	*EventDel(Event *event)
 {
 	Event *p, *q;
-	
-	for (p = events; p; p = p->next)
-	{
-		if (p == event)
-		{
+	for (p = events; p; p = p->next) {
+		if (p == event) {
 			q = p->next;
 			MyFree(p->name);
 			DelListItem(p, events);
+			if (p->owner) {
+				ModuleObject *eventobjs;
+				for (eventobjs = p->owner->objects; eventobjs; eventobjs = eventobjs->next) {
+					if (eventobjs->type == MOBJ_EVENT && eventobjs->object.event == p) {
+						DelListItem(eventobjs, p->owner->objects);
+						MyFree(eventobjs);
+						break;
+					}
+				}
+			}
 			MyFree(p);
 			return q;		
 		}
@@ -111,20 +129,23 @@ Event	*EventFind(char *name)
 	return NULL;
 }
 
-void	EventModEvery(Event *event, long every)
-{
-	Event *eventptr;
+int EventMod(Event *event, EventInfo *mods) {
+	if (!event || !mods)
+		return -1;
 
-#ifndef HAVE_NO_THREADS
-	IRCMutexLock(sys_EventLock);
-#endif
-	if (event)
-		event->every = every;
-
-#ifndef HAVE_NO_THREADS
-	IRCMutexUnlock(sys_EventLock);
-#endif
-
+	if (mods->flags & EMOD_EVERY)
+		event->every = mods->every;
+	if (mods->flags & EMOD_HOWMANY)
+		event->howmany = mods->howmany;
+	if (mods->flags & EMOD_NAME) {
+		free(event->name);
+		event->name = strdup(mods->name);
+	}
+	if (mods->flags & EMOD_EVENT)
+		event->event = mods->event;
+	if (mods->flags & EMOD_DATA)
+		event->data = mods->data;
+	return 0;
 }
 
 inline void	DoEvents(void)
@@ -132,9 +153,6 @@ inline void	DoEvents(void)
 	Event *eventptr;
 	Event temp;
 
-#ifndef HAVE_NO_THREADS
-	IRCMutexLock(sys_EventLock);
-#endif
 	for (eventptr = events; eventptr; eventptr = eventptr->next)
 		if ((eventptr->every == 0) || ((TStime() - eventptr->last) >= eventptr->every))
 		{
@@ -152,11 +170,6 @@ inline void	DoEvents(void)
 			}
 
 		}
-	
-#ifndef HAVE_NO_THREADS
-	IRCMutexUnlock(sys_EventLock);
-#endif
-
 }
 
 void	EventStatus(aClient *sptr)
@@ -185,12 +198,15 @@ void	SetupEvents(void)
 #ifndef HAVE_NO_THREADS
 	IRCCreateMutex(sys_EventLock);
 #endif
+	LockEventSystem();
+
 	/* Start events */
-	EventAdd("tklexpire", 5, 0, tkl_check_expire, NULL);
-	EventAdd("tunefile", 300, 0, save_tunefile, NULL);
-	EventAdd("garbage", GARBAGE_COLLECT_EVERY, 0, garbage_collect, NULL);
-	EventAdd("loop", 0, 0, loop_event, NULL);
+	EventAddEx(NULL, "tklexpire", 5, 0, tkl_check_expire, NULL);
+	EventAddEx(NULL, "tunefile", 300, 0, save_tunefile, NULL);
+	EventAddEx(NULL, "garbage", GARBAGE_COLLECT_EVERY, 0, garbage_collect, NULL);
+	EventAddEx(NULL, "loop", 0, 0, loop_event, NULL);
 #ifndef NO_FDLIST
-	EventAdd("fdlistcheck", 1, 0, e_check_fdlists, NULL);
+	EventAddEx(NULL, "fdlistcheck", 1, 0, e_check_fdlists, NULL);
 #endif
+	UnlockEventSystem();
 }

@@ -65,36 +65,35 @@ static long opermode = 0;
 aChannel *channel = NullChn;
 extern char backupbuf[];
 extern ircstats IRCstats;
-extern char *StripColors(char *);
 
 #ifndef NO_FDLIST
 extern int lifesux;
 #endif
 
-void over_notice PROTO((aClient *, aClient *, aChannel *, char *));
-static void add_invite PROTO((aClient *, aChannel *));
-static int add_banid PROTO((aClient *, aChannel *, char *));
-static int can_join PROTO((aClient *, aClient *, aChannel *, char *, char *,
-    char **));
-static int channel_link PROTO((aClient *, aClient *, int, char **));
-static void channel_modes PROTO((aClient *, char *, char *, aChannel *));
-static int check_channelmask PROTO((aClient *, aClient *, char *));
-int del_banid PROTO((aChannel *, char *));
-static void set_mode PROTO((aChannel *, aClient *, int, char **, u_int *,
-    char[MAXMODEPARAMS][MODEBUFLEN + 3], int));
-static void make_mode_str PROTO((aChannel *, long, long, int,
-    char[MAXMODEPARAMS][MODEBUFLEN + 3], char *, char *, char));
-static int do_mode_char PROTO((aChannel *, long, char, char *,
+void over_notice(aClient *, aClient *, aChannel *, char *);
+static void add_invite(aClient *, aChannel *);
+static int add_banid(aClient *, aChannel *, char *);
+static int can_join(aClient *, aClient *, aChannel *, char *, char *,
+    char **);
+static int channel_link(aClient *, aClient *, int, char **);
+static void channel_modes(aClient *, char *, char *, aChannel *);
+static int check_channelmask(aClient *, aClient *, char *);
+int del_banid(aChannel *, char *);
+static void set_mode(aChannel *, aClient *, int, char **, u_int *,
+    char[MAXMODEPARAMS][MODEBUFLEN + 3], int);
+static void make_mode_str(aChannel *, long, long, int,
+    char[MAXMODEPARAMS][MODEBUFLEN + 3], char *, char *, char);
+static int do_mode_char(aChannel *, long, char, char *,
 	u_int, aClient *,
-    u_int *, char[MAXMODEPARAMS][MODEBUFLEN + 3], char));
-static void do_mode PROTO((aChannel *, aClient *, aClient *, int, char **, int,
-    int));
-static void bounce_mode PROTO((aChannel *, aClient *, int, char **));
+    u_int *, char[MAXMODEPARAMS][MODEBUFLEN + 3], char);
+static void do_mode(aChannel *, aClient *, aClient *, int, char **, int,
+    int);
+static void bounce_mode(aChannel *, aClient *, int, char **);
 
-static void sub1_from_channel PROTO((aChannel *));
+static void sub1_from_channel(aChannel *);
 
-void clean_channelname PROTO((char *));
-void del_invite PROTO((aClient *, aChannel *));
+void clean_channelname(char *);
+void del_invite(aClient *, aChannel *);
 
 static char *PartFmt = ":%s PART %s";
 static char *PartFmt2 = ":%s PART %s :%s";
@@ -232,7 +231,7 @@ Membership *find_membership_link(Membership *lp, aChannel *ptr)
 /* 
  * Member functions
 */
-Member	*make_member()
+Member	*make_member(void)
 {
 	Member *lp;
 	int	i;
@@ -534,17 +533,21 @@ extern Ban *is_banned(aClient *cptr, aClient *sptr, aChannel *chptr)
 	if (!IsPerson(cptr))
 		return NULL;
 
-	if (strcmp(cptr->user->realhost, cptr->user->virthost))
-		dovirt = 1;
+	if (cptr->user->virthost)
+		if (strcmp(cptr->user->realhost, cptr->user->virthost))
+			dovirt = 1;
 
 	s = make_nick_user_host(cptr->name, cptr->user->username,
 	    cptr->user->realhost);
 	strcpy(realhost, s);
 
-	s = make_nick_user_host(cptr->name, cptr->user->username,
+	if (dovirt)
+	{
+		s = make_nick_user_host(cptr->name, cptr->user->username,
 	    cptr->user->virthost);
-	strcpy(virthost, s);
-/* We now check +b first, if a +b is found we then see if there is a +e.
+		strcpy(virthost, s);
+	}
+		/* We now check +b first, if a +b is found we then see if there is a +e.
  * If a +e was found we return NULL, if not, we return the ban.
  */
 	for (tmp = chptr->banlist; tmp; tmp = tmp->next)
@@ -716,10 +719,11 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 {
 	Membership *lp;
 	int  member;
-	static char tempbuf[1500];
-	/* Moved check here, kinda faster.
-	 * Note IsULine only uses the other parameter. -Donwulff */
-	if (IsULine(cptr) || IsServer(cptr))
+	/* 
+	 * #0000053 by |savage|, speedup 
+	*/
+	
+	if (!MyClient(cptr))
 		return 0;
 
 	if (chptr->mode.mode & MODE_NOCOLOR)
@@ -1000,9 +1004,9 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
  * parv[0] = sender
  * parv[1] = channel
  * parv[2] = modes
- * -taz
+ * -t
  */
-int m_samode(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_samode)
 {
 	aChannel *chptr;
 
@@ -1041,7 +1045,7 @@ int m_samode(aClient *cptr, aClient *sptr, int parc, char *parv[])
  * parv[0] - sender
  * parv[1] - channel
  */
-int m_mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_mode)
 {
 	static char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
 	long unsigned sendts = 0;
@@ -1871,6 +1875,11 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 					*tmp = '\0';
 				  if ((tmp = strchr(param, ':')))
 					*tmp = '\0';
+				  if ((tmp = strchr(param, ',')))
+					*tmp = '\0';
+				  if (*param == '\0')
+					break;
+				  param[KEYLEN] = '\0';
 				  strncpyzt(chptr->mode.key, param,
 				      sizeof(chptr->mode.key));
 			  }
@@ -2170,7 +2179,7 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
 {
 	char *curchr;
 	u_int what = MODE_ADD;
-	long modetype;
+	long modetype = 0;
 	int  paracount;
 #ifdef DEVELOP
 	char *tmpo = NULL;
@@ -2258,6 +2267,7 @@ int  sendmodeto_one(aClient *cptr, char *from, char *name, char *mode, char *par
 	else
 		sendto_one(cptr, ":%s %s %s %s %s", from,
 		    (IsToken(cptr) ? TOK_MODE : MSG_MODE), name, mode, param);
+	return 0;
 }
 
 char *pretty_mask(char *mask)
@@ -2644,7 +2654,8 @@ static void sub1_from_channel(aChannel *chptr)
 /*
  * Channel Link
  */
-int channel_link(aClient *cptr, aClient *sptr, int parc, char *parv[])
+
+CMD_FUNC(channel_link)
 {
 	static char jbuf[BUFSIZE];
 	Membership *lp;
@@ -2672,7 +2683,7 @@ int channel_link(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr,
 		    ":%s %s %s :*** Couldn't join %s ! - Link setting was too bouncy",
 		    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, parv[1]);
-		return;
+		return 0;
 	}
 	for (i = 0, name = strtoken(&p, parv[1], ","); name;
 	    name = strtoken(&p, NULL, ","))
@@ -2775,7 +2786,7 @@ int channel_link(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 		i1 = 0;
 		if (chptr == NULL)
-			return;
+			return 0;
 
 		if (!chptr ||
 		    (MyConnect(sptr)
@@ -2857,10 +2868,7 @@ int channel_link(aClient *cptr, aClient *sptr, int parc, char *parv[])
  * parv[1] = channels
 */
 
-int  m_cycle(cptr, sptr, parc, parv)
-        aClient *cptr, *sptr;
-        int  parc;
-        char *parv[];
+CMD_FUNC(m_cycle)
 {
 	char	channels[1024];
 	
@@ -2871,7 +2879,7 @@ int  m_cycle(cptr, sptr, parc, parv)
         (void)m_part(cptr, sptr, 3, parv);
 	parv[1] = channels;
         parv[2] = NULL;
-        (void)m_join(cptr, sptr, 2, parv);
+	return m_join(cptr, sptr, 2, parv);
 }
 
 
@@ -2881,7 +2889,7 @@ int  m_cycle(cptr, sptr, parc, parv)
 **	parv[1] = channel
 **	parv[2] = channel password (key)
 */
-int m_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_join)
 {
 	static char jbuf[BUFSIZE];
 	Membership *lp;
@@ -3141,7 +3149,7 @@ int m_join(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **	parv[1] = channel
 **	parv[2] = comment (added by Lefler)
 */
-int m_part(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_part)
 {
 	aChannel *chptr;
 	Membership *lp;
@@ -3242,7 +3250,7 @@ int m_part(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						sendto_channel_ntadmins(sptr, chptr, ":%s PART %s :%s",
 						    sptr->name, chptr->chname, comment);
 				}
-				if (MyClient(sptr))
+				if (MyClient(sptr)) {
 					/* awful hack .. */
 					if (parc < 3)
 						sendto_one(sptr,
@@ -3262,6 +3270,7 @@ int m_part(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						    sptr->user->virthost :
 						    sptr->user->realhost),
 						    chptr->chname, comment);
+				}
 			}
 			else if (chptr->mode.mode & MODE_AUDITORIUM)
 			{
@@ -3342,13 +3351,13 @@ int m_part(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **	parv[2] = client to kick
 **	parv[3] = kick comment
 */
-int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_kick)
 {
 	aClient *who;
 	aChannel *chptr;
 	int  chasing = 0;
 	char *comment, *name, *p = NULL, *user, *p2 = NULL;
-	Membership *lp, *lp2;
+	Membership *lp;
 
 
    /*	sptr->flags &= ~FLAGS_TS8;  */
@@ -3425,8 +3434,8 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				}
 
 				if (IsOper(sptr))
-					if (!is_chan_op(sptr, chptr)
-					    && !is_halfop(sptr, chptr)
+					if ((!is_chan_op(sptr, chptr)
+					    && !is_halfop(sptr, chptr))
 					    || (is_halfop(sptr, chptr)
 					    && is_chan_op(who, chptr)))
 					{
@@ -3439,7 +3448,7 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					}	/* is_chan_op */
 				if (is_chanprot(who, chptr)
 				    || is_chanowner(who, chptr)
-				    || IsServices(who))
+				    || IsServices(who)) {
 					if (IsNetAdmin(sptr))
 					{	/* IRCop kicking owner/prot */
 						sendto_snomask(SNO_EYES,
@@ -3459,6 +3468,7 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						goto deny;
 						continue;
 					}	/* chanprot/chanowner */
+				}
 				if (is_chan_op(who, chptr)
 				    && is_halfop(sptr, chptr)
 				    && !is_chan_op(sptr, chptr)
@@ -3535,7 +3545,7 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **	parv[3] = topic time
 **	parv[4] = topic text
 */
-int m_topic(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_topic)
 {
 	aChannel *chptr = NullChn;
 	char *topic = NULL, *name, *tnick = NULL;
@@ -3591,7 +3601,7 @@ int m_topic(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    (chptr->mode.mode & MODE_ADMONLY && !IsAdmin(sptr) && !IsMember(sptr, chptr)) ||
 			    (is_banned(sptr,sptr,chptr) && !IsAnOper(sptr) && !IsMember(sptr, chptr))) {
 				sendto_one(sptr, err_str(ERR_NOTONCHANNEL), me.name, parv[0], name);
-				return;
+				return 0;
 			}
 			if (!chptr->topic)
 				sendto_one(sptr, rpl_str(RPL_NOTOPIC),
@@ -3648,8 +3658,8 @@ int m_topic(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			}
 		}
 		else if (((chptr->mode.mode & MODE_TOPICLIMIT) == 0 ||
-		    is_chan_op(sptr, chptr)) || IsOper(sptr)
-		    || IsULine(sptr) || is_halfop(sptr, chptr) && topic)
+		    (is_chan_op(sptr, chptr)) || IsOper(sptr)
+		    || IsULine(sptr) || is_halfop(sptr, chptr)) && topic)
 		{
 			/* setting a topic */
 			if (IsOper(sptr) && !(is_halfop(sptr, chptr)
@@ -3712,7 +3722,7 @@ int m_topic(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **	parv[1] - user to invite
 **	parv[2] - channel number
 */
-int m_invite(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_invite)
 {
 	aClient *acptr;
 	aChannel *chptr;
@@ -3837,7 +3847,7 @@ void send_list(aClient *cptr, int numsend)
 {
 	aChannel *chptr;
 	LOpts *lopt = cptr->user->lopt;
-	int  hashnum;
+	unsigned int  hashnum;
 #ifdef LIST_SHOW_MODES
 char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
 #endif
@@ -4020,6 +4030,7 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 		remove_user_from_channel(sptr, chptr);
 		return 1;
 	}
+	return 0;
 }
 
 /* Originally from bahamut, modified a bit for Unreal by codemastr
@@ -4029,7 +4040,7 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 /*
  * * m_list *      parv[0] = sender prefix *      parv[1] = channel
  */
-int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_list)
 {
 	aChannel *chptr;
 	TS   currenttime = TStime();
@@ -4280,7 +4291,7 @@ int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **	parv[1] = channel
 */
 #define TRUNCATED_NAMES 64
-int m_names(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_names)
 {
 	int  mlen = strlen(me.name) + NICKLEN + 7;
 	aChannel *chptr;
@@ -4452,7 +4463,7 @@ void send_user_joins(aClient *cptr, aClient *user)
 ** (C) codemastr & Stskeeps
 ** 
 */
-int m_knock(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_knock)
 {
 	aChannel *chptr;
 
@@ -4633,7 +4644,7 @@ else if (b == MAXMODEPARAMS) {\
 #define AddEx(x) strcat(exbuf, x); strcat(exbuf, " ");
 
 
-int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_sjoin)
 {
 	unsigned short nopara;
 	unsigned short nomode;
@@ -4653,12 +4664,12 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	Membership *lp2;
 	aParv *ap;
 	int  ts, oldts, pcount, x, y, z, i, f;
-	unsigned short b,c;
+	unsigned short b=0,c;
 	Mode oldmode;
 	char *t, *bp, *tp, *p = NULL;
 	 char *s0 = NULL;
 	long modeflags;
-	Ban *ban=  NULL;
+	Ban *ban=NULL;
 	if (IsClient(sptr) || parc < 3 || !IsServer(sptr))
 		return 0;
 
@@ -4729,8 +4740,6 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		/* remove our modes if any */
 		if (modebuf[1] != '\0')
 		{
-			int  b;
-			Ban *ban;
 
 			ap = mp2parv(modebuf, parabuf);
 			set_mode(chptr, cptr, ap->parc, ap->parv, &pcount,
@@ -5158,7 +5167,11 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (((i + 1) <= (parc - 2)))
 			strcat(parabuf, " ");
 	}
-
+	if (!chptr->users)
+	{
+		sub1_from_channel(chptr);
+		return -1;
+	}
 	/* This sends out to SJ3 servers .. */
 	Debug((DEBUG_DEBUG, "Sending '%li %s :%s' to sj3-!sjb64", ts, parabuf,
 	    parv[parc - 1]));

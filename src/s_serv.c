@@ -21,7 +21,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef lint
+#ifndef CLEAN_COMPILE
 static char sccsid[] =
     "@(#)s_serv.c	2.55 2/7/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen";
 #endif
@@ -41,8 +41,9 @@ static char sccsid[] =
 #endif
 #include <time.h>
 #include "h.h"
+#include "proto.h"
 #include <string.h>
-
+extern VOIDSIG s_die();
 
 static char buf[BUFSIZE];
 
@@ -63,6 +64,10 @@ aMotd *read_rules(char *filename);
 extern aMotd *Find_file(char *, short);
 /*
 ** m_functions execute protocol messages on this server:
+**      CMD_FUNC(functionname) causes it to use the header
+**            int functionname (aClient *cptr,
+**  	      	aClient *sptr, int parc, char *parv[])
+**
 **
 **	cptr	is always NON-NULL, pointing to a *LOCAL* client
 **		structure (with an open socket connected!). This
@@ -126,10 +131,7 @@ extern fdlist serv_fdlist;
 **	parv[0] = sender prefix
 **	parv[1] = remote server
 */
-int  m_version(cptr, sptr, parc, parv)
-	aClient *sptr, *cptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_version)
 {
 	extern char serveropts[];
 
@@ -137,8 +139,9 @@ int  m_version(cptr, sptr, parc, parv)
 	    parv) == HUNTED_ISME)
 	{
 		sendto_one(sptr, rpl_str(RPL_VERSION), me.name,
-		    parv[0], version, ircnetwork, debugmode, me.name,
-		    serveropts,
+		    parv[0], version, debugmode, me.name,
+		    serveropts, extraflags ? extraflags : "",
+		    tainted ? "3" : "",
 		    (IsAnOper(sptr) ? MYOSNAME : "*"), UnrealProtocol);
 		if (MyClient(sptr))
 			sendto_one(sptr, rpl_str(RPL_PROTOCTL), me.name,
@@ -150,27 +153,14 @@ int  m_version(cptr, sptr, parc, parv)
 	return 0;
 }
 
-/*int IsMe (acptr)
-aClient *acptr, server;
-{
-if (memcmp (acptr, server, sizeof(aClient)) == 0)
-return 1;
-return 0;
- }*/
-
-
 /*
 ** m_squit
 **	parv[0] = sender prefix
 **	parv[1] = server name
 **	parv[parc-1] = comment
 */
-int  m_squit(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_squit)
 {
-	aConfItem *aconf;
 	char *server;
 	aClient *acptr;
 	char *comment = (parc > 2 && parv[parc - 1]) ?
@@ -320,10 +310,7 @@ int  m_squit(cptr, sptr, parc, parv)
  *	parv[0] = Sender prefix
  *	parv[1+] = Options
  */
-int  m_protoctl(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_protoctl)
 {
 	int  i;
 #ifndef PROTOCTL_MADNESS
@@ -546,7 +533,7 @@ int  m_protoctl(cptr, sptr, parc, parv)
 }
 
 char *num = NULL;
-int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *conf);
+int m_server_synch(aClient *cptr, long numeric, ConfigItem_link *conf);
 
 /*
 ** m_server
@@ -560,10 +547,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *conf);
 **
 **  Recode 2001 by Stskeeps
 */
-int  m_server(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_server)
 {
 	char *servername = NULL;	/* Pointer for servername */
  /*	char *password = NULL; */
@@ -692,7 +676,7 @@ int  m_server(cptr, sptr, parc, parv)
 			return exit_client(acptr, acptr, acptr,
 			    "Server Exists");
 		}
-		if (bconf = Find_ban(servername, CONF_BAN_SERVER))
+		if ((bconf = Find_ban(servername, CONF_BAN_SERVER)))
 		{
 			sendto_realops
 				("Cancelling link %s, banned server",
@@ -845,9 +829,10 @@ int  m_server(cptr, sptr, parc, parv)
 		m_server_remote(cptr, sptr, parc, parv);
 		return 0;
 	}
+	return 0;
 }
 
-int	m_server_remote(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_server_remote)
 {
 	aClient *acptr, *ocptr, *bcptr;
 	ConfigItem_link	*aconf;
@@ -877,7 +862,7 @@ int	m_server_remote(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return exit_client(acptr, acptr, acptr,
 		    "Server Exists");
 	}
-	if (bconf = Find_ban(servername, CONF_BAN_SERVER))
+	if ((bconf = Find_ban(servername, CONF_BAN_SERVER)))
 	{
 		sendto_realops
 			("Cancelling link %s, banned server %s",
@@ -987,11 +972,9 @@ int	m_server_remote(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 {
-	char		*servername = cptr->name;
 	char		*inpath = get_client_name(cptr, TRUE);
 	extern char 	serveropts[];
 	aClient		*acptr;
-	aChannel	*chptr;
 	int		i;
 
 
@@ -1272,8 +1255,8 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 
 		for (bconf = conf_ban; bconf; bconf = (ConfigItem_ban *) bconf->next)
 		{
-			if (bconf->flag.type == CONF_BAN_NICK)
-				if (bconf->flag.type2 == CONF_BAN_TYPE_AKILL)
+			if (bconf->flag.type == CONF_BAN_NICK) {
+				if (bconf->flag.type2 == CONF_BAN_TYPE_AKILL) {
 					if (bconf->reason)
 						sendto_one(cptr, "%s%s %s %s :%s",
 						    ns ? "@" : ":",
@@ -1288,6 +1271,8 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 						    me.name,
 						    (IsToken(cptr) ? TOK_SQLINE :
 						    MSG_SQLINE), bconf->mask);
+				}
+			}
 		}
 	}
 
@@ -1308,10 +1293,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 **
 ** Recoded by Stskeeps
 */
-int  m_links(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_links)
 {
 	Link *lp;
 	aClient *acptr;
@@ -1348,10 +1330,7 @@ int  m_links(cptr, sptr, parc, parv)
 **  parv[8] = ircnet
 **/
 
-int  m_netinfo(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_netinfo)
 {
 	long 		lmax;
 	time_t	 	xx;
@@ -1433,7 +1412,7 @@ int  m_netinfo(cptr, sptr, parc, parv)
 		    me.name, cptr->name, protocol, me.name, UnrealProtocol);
 
 	}
-	ircsprintf(buf, "%X", CLOAK_KEYCRC);
+	ircsprintf(buf, "%lX", CLOAK_KEYCRC);
 	if (strcmp(buf, parv[4]))
 	{
 		sendto_realops
@@ -1441,6 +1420,7 @@ int  m_netinfo(cptr, sptr, parc, parv)
 				cptr->name, parv[4], buf);
 	}
 	SetNetInfo(cptr);
+	return 0;
 }
 
 #ifndef IRCDTOTALVERSION
@@ -1451,8 +1431,7 @@ int  m_netinfo(cptr, sptr, parc, parv)
  * sends m_info into to sptr
 */
 
-void m_info_send(sptr)
-	aClient *sptr;
+void m_info_send(aClient *sptr)
 {
 	sendto_one(sptr, ":%s %d %s :=-=-=-= %s =-=-=-=",
 	    me.name, RPL_INFO, sptr->name, IRCDTOTALVERSION);
@@ -1532,10 +1511,7 @@ void m_info_send(sptr)
 **  Modified for hardcode by Stskeeps
 */
 
-int  m_info(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_info)
 {
 
 	if (hunt_server_token(cptr, sptr, MSG_INFO, TOK_INFO, ":%s", 1, parc,
@@ -1552,10 +1528,7 @@ int  m_info(cptr, sptr, parc, parv)
 **      parv[0] = sender prefix
 **      parv[1] = servername
 */
-int  m_dalinfo(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_dalinfo)
 {
 	char **text = dalinfotext;
 
@@ -1583,10 +1556,7 @@ int  m_dalinfo(cptr, sptr, parc, parv)
 **      parv[0] = sender prefix
 **      parv[1] = servername
 */
-int  m_license(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_license)
 {
 	char **text = gnulicense;
 
@@ -1609,10 +1579,7 @@ int  m_license(cptr, sptr, parc, parv)
 **      parv[0] = sender prefix
 **      parv[1] = servername
 */
-int  m_credits(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_credits)
 {
 	char **text = unrealcredits;
 
@@ -1642,10 +1609,7 @@ int  m_credits(cptr, sptr, parc, parv)
  * RPL_WATCHOFF	- Succesfully removed from WATCH-list.
  * ERR_TOOMANYWATCH - Take a guess :>  Too many WATCH entries.
  */
-static void show_watch(cptr, name, rpl1, rpl2)
-	aClient *cptr;
-	char *name;
-	int  rpl1, rpl2;
+static void show_watch(aClient *cptr, char *name, int rpl1, int rpl2)
 {
 	aClient *acptr;
 
@@ -1665,10 +1629,7 @@ static void show_watch(cptr, name, rpl1, rpl2)
 /*
  * m_watch
  */
-int  m_watch(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_watch)
 {
 	aClient *acptr;
 	char *s, **pav = parv, *user;
@@ -1911,10 +1872,7 @@ char *get_client_name2(aClient *acptr, int showports)
 **            it--not reversed as in ircd.conf!
 */
 
-int  m_stats(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_stats)
 {
 #ifndef DEBUGMODE
 	static char Sformat[] =
@@ -2196,7 +2154,9 @@ int  m_stats(cptr, sptr, parc, parv)
 		  break;
 	  }
 	  case 'm':
+		LockEventSystem();
 		EventStatus(sptr);
+		UnlockEventSystem();
 		break;
 
 	  case 'M':
@@ -2308,8 +2268,10 @@ int  m_stats(cptr, sptr, parc, parv)
 		  }
 		  break;
 	  case 'S':
-		  if (IsOper(sptr))
+		  if (IsOper(sptr)) {
 			  report_dynconf(sptr);
+			  RunHook2(HOOKTYPE_STATS, sptr, "S");
+		  }
 		  break;
 	  case 'D':
 	  {
@@ -2519,7 +2481,7 @@ int  m_stats(cptr, sptr, parc, parv)
 ** m_summon
 ** parv[0] = sender prefix
 */
-int  m_summon(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_summon)
 {
 	/* /summon is old and out dated, we just return an error as
 	 * required by RFC1459 -- codemastr
@@ -2530,7 +2492,8 @@ int  m_summon(aClient *cptr, aClient *sptr, int parc, char *parv[])
 ** m_users
 **	parv[0] = sender prefix
 **	parv[1] = servername
-*/ int m_users(aClient *cptr, aClient *sptr, int parc, char *parv[])
+*/ 
+CMD_FUNC(m_users)
 {
 	/* /users is out of date, just return an error as  required by
 	 * RFC1459 -- codemastr
@@ -2544,10 +2507,8 @@ int  m_summon(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **
 **	parv[0] = sender prefix
 **	parv[*] = parameters
-*/ int m_error(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+*/ 
+CMD_FUNC(m_error)
 {
 	char *para;
 
@@ -2585,7 +2546,7 @@ Link *helpign = NULL;
 
 /* Now just empty ignore-list, in future reload dynamic help.
  * Move out to help.c -Donwulff */
-void reset_help()
+void reset_help(void)
 {
 	free_str_list(helpign);
 }
@@ -2598,10 +2559,7 @@ void reset_help()
 **	parv[0] = sender prefix
 **	parv[1] = optional message text
 */
-int  m_help(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_help)
 {
 	char *message, *s;
 	Link *tmpl;
@@ -2684,10 +2642,7 @@ int  m_help(cptr, sptr, parc, parv)
  * parv[1] = host/server mask.
  * parv[2] = server to query
  */
-int  m_lusers(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_lusers)
 {
 
 	/* Just to correct results ---Stskeeps */
@@ -2742,7 +2697,7 @@ EVENT(save_tunefile)
 		return;
 	}
 	fprintf(tunefile, "%li\n", TSoffset);
-	fprintf(tunefile, "%li\n", IRCstats.me_max);
+	fprintf(tunefile, "%d\n", IRCstats.me_max);
 	fclose(tunefile);
 }
 
@@ -2769,10 +2724,8 @@ void load_tunefile(void)
    **  parv[1] = servername
    **  parv[2] = port number
    **  parv[3] = remote server
- */ int m_connect(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+ */
+CMD_FUNC(m_connect)
 {
 	int  port, tmpport, retval;
 	ConfigItem_link	*aconf;
@@ -2907,10 +2860,7 @@ void load_tunefile(void)
 **	parv[0] = sender prefix
 **	parv[1] = message text
 */
-int  m_wallops(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_wallops)
 {
 	char *message;
 	message = parc > 1 ? parv[1] : NULL;
@@ -2937,10 +2887,7 @@ int  m_wallops(cptr, sptr, parc, parv)
 **	parv[0] = sender prefix
 **	parv[1] = message text
 */
-int  m_gnotice(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_gnotice)
 {
 	char *message;
 
@@ -2969,7 +2916,7 @@ int  m_gnotice(cptr, sptr, parc, parv)
 **
 ** De-Potvinized by codemastr
 */
-int  m_addline(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_addline)
 {
 	FILE *conf;
 	char *text;
@@ -3004,7 +2951,7 @@ int  m_addline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		else
 			fprintf (conf,"%s\n",parv[i]);
 	}
-	/* I dunno what Potvin was smoking when he made this code, but it plain SUX
+	 * I dunno what Potvin was smoking when he made this code, but it plain SUX
 	 * this should work just as good, and no need for a loop -- codemastr */
 	fprintf(conf, "%s\n", text);
 
@@ -3017,7 +2964,7 @@ int  m_addline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **
 ** De-Potvinized by codemastr
 */
-int  m_addmotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_addmotd)
 {
 	FILE *conf;
 	char *text;
@@ -3064,7 +3011,7 @@ int  m_addmotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **
 ** De-Potvinized by codemastr
 */
-int  m_addomotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_addomotd)
 {
 	FILE *conf;
 	char *text;
@@ -3111,10 +3058,7 @@ int  m_addomotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 **      parv[0] = sender prefix
 **      parv[1] = message text
 */
-int  m_globops(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_globops)
 {
 	char *message;
 
@@ -3142,10 +3086,7 @@ int  m_globops(cptr, sptr, parc, parv)
 **      parv[0] = sender prefix
 **      parv[1] = message text
 */
-int  m_locops(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_locops)
 {
 	char *message;
 
@@ -3171,10 +3112,7 @@ int  m_locops(cptr, sptr, parc, parv)
 **      parv[0] = sender prefix
 **      parv[1] = message text
 */
-int  m_chatops(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_chatops)
 {
 	char *message;
 
@@ -3208,10 +3146,7 @@ int  m_chatops(cptr, sptr, parc, parv)
 **      parv[0] = sender prefix
 **      parv[1] = message text
 */
-int  m_goper(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_goper)
 {
 	char *message;
 
@@ -3240,10 +3175,7 @@ int  m_goper(cptr, sptr, parc, parv)
 **	parv[0] = sender prefix
 **	parv[1] = servername
 */
-int  m_time(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_time)
 {
 	if (hunt_server_token(cptr, sptr, MSG_TIME, TOK_TIME, ":%s", 1, parc,
 	    parv) == HUNTED_ISME)
@@ -3258,10 +3190,7 @@ int  m_time(cptr, sptr, parc, parv)
 **	parv[1] = client
 **	parv[2] = kill message
 */
-int  m_svskill(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_svskill)
 {
 	aClient *acptr;
 	/* this is very wierd ? */
@@ -3297,15 +3226,12 @@ int  m_svskill(cptr, sptr, parc, parv)
 **	parv[0] = sender prefix
 **	parv[1] = servername
 */
-int  m_admin(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_admin)
 {
 	ConfigItem_admin *admin;
 	/* Users may want to get the address in case k-lined, etc. -- Barubary
 
-	   /* Only allow remote ADMINs if registered -- Barubary */
+	   * Only allow remote ADMINs if registered -- Barubary */
 	if (IsPerson(sptr) || IsServer(cptr))
 		if (hunt_server_token(cptr, sptr, MSG_ADMIN, TOK_ADMIN, ":%s", 1, parc,
 		    parv) != HUNTED_ISME)
@@ -3345,10 +3271,7 @@ int  m_admin(cptr, sptr, parc, parv)
 ** ugly code but it seems to work :) -- codemastr
 ** added -all and fixed up a few lines -- niquil (niquil@programmer.net)
 */
-int  m_rehash(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_rehash)
 {
 	int  x;
 
@@ -3531,17 +3454,9 @@ int  m_rehash(cptr, sptr, parc, parv)
 ** The password is only valid if there is a matching X line in the
 ** config file. If it is not,  then it becomes the
 */
-int  m_restart(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_restart)
 {
-	char *pass = NULL, *encr;
 	int  x;
-#ifdef CRYPT_XLINE_PASSWORD
-	char salt[3];
-	extern char *crypt();
-#endif
 	if (MyClient(sptr) && !OPCanRestart(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
@@ -3626,10 +3541,7 @@ int  m_restart(cptr, sptr, parc, parv)
 **	parv[0] = sender prefix
 **	parv[1] = servername
 */
-int  m_trace(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_trace)
 {
 	int  i;
 	aClient *acptr;
@@ -3680,7 +3592,7 @@ int  m_trace(cptr, sptr, parc, parv)
 		link_s[i] = 0, link_u[i] = 0;
 
 
-	if (doall)
+	if (doall) {
 		for (acptr = client; acptr; acptr = acptr->next)
 #ifdef	SHOW_INVISIBLE_LUSERS
 			if (IsPerson(acptr))
@@ -3692,6 +3604,7 @@ int  m_trace(cptr, sptr, parc, parv)
 #endif
 			else if (IsServer(acptr))
 				link_s[acptr->from->slot]++;
+	}
 
 	/* report all direct connections */
 
@@ -3819,7 +3732,7 @@ int  m_trace(cptr, sptr, parc, parv)
  * Heavily modified from the ircu m_motd by codemastr
  * Also svsmotd support added
  */
-int  m_motd(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_motd)
 {
 	ConfigItem_tld *ptr;
 	aMotd *temp, *temp2;
@@ -3891,7 +3804,7 @@ HUNTED_ISME)
 /*
  * Modified from comstud by codemastr
  */
-int  m_opermotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_opermotd)
 {
 	aMotd *temp;
 
@@ -4084,7 +3997,7 @@ aMotd *read_file(char *filename, aMotd **list)
 /*
  * Modified from comstud by codemastr
  */
-int  m_botmotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_botmotd)
 {
 	aMotd *temp;
 	if (hunt_server_token(cptr, sptr, MSG_BOTMOTD, TOK_BOTMOTD, ":%s", 1, parc,
@@ -4114,7 +4027,7 @@ int  m_botmotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
  * Heavily modified from the ircu m_motd by codemastr
  * Also svsmotd support added
  */
-int  m_rules(aClient *cptr, aClient *sptr, int parc, char *parv[])
+CMD_FUNC(m_rules)
 {
 	ConfigItem_tld *ptr;
 	aMotd *temp;
@@ -4167,10 +4080,7 @@ int  m_rules(aClient *cptr, aClient *sptr, int parc, char *parv[])
 /*
 ** m_close - added by Darren Reed Jul 13 1992.
 */
-int  m_close(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_close)
 {
 	aClient *acptr;
 	int  i;
@@ -4208,14 +4118,10 @@ int  m_close(cptr, sptr, parc, parv)
  * have a reason. If you use it you should first do a GLOBOPS and
  * then a server notice to let everyone know what is going down...
  */
-int  m_die(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_die)
 {
 	aClient *acptr;
 	int  i;
-	char *pass = NULL;
 	if (!MyClient(sptr) || !OPCanDie(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
@@ -4274,11 +4180,7 @@ int  numservers = 0;
  * New /MAP format -Potvin
  * dump_map function.
  */
-void dump_map(cptr, server, mask, prompt_length, length)
-	aClient *cptr, *server;
-	char *mask;
-	int  prompt_length;
-	int  length;
+void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_length, int length)
 {
 	static char prompt[64];
 	char *p = &prompt[prompt_length];
@@ -4348,10 +4250,7 @@ void dump_map(cptr, server, mask, prompt_length, length)
 **      parv[0] = sender prefix
 **      parv[1] = server mask
 **/
-int  m_map(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+CMD_FUNC(m_map)
 {
 	Link *lp;
 	aClient *acptr;

@@ -43,7 +43,7 @@
 #endif
 
 #include "h.h"
-
+#include "proto.h"
 extern int SVSNOOP;
 extern ircstats IRCstats;
 
@@ -120,7 +120,7 @@ char *oflagstr(long oflag)
 int advanced_check(char *userhost, int ipstat)
 {
 	register int retval = TRUE;
-	char *up, *p, *thisseg;
+	char *up = NULL, *p, *thisseg;
 	int  numdots = 0, segno = 0, numseg, i = 0;
 	char *ipseg[10 + 2];
 	char safebuffer[512] = "";	/* buffer strtoken() can mess up to its heart's content...;> */
@@ -167,8 +167,8 @@ int advanced_check(char *userhost, int ipstat)
 	if (ipstat == TRUE)
 		for (i = 0; i < numseg; i++)
 		{
-			if (!IP_WILDS_OK(i) && index(ipseg[i], '*')
-			    || index(ipseg[i], '?'))
+			if (!IP_WILDS_OK(i) && (index(ipseg[i], '*')
+			    || index(ipseg[i], '?')))
 				retval = FALSE;
 			/* The person who wrote this function was braindead --Stskeeps */
 			/* MyFree(ipseg[i]); */

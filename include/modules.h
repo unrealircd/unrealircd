@@ -18,11 +18,14 @@
  *
  *   $Id$
  */
-
+#ifndef MODULES_H
+#define MODULES_H
 #define MOD_VERSION	"3.2-b5-1"
 #define MOD_WE_SUPPORT  "3.2-b5*"
 #define MAXHOOKTYPES	20
-
+typedef void			(*vFP)();	/* Void function pointer */
+typedef int			(*iFP)();	/* Integer function pointer */
+typedef char			(*cFP)();	/* char * function pointer */
 #if defined(_WIN32)
 #define DLLFUNC	_declspec(dllexport)
 #define irc_dlopen(x,y) LoadLibrary(x)
@@ -37,20 +40,21 @@
 #else
 #define irc_dlopen dlopen
 #define irc_dlclose dlclose
+#if defined(UNDERSCORE)
+#define irc_dlsym(x,y,z) z = obsd_dlsym(x,y)
+#else
 #define irc_dlsym(x,y,z) z = dlsym(x,y)
+#endif
 #define irc_dlerror dlerror
 #define DLLFUNC 
 #endif
 
-typedef void			(*vFP)();	/* Void function pointer */
-typedef int			(*iFP)();	/* Integer function pointer */
-typedef char			(*cFP)();	/* char * function pointer */
+#define EVENT(x) void (x) (void *data)
 
-/*
- * For resolving symbols 
- * Look further down for definition of the structure
- */
 typedef struct _mod_symboltable Mod_SymbolDepTable;
+typedef struct _event Event;
+typedef struct _eventinfo EventInfo;
+typedef struct _irchook Hook;
 
 /*
  * Module header that every module must include, with the name of
@@ -76,6 +80,30 @@ typedef struct _ModuleChild
 	Module *child; /* Aww. aint it cute? */
 } ModuleChild;
 
+#define MOBJ_EVENT   0x0001
+#define MOBJ_HOOK    0x0002
+#define MOBJ_COMMAND 0x0004
+
+typedef struct _ModuleObject {
+	struct _ModuleObject *prev, *next;
+	short type;
+	union {
+		Event *event;
+		Hook *hook;
+		aCommand *command;
+	} object;
+} ModuleObject;
+
+struct _irchook {
+	Hook *prev, *next;
+	short type;
+	union {
+		int (*intfunc)();
+		void (*voidfunc)();
+	} func;
+	Module *owner;
+};
+
 /*
  * What we use to keep track internally of the modules
 */
@@ -93,9 +121,8 @@ struct _Module
 #endif	
 	unsigned char flags;    /* 8-bits for flags .. */
 	ModuleChild *children;
+	ModuleObject *objects;
 };
-
-
 /*
  * Symbol table
 */
@@ -118,8 +145,45 @@ struct _mod_symboltable
 #else
 #define MOD_Dep(name, container,module) {(void *)&name, (vFP *) &container}
 #endif
+/* Event structs */
+struct _event {
+	Event   *prev, *next;
+	char    *name;
+	time_t  every;
+	long    howmany;
+	vFP	event;
+	void    *data;
+	time_t  last;
+	Module *owner;
+};
+
+#define EMOD_EVERY 0x0001
+#define EMOD_HOWMANY 0x0002
+#define EMOD_NAME 0x0004
+#define EMOD_EVENT 0x0008
+#define EMOD_DATA 0x0010
+
+struct _eventinfo {
+	int flags;
+	long howmany;
+	time_t every;
+	char *name;
+	vFP event;
+	void *data;
+};
 
 
+#define EventAdd(name, every, howmany, event, data) EventAddEx(NULL, name, every, howmany, event, data)
+Event   *EventAddEx(Module *, char *name, long every, long howmany,
+                  vFP event, void *data);
+Event   *EventDel(Event *event);
+Event   *EventFind(char *name);
+int     EventMod(Event *event, EventInfo *mods);
+void    DoEvents(void);
+void    EventStatus(aClient *sptr);
+void    SetupEvents(void);
+void	LockEventSystem(void);
+void	UnlockEventSystem(void);
 extern Hook		*Hooks[MAXHOOKTYPES];
 extern Hook		*global_i;
 
@@ -130,20 +194,24 @@ vFP     Module_Sym(char *name);
 vFP     Module_SymX(char *name, Module **mptr);
 int	Module_free(Module *mod);
 
-#define add_Hook(hooktype, func) HookAddEx(hooktype, func, NULL)
-#define del_Hook(hooktype, func) HookDelEx(hooktype, func, NULL)
-#define HookAdd(hooktype, func) HookAddEx(hooktype, func, NULL)
-#define HookDel(hooktype, func) HookDelEx(hooktype, func, NULL)
+#ifdef __OpenBSD__
+void *obsd_dlsym(void *handle, char *symbol);
+#endif
 
-#define add_HookX(hooktype, func1, func2) HookAddEx(hooktype, func1, func2)
-#define del_HookX(hooktype, func1, func2) HookDelEx(hooktype, func1, func2)
+#define add_Hook(hooktype, func) HookAddMain(NULL, hooktype, func, NULL)
+#define HookAdd(hooktype, func) HookAddMain(NULL, hooktype, func, NULL)
+#define HookAddEx(module, hooktype, func) HookAddMain(module, hooktype, func, NULL)
+#define HookAddVoid(hooktype, func) HookAddMain(NULL, hooktype, NULL, func)
+#define HookAddVoidEx(module, hooktype, func) HookAddMain(module, hooktype, NULL, func)
+#define add_HookX(hooktype, func1, func2) HookAddMain(NULL, hooktype, func1, func2)
 
-void	HookAddEx(int hooktype, int (*intfunc)(), void (*voidfunc)());
-void	HookDelEx(int hooktype, int (*intfunc)(), void (*voidfunc)());
+Hook	*HookAddMain(Module *module, int hooktype, int (*intfunc)(), void (*voidfunc)());
+Hook	*HookDel(Hook *hook);
 
 #define RunHook0(hooktype) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next)(*(global_i->func.intfunc))()
 #define RunHook(hooktype,x) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(x)
-#define RunHookReturn(hooktype,x,ret) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) if((*(global_i->func.intfunc))(x) ret) return
+#define RunHookReturn(hooktype,x,ret) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) if((*(global_i->func.intfunc))(x) ret) return -1
+#define RunHookReturnVoid(hooktype,x,ret) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) if((*(global_i->func.intfunc))(x) ret) return
 #define RunHook2(hooktype,x,y) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(x,y)
 
 
@@ -160,7 +228,7 @@ void	HookDelEx(int hooktype, int (*intfunc)(), void (*voidfunc)());
 #define HOOKTYPE_GUEST 10
 #define HOOKTYPE_SERVER_CONNECT 11
 #define HOOKTYPE_SERVER_QUIT 12
-
+#define HOOKTYPE_STATS 13
 /* Module flags */
 #define MODFLAG_NONE	0x0000
 #define MODFLAG_LOADED	0x0001 /* (mod_load has been called and suceeded) */
@@ -169,4 +237,4 @@ void	HookDelEx(int hooktype, int (*intfunc)(), void (*voidfunc)());
 #define MOD_SUCCESS 0
 #define MOD_FAILED -1
 #define MOD_DELAY 2
-
+#endif
