@@ -2495,7 +2495,7 @@ static void do_who(sptr, acptr, repchan)
 		    !ShowChannel(sptr,repchan)) 
 			status[i++] = '!';
 #else
-		if (channelwho && IsNetAdmin(sptr) ||
+		if (
 		    IsInvisible(acptr) && !IsMember(sptr,repchan) ||
                     IsAuditorium(repchan) && !is_chan_op(acptr,repchan) ||
                     !ShowChannel(sptr,repchan))
