@@ -37,3 +37,4 @@
 - Removed some irc.flirt.org references.
 - Made it so if a channel is +O or +A and you are not +O or +A and not in the channel, you can not
   /topic #channel same for +b if not +o or on the channel. Suggested by Sysop_Mars
+- Fixed a bug where you would receive a double notice when someone does a /who 0 o

@@ -2432,7 +2432,7 @@ int  m_notice(cptr, sptr, parc, parv)
 }
 
 int  channelwho = 0;
-
+int operwho = 0;
 static void do_who(sptr, acptr, repchan)
 	aClient *sptr, *acptr;
 	aChannel *repchan;
@@ -2462,7 +2462,7 @@ static void do_who(sptr, acptr, repchan)
 	else if (repchan && has_voice(acptr, repchan))
 		status[i++] = '+';
 	status[i] = '\0';
-	if (IsWhois(acptr) && channelwho == 0 && sptr != acptr)
+	if (IsWhois(acptr) && channelwho == 0 && sptr != acptr && !operwho)
 	{
 		sendto_one(acptr,
 		    ":%s NOTICE %s :*** %s either did a /who or a specific /who on you",
@@ -2510,11 +2510,13 @@ int  m_who(cptr, sptr, parc, parv)
 		clean_channelname(mask);
 	}
 	channelwho = 0;
+	operwho = 0;
 	mychannel = NullChn;
 	if (oper)
 	{
 		sendto_umode(UMODE_HELPOP, "*** HelpOp -- from %s: [Did a /who 0 o]", parv[0]);		
 		sendto_serv_butone(&me, ":%s HELP :[Did a /who 0 o]", parv[0]);
+		operwho = 1;
 	}
 	if (sptr->user)
 		if ((lp = sptr->user->channel))
