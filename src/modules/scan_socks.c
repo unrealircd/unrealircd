@@ -96,11 +96,17 @@ void    scan_socks_init(void)
 	if (!xHSlock || !xVSlock || !xVS_add)
 	{
 		module_buffer = NULL;
-		config_error("scan_socks: i depend on scan.so");
+		config_error("scan_socks: i depend on scan.so being loaded");
 		return;
 	}	
 	
 	blackhole_conf = (ConfigItem_blackhole *) module_sym("blackhole_conf");
+	if (!blackhole_conf)
+	{
+		module_buffer = NULL;
+		config_error("scan_socks: i depend on blackhole.so being loaded");
+		return;
+	}
 	module_buffer = &scan_socks_info;
 	
 	/*

@@ -103,8 +103,18 @@ void    blackhole_load(void)
 	if (!blackhole_conf.ip || !blackhole_conf.port)
 	{
 		config_error("set::blackhole: missing ip/port mask");
+		return 0;
 	}
+	if (blackhole_stop == 1)
+	{
+		sendto_realops("blackhole is already running, restarting module..");
+		blackhole_stop = 2;
+		while (blackhole_stop == 2) {}
+	}
+	blackhole_stop = 0;
+	
 	IRCCreateThread(thread, thread_attr, blackhole, NULL);
+	while (blackhole_stop == 1) {}
 }
 
 
@@ -116,8 +126,8 @@ DLLFUNC void	mod_unload(void)
 void	blackhole_unload(void)
 #endif
 {
-	blackhole_stop = 1;
-	while (blackhole_stop == 1) {}
+	blackhole_stop = 2;
+	while (blackhole_stop == 2) {}
 	del_Hook(HOOKTYPE_CONFIG_UNKNOWN, h_config_set_blackhole);
 }
 
@@ -202,13 +212,15 @@ DLLFUNC void blackhole(void *p)
 
 	listen(blackholefd, LISTEN_SIZE);
 	
-		
-	while (!blackhole_stop)
+	/* We hereby indicate that we are set up*/
+	blackhole_stop = 1;		
+	while (blackhole_stop != 2)
 	{
 		callerfd = accept(blackholefd, NULL, NULL);
 		CLOSE_SOCK(callerfd);
 	}
 	end:
+	CLOSE_SOCK(blackholefd)
 	blackhole_stop = 0;
 	IRCExitThread(NULL);	
 }
