@@ -1928,4 +1928,4 @@ seen. gmtime warning still there
   but most ppl expect it to work this way too.
 - Updated win32 compile instructions
 - Fixed set::dns error messages
-
+- Fixed win32 compile error

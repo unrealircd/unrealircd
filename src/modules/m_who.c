@@ -702,8 +702,8 @@ int oper = IsAnOper(sptr);
 		if (IsHidden(acptr) && !match(mask, acptr->user->virthost))
 			goto matchok;
 		continue;
-matchok:
 	}
+matchok:
 	  if ((cansee = can_see(sptr, acptr, NULL)) & WHO_CANTSEE)
 	    continue;
 
