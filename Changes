@@ -2949,3 +2949,5 @@ seen. gmtime warning still there
 - Fixed some compile warnings/problems caused by modulizing.
 - Fixed a bug which prevented "/spamfilter del[..]" from working.
   Reported by Fury (#0001575).
+- Moved the SQLINE system (and ban nick) to TKL and introduced "holds"
+  suggested by Certus

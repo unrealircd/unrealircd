@@ -1388,6 +1388,19 @@ char *encoded;
 	}
 
 	encoded = unreal_encodespace(SPAMFILTER_BAN_REASON);
+	for (tk = tklines[tkl_hash('q')]; tk; tk = tk->next)
+	{
+		if (tk->type != TKL_NICK)
+			continue;
+		if (!tk->setby)
+		{
+			if (me.name[0] != '\0')
+				tk->setby = strdup(me.name);
+			else
+				tk->setby = strdup(conf_me->name ? conf_me->name : "~server~");
+		}
+	}
+
 	for (tk = tklines[tkl_hash('f')]; tk; tk = tk->next)
 	{
 		if (tk->type != TKL_SPAMF)
@@ -1399,9 +1412,8 @@ char *encoded;
 			tk->spamf->tkl_duration = SPAMFILTER_BAN_TIME;
 		}
 		/* This one is even more ugly, but our config crap is VERY confusing :[ */
-		if (!strcmp(tk->setby, "~server~"))
+		if (!tk->setby)
 		{
-			MyFree(tk->setby);
 			if (me.name[0] != '\0')
 				tk->setby = strdup(me.name);
 			else
@@ -1767,6 +1779,14 @@ void	config_rehash()
 		if (tk->type == TKL_SPAMF)
 			tk_next = tkl_del_line(tk);
 		else /* global spamfilter.. don't touch! */
+			tk_next = tk->next;
+	}
+
+	for (tk = tklines[tkl_hash('q')]; tk; tk = tk_next)
+	{
+		if (tk->type == TKL_NICK)
+			tk_next = tkl_del_line(tk);
+		else 
 			tk_next = tk->next;
 	}
 
@@ -4063,6 +4083,10 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 		ca->mask = strdup(cep2->ce_vardata);
 		if (!strcmp(cep3->ce_vardata, "gline"))
 			ca->type = TKL_KILL|TKL_GLOBAL;
+		else if (!strcmp(cep3->ce_vardata, "qline"))
+			ca->type = TKL_NICK;
+		else if (!strcmp(cep3->ce_vardata, "gqline"))
+			ca->type = TKL_NICK|TKL_GLOBAL;
 		else if (!strcmp(cep3->ce_vardata, "gzline"))
 			ca->type = TKL_ZAP|TKL_GLOBAL;
 		else if (!strcmp(cep3->ce_vardata, "shun"))
@@ -4194,6 +4218,8 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 		if (!strcmp(cep3->ce_vardata, "gline")) {}
+		else if (!strcmp(cep3->ce_vardata, "qline")) {}
+		else if (!strcmp(cep3->ce_vardata, "gqline")) {}
 		else if (!strcmp(cep3->ce_vardata, "gzline")){}
 		else if (!strcmp(cep3->ce_vardata, "shun")) {}
 		else if (!strcmp(cep3->ce_vardata, "tkline")) {
@@ -4729,7 +4755,7 @@ int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 	cep = config_find_entry(ce->ce_entries, "action");
 	action = banact_stringtoval(cep->ce_vardata);
 	nl->hostmask = strdup(cep->ce_vardata);
-	nl->setby = strdup(BadPtr(me.name) ? "~server~" : me.name); /* Hmm! */
+	nl->setby = strdup(BadPtr(me.name) ? NULL : me.name); /* Hmm! */
 	
 	nl->spamf = unreal_buildspamfilter(word);
 	nl->spamf->action = action;
@@ -5251,7 +5277,17 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 
 	ca = MyMallocEx(sizeof(ConfigItem_ban));
 	if (!strcmp(ce->ce_vardata, "nick"))
-		ca->flag.type = CONF_BAN_NICK;
+	{
+		aTKline *nl = MyMallocEx(sizeof(aTKline));
+		nl->type = TKL_NICK;
+		cep = config_find_entry(ce->ce_entries, "mask");
+		nl->hostmask = strdup(cep->ce_vardata);
+		cep = config_find_entry(ce->ce_entries, "reason");
+		nl->reason = strdup(cep->ce_vardata);
+		strcpy(nl->usermask, "*");
+		AddListItem(nl, tklines[tkl_hash('q')]);
+		return 0;
+	}
 	else if (!strcmp(ce->ce_vardata, "ip"))
 		ca->flag.type = CONF_BAN_IP;
 	else if (!strcmp(ce->ce_vardata, "server"))

@@ -150,8 +150,8 @@ struct statstab StatsTable[] = {
 	{ 'L', "linkinfoall",	stats_linkinfoall,	SERVER_AS_PARA	},
 	{ 'M', "command",	stats_command,		0 		},
 	{ 'O', "oper",		stats_oper,		0 		},
+	{ 'Q', "sqline",	stats_sqline,		FLAGS_AS_PARA 	},
 	{ 'P', "port",		stats_port,		0 		},
-	{ 'Q', "bannick",	stats_bannick,		0 		},
 	{ 'R', "usage",		stats_usage,		0 		},
 	{ 'S', "set",		stats_set,		0		},
 	{ 'T', "traffic",	stats_traffic,		0 		},
@@ -164,15 +164,15 @@ struct statstab StatsTable[] = {
 	{ 'c', "link", 		stats_links,		0 		},
 	{ 'd', "denylinkauto",	stats_denylinkauto,	0 		},
 	{ 'e', "exceptthrottle",stats_exceptthrottle,	0		},
-	{ 'f', "spamfilter",	stats_spamfilter,		FLAGS_AS_PARA		},	
+	{ 'f', "spamfilter",	stats_spamfilter,	FLAGS_AS_PARA	},	
 	{ 'g', "gline",		stats_gline,		FLAGS_AS_PARA	},
 	{ 'h', "link", 		stats_links,		0 		},
-	{ 'j', "officialchans", stats_officialchannels, 0 },
+	{ 'j', "officialchans", stats_officialchannels, 0 		},
 	{ 'k', "kline",		stats_kline,		0 		},
 	{ 'l', "linkinfo",	stats_linkinfo,		SERVER_AS_PARA 	},
 	{ 'n', "banrealname",	stats_banrealname,	0 		},
 	{ 'o', "oper",		stats_oper,		0 		},
-	{ 'q', "sqline",	stats_sqline,		0 		},
+	{ 'q', "bannick",	stats_bannick,		FLAGS_AS_PARA	},
 	{ 'r', "chanrestrict",	stats_chanrestrict,	0 		},
 	{ 's', "shun",		stats_shun,		FLAGS_AS_PARA	},
 	{ 't', "tld",		stats_tld,		0 		},
@@ -669,12 +669,7 @@ int stats_port(aClient *sptr, char *para)
 
 int stats_bannick(aClient *sptr, char *para)
 {
-	ConfigItem_ban *bans;
-
-	for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) 
-		if (bans->flag.type == CONF_BAN_NICK && (bans->flag.type2 != CONF_BAN_TYPE_AKILL))
-			sendto_one(sptr, rpl_str(RPL_STATSQLINE),
-				me.name, sptr->name,  bans->reason, bans->mask);
+	tkl_stats(sptr, TKL_NICK, para);
 	return 0;
 }
 
@@ -1133,13 +1128,7 @@ int stats_banrealname(aClient *sptr, char *para)
 
 int stats_sqline(aClient *sptr, char *para)
 {
-	ConfigItem_ban *bans;
-
-	for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) 
-		if (bans->flag.type == CONF_BAN_NICK && (bans->flag.type2 == CONF_BAN_TYPE_AKILL))
-			sendto_one(sptr, rpl_str(RPL_SQLINE_NICK),
-				me.name, sptr->name, bans->mask, bans->reason ? bans->reason
-				: "No Reason");
+	tkl_stats(sptr, TKL_NICK|TKL_GLOBAL, para);
 	return 0;
 }
 

@@ -901,40 +901,6 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	/* send out SVSFLINEs */
 	dcc_sync(cptr);
 
-	/*
-	   ** Pass on all services based q-lines
-	 */
-	{
-		ConfigItem_ban *bconf;
-		char *ns = NULL;
-
-		if (me.serv->numeric && SupportNS(cptr))
-			ns = base64enc(me.serv->numeric);
-		else
-			ns = NULL;
-
-		for (bconf = conf_ban; bconf; bconf = (ConfigItem_ban *) bconf->next)
-		{
-			if (bconf->flag.type == CONF_BAN_NICK) {
-				if (bconf->flag.type2 == CONF_BAN_TYPE_AKILL) {
-					if (bconf->reason)
-						sendto_one(cptr, "%s%s %s %s :%s",
-						    ns ? "@" : ":",
-						    ns ? ns : me.name,
-						    (IsToken(cptr) ? TOK_SQLINE :
-						    MSG_SQLINE), bconf->mask,
-						    bconf->reason);
-					else
-						sendto_one(cptr, "%s%s %s %s",
-						    ns ? "@" : ":",
-						    ns ? ns : me.name,
-						    (IsToken(cptr) ? TOK_SQLINE :
-						    MSG_SQLINE), bconf->mask);
-				}
-			}
-		}
-	}
-
 	sendto_one(cptr, "%s %i %li %i %lX 0 0 0 :%s",
 	    (IsToken(cptr) ? TOK_NETINFO : MSG_NETINFO),
 	    IRCstats.global_max, TStime(), UnrealProtocol,

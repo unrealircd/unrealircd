@@ -250,7 +250,7 @@ static char *replies[] = {
 /* 214    RPL_STATSOLDNLINE */ ":%s 214 %s %c %s * %s %d %d %s",
 /* 215    RPL_STATSILINE */ ":%s 215 %s I %s * %s %d %s %s %d",
 /* 216    RPL_STATSKLINE */ ":%s 216 %s %s %s %s",
-/* 217    RPL_STATSQLINE */ ":%s 217 %s Q %s %s",
+/* 217    RPL_STATSQLINE */ ":%s 217 %s %c %s %d %d %s :%s",
 /* 218    RPL_STATSYLINE */ ":%s 218 %s Y %s %d %d %d %ld %ld",
 /* 219    RPL_ENDOFSTATS */ ":%s 219 %s %c :End of /STATS report",
 /* 220    RPL_STATSBLINE */ ":%s 220 %s %c %s %s %s %d %d",

@@ -1177,7 +1177,8 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 */
 CMD_FUNC(m_nick)
 {
-	ConfigItem_ban *aconf;
+	aTKline *tklban;
+	int ishold;
 	aClient *acptr, *serv = NULL;
 	aClient *acptrs;
 	char nick[NICKLEN + 2], *s;
@@ -1313,9 +1314,9 @@ CMD_FUNC(m_nick)
 		    "Reserved for internal IRCd purposes");
 		return 0;
 	}
-	if (!IsULine(sptr) && ((aconf = Find_ban(nick, CONF_BAN_NICK))))
+	if (!IsULine(sptr) && (tklban = find_qline(sptr, nick, &ishold)))
 	{
-		if (IsServer(sptr))
+		if (IsServer(sptr) && !ishold)
 		{
 			acptrs =
 			    (aClient *)find_server_b64_or_real(sptr->user ==
@@ -1328,7 +1329,7 @@ CMD_FUNC(m_nick)
 				    && !IsServer(sptr) ? sptr->name : "<unregistered>"),
 				    acptrs ? acptrs->name : "unknown server");
 		}
-		else
+		else if (!ishold)
 		{
 			sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s",
 			    nick,
@@ -1336,18 +1337,24 @@ CMD_FUNC(m_nick)
 			    me.name);
 		}
 
-		if ((!IsServer(cptr)) && (!IsOper(cptr)))
+		if (!IsServer(cptr))
 		{
-
-			if (aconf)
+			if (ishold)
+			{
 				sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
 				    me.name, BadPtr(parv[0]) ? "*" : parv[0],
-				    nick,
-				    BadPtr(aconf->reason) ? "reason unspecified"
-				    : aconf->reason);
-			sendto_snomask(SNO_QLINE, "Forbidding Q-lined nick %s from %s.",
-			    nick, get_client_name(cptr, FALSE));
-			return 0;	/* NICK message ignored */
+				    nick, tklban->reason);
+				return 0;
+			}
+			if (!IsOper(cptr))
+			{
+				sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
+				    me.name, BadPtr(parv[0]) ? "*" : parv[0],
+				    nick, tklban->reason);
+				sendto_snomask(SNO_QLINE, "Forbidding Q-lined nick %s from %s.",
+				    nick, get_client_name(cptr, FALSE));
+				return 0;	/* NICK message ignored */
+			}
 		}
 	}
 	/*

@@ -96,57 +96,28 @@ DLLFUNC int MOD_UNLOAD(m_sqline)(int module_unload)
 */
 DLLFUNC int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	ConfigItem_ban	*bconf;
-	/* So we do not make double entries */
-	int		addit = 0;
+	char    mo[1024];
+	char *comment = (parc == 3) ? parv[2] : NULL;
+	char *tkllayer[9] = {
+                me.name,        /*0  server.name */
+                "+",            /*1  +|- */
+                "Q",            /*2  G   */
+                "*" ,           /*3  user */
+                parv[1],           /*4  host */
+                sptr->name,           /*5  setby */
+                "0",            /*6  expire_at */
+                NULL,           /*7  set_at */
+                "no reason"     /*8  reason */
+        };
 
-	if (!(IsServer(sptr) || IsULine(sptr)) || parc < 2 || BadPtr(parv[1]))
+	if (!IsServer(cptr))
 		return 0;
 
-	if (parv[2])
-		sendto_serv_butone_token(cptr, parv[0], MSG_SQLINE, TOK_SQLINE,
-		    "%s :%s", parv[1], parv[2]);
-	else
-		sendto_serv_butone_token(cptr, parv[0], MSG_SQLINE, TOK_SQLINE,
-		    "%s", parv[1]);
+	if (parc < 2)
+		return 0;
 
-	/* Only replaces AKILL (global ban nick)'s */
-	for (bconf = conf_ban; bconf; bconf = (ConfigItem_ban *)bconf->next)
-	{
-		if (bconf->flag.type != CONF_BAN_NICK)
-			continue;
-		if (bconf->flag.type2 != CONF_BAN_TYPE_AKILL)
-			continue;
-/*** Temporarely for tracing a bconf->mask being NULL issue. -- Syzop */
-		if (!bconf->mask) {
-			sendto_realops("bconf->mask is null! %p/%d/%d/%d/'%s'",
-				bconf, bconf->flag.temporary, bconf->flag.type, bconf->flag.type2,
-				bconf->reason ? bconf->reason : "<NULL>");
-			continue; /* let's be nice and not make it crash too */
-		}
-		if (!stricmp(bconf->mask, parv[1]))
-			break;
-	}
-	if (bconf)
-	{
-		if (bconf->reason)
-			MyFree(bconf->reason);
-		bconf->reason = NULL;
-		addit = 0;
-	}
-	else
-	{
-		bconf = (ConfigItem_ban *) MyMallocEx(sizeof(ConfigItem_ban));
-		DupString(bconf->mask, parv[1]);
-		addit = 1;
-	}
-	if (parv[2])
-		DupString(bconf->reason, parv[2]);
-		
-	/* CONF_BAN_NICK && CONF_BAN_TYPE_AKILL == SQLINE */
-	bconf->flag.type = CONF_BAN_NICK;
-	bconf->flag.type2 = CONF_BAN_TYPE_AKILL;
-	if (addit == 1)
-		AddListItem(bconf, conf_ban);
-	return 0;
+	ircsprintf(mo, "%li", TStime());
+	tkllayer[7] = mo;
+        tkllayer[8] = comment ? comment : "no reason";
+        return m_tkl(&me, &me, 9, tkllayer);
 }
