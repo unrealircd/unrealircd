@@ -637,3 +637,4 @@ seen. gmtime warning still there
   regarding retarded rehashes
 - Added some thread debugging, and fixed a SVS2MODE bug
 - Fixed a major scan bug caused by stskeeps(TM) lazy-coding
+- Hmm .. minor s_bsd.c read_message fix

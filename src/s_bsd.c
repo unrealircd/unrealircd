@@ -1952,7 +1952,7 @@ deadsocket:
 			flush_connections(cptr);
 		if ((length != FLUSH_BUFFER) && IsDead(cptr))
 			goto deadsocket;
-		if ((length > 0) && !FD_ISSET(cptr->fd, &read_set))
+		if ((length > 0) && (cptr->fd >= 0) && !FD_ISSET(cptr->fd, &read_set))
 			continue;
 		nfds--;
 		readcalls++;
