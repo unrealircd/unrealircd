@@ -2850,3 +2850,4 @@ seen. gmtime warning still there
 - Added commands SVSSNO and SVS2SNO (work just like SVSMODE/SVS2MODE but for snomasks)
   suggested by x64 (#0001461).
 - Added 80% of release notes, rest will be added a day before release or so :).
+- We are having fun with Makefiles...

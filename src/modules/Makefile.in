@@ -238,6 +238,10 @@ m_svswatch.so: m_svswatch.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_svswatch.so m_svswatch.c
 
+m_svssilence.so: m_svssilence.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_svssilence.so m_svssilence.c
+
 m_sendsno.so: m_sendsno.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_sendsno.so m_sendsno.c
