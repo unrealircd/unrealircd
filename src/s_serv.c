@@ -1440,49 +1440,34 @@ int  m_server_estab(cptr)
 /*
 ** m_links
 **	parv[0] = sender prefix
-**	parv[1] = servername mask
 ** or
 **	parv[0] = sender prefix
-**	parv[1] = server to query 
-**      parv[2] = servername mask
+**
+** Recoded by Stskeeps
 */
 int  m_links(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;
 	int  parc;
 	char *parv[];
 {
-	char *mask;
+	Link *lp;
 	aClient *acptr;
 
-	if (parc > 2 && IsOper(cptr))
+	for (lp = (Link *) return_servers(); lp; lp = lp->next)
 	{
-		if (hunt_server(cptr, sptr, ":%s LINKS %s :%s", 1, parc, parv)
-		    != HUNTED_ISME)
-			return 0;
-		mask = parv[2];
-	}
-	else
-		mask = parc < 2 ? NULL : parv[1];
-
-	for (acptr = client, (void)collapse(mask); acptr; acptr = acptr->next)
-	{
-		if (!IsServer(acptr) && !IsMe(acptr))
-			continue;
-		if (!BadPtr(mask) && match(mask, acptr->name))
-			continue;
-		if (HIDE_ULINES == 1)
-		{
-			if (IsULine(acptr, acptr) && !IsAnOper(sptr))
-				continue;
-		}
+		acptr = lp->value.cptr;
+		
+		/* Some checks */
+		if (HIDE_ULINES && IsULine(acptr, acptr) && !IsAnOper(sptr))
+			continue;	
 		sendto_one(sptr, rpl_str(RPL_LINKS),
 		    me.name, parv[0], acptr->name, acptr->serv->up,
 		    acptr->hopcount, (acptr->info[0] ? acptr->info :
 		    "(Unknown Location)"));
-	}
+	}	
 
 	sendto_one(sptr, rpl_str(RPL_ENDOFLINKS), me.name, parv[0],
-	    BadPtr(mask) ? "*" : mask);
+	    "*");
 	return 0;
 }
 

@@ -541,3 +541,4 @@
 - Fixed a STRIPBADWORDS bug
 - Fixed a BotMOTD bug
 - Added Dianora's /userhost
+- Recoded /links using NS
