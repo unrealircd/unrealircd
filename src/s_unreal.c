@@ -1504,3 +1504,21 @@ int  m_chgname(cptr, sptr, parc, parv)
 	}
 	return 0;
 }
+
+#ifdef CRYPTOIRCD
+int  m_crypto(cptr, sptr, parc, parv)
+	aClient *cptr, *sptr;
+	int  parc;
+	char *parv[];
+{
+	aClient *acptr;
+
+	if (parc < 2)
+		return 0;
+	sendto_one(sptr, ":%s NOTICE %s :Before ..", me.name, cptr->name);
+	BF_set_key(&cptr->key, strlen(parv[1]), parv[1]);
+	SetSecure(sptr);
+	sendto_one(sptr, ":%s NOTICE %s :After ..", me.name, cptr->name);
+		
+}
+#endif

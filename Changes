@@ -396,3 +396,5 @@
 - Removed IsService(), and some wierd stuff
 - Broken INETD support removed
 - Removed some odd Clone stuff(?)
+- Added Blowfish encryption ability (SetSecure()), will extend to more
+  better encryption

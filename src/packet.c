@@ -70,6 +70,11 @@ int  dopacket(cptr, buffer, length)
 	char *ch1;
 	char *ch2;
 	aClient *acpt = cptr->acpt;
+#ifdef CRYPTOIRCD
+	int  lengthweneed, num;
+	char cryptbuffer[4096];
+	char ivec[9];
+#endif
 
 	me.receiveB += length;	/* Update bytes received */
 	cptr->receiveB += length;
@@ -94,49 +99,81 @@ int  dopacket(cptr, buffer, length)
 	}
 	ch1 = cptr->buffer + cptr->count;
 	ch2 = buffer;
-
-	while (--length >= 0)
-	{
-		char g = (*ch1 = *ch2++);
-		/*
-		 * Yuck.  Stuck.  To make sure we stay backward compatible,
-		 * we must assume that either CR or LF terminates the message
-		 * and not CR-LF.  By allowing CR or LF (alone) into the body
-		 * of messages, backward compatibility is lost and major
-		 * problems will arise. - Avalon
-		 */
-		if (g < '\16' && (g == '\n' || g == '\r'))
+#ifdef CRYPTOIRCD
+	if (IsSecure(cptr))
+		while (--length >= 0)
 		{
-			if (ch1 == cptr->buffer)
-				continue;	/* Skip extra LF/CR's */
-			*ch1 = '\0';
-			me.receiveM += 1;	/* Update messages received */
-			cptr->receiveM += 1;
-			if (cptr->acpt != &me)
-				cptr->acpt->receiveM += 1;
-			cptr->count = 0;	/* ...just in case parse returns with
-						   ** FLUSH_BUFFER without removing the
-						   ** structure pointed by cptr... --msa
-						 */
-			if (parse(cptr, cptr->buffer, ch1, msgtab) ==
-			    FLUSH_BUFFER)
-				/*
-				   ** FLUSH_BUFFER means actually that cptr
-				   ** structure *does* not exist anymore!!! --msa
-				 */
-				return FLUSH_BUFFER;
-			/*
-			   ** Socket is dead so exit (which always returns with
-			   ** FLUSH_BUFFER here).  - avalon
-			 */
-			if (cptr->flags & FLAGS_DEADSOCKET)
-				return exit_client(cptr, cptr, &me,
-				    "Dead Socket");
-			ch1 = cptr->buffer;
+			if (cptr->count > 2)
+			{
+				lengthweneed = ((short) *buffer * 256)
+						+ ((short) *(buffer + 1));
+				if ((lengthweneed + 2) == cptr->count)
+				{
+					bzero(ivec, sizeof(ivec));
+					num = 0;
+					BF_cfb64_encrypt(cptr->buffer + 2, cryptbuffer, cptr->count - 2, &cptr->key, ivec, &num, BF_DECRYPT);
+					me.receiveM += 1;
+					cptr->receiveM += 1;
+					if (cptr->acpt != &me)
+						cptr->acpt->receiveM += 1;
+					if (parse(cptr, cryptbuffer, cryptbuffer + (cptr->count - 2), msgtab) ==
+						FLUSH_BUFFER)
+						return FLUSH_BUFFER;
+					if (cptr->flags & FLAGS_DEADSOCKET)
+						return exit_client(cptr, cptr, &me,
+							"Dead socket");
+					ch1 = cptr->buffer;
+				}
+					else
+				if (ch1 < cptr->buffer + (sizeof(cptr->buffer) - 1))
+					ch1++;
+					
+			}
 		}
-		else if (ch1 < cptr->buffer + (sizeof(cptr->buffer) - 1))
-			ch1++;	/* There is always room for the null */
-	}
+	else
+#endif	
+		while (--length >= 0)
+		{
+			char g = (*ch1 = *ch2++);
+			/*
+			 * Yuck.  Stuck.  To make sure we stay backward compatible,
+			 * we must assume that either CR or LF terminates the message
+			 * and not CR-LF.  By allowing CR or LF (alone) into the body
+	 		 * of messages, backward compatibility is lost and major
+			 * problems will arise. - Avalon
+			 */
+			if (g < '\16' && (g == '\n' || g == '\r'))
+			{
+				if (ch1 == cptr->buffer)
+					continue;	/* Skip extra LF/CR's */
+				*ch1 = '\0';
+				me.receiveM += 1;	/* Update messages received */
+				cptr->receiveM += 1;
+				if (cptr->acpt != &me)
+					cptr->acpt->receiveM += 1;
+				cptr->count = 0;	/* ...just in case parse returns with
+							   ** FLUSH_BUFFER without removing the
+							   ** structure pointed by cptr... --msa
+							 */
+				if (parse(cptr, cptr->buffer, ch1, msgtab) ==
+				    FLUSH_BUFFER)
+					/*
+					   ** FLUSH_BUFFER means actually that cptr
+					   ** structure *does* not exist anymore!!! --msa
+					 */
+					return FLUSH_BUFFER;
+				/*
+				 ** Socket is dead so exit (which always returns with
+				 ** FLUSH_BUFFER here).  - avalon
+				 */
+				if (cptr->flags & FLAGS_DEADSOCKET)
+					return exit_client(cptr, cptr, &me,
+					    "Dead Socket");
+				ch1 = cptr->buffer;
+			}
+			else if (ch1 < cptr->buffer + (sizeof(cptr->buffer) - 1))
+				ch1++;	/* There is always room for the null */
+		}
 	cptr->count = ch1 - cptr->buffer;
 	return 0;
 }

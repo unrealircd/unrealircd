@@ -51,6 +51,11 @@ extern fdlist oper_fdlist;
 #define NEWLINE	"\r\n"
 
 static char sendbuf[2048];
+
+#ifdef CRYPTOIRCD
+static char cryptobuffer[2048];
+#endif
+
 static int send_message PROTO((aClient *, char *, int));
 
 static int sentalong[MAXCONNECTIONS];
@@ -250,8 +255,25 @@ void sendbufto_one(aClient *to)
 		dead_link(to, "Max SendQ exceeded");
 		return;
 	}
+#ifdef CRYPTOIRCD
+	if (IsSecure(to))
+	{
+		char	ivec[9];
+		int	num;
+		
+		sendbuf[len - 2] = '\0';
+		len = strlen(sendbuf);
+		len++;
+		cryptobuffer[0] = len / 256;
+		cryptobuffer[1] = len - ((len/256) * 256);
+		
+		bzero(ivec, sizeof(ivec));
+		num = 0;
+		BF_cfb64_encrypt(cryptobuffer, sendbuf, len, &to->key, ivec, &num, BF_ENCRYPT);
+	}	
+#endif
 
-	else if (!dbuf_put(&to->sendQ, sendbuf, len))
+	if (!dbuf_put(&to->sendQ, sendbuf, len))
 	{
 		dead_link(to, "Buffer allocation error");
 		return;

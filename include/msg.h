@@ -308,6 +308,11 @@
 #define TOK_CHGNAME	"BK"
 #define MSG_SHUN	"SHUN"
 #define TOK_SHUN	"BL"
+#ifdef CRYPTOIRCD
+#define MSG_CRYPTO	"CRYPTO"
+#define TOK_CRYPTO	"BM"
+#endif
+
 #define MAXPARA    	15 
 
 extern int m_private(), m_topic(), m_join(), m_part(), m_mode(), m_svsmode();
@@ -345,6 +350,9 @@ extern int m_chgident(), m_swhois(), m_svso(), m_svsfline();
 extern int m_tkl(), m_vhost(), m_botmotd(), m_sjoin(), m_htm();
 extern int m_umode2(), m_dccdeny(), m_undccdeny();
 extern int m_chgname(), m_shun();
+#ifdef CRYPTOIRCD
+extern int m_crypto();
+#endif
 
 #ifdef MSGTAB
 struct Message *msgmap[256];
@@ -480,6 +488,9 @@ struct Message msgtab[] = {
   { MSG_CHGNAME, m_chgname, 0, MAXPARA, 1, TOK_CHGNAME, 0L},
   { MSG_SVSNAME, m_chgname, 0, MAXPARA, 1, TOK_CHGNAME, 0L},
   { MSG_SHUN, m_shun, 0, MAXPARA, 1, TOK_SHUN, 0L},
+#ifdef CRYPTOIRCD
+  { MSG_CRYPTO, m_crypto, 0, MAXPARA, 1, TOK_CRYPTO, 0L},
+#endif
   { (char *) 0, (int (*)()) 0 , 0, 0, 0, 0, 0L}
 };
 

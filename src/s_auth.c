@@ -88,7 +88,6 @@ void start_auth(cptr)
 	}
 #endif
 
-
 #ifdef SHOWCONNECTINFO
 #ifndef _WIN32
 	write(cptr->fd, REPORT_DO_ID, R_do_id);

@@ -46,6 +46,9 @@
 #  include <sys/syslog.h>
 # endif
 #endif
+#ifdef CRYPTOIRCD
+#include <openssl/blowfish.h>
+#endif
 
 typedef struct  t_fline aFline;
 typedef struct  t_crline aCRline;
@@ -200,6 +203,10 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 #endif
 #define FLAGS_SHUNNED    0x4000000
 
+#ifdef CRYPTOIRCD
+#define FLAGS_SECURE	0x8000000
+#endif
+
 #define FLAGS_MAP       0x80000000 /* Show this entry in /map */
 
 /* Dec 26th, 1997 - added flags2 when I ran out of room in flags -DuffJ 
@@ -302,6 +309,13 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 #define IsShunned(x)		((x)->flags & FLAGS_SHUNNED)
 #define SetShunned(x)		((x)->flags |= FLAGS_SHUNNED)
 #define ClearShunned(x)		((x)->flags &= ~FLAGS_SHUNNED)
+
+#ifdef CRYPTOIRCD
+#define IsSecure(x)		((x)->flags & FLAGS_SECURE)
+#define SetSecure(x)		((x)->flags |= FLAGS_SECURE)
+#define ClearSecure(x)		((x)->flags &= ~FLAGS_SECURE)
+#endif
+
 
 #define IsHybNotice(x)		((x)->flags & FLAGS_HYBNOTICE)
 #define SetHybNotice(x)         ((x)->flags |= FLAGS_HYBNOTICE)
@@ -788,6 +802,9 @@ struct Client	{
 	long	receiveM;	/* Statistics: protocol messages received */
 #ifdef ZIP_LINKS
 	struct Zdata *zip;        /* zip data */
+#endif
+#ifdef CRYPTOIRCD
+	BF_KEY	key;
 #endif
 #ifndef NO_FDLIST
         long    lastrecvM;         /* to check for activity --Mika */

@@ -1419,6 +1419,7 @@ aClient *add_connection(cptr, fd)
 	set_sock_opts(acptr->fd, acptr);
 	IRCstats.unknown++;
 	start_auth(acptr);
+
 #ifdef SOCKSPORT
 
 	start_socks(acptr);
