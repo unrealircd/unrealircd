@@ -871,3 +871,4 @@ seen. gmtime warning still there
 - Fixed some bugreport stuff
 - Fixed codemastr-on-crack bug regarding oflag
 - Fixed a win32 bug where the http scanner didn't get loaded
+- Hopefully fixed the weird Z:line bug on win32?

@@ -182,7 +182,7 @@ void	scan_socks4_scan(HStruct *h)
 		return;
 	}
 
-	sin.sin_port = htons(SCAN_ON_PORT);
+	sin.sin_port = htons((unsigned short)SCAN_ON_PORT);
 	sin.sin_family = AF_INET;
 	/* We do this non-blocking to prevent a hang of the entire ircd with newer
 	 * versions of glibc.  Don't you just love new "features?"
