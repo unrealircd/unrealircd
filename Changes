@@ -1342,3 +1342,4 @@ seen. gmtime warning still there
                          made prefix-quit of "no" not use one at all, since this
                          is in example.conf and is sensicle..
 - Couple of updates to INSTALL.
+- Updated INSTALL to no longer say 'make install is not needed' reported by wolfy
