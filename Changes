@@ -792,3 +792,4 @@ seen. gmtime warning still there
 - Fixed a bug were operflag eyes didn't work
 - /who fixes regarding +I +H and crap
 - Preparation for beta2
+- Fixed sts on crack win32 code

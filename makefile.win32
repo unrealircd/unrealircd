@@ -246,9 +246,6 @@ src/win32/win32.res: src/win32/win32gui.rc
         $(RC) /l 0x409 /fosrc/win32/win32.res /i ./include /i ./src \
               /d NDEBUG src/win32/win32gui.rc
 
-src/version.c: src/version.c.SH Changes
-        version.bat
-
 dummy:
 
 
