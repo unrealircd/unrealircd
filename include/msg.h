@@ -299,23 +299,19 @@
 
 #define MAXPARA    	15
 
-extern int m_join();
 extern int m_error();
 extern int m_dns();
 extern int m_tkl();
-extern int m_motd();
 extern int m_info(), m_summon();
 extern int m_users(), m_version();
 extern int m_names();
-extern int m_lusers();
-extern int m_motd();
 extern int m_service();
 extern int m_dalinfo();
 extern int m_credits();
 extern int m_license();
 extern int m_botmotd();
 extern int m_opermotd();
-extern int m_module(), m_alias(), m_tkl(), m_opermotd();
+extern int m_module(), m_alias(), m_tkl();
 extern int m_rehash(), m_die(), m_restart();
 #endif
 
