@@ -25,7 +25,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2 </font><br>
   <b>Aktuelle Version:</b> 3.2.1-pre2 *CVS*<br>
-  <b>Letztes Dokumentation Update:</b>     2004-06-25</div>
+  <b>Letztes Dokumentation Update:</b>      2004-06-28</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
 <b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
@@ -2771,7 +2771,7 @@ Stellt den Namen des Servers ein, auf dem die Stats laufen. Die Angabe kann
 ausgelassen werden, wenn man keine Stats laufen hat.</p>
 <p><font class="set">set::help-channel &lt;network-help-channel&gt;;</font><br>
 Legt den Namen des Hilfe Channels in diesem Netzwerk fest.</p>
-<p><font class="set">set::cloak-keys { &lt;&quot;key1&quot;&gt;; &lt;&quot;key2&quot;&gt;; &lt;&quot;key3&quot;&gt;; };</font><br>
+<p><font class="set">set::cloak-keys { &lt;"key1">; &lt;"key2">; &lt;"key3">; };</font><br>
 Stellt die Verschlüsselungs Keys ein, die für die Erstellung eines +x Host
 erforderlich sind. Diese Einstellung muss auf allen Servern identisch sein,
 ansonsten linken die Server nicht. Jeder Wert in 'set::cloak-keys::' muss ein
@@ -3013,7 +3013,7 @@ möglich. Beispiel: except "#help,#spamreport"</p> </div>
     <td width="647">Macht einen Channel privat</td>
   </tr>
   <tr> 
-    <td width="136"><div align="center">q</div></td>
+    <td width="136"><div align="center">q &lt;nick&gt;</div></td>
     <td width="647">Stellt den Channel Owner ein</td>
   </tr>
   <tr> 
@@ -3045,7 +3045,7 @@ möglich. Beispiel: except "#help,#spamreport"</p> </div>
   </tr>
   <tr> 
     <td width="136"><div align="center">u</div></td>
-    <td width="647">Auditorium. Bewirkt, dass /names und /who #channel nur
+    <td width="647">Auditorium &#8211; Bewirkt, dass /names und /who #channel nur
       Channel OPs angezeigt wird</td>
   </tr>
   <tr> 
@@ -3216,9 +3216,10 @@ Befehlsliste</a></b></font></p><div class="desc">
     <td width="93" height="57">Alle</td>
   </tr>
   <tr> 
-    <td height="57" width="267">whowas &lt;nick&gt; &lt;maxreplys&gt;</td>
-    <td width="486" height="57">Liefert Informationen über User, die nicht mehr zum server verbunden sind.
-      Das &lt;max replies&gt; Feldt ist optional und schränkt ggf. die Anzahl
+    <td height="57" width="267">whowas &lt;nick&gt; &lt;maxreplies&gt;</td>
+    <td width="486" height="57">Liefert Informationen über User, die nicht mehr zum
+      Server verbunden sind.
+      Das &lt;max replies&gt; Feld ist optional und schränkt ggf. die Anzahl
       der Antworten ein.<br></td>
     <td width="93" height="57">Alle</td>
   </tr>
@@ -3230,7 +3231,10 @@ Befehlsliste</a></b></font></p><div class="desc">
   </tr>
   <tr> 
     <td height="57" width="267">join &lt;channel1,channel2, ...&gt;</td>
-    <td width="486" height="57">Wird verwendet, um einen oder mehrere Channels auf einem Server zu betreten. Alle schon im Channel befindlichen User werden über das betreten informiert. Wird JOIN mit 0 als Parameter verwendet, werden sämtliche Channels verlassen.</td>
+    <td width="486" height="57">Damit betritt man einen Channell. Durch den
+      Befehl /join #channel1, #channel2, #channel3 kann man mehr als einen
+      Channel gleichzeitig aufschalten. Der Befehl /join 0 bewirkt, dass Channels
+      verlassen werden.</td>
     <td width="93" height="57">Alle</td>
   </tr>
   <tr> 
@@ -3255,7 +3259,8 @@ Befehlsliste</a></b></font></p><div class="desc">
   <tr> 
     <td height="57" width="267">lusers &lt;server&gt; </td>
     <td width="486" height="57">Liefert Informationen über die Anzahl lokaler und globaler User und die maximal
-      erreichte Userzahl.</td>
+      erreichte Userzahl. Bei Angabe eines Servers erhält man die Werte für
+      diesen Server.</td>
     <td width="93" height="57">Alle</td>
   </tr>
   <tr> 
@@ -3336,7 +3341,7 @@ Befehlsliste</a></b></font></p><div class="desc">
   <tr> 
     <td height="114" width="267">helpop ?&lt;topic&gt; or !&lt;topic&gt;</td>
     <td width="486" height="114">HelpOp ist ein System, um IRC Server Hilfe zu
-      bekommen. Man gibt etweder ein &quot;/HELPOP 
+      bekommen. Man gibt entweder ein &quot;/HELPOP 
       ? &lt;help system topic&gt;&quot; oder &quot;/HELPOP ! &lt;question&gt;&quot;.
       Das "?" 
       in /HELPOP bedeutet, dass das Hilfesystem befragt wird und wenn man keine
@@ -3391,8 +3396,8 @@ Befehlsliste</a></b></font></p><div class="desc">
   <tr> 
     <td height="38" width="267">mode &lt;chan/nick&gt; &lt;mode&gt;</td>
     <td width="486" height="38">Ermöglicht es, Channel- oder User-Modi zu
-      setzen oder zu ändern. Siehe auch Liste der Modi in <a href="#userchannelmodes">Abschnitt
-      6</a></td>
+      setzen oder zu ändern. Siehe auch Liste der Modi in <a href="#userchannelmodes">User
+      &amp; Channel Modi</a></td>
     <td width="93" height="38">Alle</td>
   </tr>
   <tr> 
@@ -3556,8 +3561,7 @@ Befehlsliste</a></b></font></p><div class="desc">
   <tr> 
     <td height="76" width="267">lag &lt;server&gt;</td>
     <td width="486" height="76">Dieser Befehl ähnelt einem TraceRoute für IRC
-      server. Nach Eingabe von 
-      /LAG irc.fyremoon.net erhält man Antwort von jedem Server mit Zeit.
+      server. Nach Eingabe von z.B. /lag irc.fyremoon.net erhält man Antwort von jedem Server mit Zeit.
       Nützlich, um herauszufinden, wo ein Lag ist und optional (TS future/past 
       travels [??])</td>
     <td width="93" height="76">IRCop</td>
@@ -3642,9 +3646,10 @@ Befehlsliste</a></b></font></p><div class="desc">
     <td width="93" height="38">IRCop</td>
   </tr>
   <tr> 
-    <td height="38" width="267">trace &lt;servermask&gt;</td>
-    <td width="486" height="38">Berechnet den Lag zwischen Servern in
-      Millisekunden.</td>
+    <td height="38" width="267">trace &lt;servermask|nickname&gt;</td>
+    <td width="486" height="38">Auf einen User angewandt, liefert dieser Befehl
+      die Klasse und ein Lag Info. Für einen Server wird Klasse / Version und
+      Link Info angezeigt.</td>
     <td width="93" height="38">IRCop</td>
   </tr>
   <tr> 
