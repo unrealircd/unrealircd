@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
-<title>UnrealIRCd - 3.2 - Documentación oficial</title>
+<title>UnrealIRCd - 3.2 - Documentaci&oacute;n oficial</title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <style type="text/css">
  .block_section { font-size: 24; font-weight: bold; }
@@ -28,12 +28,12 @@ Spanish |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Versi&oacute;n: 3.2.2-CVS</font><br>
-  <b>&Uacute;ltima actualizaci&oacute;n del documento:</b> 2004-12-01</div>
+  <b>&Uacute;ltima actualizaci&oacute;n del documento:</b> 2005-01-29</div>
 <br>
   <b>Programadores:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contribuciones:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentaci&oacute;n:</b> CKnight^ / Syzop<br>
-  <b>Traducción al español:</b> Trocotronic (irc.rallados.net)<br>
+  <b>Traducci&oacute;n al español:</b> Trocotronic (irc.rallados.net)<br>
 <p>Debido a la crecida de la complejidad de UnrealIRCd3.2, hemos cambiado una documentaci&oacute;n m&aacute;s detallada para una m&aacute;s f&aacute;cil navegaci&oacute;n. Para ver esta documentaci&oacute;n debe tener un navegador compatible. Tiene un listado debajo. Los documentos actualizados est&aacute;n disponibles en <a href="http://www.vulnscan.org/UnrealIrcd/unreal32docs.html">http://www.vulnscan.org/UnrealIrcd/unreal32docs.html</a>
   y una FAQ en <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">http://www.vulnscan.org/UnrealIrcd/faq/</a>.
 </p>
@@ -122,13 +122,13 @@ Spanish |
     A. <a href="#regex">Expresiones Regulares</a><br>
   ---A.1. <a href="#regexlit">Literales</a><br>
   ---A.2. <a href="#regexdot">Operador punto</a><br>
-  ---A.3. <a href="#regexrep">Operadores de repetición</a><br>
+  ---A.3. <a href="#regexrep">Operadores de repetici&oacute;n</a><br>
   ---A.4. <a href="#regexbracket">Expresiones de corchete</a><br>
   ---A.5. <a href="#regexassert">Aserciones</a><br>
   ---A.6. <a href="#regexalt">Alternanza</a><br>
   ---A.7. <a href="#regexsub">Subexpresiones</a><br>
   ---A.8. <a href="#regexbackref">Referencias anteriores</a><br>
-  ---A.9. <a href="#regexcase">Sensibilidad mayúsculas/minúsculas</a><br>
+  ---A.9. <a href="#regexcase">Sensibilidad may&uacute;sculas/min&uactue;sculas</a><br>
 </p>
 <p><b><font size="+2">1.0 &#8211; Introducci&oacute;n y notas <a name="IntroductionNotes"></a></font></b><br>
 </p><div class="desc">
@@ -136,7 +136,7 @@ Spanish |
   o la distribuci&oacute;n de este documento con otro programa
   est&aacute; terminantemente prohibida sin los permisos de escritura del Equipo de Desarrollo de UnrealIRCd.
   Este documento se puede copiar, imprimir, reproducir o publicar tantas veces se quiera, para el uso de UnrealIRCd y sin
-  modificaci&oacute;n alguna. &#8211; Copyright UnrealIRCd Development Team 2002-2005</p>
+  modificaci&oacute;n alguna. &#8211; Copyright Equipo de Desarrollo UnrealIRCd 2002-2005</p>
 <p>Por favor lea este manual antes de solicitar ayuda, el 80% de las dudas m&aacute;s frecuentes est&aacute;n en una 
    <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">FAQ</a>. Si todav&iacute;a requiere ayuda,
    puede encontrarla en irc.ircsystems.net (puerto 6667) canal #unreal-support (nota:  
@@ -151,7 +151,7 @@ Spanish |
 <p>En el caso que est&eacute; actualizando desde Unreal3.1.x a Unreal3.2 apreciar&aacute; que toda la configuraci&oacute;n ha cambiado.
    Lo encontrar&aacute; dif&iacute;cil en un principio, pero una vez la haya cambiado encontrar&aacute; que es mucho mejor.</p>
 <p>No olvide leer la secci&oacute;n 3 sobre las caracter&iacute;sticas, todo y que conocer&aacute; algunas de 3.1.x existen cuantiosas mejoras.</p>
-<p>No se recomienda unir servidores 3.1.x con 3.2. Aun as&iacute;, si quiere hacerlo deber&aacute; ser a partir de la versi&oacute;n 3.1.4, pero se recomienda encarecidamente 3.1.5.1.</p>
+<p>No se recomienda unir servidores 3.1.x con 3.2. A&uacute;n as&iacute;, si quiere hacerlo deber&aacute; ser a partir de la versi&oacute;n 3.1.4, pero se recomienda encarecidamente 3.1.5.1.</p>
 </div>
 
 <p><font size="+2"><b>1.2 &#8211; Notas al actualizar entre versiones 3.2</b></font><a name="notesonupgrade"></a><br>
@@ -276,7 +276,7 @@ Windows:<br>
    [*: disponible para usuarios no operadores]<br>
   </p>
 <p>Puede controlar qu&eacute; m&aacute;scaras puede obtener (set::snomask-on-connect) y cu&aacute;les para operadores (set::snomask-on-oper, oper::snomask)</p>
-<p>Por defecto, se ponen ciertas máscaras. Si es usuario, +ks y si es operador, +kscfvGqo.</p></div>
+<p>Por defecto, se ponen ciertas m&aacute;scaras. Si es usuario, +ks y si es operador, +kscfvGqo.</p></div>
 
 <p><font size="+2"><b>3.4 - Aliases</b></font><a name="feature_aliases"></a></p><div class="desc">
 <p>Con los aliases puede configurar comandos de usuario. Puede, por ejemplo, permitir &quot;/ns identify blah&quot; sea redirigido a nickserv (que se traducir&iacute;a como: privmsg nickserv identify blah). Puede incluso hacer aliases m&aacute;s complejos como /register sea redirigido a chanserv si el primer par&aacute;metro empieza por # o a nickserv si no empieza.</p>
@@ -509,6 +509,9 @@ Los m&oacute;dulos pueden a&ntilde;adir otros tipos de ban.
    <tr><td>a</td><td>away</td>
    <td>Mensaje away </td>
    </tr>
+   <tr><td>t</td><td>topic</td>
+   <td>Topic</td>
+   </tr>
    <tr><td>u</td><td>user</td>
    <td>User ban, coincidir&aacute; con nick!user.@host:realname</td>
    </tr>
@@ -632,11 +635,11 @@ fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p>
 <pre>
 me {
 	name &lt;nombre-del-servidor&gt;;
-	info &lt;descripción-servidor&gt;;
-	numeric &lt;numérico&gt;;
+	info &lt;descripci&oacute;n-servidor&gt;;
+	numeric &lt;num&eacute;rico&gt;;
 };
 </pre></p>
-<p>Estos valores se sobreentienden. <b>name </b>especifica el nombre del servidor, <b>info</b> su descripci&oacute;n y <b>numeric</b> el num&eacute;rico con el que se identifica el servidor. Debe ser un valor entre 1 y 255 y debe ser &uacute;nico en la red. Otro servidor no podr&aacute; tener el mismo num&eacute;rico.</p>
+<p>Estos valores se sobreentienden. <b>name </b>especifica el nombre del servidor, <b>info</b> su descripci&oacute;n y <b>numeric</b> el num&eacute;rico con el que se identifica el servidor. Debe ser un valor entre 0 y 254 y debe ser &uacute;nico en la red. Otro servidor no podr&aacute; tener el mismo num&eacute;rico.</p>
 <p>Ejemplo:<br>
 <pre>
 me {
@@ -2202,6 +2205,10 @@ set {
     <td><div align="center">G</div></td>
     <td>Marca el canal con la lista de &quot;badwords&quot;</td>
   </tr>
+   <tr> 
+    <td><div align="center">j &lt;X:Y&gt;</div></td>
+    <td>Impide la entrada por usuario si sobrepasa los <em>X</em> intentos en menos de <em>Y</em> segundos</td>
+  </tr>
   <tr> 
     <td><div align="center">M</div></td>
     <td>S&oacute;lo pueden hablar los usuarios registrados (+r) </td>
@@ -2842,10 +2849,10 @@ set {
 	d - denylinkauto - Lista del bloque deny link (auto) <br>
 	D - denylinkall - Lista del bloque deny link (todo)<br>
 	e - exceptthrottle - Lista del bloque except throttle<br>
-	E - exceptban - Lista del bloque except ban<br>
+	E - exceptban - Lista del bloque except ban y except TKL <br>
 	f - spamfilter - Lista de filtros de spam<br>
 	F - denydcc - Lista del bloque deny dcc<br>
-	G - gline - Lista gline<br>
+	G - gline - Lista gline y gzline <br>
 	&nbsp;&nbsp;Flags: [+/-mrs] [m&aacute;scara] [raz&oacute;n] [autor]<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;m Devuelve las glines que coincidan o no con la m&aacute;scara<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;r Devuelve las glines que coincidan o no con la raz&oacute;n<br>
@@ -2858,17 +2865,17 @@ set {
 	M - command - Lista del uso de cada comando<br>
 	n - banrealname - Lista del bloque ban realname<br>
 	O - oper - Lista del bloque oper<br>
+	P - port - Informaci&oacute;n sobre puertos<br>
+q - sqline - Lista sqline<br>
+Q - bannick - Lista del bloque ban nick<br>
+r - chanrestrict - Lista del bloque channel deny/allow<br>
+R - usage - Uso de los recursos	<br>
 	S - set - Lista del bloque set<br>
 	s - shun - Lista de shuns<br>
   	&nbsp;&nbsp;Flags: [+/-mrs] [m&aacute;scara] [raz&oacute;n] [autor]<br>
 &nbsp;&nbsp;&nbsp;&nbsp;m Devuelve las glines que coincidan o no con la m&aacute;scara<br>
 &nbsp;&nbsp;&nbsp;&nbsp;r Devuelve las glines que coincidan o no con la raz&oacute;n<br>
 &nbsp;&nbsp;&nbsp;&nbsp;s Devuelve las glines que coincidan o no con el autor<br>
-	P - port - Informaci&oacute;n sobre puertos<br>
-	q - sqline - Lista sqline<br>
-	Q - bannick - Lista del bloque ban nick<br>
-	r - chanrestrict - Lista del bloque channel deny/allow<br>
-	R - usage - Uso de los recursos<br>
 	t - tld - Lista del bloque tld<br>
 	T - traffic - Informaci&oacute;n del tr&aacute;fico de datos<br>
 	u - uptime - Uptime del servidor<br>
