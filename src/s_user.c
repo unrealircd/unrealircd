@@ -2811,7 +2811,7 @@ int  m_whois(cptr, sptr, parc, parv)
 				if (buf[0])
 					sendto_one(sptr,
 					    rpl_str(RPL_WHOISOPERATOR), me.name,
-					    parv[0], name, buf, ircnetwork);
+					    parv[0], name, buf);
 			}
 
 			if (IsHelpOp(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))

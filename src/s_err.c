@@ -346,7 +346,7 @@ static char *replies[] = {
 /* 310    RPL_WHOISHELPOP */ ":%s 310 %s %s :is available for help.",
 /* 311    RPL_WHOISUSER */ ":%s 311 %s %s %s %s * :%s",
 /* 312    RPL_WHOISSERVER */ ":%s 312 %s %s %s :%s",
-/* 313    RPL_WHOISOPERATOR */ ":%s 313 %s %s :is %s on %s",
+/* 313    RPL_WHOISOPERATOR */ ":%s 313 %s %s :is %s",
 /* 314    RPL_WHOWASUSER */ ":%s 314 %s %s %s %s * :%s",
 /* 315    RPL_ENDOFWHO */ ":%s 315 %s %s :End of /WHO list.",
 /* 316 */ NULL, /* Used */
