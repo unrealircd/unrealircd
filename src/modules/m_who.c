@@ -738,7 +738,7 @@ static void send_who_reply(aClient *sptr, aClient *acptr,
 	     acptr->user->server,   /* server name */
 	     acptr->name,           /* nick */
 	     stat,                  /* status */
-	     acptr->hopcount        /* hops */ 
+	     acptr->hopcount,        /* hops */ 
 	     acptr->info            /* realname */
 	     );
   free(stat);

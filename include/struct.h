@@ -771,7 +771,7 @@ struct Client {
 	struct Zdata *zip;	/* zip data */
 #endif
 #ifdef USE_SSL
-	struct	SSL	*ssl;
+	SSL		*ssl;
 #endif
 #ifndef NO_FDLIST
 	long lastrecvM;		/* to check for activity --Mika */

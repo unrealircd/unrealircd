@@ -22,6 +22,7 @@
 #ifdef USE_SSL
 #include "common.h"
 #include "struct.h"
+#include "h.h"
 #include "sys.h"
 #ifdef _WIN32
 #include <windows.h>
@@ -34,6 +35,8 @@ extern HWND hwIRCDWnd;
 #define SAFE_SSL_READ 1
 #define SAFE_SSL_WRITE 2
 #define SAFE_SSL_ACCEPT 3
+#define SAFE_SSL_CONNECT 4
+
 static int fatal_ssl_error(int ssl_error, int where, aClient *sptr);
 
 /* The SSL structures */
@@ -188,7 +191,7 @@ int  ssl_handshake(aClient *cptr)
 	char *str;
 	int  err;
 
-	cptr->ssl = (struct SSL *)SSL_new(ctx_server);
+	cptr->ssl = SSL_new(ctx_server);
 	CHK_NULL(cptr->ssl);
 	SSL_set_fd((SSL *) cptr->ssl, cptr->fd);
 	set_non_blocking(cptr->fd, cptr);
@@ -260,7 +263,7 @@ int  ssl_handshake(aClient *cptr)
 */
 int  ssl_client_handshake(aClient *cptr, ConfigItem_link *l)
 {
-	cptr->ssl = (struct SSL *) SSL_new((SSL_CTX *)ctx_client);
+	cptr->ssl = SSL_new((SSL_CTX *)ctx_client);
 	if (!cptr->ssl)
 	{
 		sendto_realops("Couldn't SSL_new(ctx_client) on %s",
@@ -381,6 +384,45 @@ int ircd_SSL_write(aClient *acptr, const void *buf, int sz)
     return len;
 }
 
+int ircd_SSL_client_handshake(aClient *acptr)
+{
+	int ssl_err;
+	
+	acptr->ssl = SSL_new(ctx_server);
+	if (!acptr->ssl)
+	{
+		sendto_realops("Failed to SSL_new(ctx_server)");
+		return FALSE;
+	}
+	SSL_set_fd(acptr->ssl, acptr->fd);
+	SSL_set_connect_state(acptr->ssl);
+	if (acptr->serv && acptr->serv->conf->ciphers)
+	{
+		if (SSL_set_cipher_list((SSL *)acptr->ssl, 
+			acptr->serv->conf->ciphers) == 0)
+		{
+			/* We abort */
+			sendto_realops("SSL cipher selecting for %s was unsuccesful (%s)",
+				acptr->serv->conf->servername, 
+				acptr->serv->conf->ciphers);
+			return -2;
+		}
+	}
+	acptr->flags |= FLAGS_SSL;
+	switch (ircd_SSL_connect(acptr))
+	{
+		case -1: 
+			return -1;
+		case 0: 
+			return 1;
+		case 1: 
+			return (completed_connection(acptr));
+		default:
+			return -1;		
+	}
+
+}
+
 int ircd_SSL_accept(aClient *acptr, int fd) {
 
     int ssl_err;
@@ -396,6 +438,29 @@ int ircd_SSL_accept(aClient *acptr, int fd) {
 		    return 1;
 	    default:
 		return fatal_ssl_error(ssl_err, SAFE_SSL_ACCEPT, acptr);
+		
+	}
+	/* NOTREACHED */
+	return -1;
+    }
+    return 1;
+}
+
+int ircd_SSL_connect(aClient *acptr) {
+
+    int ssl_err;
+
+    if((ssl_err = SSL_connect((SSL *)acptr->ssl)) <= 0) {
+	switch(ssl_err = SSL_get_error((SSL *)acptr->ssl, ssl_err)) {
+	    case SSL_ERROR_SYSCALL:
+		if (errno == EINTR || errno == EWOULDBLOCK
+			|| errno == EAGAIN)
+	    case SSL_ERROR_WANT_READ:
+	    case SSL_ERROR_WANT_WRITE:
+		    /* handshake will be completed later . . */
+		    return 0;
+	    default:
+		return fatal_ssl_error(ssl_err, SAFE_SSL_CONNECT, acptr);
 		
 	}
 	/* NOTREACHED */
@@ -420,7 +485,7 @@ static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
 {
     /* don`t alter errno */
     int errtmp = errno;
-    char *errstr = strerror(errtmp);
+    char *errstr = (char *)strerror(errtmp);
     char *ssl_errstr, *ssl_func;
 
     switch(where) {
@@ -433,6 +498,8 @@ static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
 	case SAFE_SSL_ACCEPT:
 	    ssl_func = "SSL_accept()";
 	    break;
+	case SAFE_SSL_CONNECT:
+	    ssl_func = "SSL_connect()";
 	default:
 	    ssl_func = "undefined SSL func";
     }
@@ -475,6 +542,5 @@ static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
     sptr->flags |= FLAGS_DEADSOCKET;
     return -1;
 }
-
 
 #endif

@@ -105,7 +105,7 @@ int readcalls = 0, resfd = -1;
 static struct SOCKADDR_IN mysk;
 
 static struct SOCKADDR *connect_inet(ConfigItem_link *, aClient *, int *);
-static int completed_connection(aClient *);
+int completed_connection(aClient *);
 static int check_init(aClient *, char *, size_t);
 #ifndef _WIN32
 static void do_dns_async();
@@ -766,7 +766,7 @@ int  check_client(aClient *cptr)
 **	Return	TRUE, if successfully completed
 **		FALSE, if failed and ClientExit
 */
-static int completed_connection(aClient *cptr)
+int completed_connection(aClient *cptr)
 {
 	ConfigItem_link *aconf = cptr->serv ? cptr->serv->conf : NULL;
 	extern char serveropts[];
@@ -777,20 +777,6 @@ static int completed_connection(aClient *cptr)
 		sendto_ops("Lost configuration for %s", get_client_name(cptr, FALSE));
 		return -1;
 	}
-#ifdef USE_SSL
-	if ((aconf->options & CONNECT_SSL))
-		if (ssl_client_handshake(cptr, aconf) == -2)
-		{
-			sendto_realops("Could not handshake SSL with %s", get_client_name(cptr, FALSE));
-			return FALSE;
-		}
-		else
-		{
-
-			sendto_realops("Handshaked SSL with %s", cptr->name);
-			cptr->flags |= FLAGS_SSL;
-		}
-#endif
 	if (!BadPtr(aconf->connpwd))
 		sendto_one(cptr, "PASS :%s", aconf->connpwd);
 
@@ -1274,8 +1260,18 @@ add_con_refuse:
 #ifdef USE_SSL
 	if (cptr->umodes & LISTENER_SSL)
 	{
-		ssl_handshake(acptr);
+		if ((acptr->ssl = SSL_new(ctx_server)) == NULL)
+		{
+			goto add_con_refuse;
+		}
 		acptr->flags |= FLAGS_SSL;
+		SSL_set_fd(acptr->ssl, fd);
+		if (!ircd_SSL_accept(acptr, fd)) {
+			SSL_set_shutdown(acptr->ssl, SSL_RECEIVED_SHUTDOWN);
+			SSL_smart_shutdown(acptr->ssl);
+  	                SSL_free(acptr->ssl);
+	  	        goto add_con_refuse;
+	  	}
 	}
 #endif
 	add_client_to_list(acptr);
@@ -1592,7 +1588,7 @@ int  read_message(time_t delay, fdlist *listp)
 			if (cptr->ssl != NULL && IsSSL(cptr) &&
 				!SSL_is_init_finished((SSL *)cptr->ssl))
 			{
-				if (IsDead(cptr) || (!ircd_SSL_accept(cptr, cptr->fd)))
+				if (IsDead(cptr) || (IsConnecting(cptr) ? !ircd_SSL_connect(cptr) : !ircd_SSL_accept(cptr, cptr->fd)))
 					close_connection(cptr);
 				continue;
 			}
@@ -1805,7 +1801,12 @@ int  read_message(time_t delay, fdlist *listp)
 			 */
 			ClearBlocked(cptr);
 			if (IsConnecting(cptr))
-				write_err = completed_connection(cptr);
+				if ((cptr->serv) && (cptr->serv->conf->options & CONNECT_SSL))
+				{
+					write_err = ircd_SSL_client_handshake(cptr);
+				}
+				else
+					write_err = completed_connection(cptr);
 			if (!write_err)
 			{
 				if (DoList(cptr) && IsSendable(cptr))
