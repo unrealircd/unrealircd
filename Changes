@@ -2773,3 +2773,7 @@ seen. gmtime warning still there
 - Fixed a problem with the snprintf() check, reported by virusx (#0001510).
 - Fixed a bug where multiple spaces could appear in a MODE message, reported by Airnike
   (#0001169).
+- Fixed a bug with SSL remaining enabled even when the headers are not found, reported by
+  AngryWolf (#0000863)
+- Added can_setq/q for regulating which opers can set umode +q, requested by cfreak202
+  (#0000478)

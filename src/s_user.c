@@ -2513,9 +2513,8 @@ CMD_FUNC(m_umode)
 	   This is to remooove the kix bug.. and to protect some stuffie
 	   -techie
 	 */
-		if ((sptr->umodes & (UMODE_KIX)) && !IsNetAdmin(sptr) && !IsSAdmin(sptr))
+		if (MyClient(sptr) && (sptr->umodes & UMODE_KIX) && (!OPCanUmodeq(sptr) || !IsAnOper(sptr)))
 			sptr->umodes &= ~UMODE_KIX;
-
 		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE) && !IsSecure(sptr))
 			sptr->umodes &= ~UMODE_SECURE;
 		if (MyClient(sptr) && !(sptr->umodes & UMODE_SECURE) && IsSecure(sptr))

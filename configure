@@ -9502,11 +9502,11 @@ echo "$as_me: WARNING: disabling ssl support" >&2;}
 	if test ! "$ssldir" = "/usr" ; then
            LDFLAGS="$LDFLAGS -L$ssldir/lib";
         fi
-    fi
-cat >>confdefs.h <<\_ACEOF
+	cat >>confdefs.h <<\_ACEOF
 #define USE_SSL 1
 _ACEOF
 
+    fi
 
 fi;
 

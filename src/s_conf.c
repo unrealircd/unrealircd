@@ -200,6 +200,7 @@ static int _OldOperFlags[] = {
 	OFLAG_TKL, 't',
 	OFLAG_GZL, 'Z',
 	OFLAG_OVERRIDE, 'v',
+	OFLAG_UMODEQ, 'q',
 	0, 0
 };
 
@@ -220,6 +221,7 @@ static OperFlag _OperFlags[] = {
 	{ OFLAG_OVERRIDE,	"can_override" },
 	{ OFLAG_REHASH,		"can_rehash" },
 	{ OFLAG_RESTART,        "can_restart" },
+	{ OFLAG_UMODEQ,		"can_setq" },
 	{ OFLAG_UNKLINE,	"can_unkline" },
 	{ OFLAG_WALLOP,         "can_wallops" },
 	{ OFLAG_ZLINE,		"can_zline"},

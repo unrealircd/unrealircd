@@ -100,8 +100,8 @@ AC_MSG_CHECKING(for openssl)
 	if test ! "$ssldir" = "/usr" ; then
            LDFLAGS="$LDFLAGS -L$ssldir/lib";
         fi
+	AC_DEFINE(USE_SSL)
     fi
-AC_DEFINE(USE_SSL)
 ],
 )
 ])
