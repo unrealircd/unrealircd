@@ -1789,3 +1789,4 @@ seen. gmtime warning still there
 - Added message if '/helpop' is used without parameters by helpops.
 - Fixed compile error in makefile.win32.ssl (added src/random.c).
 - Fixed compile error in src/random.c at win32.
+- Added end of stats message to /kline, /gline, etc.
