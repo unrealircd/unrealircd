@@ -2845,3 +2845,5 @@ seen. gmtime warning still there
 - Fixed a problem with module reloading (#0001533) reported by penna.
 - Removed remote /restart support. There are too many security issues that
   can not be overcome. 
+- Added a patch by thilo to make Unreal correctly deal with umask settings when
+  creating devices in a chroot'ed environment. (#0001514)

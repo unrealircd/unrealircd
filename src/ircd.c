@@ -850,6 +850,9 @@ int InitwIRCD(int argc, char *argv[])
 	ircd_res_init();
 	{
 		struct stat sb;
+		mode_t umaskold;
+		
+		umaskold = umask(0);
 		if (mkdir("dev", S_IRUSR|S_IWUSR|S_IXUSR|S_IXGRP|S_IXOTH) != 0 && errno != EEXIST)
 		{
 			fprintf(stderr, "ERROR: Cannot mkdir dev: %s\n", strerror(errno));
@@ -885,6 +888,7 @@ int InitwIRCD(int argc, char *argv[])
 			fprintf(stderr, "ERROR: Cannot mknod dev/tty: %s\n", strerror(errno));
 			exit(5);
 		}
+		umask(umaskold);
 	}
 	if (chroot(DPATH)) {
 		(void)fprintf(stderr, "ERROR:  Cannot (chdir/)chroot to directory '%s'\n", dpath);
