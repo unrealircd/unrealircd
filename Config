@@ -1892,8 +1892,12 @@ if [ "$OSNAME" = "Linux (with GLIBC 2.x or greater)" ]; then
 fi
 
 if [ -n "$CRYPTOIRCD" ] ; then
-    export OPENSSLPATH
-    make pem
+    if [ ! -f server.req.pem ]; then
+	    export OPENSSLPATH
+    	    make pem
+            cat .SICI
+            read cc
+    fi
 fi
 
 cat << __EOF__

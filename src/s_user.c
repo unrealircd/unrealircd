@@ -2833,7 +2833,7 @@ int  m_whois(cptr, sptr, parc, parv)
 				RPL_WHOISSPECIAL,
 				parv[0], name, "is a \2Secure Connection\2");
 			}
-			if (acptr->user->swhois)
+			if (acptr->user->swhois && !IsHideOper(acptr))
 			{
 				if (*acptr->user->swhois != '\0')
 					sendto_one(sptr, ":%s %d %s %s :%s",

@@ -1,4 +1,4 @@
-#/************************************************************************
+k#/************************************************************************
 #*   IRC - Internet Relay Chat, Makefile
 #*   Copyright (C) 1990, Jarkko Oikarinen
 #*
@@ -163,6 +163,10 @@ build:
 	@echo '| editor. The file will contain instructions on how|'
 	@echo '| to do the dynamic configuration :)               |'
 	@echo '|                                                  |'
+	@echo '| If you really like UnrealIRCd, and would like to |'
+	@echo '| make a donation, please read the Donation file in|'
+	@echo '| this archive. :)                                 |'
+	@echo '|                                                  |'
 	@echo '| Thanks for using Unreal IRCd! If you are in need |' 
 	@echo '| for any kind of help regarding the IRCd please   |'
 	@echo '| read the Unreal.nfo file.                        |' 
@@ -223,3 +227,4 @@ pem:	src/ssl.cnf
 	@echo "Generating fingerprint .."
 	$(OPENSSLPATH) x509 -subject -dates -fingerprint -noout \
 		-in server.cert.pem
+        
