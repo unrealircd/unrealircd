@@ -478,3 +478,4 @@ seen. gmtime warning still there
   (testing)
 - Made listen format able to do:
      listen [ip]:port, for IPv6 - listen [3fff:ff::1]:6667
+- Fixed some compilation error with IPv6

@@ -56,6 +56,10 @@
 #ifdef SSL
 #include <openssl/ssl.h>
 #endif
+#ifdef INET6
+#include <netinet/in.h>
+#include <sys/socket.h>
+#endif
 #ifndef GOT_STRCASECMP
 #define	strcasecmp	mycmp
 #define	strncasecmp	myncmp
@@ -187,9 +191,5 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 #ifndef RTLD_NOW
 #define RTLD_NOW RTLD_LAZY
-#endif
-#ifdef INET6
-#include <netinet/in.h>
-#include <sys/socket.h>
 #endif
 #endif /* __sys_include__ */
