@@ -9446,14 +9446,18 @@ echo "${ECHO_T}$ac_cv_lib_dl_dlopen" >&6
 if test $ac_cv_lib_dl_dlopen = yes; then
   IRCDLIBS="$IRCDLIBS-ldl"
 else
-  { echo "$as_me:$LINENO: WARNING: Dynamic linking is not enabled because dlopen was not found" >&5
-echo "$as_me: WARNING: Dynamic linking is not enabled because dlopen was not found" >&2;} cat >>confdefs.h <<\_ACEOF
+
+{ echo "$as_me:$LINENO: WARNING: Dynamic linking is not enabled because dlopen was not found" >&5
+echo "$as_me: WARNING: Dynamic linking is not enabled because dlopen was not found" >&2;}
+cat >>confdefs.h <<\_ACEOF
 #define STATIC_LINKING 1
 _ACEOF
 
+
 fi
 
 fi
+
 
 hold_cflags=$CFLAGS
 CFLAGS="$CFLAGS -export-dynamic"
