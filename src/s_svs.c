@@ -403,7 +403,7 @@ int  m_akill(cptr, sptr, parc, parv)
 		bconf = (ConfigItem_ban *) MyMallocEx(sizeof(ConfigItem_ban));
 		bconf->flag.type = CONF_BAN_USER;
 		bconf->mask = strdup(make_user_host(usermask, hostmask));
-		bconf->reason = strdup(comment);
+		bconf->reason = comment ? strdup(comment) : NULL;
 		bconf->flag.type2 = CONF_BAN_TYPE_AKILL;
 		add_ConfigItem((ConfigItem *) bconf, (ConfigItem **) &conf_ban);
 	}
