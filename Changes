@@ -444,3 +444,4 @@
 - Fixed a /rehash -garbage bug reported by Curt|s
 - Added networks/makenet (generates a network configuration file)
 - Added networks/staticedge.network
+- Fixed some host revealing nick collision stuff

@@ -1312,9 +1312,8 @@ int  m_nick(cptr, sptr, parc, parv)
 		{
 			ircstp->is_kill++;
 			sendto_serv_butone(NULL,
-			    ":%s KILL %s :%s (Nick Collision: %s <- %s)",
-			    me.name, acptr->name, me.name, acptr->from->name,
-			    parc > 5 ? parv[5] : get_client_name(cptr, FALSE));
+			    ":%s KILL %s :%s (Nick Collision)",
+			    me.name, acptr->name, me.name);
 			acptr->flags |= FLAGS_KILLED;
 			(void)exit_client(NULL, acptr, &me,
 			    "Nick collision with no timestamp/equal timestamps");
@@ -1326,9 +1325,8 @@ int  m_nick(cptr, sptr, parc, parv)
 		{
 			ircstp->is_kill++;
 			sendto_serv_butone(cptr,
-			    ":%s KILL %s :%s (Nick Collision: %s <- %s)",
-			    me.name, acptr->name, me.name, acptr->from->name,
-			    parc > 5 ? parv[5] : get_client_name(cptr, FALSE));
+			    ":%s KILL %s :%s (Nick Collision)",
+			    me.name, acptr->name, me.name);
 			acptr->flags |= FLAGS_KILLED;
 			(void)exit_client(NULL, acptr, &me, "Nick collision");
 			goto nickkilldone;	/* OK, we got rid of the "wrong" user,
