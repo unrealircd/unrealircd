@@ -1706,6 +1706,8 @@ CMD_FUNC(m_nick)
 			sendto_snomask(SNO_NICKCHANGE, "*** Notice -- %s (%s@%s) has changed his/her nickname to %s", sptr->name, sptr->user->username, sptr->user->realhost, nick);
 
 			RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, sptr, nick);
+		} else {
+			RunHook3(HOOKTYPE_REMOTE_NICKCHANGE, cptr, sptr, nick);
 		}
 		/*
 		 * Client just changing his/her nick. If he/she is

@@ -2499,3 +2499,4 @@ seen. gmtime warning still there
 - Module coders: changed 'allowed' callback function for umodes&snomasks,
   from 'aClient *sptr' to 'aClient *sptr, int what'.
   'what' will be MODE_ADD if trying to add and MODE_DEL if trying to remove.
+- Added HOOKTYPE_REMOTE_NICKCHANGE (called like: cptr, sptr, newnick).
