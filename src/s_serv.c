@@ -2842,7 +2842,8 @@ int  m_addline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    me.name, parv[0], "ADDLINE");
 		return 0;
 	}
-	conf = fopen(CPATH, "a");
+	/* writes to current -f */
+	conf = fopen(configfile, "a");
 	if (conf == NULL)
 	{
 		return 0;

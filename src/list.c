@@ -263,10 +263,10 @@ void remove_client_from_list(cptr)
 			IRCstats.invisible--;
 		if (IsOper(cptr))
 			IRCstats.operators--;
-		if (IsUnknown(cptr) || IsConnecting(cptr) || IsHandshake(cptr))
-			IRCstats.unknown--;
 		IRCstats.clients--;
 	}
+	if (IsUnknown(cptr) || IsConnecting(cptr) || IsHandshake(cptr))
+		IRCstats.unknown--;
 	checklist();
 	if (cptr->prev)
 		cptr->prev->next = cptr->next;

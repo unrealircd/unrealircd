@@ -1,4 +1,3 @@
-
 /*
  *   Unreal Internet Relay Chat Daemon, src/s_conf.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
@@ -2694,7 +2693,7 @@ int  m_unzline(cptr, sptr, parc, parv)
  *        UNSURE == [unused] something went wrong
  */
 
-advanced_check(char *userhost, int ipstat)
+int advanced_check(char *userhost, int ipstat)
 {
 	register int retval = TRUE;
 	char *up, *p, *thisseg;
@@ -2747,7 +2746,8 @@ advanced_check(char *userhost, int ipstat)
 			if (!IP_WILDS_OK(i) && index(ipseg[i], '*')
 			    || index(ipseg[i], '?'))
 				retval = FALSE;
-			MyFree(ipseg[i]);
+			/* The person who wrote this function was braindead --Stskeeps */
+			/* MyFree(ipseg[i]); */
 		}
 	else
 	{
@@ -2765,7 +2765,7 @@ advanced_check(char *userhost, int ipstat)
 			{
 				retval = FALSE;
 			}
-			MyFree(ipseg[i]);
+			/* MyFree(ipseg[i]); */
 		}
 
 

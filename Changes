@@ -367,3 +367,7 @@
   NMAKE -f makefile.win32 DEBUG=1
   inorder to have debug support ... leave the DEBUG=1 out for normal builds
 - Fixed ircsprintf.h ... we do want it to compile in debug mode yes ?
+- Made /addline write to correct place when you use -f
+- Made /zline not memory corrupt/crash, bad df bug
+- Fixed a counting bug with unknown connections, very hopefully
+- Fixed /htm giving wrong response when /htm to 1

@@ -1371,7 +1371,7 @@ int  m_htm(cptr, sptr, parc, parv)
 				int  new_val = atoi(parv[2]);
 				if (new_val < 10)
 					sendto_one(sptr,
-					    ":%s NOTICE %s :New value must be < 10",
+					    ":%s NOTICE %s :New value must be > 10",
 					    me.name, parv[0]);
 				else
 				{
