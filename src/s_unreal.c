@@ -243,21 +243,31 @@ void unrealmanual(void)
 
 static char *militime(char *sec, char *usec)
 {
+/* Now just as accurate on win as on linux -- codemastr */
+#ifndef _WIN32
 	struct timeval tv;
+#else
+	struct _timeb tv;
+#endif
 	static char timebuf[18];
 #ifndef _WIN32
 	gettimeofday(&tv, NULL);
 #else
-	/* win32 unreal cannot fix gettimeofday - therefore only 90% precise */
-	tv.tv_sec = TStime();
-	tv.tv_usec = 0;
+	_ftime(&tv);
 #endif
 	if (sec && usec)
 		ircsprintf(timebuf, "%ld",
-		    (tv.tv_sec - atoi(sec)) * 1000 + (tv.tv_usec -
-		    atoi(usec)) / 1000);
+#ifndef _WIN32
+		    (tv.tv_sec - atoi(sec)) * 1000 + (tv.tv_usec - atoi(usec)) / 1000);
+#else
+		    (tv.time - atoi(sec)) * 1000 + (tv.militm - atoi(usec)) / 1000);
+#endif
 	else
+#ifndef _WIN32
 		ircsprintf(timebuf, "%ld %ld", tv.tv_sec, tv.tv_usec);
+#else
+		ircsprintf(timebuf, "%ld %ld", tv.time, tv.militm);
+#endif
 
 	return timebuf;
 }
