@@ -1691,15 +1691,21 @@ void	*MyMallocEx(size_t size)
  */
 char *unreal_mktemp(char *dir, char *suffix)
 {
-        static char tempbuf[PATH_MAX+1];
+FILE *fd;
+unsigned int i;
+static char tempbuf[PATH_MAX+1];
 
-        while (1)
-        {
-                snprintf(tempbuf, PATH_MAX, "%s/%X.%s", dir, rand(), suffix);
-                if (!fopen(tempbuf, "r"))
-                        break;
-        }
-        return tempbuf;
+	for (i = 500; i > 0; i--)
+	{
+		snprintf(tempbuf, PATH_MAX, "%s/%X.%s", dir, rand(), suffix);
+		fd = fopen(tempbuf, "r");
+		if (!fd)
+			return tempbuf;
+		fclose(fd);
+	}
+	config_error("Unable to create temporarely file in directory '%s': %s",
+		dir, strerror(ERRNO)); /* eg: permission denied :p */
+	return NULL;
 }
 
 /* Returns the filename portion of the given path
@@ -1729,24 +1735,44 @@ char *unreal_getfilename(char *path)
 /* Copys the contents of the src file to the dest file.
  * The dest file will have permissions r-x------
  */
-void unreal_copyfile(char *src, char *dest)
+int unreal_copyfile(char *src, char *dest)
 {
 	char buf[2048];
 	int srcfd = open(src, O_RDONLY);
 	int destfd;
 	int len;
 
-	if (srcfd < 1)
-		return;
+	if (srcfd < 0)
+		return 0;
 
 	destfd  = open(dest, O_WRONLY|O_CREAT, S_IRUSR|S_IXUSR);
 
-	if (destfd < 1)
-		return;
+	if (destfd < 0)
+	{
+		config_error("Unable to create file '%s': %s", dest, strerror(ERRNO));
+		return 0;
+	}
 
 	while ((len = read(srcfd, buf, 1023)) > 0)
-		write(destfd, buf, len);
+		if (write(destfd, buf, len) != len)
+		{
+			config_error("Write error to file '%s': %s [not enough free hd space / quota? need several mb's!]",
+				dest, strerror(ERRNO));
+			goto fail;
+		}
+
+	if (len < 0) /* very unusual.. perhaps an I/O error */
+	{
+		config_error("Read error from file '%s': %s", src, strerror(ERRNO));
+		goto fail;
+	}
 
 	close(srcfd);
 	close(destfd);
+	return 1;
+fail:
+	close(srcfd);
+	close(destfd);
+	unlink(dest); /* make sure our corrupt file isn't used */
+	return 0;
 }

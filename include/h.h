@@ -629,4 +629,4 @@ extern int valid_host(char *host);
 extern int count_oper_sessions(char *);
 extern char *unreal_mktemp(char *dir, char *suffix);
 extern char *unreal_getfilename(char *path);
-extern void unreal_copyfile(char *src, char *dest);
+extern int unreal_copyfile(char *src, char *dest);

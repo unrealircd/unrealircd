@@ -83,6 +83,16 @@ void DeleteTempModules(void)
 	DIR *fd = opendir("tmp");
 	struct dirent *dir;
 	char tempbuf[PATH_MAX+1];
+
+	if (!fd) /* Ouch.. this is NOT good!! */
+	{
+		config_error("Unable to open 'tmp' directory: %s, please create one with the appropriate permissions",
+			strerror(ERRNO));
+		if (!loop.ircd_booted)
+			exit(7);
+		return; 
+	}
+
 	while ((dir = readdir(fd)))
 	{
 		if (!match("*.so", dir->d_name))
@@ -148,6 +158,8 @@ char  *Module_Create(char *path_)
 
 	
 	tmppath = unreal_mktemp("tmp", unreal_getfilename(path));
+	if (!tmppath)
+		return "Unable to create temporarely file!";
 	if(!strchr(path, '/'))
 	{
 		path = MyMalloc(strlen(path) + 3);
