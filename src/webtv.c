@@ -308,7 +308,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					if (IsNetAdmin(sptr)
 #endif
 					    && SecretChannel(chptr) && !IsMember(sptr, chptr))
-						*(buf + len++) = '~';
+						*(buf + len++) = '?';
 					if (acptr->umodes & UMODE_HIDEWHOIS && !IsMember(sptr, chptr)
 						&& IsAnOper(sptr))
 						*(buf + len++) = '!';

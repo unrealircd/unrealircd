@@ -2200,3 +2200,4 @@ seen. gmtime warning still there
 - Removed "Duplicate user entry in SJOIN" notice because the problem has been traced down.
 - Fixed some ./Config problems on Solaris with IPv6, SSL, and some other misc. things 
   (#0001004) reported by lion.
+- Changed the /whois "secret channel" flag from '~' to '?'
