@@ -1,6 +1,6 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, Win32GUI.c
- *   Copyright (C) 2000-2003 David Flynn (DrBin) & Dominick Meglio (codemastr)
+ *   IRC - Internet Relay Chat, win32/gui.c
+ *   Copyright (C) 2000-2004 David Flynn (DrBin) & Dominick Meglio (codemastr)
  *   
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,10 +16,6 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-
-#ifndef IRCDTOTALVERSION
-#define IRCDTOTALVERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
-#endif
 
 #define WIN32_VERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4
 #include "resource.h"
@@ -48,18 +44,22 @@
 
 #define MIRC_COLORS "{\\colortbl;\\red255\\green255\\blue255;\\red0\\green0\\blue127;\\red0\\green147\\blue0;\\red255\\green0\\blue0;\\red127\\green0\\blue0;\\red156\\green0\\blue156;\\red252\\green127\\blue0;\\red255\\green255\\blue0;\\red0\\green252\\blue0;\\red0\\green147\\blue147;\\red0\\green255\\blue255;\\red0\\green0\\blue252;\\red255\\green0\\blue255;\\red127\\green127\\blue127;\\red210\\green210\\blue210;\\red0\\green0\\blue0;}"
 
-/* Lazy macro */
-#define ShowDialog(handle, inst, template, parent, proc) {\
-	if (!IsWindow(handle)) { \
-		handle = CreateDialog(inst, template, parent, (DLGPROC)proc); ShowWindow(handle, SW_SHOW); \
-	}\
-	else\
-		SetForegroundWindow(handle);\
+__inline void ShowDialog(HWND *handle, HINSTANCE inst, char *template, HWND parent, 
+			 DLGPROC proc)
+{
+	if (!IsWindow(*handle)) 
+	{
+		*handle = CreateDialog(inst, template, parent, (DLGPROC)proc); 
+		ShowWindow(*handle, SW_SHOW);
+	}
+	else
+		SetForegroundWindow(*handle);
 }
+
 /* Comments:
  * 
- * DrBin did a great job with the original GUI, but he has been gone a long time
- * in his absense it was decided it would be best to continue windows development.
+ * DrBin did a great job with the original GUI, but he has been gone a long time.
+ * In his absense, it was decided it would be best to continue windows development.
  * The new code is based on his so it will be pretty much similar in features, my
  * main goal is to make it more stable. A lot of what I know about GUI coding 
  * I learned from DrBin so thanks to him for teaching me :) -- codemastr
@@ -119,7 +119,8 @@ HWND hFind;
 extern char *find_loaded_remote_include(char *url);
 #endif 
 
-void TaskBarCreated() {
+void TaskBarCreated() 
+{
 	HICON hIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(ICO_MAIN), IMAGE_ICON,16, 16, 0);
 	SysTray.cbSize = sizeof(NOTIFYICONDATA);
 	SysTray.hIcon = hIcon;
@@ -127,15 +128,16 @@ void TaskBarCreated() {
 	SysTray.uCallbackMessage = WM_USER;
 	SysTray.uFlags = NIF_ICON|NIF_TIP|NIF_MESSAGE;
 	SysTray.uID = 0;
-	lstrcpy(SysTray.szTip, WIN32_VERSION);
+	strcpy(SysTray.szTip, WIN32_VERSION);
 	Shell_NotifyIcon(NIM_ADD ,&SysTray);
 }
 
-LRESULT LinkSubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
+LRESULT LinkSubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) 
+{
 	static HCURSOR hCursor;
 	if (!hCursor)
 		hCursor = LoadCursor(hInst, MAKEINTRESOURCE(CUR_HAND));
-	if (Message == WM_MOUSEMOVE || WM_LBUTTONUP)
+	if (Message == WM_MOUSEMOVE || Message == WM_LBUTTONDOWN)
 		SetCursor(hCursor);
 
 	return CallWindowProc((WNDPROC)lpfnOldWndProc, hWnd, Message, wParam, lParam);
@@ -143,7 +145,8 @@ LRESULT LinkSubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 
 
 
-LRESULT RESubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
+LRESULT RESubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) 
+{
 	POINT p;
 	RECT r;
 	DWORD start, end;
@@ -153,10 +156,12 @@ LRESULT RESubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
 	   return DLGC_WANTALLKEYS;
 
 	
-	if (Message == WM_CONTEXTMENU) {
+	if (Message == WM_CONTEXTMENU) 
+	{
 		p.x = GET_X_LPARAM(lParam);
 		p.y = GET_Y_LPARAM(lParam);
-		if (GET_X_LPARAM(lParam) == -1 && GET_Y_LPARAM(lParam) == -1) {
+		if (GET_X_LPARAM(lParam) == -1 && GET_Y_LPARAM(lParam) == -1) 
+		{
 			GetClientRect(hWnd, &r);
 			p.x = (int)((r.left + r.right)/2);
 			p.y = (int)((r.top + r.bottom)/2);
@@ -170,11 +175,13 @@ LRESULT RESubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
 			EnableMenuItem(hContext, IDM_PASTE, MF_BYCOMMAND|MF_GRAYED);
 		else
 			EnableMenuItem(hContext, IDM_PASTE, MF_BYCOMMAND|MF_ENABLED);
-		if (GetWindowLong(hWnd, GWL_STYLE) & ES_READONLY) {
+		if (GetWindowLong(hWnd, GWL_STYLE) & ES_READONLY) 
+		{
 			EnableMenuItem(hContext, IDM_CUT, MF_BYCOMMAND|MF_GRAYED);
 			EnableMenuItem(hContext, IDM_DELETE, MF_BYCOMMAND|MF_GRAYED);
 		}
-		else {
+		else 
+		{
 			EnableMenuItem(hContext, IDM_CUT, MF_BYCOMMAND|MF_ENABLED);
 			EnableMenuItem(hContext, IDM_DELETE, MF_BYCOMMAND|MF_ENABLED);
 		}
@@ -183,8 +190,8 @@ LRESULT RESubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
 			EnableMenuItem(hContext, IDM_COPY, MF_BYCOMMAND|MF_GRAYED);
 		else
 			EnableMenuItem(hContext, IDM_COPY, MF_BYCOMMAND|MF_ENABLED);
-			TrackPopupMenu(hContext,TPM_LEFTALIGN|TPM_RIGHTBUTTON,p.x,p.y,0,GetParent(hWnd),NULL);
-			return 0;
+		TrackPopupMenu(hContext,TPM_LEFTALIGN|TPM_RIGHTBUTTON,p.x,p.y,0,GetParent(hWnd),NULL);
+		return 0;
 	}
 
 	return CallWindowProc((WNDPROC)lpfnOldWndProc, hWnd, Message, wParam, lParam);
@@ -193,21 +200,24 @@ LRESULT RESubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
 /* Somewhat respectable RTF to IRC parser
  * (c) 2001 codemastr
  */
-DWORD CALLBACK SplitIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) {
+DWORD CALLBACK SplitIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) 
+{
 	StreamIO *stream = (StreamIO*)dwCookie;
 	if (*stream->size == 0)
 	{
 		pcb = 0;
 		*stream->buffer = 0;
 	}
-	else if (cb <= *stream->size) {
+	else if (cb <= *stream->size) 
+	{
 		memcpy(pbBuff, *stream->buffer, cb);
 		*stream->buffer += cb;
 		*stream->size -= cb;
 		*pcb = cb;
 
 	}
-	else {
+	else 
+	{
 		memcpy(pbBuff, *stream->buffer, *stream->size);
 		*pcb = *stream->size;
 		*stream->size = 0;
@@ -215,7 +225,8 @@ DWORD CALLBACK SplitIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) {
 	return 0;
 }
 
-DWORD CALLBACK BufferIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) {
+DWORD CALLBACK BufferIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) 
+{
 	unsigned char *buf2;
 	static long size = 0;
 	if (!RTFBuf)
@@ -391,31 +402,32 @@ DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb)
 					buffer[i++] = '\n';
 					if (!*(pbBuff+3) || *(pbBuff+3) != '}')
 					{
-					if (bold)
-						buffer[i++] = '\2';
-					if (uline)
-						buffer[i++] = '\37';
-					if (incolor)
-					{
-						buffer[i++] = '\3';
-						strcat(buffer, TextColors->color);
-						i += strlen(TextColors->color);
-						if (inbg)
+						if (bold)
+							buffer[i++] = '\2';
+						if (uline)
+							buffer[i++] = '\37';
+						if (incolor)
 						{
+							buffer[i++] = '\3';
+							strcat(buffer, TextColors->color);
+							i += strlen(TextColors->color);
+							if (inbg)
+							{
+								buffer[i++] = ',';
+								strcat(buffer, BgColors->color);
+								i += strlen(BgColors->color);
+							}
+						}
+						else if (inbg) 
+						{
+							buffer[i++] = '\3';
+							buffer[i++] = '0';
+							buffer[i++] = '1';
 							buffer[i++] = ',';
 							strcat(buffer, BgColors->color);
 							i += strlen(BgColors->color);
 						}
 					}
-					else if (inbg) {
-						buffer[i++] = '\3';
-						buffer[i++] = '0';
-						buffer[i++] = '1';
-						buffer[i++] = ',';
-						strcat(buffer, BgColors->color);
-						i += strlen(BgColors->color);
-					}
-}
 				}
 				else if (!strcmp(cmd, "b"))
 				{
@@ -545,7 +557,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	HWND hWnd;
 	WSADATA WSAData;
 	HICON hIcon;
-	SERVICE_TABLE_ENTRY DispatchTable[] = {
+	SERVICE_TABLE_ENTRY DispatchTable[] = 
+	{
 		{ "UnrealIRCd", ServiceMain },
 		{ 0, 0 }
 	};
@@ -553,9 +566,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	
 	VerInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	GetVersionEx(&VerInfo);
-	if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
+	GetOSName(VerInfo, OSName);
+	if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) 
+	{
 		SC_HANDLE hService, hSCManager = OpenSCManager(NULL, NULL, GENERIC_EXECUTE);
-		if ((hService = OpenService(hSCManager, "UnrealIRCd", GENERIC_EXECUTE))) {
+		if ((hService = OpenService(hSCManager, "UnrealIRCd", GENERIC_EXECUTE))) 
+		{
 			int save_err = 0;
 			StartServiceCtrlDispatcher(DispatchTable); 
 			if (GetLastError() == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT)
@@ -589,40 +605,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 				exit(0);
 		}
 	}
-	strcpy(OSName, "Windows ");
-	if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
-		if (VerInfo.dwMajorVersion == 4) {
-			if (VerInfo.dwMinorVersion == 0) {
-				strcat(OSName, "95 ");
-				if (!strcmp(VerInfo.szCSDVersion," C"))
-					strcat(OSName, "OSR2 ");
-			}
-			else if (VerInfo.dwMinorVersion == 10) {
-				strcat(OSName, "98 ");
-				if (!strcmp(VerInfo.szCSDVersion, " A"))
-					strcat(OSName, "SE ");
-			}
-			else if (VerInfo.dwMinorVersion == 90)
-				strcat(OSName, "Me ");
-		}
-	}
-	else if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
-		if (VerInfo.dwMajorVersion == 3 && VerInfo.dwMinorVersion == 51)
-			strcat(OSName, "NT 3.51 ");
-		else if (VerInfo.dwMajorVersion == 4 && VerInfo.dwMinorVersion == 0)
-			strcat(OSName, "NT 4.0 ");
-		else if (VerInfo.dwMajorVersion == 5) {
-			if (VerInfo.dwMinorVersion == 0)
-				strcat(OSName, "2000 ");
-			else if (VerInfo.dwMinorVersion == 1) 
-				strcat(OSName, "XP ");
-			else if (VerInfo.dwMinorVersion == 2)
-				strcat(OSName, "Server 2003 ");
-		}
-		strcat(OSName, VerInfo.szCSDVersion);
-	}
-	if (OSName[strlen(OSName)-1] == ' ')
-		OSName[strlen(OSName)-1] = 0;
 	InitCommonControls();
 	WM_TASKBARCREATED = RegisterWindowMessage("TaskbarCreated");
 	WM_FINDMSGSTRING = RegisterWindowMessage(FINDMSGSTRING);
@@ -633,8 +615,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 	if (WSAStartup(MAKEWORD(1, 1), &WSAData) != 0)
     	{
-        MessageBox(NULL, "Unable to initialize WinSock", "UnrealIRCD Initalization Error", MB_OK);
-        return FALSE;
+		MessageBox(NULL, "Unable to initialize WinSock", "UnrealIRCD Initalization Error", MB_OK);
+		return FALSE;
 	}
 	hInst = hInstance; 
     
@@ -651,171 +633,186 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	ShowWindow(hWnd, SW_SHOW);
 	hMainThread = (HANDLE)_beginthread(SocketLoop, 0, NULL);
 	while (GetMessage(&msg, NULL, 0, 0))
-    {
-		if (!IsWindow(hStatusWnd) || !IsDialogMessage(hStatusWnd, &msg)) {
+	{
+		if (!IsWindow(hStatusWnd) || !IsDialogMessage(hStatusWnd, &msg)) 
+		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-    }
+	}
 	return FALSE;
 
 }
 
 LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-static HCURSOR hCursor;
-static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
+	static HCURSOR hCursor;
+	static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 
 	unsigned char *argv[3];
 	aClient *paClient;
 	unsigned char *msg;
 	POINT p;
 
-	if (message == WM_TASKBARCREATED){
+	if (message == WM_TASKBARCREATED)
+	{
 		TaskBarCreated();
 		return TRUE;
 	}
 	
 	switch (message)
+	{
+		case WM_INITDIALOG: 
+		{
+			ShowWindow(hDlg, SW_HIDE);
+			hCursor = LoadCursor(hInst, MAKEINTRESOURCE(CUR_HAND));
+			hContext = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_CONTEXT)),0);
+			/* Rehash popup menu */
+			hRehash = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_REHASH)),0);
+			/* About popup menu */
+			hAbout = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_ABOUT)),0);
+			/* Systray popup menu set the items to point to the other menus*/
+			hTray = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_SYSTRAY)),0);
+			ModifyMenu(hTray, IDM_REHASH, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT)hRehash, "&Rehash");
+			ModifyMenu(hTray, IDM_ABOUT, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT)hAbout, "&About");
+			
+			SetWindowText(hDlg, WIN32_VERSION);
+			SendMessage(hDlg, WM_SETICON, (WPARAM)ICON_SMALL, 
+				(LPARAM)(HICON)LoadImage(hInst, MAKEINTRESOURCE(ICO_MAIN), IMAGE_ICON,16, 16, 0));
+			SendMessage(hDlg, WM_SETICON, (WPARAM)ICON_BIG, 
+				(LPARAM)(HICON)LoadImage(hInst, MAKEINTRESOURCE(ICO_MAIN), IMAGE_ICON,32, 32, 0));
+				return (TRUE);
+		}
+		case WM_SIZE: 
+		{
+			if (wParam & SIZE_MINIMIZED)
+				ShowWindow(hDlg,SW_HIDE);
+			return 0;
+		}
+		case WM_CLOSE: 
+		{
+			if (MessageBox(hDlg, "Close UnrealIRCd?", "Are you sure?", MB_YESNO|MB_ICONQUESTION) == IDNO)
+				return 0;
+			else 
 			{
-			case WM_INITDIALOG: {
-				ShowWindow(hDlg, SW_HIDE);
-				hCursor = LoadCursor(hInst, MAKEINTRESOURCE(CUR_HAND));
-				hContext = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_CONTEXT)),0);
-				/* Rehash popup menu */
-				hRehash = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_REHASH)),0);
-				/* About popup menu */
-				hAbout = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_ABOUT)),0);
-				/* Systray popup menu set the items to point to the other menus*/
-				hTray = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_SYSTRAY)),0);
-				ModifyMenu(hTray, IDM_REHASH, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT)hRehash, "&Rehash");
-				ModifyMenu(hTray, IDM_ABOUT, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT)hAbout, "&About");
-				
-				SetWindowText(hDlg, WIN32_VERSION);
-				SendMessage(hDlg, WM_SETICON, (WPARAM)ICON_SMALL, 
-					(LPARAM)(HICON)LoadImage(hInst, MAKEINTRESOURCE(ICO_MAIN), IMAGE_ICON,16, 16, 0));
-				SendMessage(hDlg, WM_SETICON, (WPARAM)ICON_BIG, 
-					(LPARAM)(HICON)LoadImage(hInst, MAKEINTRESOURCE(ICO_MAIN), IMAGE_ICON,32, 32, 0));
-					return (TRUE);
+				DestroyWindow(hDlg);
+				exit(0);
 			}
-			case WM_SIZE: {
-				if (wParam & SIZE_MINIMIZED) {
-					ShowWindow(hDlg,SW_HIDE);
-				}
-				return 0;
-			}
-			case WM_CLOSE: {
-				if (MessageBox(hDlg, "Close UnrealIRCd?", "Are you sure?", MB_YESNO|MB_ICONQUESTION) == IDNO)
-					return 0;
-				else {
-					DestroyWindow(hDlg);
-					exit(0);
-				}
-			}
-
-			case WM_USER: {
-				switch(LOWORD(lParam)) {
-					case WM_LBUTTONDBLCLK:
-						ShowWindow(hDlg, SW_SHOW);
-						ShowWindow(hDlg,SW_RESTORE);
-						SetForegroundWindow(hDlg);
-					case WM_RBUTTONDOWN:
-						SetForegroundWindow(hDlg);
-						break;
-					case WM_RBUTTONUP: {
-						unsigned long i = 60000;
-						GetCursorPos(&p);
-						DestroyMenu(hConfig);
-						hConfig = CreatePopupMenu();
-						DestroyMenu(hLogs);
-						hLogs = CreatePopupMenu();
-						AppendMenu(hConfig, MF_STRING, IDM_CONF, CPATH);
-						if (conf_log) {
-							ConfigItem_log *logs;
-							AppendMenu(hConfig, MF_POPUP|MF_STRING, (UINT)hLogs, "Logs");
-							for (logs = conf_log; logs; logs = (ConfigItem_log *)logs->next) {
-								AppendMenu(hLogs, MF_STRING, i++, logs->file);
-							}
+		}
+		case WM_USER: 
+		{
+			switch(LOWORD(lParam)) 
+			{
+				case WM_LBUTTONDBLCLK:
+					ShowWindow(hDlg, SW_SHOW);
+					ShowWindow(hDlg,SW_RESTORE);
+					SetForegroundWindow(hDlg);
+				case WM_RBUTTONDOWN:
+					SetForegroundWindow(hDlg);
+					break;
+				case WM_RBUTTONUP: 
+				{
+					unsigned long i = 60000;
+					GetCursorPos(&p);
+					DestroyMenu(hConfig);
+					hConfig = CreatePopupMenu();
+					DestroyMenu(hLogs);
+					hLogs = CreatePopupMenu();
+					AppendMenu(hConfig, MF_STRING, IDM_CONF, CPATH);
+					if (conf_log) 
+					{
+						ConfigItem_log *logs;
+						AppendMenu(hConfig, MF_POPUP|MF_STRING, (UINT)hLogs, "Logs");
+						for (logs = conf_log; logs; logs = (ConfigItem_log *)logs->next) 
+						{
+							AppendMenu(hLogs, MF_STRING, i++, logs->file);
 						}
-						AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
-						if (conf_include) {
-							ConfigItem_include *inc;
-							for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next) {
-								if (inc->flag.type & INCLUDE_NOTLOADED)
-									continue;
-#ifdef USE_LIBCURL
-								if (inc->flag.type & INCLUDE_REMOTE)
-									AppendMenu(hConfig, MF_STRING, i++, inc->url);
-								else
-#endif
-								AppendMenu(hConfig, MF_STRING, i++, inc->file);
-							}
-							AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
-						}
-
-						AppendMenu(hConfig, MF_STRING, IDM_MOTD, MPATH);
-						AppendMenu(hConfig, MF_STRING, IDM_SMOTD, SMPATH);
-						AppendMenu(hConfig, MF_STRING, IDM_OPERMOTD, OPATH);
-						AppendMenu(hConfig, MF_STRING, IDM_BOTMOTD, BPATH);
-						AppendMenu(hConfig, MF_STRING, IDM_RULES, RPATH);
-						
-						if (conf_tld) {
-							ConfigItem_tld *tlds;
-							AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
-							for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *)tlds->next) {
-								if (!tlds->flag.motdptr)
-									AppendMenu(hConfig, MF_STRING, i++, tlds->motd_file);
-								if (!tlds->flag.rulesptr)
-									AppendMenu(hConfig, MF_STRING, i++, tlds->rules_file);
-								if (tlds->smotd_file)
-									AppendMenu(hConfig, MF_STRING, i++, tlds->smotd_file);
-							}
-						}
-						AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
-						AppendMenu(hConfig, MF_STRING, IDM_NEW, "New File");
-						ModifyMenu(hTray, IDM_CONFIG, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT)hConfig, "&Config");
-						TrackPopupMenu(hTray, TPM_LEFTALIGN|TPM_LEFTBUTTON,p.x,p.y,0,hDlg,NULL);
-						/* Kludge for a win bug */
-						SendMessage(hDlg, WM_NULL, 0, 0);
-						break;
 					}
+					AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
+					if (conf_include) 
+					{
+						ConfigItem_include *inc;
+						for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next) 
+						{
+							if (inc->flag.type & INCLUDE_NOTLOADED)
+								continue;
+#ifdef USE_LIBCURL
+							if (inc->flag.type & INCLUDE_REMOTE)
+								AppendMenu(hConfig, MF_STRING, i++, inc->url);
+							else
+#endif
+							AppendMenu(hConfig, MF_STRING, i++, inc->file);
+						}
+						AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
+					}
+					AppendMenu(hConfig, MF_STRING, IDM_MOTD, MPATH);
+					AppendMenu(hConfig, MF_STRING, IDM_SMOTD, SMPATH);
+					AppendMenu(hConfig, MF_STRING, IDM_OPERMOTD, OPATH);
+					AppendMenu(hConfig, MF_STRING, IDM_BOTMOTD, BPATH);
+					AppendMenu(hConfig, MF_STRING, IDM_RULES, RPATH);
+						
+					if (conf_tld) 
+					{
+						ConfigItem_tld *tlds;
+						AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
+						for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *)tlds->next) 
+						{
+							if (!tlds->flag.motdptr)
+								AppendMenu(hConfig, MF_STRING, i++, tlds->motd_file);
+							if (!tlds->flag.rulesptr)
+								AppendMenu(hConfig, MF_STRING, i++, tlds->rules_file);
+							if (tlds->smotd_file)
+								AppendMenu(hConfig, MF_STRING, i++, tlds->smotd_file);
+						}
+					}
+					AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
+					AppendMenu(hConfig, MF_STRING, IDM_NEW, "New File");
+					ModifyMenu(hTray, IDM_CONFIG, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT)hConfig, "&Config");
+					TrackPopupMenu(hTray, TPM_LEFTALIGN|TPM_LEFTBUTTON,p.x,p.y,0,hDlg,NULL);
+					/* Kludge for a win bug */
+					SendMessage(hDlg, WM_NULL, 0, 0);
+					break;
 				}
-				return 0;
 			}
-			case WM_DESTROY:
-					  return 0;
-			case WM_MOUSEMOVE: {
-				 POINT p;
-				 p.x = LOWORD(lParam);
-				 p.y = HIWORD(lParam);
-
-				 if ((p.x >= 24) && (p.x <= 78) && (p.y >= 178) && (p.y <= 190)) 
-					 SetCursor(hCursor);
-				 else if ((p.x >= 85) && (p.x <= 132) && (p.y >= 178) && (p.y <= 190)) 
-					 SetCursor(hCursor);
-				 else if ((p.x >= 140) && (p.x <= 186) && (p.y >= 178) && (p.y <= 190)) 
-				     SetCursor(hCursor);
-				 else if ((p.x >= 194) && (p.x <= 237) && (p.y >= 178) && (p.y <= 190)) 
-					 SetCursor(hCursor);
-				 else if ((p.x >= 245) && (p.x <= 311) && (p.y >= 178) && (p.y <= 190)) 
-					 SetCursor(hCursor);
-				 return 0;
-			}
-			case WM_LBUTTONDOWN: {
-			 POINT p;
-	         p.x = LOWORD(lParam);
-		     p.y = HIWORD(lParam);
-			 if ((p.x >= 24) && (p.x <= 78) && (p.y >= 178) && (p.y <= 190))
-             {
+			return 0;
+		}
+		case WM_DESTROY:
+			return 0;
+		case WM_MOUSEMOVE: 
+		{
+			POINT p;
+			p.x = LOWORD(lParam);
+			p.y = HIWORD(lParam);
+			if ((p.x >= 24) && (p.x <= 78) && (p.y >= 178) && (p.y <= 190)) 
+				SetCursor(hCursor);
+			else if ((p.x >= 85) && (p.x <= 132) && (p.y >= 178) && (p.y <= 190)) 
+				SetCursor(hCursor);
+			else if ((p.x >= 140) && (p.x <= 186) && (p.y >= 178) && (p.y <= 190)) 
+				SetCursor(hCursor);
+			else if ((p.x >= 194) && (p.x <= 237) && (p.y >= 178) && (p.y <= 190)) 
+				SetCursor(hCursor);
+			else if ((p.x >= 245) && (p.x <= 311) && (p.y >= 178) && (p.y <= 190)) 
+				SetCursor(hCursor);
+			return 0;
+		}
+		case WM_LBUTTONDOWN: 
+		{
+			POINT p;
+	         	p.x = LOWORD(lParam);
+		     	p.y = HIWORD(lParam);
+			if ((p.x >= 24) && (p.x <= 78) && (p.y >= 178) && (p.y <= 190))
+             		{
 				ClientToScreen(hDlg,&p);
 				TrackPopupMenu(hRehash,TPM_LEFTALIGN|TPM_LEFTBUTTON,p.x,p.y,0,hDlg,NULL);
 				return 0;
-			 }
-			 else if ((p.x >= 85) && (p.x <= 132) && (p.y >= 178) && (p.y <= 190))  {
-				ShowDialog(hStatusWnd, hInst, "Status", hDlg, StatusDLG);
+			}
+			else if ((p.x >= 85) && (p.x <= 132) && (p.y >= 178) && (p.y <= 190))
+			{
+				ShowDialog(&hStatusWnd, hInst, "Status", hDlg, StatusDLG);
 				return 0;
-			 }
-			 else if ((p.x >= 140) && (p.x <= 186) && (p.y >= 178) && (p.y <= 190))  {
+			}
+			else if ((p.x >= 140) && (p.x <= 186) && (p.y >= 178) && (p.y <= 190))
+			{
 				unsigned long i = 60000;
 				ClientToScreen(hDlg,&p);
 				DestroyMenu(hConfig);
@@ -824,18 +821,22 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 				hLogs = CreatePopupMenu();
 
 				AppendMenu(hConfig, MF_STRING, IDM_CONF, CPATH);
-				if (conf_log) {
+				if (conf_log) 
+				{
 					ConfigItem_log *logs;
 					AppendMenu(hConfig, MF_POPUP|MF_STRING, (UINT)hLogs, "Logs");
-					for (logs = conf_log; logs; logs = (ConfigItem_log *)logs->next) {
+					for (logs = conf_log; logs; logs = (ConfigItem_log *)logs->next) 
+					{
 						AppendMenu(hLogs, MF_STRING, i++, logs->file);
 					}
 				}
 				AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
 
-				if (conf_include) {
+				if (conf_include) 
+				{
 					ConfigItem_include *inc;
-					for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next) {
+					for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next) 
+					{
 #ifdef USE_LIBCURL
 						if (inc->flag.type & INCLUDE_REMOTE)
 							AppendMenu(hConfig, MF_STRING, i++, inc->url);
@@ -852,10 +853,12 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 				AppendMenu(hConfig, MF_STRING, IDM_BOTMOTD, BPATH);
 				AppendMenu(hConfig, MF_STRING, IDM_RULES, RPATH);
 				
-				if (conf_tld) {
+				if (conf_tld) 
+				{
 					ConfigItem_tld *tlds;
 					AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
-					for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *)tlds->next) {
+					for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *)tlds->next) 
+					{
 						if (!tlds->flag.motdptr)
 							AppendMenu(hConfig, MF_STRING, i++, tlds->motd_file);
 						if (!tlds->flag.rulesptr)
@@ -869,149 +872,160 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 				TrackPopupMenu(hConfig,TPM_LEFTALIGN|TPM_LEFTBUTTON,p.x,p.y,0,hDlg,NULL);
 
 				return 0;
-			 }
-			 else if ((p.x >= 194) && (p.x <= 237) && (p.y >= 178) && (p.y <= 190)) {
+			}
+			else if ((p.x >= 194) && (p.x <= 237) && (p.y >= 178) && (p.y <= 190)) 
+			{
 				ClientToScreen(hDlg,&p);
 				TrackPopupMenu(hAbout,TPM_LEFTALIGN|TPM_LEFTBUTTON,p.x,p.y,0,hDlg,NULL);
 				return 0;
-			 }
-			 else if ((p.x >= 245) && (p.x <= 311) && (p.y >= 178) && (p.y <= 190)) {
-				 if (MessageBox(hDlg, "Close UnrealIRCd?", "Are you sure?", MB_YESNO|MB_ICONQUESTION) == IDNO)
+			}
+			else if ((p.x >= 245) && (p.x <= 311) && (p.y >= 178) && (p.y <= 190)) 
+			{
+				if (MessageBox(hDlg, "Close UnrealIRCd?", "Are you sure?", MB_YESNO|MB_ICONQUESTION) == IDNO)
 					 return 0;
-				 else {
+				else 
+				{
 					 DestroyWindow(hDlg);
 					 exit(0);
-				 }
-			 }
+				}
 			}
-			case WM_COMMAND: {
-				if (LOWORD(wParam) >= 60000 && HIWORD(wParam) == 0 && !lParam) {
-					unsigned char path[MAX_PATH];
-					if (GetMenuString(hLogs, LOWORD(wParam), path, MAX_PATH, MF_BYCOMMAND))
-						DialogBoxParam(hInst, "FromVar", hDlg, (DLGPROC)FromFileReadDLG, (LPARAM)path);
-					
+		}
+		case WM_COMMAND: 
+		{
+			if (LOWORD(wParam) >= 60000 && HIWORD(wParam) == 0 && !lParam) 
+			{
+				unsigned char path[MAX_PATH];
+				if (GetMenuString(hLogs, LOWORD(wParam), path, MAX_PATH, MF_BYCOMMAND))
+					DialogBoxParam(hInst, "FromVar", hDlg, (DLGPROC)FromFileReadDLG, (LPARAM)path);
+				
+				else 
+				{
+					GetMenuString(hConfig,LOWORD(wParam), path, MAX_PATH, MF_BYCOMMAND);
+#ifdef USE_LIBCURL
+					if (url_is_valid(path))
+					{
+						char *file = find_loaded_remote_include(path);
+						DialogBoxParam(hInst, "FromVar", hDlg, (DLGPROC)FromFileReadDLG, (LPARAM)file);
+					}
+					else
+#endif
+						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, (LPARAM)path);
+				}
+				return FALSE;
+			}
+
+			switch(LOWORD(wParam)) 
+			{
+				case IDM_STATUS:
+					ShowDialog(&hStatusWnd, hInst, "Status", hDlg,StatusDLG);
+					break;
+				case IDM_SHUTDOWN:
+					if (MessageBox(hDlg, "Close UnrealIRCd?", "Are you sure?", MB_YESNO|MB_ICONQUESTION) == IDNO)
+						return 0;
 					else 
 					{
-						GetMenuString(hConfig,LOWORD(wParam), path, MAX_PATH, MF_BYCOMMAND);
-#ifdef USE_LIBCURL
-						if (url_is_valid(path))
-						{
-							char *file = find_loaded_remote_include(path);
-							DialogBoxParam(hInst, "FromVar", hDlg, (DLGPROC)FromFileReadDLG, (LPARAM)file);
-						}
-						else
-#endif
-							DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, (LPARAM)path);
+						 DestroyWindow(hDlg);
+						exit(0);
 					}
-					return FALSE;
-				}
-
-				switch(LOWORD(wParam)) {
-
-					case IDM_STATUS:
-						ShowDialog(hStatusWnd, hInst, "Status", hDlg, StatusDLG);
-						break;
-					case IDM_SHUTDOWN:
-						if (MessageBox(hDlg, "Close UnrealIRCd?", "Are you sure?", MB_YESNO|MB_ICONQUESTION) == IDNO)
-							return 0;
-						else {
-							 DestroyWindow(hDlg);
-							exit(0);
-						}
-						break;
-
+					break;
 					case IDM_RHALL:
-						MessageBox(NULL, "Rehashing all files", "Rehashing", MB_OK);
-						sendto_realops("Rehashing all files via the console");
-						rehash(&me,&me,0);
-						reread_motdsandrules();
-						break;
-					case IDM_RHCONF:
-						MessageBox(NULL, "Rehashing the Config file", "Rehashing", MB_OK);
-						sendto_realops("Rehashing the Config file via the console");
-						rehash(&me,&me,0);
-						break;
-					case IDM_RHMOTD: {
-						ConfigItem_tld *tlds;
-						aMotd *amotd;
-						MessageBox(NULL, "Rehashing all MOTD and Rules files", "Rehashing", MB_OK);
-						rehash_motdrules();
-						sendto_realops("Rehashing all MOTD and Rules files via the console");
-						break;
-					}
-					case IDM_RHOMOTD:
-						MessageBox(NULL, "Rehashing the OperMOTD", "Rehashing", MB_OK);
-						opermotd = (aMotd *) read_file(OPATH, &opermotd);
-						sendto_realops("Rehashing the OperMOTD via the console");
-						break;
-					case IDM_RHBMOTD:
-						MessageBox(NULL, "Rehashing the BotMOTD", "Rehashing", MB_OK);
-						botmotd = (aMotd *) read_file(BPATH, &botmotd);
-						sendto_realops("Rehashing the BotMOTD via the console");
-						break;
-					case IDM_LICENSE: 
-						DialogBox(hInst, "FromVar", hDlg, (DLGPROC)LicenseDLG);
-						break;
-					case IDM_CREDITS:
-						DialogBox(hInst, "FromVar", hDlg, (DLGPROC)CreditsDLG);
-						break;
-					case IDM_DAL:
-						DialogBox(hInst, "FromVar", hDlg, (DLGPROC)DalDLG);
-						break;
-					case IDM_HELP:
-						DialogBox(hInst, "Help", hDlg, (DLGPROC)HelpDLG);
-						break;
-					case IDM_CONF:
-						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, 
-							(LPARAM)CPATH);
-						break;
-					case IDM_MOTD:
-						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, 
-							(LPARAM)MPATH);
-						break;
-					case IDM_SMOTD:
-						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, 
-							(LPARAM)SMPATH);
-						break;
-					case IDM_OPERMOTD:
-						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG,
-							(LPARAM)OPATH);
-						break;
-					case IDM_BOTMOTD:
-						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG,
-							(LPARAM)BPATH);
-						break;
-					case IDM_RULES:
-						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG,
-							(LPARAM)RPATH);
-						break;
-					case IDM_NEW:
-						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, (LPARAM)NULL);
-						break;
-
+					MessageBox(NULL, "Rehashing all files", "Rehashing", MB_OK);
+					sendto_realops("Rehashing all files via the console");
+					rehash(&me,&me,0);
+					reread_motdsandrules();
+					break;
+				case IDM_RHCONF:
+					MessageBox(NULL, "Rehashing the Config file", "Rehashing", MB_OK);
+					sendto_realops("Rehashing the Config file via the console");
+					rehash(&me,&me,0);
+					break;
+				case IDM_RHMOTD: 
+				{
+					ConfigItem_tld *tlds;
+					aMotd *amotd;
+					MessageBox(NULL, "Rehashing all MOTD and Rules files", "Rehashing", MB_OK);
+					rehash_motdrules();
+					sendto_realops("Rehashing all MOTD and Rules files via the console");
+					break;
 				}
+				case IDM_RHOMOTD:
+					MessageBox(NULL, "Rehashing the OperMOTD", "Rehashing", MB_OK);
+					opermotd = (aMotd *) read_file(OPATH, &opermotd);
+					sendto_realops("Rehashing the OperMOTD via the console");
+					break;
+				case IDM_RHBMOTD:
+					MessageBox(NULL, "Rehashing the BotMOTD", "Rehashing", MB_OK);
+					botmotd = (aMotd *) read_file(BPATH, &botmotd);
+					sendto_realops("Rehashing the BotMOTD via the console");
+					break;
+				case IDM_LICENSE: 
+					DialogBox(hInst, "FromVar", hDlg, (DLGPROC)LicenseDLG);
+					break;
+				case IDM_CREDITS:
+					DialogBox(hInst, "FromVar", hDlg, (DLGPROC)CreditsDLG);
+					break;
+				case IDM_DAL:
+					DialogBox(hInst, "FromVar", hDlg, (DLGPROC)DalDLG);
+					break;
+				case IDM_HELP:
+					DialogBox(hInst, "Help", hDlg, (DLGPROC)HelpDLG);
+					break;
+				case IDM_CONF:
+					DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, 
+						(LPARAM)CPATH);
+					break;
+				case IDM_MOTD:
+					DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, 
+						(LPARAM)MPATH);
+					break;
+				case IDM_SMOTD:
+					DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, 
+						(LPARAM)SMPATH);
+					break;
+				case IDM_OPERMOTD:
+					DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG,
+						(LPARAM)OPATH);
+					break;
+				case IDM_BOTMOTD:
+					DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG,
+						(LPARAM)BPATH);
+					break;
+				case IDM_RULES:
+					DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG,
+						(LPARAM)RPATH);
+					break;
+				case IDM_NEW:
+					DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, (LPARAM)NULL);
+					break;
 			}
+		}
 	}
-	return (FALSE);
+	return FALSE;
 }
 
-LRESULT CALLBACK LicenseDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK LicenseDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
+{
 	return FromVarDLG(hDlg, message, wParam, lParam, "UnrealIRCd License", gnulicense);
 }
 
-LRESULT CALLBACK CreditsDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK CreditsDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
+{
 	return FromVarDLG(hDlg, message, wParam, lParam, "UnrealIRCd Credits", unrealcredits);
 }
 
-LRESULT CALLBACK DalDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK DalDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
+{
 	return FromVarDLG(hDlg, message, wParam, lParam, "UnrealIRCd DALnet Credits", dalinfotext);
 }
 
 LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam,
-unsigned char *title, unsigned char **s) {
+			    unsigned char *title, unsigned char **s) 
+{
 	HWND hWnd;
-	switch (message) {
-		case WM_INITDIALOG: {
+	switch (message) 
+	{
+		case WM_INITDIALOG: 
+		{
 			unsigned char	String[16384];
 			int size;
 			unsigned char *RTFString;
@@ -1019,13 +1033,13 @@ unsigned char *title, unsigned char **s) {
 			EDITSTREAM edit;
 			SetWindowText(hDlg, title);
 			bzero(String, 16384);
-			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT),
-GWL_WNDPROC, (DWORD)RESubClassFunc);
-			while (*s) {
+			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)RESubClassFunc);
+			while (*s) 
+			{
 				strcat(String, *s++);
 				if (*s)
 					strcat(String, "\r\n");
-			    }
+			}
 			size = CountRTFSize(String)+1;
 			RTFString = malloc(size);
 			bzero(RTFString, size);
@@ -1036,43 +1050,47 @@ GWL_WNDPROC, (DWORD)RESubClassFunc);
 			stream->buffer = &RTFBuf;
 			edit.dwCookie = (UINT)stream;
 			edit.pfnCallback = SplitIt;
-			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_STREAMIN,
-(WPARAM)SF_RTF|SFF_PLAINRTF, (LPARAM)&edit);
+			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_STREAMIN, (WPARAM)SF_RTF|SFF_PLAINRTF, (LPARAM)&edit);
 			free(RTFString);	
 			free(stream);
-			return (TRUE);
-			}
+			return TRUE;
+		}
 
-		case WM_COMMAND: {
+		case WM_COMMAND: 
+		{
 			hWnd = GetDlgItem(hDlg, IDC_TEXT);
-		if (LOWORD(wParam) == IDOK)
+			if (LOWORD(wParam) == IDOK)
 				return EndDialog(hDlg, TRUE);
-		if (LOWORD(wParam) == IDM_COPY) {
-			SendMessage(hWnd, WM_COPY, 0, 0);
-			return 0;
-		}
-		if (LOWORD(wParam) == IDM_SELECTALL) {
-			SendMessage(hWnd, EM_SETSEL, 0, -1);
-			return 0;
-		}
-		if (LOWORD(wParam) == IDM_PASTE) {
-			SendMessage(hWnd, WM_PASTE, 0, 0);
-			return 0;
-		}
-		if (LOWORD(wParam) == IDM_CUT) {
-			SendMessage(hWnd, WM_CUT, 0, 0);
-			return 0;
-		}
-		if (LOWORD(wParam) == IDM_UNDO) {
-			SendMessage(hWnd, EM_UNDO, 0, 0);
-			return 0;
-		}
-		if (LOWORD(wParam) == IDM_DELETE) {
-			SendMessage(hWnd, WM_CLEAR, 0, 0);
-			return 0;
-		}
-
-
+			if (LOWORD(wParam) == IDM_COPY) 
+			{
+				SendMessage(hWnd, WM_COPY, 0, 0);
+				return 0;
+			}
+			if (LOWORD(wParam) == IDM_SELECTALL) 
+			{
+				SendMessage(hWnd, EM_SETSEL, 0, -1);
+				return 0;
+			}
+			if (LOWORD(wParam) == IDM_PASTE) 
+			{
+				SendMessage(hWnd, WM_PASTE, 0, 0);
+				return 0;
+			}
+			if (LOWORD(wParam) == IDM_CUT) 
+			{
+				SendMessage(hWnd, WM_CUT, 0, 0);
+				return 0;
+			}
+			if (LOWORD(wParam) == IDM_UNDO) 
+			{
+				SendMessage(hWnd, EM_UNDO, 0, 0);
+				return 0;
+			}
+			if (LOWORD(wParam) == IDM_DELETE) 
+			{
+				SendMessage(hWnd, WM_CLEAR, 0, 0);
+				return 0;
+			}
 			break;
 		}
 		case WM_CLOSE:
@@ -1084,10 +1102,13 @@ GWL_WNDPROC, (DWORD)RESubClassFunc);
 	return (FALSE);
 }
 
-LRESULT CALLBACK FromFileReadDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK FromFileReadDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
+{
 	HWND hWnd;
-	switch (message) {
-		case WM_INITDIALOG: {
+	switch (message) 
+	{
+		case WM_INITDIALOG: 
+		{
 			int fd,len;
 			unsigned char *buffer = '\0', *string = '\0';
 			EDITSTREAM edit;
@@ -1098,7 +1119,8 @@ LRESULT CALLBACK FromFileReadDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 			wsprintf(szText, "UnrealIRCd Viewer - %s", (unsigned char *)lParam);
 			SetWindowText(hDlg, szText);
 			lpfnOldWndProc = (FARPROC)SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)RESubClassFunc);
-			if ((fd = open((unsigned char *)lParam, _O_RDONLY|_O_BINARY)) != -1) {
+			if ((fd = open((unsigned char *)lParam, _O_RDONLY|_O_BINARY)) != -1) 
+			{
 				fstat(fd,&sb);
 				/* Only allocate the amount we need */
 				buffer = malloc(sb.st_size+1);
@@ -1123,38 +1145,43 @@ LRESULT CALLBACK FromFileReadDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 				free(string);
 				free(stream);
 			}
-			return (TRUE);
-			}
-		case WM_COMMAND: {
+			return TRUE;
+		}
+		case WM_COMMAND: 
+		{
 			hWnd = GetDlgItem(hDlg, IDC_TEXT);
-		if (LOWORD(wParam) == IDOK)
+			if (LOWORD(wParam) == IDOK)
 				return EndDialog(hDlg, TRUE);
-		if (LOWORD(wParam) == IDM_COPY) {
-			SendMessage(hWnd, WM_COPY, 0, 0);
-			return 0;
-		}
-		if (LOWORD(wParam) == IDM_SELECTALL) {
-			SendMessage(hWnd, EM_SETSEL, 0, -1);
-			return 0;
-		}
-		if (LOWORD(wParam) == IDM_PASTE) {
-			SendMessage(hWnd, WM_PASTE, 0, 0);
-			return 0;
-		}
-		if (LOWORD(wParam) == IDM_CUT) {
-			SendMessage(hWnd, WM_CUT, 0, 0);
-			return 0;
-		}
-		if (LOWORD(wParam) == IDM_UNDO) {
-			SendMessage(hWnd, EM_UNDO, 0, 0);
-			return 0;
-		}
-		if (LOWORD(wParam) == IDM_DELETE) {
-			SendMessage(hWnd, WM_CLEAR, 0, 0);
-			return 0;
-		}
-
-
+			if (LOWORD(wParam) == IDM_COPY) 
+			{
+				SendMessage(hWnd, WM_COPY, 0, 0);
+				return 0;
+			}
+			if (LOWORD(wParam) == IDM_SELECTALL) 
+			{
+				SendMessage(hWnd, EM_SETSEL, 0, -1);
+				return 0;
+			}
+			if (LOWORD(wParam) == IDM_PASTE) 
+			{
+				SendMessage(hWnd, WM_PASTE, 0, 0);
+				return 0;
+			}
+			if (LOWORD(wParam) == IDM_CUT) 
+			{
+				SendMessage(hWnd, WM_CUT, 0, 0);
+				return 0;
+			}
+			if (LOWORD(wParam) == IDM_UNDO) 
+			{
+				SendMessage(hWnd, EM_UNDO, 0, 0);
+				return 0;
+			}
+			if (LOWORD(wParam) == IDM_DELETE) 
+			{
+				SendMessage(hWnd, WM_CLEAR, 0, 0);
+				return 0;
+			}
 			break;
 		}
 		case WM_CLOSE:
@@ -1162,15 +1189,17 @@ LRESULT CALLBACK FromFileReadDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 			break;
 		case WM_DESTROY:
 			break;
-		}
-	return (FALSE);
+	}
+	return FALSE;
 }
 
 
-LRESULT CALLBACK HelpDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK HelpDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
+{
 	static HFONT hFont;
 	static HCURSOR hCursor;
-	switch (message) {
+	switch (message) 
+	{
 		case WM_INITDIALOG:
 			hCursor = LoadCursor(hInst, MAKEINTRESOURCE(CUR_HAND));
 			hFont = CreateFont(8,0,0,0,0,0,1,0,ANSI_CHARSET,0,0,PROOF_QUALITY,0,"MS Sans Serif");
@@ -1178,20 +1207,23 @@ LRESULT CALLBACK HelpDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
 			SendMessage(GetDlgItem(hDlg, IDC_URL), WM_SETFONT, (WPARAM)hFont,TRUE);
 			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_EMAIL), GWL_WNDPROC, (DWORD)LinkSubClassFunc);
 			SetWindowLong(GetDlgItem(hDlg, IDC_URL), GWL_WNDPROC, (DWORD)LinkSubClassFunc);
-			return (TRUE);
+			return TRUE;
 
-		case WM_DRAWITEM: {
+		case WM_DRAWITEM: 
+		{
 			LPDRAWITEMSTRUCT lpdis = (LPDRAWITEMSTRUCT)lParam;
 			unsigned char text[500];
 			COLORREF oldtext;
 			RECT focus;
 			GetWindowText(lpdis->hwndItem, text, 500);
-			if (wParam == IDC_URL || IDC_EMAIL) {
+			if (wParam == IDC_URL || IDC_EMAIL) 
+			{
 				FillRect(lpdis->hDC, &lpdis->rcItem, GetSysColorBrush(COLOR_3DFACE));
 				oldtext = SetTextColor(lpdis->hDC, RGB(0,0,255));
 				DrawText(lpdis->hDC, text, strlen(text), &lpdis->rcItem, DT_CENTER|DT_VCENTER);
 				SetTextColor(lpdis->hDC, oldtext);
-				if (lpdis->itemState & ODS_FOCUS) {
+				if (lpdis->itemState & ODS_FOCUS) 
+				{
 					CopyRect(&focus, &lpdis->rcItem);
 					focus.left += 2;
 					focus.right -= 2;
@@ -1205,7 +1237,8 @@ LRESULT CALLBACK HelpDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
 		case WM_COMMAND:
 			if (LOWORD(wParam) == IDOK)
 				EndDialog(hDlg, TRUE);
-			if (HIWORD(wParam) == BN_DBLCLK) {
+			if (HIWORD(wParam) == BN_DBLCLK) 
+			{
 				if (LOWORD(wParam) == IDC_URL) 
 					ShellExecute(NULL, "open", "http://www.unrealircd.com", NULL, NULL, 
 						SW_MAXIMIZE);
@@ -1223,11 +1256,12 @@ LRESULT CALLBACK HelpDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
 			DeleteObject(hFont);
 			break;
 
-		}
-	return (FALSE);
+	}
+	return FALSE;
 }
 
-HWND DrawToolbar(HWND hwndParent, UINT iID) {
+HWND DrawToolbar(HWND hwndParent, UINT iID) 
+{
 	HWND hTool;
 	TBADDBITMAP tbBit;
 	int newidx;
@@ -1268,7 +1302,8 @@ HWND DrawToolbar(HWND hwndParent, UINT iID) {
 	return hTool;
 }
 
-HWND DrawStatusbar(HWND hwndParent, UINT iID) {
+HWND DrawStatusbar(HWND hwndParent, UINT iID) 
+{
 	HWND hStatus, hTip;
 	TOOLINFO ti;
 	RECT clrect;
@@ -1289,11 +1324,14 @@ HWND DrawStatusbar(HWND hwndParent, UINT iID) {
 }
 
 
-LRESULT CALLBACK GotoDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
-	if (message == WM_COMMAND) {
+LRESULT CALLBACK GotoDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
+{
+	if (message == WM_COMMAND) 
+	{
 		if (LOWORD(wParam) == IDCANCEL)
 			EndDialog(hDlg, TRUE);
-		if (LOWORD(wParam) == IDOK) {
+		if (LOWORD(wParam) == IDOK) 
+		{
 			HWND hWnd = GetDlgItem(GetParent(hDlg),IDC_TEXT);
 			int line = GetDlgItemInt(hDlg, IDC_GOTO, NULL, FALSE);
 			int pos = SendMessage(hWnd, EM_LINEINDEX, (WPARAM)--line, 0);
@@ -1305,7 +1343,8 @@ LRESULT CALLBACK GotoDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
 	return FALSE;
 }
 
-LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
+{
 	HWND hWnd;
 	static FINDREPLACE find;
 	static char findbuf[256];
@@ -1344,10 +1383,8 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				ft.chrg.cpMax = -1;
 			}
 			if (SendMessage(hRich, EM_FINDTEXTEX, flags, (LPARAM)&ft) == -1)
-			{
 				MessageBox(NULL, "Unreal has finished searching the document",
 					"Find", MB_ICONINFORMATION|MB_OK);
-			}
 			else
 			{
 				SendMessage(hRich, EM_EXSETSEL, 0, (LPARAM)&(ft.chrgText));
@@ -1357,8 +1394,10 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 		}
 		return TRUE;
 	}
-	switch (message) {
-		case WM_INITDIALOG: {
+	switch (message) 
+	{
+		case WM_INITDIALOG: 
+		{
 			int fd,len;
 			unsigned char *buffer = '\0', *string = '\0';
 			EDITSTREAM edit;
@@ -1380,7 +1419,8 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			chars.dwMask = CFM_FACE;
 			strcpy(chars.szFaceName,"Fixedsys");
 			SendMessage(hWnd, EM_SETCHARFORMAT, (WPARAM)SCF_ALL, (LPARAM)&chars);
-			if ((fd = open(file, _O_RDONLY|_O_BINARY)) != -1) {
+			if ((fd = open(file, _O_RDONLY|_O_BINARY)) != -1) 
+			{
 				fstat(fd,&sb);
 				/* Only allocate the amount we need */
 				buffer = malloc(sb.st_size+1);
@@ -1415,8 +1455,8 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				wsprintf(szText, "Line: 1");
 				SetWindowText(hStatus, szText);
 			}
-			return (TRUE);
-			}
+			return TRUE;
+		}
 		case WM_WINDOWPOSCHANGING:
 		{
 			GetClientRect(hDlg, &rOld);
@@ -1450,53 +1490,59 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			return TRUE;
 		}
 		case WM_NOTIFY:
-			switch (((NMHDR *)lParam)->code) {
-				case EN_SELCHANGE: {
-				HWND hWnd = GetDlgItem(hDlg, IDC_TEXT);
-				DWORD start, end, currline;
-				static DWORD prevline = 0;
-				unsigned char buffer[512];
-				chars.cbSize = sizeof(CHARFORMAT2);
-				SendMessage(hWnd, EM_GETCHARFORMAT, (WPARAM)SCF_SELECTION, (LPARAM)&chars);
-				if (chars.dwMask & CFM_BOLD && chars.dwEffects & CFE_BOLD)
-					SendMessage(hTool, TB_CHECKBUTTON, (WPARAM)IDC_BOLD, (LPARAM)MAKELONG(TRUE,0));
-				else
-					SendMessage(hTool, TB_CHECKBUTTON, (WPARAM)IDC_BOLD, (LPARAM)MAKELONG(FALSE,0));
-				if (chars.dwMask & CFM_UNDERLINE && chars.dwEffects & CFE_UNDERLINE)
-					SendMessage(hTool, TB_CHECKBUTTON, (WPARAM)IDC_UNDERLINE, (LPARAM)MAKELONG(TRUE,0));
-				else
-					SendMessage(hTool, TB_CHECKBUTTON, (WPARAM)IDC_UNDERLINE, (LPARAM)MAKELONG(FALSE,0));
-				SendMessage(hWnd, EM_GETSEL,(WPARAM)&start, (LPARAM)&end);
-				if (start == end) {
-					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_COPY, (LPARAM)MAKELONG(FALSE,0));
-					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_CUT, (LPARAM)MAKELONG(FALSE,0));
-				}
-				else {
-					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_COPY, (LPARAM)MAKELONG(TRUE,0));
-					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_CUT, (LPARAM)MAKELONG(TRUE,0));
-				}
-				if (SendMessage(hWnd, EM_CANUNDO, 0, 0)) 
-					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_UNDO, (LPARAM)MAKELONG(TRUE,0));
-				else
-					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_UNDO, (LPARAM)MAKELONG(FALSE,0));
-				if (SendMessage(hWnd, EM_CANREDO, 0, 0)) 
-					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_REDO, (LPARAM)MAKELONG(TRUE,0));
-				else
-					SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_REDO, (LPARAM)MAKELONG(FALSE,0));
-				currline = SendMessage(hWnd, EM_LINEFROMCHAR, (WPARAM)-1, 0);
-				currline++;
-				if (currline != prevline) {
-					wsprintf(buffer, "Line: %d", currline);
-					SetWindowText(hStatus, buffer);
-					prevline = currline;
-				}
-				}
-				return (TRUE);
-			
-			case TTN_GETDISPINFO: {
+			switch (((NMHDR *)lParam)->code) 
+			{
+				case EN_SELCHANGE: 
+				{
+					HWND hWnd = GetDlgItem(hDlg, IDC_TEXT);
+					DWORD start, end, currline;
+					static DWORD prevline = 0;
+					unsigned char buffer[512];
+					chars.cbSize = sizeof(CHARFORMAT2);
+					SendMessage(hWnd, EM_GETCHARFORMAT, (WPARAM)SCF_SELECTION, (LPARAM)&chars);
+					if (chars.dwMask & CFM_BOLD && chars.dwEffects & CFE_BOLD)
+						SendMessage(hTool, TB_CHECKBUTTON, (WPARAM)IDC_BOLD, (LPARAM)MAKELONG(TRUE,0));
+					else
+						SendMessage(hTool, TB_CHECKBUTTON, (WPARAM)IDC_BOLD, (LPARAM)MAKELONG(FALSE,0));
+					if (chars.dwMask & CFM_UNDERLINE && chars.dwEffects & CFE_UNDERLINE)
+						SendMessage(hTool, TB_CHECKBUTTON, (WPARAM)IDC_UNDERLINE, (LPARAM)MAKELONG(TRUE,0));
+					else
+						SendMessage(hTool, TB_CHECKBUTTON, (WPARAM)IDC_UNDERLINE, (LPARAM)MAKELONG(FALSE,0));
+					SendMessage(hWnd, EM_GETSEL,(WPARAM)&start, (LPARAM)&end);
+					if (start == end) 
+					{
+						SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_COPY, (LPARAM)MAKELONG(FALSE,0));
+						SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_CUT, (LPARAM)MAKELONG(FALSE,0));
+					}
+					else 
+					{
+						SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_COPY, (LPARAM)MAKELONG(TRUE,0));
+						SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_CUT, (LPARAM)MAKELONG(TRUE,0));
+					}
+					if (SendMessage(hWnd, EM_CANUNDO, 0, 0)) 
+						SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_UNDO, (LPARAM)MAKELONG(TRUE,0));
+					else
+						SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_UNDO, (LPARAM)MAKELONG(FALSE,0));
+					if (SendMessage(hWnd, EM_CANREDO, 0, 0)) 
+						SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_REDO, (LPARAM)MAKELONG(TRUE,0));
+					else
+						SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_REDO, (LPARAM)MAKELONG(FALSE,0));
+					currline = SendMessage(hWnd, EM_LINEFROMCHAR, (WPARAM)-1, 0);
+					currline++;
+					if (currline != prevline) 
+					{
+						wsprintf(buffer, "Line: %d", currline);
+						SetWindowText(hStatus, buffer);
+						prevline = currline;
+					}
+				return TRUE;
+			}			
+			case TTN_GETDISPINFO: 
+			{
 				LPTOOLTIPTEXT lpttt = (LPTOOLTIPTEXT) lParam;
 				lpttt->hinst = NULL;
-				switch (lpttt->hdr.idFrom) {
+				switch (lpttt->hdr.idFrom) 
+				{
 					case IDM_NEW:
 						strcpy(lpttt->szText, "New");
 						break;
@@ -1537,18 +1583,20 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 						strcpy(lpttt->szText, "Find");
 						break;
 				}
-				return (TRUE);
+				return TRUE;
 			}
 			case NM_DBLCLK:
 				DialogBox(hInst, "GOTO", hDlg, (DLGPROC)GotoDLG);
 				return (TRUE);
-			}
+		}
 				
 				return (TRUE);
 		case WM_COMMAND:
-			if (LOWORD(wParam) == IDC_BOLD) {
+			if (LOWORD(wParam) == IDC_BOLD) 
+			{
 				hWnd = GetDlgItem(hDlg, IDC_TEXT);
-				if (SendMessage(hTool, TB_ISBUTTONCHECKED, (WPARAM)IDC_BOLD, (LPARAM)0) != 0) {
+				if (SendMessage(hTool, TB_ISBUTTONCHECKED, (WPARAM)IDC_BOLD, (LPARAM)0) != 0) 
+				{
 					chars.cbSize = sizeof(CHARFORMAT2);
 					chars.dwMask = CFM_BOLD;
 					chars.dwEffects = CFE_BOLD;
@@ -1556,7 +1604,8 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 					SendMessage(hWnd, EM_HIDESELECTION, 0, 0);
 					SetFocus(hWnd);
 				}
-				else {
+				else 
+				{
 					chars.cbSize = sizeof(CHARFORMAT2);
 					chars.dwMask = CFM_BOLD;
 					chars.dwEffects = 0;
@@ -1566,9 +1615,11 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				}
 				return TRUE;
 			}
-			else if (LOWORD(wParam) == IDC_UNDERLINE) {
+			else if (LOWORD(wParam) == IDC_UNDERLINE) 
+			{
 				hWnd = GetDlgItem(hDlg, IDC_TEXT);
-				if (SendMessage(hTool, TB_ISBUTTONCHECKED, (WPARAM)IDC_UNDERLINE, (LPARAM)0) != 0) {
+				if (SendMessage(hTool, TB_ISBUTTONCHECKED, (WPARAM)IDC_UNDERLINE, (LPARAM)0) != 0) 
+				{
 					chars.cbSize = sizeof(CHARFORMAT2);
 					chars.dwMask = CFM_UNDERLINETYPE;
 					chars.bUnderlineType = CFU_UNDERLINE;
@@ -1576,7 +1627,8 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 					SendMessage(hWnd, EM_HIDESELECTION, 0, 0);
 					SetFocus(hWnd);
 				}
-				else {
+				else 
+				{
 					chars.cbSize = sizeof(CHARFORMAT2);
 					chars.dwMask = CFM_UNDERLINETYPE;
 					chars.bUnderlineType = CFU_UNDERLINENONE;
@@ -1614,39 +1666,48 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			}
 				
 		hWnd = GetDlgItem(hDlg, IDC_TEXT);
-		if (LOWORD(wParam) == IDM_COPY) {
+		if (LOWORD(wParam) == IDM_COPY) 
+		{
 			SendMessage(hWnd, WM_COPY, 0, 0);
 			return 0;
 		}
-		if (LOWORD(wParam) == IDM_SELECTALL) {
+		if (LOWORD(wParam) == IDM_SELECTALL) 
+		{
 			SendMessage(hWnd, EM_SETSEL, 0, -1);
 			return 0;
 		}
-		if (LOWORD(wParam) == IDM_PASTE) {
+		if (LOWORD(wParam) == IDM_PASTE) 
+		{
 			SendMessage(hWnd, WM_PASTE, 0, 0);
 			return 0;
 		}
-		if (LOWORD(wParam) == IDM_CUT) {
+		if (LOWORD(wParam) == IDM_CUT) 
+		{
 			SendMessage(hWnd, WM_CUT, 0, 0);
 			return 0;
 		}
-		if (LOWORD(wParam) == IDM_UNDO) {
+		if (LOWORD(wParam) == IDM_UNDO) 
+		{
 			SendMessage(hWnd, EM_UNDO, 0, 0);
 			return 0;
 		}
-		if (LOWORD(wParam) == IDM_REDO) {
+		if (LOWORD(wParam) == IDM_REDO) 
+		{
 			SendMessage(hWnd, EM_REDO, 0, 0);
 			return 0;
 		}
-		if (LOWORD(wParam) == IDM_DELETE) {
+		if (LOWORD(wParam) == IDM_DELETE) 
+		{
 			SendMessage(hWnd, WM_CLEAR, 0, 0);
 			return 0;
 		}
-		if (LOWORD(wParam) == IDM_SAVE) {
+		if (LOWORD(wParam) == IDM_SAVE) 
+		{
 			int fd;
 			EDITSTREAM edit;
 			OPENFILENAME lpopen;
-			if (!file) {
+			if (!file) 
+			{
 				unsigned char path[MAX_PATH];
 				path[0] = '\0';
 				bzero(&lpopen, sizeof(OPENFILENAME));
@@ -1678,36 +1739,39 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 
 			return 0;
 		}
-		if (LOWORD(wParam) == IDM_NEW) {
+		if (LOWORD(wParam) == IDM_NEW) 
+		{
 			unsigned char text[1024];
 			BOOL newfile = FALSE;
 			int ans;
-			if (SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_GETMODIFY, 0, 0) != 0) {
+			if (SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_GETMODIFY, 0, 0) != 0) 
+			{
 				sprintf(text, "The text in the %s file has changed.\r\n\r\nDo you want to save the changes?", file ? file : "new");
 				ans = MessageBox(hDlg, text, "UnrealIRCd", MB_YESNOCANCEL|MB_ICONWARNING);
 				if (ans == IDNO)
 					newfile = TRUE;
 				if (ans == IDCANCEL)
 					return TRUE;
-				if (ans == IDYES) {
+				if (ans == IDYES) 
+				{
 					SendMessage(hDlg, WM_COMMAND, MAKEWPARAM(IDM_SAVE,0), 0);
 					newfile = TRUE;
 				}
 			}
 			else
 				newfile = TRUE;
-			if (newfile == TRUE) {
+			if (newfile == TRUE) 
+			{
 				unsigned char szText[256];
 				file = NULL;
 				strcpy(szText, "UnrealIRCd Editor - New File");
 				SetWindowText(hDlg, szText);
 				SetWindowText(GetDlgItem(hDlg, IDC_TEXT), NULL);
 			}
-
 			break;
 		}			
-			break;
-		case WM_USER+10: {
+		case WM_USER+10: 
+		{
 			HWND hWnd = GetDlgItem(hDlg, IDC_TEXT);
 			EndDialog((HWND)lParam, TRUE);
 			chars.cbSize = sizeof(CHARFORMAT2);
@@ -1718,7 +1782,8 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			SetFocus(hWnd);
 			break;
 		}
-		case WM_USER+11: {
+		case WM_USER+11: 
+		{
 			HWND hWnd = GetDlgItem(hDlg, IDC_TEXT);
 			EndDialog((HWND)lParam, TRUE);
 			chars.cbSize = sizeof(CHARFORMAT2);
@@ -1742,17 +1807,20 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				SendMessage(hTool, TB_ENABLEBUTTON, (WPARAM)IDM_PASTE, (LPARAM)MAKELONG(FALSE,0));
 			SendMessage(hClip, WM_DRAWCLIPBOARD, wParam, lParam);
 			break;
-		case WM_CLOSE: {
+		case WM_CLOSE: 
+		{
 			unsigned char text[256];
 			int ans;
-			if (SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_GETMODIFY, 0, 0) != 0) {
+			if (SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_GETMODIFY, 0, 0) != 0) 
+			{
 				sprintf(text, "The text in the %s file has changed.\r\n\r\nDo you want to save the changes?", file ? file : "new");
 				ans = MessageBox(hDlg, text, "UnrealIRCd", MB_YESNOCANCEL|MB_ICONWARNING);
 				if (ans == IDNO)
 					EndDialog(hDlg, TRUE);
 				if (ans == IDCANCEL)
 					return TRUE;
-				if (ans == IDYES) {
+				if (ans == IDYES) 
+				{
 					SendMessage(hDlg, WM_COMMAND, MAKEWPARAM(IDM_SAVE,0), 0);
 					EndDialog(hDlg, TRUE);
 				}
@@ -1764,65 +1832,69 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 		case WM_DESTROY:
 			ChangeClipboardChain(hDlg, hClip);
 			break;
-		}
+	}
 
-	return (FALSE);
+	return FALSE;
 }
 
-LRESULT CALLBACK StatusDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
-	switch (message) {
-		case WM_INITDIALOG: {
-				hwTreeView = GetDlgItem(hDlg, IDC_TREE);
-				win_map(&me, hwTreeView, 0);
-				SetDlgItemInt(hDlg, IDC_CLIENTS, IRCstats.clients, FALSE);
-				SetDlgItemInt(hDlg, IDC_SERVERS, IRCstats.servers, FALSE);
-				SetDlgItemInt(hDlg, IDC_INVISO, IRCstats.invisible, FALSE);
-				SetDlgItemInt(hDlg, IDC_UNKNOWN, IRCstats.unknown, FALSE);
-				SetDlgItemInt(hDlg, IDC_OPERS, IRCstats.operators, FALSE);
-				SetDlgItemInt(hDlg, IDC_CHANNELS, IRCstats.channels, FALSE);
-				if (IRCstats.clients > IRCstats.global_max)
-					IRCstats.global_max = IRCstats.clients;
-				if (IRCstats.me_clients > IRCstats.me_max)
-						IRCstats.me_max = IRCstats.me_clients;
-				SetDlgItemInt(hDlg, IDC_MAXCLIENTS, IRCstats.global_max, FALSE);
-				SetDlgItemInt(hDlg, IDC_LCLIENTS, IRCstats.me_clients, FALSE);
-				SetDlgItemInt(hDlg, IDC_LSERVERS, IRCstats.me_servers, FALSE);
-				SetDlgItemInt(hDlg, IDC_LMAXCLIENTS, IRCstats.me_max, FALSE);
-				SetTimer(hDlg, 1, 5000, NULL);
-				return (TRUE);
-			}
+LRESULT CALLBACK StatusDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
+{
+	switch (message) 
+	{
+		case WM_INITDIALOG: 
+		{
+			hwTreeView = GetDlgItem(hDlg, IDC_TREE);
+			win_map(&me, hwTreeView, 0);
+			SetDlgItemInt(hDlg, IDC_CLIENTS, IRCstats.clients, FALSE);
+			SetDlgItemInt(hDlg, IDC_SERVERS, IRCstats.servers, FALSE);
+			SetDlgItemInt(hDlg, IDC_INVISO, IRCstats.invisible, FALSE);
+			SetDlgItemInt(hDlg, IDC_UNKNOWN, IRCstats.unknown, FALSE);
+			SetDlgItemInt(hDlg, IDC_OPERS, IRCstats.operators, FALSE);
+			SetDlgItemInt(hDlg, IDC_CHANNELS, IRCstats.channels, FALSE);
+			if (IRCstats.clients > IRCstats.global_max)
+				IRCstats.global_max = IRCstats.clients;
+			if (IRCstats.me_clients > IRCstats.me_max)
+					IRCstats.me_max = IRCstats.me_clients;
+			SetDlgItemInt(hDlg, IDC_MAXCLIENTS, IRCstats.global_max, FALSE);
+			SetDlgItemInt(hDlg, IDC_LCLIENTS, IRCstats.me_clients, FALSE);
+			SetDlgItemInt(hDlg, IDC_LSERVERS, IRCstats.me_servers, FALSE);
+			SetDlgItemInt(hDlg, IDC_LMAXCLIENTS, IRCstats.me_max, FALSE);
+			SetTimer(hDlg, 1, 5000, NULL);
+			return TRUE;
+		}
 		case WM_CLOSE:
 			DestroyWindow(hDlg);
 			return TRUE;
 		case WM_TIMER:
-				TreeView_DeleteAllItems(hwTreeView);
-				win_map(&me, hwTreeView, 1);
-				SetDlgItemInt(hDlg, IDC_CLIENTS, IRCstats.clients, FALSE);
-				SetDlgItemInt(hDlg, IDC_SERVERS, IRCstats.servers, FALSE);
-				SetDlgItemInt(hDlg, IDC_INVISO, IRCstats.invisible, FALSE);
-				SetDlgItemInt(hDlg, IDC_INVISO, IRCstats.invisible, FALSE);
-				SetDlgItemInt(hDlg, IDC_UNKNOWN, IRCstats.unknown, FALSE);
-				SetDlgItemInt(hDlg, IDC_OPERS, IRCstats.operators, FALSE);
-				SetDlgItemInt(hDlg, IDC_CHANNELS, IRCstats.channels, FALSE);
-				if (IRCstats.clients > IRCstats.global_max)
-					IRCstats.global_max = IRCstats.clients;
-				if (IRCstats.me_clients > IRCstats.me_max)
-						IRCstats.me_max = IRCstats.me_clients;
-				SetDlgItemInt(hDlg, IDC_MAXCLIENTS, IRCstats.global_max, FALSE);
-				SetDlgItemInt(hDlg, IDC_LCLIENTS, IRCstats.me_clients, FALSE);
-				SetDlgItemInt(hDlg, IDC_LSERVERS, IRCstats.me_servers, FALSE);
-				SetDlgItemInt(hDlg, IDC_LMAXCLIENTS, IRCstats.me_max, FALSE);
-				SetTimer(hDlg, 1, 5000, NULL);
-				return (TRUE);
+			TreeView_DeleteAllItems(hwTreeView);
+			win_map(&me, hwTreeView, 1);
+			SetDlgItemInt(hDlg, IDC_CLIENTS, IRCstats.clients, FALSE);
+			SetDlgItemInt(hDlg, IDC_SERVERS, IRCstats.servers, FALSE);
+			SetDlgItemInt(hDlg, IDC_INVISO, IRCstats.invisible, FALSE);
+			SetDlgItemInt(hDlg, IDC_INVISO, IRCstats.invisible, FALSE);
+			SetDlgItemInt(hDlg, IDC_UNKNOWN, IRCstats.unknown, FALSE);
+			SetDlgItemInt(hDlg, IDC_OPERS, IRCstats.operators, FALSE);
+			SetDlgItemInt(hDlg, IDC_CHANNELS, IRCstats.channels, FALSE);
+			if (IRCstats.clients > IRCstats.global_max)
+				IRCstats.global_max = IRCstats.clients;
+			if (IRCstats.me_clients > IRCstats.me_max)
+					IRCstats.me_max = IRCstats.me_clients;
+			SetDlgItemInt(hDlg, IDC_MAXCLIENTS, IRCstats.global_max, FALSE);
+			SetDlgItemInt(hDlg, IDC_LCLIENTS, IRCstats.me_clients, FALSE);
+			SetDlgItemInt(hDlg, IDC_LSERVERS, IRCstats.me_servers, FALSE);
+			SetDlgItemInt(hDlg, IDC_LMAXCLIENTS, IRCstats.me_max, FALSE);
+			SetTimer(hDlg, 1, 5000, NULL);
+			return TRUE;
 		case WM_COMMAND:
-			if (LOWORD(wParam) == IDOK) {
+			if (LOWORD(wParam) == IDOK) 
+			{
 				DestroyWindow(hDlg);
 				return TRUE;
 			}
 			break;
 
-		}
-	return (FALSE);
+	}
+	return FALSE;
 }
 
 LRESULT CALLBACK ColorDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -1830,138 +1902,124 @@ LRESULT CALLBACK ColorDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		hBrushDarkRed, hBrushPurple, hBrushOrange, hBrushYellow, hBrushGreen, hBrushVDarkGreen,
 		hBrushLightBlue, hBrushBlue, hBrushPink, hBrushDarkGray, hBrushGray;
 	static UINT ResultMsg=0;
-	switch (message) {
-	case WM_INITDIALOG:
-		hBrushWhite = CreateSolidBrush(RGB(255,255,255));
-		hBrushBlack = CreateSolidBrush(RGB(0,0,0));
-		hBrushDarkBlue = CreateSolidBrush(RGB(0,0,127));
-		hBrushDarkGreen = CreateSolidBrush(RGB(0,147,0));
-		hBrushRed = CreateSolidBrush(RGB(255,0,0));
-		hBrushDarkRed = CreateSolidBrush(RGB(127,0,0));
-		hBrushPurple = CreateSolidBrush(RGB(156,0,156));
-		hBrushOrange = CreateSolidBrush(RGB(252,127,0));
-		hBrushYellow = CreateSolidBrush(RGB(255,255,0));
-		hBrushGreen = CreateSolidBrush(RGB(0,252,0));
-		hBrushVDarkGreen = CreateSolidBrush(RGB(0,147,147));
-		hBrushLightBlue = CreateSolidBrush(RGB(0,255,255));
-		hBrushBlue = CreateSolidBrush(RGB(0,0,252));
-		hBrushPink = CreateSolidBrush(RGB(255,0,255));
-		hBrushDarkGray = CreateSolidBrush(RGB(127,127,127));
-		hBrushGray = CreateSolidBrush(RGB(210,210,210));
-		ResultMsg = (UINT)lParam;
-		SetFocus(NULL);
-		return (TRUE);
-	case WM_DRAWITEM: {
-		LPDRAWITEMSTRUCT lpdis = (LPDRAWITEMSTRUCT)lParam;
-		if (wParam == IDC_WHITE) {
-			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushWhite);
-			}
-		if (wParam == IDC_BLACK) {
-			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushBlack);
+	switch (message) 
+	{
+		case WM_INITDIALOG:
+			hBrushWhite = CreateSolidBrush(RGB(255,255,255));
+			hBrushBlack = CreateSolidBrush(RGB(0,0,0));
+			hBrushDarkBlue = CreateSolidBrush(RGB(0,0,127));
+			hBrushDarkGreen = CreateSolidBrush(RGB(0,147,0));
+			hBrushRed = CreateSolidBrush(RGB(255,0,0));
+			hBrushDarkRed = CreateSolidBrush(RGB(127,0,0));
+			hBrushPurple = CreateSolidBrush(RGB(156,0,156));
+			hBrushOrange = CreateSolidBrush(RGB(252,127,0));
+			hBrushYellow = CreateSolidBrush(RGB(255,255,0));
+			hBrushGreen = CreateSolidBrush(RGB(0,252,0));
+			hBrushVDarkGreen = CreateSolidBrush(RGB(0,147,147));
+			hBrushLightBlue = CreateSolidBrush(RGB(0,255,255));
+			hBrushBlue = CreateSolidBrush(RGB(0,0,252));
+			hBrushPink = CreateSolidBrush(RGB(255,0,255));
+			hBrushDarkGray = CreateSolidBrush(RGB(127,127,127));
+			hBrushGray = CreateSolidBrush(RGB(210,210,210));
+			ResultMsg = (UINT)lParam;
+			SetFocus(NULL);
+			return TRUE;
+		case WM_DRAWITEM: 
+		{
+			LPDRAWITEMSTRUCT lpdis = (LPDRAWITEMSTRUCT)lParam;
+			if (wParam == IDC_WHITE) 
+				FillRect(lpdis->hDC, &lpdis->rcItem, hBrushWhite);
+			if (wParam == IDC_BLACK)
+				FillRect(lpdis->hDC, &lpdis->rcItem, hBrushBlack);
+			if (wParam == IDC_DARKBLUE) 
+				FillRect(lpdis->hDC, &lpdis->rcItem, hBrushDarkBlue);
+			if (wParam == IDC_DARKGREEN) 
+				FillRect(lpdis->hDC, &lpdis->rcItem, hBrushDarkGreen);
+			if (wParam == IDC_RED)
+				FillRect(lpdis->hDC, &lpdis->rcItem, hBrushRed);
+			if (wParam == IDC_DARKRED)
+				FillRect(lpdis->hDC, &lpdis->rcItem, hBrushDarkRed);
+			if (wParam == IDC_PURPLE)
+				FillRect(lpdis->hDC, &lpdis->rcItem, hBrushPurple);
+			if (wParam == IDC_ORANGE)
+				FillRect(lpdis->hDC, &lpdis->rcItem, hBrushOrange);
+			if (wParam == IDC_YELLOW)
+				FillRect(lpdis->hDC, &lpdis->rcItem, hBrushYellow);
+			if (wParam == IDC_GREEN)
+				FillRect(lpdis->hDC, &lpdis->rcItem, hBrushGreen);
+			if (wParam == IDC_VDARKGREEN)
+				FillRect(lpdis->hDC, &lpdis->rcItem, hBrushVDarkGreen);
+			if (wParam == IDC_LIGHTBLUE)
+				FillRect(lpdis->hDC, &lpdis->rcItem, hBrushLightBlue);
+			if (wParam == IDC_BLUE)
+				FillRect(lpdis->hDC, &lpdis->rcItem, hBrushBlue);
+			if (wParam == IDC_PINK)
+				FillRect(lpdis->hDC, &lpdis->rcItem, hBrushPink);
+			if (wParam == IDC_DARKGRAY)
+				FillRect(lpdis->hDC, &lpdis->rcItem, hBrushDarkGray);
+			if (wParam == IDC_GRAY)
+				FillRect(lpdis->hDC, &lpdis->rcItem, hBrushGray);
+			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
+			return TRUE;
 		}
-		if (wParam == IDC_DARKBLUE) {
-			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushDarkBlue);
+		case WM_COMMAND: 
+		{
+			COLORREF clrref;
+			if (LOWORD(wParam) == IDC_WHITE) 
+				clrref = RGB(255,255,255);
+			else if (LOWORD(wParam) == IDC_BLACK)
+				clrref = RGB(0,0,0);
+			else if (LOWORD(wParam) == IDC_DARKBLUE)
+				clrref = RGB(0,0,127);
+			else if (LOWORD(wParam) == IDC_DARKGREEN)
+				clrref = RGB(0,147,0);
+			else if (LOWORD(wParam) == IDC_RED)
+				clrref = RGB(255,0,0);
+			else if (LOWORD(wParam) == IDC_DARKRED)
+				clrref = RGB(127,0,0);
+			else if (LOWORD(wParam) == IDC_PURPLE)
+				clrref = RGB(156,0,156);
+			else if (LOWORD(wParam) == IDC_ORANGE)
+				clrref = RGB(252,127,0);
+			else if (LOWORD(wParam) == IDC_YELLOW)
+				clrref = RGB(255,255,0);
+			else if (LOWORD(wParam) == IDC_GREEN)
+				clrref = RGB(0,252,0);
+			else if (LOWORD(wParam) == IDC_VDARKGREEN)
+				clrref = RGB(0,147,147);
+			else if (LOWORD(wParam) == IDC_LIGHTBLUE)
+				clrref = RGB(0,255,255);
+			else if (LOWORD(wParam) == IDC_BLUE)
+				clrref = RGB(0,0,252);
+			else if (LOWORD(wParam) == IDC_PINK)
+				clrref = RGB(255,0,255);
+			else if (LOWORD(wParam) == IDC_DARKGRAY)
+				clrref = RGB(127,127,127);
+			else if (LOWORD(wParam) == IDC_GRAY)
+				clrref = RGB(210,210,210);
+			SendMessage(GetParent(hDlg), ResultMsg, (WPARAM)clrref, (LPARAM)hDlg);
+			break;
 		}
-		if (wParam == IDC_DARKGREEN) {
-			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushDarkGreen);
-		}
-		if (wParam == IDC_RED) {
-			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushRed);
-		}
-		if (wParam == IDC_DARKRED) {
-			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushDarkRed);
-		}
-		if (wParam == IDC_PURPLE) {
-			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushPurple);
-		}
-		if (wParam == IDC_ORANGE) {
-			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushOrange);
-		}
-		if (wParam == IDC_YELLOW) {
-			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushYellow);
-		}
-		if (wParam == IDC_GREEN) {
-			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushGreen);
-		}
-		if (wParam == IDC_VDARKGREEN) {
-			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushVDarkGreen);
-		}
-		if (wParam == IDC_LIGHTBLUE) {
-			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushLightBlue);
-		}
-		if (wParam == IDC_BLUE) {
-			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushBlue);
-		}
-		if (wParam == IDC_PINK) {
-			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushPink);
-		}
-		if (wParam == IDC_DARKGRAY) {
-			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushDarkGray);
-		}
-		if (wParam == IDC_GRAY) {
-			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushGray);
-		}
-		DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
-		return TRUE;
-		}
-	case WM_COMMAND: {
-		COLORREF clrref;
-		if (LOWORD(wParam) == IDC_WHITE) 
-			clrref = RGB(255,255,255);
-		else if (LOWORD(wParam) == IDC_BLACK)
-			clrref = RGB(0,0,0);
-		else if (LOWORD(wParam) == IDC_DARKBLUE)
-			clrref = RGB(0,0,127);
-		else if (LOWORD(wParam) == IDC_DARKGREEN)
-			clrref = RGB(0,147,0);
-		else if (LOWORD(wParam) == IDC_RED)
-			clrref = RGB(255,0,0);
-		else if (LOWORD(wParam) == IDC_DARKRED)
-			clrref = RGB(127,0,0);
-		else if (LOWORD(wParam) == IDC_PURPLE)
-			clrref = RGB(156,0,156);
-		else if (LOWORD(wParam) == IDC_ORANGE)
-			clrref = RGB(252,127,0);
-		else if (LOWORD(wParam) == IDC_YELLOW)
-			clrref = RGB(255,255,0);
-		else if (LOWORD(wParam) == IDC_GREEN)
-			clrref = RGB(0,252,0);
-		else if (LOWORD(wParam) == IDC_VDARKGREEN)
-			clrref = RGB(0,147,147);
-		else if (LOWORD(wParam) == IDC_LIGHTBLUE)
-			clrref = RGB(0,255,255);
-		else if (LOWORD(wParam) == IDC_BLUE)
-			clrref = RGB(0,0,252);
-		else if (LOWORD(wParam) == IDC_PINK)
-			clrref = RGB(255,0,255);
-		else if (LOWORD(wParam) == IDC_DARKGRAY)
-			clrref = RGB(127,127,127);
-		else if (LOWORD(wParam) == IDC_GRAY)
-			clrref = RGB(210,210,210);
-		SendMessage(GetParent(hDlg), ResultMsg, (WPARAM)clrref, (LPARAM)hDlg);
-	}
-
-		break;
-	case WM_CLOSE:
-		EndDialog(hDlg, TRUE);
-	case WM_DESTROY:
-		DeleteObject(hBrushWhite);
-		DeleteObject(hBrushBlack);
-		DeleteObject(hBrushDarkBlue);
-		DeleteObject(hBrushDarkGreen);
-		DeleteObject(hBrushRed);
-		DeleteObject(hBrushDarkRed);
-		DeleteObject(hBrushPurple);
-		DeleteObject(hBrushOrange);
-		DeleteObject(hBrushYellow);
-		DeleteObject(hBrushGreen);
-		DeleteObject(hBrushVDarkGreen);
-		DeleteObject(hBrushLightBlue);
-		DeleteObject(hBrushBlue);
-		DeleteObject(hBrushPink);
-		DeleteObject(hBrushDarkGray);
-		DeleteObject(hBrushGray);
-		break;
+		case WM_CLOSE:
+			EndDialog(hDlg, TRUE);
+		case WM_DESTROY:
+			DeleteObject(hBrushWhite);
+			DeleteObject(hBrushBlack);
+			DeleteObject(hBrushDarkBlue);
+			DeleteObject(hBrushDarkGreen);
+			DeleteObject(hBrushRed);
+			DeleteObject(hBrushDarkRed);
+			DeleteObject(hBrushPurple);
+			DeleteObject(hBrushOrange);
+			DeleteObject(hBrushYellow);
+			DeleteObject(hBrushGreen);
+			DeleteObject(hBrushVDarkGreen);
+			DeleteObject(hBrushLightBlue);
+			DeleteObject(hBrushBlue);
+			DeleteObject(hBrushPink);
+			DeleteObject(hBrushDarkGray);
+			DeleteObject(hBrushGray);
+			break;
 	}
 
 	return (FALSE);
@@ -2147,14 +2205,15 @@ int CountRTFSize(unsigned char *buffer) {
 		}
 		size++;
 	}			
-	size+=strlen("{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fmodern\\fprq1\\"
+	size += strlen("{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fmodern\\fprq1\\"
 		"fcharset0 Fixedsys;}}\r\n"
 		MIRC_COLORS
 		"\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20")+1;
 	return (size);
 }
 
-void IRCToRTF(unsigned char *buffer, unsigned char *string) {
+void IRCToRTF(unsigned char *buffer, unsigned char *string) 
+{
 	unsigned char *tmp;
 	int i = 0;
 	short bold = 0, uline = 0, incolor = 0, inbg = 0, reverse = 0;
@@ -2431,36 +2490,39 @@ void IRCToRTF(unsigned char *buffer, unsigned char *string) {
 
 HTREEITEM AddItemToTree(HWND hWnd, LPSTR lpszItem, int nLevel, short remap)
 {
-    TVITEM tvi; 
-    TVINSERTSTRUCT tvins; 
-    static HTREEITEM hPrev = (HTREEITEM)TVI_FIRST; 
+	TVITEM tvi; 
+	TVINSERTSTRUCT tvins; 
+	static HTREEITEM hPrev = (HTREEITEM)TVI_FIRST; 
 	static HTREEITEM hPrevLev[10] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
-    HTREEITEM hti; 
-	if (remap) {
+	HTREEITEM hti; 
+
+	if (remap) 
+	{
 		hPrev = (HTREEITEM)TVI_FIRST;
 		memset(hPrevLev, 0, sizeof(HTREEITEM)*10);
 	}
 		
-    tvi.mask = TVIF_TEXT|TVIF_PARAM; 
-    tvi.pszText = lpszItem; 
-    tvi.cchTextMax = lstrlen(lpszItem); 
-    tvi.lParam = (LPARAM)nLevel; 
-    tvins.item = tvi; 
-    tvins.hInsertAfter = hPrev; 
-    if (nLevel == 1) 
-        tvins.hParent = TVI_ROOT; 
+	tvi.mask = TVIF_TEXT|TVIF_PARAM; 
+	tvi.pszText = lpszItem; 
+	tvi.cchTextMax = lstrlen(lpszItem); 
+	tvi.lParam = (LPARAM)nLevel; 
+	tvins.item = tvi; 
+	tvins.hInsertAfter = hPrev; 
+	if (nLevel == 1) 
+		tvins.hParent = TVI_ROOT; 
 	else 
 		tvins.hParent = hPrevLev[nLevel-1];
-    hPrev = (HTREEITEM)SendMessage(hWnd, TVM_INSERTITEM, 0, (LPARAM)(LPTVINSERTSTRUCT) &tvins); 
- 		hPrevLev[nLevel] = hPrev;
-		TreeView_EnsureVisible(hWnd,hPrev);
-    if (nLevel > 1) { 
-        hti = TreeView_GetParent(hWnd, hPrev); 
-        tvi.mask = TVIF_IMAGE|TVIF_SELECTEDIMAGE; 
-        tvi.hItem = hti; 
-        TreeView_SetItem(hWnd, &tvi); 
-    } 
-    return hPrev; 
+	hPrev = (HTREEITEM)SendMessage(hWnd, TVM_INSERTITEM, 0, (LPARAM)(LPTVINSERTSTRUCT) &tvins); 
+	hPrevLev[nLevel] = hPrev;
+	TreeView_EnsureVisible(hWnd,hPrev);
+	if (nLevel > 1) 
+	{ 
+	        hti = TreeView_GetParent(hWnd, hPrev); 
+        	tvi.mask = TVIF_IMAGE|TVIF_SELECTEDIMAGE; 
+	        tvi.hItem = hti; 
+	        TreeView_SetItem(hWnd, &tvi); 
+	} 
+	return hPrev; 
 }
 
 /*
@@ -2472,9 +2534,11 @@ HTREEITEM AddItemToTree(HWND hWnd, LPSTR lpszItem, int nLevel, short remap)
 void win_map(aClient *server, HWND hwTreeView, short remap)
 {
         aClient *acptr;
-		Link *lp;
-		AddItemToTree(hwTreeView,server->name,server->hopcount+1, remap);
-		for (lp = Servers; lp; lp = lp->next)
+	Link *lp;
+
+	AddItemToTree(hwTreeView,server->name,server->hopcount+1, remap);
+
+	for (lp = Servers; lp; lp = lp->next)
         {
                 acptr = lp->value.cptr;
                 if (acptr->srvptr != server)
@@ -2484,27 +2548,32 @@ void win_map(aClient *server, HWND hwTreeView, short remap)
 }
 
 /* ugly stuff, but hey it works -- codemastr */
-void win_log(unsigned char *format, ...) {
+void win_log(unsigned char *format, ...) 
+{
         va_list ap;
         unsigned char buf[2048];
 		unsigned char *buf2;
         va_start(ap, format);
         ircvsprintf(buf, format, ap);
-	if (!IsService) {
+	if (!IsService) 
+	{
 		strcat(buf, "\r\n");
-		if (errors) {
+		if (errors) 
+		{
 			buf2 = MyMalloc(strlen(errors)+strlen(buf)+1);
 			sprintf(buf2, "%s%s",errors,buf);
 			MyFree(errors);
 			errors = NULL;
 		}
-		else {
+		else 
+		{
 			buf2 = MyMalloc(strlen(buf)+1);
 			sprintf(buf2, "%s",buf);
 		}
 		errors = buf2;
 	}
-	else {
+	else 
+	{
 		FILE *fd = fopen("service.log", "a");
 		fprintf(fd, "%s\n", buf);
 		fclose(fd);
@@ -2512,14 +2581,17 @@ void win_log(unsigned char *format, ...) {
         va_end(ap);
 }
 
-void win_error() {
+void win_error() 
+{
 	if (errors && !IsService)
 		DialogBox(hInst, "ConfigError", hwIRCDWnd, (DLGPROC)ConfigErrorDLG);
 }
 
-LRESULT CALLBACK ConfigErrorDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
-	switch (message) {
-	case WM_INITDIALOG:
+LRESULT CALLBACK ConfigErrorDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
+{
+	switch (message) 
+	{
+		case WM_INITDIALOG:
 			MessageBeep(MB_ICONEXCLAMATION);
 			SetDlgItemText(hDlg, IDC_CONFIGERROR, errors);
 			MyFree(errors);

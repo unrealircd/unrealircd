@@ -1,6 +1,6 @@
 /************************************************************************
  *   IRC - Internet Relay Chat, win32/service.c
- *   Copyright (C) 2002 Dominick Meglio (codemastr)
+ *   Copyright (C) 2002-2004 Dominick Meglio (codemastr)
  *   
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -27,22 +27,48 @@
 #include <string.h>
 
 SERVICE_STATUS IRCDStatus; 
-SERVICE_STATUS_HANDLE IRCDStatusHandle; 
+SERVICE_STATUS_HANDLE IRCDStatusHandle;
+
+/* Signal to rehash */
 #define IRCD_SERVICE_CONTROL_REHASH 128
 
 BOOL IsService = FALSE;
 
 extern OSVERSIONINFO VerInfo;
 #define WIN32_VERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4
-				
-VOID WINAPI IRCDCtrlHandler(DWORD opcode) {
+
+/* Places the service in the STOPPED state
+ * Parameters:
+ *  code - The error code (or 0)
+ */
+void SetServiceStop(int code)
+{
+	IRCDStatus.dwCurrentState = SERVICE_STOPPED;
+	IRCDStatus.dwCheckPoint = 0;
+	IRCDStatus.dwWaitHint = 0;
+	IRCDStatus.dwWin32ExitCode = code;
+	IRCDStatus.dwServiceSpecificExitCode = code;
+	SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
+}	
+
+/* Handles the service messages
+ * Parameters:
+ *  opcode - The message to process
+ */
+VOID WINAPI IRCDCtrlHandler(DWORD opcode) 
+{
 	DWORD status;
 	int i;
 	aClient *acptr;
-	if (opcode == SERVICE_CONTROL_STOP) {
+
+	/* Stopping */
+	if (opcode == SERVICE_CONTROL_STOP) 
+	{
 		IRCDStatus.dwCurrentState = SERVICE_STOP_PENDING;
 		SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
-		for (i = 0; i <= LastSlot; i++) {
+
+		for (i = 0; i <= LastSlot; i++) 
+		{
 			if (!(acptr = local[i]))
 				continue;
 			if (IsClient(acptr))
@@ -56,91 +82,66 @@ VOID WINAPI IRCDCtrlHandler(DWORD opcode) {
 		for (i = LastSlot; i >= 0; i--)
 			if ((acptr = local[i]) && DBufLength(&acptr->sendQ) > 0)
 				(void)send_queued(acptr);
-		IRCDStatus.dwWin32ExitCode = 0; 
-		IRCDStatus.dwCurrentState = SERVICE_STOPPED;
-		IRCDStatus.dwCheckPoint = 0;
-		IRCDStatus.dwWaitHint = 0;  
-		SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
+		SetServiceStop(0);
 	}
-	else if (opcode == IRCD_SERVICE_CONTROL_REHASH) {
+	/* Rehash */
+	else if (opcode == IRCD_SERVICE_CONTROL_REHASH) 
 		rehash(&me,&me,0);
-	}
 
-  SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
+	SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
 } 
 
-VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv) {
+/* Entry point function
+ * Parameters:
+ *  dwArgc   - Argument count
+ *  lpszArgv - Arguments
+ */
+VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv) 
+{
 	WSADATA WSAData;
 	DWORD error = 0;
 	char path[MAX_PATH], *folder;
+
 	IsService = TRUE;
+
+	/* Initialize the service structure */
 	IRCDStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
 	IRCDStatus.dwCurrentState = SERVICE_START_PENDING;
 	IRCDStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP|SERVICE_ACCEPT_SHUTDOWN;
 	IRCDStatus.dwWin32ExitCode = NO_ERROR;
 	IRCDStatus.dwServiceSpecificExitCode = 0;
 	IRCDStatus.dwCheckPoint = 0;
-	IRCDStatus.dwWaitHint = 0;  
+	IRCDStatus.dwWaitHint = 0;
+ 
 	GetModuleFileName(NULL,path,MAX_PATH);
 	folder = strrchr(path, '\\');
 	*folder = 0;
 	chdir(path);
-	IRCDStatusHandle = RegisterServiceCtrlHandler("unreal", IRCDCtrlHandler);  
+
+	/* Register the service controller */
+	IRCDStatusHandle = RegisterServiceCtrlHandler("unreal", IRCDCtrlHandler); 
+ 
 	VerInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	GetVersionEx(&VerInfo);
-	strcpy(OSName, "Windows ");
-	if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
-		if (VerInfo.dwMajorVersion == 4) {
-			if (VerInfo.dwMinorVersion == 0) {
-				strcat(OSName, "95 ");
-				if (!strcmp(VerInfo.szCSDVersion," C"))
-					strcat(OSName, "OSR2 ");
-			}
-			else if (VerInfo.dwMinorVersion == 10) {
-				strcat(OSName, "98 ");
-				if (!strcmp(VerInfo.szCSDVersion, " A"))
-					strcat(OSName, "SE ");
-			}
-			else if (VerInfo.dwMinorVersion == 90)
-				strcat(OSName, "Me ");
-		}
-	}
-	else if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
-		if (VerInfo.dwMajorVersion == 3 && VerInfo.dwMinorVersion == 51)
-			strcat(OSName, "NT 3.51 ");
-		else if (VerInfo.dwMajorVersion == 4 && VerInfo.dwMinorVersion == 0)
-			strcat(OSName, "NT 4.0 ");
-		else if (VerInfo.dwMajorVersion == 5) {
-			if (VerInfo.dwMinorVersion == 0)
-				strcat(OSName, "2000 ");
-			else if (VerInfo.dwMinorVersion == 1)
-				strcat(OSName, "XP ");
-			else if (VerInfo.dwMinorVersion == 2)
-				strcat(OSName, "Server 2003 ");
-		}
-		strcat(OSName, VerInfo.szCSDVersion);
-	}
-	if (OSName[strlen(OSName)-1] == ' ')
-		OSName[strlen(OSName)-1] = 0;
+	GetOSName(VerInfo, OSName);
+
 	InitDebug();
-	if ((error = WSAStartup(MAKEWORD(1, 1), &WSAData)) != 0) {
-		IRCDStatus.dwCurrentState = SERVICE_STOPPED;
-		IRCDStatus.dwCheckPoint = 0;
-		IRCDStatus.dwWaitHint = 0;
-		IRCDStatus.dwWin32ExitCode = error;
-		IRCDStatus.dwServiceSpecificExitCode = error;
-		SetServiceStatus(IRCDStatusHandle, &IRCDStatus); 
+
+	/* Initialize Winsocks */
+	if ((error = WSAStartup(MAKEWORD(1, 1), &WSAData)) != 0) 
+	{
+		SetServiceStop(error);
 		return;
 	}
-	if ((error = InitwIRCD(dwArgc, lpszArgv)) != 1) {
-		IRCDStatus.dwCurrentState = SERVICE_STOPPED;
-		IRCDStatus.dwCheckPoint = 0;
-		IRCDStatus.dwWaitHint = 0;
-		IRCDStatus.dwWin32ExitCode = error;
-		IRCDStatus.dwServiceSpecificExitCode = error;
-		SetServiceStatus(IRCDStatusHandle, &IRCDStatus); 
+
+	/* Initialize the IRCd */
+	if ((error = InitwIRCD(dwArgc, lpszArgv)) != 1) 
+	{
+		SetServiceStop(error);
 		return;
-	}	
+	}
+	
+	/* Go into the running state */
 	IRCDStatus.dwCurrentState = SERVICE_RUNNING;
 	IRCDStatus.dwCheckPoint = 0;
 	IRCDStatus.dwWaitHint = 0;  
