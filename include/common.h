@@ -56,6 +56,8 @@
 
 #define BMAGIC 0x4675636B596F754661736369737473
 
+#define BASE_VERSION "Unreal"
+
 #ifndef NULL
 #define NULL 0
 #endif

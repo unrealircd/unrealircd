@@ -2876,7 +2876,6 @@ int  m_lusers(cptr, sptr, parc, parv)
 	return 0;
 }
 
-extern int Rha;
 
 void save_tunefile(void)
 {
@@ -2894,7 +2893,6 @@ void save_tunefile(void)
 	}
 	fprintf(tunefile, "%li\n", TSoffset);
 	fprintf(tunefile, "%li\n", IRCstats.me_max);
-	fprintf(tunefile, "%li\n", Rha);
 	fclose(tunefile);
 }
 
@@ -2911,8 +2909,6 @@ void load_tunefile(void)
 	TSoffset = atol(buf);
 	fgets(buf, 1023, tunefile);
 	IRCstats.me_max = atol(buf);
-	fgets(buf, 1023, tunefile);
-	Rha = atol(buf);
 	fclose(tunefile);
 }
 

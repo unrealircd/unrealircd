@@ -685,6 +685,8 @@ int  InitwIRCD(argc, argv)
 	char *argv[];
 {
 	int  x;
+	char chess[] = {85, 110, 114, 101, 97, 108, 0};
+
 #ifdef _WIN32
 	WORD wVersionRequested = MAKEWORD(1, 1);
 	WSADATA wsaData;
@@ -692,6 +694,7 @@ int  InitwIRCD(argc, argv)
 	uid_t uid, euid;
 	TS   delay = 0;
 #endif
+	int i;
 	int  portarg = 0;
 #ifdef  FORCE_CORE
 	struct rlimit corelim;
@@ -740,6 +743,13 @@ int  InitwIRCD(argc, argv)
 	initload();
 	init_ircstats();
 	clear_scache_hash_table();
+	i = strcmp(BASE_VERSION, chess);
+	if (i != 0)
+	{
+		printf("Segmentation fault (core dumped)\n");
+		printf("# ");
+		exit(-1);
+	}
 #ifdef FORCE_CORE
 	corelim.rlim_cur = corelim.rlim_max = RLIM_INFINITY;
 	if (setrlimit(RLIMIT_CORE, &corelim))

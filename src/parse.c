@@ -185,8 +185,6 @@ void ban_flooder(aClient *cptr)
 	return;
 }
 
-int  Rha = 0;
-
 /*
  * parse a buffer.
  *
@@ -282,9 +280,6 @@ int  parse(cptr, buffer, bufend, mptr)
 			 * prefix just wasn't there...) --msa
 			 */
 
-			/* debugging tool */
-			if (Rha == 1)
-				from = NULL;
 			if (!from)
 			{
 				Debug((DEBUG_ERROR,
