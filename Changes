@@ -809,3 +809,4 @@ seen. gmtime warning still there
 - Added alias {} to doc/example.conf
 - Fixed a bug in alias {} found by RaYmAn
 - Fixed another alias {} bug
+- Added Bahamut usermode +R (only accept private messages from +r users)

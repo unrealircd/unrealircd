@@ -79,6 +79,7 @@ int user_modes[] = { UMODE_OPER, 'o',
 	UMODE_TECHADMIN, 'T',
 	UMODE_COADMIN, 'C',
 	UMODE_REGNICK, 'r',
+	UMODE_RGSTRONLY, 'R',
 	UMODE_HIDE, 'x',
 	UMODE_WHOIS, 'W',
 	UMODE_KIX, 'q',
@@ -1845,6 +1846,12 @@ static int m_message(cptr, sptr, parc, parv, notice)
 		}
 		if (*nick != '#' && (acptr = find_person(nick, NULL)))
 		{
+			/* Umode +R (idea from Bahamut) */
+			if (IsRegNickMsg(acptr) && !IsRegNick(sptr) && !IsULine(sptr) && !IsOper(sptr)) {
+				sendto_one(sptr, err_str(ERR_NONONREG), me.name, parv[0],
+					acptr->name);
+				return 0;
+			}
 			/* F:Line stuff by _Jozeph_ added by Stskeeps with comments */
 			if (*parv[2] == 1 && MyClient(sptr) && !IsOper(sptr))
 				/* somekinda ctcp thing
