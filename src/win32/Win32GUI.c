@@ -72,8 +72,8 @@ static char *ParseCodes(char *);
 HINSTANCE hInst;
 NOTIFYICONDATA SysTray;
 void CleanUp(void);
-HTREEITEM AddItemToTree(HWND, LPSTR, int);
-void win_map(aClient *, HWND);
+HTREEITEM AddItemToTree(HWND, LPSTR, int, short);
+void win_map(aClient *, HWND, short);
 extern Link *Servers;
 extern ircstats IRCstats;
 char *errors;
@@ -774,7 +774,7 @@ LRESULT CALLBACK StatusDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 	switch (message) {
 		case WM_INITDIALOG: {
 				hwTreeView = GetDlgItem(hDlg, IDC_TREE);
-				win_map(&me, hwTreeView);
+				win_map(&me, hwTreeView, 0);
 				SetDlgItemInt(hDlg, IDC_CLIENTS, IRCstats.clients, FALSE);
 				SetDlgItemInt(hDlg, IDC_SERVERS, IRCstats.servers, FALSE);
 				SetDlgItemInt(hDlg, IDC_INVISO, IRCstats.invisible, FALSE);
@@ -790,11 +790,32 @@ LRESULT CALLBACK StatusDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 				SetDlgItemInt(hDlg, IDC_LCLIENTS, IRCstats.me_clients, FALSE);
 				SetDlgItemInt(hDlg, IDC_LSERVERS, IRCstats.me_servers, FALSE);
 				SetDlgItemInt(hDlg, IDC_LMAXCLIENTS, IRCstats.me_max, FALSE);
+				SetTimer(hDlg, 1, 5000, NULL);
 				return (TRUE);
 			}
 		case WM_CLOSE:
 			EndDialog(hDlg, TRUE);
 			break;
+		case WM_TIMER:
+				TreeView_DeleteAllItems(hwTreeView);
+				win_map(&me, hwTreeView, 1);
+				SetDlgItemInt(hDlg, IDC_CLIENTS, IRCstats.clients, FALSE);
+				SetDlgItemInt(hDlg, IDC_SERVERS, IRCstats.servers, FALSE);
+				SetDlgItemInt(hDlg, IDC_INVISO, IRCstats.invisible, FALSE);
+				SetDlgItemInt(hDlg, IDC_INVISO, IRCstats.invisible, FALSE);
+				SetDlgItemInt(hDlg, IDC_UNKNOWN, IRCstats.unknown, FALSE);
+				SetDlgItemInt(hDlg, IDC_OPERS, IRCstats.operators, FALSE);
+				SetDlgItemInt(hDlg, IDC_CHANNELS, IRCstats.channels, FALSE);
+				if (IRCstats.clients > IRCstats.global_max)
+					IRCstats.global_max = IRCstats.clients;
+				if (IRCstats.me_clients > IRCstats.me_max)
+						IRCstats.me_max = IRCstats.me_clients;
+				SetDlgItemInt(hDlg, IDC_MAXCLIENTS, IRCstats.global_max, FALSE);
+				SetDlgItemInt(hDlg, IDC_LCLIENTS, IRCstats.me_clients, FALSE);
+				SetDlgItemInt(hDlg, IDC_LSERVERS, IRCstats.me_servers, FALSE);
+				SetDlgItemInt(hDlg, IDC_LMAXCLIENTS, IRCstats.me_max, FALSE);
+				SetTimer(hDlg, 1, 5000, NULL);
+				return (TRUE);
 		case WM_COMMAND:
 			if (LOWORD(wParam) == IDOK)
 				EndDialog(hDlg, TRUE);
@@ -944,14 +965,18 @@ static char *ParseCodes(char *buffer)
 
 /* This was made by DrBin but I cleaned it up a bunch to make it work better */
 
-HTREEITEM AddItemToTree(HWND hWnd, LPSTR lpszItem, int nLevel)
+HTREEITEM AddItemToTree(HWND hWnd, LPSTR lpszItem, int nLevel, short remap)
 {
     TVITEM tvi; 
     TVINSERTSTRUCT tvins; 
     static HTREEITEM hPrev = (HTREEITEM)TVI_FIRST; 
 	static HTREEITEM hPrevLev[10] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
     HTREEITEM hti; 
- 
+	if (remap) {
+		hPrev = (HTREEITEM)TVI_FIRST;
+		memset(hPrevLev, 0, sizeof(HTREEITEM)*10);
+	}
+		
     tvi.mask = TVIF_TEXT|TVIF_PARAM; 
     tvi.pszText = lpszItem; 
     tvi.cchTextMax = lstrlen(lpszItem); 
@@ -980,18 +1005,18 @@ HTREEITEM AddItemToTree(HWND hWnd, LPSTR lpszItem, int nLevel)
  * I removed the Potvin credit because it no longer uses any original code and I don't
  * even think Potvin actually made the original code
  */
-void win_map(aClient *server, HWND hwTreeView)
+void win_map(aClient *server, HWND hwTreeView, short remap)
 {
         static char prompt[64];
         aClient *acptr;
 		Link *lp;
-		AddItemToTree(hwTreeView,server->name,server->hopcount+1);
+		AddItemToTree(hwTreeView,server->name,server->hopcount+1, remap);
 		for (lp = Servers; lp; lp = lp->next)
         {
                 acptr = lp->value.cptr;
                 if (acptr->srvptr != server)
                         continue;
-                win_map(acptr, hwTreeView);
+                win_map(acptr, hwTreeView, remap);
         }
 }
 

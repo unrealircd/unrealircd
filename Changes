@@ -521,3 +521,4 @@ seen. gmtime warning still there
 - Made possible speedup of fdlist checking in s_bsd.c
 - Updated makefile.win32 for events.c
 - Added McSkaf's rehash patch
+- Made the Status Dialog update its values every 5 seconds
