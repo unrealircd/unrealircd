@@ -330,3 +330,7 @@
 - Made conf2 able to load empty files as well, with warnings
 - Added module_sym("functionname"), for modules, like, sajoin might want to
   do fp_m_join = module_sym("m_join");
+- Put out m_chghost, m_sethost in modules, remade Makefile structure and
+  added src/modules
+
+

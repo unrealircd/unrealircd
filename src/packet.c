@@ -223,7 +223,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_MKPASSWD, TOK_MKPASSWD, m_mkpasswd, MAXPARA);
 	add_Command(MSG_ADDLINE, TOK_ADDLINE, m_addline, 1);
 	add_Command(MSG_ADMINCHAT, TOK_ADMINCHAT, m_admins, 1);
-	add_Command(MSG_SETHOST, TOK_SETHOST, m_sethost, MAXPARA);
 	add_Command(MSG_TECHAT, TOK_TECHAT, m_techat, 1);
 	add_Command(MSG_NACHAT, TOK_NACHAT, m_nachat, 1);
 	add_Command(MSG_SETIDENT, TOK_SETIDENT, m_setident, MAXPARA);
@@ -234,7 +233,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_KNOCK, TOK_KNOCK, m_knock, 2);
 	add_Command(MSG_CREDITS, TOK_CREDITS, m_credits, MAXPARA);
 	add_Command(MSG_LICENSE, TOK_LICENSE, m_license, MAXPARA);
-	add_Command(MSG_CHGHOST, TOK_CHGHOST, m_chghost, MAXPARA);
 	add_Command(MSG_RPING, TOK_RPING, m_rping, MAXPARA);
 	add_Command(MSG_RPONG, TOK_RPONG, m_rpong, MAXPARA);
 	add_Command(MSG_NETINFO, TOK_NETINFO, m_netinfo, MAXPARA);

@@ -77,7 +77,8 @@ void    l_commands_init(void)
 	/*
 	 * We call our add_Command crap here
 	*/
-	modulename_init();
+	m_sethost_init();
+	m_chghost_init();
 	module_buffer = &l_commands_info;
 }
 
@@ -87,6 +88,7 @@ DLLFUNC void	mod_unload(void)
 void	l_commands_unload(void)
 #endif
 {
-	modulename_unload();	
+	m_sethost_unload();
+	m_chghost_unload();
 }
 

@@ -19,9 +19,7 @@
 #*   $Id$
 #*/
 
-CC=danger will robinson
-
-LINTFLAGS=-hba
+CC = danger will robinson
 
 OBJS=agent.o aln.o badwords.o bsd.o channel.o cloak.o crule.o dbuf.o \
 	fdlist.o hash.o help.o ircd.o ircsprintf.o list.o lusers.o \
@@ -31,21 +29,39 @@ OBJS=agent.o aln.o badwords.o bsd.o channel.o cloak.o crule.o dbuf.o \
 	s_user.o scache.o send.o support.o userload.o version.o webtv.o \
 	whowas.o zip.o
 
-MODULES=libdummy.so commands.so
-
 SRC=$(OBJS:%.o=%.c)
 
-MAKE = make 'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
-	    'LDFLAGS=${LDFLAGS}' 'IRCDMODE=${IRCDMODE}'
+MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
+		'LDFLAGS=${LDFLAGS}' 'IRCDMODE=${IRCDMODE}' \
+		'BINDIR=${BINDIR}' 'INSTALL=${INSTALL}' \
+		'INCLUDEDIR=${INCLUDEDIR}' 'IRCDDIR=${IRCDDIR}' \
+		'MANDIR=${MANDIR}' 'RM=${RM}' 'CP=${CP}' 'TOUCH=${TOUCH}' \
+		'RES=${RES}' 'SHELL=${SHELL}' 'STRTOUL=${STRTOUL}' \
+		'CRYPTOLIB=${CRYPTOLIB}' 'REGEX=${REGEX}' \
+		'CRYPTOINCLUDES=${CRYPTOINCLUDES}'
+
+MAKE = make $(MAKEARGS)
 
 INCLUDES = ../include/struct.h ../include/config.h ../include/settings.h \
 	../include/sys.h ../include/common.h ../include/version.h \
 	../include/h.h ../include/numeric.h ../include/msg.h \
-	../include/dynconf.h
+	../include/dynconf.h ../include/modules.h
 
 all: build
 
-build: ircd
+build: ircd mods
+
+ircd: $(OBJS)
+	$(CC) $(CFLAGS) $(CRYPTOLIB) -o ircd $(OBJS) $(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
+
+mods:
+	@if [ ! -r include ] ; then \
+		ln -s ../include include; \
+	fi
+	@if [ ! -r modules ] ; then \
+		echo "You havent done cvs update -P -d"; \
+	fi
+	cd modules; make all
 
 version.c: version.c.SH
 	$(SHELL) version.c.SH
@@ -53,33 +69,6 @@ version.c: version.c.SH
 version.o: version.c ../include/version.h
 	$(CC) $(CFLAGS) -c version.c
 
-ircd: $(OBJS) $(MODULES)
-#	$(CC) $(CFLAGS) $(CRYPTOLIB) -o ircd $(OBJS) $(LDFLAGS) $(IRCDLIBS) -lssl
-	$(CC) $(CFLAGS) $(CRYPTOINCLUDES) -o ircd $(CRYPTOLIB) $(OBJS) $(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
-	chmod $(IRCDMODE) ircd
-
-chkconf: ../include/struct.h ../include/config.h ../include/settings.h ../include/sys.h \
-	 ../include/common.h crule.c chkconf.c
-	$(CC) $(CFLAGS) -DCR_CHKCONF -o chkcrule.o -c crule.c
-	$(CC) $(CFLAGS) -DCR_CHKCONF -o chkmatch.o -c match.c
-	$(CC) $(CFLAGS) chkconf.c chkmatch.o chkcrule.o \
-	$(LDFLAGS) $(IRCDLIBS) -o chkconf
-
-saber: $(SRC)
-	#load -I../include $(SRC) version.c $(IRCDLIBS)
-
-lint:
-	lint $(LINTFLAGS) -I../include $(SRC) | egrep -v 'sendto_|debug'
-
-libdummy.so: m_test.c $(INCLUDES)
-	$(CC) $(CFLAGS) -DDYNAMIC_LINKING \
-        -fPIC -DPIC -shared -o libdummy.so m_test.c 
-
-commands.so: l_commands.c m_test.c $(INCLUDES)
-	$(CC) $(CFLAGS) -fPIC -DPIC -shared -o commands.so  l_commands.c m_test.c
-
-
-	
 parse.o: parse.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c parse.c
 
@@ -139,7 +128,8 @@ help.o: help.c $(INCLUDES)
 #	./buildm4 ${IRCDDIR}
 
 clean:
-	$(RM) -f *.o *.so *~ core ircd version.c chkconf
+	$(RM) -f *.o *.so *~ core ircd version.c chkconf; \
+	cd modules; make clean
 
 cleandir: clean
 
@@ -230,3 +220,4 @@ crule.o: crule.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c crule.c
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
+

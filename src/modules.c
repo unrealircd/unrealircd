@@ -149,7 +149,7 @@ int  load_module(char *module)
 		}
 		return 1;
 	}
-#ifdef _WIN32
+#ifndef _WIN32
 	else
 	{
 		const char *err = irc_dlerror();
