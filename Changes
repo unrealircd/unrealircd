@@ -1639,3 +1639,7 @@ seen. gmtime warning still there
 - Made CLIENT_FLOOD more customizable
 - Fixed some conf3 compile errors and block-modded _*_tld
 - Fixed stats bug reported by RaYmAn
+- Added a patch by McSkaf that will hopefully fix the win32 resolver crashes
+- Converted badword to conf3
+- Fixed some win32 problems with conf3
+- Fixed a problem in config testing with conf3

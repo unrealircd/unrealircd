@@ -139,24 +139,23 @@ static int	_test_help		(ConfigFile *conf, ConfigEntry *ce);
 static ConfigCommand _ConfigCommands[] = {
 	{ "include",		NULL,		  	_test_include	},
 	{ "admin", 		_conf_admin,		_test_admin 	},
-	{ "me", 		_conf_me,		_test_me	},
-	{ "oper", 		_conf_oper,		_test_oper	},
+	{ "me", 		_conf_me,			_test_me	},
+	{ "oper", 		_conf_oper,			_test_oper	},
 	{ "class", 		_conf_class,		_test_class	},
 	{ "drpass",		_conf_drpass,		_test_drpass	},
 	{ "ulines",		_conf_ulines,		_test_ulines	},
-
-	{ "tld",		_conf_tld,		_test_tld	},
-	{ "listen", 		_conf_listen,		_test_listen	},
+	{ "tld",		_conf_tld,			_test_tld	},
+	{ "listen", 	_conf_listen,		_test_listen	},
 	{ "allow",		_conf_allow,		_test_allow	},
 	{ "except",		_conf_except,		_test_except	},
 	{ "vhost", 		_conf_vhost,		_test_vhost	},
+#ifdef STRIPBADWORDS
+	{ "badword",	_conf_badword,		_test_badword	},
+#endif
 /*
 	{ "link", 		_conf_link,		_test_link	},
 	{ "ban", 		_conf_ban,		_test_ban	},
 	{ "set",		_conf_set,		_test_set	},
-#ifdef STRIPBADWORDS
-	{ "badword",		_conf_badword,		_test_badword	},
-#endif
 	{ "deny",		_conf_deny,		_test_deny	},
 	{ "loadmodule",		_conf_loadmodule, 	_test_loadmodule},
 	{ "log",		_conf_log,		_test_log	},
@@ -291,7 +290,7 @@ void 			config_status(char *format, ...);
 void 			config_progress(char *format, ...);
 
 #ifdef _WIN32
-extern void 		win_log(char *format, ...);
+extern void 	win_log(char *format, ...);
 extern void		win_error();
 #endif
 
@@ -924,16 +923,22 @@ void config_progress(char *format, ...)
 
 int	init_conf(char *rootconf, int rehash)
 {
+
 	if (conf)
 	{
 		config_error("%s:%i - Someone forgot to clean up", __FILE__, __LINE__);
 		return -1;
 	}
+
 	if (load_conf(rootconf) > 0)
 	{
 		if (config_test() < 0)
 		{
 			config_error("IRCd configuration failed to pass testing");
+#ifdef _WIN32
+			if (!rehash)
+				win_error();
+#endif
 			return -1;
 		}
 		if (rehash)
@@ -941,12 +946,20 @@ int	init_conf(char *rootconf, int rehash)
 		if (config_run() < 0)
 		{
 			config_error("Bad case of config errors. Server will now die. This really shouldn't happen");
+#ifdef _WIN32
+			if (!rehash)
+				win_error();
+#endif
 			abort();
 		}
 	}
 	else	
 	{
 		config_error("IRCd configuration failed to load");
+#ifdef _WIN32
+		if (!rehash)
+			win_error();
+#endif
 		return -1;
 	}
 	return 0;
@@ -957,6 +970,7 @@ int	load_conf(char *filename)
 	ConfigFile 	*cfptr, *cfptr2, **cfptr3;
 	ConfigEntry 	*ce;
 	int		ret;
+
 	config_status("Loading config file %s ..", filename);
 	if ((cfptr = config_load(filename)))
 	{
@@ -968,9 +982,10 @@ int	load_conf(char *filename)
 			if (!strcmp(ce->ce_varname, "include"))
 			{
 				 ret = _conf_include(cfptr, ce);
-				 if (ret < 0)
-				 	return ret;
+				 if (ret < 0) 
+					 	return ret;
 			}
+			return 1;
 	}
 	else
 	{
@@ -2934,7 +2949,6 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return -1;
 	}
-
 	if (!(vhost = config_find_entry(ce->ce_entries, "vhost")))
 	{
 		config_error("%s:%i: vhost::vhost missing",
@@ -3042,6 +3056,90 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 		return -1;
 	return 1;
 }
+
+#ifdef STRIPBADWORDS
+int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	ConfigItem_badword *ca;
+	char *tmp;
+	short regex = 0;
+
+	ca = MyMallocEx(sizeof(ConfigItem_badword));
+
+	cep = config_find_entry(ce->ce_entries, "word");
+	for (tmp = cep->ce_vardata; *tmp; tmp++) {
+		if ((int)*tmp < 65 || (int)*tmp > 123) {
+			regex = 1;
+			break;
+		}
+	}
+	if (regex) {
+		ircstrdup(ca->word, cep->ce_vardata);
+	}
+	else {
+		ca->word = MyMalloc(strlen(cep->ce_vardata) + strlen(PATTERN) -1);
+		ircsprintf(ca->word, PATTERN, cep->ce_vardata);
+	}
+	if ((cep = config_find_entry(ce->ce_entries, "replace"))) {
+		ircstrdup(ca->replace, cep->ce_vardata);
+	}
+	if (!strcmp(ce->ce_vardata, "channel"))
+		AddListItem(ca, conf_badword_channel);
+	else if (!strcmp(ce->ce_vardata, "message"))
+		AddListItem(ca, conf_badword_message);
+	return 1;
+
+}
+
+int _test_badword(ConfigFile *conf, ConfigEntry *ce) { 
+	int errors = 0;
+	ConfigEntry *word, *replace;
+	if (!ce->ce_entries)
+	{
+		config_error("%s:%i: empty badword block", 
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+	if (!ce->ce_vardata)
+	{
+		config_error("%s:%i: badword without type",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+	else if (strcmp(ce->ce_vardata, "channel") && strcmp(ce->ce_vardata, "message")) {
+			config_error("%s:%i: badword with unknown type",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+	if (!(word = config_find_entry(ce->ce_entries, "word")))
+	{
+		config_error("%s:%i: badword::word missing",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	}
+	else
+	{
+		if (!word->ce_vardata)
+		{
+			config_error("%s:%i: badword::word without contents",
+				word->ce_fileptr->cf_filename, word->ce_varlinenum);
+			errors++;
+		}	
+	}
+	if ((replace = config_find_entry(ce->ce_entries, "replace")))
+	{
+		if (!replace->ce_vardata)
+		{
+			config_error("%s:%i: badword::replace without contents",
+				replace->ce_fileptr->cf_filename, replace->ce_varlinenum);
+			errors++;
+		}
+	}	
+	return (errors > 0 ? -1 : 1); 
+}
+#endif
+
 
 
 /*

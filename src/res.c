@@ -50,6 +50,12 @@ static int incache = 0;
 static CacheTable hashtable[ARES_CACSIZE];
 static aCache *cachetop = NULL;
 static ResRQ *last, *first;
+/* control access to request queue - allow only one thread at a time */
+#ifdef _WIN32
+static HANDLE g_hResMutex = NULL;
+#endif
+static int lock_request();
+static int unlock_request();
 
 static void rem_cache(aCache *);
 static void rem_request(ResRQ *);
@@ -99,6 +105,16 @@ static struct resinfo {
 int init_resolver(int op)
 {
 	int  ret = 0;
+
+#ifdef _WIN32
+	g_hResMutex = CreateMutex(NULL, 0, "UnrealResMutex");
+#ifdef	DEBUGMODE
+	if (g_hResMutex == NULL)
+	{
+		Debug((DEBUG_ERROR, "init_request: CreateMutex failed. Last error is %d", GetLastError()));
+	}
+#endif
+#endif
 
 #ifdef	LRAND48
 	srand48(TStime());
@@ -156,10 +172,51 @@ int init_resolver(int op)
 	return ret;
 }
 
+/* get access to resolver request queue */
+static int lock_request()
+{
+#ifdef _WIN32
+	DWORD dwWaitRes;
+
+	if (g_hResMutex)
+	{
+		dwWaitRes = WaitForSingleObject(g_hResMutex, INFINITE);
+#ifdef	DEBUGMODE
+		if (dwWaitRes != WAIT_OBJECT_0)
+		{
+			Debug((DEBUG_ERROR, "lock_request: failed with %u. Last error is %d", dwWaitRes, GetLastError()));
+		}
+#endif
+	}
+#endif	
+	return 1;
+}
+
+/* release access to resolver request queue */
+static int unlock_request()
+{
+#ifdef _WIN32
+	BOOL bRc;
+
+	if (g_hResMutex)
+	{
+		bRc = ReleaseMutex(g_hResMutex);
+#ifdef	DEBUGMODE
+		if (!bRc)
+		{
+			Debug((DEBUG_ERROR, "unlock_request: failed.  Last error is %d", GetLastError()));
+		}
+#endif
+	}
+#endif
+	return 1;
+}
+
 static int add_request(ResRQ *new)
 {
 	if (!new)
 		return -1;
+	lock_request();
 	if (!first)
 		first = last = new;
 	else
@@ -169,6 +226,7 @@ static int add_request(ResRQ *new)
 	}
 	new->next = NULL;
 	reinfo.re_requests++;
+	unlock_request();
 	return 0;
 }
 
@@ -184,9 +242,19 @@ static void rem_request(ResRQ *old)
 
 	if (!old)
 		return;
+
+	lock_request();
+
 #ifdef _WIN32
-         while (old->locked)
-                 Sleep(0);
+	/* don't remove if async_dns() thread is running because it needs this memory
+	** we should consider terminating the thread here esp.
+	** if exit_client() called us
+	*/
+	if (old->locked)
+	{
+		unlock_request();
+		return;
+	}
 #endif
 	for (rptr = &first; *rptr; r2ptr = *rptr, rptr = &(*rptr)->next)
 		if (*rptr == old)
@@ -197,8 +265,7 @@ static void rem_request(ResRQ *old)
 			break;
 		}
 #ifdef	DEBUGMODE
-	Debug((DEBUG_INFO, "rem_request:Remove %#x at %#x %#x",
-	    old, *rptr, r2ptr));
+	Debug((DEBUG_INFO, "rem_request:Remove %#x at %#x %#x", old, *rptr, r2ptr));
 #endif
 	r2ptr = old;
 #ifndef _WIN32
@@ -208,13 +275,13 @@ static void rem_request(ResRQ *old)
 		if ((s = r2ptr->he.h_aliases[i]))
 			MyFree(s);
 #else
-       if (r2ptr->he)
-                 MyFree(r2ptr->he);
+	if (r2ptr->he)
+		MyFree(r2ptr->he);
 #endif
 	if (r2ptr->name)
 		MyFree(r2ptr->name);
 	MyFree(r2ptr);
-
+	unlock_request();
 	return;
 }
 
@@ -262,6 +329,7 @@ time_t timeout_query_list(time_t now)
 	aClient *cptr;
 
 	Debug((DEBUG_DNS, "timeout_query_list at %s", myctime(now)));
+	lock_request();
 	for (rptr = first; rptr; rptr = r2ptr)
 	{
 		r2ptr = rptr->next;
@@ -286,12 +354,11 @@ time_t timeout_query_list(time_t now)
 					  if (SHOWCONNECTINFO)
 						  sendto_one(cptr, REPORT_FAIL_DNS);
 					  ClearDNS(cptr);
-                                        if (!DoingAuth(cptr))
-                                                 SetAccess(cptr);
+                      if (!DoingAuth(cptr))
+						  SetAccess(cptr);
 					  break;
 				  case ASYNC_CONNECT:
-					  sendto_ops("Host %s unknown",
-					      rptr->name);
+					  sendto_ops("Host %s unknown", rptr->name);
 					  break;
 				}
 				rem_request(rptr);
@@ -315,6 +382,7 @@ time_t timeout_query_list(time_t now)
 		if (!next || tout < next)
 			next = tout;
 	}
+	unlock_request();
 	return (next > now) ? next : (now + AR_TTL);
 }
 
@@ -326,12 +394,14 @@ void del_queries(char *cp)
 {
 	ResRQ *rptr, *r2ptr;
 
+	lock_request();
 	for (rptr = first; rptr; rptr = r2ptr)
 	{
 		r2ptr = rptr->next;
 		if (cp == rptr->cinfo.value.cp)
 			rem_request(rptr);
 	}
+	unlock_request();
 }
 
 /*
@@ -426,10 +496,12 @@ static ResRQ *find_id(int id)
 {
 	ResRQ *rptr;
 
+	lock_request();
 	for (rptr = first; rptr; rptr = rptr->next)
 		if (rptr->id == id)
-			return rptr;
-	return NULL;
+			break;
+	unlock_request();
+	return rptr;
 }
 
 struct hostent *gethost_byname(char *name, Link *lp)
@@ -441,7 +513,7 @@ struct hostent *gethost_byname(char *name, Link *lp)
 #ifndef _WIN32
 		return (struct hostent *)&(cp->he);
 #else
-		 return (struct hostent *)cp->he;
+		return (struct hostent *)cp->he;
 #endif
 	if (!lp)
 		return NULL;
@@ -1950,5 +2022,6 @@ int	res_copyhostent(struct hostent *from, struct hostent *to)
 
 	    }
 	to->h_addr_list[i] = NULL;
+	return 1;
 }
 #endif /*_WIN32*/
