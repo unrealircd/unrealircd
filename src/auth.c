@@ -226,7 +226,7 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 				return -1;
 			if (!cptr->ssl)
 				return -1;
-			x509_client = SSL_get_peer_certificate(cptr->ssl);
+			x509_client = SSL_get_peer_certificate((SSL *)cptr->ssl);
 			if (!x509_client)
 				return -1;
 			evp_pkey = X509_get_pubkey(x509_client);
@@ -245,7 +245,7 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 				X509_free(x509_client);
 				return -1;
 			}
-			if (!(EVP_PKEY_cmp_parameters(evp_pkeyfile, evp_pkey))
+			if (!(EVP_PKEY_cmp_parameters(evp_pkeyfile, evp_pkey)))
 			{
 				fclose(key_file);
 				EVP_PKEY_free(evp_pkey);
