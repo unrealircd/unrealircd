@@ -335,3 +335,4 @@
 - Modified an old Unreal3.1.1 to be network file converter, and converted
   all of the networks files to the new format.
 - Fixed a bug with RAKILL and UNSQLINE not working
+- Moved m_chgident to an .so

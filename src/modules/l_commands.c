@@ -79,6 +79,8 @@ void    l_commands_init(void)
 	*/
 	m_sethost_init();
 	m_chghost_init();
+	m_chgident_init();
+
 	module_buffer = &l_commands_info;
 }
 
@@ -90,5 +92,6 @@ void	l_commands_unload(void)
 {
 	m_sethost_unload();
 	m_chghost_unload();
+	m_chgident_unload();
 }
 
