@@ -662,7 +662,7 @@ Example 2, if you have mainly chinese users and want to allow "normal" chinese c
  </p>
 <p>Now that you know how it works, create your unrealircd.conf from scratch or
    copy doc/example.conf and start editing. It's recommended to walk step by step
-   trough all block types and use this manual as a reference.</p>
+   through all block types and use this manual as a reference.</p>
 <p></p></div>
 <p><font class="block_section">4.2 - </font><font class="block_name">Me Block</font>
    <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as the M:Line)</font><a name="meblock"></a><div class="desc">
@@ -1227,7 +1227,7 @@ oper bobsmith {
 };
 </pre></p>
 <a name="operoverride"><b>Some little info about OperOverride:</b><br>
-OperOverride are things like: joining a +ikl channel and going trough bans (you need to /invite yourself first however), 
+OperOverride are things like: joining a +ikl channel and going through bans (you need to /invite yourself first however), 
 op'ing yourself in a channel, etc.<br>
 The can_override operflag was added as an attempt to stop oper abuse.
 No oper is able to override by default, you would have to give them the can_override flag explicitly.
@@ -2154,7 +2154,7 @@ set {
   Restrict users to set/unset the channelmodes listed here (don't use + or -).<br>
   For example you can set +G in modes-on-join and G in restrict-channelmodes,
   that way you can force all (new) channels to be +G and unable to do -G.<br>
-  NOTE: it may still be possible to use these channelmodes trough services 
+  NOTE: it may still be possible to use these channelmodes through services 
   by using MLOCK. Unfortunately we can't do much about that, you would have
   to ask the services coders to implement a restrict-channelmodes feature too.</p>
 <p><font class="set">set::restrict-extendedbans &lt;types|*&gt;</font><br>
@@ -3215,7 +3215,7 @@ to get more information on a command.</p>
 <div class="desc">
 <p>If you are concerned about security (you should be!), this section will help you get an overview 
 of the risks that are out there and their risk-level. Alternatively you can use it as a "checklist" 
-to walk trough your (network) configuration to make things more secure.</p>
+to walk through your (network) configuration to make things more secure.</p>
 <p>The list is ordered by by popularity/risk level/most-often-used-attack-methods:</p>
 </div></p>
 
@@ -3302,7 +3302,7 @@ as possible. A question you should ask yourself is "what do I want my users to s
 Most big networks choose "nothing", while others prefer their clients to be able to do 
 '/stats g' and '/stats k'.<br>
 I suggest you to use <i>set { oper-only-stats "*"; };</i> to deny all /stats for non-opers, but if you don't
-want that, step trough the '/stats' list (gives an overview of all available options) and
+want that, step through the '/stats' list (gives an overview of all available options) and
 block everything except what you want to allow.. (if in doubt, just deny.. why should they
 really need to know all this?).<br>
 To give you a few examples:<br>
@@ -3342,7 +3342,7 @@ It will however make it more difficult / increase the effort needed to attack/ha
 <p><b><font size="+2">8.8 Protecting against exploits</font></b><a name="secantiexploit"></a><br><div class="desc">
 There are kernel patches that make it more difficult for stack- and heap-based exploits to 
 work. This should however not be your main focus point, you have a far more bigger risk 
-of getting exploited trough the other points than this... for various reasons.<br>
+of getting exploited through the other points than this... for various reasons.<br>
 <br>
 There's one thing you should do however, which is to ALWAYS USE THE LATEST VERSION, 
 subscribe to the <a href="http://mail1.sourceforge.net/mailman/listinfo/unreal-notify" target="_blank">unreal-notify mailinglist</a> 
