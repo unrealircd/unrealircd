@@ -5908,7 +5908,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 		if (!cep->ce_vardata)
 		{
 			config_error_empty(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"link", cep->ce_vardata);
+				"link", cep->ce_varname);
 			errors++;
 			continue;
 		}
