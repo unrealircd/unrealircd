@@ -1,0 +1,24 @@
+
+Unreal3.1-Silverheart Release Notes
+===================================
+
+* It is most wise to have a Unreal3.1-only network whenever possible. Do not
+  link this to 2.1.7 or alike (might have unexpected problems). Unreal3.0
+  linking might at times cause channel desynchs because of 3.0 broken SJOIN
+  code. 
+
+* It is ADVISABLE that you allocate numerics to each server on your network.
+  You simply in the M: line, just after the port, add :numeric, like:
+  
+   M:irc.fyremoon.net:*:Description:6667:20
+
+  Where 20 is the numeric. Numerics are 1-255, 0 means no numeric (bad)
+
+* We have introduced encrypted irc connections, and we will soon have a
+  client out for it (this is not SSL). Stay tuned in #UnrealIRCd for more
+   information
+
+* NOTE, in #UnrealIRCD we don't help with Services etc.
+
+* Documentation will show up on the website sooner or later, 
+  http://unreal.tspre.org

@@ -104,6 +104,13 @@ clear
         more .CHANGES.NEW
         echo $n "[Enter to begin]"
         read cc
+        clear
+    fi
+    if [ -r .RELEASE.NOTES ] ; then
+        more .RELEASE.NOTES
+        echo $n "[Enter to begin]"
+        read cc
+        clear
     fi
 
 if [ "$1" = "-n" ] ; then
