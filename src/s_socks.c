@@ -145,13 +145,9 @@ void start_socks(aClient *cptr)
 	sin.SIN_FAMILY = AFINET;
 	bcopy((char *)&cptr->ip, (char *)&sin.SIN_ADDR, sizeof(struct IN_ADDR));
 
-	if (connect(cptr->socksfd, (struct SOCKADDR *)&sin,
-#ifndef _WIN32
-	    sinlen) == -1 && errno != EINPROGRESS)
-#else
-	    sinlen) == -1 && (WSAGetLastError() != WSAEINPROGRESS && 
-		WSAGetLastError() != WSAEWOULDBLOCK))
-#endif
+	if (connect(cptr->socksfd, (struct sockaddr *)&sin,
+		sizeof(sin)) == -1 && !((ERRNO == P_EWOULDBLOCK)
+		 || (ERRNO == P_EINPROGRESS)))
 	{
 		/* we have no socks server! */
 		CLOSE_SOCK(cptr->socksfd);

@@ -525,4 +525,6 @@ seen. gmtime warning still there
 - Made slot arrangement be different.
 - Merged McSkaf's hostname patch, debug patch, s_misc patch
 - Made validate_configuration check for !conf_listen
+- Made newconf state unknown directives (found by Madkiss)
+- Small s_socks.c bugfix possible causing indetectable socks
    

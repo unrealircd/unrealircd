@@ -829,7 +829,14 @@ int	ConfigCmd(ConfigFile *cf, ConfigEntry *ce, ConfigCommand *cc)
 			if (!strcasecmp(ccp->name, cep->ce_varname))
 			{
 				ccp->func(cf, cep);
+				break;
 			}
+		}
+		if (!ccp)
+		{
+			config_error("%s:%i: unknown directive %s",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				cep->ce_varname);
 		}
 	}
 }
