@@ -103,14 +103,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	hWnd = CreateDialog(hInstance, "WIRCD", 0, (DLGPROC)MainDLG); 
 	hwIRCDWnd = hWnd;
 	
-	 hIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(ICO_MAIN), IMAGE_ICON,16, 16, 0);
-	 SysTray.hIcon = hIcon;
-	 SysTray.hWnd = hwIRCDWnd;
-	 SysTray.uCallbackMessage = WM_USER;
-	 SysTray.uFlags = NIF_ICON|NIF_TIP|NIF_MESSAGE; 
-	 SysTray.uID = 0;
-	 lstrcpy(SysTray.szTip, WIN32_VERSION);
-	 Shell_NotifyIcon(NIM_ADD ,&SysTray);
+	hIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(ICO_MAIN), IMAGE_ICON,16, 16, 0);
+	SysTray.cbSize = sizeof(NOTIFYICONDATA);
+	SysTray.hIcon = hIcon;
+	SysTray.hWnd = hwIRCDWnd;
+	SysTray.uCallbackMessage = WM_USER;
+	SysTray.uFlags = NIF_ICON|NIF_TIP|NIF_MESSAGE; 
+	SysTray.uID = 0;
+	lstrcpy(SysTray.szTip, WIN32_VERSION);
+	Shell_NotifyIcon(NIM_ADD ,&SysTray);
 	if ((s =  GetCommandLine()))
 		argv[argc++] = s;
 	    
