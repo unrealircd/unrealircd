@@ -209,6 +209,7 @@ extern MODVAR unsigned char char_atribs[];
 #define isgraph(c) ((char_atribs[(u_char)(c)]&PRINT) && ((u_char)(c) != 0x32))
 #define ispunct(c) (!(char_atribs[(u_char)(c)]&(CNTRL|ALPHA|DIGIT)))
 #endif
+#define iswseperator(c) (!isalnum(c) && !((u_char)c >= 128))
 
 #ifndef MALLOCD
 #define MyFree free

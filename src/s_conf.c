@@ -5208,7 +5208,7 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 	 * in all other cases use regex.
 	 */
 	for (tmp = word->ce_vardata; *tmp; tmp++) {
-		if ((int)*tmp < 65 || (int)*tmp > 123) {
+		if (!isalnum(*tmp) && !(*tmp >= 128)) {
 			if ((word->ce_vardata == tmp) && (*tmp == '*')) {
 				ast_l = 1; /* Asterisk at the left */
 				continue;
@@ -5245,7 +5245,7 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 #else
 	for (tmp = word->ce_vardata; *tmp; tmp++)
 	{
-		if ((int)*tmp < 65 || (int)*tmp > 123)
+		if (!isalnum(*tmp) && !(*tmp >= 128))
 		{
 			regex = 1;
 			break;

@@ -62,12 +62,12 @@ inline int fast_badword_match(ConfigItem_badword *badword, char *line)
 	{
 		if (!(badword->type & BADW_TYPE_FAST_L))
 		{
-			if ((p != line) && isalnum(*(p - 1))) /* aaBLA but no *BLA */
+			if ((p != line) && !iswseperator(*(p - 1))) /* aaBLA but no *BLA */
 				goto next;
 		}
 		if (!(badword->type & BADW_TYPE_FAST_R))
 		{
-			if (isalnum(*(p + bwlen)))  /* BLAaa but no BLA* */
+			if (!iswseperator(*(p + bwlen)))  /* BLAaa but no BLA* */
 				goto next;
 		}
 		/* Looks like it matched */
@@ -108,8 +108,8 @@ int cleaned = 0;
 			searchn = strlen(badword->word);
 		/* Hunt for start of word */
  		if (pold > line) {
-			for (startw = pold; (isalnum(*startw) && (startw != line)); startw--);
-			if (!isalnum(*startw))
+			for (startw = pold; (!iswseperator(*startw) && (startw != line)); startw--);
+			if (iswseperator(*startw))
 				startw++; /* Don't point at the space/seperator but at the word! */
 		} else {
 			startw = pold;
@@ -122,7 +122,7 @@ int cleaned = 0;
 		}
 
 		/* Hunt for end of word */
-		for (endw = pold; ((*endw != '\0') && (isalnum(*endw))); endw++);
+		for (endw = pold; ((*endw != '\0') && (!iswseperator(*endw))); endw++);
 
 		if (!(badword->type & BADW_TYPE_FAST_R) && (pold+searchn != endw)) {
 			/* not matched */

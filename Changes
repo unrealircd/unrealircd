@@ -722,3 +722,7 @@
   (but not necessarily) for like an hour (or whatever TTL), but after that the
   (ab)user can get in again so this is usually not what you want ;).
   I suppose I'll add a FAQ entry about this.
+- Made badwords (+G) now work with hardcoded word boundaries. Also made the fastbadwords
+  system accept more characters. Basically what this means is that the (fast) badwords
+  system can now be used to properly block words with accents and things like that, just
+  the way you block English words. Bug reported by MJ12Helios (#0002311).
