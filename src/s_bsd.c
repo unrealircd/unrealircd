@@ -2414,28 +2414,23 @@ static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
 	bzero((char *)&server, sizeof(server));
 	server.SIN_FAMILY = AFINET;
 	get_sockhost(cptr, aconf->hostname);
-
-	get_sockhost(cptr, aconf->hostname);
+	
 	server.SIN_PORT = 0;
 	server.SIN_ADDR = me.ip;
 	server.SIN_FAMILY = AFINET;
-	/*
-	   ** Bind to a local IP# (with unknown port - let unix decide) so
-	   ** we have some chance of knowing the IP# that gets used for a host
-	   ** with more than one IP#.
-	 */
-	/* No we don't bind it, not all OS's can handle connecting with
-	   ** an already bound socket, different ip# might occur anyway
-	   ** leading to a freezing select() on this side for some time.
-	   ** I had this on my Linux 1.1.88 --Run
-	 */
-	/* We do now.  Virtual interface stuff --ns */
-	if (me.ip.S_ADDR != INADDR_ANY)
-		if (bind(cptr->fd, (struct SOCKADDR *)&server, sizeof(server)) == -1)
-		{
-			report_error("error binding to local port for %s:%s", cptr);
-			return NULL;
-		}
+	if (strcmp("*", aconf->bindip))
+	{
+#ifndef INET6
+		server.SIN_ADDR.S_ADDR = inet_addr(aconf->bindip);	
+#else
+		inet_pton(AFNET, aconf->bindip, server.SIN_ADDR.S_ADDR);
+#endif
+	}
+	if (bind(cptr->fd, (struct SOCKADDR *)&server, sizeof(server)) == -1)
+	{
+		report_error("error binding to local port for %s:%s", cptr);
+		return NULL;
+	}
 	bzero((char *)&server, sizeof(server));
 	server.SIN_FAMILY = AFINET;
 	/*

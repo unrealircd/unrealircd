@@ -399,7 +399,7 @@ void tkl_stats(aClient *cptr)
 	 */
 	if (!IsAnOper(cptr) && (strchr(OPER_ONLY_STATS, 'G') || strchr(OPER_ONLY_STATS, 'g'))) {
 		sendto_one(cptr, err_str(ERR_NOPRIVILEGES), me.name, cptr->name);
-		return 0;
+		return;
 	}
 	tkl_check_expire(NULL);
 	curtime = TStime();

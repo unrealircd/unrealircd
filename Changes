@@ -763,3 +763,4 @@ seen. gmtime warning still there
 - Made the config smarter, for yes/no options yes/true/on/1 = yes no/false/off/0 = no
 - Made Unreal be able to recover from a bunch of config errors
 - Added stats flag r to the stats help list
+- Fixed bindip problem with it not being made
