@@ -469,9 +469,19 @@ Modules can also add other extended ban types.<br>
 <p>Spamfilters are added via the /spamfilter command which uses the following syntax:<br>
    <b>/spamfilter [add|del|remove|+|-] [type] [action] [tkltime] [reason] [regex]</b><br>
    <table border=0>
-   <tr valign="top"><td><b>[type]</b></td><td> specifies the target type, you can specify multiple targets:
-   'c' channel msg, 'p' private msg, 'n' private notice, 'N' channel notice, 'P' part msg, 'q' quit msg, 'd' dcc, 
-   'u' user (matches against nick!user@host:realname)</td></tr>
+   <tr valign="top"><td><b>[type]</b></td><td> specifies the target type:<br>
+   <table>
+   <tr><td><b>Char:</b></td><td><b>Config item:</b></td><td><b>Description:</b></td></tr>
+   <tr><td>c</td><td>channel</td><td>Channel message</td></tr>
+   <tr><td>p</td><td>private</td><td>Private message (from user-&gt;user)</td></tr>
+   <tr><td>n</td><td>notice</td><td>Private notice</td></tr>
+   <tr><td>N</td><td>channel-notice</td><td>Channel notice</td></tr>
+   <tr><td>P</td><td>part</td><td>Part reason</td></tr>
+   <tr><td>q</td><td>quit</td><td>Quit reason</td></tr>
+   <tr><td>d</td><td>dcc</td><td>DCC filename</td></tr>
+   <tr><td>u</td><td>user</td><td>User ban, will be matched against nick!user@host:realname</td></tr>
+   </table>
+   You can specify multiple targets, like: cpNn</td></tr>
    <tr valign="top"><td><b>[action]</b></td><td> specifies the action to be taken (only 1 action can be specified)<br>
 <table>
 <tr><td>kill</td><td>kills the user</td></tr>
@@ -483,7 +493,7 @@ Modules can also add other extended ban types.<br>
 <tr><td>gzline</td><td>puts a gzline (global zline) on the host</td></tr>
 <tr><td>block</td><td>block the message only</td></tr>
 <tr><td>dccblock</td><td>mark the user so (s)he's unable to send any DCCs</td></tr>
-<tr><td>viruschan</td><td>part all channels, join set::spamfilter::virus-help-channel, disables all commands 
+<tr valign="top"><td>viruschan</td><td>part all channels, join set::spamfilter::virus-help-channel, disables all commands 
  except PONG, ADMIN, and msg/notices to set::spamfilter::virus-help-channel</td></tr>
 </table></tr></td>
    <tr valign="top"><td><b>[tkltime]</b></td><td> The duration of the *line added by the filter, use '-' to use the default or to skip 
@@ -509,7 +519,14 @@ into spaces at runtime. And double underscore ('__') gets an underscore ('_'). A
 <p>You can also add spamfilters in the config file but these will be local spamfilters (not 
    network-wide, though you could use remote includes for this). 
    The syntax of these spamfilter { } blocks are explained <a href="#spamfilter">here</a><br>
-</p>
+   Example:<br>
+   <pre>spamfilter {
+	regex "//write \$decode\(.+\|.+load -rs";
+	target { private; channel; };
+	reason "Generic $decode exploit";
+	action block;
+};</pre></p>
+
 <p><b>set::spamfilter::ban-time</b> allows you to modify the default ban time for *lines added by spamfilter (default: 1 day)<br>
    <b>set::spamfilter::ban-reason</b> allows you to specify a default reason for the *lines (default: 'Spam/advertising')<br>
    <b>set::spamfilter::virus-help-channel</b> allows you to specify the channel to join for action 'viruschan' (default: #help)<br>
@@ -1965,9 +1982,8 @@ spamfilter {
 	ban-time &lt;time&gt;;
 };</pre></p>
 <p><b>regex</b> is the regex to be matched.<br>
-   <b>target</b> specifies the targets, possible targets are: channel, private, private-notice, channel-notice, 
-   part, quit, dcc, user.<br>
-   <b>action</b> specifies the action to be taken, see <a href="#feature_spamfilter">here</a> for a list of possible actions.<br>
+   <b>target</b> specifies the targets, see <a href="#feature_spamfilter">here</a> for a list of possible types (eg: 'channel').<br>
+   <b>action</b> specifies the action to be taken, see <a href="#feature_spamfilter">here</a> for a list of possible actions (eg: 'gline').<br>
    <b>reason</b> optional: specifies the ban or block reason, else the default is used.<br>
    <b>ban-time</b> optional: specifies the duration of a *line ban, else the default is used (1 day).<br>
 </p>
