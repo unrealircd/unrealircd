@@ -124,27 +124,27 @@ aTKline *tkl_expire(aTKline * tmp)
 	{
 		if (tmp->type & TKL_KILL)
 		{
-			strcpy(whattype, "G:Line");
+			strlcpy(whattype, "G:Line", sizeof whattype);
 		}
 		else if (tmp->type & TKL_ZAP)
 		{
-			strcpy(whattype, "Global Z:Line");
+			strlcpy(whattype, "Global Z:Line", sizeof whattype);
 		}
 		else if (tmp->type & TKL_SHUN)
-			strcpy(whattype, "Shun");
+			strlcpy(whattype, "Shun", sizeof whattype);
 	}
 	else
 	{
 		if (tmp->type & TKL_KILL)
 		{
-			strcpy(whattype, "Timed K:Line");
+			strlcpy(whattype, "Timed K:Line", sizeof whattype);
 		}
 		else if (tmp->type & TKL_ZAP)
 		{
-			strcpy(whattype, "Timed Z:Line");
+			strlcpy(whattype, "Timed Z:Line", sizeof whattype);
 		}
 		else if (tmp->type & TKL_SHUN)
-			strcpy(whattype, "Local Shun");
+			strlcpy(whattype, "Local Shun", sizeof whattype);
 	}
 	sendto_snomask(SNO_TKL,
 	    "*** Expiring %s (%s@%s) made by %s (Reason: %s) set %li seconds ago",
@@ -363,7 +363,7 @@ int  find_tkline_match_zap(aClient *cptr)
 				    inet_ntop(AF_INET6, (char *)&cptr->ip,
 				    mydummy, MYDUMMY_SIZE));
 #endif
-				strcpy(zlinebuf, msge);
+				strlcpy(zlinebuf, msge, sizeof zlinebuf);
 				return (1);
 			}
 		}

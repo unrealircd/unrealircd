@@ -3925,11 +3925,21 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 				    sockhost, fullname));
 				if (index(aconf->hostname, '@'))
 				{
+					/*
+					 * Doing strlcpy / strlcat here
+					 * would simply be a waste. We are
+					 * ALREADY sure that it is proper 
+					 * lengths
+					*/
 					(void)strcpy(uhost, cptr->username);
 					(void)strcat(uhost, "@");
 				}
 				else
 					*uhost = '\0';
+				/* 
+				 * Same here as above
+				 * -Stskeeps 
+				*/
 				(void)strncat(uhost, fullname,
 				    sizeof(uhost) - strlen(uhost));
 				if (!match(aconf->hostname, uhost))

@@ -74,6 +74,9 @@ int  do_numeric(int numeric, aClient *cptr, aClient *sptr, int parc, char *parv[
 	buffer[0] = '\0';
 	if (parc > 2)
 	{
+		/*
+		 * For strlcat nazis, please read above
+		*/
 		for (i = 2; i < (parc - 1); i++)
 		{
 			(void)strcat(buffer, " ");

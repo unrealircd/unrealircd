@@ -125,7 +125,7 @@ int advanced_check(char *userhost, int ipstat)
 	char *ipseg[10 + 2];
 	char safebuffer[512] = "";	/* buffer strtoken() can mess up to its heart's content...;> */
 
-	strcpy(safebuffer, userhost);
+	strlcpy(safebuffer, userhost, sizeof safebuffer);
 
 #define userhost safebuffer
 #define IP_WILDS_OK(x) ((x)<2? 0 : 1)
@@ -272,7 +272,7 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 				char *current = malloc(strlen(parv[1])+1);
 				char *xparv[3];
 				bzero(current, strlen(parv[1])+1);
-				bzero(output, 501);
+				bzero(output, sizeof output);
 				while(format->parameters[i] && j < 500) {
 					k = 0;
 					if (format->parameters[i] == '%') {
@@ -295,7 +295,7 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 								continue;
 							if (j + strlen(current)+1 >= 500)
 								break;
-							strcat(output, current);
+							strlcat(output, current, sizeof output);
 							j += strlen(current);
 							
 						}

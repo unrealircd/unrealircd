@@ -1729,7 +1729,7 @@ CMD_FUNC(m_watch)
 				continue;
 			}
 			*buf = '\0';
-			strcpy(buf, lp->value.wptr->nick);
+			strlcpy(buf, lp->value.wptr->nick, sizeof buf);
 			count =
 			    strlen(parv[0]) + strlen(me.name) + 10 +
 			    strlen(buf);
@@ -1851,6 +1851,11 @@ char *get_client_name2(aClient *acptr, int showports)
 		return pointer;
 	if (!strrchr(pointer, '.'))
 		return NULL;
+	/*
+	 * This may seem like wack but remind this is only used 
+	 * in rows of get_client_name2's, so it's perfectly fair
+	 * 
+	*/
 	strcpy((char *)strrchr((char *)pointer, '.'), ".0]");
 
 	return pointer;
@@ -3733,7 +3738,7 @@ HUNTED_ISME)
 		goto playmotd;
 	}
 #endif
-	strcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost));
+	strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost), sizeof userhost);
 	for (ptr = conf_tld; ptr; ptr = (ConfigItem_tld *) ptr->next)
 	{
 		if (!match(ptr->mask, userhost))
@@ -4025,7 +4030,7 @@ CMD_FUNC(m_rules)
 		goto playrules;
 	}
 #endif
-	strcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost));
+	strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost, sizeof userhost));
 	for (ptr = conf_tld; ptr; ptr = (ConfigItem_tld *) ptr->next)
 	{
 		if (!match(ptr->mask, userhost))

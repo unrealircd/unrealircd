@@ -1,3 +1,4 @@
+
 /*                              
  * UnrealIRCd Changes File - (C) Carsten Munk 1999-2002 &
  *                               The UnrealIRCd Team
@@ -1267,3 +1268,6 @@ seen. gmtime warning still there
 - Documentation bug #0000152 reported by Tony at sexnet.org fixed regarding
   example.conf being wrong about set::socks
 - First part of skyper's security audit patch
+- Some more of skyper's security audit patch. Some of them were simply
+  unfair in regards to performance or blindly added strlcats/strlcpy
+

@@ -394,7 +394,7 @@ int  hunt_server_token(aClient *cptr, aClient *sptr, char *command, char *token,
 		}
 	if (acptr)
 	{
-		char buff[512];
+		char buff[1024];
 		if (IsMe(acptr) || MyClient(acptr))
 			return HUNTED_ISME;
 		if (match(acptr->name, parv[server]))

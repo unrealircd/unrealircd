@@ -365,8 +365,8 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    me.name, sptr->name, user);
 		return 0;
 	}
-	strcpy(host, make_user_host(sptr->user->username, sptr->user->realhost));
-	strcpy(host2, make_user_host(sptr->user->username, (char *)Inet_ia2p(&sptr->ip)));
+	strlcpy(host, make_user_host(sptr->user->username, sptr->user->realhost), sizeof host);
+	strlcpy(host2, make_user_host(sptr->user->username, (char *)Inet_ia2p(&sptr->ip)), sizeof host2);
 	for (from = (ConfigItem_oper_from *)vhost->from; from; from = (ConfigItem_oper_from *)from->next) {
 		if (!match(from->name, host) || !match(from->name, host2))
 			break;
@@ -392,10 +392,10 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		len = strlen(vhost->virthost);
 		length =  len > HOSTLEN ? HOSTLEN : len;
 		sptr->user->virthost = MyMalloc(length + 1);
-		strncpy(sptr->user->virthost, vhost->virthost, length + 1);
+		strlcpy(sptr->user->virthost, vhost->virthost, length + 1);
 		if (vhost->virtuser) {
 			strcpy(olduser, sptr->user->username);
-			strncpy(sptr->user->username, vhost->virtuser, USERLEN);
+			strlpy(sptr->user->username, vhost->virtuser, USERLEN);
 		}
 		sptr->umodes |= UMODE_HIDE;
 		sptr->umodes |= UMODE_SETHOST;
@@ -441,10 +441,11 @@ void ircd_log(int flags, char *format, ...)
 	char buf[2048], timebuf[128];
 	int fd;
 	struct stat fstats;
+
 	va_start(ap, format);
 	ircvsprintf(buf, format, ap);	
-	strcat(buf, "\n");
-	sprintf(timebuf, "[%s] - ", myctime(TStime()));
+	strlcat(buf, "\n", sizeof buf);
+	snprintf(timebuf, sizeof timebuf, "[%s] - ", myctime(TStime()));
 	for (logs = conf_log; logs; logs = (ConfigItem_log *) logs->next) {
 #ifdef HAVE_SYSLOG
 		if (!stricmp(logs->file, "syslog") && logs->flags & flags) {
