@@ -3732,14 +3732,18 @@ char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
 				    && ((chptr->users < lopt->usermin)
 				    || ((lopt->usermax >= 0)
 				    && (chptr->users > lopt->usermax))
-				    || ((chptr->creationtime) <=
+#ifdef LIST_USE_T
+				    || ( (chptr->creationtime) <=
 				    lopt->chantimemin)
-				    /* || (chptr->topic_time <
+				     || (chptr->topic_time <
 				       lopt->topictimemin)
 				       || (chptr->creationtime >=
 				       lopt->chantimemax)
 				       || (chptr->topic_time >
-				       lopt->topictimemax) */ ))
+				       lopt->topictimemax)))
+#else
+					))
+#endif
 					continue;
 
 				if (lopt->nolist &&
@@ -3919,11 +3923,13 @@ int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		"use, and what channels LIST will return when you use them.",
 		">number  List channels with more than <number> people.",
 		"<number  List channels with less than <number> people.",
+#ifdef LIST_USE_T
 		"C>number List channels created between now and <number> minutes ago.",
 		"C<number List channels created earlier than <number> minutes ago.",
 		"T>number List channels whose topics are older than <number> minutes",
 		"         (Ie, they have not changed in the last <number> minutes.",
 		"T<number List channels whose topics are not older than <number> minutes.",
+#endif
 		"*mask*   List channels that match *mask*",
 		"!*mask*  List channels that do not match *mask*",
 		NULL
@@ -4008,6 +4014,7 @@ int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			  usermin = atoi(name + 1) + 1;
 			  doall = 1;
 			  break;
+#ifdef LIST_USE_T
 		  case 'C':
 		  case 'c':	/* Channel TS time -- creation time? */
 			  ++name;
@@ -4052,6 +4059,7 @@ int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				    error = 1;
 			  }
 			  break;
+#endif
 		  default:	/* A channel, possibly with wildcards.
 				 * Thought for the future: Consider turning wildcard
 				 * processing on the fly.
