@@ -311,8 +311,8 @@
 #ifdef CRYPTOIRCD
 #define MSG_CRYPTO	"CRYPTO"
 #define TOK_CRYPTO	"BM"
-#define MSG_NEWJOIN 	"NEWJOIN" /* For CR Java Chat */
 #endif
+#define MSG_NEWJOIN 	"NEWJOIN" /* For CR Java Chat */
 
 #define MAXPARA    	15 
 
@@ -492,7 +492,7 @@ struct Message msgtab[] = {
 #ifdef CRYPTOIRCD
   { MSG_CRYPTO, m_crypto, 0, MAXPARA, 1, TOK_CRYPTO, 0L},
 #endif
-  { MSG_NEWJOIN,    m_join,     0, MAXPARA, 1, TOK_JOIN,    0L },
+  { MSG_NEWJOIN, m_join,     0, MAXPARA, 1, TOK_JOIN,    0L },
   { (char *) 0, (int (*)()) 0 , 0, 0, 0, 0, 0L}
 };
 
