@@ -336,3 +336,5 @@
 - First part of ZIP_LINKS
 - Fixed a typo in ./newnet
 - Made /close reset IRCstats.unknown ..
+- Made SVSO (ofcourse) IRCstats.operators--;
+- Another IRCstats.unknown fix. Hope this works (hacked from undernet code)

@@ -1,5 +1,4 @@
 /*
-/*
  *   Unreal Internet Relay Chat Daemon, src/s_bsd.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
@@ -2569,7 +2568,6 @@ int  connect_server(aconf, by, hp)
 		}
 	}
 	cptr = make_client(NULL, NULL);
-	IRCstats.unknown++;
 	cptr->hostp = hp;
 	/*
 	 * Copy these in so we have something for error detection.
@@ -2587,7 +2585,6 @@ int  connect_server(aconf, by, hp)
 #else
 			(void)closesocket(cptr->fd);
 #endif
-		IRCstats.unknown--;
 		cptr->fd = -2;
 		free_client(cptr);
 		return -1;
@@ -2607,7 +2604,6 @@ int  connect_server(aconf, by, hp)
 	{
 		errtmp = WSAGetLastError();	/* other system calls may eat errno */
 #endif
-		IRCstats.unknown--;
 		report_error("Connect to host %s failed: %s", cptr);
 		if (by && IsPerson(by) && !MyClient(by))
 			sendto_one(by,
@@ -2659,7 +2655,6 @@ int  connect_server(aconf, by, hp)
 #endif
 		cptr->fd = -2;
 		free_client(cptr);
-		IRCstats.unknown--;
 		return (-1);
 	}
 	/*
@@ -2687,7 +2682,7 @@ int  connect_server(aconf, by, hp)
 	local[cptr->fd] = cptr;
 	cptr->acpt = &me;
 	SetConnecting(cptr);
-
+	IRCstats.unknown++;
 	get_sockhost(cptr, aconf->host);
 	add_client_to_list(cptr);
 	nextping = TStime();

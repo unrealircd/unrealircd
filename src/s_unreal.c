@@ -45,6 +45,7 @@ ID_CVS("$Id$");
 ID_Copyright("(C) Carsten Munk 1999");
 
 time_t TSoffset = 0;
+extern ircstats IRCstats;
 
 #ifndef NO_FDLIST
 extern float currentrate;
@@ -1271,6 +1272,8 @@ int  m_svso(cptr, sptr, parc, parv)
 	if (*parv[2] == '-')
 	{
 		fLag = acptr->umodes;
+		if (IsOper(acptr))
+			IRCstats.operators--;
 		acptr->umodes &=
 		    ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP | UMODE_SERVICES |
 		    UMODE_SADMIN | UMODE_ADMIN);
