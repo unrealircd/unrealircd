@@ -501,3 +501,5 @@
 - Fixed the +lL (+Ll) bug, will first be fixed 100% when all is 3.1
 - Possible fixed the lopts bug
 - Fixed a egcs problem in Config, the strtok bug
+- Fixed the 'ulimit core size failed' bug (now checks whether it should
+  set the core size to unlimited in ./Config
