@@ -535,7 +535,7 @@ link <server-name> {
 	leaf <leaf-mask>;
 	leafdepth <depth>;
 	class <class-name>;
-	cipher <ciphers>;
+	ciphers <ciphers>;
 	options {
 		<option>;
 		<option>;
@@ -563,7 +563,7 @@ link block. The link::options is a list of one or more options you wish this ser
 valid options are ssl (the server will connect using SSL encryption), autoconnect (the server 
 will be autoconnected based on the value in the specified link::class), quarantine (opers on 
 this server will maintain locop status). If the server is set to link via SSL, the
-link::cipher directive may be used. This allows you to specify the ciphers that will be
+link::ciphers directive may be used. This allows you to specify the ciphers that will be
 used for this link. The ciphers are specified as a : seperated list in the order of preference. 
 Different systems support different ciphers, so the best way to get a list of available ciphers
 for your system is to execute the openssl ciphers command. This will return a : seperated list
