@@ -81,11 +81,20 @@ int		Auth_FindType(char *type)
  * } 
 */
 
-anAuthStruct	*Auth_ConvertConf2AuthStruct(ConfigEntry *ce)
+int		Auth_CheckError(ConfigEntry *ce)
 {
 	short		type = AUTHTYPE_PLAINTEXT;
-	anAuthStruct 	*as = NULL;
-	/* If there is a {}, use it */
+#ifdef AUTHENABLE_SSL_CLIENTCERT
+	X509 *x509_filecert = NULL;
+	FILE *x509_f = NULL;
+#endif
+	if (!ce->ce_vardata)
+	{
+		config_error("%s:%i: authentication module failure: missing parameter",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			ce->ce_entries->ce_varname);
+		return -1;
+	}
 	if (ce->ce_entries)
 	{
 		if (ce->ce_entries->ce_varname)
@@ -96,16 +105,58 @@ anAuthStruct	*Auth_ConvertConf2AuthStruct(ConfigEntry *ce)
 				config_error("%s:%i: authentication module failure: %s is not an implemented/enabled authentication method",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 					ce->ce_entries->ce_varname);
-				return NULL;
+				return -1;
+			}
+			switch (type)
+			{
+#ifdef AUTHENABLE_UNIXCRYPT
+				case AUTHTYPE_UNIXCRYPT:
+					/* If our data is like 1 or none, we just let em through .. */
+					if (strlen(ce->ce_vardata) < 2)
+					{
+						config_error("%s:%i: authentication module failure: AUTHTYPE_UNIXCRYPT: no salt (crypt strings will always be >2 in length)",
+							ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+						return -1;
+					}
+					break;
+#endif
+#ifdef AUTHENABLE_SSL_CLIENTCERT
+				case AUTHTYPE_SSL_CLIENTCERT:
+					if (!(x509_f = fopen(ce->ce_vardata, "r")))
+					{
+						config_error("%s:%i: authentication module failure: AUTHTYPE_SSL_CLIENTCERT: error opening file %s: %s",
+							ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata, strerror(errno));
+						return -1;
+					}
+					x509_filecert = PEM_read_X509(x509_f, NULL, NULL, NULL);
+					fclose(x509_f);
+					if (!x509_filecert)
+					{
+						config_error("%s:%i: authentication module failure: AUTHTYPE_SSL_CLIENTCERT: PEM_read_X509 errored in file %s (format error?)",
+							ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+						return -1;
+					}
+					X509_free(x509_filecert);
+					break;
+#endif
+				default:
 			}
 		}
 	}
-	if (!ce->ce_vardata)
+	return 1;	
+}
+
+anAuthStruct	*Auth_ConvertConf2AuthStruct(ConfigEntry *ce)
+{
+	short		type = AUTHTYPE_PLAINTEXT;
+	anAuthStruct 	*as = NULL;
+	/* If there is a {}, use it */
+	if (ce->ce_entries)
 	{
-		config_error("%s:%i: authentication module failure: missing parameter",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			ce->ce_entries->ce_varname);
-		return NULL;
+		if (ce->ce_entries->ce_varname)
+		{
+			type = Auth_FindType(ce->ce_entries->ce_varname);
+		}
 	}
 	as = (anAuthStruct *) MyMalloc(sizeof(anAuthStruct));
 	as->data = strdup(ce->ce_vardata);

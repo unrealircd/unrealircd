@@ -958,7 +958,7 @@ int InitwIRCD(int argc, char *argv[])
 			  exit(0);
 		  }
 		  case 'C':
-			  conf_debuglevel = atoi(p);
+			  config_verbose = atoi(p);
 			  break;
 		  case 'x':
 #ifdef	DEBUGMODE

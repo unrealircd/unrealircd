@@ -365,7 +365,7 @@ aConfiguration		tempiConf;
 ConfigFile		*conf = NULL;
 
 int			config_error_flag = 0;
-
+int			config_verbose = 0;
 /*
 */
 
@@ -995,7 +995,7 @@ void	free_iConf(aConfiguration *i)
 
 int	init_conf(char *rootconf, int rehash)
 {
-
+	config_status("Loading IRCd configuration ..");
 	if (conf)
 	{
 		config_error("%s:%i - Someone forgot to clean up", __FILE__, __LINE__);
@@ -1043,6 +1043,9 @@ int	init_conf(char *rootconf, int rehash)
 #endif
 		return -1;
 	}
+	config_free(conf);
+	conf = NULL;
+	config_status("Configuration loaded without any problems ..");
 	return 0;
 }
 
@@ -1052,14 +1055,16 @@ int	load_conf(char *filename)
 	ConfigEntry 	*ce;
 	int		ret;
 
-	config_status("Loading config file %s ..", filename);
+	if (config_verbose > 0)
+		config_status("Loading config file %s ..", filename);
 	if ((cfptr = config_load(filename)))
 	{
 		for (cfptr3 = &conf, cfptr2 = conf; cfptr2; cfptr2 = cfptr2->cf_next)
 			cfptr3 = &cfptr2->cf_next;
 		*cfptr3 = cfptr;
 #ifndef _WIN32
-		config_status("Loading modules in %s", filename);
+		if (config_verbose > 1)
+			config_status("Loading modules in %s", filename);
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
 			if (!strcmp(ce->ce_varname, "loadmodule"))
 			{
@@ -1068,7 +1073,8 @@ int	load_conf(char *filename)
 					 	return ret;
 			}
 #endif
-		config_status("Searching through %s for include files..", filename);
+		if (config_verbose > 1)
+			config_status("Searching through %s for include files..", filename);
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
 			if (!strcmp(ce->ce_varname, "include"))
 			{
@@ -1087,6 +1093,290 @@ int	load_conf(char *filename)
 
 void	config_rehash()
 {
+	ConfigItem_oper			*oper_ptr;
+	ConfigItem_class 		*class_ptr;
+	ConfigItem_ulines 		*uline_ptr;
+	ConfigItem_allow 		*allow_ptr;
+	ConfigItem_except 		*except_ptr;
+	ConfigItem_ban 			*ban_ptr;
+	ConfigItem_link 		*link_ptr;
+	ConfigItem_listen	 	*listen_ptr;
+	ConfigItem_tld			*tld_ptr;
+	ConfigItem_vhost		*vhost_ptr;
+	ConfigItem_badword		*badword_ptr;
+	ConfigItem_deny_dcc		*deny_dcc_ptr;
+	ConfigItem_deny_link		*deny_link_ptr;
+	ConfigItem_deny_channel		*deny_channel_ptr;
+	ConfigItem_allow_channel	*allow_channel_ptr;
+	ConfigItem_admin		*admin_ptr;
+	ConfigItem_deny_version		*deny_version_ptr;
+	ConfigItem_log			*log_ptr;
+	ConfigItem_alias		*alias_ptr;
+	ConfigItem_include		*include_ptr;
+	ConfigItem_help			*help_ptr;
+	ListStruct 	*next, *next2;
+
+	/* clean out stuff that we don't use */	
+	for (admin_ptr = conf_admin; admin_ptr; admin_ptr = (ConfigItem_admin *)next)
+	{
+		next = (ListStruct *)admin_ptr->next;
+		ircfree(admin_ptr->line);
+		DelListItem(admin_ptr, conf_admin);
+		MyFree(admin_ptr);
+	}
+	/* wipe the fckers out ..*/
+	for (oper_ptr = conf_oper; oper_ptr; oper_ptr = (ConfigItem_oper *)next)
+	{
+		ConfigItem_oper_from *oper_from;
+		next = (ListStruct *)oper_ptr->next;
+		ircfree(oper_ptr->name);
+		ircfree(oper_ptr->swhois);
+		ircfree(oper_ptr->snomask);
+		Auth_DeleteAuthStruct(oper_ptr->auth);
+		for (oper_from = (ConfigItem_oper_from *) oper_ptr->from; oper_from; oper_from = (ConfigItem_oper_from *) next2)
+		{
+			next2 = (ListStruct *)oper_from->next;
+			ircfree(oper_from->name);
+			DelListItem(oper_from, oper_ptr->from);
+			MyFree(oper_from);
+		}
+		DelListItem(oper_ptr, conf_oper);
+		MyFree(oper_ptr);
+	}
+	for (class_ptr = conf_class; class_ptr; class_ptr = (ConfigItem_class *) next)
+	{
+		next = (ListStruct *)class_ptr->next;
+		if (class_ptr->flag.permanent == 1)
+			continue;
+		class_ptr->flag.temporary = 1;
+		/* We'll wipe it out when it has no clients */
+		if (!class_ptr->clients)
+		{
+			ircfree(class_ptr->name);
+			DelListItem(class_ptr, conf_class);
+			MyFree(class_ptr);
+		}
+	}
+	for (uline_ptr = conf_ulines; uline_ptr; uline_ptr = (ConfigItem_ulines *) next)
+	{
+		next = (ListStruct *)uline_ptr->next;
+		/* We'll wipe it out when it has no clients */
+		ircfree(uline_ptr->servername);
+		DelListItem(uline_ptr, conf_ulines);
+		MyFree(uline_ptr);
+	}
+	for (allow_ptr = conf_allow; allow_ptr; allow_ptr = (ConfigItem_allow *) next)
+	{
+		next = (ListStruct *)allow_ptr->next;
+		ircfree(allow_ptr->ip);
+		ircfree(allow_ptr->hostname);
+		Auth_DeleteAuthStruct(allow_ptr->auth);
+		DelListItem(allow_ptr, conf_allow);
+		MyFree(allow_ptr);
+	}
+	for (except_ptr = conf_except; except_ptr; except_ptr = (ConfigItem_except *) next)
+	{
+		next = (ListStruct *)except_ptr->next;
+		ircfree(except_ptr->mask);
+		DelListItem(except_ptr, conf_except);
+		MyFree(except_ptr);
+	}
+	for (ban_ptr = conf_ban; ban_ptr; ban_ptr = (ConfigItem_ban *) next)
+	{
+		next = (ListStruct *)ban_ptr->next;
+		if (ban_ptr->flag.type2 == CONF_BAN_TYPE_CONF || ban_ptr->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
+		{
+			ircfree(ban_ptr->mask);
+			ircfree(ban_ptr->reason);
+			DelListItem(ban_ptr, conf_ban);
+			MyFree(ban_ptr);
+		}
+	}
+	for (link_ptr = conf_link; link_ptr; link_ptr = (ConfigItem_link *) next)
+	{
+		next = (ListStruct *)link_ptr->next;
+		if (link_ptr->refcount == 0)
+		{
+			link_cleanup(link_ptr);
+			DelListItem(link_ptr, conf_link);
+			MyFree(link_ptr);
+		}
+		else
+		{
+			link_ptr->flag.temporary = 1;
+		}
+	}
+	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)listen_ptr->next)
+	{
+		listen_ptr->flag.temporary = 1;
+	}
+	for (tld_ptr = conf_tld; tld_ptr; tld_ptr = (ConfigItem_tld *) next)
+	{
+		aMotd *motd;
+		next = (ListStruct *)tld_ptr->next;
+		ircfree(tld_ptr->motd_file);
+		ircfree(tld_ptr->rules_file);
+		if (!tld_ptr->flag.motdptr) {
+			while (tld_ptr->motd) {
+				motd = tld_ptr->motd->next;
+				ircfree(tld_ptr->motd->line);
+				ircfree(tld_ptr->motd);
+				tld_ptr->motd = motd;
+			}
+		}
+		if (!tld_ptr->flag.rulesptr) {
+			while (tld_ptr->rules) {
+				motd = tld_ptr->rules->next;
+				ircfree(tld_ptr->rules->line);
+				ircfree(tld_ptr->rules);
+				tld_ptr->rules = motd;
+			}
+		}
+		DelListItem(tld_ptr, conf_tld);
+		MyFree(tld_ptr);
+	}
+	for (vhost_ptr = conf_vhost; vhost_ptr; vhost_ptr = (ConfigItem_vhost *) next)
+	{
+		ConfigItem_oper_from *vhost_from;
+		
+		next = (ListStruct *)vhost_ptr->next;
+		
+		ircfree(vhost_ptr->login);
+		Auth_DeleteAuthStruct(vhost_ptr->auth);
+		ircfree(vhost_ptr->virthost);
+		ircfree(vhost_ptr->virtuser);
+		for (vhost_from = (ConfigItem_oper_from *) vhost_ptr->from; vhost_from;
+			vhost_from = (ConfigItem_oper_from *) next2)
+		{
+			next2 = (ListStruct *)vhost_from->next;
+			ircfree(vhost_from->name);
+			DelListItem(vhost_from, vhost_ptr->from);
+			MyFree(vhost_from);
+		}
+		DelListItem(vhost_ptr, conf_vhost);
+		MyFree(vhost_ptr);
+	}
+
+#ifdef STRIPBADWORDS
+	for (badword_ptr = conf_badword_channel; badword_ptr;
+		badword_ptr = (ConfigItem_badword *) next) {
+		next = (ListStruct *)badword_ptr->next;
+		ircfree(badword_ptr->word);
+			ircfree(badword_ptr->replace);
+		DelListItem(badword_ptr, conf_badword_channel);
+		MyFree(badword_ptr);
+	}
+	for (badword_ptr = conf_badword_message; badword_ptr;
+		badword_ptr = (ConfigItem_badword *) next) {
+		next = (ListStruct *)badword_ptr->next;
+		ircfree(badword_ptr->word);
+			ircfree(badword_ptr->replace);
+		DelListItem(badword_ptr, conf_badword_message);
+		MyFree(badword_ptr);
+	}
+#endif
+	for (deny_dcc_ptr = conf_deny_dcc; deny_dcc_ptr; deny_dcc_ptr = (ConfigItem_deny_dcc *)next)
+	{
+		next = (ListStruct *)deny_dcc_ptr->next;
+		if (deny_dcc_ptr->flag.type2 == CONF_BAN_TYPE_CONF)
+		{
+			ircfree(deny_dcc_ptr->filename);
+			ircfree(deny_dcc_ptr->reason);
+			DelListItem(deny_dcc_ptr, conf_deny_dcc);
+			MyFree(deny_dcc_ptr);
+		}
+	}
+	for (deny_link_ptr = conf_deny_link; deny_link_ptr; deny_link_ptr = (ConfigItem_deny_link *) next) {
+		next = (ListStruct *)deny_link_ptr->next;
+		ircfree(deny_link_ptr->prettyrule);
+		ircfree(deny_link_ptr->mask);
+		crule_free(&deny_link_ptr->rule);
+		DelListItem(deny_link_ptr, conf_deny_link);
+		MyFree(deny_link_ptr);
+	}
+	for (deny_version_ptr = conf_deny_version; deny_version_ptr; deny_version_ptr = (ConfigItem_deny_version *) next) {
+		next = (ListStruct *)deny_version_ptr->next;
+		ircfree(deny_version_ptr->mask);
+		ircfree(deny_version_ptr->version);
+		ircfree(deny_version_ptr->flags);
+		DelListItem(deny_version_ptr, conf_deny_version);
+		MyFree(deny_version_ptr);
+	}
+
+	for (deny_channel_ptr = conf_deny_channel; deny_channel_ptr; deny_channel_ptr = (ConfigItem_deny_channel *) next)
+	{
+		next = (ListStruct *)deny_channel_ptr->next;
+		ircfree(deny_channel_ptr->channel);
+		ircfree(deny_channel_ptr->reason);
+		DelListItem(deny_channel_ptr, conf_deny_channel);
+		MyFree(deny_channel_ptr);
+	}
+
+	for (allow_channel_ptr = conf_allow_channel; allow_channel_ptr; allow_channel_ptr = (ConfigItem_allow_channel *) next)
+	{
+		next = (ListStruct *)allow_channel_ptr->next;
+		ircfree(allow_channel_ptr->channel);
+		DelListItem(allow_channel_ptr, conf_allow_channel);
+		MyFree(allow_channel_ptr);
+	}
+
+	if (conf_drpass)
+	{
+		Auth_DeleteAuthStruct(conf_drpass->restartauth);
+		conf_drpass->restartauth = NULL;
+		Auth_DeleteAuthStruct(conf_drpass->dieauth);
+		conf_drpass->dieauth = NULL;
+		ircfree(conf_drpass);
+	}
+	for (log_ptr = conf_log; log_ptr; log_ptr = (ConfigItem_log *)next) {
+		next = (ListStruct *)log_ptr->next;
+		ircfree(log_ptr->file);
+		DelListItem(log_ptr, conf_log);
+		MyFree(log_ptr);
+	}
+/* FIX
+	for (alias_ptr = conf_alias; alias_ptr; alias_ptr = (ConfigItem_alias *)next) {
+		aCommand *cmptr = find_Command(alias_ptr->alias, 0, 0);
+		ConfigItem_alias_format *fmt;
+		next = (ListStruct *)alias_ptr->next;		
+		ircfree(alias_ptr->nick);
+		del_Command(alias_ptr->alias, NULL, cmptr->func);
+		ircfree(alias_ptr->alias);
+		if (alias_ptr->format && alias_ptr->type == ALIAS_COMMAND) {
+			for (fmt = (ConfigItem_alias_format *) alias_ptr->format; fmt; fmt = (ConfigItem_alias_format *) next2)
+			{
+				next2 = (ListStruct *)fmt->next;
+				ircfree(fmt->format);
+				ircfree(fmt->parameters);
+				DelListItem(fmt, alias_ptr->format);
+				MyFree(fmt);
+			}
+		}
+		DelListItem(alias_ptr, conf_alias);
+		MyFree(alias_ptr);
+	}
+	*/
+	for (include_ptr = conf_include; include_ptr; include_ptr = (ConfigItem_include *)next)
+	{
+		next = (ListStruct *)include_ptr->next;	 
+		ircfree(include_ptr->file);
+		DelListItem(include_ptr, conf_include);
+		MyFree(include_ptr);
+	}
+	for (help_ptr = conf_help; help_ptr; help_ptr = (ConfigItem_help *)next) {
+		aMotd *text;
+		next = (ListStruct *)help_ptr->next;
+		ircfree(help_ptr->command);
+		while (help_ptr->text) {
+			text = help_ptr->text->next;
+			ircfree(help_ptr->text->line);
+			ircfree(help_ptr->text);
+			help_ptr->text = text;
+		}
+		DelListItem(help_ptr, conf_help);
+		MyFree(help_ptr);
+	}
+
 }
 
 int	config_post_test()
@@ -1154,7 +1444,8 @@ int	config_run()
 	int		errors = 0;
 	for (cfptr = conf; cfptr; cfptr = cfptr->cf_next)
 	{
-		config_status("Running %s", cfptr->cf_filename);
+		if (config_verbose > 1)
+			config_status("Running %s", cfptr->cf_filename);
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
 		{
 			if ((cc = config_binary_search(ce->ce_varname))) {
@@ -1174,6 +1465,10 @@ int	config_run()
 			}
 		}
 	}
+	close_listeners();
+	listen_cleanup();
+	close_listeners();
+	loop.do_bancheck = 1;
 	free_iConf(&iConf);
 	bcopy(&tempiConf, &iConf, sizeof(aConfiguration));
 	bzero(&tempiConf, sizeof(aConfiguration));
@@ -1213,7 +1508,8 @@ int	config_test()
 
 	for (cfptr = conf; cfptr; cfptr = cfptr->cf_next)
 	{
-		config_status("Testing %s", cfptr->cf_filename);
+		if (config_verbose > 1)
+			config_status("Testing %s", cfptr->cf_filename);
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
 		{
 			if (!ce->ce_varname)
@@ -2094,12 +2390,8 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 		}
 		if (!strcmp(cep->ce_varname, "password"))
 		{
-			if (!cep->ce_vardata)
-			{
-				config_error("%s:%i: oper::password without contents",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			if (Auth_CheckError(cep) < 0)
 				errors++;
-			}
 			/* should have some auth check if ok .. */
 			continue;
 		}
@@ -2404,9 +2696,16 @@ int     _test_drpass(ConfigFile *conf, ConfigEntry *ce)
 			errors++; continue;
 		}
 		if (!strcmp(cep->ce_varname, "restart"))
-		{}
+		{
+			if (Auth_CheckError(cep) < 0)
+				errors++;
+			continue;
+		}
 		else if (!strcmp(cep->ce_varname, "die"))
 		{
+			if (Auth_CheckError(cep) < 0)
+				errors++;
+			continue;
 		}
 		else
 		{
@@ -2917,6 +3216,8 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 	if ((cep = config_find_entry(ce->ce_entries, "password")))
 	{
 		/* some auth check stuff? */
+		if (Auth_CheckError(cep) < 0)
+			errors++;
 	}
 	if ((cep = config_find_entry(ce->ce_entries, "class")))
 	{
@@ -3320,16 +3621,11 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 		config_error("%s:%i: vhost::password missing",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
-		
 	}
 	else
 	{
-		if (!password->ce_vardata)
-		{
-			config_error("%s:%i: vhost::password without contents",
-				password->ce_fileptr->cf_filename, password->ce_varlinenum);
+		if (Auth_CheckError(password) < 0)
 			errors++;
-		}
 	}
 	if (!(from = config_find_entry(ce->ce_entries, "from")))
 	{
@@ -3782,6 +4078,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return -1;
 	}
+	
 	for (p = requiredsections; *p; p++)
 	{
 		if ((cep = config_find_entry(ce->ce_entries, *p)))
@@ -3801,6 +4098,11 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 				ce->ce_varlinenum, *p);
 			errors++;
 		}
+	}
+	if ((cep = config_find_entry(ce->ce_entries, "password-receive")))
+	{
+		if (Auth_CheckError(cep) < 0)
+			errors++;
 	}
 	if (errors > 0)
 		return -1;
@@ -4760,7 +5062,18 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 
 int     rehash(aClient *cptr, aClient *sptr, int sig)
 {
-	return 0;
+	flush_connections(&me);
+	if (sig == 1)
+	{
+		sendto_ops("Got signal SIGHUP, reloading %s file", configfile);
+#ifdef	ULTRIX
+		if (fork() > 0)
+			exit(0);
+		write_pidfile();
+#endif
+	}
+	init_conf(configfile, 1);
+	return 1;
 }
 
 void	link_cleanup(ConfigItem_link *link_ptr)

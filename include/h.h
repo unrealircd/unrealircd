@@ -105,6 +105,7 @@ extern long set_usermode(char *umode);
 extern char *get_modestr(long umodes);
 extern void tkl_stats(aClient *cptr);
 extern void                    config_error(char *format, ...);
+extern int			config_verbose;
 extern void config_progress(char *format, ...);
 extern void       ipport_seperate(char *string, char **ip, char **port);
 ConfigItem_class	*Find_class(char *name);
@@ -484,9 +485,11 @@ extern int b64_decode(char const *src, unsigned char *target, size_t targsize);
 
 extern int		Auth_FindType(char *type);
 extern anAuthStruct	*Auth_ConvertConf2AuthStruct(ConfigEntry *ce);
-extern void	Auth_DeleteAuthStruct(anAuthStruct *as);
-extern int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para);
-extern char   *Auth_Make(short type, char *para);
+extern void		Auth_DeleteAuthStruct(anAuthStruct *as);
+extern int		Auth_Check(aClient *cptr, anAuthStruct *as, char *para);
+extern char   		*Auth_Make(short type, char *para);
+extern int   		Auth_CheckError(ConfigEntry *ce);
+
 extern long xbase64dec(char *b64);
 extern aClient *find_server_b64_or_real(char *name);
 extern aClient *find_server_by_base64(char *b64);
