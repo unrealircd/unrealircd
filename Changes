@@ -2883,3 +2883,4 @@ seen. gmtime warning still there
 - Modulized: time, svskill
 - Modulized: sjoin, pass, userhost, ison, silence
 - Modulized: knock, umode2, squit, protoctl
+- Slightly changed how extcmodes handles access control

@@ -2820,7 +2820,7 @@ int x;
 	if (paracnt && (!param || (*pcount >= MAXMODEPARAMS)))
 		return 0;
 
-	if (!IsServer(cptr) &&
+	if (MyClient(cptr) && 
 #ifndef NO_OPER_OVERRIDE
 	    !IsSkoAdmin(cptr) &&
 #endif
