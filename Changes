@@ -1740,3 +1740,5 @@ seen. gmtime warning still there
 - Fixed bug with INET6 and find_tkline_zap (..)
 - Fixed include bug
 - Created StripControlCodes() and call it from stripbadwords() to fix bug 552
+- Made 3 param TKL funcs Perm with reason instead of timed with no reason
+

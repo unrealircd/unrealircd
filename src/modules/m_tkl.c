@@ -346,7 +346,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 
 	secs = 0;
 
-	if (whattodo == 0 && (parc > 2))
+	if (whattodo == 0 && (parc > 3))
 	{
 		secs = atime(parv[2]);
 		if (secs < 0)
@@ -373,9 +373,10 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		ircsprintf(mo2, "%li", TStime());
 		tkllayer[6] = mo;
 		tkllayer[7] = mo2;
-		tkllayer[8] = "No reason";
 		if (parc > 3) {
 			tkllayer[8] = parv[3];
+		} else {
+			tkllayer[8] = parv[2];
 		}
 		/* call the tkl layer .. */
 		m_tkl(&me, &me, 9, tkllayer);
