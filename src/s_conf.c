@@ -1942,10 +1942,24 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 		 else
 		if (!strcmp(cep->ce_varname, "login"))
 		{
+			if (!cep->ce_vardata)
+			{
+				Error("%s:%i: missing parameter for vhost::login",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				
+				continue;		
+			}
 			vhost->login = strdup(cep->ce_vardata);
 		} else
 		if (!strcmp(cep->ce_varname, "password"))
 		{
+			if (!cep->ce_vardata)
+			{
+				Error("%s:%i: missing parameter for vhost::password",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+		
+				continue;		
+			}
 			vhost->password = strdup(cep->ce_vardata);
 		}
 		else

@@ -930,3 +930,4 @@ seen. gmtime warning still there
 - Fixed the last of the font and editor-cutting-text bugs (hopefully)
 - Commented out three lines of code that were causing SSL to freeze on 
   /connect, TODO: code in new SSL error handling (Griever)
+- Fixed password crash bug, found by \dev\NULL-Z-[Zap]
