@@ -2019,3 +2019,4 @@ seen. gmtime warning still there
 - Possibly fixed an SSL crash bug (#0000871 and #000784) reported by shotgun and comrade
 - Fixed opermode bug which could cause the ircd to crash a while later (#0000823).
 - Changed throttling errormsg so mIRC recognizes it and waits a while.
+- Added SSL quit error messages

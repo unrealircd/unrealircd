@@ -592,9 +592,15 @@ static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
      */
     sendto_snomask(SNO_JUNK, "Exiting ssl client %s: %s: %s",
     	sptr->name, ssl_func, ssl_errstr);
-    SET_ERRNO(errtmp ? errtmp : P_EIO); /* Stick a generic I/O error */
     sptr->flags |= FLAGS_DEADSOCKET;
-    sptr->error_str = strdup(strerror(errtmp));
+	if (errtmp)
+	{
+		SET_ERRNO(errtmp);
+		sptr->error_str = strdup(strerror(errtmp));
+	} else {
+		SET_ERRNO(P_EIO);
+		sptr->error_str = strdup(ssl_errstr);
+	}
     return -1;
 }
 
