@@ -1559,4 +1559,5 @@ seen. gmtime warning still there
   by Alzirr
 - Compile fix regarding above fix
 - Added vhost::swhois requested by FrostByghte (#0000171)
-
+- Fixed a win32 password encryption bug when in NT service mode reported by simonbell
+  (#0000285)
