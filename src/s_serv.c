@@ -1381,7 +1381,6 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 						sendto_one(cptr, "%s%s %s %s",
 						    ns ? "@" : ":",
 						    ns ? ns : me.name,
-						    me.name,
 						    (IsToken(cptr) ? TOK_SQLINE :
 						    MSG_SQLINE), bconf->mask);
 				}

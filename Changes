@@ -2020,3 +2020,6 @@ seen. gmtime warning still there
 - Fixed opermode bug which could cause the ircd to crash a while later (#0000823).
 - Changed throttling errormsg so mIRC recognizes it and waits a while.
 - Added SSL quit error messages
+- Fixed an SQLINE bug with sqlines without a reason
+- Fixed a bug effecting additions/deletions of SQLINES and deletions of SVSNLINES (may be
+  the cause of #0000866)

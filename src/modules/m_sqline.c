@@ -134,10 +134,17 @@ DLLFUNC int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    "%s", parv[1]);
 
 	/* Only replaces AKILL (global ban nick)'s */
-	if ((bconf = Find_banEx(parv[1], CONF_BAN_NICK, CONF_BAN_TYPE_AKILL)))
+	for (bconf = conf_ban; bconf; bconf = (ConfigItem_ban *)bconf->next)
 	{
-		if (bconf->mask)
-			MyFree(bconf->mask);
+		if (bconf->flag.type != CONF_BAN_NICK)
+			continue;
+		if (bconf->flag.type2 != CONF_BAN_TYPE_AKILL)
+			continue;
+		if (!stricmp(bconf->mask, parv[1]))
+			break;
+	}
+	if (bconf)
+	{
 		if (bconf->reason)
 			MyFree(bconf->reason);
 		bconf->mask = NULL;
@@ -147,12 +154,12 @@ DLLFUNC int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	else
 	{
 		bconf = (ConfigItem_ban *) MyMallocEx(sizeof(ConfigItem_ban));
+		if (parv[1])
+			DupString(bconf->mask, parv[1]);
 		addit = 1;
 	}
 	if (parv[2])
 		DupString(bconf->reason, parv[2]);
-	if (parv[1])
-		DupString(bconf->mask, parv[1]);
 		
 	/* CONF_BAN_NICK && CONF_BAN_TYPE_AKILL == SQLINE */
 	bconf->flag.type = CONF_BAN_NICK;
