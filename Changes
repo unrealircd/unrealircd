@@ -393,4 +393,4 @@
 - Fixed SENDQ_ALWAYS to be mainstream define (as always)
 - Removed s_gline, not in use, removed some modeless channel checks (not needed), removed an old zombie
   code, and removed a line from aHush that was missed
-
+- Added networks/seveneagle.network
