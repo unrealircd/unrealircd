@@ -73,7 +73,6 @@ extern ircstats IRCstats;
 extern int lifesux;
 #endif
 
-void over_notice(aClient *, aClient *, aChannel *, char *);
 static void add_invite PROTO((aClient *, aChannel *));
 static int add_banid PROTO((aClient *, aChannel *, char *));
 static int can_join PROTO((aClient *, aClient *, aChannel *, char *, char *,
@@ -563,7 +562,9 @@ int  is_chan_op(cptr, chptr)
 /* chanop/halfop ? */
 	if (chptr)
 		if ((lp = find_user_link(chptr->members, cptr)))
-			return ((lp->flags & CHFL_CHANOP));
+			return ((lp->flags & CHFL_CHANOP) ||
+				(lp->flags & CHFL_CHANOWNER) ||
+				(lp->flags & CHFL_CHANPROT));
 
 	return 0;
 }
@@ -637,7 +638,8 @@ int  is_chanprot(cptr, chptr)
 
 	if (chptr)
 		if ((lp = find_user_link(chptr->members, cptr)))
-			return (lp->flags & CHFL_CHANPROT);
+			return (lp->flags & CHFL_CHANPROT ||
+				lp->flags & CHFL_CHANOWNER);
 
 	return 0;
 }
@@ -1371,7 +1373,7 @@ void make_mode_str(chptr, oldm, oldl, pcount, pvar, mode_buf, para_buf, bounce)
 
 	char tmpbuf[MODEBUFLEN+3], *tmpstr;
 	aCtab *tab = &cFlagTab[0];
-	char *x = modebuf;
+	char *x = mode_buf;
 	int  what, cnt, z;
 	char *m;
 	what = 0;
@@ -1558,7 +1560,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		  }
 		  goto setthephuckingmode;
 	  case MODE_OPERONLY:
-		  if (!IsAnOper(cptr) && !IsServer(cptr) && !IsULine(cptr))
+		  if (!IsOper(cptr) && !IsServer(cptr) && !IsULine(cptr))
 		  {
 			  sendto_one(cptr,
 			      ":%s NOTICE %s :*** Opers Only mode (+O) can only be set by IRC Operators.",
@@ -1620,7 +1622,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 #endif
 	  case MODE_NOCTCP:
 	  case MODE_ONLYSECURE:
-		if (what == MODE_ADD && modetype == MODE_ONLYSECURE)
+		if (what == MODE_ADD && modetype == MODE_ONLYSECURE && !(IsServer(cptr) || IsULine(cptr)))
 		{
 	  	  for (member = chptr->members; member; member = member->next)
 		  {
@@ -1634,6 +1636,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		    }
 		  }
 		  member = NULL;
+		  /* first break nailed the for loop, this one nails switch() */
 		  if (notsecure == 1) break;
 		}
 	  case MODE_NONICKCHANGE:
@@ -1663,9 +1666,10 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 
 /* do pro-opping here (popping) */
 	  case MODE_CHANOWNER:
+		  /* Channel owners can dechanown themselves */
 		  if (!IsULine(cptr) && !IsServer(cptr)
 		      && !IsNetAdmin(cptr)
-		      && !is_chanowner(cptr, chptr))
+		      && !(is_chanowner(cptr, chptr) && what == MODE_DEL))
 		  {
 			  sendto_one(cptr, err_str(ERR_ONLYSERVERSCANCHANGE),
 			      me.name, cptr->name, chptr->chname);
@@ -2133,8 +2137,8 @@ void set_mode(chptr, cptr, parc, parv, pcount, pvar, bounce)
 	paracount = 1;
 	*pcount = 0;
 
-        oldm = chptr->mode.mode;
-        oldl = chptr->mode.limit;
+	oldm = chptr->mode.mode;
+	oldl = chptr->mode.limit;
 
 	for (curchr = parv[0]; *curchr; curchr++)
 	{
@@ -2156,16 +2160,6 @@ void set_mode(chptr, cptr, parc, parv, pcount, pvar, bounce)
 			  MyFree(tmpo);
 			  break;
 #endif
-		  case 'I':
-			  if (MyClient(cptr))
-			  {
-				  break;
-			  }
-			  else
-			  {
-				  /* compatiblity */
-				  *curchr = 'V';
-			  }
 		  default:
 			  found = 0;
 			  tab = &cFlagTab[0];
@@ -2196,22 +2190,22 @@ void set_mode(chptr, cptr, parc, parv, pcount, pvar, bounce)
 
 #ifndef NO_OPEROVERRIDE			  
 			  if ((Halfop_mode(modetype) == FALSE) && opermode == 2 && htrig != 1)
-				  htrig = 1;
+			  {
+				opermode = 0;
+				htrig = 1;
+			  }
 #endif					  
 				  
 			  /* We can afford to send off a param */
-			  /* if (parc - paracount < 1) */
                           if (parc <= paracount)
 			  	parv[paracount] = NULL;
 			  if (parv[paracount] &&
 			      strlen(parv[paracount]) >= MODEBUFLEN)
 				parv[paracount][MODEBUFLEN-1] = '\0';
-			  {
 			  paracount +=
 			      do_mode_char(chptr, modetype, *curchr,
 			      parv[paracount], what, cptr, pcount, pvar,
 			      bounce);
-			  }
 			  break;
 		}
 	}
@@ -2220,9 +2214,14 @@ void set_mode(chptr, cptr, parc, parv, pcount, pvar, bounce)
 
 #ifndef NO_OPEROVERRIDE
 	if (htrig == 1)
+	{
+		/* This is horrible. Just horrible. */
+		if (!((modebuf[0] == '+' || modebuf[0] == '-') && modebuf[1] == '\0'))
 		sendto_umode(UMODE_EYES, "*** OperOverride -- %s (%s@%s) MODE %s %s %s",
                       cptr->name, cptr->user->username, cptr->user->realhost,
                       chptr->chname, modebuf, parabuf);
+		htrig = 0;
+	}
 #endif
 
 }
@@ -2288,14 +2287,31 @@ static int can_join(cptr, sptr, chptr, key, link, parv)
 	char *parv[];
 {
 	Link *lp;
-#ifndef NO_OPEROVERRIDE
-	int  ib = 1;
-#else
-	int  ib = 0;
+
+	if ((chptr->mode.mode & MODE_ONLYSECURE) &&
+		!(sptr->umodes & UMODE_SECURE))
+	{
+		return (ERR_SECUREONLYCHAN);
+	}
+
+	if ((chptr->mode.mode & MODE_OPERONLY) && !IsOper(sptr))
+		return (ERR_OPERONLY);
+
+	if ((chptr->mode.mode & MODE_ADMONLY) && !IsSkoAdmin(sptr))
+		return (ERR_ADMONLY);
+
+#ifdef ENABLE_INVISOPER
+	if ((chptr->mode.mode & MODE_NOHIDING) && IsHiding(sptr))
+		return (ERR_NOHIDING);
 #endif
 
-
-	/* 0 = noone 1 = IRCops 2 = Net Admins 3 =Net admins  (override) */
+	if ((IsOper(sptr) && is_banned(cptr, sptr, chptr)
+	    && (chptr->mode.mode & MODE_OPERONLY)))
+		return (ERR_BANNEDFROMCHAN);    /* banned as an ircop at a +O cannot join */
+		
+	for (lp = sptr->user->invited; lp; lp = lp->next)
+		if (lp->value.chptr == chptr)
+			return 0;
 
 	if ((chptr->mode.limit && chptr->users >= chptr->mode.limit))
 	{
@@ -2317,117 +2333,29 @@ static int can_join(cptr, sptr, chptr, key, link, parv)
 		/* We check this later return (ERR_CHANNELISFULL); */
 	}
 
-	if ((chptr->mode.mode & MODE_ONLYSECURE) &&
-		!(sptr->umodes & UMODE_SECURE))
-	{
-		sendto_one(sptr, ":%s NOTICE %s :*** Cannot join: %s is a secure client-only channel (+z)",
-				me.name, sptr->name, chptr->chname); 
-		return (ERR_SECUREONLYCHAN);	
-	}
-	if ((chptr->mode.mode & MODE_OPERONLY) && !IsOper(sptr))
-	{
-		return (ERR_OPERONLY);
-	}
-	if ((chptr->mode.mode & MODE_ADMONLY))
-	{
-		if (!IsSkoAdmin(sptr))
-			return (ERR_ADMONLY);
-	}
-
-#ifdef ENABLE_INVISOPER
-	if ((chptr->mode.mode & MODE_NOHIDING) && IsHiding(sptr))
-		return (ERR_NOHIDING);
-#endif
-
-	if ((IsOper(sptr) && !((chptr->mode.mode & MODE_ADMONLY))) && !(ib==0))
-	{
-		return 0;	/* may override */
-	}
-	if ((IsOper(sptr) && is_banned(cptr, sptr, chptr)
-	    && (chptr->mode.mode & MODE_OPERONLY)))
-		return (ERR_BANNEDFROMCHAN);	/* banned as an ircop at a +O cannot join */
-
-	switch (ib)
-	{
-	  case 1:
-		  if (IsOper(sptr))
-		  {
-			  return 0;
-		  }
-		  break;
-	  case 2:
-		  if (IsNetAdmin(sptr))
-		  {
-			  return 0;
-		  }
-		  break;
-	  case 3:
-		  if (IsNetAdmin(sptr))
-			  return 0;
-		  break;
-	  default:
-		  break;
-	}
 	if ((chptr->mode.mode & MODE_RGSTRONLY) && !IsARegNick(sptr))
 		return (ERR_NEEDREGGEDNICK);
 
 	if (*chptr->mode.key && (BadPtr(key) || mycmp(chptr->mode.key, key)))
 		return (ERR_BADCHANNELKEY);
 
-	for (lp = sptr->user->invited; lp; lp = lp->next)
-		if (lp->value.chptr == chptr)
-			break;
-
-	if ((chptr->mode.mode & MODE_INVITEONLY) && !lp)
+	if ((chptr->mode.mode & MODE_INVITEONLY))
 		return (ERR_INVITEONLYCHAN);
 
 	if ((chptr->mode.limit && chptr->users >= chptr->mode.limit))
 		return (ERR_CHANNELISFULL);
 
-	if (is_banned(sptr, sptr, chptr) && !lp)
+	if (is_banned(sptr, sptr, chptr))
 		return (ERR_BANNEDFROMCHAN);
+
+#ifdef OPEROVERRIDE_VERIFY
+        if (IsOper(sptr) && (chptr->mode.mode & MODE_SECRET ||
+            chptr->mode.mode & MODE_PRIVATE))
+                return (ERR_OPERSPVERIFY);
+#endif
 
 
 	return 0;
-}
-
-/* Sends notices to +e's about opers possibly abusing priv's
- * By NiQuiL (niquil@programmer.net)
- * suggestion by -ins4ne-
- */
-
-void over_notice(aClient *cptr, aClient *sptr, aChannel *chptr, char *key)
-{
-        Link *lp;
-
-        for (lp = sptr->user->invited; lp; lp = lp->next)
-         if (lp->value.chptr == chptr)
-          break;
-
-	*modebuf = *parabuf = '\0';
-	channel_modes(cptr, modebuf, parabuf, chptr);
-			
-        if (is_banned(cptr, sptr, chptr) && IsOper(sptr) && !IsULine(sptr))
-        {
-                sendto_umode(UMODE_EYES, "*** OperOverride -- %s (%s@%s) BANWALK %s",sptr->name,
-				sptr->user->username, sptr->user->realhost, chptr->chname);
-        } 
-
-	else if (IsOper(sptr) && !IsULine(sptr) && (
-		 (*chptr->mode.key && (BadPtr(key) || mycmp(chptr->mode.key, key)))
-		 || (chptr->mode.mode & MODE_INVITEONLY && !lp)
-		 || (chptr->mode.mode & MODE_RGSTRONLY && !IsARegNick(sptr))
-		 || (chptr->mode.limit && chptr->users >= chptr->mode.limit)
-		 )
-		)
-	{
-		*modebuf = *parabuf = '\0';
-		channel_modes(cptr, modebuf, parabuf, chptr);
-
-                sendto_umode(UMODE_EYES, "*** OperOverride -- %s (%s@%s) OPERWALK %s [%s]",sptr->name,
-				sptr->user->username, sptr->user->realhost, chptr->chname,
-				modebuf);
-	}
 }
 
 /*
@@ -3031,7 +2959,6 @@ int  m_join(cptr, sptr, parc, parv)
 		/*
 		   **  Complete user entry to the new channel (if any)
 		 */
-		(void)over_notice(cptr, sptr, chptr, key);
 		add_user_to_channel(chptr, sptr, flags);
 		/*
 		   ** notify all other users on the new channel
@@ -3766,7 +3693,7 @@ int  m_invite(cptr, sptr, parc, parv)
 {
 	aClient *acptr;
 	aChannel *chptr;
-
+	short over = 0;
 
 	if (parc < 3 || *parv[1] == '\0')
 	{
@@ -3779,32 +3706,50 @@ int  m_invite(cptr, sptr, parc, parv)
 	{
 		sendto_one(sptr, err_str(ERR_NOSUCHNICK),
 		    me.name, parv[0], parv[1]);
-		return 0;
+		return -1;
 	}
 
 	if (MyConnect(sptr))
 		clean_channelname(parv[2]);
+	
 	if (check_channelmask(sptr, cptr, parv[2]))
-		return 0;
+		return -1;
+	
 	if (!(chptr = find_channel(parv[2], NullChn)))
 	{
-
-		sendto_prefix_one(acptr, sptr, ":%s INVITE %s :%s",
-		    parv[0], parv[1], parv[2]);
-		return 0;
+		sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL),
+		    me.name, parv[0], parv[2]);
+		return -1;
 	}
-	if (chptr->mode.mode & MODE_NOINVITE)
-		if (!IsULine(sptr))
-		{
+
+	if (chptr->mode.mode & MODE_NOINVITE && !IsULine(sptr))
+	{
+#ifndef NO_OPEROVERRIDE
+		if (IsOper(sptr) && sptr == acptr)
+			over = 1;
+		else {
+#endif
 			sendto_one(sptr, err_str(ERR_NOINVITE),
 			    me.name, parv[0], parv[2]);
 			return -1;
+#ifndef NO_OPEROVERRIDE
 		}
-	if (chptr && !IsMember(sptr, chptr) && !IsULine(sptr))
+#endif
+	}
+
+	if (!IsMember(sptr, chptr) && !IsULine(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
-		    me.name, parv[0], parv[2]);
-		return -1;
+#ifndef NO_OPEROVERRIDE
+		if (IsOper(sptr) && sptr == acptr)
+			over = 1;
+		else {
+#endif		
+			sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
+			    me.name, parv[0], parv[2]);
+			return -1;
+#ifndef NO_OPEROVERRIDE
+		}
+#endif
 	}
 
 	if (IsMember(acptr, chptr))
@@ -3813,20 +3758,37 @@ int  m_invite(cptr, sptr, parc, parv)
 		    me.name, parv[0], parv[1], parv[2]);
 		return 0;
 	}
-	if (chptr && (chptr->mode.mode & MODE_INVITEONLY))
+
+	if (chptr->mode.mode & MODE_INVITEONLY)
 	{
 		if (!is_chan_op(sptr, chptr) && !IsULine(sptr))
 		{
-			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
-			    me.name, parv[0], chptr->chname);
-			return -1;
+#ifndef NO_OPEROVERRIDE
+			if (IsOper(sptr) && sptr == acptr)
+				over = 1;
+			else {
+#endif
+				sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
+				    me.name, parv[0], chptr->chname);
+				return -1;
+#ifndef NO_OPEROVERRIDE
+			}
+#endif
 		}
 		else if (!IsMember(sptr, chptr) && !IsULine(sptr))
 		{
-			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
-			    me.name, parv[0],
-			    ((chptr) ? (chptr->chname) : parv[2]));
-			return -1;
+#ifndef NO_OPEROVERRIDE
+                        if (IsOper(sptr) && sptr == acptr)
+				over = 1;
+                        else {
+#endif
+				sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
+				    me.name, parv[0],
+				    ((chptr) ? (chptr->chname) : parv[2]));
+				return -1;
+#ifndef NO_OPEROVERRIDE
+			}
+#endif
 		}
 	}
 
@@ -3834,33 +3796,87 @@ int  m_invite(cptr, sptr, parc, parv)
 	{
 		if (check_for_target_limit(sptr, acptr, acptr->name))
 			return 0;
-
-		sendto_one(sptr, rpl_str(RPL_INVITING), me.name,
-		    parv[0], acptr->name,
-		    ((chptr) ? (chptr->chname) : parv[2]));
-		if (acptr->user->away)
-			sendto_one(sptr, rpl_str(RPL_AWAY), me.name,
-			    parv[0], acptr->name, acptr->user->away);
+		if (!over)
+		{
+		   	sendto_one(sptr, rpl_str(RPL_INVITING), me.name,
+			    parv[0], acptr->name,
+			    ((chptr) ? (chptr->chname) : parv[2]));
+			if (acptr->user->away)
+				sendto_one(sptr, rpl_str(RPL_AWAY), me.name,
+				    parv[0], acptr->name, acptr->user->away);
+		}
 	}
 	/* Note: is_banned() here will cause some extra CPU load, 
 	 *       and we're really only relying on the existence
 	 *       of the limit because we could momentarily have
 	 *       less people on channel.
 	 */
-	if (MyConnect(acptr))
-		if (chptr && sptr->user
-		    && (is_banned(acptr, sptr, chptr)
-		    || (chptr->mode.mode & MODE_INVITEONLY)
-		    || chptr->mode.limit) && (is_chan_op(sptr, chptr)
-		    || IsULine(sptr)))
-		{
-			add_invite(acptr, chptr);
-			sendto_channelops_butone(NULL, &me, chptr,
-			    ":%s NOTICE @%s :%s invited %s into the channel.",
-			    me.name, chptr->chname, sptr->name, acptr->name);
-		}
+	
+	/* Yes, it's crack induced. This checks if we should even bother going further */
+	if (!(MyConnect(acptr) && chptr && sptr->user &&
+	    (is_chan_op(sptr,chptr) || IsULine(sptr)
+#ifndef NO_OPEROVERRIDE
+	     || IsOper(sptr)
+#endif
+	    )))
+	       return 0;
+
+	if (is_banned(acptr, sptr, chptr))
+	{
+		if (over)
+			sendto_umode(UMODE_EYES,
+			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +b).",
+			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+	}
+	else if (chptr->mode.mode & MODE_INVITEONLY)
+	{
+		if (over)
+			sendto_umode(UMODE_EYES,
+			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +i).",
+			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+	}
+	else if (chptr->mode.limit)
+	{
+		if (over)
+			sendto_umode(UMODE_EYES,
+			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +l).",
+			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+	}
+	else if (chptr->mode.mode & MODE_RGSTRONLY)
+	{
+		if (over)
+			sendto_umode(UMODE_EYES,
+			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +R).",
+			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+	}
+	else if (*chptr->mode.key)
+	{
+		if (over)
+			sendto_umode(UMODE_EYES,
+			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +k).",
+			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+	}
+#ifdef OPEROVERRIDE_VERIFY
+	else if (chptr->mode.mode & MODE_SECRET || chptr->mode.mode & MODE_PRIVATE)
+	       over = -1;	
+#endif
+	else
+		return 0;
+	
+	if (over == 1)
+		sendto_channelops_butone(NULL, &me, chptr,
+		  ":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
+	  	  me.name, chptr->chname, sptr->name);
+	else if (over == 0)
+		sendto_channelops_butone(NULL, &me, chptr,
+	    	  ":%s NOTICE @%s :%s invited %s into the channel.",
+		  me.name, chptr->chname, sptr->name, acptr->name);
+ 
+	add_invite(acptr, chptr);	
+	
 	sendto_prefix_one(acptr, sptr, ":%s INVITE %s :%s", parv[0],
 	    acptr->name, ((chptr) ? (chptr->chname) : parv[2]));
+	
 	return 0;
 }
 
@@ -4412,7 +4428,11 @@ int  m_names(cptr, sptr, parc, parv)
 				    CHFL_CHANOWNER)) && acptr != sptr)
 					continue;
 
-		if (cm->flags & CHFL_CHANOP)
+		if (cm->flags & CHFL_CHANOWNER)
+			buf[idx++] = '~';
+		else if (cm->flags & CHFL_CHANPROT)
+			buf[idx++] = '&';
+		else if (cm->flags & CHFL_CHANOP)
 			buf[idx++] = '@';
 		else if (cm->flags & CHFL_HALFOP)
 			buf[idx++] = '%';
@@ -4794,7 +4814,10 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
                 }
                 /* remove bans */
-                parabuf[0] = '\0';
+		modebuf[0] = '-';
+		modebuf[1] = '\0';
+		parabuf[0] = '\0';
+		b = 1;
                 for (ban = chptr->banlist; ban; ban = ban->next)
                 {
                         Addit('b', ban->banstr);
@@ -4803,7 +4826,6 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 {
                         Addit('e', ban->banstr);
                 }
-                b = 1;
                 for (lp = chptr->members; lp; lp = lp->next)
                 {
                         if (lp->flags & MODE_CHANOWNER)

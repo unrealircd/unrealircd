@@ -130,18 +130,23 @@ int	webtv_parse(aClient *sptr, char *string)
 int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	static anUser UnknownUser = {
-		NULL,		/* nextu */
-		NULL,		/* channel */
-		NULL,		/* invited */
-		NULL,		/* silence */
-		NULL,		/* away */
-		0,		/* last */
-		0,		/* servicestamp */
-		1,		/* refcount */
-		0,		/* joined */
-		"<Unknown>",	/* username */
-		"<Unknown>",	/* host */
-		"<Unknown>"	/* server */
+                "<Unknown>",    /* host */
+                "<Unknown>",    /* username */
+                NULL,           /* nextu */
+                NULL,           /* channel */
+                NULL,           /* invited */
+                NULL,           /* silence */
+                NULL,           /* away */
+                NULL,           /* virthost */ 
+                NULL,           /* server */
+                NULL,           /* swhois */
+                NULL,           /* serv */
+                NULL,           /* Lopts */
+                NULL,           /* whowas */
+                0,              /* last */
+                0,              /* servicestamp */
+                0,              /* joined */
+                1               /* refcount */
 	};
 	Link *lp;
 	anUser *user;

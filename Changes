@@ -19,7 +19,7 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *                              
  */                             
-
+                                
 [ Unreal4.0 ]
 - Fixed a _serious_ bug in SERVER command, reported by Valen, Forrester,
   M0rpheus, JK, and Hiten.
@@ -523,5 +523,50 @@ Beta5 Released
 
 Fixed bug with mirc where +a/+q were misinterpreted as modes
 without nick parameters.
+--Luke
+===================================
+
+Implemented actual prefixes for +q and +a (~ and &)
+--Luke
+===================================
+
+Modified is_chan_op and is_chanprot functions to better
+respect hierarchy (chanowner is chanprot as well as chanop)
+chanprot is chanop.
+--Luke
+===================================
+
+Fixed m_gline and m_gzline bugs. (Thanks to nighthawk for
+noticing)
+--Luke
+===================================
+
+Fixed sjoin bug with ban propagation
+--Luke
+===================================
+
+Fixed m_who bug with normal users using masks
+--Luke
+===================================
+
+Rearranged structs in struct.h to be more memory efficient
+(saved 4 bytes in User, in preparation for new operoverride
+system.)
+--Luke
+===================================
+
+Decided channel owners can deown themsleves, implemented
+as such
+--Luke
+===================================
+
+Revised operoverride system further, now default prompting
+before permitting opers to walk channel modes.
+--Luke
+===================================
+
+Scratch previous revision, redid override system altogether.
+Now done via /invite. Sts' response to those of you that
+don't like it: "fuck them"
 --Luke
 ===================================

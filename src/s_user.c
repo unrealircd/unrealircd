@@ -2512,8 +2512,15 @@ static void do_who(sptr, acptr, repchan)
                         status[i++] = '!';
 #endif
 
+	
+	/* Channel owner */
+	if (repchan && is_chanowner(acptr, repchan))
+		status[i++] = '~';
+	/* Channel protected */
+	else if (repchan && is_chanprot(acptr, repchan))
+		status[i++] = '&';
 	/* Channel operator */
-	if (repchan && is_chan_op(acptr, repchan))
+	else if (repchan && is_chan_op(acptr, repchan))
 		status[i++] = '@';
 
 	/* Channel halfop */
@@ -2610,6 +2617,7 @@ int  m_who(cptr, sptr, parc, parv)
 
 		sendto_one(sptr, rpl_str(RPL_ENDOFWHO), me.name, parv[0],
 		    BadPtr(mask) ? "*" : mask);
+		return 0;
 	}
 	
 	/* List all users on a given channel */
@@ -2702,18 +2710,23 @@ int  m_whois(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	static anUser UnknownUser = {
-		NULL,		/* nextu */
-		NULL,		/* channel */
-		NULL,		/* invited */
-		NULL,		/* silence */
-		NULL,		/* away */
-		0,		/* last */
-		0,		/* servicestamp */
-		1,		/* refcount */
-		0,		/* joined */
-		"<Unknown>",	/* username */
-		"<Unknown>",	/* host */
-		"<Unknown>"	/* server */
+                "<Unknown>",    /* host */
+                "<Unknown>",    /* username */
+                NULL,           /* nextu */
+                NULL,           /* channel */
+                NULL,           /* invited */
+                NULL,           /* silence */
+                NULL,           /* away */
+                NULL,           /* virthost */
+                NULL,           /* server */
+                NULL,           /* swhois */
+                NULL,           /* serv */
+                NULL,           /* Lopts */
+                NULL,           /* whowas */
+                0,              /* last */
+                0,              /* servicestamp */
+                0,              /* joined */
+                1               /* refcount */
 	};
 	Link *lp;
 	anUser *user;
@@ -2866,16 +2879,17 @@ int  m_whois(cptr, sptr, parc, parv)
 							len = 0;
 						}
 #ifdef SHOW_SECRET
-						if (!(acptr == sptr) && IsAnOper(sptr)
+	                                        if (!(acptr == sptr) && IsAnOper(sptr)
 #else
-						if (!(acptr == sptr) && (IsNetAdmin(sptr))
+	                                        if (!(acptr == sptr)
+	                                            && IsNetAdmin(sptr)
 #endif
-						&& (showsecret == 1) && SecretChannel(chptr))
-							*(buf + len++) = '~';
+																                                                && SecretChannel(chptr))
+                                                        *(buf + len++) = '!';
 						if (is_chanowner(acptr, chptr))
-							*(buf + len++) = '*';
+							*(buf + len++) = '~';
 						else if (is_chanprot(acptr, chptr))
-							*(buf + len++) = '^';
+							*(buf + len++) = '&';
 						else if (is_chan_op(acptr, chptr))
 							*(buf + len++) = '@';
 						else if (is_half_op(acptr, chptr))
@@ -3156,18 +3170,23 @@ int  m_kill(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	static anUser UnknownUser = {
-		NULL,		/* nextu */
-		NULL,		/* channel */
-		NULL,		/* invited */
-		NULL,		/* silence */
-		NULL,		/* away */
-		0,		/* last */
-		0,		/* servicestamp */
-		1,		/* refcount */
-		0,		/* joined */
-		"<Unknown>",	/* username */
-		"<Unknown>",	/* host */
-		"<Unknown>"	/* server */
+                "<Unknown>",    /* host */
+                "<Unknown>",    /* username */
+                NULL,           /* nextu */
+                NULL,           /* channel */
+                NULL,           /* invited */
+                NULL,           /* silence */
+                NULL,           /* away */
+                NULL,           /* virthost */
+                NULL,           /* server */
+                NULL,           /* swhois */
+                NULL,           /* serv */
+                NULL,           /* Lopts */
+                NULL,           /* whowas */
+                0,              /* last */
+                0,              /* servicestamp */
+                0,              /* joined */
+                1               /* refcount */	
 	};
 	aClient *acptr;
 	anUser *auser;

@@ -588,45 +588,45 @@ struct aloopStruct {
 };
 
 typedef struct Whowas {
-	int  hashv;
+	long umodes;
 	char *name;
 	char *username;
 	char *hostname;
 	char *virthost;
 	char *servername;
 	char *realname;
-	long umodes;
-	TS   logoff;
 	struct Client *online;	/* Pointer to new nickname for chasing or NULL */
 	struct Whowas *next;	/* for hash table... */
 	struct Whowas *prev;	/* for hash table... */
 	struct Whowas *cnext;	/* for client struct linked list */
 	struct Whowas *cprev;	/* for client struct linked list */
+	int hashv;
+	TS   logoff;
 } aWhowas;
 
 
 struct SqlineItem {
-	unsigned int status;
 	char *sqline;
 	char *reason;
 	struct SqlineItem *next;
+	unsigned int status;
 };
 
 struct ConfItem {
-	unsigned int status;	/* If CONF_ILLEGAL, delete when no clients */
-	int  clients;		/* Number of *LOCAL* clients using this */
 	struct IN_ADDR ipnum;	/* ip number of host field */
 	char *host;
 	char *passwd;
 	char *name;
-	int  port;
-	TS   hold;		/* Hold action until this time (calendar time) */
-	int  tmpconf;
-#ifndef VMSP
-	aClass *class;		/* Class of connection */
-#endif
-	short options;
 	struct ConfItem *next;
+#ifndef VMSP
+        aClass *class;          /* Class of connection */
+#endif
+	unsigned int status;    /* If CONF_ILLEGAL, delete when no clients */
+	TS   hold;              /* Hold action until this time (calendar time) */
+	int  clients;           /* Number of *LOCAL* clients using this */
+	int  port;
+	int  tmpconf;
+	short options;
 };
 
 #define	CONF_ILLEGAL		0x80000000
@@ -676,40 +676,40 @@ struct ConfItem {
  * Client structures
  */
 struct User {
+	char realhost[HOSTLEN + 1];
+	char username[USERLEN + 1];
 	struct User *nextu;
 	Link *channel;		/* chain of channel pointer blocks */
 	Link *invited;		/* chain of invite pointer blocks */
 	Link *silence;		/* chain of silence pointer blocks */
 	char *away;		/* pointer to away message */
+        char *virthost;
+        char *server;
+        char *swhois;           /* special whois thing */
+	aClient *serv;
+        LOpts *lopt;            /* Saved /list options */
+        aWhowas *whowas;
+#ifdef  LIST_DEBUG
+        aClient *bcptr;
+#endif
 	TS   last;
 	u_int32_t servicestamp;	/* Services' time stamp variable */
-	signed char refcnt;	/* Number of times this block is referenced */
 	unsigned short joined;		/* number of channels joined */
-	char username[USERLEN + 1];
-	char realhost[HOSTLEN + 1];
-	char *virthost;
-	char *server;
-	char *swhois;		/* special whois thing */
-	aClient *serv;
-	LOpts *lopt;            /* Saved /list options */
-	aWhowas *whowas;
-#ifdef	LIST_DEBUG
-	aClient *bcptr;
-#endif
+	signed char refcnt;     /* Number of times this block is referenced */
 };
 
 struct Server {
+	char by[NICKLEN + 1];
+	long users;
 	struct Server *nexts;
 	anUser *user;		/* who activated this connection */
 	char *up;		/* uplink for this server */
-	char by[NICKLEN + 1];
 	aConfItem *nline;	/* N-line pointer for this server */
+#ifdef  LIST_DEBUG
+        aClient *bcptr;
+#endif
 	TS   timestamp;		/* Remotely determined connect try time */
 	unsigned short numeric;	/* NS numeric, 0 if none */
-	long users;
-#ifdef	LIST_DEBUG
-	aClient *bcptr;
-#endif
 };
 
 struct t_vhost {
@@ -740,45 +740,45 @@ struct t_kline {
 	char *hostmask;
 	char *reason;
 	char *setby;
+        aTKline *next;
+        aTKline *prev;
 	TS   expire_at;
 	TS   set_at;
-	aTKline *next;
-	aTKline *prev;
 };
 
 struct ircstatsx {
 	int  clients;		/* total */
 	int  invisible;		/* invisible */
-	unsigned short  servers;		/* servers */
 	int  operators;		/* operators */
 	int  unknown;		/* unknown local connections */
 	int  channels;		/* channels */
 	int  me_clients;	/* my clients */
-	unsigned short  me_servers;	/* my servers */
 	int  me_max;		/* local max */
 	int  global_max;	/* global max */
+	unsigned short  servers;                /* servers */
+	unsigned short  me_servers;     /* my servers */
 };
 
 struct t_fline {
 	char *mask;
 	char *reason;
-	int  type;
 	aFline *next;
 	aFline *prev;
+	int  type;
 };
 
 struct t_crline {
 	char *channel;
-	int  type;
 	aCRline *next, *prev;
+	int  type;
 };
 
 struct t_vhline {
 	char *login;
 	char *password;
 	char *vhost;
-	int  type;
 	aVHline *next, *prev;
+	int  type;
 };
 
 #define LISTENER_NORMAL		0x000001
@@ -793,26 +793,26 @@ struct t_vhline {
 
 
 struct Client {
+	char info[REALLEN + 1]; /* Free form additional client information */
+	char name[HOSTLEN + 1]; /* Unique name of the client, nick or host */
+	char username[USERLEN + 1];     /* username here now for auth stuff */
+	u_char targets[MAXTARGETS];     /* Hash values of current targets */
+	long flags;		/* client flags */
+	long umodes;		/* client usermodes */
 	struct Client *next, *prev, *hnext;
 	anUser *user;		/* ...defined, if this is a User */
 	aServer *serv;		/* ...defined, if this is a server */
+	aClient *from;          /* == self, if Local Client, *NEVER* NULL! */
+	aClient *srvptr;        /* Server introducing this.  May be &me */
 	TS   lasttime;		/* ...should be only LOCAL clients? --msa */
 	TS   firsttime;		/* time client was created */
 	TS   since;		/* last time we parsed something */
 	TS   lastnick;		/* TimeStamp on nick */
 	TS   nextnick;		/* Time the next nick change will be allowed */
 	TS   nexttarget;	/* Time until a change in targets is allowed */
-	u_char targets[MAXTARGETS];	/* Hash values of current targets */
-	long flags;		/* client flags */
-	long umodes;		/* client usermodes */
-	aClient *from;		/* == self, if Local Client, *NEVER* NULL! */
 	int  fd;		/* >= 0, for local clients */
+	short status;           /* Client type */
 	unsigned char hopcount;		/* number of servers to this 0 = local */
-	short status;		/* Client type */
-	char name[HOSTLEN + 1];	/* Unique name of the client, nick or host */
-	char username[USERLEN + 1];	/* username here now for auth stuff */
-	char info[REALLEN + 1];	/* Free form additional client information */
-	aClient *srvptr;	/* Server introducing this.  May be &me */
 	/*
 	   ** The following fields are allocated only for local clients
 	   ** (directly connected to *this* server with a socket.
@@ -821,45 +821,47 @@ struct Client {
 	   ** these fields, if (from != self).
 	 */
 	int  count;		/* Amount of data in buffer */
-	char buffer[BUFSIZE];	/* Incoming message buffer */
-	short lastsq;		/* # of 2k blocks when sendqueued called last */
-	dbuf sendQ;		/* Outgoing message queue--if socket full */
-	dbuf recvQ;		/* Hold for data incoming yet to be parsed */
+	char buffer[BUFSIZE];   /* Incoming message buffer */
+	char sockhost[HOSTLEN + 1];     /* This is the host name from the socket
+                                        ** and after which the connection was
+                                        ** accepted.
+                                        */
+	dbuf sendQ;             /* Outgoing message queue--if socket full */
+        dbuf recvQ;             /* Hold for data incoming yet to be parsed */
+	struct IN_ADDR ip;      /* keep real ip# too */
+	long oflag;             /* Operator access flags -Cabal95 */
+        long sendM;             /* Statistics: protocol messages send */
+        long sendK;             /* Statistics: total k-bytes send */
+        long receiveM;          /* Statistics: protocol messages received */
+	long receiveK;          /* Statistics: total k-bytes received */
+#ifndef NO_FDLIST
+	long lastrecvM;		/* to check for activity --Mika */
+#endif
+#ifdef USE_SSL
+        struct  SSL     *ssl;
+        struct X509     *client_cert;
+#endif
+	aClient *acpt;          /* listening client which we accepted from */
+	Link *confs;            /* Configuration record associated */
+	Link *notify;           /* Links to clients notify-structures */
+	char *passwd;
+	struct hostent *hostp;
 #ifdef NOSPOOF
 	u_int32_t nospoof;	/* Anti-spoofing random number */
 #endif
-	long oflag;		/* Operator access flags -Cabal95 */
-	long proto;		/* ProtoCtl options */
-	long sendM;		/* Statistics: protocol messages send */
-	long sendK;		/* Statistics: total k-bytes send */
-	long receiveM;		/* Statistics: protocol messages received */
-#ifdef USE_SSL
-	struct	SSL	*ssl;
-	struct X509	*client_cert;	
-#endif
 #ifndef NO_FDLIST
-	long lastrecvM;		/* to check for activity --Mika */
 	int  priority;
 #endif
-	long receiveK;		/* Statistics: total k-bytes received */
-	u_short sendB;		/* counters to count upto 1-k lots of bytes */
-	u_short receiveB;	/* sent and received. */
-	aClient *acpt;		/* listening client which we accepted from */
-	Link *confs;		/* Configuration record associated */
-	int  authfd;		/* fd for rfc931 authentication */
+	int  authfd;            /* fd for rfc931 authentication */
 #ifdef SOCKSPORT
 	int  socksfd;
 #endif
-	struct IN_ADDR ip;	/* keep real ip# too */
+	int proto;		/* ProtoCtl options */
+        u_short sendB;          /* counters to count upto 1-k lots of bytes */
+        u_short receiveB;       /* sent and received. */
 	u_short port;		/* and the remote port# too :-) */
-	struct hostent *hostp;
 	u_short notifies;	/* Keep track of count of notifies */
-	Link *notify;		/* Links to clients notify-structures */
-	char sockhost[HOSTLEN + 1];	/* This is the host name from the socket
-					   ** and after which the connection was
-					   ** accepted.
-					 */
-	char *passwd;
+	short lastsq;           /* # of 2k blocks when sendqueued called last */
 #ifdef DEBUGMODE
 	TS   cputime;
 #endif
@@ -872,19 +874,15 @@ struct Client {
  * statistics structures
  */
 struct stats {
+        unsigned long is_cks;   /* k-bytes sent to clients */
+        unsigned long is_ckr;   /* k-bytes received to clients */
+        unsigned long is_sks;   /* k-bytes sent to servers */
+        unsigned long is_skr;   /* k-bytes received to servers */
+	TS   is_cti;            /* time spent connected by clients */
+        TS   is_sti;            /* time spent connected by servers */
 	unsigned int is_cl;	/* number of client connections */
 	unsigned int is_sv;	/* number of server connections */
 	unsigned int is_ni;	/* connection but no idea who it was */
-	unsigned short is_cbs;	/* bytes sent to clients */
-	unsigned short is_cbr;	/* bytes received to clients */
-	unsigned short is_sbs;	/* bytes sent to servers */
-	unsigned short is_sbr;	/* bytes received to servers */
-	unsigned long is_cks;	/* k-bytes sent to clients */
-	unsigned long is_ckr;	/* k-bytes received to clients */
-	unsigned long is_sks;	/* k-bytes sent to servers */
-	unsigned long is_skr;	/* k-bytes received to servers */
-	TS   is_cti;		/* time spent connected by clients */
-	TS   is_sti;		/* time spent connected by servers */
 	unsigned int is_ac;	/* connections accepted */
 	unsigned int is_ref;	/* accepts refused */
 	unsigned int is_unco;	/* unknown commands */
@@ -898,20 +896,24 @@ struct stats {
 	unsigned int is_abad;	/* bad auth requests */
 	unsigned int is_udp;	/* packets recv'd on udp port */
 	unsigned int is_loc;	/* local connections made */
+        unsigned short is_cbs;  /* bytes sent to clients */
+        unsigned short is_cbr;  /* bytes received to clients */
+        unsigned short is_sbs;  /* bytes sent to servers */
+        unsigned short is_sbr;  /* bytes received to servers */
 };
 
 struct ListOptions {
 	LOpts *next;
 	Link *yeslist, *nolist;
-	int  starthash;
-	short int showall;
-	unsigned short usermin;
-	int  usermax;
 	TS   currenttime;
 	TS   chantimemin;
 	TS   chantimemax;
 	TS   topictimemin;
 	TS   topictimemax;
+	int  starthash;
+	int  usermax;
+	short int showall;
+	unsigned short usermin;
 };
 
 /* mode structure for channels */
@@ -922,8 +924,8 @@ struct SMode {
 	long mode;
 #endif
 	int  limit;
-	char key[KEYLEN + 1];
 	char link[LINKLEN + 1];
+        char key[KEYLEN + 1];
 	/* x:y */
 	unsigned short  msgs;		/* x */
 	unsigned short  per;		/* y */
@@ -937,11 +939,11 @@ struct Message {
 	int  (*func) ();
 	unsigned int count;
 	unsigned parameters : 5;
-	u_char token[3];	/* Cheat for tokenized value */
+	u_char token[3];        /* Cheat for tokenized value */
 	unsigned long bytes;
 #ifdef DEBUGMODE
-	unsigned long lticks;
-	unsigned long rticks;
+        unsigned long lticks;
+        unsigned long rticks;
 #endif
 };
 
@@ -949,8 +951,8 @@ struct Message {
 
 struct Notify {
 	aNotify *hnext;
-	TS   lasttime;
 	Link *notify;
+	TS   lasttime;
 	char nick[1];
 };
 
@@ -958,7 +960,6 @@ struct Notify {
 
 struct SLink {
 	struct SLink *next;
-	int  flags;
 	aFloodOpt *flood;
 	union {
 		aClient *cptr;
@@ -973,6 +974,7 @@ struct SLink {
 			TS   when;
 		} ban;
 	} value;
+	int flags;
 };
 
 struct SBan {
@@ -996,17 +998,17 @@ struct DSlink {
 /* channel structure */
 
 struct Channel {
-	struct Channel *nextch, *prevch, *hnextch;
 	Mode mode;
-	TS   creationtime;
+	struct Channel *nextch, *prevch, *hnextch;
 	char *topic;
 	char *topic_nick;
-	TS   topic_time;
-	unsigned short users;
 	Link *members;
 	Link *invites;
 	Ban *banlist;
 	Ban *exlist;		/* exceptions */
+	TS   creationtime;
+	TS   topic_time;
+	unsigned short users;
 	char chname[1];
 };
 
@@ -1103,8 +1105,8 @@ struct Channel {
                 find_channel_link((blah->user)->channel, chan)) ? 1 : 0)
 
 struct FloodOpt {
-	unsigned short nmsg;
 	TS   lastmsg;
+	unsigned short nmsg;
 };
 
 /* Misc macros */

@@ -759,7 +759,7 @@ int  m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
         if (IsServer(sptr))
         {
-                return;
+                return 0;
         }
         if (!IsOper(sptr))
         {
@@ -772,7 +772,7 @@ int  m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
         {
                 sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
                     me.name, sptr->name, "GZLINE");
-                return;
+                return 0;
         }
 
         mask = parv[1];
@@ -782,7 +782,7 @@ int  m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 {
                         sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
                             me.name, sptr->name, "GZLINE");
-                        return;
+                        return 0;
                 }
                 whattodo = 1;
                 mask++;
@@ -793,7 +793,7 @@ int  m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 {
                         sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
                             me.name, sptr->name, "GZLINE");
-                        return;
+                        return 0;
                 }
                 whattodo = 0;
                 mask++;
@@ -804,7 +804,7 @@ int  m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 {
                         sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
                             me.name, sptr->name, "GZLINE");
-                        return;
+                        return 0;
                 }
         }
 
@@ -818,9 +818,7 @@ int  m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 return 0;
         }
 
-        if (whattodo == 1)
-                goto nochecks;
-        if (p)
+        if (p && whattodo != 1)
         {
                 p++;
                 i = 0;
@@ -839,17 +837,24 @@ int  m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 }
         }
 
-      nochecks:
         usermask = strtok(mask, "@");
         hostmask = strtok(NULL, "");
         tkl_check_expire();
 
+	if (BadPtr(hostmask))
+	{
+		if (BadPtr(usermask))
+			return 0;
+		hostmask = usermask;
+		usermask = "*";
+	}
+	
         for (tk = tklines; tk; tk = tk->next)
         {
                 if (tk->type == (TKL_GLOBAL | TKL_ZAP))
                 {
-                        if (!match(tk->hostmask, usermask)
-                            && !match(tk->usermask, hostmask))
+                        if (!match(tk->hostmask, hostmask)
+                            && !match(tk->usermask, usermask))
                         {
                                 found = 1;
                                 break;
@@ -864,7 +869,7 @@ int  m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
                     me.name, sptr->name);
                 return 0;
         }
-        if ((found == 1) && whattodo == 1)
+        if ((found == 0) && whattodo == 1)
         {
                 sendto_one(sptr,
                     ":%s NOTICE %s :*** [Z:Line error] No such Z:Line", me.name,
@@ -1008,9 +1013,7 @@ int  m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
-	if (whattodo == 1)
-		goto nochecks;
-	if (p)
+	if (p && whattodo != 1)
 	{
 		p++;
 		i = 0;
@@ -1029,17 +1032,24 @@ int  m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 	}
 
-      nochecks:
 	usermask = strtok(mask, "@");
 	hostmask = strtok(NULL, "");
 	tkl_check_expire();
+
+	if (BadPtr(hostmask))
+	{
+		if (BadPtr(usermask))
+			return 0;
+		hostmask = usermask;
+		usermask = "*";
+	}
 
 	for (tk = tklines; tk; tk = tk->next)
 	{
 		if (tk->type == (TKL_GLOBAL | TKL_KILL))
 		{
-			if (!match(tk->hostmask, usermask)
-			    && !match(tk->usermask, hostmask))
+			if (!match(tk->hostmask, hostmask)
+			    && !match(tk->usermask, usermask))
 			{
 				found = 1;
 				break;
@@ -1054,7 +1064,7 @@ int  m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    me.name, sptr->name);
 		return 0;
 	}
-	if ((found == 1) && whattodo == 1)
+	if ((found == 0) && whattodo == 1)
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** [G:Line error] No such G:Line", me.name,
