@@ -4836,10 +4836,12 @@ int  m_sjoin(cptr, sptr, parc, parv)
         for (i = 1; i <= (parc - 2); i++)
         {
         	strcat(parabuf, parv[i]);
+        	if (((i + 1) <= (parc - 2)))
+	        	strcat(parabuf, " ");
         }
 
 	/* This sends out to SJ3 servers .. */
-	sendto_serv_butone_token_opt(cptr, OPT_SJOIN|OPT_SJ3,
+	sendto_serv_butone_token_opt(cptr, OPT_SJOIN|OPT_SJ3, sptr->name,
         	MSG_SJOIN, TOK_SJOIN, "%s :%s", parabuf, parv[parc - 1]);
         
 	/* We strip out & and " here, for SJ2 */
@@ -4854,12 +4856,14 @@ int  m_sjoin(cptr, sptr, parc, parv)
 			continue;
 	 	
 		strcat(parabuf, ap->parv[i]);
-		strcat(parabuf, " ");
+		if (!((i + 1) == ap->parc))
+			strcat(parabuf, " ");
 	}
 	
 	if (nomode)
 	{
 		sendto_serv_butone_token_opt(cptr, OPT_SJOIN|OPT_SJOIN2|OPT_NOT_SJ3,
+			sptr->name,
 			MSG_SJOIN, TOK_SJOIN, "%s %s + <-> :%s", parv[1],
 				parv[2], parabuf);
 		return 0;
@@ -4867,6 +4871,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	if (nopara)
 	{
 		sendto_serv_butone_token_opt(cptr, OPT_SJOIN|OPT_SJOIN2|OPT_NOT_SJ3,
+			sptr->name,
 			MSG_SJOIN, TOK_SJOIN, "%s %s %s <-> :%s", parv[1],
 				parv[2], parv[3], parabuf);
 		return 0;
@@ -4880,6 +4885,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 		strcat(paraback, " ");
 	}
 	sendto_serv_butone_token_opt(cptr, OPT_SJOIN|OPT_SJOIN2|OPT_NOT_SJ3,
+		sptr->name,
 		MSG_SJOIN, TOK_SJOIN, "%s %s %s %s :%s",
 			parv[1], parv[2], parv[3], paraback, parabuf);
 	
