@@ -4484,7 +4484,8 @@ void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_length, int
 	for (lp = Servers; lp; lp = lp->next)
 	{
 		acptr = lp->value.cptr;
-		if (acptr->srvptr != server)
+		if (acptr->srvptr != server ||
+ 		    IsULine(acptr) && !IsOper(cptr) && HIDE_ULINES)
 			continue;
 		acptr->flags |= FLAGS_MAP;
 		cnt++;
@@ -4493,14 +4494,13 @@ void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_length, int
 	for (lp = Servers; lp; lp = lp->next)
 	{
 		acptr = lp->value.cptr;
-		if (acptr->srvptr != server)
+		if (IsULine(acptr) && HIDE_ULINES && !IsOper(cptr))
 			continue;
-		--cnt;
-		if (IsULine(acptr) && HIDE_ULINES && !IsAnOper(cptr))
+		if (acptr->srvptr != server)
 			continue;
 		if (!acptr->flags & FLAGS_MAP)
 			continue;
-		if (cnt == 0)
+		if (--cnt == 0)
 			*p = '`';
 		dump_map(cptr, acptr, mask, prompt_length + 2, length - 2);
 
