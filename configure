@@ -3781,13 +3781,12 @@ fi
 echo "$ac_t""$ac_cv_export_dynamic" 1>&6
 if test $ac_cv_export_dynamic=no; then
 CFLAGS=$hold_cflags
-fi
-if test $ac_cv_export_dynamic=yes; then
+elif test $ac_cv_export_dynamic=yes; then
 CFLAGS="$CFLAGS -export-dynamic"
 fi
 
 echo $ac_n "checking for compiler option to produce PIC""... $ac_c" 1>&6
-echo "configure:3791: checking for compiler option to produce PIC" >&5
+echo "configure:3790: checking for compiler option to produce PIC" >&5
 if eval "test \"`echo '$''{'ac_cv_pic'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3845,7 +3844,7 @@ else { echo "configure: error: can not run $ac_config_sub" 1>&2; exit 1; }
 fi
 
 echo $ac_n "checking host system type""... $ac_c" 1>&6
-echo "configure:3849: checking host system type" >&5
+echo "configure:3848: checking host system type" >&5
 
 host_alias=$host
 case "$host_alias" in
@@ -3871,17 +3870,17 @@ acx_pthread_ok=no
 # If it isn't, don't bother looking for the threads libraries.
 ac_safe=`echo "pthread.h" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for pthread.h""... $ac_c" 1>&6
-echo "configure:3875: checking for pthread.h" >&5
+echo "configure:3874: checking for pthread.h" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 3880 "configure"
+#line 3879 "configure"
 #include "confdefs.h"
 #include <pthread.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:3885: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:3884: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -3950,7 +3949,7 @@ esac
 result=none
 if test $acx_pthread_ok = no; then
 echo $ac_n "checking what flags pthreads needs""... $ac_c" 1>&6
-echo "configure:3954: checking what flags pthreads needs" >&5
+echo "configure:3953: checking what flags pthreads needs" >&5
 if eval "test \"`echo '$''{'ac_cv_pthreadflag'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3988,7 +3987,7 @@ for flag in $acx_pthread_flags; do
         # functions on Solaris that doesn't have a non-functional libc stub.
         # We try pthread_create on general principles.
         cat > conftest.$ac_ext <<EOF
-#line 3992 "configure"
+#line 3991 "configure"
 #include "confdefs.h"
 #include <pthread.h>
 int main() {
@@ -3997,7 +3996,7 @@ pthread_t th; pthread_join(th, 0);
                      pthread_create(0,0,0,0); pthread_cleanup_pop(0); 
 ; return 0; }
 EOF
-if { (eval echo configure:4001: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4000: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   acx_pthread_ok=yes
 else
@@ -4043,20 +4042,20 @@ esac
         # Detect AIX lossage: threads are created detached by default
         # and the JOINABLE attribute has a nonstandard name (UNDETACHED).
         echo $ac_n "checking for joinable pthread attribute""... $ac_c" 1>&6
-echo "configure:4047: checking for joinable pthread attribute" >&5
+echo "configure:4046: checking for joinable pthread attribute" >&5
 if eval "test \"`echo '$''{'ac_cv_pthreadjoin'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   
         cat > conftest.$ac_ext <<EOF
-#line 4053 "configure"
+#line 4052 "configure"
 #include "confdefs.h"
 #include <pthread.h>
 int main() {
 int attr=PTHREAD_CREATE_JOINABLE;
 ; return 0; }
 EOF
-if { (eval echo configure:4060: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4059: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   ac_cv_pthreadjoin=PTHREAD_CREATE_JOINABLE
 else
@@ -4068,14 +4067,14 @@ fi
 rm -f conftest*
         if test $ac_cv_pthreadjoin = unknown; then
                 cat > conftest.$ac_ext <<EOF
-#line 4072 "configure"
+#line 4071 "configure"
 #include "confdefs.h"
 #include <pthread.h>
 int main() {
 int attr=PTHREAD_CREATE_UNDETACHED;
 ; return 0; }
 EOF
-if { (eval echo configure:4079: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4078: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   ac_cv_pthreadjoin=PTHREAD_CREATE_UNDETACHED
 else
@@ -4101,7 +4100,7 @@ EOF
         fi
 
         echo $ac_n "checking if more special flags are required for pthreads""... $ac_c" 1>&6
-echo "configure:4105: checking if more special flags are required for pthreads" >&5
+echo "configure:4104: checking if more special flags are required for pthreads" >&5
 if eval "test \"`echo '$''{'ac_cv_pthreadspecial'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -4126,7 +4125,7 @@ echo "$ac_t""$ac_cv_pthreadspecial" 1>&6
         # Extract the first word of "cc_r", so it can be a program name with args.
 set dummy cc_r; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:4130: checking for $ac_word" >&5
+echo "configure:4129: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_PTHREAD_CC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -4178,12 +4177,12 @@ CC="$PTHREAD_CC"
 CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 IRCDLIBS="$IRCDLIBS $PTHREAD_LIBS"
 echo $ac_n "checking if FD_SETSIZE is large enough to allow $ac_fd file descriptors""... $ac_c" 1>&6
-echo "configure:4182: checking if FD_SETSIZE is large enough to allow $ac_fd file descriptors" >&5
+echo "configure:4181: checking if FD_SETSIZE is large enough to allow $ac_fd file descriptors" >&5
 if test "$cross_compiling" = yes; then
     { echo "configure: error: can not run test program while cross compiling" 1>&2; exit 1; }
 else
   cat > conftest.$ac_ext <<EOF
-#line 4187 "configure"
+#line 4186 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -4195,7 +4194,7 @@ exit(1);
 }
 
 EOF
-if { (eval echo configure:4199: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:4198: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   echo "$ac_t""yes" 1>&6
 else

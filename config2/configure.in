@@ -49,8 +49,7 @@ AC_CACHE_CHECK(if we need the -export-dynamic flag, ac_cv_export_dynamic, [
 AC_TRY_LINK(, [int i];, ac_cv_export_dynamic=yes, ac_cv_export_dynamic=no)])
 if test $ac_cv_export_dynamic=no; then
 CFLAGS=$hold_cflags
-fi
-if test $ac_cv_export_dynamic=yes; then
+elif test $ac_cv_export_dynamic=yes; then
 CFLAGS="$CFLAGS -export-dynamic"
 fi
 

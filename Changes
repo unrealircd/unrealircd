@@ -588,3 +588,4 @@ seen. gmtime warning still there
 - Fixed lack of -lssl
 - Fixed the keywalk bug reported by BaTmAn (?)
 - Fixed a few configure problems with sunos and amiga
+- Fixed an OpenBSD bug reported by perian
