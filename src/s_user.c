@@ -916,7 +916,8 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		else
 			sptr->flags |= (acptr->flags & FLAGS_TS8);
 		/* *FINALL* this gets in ircd... -- Barubary */
-		if ((find_uline(cptr->confs, sptr->user->server)))
+                /* We change this a bit .. */
+		if (IsULine(sptr->srvptr))
 			sptr->flags |= FLAGS_ULINE;
 	}
 	if (sptr->umodes & UMODE_INVISIBLE)

@@ -500,7 +500,7 @@ extern TS check_pings(TS currenttime, int check_kills)
 				killflag = 0;
 			if (check_kills && !killflag && IsPerson(cptr))
 				if (find_zap(cptr, 1)
-				    || find_tkline_match(cptr, 2) > -1 ||
+				    || find_tkline_match(cptr, 0) -1 ||
 				    (!IsAnOper(cptr) && find_nline(cptr)))
 					killflag = 1;
 			ping = IsRegistered(cptr) ? get_client_ping(cptr) :

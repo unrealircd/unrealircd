@@ -724,3 +724,5 @@
 - Removed remapping fds, and did a severe select() speedup, suggested by
   Demiurgus. Should speed CPU a lot
 - Updated some messages
+- Fixed-fixed-fixed the U:line branching thing made by codemastr
+- Fixed a G: line-turn-into Z:line problem, reported by eYe-Man
