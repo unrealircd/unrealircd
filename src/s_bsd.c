@@ -1479,8 +1479,7 @@ static int read_packet(cptr, rfd)
 	   ** For server connections, we process as many as we can without
 	   ** worrying about the time of day or anything :)
 	 */
-	if (IsServer(cptr) || IsConnecting(cptr) || IsHandshake(cptr) ||
-	    IsService(cptr))
+	if (IsServer(cptr) || IsConnecting(cptr) || IsHandshake(cptr))
 	{
 		if (length > 0)
 			if ((done = dopacket(cptr, readbuf, length)))
@@ -1514,7 +1513,7 @@ static int read_packet(cptr, rfd)
 			   ** If it has become registered as a Service or Server
 			   ** then skip the per-message parsing below.
 			 */
-			if (IsService(cptr) || IsServer(cptr))
+			if (IsServer(cptr))
 			{
 				dolen = dbuf_get(&cptr->recvQ, readbuf,
 				    sizeof(readbuf));

@@ -275,8 +275,6 @@ aClient *next_client(next, ch)
 		return next;
 	for (; next; next = next->next)
 	{
-		if (IsService(next))
-			continue;
 		if (!match(ch, next->name) || !match(next->name, ch))
 			break;
 	}

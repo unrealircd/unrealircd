@@ -735,6 +735,7 @@ static void channel_modes(cptr, mbuf, pbuf, chptr)
 			(void)strcat(pbuf, bcbuf);
 		}
 	}
+	/* if we add more parameter modes, add a space to the strings here --Stskeeps*/
 	if (chptr->mode.per)
 	{
 		*mbuf++ = 'f';
@@ -751,6 +752,7 @@ static void channel_modes(cptr, mbuf, pbuf, chptr)
 		}
 
 	}
+
 	*mbuf++ = '\0';
 	return;
 }
@@ -5105,7 +5107,8 @@ void send_channel_modes_sjoin(cptr, chptr)
 	channel_modes(cptr, modebuf, parabuf, chptr);
 
 	if (*parabuf)
-		strcat(parabuf, " ");
+	{
+	}
 	else
 	{
 		if (!SupportSJOIN2(cptr))

@@ -393,3 +393,4 @@
   work)
 - Fixed last R_LINE stuff (check_time_interval)
 - Fixed /setname desynch
+- Removed IsService()

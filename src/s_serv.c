@@ -1067,13 +1067,6 @@ int  m_server_estab(cptr)
 			if (!SupportSJOIN(cptr))
 				send_user_joins(cptr, acptr);
 		}
-		else if (IsService(acptr))
-		{
-			sendto_one(cptr, "NICK %s :%d",
-			    acptr->name, acptr->hopcount + 1);
-			sendto_one(cptr, ":%s SERVICE * * :%s",
-			    acptr->name, acptr->info);
-		}
 	}
 	/*
 	   ** Last, pass all channels plus statuses
@@ -2390,7 +2383,7 @@ int  m_error(cptr, sptr, parc, parv)
 	   ** screen otherwise). Pass ERROR's from other sources to
 	   ** the local operator...
 	 */
-	if (IsPerson(cptr) || IsUnknown(cptr) || IsService(cptr))
+	if (IsPerson(cptr) || IsUnknown(cptr))
 		return 0;
 	if (cptr == sptr)
 	{
