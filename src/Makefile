@@ -73,7 +73,7 @@ mods:
 	@if [ ! -r modules ] ; then \
 		echo "You havent done cvs update -P -d"; \
 	fi
-	cd modules; make all
+	cd modules; make $(MAKEARGS) all
 
 version.c: version.c.SH
 	$(SHELL) version.c.SH

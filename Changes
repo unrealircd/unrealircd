@@ -561,3 +561,4 @@ seen. gmtime warning still there
 - Fixed /quote sethost : and /quote setident : exploit, found by ac1d, fixed
   by Griever
 - Allowed capturing of unknown set {} variables by modules
+- Minor src/Makefile screwup fix
