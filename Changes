@@ -2997,3 +2997,4 @@ seen. gmtime warning still there
   HOOK_ALLOW, and HOOK_CONTINUE to prevent a user from joining, to immediately allow
   a user to join, and to proceed on to see if other modules will deny the user.
   Based on a suggestion by satmd (#0001604)
+- Imported TRE 0.6.5 on Win32
