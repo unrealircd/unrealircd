@@ -1295,3 +1295,5 @@ seen. gmtime warning still there
 - Fixed problem in dopm (short and char should NEVER be passed to va_arg)
 - Fixed HCN so it uses IP instead of sockhost.
 - Changed version to beta10 and updated documentation
+- Removed obsolete network files
+- Added some new network files (hopefully I'll be able to get all the submissions added soon)
