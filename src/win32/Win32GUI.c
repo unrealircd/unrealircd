@@ -1429,7 +1429,7 @@ int CountRTFSize(char *buffer) {
 			uline = bold = 0;
 		}
 	}
-	return (size+535);
+	return (size+494);
 }
 
 void IRCToRTF(char *buffer, char *string) {
@@ -1437,10 +1437,10 @@ void IRCToRTF(char *buffer, char *string) {
 	int i = 0;
 	short bold = 0, uline = 0;
 	sprintf(string, "{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fmodern\\fprq1\\"
-		"fcharset0 Fixedsys;} {\\f1\\fnil\\fcharset0 Times New Roman;}}\r\n"
+		"fcharset0 Fixedsys;}}\r\n"
 		MIRC_COLORS
 		"\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20");
-	i = 525;
+	i = 487;
 	for (tmp; *tmp; tmp++, i++) {
 		if (*tmp == '{') {
 			strcat(string, "\\{");
@@ -1536,7 +1536,7 @@ void IRCToRTF(char *buffer, char *string) {
 		}
 		string[i] = *tmp;
 	}
-	strcat(string, "\\f1\\par\r\n}");
+	strcat(string, "\\par\r\n}");
 	return;
 }
 
