@@ -3101,4 +3101,4 @@ seen. gmtime warning still there
 - Changed version to pre1
 - Fixed SJOIN bug: it sometimes was setting too many modes at once.
 - Minor sajoin/sapart ERR_NEEDMOREPARAMS tweak.
-** internal pre1 release (testing only) **
+** internal pre1 release **
