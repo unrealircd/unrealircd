@@ -103,7 +103,6 @@ static char nickbuf[BUFSIZE], buf[BUFSIZE];
 char modebuf[MAXMODEPARAMS*2+1], parabuf[504];
 #include "sjoin.h"
 
-#ifdef USE_LONGMODE
 typedef struct {
 	long mode;
 	char flag;
@@ -112,7 +111,6 @@ typedef struct {
 } aCtab;
 
 
-// typedef struct CFlagTab aCtab;
 #define MODESYS_LINKOK		/* We do this for a TEST  */
 aCtab cFlagTab[] = {
 	{MODE_LIMIT, 'l', 0, 1},
@@ -151,7 +149,6 @@ aCtab cFlagTab[] = {
 	{MODE_NONICKCHANGE, 'N', 0, 0},
 	{0x0, 0x0, 0x0}
 };
-#endif
 
 
 #define	BADOP_BOUNCE	1
@@ -1586,7 +1583,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	char tmpbuf[512], *tmpstr;
 	char tc = ' ';		/* */
 	int  chasing, x;
-	int  xxi, xyi, xzi, hascolon;
+	int xxi, xyi, xzi, hascolon;
 	char *xxx;
 	char *xp;
 	int  notsecure;
@@ -2142,6 +2139,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				      '*' ? (param + 1) : param));
 				  xp++;
 				  xyi = atoi(xp);
+				  if (xxi > 500 || xyi > 500)
+					break;
 				  xp--;
 				  *xp = ':';
 				  if ((xxi == 0) || (xyi == 0))
@@ -2621,7 +2620,8 @@ static void sub1_from_channel(aChannel *chptr)
 	Ban *ban;
 	Link *lp;
 
-	if (--chptr->users <= 0)
+        /* if (--chptr->users <= 0) */
+	if (chptr->users == 0 || --chptr->users == 0)
 	{
 		/*
 		 * Now, find all invite links from channel structure

@@ -60,7 +60,16 @@ typedef struct hashentry {
 
 #define WATCHHASHSIZE  10007	/* prime number  */
 
+/*
+ * Throttling
+*/
+#ifdef THROTTLING
+#define THROTTLING_HASH_SIZE	1024
+#endif
+
+
 #define NullChn ((aChannel *)0)
 
 #define find_channel hash_find_channel
+
 #endif /* __hash_include__ */

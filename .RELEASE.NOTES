@@ -1,5 +1,5 @@
 
-Unreal3.2-beta13 Release Notes
+Unreal3.2-beta14 Release Notes
 ======================================
     
      I M P O R T A N T   R E A D I N G
@@ -225,6 +225,10 @@ Unreal3.2-beta13 Release Notes
 
 * UNKLINE and UNZLINE have been removed in favor of a system like G:lines, to remove you
   now /kline -user@host or /zline -user@host
+
+* We now support ranges in listen blocks, for example listen *:6660-6669;
+
+* If you want throttling protection, read include/config.h
 
 * MAKE SURE YOU RERUN ./Config AND RUN make clean BEFORE USING THIS VERSION!!!
 

@@ -44,11 +44,10 @@ void badwords_stats(aClient *sptr)
 char *stripbadwords_channel(char *str)
 {
 	regmatch_t pmatch[MAX_MATCH];
-	regex_t pcomp;
 	static char cleanstr[4096];
 	char buf[4096];
 	char *ptr;
-	int  errorcode, matchlen, stringlen;
+	int  matchlen, stringlen, cleaned;
 	ConfigItem_badword *this_word;
 	if (!conf_badword_channel)
 		return str;
@@ -56,30 +55,24 @@ char *stripbadwords_channel(char *str)
 	/*
 	 * work on a copy
 	 */
-	stringlen = strlcpy(cleanstr, str, sizeof cleanstr);
+	stringlen = strlcpy(cleanstr, StripControlCodes(str), sizeof cleanstr);
 	memset(&pmatch, 0, sizeof pmatch);
 	matchlen = 0;
 	buf[0] = '\0';
+	cleaned = 0;
 
 	for (this_word = conf_badword_channel; this_word; this_word = (ConfigItem_badword *)this_word->next)
 	{
-		if ((errorcode =
-		    regcomp(&pcomp, this_word->word, REG_ICASE)) > 0)
-		{
-			regfree(&pcomp);
-			return cleanstr;
-		}
-
 		/*
 		 * Set pointer to start of string
 		 */
 		ptr = cleanstr;
 
-		while (regexec(&pcomp, ptr, MAX_MATCH, pmatch,
-		    0) != REG_NOMATCH)
+		while (regexec(&this_word->expr, ptr, MAX_MATCH, pmatch,0) != REG_NOMATCH)
 		{
 			if (pmatch[0].rm_so == -1)
 				break;
+			cleaned = 1;
 			matchlen += pmatch[0].rm_eo - pmatch[0].rm_so;
 			strlncat(buf, ptr, sizeof buf, pmatch[0].rm_so);
 			if (this_word->replace)
@@ -93,22 +86,19 @@ char *stripbadwords_channel(char *str)
 		strlcat(buf, ptr, sizeof buf);	
 		memcpy(cleanstr, buf, sizeof cleanstr);
 		memset(buf, 0, sizeof(buf));
-		regfree(&pcomp);
 		if (matchlen == stringlen)
 			break;
 	}
-
-	return (cleanstr);
+	return (cleaned) ? cleanstr : str;
 }
 
 char *stripbadwords_message(char *str)
 {
 	regmatch_t pmatch[MAX_MATCH];
-	regex_t pcomp;
 	static char cleanstr[4096];
 	char buf[4096];
 	char *ptr;
-	int  errorcode, matchlen, stringlen;
+	int matchlen, stringlen;
 	ConfigItem_badword *this_word;
 	if (!conf_badword_message)
 		return str;
@@ -123,19 +113,12 @@ char *stripbadwords_message(char *str)
 
 	for (this_word = conf_badword_message; this_word; this_word = (ConfigItem_badword *)this_word->next)
 	{
-		if ((errorcode =
-		    regcomp(&pcomp, this_word->word, REG_ICASE)) > 0)
-		{
-			regfree(&pcomp);
-			return cleanstr;
-		}
-
 		/*
 		 * Set pointer to start of string
 		 */
 		ptr = cleanstr;
 
-		while (regexec(&pcomp, ptr, MAX_MATCH, pmatch,
+		while (regexec(&this_word->expr, ptr, MAX_MATCH, pmatch,
 		    0) != REG_NOMATCH)
 		{
 			if (pmatch[0].rm_so == -1)
@@ -153,7 +136,6 @@ char *stripbadwords_message(char *str)
 		strlcat(buf, ptr, sizeof buf);	
 		memcpy(cleanstr, buf, sizeof cleanstr);
 		memset(buf, 0, sizeof(buf));
-		regfree(&pcomp);
 		if (matchlen == stringlen)
 			break;
 	}

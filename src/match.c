@@ -67,6 +67,10 @@ static inline int match2(char *mask, char *name)
 	}
 	else if (cm != '?' && lc(cm) != lc(*n))
 		return 1;	/* most likely first chars won't match */
+	else if ((*m == '\0') && (*n == '\0'))
+		return 0;  /* true: both are empty */
+	else if (*n == '\0')
+		return 1; /* false: name is empty */
 	else
 	{
 		m++;
@@ -91,6 +95,7 @@ static inline int match2(char *mask, char *name)
 			cm = *m;
 			if (cm == '\\')	/* don't do ? checking if a \ */
 			{
+				
 				cm = *(++m);	/* just skip this char, no ? checking */
 			}
 			else if (cm == '?')	/* if it's a ? */
@@ -98,6 +103,8 @@ static inline int match2(char *mask, char *name)
 				do
 				{
 					m++;	/* go to the next char of both */
+					if (!*n)
+						return 1; /* false: no character left */
 					n++;
 					if (!*n)	/* if end of test string... */
 						return (!*m ? 0 : 1);	/* true if end of mask str, else false */
@@ -110,9 +117,9 @@ static inline int match2(char *mask, char *name)
 			cm = lc(cm);
 			while (lc(*n) != cm)
 			{	/* compare */
-				n++;	/* go to next char of n */
 				if (!*n)	/* if at end of n string */
 					return 1;	/* function becomes false. */
+				n++;	/* go to next char of n */
 			}
 			wsm = m;	/* mark after where wildcard found */
 			cm = lc(*(++m));	/* go to next mask char */
@@ -123,6 +130,8 @@ static inline int match2(char *mask, char *name)
 		if (cm == '?')	/* found ? wildcard */
 		{
 			cm = lc(*(++m));	/* just skip and go to next */
+			if (!*n)
+				return 1; /* false: no character left */
 			n++;
 			if (!*n)	/* return true if end of both, */
 				return (cm ? 1 : 0);	/* false if end of test str only */
@@ -143,9 +152,9 @@ static inline int match2(char *mask, char *name)
 			cm = lc(*m);
 			while (cm != lc(*n))
 			{	/* compare them */
-				n++;	/* go to next char of n */
 				if (!*n)	/* if we reached end of n string, */
 					return 1;	/* function becomes false. */
+				n++;	/* go to next char of n */
 			}
 			wsn = n;	/* mark spot first char was found */
 		}

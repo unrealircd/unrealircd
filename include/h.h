@@ -100,6 +100,10 @@ extern int		completed_connection(aClient *);
 extern void clear_unknown();
 extern EVENT(tkl_check_expire);
 extern EVENT(e_unload_module_delayed);
+#ifdef THROTTLING
+extern EVENT(e_clean_out_throttling_buckets);
+#endif
+
 extern void  module_loadall(int module_load);
 extern long set_usermode(char *umode);
 extern char *get_modestr(long umodes);
@@ -307,6 +311,7 @@ extern int  check_for_target_limit(aClient *sptr, void *target, const char *name
 extern char *stripbadwords_message(char *str);
 extern char *stripbadwords_channel(char *str);
 extern unsigned char *StripColors(unsigned char *);
+extern const char *StripControlCodes(unsigned char *text);
 extern char *canonize(char *buffer);
 extern int webtv_parse(aClient *sptr, char *string);
 extern ConfigItem_deny_dcc *dcc_isforbidden(aClient *cptr, aClient *sptr, aClient *target, char *filename);
@@ -324,6 +329,7 @@ extern int parse(aClient *, char *, char *);
 extern int do_numeric(int, aClient *, aClient *, int, char **);
 extern int hunt_server(aClient *, aClient *, char *, int, int, char **);
 extern int hunt_server_token(aClient *, aClient *, char *, char *, char *, int, int, char **);
+extern int hunt_server_token_quiet(aClient *, aClient *, char *, char *, char *, int, int, char **);
 extern aClient *next_client(aClient *, char *);
 extern int m_umode(aClient *, aClient *, int, char **);
 extern int m_names(aClient *, aClient *, int, char **);
@@ -524,6 +530,7 @@ extern u_long cres_mem(aClient *sptr, char *nick);
 extern void      flag_add(char *ch);
 extern void      flag_del(char ch);
 extern void init_dynconf(void);
+extern char *pretty_time_val(long);
 extern int        init_conf(char *filename, int rehash);
 extern void       validate_configuration(void);
 extern void       run_configuration(void);
@@ -543,5 +550,7 @@ char  *ssl_get_cipher(SSL *ssl);
 #endif
 long config_checkval(char *value, unsigned short flags);
 void config_status(char *format, ...);
+void init_random();
+u_int32_t getrandom32();
 #define EVENT_DRUGS BASE_VERSION
 

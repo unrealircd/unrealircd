@@ -57,6 +57,11 @@
 #include <openssl/rand.h>
 #endif
 #include "auth.h" 
+#ifdef HAVE_REGEX
+#include <regex.h>
+#else
+#include "../extras/regex/regex.h"
+#endif
 extern int sendanyways;
 
 
@@ -1012,6 +1017,7 @@ struct _configitem_badword {
 	ConfigItem      *prev, *next;
 	ConfigFlag	flag;
 	char		*word, *replace;
+	regex_t 	expr;
 };
 
 struct _configitem_deny_dcc {
@@ -1087,10 +1093,12 @@ struct _configitem_alias_format {
 	short type;
 	char *format, *parameters;
 };
+
+#define INCLUDE_NOTLOADED 1
 	
 struct _configitem_include {
 	ConfigItem *prev, *next;
-	ConfigFlag flag;
+	ConfigFlag_ban flag;
 	char *file;
 };
 
@@ -1158,11 +1166,7 @@ struct ListOptions {
 
 /* mode structure for channels */
 struct SMode {
-#ifndef USE_LONGMODE
-	unsigned int mode;
-#else
 	long mode;
-#endif
 	int  limit;
 	char key[KEYLEN + 1];
 	char link[LINKLEN + 1];
@@ -1438,6 +1442,25 @@ struct Command {
 	unsigned long 		rticks;
 #endif
 };
+
+#ifdef THROTTLING
+
+struct ThrottlingBucket
+{
+	struct ThrottlingBucket *next, *prev;
+	struct IN_ADDR	in;
+	time_t		since;
+};
+
+void	init_throttling_hash();
+int	hash_throttling(struct IN_ADDR *in);
+struct	ThrottlingBucket	*find_throttling_bucket(struct IN_ADDR *in);
+void	add_throttling_bucket(struct IN_ADDR *in);
+void	del_throttling_bucket(struct ThrottlingBucket *bucket);
+int	throttle_can_connect(struct IN_ADDR *in);
+
+#endif
+
 
 #endif /* __struct_include__ */
 

@@ -118,9 +118,6 @@ int init_resolver(int op)
 	}
 #endif
 
-#ifdef	LRAND48
-	srand48(TStime());
-#endif
 	if (op & RES_INITLIST)
 	{
 		bzero((char *)&reinfo, sizeof(reinfo));
@@ -697,20 +694,19 @@ static int query_name(char *name, int class, int type, ResRQ *rptr)
 		return r;
 	}
 	hptr = (HEADER *) buf;
-#ifdef LRAND48
-	do
-	{
-		hptr->id = htons(ntohs(hptr->id) + k + lrand48() & 0xffff);
-#else
 	(void)gettimeofday(&tv, NULL);
 	do
 	{
 		/* htons/ntohs can be assembler macros, which cannot
 		   be nested. Thus two lines.   -Vesa               */
+#ifdef LRAND48
 		u_short nstmp = ntohs(hptr->id) + k +
-		    (u_short)(tv.tv_usec & 0xffff);
-		hptr->id = htons(nstmp);
+		    (u_short)(tv.tv_usec & 0xffff) + (u_short)(lrand48() & 0xffff);
+#else
+		u_short nstmp = ntohs(hptr->id) + k +
+		    (u_short)(tv.tv_usec & 0xffff) + (u_short)(rand() & 0xffff);
 #endif /* LRAND48 */
+		hptr->id = htons(nstmp);
 		k++;
 	}
 	while (find_id(ntohs(hptr->id)));
@@ -1159,6 +1155,7 @@ struct hostent *get_res(char *lp,long id)
 			bcopy((char *)&rptr->cinfo, lp, sizeof(Link));
 	}
 #else
+/* WIN32 */
         he = rptr->he;
          if (he && he->h_name && ((struct IN_ADDR *)he->h_addr)->S_ADDR &&
 	             rptr->locked < 2)
@@ -1373,11 +1370,10 @@ static void update_list(ResRQ *rptr, aCache *cachep)
 	 */
 #ifdef INET6
 	for (s = (char *)HE(rptr)->h_addr.S_ADDR;
-	    ((struct IN_ADDR *)s)->S_ADDR; s += sizeof(struct IN_ADDR))
 #else
 	for (s = (char *)&HE(rptr)->h_addr.S_ADDR;
-	    ((struct IN_ADDR *)s)->S_ADDR; s += sizeof(struct IN_ADDR))
 #endif
+	    WHOSTENTP(((struct IN_ADDR *)s)->S_ADDR); s += sizeof(struct IN_ADDR))
 	{
 #ifdef INET6
 		for (i = 0; (t = HE(cp)->h_addr_list[i]); i++)
@@ -1407,10 +1403,18 @@ static void update_list(ResRQ *rptr, aCache *cachep)
 			base = (char **)MyRealloc((char *)ab,
 			    (addrcount + 1) * sizeof(*ab));
 			HE(cp)->h_addr_list = base;
+			ab = (struct IN_ADDR **)HE(cp)->h_addr_list; /* Update after realloc -- Syzop */
 #ifdef	DEBUGMODE
+ #ifdef INET6
+			Debug((DEBUG_DNS, "u_l:add IP %s hal %x ac %d",
+				inet_ntop(((struct IN_ADDR *)s), mydummy,
+				          MYDUMMY_SIZE),
+				HE(cp)->h_addr_list, addrcount));
+ #else
 			Debug((DEBUG_DNS, "u_l:add IP %x hal %x ac %d",
 			    ntohl(((struct IN_ADDR *)s)->S_ADDR),
 			    HE(cp)->h_addr_list, addrcount));
+ #endif
 #endif
 			for (; addrcount; addrcount--)
 			{
@@ -1560,7 +1564,7 @@ static aCache *make_cache(ResRQ *rptr)
 	   ** shouldn't happen but it just might...
 	 */
 #ifndef _WIN32
-	if (!rptr->he.h_name || !rptr->he.h_addr.S_ADDR)
+	if (!rptr->he.h_name || !WHOSTENTP(rptr->he.h_addr.S_ADDR) )
 #else
 		if (!rptr->he->h_name || !((struct IN_ADDR *)rptr->he->h_addr)->S_ADDR)
 #endif

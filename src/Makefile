@@ -28,7 +28,7 @@ OBJS=auth.o aln.o badwords.o channel.o cloak.o crule.o dbuf.o \
 	s_bsd.o s_conf.o s_debug.o s_err.o s_extra.o s_kline.o \
 	s_misc.o s_numeric.o s_serv.o s_svs.o $(STRTOUL) socket.o \
 	ssl.o s_user.o scache.o send.o support.o umodes.o \
-	version.o webtv.o whowas.o zip.o cidr.o
+	version.o webtv.o whowas.o zip.o cidr.o random.o
 
 SRC=$(OBJS:%.o=%.c)
 
@@ -53,7 +53,7 @@ all: build
 build: ircd mods
 
 custommodule:
-	cd modules; make $(MAKEARGS) MODULEFILE=$(MODULEFILE) EXLIBS=$(EXLIBS) custommodule
+	cd modules; $(MAKE) MODULEFILE=$(MODULEFILE) EXLIBS=$(EXLIBS) custommodule
 
 ircd: $(OBJS)
 	$(CC) $(CFLAGS) $(CRYPTOLIB) -o ircd $(OBJS) $(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
@@ -76,7 +76,7 @@ mods:
 	@if [ ! -r modules ] ; then \
 		echo "You havent done cvs update -P -d"; \
 	fi
-	cd modules; make $(MAKEARGS) all
+	cd modules; $(MAKE) all
 
 version.c: version.c.SH ../Changes
 	$(SHELL) version.c.SH
@@ -236,6 +236,9 @@ crule.o: crule.c $(INCLUDES)
 
 cidr.o: cidr.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c cidr.c
+
+random.o: random.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c random.c
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 

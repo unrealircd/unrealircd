@@ -49,6 +49,7 @@
 #ifdef _WIN32
 #undef GLOBH
 #endif
+#include "badwords.h"
 
 #define ircstrdup(x,y) if (x) MyFree(x); if (!y) x = NULL; else x = strdup(y)
 #define ircfree(x) if (x) MyFree(x); x = NULL
@@ -296,6 +297,7 @@ struct {
 */
 
 void	ipport_seperate(char *string, char **ip, char **port);
+void	port_range(char *string, int *start, int *end);
 long	config_checkval(char *value, unsigned short flags);
 
 /*
@@ -319,6 +321,8 @@ void 			config_progress(char *format, ...);
 extern void 	win_log(char *format, ...);
 extern void		win_error();
 #endif
+
+extern void add_entropy_configfile(struct stat st, char *buf);
 
 /*
  * Config parser (IRCd)
@@ -365,45 +369,80 @@ ConfigFile		*conf = NULL;
 
 int			config_error_flag = 0;
 int			config_verbose = 0;
-/*
-*/
 
-void	ipport_seperate(char *string, char **ip, char **port)
+/* Pick out the ip address and the port number from a string.
+ * The string syntax is:  ip:port.  ip must be enclosed in brackets ([]) if its an ipv6
+ * address because they contain colon (:) separators.  The ip part is optional.  If the string
+ * contains a single number its assumed to be a port number.
+ *
+ * Returns with ip pointing to the ip address (if one was specified), a "*" (if only a port 
+ * was specified), or an empty string if there was an error.  port is returned pointing to the 
+ * port number if one was specified, otherwise it points to a empty string.
+ */
+void ipport_seperate(char *string, char **ip, char **port)
 {
 	char *f;
+	
+	/* assume failure */
+	*ip = *port = "";
 
-	if (*string == '[')
+	/* sanity check */
+	if (string && strlen(string) > 0)
 	{
-		f = strrchr(string, ':');
-	        if (f)
-	        {
-	        	*f = '\0';
-	        }
-	        else
-	        {
-	 		*ip = NULL;
-	        	*port = NULL;
-	        }
-
-	        *port = (f + 1);
-	        f = strrchr(string, ']');
-	        if (f) *f = '\0';
-	        *ip = (*string == '[' ? (string + 1) : string);
-	        
-	}
-	else if (strchr(string, ':'))
-	{
-		*ip = strtok(string, ":");
-		*port = strtok(NULL, "");
-	}
-	else if (!strcmp(string, my_itoa(atoi(string))))
-	{
-		*ip = "*";
-		*port = string;
+		/* handle ipv6 type of ip address */
+		if (*string == '[')
+		{
+			if ((f = strrchr(string, ']')))
+			{
+				*ip = string + 1;	/* skip [ */
+				*f = '\0';			/* terminate the ip string */
+				/* next char must be a : if a port was specified */
+				if (*++f == ':')
+				{
+					*port = ++f;
+				}
+			}
+		}
+		/* handle ipv4 and port */
+		else if ((f = strchr(string, ':')))
+		{
+			/* we found a colon... we may have ip:port or just :port */
+			if (f == string)
+			{
+				/* we have just :port */
+				*ip = "*";
+			}
+			else
+			{
+				/* we have ip:port */
+				*ip = string;
+				*f = '\0';
+			}
+			*port = ++f;
+		}
+		/* no ip was specified, just a port number */
+		else if (!strcmp(string, my_itoa(atoi(string))))
+		{
+			*ip = "*";
+			*port = string;
+		}
 	}
 }
 
-
+void port_range(char *string, int *start, int *end)
+{
+	char *c = strchr(string, '-');
+	if (!c)
+	{
+		int tmp = atoi(string);
+		*start = tmp;
+		*end = tmp;
+		return;
+	}
+	*c = '\0';
+	*start = atoi(string);
+	*end = atoi((c+1));
+}
 
 long config_checkval(char *value, unsigned short flags) {
 	char *text;
@@ -493,7 +532,8 @@ tolower(*(text+1)) == 'n') || *text == '1' || tolower(*text) == 't') {
 						break;
 				}
 				ret += atoi(sz+1)*mfactor;
-				
+				if (*text == '\0')
+					break;
 			}
 		}
 		mfactor = 1;
@@ -561,6 +601,7 @@ ConfigFile *config_load(char *filename)
 	/* Just me or could this cause memory corrupted when ret <0 ? */
 	buf[ret] = '\0';
 	close(fd);
+	add_entropy_configfile(sb, buf);
 	cfptr = config_parse(filename, buf);
 	free(buf);
 	return cfptr;
@@ -946,7 +987,7 @@ void config_progress(char *format, ...)
 
 ConfigCommand *config_binary_search(char *cmd) {
 	int start = 0;
-	int stop = sizeof(_ConfigCommands)/sizeof(_ConfigCommands[0]);
+	int stop = sizeof(_ConfigCommands)/sizeof(_ConfigCommands[0])-1;
 	int mid;
 	while (start <= stop) {
 		mid = (start+stop)/2;
@@ -969,6 +1010,7 @@ void	free_iConf(aConfiguration *i)
 	ircfree(i->auto_join_chans);
 	ircfree(i->oper_auto_join_chans);
 	ircfree(i->oper_only_stats);
+	ircfree(i->oper_snomask);
 	ircfree(i->egd_path);
 	ircfree(i->static_quit);
 #ifdef USE_SSL
@@ -992,8 +1034,12 @@ void	free_iConf(aConfiguration *i)
 	ircfree(i->network.x_stats_server);
 }
 
+int	config_test();
+
 int	init_conf(char *rootconf, int rehash)
 {
+	ConfigItem_include *inc, *next;
+
 	config_status("Loading IRCd configuration ..");
 	if (conf)
 	{
@@ -1014,6 +1060,15 @@ int	init_conf(char *rootconf, int rehash)
 #ifndef STATIC_LINKING
 			Unload_all_testing_modules();
 #endif
+			for (inc = conf_include; inc; inc = next)
+			{
+				next = (ConfigItem_include *)inc->next;
+				if (inc->flag.type != INCLUDE_NOTLOADED)
+					continue;
+				ircfree(inc->file);
+				DelListItem(inc, conf_include);
+				MyFree(inc);
+			}
 			config_free(conf);
 			conf = NULL;
 			free_iConf(&tempiConf);
@@ -1028,6 +1083,16 @@ int	init_conf(char *rootconf, int rehash)
 #else
 			RunHook0(HOOKTYPE_REHASH);
 #endif
+			for (inc = conf_include; inc; inc = next)
+			{
+				next = (ConfigItem_include *)inc->next;
+				if (inc->flag.type == INCLUDE_NOTLOADED)
+					continue;
+				ircfree(inc->file);
+				DelListItem(inc, conf_include);
+				MyFree(inc);
+			}
+			
 		}
 #ifndef STATIC_LINKING
 		Init_all_testing_modules();
@@ -1040,6 +1105,11 @@ int	init_conf(char *rootconf, int rehash)
 			l_commands_Init(&ModCoreInfo);
 		}
 #endif
+		for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+		{
+			if (inc->flag.type == INCLUDE_NOTLOADED)
+				inc->flag.type = 0;
+		}
 		if (config_run() < 0)
 		{
 			config_error("Bad case of config errors. Server will now die. This really shouldn't happen");
@@ -1053,6 +1123,15 @@ int	init_conf(char *rootconf, int rehash)
 	}
 	else	
 	{
+		for (inc = conf_include; inc; inc = next)
+		{
+			next = (ConfigItem_include *)inc->next;
+			if (inc->flag.type != INCLUDE_NOTLOADED)
+				continue;
+			ircfree(inc->file);
+			DelListItem(inc, conf_include);
+			MyFree(inc);
+		}
 		config_error("IRCd configuration failed to load");
 		config_free(conf);
 		conf = NULL;
@@ -1078,6 +1157,7 @@ int	load_conf(char *filename)
 	ConfigFile 	*cfptr, *cfptr2, **cfptr3;
 	ConfigEntry 	*ce;
 	int		ret;
+	ConfigItem_include *includes;
 
 	if (config_verbose > 0)
 		config_status("Loading config file %s ..", filename);
@@ -1106,7 +1186,20 @@ int	load_conf(char *filename)
 				 if (ret < 0) 
 					 	return ret;
 			}
-			return 1;
+		if (stricmp(filename, CPATH)) {
+			for (includes = conf_include; includes; includes = (ConfigItem_include *)includes->next) {
+				if (includes->flag.type == INCLUDE_NOTLOADED &&
+				    !stricmp(includes->file, filename)) 
+					break;
+			}
+			if (!includes) {
+				includes = MyMalloc(sizeof(ConfigItem_include));
+				includes->file = strdup(filename);
+				includes->flag.type = INCLUDE_NOTLOADED;
+				AddListItem(includes, conf_include);
+			}
+		}
+		return 1;
 	}
 	else
 	{
@@ -1286,7 +1379,9 @@ void	config_rehash()
 		badword_ptr = (ConfigItem_badword *) next) {
 		next = (ListStruct *)badword_ptr->next;
 		ircfree(badword_ptr->word);
+		if (badword_ptr->replace)
 			ircfree(badword_ptr->replace);
+		regfree(&badword_ptr->expr);
 		DelListItem(badword_ptr, conf_badword_channel);
 		MyFree(badword_ptr);
 	}
@@ -1294,7 +1389,9 @@ void	config_rehash()
 		badword_ptr = (ConfigItem_badword *) next) {
 		next = (ListStruct *)badword_ptr->next;
 		ircfree(badword_ptr->word);
+		if (badword_ptr->replace)
 			ircfree(badword_ptr->replace);
+		regfree(&badword_ptr->expr);
 		DelListItem(badword_ptr, conf_badword_message);
 		MyFree(badword_ptr);
 	}
@@ -1378,13 +1475,6 @@ void	config_rehash()
 		}
 		DelListItem(alias_ptr, conf_alias);
 		MyFree(alias_ptr);
-	}
-	for (include_ptr = conf_include; include_ptr; include_ptr = (ConfigItem_include *)next)
-	{
-		next = (ListStruct *)include_ptr->next;	 
-		ircfree(include_ptr->file);
-		DelListItem(include_ptr, conf_include);
-		MyFree(include_ptr);
 	}
 	for (help_ptr = conf_help; help_ptr; help_ptr = (ConfigItem_help *)next) {
 		aMotd *text;
@@ -1508,10 +1598,11 @@ int	config_run()
 
 OperFlag *config_binary_flags_search(OperFlag *table, char *cmd, int size) {
 	int start = 0;
-	int stop = size;
+	int stop = size-1;
 	int mid;
 	while (start <= stop) {
 		mid = (start+stop)/2;
+
 		if (smycmp(cmd,table[mid].name) < 0) {
 			stop = mid-1;
 		}
@@ -1931,6 +2022,26 @@ void init_dynconf(void)
 	bzero(&tempiConf, sizeof(iConf));
 }
 
+char *pretty_time_val(long timeval)
+{
+	static char buf[512];
+
+	if (timeval == 0)
+		return "0";
+
+	buf[0] = 0;
+
+	if (timeval/86400)
+		sprintf(buf, "%d day%s ", timeval/86400, timeval/86400 != 1 ? "s" : "");
+	if ((timeval/3600) % 24)
+		sprintf(buf, "%s%d hour%s ", buf, (timeval/3600)%24, (timeval/3600)%24 != 1 ? "s" : "");
+	if ((timeval/60)%60)
+		sprintf(buf, "%s%d minute%s ", buf, (timeval/60)%60, (timeval/60)%60 != 1 ? "s" : "");
+	if ((timeval%60))
+		sprintf(buf, "%s%d second%s", buf, timeval%60, timeval%60 != 1 ? "s" : "");
+	return buf;
+}
+
 /* Report the unrealircd.conf info -codemastr*/
 void report_dynconf(aClient *sptr)
 {
@@ -1940,11 +2051,15 @@ void report_dynconf(aClient *sptr)
 	    sptr->name, KLINE_ADDRESS);
 	sendto_one(sptr, ":%s %i %s :modes-on-connect: %s", me.name, RPL_TEXT,
 	    sptr->name, get_modestr(CONN_MODES));
+	sendto_one(sptr, ":%s %i %s :modes-on-oper: %s", me.name, RPL_TEXT,
+	    sptr->name, get_modestr(OPER_MODES));
+	sendto_one(sptr, ":%s %i %s :snomask-on-oper: %s", me.name, RPL_TEXT,
+	    sptr->name, OPER_SNOMASK ? OPER_SNOMASK : SNO_DEFOPER);
 	if (OPER_ONLY_STATS)
 		sendto_one(sptr, ":%s %i %s :oper-only-stats: %s", me.name, RPL_TEXT,
 			sptr->name, OPER_ONLY_STATS);
-	sendto_one(sptr, ":%s %i %s :anti-spam-quit-message-time: %d", me.name, RPL_TEXT,
-		sptr->name, ANTI_SPAM_QUIT_MSG_TIME);
+	sendto_one(sptr, ":%s %i %s :anti-spam-quit-message-time: %s", me.name, RPL_TEXT,
+		sptr->name, pretty_time_val(ANTI_SPAM_QUIT_MSG_TIME));
 #ifdef USE_SSL
 	sendto_one(sptr, ":%s %i %s :ssl::egd: %s", me.name, RPL_TEXT,
 		sptr->name, EGD_PATH ? EGD_PATH : (USE_EGD ? "1" : "0"));
@@ -1982,8 +2097,8 @@ void report_dynconf(aClient *sptr)
 	    RPL_TEXT, sptr->name, OPER_AUTO_JOIN_CHANS ? OPER_AUTO_JOIN_CHANS : "0");
 	sendto_one(sptr, ":%s %i %s :static-quit: %s", me.name, 
 		RPL_TEXT, sptr->name, STATIC_QUIT ? STATIC_QUIT : "<none>");	
-	sendto_one(sptr, ":%s %i %s :dns::timeout: %li", me.name, RPL_TEXT,
-	    sptr->name, HOST_TIMEOUT);
+	sendto_one(sptr, ":%s %i %s :dns::timeout: %s", me.name, RPL_TEXT,
+	    sptr->name, pretty_time_val(HOST_TIMEOUT));
 	sendto_one(sptr, ":%s %i %s :dns::retries: %d", me.name, RPL_TEXT,
 	    sptr->name, HOST_RETRIES);
 	sendto_one(sptr, ":%s %i %s :dns::nameserver: %s", me.name, RPL_TEXT,
@@ -2083,12 +2198,11 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 			cSlash--; 
 		*(cSlash+1)=0;
 	}
-	hFind = FindFirstFile(ce->ce_vardata, &FindData);
-	if (!FindData.cFileName) {
+	if ( (hFind = FindFirstFile(ce->ce_vardata, &FindData)) == INVALID_HANDLE_VALUE )
+	{
 		config_status("%s:%i: include %s: invalid file given",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			ce->ce_vardata);
-		FindClose(hFind);
 		return -1;
 	}
 	if (cPath) {
@@ -2514,6 +2628,12 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_varlinenum);
 		errors++;
 	}	
+	if (!config_find_entry(ce->ce_entries, "flags"))
+	{
+		config_error("%s:%i: oper::flags missing", ce->ce_fileptr->cf_filename,
+			ce->ce_varlinenum);
+		errors++;
+	}	
 	if (!config_find_entry(ce->ce_entries, "class"))
 	{
 		config_error("%s:%i: oper::class missing", ce->ce_fileptr->cf_filename,
@@ -2601,12 +2721,15 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if ((cep = config_find_entry(ce->ce_entries, "pingfreq")))
 	{
-		l = atol(cep->ce_vardata);
-		if (l < 1)
+		if (cep->ce_vardata)
 		{
-			config_error("%s:%i: class::pingfreq with illegal value",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-			errors++;
+			l = atol(cep->ce_vardata);
+			if (l < 1)
+			{
+				config_error("%s:%i: class::pingfreq with illegal value",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
 		}
 	}
 	else
@@ -2617,12 +2740,15 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if ((cep = config_find_entry(ce->ce_entries, "maxclients")))
 	{
-		l = atol(cep->ce_vardata);
-		if (!l)
+		if (cep->ce_vardata)
 		{
-			config_error("%s:%i: class::maxclients with illegal value",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-			errors++;
+			l = atol(cep->ce_vardata);
+			if (!l)
+			{
+				config_error("%s:%i: class::maxclients with illegal value",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
 		}
 	}
 	else
@@ -2633,12 +2759,15 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if ((cep = config_find_entry(ce->ce_entries, "sendq")))
 	{
-		l = atol(cep->ce_vardata);
-		if (!l)
-		{
-			config_error("%s:%i: class::sendq with illegal value",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-			errors++;
+		if (cep->ce_vardata)
+		{	
+			l = atol(cep->ce_vardata);
+			if (!l)
+			{
+				config_error("%s:%i: class::sendq with illegal value",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
 		}
 	}
 	else
@@ -2649,12 +2778,15 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if ((cep = config_find_entry(ce->ce_entries, "connfreq")))
 	{
-		l = atol(cep->ce_vardata);
-		if (l < 10)
+		if (cep->ce_vardata)
 		{
-			config_error("%s:%i: class::connfreq with illegal value (<10)",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-			errors++;
+			l = atol(cep->ce_vardata);
+			if (l < 10)
+			{
+				config_error("%s:%i: class::connfreq with illegal value (<10)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
 		}
 	}
 	
@@ -2846,15 +2978,18 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else
 	{
-		if (((fd = open(cep->ce_vardata, O_RDONLY)) == -1))
+		if (cep->ce_vardata)
 		{
-			config_error("%s:%i: tld::motd: %s: %s",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				cep->ce_vardata, strerror(errno));
-			errors++;
+			if (((fd = open(cep->ce_vardata, O_RDONLY)) == -1))
+			{
+				config_error("%s:%i: tld::motd: %s: %s",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					cep->ce_vardata, strerror(errno));
+				errors++;
+			}
+			else
+				close(fd);
 		}
-		else
-			close(fd);
 		
 	}
 	
@@ -2866,15 +3001,18 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else
 	{
-		if (((fd = open(cep->ce_vardata, O_RDONLY)) == -1))
+		if (cep->ce_vardata)
 		{
-			config_error("%s:%i: tld::rules: %s: %s",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				cep->ce_vardata, strerror(errno));
-			errors++;
+			if (((fd = open(cep->ce_vardata, O_RDONLY)) == -1))
+			{
+				config_error("%s:%i: tld::rules: %s: %s",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					cep->ce_vardata, strerror(errno));
+				errors++;
+			}
+			else
+				close(fd);
 		}
-		else
-			close(fd);
 	}
 	
 	return errors;
@@ -2889,7 +3027,8 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	char	    copy[256];
 	char	    *ip;
 	char	    *port;
-	int	    iport;
+	int	    start, end, iport;
+	int tmpflags =0;
 	unsigned char	isnew = 0;
 
 	if (!ce->ce_vardata)
@@ -2912,31 +3051,12 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	{
 		return -1;
 	}
-	iport = atol(port);
-	if ((iport < 0) || (iport > 65535))
+	port_range(port, &start, &end);
+	if ((start < 0) || (start > 65535) || (end < 0) || (end > 65535))
 	{
 		return -1;
 	}
-	if (!(listen = Find_listen(ip, iport)))
-	{
-		listen = MyMallocEx(sizeof(ConfigItem_listen));
-		listen->ip = strdup(ip);
-		listen->port = iport;
-		isnew = 1;
-	}
-	else
-	{
-		isnew = 0;
-	}
-
-	if (listen->options & LISTENER_BOUND)
-	{
-		listen->options = 0;
-		listen->options |= LISTENER_BOUND;
-	}
-	else
-		listen->options = 0;
-
+	end++;
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "options"))
@@ -2944,24 +3064,42 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
 				if ((ofp = config_binary_flags_search(_ListenerFlags, cepp->ce_varname, sizeof(_ListenerFlags)/sizeof(_ListenerFlags[0]))))
-					listen->options |= ofp->flag;
+					tmpflags |= ofp->flag;
 			}
 #ifndef USE_SSL
-			if (listen->options & LISTENER_SSL)
+			if (tmpflags & LISTENER_SSL)
 			{
 				config_status("%s:%i: listen with SSL flag enabled on a non SSL compile",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-						cep->ce_varname);
-				listen->options &= ~LISTENER_SSL;
+					cep->ce_varname);
+				tmpflags &= ~LISTENER_SSL;
 			}
 #endif
 		
 		}
-
 	}
-	if (isnew)
-		AddListItem(listen, conf_listen);
-	listen->flag.temporary = 0;
+
+	for (iport = start; iport < end; iport++)
+	{
+		
+		if (!(listen = Find_listen(ip, iport)))
+		{
+			listen = MyMallocEx(sizeof(ConfigItem_listen));
+			listen->ip = strdup(ip);
+			listen->port = iport;
+			isnew = 1;
+		}
+		else
+			isnew = 0;
+
+		if (listen->options & LISTENER_BOUND)
+			tmpflags |= LISTENER_BOUND;
+
+		listen->options = tmpflags;
+		if (isnew)
+			AddListItem(listen, conf_listen);
+		listen->flag.temporary = 0;
+	}
 	return 1;
 }
 
@@ -2974,7 +3112,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 	char	    copy[256];
 	char	    *ip;
 	char	    *port;
-	int	    iport;
+	int	    start, end;
 	int	    errors = 0;
 
 	if (!ce->ce_vardata)
@@ -3005,12 +3143,30 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return 1;
 	}
-	iport = atol(port);
-	if ((iport < 0) || (iport > 65535))
+	port_range(port, &start, &end);
+	if (start == end)
 	{
-		config_error("%s:%i: listen: illegal port (must be 0..65536)",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return 1;
+		if ((start < 0) || (start > 65535))
+		{
+			config_error("%s:%i: listen: illegal port (must be 0..65535)",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			return 1;
+		}
+	}
+	else 
+	{
+		if (end < start)
+		{
+			config_error("%s:%i: listen: illegal port range end value is less than starting value",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			return 1;
+		}
+		if ((start < 0) || (start > 65535) || (end < 0) || (end > 65535))
+		{
+			config_error("%s:%i: listen: illegal port range values must be between 0 and 65535",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			return 1;
+		}
 	}
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -3295,10 +3451,7 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 		if (Auth_CheckError(cep) < 0)
 			errors++;
 	}
-	if ((cep = config_find_entry(ce->ce_entries, "class")))
-	{
-	}
-	else
+	if (!(cep = config_find_entry(ce->ce_entries, "class")))
 	{
 		config_error("%s:%i: allow::class missing",
 			ce->ce_fileptr->cf_filename,
@@ -3307,11 +3460,14 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if ((cep = config_find_entry(ce->ce_entries, "maxperip")))
 	{
-		if (atoi(cep->ce_vardata) <= 0)
+		if (cep->ce_vardata)
 		{
-			config_error("%s:%i: allow::maxperip with illegal value (must be >0)",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-			errors++;
+			if (atoi(cep->ce_vardata) <= 0)
+			{
+				config_error("%s:%i: allow::maxperip with illegal value (must be >0)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
 		}
 	}
 	if ((cep = config_find_entry(ce->ce_entries, "options")))
@@ -3819,9 +3975,15 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 		ca->word = MyMalloc(strlen(cep->ce_vardata) + strlen(PATTERN) -1);
 		ircsprintf(ca->word, PATTERN, cep->ce_vardata);
 	}
+	/* Yes this is called twice, once in test, and once here, but it is still MUCH
+	   faster than calling it each time a message is received like before. -- codemastr
+	 */
+	regcomp(&ca->expr, ca->word, REG_ICASE);
 	if ((cep = config_find_entry(ce->ce_entries, "replace"))) {
 		ircstrdup(ca->replace, cep->ce_vardata);
 	}
+	else
+		ca->replace = NULL;
 	if (!strcmp(ce->ce_vardata, "channel"))
 		AddListItem(ca, conf_badword_channel);
 	else if (!strcmp(ce->ce_vardata, "message"))
@@ -3833,6 +3995,7 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 int _test_badword(ConfigFile *conf, ConfigEntry *ce) { 
 	int errors = 0;
 	ConfigEntry *word, *replace, *cep;
+	regex_t expr;
 	if (!ce->ce_entries)
 	{
 		config_error("%s:%i: empty badword block", 
@@ -3863,7 +4026,44 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 			config_error("%s:%i: badword::word without contents",
 				word->ce_fileptr->cf_filename, word->ce_varlinenum);
 			errors++;
-		}	
+		}
+		else 
+		{
+			
+			int errorcode, errorbufsize, regex=0;
+			char *errorbuf, *tmp, *tmpbuf=NULL;
+			for (tmp = word->ce_vardata; *tmp; tmp++) {
+				if ((int)*tmp < 65 || (int)*tmp > 123) {
+					regex = 1;
+					break;
+				}
+			}
+			if (regex)
+				errorcode = regcomp(&expr, word->ce_vardata, REG_ICASE);
+			else
+			{
+				tmpbuf = malloc(strlen(word->ce_vardata) +
+					 strlen(PATTERN) -1);
+				ircsprintf(tmpbuf, PATTERN, word->ce_vardata);
+				errorcode = regcomp(&expr, tmpbuf, REG_ICASE);
+			}
+			if (errorcode > 0)
+			{
+				errorbufsize = regerror(errorcode, &expr, NULL, 0)+1;
+				errorbuf = malloc(errorbufsize);
+				regerror(errorcode, &expr, errorbuf, errorbufsize);
+				config_error("%s:%i: badword::%s contains an invalid regex: %s",
+					word->ce_fileptr->cf_filename,
+					word->ce_varlinenum,
+					word->ce_varname, errorbuf);
+				errors++;
+				free(errorbuf);
+			}
+			if (!regex)
+				free(tmpbuf);	
+			regfree(&expr);
+		}
+
 	}
 	if ((replace = config_find_entry(ce->ce_entries, "replace")))
 	{
@@ -4043,6 +4243,7 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 					 config_error("%s:%i: unknown log flag '%s'",
 						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
 						cepp->ce_varname);
+
 					errors++; 
 				}
 			}
@@ -4179,6 +4380,15 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (Auth_CheckError(cep) < 0)
 			errors++;
+	}
+	if ((cep = config_find_entry(ce->ce_entries, "password-connect")))
+	{
+		if (cep->ce_entries)
+		{
+			config_error("%s:%i: link::password-connect can not be encrypted",
+				     ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			errors++;
+		}
 	}
 	if (errors > 0)
 		return errors;
@@ -4379,6 +4589,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "modes-on-oper")) {
 			tempiConf.oper_modes = (long) set_usermode(cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "snomask-on-oper")) {
+			ircstrdup(tempiConf.oper_snomask, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "static-quit")) {
 			ircstrdup(tempiConf.static_quit, cep->ce_vardata);
@@ -4613,6 +4826,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "modes-on-oper")) {
 			CheckNull(cep);
 			templong = (long) set_usermode(cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "snomask-on-oper")) {
+			CheckNull(cep);
 		}
 		else if (!strcmp(cep->ce_varname, "static-quit")) {
 			CheckNull(cep);

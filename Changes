@@ -1719,3 +1719,65 @@ seen. gmtime warning still there
 - Changed base version name to Unreal3.2, instead of Unreal3.2-Selene
 - Made McSkaf part of core coder team
 *** beta13 released ***
+- Added set::htm to set HTM options via the config. set::htm is only valid if either
+  commands.so or m_htm.so is loaded.
+- Recoded some of +G to work MUCH faster. A compiled copy of the regex is now stored 
+  in memory rather than compiling the regex each time the swear stripping was trigged. 
+  This uses slightly more memory, but saves a signifigant amount of execution time.
+  Idea inspired by a suggestion from CaliMonk
+- Fixed a bug where makeconf was still included in make install 
+- Fixed a bug reported by |Zerwas| where tsctl required all lowercase params (#0000537)
+- Fixed a bug reported by |Zerwas| where forgetting to have an oper::flags would cause a 
+  crash (#0000543)
+- Added a max of 500:500 to +f (higher than this is just stupid), this fixes
+  (#0000542) reported by BiGi
+- Fixed a bug where included files were not added to the file list in the Config menu under
+  win32. Reported by PoisonDart316 (#0000535)
+- Added chmode +u to help.conf, reported by Jaw959 (#0000544)
+- Fixed a docs typo 'channes' instead of 'channels' and a typo that said +I is limited to
+  netadmins, reported by PoisonDart316 (#0000547), also removed /unkline and /unzline from
+  the docs (replaced with /kline - and /zline -, also reported by PoisonDart316 (#0000548)
+- Fixed bug with INET6 and find_tkline_zap (..)
+- Fixed include bug
+- Created StripControlCodes() and call it from stripbadwords() to fix bug 552
+- Made 3 param TKL funcs Perm with reason instead of timed with no reason
+- Added set::snomask-on-oper to set the default snomask when users /oper (oper::snomask
+  overrides this)
+- Fixed a bug reported by AngryWolf where setting umode -o didn't remove umode
+  h. (#0000556)
+- Added a pretty_time_val function, this converts a number such as 86400 to "1 day"
+  to make it easier to read.
+- Fixed a bug in the binary search functions that could cause crashes when unknown config
+  directives were added. Reported by 1of10 (#0000587)
+- Fixed a bug at synch time that could cause more parameters to be sent than should be
+- Fixed a TKL bug where leaving out the reason caused a crash (reported by Ravage)
+- Added the ability to specify port ranges, for example listen *:6660-6669; listens
+  on ports 6660, 6661, ... 6669. Suggested by Krisztian Romek
+- Removed USE_LONGMODE, if it was #undef'ed problems could occur, so there is no reason to
+  have it if it doesn't to anything.
+- Fixed a bug where leaving out a value for certain config directives would cause a crash,
+  reported by AngryWolf (#0000596)
+- Fixed whole bunch of users in empty channel bug (probably)
+- Added a patch by Syzop to increase the "randomness" of well... the random numbers
+- Fixed a bug in the empty channel fix
+- Fixed a bug in the random patch under win32
+- Added a suggestion by AngryWolf to generate an error if a link::password-connect
+  is specified as encrypted. (#0000597)
+- Fixed bug #0000601 reported by cate where specifying just a :port number for set::scan::endpoint 
+  caused a seg fault.
+- Added some patches by Syzop to fix a variety of different bugs
+- Added some bugfixes for IPv6 and others by Syzop
+- Fixed a bug where leaving out the parameter to a password config entry would cause a
+  crash, reported by AngryWolf (#0000623)
+- Adding throttling, read config.h for more info. For the uneducated,
+  throttling is to reconnect way too fast repeatedly. Thanks to [Real] for
+  the idea
+- Fixed bug #000613 reported by AngryWolf where we were writing a null to the log file when 
+  we reached max size.
+- Fixed a bug where helpop would pass on a null pointer
+- One more fix to the above
+- Patch by Syzop to fix a bug in the resolver
+- Preperations for beta14. Will be a recommended upgrade
+- Compile fixes regarding throttling
+- Fix when you use another make than make
+** beta14 released **

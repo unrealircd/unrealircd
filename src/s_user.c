@@ -56,6 +56,7 @@ void send_umode_out(aClient *, aClient *, long);
 void send_umode_out_nickv2(aClient *, aClient *, long);
 void send_umode(aClient *, aClient *, long, long, char *);
 void set_snomask(aClient *, char *);
+int create_snomask(char *, int);
 /* static  Link    *is_banned(aClient *, aChannel *); */
 int  dontspread = 0;
 extern char *me_hash;
@@ -228,6 +229,54 @@ unsigned char *StripColors(unsigned char *text) {
 	return new_str;
 }
 
+/* strip color, bold, underline, and reverse codes from a string */
+const char *StripControlCodes(unsigned char *text) 
+{
+	int nc = 0, col = 0, i = 0, len = strlen(text);
+	static unsigned char new_str[4096];
+	while (len > 0) 
+	{
+		if ( col && ((isdigit(*text) && nc < 2) || (*text == ',' && nc < 3)))
+		{
+			nc++;
+			if (*text == ',')
+				nc = 0;
+		}
+		else 
+		{
+			if (col)
+				col = 0;
+			switch (*text)
+			{
+			case 3:
+				/* color */
+				col = 1;
+				nc = 0;
+				break;
+			case 2:
+				/* bold */
+				break;
+			case 31:
+				/* underline */
+				break;
+			case 22:
+				/* reverse */
+				break;
+			case 15:
+				/* plain */
+				break;
+			default:
+				new_str[i] = *text;
+				i++;
+				break;
+			}
+		}
+		text++;
+		len--;
+	}
+	new_str[i] = 0;
+	return new_str;
+}
 
 char umodestring[UMODETABLESZ+1];
 
@@ -1664,13 +1713,7 @@ CMD_FUNC(m_nick)
 		 *
 		 * Generate a random string for them to pong with.
 		 */
-#ifndef _WIN32
-		sptr->nospoof =
-		    1 + (int)(9000000.0 * random() / (RAND_MAX + 80000000.0));
-#else
-		sptr->nospoof =
-		    1 + (int)(9000000.0 * rand() / (RAND_MAX + 80000000.0));
-#endif
+		sptr->nospoof = getrandom32();
 		sendto_one(sptr, ":%s NOTICE %s :*** If you are having problems"
 		    " connecting due to ping timeouts, please"
 		    " type /quote pong %X or /raw pong %X now.",
@@ -1799,6 +1842,22 @@ char *get_modestr(long umodes)
 	*m = '\0';
 	return buf;
 }
+
+char *get_snostr(long sno) {
+	int flag;
+	int *s;
+	char *m;
+
+	m = buf;
+
+	*m++ = '+';
+	for (s = sno_mask; (flag = *s) && (m - buf < BUFSIZE - 4); s += 2)
+		if (sno & flag)
+			*m++ = (char)(*(s + 1));
+	*m = 0;
+	return buf;
+}
+
 
 /*
 ** m_user
@@ -2111,6 +2170,39 @@ void set_snomask(aClient *sptr, char *snomask) {
 	}
 }
 
+int create_snomask(char *snomask, int oper) {
+	int what = MODE_ADD;
+	char *p;
+	int *s, flag, sno = 0;
+	
+	if (snomask == NULL) 
+		return sno;
+	
+	for (p = snomask; p && *p; p++) {
+		switch (*p) {
+			case '+':
+				what = MODE_ADD;
+				break;
+			case '-':
+				what = MODE_DEL;
+				break;
+			default:
+				for (s = sno_mask; (flag = *s); s += 2)
+					if (*p == (char) (*(s + 1))) {
+						if (what == MODE_ADD)
+							sno |= flag;
+						else
+							sno &= ~flag;
+					}
+				
+		}
+	}
+	if (!oper) {
+		sno &= (SNO_NONOPERS);
+	}
+	return sno;
+}
+
 /*
  * m_umode() added 15/10/91 By Darren Reed.
  * parv[0] - sender
@@ -2275,6 +2367,8 @@ CMD_FUNC(m_umode)
 			ClearHideOper(sptr);
 		if (IsCoAdmin(sptr))
 			ClearCoAdmin(sptr);
+		if (IsHelpOp(sptr))
+			ClearHelpOp(sptr);
 		if (sptr->user->snomask & SNO_CLIENT)
 			sptr->user->snomask &= ~SNO_CLIENT;
 		if (sptr->user->snomask & SNO_FCLIENT)
