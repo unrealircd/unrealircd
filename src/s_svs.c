@@ -213,3 +213,219 @@ int  m_svso(cptr, sptr, parc, parv)
 		send_umode_out(acptr, acptr, fLag);
 	}
 }
+
+
+/* ** m_akill;
+**	parv[0] = sender prefix
+**	parv[1] = hostmask
+**	parv[2] = username
+**	parv[3] = comment
+*/
+int  m_akill(cptr, sptr, parc, parv)
+	aClient *cptr, *sptr;
+	int  parc;
+	char *parv[];
+{
+	char *hostmask, *usermask, *comment;
+	ConfigItem_ban *bconf;
+
+	if (parc < 2 && IsPerson(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+		    me.name, parv[0], "AKILL");
+		return 0;
+	}
+
+	if (IsServer(sptr) && parc < 3)
+		return 0;
+
+	if (!IsServer(cptr))
+	{
+		if (!IsOper(sptr))
+		{
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+			    sptr->name);
+			return 0;
+		}
+		else
+		{
+			comment = parc < 3 ? NULL : parv[2];
+			if ((hostmask = (char *)index(parv[1], '@')))
+			{
+				*hostmask = 0;
+				hostmask++;
+				usermask = parv[1];
+			}
+			else
+			{
+				sendto_one(sptr, ":%s NOTICE %s :%s", me.name,
+				    sptr->name,
+				    "Please use a nick!user@host mask.");
+				return 0;
+			}
+			if (!strchr(hostmask, '.'))
+			{
+				sendto_one(sptr,
+				    "NOTICE %s :*** What a sweeping AKILL.  If only your admin knew you tried that..",
+				    parv[0]);
+				sendto_realops("%s attempted to /akill *@*",
+				    parv[0]);
+				return 0;
+			}
+			if (MyClient(sptr))
+			{
+				sendto_realops("%s added akill for %s@%s (%s)",
+				    sptr->name, usermask, hostmask,
+				    !BadPtr(comment) ? comment : "no reason");
+				sendto_serv_butone(&me,
+				    ":%s GLOBOPS :%s added akill for %s@%s (%s)",
+				    me.name, sptr->name, usermask, hostmask,
+				    !BadPtr(comment) ? comment : "no reason");
+			}
+		}
+	}
+	else
+	{
+		hostmask = parv[1];
+		usermask = parv[2];
+		comment = parc < 4 ? NULL : parv[3];
+	}
+
+	if (!usermask || !hostmask)
+	{
+		/*
+		 * This is very bad, it should never happen.
+		 */
+		sendto_ops("Error adding akill from %s!", sptr->name);
+		return 0;
+	}
+
+	if (!(bconf = Find_ban(make_user_host(usermask, hostmask), CONF_BAN_USER)))
+	{
+		bconf = (ConfigItem_ban *) MyMallocEx(sizeof(ConfigItem_ban));
+		bconf->flag.type = CONF_BAN_USER;
+		bconf->mask = strdup(make_user_host(usermask, hostmask));
+		bconf->reason = comment;
+		bconf->flag.type2 = CONF_BAN_TYPE_AKILL;
+		add_ConfigItem((ConfigItem *) bconf, (ConfigItem **) &conf_ban);
+	}
+
+	if (comment)
+		sendto_serv_butone(cptr, ":%s AKILL %s %s :%s",
+		    IsServer(cptr) ? parv[0] : me.name, hostmask,
+		    usermask, comment);
+	else
+		sendto_serv_butone(cptr, ":%s AKILL %s %s",
+		    IsServer(cptr) ? parv[0] : me.name, hostmask, usermask);
+
+
+	check_pings(TStime(), 1);
+
+}
+
+/*
+** m_rakill;
+**      parv[0] = sender prefix
+**      parv[1] = hostmask
+**      parv[2] = username
+**      parv[3] = comment
+*/
+int  m_rakill(cptr, sptr, parc, parv)
+	aClient *cptr, *sptr;
+	int  parc;
+	char *parv[];
+{
+	char *hostmask, *usermask;
+	ConfigItem_ban  *bconf;
+	int  result;
+
+	if (parc < 2 && IsPerson(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+		    me.name, parv[0], "RAKILL");
+		return 0;
+	}
+
+	if (IsServer(sptr) && parc < 3)
+		return 0;
+
+	if (!IsServer(cptr))
+	{
+		if (!IsOper(sptr))
+		{
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+			    sptr->name);
+			return 0;
+		}
+		else
+		{
+			if ((hostmask = (char *)index(parv[1], '@')))
+			{
+				*hostmask = 0;
+				hostmask++;
+				usermask = parv[1];
+			}
+			else
+			{
+				sendto_one(sptr, ":%s NOTICE %s :*** %s", me.name,
+				    sptr->name, "Please use a user@host mask.");
+				return 0;
+			}
+		}
+	}
+	else
+	{
+		hostmask = parv[1];
+		usermask = parv[2];
+	}
+
+	if (!usermask || !hostmask)
+	{
+		/*
+		 * This is very bad, it should never happen.
+		 */
+		sendto_realops("Error adding akill from %s!", sptr->name);
+		return 0;
+	}
+	
+	if (!(bconf = Find_ban(make_user_host(usermask, hostmask), CONF_BAN_USER)))
+	{
+		if (!MyClient(sptr))
+		{
+			sendto_serv_butone(cptr, ":%s RAKILL %s %s",
+			    IsServer(cptr) ? parv[0] : me.name, hostmask,
+			    usermask);
+			return 0;
+		}
+		sendto_one(sptr, ":%s NOTICE %s :*** AKill %s@%s does not exist.",
+		    me.name, sptr->name, usermask, hostmask);
+		return 0;
+		
+	}
+	if (bconf->flag.type != CONF_BAN_TYPE_AKILL)
+	{
+		sendto_one(sptr, ":%s NOTICE %s :*** Error: Cannot remove other ban types",
+			me.name, sptr->name);
+		return 0;
+	}
+	if (MyClient(sptr))
+	{
+		sendto_ops("%s removed akill for %s@%s",
+		    sptr->name, usermask, hostmask);
+		sendto_serv_butone(&me,
+		    ":%s GLOBOPS :%s removed akill for %s@%s",
+		    me.name, sptr->name, usermask, hostmask);
+	}
+	
+	/* Wipe it out. */
+	del_ConfigItem(bconf, &conf_me);
+	MyFree(bconf->mask);
+	if (bconf->reason)
+		MyFree(bconf->reason);
+	MyFree(bconf);
+	
+	sendto_serv_butone(cptr, ":%s RAKILL %s %s",
+	    IsServer(cptr) ? parv[0] : me.name, hostmask, usermask);
+
+	check_pings(TStime(), 1);
+}

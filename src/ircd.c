@@ -530,7 +530,8 @@ extern TS check_pings(TS currenttime, int check_kills)
 			if (IsPerson(cptr))
 			{
 				bconf =
-				    Find_ban(make_user_host(cptr->username,
+				    Find_ban(make_user_host(
+				    cptr->user ? cptr->user->username : cptr->username,
 				    cptr->user ? cptr->user->realhost : cptr->
 				    sockhost), CONF_BAN_USER);
 				if (bconf)

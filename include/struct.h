@@ -942,13 +942,18 @@ struct _configflag_ban
 {
 	unsigned	temporary : 1;
 	unsigned	type	  : 4;
+	unsigned	type2	  : 2;
 };
 
 #define CONF_BAN_NICK		1
-#define CONF_BAN_IP			2
+#define CONF_BAN_IP		2
 #define CONF_BAN_SERVER		3
 #define CONF_BAN_USER   	4
 #define CONF_BAN_REALNAME 	5
+
+#define CONF_BAN_TYPE_CONF	0
+#define CONF_BAN_TYPE_AKILL	1
+
 
 struct _configitem {
 	ConfigFlag flag;

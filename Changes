@@ -159,3 +159,4 @@
 - Fixed a /connect bug
 - Made /svsnoop "work" again, moved it to s_svs.c (and made that file too)
 - Made /svso work again, moved it to same place as svsnoop.
+- Made /rakill and /akill work again :). Added banflag.type2

@@ -59,10 +59,11 @@ extern ConfigItem_ulines	*conf_ulines;
 extern ConfigItem_tld		*conf_tld;
 extern ConfigItem_oper		*conf_oper;
 extern ConfigItem_listen	*conf_listen;
-extern ConfigItem_allow	*conf_allow;
+extern ConfigItem_allow		*conf_allow;
 extern ConfigItem_except	*conf_except;
-extern ConfigItem_vhost	*conf_vhost;
+extern ConfigItem_vhost		*conf_vhost;
 extern ConfigItem_link		*conf_link;
+extern ConfigItem_ban		*conf_ban;
 
 ConfigItem_class	*Find_class(char *name);
 ConfigItem_oper		*Find_oper(char *name);
