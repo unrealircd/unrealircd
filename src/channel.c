@@ -1936,7 +1936,10 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		       && !is_chanowner(cptr, chptr))
 		  {
 			  if (IsNetAdmin(cptr))
-				opermode = 1;
+			  {
+				if (!is_halfop(cptr, chptr)) /* htrig will take care of halfop override notices */
+				   opermode = 1;
+			  }
 			  else
 			  {
 				  sendto_one(cptr, err_str(ERR_ONLYSERVERSCANCHANGE),
@@ -1949,7 +1952,10 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		      && !is_chanowner(cptr, chptr))
 		  {
 			  if (IsNetAdmin(cptr))
-				opermode = 1;
+			  {
+				if (!is_halfop(cptr, chptr)) /* htrig will take care of halfop override notices */
+				   opermode = 1;
+			  }
 			  else
 			  {
 				  sendto_one(cptr,
