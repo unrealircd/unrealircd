@@ -1654,4 +1654,6 @@ seen. gmtime warning still there
 - Finished up conf3, still needing some directives added but it sortof works. Rehash doesn't yet. 
 -  Fixed some idiotic lack of src/modules/Makefile.in changes for the sake of commands.so when 
   /zline /kline etc was moved to a module
- 
+- Converted _conf_alias to conf3, in the process changed the format to be slightly more
+  stable. See aliases/aliases.conf for the format changes
+- Numerous Sts-coded-conf3-while-sick bugs

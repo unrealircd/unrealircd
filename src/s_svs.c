@@ -321,7 +321,7 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 				xparv[0] = parv[0];
 				xparv[1] = output;
 				xparv[2] = NULL;
-				m_alias(cptr, sptr, 2, xparv, format->alias->alias);
+				m_alias(cptr, sptr, 2, xparv, format->nick);
 				regfree(&pcomp);
 				free(current);
 				break;

@@ -139,6 +139,7 @@ static int	_test_help		(ConfigFile *conf, ConfigEntry *ce);
 /* This MUST be alphabetized */
 static ConfigCommand _ConfigCommands[] = {
 	{ "admin", 		_conf_admin,		_test_admin 	},
+	{ "alias",		_conf_alias,		_test_alias	},
 	{ "allow",		_conf_allow,		_test_allow	},
 #ifdef STRIPBADWORDS
 	{ "badword",		_conf_badword,		_test_badword	},
@@ -160,8 +161,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "ulines",		_conf_ulines,		_test_ulines	},
 	{ "vhost", 		_conf_vhost,		_test_vhost	},
 /*
-	{ "deny",		_conf_deny,		_test_deny	},
-	{ "alias",		_conf_alias,		_test_alias	},*/
+	{ "deny",		_conf_deny,		_test_deny	},*/
 };
 
 static int _OldOperFlags[] = {
@@ -2141,19 +2141,19 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 	if (!config_find_entry(ce->ce_entries, "password"))
 	{
 		config_error("%s:%i: oper::password missing", ce->ce_fileptr->cf_filename,
-			cep->ce_varlinenum);
+			ce->ce_varlinenum);
 		errors++;
 	}	
 	if (!config_find_entry(ce->ce_entries, "from"))
 	{
 		config_error("%s:%i: oper::from missing", ce->ce_fileptr->cf_filename,
-			cep->ce_varlinenum);
+			ce->ce_varlinenum);
 		errors++;
 	}	
 	if (!config_find_entry(ce->ce_entries, "class"))
 	{
 		config_error("%s:%i: oper::class missing", ce->ce_fileptr->cf_filename,
-			cep->ce_varlinenum);
+			ce->ce_varlinenum);
 		errors++;
 	}	
 	return (errors == 0 ? 1 : -1);
@@ -2248,7 +2248,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 	else
 	{
 		config_error("%s:%i: class::pingfreq missing",
-			ce->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
 	}
 	if ((cep = config_find_entry(ce->ce_entries, "maxclients")))
@@ -2264,7 +2264,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 	else
 	{
 		config_error("%s:%i: class::maxclients missing",
-			ce->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
 	}
 	if ((cep = config_find_entry(ce->ce_entries, "sendq")))
@@ -2280,7 +2280,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 	else
 	{
 		config_error("%s:%i: class::sendq missing",
-			ce->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
 	}
 	if ((cep = config_find_entry(ce->ce_entries, "connfreq")))
@@ -3271,7 +3271,7 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 		}
 		if (!cep->ce_vardata)
 		{
-			if (stricmp(cep->ce_varname, "from") != NULL)
+			if (strcmp(cep->ce_varname, "from"))
 			{
 				config_error("%s:%i: vhost item without contents",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
@@ -3595,31 +3595,10 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 					continue;
 				}
-				for (ofp = _LinkFlags; ofp->name; ofp++)
-				{
-					if (!strcmp(ofp->name, cepp->ce_varname))
-					{
-						if (!(link->options & ofp->flag))
-							link->options |= ofp->flag;
-						break;
-					}
-				}
-				if (!ofp->name)
-				{
-					config_status("%s:%i: unknown link option '%s'",
-						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
-						cepp->ce_varname);
-					continue;
-				}
+				if ((ofp = config_binary_flags_search(_LinkFlags, cepp->ce_varname, sizeof(_LinkFlags)/sizeof(_LinkFlags[0])))) 
+					link->options |= ofp->flag;
+
 			}
-#ifndef USE_SSL
-			if (link->options & CONNECT_SSL)
-			{
-				config_status("%s:%i: link %s with SSL option enabled on a non-SSL compile",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, ce->ce_vardata);
-				link->options &= ~CONNECT_SSL;
-			}
-#endif
 		} else
 		if (!strcmp(cep->ce_varname, "hub"))
 		{
@@ -3632,9 +3611,9 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->ce_varname, "leafdepth"))
 		{
 			link->leafdepth = atol(cep->ce_vardata);
-		} else
+		} 
 #ifdef USE_SSL
-		if (!strcmp(cep->ce_varname, "ciphers"))
+		else if (!strcmp(cep->ce_varname, "ciphers"))
 		{
 			link->ciphers = strdup(cep->ce_vardata);
 		}
@@ -3646,7 +3625,8 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 
 int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 {
-	ConfigEntry	*cep;
+	ConfigEntry	*cep, *cepp;
+	OperFlag 	*ofp;
 	int		errors = 0;
 	char 		**p;
 	char		*requiredsections[] = {
@@ -3659,9 +3639,9 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 				"username", "hostname", "bind-ip",
 				"port", "password-receive",
 				"password-connect", "class",
-				"options", "hub",
-				"leaf", "leafdepth",
-				"ciphers", NULL
+				"hub", "leaf", 
+				"leafdepth", "ciphers", 
+				NULL
 			};
 	if (!ce->ce_vardata)
 	{
@@ -3700,6 +3680,37 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 		return -1;
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
+		if (!strcmp(cep->ce_varname, "options")) 
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!cepp->ce_varname)
+				{
+					config_error("%s:%i: link::options item without variable name",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+						errors++; 
+						continue;
+				}
+				if (!(ofp = config_binary_flags_search(_LinkFlags, cepp->ce_varname, sizeof(_LinkFlags)/sizeof(_LinkFlags[0])))) {
+					 config_error("%s:%i: unknown link option '%s'",
+						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
+						cepp->ce_varname);
+					errors++; 
+				}
+#ifndef USE_SSL
+				else 
+				{
+					if (ofp->flag == CONNECT_SSL)
+					{
+						config_status("%s:%i: link %s with SSL option enabled on a non-SSL compile",
+							cep->ce_fileptr->cf_filename, cep->ce_varlinenum, ce->ce_vardata);
+						errors++;
+					}
+				}
+#endif	
+			}
+			continue;
+		}
 		for (p = knowndirc; *p; p++)
 			if (!strcmp(cep->ce_varname, *p))
 				break;
@@ -3711,8 +3722,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			errors++;
 		}
 	}
-	if (errors > 0)
-		return -1;
+	return (errors > 0 ? -1 : 1);
 		
 }
 
@@ -4360,6 +4370,191 @@ void	run_configuration(void)
 		}
 	}
 }
+
+int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigItem_alias *alias = NULL;
+	ConfigItem_alias_format *format;
+	ConfigEntry 	    	*cep, *cepp;
+	aCommand *cmptr;
+
+	if (!ce->ce_vardata)
+	{
+		config_status("%s:%i: alias without name",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+	if ((cmptr = find_Command(ce->ce_vardata, 0, M_ALIAS)))
+		del_Command(ce->ce_vardata, NULL, cmptr->func);
+	if ((alias = Find_alias(ce->ce_vardata)))
+		DelListItem(alias, conf_alias);
+	alias = MyMallocEx(sizeof(ConfigItem_alias));
+	ircstrdup(alias->alias, ce->ce_vardata);
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "format")) {
+			format = MyMallocEx(sizeof(ConfigItem_alias_format));
+			ircstrdup(format->format, cep->ce_vardata);
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				if (!strcmp(cepp->ce_varname, "nick")) {
+					ircstrdup(format->nick, cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "parameters")) {
+					ircstrdup(format->parameters, cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "type")) {
+					if (!strcmp(cepp->ce_vardata, "services"))
+						format->type = ALIAS_SERVICES;
+					else if (!strcmp(cepp->ce_vardata, "stats"))
+						format->type = ALIAS_STATS;
+					else if (!strcmp(cepp->ce_vardata, "normal"))
+						format->type = ALIAS_NORMAL;
+				}
+			}
+			AddListItem(format, alias->format);
+		}		
+				
+		else if (!strcmp(cep->ce_varname, "nick")) {
+			ircstrdup(alias->nick, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "type")) {
+			if (!strcmp(cep->ce_vardata, "services"))
+				alias->type = ALIAS_SERVICES;
+			else if (!strcmp(cep->ce_vardata, "stats"))
+				alias->type = ALIAS_STATS;
+			else if (!strcmp(cep->ce_vardata, "normal"))
+				alias->type = ALIAS_NORMAL;
+			else if (!strcmp(cep->ce_vardata, "command"))
+				alias->type = ALIAS_COMMAND;
+		}
+			
+	}
+	if (BadPtr(alias->nick) && alias->type != ALIAS_COMMAND) {
+		ircstrdup(alias->nick, alias->alias); 
+	}
+	add_CommandX(alias->alias, NULL, m_alias, 1, M_USER|M_ALIAS);
+	AddListItem(alias, conf_alias);
+	return 0;
+}
+
+
+int _test_alias(ConfigFile *conf, ConfigEntry *ce) { 
+	int errors = 0;
+	ConfigEntry *cep, *cepp;
+	if (!ce->ce_entries)
+	{
+		config_error("%s:%i: empty alias block", 
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+	if (!ce->ce_vardata) 
+	{
+		config_error("%s:%i: alias without name", 
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	}
+	else if (!find_Command(ce->ce_vardata, 0, M_ALIAS) && find_Command(ce->ce_vardata, 0, 0)) {
+		config_status("%s:%i: %s is an existing command, can not add alias",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+		errors++;
+	}
+	if (!config_find_entry(ce->ce_entries, "type"))
+	{
+		config_error("%s:%i: alias::type missing", ce->ce_fileptr->cf_filename,
+			ce->ce_varlinenum);
+		errors++;
+	}
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+		{
+			config_error("%s:%i: blank alias item",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++; continue;
+		}
+		if (!cep->ce_vardata)
+		{
+			config_error("%s:%i: alias::%s without parameter",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum,
+				cep->ce_varname);
+			errors++; continue;
+		}
+
+		if (!strcmp(cep->ce_varname, "format")) {
+			if (!config_find_entry(cep->ce_entries, "type"))
+			{
+				config_error("%s:%i: alias::format::type missing", cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum);
+				errors++;
+			}
+			if (!config_find_entry(cep->ce_entries, "nick"))
+			{
+				config_error("%s:%i: alias::format::nick missing", cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum);
+				errors++;
+			}
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				if (!cepp->ce_vardata)
+				{
+					config_error("%s:%i: alias::format::%s without parameter",
+						cepp->ce_fileptr->cf_filename,
+						cepp->ce_varlinenum,
+						cepp->ce_varname);
+					errors++; continue;
+				}
+				if (!strcmp(cepp->ce_varname, "nick")) 
+					;
+				else if (!strcmp(cepp->ce_varname, "type"))
+				{
+					if (!strcmp(cepp->ce_vardata, "services"))
+						;
+					else if (!strcmp(cep->ce_vardata, "stats"))
+						;
+					else if (!strcmp(cep->ce_vardata, "normal"))
+						;
+					else {
+						config_status("%s:%i: unknown alias type",
+						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+						errors++;
+					}
+				}
+				else if (!strcmp(cepp->ce_varname, "parameters")) 
+					;
+				else {
+					config_status("%s:%i: unknown directive alias::format::%s",
+						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname);
+					errors++;
+				}
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "nick")) 
+			;
+		else if (!strcmp(cep->ce_varname, "type")) {
+			if (!strcmp(cep->ce_vardata, "services"))
+				;
+			else if (!strcmp(cep->ce_vardata, "stats"))
+				;
+			else if (!strcmp(cep->ce_vardata, "normal"))
+				;
+			else if (!strcmp(cep->ce_vardata, "command"))
+				;
+			else {
+				config_status("%s:%i: unknown alias type",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+		}
+		else {
+			config_error("%s:%i: unknown directive alias::%s",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				cep->ce_varname);
+			errors++;
+		}
+	}
+	return (errors > 0 ? -1 : 1); 
+}
+
 
 int     rehash(aClient *cptr, aClient *sptr, int sig)
 {

@@ -1081,7 +1081,8 @@ struct _configitem_alias {
 struct _configitem_alias_format {
 	ConfigItem *prev, *next;
 	ConfigFlag flag;
-	ConfigItem_alias *alias;
+	char *nick;
+	short type;
 	char *format, *parameters;
 };
 	
