@@ -443,7 +443,7 @@ void ircd_log(int flags, char *format, ...)
 #ifndef _WIN32
 				fd = open(logs->file, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR);
 #else
-				fd = open(logs->file, O_CREAT|O_WRONLY|O_TRUNC);
+				fd = open(logs->file, O_CREAT|O_WRONLY|O_TRUNC, S_IREAD|S_IWRITE);
 #endif
 				if (fd == -1)
 					continue;
@@ -453,7 +453,7 @@ void ircd_log(int flags, char *format, ...)
 #ifndef _WIN32
 			fd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY, S_IRUSR|S_IWUSR);
 #else
-			fd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY);
+			fd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY, S_IREAD|S_IWRITE);
 #endif
 			if (fd == -1)
 				continue;

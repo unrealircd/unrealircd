@@ -1164,3 +1164,5 @@ v- Fixed some bugreport stuff
 - Fixed a bug in the new usermode system that caused odd Unknown mode flag reporting.
 - Added a shutdown confirm message box to the X button on the win32 GUI 
   (suggested by dimplesx #0000058
+- Made the win32 version set log files to writable if they are
+  read only (reported by dimplesx #0000057)
