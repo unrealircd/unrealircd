@@ -500,7 +500,7 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_CONFIGPOSTTEST 6
 #define HOOKTYPE_REHASH 7
 #define HOOKTYPE_PRE_LOCAL_CONNECT 8
-#define HOOKTYPE_HTTPD_URL 9
+#define HOOKTYPE_PRE_LOCAL_QUIT 9
 #define HOOKTYPE_GUEST 10
 #define HOOKTYPE_SERVER_CONNECT 11
 #define HOOKTYPE_SERVER_QUIT 12

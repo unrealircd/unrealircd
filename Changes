@@ -2731,3 +2731,5 @@ seen. gmtime warning still there
 - Renamed "FAKE_LAG_FOR_LOCOPS" to "NO_FAKE_LAG_FOR_LOCOPS" since that's what it did
   anyway, requested by Greg (#0001453)
 - Made it so chan ops can invite in a +V channel. Requested by AI (#0001478)
+- Added HOOKTYPE_PRE_LOCAL_QUIT to allow changing quit messages. Suggested by penna22
+  (#0001424)

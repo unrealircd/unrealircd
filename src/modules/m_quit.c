@@ -103,10 +103,10 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		int blocked = 0;
 #endif
 		char *s = comment;
+		Hook *tmphook;
 		if (STATIC_QUIT)
-		{
 			return exit_client(cptr, sptr, sptr, STATIC_QUIT);
-		}
+
 		if (!prefix_quit || strcmp(prefix_quit, "no"))
 			s = ircsprintf(comment, "%s ",
 		    		BadPtr(prefix_quit) ? "Quit:" : prefix_quit);
@@ -145,6 +145,16 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			if (filtertype == 2)
 				ocomment = parv[0];
 		} /* (strip color codes) */
+
+                for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_QUIT]; tmphook; tmphook = tmphook->next)
+		{
+                	ocomment = (*(tmphook->func.pcharfunc))(sptr, ocomment);
+                        if (!ocomment)
+			{			
+				ocomment = parv[0];
+                                break;
+                        }
+                }
 
 		strncpy(s, ocomment, TOPICLEN - (s - comment));
 		comment[TOPICLEN] = '\0';
