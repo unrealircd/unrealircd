@@ -1814,3 +1814,4 @@ seen. gmtime warning still there
 - Added a much faster (>100x) badwords replace routine, currently disabled until it's
   100% finished and more testing has been done.
 - Cleanups in badwords.c.
+- Fixed minor bug in resolving of IPv4 names if IPv6 is enabled (#0000659).

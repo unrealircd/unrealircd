@@ -564,7 +564,7 @@ static int do_query_name(Link *lp, char *name, ResRQ *rptr)
 	{
 		rptr = make_request(lp);
 #ifdef INET6
-		rptr->type = T_AAAA;
+		rptr->type = T_ANY; /* Was T_AAAA: now using T_ANY so we fetch both A and AAAA -- Syzop */
 #else
 		rptr->type = T_A;
 #endif
@@ -574,7 +574,7 @@ static int do_query_name(Link *lp, char *name, ResRQ *rptr)
 	Debug((DEBUG_DNS, "do_query_name(): %s ", hname));
 #ifndef _WIN32
 #ifdef INET6
-	return (query_name(hname, C_IN, T_AAAA, rptr));
+	return (query_name(hname, C_IN, T_ANY, rptr)); /* Was T_AAAA: now using T_ANY so we fetch both A and AAAA -- Syzop */
 #else
 	return (query_name(hname, C_IN, T_A, rptr));
 #endif
