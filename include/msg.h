@@ -428,7 +428,6 @@ struct Message msgtab[] = {
 	{MSG_HELPSERV, m_helpserv, 0, 1, TOK_HELPSERV, 0L},
 	{MSG_HS, m_helpserv, 0, 1, TOK_HELPSERV, 0L},
 	{MSG_SERVICES, m_services, 0, 1, TOK_SERVICES, 0L},
-	{MSG_SUMMON, m_summon, 0, MAXPARA, TOK_SUMMON, 0L},
 	{MSG_HELP, m_help, 0, 1, TOK_HELP, 0L},
 	{MSG_HELPOP, m_help, 0, 1, TOK_HELP, 0L},
 	{MSG_INFO, m_info, 0, MAXPARA, TOK_INFO, 0L},

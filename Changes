@@ -587,3 +587,4 @@
   .kmode to unsigned char
 - Changed aChannel->users to unsigned short (max 65536 users per channel)
   and FloodOpt->nmsg to an unsigned short
+- Removed SUMMON totally

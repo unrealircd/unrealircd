@@ -69,9 +69,6 @@ char serveropts[] = {
 #ifdef	NPATH
 	'N',
 #endif
-#ifdef	ENABLE_SUMMON
-	'S',
-#endif
 #ifdef	ENABLE_USERS
 	'U',
 #endif

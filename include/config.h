@@ -597,9 +597,7 @@ extern void debug();
 # endif
 #endif
 
-#ifndef ENABLE_SUMMON
 #  undef LEAST_IDLE
-#endif
 
 #if defined(mips) || defined(PCS)
 #undef SYSV
