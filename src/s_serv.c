@@ -2914,39 +2914,41 @@ int  m_stats(cptr, sptr, parc, parv)
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "b - Send the badwords list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "C - Send the C/N line list");
+		      "C - Send the link block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "d - Send the d line list");
+		      "d - Send the deny link (auto) block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "D - Send the D line list");
+		      "D - Send the deny link (all) block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "e - Send the e line list");
+		      "e - Send the except socks block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "E - Send the E line list");
+		      "E - Send the except ban block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "F - Send the dccdeny line list");
+		      "F - Send the deny dcc block list list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "G - Report TKL information (G:lines/Shuns)");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "H - Send the H/L line list");
+		      "H - Send the link block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "I - Send the I line list");
+		      "I - Send the allow block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "K - Send the K/E/Z line list (Includes AKILLs)");
+		      "K - Send the ban user/ban ip/except ban block list (Includes AKILLs)");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "L - Send Link information");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
+		      "m - Send the events list");
+		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "M - Send list of how many times each command was used");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "n - Send the n line list");
+		      "n - Send the ban realname block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "N - Send network configuration list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "O - Send the O line list");
+		      "O - Send the oper block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "q - Send the SQLINE list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "Q - Send the Q line list");
+		      "Q - Send the ban nick block list");
 #ifdef DEBUGMODE
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "R - Send the usage list");
@@ -2956,19 +2958,19 @@ int  m_stats(cptr, sptr, parc, parv)
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "S - Send the dynamic configuration list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "t - Send the T line list");
+		      "T - Send the tld block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "t - Send connection information");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "u - Send server uptime and connection count");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "U - Send the U line list");
+		      "U - Send the ulines block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "v - Send the V line list");
+		      "v - Send the deny version block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "V - Send the vhost list");
+		      "V - Send the vhost block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "Y - Send the Y line list");
+		      "Y - Send the class block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "Z - Send memory usage information");
 		  stat = '*';
