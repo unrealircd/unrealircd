@@ -369,41 +369,63 @@ ConfigFile		*conf = NULL;
 
 int			config_error_flag = 0;
 int			config_verbose = 0;
-/*
-*/
 
-void	ipport_seperate(char *string, char **ip, char **port)
+/* Pick out the ip address and the port number from a string.
+ * The string syntax is:  ip:port.  ip must be enclosed in brackets ([]) if its an ipv6
+ * address because they contain colon (:) separators.  The ip part is optional.  If the string
+ * contains a single number its assumed to be a port number.
+ *
+ * Returns with ip pointing to the ip address (if one was specified), a "*" (if only a port 
+ * was specified), or an empty string if there was an error.  port is returned pointing to the 
+ * port number if one was specified, otherwise it points to a empty string.
+ */
+void ipport_seperate(char *string, char **ip, char **port)
 {
 	char *f;
+	
+	/* assume failure */
+	*ip = *port = "";
 
-	if (*string == '[')
+	/* sanity check */
+	if (string && strlen(string) > 0)
 	{
-		f = strrchr(string, ':');
-	        if (f)
-	        {
-	        	*f = '\0';
-	        }
-	        else
-	        {
-	 		*ip = NULL;
-	        	*port = NULL;
-	        }
-
-	        *port = (f + 1);
-	        f = strrchr(string, ']');
-	        if (f) *f = '\0';
-	        *ip = (*string == '[' ? (string + 1) : string);
-	        
-	}
-	else if (strchr(string, ':'))
-	{
-		*ip = strtok(string, ":");
-		*port = strtok(NULL, "");
-	}
-	else if (!strcmp(string, my_itoa(atoi(string))))
-	{
-		*ip = "*";
-		*port = string;
+		/* handle ipv6 type of ip address */
+		if (*string == '[')
+		{
+			if (f = strrchr(string, ']'))
+			{
+				*ip = string + 1;	/* skip [ */
+				*f = '\0';			/* terminate the ip string */
+				/* next char must be a : if a port was specified */
+				if (*++f == ':')
+				{
+					*port = ++f;
+				}
+			}
+		}
+		/* handle ipv4 and port */
+		else if (f = strchr(string, ':'))
+		{
+			/* we found a colon... we may have ip:port or just :port */
+			if (f == string)
+			{
+				/* we have just :port */
+				*ip = "*";
+			}
+			else
+			{
+				/* we have ip:port */
+				*ip = string;
+				*f = '\0';
+			}
+			*port = ++f;
+		}
+		/* no ip was specified, just a port number */
+		else if (!strcmp(string, my_itoa(atoi(string))))
+		{
+			*ip = "*";
+			*port = string;
+		}
 	}
 }
 
