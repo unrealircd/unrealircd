@@ -2086,3 +2086,4 @@ seen. gmtime warning still there
   defines who may set the specified usermode.
 - Made it so Ulined servers can use a TS that is in the past for topics (#0000448) reported 
   by thilo
+- Fixed a bug with ban version {} where some clients didn't like the request we were sending.

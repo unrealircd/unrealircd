@@ -1765,8 +1765,8 @@ CMD_FUNC(m_nick)
 			 */
 #ifndef NOSPOOF
 			if (USE_BAN_VERSION && MyConnect(sptr))
-				sendto_one(sptr, ":IRC PRIVMSG %s :\1VERSION\1",
-					nick);
+				sendto_one(sptr, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
+					me.name, nick);
 #endif
 			sptr->lastnick = TStime();	/* Always local client */
 			if (register_user(cptr, sptr, nick,
@@ -1986,8 +1986,8 @@ CMD_FUNC(m_user)
 		/* NICK and no-spoof already received, now we have USER... */
 	{
 		if (USE_BAN_VERSION && MyConnect(sptr))
-			sendto_one(sptr, ":IRC PRIVMSG %s :\1VERSION\1",
-				sptr->name);
+			sendto_one(sptr, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
+				me.name, sptr->name);
 
 		return(
 		    register_user(cptr, sptr, sptr->name, username, umodex,
