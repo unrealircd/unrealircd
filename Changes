@@ -1792,3 +1792,5 @@ seen. gmtime warning still there
 - Added end of stats message to /kline, /gline, etc.
 - Fixed some of the FreeBSD warnings, like 'Cannot accept connections' and 'getsockopt(IP_OPTIONS)'
   (#0000616) and also changed report_error() to give additional error info.
+- Fixed /shun: ADMIN and PONG allowed if shunned (as documented) and removing a shun now also
+  affects connected clients immediately. (#0000593)
