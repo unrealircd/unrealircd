@@ -57,7 +57,7 @@ ModuleHeader MOD_HEADER(m_tkl)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_tkl)(ModuleInfo *modinfo)
 {
-	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	/*
 	 * We call our add_Command crap here
 	*/
@@ -66,7 +66,7 @@ DLLFUNC int MOD_INIT(m_tkl)(ModuleInfo *modinfo)
 	add_Command(MSG_ZLINE, TOK_NONE, m_tzline, 3);
 	add_Command(MSG_KLINE, TOK_NONE, m_tkline, 3);
 	add_Command(MSG_GZLINE, TOK_NONE, m_gzline, 3);
-	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 

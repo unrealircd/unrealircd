@@ -107,7 +107,7 @@ DLLFUNC int MOD_INIT(m_htm)(ModuleInfo *modinfo)
 	e_htmcalc = EventAddEx(HtmModInfo->handle, "htmcalc", 1, 0, htm_calc, NULL);
 	UnlockEventSystem();
 #endif
-	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 

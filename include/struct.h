@@ -1602,6 +1602,8 @@ int	throttle_can_connect(struct IN_ADDR *in);
 
 #define VERIFY_OPERCOUNT(clnt,tag) { if (IRCstats.operators < 0) verify_opercount(clnt,tag); } while(0)
 
+#define MARK_AS_OFFICIAL_MODULE(modinf)	do { if (modinf && modinf->handle) ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);  } while(0)
+
 #endif /* __struct_include__ */
 
 #include "dynconf.h"

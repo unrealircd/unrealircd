@@ -68,7 +68,7 @@ DLLFUNC int MOD_INIT(m_chgname)(ModuleInfo *modinfo)
 	*/
 	add_Command(MSG_CHGNAME, TOK_CHGNAME, m_chgname, 2);
         add_Command(MSG_SVSNAME, TOK_CHGNAME, m_chgname, 2);
-	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 

@@ -2577,3 +2577,4 @@ seen. gmtime warning still there
 - Changed emailaddr in help window at windows to unreal-users mailinglist.
 - Made the cloak mismatch msg during linking a bit more scary.
 - Added comment to 'Install as a service' option in installer to help n00bs a bit.
+- Made win32 work again (broke it by /module patch 30 minutes ago).

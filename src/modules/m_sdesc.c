@@ -65,7 +65,7 @@ DLLFUNC int MOD_INIT(m_sdesc)(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_SDESC, TOK_SDESC, m_sdesc, 1);
-	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 

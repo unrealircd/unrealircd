@@ -99,7 +99,7 @@ ModuleHeader MOD_HEADER(m_svso)
 DLLFUNC int MOD_INIT(m_svso)(ModuleInfo *modinfo)
 {
 	add_Command(MSG_SVSO, TOK_SVSO, m_svso, MAXPARA);
-	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 

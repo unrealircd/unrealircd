@@ -75,7 +75,7 @@ DLLFUNC int MOD_INIT(m_pingpong)(ModuleInfo *modinfo)
 
 	add_Command(MSG_PING, TOK_PING, m_ping, MAXPARA);
 	add_CommandX(MSG_PONG, TOK_PONG, m_pong, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER|M_SHUN);
-	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 

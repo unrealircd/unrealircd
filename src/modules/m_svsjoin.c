@@ -65,7 +65,7 @@ DLLFUNC int MOD_INIT(m_svsjoin)(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_SVSJOIN, TOK_SVSJOIN, m_svsjoin, MAXPARA);
-	ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
