@@ -29,3 +29,4 @@
 - Modified rehash flags to use strnicmp rather than match (faster)
 - Fixed some points of confusion of possible cptr->passwd bug in
   m_server_estab, reported and fixed by Kanzen_Greiver
+- Fixed some more points of ->passwd bugs

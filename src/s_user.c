@@ -878,7 +878,10 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			 * - Wizzu
 			 */
 			else
-			MyFree(sptr->passwd);
+			{
+				MyFree(sptr->passwd);
+				sptr->passwd = NULL;
+			}
 		}
 
 		/*
@@ -1057,9 +1060,11 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		}
 	}
 
-	if (MyConnect(sptr) && !BadPtr(sptr->passwd)) 
+	if (MyConnect(sptr) && !BadPtr(sptr->passwd))
+	{ 
 		MyFree(sptr->passwd);
-
+		sptr->passwd = NULL;
+	}
 	return 0;
 }
 

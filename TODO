@@ -33,6 +33,9 @@ TODO :
 * stskeeps - Tue Dec 12 2000 - 1 - [ Bugfixes/Hash ]:
     Check for possible hash bug with del_from_client_table or something
     People still complain about crashes
+    We might have fixed this with recent SERVER passwd fix and other passwd
+    fixes
+
 
 * stskeeps - Wed Dec 13 2000 - 10 - [ Bugfixes ]:
 [[r00t3d](~lok70@168.213.226.rox-62220)] The other one, is lets say you are on
