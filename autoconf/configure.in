@@ -58,6 +58,21 @@ fi
 MODULEFLAGS=$ac_cv_pic
 AC_DEFINE(DYNAMIC_LINKING)
 ])
+AC_DEFUN(AC_ENABLE_INET6,[
+AC_CACHE_CHECK(if your system has IPv6 support, ac_cv_ip6, [
+AC_TRY_RUN([
+#include <sys/types.h>
+#include <sys/socket.h>
+int main() {
+if (socket(AF_INET6, SOCK_STREAM, 0) < 0)
+exit(1);
+exit(0);
+}
+], ac_cv_ip6=yes, ac_cv_ip6=no)
+])
+
+])
+
 AC_CHECK_HEADER(sys/param.h,AC_DEFINE(PARAMH))
 AC_CHECK_HEADER(stdlib.h,AC_DEFINE(STDLIBH))
 AC_CHECK_HEADER(stddef.h,AC_DEFINE(STDDEFH))
@@ -273,12 +288,14 @@ AC_ARG_WITH(dpath, [ --with-dpath=path     Specify the path where configuration 
 AC_DEFINE_UNQUOTED(DPATH, "$withval"), AC_DEFINE_UNQUOTED(DPATH, "`pwd`"))
 AC_ARG_WITH(fd-setsize, [ --with-fd-setsize=size     Specify the max file descriptors to use],
 ac_fd=$withval, ac_fd=1024)
+AC_DEFINE_UNQUOTED(MAXCONNECTIONS, $withval)
 AC_ARG_WITH(spath, [ --with-spath     Specify the location of the executable],
 AC_DEFINE_UNQUOTED(SPATH,"$withval"),AC_DEFINE_UNQUOTED(SPATH,"`pwd`/src/ircd"))
 AC_ARG_ENABLE(nospoof, [ --enable-nospoof     Enable spoofing protection], AC_DEFINE(NOSPOOF))
 AC_ARG_ENABLE(hub, [ --enable-hub     Compile as a hub server], AC_DEFINE(HUB))
 AC_ARG_ENABLE(ssl, [ --enable-ssl     Enable client and server SSL connections ], AC_ENABLE_SSL)
 AC_ARG_ENABLE(dynamic-linking, [ --enable-dynamic-linking     Make the IRCd dynamically link shared objects rather than statically ], AC_ENABLE_DYN, AC_DEFINE(STATIC_LINKING))
+AC_ARG_ENABLE(inet6, [ --enable-inet6     Make the IRCd support IPv6 ], AC_ENABLE_INET6)
 ACX_PTHREAD
 CC="$PTHREAD_CC"
 CFLAGS="$CFLAGS $PTHREAD_CFLAGS"

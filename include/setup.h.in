@@ -200,3 +200,6 @@
 
 /* Set to the bufferpool size you want */
 #undef BUFFERPOOL
+
+/* Set to the max connections you want */
+#undef MAXCONNECTIONS
