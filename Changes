@@ -1841,3 +1841,4 @@ seen. gmtime warning still there
 - Fix for error msgs flood at (at least) Linux 2.4.x and FreeBSD ("Transport endpoint is not connected"
   and "Socket is not connected"). (#0000677)
 - Added makefiles to compile with zip links @ windows (zlib needed).
+- Added '/stats zip' (Oper only, only usefull if ZIP_LINKS is defined).

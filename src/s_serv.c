@@ -1430,11 +1430,13 @@ CMD_FUNC(m_netinfo)
 	    cptr->name, me.name, (TStime() - endsync), sptr->receiveK,
 	    sptr->receiveB, sptr->sendK, sptr->sendB);
 #ifdef ZIP_LINKS
-	if ((MyConnect(cptr)) && (IsZipped(cptr)) && cptr->zip->out->total_in) {
+	if ((MyConnect(cptr)) && (IsZipped(cptr)) && cptr->zip->in->total_out && cptr->zip->out->total_in) {
 		sendto_realops
-		("Zipstats for link to %s: %01lu, compressed %01lu (%3.1f%%)",
-			get_client_name(cptr, TRUE), cptr->zip->out->total_in,
-			cptr->zip->out->total_out,
+		("Zipstats for link to %s: decompressed (in): %01lu/%01lu (%3.1f%%), compressed (out): %01lu/%01lu (%3.1f%%)",
+			get_client_name(cptr, TRUE),
+			cptr->zip->in->total_in, cptr->zip->in->total_out,
+			(100.0*(float)cptr->zip->in->total_in) /(float)cptr->zip->in->total_out,
+			cptr->zip->out->total_in, cptr->zip->out->total_out,
 			(100.0*(float)cptr->zip->out->total_out) /(float)cptr->zip->out->total_in);
 	}
 #endif
@@ -2469,6 +2471,38 @@ CMD_FUNC(m_stats)
 	  }
 	  case 'Z':
 	  case 'z':
+		  if (!strcasecmp(parv[1], "zip"))
+		  {
+			/* Ugly, but I want a '/stats zip' -- Syzop */
+			if (!IsAnOper(sptr)) {
+				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+				return 0;
+			}
+#ifndef ZIP_LINKS
+			sendto_one(sptr, ":%s NOTICE %s :Sorry this server doesn't support zip links", me.name, parv[0]);
+#else
+			for (i=0; i <= LastSlot; i++)
+			{
+				if (!(acptr = local[i]))
+					continue;
+				if (!IsServer(acptr) || !IsZipped(acptr))
+					continue;
+				if (acptr->zip->in->total_out && acptr->zip->out->total_in)
+				{
+				  sendto_one(sptr,
+				    ":%s NOTICE %s :Zipstats for link to %s: decompressed (in): %01lu/%01lu (%3.1f%%), compressed (out): %01lu/%01lu (%3.1f%%)",
+				    me.name, parv[0], get_client_name(acptr, TRUE),
+				    acptr->zip->in->total_in, acptr->zip->in->total_out,
+				    (100.0*(float)acptr->zip->in->total_in) /(float)acptr->zip->in->total_out,
+				    acptr->zip->out->total_in, acptr->zip->out->total_out,
+				    (100.0*(float)acptr->zip->out->total_out) /(float)acptr->zip->out->total_in);
+				} else {
+					sendto_one(sptr, ":%s NOTICE %s :Zipstats for link to %s: unavailable", me.name, parv[0]);
+				}
+			}
+#endif
+			break;
+		  } /* 'zip' */
 		  if (IsAnOper(sptr))
 			  count_memory(sptr, parv[0]);
 		  break;
