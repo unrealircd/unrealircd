@@ -511,7 +511,6 @@ struct	IN_ADDR	*numb;
 #else
 		rptr->he->h_length = sizeof(struct IN_ADDR);
 #endif
-#endif
 	    }
 #ifndef _WIN32
 	return (query_name(ipbuf, C_IN, T_PTR, rptr));
