@@ -243,3 +243,4 @@
   - Fixed /whois to not show idle times of global opers to anyone except
     another global oper or services.
   - Fixed /who to show users for opers when not in the channel. 
+- Fixed restart bug, reported by RaYmAn
