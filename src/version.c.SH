@@ -10,7 +10,7 @@ case $CONFIG in
 	 ;;
 esac
 
-echo "Extracting $package/ircd/version.c..."
+echo "Extracting src/version.c..."
 
 if test -r version.c
 then
@@ -156,13 +156,10 @@ char *unrealcredits[] =
 	"zero9000      Kevin Alford",
 	" - UnrealIRCd logo, graphics, null desu ;), ideas etc.",
         "                   \2\37codemastr would like to thank:\2\37", 
-	"CaliMonk      Ivo Teel                calimonk@nhn.net",
+	"CaliMonk      Ivo Teel                calimonk@axenet.org",
 	" - Getting me started at NeoHorizon which basically got me",
 	"   started coding IRCd",
-	"Kenpo         Ian Ricci               ianr@nhn.net",
-	" - Starting me out learning *nix and giving me a place",
-	"   to develop Unreal",
-	"[FBI]         Corey Lang              *unknown*",
+	"[FBI]         Corey Lang              fbi@dal.net",
 	" - Being a good IRC friend and getting me started with",
 	"   IRC through our old little wIRCd net :)",
 	"",                     

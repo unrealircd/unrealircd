@@ -262,7 +262,7 @@ int  find_tkline_match(cptr, xx)
 
 	for (lp = tklines; lp; lp = lp->next)
 	{
-		if (!(*lp->hostmask < '0') && (*lp->hostmask > '9'))
+		if (*lp->hostmask >= '0' && *lp->hostmask <= '9')
 			is_ip = 1;
 		else
 			is_ip = 0;
@@ -270,7 +270,7 @@ int  find_tkline_match(cptr, xx)
 		if (is_ip == 0 ? (!match(lp->hostmask, chost)
 		    && !match(lp->usermask, cname)) : (!match(lp->hostmask,
 		    chost) || !match(lp->hostmask, cip))
-		    && !match(lp->usermask, cname))
+		    && !match(lp->usermask, cname) && (xx != 2 || !match(lp->usermask, cname)))
 		{
 			
 			if ((lp->type & (TKL_KILL)) && (xx != 2))
