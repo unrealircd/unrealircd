@@ -2907,3 +2907,5 @@ seen. gmtime warning still there
   reported by lunytune
 - Made a change to the remote include code to deal with a random memory corruption
   issue (#0001558) reported by hybridz.
+- Fixed a bug caused by the fix to bug (#0000917) that would also prevent you from
+  setting +qaohv on a network service (#0001563) reported by Rocko.

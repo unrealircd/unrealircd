@@ -2091,7 +2091,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  goto breaktherules;
 		
 		  /* Services are special! */
-		  if (IsServices(member->cptr) && MyClient(cptr) && !IsNetAdmin(cptr))
+		  if (IsServices(member->cptr) && MyClient(cptr) && !IsNetAdmin(cptr) && (what == MODE_DEL))
 		  {
 			sendto_one(cptr,
 				":%s %s %s :*** You cannot %s %s in %s, it is a network service",
