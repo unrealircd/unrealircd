@@ -219,14 +219,18 @@ char *stripbadwords(char *str, ConfigItem_badword *start_bw)
 	return (cleaned) ? cleanstr : str;
 }
 
-char *stripbadwords_channel(char *str)
+char inline *stripbadwords_channel(char *str)
 {
 	return stripbadwords(str, conf_badword_channel);
 }
 
-char *stripbadwords_message(char *str)
+char inline *stripbadwords_message(char *str)
 {
 	return stripbadwords(str, conf_badword_message);
+}
+char inline *stripbadwords_quit(char *str)
+{
+	return stripbadwords(str, conf_badword_quit);
 }
 
 #endif

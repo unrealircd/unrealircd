@@ -1934,3 +1934,6 @@ seen. gmtime warning still there
 - Documentation updates (added a section about features).
 - Fixed remote /rehash bug (#0000600).
 - Documentation updates (unreal32docs.html, example.conf).
+- Added a new badword type, quit. This replaces the old CENSOR_QUIT. If you want to censor
+  quit messages you create a badword quit {}. Additionally loading badwords.quit.conf will
+  censor several badwords by default. Based on suggestions by Gargo

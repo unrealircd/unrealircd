@@ -363,6 +363,7 @@ ConfigItem_help		*conf_help = NULL;
 #ifdef STRIPBADWORDS
 ConfigItem_badword	*conf_badword_channel = NULL;
 ConfigItem_badword      *conf_badword_message = NULL;
+ConfigItem_badword	*conf_badword_quit = NULL;
 #endif
 
 aConfiguration		iConf;
@@ -4078,6 +4079,8 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 		AddListItem(ca, conf_badword_channel);
 	else if (!strcmp(ce->ce_vardata, "message"))
 		AddListItem(ca, conf_badword_message);
+	else
+		AddListItem(ca, conf_badword_quit);
 	return 1;
 
 }
@@ -4098,7 +4101,7 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return 1;
 	}
-	else if (strcmp(ce->ce_vardata, "channel") && strcmp(ce->ce_vardata, "message")) {
+	else if (strcmp(ce->ce_vardata, "channel") && strcmp(ce->ce_vardata, "message") && strcmp(ce->ce_vardata, "quit")) {
 			config_error("%s:%i: badword with unknown type",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return 1;
