@@ -70,7 +70,7 @@ typedef struct {
 	char **buffer;
 } StreamIO;
 
-extern  void      SocketLoop(void *dummy), rehash(aClient *, aClient *, int);
+extern  void      SocketLoop(void *dummy);
 int CountRTFSize(char *);
 void IRCToRTF(char *, char *);
 HINSTANCE hInst;
