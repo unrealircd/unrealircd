@@ -249,6 +249,11 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		if ((aconf->oflags & OFLAG_HIDE) && iNAH && !BadPtr(host)) {
 			iNAH_host(sptr, host);
 			SetHidden(sptr);
+		} else
+		if (IsHidden(sptr) && !sptr->user->virthost) {
+			/* +x has just been set by modes-on-oper and iNAH is off */
+			sptr->user->virthost = (char *)make_virthost(sptr->user->realhost,
+			                                             sptr->user->virthost, 1);
 		}
 
 		if (!IsOper(sptr))
