@@ -425,6 +425,7 @@ static ResRQ *find_id(int id)
 	return rptr;
 }
 
+/* As of 2004-10-08 gethost_byname() is only used for outgoing connects to servers */
 struct hostent *gethost_byname(char *name, Link *lp)
 {
 	aCache *cp;
@@ -465,6 +466,9 @@ struct hostent *gethost_byaddr(char *addr, Link *lp)
 	return NULL;
 }
 
+/* [2004-10-08/Syzop] used for outgoing connects to servers and
+ * also for repeated normal requests (in which case rptr is non-NULL).
+ */
 static int do_query_name(Link *lp, char *name, ResRQ *rptr)
 {
 char hname[HOSTLEN + 1];
@@ -485,18 +489,18 @@ char hname[HOSTLEN + 1];
 	{
 		rptr = make_request(lp);
 #ifdef INET6
-		rptr->type = T_ANY; /* Was T_AAAA: now using T_ANY so we fetch both A and AAAA -- Syzop */
+		rptr->type = T_AAAA; /* outgoing connect: try AAAA first, then A later */
 #else
 		rptr->type = T_A;
 #endif
 		rptr->name = strdup(name);
 	}
 	Debug((DEBUG_DNS, "do_query_name(): %s ", hname));
-#ifdef INET6
-	return (query_name(hname, C_IN, T_ANY, rptr)); /* Was T_AAAA: now using T_ANY so we fetch both A and AAAA -- Syzop */
-#else
-	return (query_name(hname, C_IN, T_A, rptr));
-#endif
+
+	/* We used 'type' here instead of 'rptr->type', but I don't see
+	 * any reason not to use the latter. -- Syzop, 2004-10-08
+	 */
+	return (query_name(hname, C_IN, rptr->type, rptr));
 }
 
 /* If is_ipv6_address is set, look for AAAA records, if not,

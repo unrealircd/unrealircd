@@ -281,7 +281,8 @@
 - doc/example.conf now simply refers to unreal32docs.html for oper flags (#0001973)
   reported by vonitsanet and AngryWolf.
 - Fixed crash-on-first-connect if SSL was enabled. This seemed to happen on Mac OS X,
-  Sun Solaris, and perhaps others (#0001982, #0001984), reported by bit and lion.
+  Sun Solaris, Opteron@Linux and perhaps others (#1982, #1984, #2110), reported by bit,
+  lion and liverbugg.
 - Fixed a bug if me::info was set to "".
 - Added a missing error message for ModuleGetErrorStr. Additionally added error checking to
   ensure NULL is returned when an invalid error code is specified (#0001986) reported by
@@ -385,3 +386,4 @@
 - Made docs a bit more clear on spamfilter targettypes.
 - Fix for too broad regex in badword::word causing the IRCd to hang, reported by Flop
   (#0002101).
+- IPv6: Fixed hostnames in link::hostname not working, reported by Jasmin (#0001990).

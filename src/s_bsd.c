@@ -2366,7 +2366,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	 * If we dont know the IP# for this host and itis a hostname and
 	 * not a ip# string, then try and find the appropriate host record.
 	 */
-	 if ((!aconf->ipnum.S_ADDR))
+	 if (!WHOSTENTP(aconf->ipnum.S_ADDR))
 	 {
 		Link lin;
 
@@ -2530,8 +2530,9 @@ static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int 
 	 * being present instead. If we dont know it, then the connect fails.
 	 */
 #ifdef INET6
-	if (!inet_pton(AF_INET6, aconf->hostname, aconf->ipnum.s6_addr))
-		bcopy(minus_one, aconf->ipnum.s6_addr, IN6ADDRSZ);
+	if (!WHOSTENTP(aconf->ipnum.S_ADDR) &&
+	    !inet_pton(AF_INET6, aconf->hostname, aconf->ipnum.s6_addr))
+		bcopy(minus_one, aconf->ipnum.s6_addr, IN6ADDRSZ); /* IP->struct failed: make invalid */
 	if (AND16(aconf->ipnum.s6_addr) == 255)
 #else
 	if (isdigit(*aconf->hostname) && (aconf->ipnum.S_ADDR == -1))
