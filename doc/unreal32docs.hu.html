@@ -28,7 +28,7 @@ Hungarian |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
   <font size="4">Verzió: 3.2.2-CVS</font><br>
-  <b>Utolsó dokumentáció módosítás:</b> 2004-10-13</div>
+  <b>Utolsó dokumentáció módosítás:</b> 2004-12-01</div>
 <br>
   <b>Fõ fejlesztõk:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Munkatársak:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -482,6 +482,7 @@ A modulok bõvíthetik is más típusokkal a kiterjesztett ban típusokat.<br>
    <tr><td>P</td><td>part</td><td>Csatornáról lelépés indoka</td></tr>
    <tr><td>q</td><td>quit</td><td>Kilépési indok</td></tr>
    <tr><td>d</td><td>dcc</td><td>DCC fájlnév</td></tr>
+   <tr><td>a</td><td>away</td><td>Távolléti üzenet</td></tr>
    <tr><td>u</td><td>user</td><td>Felhasználó kitiltása, nick!user@host:valósnév alakú illeszkedési maszk</td></tr>
    </table>
    Egyszerre több célpontot is megadhatsz, például így: cpNn</td></tr>
@@ -2066,9 +2067,11 @@ set {
   Példa:<br>
   set { options { hide-ulines; no-stealth; }; };<br>
 </p>
-<p><font class="set">set::kline-address &lt;email-address&gt;;</font><br>
+<p><font class="set">set::kline-address &lt;email-cím&gt;;</font><br>
   Az az email cím, ahová küldhetõk a K:line-nal kapcsolatos kérdések. Ezt az értéket
   kötelezõ megadni.</p>
+<p><font class="set">set::gline-address &lt;email-cím&gt;;</font><br>
+  Az az email cím, ahová küldhetõk a G:line-nal kapcsolatos kérdések.</p>
 <p><font class="set">set::modes-on-connect &lt;+módok&gt;;</font><br>
   Azok a módok, amelyek kapcsolódáskor lesznek beállítva a felhasználókon.</p>
 <p><font class="set">set::snomask-on-connect &lt;+módok&gt;</font><br>
