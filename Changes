@@ -1705,3 +1705,5 @@ seen. gmtime warning still there
 - Implemented a patch by poisoner to log vhosts in connect/disconnect logging (#0000487)
 - Made some changes to the thread API to fix some win32 crashes
 - Changed resolver code to use IRCMutex macros.
+- Documentation updates (some reported by poisoner) (#0000493)
+- Fixed some problems with /kline when removing a K:line

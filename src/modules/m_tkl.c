@@ -206,7 +206,11 @@ DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		tkl_stats(sptr);
 		return 0;
 	}
-
+	if (!OPCanUnKline(sptr) && *parv[1] == '-')
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		return 0;
+	}
 	return m_tkl_line(cptr, sptr, parc, parv, "k");
 
 }
