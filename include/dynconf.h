@@ -28,6 +28,10 @@
 
 typedef struct zNetwork aNetwork;
 struct zNetwork {
+	long	key;
+	long	key2;
+	long	key3;
+	long	keycrc;
 	unsigned x_inah:1;
 	char *x_ircnetwork;
 	char *x_defserv;
@@ -130,3 +134,9 @@ extern aConfiguration iConf;
 #define iNAH				iConf.network.x_inah
 #define prefix_quit			iConf.network.x_prefix_quit
 #define STOPSE				iConf.network.x_se
+
+
+#define CLOAK_KEY1			iConf.network.key
+#define CLOAK_KEY2			iConf.network.key2
+#define CLOAK_KEY3			iConf.network.key3
+#define CLOAK_KEYCRC			iConf.network.keycrc

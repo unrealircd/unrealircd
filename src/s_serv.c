@@ -1289,9 +1289,11 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 		}
 	}
 
-	sendto_one(cptr, "%s %li %li %li 0 0 0 0 :%s",
+	sendto_one(cptr, "%s %li %li %li %X 0 0 0 :%s",
 	    (IsToken(cptr) ? TOK_NETINFO : MSG_NETINFO),
-	    IRCstats.global_max, TStime(), UnrealProtocol, ircnetwork);
+	    IRCstats.global_max, TStime(), UnrealProtocol,
+	    CLOAK_KEYCRC,
+	    ircnetwork);
 	return 0;
 
 }
@@ -1811,7 +1813,7 @@ int  m_links(cptr, sptr, parc, parv)
 **  parv[1] = max global count
 **  parv[2] = time of end sync 
 **  parv[3] = unreal protocol using (numeric)
-**  parv[4] = free(for unrealprotocol > 2100)
+**  parv[4] = cloak-crc (> u2302)
 **  parv[5] = free(**)
 **  parv[6] = free(**)
 **  parv[7] = free(**)
@@ -1823,9 +1825,10 @@ int  m_netinfo(cptr, sptr, parc, parv)
 	int  parc;
 	char *parv[];
 {
-	long lmax;
-	time_t xx;
-	long endsync, protocol;
+	long 		lmax;
+	time_t	 	xx;
+	long 		endsync, protocol;
+	char		buf[512];
 
 	if (IsPerson(sptr))
 		return 0;
@@ -1913,7 +1916,13 @@ int  m_netinfo(cptr, sptr, parc, parv)
 		    me.name, cptr->name, protocol, me.name, UnrealProtocol);
 
 	}
-
+	ircsprintf(buf, "%X", CLOAK_KEYCRC);
+	if (strcmp(buf, parv[4]))
+	{
+		sendto_realops
+			("Link %s is having a different cloak key - %s != %s",
+				parv[4], buf);
+	}	
 	SetNetInfo(cptr);
 }
 

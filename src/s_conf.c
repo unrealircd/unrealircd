@@ -1906,6 +1906,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
+	char	    temp[512];
+	int	    i;
+	
 	
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -2046,6 +2049,31 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 						iNAH = 1;
 				}
 			}
+		}
+		else if (!strcmp(cep->ce_varname, "cloak-keys"))
+		{
+			/* Count number of numbers there .. */
+			for (cepp = cep->ce_entries, i = 0; cepp; cepp = cepp->ce_next, i++) { }
+			if (i != 3)
+			{
+				config_error("%s:%i: set::cloak-keys: we want 3 values, not %i!",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					i);
+				return 0;
+			}
+			/* i == 3 SHOULD make this true .. */
+			CLOAK_KEY1 = atol(cep->ce_entries->ce_varname);
+			CLOAK_KEY2 = atol(cep->ce_entries->ce_next->ce_varname);
+			CLOAK_KEY3 = atol(cep->ce_entries->ce_next->ce_next->ce_varname);
+			ircsprintf(temp, "%li.%li.%li", CLOAK_KEY1,
+				CLOAK_KEY2, CLOAK_KEY3);
+			CLOAK_KEYCRC = (long) crc32(temp, strlen(temp));
+		}
+		else
+		{
+			config_status("%s:%i: unknown directive set::%s",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				cep->ce_varname); 
 		}
 	} 
 }
@@ -2691,7 +2719,18 @@ void	validate_configuration(void)
 		Warning("set::socks::quit-message is missing. Using default of \"Insecure SOCKS server\"");
 		ircstrdup(iConf.socksquitmessage, "Insecure SOCKS server");
 	}
-
+	
+	if ((CLOAK_KEY1 < 10000) || (CLOAK_KEY2 < 10000) || (CLOAK_KEY3 < 10000))
+	{
+		if (!CLOAK_KEY1 || !CLOAK_KEY2 || !CLOAK_KEY3)
+		{
+			Error("set::cloak-keys are missing or is 0.");
+			Error("Add this in your config file:");
+			Error("set { cloak-keys { <big integer value>; <big integer value>; <big integer value>; };");
+			Error("The numbers must be purely random, and the same on every server you link to");			
+		}
+		Error("set::cloak-keys are too easy to guess. Please select three other more absurd and crazy numbers - will increase security a lot");
+	}
 	/* Now for the real config */
 	if (conf_me)
 	{
@@ -3546,5 +3585,7 @@ void report_network(aClient *sptr)
 	    sptr->name, STATS_SERVER);
 	sendto_one(sptr, ":%s %i %s :INAH: %i", me.name, RPL_TEXT, sptr->name,
 	    iNAH);
+	sendto_one(sptr, ":%s %i %s :KEYCRC: %X", me.name, RPL_TEXT, sptr->name,
+		CLOAK_KEYCRC);
 }
 

@@ -34,7 +34,17 @@ static char sccxid[] = "@(#)cloak.c		9.00 7/12/99 UnrealIRCd";
 #include <string.h>
 #include "h.h"
 
-#define CLOAK_KEY "()%289259248924924"
+#undef KEY
+#undef KEY2
+#undef KEY3
+#define KEY CLOAK_KEY1
+#define KEY2 CLOAK_KEY2
+#define KEY3 CLOAK_KEY3
+
+#define POW_8 256L
+#define POW_16 65536L
+#define POW_32 4294967296L
+
 
 /* The implementation here was originally done by Gary S. Brown.  I have
    borrowed the tables directly, and made some minor changes to the
@@ -157,7 +167,8 @@ char *hidehost(char *host)
 	static char	cloaked[512];
 	static char	h1[512];
 	static char	h2[4][4];
-	long		l[5];
+	static char	h3[300];
+	unsigned long		l[5];
 	int		i;
 	char		*p;
 
@@ -170,7 +181,7 @@ char *hidehost(char *host)
 			break;
 		if (!isdigit(*p) && !(*p == '.'))
 		{
-			break;
+				break;
 		}
 	}
 	if (!(*p))
@@ -182,13 +193,15 @@ char *hidehost(char *host)
 		{
 			strncpy(h2[i], p, 4);			
 		}
+		ircsprintf(h3, "%s.%s", h2[0], h2[1]);
+		l[0] = ((crc32(h3, strlen(h3)) + KEY2) ^ KEY) ^ KEY3;
+		ircsprintf(h3, "%s.%s.%s", h2[0], h2[1], h2[2]);		
+		l[1] = ((KEY2 + crc32(h3, strlen(h3))) ^ KEY) ^ KEY3;
 		l[4] = crc32(host, strlen(host));
-		for (i = 0; i <= 3; i++)
-		{
-			l[i] = crc32(h2[i], strlen(h2[i]));
-		}
-		l[3] += l[4];
-		ircsprintf(cloaked, "%X-%X-%X.%X", l[0], l[1], l[2], l[3]);
+		l[2] = ((l[4] + KEY2) ^ KEY)^ KEY3;
+		l[2] << 2; l[2] >> 2;
+		l[0] >> 1; l[0] << 1;
+		ircsprintf(cloaked, "%X.%X.%X.IP", l[2], l[1], l[0]);
 		return cloaked;
 	}
 	else if (*p == ':')
