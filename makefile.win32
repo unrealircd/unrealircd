@@ -5,6 +5,7 @@ CC=cl
 LINK=link
 RC=rc
 # Here you put your settings
+DEBUG=1
 FD_SETSIZE=/D SCAN_API=1 /D FD_SETSIZE=16384
 !IFNDEF DEBUG 
 CFLAGS=/MT /O2 /G5 /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D STATIC_LINKING /D _WIN32GUI /D NOSPOOF=1 /c
@@ -36,7 +37,7 @@ OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/BSD.OBJ \
 
 MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OBJ \
  SRC/M_SETNAME.OBJ SRC/M_SETHOST.OBJ SRC/M_CHGIDENT.OBJ SRC/M_SVSMOTD.OBJ \
- SRC/M_SVSNLINE.OBJ SRC/M_SWHOIS.OBJ SRC/M_SVSMODE.OBJ SRC/SCAN.OBJ SRC/SCAN_SOCKS.OBJ 
+ SRC/M_SVSNLINE.OBJ SRC/M_WHO.OBJ SRC/M_SWHOIS.OBJ SRC/M_SVSMODE.OBJ SRC/SCAN.OBJ SRC/SCAN_SOCKS.OBJ 
 
 
 ALL: WIRCD.EXE
@@ -229,6 +230,9 @@ src/m_swhois.obj: src/modules/m_swhois.c $(INCLUDES)
 src/m_svsnline.obj: src/modules/m_svsnline.c $(INCLUDES)
         $(CC) $(CFLAGS) src/modules/m_svsnline.c
 
+src/m_who.obj: src/modules/m_who.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_who.c
+
 src/scan.obj: src/modules/scan.c $(INCLUDES)
         $(CC) $(CFLAGS) src/modules/scan.c
 
@@ -241,6 +245,9 @@ src/scan_socks.obj: src/modules/scan_socks.c $(INCLUDES)
 src/win32/win32.res: src/win32/win32gui.rc
         $(RC) /l 0x409 /fosrc/win32/win32.res /i ./include /i ./src \
               /d NDEBUG src/win32/win32gui.rc
+
+src/version.c: src/version.c.SH Changes
+        version.bat
 
 dummy:
 
