@@ -2314,3 +2314,4 @@ seen. gmtime warning still there
 - Added stats flags for except throttle and ban version blocks
 - stats bugfixes: a null pointer crash and a '/stats k' bug.
 - Fixed a couple of problems in the new stats system
+- Fixed another stats problem, reported by Angrywolf (#0001163)

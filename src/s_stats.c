@@ -39,7 +39,7 @@ int stats_denylinkauto(aClient *, char *);
 int stats_exceptthrottle(aClient *, char *);
 int stats_denydcc(aClient *, char *);
 int stats_kline(aClient *, char *);
-int stats_banreal(aClient *, char *);
+int stats_banrealname(aClient *, char *);
 int stats_sqline(aClient *, char *);
 int stats_linkinfoint(aClient *, char *, int);
 int stats_linkinfo(aClient *, char *);
@@ -103,7 +103,7 @@ struct statstab StatsTable[] = {
 	{ 'h', "link", 		stats_links,		0 		},
 	{ 'k', "kline",		stats_kline,		0 		},
 	{ 'l', "linkinfo",	stats_linkinfo,		SERVER_AS_PARA 	},
-	{ 'n', "banreal",	stats_banreal,		0 		},
+	{ 'n', "banrealname",	stats_banrealname,	0 		},
 	{ 'o', "oper",		stats_oper,		0 		},
 	{ 'q', "sqline",	stats_sqline,		0 		},
 	{ 'r', "chanrestrict",	stats_chanrestrict,	0 		},
@@ -1004,7 +1004,7 @@ int stats_kline(aClient *sptr, char *para)
 	return 0;
 }
 
-int stats_banreal(aClient *sptr, char *para)
+int stats_banrealname(aClient *sptr, char *para)
 {
 	ConfigItem_ban *bans;
 	for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) 
