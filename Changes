@@ -1030,3 +1030,4 @@ seen. gmtime warning still there
 - beta5 released
 - Fixed a bug causing /map to give away Ulines
 - Fixed a possible segfault in m_stats
+- Bug with crypt not working for /oper fixed

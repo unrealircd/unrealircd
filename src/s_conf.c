@@ -1342,6 +1342,11 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			continue;
 		}
+		if (!strcmp(cep->ce_varname, "password"))
+		{
+			oper->auth = Auth_ConvertConf2AuthStruct(cep);
+			continue;
+		}
 		if (!cep->ce_entries)
 		{
 			/* standard variable */
@@ -1364,10 +1369,6 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 						cep->ce_vardata);
 					oper->class = default_class;
 				}
-			} else
-			if (!strcmp(cep->ce_varname, "password"))
-			{
-				oper->auth = Auth_ConvertConf2AuthStruct(cep);
 			}
 			else if (!strcmp(cep->ce_varname, "swhois")) {
 				ircstrdup(oper->swhois, cep->ce_vardata);
