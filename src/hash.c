@@ -820,13 +820,7 @@ EVENT(e_clean_out_throttling_buckets)
 		for (n = ThrottlingHash[i]; n; n = n->next)
 			if ((TStime() - n->since) > (THROTTLING_PERIOD ? THROTTLING_PERIOD : 15))
 			{
-				if (n->prev)
-					n->prev->next = n->next;
-				else
-					ThrottlingHash[i] = n->next;
-				if (n->next)
-					n->next->prev = n->prev;	
-				z.next = n->next;
+				z.next = (struct ThrottlingBucket *) DelListItem(n, ThrottlingHash[i]);
 				MyFree(n);
 				n = &z;
 			}

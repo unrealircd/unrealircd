@@ -57,7 +57,6 @@ struct ChMode {
         unsigned char   kmode;
 };
 
-
 typedef struct zConfiguration aConfiguration;
 struct zConfiguration {
 	unsigned som:1;

@@ -2004,3 +2004,5 @@ seen. gmtime warning still there
 - Moved the "missing user in SJOIN" notice to snomask +j
 - Rewrote some of the set::allow-userhost-change code. Fixes (#000843) and (#0000791) reported
   by |VIO|Maverick and Rocko
+- Made throttling use DelListItem and fixed some confusing regarding
+  undeffing of THROTTLING
