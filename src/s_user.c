@@ -198,25 +198,61 @@ long set_usermode(char *umode)
 
 /* Taken from xchat by Peter Zelezny
  * changed very slightly by codemastr
+ * RGB color stripping support added -- codemastr
  */
 
 unsigned char *StripColors(unsigned char *text) {
-	int nc = 0, col = 0, i = 0, len = strlen(text);
+	int i = 0, len = strlen(text), save_len;
+	char nc = 0, col = 0, rgb = 0, *save_text;
 	static unsigned char new_str[4096];
-	while (len > 0) {
-		if ((col && isdigit(*text) && nc < 2) || (col && *text == ',' && nc < 3)) {
+
+	while (len > 0) 
+	{
+		if ((col && isdigit(*text) && nc < 2) || (col && *text == ',' && nc < 3)) 
+		{
 			nc++;
 			if (*text == ',')
 				nc = 0;
 		}
-		else {
+		/* Syntax for RGB is ^DHHHHHH where H is a hex digit.
+		 * If < 6 hex digits are specified, the code is displayed
+		 * as text
+		 */
+		else if ((rgb && isxdigit(*text) && nc < 6) || (rgb && *text == ',' && nc < 7))
+		{
+			nc++;
+			if (*text == ',')
+				nc = 0;
+		}
+		else 
+		{
 			if (col)
 				col = 0;
-			if (*text == '\003') {
+			if (rgb)
+			{
+				if (nc != 6)
+				{
+					text = save_text+1;
+					len = save_len-1;
+					rgb = 0;
+					continue;
+				}
+				rgb = 0;
+			}
+			if (*text == '\003') 
+			{
 				col = 1;
 				nc = 0;
 			}
-			else {
+			else if (*text == '\004')
+			{
+				save_text = text;
+				save_len = len;
+				rgb = 1;
+				nc = 0;
+			}
+			else 
+			{
 				new_str[i] = *text;
 				i++;
 			}
@@ -231,7 +267,8 @@ unsigned char *StripColors(unsigned char *text) {
 /* strip color, bold, underline, and reverse codes from a string */
 const char *StripControlCodes(unsigned char *text) 
 {
-	int nc = 0, col = 0, i = 0, len = strlen(text);
+	int i = 0, len = strlen(text), save_len;
+	char nc = 0, col = 0, rgb = 0, *save_text;
 	static unsigned char new_str[4096];
 	while (len > 0) 
 	{
@@ -241,15 +278,43 @@ const char *StripControlCodes(unsigned char *text)
 			if (*text == ',')
 				nc = 0;
 		}
+		/* Syntax for RGB is ^DHHHHHH where H is a hex digit.
+		 * If < 6 hex digits are specified, the code is displayed
+		 * as text
+		 */
+		else if ((rgb && isxdigit(*text) && nc < 6) || (rgb && *text == ',' && nc < 7))
+		{
+			nc++;
+			if (*text == ',')
+				nc = 0;
+		}
 		else 
 		{
 			if (col)
 				col = 0;
+			if (rgb)
+			{
+				if (nc != 6)
+				{
+					text = save_text+1;
+					len = save_len-1;
+					rgb = 0;
+					continue;
+				}
+				rgb = 0;
+			}
 			switch (*text)
 			{
 			case 3:
 				/* color */
 				col = 1;
+				nc = 0;
+				break;
+			case 4:
+				/* RGB */
+				save_text = text;
+				save_len = len;
+				rgb = 1;
 				nc = 0;
 				break;
 			case 2:

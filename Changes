@@ -588,3 +588,4 @@
 - Made channel mode +c block RGB color codes.
 - Fixed a bug with channel alias{}'s where using the format syntax caused a crash (#0002323)
   reported by Snake.
+- Made channel mode +S strip RGB color codes.
