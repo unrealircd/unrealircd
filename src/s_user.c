@@ -411,22 +411,22 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 			return 0;
 		}
 
-	if (now < sptr->nexttarget)
+	if (TStime() < sptr->nexttarget)
 	{
-		if (sptr->nexttarget - now < TARGET_DELAY + 8)
+		if (sptr->nexttarget - TStime() < TARGET_DELAY + 8)
 		{
 			sptr->nexttarget += 2;
 			sendto_one(sptr, err_str(ERR_TARGETTOOFAST),
-			    me.name, sptr->name, name, sptr->nexttarget - now);
+			    me.name, sptr->name, name, sptr->nexttarget - TStime());
 		}
 		return 1;
 	}
 	else
 	{
 		sptr->nexttarget += TARGET_DELAY;
-		if (sptr->nexttarget < now - (TARGET_DELAY * (MAXTARGETS - 1)))
+		if (sptr->nexttarget < TStime() - (TARGET_DELAY * (MAXTARGETS - 1)))
 			sptr->nexttarget =
-			    now - (TARGET_DELAY * (MAXTARGETS - 1));
+			    TStime() - (TARGET_DELAY * (MAXTARGETS - 1));
 	}
 	memmove(&sptr->targets[1], &sptr->targets[0], MAXTARGETS - 1);
 	sptr->targets[0] = hash;
