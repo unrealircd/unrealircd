@@ -504,6 +504,7 @@ extern TS check_pings(TS currenttime)
 			(void)exit_client(cptr, cptr, &me, "Dead socket");
 			continue;
 		}
+		ping = 0;
 		killflag = 0;
 		/*
 		 * Check if user is banned
@@ -573,20 +574,20 @@ extern TS check_pings(TS currenttime)
 		
 		}
 		/* We go into ping phase */
-		ping =
+		ping = 
 		    IsRegistered(cptr) ? (cptr->class ? cptr->
-	   		class->pingfreq : CONNECTTIMEOUT) : CONNECTTIMEOUT;
+		    class->pingfreq : CONNECTTIMEOUT) : CONNECTTIMEOUT;
 		Debug((DEBUG_DEBUG, "c(%s)=%d p %d k %d a %d", cptr->name,
 		    cptr->status, ping, killflag,
-			    currenttime - cptr->lasttime));
+		    currenttime - cptr->lasttime));
 		if (ping < (currenttime - cptr->lasttime))
 		{
 			if (((cptr->flags & FLAGS_PINGSENT)
 			    && ((currenttime - cptr->lasttime) >= (2 * ping)))
 			    || ((!IsRegistered(cptr)
 			    && (currenttime - cptr->since) >= ping)))
+
 			{
-				/* One of these days you could use a 300 char terminal ..*/
 				if (!IsRegistered(cptr) &&
 				    (DoingDNS(cptr) || DoingAuth(cptr)
 				    ))
@@ -611,7 +612,7 @@ extern TS check_pings(TS currenttime)
 					    "DNS/AUTH timeout %s",
 					    get_client_name(cptr, TRUE)));
 					del_queries((char *)cptr);
-					ClearAuth(cptr);
+					    ClearAuth(cptr);
 					ClearDNS(cptr);
 					SetAccess(cptr);
 					cptr->firsttime = currenttime;
@@ -619,7 +620,7 @@ extern TS check_pings(TS currenttime)
 					continue;
 				}
 				if (IsServer(cptr) || IsConnecting(cptr) ||
-			    		IsHandshake(cptr))
+				    IsHandshake(cptr))
 				{
 					sendto_realops
 					    ("No response from %s, closing link",
@@ -647,17 +648,17 @@ extern TS check_pings(TS currenttime)
 				    IsToken(cptr) ? TOK_PING : MSG_PING,
 				    me.name);
 			}
-			/*
-	 		* Check UNKNOWN connections - if they have been in this state
-			* for > 100s, close them.
-			 */
-			if (IsUnknown(cptr))
-				if (cptr->firsttime ? ((TStime() - cptr->firsttime) >
-				    100) : 0)
-					(void)exit_client(cptr, cptr, &me,
-					    "Connection Timed Out");
-						
 		}
+
+		/*
+		 * Check UNKNOWN connections - if they have been in this state
+		 * for > 100s, close them.
+		 */
+		if (IsUnknown(cptr))
+			if (cptr->firsttime ? ((TStime() - cptr->firsttime) >
+			    100) : 0)
+				(void)exit_client(cptr, cptr, &me,
+				    "Connection Timed Out");
 	}
 	/* EXPLANATION
 	 * on a server with a large volume of clients, at any given point
