@@ -981,10 +981,8 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		}
 	}
 
-	if (MyConnect(sptr) && !BadPtr(sptr->passwd)) {
+	if (MyConnect(sptr) && !BadPtr(sptr->passwd)) 
 		MyFree(sptr->passwd);
-		ircd_log("%s freed", sptr->passwd);
-	}
 
 	return 0;
 }
