@@ -1805,3 +1805,4 @@ seen. gmtime warning still there
 - Fixed bug in channel mode +L #aaaaaaaa<etc>
 - Added win32 compile instructions in doc/compiling_win32.txt.
 - Fixed major (?) bug in resolver (affects ipv4 only), could cause long stalls / crashes.
+- Added much better checking for weird characters in hostnames.
