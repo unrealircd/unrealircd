@@ -120,6 +120,7 @@ void flush_connections(fd)
 
 }
 /* flush an fdlist intelligently */
+#ifdef NO_FDLIST
 void flush_fdlist_connections(fdlist * listp)
 {
 	int  i, fd;
@@ -131,7 +132,7 @@ void flush_fdlist_connections(fdlist * listp)
 		    && DBufLength(&cptr->sendQ) > 0)
 			send_queued(cptr);
 }
-
+#endif
 
 /*
 ** send_queued
