@@ -480,3 +480,4 @@
 - Removed UPING UDP socket. Only resfd opens a udp fd now
 - Small memory cleanup
 - NS introduction in sendto_serv_butone_token
+- Fixed Q:lined nick NickServ from <unregistered> on Nickname Server message

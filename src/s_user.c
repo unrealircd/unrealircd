@@ -1060,6 +1060,7 @@ int  m_nick(cptr, sptr, parc, parv)
 	aConfItem *aconf;
 	aSqlineItem *asqline;
 	aClient *acptr, *serv;
+	aClient *acptrs;
 	char nick[NICKLEN + 2], *s;
 	Link *lp;
 	time_t lastnick = (time_t) 0;
@@ -1170,13 +1171,22 @@ int  m_nick(cptr, sptr, parc, parv)
 	    && ((aconf = find_conf_name(nick, CONF_QUARANTINED_NICK))
 	    || (asqline = find_sqline_match(nick))))
 	{
-		sendto_realops("Q:lined nick %s from %s on %s.", nick,
-			(*sptr->name != 0 && !IsServer(sptr)) ? sptr->name :
-			"<unregistered>"),
-			((sptr->user == NULL) ? 
-			(IsServer(sptr) ? parv[6] : me.name) :
-				sptr->user->server);
-			
+		if (IsServer(sptr))
+		{
+			acptrs = (aClient *) find_server_b64_or_real(sptr->user == NULL ? (char *) parv[6] : (char *) sptr->user->server);
+			sendto_realops("Q:lined nick %s from %s on %s",
+				nick, 
+				(*sptr->name != 0 && !IsServer(sptr) ? sptr->name :
+				 "<unregistered>"),
+				 acptrs ? acptrs->name : "unknown server");
+		}
+			else
+		{
+			sendto_realops("Q:lined nick %s from %s on %s",
+				nick,
+				*sptr->name ? sptr->name : "<unregistered>",
+				me.name);
+		}
 
 		if ((!IsServer(cptr)) && (!IsOper(cptr)))
 		{
