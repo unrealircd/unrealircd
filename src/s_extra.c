@@ -365,7 +365,7 @@ void ircd_log(int flags, char *format, ...)
 #endif
 				if (fd == -1)
 					continue;
-				write(fd, "Max file size reached, starting new log file\n", 46);
+				write(fd, "Max file size reached, starting new log file\n", 45);
 			}
 			else {
 #ifndef _WIN32
