@@ -1083,8 +1083,8 @@ int  InitwIRCD(argc, argv)
 		exit(-1);
 	}
 	/* Put in our info */
-	strncpyzt(me.info, conf_me->info, sizeof(me.info);
-	strncpyzt(me.name, conf_me->name, sizeof(me.name);
+	strncpyzt(me.info, conf_me->info, sizeof(me.info));
+	strncpyzt(me.name, conf_me->name, sizeof(me.name));
 	 
 	/* We accept the first listen record */
 	portnum = conf_listen->port;

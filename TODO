@@ -157,6 +157,13 @@ InTe[_:#roxnet> -oxygen.phrozen.org- *** Global -- from Irc.LinuxFreakz.Net:
 	http://sourceforge.net/bugs/?func=detailbug&bug_id=126645&group_id=1968
 	That fix will work except it needs to be modified so it checks remote
 	before denying because of not being oper
+* stskeeps - Wed Dec 27 2000 - 5 - [Configuration]
+        Add a SWHOIS option to oper {} block, suggested by Robertsog
+* codemastr - Tue Dec 26 2000 - 6 - [ Bugfixes ]
+	(too lazy to type it out)
+	http://sourceforge.net/bugs/?func=detailbug&bug_id=126645&group_id=1968
+	That fix will work except it needs to be modified so it checks remote
+	before denying because of not being oper
 * stskeeps  - Sun Dec 30 2000 - 10 - [ Bugfixes ]
        /whois shows what channels +S are in
 * codemastr - Tue Jan 03 2001 - 1 - [ Idea ]

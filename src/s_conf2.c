@@ -41,7 +41,7 @@
 
 #include "h.h"
 
-
+extern char *my_itoa(long i);
 /*
  * TODO:
  *  - allow channel {} (chrestrict)
@@ -1196,7 +1196,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	
 	strcpy(copy, ce->ce_vardata);
 	/* Seriously cheap hack to make listen <port> work -Stskeeps */
-	if (!strcmp(copy, my_itoa(atoi(copy)))
+	if (!strcmp(copy, my_itoa(atoi(copy))))
 	{
 		ip = "*";
 		port = copy;	
@@ -1409,7 +1409,7 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->ce_varname, "password"))
 		{
 			vhost->password = strdup(cep->ce_vardata);
-		} else
+		}
 		else
 		{
 			config_error("%s:%i: unknown directive vhost::%s",
@@ -1623,11 +1623,6 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->ce_varname, "port"))
 		{
 			link->port = atol(cep->ce_vardata);
-			if ((link->port < 0) || (link->port > 65535))
-			{
-				config_error("%s:%i: link: illegal port (must be 0..65536)",
-					ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			} 
 		} else
 		if (!strcmp(cep->ce_varname, "hub"))
 		{
@@ -1781,7 +1776,7 @@ void	report_configuration(void)
 	if (conf_except) {
 		for (except_ptr = conf_except; except_ptr; except_ptr = (ConfigItem_except *) except_ptr->next)
 		{
-			printf("Got an except for %s (%s)\n", except_ptr->mask, except_ptr->type ? "ban" : "socks");
+			printf("Got an except for %s (%s)\n", except_ptr->mask, except_ptr->flag.type ? "ban" : "socks");
 		}
 	}
 }	

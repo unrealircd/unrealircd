@@ -1072,7 +1072,7 @@ struct _configitem_link {
 };
 
 struct _configitem_except {
-	ConfigFlag      flag;
+	ConfigFlag_except      flag;
 	ConfigItem      *prev;
 	ConfigItem      *next;
 	char		*mask;

@@ -59,6 +59,7 @@
 - Added TODO in top of s_conf2.c
 - Fixed a bug reported by S7 that affected chg* and set* as well as sdesc
 - Started work on the except parser
+- Wierdoe parse things
 - Made except parser use a specialized _configflag_except instead of wasting
   a byte.
 - Changed version to "Unreal3.2-Selene" (Selene = female character in a
@@ -79,3 +80,4 @@
 - Fixed a STATS_ONLYOPER bug
 - Fixed a ircd.tune bug (the file may not write if it didn't exist)
 - Fixed a serious bug reported by Kanzen_Griever
+- Merged in sts-laptop branch
