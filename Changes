@@ -2443,3 +2443,4 @@ seen. gmtime warning still there
 - Changed version to 'beta18'
 - Fixed a problem with tre.dll
 - Rewrote some of the message searching code to make it roughly 25% faster
+- Minor botmotd-on-mode+B fix.

@@ -2595,7 +2595,7 @@ CMD_FUNC(m_umode)
 		RunHook2(HOOKTYPE_LOCAL_OPER, sptr, 0);
 	}
 
-	if ((sptr->umodes & UMODE_BOT) && !(setflags & UMODE_BOT))
+	if ((sptr->umodes & UMODE_BOT) && !(setflags & UMODE_BOT) && MyClient(sptr))
 	{
 		/* now +B */
 	  (void)m_botmotd(sptr, sptr, 1, parv);
