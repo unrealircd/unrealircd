@@ -1736,7 +1736,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		    default:
 			    xxx = "whatthefuckisthatmode?";
 		  }
-		  if (!param || *pcount >= MAXMODEPARAMS || )
+		  if (!param || *pcount >= MAXMODEPARAMS)
 		  {
 			  retval = 0;
 			  break;
@@ -1821,7 +1821,6 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  membership->flags = member->flags;
 		  (void)ircsprintf(pvar[*pcount], "%c%c%s",
 		      what == MODE_ADD ? '+' : '-', tc, who->name);
-		  (*paramsz) += strlen(who->name);
 		  (*pcount)++;
 		  break;
 	  case MODE_LIMIT:

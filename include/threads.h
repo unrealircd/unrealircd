@@ -40,7 +40,7 @@ typedef pthread_mutex_t MUTEX;
 #define IRCMutexLock(mutex) TDebug(MutexLock); pthread_mutex_lock(&mutex)
 #define IRCMutexTryLock(mutex) TDebug(MutexTryLock); pthread_mutex_trylock(&mutex);
 #define IRCMutexUnlock(mutex) TDebug(MutexUnlcok); pthread_mutex_unlock(&mutex)
-#define IRCCreateMutex(mutex) TDebug(CreateMutex); mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
+#define IRCCreateMutex(mutex) TDebug(CreateMutex); pthread_mutex_init(&mutex, NULL)
 #define IRCMutexDestroy(mutex) TDebug(MutexDestroy); pthread_mutex_destroy(&mutex)
 #define IRCJoinThread(thread,return) TDebug(JoinThread); pthread_join(thread, return)
 #define IRCExitThread(value) TDebug(ExitThread); pthread_exit(value)

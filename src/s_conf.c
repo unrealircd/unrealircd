@@ -2578,7 +2578,7 @@ int	_conf_deny_link(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_deny_link 	*deny = NULL;
 	ConfigEntry 	    	*cep;
 
-	deny = MyMallocEx(sizeof(ConfigItem_deny_dcc));
+	deny = MyMallocEx(sizeof(ConfigItem_deny_link));
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!cep->ce_varname || !cep->ce_vardata)
