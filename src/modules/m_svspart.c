@@ -64,7 +64,7 @@ DLLFUNC int MOD_INIT(m_svspart)(ModuleInfo *modinfo)
 	/*
 	 * We call our add_Command crap here
 	*/
-	add_Command(MSG_SVSPART, TOK_SVSPART, m_svspart, MAXPARA);
+	add_Command(MSG_SVSPART, TOK_SVSPART, m_svspart, 3);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -92,10 +92,12 @@ DLLFUNC int MOD_UNLOAD(m_svspart)(int module_unload)
 	parv[0] - sender
 	parv[1] - nick to make part
 	parv[2] - channel(s) to part
+	parv[3] - comment
 */
 CMD_FUNC(m_svspart)
 {
 	aClient *acptr;
+	char *comment = (parc > 3 && parv[3] ? parv[3] : NULL);
 	if (!IsULine(sptr))
 		return 0;
 
@@ -105,11 +107,18 @@ CMD_FUNC(m_svspart)
 	{
 		parv[0] = parv[1];
 		parv[1] = parv[2];
-		(void)m_part(acptr, acptr, 2, parv);
+		parv[2] = comment;
+		(void)m_part(acptr, acptr, comment ? 3 : 2, parv);
 	}
 	else
-		sendto_one(acptr, ":%s SVSPART %s %s", parv[0],
-		    parv[1], parv[2]);
+	{
+		if (comment)
+			sendto_one(acptr, ":%s SVSPART %s %s :%s", parv[0],
+			    parv[1], parv[2], parv[3]);
+		else
+			sendto_one(acptr, ":%s SVSPART %s %s", parv[0],
+			    parv[1], parv[2]);
+	}
 
 	return 0;
 }

@@ -268,3 +268,6 @@
 - Added src/win32/editor.c (woops), (#0001932) reported by Troco
 - Fixed a problem with /who incorrectly showing the ? flag to opers even when the user should
   be visible (#0001888) reported by Bugz and aquanight
+- Added SAPART and SVSPART reasons. Note, to fully work it requires all servers to upgrade,
+  and due to a bug in older versions, it could cause problems if linked to 3.2 or earlier
+  (#0001859) suggested by Bugz
