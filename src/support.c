@@ -592,6 +592,7 @@ int	rh(void)
 	   for testing phases at irc.ircsystems.net
 	   
 	*/
+	return 0;
 	if (!is_enabled("Unreal*l*", Rh VERSIONONLY))
 		return 0;
 		
