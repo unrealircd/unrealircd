@@ -4921,6 +4921,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else {
 		int value;
+		free(ca); /* ca isn't used, modules have their own list. */
 		for (global_i = Hooks[HOOKTYPE_CONFIGRUN]; global_i;
 		     global_i = global_i->next)
 		{
