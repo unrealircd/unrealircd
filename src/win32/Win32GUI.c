@@ -467,8 +467,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	hMainThread = (HANDLE)_beginthread(SocketLoop, 0, NULL);
 	while (GetMessage(&msg, NULL, 0, 0))
     {
-		if (hWndMod == msg.hwnd) 
-			MessageBox(NULL, "yea", "yea", MB_OK);
 		if (hWndMod == NULL || !IsDialogMessage(hWndMod, &msg)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
