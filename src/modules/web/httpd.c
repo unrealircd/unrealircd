@@ -147,9 +147,10 @@ int    httpd_load(int module_load)
 		config_error("httpd: could not create socket");
 		httpdfd = -1;
 		return -1;
-	}		
+	}
+	set_sock_opts(httpdfd, NULL);		
 #ifndef INET6
-	sin.SIN_ADDR.S_ADDR = inet_addr(conf_listen->ip);
+	sin.SIN_ADDR.S_ADDR = inet_addr("0.0.0.0");
 #else
 	inet_pton(AFINET, conf_listen->ip, (void *)&sin.SIN_ADDR);
 #endif

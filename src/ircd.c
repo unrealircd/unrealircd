@@ -840,7 +840,7 @@ int  InitwIRCD(argc, argv)
 		perror("chdir");
 		exit(-1);
 	}
-	res_init();
+	ircd_res_init();
 	if (chroot(DPATH))
 	{
 		(void)fprintf(stderr, "ERROR:  Cannot chdir/chroot\n");

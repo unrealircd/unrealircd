@@ -84,6 +84,9 @@ VFStable	vfsTable[] =
 	{"/back/background.jpg", "html/back/background.jpg", "image/jpeg"},
 	{"/unrealircd.com/active.gif", "html/unrealircd.com/active.gif", "image/jpeg"},
 	{"/unrealircd.com/inactive.gif", "html/unrealircd.com/inactive.gif", "image/jpeg"},
+	{"/back/grad.jpg", "html/back/grad.jpg", "image/jpeg"},
+	{"/back/line.gif", "html/back/line.gif", "image/gif"},
+	{"/sections/bg.gif", "html/sections/bg.gif", "image/gif"},
 	{"/", "html/index.html", "text/html"},
 	{NULL, NULL, NULL}	
 };

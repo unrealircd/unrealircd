@@ -65,7 +65,7 @@ DLLFUNC int h_u_phtml(HTTPd_Request *r);
 
 #define SECTION_OPERS 1
 #define SECTION_STATS 2
-
+extern char *buildid;
 char *Titles[] = 
 {
 	"<NULL>",
@@ -149,6 +149,15 @@ DLLFUNC int h_u_phtml(HTTPd_Request *r)
 							Sections[section]);
 					}
 					else
+					if (!strcmp(s, "STATUSLINE"))
+					{
+						sockprintf(r,"%s%s-%s%s",
+						"<td align=\"center\" height=\"9\" width=\"450\"><table width=\"398\" height=\"9\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\"><tr><td valign=\"top\" align=\"center\"><span class=\"status\">",
+						version, buildid,
+						"</span></td></tr></table></td><td align=\"right\" height=\"9\" width=\"159\"><img src=\"../back/grad.jpg\"></td></tr></table>");
+					}
+					else
+					
 					if (!strcmp(s, "DATA"))
 					{
 						time_t	tmpnow;

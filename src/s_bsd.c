@@ -109,9 +109,10 @@ static struct SOCKADDR *connect_inet PROTO((ConfigItem_link *, aClient *, int *)
 static int completed_connection PROTO((aClient *));
 static int check_init PROTO((aClient *, char *));
 #ifndef _WIN32
-static void do_dns_async PROTO(()), set_sock_opts PROTO((int, aClient *));
+static void do_dns_async PROTO(());
+void set_sock_opts PROTO((int, aClient *));
 #else
-static void set_sock_opts PROTO((int, aClient *));
+void set_sock_opts PROTO((int, aClient *));
 #endif
 static char readbuf[8192];
 char zlinebuf[BUFSIZE];
@@ -267,11 +268,10 @@ void report_error(text, cptr)
 	int errtmp = ERRNO;
 	char *host;
 	int  err, len = sizeof(err);
+	
 
 	host = (cptr) ? get_client_name(cptr, FALSE) : "";
 
-/*	fprintf(stderr, text, host, strerror(errtmp));
-	fputc('\n', stderr); */
 	Debug((DEBUG_ERROR, text, host, strerror(errtmp)));
 
 	/*
@@ -1006,7 +1006,7 @@ void close_connection(cptr)
 /*
 ** set_sock_opts
 */
-static void set_sock_opts(fd, cptr)
+void set_sock_opts(fd, cptr)
 	int  fd;
 	aClient *cptr;
 {
@@ -1015,7 +1015,7 @@ static void set_sock_opts(fd, cptr)
 	opt = 1;
 	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (OPT_TYPE *)&opt,
 	    sizeof(opt)) < 0)
-		report_error("setsockopt(SO_REUSEADDR) %s:%s", cptr);
+			report_error("setsockopt(SO_REUSEADDR) %s:%s", cptr);
 #endif
 #if  defined(SO_DEBUG) && defined(DEBUGMODE) && 0
 /* Solaris with SO_DEBUG writes to syslog by default */
@@ -1023,6 +1023,7 @@ static void set_sock_opts(fd, cptr)
 	opt = 1;
 	if (setsockopt(fd, SOL_SOCKET, SO_DEBUG, (OPT_TYPE *)&opt,
 	    sizeof(opt)) < 0)
+		
 		report_error("setsockopt(SO_DEBUG) %s:%s", cptr);
 #endif /* _SOLARIS */
 #endif
