@@ -651,10 +651,10 @@ int  m_server(cptr, sptr, parc, parv)
 	{
 		sendto_one(sptr, "ERROR :Bogus server name (%s)",
 		    sptr->name, host);
-/*		sendto_ops
-		    ("WARNING: Bogus server name (%s) from %s (maybe just a fishy client)",
+		sendto_umode
+		    (UMODE_JUNK,"WARNING: Bogus server name (%s) from %s (maybe just a fishy client)",
 		    host, get_client_name(cptr, TRUE));
-*/
+
 		sptr->since += 7;
 		return 0;
 	}
