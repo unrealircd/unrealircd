@@ -335,8 +335,11 @@ int  m_protoctl(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	int  i;
-	char proto[128], *options, *equal;
-	static char *dummyblank = "";	/* Yes, it is kind of ugly */
+#ifndef PROTOCTL_MADNESS
+	int remove = 0;
+#endif
+	char proto[128], *s;
+/*	static char *dummyblank = "";	Yes, it is kind of ugly */
 
 #ifdef PROTOCTL_MADNESS
 	if (GotProtoctl(sptr))
@@ -356,74 +359,144 @@ int  m_protoctl(cptr, sptr, parc, parv)
 	{
 		strncpy(proto, parv[i], 127);
 		proto[127] = '\0';	/* Just to be safe... */
-		equal = (char *)index(proto, '=');
+		s = proto;
+#ifndef PROTOCTL_MADNESS
+		if (*s == '-') {
+			s++;
+			remove = 1;
+		}
+		else
+			remove = 0;
+#endif
+/*		equal = (char *)index(proto, '=');
 		if (equal == NULL)
 			options = dummyblank;
 		else
 		{
-			options = &equal[1];	/* Variable-byte-size safe */
+			options = &equal[1];	
 			equal[0] = '\0';
 		}
-
-		if (strcmp(proto, "NOQUIT") == 0)
+*/
+		if (strcmp(s, "NOQUIT") == 0)
 		{
+#ifndef PROTOCTL_MADNESS
+			if (remove) {
+				ClearNoQuit(cptr);
+				continue;
+			}
+#endif
 			Debug((DEBUG_ERROR, "Chose protocol %s for link %s",
 			    proto, cptr->name));
 			SetNoQuit(cptr);
+		
 		}
-		else if (strcmp(proto, "TOKEN") == 0)
+		else if (strcmp(s, "TOKEN") == 0)
 		{
+#ifndef PROTOCTL_MADNESS
+			if (remove) {
+				ClearToken(cptr);
+				continue;
+			}
+#endif
 			Debug((DEBUG_ERROR, "Chose protocol %s for link %s",
 			    proto, cptr->name));
 			SetToken(cptr);
 		}
-		else if (strcmp(proto, "HCN") == 0)
+		else if (strcmp(s, "HCN") == 0)
 		{
+#ifndef PROTOCTL_MADNESS
+			if (remove) {
+				ClearHybNotice(cptr);
+				continue;
+			}
+#endif
 			Debug((DEBUG_ERROR, "Chose protocol %s for link %s",
 			    proto, cptr->name));
 			SetHybNotice(cptr);
 		}
-		else if (strcmp(proto, "SJOIN") == 0)
+		else if (strcmp(s, "SJOIN") == 0)
 		{
+#ifndef PROTOCTL_MADNESS
+			if (remove)  {
+				ClearSJOIN(cptr);
+				continue;
+			}
+#endif
 			Debug((DEBUG_ERROR, "Chose protocol %s for link %s",
 			    proto, cptr->name));
 			SetSJOIN(cptr);
 		}
-		else if (strcmp(proto, "SJOIN2") == 0)
+		else if (strcmp(s, "SJOIN2") == 0)
 		{
+#ifndef PROTOCTL_MADNESS
+			if (remove) {
+				ClearSJOIN2(cptr);
+				continue;
+			}
+#endif
 			Debug((DEBUG_ERROR, "Chose protocol %s for link %s",
 			    proto, cptr->name));
 			SetSJOIN2(cptr);
 		}
-		else if (strcmp(proto, "NICKv2") == 0)
+		else if (strcmp(s, "NICKv2") == 0)
 		{
+#ifndef PROTOCTL_MADNESS
+			if (remove) {
+				ClearNICKv2(cptr);
+				continue;
+			}
+#endif
 			Debug((DEBUG_ERROR, "Chose protocol %s for link %s",
 			    proto, cptr->name));
 			SetNICKv2(cptr);
 		}
-		else if (strcmp(proto, "UMODE2") == 0)
+		else if (strcmp(s, "UMODE2") == 0)
 		{
+#ifndef PROTOCTL_MADNESS
+			if (remove) {
+				ClearUMODE2(cptr);
+				continue;
+			}
+#endif
 			Debug((DEBUG_ERROR,
 			    "Chose protocol %s for link %s",
 			    proto, cptr->name));
 			SetUMODE2(cptr);
 		}
-		else if (strcmp(proto, "ALN") == 0)
+		else if (strcmp(s, "ALN") == 0)
 		{
+#ifdef PROTOCTL_MADNESS
+			if (remove) {
+				ClearALN(cptr);
+				continue;
+			}
+#endif
 			Debug((DEBUG_ERROR,
 			    "Chose protocol %s for link %s",
 			    proto, cptr->name));
 			SetALN(cptr);
 		}
-		else if (strcmp(proto, "VL") == 0)
+		else if (strcmp(s, "VL") == 0)
 		{
+#ifndef PROTOCTL_MADNESS
+			if (remove) {
+				ClearVL(cptr);
+				continue;
+			}
+#endif
 			Debug((DEBUG_ERROR,
 			    "Chose protocol %s for link %s",
 			    proto, cptr->name));
 			SetVL(cptr);
 		}
-		else if (strcmp(proto, "VHP") == 0)
+		else if (strcmp(s, "VHP") == 0)
 		{
+#ifndef PROTOCTL_MADNESS
+			if (remove) {
+				ClearVHP(cptr);
+				continue;
+			}
+#endif
 			Debug((DEBUG_ERROR,
 			    "Chose protocol %s for link %s",
 			    proto, cptr->name));

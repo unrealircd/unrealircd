@@ -330,6 +330,7 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 
 #define IsHybNotice(x)		((x)->flags & FLAGS_HYBNOTICE)
 #define SetHybNotice(x)         ((x)->flags |= FLAGS_HYBNOTICE)
+#define ClearHybNotice(x)	((x)->flags &= ~FLAGS_HYBNOTICE)
 #define IsHidden(x)             ((x)->umodes & UMODE_HIDE)
 #define IsHideOper(x)		((x)->umodes & UMODE_HIDEOPER)
 
@@ -423,6 +424,8 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 #define ClearToken(x)		((x)->proto &= ~PROTO_TOKEN)
 #define ClearNICKv2(x)		((x)->proto &= ~PROTO_NICKv2)
 #define ClearSJOIN2(x)		((x)->proto &= ~PROTO_SJOIN2)
+#define ClearUMODE2(x)		((x)->proto &= ~PROTO_UMODE2)
+#define ClearVL(x)		((x)->proto &= ~PROTO_VL)
 #define ClearVHP(x)		((x)->proto &= ~PROTO_VHP)
 /*
  * defined operator access levels
