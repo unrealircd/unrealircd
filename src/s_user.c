@@ -1677,7 +1677,7 @@ CMD_FUNC(m_nick)
 		{
 			for (mp = sptr->user->channel; mp; mp = mp->next)
 			{
-				if (is_banned(sptr, mp->chptr, BANCHK_NICK) && !is_chanownprotop(sptr, mp->chptr))
+				if (!is_skochanop(sptr, mp->chptr) && is_banned(sptr, mp->chptr, BANCHK_NICK))
 				{
 					sendto_one(sptr,
 					    err_str(ERR_BANNICKCHANGE),

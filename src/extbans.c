@@ -195,6 +195,9 @@ char *ban = banin + 3;
 
 	if (type != BANCHK_NICK)
 		return 0;
+
+	if (has_voice(sptr, chptr))
+		return 0;
 	
 	if ((ban_realhost && !match(ban, ban_realhost)) ||
 	     (ban_virthost && !match(ban, ban_virthost)) ||

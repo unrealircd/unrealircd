@@ -250,3 +250,6 @@
   who /oper and receive an oper-host (#0001901) reported by hypnetric.
 - Removed the /hs alias pointing to HelpServ for Anope since this conflicts with HostServ
   (#0001709) reported by DukePyrolator
+- Fixed ban bug: halfops were also prevented from doing nickchanges if banned, plus..
+  +b ~n:*!*@* also made nickchanges impossible for voiced(&halfop'ed) people (so like half
+  of the purpose of it was defeated @$#&@#). Reported by Rocko.
