@@ -19,9 +19,9 @@
 #*   $Id$
 #*/
 
-COMMANDS_MODULES=m_sethost.so m_chghost.so m_chgident.so
+COMMANDS_MODULES=m_sethost.so m_chghost.so m_chgident.so m_setname.so
 
-COMMANDS=m_sethost.c m_chghost.c m_chgident.c
+COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c
 
 MODULES=commands.so $(COMMANDS_MODULES)
 
@@ -44,6 +44,9 @@ m_chghost.so: m_chghost.c $(INCLUDES)
 m_chgident.so: m_chgident.c $(INCLUDES)
 	$(CC) $(CFLAGS) -fPIC -DPIC -shared -DDYNAMIC_LINKING \
 		 -o m_chgident.so m_chgident.c
+m_setname.so: m_setname.c $(INCLUDES)
+	$(CC) $(CFLAGS) -fPIC -DPIC -shared -DDYNAMIC_LINKING \
+		 -o m_setname.so m_setname.c
 
 clean:
 	$(RM) -f *.o *.so *~ core

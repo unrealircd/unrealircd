@@ -226,7 +226,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_TECHAT, TOK_TECHAT, m_techat, 1);
 	add_Command(MSG_NACHAT, TOK_NACHAT, m_nachat, 1);
 	add_Command(MSG_SETIDENT, TOK_SETIDENT, m_setident, MAXPARA);
-	add_Command(MSG_SETNAME, TOK_SETNAME, m_setname, 1);
 	add_Command(MSG_LAG, TOK_LAG, m_lag, MAXPARA);
 	add_Command(MSG_SDESC, TOK_SDESC, m_sdesc, 1);
 	add_Command(MSG_STATSERV, TOK_STATSERV, m_statserv, 1);

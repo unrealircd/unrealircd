@@ -381,61 +381,6 @@ int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	return;
 }
-/* m_setname - 12/05/1999 - Stskeeps
- *  :prefix SETNAME :gecos
- *  parv[0] - sender
- *  parv[1] - gecos
- *  D: This will set your gecos to be <x> (like (/setname :The lonely wanderer))
-   yes it is experimental but anyways ;P
-    FREEDOM TO THE USERS! ;)
-*/
-
-int m_setname(aClient *cptr, aClient *sptr, int parc, char *parv[])
-{
-	if (parc < 2)
-		return;
-	if (strlen(parv[1]) > (REALLEN))
-	{
-		if (MyConnect(sptr))
-		{
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** /SetName Error: \"Real names\" may maximum be %i characters of length",
-			    me.name, sptr->name, REALLEN);
-		}
-		return 0;
-	}
-
-	if (strlen(parv[1]) < 1)
-	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :Couldn't change realname - Nothing in parameter",
-		    me.name, sptr->name);
-		return 0;
-	}
-
-	/* set the new name before we check, but don't send to servers unless it is ok */
-	else
-		ircsprintf(sptr->info, "%s", parv[1]);
-
-	/* Check for n:lines here too */
-	if (!IsAnOper(sptr) && Find_ban(sptr->info, CONF_BAN_REALNAME))
-	{
-		int  xx;
-		xx =
-		    exit_client(cptr, sptr, &me,
-		    "Your GECOS (real name) is banned from this server");
-		return xx;
-	}
-	sendto_serv_butone_token(cptr, sptr->name, MSG_SETNAME, TOK_SETNAME,
-	    ":%s", parv[1]);
-	if (MyConnect(sptr))
-		sendto_one(sptr,
-		    ":%s NOTICE %s :Your \"real name\" is now set to be %s - you have to set it manually to undo it",
-		    me.name, parv[0], parv[1]);
-
-	return 0;
-}
-
 /* m_sdesc - 15/05/1999 - Stskeeps
  *  :prefix SDESC
  *  parv[0] - sender

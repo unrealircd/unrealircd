@@ -78,9 +78,9 @@ void    l_commands_init(void)
 	 * We call our add_Command crap here
 	*/
 	m_sethost_init();
+	m_setname_init();
 	m_chghost_init();
 	m_chgident_init();
-
 	module_buffer = &l_commands_info;
 }
 
@@ -91,6 +91,7 @@ void	l_commands_unload(void)
 #endif
 {
 	m_sethost_unload();
+	m_setname_unload();
 	m_chghost_unload();
 	m_chgident_unload();
 }
