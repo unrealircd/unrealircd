@@ -1038,7 +1038,7 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			  if (tk->type == type)
 			  {
 				  if (!strcmp(tk->hostmask, parv[4]) && !strcmp(tk->usermask, parv[3]) &&
-				      (!(type & TKL_SPAMF) || !strcmp(tk->reason, parv[8])))
+				      (!(type & TKL_SPAMF) || !strcmp(tk->reason, reason)))
 				  {
 					  strncpyzt(gmt, asctime(gmtime((TS *)&tk->set_at)), sizeof(gmt));
 					  iCstrip(gmt);
@@ -1071,7 +1071,7 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 							  sendto_serv_butone(cptr,
 							      ":%s TKL %s %s %s %s %s %s %s :%s",
 							      sptr->name, parv[1], parv[2], parv[3], parv[4], parv[5],
-							      parv[6], parv[7], parv[8]);
+							      parv[6], parv[7], reason);
 				      }
 					  break;
 				  }
