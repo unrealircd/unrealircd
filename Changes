@@ -1863,3 +1863,5 @@ seen. gmtime warning still there
 - Fixed /topic for opers when not in +s-channel.
 - Improved unreal32docs.html readability/layout/text.
 - Minor doc updates (example.conf).
+- Added better (specific) link error messages (only on the "incomming" side) so you can easily
+  see whether servername, hostname/ip or username is wrong.

@@ -635,6 +635,30 @@ CMD_FUNC(m_server)
 	 */
 	if (IsUnknown(cptr) || IsHandshake(cptr))
 	{
+		char xerrmsg[256];
+		ConfigItem_link *link;
+		
+		strcpy(xerrmsg, "No matching link configuration");
+		/* First check if the server is in the list */
+		if (!servername) {
+			strcpy(xerrmsg, "Null servername");
+			goto errlink;
+		}
+		for(link = conf_link; link; link = (ConfigItem_link *) link->next)
+			if (!match(link->servername, servername))
+				break;
+		if (!link) {
+			snprintf(xerrmsg, 256, "No link block named '%s'", servername);
+			goto errlink;
+		}
+		if (link->username && match(link->username, cptr->username)) {
+			snprintf(xerrmsg, 256, "Username '%s' didn't match '%s'",
+				cptr->username, link->username);
+			/* I assume nobody will have 2 link blocks with the same servername
+			 * and different username. -- Syzop
+			 */
+			goto errlink;
+		}
 		/* For now, we don't check based on DNS, it is slow, and IPs
 		   are better */
 		aconf = Find_link(cptr->username, cptr->sockhost, cptr->sockhost,
@@ -654,12 +678,16 @@ CMD_FUNC(m_server)
 #endif		
 		if (!aconf)
 		{
+			snprintf(xerrmsg, 256, "Server is in link block but IP/host didn't match");
+errlink:
+			/* Send the "simple" error msg to the server */
 			sendto_one(cptr,
 			    "ERROR :Link denied (No matching link configuration) %s",
 			    inpath);
+			/* And send the "verbose" error msg only to local failops */
 			sendto_locfailops
-			    ("Link denied for %s(%s@%s) (No matching link configuration) %s",
-			    servername, cptr->username, cptr->sockhost, inpath);
+			    ("Link denied for %s(%s@%s) (%s) %s",
+			    servername, cptr->username, cptr->sockhost, xerrmsg, inpath);
 			return exit_client(cptr, sptr, &me,
 			    "Link denied (No matching link configuration)");
 		}
@@ -670,7 +698,7 @@ CMD_FUNC(m_server)
 			    "ERROR :Link denied (Authentication failed) %s",
 			    inpath);
 			sendto_locfailops
-			    ("Link denied (Authentication failed) %s", inpath);
+			    ("Link denied (Authentication failed [Bad password?]) %s", inpath);
 			return exit_client(cptr, sptr, &me,
 			    "Link denied (Authentication failed)");
 		}
