@@ -407,3 +407,4 @@
 ** internal 3.2.2-pre1 release **
 - Fixed some doc & release notes typos. Reported by Rocko, HiT.
 - French doc updates, hopefully synched now.
+- Fixed bug where some ban ip { } masks didn't work.
