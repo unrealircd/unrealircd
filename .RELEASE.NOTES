@@ -116,6 +116,10 @@ Unreal3.2-Selene (BETA7) RELEASE NOTES
 
 * +I is now in invisibility.so so it is easily disabled
 
+* set::socks has been replaced by set::scan (read doc/conf.doc for more info)
+
+* log {} syslog support added (read doc/conf.doc for more info)
+
 * MAKE SURE YOU RERUN ./Config AND RUN make clean BEFORE USING THIS VERSION!!!
 
 * THIS IS A BETA VERSION. THINGS MAY NOT WORK. REPORT ANY BUGS TO THESE 

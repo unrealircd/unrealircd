@@ -211,9 +211,6 @@ VOIDSIG s_die()
 	int i;
 	aClient *cptr;
 #endif
-#ifdef	USE_SYSLOG
-	(void)syslog(LOG_CRIT, "Server Killed By SIGTERM");
-#endif
 	unload_all_modules();
 #ifndef _WIN32
 	flush_connections(&me);
@@ -248,11 +245,7 @@ VOIDSIG s_rehash()
 #endif
 }
 
-void restart(char *mesg)
-{
-#ifdef	USE_SYSLOG
-	(void)syslog(LOG_WARNING, "Restarting Server because: %s", mesg);
-#endif
+void restart(char *mesg) {
 	server_reboot(mesg);
 }
 
@@ -260,9 +253,6 @@ VOIDSIG s_restart()
 {
 	static int restarting = 0;
 
-#ifdef	USE_SYSLOG
-	(void)syslog(LOG_WARNING, "Server Restarting on SIGINT");
-#endif
 	if (restarting == 0)
 	{
 		/* Send (or attempt to) a dying scream to oper if present */
@@ -342,7 +332,7 @@ void server_reboot(char *mesg)
 	   ** fd 0 must be 'preserved' if either the -d or -i options have
 	   ** been passed to us before restarting.
 	 */
-#ifdef USE_SYSLOG
+#ifdef HAVE_SYSLOG
 	(void)closelog();
 #endif
 #ifndef _WIN32
@@ -358,13 +348,6 @@ void server_reboot(char *mesg)
 	close_connections();
 	CleanUp();
 	(void)execv(myargv[0], myargv);
-#endif
-#ifdef USE_SYSLOG
-	/* Have to reopen since it has been closed above */
-
-	openlog(myargv[0], LOG_PID | LOG_NDELAY, LOG_FACILITY);
-	syslog(LOG_CRIT, "execv(%s,%s) failed: %m\n", MYNAME, myargv[0]);
-	closelog();
 #endif
 #ifndef _WIN32
 	Debug((DEBUG_FATAL, "Couldn't restart server: %s", strerror(errno)));
@@ -1137,8 +1120,8 @@ int  InitwIRCD(int argc, char *argv[])
 	me.fd = -1;
 	SetMe(&me);
 	make_server(&me);
-#ifdef USE_SYSLOG
-	openlog(myargv[0], LOG_PID | LOG_NDELAY, LOG_FACILITY);
+#ifdef HAVE_SYSLOG
+	openlog("ircd", LOG_PID | LOG_NDELAY, LOG_DAEMON);
 #endif
 	/* Put in our info */
 	strncpyzt(me.info, conf_me->info, sizeof(me.info));
@@ -1200,9 +1183,6 @@ int  InitwIRCD(int argc, char *argv[])
 	R_fail_id = strlen(REPORT_FAIL_ID);
 	write_pidfile();
 	Debug((DEBUG_NOTICE, "Server ready..."));
-#ifdef USE_SYSLOG
-	syslog(LOG_NOTICE, "Server Ready");
-#endif
 	SetupEvents();
 	loop.ircd_booted = 1;
 #if defined(HAVE_SETPROCTITLE)

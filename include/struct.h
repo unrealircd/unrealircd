@@ -40,7 +40,7 @@
 # include <stddef.h>
 #endif
 
-#ifdef USE_SYSLOG
+#ifdef HAVE_SYSLOG
 # include <syslog.h>
 # ifdef SYSSYSLOGH
 #  include <sys/syslog.h>

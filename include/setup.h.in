@@ -111,6 +111,12 @@
 /* Define if you need bzero */
 #undef NEED_BZERO
 
+/* Define if you have syslog */
+#undef HAVE_SYSLOG
+
+/* Define if you have vsyslog */
+#undef HAVE_VSYSLOG
+
 /* Define if you want to allow SSL connections */
 #undef USE_SSL
 

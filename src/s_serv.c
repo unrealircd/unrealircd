@@ -266,10 +266,6 @@ CMD_FUNC(m_squit)
 		sendto_serv_butone(&me,
 		    ":%s GLOBOPS :Received SQUIT %s from %s (%s)", me.name,
 		    server, get_client_name(sptr, FALSE), comment);
-#if defined(USE_SYSLOG) && defined(SYSLOG_SQUIT)
-		syslog(LOG_DEBUG, "SQUIT From %s : %s (%s)",
-		    parv[0], server, comment);
-#endif
 	}
 	else if (MyConnect(acptr))
 	{
@@ -2824,10 +2820,6 @@ CMD_FUNC(m_connect)
 		    ":%s GLOBOPS :Remote CONNECT %s %s from %s",
 		    me.name, parv[1], parv[2] ? parv[2] : "",
 		    get_client_name(sptr, FALSE));
-#if defined(USE_SYSLOG) && defined(SYSLOG_CONNECT)
-		syslog(LOG_DEBUG, "CONNECT From %s : %s %d", parv[0], parv[1],
-		    parv[2] ? parv[2] : "");
-#endif
 	}
 	/* Interesting */
 	aconf->port = port;
@@ -3439,9 +3431,6 @@ CMD_FUNC(m_rehash)
 		sendto_ops("%s is rehashing server config file", parv[0]);
 
 	sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
-#ifdef USE_SYSLOG
-	syslog(LOG_INFO, "REHASH From %s\n", get_client_name(sptr, FALSE));
-#endif
 	return rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
 }
 
@@ -3524,12 +3513,6 @@ CMD_FUNC(m_restart)
 
 	}
 
-#ifdef USE_SYSLOG
-	syslog(LOG_WARNING, "Server RESTART by %s - %s\n",
-	    get_client_name(sptr, FALSE),
-	    (!MyClient(sptr) ? (parc > 2 ? parv[3] : "No reason")
-	    : (parc > 1 ? parv[2] : "No reason")));
-#endif
 	sendto_ops("Server is Restarting by request of %s", parv[0]);
 	server_reboot((!MyClient(sptr) ? (parc > 2 ? parv[3] : "No reason")
 	    : (parc > 1 ? parv[2] : "No reason")));

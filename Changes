@@ -1,5 +1,5 @@
 /*                              
- * UnrealIRCd Changes File - (C) Carsten Munk 1999-2000 &
+ * UnrealIRCd Changes File - (C) Carsten Munk 1999-2002 &
  *                               The UnrealIRCd Team
  *                              
  * $Id$
@@ -1245,3 +1245,15 @@ seen. gmtime warning still there
   Thanks to larne, Luke, SciFi, panda, ^Tux^.. Syzop .. and the countless
   people bitching about their servers going down.
 *** beta8 released ***
+- Added log {} syslog support (appears to work fine) [#0000099]
+- Added HOOKTYPE_JOIN
+- Converted all modules to 3.2-b8 format (passes ModuleInfo)
+- Updated doc/conf.doc
+- Fix for desynch problem with the fix in /mode system, Thanks to Luke
+- One little patch for humanity, one giant step for science..
+- Cosmetic fix for /setident, found by juli ..
+- Implimented a dynamic hooktype system to allow modules to create their own hooktypes
+- Fixed a conf_unknown bug
+- Added EXLIBS= to make custommodule so a module can specify additional libraries it needs
+- Changed version to beta9 and updated documentation
+- Made +I once again work in win32

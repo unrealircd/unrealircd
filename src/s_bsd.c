@@ -282,9 +282,6 @@ void report_error(char *text, aClient *cptr)
 #endif
 	sendto_snomask(SNO_JUNK, text, host, strerror(errtmp));
 	ircd_log(LOG_ERROR, text,host,strerror(errtmp));
-#ifdef USE_SYSLOG
-	syslog(LOG_WARNING, text, host, strerror(errtmp));
-#endif
 	return;
 }
 
@@ -317,9 +314,6 @@ void report_baderror(char *text, aClient *cptr)
 				errtmp = err;
 #endif
 	sendto_umode(UMODE_OPER, text, host, strerror(errtmp));
-#ifdef USE_SYSLOG
-	syslog(LOG_WARNING, text, host, strerror(errtmp));
-#endif
 	return;
 }
 
@@ -985,7 +979,7 @@ void set_sock_opts(int fd, aClient *cptr)
 #endif
 #if  defined(SO_DEBUG) && defined(DEBUGMODE) && 0
 /* Solaris with SO_DEBUG writes to syslog by default */
-#if !defined(_SOLARIS) || defined(USE_SYSLOG)
+#if !defined(_SOLARIS) || defined(HAVE_SYSLOG)
 	opt = 1;
 	if (setsockopt(fd, SOL_SOCKET, SO_DEBUG, (OPT_TYPE *)&opt,
 	    sizeof(opt)) < 0)

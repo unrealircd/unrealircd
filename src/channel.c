@@ -2180,14 +2180,14 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
 	char *curchr;
 	u_int what = MODE_ADD;
 	long modetype = 0;
-	int  paracount;
+	char *param = NULL;
 #ifdef DEVELOP
 	char *tmpo = NULL;
 #endif
 	aCtab *tab = &cFlagTab[0];
 	aCtab foundat;
 	int  found = 0;
-	paracount = 1;
+	int  paracount = 1;
 	*pcount = 0;
 	for (curchr = parv[0]; *curchr; curchr++)
 	{
@@ -2236,14 +2236,19 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
 				      me.name, cptr->name, *curchr);
 				  break;
 			  }
-			  if (paracount > parc)
-			  	break;
+			  /* We can afford to send off a param */
+			  if (parc - paracount >= 1)
+			  {
+			  	param = parv[paracount];
+			  }
+			  else
+			  	param = NULL;
 			  
-			  if (parv[paracount] && ((strlen(parv[paracount]) >= MODEBUFLEN)))
-				  parv[paracount][MODEBUFLEN - 1] = '\0';
+			  if (param && ((strlen(param) >= MODEBUFLEN)))
+				  param[MODEBUFLEN - 1] = '\0';
 			  paracount +=
 			      do_mode_char(chptr, modetype, *curchr,
-			      parv[paracount], what, cptr, pcount, pvar,
+			      param, what, cptr, pcount, pvar,
 			      bounce);
 			  break;
 		}
@@ -2802,6 +2807,17 @@ CMD_FUNC(channel_link)
 			}
 			continue;
 		}
+		if (MyConnect(sptr)) {
+			int breakit = 0;
+			for (global_i = Hooks[HOOKTYPE_LOCAL_JOIN]; global_i; global_i = global_i->next) {
+				if((*(global_i->func.intfunc))(cptr, sptr, chptr, parv) > 0) {
+					breakit = 1;
+					break;
+				}
+			}
+			if (breakit)
+				continue;
+		}
 		/*
 		   **  Complete user entry to the new channel (if any)
 		 */
@@ -3037,6 +3053,18 @@ CMD_FUNC(m_join)
 			continue;
 
 		}
+		if (MyConnect(sptr)) {
+			int breakit = 0;
+			for (global_i = Hooks[HOOKTYPE_LOCAL_JOIN]; global_i; global_i = global_i->next) {
+				if((*(global_i->func.intfunc))(cptr,sptr,chptr,parv) > 0) {
+					breakit = 1;
+					break;
+				}
+			}
+			if (breakit)
+				continue;
+		}
+
 		/*
 		   **  Complete user entry to the new channel (if any)
 		 */
@@ -4575,6 +4603,7 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
 		c++; /* in my dreams */
 	}
 	pparv.parv[c] = NULL;
+	pparv.parc = c;
 	return (&pparv);
 }
 

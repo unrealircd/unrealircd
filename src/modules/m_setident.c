@@ -58,7 +58,7 @@ ModuleHeader Mod_Header
 	"setident",	/* Name of module */
 	"$Id$", /* Version */
 	"/setident", /* Short description of module */
-	"3.2-b5",
+	"3.2-b8-1",
 	NULL 
     };
 
@@ -68,9 +68,9 @@ ModuleHeader Mod_Header
 */
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(int module_load)
+DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
 #else
-int    m_setident_Init(int module_load)
+int    m_setident_Init(ModuleInfo *modinfo)
 #endif
 {
 	/*
@@ -171,7 +171,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (MyConnect(sptr))
 		{
 			sendto_one(sptr,
-			    ":%s NOTICE %s :*** Syntax: /SetIdent <new host>",
+			    ":%s NOTICE %s :*** Syntax: /SetIdent <new ident>",
 			    me.name, parv[0]);
 		}
 		return 1;

@@ -68,6 +68,8 @@ extern int Scan_TimeOut;
 void	scan_socks_scan(Scan_AddrStruct *sr);
 void	scan_socks4_scan(Scan_AddrStruct *sr);
 void	scan_socks5_scan(Scan_AddrStruct *sr);
+static int HOOKTYPE_SCAN_HOST;
+static Hooktype *ScanHost;
 static Mod_SymbolDepTable modsymdep[] = 
 {
 	MOD_Dep(Eadd_scan, xEadd_scan, "src/modules/scan.so"),
@@ -107,6 +109,7 @@ int    scan_socks_Init(ModuleInfo *modinfo)
 	 * Add scanning hooks
 	*/
 	bcopy(modinfo,&ScanSocksModInfo,modinfo->size);
+	ScanHost = HooktypeAdd(ScanSocksModInfo.handle, "HOOKTYPE_SCAN_HOST", &HOOKTYPE_SCAN_HOST);
 	SocksScanHost = HookAddVoidEx(ScanSocksModInfo.handle, HOOKTYPE_SCAN_HOST, scan_socks_scan); 
 	return MOD_SUCCESS;
 }
@@ -130,6 +133,7 @@ int	scan_socks_Unload(int module_unload)
 #endif
 {
 	HookDel(SocksScanHost);
+	HooktypeDel(ScanHost,ScanSocksModInfo.handle);
 	return MOD_SUCCESS;
 }
 
