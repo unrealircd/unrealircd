@@ -66,13 +66,13 @@ int  do_numeric(numeric, cptr, sptr, parc, parv)
 	if (numeric < 100)
 		numeric += 100;
 
-	if (numeric == ERR_NOTONCHANNEL)
+/*	if (numeric == ERR_NOTONCHANNEL)
 		if (!MyClient(sptr) && IsServer(sptr))
 		{
 			sendto_umode(UMODE_EYES, "Recieved ERR_NOTONCHANNEL from remote server %s. Possible desynch, contact UnrealIRCd Team (%s)",
 				sptr->name, backupbuf);
 		}
-	
+*/	
 	/*
 	   ** Prepare the parameter portion of the message into 'buffer'.
 	   ** (Because the buffer is twice as large as the message buffer
@@ -128,7 +128,7 @@ int  do_numeric(numeric, cptr, sptr, parc, parv)
 				sendto_prefix_one(acptr, sptr, ":%s %d %s%s",
 				    parv[0], numeric, nick, buffer);
 		}
-		else if ((acptr = find_server(nick, (aClient *)NULL)))
+		else if ((acptr = find_server_quick(nick)))
 		{
 			if (!IsMe(acptr) && acptr->from != cptr)
 				sendto_prefix_one(acptr, sptr, ":%s %d %s%s",
