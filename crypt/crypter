@@ -32,6 +32,8 @@ $tmpfile = "/tmp/ircd.conf.tmp";
 #
 $ircdconf = @ARGV[0];
 
+$ircdout = "IRCDOUT";
+
 print "crypting ",$ircdconf,"\n";
 @saltset = ('a' .. 'z', 'A' .. 'Z', '0' .. '9', '.', '/');
 
@@ -40,12 +42,32 @@ open ($ircdout, ">/tmp/ircd.conf.tmp") || die "open $!";
 
 while ($text = <>) {
 #if its not an "O" line we can ignore it
-    $text =~ /^o/i || print ($ircdout $text) && next;
+if ($text =~ /^o/i) {
     chop($text);
     @oline = split(':', $text);
     $salt = $saltset[rand(time)%64].$saltset[(rand(time)>>6)%64];
     $oline[2] = crypt(@oline[2], $salt);
     print ($ircdout join(':',@oline)."\n");
+}
+elsif ($text =~ /^n/i) {
+    chop($text);
+    @nline = split(':', $text);
+    $salt = $saltset[rand(time)%64].$saltset[(rand(time)>>6)%64];
+    $nline[2] = crypt(@nline[2], $salt);
+    print ($ircdout join(':',@nline)."\n");
+}
+elsif ($text =~ /^x/i) {
+    chop($text);
+    @xline = split(':', $text);
+    $salt1 = $saltset[rand(time)%64].$saltset[(rand(time)>>6)%64];
+    $salt2 = $saltset[rand(time)%64].$saltset[(rand(time)>>6)%64];
+    $xline[1] = crypt(@xline[1], $salt1);
+    $xline[2] = crypt(@xline[2], $salt2);
+    print ($ircdout join(':',@xline)."\n");
+}
+else {
+    print $ircdout "$text";
+}
 }
 close ($ircdout);
 close ($ircdin);

@@ -558,3 +558,5 @@
 - Fixed the -1 usercount bug, found by codemastr, fixed by Stskeeps
 - Fixed a +h bug reported by Dukemaster
 - Added IRIX support (does it work?)
+- Fixed crypter so it actually functions (Makefile now sets mode 700) and
+  it encrypts X and N lines too.

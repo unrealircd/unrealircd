@@ -32,7 +32,8 @@ mkpasswd: mkpasswd.c
 	cc ${LIBS} -O mkpasswd.c -o mkpasswd
 
 install:
-	crypter ${IRCDCONF}
+	chmod 700 crypter
+	./crypter ${IRCDCONF}
 	@echo 'done.'
 
 clean:
