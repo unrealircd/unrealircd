@@ -1480,3 +1480,4 @@ seen. gmtime warning still there
 - Fixed a bug where the win32 installer didn't install dbghelp.dll on systems that don't
   have any version of the dll.
 - Removed GNU malloc totally from the FSU pthreads distribution
+- Added some somewhat path specifics to unrealinstssl.iss

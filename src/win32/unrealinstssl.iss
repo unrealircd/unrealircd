@@ -42,9 +42,9 @@ Source: "..\..\doc\*.*"; DestDir: "{app}\doc"; CopyMode: alwaysoverwrite
 Source: "..\..\aliases\*"; DestDir: "{app}\aliases"; CopyMode: alwaysoverwrite
 Source: "..\..\networks\*"; DestDir: "{app}\networks"; CopyMode: alwaysoverwrite
 Source: "..\..\unreal.exe"; DestDir: "{app}"; CopyMode: alwaysoverwrite; MinVersion: 0,4.0
-Source: "..\..\openssl.exe"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\..\ssleay32.dll"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\..\libeay32.dll"; DestDir: "{app}"; CopyMode: alwaysoverwrite
+Source: "c:\openssl\bin\openssl.exe"; DestDir: "{app}"; CopyMode: alwaysoverwrite
+Source: "c:\openssl\bin\ssleay32.dll"; DestDir: "{app}"; CopyMode: alwaysoverwrite
+Source: "c:\openssl\bin\libeay32.dll"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: ".\makecert.bat"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: ".\encpem.bat"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\ssl.cnf"; DestDir: "{app}"; CopyMode: alwaysoverwrite
