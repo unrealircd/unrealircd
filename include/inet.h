@@ -30,6 +30,9 @@
 #define	__u_l	unsigned long
 #endif
 
+extern int inet_pton(int af, const char *src, void *dst);
+extern const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt);
+
 #ifdef __STDC__
 # ifndef _WIN32
 extern __u_l inet_addr(char *);

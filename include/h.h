@@ -688,5 +688,7 @@ extern void reread_motdsandrules();
 extern MODVAR int SVSNOOP;
 extern int callbacks_check(void);
 extern void callbacks_switchover(void);
-extern char *encode_ip(char *);
+extern char *encode_ip(u_char *);
 extern char *decode_ip(char *);
+extern void sendto_fconnectnotice(char *nick, anUser *user, aClient *sptr, int disconnect, char *comment);
+extern void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes);

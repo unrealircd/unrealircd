@@ -39,6 +39,7 @@
 #include <fcntl.h>
 #include "h.h"
 #include "proto.h"
+#include "inet.h"
 
 aTKline *tklines[TKLISTLEN];
 

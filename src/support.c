@@ -28,6 +28,7 @@ static char sccsid[] = "@(#)support.c	2.21 4/13/94 1990, 1991 Armin Gruner;\
 #include "sys.h"
 #include "version.h"
 #include "h.h"
+#include "inet.h"
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <limits.h>
