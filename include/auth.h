@@ -43,7 +43,14 @@ typedef	struct {
 #endif
 
 	
-
+#ifdef _WIN32
+#ifndef AUTHENABLE_MD5
+#define AUTHENABLE_MD5
+#endif
+#ifndef AUTHENABLE_SHA1
+#define AUTHENABLE_SHA1
+#endif
+#endif
 
 
 

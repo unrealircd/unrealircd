@@ -1361,3 +1361,5 @@ seen. gmtime warning still there
 - More WinXP IPv6, finished headers, replaced calls to inet_ntoa with Inet_ia2p
 - Added support for the RIPEMD-160 encryption algorithm for encrypted passwords (supposed to be slightly 
   stronger than SHA1 and much stronger than MD5)
+- Added MD5 and SHA1 password encryption support to the win32 version whether SSL is
+  installed or not using the CryptoAPI library included in Windows.
