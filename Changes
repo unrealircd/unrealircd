@@ -452,3 +452,7 @@ ability to view banlists, exemptlists, etc.)
 Played with I line password bug for a while
 --Luke
 ===================================
+
+Fixed (maybe?) an implementation with MAXBANLENGTH
+--Luke
+===================================
