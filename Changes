@@ -1096,3 +1096,4 @@ seen. gmtime warning still there
 - Changed version to beta6 and added final cleanups
 - Added the TKline, TZline, and GZline commands to the documentation
 - Fixed bug in m_tkl_line causing segfaultage
+- Any reason why HOOKTYPE_SERVER_QUIT was being called for clients?

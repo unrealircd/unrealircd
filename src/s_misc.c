@@ -612,13 +612,13 @@ int  exit_client(cptr, sptr, from, comment)
 #endif
 		}
 		recurse--;
+		RunHook(HOOKTYPE_SERVER_QUIT, sptr);
 	}
 
 
 	/*
 	 * Finally, clear out the server we lost itself
 	 */
-	RunHook(HOOKTYPE_SERVER_QUIT, sptr);
 	exit_one_client(cptr, sptr, from, comment);
 	return cptr == sptr ? FLUSH_BUFFER : 0;
 }
