@@ -229,6 +229,15 @@
   [With EGD support enabled], PRNGD (http://www.aet.tu-cottbus.de/personen/jaenicke/postfix_tls/prngd.html), 
   and EGD (http://egd.sourceforge.net). Other EGD compatible programs should work 
   as well.</font></p>
+<p><font size="-1">* We have created a new complete set of docs! doc/unreal32docs.html 
+  is now a complete<br>
+  set of docs! It is still not finished, however it contains atleast what was 
+  already<br>
+  avail. in the other doc files. <br>
+  It can also be view online @ http://www.unrealircd.com/unreal32docs.html</font></p>
+<p><font size="-1">* We have removed ./Setup - Please read the new docs for information 
+  on configuring &amp;<br>
+  setting up Unreal3.2</font></p>
 <p><font size="-1">* MAKE SURE YOU RERUN ./Config AND RUN make clean BEFORE USING 
   THIS VERSION!!!</font></p>
 <p> </p>
@@ -1355,6 +1364,13 @@
   a /quit message will be displayed. Used to prevent spam. A time value is a numeric 
   string with d meaning days, h meaning hours, m meaning minutes, and s meaning 
   seconds, for example 1d2h3m means 1 day, 2 hours, 3 minutes.</p>
+<p>set::prefix-quit &lt;text-to-prefix-quit&gt;;<br>
+  Sets the text that will be used to prefix a quit message. If this value is set 
+  to 0 then the standard &quot;Quit:&quot; is used.</p>
+<p>set::static-quit {quit message};<br>
+  Sets a static quit message that will be sent whenever a client logs off the 
+  network. This eliminates the need for anti-spam-quit-message-time, as well as 
+  the set::prefix-quit. It will NOT replace ERRORS with the static-quit message.</p>
 <p>set::oper-only-stats &lt;stats-list&gt;;<br>
   Specifies a list of stats flags with no seperators that defines stats flags 
   only opers can use. Leave this value out to allow users to use all flags, or 
@@ -1399,9 +1415,6 @@
   not run this value may be left out.</p>
 <p>set::help-channel &lt;network-help-channel&gt;;<br>
   Sets the name of the help channel for this network.</p>
-<p>set::prefix-quit &lt;text-to-prefix-quit&gt;;<br>
-  Sets the text that will be used to prefix a quit message. If this value is set 
-  to 0 then the standard &quot;Quit:&quot; is used.</p>
 <p>set::cloak-keys { &lt;value&gt;; &lt;value&gt;; &lt;value&gt;; };<br>
   Sets the keys to be used to generate a +x host. This value must be the same 
   on all servers or the servers will not link. Each of the set::cloak-keys:: must 
