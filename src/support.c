@@ -43,7 +43,7 @@ extern void outofmemory();
 TS	TS2ts(char *s)
 {
 	if (*s == '!')
-		return (xbase64dec(s + 1));
+		return (base64dec(s + 1));
 	else
 		return (atoi(s));	
 }
