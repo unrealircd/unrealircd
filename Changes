@@ -1428,3 +1428,4 @@ seen. gmtime warning still there
   win32 equiviant of EIO is? I don't think my WSAEIO or whatever I called it
   in sys.h is correct.
 - Seemingily we can't do SSLv3 only for ctx_server?
+- Fixed some SJ3 bugs that could cause desync in rare cases
