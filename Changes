@@ -687,3 +687,7 @@ Fixed broken /who
 Fixed bug with /whois and +I
 --Luke
 ===================================
+
+Fixed exempt propagation bug
+--Luke
+===================================

@@ -261,7 +261,7 @@ static int add_exbanid(aClient *cptr, aChannel *chptr, char *banid)
                 return -1;
         }
         
-        for (ban = chptr->banlist; ban; ban = ban->next)
+        for (ban = chptr->exlist; ban; ban = ban->next)
         {
                 /* wtf is this?
                 len += strlen(ban->banstr);
