@@ -268,6 +268,7 @@ VOIDSIG s_segv()
 	FILE *log;
 	int  p;
 	char corename[512];
+	signal(SIGSEGV,SIG_DFL);
 #ifdef POSIX_SIGNALS
 	act.sa_flags = 0;
 	act.sa_handler = SIG_DFL;
@@ -297,11 +298,7 @@ VOIDSIG s_segv()
 
 #if !defined(_WIN32) && !defined(_AMIGA)
 	p = getpid();
-	if (fork() > 0)
-	{
-		kill(p, 3);
-		kill(p, 9);
-	}
+	if (!fork()) { return;}
 	write_pidfile();
 	(void)ircsprintf(corename, "core.%d", p);
 	(void)rename("core", corename);
