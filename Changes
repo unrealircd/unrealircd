@@ -176,3 +176,6 @@
 - Fixed a little problem with SERVER servername :info crashing the ircd
   Long live the Floridan way of counting
 - ban server {} works the original way it was intended to now
+- Classes keep reference counts now, and moving classes (oper) works good
+  too.
+- Added /trace class search results (class->clients)

@@ -4160,7 +4160,7 @@ int  m_trace(cptr, sptr, parc, parv)
 {
 	int  i;
 	aClient *acptr;
-	aClass *cltmp;
+	ConfigItem_class *cltmp;
 	char *tname;
 	int  doall, link_s[MAXCONNECTIONS], link_u[MAXCONNECTIONS];
 	int  cnt = 0, wilds, dow;
@@ -4338,11 +4338,10 @@ int  m_trace(cptr, sptr, parc, parv)
 		    link_u[me.fd], me.name, "*", "*", me.name);
 		return 0;
 	}
-/*	for (cltmp = FirstClass(); doall && cltmp; cltmp = NextClass(cltmp))
-		if (Links(cltmp) > 0)
+	for (cltmp = conf_class; doall && cltmp; cltmp = (ConfigItem_class *) cltmp->next)
+		if (cltmp->clients > 0)
 			sendto_one(sptr, rpl_str(RPL_TRACECLASS), me.name,
-			    parv[0], Class(cltmp), Links(cltmp));
-*/
+			    parv[0], cltmp->name ? cltmp->name : "[noname]", cltmp->clients);
 	return 0;
 }
 

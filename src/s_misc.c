@@ -440,6 +440,8 @@ int  exit_client(cptr, sptr, from, comment)
 		if (IsServer(sptr))
 			delfrom_fdlist(sptr->fd, &serv_fdlist);
 #endif
+		if (sptr->class)
+			sptr->class->clients--;
 		if (IsClient(sptr))
 			IRCstats.me_clients--;
 		if (IsServer(sptr))

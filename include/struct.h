@@ -979,6 +979,8 @@ struct _configitem_class {
 	int	   pingfreq;
 	int	   maxclients;
 	int	   sendq;
+	
+	int	   clients;
 };
 
 struct _configitem_allow {

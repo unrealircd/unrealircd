@@ -172,7 +172,6 @@ void ban_flooder(aClient *cptr)
 	};
 
 	strcpy(hostip, (char *)inetntoa((char *)&cptr->ip));
-//	exit_client(cptr, cptr, &me, "Flooding");
 
 	tkllayer[4] = hostip;
 	tkllayer[5] = me.name;
@@ -209,8 +208,6 @@ int  parse(cptr, buffer, bufend, mptr)
 	    (*cptr->name ? cptr->name : "*")));
 	if (IsDead(cptr))
 		return 0;
-
-//	sendto_realops("Debug: parse(): %s", buffer);
 
 	if ((cptr->receiveK >= 4) && IsUnknown(cptr))
 	{

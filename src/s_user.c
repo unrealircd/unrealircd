@@ -742,16 +742,13 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			    i == -3 ? "Too many connections" :
 			    "Unauthorized connection", get_client_host(sptr));
 			ircstp->is_ref++;
-			tmpx = MyMalloc(1024);
-			ircsprintf(tmpx, "This server is full. Please try %s",
+			ircsprintf(mo, "This server is full. Please try %s",
 			    defserv);
-			xx =
+			return
 			    exit_client(cptr, sptr, &me,
 			    i ==
-			    -3 ? tmpx :
+			    -3 ? mo :
 			    "You are not authorized to connect to this server");
-			MyFree(tmpx);
-			return xx;
 		}
 		if (sptr->hostp)
 		{
@@ -3226,7 +3223,7 @@ int  m_kill(cptr, sptr, parc, parv)
 				continue;
 			}
 			sendto_one(sptr,
-			    ":%s NOTICE %s :KILL changed from %s to %s",
+			    ":%s NOTICE %s :*** KILL changed from %s to %s",
 			    me.name, parv[0], nick, acptr->name);
 			chasing = 1;
 		}
@@ -3252,18 +3249,6 @@ int  m_kill(cptr, sptr, parc, parv)
 			    parv[0], parv[1]);
 			return 0;
 		}
-/*        if (IsULine(sptr) || (IsSAdmin(sptr) && !IsSAdmin(acptr)) || (IsNetAdmin(sptr)) || (IsTechAdmin(sptr) || (IsCoAdmin(sptr)))) {
-        goto aftermath;
-        } else if (IsULine(acptr)) {
-                goto error;
-        } else {
-                goto aftermath;
-        }
-
-        error:
-
-                return 0;
-*/
 	      aftermath:
 
 		/* From here on, the kill is probably going to be successful. */
@@ -3273,7 +3258,7 @@ int  m_kill(cptr, sptr, parc, parv)
 		if (!IsServer(sptr) && (kcount > MAXKILLS))
 		{
 			sendto_one(sptr,
-			    ":%s NOTICE %s :Too many targets, kill list was truncated. Maximum is %d.",
+			    ":%s NOTICE %s :*** Too many targets, kill list was truncated. Maximum is %d.",
 			    me.name, parv[0], MAXKILLS);
 			break;
 		}
@@ -3777,11 +3762,17 @@ int  m_oper(cptr, sptr, parc, parv)
 #else /* CRYPT_OPER_PASSWORD */
 	encr = password;
 #endif /* CRYPT_OPER_PASSWORD */
-
 	if (StrEq(encr, aconf->password))
 	{
 		int  old = (sptr->umodes & ALL_UMODES);
 		char *s;
+		
+		/* Put in the right class */
+		if (sptr->class)
+			sptr->class->clients--;
+		
+		sptr->class = aconf->class;
+		sptr->class->clients++;
 
 		if ((aconf->oflags & OFLAG_HELPOP))
 		{

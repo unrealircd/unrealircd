@@ -2194,8 +2194,16 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 		{
 			MyFree(cptr->passwd);
 			cptr->passwd = NULL;
-		}			
-		cptr->class = aconf->class;
+		}
+		if (!((aconf->class->clients + 1) > aconf->class->maxclients))
+		{
+			cptr->class = aconf->class;
+			cptr->class->clients++;
+		}
+		else
+		{
+			return -3;
+		}
 		return 0;
 	}
 	return -1;

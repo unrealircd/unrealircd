@@ -289,6 +289,7 @@ void remove_client_from_list(cptr)
 		add_history(cptr, 0);
 		off_history(cptr);	/* Remove all pointers to cptr */
 	}
+	
 	if (cptr->user)
 		(void)free_user(cptr->user, cptr);
 	if (cptr->serv)
