@@ -2081,8 +2081,9 @@ void set_mode(chptr, cptr, parc, parv, pcount, pvar, bounce)
 {
 	char *curchr;
 	u_int what = MODE_ADD;
-	long modetype;
-	int  paracount;
+	long modetype = 0;
+	char *param = NULL;
+	int  paracount = 1;
 #ifdef DEVELOP
 	char *tmpo = NULL;
 #endif
@@ -2163,14 +2164,19 @@ void set_mode(chptr, cptr, parc, parv, pcount, pvar, bounce)
 				      me.name, cptr->name, *curchr);
 				  break;
 			  }
+			  /* We can afford to send off a param */
                           if (parc - paracount >= 1)
-				  parv[paracount] = NULL;
-			  if (parv[paracount] &&
-			      strlen(parv[paracount]) >= MODEBUFLEN)
-				  parv[paracount][MODEBUFLEN - 1] = '\0';
+			  {
+				  param = parv[paracount];
+			  }
+			  else
+				  param = NULL;
+			  
+			  if (param && ((strlen(param) >= MODEBUFLEN)))
+			          param[MODEBUFLEN - 1] = '\0';
 			  paracount +=
 			      do_mode_char(chptr, modetype, *curchr,
-			      parv[paracount], what, cptr, pcount, pvar,
+			      param, what, cptr, pcount, pvar,
 			      bounce);
 			  break;
 		}
