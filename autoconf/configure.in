@@ -369,12 +369,6 @@ IRCDLIBS="$IRCDLIBS -lresolv "
 ;;
 esac
 
-if test `uname -p 2>/dev/null` = "ppc" ; then
- if test `uname -s` = "Linux" ; then
-  CFLAGS="$CFLAGS -DLINUX_PPC"
- fi
-fi
-
 dnl AC_MSG_RESULT(configuring TRE regex library)
 dnl cur_dir=`pwd`
 dnl cd extras/tre

@@ -2418,3 +2418,4 @@ seen. gmtime warning still there
 - Finished some of the extcmode code (memleaks).
 - Fixed a problem in the new win32 resolver code
 - Added HOOKTYPE_UNKUSER_QUIT (disconnects of unregistered clients).
+- Fixed a Linux PPC problem (#0001242)

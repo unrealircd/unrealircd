@@ -9957,12 +9957,6 @@ IRCDLIBS="$IRCDLIBS -lresolv "
 ;;
 esac
 
-if test `uname -p 2>/dev/null` = "ppc" ; then
- if test `uname -s` = "Linux" ; then
-  CFLAGS="$CFLAGS -DLINUX_PPC"
- fi
-fi
-
 ac_config_files="$ac_config_files Makefile src/modules/Makefile unreal ircdcron/ircdchk"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
