@@ -3094,3 +3094,5 @@ seen. gmtime warning still there
   normal /rehash does, reported by superh (#0001699).
 - Various doc/text updates
 - Added some release notes already.
+- Fixed /rehash bug if an .so (or remote include?) failed to load properly,
+  reported by fez (#0001736).

@@ -1569,6 +1569,10 @@ int	init_conf(char *rootconf, int rehash)
 	else	
 	{
 		config_error("IRCd configuration failed to load");
+#ifndef STATIC_LINKING
+		Unload_all_testing_modules();
+#endif
+		unload_notloaded_includes();
 		config_free(conf);
 		conf = NULL;
 		free_iConf(&tempiConf);
