@@ -147,7 +147,7 @@ long	umode_get(char ch)
 	{
 		Usermode_Table[i].flag = ch;
 		Debug((DEBUG_DEBUG, "umode_get(%c) returning %04x",
-			ch, UserMode_Table[i].mode));
+			ch, Usermode_Table[i].mode));
 		/* Update usermode table highest */
 		for (j = 0; j < UMODETABLESZ; j++)
 			if (Usermode_Table[i].flag)
