@@ -59,7 +59,7 @@ extern int LRV;
 DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 EVENT(lcf_check);
 EVENT(htm_calc);
-
+Event *e_lcf, *e_htmcalc;
 
 /* Place includes here */
 #define MSG_HTM         "HTM"
@@ -98,8 +98,8 @@ int    m_htm_init(int module_load)
 	*/
 	add_Command(MSG_HTM, TOK_HTM, m_htm, MAXPARA);
 #ifndef NO_FDLIST
-	EventAdd("lcf", LCF, 0, lcf_check, NULL);
-	EventAdd("htmcalc", 1, 0, htm_calc, NULL);
+	e_lcf = EventAdd("lcf", LCF, 0, lcf_check, NULL);
+	e_htmcalc = EventAdd("htmcalc", 1, 0, htm_calc, NULL);
 #endif
 
 }
@@ -127,8 +127,8 @@ void	m_htm_unload(void)
 				m_htm_info.name);
 	}
 #ifndef NO_FDLIST
-	EventDel("lcf");
-	EventDel("htmcalc");
+	EventDel(e_lcf);
+	EventDel(e_htmcalc);
 #endif
 }
 
@@ -217,13 +217,13 @@ DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    parv[0], sptr->user->username,
 			    sptr->user->realhost);
 			LCF = 60;	/* 60 seconds */
-			EventModEvery("lcf", LCF);
+			EventModEvery(e_lcf, LCF);
 		}
 		else if (!stricmp(command, "OFF"))
 		{
 			lifesux = 0;
 			LCF = LOADCFREQ;
-			EventModEvery("lcf", LCF);
+			EventModEvery(e_lcf, LCF);
 			sendto_one(sptr,
 			    ":%s NOTICE %s :High traffic mode is now OFF.",
 			    me.name, parv[0]);
@@ -315,7 +315,7 @@ EVENT(lcf_check)
 			{
 				lifesux++;	/* Ok, life really sucks! */
 				LCF += 2;	/* wait even longer */
-				EventModEvery("lcf", LCF);
+				EventModEvery(e_lcf, LCF);
 				if (noisy_htm)
 					sendto_realops
 					    ("Still high-traffic mode %d%s (%d delay): %0.2f kb/s",
@@ -332,7 +332,7 @@ EVENT(lcf_check)
 						    ("Resetting HTM and raising limit to: %dk/s\n",
 						    LRV + 5);
 					LCF = LOADCFREQ;
-					EventModEvery("lcf", LCF);
+					EventModEvery(e_lcf, LCF);
 					lifesux = 0;
 					LRV += 5;
 				}
@@ -341,7 +341,7 @@ EVENT(lcf_check)
 		else
 		{
 			LCF = LOADCFREQ;
-			EventModEvery("lcf", LCF);
+			EventModEvery(e_lcf, LCF);
 			if (lifesux)
 			{
 				lifesux = 0;

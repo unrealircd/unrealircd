@@ -86,6 +86,7 @@ DLLFUNC int			h_config_set_blackhole_rehash(void);
 DLLFUNC void 			blackhole(void *p);
 THREAD				acceptthread;
 THREAD_ATTR			acceptthread_attr;
+Event *e_hscleanup, *e_vsban;
 
 #ifndef DYNAMIC_LINKING
 ModuleInfo m_scan_info
@@ -118,8 +119,8 @@ int    m_scan_init(int module_load)
 	add_Hook(HOOKTYPE_SCAN_INFO, h_scan_info);
 	bzero(Hosts, sizeof(Hosts));
 	bzero(VHosts, sizeof(VHosts));
-	EventAdd("hscleanup", 1, 0, HS_Cleanup, NULL);
-	EventAdd("vsban", 1, 0, VS_Ban, NULL);
+	e_hscleanup = EventAdd("hscleanup", 1, 0, HS_Cleanup, NULL);
+	e_vsban = EventAdd("vsban", 1, 0, VS_Ban, NULL);
 	IRCCreateMutex(HSlock);
 	IRCCreateMutex(VSlock);
 	add_Command(MSG_SCAN, TOK_SCAN, m_scan, MAXPARA);
@@ -190,8 +191,8 @@ void	m_scan_unload(void)
 	}
 	del_Hook(HOOKTYPE_LOCAL_CONNECT, h_scan_connect);
 	del_Hook(HOOKTYPE_SCAN_INFO, h_scan_info);
-	EventDel("hscleanup");
-	EventDel("vsban");
+	EventDel(e_hscleanup);
+	EventDel(e_vsban);
 	i = 1;
 	while (i)
 	{

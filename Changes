@@ -939,3 +939,5 @@ seen. gmtime warning still there
   is drunken coding
 - Made delayed module unloading possible, make a int mod_delay() adding
   an event, for e_unload_module_delayed
+- Updated makefile.win32 for the Auth system
+- Redid the event system somewhat

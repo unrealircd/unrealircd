@@ -33,13 +33,13 @@ struct _event {
 	time_t	last;
 };
 
-void	EventAdd(char *name, long every, long howmany,
+Event	*EventAdd(char *name, long every, long howmany,
 		  vFP event, void *data);
-Event	*EventDel(char *name);
+Event	*EventDel(Event *event);
 
 Event	*EventFind(char *name);
 
-void	EventModEvery(char *name, int every);
+void	EventModEvery(Event *event, int every);
 
 void	DoEvents(void);
 

@@ -50,7 +50,7 @@ MUTEX			sys_EventLock;
 Event *events = NULL;
 
 
-void	EventAdd(char *name, long every, long howmany,
+Event	*EventAdd(char *name, long every, long howmany,
 		  vFP event, void *data)
 {
 	Event *newevent;
@@ -65,7 +65,7 @@ void	EventAdd(char *name, long every, long howmany,
 		IRCMutexUnlock(sys_EventLock);
 #endif
 
-		return;
+		return NULL;
 	}
 	newevent = (Event *) MyMallocEx(sizeof(Event));
 	newevent->name = strdup(name);
@@ -83,16 +83,17 @@ void	EventAdd(char *name, long every, long howmany,
 #ifndef HAVE_NO_THREADS
 	IRCMutexUnlock(sys_EventLock);
 #endif
+	return newevent;
 	
 }
 
-Event	*EventDel(char *name)
+Event	*EventDel(Event *event)
 {
 	Event *p, *q;
 	
 	for (p = events; p; p = p->next)
 	{
-		if (!strcmp(p->name, name))
+		if (p == event)
 		{
 			q = p->next;
 			MyFree(p->name);
@@ -120,16 +121,15 @@ Event	*EventFind(char *name)
 	return NULL;
 }
 
-void	EventModEvery(char *name, int every)
+void	EventModEvery(Event *event, int every)
 {
 	Event *eventptr;
 
 #ifndef HAVE_NO_THREADS
 	IRCMutexLock(sys_EventLock);
 #endif
-	eventptr = EventFind(name);
-	if (eventptr)
-		eventptr->every = every;
+	if (event)
+		event->every = every;
 
 #ifndef HAVE_NO_THREADS
 	IRCMutexUnlock(sys_EventLock);
@@ -154,7 +154,7 @@ inline void	DoEvents(void)
 				eventptr->howmany--;
 				if (eventptr->howmany == 0)
 				{
-					temp.next = EventDel(eventptr->name);
+					temp.next = EventDel(eventptr);
 					eventptr = &temp;
 					continue;
 				}
