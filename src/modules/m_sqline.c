@@ -147,7 +147,6 @@ DLLFUNC int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		if (bconf->reason)
 			MyFree(bconf->reason);
-		bconf->mask = NULL;
 		bconf->reason = NULL;
 		addit = 0;
 	}

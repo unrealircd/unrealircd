@@ -2034,3 +2034,4 @@ seen. gmtime warning still there
   example disallow using of channelmode u and L. Suggested by poisoner and others (#0000838).
 - Added allow::options::ssl and allow::options::nopasscont, requested by iguy and Scytale.
 - Removed usermode +b from docs (been gone for a long time) (#0000798) reported by Rocko
+- Fixed an SQLINE bug
