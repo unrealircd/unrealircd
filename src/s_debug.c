@@ -105,6 +105,8 @@ char serveropts[] = {
 #ifdef CRYPTOIRCD
 	'r',
 #endif
+/* we are a stable ircd */
+	'S',
 	'\0'
 };
 
