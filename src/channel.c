@@ -342,13 +342,12 @@ static aClient *find_chasing(aClient *sptr, char *user, int *chasing)
 
 	if (chasing)
 		*chasing = 0;
-	if (who && !IsServer(who))
+	if (who)
 	{
-		return who;
-	}
-	else
-	{
-		return NULL;
+		if (!IsServer(who))
+			return who;
+		else
+			return NULL;
 	}
 	if (!(who = get_history(user, (long)KILLCHASETIMELIMIT)))
 	{
@@ -360,7 +359,7 @@ static aClient *find_chasing(aClient *sptr, char *user, int *chasing)
 		*chasing = 1;
 	if (!IsServer(who))
 		return who;
-	return NULL;
+	else return NULL;
 }
 /*
   Exception functions to work with mode +e
