@@ -54,6 +54,7 @@
  *  - deny dcc {} (dccdeny)
  *  - set {} lines (unrealircd.conf, network files)
  *  - allow {} connfreq (Y:lines)
+ *  - listen <port> {} must work
  *  - converter
 */
 
@@ -1094,7 +1095,7 @@ int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!cep->ce_varname)
 		{
-			config_error("%s:%i: blank drpass line", 
+			config_error("%s:%i: drpass item without variable name", 
 			 cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			continue;
 		}

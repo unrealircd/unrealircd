@@ -80,6 +80,7 @@ typedef struct _configitem_ulines ConfigItem_ulines;
 typedef struct _configitem_tld ConfigItem_tld;
 typedef struct _configitem_listen ConfigItem_listen;
 typedef struct _configitem_allow ConfigItem_allow;
+typedef struct _configitem_vhost ConfigItem_vhost;
 typedef struct _configitem_except ConfigItem_except;
 
 typedef struct Notify aNotify;
@@ -1023,6 +1024,15 @@ struct _configitem_listen {
 	long		options;
 };
 
+struct _configitem_vhost {
+	ConfigFlag 	flag;
+	ConfigItem 	*prev;
+	ConfigItem	*next;
+	char		*userhost;
+	char		*login;
+	char		*password;
+	char		*virthost;
+};
 struct _configitem_except {
 	ConfigFlag      flag;
 	ConfigItem      *prev;
@@ -1030,6 +1040,7 @@ struct _configitem_except {
 	unsigned	type :1;
 	char		*mask;
 };
+
 
 /*
  * statistics structures
