@@ -582,3 +582,7 @@ do_mode_char fixes (mostly from sts)
 SJ3 fixes from codemastr for possible desynch
 --Luke
 ===================================
+
+Fixed prefix problem as per nighthawk
+--Luke
+===================================

@@ -240,8 +240,8 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                             "#",      \
                             "(qaohv)~&@%+", \
 			    "ohvbeqa", \
-			    "k", \
-			    "lfL", \
+			    "kfL", \
+			    "l", \
 			    "psmntirRcOAQKVHGCuzN"
 
 /* Server-Server PROTOCTL -Stskeeps */
