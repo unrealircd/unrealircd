@@ -851,4 +851,19 @@ Backported m_message fix from 3.2, fixed by Syzop, reported by Ashkrynt
 -Stskeeps
 ===================================
 
-** Unreal3.1.6 released **
+*** Unreal3.1.6 released ***
+
+[ Unreal 3.1.7 ]
+--------------------------------------------------
+...
+--------------------------------------------------
+
+Initial release prep, changing version numbers in cvs
+(again).
+--Luke
+===================================
+
+Fixed double snotice exit bug (probably)
+--Luke
+===================================
+

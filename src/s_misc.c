@@ -428,10 +428,6 @@ int  exit_client(cptr, sptr, from, comment)
 		sptr->flags |= FLAGS_CLOSING;
 		if (IsPerson(sptr))
 		{
-			sendto_umode(UMODE_OPER | UMODE_CLIENT,
-			    "*** Notice -- Client exiting: %s (%s@%s) [%s]",
-			    sptr->name, sptr->user->username,
-			    sptr->user->realhost, comment);
 			sendto_connectnotice(sptr->name, sptr->user, sptr, 1, comment);
 		}
 		current_load_data.conn_count--;
