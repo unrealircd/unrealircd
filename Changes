@@ -2490,3 +2490,4 @@ seen. gmtime warning still there
   and when they sync back they merge chanmodes so +i/+R is set again.
   I don't consider this a huge problem but maybe it can be inconveniently, if people have
   a lot of trouble with this I'll have to consider a 50% recode of the +f system :/.
+- Fixed gline with weird value causing a crash at windows, reported by Spectre (#0001309).
