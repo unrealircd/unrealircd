@@ -103,8 +103,7 @@ void start_auth(aClient *cptr)
 	sock.SIN_PORT = htons(113);
 	sock.SIN_FAMILY = AFINET;
 
-	if (connect(cptr->authfd, (struct sockaddr *)&sock,
-		sizeof(sock)) == -1 && !(ERRNO == P_EINPROGRESS))
+	if (connect(cptr->authfd, (struct sockaddr *)&sock, sizeof(sock)) == -1 && !(ERRNO == P_EWORKING))
 	{
 		ircstp->is_abad++;
 		/*
