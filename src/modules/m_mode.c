@@ -69,6 +69,8 @@ void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount,
 #endif
 static void mode_cutoff(char *s);
 
+static int samode_in_progress = 0;
+
 #define MSG_MODE 	"MODE"	
 #define TOK_MODE 	"G"	
 
@@ -398,7 +400,10 @@ DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, c
 	if (**parv == '&')
 		isbounce = 1;
 
+	/* Please keep the next 3 lines next to each other */
+	samode_in_progress = samode;
 	set_mode(chptr, sptr, parc, parv, &pcount, pvar, 0);
+	samode_in_progress = 0; 
 
 	if (IsServer(sptr))
 	{
@@ -720,7 +725,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	int  notsecure;
 	chasing = 0;
 	if (is_half_op(cptr, chptr) && !is_chan_op(cptr, chptr) && !IsULine(cptr)
-	    && !op_can_override(cptr))
+	    && !op_can_override(cptr) && !samode_in_progress)
 	{
 		/* Ugly halfop hack --sts 
 		   - this allows halfops to do +b +e +v and so on */
@@ -746,9 +751,9 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	switch (modetype)
 	{
 	  case MODE_AUDITORIUM:
-		  if (IsULine(cptr) || IsServer(cptr))
+		  if (IsULine(cptr) || IsServer(cptr) || samode_in_progress)
 			  goto auditorium_ok;
-		  if (!IsNetAdmin(cptr) && !is_chanowner(cptr, chptr))
+		  if (MyClient(cptr) && !is_chanowner(cptr, chptr) && !op_can_override(cptr))
 		  {
 			sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name,
 				   chptr->chname);
@@ -895,36 +900,32 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 /* do pro-opping here (popping) */
 	  case MODE_CHANOWNER:
 		  REQUIRE_PARAMETER()
-		  if (!IsULine(cptr) && !IsServer(cptr)
-		       && !is_chanowner(cptr, chptr))
+		  if (!IsULine(cptr) && !IsServer(cptr) && !is_chanowner(cptr, chptr) && !samode_in_progress)
 		  {
-			  if (IsNetAdmin(cptr))
+		  	  if (MyClient(cptr) && !op_can_override(cptr))
+		  	  {
+		  	  	sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name, chptr->chname);
+		  	  	break;
+		  	  }
+			  if (IsOper(cptr))
 			  {
 				if (!is_halfop(cptr, chptr)) /* htrig will take care of halfop override notices */
 				   opermode = 1;
-			  }
-			  else if (MyClient(cptr))
-			  {
-				  sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED),
-				      me.name, cptr->name, chptr->chname);
-				  break;
 			  }
 		  }
 	  case MODE_CHANPROT:
 		  REQUIRE_PARAMETER()
-		  if (!IsULine(cptr) && !IsServer(cptr)
-		      && !is_chanowner(cptr, chptr))
+		  if (!IsULine(cptr) && !IsServer(cptr) && !is_chanowner(cptr, chptr) && !samode_in_progress)
 		  {
-			  if (IsNetAdmin(cptr))
+		  	  if (MyClient(cptr) && !op_can_override(cptr))
+		  	  {
+		  	  	sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name, chptr->chname);
+		  	  	break;
+		  	  }
+			  if (IsOper(cptr))
 			  {
 				if (!is_halfop(cptr, chptr)) /* htrig will take care of halfop override notices */
 				   opermode = 1;
-			  }
-			  else if (MyClient(cptr))
-			  {
-				sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name,
-					   chptr->chname);
-				break;
 			  }
 		  }
 		 
@@ -969,7 +970,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  if (is_chanowner(member->cptr, chptr)
 		      && member->cptr != cptr
 		      && !is_chanowner(cptr, chptr) && !IsServer(cptr)
-		      && !IsULine(cptr) && !opermode && (what == MODE_DEL))
+		      && !IsULine(cptr) && !opermode && !samode_in_progress && (what == MODE_DEL))
 		  {
 			  if (MyClient(cptr))
 			  {
@@ -984,7 +985,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  }
 		  if (is_chanprot(member->cptr, chptr)
 		      && member->cptr != cptr
-		      && !is_chanowner(cptr, chptr) && !IsServer(cptr) && !opermode
+		      && !is_chanowner(cptr, chptr) && !IsServer(cptr) && !opermode && !samode_in_progress
 		      && modetype != MODE_CHANOWNER && (what == MODE_DEL))
 		  {
 			  if (MyClient(cptr))
@@ -1214,7 +1215,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  goto linkok;
 		  }
 
-		  if (!IsNetAdmin(cptr) && !is_chanowner(cptr, chptr))
+		  if (MyClient(cptr) && !is_chanowner(cptr, chptr) && !op_can_override(cptr) && !samode_in_progress)
 		  {
 			sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name,
 				   chptr->chname);

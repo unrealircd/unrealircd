@@ -704,3 +704,13 @@
   - Hungarian characters show both fine in w1250 and latin2, hence hungarian is included
     both in 'windows-1250' and 'latin2'.
   - Fixed bug: polish was not included in latin2
+- Fixed various OperOverride issues:
+  - Opers with can_override can now +qa/-qa even if they are not netadmins,
+    and they can also (un)set L/u.
+  - Fixed several SAMODE bugs, such as not completely working for non-netadmins and
+    not working if you were halfop'ed, etc.
+  Bugs reported by pak, aquanight, niphler, Bugz, and more.
+  If there are still any bugs left, please report them on http://bugs.unrealircd.org/
+  NOTE: some of these enhancements will produce desynchs if your net is not 100%
+        on current CVS / Unreal3.2.3 and an oper tries to use these 'new features'.
+        So use with care on mixed-version nets.
