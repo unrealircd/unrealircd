@@ -749,6 +749,8 @@ int size_string, ret;
 	/* Most likely a DCC send .. */
 	if (!myncmp(ctcp, "DCC SEND ", 9))
 		ctcp = text + 10;
+	else if (!myncmp(ctcp, "DCC RESUME ", 11))
+		ctcp = text + 12;
 	else
 		return 1; /* something else, allow */
 

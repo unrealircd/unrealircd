@@ -921,7 +921,7 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			continue;
 		sprintf(p, "%d ", i);
 		p += strlen(p);
-		if (p > tmp+480)
+		if (p > tmp+380)
 		{
 			sendto_one(sptr, ":%s NOTICE %s :Hooks: %s", me.name, sptr->name, tmp);
 			tmp[0] = '\0';
@@ -939,7 +939,7 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			{
 				sprintf(p, "%s ", mptr->cmd);
 				p += strlen(p);
-				if (p > tmp+470)
+				if (p > tmp+380)
 				{
 					sendto_one(sptr, ":%s NOTICE %s :Override: %s", me.name, sptr->name, tmp);
 					tmp[0] = '\0';

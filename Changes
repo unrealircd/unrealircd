@@ -489,3 +489,4 @@
 - Added a set::gline-address which works like set::kline-address (#0001298) suggested by
   Bugz.
 - Added missing documentation for spamfilter away target (#0002205) reported by Dukat.
+- Fixed dcc spamfilter problem reported by TimeFX and Deadalus (#2177, #2204).
