@@ -2307,21 +2307,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			}
 			ircstrdup(prefix_quit, cep->ce_vardata);
 		}
-		else
-		if (!strcmp(cep->ce_varname, "socks")) {
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
-				CheckNull(cepp);
-				if (!strcmp(cepp->ce_varname, "ban-message")) {
-					ircstrdup(SOCKSBANMSG, cepp->ce_vardata);
-				}
-				else if (!strcmp(cepp->ce_varname, "quit-message")) {
-					ircstrdup(SOCKSQUITMSG, cepp->ce_vardata);
-				}
-				else if (!strcmp(cepp->ce_varname, "ban-time")) {
-					SOCKSBANTIME = atime(cepp->ce_vardata);
-				}
-			}
-		}
 		else if (!strcmp(cep->ce_varname, "dns")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				CheckNull(cepp);
@@ -3089,18 +3074,6 @@ void	validate_configuration(void)
 		Error("set::help-channel is missing");
 	if (Missing(STATS_SERVER))
 		Warning("set::stats-server is missing. /statserv is being disabled");
-	if (iConf.socksbantime < 10) {
-		Warning("set::socks::ban-time is invalid. Using default of 1 day");
-		iConf.socksbantime = 86400;
-	}
-	if (Missing(iConf.socksbanmessage)) {
-		Warning("set::socks::ban-message is missing. Using default of \"Insecure SOCKS server\"");
-		ircstrdup(iConf.socksbanmessage, "Insecure SOCKS server");
-	}
-	if (Missing(iConf.socksquitmessage)) {
-		Warning("set::socks::quit-message is missing. Using default of \"Insecure SOCKS server\"");
-		ircstrdup(iConf.socksquitmessage, "Insecure SOCKS server");
-	}
 	if ((CLOAK_KEY1 < 10000) || (CLOAK_KEY2 < 10000) || (CLOAK_KEY3 < 10000))
 	{
 		if (!CLOAK_KEY1 || !CLOAK_KEY2 || !CLOAK_KEY3)
@@ -4065,12 +4038,6 @@ void report_dynconf(aClient *sptr)
 	    sptr->name, FAILOPER_WARN);
 	sendto_one(sptr, ":%s %i %s :options::show-connect-info: %d", me.name, RPL_TEXT,
 	    sptr->name, SHOWCONNECTINFO);
-	sendto_one(sptr, ":%s %i %s :socks::ban-message: %s", me.name, RPL_TEXT,
-	    sptr->name, iConf.socksbanmessage);
-	sendto_one(sptr, ":%s %i %s :socks::quit-message: %s", me.name, RPL_TEXT,
-	    sptr->name, iConf.socksquitmessage);
-	sendto_one(sptr, ":%s %i %s :socks::ban-time: %i", me.name, RPL_TEXT,
-	    sptr->name, iConf.socksbantime);
 	sendto_one(sptr, ":%s %i %s :maxchannelsperuser: %i", me.name, RPL_TEXT,
 	    sptr->name, MAXCHANNELSPERUSER);
 	sendto_one(sptr, ":%s %i %s :auto-join: %s", me.name, RPL_TEXT,

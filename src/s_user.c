@@ -676,7 +676,7 @@ int  m_post(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	tkllayer[4] = hostip;
 	tkllayer[5] = me.name;
-	ircsprintf(mo, "%li", iConf.socksbantime + TStime());
+	ircsprintf(mo, "%li", 0 + TStime());
 	ircsprintf(mo2, "%li", TStime());
 	tkllayer[6] = mo;
 	tkllayer[7] = mo2;

@@ -2259,8 +2259,10 @@ int  m_stats(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  }
 		  break;
 	  case 'S':
-		  if (IsOper(sptr))
+		  if (IsOper(sptr)) {
 			  report_dynconf(sptr);
+			  RunHook2(HOOKTYPE_STATS, sptr, "S");
+		  }
 		  break;
 	  case 'D':
 	  {

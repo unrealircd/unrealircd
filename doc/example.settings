@@ -15,10 +15,6 @@ set {
 	auto-join		 "0";
 	/* What channels opers will autojoin on connect*/
 	oper-auto-join		 "0";
-	/* This needs to be an unused port, that the IRCd will bind
-	 * to, and make insecure proxies connect to.
-	*/
-	blackhole		 [ip]:port;
 	dns {
 		/* What IP has our DNS server got? */
 		nameserver 127.0.0.1;
@@ -35,11 +31,6 @@ set {
 		identd-check;
 	};
 	
-	socks {
-		ban-message "Insecure SOCKS server";
-		quit-message "Insecure SOCKS server";
-		ban-time "1d";
-	};
 	/*
 	 * How many channels each user can join
 	*/

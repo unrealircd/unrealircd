@@ -59,6 +59,7 @@
 static Hook *SocksScanHost = NULL;
 static vFP			xEadd_scan = NULL;
 static struct SOCKADDR_IN	*xScan_endpoint = NULL;
+static int xScan_TimeOut = 0;
 #ifdef STATIC_LINKING
 extern void Eadd_scan();
 extern struct SOCKADDR_IN	Scan_endpoint;
@@ -75,6 +76,7 @@ static Mod_SymbolDepTable modsymdep[] =
 {
 	MOD_Dep(Eadd_scan, xEadd_scan, "src/modules/scan.so"),
 	MOD_Dep(Scan_endpoint, xScan_endpoint, "src/modules/scan.so"),
+	MOD_Dep(Scan_TimeOut, xScan_TimeOut, "src/modules/scan.so"),
 	{NULL, NULL}
 };
 
@@ -229,7 +231,7 @@ void	scan_socks4_scan(Scan_AddrStruct *h)
 	}
 	
 	/* We wait for write-ready */
-	tv.tv_sec = 40;
+	tv.tv_sec = xScan_TimeOut;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
@@ -260,7 +262,7 @@ void	scan_socks4_scan(Scan_AddrStruct *h)
 		goto exituniverse;
 	}
 	/* Now we wait for data. 10 secs ought to be enough  */
-	tv.tv_sec = 10;
+	tv.tv_sec = xScan_TimeOut;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
@@ -366,7 +368,7 @@ void	scan_socks5_scan(Scan_AddrStruct *h)
 	}
 	
 	/* We wait for write-ready */
-	tv.tv_sec = 40;
+	tv.tv_sec = xScan_TimeOut;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
@@ -388,7 +390,7 @@ void	scan_socks5_scan(Scan_AddrStruct *h)
 		CLOSE_SOCK(fd);
 		goto exituniverse;
 	}
-	tv.tv_sec = 10;
+	tv.tv_sec = xScan_TimeOut;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);

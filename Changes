@@ -1153,4 +1153,6 @@ v- Fixed some bugreport stuff
 - -Wall cleanup cleanup with SSL AUTH problem
 - Fix for /version crash, reported by RaYmAn
 - Made all functions use new-style parameter lists
-
+- Moved set::socks::ban-time to set::scan::bantime, and remove the other set::socks::* (not used)
+  also added set::scan::timeout to specify how long the scanner should wait for a response before giving up
+- Added HOOKTYPE_STATS - allows modules to respond to certain /stats (so far only S is supported)
