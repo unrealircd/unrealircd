@@ -20,7 +20,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta15<br>
-  <b>Last doc update:</b> 2003-03-18 </div>
+  <b>Last doc update:</b> 2003-03-20 </div>
   <b>Head Coders:</b> Stskeeps / codemastr / Luke / McSkaf / Syzop<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -73,20 +73,21 @@
   ---4.17. <a href="#banrealnameblock">Ban Realname Block -=- (n:Line)</a><br>
   ---4.18. <a href="#banversionblock">Ban Version Block</a><br>
   ---4.19. <a href="#banexceptionblock">Ban Exception Block -=- (E:Line)</a><br>
-  ---4.20. <a href="#scanexceptionblock">Scan Exception Block -=- (e:Line)</a><br>
-  ---4.21. <a href="#throttleexceptionblock">Throttle Exception Block</a><br>
-  ---4.22. <a href="#denydccblock">Deny DCC Block -=- (dccdeny.conf)</a><br>
-  ---4.23. <a href="#denyversionblock">Deny Version Block -=- (V:Line)</a><br>
-  ---4.24. <a href="#denylinkblock">Deny Link Block -=- (D:Line / d:Line)</a><br>
-  ---4.25. <a href="#denychannelblock">Deny Channel Block -=- (chrestrict.conf)</a><br>
-  ---4.26. <a href="#allowchannelblock">Allow Channel Block</a><br>
-  ---4.27. <a href="#vhostblock">Vhost Block Block -=- (vhost.conf)</a><br>
-  ---4.28. <a href="#badwordsblock">Badwords Block -=- (badwords.conf)</a><br>
-  ---4.29. <a href="#ulinesblock">Uline Block -=- (U:Line)</a><br>
-  ---4.30. <a href="#linkblock">Link Block -=- (C/N/H:Lines)</a><br>
-  ---4.31. <a href="#aliasblock">Alias Block</a><br>
-  ---4.32. <a href="#helpblock">Help Block</a><br>
-  ---4.33. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
+  ---4.20. <a href="#tklexceptionblock">TKL Exception Block</a><br>
+  ---4.21. <a href="#scanexceptionblock">Scan Exception Block -=- (e:Line)</a><br>
+  ---4.22. <a href="#throttleexceptionblock">Throttle Exception Block</a><br>
+  ---4.23. <a href="#denydccblock">Deny DCC Block -=- (dccdeny.conf)</a><br>
+  ---4.24. <a href="#denyversionblock">Deny Version Block -=- (V:Line)</a><br>
+  ---4.25. <a href="#denylinkblock">Deny Link Block -=- (D:Line / d:Line)</a><br>
+  ---4.26. <a href="#denychannelblock">Deny Channel Block -=- (chrestrict.conf)</a><br>
+  ---4.27. <a href="#allowchannelblock">Allow Channel Block</a><br>
+  ---4.28. <a href="#vhostblock">Vhost Block Block -=- (vhost.conf)</a><br>
+  ---4.29. <a href="#badwordsblock">Badwords Block -=- (badwords.conf)</a><br>
+  ---4.30. <a href="#ulinesblock">Uline Block -=- (U:Line)</a><br>
+  ---4.31. <a href="#linkblock">Link Block -=- (C/N/H:Lines)</a><br>
+  ---4.32. <a href="#aliasblock">Alias Block</a><br>
+  ---4.33. <a href="#helpblock">Help Block</a><br>
+  ---4.34. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
   5. <a href="#userchannelmodes">User & Channel Modes</a><br>
   6. <a href="#useropercommands">User & Oper Commands</a><br>
   7. <a href="#faq">Frequently Asked Questions (FAQ)</a><br> 
@@ -1148,7 +1149,30 @@ except ban {
 	mask myident@my.isp.com;
 };</pre></p>
 <p></p>
-<p><font class="block_section">4.20 - </font><font class="block_name">Scan Exceptions Block</font>
+<p><font class="block_section">4.20 - </font><font class="block_name">TKL Exceptions Block</font>
+   <font class="block_optional">OPTIONAL</font><a name="tklexceptionblock"></a>
+</p>
+<p>Syntax:<br>
+<pre>
+except tkl {
+	mask &lt;hostmask&gt;;
+	type &lt;type&gt;;
+};</pre></p>
+<p>The except tkl block allows you to specify a user@host that will override a 
+  tkl ban placed on a broader host. This is useful when you want an ISP banned, but 
+  still want specific users to be able to connect. The except::mask directive 
+  specifies the user@host mask of the client who will be allowed to connect. The 
+  except::type specifies which type of ban this should override. Valid types are
+  gline, gzline, and shun, which make an exception from Glines, Global Zlines, and
+  shuns.</p>
+<p>Example:<br>
+<pre>
+except tkl {
+	mask myident@my.isp.com;
+	type gline;
+};</pre></p>
+<p></p>
+<p><font class="block_section">4.21 - </font><font class="block_name">Scan Exceptions Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the e:Line)</font><a name="scanexceptionblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1166,7 +1190,7 @@ except scan {
 	mask 192.168.1.*;
 };</pre></p>
 <p></p>
-<p><font class="block_section">4.21 - </font><font class="block_name">Throttle Exceptions Block</font>
+<p><font class="block_section">4.22 - </font><font class="block_name">Throttle Exceptions Block</font>
    <font class="block_optional">OPTIONAL</font> <a name="throttleexceptionblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1182,21 +1206,6 @@ except throttle {
 except throtte {
 	mask 192.168.1.*;
 };</pre></p>
-<p></p>
-<p><font class="block_section">4.22 - </font><font class="block_name">Throttle Exceptions Block</font>
-   <font class="block_optional">OPTIONAL</font> <a name="throttleexceptionblock"></a>
-</p>
-<p>Syntax:<br>
-  except throttle {<br>
-  mask &lt;ipmask&gt;;<br>
-  };</p>
-<p>The except throttle block allows you to specify an IP mask that will override the 
-  throttling system. This only works if you have chosen to enable throttling. The 
-  except::mask specifies an IP mask that will not be banned because of throttling.</p>
-<p>Example<br>
-  except throtte {<br>
-  mask 192.168.1.*;<br>
-  };</p>
 <p></p>
 <p><font class="block_section">4.23 - </font><font class="block_name">Deny DCC Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as dccdeny.conf)</font><a name="denydccblock"></a>
@@ -1246,7 +1255,7 @@ deny version {
   flag compiled into it, if it does not have a ! prefix, then it means the server 
   must have this flag compiled.</p>
 <p></p>
-<p><font class="block_section">4.23 - </font><font class="block_name">Deny Link Block</font>
+<p><font class="block_section">4.25 - </font><font class="block_name">Deny Link Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the D/d:Line)</font><a name="denylinkblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1273,7 +1282,7 @@ deny link {
   auto (only applies to autoconnects, /connect will still work), and all (applies 
   to all connection attempts).</p>
 <p></p>
-<p><font class="block_section">4.25 - </font><font class="block_name">Deny Channel Block</font>
+<p><font class="block_section">4.26 - </font><font class="block_name">Deny Channel Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as chrestrict.conf)</font><a name="denychannelblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1294,7 +1303,7 @@ deny channel {
 	reason "No it don't!";
 };</pre></p>
 <p></p>
-<p><font class="block_section">4.26 - </font><font class="block_name">Allow Channel Block</font>
+<p><font class="block_section">4.27 - </font><font class="block_name">Allow Channel Block</font>
    <font class="block_optional">OPTIONAL</font><a name="allowchannelblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1311,7 +1320,7 @@ allow channel {
 	channel "#something";
 };</pre></p>
 <p></p>
-<p><font class="block_section">4.27 - </font><font class="block_name">Vhost Block</font>
+<p><font class="block_section">4.28 - </font><font class="block_name">Vhost Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as vhosts.conf)</font><a name="vhostblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1350,7 +1359,7 @@ vhost {
 	swhois "Im Special";
 };</pre></p>
 <p></p>
-<p><font class="block_section">4.28 - </font><font class="block_name">Bad Word Block</font>
+<p><font class="block_section">4.29 - </font><font class="block_name">Bad Word Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as badwords.*.conf)</font><a name="badwordsblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1373,7 +1382,7 @@ badword channel {
 	replace shoot;
 };</pre></p>
 <p></p>
-<p><font class="block_section">4.29 - </font><font class="block_name">ULines Block</font>
+<p><font class="block_section">4.30 - </font><font class="block_name">ULines Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the U:Line)</font><a name="ulinesblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1394,7 +1403,7 @@ ulines {
 	stats.mynetwork.com;
 };</pre></p>
 <p></p>
-<p><font class="block_section">4.30 - </font><font class="block_name">Link Block</font>
+<p><font class="block_section">4.31 - </font><font class="block_name">Link Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as C/N/H:Lines)</font><a name="linkblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1493,7 +1502,7 @@ link hub.mynet.com {
 };</pre></p>
 <p> </p>
 <p> </p>
-<p><font class="block_section">4.31 - </font><font class="block_name">Alias Block</font>
+<p><font class="block_section">4.32 - </font><font class="block_name">Alias Block</font>
    <font class="block_optional">OPTIONAL</font><a name="aliasblock"></a>
 </p>
 <p>Syntax [standard alias]:<br>
@@ -1540,7 +1549,7 @@ alias &lt;name&gt; {
   from the second till the last. For examples of using the alias block in the 
   command format, consult doc/example.conf.</p>
 <p></p>
-<p><font class="block_section">4.32 - </font><font class="block_name">Help Block</font>
+<p><font class="block_section">4.33 - </font><font class="block_name">Help Block</font>
    <font class="block_optional">OPTIONAL</font><a name="helpblock"></a>
 </p>
 <p>Syntax:<br>
@@ -1557,7 +1566,7 @@ help &lt;name&gt; {
   for the help block are the text that will be displayed to the user when requesting 
   the /helpop.</p>
 <p></p>
-<p><font class="block_section">4.33 - </font><font class="block_name">Set Block</font>
+<p><font class="block_section">4.34 - </font><font class="block_name">Set Block</font>
    <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as unrealircd.conf/networks file)</font><a name="setblock"></a>
 </p>
 <p>The set file is what use to be our networks/unrealircd.conf and our networks 
