@@ -148,6 +148,8 @@ aClient *find_person(char *name, aClient *cptr)
 
 void ban_flooder(aClient *cptr)
 {
+	int i;
+	aClient *acptr;
 	char hostip[128], mo[100], mo2[100];
 	char *tkllayer[9] = {
 		me.name,	/*0  server.name */
@@ -165,11 +167,26 @@ void ban_flooder(aClient *cptr)
 
 	tkllayer[4] = hostip;
 	tkllayer[5] = me.name;
-	ircsprintf(mo, "%li", 600 + TStime());
+	ircsprintf(mo, "%li", (UNKNOWN_FLOOD_BANTIME ? UNKNOWN_FLOOD_BANTIME : 600) + TStime());
 	ircsprintf(mo2, "%li", TStime());
 	tkllayer[6] = mo;
 	tkllayer[7] = mo2;
 	tkllayer[8] = "Flood from unknown connection";
+	/* This removes all unknown clients from the specified IP, it should prevent
+ 	 * duplicate notices about the flood */
+	for (i = 0; i <= LastSlot; i++)
+	{
+		if (!(acptr = local[i]))
+			continue;
+		if (!IsUnknown(acptr))
+			continue;
+#ifndef INET6
+		if (acptr->ip.S_ADDR == cptr->ip.S_ADDR)
+#else
+		if (!bcmp(acptr->ip.S_ADDR, cptr->ip.S_ADDR, sizeof(cptr->ip.S_ADDR)))
+#endif
+			exit_client(acptr, acptr, acptr, "Flood from unknown connection");
+	}
 	m_tkl(&me, &me, 9, tkllayer);
 	return;
 }
@@ -211,7 +228,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 	if (IsDead(cptr))
 		return 0;
 
-	if ((cptr->receiveK >= 4) && IsUnknown(cptr))
+	if ((cptr->receiveK >= (UNKNOWN_FLOOD_AMOUNT ? UNKNOWN_FLOOD_AMOUNT : 4)) && IsUnknown(cptr))
 	{
 		sendto_snomask(SNO_FLOOD, "Flood from unknown connection %s detected",
 			cptr->sockhost);

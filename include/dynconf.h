@@ -90,6 +90,8 @@ struct zConfiguration {
 #endif
 	enum UHAllowed userhost_allowed;
 	char *restrict_usermodes;
+	long unknown_flood_bantime;
+	long unknown_flood_amount;
 	aNetwork network;
 };
 
@@ -152,3 +154,5 @@ extern aConfiguration iConf;
 #define THROTTLING_PERIOD		iConf.throttle_period
 #endif
 #define USE_BAN_VERSION			iConf.use_ban_version
+#define UNKNOWN_FLOOD_BANTIME		iConf.unknown_flood_bantime
+#define UNKNOWN_FLOOD_AMOUNT		iConf.unknown_flood_amount

@@ -1983,3 +1983,8 @@ seen. gmtime warning still there
 - Implemented a ban version {} (bans users based on CTCP VERSION). It works by sending out
   a CTCP VERSION when a user connects then checking the reply. If you don't use any 
   ban version{}'s then no version request is sent so users are not inconvenienced.
+- Rewrote the "flood from unknown connection" system to kill all matching users immediately
+  and also added set::anti-flood::unknown-flood-bantime and 
+  set::anti-flood::unknown-flood-amount to set the length of time an unknown connection
+  flooder is banned for and how much data (in KB) the user must send before being banned.
+  This should fix (#0000767) reported by ora.
