@@ -2582,7 +2582,6 @@ int  m_who(cptr, sptr, parc, parv)
 	aChannel *chptr;
 	char *channame = NULL, *s;
 	int  show_opers = parc > 2 ? (*parv[2] == 'o') : 0;	/* Show OPERS only */
-	int  member;
 
 	show_hosts = 0;
 
@@ -2657,6 +2656,7 @@ int  m_who(cptr, sptr, parc, parv)
 		for (acptr = client; acptr; acptr = acptr->next)
 		{
 			aChannel *ch2ptr = NULL;
+			short g2g = 0;
 			
 			if (!IsPerson(acptr))
 				continue;
@@ -2665,14 +2665,35 @@ int  m_who(cptr, sptr, parc, parv)
 			    && !IsOper(sptr))))
 				continue;
 			
-			/* The other method my have been slightly more efficient,
-			 * but I honestly doubt it. The readability of that code was
-			 * well, insane. --Luke
+			/* *sigh* okay so maybe I should have kept some of that code,
+			 * especially since it seems to be the stuff that determines
+			 * whether or not the user should show in /who.
 			 */
-			if (acptr->user->channel)
-				ch2ptr = acptr->user->channel->value.chptr;
 
-			if (
+#ifndef NO_OPEROVERRIDE
+			if (IsOper(sptr))
+				g2g = 1;
+			else
+#endif
+			for (lp = acptr->user->channel; lp; lp = lp->next)
+			{
+				if (!IsMember(sptr, lp->value.chptr) &&
+				    (acptr != sptr && IsInvisible(acptr)))
+				    continue;
+
+				if (IsMember(sptr, lp->value.chptr) ||
+				    !IsInvisible(acptr) && ShowChannel(sptr, lp->value.chptr))
+				{
+					g2g = 1;
+					ch2ptr = lp->value.chptr;
+					break;
+				}
+			}
+
+			if (!acptr->user->channel && (acptr == sptr || !IsInvisible(acptr)))
+				g2g = 1;
+
+			if (g2g &&
 			    (!mask ||
 			    match(mask, acptr->name) == 0 ||
 			    match(mask, acptr->user->username) == 0 ||
@@ -2687,6 +2708,7 @@ int  m_who(cptr, sptr, parc, parv)
 				do_who(sptr, acptr, ch2ptr);
 
 		}
+
 	sendto_one(sptr, rpl_str(RPL_ENDOFWHO), me.name, parv[0],
 	    BadPtr(mask) ? "*" : mask);
 	return 0;
