@@ -343,3 +343,4 @@
 - Took out "nick did a /userhost on you"
 - Reduced hashtable size
 - Took out sequent/dynix support
+- Fixed a bug that prolly was fixed by Potvin, but was "not fixed correctly"

@@ -531,7 +531,7 @@ int  m_server(cptr, sptr, parc, parv)
 		aconf = find_conf_servern(host);
 		if (!aconf)
 		{
-			sendto_locfailops("ERROR :No Access (No N line) %s",
+			sendto_one(cptr,"ERROR :No Access (No N line) %s",
 			    inpath);
 			sendto_locfailops("Access denied (No N line) %s",
 			    inpath);
