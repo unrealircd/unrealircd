@@ -2162,6 +2162,7 @@ void	validate_configuration(void)
 	ConfigItem_except *except_ptr;
 	ConfigItem_ban *ban_ptr;
 	ConfigItem_link *link_ptr;
+	short hide_host = 1;
 	
 	/* Let us validate dynconf first */
 	if (!KLINE_ADDRESS || (*KLINE_ADDRESS == '\0'))
@@ -2178,34 +2179,59 @@ void	validate_configuration(void)
 			   "set::kline-address may not be an UnrealIRCd Team address");
 	
 #endif
-	if ((MAXCHANNELSPERUSER < 1))
-		Error(
-		    "set::maxchannelsperuser is an invalid value, must be > 0");
-	if ((iNAH < 0) || (iNAH > 1))
-		Error("set::host-on-oper-op is an invalid value");
-	if (HOST_TIMEOUT < 0 || HOST_TIMEOUT > 180)
-		Error("set::dns::timeout is an invalid value");
-	if (HOST_RETRIES < 0 || HOST_RETRIES > 10)
-		Error("set::dns::retries is an invalid value");
+	if ((MAXCHANNELSPERUSER < 1)) {
+		MAXCHANNELSPERUSER = 10;
+		Warning("set::maxchannelsperuser must be > 0. Using default of 10");
+	}
+	if ((iNAH < 0) || (iNAH > 1)) {
+		iNAH = 0;
+		Warning("set::host-on-oper-op is invalid. Disabling by default");
+	}
+	if (HOST_TIMEOUT < 0 || HOST_TIMEOUT > 180) {
+		HOST_TIMEOUT = 2;
+		Warning("set::dns::timeout is invalid. Using default of 2 seconds");
+	}
+	if (HOST_RETRIES < 0 || HOST_RETRIES > 10) {
+		HOST_RETRIES = 2;
+		Warning("set::dns::retries is invalid. Using default of 2");
+	}
 #define Missing(x) !(x) || (*(x) == '\0')
 	if (Missing(defserv))
 		Error("set::default-server is missing");
 	if (Missing(SERVICES_NAME))
 		Error("set::services-server is missing");
-	if (Missing(oper_host))
-		Error("set::hosts::global is missing");
-	if (Missing(admin_host))
-		Error("set::hosts::admin is missing");
-	if (Missing(locop_host))
-		Error("set::hosts:local is missing");
-	if (Missing(sadmin_host))
-		Error("set::hosts::servicesadmin is missing");
-	if (Missing(netadmin_host))
-		Error("set::hosts::netadmin is missing");
-	if (Missing(coadmin_host))
-		Error("set::hosts::coadmin is missing");
-	if (Missing(techadmin_host))
-		Error("set::hosts::techadmin is missing");
+	if (Missing(oper_host)) {
+		Warning("set::hosts::global is missing");
+		hide_host = 0;
+	}
+	if (Missing(admin_host)) {
+		Warning("set::hosts::admin is missing");
+		hide_host = 0;
+	}
+	if (Missing(locop_host)) {
+		Warning("set::hosts:local is missing");
+		hide_host = 0;
+	}
+	if (Missing(sadmin_host)) {
+		Warning("set::hosts::servicesadmin is missing");
+		hide_host = 0;
+	}
+	if (Missing(netadmin_host)) {
+		Warning("set::hosts::netadmin is missing");
+		hide_host = 0;
+	}
+	if (Missing(coadmin_host)) {
+		Warning("set::hosts::coadmin is missing");
+		hide_host = 0;
+	}
+	if (Missing(techadmin_host)) {
+		Warning("set::hosts::techadmin is missing");
+		hide_host = 0;
+	}
+	if (hide_host == 0) {
+		Warning("Due to an invalid set::hosts field, oper host masking is being disabled");
+		iNAH = 0;
+	}
 	if (Missing(hidden_host))
 		Error("set::hiddenhost-prefix is missing");
 	if (Missing(helpchan))
@@ -2240,7 +2266,7 @@ void	validate_configuration(void)
 					class_ptr->name);
 			if (!class_ptr->sendq)
 				Error("class %s::sendq with illegal value",
-					class_ptr->name);;
+					class_ptr->name);
 			if (class_ptr->maxclients < 0)
 				Error("class %s:maxclients with illegal (negative) value",
 					class_ptr->name);				
