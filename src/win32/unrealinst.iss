@@ -43,6 +43,9 @@ Source: "..\..\networks\*"; DestDir: "{app}\networks"; CopyMode: alwaysoverwrite
 Source: "..\..\unreal.exe"; DestDir: "{app}"; CopyMode: alwaysoverwrite; MinVersion: 0,4.0
 Source: isxdl.dll; DestDir: {tmp}; CopyMode: dontcopy
 
+[UninstallDelete]
+Type: files; Name: "{app}\DbgHelp.Dll"
+
 [Code]
 function isxdl_Download(hWnd: Integer; URL, Filename: PChar): Integer;
 external 'isxdl_Download@files:isxdl.dll stdcall';

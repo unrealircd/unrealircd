@@ -1389,3 +1389,4 @@ seen. gmtime warning still there
   other versions. Also removes StackTrace
 - Added src/win32/gpl.rtf (used for installer) made installer download dbghelp.dll if needed
 - Added an installer script to generate the Win32 SSL version
+- Made the win32 uninstaller remove dbghelp.dll if it was added when uninstalling
