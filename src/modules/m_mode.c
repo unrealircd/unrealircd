@@ -1710,7 +1710,7 @@ int x;
 	{
 		x = Channelmode_Table[modeindex].is_ok(cptr, chptr, param, EXCHK_ACCESS, what);
 		if ((x == EX_ALWAYS_DENY) ||
-		    ((x == EX_DENY) && !op_can_override(cptr)))
+		    ((x == EX_DENY) && !op_can_override(cptr) && !samode_in_progress))
 		{
 			Channelmode_Table[modeindex].is_ok(cptr, chptr, param, EXCHK_ACCESS_ERR, what);
 			return paracnt; /* Denied & error msg sent */
