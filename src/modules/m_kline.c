@@ -117,7 +117,7 @@ DLLFUNC int m_kline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *host, *tmp, *hosttemp;
 	char uhost[80], name[80];
-	int  ip1, ip2, ip3, temp;
+	int  ip1, ip2, ip3, temp, i;
 	aClient *acptr;
 	ConfigItem_ban *bconf;
 
@@ -157,13 +157,23 @@ DLLFUNC int m_kline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    parv[0]);
 			return 0;
 		}
-		if (!strcmp(uhost, "*") || !strchr(uhost, '.'))
+		if (hosttemp)
 		{
-			sendto_one(sptr,
-			    "NOTICE %s :*** What a sweeping K:Line.  If only your admin knew you tried that..",
-			    parv[0]);
-			sendto_realops("%s attempted to /kline *@*", parv[0]);
-			return 0;
+			hosttemp++;
+			i = 0;
+			while (*hosttemp)
+			{
+				if (*hosttemp != '*' && *hosttemp != '.' && *hosttemp != '?')
+					i++;
+				hosttemp++;
+			}
+			if (i < 4)
+			{
+				sendto_one(sptr,
+				    ":%s NOTICE %s :*** [K:Line error] Too broad mask",
+				    me.name, sptr->name);
+				return 0;
+			}
 		}
 	}
 

@@ -912,3 +912,4 @@ seen. gmtime warning still there
   coding)
 - Webserver caching fix
 - A little bug fix that prevented the G:line hostmask checker from checking ?
+- Made the /kline hostmask checker work like the G:line checker, (it was too easy to K:line *@*)
