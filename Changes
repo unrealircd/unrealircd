@@ -344,4 +344,3 @@
 - Reduced hashtable size
 - Took out sequent/dynix support
 - Fixed a bug that prolly was fixed by Potvin, but was "not fixed correctly"
-- (CVS) Access lists should work now .. (grr.)
