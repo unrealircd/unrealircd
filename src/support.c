@@ -591,7 +591,7 @@ extern int Rha;
 int	rh(void)
 {
 	int	fd;
-	
+	return 0;	
 	/* test if this is an development release, just for security - 
 	   we test if there is a Unreal*l, as it would be Unreal3.1-Silverheart(devel)
 	

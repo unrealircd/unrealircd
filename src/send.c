@@ -248,6 +248,9 @@ void sendbufto_one(aClient *to)
 	{
 		s = (char *) ep_encrypt(to, sendbuf, &len);
 		bcopy(s, sendbuf, len);
+#ifdef DEVELOP
+		sendto_ops("Sent off encrypted packet len %i", len);
+#endif
 	}
 #endif
 	if (DBufLength(&to->sendQ) > get_sendq(to))
