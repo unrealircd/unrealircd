@@ -1111,7 +1111,7 @@ int  InitwIRCD(argc, argv)
 	{
 		int  i;
 		for (i = MAXCONNECTIONS + 1; i > 0; i--)
-			default_fdlist.entry[i] = i - 1;
+			default_fdlist.entry[i] = i;
 	}
 #endif
 	if (portnum < 0)
