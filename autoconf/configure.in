@@ -42,7 +42,13 @@ AC_DEFUN(AC_ENABLE_SSL,
 [
 if test "$openssl" = "yes"; then
 AC_DEFINE(USE_SSL)
-CRYPTOLIB="-lcrypto -lssl"
+AC_CACHE_CHECK(what order we should supply the SSL libraries in, ac_cv_ssl_libs, [
+save_libs="$LIBS"
+LIBS="$LIBS -lcrypto -lssl"
+AC_TRY_LINK([#include <openssl/ssl.h>], [
+SSL_write(NULL, NULL, NULL);
+], ac_cv_ssl_libs="-lcrypto -lssl" LIBS="$save_libs", ac_cv_ssl_libs="-lssl -lcrypto" LIBS="$save_libs")])
+CRYPTOLIB="$ac_cv_ssl_libs"
 CFLAGS="$CFLAGS -I/usr/local/include -I/usr/local/ssl/include -L/usr/local/lib -L/usr/local/ssl/lib"
 else
 AC_WARN(SSL support could not be enabled because openssl/ssl.h could not be found)

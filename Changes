@@ -775,3 +775,4 @@ seen. gmtime warning still there
   scan*
 - Fixed some more IPv6 stuff in httpd
 - Implimented snomask (similar to IRCu) and moved several usermodes to it
+- Added a config check to detect what order we should specify the SSL libraries in
