@@ -962,8 +962,8 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	 */
 	if (MyConnect(sptr))
 	{
-	if (sptr->passwd[0]) 
-		if (sptr->passwd[0] && (nsptr = find_person(NickServ, NULL)))
+	if (*sptr->passwd) 
+		if (*sptr->passwd && (nsptr = find_person(NickServ, NULL)))
 			sendto_one(nsptr, ":%s PRIVMSG %s@%s :IDENTIFY %s",
 			    sptr->name, NickServ, SERVICES_NAME, sptr->passwd);
 		/* Force the user to join the given chans -- codemastr */
