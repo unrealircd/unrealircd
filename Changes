@@ -439,3 +439,5 @@
   Seemed to work without the +1 but added it just to be safe.
 - Fixed possible crash bug imposed by too many users per ip in AllowClient -found and fixed by McSkaf
 - Made IP Mismatches getting sent to UMODE_JUNK instead
+- Added method mod_load in dummy example and made it work. mod_load() is executed 
+  when server is ready

@@ -123,8 +123,25 @@ int  load_module(char *module)
 				return -1;
 			}
 		}
+		
 		module_buffer->dll = Mod;
 		module_buffer->unload = mod_unload;
+
+		mod_unload = irc_dlsym(Mod, "mod_load");
+		if (!mod_unload)
+		{
+			mod_unload = irc_dlsym(Mod, "_mod_load");
+			if (!mod_unload)
+			{
+				return -1;
+			}
+		}
+		else
+		{
+			/* if ircd is booted, load it */
+			if (loop.ircd_booted)
+				(*mod_unload)();
+		}
 		for (i = 0; i < MAXMODULES; i++)
 			if (Modules[i] && !strcmp(Modules[i]->name, module_buffer->name))
 			{
@@ -148,6 +165,7 @@ int  load_module(char *module)
 		{
 			config_progress
 			    ("Failed to load module %s: Too many modules loaded");
+			(*module_buffer->unload)();
 			irc_dlclose(Mod);
 			return -1;
 		}
@@ -217,6 +235,43 @@ vFP module_sym(char *name)
 	return NULL;
 }
 
+
+void	module_loadall()
+{
+	vFP	fp;
+	char	buf[512];
+	int	i;
+	ModuleInfo *mi;
+	
+	ircsprintf(buf, "_mod_load");
+	if (!loop.ircd_booted)
+	{
+		sendto_realops("Ehh, !loop.ircd_booted in module_loadall()");
+		return ;
+	}
+	/* Run through all modules and check for module load */
+	for (i = 0; i < MAXMODULES; i++)
+	{
+		mi = Modules[i];
+		if (!mi)
+			continue;
+			
+		if (fp = (vFP) irc_dlsym(mi->dll, "mod_load"))
+		{
+		}
+		else
+		if (fp = (vFP) irc_dlsym(mi->dll, buf))
+		{
+		}
+		else
+		{
+			/* else, we didn't find it */
+			continue;
+		}
+		/* Call the module_load */
+		(*fp)();
+	}
+}
 
 int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {

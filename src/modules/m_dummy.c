@@ -50,6 +50,7 @@ ModuleInfo m_dummy_info
  * want to
 */
 
+/* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
 DLLFUNC void	mod_init(void)
 #else
@@ -68,6 +69,17 @@ void    m_dummy_init(void)
 	add_Command(MSG_DUMMY, TOK_DUMMY, m_dummy, MAXPARA);
 }
 
+/* Is first run when server is 100% ready */
+#ifdef DYNAMIC_LINKING
+DLLFUNC void	mod_load(void)
+#else
+void    m_dummy_load(void)
+#endif
+{
+}
+
+
+/* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
 DLLFUNC void	mod_unload(void)
 #else

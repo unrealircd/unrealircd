@@ -612,6 +612,7 @@ struct MotdItem {
 struct aloopStruct {
 	unsigned do_garbage_collect : 1;
 	unsigned do_tkl_sweep : 1;
+	unsigned ircd_booted : 1;
 };
 
 typedef struct Whowas {

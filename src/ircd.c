@@ -1145,6 +1145,8 @@ int  InitwIRCD(argc, argv)
 #ifdef USE_SYSLOG
 	syslog(LOG_NOTICE, "Server Ready");
 #endif
+	loop.ircd_booted = 1;
+	module_loadall();
 #ifndef NO_FDLIST
 	check_fdlists(TStime());
 #endif
