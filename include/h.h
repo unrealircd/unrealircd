@@ -286,6 +286,7 @@ extern void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChanne
     int prefix, char *cmd, char *tok, char *nick, char *text);
 extern void sendto_channel_butone(aClient *, aClient *, aChannel *, char *,
     ...);
+extern void sendto_channel_butserv_butone(aChannel *chptr, aClient *from, aClient *one, char *pattern, ...);
 extern void sendto_serv_butone(aClient *, char *, ...);
 extern void sendto_serv_butone_quit(aClient *, char *, ...);
 extern void sendto_serv_butone_sjoin(aClient *, char *, ...);
@@ -562,4 +563,5 @@ void init_random();
 u_int32_t getrandom32();
 extern char trouble_info[1024];
 #define EVENT_DRUGS BASE_VERSION
-
+extern void rejoin_doparts(aClient *sptr);
+extern void rejoin_dojoinandmode(aClient *sptr);

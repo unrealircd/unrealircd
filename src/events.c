@@ -185,17 +185,19 @@ freeit:
 void	EventStatus(aClient *sptr)
 {
 	Event *eventptr;
-
+	time_t now = TStime();
+	
 	if (!events)
 	{
 		sendto_one(sptr, ":%s NOTICE %s :*** No events",
 				me.name, sptr->name);
+		return;
 	}
 	for (eventptr = events; eventptr; eventptr = eventptr->next)
 	{
 		sendto_one(sptr, ":%s NOTICE %s :*** Event %s: e/%i h/%i n/%i l/%i", me.name,
 			sptr->name, eventptr->name, eventptr->every, eventptr->howmany,
-				TStime() - eventptr->last, (eventptr->last + eventptr->every) - TStime());
+				now - eventptr->last, (eventptr->last + eventptr->every) - now);
 	}
 }
 

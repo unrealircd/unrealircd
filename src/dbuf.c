@@ -36,6 +36,7 @@
 */
 
 #include <stdio.h>
+#include <string.h>
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
