@@ -24,7 +24,8 @@
 #include "struct.h"
 #ifdef _WIN32
 #include <windows.h>
-#include "resource.h"
+
+#define IDC_PASS                        1166
 extern HINSTANCE hInst;
 extern HWND hwIRCDWnd;
 #endif
@@ -32,6 +33,12 @@ extern HWND hwIRCDWnd;
 SSL_CTX *ctx_server;
 SSL_CTX *ctx_client;
 
+typedef struct {
+	int *size;
+	char **buffer;
+} StreamIO;
+
+static StreamIO *streamp;
 #define CHK_SSL(err) if ((err)==-1) { ERR_print_errors_fp(stderr); }
 #ifdef _WIN32
 LRESULT SSLPassDLG(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam) {
@@ -40,7 +47,7 @@ LRESULT SSLPassDLG(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam) {
 		case WM_INITDIALOG:
 			return TRUE;
 		case WM_COMMAND:
-			stream = (StreamIO *)lParam;
+			stream = (StreamIO *)streamp;
 			if (LOWORD(wParam) == IDCANCEL) {
 				*stream->buffer = NULL;
 				EndDialog(hDlg, TRUE);
@@ -51,7 +58,8 @@ LRESULT SSLPassDLG(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam) {
 			}
 			return FALSE;
 		case WM_CLOSE:
-			*stream->buffer = NULL;
+			if (stream)
+				*stream->buffer = NULL;
 			EndDialog(hDlg, TRUE);
 		default:
 			return FALSE;
@@ -67,6 +75,8 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 	static char beforebuf[1024];
 #ifdef _WIN32
 	StreamIO stream;
+	char passbuf[512];	
+	int passsize = 512;
 #endif
 	if (before)
 	{
@@ -77,9 +87,11 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 #ifndef _WIN32
 	pass = getpass("Password for SSL private key: ");
 #else
+	pass = passbuf;
 	stream.buffer = &pass;
-	stream.size = &size;
-	DialogBoxParam(hInst, "SSLPass", hwIRCDWnd, SSLPassDLG, (LPARAM)&stream); 
+	stream.size = &passsize;
+	streamp = &stream;
+	DialogBoxParam(hInst, "SSLPass", hwIRCDWnd, (DLGPROC)SSLPassDLG, (LPARAM)NULL); 
 #endif
 	if (pass)
 	{
@@ -101,9 +113,7 @@ void init_ctx_server(void)
 		ircd_log(LOG_ERROR, "Failed to do SSL CTX new");
 		exit(2);
 	}
-#ifndef _WIN32
 	SSL_CTX_set_default_passwd_cb(ctx_server, ssl_pem_passwd_cb);
-#endif
 
 	if (SSL_CTX_use_certificate_file(ctx_server, CERTF, SSL_FILETYPE_PEM) <= 0)
 	{
@@ -131,9 +141,7 @@ void init_ctx_client(void)
 		ircd_log(LOG_ERROR, "Failed to do SSL CTX new client");
 		exit(2);
 	}
-#ifndef _WIN32
 	SSL_CTX_set_default_passwd_cb(ctx_client, ssl_pem_passwd_cb);
-#endif
 	if (SSL_CTX_use_certificate_file(ctx_client, CERTF, SSL_FILETYPE_PEM) <= 0)
 	{
 		ircd_log(LOG_ERROR, "Failed to load SSL certificate %s (client)", CERTF);
