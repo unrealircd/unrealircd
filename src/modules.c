@@ -97,6 +97,8 @@ void DeleteTempModules(void)
 
 	while ((dir = readdir(fd)))
 	{
+		if (!strcmp(dir->d_name, ".") || !strcmp(dir->d_name, ".."))
+			continue;
 		strcpy(tempbuf, "tmp/");
 		strcat(tempbuf, dir->d_name);
 		remove(tempbuf);

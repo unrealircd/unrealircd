@@ -2862,3 +2862,7 @@ seen. gmtime warning still there
   DukePyrolator (#0001539).
 - Changed version to RC1
 *** RC1 release ***
+- Fixed a problem regarding the new module system and deleting the tmp/ directory
+  under Linux 2.2 (thanks to FunTeenChat for helping track this down)
+- Updated /credits. Now includes everyone who has sent in donations, thanks
+  to everyone!
