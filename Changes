@@ -2251,3 +2251,4 @@ seen. gmtime warning still there
   codes that are 0..9 are translated to 2 digits, ie "2" becomes "02" this is to prevent 
   problems when a number follows directly after the color code. 
 - Added support for editting short motds in the win32 editor.
+- Added a goto button on the win32 editor toolbar.

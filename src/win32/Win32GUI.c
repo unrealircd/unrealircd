@@ -1196,23 +1196,26 @@ HWND DrawToolbar(HWND hwndParent, UINT iID) {
 		{ 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0}, 0L, 0}
 	};
 		
-	TBBUTTON tbAddButtons[4] = {
+	TBBUTTON tbAddButtons[6] = {
 		{ 0, IDC_BOLD, TBSTATE_ENABLED, TBSTYLE_CHECK, {0}, 0L, 0},
 		{ 1, IDC_UNDERLINE, TBSTATE_ENABLED, TBSTYLE_CHECK, {0}, 0L, 0},
 		{ 2, IDC_COLOR, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0L, 0},
-		{ 3, IDC_BGCOLOR, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0L, 0}
+		{ 3, IDC_BGCOLOR, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0L, 0},
+		{ 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0}, 0L, 0},
+		{ 4, IDC_GOTO, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0L, 0}
 	};
 	hTool = CreateToolbarEx(hwndParent, WS_VISIBLE|WS_CHILD|TBSTYLE_FLAT|TBSTYLE_TOOLTIPS, 
 				IDC_TOOLBAR, 0, HINST_COMMCTRL, IDB_STD_SMALL_COLOR,
 				tbButtons, 10, 0,0,100,30, sizeof(TBBUTTON));
 	tbBit.hInst = hInst;
 	tbBit.nID = IDB_BITMAP1;
-	newidx = SendMessage(hTool, TB_ADDBITMAP, (WPARAM)3, (LPARAM)&tbBit);
+	newidx = SendMessage(hTool, TB_ADDBITMAP, (WPARAM)5, (LPARAM)&tbBit);
 	tbAddButtons[0].iBitmap += newidx;
 	tbAddButtons[1].iBitmap += newidx;
 	tbAddButtons[2].iBitmap += newidx;
 	tbAddButtons[3].iBitmap += newidx;
-	SendMessage(hTool, TB_ADDBUTTONS, (WPARAM)4, (LPARAM)&tbAddButtons);
+	tbAddButtons[5].iBitmap += newidx;
+	SendMessage(hTool, TB_ADDBUTTONS, (WPARAM)6, (LPARAM)&tbAddButtons);
 	return hTool;
 }
 
@@ -1400,6 +1403,9 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 					case IDC_BGCOLOR:
 						strcpy(lpttt->szText, "Background Color");
 						break;
+					case IDC_GOTO:
+						strcpy(lpttt->szText, "Goto");
+						break;
 				}
 				return (TRUE);
 			}
@@ -1454,6 +1460,8 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				DialogBoxParam(hInst, "Color", hDlg, (DLGPROC)ColorDLG, (LPARAM)WM_USER+10);
 			if (LOWORD(wParam) == IDC_BGCOLOR)
 				DialogBoxParam(hInst, "Color", hDlg, (DLGPROC)ColorDLG, (LPARAM)WM_USER+11);
+			if (LOWORD(wParam) == IDC_GOTO)
+				DialogBox(hInst, "GOTO", hDlg, (DLGPROC)GotoDLG);
 				
 		hWnd = GetDlgItem(hDlg, IDC_TEXT);
 		if (LOWORD(wParam) == IDM_COPY) {
