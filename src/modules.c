@@ -197,7 +197,7 @@ int  load_module(char *module, int module_load)
 			return -1;
 			
 		}
-		ModuleFlags[i] = NULL;
+		ModuleFlags[i] = 0;
 		if (module_load)
 		{
 			mod_load = irc_dlsym(Mod, "mod_load");
