@@ -9510,7 +9510,7 @@ _ACEOF
 
 else
   cat >>confdefs.h <<\_ACEOF
-#define BUFFERPOOL (9 * MAXSENDQLENGTH)
+#define BUFFERPOOL (18 * MAXSENDQLENGTH)
 _ACEOF
 
 fi;
