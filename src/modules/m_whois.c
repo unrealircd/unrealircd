@@ -123,10 +123,7 @@ DLLFUNC int  m_whois(cptr, sptr, parc, parv)
 		NULL,		/* invited */
 		NULL,		/* silence */
 		NULL,		/* away */
-		0,		/* last */
-		0,		/* nexttarget */
 		0,		/* servicestamp */
-		0,		/* oflag */
 		1,		/* refcount */
 		0,		/* joined */
 		"<Unknown>",	/* username */
@@ -357,7 +354,7 @@ DLLFUNC int  m_whois(cptr, sptr, parc, parv)
 			if (MyConnect(acptr))
 				sendto_one(sptr, rpl_str(RPL_WHOISIDLE),
 				    me.name, parv[0], name,
-				    TStime() - user->last, acptr->firsttime);
+				    TStime() - acptr->last, acptr->firsttime);
 		}
 		if (!found)
 			sendto_one(sptr, err_str(ERR_NOSUCHNICK),

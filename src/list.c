@@ -179,19 +179,14 @@ anUser *make_user(cptr)
 		user->invited = NULL;
 		user->silence = NULL;
 		user->server = NULL;
-		user->serv = NULL;
 		user->servicestamp = 0;
 		user->lopt = NULL;
 		user->whowas = NULL;
 		user->snomask = 0;
-		user->oflag = 0;
 		*user->realhost = '\0';
 		user->virthost = MyMalloc(5);
 		*user->virthost = '\0';
-		cptr->user = user;
-		user->last = TStime();
-		user->nexttarget = TStime();
-		
+		cptr->user = user;		
 	}
 	return user;
 }

@@ -128,7 +128,7 @@ int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[])
                                                 ~(UMODE_NETADMIN | UMODE_WHOIS);
                                         acptr->umodes &=
                                             ~(UMODE_KIX | UMODE_HIDING | UMODE_DEAF | UMODE_HIDEOPER);
-                                        acptr->user->oflag = 0;
+                                        acptr->oflag = 0;
                                        acptr->user->snomask &= ~(SNO_CLIENT|SNO_FLOOD|SNO_FCLIENT|
                                                 SNO_EYES|SNO_VHOST);
 

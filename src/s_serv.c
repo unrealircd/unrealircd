@@ -2040,7 +2040,7 @@ int  m_stats(cptr, sptr, parc, parv)
 #ifdef DEBUGMODE
 			  ircsprintf(pbuf, "%d :%d", acptr->cputime,
 			      (acptr->user && MyConnect(acptr)) ?
-			      TStime() - acptr->user->last : 0);
+			      TStime() - acptr->last : 0);
 #endif
 			  if (IsOper(sptr))
 			  {
@@ -2057,7 +2057,7 @@ int  m_stats(cptr, sptr, parc, parv)
 				      TStime() - acptr->firsttime,
 #ifndef DEBUGMODE
 				      (acptr->user && MyConnect(acptr)) ?
-				      TStime() - acptr->user->last : 0);
+				      TStime() - acptr->last : 0);
 #else
 				      pbuf);
 #endif
@@ -2081,7 +2081,7 @@ int  m_stats(cptr, sptr, parc, parv)
 				      TStime() - acptr->firsttime,
 #ifndef DEBUGMODE
 				      (acptr->user && MyConnect(acptr)) ?
-				      TStime() - acptr->user->last : 0);
+				      TStime() - acptr->last : 0);
 #else
 				      pbuf);
 #endif

@@ -218,7 +218,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 
 		sptr->class = aconf->class;
 		sptr->class->clients++;
-		sptr->user->oflag = 0;
+		sptr->oflag = 0;
 		if (aconf->swhois) {
 			if (sptr->user->swhois)
 				MyFree(sptr->user->swhois);
@@ -252,7 +252,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 			j++;
 		}
 
-		sptr->user->oflag = aconf->oflags;
+		sptr->oflag = aconf->oflags;
 
 		if ((aconf->oflags & OFLAG_HIDE) && iNAH && !BadPtr(host)) {
 			iNAH_host(sptr, (host != NULL) ? host : "eek.host.is.null.pointer");

@@ -1098,3 +1098,5 @@ seen. gmtime warning still there
 - Fixed bug in m_tkl_line causing segfaultage
 - Any reason why HOOKTYPE_SERVER_QUIT was being called for clients?
 - Fixed exit_client to do NOQUIT type thing for SQUITs
+- Moved around a lot of aClient/anUser members, hopefully wont cause
+  segfaults
