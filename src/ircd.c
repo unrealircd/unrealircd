@@ -1005,11 +1005,11 @@ int  InitwIRCD(argc, argv)
 	initwhowas();
 	initstats();
 	booted = FALSE;
-	init_conf2("unrealircd.conf");
-	report_configuration();
 	init_dynconf();
 	load_conf(ZCONF, 0);
 	doneconf(0);
+	init_conf2("unrealircd.conf");
+	report_configuration();
 #ifdef STRIPBADWORDS
 	if (loadbadwords_message("badwords.message.conf"))
 	{

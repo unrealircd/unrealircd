@@ -87,6 +87,7 @@ int	_conf_except	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_vhost		(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_link		(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_ban		(ConfigFile *conf, ConfigEntry *ce);
+int	_conf_set		(ConfigFile *conf, ConfigEntry *ce);
 
 extern int conf_debuglevel;
 
@@ -105,6 +106,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "vhost", 		_conf_vhost },
 	{ "link", 		_conf_link },	
 	{ "ban", 		_conf_ban },
+	{ "set",		_conf_set },
 	{ NULL, 		NULL  }
 };
 
@@ -118,7 +120,6 @@ static OperFlag _OperFlags[] = {
 	{ OFLAG_HELPOP,         "helpop" },
 	{ OFLAG_GLOBOP,         "can_globops" },
 	{ OFLAG_WALLOP,         "can_wallops" },
-	{ OFLAG_RESTART,        "can_restart" },
 	{ OFLAG_LOCOP,		"locop"},
 	{ OFLAG_LROUTE,		"can_localroute" },
 	{ OFLAG_GROUTE,		"can_globalroute" },
@@ -1646,6 +1647,146 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 	} 
 	if (isnew)
 		add_ConfigItem((ConfigItem *)link, (ConfigItem **)&conf_link);
+}
+int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	ConfigEntry *cepp;
+	
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+		{
+			config_error("%s:%i: blank set item",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum);
+			continue;	
+		}
+		if (!strcmp(cep->ce_varname, "kline-address")) {
+			ircstrdup(KLINE_ADDRESS, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "modes-on-connect")) {
+			ircstrdup(CONN_MODES, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "auto-join")) {
+			ircstrdup(AUTO_JOIN_CHANS, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "oper-auto-join")) {
+			ircstrdup(OPER_AUTO_JOIN_CHANS, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "auto-join")) {
+			ircstrdup(AUTO_JOIN_CHANS, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "socks")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				if (!strcmp(cepp->ce_varname, "ban-message")) {
+					ircstrdup(SOCKSBANMSG, cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "quit-message")) {
+					ircstrdup(SOCKSQUITMSG, cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "ban-time")) {
+					SOCKSBANTIME = atime(cepp->ce_vardata);
+				}
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "dns")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				if (!strcmp(cepp->ce_varname, "timeout")) {
+					HOST_TIMEOUT = atime(cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "retries")) {
+					HOST_RETRIES = atime(cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "nameserver")) {
+					ircstrdup(NAME_SERVER, cepp->ce_vardata);
+				}
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "options")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				if (!strcmp(cepp->ce_varname, "webtv-support")) {
+					WEBTV_SUPPORT = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "hide-ulines")) {
+					HIDE_ULINES = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "enable-chatops")) {
+					ALLOW_CHATOPS = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "no-stealth")) {
+					NO_OPER_HIDING = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "show-opermotd")) {
+					SHOWOPERMOTD = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "identd-check")) {
+					IDENT_CHECK = 1;
+				}
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "maxchannelsperuser")) {
+			MAXCHANNELSPERUSER = atoi(cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "network-name")) {
+			ircstrdup(ircnetwork, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "default-server")) {
+			ircstrdup(defserv, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "services-server")) {
+			ircstrdup(SERVICES_NAME, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "stats-server")) {
+			ircstrdup(STATS_SERVER, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "help-channel")) {
+			ircstrdup(helpchan, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "hiddenhost-prefix")) {
+			ircstrdup(hidden_host, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "www-site")) {
+			ircstrdup(www_site, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "ftp-site")) {
+			ircstrdup(ftp_site, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "prefix_quit")) {
+			ircstrdup(prefix_quit, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "hosts")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				if (!strcmp(cepp->ce_varname, "local")) {
+					ircstrdup(locop_host, cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "global")) {
+					ircstrdup(oper_host, cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "coadmin")) {
+					ircstrdup(coadmin_host, cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "admin")) {
+					ircstrdup(admin_host, cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "servicesadmin")) {
+					ircstrdup(sadmin_host, cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "techadmin")) {
+					ircstrdup(techadmin_host, cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "netadmin")) {
+					ircstrdup(netadmin_host, cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "host-on-oper-up")) {
+					if (!stricmp(cepp->ce_vardata, "no")) 
+						iNAH = 0;
+					else
+						iNAH = 1;
+				}
+			}
+		}
+	} 
 }
 
 

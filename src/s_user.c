@@ -211,6 +211,11 @@ char *StripColors(char *buffer)
 			if (!isdigit(tmp[i]))
 				continue;
 
+			if (isdigit(tmp[i]) && isdigit(tmp[i + 1]) && isdigit(tmp[i + 2])) {
+				i += 2;
+				continue;
+			}
+				
 			while (isdigit(tmp[i]) || (isdigit(tmp[i - 1])
 			    && tmp[i] == ',' && isdigit(tmp[i + 1])
 			    && hascomma == 0))
@@ -3060,6 +3065,9 @@ int  m_user(cptr, sptr, parc, parv)
 		{
 			sptr->umodes |= UMODE_STRIPBADWORDS;
 		}
+			
+		
+			
 	}
 
 
@@ -3100,11 +3108,12 @@ int  m_quit(cptr, sptr, parc, parv)
 
 	if (!IsServer(cptr))
 	{
-		ircsprintf(comment, "Quit: ");
+			ircsprintf(comment, "%s ", BadPtr(prefix_quit) ?  "Quit:" : prefix_quit);
+			
 #ifdef CENSOR_QUIT
 		ocomment = (char *) stripbadwords_channel(ocomment);
 #endif
-		strncpy(comment + 6, ocomment, TOPICLEN - 7);
+		strncpy(comment + strlen(comment), ocomment, TOPICLEN - 7);
 		comment[TOPICLEN] = '\0';
 		return exit_client(cptr, sptr, sptr, comment);
 	}

@@ -106,5 +106,7 @@
 - Added Find_link, serv->conf, did a Find_tld fixup, removed serv->nline, 
   removing a lot of my_name_for_link crap, indented s_serv.c
 - Recoded m_server(YES!) -stskeeps
+- Fixed a +S bug reported by script0r
 - Fixed a #undef USE_SSL problem found by codemastr.. caused by
   Sts(TM)coding
+- Added set {} (unrealircd.conf/network file replacement)
