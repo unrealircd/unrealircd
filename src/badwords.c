@@ -83,9 +83,9 @@ int cleaned = 0;
 			searchn = strlen(badword->word);
 		/* Hunt for start of word */
  		if (pold > line) {
-			for (startw = pold; ((*startw != ' ') && (startw != line)); startw--);
-			if (*startw == ' ')
-				startw++; /* Don't point at the space but at the word! */
+			for (startw = pold; (isalnum(*startw) && (startw != line)); startw--);
+			if (!isalnum(*startw))
+				startw++; /* Don't point at the space/seperator but at the word! */
 		} else {
 			startw = pold;
 		}
