@@ -184,7 +184,7 @@ extern int del_silence(aClient *, char *);
 extern void send_user_joins(aClient *, aClient *);
 extern void clean_channelname(char *);
 extern int do_nick_name(char *);
-extern int can_send(aClient *, aChannel *, char *);
+extern int can_send(aClient *, aChannel *, char *, int);
 extern long get_access(aClient *, aChannel *);
 extern int is_chan_op(aClient *, aChannel *);
 extern int has_voice(aClient *, aChannel *);
@@ -450,6 +450,11 @@ extern long SNO_TKL;
 extern long SNO_NICKCHANGE;
 extern long SNO_QLINE;
 extern long SNO_SNOTICE;
+
+#ifdef EXTCMODE
+/* Extended chanmodes... */
+extern Cmode_t EXTMODE_NONOTICE;
+#endif
 
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *dst, const char *src, size_t size);

@@ -134,6 +134,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 		"CTCPs are not permitted in this channel",
 		"You must have a registered nick (+r) to talk on this channel",
 		"Swearing is not permitted in this channel",
+		"NOTICEs are not permitted in this channel",
 		NULL
 	};
 
@@ -369,8 +370,9 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				strlcat(pfixchan, p2, sizeof(pfixchan));
 				nick = pfixchan;
 			}
+			
 			cansend =
-			    !IsULine(sptr) ? can_send(sptr, chptr, parv[2]) : 0;
+			    !IsULine(sptr) ? can_send(sptr, chptr, parv[2], notice) : 0;
 			if (!cansend)
 			{
 #ifdef STRIPBADWORDS
@@ -456,11 +458,12 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				continue;
 			}
 			else
-			if (!notice && MyClient(sptr))
+			if (MyClient(sptr))
 			{
-				sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
-				    me.name, parv[0], parv[0],
-				    err_cantsend[cansend - 1], p2);
+				if (!notice || (cansend == 8)) /* privmsg or 'cannot send notice'... */
+					sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
+					    me.name, parv[0], parv[0],
+					    err_cantsend[cansend - 1], p2);
 			}
 			continue;
 		}

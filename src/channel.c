@@ -794,7 +794,9 @@ int  is_chanprot(aClient *cptr, aChannel *chptr)
 #define CANNOT_SEND_NOCTCP 5
 #define CANNOT_SEND_MODREG 6
 #define CANNOT_SEND_SWEAR 7 /* This isn't actually used here */
-int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
+#define CANNOT_SEND_NOTICE 8 
+
+int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 {
 	Membership *lp;
 	int  member;
@@ -851,6 +853,13 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_CHANOWNER | CHFL_CHANPROT))))
 		if (msgtext[0] == 1 && strncmp(&msgtext[1], "ACTION ", 7))
 			return (CANNOT_SEND_NOCTCP);
+
+#ifdef EXTCMODE
+	if (notice && (chptr->mode.extmode & EXTMODE_NONOTICE) &&
+	   (!lp || !(lp->flags & (CHFL_CHANOP | CHFL_CHANOWNER | CHFL_CHANPROT))))
+		return (CANNOT_SEND_NOTICE);
+#endif
+
 
 	/* Makes opers able to talk thru bans -Stskeeps suggested by The_Cat */
 	if (IsOper(cptr))

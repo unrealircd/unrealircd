@@ -53,6 +53,8 @@ char extchmstr[4][64];
 Cmode *Channelmode_Table = NULL;
 unsigned short Channelmode_highest = 0;
 
+Cmode_t EXTMODE_NONOTICE = 0L;
+
 void make_extcmodestr()
 {
 char *p;
@@ -81,6 +83,16 @@ int i;
 	*p = '\0';
 }
 
+static void load_extendedchanmodes(void)
+{
+	CmodeInfo req;
+	memset(&req, 0, sizeof(req));
+	
+	req.paracount = 0;
+	req.is_ok = extcmode_default_requirechop;
+	req.flag = 'T';
+	CmodeAdd(NULL, req, &EXTMODE_NONOTICE);
+}
 
 void	extcmode_init(void)
 {
@@ -95,6 +107,9 @@ void	extcmode_init(void)
 	}
 	Channelmode_highest = 0;
 	memset(&extchmstr, 0, sizeof(extchmstr));
+
+	/* And load the build-in extended chanmodes... */
+	load_extendedchanmodes();
 }
 
 Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode)
