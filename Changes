@@ -1979,3 +1979,4 @@ seen. gmtime warning still there
 - Fixed a restrict-usermodes bug reported by Rocko (#0000796)
 - Minor /die and /restart code cleanups
 - Added channel mode +M to 005 (#0000803) reported by jollino
+- Fixed a bug where +x would make hosts lowercase (#0000810) reported by rayman

@@ -205,12 +205,7 @@ char *hidehost(char *rhost)
 		l[2] = our_crc32(host, strlen(host));
 		for (i = 0; i <= 2; i++)
 		{
-#ifdef COMPAT_BETA4_KEYS
-		        l[i] = ((l[i] + KEY2) ^ KEY) ^ KEY3;
-#else
 			l[i] = ((l[i] + KEY2) ^ KEY) + KEY3;
-#endif
-
 			l[i] &= 0x3FFFFFFF;
 	        }
 		ircsprintf(cloaked, "%lx:%lx:%lx:IP",
@@ -235,21 +230,12 @@ char *hidehost(char *rhost)
 		{
 			strncpy(h2[i], p, 4);			
 		}
-#ifndef COMPAT_BETA4_KEYS
 		ircsprintf(h3, "%s.%s", h2[0], h2[1]);
 		l[0] = ((our_crc32(h3, strlen(h3)) + KEY) ^ KEY2) + KEY3;
 		ircsprintf(h3, "%s.%s.%s", h2[0], h2[1], h2[2]);		
 		l[1] = ((KEY2 ^ our_crc32(h3, strlen(h3))) + KEY3) ^ KEY;
 		l[4] = our_crc32(host, strlen(host));
 		l[2] = ((l[4] + KEY3) ^ KEY) + KEY2;
-#else
-		ircsprintf(h3, "%s.%s", h2[0], h2[1]);
-		l[0] = ((our_crc32(h3, strlen(h3)) + KEY2) ^ KEY) ^ KEY3;
-		ircsprintf(h3, "%s.%s.%s", h2[0], h2[1], h2[2]);
-		l[1] = ((KEY2 + our_crc32(h3, strlen(h3))) ^ KEY3) ^ KEY;
-		l[4] = our_crc32(host, strlen(host));
-		l[2] = ((l[4] + KEY) ^ KEY3)^ KEY2;
-#endif
 		l[2] &= 0x3FFFFFFF;
 		l[0] &= 0x7FFFFFFF;
 		l[1] &= 0xFFFFFFFF;
@@ -263,7 +249,7 @@ char *hidehost(char *rhost)
 		 *
 		 * Find first .<alpha>
 		*/
-		for (p = host; *p; p++)
+		for (p = rhost; *p; p++)
 		{
 			if (*p == '.')
 			{
@@ -271,11 +257,7 @@ char *hidehost(char *rhost)
 					break;
 			}
 		}
-#ifdef COMPAT_BETA4_KEYS
-		l[0] = ((our_crc32(host, strlen(host)) + KEY2) ^ KEY)^ KEY3;
-#else
 		l[0] = ((our_crc32(host, strlen(host)) ^ KEY2) + KEY) ^ KEY3;
-#endif
 		l[0] &= 0x3FFFFFFF;
 		if (*p) {
 			p++;
