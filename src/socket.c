@@ -202,4 +202,12 @@ char	*Inet_si2p(struct SOCKADDR_IN *sin)
 	return (Inet_si2pB(sin, buf, sizeof(buf)));
 }
 
-
+char	*Inet_ia2p(struct IN_ADDR *ia)
+{
+	static char buf[256]; 
+#ifndef INET6
+	return(inet_ntoa(ia));
+#else
+	return(inet_ntop(AFINET, ia, buf, sizeof(buf)));
+#endif
+}
