@@ -794,6 +794,7 @@ listen *:6601 {
 	swhois &lt;informaci&oacute;n whois&gt;;
 	snomask &lt;snomask&gt;;
 	maxlogins &lt;num&gt;;
+modes &lt;modos&gt;;
 };
 </pre>
 <p>El bloque oper permite asignar Operadores de Red para tu servidor. <b>oper::</b> especifica el nombre de usuario para /oper. <b>oper::from::userhost </b>es una m&aacute;scara user@host que debe coincidir. Puede especificar m&aacute;s de una m&aacute;scara usando varios oper::from::userhost. <b>oper::password</b> es la contrase&ntilde;a que deber&aacute; especificar, <b>oper::password::</b> permite especificar un m&eacute;todo de cifrado para esta contrase&ntilde;a. M&eacute;todos v&aacute;lidos: crypt, md5, sha1 y ripemd-160. Si no utilizar&aacute; m&eacute;todo de cifrado, este bloque puede omitirse.</p>
@@ -1085,7 +1086,7 @@ listen *:6601 {
 <p>La directriz <b>oper::snomask</b> fija las m&aacute;scaras de servidor que recibir&aacute;. Vea la <a href="#feature_snomasks">secci&oacute;n 3.3</a> 
   <font color=blue>[opcional]</font></p>
 <p>La directriz <b>oper::maxlogins</b> restringe el n&uacute;mero de intentos para hacerse operador. Si lo fija a 1, s&oacute;lo podr&aacute; haber un operador usando este bloque al mismo tiempo <font color=blue>[opcional]</font></p>
-
+<p>La&nbsp;directriz <b>oper::modes</b> establece qu&eacute; modos recibe el operador cuando se identifica. <font color=blue>[opcional]</font></p>
 <p>Ejemplo:<br>
 <pre>
 oper bobsmith {
