@@ -1827,3 +1827,5 @@ seen. gmtime warning still there
 - Fixed crash when link::leaf was empty. (#0000610)
 - Fixed a bug where HCN would mean client exiting notices were displayed twice. As are result
   of the fix, sendto_conn_hcn has also been removed. Reported by AngryWolf (#0000672)
+- Added some missing oflags for SVSO. Reported by auspice (#0000671)
+- Possibly fixed the throttling bug reported by Jaw959 (#0000644)

@@ -788,7 +788,7 @@ void	del_throttling_bucket(struct ThrottlingBucket *bucket)
 	int	hash;
 	struct ThrottlingBucket 	*n;
 	hash = hash_throttling(&bucket->in);
-	
+	MyFree(n);	
 	DelListItem(n, ThrottlingHash[hash]);
 	return;
 }
@@ -818,6 +818,7 @@ EVENT(e_clean_out_throttling_buckets)
 				if (n->next)
 					n->next->prev = n->prev;	
 				z.next = n->next;
+				MyFree(n);
 				n = &z;
 			}
 	return;
