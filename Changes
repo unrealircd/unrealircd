@@ -3098,3 +3098,4 @@ seen. gmtime warning still there
   reported by fez (#0001736).
 - doc/unreal32docs.html and help.conf updates (#0001734 + other stuff).
 - spamfilter.conf: added signatures for Gaggle worm.
+- Changed version to pre1
