@@ -868,11 +868,14 @@ int  m_kline(cptr, sptr, parc, parv)
  */
 	if (hosttemp = (char *)strchr((char *)parv[1], '@'))
 	{
-		temp = 0;
-		while (temp <= 20)
-			name[temp++] = 0;
-		strcpy(uhost, ++hosttemp);
-		strncpy(name, parv[1], hosttemp - 1 - parv[1]);
+		*hosttemp = 0;
+		hosttemp++;
+		bzero(name, sizeof(name));
+		bzero(uhost, sizeof(uhost));
+		
+		strncpy(name, parv[1], sizeof(name) - 1);
+		strncpy(uhost, hosttemp, sizeof(uhost) - 1);
+		
 		if (name[0] == '\0' || uhost[0] == '\0')
 		{
 			Debug((DEBUG_INFO, "KLINE: Bad field!"));
@@ -983,11 +986,13 @@ int  m_unkline(cptr, sptr, parc, parv)
 	}
 	if (hosttemp = (char *)strchr((char *)parv[1], '@'))
 	{
-		temp = 0;
-		while (temp <= 20)
-			name[temp++] = 0;
-		strcpy(host, ++hosttemp);
-		strncpy(name, parv[1], hosttemp - 1 - parv[1]);
+		*hosttemp = 0;
+		hosttemp++;
+		bzero(name, sizeof(name));
+		bzero(host, sizeof(host));
+		
+		strncpy(name, parv[1], sizeof(name) - 1);
+		strncpy(host, hosttemp, sizeof(host) - 1);
 		if (name[0] == '\0' || host[0] == '\0')
 		{
 			Debug((DEBUG_INFO, "UNKLINE: Bad field"));

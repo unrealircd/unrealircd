@@ -2513,7 +2513,7 @@ int  m_stats(cptr, sptr, parc, parv)
 					  type[0] = 'k';
 				type[1] = '\0';
 	  			sendto_one(sptr, rpl_str(RPL_STATSKLINE),
-			 	    me.name, parv[0], type, bans->mask, bans->reason);
+			 	    me.name, parv[0], type, bans->mask, bans->reason ? bans->reason : "<no reason>");
 			  }
 			  else if (bans->flag.type == CONF_BAN_IP) {
 				if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
@@ -2524,7 +2524,7 @@ int  m_stats(cptr, sptr, parc, parv)
 					type[0] = 'z';
 				type[1] = '\0';
 				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
-				    me.name, parv[0], type, bans->mask, bans->reason);
+				    me.name, parv[0], type, bans->mask, bans->reason ? bans->reason : "<no reason>");
 			  }
 
 		  }
@@ -2560,7 +2560,7 @@ int  m_stats(cptr, sptr, parc, parv)
 		  for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) {
 			  if (bans->flag.type == CONF_BAN_REALNAME)
 				sendto_one(sptr, rpl_str(RPL_STATSNLINE),
-				    me.name, parv[0], bans->mask, bans->reason);
+				    me.name, parv[0], bans->mask, bans->reason ? bans->reason : "<no reason>");
 		  }
 		  break;
 	  }
@@ -2650,7 +2650,7 @@ int  m_stats(cptr, sptr, parc, parv)
 		  {
 			  sendto_one(sptr, rpl_str(RPL_STATSTLINE), me.name,
 			      parv[0], tld->mask, tld->motd_file,
-			      tld->rules_file);
+			      tld->rules_file ? tld->rules_file : "none");
 		  }
 		  break;
 	  }

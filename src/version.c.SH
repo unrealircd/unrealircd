@@ -114,7 +114,10 @@ char *unrealcredits[] =
 	"[Real] from ChatFIRST.com",
 	" - donation to UnrealIRCd project :)",
 	"Jameno123 & ByteHosting Internet Services",
-	"- Hardware donations (diskspace!)",	
+	"- Hardware donations (diskspace!)",
+	"Anonymos",
+	"- Shell donation for tspre.org",
+
 	"Thanks to Headbang and WonderWal too for hardware+software",
 	"donations",
 	"   (yes your name can be here too;)",
