@@ -57,10 +57,12 @@
 #define SCAN_ON_PORT 1080
 #endif
 
-
 static vFP			xEadd_scan = NULL;
 static struct SOCKADDR_IN	*xScan_endpoint = NULL;
-
+#ifdef STATIC_LINKING
+extern void Eadd_scan();
+extern struct SOCKADDR_IN	Scan_endpoint;
+#endif
 void	scan_socks_scan(Scan_AddrStruct *sr);
 void	scan_socks4_scan(Scan_AddrStruct *sr);
 void	scan_socks5_scan(Scan_AddrStruct *sr);

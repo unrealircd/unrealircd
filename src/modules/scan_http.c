@@ -64,6 +64,11 @@ struct _hsstruct
 static vFP			xEadd_scan = NULL;
 static struct SOCKADDR_IN	*xScan_endpoint = NULL;
 
+#ifdef STATIC_LINKING
+extern void Eadd_scan();
+extern struct SOCKADDR_IN	Scan_endpoint;
+#endif
+
 static Mod_SymbolDepTable modsymdep[] = 
 {
 	MOD_Dep(Eadd_scan, xEadd_scan, "src/modules/scan.so"),

@@ -110,7 +110,8 @@ DLLFUNC int	Mod_Unload(void)
 int	m_scan_Unload(void)
 #endif
 {
-	int	ret = MOD_SUCCESS
+	int	ret = MOD_SUCCESS;
+
 	IRCMutexLock(Scannings_lock);
 	if (Scannings)	
 	{
