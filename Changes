@@ -669,3 +669,7 @@
 - spamfilter.conf and dccallow.conf are now also copied upon make install, reported by
   TommyTheKid (#0002313).
 - Made CHGIDENT, CHGHOST and CHGNAME use more numerics (where possible) (#0002358).
+- Fixed halfop trying to set chanmode +G/+T/+j not getting an error message, reported
+  by Ron2K (#Ron2K).
+- Module coders: using extcmode_default_requirechop is now depricated, check src/extcmodes.c
+  ctrl+f extcmode_default_requirechop for more details (solution: copy+paste & fill in modechar).

@@ -69,6 +69,10 @@ void cmodej_free_param(CmodeParam *r);
 CmodeParam *cmodej_dup_struct(CmodeParam *r_in);
 int cmodej_sjoin_check(aChannel *chptr, CmodeParam *ourx, CmodeParam *theirx);
 #endif
+int extcmode_cmodeT_requirechop(aClient *cptr, aChannel *chptr, char *para, int checkt, int what);
+#ifdef STRIPBADWORDS
+int extcmode_cmodeG_requirechop(aClient *cptr, aChannel *chptr, char *para, int checkt, int what);
+#endif
 
 void make_extcmodestr()
 {
@@ -104,11 +108,12 @@ static void load_extendedchanmodes(void)
 	memset(&req, 0, sizeof(req));
 	
 	req.paracount = 0;
-	req.is_ok = extcmode_default_requirechop;
+	req.is_ok = extcmode_cmodeT_requirechop;
 	req.flag = 'T';
 	CmodeAdd(NULL, req, &EXTMODE_NONOTICE);
 #ifdef STRIPBADWORDS
 	req.flag = 'G';
+	req.is_ok = extcmode_cmodeG_requirechop;
 	CmodeAdd(NULL, req, &EXTMODE_STRIPBADWORDS);
 #endif
 	
@@ -280,10 +285,22 @@ void extcmode_free_paramlist(CmodeParam *lst)
 	}
 }
 
+/* Ok this is my mistake @ EXCHK_ACCESS_ERR error msg:
+ * the is_ok() thing does not know which mode it belongs to,
+ * this is normally redundant information of course but in
+ * case of a default handler like these, it's required to
+ * know which setting of mode failed (the mode char).
+ * I just return '?' for now, better than nothing.
+ * TO SUMMARIZE: Do not use extcmode_default_requirechop for new modules :p.
+ * Obviously in Unreal3.3* we should fix this. -- Syzop
+ */
+
 int extcmode_default_requirechop(aClient *cptr, aChannel *chptr, char *para, int checkt, int what)
 {
 	if (IsPerson(cptr) && is_chan_op(cptr, chptr))
 		return EX_ALLOW;
+	if (checkt == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
+		sendto_one(cptr, err_str(ERR_NOTFORHALFOPS), me.name, cptr->name, '?');
 	return EX_DENY;
 }
 
@@ -295,6 +312,24 @@ int extcmode_default_requirehalfop(aClient *cptr, aChannel *chptr, char *para, i
 	return EX_DENY;
 }
 
+int extcmode_cmodeT_requirechop(aClient *cptr, aChannel *chptr, char *para, int checkt, int what)
+{
+	if (IsPerson(cptr) && is_chan_op(cptr, chptr))
+		return EX_ALLOW;
+	if (checkt == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
+		sendto_one(cptr, err_str(ERR_NOTFORHALFOPS), me.name, cptr->name, 'T');
+	return EX_DENY;
+}
+
+int extcmode_cmodeG_requirechop(aClient *cptr, aChannel *chptr, char *para, int checkt, int what)
+{
+	if (IsPerson(cptr) && is_chan_op(cptr, chptr))
+		return EX_ALLOW;
+	if (checkt == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
+		sendto_one(cptr, err_str(ERR_NOTFORHALFOPS), me.name, cptr->name, 'G');
+	return EX_DENY;
+}
+
 #ifdef JOINTHROTTLE
 /*** CHANNEL MODE +j STUFF ******/
 int cmodej_is_ok(aClient *sptr, aChannel *chptr, char *para, int type, int what)
@@ -303,6 +338,8 @@ int cmodej_is_ok(aClient *sptr, aChannel *chptr, char *para, int type, int what)
 	{
 		if (IsPerson(sptr) && is_chan_op(sptr, chptr))
 			return EX_ALLOW;
+		if (type == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
+			sendto_one(sptr, err_str(ERR_NOTFORHALFOPS), me.name, sptr->name, 'j');
 		return EX_DENY;
 	} else
 	if (type == EXCHK_PARAM)
