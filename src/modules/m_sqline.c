@@ -123,7 +123,7 @@ DLLFUNC int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	/* So we do not make double entries */
 	int		addit = 0;
 
-	if (!(IsServer(sptr) || IsULine(sptr)) || parc < 2)
+	if (!(IsServer(sptr) || IsULine(sptr)) || parc < 2 || BadPtr(parv[1]))
 		return 0;
 
 	if (parv[2])
@@ -140,6 +140,13 @@ DLLFUNC int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			continue;
 		if (bconf->flag.type2 != CONF_BAN_TYPE_AKILL)
 			continue;
+/*** Temporarely for tracing a bconf->mask being NULL issue. -- Syzop */
+		if (!bconf->mask) {
+			sendto_realopers("bconf->mask is null! %p/%d/%d/%d/'%s'",
+				bconf, bconf->flag.temporary, bconf->flag.type, bconf->flag.type2,
+				bconf->reason ? bconf->reason : "<NULL>");
+			continue; /* let's be nice and not make it crash too */
+		}
 		if (!stricmp(bconf->mask, parv[1]))
 			break;
 	}
@@ -153,8 +160,7 @@ DLLFUNC int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	else
 	{
 		bconf = (ConfigItem_ban *) MyMallocEx(sizeof(ConfigItem_ban));
-		if (parv[1])
-			DupString(bconf->mask, parv[1]);
+		DupString(bconf->mask, parv[1]);
 		addit = 1;
 	}
 	if (parv[2])
