@@ -971,7 +971,7 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 			return xx;
 		}
 		find_shun(sptr);
-		RunHookReturn(HOOKTYPE_PRE_LOCAL_CONNECT, sptr, >0);
+		RunHookReturnInt(HOOKTYPE_PRE_LOCAL_CONNECT, sptr, !=0);
 	}
 	else
 	{

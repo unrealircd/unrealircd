@@ -2105,3 +2105,7 @@ seen. gmtime warning still there
   * Removed basically any mentions of threads in source tree, excepting
     threads.h which Resolver uses on win32
   * Documentation changes not done yet
+- Updated docs [unreal32docs/example.conf] (maybe not all yet), win zip makefile fixed
+- Module coders: I've changed HOOKTYPE_PRE_LOCAL_CONNECT, you must now return '0' to let
+  the client pass and anything else is threated like a return, so you must return
+  FLUSH_BUFFER if you just called exit_client, this fixes a read-already-freed-mem bug.

@@ -372,18 +372,6 @@ src/m_svswatch.obj: src/modules/m_svswatch.c $(INCLUDES)
 src/m_svssilence.obj: src/modules/m_svssilence.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/modules/m_svssilence.c
 
-src/scan.obj: src/modules/scan.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/modules/scan.c
-
-src/scan_dummy.obj: src/modules/scan_dummy.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/modules/scan_dummy.c
-
-src/scan_socks.obj: src/modules/scan_socks.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/modules/scan_socks.c
-
-src/scan_http.obj: src/modules/scan_http.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/modules/scan_http.c
-
 src/win32/win32.res: src/win32/win32gui.rc
         $(RC) /l 0x409 /fosrc/win32/win32.res /i ./include /i ./src \
               /d NDEBUG src/win32/win32gui.rc

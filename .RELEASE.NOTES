@@ -35,7 +35,6 @@ Unreal3.2-beta16 Release Notes
 * fixed major "messages being lost" bug which could cause: ziplink corruption,
   duplicate user entry in sjoin, etc which would happen if BUFFERPOOL was too small.
 * /who: there was a bug in the new /who system which could make it crash (oper only)
-* "proxyscan on quit" bug introduced in beta15
 * /list: opers couldn't see +s channels
 * a set::allow-userhost-change force-rejoin crash
 * compile error on redhat 9 with SSL enabled
@@ -53,6 +52,8 @@ Unreal3.2-beta16 Release Notes
 * random ziplink crashes
 
 ==[ REMOVED ]==
+* The built-in scanner (and threading at *NIX) has been removed because it
+  made UnrealIRCd unstable, you can use BOPM instead: http://www.blitzed.org/bopm/
 * not removed, but CMDLINE_CONFIG(-f) is now disabled by default
 
 ==[ ADDITIONAL INFO ]==
@@ -61,6 +62,7 @@ Unreal3.2-beta16 Release Notes
 * See Changelog
 
 ============================= (old release notes below) ==============================
+[this has been editted a bit]
 
 * Unreal3.2 is a lot different than Unreal3.1.1. Forget all you have
   learned about setting up Unreal3.1.1 - this is a lot different. We have got
@@ -91,16 +93,10 @@ Unreal3.2-beta16 Release Notes
 * We use autoconf to help with compiliation, and this should make us able
   to a lot more platform (we have even ported to BeOS). 
 
-* We require a pthreads library for the SOCKS scan now - and this is now
-  done in the background (no more waiting!). 
-
 * The IRCd is now modularized, and you load modules with the loadmodule
-  command. You will most likely want to add these lines:
+  command. You will most likely want to add this line:
  
   loadmodule "src/modules/commands.so";
-  loadmodule "src/modules/scan.so";
-  loadmodule "src/modules/scan_socks.so";
-  loadmodule "src/modules/scan_http.so";
    
   If you would like to code a module, doc/ will contain a module guide,
   and we got an example module in src/modules/m_dummy.c.
@@ -149,8 +145,6 @@ Unreal3.2-beta16 Release Notes
 
 * You can now use an IP in the oper::from and vhost::from fields even if the host resolves
 
-* Added an http proxy scanner (scan_http.so)
-
 * Added oper::snomask to specify default oper snomask modes
 
 * /helpop text has been moved to a config directive, help {}. To keep the standard help
@@ -176,17 +170,9 @@ Unreal3.2-beta16 Release Notes
   This allows you to have some crypted passwords and others not. If you have SSL enabled
   you may also use the md5 and sha1 methods.
 
-* The old blackhole is now set::scan::endpoint and specifies an IP and port to tell
-  proxies to connect to.
-
 * You can now specify a cipher list for SSL links (read doc/unreal32docs.html for more info)
 
 * +I is now in invisibility.so so it is easily disabled
-
-* set::socks has been replaced by set::scan (read doc/unreal32docs.html for more info)
-
-* If you experince problems with the scanners, perhaps check out BOPM
-  (http://www.blitzed.org/bopm)
 
 * log {} syslog support added (read doc/unreal32docs.html for more info)
 

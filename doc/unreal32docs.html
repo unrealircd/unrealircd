@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta16<br>
-  <b>Last doc update:</b> 2003-04-28 </div>
+  <b>Last doc update:</b> 2003-05-01 </div>
   <b>Head Coders:</b> Stskeeps / codemastr / Luke / McSkaf / Syzop<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -46,18 +46,17 @@
   3. <a href="#features">Features</a><br>
   -- 3.1. <a href="#feature_cloaking">Cloaking</a><br>
   -- 3.2. <a href="#feature_modules">Modules</a><br>
-  -- 3.3. <a href="#feature_scanner">Proxy scanner</a><br>
-  -- 3.4. <a href="#feature_snomasks">Snomasks</a><br>
-  -- 3.5. <a href="#feature_aliases">Aliases</a><br>
-  -- 3.6. <a href="#feature_helpop">Helpop</a><br>
-  -- 3.7. <a href="#feature_operaccesslevels">Oper access levels</a><br>
-  -- 3.8. <a href="#feature_opercmds">Oper commands</a><br>
-  -- 3.9. <a href="#feature_ssl">SSL</a><br>
-  -- 3.10. <a href="#feature_ipv6">IPv6</a><br>
-  -- 3.11. <a href="#feature_ziplinks">Zip links</a><br>
-  -- 3.12. <a href="#feature_dyndns">Dynamic DNS/IP linking support</a><br>
-  -- 3.13. <a href="#feature_throttling">Throttling</a><br>
-  -- 3.14. <a href="#feature_other">Other features</a><br>
+  -- 3.3. <a href="#feature_snomasks">Snomasks</a><br>
+  -- 3.4. <a href="#feature_aliases">Aliases</a><br>
+  -- 3.5. <a href="#feature_helpop">Helpop</a><br>
+  -- 3.6. <a href="#feature_operaccesslevels">Oper access levels</a><br>
+  -- 3.7. <a href="#feature_opercmds">Oper commands</a><br>
+  -- 3.8. <a href="#feature_ssl">SSL</a><br>
+  -- 3.9. <a href="#feature_ipv6">IPv6</a><br>
+  -- 3.10. <a href="#feature_ziplinks">Zip links</a><br>
+  -- 3.11. <a href="#feature_dyndns">Dynamic DNS/IP linking support</a><br>
+  -- 3.12. <a href="#feature_throttling">Throttling</a><br>
+  -- 3.13. <a href="#feature_other">Other features</a><br>
   4. <a href="#configuringyourunrealircdconf">Configuring your unrealircd.conf 
   file</a><br>
   ---4.1. <a href="#configurationfileexplained">Configuration file explained</a><br>
@@ -80,20 +79,19 @@
   ---4.18. <a href="#banversionblock">Ban Version Block</a><br>
   ---4.19. <a href="#banexceptionblock">Ban Exception Block -=- (E:Line)</a><br>
   ---4.20. <a href="#tklexceptionblock">TKL Exception Block</a><br>
-  ---4.21. <a href="#scanexceptionblock">Scan Exception Block -=- (e:Line)</a><br>
-  ---4.22. <a href="#throttleexceptionblock">Throttle Exception Block</a><br>
-  ---4.23. <a href="#denydccblock">Deny DCC Block -=- (dccdeny.conf)</a><br>
-  ---4.24. <a href="#denyversionblock">Deny Version Block -=- (V:Line)</a><br>
-  ---4.25. <a href="#denylinkblock">Deny Link Block -=- (D:Line / d:Line)</a><br>
-  ---4.26. <a href="#denychannelblock">Deny Channel Block -=- (chrestrict.conf)</a><br>
-  ---4.27. <a href="#allowchannelblock">Allow Channel Block</a><br>
-  ---4.28. <a href="#vhostblock">Vhost Block Block -=- (vhost.conf)</a><br>
-  ---4.29. <a href="#badwordsblock">Badword Block -=- (badwords.conf)</a><br>
-  ---4.30. <a href="#ulinesblock">Uline Block -=- (U:Line)</a><br>
-  ---4.31. <a href="#linkblock">Link Block -=- (C/N/H:Lines)</a><br>
-  ---4.32. <a href="#aliasblock">Alias Block</a><br>
-  ---4.33. <a href="#helpblock">Help Block</a><br>
-  ---4.34. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
+  ---4.21. <a href="#throttleexceptionblock">Throttle Exception Block</a><br>
+  ---4.22. <a href="#denydccblock">Deny DCC Block -=- (dccdeny.conf)</a><br>
+  ---4.23. <a href="#denyversionblock">Deny Version Block -=- (V:Line)</a><br>
+  ---4.24. <a href="#denylinkblock">Deny Link Block -=- (D:Line / d:Line)</a><br>
+  ---4.25. <a href="#denychannelblock">Deny Channel Block -=- (chrestrict.conf)</a><br>
+  ---4.26. <a href="#allowchannelblock">Allow Channel Block</a><br>
+  ---4.27. <a href="#vhostblock">Vhost Block Block -=- (vhost.conf)</a><br>
+  ---4.28. <a href="#badwordsblock">Badword Block -=- (badwords.conf)</a><br>
+  ---4.29. <a href="#ulinesblock">Uline Block -=- (U:Line)</a><br>
+  ---4.30. <a href="#linkblock">Link Block -=- (C/N/H:Lines)</a><br>
+  ---4.31. <a href="#aliasblock">Alias Block</a><br>
+  ---4.32. <a href="#helpblock">Help Block</a><br>
+  ---4.33. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
   5. <a href="#addtlfiles">Additional Files</a><br>
   6. <a href="#userchannelmodes">User & Channel Modes</a><br>
   7. <a href="#useropercommands">User & Oper Commands</a><br>
@@ -205,22 +203,13 @@ Windows:<br>
 </div>
 <p><font size="+2"><b>3.2 - Modules</b></font><a name="feature_modules"></a></p><div class="desc">
 <p>UnrealIRCd supports modules (except under windows) which is nice because:<br>
-   - You can decide not to load them (ex: not load the scanner module) and they won't use any memory/CPU<br>
    - You can load/reload/unload them while the ircd is running (by /rehash). This allows some bugs to be fixed or new features to be added without requiring a restart.<br>
    - Other people can create modules as well with new commands or usermodes for example.<br>
    UnrealIRCd only comes with a few modules, take a look at www.unrealircd.com -&gt; modules
    or use google to find 3rd party modules.</p>
 <p>Note that you need to load at least the commands module!</p></div>
 
-<p><font size="+2"><b>3.3 - Proxy scanner</b></font><a name="feature_scanner"></a></p><div class="desc">
-<p>UnrealIRCd comes with proxy scanner modules: if a user connects it will check on some ports to see 
-   if the user is using an anonymous proxy. There's 1 main scanner module (scan.so) and two
-   modules which do the actual scanning: scan_socks and scan_http.</p>
-<p>This module is not required, but often useful. If you load them, you need a set::scan block.</p>
-<p>You can also use a separate proxy scanner program like <A HREF="http://www.blitzed.org/bopm/" TARGET="_blank">BOPM</A>,
-   in that case you should disable UnrealIRCd's own proxy scanner.</p></div>
-
-<p><font size="+2"><b>3.4 - Snomasks</b></font><a name="feature_snomasks"></a></p><div class="desc">
+<p><font size="+2"><b>3.3 - Snomasks</b></font><a name="feature_snomasks"></a></p><div class="desc">
 <p>Snomasks are server notice masks, it's a special type of usermode that controls which 
    server notices you will receive (mostly used by opers)</p>
 <p>It can be set by: /mode yournick +s SNOMASK, for example: /mode yournick +s +cF<br>
@@ -241,7 +230,7 @@ Windows:<br>
 <p>You can control which snomasks you automatically get (set::snomask-on-connect) and which you get
    on oper (set::snomask-on-oper, set::oper::snomask)</p></div>
 
-<p><font size="+2"><b>3.5 - Aliases</b></font><a name="feature_aliases"></a></p><div class="desc">
+<p><font size="+2"><b>3.4 - Aliases</b></font><a name="feature_aliases"></a></p><div class="desc">
 <p>With aliases you can configure server-side alias commands. 
    You can for example let "/ns identify blah" be forwarded to nickserv (it will be 
    translated to: privmsg nickserv identify blah). You can even make more complex aliases such as /register can forward to 
@@ -249,7 +238,7 @@ Windows:<br>
 <p>Aliases are configured by alias blocks in the configuration file, and you can also include
    a file with default aliases for most commonly used services.</p></div>
    
-<p><font size="+2"><b>3.6 - Helpop</b></font><a name="feature_helpop"></a></p><div class="desc">
+<p><font size="+2"><b>3.5 - Helpop</b></font><a name="feature_helpop"></a></p><div class="desc">
 <p>UnrealIRCd has a built-in help system accessable by /helpop. The /helpop command is completely user configurable via
    the help block in the configuration file. Additionally, a help.conf is included which contains some basic help for
    all commands.<br>
@@ -258,16 +247,16 @@ Windows:<br>
    so <i>/helpop</i> becomes <i>/helpop ?</i> and 
    <i>/helpop chmodes</i> becomes <i>/helpop ?chmodes</i> etc..</p></div>
 
-<p><font size="+2"><b>3.7 - Oper access levels</b></font><a name="feature_operaccesslevels"></a></p><div class="desc">
+<p><font size="+2"><b>3.6 - Oper access levels</b></font><a name="feature_operaccesslevels"></a></p><div class="desc">
 <p>There are several oper levels in UnrealIRCd and you can add additional rights (like to use /gline) to
    each of them, that way you can give each oper the privileges they need.</p>
 <p>This is controlled by the oper flags in the oper block, see the oper block for more information.</p></div>
 
-<p><font size="+2"><b>3.8 - Oper commands</b></font><a name="feature_opercmds"></a></p><div class="desc">
+<p><font size="+2"><b>3.7 - Oper commands</b></font><a name="feature_opercmds"></a></p><div class="desc">
 <p>UnrealIRCd has a lot of powerful oper commands which are explained in section 6,
    you probably want to read those after installing :).</p></div>
 
-<p><font size="+2"><b>3.9 - SSL</b></font><a name="feature_ssl"></a></p><div class="desc">
+<p><font size="+2"><b>3.8 - SSL</b></font><a name="feature_ssl"></a></p><div class="desc">
 <p>SSL stands for Secure Socket Layer, with SSL you can make secure encrypted connections. 
    It can be used to encrypt server&lt;-&gt;server traffic, but client&lt;-&gt;server traffic can also be encrypted.
    You usually use SSL to protect against sniffing and for authentication.</p>
@@ -287,28 +276,28 @@ Windows:<br>
    port 6900 (an SSL port).</p>
 <p>If you are really concerned about security/sniffing then you also need to validate certificates on the client end.
    That's however way too off topic to explain here. Learn about SSL, don't ask us, it has nothing to do with UnrealIRCd.</p></div>
-<p><font size="+2"><b>3.10 - IPv6</b></font><a name="feature_ipv6"></a></p><div class="desc">
+<p><font size="+2"><b>3.9 - IPv6</b></font><a name="feature_ipv6"></a></p><div class="desc">
 <p>UnrealIRCd supports IPv6, since beta15 it seems to work well although there might be some
    bugs in it. You need to compile with IPv6 support (answer yes to the ./Config question), ofcourse your
    OS needs to have IPv6 support enabled too.</p>
 <p>Although microsoft has an experimental IPv6 implementation for w2k/XP it is not (yet) supported by UnrealIRCd.</p></div>
 
-<p><font size="+2"><b>3.11 - Zip links</b></font><a name="feature_ziplinks"></a></p><div class="desc">
+<p><font size="+2"><b>3.10 - Zip links</b></font><a name="feature_ziplinks"></a></p><div class="desc">
 <p>Zip links can be turned on for server&lt;-&gt;server links, it compresses the data by using zlib.
    It can save 60-80% bandwidth... So it's quite useful for low-bandwidth links or links with
    many users, it can help a lot when you are linking since a lot of data is sent about every user/channel/etc.</p>
 <p>To compile with zip links support, you need to answer Yes to the zlib question in ./Config and set it in link::options::zip</p></div>
 
-<p><font size="+2"><b>3.12 - Dynamic DNS/IP linking support</b></font><a name="feature_dyndns"></a></p><div class="desc">
+<p><font size="+2"><b>3.11 - Dynamic DNS/IP linking support</b></font><a name="feature_dyndns"></a></p><div class="desc">
 <p>UnrealIRCd has some (new) nice features which helps dynamic IP users using dynamic DNS (like blah.dyndns.org).
    If you are linking two dynamic DNS hosts, then set link::options::nodnscache and link::options::nohostcheck. 
 </p></div>
 
-<p><font size="+2"><b>3.13 - Throttling</b></font><a name="feature_throttling"></a></p><div class="desc">
+<p><font size="+2"><b>3.12 - Throttling</b></font><a name="feature_throttling"></a></p><div class="desc">
 <p>Throttling is a method that allows you to limit how fast a user can disconnect and then reconnect to your server. 
    You can config it in your set::throttle block to allow X connections in YY seconds from the same IP.</p></div>
 
-<p><font size="+2"><b>3.14 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
+<p><font size="+2"><b>3.13 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
 <p>UnrealIRCd has a lot of features so not everything is covered here... You'll find that out by yourself.</p></div>
 
 <p> </p>
@@ -920,16 +909,10 @@ drpass {
 <p>UnrealIRCd now supports modules (at *NIX). Modules make it easy to write extensions and you 
    can load/unload them while the ircd is running.</p>
 <p>Modules that come standard with Unreal3.2:</p>
-<p>scan_http.so - HTTP proxy scanner module<br>
-   scan_socks.so - SOCKS proxy scanner module<br>
-   scan.so - Main scanner module (scan_socks and scan_http rely on it)<br>
-   commands.so - All the / commands (well not all yet, but will eventually be all) <font color="red">REQUIRED</font></p>
-<p>So you want to be sure you have commands.so loaded, and often you want the scan* modules too, example:</p>
+<p>commands.so - All the / commands (well not all yet, but will eventually be all) <font color="red">REQUIRED</font></p>
+<p>So you want to be sure you have commands.so loaded:</p>
 <pre>
 loadmodule "src/modules/commands.so";
-loadmodule "src/modules/scan.so";
-loadmodule "src/modules/scan_socks.so";
-loadmodule "src/modules/scan_http.so";
 </pre></div>
 <p><font class="block_section">4.11 - </font><font class="block_name">Log Block</font>
    <font class="block_optional">OPTIONAL</font><a name="logblock"></a><div class="desc">
@@ -1169,25 +1152,7 @@ except tkl {
 	type gline;
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.21 - </font><font class="block_name">Scan Exceptions Block</font>
-   <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the e:Line)</font><a name="scanexceptionblock"></a><div class="desc">
-</p>
-<p>Syntax:<br>
-<pre>
-except scan {
-	mask &lt;ipmask&gt;;
-};</pre></p>
-<p>The except scan block allows you to specify an IP mask that will override the 
-  scanners. This only works if you have chosen to load the scanner modules. The 
-  except::mask specifies an IP mask that will not be banned because of any type 
-  of scanner problem.</p>
-<p>Example<br>
-<pre>
-except scan {
-	mask 192.168.1.*;
-};</pre></p>
-<p></p></div>
-<p><font class="block_section">4.22 - </font><font class="block_name">Throttle Exceptions Block</font>
+<p><font class="block_section">4.21 - </font><font class="block_name">Throttle Exceptions Block</font>
    <font class="block_optional">OPTIONAL</font> <a name="throttleexceptionblock"></a>
 </p><div class="desc">
 <p>Syntax:<br>
@@ -1204,7 +1169,7 @@ except throttle {
 	mask 192.168.1.*;
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.23 - </font><font class="block_name">Deny DCC Block</font>
+<p><font class="block_section">4.22 - </font><font class="block_name">Deny DCC Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as dccdeny.conf)</font><a name="denydccblock"></a>
 </p><div class="desc">
 <p>Syntax:<br>
@@ -1225,7 +1190,7 @@ deny dcc {
 	reason "This is a GD Virus";
 };</pre></p></div>
 <p></p>
-<p><font class="block_section">4.24 - </font><font class="block_name">Deny Version Block</font>
+<p><font class="block_section">4.23 - </font><font class="block_name">Deny Version Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the V:Line)</font><a name="denyversionblock"></a><div class="desc">
 </p>
 <p> Syntax:<br>
@@ -1252,7 +1217,7 @@ deny version {
   flag compiled into it, if it does not have a ! prefix, then it means the server 
   must have this flag compiled.</p>
 <p></p></div>
-<p><font class="block_section">4.25 - </font><font class="block_name">Deny Link Block</font>
+<p><font class="block_section">4.24 - </font><font class="block_name">Deny Link Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the D/d:Line)</font><a name="denylinkblock"></a><div class="desc">
 </p>
 <p>Syntax:<br>
@@ -1279,7 +1244,7 @@ deny link {
   auto (only applies to autoconnects, /connect will still work), and all (applies 
   to all connection attempts).</p>
 <p></p></div>
-<p><font class="block_section">4.26 - </font><font class="block_name">Deny Channel Block</font>
+<p><font class="block_section">4.25 - </font><font class="block_name">Deny Channel Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as chrestrict.conf)</font><a name="denychannelblock"></a>
 </p><div class="desc">
 <p>Syntax:<br>
@@ -1300,7 +1265,7 @@ deny channel {
 	reason "No it don't!";
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.27 - </font><font class="block_name">Allow Channel Block</font>
+<p><font class="block_section">4.26 - </font><font class="block_name">Allow Channel Block</font>
    <font class="block_optional">OPTIONAL</font><a name="allowchannelblock"></a>
 </p><div class="desc">
 <p>Syntax:<br>
@@ -1317,7 +1282,7 @@ allow channel {
 	channel "#something";
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.28 - </font><font class="block_name">Vhost Block</font>
+<p><font class="block_section">4.27 - </font><font class="block_name">Vhost Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as vhosts.conf)</font><a name="vhostblock"></a>
 </p><div class="desc">
 <p>Syntax:<br>
@@ -1356,7 +1321,7 @@ vhost {
 	swhois "Im Special";
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.29 - </font><font class="block_name">Badword Block</font>
+<p><font class="block_section">4.28 - </font><font class="block_name">Badword Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as badwords.*.conf)</font><a name="badwordsblock"></a>
 </p><div class="desc">
 <p>Syntax:<br>
@@ -1383,7 +1348,7 @@ badword channel {
 	replace shoot;
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.30 - </font><font class="block_name">ULines Block</font>
+<p><font class="block_section">4.29 - </font><font class="block_name">ULines Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the U:Line)</font><a name="ulinesblock"></a><div class="desc">
 </p>
 <p>Syntax:<br>
@@ -1404,7 +1369,7 @@ ulines {
 	stats.mynetwork.com;
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.31 - </font><font class="block_name">Link Block</font>
+<p><font class="block_section">4.30 - </font><font class="block_name">Link Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as C/N/H:Lines)</font><a name="linkblock"></a>
 </p><div class="desc">
 <p>Syntax:<br>
@@ -1511,7 +1476,7 @@ link hub.mynet.com {
 	};
 };</pre></p>
 <p> </p></div>
-<p><font class="block_section">4.32 - </font><font class="block_name">Alias Block</font>
+<p><font class="block_section">4.31 - </font><font class="block_name">Alias Block</font>
    <font class="block_optional">OPTIONAL</font><a name="aliasblock"></a>
 </p><div class="desc">
 <p>Syntax [standard alias]:<br>
@@ -1558,7 +1523,7 @@ alias &lt;name&gt; {
   from the second till the last. For examples of using the alias block in the 
   command format, consult doc/example.conf.</p>
 <p></p></div>
-<p><font class="block_section">4.33 - </font><font class="block_name">Help Block</font>
+<p><font class="block_section">4.32 - </font><font class="block_name">Help Block</font>
    <font class="block_optional">OPTIONAL</font><a name="helpblock"></a>
 </p><div class="desc">
 <p>Syntax:<br>
@@ -1575,7 +1540,7 @@ help &lt;name&gt; {
   for the help block are the text that will be displayed to the user when requesting 
   the /helpop.</p>
 <p></p></div>
-<p><font class="block_section">4.34 - </font><font class="block_name">Set Block</font>
+<p><font class="block_section">4.33 - </font><font class="block_name">Set Block</font>
    <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as unrealircd.conf/networks file)</font><a name="setblock"></a>
 </p><div class="desc">
 <p>The set file is what use to be our networks/unrealircd.conf and our networks 
@@ -1737,17 +1702,6 @@ set {
   If set to yes, the H/get_host flag will be honored and +x will be automatically 
   set at /oper. If set to no, the user must set +x manually to receive the oper 
   host.</p>
-<p><font class="set">set::scan::endpoint &lt;ip:port&gt;;</font><br>
-  Specifies the IP and port that the server will tell an incoming open proxy to 
-  connect to.</p>
-<p><font class="set">set::scan::bind-ip &lt;ip&gt;;</font><br>
-  What ip should the scanner bind to before connecting</p>
-<p><font class="set">set::scan::message &lt;message&gt;;</font><br>
-  Put a message that users will see when scanner is scanning</p>
-<p><font class="set">set::scan::bantime &lt;time&gt;;</font><br>
-  Sets the time of the ban (4d)</p>
-<p><font class="set">set::scan::timeout &lt;time&gt;;</font><br>
-  How long we wait to see if the host has a proxy (15s)</p>
 <p><font class="set">set::ssl::egd &lt;filename&gt;;</font><br>
   Specifies that EGD (Entropy Gathering Daemon) support should be enabled. If 
   you run OpenSSL 0.9.7 or higher, then /var/run/egd-pool, /dev/egd-pool, /etc/egd-pool, 
