@@ -311,7 +311,10 @@ o - Oper-up Meldungen anzeigen<br>
 [*: Diese snomask ist auch für Nicht-IrcOps möglich]<br>
    </p>
 <p>Es kann eingestellt werden, welche snomasks man automatisch erhält (set::snomask-on-connect)
-und welche man als Oper erhält (set::snomask-on-oper, set::oper::snomask)</p></div>
+und welche man als Oper erhält (set::snomask-on-oper, set::oper::snomask)</p>
+<p>Per Default ist eingestellt, dass einem User, der einfach nur den Modus +s
+setzt, bestimmte Flags eingestellt werden. Für Nicht-Opers ist das die snomask +ks,
+und für Opers die snomask +kscfvGqo.</p></div>
 
 <p><font size="+2"><b><a name="feature_aliases">3.4 - Aliases</a></b></font></p><div class="desc">
 <p>Mit Alias können serverseitig bestimmte Befehle eingestellt und dadurch
