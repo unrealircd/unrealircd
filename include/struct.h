@@ -1031,7 +1031,7 @@ struct _configitem_listen {
 	ConfigFlag 	flag;
 	char		*ip;
 	int		port;
-	long		options, clients;
+	int		options, clients;
 	aClient		*listener;
 };
 

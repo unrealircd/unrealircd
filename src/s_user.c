@@ -951,8 +951,7 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 			    ":%s %d %s :*** Your GECOS (real name) is not allowed on this server (%s)"
 			    " Please change it and reconnect",
 			    me.name, ERR_YOUREBANNEDCREEP,
-			    cptr->name, bconf->reason ? bconf->reason : "",
-			    KLINE_ADDRESS);
+			    cptr->name, bconf->reason ? bconf->reason : "");
 
 			return exit_client(cptr, sptr, &me,
 			    "Your GECOS (real name) is banned from this server");
@@ -1491,7 +1490,7 @@ CMD_FUNC(m_nick)
 				differ = (mycmp(acptr->user->username, parv[4])
 				    || mycmp(acptr->user->realhost, parv[5]));
 		}
-		sendto_failops("Nick collision on %s (%s %d <- %s %d)",
+		sendto_failops("Nick collision on %s (%s %ld <- %s %ld)",
 		    acptr->name, acptr->from->name, acptr->lastnick,
 		    cptr->name, lastnick);
 		/*
@@ -1543,7 +1542,7 @@ CMD_FUNC(m_nick)
 
 			sendto_one(cptr, ":%s KILL %s :%s (Nick Collision)",
 			    me.name, parv[1], me.name);
-			sendto_one(cptr, "NICK %s %d %d %s %s %s :%s",
+			sendto_one(cptr, "NICK %s %d %ld %s %s %s :%s",
 			    acptr->name, acptr->hopcount + 1, acptr->lastnick,
 			    acptr->user->username, acptr->user->realhost,
 			    acptr->user->server, acptr->info);
@@ -1571,7 +1570,7 @@ CMD_FUNC(m_nick)
 		differ = (mycmp(acptr->user->username, sptr->user->username) ||
 		    mycmp(acptr->user->realhost, sptr->user->realhost));
 		sendto_failops
-		    ("Nick change collision from %s to %s (%s %d <- %s %d)",
+		    ("Nick change collision from %s to %s (%s %ld <- %s %ld)",
 		    sptr->name, acptr->name, acptr->from->name, acptr->lastnick,
 		    sptr->from->name, lastnick);
 		if (!(parc > 2) || lastnick == acptr->lastnick)
@@ -1622,7 +1621,7 @@ CMD_FUNC(m_nick)
 			/* Kill their user. */
 			sendto_one(cptr, ":%s KILL %s :%s (Nick Collision)",
 			    me.name, parv[1], me.name);
-			sendto_one(cptr, "NICK %s %d %d %s %s %s :%s",
+			sendto_one(cptr, "NICK %s %d %ld %s %s %s :%s",
 			    acptr->name, acptr->hopcount + 1, acptr->lastnick,
 			    acptr->user->username, acptr->user->realhost,
 			    acptr->user->server, acptr->info);
@@ -1728,7 +1727,7 @@ CMD_FUNC(m_nick)
 		add_history(sptr, 1);
 		sendto_common_channels(sptr, ":%s NICK :%s", parv[0], nick);
 		sendto_serv_butone_token(cptr, parv[0], MSG_NICK, TOK_NICK,
-		    "%s %d", nick, sptr->lastnick);
+		    "%s %ld", nick, sptr->lastnick);
 		sptr->umodes &= ~UMODE_REGNICK;
 	}
 	else if (!sptr->name[0])

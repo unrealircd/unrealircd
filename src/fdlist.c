@@ -40,10 +40,10 @@ void addto_fdlist(int fd, fdlist * listp)
 	/* I prefer this little 5-cpu-cycles-check over memory corruption. -- Syzop */
 	if ((fd < 0) || (fd >= MAXCONNECTIONS))
 	{
-		sendto_realops("[BUG] trying to add fd #%d to 0x%x (%x/%x/%x/%x), range is 0..%d",
+		sendto_realops("[BUG] trying to add fd #%d to %p (%p/%p/%p/%p), range is 0..%d",
 			fd, listp, &default_fdlist, &busycli_fdlist, &serv_fdlist, &oper_fdlist,
 			MAXCONNECTIONS);
-		ircd_log(LOG_ERROR, "[BUG] trying to add fd #%d to 0x%x (%x/%x/%x/%x), range is 0..%d",
+		ircd_log(LOG_ERROR, "[BUG] trying to add fd #%d to %p (%p/%p/%p/%p), range is 0..%d",
 			fd, listp, &default_fdlist, &busycli_fdlist, &serv_fdlist, &oper_fdlist,
 			MAXCONNECTIONS);
 		return;
@@ -70,10 +70,10 @@ void delfrom_fdlist(int fd, fdlist * listp)
 	/* I prefer this little 5-cpu-cycles-check over memory corruption. -- Syzop */
 	if ((fd < 0) || (fd >= MAXCONNECTIONS))
 	{
-		sendto_realops("[BUG] trying to remove fd #%d to 0x%x (%x/%x/%x/%x), range is 0..%d",
+		sendto_realops("[BUG] trying to remove fd #%d to %p (%p/%p/%p/%p), range is 0..%d",
 			fd, listp, &default_fdlist, &busycli_fdlist, &serv_fdlist, &oper_fdlist,
 			MAXCONNECTIONS);
-		ircd_log(LOG_ERROR, "[BUG] trying to remove fd #%d to 0x%x (%x/%x/%x/%x), range is 0..%d",
+		ircd_log(LOG_ERROR, "[BUG] trying to remove fd #%d to %p (%p/%p/%p/%p), range is 0..%d",
 			fd, listp, &default_fdlist, &busycli_fdlist, &serv_fdlist, &oper_fdlist,
 			MAXCONNECTIONS);
 		return;

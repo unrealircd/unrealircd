@@ -660,6 +660,7 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 							break;
 						p++;
 						a = '\0';
+						r = 0;
 						if (*p != '\0')
 						{
 							if (*p == '#')
@@ -3421,8 +3422,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 			if (tmpflags & LISTENER_SSL)
 			{
 				config_status("%s:%i: listen with SSL flag enabled on a non SSL compile",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-					cep->ce_varname);
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				tmpflags &= ~LISTENER_SSL;
 			}
 #endif
@@ -5811,8 +5811,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					if (temp < 1 || temp > 255)
 					{
 						config_error("%s:%i: set::anti-flood::away-count must be between 1 and 255",
-							cepp->ce_fileptr->cf_filename,
-							cepp->ce_varname);
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 						errors++;
 					}
 				}
@@ -5821,8 +5820,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					if (temp < 10)
 					{
 						config_error("%s:%i: set::anti-flood::away-period must be greater than 9",
-							cepp->ce_fileptr->cf_filename,
-							cepp->ce_varname);
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 						errors++;
 					}
 				}
@@ -5834,8 +5832,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					{
 						config_error("%s:%i: set::anti-flood::away-flood error. Syntax is '<count>:<period>' (eg 5:60), "
 						             "count should be 1-255, period should be greater than 9",
-							cepp->ce_fileptr->cf_filename,
-							cepp->ce_varname);
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 						errors++;
 					}
 				}
@@ -5848,8 +5845,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					{
 						config_error("%s:%i: set::anti-flood::away-flood error. Syntax is '<count>:<period>' (eg 5:60), "
 						             "count should be 1-255, period should be greater than 4",
-							cepp->ce_fileptr->cf_filename,
-							cepp->ce_varname);
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 						errors++;
 					}
 				}

@@ -312,8 +312,7 @@ void sendbufto_one(aClient *to, char *msg, unsigned int quick)
 	if (DBufLength(&to->sendQ) > get_sendq(to))
 	{
 		if (IsServer(to))
-			sendto_ops("Max SendQ limit exceeded for %s: "
-			    "%lu > %lu",
+			sendto_ops("Max SendQ limit exceeded for %s: %u > %d",
 			    get_client_name(to, FALSE), DBufLength(&to->sendQ),
 			    get_sendq(to));
 		dead_link(to, "Max SendQ exceeded");

@@ -245,7 +245,7 @@ void free_user(anUser *user, aClient *cptr)
 		 */
 		if (user->joined || user->refcnt < 0 ||
 		    user->invited || user->channel)
-			sendto_realops("* %#x user (%s!%s@%s) %#x %#x %#x %d %d *",
+			sendto_realops("* %p user (%s!%s@%s) %p %p %p %d %d *",
 			    cptr, cptr ? cptr->name : "<noname>",
 			    user->username, user->realhost, user,
 			    user->invited, user->channel, user->joined,

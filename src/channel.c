@@ -94,7 +94,7 @@ void make_mode_str(aChannel *, long, long, int,
 int do_mode_char(aChannel *, long, char, char *,
 	u_int, aClient *,
     u_int *, char[MAXMODEPARAMS][MODEBUFLEN + 3], char);
-void do_mode(aChannel *, aClient *, aClient *, int, char **, int,
+void do_mode(aChannel *, aClient *, aClient *, int, char **, time_t,
     int);
 void bounce_mode(aChannel *, aClient *, int, char **);
 
@@ -1458,7 +1458,7 @@ void bounce_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[])
  *	User or server is authorized to do the mode.  This takes care of
  * setting the mode and relaying it to other users and servers.
  */
-void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], int sendts, int samode)
+void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode)
 {
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
 	int  pcount;
@@ -5414,7 +5414,8 @@ CMD_FUNC(m_sjoin)
 	Member *lp;
 	Membership *lp2;
 	aParv *ap;
-	int  ts, oldts, pcount, i, f;
+	int pcount, i, f;
+	time_t ts, oldts;
 	unsigned short b=0,c;
 	Mode oldmode;
 	char *t, *bp, *tp, *p = NULL;
@@ -5451,9 +5452,9 @@ CMD_FUNC(m_sjoin)
 	chptr = get_channel(cptr, parv[2], CREATE);
 
 	if (*parv[1] != '!')
-		ts = atol(parv[1]);
+		ts = (time_t)atol(parv[1]);
 	else
-		ts = base64dec(parv[1] + 1);
+		ts = (time_t)base64dec(parv[1] + 1);
 
 	if (chptr->creationtime > ts)
 	{

@@ -436,12 +436,12 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 			}
 			on_for = TStime() - sptr->firsttime;
 			if IsHidden(sptr)
-				ircd_log(LOG_CLIENT, "Disconnect - (%d:%d:%d) %s!%s@%s [VHOST %s]",
+				ircd_log(LOG_CLIENT, "Disconnect - (%ld:%ld:%ld) %s!%s@%s [VHOST %s]",
 					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
 					sptr->name, sptr->user->username,
 					sptr->user->realhost, sptr->user->virthost);
 			else
-				ircd_log(LOG_CLIENT, "Disconnect - (%d:%d:%d) %s!%s@%s",
+				ircd_log(LOG_CLIENT, "Disconnect - (%ld:%ld:%ld) %s!%s@%s",
 					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
 					sptr->name, sptr->user->username, sptr->user->realhost);
 		} else

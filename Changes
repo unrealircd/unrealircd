@@ -2536,3 +2536,14 @@ seen. gmtime warning still there
   the kick. You will receive a 'You cannot kick channel' message from every older
   server so you'll at least be notified ;p.
 - Don't allow remote pongs if unregistered.
+- (Internal) Added __attribute__ format checking for most format string functions,
+  this will currently produce a lot of warnings with -Wall.
+- Fixed 159 of 184 warnings detected by the above, the other warnings are false.
+  Most warnings had to do with long vs int, and thus the format strings (%d->%ld)
+  or the vars (int->long) have been changed (many of these were time_t/TS vs int).
+  Only a few rare crashbugs were discovered.
+- Module coders: for HOOKTYPE_LOCAL_CHANMODE the 'sendts' parameter was changed
+  from type 'int' to 'time_t', while in most circumstances (like on ia32)
+  you won't notice, I suggest you to update your callback functions anyway.
+- Possibly fixed an issue with set::modes-on-join and mode +f, it could have
+  set random remove-chanmode times in the default chanmode line.

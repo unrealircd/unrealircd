@@ -193,7 +193,7 @@ void	EventStatus(aClient *sptr)
 	}
 	for (eventptr = events; eventptr; eventptr = eventptr->next)
 	{
-		sendto_one(sptr, ":%s NOTICE %s :*** Event %s: e/%i h/%i n/%i l/%i", me.name,
+		sendto_one(sptr, ":%s NOTICE %s :*** Event %s: e/%ld h/%ld n/%ld l/%ld", me.name,
 			sptr->name, eventptr->name, eventptr->every, eventptr->howmany,
 				now - eventptr->last, (eventptr->last + eventptr->every) - now);
 	}

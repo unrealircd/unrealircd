@@ -685,13 +685,13 @@ int stats_traffic(aClient *sptr, char *para)
 	    me.name, RPL_STATSDEBUG, sptr->name);
 	sendto_one(sptr, ":%s %d %s :connected %u %u",
 	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_cl, sp->is_sv);
-	sendto_one(sptr, ":%s %d %s :bytes sent %u.%uK %u.%uK",
+	sendto_one(sptr, ":%s %d %s :bytes sent %ld.%huK %ld.%huK",
 	    me.name, RPL_STATSDEBUG, sptr->name,
 	    sp->is_cks, sp->is_cbs, sp->is_sks, sp->is_sbs);
-	sendto_one(sptr, ":%s %d %s :bytes recv %u.%uK %u.%uK",
+	sendto_one(sptr, ":%s %d %s :bytes recv %ld.%huK %ld.%huK",
 	    me.name, RPL_STATSDEBUG, sptr->name,
 	    sp->is_ckr, sp->is_cbr, sp->is_skr, sp->is_sbr);
-	sendto_one(sptr, ":%s %d %s :time connected %u %u",
+	sendto_one(sptr, ":%s %d %s :time connected %ld %ld",
 	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_cti, sp->is_sti);
 #ifndef NO_FDLIST
 	sendto_one(sptr,
@@ -829,14 +829,14 @@ int stats_mem(aClient *sptr, char *para)
 		}
 	}
 
-	sendto_one(sptr, ":%s %d %s :Client Local %d(%d) Remote %d(%d)",
+	sendto_one(sptr, ":%s %d %s :Client Local %d(%ld) Remote %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, lc, lcm, rc, rcm);
 	sendto_one(sptr, ":%s %d %s :Users %d(%d) Invites %d(%d)",
 	    me.name, RPL_STATSDEBUG, sptr->name, us, us * sizeof(anUser), usi,
 	    usi * sizeof(Link));
-	sendto_one(sptr, ":%s %d %s :User channels %d(%d) Aways %d(%d)",
+	sendto_one(sptr, ":%s %d %s :User channels %d(%d) Aways %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, usc, usc * sizeof(Link), aw, awm);
-	sendto_one(sptr, ":%s %d %s :WATCH headers %d(%d) entries %d(%d)",
+	sendto_one(sptr, ":%s %d %s :WATCH headers %d(%ld) entries %d(%d)",
 	    me.name, RPL_STATSDEBUG, sptr->name, wlh, wlhm, wle, wle * sizeof(Link));
 	sendto_one(sptr, ":%s %d %s :Attached confs %d(%d)",
 	    me.name, RPL_STATSDEBUG, sptr->name, lcc, lcc * sizeof(Link));
@@ -845,13 +845,13 @@ int stats_mem(aClient *sptr, char *para)
 	totcl += lcc * sizeof(Link) + usi * sizeof(Link) + wlhm;
 	totcl += wle * sizeof(Link);
 
-	sendto_one(sptr, ":%s %d %s :Conflines %d(%d)",
+	sendto_one(sptr, ":%s %d %s :Conflines %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, co, com);
 
-	sendto_one(sptr, ":%s %d %s :Classes %d(%d)",
+	sendto_one(sptr, ":%s %d %s :Classes %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, StatsZ.classes, StatsZ.classesmem);
 
-	sendto_one(sptr, ":%s %d %s :Channels %d(%d) Bans %d(%d)",
+	sendto_one(sptr, ":%s %d %s :Channels %d(%ld) Bans %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, ch, chm, chb, chbm);
 	sendto_one(sptr, ":%s %d %s :Channel members %d(%d) invite %d(%d)",
 	    me.name, RPL_STATSDEBUG, sptr->name, chu, chu * sizeof(Link),
@@ -859,10 +859,10 @@ int stats_mem(aClient *sptr, char *para)
 
 	totch = chm + chbm + chu * sizeof(Link) + chi * sizeof(Link);
 
-	sendto_one(sptr, ":%s %d %s :Whowas users %d(%d) away %d(%d)",
+	sendto_one(sptr, ":%s %d %s :Whowas users %d(%d) away %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, wwu, wwu * sizeof(anUser),
 	    wwa, wwam);
-	sendto_one(sptr, ":%s %d %s :Whowas array %d(%d)",
+	sendto_one(sptr, ":%s %d %s :Whowas array %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, NICKNAMEHISTORYLENGTH, wwm);
 
 	totww = wwu * sizeof(anUser) + wwam + wwm;
@@ -873,7 +873,7 @@ int stats_mem(aClient *sptr, char *para)
 	    sizeof(aHashEntry) * CH_MAX, WATCHHASHSIZE,
 	    sizeof(aWatch *) * WATCHHASHSIZE);
 	db = dbufblocks * sizeof(dbufbuf);
-	sendto_one(sptr, ":%s %d %s :Dbuf blocks %d(%d)",
+	sendto_one(sptr, ":%s %d %s :Dbuf blocks %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, dbufblocks, db);
 
 	link = freelink;
@@ -892,7 +892,7 @@ int stats_mem(aClient *sptr, char *para)
 	tot += sizeof(aHashEntry) * CH_MAX;
 	tot += sizeof(aWatch *) * WATCHHASHSIZE;
 
-	sendto_one(sptr, ":%s %d %s :Total: ww %d ch %d cl %d co %d db %d",
+	sendto_one(sptr, ":%s %d %s :Total: ww %ld ch %ld cl %ld co %ld db %ld",
 	    me.name, RPL_STATSDEBUG, sptr->name, totww, totch, totcl, com, db);
 #if !defined(_WIN32) && !defined(_AMIGA)
 #ifdef __alpha
@@ -900,7 +900,7 @@ int stats_mem(aClient *sptr, char *para)
 	    me.name, RPL_STATSDEBUG, nick, tot,
 	    (u_int)sbrk((size_t)0) - (u_int)sbrk0);
 #else
-	sendto_one(sptr, ":%s %d %s :TOTAL: %d sbrk(0)-etext: %ul",
+	sendto_one(sptr, ":%s %d %s :TOTAL: %ld sbrk(0)-etext: %lu",
 	    me.name, RPL_STATSDEBUG, sptr->name, tot,
 	    (u_long)sbrk((size_t)0) - (u_long)sbrk0);
 
@@ -1121,7 +1121,7 @@ int stats_set(aClient *sptr, char *para)
 	    sptr->name, hidden_host);
 	sendto_one(sptr, ":%s %i %s :help-channel: %s", me.name, RPL_TEXT,
 	    sptr->name, helpchan);
-	sendto_one(sptr, ":%s %i %s :cloak-keys: %X", me.name, RPL_TEXT, sptr->name,
+	sendto_one(sptr, ":%s %i %s :cloak-keys: %lX", me.name, RPL_TEXT, sptr->name,
 		CLOAK_KEYCRC);
 	sendto_one(sptr, ":%s %i %s :kline-address: %s", me.name, RPL_TEXT,
 	    sptr->name, KLINE_ADDRESS);
@@ -1226,7 +1226,7 @@ int stats_set(aClient *sptr, char *para)
 #endif
 	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-bantime: %s", me.name, RPL_TEXT,
 			sptr->name, pretty_time_val(UNKNOWN_FLOOD_BANTIME));
-	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-amount: %dKB", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-amount: %ldKB", me.name, RPL_TEXT,
 			sptr->name, UNKNOWN_FLOOD_AMOUNT);
 #ifdef NO_FLOOD_AWAY
 	if (AWAY_PERIOD)

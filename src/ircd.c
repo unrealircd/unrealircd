@@ -1303,7 +1303,7 @@ void SocketLoop(void *dummy)
 		oldtimeofday = timeofday;
 		timeofday = time(NULL) + TSoffset;
 		if (timeofday - oldtimeofday < 0) {
-			sendto_realops("Time running backwards! %i-%i<0",
+			sendto_realops("Time running backwards! %ld - %ld < 0",
 			    timeofday, oldtimeofday);
 		}
 		LockEventSystem();

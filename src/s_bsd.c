@@ -765,7 +765,7 @@ int  check_client(aClient *cptr)
 				break;
 		if (!hp->h_addr_list[i])
 		{
-			sendto_snomask(SNO_JUNK, "IP# Mismatch: %s != %s[%08x]",
+			sendto_snomask(SNO_JUNK, "IP# Mismatch: %s != %s[%08lx]",
 			    Inet_ia2p((struct IN_ADDR *)&cptr->ip), hp->h_name,
 			    *((unsigned long *)hp->h_addr));
 			hp = NULL;
@@ -2415,7 +2415,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 		if (by && IsPerson(by) && !MyClient(by))
 			sendto_one(by,
 			    ":%s NOTICE %s :*** Connect to host %s failed.",
-			    me.name, by->name, cptr);
+			    me.name, by->name, cptr->name);
 		CLOSE_SOCK(cptr->fd);
 		--OpenFiles;
 		cptr->fd = -2;

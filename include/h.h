@@ -112,9 +112,9 @@ extern void  module_loadall(int module_load);
 extern long set_usermode(char *umode);
 extern char *get_modestr(long umodes);
 extern void tkl_stats(aClient *cptr, int type, char *para);
-extern void                    config_error(char *format, ...);
+extern void                    config_error(char *format, ...) __attribute__((format(printf,1,2)));
 extern int			config_verbose;
-extern void config_progress(char *format, ...);
+extern void config_progress(char *format, ...) __attribute__((format(printf,1,2)));
 extern void       ipport_seperate(char *string, char **ip, char **port);
 ConfigItem_class	*Find_class(char *name);
 ConfigItem_deny_dcc	*Find_deny_dcc(char *name);
@@ -192,7 +192,7 @@ extern int is_chanowner(aClient *, aChannel *);
 extern Ban *is_banned(aClient *, aClient *, aChannel *);
 extern int parse_help(aClient *, char *, char *);
 
-extern void ircd_log(int, char *, ...);
+extern void ircd_log(int, char *, ...) __attribute__((format(printf,2,3)));
 extern aClient *find_client(char *, aClient *);
 extern aClient *find_name(char *, aClient *);
 extern aClient *find_nickserv(char *, aClient *);
@@ -270,7 +270,7 @@ extern int send_queued(aClient *);
 /* i know this is naughty but :P --stskeeps */
 extern void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr);
 extern void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr);
-extern void sendto_locfailops(char *pattern, ...);
+extern void sendto_locfailops(char *pattern, ...) __attribute__((format(printf,1,2)));
 extern void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnect, char *comment);
 extern void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr, char *nick, int hopcount,
 int lastnick, char *username, char *realhost, char *server, long servicestamp, char *info, char *umodes,
@@ -284,32 +284,33 @@ extern void    sendto_message_one(aClient *to, aClient *from, char *sender,
 #define PREFIX_ADMIN	0x08
 #define PREFIX_OWNER	0x10
 extern void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
-    int prefix, char *pattern, ...);
+    int prefix, char *pattern, ...) __attribute__((format(printf,5,6)));
 extern void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chptr,
     int prefix, char *cmd, char *tok, char *nick, char *text, char do_send_check);
-extern void sendto_channel_butone(aClient *, aClient *, aChannel *, char *,
-    ...);
-extern void sendto_channel_butserv_butone(aChannel *chptr, aClient *from, aClient *one, char *pattern, ...);
-extern void sendto_serv_butone(aClient *, char *, ...);
-extern void sendto_serv_butone_quit(aClient *, char *, ...);
-extern void sendto_serv_butone_sjoin(aClient *, char *, ...);
-extern void sendto_serv_sjoin(aClient *, char *, ...);
-extern void sendto_common_channels(aClient *, char *, ...);
-extern void sendto_channel_butserv(aChannel *, aClient *, char *, ...);
-extern void sendto_match_servs(aChannel *, aClient *, char *, ...);
+extern void sendto_channel_butone(aClient *, aClient *, aChannel *,
+                                  char *, ...) __attribute__((format(printf,4,5)));
+extern void sendto_channel_butserv_butone(aChannel *chptr, aClient *from, aClient *one,
+                                          char *pattern, ...) __attribute__((format(printf,4,5)));
+extern void sendto_serv_butone(aClient *, char *, ...) __attribute__((format(printf,2,3)));
+extern void sendto_serv_butone_quit(aClient *, char *, ...) __attribute__((format(printf,2,3)));
+extern void sendto_serv_butone_sjoin(aClient *, char *, ...) __attribute__((format(printf,2,3)));
+extern void sendto_serv_sjoin(aClient *, char *, ...) __attribute__((format(printf,2,3)));
+extern void sendto_common_channels(aClient *, char *, ...) __attribute__((format(printf,2,3)));
+extern void sendto_channel_butserv(aChannel *, aClient *, char *, ...) __attribute__((format(printf,3,4)));
+extern void sendto_match_servs(aChannel *, aClient *, char *, ...) __attribute__((format(printf,3,4)));
 extern void sendto_match_butone(aClient *, aClient *, char *, int,
-    char *pattern, ...);
-extern void sendto_all_butone(aClient *, aClient *, char *, ...);
-extern void sendto_ops(char *, ...);
-extern void sendto_ops_butone(aClient *, aClient *, char *, ...);
-extern void sendto_ops_butme(aClient *, char *, ...);
-extern void sendto_prefix_one(aClient *, aClient *, const char *, ...);
-extern void sendto_failops_whoare_opers(char *, ...);
-extern void sendto_failops(char *, ...);
-extern void sendto_opers(char *, ...);
-extern void sendto_umode(int, char *, ...);
-extern void sendto_umode_raw(int, char *, ...);
-extern void sendto_snomask(int snomask, char *pattern, ...);
+    char *pattern, ...) __attribute__((format(printf,5,6)));
+extern void sendto_all_butone(aClient *, aClient *, char *, ...) __attribute__((format(printf,3,4)));
+extern void sendto_ops(char *, ...) __attribute__((format(printf,1,2)));
+extern void sendto_ops_butone(aClient *, aClient *, char *, ...) __attribute__((format(printf,3,4)));
+extern void sendto_ops_butme(aClient *, char *, ...) __attribute__((format(printf,2,3)));
+extern void sendto_prefix_one(aClient *, aClient *, const char *, ...) __attribute__((format(printf,3,4)));
+extern void sendto_failops_whoare_opers(char *, ...) __attribute__((format(printf,1,2)));
+extern void sendto_failops(char *, ...) __attribute__((format(printf,1,2)));
+extern void sendto_opers(char *, ...) __attribute__((format(printf,1,2)));
+extern void sendto_umode(int, char *, ...) __attribute__((format(printf,2,3)));
+extern void sendto_umode_raw(int, char *, ...) __attribute__((format(printf,2,3)));
+extern void sendto_snomask(int snomask, char *pattern, ...) __attribute__((format(printf,2,3)));
 extern int writecalls, writeb[];
 extern int deliver_it(aClient *, char *, int);
 extern int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr);
@@ -579,7 +580,7 @@ extern void *MyMallocEx(size_t size);
 char  *ssl_get_cipher(SSL *ssl);
 #endif
 long config_checkval(char *value, unsigned short flags);
-void config_status(char *format, ...);
+void config_status(char *format, ...) __attribute__((format(printf,1,2)));
 void init_random();
 u_int32_t getrandom32();
 extern char trouble_info[1024];
