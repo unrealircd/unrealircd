@@ -3927,6 +3927,7 @@ int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 
 	/* if HTM, drop this too */
+#ifndef NO_FDLIST
 	if (lifesux && !IsOper(cptr))
 	{
 		sendto_one(sptr, err_str(ERR_HTMDISABLED), me.name,
@@ -3935,7 +3936,7 @@ int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr, rpl_str(RPL_LISTEND), me.name, parv[0]);
 		return 0;
 	}
-
+#endif
 	if (parc < 2 || BadPtr(parv[1]))
 	{
 
