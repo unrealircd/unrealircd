@@ -297,6 +297,7 @@ struct {
 */
 
 void	ipport_seperate(char *string, char **ip, char **port);
+void	port_range(char *string, int *start, int *end);
 long	config_checkval(char *value, unsigned short flags);
 
 /*
@@ -404,7 +405,20 @@ void	ipport_seperate(char *string, char **ip, char **port)
 	}
 }
 
-
+void port_range(char *string, int *start, int *end)
+{
+	char *c = strchr(string, '-');
+	if (!c)
+	{
+		int tmp = atoi(string);
+		*start = tmp;
+		*end = tmp;
+		return;
+	}
+	*c = '\0';
+	*start = atoi(string);
+	*end = atoi((c+1));
+}
 
 long config_checkval(char *value, unsigned short flags) {
 	char *text;
@@ -2967,7 +2981,8 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	char	    copy[256];
 	char	    *ip;
 	char	    *port;
-	int	    iport;
+	int	    start, end, iport;
+	int tmpflags =0;
 	unsigned char	isnew = 0;
 
 	if (!ce->ce_vardata)
@@ -2990,31 +3005,12 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	{
 		return -1;
 	}
-	iport = atol(port);
-	if ((iport < 0) || (iport > 65535))
+	port_range(port, &start, &end);
+	if ((start < 0) || (start > 65535) || (end < 0) || (end > 65535))
 	{
 		return -1;
 	}
-	if (!(listen = Find_listen(ip, iport)))
-	{
-		listen = MyMallocEx(sizeof(ConfigItem_listen));
-		listen->ip = strdup(ip);
-		listen->port = iport;
-		isnew = 1;
-	}
-	else
-	{
-		isnew = 0;
-	}
-
-	if (listen->options & LISTENER_BOUND)
-	{
-		listen->options = 0;
-		listen->options |= LISTENER_BOUND;
-	}
-	else
-		listen->options = 0;
-
+	end++;
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "options"))
@@ -3022,24 +3018,42 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
 				if ((ofp = config_binary_flags_search(_ListenerFlags, cepp->ce_varname, sizeof(_ListenerFlags)/sizeof(_ListenerFlags[0]))))
-					listen->options |= ofp->flag;
+					tmpflags |= ofp->flag;
 			}
 #ifndef USE_SSL
-			if (listen->options & LISTENER_SSL)
+			if (tmpflags & LISTENER_SSL)
 			{
 				config_status("%s:%i: listen with SSL flag enabled on a non SSL compile",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-						cep->ce_varname);
-				listen->options &= ~LISTENER_SSL;
+					cep->ce_varname);
+				tmpflags &= ~LISTENER_SSL;
 			}
 #endif
 		
 		}
-
 	}
-	if (isnew)
-		AddListItem(listen, conf_listen);
-	listen->flag.temporary = 0;
+
+	for (iport = start; iport < end; iport++)
+	{
+		
+		if (!(listen = Find_listen(ip, iport)))
+		{
+			listen = MyMallocEx(sizeof(ConfigItem_listen));
+			listen->ip = strdup(ip);
+			listen->port = iport;
+			isnew = 1;
+		}
+		else
+			isnew = 0;
+
+		if (listen->options & LISTENER_BOUND)
+			tmpflags |= LISTENER_BOUND;
+
+		listen->options = tmpflags;
+		if (isnew)
+			AddListItem(listen, conf_listen);
+		listen->flag.temporary = 0;
+	}
 	return 1;
 }
 
@@ -3052,7 +3066,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 	char	    copy[256];
 	char	    *ip;
 	char	    *port;
-	int	    iport;
+	int	    start, end;
 	int	    errors = 0;
 
 	if (!ce->ce_vardata)
@@ -3083,12 +3097,30 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return 1;
 	}
-	iport = atol(port);
-	if ((iport < 0) || (iport > 65535))
+	port_range(port, &start, &end);
+	if (start == end)
 	{
-		config_error("%s:%i: listen: illegal port (must be 0..65536)",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return 1;
+		if ((start < 0) || (start > 65535))
+		{
+			config_error("%s:%i: listen: illegal port (must be 0..65535)",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			return 1;
+		}
+	}
+	else 
+	{
+		if (end < start)
+		{
+			config_error("%s:%i: listen: illegal port range end value is less than starting value",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			return 1;
+		}
+		if ((start < 0) || (start > 65535) || (end < 0) || (end > 65535))
+		{
+			config_error("%s:%i: listen: illegal port range values must be between 0 and 65535",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			return 1;
+		}
 	}
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{

@@ -1751,3 +1751,5 @@ seen. gmtime warning still there
   directives were added. Reported by 1of10 (#0000587)
 - Fixed a bug at synch time that could cause more parameters to be sent than should be
 - Fixed a TKL bug where leaving out the reason caused a crash (reported by Ravage)
+- Added the ability to specify port ranges, for example listen *:6660-6669; listens
+  on ports 6660, 6661, ... 6669. Suggested by Krisztian Romek
