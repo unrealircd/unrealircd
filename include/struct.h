@@ -95,6 +95,7 @@ typedef struct _configitem_unknown_ext ConfigItem_unknown_ext;
 typedef struct _configitem_alias ConfigItem_alias;
 typedef struct _configitem_alias_format ConfigItem_alias_format;
 typedef struct _configitem_include ConfigItem_include;
+typedef struct liststruct ListStruct;
 
 typedef struct Watch aWatch;
 typedef struct Client aClient;
@@ -1241,6 +1242,12 @@ struct DSlink {
 		ConfigItem *aconf;
 		char *cp;
 	} value;
+};
+#define AddListItem(item,list) add_ListItem((ListStruct *)item, (ListStruct **)&list)
+#define DelListItem(item,list) del_ListItem((ListStruct *)item, (ListStruct **)&list)
+
+struct liststruct {
+	ListStruct *prev, *next;
 };
 
 /* channel structure */

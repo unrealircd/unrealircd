@@ -511,3 +511,31 @@ void send_listinfo(cptr, name)
 }
 
 #endif
+
+void add_ListItem(ListStruct *item, ListStruct **list) {
+	item->next = *list;
+	item->prev = NULL;
+	if (*list)
+		(*list)->prev = item;
+	*list = item;
+}
+
+ListStruct *del_ListItem(ListStruct *item, ListStruct **list) {
+	ListStruct *l, *ret;
+
+	for (l = *list; *l; l = l->next) {
+		if (l == item) {
+			ret = item->next;
+			if (l->prev)
+				l->prev->next = l->next;
+			else
+				*list = l->next;
+			if (l->next)
+				l->next->prev = l->prev;
+			return ret;
+		}
+	}
+	return NULL;
+}
+		
+	

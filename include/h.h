@@ -121,7 +121,8 @@ aMotd *read_motd(char *filename);
 aMotd *read_rules(char *filename);
 extern struct tm *motd_tm;
 extern Link	*Servers;
-
+void add_ListItem(ListStruct *, ListStruct **);
+ListStruct *del_ListItem(ListStruct *, ListStruct **);
 /* Remmed out for win32 compatibility.. as stated of 467leaf win32 port.. */
 
 extern LoopStruct loop;
