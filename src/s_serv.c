@@ -1412,7 +1412,7 @@ CMD_FUNC(m_netinfo)
 		    me.name, cptr->name, protocol, me.name, UnrealProtocol);
 
 	}
-	ircsprintf(buf, "%X", CLOAK_KEYCRC);
+	ircsprintf(buf, "%lX", CLOAK_KEYCRC);
 	if (strcmp(buf, parv[4]))
 	{
 		sendto_realops

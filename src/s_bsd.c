@@ -543,7 +543,7 @@ void init_sys(void)
 	limit.rlim_cur = limit.rlim_max;	/* make soft limit the max */
 	if (setrlimit(RLIMIT_FD_MAX, &limit) == -1)
 	{
-		(void)fprintf(stderr, "error setting max fd's to %d\n",
+		(void)fprintf(stderr, "error setting max fd's to %ld\n",
 		    limit.rlim_cur);
 		exit(-1);
 	}
@@ -1029,7 +1029,7 @@ void set_sock_opts(int fd, aClient *cptr)
 		else if (opt > 0 && opt != sizeof(readbuf) / 8)
 		{
 			for (*readbuf = '\0'; opt > 0; opt--, s += 3)
-				(void)ircsprintf(s, "%02.2x:", *t++);
+				(void)ircsprintf(s, "%2.2x:", *t++);
 			*s = '\0';
 			sendto_ops("Connection %s using IP opts: (%s)",
 			    get_client_name(cptr, TRUE), readbuf);

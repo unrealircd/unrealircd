@@ -185,13 +185,13 @@ char *hidehost(char *host)
 		 * crc(a.b.c.d.e.f.g)
 		 * crc(a.b.c.d.e.f.g.h)
 		 */
-		sscanf(host, "%x:%x:%x:%x:%x:%x:%x:%x",
+		sscanf(host, "%lx:%lx:%lx:%lx:%lx:%lx:%lx:%lx",
 		         &l[0], &l[1], &l[2], &l[3],
 		         &l[4], &l[5], &l[6], &l[7]);
-		ircsprintf(h3, "%x:%x:%x:%x",
+		ircsprintf(h3, "%lx:%lx:%lx:%lx",
 			l[0], l[1], l[2], l[3]);
 		l[0] = crc32(h3, strlen(h3));
-		ircsprintf(h3, "%x:%x:%x:%x:%x:%x:%x",
+		ircsprintf(h3, "%lx:%lx:%lx:%lx:%lx:%lx:%lx",
 			l[0], l[1], l[2], l[3],
 			l[4], l[5], l[6]);
 		l[1] = crc32(h3, strlen(h3));
@@ -201,7 +201,7 @@ char *hidehost(char *host)
 		        l[i] = ((l[i] + KEY2) ^ KEY) ^ KEY3;
 		        l[i] <<= 2; l[i] >>= 2;
 	        }
-		ircsprintf(cloaked, "%x:%x:%x:IP",
+		ircsprintf(cloaked, "%lx:%lx:%lx:IP",
 			l[2], l[1], l[0]);
 		return cloaked;
 	}
@@ -239,7 +239,7 @@ char *hidehost(char *host)
 #endif
 		l[2] <<= 2; l[2] >>= 2;
 		l[0] <<= 1; l[0] >>= 1;
-		ircsprintf(cloaked, "%X.%X.%X.IP", l[2], l[1], l[0]);
+		ircsprintf(cloaked, "%lX.%lX.%lX.IP", l[2], l[1], l[0]);
 		return cloaked;
 	}
 	else
@@ -261,10 +261,10 @@ char *hidehost(char *host)
 		l[0] >>= 2; 
 		p++;
 		if (*p)
-			sprintf(cloaked, "%s-%X.%s", hidden_host,
+			sprintf(cloaked, "%s-%lX.%s", hidden_host,
 				l[0], p);
 		else
-			sprintf(cloaked, "%s-%X", hidden_host, l[0]);
+			sprintf(cloaked, "%s-%lX", hidden_host, l[0]);
 			
 		return cloaked;
 	}

@@ -1198,3 +1198,4 @@ v- Fixed some bugreport stuff
 - Fixed s_conf.c so a) It uses MyMalloc b) It doesn't cast the return
   from MyMalloc!
 - Clean compile under -Wunused
+- Clean compile under -Wformat
