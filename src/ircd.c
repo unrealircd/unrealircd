@@ -342,7 +342,7 @@ VOIDSIG s_segv()
 	}
 	kill(p, SIGQUIT);
 #else
-	for (i = 0; i < highest_fd && i > 10; i++)
+	for (i = 0; i < highest_fd; i++)
 	{
 		if (closesocket(i) == -1)
 			close(i);
