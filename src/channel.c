@@ -4766,8 +4766,8 @@ CMD_FUNC(m_sjoin)
 	if (ts < 750000)
 		if (ts != 0)
 			sendto_ops
-			    ("Warning! Possible desynch: SJOIN for channel %s has a fishy timestamp (%ld)",
-			    chptr->chname, ts);
+			    ("Warning! Possible desynch: SJOIN for channel %s has a fishy timestamp (%ld) [%s/%s]",
+			    chptr->chname, ts, sptr->name, cptr->name);
 	parabuf[0] = '\0';
 	modebuf[0] = '+';
 	modebuf[1] = '\0';
