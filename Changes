@@ -489,3 +489,4 @@ seen. gmtime warning still there
 - Changed all TStime() to use timeofday - CPU SAVE
 - Removed userload.c & userload.h
 - Added McSkaf's patch for the richedit to be able to support reverse codes
+- Fixed the problems with 100% cpu, hopefully

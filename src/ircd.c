@@ -1367,7 +1367,7 @@ void SocketLoop(void *dummy)
 		}
 		{
 			static TS lasttime = 0;
-			if ((lasttime + (lifesux + 1) * 2) < timeofday)
+			if ((lasttime + (lifesux + 1) * 2) < (timeofday = (time(NULL) + TSoffset)))
 			{
 				read_message(delay, NULL);	/*  check everything */
 				lasttime = timeofday;
