@@ -448,6 +448,7 @@ extern long SNO_VHOST;
 extern long SNO_EYES;
 extern long SNO_TKL;
 extern long SNO_NICKCHANGE;
+extern long SNO_FNICKCHANGE;
 extern long SNO_QLINE;
 extern long SNO_SNOTICE;
 
@@ -653,3 +654,4 @@ extern Spamfilter *unreal_buildspamfilter(char *s);
 extern int dospamfilter(aClient *sptr, char *str, int type);
 extern char *our_strcasestr(char *haystack, char *needle);
 extern int spamfilter_getconftargets(char *s);
+extern void remove_oper_snomasks(aClient *sptr);

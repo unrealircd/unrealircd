@@ -2811,3 +2811,7 @@ seen. gmtime warning still there
   On '/rehash' we reload everything already so the '-all' option was useless anyway.
   Reported by fez (#0001516).
 - Made blocked dcc notices (sent to umode +v) global, suggested by neothematrix (#1513).
+- [internal] cleaned up snomask removal after deoper, now remove_oper_snomasks() is
+  called which might look a bit ugly, but is better than before (scattered on 3 places).
+- Added snomasks 'N' which allows you to see nick changes of clients on other servers,
+  requested by several people (#0001323).

@@ -87,6 +87,7 @@ long SNO_VHOST = 0L;
 long SNO_EYES = 0L;
 long SNO_TKL = 0L;
 long SNO_NICKCHANGE = 0L;
+long SNO_FNICKCHANGE = 0L;
 long SNO_QLINE = 0L;
 long SNO_SNOTICE = 0L;
 
@@ -153,6 +154,7 @@ void	umode_init(void)
 	SnomaskAdd(NULL, 'e', umode_allow_opers, &SNO_EYES);
 	SnomaskAdd(NULL, 'G', umode_allow_opers, &SNO_TKL);
 	SnomaskAdd(NULL, 'n', umode_allow_opers, &SNO_NICKCHANGE);
+	SnomaskAdd(NULL, 'N', umode_allow_opers, &SNO_FNICKCHANGE);
 	SnomaskAdd(NULL, 'q', umode_allow_opers, &SNO_QLINE);
 	SnomaskAdd(NULL, 's', umode_allow_all, &SNO_SNOTICE);
 }
@@ -465,4 +467,19 @@ int umode_delete(char ch, long val)
 		}
 	}
 	return -1;
+}
+
+/* Simply non-perfect function to remove all oper-snomasks, 
+ * it's at least better than manually doing a .. &= ~SNO_BLAH everywhere.
+ */
+void remove_oper_snomasks(aClient *sptr)
+{
+int i;
+	for (i = 0; i <= Snomask_highest; i++)
+	{
+		if (!Snomask_Table[i].flag)
+			continue;
+		if (Snomask_Table[i].allowed == umode_allow_opers)
+			sptr->user->snomask &= ~Snomask_Table[i].mode;
+	}
 }

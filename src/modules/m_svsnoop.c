@@ -118,8 +118,7 @@ int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[])
                                         acptr->umodes &=
                                             ~(UMODE_KIX | UMODE_DEAF | UMODE_HIDEOPER);
                                         acptr->oflag = 0;
-                                        acptr->user->snomask &= ~(SNO_CLIENT|SNO_FLOOD|SNO_FCLIENT|
-                                                SNO_JUNK|SNO_TKL|SNO_EYES|SNO_VHOST|SNO_NICKCHANGE|SNO_QLINE);
+                                        remove_oper_snomasks(acptr);
 					RunHook2(HOOKTYPE_LOCAL_OPER, acptr, 0);
                                 }
                         }
