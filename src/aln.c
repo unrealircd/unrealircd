@@ -213,13 +213,13 @@ aClient *find_server_quickx(char *name, aClient *cptr)
 aClient *find_server_b64_or_real(char *name)
 {
 	Link *lp;
-	int  namebase64;
+	long  namebase64;
 	
 	if (!name)
 		return NULL;
 	
 	namebase64 = base64dec(name);	
-	if (namebase64 < 257)
+	if ((namebase64 < 257) && (namebase64 > 0))
 	{
 		for (lp = servers; lp; lp = lp->next)
 			if (lp->value.cptr->serv->numeric == namebase64)

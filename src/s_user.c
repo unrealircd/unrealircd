@@ -1135,7 +1135,7 @@ int  m_nick(cptr, sptr, parc, parv)
 	    (parc > 7 && (!(serv = (aClient *)find_server_b64_or_real(parv[6], NULL)) ||
 	    serv->from != cptr->from)))
 	{
-		sendto_realops("Cannot find server (%s)", backupbuf);
+		sendto_realops("Cannot find server %s (%s)", parv[6], backupbuf);
 		return 0;
 	}
 	/*

@@ -712,4 +712,7 @@
   that when a fd is closed, we change fds from 4 to 3 etc, in other words,
   we renumber fds. SSL didn't know this and if you would call SSL_set_fd it
   would close the connection/crash. Added SSL_change_fd() to change the FD
-  directly through BIO_set_fd.  
+  directly through BIO_set_fd. 
+- Fixed the masskill bug, hopefully. Was a delimiter/number array bug in
+  find_server_b64_or_real, causing negative base64 to be accepted (bad).
+  value 1-256 will never be able to be in two letters (a server name)
