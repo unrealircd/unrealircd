@@ -553,3 +553,5 @@ seen. gmtime warning still there
   - HOOKTYPE_REHASH sent when a rehash is being done
   Note: if you parse a block in conf_unknown make sure to del_ConfigItem it from the list
   or Unreal will return an unknown directive error for it.
+- Fixed problem with u_int32_t servicesstamps, with SVSMODE and SVS2MODE,
+  found by Andrew Church

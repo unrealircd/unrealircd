@@ -4747,10 +4747,11 @@ int  m_svs2mode(cptr, sptr, parc, parv)
 					  max_global_count = atoi(parv[3]);
 				  break;
 			  case 'd':
-				  if (parv[3] && (isdigit(*parv[3])
-				      || (*parv[3] == '!')))
-					  acptr->user->servicestamp =
-					      TS2ts(parv[3]);
+				  if (parv[3] && (isdigit(*parv[3])))
+				  {
+				  	acptr->user->servicestamp =
+					  	strtoul(parv[3], NULL, 10);
+				  }
 				  break;
 			  case 'i':
 				  if (what == MODE_ADD
@@ -4877,8 +4878,9 @@ int  m_svsmode(cptr, sptr, parc, parv)
 			  case 'd':
 				  if (parv[3] && isdigit(*parv[3]))
 				  {
-					  acptr->user->servicestamp =
-					      atol(parv[3]);
+ 				  	  acptr->user->servicestamp =
+					  	strtoul(parv[3], NULL, 10);
+
 					  break;
 				  }
 			  default:
