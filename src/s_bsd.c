@@ -1654,20 +1654,33 @@ int  read_message(time_t delay, fdlist *listp)
 			
 			if (DoingAuth(cptr))
 			{
-				auth++;
-				Debug((DEBUG_NOTICE, "auth on %x %d", cptr, i));
-				if (cptr->authfd >= 0)
+				int s = TStime() - cptr->firsttime, fail = 0;
+				/* Maybe they should be timed out. -- Syzop. */
+				if ( ((s > IDENT_CONNECT_TIMEOUT) && (cptr->flags & FLAGS_WRAUTH)) ||
+				     (s > IDENT_READ_TIMEOUT))
 				{
-					FD_SET(cptr->authfd, &read_set);
-#ifdef _WIN32
-					FD_SET(cptr->authfd, &excpt_set);
-#endif
-					if (cptr->flags & FLAGS_WRAUTH)
-						FD_SET(cptr->authfd, &write_set);
+					Debug((DEBUG_NOTICE, "ident timed out (cptr %x, %d sec)", cptr, s));
+					ident_failed(cptr);
+				}
+				else
+				{
+					auth++;
+					Debug((DEBUG_NOTICE, "auth on %x %d %d", cptr, i, s));
+					if (cptr->authfd >= 0)
+					{
+						FD_SET(cptr->authfd, &read_set);
+#ifdef _WIN32	
+						FD_SET(cptr->authfd, &excpt_set);
+#endif	
+						if (cptr->flags & FLAGS_WRAUTH)
+							FD_SET(cptr->authfd, &write_set);
+					}
 				}
 			}
-			if (DoingDNS(cptr) || DoingAuth(cptr)
-			    )
+			/* (warning: don't merge the DoingAuth() here with the check
+			 *  above coz ident_failed() might have been called -- Syzop.)
+			 */
+			if (DoingDNS(cptr) || DoingAuth(cptr))
 				continue;
 			if (IsMe(cptr) && IsListening(cptr))
 			{

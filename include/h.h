@@ -569,3 +569,4 @@ extern char trouble_info[1024];
 #define EVENT_DRUGS BASE_VERSION
 extern void rejoin_doparts(aClient *sptr);
 extern void rejoin_dojoinandmode(aClient *sptr);
+extern void ident_failed(aClient *cptr);

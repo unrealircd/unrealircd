@@ -1147,6 +1147,8 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->unknown_flood_amount = 4;
 	i->unknown_flood_bantime = 600;
 	i->oper_snomask = strdup(SNO_DEFOPER);
+	i->ident_read_timeout = 30;
+	i->ident_connect_timeout = 10;
 }
 
 int	init_conf(char *rootconf, int rehash)
@@ -2296,6 +2298,10 @@ void report_dynconf(aClient *sptr)
 			sptr->name, pretty_time_val(AWAY_PERIOD));
 	}
 #endif
+	sendto_one(sptr, ":%s %i %s :ident::connect-timeout: %s", me.name, RPL_TEXT,
+			sptr->name, pretty_time_val(IDENT_CONNECT_TIMEOUT));
+	sendto_one(sptr, ":%s %i %s :ident::read-timeout: %s", me.name, RPL_TEXT,
+			sptr->name, pretty_time_val(IDENT_READ_TIMEOUT));
 	
 }
 
@@ -5213,6 +5219,16 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				tempiConf.network.key2, tempiConf.network.key3);
 			tempiConf.network.keycrc = (long) our_crc32(temp, strlen(temp));
 		}
+		else if (!strcmp(cep->ce_varname, "ident"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "connect-timeout"))
+					tempiConf.ident_connect_timeout = config_checkval(cepp->ce_vardata,CFG_TIME);
+				if (!strcmp(cepp->ce_varname, "read-timeout"))
+					tempiConf.ident_read_timeout = config_checkval(cepp->ce_vardata,CFG_TIME);
+			}
+		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 #ifdef USE_SSL
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
@@ -5675,6 +5691,28 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			config_status("%s:%i: set::scan: WARNING: scanner support has been removed, "
 			    "use BOPM instead: http://www.blitzed.org/bopm/ (*NIX) / http://vulnscan.org/winbopm/ (Windows)",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+		}
+		else if (!strcmp(cep->ce_varname, "ident")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				CheckNull(cepp);
+				if (!strcmp(cepp->ce_varname, "connect-timeout") || !strcmp(cepp->ce_varname, "read-timeout"))
+				{
+					int v = config_checkval(cepp->ce_vardata,CFG_TIME);;
+					if ((v > 60) || (v < 1))
+					{
+						config_error("%s:%i: set::ident::%s value out of range (%d), should be between 1 and 60.",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname, v);
+						errors++;
+						continue;
+					}
+				} else {
+					config_error("%s:%i: unknown directive set::ident::%s",
+						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname);
+					errors++;
+					continue;
+				}
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 #ifdef USE_SSL

@@ -1727,6 +1727,10 @@ set {
   times.</p>
 <p><font class="set">set::throttle::connections &lt;amount&gt;;</font><br>
   How many times a user must connect with the same host to be throttled.</p>
+<p><font class="set">set::ident::connect-timeout &lt;amount&gt;;</font><br>
+  Amount of seconds after which to give up connecting to the ident server (default: 10s).</p>
+<p><font class="set">set::ident::read-timeout &lt;amount&gt;;</font><br>
+  Amount of seconds after which to give up waiting for a reply (default: 30s).</p>
 <p><font class="set">set::anti-flood::unknown-flood-bantime &lt;timevalue&gt;;</font><br>
   Specifies how long an unknown connection flooder is banned for.</p>
  <p><font class="set">set::anti-flood::unknown-flood-amount &lt;amount&gt;;</font><br>

@@ -2157,3 +2157,7 @@ seen. gmtime warning still there
 - IPv6: Fixed unable-to-resolve-bug if both a A/AAAA record and NS/MX/etc records were present
   for the same hostname, reported by Byte (#0000972).
 - Updated flags in /version (and greeting), added 'Z' for zip links support, updated tech doc.
+- Added set::ident::connect-timeout (default 10s) and set::ident::read-timeout (default 30s) to
+  have much more control over ident timeouts, this should also fix connection timeout problems
+  during connecting.
+- Updated example.conf (added throttle block).
