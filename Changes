@@ -2258,3 +2258,4 @@ seen. gmtime warning still there
   just became an oper, 0 if they just -o'ed)
 - Added a system to allow modules to create snomasks using functions SnomaskAdd and SnomaskDel
 - Fixed ban version crash and another read-after-free.
+- Fixed problem with make custommodule and multiple EXLIBS arguments (EXLIBS="-la -lb -lc").
