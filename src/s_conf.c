@@ -1816,7 +1816,17 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			ircstrdup(KLINE_ADDRESS, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "modes-on-connect")) {
-			ircstrdup(CONN_MODES, cep->ce_vardata);
+			if (cep->ce_vardata)
+			{
+				CONN_MODES = (long) set_usermode(cep->ce_vardata);
+				if (CONN_MODES & UMODE_OPER)
+				{
+					config_status("%s:%i set::modes-on-connect contains +o, deleting",
+						cep->ce_fileptr->cf_filename,
+						cep->ce_varlinenum);
+					CONN_MODES &= ~UMODE_OPER;
+				}
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "auto-join")) {
 			ircstrdup(AUTO_JOIN_CHANS, cep->ce_vardata);

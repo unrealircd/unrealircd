@@ -67,7 +67,7 @@ struct zConfiguration {
 	int  host_retries;
 	char *name_server;
 	char *kline_address;
-	char *conn_modes;
+	long conn_modes;
 	char *include;
 	char *domainname;
 	char *domainmask;	/* '*' + domainname */
