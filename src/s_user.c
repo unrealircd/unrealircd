@@ -871,9 +871,11 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		(void)m_lusers(sptr, sptr, 1, parv);
 		update_load();
 		(void)m_motd(sptr, sptr, 1, parv);
+#ifdef EXPERIMENTAL
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** \2NOTE:\2 This server (%s) is running experimental IRC server software. If you find any bugs or problems, please mail unreal-dev@lists.sourceforge.net about it",
 		    me.name, sptr->name, me.name);
+#endif
 #ifdef HOSTILENAME
 		/*
 		 * Now send a numeric to the user telling them what, if
