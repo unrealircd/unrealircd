@@ -72,6 +72,7 @@ void	del_Hook(int hooktype, int (*func)());
 #define RunHook(hooktype,x) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*global_i->func)(x)
 #define RunHook2(hooktype,x,y) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*global_i->func)(x,y)
 
-#define HOOKTYPE_LOCAL_QUIT		1
-#define HOOKTYPE_LOCAL_NICKCHANGE 	2
+#define HOOKTYPE_LOCAL_QUIT	1
+#define HOOKTYPE_LOCAL_NICKCHANGE 2
+#define HOOKTYPE_LOCAL_CONNECT 3
 

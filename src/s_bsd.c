@@ -1784,7 +1784,7 @@ int  read_message(delay, listp)
 		nfds = select(FD_SETSIZE, &read_set, &write_set, &excpt_set, &wait);
 # endif
 #endif
-	    if (nfds == -1 && (ERRNO == P_EINTR) || (ERRNO == P_ENOTSOCK))
+	    if (nfds == -1 && ((ERRNO == P_EINTR) || (ERRNO == P_ENOTSOCK)))
 			return -1;
 		else if (nfds >= 0)
 			break;
