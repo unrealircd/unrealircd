@@ -23,11 +23,11 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2 </font><br>
   <b>Aktuelle Version:</b> 3.2 *CVS*<br>
-  <b>Letztes Dokumentation Update:</b>  2004-05-28</div>
+  <b>Letztes Dokumentation Update:</b>   2004-06-10</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
 <b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
-<b>Deutsche Übersetzung:</b> Stylus740<br>
+<b>Deutsche Übersetzung:</b> Stylus740 (irc.smart-irc.net)<br>
 <p>Aufgrund des wachsenden Umfangs der Dokumentation von UnrealIRCd3.2 wurde das
 Dokument auf HTML umgestellt, um leichter navigieren und besser
 Querverweisen folgen zu können. Um diese Dokumentation zu lesen, wird einer der
@@ -91,16 +91,17 @@ Konfigurationsdatei</a><br>
   ---4.23. <a href="#denyversionblock">Deny Version Block -=- (V:Line)</a><br>
   ---4.24. <a href="#denylinkblock">Deny Link Block -=- (D:Line / d:Line)</a><br>
   ---4.25. <a href="#denychannelblock">Deny Channel Block -=- (chrestrict.conf)</a><br>
-  ---4.26. <a href="#allowchannelblock">Allow Channel Block</a><br>
-  ---4.27. <a href="#vhostblock">Vhost Block -=- (vhost.conf)</a><br>
-  ---4.28. <a href="#badwordsblock">Badword Block -=- (badwords.conf)</a><br>
-  ---4.29. <a href="#ulinesblock">Uline Block -=- (U:Line)</a><br>
-  ---4.30. <a href="#linkblock">Link Block -=- (C/N/H:Lines)</a><br>
-  ---4.31. <a href="#aliasblock">Alias Block</a><br>
-  ---4.32. <a href="#helpblock">Help Block<br>
-</a>---4.33. <a href="#officialchannels"> Official Channels Block</a><br>
----4.34. <a href="#spamfilter"> Spamfilter Block</a><br>
----4.35. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
+  ---4.26. <a href="#allowchannelblock">Allow Channel Block<br>
+</a>---4.27. <a href="#allowdccblock"> Allow DCC Block</a><br>
+---4.28. <a href="#vhostblock">Vhost Block -=- (vhost.conf)</a><br>
+---4.29. <a href="#badwordsblock">Badword Block -=- (badwords.conf)</a><br>
+---4.30. <a href="#ulinesblock">Uline Block -=- (U:Line)</a><br>
+---4.31. <a href="#linkblock">Link Block -=- (C/N/H:Lines)</a><br>
+---4.32. <a href="#aliasblock">Alias Block</a><br>
+---4.33. <a href="#helpblock">Help Block<br>
+</a>---4.34. <a href="#officialchannels"> Official Channels Block</a><br>
+---4.35. <a href="#spamfilter"> Spamfilter Block</a><br>
+---4.36. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
   5. <a href="#addtlfiles">Additional Files</a><br>
   6. <a href="#userchannelmodes">User & Channel Modi</a><br>
   7. <a href="#useropercommands">User & Oper Befehlsliste<br>
@@ -692,6 +693,12 @@ Gegenwärtig gibt es folgende Typen:
     <td width="54" valign="top">quiet</td>
     <td width="758">User, auf die dieser Bann gesetzt ist, können joinen, aber
       nicht schreiben, solange sie nicht +v oder höher haben. Beispiel: <i> ~q:*!*@blah.blah.com</i></td>
+  </tr>
+  <tr>
+    <td width="25" valign="top">~n</td>
+    <td width="54" valign="top">nickchange</td>
+    <td width="758">User, auf die dieser Bann gesetzt ist, können ihre Nicks
+      nicht ändern, solange sie nicht +v oder höher haben. Beispiel:<i> ~n:*!*@*.aol.com</i></td>
   </tr>
   <tr>
     <td width="25" valign="top">~c</td>
@@ -1976,6 +1983,7 @@ bekannt als dccdeny.conf)</font>
 <pre>deny dcc {
 	filename &lt;file-to-block&gt;;
 	reason &lt;reason-for-ban&gt;;
+	soft [yes|no]
 };</pre>
 <p>Im &quot;deny dcc Block&quot; können Dateinamen angegeben werden, die nicht
 per DCC über den Server versandt werden dürfen. Das kann helfen, die
@@ -1983,10 +1991,15 @@ Verteilung von Viren und Trojanern zu verhindern. </p>
 <p>Der Parameter <b>deny::filename</b> definiert eine Maske von Dateinamen,
 deren Versand blockiert wird, Wildcards sind hier möglich. <b> deny::reason</b>
 legt den anzuzeigenden Grund für die Sperrung der Datei fest.</p>
+<p>Ferner gibt es eine <b>deny::soft </b>Option. Wenn diese auf&nbsp; 'yes'
+gesetzt ist, ist dcc so lange gesperrt, bis der User es explizit via /DCCALLOW +nickname-der-versucht-zu-senden
+erlaubt.<br>
+Siehe dccallow.conf für ein gutes Konfigurationsbeispiel zu dccallow.</p>
 <p>Beispiel:
 <pre>deny dcc {
-	filename virus.exe;
-	reason &quot;Das ist ein Virus&quot;;
+	filename *.exe;
+	reason &quot;Ausführbare Datei&quot;;
+	soft yes;
 };</pre></div>
 <p></p>
 <p><font class="block_section"><a name="denyversionblock">4.23 - </a> </font><a name="denyversionblock"><font class="block_name">Deny Version Block</font>
@@ -2119,7 +2132,31 @@ joinen dürfen.</p>
 	channel &quot;#smart_*&quot;;
 };</pre>
 </div>
-<p><font class="block_section"><a name="vhostblock">4.27 - </a> </font><a name="vhostblock"><font class="block_name">Vhost Block</font>
+<p><a name="allowdccblock"><font class="block_name">4.27 - Allow DCC Block</font>
+</a>
+   <font class="block_optional">OPTIONAL </font><font class="block_old">(Früher
+nicht vorhanden)</font>
+</p><div class="desc">
+<p>Syntax:
+<pre>allow dcc {
+	filename &quot;&lt;filename-mask&gt;&quot;;
+	soft [yes|no];
+};</pre>
+<p>Mit dem &quot;allow dcc Block&quot; kann man Ausnahmen zum deny dcc Block
+festlegen, wobei Wildcards erlaubt sind. Wenn <b>allow dcc::soft</b> auf 'yes'
+gesetzt ist, gilt die 'soft dcc Bann Liste', wenn 'no' eingestellt ist, gelten
+normale ('harte') dcc Banns.</p>
+<p>Beispiel:<br>
+<pre>allow dcc {
+	filename &quot;*.jpg&quot;; /* Bilder sind üblicherweise sicher */
+	soft yes;
+};</pre>
+<pre>allow channel {
+	channel &quot;#smart_*&quot;;
+};</pre>
+</div>
+
+<p><font class="block_section"><a name="vhostblock">4.28 - </a> </font><a name="vhostblock"><font class="block_name">Vhost Block</font>
 </a>
    <font class="block_optional">OPTIONAL</font>  <font class="block_old">(Früher
 bekannt als vhosts.conf)</font>
@@ -2161,7 +2198,7 @@ im Oper Block bei &quot;oper::svhost&quot;.</p>
 	swhois &quot;Ich bin wichtig ;)&quot;;
 };</pre>
 </div>
-<p><font class="block_section"><a name="badwordsblock">4.28 - </a> </font><a name="badwordsblock"><font class="block_name">Badword Block</font>
+<p><font class="block_section"><a name="badwordsblock">4.29 - </a> </font><a name="badwordsblock"><font class="block_name">Badword Block</font>
 </a>
    <font class="block_optional">OPTIONAL</font>  <font class="block_old">(Früher
 bekannt als badwords.*.conf)</font>
@@ -2192,7 +2229,7 @@ Default angenommen.</p>
 	replace shoot;
 };</pre>
 </div>
-<p><font class="block_section"><a name="ulinesblock">4.29 - </a> </font><a name="ulinesblock"><font class="block_name">ULines Block</font>
+<p><font class="block_section"><a name="ulinesblock">4.30 - </a> </font><a name="ulinesblock"><font class="block_name">ULines Block</font>
 </a>
    <font class="block_optional">OPTIONAL</font>  <font class="block_old">(Früher
 bekannt als U:Line)</font><div class="desc">
@@ -2212,7 +2249,7 @@ Eintrag steht für den Namen des Servers mit einem besonderen Zweck.</p>
 	stats.mynetwork.com;
 };</pre>
 </div>
-<p><font class="block_section"><a name="linkblock">4.30 - </a> </font><a name="linkblock"><font class="block_name">Link Block</font>
+<p><font class="block_section"><a name="linkblock">4.31 - </a> </font><a name="linkblock"><font class="block_name">Link Block</font>
 </a>
    <font class="block_optional">OPTIONAL</font>  <font class="block_old">(Früher
 bekannt als C/N/H:Lines)</font>
@@ -2336,7 +2373,7 @@ nicht benötigt.<br>
 	};
 };</pre>
 </div>
-<p><font class="block_section"><a name="aliasblock">4.31 - </a> </font><a name="aliasblock"><font class="block_name">Alias Block</font>
+<p><font class="block_section"><a name="aliasblock">4.32 - </a> </font><a name="aliasblock"><font class="block_name">Alias Block</font>
 </a>
    <font class="block_optional">OPTIONAL </font><font class="block_old">(Früher
 nicht vorhanden)</font>
@@ -2413,7 +2450,7 @@ services;<br>
 };</font></p>
 </font>
 </div>
-<p><font class="block_section"><a name="helpblock">4.32 - </a> </font><a name="helpblock"><font class="block_name">Help Block</font>
+<p><font class="block_section"><a name="helpblock">4.33 - </a> </font><a name="helpblock"><font class="block_name">Help Block</font>
 </a>
    <font class="block_optional">OPTIONAL </font><font class="block_old">(Früher
 nicht vorhanden)</font>
@@ -2435,7 +2472,7 @@ globale Hilfe Übersicht).&nbsp; Die Einträge für den &quot;help Block&quot;
 sind der Text, der später dem User nach der Eingabe von &quot;/helpop&quot;
 angezeigt werden.</p>
 </div>
-<p><font class="block_section"><a name="officialchannels">4.33 - Offizielle
+<p><font class="block_section"><a name="officialchannels">4.34 - Offizielle
 Channels Block</a></font>
    <font class="block_optional">OPTIONAL </font><font class="block_old">(Früher
 nicht vorhanden)</font>
@@ -2453,7 +2490,7 @@ wird nur angezeigt, wenn der Channel 0 User hat.</p>
 	"#Main" { topic "The main channel"; };<br>
 };</font></p>
 </div>
-<p><font class="block_section"><a name="spamfilter">4.34 - Spamfilter Block</a></font><font class="block_optional">
+<p><font class="block_section"><a name="spamfilter">4.35 - Spamfilter Block</a></font><font class="block_optional">
 OPTIONAL </font><font class="block_old">(Früher
 nicht vorhanden)</font>
 </p><div class="desc">
@@ -2500,7 +2537,7 @@ spamfilter {<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; reason &quot;Kein Spam erlaubt&quot;<br>
 };<br>
 </font></div>
-<p><font class="block_section"><a name="setblock">4.35 - </a> </font><a name="setblock"><font class="block_name">Set Block</font>
+<p><font class="block_section"><a name="setblock">4.36 - </a> </font><a name="setblock"><font class="block_name">Set Block</font>
 </a> <font class="block_required">ERFORDERLICH</font> <font class="block_old">(Früher
 bekannt als unrealircd.conf/networks file)</font>
 </p><div class="desc">
@@ -2512,8 +2549,7 @@ eine &quot;networks&quot; Datei zu verwenden.</p>
 <p>Wenn nämlich der Server in ein Netzwerk eingebunden ist, werden
 wahrscheinlich überall die selben &quot;Set&quot; Einstellungen verwendet, so
 dass es mehr Sinn macht, eine &quot;network&quot; Datei zu verwenden, die mit
-der <b>include::</b> Anweisung eingebunden wird. Zum Einbinden von Files siehe
-auch Abschnitt <a href="#includedirective">4.9</a>. Weiter unten werden sämtliche
+der <a href="#includedirective">include</a> Anweisung eingebunden wird. Weiter unten werden sämtliche
 möglichen &quot;Set&quot; Anweisungen im Einzelnen beschrieben.</p>
 <p>In dieser Dokumentation werden Einstellungen / Anweisungen im <b> &lt;block-name&gt;::&lt;block-directive&gt;</b>
 Format angegeben. Dieses Format kann jedoch <b>NICHT</b> so in die
@@ -2580,7 +2616,14 @@ Die Channel-Modi, die User wählen können werden auf die hier angegebenen Modi
 eingeschränkt. (kein + oder - angeben!).<br>
 Beispielsweise kann man&nbsp; +G in 'modes-on-join' setzen und G in 'restrict-channelmodes',
 wodurch erreicht wird, dass sämtliche (neuen) Channels&nbsp; +G erhalten, aber kein -G
-eingestellt werden kann.</p>
+eingestellt werden kann.<br>
+ACHTUNG: Es kann weiterhin möglich sein, diese Channel Modi durch Services
+über MLOCK zu benutzen. Wir können dagegen leider nichts tun, es obliegt den
+Codern der Services, ebenfalls ein restrict-channelmodes feature zu
+implementieren.</p>
+<p><b>set::restrict-extendedbans &lt;types|*&gt;</b><br>
+Den Usern ist nicht gestattet, irgendwelche erweiterten Banns ("*") zu benutzen
+oder es werden nur bestimmte Typen verboten (z.B.:&quot;qc&quot;).</p>
 <p><font class="set">set::auto-join &lt;channels&gt;;</font><br>
 Der oder die Channel(s), in den/die User beim Connect automatisch geforwardet
 werden. Soll mehr als ein Channel angegeben werden, so sind diese durch Kommata
@@ -2626,6 +2669,8 @@ Definiert eine Liste von Stats Flags, die nur von Opers benutzt werden können.
 In dieser Syntax dürfen nur <b>lange Operflags</b> angegeben wwerden.</p>
 <p><font class="set">set::maxchannelsperuser &lt;amount-of-channels&gt;;</font><br>
 Einstellung, in wie vielen Channels ein User gleichzeitig sein darf.</p>
+<p><b>set::maxdccallow &lt;amount-of-entries&gt;;</b><br>
+Legt fest, wie viele Einträge ein User in seiner DCCALLOW Liste haben kann.</p>
 <p><font class="set">set::channel-command-prefix &lt;command-prefixes&gt;;<br>
 </font>Stellt das Vorzeichen für Services in &quot;channel Befehlen&quot; ein.
 Nachrichten, die mit einem dieser Zeichen beginnen, werden auch noch gesendet,
