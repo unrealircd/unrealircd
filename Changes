@@ -2979,3 +2979,5 @@ seen. gmtime warning still there
   (#0001586). Ex: set { spamfilter { except "#spamreport,#help"; }; };
 - Fixed a zero-terminate bug in remote includes: urls with '?' in it could
   cause a crash, reported by Joolz (#0001587).
+- Made numerics 518-520 a bit more clear by mentioning the channelname in it.
+  Suggested by Zell (#0001589).
