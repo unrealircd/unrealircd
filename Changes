@@ -482,3 +482,4 @@
 - NS introduction in sendto_serv_butone_token
 - Fixed Q:lined nick NickServ from <unregistered> on Nickname Server message
 - Fixed a problem in synch using acptr->name as info line
+- Introduced NS in SQLINE..

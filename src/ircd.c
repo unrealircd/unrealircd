@@ -649,6 +649,8 @@ extern time_t check_pings(time_t currenttime, int check_kills)
 	return (oldest);
 }
 
+
+
 /*
 ** bad_command
 **	This is called when the commandline is not acceptable.
@@ -1097,10 +1099,9 @@ int  InitwIRCD(argc, argv)
 #ifdef SOCKSPORT
 	init_socks(&me);
 #endif
-
 	check_class();
 	write_pidfile();
-
+	
 	Debug((DEBUG_NOTICE, "Server ready..."));
 #ifdef USE_SYSLOG
 	syslog(LOG_NOTICE, "Server Ready");
@@ -1113,6 +1114,7 @@ int  InitwIRCD(argc, argv)
 #ifdef _WIN32
 	return 1;
 }
+
 
 void SocketLoop(void *dummy)
 {

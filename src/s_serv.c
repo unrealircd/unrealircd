@@ -1405,19 +1405,28 @@ int  m_server_estab(cptr)
 	 */
 	{
 		aSqlineItem *tmp;
-
+		char	*ns = NULL;
+		
+		if (me.serv->numeric)
+			ns = base64enc(me.serv->numeric);
+		else
+			ns = NULL;
 		
 		for (tmp = sqline; tmp; tmp = tmp->next)
 		{
 			if (tmp->status != CONF_ILLEGAL)
 				if (tmp->reason)
-					sendto_one(cptr, ":%s %s %s :%s",
-					    me.name,
+					sendto_one(cptr, "%s%s %s %s :%s",
+					    ns ? "@" : ":",
+					    ns ? ns : me.name,
 					    (IsToken(cptr) ? TOK_SQLINE :
 					    MSG_SQLINE), tmp->sqline,
 					    tmp->reason);
 				else
-					sendto_one(cptr, ":%s %s %s", me.name,
+					sendto_one(cptr, "%s%s %s %s",
+					    ns ? "@" : ":",
+					    ns ? ns : me.name,
+					    me.name,
 					    (IsToken(cptr) ? TOK_SQLINE :
 					    MSG_SQLINE), tmp->sqline);
 		}
