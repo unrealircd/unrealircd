@@ -4791,7 +4791,11 @@ CMD_FUNC(m_sjoin)
 
 		}
 		/* remove bans */
+		/* reset the buffers */
+		modebuf[0] = '-';
+		modebuf[1] = '\0';
 		parabuf[0] = '\0';
+		b = 1;
 		for (ban = chptr->banlist; ban; ban = ban->next)
 		{
 			Addit('b', ban->banstr);
@@ -4800,7 +4804,6 @@ CMD_FUNC(m_sjoin)
 		{
 			Addit('e', ban->banstr);
 		}
-		b = 1;
 		for (lp = chptr->members; lp; lp = lp->next)
 		{
 			lp2 = find_membership_link(lp->cptr->user->channel, chptr);
