@@ -413,7 +413,7 @@
 ** 3.2.2 release **
 - Fixed a typo in the makefile for USERIP
 - Made the WATCH command work for WebTV users (#0002121) suggested by White_Magic.
-- Some text updates... docs: now 3.2.2-CVS, lso got rid of double version to avoid
+- Some text updates... docs: now 3.2.2-CVS, also got rid of double version to avoid
   confusion. credits: fixed typo.
 - Added updated auspice.conf from Rocko since previous one was outdated (#0002147).
 - Recoded the config parsing code 
@@ -732,3 +732,4 @@
 - Made spamfilter 'u' also check nickchanges, reported by Gilou (#0002251).
 - Updated doc/technical/token.txt, reported by webfox (#0002373).
 - NickChars: Added 'romanian', supplied by crazytoon.
+- Added 3.2.3 release notes (expected to be changed later on).
