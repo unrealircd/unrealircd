@@ -428,3 +428,4 @@
 - Added OpenBSD 2.x support, thanks to noriko for donating the development shell
 - Added so stuff like Lost connection to, (report_error) only goes to realops
 - Added some more descriptive error messages
+- Added doc/crypto.doc describing the encrypted irc protocol
