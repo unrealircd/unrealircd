@@ -620,3 +620,90 @@ Fixed OPEROVERRIDE_VERIFY Bug
 ===================================
 
 *** Unreal3.1.4 Released ***
+
+[ Unreal 3.1.5 ]
+
+------------------------------------------
+We begin this release with a stupid
+bug fix. Yes, I severely broke userhost.
+I'm sorry.
+------------------------------------------
+
+Beta1
+----------------------------
+
+Fixed userhost displaying * all the time
+--Luke
+===================================
+
+Fixed broken m_invite, thanks to codemastr
+--Luke
+===================================
+
+Fixed halfop kick priv bug thanks to JK
+--Luke
+===================================
+
+Added Oo flags in version response if
+OPEROVERRIDE is enabled, and OPEROVERRIDE_VERIFY
+enabled.
+--Luke
+===================================
+
+Removed LEAST_IDLE, served no useful purpose
+really.
+--Luke
+===================================
+
+Fixed grammatical error thanks to MorPheus
+--Luke
+===================================
+
+Fixed m_invite, really. I tested it this time :)
+--Luke
+===================================
+
+Changed +A/+O bans to act more sanely
+--Luke
+===================================
+
+Fixed cloaking fun for hosts w/out . (from codemastr)
+--Luke
+===================================
+
+Copied fixes to /helpop from 3.2 reported by FrostByghte
+--Luke
+===================================
+
+Applied weird sts patch for dynamic allocation of nick
+field in topics
+--Luke
+===================================
+
+Fixed broken /who
+--Luke
+===================================
+
+Fixed bug with /whois and +I
+--Luke
+===================================
+
+Fixed exempt propagation bug
+--Luke
+===================================
+
+------------------------------------------------------
+Beta2 Released
+------------------------------------------------------
+
+Fixed m_who bug displaying channels
+when it isn't supposed to, thanks to frozen
+--Luke
+===================================
+
+Fixed issue with server IP addresses being
+shown to normal +s lusers (thanks to MrAllthat)
+--Luke
+===================================
+
+*** Unreal3.1.5 Released ***

@@ -1076,7 +1076,7 @@ int  parse_help(sptr, name, help)
       SND(" This command provides timed Z:Lines. If you match a Z:Line you cannot");
       SND(" connect to ANY server on the IRC network");
       SND(" A time of 0 in the ZLINE makes it permanent (Never Expires).");
-      SND(" In Unreal 3.1.4 you may also specify the time in the format 1d10h15m30s.");  
+      SND(" You may also specify the time in the format 1d10h15m30s.");  
       SND(" IRC Operator only command.");
       SND(" -");
       SND(" Syntax:  GZLINE <user@host mask> <seconds to be banned> :<reason>");

@@ -261,7 +261,7 @@ static int add_exbanid(aClient *cptr, aChannel *chptr, char *banid)
                 return -1;
         }
         
-        for (ban = chptr->banlist; ban; ban = ban->next)
+        for (ban = chptr->exlist; ban; ban = ban->next)
         {
                 /* wtf is this?
                 len += strlen(ban->banstr);
@@ -1739,7 +1739,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 			  if (MyClient(cptr))
 			  {
 				  sendto_one(cptr,
-				      ":%s NOTICE %s :*** You cannot %s %s in %s, they are the channel owner (+q).",
+				      ":%s NOTICE %s :*** You cannot %s %s in %s, (s)he is the channel owner (+q).",
 				      me.name, cptr->name, xxx,
 				      member->value.cptr->name, chptr->chname);
 			  }
@@ -1754,7 +1754,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 			  if (MyClient(cptr))
 			  {
 				  sendto_one(cptr,
-				      ":%s NOTICE %s :*** You cannot %s %s in %s, they are a protected user (+a).",
+				      ":%s NOTICE %s :*** You cannot %s %s in %s, (s)he is a protected user (+a).",
 				      me.name, cptr->name, xxx,
 				      member->value.cptr->name, chptr->chname);
 			  }
@@ -2309,10 +2309,17 @@ static int can_join(cptr, sptr, chptr, key, link, parv)
 		return (ERR_NOHIDING);
 #endif
 
-	if ((IsOper(sptr) && is_banned(cptr, sptr, chptr)
-	    && (chptr->mode.mode & MODE_OPERONLY)))
-		return (ERR_BANNEDFROMCHAN);    /* banned as an ircop at a +O cannot join */
-		
+        /* Admin, Coadmin, Netadmin, and SAdmin can still walk +b in +O */
+	if (IsOper(sptr) && !IsAdmin(sptr) && !IsCoAdmin(sptr) && !IsNetAdmin(sptr)
+            && !IsSAdmin(sptr) && is_banned(cptr, sptr, chptr)
+            && (chptr->mode.mode & MODE_OPERONLY))
+		return (ERR_BANNEDFROMCHAN); 
+
+        /* Only NetAdmin/SAdmin can walk +b in +A */
+	if (IsOper(sptr) && !IsNetAdmin(sptr) && !IsSAdmin(sptr)
+	    && (chptr->mode.mode & MODE_ADMONLY))
+		return (ERR_BANNEDFROMCHAN);
+
 	for (lp = sptr->user->invited; lp; lp = lp->next)
 		if (lp->value.chptr == chptr)
 			return 0;
@@ -3436,6 +3443,18 @@ int  m_kick(cptr, sptr, parc, parv)
 					    me.name, sptr->name, chptr->chname);
 					goto deny;
 				}
+
+				/* I pondered adding && !is_chan_op(who,chptr) in with is_half_op, but that's redundant
+				 * since the previous check would already have sent you to deny.
+				 */
+				if (is_half_op(who,chptr) && is_halfop(sptr,chptr)
+				    && !is_chan_op(sptr,chptr))
+				{
+					sendto_one(sptr,
+					    ":%s NOTICE %s :*** You cannot kick halfops on %s if you are only a halfop",
+		    			    me.name, sptr->name, chptr->chname);
+	    				goto deny;
+				}
 				
 				/* Protected users, Owners, and Services can't get nailed unless they're nailing themselves
 				 * However, owners CAN nail protected users, as they're higher.
@@ -3600,8 +3619,8 @@ int  m_topic(cptr, sptr, parc, parv)
 				if (topiClen > (TOPICLEN))
 					topiClen = TOPICLEN;
 
-				if (nicKlen > (NICKLEN))
-					nicKlen = NICKLEN;
+				if (nicKlen > (NICKLEN+USERLEN+HOSTLEN+4))
+					nicKlen = NICKLEN+USERLEN+HOSTLEN+4;
 
 				chptr->topic = MyMalloc(topiClen + 1);
 				strncpyzt(chptr->topic, topic, topiClen + 1);
@@ -3818,7 +3837,7 @@ int  m_invite(cptr, sptr, parc, parv)
 	 */
 	
 	/* Yes, it's crack induced. This checks if we should even bother going further */
-	if (!(MyConnect(acptr) && chptr && sptr->user &&
+	if (!(chptr && sptr->user &&
 	    (is_chan_op(sptr,chptr) || IsULine(sptr)
 #ifndef NO_OPEROVERRIDE
 	     || IsOper(sptr)
@@ -3826,62 +3845,65 @@ int  m_invite(cptr, sptr, parc, parv)
 	    )))
 	       return 0;
 
-	if (is_banned(acptr, sptr, chptr))
-	{
-		if (over)
+	if (over) {
+		if (is_banned(acptr, sptr, chptr))
+		{
 			sendto_umode(UMODE_EYES,
 			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +b).",
 			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-	}
-	else if (chptr->mode.mode & MODE_INVITEONLY)
-	{
-		if (over)
+		}
+		else if (chptr->mode.mode & MODE_INVITEONLY)
+		{
 			sendto_umode(UMODE_EYES,
 			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +i).",
 			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-	}
-	else if (chptr->mode.limit)
-	{
-		if (over)
+		}
+		else if (chptr->mode.limit)
+		{
 			sendto_umode(UMODE_EYES,
 			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +l).",
 			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-	}
-	else if (chptr->mode.mode & MODE_RGSTRONLY)
-	{
-		if (over)
+		}
+		else if (chptr->mode.mode & MODE_RGSTRONLY)
+		{
 			sendto_umode(UMODE_EYES,
 			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +R).",
 			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-	}
-	else if (*chptr->mode.key)
-	{
-		if (over)
+		}
+		else if (*chptr->mode.key)
+		{
 			sendto_umode(UMODE_EYES,
 			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +k).",
 			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-	}
+		}
 #ifdef OPEROVERRIDE_VERIFY
-	else if (chptr->mode.mode & MODE_SECRET || chptr->mode.mode & MODE_PRIVATE)
-	       over = -1;	
+		else if (chptr->mode.mode & MODE_SECRET || chptr->mode.mode & MODE_PRIVATE)
+		{
+			sendto_umode(UMODE_EYES,
+			  "*** OperOverride -- %s (%s@%s) invited him/herself into %s (potentially overriding +s or +p).",
+			  sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+ 			over = -1;
+		}
 #endif
-	else
-		return 0;
+		else
+			return 0;
+	}
 	
 #ifdef ENABLE_INVISOPER
 	if (over == 1 && !IsHiding(sptr))
 #else
-	if (over == 1)
+	if (over == 1 && MyConnect(acptr))
 #endif
 		sendto_channelops_butone(NULL, &me, chptr,
 		  ":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
 	  	  me.name, chptr->chname, sptr->name);
-	else if (over == 0)
+	else if (over == 0 && MyConnect(sptr))
 		sendto_channelops_butone(NULL, &me, chptr,
 	    	  ":%s NOTICE @%s :%s invited %s into the channel.",
 		  me.name, chptr->chname, sptr->name, acptr->name);
- 
-	add_invite(acptr, chptr);	
+
+        if (MyConnect(acptr))
+		add_invite(acptr, chptr);	
 	
 	sendto_prefix_one(acptr, sptr, ":%s INVITE %s :%s", parv[0],
 	    acptr->name, ((chptr) ? (chptr->chname) : parv[2]));
@@ -4831,6 +4853,22 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 {
                         Addit('b', ban->banstr);
                 }
+		/* blah code */
+		if (b > 1)
+		{
+                        modebuf[b] = '\0';
+                        sendto_serv_butone_sjoin(cptr,
+                            ":%s MODE %s %s %s %lu",
+                            sptr->name, chptr->chname,
+                            modebuf, parabuf, chptr->creationtime);
+                        sendto_channel_butserv(chptr,
+                            sptr, ":%s MODE %s %s %s",
+                            sptr->name, chptr->chname, modebuf, parabuf);
+                }
+		modebuf[0] = '-';
+		modebuf[1] = '\0';
+		parabuf[0] = '\0';
+		b = 1;
                 for (ban = chptr->exlist; ban; ban = ban->next)
                 {
                         Addit('e', ban->banstr);

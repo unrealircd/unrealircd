@@ -2511,7 +2511,20 @@ static void do_who(sptr, acptr, repchan)
                     !ShowChannel(sptr,repchan))
                         status[i++] = '!';
 #endif
-
+	else if (sptr != acptr)
+#ifdef ENABLE_INVISOPER
+		if (channelwho && IsHiding(acptr) ||
+                    IsInvisible(acptr) && !IsMember(sptr,repchan) ||
+                    IsAuditorium(repchan) && !is_chan_op(acptr,repchan) ||
+                    !ShowChannel(sptr,repchan))
+			return;
+#else
+		if (
+		    IsInvisible(acptr) && !IsMember(sptr,repchan) ||
+                    IsAuditorium(repchan) && !is_chan_op(acptr,repchan) ||
+                    !ShowChannel(sptr,repchan))
+                    	return;
+#endif
 	
 	/* Channel owner */
 /*	if (repchan && is_chanowner(acptr, repchan))
@@ -2569,7 +2582,6 @@ int  m_who(cptr, sptr, parc, parv)
 	aChannel *chptr;
 	char *channame = NULL, *s;
 	int  show_opers = parc > 2 ? (*parv[2] == 'o') : 0;	/* Show OPERS only */
-	int  member;
 
 	show_hosts = 0;
 
@@ -2644,6 +2656,7 @@ int  m_who(cptr, sptr, parc, parv)
 		for (acptr = client; acptr; acptr = acptr->next)
 		{
 			aChannel *ch2ptr = NULL;
+			short g2g = 0;
 			
 			if (!IsPerson(acptr))
 				continue;
@@ -2652,14 +2665,41 @@ int  m_who(cptr, sptr, parc, parv)
 			    && !IsOper(sptr))))
 				continue;
 			
-			/* The other method my have been slightly more efficient,
-			 * but I honestly doubt it. The readability of that code was
-			 * well, insane. --Luke
+			/* *sigh* okay so maybe I should have kept some of that code,
+			 * especially since it seems to be the stuff that determines
+			 * whether or not the user should show in /who.
 			 */
-			if (acptr->user->channel)
-				ch2ptr = acptr->user->channel->value.chptr;
 
-			if (
+#ifndef NO_OPEROVERRIDE
+			if (IsOper(sptr))
+				g2g = 1;
+			else
+#endif
+			for (lp = acptr->user->channel; lp; lp = lp->next)
+			{
+				/* sptr not a member
+				 * not whoing oneself & acptr invisible
+				 */
+				if (!IsMember(sptr, lp->value.chptr) &&
+				    (acptr != sptr && IsInvisible(acptr)))
+				    continue;
+
+				/* sptr is a member OR
+				 * acptr not invisible, and channel not +s/+p
+				 */
+				if (IsMember(sptr, lp->value.chptr) ||
+				    !IsInvisible(acptr) && PubChannel(lp->value.chptr))
+				{
+					g2g = 1;
+					ch2ptr = lp->value.chptr;
+					break;
+				}
+			}
+
+			if (!acptr->user->channel && (acptr == sptr || !IsInvisible(acptr)))
+				g2g = 1;
+
+			if (g2g &&
 			    (!mask ||
 			    match(mask, acptr->name) == 0 ||
 			    match(mask, acptr->user->username) == 0 ||
@@ -2674,6 +2714,7 @@ int  m_who(cptr, sptr, parc, parv)
 				do_who(sptr, acptr, ch2ptr);
 
 		}
+
 	sendto_one(sptr, rpl_str(RPL_ENDOFWHO), me.name, parv[0],
 	    BadPtr(mask) ? "*" : mask);
 	return 0;
@@ -2859,7 +2900,13 @@ int  m_whois(cptr, sptr, parc, parv)
 			mlen = strlen(me.name) + strlen(parv[0]) + 6 +
 			    strlen(name);
 
-			if (!IsServices(acptr) || (IsServices(acptr) && IsNetAdmin(sptr)))
+#ifdef ENABLE_INVISOPER
+			if (!IsServices(acptr) && !IsHiding(acptr) ||
+			    ((IsServices(acptr) || IsHiding(acptr)) && IsNetAdmin(sptr))
+			   )
+#else
+			if (!IsServices(acptr) || IsServices(acptr) && IsNetAdmin(sptr))
+#endif
 			{
 				for (len = 0, *buf = '\0', lp = user->channel; lp;
 				    lp = lp->next)
@@ -4136,8 +4183,8 @@ int  m_userhost(cptr, sptr, parc, parv)
         {
           ircsprintf(response[i], "%s%s=%c%s@%s",
                      acptr->name,
-                     (IsAnOper(acptr) && (((acptr != sptr) && IsOper(sptr) && IsHideOper(acptr)))
-		          || (!IsHideOper(acptr)) || (acptr == sptr)) ? "*" : "",
+                     (IsAnOper(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
+		          ? "*" : "",
                      (acptr->user->away) ? '-' : '+',
                      acptr->user->username,
    			((acptr != sptr) && !IsOper(sptr) 
