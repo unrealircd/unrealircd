@@ -101,6 +101,7 @@ static int	_conf_deny_link		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_deny_channel	(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_deny_version	(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_allow_channel	(ConfigFile *conf, ConfigEntry *ce);
+static int	_conf_allow_dcc		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_loadmodule	(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_log		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_alias		(ConfigFile *conf, ConfigEntry *ce);
@@ -136,6 +137,7 @@ static int	_test_deny		(ConfigFile *conf, ConfigEntry *ce);
 /* static int	_test_deny_channel	(ConfigFile *conf, ConfigEntry *ce); ** TODO? */
 /* static int	_test_deny_version	(ConfigFile *conf, ConfigEntry *ce); ** TODO? */
 static int	_test_allow_channel	(ConfigFile *conf, ConfigEntry *ce);
+static int	_test_allow_dcc		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_loadmodule	(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_log		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_alias		(ConfigFile *conf, ConfigEntry *ce);
@@ -373,6 +375,7 @@ ConfigItem_ban		*conf_ban = NULL;
 ConfigItem_deny_dcc     *conf_deny_dcc = NULL;
 ConfigItem_deny_channel *conf_deny_channel = NULL;
 ConfigItem_allow_channel *conf_allow_channel = NULL;
+ConfigItem_allow_dcc    *conf_allow_dcc = NULL;
 ConfigItem_deny_link	*conf_deny_link = NULL;
 ConfigItem_deny_version *conf_deny_version = NULL;
 ConfigItem_log		*conf_log = NULL;
@@ -1431,6 +1434,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->spamfilter_ban_time = 86400; /* 1d */
 	i->spamfilter_ban_reason = strdup("Spam/advertising");
 	i->spamfilter_virus_help_channel = strdup("#help");
+	i->maxdccallow = 10;
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -1650,6 +1654,7 @@ void	config_rehash()
 	ConfigItem_vhost		*vhost_ptr;
 	ConfigItem_badword		*badword_ptr;
 	ConfigItem_deny_dcc		*deny_dcc_ptr;
+	ConfigItem_allow_dcc		*allow_dcc_ptr;
 	ConfigItem_deny_link		*deny_link_ptr;
 	ConfigItem_deny_channel		*deny_channel_ptr;
 	ConfigItem_allow_channel	*allow_channel_ptr;
@@ -1890,7 +1895,6 @@ void	config_rehash()
 		DelListItem(deny_version_ptr, conf_deny_version);
 		MyFree(deny_version_ptr);
 	}
-
 	for (deny_channel_ptr = conf_deny_channel; deny_channel_ptr; deny_channel_ptr = (ConfigItem_deny_channel *) next)
 	{
 		next = (ListStruct *)deny_channel_ptr->next;
@@ -1907,6 +1911,16 @@ void	config_rehash()
 		ircfree(allow_channel_ptr->channel);
 		DelListItem(allow_channel_ptr, conf_allow_channel);
 		MyFree(allow_channel_ptr);
+	}
+	for (allow_dcc_ptr = conf_allow_dcc; allow_dcc_ptr; allow_dcc_ptr = (ConfigItem_allow_dcc *)next)
+	{
+		next = (ListStruct *)allow_dcc_ptr->next;
+		if (allow_dcc_ptr->flag.type2 == CONF_BAN_TYPE_CONF)
+		{
+			ircfree(allow_dcc_ptr->filename);
+			DelListItem(allow_dcc_ptr, conf_allow_dcc);
+			MyFree(allow_dcc_ptr);
+		}
 	}
 
 	if (conf_drpass)
@@ -3816,9 +3830,9 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 	if (ce->ce_vardata)
 	{
 		if (!strcmp(ce->ce_vardata, "channel"))
-		{
 			return (_conf_allow_channel(conf, ce));
-		}
+		else if (!strcmp(ce->ce_vardata, "dcc"))
+			return (_conf_allow_dcc(conf, ce));
 		else
 		{
 			int value;
@@ -3890,9 +3904,9 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 	if (ce->ce_vardata)
 	{
 		if (!strcmp(ce->ce_vardata, "channel"))
-		{
 			return (_test_allow_channel(conf, ce));
-		}
+		else if (!strcmp(ce->ce_vardata, "dcc"))
+			return (_test_allow_dcc(conf, ce));
 		else
 		{
 			int used = 0;
@@ -4137,6 +4151,62 @@ int	_test_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_varname);
 			errors++;
 		}
+	}
+	return errors;
+}
+
+int	_conf_allow_dcc(ConfigFile *conf, ConfigEntry *ce)
+{
+ConfigItem_allow_dcc *allow = NULL;
+ConfigEntry *cep;
+
+	allow = MyMallocEx(sizeof(ConfigItem_allow_dcc));
+	
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "filename"))
+			ircstrdup(allow->filename, cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "soft"))
+		{
+			int x = config_checkval(cep->ce_vardata,CFG_YESNO);
+			if (x)
+				allow->flag.type = DCCDENY_SOFT;
+		}
+	}
+	AddListItem(allow, conf_allow_dcc);
+	return 1;
+}
+
+int	_test_allow_dcc(ConfigFile *conf, ConfigEntry *ce)
+{
+ConfigEntry *cep;
+int errors = 0, gotfilename=0;
+	
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname || !cep->ce_vardata)
+		{
+			config_error("%s:%i: allow dcc item without contents",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++; continue;
+		}
+		if (!strcmp(cep->ce_varname, "filename"))
+			gotfilename=1;
+		else if (!strcmp(cep->ce_varname, "soft"))
+			;
+		else
+		{
+			config_error("%s:%i: unknown allow dcc directive %s",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, 
+				cep->ce_varname);
+			errors++;
+		}
+	}
+	if (!gotfilename)
+	{
+		config_error("%s:%i: allow dcc: no 'filename' specified.",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
 	}
 	return errors;
 }
@@ -5652,6 +5722,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "maxchannelsperuser")) {
 			tempiConf.maxchannelsperuser = atoi(cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "maxdccallow")) {
+			tempiConf.maxdccallow = atoi(cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "network-name")) {
 			char *tmp;
 			ircstrdup(tempiConf.network.x_ircnetwork, cep->ce_vardata);
@@ -6101,6 +6174,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			requiredstuff.settings.maxchannelsperuser = 1;
+		}
+		else if (!strcmp(cep->ce_varname, "maxdccallow")) {
+			CheckNull(cep);
 		}
 		else if (!strcmp(cep->ce_varname, "network-name")) {
 			CheckNull(cep);
@@ -7051,6 +7127,19 @@ int	_conf_deny_dcc(ConfigFile *conf, ConfigEntry *ce)
 		{
 			ircstrdup(deny->reason, cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "soft"))
+		{
+			int x = config_checkval(cep->ce_vardata,CFG_YESNO);
+			if (x == 1)
+				deny->flag.type = DCCDENY_SOFT;
+		}
+	}
+	if (!deny->reason)
+	{
+		if (deny->flag.type == DCCDENY_HARD)
+			ircstrdup(deny->reason, "Possible infected virus file");
+		else
+			ircstrdup(deny->reason, "Possible executable content");
 	}
 	AddListItem(deny, conf_deny_dcc);
 	return 0;
@@ -7170,6 +7259,8 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 			if (!strcmp(cep->ce_varname, "filename"))
 			;
 			else if (!strcmp(cep->ce_varname, "reason"))
+			;
+			else if (!strcmp(cep->ce_varname, "soft"))
 			;
 			else 
 			{

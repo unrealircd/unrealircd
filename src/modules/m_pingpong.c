@@ -43,8 +43,6 @@
 #include "version.h"
 #endif
 
-int register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost);
-
 DLLFUNC int m_ping(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int m_pong(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int m_nospoof(aClient *cptr, aClient *sptr, int parc, char *parv[]);
@@ -187,7 +185,7 @@ Debug((DEBUG_NOTICE, "NOSPOOF"));
 
 	if (sptr->user && sptr->name[0])
 		return register_user(cptr, sptr, sptr->name,
-		    sptr->user->username, NULL, NULL);
+		    sptr->user->username, NULL, NULL, NULL);
 	return 0;
       temp:
 	/* Homer compatibility */

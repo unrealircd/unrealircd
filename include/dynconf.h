@@ -99,6 +99,7 @@ struct zConfiguration {
 	char *oper_only_stats;
 	OperStat *oper_only_stats_ext;
 	int  maxchannelsperuser;
+	int  maxdccallow;
 	int  anti_spam_quit_message_time;
 	char *egd_path;
 	char *static_quit;
@@ -158,6 +159,7 @@ extern MODVAR aConfiguration iConf;
 #define FLAT_MAP			iConf.flat_map
 #define ALLOW_CHATOPS			iConf.allow_chatops
 #define MAXCHANNELSPERUSER		iConf.maxchannelsperuser
+#define MAXDCCALLOW			iConf.maxdccallow
 #define WEBTV_SUPPORT			iConf.webtv_support
 #define NO_OPER_HIDING			iConf.no_oper_hiding
 #define DONT_RESOLVE			iConf.dont_resolve

@@ -1190,6 +1190,15 @@ Cmdoverride *CmdoverrideAdd(Module *module, char *name, iFP function)
 			module->errorcode = MODERR_NOTFOUND;
 		return NULL;
 	}
+	for (ovr=p->overriders; ovr; ovr=ovr->next)
+	{
+		if ((ovr->owner == module) && (ovr->func == function))
+		{
+			if (module)
+				module->errorcode = MODERR_EXISTS;
+			return NULL;
+		}
+	}
 	ovr = MyMallocEx(sizeof(Cmdoverride));
 	ovr->func = function;
 	ovr->owner = module; /* TODO: module objects */

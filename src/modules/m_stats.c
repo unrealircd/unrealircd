@@ -250,7 +250,7 @@ inline void stats_help(aClient *sptr)
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"f - spamfilter - Send the spamfilter list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"F - denydcc - Send the deny dcc block list");
+		"F - denydcc - Send the deny dcc and allow dcc block lists");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"G - gline - Send the gline list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
@@ -1062,22 +1062,41 @@ int stats_exceptthrottle(aClient *sptr, char *para)
 
 int stats_denydcc(aClient *sptr, char *para)
 {
-	ConfigItem_deny_dcc *tmp;
+	ConfigItem_deny_dcc *denytmp;
+	ConfigItem_allow_dcc *allowtmp;
 	char *filemask, *reason;
 	char a = 0;
 
-	for (tmp = conf_deny_dcc; tmp; tmp = (ConfigItem_deny_dcc *) tmp->next)
+	for (denytmp = conf_deny_dcc; denytmp; denytmp = (ConfigItem_deny_dcc *) denytmp->next)
 	{
-		filemask = BadPtr(tmp->filename) ? "<NULL>" : tmp->filename;
-		reason = BadPtr(tmp->reason) ? "<NULL>" : tmp->reason;
-		if (tmp->flag.type2 == CONF_BAN_TYPE_CONF)
+		filemask = BadPtr(denytmp->filename) ? "<NULL>" : denytmp->filename;
+		reason = BadPtr(denytmp->reason) ? "<NULL>" : denytmp->reason;
+		if (denytmp->flag.type2 == CONF_BAN_TYPE_CONF)
 			a = 'c';
-		if (tmp->flag.type2 == CONF_BAN_TYPE_AKILL)
+		if (denytmp->flag.type2 == CONF_BAN_TYPE_AKILL)
 			a = 's';
-		if (tmp->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
+		if (denytmp->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
 			a = 'o';
-		sendto_one(sptr, ":%s %i %s :%c %s %s", me.name, RPL_TEXT,
-		    sptr->name, a, filemask, reason);
+		/* <d> <s|h> <howadded> <filemask> <reason> */
+		sendto_one(sptr, ":%s %i %s :d %c %c %s %s", me.name, RPL_TEXT,
+			sptr->name,
+			(denytmp->flag.type == DCCDENY_SOFT) ? 's' : 'h',
+			a, filemask, reason);
+	}
+	for (allowtmp = conf_allow_dcc; allowtmp; allowtmp = (ConfigItem_allow_dcc *) allowtmp->next)
+	{
+		filemask = BadPtr(allowtmp->filename) ? "<NULL>" : allowtmp->filename;
+		if (allowtmp->flag.type2 == CONF_BAN_TYPE_CONF)
+			a = 'c';
+		if (allowtmp->flag.type2 == CONF_BAN_TYPE_AKILL)
+			a = 's';
+		if (allowtmp->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
+			a = 'o';
+		/* <a> <s|h> <howadded> <filemask> */
+		sendto_one(sptr, ":%s %i %s :a %c %c %s", me.name, RPL_TEXT,
+			sptr->name,
+			(allowtmp->flag.type == DCCDENY_SOFT) ? 's' : 'h',
+			a, filemask);
 	}
 	return 0;
 }

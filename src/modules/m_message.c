@@ -100,6 +100,7 @@ DLLFUNC int MOD_UNLOAD(m_message)(int module_unload)
 }
 
 static int check_dcc(aClient *sptr, char *target, aClient *targetcli, char *text);
+static int check_dcc_soft(aClient *from, aClient *to, char *text);
 
 /*
 ** m_message (used in m_private() and m_notice())
@@ -220,7 +221,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				}
 			}
 
-			if (MyClient(sptr) && (*parv[2] == 1))
+			if (MyClient(sptr) && !strncasecmp(parv[2], "\001DCC", 4))
 			{
 				ret = check_dcc(sptr, acptr->name, acptr, parv[2]);
 				if (ret < 0)
@@ -228,6 +229,9 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				if (ret == 0)
 					continue;
 			}
+			if (MyClient(acptr) && !strncasecmp(parv[2], "\001DCC", 4) &&
+			    !check_dcc_soft(sptr, acptr, parv[2]))
+				continue;
 
 			if (MyClient(sptr) && check_for_target_limit(sptr, acptr, acptr->name))
 				continue;
@@ -675,6 +679,45 @@ static int is_silenced(aClient *sptr, aClient *acptr)
 	return 0;
 }
 
+/** Make a viewable dcc filename.
+ * This is to protect a bit against tricks like 'flood-it-off-the-buffer'
+ * and color 1,1 etc...
+ */
+char *dcc_displayfile(char *f)
+{
+static char buf[512];
+char *i, *o = buf;
+size_t n = strlen(f);
+
+	if (n < 300)
+	{
+		for (i = f; *i; i++)
+			if (*i < 32)
+				*o++ = '?';
+			else
+				*o++ = *i;
+		*o = '\0';
+		return buf;
+	}
+
+	/* Else, we show it as: [first 256 chars]+"[..TRUNCATED..]"+[last 20 chars] */
+	for (i = f; i < f+256; i++)
+		if (*i < 32)
+			*o++ = '?';
+		else
+			*o++ = *i;
+	strcpy(o, "[..TRUNCATED..]");
+	o += sizeof("[..TRUNCATED..]");
+	for (i = f+n-20; *i; i++)
+		if (*i < 32)
+			*o++ = '?';
+		else
+			*o++ = *i;
+	*o = '\0';
+	return buf;
+	
+}
+
 /** Checks if a DCC is allowed.
  * PARAMETERS:
  * sptr:		the client to check for
@@ -687,24 +730,22 @@ static int is_silenced(aClient *sptr, aClient *acptr)
  * <0:			immediately return with this value (could be FLUSH_BUFFER)
  * HISTORY:
  * F:Line stuff by _Jozeph_ added by Stskeeps with comments.
- * moved and various improvements by Syzop (dcc resume, dccs to channels).
+ * moved and various improvements by Syzop.
  */
 static int check_dcc(aClient *sptr, char *target, aClient *targetcli, char *text)
 {
 char *ctcp;
 ConfigItem_deny_dcc *fl;
-char *end, file[BUFSIZE];
+char *end, realfile[BUFSIZE];
 int size_string, ret;
 
-	if ((*text != 1) || !MyClient(sptr) || IsOper(sptr))
+	if ((*text != 1) || !MyClient(sptr) || IsOper(sptr) || (targetcli && IsAnOper(targetcli)))
 		return 1;
 
 	ctcp = &text[1];
 	/* Most likely a DCC send .. */
 	if (!myncmp(ctcp, "DCC SEND ", 9))
 		ctcp = text + 10;
-	else if (!myncmp(ctcp, "DCC RESUME ", 11))
-		ctcp = text + 12;
 	else
 		return 1; /* something else, allow */
 
@@ -729,31 +770,104 @@ int size_string, ret;
 	if (!size_string || (size_string > (BUFSIZE - 1)))
 		return 1; /* allow */
 
-	strncpy(file, ctcp, size_string);
-	file[size_string] = '\0';
+	strlcpy(realfile, ctcp, size_string+1);
 
-	if ((ret = dospamfilter(sptr, file, SPAMF_DCC, target)) < 0)
+	if ((ret = dospamfilter(sptr, realfile, SPAMF_DCC, target)) < 0)
 		return ret;
 
-	if ((fl = (ConfigItem_deny_dcc *)dcc_isforbidden(sptr, sptr, targetcli, file)))
+	if ((fl = dcc_isforbidden(sptr, targetcli, realfile)))
 	{
+		char *displayfile = dcc_displayfile(realfile);
 		sendto_one(sptr,
 		    ":%s %d %s :*** Cannot DCC SEND file %s to %s (%s)",
 		    me.name, RPL_TEXT,
-		    sptr->name, file,
-		    target,
-		    fl->reason ? fl->reason :
-		    "Possible infected virus file");
+		    sptr->name, displayfile, target, fl->reason);
 		sendto_one(sptr, ":%s NOTICE %s :*** You have been blocked from sending files, reconnect to regain permission to send files",
 			me.name, sptr->name);
 
 		sendto_umode(UMODE_VICTIM,
 		    "%s tried to send forbidden file %s (%s) to %s (is blocked now)",
-		    sptr->name, file, fl->reason, target);
+		    sptr->name, displayfile, fl->reason, target);
 		sendto_serv_butone(NULL, ":%s SMO v :%s tried to send forbidden file %s (%s) to %s (is blocked now)",
-			me.name, sptr->name, file, fl->reason, target);
+			me.name, sptr->name, displayfile, fl->reason, target);
 		sptr->flags |= FLAGS_DCCBLOCK;
 		return 0; /* block */
+	}
+	return 1; /* allowed */
+}
+
+/** Checks if a DCC is allowed by DCCALLOW rules (only SOFT bans are checked).
+ * PARAMETERS:
+ * from:		the sender client (possibly remote)
+ * to:			the target client (always local)
+ * text:		the whole msg
+ * RETURNS:
+ * 1:			allowed
+ * 0:			block
+ */
+static int check_dcc_soft(aClient *from, aClient *to, char *text)
+{
+char *ctcp;
+ConfigItem_deny_dcc *fl;
+char *end, realfile[BUFSIZE];
+int size_string, ret;
+
+	if ((*text != 1) || IsOper(from) || IsOper(to))
+		return 1;
+
+	ctcp = &text[1];
+	/* Most likely a DCC send .. */
+	if (!myncmp(ctcp, "DCC SEND ", 9))
+		ctcp = text + 10;
+	else
+		return 1; /* something else, allow */
+
+	if (*ctcp == '"' && *(ctcp+1))
+		end = index(ctcp+1, '"');
+	else
+		end = index(ctcp, ' ');
+
+	/* check if it was fake.. just pass it along then .. */
+	if (!end || (end < ctcp))
+		return 1; /* allow */
+
+	size_string = (int)(end - ctcp);
+
+	if (!size_string || (size_string > (BUFSIZE - 1)))
+		return 1; /* allow */
+
+	strlcpy(realfile, ctcp, size_string+1);
+
+	if ((fl = dcc_isdiscouraged(from, to, realfile)))
+	{
+		if (!on_dccallow_list(to, from))
+		{
+			char *displayfile = dcc_displayfile(realfile);
+			sendto_one(from,
+				":%s %d %s :*** Cannot DCC SEND file %s to %s (%s)",
+				me.name, RPL_TEXT, from->name, displayfile, to->name, fl->reason);
+			sendnotice(from, "User %s is currently not accepting DCC SENDs with such a filename/filetype from you. "
+				"Your file %s was not sent.", to->name, displayfile);
+			sendnotice(to, "%s (%s@%s) tried to DCC SEND you a file named '%s', the request has been blocked.",
+				to->name, to->user->username, GetHost(to), displayfile);
+			if (!IsDCCNotice(to))
+			{
+				SetDCCNotice(to);
+				sendnotice(to, "Files like these might contain malicious content (viruses, trojans). "
+					"Therefore, you must explicitly allow anyone that tries to send you such files.");
+				sendnotice(to, "If you trust %s, and want him/her to send you this file, you may obtain "
+					"more information on using the dccallow system by typing '/DCCALLOW HELP'", from->name);
+			}
+	
+			/* if (SHOW_ALLDENIEDDCCS) */
+			if (0)
+			{
+				sendto_umode(UMODE_VICTIM,
+					"[DCCALLOW] %s tried to send forbidden file %s (%s) to %s",
+					from->name, displayfile, fl->reason, to->name);
+			}
+			return 0;
+		}
 	}
 
 	return 1; /* allowed */

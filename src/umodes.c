@@ -147,7 +147,7 @@ void	umode_init(void)
 	UmodeAdd(NULL, 'q', UMODE_GLOBAL, umode_allow_opers, &UMODE_KIX);
 	UmodeAdd(NULL, 'B', UMODE_GLOBAL, NULL, &UMODE_BOT);
 	UmodeAdd(NULL, 'z', UMODE_GLOBAL, NULL, &UMODE_SECURE);
-	UmodeAdd(NULL, 'v', UMODE_GLOBAL, NULL, &UMODE_VICTIM);
+	UmodeAdd(NULL, 'v', UMODE_GLOBAL, umode_allow_opers, &UMODE_VICTIM);
 	UmodeAdd(NULL, 'd', UMODE_GLOBAL, NULL, &UMODE_DEAF);
 	UmodeAdd(NULL, 'H', UMODE_GLOBAL, umode_allow_opers, &UMODE_HIDEOPER);
 	UmodeAdd(NULL, 't', UMODE_GLOBAL, NULL, &UMODE_SETHOST);

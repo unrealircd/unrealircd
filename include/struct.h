@@ -100,6 +100,7 @@ typedef struct _configitem_listen ConfigItem_listen;
 typedef struct _configitem_allow ConfigItem_allow;
 typedef struct _configflag_allow ConfigFlag_allow;
 typedef struct _configitem_allow_channel ConfigItem_allow_channel;
+typedef struct _configitem_allow_dcc ConfigItem_allow_dcc;
 typedef struct _configitem_vhost ConfigItem_vhost;
 typedef struct _configitem_except ConfigItem_except;
 typedef struct _configitem_link	ConfigItem_link;
@@ -309,14 +310,14 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #ifdef ZIP_LINKS
 #define FLAGS_ZIP        0x1000000
 #endif
-#define FLAGS_UNOCCUP2   0x2000000 /* [FREE] */
+#define FLAGS_DCCNOTICE  0x2000000 /* Has the user seen a notice on how to use DCCALLOW already? */
 #define FLAGS_SHUNNED    0x4000000
 #define FLAGS_VIRUS      0x8000000 /* tagged by spamfilter */
 #ifdef USE_SSL
 #define FLAGS_SSL        0x10000000
 #endif
 #define FLAGS_UNOCCUP4   0x20000000 /* [FREE] */
-#define FLAGS_DCCBLOCK   0x40000000
+#define FLAGS_DCCBLOCK   0x40000000 /* Block all DCC send requests */
 #define FLAGS_MAP        0x80000000	/* Show this entry in /map */
 /* Dec 26th, 1997 - added flags2 when I ran out of room in flags -DuffJ */
 
@@ -451,6 +452,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SetBlocked(x)		((x)->flags |= FLAGS_BLOCKED)
 #define	DoingAuth(x)		((x)->flags & FLAGS_AUTH)
 #define	NoNewLine(x)		((x)->flags & FLAGS_NONL)
+#define IsDCCNotice(x)		((x)->flags & FLAGS_DCCNOTICE)
+#define SetDCCNotice(x)		do { x->flags |= FLAGS_DCCNOTICE; } while(0)
 #define SetRegNick(x)		((x)->umodes & UMODE_REGNICK)
 #define SetHidden(x)            ((x)->umodes |= UMODE_HIDE)
 #define SetHideOper(x)      ((x)->umodes |= UMODE_HIDEOPER)
@@ -647,6 +650,14 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	CURSES_TERM	1
 #define	TERMCAP_TERM	2
 
+/* Dcc deny types (see src/s_extra.c) */
+#define DCCDENY_HARD	0
+#define DCCDENY_SOFT	1
+
+/* Linked list dcc flags */
+#define DCC_LINK_ME		1 /* My dcc allow */
+#define DCC_LINK_REMOTE	2 /* I need to remove dccallows from these clients when I die */
+
 struct FloodOpt {
 	unsigned short nmsg;
 	TS   firstmsg;
@@ -691,6 +702,7 @@ struct User {
 	Membership *channel;		/* chain of channel pointer blocks */
 	Link *invited;		/* chain of invite pointer blocks */
 	Link *silence;		/* chain of silence pointer blocks */
+	Link *dccallow;		/* chain of dccallowed entries */
 	char *away;		/* pointer to away message */
 	u_int32_t servicestamp;	/* Services' time stamp variable */
 	signed char refcnt;	/* Number of times this block is referenced */
@@ -1198,6 +1210,12 @@ struct _configitem_allow_channel {
 	ConfigItem		*prev, *next;
 	ConfigFlag		flag;
 	char			*channel;
+};
+
+struct _configitem_allow_dcc {
+	ConfigItem		*prev, *next;
+	ConfigFlag_ban	flag;
+	char			*filename;
 };
 
 struct _configitem_log {

@@ -3238,3 +3238,21 @@ This is the 3.2 fixes branch.
 - Made it so /who +m doesn't default to /who if a user uses modes they aren't allowed to
   use (#0001858) reported by Bugz
 - Added a couple donators to /credits
+- Module coders: if CmdoverrideAdd() is called for an override that is already in place, it
+  now sets MODERR_EXISTS as errorcode and returns NULL (previously it added duplicates).
+  In the past module coders had many issues with PERM mods... you had to use weird tricks,
+  but now you can (and should!) just override on INIT and on HOOKTYPE_REHASH_COMPLETE.
+- Moved register_user declaration to h.h, updated call in m_pingpong.c (due new 'ip' field).
+- Usermode +v ('receive dcc send rejection notices') is oper-only now for privacy reasons.
+- Added dcc allow { }, which allows one to make exceptions over deny dcc { }.
+- Added deny dcc::soft and allow dcc::soft item, if set to 'yes' it allows someone
+  to explicitly override it per-person via /DCCALLOW (see next).
+- Added DCCALLOW system, taken directly from bahamut.
+  With this system you can block certain (or all) DCC SENDs and then allow the user to
+  'override' this limit for every user he/she trusts via '/DCCALLOW +User'.
+  This is an attempt to stop (or at least limit) the spreading of viruses/etc.
+  See '/DCCALLOW HELP' for more info.
+- Added example dccallow.conf which filters everything except some known
+  'safe types' (jpg, jpeg, png, gif, etc). Note that the purpose of this file
+  is NOT to get a complete list, rather to limit it to a few 'known safe' entries.
+- Added set::maxdccallow: max number of entries of the DCCALLOW list (default: 10).

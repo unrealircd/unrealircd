@@ -775,7 +775,7 @@ extern MODVAR char cmodestring[512];
 extern MODVAR aTKline *tklines;
 extern int badclass;
 
-extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost, char *ip)
+int register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost, char *ip)
 {
 	ConfigItem_ban *bconf;
 	char *parv[3], *tmpstr;

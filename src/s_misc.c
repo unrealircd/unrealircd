@@ -352,6 +352,49 @@ void get_sockhost(aClient *cptr, char *host)
 	strncpyzt(cptr->sockhost, s, sizeof(cptr->sockhost));
 }
 
+void remove_dcc_references(aClient *sptr)
+{
+aClient *acptr;
+Link *lp, *nextlp;
+Link **lpp, *tmp;
+int found;
+
+	lp = sptr->user->dccallow;
+	while(lp)
+	{
+		nextlp = lp->next;
+		acptr = lp->value.cptr;
+		for(found = 0, lpp = &(acptr->user->dccallow); *lpp; lpp=&((*lpp)->next))
+		{
+			if(lp->flags == (*lpp)->flags)
+				continue; /* match only opposite types for sanity */
+			if((*lpp)->value.cptr == sptr)
+			{
+				if((*lpp)->flags == DCC_LINK_ME)
+				{
+					sendto_one(acptr, ":%s %d %s :%s has been removed from "
+						"your DCC allow list for signing off",
+						me.name, RPL_DCCINFO, acptr->name, sptr->name);
+				}
+				tmp = *lpp;
+				*lpp = tmp->next;
+				free_link(tmp);
+				found++;
+				break;
+			}
+		}
+
+		if(!found)
+			sendto_realops("[BUG] remove_dcc_references:  %s was in dccallowme "
+				"list[%d] of %s but not in dccallowrem list!",
+				acptr->name, lp->flags, sptr->name);
+
+		free_link(lp);
+		lp = nextlp;
+	}
+}
+
+
 /*
 ** exit_client
 **	This is old "m_bye". Name  changed, because this is not a
@@ -689,6 +732,11 @@ static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from, char *c
 			/* Clean up silencefield */
 			while ((lp = sptr->user->silence))
 				(void)del_silence(sptr, lp->value.cp);
+
+			/* Clean up dccallow list and (if needed) notify other clients
+			 * that have this person on DCCALLOW that the user just left/got removed.
+			 */
+			remove_dcc_references(sptr);
 		}
 	}
 

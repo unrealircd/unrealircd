@@ -41,43 +41,66 @@
 
 ID_Copyright("(C) Carsten Munk 1999");
 
-/*
-    fl->type = 
-       0     = set by dccconf.conf
-       1     = set by services
-       2     = set by ircops by /dccdeny
-*/
-
-/* ircd.dcc configuration */
+/* e->flag.type2:
+ * CONF_BAN_TYPE_AKILL		banned by SVSFLINE ('global')
+ * CONF_BAN_TYPE_CONF		banned by conf
+ * CONF_BAN_TYPE_TEMPORARY	banned by /DCCDENY ('temporary')
+ * e->flag.type:
+ * DCCDENY_HARD				Fully denied
+ * DCCDENY_SOFT				Denied, but allowed to override via /DCCALLOW
+ */
 
 /* checks if the dcc is blacklisted.
  * NOTE: 'target' can be NULL if the target was a channel
  */
-ConfigItem_deny_dcc *dcc_isforbidden(aClient *cptr, aClient *sptr, aClient *target, char *filename)
+ConfigItem_deny_dcc *dcc_isforbidden(aClient *sptr, aClient *target, char *filename)
 {
-	ConfigItem_deny_dcc *p;
+ConfigItem_deny_dcc *d;
+ConfigItem_allow_dcc *a;
 
 	if (!conf_deny_dcc || !filename)
 		return NULL;
 
-	if (IsOper(sptr) || IsULine(sptr))
-		return NULL;
-
-	if (target && IsOper(target))
-		return NULL;
-	if (target && IsVictim(target))
+	for (d = conf_deny_dcc; d; d = (ConfigItem_deny_dcc *) d->next)
 	{
-		return NULL;
-	}
-	for (p = conf_deny_dcc; p; p = (ConfigItem_deny_dcc *) p->next)
-	{
-		if (!match(p->filename, filename))
+		if ((d->flag.type == DCCDENY_HARD) && !match(d->filename, filename))
 		{
-			return p;
+			for (a = conf_allow_dcc; a; a = (ConfigItem_allow_dcc *) a->next)
+			{
+				if ((a->flag.type == DCCDENY_HARD) && !match(a->filename, filename))
+					return NULL;
+			}
+			return d;
 		}
 	}
 
-	/* no target found */
+	return NULL;
+}
+
+/* checks if the dcc is discouraged ('soft bans').
+ * NOTE: 'target' can be NULL if the target was a channel
+ */
+ConfigItem_deny_dcc *dcc_isdiscouraged(aClient *sptr, aClient *target, char *filename)
+{
+ConfigItem_deny_dcc *d;
+ConfigItem_allow_dcc *a;
+
+	if (!conf_deny_dcc || !filename)
+		return NULL;
+
+	for (d = conf_deny_dcc; d; d = (ConfigItem_deny_dcc *) d->next)
+	{
+		if ((d->flag.type == DCCDENY_SOFT) && !match(d->filename, filename))
+		{
+			for (a = conf_allow_dcc; a; a = (ConfigItem_allow_dcc *) a->next)
+			{
+				if ((a->flag.type == DCCDENY_SOFT) && !match(a->filename, filename))
+					return NULL;
+			}
+			return d;
+		}
+	}
+
 	return NULL;
 }
 
@@ -93,14 +116,15 @@ void dcc_sync(aClient *sptr)
 	}
 }
 
-void	DCCdeny_add(char *filename, char *reason, int type)
+void	DCCdeny_add(char *filename, char *reason, int type, int type2)
 {
 	ConfigItem_deny_dcc *deny = NULL;
 	
 	deny = (ConfigItem_deny_dcc *) MyMallocEx(sizeof(ConfigItem_deny_dcc));
 	deny->filename = strdup(filename);
 	deny->reason = strdup(reason);
-	deny->flag.type2 = type;
+	deny->flag.type = type;
+	deny->flag.type2 = type2;
 	AddListItem(deny, conf_deny_dcc);
 }
 
@@ -132,6 +156,100 @@ void dcc_wipe_services(void)
 		}
 	}
 
+}
+
+/* The dccallow functions below are all taken from bahamut (1.8.1).
+ * Well, with some small modifications of course. -- Syzop
+ */
+int on_dccallow_list(aClient *to, aClient *from)
+{
+Link *lp;
+
+	for(lp = to->user->dccallow; lp; lp = lp->next)
+		if(lp->flags == DCC_LINK_ME && lp->value.cptr == from)
+			return 1;
+	return 0;
+}
+int add_dccallow(aClient *sptr, aClient *optr)
+{
+Link *lp;
+int cnt = 0;
+
+	for (lp = sptr->user->dccallow; lp; lp = lp->next)
+	{
+		if (lp->flags != DCC_LINK_ME)
+			continue;
+		if (++cnt >= MAXDCCALLOW)
+		{
+			sendto_one(sptr, err_str(ERR_TOOMANYDCC), me.name, sptr->name,
+				optr->name, MAXDCCALLOW);
+			return 0;
+		} else
+		if (lp->value.cptr == optr)
+			return 0;
+	}
+	
+	lp = make_link();
+	lp->value.cptr = optr;
+	lp->flags = DCC_LINK_ME;
+	lp->next = sptr->user->dccallow;
+	sptr->user->dccallow = lp;
+	
+	lp = make_link();
+	lp->value.cptr = sptr;
+	lp->flags = DCC_LINK_REMOTE;
+	lp->next = optr->user->dccallow;
+	optr->user->dccallow = lp;
+	
+	sendto_one(sptr, rpl_str(RPL_DCCSTATUS), me.name, sptr->name, optr->name, "added to");
+	return 0;
+}
+
+int del_dccallow(aClient *sptr, aClient *optr)
+{
+Link **lpp, *lp;
+int found = 0;
+
+	for (lpp = &(sptr->user->dccallow); *lpp; lpp=&((*lpp)->next))
+	{
+		if ((*lpp)->flags != DCC_LINK_ME)
+			continue;
+		if ((*lpp)->value.cptr == optr)
+		{
+			lp = *lpp;
+			*lpp = lp->next;
+			free_link(lp);
+			found++;
+			break;
+		}
+	}
+	if (!found)
+	{
+		sendto_one(sptr, ":%s %d %s :%s is not in your DCC allow list",
+			me.name, RPL_DCCINFO, sptr->name, optr->name);
+		return 0;
+	}
+	
+	for (found = 0, lpp = &(optr->user->dccallow); *lpp; lpp=&((*lpp)->next))
+	{
+		if ((*lpp)->flags != DCC_LINK_REMOTE)
+			continue;
+		if ((*lpp)->value.cptr == sptr)
+		{
+			lp = *lpp;
+			*lpp = lp->next;
+			free_link(lp);
+			found++;
+			break;
+		}
+	}
+	if (!found)
+		sendto_realops("[BUG!] %s was in dccallowme list of %s but not in dccallowrem list!",
+			optr->name, sptr->name);
+
+	sendto_one(sptr, rpl_str(RPL_DCCSTATUS), me.name, sptr->name, optr->name, "removed from");
+
+	return 0;
 }
 
 /* restrict channel stuff */

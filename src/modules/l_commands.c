@@ -115,7 +115,7 @@ extern int m_map_Init(ModuleInfo *modinfo), m_eos_Init(ModuleInfo *modinfo);
 extern int m_server_Init(ModuleInfo *modinfo), m_stats_Init(ModuleInfo *modinfo);
 extern int m_svsfline_Init(ModuleInfo *modinfo), m_undccdeny_Init(ModuleInfo *modinfo);
 extern int m_dccdeny_Init(ModuleInfo *modinfo), m_whowas_Init(ModuleInfo *modinfo);
-extern int m_connect_Init(ModuleInfo *modinfo);
+extern int m_connect_Init(ModuleInfo *modinfo), m_dccallow_Init(ModuleInfo *modinfo);
 #ifdef GUEST
 extern int m_guest_Init(ModuleInfo *modinfo);
 #endif
@@ -157,7 +157,7 @@ extern int m_map_Load(int module_load), m_eos_Load(int module_load);
 extern int m_server_Load(int module_load), m_stats_Load(int module_load);
 extern int m_svsfline_Load(int module_load), m_undccdeny_Load(int module_load);
 extern int m_dccdeny_Load(int module_load), m_whowas_Load(int module_load);
-extern int m_connect_Load(int module_load);
+extern int m_connect_Load(int module_load), m_dccallow_Load(int module_load);
 #ifdef GUEST
 extern int m_guest_Load(int module_load);
 #endif
@@ -188,7 +188,7 @@ extern int m_netinfo_Unload(), m_links_Unload(), m_help_Unload();
 extern int m_rules_Unload(), m_close_Unload(), m_map_Unload();
 extern int m_eos_Unload(), m_server_Unload(), m_stats_Unload();
 extern int m_svsfline_Unload(), m_dccdeny_Unload(), m_undccdeny_Unload();
-extern int m_whowas_Unload(), m_connect_Unload();
+extern int m_whowas_Unload(), m_connect_Unload(), m_dccallow_Unload();
 #ifdef GUEST
 extern int m_guest_Unload();
 #endif
@@ -309,6 +309,7 @@ int    l_commands_Init(ModuleInfo *modinfo)
 	m_undccdeny_Init(ModCmdsInfo);
 	m_whowas_Init(ModCmdsInfo);
 	m_connect_Init(ModCmdsInfo);
+	m_dccallow_Init(ModCmdsInfo);
 #ifdef GUEST
 	m_guest_Init(ModCmdsInfo);
 #endif
@@ -408,6 +409,7 @@ int    l_commands_Load(int module_load)
 	m_undccdeny_Load(module_load);
 	m_whowas_Load(module_load);
 	m_connect_Load(module_load);
+	m_dccallow_Load(module_load);
 #ifdef GUEST
 	m_guest_Load(module_load);
 #endif
@@ -507,6 +509,7 @@ int	l_commands_Unload(int module_unload)
 	m_undccdeny_Unload();
 	m_whowas_Unload();
 	m_connect_Unload();
+	m_dccallow_Unload();
 #ifdef GUEST
 	m_guest_Unload();
 #endif

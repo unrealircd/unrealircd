@@ -114,7 +114,7 @@ DLLFUNC CMD_FUNC(m_dccdeny)
 	{
 		sendto_ops("%s added a temp dccdeny for %s (%s)", parv[0],
 		    parv[1], parv[2]);
-		DCCdeny_add(parv[1], parv[2], CONF_BAN_TYPE_TEMPORARY);		
+		DCCdeny_add(parv[1], parv[2], DCCDENY_HARD, CONF_BAN_TYPE_TEMPORARY);
 		return 0;
 	}
 	else

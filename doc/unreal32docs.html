@@ -24,7 +24,7 @@ English | <a href="unreal32docs.de.html">German</a><br><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 *CVS*<br>
-  <b>Last doc update:</b> 2004-05-28</div>
+  <b>Last doc update:</b> 2004-06-10</div>
 <br>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -93,15 +93,16 @@ English | <a href="unreal32docs.de.html">German</a><br><br>
   ---4.24. <a href="#denylinkblock">Deny Link Block -=- (D:Line / d:Line)</a><br>
   ---4.25. <a href="#denychannelblock">Deny Channel Block -=- (chrestrict.conf)</a><br>
   ---4.26. <a href="#allowchannelblock">Allow Channel Block</a><br>
-  ---4.27. <a href="#vhostblock">Vhost Block -=- (vhost.conf)</a><br>
-  ---4.28. <a href="#badwordsblock">Badword Block -=- (badwords.conf)</a><br>
-  ---4.29. <a href="#ulinesblock">Uline Block -=- (U:Line)</a><br>
-  ---4.30. <a href="#linkblock">Link Block -=- (C/N/H:Lines)</a><br>
-  ---4.31. <a href="#aliasblock">Alias Block</a><br>
-  ---4.32. <a href="#helpblock">Help Block</a><br>
-  ---4.33. <a href="#officialchannels">Official Channels Block</a><br>
-  ---4.34. <a href="#spamfilter">Spamfilter Block</a><br>
-  ---4.35. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
+  ---4.27. <a href="#allowdccblock">Allow DCC Block</a><br>
+  ---4.28. <a href="#vhostblock">Vhost Block -=- (vhost.conf)</a><br>
+  ---4.29. <a href="#badwordsblock">Badword Block -=- (badwords.conf)</a><br>
+  ---4.30. <a href="#ulinesblock">Uline Block -=- (U:Line)</a><br>
+  ---4.31. <a href="#linkblock">Link Block -=- (C/N/H:Lines)</a><br>
+  ---4.32. <a href="#aliasblock">Alias Block</a><br>
+  ---4.33. <a href="#helpblock">Help Block</a><br>
+  ---4.34. <a href="#officialchannels">Official Channels Block</a><br>
+  ---4.35. <a href="#spamfilter">Spamfilter Block</a><br>
+  ---4.36. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
   5. <a href="#addtlfiles">Additional Files</a><br>
   6. <a href="#userchannelmodes">User & Channel Modes</a><br>
   7. <a href="#useropercommands">User & Oper Commands</a><br>
@@ -1475,18 +1476,29 @@ except throttle {
 deny dcc {
 	filename &lt;file-to-block&gt;;
 	reason &lt;reason-for-ban&gt;;
+	soft [yes|no];
 };</pre></p>
 <p>The deny dcc block allows you to specify a filename which will not be allowed 
   to be sent via DCC over the server. This is very useful in helping stop distribution 
   of trojans and viruses. </p>
-<p>The deny::filename parameter specifies a wildcard mask of the filename to reject 
-  sends of, and deny::reason specifies the reason why this file is blocked.</p>
+<p>The <b>deny::filename</b> parameter specifies a wildcard mask of the filename to reject 
+  sends of, and <b>deny::reason</b> specifies the reason why this file is blocked.</p>
+<p>There's also a <b>deny::soft</b> option, if set to 'yes' the dcc is blocked 
+   unless the user explicitly allows it via /DCCALLOW +nickname-trying-to-send. 
+   See dccallow.conf for a good example configuration for dccallow.</p>
 <p>Example<br>
 <pre>
 deny dcc {
 	filename virus.exe;
 	reason "This is a GD Virus";
-};</pre></p></div>
+};
+
+deny dcc {
+	filename "*.exe";
+	reason "Executable content";
+	soft yes;
+};</pre>
+</p></div>
 <p></p>
 <p><font class="block_section">4.23 - </font><font class="block_name">Deny Version Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the V:Line)</font><a name="denyversionblock"></a><div class="desc">
@@ -1599,7 +1611,26 @@ allow channel {
 	channel "#something";
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.27 - </font><font class="block_name">Vhost Block</font>
+<p><font class="block_section">4.27 - </font><font class="block_name">Allow DCC Block</font>
+   <font class="block_optional">OPTIONAL</font><a name="allowdccblock"></a>
+</p><div class="desc">
+<p>Syntax:<br>
+<pre>
+allow dcc {
+	filename "&lt;filename-mask&gt;";
+	soft [yes|no];
+};</pre></p>
+<p>The allow dcc blocks allows you to specify exceptions over deny dcc blocks, wildcards
+ are permitted. If <b>allow dcc::soft</b> is set to 'yes' it applies to 'soft dcc bans' list,
+ if set to 'no' it applies to the normal ('hard') dcc bans.</p>
+<p>Example:<br>
+<pre>
+allow dcc {
+	filename "*.jpg"; /* Images are usually safe */
+	soft yes;
+};</pre></p>
+<p></p></div>
+<p><font class="block_section">4.28 - </font><font class="block_name">Vhost Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as vhosts.conf)</font><a name="vhostblock"></a>
 </p><div class="desc">
 <p>Syntax:<br>
@@ -1638,7 +1669,7 @@ vhost {
 	swhois "Im Special";
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.28 - </font><font class="block_name">Badword Block</font>
+<p><font class="block_section">4.29 - </font><font class="block_name">Badword Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as badwords.*.conf)</font><a name="badwordsblock"></a>
 </p><div class="desc">
 <p>Syntax:<br>
@@ -1665,7 +1696,7 @@ badword channel {
 	replace shoot;
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.29 - </font><font class="block_name">ULines Block</font>
+<p><font class="block_section">4.30 - </font><font class="block_name">ULines Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the U:Line)</font><a name="ulinesblock"></a><div class="desc">
 </p>
 <p>Syntax:<br>
@@ -1686,7 +1717,7 @@ ulines {
 	stats.mynetwork.com;
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.30 - </font><font class="block_name">Link Block</font>
+<p><font class="block_section">4.31 - </font><font class="block_name">Link Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as C/N/H:Lines)</font><a name="linkblock"></a>
 </p><div class="desc">
 <p>Syntax:<br>
@@ -1793,7 +1824,7 @@ link hub.mynet.com {
 	};
 };</pre></p>
 <p> </p></div>
-<p><font class="block_section">4.31 - </font><font class="block_name">Alias Block</font>
+<p><font class="block_section">4.32 - </font><font class="block_name">Alias Block</font>
    <font class="block_optional">OPTIONAL</font><a name="aliasblock"></a>
 </p><div class="desc">
 <p>Syntax [standard alias]:<br>
@@ -1840,7 +1871,7 @@ alias &lt;name&gt; {
   from the second till the last. For examples of using the alias block in the 
   command format, consult doc/example.conf.</p>
 <p></p></div>
-<p><font class="block_section">4.32 - </font><font class="block_name">Help Block</font>
+<p><font class="block_section">4.33 - </font><font class="block_name">Help Block</font>
    <font class="block_optional">OPTIONAL</font><a name="helpblock"></a>
 </p><div class="desc">
 <p>Syntax:<br>
@@ -1858,7 +1889,7 @@ help &lt;name&gt; {
   the /helpop.</p>
 <p></p></div>
 
-<p><font class="block_section">4.33 - </font><font class="block_name">Official Channels Block</font>
+<p><font class="block_section">4.34 - </font><font class="block_name">Official Channels Block</font>
    <font class="block_optional">OPTIONAL</font><a name="officialchannels"></a>
 </p><div class="desc">
 <p>Syntax:<br>
@@ -1879,7 +1910,7 @@ official-channels {
 };</pre></p>
 </div>
 
-<p><font class="block_section">4.34 - </font><font class="block_name">Spamfilter Block</font>
+<p><font class="block_section">4.35 - </font><font class="block_name">Spamfilter Block</font>
    <font class="block_optional">OPTIONAL</font><a name="spamfilter"></a>
 </p><div class="desc">
 <p>
@@ -1923,7 +1954,7 @@ spamfilter {
 </pre></p>
 </div>
 
-<p><font class="block_section">4.35 - </font><font class="block_name">Set Block</font>
+<p><font class="block_section">4.36 - </font><font class="block_name">Set Block</font>
    <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as unrealircd.conf/networks file)</font><a name="setblock"></a>
 </p><div class="desc">
 <p>The set file is what use to be our networks/unrealircd.conf and our networks 
@@ -1932,7 +1963,7 @@ spamfilter {
   multi-server networks, i recommend still using a networks file.</p>
   <p>Now, if your server is on a network, chances are you will all basically use 
     the same Set settings. Therefore it makes more sense to have a network file, 
-    which is loaded with a include:: directive. Refer to section <a href="#includedirective">4.9</a>. 
+    which is loaded with an <a href="#includedirective">include</a> directive. 
     Below you will find all of the set directives available.</p>
 <p>In this doc we refer to settings / directives in the &lt;block-name&gt;::&lt;block-directive&gt; 
   format. This format is NOT the format that it can be entered into the configuration 
