@@ -2617,3 +2617,5 @@ seen. gmtime warning still there
   might need some testing.
 - Fixed some problems with the copyfile routine for the new module rehash system and also fixed
   an issue with rehashing when permanent modules are loaded
+- Made "chanop notices" only go to @#chan on non-prefixaq servers (and to ~&@#chan otherwise),
+  internal: added ugly macro CHANOPPFX which is "~&@" if prefix_aq, else "@".

@@ -3150,7 +3150,7 @@ Link *lp;
 		if (key && !strcasecmp(key, "override"))
 		{
 			sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-				":%s NOTICE ~&@%s :setting channel -%c due to OperOverride request from %s",
+				":%s NOTICE " CHANOPPFX "%s :setting channel -%c due to OperOverride request from %s",
 				me.name, chptr->chname, mchar, sptr->name);
 			sendto_serv_butone(&me, ":%s MODE %s -%c 0", me.name, chptr->chname, mchar);
 			sendto_channel_butserv(chptr, &me, ":%s MODE %s -%c", me.name, chptr->chname, mchar);
@@ -4642,11 +4642,11 @@ CMD_FUNC(m_invite)
 		    )) {
 		        if (over == 1)
                 		sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-		                  ":%s NOTICE ~&@%s :OperOverride -- %s invited him/herself into the channel.",
+		                  ":%s NOTICE " CHANOPPFX "%s :OperOverride -- %s invited him/herself into the channel.",
                 		  me.name, chptr->chname, sptr->name);
 		        else if (over == 0)
 		                sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-                		  ":%s NOTICE ~&@%s :%s invited %s into the channel.",
+                		  ":%s NOTICE " CHANOPPFX "%s :%s invited %s into the channel.",
 		                  me.name, chptr->chname, sptr->name, acptr->name);
 
 		        add_invite(acptr, chptr);
@@ -5376,7 +5376,7 @@ CMD_FUNC(m_knock)
 	}
 
 	sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-	    ":%s NOTICE ~&@%s :[Knock] by %s!%s@%s (%s) ",
+	    ":%s NOTICE " CHANOPPFX "%s :[Knock] by %s!%s@%s (%s) ",
 	    me.name, chptr->chname, sptr->name,
 	    sptr->user->username, GetHost(sptr), 
 	    parv[2] ? parv[2] : "no reason specified");
@@ -6887,7 +6887,7 @@ char m;
 		char comment[1024], target[CHANNELLEN + 8];
 		ircsprintf(comment, "*** Channel %sflood detected (limit is %d per %d seconds), setting mode +%c",
 			text, chptr->mode.floodprot->l[what], chptr->mode.floodprot->per, m);
-		ircsprintf(target, "~&@%%%s", chptr->chname);
+		ircsprintf(target, CHANOPPFX "%%%s", chptr->chname);
 		sendto_channelprefix_butone_tok(NULL, &me, chptr,
 			PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
 			MSG_NOTICE, TOK_NOTICE, target, comment, 0);

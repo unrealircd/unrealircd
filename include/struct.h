@@ -1606,6 +1606,12 @@ int	throttle_can_connect(struct IN_ADDR *in);
 
 #define MARK_AS_OFFICIAL_MODULE(modinf)	do { if (modinf && modinf->handle) ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);  } while(0)
 
+#ifdef PREFIX_AQ
+ #define CHANOPPFX "~&@"
+#else
+ #define CHANOPPFX "@"
+#endif
+
 #endif /* __struct_include__ */
 
 #include "dynconf.h"
