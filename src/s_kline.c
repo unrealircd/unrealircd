@@ -796,7 +796,7 @@ int  m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	for (tk = tklines; tk; tk = tk->next)
 	{
-		if (tk->type = (TKL_GLOBAL | TKL_KILL))
+		if (tk->type == (TKL_GLOBAL | TKL_KILL))
 		{
 			if (!match(tk->hostmask, usermask)
 			    && !match(tk->usermask, hostmask))
@@ -993,7 +993,7 @@ int  m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	for (tk = tklines; tk; tk = tk->next)
 	{
-		if (tk->type = (TKL_GLOBAL | TKL_SHUN))
+		if (tk->type == (TKL_GLOBAL | TKL_SHUN))
 		{
 			if (!match(tk->hostmask, usermask)
 			    && !match(tk->usermask, hostmask))
