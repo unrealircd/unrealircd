@@ -2893,3 +2893,5 @@ seen. gmtime warning still there
   Note that it's backward compatible since TRUE/EX_ALLOW=1 and FALSE/EX_DENY=0.
 - Fixed a few bugs with oper override & extended chanmodes, for example
   chanmode +T could not be set by a globop w/can_override and non-+hoaq.
+- Added some set::throttle::* checking if insane values were supplied.
+  Reported by Troco (#0001555).

@@ -5958,8 +5958,25 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				CheckNull(cepp);
 				if (!strcmp(cepp->ce_varname, "period")) {
+					int x = config_checkval(cepp->ce_vardata,CFG_TIME);
+					if (x > 86400*7)
+					{
+						config_error("%s:%i: insane set::throttle::period value",
+							cepp->ce_fileptr->cf_filename,
+							cepp->ce_varlinenum);
+						errors++;
+						continue;
+					}
 				}
 				else if (!strcmp(cepp->ce_varname, "connections")) {
+					int x = atoi(cepp->ce_vardata);
+					if ((x < 1) || (x > 127))
+					{
+						config_error("%s:%i: set::throttle::connections out of range, should be 1-127",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+						errors++;
+						continue;
+					}
 				}
 				else
 				{
