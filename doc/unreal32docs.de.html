@@ -2181,9 +2181,6 @@ normale ('harte') dcc Banns.</p>
 	filename &quot;*.jpg&quot;; /* Bilder sind üblicherweise sicher */
 	soft yes;
 };</pre>
-<pre>allow channel {
-	channel &quot;#smart_*&quot;;
-};</pre>
 </div>
 
 <p><font class="block_section"><a name="vhostblock">4.28 - </a> </font><a name="vhostblock"><font class="block_name">Vhost Block</font>
@@ -2784,18 +2781,22 @@ Legt die ersten Zeichen eines verdeckten Hosts (+x) fest. Üblicherweise nimmt
 man hier 3 oder 4 Buchstaben, die den Netzwerksnamen bezeichnen.</p>
 <p><font class="set">set::hosts::local &lt;locop-host-name&gt;;</font><br>
 Legt den Hostnamen fest, der lokalen Operatoren zugewiesen wird, wenn sie +x
-setzen.</p>
+setzen. Optional kann für diesen Wert ein username@host angegeben werden.</p>
 <p><font class="set">set::hosts::global &lt;globop-host-name&gt;;</font><br>
 Legt den Hostnamen fest, der globalen Operatoren zugewiesen wird, wenn sie +x
-setzen.</p>
+setzen.Optional kann für diesen Wert ein username@host angegeben werden.</p>
 <p><font class="set">set::hosts::coadmin &lt;coadmin-host-name&gt;;</font><br>
-Legt den Hostnamen fest, der co-admins zugewiesen wird, wenn sie +x setzen.</p>
+Legt den Hostnamen fest, der co-admins zugewiesen wird, wenn sie +x setzen.Optional
+kann für diesen Wert ein username@host angegeben werden.</p>
 <p><font class="set">set::hosts::admin &lt;admin-host-name&gt;;</font><br>
-Legt den Hostnamen fest, der Admins zugewiesen wird, wenn sie +x setzen.</p>
+Legt den Hostnamen fest, der Admins zugewiesen wird, wenn sie +x setzen.Optional
+kann für diesen Wert ein username@host angegeben werden.</p>
 <p><font class="set">set::hosts::servicesadmin &lt;servicesadmin-host-name&gt;;</font><br>
-Legt den Hostnamen fest, der Service-Admins zugewiesen wird, wenn sie +x setzen.</p>
+Legt den Hostnamen fest, der Service-Admins zugewiesen wird, wenn sie +x setzen.Optional
+kann für diesen Wert ein username@host angegeben werden.</p>
 <p><font class="set">set::hosts::netadmin &lt;netadmin-host-name&gt;;</font><br>
-Legt den Hostnamen fest, der Netadmins zugewiesen wird, wenn sie +x setzen.</p>
+Legt den Hostnamen fest, der Netadmins zugewiesen wird, wenn sie +x setzen.Optional
+kann für diesen Wert ein username@host angegeben werden.</p>
 <p><font class="set">set::hosts::host-on-oper-up &lt;yes/no&gt;;</font><br>
 Falls auf 'yes' eingestellt, wird das H/get_host Flag akzeptiert und&nbsp; +x
 wird automatisch bei /oper gesetzt.. Falls 'no', muss sich der User manuell +x
