@@ -21,7 +21,7 @@
 #define IRCDTOTALVERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
 #endif
 
-#define WIN32_VERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH9
+#define WIN32_VERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4
 #include "resource.h"
 #include "version.h"
 #include "setup.h"
@@ -94,6 +94,8 @@ extern Link *Servers;
 extern ircstats IRCstats;
 char *errors = NULL, *RTFBuf = NULL;
 extern aMotd *botmotd, *opermotd, *motd, *rules;
+extern VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv);
+extern BOOL IsService;
 void CleanUp(void)
 {
 	Shell_NotifyIcon(NIM_DELETE ,&SysTray);
@@ -462,15 +464,23 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	HWND hWnd;
 	WSADATA WSAData;
 	HICON hIcon;
-	InitCommonControls();
-
-	WM_TASKBARCREATED = RegisterWindowMessage("TaskbarCreated");
-	atexit(CleanUp);
-	if(!LoadLibrary("riched20.dll"))
-		LoadLibrary("riched32.dll");
-	InitStackTraceLibrary();
+	SERVICE_TABLE_ENTRY DispatchTable[] = {
+		{ "UnrealIRCd", ServiceMain },
+		{ 0, 0 }
+	};
+	DWORD need;
+	
 	VerInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	GetVersionEx(&VerInfo);
+	if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
+		SC_HANDLE hService, hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
+		if ((hService = OpenService(hSCManager, "UnrealIRCd", GENERIC_READ))) {
+			CloseServiceHandle(hService);
+			CloseServiceHandle(hSCManager);
+			StartServiceCtrlDispatcher(DispatchTable);
+			exit(0);
+		}
+	}
 	strcpy(OSName, "Windows ");
 	if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
 		if (VerInfo.dwMajorVersion == 4) {
@@ -498,11 +508,19 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 				strcat(OSName, "2000 ");
 			else if (VerInfo.dwMinorVersion == 1)
 				strcat(OSName, "XP ");
+			else if (VerInfo.dwMinorVersion == 2)
+				strcat(OSName, ".NET Server ");
 		}
 		strcat(OSName, VerInfo.szCSDVersion);
 	}
 	if (OSName[strlen(OSName)-1] == ' ')
 		OSName[strlen(OSName)-1] = 0;
+	InitCommonControls();
+	WM_TASKBARCREATED = RegisterWindowMessage("TaskbarCreated");
+	atexit(CleanUp);
+	if(!LoadLibrary("riched20.dll"))
+		LoadLibrary("riched32.dll");
+	InitStackTraceLibrary();
 
 	if (WSAStartup(MAKEWORD(1, 1), &WSAData) != 0)
     	{
@@ -521,7 +539,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		MessageBox(NULL, "UnrealIRCd has failed to initialize in InitwIRCD()", "UnrealIRCD Initalization Error" ,MB_OK);
 		return FALSE;
 	}
-
+	ShowWindow(hWnd, SW_SHOW);
 	hMainThread = (HANDLE)_beginthread(SocketLoop, 0, NULL);
 	while (GetMessage(&msg, NULL, 0, 0))
     {
@@ -552,6 +570,7 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 	switch (message)
 			{
 			case WM_INITDIALOG: {
+				ShowWindow(hDlg, SW_HIDE);
 				hCursor = LoadCursor(hInst, MAKEINTRESOURCE(CUR_HAND));
 				hContext = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_CONTEXT)),0);
 				/* Rehash popup menu */
@@ -1940,23 +1959,30 @@ void win_log(char *format, ...) {
 		char *buf2;
         va_start(ap, format);
         ircvsprintf(buf, format, ap);
-	strcat(buf, "\r\n");
-	if (errors) {
-		buf2 = MyMalloc(strlen(errors)+strlen(buf)+1);
-		sprintf(buf2, "%s%s",errors,buf);
-		MyFree(errors);
-		errors = NULL;
+	if (!IsService) {
+		strcat(buf, "\r\n");
+		if (errors) {
+			buf2 = MyMalloc(strlen(errors)+strlen(buf)+1);
+			sprintf(buf2, "%s%s",errors,buf);
+			MyFree(errors);
+			errors = NULL;
+		}
+		else {
+			buf2 = MyMalloc(strlen(buf)+1);
+			sprintf(buf2, "%s",buf);
+		}
+		errors = buf2;
 	}
 	else {
-		buf2 = MyMalloc(strlen(buf)+1);
-		sprintf(buf2, "%s",buf);
+		FILE *fd = fopen("service.log", "a");
+		fprintf(fd, "%s\n", buf);
+		fclose(fd);
 	}
-	errors = buf2;
         va_end(ap);
 }
 
 void win_error() {
-	if (errors)
+	if (errors && !IsService)
 		DialogBox(hInst, "ConfigError", hwIRCDWnd, (DLGPROC)ConfigErrorDLG);
 }
 

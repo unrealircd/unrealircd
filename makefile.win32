@@ -34,7 +34,8 @@ OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/VERSION.OBJ SRC/S_UNREAL.OBJ SRC/RES_INIT.OBJ \
  SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ \
  SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ \
- SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ
+ SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ \
+ SRC/SERVICE.OBJ
 
 MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OBJ \
  SRC/M_SETNAME.OBJ SRC/M_SETHOST.OBJ SRC/M_CHGIDENT.OBJ SRC/M_SVSMOTD.OBJ \
@@ -48,7 +49,7 @@ MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OB
  SRC/SCAN.OBJ SRC/SCAN_SOCKS.OBJ SRC/SCAN_HTTP.OBJ SRC/M_TKL.OBJ SRC/INVISIBILITY.OBJ
 
 
-ALL: CONF WIRCD.EXE
+ALL: CONF UNREAL.EXE WIRCD.EXE
 
 CLEAN:
         -@erase src\*.obj >NUL
@@ -57,10 +58,15 @@ CLEAN:
         -@erase src\win32\*.obj >NUL
         -@erase .\*.exe >NUL
 
+./UNREAL.EXE: SRC/UNREAL.OBJ SRC/WIN32/UNREAL.RES
+	$(LINK) advapi32.lib src/unreal.obj src/win32/unreal.res
+
 CONF:
 	-@copy include\win32\setup.h include\setup.h >NUL
 	$(CC) src/win32/config.c
 	-@config.exe
+
+	
 
 ./WIRCD.EXE: $(OBJ_FILES) $(MOD_FILES) SRC/win32/WIN32.RES
         $(LINK) $(LFLAGS) $(OBJ_FILES) $(MOD_FILES) SRC/win32/WIN32.RES SRC/WIN32/GNU_REGEX.LIB SRC/WIN32/DEBUG/STACKTRACE.LIB /MAPINFO:LINES /MAP
@@ -191,6 +197,12 @@ src/crule.obj: src/crule.c $(INCLUDES)
 
 src/win32gui.obj: src/win32/win32gui.c $(INCLUDES) ./include/resource.h
         $(CC) $(CFLAGS) src/win32/win32gui.c
+
+src/service.obj: src/win32/service.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/win32/service.c
+
+src/unreal.obj: src/win32/unreal.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/win32/unreal.c
 
 src/res_comp.obj: src/res_comp.c $(INCLUDES)
         $(CC) $(CFLAGS) src/res_comp.c
@@ -361,6 +373,10 @@ src/invisibility.obj: src/modules/invisibility.c $(INCLUDES)
 src/win32/win32.res: src/win32/win32gui.rc
         $(RC) /l 0x409 /fosrc/win32/win32.res /i ./include /i ./src \
               /d NDEBUG src/win32/win32gui.rc
+
+src/win32/unreal.res: src/win32/unreal.rc
+        $(RC) /l 0x409 /fosrc/win32/unreal.res /i ./include /i ./src \
+              /d NDEBUG src/win32/unreal.rc
 
 dummy:
 

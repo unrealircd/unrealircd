@@ -67,6 +67,7 @@ Computing Center and Jarkko Oikarinen";
 #endif
 #include "version.h"
 #include "proto.h"
+extern BOOL IsService;
 
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
@@ -81,6 +82,7 @@ int  un_uid = 99;
 int  un_gid = 99;
 #endif
 /* End */
+
 
 #ifndef _WIN32
 extern char unreallogo[];
@@ -701,9 +703,11 @@ static int bad_command(void)
 	    CMDLINE_CFG);
 	(void)printf("Server not started\n\n");
 #else
-	MessageBox(NULL,
-	    "Usage: wircd [-h servername] [-p portnumber] [-x loglevel]\n",
-	    "UnrealIRCD/32", MB_OK);
+	if (!IsService) {
+		MessageBox(NULL,
+		    "Usage: wircd [-h servername] [-p portnumber] [-x loglevel]\n",
+		    "UnrealIRCD/32", MB_OK);
+	}
 #endif
 	return (-1);
 }
@@ -920,8 +924,10 @@ int InitwIRCD(int argc, char *argv[])
 			  (void)printf("%s build %s\n", version, buildid);
 #else
 		  case 'v':
-			  MessageBox(NULL, version,
-			      "UnrealIRCD/Win32 version", MB_OK);
+			  if (!IsService) {
+				  MessageBox(NULL, version,
+				      "UnrealIRCD/Win32 version", MB_OK);
+			  }
 #endif
 			  exit(0);
 		  case 'W':{
@@ -955,9 +961,11 @@ int InitwIRCD(int argc, char *argv[])
 			      "%s: DEBUGMODE must be defined for -x y\n",
 			      myargv[0]);
 # else
-			  MessageBox(NULL,
-			      "DEBUGMODE must be defined for -x option",
-			      "UnrealIRCD/32", MB_OK);
+			  if (!IsService) {
+				  MessageBox(NULL,
+				      "DEBUGMODE must be defined for -x option",
+				      "UnrealIRCD/32", MB_OK);
+			  }
 # endif
 			  exit(0);
 #endif
@@ -972,8 +980,10 @@ int InitwIRCD(int argc, char *argv[])
 # ifndef _WIN32
 		perror("chdir");
 # else
-		MessageBox(NULL, strerror(GetLastError()),
-		    "UnrealIRCD/32: chdir()", MB_OK);
+		if (!IsService) {
+			MessageBox(NULL, strerror(GetLastError()),
+			    "UnrealIRCD/32: chdir()", MB_OK);
+		}
 # endif
 		exit(-1);
 	}

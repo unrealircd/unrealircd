@@ -1371,3 +1371,13 @@ seen. gmtime warning still there
 - Fixed m_sjoin bug with banlist propagation
 - Fixed compile problem with non-glob/win32 systems (sunos 4.1) found by rshurr
 - Fixed secure channel only (+z) sending ERR_BANNEDFROMCHAN
+- WinNT/2k/XP service support added
+  This should currently be considered EXPERIMENTAL
+  To use this you use the unreal.exe utility:
+    unreal install -installs the service
+    unreal uninstall -uninstalls the service
+    unreal start -starts the service
+    unreal stop -stops the service
+    unreal restart -restarts the service
+    unreal rehash -rehashes the config file
+  Config errors are now logged to service.log when in service mode.
