@@ -220,3 +220,4 @@
 - Fixed up /stats L bug
 - Changed CONNECTTIMEOUT to 30sec
 - Changed some _more_ credits
+- Fixed compile error found by Headbang

@@ -2302,8 +2302,10 @@ char *get_cptr_status(aClient *acptr)
 	}
 	else
 	{
+#ifdef USE_SSL
 		if (acptr->flags & FLAGS_SSL)
 			*p++ = 's';
+#endif
 	}
 	*p++ = ']';
 	*p++ = '\0';
