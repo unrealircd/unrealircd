@@ -198,7 +198,11 @@ char *hidehost(char *host)
 		l[2] = crc32(host, strlen(host));
 		for (i = 0; i <= 2; i++)
 		{
+#ifdef COMPAT_BETA4_KEYS
 		        l[i] = ((l[i] + KEY2) ^ KEY) ^ KEY3;
+#else
+			l[i] = ((l[i] + KEY2) ^ KEY) + KEY3;
+#endif
 		        l[i] <<= 2; l[i] >>= 2;
 	        }
 		ircsprintf(cloaked, "%lx:%lx:%lx:IP",
@@ -224,11 +228,11 @@ char *hidehost(char *host)
 		}
 #ifndef COMPAT_BETA4_KEYS
 		ircsprintf(h3, "%s.%s", h2[0], h2[1]);
-		l[0] = ((crc32(h3, strlen(h3)) + KEY) ^ KEY2) ^ KEY3;
+		l[0] = ((crc32(h3, strlen(h3)) + KEY) ^ KEY2) + KEY3;
 		ircsprintf(h3, "%s.%s.%s", h2[0], h2[1], h2[2]);		
-		l[1] = ((KEY2 + crc32(h3, strlen(h3))) ^ KEY3) ^ KEY;
+		l[1] = ((KEY2 ^ crc32(h3, strlen(h3))) + KEY3) ^ KEY;
 		l[4] = crc32(host, strlen(host));
-		l[2] = ((l[4] + KEY3) ^ KEY)^ KEY2;
+		l[2] = ((l[4] + KEY3) ^ KEY) + KEY2;
 #else
 		ircsprintf(h3, "%s.%s", h2[0], h2[1]);
 		l[0] = ((crc32(h3, strlen(h3)) + KEY2) ^ KEY) ^ KEY3;
@@ -256,7 +260,11 @@ char *hidehost(char *host)
 					break;
 			}
 		}
+#ifdef COMPAT_BETA4_KEYS
 		l[0] = ((crc32(host, strlen(host)) + KEY2) ^ KEY)^ KEY3;
+#else
+		l[0] = ((crc32(host, strlen(host)) ^ KEY2) + KEY) ^ KEY3;
+#endif
 		l[0] <<= 2; 
 		l[0] >>= 2; 
 		p++;

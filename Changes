@@ -1202,3 +1202,4 @@ seen. gmtime warning still there
 - Clean compile under -Wparentheses
 - Clean compile under -Wall -Wno-implicit
 - Fixed #undef STRIPBADWORDS problem, patch by light
+- Blah blah new cloaking shit blah
