@@ -376,3 +376,5 @@
 - Made so badwords.*.conf accepts # comments
 - Added some default default badwords.message.conf and badwords.channel.conf
 - Made so auditorium mode shows users to @'s 
+- Fixed a bug where /chgident would overflow into the *real* host if it where greater than USERLEN
+  because _someone_ aka sts told it to check against HOSTLEN rather than USERLEN... reported by wshs

@@ -334,7 +334,7 @@ int  m_chgident(cptr, sptr, parc, parv)
 		return 0;
 	}
 
-	if (strlen(parv[2]) > (HOSTLEN - 1))
+	if (strlen(parv[2]) > (USERLEN - 1))
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** ChgIdent Error: Too long ident!!",
