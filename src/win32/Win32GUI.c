@@ -1,6 +1,6 @@
 /************************************************************************
  *   IRC - Internet Relay Chat, Win32GUI.c
- *   Copyright (C) 2000-2001 David Flynn (DrBin) & Dominick Meglio (codemastr)
+ *   Copyright (C) 2000-2002 David Flynn (DrBin) & Dominick Meglio (codemastr)
  *   
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -557,7 +557,6 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 				/* Systray popup menu set the items to point to the other menus*/
 				hTray = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_SYSTRAY)),0);
 				ModifyMenu(hTray, IDM_REHASH, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT)hRehash, "&Rehash");
-				ModifyMenu(hTray, IDM_CONFIG, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT)hConfig, "&Config");
 				ModifyMenu(hTray, IDM_ABOUT, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT)hAbout, "&About");
 				
 				SetWindowText(hDlg, WIN32_VERSION);
@@ -591,13 +590,54 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 					case WM_RBUTTONDOWN:
 						SetForegroundWindow(hDlg);
 						break;
-					case WM_RBUTTONUP: 
+					case WM_RBUTTONUP: {
+						unsigned long i = 60000;
 						GetCursorPos(&p);
+						DestroyMenu(hConfig);
+						hConfig = CreatePopupMenu();
+						DestroyMenu(hLogs);
+						hLogs = CreatePopupMenu();
+						AppendMenu(hConfig, MF_STRING, IDM_CONF, CPATH);
+						if (conf_log) {
+							ConfigItem_log *logs;
+							AppendMenu(hConfig, MF_POPUP|MF_STRING, (UINT)hLogs, "Logs");
+							for (logs = conf_log; logs; logs = (ConfigItem_log *)logs->next) {
+								AppendMenu(hLogs, MF_STRING, i++, logs->file);
+							}
+						}
+						AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
+						if (conf_include) {
+							ConfigItem_include *inc;
+							for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next) {
+								AppendMenu(hConfig, MF_STRING, i++, inc->file);
+							}
+							AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
+						}
+
+						AppendMenu(hConfig, MF_STRING, IDM_MOTD, MPATH);
+						AppendMenu(hConfig, MF_STRING, IDM_OPERMOTD, OPATH);
+						AppendMenu(hConfig, MF_STRING, IDM_BOTMOTD, BPATH);
+						AppendMenu(hConfig, MF_STRING, IDM_RULES, RPATH);
+						
+						if (conf_tld) {
+							ConfigItem_tld *tlds;
+							AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
+							for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *)tlds->next) {
+								if (!tlds->flag.motdptr)
+									AppendMenu(hConfig, MF_STRING, i++, tlds->motd_file);
+								if (!tlds->flag.rulesptr)
+									AppendMenu(hConfig, MF_STRING, i++, tlds->rules_file);
+							}
+						}
+						AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
+						AppendMenu(hConfig, MF_STRING, IDM_NEW, "New File");
+						ModifyMenu(hTray, IDM_CONFIG, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT)hConfig, "&Config");
 						TrackPopupMenu(hTray, TPM_LEFTALIGN|TPM_LEFTBUTTON,p.x,p.y,0,hDlg,NULL);
 						/* Kludge for a win bug */
 						SendMessage(hDlg, WM_NULL, 0, 0);
 						break;
 					}
+				}
 				return 0;
 			}
 			case WM_DESTROY:

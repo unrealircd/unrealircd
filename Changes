@@ -1327,3 +1327,4 @@ seen. gmtime warning still there
 - Made hosts converted to lowercase before run through hidehost() this way ABC.com is the
   same as abc.com, reported by Magnet (#0000065)
 - Converted the status window in the win32 GUI to a modeless dialog
+- Fixed a win32 bug where the tray config menu didn't contain anything, reported by Jens (#0000127)
