@@ -21,7 +21,6 @@
 
 
 #define DYNCONF_H
-
 /* config level */
 #define DYNCONF_CONF_VERSION "1.5"
 #define DYNCONF_NETWORK_VERSION "2.2"
@@ -50,6 +49,14 @@ struct zNetwork {
 };
 
 enum UHAllowed { UHALLOW_ALWAYS, UHALLOW_NOCHANS, UHALLOW_REJOIN, UHALLOW_NEVER };
+
+struct ChMode {
+        long mode;
+        unsigned short  msgs;
+        unsigned short  per; 
+        unsigned char   kmode;
+};
+
 
 typedef struct zConfiguration aConfiguration;
 struct zConfiguration {
@@ -92,6 +99,7 @@ struct zConfiguration {
 	char *restrict_usermodes;
 	long unknown_flood_bantime;
 	long unknown_flood_amount;
+	struct ChMode modes_on_join;
 	aNetwork network;
 };
 
@@ -156,3 +164,4 @@ extern aConfiguration iConf;
 #define USE_BAN_VERSION			iConf.use_ban_version
 #define UNKNOWN_FLOOD_BANTIME		iConf.unknown_flood_bantime
 #define UNKNOWN_FLOOD_AMOUNT		iConf.unknown_flood_amount
+#define MODES_ON_JOIN			iConf.modes_on_join.mode

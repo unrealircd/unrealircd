@@ -75,7 +75,7 @@ static int add_banid(aClient *, aChannel *, char *);
 static int can_join(aClient *, aClient *, aChannel *, char *, char *,
     char **);
 static int channel_link(aClient *, aClient *, int, char **);
-static void channel_modes(aClient *, char *, char *, aChannel *);
+void channel_modes(aClient *, char *, char *, aChannel *);
 static int check_channelmask(aClient *, aClient *, char *);
 int del_banid(aChannel *, char *);
 static void set_mode(aChannel *, aClient *, int, char **, u_int *,
@@ -804,9 +804,8 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
  * write the "simple" list of channel modes for channel chptr onto buffer mbuf
  * with the parameters in pbuf.
  */
-static void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr)
+void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr)
 {
-	long zode;
 	aCtab *tab = &cFlagTab[0];
 	char bcbuf[1024];
 
@@ -814,16 +813,8 @@ static void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr
 	while (tab->mode != 0x0)
 	{
 		if ((chptr->mode.mode & tab->mode))
-		{
-			zode = chptr->mode.mode;
-			if (!(zode & (MODE_LIMIT | MODE_KEY | MODE_LINK)))
-				if (!(zode & (MODE_CHANOP | MODE_VOICE |
-				    MODE_CHANOWNER)))
-					if (!(zode & (MODE_BAN | MODE_EXCEPT |
-					    MODE_CHANPROT)))
-						if (!(zode & (MODE_HALFOP)))
-							*mbuf++ = tab->flag;
-		}
+			if (!tab->parameters)
+				*mbuf++ = tab->flag;
 		tab++;
 	}
 	if (chptr->mode.limit)
@@ -2856,6 +2847,20 @@ CMD_FUNC(channel_link)
 				    parv[0], name, chptr->topic_nick,
 				    chptr->topic_time);
 			}
+			if (chptr->users == 1 && MODES_ON_JOIN)
+			{
+				chptr->mode.mode = MODES_ON_JOIN;
+				chptr->mode.kmode = iConf.modes_on_join.kmode;
+				chptr->mode.per = iConf.modes_on_join.per;
+				chptr->mode.msgs = iConf.modes_on_join.msgs;
+				*modebuf = *parabuf = 0;
+				channel_modes(sptr, modebuf, parabuf, chptr);
+				/* This should probably be in the SJOIN stuff */
+				sendto_serv_butone_token(&me, me.name, MSG_MODE, TOK_MODE, 
+					"%s %s %s %lu", chptr->chname, modebuf, parabuf, 
+					chptr->creationtime);
+				sendto_one(sptr, ":%s MODE %s %s %s", me.name, chptr->chname, modebuf, parabuf);
+			}
 			parv[1] = name;
 			(void)m_names(cptr, sptr, 2, parv);
 			bouncedtimes = 0;
@@ -3105,6 +3110,20 @@ CMD_FUNC(m_join)
 				    rpl_str(RPL_TOPICWHOTIME), me.name,
 				    parv[0], name, chptr->topic_nick,
 				    chptr->topic_time);
+			}
+			if (chptr->users == 1 && MODES_ON_JOIN)
+			{
+				chptr->mode.mode = MODES_ON_JOIN;
+				chptr->mode.kmode = iConf.modes_on_join.kmode;
+				chptr->mode.per = iConf.modes_on_join.per;
+				chptr->mode.msgs = iConf.modes_on_join.msgs;
+				*modebuf = *parabuf = 0;
+				channel_modes(sptr, modebuf, parabuf, chptr);
+				/* This should probably be in the SJOIN stuff */
+				sendto_serv_butone_token(&me, me.name, MSG_MODE, TOK_MODE, 
+					"%s %s %s %lu", chptr->chname, modebuf, parabuf, 
+					chptr->creationtime);
+				sendto_one(sptr, ":%s MODE %s %s %s", me.name, chptr->chname, modebuf, parabuf);
 			}
 			parv[1] = chptr->chname;
 			(void)m_names(cptr, sptr, 2, parv);

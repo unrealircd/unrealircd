@@ -73,6 +73,7 @@ struct _conf_operflag
 	char	*name;
 };
 
+
 /* Config commands */
 
 static int	_conf_admin		(ConfigFile *conf, ConfigEntry *ce);
@@ -323,7 +324,7 @@ void 			config_progress(char *format, ...);
 extern void 	win_log(char *format, ...);
 extern void		win_error();
 #endif
-
+extern char modebuf[MAXMODEPARAMS*2+1], parabuf[504];
 extern void add_entropy_configfile(struct stat st, char *buf);
 
 /*
@@ -556,6 +557,105 @@ tolower(*(text+1)) == 'n') || *text == '1' || tolower(*text) == 't') {
 	}
 
 	return ret;
+}
+
+typedef struct {
+	long mode;
+	char flag;
+	unsigned  halfop : 1;		/* 1 = yes 0 = no */
+	unsigned  parameters : 1; 
+} aCtab;
+extern aCtab cFlagTab[];
+
+void set_channelmodes(char *modes, struct ChMode *store)
+{
+	aCtab *tab;
+	char *param = strchr(modes, ' ');
+	if (param)
+		param++;
+
+	for (; *modes && *modes != ' '; modes++)
+	{
+		if (*modes == '+')
+			continue;
+		if (*modes == '-')
+		/* When a channel is created it has no modes, so just ignore if the
+		 * user asks us to unset anything -- codemastr 
+		 */
+		{
+			while (*modes && *modes != '+')
+				modes++;
+			continue;
+		}
+		switch (*modes)
+		{
+			case 'f':
+			{
+				char kmode = 0;
+				char *xp;
+				int msgs=0, per=0;
+				int hascolon = 0;
+				if (!param)
+					break;
+				if (*param == '*')
+					kmode = 1;
+				for (xp = param; *xp; xp++)
+				{
+					if (*xp == ':')
+					{
+						hascolon++;
+						continue;
+					}
+					if (((*xp < '0') || (*xp > '9')) && *xp != '*')
+						break;
+					if (*xp == '*' && *param != '*')
+						break;
+				}
+				if (hascolon != 1)
+					break;
+				xp = strchr(param, ':');
+					*xp = 0;
+				msgs = atoi((*param == '*') ? (param+1) : param);
+				xp++;
+				per = atoi(xp);
+				xp--;
+				*xp = ':';
+				if (msgs == 0 || msgs > 500 || per == 0 || per > 500)
+					break;
+				store->msgs = msgs;
+				store->per = per;
+				store->kmode = kmode; 					     
+				store->mode |= MODE_FLOODLIMIT;
+				break;
+			}
+			default:
+				for (tab = &cFlagTab[0]; tab->mode; tab++)
+				{
+					if (tab->flag == *modes)
+						store->mode |= tab->mode;
+				}
+		}
+	}
+}
+
+void chmode_str(struct ChMode modes, char *mbuf, char *pbuf)
+{
+	aCtab *tab;
+	*mbuf++ = '+';
+	for (tab = &cFlagTab[0]; tab->mode; tab++)
+	{
+		if (modes.mode & tab->mode)
+		{
+			if (!tab->parameters)
+				*mbuf++ = tab->flag;
+		}
+	}
+	if (modes.per)
+	{
+		*mbuf++ = 'f';
+		sprintf(pbuf, "%s%d:%d", modes.kmode ? "*" : "", modes.msgs, modes.per);
+	}
+	*mbuf++=0;
 }
 
 ConfigFile *config_load(char *filename)
@@ -2083,6 +2183,10 @@ void report_dynconf(aClient *sptr)
 	    sptr->name, get_modestr(CONN_MODES));
 	sendto_one(sptr, ":%s %i %s :modes-on-oper: %s", me.name, RPL_TEXT,
 	    sptr->name, get_modestr(OPER_MODES));
+	*modebuf = *parabuf = 0;
+	chmode_str(iConf.modes_on_join, modebuf, parabuf);
+	sendto_one(sptr, ":%s %i %s :modes-on-join: %s %s", me.name, RPL_TEXT,
+		sptr->name, modebuf, parabuf);
 	sendto_one(sptr, ":%s %i %s :snomask-on-oper: %s", me.name, RPL_TEXT,
 	    sptr->name, OPER_SNOMASK ? OPER_SNOMASK : SNO_DEFOPER);
 	sendto_one(sptr, ":%s %i %s :snomask-on-connect: %s", me.name, RPL_TEXT,
@@ -4795,6 +4899,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "modes-on-oper")) {
 			tempiConf.oper_modes = (long) set_usermode(cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "modes-on-join")) {
+			set_channelmodes(cep->ce_vardata, &tempiConf.modes_on_join);
+		}
 		else if (!strcmp(cep->ce_varname, "snomask-on-oper")) {
 			ircstrdup(tempiConf.oper_snomask, cep->ce_vardata);
 		}
@@ -5071,9 +5178,53 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 		}
-		else if (!strcmp(cep->ce_varname, "modes-on-oper")) {
+		else if (!strcmp(cep->ce_varname, "modes-on-join")) {
+			char *c;
+			struct ChMode temp;
 			CheckNull(cep);
-			templong = (long) set_usermode(cep->ce_vardata);
+			for (c = cep->ce_vardata; *c; c++)
+			{
+				switch (*c)
+				{
+					case 'q':
+					case 'a':
+					case 'o':
+					case 'h':
+					case 'v':
+					case 'b':
+					case 'e':
+					case 'O':
+					case 'A':
+					case 'z':
+					case 'l':
+					case 'k':
+					case 'L':
+						config_error("%s:%i: set::modes-on-join contains +%c", 
+							cep->ce_fileptr->cf_filename, cep->ce_varlinenum, *c);
+						errors++;
+						break;
+				}
+			}
+			set_channelmodes(cep->ce_vardata, &temp);
+			if (temp.mode & MODE_NOKNOCK && !(temp.mode & MODE_INVITEONLY))
+			{
+				config_error("%s:%i: set::modes-on-join has +K but not +i",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+			if (temp.mode & MODE_NOCOLOR && temp.mode & MODE_STRIP)
+			{
+				config_error("%s:%i: set::modes-on-join has +c and +S",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+			if (temp.mode & MODE_SECRET && temp.mode & MODE_PRIVATE)
+			{
+				config_error("%s:%i: set::modes-on-join has +s and +p",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+			
 		}
 		else if (!strcmp(cep->ce_varname, "snomask-on-oper")) {
 			CheckNull(cep);

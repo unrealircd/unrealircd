@@ -1995,3 +1995,5 @@ seen. gmtime warning still there
 - Added umode +p (hide channels in whois). For opers, channels are shown as "!#chan" to indicate
   that the user is +p and the channel is only shown because you are an oper.
 - Fixed a typo in the docs for except throttle (#0000830) reported by CoNfOuNd
+- Added set::modes-on-join to set channel modes that are set when a new channel is created.
+- Fixed a typo in the HTM docs (#0000832) reported by CoNfOuNd
