@@ -598,3 +598,4 @@
 - ./update now checks when you specify wget if it exists, if not it tries lynx
 - Cached MOTDs are now dynamically allocated (saves alot of memory)
 - Made aClient->passwd dynamically allocated (saves 32bytes per user/server) [may need debugging]
+- Fixed a NOTICE crash bug, reported by EJ

@@ -2319,7 +2319,8 @@ int  m_notice(cptr, sptr, parc, parv)
 		return 0;
 	}
       temp:
-	return m_message(cptr, sptr, parc, parv, 1);
+	if (sptr->name[0])
+		return m_message(cptr, sptr, parc, parv, 1);
 }
 
 int  channelwho = 0;
