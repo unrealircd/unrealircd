@@ -972,7 +972,7 @@ struct _configitem_allow {
 struct _configitem_oper {
 	ConfigFlag 	 flag;
 	ConfigItem       *prev, *next;
-	char		 *name, *password;
+	char		 *name, *password, *swhois;
 	ConfigItem_class *class;
 	ConfigItem	 *from;
 	long		 oflags;

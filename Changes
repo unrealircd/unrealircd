@@ -361,3 +361,5 @@
 - Removed PROTO() and general h.h/proto.h cleanups (made source 3.14K smaller)
 - Implimented a system using chmod() at startup to try and keep the config file from being read 
   by people who shouldn't have access. (set through ./Config)
+- Added oper::swhois idea by Robertsog (NOTE: since this is done before the mode change, a U:Line changing
+  the SWHOIS after you /oper will override this)

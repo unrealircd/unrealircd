@@ -1108,6 +1108,9 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 						cep->ce_varlinenum);
 				}
 			} 
+			else if (!strcmp(cep->ce_varname, "swhois")) {
+				ircstrdup(oper->swhois, cep->ce_vardata);
+			}
 			else if (!strcmp(cep->ce_varname, "flags")) 
 			{
 				char *m = "*";

@@ -3898,6 +3898,14 @@ int  m_oper(cptr, sptr, parc, parv)
 		sptr->class = aconf->class;
 		sptr->class->clients++;
 
+		if (aconf->swhois) {
+			if (sptr->user->swhois)
+				MyFree(sptr->user->swhois);
+			sptr->user->swhois = MyMalloc(strlen(aconf->swhois) +1);
+			strcpy(sptr->user->swhois, aconf->swhois);
+			sendto_serv_butone_token(cptr, sptr->name,
+				MSG_SWHOIS, TOK_SWHOIS, "%s :%s", sptr->name, aconf->swhois);
+		}
 		if ((aconf->oflags & OFLAG_HELPOP))
 		{
 			sptr->umodes |= UMODE_HELPOP;
