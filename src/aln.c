@@ -63,11 +63,15 @@ Link *return_servers(void)
 
 char *base64enc(long i)
 {
+	if (i < 0)
+		return ("0");
 	return int_to_base64(i);
 }
 
 char *xbase64enc(long i)
 {
+	if (i < 0)
+		return ("0");
 	return int_to_base64(i);
 }
 

@@ -188,4 +188,5 @@
 - Fixed a spread server bug
 - Some more rehash stuff
 - Fixed check_pings problem (crash)
+- Fixed negative timestamps problem (crash)
  

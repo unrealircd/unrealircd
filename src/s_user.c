@@ -1625,6 +1625,12 @@ int  m_nick(cptr, sptr, parc, parv)
 			sptr->lastnick = TS2ts(parv[3]);
 		else		/* Little bit better, as long as not all upgraded */
 			sptr->lastnick = TStime();
+		if (sptr->lastnick < 0)
+		{
+			sendto_realops("Negative timestamp recieved from %s, resetting to TStime (%s)",
+				cptr->name, backupbuf);
+			sptr->lastnick = TStime();
+		}
 	}
 	else if (sptr->name[0] && IsPerson(sptr))
 	{
@@ -1665,6 +1671,11 @@ int  m_nick(cptr, sptr, parc, parv)
 		    && TS2ts(parv[2]) < sptr->lastnick)
 			sptr->lastnick = (MyClient(sptr)
 			    || parc < 3) ? TStime() : TS2ts(parv[2]);
+		if (sptr->lastnick < 0)
+		{
+			sendto_realops("Negative timestamp (%s)", backupbuf);
+			sptr->lastnick = TStime();
+		}
 		add_history(sptr, 1);
 		sendto_common_channels(sptr, ":%s NICK :%s", parv[0], nick);
 		sendto_serv_butone_token(cptr, parv[0], MSG_NICK, TOK_NICK,
