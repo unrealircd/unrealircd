@@ -1303,7 +1303,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 	}
 	FindClose(hFind);
 #else
-	if ((ret = Module_Load(ce->ce_vardata,0)))) {
+	if ((ret = Module_Load(ce->ce_vardata,0))) {
 			config_status("%s:%i: loadmodule %s: failed to load: %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				ce->ce_vardata, ret);

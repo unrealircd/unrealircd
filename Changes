@@ -1369,3 +1369,4 @@ seen. gmtime warning still there
 - Fixed a bug where locops did not receive a hidden host reported by breathingman (#0000221)
 - Fixed a bug where makeconf would not work after a make install
 - Fixed m_sjoin bug with banlist propagation
+- Fixed compile problem with non-glob/win32 systems (sunos 4.1) found by rshurr
