@@ -695,5 +695,12 @@
   convert it to globops. This is also what we always did for can_globalroute/can_gkill
   (well, except the warning). Giving such NETWORK (GLOBAL) privileges to a LOCAL operator
   does not make any sense and is therefore no longer allowed.
-- Added 'russian-w1251', supplied by Roman Parkin. There are like 3 main standards in Russia,
-  and 7 standards in total, so I didn't dare to call this one 'russian' ;).
+- NickChars:
+  - Added 'russian-w1251', supplied by Roman Parkin. There are like 7 standards
+    in Russia (and like 2-3 main ones), so I didn't dare to call this one 'russian' ;).
+  - Added 'czech-w1250' and 'slovak-w1250' (both might miss a few characters).
+  - Added 'windows-1250' group which contains czech-w1250, slovak-w1250, polish-w1250
+    and hungarian.
+  - Hungarian characters show both fine in w1250 and latin2, hence hungarian is included
+    both in 'windows-1250' and 'latin2'.
+  - Fixed bug: polish was not included in latin2

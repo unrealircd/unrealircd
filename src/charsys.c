@@ -71,12 +71,13 @@ char langsinuse[4096];
 /* bitmasks: */
 #define LANGAV_ASCII		0x0001 /* 8 bit ascii */
 #define LANGAV_LATIN1		0x0002 /* latin1 (western europe) */
-#define LANGAV_LATIN2		0x0004 /* latin2 (eastern europe, eg: hungarian) */
+#define LANGAV_LATIN2		0x0004 /* latin2 (eastern europe, eg: polish) */
 #define LANGAV_ISO8859_7	0x0008 /* greek */
 #define LANGAV_ISO8859_8I	0x0010 /* hebrew */
 #define LANGAV_ISO8859_9	0x0020 /* turkish */
-#define LANGAV_W1250		0x0040 /* windows-1250 (eg: polish) */
+#define LANGAV_W1250		0x0040 /* windows-1250 (eg: polish-w1250) */
 #define LANGAV_W1251		0x0080 /* windows-1251 (eg: russian) */
+#define LANGAV_LATIN2W1250	0x0100 /* Compatible with both latin2 AND windows-1250 (eg: hungarian) */
 #define LANGAV_GBK			0x1000 /* (Chinese) GBK encoding */
 
 typedef struct _langlist LangList;
@@ -94,24 +95,27 @@ static LangList langlist[] = {
 	{ "chinese-simp", "chi-s", LANGAV_GBK },
 	{ "chinese-trad", "chi-t", LANGAV_GBK },
 	{ "chinese-ja",   "chi-j", LANGAV_GBK },
+	{ "czech",        "cze-m", LANGAV_ASCII|LANGAV_W1250 },
 	{ "dutch",        "dut", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "french",       "fre", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "gbk",          "chi-s,chi-t,chi-j", LANGAV_GBK },
 	{ "german",       "ger", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "greek",        "gre", LANGAV_ASCII|LANGAV_ISO8859_7 },
 	{ "hebrew",       "heb", LANGAV_ASCII|LANGAV_ISO8859_8I },
-	{ "hungarian",    "hun", LANGAV_ASCII|LANGAV_LATIN2 },
+	{ "hungarian",    "hun", LANGAV_ASCII|LANGAV_LATIN2W1250 },
 	{ "icelandic",    "ice", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "italian",      "ita", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "latin1",       "cat,dut,fre,ger,ita,spa,swe", LANGAV_ASCII|LANGAV_LATIN1 },
-	{ "latin2",       "hun", LANGAV_ASCII|LANGAV_LATIN2 },
+	{ "latin2",       "hun,pol", LANGAV_ASCII|LANGAV_LATIN2 },
 	{ "polish",       "pol", LANGAV_ASCII|LANGAV_LATIN2 },
 	{ "polish-w1250", "pol-m", LANGAV_ASCII|LANGAV_W1250 },
 	{ "russian-w1251","rus", LANGAV_ASCII|LANGAV_W1251 },
+	{ "slovak",       "slo-m", LANGAV_ASCII|LANGAV_W1250 },
 	{ "spanish",      "spa", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "swedish",      "swe", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "swiss-german", "swg", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "turkish",      "tur", LANGAV_ASCII|LANGAV_ISO8859_9 },
+	{ "windows-1250", "cze-m,pol-m,slo-m,hun",  LANGAV_ASCII|LANGAV_W1250 },
 	{ NULL, NULL, 0 }
 };
 
@@ -380,6 +384,8 @@ int x=0;
 		x++;
 	if (langav & LANGAV_W1251)
 		x++;
+	if ((langav & LANGAV_LATIN2W1250) && !(langav & LANGAV_LATIN2) && !(langav & LANGAV_W1250))
+	    x++;
 	if (x > 1)
 	{
 		config_status("WARNING: set::accept-language: "
@@ -464,7 +470,7 @@ char tmp[512], *lang, *p;
 
 void charsys_add_language(char *name)
 {
-char latin1=0, latin2=0, chinese=0;
+char latin1=0, latin2=0, w1250=0, chinese=0;
 
 	/** Note: there could well be some characters missing in the lists below.
 	 *        While I've seen other altnernatives that just allow pretty much
@@ -481,9 +487,11 @@ char latin1=0, latin2=0, chinese=0;
 	/* GROUPS */
 	if (!strcmp(name, "latin1"))
 		latin1 = 1;
-	if (!strcmp(name, "latin2"))
+	else if (!strcmp(name, "latin2"))
 		latin2 = 1;
-	if (!strcmp(name, "chinese") || !strcmp(name, "gbk"))
+	else if (!strcmp(name, "windows-1250"))
+		w1250 = 1;
+	else if (!strcmp(name, "chinese") || !strcmp(name, "gbk"))
 		chinese = 1;
 	
 	/* INDIVIDUAL CHARSETS */
@@ -548,7 +556,8 @@ char latin1=0, latin2=0, chinese=0;
 	}
 
 	/* [LATIN2] */
-	if (latin2 || !strcmp(name, "hungarian"))
+	/* actually hungarian is a special case, include it in both w1250 and latin2 ;p */
+	if (latin2 || w1250 || !strcmp(name, "hungarian"))
 	{
 		/* supplied by AngryWolf */
 		/* a', e', i', o', o", o~, u', u", u~, A', E', I', O', O", O~, U', U", U~ */
@@ -561,10 +570,20 @@ char latin1=0, latin2=0, chinese=0;
 	}
 
 	/* [windows 1250] */
-	if (!strcmp(name, "polish-w1250"))
+	if (w1250 || !strcmp(name, "polish-w1250"))
 	{
 		/* supplied by k4be */
 		charsys_addallowed("¹æê³ñóœ¿Ÿ¥ÆÊ£ÑÓŒ¯");
+	}
+	if (w1250 || !strcmp(name, "czech-w1250"))
+	{
+		/* Syzop [probably incomplete] */
+		charsys_addallowed("ŠšÁÈÉÌÍÏÒÓØÙÚİáèéìíïòóøùúı");
+	}
+	if (w1250 || !strcmp(name, "slovak-w1250"))
+	{
+		/* Syzop [probably incomplete] */
+		charsys_addallowed("Šš¼¾ÀÁÄÅÈÉÍÏàáäåèéíïòóôúı");
 	}
 
 	/* [windows 1251] */
