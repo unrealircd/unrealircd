@@ -78,6 +78,8 @@ typedef struct _configitem_oper_from ConfigItem_oper_from;
 typedef struct _configitem_drpass ConfigItem_drpass;
 typedef struct _configitem_ulines ConfigItem_ulines;
 typedef struct _configitem_tld ConfigItem_tld;
+typedef struct _configitem_listen ConfigItem_listen;
+
 typedef struct Notify aNotify;
 typedef struct Client aClient;
 typedef struct Channel aChannel;
@@ -1006,6 +1008,15 @@ struct _configitem_tld {
 	char 		*mask;
 	char		*motd;
 	char		*rules;
+};
+
+struct _configitem_listen {
+	ConfigFlag 	flag;
+	ConfigItem 	*prev;
+	ConfigItem	*next;
+	char		*ip;
+	int		port;
+	long		options;
 };
 
 /*

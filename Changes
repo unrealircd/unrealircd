@@ -54,3 +54,4 @@
 - Added tld (T:line) to the config code
 - Finished _conf_oper
 - A report_configuration code (showoff)
+- Finished _conf_listen

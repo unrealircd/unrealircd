@@ -55,6 +55,7 @@ struct _conf_operflag
 	char	*name;
 };
 
+
 /* 
  * Top-level configuration commands -Stskeeps
  */
@@ -66,6 +67,7 @@ int	_conf_drpass	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_ulines	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_include	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_tld	(ConfigFile *conf, ConfigEntry *ce);
+int	_conf_listen	(ConfigFile *conf, ConfigEntry *ce);
 
 extern int conf_debuglevel;
 
@@ -78,6 +80,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "ulines", 	_conf_ulines },
 	{ "include", 	_conf_include },
 	{ "tld",	_conf_tld },
+	{ "listen", 	_conf_listen },
 	{ NULL, 	NULL  }
 };
 
@@ -114,6 +117,17 @@ static OperFlag _OperFlags[] = {
 	{ 0L, 	NULL  }
 };
 
+static OperFlag _ListenerFlags[] = {
+	{ LISTENER_NORMAL, 	"standard"},
+	{ LISTENER_CLIENTSONLY, "clientsonly"},
+	{ LISTENER_SERVERSONLY, "serversonly"},
+	{ LISTENER_REMOTEADMIN, "remoteadmin"},
+	{ LISTENER_JAVACLIENT, 	"java"},
+	{ LISTENER_MASK, 	"mask"},
+	{ LISTENER_SSL, 	"ssl"},
+	{ 0L,			NULL },
+};
+
 /*
  * Some prototypes
  */
@@ -128,6 +142,7 @@ int			ConfigParse(ConfigFile *cfptr);
 /* Lookup prototypes, to be moved to some .h */
 ConfigItem_class	*Find_class(char *name);
 ConfigItem_oper		*Find_oper(char *name);
+ConfigItem_listen	*Find_listen(char *ipmask, int port);
 
 
 /*
@@ -140,6 +155,9 @@ ConfigItem_drpass	*conf_drpass = NULL;
 ConfigItem_ulines	*conf_ulines = NULL;
 ConfigItem_tld		*conf_tld = NULL;
 ConfigItem_oper		*conf_oper = NULL;
+ConfigItem_listen	*conf_listen = NULL;
+
+
 
 /*
  * MyMalloc with the only difference that it clears the memory too
@@ -974,7 +992,8 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 					{
 						if (!strcmp(ofp->name, cepp->ce_varname))
 						{
-							oper->oflags |= ofp->flag;
+							if (!(oper->oflags & ofp->flag))
+								oper->oflags |= ofp->flag;
 							config_status("%s:%i: setting flag %s",
 								cepp->ce_fileptr->cf_filename,
 								cepp->ce_varlinenum,
@@ -1041,6 +1060,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 		add_ConfigItem((ConfigItem *)oper, (ConfigItem **)&conf_oper);
 }
 
+
 int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
@@ -1106,13 +1126,13 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 			continue;
 		}
 		
-		if (strcmp(cep->ce_varname, "mask")) {
+		if (!strcmp(cep->ce_varname, "mask")) {
 			ca->mask = strdup(cep->ce_vardata);
 		}
-		else if (strcmp(cep->ce_varname, "motd")) {
+		else if (!strcmp(cep->ce_varname, "motd")) {
 			ca->motd = strdup(cep->ce_vardata);
 		}
-		else if (strcmp(cep->ce_varname, "rules")) {
+		else if (!strcmp(cep->ce_varname, "rules")) {
 			ca->rules = strdup(cep->ce_vardata);
 		}
 		else
@@ -1125,6 +1145,134 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 	add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_tld);
 }
 
+/*
+ * listen {} block parser
+*/
+int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	ConfigEntry *cepp;
+	ConfigItem_listen *listen = NULL;
+	OperFlag    *ofp;
+	char	    copy[256];
+	char	    *ip;
+	char	    *port;
+	int	    iport;
+	unsigned char	isnew = 0;
+	
+	if (!ce->ce_vardata)
+	{
+		config_error("%s:%i: listen without ip:port",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+	
+	strcpy(copy, ce->ce_vardata);
+	ip = strtok(copy, ":");
+	if (!ip)
+	{
+		config_error("%s:%i: listen: illegal ip:port mask",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+	if (strchr(ip, '*') && strcmp(ip, "*"))
+	{
+		config_error("%s:%i: listen: illegal ip, (mask, and not '*')",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+		
+	}
+	port = strtok(NULL, ":");
+	if (!port)
+	{
+		config_error("%s:%i: listen: missing port in mask",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+	iport = atol(port);
+	if ((iport < 0) || (iport > 65535))
+	{
+		config_error("%s:%i: listen: illegal port (must be 0..65536)",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return;
+	} 
+	if (!(listen = Find_listen(ip, iport)))
+	{
+		listen = (ConfigItem_listen *) MyMallocEx(sizeof(ConfigItem_listen));
+		listen->ip = strdup(ip);
+		listen->port = iport;
+		isnew = 1;
+	}
+	else
+	{
+		isnew = 0;
+		config_status("%s:%i: warning: redefining a record in listen %s",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			ce->ce_vardata);
+	}
+
+	
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+		{
+			config_error("%s:%i: listen item without variable name",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			continue;
+		}
+		if (!cep->ce_vardata && !cep->ce_entries)
+		{
+			config_error("%s:%i: listen::%s without parameter",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum,
+				cep->ce_varname);
+			continue;	
+		}
+		if (!strcmp(cep->ce_varname, "options"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!cepp->ce_varname)
+				{
+					config_error("%s:%i: listen::options item without variable name",
+						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+					continue;
+				}
+				for (ofp = _ListenerFlags; ofp->name; ofp++)
+				{
+					if (!strcmp(ofp->name, cepp->ce_varname))
+					{
+						if (!(listen->options & ofp->flag))
+							listen->options |= ofp->flag;
+						config_status("%s:%i: setting option %s",
+							cepp->ce_fileptr->cf_filename,
+							cepp->ce_varlinenum,
+							ofp->name);
+						break;
+					} 
+				}
+				if (!ofp->name)
+				{
+					config_error("%s:%i: unknown listen option '%s'",
+						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
+						cepp->ce_varname);
+					continue;
+				}
+			}
+		}
+		else
+		{
+			config_error("%s:%i: unknown directive listen::%s",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					cep->ce_varname);
+			continue;								
+		}
+
+	} 
+	if (isnew)
+		add_ConfigItem((ConfigItem *)listen, (ConfigItem **)&conf_listen);
+}
+
 
 /*
  * Report functions
@@ -1133,12 +1281,13 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 void	report_configuration(void)
 {
 	ConfigItem_admin	*admin_ptr;
-	ConfigItem_oper		*oper_ptr;
+	ConfigItem_oper 	*oper_ptr;
 	ConfigItem_oper_from	*from_ptr;
 	ConfigItem_class	*class_ptr;
 	ConfigItem_ulines	*uline_ptr;
 	ConfigItem_tld		*tld_ptr;
-	
+	ConfigItem_listen	*listen_ptr;
+	OperFlag		*ofp;
 	printf("Report:\n");
 	printf("-------\n");
 	if (conf_me)
@@ -1203,6 +1352,16 @@ void	report_configuration(void)
 					(tld_ptr->motd ? tld_ptr->motd : "no motd"),		
 					(tld_ptr->rules ? tld_ptr->rules : "no rules"));
 	}
+	if (conf_listen)
+	{
+		for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *) listen_ptr->next)
+		{
+			printf("I listen on %s:%i\n", listen_ptr->ip, listen_ptr->port);
+			for (ofp = _ListenerFlags; ofp->name; ofp++)
+				if (listen_ptr->options & ofp->flag)
+					printf("  * option: %s\n", ofp->name);
+		}		
+	}
 }
 
 
@@ -1240,4 +1399,23 @@ ConfigItem_oper	*Find_oper(char *name)
 	}
 	return NULL;
 }
+
+ConfigItem_listen	*Find_listen(char *ipmask, int port)
+{
+	ConfigItem_listen	*p;
+	
+	if (!ipmask)
+		return NULL;
+		
+	for (p = conf_listen; p; p = (ConfigItem_listen *) p->next)
+	{
+		if (!match(p->ip, ipmask) && (port == p->port))
+			return (p);
+		if (!match(ipmask, p->ip) && (port == p->port))
+			return (p);
+	}
+	return NULL;
+}
+
+
 
