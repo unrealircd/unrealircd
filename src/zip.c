@@ -117,21 +117,20 @@ int     zip_init(aClient *cptr, int compressionlevel)
 */
 void    zip_free(aClient *cptr)
 {
-  if (cptr->zip)
-    {
-      if (cptr->zip->in) {
-        inflateEnd(cptr->zip->in);
-        MyFree(cptr->zip->in);
-        cptr->zip->in = NULL;
-      }
-      if (cptr->zip->out) {
-        deflateEnd(cptr->zip->out);
-        MyFree(cptr->zip->out);
-        cptr->zip->out = NULL;
-      }
-      MyFree(cptr->zip);
-      cptr->zip = NULL;
-    }
+	ClearZipped(cptr);
+	if (cptr->zip)
+	{
+		if (cptr->zip->in)
+			inflateEnd(cptr->zip->in);
+		MyFree(cptr->zip->in);
+		cptr->zip->in = NULL;
+		if (cptr->zip->out) 
+			deflateEnd(cptr->zip->out);
+		MyFree(cptr->zip->out);
+		cptr->zip->out = NULL;
+		MyFree(cptr->zip);
+		cptr->zip = NULL;
+	}
 }
 
 /*

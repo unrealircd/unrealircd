@@ -1989,3 +1989,4 @@ seen. gmtime warning still there
   flooder is banned for and how much data (in KB) the user must send before being banned.
   This should fix (#0000767) reported by ora.
 - Updated some documentation
+- (Hopefully) fixed some Ziplinks problems
