@@ -3311,3 +3311,5 @@ This is the 3.2 fixes branch.
 - Made the new numerics use nicknames (#0001896) suggested by Dukat.
 - Fixed a problem where the tmp directory was created in the current directory rather than
   the correct path (#0001898) reported by AngryWolf
+- Updated HOOKTYPE_TKL_ADD/HOOKTYPE_TKL_DEL to cptr, sptr, tk, parc, parv, else it was
+  impossible to tell *who* removed a *line. Again, parc/parv are 0/NULL for expires.

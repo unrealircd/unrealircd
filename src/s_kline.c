@@ -320,7 +320,7 @@ aTKline *tkl_expire(aTKline * tmp)
 	if (tmp->type & TKL_SHUN)
 		tkl_check_local_remove_shun(tmp);
 
-	RunHook3(HOOKTYPE_TKL_DEL, NULL, NULL, tmp);
+	RunHook5(HOOKTYPE_TKL_DEL, NULL, NULL, tmp, 0, NULL);
 	return (tkl_del_line(tmp));
 }
 
@@ -1078,7 +1078,7 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				expiry_1, setat_1, 0, NULL);
 
 		  if (tk)
-		  	RunHook3(HOOKTYPE_TKL_ADD, cptr, sptr, tk);
+		  	RunHook5(HOOKTYPE_TKL_ADD, cptr, sptr, tk, parc, parv);
 
 		  strncpyzt(gmt, asctime(gmtime((TS *)&setat_1)), sizeof(gmt));
 		  strncpyzt(gmt2, asctime(gmtime((TS *)&expiry_1)), sizeof(gmt2));
@@ -1303,7 +1303,7 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					  }
 					  if (type & TKL_SHUN)
 					      tkl_check_local_remove_shun(tk);
-					  RunHook3(HOOKTYPE_TKL_DEL, cptr, sptr, tk);
+					  RunHook5(HOOKTYPE_TKL_DEL, cptr, sptr, tk, parc, parv);
 					  tkl_del_line(tk);
 					  if (type & TKL_GLOBAL)
 					  {
