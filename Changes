@@ -3269,3 +3269,5 @@ This is the 3.2 fixes branch.
   any extendedbans ("*") or disallow only certain ones (eg: "qc").
 - Made the negative TS message a bit more annoying if time is off more than 10 seconds.
 - Minor doc tweakers, reported by AngryWolf (#0001871).
+- Win32: Readded /J compiler flag (was accidently lost in December). This could cause
+  some weird issues. Reported by Troco (#0001877).
