@@ -1283,17 +1283,30 @@ static void update_list(ResRQ *rptr, aCache *cachep)
 			base[addrcount] = NULL;
 		}
 	}
+#ifdef INET6
 	for (i = 0; HE(cp)->h_addr_list[i]; i++)
+#else
+	for (i = 0; &HE(cp)->h_addr_list[i]; i++)
+#endif
 		;
 	addrcount = i;
 
 	/*
 	 * Do the same again for IP#'s.
 	 */
+#ifdef INET6
 	for (s = (char *)HE(rptr)->h_addr.S_ADDR;
 	    ((struct IN_ADDR *)s)->S_ADDR; s += sizeof(struct IN_ADDR))
+#else
+	for (s = (char *)&HE(rptr)->h_addr.S_ADDR;
+	    ((struct IN_ADDR *)s)->S_ADDR; s += sizeof(struct IN_ADDR))
+#endif
 	{
+#ifdef INET6
 		for (i = 0; (t = HE(cp)->h_addr_list[i]); i++)
+#else
+		for (i = 0; (t = HE(cp)->h_addr_list[i]); i++)
+#endif
 			if (!bcmp(s, t, sizeof(struct IN_ADDR)))
 				break;
 		if (i >= MAXADDRS || addrcount >= MAXADDRS)
@@ -1317,12 +1330,10 @@ static void update_list(ResRQ *rptr, aCache *cachep)
 			base = (char **)MyRealloc((char *)ab,
 			    (addrcount + 1) * sizeof(*ab));
 			HE(cp)->h_addr_list = base;
-#ifndef INET6
 #ifdef	DEBUGMODE
 			Debug((DEBUG_DNS, "u_l:add IP %x hal %x ac %d",
 			    ntohl(((struct IN_ADDR *)s)->S_ADDR),
 			    HE(cp)->h_addr_list, addrcount));
-#endif
 #endif
 			for (; addrcount; addrcount--)
 			{
@@ -1407,7 +1418,11 @@ static aCache *find_cache_number(ResRQ *rptr, char *numb)
 #endif
 	for (; cp; cp = cp->hnum_next)
 	{
+#ifdef INET6
 		for (i = 0; HE(cp)->h_addr_list[i]; i++)
+#else
+		for (i = 0; HE(cp)->h_addr_list[i]; i++)
+#endif
 		{
 			if (!bcmp(HE(cp)->h_addr_list[i], numb,
 			    sizeof(struct IN_ADDR)))
@@ -1429,7 +1444,11 @@ static aCache *find_cache_number(ResRQ *rptr, char *numb)
 		 * single address entry...would have been done by hashed
 		 * search above...
 		 */
+#ifdef INET6
 		if (!HE(cp)->h_addr_list[1])
+#else
+		if (!HE(cp)->h_addr_list[1])
+#endif
 			continue;
 		/*
 		 * if the first IP# has the same hashnumber as the IP# we
@@ -1437,7 +1456,11 @@ static aCache *find_cache_number(ResRQ *rptr, char *numb)
 		 */
 		if (hashv == hash_number((u_char *)HE(cp)->h_addr_list[0]))
 			continue;
+#ifdef INET6
 		for (i = 1; HE(cp)->h_addr_list[i]; i++)
+#else
+		for (i = 1; HE(cp)->h_addr_list[i]; i++)
+#endif
 			if (!bcmp(HE(cp)->h_addr_list[i], numb,
 			    sizeof(struct IN_ADDR)))
 			{
@@ -1472,7 +1495,11 @@ static aCache *make_cache(ResRQ *rptr)
 #ifndef _WIN32
 	for (i = 0; WHOSTENTP(rptr->he.h_addr_list[i].S_ADDR); i++)
 		if ((cp = find_cache_number(rptr,
+#ifdef INET6
 		    (char *)(rptr->he.h_addr_list[i].S_ADDR))))
+#else
+		    (char *)&(rptr->he.h_addr_list[i].S_ADDR))))
+#endif
 		return cp;
 #else
 		for (i = 0; rptr->he->h_addr_list[i] &&
@@ -1731,7 +1758,13 @@ int m_dns(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(sptr, "NOTICE %s : %s = %s (CN)",
 				    parv[0], HE(cp)->h_name,
 				    HE(cp)->h_aliases[i]);
-			for (i = 1; HE(cp)->h_addr_list[i]; i++) {
+#ifdef INET6
+			for (i = 1; HE(cp)->h_addr_list[i]; i++)
+			{
+#else
+			for (i = 1; HE(cp)->h_addr_list[i]; i++)
+			{
+#endif
 				sendto_one(sptr, "NOTICE %s : %s = %s (IP)",
 				    parv[0], HE(cp)->h_name,
 #ifdef INET6
@@ -1775,7 +1808,11 @@ u_long cres_mem(aClient *sptr, char *nick)
 #else
 		h = c->he;
 #endif
+#ifdef INET6
 		for (i = 0; h->h_addr_list[i]; i++)
+#else
+		for (i = 0; h->h_addr_list[i]; i++)
+#endif
 		{
 			im += sizeof(char *);
 			im += sizeof(struct IN_ADDR);
