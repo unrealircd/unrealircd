@@ -530,3 +530,4 @@ seen. gmtime warning still there
 - Fixed /whois problem, maybe introduced some others?
 - Removed send_out_svsmode, not in use and broken too
 - Made Config say Unreal3.2
+- Made a popup menu for the tray icon to contain the same 'buttons' as the GUI does

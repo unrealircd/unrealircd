@@ -150,11 +150,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 static HCURSOR hCursor;
-static HMENU hRehash, hAbout, hConfig;
+static HMENU hRehash, hAbout, hConfig, hTray;
 
 	char *argv[3];
 	aClient *paClient;
 	char *msg;
+	POINT p;
 	
 	switch (message)
 			{
@@ -171,7 +172,12 @@ static HMENU hRehash, hAbout, hConfig;
 				ModifyMenu(hConfig, IDM_OPERMOTD, MF_BYCOMMAND, IDM_OPERMOTD, OPATH);
 				ModifyMenu(hConfig, IDM_BOTMOTD, MF_BYCOMMAND, IDM_BOTMOTD, BPATH);
 				ModifyMenu(hConfig, IDM_RULES, MF_BYCOMMAND, IDM_RULES, RPATH);
-				/* DrawMenuBar(hConfig); */
+				/* Systray popup menu set the items to point to the other menus*/
+				hTray = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_SYSTRAY)),0);
+				ModifyMenu(hTray, IDM_REHASH, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT)hRehash, "&Rehash");
+				ModifyMenu(hTray, IDM_CONFIG, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT)hConfig, "&Config");
+				ModifyMenu(hTray, IDM_ABOUT, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT)hAbout, "&About");
+				
 				SetWindowText(hDlg, WIN32_VERSION);
 				SendMessage(hDlg, WM_SETICON, (WPARAM)ICON_SMALL, 
 					(LPARAM)(HICON)LoadImage(hInst, MAKEINTRESOURCE(ICO_MAIN), IMAGE_ICON,16, 16, 0));
@@ -189,12 +195,22 @@ static HMENU hRehash, hAbout, hConfig;
 					DestroyWindow(hDlg);
 					exit(0);
 			}
+
 			case WM_USER: {
 				switch(LOWORD(lParam)) {
 					case WM_LBUTTONDBLCLK:
 						ShowWindow(hDlg, SW_SHOW);
 						ShowWindow(hDlg,SW_RESTORE);
 						SetForegroundWindow(hDlg);
+					case WM_RBUTTONDOWN:
+						SetForegroundWindow(hDlg);
+						break;
+					case WM_RBUTTONUP: 
+						GetCursorPos(&p);
+						TrackPopupMenu(hTray, TPM_LEFTALIGN|TPM_LEFTBUTTON,p.x,p.y,0,hDlg,NULL);
+						/* Kludge for a win bug */
+						SendMessage(hDlg, WM_NULL, 0, 0);
+						break;
 					}
 				return 0;
 			}
@@ -252,6 +268,18 @@ static HMENU hRehash, hAbout, hConfig;
 		}
 			case WM_COMMAND: {
 				switch(LOWORD(wParam)) {
+
+					case IDM_STATUS:
+						DialogBox(hInst, "Status", hDlg, (DLGPROC)StatusDLG);
+						break;
+					case IDM_SHUTDOWN:
+						if (MessageBox(hDlg, "Close UnrealIRCd?", "Are you sure?", MB_YESNO|MB_ICONQUESTION) == IDNO)
+							return 0;
+						else {
+							 DestroyWindow(hDlg);
+							exit(0);
+						}
+						break;
 
 					case IDM_RHALL:
 					case IDM_RHCONF:

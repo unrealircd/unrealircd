@@ -9,7 +9,8 @@
 #define CUR_HAND                        136
 #define MENU_ABOUT                      137
 #define MENU_CONFIG                     141
-#define MENU_REHASH                    144
+#define MENU_REHASH                     144
+#define MENU_SYSTRAY                    145
 #define IDC_BAR                         1103
 #define IDC_TEXT                        1107
 #define IDC_EMAIL                       1108
@@ -42,6 +43,11 @@
 #define IDM_RHOMOTD                     40046
 #define IDM_RHBMOTD                     40047
 #define IDM_RHRULES                     40048
+#define IDM_REHASH                      40049
+#define IDM_STATUS                      40050
+#define IDM_CONFIG                      40051
+#define IDM_ABOUT                       40052
+#define IDM_SHUTDOWN                    40053
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -49,8 +55,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        145
-#define _APS_NEXT_COMMAND_VALUE         40049
+#define _APS_NEXT_RESOURCE_VALUE        146
+#define _APS_NEXT_COMMAND_VALUE         40054
 #define _APS_NEXT_CONTROL_VALUE         1129
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

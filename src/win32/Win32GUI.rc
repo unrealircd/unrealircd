@@ -12,7 +12,6 @@
 #undef APSTUDIO_HIDDEN_SYMBOLS
 #include "resource.h"
 #include "winver.h"
-#include "richedit.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -49,9 +48,8 @@ CAPTION "UnrealIRCd License"
 FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,184,162,50,14
-    CONTROL         "",IDC_TEXT,"RichEdit20A",ES_MULTILINE | ES_AUTOVSCROLL | 
-                    ES_AUTOHSCROLL | ES_READONLY | ES_WANTRETURN | WS_BORDER | 
-                    WS_VSCROLL | WS_TABSTOP,8,7,402,149
+    CONTROL         "",IDC_TEXT,"RichEdit20A",WS_BORDER | WS_VSCROLL | 
+                    WS_TABSTOP | 0x18c4,8,7,402,149
 END
 
 HELP DIALOG DISCARDABLE  0, 0, 318, 94
@@ -316,7 +314,7 @@ BEGIN
     END
 END
 
-MENU_REHASH MENU DISCARDABLE
+MENU_REHASH MENU DISCARDABLE 
 BEGIN
     POPUP "Rehash"
     BEGIN
@@ -326,6 +324,18 @@ BEGIN
         MENUITEM "&All MOTDs and Rules",        IDM_RHMOTD
         MENUITEM "&OPER MOTD",                  IDM_RHOMOTD
         MENUITEM "&BOT MOTD",                   IDM_RHBMOTD
+    END
+END
+
+MENU_SYSTRAY MENU DISCARDABLE 
+BEGIN
+    POPUP "Systray"
+    BEGIN
+        MENUITEM "&Rehash",                     IDM_REHASH
+        MENUITEM "&Status",                     IDM_STATUS
+        MENUITEM "&Config",                     IDM_CONFIG
+        MENUITEM "&About",                      IDM_ABOUT
+        MENUITEM "S&hutdown",                   IDM_SHUTDOWN
     END
 END
 
