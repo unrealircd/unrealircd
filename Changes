@@ -788,3 +788,4 @@ seen. gmtime warning still there
 - Fixed a umode2 bug that crashed the server
 - Fixed vhost bug that forgot to add a \0 in the end of the string
 - /who fix
+- Another /who fix, what crashed it I assume - helped by narf to find this

@@ -699,8 +699,6 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 	} else {
 		for (ac = client; ac; ac = ac->next) {
-			if (!sptr->user)
-				continue;
 			if (!chk_who(sptr, ac, showall))
 				continue;
 			/*
@@ -712,6 +710,7 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				    me.name, sptr->name, MAXWHOREPLIES);
 				break;	/* break out of loop so we can send end of who */
 			}
+			i = 0;
 			status[i++] =
 			    (ac->user->away == NULL ? 'H' : 'G');
 			status[i++] =
