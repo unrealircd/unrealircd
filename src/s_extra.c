@@ -433,8 +433,7 @@ void ircd_log(int flags, char *format, ...)
 	sprintf(timebuf, "[%s] - ", myctime(TStime()));
 	for (logs = conf_log; logs; logs = (ConfigItem_log *) logs->next) {
 		if (logs->flags & flags) {
-			stat(logs->file, &fstats);
-			if (logs->maxsize && fstats.st_size >= logs->maxsize) {
+			if (stat(logs->file, &fstats) != -1 && logs->maxsize && fstats.st_size >= logs->maxsize) {
 #ifndef _WIN32
 				fd = open(logs->file, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR);
 #else

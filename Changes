@@ -824,3 +824,4 @@ seen. gmtime warning still there
 - Fixed something that could cause a possible bug in /oper ?
 - log::maxsize can now be entered in the format 1MB, 1MegaByte, 1MByte, etc (KB,MB,GB,TB are the only sizes 
   recognized)
+- Fixed a bug where log::maxsize would say it started a new log file if the log file didn't exist
