@@ -690,3 +690,4 @@
 - Added /botserv /bs command, patch by ATHnet.de
 - /who's now show +i users for opers in channels, idea by
   Strider@ChatCircuit
+- Fixed NO_OPEROVERRIDE bug reported by otherguy

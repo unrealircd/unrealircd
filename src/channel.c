@@ -2282,7 +2282,7 @@ static int can_join(cptr, sptr, chptr, key, link, parv)
 	if ((chptr->mode.mode & MODE_NOHIDING) && IsHiding(sptr))
 		return (ERR_NOHIDING);
 
-	if ((IsOper(sptr) && !((chptr->mode.mode & MODE_ADMONLY))))
+	if ((IsOper(sptr) && !((chptr->mode.mode & MODE_ADMONLY))) && !(ib==0))
 	{
 		return 0;	/* may override */
 	}
