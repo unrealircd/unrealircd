@@ -1496,3 +1496,8 @@ seen. gmtime warning still there
 - Removed doc/Elite.Changes - Out Dated
 - Removed doc/services-install-guide - Refer to NEW docs Unreal32docs.html
 - Modfied Unreal.nfo to include ref. to new docs
+- Removed old docs and added new docs to Makefile.in
+- Updated .CHANGES.NEW with new version # and link to docs
+- Updated .RELEASE.NOTES with new version # and link to docs
+- Added NEW doc/unreal32docs.html Docs
+
