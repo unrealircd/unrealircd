@@ -1785,3 +1785,4 @@ seen. gmtime warning still there
 ** beta14 released **
 - Fixed example.conf set::dns::retries, 2s -> 2
 - Updated help.conf: added access level required for channel modes, added chanmode +G, etc.
+- Fix for missing mode 'S' in 005 CHANMODES= message
