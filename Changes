@@ -3331,3 +3331,4 @@ This is the 3.2 fixes branch.
 - Added hungarian docs, translated by AngryWolf.
 - Fixed a problem with the win32 installer as a result of MSVCR70D.DLL, reported by
   aquanight
+- Updated /Credits and added a donator.
