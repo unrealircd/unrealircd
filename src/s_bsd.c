@@ -1253,6 +1253,7 @@ add_con_refuse:
 		}
 		acptr->flags |= FLAGS_SSL;
 		SSL_set_fd(acptr->ssl, fd);
+		SSL_set_non_blocking(acptr->ssl);
 		if (!ircd_SSL_accept(acptr, fd)) {
 			SSL_set_shutdown(acptr->ssl, SSL_RECEIVED_SHUTDOWN);
 			SSL_smart_shutdown(acptr->ssl);
