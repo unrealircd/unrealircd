@@ -314,3 +314,12 @@ Fixed m_kick more
 Made "is a bot.." not bold
 --Luke
 ===================================
+
+Fixed a bug with \r\n being mistakenly parsed
+wrong. Thanks to John_z
+--Luke
+===================================
+
+Added temp patch to m_kline to stop segfault
+--Luke
+===================================

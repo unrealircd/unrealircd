@@ -2247,6 +2247,18 @@ int  m_kline(cptr, sptr, parc, parv)
 	}
 
 	add_temp_conf(CONF_KILL, uhost, parv[2], name, 0, 0, 1);
+
+        if (find_kill(cptr) || find_kill(sptr))
+	{
+		sendto_failops_whoare_opers("k:line error: mask=%s parsed=%s I tried to kill cptr",
+		mask, userhost);
+		sendto_serv_butone(NULL,
+		":%s GLOBOPS :k:line error: mask=%s parsed=%s I tried to kill cptr",
+		me.name, mask, userhost);
+		flush_connections(me.fd);
+		(void)rehash(&me, &me, 0);
+		return;
+	}
 	check_pings(TStime(), 1);
 }
 
