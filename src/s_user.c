@@ -1669,12 +1669,6 @@ int  m_nick(cptr, sptr, parc, parv)
 		sptr->nospoof =
 		    1 + (int)(9000000.0 * rand() / (RAND_MAX + 80000000.0));
 #endif
-		/*
-		 * If on the odd chance it comes out zero, make it something
-		 * non-zero.
-		 */
-		if (sptr->nospoof == 0)
-			sptr->nospoof = 0xa123b789;
 		sendto_one(sptr, ":%s NOTICE %s :*** If you are having problems"
 		    " connecting due to ping timeouts, please"
 		    " type /quote pong %X or /raw pong %X now.",
@@ -3116,8 +3110,8 @@ int  m_nospoof(cptr, sptr, parc, parv)
 	return 0;
       temp:
 	/* Homer compatibility */
-	sendto_one(cptr, ":%X!nospoof@%s PRIVMSG %s :%cVERSION%c",
-	    cptr->nospoof, me.name, cptr->name, (char)1, (char)1);
+	sendto_one(cptr, ":%X!nospoof@%s PRIVMSG %s :\1VERSION\1",
+	    cptr->nospoof, me.name, cptr->name);
 	return 0;
 }
 #endif /* NOSPOOF */
@@ -3260,11 +3254,7 @@ int  m_mkpasswd(cptr, sptr, parc, parv)
 */
 int  SVSNOOP;
 
-int  m_oper(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
-{
+int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	ConfigItem_oper *aconf;
 	ConfigItem_oper_from *oper_from;
 	char *name, *password, *encr, nuhhost[NICKLEN+USERLEN+HOSTLEN+6], nuhhost2[NICKLEN+USERLEN+HOSTLEN+6];
@@ -3273,48 +3263,29 @@ int  m_oper(cptr, sptr, parc, parv)
 	extern char *crypt();
 #endif /* CRYPT_OPER_PASSWORD */
 
-
-	name = parc > 1 ? parv[1] : NULL;
-	password = parc > 2 ? parv[2] : NULL;
-
-	if (!IsServer(cptr) && (BadPtr(name) || BadPtr(password)))
-	{
+	if (parc < 3) {
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
 		    me.name, parv[0], "OPER");
 		return 0;
 	}
 
-	if (SVSNOOP)
-	{
+	if (SVSNOOP) {
 		sendto_one(sptr,
 		    ":%s %s %s :*** This server is in NOOP mode, you cannot /oper",
 		    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name);
 		return 0;
 	}
 
-	/* if message arrived from server, trust it, and set to oper */
-
-	if ((IsServer(cptr) || IsMe(cptr)) && !IsOper(sptr))
-	{
-		sptr->umodes |= UMODE_OPER;
-		sendto_serv_butone(cptr, ":%s MODE %s :+o", parv[0], parv[0]);
-		if (IsMe(cptr))
-		{
-			sendto_one(sptr, rpl_str(RPL_YOUREOPER),
-			    me.name, parv[0]);
-		}
-		return 0;
-	}
-	else if (IsOper(sptr))
-	{
-		if (MyConnect(sptr))
-			sendto_one(sptr, rpl_str(RPL_YOUREOPER),
-			    me.name, parv[0]);
+	if (IsOper(sptr)) {
+		sendto_one(sptr, rpl_str(RPL_YOUREOPER),
+		    me.name, parv[0]);
 		return 0;
 	}
 
-	if (!(aconf = Find_oper(name)))
-	{
+	name = parc > 1 ? parv[1] : NULL;
+	password = parc > 2 ? parv[2] : NULL;
+
+	if (!(aconf = Find_oper(name))) {
 		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);
 		sendto_realops
 		    ("Failed OPER attempt by %s (%s@%s) [unknown oper]",
@@ -3328,8 +3299,7 @@ int  m_oper(cptr, sptr, parc, parv)
 	    oper_from; oper_from = (ConfigItem_oper_from *) oper_from->next)
 		if (!match(oper_from->name, nuhhost) || !match(oper_from->name, nuhhost2))
 			break;
-	if (!oper_from)
-	{
+	if (!oper_from)	{
 		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);
 		sendto_realops
 		    ("Failed OPER attempt by %s (%s@%s) [host doesnt match]",
@@ -3378,139 +3348,113 @@ int  m_oper(cptr, sptr, parc, parv)
 			sendto_serv_butone_token(cptr, sptr->name,
 				MSG_SWHOIS, TOK_SWHOIS, "%s :%s", sptr->name, aconf->swhois);
 		}
-		if ((aconf->oflags & OFLAG_HELPOP))
-		{
-			sptr->umodes |= UMODE_HELPOP;
+		sptr->umodes |= (UMODE_SERVNOTICE | UMODE_WALLOP | UMODE_FAILOP);
+		if (aconf->oflags & OFLAG_NETADMIN) {
+			sptr->umodes |= (UMODE_NETADMIN | UMODE_ADMIN | UMODE_SADMIN | UMODE_OPER);
+			sendto_ops
+			    ("%s (%s@%s) is now a network administrator (N)",
+			    parv[0], sptr->user->username,
+			    IsHidden(cptr) ? sptr->user->virthost : sptr->
+			    user->realhost);
+			sendto_serv_butone(&me,
+			    ":%s GLOBOPS :%s (%s@%s) is now a network administrator (N)",
+			    me.name, parv[0], sptr->user->username,
+			    IsHidden(sptr) ? sptr->
+			    user->virthost : sptr->user->realhost);
+			sptr->user->oflag |= OFLAG_ADMIN|OFLAG_SADMIN|OFLAG_ISGLOBAL;
+			if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
+				iNAH_host(sptr, netadmin_host);
 		}
-
-		if (!(aconf->oflags & OFLAG_ISGLOBAL))
-		{
-			SetLocOp(sptr);
+		else if (aconf->oflags & OFLAG_TECHADMIN) {
+			sptr->umodes |= (UMODE_TECHADMIN | UMODE_ADMIN | UMODE_SADMIN | UMODE_OPER);
+			sendto_ops
+			    ("%s (%s@%s) is now a technical administrator (T)",
+			    parv[0], sptr->user->username,
+			    IsHidden(sptr) ? sptr->user->virthost : sptr->
+			    user->realhost);
+			sendto_serv_butone(&me,
+			    ":%s GLOBOPS :%s (%s@%s) is now a technical administrator (T)",
+			    me.name, parv[0], sptr->user->username,
+			    IsHidden(sptr) ? sptr->
+			    user->virthost : sptr->user->realhost);
+			sptr->user->oflag |= OFLAG_ADMIN|OFLAG_SADMIN|OFLAG_ISGLOBAL;
+			if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
+				iNAH_host(sptr, techadmin_host);
 		}
-		else if (aconf->oflags & OFLAG_NETADMIN)
-		{
-			if (aconf->oflags & OFLAG_SADMIN)
-			{
-				sptr->umodes |=
-				    (UMODE_NETADMIN | UMODE_ADMIN |
-				    UMODE_SADMIN);
-				SetNetAdmin(sptr);
-				SetSAdmin(sptr);
-				SetAdmin(sptr);
-
-				SetOper(sptr);
+		else if (aconf->oflags & OFLAG_ADMIN) {
+			sptr->umodes |= (UMODE_ADMIN|UMODE_OPER);
+			if (!(aconf->oflags & OFLAG_SADMIN)) {
+				sendto_ops("%s (%s@%s) is now a server admin (A)",
+				    parv[0], sptr->user->username,
+				    IsHidden(sptr) ? sptr->user->virthost : sptr->
+				    user->realhost);
+				if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
+					iNAH_host(sptr, admin_host);
 			}
-			else
-			{
-				sptr->umodes |= (UMODE_NETADMIN | UMODE_ADMIN);
-				SetNetAdmin(sptr);
-				SetAdmin(sptr);
-				SetOper(sptr);
-
-			}
+			sptr->user->oflag |= OFLAG_ISGLOBAL;
 		}
-		else if (aconf->oflags & OFLAG_COADMIN)
-		{
-			if (aconf->oflags & OFLAG_SADMIN)
-			{
-				sptr->umodes |=
-				    (UMODE_COADMIN | UMODE_ADMIN |
-				    UMODE_SADMIN);
-				SetCoAdmin(sptr);
-				SetSAdmin(sptr);
-				SetAdmin(sptr);
-				SetOper(sptr);
-
+		else if (aconf->oflags & OFLAG_COADMIN)	{
+			sptr->umodes |= (UMODE_COADMIN|UMODE_OPER);
+			if (!(aconf->oflags & OFLAG_SADMIN)) {
+				sendto_ops("%s (%s@%s) is now a co administrator (C)",
+				    parv[0], sptr->user->username,
+				    IsHidden(sptr) ? sptr->user->virthost : sptr->
+				    user->realhost);
+				if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
+					iNAH_host(sptr, coadmin_host);
 			}
-			else
-			{
-				sptr->umodes |= (UMODE_COADMIN | UMODE_ADMIN);
-				SetCoAdmin(sptr);
-				SetAdmin(sptr);
-				SetOper(sptr);
-
-			}
+			sptr->user->oflag |= OFLAG_ISGLOBAL;
 		}
-		else if (aconf->oflags & OFLAG_TECHADMIN)
-		{
-			if (aconf->oflags & OFLAG_SADMIN)
-			{
-				sptr->umodes |=
-				    (UMODE_TECHADMIN | UMODE_ADMIN |
-				    UMODE_SADMIN);
-				SetTechAdmin(sptr);
-				SetSAdmin(sptr);
-				SetAdmin(sptr);
-				SetOper(sptr);
-
-			}
-			else
-			{
-				sptr->umodes |= (UMODE_TECHADMIN | UMODE_ADMIN);
-				SetTechAdmin(sptr);
-				SetAdmin(sptr);
-				SetOper(sptr);
-
+		else if (aconf->oflags & OFLAG_ISGLOBAL) {
+			sptr->umodes |= UMODE_OPER;
+			if (!(aconf->oflags & OFLAG_SADMIN)) {
+				sendto_ops("%s (%s@%s) is now an operator (O)", parv[0],
+				    sptr->user->username,
+				    IsHidden(sptr) ? sptr->user->virthost : sptr->
+				    user->realhost);
+				if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
+					iNAH_host(sptr, oper_host);
 			}
 		}
-		else
-		    if (aconf->oflags & OFLAG_ADMIN
-		    && aconf->oflags & OFLAG_SADMIN)
-		{
-			sptr->umodes |= (UMODE_ADMIN | UMODE_SADMIN);
-			SetAdmin(sptr);
-			SetSAdmin(sptr);
-			SetOper(sptr);
-
+		else {
+			sptr->umodes |= UMODE_LOCOP;
+			if (!(aconf->oflags & OFLAG_SADMIN)) {
+				sendto_ops("%s (%s@%s) is now a local operator (o)",
+				    parv[0], sptr->user->username,
+				    IsHidden(sptr) ? sptr->user->virthost : sptr->
+				    user->realhost);
+				if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
+					iNAH_host(sptr, locop_host);
+			}
 		}
-		else if (aconf->oflags & OFLAG_SADMIN)
+		if (aconf->oflags & OFLAG_SADMIN)
 		{
 			sptr->umodes |= (UMODE_SADMIN);
-			SetSAdmin(sptr);
-			SetOper(sptr);
-
-		}
-		else if (aconf->oflags & OFLAG_ADMIN)
-		{
-			sptr->umodes |= (UMODE_ADMIN);
-			SetAdmin(sptr);
-			SetOper(sptr);
-
-		}
-		else
-		{
-			if (aconf->oflags & OFLAG_SADMIN)
-			{
-				sptr->umodes |= (UMODE_OPER | UMODE_SADMIN);
-				SetSAdmin(sptr);
-				SetOper(sptr);
-
-			}
-			else
-			{
-				sptr->umodes |= (UMODE_OPER);
-				SetOper(sptr);
-
+			if (!(aconf->oflags & OFLAG_NETADMIN) && !(aconf->oflags & OFLAG_TECHADMIN)) {
+				sendto_ops("%s (%s@%s) is now a services admin (a)",
+				    parv[0], sptr->user->username,
+				    IsHidden(sptr) ? sptr->user->virthost : sptr->
+				    user->realhost);
+				sendto_serv_butone(&me,
+				    ":%s GLOBOPS :%s (%s@%s) is now a services administrator (a)",
+				    me.name, parv[0], sptr->user->username,
+				    IsHidden(sptr) ? sptr->
+				    user->virthost : sptr->user->realhost);
+				if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
+					iNAH_host(sptr, sadmin_host);
 			}
 		}
-
+		if ((aconf->oflags & OFLAG_HELPOP))
+			sptr->umodes |= UMODE_HELPOP;
 		if (aconf->oflags & OFLAG_WHOIS)
-		{
-			sptr->umodes |= (UMODE_WHOIS);
-		}
-
+			sptr->umodes |= UMODE_WHOIS;
 		if (aconf->oflags & OFLAG_HIDE)
-		{
 			sptr->umodes |= (UMODE_HIDE);
-		}
-
-		sptr->user->oflag = aconf->oflags;
-
-		sptr->umodes |=
-		    (UMODE_SERVNOTICE | UMODE_WALLOP | UMODE_FAILOP);
-		set_snomask(sptr, SNO_DEFOPER);
 		if (aconf->oflags & OFLAG_EYES)
 			sptr->user->snomask |= SNO_EYES;
+		sptr->user->oflag |= aconf->oflags;
+
+		set_snomask(sptr, SNO_DEFOPER);
 		send_umode_out(cptr, sptr, old);
 		sendto_one(sptr, rpl_str(RPL_SNOMASK),
 			me.name, parv[0], get_sno_str(sptr));
@@ -3519,104 +3463,6 @@ int  m_oper(cptr, sptr, parc, parv)
 		addto_fdlist(sptr->slot, &oper_fdlist);
 #endif
 		sendto_one(sptr, rpl_str(RPL_YOUREOPER), me.name, parv[0]);
-
-		if (!(aconf->oflags & OFLAG_ISGLOBAL))
-		{
-			sendto_ops("%s (%s@%s) is now a local operator (o)",
-			    parv[0], sptr->user->username,
-			    IsHidden(sptr) ? sptr->user->virthost : sptr->
-			    user->realhost);
-			if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
-				iNAH_host(sptr, locop_host);
-			sptr->umodes &= ~UMODE_OPER;
-		}
-		else if (aconf->oflags & OFLAG_NETADMIN)
-		{
-			sendto_ops
-			    ("%s (%s@%s) is now a network administrator (N)",
-			    parv[0], sptr->user->username,
-			    IsHidden(cptr) ? sptr->user->virthost : sptr->
-			    user->realhost);
-			if (MyClient(sptr))
-			{
-				sendto_serv_butone(&me,
-				    ":%s GLOBOPS :%s (%s@%s) is now a network administrator (N)",
-				    me.name, parv[0], sptr->user->username,
-				    IsHidden(sptr) ? sptr->
-				    user->virthost : sptr->user->realhost);
-			}
-
-			if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
-				iNAH_host(sptr, netadmin_host);
-		}
-		else if (aconf->oflags & OFLAG_COADMIN)
-		{
-			sendto_ops("%s (%s@%s) is now a co administrator (C)",
-			    parv[0], sptr->user->username,
-			    IsHidden(sptr) ? sptr->user->virthost : sptr->
-			    user->realhost);
-			if (MyClient(sptr))
-			{
-				/*      sendto_serv_butone(&me, ":%s GLOBOPS :%s (%s@%s) is now a co administrator (C)", me.name, parv[0],
-				   sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost);
-				 */
-			}
-			if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
-				iNAH_host(sptr, coadmin_host);
-		}
-		else if (aconf->oflags & OFLAG_TECHADMIN)
-		{
-			sendto_ops
-			    ("%s (%s@%s) is now a technical administrator (T)",
-			    parv[0], sptr->user->username,
-			    IsHidden(sptr) ? sptr->user->virthost : sptr->
-			    user->realhost);
-			if (MyClient(sptr))
-			{
-				sendto_serv_butone(&me,
-				    ":%s GLOBOPS :%s (%s@%s) is now a technical administrator (T)",
-				    me.name, parv[0], sptr->user->username,
-				    IsHidden(sptr) ? sptr->
-				    user->virthost : sptr->user->realhost);
-			}
-			if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
-				iNAH_host(sptr, techadmin_host);
-		}
-		else if (aconf->oflags & OFLAG_SADMIN)
-		{
-			sendto_ops("%s (%s@%s) is now a services admin (a)",
-			    parv[0], sptr->user->username,
-			    IsHidden(sptr) ? sptr->user->virthost : sptr->
-			    user->realhost);
-			if (MyClient(sptr))
-			{
-				sendto_serv_butone(&me,
-				    ":%s GLOBOPS :%s (%s@%s) is now a services administrator (a)",
-				    me.name, parv[0], sptr->user->username,
-				    IsHidden(sptr) ? sptr->
-				    user->virthost : sptr->user->realhost);
-			}
-			if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
-				iNAH_host(sptr, sadmin_host);
-		}
-		else if (aconf->oflags & OFLAG_ADMIN)
-		{
-			sendto_ops("%s (%s@%s) is now a server admin (A)",
-			    parv[0], sptr->user->username,
-			    IsHidden(sptr) ? sptr->user->virthost : sptr->
-			    user->realhost);
-			if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
-				iNAH_host(sptr, admin_host);
-		}
-		else
-		{
-			sendto_ops("%s (%s@%s) is now an operator (O)", parv[0],
-			    sptr->user->username,
-			    IsHidden(sptr) ? sptr->user->virthost : sptr->
-			    user->realhost);
-			if (iNAH == 1 && (sptr->user->oflag & OFLAG_HIDE))
-				iNAH_host(sptr, oper_host);
-		}
 
 		if (IsOper(sptr))
 			IRCstats.operators++;
@@ -3634,13 +3480,9 @@ int  m_oper(cptr, sptr, parc, parv)
 			(void)m_join(cptr, sptr, 3, chans);
 		}
 
-#if !defined(CRYPT_OPER_PASSWORD) && (defined(FNAME_OPERLOG) ||\
-    (defined(USE_SYSLOG) && defined(SYSLOG_OPER)))
-		encr = "";
-#endif
 #if defined(USE_SYSLOG) && defined(SYSLOG_OPER)
-		syslog(LOG_INFO, "OPER (%s) (%s) by (%s!%s@%s)",
-		    name, encr, parv[0], sptr->user->username, sptr->sockhost);
+		syslog(LOG_INFO, "OPER (%s) by (%s!%s@%s)",
+		    name, parv[0], sptr->user->username, sptr->sockhost);
 #endif
 		ircd_log(LOG_OPER, "OPER (%s) by (%s!%s@%s)", name, parv[0], sptr->user->username,
 			sptr->sockhost);
@@ -3661,34 +3503,6 @@ int  m_oper(cptr, sptr, parc, parv)
 		    me.name, parv[0], sptr->user->username, sptr->sockhost,
 		    name);
 		sptr->since += 7;
-#ifdef FNAME_OPERLOG
-		{
-			int  logfile;
-
-			/*
-			 * This conditional makes the logfile active only after
-			 * it's been created - thus logging can be turned off by
-			 * removing the file.
-			 *
-			 * stop NFS hangs...most systems should be able to open a
-			 * file in 3 seconds. -avalon (curtesy of wumpus)
-			 */
-			if (IsPerson(sptr) &&
-			    (logfile =
-			    open(FNAME_OPERLOG, O_WRONLY | O_APPEND)) != -1)
-			{
-
-				(void)ircsprintf(buf,
-				    "%s FAILED OPER (%s) (%s) by (%s!%s@%s)\n PASSWORD %s",
-				    myctime(TStime()), name, encr, parv[0],
-				    sptr->user->username, sptr->sockhost,
-				    password);
-				(void)write(logfile, buf, strlen(buf));
-				(void)close(logfile);
-			}
-			/* Modification by pjg */
-		}
-#endif
 	}
 	return 0;
 }
