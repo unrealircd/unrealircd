@@ -1010,3 +1010,4 @@ seen. gmtime warning still there
 - Fixed a typo in s_misc.c
 - Config parser fixes (bugs found by Souleh)
 - Changed SERVICES-NAME warning to error
+- Auth_Make fix for crypt method

@@ -290,7 +290,7 @@ char	*Auth_Make(short type, char *para)
 			if (!para)
 				return NULL;
 			/* If our data is like 1 or none, we just let em through .. */
-			if (!(salt[0] && salt[1]))
+			if (!(para[0] && para[1]))
 				return NULL;
 			salt[0] = para[0];
 			salt[1] = para[1];
