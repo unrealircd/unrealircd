@@ -50,7 +50,7 @@ int  max_connection_count = 1, max_client_count = 1;
 extern ircstats IRCstats;
 extern int do_garbage_collect;
 /* We need all these for cached MOTDs -- codemastr */
-
+extern char *buildid;
 aMotd *opermotd;
 aMotd *rules;
 aMotd *motd;
@@ -1994,7 +1994,7 @@ void m_info_send(sptr)
 	sendto_one(sptr, ":%s %d %s :On-line since %s", me.name, RPL_INFO,
 	    sptr->name, myctime(me.firsttime));
 	sendto_one(sptr, ":%s %d %s :ReleaseID (%s)", me.name, RPL_INFO,
-	    sptr->name, RELEASEID);
+	    sptr->name, buildid);
 	sendto_one(sptr, rpl_str(RPL_ENDOFINFO), me.name, sptr->name);
 }
 

@@ -616,3 +616,4 @@ seen. gmtime warning still there
 - Made glob() use GLOB_LIMIT on OpenBSD 2.9 to help prevent a DoS
 - Fixed a bug allowing channek keys to have spaces
 - Cleaned up some thread porting code
+- Added a new versioning system to allow easy tracking of bugs

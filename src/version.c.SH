@@ -1,16 +1,10 @@
 # $Id$
-case $CONFIG in
-'')	 if test -r ../config.sh
-	 then 
-	    . ../config.sh ;
-	 else 
-	    spitshell=cat
-	    package=IRC
-	 fi
-	 ;;
-esac
 
 echo "Extracting src/version.c..."
+
+id=`grep '$Id: Changes,v' ../Changes`
+id=`echo $id |sed 's/.* Changes\,v \(.*\) .* Exp .*/\1/'`
+echo "$id"
 
 if test -r version.c
 then
@@ -27,7 +21,7 @@ awk '{if (NF == 6) \
 else \
          { print $1 " "  $2 " " $3 " " $7 " at " $4 " " $5 " " $6 }}'`
 
-$spitshell >version.c <<!SUB!THIS!
+cat >version.c <<!SUB!THIS!
 /*
  *   IRC - Internet Relay Chat, ircd/version.c
  *   Copyright (C) 1990 Chelsea Ashley Dyerman
@@ -61,7 +55,7 @@ char *generation = "$generation";
 char *creation = "$creation";
 #define IRCDTOTALVERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
 char *version = IRCDTOTALVERSION;
-
+char *buildid = "$id";
 /* moved to s_serv.c */
 char *infotext[] = 
 { 0 };
