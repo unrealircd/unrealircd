@@ -1176,3 +1176,6 @@ v- Fixed some bugreport stuff
 - More -Wall cleanups
 - Fixed hunt_server_token (use IsToken on acptr->from, not acptr)
 - Unbroken Griever's broken hunt_server_token broken token fix
+- Various fixes to virthost system, may fix some memory corruptions,
+  and potential exploits.
+

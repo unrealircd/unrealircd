@@ -181,8 +181,7 @@ anUser *make_user(aClient *cptr)
 		user->whowas = NULL;
 		user->snomask = 0;
 		*user->realhost = '\0';
-		user->virthost = MyMalloc(5);
-		*user->virthost = '\0';
+		user->virthost = NULL;
 		cptr->user = user;		
 	}
 	return user;
