@@ -267,8 +267,9 @@ int parse_netmask(const char *text, struct irc_netmask *netmask)
 #ifdef INET6
 	if (strchr(host, ':'))
 		return parse_v6_netmask(host, &netmask->mask, &netmask->bits);
+	else
 #endif
-	else if (strchr(host, '.'))
+	if (strchr(host, '.'))
 		return parse_v4_netmask(host, &netmask->mask, &netmask->bits);
 	else
 	{
