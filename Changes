@@ -231,3 +231,9 @@ and "is a secure connection" is no longer
 bold (it was lame)
 --Luke
 ===================================
+
+s_serv.c fixes
+fixed map bug that allowed you to trivially
+find a hidden U lined server (hopefully)
+--Luke
+===================================
