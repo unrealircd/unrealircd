@@ -1598,11 +1598,15 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 	  case MODE_TOPICLIMIT:
 	  case MODE_NOPRIVMSGS:
 	  case MODE_INVITEONLY:
+		if (what == MODE_DEL && modetype == MODE_INVITEONLY && (chptr->mode.mode & MODE_NOKNOCK))
+			chptr->mode.mode &= ~MODE_NOKNOCK;
 	  case MODE_RGSTRONLY:
 	  case MODE_NOCOLOR:
 	  case MODE_NOKICKS:
 	  case MODE_STRIP:
 	  case MODE_NOKNOCK:
+		if (what == MODE_ADD && modetype == MODE_NOKNOCK && !(chptr->mode.mode & MODE_INVITEONLY))
+			break;
 #ifdef STRIPBADWORDS
 	  case MODE_STRIPBADWORDS:
 #endif

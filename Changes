@@ -612,3 +612,5 @@
 - Fixed a wierd NOTICE bug
 - Modified and fixed the NOTICE bug totally, with some waste of the nospoof
   system
+- Fixed a bug where +K could be set when +i was not (reported by rapta)
+- Made it so if you set -i on a channel that is +K it sets -iK
