@@ -545,7 +545,7 @@ extern TS check_pings(TS currenttime)
 				 * If it's a user, we check for CONF_BAN_USER
 				 */
 				bconf =
-				    Find_ban(make_user_host(cptr->
+				    Find_ban(cptr, make_user_host(cptr->
 				    user ? cptr->user->username : cptr->
 				    username,
 				    cptr->user ? cptr->user->realhost : cptr->
@@ -555,7 +555,7 @@ extern TS check_pings(TS currenttime)
 
 				if (!killflag && !IsAnOper(cptr) &&
 				    (bconf =
-				    Find_ban(cptr->info, CONF_BAN_REALNAME))) {
+				    Find_ban(NULL, cptr->info, CONF_BAN_REALNAME))) {
 					killflag++;
 				}
 
@@ -565,7 +565,7 @@ extern TS check_pings(TS currenttime)
 			 */
 			if (!killflag)
 				if ((bconf =
-				    Find_ban(Inet_ia2p(&cptr->ip),
+				    Find_ban(cptr, Inet_ia2p(&cptr->ip),
 				    CONF_BAN_IP)))
 					killflag++;
 			if (killflag) {
@@ -1128,13 +1128,6 @@ int InitwIRCD(int argc, char *argv[])
 			  }
 #endif
 			  exit(0);
-		  case 'W':{
-			  struct IN_ADDR bah;
-			  int  bit;
-			  parse_netmask("255.255.255.255/8", &bah, &bit);
-			  printf("%s - %d\n", Inet_ia2p(&bah), bit);
-			  exit(0);
-		  }
 		  case 'C':
 			  config_verbose = atoi(p);
 			  break;

@@ -1252,7 +1252,7 @@ add_con_refuse:
 			}
 		}
 
-		if ((bconf = Find_ban(acptr->sockhost, CONF_BAN_IP))) {
+		if ((bconf = Find_ban(acptr, Inet_ia2p(&acptr->ip), CONF_BAN_IP))) {
 			if (bconf)
 			{
 				ircsprintf(zlinebuf,
@@ -1278,7 +1278,7 @@ add_con_refuse:
 		else
 		{
 			int val;
-			if (!(val = throttle_can_connect(&acptr->ip)))
+			if (!(val = throttle_can_connect(acptr, &acptr->ip)))
 			{
 				ircsprintf(zlinebuf,
 					"ERROR :Closing Link: [%s] (Throttled: Reconnecting too fast) -"

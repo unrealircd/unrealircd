@@ -268,7 +268,7 @@ nohostcheck:
 			return exit_client(acptr, acptr, acptr,
 			    "Server Exists");
 		}
-		if ((bconf = Find_ban(servername, CONF_BAN_SERVER)))
+		if ((bconf = Find_ban(NULL, servername, CONF_BAN_SERVER)))
 		{
 			sendto_realops
 				("Cancelling link %s, banned server",
@@ -471,7 +471,7 @@ CMD_FUNC(m_server_remote)
 			return 0;
 		}
 	}
-	if ((bconf = Find_ban(servername, CONF_BAN_SERVER)))
+	if ((bconf = Find_ban(NULL, servername, CONF_BAN_SERVER)))
 	{
 		sendto_realops
 			("Cancelling link %s, banned server %s",

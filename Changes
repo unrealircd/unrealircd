@@ -3272,3 +3272,7 @@ This is the 3.2 fixes branch.
 - Win32: Readded /J compiler flag (was accidentally lost in December). This could cause
   some weird issues. Reported by Troco (#0001877).
 - Fixed compile problem with debugmode + ipv6
+- Added CIDR support (#0001296) suggested by many people.
+  - Imported the latest CIDR functions from Hybrid 7.0.1 (and fixed numerous bugs)
+  - Implemented CIDR support for ban ip, ban user, allow, except ban/tkl/throttle, and TKL
+  - Note: This needs testing

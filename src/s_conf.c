@@ -1479,11 +1479,11 @@ char *encoded;
 	{
 		if (tk->type != TKL_SPAMF)
 			continue; /* global entry or something else.. */
-		if (!strcmp(tk->spamf->tkl_reason, "<internally added by ircd>"))
+		if (!strcmp(tk->ptr.spamf->tkl_reason, "<internally added by ircd>"))
 		{
-			MyFree(tk->spamf->tkl_reason);
-			tk->spamf->tkl_reason = strdup(encoded);
-			tk->spamf->tkl_duration = SPAMFILTER_BAN_TIME;
+			MyFree(tk->ptr.spamf->tkl_reason);
+			tk->ptr.spamf->tkl_reason = strdup(encoded);
+			tk->ptr.spamf->tkl_duration = SPAMFILTER_BAN_TIME;
 		}
 		/* This one is even more ugly, but our config crap is VERY confusing :[ */
 		if (!tk->setby)
@@ -1726,6 +1726,8 @@ void	config_rehash()
 		next = (ListStruct *)allow_ptr->next;
 		ircfree(allow_ptr->ip);
 		ircfree(allow_ptr->hostname);
+		if (allow_ptr->netmask)
+			MyFree(allow_ptr->netmask);
 		Auth_DeleteAuthStruct(allow_ptr->auth);
 		DelListItem(allow_ptr, conf_allow);
 		MyFree(allow_ptr);
@@ -1734,6 +1736,8 @@ void	config_rehash()
 	{
 		next = (ListStruct *)except_ptr->next;
 		ircfree(except_ptr->mask);
+		if (except_ptr->netmask)
+			MyFree(except_ptr->netmask);
 		DelListItem(except_ptr, conf_except);
 		MyFree(except_ptr);
 	}
@@ -1744,6 +1748,8 @@ void	config_rehash()
 		{
 			ircfree(ban_ptr->mask);
 			ircfree(ban_ptr->reason);
+			if (ban_ptr->netmask)
+				MyFree(ban_ptr->netmask);
 			DelListItem(ban_ptr, conf_ban);
 			MyFree(ban_ptr);
 		}
@@ -2319,7 +2325,7 @@ ConfigItem_ulines *Find_uline(char *host) {
 }
 
 
-ConfigItem_except *Find_except(char *host, short type) {
+ConfigItem_except *Find_except(aClient *sptr, char *host, short type) {
 	ConfigItem_except *excepts;
 
 	if (!host)
@@ -2327,8 +2333,10 @@ ConfigItem_except *Find_except(char *host, short type) {
 
 	for(excepts = conf_except; excepts; excepts =(ConfigItem_except *) excepts->next) {
 		if (excepts->flag.type == type)
-			if (!match(excepts->mask, host))
+		{
+			if (match_ip(sptr->ip, host, excepts->mask, excepts->netmask))
 				return excepts;
+		}
 	}
 	return NULL;
 }
@@ -2375,7 +2383,7 @@ ConfigItem_link *Find_link(char *username,
 
 }
 
-ConfigItem_ban 	*Find_ban(char *host, short type)
+ConfigItem_ban 	*Find_ban(aClient *sptr, char *host, short type)
 {
 	ConfigItem_ban *ban;
 
@@ -2386,17 +2394,18 @@ ConfigItem_ban 	*Find_ban(char *host, short type)
 
 	for (ban = conf_ban; ban; ban = (ConfigItem_ban *) ban->next)
 		if (ban->flag.type == type)
-			if (!match(ban->mask, host)) {
+			if (match_ip(sptr->ip, host, ban->mask, ban->netmask))
+			{
 				/* Person got a exception */
 				if ((type == CONF_BAN_USER || type == CONF_BAN_IP)
-				    && Find_except(host, CONF_EXCEPT_BAN))
+				    && Find_except(sptr, host, CONF_EXCEPT_BAN))
 					return NULL;
 				return ban;
 			}
 	return NULL;
 }
 
-ConfigItem_ban 	*Find_banEx(char *host, short type, short type2)
+ConfigItem_ban 	*Find_banEx(aClient *sptr, char *host, short type, short type2)
 {
 	ConfigItem_ban *ban;
 
@@ -2407,9 +2416,9 @@ ConfigItem_ban 	*Find_banEx(char *host, short type, short type2)
 
 	for (ban = conf_ban; ban; ban = (ConfigItem_ban *) ban->next)
 		if ((ban->flag.type == type) && (ban->flag.type2 == type2))
-			if (!match(ban->mask, host)) {
+			if (match_ip(sptr->ip, host, ban->mask, ban->netmask)) {
 				/* Person got a exception */
-				if (Find_except(host, type))
+				if (Find_except(sptr, host, type))
 					return NULL;
 				return ban;
 			}
@@ -2479,7 +2488,8 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 		else
 			*uhost = '\0';
 		(void)strncat(uhost, sockhost, sizeof(uhost) - strlen(uhost));
-		if (!match(aconf->ip, uhost))
+		/* Check the IP */
+		if (match_ip(cptr->ip, uhost, aconf->ip, aconf->netmask))
 			goto attach;
 
 		/* Hmm, localhost is a special case, hp == NULL and sockhost contains
@@ -3827,7 +3837,7 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep, *cepp;
 	ConfigItem_allow *allow;
 	Hook *h;
-
+	struct irc_netmask tmp;
 	if (ce->ce_vardata)
 	{
 		if (!strcmp(ce->ce_vardata, "channel"))
@@ -3846,10 +3856,17 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 			return 0;
 		}
 	}
-
 	allow = MyMallocEx(sizeof(ConfigItem_allow));
 	cep = config_find_entry(ce->ce_entries, "ip");
 	allow->ip = strdup(cep->ce_vardata);
+	/* CIDR */
+	tmp.type = parse_netmask(allow->ip, &tmp);
+	if (tmp.type != HM_HOST)
+	{
+		allow->netmask = MyMallocEx(sizeof(struct irc_netmask));
+		bcopy(&tmp, allow->netmask, sizeof(struct irc_netmask));
+	}
+	
 	cep = config_find_entry(ce->ce_entries, "hostname");
 	allow->hostname = strdup(cep->ce_vardata);
 	if ((cep = config_find_entry(ce->ce_entries, "password")))
@@ -4218,6 +4235,7 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep, *cep2, *cep3;
 	ConfigItem_except *ca;
 	Hook *h;
+	struct irc_netmask tmp;
 
 	if (!strcmp(ce->ce_vardata, "ban")) {
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -4225,6 +4243,12 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 			if (!strcmp(cep->ce_varname, "mask")) {
 				ca = MyMallocEx(sizeof(ConfigItem_except));
 				ca->mask = strdup(cep->ce_vardata);
+				tmp.type = parse_netmask(ca->mask, &tmp);
+				if (tmp.type != HM_HOST)
+				{
+					ca->netmask = MyMallocEx(sizeof(struct irc_netmask));
+					bcopy(&tmp, ca->netmask, sizeof(struct irc_netmask));
+				}
 				ca->flag.type = CONF_EXCEPT_BAN;
 				AddListItem(ca, conf_except);
 			}
@@ -4239,6 +4263,12 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 			if (!strcmp(cep->ce_varname, "mask")) {
 				ca = MyMallocEx(sizeof(ConfigItem_except));
 				ca->mask = strdup(cep->ce_vardata);
+				tmp.type = parse_netmask(ca->mask, &tmp);
+				if (tmp.type != HM_HOST)
+				{
+					ca->netmask = MyMallocEx(sizeof(struct irc_netmask));
+					bcopy(&tmp, ca->netmask, sizeof(struct irc_netmask));
+				}
 				ca->flag.type = CONF_EXCEPT_THROTTLE;
 				AddListItem(ca, conf_except);
 			}
@@ -4266,6 +4296,15 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 		else 
 		{}
 		
+		if (ca->type & TKL_KILL || ca->type & TKL_ZAP || ca->type & TKL_SHUN)
+		{
+			tmp.type = parse_netmask(ca->mask, &tmp);
+			if (tmp.type != HM_HOST)
+			{
+				ca->netmask = MyMallocEx(sizeof(struct irc_netmask));
+				bcopy(&tmp, ca->netmask, sizeof(struct irc_netmask));
+			}
+		}
 		ca->flag.type = CONF_EXCEPT_TKL;
 		AddListItem(ca, conf_except);
 	}
@@ -4930,18 +4969,18 @@ int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 	nl->hostmask = strdup(cep->ce_vardata);
 	nl->setby = BadPtr(me.name) ? NULL : strdup(me.name); /* Hmm! */
 	
-	nl->spamf = unreal_buildspamfilter(word);
-	nl->spamf->action = action;
+	nl->ptr.spamf = unreal_buildspamfilter(word);
+	nl->ptr.spamf->action = action;
 
 	if ((cep = config_find_entry(ce->ce_entries, "reason")))
-		nl->spamf->tkl_reason = strdup(unreal_encodespace(cep->ce_vardata));
+		nl->ptr.spamf->tkl_reason = strdup(unreal_encodespace(cep->ce_vardata));
 	else
-		nl->spamf->tkl_reason = strdup("<internally added by ircd>");
+		nl->ptr.spamf->tkl_reason = strdup("<internally added by ircd>");
 
 	if ((cep = config_find_entry(ce->ce_entries, "ban-time")))
-		nl->spamf->tkl_duration = config_checkval(cep->ce_vardata, CFG_TIME);
+		nl->ptr.spamf->tkl_duration = config_checkval(cep->ce_vardata, CFG_TIME);
 	else
-		nl->spamf->tkl_duration = (SPAMFILTER_BAN_TIME ? SPAMFILTER_BAN_TIME : 86400);
+		nl->ptr.spamf->tkl_duration = (SPAMFILTER_BAN_TIME ? SPAMFILTER_BAN_TIME : 86400);
 		
 	AddListItem(nl, tklines[tkl_hash('f')]);
 	return 1;
@@ -5500,8 +5539,17 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 	}
 	cep = config_find_entry(ce->ce_entries, "mask");	
 	ca->mask = strdup(cep->ce_vardata);
-	if (ca->flag.type == CONF_BAN_IP)
-		ca->masktype = parse_netmask(ca->mask, &ca->netmask, &ca->bits);
+	if (ca->flag.type == CONF_BAN_IP || ca->flag.type == CONF_BAN_USER)
+	{
+		struct irc_netmask tmp;
+		tmp.type = parse_netmask(ca->mask, &tmp);
+		if (tmp.type != HM_HOST)
+		{
+			ca->netmask = MyMallocEx(sizeof(struct irc_netmask));
+			bcopy(&tmp, ca->netmask, sizeof(struct irc_netmask));
+		}
+	}
+
 	cep = config_find_entry(ce->ce_entries, "reason");
 	ca->reason = strdup(cep->ce_vardata);
 	cep = config_find_entry(ce->ce_entries, "action");

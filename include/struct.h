@@ -658,6 +658,13 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define DCC_LINK_ME		1 /* My dcc allow */
 #define DCC_LINK_REMOTE	2 /* I need to remove dccallows from these clients when I die */
 
+struct irc_netmask
+{
+	short int type;
+	struct IN_ADDR mask;
+	short int bits;
+};
+
 struct FloodOpt {
 	unsigned short nmsg;
 	TS   firstmsg;
@@ -790,7 +797,10 @@ struct t_kline {
 	aTKline *prev, *next;
 	int type;
 	unsigned short subtype; /* subtype (currently spamfilter only), see SPAMF_* */
-	Spamfilter *spamf;
+	union {
+		Spamfilter *spamf;
+		struct irc_netmask *netmask;
+	} ptr;
 	char usermask[USERLEN + 3];
 	char *hostmask, *reason, *setby;
 	TS expire_at, set_at;
@@ -1061,6 +1071,7 @@ struct _configitem_allow {
 	unsigned short		maxperip;
 	int					port;
 	ConfigItem_class	*class;
+	struct irc_netmask	*netmask;
 	ConfigFlag_allow	flags;
 };
 
@@ -1147,15 +1158,14 @@ struct _configitem_except {
 	ConfigFlag_except      flag;
 	int type;
 	char		*mask;
+	struct irc_netmask *netmask;
 };
 
 struct _configitem_ban {
 	ConfigItem		*prev, *next;
 	ConfigFlag_ban	flag;
 	char			*mask, *reason;
-	struct IN_ADDR netmask;
-	int bits;
-	short masktype;
+	struct irc_netmask	*netmask;
 	unsigned short action;
 };
 
@@ -1697,7 +1707,7 @@ int	hash_throttling(struct IN_ADDR *in);
 struct	ThrottlingBucket	*find_throttling_bucket(struct IN_ADDR *in);
 void	add_throttling_bucket(struct IN_ADDR *in);
 void	del_throttling_bucket(struct ThrottlingBucket *bucket);
-int	throttle_can_connect(struct IN_ADDR *in);
+int	throttle_can_connect(aClient *, struct IN_ADDR *in);
 
 #endif
 

@@ -933,7 +933,7 @@ int register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char
 		 * following block for the benefit of time-dependent K:-lines
 		 */
 		if ((bconf =
-		    Find_ban(make_user_host(user->username, user->realhost),
+		    Find_ban(sptr, make_user_host(user->username, user->realhost),
 		    CONF_BAN_USER)))
 		{
 			ircstp->is_ref++;
@@ -945,7 +945,7 @@ int register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char
 			    KLINE_ADDRESS);
 			return exit_client(cptr, cptr, cptr, "You are banned");
 		}
-		if ((bconf = Find_ban(sptr->info, CONF_BAN_REALNAME)))
+		if ((bconf = Find_ban(NULL, sptr->info, CONF_BAN_REALNAME)))
 		{
 			ircstp->is_ref++;
 			sendto_one(cptr,

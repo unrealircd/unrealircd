@@ -116,7 +116,7 @@ DLLFUNC int m_setname(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
         else
                 ircsprintf(sptr->info, "%s", parv[1]);
         /* Check for n:lines here too */
-        if (!IsAnOper(sptr) && Find_ban(sptr->info, CONF_BAN_REALNAME))
+        if (!IsAnOper(sptr) && Find_ban(NULL, sptr->info, CONF_BAN_REALNAME))
         {
                 int xx;
                 xx =

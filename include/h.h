@@ -122,21 +122,19 @@ ConfigItem_deny_dcc	*Find_deny_dcc(char *name);
 ConfigItem_oper		*Find_oper(char *name);
 ConfigItem_listen	*Find_listen(char *ipmask, int port);
 ConfigItem_ulines	*Find_uline(char *host);
-ConfigItem_except	*Find_except(char *host, short type);
+ConfigItem_except	*Find_except(aClient *, char *host, short type);
 ConfigItem_tld		*Find_tld(aClient *cptr, char *host);
 ConfigItem_link		*Find_link(char *username, char *hostname, char *ip, char *servername);
-ConfigItem_ban 		*Find_ban(char *host, short type);
-ConfigItem_ban 		*Find_banEx(char *host, short type, short type2);
+ConfigItem_ban 		*Find_ban(aClient *, char *host, short type);
+ConfigItem_ban 		*Find_banEx(aClient *,char *host, short type, short type2);
 ConfigItem_vhost	*Find_vhost(char *name);
 ConfigItem_deny_channel *Find_channel_allowed(char *name);
 ConfigItem_alias	*Find_alias(char *name);
 ConfigItem_help 	*Find_Help(char *command);
 int			AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *username);
-int parse_netmask(const char *text, struct IN_ADDR *addr, int *b);
-int match_ipv4(struct IN_ADDR *addr, struct IN_ADDR *mask, int b);
-#ifdef INET6
-int match_ipv6(struct IN_ADDR *addr, struct IN_ADDR *mask, int b);
-#endif
+int parse_netmask(const char *text, struct irc_netmask *netmask);
+int match_ip(struct IN_ADDR addr, char *uhost, char *mask, struct irc_netmask *netmask);
+ConfigItem_ban  *Find_ban_ip(aClient *sptr);
 extern MODVAR struct tm motd_tm, smotd_tm;
 extern MODVAR Link	*Servers;
 void add_ListItem(ListStruct *, ListStruct **);
