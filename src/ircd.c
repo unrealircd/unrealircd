@@ -462,7 +462,7 @@ static TS try_connections(currenttime)
 
 			if (connect_server(aconf, (aClient *)NULL,
 			    (struct hostent *)NULL) == 0)
-				sendto_ops("Connection to %s[%s] activated.",
+				sendto_realops("Connection to %s[%s] activated.",
 				    aconf->servername, aconf->hostname);
 
 		}
