@@ -126,5 +126,6 @@ InTe[_:#roxnet> -oxygen.phrozen.org- *** Global -- from Irc.LinuxFreakz.Net:
 * codemastr - Wed 20 Dec 2000 - 9 - [ Bugfixes ]
 
 	connect to a server, /oper, then run telnet and link a server. Close the telnet but do NOT
-	send a SQUIT, the server displays no notice to opers that the server split.
+ 	send a SQUIT, the server displays no notice to opers that the server split.
+          Stskeeps> +j? but yes, there's a bug there
 
