@@ -334,7 +334,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	ConfigItem_vhost *vhost;
 	ConfigItem_oper_from *from;
 	char *user, *pwd, host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
-
+	int	len, length;
 	if (parc < 3)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
@@ -378,8 +378,10 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		char olduser[USERLEN+1];
 		if (sptr->user->virthost)
 			MyFree(sptr->user->virthost);
-		sptr->user->virthost = MyMalloc(strlen(vhost->virthost) + 1);
-		strncpy(sptr->user->virthost, vhost->virthost, HOSTLEN);
+		len = strlen(vhost->virthost);
+		length =  len > HOSTLEN ? HOSTLEN : len;
+		sptr->user->virthost = MyMalloc(length + 1);
+		strncpy(sptr->user->virthost, vhost->virthost, length);
 		if (vhost->virtuser) {
 			strcpy(olduser, sptr->user->username);
 			strncpy(sptr->user->username, vhost->virtuser, USERLEN);
