@@ -2026,8 +2026,8 @@ seen. gmtime warning still there
 - Fixed MAJOR "messages are lost" bug which can cause various problems: ziplink corruption,
   duplicate user entry in sjoin, etc etc. This would happen if BUFFERPOOL was set too low (like
   the default) and you got a lot of traffic. It's now handled a bit better and you'll get
-  a nice warning, additionally the default BUFFERPOOL is now set to MAXSENDQLENGTH*18 instead of *9.
-  Thanks to ora and others which helped me tracing this down.
+  a nice warning, additionally the default BUFFERPOOL is now set to MAXSENDQLENGTH*18 instead of
+  *9. Thanks to ora and others which helped me tracing this down.
 - Added tld::options::ssl so you can have different motd/rules files if the user is using SSL.
 - Fixed cloaking bug reported by Rocko (#0000869).
 - Added set::restrict-channelmodes, works exactly the same as restrict-usermodes, you can for
@@ -2061,4 +2061,7 @@ seen. gmtime warning still there
 - Added aliases/anope.conf (For Anope IRC Services)
 - Updated some documentation
 - Minor error msg improvements
-- Fixed a bug with wrong hub/leaf settings ("non-hub introduced leaf") causing a crash (#0000732).
+- Fixed a bug with wrong hub/leaf settings ("non-hub introduced leaf") causing a crash 
+  (#0000732).
+- Fixed a bug where an unknown set::dns directive wasn't reported as an error (#0000898)
+  reported by AngryWolf

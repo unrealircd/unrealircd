@@ -5483,6 +5483,14 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					}
 					requiredstuff.settings.name_server = 1;
 				}
+				else
+				{
+					config_error("%s:%i: unknown option set::dns::%s",
+						cepp->ce_fileptr->cf_filename,
+						cepp->ce_varlinenum,
+						cepp->ce_varname);
+						errors++;
+				}
 			}
 		}
 #ifdef THROTTLING
