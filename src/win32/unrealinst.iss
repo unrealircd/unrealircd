@@ -60,6 +60,7 @@ Source: "..\..\help.conf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
 Source: "..\..\Unreal.nfo"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\doc\*.*"; DestDir: "{app}\doc"; Flags: ignoreversion
+Source: "..\..\doc\technical\*.*"; DestDir: "{app}\doc\technical"; Flags: ignoreversion
 Source: "..\..\aliases\*"; DestDir: "{app}\aliases"; Flags: ignoreversion
 Source: "..\..\networks\*"; DestDir: "{app}\networks"; Flags: ignoreversion
 Source: "..\..\unreal.exe"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0,4.0
