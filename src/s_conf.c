@@ -2749,7 +2749,7 @@ void	validate_configuration(void)
 		{
 			Error("set::cloak-keys are missing or is 0.");
 			Error("Add this in your config file:");
-			Error("set { cloak-keys { <big integer value>; <big integer value>; <big integer value>; };");
+			Error("set { cloak-keys { <big integer value>; <big integer value>; <big integer value>; }; };");
 			Error("The numbers must be purely random, and the same on every server you link to");			
 		}
 		Error("set::cloak-keys are too easy to guess. Please select three other more absurd and crazy numbers - will increase security a lot");
