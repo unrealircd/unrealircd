@@ -79,7 +79,7 @@ int  un_gid = 99;
 #ifndef _WIN32
 extern char unreallogo[];
 #endif
-
+extern char *buildid;
 time_t timeofday = 0;
 LoopStruct loop;
 extern aMotd *opermotd;
@@ -946,7 +946,7 @@ int  InitwIRCD(argc, argv)
 			  bootopt |= BOOT_TTY;
 			  break;
 		  case 'v':
-			  (void)printf("%s\n", version);
+			  (void)printf("%s build %s\n", version, buildid);
 #else
 		  case 'v':
 			  MessageBox(NULL, version,
