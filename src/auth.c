@@ -139,7 +139,7 @@ int		Auth_CheckError(ConfigEntry *ce)
 					X509_free(x509_filecert);
 					break;
 #endif
-				default:
+				default: ;
 			}
 		}
 	}
