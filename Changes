@@ -2119,3 +2119,4 @@ seen. gmtime warning still there
   (#0000942) reported by Rocko
 - Added verification that a vhost::vhost is valid (#0000924) reported by AngryWolf and ChRiS
 - Fixed "make install" error caused by bugreport file removal.
+- Removed some leftover +I code (can_stealth/^).

@@ -190,7 +190,6 @@ static int _OldOperFlags[] = {
 	OFLAG_ZLINE, 'z',
 	OFLAG_WHOIS, 'W',
 	OFLAG_HIDE, 'H',
-	OFLAG_INVISIBLE, '^',
 	OFLAG_TKL, 't',
 	OFLAG_GZL, 'Z',
 	OFLAG_OVERRIDE, 'v',
@@ -214,7 +213,6 @@ static OperFlag _OperFlags[] = {
 	{ OFLAG_OVERRIDE,	"can_override" },
 	{ OFLAG_REHASH,		"can_rehash" },
 	{ OFLAG_RESTART,        "can_restart" },
-	{ OFLAG_INVISIBLE,	"can_stealth"},
 	{ OFLAG_UNKLINE,	"can_unkline" },
 	{ OFLAG_WALLOP,         "can_wallops" },
 	{ OFLAG_ZLINE,		"can_zline"},
@@ -2758,10 +2756,17 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 						continue;
 					}
 					if (!config_binary_flags_search(_OperFlags, cepp->ce_varname, sizeof(_OperFlags)/sizeof(_OperFlags[0]))) {
+						if (!strcmp(cepp->ce_varname, "can_stealth"))
+						{
+						 config_status("%s:%i: unknown oper flag '%s' [feature no longer exists]",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
+							cepp->ce_varname);
+						} else {
 						 config_error("%s:%i: unknown oper flag '%s'",
 							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
 							cepp->ce_varname);
 						errors++; 
+						}
 					}
 				}
 				continue;
