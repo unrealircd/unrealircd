@@ -288,3 +288,5 @@
   AngryWolf.
 - Applied patch from slePP for bug #0001252: if IPv6 was enabled then in some cases names
   were not properly resolved. Original bug reported by kormat.
+- Fixed bugs regarding HOOKTYPE_SERVER_QUIT: was sometimes called twice and could cause
+  crashes due read-after-free. Reported by SET (#0001988).

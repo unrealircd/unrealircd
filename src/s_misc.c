@@ -597,11 +597,8 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 		for (acptr = client; acptr; acptr = next)
 		{
 			next = acptr->next;
-			if (IsServer(acptr) && acptr->srvptr == sptr) {
-				exit_client(sptr, acptr,	/* RECURSION */
-				    sptr, comment1);
-				RunHook(HOOKTYPE_SERVER_QUIT, acptr);
-			}
+			if (IsServer(acptr) && acptr->srvptr == sptr)
+				exit_client(sptr, acptr, sptr, comment1); /* RECURSION */
 			/*
 			 * I am not masking SQUITS like I do QUITs.  This
 			 * is probobly something we could easily do, but
