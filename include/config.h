@@ -623,11 +623,6 @@
 #endif
 #endif
 
-#ifdef _SEQUENT_		/* Dynix 1.4 or 2.0 Generic Define.. */
-#undef BSD
-#define SYSV			/* Also #define SYSV */
-#endif
-
 #ifdef	ultrix
 #define	ULTRIX
 #endif
@@ -671,14 +666,6 @@ extern	void	debug();
 #ifdef MIPS
 #undef BSD
 #define BSD             1       /* mips only works in bsd43 environment */
-#endif
-
-#ifdef sequent                   /* Dynix (sequent OS) */
-#define SEQ_NOFILE    128        /* set to your current kernel impl, */
-#endif                           /* max number of socket connections */
-
-#ifdef _SEQUENT_
-#define	DYNIXPTX
 #endif
 
 #ifdef	BSD_RELIABLE_SIGNALS

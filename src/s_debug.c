@@ -120,7 +120,7 @@ char serveropts[] = {
 #ifdef HPUX
 #include <fcntl.h>
 #endif
-#if !defined(ULTRIX) && !defined(SGI) && !defined(sequent) && \
+#if !defined(ULTRIX) && !defined(SGI) && \
     !defined(__convex__) && !defined(_WIN32)
 # include <sys/param.h>
 #endif
@@ -146,10 +146,6 @@ char serveropts[] = {
 #endif
 #ifdef HPUX
 #include <unistd.h>
-#ifdef DYNIXPTX
-#include <sys/types.h>
-#include <time.h>
-#endif
 #endif
 #include "h.h"
 

@@ -34,7 +34,7 @@ static char sccsid[] =
 #include "channel.h"
 #include "userload.h"
 #include "version.h"
-#if defined(PCS) || defined(AIX) || defined(DYNIXPTX) || defined(SVR3)
+#if defined(PCS) || defined(AIX) || defined(SVR3)
 #include <time.h>
 #endif
 #include <sys/stat.h>

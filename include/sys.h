@@ -116,14 +116,6 @@ extern	char	*rindex PROTO((char *, char));
 extern	VOIDSIG	dummy();
 #endif
 
-#ifdef	DYNIXPTX
-#define	NO_U_TYPES
-typedef unsigned short n_short;         /* short as received from the net */
-typedef unsigned long   n_long;         /* long as received from the net */
-typedef unsigned long   n_time;         /* ms since 00:00 GMT, byte rev */
-#define _NETINET_IN_SYSTM_INCLUDED
-#endif
-
 #ifdef	NO_U_TYPES
 typedef	unsigned char	u_char;
 typedef	unsigned short	u_short;

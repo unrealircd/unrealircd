@@ -50,7 +50,7 @@ Computing Center and Jarkko Oikarinen";
 #ifdef __hpux
 #include "inet.h"
 #endif
-#if defined(PCS) || defined(AIX) || defined(DYNIXPTX) || defined(SVR3)
+#if defined(PCS) || defined(AIX) || defined(SVR3)
 #include <time.h>
 #endif
 

@@ -24,7 +24,6 @@
 
 /* -- Armin -- Jun 18 1990
  * Added setdtablesize() for more socket connections
- * (sequent OS Dynix only) -- maybe select()-call must be changed ...
  */
 
 /* -- Jto -- 13 May 1990
@@ -489,24 +488,7 @@ void init_sys()
 	   fprintf(stderr, "| MAXCONNECTIONS set at %d\n", MAXCONNECTIONS);
 	   fprintf(stderr, "| Process ID: %d\n", pid);
 	   fprintf(stderr, "|---------------------------------------------\n"); */
-#ifndef USE_POLL
-#ifdef sequent
-# ifndef	DYNIXPTX
-int  fd_limit;
-
-fd_limit = setdtablesize(MAXCONNECTIONS + 1);
-if (fd_limit < MAXCONNECTIONS)
-{
-	(void)fprintf(stderr, "ircd fd table too big\n");
-	(void)fprintf(stderr, "Hard Limit: %d IRC max: %d\n",
-	    fd_limit, MAXCONNECTIONS);
-	(void)fprintf(stderr, "Fix MAXCONNECTIONS\n");
-	exit(-1);
-}
-# endif
-#endif
-#endif
-#if defined(PCS) || defined(DYNIXPTX) || defined(SVR3)
+#if defined(PCS) || defined(SVR3)
 char logbuf[BUFSIZ];
 
 (void)setvbuf(stderr, logbuf, _IOLBF, sizeof(logbuf));
@@ -550,7 +532,7 @@ if (((bootopt & BOOT_CONSOLE) || isatty(0)) &&
 	}
 #endif
 
-#if defined(HPUX) || defined(_SOLARIS) || defined(DYNIXPTX) || \
+#if defined(HPUX) || defined(_SOLARIS) || \
     defined(_POSIX_SOURCE) || defined(SVR4) || defined(SGI)
 	(void)setsid();
 #else

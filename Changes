@@ -342,4 +342,4 @@
 - /stats s is now avail only for opers in mainstream
 - Took out "nick did a /userhost on you"
 - Reduced hashtable size
-- Test of log messages..
+- Took out sequent/dynix support

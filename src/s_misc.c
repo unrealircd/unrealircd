@@ -38,7 +38,7 @@ Computing Center and Jarkko Oikarinen";
 #include "userload.h"
 #include <sys/stat.h>
 #include <fcntl.h>
-#if !defined(ULTRIX) && !defined(SGI) && !defined(sequent) && \
+#if !defined(ULTRIX) && !defined(SGI) && \
     !defined(__convex__) && !defined(_WIN32)
 # include <sys/param.h>
 #endif
@@ -47,10 +47,6 @@ Computing Center and Jarkko Oikarinen";
 #endif
 #ifdef HPUX
 #include <unistd.h>
-#endif
-#ifdef DYNIXPTX
-#include <sys/types.h>
-#include <time.h>
 #endif
 #ifdef _WIN32
 # include <io.h>

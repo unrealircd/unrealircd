@@ -24,10 +24,6 @@ static char sccsid[] = "@(#)support.c	2.21 4/13/94 1990, 1991 Armin Gruner;\
 #endif
 
 #include "config.h"
-#ifdef DYNIXPTX
-#include <sys/timers.h>
-#include <stddef.h>
-#endif
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
