@@ -422,6 +422,13 @@ int  m_protoctl(cptr, sptr, parc, parv)
 			    proto, cptr->name));
 			SetVL(cptr);
 		}
+		else if (strcmp(proto, "VHP") == 0)
+		{
+			Debug((DEBUG_ERROR,
+			    "Chose protocol %s for link %s",
+			    proto, cptr->name));
+			SetVHP(cptr);
+		}
 		/*
 		 * Add other protocol extensions here, with proto
 		 * containing the base option, and options containing
@@ -1148,21 +1155,35 @@ int  m_server_estab(cptr)
 			else
 			{
 				send_umode(NULL, acptr, 0, SEND_UMODES, buf);
-				sendto_one(cptr,
-				    "%s %s %d %d %s %s %s %lu %s %s :%s",
-				    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
-				    acptr->name, acptr->hopcount + 1,
-				    acptr->lastnick, acptr->user->username,
-				    acptr->user->realhost,
-				    (SupportALN(cptr) ?
-				    find_server_aln(acptr->user->
-				    server) : acptr->user->server),
-				    acptr->user->servicestamp, (!buf
-				    || *buf == '\0' ? "+" : buf),
-				    ((IsHidden(acptr)
-				    && (acptr->umodes & UMODE_SETHOST)) ?
-				    acptr->user->virthost : "*"), acptr->info);
-
+				if (!SupportVHP(cptr))
+					sendto_one(cptr,
+					    "%s %s %d %d %s %s %s %lu %s %s :%s",
+					    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
+					    acptr->name, acptr->hopcount + 1,
+					    acptr->lastnick, acptr->user->username,
+					    acptr->user->realhost,
+					    (SupportALN(cptr) ?
+					    find_server_aln(acptr->user->
+					    server) : acptr->user->server),
+					    acptr->user->servicestamp, (!buf
+					    || *buf == '\0' ? "+" : buf),
+					    ((IsHidden(acptr)
+					    && (acptr->umodes & UMODE_SETHOST)) ?
+					    acptr->user->virthost : "*"), acptr->info);
+				else
+					sendto_one(cptr, 
+					    "%s %s %d %d %s %s %s %lu %s %s :%s",
+					    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
+					    acptr->name, acptr->hopcount + 1,
+					    acptr->lastnick, acptr->user->username,
+					    acptr->user->realhost,
+					    (SupportALN(cptr) ?
+					    find_server_aln(acptr->user->
+					    server) : acptr->user->server),
+					    acptr->user->servicestamp, (!buf
+					    || *buf == '\0' ? "+" : buf),
+					    IsHidden(acptr) ? acptr->user->virthost 
+					    : acptr->user->realhost, acptr->info);
 			}
 
 			if (acptr->user->away)

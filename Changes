@@ -430,3 +430,8 @@
 - Added some more descriptive error messages
 - Added doc/crypto.doc describing the encrypted irc protocol
 - Fixed a sendto_serv_butone_token problem
+- Removed any trace of MD5, we use random() for nospoof now, this fixed a
+  license problem too
+- Removed NOSPOOF_SEED01 and 02
+- Added VHP protoctl, (not in use in the synch). This makes virthost field
+  in NICKv2 use the real virthost even if its +t. (Thanks to SL7)

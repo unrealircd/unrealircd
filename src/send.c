@@ -1546,7 +1546,8 @@ void sendto_connectnotice(nick, user, sptr)
  *
  * Send a message to all connected servers except the client 'one'.
  */
-void sendto_serv_butone_nickcmd(aClient *one, char *nick, int hopcount,
+void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
+			char *nick, int hopcount,
     int lastnick, char *username, char *realhost, char *server,
     long servicestamp, char *info, char *umodes, char *virthost)
 {
@@ -1577,8 +1578,9 @@ void sendto_serv_butone_nickcmd(aClient *one, char *nick, int hopcount,
 				    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
 				    hopcount, lastnick, username, realhost,
 				    (SupportALN(cptr) ? find_server_aln(server)
-				    : server), servicestamp, umodes, virthost,
-				    info);
+				    : server), servicestamp, umodes, 
+					  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : virthost),
+					    info);
 			}
 			else
 			{

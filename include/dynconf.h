@@ -80,8 +80,6 @@ struct	zConfiguration {
 extern	aConfiguration iConf;
 #endif
 
-// #define NOSPOOF_SEED01		iConf.nospoof_seed01
-// #define NOSPOOF_SEED02		iConf.nospoof_seed02
 #define KLINE_ADDRESS		iConf.kline_address
 #define INCLUDE				iConf.include
 #define DOMAINNAMEMASK		"*" DOMAINNAME

@@ -177,7 +177,7 @@ int  m_sethost(cptr, sptr, parc, parv)
 	sprintf(sptr->user->virthost, "%s", vhost);
 	/* spread it out */
 	sendto_serv_butone_token(cptr, sptr->name, MSG_SETHOST, TOK_SETHOST,
-	    parv[1]);
+	    "%s", parv[1]);
 
 	if (MyConnect(sptr))
 	{
@@ -371,7 +371,7 @@ int  m_chgident(cptr, sptr, parc, parv)
 		}
 		sendto_serv_butone_token(cptr, sptr->name,
 		    MSG_CHGIDENT,
-		    TOK_CHGIDENT, sptr->name, acptr->name, parv[2]);
+		    TOK_CHGIDENT, "%s %s", acptr->name, parv[2]);
 		sprintf(acptr->user->username, "%s", parv[2]);
 		return 0;
 	}
@@ -498,7 +498,7 @@ int  m_setident(cptr, sptr, parc, parv)
 	sprintf(sptr->user->username, "%s", vident);
 	/* spread it out */
 	sendto_serv_butone_token(cptr, sptr->name,
-	    MSG_SETIDENT, TOK_SETIDENT, parv[1]);
+	    MSG_SETIDENT, TOK_SETIDENT, "%s", parv[1]);
 
 	if (MyConnect(sptr))
 	{
@@ -616,7 +616,7 @@ int  m_sdesc(cptr, sptr, parc, parv)
 	sprintf(sptr->srvptr->info, "%s", parv[1]);
 
 	sendto_serv_butone_token(cptr, sptr->name, MSG_SDESC, TOK_SDESC, ":%s",
-	    parv[0], parv[1]);
+	    parv[1]);
 
 	if (MyConnect(sptr))
 	{

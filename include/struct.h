@@ -268,6 +268,9 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 #define PROTO_ALN	0x40	/* Negotiated ALN protocol */
 #define PROTO_ZIP	0x80	/* Negotiated ZIP protocol */
 #define PROTO_VL	0x100   /* Negotiated VL protocol */
+#define PROTO_SJ3	0x200	/* Negotiated SJ3 protocol */
+#define PROTO_VHP	0x400	/* Send hostnames in NICKv2 even if not 
+                                   sethosted */
 /*
  * flags macros.
  */
@@ -401,6 +404,8 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 #define SupportUMODE2(x)	((x)->proto & PROTO_UMODE2)
 #define SupportALN(x)		((x)->proto & PROTO_ALN)
 #define SupportVL(x)		((x)->proto & PROTO_VL)
+#define SupportSJ3(x)		((x)->proto & PROTO_SJ3)
+#define SupportVHP(x)		((x)->proto & PROTO_VHP)
 
 #define SetSJOIN(x)		((x)->proto |= PROTO_SJOIN)
 #define SetNoQuit(x)		((x)->proto |= PROTO_NOQUIT)
@@ -410,13 +415,15 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 #define SetUMODE2(x)		((x)->proto |= PROTO_UMODE2)
 #define SetALN(x)		((x)->proto |= PROTO_ALN)
 #define SetVL(x)		((x)->proto |= PROTO_VL)
+#define SetSJ3(x)		((x)->proto |= PROTO_SJ3)
+#define SetVHP(x)		((x)->proto |= PROTO_VHP)
 
 #define ClearSJOIN(x)		((x)->proto &= ~PROTO_SJOIN)
 #define ClearNoQuit(x)		((x)->proto &= ~PROTO_NOQUIT)
 #define ClearToken(x)		((x)->proto &= ~PROTO_TOKEN)
 #define ClearNICKv2(x)		((x)->proto &= ~PROTO_NICKv2)
 #define ClearSJOIN2(x)		((x)->proto &= ~PROTO_SJOIN2)
-
+#define ClearVHP(x)		((x)->proto &= ~PROTO_VHP)
 /*
  * defined operator access levels
  */

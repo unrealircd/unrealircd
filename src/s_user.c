@@ -903,7 +903,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	hash_check_notify(sptr, RPL_LOGON);	/* Uglier hack */
 	send_umode(NULL, sptr, 0, SEND_UMODES, buf);
 	/* NICKv2 Servers ! */
-	sendto_serv_butone_nickcmd(cptr, nick,
+	sendto_serv_butone_nickcmd(cptr, sptr, nick,
 	    sptr->hopcount + 1, sptr->lastnick, user->username, user->realhost,
 	    user->server, user->servicestamp, sptr->info,
 	    (!buf || *buf == '\0' ? "+" : buf),

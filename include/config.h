@@ -124,29 +124,6 @@
 /* #define NOSPOOF 1 /* */
 
 /*
- *
- * This controls the "nospoof" system.  These numbers are "seeds" of the
- * "random" number generating formula.  Choose any number you like in the
- * range of 0x00000000 to 0xFFFFFFFF.  Don't tell anyone these numbers, and
- * don't use the default ones.  Change both #define NOSPOOF... lines below.
- *
- * Other data is mixed in as well, but these guarantee a per-server secret.
- * Also, these values need not remain constant over compilations...  Change
- * them as often as you like.
- */
-#ifdef NOSPOOF
-
-#ifndef NOSPOOF_SEED01
-#define NOSPOOF_SEED01 0x12345678
-#endif
-
-#ifndef NOSPOOF_SEED02
-#define NOSPOOF_SEED02 0x87654321
-#endif
-
-#endif /* NOSPOOF */
-
-/*
  * HOSTILENAME - Define this if you want the hostile username patch included,
  *		 it will strip characters that are not 0-9,a-z,A-Z,_,- or .
  */

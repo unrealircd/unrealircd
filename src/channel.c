@@ -4368,7 +4368,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	else if (chptr->creationtime == ts)
 		merge = 1;
 		
-	if (chptr->creationtime == 0 && (ts > 0))
+	if (chptr->creationtime == 0)
 		oldts = -1;
 	else
 		oldts = chptr->creationtime;
