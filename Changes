@@ -1460,3 +1460,5 @@ seen. gmtime warning still there
 - Fixed a autoconf problem where FD_SETSIZE was NOT replaced when it wasn't big enough
   (abort() problem on some installs.)
 - Readded find_match_server which got removed, m_rping uses it. Now in hash.c
+- Added note about Linux and FD_SETSIZE > 1024 in release notes
+- Made IRCd bitch properly when MAXCONNECTIONS>FD_SETSIZE

@@ -23,6 +23,14 @@ Unreal3.2-Selene (BETA11) RELEASE NOTES
   to fix a method of cracking that was found. #define COMPAT_BETA4_KEYS to use the beta4
   system for compatibility with older betas.
 
+* If you use Linux and have problems where the IRCd complains that
+  MAXCONNECTIONS is larger than FD_SETSIZE, you need to get your root to
+  edit /usr/include/bits/types.h - #define __FD_SETSIZE 1024 to be some
+  number that is equal or higher than MAXCONNECTIONS. This is a problem with
+  Linux that it is hardcoded and non overrideable in some distributions. We
+  recommend you use FreeBSD or the variants of this if you need to run high
+  load IRC servers. 
+
 * We use autoconf to help with compiliation, and this should make us able
   to a lot more platform (we have even ported to BeOS). 
 
