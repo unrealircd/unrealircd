@@ -237,27 +237,30 @@ Member	*make_member(void)
 
 	if (freemember == NULL)
 	{
-		for (i = 1; i <= (4072/sizeof(Member)); i++)		
+		for (i = 1; i <= (4072/sizeof(Member)); ++i)		
 		{
 			lp = (Member *)MyMalloc(sizeof(Member));
+			lp->cptr = NULL;
+			lp->flags = 0;
 			lp->next = freemember;
 			freemember = lp;
 		}
-		lp = freemember;
-		freemember = lp->next;
 	}
-	else
-	{
-		lp = freemember;
-		freemember = freemember->next;
-	}
+	lp = freemember;
+	freemember = freemember->next;
+	lp->next = NULL;
 	return lp;
 }
 
 void	free_member(Member *lp)
 {
-	lp->next = freemember;
-	freemember = lp;
+	if (lp)
+	{
+		lp->next = freemember;
+		lp->cptr = NULL;
+		lp->flags = 0;
+		freemember = lp;
+	}
 }
 
 /* 
@@ -321,15 +324,18 @@ Membership	*make_membership(int local)
 
 void	free_membership(Membership *lp, int local)
 {
-	if (!local)
+	if (lp)
 	{
-		lp->next = freemembership;
-		freemembership = lp;
-	}
-	else
-	{
-		lp->next = (Membership *) freemembershipL;
-		freemembershipL = (MembershipL *) lp;
+		if (!local)
+		{
+			lp->next = freemembership;
+			freemembership = lp;
+		}
+		else
+		{
+			lp->next = (Membership *) freemembershipL;
+			freemembershipL = (MembershipL *) lp;
+		}
 	}
 }
 
@@ -601,6 +607,7 @@ void remove_user_from_channel(aClient *sptr, aChannel *chptr)
 	Member *tmp; Membership *tmp2;
 	Member *lp = chptr->members;
 
+	/* find 1st entry in list that is not user */
 	for (; lp && (lp->cptr == sptr); lp = lp->next);
 	for (;;)
 	{
@@ -611,8 +618,7 @@ void remove_user_from_channel(aClient *sptr, aChannel *chptr)
 				free_member(tmp);
 				break;
 			}
-		for (curr2 = &sptr->user->channel; (tmp2 = *curr2);
-		    curr2 = &tmp2->next)
+		for (curr2 = &sptr->user->channel; (tmp2 = *curr2); curr2 = &tmp2->next)
 			if (tmp2->chptr == chptr)
 			{
 				*curr2 = tmp2->next;
@@ -3925,11 +3931,11 @@ CMD_FUNC(m_invite)
 #endif
 		    )) {
 		        if (over == 1)
-                		sendto_channelops_butone(NULL, &me, chptr,
+                		sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP,
 		                  ":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
                 		  me.name, chptr->chname, sptr->name);
 		        else if (over == 0)
-		                sendto_channelops_butone(NULL, &me, chptr,
+		                sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP,
                 		  ":%s NOTICE @%s :%s invited %s into the channel.",
 		                  me.name, chptr->chname, sptr->name, acptr->name);
 
@@ -3941,9 +3947,6 @@ CMD_FUNC(m_invite)
 
         return 0;
 }
-
-
-
 
 /*
  * The function which sends the actual channel list back to the user.
@@ -4652,7 +4655,7 @@ CMD_FUNC(m_knock)
 		return 0;
 	}
 
-	sendto_channelops_butone(NULL, &me, chptr,
+	sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP,
 	    ":%s NOTICE @%s :[Knock] by %s!%s@%s (%s) ",
 	    me.name, chptr->chname, sptr->name,
 	    sptr->user->username,
