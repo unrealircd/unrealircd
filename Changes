@@ -2036,3 +2036,4 @@ seen. gmtime warning still there
 - Removed usermode +b from docs (been gone for a long time) (#0000798) reported by Rocko
 - Fixed an SQLINE bug
 - code cleanup / misc minor bugfixes (MyMalloc, oper msgs)
+- Fixed a throttling bug where it could return negative numbers.
