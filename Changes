@@ -1159,3 +1159,4 @@ v- Fixed some bugreport stuff
 - Changed some m_ functions into CMD_FUNC(m_*)
 - Fixed a win32 bug with the scanner code changes
 - Added a win32 menu item that lets you view log files
+- Documented the net set::scan::* directives in doc/conf.doc

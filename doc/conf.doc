@@ -753,6 +753,17 @@ If set to no, the user must set +x manually to receive the oper host.
 set::scan::endpoint <ip:port>;
 Specifies the IP and port that the server will tell an incomming open proxy to connect to.
 
+set::scan::bantime <timevalue>;
+A time value that defines the length of time that a user caught by the scanner will be
+banned for. A time value is a numeric string with d meaning days, h meaning hours, m
+meaning minutes, and s meaning seconds, for example 1d2h3m means 1 day, 2 hours, 3 minutes.
+
+set::scan::timeout <timevalue>;
+A time value specifying the amount of time that is spent waiting for a proxy to respond to
+the scanner's request.  A time value is a numeric string with d meaning days, h meaning
+hours, m meaning minutes, and s meaning seconds, for example 1d2h3m means 1 day, 2 hours, 
+3 minutes.
+
 24.0 Conclusion
 Well hopefully that cleared up some of the issues you had with the new config file format. 
 There are some additional documents that may help you with other problems such as 
