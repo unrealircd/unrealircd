@@ -165,6 +165,11 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 	aClient *paClient;
 	char *msg;
 	POINT p;
+
+	if (message = WM_TASKBARCREATED){
+		TaskBarCreated();
+		return TRUE;
+	}
 	
 	switch (message)
 			{
@@ -275,9 +280,6 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 				 }
 			 }
 		}
-			case WM_TASKBARCREATED:
-				TaskBarCreated();
-				return TRUE;
 
 			case WM_COMMAND: {
 				switch(LOWORD(wParam)) {
