@@ -14,7 +14,7 @@ cat .UPDATE
 cd src
 rm update.sh
 read $WHATYAWANT
-if [ "$WHATYWANT" == "wget" ] ; then
+if [ "$WHATYAWANT" == "wget" ] ; then
 	wget http://unreal.tspre.org/update.sh
 else
 	lynx -source http://unreal.tspre.org/update.sh > update.sh

@@ -3,4 +3,9 @@
 *  UnrealIRCd Upgrade Script 
 *  
 
-*** Downloading upgrade script from unreal.tspre.org
+What download program do you want to use?
+
+Type "wget" for wget
+Type "lynx" for lynx
+
+> 
