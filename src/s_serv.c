@@ -2449,9 +2449,9 @@ int  m_stats(cptr, sptr, parc, parv)
 				link_p->hostname, link_p->servername,
 				link_p->port,
 				link_p->class->name,
-				(link_p->options & 0x1) ? "a" : "",
-				(link_p->options & 0x2) ? "S" : "",
-				(link_p->options & 0x4) ? "z" : "");
+				(link_p->options & CONNECT_AUTO) ? "a" : "",
+				(link_p->options & CONNECT_SSL) ? "S" : "",
+				(link_p->options & CONNECT_ZIP) ? "z" : "");
 			if (link_p->hubmask)
 			{
 				sendto_one(sptr, ":%s 244 %s H %s * %s",

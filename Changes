@@ -273,3 +273,4 @@
   delete. Found by Zogg and CVSweb
 - Made autoconnect msgs only go to +os
 - Made DNS cache list show a notice to other ops
+- Made /stats C show flags correctly
