@@ -1420,3 +1420,4 @@ seen. gmtime warning still there
 - Fixed +bbbbb lots of crap desynch bug
 - Fixed OperOverride snotice bugs with halfop
 - Standardized OperOverride notices
+- Implemented new operoverride system

@@ -309,6 +309,7 @@
 
 #define ERR_WHOSYNTAX 522
 #define ERR_WHOLIMEXCEED 523
+#define ERR_OPERSPVERIFY 524
 
 #define RPL_SNOMASK	     8
 
