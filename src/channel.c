@@ -100,7 +100,7 @@ static char *PartFmt2 = ":%s PART %s :%s";
  * some buffers for rebuilding channel/nick lists with ,'s
  */
 static char nickbuf[BUFSIZE], buf[BUFSIZE];
-char modebuf[MODEBUFLEN], parabuf[MODEBUFLEN];
+char modebuf[MAXMODEPARAMS*2+1], parabuf[504];
 #include "sjoin.h"
 
 #ifdef USE_LONGMODE
