@@ -5069,7 +5069,7 @@ int  m_svsjoin(cptr, sptr, parc, parv)
 		(void)m_join(acptr, acptr, 2, parv);
 	}
 	else
-		sendto_serv_butone(cptr, ":%s SVSJOIN %s %s", parv[0],
+		sendto_one(acptr, ":%s SVSJOIN %s %s", parv[0],
 		    parv[1], parv[2]);
 
 	return 0;
@@ -5107,7 +5107,7 @@ int  m_sajoin(cptr, sptr, parc, parv)
 		(void)m_join(acptr, acptr, 2, parv);
 	}
 	else
-		sendto_serv_butone(cptr, ":%s SAJOIN %s %s", parv[0],
+		sendto_one(acptr, ":%s SAJOIN %s %s", parv[0],
 		    parv[1], parv[2]);
 
 	return 0;
@@ -5138,7 +5138,7 @@ int  m_svspart(cptr, sptr, parc, parv)
 		(void)m_part(acptr, acptr, 2, parv);
 	}
 	else
-		sendto_serv_butone(cptr, ":%s SVSPART %s %s", parv[0],
+		sendto_one(acptr, ":%s SVSPART %s %s", parv[0],
 		    parv[1], parv[2]);
 
 	return 0;
@@ -5176,7 +5176,7 @@ int  m_sapart(cptr, sptr, parc, parv)
 		(void)m_part(acptr, acptr, 2, parv);
 	}
 	else
-		sendto_serv_butone(cptr, ":%s SAPART %s %s", parv[0],
+		sendto_one(acptr, ":%s SAPART %s %s", parv[0],
 		    parv[1], parv[2]);
 
 	return 0;
