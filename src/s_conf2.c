@@ -1990,9 +1990,7 @@ void	listen_cleanup()
 		close_listeners();
 }
 
-int     rehash(cptr, sptr, sig)
-        aClient *cptr, *sptr;
-        int  sig;
+int     rehash(aClient *cptr, aClient *sptr, int sig)
 {
 	ConfigItem_oper		*oper_ptr;
 	ConfigItem_class 	*class_ptr;
@@ -2002,6 +2000,7 @@ int     rehash(cptr, sptr, sig)
 	ConfigItem_ban 		*ban_ptr;
 	ConfigItem_link 	*link_ptr;
 	ConfigItem_listen 	*listen_ptr;
+	ConfigItem_tld		*tld_ptr;
 	ConfigItem 	t;
 
 	
@@ -2098,6 +2097,27 @@ int     rehash(cptr, sptr, sig)
 	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)listen_ptr->next)
 	{
 		listen_ptr->flag.temporary = 1;
+	}
+	for (tld_ptr = conf_tld; tld_ptr; tld_ptr = (ConfigItem_tld *) tld_ptr->next)
+	{
+		aMotd *motd;
+		ircfree(tld_ptr->motd_file);
+		ircfree(tld_ptr->rules_file);
+		while (tld_ptr->motd) {
+			motd = tld_ptr->motd->next;
+			ircfree(tld_ptr->motd->line);	
+			ircfree(tld_ptr->motd);
+			tld_ptr->motd = motd;
+		}
+		while (tld_ptr->rules) {
+			motd = tld_ptr->rules->next;
+			ircfree(tld_ptr->rules->line);
+			ircfree(tld_ptr->rules);
+			tld_ptr->rules = motd;
+		}
+		t.next = del_ConfigItem((ConfigItem *) tld_ptr, (ConfigItem **)&conf_tld);
+		MyFree(tld_ptr);
+		tld_ptr = (ConfigItem_tld *) &t;			
 	}
 	/* This space is for codemastr's upcoming tld & vhost removal code. */
 	if (conf_drpass)

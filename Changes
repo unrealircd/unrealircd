@@ -201,3 +201,4 @@
 - Added /stats P on listener info (oper-only)
 - listener temporary stuff works now
 - Fixed temporary stuf with conf_link
+- Made tld {} get rehashed
