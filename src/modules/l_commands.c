@@ -85,6 +85,7 @@ extern int m_message_Init(ModuleInfo *modinfo), m_whois_Init(ModuleInfo *modinfo
 extern int m_kill_Init(ModuleInfo *modinfo), m_pingpong_Init(ModuleInfo *modinfo), m_oper_Init(ModuleInfo *modinfo);
 extern int m_akill_Init(ModuleInfo *modinfo), m_rakill_Init(ModuleInfo *modinfo), m_zline_Init(ModuleInfo *modinfo);
 extern int m_unzline_Init(ModuleInfo *modinfo), m_kline_Init(ModuleInfo *modinfo), m_unkline_Init(ModuleInfo *modinfo);
+extern int m_sqline_Init(ModuleInfo *modinfo), m_unsqline_Init(ModuleInfo *modinfo), m_tkl_Init(ModuleInfo *modinfo);
 extern int m_vhost_Init(ModuleInfo *modinfo), m_cycle_Init(ModuleInfo *modinfo), m_svsjoin_Init(ModuleInfo *modinfo);
 extern int m_svspart_Init(ModuleInfo *modinfo);
 #ifdef GUEST

@@ -1581,4 +1581,4 @@ seen. gmtime warning still there
 - Added Nugget's setuid patch
 - Made the IRC_UID stuff more proper..
 - Removed some old debug code from the win32 debugger
-
+- Compile warning cleanups

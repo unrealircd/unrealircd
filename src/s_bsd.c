@@ -80,7 +80,12 @@ Computing Center and Jarkko Oikarinen";
 int  rr;
 
 #endif
-
+#ifdef INET6
+static unsigned char minus_one[] =
+    { 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 0
+};
+#endif
 
 #ifndef IN_LOOPBACKNET
 #define IN_LOOPBACKNET	0x7f
@@ -542,7 +547,11 @@ void init_sys(void)
 	limit.rlim_cur = limit.rlim_max;	/* make soft limit the max */
 	if (setrlimit(RLIMIT_FD_MAX, &limit) == -1)
 	{
+#ifndef LONG_LONG_RLIM_T
 		(void)fprintf(stderr, "error setting max fd's to %ld\n",
+#else
+		(void)fprintf(stderr, "error setting max fd's to %lld\n",
+#endif
 		    limit.rlim_cur);
 		exit(-1);
 	}
@@ -1147,7 +1156,6 @@ void set_non_blocking(int fd, aClient *cptr)
  */
 aClient *add_connection(aClient *cptr, int fd)
 {
-	Link	lin;
 	aClient *acptr;
 	ConfigItem_ban *bconf;
 	int i, j;
@@ -1806,7 +1814,7 @@ int  read_message(time_t delay, fdlist *listp)
 			   ** ...room for writing, empty some queue then...
 			 */
 			ClearBlocked(cptr);
-			if (IsConnecting(cptr))
+			if (IsConnecting(cptr)) {
 #ifdef USE_SSL
 				if ((cptr->serv) && (cptr->serv->conf->options & CONNECT_SSL))
 				{
@@ -1816,6 +1824,7 @@ int  read_message(time_t delay, fdlist *listp)
 				else
 #endif
 					write_err = completed_connection(cptr);
+			}
 			if (!write_err)
 			{
 				if (DoList(cptr) && IsSendable(cptr))

@@ -120,7 +120,6 @@ int	m_akill_Unload(int module_unload)
 DLLFUNC int m_akill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *hostmask, *usermask, *comment;
-	ConfigItem_ban *bconf;
 	char	mo[1024];
 	char *tkllayer[9] = {
 		me.name,	/*0  server.name */

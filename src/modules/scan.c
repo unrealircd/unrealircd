@@ -93,7 +93,6 @@ DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
 int    m_scan_Init(ModuleInfo *modinfo)
 #endif
 {
-	int id;
 	scan_message = NULL;
 	bcopy(modinfo,&ScanModInfo,modinfo->size);
 	ScanHost = (Hooktype *)HooktypeAdd(modinfo->handle, "HOOKTYPE_SCAN_HOST", &HOOKTYPE_SCAN_HOST);

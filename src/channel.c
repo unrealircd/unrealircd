@@ -4765,7 +4765,7 @@ CMD_FUNC(m_sjoin)
 	Member *lp;
 	Membership *lp2;
 	aParv *ap;
-	int  ts, oldts, pcount, x, y, z, i, f;
+	int  ts, oldts, pcount, i, f;
 	unsigned short b=0,c;
 	Mode oldmode;
 	char *t, *bp, *tp, *p = NULL;

@@ -330,7 +330,7 @@ void	ipport_seperate(char *string, char **ip, char **port)
 
 
 long config_checkval(char *value, unsigned short flags) {
-	char *text, *ptr;
+	char *text;
 	long ret = 0;
 
 

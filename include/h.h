@@ -532,5 +532,8 @@ extern void set_sock_opts(int fd, aClient *cptr);
 extern void iCstrip(char *line);
 extern time_t rfc2time(char *s);
 extern char *rfctime(time_t t, char *buf);
+char  *ssl_get_cipher(SSL *ssl);
+long config_checkval(char *value, unsigned short flags);
+void config_status(char *format, ...);
 #define EVENT_DRUGS BASE_VERSION
 

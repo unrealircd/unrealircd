@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "struct.h"
-
+#include "h.h"
 /* The following functions have been taken from Hybrid7-beta8 simply because
  * I didn't feel like writing my own when they had ones that work just fine :)
  */

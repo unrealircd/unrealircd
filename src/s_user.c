@@ -1291,7 +1291,7 @@ CMD_FUNC(m_nick)
 	   ** is concerned (user is changing the case of his/her
 	   ** nickname or somesuch)
 	 */
-	if (acptr == sptr)
+	if (acptr == sptr) {
 		if (strcmp(acptr->name, nick) != 0)
 			/*
 			   ** Allows change of case in his/her nick
@@ -1306,6 +1306,7 @@ CMD_FUNC(m_nick)
 			   ** version would treat it as nick collision.
 			 */
 			return 0;	/* NICK Message ignored */
+	}
 	/*
 	   ** Note: From this point forward it can be assumed that
 	   ** acptr != sptr (point to different client structures).

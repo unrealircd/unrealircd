@@ -23,6 +23,7 @@
 #include "common.h"
 #include "struct.h"
 #include "h.h"
+#include "proto.h"
 #include "sys.h"
 #ifdef _WIN32
 #include <windows.h>
@@ -48,9 +49,9 @@ typedef struct {
 	char **buffer;
 } StreamIO;
 
-static StreamIO *streamp;
 #define CHK_SSL(err) if ((err)==-1) { ERR_print_errors_fp(stderr); }
 #ifdef _WIN32
+static StreamIO *streamp;
 LRESULT SSLPassDLG(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam) {
 	StreamIO *stream;
 	switch (Message) {
@@ -233,8 +234,9 @@ void init_ssl(void)
 
 int  ssl_handshake(aClient *cptr)
 {
+#ifdef NO_CERTCHECKING
 	char *str;
-	int  err;
+#endif
 
 	cptr->ssl = SSL_new(ctx_server);
 	CHK_NULL(cptr->ssl);
@@ -445,8 +447,6 @@ int ircd_SSL_write(aClient *acptr, const void *buf, int sz)
 
 int ircd_SSL_client_handshake(aClient *acptr)
 {
-	int ssl_err;
-	
 	acptr->ssl = SSL_new(ctx_client);
 	if (!acptr->ssl)
 	{
@@ -552,7 +552,6 @@ static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
 {
     /* don`t alter ERRNO */
     int errtmp = ERRNO;
-    char *errstr = (char *)strerror(errtmp);
     char *ssl_errstr, *ssl_func;
 
     switch(where) {

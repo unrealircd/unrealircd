@@ -476,7 +476,6 @@ extern TS check_pings(TS currenttime)
 	int  i = 0;
 	char banbuf[1024];
 	int  ping = 0;
-	TS   oldest = 0;
 
 	for (i = 0; i <= LastSlot; i++) {
 		/*

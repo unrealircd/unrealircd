@@ -146,9 +146,7 @@ struct {
 
 DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-  aClient *target_client;
   aChannel *target_channel;
-  int opers_only = 0;
   char *mask = parv[1];
   char star[] = "*";
   int i = 0;
@@ -246,7 +244,7 @@ static void who_sendhelp(aClient *sptr)
 static int parse_who_options(aClient *sptr, int argc, char **argv)
 {
   char *s = argv[0];
-  int what;
+  int what = WHO_ADD;
   int i = 1;
 
   if (*s != '-' && *s != '+')
@@ -453,16 +451,17 @@ static int can_see(aClient *sptr, aClient *acptr, aChannel *channel)
 	if (!IsAnOper(acptr))
 	  return ret | WHO_CANTSEE;
 
-	if (IsHideOper(acptr))
+	if (IsHideOper(acptr)) {
 	  if (IsAnOper(sptr))
 	    ret |= WHO_OPERSEE;
 	  else
 	    return ret | WHO_CANTSEE;
+	}
       }
 
     /* if they only want people who are away */
     if ((wfl.want_away == WHO_WANT && !acptr->user->away) ||
-	wfl.want_away == WHO_DONTWANT && acptr->user->away)
+	(wfl.want_away == WHO_DONTWANT && acptr->user->away))
       return WHO_CANTSEE;
 
     /* if they only want people on a certain channel. */
@@ -752,9 +751,7 @@ static void send_who_reply(aClient *sptr, aClient *acptr,
 
 static char *first_visible_channel(aClient *sptr, aClient *acptr, int *flg)
 {
-  aChannel *chptr;
   Membership *lp;
-  static char chbuf[CHANNELLEN + 2];
 
   *flg = 0;
 
