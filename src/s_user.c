@@ -2193,8 +2193,6 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			ClearHideOper(sptr);
 		if (IsCoAdmin(sptr))
 			ClearCoAdmin(sptr);
-		if (IsTechAdmin(sptr))
-			ClearTechAdmin(sptr);
 		if (sptr->user->snomask & SNO_CLIENT)
 			sptr->user->snomask &= ~SNO_CLIENT;
 		if (sptr->user->snomask & SNO_FCLIENT)
@@ -2223,10 +2221,6 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	 */
 	if (MyClient(sptr)) {
 		if (IsAnOper(sptr)) {
-			if (IsClientF(sptr) && !OPCanUModeC(sptr))
-				ClearClientF(sptr);
-			if (IsFloodF(sptr) && !OPCanUModeF(sptr))
-				ClearFloodF(sptr);
 			if (IsAdmin(sptr) && !OPIsAdmin(sptr))
 				ClearAdmin(sptr);
 			if (IsSAdmin(sptr) && !OPIsSAdmin(sptr))
@@ -2235,23 +2229,18 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				ClearNetAdmin(sptr);
 			if (IsCoAdmin(sptr) && !OPIsCoAdmin(sptr))
 				ClearCoAdmin(sptr);
-			if (IsTechAdmin(sptr) && !OPIsTechAdmin(sptr))
-				ClearTechAdmin(sptr);
 			if ((sptr->umodes & UMODE_HIDING)
 			    && !(sptr->user->oflag & OFLAG_INVISIBLE))
 				sptr->umodes &= ~UMODE_HIDING;
 			if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
 			    && !IsSecure(sptr))
 				sptr->umodes &= ~UMODE_SECURE;
-			if (IsTechAdmin(sptr) && IsNetAdmin(sptr))
-				ClearTechAdmin(sptr);
 		}
 	/*
 	   This is to remooove the kix bug.. and to protect some stuffie
 	   -techie
 	 */
-		if ((sptr->umodes & (UMODE_KIX)) && !(IsNetAdmin(sptr)
-		    || IsTechAdmin(sptr)))
+		if ((sptr->umodes & (UMODE_KIX)) && !IsNetAdmin(sptr))
 			sptr->umodes &= ~UMODE_KIX;
 
 		if ((sptr->umodes & UMODE_HIDING) && !IsAnOper(sptr))

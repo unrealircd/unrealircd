@@ -3356,7 +3356,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	if (!MyClient(sptr) && !IsTechAdmin(sptr) && !IsNetAdmin(sptr)
+	if (!MyClient(sptr) && !IsNetAdmin(sptr)
 	    && !IsULine(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
@@ -3545,7 +3545,7 @@ int  m_restart(cptr, sptr, parc, parv)
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	if (!MyClient(sptr) && !(IsTechAdmin(sptr) || IsNetAdmin(sptr))
+	if (!MyClient(sptr) && !IsNetAdmin(sptr)
 	    && !IsULine(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
@@ -3554,7 +3554,7 @@ int  m_restart(cptr, sptr, parc, parv)
 	if (parc > 3)
 	{
 		/* Remote restart. */
-		if (MyClient(sptr) && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
+		if (MyClient(sptr) && !IsNetAdmin(sptr))
 		{
 			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 			    parv[0]);
