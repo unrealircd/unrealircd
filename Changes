@@ -632,3 +632,4 @@ seen. gmtime warning still there
 - Updated thread porting code to support more functions
 - Fixed a pthread_join
 - Rewrote updconf a bit, should work flawlessly now (?)
+- Made a minor message change to ./Setup
