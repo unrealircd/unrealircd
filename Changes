@@ -2501,3 +2501,6 @@ seen. gmtime warning still there
   'what' will be MODE_ADD if trying to add and MODE_DEL if trying to remove.
 - Added HOOKTYPE_REMOTE_NICKCHANGE (called like: cptr, sptr, newnick).
 - Fixed a bug regarding +f and bounce modes, would cause a crash, reported by Rocko.
+- Made it so the dccdeny system can now check files that contain spaces (suggested by
+  Lamego)
+

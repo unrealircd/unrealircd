@@ -228,8 +228,10 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 						continue;
 					}
 					ctcp = &parv[2][10];
-					end = (char *)index(ctcp, ' ');
-
+					if (*ctcp == '"' && *(ctcp+1))
+						end = index(ctcp+1, '"');
+					else
+						end = index(ctcp, ' ');
 					/* check if it was fake.. just pass it along then .. */
 					if (!end || (end < ctcp))
 						goto dcc_was_ok;
