@@ -4449,6 +4449,8 @@ int  m_umode2(cptr, sptr, parc, parv)
 		NULL
 	};
 
+	if (!parv[1])
+		return 0;
 	m_umode(cptr, sptr, parv[3] ? 4 : 3, xparv);
 }
 

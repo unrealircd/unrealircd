@@ -785,3 +785,4 @@ seen. gmtime warning still there
 - HCN fix
 - /who fix .. removed nick matching functionality..
 - Fixed a SNOMASK problem found by Arantis
+- Fixed a umode2 bug that crashed the server
