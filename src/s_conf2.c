@@ -50,6 +50,7 @@ extern char *my_itoa(long i);
  *  - deny dcc {} (dccdeny)
  *  - set {} lines (unrealircd.conf, network files)
  *  - allow {} connfreq (Y:lines)
+ *  - badword { }
  *  - converter
 */
 #define ircdupstr(x,y) if (x) MyFree(x); x = strdup(y)

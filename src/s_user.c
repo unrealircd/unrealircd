@@ -4286,7 +4286,7 @@ int  m_umode(cptr, sptr, parc, parv)
 	char **p, *m;
 	aClient *acptr;
 	int  what, setflags;
-
+	short rpterror = 0;
 
 	what = MODE_ADD;
 
@@ -4388,10 +4388,12 @@ int  m_umode(cptr, sptr, parc, parv)
 						  break;
 					  }
 
-				  if (flag == 0 && MyConnect(sptr))
+				  if (flag == 0 && MyConnect(sptr) && !rpterror) {
 					  sendto_one(sptr,
 					      err_str(ERR_UMODEUNKNOWNFLAG),
 					      me.name, parv[0]);
+						rpterror = 1;
+				  }
 				  break;
 			}
 	/*

@@ -3653,19 +3653,49 @@ int  m_rehash(cptr, sptr, parc, parv)
 {
 	int  x;
 
+
 	if (MyClient(sptr) && !OPCanRehash(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	if (!MyClient(sptr) && !(IsTechAdmin(sptr) || IsNetAdmin(sptr))
-	    && !IsULine(sptr))
+	if (!MyClient(sptr) && !IsTechAdmin(sptr) && ! IsNetAdmin(sptr) && !IsULine(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
 	x = 0;
 
+	if (cptr != sptr) {
+#ifndef REMOTE_REHASH
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		return 0;
+#endif
+		if (parv[2] == NULL) {
+			sendto_serv_butone(&me,
+				":%s GLOBOPS :%s is remotely rehashing server config file",
+				me.name, sptr->name);
+			sendto_ops
+				("%s is remotely rehashing server config file",
+				parv[0]);
+			return rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
+		}		
+		parv[1] = parv[2];
+	}
+else {
+	if (find_server_quick(parv[1])) {
+		if (parv[2]) {
+			if ((x = hunt_server(cptr, sptr, ":%s REHASH %s %s", 1, parc, parv)) !=
+				HUNTED_ISME)
+				return 0;
+		}
+		else {
+			if ((x = hunt_server(cptr, sptr, ":%s REHASH %s", 1, parc, parv)) !=
+				HUNTED_ISME)
+				return 0;
+		}
+	}
+}
 	if (!BadPtr(parv[1]))
 	{
 		if (*parv[1] == '-')
@@ -3673,8 +3703,8 @@ int  m_rehash(cptr, sptr, parc, parv)
 			if (!strnicmp("-dcc", parv[1], 4))
 			{
 				sendto_ops
-				    ("Rehashing dccdeny.conf on request of %s",
-				    sptr->name);
+				    ("%sRehashing dccdeny.conf on request of %s", 
+				    cptr != sptr ? "Remotely " : "", sptr->name);
 				dcc_rehash();
 				return 0;
 			}
@@ -3683,8 +3713,8 @@ int  m_rehash(cptr, sptr, parc, parv)
 				if (!IsAdmin(sptr))
 					return 0;
 				sendto_ops
-				    ("Rehashing dynamic configuration on request of %s",
-				    sptr->name);
+				    ("%sRehashing dynamic configuration on request of %s", 
+				    cptr != sptr ? "Remotely " : "", sptr->name);
 				load_conf(ZCONF, 1);
 				return 0;
 			}
@@ -3700,8 +3730,8 @@ int  m_rehash(cptr, sptr, parc, parv)
 				if (!IsAdmin(sptr))
 					return 0;
 				sendto_ops
-				    ("Rehashing channel restrict configuration on request of %s",
-				    sptr->name);
+				    ("%sRehashing channel restrict configuration on request of %s",
+					cptr != sptr ? "Remotely " : "", sptr->name);
 				cr_rehash();
 				return 0;
 			}
@@ -3710,8 +3740,8 @@ int  m_rehash(cptr, sptr, parc, parv)
 				if (!IsAdmin(sptr))
 					return 0;
 				sendto_ops
-				    ("Rehashing OperMOTD on request of %s",
-				    sptr->name);
+				    ("%sRehashing OperMOTD on request of %s", 
+				   cptr != sptr ? "Remotely " : "", sptr->name);
 				opermotd = (aMotd *) read_opermotd(OPATH);
 				return 0;
 			}
@@ -3719,21 +3749,41 @@ int  m_rehash(cptr, sptr, parc, parv)
 			{
 				if (!IsAdmin(sptr))
 					return 0;
-				sendto_ops("Rehashing BotMOTD on request of %s",
-				    sptr->name);
+				sendto_ops("%sRehashing BotMOTD on request of %s", 
+				    cptr != sptr ? "Remotely " : "", sptr->name);
 				botmotd = (aMotd *) read_botmotd(BPATH);
 				return 0;
 			}
 			if (!strnicmp("-motd", parv[1], 5)
 			    || !strnicmp("-rules", parv[1], 6))
 			{
+				ConfigItem_tld *tlds;
+				aMotd *amotd;
 				if (!IsAdmin(sptr))
 					return 0;
 				sendto_ops
-				    ("Rehashing all MOTDs and RULES on request of %s",
-				    sptr->name);
+				    ("%sRehashing all MOTDs and RULES on request of %s", 
+				    cptr != sptr ? "Remotely " : "", sptr->name);
 				motd = (aMotd *) read_motd(MPATH);
 				rules = (aMotd *) read_rules(RPATH);
+				for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *) tlds->next) {
+					while (tlds->motd) {
+						amotd = tlds->motd->next;
+						MyFree(tlds->motd->line);
+						MyFree(tlds->motd);
+						tlds->motd = amotd;
+					}
+					tlds->motd = read_motd(tlds->motd_file);
+					while (tlds->rules) {
+						amotd = tlds->rules->next;
+						MyFree(tlds->rules->line);
+						MyFree(tlds->rules);
+						tlds->rules = amotd;
+					}
+					tlds->rules = read_rules(tlds->rules_file);
+				}
+						
+				
 				return 0;
 			}
 			if (!strnicmp("-vhos", parv[1], 5))
@@ -3741,8 +3791,8 @@ int  m_rehash(cptr, sptr, parc, parv)
 				if (!IsAdmin(sptr))
 					return 0;
 				sendto_ops
-				    ("Rehashing vhost configuration on request of %s",
-				    sptr->name);
+				    ("%sRehashing vhost configuration on request of %s", 
+				    cptr != sptr ? "Remotely " : "", sptr->name);
 				vhost_rehash();
 				return 0;
 			}
@@ -3752,8 +3802,8 @@ int  m_rehash(cptr, sptr, parc, parv)
 				if (!IsAdmin(sptr))
 					return 0;
 				sendto_ops
-				    ("Rehashing badword configuration on request of %s",
-				    sptr->name);
+				    ("%sRehashing badword configuration on request of %s", 
+				    cptr != sptr ? "Remotely " : "", sptr->name);
 				freebadwords();
 				loadbadwords_channel("badwords.channel.conf");
 				loadbadwords_message("badwords.message.conf");
@@ -3761,161 +3811,10 @@ int  m_rehash(cptr, sptr, parc, parv)
 			}
 #endif
 		}
-		if (MyClient(sptr) && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
-		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			    parv[0]);
-			return 0;
-		}
-		/* This little number allows us to send a -param to another server,
-		 * but only if it exists -- codemastr*/
-		if (parv[2] != NULL)
-		{
-			if ((x =
-			    hunt_server(cptr, sptr, ":%s REHASH %s %s", 1, parc,
-			    parv)) != HUNTED_ISME)
-				return 0;
-		}
-		if (parv[2] == NULL)
-		{
-			if ((x =
-			    hunt_server(cptr, sptr, ":%s REHASH %s", 1, parc,
-			    parv)) != HUNTED_ISME)
-				return 0;
-		}
-
 	}
-
-	if (cptr != sptr)
-	{
-
-#ifndef REMOTE_REHASH
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-		return 0;
-#else
-		if (parv[2] == NULL)
-		{
-			sendto_serv_butone(&me,
-			    ":%s GLOBOPS :%s is remotely rehashing server config file",
-			    me.name, sptr->name);
-			sendto_ops
-			    ("%s is remotely rehashing server config file",
-			    parv[0]);
-		}
-		/* Then we have a hack here to parse the flags (thats the ugly part) */
 		else
-		{
-			if (!BadPtr(parv[2]))
-			{
-				if (*parv[2] == '-')
-				{
-					if (!strnicmp("-dcc", parv[2], 4))
-					{
-						sendto_serv_butone(&me,
-						    ":%s GLOBOPS :%s is remotely rehashing dccdeny.conf",
-						    me.name, sptr->name);
-						sendto_ops
-						    ("Remotely rehashing dccdeny.conf on request of %s",
-						    sptr->name);
-						dcc_rehash();
-						return 0;
-					}
-					if (!strnicmp("-dyn", parv[2], 4))
-					{
-						if (!IsAdmin(sptr))
-							return 0;
-						sendto_serv_butone(&me,
-						    ":%s GLOBOPS :%s is remotely rehashing dynamic configuration",
-						    me.name, sptr->name);
-						sendto_ops
-						    ("Remotely rehashing dynamic configuration on request of %s",
-						    sptr->name);
-						load_conf(ZCONF, 1);
-						return 0;
-					}
-					if (!strnicmp("-rest", parv[2], 5))
-					{
-						if (!IsAdmin(sptr))
-							return 0;
-						sendto_serv_butone(&me,
-						    ":%s GLOBOPS :%s is remotely rehashing channel restrict configuration",
-						    me.name, sptr->name);
-						sendto_ops
-						    ("Remotely rehashing channel restrict configuration on request of %s",
-						    sptr->name);
-						cr_rehash();
-						return 0;
-					}
-					if (!match("-o*motd", parv[2]))
-					{
-						if (!IsAdmin(sptr))
-							return 0;
-						sendto_serv_butone(&me,
-						    ":%s GLOBOPS :%s is remotely rehashing OperMOTD",
-						    me.name, sptr->name);
-						sendto_ops
-						    ("Remotely rehashing OperMOTD on request of %s",
-						    sptr->name);
-						opermotd =
-						    (aMotd *)
-						    read_opermotd(OPATH);
-						return 0;
-					}
-					if (!match("-b*motd", parv[2]))
-					{
-						if (!IsAdmin(sptr))
-							return 0;
-						sendto_serv_butone(&me,
-						    ":%s GLOBOPS :%s is remotely rehashing BotMOTD",
-						    me.name, sptr->name);
-						sendto_ops
-						    ("Remotely rehashing BotMOTD on request of %s",
-						    sptr->name);
-						botmotd =
-						    (aMotd *)
-						    read_botmotd(BPATH);
-						return 0;
-					}
-					if (!strnicmp("-motd", parv[2], 5)
-					    || !strnicmp("-rules", parv[2], 6))
-					{
-						if (!IsAdmin(sptr))
-							return 0;
-						sendto_serv_butone(&me,
-						    ":%s GLOBOPS :%s is remotely rehashing all MOTDs and RULES",
-						    me.name, sptr->name);
-						sendto_ops
-						    ("Remotely rehashing all MOTDs and RULES on request of %s",
-						    sptr->name);
-						motd =
-						    (aMotd *) read_motd(MPATH);
-						rules =
-						    (aMotd *) read_rules(RPATH);
-						return 0;
-					}
-					if (!strnicmp("-vhos", parv[2], 5))
-					{
-						if (!IsAdmin(sptr))
-							return 0;
-						sendto_serv_butone(&me,
-						    ":%s GLOBOPS :%s is remotely rehashing vhost configuration",
-						    me.name, sptr->name);
-						sendto_ops
-						    ("Remotely rehashing vhost configuration on request of %s",
-						    sptr->name);
-						vhost_rehash();
-						return 0;
-					}
-				}
-			}
-		}
-
-#endif
-	}
-	else
-	{
 		sendto_ops("%s is rehashing server config file", parv[0]);
-	}
+	
 	sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
 #ifdef USE_SYSLOG
 	syslog(LOG_INFO, "REHASH From %s\n", get_client_name(sptr, FALSE));
