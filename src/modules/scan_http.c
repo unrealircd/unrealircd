@@ -154,7 +154,7 @@ void 	scan_http_scan(Scan_AddrStruct *h)
 	/* note: on windows dwRc holds the thread return code.  on unix
 	** its a void pointer
 	*/
-	DWORD   dwRc[3];
+	u_int32_t dwRc[3];
 	HSStruct *p = NULL;
 	
 	IRCMutexLock((h->lock));

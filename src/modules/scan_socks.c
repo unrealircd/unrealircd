@@ -147,7 +147,7 @@ void scan_socks_scan(Scan_AddrStruct *h)
 {
 	THREAD thread[2];
 	unsigned id[2];
-	DWORD  dwRc[2];
+	u_int32_t dwRc[2];
 	
 	IRCMutexLock((h->lock));
 	h->refcnt++;
