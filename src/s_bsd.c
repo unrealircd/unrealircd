@@ -698,7 +698,11 @@ static int check_init(aClient *cptr, char *sockn, size_t size)
 	}
 	else if (getpeername(cptr->fd, (struct SOCKADDR *)&sk, &len) == -1)
 	{
-		report_error("connect failure: %s %s", cptr);
+		/* On Linux 2.4 and FreeBSD the socket may just have been disconnected
+		 * so it's not a serious error and can happen quite frequently -- Syzop
+		 */
+		if (ERRNO != P_ENOTCONN)
+			report_error("connect failure: %s %s", cptr);
 		return -1;
 	}
 	(void)strlcpy(sockn, (char *)Inet_si2p(&sk), size);
@@ -1190,7 +1194,11 @@ aClient *add_connection(aClient *cptr, int fd)
 
 		if (getpeername(fd, (struct SOCKADDR *)&addr, &len) == -1)
 		{
-			report_error("Failed in connecting to %s :%s", cptr);
+			/* On Linux 2.4 and FreeBSD the socket may just have been disconnected
+			 * so it's not a serious error and can happen quite frequently -- Syzop
+			 */
+			if (ERRNO != P_ENOTCONN)
+				report_error("Failed in connecting to %s :%s", cptr);
 add_con_refuse:
 			ircstp->is_ref++;
 			acptr->fd = -2;
