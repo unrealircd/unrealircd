@@ -162,11 +162,13 @@ char  *Module_Create(char *path_)
 		if (!mod_header)
 		{
 			irc_dlclose(Mod);
+			remove(tmppath);
 			return ("Unable to locate Mod_Header");
 		}
 		if (!mod_header->modversion)
 		{
 			irc_dlclose(Mod);
+			remove(tmppath);
 			return ("Lacking mod_header->modversion");
 		}
 		if (sscanf(mod_header->modversion, "3.2-b%d-%d", &betaversion, &tag)) {
@@ -174,6 +176,7 @@ char  *Module_Create(char *path_)
 				snprintf(errorbuf, 1023, "Unsupported version, we support %s, %s is %s",
 					   MOD_WE_SUPPORT, path, mod_header->modversion);
 				irc_dlclose(Mod);
+				remove(tmppath);
 				return(errorbuf);
 			}
 		}
@@ -181,11 +184,13 @@ char  *Module_Create(char *path_)
 		    !mod_header->description)
 		{
 			irc_dlclose(Mod);
+			remove(tmppath);
 			return("Lacking sane header pointer");
 		}
 		if (Module_Find(mod_header->name))
 		{
 		        irc_dlclose(Mod);
+			remove(tmppath);
 			return (NULL);
 		}
 		mod = (Module *)Module_make(mod_header, Mod);

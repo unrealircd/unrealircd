@@ -2615,3 +2615,5 @@ seen. gmtime warning still there
   after a newer version has been compiled. This also fixes the problem with hooks disappearing
   during a rehash (#0001332) reported by AngryWolf and (#0001325) reported by Cnils. This
   might need some testing.
+- Fixed some problems with the copyfile routine for the new module rehash system and also fixed
+  an issue with rehashing when permanent modules are loaded

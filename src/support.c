@@ -1733,12 +1733,20 @@ void unreal_copyfile(char *src, char *dest)
 {
 	char buf[2048];
 	int srcfd = open(src, O_RDONLY);
-	int destfd = open(dest, O_WRONLY|O_CREAT, S_IRUSR|S_IXUSR);
+	int destfd;
 	int len;
+
+	if (srcfd < 1)
+		return;
+
+	destfd  = open(dest, O_WRONLY|O_CREAT, S_IRUSR|S_IXUSR);
+
+	if (destfd < 1)
+		return;
 
 	while ((len = read(srcfd, buf, 1023)) > 0)
 		write(destfd, buf, len);
 
-	close(src);
-	close(dest);
+	close(srcfd);
+	close(destfd);
 }
