@@ -1473,8 +1473,10 @@
   What ip should the scanner bind to before connecting</p>
 <p>set::scan::message &lt;message&gt;;<br>
   Put a message that users will see when scanner is scanning</p>
-<p>set::scan::ban-time {time}<br>
-  Sets the time of the ban (1d,2h,1w)</p>
+<p>set::scan::bantime {time}<br>
+  Sets the time of the ban (4d)</p>
+<p>set::scan::timeout {time}<br>
+  How long we wait to see if the host has a proxy (15s)</p>
 <p>set::ssl::egd &lt;filename&gt;;<br>
   Specifies that EGD (Entropy Gathering Daemon) support should be enabled. If 
   you run OpenSSL 0.9.7 or higher, then /var/run/egd-pool, /dev/egd-pool, /etc/egd-pool, 
