@@ -59,3 +59,4 @@
 - Added TODO in top of s_conf2.c
 - Fixed a bug reported by S7 that affected chg* and set* as well as sdesc
 - Started work on the except parser
+- Fixed a STATS_ONLYOPER bug

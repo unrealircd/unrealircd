@@ -2351,16 +2351,18 @@ int  m_stats(cptr, sptr, parc, parv)
 	int  doall = 0, wilds = 0, showports = IsAnOper(sptr), remote = 0;
 	char *name;
 
-
-#ifdef STATS_ONLYOPER
-	if (!IsAnOper(sptr))
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-
-#endif
-
 	if (hunt_server(cptr, sptr, ":%s STATS %s :%s", 2, parc,
 	    parv) != HUNTED_ISME)
 		return 0;
+
+#ifdef STATS_ONLYOPER
+	if (!IsAnOper(sptr)) {
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		return 0;
+	}
+	
+#endif
+
 
 	if (parc > 2)
 	{
