@@ -144,6 +144,7 @@ extern fdlist socks_fdlist;
 #  endif
 # endif
 #endif
+void	start_of_normal_client_handshake(aClient *acptr);
 
 /* winlocal */
 void add_local_client(aClient* cptr)
@@ -1139,7 +1140,7 @@ void set_non_blocking(int fd, aClient *cptr)
  */
 aClient *add_connection(aClient *cptr, int fd)
 {
-	Link lin;
+	Link	lin;
 	aClient *acptr;
 	ConfigItem_ban *bconf;
 	int i, j;
@@ -1225,25 +1226,6 @@ add_con_refuse:
 			goto add_con_refuse;
 		}
 		acptr->port = ntohs(addr.SIN_PORT);
-		if (SHOWCONNECTINFO) {
-			/* Start of the very first DNS check */
-			if (!(cptr->umodes & LISTENER_SSL))
-				FDwrite(fd, REPORT_DO_DNS, R_do_dns);
-		}
-		lin.flags = ASYNC_CLIENT;
-		lin.value.cptr = acptr;
-		Debug((DEBUG_DNS, "lookup %s", acptr->sockhost));
-		acptr->hostp = gethost_byaddr((char *)&acptr->ip, &lin);
-
-		if (!acptr->hostp)
-			SetDNS(acptr);
-		else
-		{
-			if (SHOWCONNECTINFO)
-				if (!(cptr->umodes & LISTENER_SSL))
-					FDwrite(fd, REPORT_FIN_DNSC, R_fin_dnsc);
-		}
-		nextdnscheck = 1;
 	}
 
 	acptr->fd = fd;
@@ -1257,9 +1239,14 @@ add_con_refuse:
 	{
 		((ConfigItem_listen *) acptr->listener->class)->clients++;
 	}
+	add_client_to_list(acptr);
+	set_non_blocking(acptr->fd, acptr);
+	set_sock_opts(acptr->fd, acptr);
+	IRCstats.unknown++;
 #ifdef USE_SSL
 	if (cptr->umodes & LISTENER_SSL)
 	{
+		SetSSLAcceptHandshake(acptr);
 		if ((acptr->ssl = SSL_new(ctx_server)) == NULL)
 		{
 			goto add_con_refuse;
@@ -1273,14 +1260,33 @@ add_con_refuse:
 	  	        goto add_con_refuse;
 	  	}
 	}
+	else
 #endif
-	add_client_to_list(acptr);
-	set_non_blocking(acptr->fd, acptr);
-	set_sock_opts(acptr->fd, acptr);
-	IRCstats.unknown++;
-	start_auth(acptr);
-
+		start_of_normal_client_handshake(acptr);
 	return acptr;
+}
+
+void	start_of_normal_client_handshake(aClient *acptr)
+{
+	Link	lin;
+	acptr->status = STAT_UNKNOWN;	
+	if (SHOWCONNECTINFO) {
+		sendto_one(acptr, REPORT_DO_DNS);
+	}
+	lin.flags = ASYNC_CLIENT;
+	lin.value.cptr = acptr;
+	Debug((DEBUG_DNS, "lookup %s", acptr->sockhost));
+	acptr->hostp = gethost_byaddr((char *)&acptr->ip, &lin);
+	
+	if (!acptr->hostp)
+		SetDNS(acptr);
+	else
+	{
+		if (SHOWCONNECTINFO)
+			sendto_one(acptr, REPORT_FIN_DNSC);
+	}
+	nextdnscheck = 1;
+	start_auth(acptr);
 }
 
 /*
@@ -1584,16 +1590,6 @@ int  read_message(time_t delay, fdlist *listp)
 			if (IsLog(cptr))
 				continue;
 			
-#ifdef USE_SSL
-			if (cptr->ssl != NULL && IsSSL(cptr) &&
-				!SSL_is_init_finished((SSL *)cptr->ssl))
-			{
-				if (IsDead(cptr) || (IsConnecting(cptr) ? !ircd_SSL_connect(cptr) : !ircd_SSL_accept(cptr, cptr->fd)))
-					close_connection(cptr);
-				continue;
-			}
-#endif
-			
 			if (DoingAuth(cptr))
 			{
 				auth++;
@@ -1831,8 +1827,33 @@ deadsocket:
 			}
 		}
 		length = 1;	/* for fall through case */
-		if (!NoNewLine(cptr) || FD_ISSET(cptr->fd, &read_set))
+		if ((!NoNewLine(cptr) || FD_ISSET(cptr->fd, &read_set)) 
+#ifdef USE_SSL
+			&& 
+			!(IsSSLAcceptHandshake(cptr) || IsSSLConnectHandshake(cptr))
+#endif		
+			)
 			length = read_packet(cptr, &read_set);
+		if ((cptr->ssl != NULL) && 
+			(IsSSLAcceptHandshake(cptr) || IsSSLConnectHandshake(cptr)) &&
+			FD_ISSET(cptr->fd, &read_set))
+		{
+			if (!SSL_is_init_finished(cptr->ssl))
+			{
+				if (IsDead(cptr) || IsSSLAcceptHandshake(cptr) ? !ircd_SSL_accept(cptr, cptr->fd) : ircd_SSL_connect(cptr) < 0)
+				{
+					length = -1;
+				}
+			}
+			else
+			{
+				if (IsSSLAcceptHandshake(cptr))
+					start_of_normal_client_handshake(cptr);
+				else
+					completed_connection(cptr);
+
+			}
+		}
 		if (length > 0)
 			flush_connections(cptr);
 		if ((length != FLUSH_BUFFER) && IsDead(cptr))

@@ -195,8 +195,10 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	BOOT_AUTODIE	64
 #define BOOT_NOFORK     128
 
-#define	STAT_LOG	-6	/* logfile for -x */
-#define	STAT_CONNECTING	-4
+#define	STAT_LOG	-7	/* logfile for -x */
+#define	STAT_CONNECTING	-6
+#define STAT_SSL_CONNECT_HANDSHAKE -5
+#define STAT_SSL_ACCEPT_HANDSHAKE -4
 #define	STAT_HANDSHAKE	-3
 #define	STAT_ME		-2
 #define	STAT_UNKNOWN	-1
@@ -215,6 +217,13 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	IsServer(x)		((x)->status == STAT_SERVER)
 #define	IsClient(x)		((x)->status == STAT_CLIENT)
 #define	IsLog(x)		((x)->status == STAT_LOG)
+
+#ifdef USE_SSL
+#define IsSSLAcceptHandshake(x)	((x)->status == STAT_SSL_ACCEPT_HANDSHAKE)
+#define IsSSLConnectHandshake(x)	((x)->status == STAT_SSL_CONNECT_HANDSHAKE)
+#define SetSSLAcceptHandshake(x)	((x)->status = STAT_SSL_ACCEPT_HANDSHAKE)
+#define SetSSLConnectHandshake(x)	((x)->status = STAT_SSL_CONNECT_HANDSHAKE)
+#endif
 
 #define	SetConnecting(x)	((x)->status = STAT_CONNECTING)
 #define	SetHandshake(x)		((x)->status = STAT_HANDSHAKE)
@@ -267,7 +276,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define FLAGS_SHUNNED    0x4000000
 #ifdef USE_SSL
 #define FLAGS_SSL	 0x10000000
-#define FLAGS_SSL_HSHAKE 0x20000000
 #endif
 #define FLAGS_DCCBLOCK	0x40000000
 #define FLAGS_MAP       0x80000000	/* Show this entry in /map */
@@ -331,7 +339,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #ifdef STRIPBADWORDS
 #define IsFilteringWords(x)	((x)->umodes & UMODE_STRIPBADWORDS)
 #endif
-
 #define IsNetAdmin(x)		((x)->umodes & UMODE_NETADMIN)
 #define IsCoAdmin(x)		((x)->umodes & UMODE_COADMIN)
 #define IsSAdmin(x)		((x)->umodes & UMODE_SADMIN)

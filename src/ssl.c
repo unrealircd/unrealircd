@@ -145,7 +145,7 @@ void init_ctx_server(void)
 
 void init_ctx_client(void)
 {
-	ctx_client = SSL_CTX_new(SSLv3_client_method());
+	ctx_client = SSL_CTX_new(SSLv23_client_method());
 	if (!ctx_client)
 	{
 		ircd_log(LOG_ERROR, "Failed to do SSL CTX new client");
@@ -304,6 +304,12 @@ int	SSL_change_fd(SSL *s, int fd)
 	return 1;
 }
 
+void	SSL_set_nonblocking(SSL *s)
+{
+	BIO_set_nbio(SSL_get_rbio(s),1);  
+	BIO_set_nbio(SSL_get_wbio(s),1);  
+}
+
 char	*ssl_get_cipher(SSL *ssl)
 {
 	static char buf[400];
@@ -394,14 +400,15 @@ int ircd_SSL_client_handshake(aClient *acptr)
 {
 	int ssl_err;
 	
-	acptr->ssl = SSL_new(ctx_server);
+	acptr->ssl = SSL_new(ctx_client);
 	if (!acptr->ssl)
 	{
-		sendto_realops("Failed to SSL_new(ctx_server)");
+		sendto_realops("Failed to SSL_new(ctx_client)");
 		return FALSE;
 	}
 	SSL_set_fd(acptr->ssl, acptr->fd);
 	SSL_set_connect_state(acptr->ssl);
+	SSL_set_nonblocking(acptr->ssl);
 	if (acptr->serv && acptr->serv->conf->ciphers)
 	{
 		if (SSL_set_cipher_list((SSL *)acptr->ssl, 
@@ -420,9 +427,11 @@ int ircd_SSL_client_handshake(aClient *acptr)
 		case -1: 
 			return -1;
 		case 0: 
-			return 1;
+			SetSSLConnectHandshake(acptr);
+			return 0;
 		case 1: 
-			return (completed_connection(acptr));
+			/* SSL_init_finished in s_bsd will finish the job */
+			return 1;
 		default:
 			return -1;		
 	}
@@ -455,7 +464,6 @@ int ircd_SSL_accept(aClient *acptr, int fd) {
 int ircd_SSL_connect(aClient *acptr) {
 
     int ssl_err;
-
     if((ssl_err = SSL_connect((SSL *)acptr->ssl)) <= 0) {
 	switch(ssl_err = SSL_get_error((SSL *)acptr->ssl, ssl_err)) {
 	    case SSL_ERROR_SYSCALL:

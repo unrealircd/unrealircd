@@ -17,4 +17,4 @@ extern	 int ircd_SSL_accept(aClient *acptr, int fd);
 extern	 int ircd_SSL_connect(aClient *acptr);
 extern	 int SSL_smart_shutdown(SSL *ssl);
 extern	 int ircd_SSL_client_handshake(aClient *acptr);
-
+extern   void SSL_set_nonblocking(SSL *s);

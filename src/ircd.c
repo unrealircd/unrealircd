@@ -643,7 +643,11 @@ extern TS check_pings(TS currenttime)
 		 * Check UNKNOWN connections - if they have been in this state
 		 * for > 100s, close them.
 		 */
-		if (IsUnknown(cptr))
+		if (IsUnknown(cptr)
+#ifdef USE_SSL
+			|| (IsSSLAcceptHandshake(cptr) || IsSSLConnectHandshake(cptr))
+#endif		
+		)
 			if (cptr->firsttime ? ((TStime() - cptr->firsttime) >
 			    100) : 0)
 				(void)exit_client(cptr, cptr, &me,
