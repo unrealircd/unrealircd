@@ -944,7 +944,7 @@ static int completed_connection(cptr)
 	aClient *cptr;
 {
 	aConfItem *aconf;
-
+	extern char serveropts[];
 	SetHandshake(cptr);
 
 	aconf = find_conf(cptr->confs, cptr->name, CONF_CONNECT_SERVER);
@@ -963,8 +963,8 @@ static int completed_connection(cptr)
 		return -1;
 	}
 	sendto_one(cptr, "PROTOCTL %s", PROTOCTL_SERVER);
-	sendto_one(cptr, "SERVER %s 1 :%s",
-	    my_name_for_link(me.name, aconf), me.info);
+	sendto_one(cptr, "SERVER %s 1 :U%d-%s %s",
+	    my_name_for_link(me.name, aconf), UnrealProtocol, serveropts,me.info);
 	if (!IsDead(cptr))
 		start_auth(cptr);
 
