@@ -3093,3 +3093,4 @@ seen. gmtime warning still there
 - Made ./unreal rehash (= kill -1 <pid>) also reread motd/rules/etc just as a
   normal /rehash does, reported by superh (#0001699).
 - Various doc/text updates
+- Added some release notes already.
