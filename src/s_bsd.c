@@ -618,6 +618,8 @@ init_dgram:
 	resfd = init_resolver(0x1f);
 	Debug((DEBUG_DNS, "resfd %d", resfd));
 #ifndef _WIN32
+	ircd_log(LOG_ERROR, "MAXCONNECTIONS is %i", MAXCONNECTIONS);
+	ircd_log(LOG_ERROR, "FD_SETSIZE is %i", FD_SETSIZE);
 	if (MAXCONNECTIONS > FD_SETSIZE)
 		abort();
 #endif
