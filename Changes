@@ -2999,3 +2999,4 @@ seen. gmtime warning still there
   Based on a suggestion by satmd (#0001604)
 - Imported TRE 0.6.5 on Win32 and Linux, solves (#0001542) and (#0001564) reported 
   by methos
+- Added rest of release notes.

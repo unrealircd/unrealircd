@@ -42,9 +42,10 @@ Unreal3.2-RC2 Release Notes
 ==[ MAJOR BUGS FIXED ]==
 * The ircd was unable to boot on some OSs because unreal removed tmp/
 * crash: if an invalid regex was entered (eg: in spamfilter) the ircd could crash
+* crash: The TRE regex library could be crashed in case of some (advanced) regexes.
 * crash: several remote includes problems (also non-crash)
+* crash/security: an user-triggerable crash bug
 * Fixed problem with 'tkl update' which could lead to server fights in some cases.
-[incomplete!]
 
 ==[ MINOR BUGS FIXED ]==
 * allow::options::noident now actually works
