@@ -1455,3 +1455,5 @@ seen. gmtime warning still there
 - SSL fixes to deal with not allowing SSLv2
 *** beta11 released ***
 - Removed src/s_unreal.c contained 2 functions, 1 never used, 1 used once
+- Removed /hash (did nothing), removed /post (replaced by scan_http)
+- Modulized /vhost, /cycle, /svsjoin, /svspart

@@ -2872,27 +2872,6 @@ CMD_FUNC(channel_link)
 }
 
 /*
- * m_cycle() - Stskeeps
- * parv[0] = prefix
- * parv[1] = channels
-*/
-
-CMD_FUNC(m_cycle)
-{
-	char	channels[1024];
-	
-        if (parc < 2)
-                return 0;
-        parv[2] = "cycling";
-	strncpy(channels, parv[1], 1020);
-        (void)m_part(cptr, sptr, 3, parv);
-	parv[1] = channels;
-        parv[2] = NULL;
-	return m_join(cptr, sptr, 2, parv);
-}
-
-
-/*
 ** m_join
 **	parv[0] = sender prefix
 **	parv[1] = channel
