@@ -665,3 +665,4 @@ seen. gmtime warning still there
 - Added set { blackhole "insideip:port" { "outsideip"; }; }; (useful if
   being behind firewall)
 - Fixed a little scan.so bug
+- Fixed so we compile without symbols in win32 .. 
