@@ -4912,7 +4912,7 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 		}
 		else 
 		{
-			char *errbuf = unreal_checkregex(word->ce_vardata,1,0);
+			char *errbuf = unreal_checkregex(word->ce_vardata,1,1);
 			if (errbuf)
 			{
 				config_error("%s:%i: badword::%s contains an invalid regex: %s",

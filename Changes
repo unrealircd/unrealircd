@@ -383,3 +383,5 @@
   would kill any drones that have both a nick and realname with 'Drone' followed by digits.
 - If a nick is qlined, the user is now lagged up to limit qline floods a bit (#0001335).
 - Made docs a bit more clear on spamfilter targettypes.
+- Fix for too broad regex in badword::word causing the IRCd to hang, reported by Flop
+  (#0002101).
