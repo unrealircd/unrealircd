@@ -2038,10 +2038,10 @@ int	res_copyhostent(struct hostent *from, struct hostent *to)
 	for (x = 0; from->h_aliases[x]; x++)
 		;
 	x *= sizeof(char *);
-	amt += sizeof(char *);
+	amt += sizeof(char *) + x;
 	for (i = 0; from->h_aliases[i]; i++)
 	    {
-		to->h_aliases[i] = (char *)(amt+x);
+		to->h_aliases[i] = (char *)amt;
 		strcpy(to->h_aliases[i], from->h_aliases[i]);
 		amt += strlen(to->h_aliases[i])+1;
 		if (amt&0x3)
@@ -2053,19 +2053,30 @@ int	res_copyhostent(struct hostent *from, struct hostent *to)
 	for (x = 0; from->h_addr_list[x]; x++)
 		;
 	x *= sizeof(char *);
+	amt += sizeof(char *) + x;
 	for (i = 0; from->h_addr_list[i]; i++)
 	    {
-		amt += 4;
-		to->h_addr_list[i] = (char *)(amt+x);
+		to->h_addr_list[i] = (char *)amt;
 #ifndef INET6
 		((struct IN_ADDR *)to->h_addr_list[i])->S_ADDR = ((struct IN_ADDR *)from->h_addr_list[i])->S_ADDR;
 #else
 		bcopy(((struct IN_ADDR *)from->h_addr_list[i])->S_ADDR,((struct IN_ADDR *)to->h_addr_list[i])->S_ADDR, IN6ADDRSZ);
 #endif
-
-
+		amt += sizeof(struct IN_ADDR); /* Prolly 4 */
 	    }
 	to->h_addr_list[i] = NULL;
+
+#ifdef WINDNSDEBUG
+	{
+		int aliascnt = 0, addrcnt = 0;
+		for (aliascnt = 0; from->h_aliases[aliascnt]; aliascnt++);
+		for (addrcnt = 0; from->h_addr_list[addrcnt]; addrcnt++);
+		ircd_log(LOG_ERROR, "resolver: amt=0x%x, to=0x%x, len=%d, max=%d [%d aliases, %d addrs]",
+			amt, to, (char *)amt - (char *)to, MAXGETHOSTSTRUCT, aliascnt, addrcnt);
+	}
+#endif
+	if ((char *)amt + 4 > (char *)to + MAXGETHOSTSTRUCT)
+		ircd_log(LOG_ERROR, "resolver: overflow???");
 	return 1;
 }
 #endif /*_WIN32*/
