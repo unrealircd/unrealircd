@@ -585,15 +585,23 @@ extern TS check_pings(TS currenttime)
 		Debug((DEBUG_DEBUG, "c(%s)=%d p %d k %d a %d", cptr->name,
 		    cptr->status, ping, killflag,
 		    currenttime - cptr->lasttime));
-		if (ping < (currenttime - cptr->lasttime)) {
-			if (((cptr->flags & FLAGS_PINGSENT)
-			    && ((currenttime - cptr->lasttime) >= (2 * ping)))
-			    || ((!IsRegistered(cptr)
-			    && (currenttime - cptr->since) >= ping)))
+		
+		/* If ping is less than or equal to the last time we received a command from them */
+		if (ping <= (currenttime - cptr->lasttime))
+		{
+			if (
+				/* If we have sent a ping */
+				((cptr->flags & FLAGS_PINGSENT)
+				/* And they had 2x ping frequency to respond */
+				&& ((currenttime - cptr->lasttime) >= (2 * ping)))
+				|| 
+				/* Or isn't registered and time spent is larger than ping .. */
+				(!IsRegistered(cptr) && (currenttime - cptr->since >= ping))
+				)
 			{
-				if (!IsRegistered(cptr) &&
-				    (DoingDNS(cptr) || DoingAuth(cptr)
-				    )) {
+				/* if it's registered and doing dns/auth, timeout */
+				if (!IsRegistered(cptr) && (DoingDNS(cptr) || DoingAuth(cptr)))
+				{
 					if (cptr->authfd >= 0) {
 						CLOSE_SOCK(cptr->authfd);
 						--OpenFiles;
@@ -621,7 +629,11 @@ extern TS check_pings(TS currenttime)
 					continue;
 				}
 				if (IsServer(cptr) || IsConnecting(cptr) ||
-				    IsHandshake(cptr)) {
+				    IsHandshake(cptr)
+#ifdef USE_SSL
+					|| IsSSLConnectHandshake(cptr)
+#endif	    
+				    ) {
 					sendto_realops
 					    ("No response from %s, closing link",
 					    get_client_name(cptr, FALSE));
@@ -630,9 +642,16 @@ extern TS check_pings(TS currenttime)
 					    me.name, get_client_name(cptr,
 					    FALSE));
 				}
+#ifdef USE_SSL
+				if (IsSSLAcceptHandshake(cptr))
+					Debug((DEBUG_DEBUG, "ssl accept handshake timeout: %s (%li-%li > %li)", cptr->sockhost,
+						currenttime, cptr->since, ping));
+#endif
 				exit_client(cptr, cptr, &me, "Ping timeout");
 				continue;
-			} else if (IsRegistered(cptr) &&
+				
+			}
+			else if (IsRegistered(cptr) &&
 			    ((cptr->flags & FLAGS_PINGSENT) == 0)) {
 				/*
 				 * if we havent PINGed the connection and we havent
@@ -658,7 +677,7 @@ extern TS check_pings(TS currenttime)
 			|| (IsSSLAcceptHandshake(cptr) || IsSSLConnectHandshake(cptr))
 #endif		
 		)
-			if (cptr->firsttime ? ((TStime() - cptr->firsttime) >
+			if (cptr->firsttime ? ((currenttime - cptr->firsttime) >
 			    100) : 0)
 				(void)exit_client(cptr, cptr, &me,
 				    "Connection Timed Out");

@@ -1565,3 +1565,4 @@ seen. gmtime warning still there
   ->ce_varname instead of ->ce_vardata. Found by badSol
 - Added a newline in dynconf.h
 - SSL debugging stuff
+- Added some more debugging stuff, made check_pings a little more readable 
