@@ -208,25 +208,25 @@ VOIDSIG s_die()
 #ifdef _WIN32
 	int  i;
 	aClient *cptr;
-#endif
-	unload_all_modules();
-#ifndef _WIN32
-	flush_connections(&me);
-#else
-	for (i = LastSlot; i >= 0; i--)
-		if ((cptr = local[i]) && DBufLength(&cptr->sendQ) > 0)
-			(void)send_queued(cptr);
 	if (!IsService)
-#endif
-	exit(-1);
-#ifdef _WIN32
+	{
+		unload_all_modules();
+		for (i = LastSlot; i >= 0; i--)
+			if ((cptr = local[i]) && DBufLength(&cptr->sendQ) > 0)
+				(void)send_queued(cptr);
+		
+		exit(-1);
+	}
 	else {
 		SERVICE_STATUS status;
 		SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 		SC_HANDLE hService = OpenService(hSCManager, "UnrealIRCd", SERVICE_STOP); 
 		ControlService(hService, SERVICE_CONTROL_STOP, &status);
 	}
-#endif
+#else
+	unload_all_modules();
+	flush_connections(&me);
+	exit(-1);
 }
 
 #ifndef _WIN32
