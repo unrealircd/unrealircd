@@ -1257,3 +1257,4 @@ seen. gmtime warning still there
 - Added EXLIBS= to make custommodule so a module can specify additional libraries it needs
 - Changed version to beta9 and updated documentation
 - Made +I once again work in win32
+- Fixed a stupid m_oper bug
