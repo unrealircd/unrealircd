@@ -1232,8 +1232,13 @@ void bounce_mode(chptr, cptr, parc, parv)
 	set_mode(chptr, cptr, parc, parv, &pcount, pvar, 1);
 	make_mode_str(chptr, oldm, oldl, pcount, pvar, mode_buf, parabuf, 1);
 
-	sendto_one(cptr, ":%s MODE %s &%s %s %lu", me.name, chptr->chname,
-	    mode_buf, parabuf, chptr->creationtime);
+	if (chptr->creationtime)
+		sendto_one(cptr, ":%s MODE %s &%s %s %lu", me.name, chptr->chname,
+		    mode_buf, parabuf, chptr->creationtime);
+	else
+		sendto_one(cptr, ":%s MODE %s &%s %s", me.name, chptr->chname,
+		    mode_buf, parabuf);
+
 	/* the '&' denotes a bounce so servers won't bounce a bounce */
 }
 

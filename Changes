@@ -1,4 +1,4 @@
-/*
+k/*
  * UnrealIRCd Changes File - (C) Carsten Munk 1999-2000 &
  *                               The UnrealIRCd Team
  *
@@ -324,3 +324,5 @@
 - Did a dirty hack on ALN problem with colliding hash (will deny linking in
   wrong servers)
 - Fixed /stats C not showing N:lines, reported by auspice
+- Fixed codemastr (possible) fucked up the shell ircd script with
+  overwriting it ...
