@@ -52,7 +52,7 @@ Versions downloaded from such sites will often CRASH.
 
 The easiest is to download the UnrealIRCd development package
 which contains zlib, openssl and curl precompiled for you.
-See: www.vulnscan.org/unrealdevpackage/
+See: www.vulnscan.org/unrealwin32dev/
 
 Just extract it somewhere (eg: to c:\dev).
 Then, use compile flags to enable the features + specify where to look.
