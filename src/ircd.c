@@ -227,6 +227,7 @@ VOIDSIG s_die()
 	unload_all_modules();
 	flush_connections(&me);
 	exit(-1);
+#endif
 }
 
 #ifndef _WIN32

@@ -2264,3 +2264,4 @@ seen. gmtime warning still there
 - Fixed a bug in aliases reported by darko``
 - Updated help.conf and unreal32docs.html (#0001111) reported by SciFi, AngryWolf, and Zerwas.
 - Cleaned up some code for /die under Windows
+- Fixed ircd.c compile error discovered by Ravage
