@@ -279,6 +279,7 @@ struct {
 		unsigned name_server : 1;
 		unsigned host_timeout : 1;
 		unsigned host_retries : 1;
+		unsigned servicesserv : 1;
 		unsigned defaultserv : 1;
 		unsigned irc_network : 1;
 		unsigned operhost : 1;
@@ -1518,6 +1519,8 @@ int	config_post_test()
 		Error("set::dns::host-timeout missing");
 	if (!requiredstuff.settings.host_retries)
 		Error("set::dns::host-retries missing");
+	if (!requiredstuff.settings.servicesserv)
+		Error("set::services-server missing");
 	if (!requiredstuff.settings.defaultserv)
 		Error("set::default-server missing");
 	if (!requiredstuff.settings.irc_network)
@@ -5035,6 +5038,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "services-server")) {
 			CheckNull(cep);
+			requiredstuff.settings.servicesserv = 1;
 		}
 		else if (!strcmp(cep->ce_varname, "stats-server")) {
 			CheckNull(cep);

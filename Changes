@@ -1911,3 +1911,4 @@ seen. gmtime warning still there
 - Removed some left over +I code
 - Added set::restrict-usermodes to /stats S (reported by AngryWolf)
 - Zip links: Added link::compression-level so you can set the compression level per link.
+- set::services-server is now required to be set (#0000730).
