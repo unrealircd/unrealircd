@@ -94,11 +94,19 @@ void	del_HookX(int hooktype, int (*intfunc)(), void (*voidfunc)());
 #define RunHookReturn(hooktype,x,ret) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) if((*(global_i->func.intfunc))(x) ret) return
 #define RunHook2(hooktype,x,y) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(x,y)
 
+
+/* Hook types */
 #define HOOKTYPE_LOCAL_QUIT	1
 #define HOOKTYPE_LOCAL_NICKCHANGE 2
 #define HOOKTYPE_LOCAL_CONNECT 3
-#define HOOKTYPE_SCAN_HOST 4
-#define HOOKTYPE_SCAN_INFO 5
+#define HOOKTYPE_SCAN_HOST 4	/* Taken care of in scan.c */
+#define HOOKTYPE_SCAN_INFO 5    /* Taken care of in scan.c */
 #define HOOKTYPE_CONFIG_UNKNOWN 6
 #define HOOKTYPE_REHASH 7
 #define HOOKTYPE_PRE_LOCAL_CONNECT 8
+
+
+/* Module flags */
+#define MODFLAG_NONE	0x0000
+#define MODFLAG_LOADED	0x0001 /* (mod_load has been called and suceeded) */
+

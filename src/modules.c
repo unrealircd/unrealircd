@@ -46,15 +46,18 @@
 #define RTLD_NOW RTLD_LAZY
 #endif
 
-ModuleInfo *Modules[MAXMODULES];
-Hook	   *Hooks[MAXHOOKTYPES];
-Hook 	   *global_i = NULL;
+ModuleInfo	 *Modules[MAXMODULES];
+unsigned char	ModuleFlags[MAXMODULES];
+Hook	   	*Hooks[MAXHOOKTYPES];
+Hook 	   	*global_i = NULL;
+
 int  modules_loaded = 0;
 
 void module_init(void)
 {
 	bzero(Modules, sizeof(Modules));
 	bzero(Hooks, sizeof(Hooks));
+	bzero(ModuleFlags, sizeof(ModuleFlags));
 	modules_loaded = 0;
 }
 
@@ -178,11 +181,6 @@ int  load_module(char *module, int module_load)
 		mod_header->dll = Mod;
 		mod_header->unload = mod_unload;
 
-		mod_load = irc_dlsym(Mod, "mod_load");
-		if (!mod_load)
-		{
-			mod_load = irc_dlsym(Mod, "_mod_load");
-		}
 		if ((*mod_init)(module_load) < 0)
 		{
 			config_progress
@@ -193,21 +191,17 @@ int  load_module(char *module, int module_load)
 			return -1;
 			
 		}
-		if (mod_load)
+		ModuleFlags[i] = NULL;
+		if (module_load)
 		{
-			/* if ircd is booted, load it */
-			if (loop.ircd_booted)
+			mod_load = irc_dlsym(Mod, "mod_load");
+			if (!mod_load)
 			{
-				if ((*mod_load)() < 0)
+				mod_load = irc_dlsym(Mod, "_mod_load");
+				if (mod_load)
 				{
-					config_progress
-					    ("Failed to load module %s: mod_load failed",
-					    module);
-					(*mod_unload)();
-					Modules[i] = NULL;
-					irc_dlclose(Mod);
-					return -1;
-						
+					(*mod_load)(module_load);
+					ModuleFlags[i] |= MODFLAG_LOADED;
 				}
 			}
 		}
@@ -244,6 +238,7 @@ void    unload_all_modules(void)
 			irc_dlclose(Modules[i]->dll);
 		
 			Modules[i] = NULL;
+			ModuleFlags[i] = MODFLAG_NONE;
 			modules_loaded--;
 	}
 #endif
@@ -268,6 +263,7 @@ int	unload_module(char *name)
 	irc_dlclose(Modules[i]->dll);
 	
 	Modules[i] = NULL;
+	ModuleFlags[i] = MODFLAG_NONE;
 	modules_loaded--;
 	return 1;
 #endif
@@ -303,15 +299,13 @@ vFP module_sym(char *name)
 }
 
 
-void	module_loadall()
+void	module_loadall(int module_load)
 {
 #ifndef STATIC_LINKING
-	vFP	fp;
-	char	buf[512];
+	iFP	fp;
 	int	i;
 	ModuleInfo *mi;
 	
-	ircsprintf(buf, "_mod_load");
 	if (!loop.ircd_booted)
 	{
 		sendto_realops("Ehh, !loop.ircd_booted in module_loadall()");
@@ -323,12 +317,13 @@ void	module_loadall()
 		mi = Modules[i];
 		if (!mi)
 			continue;
-			
-		if (fp = (vFP) irc_dlsym(mi->dll, "mod_load"))
+		if (ModuleFlags[i] & MODFLAG_LOADED)
+			continue;
+		if (fp = (iFP) irc_dlsym(mi->dll, "mod_load"))
 		{
 		}
 		else
-		if (fp = (vFP) irc_dlsym(mi->dll, buf))
+		if (fp = (iFP) irc_dlsym(mi->dll, "_mod_load"))
 		{
 		}
 		else
@@ -337,7 +332,15 @@ void	module_loadall()
 			continue;
 		}
 		/* Call the module_load */
-		(*fp)();
+		if ((*fp)(module_load) < 0)
+		{
+			config_error("cannot load module %s", mi->name);
+		}
+		else
+		{
+			ModuleFlags[i] |= MODFLAG_LOADED;
+		}
+		
 	}
 #endif
 }

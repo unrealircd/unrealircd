@@ -134,7 +134,6 @@ DLLFUNC int	mod_load(int module_load)
 int    m_scan_load(int module_load)
 #endif
 {
-
 	if (!blackhole_conf.ip || !blackhole_conf.port)
 	{
 		config_progress("set::blackhole: missing ip/port mask or configuration not loaded. using %s:6013",
@@ -163,6 +162,7 @@ int    m_scan_load(int module_load)
 	listen(blackholefd, LISTEN_SIZE);
 	/* Create blackhole accept() thread */
 	IRCCreateThread(acceptthread, acceptthread_attr, blackhole, NULL);
+	return 0;
 }
 
 
@@ -420,6 +420,8 @@ DLLFUNC int	h_config_set_blackhole(void)
 	char	*ip;
 	char	*port;
 	int	iport;
+	if (blackhole_conf.ip)
+		MyFree(blackhole_conf.ip);
 	for (sets = conf_unknown_set; sets; 
 		sets = (ConfigItem_unknown_ext *)sets->next)
 	{

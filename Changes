@@ -633,3 +633,5 @@ seen. gmtime warning still there
 - Fixed a pthread_join
 - Rewrote updconf a bit, should work flawlessly now (?)
 - Made a minor message change to ./Setup
+- Fixed some minor mod_load troubles, and made it go a little more sensible
+  regarding retarded rehashes
