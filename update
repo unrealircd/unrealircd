@@ -12,7 +12,7 @@ WHATYAWANT="wget"
 clear
 cat .UPDATE
 cd src
-rm update.sh
+rm -f update.sh
 read $WHATYAWANT
 if [ "$WHATYAWANT" == "wget" ] ; then
 	wget http://unreal.tspre.org/update.sh
