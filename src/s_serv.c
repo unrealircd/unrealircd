@@ -2640,6 +2640,8 @@ CMD_FUNC(m_help)
 			if (parse_help(sptr, parv[0], message))
 				return 0;
 		}
+		if (BadPtr(message))
+			return 0;
 		s = make_nick_user_host(cptr->name, cptr->user->username,
 		    cptr->user->realhost);
 		for (tmpl = helpign; tmpl; tmpl = tmpl->next)

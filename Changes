@@ -1775,3 +1775,4 @@ seen. gmtime warning still there
 - Fixed bug #000613 reported by AngryWolf where we were writing a null to the log file when 
   we reached max size.
 - Fixed a bug where helpop would pass on a null pointer
+- One more fix to the above
