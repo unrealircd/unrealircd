@@ -63,7 +63,9 @@ begin
   output := ExpandConstant('{app}\DbgHelp.Dll');
   GetVersionNumbersString(dbghelp,m);
   if ((CurPage = wpReady) AND NOT FileExists(output)) then begin
-    if StrToInt(m[1]) < 5 then begin
+    if (NOT FileExists(dbghelp)) then
+      m := StringOfChar('0',1);
+    if (StrToInt(m[1]) < 5) then begin
      answer := MsgBox('DbgHelp.dll version 5.0 or higher is required to install Unreal, do you wish to install it now?', mbConfirmation, MB_YESNO);
      if answer = IDYES then begin
       tmp := ExpandConstant('{tmp}\dbghelp.dll');

@@ -1477,3 +1477,5 @@ seen. gmtime warning still there
   and a missing return for normal users.
 - Fixed a win32 SSL installer problem
 - Fixed problem with DEBUG ERROR when SSL handshaking (reported by some people)
+- Fixed a bug where the win32 installer didn't install dbghelp.dll on systems that don't
+  have any version of the dll.
