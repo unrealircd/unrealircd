@@ -2030,3 +2030,5 @@ seen. gmtime warning still there
   Thanks to ora and others which helped me tracing this down.
 - Added tld::options::ssl so you can have different motd/rules files if the user is using SSL.
 - Fixed cloaking bug reported by Rocko (#0000869).
+- Added set::restrict-channelmodes, works exactly the same as restrict-usermodes, you can for
+  example disallow using of channelmode u and L. Suggested by poisoner and others (#0000838).

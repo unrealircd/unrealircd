@@ -2211,6 +2211,7 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
 	int  found = 0;
 	unsigned int htrig = 0;
 	long oldm, oldl;
+	int checkrestr = 0, warnrestr = 1;
 	
 	paracount = 1;
 	*pcount = 0;
@@ -2218,8 +2219,22 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
 	oldm = chptr->mode.mode;
 	oldl = chptr->mode.limit;
 
+	if (RESTRICT_CHANNELMODES && MyClient(cptr) && !IsAnOper(cptr) && !IsServer(cptr)) /* "cache" this */
+		checkrestr = 1;
+
 	for (curchr = parv[0]; *curchr; curchr++)
 	{
+		if (checkrestr && strchr(RESTRICT_CHANNELMODES, *curchr))
+		{
+			if (warnrestr)
+			{
+				sendto_one(cptr, ":%s NOTICE %s :Setting/removing of channelmode(s) '%s' has been disabled.",
+					me.name, cptr->name, RESTRICT_CHANNELMODES);
+				warnrestr = 0;
+			}
+			continue;
+		}
+		
 		switch (*curchr)
 		{
 		  case '+':

@@ -96,6 +96,7 @@ struct zConfiguration {
 #endif
 	enum UHAllowed userhost_allowed;
 	char *restrict_usermodes;
+	char *restrict_channelmodes;
 	long unknown_flood_bantime;
 	long unknown_flood_amount;
 	struct ChMode modes_on_join;
@@ -161,6 +162,7 @@ extern aConfiguration iConf;
 #define STATIC_QUIT			iConf.static_quit
 #define UHOST_ALLOWED			iConf.userhost_allowed
 #define RESTRICT_USERMODES		iConf.restrict_usermodes
+#define RESTRICT_CHANNELMODES		iConf.restrict_channelmodes
 #ifdef THROTTLING
 #define THROTTLING_PERIOD		iConf.throttle_period
 #endif

@@ -2234,10 +2234,9 @@ CMD_FUNC(m_umode)
 	char **p, *m;
 	aClient *acptr;
 	int  what, setflags, setsnomask = 0;
-	short rpterror = 0, umode_restrict_err = 0, modex_err = 0, oper;
+	short rpterror = 0, umode_restrict_err = 0, chk_restrict = 0, modex_err = 0;
 
 	what = MODE_ADD;
-	oper = IsAnOper(sptr) ? 1 : 0;
 	
 	if (parc < 2)
 	{
@@ -2273,6 +2272,9 @@ CMD_FUNC(m_umode)
 		if ((sptr->umodes & Usermode_Table[i].mode))
 			setflags |= Usermode_Table[i].mode;
 
+	if (RESTRICT_USERMODES && MyClient(sptr) && !IsAnOper(sptr) && !IsServer(sptr))
+		chk_restrict = 1;
+
 	if (MyConnect(sptr))
 		setsnomask = sptr->user->snomask;
 	/*
@@ -2281,8 +2283,7 @@ CMD_FUNC(m_umode)
 	p = &parv[2];
 	for (m = *p; *m; m++)
 	{
-		if (MyClient(sptr) && RESTRICT_USERMODES &&
-		    !oper && strchr(RESTRICT_USERMODES, *m))
+		if (chk_restrict && strchr(RESTRICT_USERMODES, *m))
 		{
 			if (!umode_restrict_err)
 			{
