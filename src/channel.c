@@ -6080,22 +6080,24 @@ CMD_FUNC(m_sjoin)
 			{
 				int r;
 				char *parax;
-				r = Channelmode_Table[i].sjoin_check(chptr, extcmode_get_struct(oldmode.extmodeparam,Channelmode_Table[i].flag), extcmode_get_struct(chptr->mode.extmodeparam, Channelmode_Table[i].flag));
+				CmodeParam *ourm = extcmode_get_struct(oldmode.extmodeparam,Channelmode_Table[i].flag);
+				CmodeParam *theirm = extcmode_get_struct(chptr->mode.extmodeparam, Channelmode_Table[i].flag);
+				
+				r = Channelmode_Table[i].sjoin_check(chptr, ourm, theirm);
 				switch (r)
 				{
 					case EXSJ_WEWON:
 					{
-						CmodeParam *p = extcmode_get_struct(oldmode.extmodeparam, Channelmode_Table[i].flag);
 						CmodeParam *r;
-						parax = Channelmode_Table[i].get_param(p);
+						parax = Channelmode_Table[i].get_param(ourm);
 						Debug((DEBUG_DEBUG, "sjoin: we won: '%s'", parax));
-						r = Channelmode_Table[i].put_param(p, parax);
-						if (r != p)
+						r = Channelmode_Table[i].put_param(theirm, parax);
+						if (r != theirm) /* confusing eh ;) */
 							AddListItem(r, chptr->mode.extmodeparam);
 						break;
 					}
 					case EXSJ_THEYWON:
-						parax = Channelmode_Table[i].get_param(extcmode_get_struct(chptr->mode.extmodeparam,Channelmode_Table[i].flag));
+						parax = Channelmode_Table[i].get_param(theirm);
 						Debug((DEBUG_DEBUG, "sjoin: they won: '%s'", parax));
 						Addit(Channelmode_Table[i].flag, parax);
 						break;

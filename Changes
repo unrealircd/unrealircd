@@ -2562,3 +2562,4 @@ seen. gmtime warning still there
 - Added hostname check for me::name since this could cause mysterious trouble.
 - Removed references to tkline/tzline from help.conf. Reported by penna22 (#0001340)
 - Fix for permanent modules w/ config hooks (they were not called).
+- Fixed desynch bug regarding extended channelmodes. Reported by AngryWolf (#0001347)
