@@ -3113,4 +3113,5 @@ seen. gmtime warning still there
 - Some doc/release notes updates on win module support.
 *** 3.2 release ***
 This is the 3.2 fixes branch.
-
+- Replaced tre.dll/tre.lib, previous versions caused a crash (eg: if you included
+  spamfilter.conf).
