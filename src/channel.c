@@ -3306,8 +3306,8 @@ int  m_kick(cptr, sptr, parc, parv)
 				if (is_chanprot(who, chptr)
 				    || is_chanowner(who, chptr)
 				    || IsServices(who))
-					if IsOper
-						(sptr)
+					if (IsNetAdmin
+						(sptr) || IsTechAdmin(sptr))
 					{	/* IRCop kicking owner/prot */
 						sendto_umode(UMODE_EYES,
 						    "*** OperKick [%s @ %s -> %s (%s)]",
