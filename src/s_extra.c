@@ -404,16 +404,18 @@ void ircd_log(int flags, char *format, ...)
 {
 	va_list ap;
 	ConfigItem_log *logs;
-	char buf[2048];
+	char buf[2048], timebuf[128];
 	int fd;
 	va_start(ap, format);
 	ircvsprintf(buf, format, ap);	
 	strcat(buf, "\n");
+	sprintf(timebuf, "[%s] - ", myctime(TStime()));
 	for (logs = conf_log; logs; logs = (ConfigItem_log *) logs->next) {
 		fd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY, S_IRUSR|S_IWUSR);
 		if (fd == -1)
 			continue;
 		if (logs->flags & flags) {
+			write(fd, timebuf, strlen(timebuf));
 			write(fd, buf, strlen(buf));
 			close(fd);
 		}

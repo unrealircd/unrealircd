@@ -384,4 +384,4 @@
 - Added new CRC32-hex-based IPv4 and hostname cloaking form
 - Make users that send a forbidden file get auto blocked from sending other
   files. sptr->flags & FLAGS_DCCBLOCKED.
-
+- Readded timestamp to log, accidentily got removed
