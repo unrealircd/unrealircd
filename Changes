@@ -261,3 +261,4 @@
   removed inittoken, made command initalization happen in init_CommandHash
 - Adapted /stats M to it. Removed /helpop ?commands temporary. Confirming
   hashtable works.
+- Fixed one of codemastr's wonderful coding bugs. *slap slap slap*

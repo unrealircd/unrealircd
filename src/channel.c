@@ -1584,13 +1584,18 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 		  retval = 1;
 		  if (!(who = find_chasing(cptr, param, &chasing)))
 			  break;
-		if (!(member = find_channel_link(who->user->channel, chptr)))
-/*		  if (!(member = find_user_link(chptr->members, who)))*/
+   		  /* codemastr: your patch is a good idea here, but look at the
+   		     member->flags stuff longer down. this caused segfaults */
+   		  if (!(member = find_channel_link(who->user->channel, chptr)))
 		  {
 			  sendto_one(cptr, err_str(ERR_USERNOTINCHANNEL),
 			      me.name, cptr->name, who->name, chptr->chname);
 			  break;
 		  }
+		  member = find_user_link(chptr->members, who);
+		  if (!member)
+		  /* should never happen */
+		  	break;
 		  /* we make the rules, we bend the rules */
 		  if (IsServer(cptr) || IsULine(cptr))
 			  goto breaktherules;
