@@ -471,3 +471,6 @@
 - Some unreal32docs->security section improvements.
 - Fixed a minor bug in the new config system when displaying link {} and set::hosts errors
   (#0002194) reported by AngryWolf.
+- Renamed RPL_INVITELIST/RPL_ENDOFINVITELIST to RPL_INVEXLIST/RPL_ENDOFINVEXLIST
+- Using /invite with no parameters now lists the channels you are invited to but have not
+  yet joined (#0002190) suggested by sac.

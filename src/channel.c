@@ -1379,7 +1379,7 @@ CMD_FUNC(m_mode)
 	{
 		if (!IsMember(sptr, chptr))
 			return 0;
-		sendto_one(sptr, rpl_str(RPL_ENDOFINVITELIST), me.name,
+		sendto_one(sptr, rpl_str(RPL_ENDOFINVEXLIST), me.name,
 		    sptr->name, chptr->chname);
 		return 0;
 	}

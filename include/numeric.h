@@ -182,6 +182,9 @@
 #define RPL_TOPIC            332
 #define RPL_TOPICWHOTIME     333
 
+#define RPL_INVITELIST       336
+#define RPL_ENDOFINVITELIST  337
+
 #define RPL_LISTSYNTAX       334
 #define RPL_WHOISBOT	     335
 #define RPL_USERIP	     340
@@ -194,8 +197,8 @@
 #define RPL_ENDOFWHO         315
 #define RPL_NAMREPLY         353
 #define RPL_ENDOFNAMES       366
-#define RPL_INVITELIST	     346
-#define RPL_ENDOFINVITELIST  347
+#define RPL_INVEXLIST	     346
+#define RPL_ENDOFINVEXLIST   347
 
 #define RPL_EXLIST	     348
 #define RPL_ENDOFEXLIST      349
@@ -309,6 +312,7 @@
 #define RPL_HELPHLP	     293
 #define RPL_HELPFWD	     294
 #define RPL_HELPIGN	     295
+
 
 /*
  * New /MAP format.

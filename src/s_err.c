@@ -331,7 +331,7 @@ static char *replies[] = {
 /* 295    RPL_HELPIGN */ ":%s 295 %s :Your address has been ignored from forwarding",
 /* 296 */ NULL, /* aircd */
 /* 297 */ NULL,
-/* 298 */ NULL,
+/* 298 */ NULL, /* Used */
 /* 299 */ NULL, /* aircd */
 /* 300 */ NULL, /* rfc1459 */
 /* 301    RPL_AWAY */ ":%s 301 %s %s :%s",
@@ -373,8 +373,8 @@ static char *replies[] = {
 /* 333    RPL_TOPICWHOTIME */ ":%s 333 %s %s %s %lu",
 /* 334    RPL_LISTSYNTAX */ ":%s 334 %s :%s",
 /* 335    RPL_WHOISBOT */ ":%s 335 %s %s :is a \2Bot\2 on %s",
-/* 336 */ NULL,
-/* 337 */ NULL,
+/* 336    RPL_INVITELIST */ ":%s 336 %s :%s",
+/* 337    RPL_ENDOFINVITELIST */ ":%s 337 %s :End of /INVITE list.",
 /* 338 */ NULL, /* ircu, bahamut */
 /* 339 */ NULL, /* Used */
 /* 340    RPL_USERIP */ ":%s 340 %s :%s %s %s %s %s",
@@ -383,8 +383,8 @@ static char *replies[] = {
 /* 343 */ NULL,
 /* 344 */ NULL,
 /* 345 */ NULL, /* gamesurge */
-/* 346    RPL_INVITELIST */ ":%s 346 %s %s %s",
-/* 347    RPL_ENDOFINVITELIST */ ":%s 347 %s %s :End of Channel Invite List",
+/* 346    RPL_INVEXLIST */ ":%s 346 %s %s %s",
+/* 347    RPL_ENDOFINVEXLIST */ ":%s 347 %s %s :End of Channel Invite List",
 /* 348    RPL_EXLIST */ ":%s 348 %s %s %s %s %lu",
 /* 349    RPL_ENDOFEXLIST */ ":%s 349 %s %s :End of Channel Exception List",
 /* 350 */ NULL,

@@ -80,6 +80,20 @@ DLLFUNC int MOD_UNLOAD(m_invite)(int module_unload)
 	return MOD_SUCCESS;
 }
 
+/* Send the user his/her list of active invites */
+int send_invite_list(aClient *sptr)
+{
+	Link *inv;
+
+	for (inv = sptr->user->invited; inv; inv = inv->next)
+	{
+		sendto_one(sptr, rpl_str(RPL_INVITELIST), me.name, sptr->name,
+			   inv->value.chptr->chname);	
+	}
+	sendto_one(sptr, rpl_str(RPL_ENDOFINVITELIST), me.name, sptr->name);
+	return 0;
+}
+
 /*
 ** m_invite
 **	parv[0] - sender prefix
@@ -92,7 +106,9 @@ DLLFUNC CMD_FUNC(m_invite)
         aChannel *chptr;
         short over = 0;
 
-        if (parc < 3 || *parv[1] == '\0')
+	if (parc == 1)
+		return send_invite_list(sptr);
+        else if (parc < 3 || *parv[1] == '\0')
         {
                 sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
                     me.name, parv[0], "INVITE");
