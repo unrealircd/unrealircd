@@ -221,3 +221,5 @@
 - Changed CONNECTTIMEOUT to 30sec
 - Changed some _more_ credits
 - Fixed compile error found by Headbang
+- #define CHINESE_NICK will make you able to use chinese nicks
+  thanks to RexHsu and Aim

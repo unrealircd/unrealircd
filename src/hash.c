@@ -290,7 +290,7 @@ aClient *hash_find_client(char *name, aClient *cptr)
 	 * Got the bucket, now search the chain.
 	 */
 	for (tmp = (aClient *)tmp3->list; tmp; tmp = tmp->hnext)
-		if (mycmp(name, tmp->name) == 0)
+		if (smycmp(name, tmp->name) == 0)
 		{
 			return (tmp);
 		}
@@ -328,8 +328,8 @@ aClient *hash_find_nickserver(char *name, aClient *cptr)
 	 * Got the bucket, now search the chain.
 	 */
 	for (tmp = (aClient *)tmp3->list; tmp; tmp = tmp->hnext)
-		if (mycmp(name, tmp->name) == 0 && tmp->user &&
-		    mycmp(serv, tmp->user->server) == 0)
+		if (smycmp(name, tmp->name) == 0 && tmp->user &&
+		    smycmp(serv, tmp->user->server) == 0)
 		{
 			*--serv = '\0';
 			return (tmp);
@@ -359,7 +359,7 @@ aClient *hash_find_server(char *server, aClient *cptr)
 	{
 		if (!IsServer(tmp) && !IsMe(tmp))
 			continue;
-		if (mycmp(server, tmp->name) == 0)
+		if (smycmp(server, tmp->name) == 0)
 		{
 			return (tmp);
 		}
@@ -417,7 +417,7 @@ aChannel *hash_find_channel(char *name, aChannel *chptr)
 	tmp3 = &channelTable[hashv];
 
 	for (tmp = (aChannel *)tmp3->list; tmp; tmp = tmp->hnextch)
-		if (mycmp(name, tmp->chname) == 0)
+		if (smycmp(name, tmp->chname) == 0)
 		{
 			return (tmp);
 		}
@@ -507,7 +507,7 @@ int  add_to_notify_hash_table(nick, cptr)
 
 	/* Find the right nick (header) in the bucket, or NULL... */
 	if ((anptr = (aNotify *) notifyTable[hashv]))
-		while (anptr && mycmp(anptr->nick, nick))
+		while (anptr && smycmp(anptr->nick, nick))
 			anptr = anptr->hnext;
 
 	/* If found NULL (no header for this nick), make one... */
@@ -563,7 +563,7 @@ int  hash_check_notify(cptr, reply)
 
 	/* Find the right header in this bucket */
 	if ((anptr = (aNotify *) notifyTable[hashv]))
-		while (anptr && mycmp(anptr->nick, cptr->name))
+		while (anptr && smycmp(anptr->nick, cptr->name))
 			anptr = anptr->hnext;
 	if (!anptr)
 		return 0;	/* This nick isn't on notify */
@@ -596,7 +596,7 @@ aNotify *hash_get_notify(name)
 	hashv = hash_nn_name(name) % NOTIFYHASHSIZE;
 
 	if ((anptr = (aNotify *) notifyTable[hashv]))
-		while (anptr && mycmp(anptr->nick, name))
+		while (anptr && smycmp(anptr->nick, name))
 			anptr = anptr->hnext;
 
 	return anptr;
@@ -619,7 +619,7 @@ int  del_from_notify_hash_table(nick, cptr)
 
 	/* Find the right header, maintaining last-link pointer... */
 	if ((anptr = (aNotify *) notifyTable[hashv]))
-		while (anptr && mycmp(anptr->nick, nick))
+		while (anptr && smycmp(anptr->nick, nick))
 		{
 			nlast = anptr;
 			anptr = anptr->hnext;

@@ -435,7 +435,77 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 **	a change should be global, some confusion would
 **	result if only few servers allowed it...
 */
+#ifdef CHINESE_NICK
+/* Chinese Nick Verification Code - Added by RexHsu on 08/09/00 (beta2) 
+ * Now Support All GBK Words,Thanks to Mr.WebBar <climb@guomai.sh.cn>!
+ * Special Char Bugs Fixed by RexHsu 09/01/00 I dont know whether it is
+ * okay now?May I am right ;p
+ * Thanks dilly for providing me Japanese code range!
+ * Now I am meeting a nickname conflicting problem....
+ * 
+ * GBK Libary Reference:
+ * 1. GBK2312·Çºº×Ö·ûºÅÇø(A1A1----A9FE)
+ * 2. GBK2312ºº×ÖÇø(B0A1----F7FE)
+ * 3. GBKÀ©³äºº×ÖÇø(8140----A0FE)
+ * 4. GBKÀ©³äºº×ÖÇø(AA40----FEA0)
+ * 5. GBKÀ©³ä·Çºº×ÖÇø(A840----A9A0)
+ * 6. ÈÕÎÄÆ½¼ÙÃû±àÂëÇø(a4a1-a4f3) -->work correctly?maybe...
+ * 7. ÈÕÎÄÆ¬¼ÙÃû±àÂëÇø(a5a1-a5f7) -->work correctly?maybe...
+ * 8. º«ÎÄ±àÂëÇø(xxxx-yyyy)
+ */
+int isvalidChinese(const unsigned char c1, const unsigned char c2)
+{ 
+     const unsigned int GBK_S = 0xb0a1;
+     const unsigned int GBK_E = 0xf7fe;
+     const unsigned int GBK_2_S = 0x8140;
+     const unsigned int GBK_2_E = 0xa0fe;
+     const unsigned int GBK_3_S = 0xaa40;
+     const unsigned int GBK_3_E = 0xfea0;          
+     const unsigned int JPN_PING_S = 0xa4a1;
+     const unsigned int JPN_PING_E = 0xa4f3;
+     const unsigned int JPN_PIAN_S = 0xa5a1;
+     const unsigned int JPN_PIAN_E = 0xa5f7;
+     unsigned int AWord = c1 * 256 + c2;
+     return (AWord >= GBK_S && AWord <= GBK_E || AWord >= GBK_2_S && AWord <= GBK_2_E || AWord >= GBK_3_S && AWord <= GBK_3_E || AWord >= JPN_PING_S && AWord <= JPN_PING_E || AWord >= JPN_PIAN_S && AWord <= JPN_PIAN_E) ? 1 : 0;
+     //return (AWord >= GBK_S && AWord <= GBK_E) ? 1 : 0;
+}
 
+/* Chinese Nick Supporting Code (Switch Mode) - Modified by RexHsu on 08/09/00 */
+int do_nick_name(char *pnick)
+{
+  unsigned char *ch;
+  unsigned char *nick=pnick;
+  int          firstChineseChar=0;
+  char         lastChar;
+
+  if (*nick == '-' || isdigit(*nick))	/* first character in [0..9-] */
+    return 0;
+
+  for (ch = nick; *ch && (ch - nick) < NICKLEN; ch++)
+  {
+    if ((!isvalid(*ch) && !((*ch)&0x80) ) || isspace(*ch) || (*ch)=='@' || (*ch)=='!' || (*ch)==':' || (*ch)==' ')
+      break;
+    if(firstChineseChar)
+    {
+      if (!isvalidChinese(lastChar,*ch))
+        break;
+      firstChineseChar=0;
+    }
+    else if((*ch)&0x80)
+      firstChineseChar=1;
+    lastChar=*ch;
+  }
+
+  if(firstChineseChar)
+     ch--;
+
+  *ch = '\0';
+
+  return (ch - nick);
+}
+
+
+#else
 int  do_nick_name(nick)
 	char *nick;
 {
@@ -452,7 +522,7 @@ int  do_nick_name(nick)
 
 	return (ch - nick);
 }
-
+#endif
 
 /*
 ** canonize
