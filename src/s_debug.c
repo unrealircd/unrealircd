@@ -183,9 +183,11 @@ void debug(int level, char *form, ...)
 		(void)ircsprintf(debugbuf, form, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
 #else
 		(void)ircvsprintf(debugbuf, form, vl);
+#if 0
 # ifdef _WIN32
 		strcat(debugbuf,"\r\n");
 # endif
+#endif
 #endif
 
 #if 0
@@ -202,6 +204,7 @@ void debug(int level, char *form, ...)
 # ifndef _WIN32GUI
 		Cio_Puts(hCio, debugbuf, strlen(debugbuf));
 # else
+		strcat(debugbuf, "\r\n");
 		OutputDebugString(debugbuf);
 # endif
 #endif

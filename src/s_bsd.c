@@ -2492,7 +2492,7 @@ int  connect_server(aconf, by, hp)
 #endif
 			hp = gethost_byname(s, &lin);
 			if (!hp)
-				return 0;
+				return -2;
 			bcopy(hp->h_addr, (char *)&aconf->ipnum,
 			    sizeof(struct IN_ADDR));
 		}

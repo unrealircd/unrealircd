@@ -523,3 +523,5 @@ seen. gmtime warning still there
 - Added McSkaf's rehash patch
 - Made the Status Dialog update its values every 5 seconds
 - Made slot arrangement be different.
+- Merged McSkaf's hostname patch, debug patch, s_misc patch
+   

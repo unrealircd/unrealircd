@@ -3325,8 +3325,8 @@ void load_tunefile(void)
 		      me.name, parv[0], aconf->servername);
 		  break;
 	  case -2:
-		  sendto_one(sptr, ":%s NOTICE %s :*** Host %s is unknown.",
-		      me.name, parv[0], aconf->servername);
+		  sendto_one(sptr, ":%s NOTICE %s :*** Hostname %s is unknown for server %s.",
+		      me.name, parv[0], aconf->hostname, aconf->servername);
 		  break;
 	  default:
 		  sendto_one(sptr,
