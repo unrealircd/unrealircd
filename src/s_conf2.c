@@ -46,7 +46,7 @@
  * TODO:
  *  - link {} parser
  *  - ban [realname, server, nick, ip, user] {} parser
- *  - except [socks, ban] {} parser
+ *  - except [socks, ban] {} parser added (somewhat)
  *  - vhost {} parser
  *  - allow channel {} (chrestrict)
  *  - deny channel {} (chrestrict)
@@ -85,6 +85,7 @@ int	_conf_include	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_tld	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_listen	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_allow	(ConfigFile *conf, ConfigEntry *ce);
+int	_conf_except	(ConfigFile *conf, ConfigEntry *ce);
 
 extern int conf_debuglevel;
 
@@ -99,6 +100,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "tld",	_conf_tld },
 	{ "listen", 	_conf_listen },
 	{ "allow",	_conf_allow },
+	{ "except",	_conf_except },
 	{ NULL, 	NULL  }
 };
 
@@ -175,7 +177,7 @@ ConfigItem_tld		*conf_tld = NULL;
 ConfigItem_oper		*conf_oper = NULL;
 ConfigItem_listen	*conf_listen = NULL;
 ConfigItem_allow	*conf_allow = NULL;
-
+ConfigItem_except	*conf_except = NULL;
 
 /*
  * MyMalloc with the only difference that it clears the memory too
@@ -1353,6 +1355,61 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		add_ConfigItem((ConfigItem *) allow, (ConfigItem **) &conf_allow);
 }
 
+int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
+{
+
+	ConfigEntry *cep;
+	ConfigItem_except *ca;
+	unsigned char isnew = 0;
+
+	ca = (ConfigItem_except *) MyMallocEx(sizeof(ConfigItem_except));
+	isnew = 1;
+
+	if (!ce->ce_vardata)
+	{
+		config_error("%s:%i: except without type",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+
+	if (!strcmp(ce->ce_vardata, "ban")) {
+		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+		{
+			if (!strcmp(cep->ce_varname, "mask")) {
+				ca->mask = strdup(cep->ce_vardata);
+			}
+			else {
+				config_error("%s:%i: unknown directive except::ban::%s",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+					cep->ce_varname);
+			}
+		}
+		ca->type = 1;
+		add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_except);				
+	}
+	else if (!strcmp(ce->ce_vardata, "socks")) {
+		config_status("Got except socks");
+		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+		{
+			if (!strcmp(cep->ce_varname, "mask")) {
+				ca->mask = strdup(cep->ce_vardata);
+			}
+			else {
+			config_error("%s:%i: unknown directive except::socks::%s",		
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+				cep->ce_varname);
+			}
+		}
+		ca->type = 0;
+		add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_except);
+
+	}
+	else {
+		config_error("%s:%i: unknown type except::%s",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			ce->ce_vardata);	
+	}
+}		
 
 /*
  * Report functions
@@ -1368,6 +1425,7 @@ void	report_configuration(void)
 	ConfigItem_tld		*tld_ptr;
 	ConfigItem_listen	*listen_ptr;
 	ConfigItem_allow	*allow_ptr;
+	ConfigItem_except	*except_ptr;
 	OperFlag		*ofp;
 	
 	printf("Report:\n");
@@ -1458,8 +1516,13 @@ void	report_configuration(void)
 				(allow_ptr->password ? allow_ptr->password : "(no password)"));
 		}		
 	}
-	
-}
+	if (conf_except) {
+		for (except_ptr = conf_except; except_ptr; except_ptr = (ConfigItem_except *) except_ptr->next)
+		{
+			printf("Got an except for %s (%s)\n", except_ptr->mask, except_ptr->type ? "ban" : "socks");
+		}
+	}
+}	
 
 
 /*

@@ -80,6 +80,7 @@ typedef struct _configitem_ulines ConfigItem_ulines;
 typedef struct _configitem_tld ConfigItem_tld;
 typedef struct _configitem_listen ConfigItem_listen;
 typedef struct _configitem_allow ConfigItem_allow;
+typedef struct _configitem_except ConfigItem_except;
 
 typedef struct Notify aNotify;
 typedef struct Client aClient;
@@ -1022,6 +1023,13 @@ struct _configitem_listen {
 	long		options;
 };
 
+struct _configitem_except {
+	ConfigFlag      flag;
+	ConfigItem      *prev;
+	ConfigItem      *next;
+	unsigned	type :1;
+	char		*mask;
+};
 
 /*
  * statistics structures

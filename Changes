@@ -57,4 +57,5 @@
 - Finished _conf_listen
 - Finished _conf_allow
 - Added TODO in top of s_conf2.c
-- Fixd a bug reported by S7 that affected chg* and set* as well as sdesc
+- Fixed a bug reported by S7 that affected chg* and set* as well as sdesc
+- Started work on the except parser
