@@ -4190,26 +4190,22 @@ int  m_trace(cptr, sptr, parc, parv)
 	wilds = !parv[1] || index(tname, '*') || index(tname, '?');
 	dow = wilds || doall;
 
-#ifndef _WIN32
 	for (i = 0; i < MAXCONNECTIONS; i++)
 		link_s[i] = 0, link_u[i] = 0;
-#else
-	bzero(link_s, sizeof(link_s));
-	bzero(link_u, sizeof(link_u));
-#endif
+
 
 	if (doall)
 		for (acptr = client; acptr; acptr = acptr->next)
 #ifdef	SHOW_INVISIBLE_LUSERS
 			if (IsPerson(acptr))
-				link_u[acptr->from->fd]++;
+				link_u[acptr->from->slot]++;
 #else
 			if (IsPerson(acptr) &&
 			    (!IsInvisible(acptr) || IsOper(sptr)))
-				link_u[acptr->from->fd]++;
+				link_u[acptr->from->slot]++;
 #endif
 			else if (IsServer(acptr))
-				link_s[acptr->from->fd]++;
+				link_s[acptr->from->slot]++;
 
 	/* report all direct connections */
 
