@@ -358,3 +358,4 @@
 - Allowed /shunned users to use /pong now
 - Fixed (by DrBin) Shun and Gline bug, where they replaced eachothers ->type
   .... Learn that (= != ==) /me looks at Sts
+- You can now specify 0 as the time for any TKL (ex Glines, Shun) for it to be perm

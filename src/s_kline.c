@@ -375,47 +375,35 @@ void tkl_stats(cptr)
 		{
 			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
 			    cptr->name, 'G', tk->usermask, tk->hostmask,
-			    (tk->expire_at - curtime), (curtime - tk->set_at),
+			 (tk->expire_at != 0) ? (tk->expire_at - curtime) : 0, (curtime - tk->set_at),
 			    tk->setby, tk->reason);
 		}
-	}
-	for (tk = tklines; tk; tk = tk->next)
-	{
 		if (tk->type == (TKL_ZAP | TKL_GLOBAL))
 		{
 			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
 			    cptr->name, 'Z', tk->usermask, tk->hostmask,
-			    (tk->expire_at - curtime), (curtime - tk->set_at),
+			(tk->expire_at != 0) ? (tk->expire_at - curtime) : 0, (curtime - tk->set_at),
 			    tk->setby, tk->reason);
 		}
-	}
-	for (tk = tklines; tk; tk = tk->next)
-	{
 		if (tk->type == (TKL_SHUN | TKL_GLOBAL))
 		{
 			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
 			    cptr->name, 's', tk->usermask, tk->hostmask,
-			    (tk->expire_at - curtime), (curtime - tk->set_at),
+			(tk->expire_at != 0) ? (tk->expire_at - curtime) : 0, (curtime - tk->set_at),
 			    tk->setby, tk->reason);
 		}
-	}
-	for (tk = tklines; tk; tk = tk->next)
-	{
 		if (tk->type == (TKL_KILL))
 		{
 			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
 			    cptr->name, 'K', tk->usermask, tk->hostmask,
-			    (tk->expire_at - curtime), (curtime - tk->set_at),
+			(tk->expire_at != 0) ? (tk->expire_at - curtime) : 0, (curtime - tk->set_at),
 			    tk->setby, tk->reason);
 		}
-	}
-	for (tk = tklines; tk; tk = tk->next)
-	{
 		if (tk->type == (TKL_ZAP))
 		{
 			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
 			    cptr->name, 'z', tk->usermask, tk->hostmask,
-			    (tk->expire_at - curtime), (curtime - tk->set_at),
+			 (tk->expire_at != 0) ? (tk->expire_at - curtime) : 0, (curtime - tk->set_at),
 			    tk->setby, tk->reason);
 		}
 	}
@@ -561,13 +549,22 @@ int  m_tkl(cptr, sptr, parc, parv)
 		    default:
 			    strcpy(txt, "Unknown *:Line");
 		  }
-
+		if (expiry_1 != 0) {
 		  sendto_umode(UMODE_EYES,
 		      "*** %s added for %s@%s on %s GMT (from %s to expire at %s GMT: %s)",
 		      txt, parv[3], parv[4], gmt, parv[5], gmt2, parv[8]);
 		  ircd_log
 		      ("%s added for %s@%s on %s GMT (from %s to expire at %s GMT: %s)",
 		      txt, parv[3], parv[4], gmt, parv[5], gmt2, parv[8]);
+		}
+		else {
+		sendto_umode(UMODE_EYES,
+			"*** Permanent %s added for %s@%s on %s GMT (from %s: %s)", txt, parv[3], parv[4],
+			gmt, parv[5], parv[8]);
+		ircd_log
+			("Permanent %s added for %s@%s on %s GMT (from %s: %s)", txt, parv[3], parv[4],
+                        gmt, parv[5], parv[8]);
+		}
 		  tkl_sweep();
 		  if (type & TKL_GLOBAL)
 		  {
@@ -824,7 +821,7 @@ int  m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (whattodo == 0)
 	{
 		secs = atol(parv[2]);
-		if (secs < 1)
+		if (secs < 0)
 		{
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** [G:Line error] Please specify a positive value for time",
@@ -840,6 +837,9 @@ int  m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	    (IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost));
 	if (whattodo == 0)
 	{
+		if (secs == 0)
+		ircsprintf(mo, "%li", secs);
+		else
 		ircsprintf(mo, "%li", secs + TStime());
 		ircsprintf(mo2, "%li", TStime());
 		tkllayer[6] = mo;
@@ -1021,7 +1021,7 @@ int  m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (whattodo == 0)
 	{
 		secs = atol(parv[2]);
-		if (secs < 1)
+		if (secs < 0)
 		{
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** [Shun error] Please specify a positive value for time",
@@ -1037,6 +1037,9 @@ int  m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	    (IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost));
 	if (whattodo == 0)
 	{
+		if (secs ==0)
+		ircsprintf(mo, "%li", secs);
+		else
 		ircsprintf(mo, "%li", secs + TStime());
 		ircsprintf(mo2, "%li", TStime());
 		tkllayer[6] = mo;
