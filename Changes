@@ -1809,3 +1809,4 @@ seen. gmtime warning still there
 - Fixed SSL session cache bug, symptoms were: stunnel can only connect the 1st time, reconnecting
   etc fails with (in stunnel log) "SSL_connect: Peer suddenly disconnected". This happends with
   OpenSSL 0.9.7.
+- Fixed some formatting issues.

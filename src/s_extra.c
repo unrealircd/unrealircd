@@ -289,7 +289,7 @@ int  m_svsfline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			break;
 		  DCCdeny_del(deny);
 		  sendto_serv_butone_token(cptr, sptr->name,
-		 	MSG_SVSFLINE, TOK_SVSFLINE,
+		 	MSG_SVSFLINE, TOK_SVSFLINE, "%s",
 			      parv[2]);
 		  break;
 	  }

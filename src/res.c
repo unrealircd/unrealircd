@@ -354,7 +354,7 @@ time_t timeout_query_list(time_t now)
 				{
 				  case ASYNC_CLIENT:
 					  if (SHOWCONNECTINFO)
-						  sendto_one(cptr, REPORT_FAIL_DNS);
+						  sendto_one(cptr, "%s", REPORT_FAIL_DNS);
 					  ClearDNS(cptr);
                       if (!DoingAuth(cptr))
 						  SetAccess(cptr);

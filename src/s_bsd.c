@@ -1317,7 +1317,7 @@ void	start_of_normal_client_handshake(aClient *acptr)
 	Link	lin;
 	acptr->status = STAT_UNKNOWN;	
 	if (SHOWCONNECTINFO) {
-		sendto_one(acptr, REPORT_DO_DNS);
+		sendto_one(acptr, "%s", REPORT_DO_DNS);
 	}
 	lin.flags = ASYNC_CLIENT;
 	lin.value.cptr = acptr;
@@ -1329,7 +1329,7 @@ void	start_of_normal_client_handshake(aClient *acptr)
 	else
 	{
 		if (SHOWCONNECTINFO)
-			sendto_one(acptr, REPORT_FIN_DNSC);
+			sendto_one(acptr, "%s", REPORT_FIN_DNSC);
 	}
 	nextdnscheck = 1;
 	start_auth(acptr);
@@ -2535,7 +2535,7 @@ void do_dns_async(int id)
 				cptr->hostp = hp;
 
 				if (SHOWCONNECTINFO)
-		          	        sendto_one(cptr, cptr->hostp ? REPORT_FIN_DNS : REPORT_FAIL_DNS);
+		          	        sendto_one(cptr, "%s", cptr->hostp ? REPORT_FIN_DNS : REPORT_FAIL_DNS);
 				  if (!DoingAuth(cptr))
 					  SetAccess(cptr);
 			    }
