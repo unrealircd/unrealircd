@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_map)
 	"m_map",
 	"$Id$",
 	"command /map", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_addline)
 	"m_addline",
 	"$Id$",
 	"command /addline", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

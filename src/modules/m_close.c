@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_close)
 	"m_close",
 	"$Id$",
 	"command /close", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

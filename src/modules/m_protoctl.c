@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_protoctl)
 	"m_protoctl",
 	"$Id$",
 	"command /protoctl", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

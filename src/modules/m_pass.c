@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_pass)
 	"m_pass",
 	"$Id$",
 	"command /pass", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

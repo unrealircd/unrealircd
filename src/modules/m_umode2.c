@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_umode2)
 	"m_umode2",
 	"$Id$",
 	"command /umode2", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

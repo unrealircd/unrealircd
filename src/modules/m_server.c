@@ -52,7 +52,7 @@ ModuleHeader MOD_HEADER(m_server)
 	"m_server",
 	"$Id$",
 	"command /server", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_locops)
 	"m_locops",
 	"$Id$",
 	"command /locops", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

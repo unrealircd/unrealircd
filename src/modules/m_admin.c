@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_admin)
 	"m_admin",
 	"$Id$",
 	"command /admin", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

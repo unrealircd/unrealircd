@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_stats)
 	"m_stats",
 	"$Id$",
 	"command /stats", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_connect)
 	"m_connect",
 	"$Id$",
 	"command /connect", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

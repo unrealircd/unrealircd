@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_topic)
 	"m_topic",
 	"$Id$",
 	"command /topic", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

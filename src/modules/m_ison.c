@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_ison)
 	"m_ison",
 	"$Id$",
 	"command /ison", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

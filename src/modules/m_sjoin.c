@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_sjoin)
 	"m_sjoin",
 	"$Id$",
 	"command /sjoin", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

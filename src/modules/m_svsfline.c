@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_svsfline)
 	"m_svsfline",
 	"$Id$",
 	"command /svsfline", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

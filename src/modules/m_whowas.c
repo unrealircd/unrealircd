@@ -55,7 +55,7 @@ ModuleHeader MOD_HEADER(m_whowas)
 	"m_whowas",
 	"$Id$",
 	"command /whowas", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

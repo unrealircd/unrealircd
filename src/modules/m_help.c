@@ -55,7 +55,7 @@ ModuleHeader MOD_HEADER(m_help)
 	"m_help",
 	"$Id$",
 	"command /help", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_knock)
 	"m_knock",
 	"$Id$",
 	"command /knock", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_links)
 	"m_links",
 	"$Id$",
 	"command /links", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_undccdeny)
 	"m_undccdeny",
 	"$Id$",
 	"command /undccdeny", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_trace)
 	"m_trace",
 	"$Id$",
 	"command /trace", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

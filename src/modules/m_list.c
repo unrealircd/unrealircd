@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_list)
 	"m_list",
 	"$Id$",
 	"command /list", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_samode)
 	"m_samode",
 	"$Id$",
 	"command /samode", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

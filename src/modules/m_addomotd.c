@@ -54,7 +54,7 @@ ModuleHeader MOD_HEADER(m_addomotd)
 	"m_addomotd",
 	"$Id$",
 	"command /addomotd", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 

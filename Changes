@@ -2971,3 +2971,4 @@ seen. gmtime warning still there
 - Improved dcc blocking support (both for spamfilter and deny dcc).
 - '0' tkltime in spamfilter now really means 'perm', not '*line for
   0 seconds' or something. Reported by Certus.
+- Fixed a bug in individual m_*.so loading, 39 new modules were affected.
