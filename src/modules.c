@@ -182,7 +182,7 @@ char  *Module_Load (char *path_, int load)
 			Module_free(mod);
 			return ("Dependancy problem");
 		}
-		irc_dlsymtype(Mod, "Mod_Handle", Mod_Handle, (Module **));
+		irc_dlsym(Mod, "Mod_Handle", Mod_Handle);
 		if (Mod_Handle)
 			*Mod_Handle = mod;
 		if ((ret = (*Mod_Init)(load)) < MOD_SUCCESS)
