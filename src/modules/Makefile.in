@@ -87,9 +87,5 @@ scan_socks.so: scan_socks.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		 -o scan_socks.so scan_socks.c
 
-blackhole.so: blackhole.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		 -o blackhole.so blackhole.c
-
 clean:
 	$(RM) -f *.o *.so *~ core
