@@ -759,3 +759,4 @@ seen. gmtime warning still there
 - Removed some obsolete code
 - Added set::oper-only-stats which allows you to set any/all stats as oper only (* = all). Code is kind of 
   ugly since some flags are case insensitive and C == H but it works and seems pretty fast.
+- Added set::anti-spam-quit-message-time idea from hybrid7

@@ -2142,6 +2142,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "oper-auto-join")) {
 			ircstrdup(OPER_AUTO_JOIN_CHANS, cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {
+			ANTI_SPAM_QUIT_MSG_TIME = atime(cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "socks")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				if (!strcmp(cepp->ce_varname, "ban-message")) {
@@ -3763,6 +3766,8 @@ void report_dynconf(aClient *sptr)
 	if (OPER_ONLY_STATS)
 		sendto_one(sptr, ":%s %i %s :oper-only-stats: %s", me.name, RPL_TEXT,
 			sptr->name, OPER_ONLY_STATS);
+	sendto_one(sptr, ":%s %i %s :anti-spam-quit-message-time: %d", me.name, RPL_TEXT,
+		sptr->name, ANTI_SPAM_QUIT_MSG_TIME);
 	sendto_one(sptr, ":%s %i %s :options::show-opermotd: %d", me.name, RPL_TEXT,
 	    sptr->name, SHOWOPERMOTD);
 	sendto_one(sptr, ":%s %i %s :options::hide-ulines: %d", me.name, RPL_TEXT,

@@ -68,6 +68,7 @@ struct zConfiguration {
 	char *oper_only_stats;
 	int  socksbantime;
 	int  maxchannelsperuser;
+	int  anti_spam_quit_message_time;
 	char *socksbanmessage;
 	char *socksquitmessage;
 	aNetwork network;
@@ -95,7 +96,7 @@ extern aConfiguration iConf;
 #define NAME_SERVER			iConf.name_server
 #define IDENT_CHECK			iConf.ident_check
 #define OPER_ONLY_STATS			iConf.oper_only_stats
-
+#define ANTI_SPAM_QUIT_MSG_TIME		iConf.anti_spam_quit_message_time
 
 #define ircnetwork			iConf.network.x_ircnetwork
 #define ircnet005			iConf.network.x_ircnet005
