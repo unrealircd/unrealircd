@@ -595,6 +595,7 @@ extern void rejoin_dojoinandmode(aClient *sptr);
 extern void ident_failed(aClient *cptr);
 
 extern char extchmstr[4][64];
+extern char extbanstr[EXTBANTABLESZ+1];
 #ifdef EXTCMODE
 extern int extcmode_default_requirechop(aClient *, aChannel *, char *, int, int);
 extern int extcmode_default_requirehalfop(aClient *, aChannel *, char *, int, int);

@@ -17,7 +17,7 @@ by this server"
 Currently UnrealIRCd supports several tokens that are included in numeric 005. A list of
 all tokens, their respective value and a brief description are listed below.
 
-Token          Value           Default Value              Description
+Token         Value           Default Value                Description
 ------------------------------------------------------------------------------------------------
 MAP           none            none                         Informs the client that the /map 
                                                            command is present.
@@ -70,11 +70,11 @@ MODES         number          13                           Indicates the number 
 CHANTYPES     chars           #                            Indicates the prefixes available
                                                            for channels.
  
-PREFIX        (modes)prefixes (ohv)@%+                     Indicates the modes on a channel
+PREFIX        (modes)prefixes (qaohv)~&@%+                 Indicates the modes on a channel
                                                            that corespond to the given
                                                            nickname prefixes.
 
-CHANMODES     A,B,C,D         ohvbeqa,k,lfL,               Specifies how each channel mode is
+CHANMODES     A,B,C,D         be,k,lfL,                    Specifies how each channel mode is
                               psmntirRcOAQKVHGCuzN         set/unset. The A section specifies
                                                            modes that add a nick/mask to a
                                                            list. The B section specifies
@@ -89,3 +89,14 @@ CHANMODES     A,B,C,D         ohvbeqa,k,lfL,               Specifies how each ch
 NETWORK       string          no default value             Specifies the name of the
                                                            network that the server is
                                                            connected to.
+
+CASEMAPPING   string          ascii                        Specifies what definition the
+                                                           server uses when determining if
+                                                           characters are upper/lowercase
+                                                           of eachother.
+
+EXTBAN        prefix,types    ~,cqr                        Specifies what extbans are
+                                                           supported by the server. The prefix
+                                                           defines which character indicates
+                                                           an extban and the types defines
+                                                           which extbans the server supports.

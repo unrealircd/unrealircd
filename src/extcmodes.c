@@ -154,6 +154,8 @@ void CmodeDel(Cmode *cmode)
 	/* TODO: remove from all channel */
 	if (cmode)
 		cmode->flag = '\0';
+	make_cmodestr();
+	make_extcmodestr();
 	/* Not unloadable, so module object support is not needed (yet) */
 }
 

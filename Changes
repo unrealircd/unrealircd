@@ -2697,3 +2697,5 @@ seen. gmtime warning still there
 - Reactivated TRE compile
 - Finally made Unreal use TRE under *nix
 - Fixed a compile problem reported by ace (#0001474)
+- Added an EXTBAN 005 token (see doc/technical/005.txt for info)
+- Fixed a bug with the dynamic umode and cmode systems

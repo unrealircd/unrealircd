@@ -259,6 +259,7 @@ void UmodeDel(Umode *umode)
 		umode->flag = '\0';
 		AllUmodes &= ~(umode->mode);
 		SendUmodes &= ~(umode->mode);
+		make_umodestr();
 	}
 
 	if (umode->owner) {
@@ -410,7 +411,7 @@ void unload_all_unused_umodes()
 			Usermode_Table[i].unloaded = 0;
 		}
 	}
-
+	make_umodestr();
 }
 
 void unload_all_unused_snomasks()

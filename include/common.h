@@ -282,6 +282,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 		" CHANMODES=%s%s,%s%s,%s%s,%s%s" \
 		" NETWORK=%s" 	  \
 		" CASEMAPPING=%s" \
+		" EXTBAN=~,%s" \
 		" :are supported by this server"
 
 #define PROTOCTL_PARAMETERS_2	  \
@@ -295,7 +296,8 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 		CHPAR3, EXPAR3, \
 		"psmntirRcOAQKVGCuzNSM", EXPAR4, \
 		ircnet005, \
-		"ascii"
+		"ascii", \
+		extbanstr
 
 /* Server-Server PROTOCTL -Stskeeps
  * Please check send_proto() for more. -- Syzop

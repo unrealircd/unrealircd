@@ -45,7 +45,21 @@
 Extban ExtBan_Table[EXTBANTABLESZ]; /* this should be fastest */
 unsigned short ExtBan_highest = 0;
 
-/* TODO: Add 005 stuff */
+char extbanstr[EXTBANTABLESZ+1];
+
+void make_extbanstr(void)
+{
+	int i;
+	char *m;
+
+	m = extbanstr;
+	for (i = 0; i <= ExtBan_highest; i++)
+	{
+		if (ExtBan_Table[i].flag)
+			*m++ = ExtBan_Table[i].flag;
+	}
+	*m = 0;
+}
 
 Extban *findmod_by_bantype(char c)
 {
@@ -86,6 +100,7 @@ int slot;
 	ExtBan_Table[slot].is_banned = req.is_banned;
 
 	ExtBan_highest = slot;
+	make_extbanstr();
 	return &ExtBan_Table[slot];
 }
 
@@ -93,7 +108,7 @@ void ExtbanDel(Extban *eb)
 {
 	/* Just zero it all away.. */
 	memset(eb, 0, sizeof(Extban));
-	
+	make_extbanstr();
 	/* Hmm do we want to go trough all chans and remove the bans?
 	 * I would say 'no' because perhaps we are just reloading,
 	 * and else.. well... screw them?
