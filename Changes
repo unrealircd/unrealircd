@@ -3044,3 +3044,6 @@ seen. gmtime warning still there
 - Fixed /spamfilter reason field bug.. things were double escaped sometimes,
   especially in post-RC2-cvs this was noticable. Reported by Fury (#0001670).
 - help.conf: updated snomasks section.
+- Added a patch by baafie to fix a problem where environment variables could not
+  be specified in the Config script (#0001657)
+

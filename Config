@@ -16,6 +16,8 @@
 # in the cache file is valid and therefore doesn't check it, so if you messed with
 # default values thats your problem :P
 
+# some bits edited by baafie on March 17 2004, every change marked.
+
 
 RUN_CONFIGURE () {
 ARG=""
@@ -195,7 +197,7 @@ read cc
 if [ -z "$cc" ] ; then
    DPATH=$TEST
 else
-   DPATH=$cc
+   DPATH=`eval echo $cc` # modified
 fi
 
 TEST="$SPATH"
@@ -206,7 +208,7 @@ echo $n "[$TEST] -> $c"
 if [ -z "$cc" ] ; then
     SPATH=$TEST
 else 
-    SPATH=$cc
+    SPATH=`eval echo $cc` # modified
 fi
 
 TEST=""
@@ -247,7 +249,7 @@ echo $n "[$TEST] -> $c"
 if [ -z "$cc" ] ; then
     DOMAINNAME=$TEST
 else
-DOMAINNAME=$cc
+DOMAINNAME=`eval echo $cc` # modified
 fi
 
 TEST=""
@@ -314,7 +316,7 @@ echo $n "[$TEST] -> $c"
 if [ -z "$cc" ] ; then
     SSLDIR=""
 else 
-    SSLDIR=$cc
+    SSLDIR=`eval echo $cc` # modified
 fi
 fi
 
@@ -386,7 +388,7 @@ echo $n "[$TEST] -> $c"
 if [ -z "$cc" ] ; then
     ZIPLINKSDIR=""
 else 
-    ZIPLINKSDIR=$cc
+    ZIPLINKSDIR=`eval echo $cc` # modified
 fi
 fi
 
@@ -432,7 +434,7 @@ if [ "$REMOTEINC" = "1" ] ; then
 		    cc=$TEST
 		else
 		    TEST=$cc
-		    CURLDIR=$cc
+		    CURLDIR=`eval echo $cc` # modified
 		fi
 	done
 fi
