@@ -96,6 +96,7 @@ static LangList langlist[] = {
 	{ "chinese-trad", "chi-t", LANGAV_GBK },
 	{ "chinese-ja",   "chi-j", LANGAV_GBK },
 	{ "czech",        "cze-m", LANGAV_ASCII|LANGAV_W1250 },
+	{ "danish",       "dan", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "dutch",        "dut", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "french",       "fre", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "gbk",          "chi-s,chi-t,chi-j", LANGAV_GBK },
@@ -105,7 +106,7 @@ static LangList langlist[] = {
 	{ "hungarian",    "hun", LANGAV_ASCII|LANGAV_LATIN2W1250 },
 	{ "icelandic",    "ice", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "italian",      "ita", LANGAV_ASCII|LANGAV_LATIN1 },
-	{ "latin1",       "cat,dut,fre,ger,ita,spa,swe", LANGAV_ASCII|LANGAV_LATIN1 },
+	{ "latin1",       "cat,dan,dut,fre,ger,ita,spa,swe", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "latin2",       "hun,pol,rum", LANGAV_ASCII|LANGAV_LATIN2 },
 	{ "polish",       "pol", LANGAV_ASCII|LANGAV_LATIN2 },
 	{ "polish-w1250", "pol-m", LANGAV_ASCII|LANGAV_W1250 },
@@ -518,6 +519,12 @@ char latin1=0, latin2=0, w1250=0, chinese=0;
 		 */
 		/* e', e", o", i", u", e`. */
 		charsys_addallowed("ÈÎˆÔ¸Ë");
+	}
+	if (latin1 || !strcmp(name, "danish"))
+	{
+		/* supplied by klaus:
+		 * <ae>, <AE>, ao, Ao, o/, O/ */
+		charsys_addallowed("Ê∆Â≈¯ÿ");
 	}
 	if (latin1 || !strcmp(name, "french"))
 	{

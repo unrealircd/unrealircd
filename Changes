@@ -777,3 +777,5 @@
 - Fixed incorrect badword { } in conf causing a crash (should give an error).
 - spamfilter.conf Gaggle worm sigs were broken causing odd things to match, this is because
   \\ now needs to be escaped as \\\\ due to the 3.2.3 conf change... didn't think of updating sigs.
+- Clarified some nickchar stuff in the docs
+- Added 'danish' nickchars, supplied by klaus (#0002436).

@@ -572,6 +572,7 @@ A table of all possible choices:<br>
 <table border="1">
 <tr><td><b>Name:</b></td><td><b>Description:</b></td><td><b>Character set/encoding:</b></td></tr>
 <tr><td>catalan</td><td>Catalan characters</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>danish</td><td>Danish characters</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>dutch</td><td>Dutch characters</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>french</td><td>French characters</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>german</td><td>German characters</td><td>iso8859-1 (latin1)</td></tr>
@@ -580,7 +581,7 @@ A table of all possible choices:<br>
 <tr><td>italian</td><td>Italian characters</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>spanish</td><td>Spanish characters</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>swedish</td><td>Swedish characters</td><td>iso8859-1 (latin1)</td></tr>
-<tr><td><b>latin1</b></td><td>catalan, dutch, french, german, swiss-german, spanish, icelandic, italian, swedish</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td><b>latin1</b></td><td>catalan, danish, dutch, french, german, swiss-german, spanish, icelandic, italian, swedish</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>hungarian</td><td>Hungarian characters</td><td>iso8859-2 (latin2), windows-1250</td></tr>
 <tr><td>polish</td><td>Polish characters</td><td>iso8859-2 (latin2)</td></tr>
 <tr><td>romanian</td><td>Romanian characters</td><td>iso8859-2 (latin2), windows-1250, iso8859-16</td></tr>
@@ -599,11 +600,18 @@ A table of all possible choices:<br>
 <tr><td><b>chinese</b></td><td>chinese-*</td><td>Multibyte: GBK</td></tr>
 <tr><td><b>gbk</b></td><td>chinese-*</td><td>Multibyte: GBK</td></tr>
 </table>
-Please note that some combinations can cause problems. 
+<p>NOTE 1: Please note that some combinations can cause problems. 
 For example, combining latin* and chinese-* can not be properly handled by 
 the IRCd and Unreal will print an error. 
 Mixing of other charsets might cause display problems, so Unreal will print out 
-a warning if you try to mix latin1/latin2/greek.<br><br>
+a warning if you try to mix latin1/latin2/greek/other incompatible groups.</p>
+<p>NOTE 2: Casemapping (if a certain lowercase character belongs to an upper one) is done according to
+US-ASCII, this means that o" and O" are not recognized as 'the same character' and hence someone can
+have a nick with B"ar and someone else BA"r at the same time. This is a limitation of the current system
+and IRCd standards that cannot be solved anytime soon. People should be aware of this limitation.
+Note that this limitation has always also been applied to channels, in which nearly all characters were always
+permitted and US-ASCII casemapping was always performed.</p>
+<p>NOTE 3: The basic nick characters (a-z A-Z 0-9 [ \ ] ^ _ - { | }) are always allowed/included.</p>
 
 Example 1, for people of western europe:<br>
 <pre>set { allowed-nickchars { latin1; }; };</pre>
