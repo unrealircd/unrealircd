@@ -660,3 +660,5 @@
 - ircsprintf() is now used everywhere
 - Fixed the SJB64 bugs that misplaced users
 - Removed sendto_helpops and replaced it with sendto_umode
+- Added is_chanownprotop() checks if +q +a or +o with 1 loop
+- Added chmode +N (no nick changes) (opers, ulines, +o +q or +a can override)

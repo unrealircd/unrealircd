@@ -1541,7 +1541,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		   ** Also set 'lastnick' to current time, if changed.
 		 */
 		if (MyClient(sptr))
-			for (lp = cptr->user->channel; lp; lp = lp->next)
+			for (lp = cptr->user->channel; lp; lp = lp->next) {
 				if (is_banned(cptr, &me, lp->value.chptr))
 				{
 					sendto_one(cptr,
@@ -1550,7 +1550,15 @@ int  m_nick(cptr, sptr, parc, parv)
 					    lp->value.chptr->chname);
 					return 0;
 				}
-
+				if (!IsOper(cptr) && !IsULine(cptr) && lp->value.chptr->mode.mode &
+				   MODE_NONICKCHANGE && !is_chanownprotop(cptr, lp->value.chptr)) {
+					sendto_one(cptr,
+					   err_str(ERR_NONICKCHANGE),
+					   me.name, parv[0],
+					   lp->value.chptr->chname);
+					return 0;
+				}
+			}
 		/*
 		 * Client just changing his/her nick. If he/she is
 		 * on a channel, send note of change to all clients

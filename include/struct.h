@@ -1096,6 +1096,7 @@ struct Channel {
 #define MODE_NOCTCP		0x10000000
 #define MODE_AUDITORIUM		0x20000000
 #define MODE_ONLYSECURE		0x40000000
+#define MODE_NONICKCHANGE	0x80000000
 
 #define is_halfop is_half_op
 /*

@@ -149,6 +149,7 @@ aCtab cFlagTab[] = {
 	{MODE_NOCTCP, 'C', 0, 0},	/* no CTCPs */
 	{MODE_AUDITORIUM, 'u', 0, 0},
 	{MODE_ONLYSECURE, 'z', 0, 0},
+	{MODE_NONICKCHANGE, 'N', 0, 0},
 	{0x0, 0x0, 0x0}
 };
 #endif
@@ -586,6 +587,16 @@ int  is_chanowner(cptr, chptr)
 		if ((lp = find_user_link(chptr->members, cptr)))
 			return (lp->flags & CHFL_CHANOWNER);
 
+	return 0;
+}
+
+int is_chanownprotop(aClient *cptr, aChannel *chptr) {
+	Link *lp;
+		
+	if (chptr)
+		if ((lp = find_user_link(chptr->members, cptr)))
+			if (lp->flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP))
+				return 1;
 	return 0;
 }
 
@@ -1586,6 +1597,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 #endif
 	  case MODE_NOCTCP:
 	  case MODE_ONLYSECURE:
+	  case MODE_NONICKCHANGE:
 	  case MODE_NOINVITE:
 		setthephuckingmode:
 		  /* +sp bugfix.. */
