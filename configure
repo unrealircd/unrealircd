@@ -4942,16 +4942,16 @@ ac_cv_underscore=no
 else
 ac_cv_underscore=yes
 fi
+
+fi
+
+echo "$ac_t""$ac_cv_underscore" 1>&6
 if test "$ac_cv_underscore" = "yes"; then
 cat >> confdefs.h <<\EOF
 #define UNDERSCORE 1
 EOF
 
 fi
-
-fi
-
-echo "$ac_t""$ac_cv_underscore" 1>&6
 
 MODULEFLAGS=$ac_cv_pic
 cat >> confdefs.h <<\EOF
