@@ -1517,9 +1517,9 @@ int	config_post_test()
 	if (!requiredstuff.settings.name_server)
 		Error("set::dns::nameserver missing");
 	if (!requiredstuff.settings.host_timeout)
-		Error("set::dns::host-timeout missing");
+		Error("set::dns::timeout missing");
 	if (!requiredstuff.settings.host_retries)
-		Error("set::dns::host-retries missing");
+		Error("set::dns::retries missing");
 	if (!requiredstuff.settings.servicesserv)
 		Error("set::services-server missing");
 	if (!requiredstuff.settings.defaultserv)

@@ -6,6 +6,8 @@ PONG back to the initial PING at connect).
 
 ==[ HOW TO COMPILE UNREALIRCD WITHOUT SSL AT WINDOWS ]==
 1. You need Microsoft Visual C++
+
+== VC++ 6.0 ==
 2. You need the Platform SDK (PSDK)
    Grab it at: http://www.microsoft.com/msdownload/platformsdk/sdkupdate/ ->
    core sdk -> install this sdk.
@@ -13,8 +15,16 @@ PONG back to the initial PING at connect).
    (450mb installed) [!].
 3. To compile:
    start -> programs -> platform sdk blabla -> open build env. -> (choose os) ->
-   set blabla build env (debug). This will launch a DOS window, then go to
-   your UnrealIrcd dir (like: cd \dev\unreal3.2) and then compile with:
+   set blabla build env (debug). This will launch a DOS window.
+4. Go to your UnrealIrcd dir (like: cd \dev\unreal3.2) and then compile with:
+   nmake -f makefile.win32
+   This will generate a wircd.exe and unreal.exe
+5. Copy the src\win32\gnu_regex.dll to your UnrealIrcd main dir.
+6. Done!
+
+== VC++ 7.x (.NET) ==
+2. Start the Visual Studio .NET Command Prompt
+3. Go to your UnrealIrcd dir (like: cd \dev\unreal3.2) and then compile with:
    nmake -f makefile.win32
    This will generate a wircd.exe and unreal.exe
 4. Copy the src\win32\gnu_regex.dll to your UnrealIrcd main dir.
@@ -25,4 +35,6 @@ Ouch, that's much work ;).
 You need to compile openssl and have it installed in c:\openssl.
 Then use makefile.win32.ssl instead of makefile.win32.
 And don't ask us for help on how to compile openssl...
-
+
+==[ AND ZIP LINKS SUPPORT? ]==
+See top of makefile.win32.ziplink for instructions.

@@ -1926,3 +1926,6 @@ seen. gmtime warning still there
 - Fixed bug with chmode +u: Quits/nick changes of other users were shown.
 - Added /who *.host.com support (ircop only), this was already possible via /who -h <host>
   but most ppl expect it to work this way too.
+- Updated win32 compile instructions
+- Fixed set::dns error messages
+
