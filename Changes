@@ -695,3 +695,5 @@
   convert it to globops. This is also what we always did for can_globalroute/can_gkill
   (well, except the warning). Giving such NETWORK (GLOBAL) privileges to a LOCAL operator
   does not make any sense and is therefore no longer allowed.
+- Added 'russian-w1251', supplied by Roman Parkin. There are like 3 main standards in Russia,
+  and 7 standards in total, so I didn't dare to call this one 'russian' ;).

@@ -76,6 +76,7 @@ char langsinuse[4096];
 #define LANGAV_ISO8859_8I	0x0010 /* hebrew */
 #define LANGAV_ISO8859_9	0x0020 /* turkish */
 #define LANGAV_W1250		0x0040 /* windows-1250 (eg: polish) */
+#define LANGAV_W1251		0x0080 /* windows-1251 (eg: russian) */
 #define LANGAV_GBK			0x1000 /* (Chinese) GBK encoding */
 
 typedef struct _langlist LangList;
@@ -106,6 +107,7 @@ static LangList langlist[] = {
 	{ "latin2",       "hun", LANGAV_ASCII|LANGAV_LATIN2 },
 	{ "polish",       "pol", LANGAV_ASCII|LANGAV_LATIN2 },
 	{ "polish-w1250", "pol-m", LANGAV_ASCII|LANGAV_W1250 },
+	{ "russian-w1251","rus", LANGAV_ASCII|LANGAV_W1251 },
 	{ "spanish",      "spa", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "swedish",      "swe", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "swiss-german", "swg", LANGAV_ASCII|LANGAV_LATIN1 },
@@ -376,6 +378,8 @@ int x=0;
 		x++;
 	if (langav & LANGAV_W1250)
 		x++;
+	if (langav & LANGAV_W1251)
+		x++;
 	if (x > 1)
 	{
 		config_status("WARNING: set::accept-language: "
@@ -561,6 +565,15 @@ char latin1=0, latin2=0, chinese=0;
 	{
 		/* supplied by k4be */
 		charsys_addallowed("Ήζκ³ρσΏ¥ΖΚ£ΡΣ―");
+	}
+
+	/* [windows 1251] */
+	if (!strcmp(name, "russian-w1251"))
+	{
+		/* supplied by Roman Parkin:
+		 * 128-159 and 223-254
+		 */
+		charsys_addallowed("€‚ƒ„…†‡‰‹‘’“”•–—™›ίΰαβγδεζηθικλμνξοπρςστυφχψωϊϋόύώ");
 	}
 	
 	/* [GREEK] */	
