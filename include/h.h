@@ -488,6 +488,7 @@ extern void debug(int, char *, ...);
 extern void send_usage(aClient *, char *);
 extern void send_listinfo(aClient *, char *);
 extern void count_memory(aClient *, char *);
+extern int checkprotoflags(aClient *, int, char *, int);
 #endif
 
 #ifdef INET6
@@ -715,3 +716,4 @@ extern void del_async_connects(void);
 extern int find_spamfilter_user(aClient *sptr);
 extern void make_extbanstr(void);
 extern void isupport_init(void);
+extern int do_cmd(aClient *cptr, aClient *sptr, char *cmd, int parc, char *parv[]);

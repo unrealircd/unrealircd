@@ -557,8 +557,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 					 */
 					if (!IsMe(acptr))
 					{
-/* BUG: IsToken() can only be done on locally (directly) connected servers, OOB READ PLZ FIX */
-						if (IsToken(acptr))
+						if (IsToken(acptr->from))
 							sendto_one(acptr,
 							    ":%s %s %s :%s", parv[0],
 							    notice ? TOK_NOTICE : TOK_PRIVATE,

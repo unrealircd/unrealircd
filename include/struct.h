@@ -493,18 +493,24 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 /*
  * ProtoCtl options
  */
-#define DontSendQuit(x)		((x)->proto & PROTO_NOQUIT)
-#define IsToken(x)		((x)->proto & PROTO_TOKEN)
-#define SupportSJOIN(x)		((x)->proto & PROTO_SJOIN)
-#define SupportNICKv2(x)	((x)->proto & PROTO_NICKv2)
-#define SupportNICKIP(x)	((x)->proto & PROTO_NICKIP)
-#define SupportSJOIN2(x)	((x)->proto & PROTO_SJOIN2)
-#define SupportUMODE2(x)	((x)->proto & PROTO_UMODE2)
-#define SupportNS(x)		((x)->proto & PROTO_NS)
-#define SupportVL(x)		((x)->proto & PROTO_VL)
-#define SupportSJ3(x)		((x)->proto & PROTO_SJ3)
-#define SupportVHP(x)		((x)->proto & PROTO_VHP)
-#define SupportTKLEXT(x)	((x)->proto & PROTO_TKLEXT)
+#ifndef DEBUGMODE
+#define CHECKPROTO(x,y)	((x)->proto & y)
+#else
+#define CHECKPROTO(x,y) (checkprotoflags(x, y, __FILE__, __LINE__))
+#endif
+
+#define DontSendQuit(x)		(CHECKPROTO(x, PROTO_NOQUIT))
+#define IsToken(x)		(CHECKPROTO(x, PROTO_TOKEN))
+#define SupportSJOIN(x)		(CHECKPROTO(x, PROTO_SJOIN))
+#define SupportNICKv2(x)	(CHECKPROTO(x, PROTO_NICKv2))
+#define SupportNICKIP(x)	(CHECKPROTO(x, PROTO_NICKIP))
+#define SupportSJOIN2(x)	(CHECKPROTO(x, PROTO_SJOIN2))
+#define SupportUMODE2(x)	(CHECKPROTO(x, PROTO_UMODE2))
+#define SupportNS(x)		(CHECKPROTO(x, PROTO_NS))
+#define SupportVL(x)		(CHECKPROTO(x, PROTO_VL))
+#define SupportSJ3(x)		(CHECKPROTO(x, PROTO_SJ3))
+#define SupportVHP(x)		(CHECKPROTO(x, PROTO_VHP))
+#define SupportTKLEXT(x)	(CHECKPROTO(x, PROTO_TKLEXT))
 
 #define SetSJOIN(x)		((x)->proto |= PROTO_SJOIN)
 #define SetNoQuit(x)		((x)->proto |= PROTO_NOQUIT)

@@ -445,3 +445,36 @@ aCommand *find_Command_simple(char *cmd)
 	}
 	return NULL;
 }
+
+/** Calls the specified command.
+ * PURPOSE:
+ *  This function is especially meant for calling modulized commands,
+ *  both from the core and from (eg:) module A to a command in module B.
+ *  An alternative to this is MOD_Dep, but this requires a lot more
+ *  effort, is more error phrone and is not a general solution
+ *  (but it is slightly faster).
+ * PARAMETERS:
+ *  Parameters are clear.. the usual cptr, sptr, parc, parv stuff.
+ *  'cmd' is the command string, eg: "JOIN"
+ * RETURN VALUE:
+ *  The value returned by the command function, or -99 if command not found.
+ * IMPORTANT NOTES:
+ *  - make sure you terminate the last parv[] parameter with NULL,
+ *    this can easily be forgotten, but certain functions depend on it,
+ *    you risk crashes otherwise.
+ *  - be sure to check for FLUSH_BUFFER (-5) return value, especially
+ *    if you are calling functions that might cause an immediate kill
+ *    (eg: due to spamfilter).
+ *  - obvious, but... do not stuff in insane parameters, like a parameter
+ *    of 1024 bytes, most of the ircd code depends on the max size of the
+ *    total command being less than 512 bytes. Same for parc < MAXPARA.
+ */
+int do_cmd(aClient *cptr, aClient *sptr, char *cmd, int parc, char *parv[])
+{
+aCommand *cmptr;
+
+	cmptr = find_Command_simple(cmd);
+	if (!cmptr)
+		return -99;
+	return (*cmptr->func) (cptr, sptr, parc, parv);
+}

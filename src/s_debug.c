@@ -341,6 +341,12 @@ void send_usage(aClient *cptr, char *nick)
 	    writeb[5], writeb[6], writeb[7], writeb[8], writeb[9]);
 	return;
 }
+
+int checkprotoflags(aClient *sptr, int flags, char *file, int line)
+{
+	if (!MyConnect(sptr))
+		ircd_log(LOG_ERROR, "[Debug] [BUG] ERROR: %s:%d: IsToken(<%s>,%d) on remote client",
+		         file, line, sptr->name, flags);
+	return (sptr->proto & flags) ? 1 : 0;
+}
 #endif
-
-
