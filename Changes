@@ -3303,3 +3303,4 @@ This is the 3.2 fixes branch.
 - Converted several notices to numerics (#0001599) suggested by olene
 - Added a donator to /credits
 - Fixed '/stats P' negative usercount bug (#0001691).
+- Made IPv6 bans work the way they should again, reported by al5001 (#0001876).
