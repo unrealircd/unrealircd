@@ -373,7 +373,7 @@ static char *replies[] = {
 /* 333    RPL_TOPICWHOTIME */ ":%s 333 %s %s %s %lu",
 /* 334    RPL_LISTSYNTAX */ ":%s 334 %s :%s",
 /* 335    RPL_WHOISBOT */ ":%s 335 %s %s :is a \2Bot\2 on %s",
-/* 336    RPL_INVITELIST */ ":%s 336 %s %s :%s",
+/* 336    RPL_INVITELIST */ ":%s 336 %s :%s",
 /* 337    RPL_ENDOFINVITELIST */ ":%s 337 %s :End of /INVITE list.",
 /* 338 */ NULL, /* ircu, bahamut */
 /* 339 */ NULL, /* Used */
