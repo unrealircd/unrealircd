@@ -143,7 +143,7 @@ void	init_CommandHash(void)
 	add_Command(MSG_WATCH, TOK_WATCH, m_watch, 1);
 	add_Command(MSG_USERHOST, TOK_USERHOST, m_userhost, 1);
 	add_Command(MSG_LUSERS, TOK_LUSERS, m_lusers, MAXPARA);
-	add_Command(MSG_TOPIC, TOK_TOPIC, m_topic, 2);
+	add_Command(MSG_TOPIC, TOK_TOPIC, m_topic, 4);
 	add_Command(MSG_INVITE, TOK_INVITE, m_invite, MAXPARA);
 	add_Command(MSG_KICK, TOK_KICK, m_kick, 3);
 	add_Command(MSG_WALLOPS, TOK_WALLOPS, m_wallops, 1);

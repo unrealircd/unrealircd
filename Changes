@@ -1112,3 +1112,4 @@ v- Fixed some bugreport stuff
 - Made a SNOMASK for the +s notices, so you arent forced into hearing them if you just
   want say +k
 - Fixed some return values, can't gline masks with a ! in them anymore
+- ARGH
