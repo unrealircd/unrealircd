@@ -27,7 +27,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2.1 </font><br>
   <b>Aktuelle Version:</b> 3.2.1<br>
-  <b>Letztes Dokumentation Update:</b>      2004-07-03</div>
+  <b>Letztes Dokumentation Update:</b>       2004-10-11</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
 <b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
@@ -2046,19 +2046,25 @@ connecten dürfen.</p>
    <font class="block_optional">OPTIONAL </font><font class="block_old">(Früher
 nicht vorhanden)</font><div class="desc">
 <p>Syntax:
-<pre>except tkl {
+<pre><font face="Courier New">except tkl {
 	mask &lt;hostmask&gt;;
 	type &lt;type&gt;;
-};</pre>
+	type { 
+		&lt;type&gt;;
+		&lt;type&gt;;
+		...
+	};
+};</font></pre>
 <p>Mit dem &quot;except tkl Block&quot; kann man <a href="mailto:user@host">user@host</a>
-Masken angeben, die von den gesetzten Banns tkl Banns (also G-Lines, Shuns, GZ
-Lines) ausgenommen werden sollen. So etwas kann verwendet werden, falls man z.B.
+Masken angeben, die von den gesetzten tkl Banns (also G-Lines, Shuns, GZ
+Lines) auf breitere Hosts ausgenommen werden sollen. So etwas kann verwendet werden, falls man z.B.
 ganze ISP bannen möchte, aber einzelnen Usern trotzdem die Verbindung erlauben
 möchte. Dazu bei <b> except::mask</b> den oder die Hosts eintragen (als user@host
 Mask) die trotz globalem Bann connecten dürfen. Bei <b>except::type</b> wird
 angegeben, welcher Bann Typ ausgenommen werden soll. Gültige Typen sind hier:
 gline, gzline, qline, gqline und shun, für Ausnahmen von Glines, Global Zlines,
-Qlines, Global Qlines und Shuns.</p>
+Qlines, Global Qlines und Shuns. Wenn das {} Format benutzt wird, können
+unterschiedliche Typen angegeben werden.</p>
 <p>Beispiel:
 <pre>except tkl {
 	mask myident@my.isp.com;
