@@ -417,6 +417,69 @@ int  hunt_server_token(aClient *cptr, aClient *sptr, char *command, char *token,
 	return (HUNTED_NOSUCH);
 }
 
+int  hunt_server_token_quiet(aClient *cptr, aClient *sptr, char *command, char *token, char
+*params, int server, int parc, char *parv[])
+{
+	aClient *acptr;
+
+	/*
+	   ** Assume it's me, if no server
+	 */
+	if (parc <= server || BadPtr(parv[server]) ||
+	    match(me.name, parv[server]) == 0 ||
+	    match(parv[server], me.name) == 0)
+		return (HUNTED_ISME);
+	/*
+	   ** These are to pickup matches that would cause the following
+	   ** message to go in the wrong direction while doing quick fast
+	   ** non-matching lookups.
+	 */
+	if ((acptr = find_client(parv[server], NULL)))
+		if (acptr->from == sptr->from && !MyConnect(acptr))
+			acptr = NULL;
+	if (!acptr && (acptr = find_server_quick(parv[server])))
+		if (acptr->from == sptr->from && !MyConnect(acptr))
+			acptr = NULL;
+	if (!acptr)
+		for (acptr = client, (void)collapse(parv[server]);
+		    (acptr = next_client(acptr, parv[server]));
+		    acptr = acptr->next)
+		{
+			if (acptr->from == sptr->from && !MyConnect(acptr))
+				continue;
+			/*
+			 * Fix to prevent looping in case the parameter for
+			 * some reason happens to match someone from the from
+			 * link --jto
+			 */
+			if (IsRegistered(acptr) && (acptr != cptr))
+				break;
+		}
+	if (acptr)
+	{
+		char buff[1024];
+		if (IsMe(acptr) || MyClient(acptr))
+			return HUNTED_ISME;
+		if (match(acptr->name, parv[server]))
+			parv[server] = acptr->name;
+		if (IsToken(acptr->from)) {
+			sprintf(buff, ":%s %s ", parv[0], token);
+			strcat(buff, params);
+			sendto_one(acptr, buff, parv[1], parv[2], parv[3], parv[4], parv[5], parv[6], parv[7], parv[8]);
+		}
+		else {
+			sprintf(buff, ":%s %s ", parv[0], command);
+			strcat(buff, params);
+			sendto_one(acptr, buff, parv[1], parv[2],
+			parv[3], parv[4], parv[5], parv[6], parv[7], parv[8]);
+		}
+		return (HUNTED_PASS);
+	}
+	return (HUNTED_NOSUCH);
+}
+
+
+
 
 /*
 ** check_for_target_limit

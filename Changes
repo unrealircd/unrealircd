@@ -1610,3 +1610,5 @@ seen. gmtime warning still there
 - Fixed an samode bug reported by mcskaf (#0000403)
 - Added the ability to /lusers server.name to get the lusers reply of another server
   suggested by tony0man (#0000373)
+- Fixed a bug where /htm would report "no such server" when used locally, reported by
+  jollino (#0000343)
