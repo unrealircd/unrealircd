@@ -117,7 +117,7 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 
 void init_ctx_server(void)
 {
-	ctx_server = SSL_CTX_new(SSLv3_server_method());
+	ctx_server = SSL_CTX_new(SSLv23_server_method());
 	if (!ctx_server)
 	{
 		ircd_log(LOG_ERROR, "Failed to do SSL CTX new");
@@ -545,6 +545,8 @@ static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
      * the only way to do it.
      * IRC protocol wasn`t SSL enabled .. --vejeta
      */
+    ircd_log(LOG_ERROR, "exiting ssl client %s: %s: %s",
+    	sptr->name, ssl_func, ssl_errstr);
     SET_ERRNO(errtmp ? errtmp : P_EIO); /* Stick a generic I/O error */
     sptr->flags |= FLAGS_DEADSOCKET;
     return -1;
