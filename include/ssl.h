@@ -1,0 +1,10 @@
+/* Make these what you want for cert & key files */
+#define CERTF  "server.pem"
+#define KEYF  "server.pem"
+
+
+extern   SSL_CTX * ctx;
+extern   SSL_METHOD *meth;
+extern   void init_ssl();
+extern   int ssl_handshake(aClient *);   /* Handshake the accpeted con.*/
+extern   int ssl_client_handshake(aClient *); /* and the initiated con.*/

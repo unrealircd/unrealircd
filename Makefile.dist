@@ -210,3 +210,8 @@ depend:
 install: all
 	@echo "Now install by hand; make install is broken."
 
+pem:	src/ssl.cnf
+	/usr/local/ssl/bin/openssl req -new -x509 -days 365 -nodes \
+                -config src/ssl.cnf -out server.pem -keyout server.pem
+	/usr/local/ssl/bin/openssl x509 -subject -dates -fingerprint -noout \
+		-in server.pem

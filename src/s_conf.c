@@ -873,7 +873,7 @@ int  m_svsnoop(cptr, sptr, parc, parv)
 		    				~(UMODE_NETADMIN | UMODE_TECHADMIN | UMODE_CLIENT |
 		 			   UMODE_FLOOD | UMODE_EYES | UMODE_CHATOP | UMODE_WHOIS);
 					acptr->umodes &=
-					    ~(UMODE_KIX | UMODE_FCLIENT | UMODE_HIDING | UMODE_CODER |
+					    ~(UMODE_KIX | UMODE_FCLIENT | UMODE_HIDING |
 					    UMODE_DEAF | UMODE_HIDEOPER);
 					acptr->oflag = 0;
 				

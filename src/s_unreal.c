@@ -1107,9 +1107,10 @@ int  m_sendumode(cptr, sptr, parc, parv)
 		  case 'A':
 			  sendto_umode(UMODE_ADMIN, "%s", parv[2]);
 			  break;
-		  case '1':
+/*		  case '1':
 			  sendto_umode(UMODE_CODER, "%s", parv[2]);
 			  break;
+*/
 		  case 'I':
 			  sendto_umode(UMODE_HIDING, "%s", parv[2]);
 			  break;
@@ -1296,7 +1297,7 @@ int  m_svso(cptr, sptr, parc, parv)
 		    ~(UMODE_NETADMIN | UMODE_TECHADMIN | UMODE_CLIENT |
 		    UMODE_FLOOD | UMODE_EYES | UMODE_CHATOP | UMODE_WHOIS);
 		acptr->umodes &=
-		    ~(UMODE_KIX | UMODE_FCLIENT | UMODE_HIDING | UMODE_CODER |
+		    ~(UMODE_KIX | UMODE_FCLIENT | UMODE_HIDING |
 		    UMODE_DEAF | UMODE_HIDEOPER);
 		acptr->oflag = 0;
 		send_umode_out(acptr, acptr, fLag);

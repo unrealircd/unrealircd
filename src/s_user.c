@@ -91,8 +91,7 @@ static int user_modes[] = { UMODE_OPER, 'o',
 	UMODE_BOT, 'B',
 	UMODE_FCLIENT, 'F',
 	UMODE_HIDING, 'I',
-	/* UMODE_AGENT,   'Z', */
-	UMODE_CODER, '1',
+	UMODE_SECURE, 'z',
 	UMODE_DEAF, 'd',
 	UMODE_VICTIM, 'v',
 	UMODE_SETHOST, 't',
@@ -887,6 +886,8 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 #endif
 		nextping = TStime();
 		sendto_connectnotice(nick, user, sptr);
+		if (IsSecure(sptr))
+			sptr->umodes |= UMODE_SECURE;
 	}
 	else if (IsServer(cptr))
 	{
@@ -2786,11 +2787,11 @@ int  m_whois(cptr, sptr, parc, parv)
 				sendto_one(sptr, rpl_str(RPL_WHOISBOT),
 				    me.name, parv[0], name, ircnetwork);
 			}
-			if (acptr->umodes & UMODE_CODER && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
+			if (acptr->umodes & UMODE_SECURE)
 			{
-				sendto_one(sptr, rpl_str(RPL_WHOISOPERATOR),
-				    me.name, parv[0], name, "a Coder",
-				    ircnetwork);
+				sendto_one(sptr, ":%s %d %s %s :%s %s",me.name, 
+				RPL_WHOISSPECIAL,
+				parv[0], name, "is a \2Secure Connection\2");
 			}
 			if (acptr->user->swhois)
 			{
@@ -4331,9 +4332,9 @@ int  m_umode(cptr, sptr, parc, parv)
 		if ((sptr->umodes & UMODE_HIDING)
 		    && !(sptr->oflag & OFLAG_INVISIBLE))
 			sptr->umodes &= ~UMODE_HIDING;
-		if (MyClient(sptr) && (sptr->umodes & UMODE_CODER)
-		    && !IsAnOper(sptr))
-			sptr->umodes &= ~UMODE_CODER;
+		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
+		    && !IsSecure(sptr))
+			sptr->umodes &= ~UMODE_SECURE;
 
 
 	}
@@ -4381,9 +4382,9 @@ int  m_umode(cptr, sptr, parc, parv)
 		if ((sptr->umodes & UMODE_HIDING)
 		    && !(sptr->oflag & OFLAG_INVISIBLE))
 			sptr->umodes &= ~UMODE_HIDING;
-		if (MyClient(sptr) && (sptr->umodes & UMODE_CODER)
-		    && !IsAnOper(sptr))
-			sptr->umodes &= ~UMODE_CODER;
+		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
+		    && !IsSecure(sptr))
+			sptr->umodes &= ~UMODE_SECURE;
 
 		if ((sptr->umodes & (UMODE_HIDING))
 		    && !(setflags & UMODE_HIDING))

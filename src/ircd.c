@@ -1125,7 +1125,9 @@ int  InitwIRCD(argc, argv)
 #endif
 	check_class();
 	write_pidfile();
-
+#ifdef USE_SSL
+	init_ssl();
+#endif
 	Debug((DEBUG_NOTICE, "Server ready..."));
 #ifdef USE_SYSLOG
 	syslog(LOG_NOTICE, "Server Ready");

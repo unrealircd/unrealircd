@@ -351,10 +351,10 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(sptr, ":IRC PRIVMSG %s :%s is an Bot on %s",
 					sptr->name, name, ircnetwork);
 			}
-			if (acptr->umodes & UMODE_CODER && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
+			if (acptr->umodes & UMODE_SECURE)
 			{
-				sendto_one(sptr, ":IRC PRIVMSG %s :%s is a Coder on %s",
-					sptr->name, acptr->name, ircnetwork);
+				sendto_one(sptr, ":IRC PRIVMSG %s :%s is a Secure Connection",
+					sptr->name, acptr->name);
 			}
 			if (acptr->user->swhois)
 			{

@@ -504,8 +504,8 @@ else
 	echo 'not found (good!)'
 fi
 
-echo $n "...Looking for /usr/include/openssl/blowfish.h...$c"
-if [ -r /usr/include/openssl/blowfish.h ] ; then
+echo $n "...Looking for /usr/include/openssl/ssl.h...$c"
+if [ -r /usr/include/openssl/ssl.h ] ; then
 	OPENSSL=define
 	echo 'found!'
 else
@@ -793,28 +793,6 @@ else
 	fi
 fi
 $RM -f $EXEC $TMP
-
-echo $n "Do we have an broken /usr/include/string.h ... $c"
-cat > $TMP <<__EOF__
-#include <string.h>
-main()
-{
-	char	*s = "moocows";
-	char	*p = "moocows";
-
-	if (strcasecmp(s, p))
-		exit(0);
-	exit(0);
-}
-__EOF__
-$COMP >/dev/null 2>&1
-if [ $? -ne 0 ] ; then
-	echo " no$c"
-	STRCASECMP=undef
-else
-	echo "yes"
-	STRCASECMP=define
-fi
 #
 # what do we need that isn't here already ?
 #
@@ -1015,8 +993,25 @@ if [ $? -ne 0 ] ; then
 	echo $n " inet_netof$c"
 	NINETNETOF=define
 fi
-$RM -f $EXEC $TMP
 echo " "
+$RM -f $EXEC $TMP
+cat > $TMP << __EOF__
+#include <string.h>
+main()
+{
+	strcasecmp("moo", "moo");
+}
+__EOF__
+$COMP 
+# >/dev/null 2>&1
+if [ $? -ne 0 ] ; then
+	echo $n " strcasecmp $c "
+	STRCASECMP=undef
+else
+	STRCASECMP=define
+fi
+$RM -f $EXEC $TMP
+
 #
 #
 #
@@ -1096,7 +1091,7 @@ cat > $SETUP  <<__EOF__
 #$NINETNETOF	NEED_INET_NETOF
 #$GETTIMEOFDAY	GETTIMEOFDAY
 #$LRAND48	LRAND48
-#$STRCASECMP    GOT_STRCASECMP
+#$STRCASECMP GOT_STRCASECMP
 __EOF__
 if [ "$MALLOCH" = "undef" ] ; then
 	echo "#undef	MALLOCH" >> $SETUP
@@ -1304,7 +1299,7 @@ while [ -z "$FOO" ] ; do
 	FOO="No"
     fi
     echo ""
-    echo "Do you want to support encrypted connections"
+    echo "Do you want to support SSL (Secure Sockets Layer) connections"
     echo $n "[$FOO] -> $c"
     if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
 	read cc
@@ -1318,7 +1313,7 @@ while [ -z "$FOO" ] ; do
     case "$cc" in
 	[Yy]*)
 	    CRYPTOIRCD="1"
-	    CRYPTOLIB="-lcrypto"
+	    CRYPTOLIB="-lssl -lcrypto"
 	    ;;
 	[Nn]*)
 	    CRYPTOIRCD=""
@@ -1779,9 +1774,9 @@ else
     echo "#undef CRYPT_OPER_PASSWORD" >> $OPTIONS_H
 fi
 if [ -n "$CRYPTOIRCD" ] ; then
-    echo "#define CRYPTOIRCD 1" >> $OPTIONS_H
+    echo "#define USE_SSL 1" >> $OPTIONS_H
 else
-    echo "#undef CRYPTOIRCD" >> $OPTIONS_H
+    echo "#undef USE_SSL" >> $OPTIONS_H
 fi
 if [ -n "$CRYPT_LINK_PASSWORD" ] ; then
     echo "#define CRYPT_LINK_PASSWORD 1" >> $OPTIONS_H
@@ -1855,6 +1850,10 @@ __EOF__
 if [ "$OSNAME" = "Linux (with GLIBC 2.x or greater)" ]; then
    echo "GLIBC2_x="YES"" >> $OPTIONS
    echo ""
+fi
+
+if [ -n "$CRYPTOIRCD" ] ; then
+    make pem
 fi
 
 cat << __EOF__

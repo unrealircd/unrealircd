@@ -148,6 +148,7 @@ aCtab cFlagTab[] = {
 #endif
 	{MODE_NOCTCP, 'C', 0, 0},	/* no CTCPs */
 	{MODE_AUDITORIUM, 'u', 0, 0},
+	{MODE_ONLYSECURE, 'z', 0, 0},
 	{0x0, 0x0, 0x0}
 };
 #endif
@@ -1583,6 +1584,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 	  case MODE_STRIPBADWORDS:
 #endif
 	  case MODE_NOCTCP:
+	  case MODE_ONLYSECURE:
 	  case MODE_NOINVITE:
 		setthephuckingmode:
 		  /* +sp bugfix.. */
@@ -2246,6 +2248,11 @@ static int can_join(cptr, sptr, chptr, key, link, parv)
 /*    if ((chptr->mode.mode & MODE_OPERONLY) && IsOper(sptr)) {
     	goto admok;
     } */
+	if ((chptr->mode.mode & MODE_ONLYSECURE) &&
+		!(sptr->umodes & UMODE_SECURE))
+	{
+		return (ERR_BANNEDFROMCHAN);	
+	}
 	if ((chptr->mode.mode & MODE_OPERONLY) && !IsOper(sptr))
 	{
 		return (ERR_OPERONLY);
@@ -2259,7 +2266,7 @@ static int can_join(cptr, sptr, chptr, key, link, parv)
 	if ((chptr->mode.mode & MODE_NOHIDING) && IsHiding(sptr))
 		return (ERR_NOHIDING);
 
-	if ((IsOper(sptr) && !(chptr->mode.mode & MODE_ADMONLY)))
+	if ((IsOper(sptr) && !((chptr->mode.mode & MODE_ADMONLY))))
 	{
 		return 0;	/* may override */
 	}

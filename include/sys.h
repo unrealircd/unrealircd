@@ -53,7 +53,9 @@
 # include <string.h>
 # endif
 #endif
-
+#ifdef SSL
+#include <openssl/ssl.h>
+#endif
 #ifndef GOT_STRCASECMP
 #define	strcasecmp	mycmp
 #define	strncasecmp	myncmp

@@ -422,7 +422,7 @@
  * Would you like all clients to see the progress of their connections?
  */
 
-#define SHOWCONNECTINFO
+#undef SHOWCONNECTINFO
 
 /*
  * SOCKS proxy checker

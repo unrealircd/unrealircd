@@ -49,7 +49,14 @@
 #ifdef CRYPTOIRCD
 #include <openssl/blowfish.h>
 #endif
-
+#ifdef USE_SSL
+#include <openssl/rsa.h>       /* SSL stuff */
+#include <openssl/crypto.h>
+#include <openssl/x509.h>
+#include <openssl/pem.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>    
+#endif
 typedef struct t_fline aFline;
 typedef struct t_crline aCRline;
 typedef struct t_vhline aVHline;
@@ -217,9 +224,12 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #ifdef CRYPTOIRCD
 #define FLAGS_SECURE	0x8000000
 #endif
+#ifdef USE_SSL
+#define FLAGS_SSL	 0x10000000
+#define FLAGS_SSL_HSHAKE 0x20000000
+#endif
 
 #define FLAGS_MAP       0x80000000	/* Show this entry in /map */
-
 /* Dec 26th, 1997 - added flags2 when I ran out of room in flags -DuffJ */
 
 /* Dec 26th, 1997 - having a go at
@@ -250,7 +260,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define UMODE_WHOIS    0x100000	/* gets notice on /whois */
 #define UMODE_KIX      0x200000	/* usermode +q */
 #define UMODE_BOT       0x400000	/* User is a bot */
-#define UMODE_CODER	0x800000	/* User is a network coder */
+#define UMODE_SECURE	0x800000	/* User is a secure connect */
 #define UMODE_FCLIENT  0x1000000	/* recieve client on far connects.. */
 #define UMODE_HIDING   0x2000000	/* Totally invisible .. */
 #define	UMODE_VICTIM   0x8000000	/* Intentional Victim */
@@ -259,7 +269,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define UMODE_SETHOST    0x40000000	/* used sethost */
 #define UMODE_STRIPBADWORDS 0x80000000	/* */
 
-#define	SEND_UMODES	(UMODE_INVISIBLE|UMODE_OPER|UMODE_WALLOP|UMODE_FAILOP|UMODE_HELPOP|UMODE_REGNICK|UMODE_SADMIN|UMODE_NETADMIN|UMODE_TECHADMIN|UMODE_COADMIN|UMODE_ADMIN|UMODE_SERVICES|UMODE_HIDE|UMODE_EYES|UMODE_WHOIS|UMODE_KIX|UMODE_BOT|UMODE_CODER|UMODE_FCLIENT|UMODE_HIDING|UMODE_DEAF|UMODE_VICTIM|UMODE_HIDEOPER|UMODE_SETHOST|UMODE_STRIPBADWORDS)
+#define	SEND_UMODES	(UMODE_INVISIBLE|UMODE_OPER|UMODE_WALLOP|UMODE_FAILOP|UMODE_HELPOP|UMODE_REGNICK|UMODE_SADMIN|UMODE_NETADMIN|UMODE_TECHADMIN|UMODE_COADMIN|UMODE_ADMIN|UMODE_SERVICES|UMODE_HIDE|UMODE_EYES|UMODE_WHOIS|UMODE_KIX|UMODE_BOT|UMODE_SECURE|UMODE_FCLIENT|UMODE_HIDING|UMODE_DEAF|UMODE_VICTIM|UMODE_HIDEOPER|UMODE_SETHOST|UMODE_STRIPBADWORDS)
 #define	ALL_UMODES (SEND_UMODES|UMODE_SERVNOTICE|UMODE_LOCOP|UMODE_KILLS|UMODE_CLIENT|UMODE_FLOOD|UMODE_CHATOP|UMODE_SERVICES|UMODE_EYES)
 #define	FLAGS_ID	(FLAGS_DOID|FLAGS_GOTID)
 
@@ -329,8 +339,13 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsSecure(x)		((x)->flags & FLAGS_SECURE)
 #define SetSecure(x)		((x)->flags |= FLAGS_SECURE)
 #define ClearSecure(x)		((x)->flags &= ~FLAGS_SECURE)
+#else
+#ifdef USE_SSL
+#define IsSecure(x)		((x)->flags & FLAGS_SSL)
+#else
+#define IsSecure(x)		(0)
 #endif
-
+#endif
 
 #define IsHybNotice(x)		((x)->flags & FLAGS_HYBNOTICE)
 #define SetHybNotice(x)         ((x)->flags |= FLAGS_HYBNOTICE)
@@ -792,6 +807,7 @@ struct t_vhline {
 #define LISTENER_REMOTEADMIN	0x000008
 #define LISTENER_JAVACLIENT	0x000010
 #define LISTENER_MASK		0x000020
+#define LISTENER_SSL		0x000040
 
 struct Client {
 	struct Client *next, *prev, *hnext;
@@ -841,6 +857,10 @@ struct Client {
 #endif
 #ifdef CRYPTOIRCD
 	aCryptInfo *cryptinfo;	/* crypt */
+#endif
+#ifdef USE_SSL
+	struct	SSL	*ssl;
+	struct X509	*client_cert;	
 #endif
 #ifndef NO_FDLIST
 	long lastrecvM;		/* to check for activity --Mika */
@@ -1073,6 +1093,7 @@ struct Channel {
 #endif
 #define MODE_NOCTCP		0x10000000
 #define MODE_AUDITORIUM		0x20000000
+#define MODE_ONLYSECURE		0x40000000
 
 #define is_halfop is_half_op
 /*
@@ -1164,5 +1185,8 @@ extern char *gnulicense[];
 
 #define	FLUSH_BUFFER	-2
 #define	COMMA		","
+#ifdef USE_SSL
+#include "ssl.h"
+#endif
 
 #endif /* __struct_include__ */

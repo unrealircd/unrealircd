@@ -27,7 +27,7 @@ OBJS=agent.o aln.o badwords.o bsd.o channel.o class.o cloak.o crule.o dbuf.o dyn
 	fdlist.o hash.o help.o ircd.o ircsprintf.o list.o lusers.o \
 	match.o packet.o parse.o $(REGEX) res.o $(RES) s_auth.o \
 	s_bsd.o s_conf.o s_debug.o s_err.o s_extra.o s_kline.o \
-	s_misc.o s_numeric.o s_serv.o s_socks.o $(STRTOUL) s_unreal.o \
+	s_misc.o s_numeric.o s_serv.o s_socks.o $(STRTOUL) ssl.o s_unreal.o \
 	s_user.o scache.o send.o support.o userload.o version.o webtv.o \
 	whowas.o zip.o
 
@@ -59,7 +59,8 @@ version.o: version.c ../include/version.h
 	$(CC) $(CFLAGS) -c version.c
 
 ircd: $(OBJS) 
-	$(CC) $(CFLAGS) -o ircd $(OBJS) $(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
+#	$(CC) $(CFLAGS) $(CRYPTOLIB) -o ircd $(OBJS) $(LDFLAGS) $(IRCDLIBS) -lssl
+	$(CC) $(CFLAGS) -o ircd $(CRYPTOLIB) $(OBJS) $(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
 	chmod $(IRCDMODE) ircd
 
 chkconf: ../include/struct.h ../include/config.h ../include/settings.h ../include/sys.h \
@@ -101,6 +102,9 @@ send.o: send.c $(INCLUDES)
 
 webtv.o: webtv.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c webtv.c
+
+ssl.o: ssl.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c ssl.c
 
 match.o: match.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c match.c

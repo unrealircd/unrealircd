@@ -1636,7 +1636,7 @@ void sendto_connectnotice(nick, user, sptr)
 	ircsprintf(connectd,
 	    "*** Notice -- Client connecting on port %d: %s (%s@%s) %s",
 	    sptr->acpt->port, nick, user->username, user->realhost,
-#ifdef CRYPTOIRCD    
+#if defined(CRYPTOIRCD) || defined(USE_SSL)
 	IsSecure(sptr) ? "[secure]" : "");
 #else
 	"");

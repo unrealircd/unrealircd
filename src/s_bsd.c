@@ -390,6 +390,9 @@ int  add_listener(aconf)
 			  case 'S':
 				  cptr->umodes |= LISTENER_SERVERSONLY;
 				  break;
+			  case 's':
+			  	cptr->umodes |= LISTENER_SSL;
+			  	break;
 			  case 'R':
 				  cptr->umodes |= LISTENER_REMOTEADMIN;
 				  break;
@@ -1068,7 +1071,10 @@ void close_connection(cptr)
 #else
 		(void)closesocket(cptr->authfd);
 #endif
-
+#ifdef USE_SSL
+	if (cptr->flags & FLAGS_SSL)
+		SSL_shutdown((SSL *)cptr->ssl);
+#endif
 #ifdef SOCKSPORT
 	if (cptr->socksfd >= 0)
 #ifndef _WIN32
@@ -1448,6 +1454,13 @@ aClient *add_connection(cptr, fd)
 		highest_fd = fd;
 	local[fd] = acptr;
 	acptr->acpt = cptr;
+#ifdef USE_SSL
+	if (cptr->umodes & LISTENER_SSL)
+	{
+		ssl_handshake(acptr);
+		acptr->flags |= FLAGS_SSL;
+	}
+#endif	
 	add_client_to_list(acptr);
 	set_non_blocking(acptr->fd, acptr);
 	set_sock_opts(acptr->fd, acptr);
@@ -1488,7 +1501,15 @@ static int read_packet(cptr, rfd)
 #ifdef INET6
 		length = recvfrom(cptr->fd, readbuf, sizeof(readbuf), 0, 0, 0);
 #else
+#ifndef USE_SSL
 		length = recv(cptr->fd, readbuf, sizeof(readbuf), 0);
+#else
+		if (cptr->flags & FLAGS_SSL)
+	    		length = SSL_read((SSL *)cptr->ssl, readbuf, sizeof(readbuf));
+		else
+			length = recv(cptr->fd, readbuf, sizeof(readbuf), 0);
+		
+#endif
 #endif
 
 		cptr->lasttime = now;
@@ -1665,8 +1686,15 @@ static int read_packet(aClient *cptr)
 	{
 		errno = 0;
 
+#ifndef USE_SSL
 		length = recv(cptr->fd, readbuf, sizeof(readbuf), 0);
-
+#else
+		if (cptr->flags & FLAGS_SSL)
+	    		length = SSL_read((SSL *)cptr->ssl, readbuf, sizeof(readbuf));
+		else
+			length = recv(cptr->fd, readbuf, sizeof(readbuf), 0);
+    
+#endif
 		cptr->lasttime = now;
 		if (cptr->lasttime > cptr->since)
 			cptr->since = cptr->lasttime;

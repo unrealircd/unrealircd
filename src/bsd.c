@@ -118,10 +118,18 @@ int  deliver_it(cptr, str, len)
 		    cptr->name, cptr->status, IsDead(cptr) ? "DEAD" : "", str);
 		return -1;
 	}
+
+#ifdef USE_SSL
+	if (cptr->flags & FLAGS_SSL)
+		 retval = SSL_write((SSL *)cptr->ssl, str, len);	
+	else
+		retval = send(cptr->fd, str, len, 0);
+#else
 #ifndef INET6
 	retval = send(cptr->fd, str, len, 0);
 #else
 	retval = sendto(cptr->fd, str, len, 0, 0, 0);
+#endif
 #endif
 	/*
 	   ** Convert WOULDBLOCK to a return of "0 bytes moved". This
