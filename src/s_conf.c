@@ -1011,7 +1011,7 @@ int	init_conf(char *rootconf, int rehash)
 			if (!rehash)
 				win_error();
 #endif
-#ifdef DYNAMIC_LINKING
+#ifndef STATIC_LINKING
 			Unload_all_testing_modules();
 #endif
 			config_free(conf);
@@ -1023,13 +1023,13 @@ int	init_conf(char *rootconf, int rehash)
 		if (rehash)
 		{
 			config_rehash();
-#ifdef DYNAMIC_LINKING
+#ifndef STATIC_LINKING
 			Unload_all_loaded_modules();
 #else
 			RunHook0(HOOKTYPE_REHASH);
 #endif
 		}
-#ifdef DYNAMIC_LINKING
+#ifndef STATIC_LINKING
 		Init_all_testing_modules();
 #else
 		if (!rehash) {
@@ -1065,7 +1065,7 @@ int	init_conf(char *rootconf, int rehash)
 	}
 	config_free(conf);
 	conf = NULL;
-#ifdef DYNAMIC_LINKING
+#ifndef STATIC_LINKING
 	if (rehash)
 		module_loadall(0);
 #endif
