@@ -37,7 +37,9 @@ R_MODULES=m_sethost.so m_chghost.so m_chgident.so m_setname.so \
 	 m_sajoin.so m_sapart.so m_samode.so m_kick.so m_topic.so \
 	 m_invite.so m_list.so m_time.so m_svskill.so m_sjoin.so \
 	 m_pass.so m_userhost.so m_ison.so m_silence.so m_knock.so \
-	 m_umode2.so m_squit.so m_protoctl.so
+	 m_umode2.so m_squit.so m_protoctl.so m_addline.so m_addomotd.so \
+	 m_wallops.so m_admin.so m_globops.so m_locops.so m_chatops.so \
+	 m_trace.so
 
 COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
          m_sdesc.c m_svsmode.c m_swhois.c m_svsmotd.c m_svsnline.c \
@@ -51,7 +53,9 @@ COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
 	 m_svssno.c m_sajoin.c m_sapart.c m_samode.c m_kick.c m_topic.c \
 	 m_invite.c m_list.c m_time.c m_svskill.c m_sjoin.c \
 	 m_pass.c m_userhost.c m_ison.c m_silence.c m_knock.c m_umode2.c \
-	 m_squit.c m_protoctl.c
+	 m_squit.c m_protoctl.c m_addline.c m_addmotd.c m_addomotd.c \
+	 m_wallops.c m_admin.c m_globops.c m_locops.c m_chatops.c \
+	 m_trace.c
 
 
 MODULES=commands.so $(R_MODULES)
@@ -328,6 +332,42 @@ m_squit.so: m_squit.c $(INCLUDES)
 m_protoctl.so: m_protoctl.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_protoctl.so m_protoctl.c
+
+m_addline.so: m_addline.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_addline.so m_addline.c
+
+m_addmotd.so: m_addmotd.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_addmotd.so m_addmotd.c
+
+m_addomotd.so: m_addomotd.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_addomotd.so m_addomotd.c
+
+m_wallops.so: m_wallops.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_wallops.so m_wallops.c
+
+m_admin.so: m_admin.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_admin.so m_admin.c
+
+m_globops.so: m_globops.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_globops.so m_globops.c
+
+m_locops.so: m_locops.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_locops.so m_locops.c
+
+m_chatops.so: m_chatops.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_chatops.so m_chatops.c
+
+m_trace.so: m_trace.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_trace.so m_trace.c
 
 clean:
 	$(RM) -f *.o *.so *~ core

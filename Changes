@@ -2938,3 +2938,6 @@ seen. gmtime warning still there
   (just like the 'tempshun' in spamfilter and ban version). Suggested by
   Cnils (#0001526). [docs/help.conf will be updated later]
 - Updated docs on tempshun and new spamfilter features.
+- Modulized: addline, addmotd, addomotd, wallops, globops, locops, chatops,
+  admin, trace.
+- Removed: gnotice, goper

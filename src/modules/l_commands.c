@@ -100,6 +100,11 @@ extern int m_pass_Init(ModuleInfo *modinfo), m_userhost_Init(ModuleInfo *modinfo
 extern int m_ison_Init(ModuleInfo *modinfo), m_silence_Init(ModuleInfo *modinfo);
 extern int m_knock_Init(ModuleInfo *modinfo), m_umode2_Init(ModuleInfo *modinfo);
 extern int m_squit_Init(ModuleInfo *modinfo), m_protoctl_Init(ModuleInfo *modinfo);
+extern int m_addline_Init(ModuleInfo *modinfo), m_addmotd_Init(ModuleInfo *modinfo);
+extern int m_addomotd_Init(ModuleInfo *modinfo), m_wallops_Init(ModuleInfo *modinfo);
+extern int m_admin_Init(ModuleInfo *modinfo), m_globops_Init(ModuleInfo *modinfo);
+extern int m_locops_Init(ModuleInfo *modinfo), m_chatops_Init(ModuleInfo *modinfo);
+extern int m_trace_Init(ModuleInfo *modinfo);
 #ifdef GUEST
 extern int m_guest_Init(ModuleInfo *modinfo);
 #endif
@@ -130,6 +135,11 @@ extern int m_pass_Load(int module_load), m_userhost_Load(int module_load);
 extern int m_ison_Load(int module_load), m_silence_Load(int module_load);
 extern int m_knock_Load(int module_load), m_umode2_Load(int module_load);
 extern int m_squit_Load(int module_load), m_protoctl_Load(int module_load);
+extern int m_addline_Load(int module_load), m_addmotd_Load(int module_load);
+extern int m_addomotd_Load(int module_load), m_wallops_Load(int module_load);
+extern int m_admin_Load(int module_load), m_globops_Load(int module_load);
+extern int m_locops_Load(int module_load), m_chatops_Load(int module_load);
+extern int m_trace_Load(int module_load);
 #ifdef GUEST
 extern int m_guest_Load(int module_load);
 #endif
@@ -153,6 +163,9 @@ extern int m_invite_Unload(), m_list_Unload(), m_squit_Unload();
 extern int m_samode_Unload(), m_sjoin_Unload(), m_protoctl_Unload();
 extern int m_pass_Unload(), m_userhost_Unload(), m_knock_Unload();
 extern int m_ison_Unload(), m_silence_Unload();
+extern int m_addline_Unload(), m_addmotd_Unload(), m_addomotd_Unload();
+extern int m_wallops_Unload(), m_admin_Unload(), m_globops_Unload();
+extern int m_locops_Unload(), m_chatops_Unload(), m_trace_Unload();
 #ifdef GUEST
 extern int m_guest_Unload();
 #endif
@@ -250,6 +263,15 @@ int    l_commands_Init(ModuleInfo *modinfo)
 	m_umode2_Init(ModCmdsInfo);
 	m_squit_Init(ModCmdsInfo);
 	m_protoctl_Init(ModCmdsInfo);
+	m_addline_Init(ModCmdsInfo);
+	m_addmotd_Init(ModCmdsInfo);
+	m_addomotd_Init(ModCmdsInfo);
+	m_wallops_Init(ModCmdsInfo);
+	m_admin_Init(ModCmdsInfo);
+	m_globops_Init(ModCmdsInfo);
+	m_locops_Init(ModCmdsInfo);
+	m_chatops_Init(ModCmdsInfo);
+	m_trace_Init(ModCmdsInfo);
 #ifdef GUEST
 	m_guest_Init(ModCmdsInfo);
 #endif
@@ -326,6 +348,15 @@ int    l_commands_Load(int module_load)
 	m_umode2_Load(module_load);
 	m_squit_Load(module_load);
 	m_protoctl_Load(module_load);
+	m_addline_Load(module_load);
+	m_addmotd_Load(module_load);
+	m_addomotd_Load(module_load);
+	m_wallops_Load(module_load);
+	m_admin_Load(module_load);
+	m_globops_Load(module_load);
+	m_locops_Load(module_load);
+	m_chatops_Load(module_load);
+	m_trace_Load(module_load);
 #ifdef GUEST
 	m_guest_Load(module_load);
 #endif
@@ -402,6 +433,15 @@ int	l_commands_Unload(int module_unload)
 	m_umode2_Unload();
 	m_squit_Unload();
 	m_protoctl_Unload();
+	m_addline_Unload();
+	m_addmotd_Unload();
+	m_addomotd_Unload();
+	m_wallops_Unload();
+	m_admin_Unload();
+	m_globops_Unload();
+	m_locops_Unload();
+	m_chatops_Unload();
+	m_trace_Unload();
 #ifdef GUEST
 	m_guest_Unload();
 #endif
