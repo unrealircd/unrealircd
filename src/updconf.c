@@ -21,6 +21,11 @@
 #include <stdio.h>
 #include <string.h>
 #include "../include/config.h"
+#include "../include/setup.h"
+#ifdef _WIN32
+#define index strchr
+#define strcasecmp stricmp
+#endif
 
 #define	BadPtr(x) (!(x) || (*(x) == '\0'))
 #define AllocCpy(x,y) if (x) free(x);  x = (char *) malloc(strlen(y) + 1); strcpy(x,y)
@@ -328,7 +333,8 @@ int main(int argc, char *argv[]) {
 	}
 	else {
 		fd = fopen("ircd.conf","r");
-		fd2 = fopen("unrealircd.conf.new", "w");
+		fd2 = stdout;
+//		fd2 = fopen("unrealircd.conf.new", "w");
 	}
 	if (!fd || !fd2)
 		return;

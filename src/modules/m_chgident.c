@@ -49,17 +49,16 @@
 DLLFUNC int m_chgident(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_chgident_info
+ModuleHeader m_chgident_Header
 #else
-#define m_chgident_info mod_header
-ModuleInfo mod_header
+#define m_chgident_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"chgident",	/* Name of module */
 	"$Id$", /* Version */
 	"/chgident", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
@@ -69,13 +68,13 @@ ModuleInfo mod_header
 */
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int   m_chgident_init(int module_load)
+int   m_chgident_Init(int module_load)
 #endif
 {
 	/* extern variable to export m_chgident_info to temporary
-           ModuleInfo *modulebuffer;
+           ModuleHeader *modulebuffer;
 	   the module_load() will use this to add to the modules linked 
 	   list
 	*/
@@ -83,27 +82,30 @@ int   m_chgident_init(int module_load)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_CHGIDENT, TOK_CHGIDENT, m_chgident, MAXPARA);
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int   m_chgident_load(int module_load)
+int   m_chgident_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_chgident_unload(void)
+int	m_chgident_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_CHGIDENT, TOK_CHGIDENT, m_chgident) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_chgident_info.name);
+				m_chgident_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 
 /* 

@@ -53,17 +53,16 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define TOK_WHO 	"\""	/* 127 4ever !;) */
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_who_info
+ModuleHeader m_who_Header
 #else
-#define m_who_info mod_header
-ModuleInfo mod_header
+#define m_who_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"who",	/* Name of module */
 	"$Id$", /* Version */
 	"command /who", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
@@ -74,39 +73,42 @@ ModuleInfo mod_header
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_who_init(int module_load)
+int    m_who_Init(int module_load)
 #endif
 {
 	/*
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_WHO, TOK_WHO, m_who, MAXPARA);
+	return MOD_SUCCESS;
 }
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_who_load(int module_load)
+int    m_who_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_who_unload(void)
+int	m_who_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_WHO, TOK_WHO, m_who) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_who_info.name);
+				m_who_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 
 
@@ -570,7 +572,7 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				i = 0;
 				if (!chk_who(sptr, ac, showall))
 					continue;
-				if (IsHiding(ac) && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
+				if (IsHiding(ac) && !IsNetAdmin(sptr))
 					continue;
 				 
 				/*

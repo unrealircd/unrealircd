@@ -52,48 +52,50 @@ DLLFUNC int m_away(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_away_info
+ModuleHeader m_away_Header
 #else
-#define m_away_info mod_header
-ModuleInfo mod_header
+#define m_away_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"test",
 	"$Id$",
 	"command /away", 
-	NULL,
+	"3.2-b5",
 	NULL 
     };
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_away_init(int module_load)
+int    m_away_Init(int module_load)
 #endif
 {
 	add_Command(MSG_AWAY, TOK_AWAY, m_away, MAXPARA);
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_away_load(int module_load)
+int    m_away_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_away_unload(void)
+int	m_away_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_AWAY, TOK_AWAY, m_away) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_away_info.name);
+				m_away_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 /***********************************************************************
  * m_away() - Added 14 Dec 1988 by jto.

@@ -50,17 +50,16 @@ DLLFUNC int m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_quit_info
+ModuleHeader m_quit_Header
 #else
-#define m_quit_info mod_header
-ModuleInfo mod_header
+#define m_quit_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"quit",	/* Name of module */
 	"$Id$", /* Version */
 	"command /quit", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
@@ -71,39 +70,45 @@ ModuleInfo mod_header
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_quit_init(int module_load)
+int    m_quit_Init(int module_load)
 #endif
 {
 	/*
 	 * We call our add_Command crap here
 	*/
 	add_CommandX(MSG_QUIT, TOK_QUIT, m_quit, MAXPARA, M_UNREGISTERED|M_USER);
+	return MOD_SUCCESS;
+	
 }
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_quit_load(int module_load)
+int    m_quit_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
+	
 }
 
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_quit_unload(void)
+int	m_quit_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_QUIT, TOK_QUIT, m_quit) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_quit_info.name);
+				m_quit_Header.name);
 	}
+	return MOD_SUCCESS;
+	
 }
 
 

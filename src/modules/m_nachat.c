@@ -49,17 +49,16 @@ DLLFUNC int m_nachat(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define TOK_NACHAT      "AC"    /* *beep* */
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_nachat_info
+ModuleHeader m_nachat_Header
 #else
-#define m_nachat_info mod_header
-ModuleInfo mod_header
+#define m_nachat_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"Nachat",	/* Name of module */
 	"$Id$", /* Version */
 	"command /nachat", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
@@ -70,39 +69,45 @@ ModuleInfo mod_header
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_nachat_init(int module_load)
+int    m_nachat_Init(int module_load)
 #endif
 {
 	/*
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_NACHAT, TOK_NACHAT, m_nachat, MAXPARA);
+	return MOD_SUCCESS;
+	
 }
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_nachat_load(int module_load)
+int    m_nachat_Load(int module_load)
 #endif
-{
+{	
+	return MOD_SUCCESS;
+	
 }
 
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_nachat_unload(void)
+int m_nachat_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_NACHAT, TOK_NACHAT, m_nachat) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_nachat_info.name);
+				m_nachat_Header.name);
 	}
+	return MOD_SUCCESS;
+	
 }
 
 /*
@@ -125,7 +130,7 @@ DLLFUNC int m_nachat(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 #ifdef ADMINCHAT
 	if (MyClient(sptr))
-		if (!(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
+		if (!IsNetAdmin(sptr))
 #else
 	if (MyClient(sptr))
 #endif
@@ -138,8 +143,6 @@ DLLFUNC int m_nachat(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	   MSG_NACHAT, TOK_NACHAT, ":%s", message);
 #ifdef ADMINCHAT
 	sendto_umode(UMODE_NETADMIN, "*** NetAdmin.Chat -- from %s: %s",
-	    parv[0], message);
-	sendto_umode(UMODE_TECHADMIN, "*** NetAdmin.Chat -- from %s: %s",
 	    parv[0], message);
 #endif
 	return 0;

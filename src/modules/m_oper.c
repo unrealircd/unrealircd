@@ -42,26 +42,58 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_dummy(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+DLLFUNC int m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 
 /* Place includes here */
 #define MSG_OPER        "OPER"  /* OPER */
 #define TOK_OPER        ";"     /* 59 */
 
+typedef struct oper_oflag_ {
+	unsigned long oflag;
+	long* umode;	/* you just HAD to make them variables */
+	char** host;
+	char* announce;
+} oper_oflag_t;
+
+static oper_oflag_t oper_oflags[] = {
+	{ OFLAG_NETADMIN,	&UMODE_NETADMIN,	&netadmin_host,
+		"is now a network administrator (N)" },
+	{ OFLAG_SADMIN,		&UMODE_SADMIN,		&sadmin_host,
+		"is now a services administrator (a)" },
+	{ OFLAG_ADMIN,		&UMODE_ADMIN,		&admin_host,
+		"is now a server admin (A)" },
+	{ OFLAG_COADMIN,	&UMODE_COADMIN,		&coadmin_host,
+		"is now a co administrator (C)" },
+	{ OFLAG_ISGLOBAL,	&UMODE_OPER,		&oper_host,
+		"is now an operator (O)" },
+	{ 0,			&UMODE_LOCOP,		&locop_host,
+		"is now a local operator (o)" },
+	{ OFLAG_HELPOP,		&UMODE_HELPOP,		0 ,
+		0 },
+	{ OFLAG_GLOBOP,		&UMODE_FAILOP,		0 ,
+		0 },
+	{ OFLAG_WALLOP,		&UMODE_WALLOP,	0 ,
+		0 },
+	{ OFLAG_WHOIS,		&UMODE_WHOIS,	0 , 		
+		0 },
+	{ OFLAG_HIDE,		&UMODE_HIDE,	0 ,
+		0 },
+	{ 0,			0,	0 ,
+		0 },
+};
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_oper_info
+ModuleHeader m_oper_Header
 #else
-#define m_oper_info mod_header
-ModuleInfo mod_header
+#define m_oper_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"oper",	/* Name of module */
 	"$Id$", /* Version */
 	"command /oper", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
@@ -72,39 +104,42 @@ ModuleInfo mod_header
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_oper_init(int module_load)
+int    m_oper_Init(int module_load)
 #endif
 {
 	/*
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_OPER, TOK_OPER, m_oper, MAXPARA);
+	return MOD_SUCCESS;
 }
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_oper_load(int module_load)
+int    m_oper_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_oper_unload(void)
+int	m_oper_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_OPER, TOK_OPER, m_oper) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_oper_info.name);
+				m_oper_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 
 
@@ -120,10 +155,10 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	ConfigItem_oper *aconf;
 	ConfigItem_oper_from *oper_from;
 	char *name, *password, *encr, nuhhost[NICKLEN+USERLEN+HOSTLEN+6], nuhhost2[NICKLEN+USERLEN+HOSTLEN+6];
-#ifdef CRYPT_OPER_PASSWORD
-	char salt[3];
-	extern char *crypt();
-#endif /* CRYPT_OPER_PASSWORD */
+	unsigned long oper_type = 0;
+	char* host = 0;
+	int i = 0, j = 0;
+	char* announce = 0;
 
 	if (parc < 3) {
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
@@ -170,27 +205,8 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		return 0;
 	}
 
-#ifdef CRYPT_OPER_PASSWORD
-	/* use first two chars of the password they send in as salt */
-
-	/* passwd may be NULL. Head it off at the pass... */
-	salt[0] = '\0';
-	if (password && aconf->password && aconf->password[0]
-	    && aconf->password[1])
-	{
-		salt[0] = aconf->password[0];
-		salt[1] = aconf->password[1];
-		salt[2] = '\0';
-		encr = crypt(password, salt);
-	}
-	else
-	{
-		encr = "";
-	}
-#else /* CRYPT_OPER_PASSWORD */
-	encr = password;
-#endif /* CRYPT_OPER_PASSWORD */
-	if (StrEq(encr, aconf->password))
+	i = Auth_Check(cptr, aconf->auth, password);
+	if (i > 1)
 	{
 		int  old = (sptr->umodes & ALL_UMODES);
 		char *s;
@@ -210,6 +226,9 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 			sendto_serv_butone_token(cptr, sptr->name,
 				MSG_SWHOIS, TOK_SWHOIS, "%s :%s", sptr->name, aconf->swhois);
 		}
+
+#ifdef POTVINIZE /* scary shit below */
+
 		sptr->umodes |= (UMODE_SERVNOTICE | UMODE_WALLOP | UMODE_FAILOP);
 		if (aconf->oflags & OFLAG_NETADMIN) {
 			sptr->umodes |= (UMODE_NETADMIN | UMODE_ADMIN | UMODE_SADMIN | UMODE_OPER);
@@ -316,7 +335,61 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 			sptr->user->snomask |= SNO_EYES;
 		sptr->user->oflag |= aconf->oflags;
 
-		set_snomask(sptr, SNO_DEFOPER);
+#else
+
+/* new oper code */
+
+		sptr->umodes |= OPER_MODES;
+
+/* handle oflags that trigger umodes */
+		
+		while(oper_oflags[j].umode) {
+			if(aconf->oflags & oper_oflags[j].oflag) {	/* we match this oflag */
+				if (!announce && oper_oflags[j].announce) { /* we haven't matched an oper_type yet */
+					host = *oper_oflags[j].host;	/* set the iNAH host */
+					announce = oper_oflags[j].announce; /* set the announcement */
+				}
+				sptr->umodes |= 
+					*oper_oflags[j].umode; /* add the umode for this oflag */
+			}
+			j++;
+		}
+
+		sptr->user->oflag = aconf->oflags;
+
+		if ((aconf->oflags & OFLAG_HIDE) && iNAH) {
+			iNAH_host(sptr, (host != NULL) ? host : "eek.host.is.null.pointer");
+		}
+
+		if (announce != NULL) {
+
+			sendto_ops
+			    ("%s (%s@%s) %s",
+			    parv[0], sptr->user->username,
+			    IsHidden(sptr) ? sptr->user->virthost : sptr->
+			    user->realhost, announce);
+			if (aconf->oflags & (OFLAG_SADMIN | OFLAG_NETADMIN)) {
+				sendto_serv_butone(&me,
+				    ":%s GLOBOPS :%s (%s@%s) %s",
+				    me.name, parv[0], sptr->user->username,
+				    IsHidden(sptr) ? sptr->
+				    user->virthost : sptr->user->realhost, announce);
+			}
+
+		} else {
+			sendto_ops
+			    ("%s (%s@%s) opered but announce is NULL!",
+			    parv[0], sptr->user->username,
+			    IsHidden(sptr) ? sptr->user->virthost : sptr->
+			    user->realhost, announce);
+		}
+
+#endif
+
+		if (!aconf->snomask)
+			set_snomask(sptr, SNO_DEFOPER);
+		else
+			set_snomask(sptr, aconf->snomask);
 		send_umode_out(cptr, sptr, old);
 		sendto_one(sptr, rpl_str(RPL_SNOMASK),
 			me.name, parv[0], get_sno_str(sptr));
@@ -350,15 +423,15 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 			sptr->sockhost);
 
 	}
-	else
+	if (i == -1)
 	{
 		sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name, parv[0]);
 		if (FAILOPER_WARN)
-		sendto_one(sptr,
-		    ":%s %s %s :*** Your attempt has been logged.", me.name,
-		    IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name);
+			sendto_one(sptr,
+			    ":%s %s %s :*** Your attempt has been logged.", me.name,
+			    IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name);
 		sendto_realops
-		    ("Failed OPER attempt by %s (%s@%s) using UID %s [NOPASSWORD]",
+		    ("Failed OPER attempt by %s (%s@%s) using UID %s [FAILEDAUTH]",
 		    parv[0], sptr->user->username, sptr->sockhost, name);
 		sendto_serv_butone(&me,
 		    ":%s GLOBOPS :Failed OPER attempt by %s (%s@%s) using UID %s [---]",
@@ -366,5 +439,6 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		    name);
 		sptr->since += 7;
 	}
+	/* Belay that order, number One. (-2) */
 	return 0;
 }

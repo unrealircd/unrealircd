@@ -17,7 +17,9 @@ Unreal3.2-Selene (BETA4) RELEASE NOTES
   hostname will look different. This is made of three big numbers,
   configured in the config file - and these MUST be the same on all servers
   on the network. Keep these numbers secret, and the cloaking algorithm is
-  uncrackable (within 55 years, that is)
+  uncrackable (within 55 years, that is). The +x algorithm was changed slightly
+  to fix a method of cracking that was found. #define COMPAT_BETA4_KEYS to use the beta4
+  system for compatibility with older betas.
 
 * We use autoconf to help with compiliation, and this should make us able
   to a lot more platform (we have even ported to BeOS). 
@@ -60,6 +62,8 @@ Unreal3.2-Selene (BETA4) RELEASE NOTES
   j - 'junk' notices
   v - vhost notices
   G - gline/shun notices
+  n - nick change notices
+  q - deny nick (Q:line) rejection notices
 
   It shouldn't be too hard to figure out, just play around with it a bit :)
 
@@ -71,6 +75,7 @@ Unreal3.2-Selene (BETA4) RELEASE NOTES
 
   aliases/ircservices.conf (IRCServices, Daylight)
   aliases/epona.conf (Epona)
+  aliases/auspice.conf (Auspice)
   aliases/generic.conf (Magick, Sirius, Wrecked)
   aliases/operstats.conf (OperStats)
   aliases/genericstats.conf (GeoStats, NeoStats)
@@ -78,6 +83,31 @@ Unreal3.2-Selene (BETA4) RELEASE NOTES
 * You can now use an IP in the oper::from and vhost::from fields even if the host resolves
 
 * Added an http proxy scanner (scan_http.so)
+
+* Added oper::snomask to specify default oper snomask modes
+
+* /helpop text has been moved to a config directive, help {}. To keep the standard help
+  text you need to include help.conf so add
+
+  include "help.conf";
+
+  to your config file.
+
+* To be able to use G:lines you must now have the can_gkline flag (or t if old style flags)
+
+* Usermode +T (Tech Admin) has been removed, since it is 100% useless
+
+* Added a make install to copy files to the installation location
+
+* Removed ./ircd, ./killircd, crypt/mkpasswd, ./rehash and merged them into a new
+  ./unreal [start|stop|rehash|mkpasswd]
+  for mkpasswd the format is
+  ./unreal mkpasswd [method] [password]
+
+* Added a new system for crypting passwords. You now do for example
+  password "my password" { crypt; };
+  This allows you to have some crypted passwords and others not. If you have SSL enabled
+  you may also use the md5 and sha1 methods.
 
 * MAKE SURE YOU RERUN ./Config AND RUN make clean BEFORE USING THIS VERSION!!!
 

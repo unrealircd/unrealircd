@@ -53,7 +53,9 @@
 #include <openssl/pem.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>    
+#include <openssl/evp.h>
 #endif
+#include "auth.h" 
 extern int sendanyways;
 
 
@@ -93,6 +95,9 @@ typedef struct _configitem_unknown ConfigItem_unknown;
 typedef struct _configitem_unknown_ext ConfigItem_unknown_ext;
 typedef struct _configitem_alias ConfigItem_alias;
 typedef struct _configitem_alias_format ConfigItem_alias_format;
+typedef struct _configitem_include ConfigItem_include;
+typedef struct _configitem_help ConfigItem_help;
+typedef struct liststruct ListStruct;
 
 typedef struct Watch aWatch;
 typedef struct Client aClient;
@@ -269,19 +274,21 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
  */
 
 
-#define SNO_KILLS   0x0001
-#define SNO_CLIENT  0x0002
-#define SNO_FLOOD   0x0004
-#define SNO_FCLIENT 0x0008
-#define SNO_JUNK    0x0010
-#define SNO_VHOST   0x0020
-#define SNO_EYES    0x0040
-#define SNO_TKL     0x0080
+#define SNO_KILLS      0x0001
+#define SNO_CLIENT     0x0002
+#define SNO_FLOOD      0x0004
+#define SNO_FCLIENT    0x0008
+#define SNO_JUNK       0x0010
+#define SNO_VHOST      0x0020
+#define SNO_EYES       0x0040
+#define SNO_TKL        0x0080
+#define SNO_NICKCHANGE 0x0100
+#define SNO_QLINE      0x0200
 
-#define SNO_DEFOPER "+kcfvG"
+#define SNO_DEFOPER "+kcfvGq"
 #define SNO_DEFUSER "+k"
 
-#define	SEND_UMODES (UMODE_INVISIBLE|UMODE_OPER|UMODE_WALLOP|UMODE_FAILOP|UMODE_HELPOP|UMODE_RGSTRONLY|UMODE_REGNICK|UMODE_SADMIN|UMODE_NETADMIN|UMODE_TECHADMIN|UMODE_COADMIN|UMODE_ADMIN|UMODE_SERVICES|UMODE_HIDE|UMODE_WHOIS|UMODE_KIX|UMODE_BOT|UMODE_SECURE|UMODE_HIDING|UMODE_DEAF|UMODE_VICTIM|UMODE_HIDEOPER|UMODE_SETHOST|UMODE_STRIPBADWORDS|UMODE_WEBTV)
+#define	SEND_UMODES (UMODE_INVISIBLE|UMODE_OPER|UMODE_WALLOP|UMODE_FAILOP|UMODE_HELPOP|UMODE_RGSTRONLY|UMODE_REGNICK|UMODE_SADMIN|UMODE_NETADMIN|UMODE_COADMIN|UMODE_ADMIN|UMODE_SERVICES|UMODE_HIDE|UMODE_WHOIS|UMODE_KIX|UMODE_BOT|UMODE_SECURE|UMODE_HIDING|UMODE_DEAF|UMODE_VICTIM|UMODE_HIDEOPER|UMODE_SETHOST|UMODE_STRIPBADWORDS|UMODE_WEBTV)
 #define	ALL_UMODES (SEND_UMODES|UMODE_SERVNOTICE|UMODE_LOCOP|UMODE_SERVICES)
 #define	FLAGS_ID	(FLAGS_DOID|FLAGS_GOTID)
 
@@ -318,7 +325,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #endif
 
 #define IsNetAdmin(x)		((x)->umodes & UMODE_NETADMIN)
-#define IsTechAdmin(x)		((x)->umodes & UMODE_TECHADMIN)
 #define IsCoAdmin(x)		((x)->umodes & UMODE_COADMIN)
 #define IsSAdmin(x)		((x)->umodes & UMODE_SADMIN)
 #define SendFailops(x)		((x)->umodes & UMODE_FAILOP)
@@ -375,7 +381,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SetAdmin(x)		((x)->umodes |= UMODE_ADMIN)
 #define SetSAdmin(x)		((x)->umodes |= UMODE_SADMIN)
 #define SetNetAdmin(x)		((x)->umodes |= UMODE_NETADMIN)
-#define SetTechAdmin(x)		((x)->umodes |= UMODE_TECHADMIN)
 #define SetCoAdmin(x)		((x)->umodes |= UMODE_COADMIN)
 #define	SetInvisible(x)		((x)->umodes |= UMODE_INVISIBLE)
 #define SetEyes(x)		((x)->user->snomask |= SNO_EYES)
@@ -392,7 +397,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 
 #define ClearAdmin(x)		((x)->umodes &= ~UMODE_ADMIN)
 #define ClearNetAdmin(x)	((x)->umodes &= ~UMODE_NETADMIN)
-#define ClearTechAdmin(x)	((x)->umodes &= ~UMODE_TECHADMIN)
 #define ClearCoAdmin(x)		((x)->umodes &= ~UMODE_COADMIN)
 #define ClearSAdmin(x)		((x)->umodes &= ~UMODE_SADMIN)
 #define ClearKillsF(x)		((x)->user->snomask &= ~SNO_KILLS)
@@ -466,25 +470,25 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OFLAG_LNOTICE	0x00004000	/* Oper can send local serv notices */
 #define OFLAG_GNOTICE	0x00008000	/* Oper can send global notices */
 #define OFLAG_ADMIN	0x00010000	/* Admin */
-#define OFLAG_UMODEC	0x00020000	/* Oper can set umode +c */
-#define OFLAG_UMODEF	0x00040000	/* Oper can set umode +f */
 #define OFLAG_ZLINE	0x00080000	/* Oper can use /zline and /unzline */
-#define OFLAG_EYES      0x00100000	/* Oper auto gets +e */
-#define OFLAG_NETADMIN  0x00200000	/* netadmin gets +N */
-#define OFLAG_TECHADMIN 0x00400000	/* tech admin gets +T */
+#define OFLAG_NETADMIN	0x00200000	/* netadmin gets +N */
 #define OFLAG_COADMIN	0x00800000	/* co admin gets +C */
 #define OFLAG_SADMIN	0x01000000	/* services admin gets +a */
 #define OFLAG_WHOIS     0x02000000	/* gets auto +W on oper up */
 #define OFLAG_HIDE      0x04000000	/* gets auto +x on oper up */
-#define OFLAG_AFOUNDER  0x10000000
-#define OFLAG_COFOUND   0x20000000
+#define OFLAG_TKL       0x10000000	/* can use G:lines and shuns */
+#define OFLAG_GZL       0x20000000	/* can use global Z:lines */
 #define OFLAG_WMASTER	0x40000000
 #define OFLAG_INVISIBLE 0x80000000
-#define OFLAG_LOCAL	(OFLAG_REHASH|OFLAG_HELPOP|OFLAG_GLOBOP|OFLAG_WALLOP|OFLAG_LOCOP|OFLAG_LROUTE|OFLAG_LKILL|OFLAG_KLINE|OFLAG_UNKLINE|OFLAG_LNOTICE|OFLAG_UMODEC|OFLAG_UMODEF)
+#define OFLAG_LOCAL	(OFLAG_REHASH|OFLAG_HELPOP|OFLAG_GLOBOP|OFLAG_WALLOP|OFLAG_LOCOP|OFLAG_LROUTE|OFLAG_LKILL|OFLAG_KLINE|OFLAG_UNKLINE|OFLAG_LNOTICE)
 #define OFLAG_GLOBAL	(OFLAG_LOCAL|OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
 #define OFLAG_ISGLOBAL	(OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
+#define OFLAG_NADMIN	(OFLAG_NETADMIN | OFLAG_SADMIN | OFLAG_ADMIN | OFLAG_GLOBAL)
+#define OFLAG_ADMIN_	(OFLAG_ADMIN | OFLAG_GLOBAL)
+#define OFLAG_SADMIN_	(OFLAG_SADMIN | OFLAG_GLOBAL)
 
-
+#define OPCanTKL(x)	((x)->user->oflag & OFLAG_TKL)
+#define OPCanGZL(x)	((x)->user->oflag & OFLAG_GZL)
 #define OPCanZline(x)   ((x)->user->oflag & OFLAG_ZLINE)
 #define OPCanRehash(x)	((x)->user->oflag & OFLAG_REHASH)
 #define OPCanDie(x)	((x)->user->oflag & OFLAG_DIE)
@@ -504,11 +508,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPIsAdmin(x)	((x)->user->oflag & OFLAG_ADMIN)
 #define OPIsSAdmin(x)	((x)->user->oflag & OFLAG_SADMIN)
 #define OPIsNetAdmin(x) ((x)->user->oflag & OFLAG_NETADMIN)
-#define OPIsTechAdmin(x) ((x)->user->oflag & OFLAG_TECHADMIN)
 #define OPIsCoAdmin(x)	((x)->user->oflag & OFLAG_COADMIN)
-#define OPCanUModeC(x)	((x)->user->oflag & OFLAG_UMODEC)
-#define OPCanUModeF(x)	((x)->user->oflag & OFLAG_UMODEF)
-#define OPIsEyes(x)	((x)->user->oflag & OFLAG_EYES)
 #define OPIsWhois(x)    ((x)->user->oflag & OFLAG_WHOIS)
 
 #define OPSetRehash(x)	((x)->user->oflag |= OFLAG_REHASH)
@@ -529,11 +529,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPSSetAdmin(x)	((x)->user->oflag |= OFLAG_ADMIN)
 #define OPSSetSAdmin(x)	((x)->user->oflag |= OFLAG_SADMIN)
 #define OPSSetNetAdmin(x) ((x)->user->oflag |= OFLAG_NETADMIN)
-#define OPSSetTechAdmin(x) ((x)->user->oflag |= OFLAG_TECHADMIN)
 #define OPSSetCoAdmin(x) ((x)->user->oflag |= OFLAG_COADMIN)
-#define OPSetUModeC(x)	((x)->user->oflag |= OFLAG_UMODEC)
-#define OPSetUModeF(x)	((x)->user->oflag |= OFLAG_UMODEF)
-#define OPSetEyes(x)	((x)->user->oflag |= OFLAG_EYES)
 #define OPSetZLine(x)	((x)->user->oflag |= OFLAG_ZLINE)
 #define OPSetWhois(x)   ((x)->user->oflag |= OFLAG_WHOIS)
 #define OPClearRehash(x)	((x)->user->oflag &= ~OFLAG_REHASH)
@@ -554,11 +550,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPClearAdmin(x)		((x)->user->oflag &= ~OFLAG_ADMIN)
 #define OPClearSAdmin(x)	((x)->user->oflag &= ~OFLAG_SADMIN)
 #define OPClearNetAdmin(x)	((x)->user->oflag &= ~OFLAG_NETADMIN)
-#define OPClearTechAdmin(x)	((x)->user->oflag &= ~OFLAG_TECHADMIN)
 #define OPClearCoAdmin(x)	((x)->user->oflag &= ~OFLAG_COADMIN)
-#define OPClearUModeC(x)	((x)->user->oflag &= ~OFLAG_UMODEC)
-#define OPClearUModeF(x)	((x)->user->oflag &= ~OFLAG_UMODEF)
-#define OPClearEyes(x)		((x)->user->oflag &= ~OFLAG_EYES)
 #define OPClearZLine(x)		((x)->user->oflag &= ~OFLAG_ZLINE)
 #define OPClearWhois(x)         ((x)->user->oflag &= ~OFLAG_WHOIS)
 /*
@@ -667,8 +659,7 @@ struct Server {
 #define M_RESETIDLE 0x0040
 
 struct Command {
-	aCommand		*next;
-	aCommand		*prev;
+	aCommand		*prev, *next;
 	char 			*cmd;
 	int			(*func) ();
 	int			flags;
@@ -696,10 +687,10 @@ struct Command {
 #define TKL_QUIET	0x0010
 
 struct t_kline {
+	aTKline *prev, *next;
 	int  type;
 	char *usermask, *hostmask, *reason, *setby;
 	TS expire_at, set_at;
-	aTKline *prev, *next;
 };
 
 typedef struct ircstatsx {
@@ -885,88 +876,89 @@ struct _configitem {
 };
 
 struct _configitem_me {
-	ConfigFlag flag;
-	ConfigItem *prev, *next;
 	char	   *name, *info;
 	short	   numeric;
 };
 
 struct _configitem_admin {
-	ConfigFlag flag;
 	ConfigItem *prev, *next;
+	ConfigFlag flag;
 	char	   *line; 
 };
 
 struct _configitem_class {
-	ConfigFlag flag;
 	ConfigItem *prev, *next;
+	ConfigFlag flag;
 	char	   *name;
 	int	   pingfreq, connfreq, maxclients, sendq, clients;
 };
 
 struct _configitem_allow {
-	ConfigFlag 	 flag;
 	ConfigItem       *prev, *next;
-	char	         *ip, *hostname, *password, *server;
+	ConfigFlag 	 flag;
+	char	         *ip, *hostname, *server;
+	anAuthStruct	 *auth;	
 	short		 maxperip;
 	int		 port;
 	ConfigItem_class *class;
 };
 
 struct _configitem_oper {
-	ConfigFlag 	 flag;
 	ConfigItem       *prev, *next;
-	char		 *name, *password, *swhois;
+	ConfigFlag 	 flag;
+	char		 *name, *swhois, *snomask;
+	anAuthStruct	 *auth;
 	ConfigItem_class *class;
 	ConfigItem	 *from;
 	long		 oflags;
 };
 
 struct _configitem_oper_from {
-	ConfigFlag 	 flag;
 	ConfigItem       *prev, *next;
+	ConfigFlag 	 flag;
 	char		 *name;
 };
 
 struct _configitem_drpass {
-	ConfigFlag 	 flag;
-	ConfigItem       *prev, *next;
-	char 		 *restart, *die;
+	anAuthStruct	 *restartauth;
+	anAuthStruct	 *dieauth;
 };
 
 struct _configitem_ulines {
-	ConfigFlag 	 flag;
 	ConfigItem       *prev, *next;
+	ConfigFlag 	 flag;
 	char 		 *servername;
 };
 
 struct _configitem_tld {
-	ConfigFlag_tld 	flag;
 	ConfigItem 	*prev, *next;
+	ConfigFlag_tld 	flag;
 	char 		*mask, *motd_file, *rules_file, *channel;
 	struct tm	*motd_tm;
 	aMotd		*rules, *motd;
 };
 
 struct _configitem_listen {
-	ConfigFlag 	flag;
 	ConfigItem 	*prev, *next;
+	ConfigFlag 	flag;
 	char		*ip;
 	int		port;
 	long		options, clients;
 };
 
 struct _configitem_vhost {
-	ConfigFlag 	flag;
 	ConfigItem 	*prev, *next;
+	ConfigFlag 	flag;
 	ConfigItem       *from;
-	char		*login, *password, *virthost, *virtuser;
+	char		*login, *virthost, *virtuser;
+	anAuthStruct	*auth;
 };
 
 struct _configitem_link {
-	ConfigFlag	flag;
 	ConfigItem	*prev, *next;
-	char		*servername, *username, *hostname, *bindip, *hubmask, *leafmask, *connpwd, *recvpwd;
+	ConfigFlag	flag;
+	char		*servername, *username, *hostname, *bindip, *hubmask, *leafmask, *connpwd;
+	anAuthStruct	*recvauth;
 	short		port, options;
 	unsigned char 	leafdepth;
 	int		refcount;
@@ -976,70 +968,74 @@ struct _configitem_link {
 };
 
 struct _configitem_except {
-	ConfigFlag_except      flag;
 	ConfigItem      *prev, *next;
+	ConfigFlag_except      flag;
 	char		*mask;
 };
 
 struct _configitem_ban {
-	ConfigFlag_ban	flag;
 	ConfigItem		*prev, *next;
+	ConfigFlag_ban	flag;
 	char			*mask, *reason;
+	struct IN_ADDR netmask;
+	int bits;
+	short masktype;
+
 };
 
 struct _configitem_badword {
-	ConfigFlag	flag;
 	ConfigItem      *prev, *next;
+	ConfigFlag	flag;
 	char		*word, *replace;
 };
 
 struct _configitem_deny_dcc {
-	ConfigFlag_ban		flag;
 	ConfigItem		*prev, *next;
+	ConfigFlag_ban		flag;
 	char			*filename, *reason;
 };
 
 struct _configitem_deny_link {
-	ConfigFlag_except       flag;
 	ConfigItem              *prev, *next;
+	ConfigFlag_except       flag;
 	char			*mask, *rule, *prettyrule;
 };
 
 struct _configitem_deny_version {
-	ConfigFlag		flag;
 	ConfigItem		*prev, *next;
+	ConfigFlag		flag;
 	char 			*mask, *version, *flags;
 };
 
 struct _configitem_deny_channel {
-	ConfigFlag		flag;
 	ConfigItem		*prev, *next;
+	ConfigFlag		flag;
 	char			*channel, *reason;
 };
 
 struct _configitem_allow_channel {
-	ConfigFlag		flag;
 	ConfigItem		*prev, *next;
+	ConfigFlag		flag;
 	char			*channel;
 };
 
 struct _configitem_log {
-	ConfigFlag flag;
 	ConfigItem *prev, *next;
+	ConfigFlag flag;
 	char *file;
 	long maxsize;
 	int  flags;
 };
 
 struct _configitem_unknown {
-	ConfigFlag flag;
 	ConfigItem *prev, *next;
+	ConfigFlag flag;
 	ConfigEntry *ce;
 };
 
 struct _configitem_unknown_ext {
-	ConfigFlag flag;
 	ConfigItem *prev, *next;
+	ConfigFlag flag;
 	char *ce_varname, *ce_vardata;
 	ConfigFile      *ce_fileptr;
 	int             ce_varlinenum;
@@ -1052,30 +1048,46 @@ struct _configitem_unknown_ext {
 #define ALIAS_COMMAND 4
 
 struct _configitem_alias {
-	ConfigFlag flag;
 	ConfigItem *prev, *next;
+	ConfigFlag flag;
 	ConfigItem_alias_format *format;
 	char *alias, *nick;
 	short type;
 };
 
 struct _configitem_alias_format {
-	ConfigFlag flag;
 	ConfigItem *prev, *next;
+	ConfigFlag flag;
 	ConfigItem_alias *alias;
 	char *format, *parameters;
 };
 	
+struct _configitem_include {
+	ConfigItem *prev, *next;
+	ConfigFlag flag;
+	char *file;
+};
+
+struct _configitem_help {
+	ConfigItem *prev, *next;
+	ConfigFlag flag;
+	char *command;
+	aMotd *text;
+};
 
 struct _irchook {
-	ConfigFlag flag;
 	Hook *prev, *next;
+	ConfigFlag flag;
 	union
 	{
 		int (*intfunc)();
 		void (*voidfunc)();
 	} func;
 };
+
+#define HM_HOST 1
+#define HM_IPV4 2
+#define HM_IPV6 3
 
 /*
  * statistics structures
@@ -1156,7 +1168,7 @@ struct SLink {
 	union {
 		aClient *cptr;
 		aChannel *chptr;
-		ConfigItem *aconf;
+		ListStruct *aconf;
 		aWatch *wptr;
 		aName *whowas;
 		char *cp;
@@ -1218,9 +1230,18 @@ struct DSlink {
 	union {
 		aClient *cptr;
 		aChannel *chptr;
-		ConfigItem *aconf;
+		ListStruct *aconf;
 		char *cp;
 	} value;
+};
+#define AddListItem(item,list) add_ListItem((ListStruct *)item, (ListStruct **)&list)
+#define DelListItem(item,list) del_ListItem((ListStruct *)item, (ListStruct **)&list)
+/* Backwards compatibility */
+#define add_ConfigItem(item,list) add_ListItem((ListStruct *)item, (ListStruct **)&list)
+#define del_ConfigItem(item,list) del_ListItem((ListStruct *)item, (ListStruct **)&list)
+
+struct liststruct {
+	ListStruct *prev, *next;
 };
 
 /* channel structure */
@@ -1377,5 +1398,6 @@ extern char *gnulicense[];
 #define EVENT_HASHES EVENT_DRUGS
 #include "modules.h"
 #include "events.h"
+
 #endif /* __struct_include__ */
 

@@ -81,6 +81,7 @@
 #define IDM_PASTE                       40057
 #define IDM_DELETE                      40058
 #define IDM_SELECTALL                   40059
+#define IDM_NEW				40060
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -89,7 +90,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        149
-#define _APS_NEXT_COMMAND_VALUE         40060
+#define _APS_NEXT_COMMAND_VALUE         40061
 #define _APS_NEXT_CONTROL_VALUE         1164
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

@@ -33,7 +33,7 @@ OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/VERSION.OBJ SRC/S_UNREAL.OBJ SRC/RES_INIT.OBJ \
  SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ \
  SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ \
- SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ
+ SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ
 
 MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OBJ \
  SRC/M_SETNAME.OBJ SRC/M_SETHOST.OBJ SRC/M_CHGIDENT.OBJ SRC/M_SVSMOTD.OBJ \
@@ -42,9 +42,9 @@ MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OB
  SRC/M_ADMINCHAT.OBJ SRC/M_AKILL.OBJ SRC/M_CHGNAME.OBJ SRC/M_GUEST.OBJ SRC/M_HTM.OBJ \
  SRC/M_KLINE.OBJ SRC/M_LAG.OBJ SRC/M_MESSAGE.OBJ SRC/M_NACHAT.OBJ SRC/M_OPER.OBJ \
  SRC/M_PINGPONG.OBJ SRC/M_QUIT.OBJ SRC/M_RAKILL.OBJ SRC/M_RPING.OBJ SRC/M_SENDUMODE.OBJ \
- SRC/M_SQLINE.OBJ SRC/M_KILL.OBJ SRC/M_TECHAT.OBJ SRC/M_TSCTL.OBJ SRC/M_UNKLINE.OBJ \
+ SRC/M_SQLINE.OBJ SRC/M_KILL.OBJ SRC/M_TSCTL.OBJ SRC/M_UNKLINE.OBJ \
  SRC/M_UNSQLINE.OBJ SRC/M_UNZLINE.OBJ SRC/M_WHOIS.OBJ SRC/M_ZLINE.OBJ \
- SRC/SCAN.OBJ SRC/SCAN_SOCKS.OBJ SRC/SCAN_HTTP.OBJ
+ SRC/SCAN.OBJ SRC/SCAN_SOCKS.OBJ SRC/SCAN_HTTP.OBJ SRC/M_TKL.OBJ
 
 
 ALL: CONF WIRCD.EXE
@@ -209,6 +209,15 @@ src/events.obj: src/events.c $(INCLUDES)
 src/umodes.obj: src/umodes.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/umodes.c
 
+src/auth.obj: src/auth.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/auth.c
+
+src/cidr.obj: src/cidr.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/cidr.c
+
+src/ssl.obj: src/ssl.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/ssl.c
+
 src/l_commands.obj: src/modules/l_commands.c $(INCLUDES)
         $(CC) $(CFLAGS) src/modules/l_commands.c
 
@@ -235,6 +244,10 @@ src/m_svsmotd.obj: src/modules/m_svsmotd.c $(INCLUDES)
 
 src/m_svsmode.obj: src/modules/m_svsmode.c $(INCLUDES)
         $(CC) $(CFLAGS) src/modules/m_svsmode.c
+
+src/m_tkl.obj: src/modules/m_tkl.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_tkl.c
+
 
 src/m_swhois.obj: src/modules/m_swhois.c $(INCLUDES)
         $(CC) $(CFLAGS) src/modules/m_swhois.c
@@ -310,9 +323,6 @@ src/m_sendumode.obj: src/modules/m_sendumode.c $(INCLUDES)
 
 src/m_sqline.obj: src/modules/m_sqline.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/modules/m_sqline.c
-
-src/m_techat.obj: src/modules/m_techat.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/modules/m_techat.c
 
 src/m_tsctl.obj: src/modules/m_tsctl.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/modules/m_tsctl.c

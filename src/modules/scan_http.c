@@ -52,74 +52,70 @@
 #endif
 
 #include "modules/scan.h"
-#include "modules/blackhole.h"
 
 typedef struct _hsstruct HSStruct;
 
 struct _hsstruct
 {
-	HStruct *hs;
+	Scan_AddrStruct *hs;
 	int	port;
 };
 
+static vFP			xEadd_scan = NULL;
+static struct SOCKADDR_IN	*xScan_endpoint = NULL;
 
-static iFP			xVS_add = NULL;
-static ConfigItem_blackhole	*blackh_conf = NULL;
-void	scan_http_scan(HStruct *h);
-void	scan_http_scan_port(HSStruct *z);
-#ifndef DYNAMIC_LINKING
-ModuleInfo scan_http_info
-#else
-ModuleInfo mod_header
-#endif
-  = {
-  	2,
-	"scan_http",	/* Name of module */
-	"$Id$", /* Version */
-	"scanning API: http proxies", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
-	NULL 
-    };
-
-/*
- * Our symbol depencies
-*/
 #ifdef STATIC_LINKING
-MSymbolTable scan_http_depend[] = {
-#else
-MSymbolTable mod_depend[] = {
+extern void Eadd_scan();
+extern struct SOCKADDR_IN	Scan_endpoint;
 #endif
-	SymD(VS_Add, xVS_add),
-	SymD(HSlock, xHSlock),
-	SymD(VSlock, xVSlock),
-	SymD(blackhole_conf, blackh_conf),
+
+static Mod_SymbolDepTable modsymdep[] = 
+{
+	MOD_Dep(Eadd_scan, xEadd_scan, "src/modules/scan.so"),
+	MOD_Dep(Scan_endpoint, xScan_endpoint, "src/modules/scan.so"),
 	{NULL, NULL}
 };
 
+
+#ifndef DYNAMIC_LINKING
+ModuleHeader scan_http_Header
+#else
+ModuleHeader Mod_Header
+#endif
+  = {
+	"scan_http",	/* Name of module */
+	"$Id$", /* Version */
+	"scanning API: http proxies", /* Short description of module */
+	"3.2-b5",
+	modsymdep
+    };
 
 /*
  * The purpose of these ifdefs, are that we can "static" link the ircd if we
  * want to
 */
+void	scan_http_scan(Scan_AddrStruct *h);
+void	scan_http_scan_port(HSStruct *z);
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    scan_http_init(int module_load)
+int    scan_http_Init(int module_load)
 #endif
 {
 	/*
 	 * Add scanning hooks
 	*/
-	add_HookX(HOOKTYPE_SCAN_HOST, NULL, scan_http_scan); 
+	HookAddEx(HOOKTYPE_SCAN_HOST, NULL, scan_http_scan); 
+	return MOD_SUCCESS;
 }
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    scan_http_load(int module_load)
+int    scan_http_Load(int module_load)
 #endif
 {
 }
@@ -127,25 +123,25 @@ int    scan_http_load(int module_load)
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	scan_http_unload(void)
+int	scan_http_Unload(int module_unload)
 #endif
 {
-	del_HookX(HOOKTYPE_SCAN_HOST, NULL, scan_http_scan);
+	HookDelEx(HOOKTYPE_SCAN_HOST, NULL, scan_http_scan);
 }
 
 #define HICHAR(s)	(((unsigned short) s) >> 8)
 #define LOCHAR(s)	(((unsigned short) s) & 0xFF)
 
 
-void 	scan_http_scan(HStruct *h)
+void 	scan_http_scan(Scan_AddrStruct *h)
 {
 	THREAD	thread[3];
 	THREAD_ATTR thread_attr;
 	HSStruct *p = NULL;
 	
-	IRCMutexLock((*xHSlock));
+	IRCMutexLock((h->lock));
 	/* First we take 3128 .. */
 	h->refcnt++;
 	p = MyMalloc(sizeof(HSStruct));
@@ -164,47 +160,59 @@ void 	scan_http_scan(HStruct *h)
 	p->hs = h;
 	p->port = 80;
 	IRCCreateThread(thread[2], thread_attr, scan_http_scan_port, p);
-	IRCMutexUnlock((*xHSlock));
+	IRCMutexUnlock((h->lock));
 	IRCJoinThread(thread[0], NULL);		
 	IRCJoinThread(thread[1], NULL);		
 	IRCJoinThread(thread[2], NULL);	
-	IRCMutexLock((*xHSlock));
+	IRCMutexLock((h->lock));
 	h->refcnt--;
-	IRCMutexUnlock((*xHSlock));
+	IRCMutexUnlock((h->lock));
 	IRCExitThread(NULL);
 	return;
 }
 
 void	scan_http_scan_port(HSStruct *z)
 {
-	HStruct			*h = z->hs;
+	Scan_AddrStruct		*h = z->hs;
 	int			retval;
-	char			host[SCAN_HOSTLENGTH];
-	struct			sockaddr_in sin;
-	SOCKET				fd;
-	int				sinlen = sizeof(struct sockaddr_in);
-	unsigned short	sport = blackh_conf->port;
-	unsigned char   httpbuf[160];
+	unsigned char			*cp;
+	struct			SOCKADDR_IN sin;
+	struct			in_addr ia4;
+	SOCKET			fd;
+	unsigned char		httpbuf[160];
+	int			sinlen = sizeof(struct SOCKADDR_IN);
+	unsigned long   	theip;
 	fd_set			rfds;
 	struct timeval  	tv;
-	int				len;
-	/* Get host */
-	IRCMutexLock((*xHSlock));
-	strcpy(host, h->host);
-	IRCMutexUnlock((*xHSlock));
+	int			len;
+
+	IRCMutexLock((h->lock));
+#ifndef INET6
+	sin.SIN_ADDR.S_ADDR = h->in.S_ADDR;
+#else
+	bcopy(sin.SIN_ADDR.S_ADDR, h->in.S_ADDR, sizeof(h->in.S_ADDR));
+#endif
+	IRCMutexUnlock((h->lock));
 	/* IPv6 ?*/
-	if (strchr(host, ':'))
+#ifdef INET6
+	/* ::ffff:ip hack */
+	cp = (u_char *)&h->in.s6_addr;
+	if (!(cp[0] == 0 && cp[1] == 0 && cp[2] == 0 && cp[3] == 0 && cp[4] == 0
+	    && cp[5] == 0 && cp[6] == 0 && cp[7] == 0 && cp[8] == 0
+	    && cp[9] == 0 && ((cp[10] == 0 && cp[11] == 0) || (cp[10] == 0xff
+	    && cp[11] == 0xff))))
+
 		goto exituniverse;
-		
-	sin.sin_addr.s_addr = inet_addr(host);
+#endif
+
 	if ((fd = socket(AFINET, SOCK_STREAM, 0)) < 0)
 	{
 		goto exituniverse;
 		return;
 	}
 
-	sin.sin_port = htons((unsigned short)z->port);
-	sin.sin_family = AF_INET;
+	sin.SIN_PORT = htons((unsigned short)z->port);
+	sin.SIN_FAMILY = AFINET;
 	/* We do this non-blocking to prevent a hang of the entire ircd with newer
 	 * versions of glibc.  Don't you just love new "features?"
 	 * Passing null to this is probably bad, a better method is needed. 
@@ -226,7 +234,7 @@ void	scan_http_scan_port(HSStruct *z)
 	if ((retval = connect(fd, (struct sockaddr *)&sin,
                 sizeof(sin))) == -1 && ERRNO != P_EINPROGRESS)
 	{
-		/* we have no http server! */
+		/* we have no socks server! */
 		CLOSE_SOCK(fd);	
 		goto exituniverse;
 		return;
@@ -243,11 +251,9 @@ void	scan_http_scan_port(HSStruct *z)
 		goto exituniverse;
 	}
 				
-	sin.sin_addr.s_addr = inet_addr(blackh_conf->outip ? blackh_conf->outip : blackh_conf->ip);
 	bzero(httpbuf, sizeof(httpbuf));
 	sprintf(httpbuf, "CONNECT %s:%i HTTP/1.1\n\n",
-		blackh_conf->ip, blackh_conf->port);
-	
+		Inet_ia2p(&xScan_endpoint->SIN_ADDR), ntohs(xScan_endpoint->SIN_PORT));
 	if ((retval = send(fd, httpbuf, strlen(httpbuf), 0)) != strlen(httpbuf))
 	{
 		CLOSE_SOCK(fd);
@@ -270,9 +276,9 @@ void	scan_http_scan_port(HSStruct *z)
 		if (!strncmp(httpbuf, "HTTP/1.0 200", 12))
 		{
 			/* Gotcha */
-			IRCMutexLock((*xVSlock));
-			(*xVS_add)(host, "Open HTTP proxy");
-			IRCMutexUnlock((*xVSlock));
+			IRCMutexLock((h->lock));
+			(*xEadd_scan)(h->in, "Open HTTP proxy");
+			IRCMutexUnlock((h->lock));
 			goto exituniverse;
 		} 
 	}
@@ -282,9 +288,9 @@ void	scan_http_scan_port(HSStruct *z)
 	}
 exituniverse:
 	MyFree(z);
-	IRCMutexLock((*xHSlock));
+	IRCMutexLock((h->lock));
 	h->refcnt--;
-	IRCMutexUnlock((*xHSlock));
+	IRCMutexUnlock((h->lock));
 	IRCExitThread(NULL);
 	return;
 }

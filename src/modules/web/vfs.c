@@ -103,7 +103,7 @@ DLLFUNC int h_u_vfs(HTTPd_Request *r)
 	char	datebuf[100];
 	int	fd;
 	int	i, j;
-	ims = GetHeader(r, "if-modified-since");
+	ims = GetHeader(r, "if-modified-since:");
 	while (p->filename)
 	{
 		if (!match(p->filename, r->url))

@@ -50,7 +50,7 @@ extern ircstats IRCstats;
 aConfiguration iConf;
 
 #define STAR1 OFLAG_SADMIN|OFLAG_ADMIN|OFLAG_NETADMIN|OFLAG_COADMIN
-#define STAR2 OFLAG_TECHADMIN|OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
+#define STAR2 OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
 #define STAR3 OFLAG_INVISIBLE
 
 int oper_access[] = {
@@ -58,7 +58,6 @@ int oper_access[] = {
 	OFLAG_LOCAL, 'o',
 	OFLAG_GLOBAL, 'O',
 	OFLAG_REHASH, 'r',
-	OFLAG_EYES, 'e',
 	OFLAG_DIE, 'D',
 	OFLAG_RESTART, 'R',
 	OFLAG_HELPOP, 'h',
@@ -77,9 +76,6 @@ int oper_access[] = {
 	OFLAG_SADMIN, 'a',
 	OFLAG_NETADMIN, 'N',
 	OFLAG_COADMIN, 'C',
-	OFLAG_TECHADMIN, 'T',
-	OFLAG_UMODEC, 'u',
-	OFLAG_UMODEF, 'f',
 	OFLAG_ZLINE, 'z',
 	OFLAG_WHOIS, 'W',
 	OFLAG_HIDE, 'H',

@@ -49,17 +49,16 @@ DLLFUNC int m_admins(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define TOK_ADMINCHAT	"x"
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_adminchat_info
+ModuleHeader m_adminchat_Header
 #else
-#define m_adminchat_info mod_header
-ModuleInfo mod_header
+#define m_adminchat_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"adminchat",	/* Name of module */
 	"$Id$", /* Version */
 	"command /adchat", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
@@ -70,39 +69,42 @@ ModuleInfo mod_header
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_adminchat_init(int module_load)
+int    m_adminchat_Init(int module_load)
 #endif
 {
 	/*
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_ADMINCHAT, TOK_ADMINCHAT, m_admins, MAXPARA);
+	return MOD_SUCCESS;
 }
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_adminchat_load(int module_load)
+int    m_adminchat_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_adminchat_unload(void)
+int	m_adminchat_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_ADMINCHAT, TOK_ADMINCHAT, m_admins) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_adminchat_info.name);
+				m_adminchat_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 
 /*

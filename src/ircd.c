@@ -52,6 +52,12 @@ Computing Center and Jarkko Oikarinen";
 #undef _KERNEL
 #endif
 #include <errno.h>
+#ifdef HAVE_PSSTRINGS
+#include <sys/exec.h>
+#endif
+#ifdef HAVE_PSTAT
+#include <sys/pstat.h>
+#endif
 #include "h.h"
 #ifndef NO_FDLIST
 #include "fdlist.h"
@@ -544,7 +550,9 @@ extern TS check_pings(TS currenttime, int check_kills)
 			    Find_ban(inetntoa((char *)&cptr->ip), CONF_BAN_IP))
 			{
 				killflag = 1;
-			}
+			} 
+			if (bconf)
+				killflag = 1;
 			if (find_tkline_match(cptr, 0) < 0)
 			{
 				continue;
@@ -783,6 +791,9 @@ int  InitwIRCD(argc, argv)
 	uid_t uid, euid;
 	TS   delay = 0;
 #endif
+#ifdef HAVE_PSTAT
+	union pstun pstats;
+#endif
 	int  i, ggg;
 	int  portarg = 0;
 #ifdef  FORCE_CORE
@@ -889,10 +900,27 @@ int  InitwIRCD(argc, argv)
 			  }
 			  strncpyzt(me.name, p, sizeof(me.name));
 			  break;
-		  case 'H':
-			  unrealmanual();
-			  exit(0);
 #endif
+#ifndef _WIN32
+		  case 'P': {
+			  short type;
+			  char *result;
+			  srandom(TStime());
+			  if ((type = Auth_FindType(p)) == -1) {
+				printf("No such auth type %s\n", p);
+				exit(0);
+			  }
+			  p = *++argv;
+			  argc--;
+			  if (!(result = Auth_Make(type, p))) {
+				printf("Authentication failed\n");
+				exit(0);
+			  }
+			  printf("Encrypted password is: %s\n", result);
+			  exit(0);
+		  }
+#endif			
+			
 		  case 'p':
 			  if ((portarg = atoi(p)) > 0)
 				  portnum = portarg;
@@ -926,6 +954,13 @@ int  InitwIRCD(argc, argv)
 			      "UnrealIRCD/Win32 version", MB_OK);
 #endif
 			  exit(0);
+		case 'W': {
+			struct IN_ADDR bah;
+			int bit;
+			parse_netmask("255.255.255.255/8", &bah, &bit);
+			printf("%s - %d",Inet_ia2p(&bah), bit);
+			exit(0);
+		}
 		  case 'C':
 			  conf_debuglevel = atoi(p);
 			  break;
@@ -1050,7 +1085,7 @@ int  InitwIRCD(argc, argv)
 #endif
 	init_dynconf();
 #ifdef STATIC_LINKING	
-	l_commands_init();
+        l_commands_Init();
 #endif
 	/* Add default class */
 	default_class = (ConfigItem_class *) MyMallocEx(sizeof(ConfigItem_class));
@@ -1059,7 +1094,7 @@ int  InitwIRCD(argc, argv)
 	default_class->maxclients = 100;
 	default_class->sendq = MAXSENDQLENGTH;
 	default_class->name = "default";
-	add_ConfigItem((ConfigItem *) default_class, (ConfigItem **) &conf_class);
+	AddListItem(default_class, conf_class);
 	init_conf2(configfile);
 	validate_configuration();
 	booted = TRUE;
@@ -1162,10 +1197,20 @@ int  InitwIRCD(argc, argv)
 #endif
 	SetupEvents();
 	loop.ircd_booted = 1;
+#if defined(HAVE_SETPROCTITLE)
+	setproctitle("%s", me.name);
+#elif defined(HAVE_PSTAT)
+	pstats.pst_command = me.name;
+	pstat(PSTAT_SETCMD, pstats, strlen(me.name), 0, 0);
+#elif defined(HAVE_PSSTRINGS)
+	PS_STRINGS->ps_nargvstr = 1;
+	PS_STRINGS->ps_argvstr = me.name;
+#endif
 	module_loadall();
 #ifdef STATIC_LINKING
-	l_commands_load(0);
+        l_commands_Load(0);
 #endif
+
 #ifndef NO_FDLIST
 	check_fdlists(TStime());
 #endif

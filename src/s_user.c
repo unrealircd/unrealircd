@@ -70,6 +70,8 @@ int sno_mask[] = {
 	SNO_VHOST, 'v',
 	SNO_EYES, 'e',
 	SNO_TKL, 'G',
+	SNO_NICKCHANGE, 'n',
+	SNO_QLINE, 'q',
 	0, 0
 };
 
@@ -77,7 +79,7 @@ void iNAH_host(aClient *sptr, char *host)
 {
 	if (!sptr->user)
 		return;
-	if (sptr->user->virthost)
+	if (IsHidden(sptr) && sptr->user->virthost)
 		MyFree(sptr->user->virthost);
 	sptr->user->virthost = MyMalloc(strlen(host) + 1);
 	ircsprintf(sptr->user->virthost, "%s", host);
@@ -683,7 +685,7 @@ extern int register_user(cptr, sptr, nick, username, umode, virthost)
 			if (*tmpstr || !*user->realhost
 			    || isdigit(*(tmpstr - 1)))
 				strncpyzt(sptr->sockhost,
-				    (char *)inetntoa((char *)&sptr->ip), sizeof(sptr->sockhost));	/* Fix the sockhost for debug jic */
+				    (char *)Inet_ia2p((struct IN_ADDR*)&sptr->ip), sizeof(sptr->sockhost));	/* Fix the sockhost for debug jic */
 			strncpyzt(user->realhost, sptr->sockhost,
 			    sizeof(sptr->sockhost));
 		}
@@ -1142,14 +1144,14 @@ int  m_nick(cptr, sptr, parc, parv)
 			    (aClient *)find_server_b64_or_real(sptr->user ==
 			    NULL ? (char *)parv[6] : (char *)sptr->user->
 			    server);
-			sendto_realops("Q:lined nick %s from %s on %s", nick,
+			sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s", nick,
 			    (*sptr->name != 0
 			    && !IsServer(sptr) ? sptr->name : "<unregistered>"),
 			    acptrs ? acptrs->name : "unknown server");
 		}
 		else
 		{
-			sendto_realops("Q:lined nick %s from %s on %s",
+			sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s",
 			    nick,
 			    *sptr->name ? sptr->name : "<unregistered>",
 			    me.name);
@@ -1164,7 +1166,7 @@ int  m_nick(cptr, sptr, parc, parv)
 				    nick,
 				    BadPtr(aconf->reason) ? "reason unspecified"
 				    : aconf->reason);
-			sendto_realops("Forbidding Q-lined nick %s from %s.",
+			sendto_snomask(SNO_QLINE, "Forbidding Q-lined nick %s from %s.",
 			    nick, get_client_name(cptr, FALSE));
 			return 0;	/* NICK message ignored */
 		}
@@ -1513,6 +1515,8 @@ int  m_nick(cptr, sptr, parc, parv)
 					return 0;
 				}
 			}
+			sendto_snomask(SNO_NICKCHANGE, "*** Notice -- %s (%s@%s) has changed his/her nickname to %s", sptr->name, sptr->user->username, sptr->user->realhost, nick);
+
 			RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, sptr, nick);
 		}
 		/*
@@ -2017,6 +2021,10 @@ void set_snomask(aClient *sptr, char *snomask) {
 			sptr->user->snomask &= ~SNO_VHOST;
 		if (sptr->user->snomask & SNO_TKL)
 			sptr->user->snomask &= ~SNO_TKL;
+		if (sptr->user->snomask & SNO_NICKCHANGE)
+			sptr->user->snomask &= ~SNO_NICKCHANGE;
+		if (sptr->user->snomask & SNO_QLINE)
+			sptr->user->snomask &= ~SNO_QLINE;
 	}
 }
 
@@ -2185,8 +2193,6 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			ClearHideOper(sptr);
 		if (IsCoAdmin(sptr))
 			ClearCoAdmin(sptr);
-		if (IsTechAdmin(sptr))
-			ClearTechAdmin(sptr);
 		if (sptr->user->snomask & SNO_CLIENT)
 			sptr->user->snomask &= ~SNO_CLIENT;
 		if (sptr->user->snomask & SNO_FCLIENT)
@@ -2201,6 +2207,10 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sptr->user->snomask &= ~SNO_VHOST;
 		if (sptr->user->snomask & SNO_TKL)
 			sptr->user->snomask &= ~SNO_TKL;
+		if (sptr->user->snomask & SNO_NICKCHANGE)
+			sptr->user->snomask &= ~SNO_NICKCHANGE;
+		if (sptr->user->snomask & SNO_QLINE)
+			sptr->user->snomask &= ~SNO_QLINE;
 
 	}
 
@@ -2211,10 +2221,6 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	 */
 	if (MyClient(sptr)) {
 		if (IsAnOper(sptr)) {
-			if (IsClientF(sptr) && !OPCanUModeC(sptr))
-				ClearClientF(sptr);
-			if (IsFloodF(sptr) && !OPCanUModeF(sptr))
-				ClearFloodF(sptr);
 			if (IsAdmin(sptr) && !OPIsAdmin(sptr))
 				ClearAdmin(sptr);
 			if (IsSAdmin(sptr) && !OPIsSAdmin(sptr))
@@ -2223,23 +2229,18 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				ClearNetAdmin(sptr);
 			if (IsCoAdmin(sptr) && !OPIsCoAdmin(sptr))
 				ClearCoAdmin(sptr);
-			if (IsTechAdmin(sptr) && !OPIsTechAdmin(sptr))
-				ClearTechAdmin(sptr);
 			if ((sptr->umodes & UMODE_HIDING)
 			    && !(sptr->user->oflag & OFLAG_INVISIBLE))
 				sptr->umodes &= ~UMODE_HIDING;
 			if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
 			    && !IsSecure(sptr))
 				sptr->umodes &= ~UMODE_SECURE;
-			if (IsTechAdmin(sptr) && IsNetAdmin(sptr))
-				ClearTechAdmin(sptr);
 		}
 	/*
 	   This is to remooove the kix bug.. and to protect some stuffie
 	   -techie
 	 */
-		if ((sptr->umodes & (UMODE_KIX)) && !(IsNetAdmin(sptr)
-		    || IsTechAdmin(sptr)))
+		if ((sptr->umodes & (UMODE_KIX)) && !IsNetAdmin(sptr))
 			sptr->umodes &= ~UMODE_KIX;
 
 		if ((sptr->umodes & UMODE_HIDING) && !IsAnOper(sptr))
@@ -2327,6 +2328,10 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sptr->user->snomask &= ~SNO_VHOST;
 		if (sptr->user->snomask & SNO_TKL)
 			sptr->user->snomask &= ~SNO_TKL;
+		if (sptr->user->snomask & SNO_NICKCHANGE)
+			sptr->user->snomask &= ~SNO_NICKCHANGE;
+		if (sptr->user->snomask & SNO_QLINE)
+			sptr->user->snomask &= ~SNO_QLINE;
 	}
 	if (!(setflags & UMODE_OPER) && IsOper(sptr))
 		IRCstats.operators++;

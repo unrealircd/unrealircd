@@ -74,7 +74,8 @@ HTREEITEM AddItemToTree(HWND, LPSTR, int, short);
 void win_map(aClient *, HWND, short);
 extern Link *Servers;
 extern ircstats IRCstats;
-char *errors;
+char *errors, *RTFBuf;
+extern aMotd *botmotd, *opermotd, *motd, *rules;
 void CleanUp(void)
 {
 	Shell_NotifyIcon(NIM_DELETE ,&SysTray);
@@ -211,8 +212,30 @@ void WipeColors() {
 	}
 
 }
-DWORD CALLBACK RTFToIRC(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) {
-	int fd = (int)dwCookie;
+DWORD CALLBACK BufferIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) {
+	char *buf2;
+	static long size = 0;
+	if (!RTFBuf)
+		size = 0;
+
+	buf2 = MyMalloc(size+cb+1);
+
+	if (RTFBuf)
+		memcpy(buf2,RTFBuf,size);
+
+	memcpy(buf2+size,pbBuff,cb);
+
+	size += cb;
+	if (RTFBuf)
+		MyFree(RTFBuf);
+
+	RTFBuf = buf2;
+
+	pcb = &cb;
+	return 0;
+}
+
+DWORD CALLBACK RTFToIRC(int fd, char *pbBuff, long cb) {
 	char *buffer = (char *)malloc(cb);
 	int i = 0, j = 0, k = 0, start = 0, end = 0;
 	int incolor = 0, bold = 0, uline = 0;
@@ -500,13 +523,6 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 				hRehash = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_REHASH)),0);
 				/* About popup menu */
 				hAbout = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_ABOUT)),0);
-				/* Config popup menu ... get menu items from macros */
-				hConfig = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_CONFIG)),0);
-				ModifyMenu(hConfig, IDM_CONF, MF_BYCOMMAND, IDM_CONF, CPATH);
-				ModifyMenu(hConfig, IDM_MOTD, MF_BYCOMMAND, IDM_MOTD, MPATH);
-				ModifyMenu(hConfig, IDM_OPERMOTD, MF_BYCOMMAND, IDM_OPERMOTD, OPATH);
-				ModifyMenu(hConfig, IDM_BOTMOTD, MF_BYCOMMAND, IDM_BOTMOTD, BPATH);
-				ModifyMenu(hConfig, IDM_RULES, MF_BYCOMMAND, IDM_RULES, RPATH);
 				/* Systray popup menu set the items to point to the other menus*/
 				hTray = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_SYSTRAY)),0);
 				ModifyMenu(hTray, IDM_REHASH, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT)hRehash, "&Rehash");
@@ -583,8 +599,41 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 				 return 0;
 			 }
 			 else if ((p.x >= 140) && (p.x <= 186) && (p.y >= 178) && (p.y <= 190))  {
+				unsigned long i = 60000;
 				ClientToScreen(hDlg,&p);
+				DestroyMenu(hConfig);
+				hConfig = CreatePopupMenu();
+
+				AppendMenu(hConfig, MF_STRING, IDM_CONF, CPATH);
+				AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
+
+				if (conf_include) {
+					ConfigItem_include *inc;
+					for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next) {
+						AppendMenu(hConfig, MF_STRING, i++, inc->file);
+					}
+					AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
+				}
+
+				AppendMenu(hConfig, MF_STRING, IDM_MOTD, MPATH);
+				AppendMenu(hConfig, MF_STRING, IDM_OPERMOTD, OPATH);
+				AppendMenu(hConfig, MF_STRING, IDM_BOTMOTD, BPATH);
+				AppendMenu(hConfig, MF_STRING, IDM_RULES, RPATH);
+				
+				if (conf_tld) {
+					ConfigItem_tld *tlds;
+					AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
+					for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *)tlds->next) {
+						if (!tlds->flag.motdptr)
+							AppendMenu(hConfig, MF_STRING, i++, tlds->motd_file);
+						if (!tlds->flag.rulesptr)
+							AppendMenu(hConfig, MF_STRING, i++, tlds->rules_file);
+					}
+				}
+				AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
+				AppendMenu(hConfig, MF_STRING, IDM_NEW, "New File");
 				TrackPopupMenu(hConfig,TPM_LEFTALIGN|TPM_LEFTBUTTON,p.x,p.y,0,hDlg,NULL);
+
 				return 0;
 			 }
 			 else if ((p.x >= 194) && (p.x <= 237) && (p.y >= 178) && (p.y <= 190)) {
@@ -600,9 +649,16 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 					 exit(0);
 				 }
 			 }
-		}
-
+			}
 			case WM_COMMAND: {
+				if (LOWORD(wParam) >= 60000 && HIWORD(wParam) == 0 && !lParam) {
+					char path[MAX_PATH];
+					GetMenuString(hConfig,LOWORD(wParam), path, MAX_PATH, MF_BYCOMMAND);
+					DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, 
+							(LPARAM)path);
+					return FALSE;
+				}
+
 				switch(LOWORD(wParam)) {
 
 					case IDM_STATUS:
@@ -618,46 +674,60 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 						break;
 
 					case IDM_RHALL:
-					case IDM_RHCONF:
-					case IDM_RHMOTD:
-					case IDM_RHOMOTD:
-					case IDM_RHBMOTD:
-						argv[0] = "The Console";
-						paClient = make_client(NULL, &me);
-						SetNetAdmin(paClient);
-						SetAdmin(paClient);
-						strcpy(paClient->name, "The Console");
-						switch (LOWORD(wParam))
-						{
-						case IDM_RHALL:
-							msg = "Rehashing the wIRCd";
-							argv[2] = "-all";
-	         				m_rehash(&me, paClient, 3, argv);
-							/* fall through! */
-						case IDM_RHCONF:
-							if (LOWORD(wParam) == IDM_RHCONF)
-								msg = "Rehashing the config file";
-							argv[1] = "";
-							argv[2] = NULL;
-							break;
-						case IDM_RHMOTD:
-							msg = "Rehashing all MOTDs and Rules files";
-							argv[2] = "-motd";
-							break;
-						case IDM_RHOMOTD:
-							msg = "Rehashing the OPER MOTD file";
-							argv[2] = "-opermotd";
-							break;
-						case IDM_RHBMOTD:
-							msg = "Rehashing the BOT MOTD file";
-							argv[2] = "-botmotd";
-							break;
-						}
-						MessageBox(hDlg, msg, "Rehashing", MB_OK);
-       					m_rehash(&me, paClient, 3, argv);
-						free(paClient);
+						MessageBox(NULL, "Rehashing all files", "Rehashing", MB_OK);
+						sendto_realops("Rehashing all files via the console");
+						rehash(&me,&me,0);
+						opermotd = (aMotd *) read_file(OPATH, &opermotd);
+						botmotd = (aMotd *) read_file(BPATH, &botmotd);
 						break;
-						case IDM_LICENSE: 
+					case IDM_RHCONF:
+						MessageBox(NULL, "Rehashing the Config file", "Rehashing", MB_OK);
+						sendto_realops("Rehashing the Config file via the console");
+						rehash(&me,&me,0);
+						break;
+					case IDM_RHMOTD: {
+						ConfigItem_tld *tlds;
+						aMotd *amotd;
+						MessageBox(NULL, "Rehashing all MOTD and Rules files", "Rehashing", MB_OK);
+						motd = (aMotd *) read_motd(MPATH);
+						rules = (aMotd *) read_rules(RPATH);
+						for (tlds = conf_tld; tlds;
+						    tlds = (ConfigItem_tld *) tlds->next) {
+							if (!tlds->flag.motdptr) {
+								while (tlds->motd)
+								{
+									amotd = tlds->motd->next;
+									MyFree(tlds->motd->line);
+									MyFree(tlds->motd);
+									tlds->motd = amotd;
+								}
+							}
+							tlds->motd = read_motd(tlds->motd_file);
+							if (!tlds->flag.rulesptr) {
+								while (tlds->rules)
+								{
+									amotd = tlds->rules->next;
+									MyFree(tlds->rules->line);
+									MyFree(tlds->rules);
+									tlds->rules = amotd;
+								}
+							}
+							tlds->rules = read_rules(tlds->rules_file);
+						}
+						sendto_realops("Rehashing all MOTD and Rules files via the console");
+						break;
+					}
+					case IDM_RHOMOTD:
+						MessageBox(NULL, "Rehashing the OperMOTD", "Rehashing", MB_OK);
+						opermotd = (aMotd *) read_file(OPATH, &opermotd);
+						sendto_realops("Rehashing the OperMOTD via the console");
+						break;
+					case IDM_RHBMOTD:
+						MessageBox(NULL, "Rehashing the BotMOTD", "Rehashing", MB_OK);
+						botmotd = (aMotd *) read_file(BPATH, &botmotd);
+						sendto_realops("Rehashing the BotMOTD via the console");
+						break;
+					case IDM_LICENSE: 
 						DialogBox(hInst, "FromVar", hDlg, (DLGPROC)LicenseDLG);
 						break;
 					case IDM_CREDITS:
@@ -688,6 +758,10 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 					case IDM_RULES:
 						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG,
 							(LPARAM)RPATH);
+						break;
+					case IDM_NEW:
+						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, (LPARAM)NULL);
+						break;
 
 				}
 			}
@@ -849,7 +923,10 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			char szText[256];
 			struct stat sb;
 			file = (char *)lParam;
-			wsprintf(szText, "UnrealIRCd Editor - %s", file);
+			if (file)
+				wsprintf(szText, "UnrealIRCd Editor - %s", file);
+			else 
+				strcpy(szText, "UnrealIRCd Editor - New File");
 			SetWindowText(hDlg, szText);			
 			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)RESubClassFunc);
 			hFont = CreateFont(8,0,0,0,FW_HEAVY,0,0,0,ANSI_CHARSET,0,0,PROOF_QUALITY,0,"MS Sans Serif");
@@ -860,6 +937,10 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			SendMessage(GetDlgItem(hDlg, IDC_UNDERLINE), WM_SETFONT, (WPARAM)hFont2,TRUE);
 			SendMessage(GetDlgItem(hDlg, IDC_COLOR), WM_SETFONT, (WPARAM)hFont3,TRUE);
 			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_SETEVENTMASK, 0, (LPARAM)ENM_SELCHANGE);
+			chars.cbSize = sizeof(CHARFORMAT2);
+			chars.dwMask = CFM_FACE;
+			strcpy(chars.szFaceName,"Fixedsys");
+			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_SETCHARFORMAT, (WPARAM)SCF_ALL, (LPARAM)&chars);
 			if ((fd = open(file, _O_RDONLY|_O_BINARY)) != -1) {
 				fstat(fd,&sb);
 				/* Only allocate the amount we need */
@@ -978,7 +1059,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				char text[256];
 				int ans;
 				if (SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_GETMODIFY, 0, 0) != 0) {
-					sprintf(text, "The text in the %s file has changed.\r\n\r\nDo you want to save the changes?", file);
+					sprintf(text, "The text in the %s file has changed.\r\n\r\nDo you want to save the changes?", file ? file : "new");
 					ans = MessageBox(hDlg, text, "UnrealIRCd", MB_YESNOCANCEL|MB_ICONWARNING);
 					if (ans == IDNO)
 						EndDialog(hDlg, TRUE);
@@ -992,12 +1073,36 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 		if (LOWORD(wParam) == IDOK) {
 			int fd;
 			EDITSTREAM edit;
+			OPENFILENAME lpopen;
+			if (!file) {
+				char path[MAX_PATH];
+				path[0] = '\0';
+				lpopen.lStructSize = sizeof(OPENFILENAME);
+				lpopen.hwndOwner = hDlg;
+				lpopen.lpstrFilter = NULL;
+				lpopen.lpstrCustomFilter = NULL;
+				lpopen.nFilterIndex = 0;
+				lpopen.lpstrFile = path;
+				lpopen.nMaxFile = MAX_PATH;
+				lpopen.lpstrFileTitle = NULL;
+				lpopen.lpstrInitialDir = DPATH;
+				lpopen.lpstrTitle = NULL;
+				lpopen.Flags = (OFN_ENABLESIZING|OFN_NONETWORKBUTTON|
+						OFN_OVERWRITEPROMPT);
+				if (GetSaveFileName(&lpopen))
+					file = path;
+				else
+					break;
+			}
+
 			fd = open(file, _O_TRUNC|_O_CREAT|_O_WRONLY|_O_BINARY,_S_IWRITE);
-			edit.dwCookie = (DWORD)fd;
-			edit.pfnCallback = RTFToIRC;
+			edit.dwCookie = 0;
+			edit.pfnCallback = BufferIt;
 			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_SETSEL, -1, -1);
 			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_STREAMOUT, (WPARAM)SF_RTF|SFF_PLAINRTF, (LPARAM)&edit);
-			close(fd);
+			RTFToIRC(fd, RTFBuf, strlen(RTFBuf));
+			free(RTFBuf);
+			RTFBuf = NULL;
 			EndDialog(hDlg, TRUE);
 		}
 		hWnd = GetDlgItem(hDlg, IDC_TEXT);
@@ -1046,7 +1151,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			char text[256];
 			int ans;
 			if (SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_GETMODIFY, 0, 0) != 0) {
-				sprintf(text, "The text in the %s file has changed.\r\n\r\nDo you want to save the changes?", file);
+				sprintf(text, "The text in the %s file has changed.\r\n\r\nDo you want to save the changes?", file ? file : "new");
 				ans = MessageBox(hDlg, text, "UnrealIRCd", MB_YESNOCANCEL|MB_ICONWARNING);
 				if (ans == IDNO)
 					EndDialog(hDlg, TRUE);
@@ -1324,7 +1429,7 @@ int CountRTFSize(char *buffer) {
 			uline = bold = 0;
 		}
 	}
-	return (size+535);
+	return (size+494);
 }
 
 void IRCToRTF(char *buffer, char *string) {
@@ -1332,10 +1437,10 @@ void IRCToRTF(char *buffer, char *string) {
 	int i = 0;
 	short bold = 0, uline = 0;
 	sprintf(string, "{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fmodern\\fprq1\\"
-		"fcharset0 Fixedsys;} {\\f1\\fnil\\fcharset0 Times New Roman;}}\r\n"
+		"fcharset0 Fixedsys;}}\r\n"
 		MIRC_COLORS
 		"\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20");
-	i = 525;
+	i = 487;
 	for (tmp; *tmp; tmp++, i++) {
 		if (*tmp == '{') {
 			strcat(string, "\\{");
@@ -1431,7 +1536,7 @@ void IRCToRTF(char *buffer, char *string) {
 		}
 		string[i] = *tmp;
 	}
-	strcat(string, "\\f1\\par\r\n}");
+	strcat(string, "\\par\r\n}");
 	return;
 }
 

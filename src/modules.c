@@ -35,6 +35,9 @@
 #ifdef _WIN32
 #include <io.h>
 #define RTLD_NOW 0
+#elif defined(HPUX)
+#include <dl.h>
+#define RTLD_NOW BIND_IMMEDIATE
 #else
 #include <dlfcn.h>
 #endif
@@ -45,243 +48,291 @@
 #define RTLD_NOW RTLD_LAZY
 #endif
 
-ModuleInfo	 *Modules[MAXMODULES];
-unsigned char	ModuleFlags[MAXMODULES];
 Hook	   	*Hooks[MAXHOOKTYPES];
 Hook 	   	*global_i = NULL;
+Module          *Modules = NULL;
 
-int  modules_loaded = 0;
+Module *Module_make(ModuleHeader *header, 
+#ifdef _WIN32
+       HMODULE mod
+#else
+       void *mod
+#endif
+       );
 
-void module_init(void)
+void Module_Init(void)
 {
-	bzero(Modules, sizeof(Modules));
 	bzero(Hooks, sizeof(Hooks));
-	bzero(ModuleFlags, sizeof(ModuleFlags));
-	modules_loaded = 0;
 }
 
-int  load_module(char *module, int module_load)
+Module *Module_Find(char *name)
+{
+	Module *p;
+	
+	for (p = Modules; p; p = p->next)
+	{
+		if (!strcmp(p->header->name, name))
+		{
+			return (p);
+		}
+	}
+	return NULL;
+	
+}
+
+/*
+ * Returns an error if insucessful .. yes NULL is OK! 
+*/
+char  *Module_Load (char *path, int load)
 {
 #ifndef STATIC_LINKING
 #ifdef _WIN32
-	HMODULE Mod;
-#else
-	void *Mod;
-#endif
-	int (*mod_init) ();
-	int (*mod_load) ();
-	void (*mod_unload) ();
-	MSymbolTable *mod_dep;
-	ModuleInfo *mod_header;
-	int  i;
-
-	Debug((DEBUG_DEBUG, "Attemping to load %s",
-		module));
-
-	if (Mod = irc_dlopen(module, RTLD_NOW))
+	HMODULE 	Mod;
+#else /* _WIN32 */
+	void   		*Mod;
+#endif /* _WIN32 */
+	int		(*Mod_Init)();
+	int             (*Mod_Load)();
+	int             (*Mod_Unload)();
+	static char 	errorbuf[1024];
+	ModuleHeader    *mod_header;
+	int		ret = 0;
+	Module          *mod = NULL;
+	Debug((DEBUG_DEBUG, "Attempting to load module from %s",
+	       path));
+	if ((Mod = irc_dlopen(path, RTLD_NOW)))
 	{
-		/* Succeed loading module */
-		/* We check header */
-		mod_header = irc_dlsym(Mod, "mod_header");
-		if (!mod_header) 
-		{
-			Debug((DEBUG_DEBUG, "Didn't find mod_header, trying _mod_header"));
-			mod_header = irc_dlsym(Mod, "_mod_header");
-		}
+		/* We have engaged the borg cube. Scan for lifesigns. */
+		irc_dlsym(Mod, "Mod_Header", mod_header);
 		if (!mod_header)
 		{
-			config_progress("%s: cannot load, no module header",
-				module);
 			irc_dlclose(Mod);
-			return -1;
+			return ("Unable to locate Mod_Header");
 		}
-		if (mod_header->mversion != MOD_VERSION)
+		if (!mod_header->modversion)
 		{
-			config_progress
-			    ("Failed to load module %s: mversion is %i, not %i as we require",
-			    module, mod_header->mversion, MOD_VERSION);
 			irc_dlclose(Mod);
-			return -1;
+			return ("Lacking mod_header->modversion");
 		}
-		if (!mod_header->name || !mod_header->version
-		    || !mod_header->description)
+		if (match(MOD_WE_SUPPORT, mod_header->modversion))
 		{
-			config_progress
-			    ("Failed to load module %s: name/version/description missing",
-			    module);
+			ircsprintf(errorbuf, "Unsupported version, we support %s, %s is %s",
+				   MOD_WE_SUPPORT, path, mod_header->modversion);
 			irc_dlclose(Mod);
-			return -1;
+			return(errorbuf);
 		}
-		for (i = 0; i < MAXMODULES; i++)
-			if (Modules[i] && !strcmp(Modules[i]->name, mod_header->name))
+		if (!mod_header->name || !mod_header->version ||
+		    !mod_header->description)
+		{
+			irc_dlclose(Mod);
+			return("Lacking sane header pointer");
+		}
+		if (Module_Find(mod_header->name))
+		{
+		        irc_dlclose(Mod);
+			return (NULL);
+		}
+		mod = (Module *)Module_make(mod_header, Mod);
+		irc_dlsym(Mod, "Mod_Init", Mod_Init);
+		if (!Mod_Init)
+		{
+			Module_free(mod);
+			return ("Unable to locate Mod_Init");
+		}
+		irc_dlsym(Mod, "Mod_Unload", Mod_Unload);
+		if (!Mod_Unload)
+		{
+			Module_free(mod);
+			return ("Unable to locate Mod_Unload");
+		}
+		irc_dlsym(Mod, "Mod_Load", Mod_Load);
+		if (!Mod_Load)
+		{
+			Module_free(mod);
+			return ("Unable to locate Mod_Load"); 
+		}
+		if (Module_Depend_Resolve(mod) == -1)
+		{
+			Module_free(mod);
+			return ("Dependancy problem");
+		}
+		if ((ret = (*Mod_Init)(load)) < MOD_SUCCESS)
+		{
+			ircsprintf(errorbuf, "Mod_Init returned %i",
+				   ret);
+			/* We EXPECT the module to have cleaned up it's mess */
+		        Module_free(mod);
+			return (errorbuf);
+		}
+		
+		if (load)
+		{
+			irc_dlsym(Mod, "Mod_Load", Mod_Load);
+			if (!Mod_Load)
 			{
-				Debug((DEBUG_DEBUG, "Module already loaded, duplicate"));
-				/* We will unload it without notice, its a duplicate */
-				irc_dlclose(Mod);
-				return 1;
+				/* We cannot do delayed unloading if this happens */
+				(*Mod_Unload)();
+				Module_free(mod);
+				return ("Unable to locate Mod_Load"); 
 			}
-		for (i = 0; i < MAXMODULES; i++)
-		{
-			if (!Modules[i])
+			if ((ret = (*Mod_Load)(load)) < MOD_SUCCESS)
 			{
-				Modules[i] = mod_header;
-				modules_loaded++;
+				ircsprintf(errorbuf, "Mod_Load returned %i",
+					  ret);
+				(*Mod_Unload)();
+				Module_free(mod);
+				return (errorbuf);
+			}
+			mod->flags |= MODFLAG_LOADED;
+		}
+		AddListItem(mod, Modules);
+		return NULL;
+	}
+	else
+	{
+		/* Return the error .. */
+		return ((char *)irc_dlerror());
+	}
+					     
+	
+#else /* !STATIC_LINKING */
+	return "We don't support dynamic linking";
+#endif
+	
+}
+
+Module *Module_make(ModuleHeader *header, 
+#ifdef _WIN32
+       HMODULE mod
+#else
+       void *mod
+#endif
+       )
+{
+	Module *modp = NULL;
+	
+	modp = (Module *)MyMallocEx(sizeof(Module));
+	modp->header = header;
+	modp->dll = mod;
+	modp->flags = MODFLAG_NONE;
+	modp->children = NULL;
+	return (modp);
+}
+
+/* 
+ * Returns -1 if you cannot unload due to children still alive 
+ * Returns 1 if successful 
+ */
+int    Module_free(Module *mod)
+{
+	Module *p;
+	ModuleChild *cp;
+	/* Do not kill parent if children still alive */
+
+	if (mod->children)
+        {
+		for (cp = mod->children; cp; cp = cp->next)
+		{
+			sendto_realops("Unloading child module %s",
+				      cp->child->header->name);
+			Module_Unload(cp->child->header->name, 0);
+		}
+	}
+	for (p = Modules; p; p = p->next)
+	{
+		for (cp = p->children; cp; cp = cp->next)
+		{
+			if (cp->child == mod)
+			{
+				DelListItem(mod, p->children);
+				/* We can assume there can be only one. */
 				break;
 			}
 		}
-		if (i == MAXMODULES)
-		{
-			config_progress
-			    ("Failed to load module %s: Too many modules loaded");
-			Modules[i] = NULL;
-			irc_dlclose(Mod);
-			return -1;
-		}
-		
-		/* Locate mod_depend */
-		mod_dep =  irc_dlsym(Mod, "mod_depend");
-		if (!mod_dep)
-			mod_dep = irc_dlsym(Mod, "_mod_depend");
-		if (mod_dep)
-		{
-			if (module_depend_resolve(mod_dep) == -1)
-			{
-				config_progress("%s: cannot load, missing dependancy",
-					module);
-				Modules[i] = NULL;
-				irc_dlclose(Mod);
-				return -1;
-			}	
-		}		
-		
-		/* Locate mod_init function */
-		mod_init = irc_dlsym(Mod, "mod_init");
-		if (!mod_init)
-		{
-			mod_init = irc_dlsym(Mod, "_mod_init");
-			if (!mod_init)
-			{
-				config_progress
-				    ("Failed to load module %s: Could not locate mod_init",
-				    module);
-				Modules[i] = NULL;
-				irc_dlclose(Mod);
-				return -1;
-			}
-		}
-		mod_unload = irc_dlsym(Mod, "mod_unload");
-		if (!mod_unload)
-		{
-			mod_unload = irc_dlsym(Mod, "_mod_unload");
-			if (!mod_unload)
-			{
-				config_progress
-				    ("Failed to load module %s: Could not locate mod_unload",
-				    module);
-				Modules[i] = NULL;
-				irc_dlclose(Mod);
-				return -1;
-			}
-		}
-		
-		mod_header->dll = Mod;
-		mod_header->unload = mod_unload;
-
-		if ((*mod_init)(module_load) < 0)
-		{
-			config_progress
-			    ("Failed to load module %s: mod_init failed",
-			    module);
-			Modules[i] = NULL;
-			irc_dlclose(Mod);
-			return -1;
-			
-		}
-		ModuleFlags[i] = 0;
-		if (module_load)
-		{
-			mod_load = irc_dlsym(Mod, "mod_load");
-			if (!mod_load)
-			{
-				mod_load = irc_dlsym(Mod, "_mod_load");
-				if (mod_load)
-				{
-					(*mod_load)(module_load);
-					ModuleFlags[i] |= MODFLAG_LOADED;
-				}
-			}
-		}
-		return 1;
 	}
-#ifndef _WIN32
-	else
-	{
-		const char *err = irc_dlerror();
-
-		if (err)
-		{
-			config_progress("Failed to load module %s: %s",
-			    module, err);
-		}
-		return -1;
-	}
-#endif
-#endif
-}
-
-void    unload_all_modules(void)
-{
-#ifndef STATIC_LINKING
-	int	i;
-	
-	for (i = 0; i < MAXMODULES; i++)
-		if (Modules[i])
-		{
-	
-			/* Call unload */
-			(*Modules[i]->unload)();
-	
-			irc_dlclose(Modules[i]->dll);
-		
-			Modules[i] = NULL;
-			ModuleFlags[i] = MODFLAG_NONE;
-			modules_loaded--;
-	}
-#endif
-	return;
-}
-
-int	unload_module(char *name)
-{
-#ifndef STATIC_LINKING
-	int	i;
-	
-	for (i = 0; i < MAXMODULES; i++)
-		if (Modules[i])
-			if (!strcmp(Modules[i]->name, name))
-				break;		
-	if (i == MAXMODULES)
-		return -1;
-	
-	/* Call unload */
-	(*Modules[i]->unload)();
-	
-	irc_dlclose(Modules[i]->dll);
-	
-	Modules[i] = NULL;
-	ModuleFlags[i] = MODFLAG_NONE;
-	modules_loaded--;
+	DelListItem(mod, Modules);
+	irc_dlclose(mod->dll);
+	MyFree(mod);
 	return 1;
-#endif
 }
 
-vFP module_sym(char *name)
+/*
+ *  Module_Unload ()
+ *     char *name        Internal module name
+ *     int unload        If /module unload
+ *  Returns:
+ *     -1                Not able to locate module, severe failure, anything
+ *      1                Module unloaded
+ *      2                Module wishes delayed unloading, has placed event
+ */
+int     Module_Unload(char *name, int unload)
+{
+	Module *m;
+	int    (*Mod_Unload)();
+	int    ret;
+	for (m = Modules; m; m = m->next)
+	{
+		if (!strcmp(m->header->name, name))
+		{
+		       break;
+		}
+	}      
+	if (!m)
+		return -1;
+	irc_dlsym(m->dll, "Mod_Unload", Mod_Unload);
+	if (!Mod_Unload)
+	{
+		return -1;
+	}
+	ret = (*Mod_Unload)(unload);
+	if (ret == MOD_DELAY)
+	{
+		return 2;
+	}
+	if (ret == MOD_FAILED)
+	{
+		return -1;
+	}
+	/* No more pain detected, let's unload */
+	DelListItem(m, Modules);
+	Module_free(m);
+	return 1;
+}
+
+
+vFP Module_Sym(char *name)
 {
 #ifndef STATIC_LINKING
 	vFP	fp;
 	char	buf[512];
 	int	i;
-	ModuleInfo *mi;
+	Module *mi;
+	if (!name)
+		return NULL;
+	
+	ircsprintf(buf, "_%s", name);
+
+	/* Run through all modules and check for symbols */
+	for (mi = Modules; mi; mi = mi->next)
+	{
+		irc_dlsym(mi->dll, name, fp);
+		if (fp)
+			return (fp);
+		irc_dlsym(mi->dll, buf, fp);
+		if (fp)
+			return (fp);
+	}
+	return NULL;
+#endif
+}
+
+vFP Module_SymX(char *name, Module **mptr)
+{
+#ifndef STATIC_LINKING
+	vFP	fp;
+	char	buf[512];
+	int	i;
+	Module *mi;
 	
 	if (!name)
 		return NULL;
@@ -289,28 +340,35 @@ vFP module_sym(char *name)
 	ircsprintf(buf, "_%s", name);
 
 	/* Run through all modules and check for symbols */
-	for (i = 0; i < MAXMODULES; i++)
+	for (mi = Modules; mi; mi = mi->next)
 	{
-		mi = Modules[i];
-		if (!mi)
-			continue;
-			
-		if (fp = (vFP) irc_dlsym(mi->dll, name))
+		irc_dlsym(mi->dll, name, fp);
+		if (fp)
+		{
+			*mptr = mi;
 			return (fp);
-		if (fp = (vFP) irc_dlsym(mi->dll, buf))
+		}
+		irc_dlsym(mi->dll, buf, fp);
+		if (fp)
+		{
+			*mptr = mi;
 			return (fp);
+		}
 	}
+	*mptr = NULL;
 	return NULL;
 #endif
 }
 
 
+
+
 void	module_loadall(int module_load)
 {
 #ifndef STATIC_LINKING
-	iFP	fp;
+	iFP	fp, fpp;
 	int	i;
-	ModuleInfo *mi;
+	Module *mi;
 	
 	if (!loop.ircd_booted)
 	{
@@ -318,52 +376,81 @@ void	module_loadall(int module_load)
 		return ;
 	}
 	/* Run through all modules and check for module load */
-	for (i = 0; i < MAXMODULES; i++)
+	for (mi = Modules; mi; mi = mi->next)
 	{
-		mi = Modules[i];
-		if (!mi)
+		if (mi->flags & MODFLAG_LOADED)
 			continue;
-		if (ModuleFlags[i] & MODFLAG_LOADED)
-			continue;
-		if (fp = (iFP) irc_dlsym(mi->dll, "mod_load"))
-		{
-		}
-		else
-		if (fp = (iFP) irc_dlsym(mi->dll, "_mod_load"))
-		{
-		}
+		irc_dlsym(mi->dll, "Mod_Load", fp);
+		irc_dlsym(mi->dll, "_Mod_Load", fpp);
+		if (fp);
+		else if (fpp) { fp = fpp; }
 		else
 		{
 			/* else, we didn't find it */
 			continue;
 		}
 		/* Call the module_load */
-		if ((*fp)(module_load) < 0)
+		if ((*fp)(module_load) != MOD_SUCCESS)
 		{
-			config_error("cannot load module %s", mi->name);
+			config_error("cannot load module %s", mi->header->name);
 		}
 		else
 		{
-			ModuleFlags[i] |= MODFLAG_LOADED;
+			mi->flags |= MODFLAG_LOADED;
 		}
 		
 	}
 #endif
 }
 
-int	module_depend_resolve(MSymbolTable *dep)
+inline int	Module_IsAlreadyChild(Module *parent, Module *child)
 {
-	MSymbolTable *d = dep;
+	ModuleChild *mcp;
+	
+	for (mcp = parent->children; mcp; mcp = mcp->next)
+	{
+		if (mcp->child == child) 
+			return 1;
+	}
+	return 0;
+}
+
+inline void	Module_AddAsChild(Module *parent, Module *child)
+{
+	ModuleChild	*childp = NULL;
+	
+	childp = (ModuleChild *) MyMallocEx(sizeof(ModuleChild));
+	childp->child = child;
+	AddListItem(childp, parent->children);
+}
+
+int	Module_Depend_Resolve(Module *p)
+{
+	Mod_SymbolDepTable *d = p->header->symdep;
+	Module		   *parental = NULL;
+	
+	if (d == NULL)
+	{
+		return 0;
+	}
 #ifndef STATIC_LINKING
 	while (d->pointer)
 	{
-		*(d->pointer) = module_sym(d->symbol);
+		*(d->pointer) = Module_SymX(d->symbol, &parental);
 		if (!*(d->pointer))
 		{
-			config_progress("module dependancy error: cannot resolve symbol %s",
-				d->symbol);
-			return -1;
-		}	
+			config_progress("Unable to resolve symbol %s, attempting to load %s to find it", d->symbol, d->module);
+			Module_Load(d->module,0);
+			*(d->pointer) = Module_SymX(d->symbol, &parental);
+			if (!*(d->pointer)) {
+				config_progress("module dependancy error: cannot resolve symbol %s",
+					d->symbol);
+				return -1;
+			}
+			
+		}
+		if (!Module_IsAlreadyChild(parental, p))
+			Module_AddAsChild(parental, p);
 		d++;	
 	}
 	return 0;
@@ -379,8 +466,9 @@ int	module_depend_resolve(MSymbolTable *dep)
 
 int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	int 		i;
-	ModuleInfo *mi;
+	int		i;
+	char 		*ret;
+	Module          *mi;
 	
 	if (!IsAdmin(sptr))
 	{
@@ -401,9 +489,16 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    me.name, parv[0], "MODULE LOAD");
 			return 0;
 		}
-		sendto_realops("Trying to load module %s", parv[2]);
-		if (load_module(parv[2],1) == 1)
+		if (!(ret = Module_Load(parv[2], 1)))
+		{
 			sendto_realops("Loaded module %s", parv[2]);
+			return;
+		}
+		else
+		{
+			sendto_realops("Module load of %s failed: %s",
+				parv[2], ret);
+		}
 	}
 	else
 	if (!match(parv[1], "unload"))
@@ -415,24 +510,31 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			return 0;
 		}
 		sendto_realops("Trying to unload module %s", parv[2]);
-		if (unload_module(parv[2]) == 1)
-			sendto_realops("Unloaded module %s", parv[2]);
-		
+		i = Module_Unload(parv[2], 0);
+		{
+			if (i == 1)
+				sendto_realops("Unloaded module %s", parv[2]);
+			else if (i == 2)
+				sendto_realops("Delaying module unload of %s",
+					parv[2]);
+			else if (i == -1)
+				sendto_realops("Couldn't unload module %s",	
+					parv[2]);
+		}
 	}		
 	else
 	if (!match(parv[1], "status"))
 	{
-		if (modules_loaded == 0)
+		if (!Modules)
 		{
 			sendto_one(sptr, ":%s NOTICE %s :*** No modules loaded", me.name, sptr->name);
 			return 1;
 		}
-		for (i = 0; i < MAXMODULES; i++)
-			if (mi = Modules[i])
-			{
-				sendto_one(sptr, ":%s NOTICE %s :*** %s - %s (%s)", me.name, sptr->name,
-					mi->name, mi->version, mi->description);	
-			}
+		for (mi = Modules; mi; mi = mi->next)
+		{
+			sendto_one(sptr, ":%s NOTICE %s :*** %s - %s (%s)", me.name, sptr->name,
+				mi->header->name, mi->header->version, mi->header->description);	
+		}
 	}
 	else
 	{
@@ -442,7 +544,7 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return 1;
 }
 
-void	add_HookX(int hooktype, int (*func)(), void (*vfunc)())
+void	HookAddEx(int hooktype, int (*func)(), void (*vfunc)())
 {
 	Hook *p;
 	
@@ -451,10 +553,10 @@ void	add_HookX(int hooktype, int (*func)(), void (*vfunc)())
 		p->func.intfunc = func;
 	if (vfunc)
 		p->func.voidfunc = vfunc;
-	add_ConfigItem((ConfigItem *) p, (ConfigItem **) &Hooks[hooktype]);
+	AddListItem(p, Hooks[hooktype]);
 }
 
-void	del_HookX(int hooktype, int (*func)(), void (*vfunc)())
+void	HookDelEx(int hooktype, int (*func)(), void (*vfunc)())
 {
 	Hook *p;
 	
@@ -462,8 +564,47 @@ void	del_HookX(int hooktype, int (*func)(), void (*vfunc)())
 		if ((func && (p->func.intfunc == func)) || 
 			(vfunc && (p->func.voidfunc == vfunc)))
 		{
-			del_ConfigItem((ConfigItem *) p, (ConfigItem **) &Hooks[hooktype]);
+			DelListItem(p, Hooks[hooktype]);
 			return;
 		}
 }
 
+EVENT(e_unload_module_delayed)
+{
+	char	*name = (char *) data;
+	int	i; 
+	sendto_realops("Delayed unload of module %s in progress",
+		name);
+	
+	i = Module_Unload(name, 0);
+	if (i == 2)
+	{
+		sendto_realops("Delayed unload of %s, again",
+			name);
+	}
+        if (i == -2)
+	{
+		
+	}
+	if (i == -1)
+	{
+		sendto_realops("Failed to unload '%s'", name);
+	}
+	if (i == 1)
+	{
+		sendto_realops("Unloaded module %s", name);
+	}
+	return;
+}
+
+void	unload_all_modules(void)
+{
+	Module *m;
+	int	(*Mod_Unload)();
+	for (m = Modules; m; m = m->next)
+	{
+		irc_dlsym(m->dll, "Mod_Unload", Mod_Unload);
+		if (Mod_Unload)
+			(*Mod_Unload)(0);
+	}
+}

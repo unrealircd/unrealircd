@@ -295,41 +295,35 @@
 
 #define MAXPARA    	15
 
-extern int m_private(), m_topic(), m_join(), m_part(), m_mode(), m_svsmode();
-extern int m_ping(), m_pong(), m_wallops(), m_kick(), m_svsnick();
-extern int m_nick(), m_error(), m_notice(), m_samode(), m_svsnoop();
-extern int m_invite(), m_quit(), m_kill(), m_svskill(), m_identify();
-extern int m_akill(), m_kline(), m_unkline(), m_rakill(), m_sqline();
-extern int m_zline(), m_unzline();
-extern int m_gnotice(), m_goper(), m_globops(), m_locops(), m_unsqline(),
-m_chatops();
+extern int m_topic(), m_join(), m_part(), m_mode();
+extern int m_wallops(), m_kick();
+extern int m_nick(), m_error(), m_samode();
+extern int m_invite(), m_svskill(), m_identify();
+extern int m_chatops(), m_dns();
+extern int m_gnotice(), m_goper(), m_globops(), m_locops();
 extern int m_protoctl();
-extern int m_motd(), m_whois(), m_user(), m_list();
+extern int m_motd(), m_user(), m_list();
 extern int m_server(), m_info(), m_links(), m_summon(), m_stats();
 extern int m_users(), m_version(), m_help();
 extern int m_services(), m_identify();
-extern int m_squit(), m_away(), m_connect();
-extern int m_oper(), m_pass(), m_trace();
+extern int m_squit(), m_connect();
+extern int m_pass(), m_trace();
 extern int m_time(), m_names(), m_admin();
 extern int m_lusers(), m_umode(), m_close();
 extern int m_motd(), m_whowas(), m_silence();
 extern int m_service(), m_userhost(), m_ison(), m_watch();
-extern int m_service(), m_servset(), m_servlist(), m_squery();
-extern int m_rehash(), m_restart(), m_die(), m_dns(), m_hash();
 
-extern int m_gline(), m_remgline(), m_map(), m_svs2mode(), m_admins(),
-m_dalinfo();
-extern int m_addline(), m_rules(), m_mkpasswd();
-extern int m_sethost(), m_nachat(), m_techat(), m_setident(), m_setname();
-extern int m_lag(), m_sdesc(), m_knock(), m_credits();
-extern int m_license(), m_chghost(), m_rping(), m_rpong();
-extern int m_netinfo(), m_sendumode(), m_addmotd(), m_addomotd();
-extern int m_svsmotd(), m_opermotd(), m_tsctl();
+extern int m_remgline(), m_map(), m_dalinfo();
+extern int m_addline(), m_rules();
+extern int m_knock(),m_credits();
+extern int m_license();
+extern int m_netinfo(), m_addmotd(), m_addomotd();
 extern int m_svsjoin(), m_sajoin(), m_svspart(), m_sapart();
-extern int m_chgident(), m_swhois(), m_svso(), m_svsfline();
-extern int m_tkl(), m_vhost(), m_botmotd(), m_sjoin(), m_htm();
+extern int m_svsfline();
+extern int m_vhost(), m_botmotd(), m_sjoin();
 extern int m_umode2(), m_dccdeny(), m_undccdeny();
-extern int m_chgname(), m_shun(), m_post(), m_cycle();
+extern int m_post(), m_cycle();
 extern int m_module(), m_alias();
+extern int m_hash(), m_rehash(), m_die(), m_restart();
 #endif
 

@@ -51,14 +51,13 @@ DLLFUNC int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define TOK_SVSO 	"BB"	
 
 #define STAR1 OFLAG_SADMIN|OFLAG_ADMIN|OFLAG_NETADMIN|OFLAG_COADMIN
-#define STAR2 OFLAG_TECHADMIN|OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
+#define STAR2 OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
 #define STAR3 OFLAG_INVISIBLE
 static int oper_access[] = {
         ~(STAR1 | STAR2 | STAR3), '*',
         OFLAG_LOCAL, 'o',
         OFLAG_GLOBAL, 'O',
         OFLAG_REHASH, 'r',
-        OFLAG_EYES, 'e',
         OFLAG_DIE, 'D',
         OFLAG_RESTART, 'R',
         OFLAG_HELPOP, 'h',
@@ -77,9 +76,6 @@ static int oper_access[] = {
         OFLAG_SADMIN, 'a',
         OFLAG_NETADMIN, 'N',
         OFLAG_COADMIN, 'C',
-        OFLAG_TECHADMIN, 'T',
-        OFLAG_UMODEC, 'u',
-        OFLAG_UMODEF, 'f',
         OFLAG_ZLINE, 'z',
         OFLAG_WHOIS, 'W',
         OFLAG_HIDE, 'H',
@@ -90,48 +86,50 @@ static int oper_access[] = {
 extern ircstats IRCstats;
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_svso_info
+ModuleHeader m_svso_Header
 #else
-#define m_svso_info mod_header
-ModuleInfo mod_header
+#define m_svso_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"test",
 	"$Id$",
 	"command /svso", 
-	NULL,
+	"3.2-b5",
 	NULL 
     };
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_svso_init(int module_load)
+int    m_svso_Init(int module_load)
 #endif
 {
 	add_Command(MSG_SVSO, TOK_SVSO, m_svso, MAXPARA);
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_svso_load(int module_load)
+int    m_svso_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_svso_unload(void)
+int	m_svso_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_SVSO, TOK_SVSO, m_svso) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_svso_info.name);
+				m_svso_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 /*
 ** m_svso - Stskeeps
@@ -185,7 +183,7 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
                     ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP |UMODE_SERVICES |
                     UMODE_SADMIN | UMODE_ADMIN);
                 acptr->umodes &=
-                    ~(UMODE_NETADMIN | UMODE_TECHADMIN | UMODE_WHOIS);
+                    ~(UMODE_NETADMIN | UMODE_WHOIS);
                 acptr->umodes &=
                     ~(UMODE_KIX | UMODE_HIDING | UMODE_DEAF | UMODE_HIDEOPER);
                 acptr->user->oflag = 0;

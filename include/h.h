@@ -94,9 +94,11 @@ extern ConfigItem_log		*conf_log;
 extern ConfigItem_unknown	*conf_unknown;
 extern ConfigItem_unknown_ext   *conf_unknown_set;
 extern ConfigItem_alias		*conf_alias;
+extern ConfigItem_include	*conf_include;
+extern ConfigItem_help		*conf_help;
 extern void clear_unknown();
-EVENT(tkl_check_expire);
-
+extern EVENT(tkl_check_expire);
+extern EVENT(e_unload_module_delayed);
 ConfigItem_class	*Find_class(char *name);
 ConfigItem_deny_dcc	*Find_deny_dcc(char *name);
 ConfigItem_oper		*Find_oper(char *name);
@@ -110,14 +112,19 @@ ConfigItem_ban 		*Find_banEx(char *host, short type, short type2);
 ConfigItem_vhost	*Find_vhost(char *name);
 ConfigItem_deny_channel *Find_channel_allowed(char *name);
 ConfigItem_alias	*Find_alias(char *name);
+ConfigItem_help		*find_help(char *command);
 int			AllowClient(aClient *cptr, struct hostent *hp, char *sockhost);
-
-
+int parse_netmask(const char *text, struct IN_ADDR *addr, int *b);
+int match_ipv4(struct IN_ADDR *addr, struct IN_ADDR *mask, int b);
+#ifdef INET6
+int match_ipv6(struct IN_ADDR *addr, struct IN_ADDR *mask, int b);
+#endif
 aMotd *read_motd(char *filename);
 aMotd *read_rules(char *filename);
 extern struct tm *motd_tm;
 extern Link	*Servers;
-
+void add_ListItem(ListStruct *, ListStruct **);
+ListStruct *del_ListItem(ListStruct *, ListStruct **);
 /* Remmed out for win32 compatibility.. as stated of 467leaf win32 port.. */
 
 extern LoopStruct loop;
@@ -352,7 +359,6 @@ extern long UMODE_WEBTV;     /* 0x0800  WebTV Client */
 extern long UMODE_SERVICES;  /* 0x4000	 services */
 extern long UMODE_HIDE;	     /* 0x8000	 Hide from Nukes */
 extern long UMODE_NETADMIN;  /* 0x10000	 Network Admin */
-extern long UMODE_TECHADMIN; /* 0x40000	 Tech Admin */
 extern long UMODE_COADMIN;   /* 0x80000	 Co Admin */
 extern long UMODE_WHOIS;     /* 0x100000	 gets notice on /whois */
 extern long UMODE_KIX;       /* 0x200000	 usermode +q */
@@ -386,7 +392,8 @@ extern char *inetntop(int af, const void *in, char *local_dummy,
 */
 
 char	*Inet_si2p(struct SOCKADDR_IN *sin);
-char	*Inet_si2pB(struct SOCKADDR_IN *sin, char *buf);
+char	*Inet_si2pB(struct SOCKADDR_IN *sin, char *buf, int sz);
+char	*Inet_ia2p(struct IN_ADDR *ia);
 
 /*
  * CommandHash -Stskeeps
@@ -414,5 +421,15 @@ extern void remove_local_client(aClient* cptr);
  */
 extern void close_connections(void);
 extern void flush_connections(aClient *cptr);
+
+extern int b64_encode(unsigned char const *src, size_t srclength, char *target, size_t targsize);
+extern int b64_decode(char const *src, unsigned char *target, size_t targsize);
+
+extern int		Auth_FindType(char *type);
+extern anAuthStruct	*Auth_ConvertConf2AuthStruct(ConfigEntry *ce);
+extern void	Auth_DeleteAuthStruct(anAuthStruct *as);
+extern int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para);
+extern char   *Auth_Make(short type, char *para);
+
 
 #define EVENT_DRUGS BASE_VERSION

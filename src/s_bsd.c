@@ -1,5 +1,4 @@
 /*
-/*
  *   Unreal Internet Relay Chat Daemon, src/s_bsd.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
@@ -377,8 +376,9 @@ int  inetport(cptr, name, port)
 	 * At first, open a new socket
 	 */
 	if (cptr->fd == -1)
+	{
 		cptr->fd = socket(AFINET, SOCK_STREAM, 0);
-
+	}
 	if (cptr->fd < 0)
 	{
 #if !defined(DEBUGMODE) && !defined(_WIN32)
@@ -407,10 +407,7 @@ int  inetport(cptr, name, port)
 #ifndef INET6
 		server.SIN_ADDR.S_ADDR = inet_addr(ipname);
 #else
-		if (strchr(ipname, '.'))
-			inet_pton(AF_INET, ipname, server.SIN_ADDR.S_ADDR);
-		else
-			inet_pton(AF_INET6, ipname, server.SIN_ADDR.S_ADDR);
+		inet_pton(AFINET, ipname, server.SIN_ADDR.S_ADDR);
 #endif
 		server.SIN_PORT = htons(port);
 		/*
@@ -718,7 +715,7 @@ int  check_client(cptr)
 	static char sockname[HOSTLEN + 1];
 	struct hostent *hp = NULL;
 	int  i;
-
+	
 	ClearAccess(cptr);
 	Debug((DEBUG_DNS, "ch_cl: check access for %s[%s]",
 	    cptr->name, inetntoa((char *)&cptr->ip)));
@@ -740,7 +737,7 @@ int  check_client(cptr)
 		if (!hp->h_addr_list[i])
 		{
 			sendto_snomask(SNO_JUNK, "IP# Mismatch: %s != %s[%08x]",
-			    inetntoa((char *)&cptr->ip), hp->h_name,
+			    Inet_ia2p((struct IN_ADDR *)&cptr->ip), hp->h_name,
 			    *((unsigned long *)hp->h_addr));
 			hp = NULL;
 		}
@@ -1034,7 +1031,7 @@ void set_sock_opts(fd, cptr)
 	    sizeof(opt)) < 0)
 		report_error("setsockopt(SO_SNDBUF) %s:%s", cptr);
 #endif
-#if defined(IP_OPTIONS) && defined(IPPROTO_IP) && !defined(_WIN32)
+#if defined(IP_OPTIONS) && defined(IPPROTO_IP) && !defined(_WIN32) && !defined(INET6)
 	{
 		char *s = readbuf, *t = readbuf + sizeof(readbuf) / 2;
 
@@ -1233,7 +1230,8 @@ add_con_refuse:
 			}
 		}
 
-		if ((bconf = Find_ban(acptr->sockhost, CONF_BAN_IP)))
+		if ((bconf = Find_ban(acptr->sockhost, CONF_BAN_IP))) 
+		if (bconf)
 		{
 			ircsprintf(zlinebuf,
 				"ERROR :Closing Link: [%s] (You are not welcome on "
@@ -2255,7 +2253,7 @@ int  connect_server(aconf, by, hp)
 		Link lin;
 
 		lin.flags = ASYNC_CONNECT;
-		lin.value.aconf = (ConfigItem *) aconf;
+		lin.value.aconf = (ListStruct *) aconf;
 		nextdnscheck = 1;
 		s = aconf->hostname;
 #ifndef INET6
@@ -2285,7 +2283,6 @@ int  connect_server(aconf, by, hp)
 	strncpyzt(cptr->sockhost, aconf->hostname, HOSTLEN + 1);
 
 	svp = connect_inet(aconf, cptr, &len);
-
 	if (!svp)
 	{
 		if (cptr->fd >= 0)
@@ -2297,7 +2294,6 @@ int  connect_server(aconf, by, hp)
 		free_client(cptr);
 		return -1;
 	}
-
 	set_non_blocking(cptr->fd, cptr);
 	set_sock_opts(cptr->fd, cptr);
 #ifndef _WIN32
@@ -2399,17 +2395,7 @@ static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
 #ifndef INET6
 		server.SIN_ADDR.S_ADDR = inet_addr(aconf->bindip);	
 #else
-		if (strchr(aconf->bindip, '.'))
-		{
-			inet_pton(AF_INET, aconf->bindip, server.SIN_ADDR.S_ADDR);
-			server.SIN_FAMILY = AF_INET;
-		}
-		else
-		{
-			inet_pton(AF_INET6, aconf->bindip, server.SIN_ADDR.S_ADDR);
-			server.SIN_FAMILY = AF_INET6;
-
-		}
+		inet_pton(AF_INET6, aconf->bindip, server.SIN_ADDR.S_ADDR);
 #endif
 	}
 	if (bind(cptr->fd, (struct SOCKADDR *)&server, sizeof(server)) == -1)
@@ -2425,9 +2411,8 @@ static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
 	 * being present instead. If we dont know it, then the connect fails.
 	 */
 #ifdef INET6
-	if (isdigit(*aconf->hostname) && (AND16(aconf->ipnum.s6_addr) == 255))
-		if (!inet_pton(AF_INET6, aconf->hostname, aconf->ipnum.s6_addr))
-			bcopy(minus_one, aconf->ipnum.s6_addr, IN6ADDRSZ);
+	if (!inet_pton(AF_INET6, aconf->hostname, aconf->ipnum.s6_addr))
+		bcopy(minus_one, aconf->ipnum.s6_addr, IN6ADDRSZ);
 	if (AND16(aconf->ipnum.s6_addr) == 255)
 #else
 	if (isdigit(*aconf->hostname) && (aconf->ipnum.S_ADDR == -1))

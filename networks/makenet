@@ -241,10 +241,10 @@ set {
 		netadmin	"$NETADMIN_HOST";
 __EOF__
 if [ "$INAH" = "1" ]; then
-	echo "		host-on-oper	yes;" >> $FILE
+	echo "		host-on-oper-up	yes;" >> $FILE
 fi
 if [ "$INAH" = "0" ]; then
-	echo "          host-on-oper	no;" >> $FILE
+	echo "          host-on-oper-up	no;" >> $FILE
 fi
 echo "	};" >> $FILE		
 echo "};" >> $FILE

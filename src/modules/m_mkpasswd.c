@@ -52,110 +52,97 @@ DLLFUNC int m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_mkpasswd_info
+ModuleHeader m_mkpasswd_Header
 #else
-#define m_mkpasswd_info mod_header
-ModuleInfo mod_header
+#define m_mkpasswd_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"test",
 	"$Id$",
 	"command /mkpasswd", 
-	NULL,
+	"3.2-b5",
 	NULL 
     };
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_mkpasswd_init(int module_load)
+int    m_mkpasswd_Init(int module_load)
 #endif
 {
 	add_Command(MSG_MKPASSWD, TOK_MKPASSWD, m_mkpasswd, MAXPARA);
+	return MOD_SUCCESS;
+	
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_mkpasswd_load(int module_load)
+int    m_mkpasswd_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_mkpasswd_unload(void)
+int	m_mkpasswd_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_MKPASSWD, TOK_MKPASSWD, m_mkpasswd) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_mkpasswd_info.name);
+				m_mkpasswd_Header.name);
 	}
+	return MOD_SUCCESS;
+	
 }
 /*
 ** m_mkpasswd
 **      parv[0] = sender prefix
 **      parv[1] = password to encrypt
 */
-#ifndef _WIN32
-int  m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
-        static char saltChars[] =
-
-"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./";
-        char salt[3];
-        extern char *crypt();
-        int  useable = 0;
-
+int  m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[])
+{
+	short	type;
+	char	*result = NULL;
         if (!IsAnOper(sptr))
                 return -1;
-        if (parc > 1)
-        {
-                if (strlen(parv[1]) >= 1)
-                        useable = 1;
-        }
-
-        if (useable == 0)
+	if (parc < 3)
+	{
+		sendto_one(sptr, ":%s NOTICE %s :*** Syntax: /mkpasswd <authmethod> :parameter",
+			me.name, sptr->name);
+		return 0;
+	}        
+        
+        if (strlen(parv[1]) < 1)
         {
                 sendto_one(sptr,
-                    ":%s %s %s :*** Encryption's MUST be atleast 1 character in length",
-                    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE",
-parv[0]);
+                    ":%s %s %s :*** Parameters MUST be atleast 1 character in length",
+                    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0]);
                 return 0;
         }
-        srandom(TStime());
 #ifndef _WIN32
-        salt[0] = saltChars[random() % 64];
-        salt[1] = saltChars[random() % 64];
-        salt[2] = 0;
-#else
-        salt[0] = saltChars[rand() % 64];
-        salt[1] = saltChars[rand() % 64];
-        salt[2] = 0;
+        srandom(TStime());
 #endif
-        if ((strchr(saltChars, salt[0]) == NULL)
-            || (strchr(saltChars, salt[1]) == NULL))
-        {
-                sendto_one(sptr, ":%s %s %s :*** Illegal salt %s",
-me.name,
-                        IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0],
-salt);
-                return 0;
-        }
-
-
-        sendto_one(sptr, ":%s %s %s :*** Encryption for [%s] is %s",
-            me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], parv[1], crypt(parv[1], salt));
+	if ((type = Auth_FindType(parv[1])) == -1)
+	{
+		sendto_one(sptr, 
+			":%s NOTICE %s :*** %s is not a enabled authentication method",
+				me.name, sptr->name, parv[1]);
+		return 0;
+	}
+	
+	if (!(result = Auth_Make(type, parv[2])))
+	{
+		sendto_one(sptr, 
+			":%s NOTICE %s :*** Authentication method %s failed",
+				me.name, sptr->name, parv[1]);
+		return;
+	}
+        sendto_one(sptr, ":%s %s %s :*** Authentication phrase (method=%s, para=%s) is: %s",
+            me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], parv[1], parv[2], result);
         return 0;
 }
-#else
-int  m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
-        sendto_one(sptr,
-            ":%s %s %s :*** Encryption is disabled on UnrealIRCD-win32",
-            me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0]);
-        return 0;
-}
-
-#endif

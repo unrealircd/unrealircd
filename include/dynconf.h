@@ -43,7 +43,6 @@ struct zNetwork {
 	char *x_sadmin_host;
 	char *x_netadmin_host;
 	char *x_coadmin_host;
-	char *x_techadmin_host;
 	char *x_hidden_host;
 	char *x_prefix_quit;
 	char *x_helpchan;
@@ -65,6 +64,7 @@ struct zConfiguration {
 	char *name_server;
 	char *kline_address;
 	long conn_modes;
+	long oper_modes;
 	char *auto_join_chans;
 	char *oper_auto_join_chans;
 	char *oper_only_stats;
@@ -82,6 +82,7 @@ extern aConfiguration iConf;
 
 #define KLINE_ADDRESS		iConf.kline_address
 #define CONN_MODES			iConf.conn_modes
+#define OPER_MODES			iConf.oper_modes
 #define SHOWOPERMOTD			iConf.som
 #define HIDE_ULINES			iConf.hide_ulines
 #define ALLOW_CHATOPS			iConf.allow_chatops

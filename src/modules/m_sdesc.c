@@ -50,17 +50,16 @@ DLLFUNC int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define TOK_SDESC 	"AG"	/* 127 4ever !;) */
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_sdesc_info
+ModuleHeader m_sdesc_Header
 #else
-#define m_sdesc_info mod_header
-ModuleInfo mod_header
+#define m_sdesc_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"sdesc",	/* Name of module */
 	"$Id$", /* Version */
 	"command /sdesc", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
@@ -70,36 +69,41 @@ ModuleInfo mod_header
 */
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_sdesc_init(int module_load)
+int    m_sdesc_Init(int module_load)
 #endif
 {
 	/*
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_SDESC, TOK_SDESC, m_sdesc, 1);
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_sdesc_load(int module_load)
+int    m_sdesc_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
+	
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_sdesc_unload(void)
+int	m_sdesc_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_SDESC, TOK_SDESC, m_sdesc) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_sdesc_info.name);
+				m_sdesc_Header.name);
 	}
+	return MOD_SUCCESS;
+	
 }
 
 /* m_sdesc - 15/05/1999 - Stskeeps

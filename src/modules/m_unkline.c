@@ -50,17 +50,16 @@ DLLFUNC int m_unkline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_unkline_info
+ModuleHeader m_unkline_Header
 #else
-#define m_unkline_info mod_header
-ModuleInfo mod_header
+#define m_unkline_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"unkline",	/* Name of module */
 	"$Id$", /* Version */
 	"command /unkline", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
@@ -71,39 +70,42 @@ ModuleInfo mod_header
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_unkline_init(int module_load)
+int    m_unkline_Init(int module_load)
 #endif
 {
 	/*
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_UNKLINE, TOK_UNKLINE, m_unkline, MAXPARA);
+	return MOD_SUCCESS;
 }
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_unkline_load(int module_load)
+int    m_unkline_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_unkline_unload(void)
+int	m_unkline_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_UNKLINE, TOK_UNKLINE, m_unkline) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_unkline_info.name);
+				m_unkline_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 
 /*
@@ -160,7 +162,7 @@ DLLFUNC int m_unkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			return 0;
 		}
 		
-		del_ConfigItem((ConfigItem *)bconf, (ConfigItem **)&conf_ban);
+		DelListItem(bconf, conf_ban);
 		if (bconf->mask)
 			MyFree(bconf->mask);
 		if (bconf->reason)

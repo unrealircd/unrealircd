@@ -51,17 +51,16 @@ DLLFUNC int m_kline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_kline_info
+ModuleHeader m_kline_Header
 #else
-#define m_kline_info mod_header
-ModuleInfo mod_header
+#define m_kline_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"kline",	/* Name of module */
 	"$Id$", /* Version */
 	"command /kline", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
@@ -72,39 +71,44 @@ ModuleInfo mod_header
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_kline_init(int module_load)
+int    m_kline_Init(int module_load)
 #endif
 {
 	/*
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_KLINE, TOK_KLINE, m_kline, MAXPARA);
+	return MOD_SUCCESS;
+	
 }
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_kline_load(int module_load)
+int    m_kline_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
+	
 }
 
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_kline_unload(void)
+int	m_kline_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_KLINE, TOK_KLINE, m_kline) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_kline_info.name);
+				m_kline_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 
 /*
@@ -117,7 +121,7 @@ DLLFUNC int m_kline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *host, *tmp, *hosttemp;
 	char uhost[80], name[80];
-	int  ip1, ip2, ip3, temp;
+	int  ip1, ip2, ip3, temp, i;
 	aClient *acptr;
 	ConfigItem_ban *bconf;
 
@@ -157,13 +161,23 @@ DLLFUNC int m_kline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    parv[0]);
 			return 0;
 		}
-		if (!strcmp(uhost, "*") || !strchr(uhost, '.'))
+		if (hosttemp)
 		{
-			sendto_one(sptr,
-			    "NOTICE %s :*** What a sweeping K:Line.  If only your admin knew you tried that..",
-			    parv[0]);
-			sendto_realops("%s attempted to /kline *@*", parv[0]);
-			return 0;
+			hosttemp++;
+			i = 0;
+			while (*hosttemp)
+			{
+				if (*hosttemp != '*' && *hosttemp != '.' && *hosttemp != '?')
+					i++;
+				hosttemp++;
+			}
+			if (i < 4)
+			{
+				sendto_one(sptr,
+				    ":%s NOTICE %s :*** [K:Line error] Too broad mask",
+				    me.name, sptr->name);
+				return 0;
+			}
 		}
 	}
 
@@ -226,6 +240,6 @@ DLLFUNC int m_kline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	bconf->mask = strdup(make_user_host(name, uhost));
 	bconf->reason = parv[2] ? strdup(parv[2]) : NULL;
 	bconf->flag.type2 = CONF_BAN_TYPE_TEMPORARY;
-	add_ConfigItem((ConfigItem *) bconf, (ConfigItem **) &conf_ban);
+	AddListItem(bconf, conf_ban);
 	check_pings(TStime(), 1);
 }

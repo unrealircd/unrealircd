@@ -41,18 +41,31 @@
 
 ID_Copyright("(C) Carsten Munk 2001");
 
+#ifndef HAVE_NO_THREADS
+#include "threads.h"
+MUTEX			sys_EventLock;
+#endif
 
 
 Event *events = NULL;
 
-void	EventAdd(char *name, long every, long howmany,
+
+Event	*EventAdd(char *name, long every, long howmany,
 		  vFP event, void *data)
 {
 	Event *newevent;
+
+#ifndef HAVE_NO_THREADS
+	IRCMutexLock(sys_EventLock);
+#endif
 	
 	if (!name || (every < 0) || (howmany < 0) || !event)
 	{
-		return;
+#ifndef HAVE_NO_THREADS
+		IRCMutexUnlock(sys_EventLock);
+#endif
+
+		return NULL;
 	}
 	newevent = (Event *) MyMallocEx(sizeof(Event));
 	newevent->name = strdup(name);
@@ -60,32 +73,27 @@ void	EventAdd(char *name, long every, long howmany,
 	newevent->every = every;
 	newevent->event = event;
 	newevent->data = data;
-	newevent->next = events;
-	newevent->prev = NULL;
 	/* We don't want a quick execution */
 	newevent->last = TStime();
-	if (events)
-		events->prev = newevent;
-	events = newevent;
+	AddListItem(newevent,events);
+#ifndef HAVE_NO_THREADS
+	IRCMutexUnlock(sys_EventLock);
+#endif
+	return newevent;
+	
 }
 
-Event	*EventDel(char *name)
+Event	*EventDel(Event *event)
 {
 	Event *p, *q;
 	
 	for (p = events; p; p = p->next)
 	{
-		if (!strcmp(p->name, name))
+		if (p == event)
 		{
 			q = p->next;
 			MyFree(p->name);
-			if (p->prev)
-				p->prev->next = p->next;
-			else
-				events = p->next;
-				
-			if (p->next)
-				p->next->prev = p->prev;
+			DelListItem(p, events);
 			MyFree(p);
 			return q;		
 		}
@@ -103,13 +111,20 @@ Event	*EventFind(char *name)
 	return NULL;
 }
 
-void	EventModEvery(char *name, int every)
+void	EventModEvery(Event *event, long every)
 {
 	Event *eventptr;
-	
-	eventptr = EventFind(name);
-	if (eventptr)
-		eventptr->every = every;
+
+#ifndef HAVE_NO_THREADS
+	IRCMutexLock(sys_EventLock);
+#endif
+	if (event)
+		event->every = every;
+
+#ifndef HAVE_NO_THREADS
+	IRCMutexUnlock(sys_EventLock);
+#endif
+
 }
 
 inline void	DoEvents(void)
@@ -117,23 +132,29 @@ inline void	DoEvents(void)
 	Event *eventptr;
 	Event temp;
 
+#ifndef HAVE_NO_THREADS
+	IRCMutexLock(sys_EventLock);
+#endif
 	for (eventptr = events; eventptr; eventptr = eventptr->next)
 		if ((eventptr->every == 0) || ((TStime() - eventptr->last) >= eventptr->every))
 		{
 			if (eventptr->howmany > 0)
-			{
-
 				eventptr->howmany--;
-				if (eventptr->howmany == 0)
-				{
-					temp.next = EventDel(eventptr->name);
-					eventptr = &temp;
-					continue;
-				}
-			}
 			eventptr->last = TStime();
 			(*eventptr->event)(eventptr->data);
+			if (eventptr->howmany == 0)
+			{
+				temp.next = EventDel(eventptr);
+				eventptr = &temp;
+				continue;
+			}
+
 		}
+	
+#ifndef HAVE_NO_THREADS
+	IRCMutexUnlock(sys_EventLock);
+#endif
+
 }
 
 void	EventStatus(aClient *sptr)
@@ -159,7 +180,9 @@ void	SetupEvents(void)
 	/* We're doomed! */
 	if (match(EVENT_HASHES, &EVENT_CRC[EVENT_HASHVALUE]))
 		exit (0);
-		
+#ifndef HAVE_NO_THREADS
+	IRCCreateMutex(sys_EventLock);
+#endif
 	/* Start events */
 	EventAdd("tklexpire", 5, 0, tkl_check_expire, NULL);
 	EventAdd("tunefile", 300, 0, save_tunefile, NULL);

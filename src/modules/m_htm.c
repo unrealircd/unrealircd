@@ -59,7 +59,7 @@ extern int LRV;
 DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 EVENT(lcf_check);
 EVENT(htm_calc);
-
+Event *e_lcf, *e_htmcalc;
 
 /* Place includes here */
 #define MSG_HTM         "HTM"
@@ -67,17 +67,16 @@ EVENT(htm_calc);
 
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_htm_info
+ModuleHeader m_htm_Header
 #else
-#define m_htm_info mod_header
-ModuleInfo mod_header
+#define m_htm_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"htm",	/* Name of module */
 	"$Id$", /* Version */
 	"command /htm", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
@@ -88,9 +87,9 @@ ModuleInfo mod_header
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_htm_init(int module_load)
+int    m_htm_Init(int module_load)
 #endif
 {
 	/*
@@ -98,39 +97,47 @@ int    m_htm_init(int module_load)
 	*/
 	add_Command(MSG_HTM, TOK_HTM, m_htm, MAXPARA);
 #ifndef NO_FDLIST
-	EventAdd("lcf", LCF, 0, lcf_check, NULL);
-	EventAdd("htmcalc", 1, 0, htm_calc, NULL);
+	e_lcf = EventAdd("lcf", LCF, 0, lcf_check, NULL);
+	e_htmcalc = EventAdd("htmcalc", 1, 0, htm_calc, NULL);
 #endif
-
+	return MOD_SUCCESS;
 }
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_htm_load(int module_load)
+int    m_htm_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_htm_unload(void)
+int	m_htm_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_HTM, TOK_HTM, m_htm) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_htm_info.name);
+				m_htm_Header.name);
 	}
 #ifndef NO_FDLIST
-	EventDel("lcf");
-	EventDel("htmcalc");
+	EventDel(e_lcf);
+	EventDel(e_htmcalc);
 #endif
+	return MOD_SUCCESS;
 }
+
+/* m_htm recoded by griever
+parameters
+
+HTM [server] [command] [param]
+*/
 
 DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
@@ -139,7 +146,6 @@ DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (!IsOper(sptr))
 		return 0;
 
-#ifndef NO_FDLIST
 
 	switch(parc) {
 		case 1:
@@ -167,6 +173,7 @@ DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			return 0;
 	}
 
+#ifndef NO_FDLIST
 
 	if (!command)
 	{
@@ -217,13 +224,13 @@ DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    parv[0], sptr->user->username,
 			    sptr->user->realhost);
 			LCF = 60;	/* 60 seconds */
-			EventModEvery("lcf", LCF);
+			EventModEvery(e_lcf, LCF);
 		}
 		else if (!stricmp(command, "OFF"))
 		{
 			lifesux = 0;
 			LCF = LOADCFREQ;
-			EventModEvery("lcf", LCF);
+			EventModEvery(e_lcf, LCF);
 			sendto_one(sptr,
 			    ":%s NOTICE %s :High traffic mode is now OFF.",
 			    me.name, parv[0]);
@@ -315,7 +322,7 @@ EVENT(lcf_check)
 			{
 				lifesux++;	/* Ok, life really sucks! */
 				LCF += 2;	/* wait even longer */
-				EventModEvery("lcf", LCF);
+				EventModEvery(e_lcf, LCF);
 				if (noisy_htm)
 					sendto_realops
 					    ("Still high-traffic mode %d%s (%d delay): %0.2f kb/s",
@@ -332,7 +339,7 @@ EVENT(lcf_check)
 						    ("Resetting HTM and raising limit to: %dk/s\n",
 						    LRV + 5);
 					LCF = LOADCFREQ;
-					EventModEvery("lcf", LCF);
+					EventModEvery(e_lcf, LCF);
 					lifesux = 0;
 					LRV += 5;
 				}
@@ -341,7 +348,7 @@ EVENT(lcf_check)
 		else
 		{
 			LCF = LOADCFREQ;
-			EventModEvery("lcf", LCF);
+			EventModEvery(e_lcf, LCF);
 			if (lifesux)
 			{
 				lifesux = 0;

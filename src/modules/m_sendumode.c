@@ -50,18 +50,19 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_SMO         "SMO"
 #define TOK_SMO         "AU"
 
+extern int sno_mask[]; /* someone is going to make this static, I just know it */
+
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_sendumode_info
+ModuleHeader m_sendumode_Header
 #else
-#define m_sendumode_info mod_header
-ModuleInfo mod_header
+#define m_sendumode_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"sendumode",	/* Name of module */
 	"$Id$", /* Version */
 	"command /sendumode", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
@@ -72,9 +73,9 @@ ModuleInfo mod_header
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_sendumode_init(int module_load)
+int    m_sendumode_Init(int module_load)
 #endif
 {
 	/*
@@ -82,35 +83,39 @@ int    m_sendumode_init(int module_load)
 	*/
 	add_Command(MSG_SENDUMODE, TOK_SENDUMODE, m_sendumode, MAXPARA);
 	add_Command(MSG_SMO, TOK_SMO, m_sendumode, MAXPARA);
+	return MOD_SUCCESS;
 }
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_sendumode_load(int module_load)
+int    m_sendumode_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_sendumode_unload(void)
+int	m_sendumode_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_SENDUMODE, TOK_SENDUMODE, m_sendumode) < 0)
 	{
 		sendto_realops("Failed to delete command sendumode when unloading %s",
-				m_sendumode_info.name);
+				m_sendumode_Header.name);
 	}
 	if (del_Command(MSG_SMO, TOK_SMO, m_sendumode) < 0)
 	{
 		sendto_realops("Failed to delete command smo when unloading %s",
-				m_sendumode_info.name);
+				m_sendumode_Header.name);
 	}
+	return MOD_SUCCESS;
+	
 
 }
 
@@ -128,10 +133,16 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *message;
 	char *p;
+	int i;
+	long umode_s = 0;
+	long snomask = 0;
+	int and = 0;
 
-	message = parc > 2 ? parv[2] : NULL;
+	aClient* acptr;
 
-	if (BadPtr(message))
+	message = (parc > 3) ? parv[3] : parv[2];
+
+	if (parc < 3)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
 		    me.name, parv[0], "SENDUMODE");
@@ -147,53 +158,50 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	sendto_serv_butone(IsServer(cptr) ? cptr : NULL,
 	    ":%s SMO %s :%s", parv[0], parv[1], message);
 
-
 	for (p = parv[1]; *p; p++)
 	{
-		switch (*p)
+		umode_s = 0;
+		
+		for(i = 0; Usermode_Table[i].flag; i++)
 		{
-		  case 'e':
-			  sendto_snomask(SNO_EYES, "%s", parv[2]);
-			  break;
-		  case 'o':
-			  sendto_umode(UMODE_OPER, "%s", parv[2]);
-			  break;
-		  case 'O':
-			  sendto_umode(UMODE_LOCOP, "%s", parv[2]);
-			  break;
-		  case 'h':
-			  sendto_umode(UMODE_HELPOP, "%s", parv[2]);
-			  break;
-		  case 'N':
-			  sendto_umode(UMODE_NETADMIN | UMODE_TECHADMIN, "%s",
-			      parv[2]);
-			  break;
-		  case 'A':
-			  sendto_umode(UMODE_ADMIN, "%s", parv[2]);
-			  break;
-/*		  case '1':
-			  sendto_umode(UMODE_CODER, "%s", parv[2]);
-			  break;
-*/
-		  case 'I':
-			  sendto_umode(UMODE_HIDING, "%s", parv[2]);
-			  break;
-		  case 'w':
-			  sendto_umode(UMODE_WALLOP, "%s", parv[2]);
-			  break;
-		  case 's':
-			  sendto_umode(UMODE_SERVNOTICE, "%s", parv[2]);
-			  break;
-		  case 'T':
-			  sendto_umode(UMODE_TECHADMIN, "%s", parv[2]);
-			  break;
-		  case '*':
-		  	  sendto_all_butone(NULL, &me, ":%s NOTICE :%s", 
-			   	me.name, parv[2]);  	  	
-					  	  	 	 
-			  break;
+			if (Usermode_Table[i].flag == *p)
+			{
+				umode_s |= Usermode_Table[i].mode;
+			}
+		}
+		if (Usermode_Table[i].flag)
+			break;
+
+		for (i = 1; sno_mask[i]; i += 2)
+		{
+			if (sno_mask[i] ==  *p) 	
+			{
+				snomask |= sno_mask[i - 1];
+				break;
+			}
 		}
 	}
+
+	if (parc > 3)
+	    for(p = parv[2]; *p; p++)
+	{
+		for (i = 1; sno_mask[i]; i += 2)
+		{
+			if (sno_mask[i] ==  *p) 	
+			{
+				snomask |= sno_mask[i - 1];
+				break;
+			}
+		}
+	}
+
+	for(i = 0; i <= LastSlot; i++)
+	    if((acptr = local[i]) && IsPerson(acptr) && ((acptr->user->snomask & snomask) ||
+		(acptr->umodes & umode_s)))
+	{
+		sendto_one(acptr, ":%s NOTICE %s :%s", me.name, acptr->name, message);
+	}
+
 	return 0;
 }
 

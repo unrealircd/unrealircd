@@ -134,6 +134,8 @@
 		class <classname>;
 		password "<password>";
 		maxperip <max>;
+		redirect-server <server>;
+		redirect-port <port>;
 	};
 
 5.2) Variables:
@@ -142,6 +144,8 @@
 	<classname>	Class name to use defined above		(name)
 	<password>	Password required for connection	(password)
 	<max>		Maximum per ip address			(number)
+	<server>	server to redirect to			(hostname/ip)
+	<port>		port on server to redirect		(port)
 
 6.0) drpass{} (Die/Restart Password):
 
@@ -174,6 +178,8 @@
 			<flag>;
 			<flag>;
 		}
+		swhois <whois stuff>;
+		snomask <snomask>;
 	};
 
 7.2) Variables
@@ -182,6 +188,8 @@
 	<host>		Host the oper is allowed to op from	(ident@host)
 	<password>	Password to accompany login-name	(password)
 	<flag>		Flags to define permissions		(see 7.3)
+	<snomask>	Snomask on oper				(SNOMASK)
+	<whois stuff>	Extra info in /whois			(string)
 
 7.3) Oper Flags (old and new)
 
@@ -195,13 +203,12 @@
 	o	| local		  | Local IRC Operator
 	O	| global	  | Global IRC Operator
 	r	| can_rehash	  | Is able to rehash the server
-	e	| eyes		  | Can use the eyes message mode
 	D	| can_die	  | Can shutdown the server (with password)
 	R	| can_restart	  | Can restart the server (with password)
 	h	| helpop	  | ..is available for help. Can see /helpops
 	g	| can_globops	  | Can use /globops
 	w	| can_wallops	  | Can use /wallops
-	l	| locop		  | Can't kill remote users
+	l	| locop		  | can send /locops
 	c	| can_localroute  | Can locally /connect and /squit servers
 	L	| can_globalroute | Can globally /connect and /squit servers
 	k	| can_localkill   | Can do local /kills
@@ -211,7 +218,9 @@
 	n	| can_localnotice | Can send local notices
 	G	| can_globalnotice| Can send global notices
 	z	| can_zline	  | Can set /zlines
-	^	| can_stealth	  | Is invisible to /names
+	t	| can_gkline	  | can use /gline and /shun
+	Z	| can_gzline	  | can use /gzline
+	^	| can_stealth	  | Can set +I
 
 
 7.4) Oper Flag Usage:

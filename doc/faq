@@ -52,7 +52,7 @@ A: T:Lines is a new Unreal feature that makes it able to show different
    T:*.dk:motds/danish.motd:rules/danish.rules
    T:*.fr:motds/french.motd:rules/french.rules
  
-  This will get people from Denmark to see the "Danish" MOTD and the "Dandish" RULLES
+  This will get people from Denmark to see the "Danish" MOTD and the "Danish" RULLES
   and people from France to see the French ones:) 
   
   NOTE: T:Lines are read up side down so if you have a T:*:ircd.motd:ircd.rules in the bottom
@@ -141,4 +141,12 @@ match.c:247: argument 'n' doesn't match prototype
 Then go into include/setup.h and add this line:
 #define GOT_STRCASECMP
 
+14) I have my ircd linked to 3.2beta4 and lower servers and people walk 
+bans!!
+
+In include/config.h, define COMPAT_BETA4_KEYS, and make sure all servers
+are using the exact same cloak keys. If you are running pre-3.2 servers
+along with 3.2 servers this is unavoidable.
+
 (C) Carsten Munk 1999-2000
+(C) also Finny Merrill 2001

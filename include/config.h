@@ -104,6 +104,20 @@
 #define PROPER_COREDUMP
 
 
+/* 
+ * If channel mode is +z, only send to secure links & people
+ *
+*/
+#undef SECURECHANMSGSONLYGOTOSECURE
+
+/*
+ * be compatible with older cloak keys? If you link to servers beta4 and 
+ * earlier without this the cloak keys will produce diff results
+ * Not recommended, however, as beta4 and earlier 3.2 has an insecure
+ * cloak algo -griever
+ */
+#undef COMPAT_BETA4_KEYS
+
 /*
  * Kill logging -otherguy
 */
@@ -135,6 +149,13 @@
  *   This will disable OperMode, OperTopic and Banwalks
 */
 #undef NO_OPEROVERRIDE
+
+/*
+ * NAZIISH_CHBAN_HANDLING (formerly ANNOYING_BAN_THING)
+ *   Reject bans that are matched by existing bans, causes chanserv
+ *   To flood-kick an akicked user if their akick is matched by another
+ *   Ban, but if you don't mind, this can free up ban list space I guess
+#undef NAZIISH_CHBAN_HANDLING
 
 /*
  * Disable /sethost, /setident, /chgname, /chghost, /chgident
@@ -685,6 +706,9 @@ error You stuffed up config.h signals
 #endif
 #ifdef NEED_BZERO
 #define bzero(a,b) memset(a,0,b)
+#endif
+#ifdef HAVE_CRYPT
+#define AUTHENABLE_UNIXCRYPT
 #endif
 #if defined(AIX) && defined(_XOPEN_SOURCE_EXTENDED) && _XOPEN_SOURCE_EXTENDED
 # define SOCK_LEN_TYPE size_t

@@ -92,7 +92,7 @@ IRCDMODE = 711
 # [CHANGEME]
 # IRCDDIR must be the same as DPATH in include/config.h
 #
-IRCDDIR=/usr/local/lib/ircd
+IRCDDIR=@IRCDDIR@
 
 
 #
@@ -120,9 +120,8 @@ CFLAGS=-I$(INCLUDEDIR) $(XCFLAGS) $(FD_SETSIZE)
 
 SHELL=/bin/sh
 SUBDIRS=src
-BINDIR=$(IRCDDIR)
-MANDIR=/usr/local/man
-INSTALL=/usr/bin/install
+BINDIR=@BINDIR@
+INSTALL=@INSTALL@
 RM=@RM@
 CP=@CP@
 TOUCH=@TOUCH@
@@ -133,7 +132,7 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 		'LDFLAGS=${LDFLAGS}' 'IRCDMODE=${IRCDMODE}' \
 		'RES=${RES}' 'BINDIR=${BINDIR}' 'INSTALL=${INSTALL}' \
 		'INCLUDEDIR=${INCLUDEDIR}' 'IRCDDIR=${IRCDDIR}' \
-		'MANDIR=${MANDIR}' 'RM=${RM}' 'CP=${CP}' 'TOUCH=${TOUCH}' \
+		'RM=${RM}' 'CP=${CP}' 'TOUCH=${TOUCH}' \
 		'SHELL=${SHELL}' 'STRTOUL=${STRTOUL}' \
 		'CRYPTOLIB=${CRYPTOLIB}' 'REGEX=${REGEX}' \
 		'CRYPTOINCLUDES=${CRYPTOINCLUDES}'
@@ -207,9 +206,24 @@ depend:
 	done
 
 install: all
-	@echo "Now install by hand; make install is broken."
+	$(INSTALL) -m 0700 -d $(IRCDDIR)
+	$(INSTALL) -m 0700 src/ircd $(BINDIR)
+	$(INSTALL) -m 0700 -d $(IRCDDIR)/networks
+	$(INSTALL) -m 0600 networks/*.network $(IRCDDIR)/networks
+	$(INSTALL) -m 0700 networks/makenet $(IRCDDIR)/networks
+	$(INSTALL) -m 0600 networks/networks.ndx $(IRCDDIR)/networks
+	$(INSTALL) -m 0700 -d $(IRCDDIR)/doc
+	$(INSTALL) -m 0600 doc/Authors doc/conf.doc doc/faq doc/tao.of.irc doc/coding-guidelines doc/example.conf doc/features.txt doc/unrealircd.conf.txt doc/commands.txt doc/example.settings doc/services-install-guide doc/unrealircd.doc $(IRCDDIR)/doc
+	$(INSTALL) -m 0700 -d $(IRCDDIR)/aliases
+	$(INSTALL) -m 0600 aliases/*.conf $(IRCDDIR)/aliases
+	$(TOUCH) $(IRCDDIR)/unrealircd.conf
+	chmod 0600 $(IRCDDIR)/unrealircd.conf
+	$(INSTALL) -m 0600 badwords.*.conf help.conf LICENSE Donation $(IRCDDIR)
+	$(INSTALL) -m 0700 bugreport makeconf unreal $(IRCDDIR)
+	$(INSTALL) -m 0700 -d $(IRCDDIR)/modules
+	$(INSTALL) -m 0700 src/modules/*.so $(IRCDDIR)/modules
 
-pem:	src/ssl.cnf
+ pem:	src/ssl.cnf
 	@echo "Generating certificate request .. "
 	$(OPENSSLPATH) req -new \
               -config src/ssl.cnf -out server.req.pem \

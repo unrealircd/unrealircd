@@ -1,1762 +1,534 @@
-Originally by Roddy Vagg -- roddy@dal.net
-modified for UnrealIRCD3.1 by codemastr
-
---------------------
-
-	1) ............................. Introduction
-	2) ............................. ircd.conf Basics
-	3) ............................. ircd.conf Lines
-	 3.1) .......................... M Lines
-	 3.2) .......................... A Lines
-	 3.3) .......................... Y Lines
-	 3.4) .......................... I Lines
-	 3.5) .......................... O Lines
-	 3.6) .......................... U Lines
-	 3.7) .......................... C and N Lines
-	 3.8) .......................... K Lines
-	 3.9) .......................... q Lines (server form)
-	 3.10) ......................... Q Lines (nickname form)
-	 3.11) ......................... L Lines
-	 3.12) ......................... H Lines
-	 3.13) ......................... P Lines
-	 3.14) ......................... T Lines
-	 3.15) ......................... E Lines
-	 3.16) ......................... e Lines
-	 3.17) ......................... Summary
-	4) ............................. dccdeny.conf
-	 4.1) .......................... deny Lines 
-	5) ............................. chrestrict.conf
-	 5.1) .......................... msg Lines
-	 5.2) .......................... allow Lines
-	6) ............................. vhost.conf
-	 6.1) .......................... vhost Lines
-	7) ............................. unrealircd.conf
-	 7.1) .......................... Include Line
-	 7.2) .......................... Set KLINE_ADDRESS Line
-	 7.3) .......................... Set MODE_X Line
-	 7.4) .......................... Set MODE_I Line
-	 7.5) .......................... Set TRUEHUB Line
-	 7.6) .......................... Set CONFIG_FILE_STOP Line
-	 7.7) .......................... Set SHOWOPERS Line
-	 7.8) .......................... Set KILLDIFF Line
-	 7.9) .......................... Set SHOWOPERMOTD Line
-	 7.10).......................... Set HIDE_ULINES Line
-       7.11).......................... Set ALLOW_CHATOPS Line
-       7.12).......................... Set SOCKS_BAN_MESSAGE Line
-       7.13).......................... Set SOCKS_QUIT_MESSAGE Line
-       7.14).......................... Set SOCKSBANTIME Line
-       7.15).......................... Set MAXCHANNELSPERUSER Line
-       7.16).......................... Set WEBTV_SUPPORT Line
-       7.17).......................... Set NO_OPER_HIDING Line
-	 7.18) ......................... Set AUTO_JOIN_CHANS Line
-	8) ............................. network files
-	 8.1) .......................... Network Line
-	 8.2) .......................... Set ircnetwork Line
-	 8.3) .......................... Set defserver Line
-	 8.4) .......................... Set SERVICES_NAME Line
-	 8.5) .......................... Set oper_host Line
-	 8.6) .......................... Set admin_host Line
-	 8.7) .......................... Set locop_host Line
-	 8.8) .......................... Set sadmin_host Line
-	 8.9) .......................... Set netadmin_host Line
-	 8.10) ......................... Set coadmin_host Line
-	 8.11) ......................... Set techadmin_host Line
-	 8.12) ......................... Set hidden_host Line
-	 8.13) ......................... Set netdomain Line
-	 8.14) ......................... Set helpchan Line
-	 8.15) ......................... Set STATS_SERVER Line
-	 8.16) ......................... Set HUB Line
-	 8.17) ......................... Set iHAN Line
-	 8.18) ......................... Set net_quit Line
-
---------------------
-
-1) Introduction:
-
-  If you are running, or planning on running an IRC server for a network,
- you will need to setup an ircd.conf, your ircd.conf must meet the
- requirements of a linked network server which means it must contain all
- the standard network lines, these will be listed at the bottom of this
- document. (If you make your own network you may customize them yourself)
-
---------------------
-
-2) ircd.conf Basics:
-
-  When you compile your server, you must specify the correct paths to
- where you plan on keeping your ircd.conf, for simplicity it is recommended
- that you keep it in the same directory as your ircd binary and other ircd
- files.
-   note: You need only supply full pathnames for DPATH and SPATH, the
- other defines will only point to files under these directories so you
- need not put full path names.
-  For security reasons, your ircd.conf should have permissions set to 600,
- if other users on your system gain access to view the file they may be
- able to breach the security of your server and compromise the whole
- network.
-  When you have made your ircd.conf you may check it with the program
- `chkconf', this program is supplied with the source code release and will
- be installed into your ircd directory when you run `make install',
- `chkconf' will check your ircd.conf for errors so is a useful tool for
- beginners to ircd.conf.
-  Your ircd.conf will be made up of a series of lines, each line is used
- for a different purpose in the running of your server, some lines are
- mandatory for ircd, so you must enter these lines or your server will not
- start, these lines are listed below.
-  You may enter comments in your ircd.conf with the use of a hash mark (#)
- at the beginning of a line, it is recommended that you make full use of
- this to add comments to everything you put in your ircd.conf so you don't
- have any problems later.
-   eg: Put a contact email address and the name/nick of the server admin
-       above each C/N line pair.
-  When ircd reads the ircd.conf file, it does it upside down, so lines with
- higher preference should go lower in the file, this will be explained later.
-
---------------------
-
-3) ircd.conf Lines:
-
-  Each type of line in this section will be given a rating of how needed
-  it is in the running of the server, the ratings are:
-
-     MANDATORY: you absolutely MUST have this line
-     NETWORKED: you must have this line if plan on connecting your server
-                to other servers. (note: you can run ircd stand alone)
-     SUGGESTED: it is highly suggested that you use this line
-      OPTIONAL: it's completely up to you whether to define this or not
-   DISCOURAGED: you really should not use this line if at all
-                possible.
-
-  Note that "*" in a field indicates an "unused" field.
-
---------------------
-
-3.1) M Lines: [MANDATORY]
-
- This line sets your server's name, description, and port number.
- The standard port number used by most networks and supported by most clients is     
- 6667. It is recommended that you specify this as your main port.
- 
- 
- Syntax:
-M:hostname:IP:Description Of Your Server:6667
- The 1st field should be the `real' name of your server, not the short
- name.
- The 2nd field is the IP the server should bind to. Use an "*" to bind to all interfaces on the server. The 3rd field is your server's description, it is up to you what you put in this field, but a short description of its geographic location is recommended. The 4th field is the port number you compiled ircd with. This generally should be 6667.
- 
- Example:
-M:Irc.yournet.com::My first IRC server:6667
-
---------------------
-
-3.2) A Lines: [MANDATORY]
-
- This line sets your server's administrative information.
- Whenever a user types /admin on your server (or /admin <servername>)
- they will recieve the information you put here.
- This line has no set information, so you may put arbitrary text if you
- like, but it is recomended that you at least put your nick and email
- address so users may contact you if need be.
-
- Syntax:
-A:A little info about your server:Admin's nick/real name:contact address
- There is no fixed standard, so you may put whatever you like in each
- field, but you should put enough information for users to contact someone
- responsible for the server.
-
- Example:
-A:FooBar IRC Server:Admin - foobar:email - foo@bar.com
-
---------------------
-
-3.3) Y Lines: [SUGGESTED]
-
- These lines define connection classes. They allow you to fine-tune
- your incomming and outgoing connections, both server and client types.
- These classes are for use with C, N, I and O lines, more on this in later
- sections. Client and server connection classes are your responsibility, you   
- must make up your own set of Y lines for client connections based on your own
- situation (netwise location, machine, etc).
- Connection classes define a number of parameters for connections, these
- include:
-  o Ping frequency of a silent connection.
-  o Connect frequency (for server connections only!).
-  o Maximum number of links allowed on the specific connection class.
-  o Maximum sendq allowed for the connection before it is dropped.
- Your Y line numbers are not arbitraty. For server connection classes, the
- higher the class number, the higher the priority the connection's are given
- when auto-connecting, (see C/N lines below).
- - Ping frequency: When a connection is silent for this period of time
- the server will send a PING to the connection, if the client/server
- on the connection does not reply after a set period of time, the
- connection will be dropped. A value in this field will override the
- ping frequency defined at compile time in your config.h. For server
- connection classes, you should have the same ping frequency on both ends
- of the link, so you should stick with the standard DALnet classes.
- - Connect frequency: Since clients connect to servers and NOT the other
- way around, only server connection classes need to have a connect
- frequency. Client classes should have this field set to 0. When a server
- listed in the server's ircd.conf (see C/N lines) is missing and belongs
- on a conenction class that is holding less connections that defined by
- the max links field, the server will keep on trying to connect to
- the missing server. The amount time between connection attempts is what
- you define in this field.
-  example:
-   server1 and server2 are listed in server0's ircd.conf but the only
-   visible server to server0 is server1, both server1 and server2 are
-   in server0's ircd.conf on the same connection class that allows for `2'
-   links, server0 will go looking for server2 and try to connect to
-   it each `connect frequency' seconds until the server becomes visible
-   again, either by direct connection to server0, or by connection to server1
- - Maximum number of links: Each Y line should have a restriction on the number
- of connections allowed on the class. For client connections, when the limit
- is reached on a particular class, connecting clients trying to connect
- through this class are rejected. A server connecting on a `full' connection
- class will be allowed as this number on server connection classes is used for
- auto-connect purposes. As shown in the above example, when a missing server
- is listed for a particular connection class, and the class is not `full',
- your server will try and connect to this server until it becomes visible
- again. Servers being connected manually on a `full' connection class via the
- /connect command will be allowed as long as you compiled with MAXIMUM_LINKS
- high enough to accommodate all of your server connections. (you must compile
- as a HUB if you wish to hold more than one server connection, also see H
- lines later in this document).
- - Maximum sendq: SendQ defines the `que' of data waiting to be sent to the
- client/server on the other end of the connection. SendQ's will build up if
- the client requests more data than the link can handle, say if they issue the
- /list command on a network with a lot of channels and they are only on a
- 14.4K link, their sendq on the server will build up as all the data cannot
- be sent at once, the sendq size will decrease as the data is sent, and
- increase as more data is requested. Clients will normally sit with a sendq of
- 0, it is `abnormal' for a sendq to be high for a client for a long period
- of time. When 2 servers connect, they must send their own data to
- eachother, this data includes: all the users on the server and already
- connected servers, channels, user modes, channel modes, topics 
- etc. When there are many clients on a particular side of the connection, a
- sendq will build up, especially if the link is slow, or already congested
- (example: the link from Australia to the US). When the sendq built up reaches
- the max sendq defined in the connection class for the particular
- client/server, the connection will be dropped. If max sendq's are
- particularly high, it will allow clients/server to take up excess memory on
- the ircd machine so a limit should be placed, especially on client connection
- classes. (IMPORTANT!) If any value of max sendq defined in a connection
- class exceeds the value defined at compile time in your config.h, the sendq
- value will default back to the compile time sendq. If your sendq field in
- a Y line is empty, the class will use the default defined in your config.h
- SendQ's for all connections on your server can be viewed with the
-  /stats l <servername>
- command, this will show information for all your server's current links.
- You should have a set of standard server connection classes, at least one
- client connection class, and an Operator class. (see relevant parts of this
- document for notes on each of these)
-
- Syntax:
-Y:Class #:Ping frequency:Connect frequency:Max links:Max sendq
-
- Examples:
-Y:1:90:0:20:10000
- In this case, connect-frequency is 0 indicating that this is a client
- class (servers never connect to clients, it is the other way around).
- Clients may only idle for 90 seconds before being pinged by the server.
- The number of clients allowed to use this class is 20.
- Clients may only build up a sendq on the server of 10000 bits.
-
- These are some standard Y:lines that most networks use:
-
-# Connecting a hub to a hub
-Y:20:10:300:1:3000000
-# Connecting a US hub to a US leaf
-Y:30:45:0:0:2000000
-# Connecting a US leaf to a US hub
-Y:35:45:20:1:2000000
-# Connecting a US hub to an EU leaf
-Y:40:60:0:0:2200000
-# Connecting an EU leaf to a US hub
-Y:45:60:20:1:2200000
-# Connecting a US hub to an AU leaf
-Y:42:240:0:0:2200000
-# Connecting an AU leaf to a US hub
-Y:43:240:60:1:2200000
-# Oper connection class
-Y:10:300:0:20:1000000
-#User connection class
-Y:1:90:0:256:500000
-
---------------------
-
-3.4) I Lines: [MANDATORY]
-
- These lines are the ones initially responsible for letting clients connect
- to your server. So called `client-authorization' lines, they define who
- may connect, and which connection class they will connect through.
- I lines, like C, N and O lines refer back to Y lines, as they allow
- connections, and each connection to ircd needs to be assigned to a
- connection class. If you don't provide a connection class, the connection
- will be governed by the defaults set at compile time in your config.h.
- When a client connects to the server, it gives its own information,
- this information includes username, nick and can include a password, the
- server then goes through its client-authorization rules (I lines) to see
- if the client fits any of the connection criteria.
- The rules for connection on the I lines are read from right to left, so
- if a connection is made, it is made on the right most rule it matches on
- the line. Also, since the ircd.conf is read upside down, the server will
- put the client on the lowest I line matching the client information. This
- means that if the 1st rule the client can connect on matches a connection
- class (Y line) that is `full' (see above), the client will be rejected,
- even if there is a line further up in the file that the client matches on
- that uses a connection class that has room for more clients. This means
- that I lines may be used in much the same fashion as K lines (see later)
- to block certain clients. It also means that you may place certain clients
- on many different connection classes. (examples later)
- 
- Syntax:
-I:IP-address-mask:optional password:host/domain-mask::connection class (opt)
- Wildcards (`*') may be used in the mask fields (1 and 3) to allow for
- very broad connection rules. Ident (for more information on this, see
- rfc1413) can also be used by placing an `@' in the mask fields in the
- appropriate positions. If you don't want to use ident, only give the
- host/IP part of the connecting addresses, if you add a @ (usually used
- as *@), ircd will try and use ident to check the real username of the
- client, any connecting clients on host's that are running ident that
- give usernames that dont match those found by ircd will be rejected by
- the server. If the host is not running ident, a `~' will be placed in
- front of the username of the connecting client to show that the its
- host isnt running ident.
-
- Examples:
-
-I:*@*:foobar:*@*::1
- This line will allow anyone from any host that uses the password
- "foobar" to connect through connection class 1 (Y line 1), the server
- will also try and use ident to verify the username of the client.
- Placed at the top of the I lines in your ircd.conf, this line may serve
- as a fall-through for connecting clients, any client that does not match
- any other I line but gives the password "foobar" will be able to connect
- through this line (If Y line 1 has space).
-
-I:205.133.*::*.toledolink.com::1
- This is a standard vanilla I: line which will permit anyone with an IP
- address starting with 205.133 OR with a hostname ending in
- .toledolink.com to connect to the server. remember, ircd uses the
- right-most match, so if I connect as rmiller@glass.toledolink.com
- (which is rmiller@205.133.127.8) I will show up on IRC as
- rmiller@glass.toledolink.com since that is the first match it found.
- (Even though the second match is valid). Any clients coming through
- on this line will use connection class 1.
-
-I:*@205.133.*::*@*.toledolink.com::1
- Same as above, but the server will use ident. You may even specify
- certain usernames with ident I lines, but they will only match if their
- host is running ident.
-
-I:NOMATCH::rmiller@glass.toledolink.com::1
- Putting NOMATCH in the first field will stop the ircd from matching
- automatically against the IP address and it will force the server to
- match against the hostname. (the "NOMATCH" string is not mandatory, you
- can use any arbitrary text in the first field).
-
-I:*@*:ONE:*@*.com::1
- Putting ONE is the second field says that only one user may connect through the 
- use of this I:line. Once that one user is connected this I:line is ignored by 
- other users.
-
- Bulk example:
-I:NOMATCH::*@*::1
-I:NOMATCH::*@*.fr::2
-I:NOMATCH::*@*.de::3
-I:NOMATCH::*@*.se::4
-I:NOMATCH::*@*.au::5
-I:129.180.*::*.une.edu.au::6
- In this example, connecting clients will 1st be matched against the mask
- *.une.edu.au, if they match they will be placed on connection class 6
- (note: if 6 is full, they will be rejected, they wont be passed on to the
- next I line), then tried against the IP 129.180.*, if they match, they will
- be placed on class 6. If the client doesn't match either of these masks, they
- will be tried against the mask *.au, so if they are from Australia, but are
- not from *.une.edu.au they will be placed on class 5. This goes on through
- the other lines, being placed on the various connection classes if they match
- any of the indicated host masks, if the client is not from the IP 129.180.*,
- Australia, Sweden, Germany or France, they will be connected through the
- final (top) I line as it serves as a fall-through, so these clients will be
- put on class 1.
-
---------------------
-
-3.5) O Lines: [OPTIONAL]
-
- These lines provide rules as to who may gain Operator status on your server.
- O lines are much like I lines in their operation and syntax.
- Servers need not have any Operators as ircd, given well defined connection's
- can perform all of its functions automatically. Server admin's have the
- ability to `kill -HUP' the server's PID to rehash the config file, removing
- the need to use the /rehash command. However, an efficient network needs  
- operators to oversee the users of the server, and make sure
- users actually enjoy their time on IRC without being continually harassed
- etc by troublemakers.
- O lines give users power over the whole network, to use commands
- such as /kill, local Operators only have power on their local server, that
- is, the server where they can use the /oper command to make themselves +o.
- Abilities of Operators and Local Operators can be defined in your config.h.
- When a user issues the /oper command to the server, the server will search
- through all listed O lines for a match of the user's mask, much the same way
- as I lines. As with I lines, you may specify the use of ident by placing an
- `@' in the appropriate positions.
-
- Syntax:
-
-O:hostname:password:nickname:flags:class
- See I lines for rules about the hostname and using ident.
- If you use ident, a client matching the hostname must have ident running on
- their host to be able to +o themselves.
- If you compiled defining oper passwords to be crypted, you must 1st crypt
- the plain text using mkpasswd, a program supplied with the ircd distribution.
- See src/crypt/README for more information on this.
- The nickname is the nickname they must pass with the /oper command
-  ie:
-   /oper <nickname> <password>
- The flags allow you to specify what access an oper will have with great  
- control. This also allows you to give users Administrator access on your  
- server. A set of standard FULL ACCESS flags is OaARDNz*^. See below for a 
- complete list of flags.
-
- The class is the connection class to be used when the user /oper's using
- the O line, they connect using the standard I -- Y lines, but when they
- /oper successfully they are passed across to the new Y line.
-
- Examples:
-
-O:RIP.org:waltspass:Walt:OaARD:10
- This line will allow anyone on the host RIP.org (running ident or not) to
- issue the command `/oper Walt waltspass', at which point they will be moved
- over to class 10 and be made an Admin with /restart and /die access.
-
- Valid Flags: 
-r = access to /rehash server
-R = access to /restart server
-D = access to /die server
-h = oper can send /help ops
-g = oper can send /globops
-w = oper can send /wallops
-l = oper can send /locops
-c = access to do local /squits and /connects
-L = access to do remote /squits and /connects
-k = access to do local /kills
-K = access to do global /kills
-b = oper can /kline users from server
-B = oper can /unkline users from server
-n = oper can send local server notices(/notice $servername message)
-G = oper can send global server notices(/notce $*.my.net message)
-S = oper can join unlimited amount of channels
-A = admin
-u = oper can set /umode +c
-f = oper can set /umode +f
-^ = oper can set /umode +I
-e = oper can set /umode +e
-W = oper can set /umode +W
-H = oper gets auto +x on /oper
-o = local oper, flags included: rhgwlckbBnuf
-O = global oper, flags included: oRDCK
-a = services admin, access to /samode
-C = co admin
-T = tech admin
-A = admin
-N = network admin access to remote /rehash and remote /restart and a bunch more
-* = flags included: AaNCTzSHW^
---------------------
-
-3.6) U Lines: [OPTIONAL]
-
- These lines define which server(s) on the network your server is connected
- to will be able to `hack' channel modes.
- On most networks, services are given this power, this allows the server
- to change modes on channels without being a channel operator, the
- commonly used form is ChanServ changing channel modes while not in the
- channels.
- It is very important that you add the U:lines required by your network, because 
- if you don't it can lead to desync in channel modes as well as "mode setting 
- wars".
- U lined servers also have the capability to add Akill's to your server,
- Akill's are much the same as the /kline command except that they show up
- as A: lines on /stats k.
-
- Syntax:
-U:servername:*:*
- The last 2 fields are currently unused so you only need to give the U
- lined server's name.
-
- Example:
-U:services.your.net:*:*
- This will allow services.your.net to "hack" channel modes and use certain 
- U:line only commands.
-
---------------------
-
-3.7) C and N Lines [NETWORKED]
-
- These lines are always used in pairs, one will not work without the other.
- C lines define who your server may connect to, while N lines define what
- servers may connect to you.
- When two servers connect, they both send each other the `SERVER' command,
- this command contains the server name and server info (set by M lines)
- along with this command is sent a password with the PASS command, C and N
- lines provide a set of rules governing the connection between servers
- given the details of the server and pass command's.
- When one a server initiates the connection, the other server will check
- the details of the incoming server against its N lines, if a match is
- found, the server will return the server and pass command's to the
- initiating server, which will also check its N lines for a match.
- For a server to initiate a connection, it must have a C line. C lines
- tell the server where to go to make the connection and what to send for
- the pass command.
- What this all means is that for two servers to make a complete connection,
- they must have both C and N lines to refer to for the other server.
-
- Syntax:
-C:remote server's hostname/IP:password:remote server's name:port:class
-N:remote server's hostname/IP:password:remote server's name:host mask:class
- The remote server's hostname/IP should be the location on the internet that
- the server can be found. IP addresses are preferred as they are more secure,
- and can be a little quicker for the server. As with I and O lines, ident
- can be used with this 1st field to specify the username the ircd on the
- remote server is running from (if the remote server is running ident), to
- use ident with C/N lines, place the username with an @ before the hostname.
- The password should be crypted if you compile ircd specifying that link
- passwords should be crypted. Your link passwords should be very secure, as
- they provide more power, if hacked, than Operator passwords do. However
- crypted link passwords can be very awkward to keep track of.
- Your C line password is the password used in the pass command, while your
- N line password will be used to check against the pass command used by
- incoming servers. So, your C line password should match the listed
- server's N line password, and your N line password should match their C
- line password.
- If you compile your ircd specifying crypted link passwords, you only need
- to crypt your N line passwords, use the same method as with O line
- passwords. If you crypt your C line passwords, your link will not work!
- Crypted passwords are a one sided affair, because one server crypts its
- N line passwords does not mean the connecting servers must crypt their
- C line passwords for that server.
- For the 3rd field, the remote servers `name' should be used, this name is
- the one given in that servers M line (see above). This name will be sent
- with the SERVER command, so it must match the one given. The C and N line
- pair should have the same name for this field.
- The 4th field of C lines may contain the remote servers connection port.
- It is not mandatory that you place a port number in this field. If you don't  
- give a port number, the server will not try and autoconnect to the listed 
- server. If you do give a port number, the server will only try and
- autoconnect to the listed server if there is enough room on the connection
- class listed at the end of the C line (connection classes are covered in
- more detail above, under Y lines), and the listed server is not visible
- (ie: it is not connected to the network). If you don't give a port number,
- any /connect commands for this C line will use the default port specified
- in your config.h unless a port is given with the command. If you do put a
- port number, any /connect command's will use this port unless another port
- number is given with the command.
- The 4th field of N lines is called the `host mask', this defined how many
- parts of your hostname the incoming server will mask to. So, if your
- server's name is disney.us.dal.net, and you want the connecting server to
- see you as *.us.dal.net you will give a host mask of 1 in your N line. This
- field should normally be left blank.
- The 5th (last) field of both C and N lines gives the connection class to
- place the connection on. If your C line has a 42 in this field, and your
- server initiates a connection through this line, the connection will be
- placed on class 42, however, if You have a 42 in your C line and a 43 in
- your N line and an incoming server initiates a connection via this N
- line, the server connection will be placed on class 43.
- 
- Examples: 
-C:143.53.233.32:mypass:somewhere.fr.your.net:7325:35
-N:143.53.233.32:yourpass:somewhere.fr.your.net::35
- This set will allow a server named somewhere.fr.dal.net to connect to your
- server if it has the IP address of 143.53.233.32 and gives a password of
- `yourpass'. This connection will be governed by connection class 35.
- If your server receives the command /connect somewhere.*, it will try and
- connect to the IP 143.53.233.32 through port 7325 and give the password
- `mypass'.
-
-C:143.53.233.32:mypass:somewhere.fr.your.net:7325:35
-N:143.53.233.32:yourpass:somewhere.fr.your.net::35
-C:ircd@176.43.652.31:apass:elsewhere.jp.your.net:7235:35
-N:ircd@176.43.652.31:THEpass:elsewhere.jp.your.net::33
- Both these set's will work as explained above, but if your Y line defining
- class 35 has `max links' set to 1, and one of these servers is connected to
- your server, your server will not try and autoconnect to the other since
- the Y line is `full', but it will accept any incoming connections from the
- other server and any /connect commands given for this server. If your Y
- line allows for more connections but your C lines do not have port numbers,
- your server will not try and autoconnect.
- Since the second set in this example has a username, ident will be used to
- authenticate any connections made to this server. If the listed server does
- not run ident, or the incoming connection comes from another username, the
- connection will be rejected.
- If a connection is made via the second set by your server, the connection
- will be ruled by connection class 35, if the other server initiates the
- connection, the connection will use class 33.
- Autoconnect C/N line pairs can be given preference over other pairs by placing
- them lower in your ircd.conf, the lower the line, the higher the priority
- when autoconnecting.
- Connection classes and C/N line set's allow you to refine your autoconnects
- to a very high degree, with practice you can have your server running so
- it does not need any help.
-
---------------------
-
-3.8) K Lines [OPTIONAL]
-
- These lines restrict access to certain users to your server based on
- user@host matches and time of the day.
- K lines can come in 3 forms, only one of which you can specify in your
- ircd.conf, this type will show up as K on /stats k, the other types
- are `AutoKill' which will show up as A on /stats k, and `kline' which will
- show up as k on /stats k. AutoKill's are set by U lined servers (see
- above), they act in the same way as K lines except that they are set
- remotely and are usually set on all servers, they disappear when you
- /rehash or restart your server. klines are set via the /kline command,
- they operate more like AutoKill's than K lines because they also disappear
- when you /rehash, or restart the server. The /kline command can be used on
- nicknames that appear on IRC, or you can use a user@host mask. If the
- /kline is done on an existing nickname, a kline will be set with that users
- mask and they will be killed off the server.
-
- Syntax:
-K:hostmask:time/comment:username
- The hostmask is the host that the user will have on IRC, this may be an
- IP address or a standard host name. The time/comment field may either
- contain nothing, a set of times, or a comment. This field should not
- contain spaces, if you place a comment in the field, you should try and
- be creative in your avoidance of spaces. The syntax of time specification
- is:
-  from-to[,from-to[,from-to]]....
- Again, you should not use spaces in this field, but you may specify as
- many time periods as you want/need. 24 hour time should be used, AM and PM
- will not work.
- You may also specify a filename as a reason. To do so use |kc.reason as the 
- reason. Replace reason with the reason for the ban. Note, all files must be in 
- the format of kc.* to ensure no important configuration files are sent to the 
- user. 
- The username will be the username that shows up on IRC.
- Wildcards (`*', `?') may be used with K lines in both the hostmask and
- username fields.
-
- Examples:
-K:RIP.org::walt
- This will reject any user who appears as `walt@RIP.org'.
-
-K:*.edu:0800-1200,1300-1700:*
- This will reject any user from any host with a top level `edu', In other
- words, anyone appearing as *@*.edu are banned from the server.
- This ban is only present during the hours of 8AM to 12AM, and again from
- 1PM to 5PM, at times other than this, the K line will not be active.
-
-K:*.lamer.org:|kc.spamming:*
- This will reject all users from *.lamer.org and play the file kc.spamming as 
- the reason. 
-
-K:*::*rad
- This K line will reject anyone with the username `rad', or anything ending
- in `rad'. This ban will disallow anyone using `rad' running ident or not.
- You must always take into account the ident character (`~') that is placed
- in front of usernames when their host is not running ident. If you place a
- K line on a username `rad' the user will be banned only if they are running
- ident, but if this user can turn off ident they can appear as ~rad, this
- will allow them to bypass any ban of username `rad'. So, wildcards should
- be used with usernames to take into account the ability to turn ident on
- and off. (The ability to change usernames can only be tackled with a `*'
- in the username field)
-
---------------------
-
-3.9) Q Lines (server form) [DISCOURAGED]
-
- Server form Q lines on servers are used to disallow operators on
- certain servers to use commands such as remote /kill's, and remote
- /connect's, this will effectively restrict the operators on the server to
- local operator privileges. These lines are usually only used for `test'
- server situations. If a server isn't officially part of a network, they may
- be temporarily linked and Q lined, this means the server can be tested
- while not posing a threat to the rest of the network. Q lines need only be
- placed on the hub connecting the `test' server.
-
- Syntax:
-Q:*:*:servername
- The 1st 2 fields are currently unused. A Q line placed on a hub connected
- to the named server will disallow operators on the server to affect other
- DALnet users/servers.
-
- Example:
-Q:::test-server.my.net
- Q line a server with the name `test-server.my.net'.
-
---------------------
-
-3.10) Q lines (nickname form) [OPTIONAL]
-
- Nickname form Q lines have the ability to deny certain nicknames to users.
- If a nickname is Q lined, the only people allowed to use those nicknames
- are Operators. Q lines, like most other things in your ircd.conf, are local
- only, for a nickname to be Q lined on a whole network all servers must have
- a Q line for that nick. Q lines may also contain comments, these comments
- are given to the user when they attempt to use the nickname and are asked
- to choose another.
-
- Syntax:
-Q:*:reason why nick is quarantined:nickname
- The 1st field is currently unused. The 2nd field is the comment sent to any
- user attempting to use the nickname. Unlike K lines, you may use spaces.
- The last field is the nickname to be quarantined, this nickname may contain
- wildcards.
-
- Examples:
-Q::No nicknames on MY server!:*
- This Q line will disallow any nicknames on the server giving the reason:
-  No nicknames on MY server!
- Only Operators will be allowed to use any nicknames, but since you must be
- a user before you can be +o, you will effectively ban everyone from your
- server.
-
-Q::Do not use the Lords name in vain!:God
- Anyone attempting to use the nickname `God' on your server will be told
- that they must find a new nickname and will be given the reason:
-  Do not use the Lords name in vain!
-
- Below are a set of standard Q lines that should be in place on all
- server's. They are as follows:
-
-Q::Reserved for services:*Chan*S*rv*
-Q::Reserved for services:*Nick*S*rv*
-Q::Reserved for services:*Memo*S*rv
-Q::Reserved for services:*Oper*S*rv*
-Q::Reserved for services:*Help*S*rv*
-Q::Reserved for services:*Stat*S*rv*
-Q::Reserved for operators:IRC*op*
-Q::Reserved for operators:*oper*
-Q::Causes problems with mIRC:Status
-
---------------------
-
-3.11) L Lines [OPTIONAL/NETWORKED]
-
- These lines specify which servers are to behave as leaves, that is,
- servers that may not have any other servers connected to them.
- They will only be useful if your server is a non-leaf (hub) server.
- Not only can you limit servers to leaves, but you can also specify
- what tree depth may appear after certain servers. If a server connects
- but tells your server that it has a larger tree depth behind it than is
- allowed via your L line for the server, the server will be rejected.
- A limit of `0' will mean the server may only be a leaf. A limit of `1'
- will mean that only leaf servers may be connected to the L lined server
- when it is connected to your server.
- You may also use L lines to restrict what servers may connect to certain
- servers while they are connected to your server.
-
- Syntax:
-L:hostmask of disallowed servers:*:server name:depth
- The 1st field defines the limitations on servers allowed to connect to
- the L lined server by hostmask. If any server connects to the L lined
- server while it is connected to your server, and it's name matches the
- hostmask given here, it will be rejected. Wildcards are allowed. You do not
- need to put a value in this field.
- The 2nd field is currently unused and should be left blank.
- The 3rd field is the name of the server to be L lined, when this server
- connects to your server, the restrictions defined by the L line are placed
- on this server. Wildcards are allowed.
- The 4th field defines the depth of servers allowed to be connected behind
- the L lined server. 
-
- Examples:
-L:::leaf.de.dal.net
- This line will allow a server named `leaf.de.your.net' to connect only as
- a leaf. So this server may not connect any other servers behind it.
-
-L:::semi-hub.sg.dal.net:1
- This line will force the server named `semi-hub.sg.your.net' to allow only
- leaf servers to connect behind it. ie: to have a tree depth of 1.
-
-L:*.us.dal.net::*.au.your.net
-L:*.eu.dal.net::*.au.your.net
- These lines will make sure that any server with a name matching
- *.au.your.net will not introduce any servers matching *.us.your.net or
- *.eu.your.net. This can be useful for stopping certain hubs from letting
- its autoconnects route the network badly.
-
---------------------
-
-3.12) H Lines [OPTIONAL/NETWORKED]
-
- These lines are similar to L lines, except that they define what servers
- may act as a hub while connected to you. That is, which servers may
- introduce other servers behind them.
- You may limit what servers may be connected behind the H lined server.
-
- Syntax:
-H:servers which are allowed behind the hub:*:hub servername
- The 1st field defines what server names the H lined server is allowed to
- introduce. Wildcards are allowed.
- The 2nd field is currently unused and should be left blank.
- The 3rd field should be the exact name of the server allowed to be a hub
- while connected to you. You may not use wildcards with this field unless
- the server's name includes a `*' (See N lines for host masking).
-
- Examples:
-H:*::dal-hub.us.your.net
- This line will allow the server with the name `dal-hub.us.your.net' to act
- as a hub server while you are connected to it, there are no restrictions
- on the names of the servers it may introduce.
-
-H:*.us.dal.net::usa-hub.us.your.net
- This line will allow the server named `usa-hub.us.your.net' to act as a hub
- while your server is connected to it, but it is limited to introducing
- servers with names matching `*.us.your.net', so any servers trying to
- connect to `usa-hub.us.your.net' with a name such as `bad-link.nz.your.net'
- will be rejected by your server.
-
---------------------
-
-3.13) P lines [OPTIONAL]
-
- These lines will open up ports other than the port you specified in your
- config.h when you compiled your ircd.
- Using internet domain ports below 1024 mean that you must run ircd from
- inetd. ircd can listen to ports in the UNIX domain as well as the internet
- domain. With UNIX domain ports you must give a unix socket file, you must
- also compile ircd with UNIXPORT defined in your config.h.
- You may limit usage of ports in the internet domain to certain hostmasks.
- You do not need to provide a P line for the default port you defined in
- your config.h, only extra ports you wish to open. You should compile ircd
- to run from port 7000, but it is recomended that you add a P line for port
- 6667 as most IRC clients default to this port when connecting. If you are
- connected to DALnet, you should have a P line for port 7325, this is the
- standard server connection port for all DALnet servers.
-
- Syntax:
-P:hostmask or UNIX socket file:*:*:port number
- The 1st field should either specify a path to a UNIX socket file, or give
- a hostmask to match against connecting clients on this port. Clients not
- matching this mask will be rejected.
- The 2nd and 3rd field's are currently unused, and should be left blank.
- The last field is the port number to open up and listen to for connections.
-
- Examples:
-P:*:::7325
- This will open up port 7325.
-
-P:*.net:::6665
- This line will open up port 6665 and wait for connections, connections from
- hosts not matching `*.net' will be rejected.
-
-P:/tmp/.ircd:*:*:6666
- This line will open up the port 6666 in the UNIX domain, with a socket file
- of: /tmp/.ircd.
-
---------------------
-
-3.14) T lines [OPTIONAL]
-
- These lines allow you to have multiple MOTD and RULES files in the same IRCd.
- The idea of this is to allow you to have MOTD and RULES files in different  
- languages for your users all over the world. The way this works is you can   
- match a MOTD and RULES file to a certain part of a users host.  For example 
- *.fr  (France) now you can make it so all *.fr users see a French MOTD and 
- RULES where  as everyone else still sees the default.
-
- Syntax:
-T:hostmask:motd file:rules file
- The first field is where you specify the hostmask to match. This should be a  
- TLD (Top Level Domain) but doesn't have to be. The second is the location of 
- the MOTD file to display, this should be relative to DPATH. The last field is
- the path to the RULES file, again this should also be relative to DPATH.  The 
- best way to keep your T:lines MOTD/RULES files in order is to make a motds/ and  
- rules/ then make files such as spanish.motd and spanish.rules etc.
-
- Examples:
-T:bngr216-37-173ppp107.epix.net:motds/epix.motd:rules/epix.rules
- This T:line uses a matches a specific host. When a user with the host bngr216- 
- 37-173ppp107.epix.net requests a /MOTD they will see the file motds/epix.motd 
- and when they request a /RULES they will see the file rules/epix.rules. 
-
-T:*.epix.net:motds/epix.motd:rules/epix.rules
- This T:line matches based on ISP. When a user from *.epix.net requests a /MOTD 
- or /RULES the specified files are played.
-
-T:*.dk:motds/danish.motd:rules/danish.rules
- This T:line matches based on TLD. This is probably the most efficient method to 
- use. When a user from the .dk TLD requests a /MOTD the Danish MOTD is played
- when they request a /RULES the Danish RULES file is played.
- 
---------------------
-
-3.15) E Lines [OPTIONAL]
-
- These lines allow you to exclude certain people from a K:line, or to prevent 
- certain people from receiving a K:line. E:lines can be used with a more strict 
- host than a K:line so for example if you K:line *.net and then E:line 
- splitrock.net only users from splitrock.net may connect. These lines are also 
- often used to prevent the server's staff from being K:lined from that server.
-
- Syntax:
-E:hostmask:reason:ident
- The first field is where you enter the hostmask that the E:line will apply to.  
- The reason parameter allows you to specify why that hostmask is E:lined. The 
- third field is optional. To E:line all idents just specify this field as an *. 
- 
- Examples:
-E:*.epix.net:Admin's ISP:*
- This E:line affects all *.epix.net users with reason 'Admin's ISP'. The * in 
- the ident field says that it applies to all *.epix.net users.
-
-E:*.epix.net:Server Admin:n64master
- This E:line affects any *.epix.net user using the n64master ident, with reason 'Server Admin'. This is probably the best way to go if you are making the E:line 
- to protect server staff.
-
---------------------
-
-3.16) e Lines [OPTIONAL]
-
- These lines allow you to specify which hosts will not be scaned by the proxy  
- scanner. This will allow you to make certain proxys to connect while the rest 
- are still killed. Note, if you want to allow all proxys, don't e:line *, just 
- disable it at compile time.
-
- Syntax:
-e:IP address:*:*
- This line requires only one field, the first field is the IP address of the 
- host to be e lined. Make sure you use an IP and not a hostname or this will not 
- work.
-
- Examples:
-e:234.45.32.1:*:*
- This will prevent any user who's host resolves to 234.45.32.1 from being 
- scanned for an open wingate/proxy by the proxy scanner when they connect.
-
---------------------
-
-3.17) Summary:
-
- Well, that's it for the lines you may use in your ircd.conf. Remember that
- ircd.conf is an art, just like any other type of programming. Some parts
- are particularly easy, but other's, like Y lines, can take a while to get
- used to. Given a little time experimenting with lines on a network of
- servers, you will become well versed in ircd.conf programming.
-
-Good luck!
-
---------------------
-
-4) dccdeny.conf:
- 
- The dccdeny.conf allows you to specify files which may not be sent through the 
- use of DCC (Direct Client Connection). This is mainly to keep the speading of 
- virii at a minimum on your network. It is strongly suggested that you set up a 
- dccdeny.conf as it will help you provide a safe enviromnet for your users.
-
-4.1) deny Lines:
- 
- As with the ircd.conf, dccdeny.conf supports comments in the form of # comment. 
- It is suggested that you place comments above each dccdeny for easy reference.
- 
- Syntax:
-deny filename reason
- The first field is required to be deny, this tells the server that this line 
- specifies a file which should be denied. The second field is where you specify 
- what file should be denied. The last field is where you specify a reason. It is  
- recommended you place a web address such as http://www.nohack.net in the reason 
- so if the user is infected with a virus, they can learn how to remove it.
-
-deny dmsetup.exe You may be infected with DMSetup, visit http://www.nohack.net 
- This line will deny users to send the file dmsetup.exe.  If they attempt to 
- send this file the server will display the reason which is 'You may be infected 
- with DMSetup, visit http://www.nohack.net. 
-
-deny *.jpg.bat You may be infected with a virus, visit http://www.nohack.net
- This line will deny sends matching *.jpg.bat and display the reason 'You may be infected with a virus, visit http://www.nohack.net' when a send is attempted.
-
---------------------
-
-5) chrestrict.conf:
- 
- The chrestrict.conf allows you to limit what channels users may join. This is 
- strongly discouraged for most networks. This is just provided for the networks 
- that wish to have one open channel on a specific topic.
-
---------------------
-
-5.1) msg Lines:
- 
- The msg line allows you to specify a message that will be played when a user 
- attempts to join a channel that is not allowed. 
-
- Syntax:
-msg message
- The first field tells the server that this is a message line. The second field 
- is where you specify the message that will be displayed when a user attempts to 
- join a denied channel.
-
- Examples:
-msg Sorry, the channel you attempted to join is not allowed on this network
- This line will display 'Sorry, the channel you attempted to join is not allowed 
- on this network' when a user trys to enter a channel that is denied.
-
---------------------
-
-5.2) allow Lines:
-
- The allow lines say which channels users are allowed to join. Any channel not 
- in an allow line will be denied to the user.
-
- Syntax:
-allow channel
- The first field tells the server this is an allow line. The second is where you 
- specify the channel which users are allowed to join.
-
- Examples:
-allow #help
- This line will allow users to join #help and deny them from joining all other 
- channels.
-
---------------------
-
-6) vhost.conf:
- 
- The vhost.conf file allows you to integrate a BNC type program into your ircd. 
- This command works through use of the SETHOST command. You must be set +x in 
- order for you to be able to keep your vhost, setting -x will return you to your 
- normal host.
-
-6.1) vhost Lines:
- 
- vhost lines are the lines that allow you to create specific vhosts for certain  
- users. These lines are used along with the /VHOST login password command.
-
- Syntax:
-vhost virtualhost username password hostmask
- The first field tells the server this is a vhost command. The second field is 
- where you specify what the users host will be changed to once they use the 
- /VHOST command. The third field is the username field and forth is password, a 
- user must use the correct username and password in order to use the vhost. The 
- last field is the hostmask. This allows you to specify which users can use that 
- vhost based on host, to allow all users use *@*.
-
- Examples:
-vhost i.work.at.the.foobar.net john21 asdf1234 *@*
- This line will grant the user the hostname i.work.at.the.foobar.net, if they 
- supply the username john21 and the password asdf1234. This line allows any 
- hostmask to use the line since it has *@*.
-
-vhost i.am.a.lamer.org codemastr jnh32 n64master@*.epix.net 
- This line will give the user the hostname i.am.a.lamer.org, if they supply the   
- username codemastr and the password jnh32, but only if they match the hostmask 
- n64master@*.epix.net. 
-
---------------------
-
-7) unrealircd.conf
-
- The unrealircd.conf allows you to change certain settings in your IRCd that 
- used to be set at compile time. This feature is especially beneficial to 
- Windows users since they use a precompiled version. The unrealircd.conf works 
- along with your network file (explained in section 8) to provide a completely 
- customized IRCd.
-
---------------------
-
-7.1) Include Line:
- 
- The include line allows you to tell the unrealircd.conf where your network file 
- is located. This path must be relative to DPATH in order for your IRCd to work. 
-
- Syntax:
-Include .................: filename
- This line will say that the network file is located in the field filename,  
- again the path to the file must be relative to DPATH.
-
- Examples:
-Include .................: networks/roxnet.network
- This line says that you will be using the roxnet.network file, which is located 
- in the networks directory. The networks/yourfile.network is most likely the 
- format you will use if you keep the standard DPATH.
-
-Include .................: roxnet.network
- This line says you will use the file roxnet.network which is located in the 
- same directory as DPATH. This is valid although it is not the default.
-
---------------------
-
-7.2) Set KLINE_ADDRESS Line:
- 
- This line allows you to tell the IRCd what email should be displayed to a user 
- when they are klined. It is strongly encouraged that you set this to a valid 
- email address of someone on the server staff.
-
- Syntax:
-Set KLINE_ADDRESS .......: emailaddress
- This line tells the server that the K:Line email address is located in the 
- field emailaddress. Note, the emailaddress is not checked to see if it is valid 
- so it is up to you to set it right.
-
- Examples:
-Set KLINE_ADDRESS .......: bob@myserver.net 
- This tells the server that the K:Line email address is bob@myserver.net and 
- when a user gets klined this will be the email address shown to them.
-
---------------------
-
-7.3) Set MODE_X Line:
- 
- This line lets you tell the server whether or not to set a user +x when they 
- connect to the server. Set it to 1 for yes, or 0 for no. It is encouraged that 
- you set this to 1 as it will help prevent users against nukes and other 
- malicious attacks.
-
- Syntax:
-Set MODE_X ..............: 1/0
- If this line is set to 1 then the server will set users +x when they connect to 
- the server. If it is set to 0 they will not be set +x on connect.
-
- Examples:
-Set MODE_X ..............: 1
- This line has auto +x on connect enabled, this is the recommended setting for 
- security purposes.
-
-Set MODE_X ..............: 0
- This line has auto +x disabled. This is discouraged, but it is not required 
- that auto +x be enabled.
-
---------------------
-
-7.4) Set MODE_I Line:
- 
- This line lets you tell the server whether or not to set a user +i when they 
- connect to the server. Set it to 1 for yes, or 0 for no. It is encouraged that 
- you set this to 1 as it will help prevent users from getting unwanted messages 
- from users.
-
- Syntax:
-Set MODE_I ..............: 1/0
- If this line is set to 1 then the server will set users +i when they connect to 
- the server. If it is set to 0 they will not be set +i on connect.
-
- Examples:
-Set MODE_I ..............: 1
- This line has auto +i on connect enabled, this is the recommended setting for 
- security purposes.
-
-Set MODE_I ..............: 0
- This line has auto +i disabled. This is discouraged, but it is not required 
- that auto +i be enabled.
-
---------------------
-
-7.5) Set TRUEHUB Line:
- 
- The Set TRUEHUB line allows you to tell the server the server you are a Hub and 
- not a HalfHub. For most networks it is recommended that you set this to 1 to 
- enable your server as a Hub. Note, if you compiled your server as a leaf and 
- set this to 1 it will give an error. Only set this to 1 if you compiled your 
- server as a hub.
-
- Syntax:
-Set TRUEHUB .............: 1/0
- If this line is set to 1 then TRUEHUB is enabled. If it is set to 0 it is 
- disabled. Again it is recommended for most networks that this is set to 1, and 
- may only be used if you compiled as a Hub.
-
- Examples:
-Set TRUEHUB .............: 1
- This line has TRUEHUB enabled, the server will send a GLOBOPS when it links.
-
-Set TRUEHUB .............: 0
- This line has TRUEHUB disabled. The server will not send a GLOBOPS when it 
- links, and it will link as a half hub.
-
---------------------
-
-7.6) Set CONFIG_FILE_STOP Line:
- 
- The Set CONFIG_FILE_STOP line must be set to 0 in order for your IRCd to work. 
- If this is set to 1 your IRCd will give an error and won't start. This line is 
- there just to makesure you take the time to read over your unrealircd.conf and  
- configure it correctly.
-
- Syntax:
-Set CONFIG_FILE_STOP ....: 1/0
- If this line is set to 1 then your IRCd will not start and will give you an 
- error. It must be set to 0 in order to work. If set to 0 your IRCd will load 
- normally.
-
- Examples:
-Set CONFIG_FILE_STOP ....: 1
- In this line, the IRCd will die and give an error when it attempts to load the 
- unrealircd.conf.
-
-Set CONFIG_FILE_STOP ....: 0
- This line will allow the IRCd to load and run fine without giving any errors.
-
---------------------
-
-7.7) Set SHOWOPERS line:
- 
- This line sets whether non opers will be allowed to user /stats O to see a list 
- of IRCOps on the server. This line may be set to whatever you want, although it 
- is recommended you set this to 0 you may set it to 1.
-
- Syntax:
-Set SHOWOPERS ...........: 1/0
- If this line is set to 1, then all users will be able to see a list of O:lines, 
- note a non oper will not see the host allowed by this line for security 
- reasons. If this line is set to 0 then only opers may request a /stats O.
-
- Examples:
-Set SHOWOPERS ...........: 1
- This line allows all users to view a list of all the opers on a server. Again 
- they will not be able to see the O:lines hosts or flags for security reasons.
- 
-Set SHOWOPERS ...........: 0
- This line only allows opers to request a /stats O, if a user requests it, it 
- will return no information. 
-
---------------------
-
-7.8) Set KILLDIFF Line:
- 
- This line allows you to set whether the new /kill format should be used. Then 
- new format includes the server from which the /kill came from, the old format 
- does not.
-
- Syntax:
-Set KILLDIFF ............: 1/0
- If this line is set to 1 the new format will be used. If it is set to 0 then 
- the standard format will be used. Note, if you set this to 1 then some users 
- scripts may not function correctly, so if you want backwards compatibility set 
- this to 0.
-
- Examples:
-Set KILLDIFF ............: 1
- This line will make the server use the new /kill format, and the server name 
- will be displayed.
-
-Set KILLDIFF ............: 0
- This line will disable the new /kill format and the standard format will be 
- displayed to the user. This is recommended for backwards compatibility.
-
---------------------
-
-7.9) Set SHOWOPERMOTD Line:
- 
- This line allows you to set whether or not the OperMOTD will be displayed to a 
- user when they /oper. This is completely up to you as to what it shoul be set 
- to, although it is recommended that if you do not have an OperMOTD you set this 
- to 0 to avoid the error message from being displayed.
-
- Syntax:
-Set SHOWOPERMOTD ........: 1/0
- If this line is set to 1 then the OperMOTD is displayed when the user /oper's. 
- If it is set to 0 then the user must /OperMOTD to see the OperMOTD.
-
-Set SHOWOPERMOTD ........: 1
- This line will make the server display the OperMOTD to the user when the /oper 
- up.
-
-Set SHOWOPERMOTD ........: 0
- This line will not make the server display the OperMOTD, and instead make the 
- user have to type /OperMOTD to view the OperMOTD.
-
---------------------
-
-7.10) Set HIDE_ULINES Line:
-
- This line allows you to hide U:lined servers from non-opers in /links. This can 
- help in adding security, since a user can not DoS services uplink to disconnect 
- the services, but can also be a disadvantage if you have servers with a lot of 
- hops to services, since a user can not get closer to the services server.
-
- Syntax:
-Set HIDE_ULINES .........: 1/0
- If this line is set to 1, then non-opers can not see U:lines in /links, if it 
- is set to 0 non-opers can see U:lines in /links.
-
- Examples:
-Set HIDE_ULINES .........: 1
- This line makes it so only opers can see U:lined servers in /links.
-
-Set HIDE_ULINES .........: 0
- This line makes it so anyone can see U:lined servers in /links.
-
---------------------
-
-7.11) Set ALLOW_CHATOPS Line
-
- This line defines whether or not /chatops will be allowed to be used. When  
- disabled /chatops as well as user mode +b will be disabled.
-
- Syntax:
-Set ALLOW_CHATOPS .......: 1/0
- If this line is set to 1, then /chatops and +b are allowed, if it is set to 0, 
- then /chatops and +b are disabled.
-
- Examples:
-Set ALLOW_CHATOPS .......: 1
- This line will allow use of /chatops and +b.
-
-Set ALLOW_CHATOPS .......: 0
- This line will disable /chatops and +b.
-
---------------------
-
-7.12) Set SOCKS_BAN_MESSAGE Line
-
- This line allows you to specify the reason to be used in the Z:line when a user 
- is killed for an open proxy server. It is very important that this is set, if 
- left NULL it can cause serious problems.
-
- Syntax:
-Set SOCKS_BAN_MESSAGE ...: message
- In this line the word "message" should be replaced with the reason the user is 
- being Z:lined, the default is "Insecure SOCKS Server".
-
- Examples:
-Set SOCKS_BAN_MESSAGE ...: You are running an insecure SOCKS Server.
- This line will Z:line a user using an open SOCKS server with the reason, "You  
- are running an insecure SOCKS Server."
-
---------------------
-
-7.13) Set SOCKS_QUIT_MESSAGE Line
-
- This line defines the message that will be used in the QUIT message the user 
- will have when they are killed for an insecure SOCKS server.
-
- Syntax:
-Set SOCKS_QUIT_MESSAGE ..: message
- In this line the word "message" will be used as the QUIT message for the user 
- being killed.
-
- Examples:
-Set SOCKS_QUIT_MESSAGE ..: User was running an insecure SOCKS Server.
- This line will use "User was running an insecure SOCKS Server." as the QUIT 
- message for the user when they are found to be running an insecure SOCKS  
- server.
-
---------------------
-
-7.14) Set SOCKSBANTIME Line
-
- This line lets you specify how long a user using an open SOCKS server will be 
- Z:lined for.
-
- Syntax:
-Set SOCKSBANTIME ........: time in seconds
- This line will ban a user for "time in seconds" seconds, it is important to 
- remember that this is seconds, not minutes.
-
- Examples:
-Set SOCKSBANTIME ........: 86400
- This line will Z:line all users running open SOCKS servers for 86400 seconds.
-
---------------------
-
-7.15) Set MAXCHANNELSPERUSER Line
-
- This line allows you to define the max amount of channels a user may join. 
- Note, IRCd Agents can still join unlimited channels no matter what this is set 
- to.
-
- Syntax:
-Set MAXCHANNELSPERUSER ..: number of channels
- This line will allow users to join "number of channels", the recommended value 
- is 10 but it is not required.
-
- Examples:
-Set MAXCHANNELSPERUSER ..: 11
- This line will allow users to join 11 channels before they are given an error.
-
---------------------
-
-7.16) Set WEBTV_SUPPORT Line
-
- This line allows you to specify whether WebTV Support will be enabled or not.
- When WebTV Support is enabled the /NOTICE command is disabled also, anyone 
- using /NOTICE will send a /PRIVMSG. Also, in addition to using /<command> users 
- can /PRIVMSG irc <command> this is so WebTV users can also use commands.
-
- Syntax:
-Set WEBTV_SUPPORT .......: 1/0
- When this line is set to 1, WebTV support will be enabled, when it is set to 0 
- it will be disabled and the IRCd will support /NOTICE as it normally would.
-
- Examples:
-Set WEBTV_SUPPORT .......: 1
- This line enables WebTV Support disabling /NOTICE and enabling /PRIVMSG irc 
- <command>.
-
-Set WEBTV_SUPPORT .......: 0
- This line disables WebTV Support and leaving /NOTICE alone.
-
---------------------
-
-7.17) Set NO_OPER_HIDING Line
-
- This line allows you to specify whether IRCops will be allowed to set 
- themselves +I (if they have the ^ Oflag).
-
- Syntax:
-Set NO_OPER_HIDING ......: 1/0
- If this line is set to 1 IRCops will not be able to use usermode +I, if this is 
- set to 0 they may use usermode +I. 
-
- Examples:
-Set NO_OPER_HIDING ......: 1
- This line has use of usermode +I disabled.
-
-Set NO_OPER_HIDING ......: 0
- This line has use of usermode +I enabled for IRCops.
-
---------------------
-
-7.18) Set AUTO_JOIN_CHANS Line
-
- This line allows you to force a user to join one or more channels when they 
- connect to the server. Using this will not override modes if you set it to make 
- a user join a +k channel they still need the password.
-
- Syntax:
-Set AUTO_JOIN_CHANS .....: 0/<channel>[,channel2,...]
- When this line is set to 0 it will not make the user join any channels on 
- connect. If this is set to a channel name it will name the user join that 
- channel, to enter more than one channel use a comma separated list.
-
- Examples:
-Set AUTO_JOIN_CHANS .....: 0
- This line makes it so the user will not be forced to join a channel when they 
- connect to the server.
-
-Set AUTO_JOIN_CHANS .....: #main
- This line will make the user join #main when they connect to the server.
-
-Set AUTO_JOIN_CHANS .....: #main,#help
- This line will make the user join #main and help when they connect, you may 
- specify as many channels as are defined in MAXCHANNELSPERUSER (see 7.15).
-
---------------------
-
-8) network files:
- 
- The networks files allow you to specify some information specific about your 
- network you may use a current network file, or you can create your own. To 
- create your own network file edit the template.network file to suit your needs, 
- then add that file to your unrealircd.conf (See section 7.1). To use an 
- existing network file just add the file to your unrealircd.conf (See section 
- 7.1).
-
---------------------
-
-8.1) Network line:
- 
- The Network line tells the server what the name of your IRC network is. You can 
- set this line to anything you want, although it may not be left empty.
-
- Syntax:
-Network >..........: yournetwork
- This line tells the server that your networks name is located in the field  
- yournetwork. Note, yournetwork should be the same on all servers to let users 
- know what network they are on.
- 
- Examples:
-Network >..........: NeoHorizon
- This tells the server that your network is called NeoHorizon and will display 
- this to the user when it is requested.
-
---------------------
-
-8.2) Set ircnetwork Line:
- 
- This line does the same thing as the Network line, but it is required that Set 
- ircnetwork be the exact same as the Network line or your IRCd will not work. So 
- if your Network line has Bunker7 then your Set ircnetwork line must also have 
- Bunker7.
-
- Syntax:
-Set ircnetwork ....: yournetwork
- This tells the server that your network's name is found in the file called 
- yournetwork.
-
- Examples:
-Set ircnetwork ....: Bunker7
- This defines your IRC networks name as Bunker7, again if this was your line you 
- must also have Bunker7 in your Network line.
-
---------------------
-
-8.3) Set defserver Line:
- 
- This line defines the server that the IRCd will tell users to go to when the 
- IRCd is full. It is recommended that you point this to a random server pool if 
- one is available.
-
- Syntax:
-Set defserver .......: servername
- This tells the server to tell the user to go to the contents of the field names 
- servername with the server is full.
-
- Examples:
-Set defserver .......: irc.dragonwings.org
- This will display the server irc.dragonwings.org in the server is full message 
- when a user attempts to connect to a full server.
-
---------------------
-
-8.4) Set SERVICES_NAME Line:
- 
- This line is very important. It must be set correctly for commands such as 
- /nickserv, /chanserv, /memoserv, /operserv, etc. to work. If this is not set 
- correctly you must use /msg servicesname to use services.
-
- Syntax: 
-Set SERVICES_NAME .: servicesserver
- This line tells the IRCd to redirect /nickserv, /chanserv etc to servicesserver 
- and find the correct client.
-
- Examples:
-Set SERVICES_NAME .: services.realchat.org
- This tells the server to redirect the services commands to 
- services.realchat.org.
-
---------------------
-
-8.5) Set oper_host Line:
-
- This allows you to specify a host that Global IRCOps will receive when they 
- /oper, this only works if iNAH (See section 8.17) is enabled. If this is left 
- blank it can cause some problems in your IRCd so it is recommended that you 
- fill in a value.
-
- Syntax: 
-Set oper_host .....: operhost
- This tells the server to switch the host of the user to operhost when they 
- /oper.
-
- Examples:
-Set oper_host .....: opers.nevernet.net
- This will make a Global Oper's host change to opers.nevernet.net when they 
- /oper up if iNAH is enabled.
-
---------------------
-
-8.6) Set admin_host Line:
-
- This allows you to specify a host that Admins will receive when they 
- /oper, this only works if iNAH (See section 8.17) is enabled. If this is left 
- blank it can cause some problems in your IRCd so it is recommended that you 
- fill in a value.
-
- Syntax: 
-Set admin_host ....: adminhost
- This tells the server to switch the host of the admin to adminhost when they 
- /oper.
-
- Examples:
-Set admin_host ....: admins.nevernet.net
- This will make a Admin's host change to admins.nevernet.net when they /oper up 
- if iNAH is enabled.
-
---------------------
-
-8.7) Set locop_host Line:
-
- This allows you to specify a host that Local IRCOps will receive when they 
- /oper, this only works if iNAH (See section 8.17) is enabled. If this is left 
- blank it can cause some problems in your IRCd so it is recommended that you 
- fill in a value.
-
- Syntax: 
-Set locop_host ....: locophost
- This tells the server to switch the host of the Local Oper to locophost when 
- they /oper.
-
- Examples:
-Set locop_host ....: locop.nhn.net
- This will make a Local Oper's host change to locop.nhn.net when they /oper up 
- if iNAH is enabled.
-
---------------------
-
-8.8) Set sadmin_host Line:
-
- This allows you to specify a host that Services Admins will receive when they 
- /oper, this only works if iNAH (See section 8.17) is enabled. If this is left 
- blank it can cause some problems in your IRCd so it is recommended that you 
- fill in a value.
-
- Syntax: 
-Set sadmin_host ...: sadminhost
- This tells the server to switch the host of the Services Admin to sadminhost 
- when they /oper.
-
- Examples:
-Set sadmin_host ...: sops.spynet.org
- This will make a Services Admin's host change to sops.spynet.org when they 
- /oper up if iNAH is enabled.
-
---------------------
-
-8.9) Set netadmin_host Line:
-
- This allows you to specify a host that NetAdmins will receive when they 
- /oper, this only works if iNAH (See section 8.17) is enabled. If this is left 
- blank it can cause some problems in your IRCd so it is recommended that you 
- fill in a value.
-
- Syntax: 
-Set netadmin_host .: netadminhost
- This tells the server to switch the host of the NetAdmin to netadminhost when 
- they /oper.
-
- Examples:
-Set netadmin_host .: netadmin.spynet.org
- This will make a NetAdmin's host change to netadmin.spynet.org when they /oper  
- up if iNAH is enabled.
-
---------------------
-
-8.10) Set coadmin_host Line:
-
- This allows you to specify a host that CoAdmins will receive when they 
- /oper, this only works if iNAH (See section 8.17) is enabled. If this is left 
- blank it can cause some problems in your IRCd so it is recommended that you 
- fill in a value.
-
- Syntax: 
-Set coadmin_host ..: coadminhost
- This tells the server to switch the host of the CoAdmin to coadminhost when 
- they /oper.
-
- Examples:
-Set coadmin_host ..: coadmin.starspace.net
- This will make a CoAdmin's host change to coadmin.starspace.net when they /oper 
- up if iNAH is enabled.
-
---------------------
-
-8.11) Set techadmin_host Line:
-
- This allows you to specify a host that TechAdmins will receive when they 
- /oper, this only works if iNAH (See section 8.17) is enabled. If this is left 
- blank it can cause some problems in your IRCd so it is recommended that you 
- fill in a value.
-
- Syntax: 
-Set techadmin_host : techadminhost
- This tells the server to switch the host of the TechAdmin to techadminhost when 
- they /oper.
-
- Examples:
-Set techadmin_host : techadmin.starspace.net
- This will make a TechAdmin's host change to techadmin.starspace.net when they 
- /oper up if iNAH is enabled.
-
---------------------
-
-8.12) Set hidden_host Line:
- 
- The Set hidden_host line allows you to specify what the masked part of a users 
- host will look like when they set +x. Most networks tend to use a part of their 
- network's name, for example MegaIRC uses mega for their hidden host. Note, if 
- you leave this blank it may cause some problems in your IRCd.
-
- Syntax:
-Set hidden_host ...: hiddenhost
- This tells the server to use the contents of hiddenhost as the masked part of a 
- users host when they set +x.
-
- Examples:
-Set hidden_host ...: neo
- This will use the word neo as the masked part of a users host.
-
---------------------
-
-8.13) Set netdomain Line:
- 
- This is used to specify the domain name of your IRC network. It is used to give 
- the user your www address and ftp address in the /info reply. If you leave this 
- blank, users may find difficulty getting help with a specific topic.
-
- Syntax:
-Set netdomain .....: networkdomain
- This tells the server to use the field networkdomain for your networks domain.
-
- Examples:
-Set netdomain .....: Infinity-IRC.org 
- This will make the server set your domain as Infinity-IRC.org, and display the 
- www and ftp as www.Infinity-IRC.org and ftp.Infinity-IRC.org in the /info 
- reply.
-
---------------------
-
-8.14) Set helpchan Line:
- 
- This line specifies a channel which the user can go to for help, this is also 
- used as a reply in the /info command. Again, leaving this blank may cause users 
- to have problems when seeking help.
-
- Syntax:
-Set helpchan ......: channel
- This will make the server use the field channel as your Official Help Channel 
- in the /info reply.
-
- Examples:
-Set helpchan ......: #help
- This will tell the user that the server's help channel is #help when they 
- request a /info.
-
---------------------
-
-8.15) Set STATS_SERVER Line:
- 
- This line is used to tell the IRCd where your StatServ is located for use in 
- the /StatServ command.
-
- Syntax:
-Set STATS_SERVER ..: statserver
- This tells the server to send all /StatServ's to the field statserver.
-
- Examples:
-Set STATS_SERVER ..: stats.tspre.org
- This tells the server to forward all /StatServ commands to stats.tspre.org.
-
---------------------
-
-8.16) Set HUB Line:
-
- This line is obsolete and no longer in use. It is provided only for backwards 
- compatibility.
-
---------------------
-
-8.17) Set iNAH Line:
-
- This line allows you to specify whether or not oper's hosts should be changed 
- when they send a /oper command. Most networks set this on, but there are some 
- that do not like the host masking feature.
-
- Syntax:
-Set iNAH ..........: 1/0
- Set this line to 1 to enable the oper host masking, or set it to 0 to disable 
- the host masking.
-
- Examples:
-Set iNAH ..........: 1
- This line tells the server to mask an oper's host when they issue a /oper 
- command.
-
-Set iNAH ..........: 0
- This tells the server not to mask an oper's host when they send a /oper 
- command.
-
---------------------
-
-8.18) Set net_quit Line:
-
- This line is no longer in use and is only provided for compatibility with older 
- versions of Unreal.
-
---------------------
-
-[ $Id$ ]
+UnrealIRCd Configuration Documentation v3.2-beta5
+
+Table of Contents
+ 1.0 Abstract
+ 1.1 Introduction
+ 2.0 Me block (M:line)
+ 3.0 Admin block (A:line)
+ 4.0 Class block (Y:line)
+ 5.0 Allow block (I:line)
+ 6.0 Listen block (P:line)
+ 7.0 Oper block (O:line)
+ 8.0 Drpass block (X:line)
+ 9.0 Include directive (N/A)
+10.0 Loadmodule directive (N/A)
+11.0 Log block (N/A)
+12.0 Tld block (T:line)
+13.0 Ban nick block (Q:line)
+13.1 Ban user block (K:line)
+13.2 Ban ip block (Z:line)
+13.3 Ban realname block (n:line)
+13.4 Ban server block (q:line)
+14.0 Except ban block (E:line)
+14.1 Except scan block (e:line)
+15.0 Deny dcc block (dccdeny.conf)
+15.1 Deny version block (V:line)
+15.2 Deny link block (D:line and d:line)
+15.3 Deny channel block (chrestrict.conf)
+16.0 Allow channel block (N/A)
+17.0 Vhost block block (vhost.conf)
+18.0 Badword block (badwords.*.conf)
+19.0 Ulines block (U:line)
+20.0 Link block (C:line, N:line, H:line, L:line)
+21.0 Alias block (N/A)
+22.0 Help block (N/A)
+23.0 Set block (networks/unrealircd.conf and networks/*.network)
+24.0 Conclusion
+
+1.0 Abstract
+Welcome to the new Unreal configuration format. This format may seem very confusing at first, but hopefully this document will clear up any confusion. This file will show you the new config file directives as well as tell you the old format equivilent (where one exists) to help you get a feel for the new file.
+
+1.1 Introduction
+Each entry, or block, in the new format has a specific format. The format works like:
+
+<block-name> <block-value> {
+	<block-directive> <directive-value>;
+};
+
+<block-name> is the type of block, such as me, or admin. <block-value> sometimes specifys a value, such as /oper login, but other times it will be a sub-type such as in ban user. <block-directive> is an individual variable specific to the block, and <directive-value> is the associated value. Directives and their values do not have to be seperated by an equal sign, but they maybe if you choose to do so. If <directive-value> contains spaces, or characters that represent a comment it must be contained in double quotes. If you want to use a quote character inside a quoted string use \" and it will be understood as a quote character. A <block-directive> can have directives within it, if thats the case it will have it's own set of curly braces surrounding it. Some blocks do not have directives and are specified just by <block-value>, such as include. Also note that there is no set format, meaning the whole block can appear on one line or over multiple lines. The format above is what is normally used (and what will be used in this file) because it is easy to read. Note: the configuration file is currently case sensitive so BLOCK-NAME is not the same as block-name. There is a special notation used to talk about entries in the config file. For example, to talk about <directive-name> in the example above, you'd say <block-name>::<block-directive>, and if that directive has a subblock you want to reverence, you would add another :: and the name of the sub directive. To talk about an unnamed directive you would do <block-name>:: which would in this case mean <block-value>, or it could be an entry in a sub block that has no name.
+
+Comments are supported in three formats, both multi-line and single-line comments are supported. To comment a single line there are two options, a shell style comment, or a C++ style comment. A shell style comment begins with a # and a C++ style begins with a //. These comments can appear anywhere in a line and comment anything until the end of the line. For multi-line comments, a C style comment is supported. To start the comment you enter /* and anything from there until the */ is commented.
+
+2.0 Me block (M:line)
+
+Syntax:
+me {
+	name <name-of-server>;
+	info <server-description>;
+	numeric <server-numeric>;
+};
+
+These values are pretty obvious. The me::name specifies the name of the server, me::info specifies the server's info line, me::numeric specifies a numeric to identify the server. This must be a value between 1 and 255 that is unique to the server meaning no other servers on the network may have the same numeric.
+
+3.0 Admin block (A:line)
+
+Syntax:
+admin {
+	<text-line>;
+	<text-line>;
+	...
+};
+
+The admin block defines the text displayed in a /admin request. You can specify as many lines as you want and you they can contain whatever information you choose, but it is standard to include the admin's nickname and email address at a minimum. Other information may include any other contact information you wish to give.
+
+4.0 Class block (Y:line)
+
+Syntax:
+class <name> {
+	pingfreq <ping-frequency>;
+	connfreq <connect-frequency>;
+	maxclients <maximum-clients>;
+	sendq <send-queue>;
+};
+
+The class block is a vastly simplified version of the Y:lines. You are no longer limited to naming them with a number, you can now use an alpha-numeric string which is specified in the class::. The values of this block define the connection classes, class::pingfreq specifies the number of seconds between PINGs, class::connfreq is only used in server classes to specify the time in seconds between connection attempts, class::maxclients specifies the maximum amount of clients that may use this class to connect, and class::sendq specifies the amount of information that can remain in the send queue buffer.
+
+5.0 Allow block (I:line)
+
+Syntax:
+allow {
+	ip <user@ip-connection-mask>;
+	hostname <user@host-connection-mask>;
+	class <connection-class>;
+	password <connection-password> { <auth-type>; };
+	maxperip <max-connections-per-ip>;
+	redirect-server <server-to-forward-to>;
+	redirect-port <port-to-forward-to>;
+};
+
+The allow class is similar to an I:line but provides more features. The allow::ip specifies a user@ip hostmask for a user to match to connect and allow::hostname specifies a user@host to match to connect, allow::class is the name of a preexisting (appears before this block in the config) class block that will be used for this class. The rest of the directives are optional, allow::password specifies a password that users must enter to connect. The allow::password:: allows you to specify an authentication method. Currently supported methods are crypt, md3, and sha1. If you are using plain-text you can just leave this sub-block out. This directive also allows you to configure close killing, allow::maxperip lets you specify the maximum number of clients that may connect from a single IP. Lastly, the allow block supports redirection when the server is full, allow::redirect-server specifies the address of a server to forward to, and allow::redirect-port specifies the port, if no port is specified, 6667 is assumed. Note: for auto-redirection to occur the client must have support for the redirection numeric, at this time not many clients do.
+
+6.0 Listen block (P:line)
+
+Syntax:
+listen <ip:port> {
+	options {
+		<option>;
+		<option>;
+		...
+	};
+};
+
+This block allows you to specify the ports on which the IRCd will listen. If no options are required, you may specify this without any directives in the form listen <ip:port>;. Valid listen::options are clientsonly (only users may connect), serversonly (only servers name connect), java (CR javachat support), ssl (SSL encrypted port). A combination of any of those flags may be specified. Since IPv6 is now supported, and the IPv6 seperator is a : it makes the ip:port format a bit difficult. To compensate, you should enclose the IP in brackets. For example, [::1]:6667. Which will bind to the localhost on port 6667. If you are using IPv6 and want to listen on an IPv4 IP use the format [::ffff:<ip>]:<port>. For example, [::ffff:203.123.67.1]:6667. Which will bind to the IPv4 203.123.67.1 on port 6667. You may also specify * as the IP to bind to all interfaces.
+
+7.0 Oper block (O:line)
+
+oper <name> {
+	from {
+		userhost <hostmask>;
+		userhost <hostmask>;
+		...
+	};
+	password <password> { <auth-type>; };
+	class <class-name>;
+	flags <flags>;
+	flags {
+		<flag>;
+		<flag>;
+		...
+	};
+};
+
+The oper block allows you to assign IRC Operators for your server. The oper:: specifies the login name for the /oper. The oper::from::userhost is a user@host mask that the user must match, you can specify more than one hostmask by creating more than one oper::from::userhost. The oper::password is the password the user must specify, oper::password:: allows you to specify an authentication method for this password, valid auth-types are crypt, md5, and sha1. If you want to use a plain-text password leave this sub-block out. The oper::class directive specifies the name of a preexisting (appears before this in the config file) class name that the oper block will use. The oper::flags directive has two formats. If you wish to use the old style oper flags i.e., OAa, you use the flags <flags> method, if you want to use the new style, i.e., services-admin, then you use the flags { <flag>; } method. Below is a list of all the flags (in both formats) and what they do.
+
+o	local			Makes you a local operator (contains rhgwlckbBn)
+O	global		Makes you a global operator (contains oLKG)
+C	coadmin		Makes you a coadmin
+A	admin			Makes you an admin
+a	services-admin	Makes you a services admin
+N	netadmin		Makes you a netadmin
+r	can_rehash		Oper may use /rehash
+D	can_die		Oper may use /die
+R	can_restart		Oper may use /restart
+h	helpop		Oper receives +h (helpop)
+w	can_wallops		Oper can send /wallops
+g	can_globops		Oper can send /globops
+c	can_localroute	Can connect servers locally
+L	can_globalroute	Can connect servers globally
+k	can_localkill	Can /kill local users
+K	can_globalkill	Can /kill global users
+b	can_kline		Can use /kline
+B	can_unkline		Can use /unkline
+t	can_gkline		Can use /gline
+n	can_localnotice	Can send local server notices
+G	can_globalnotice	Can send global server notices
+z	can_zline		Can use /zline
+W	get_umodew		Sets +W when you oper
+H	get_host		Sets your host to an oper host
+^	can_stealth		Can use +I
+
+8.0 Drpass block (X:line)
+
+Syntax:
+drpass {
+	restart <restart-password> { <auth-type>; };
+	die <die-password> { <auth-type>; };
+};
+
+This block sets the /restart and /die passwords with drpass::restart and drpass::die respectively. The drpass::restart:: and drpass::die:: allow you to specify the type of authentication used by this item. The currently supported authentication types are crypt, md5, and sha1.
+
+9.0 Include directive (N/A)
+
+Syntax:
+include <file-name>;
+
+This directive specifies a filename to be loaded as a seperate configuration file. This file may contain any type of config block and can even include other files. Wildcards are supported in the file name to allow you to load multiple files at once.
+
+10.0 Loadmodule directive (N/A)
+
+Syntax:
+loadmodule <file-name>;
+
+This directive specifies a filename to be loaded as a module. Some modules may have there own documentation which should be consulted when setting it up. Loadmodule also supports wildcards to easily load multiple modules at once. 
+
+
+11.0 Log block (N/A)
+
+Syntax:
+log <file-name> {
+	maxsize <max-file-size>;
+	flags {
+		<flag>;
+		<flag>;
+		...
+	};
+};
+
+The log block allows you to assign different log files for different purposes. The log:: contains the name of the log file. log::maxsize is an optional directive that allows you to specify a size that the log file will be wiped and restarted. You can enter this string using MB for megabytes, KB, for kilobytes, GB, for gigabytes. The log::flags specifies which types of information will be in this log. You can specify one or more of the following, errors, kills, tkl (G:lines and Shuns), connects, server-connects, kline, and oper. 
+
+12.0 Tld block (T:line)
+
+Syntax:
+tld {
+	mask <hostmask>;
+	motd <motd-file>;
+	rules <rules-file>;
+	channel <channel-name>;
+};
+
+The tld block allows you to specify a motd, rules, and channel for a user based on their host. This is useful if you want different motds for different languages. The tld::mask is a hostmask (not user@host) that the user's hostname must match. The tld::motd and tld::rules specify the motd and rules file, respectively, to be displayed to this hostmask. Lastly the tld::channel is optional, it allows you to specify a channel that this user will be forced to join on connect. If this exists it will override the default auto join channel.
+
+13.0 Ban nick block (Q:line)
+
+Syntax:
+ban nick {
+	mask <nickname>;
+	reason <reason-for-ban>;
+};
+
+The ban nick block allows you to disable use of a nickname on the server. The ban::mask allows wildcard masks to match multiple nicks, and ban::reason allows you to specify the reason for which this ban is placed. Most commonly these blocks are used to ban usage of the nicknames commonly used for network services.
+
+13.1 Ban user block (K:line)
+
+Syntax:
+ban user {
+	mask <hostmask>;
+	reason <reason-for-ban>;
+};
+
+This block allows you to ban a user@host mask from connecting to the server. The ban::mask is a wildcard string of a user@host to ban, and ban::reason is the reason for a ban being placed. Note, this is only a local ban and therefore the user may connect to other servers on the network.
+
+13.2 Ban ip block (Z:line)
+
+Syntax:
+ban ip {
+	mask <ipmask>;
+	reason <reason-for-ban>;
+};
+
+The ban ip block bans an IP from accessing the server. This includes both users and servers attempting to link. The ban::mask parameter is an IP which may contain wildcard characters, and ban::reason is the reason why this ban is being placed. Since this ban affects servers it should be used very carefully.
+
+13.3 Ban realname block (n:line)
+
+Syntax:
+ban realname {
+	mask <realname-mask>;
+	reason <reason-for-ban>;
+};
+
+The ban realname block allows you to ban a client based on the GECOS (realname) field. This is useful to stop clone floods because often clone bots use the same realname. The ban::mask specifies the realname which should be banned. The mask may contain wildcards. The ban::reason specifies the reason why this ban is being placed.
+
+13.4 Ban server block (q:line)
+
+Syntax:
+ban server {
+	mask <server-name>;
+	reason <reason-for-ban>;
+};
+
+This block disables a server's ability to connect to your server. The ban::mask field specifies a wildcard mask to match against the server attempting to connect's name, and ban::reason specifies the reason for which this ban has been placed.
+
+14.0 Except ban block (E:line)
+
+Syntax:
+except ban {
+	mask <hostmask>;
+};
+
+The except ban block allows you to specify a user@host that will override a ban placed on a broader host. This is useful when you want an ISP banned, but still want specific users to be able to connect. The except::mask directive specifies the user@host mask of the client who will be allowed to connect.
+
+14.1 Except scan block (e:line)
+
+Syntax:
+except scan {
+	mask <ipmask>;
+};
+
+The except scan block allows you to specify an IP mask that will override the scanners. This only works if you have chosen to load the scanner modules. The except::mask specifies an IP mask that will not be banned because of any type of scanner problem.
+
+15.0 Deny dcc block (dccdeny.conf)
+
+Syntax:
+deny dcc {
+	filename <file-to-block>;
+	reason <reason-for-ban>;
+};
+
+The deny dcc block allows you to specify a filename which will not be allowed to be sent via DCC over the server. This is very useful in helping stop distribution of trojans and viruses. The deny::filename parameter specifies a wildcard mask of the filename to reject sends of, and deny::reason specifys the reason why this file is blocked.
+
+15.1 Deny version block (V:line)
+
+Syntax:
+deny version {
+	mask <server-name>;
+	version <version-number>;
+	flags <compile-flags>;
+};
+
+This block allows you to deny a server from linking based on the version of Unreal it is running and what compile time options it has. The format for this block is somewhat complex but isn't too hard to figure out. The deny::mask directive specifies a wildcard mask of the server name this applies to. The deny::version specifies the protocol number of the version this refers to. For example, 3.0 is 2301, 3.1.1/3.1.2 is 2302, 3.2 is 2303. The first character of this parameter can be one of the following >, <, =, !. This character tells the IRCd how to interpret the version. If the first character is a > then all version greater than the specified version are denied, if it is a < all versions lower are denied, if it is an = only that version is denied, and if it is a ! then all versions except the specified are denied. The deny::flags directive allows you to specify what compile time flags the server may or may not have. The flags are arranged one after the other with no seperation between, if a character is prefixed by a ! then it means the server may not have this flag compiled into it, if it does not have a ! prefix, then it means the server must have this flag compiled.
+
+15.2 Deny link block (D:line and d:line)
+
+Syntax:
+deny link {
+	mask <server-name>;
+	rule <crule-expression>;
+	type <type-of-denial>;
+};
+
+This block allows you to use specific rules to deny a server from linking. The deny::mask specifies a wildcard mask of the server name to apply this rule to. The deny::rule directive is very complex. A crule expression allows you to control the link in great detail, and it is set up like a programming expression. Four operators are supported, connected(<servermask>), returns true if a server matching servermask is connected, directcon(<servermask>), returns true if the server matching servermask is directly connected to this server, via(<viamask>,<servermask>), returns true if a server matching servermask is connected by a server matching viamask, and directop(), which returns true if the operator issuing a /connect is directly connected to this server. These operators can be combined using && (and) and || (or), items may also be enclosed in parenthesis to allow grouping. In addition, an operator preceded with a ! checks if the operator returned false. If the entire expression evaluates to true, then the link is denied. The deny::type allows two different values, auto (only applies to autoconnects, /connect will still work), and all (applies to all connection attempts).
+
+15.3 Deny channel block (chrestrict.conf)
+
+Syntax:
+deny channel {
+	channel <channel-mask>;
+	reason <reason-for-ban>;
+};
+
+The deny channel block allows you to disallow users from joining specific channels. The deny::channel directive specifies a wildcard mask of channels the users may not join, and the deny::reason specifies the reason why the channel may not be joined. 
+
+16.0 Allow channel block (N/A)
+
+Syntax:
+allow channel {
+	channel <channel-mask>;
+};
+
+The allow channel block allows you to specify specific channels that users may join. The allow::channel directive specifies the wildcard mask of the channels which may be joined.
+
+17.0 Vhost block (vhost.conf)
+
+Syntax:
+vhost {
+	vhost <vhost>;
+	from {
+		userhost <hostmask>;
+		userhost <hostmask>;
+		...
+	};
+	login <login-name>;
+	password <password> { <auth-type>; };
+};
+
+The vhost block allows you to specify a login/password that can be used with the /vhost command to obtain a fake hostname. The vhost::vhost parameter can be either a user@host or just a host that the user will receive upon successful /vhost. The vhost::from::userhost contains a user@host that the user must match to be eligable for the vhost. You may specify more than one hostmask. The vhost::login in the login name the user must enter and vhost::password is the password that must be entered. Lastly vhost::password:: allows you to specify the type of authentication used by this item. The currently supported authentication types are crypt, md5, and sha1.
+
+18.0 Badword block (badwords.*.conf)
+
+Syntax:
+badword <type> {
+	word <regex-to-match>;
+	replace <replace-with>;
+};
+
+The badword block allows you to manipulate the list used for user and channel mode +G to strip "badwords". The badword:: specifies the type, valid types are channel and messages, channel is for the channel +G list, and message is for the user +G list. The badword::word is a regular expression of the word we should search for and remove. The badword::replace is what we should replace this match with. If badword::replace is left out, the word is replaced with <censored>.
+
+19.0 Ulines block (U:line)
+
+Syntax:
+ulines {
+	<server-name>;
+	<server-name>;
+	...
+};
+
+The ulines block lets you define certain servers as having extra abilities. This should only be used for servers such as services and stats. This should not be set for a normal server. Each entry is the name of the server which will receive the extra abilities.
+
+20.0 Link block (C:line, N:line, H:line, and L:line)
+
+Syntax:
+link <server-name> {
+	username <usermask>;
+	hostname <ipmask>;
+	bind-ip <ip-to-bind-to>;
+	port <port-to-connect-on>;
+	password-connect <password-to-connect-with>;
+	password-receive <password-to-receive> { <auth-type>; };
+	hub <hub-mask>;
+	leaf <leaf-mask>;
+	leafdepth <depth>;
+	class <class-name>;
+	options {
+		<option>;
+		<option>;
+		...
+	};
+};
+
+The link block is a simplified way to link servers. The link:: should be the name of the server which is to be linked, link::username is a wildcard mask of the username the server must have, and link::hostname is an IP mask the server must match. If you are running with IPv6 enabled and you want to link to an IPv4 server, specify the hostname in the format ::ffff:<ip>, example ::ffff:203.123.67.1. The link::bind-ip specifies an IP that the server will bind to in order to make this connection and link::port specifies the port it will establish the connection on. The link::password-connect must be a plain-text password since it will be sent to the other server, but link::password-receive may be encrypted using a method specified in link::password-receive:: valid methods are crypt, md5, and sha1. You can leave the auth-type parameter out to have it remain plain-text. The link::hub and link::leaf directives may not be used together, either a server is a hub or a leaf. If link::hub is specified, the value is a mask of what servers this hub may connect. If link::leaf is specified the value specifies the mask that this server will act like a leaf towards. The link::leafdepth directive should only be specified if link::leaf exists and is also optional. This value specifies the depth (number of hops) this server may have beneath it. The link::class is the name of a preexisting (appears before this in the config) class block that will be used for the server connecting with the link block. The link::options is a list of one or more options you wish this server to use, valid options are ssl (the server will connect using SSL encryption), autoconnect (the server will be autoconnected based on the value in the specified link::class), quarantine (opers on this server will maintain locop status).
+
+21.0 Alias block (N/A)
+
+Syntax [standard alias]:
+alias <name> {
+	nick <nick-to-forward-to>;
+	type <type-of-alias>;
+};
+
+The alias block [standard alias] allows you to forward a command to a user, for example /chanserv sends a message to the user chanserv. The alias:: specifies the name of the command that will be the alias, ex /chanserv, alias::nick is the nickname it will forward to, if the alias:: is the same as the nick it will forward to, alias::nick can be left out. The alias::type specifies the type of alias, valid types are services (the user is on the services server), stats (the user is on the stats server), and normal (the user is a normal user on any server). The alias block also has another purpose which is explained below.
+
+Syntax [command alias]:
+alias <name> {
+	format <regex-expression> {
+		alias <alias-to-forward-to>;
+		parameters <parameter-string>;
+	};
+	format <regex-expression> {
+		...
+	};
+	type command;
+};
+
+When the alias block is used in this format, it allows you a much broader range of usage. For example you can create aliases such as /identify. The alias:: is the same as above, the name of the alias command. The alias::format specifies a regular expression that compares against the text sent to the alias command, when matched the sub-entries of that alias::format will be used, you may have multiple alias::format's to make the command do different things depending on the text sent to it. The alias::format::alias is the name of a preexisting (appears before this in the config file) alias block in the standard format that when that format is matched will be used. The alias::format::parameters is what will be sent as the parameters to this alias. To specify one of the parameters given to the command alias specify % followed by a number, for example, %1 is the first parameter. To specify all parameters from a given parameter to the end do % followed by the number and a -, for example %2- returns all parameters from the second till the last. For examples of using the alias block in the command format, consult doc/example.conf.
+
+22.0 Help block (N/A)
+
+Syntax:
+help <name> {
+	<text-line>;
+	<text-line>;
+	...
+};
+
+The help block allows you to create entries for use in /helpop. The help:: is the value that must be passed to /helpop as a parameter, if the help:: is left out, then it will be used when no parameter is passed to /helpop. The entries for the help block are the text that will be displayed to the user when requesting the /helpop.
+
+23.0 Set block (networks/unrealircd.conf and networks/*.network)
+
+Syntax:
+set {
+	<entry> <value>;
+	<entry> <value>;
+	...
+};
+
+The set block sets options for individual server features. Each entry does something different and therefore each will be described below. Some directives have sub blocks which will also be described.
+
+set::kline-address <email-address>;
+The email address that K:line questions should be sent to. This value must be specified.
+
+set::modes-on-connect <+modes>;	
+The modes that will be set on a user at connection.
+
+set::modes-on-oper <+modes>;
+The modes that will be set on a user when they /oper.
+
+set::auto-join <channels>;	
+The channel(s) a user will be forced to join at connection. To specify more than one channel use a comma seperated list.
+
+set::oper-auto-join <channels>;
+The channel(s) a user will be forced to join when they /oper. To specify more than one channel use a comma seperated list.
+
+set::anti-spam-quit-message-time <timevalue>;
+A time value specifying the length of time a user must be connected for before a /quit message will be displayed. Used to prevent spam. A time value is a numeric string with d meaning days, h meaning hours, m meaning minutes, and s meaning seconds, for example 1d2h3m means 1 day, 2 hours, 3 minutes.
+
+set::oper-only-stats <stats-list>;
+Specifies a list of stats flags with no seperators that defines stats flags only opers can use. Leave this value out to allow users to use all flags, or specify * for users to be able to use no flags.
+
+set::maxchannelsperuser <amount-of-channels>;
+Specifies the number of channels a single user may be in at any one time.
+
+set::options::hide-ulines;
+If this is present, Ulined server will be hidden in a /links requested by non-opers.
+
+set::options::no-stealth;
+If present usermode +I may not be used by anyone on this server.
+
+set::options::show-opermotd;
+If present the opermotd will be shown to users once they successfully /oper.
+
+set::options::identd-check;
+If present the presence of an identd server will be checked and the returned value will be used for the username. If no ident request is returned or the identd server doesn't exist, the user's specified username will be prefixed with a ~. If this value is omitted no such check is made.
+
+set::options::show-connect-info;
+If present notices showing "ident request", "hostname lookup", etc. will be displayed when a user connects.
+
+set::dns::timeout <timevalue>;
+A time value specifying the length of time a DNS server has to respond before a timeout. A time value is a numeric string with d meaning days, h meaning hours, m meaning minutes, and s meaning seconds, for example 1d2h3m means 1 day, 2 hours, 3 minutes.
+
+set::dns::retries <number-of-retries>;
+A numeric value specifying the number of times the DNS lookup will be retried if failure occurs.
+
+set::dns::nameserver <name-of-dns-server>;
+Specifies the hostname of the server that will be used for DNS lookups.
+
+set::network-name <name-of-network>;
+Specifies the name of the network on which this server is run. This value should be exactly the same on all servers on a network.
+
+set::default-server <server-name>;
+Defines the name of the default server to tell users to connect to if this server is full.
+
+set::services-server <server-name>;
+Specifies the name of the server that the services bots are connected to. If services are not run this value may be left out.
+
+set::stats-server <server-name>;
+Sets the name of the server on which the stats bot is located. If stats are not run this value may be left out.
+
+set::help-channel <network-help-channel>;
+Sets the name of the help channel for this network.
+
+set::prefix-quit <text-to-prefix-quit>;
+Sets the text that will be used to prefix a quit message. If this value is set to 0 then the standard "Quit:" is used.
+
+set::cloak-keys { <value>; <value>; <value>; };
+Sets the keys to be used to generate a +x host. This value must be the same on all servers or the servers will not link. Each of the set::cloak-keys:: must be a numeric value greater than 10000. You must have exactly three values specified.
+
+set::hiddenhost-prefix <prefix-value>;
+Defines the prefix that will be used on hiddenhosts (+x) this is usually three or four letters representing the network name.
+
+set::hosts::local <locop-host-name>;
+Defines the hostname that will be assigned to local opers when they set +x.
+
+set::hosts::global <globop-host-name>;
+Defines the hostname that will be assigned to global operators when they set +x.
+
+set::hosts::coadmin <coadmin-host-name>;
+Sets the hostname that will be assigned to co-admins when they set +x.
+
+set::hosts::admin <admin-host-name>;
+Defines the hostname that will be set for admins when they set +x.
+
+set::hosts::servicesadmin <servicesadmin-host-name>;
+Sets the hostname that will be given to services-admins when they set +x.
+
+set::hosts::netadmin <netadmin-host-name>;
+Sets the hostname that will be given to netadmins when they set +x.
+
+set::hosts::host-on-oper-up <yes/no>;
+If set to yes, the H/get_host flag will be honored and +x will be automatically set at /oper. If set to no, the user must set +x manually to receive the oper host.
+
+set::scan::endpoint <ip:port>;
+Specifies the IP and port that the server will tell an incomming open proxy to connect to.
+
+24.0 Conclusion
+Well hopefully that cleared up some of the issues you had with the new config file format. There are some additional documents that may help you with other problems such as doc/example.conf and doc/example.settings. If you need an example in more detail on how to use these directives, refer to one of those files.
+

@@ -97,7 +97,7 @@ char *date(clock)
 	bcopy((char *)gm, (char *)&gmbuf, sizeof(gmbuf));
 	gm = &gmbuf;
 	lt = localtime(&clock);
-
+#ifndef _WIN32
 	if (lt->tm_yday == gm->tm_yday)
 		minswest = (gm->tm_hour - lt->tm_hour) * 60 +
 		    (gm->tm_min - lt->tm_min);
@@ -105,11 +105,12 @@ char *date(clock)
 		minswest = (gm->tm_hour - (lt->tm_hour + 24)) * 60;
 	else
 		minswest = ((gm->tm_hour + 24) - lt->tm_hour) * 60;
-
+#else
+	minswest = (_timezone / 60);
+#endif
 	plus = (minswest > 0) ? '-' : '+';
 	if (minswest < 0)
 		minswest = -minswest;
-
 	(void)ircsprintf(buf, "%s %s %d %d -- %02d:%02d %c%02d:%02d",
 	    weekdays[lt->tm_wday], months[lt->tm_mon], lt->tm_mday,
 	    1900 + lt->tm_year,
@@ -132,7 +133,8 @@ char *convert_time (time_t ltime)
 	ltime = (ltime - minutes) / 60;
 	hours = ltime % 24;
 	days = (ltime - hours) / 24;
-	ircsprintf(buffer, "%ludays %luhours %lumonths %lusecs", days, hours, minutes, seconds);
+	ircsprintf(buffer, "%ludays %luhours %luminutes %lusecs",
+days, hours, minutes, seconds);
 	return(*buffer ? buffer : "");
 }
 
@@ -450,7 +452,7 @@ int  exit_client(cptr, sptr, from, comment)
 			  && sptr->serv->conf->flag.temporary)
 			{
 				/* Due for deletion */
-				del_ConfigItem((ConfigItem *) sptr->serv->conf, (ConfigItem **)&conf_link);
+				DelListItem(sptr->serv->conf, conf_link);
 				link_cleanup(sptr->serv->conf);
 				MyFree(sptr->serv->conf);
 			}
@@ -481,12 +483,6 @@ int  exit_client(cptr, sptr, from, comment)
 			    sptr->name, sptr->user->username,
 			    sptr->user->realhost, comment, sptr->sockhost);
 
-		}
-		if (IsPerson(sptr))
-		{
-			char mydom_mask[HOSTLEN + 1];
-			mydom_mask[0] = '\0';
-			strncpy(&mydom_mask[1], DOMAINNAME, HOSTLEN - 1);
 			/* Clean out list and watch structures -Donwulff */
 			hash_del_watch_list(sptr);
 			if (sptr->user && sptr->user->lopt)
@@ -495,20 +491,18 @@ int  exit_client(cptr, sptr, from, comment)
 				free_str_list(sptr->user->lopt->nolist);
 				MyFree(sptr->user->lopt);
 			}
-		}
-		on_for = TStime() - sptr->firsttime;
+			on_for = TStime() - sptr->firsttime;
 # if defined(USE_SYSLOG) && defined(SYSLOG_USERS)
-		if (IsPerson(sptr))
 			syslog(LOG_NOTICE, "%s (%3d:%02d:%02d): %s@%s (%s)\n",
 			    myctime(sptr->firsttime),
 			    on_for / 3600, (on_for % 3600) / 60,
 			    on_for % 60, sptr->user->username,
 			    sptr->sockhost, sptr->name);
 #endif
-			if (IsPerson(sptr))
-				ircd_log(LOG_CLIENT, "Disconnect - (%d:%d:%d) %s!%s@%s",
-					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
-					sptr->name, sptr->user->username, sptr->user->realhost);
+			ircd_log(LOG_CLIENT, "Disconnect - (%d:%d:%d) %s!%s@%s",
+				on_for / 3600, (on_for % 3600) / 60, on_for % 60,
+				sptr->name, sptr->user->username, sptr->user->realhost);
+		}
 
 		if (sptr->fd >= 0 && !IsConnecting(sptr))
 		{
@@ -591,9 +585,11 @@ int  exit_client(cptr, sptr, from, comment)
 		for (acptr = client; acptr; acptr = next)
 		{
 			next = acptr->next;
-			if (IsServer(acptr) && acptr->srvptr == sptr)
+			if (IsServer(acptr) && acptr->srvptr == sptr) {
 				exit_client(sptr, acptr,	/* RECURSION */
 				    sptr, comment1);
+				RunHook(HOOKTYPE_SERVER_QUIT, acptr);
+			}
 			/*
 			 * I am not masking SQUITS like I do QUITs.  This
 			 * is probobly something we could easily do, but
@@ -622,6 +618,7 @@ int  exit_client(cptr, sptr, from, comment)
 	/*
 	 * Finally, clear out the server we lost itself
 	 */
+	RunHook(HOOKTYPE_SERVER_QUIT, sptr);
 	exit_one_client(cptr, sptr, from, comment);
 	return cptr == sptr ? FLUSH_BUFFER : 0;
 }

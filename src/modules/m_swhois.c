@@ -51,48 +51,50 @@ DLLFUNC int m_swhois(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define TOK_SWHOIS 	"BA"	
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_swhois_info
+ModuleHeader m_swhois_Header
 #else
-#define m_swhois_info mod_header
-ModuleInfo mod_header
+#define m_swhois_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
-	"test",
+	"m_swhois",
 	"$Id$",
 	"command /swhois", 
-	NULL,
+	"3.2-b5",
 	NULL 
     };
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_init(void)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-void    m_swhois_init(void)
+int    m_swhois_Init(int module_load)
 #endif
 {
 	add_Command(MSG_SWHOIS, TOK_SWHOIS, m_swhois, MAXPARA);
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_load(void)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-void    m_swhois_load(void)
+int    m_swhois_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_swhois_unload(void)
+int	m_swhois_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_SWHOIS, TOK_SWHOIS, m_swhois) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_swhois_info.name);
+				m_swhois_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 /*
  * m_swhois

@@ -1056,7 +1056,7 @@ static char *replies[] = {
 };
 
 char *getreply(int numeric) {
-	if((numeric<0 || numeric>999) || !replies[numeric])
+   	if((numeric<0 || numeric>999) || !replies[numeric])
 	  return(replies[ERR_NUMERICERR]);
 	else
           return(replies[numeric]);

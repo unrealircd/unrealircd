@@ -54,48 +54,50 @@ extern int SVSNOOP;
 extern ircstats IRCstats;
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_svsnoop_info
+ModuleHeader m_svsnoop_Header
 #else
-#define m_svsnoop_info mod_header
-ModuleInfo mod_header
+#define m_svsnoop_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"test",
 	"$Id$",
 	"command /svsnoop", 
-	NULL,
+	"3.2-b5",
 	NULL 
     };
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_svsnoop_init(int module_load)
+int    m_svsnoop_Init(int module_load)
 #endif
 {
 	add_Command(MSG_SVSNOOP, TOK_SVSNOOP, m_svsnoop, MAXPARA);
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_svsnoop_load(int module_load)
+int    m_svsnoop_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_svsnoop_unload(void)
+int	m_svsnoop_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_SVSNOOP, TOK_SVSNOOP, m_svsnoop) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_svsnoop_info.name);
+				m_svsnoop_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
@@ -121,7 +123,7 @@ int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[])
                                             ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP | UMODE_SERVICES |
                                             UMODE_SADMIN | UMODE_ADMIN);
                                         acptr->umodes &=
-                                                ~(UMODE_NETADMIN | UMODE_TECHADMIN | UMODE_WHOIS);
+                                                ~(UMODE_NETADMIN | UMODE_WHOIS);
                                         acptr->umodes &=
                                             ~(UMODE_KIX | UMODE_HIDING | UMODE_DEAF | UMODE_HIDEOPER);
                                         acptr->user->oflag = 0;

@@ -161,7 +161,7 @@ aCtab cFlagTab[] = {
 #define	BADOP_OVERRIDE	4
 
 /* is some kind of admin */
-#define IsSkoAdmin(sptr) (IsAdmin(sptr) || IsNetAdmin(sptr) || IsTechAdmin(sptr) || IsSAdmin(sptr))
+#define IsSkoAdmin(sptr) (IsAdmin(sptr) || IsNetAdmin(sptr) || IsSAdmin(sptr))
 
 char cmodestring[512];
 
@@ -392,8 +392,12 @@ static int add_exbanid(aClient *cptr, aChannel *chptr, char *banid)
 			}
 			else
 			{
+#ifdef NAZIISH_CHBAN_HANDLING
 				if (!match(ban->banstr, banid) ||
 				    !match(banid, ban->banstr))
+#else
+				if (!match(ban->banstr, banid))
+#endif
 					return -1;
 			}
 		else if (!mycmp(ban->banstr, banid))
@@ -461,8 +465,12 @@ static int add_banid(aClient *cptr, aChannel *chptr, char *banid)
 			}
 			else
 			{
+#ifdef NAZIISH_CHBAN_HANDLING /* why does it do this?? */
 				if (!match(ban->banstr, banid) ||
 				    !match(banid, ban->banstr))
+#else
+				if (!match(ban->banstr, banid))
+#endif
 					return -1;
 			}
 		else if (!mycmp(ban->banstr, banid))
@@ -1589,8 +1597,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 	  case MODE_AUDITORIUM:
 		  if (IsULine(cptr) || IsServer(cptr))
 			  goto auditorium_ok;
-		  if (!IsNetAdmin(cptr) && !IsTechAdmin(cptr)
-		      && !is_chanowner(cptr, chptr))
+		  if (!IsNetAdmin(cptr) && !is_chanowner(cptr, chptr))
 		  {
 			  sendto_one(cptr,
 			      ":%s %s %s :*** Channel mode +u can only be set by the channel owner",
@@ -1682,8 +1689,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 /* do pro-opping here (popping) */
 	  case MODE_CHANOWNER:
 		  if (!IsULine(cptr) && !IsServer(cptr)
-		      && !IsNetAdmin(cptr) && !IsTechAdmin(cptr)
-		      && !is_chanowner(cptr, chptr))
+		      && !IsNetAdmin(cptr) && !is_chanowner(cptr, chptr))
 		  {
 			  sendto_one(cptr, err_str(ERR_ONLYSERVERSCANCHANGE),
 			      me.name, cptr->name, chptr->chname);
@@ -1691,8 +1697,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 		  }
 	  case MODE_CHANPROT:
 		  if (!IsULine(cptr) && !IsServer(cptr)
-		      && !IsNetAdmin(cptr) && !IsTechAdmin(cptr)
-		      && !is_chanowner(cptr, chptr))
+		      && !IsNetAdmin(cptr) && !is_chanowner(cptr, chptr))
 		  {
 			  sendto_one(cptr,
 			      ":%s %s %s :*** Protected users can only be set by the channel owner.",
@@ -1924,8 +1929,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 			  goto linkok;
 		  }
 
-		  if (!IsNetAdmin(cptr) && !IsTechAdmin(cptr)
-		      && !is_chanowner(cptr, chptr))
+		  if (!IsNetAdmin(cptr) && !is_chanowner(cptr, chptr))
 		  {
 			  sendto_one(cptr,
 			      ":%s %s %s :*** Channel mode +L can only be set by the channel owner",
@@ -2361,7 +2365,7 @@ static int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, ch
 		  }
 		  break;
 	  case 3:
-		  if (IsNetAdmin(sptr) || IsTechAdmin(sptr))
+		  if (IsNetAdmin(sptr))
 			  return 0;
 		  break;
 	  default:
@@ -2794,7 +2798,7 @@ int channel_link(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				    (IsHidden(sptr) ? sptr->
 				    user->virthost : sptr->user->realhost),
 				    name);
-			sendto_umode(UMODE_NETADMIN | UMODE_TECHADMIN,
+			sendto_umode(UMODE_NETADMIN,
 			    "*** Invisible(+I) user %s joined %s", sptr->name,
 			    chptr->chname);
 		}
@@ -3426,8 +3430,7 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (is_chanprot(who, chptr)
 				    || is_chanowner(who, chptr)
 				    || IsServices(who))
-					if (IsNetAdmin
-						(sptr) || IsTechAdmin(sptr))
+					if (IsNetAdmin(sptr))
 					{	/* IRCop kicking owner/prot */
 						sendto_snomask(SNO_EYES,
 						    "*** OperKick [%s @ %s -> %s (%s)]",
@@ -3459,8 +3462,7 @@ int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 				if (IsKix(who) && !IsULine(sptr))
 				{
-					if (!(IsNetAdmin(sptr)
-					    || IsTechAdmin(sptr)))
+					if (!IsNetAdmin(sptr))
 					{
 						sendto_one(sptr,
 						    ":%s %s %s :*** Cannot kick %s from channel %s (usermode +q)",
@@ -4341,7 +4343,7 @@ int m_names(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		acptr = cm->cptr;
 		if (IsInvisible(acptr) && !member)
 			continue;
-		if (IsHiding(acptr) && acptr != sptr && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
+		if (IsHiding(acptr) && acptr != sptr && !IsNetAdmin(sptr))
 			continue;
 		if (chptr->mode.mode & MODE_AUDITORIUM)
 			if (!is_chan_op(sptr, chptr)

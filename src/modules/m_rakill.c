@@ -50,17 +50,16 @@ DLLFUNC int m_rakill(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 
 #ifndef DYNAMIC_LINKING
-ModuleInfo m_rakill_info
+ModuleHeader m_rakill_Header
 #else
-#define m_rakill_info mod_header
-ModuleInfo mod_header
+#define m_rakill_Header Mod_Header
+ModuleHeader Mod_Header
 #endif
   = {
-  	2,
 	"rakill",	/* Name of module */
 	"$Id$", /* Version */
 	"command /rakill", /* Short description of module */
-	NULL, /* Pointer to our dlopen() return value */
+	"3.2-b5",
 	NULL 
     };
 
@@ -71,39 +70,45 @@ ModuleInfo mod_header
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
+DLLFUNC int	Mod_Init(int module_load)
 #else
-int    m_rakill_init(int module_load)
+int    m_rakill_Init(int module_load)
 #endif
 {
 	/*
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_RAKILL, TOK_RAKILL, m_rakill, MAXPARA);
+	return MOD_SUCCESS;
+	
 }
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
+DLLFUNC int	Mod_Load(int module_load)
 #else
-int    m_rakill_load(int module_load)
+int    m_rakill_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
+	
 }
 
 
 /* Called when module is unloaded */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
+DLLFUNC int	Mod_Unload(int module_unload)
 #else
-void	m_rakill_unload(void)
+int	m_rakill_Unload(int module_unload)
 #endif
 {
 	if (del_Command(MSG_RAKILL, TOK_RAKILL, m_rakill) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_rakill_info.name);
+				m_rakill_Header.name);
 	}
+	return MOD_SUCCESS;
+	
 }
 
 
@@ -199,7 +204,7 @@ DLLFUNC int m_rakill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	
 	/* Wipe it out. */
-	del_ConfigItem(bconf, &conf_ban);
+	DelListItem(bconf, conf_ban);
 	MyFree(bconf->mask);
 	if (bconf->reason)
 		MyFree(bconf->reason);

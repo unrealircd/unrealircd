@@ -28,18 +28,6 @@ fi
 if [  "$CRYPTOIRCD" = "1" ] ; then
 ARG="$ARG--enable-ssl "
 fi
-if [ "$CRYPT_OPER_PASSWORD" = "1" ] ; then
-ARG="$ARG--with-crypt-oper "
-fi
-if [ "$CRYPT_LINK_PASSWORD" = "1" ] ; then
-ARG="$ARG--with-crypt-link "
-fi
-if [ "$CRYPT_XLINE_PASSWORD" = "1" ] ; then
-ARG="$ARG--with-crypt-xline "
-fi
-if [ "$CRYPT_ILINE_PASSWORD" = "1" ] ; then
-ARG="$ARG--with-crypt-iline "
-fi
 if [ "$INET6" = "1" ] ; then
 ARG="$ARG--enable-inet6 "
 fi
@@ -78,10 +66,6 @@ HUB="1"
 DOMAINNAME=`hostname`
 DEFPERM="0600"
 CRYPTOIRCD=""
-CRYPT_OPER_PASSWORD=""
-CRYPT_LINK_PASSWORD=""
-CRYPT_ILINE_PASSWORD=""
-CRYPT_XLINE_PASSWORD=""
 LISTEN_SIZE="5"
 NICKNAMEHISTORYLENGTH="2000"
 MAXSENDQLENGTH="3000000"
@@ -299,121 +283,6 @@ while [ -z "$TEST" ] ; do
 	    ;;
     esac
 done
-
-TEST=""
-while [ -z "$TEST" ] ; do
-    if [ "$CRYPT_OPER_PASSWORD" = "1" ] ; then
-	TEST="Yes"
-    else
-	TEST="No"
-    fi
-    echo ""
-    echo "Do you want use encrypted oper {} passwords?"
-    echo $n "[$TEST] -> $c"
-	read cc
-    if [ -z "$cc" ] ; then
-	cc=$TEST
-    fi
-    case "$cc" in
-	[Yy]*)
-	    CRYPT_OPER_PASSWORD="1"
-	    ;;
-	[Nn]*)
-	    CRYPT_OPER_PASSWORD=""
-	    ;;
-	*)
-	    echo ""
-	    echo "You must enter either Yes or No"
-	    TEST=""
-	    ;;
-    esac
-done
-
-TEST=""
-while [ -z "$TEST" ] ; do
-    if [ "$CRYPT_LINK_PASSWORD" = "1" ] ; then
-	TEST="Yes"
-    else
-	TEST="No"
-    fi
-    echo ""
-    echo "Do you want use encrypted incoming link {} passwords?"
-    echo $n "[$TEST] -> $c"
-	read cc
-    if [ -z "$cc" ] ; then
-	cc=$TEST
-    fi
-    case "$cc" in
-	[Yy]*)
-	    CRYPT_LINK_PASSWORD="1"
-	    ;;
-	[Nn]*)
-	    CRYPT_LINK_PASSWORD=""
-	    ;;
-	*)
-	    echo ""
-	    echo "You must enter either Yes or No"
-	    TEST=""
-	    ;;
-    esac
-done
-
-TEST=""
-while [ -z "$TEST" ] ; do
-if [ "$CRYPT_XLINE_PASSWORD" = "1" ] ; then
-	TEST="yes"
-else 
-	TEST="No"
-fi
-echo ""
-echo "Do you want to use encrypted drpass {} passwords?"
-echo $n "[$TEST] -> $c"
-	read cc
-	if [ -z "$cc" ] ; then
-		cc=$TEST
-	fi
-	case "$cc" in
-		[Yy]*)
-			CRYPT_XLINE_PASSWORD="1"
-			;;
-		[Nn]*) 
-			CRYPT_XLINE_PASSWORD=""
-			;;
-		*)
-			echo ""
-	                echo "You must enter either Yes or No"
-			TEST=""
-			;;
-		esac
-done
-TEST=""
-while [ -z "$TEST" ] ; do
-if [ "$CRYPT_ILINE_PASSWORD" = "1" ] ; then
-	TEST="Yes"
-else
-	TEST="No"
-fi
-echo ""
-echo "Do you want to use encrypted allow {} passwords?"
-echo $n "[$TEST] -> $c"
-	read cc
-if [ -z "$cc" ] ; then
-	cc=$TEST
-fi
-	case "$cc" in
-		[Yy]*)
-			CRYPT_ILINE_PASSWORD="1"
-			;;
-		[Nn]*) 
-			CRYPT_ILINE_PASSWORD=""
-			;;
-		*)
-			echo ""
-	                echo "You must enter either Yes or No"
-			TEST=""
-			;;
-		esac
-done		
 
 TEST=""
 while [ -z "$TEST" ] ; do
