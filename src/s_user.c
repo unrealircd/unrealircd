@@ -1620,7 +1620,7 @@ int  m_nick(cptr, sptr, parc, parv)
 				{
 /* Horrible hack to add operoverride notification for +N channels --Luke */
 #ifndef NO_OPEROVERRIDE
-					if (IsOper(cptr))
+					if (OPCanOver(cptr))
 					{
 						sendto_umode(UMODE_EYES, "*** OperOverride -- %s (%s@%s) BANWALK %s",
 							cptr->name, cptr->user->username, cptr->user->realhost,
@@ -1640,7 +1640,7 @@ int  m_nick(cptr, sptr, parc, parv)
 				if (!IsULine(cptr) && lp->value.chptr->mode.mode &
 				   MODE_NONICKCHANGE && !is_chanownprotop(cptr, lp->value.chptr)) {
 #ifndef NO_OPEROVERRIDE
-					if (IsOper(cptr))
+					if (OPCanOver(cptr))
 					{
 						sendto_umode(UMODE_EYES, "*** OperOverride -- %s (%s@%s) NICKWALK %s",
 							cptr->name, cptr->user->username, cptr->user->realhost,
@@ -2671,7 +2671,7 @@ int  m_who(cptr, sptr, parc, parv)
 			 */
 
 #ifndef NO_OPEROVERRIDE
-			if (IsOper(sptr))
+			if (OPCanOver(sptr))
 			{
 				g2g = 1;
 				if (acptr->user->channel) ch2ptr = acptr->user->channel->value.chptr;

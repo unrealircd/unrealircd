@@ -2,6 +2,10 @@
 Unreal3.1.5-Valek Release Notes
 ===================================
 
+* IMPORTANT: OperOverride has been modified. In order to be
+  able to override anything as an oper, you MUST have the letter
+  "v" in your O line flags!
+
 * This release is mostly a bug fix release. It resolves the
   following issues as well as some others:
     - Bug with /invite not propagating

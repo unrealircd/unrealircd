@@ -707,7 +707,7 @@ shown to normal +s lusers (thanks to MrAllthat)
 ===================================
 
 Added prefixes for channel owner/protected to
-/who and /whois. They probably should never
+/who and /whois (& and ~). They probably should never
 have been removed. Still to be implemented
 are actual prefixes in /names.
 --Luke
@@ -716,3 +716,13 @@ are actual prefixes in /names.
 Small m_who bug with opers fixed.
 --Luke
 ===================================
+
+Implemented awesome new feature for operoverride, per
+codemastr. You now need the letter "v" in your O line
+in order to be able to override!
+--Luke
+===================================
+
+------------------------------------------------------
+Beta3 Released
+------------------------------------------------------
