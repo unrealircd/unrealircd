@@ -727,7 +727,7 @@ static char *replies[] = {
 /* 668 */ NULL,
 /* 669 */ NULL,
 /* 670 */ NULL, /* kineircd */
-/* 671 */ NULL, /* kineircd */
+/* 671 RPL_WHOISSECURE */ ":%s 671 %s %s :%s", /* our variation on the kineircd numeric */
 /* 672 */ NULL, /* ithildin */
 /* 673 */ NULL, /* ithildin */
 /* 674 */ NULL,

@@ -676,3 +676,18 @@
 - Nicks with ~ are now also not cutoff anymore but rejected like any other illegal char (#0002074).
 - Fixed bug in +G where with not-really-matching-words color was needlessly stripped,
   reported by SpeedFire (#0002375).
+- Changed the 'is a Secure Connection' msg/numeric in /whois from RPL_WHOISSPECIAL to
+  a slightly changed RPL_WHOISSECURE, namely: ':%s 671 %s %s :is using a Secure connection',
+  I'm sure some client coders will bitch at this, but the current way is brok in 2 ways:
+  - RPL_WHOISSPECIAL is meant for 1 line of additional whois info, usually an IRCOp title or
+    description. Having a dedicated numeric for it allows for client-side interpretations
+    and/or translations.
+  - The 'is a Secure Connection' was incorrect English, this has been reported numerous times.
+  The PRO's of this change are clear, the only CON is that in-window-/whois's are now
+  likely not to show this line properly in-window but rather in the status window, until client
+  coders implement this numeric.
+  If you wonder why we didn't use RPL_USINGSSL, that's because this numeric collides with
+  RPL_STATSDLINE (which we are already using for >5 years).
+  If you wonder why we didn't use the RPL_WHOISSECURE numeric as-is (even though I haven't
+  seen it in use anywhere), then that's because we wanted to minimize display problems in
+  the transition period.
