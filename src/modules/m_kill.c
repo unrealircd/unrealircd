@@ -220,8 +220,7 @@ DLLFUNC int  m_kill(cptr, sptr, parc, parv)
 			continue;
 		}
 
-		if (IsServices(acptr) && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)
-		    || IsULine(sptr)))
+		if (IsServices(acptr) && !(IsNetAdmin(sptr) || IsULine(sptr)))
 		{
 			sendto_one(sptr, err_str(ERR_KILLDENY), me.name,
 			    parv[0], parv[1]);

@@ -569,7 +569,7 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				i = 0;
 				if (!chk_who(sptr, ac, showall))
 					continue;
-				if (IsHiding(ac) && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
+				if (IsHiding(ac) && !IsNetAdmin(sptr))
 					continue;
 				 
 				/*
