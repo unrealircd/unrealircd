@@ -326,10 +326,7 @@ aClient *next_client(next, ch)
 **
 **	returns: (see #defines)
 */
-int  hunt_server(cptr, sptr, command, server, parc, parv)
-	aClient *cptr, *sptr;
-	char *command, *parv[];
-	int  server, parc;
+int  hunt_server(aClient *cptr, aClient *sptr, char *command, int server, int parc, char *parv[])
 {
 	aClient *acptr;
 

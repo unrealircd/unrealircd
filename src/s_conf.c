@@ -2695,18 +2695,18 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_varlinenum);
 			continue;
 		}
-		if (!strcmp(cep->ce_varname, "nick")) 
+		if (!strcmp(cep->ce_varname, "nick")) {
 			ircstrdup(alias->nick, cep->ce_vardata);
-		if (!strcmp(cep->ce_varname, "type")) {
+		}
+		else if (!strcmp(cep->ce_varname, "type")) {
 			if (!strcmp(cep->ce_vardata, "services"))
 				alias->type = ALIAS_SERVICES;
 			else if (!strcmp(cep->ce_vardata, "stats"))
 				alias->type = ALIAS_STATS;
 			else if (!strcmp(cep->ce_vardata, "normal"))
 				alias->type = ALIAS_NORMAL;
-			else {
+			else 
 				continue;
-			}
 		}
 			
 	}

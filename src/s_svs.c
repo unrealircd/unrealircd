@@ -1090,7 +1090,7 @@ int m_unsqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return 0;
 }
 
-int m_alias(aClient *sptr, aClient *cptr, int parc, char *parv[], char *cmd) {
+int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 	ConfigItem_alias *alias;
 	aClient *acptr;
 	if (parc < 2 || *parv[1] == '\0') {

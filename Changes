@@ -807,3 +807,4 @@ seen. gmtime warning still there
 - Fixed some credits, recoded httpd (still in progress)
 - Disabled #undef PROPER_CORE
 - Added alias {} to doc/example.conf
+- Fixed a bug in alias {} found by RaYmAn
