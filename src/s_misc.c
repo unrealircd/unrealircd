@@ -655,6 +655,7 @@ static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from, char *c
 					    sptr->user->server, sptr->name,
 					    sptr->user->username,
 					    sptr->user->realhost, comment);
+			RunHook2(HOOKTYPE_REMOTE_QUIT, sptr, comment);
 			while ((mp = sptr->user->channel))
 				remove_user_from_channel(sptr, mp->chptr);
 

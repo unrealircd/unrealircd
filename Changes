@@ -2427,3 +2427,4 @@ seen. gmtime warning still there
 - Added set::default-bantime. It allows you to set the default time for a gline/kline/gzline/
   shun/etc when the time is not not specified (like with /gline *@*.stupid.net).
 - Added HOOKTYPE_LOCAL_PASS and HOOKTYPE_REMOTE_CONNECT
+- Added HOOKTYPE_REMOTE_QUIT

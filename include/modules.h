@@ -451,6 +451,7 @@ int CommandExists(char *name);
 #define HOOKTYPE_UNKUSER_QUIT 24
 #define HOOKTYPE_LOCAL_PASS 25
 #define HOOKTYPE_REMOTE_CONNECT 26
+#define HOOKTYPE_REMOTE_QUIT 26
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000
