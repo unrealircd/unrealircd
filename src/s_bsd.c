@@ -1278,11 +1278,11 @@ add_con_refuse:
 			goto add_con_refuse;
 		}
 		acptr->port = ntohs(addr.SIN_PORT);
-#ifdef SHOWCONNECTINFO
-		/* Start of the very first DNS check */
-		if (!(cptr->umodes & LISTENER_SSL))
-			FDwrite(fd, REPORT_DO_DNS, R_do_dns);
-#endif
+		if (SHOWCONNECTINFO) {
+			/* Start of the very first DNS check */
+			if (!(cptr->umodes & LISTENER_SSL))
+				FDwrite(fd, REPORT_DO_DNS, R_do_dns);
+		}
 		lin.flags = ASYNC_CLIENT;
 		lin.value.cptr = acptr;
 		Debug((DEBUG_DNS, "lookup %s", inetntoa((char *)&addr.SIN_ADDR)));
@@ -1291,13 +1291,12 @@ add_con_refuse:
 
 		if (!acptr->hostp)
 			SetDNS(acptr);
-#ifdef SHOWCONNECTINFO
 		else
 		{
-			if (!(cptr->umodes & LISTENER_SSL))
-				FDwrite(fd, REPORT_FIN_DNSC, R_fin_dnsc);
+			if (SHOWCONNECTINFO)
+				if (!(cptr->umodes & LISTENER_SSL))
+					FDwrite(fd, REPORT_FIN_DNSC, R_fin_dnsc);
 		}
-#endif /*SHOWCONNECTINFO*/
 		nextdnscheck = 1;
 	}
 
@@ -2512,9 +2511,8 @@ void do_dns_async(id)
 				del_queries((char *)cptr);
 				ClearDNS(cptr);
 				cptr->hostp = hp;
-#ifdef SHOWCONNECTINFO
-	          	        sendto_one(cptr, REPORT_FIN_DNS);
-#endif
+				if (SHOWCONNECTINFO)
+		          	        sendto_one(cptr, REPORT_FIN_DNS);
 				  if (!DoingAuth(cptr))
 					  SetAccess(cptr);
 			    }

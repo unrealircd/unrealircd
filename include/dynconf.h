@@ -59,6 +59,7 @@ struct zConfiguration {
 	unsigned no_oper_hiding:1;
 	unsigned ident_check:1;
 	unsigned fail_oper_warn:1;
+	unsigned show_connect_info:1;
 	long host_timeout;
 	int  host_retries;
 	char *name_server;
@@ -97,6 +98,7 @@ extern aConfiguration iConf;
 #define NAME_SERVER			iConf.name_server
 #define IDENT_CHECK			iConf.ident_check
 #define FAILOPER_WARN			iConf.fail_oper_warn
+#define SHOWCONNECTINFO			iConf.show_connect_info
 #define OPER_ONLY_STATS			iConf.oper_only_stats
 #define ANTI_SPAM_QUIT_MSG_TIME		iConf.anti_spam_quit_message_time
 

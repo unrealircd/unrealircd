@@ -281,9 +281,8 @@ time_t timeout_query_list(now)
 				switch (rptr->cinfo.flags)
 				{
 				  case ASYNC_CLIENT:
-#ifdef SHOWCONNECTINFO
-					  sendto_one(cptr, REPORT_FAIL_DNS);
-#endif
+					  if (SHOWCONNECTINFO)
+						  sendto_one(cptr, REPORT_FAIL_DNS);
 					  ClearDNS(cptr);
                                         if (!DoingAuth(cptr))
                                                  SetAccess(cptr);

@@ -429,12 +429,6 @@
 #define MAXTARGETS		20
 #define TARGET_DELAY		120
 
-/*
- * Would you like all clients to see the progress of their connections?
- */
-
-#define SHOWCONNECTINFO
-
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
 
 /* You shouldn't change anything below this line, unless absolutely needed. */

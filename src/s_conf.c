@@ -2205,6 +2205,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "fail-oper-warn")) {
 					FAILOPER_WARN = 1;
 				}
+				else if (!strcmp(cepp->ce_varname, "show-connect-info")) {
+					SHOWCONNECTINFO = 1;
+				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "oper-only-stats")) {
@@ -3951,6 +3954,8 @@ void report_dynconf(aClient *sptr)
 	    sptr->name, IDENT_CHECK);
 	sendto_one(sptr, ":%s %i %s :options::fail-oper-warn: %d", me.name, RPL_TEXT,
 	    sptr->name, FAILOPER_WARN);
+	sendto_one(sptr, ":%s %i %s :options::show-connect-info: %d", me.name, RPL_TEXT,
+	    sptr->name, SHOWCONNECTINFO);
 	sendto_one(sptr, ":%s %i %s :socks::ban-message: %s", me.name, RPL_TEXT,
 	    sptr->name, iConf.socksbanmessage);
 	sendto_one(sptr, ":%s %i %s :socks::quit-message: %s", me.name, RPL_TEXT,

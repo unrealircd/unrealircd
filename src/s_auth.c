@@ -88,9 +88,8 @@ void start_auth(cptr)
 		return;
 	}
 
-#ifdef SHOWCONNECTINFO
-	sendto_one(cptr, REPORT_DO_ID);
-#endif
+	if (SHOWCONNECTINFO)
+		sendto_one(cptr, REPORT_DO_ID);
 
 	set_non_blocking(cptr->authfd, cptr);
 
@@ -118,9 +117,8 @@ void start_auth(cptr)
 		cptr->authfd = -1;
 		if (!DoingDNS(cptr))
 			SetAccess(cptr);
-#ifdef SHOWCONNECTINFO
-	sendto_one(cptr, REPORT_FAIL_ID);
-#endif
+	if (SHOWCONNECTINFO)
+		sendto_one(cptr, REPORT_FAIL_ID);
 		return;
 	}
 	cptr->flags |= (FLAGS_WRAUTH | FLAGS_AUTH);
@@ -170,9 +168,8 @@ authsenderr:
 		--OpenFiles;
 		cptr->authfd = -1;
 		cptr->flags &= ~FLAGS_AUTH;
-#ifdef SHOWCONNECTINFO
-		sendto_one(cptr, REPORT_FAIL_ID);
-#endif
+		if (SHOWCONNECTINFO)
+			sendto_one(cptr, REPORT_FAIL_ID);
 		if (!DoingDNS(cptr))
 			SetAccess(cptr);
 	}
@@ -248,9 +245,8 @@ void read_authports(cptr)
 	if (len > 0)
 		Debug((DEBUG_INFO, "ident reply: [%s]", cptr->buffer));
 
-#ifdef SHOWCONNECTINFO
-	sendto_one(cptr, REPORT_FIN_ID);
-#endif
+	if (SHOWCONNECTINFO)
+		sendto_one(cptr, REPORT_FIN_ID);
 
 	if (!locp || !remp || !*ruser)
 	{

@@ -88,13 +88,11 @@ extern aMotd *motd;
 extern aMotd *rules;
 extern aMotd *botmotd;
 
-#ifdef SHOWCONNECTINFO
 int  R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
 
 char REPORT_DO_DNS[128], REPORT_FIN_DNS[128], REPORT_FIN_DNSC[128],
     REPORT_FAIL_DNS[128], REPORT_DO_ID[128], REPORT_FIN_ID[128],
     REPORT_FAIL_ID[128];
-#endif
 extern ircstats IRCstats;
 aClient me;			/* That's me */
 char *me_hash;
@@ -644,15 +642,14 @@ extern TS check_pings(TS currenttime, int check_kills)
 						cptr->count = 0;
 						*cptr->buffer = '\0';
 					}
-
-#ifdef SHOWCONNECTINFO
-					if (DoingDNS(cptr))
-						sendto_one(cptr,
-						    REPORT_FAIL_DNS);
-					else if (DoingAuth(cptr))
-						sendto_one(cptr,
-						    REPORT_FAIL_ID);
-#endif
+					if (SHOWCONNECTINFO) {
+						if (DoingDNS(cptr))
+							sendto_one(cptr,
+							    REPORT_FAIL_DNS);
+						else if (DoingAuth(cptr))
+							sendto_one(cptr,
+							    REPORT_FAIL_ID);
+					}
 					Debug((DEBUG_NOTICE,
 					    "DNS/AUTH timeout %s",
 					    get_client_name(cptr, TRUE)));
@@ -1168,7 +1165,6 @@ int  InitwIRCD(argc, argv)
 		if (fork())
 			exit(0);
 #endif
-#ifdef SHOWCONNECTINFO
 	(void)ircsprintf(REPORT_DO_DNS, ":%s %s", me.name, BREPORT_DO_DNS);
 	(void)ircsprintf(REPORT_FIN_DNS, ":%s %s", me.name, BREPORT_FIN_DNS);
 	(void)ircsprintf(REPORT_FIN_DNSC, ":%s %s", me.name, BREPORT_FIN_DNSC);
@@ -1183,7 +1179,6 @@ int  InitwIRCD(argc, argv)
 	R_do_id = strlen(REPORT_DO_ID);
 	R_fin_id = strlen(REPORT_FIN_ID);
 	R_fail_id = strlen(REPORT_FAIL_ID);
-#endif
 	write_pidfile();
 #ifdef USE_SSL
 	init_ssl();
