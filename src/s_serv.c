@@ -2596,8 +2596,15 @@ CMD_FUNC(m_help)
 
 	if (IsServer(sptr) || IsHelpOp(sptr))
 	{
-		if (BadPtr(message))
+		if (BadPtr(message)) {
+			if (MyClient(sptr)) {
+				parse_help(sptr, parv[0], NULL);
+				sendto_one(sptr,
+					":%s NOTICE %s :*** NOTE: As a helpop you have to prefix your text with ? to query the help system, like: /helpop ?usercmds",
+					&me.name, sptr->name);
+			}
 			return 0;
+		}
 		if (message[0] == '?')
 		{
 			parse_help(sptr, parv[0], message + 1);
