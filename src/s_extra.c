@@ -125,7 +125,7 @@ int m_dccdeny(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (!MyClient(sptr))
 		return 0;
 
-	if (!IsAdmin(sptr))
+	if (!IsAnOper(sptr) || !OPCanDCCDeny(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
@@ -167,7 +167,7 @@ int m_undccdeny(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (!MyClient(sptr))
 		return 0;
 
-	if (!IsAdmin(sptr))
+	if (!IsAnOper(sptr) || !OPCanDCCDeny(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;

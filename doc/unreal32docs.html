@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta19-CVS<br>
-  <b>Last doc update:</b> 2004-01-30</div>
+  <b>Last doc update:</b> 2004-02-05</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke / McSkaf<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -894,6 +894,11 @@ listen *:6601 {
     <td><div align="center">can_setq</div></td>
     <td>Can use usermode +q</td>
   </tr>
+  <tr>
+    <td><div align="center">d</div></td>
+    <td><div align="center">can_dccdeny</div></td>
+    <td>Can use /dccdeny and /undccdeny</td>
+  </tr>
 </table>
 <p>Certain flags give you other flags by default:</p>
 <table width="59%" border="1">
@@ -994,6 +999,20 @@ listen *:6601 {
     <td>global</td>
     <td>global</td>
     <td>global</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>can_dccdeny</td>
+    <td>can_dccdeny</td>
+    <td>can_dccdeny</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>can_setq</td>
+    <td>can_setq</td>
   </tr>
   <tr>
     <td>&nbsp;</td>

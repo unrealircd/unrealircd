@@ -2804,3 +2804,6 @@ seen. gmtime warning still there
   an exception because this msg is sent to _all opers_ and you cannot disable it by
   unsetting certain snomasks. Anything lower than 15s would be bad anyway since this
   is a very serious error condition. Requested by LoVeR (#0001412).
+- Added can_dccdeny operflag so you can give your local/global opers access to this too.
+  Co-admin, admin, sadmin and netadmin get it by default. Suggested in #0001247.
+- Updated operflag docs.
