@@ -349,8 +349,6 @@ static int add_banid(aClient *cptr, aChannel *chptr, char *banid)
 	 */
 	if (strlen(banid) > MAXBANLENGTH)
 	{
-		sendto_ops("BANLISTFULL: strlen(banid) is > %i [%s, %s]",
-				MAXBANLENGTH,chptr->chname, banid);
 		sendto_one(cptr, err_str(ERR_BANLISTFULL),
 		    me.name, cptr->name, chptr->chname, banid);
 		return -1;
@@ -364,8 +362,6 @@ static int add_banid(aClient *cptr, aChannel *chptr, char *banid)
                 if (MyClient(cptr))
                         if (++cnt >= MAXBANS)
                         {
-				sendto_ops("BANLISTFULL: Hit MAXBANS (%i) with CNT %i [%s, %s]",
-						MAXBANS, cnt, chptr->chname, banid);
 				sendto_one(cptr, err_str(ERR_BANLISTFULL),
                                     me.name, cptr->name, chptr->chname, banid);
                                 return -1;
