@@ -674,3 +674,4 @@
 - Fixed the /list only showing 64 channels bug! Also sped /list up in the process
 - Probably fixed the hash bug, again.
 - Possible fixed some b64 bugs
+- Tokenized PING and PONG

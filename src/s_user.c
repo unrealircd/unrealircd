@@ -3356,7 +3356,7 @@ int  m_ping(cptr, sptr, parc, parv)
 		}
 	}
 	else
-		sendto_one(sptr, ":%s PONG %s :%s", me.name,
+		sendto_one(sptr, ":%s %s %s :%s", me.name, IsToken(sptr) ? TOK_PONG : MSG_PONG,
 		    (destination) ? destination : me.name, origin);
 	return 0;
 }

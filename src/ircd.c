@@ -30,6 +30,7 @@ Computing Center and Jarkko Oikarinen";
 #include "sys.h"
 #include "numeric.h"
 #include "userload.h"
+#include "msg.h"
 #include <sys/stat.h>
 #include <signal.h>
 #include <fcntl.h>
@@ -617,7 +618,7 @@ extern TS check_pings(TS currenttime, int check_kills)
 				cptr->flags |= FLAGS_PINGSENT;
 				/* not nice but does the job */
 				cptr->lasttime = currenttime - ping;
-				sendto_one(cptr, "PING :%s", me.name);
+				sendto_one(cptr, "%s :%s", IsToken(cptr) ? TOK_PING : MSG_PING, me.name);
 			}
 		      ping_timeout:
 			timeout = cptr->lasttime + ping;
