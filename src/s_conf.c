@@ -998,7 +998,7 @@ ConfigCommand *config_binary_search(char *cmd) {
 		if (smycmp(cmd,_ConfigCommands[mid].name) < 0) {
 			stop = mid-1;
 		}
-		else if (smycmp(cmd,_ConfigCommands[mid].name) == 0) {
+		else if (strcmp(cmd,_ConfigCommands[mid].name) == 0) {
 			return &_ConfigCommands[mid];
 		}
 		else
@@ -1615,7 +1615,7 @@ OperFlag *config_binary_flags_search(OperFlag *table, char *cmd, int size) {
 		if (smycmp(cmd,table[mid].name) < 0) {
 			stop = mid-1;
 		}
-		else if (smycmp(cmd,table[mid].name) == 0) {
+		else if (strcmp(cmd,table[mid].name) == 0) {
 			return &(table[mid]);
 		}
 		else

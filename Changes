@@ -1921,3 +1921,4 @@ seen. gmtime warning still there
 - Removed some debugging messages
 - Fixed an alias bug reported by darko`` where alias::format::type of "normal" produced
   an error.
+- Fixed some case insensitive checks in configfile parsing, fixed to be case sensitive.
