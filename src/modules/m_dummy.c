@@ -1,6 +1,7 @@
 /*
- * Typical UnrealIRCd module skeleton
- * (C) Carsten V. Munk 2000, may be used for everything
+ * Module skeleton, by Carsten V. Munk 2001 <stskeeps@tspre.org>
+ * May be used, modified, or changed by anyone, no license applies.
+ * You may relicense this, to any license
  */
 #include "config.h"
 #include "struct.h"
@@ -27,23 +28,19 @@
 #include "version.h"
 #endif
 
+DLLFUNC int m_dummy(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+
 /* Place includes here */
-/*
- * Run a search and replace on modulename to a unique name of your module,
- * like dummy
- * -link will fail else
-*/
-#define MSG_DUMMY "DUMMY"
-#define TOK_DUMMY "DU"
+#define MSG_DUMMY 	"DUMMY"	/* dummy */
+#define TOK_DUMMY 	"DU"	/* 127 4ever !;) */
 
-DLLFUNC int m_dummy(aClient *cptr, aClient *sptr, char *parv[], int parc);
 
-ModuleInfo modulename_info
+ModuleInfo m_dummy_info
   = {
   	1,
 	"dummy",	/* Name of module */
 	"$Id$", /* Version */
-	"description", /* Short description of module */
+	"command /dummy", /* Short description of module */
 	NULL, /* Pointer to our dlopen() return value */
 	NULL 
     };
@@ -56,15 +53,15 @@ ModuleInfo modulename_info
 #ifdef DYNAMIC_LINKING
 DLLFUNC void	mod_init(void)
 #else
-void    modulename_init(void)
+void    m_dummy_init(void)
 #endif
 {
-	/* extern variable to export modulename_info to temporary
+	/* extern variable to export m_dummy_info to temporary
            ModuleInfo *modulebuffer;
 	   the module_load() will use this to add to the modules linked 
 	   list
 	*/
-	module_buffer = &modulename_info;
+	module_buffer = &m_dummy_info;
 	/*
 	 * We call our add_Command crap here
 	*/
@@ -74,19 +71,16 @@ void    modulename_init(void)
 #ifdef DYNAMIC_LINKING
 DLLFUNC void	mod_unload(void)
 #else
-void	modulename_unload(void)
+void	m_dummy_unload(void)
 #endif
 {
 	if (del_Command(MSG_DUMMY, TOK_DUMMY, m_dummy) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				modulename_info.name);
+				m_dummy_info.name);
 	}
-	/* do etc stuff here */
-	sendto_ops("Unloaded");
 }
 
-DLLFUNC int	m_dummy(aClient *cptr, aClient *sptr, char *parv[], int parc)
+DLLFUNC int m_dummy(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	sendto_ops("MOOO");
 }

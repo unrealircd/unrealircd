@@ -336,3 +336,5 @@
   all of the networks files to the new format.
 - Fixed a bug with RAKILL and UNSQLINE not working
 - Moved m_chgident to an .so
+- Changed license of m_dummy.c (dummy module, skeleton), so people can do
+  closed source modules.
