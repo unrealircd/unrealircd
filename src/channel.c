@@ -4223,7 +4223,7 @@ CMD_FUNC(m_list)
 			  else	/* Just a normal channel */
 			  {
 				  chptr = find_channel(name, NullChn);
-				  if (chptr && ShowChannel(sptr, chptr)) {
+				  if (chptr && (ShowChannel(sptr, chptr) || IsAnOper(sptr))) {
 #ifdef LIST_SHOW_MODES
 					modebuf[0] = '[';
 					channel_modes(sptr, &modebuf[1], parabuf, chptr);
@@ -4235,12 +4235,9 @@ CMD_FUNC(m_list)
 					  sendto_one(sptr,
 					      rpl_str(RPL_LIST),
 					      me.name, parv[0],
-					      ShowChannel(sptr,
-					      chptr) ? name : "*",
-					      chptr->users,
+					      name, chptr->users,
 #ifdef LIST_SHOW_MODES
-					      ShowChannel(sptr, chptr) ?
-					      modebuf : "",
+					      modebuf,
 #endif
 					      (chptr->topic ? chptr->topic :
 					      ""));

@@ -1962,3 +1962,5 @@ seen. gmtime warning still there
 - Fixed a buffer overflow that could be used against setuid setups, 
   found by rave@dtors.net, reported by kokanin
 - Disabled CMDLINE_CONFIG(-f) by default
+- Fixed a bug in /list where opers could not see +s channels when doing /list #channel. 
+  Reported by _SciFi_ (#0000762)
