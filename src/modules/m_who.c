@@ -117,7 +117,6 @@ typedef struct SearchOptions {
 	char *user;
 	char *host;
 	char *gcos;
-	char *ip;
 	aChannel *channel;
 	char *server;
 	char umode_plus:1;
@@ -209,7 +208,7 @@ int build_searchopts(aClient *sptr, int parc, char *parv[])
 	 * if the first argument isn't a list of stuff 
 	 */
 	else if (parv[0][0] != '+' && parv[0][0] != '-') {
-		if (parv[0][0] == '#' || parv[0][0] == '&') {
+		if (parv[0][0] == '#') {
 			wsopts.channel = find_channel(parv[0], NullChn);
 			if (wsopts.channel == NULL) {
 				sendto_one(sptr, getreply(ERR_NOSUCHCHANNEL),
@@ -418,7 +417,7 @@ int  (*ichkfn) (char *, char *);
 
 int chk_who(aClient *from, aClient *ac, int showall)
 {
-	if (!IsClient(ac))
+	if (!IsPerson(ac))
 		return 0;
 	if (IsInvisible(ac) && !showall)
 		return 0;
@@ -490,6 +489,8 @@ inline char *first_visible_channel(aClient *cptr, aClient *sptr)
 	aChannel *chptr = NULL;
 	static char chnbuf[CHANNELLEN + 2];
 
+	if (IsHiding(cptr))
+		return ("*");
 	if (cptr->user->channel) {
 		if (IsAdmin(sptr)) {
 			chptr = cptr->user->channel->chptr;
@@ -555,13 +556,6 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	else
 		hchkfn = match;
 
-	if (wsopts.ip != NULL && (strchr(wsopts.ip, '?')) == NULL &&
-	    (strchr(wsopts.ip, '*')) == NULL)
-		ichkfn = smycmp;
-	else
-		ichkfn = match;
-
-
 	if (wsopts.channel != NULL) {
 		if (IsMember(sptr, wsopts.channel))
 			showall = 1;
@@ -577,6 +571,9 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				i = 0;
 				if (!chk_who(sptr, ac, showall))
 					continue;
+				if (IsHiding(ac) && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
+					continue;
+				 
 				/*
 				 * get rid of the pidly stuff first 
 				 */
@@ -587,7 +584,7 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				status[i++] =
 				    (ac->user->away == NULL ? 'H' : 'G');
 				status[i++] =
-				    (IsAnOper(ac) ? '*' : ((IsInvisible(ac)
+				    (IsAnOper(ac) && !(IsHideOper(ac) && !IsOper(ac) && (ac != sptr)) ? '*' : ((IsInvisible(ac)
 				    && IsOper(sptr)) ? '%' : 0));
 				if (IsARegNick(ac))
 					status[i++] = 'r';
@@ -627,7 +624,7 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				status[i++] =
 				    (ac->user->away == NULL ? 'H' : 'G');
 				status[i++] =
-				    (IsAnOper(ac) ? '*' : ((IsInvisible(ac)
+				    (IsAnOper(ac) && !(IsHideOper(ac) && !IsOper(ac) && (ac != sptr)) ? '*' : ((IsInvisible(ac)
 				    && IsOper(sptr)) ? '%' : 0));
 				if (IsARegNick(ac))
 					status[i++] = 'r';
@@ -666,19 +663,20 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				ac = cm->cptr;
 				if (!chk_who(sptr, ac, 1))
 					continue;
-
+				if ((lp->chptr->mode.mode & MODE_AUDITORIUM) && !((cm->flags & CHFL_CHANOP)))
+					continue;
 				if (shown == MAXWHOREPLIES && !IsAnOper(sptr)) {
 					sendto_one(sptr,
 					    getreply(ERR_WHOLIMEXCEED), me.name,
 					    sptr->name, MAXWHOREPLIES);
 					break;
 				}
-
+				
 				i = 0;
 				status[i++] =
 				    (ac->user->away == NULL ? 'H' : 'G');
 				status[i++] =
-				    (IsAnOper(ac) ? '*' : ((IsInvisible(ac)
+				    (IsAnOper(ac) && !(IsHideOper(ac) && !IsOper(ac) && (ac != sptr)) ? '*' : ((IsInvisible(ac)
 				    && IsOper(sptr)) ? '%' : 0));
 				if (IsARegNick(ac))
 					status[i++] = 'r';
