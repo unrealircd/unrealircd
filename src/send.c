@@ -1724,7 +1724,6 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 			}
 		}
 	}
-	va_end(vl);
 	return;
 }
 

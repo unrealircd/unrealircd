@@ -599,3 +599,4 @@
 - Cached MOTDs are now dynamically allocated (saves alot of memory)
 - Made aClient->passwd dynamically allocated (saves 32bytes per user/server) [may need debugging]
 - Fixed a NOTICE crash bug, reported by EJ
+- Removed a excessive va_end in send.c
