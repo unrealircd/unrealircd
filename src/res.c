@@ -81,6 +81,10 @@ static int bad_hostname(char *, int);
 static	void	async_dns(void *parm);
 #endif
 
+#ifndef _WIN32
+extern TS nextexpire;
+#endif
+
 static struct cacheinfo {
 	int  ca_adds;
 	int  ca_dels;
@@ -1641,14 +1645,24 @@ static aCache *make_cache(ResRQ *rptr)
 	hp->h_length = rptr->he.h_length;
 	hp->h_name = rptr->he.h_name;
 #endif
-	if (rptr->ttl < 600)
+	if (rptr->ttl < AR_TTL)
 	{
 		reinfo.re_shortttl++;
-		cp->ttl = 600;
+		cp->ttl = AR_TTL;
 	}
 	else
 		cp->ttl = rptr->ttl;
 	cp->expireat = TStime() + cp->ttl;
+#ifndef _WIN32
+	/* Update next dns cache clean time, this way it will be cleaned when needed.
+	 * I don't know how to do multithreaded (win32), as a consequence it can take
+	 * AR_TTL (300s) too much before we expire this entry at win32 -- Syzop
+	 */
+	if (nextexpire > cp->expireat) {
+		nextexpire = cp->expireat;
+		Debug((DEBUG_DNS, "Adjusting nextexpire to %lu", nextexpire));
+	}
+#endif
 	HE(rptr)->h_name = NULL;
 #ifdef DEBUGMODE
 	Debug((DEBUG_INFO, "make_cache:made cache %#x", cp));
@@ -1791,6 +1805,7 @@ time_t expire_cache(time_t now)
 	aCache *cp, *cp2;
 	time_t next = 0;
 
+	Debug((DEBUG_DEBUG, "expire_cache(%lu)", now));
 	for (cp = cachetop; cp; cp = cp2)
 	{
 		cp2 = cp->list_next;
@@ -1803,6 +1818,13 @@ time_t expire_cache(time_t now)
 		else if (!next || next > cp->expireat)
 			next = cp->expireat;
 	}
+	/* Always check at least AR_TTL seconds, ugly workaround for
+	 * (win32 specific) problem with not removing caches (otherwise a new cache could
+	 * be added later while the next expire_cache will be about XX hours :/) -- Syzop
+	 */
+	if (next > now + AR_TTL)
+		next = now + AR_TTL;
+	Debug((DEBUG_DEBUG, "next expire_cache at %lu", (next > now) ? next : (now + AR_TTL)));
 	return (next > now) ? next : (now + AR_TTL);
 }
 

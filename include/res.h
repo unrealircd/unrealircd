@@ -12,7 +12,7 @@
 #define MAXALIASES	35
 #define MAXADDRS	35
 
-#define	AR_TTL		600	/* TTL in seconds for dns cache entries */
+#define	AR_TTL		300	/* minimum TTL in seconds for dns cache entries */
 
 struct	hent {
 	char	*h_name;	/* official name of host */

@@ -1867,3 +1867,8 @@ seen. gmtime warning still there
   see whether servername, hostname/ip or username is wrong.
 - Added recvq column to /stats y reply.
 - Fixed a throttling bug reported by Ely (#0000704)
+- Fixed a resolver bug where cache entries didn't timeout correctly.
+- Made async resolve-and-connect work
+- Added link::options::nodnscache which means Unreal will not cache the host forever for
+  outgoing server connections, you could for example enable this if you are linking two servers
+  with an often changing host (like dyndns.org).

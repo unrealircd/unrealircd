@@ -3000,8 +3000,8 @@ CMD_FUNC(m_connect)
 		      me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], aconf->servername);
 		  break;
 	  case -2:
-		  sendto_one(sptr, ":%s %s %s :*** Hostname %s is unknown for server %s.",
-		      me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], aconf->hostname, aconf->servername);
+		  sendto_one(sptr, ":%s %s %s :*** Resolving hostname '%s'...",
+		      me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], aconf->hostname);
 		  break;
 	  default:
 		  sendto_one(sptr,

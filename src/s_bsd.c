@@ -2313,6 +2313,10 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	char *s;
 	int  errtmp, len;
 
+	if (aconf->options & CONNECT_NODNSCACHE) {
+		/* Remove "cache" if link::options::nodnscache is set */
+		memset(&aconf->ipnum, '\0', sizeof(struct IN_ADDR));
+	}
 	/*
 	 * If we dont know the IP# for this host and itis a hostname and
 	 * not a ip# string, then try and find the appropriate host record.
@@ -2560,6 +2564,36 @@ void do_dns_async(int id)
 			  bcopy(hp->h_addr, (char *)&aconf->ipnum,
 		      sizeof(struct IN_ADDR));
 		break;
+		case ASYNC_CONNECT :
+			/* Async connect support, the only problem is we don't know who did the /connect
+			 * anymore, so we send the statusinfo to all local ops ;P -- Syzop
+			 */
+			aconf = (ConfigItem_link *) ln.value.aconf;
+			if (hp && aconf)
+			{
+				int n;
+				bcopy(hp->h_addr, (char *)&aconf->ipnum, sizeof(struct IN_ADDR));
+				n = connect_server(aconf, (aClient *)NULL, hp);
+				/* I love semi-duplicate code */
+				switch(n) {
+					case 0:
+						sendto_realops("Connecting to %s[%s].", aconf->servername, aconf->hostname);
+						break;
+					case -1:
+						sendto_realops("Couldn't connect to %s.", aconf->servername);
+						break;
+					case -2:
+						/* Should not happen since hp is not NULL */
+						sendto_realops("Hostname %s is unknown for server %s (???).", aconf->hostname, aconf->servername);
+						break;
+					default:
+						sendto_realops("Connection to %s failed: %s", aconf->servername, strerror(n));
+				}
+			}
+			if (!hp) {
+				sendto_realops("Hostname %s is unknown for server %s.", aconf->hostname, aconf->servername);
+			}
+			break;
 		default :
 			break;
 		}

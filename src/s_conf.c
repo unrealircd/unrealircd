@@ -242,6 +242,7 @@ static OperFlag _ListenerFlags[] = {
 /* This MUST be alphabetized */
 static OperFlag _LinkFlags[] = {
 	{ CONNECT_AUTO,	"autoconnect" },
+	{ CONNECT_NODNSCACHE, "nodnscache" },
 	{ CONNECT_QUARANTINE, "quarantine"},
 	{ CONNECT_SSL,	"ssl"		  },
 	{ CONNECT_ZIP,	"zip"		  },
