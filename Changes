@@ -327,4 +327,6 @@
 - Made chmode +z only settable by umode +z users or U:lines or services.
 - Updated badwords.channel.conf and badwords.message.conf to use newconf (requires an include in 
   the config file)
-- Made conf2 able to load empty files as well
+- Made conf2 able to load empty files as well, with warnings
+- Added module_sym("functionname"), for modules, like, sajoin might want to
+  do fp_m_join = module_sym("m_join");

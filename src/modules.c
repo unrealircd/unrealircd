@@ -164,6 +164,7 @@ int  load_module(char *module)
 #endif
 }
 
+
 int	unload_module(char *name)
 {
 	int	i;
@@ -184,6 +185,34 @@ int	unload_module(char *name)
 	modules_loaded--;
 	return 1;
 }
+
+vFP module_sym(char *name)
+{
+	vFP	fp;
+	char	buf[512];
+	int	i;
+	ModuleInfo *mi;
+	
+	if (!name)
+		return NULL;
+	
+	ircsprintf(buf, "_%s", name);
+
+	/* Run through all modules and check for symbols */
+	for (i = 0; i < MAXMODULES; i++)
+	{
+		mi = Modules[i];
+		if (!mi)
+			continue;
+			
+		if (fp = (vFP) irc_dlsym(mi->dll, name))
+			return (fp);
+		if (fp = (vFP) irc_dlsym(mi->dll, buf))
+			return (fp);
+	}
+	return NULL;
+}
+
 
 int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
@@ -249,3 +278,5 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	return 1;
 }
+
+

@@ -35,7 +35,10 @@
 #define DLLFUNC 
 #endif
 
-typedef struct moduleInfo ModuleInfo;
+typedef struct moduleInfo 	ModuleInfo;
+typedef void			(*vFP)();	/* Void function pointer */
+typedef int			(*iFP)();	/* Integer function pointer */
+typedef char			(*cFP)();	/* char * function pointer */
 
 struct moduleInfo
 {
@@ -53,8 +56,9 @@ struct moduleInfo
 
 extern ModuleInfo	*module_buffer;
 
-void module_init(void);
-int  load_module(char *module);
-int	unload_module(char *name);
 
+void 	module_init(void);
+int  	load_module(char *module);
+int	unload_module(char *name);
+vFP	module_sym(char *name);
 
