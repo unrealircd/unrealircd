@@ -318,6 +318,18 @@ aCommand *add_Command_backend(char *cmd, int (*func)(), unsigned char parameters
 	return newcmd;
 }
 
+int CommandExists(char *name)
+{
+	aCommand *p;
+	
+	for (p = CommandHash[toupper(*name)]; p; p = p->next)
+	{
+		if (!stricmp(p->cmd, name))
+			return 1;
+	}
+	return 0;
+}
+
 Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigned char params, int flags) {
 	Command *command = MyMallocEx(sizeof(Command));
 	command->cmd = add_Command_backend(cmd,func,params, 0, flags);

@@ -2133,3 +2133,5 @@ seen. gmtime warning still there
 - Fixed ripemd-160 vs ripemd160 confusion, reported by thelight (#0000949).
 - Little find_client() audit.
 - Removed some leftover TECHAT references (#0000953).
+- Added a CommandExists function to be used by module coders to determine if a command already
+  exists.

@@ -272,6 +272,7 @@ void HooktypeDel(Hooktype *hooktype, Module *module);
 
 Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigned char params, int flags);
 void CommandDel(Command *command);
+int CommandExists(char *name);
 
 /* Hook types */
 #define HOOKTYPE_LOCAL_QUIT	1
