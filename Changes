@@ -3066,3 +3066,4 @@ seen. gmtime warning still there
   just like 0.01%).
 - Fixed an SVSMODE #chan -qaohv bug that would cause the user to be able to readd the mode
   (#0001690) reported by auspice
+- spamfilter.conf: added signature for LOI trojan.
