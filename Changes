@@ -189,4 +189,5 @@
 - Some more rehash stuff
 - Fixed check_pings problem (crash)
 - Fixed negative timestamps problem (crash)
+- Fixed a problem with cptr->class counting for servers
 - Made a bunch of /stats flags work with newconf

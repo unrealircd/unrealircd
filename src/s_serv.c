@@ -967,7 +967,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	cptr->serv->conf = aconf;
 	cptr->serv->conf->refcount++;
 	cptr->serv->conf->class->clients++;
-	
+	cptr->class = cptr->serv->conf->class;
 	add_server_to_table(cptr);
 	for (i = 0; i <= highest_fd; i++)
 	{
