@@ -346,3 +346,4 @@
   - You can't send numerics to servers
   - Using ERR_NOPRIVLEDGES (says you aren't oper)
   - Disabled commands allowed by unregistered users from registered users
+- Removed networks/unrealircd.conf
