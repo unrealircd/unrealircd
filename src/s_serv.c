@@ -579,7 +579,7 @@ int  m_server(cptr, sptr, parc, parv)
 	char *ch = NULL;	/* */
 	char *inpath = get_client_name(cptr, TRUE);
 	aClient *acptr = NULL, *ocptr = NULL;
-	aConfItem *cconf;
+	ConfigItem_ban *bconf;
 	int  hop = 0, numeric = 0;
 	char info[REALLEN + 61];
 	ConfigItem_link *aconf = NULL;
@@ -592,7 +592,7 @@ int  m_server(cptr, sptr, parc, parv)
 		sendto_one(cptr, err_str(ERR_ALREADYREGISTRED),
 		    me.name, parv[0]);
 		sendto_one(cptr,
-		    ":%s NOTICE %s :Sorry, but your IRC program doesn't appear to support changing servers.",
+		    ":%s NOTICE %s :*** Sorry, but your IRC program doesn't appear to support changing servers.",
 		    me.name, cptr->name);
 		sptr->since += 7;
 		return 0;
@@ -719,6 +719,14 @@ int  m_server(cptr, sptr, parc, parv)
 			return exit_client(acptr, acptr, acptr,
 			    "Server Exists");
 		}
+		if (bconf = Find_ban(servername, CONF_BAN_SERVER))
+		{
+			sendto_realops
+				("Cancelling link %s, banned server",
+				get_client_name(cptr, TRUE));
+			sendto_one(cptr, "ERROR :Banned server (%s)", bconf->reason ? bconf->reason : "no reason");
+			return exit_client(cptr, cptr, &me, "Banned server");
+		}
 		/* OK, let us check in the data now now */
 		hop = TS2ts(parv[2]);
 		numeric = (parc > 4) ? TS2ts(parv[3]) : 0;
@@ -775,6 +783,7 @@ int	m_server_remote(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr, *ocptr, *bcptr;
 	ConfigItem_link	*aconf;
+	ConfigItem_ban *bconf;
 	int 	hop;
 	char	info[REALLEN + 61];
 	long	numeric = 0;
@@ -799,6 +808,14 @@ int	m_server_remote(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    (ocptr->from ? ocptr->from->name : "<nobody>"));
 		return exit_client(acptr, acptr, acptr,
 		    "Server Exists");
+	}
+	if (bconf = Find_ban(servername, CONF_BAN_SERVER))
+	{
+		sendto_realops
+			("Cancelling link %s, banned server %s",
+			get_client_name(cptr, TRUE), servername);
+		sendto_one(cptr, "ERROR :Banned server (%s)", bconf->reason ? bconf->reason : "no reason");
+		return exit_client(cptr, cptr, &me, "Brought in banned server");
 	}
 	/* OK, let us check in the data now now */
 	hop = TS2ts(parv[2]);
