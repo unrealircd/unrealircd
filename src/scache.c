@@ -125,6 +125,24 @@ char *find_server_aln(char *s)
 	return (convert2aln(hash(s)));
 
 }
+
+char	*does_servername_collide(char *s)
+{
+	int	i = hash(s);
+	
+	if (scache_hash[i])
+	{
+		if (strcmp(s, scache_hash[i])
+			return scache_hash[i];
+		else
+			return NULL;
+	}
+	else
+	{
+		return NULL;
+	}
+}
+
 /*
  * Added so s_debug could check memory usage in here -Dianora 
  */

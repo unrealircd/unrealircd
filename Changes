@@ -321,3 +321,5 @@
 - "Fixed" the /stats u bug?
 - Fixed +f not working (?)
 - Made the Own-protection just reduce the class maxli instead of bitching..
+- Did a dirty hack on ALN problem with colliding hash (will deny linking in
+  wrong servers)

@@ -443,7 +443,8 @@ int  m_server(cptr, sptr, parc, parv)
 {
 	char *ch;
 	int  i;
-	char info[REALLEN + 1], *inpath, *host, *encr;
+	char info[REALLEN + 1], *inpath, *host, *encr, *f;
+	char pp[512];
 	aClient *acptr, *bcptr;
 	aConfItem *aconf, *cconf;
 	int  hop, ts = 0;
@@ -566,7 +567,13 @@ int  m_server(cptr, sptr, parc, parv)
 		}
 		/*      bzero(cptr->passwd, sizeof(cptr->passwd)); */
 	}
-
+	f = does_servername_collide(parv[1]);
+	if (f)
+	{
+		ircsprintf(pp, "Servername %s collides with servername %s (similar hash). Change servername in some way (maybe change case)",
+			parv[1], f);		
+		return exit_client(cptr, cptr, cptr, f);
+	}
 	if ((acptr = find_name(host, NULL)))
 	{
 		aClient *ocptr;
@@ -607,6 +614,8 @@ int  m_server(cptr, sptr, parc, parv)
 		return exit_client(cptr, cptr, cptr, "Nick as Server");
 	}
 
+	
+	
 	if (IsServer(cptr))
 	{
 		/*
