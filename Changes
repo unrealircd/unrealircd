@@ -1278,3 +1278,5 @@ seen. gmtime warning still there
 - Fixed another memory leak with the scanners
 - Fixed some helpop typos reported by BiGi (#0000144)
 - Fixed a typo in /stats ? where T/t were reversed, reported by Zer0
+- Fixed a typo displaying a message to edit config.h after compiling reported by dimplesx
+  (#0000133)
