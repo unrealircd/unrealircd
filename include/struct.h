@@ -843,7 +843,7 @@ struct Client	{
 				     ** and after which the connection was
 				     ** accepted.
 				     */
-	char	passwd[PASSWDLEN+1];
+	char	*passwd;
 #ifdef DEBUGMODE
 	time_t	cputime;
 #endif

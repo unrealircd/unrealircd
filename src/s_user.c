@@ -737,7 +737,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		{
 /* I:line password encryption --codemastr */
 #ifdef CRYPT_ILINE_PASSWORD
-		if (*sptr->passwd) {
+		if (sptr->passwd && *sptr->passwd) {
 			char salt[3];
 			extern char *crypt();
 
@@ -916,7 +916,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	 */
 	if (MyConnect(sptr))
 	{
-		if (sptr->passwd[0] && (nsptr = find_person(NickServ, NULL)))
+		if (sptr->passwd && (nsptr = find_person(NickServ, NULL)))
 			sendto_one(nsptr, ":%s PRIVMSG %s@%s :IDENTIFY %s",
 			    sptr->name, NickServ, SERVICES_NAME, sptr->passwd);
 		/* Force the user to join the given chans -- codemastr */

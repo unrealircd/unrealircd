@@ -1084,7 +1084,7 @@ void close_connection(cptr)
 		cptr->fd = -2;
 		DBufClear(&cptr->sendQ);
 		DBufClear(&cptr->recvQ);
-		bzero(cptr->passwd, sizeof(cptr->passwd));
+	
 		/*
 		 * clean up extra sockets from P-lines which have been
 		 * discarded.
