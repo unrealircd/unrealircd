@@ -148,7 +148,11 @@ int    httpd_load(int module_load)
 		httpdfd = -1;
 		return -1;
 	}		
-	sin.SIN_ADDR.S_ADDR = inet_addr("0.0.0.0");
+#ifndef INET6
+	sin.SIN_ADDR.S_ADDR = inet_addr(conf_listen->ip);
+#else
+	inet_pton(AFINET, conf_listen->ip, (void *)&sin.SIN_ADDR);
+#endif
 	sin.SIN_PORT = htons(8091);
 	sin.SIN_FAMILY = AFINET;
 	if (bind(httpdfd, (struct SOCKADDR *)&sin, sizeof(sin)))

@@ -773,3 +773,4 @@ seen. gmtime warning still there
 - Added log::maxsize, when this size is reached the log is cleared and started over again
 - Fixed a codemastr-on-crack /version bug, and fixed some IPv6 stuff in
   scan*
+- Fixed some more IPv6 stuff in httpd
