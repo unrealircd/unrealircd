@@ -235,8 +235,9 @@ static inline char *int_to_base64(long val)
 	/* Temporary debugging code.. remove before 2038 ;p */
 	if (val > 2147483646)
 	{
-		snprintf(trouble_info, "[BUG] int_to_base64() called for insane value %ld. Please report!", val);
-		ircd_log("%s", trouble_info);
+		snprintf(trouble_info, sizeof(trouble_info),
+			"[BUG] int_to_base64() called for insane value %ld. Please report!", val);
+		ircd_log(LOG_ERROR, "%s", trouble_info);
 		val = 2147483647L; /* prevent buffer overflow */
 	}
 
