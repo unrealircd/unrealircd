@@ -2438,3 +2438,4 @@ seen. gmtime warning still there
 - Fixed hunt_server* bug
 - Very Very small change to doc/example.conf
 - Updated .CHANGES.NEW to read Beta18
+- Minor doc update.
