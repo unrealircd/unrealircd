@@ -4049,7 +4049,7 @@ int  m_userhost(cptr, sptr, parc, parv)
                      acptr->name,
                      IsAnOper(acptr) ? "*" : "",
                      (acptr->user->away) ? '-' : '+',
-                     acptr->username,
+                     acptr->user->username,
    			((acptr != sptr) && !IsOper(sptr) 
    			  && IsHidden(acptr) ? acptr->user->virthost : 
    			  acptr->user->realhost));
