@@ -1253,3 +1253,4 @@ seen. gmtime warning still there
 - One little patch for humanity, one giant step for science..
 - Cosmetic fix for /setident, found by juli ..
 - Implimented a dynamic hooktype system to allow modules to create their own hooktypes
+- Fixed a conf_unknown bug

@@ -926,7 +926,7 @@ int	ConfigCmd(ConfigFile *cf, ConfigEntry *ce, ConfigCommand *cc)
 			ConfigItem_unknown *ca = MyMalloc(sizeof(ConfigItem_unknown));
 			ca->ce = cep;			
 			/* Add to the unknown list */
-			DelListItem(ca, conf_unknown);
+			AddListItem(ca, conf_unknown);
 		}
 	}
 	return 0;
