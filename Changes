@@ -3232,3 +3232,4 @@ This is the 3.2 fixes branch.
   reported by Troco
 - Added a doc/translations.txt which describes the (current) translation process
   and requirements a bit.
+- Fixed a synch bug, reported by Troco (#0001857).
