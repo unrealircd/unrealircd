@@ -240,7 +240,7 @@ inline void stats_help(aClient *sptr)
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"D - denylinkall - Send the deny link (all) block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"e - exceptthrottle - Send the except trottle block list");
+		"e - exceptthrottle - Send the except throttle block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"E - exceptban - Send the except ban and except tkl block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,

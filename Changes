@@ -649,3 +649,4 @@
   - Added 'polish' (latin2), supplied by k4be.
   - Added 'hebrew' (iso8859-8I / windows-1255), supplied by PHANTOm.
 - Added French example.fr.conf and help.fr.conf, translated/maintained by Babass.
+- Fixed a doc typo, reported by SDF_of_BC.
