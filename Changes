@@ -3309,3 +3309,5 @@ This is the 3.2 fixes branch.
   old confusing comment on SEGV logging, config.h: ripped out lPATH since that define
   isn't anywhere used and is only confusing.
 - Made the new numerics use nicknames (#0001896) suggested by Dukat.
+- Fixed a problem where the tmp directory was created in the current directory rather than
+  the correct path (#0001898) reported by AngryWolf
