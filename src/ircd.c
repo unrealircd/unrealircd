@@ -201,14 +201,22 @@ VOIDSIG s_monitor()
 
 VOIDSIG s_die()
 {
+#ifdef _WIN32
+	int i;
+	aClient *cptr;
+#endif
 #ifdef	USE_SYSLOG
 	(void)syslog(LOG_CRIT, "Server Killed By SIGTERM");
 #endif
 	unload_all_modules();
-	flush_connections(&me);
 #ifndef _WIN32
-	exit(-1);
+	flush_connections(&me);
+#else
+	for (i = LastSlot; i >= 0; i--)
+		if ((cptr = local[i]) && DBufLength(&cptr->sendQ) > 0)
+			(void)send_queued(cptr);
 #endif
+	exit(-1);
 }
 
 #ifndef _WIN32
@@ -342,10 +350,18 @@ void server_reboot(mesg)
 	char *mesg;
 {
 	int  i;
-
+#ifdef _WIN32
+	aClient *cptr;
+#endif
 	sendto_realops("Aieeeee!!!  Restarting server... %s", mesg);
 	Debug((DEBUG_NOTICE, "Restarting server... %s", mesg));
+#ifndef _WIN32
 	flush_connections(&me);
+#else
+	for (i = LastSlot; i >= 0; i--)
+		if ((cptr = local[i]) && DBufLength(&cptr->sendQ) > 0)
+			(void)send_queued(cptr);
+#endif
 	/*
 	   ** fd 0 must be 'preserved' if either the -d or -i options have
 	   ** been passed to us before restarting.
@@ -379,6 +395,7 @@ void server_reboot(mesg)
 	Debug((DEBUG_FATAL, "Couldn't restart server: %s",
 	    strerror(GetLastError())));
 #endif
+	unload_all_modules();
 	exit(-1);
 }
 
