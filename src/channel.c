@@ -3625,10 +3625,10 @@ CMD_FUNC(m_kick)
 				sendto_one(sptr,
 				    err_str(ERR_USERNOTINCHANNEL),
 				    me.name, parv[0], user, name);
-			if (!IsServer(cptr) || !IsULine(sptr))
+			if (MyClient(cptr))
 				break;
 		}		/* loop on parv[2] */
-		if (!IsServer(cptr) || !IsULine(sptr))
+		if (MyClient(cptr))
 			break;
 	}			/* loop on parv[1] */
 

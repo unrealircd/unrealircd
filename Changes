@@ -2303,3 +2303,4 @@ seen. gmtime warning still there
   In the meantime, don't report bugs or ask for support on this.
 - Fixed bug with SWHOIS: oper::swhois wasn't broadcasted correctly which made it
   only show up in local (or server) /whois, reported by format (#0001141).
+- minor m_kick tweak.
