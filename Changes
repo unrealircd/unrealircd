@@ -1801,3 +1801,4 @@ seen. gmtime warning still there
 - Removed ircdreg, bug (#0000614), outdated
 - Fixed win32 compile error because of report_error patch (oops..)
 - Minor documentation fixes reported by Jollino (LUSERS, OFLAGS mode h).
+- Fixed bug in non-working channel mode +H. (#0000572)

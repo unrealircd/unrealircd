@@ -2381,10 +2381,8 @@ static int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, ch
         if ((chptr->mode.mode & MODE_ADMONLY) && !IsSkoAdmin(sptr))
                 return (ERR_ADMONLY);
 
-#ifdef ENABLE_INVISOPER
         if ((chptr->mode.mode & MODE_NOHIDING) && IsHiding(sptr))
                 return (ERR_NOHIDING);
-#endif
 
 	/* Admin, Coadmin, Netadmin, and SAdmin can still walk +b in +O */
         if (IsOper(sptr) && !IsAdmin(sptr) && !IsCoAdmin(sptr) && !IsNetAdmin(sptr)
