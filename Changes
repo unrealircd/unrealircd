@@ -438,3 +438,4 @@
 - Removed NAZIISH_CHBAN_HANDLING as it didn't do anything
 - Added -advanced flag to ./Config to configure advanced options (#0002145) suggested by
   Bugz. As a result, some config.h options are now in ./Config -advanced.
+- Small fix for above
