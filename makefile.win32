@@ -4,20 +4,87 @@
 CC=cl
 LINK=link
 RC=rc
-# Here you put your settings
+
+############################ USER CONFIGURATION ############################
+
+#### ZIPLINKS SUPPORT ####
+#To enable ziplinks support you must have zlib installed on your system
+#you can get a pre-built zlib library from http://www.winimage.com/zLibDll/
+#
+#
+#To enable ziplinks uncomment the next line:
+#USE_ZIPLINKS=1
+#
+#If your zlib library and include files are not in your compiler's
+#default locations, specify the locations here:
+#ZLIB_INC_DIR="c:\dev\zlib"
+#ZLIB_LIB_DIR="c:\dev\zlib\dll32"
+#
+#
+###### END ZIPLINKS ######
+
+####### SSL SUPPORT ######
+#To enable SSL support you must have OpenSSL installed on your system
+#
+#
+#To enable SSL uncomment the next line:
+#USE_SSL=1
+#
+#If your OpenSSL library and include files are not in your compiler's
+#default locations, specify the locations here:
+#OPENSSL_INC_DIR="c:\openssl\include"
+#OPENSSL_LIB_DIR="c:\openssl\lib"
+#
+#
+######### END SSL ########
+
+###### RELEASE BUILD #####
+#To make a release build comment out the next line a release build
+#does not contain debugging symbols and can not be used to locate
+#the source of a crash or bug
 DEBUG=1
-FD_SETSIZE=/D FD_SETSIZE=16384
-!IFNDEF DEBUG 
-CFLAGS=/MT /J /O2 /G5 /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D STATIC_LINKING /D _WIN32GUI /D NOSPOOF=1 /c
-LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib dbghelp.lib \
- oldnames.lib libcmt.lib comctl32.lib comdlg32.lib /nodefaultlib /nologo /out:WIRCD.EXE
-!ELSE
-CFLAGS=/MTd /J /Zi /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D STATIC_LINKING /D _WIN32GUI /D NOSPOOF=1 /c
-LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib dbghelp.lib\
- oldnames.lib libcmt.lib comctl32.lib comdlg32.lib \
- advapi32.lib /nodefaultlib /nologo /debug /debugtype:BOTH /OUT:WIRCD.EXE 
+#
+#
+#### END RELEASE BUILD ###
+
+############################# END CONFIGURATION ############################
+
+!IFDEF USE_ZIPLINKS
+ZIPCFLAGS=/D ZIP_LINKS /D ZLIB_DLL
+ZIPOBJ=SRC/ZIP.OBJ
+ZIPLIB=zlib.lib
+!IFDEF ZLIB_INC_DIR
+ZLIB_INC=/I "$(ZLIB_INC_DIR)"
+!ENDIF
+!IFDEF ZLIB_LIB_DIR
+ZLIB_LIB=/LIBPATH:"$(ZLIB_LIB_DIR)"
+!ENDIF
 !ENDIF
 
+!IFDEF USE_SSL
+SSLCFLAGS=/D USE_SSL
+SSLLIBS=ssleay32.lib libeay32.lib
+!IFDEF OPENSSL_INC_DIR
+OPENSSL_INC=/I "$(OPENSSL_INC_DIR)"
+!ENDIF
+!IFDEF OPENSSL_LIB_DIR
+OPENSSL_LIB=/LIBPATH:"$(OPENSSL_LIB_DIR)"
+!ENDIF
+!ENDIF
+
+!IFDEF DEBUG
+DBGCFLAG=/MTd /Zi
+DBGLFLAG=/debug /debugtype:BOTH
+!ELSE
+DBGCFLAG=/MT /O2 /G5
+!ENDIF 
+
+FD_SETSIZE=/D FD_SETSIZE=16384
+CFLAGS=$(DBGCFLAG) $(ZLIB_INC) $(OPENSSL_INC) /I ./INCLUDE /Fosrc/ /nologo $(ZIPCFLAGS) \
+ $(FD_SETSIZE) $(SSLCFLAGS) $(NS_ADDRESS) /D STATIC_LINKING /D NOSPOOF=1 /c 
+LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib dbghelp.lib \
+ oldnames.lib libcmt.lib comctl32.lib comdlg32.lib $(ZLIB_LIB) $(ZIPLIB) $(OPENSSL_LIB) \
+ $(SSLLIBS) /nodefaultlib /nologo $(DBGLFLAG) /out:WIRCD.EXE
 
 INCLUDES=./include/struct.h ./include/config.h ./include/sys.h \
  ./include/common.h ./include/version.h ./include/h.h ./include/numeric.h \
@@ -35,7 +102,8 @@ OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ \
  SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ \
  SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ \
- SRC/SERVICE.OBJ SRC/DEBUG.OBJ SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/S_STATS.OBJ
+ SRC/SERVICE.OBJ SRC/DEBUG.OBJ SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/S_STATS.OBJ \
+ $(ZIPOBJ)
 
 MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OBJ \
  SRC/M_SETNAME.OBJ SRC/M_SETHOST.OBJ SRC/M_CHGIDENT.OBJ SRC/M_SVSMOTD.OBJ \
@@ -242,6 +310,9 @@ src/random.obj: src/random.c $(INCLUDES)
 
 src/extcmodes.obj: src/extcmodes.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/extcmodes.c
+
+src/zip.obj: src/zip.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/zip.c
 
 src/ssl.obj: src/ssl.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/ssl.c
