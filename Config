@@ -1,4 +1,13 @@
 #!/bin/sh
+#
+# Config script for UnrealIRCd
+# (C) 2001 The UnrealIRCd Team
+#
+# This configure script is free software; the UnrealIRCd Team gives 
+# unlimited permission to copy, distribute and modify as long as the
+# copyright headers stay intact
+#
+#
 # Rewritten completely to be an interface to autoconf by codemastr
 # This was inspired by the config by Michael Graff (explorer@flame.org)
 # but was written from scratch
@@ -9,10 +18,10 @@
 
 c=""
 n=""
-NOSPOOF="1"
+NOSPOOF=""
 DPATH="`pwd`"
 SPATH="`pwd`/src/ircd"
-HUB=""
+HUB="1"
 DOMAINNAME=`hostname`
 DEFPERM="0600"
 CRYPTOIRCD=""
@@ -415,7 +424,7 @@ TEST=""
 while [ -z "$TEST" ] ; do
     TEST="$BUFFERPOOL"
     echo ""
-    echo "How many buffer pools would you like?
+    echo "How many buffer pools would you like?"
     echo "This number will be multiplied by MAXSENDQLENGTH."
     echo $n "[$TEST] -> $c"
 	read cc

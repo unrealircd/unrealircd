@@ -581,3 +581,4 @@ seen. gmtime warning still there
 - Config fixes, settings.h and Makefile.dist are now dead. RIP.
 - Fixed a typo in configure
 - Rewrote Config, it is now perfectly suited for an autoconf interface rather than a standalone config
+- Minor fixes to Config, a license, etc
