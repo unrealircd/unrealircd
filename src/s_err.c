@@ -416,7 +416,7 @@ static char *replies[] = {
 /* 376    RPL_ENDOFMOTD */ ":%s 376 %s :End of /MOTD command.",
 /* 377 */ NULL, /* aircd, austhex */
 /* 378    RPL_WHOISHOST */ ":%s 378 %s %s :is connecting from *@%s %s",
-/* 379    RPL_WHOISMODES */ ":%s 379 %s %s :is using modes %s",
+/* 379    RPL_WHOISMODES */ ":%s 379 %s %s :is using modes %s %s",
 /* 380 */ NULL, /* aircd, austhex */
 /* 381    RPL_YOUREOPER */ ":%s 381 %s :You are now an IRC Operator",
 /* 382    RPL_REHASHING */ ":%s 382 %s %s :Rehashing",

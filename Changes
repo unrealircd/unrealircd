@@ -314,3 +314,5 @@
    ZLIB_LIB_DIR="c:\dev\zlib\dll32" custommodule MODULEFILE=m_mymodule
   For 3.2.2+ these additional parameters will no longer be needed (but wouldn't harm either).
 - Some doc/example.conf clarifications, mainly for modules @ win32.
+- Made /whois show the user's modes to opers regardless of +e
+- Added snomask to the /whois umode output

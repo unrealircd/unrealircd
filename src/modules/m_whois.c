@@ -175,12 +175,15 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    IsHidden(acptr) ? user->virthost : user->realhost,
 			    acptr->info);
 
-			if (IsEyes(sptr) && IsOper(sptr))
+			if (IsOper(sptr))
 			{
+				char sno[512];
+				strcpy(sno, get_sno_str(acptr));
+				
 				/* send the target user's modes */
 				sendto_one(sptr, rpl_str(RPL_WHOISMODES),
 				    me.name, parv[0], name,
-				    get_mode_str(acptr));
+				    get_mode_str(acptr), sno[1] == 0 ? "" : sno);
 			}
 			if ((acptr == sptr) || IsAnOper(sptr))
 			{
