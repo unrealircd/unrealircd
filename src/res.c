@@ -114,14 +114,8 @@ int	op;
 		if (!_res.nscount)
 		    {
 			_res.nscount = 1;
-#ifdef INET6
-                       /* still IPv4 */
-                         inet_pton(AFINET, "127.0.0.1", 
-                         &_res.nsaddr_list[0].SIN_ADDR.S_ADDR);
-#else
 			_res.nsaddr_list[0].SIN_ADDR.S_ADDR =
 				inet_addr("127.0.0.1");
-#endif
 		    }
 	    }
 
@@ -473,20 +467,12 @@ char	*name;
 	if (!rptr)
 	    {
 		rptr = make_request(lp);
-#ifdef INET6
-		rptr->type = T_AAAA;
-#else
 		rptr->type = T_A;
-#endif
 		rptr->name = (char *)MyMalloc(strlen(name) + 1);
 		(void)strcpy(rptr->name, name);
 	    }
 #ifndef _WIN32
-#ifdef INET6
-	return (query_name(hname, C_IN, T_AAAA, rptr));
-#else
 	return (query_name(hname, C_IN, T_A, rptr));
-#endif
 #else
 
 	rptr->id = _beginthread(async_dns, 0, (void *)rptr);
@@ -507,54 +493,15 @@ struct	IN_ADDR	*numb;
 		u_char	*cp;
 
 #ifndef _WIN32
-#ifdef INET6
-	cp = (u_char *)numb->s6_addr;
-	if (cp[0]==0 && cp[1]==0 && cp[2]==0 && cp[3]==0 && cp[4]==0 && 
-	    cp[5]==0 && cp[6]==0 && cp[7]==0 && cp[8]==0 && cp[9]==0 && 
-	    ((cp[10]==0 && cp[11]==0) || (cp[10]==0xff && cp[11]==0xff)))
-	    {
-		(void)sprintf(ipbuf, "%u.%u.%u.%u.in-addr.arpa.",
-			      (u_int)(cp[15]), (u_int)(cp[14]),
-			      (u_int)(cp[13]), (u_int)(cp[12]));
-	    }
-	else
-	    {
-		(void)sprintf(ipbuf, "%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.ip6.int.",
-		(u_int)(cp[15]&0xf), (u_int)(cp[15]>>4),
-		(u_int)(cp[14]&0xf), (u_int)(cp[14]>>4),
-		(u_int)(cp[13]&0xf), (u_int)(cp[13]>>4),
-		(u_int)(cp[12]&0xf), (u_int)(cp[12]>>4),
-		(u_int)(cp[11]&0xf), (u_int)(cp[11]>>4),
-		(u_int)(cp[10]&0xf), (u_int)(cp[10]>>4),
-		(u_int)(cp[9]&0xf), (u_int)(cp[9]>>4),
-		(u_int)(cp[8]&0xf), (u_int)(cp[8]>>4),
-		(u_int)(cp[7]&0xf), (u_int)(cp[7]>>4),
-		(u_int)(cp[6]&0xf), (u_int)(cp[6]>>4),
-		(u_int)(cp[5]&0xf), (u_int)(cp[5]>>4),
-		(u_int)(cp[4]&0xf), (u_int)(cp[4]>>4),
-		(u_int)(cp[3]&0xf), (u_int)(cp[3]>>4),
-		(u_int)(cp[2]&0xf), (u_int)(cp[2]>>4),
-		(u_int)(cp[1]&0xf), (u_int)(cp[1]>>4),
-		(u_int)(cp[0]&0xf), (u_int)(cp[0]>>4));
-	    }
-#else
-
-
 	cp = (u_char *)&numb->S_ADDR;
 	(void)ircsprintf(ipbuf,"%u.%u.%u.%u.in-addr.arpa.",
 		(u_int)(cp[3]), (u_int)(cp[2]),
 		(u_int)(cp[1]), (u_int)(cp[0]));
 #endif
-#endif
 	if (!rptr)
 	    {
 		rptr = make_request(lp);
 		rptr->type = T_PTR;
-#ifdef INET6
-               bcopy(numb->s6_addr, rptr->addr.s6_addr, IN6ADDRSZ);
-               bcopy((char *)numb->s6_addr,
-                       (char *)&rptr->he.h_addr, sizeof(struct in6_addr));
-#else
 		rptr->addr.S_ADDR = numb->S_ADDR;
 #ifndef _WIN32
 
@@ -637,9 +584,6 @@ ResRQ	*rptr;
 	case T_PTR:
 		(void)do_query_number(NULL, &rptr->addr, rptr);
 		break;
-#ifdef INET6
-	case T_AAAA:
-#endif
 	case T_A:
 		(void)do_query_name(NULL, rptr->name, rptr);
 		break;
@@ -666,12 +610,7 @@ HEADER	*hptr;
 	cp = buf + sizeof(HEADER);
 	hp = (struct hent *)&(rptr->he);
 	adr = &hp->h_addr;
-#ifndef INET6
 	while (adr->S_ADDR)
-#else
-        while (adr->s6_laddr[0] | adr->s6_laddr[1] | adr->s6_laddr[2] |
-               adr->s6_laddr[3])
-#endif
 		adr++;
 	alias = hp->h_aliases;
 	while (*alias)
@@ -709,7 +648,11 @@ HEADER	*hptr;
 #ifdef __alpha
                 cp += 4;
 #else
+#ifndef _WIN32
 		cp += sizeof(rptr->ttl);
+#else
+		cp += 4;
+#endif
 #endif
    
 		dlen =  (int)_getshort(cp);
@@ -730,37 +673,16 @@ HEADER	*hptr;
 
 		switch(type)
 		{
-#ifdef INET6
-		case T_AAAA:
-#endif
 		case T_A :
 			hp->h_length = dlen;
 			if (ans == 1)
 				hp->h_addrtype =  (class == C_IN) ?
 							AFINET : AF_UNSPEC;
-#ifdef INET6
-                       if (type == T_AAAA)
-                               bcopy(cp, (char *)&dr, dlen);
-                       else {
-                               dr.s6_laddr[0]=dr.s6_laddr[1]=0;
-                               dr.s6_laddr[2]=htonl(0xffff);
-                               bcopy(cp, &dr.s6_laddr[3], INADDRSZ);
-                       }
-                       bcopy(dr.s6_addr, adr->s6_addr, IN6ADDRSZ);
-#else
 			bcopy(cp, (char *)&dr, dlen);
 
 			adr->S_ADDR = dr.S_ADDR;
-#endif
-#ifdef INET6
-                       Debug((DEBUG_INFO,"got ip # %s for %s",
-                              inet_ntop(AF_INET6, (char *)adr, mydummy,
-                                        MYDUMMY_SIZE),
-                              hostbuf));
-#else
 			Debug((DEBUG_INFO,"got ip # %s for %s",
 				inetntoa((char *)adr), hostbuf));
-#endif
 			if (!hp->h_name)
 			    {
 				hp->h_name =(char *)MyMalloc(len+1);
@@ -937,16 +859,8 @@ long   id;
 	if (a && rptr->type == T_PTR)
 	    {
 		struct	hostent	*hp2 = NULL;
-#ifdef INET6
-                Debug((DEBUG_DNS, "relookup %s <-> %s",
-                       rptr->he.h_name, inet_ntop(AF_INET6,
-                                                  (char *)&rptr->he.h_addr,
-                                                  mydummy, MYDUMMY_SIZE)));
-#else
 		Debug((DEBUG_DNS, "relookup %s <-> %s",
 			rptr->he.h_name, inetntoa((char *)&rptr->he.h_addr)));
-
-#endif
 		/*
 		 * Lookup the 'authoritive' name that we were given for the
 		 * ip#.  By using this call rather than regenerating the
@@ -1008,25 +922,11 @@ getres_err:
 				rptr->retries = _res.retry;
 				rptr->sends = 0;
 				rptr->resend = 1;
-#ifdef INET6
-/* Comment out this ifdef to get names like ::ffff:a.b.c.d */
-				if(rptr->type == T_AAAA)
-					query_name(rptr->name, C_IN, T_A, rptr);
-				Debug((DEBUG_DNS,"getres_err: didn't work with T_AAAA, now also trying with T_A for %s",rptr->name));
-#endif
-
 				resend_query(rptr);
 			    }
 			else
 			{
 				resend_query(rptr);
-#ifdef INET6
-/* Comment out this ifdef to get names like ::ffff:a.b.c.d */
-				if(rptr->type == T_AAAA)
-					query_name(rptr->name, C_IN, T_A, rptr);
-				Debug((DEBUG_DNS,"getres_err: didn't work with T_AAAA, now also trying with T_A for %s",rptr->name));
-#endif
-	
 			}
 		    }
 		else if (lp)
@@ -1082,20 +982,6 @@ static	int	hash_number(ip)
 	hashv += hashv + (int)*ip++;
 	hashv += hashv + (int)*ip++;
 	hashv += hashv + (int)*ip++;
-#ifdef INET6
-	hashv += hashv + (int)*ip++;
-	hashv += hashv + (int)*ip++;
-	hashv += hashv + (int)*ip++;
-	hashv += hashv + (int)*ip++;
-	hashv += hashv + (int)*ip++;
-	hashv += hashv + (int)*ip++;
-	hashv += hashv + (int)*ip++;
-	hashv += hashv + (int)*ip++;
-	hashv += hashv + (int)*ip++;
-	hashv += hashv + (int)*ip++;
-	hashv += hashv + (int)*ip++;
-	hashv += hashv + (int)*ip++;
-#endif
 
 	hashv %= ARES_CACSIZE;
 	return (hashv);
@@ -1127,19 +1013,10 @@ static	aCache	*add_to_cache(ocp)
 		int	hashv;
 
 #ifdef DEBUG
-#ifdef INET6
-       Debug((DEBUG_INFO,"add_to_cache:added %s[%08x%08x%08x%08x] cache %#x.",
-              ocp->he.h_name,
-              ((struct in6_addr *)ocp->he.h_addr_list)->s6_laddr[0],
-              ((struct in6_addr *)ocp->he.h_addr_list)->s6_laddr[1],
-              ((struct in6_addr *)ocp->he.h_addr_list)->s6_laddr[2],
-              ((struct in6_addr *)ocp->he.h_addr_list)->s6_laddr[3], ocp));
-#else
 	Debug((DEBUG_INFO,
 	      "add_to_cache:ocp %#x he %#x name %#x addrl %#x 0 %#x",
 		ocp, &ocp->he, ocp->he.h_name, ocp->he.h_addr_list,
 		ocp->he.h_addr_list[0]));
-#endif
 #endif
 	ocp->list_next = cachetop;
 	cachetop = ocp;
@@ -1456,11 +1333,7 @@ ResRQ	*rptr;
 	** shouldn't happen but it just might...
 	*/
 #ifndef _WIN32
-#ifdef INET6
-	if (!rptr->he.h_name || !WHOSTENTP(rptr->he.h_addr.S_ADDR))
-#else
 	if (!rptr->he.h_name || !rptr->he.h_addr.S_ADDR)
-#endif
 #else
 #endif
 		return NULL;
