@@ -430,4 +430,5 @@
 - Removed doc/ADD-TO-IRCRC, doc/INSTALL, doc/Manual, doc/Operators,
   doc/irc.1, doc/ircd.8, doc/server-compile-guide
 - Made it so Invitewalk and Keywalk don't show for U:lines
-- Fixed a claok bug caused by stskeeps(tm) "not knowing how to use << and >> coding"
+- Fixed a cloak bug caused by stskeeps(tm) "not knowing how to use << and >> coding"
+- Fixed some cloak bugs, and applied +x crypto to hostnames as well

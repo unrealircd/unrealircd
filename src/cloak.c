@@ -200,7 +200,7 @@ char *hidehost(char *host)
 		l[4] = crc32(host, strlen(host));
 		l[2] = ((l[4] + KEY2) ^ KEY)^ KEY3;
 		l[2] <<= 2; l[2] >>= 2;
-		l[0] >>= 1; l[0] >>= 1;
+		l[0] <<= 1; l[0] >>= 1;
 		ircsprintf(cloaked, "%X.%X.%X.IP", l[2], l[1], l[0]);
 		return cloaked;
 	}
@@ -223,12 +223,15 @@ char *hidehost(char *host)
 					break;
 			}
 		}
+		l[0] = ((crc32(host, strlen(host)) + KEY2) ^ KEY)^ KEY3;
+		l[0] <<= 2; 
+		l[0] >>= 2; 
 		p++;
 		if (*p)
 			sprintf(cloaked, "%s-%X.%s", hidden_host,
-				crc32(host, strlen(host)), p);
+				l[0], p);
 		else
-			sprintf(cloaked, "%s-%X", hidden_host, crc32(host, strlen(host)));
+			sprintf(cloaked, "%s-%X", hidden_host, l[0]);
 			
 		return cloaked;
 	}
