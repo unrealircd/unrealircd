@@ -1,7 +1,7 @@
 /*
   retest.c - TRE regression test program
 
-  Copyright (C) 2001-2003 Ville Laurikari <vl@iki.fi>.
+  Copyright (C) 2001-2004 Ville Laurikari <vl@iki.fi>.
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License version 2 (June
@@ -1101,6 +1101,11 @@ main(int argc, char **argv)
   test_exec("xxxxxxxxx", 0, REG_OK, 0, 9, 6, 9, 6, 8, END);
   test_exec("xxxxxxxxxx", 0, REG_OK, 0, 9, 6, 9, 6, 8, END);
   test_exec("xxxxxxxxxxx", 0, REG_OK, 0, 11, 8, 11, 8, 10, END);
+
+  /* Repeats with iterations inside. */
+  test_comp("([a-z]+){2,5}", REG_EXTENDED, 0);
+  test_exec("a\n", 0, REG_NOMATCH, END);
+  test_exec("aa\n", 0, REG_OK, 0, 2, 1, 2, END);
 
   /*
    * Back referencing tests.

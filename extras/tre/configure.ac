@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(TRE, 0.6.3, [Ville Laurikari <vl@iki.fi>])
+AC_INIT(TRE, 0.6.4, [Ville Laurikari <vl@iki.fi>])
 AC_CONFIG_SRCDIR([lib/regcomp.c])
 AC_CONFIG_AUX_DIR(utils)
 AC_CANONICAL_TARGET
@@ -13,7 +13,7 @@ AC_PROG_INSTALL
 
 tre_version_1=0
 tre_version_2=6
-tre_version_3=3
+tre_version_3=4
 tre_version=$tre_version_1.$tre_version_2.$tre_version_3
 AC_DEFINE_UNQUOTED(TRE_VERSION,  "$tre_version",  [ TRE version string.  ])
 AC_DEFINE_UNQUOTED(TRE_VERSION_1, $tre_version_1, [ TRE version level 1. ])

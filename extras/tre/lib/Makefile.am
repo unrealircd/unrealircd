@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
 lib_LTLIBRARIES = libtre.la
-libtre_la_LDFLAGS = -version-info 4:3:0
+libtre_la_LDFLAGS = -version-info 4:4:0
 
 noinst_HEADERS =		\
 	tre-internal.h		\

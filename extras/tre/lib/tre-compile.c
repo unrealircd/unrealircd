@@ -1,7 +1,7 @@
 /*
   tre-compile.c - TRE regex compiler
 
-  Copyright (C) 2001-2003 Ville Laurikari <vl@iki.fi>
+  Copyright (C) 2001-2004 Ville Laurikari <vl@iki.fi>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License version 2 (June
@@ -1251,6 +1251,7 @@ tre_copy_ast(tre_mem_t mem, tre_stack_t *stack, tre_ast_node_t *ast,
 	      {
 		tre_iteration_t *iter = node->obj;
 		STACK_PUSHX(stack, iter->arg);
+		STACK_PUSHX(stack, COPY_RECURSE);
 		*result = tre_ast_new_iter(mem, iter->arg, iter->min,
 					   iter->max, iter->minimal);
 		if (*result == NULL)

@@ -1,7 +1,7 @@
 /*
   tre-match-backtrack.c - TRE backtracking regex matching engine
 
-  Copyright (C) 2001-2003 Ville Laurikari <vl@iki.fi>.
+  Copyright (C) 2001-2004 Ville Laurikari <vl@iki.fi>.
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License version 2 (June
@@ -407,12 +407,14 @@ tre_tnfa_run_backtrack(const tre_tnfa_t *tnfa, const void *string,
 			bt_len, so, eo, bt_len, (char*)string + so));
 		DPRINT(("  current string is '%.*s'\n", slen, str_byte - 1));
 	      }
+#ifdef TRE_WCHAR
 	    else if (type == STR_WIDE)
 	      {
 		DPRINT(("  substring (len %d) is [%d, %d[: '%.*ls'\n",
 			bt_len, so, eo, bt_len, (wchar_t*)string + so));
 		DPRINT(("  current string is '%.*ls'\n", slen, str_wide - 1));
 	      }
+#endif /* TRE_WCHAR */
 	  }
 #endif
 

@@ -2690,4 +2690,4 @@ seen. gmtime warning still there
   feature fast enough.
 - Updated the TRE library source to 0.6.3 (not yet used)
 - Updated the win32 TRE lib/dll to 0.6.4
-
+- Updated the TRE library source to 0.6.4 (yup, a release right after I do the last upgrade!)
