@@ -572,11 +572,17 @@ static int query_name(char *name, int class, int type, ResRQ *rptr)
 		k++;
 	}
 #else
-	/* WIN32: actually this should be safe since it was seeded already */
-	hptr->id = htons(rand() & 0xffff);
+	do
+	{
+		/* WIN32: actually this should be safe since it was seeded already */
+		hptr->id = htons(rand() & 0xffff);
+	}
 #endif
-
 	while (find_id(ntohs(hptr->id)));
+	/* The above loop takes care of preventing requests with duplicate id's,
+	 * it belongs to the do { } block. -- Syzop
+	 */
+
 	rptr->id = ntohs(hptr->id);
 	rptr->sends++;
 	s = send_res_msg(buf, r, rptr->sends);
