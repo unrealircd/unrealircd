@@ -3140,8 +3140,8 @@ Link *lp;
 	{
 		if (key && !strcasecmp(key, "override"))
 		{
-			sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP,
-				":%s NOTICE @%s :setting channel -%c due to OperOverride request from %s",
+			sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+				":%s NOTICE ~&@%s :setting channel -%c due to OperOverride request from %s",
 				me.name, chptr->chname, mchar, sptr->name);
 			sendto_serv_butone(&me, ":%s MODE %s -%c 0", me.name, chptr->chname, mchar);
 			sendto_channel_butserv(chptr, &me, ":%s MODE %s -%c", me.name, chptr->chname, mchar);
@@ -4623,12 +4623,12 @@ CMD_FUNC(m_invite)
 #endif
 		    )) {
 		        if (over == 1)
-                		sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP,
-		                  ":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
+                		sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+		                  ":%s NOTICE ~&@%s :OperOverride -- %s invited him/herself into the channel.",
                 		  me.name, chptr->chname, sptr->name);
 		        else if (over == 0)
-		                sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP,
-                		  ":%s NOTICE @%s :%s invited %s into the channel.",
+		                sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+                		  ":%s NOTICE ~&@%s :%s invited %s into the channel.",
 		                  me.name, chptr->chname, sptr->name, acptr->name);
 
 		        add_invite(acptr, chptr);
@@ -5357,8 +5357,8 @@ CMD_FUNC(m_knock)
 		return 0;
 	}
 
-	sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP,
-	    ":%s NOTICE @%s :[Knock] by %s!%s@%s (%s) ",
+	sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+	    ":%s NOTICE ~&@%s :[Knock] by %s!%s@%s (%s) ",
 	    me.name, chptr->chname, sptr->name,
 	    sptr->user->username, GetHost(sptr), 
 	    parv[2] ? parv[2] : "no reason specified");

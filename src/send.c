@@ -39,8 +39,6 @@ static char sccsid[] =
 #endif
 #include <string.h>
 
-#define PREFIX_AQ_COMPAT
-
 void vsendto_one(aClient *to, char *pattern, va_list vl);
 void sendbufto_one(aClient *to, char *msg, unsigned int quick);
 
@@ -417,10 +415,6 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 			goto good;
 		if ((prefix & PREFIX_OP) && (lp->flags & CHFL_CHANOP))
 			goto good;
-#ifdef PREFIX_AQ_COMPAT
-		if ((prefix & PREFIX_OP) && ((lp->flags & CHFL_CHANPROT) || (lp->flags & CHFL_CHANOWNER)))
-			goto good;
-#endif
 #ifdef PREFIX_AQ
 		if ((prefix & PREFIX_ADMIN) && (lp->flags & CHFL_CHANPROT))
 			goto good;
@@ -511,10 +505,6 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 			goto good;
 		if ((prefix & PREFIX_OP) && (lp->flags & CHFL_CHANOP))
 			goto good;
-#ifdef PREFIX_AQ_COMPAT
-		if ((prefix & PREFIX_OP) && ((lp->flags & CHFL_CHANPROT) || (lp->flags & CHFL_CHANOWNER)))
-			goto good;
-#endif
 #ifdef PREFIX_AQ
 		if ((prefix & PREFIX_ADMIN) && (lp->flags & CHFL_CHANPROT))
 			goto good;
