@@ -1268,11 +1268,11 @@ LRESULT CALLBACK ColorDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 /* find how big a buffer expansion we need for RTF transformation */
 int CountRTFSize(char *buffer) {
-	int size;
+	int size = 0;
 	short bold = 0, uline = 0, reverse = 0;
 	char *buf = buffer;
 
-	for (; *buf; buf++) {
+	for (; *buf; buf++, size++) {
 		if (*buf == '{' || *buf == '}' || *buf == '\\') {
 			size++;
 			continue;

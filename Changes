@@ -793,3 +793,5 @@ seen. gmtime warning still there
 - /who fixes regarding +I +H and crap
 - Preparation for beta2
 - Fixed sts on crack win32 code
+- Fixed a win2000 bug causing Unreal to crash on the credits dialog, thanks to llthangel and WildChild for 
+  helping fix the bug
