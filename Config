@@ -1941,7 +1941,6 @@ cat << __EOF__
 | - The UnrealIRCd Team -                                             |
 | * Stskeeps  stskeeps@unrealircd.com                                 |
 | * codemastr codemastr@unrealircd.com                                |
-| * DrBin     drbin@unrealircd.com                                    |
 | * Luke      luke@unrealircd.com                                     |
 |_____________________________________________________________________|
 __EOF__

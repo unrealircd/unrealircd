@@ -2485,7 +2485,7 @@ static void do_who(sptr, acptr, repchan)
 	 */
 	if (IsAnOper(sptr) && sptr != acptr)
 		if (channelwho && IsHiding(acptr) && IsNetAdmin(sptr) ||
-		    IsInvisible(acptr) ||
+		    IsInvisible(acptr) && !IsMember(sptr,repchan) ||
 		    IsAuditorium(repchan) && !is_chan_op(acptr,repchan) ||
 		    !ShowChannel(sptr,repchan)) 
 			status[i++] = '!';
@@ -2525,7 +2525,7 @@ static void do_who(sptr, acptr, repchan)
 ** m_who
 **	parv[0] = sender prefix
 **	parv[1] = nickname mask list
-**	parv[2] = additional selection flag, only 'o' for now.
+**	parv[2] = additional selection flag, 'o' and 'h' for now.
 */
 int  m_who(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;
