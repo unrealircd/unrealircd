@@ -57,12 +57,6 @@ char serveropts[] = {
 #ifdef	LEAST_IDLE
 	'L',
 #endif
-#ifdef	CRYPT_OPER_PASSWORD
-	'p',
-#endif
-#ifdef	CRYPT_LINK_PASSWORD
-	'P',
-#endif
 #ifdef NOSPOOF
 	'n',
 #endif

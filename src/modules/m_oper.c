@@ -120,10 +120,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	ConfigItem_oper *aconf;
 	ConfigItem_oper_from *oper_from;
 	char *name, *password, *encr, nuhhost[NICKLEN+USERLEN+HOSTLEN+6], nuhhost2[NICKLEN+USERLEN+HOSTLEN+6];
-#ifdef CRYPT_OPER_PASSWORD
-	char salt[3];
-	extern char *crypt();
-#endif /* CRYPT_OPER_PASSWORD */
+	int i;
 
 	if (parc < 3) {
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
@@ -170,27 +167,8 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		return 0;
 	}
 
-#ifdef CRYPT_OPER_PASSWORD
-	/* use first two chars of the password they send in as salt */
-
-	/* passwd may be NULL. Head it off at the pass... */
-	salt[0] = '\0';
-	if (password && aconf->password && aconf->password[0]
-	    && aconf->password[1])
-	{
-		salt[0] = aconf->password[0];
-		salt[1] = aconf->password[1];
-		salt[2] = '\0';
-		encr = crypt(password, salt);
-	}
-	else
-	{
-		encr = "";
-	}
-#else /* CRYPT_OPER_PASSWORD */
-	encr = password;
-#endif /* CRYPT_OPER_PASSWORD */
-	if (StrEq(encr, aconf->password))
+	i = Auth_Check(cptr, aconf->auth, password);
+	if (i > 1)
 	{
 		int  old = (sptr->umodes & ALL_UMODES);
 		char *s;
@@ -350,15 +328,15 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 			sptr->sockhost);
 
 	}
-	else
+	if (i == -1)
 	{
 		sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name, parv[0]);
 		if (FAILOPER_WARN)
-		sendto_one(sptr,
-		    ":%s %s %s :*** Your attempt has been logged.", me.name,
-		    IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name);
+			sendto_one(sptr,
+			    ":%s %s %s :*** Your attempt has been logged.", me.name,
+			    IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name);
 		sendto_realops
-		    ("Failed OPER attempt by %s (%s@%s) using UID %s [NOPASSWORD]",
+		    ("Failed OPER attempt by %s (%s@%s) using UID %s [FAILEDAUTH]",
 		    parv[0], sptr->user->username, sptr->sockhost, name);
 		sendto_serv_butone(&me,
 		    ":%s GLOBOPS :Failed OPER attempt by %s (%s@%s) using UID %s [---]",
@@ -366,5 +344,6 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		    name);
 		sptr->since += 7;
 	}
+	/* Belay that order, number One. (-2) */
 	return 0;
 }

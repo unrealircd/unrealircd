@@ -658,35 +658,15 @@ int  m_server(cptr, sptr, parc, parv)
 			    "Link denied (No matching link configuration)");
 		}
 		/* Now for checking passwords */
-#ifdef CRYPT_LINK_PASSWORD
-		if (!BadPtr(cptr->passwd))
-		{
-			char salt[3];
-			char *encr;
-			extern char *crypt();
-
-			salt[0] = aconf->recvpwd[0];
-			salt[1] = aconf->recvpwd[1];
-			salt[2] = '\0';
-
-			password = crypt(cptr->passwd, salt);
-		}
-		else
-		{
-			password = "";
-		}
-#else
-		password = cptr->passwd;
-#endif
-		if (!StrEq(aconf->recvpwd, password))
+		if (!Auth_Check(cptr, aconf->recvauth, password))
 		{
 			sendto_one(cptr,
-			    "ERROR :Link denied (Passwords don't match) %s",
+			    "ERROR :Link denied (Authentication failed) %s",
 			    inpath);
 			sendto_locfailops
-			    ("Link denied (Passwords don't match) %s", inpath);
+			    ("Link denied (Authentication failed) %s", inpath);
 			return exit_client(cptr, sptr, &me,
-			    "Link denied (Passwords don't match)");
+			    "Link denied (Authentication failed)");
 		}
 
 		/*
@@ -4057,17 +4037,7 @@ int  m_restart(cptr, sptr, parc, parv)
 			return 0;
 	}
 
-	if (cptr != sptr)
-	{
-		sendto_serv_butone(&me,
-		    ":%s GLOBOPS :%s is remotely restarting server (%s)",
-		    me.name, sptr->name, parv[3]);
-		sendto_ops("%s is remotely restarting IRCd (%s)", parv[0],
-		    parv[3]);
-
-	}
-
-	if (conf_drpass && (pass = conf_drpass->restart))
+	if (conf_drpass)
 	{
 		if (parc < 2)
 		{
@@ -4075,19 +4045,19 @@ int  m_restart(cptr, sptr, parc, parv)
 			    parv[0], "RESTART");
 			return 0;
 		}
-#ifdef CRYPT_XLINE_PASSWORD
-		salt[0] = pass[0];
-		salt[1] = pass[1];
-		salt[3] = '\0';
-
-		encr = crypt(parv[1], salt);
-#else
-		encr = parv[1];
-#endif
-		if (strcmp(pass, encr))
+		x = Auth_Check(cptr, conf_drpass->restartauth, parv[1]);
+		if (x == -1)
 		{
 			sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name,
 			    parv[0]);
+			return 0;
+		}
+		if (x == -2)
+		{
+			return 0;
+		}
+		if (x < 1)
+		{
 			return 0;
 		}
 		/* Hack to make the code after this if { } easier: we assign the comment to the
@@ -4096,6 +4066,15 @@ int  m_restart(cptr, sptr, parc, parv)
 		 */
 		parv[1] = parv[2];
 		parc--;
+	}
+	if (cptr != sptr)
+	{
+		sendto_serv_butone(&me,
+		    ":%s GLOBOPS :%s is remotely restarting server (%s)",
+		    me.name, sptr->name, parv[3]);
+		sendto_ops("%s is remotely restarting IRCd (%s)", parv[0],
+		    parv[3]);
+
 	}
 
 #ifdef USE_SYSLOG
@@ -4701,20 +4680,14 @@ int  m_die(cptr, sptr, parc, parv)
 {
 	aClient *acptr;
 	int  i;
-	char *pass = NULL, *encr;
-
-#ifdef CRYPT_XLINE_PASSWORD
-	char salt[3];
-	extern char *crypt();
-#endif
-
+	char *pass = NULL;
 	if (!MyClient(sptr) || !OPCanDie(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
 
-	if (conf_drpass && (pass = conf_drpass->die))	/* See if we have and DIE/RESTART password */
+	if (conf_drpass)	/* See if we have and DIE/RESTART password */
 	{
 		if (parc < 2)	/* And if so, require a password :) */
 		{
@@ -4722,21 +4695,19 @@ int  m_die(cptr, sptr, parc, parv)
 			    parv[0], "DIE");
 			return 0;
 		}
-
-#ifdef CRYPT_XLINE_PASSWORD
-		salt[0] = pass[0];
-		salt[1] = pass[1];
-		salt[3] = '\0';
-
-		encr = crypt(parv[1], salt);
-#else
-		encr = parv[1];
-#endif
-
-		if (strcmp(pass, encr))
+		i = Auth_Check(cptr, conf_drpass->dieauth, parv[1]);
+		if (i == -1)
 		{
 			sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name,
 			    parv[0]);
+			return 0;
+		}
+		if (i == -2)
+		{
+			return 0;
+		}
+		if (i < 1)
+		{
 			return 0;
 		}
 	}

@@ -1410,13 +1410,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 			} else
 			if (!strcmp(cep->ce_varname, "password"))
 			{
-				ircstrdup(oper->password, cep->ce_vardata);
-				if (!(*oper->password))
-				{
-					config_error("%s:%i: illegal password, please write something",
-						cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum);
-				}
+				oper->auth = Auth_ConvertConf2AuthStruct(cep);
 			}
 			else if (!strcmp(cep->ce_varname, "swhois")) {
 				ircstrdup(oper->swhois, cep->ce_vardata);
@@ -1551,14 +1545,17 @@ int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
 		}
 		if (!strcmp(cep->ce_varname, "restart"))
 		{
-			ircfree(conf_drpass->restart);
-			conf_drpass->restart = strdup(cep->ce_vardata);
-			ircstrdup(conf_drpass->restart, cep->ce_vardata);
+			if (conf_drpass->restartauth)
+				Auth_DeleteAuthStruct(conf_drpass->restartauth);
+			
+			conf_drpass->restartauth = Auth_ConvertConf2AuthStruct(cep);
 		}
 		else if (!strcmp(cep->ce_varname, "die"))
 		{
-			ircfree(conf_drpass->die);
-			conf_drpass->die = strdup(cep->ce_vardata);
+			if (conf_drpass->dieauth)
+				Auth_DeleteAuthStruct(conf_drpass->dieauth);
+			
+			conf_drpass->dieauth = Auth_ConvertConf2AuthStruct(cep);
 		}
 		else
 			config_status("%s:%i: warning: unknown drpass directive '%s'",
@@ -1797,7 +1794,7 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		} else
 		if (!strcmp(cep->ce_varname, "password"))
 		{
-			allow->password = strdup(cep->ce_vardata);
+			allow->auth = Auth_ConvertConf2AuthStruct(cep);
 		} else
 		if (!strcmp(cep->ce_varname, "class"))
 		{
@@ -1944,7 +1941,7 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 		{
 			if (!cep->ce_vardata)
 			{
-				Error("%s:%i: missing parameter for vhost::login",
+				config_error("%s:%i: missing parameter for vhost::login",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				
 				continue;		
@@ -1953,14 +1950,7 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 		} else
 		if (!strcmp(cep->ce_varname, "password"))
 		{
-			if (!cep->ce_vardata)
-			{
-				Error("%s:%i: missing parameter for vhost::password",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-		
-				continue;		
-			}
-			vhost->password = strdup(cep->ce_vardata);
+			vhost->auth = Auth_ConvertConf2AuthStruct(cep);
 		}
 		else
 		{
@@ -2196,7 +2186,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 		} else
 		if (!strcmp(cep->ce_varname, "password-receive"))
 		{
-			link->recvpwd = strdup(cep->ce_vardata);
+			link->recvauth = Auth_ConvertConf2AuthStruct(cep);
 		} else
 		if (!strcmp(cep->ce_varname, "class"))
 		{
@@ -2860,110 +2850,6 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 
 void	report_configuration(void)
 {
-	ConfigItem_admin	*admin_ptr;
-	ConfigItem_oper 	*oper_ptr;
-	ConfigItem_oper_from	*from_ptr;
-	ConfigItem_class	*class_ptr;
-	ConfigItem_ulines	*uline_ptr;
-	ConfigItem_tld		*tld_ptr;
-	ConfigItem_listen	*listen_ptr;
-	ConfigItem_allow	*allow_ptr;
-	ConfigItem_except	*except_ptr;
-	OperFlag		*ofp;
-
-	printf("Report:\n");
-	printf("-------\n");
-	if (conf_me)
-	{
-		printf("My name is %s and i describe myself as \"%s\", my numeric is %i\n",
-			conf_me->name, conf_me->info, conf_me->numeric);
-
-	}
-	if (conf_admin)
-	{
-		printf("My pathetic admin is:\n");
-		for (admin_ptr = conf_admin; admin_ptr; admin_ptr = (ConfigItem_admin *) admin_ptr->next)
-			printf("        %s\n", admin_ptr->line);
-	}
-	if (conf_oper)
-	{
-		printf("My even more pathetic opers are:\n");
-		for (oper_ptr = conf_oper; oper_ptr; oper_ptr = (ConfigItem_oper *)oper_ptr->next)
-		{
-			printf("      %s (%s) :\n", oper_ptr->name, oflagstr(oper_ptr->oflags));
-			printf("        - Password: %s\n", oper_ptr->password);
-			printf("        - Class: %s\n", oper_ptr->class->name);
-			if (oper_ptr->from)
-			{
-				printf("        - He can come from (the grave):\n");
-				for (from_ptr = (ConfigItem_oper_from *) oper_ptr->from; from_ptr; from_ptr = (ConfigItem_oper_from *) from_ptr->next)
-				printf("          * %s\n", from_ptr->name);
-			}
-		}
-	}
-	if (conf_class)
-	{
-		printf("I got some nice classes that i like to put servers or people in:\n");
-		for (class_ptr = conf_class; class_ptr; class_ptr = (ConfigItem_class *)class_ptr->next)
-		{
-			printf("       class %s:\n", class_ptr->name);
-			printf("         * pingfreq: %i\n", class_ptr->pingfreq);
-			printf("         * maxclients: %i\n", class_ptr->maxclients);
-			printf("         * sendq: %i\n", class_ptr->sendq);
-		}
-	}
-	if (conf_drpass)
-	{
-		printf("I also got a Die/Restart password pair\n");
-		printf("         * restart: %s\n", conf_drpass->restart);
-		printf("         *     die: %s\n", conf_drpass->die);
-	}
-	if (conf_ulines)
-	{
-		printf("Got some Ulines configured too:\n");
-		for (uline_ptr = conf_ulines; uline_ptr; uline_ptr = (ConfigItem_ulines *) uline_ptr->next)
-		{
-			printf("       * %s\n", uline_ptr->servername);
-		}
-	}
-	if (conf_tld)
-	{
-		printf("Got some TLDs:\n");
-		for (tld_ptr = conf_tld; tld_ptr; tld_ptr = (ConfigItem_tld *) tld_ptr->next)
-			printf("       * %s (motd=%s) (rules=%s)\n",
-					tld_ptr->mask,
-					(tld_ptr->motd_file ? tld_ptr->motd_file : "no motd"),
-					(tld_ptr->rules_file ? tld_ptr->rules_file : "no rules"));
-	}
-	if (conf_listen)
-	{
-		for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *) listen_ptr->next)
-		{
-			printf("I listen on %s:%i\n", listen_ptr->ip, listen_ptr->port);
-			for (ofp = _ListenerFlags; ofp->name; ofp++)
-				if (listen_ptr->options & ofp->flag)
-					printf("  * option: %s\n", ofp->name);
-		}
-	}
-	if (conf_allow)
-	{
-		for (allow_ptr = conf_allow; allow_ptr; allow_ptr = (ConfigItem_allow *) allow_ptr->next)
-		{
-			printf("I allow for IP %s and hostname %s to enter.\n",
-				allow_ptr->ip,
-				allow_ptr->hostname);
-
-			printf("      * class: %s\n      * password: %s\n",
-				(allow_ptr->class ? allow_ptr->class->name : "NO CLASS (BAD)"),
-				(allow_ptr->password ? allow_ptr->password : "(no password)"));
-		}
-	}
-	if (conf_except) {
-		for (except_ptr = conf_except; except_ptr; except_ptr = (ConfigItem_except *) except_ptr->next)
-		{
-			printf("Got an except for %s (%s)\n", except_ptr->mask, except_ptr->flag.type ? "ban" : "socks");
-		}
-	}
 }
 
 
@@ -2995,7 +2881,8 @@ void	link_cleanup(ConfigItem_link *link_ptr)
 	ircfree(link_ptr->hubmask);
 	ircfree(link_ptr->leafmask);
 	ircfree(link_ptr->connpwd);
-	ircfree(link_ptr->recvpwd);
+	Auth_DeleteAuthStruct(link_ptr->recvauth);
+	link_ptr->recvauth = NULL;
 }
 
 
@@ -3225,10 +3112,6 @@ void	validate_configuration(void)
 				oper_ptr->name);
 			oper_ptr->class = default_class;
 		}
-		if (BadPtr(oper_ptr->password)) {
-			Error("oper %s::password is missing",
-				oper_ptr->name);
-		}
 		if (!oper_ptr->oflags) {
 			oper_ptr->oflags |= OFLAG_LOCAL;
 			Warning("oper %s without privileges",
@@ -3301,10 +3184,7 @@ void	validate_configuration(void)
 		{
 			Warning("link without name. Deleting link {} block");
 			t.next = del_ConfigItem((ConfigItem *)link_ptr, (ConfigItem **)&conf_link);
-			ircfree(link_ptr->username);
-			ircfree(link_ptr->hostname);
-			ircfree(link_ptr->connpwd);
-			ircfree(link_ptr->recvpwd);
+			link_cleanup(link_ptr);
 			MyFree(link_ptr);
 			link_ptr = (ConfigItem_link *)&t;
 		}
@@ -3317,10 +3197,7 @@ void	validate_configuration(void)
 			if (BadPtr(link_ptr->hostname)) {
 				Warning("link with invalid hostname. Deleting link {} block");
 				t.next = del_ConfigItem((ConfigItem *)link_ptr, (ConfigItem **)&conf_link);
-				ircfree(link_ptr->username);
-				ircfree(link_ptr->servername);
-				ircfree(link_ptr->connpwd);
-				ircfree(link_ptr->recvpwd);
+				link_cleanup(link_ptr);
 				MyFree(link_ptr);
 				link_ptr = (ConfigItem_link *)&t;
 				continue;
@@ -3328,21 +3205,7 @@ void	validate_configuration(void)
 			if (BadPtr(link_ptr->connpwd)) {
 				Warning("link with invalid password-connect. Deleting link {} block");
 				t.next = del_ConfigItem((ConfigItem *)link_ptr, (ConfigItem **)&conf_link);
-				ircfree(link_ptr->username);
-				ircfree(link_ptr->hostname);
-				ircfree(link_ptr->servername);
-				ircfree(link_ptr->recvpwd);
-				MyFree(link_ptr);
-				link_ptr = (ConfigItem_link *)&t;
-				continue;
-			}
-			if (BadPtr(link_ptr->recvpwd)) {
-				Warning("link with invalid password-receive. Deleting link {} block");
-				t.next = del_ConfigItem((ConfigItem *)link_ptr, (ConfigItem **)&conf_link);
-				ircfree(link_ptr->username);
-				ircfree(link_ptr->hostname);
-				ircfree(link_ptr->connpwd);
-				ircfree(link_ptr->servername);
+				link_cleanup(link_ptr);
 				MyFree(link_ptr);
 				link_ptr = (ConfigItem_link *)&t;
 				continue;
@@ -3397,7 +3260,7 @@ void	validate_configuration(void)
 			ircfree(vhost_ptr->login);
 			ircfree(vhost_ptr->virthost);
 			ircfree(vhost_ptr->virtuser);
-			ircfree(vhost_ptr->password);
+			Auth_DeleteAuthStruct(vhost_ptr->auth);
 			for (vhost_from = (ConfigItem_oper_from *) vhost_ptr->from; vhost_from; vhost_from = (ConfigItem_oper_from *) vhost_from->next)
 			{
 				ircfree(vhost_from->name);
@@ -3529,7 +3392,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		ConfigItem_oper_from *oper_from;
 
 		ircfree(oper_ptr->name);
-		ircfree(oper_ptr->password);
+		Auth_DeleteAuthStruct(oper_ptr->auth);
 		for (oper_from = (ConfigItem_oper_from *) oper_ptr->from; oper_from; oper_from = (ConfigItem_oper_from *) oper_from->next)
 		{
 			ircfree(oper_from->name);
@@ -3567,7 +3430,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	{
 		ircfree(allow_ptr->ip);
 		ircfree(allow_ptr->hostname);
-		ircfree(allow_ptr->password);
+		Auth_DeleteAuthStruct(allow_ptr->auth);
 		t.next = del_ConfigItem((ConfigItem *) allow_ptr, (ConfigItem **) &conf_allow);
 		MyFree(allow_ptr);
 		allow_ptr = (ConfigItem_allow *) &t;
@@ -3638,7 +3501,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		ConfigItem_oper_from *vhost_from;
 
 		ircfree(vhost_ptr->login);
-		ircfree(vhost_ptr->password);
+		Auth_DeleteAuthStruct(vhost_ptr->auth);
 		ircfree(vhost_ptr->virthost);
 		ircfree(vhost_ptr->virtuser);
 		for (vhost_from = (ConfigItem_oper_from *) vhost_ptr->from; vhost_from;
@@ -3718,8 +3581,10 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 
 	if (conf_drpass)
 	{
-		ircfree(conf_drpass->restart);
-		ircfree(conf_drpass->die);
+		Auth_DeleteAuthStruct(conf_drpass->restartauth);
+		conf_drpass->restartauth = NULL;
+		Auth_DeleteAuthStruct(conf_drpass->dieauth);
+		conf_drpass->dieauth = NULL;
 		ircfree(conf_drpass);
 	}
 	for (log_ptr = conf_log; log_ptr; log_ptr = (ConfigItem_log *)log_ptr->next) {
@@ -3970,14 +3835,10 @@ aMotd *Find_file(char *file, short type) {
 int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 {
 	ConfigItem_allow *aconf;
-	char *hname, *encr;
+	char *hname;
 	int  i, ii = 0;
 	static char uhost[HOSTLEN + USERLEN + 3];
 	static char fullname[HOSTLEN + 1];
-#ifdef CRYPT_ILINE_PASSWORD
-        char salt[3];
-        extern char *crypt();
-#endif /* CRYPT_ILINE_PASSWORD */
 
 	for (aconf = conf_allow; aconf; aconf = (ConfigItem_allow *) aconf->next)
 	{
@@ -4038,38 +3899,13 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 					}
 				}
 		}
-		/* if no password, and no password given, ok */
-		if (!aconf->password && !cptr->passwd)
-			goto goforit;
-
-
-#ifdef CRYPT_ILINE_PASSWORD
-               /* use first two chars of the password they send in as salt */
-
-               /* passwd may be NULL. Head it off at the pass... */
-               salt[0] = '\0';
-               if (cptr->passwd && aconf->password && aconf->password[0] && aconf->password[1])
-               {
-                       salt[0] = aconf->password[0];
-                       salt[1] = aconf->password[1];
-                       salt[2] = '\0';
-                       encr = crypt(cptr->passwd, salt);
-               }
-                else
-                        encr = "";
-#else /* CRYPT_ILINE_PASSWORD */
-               encr = cptr->passwd;
-#endif /* CRYPT_ILINE_PASSWORD */
-                /* password does not match  */
-                if ((aconf->password && !encr)
-                  || (aconf->password && encr && strcmp(aconf->password, encr)))		/* password does not match  */
+		if ((i = Auth_Check(cptr, aconf->auth, cptr->passwd)) == -1)
 		{
 			exit_client(cptr, cptr, &me,
 				"Password mismatch");
 			return -5;
 		}
-		goforit:
-		if (aconf->password && cptr->passwd)
+		if ((i == 2) && (cptr->passwd))
 		{
 			MyFree(cptr->passwd);
 			cptr->passwd = NULL;

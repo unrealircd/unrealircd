@@ -54,6 +54,7 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>    
 #endif
+#include "auth.h" 
 extern int sendanyways;
 
 
@@ -908,7 +909,8 @@ struct _configitem_class {
 struct _configitem_allow {
 	ConfigFlag 	 flag;
 	ConfigItem       *prev, *next;
-	char	         *ip, *hostname, *password, *server;
+	char	         *ip, *hostname, *server;
+	anAuthStruct	 *auth;	
 	short		 maxperip;
 	int		 port;
 	ConfigItem_class *class;
@@ -917,7 +919,8 @@ struct _configitem_allow {
 struct _configitem_oper {
 	ConfigFlag 	 flag;
 	ConfigItem       *prev, *next;
-	char		 *name, *password, *swhois;
+	char		 *name, *swhois;
+	anAuthStruct	 *auth;
 	ConfigItem_class *class;
 	ConfigItem	 *from;
 	long		 oflags;
@@ -932,7 +935,8 @@ struct _configitem_oper_from {
 struct _configitem_drpass {
 	ConfigFlag 	 flag;
 	ConfigItem       *prev, *next;
-	char 		 *restart, *die;
+	anAuthStruct	 *restartauth;
+	anAuthStruct	 *dieauth;
 };
 
 struct _configitem_ulines {
@@ -961,13 +965,15 @@ struct _configitem_vhost {
 	ConfigFlag 	flag;
 	ConfigItem 	*prev, *next;
 	ConfigItem       *from;
-	char		*login, *password, *virthost, *virtuser;
+	char		*login, *virthost, *virtuser;
+	anAuthStruct	*auth;
 };
 
 struct _configitem_link {
 	ConfigFlag	flag;
 	ConfigItem	*prev, *next;
-	char		*servername, *username, *hostname, *bindip, *hubmask, *leafmask, *connpwd, *recvpwd;
+	char		*servername, *username, *hostname, *bindip, *hubmask, *leafmask, *connpwd;
+	anAuthStruct	*recvauth;
 	short		port, options;
 	unsigned char 	leafdepth;
 	int		refcount;
@@ -1383,5 +1389,6 @@ extern char *gnulicense[];
 #define EVENT_HASHES EVENT_DRUGS
 #include "modules.h"
 #include "events.h"
+
 #endif /* __struct_include__ */
 

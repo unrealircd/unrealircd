@@ -335,6 +335,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	ConfigItem_oper_from *from;
 	char *user, *pwd, host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
 	int	len, length;
+	int 	i;
 	if (parc < 3)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
@@ -374,7 +375,9 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    me.name, sptr->name);
 		return 0;
 	}
-	if (!strcmp(vhost->password, pwd)) {
+	i = Auth_Check(cptr, vhost->auth, pwd);
+	if (i > 0)
+	{
 		char olduser[USERLEN+1];
 		if (sptr->user->virthost)
 			MyFree(sptr->user->virthost);
@@ -405,7 +408,8 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    	vhost->virtuser ? "@" : "", vhost->virthost);
 		return 0;
 	}
-	else {
+	if (i == -1)
+	{
 		sendto_snomask(SNO_VHOST,
 		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - incorrect password",
 		    user, sptr->name,
@@ -416,7 +420,9 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    me.name, sptr->name, user);
 		return 0;
 	}
-		
+	/* Belay that order, Lt. (upon -2)*/
+	
+	return 0;	
 }
 
 /* irc logs.. */

@@ -417,4 +417,14 @@ extern void remove_local_client(aClient* cptr);
 extern void close_connections(void);
 extern void flush_connections(aClient *cptr);
 
+extern int b64_encode(unsigned char const *src, size_t srclength, char *target, size_t targsize);
+extern int b64_decode(char const *src, unsigned char *target, size_t targsize);
+
+extern int		Auth_FindType(char *type);
+extern anAuthStruct	*Auth_ConvertConf2AuthStruct(ConfigEntry *ce);
+extern void	Auth_DeleteAuthStruct(anAuthStruct *as);
+extern int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para);
+extern char   *Auth_Make(short type, char *para);
+
+
 #define EVENT_DRUGS BASE_VERSION

@@ -931,3 +931,4 @@ seen. gmtime warning still there
 - Commented out three lines of code that were causing SSL to freeze on 
   /connect, TODO: code in new SSL error handling (Griever)
 - Fixed password crash bug, found by \dev\NULL-Z-[Zap]
+- Added new auth.c API and a lot of different crap .. will document later
