@@ -112,6 +112,7 @@
 #define ERR_KILLDENY	     485
 
 #define ERR_HTMDISABLED		 486
+#define ERR_NOTFORUSERS	    487
 
 #define ERR_NOOPERHOST       491
 #define ERR_NOSERVICEHOST    492

@@ -539,7 +539,7 @@ static char *replies[] = {
 /* 484    ERR_ATTACKDENY */ ":%s 484 %s %s :Cannot kick protected user %s.",
 /* 485    ERR_KILLDENY */ ":%s 485 %s :Cannot kill protected user %s.",
 /* 486    ERR_HTMDISABLED */ ":%s 486 %s :%s is currently disabled, please try again later.",
-/* 487 */ NULL,
+/* 487    ERR_NOTFORUSERS */ ":%s 487 %s :%s is a server only command",
 /* 488 */ NULL,
 /* 489 */ NULL,
 /* 490 */ NULL,

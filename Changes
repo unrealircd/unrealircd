@@ -342,4 +342,7 @@
 - Started work on the new improved command hashing system
 - Modified command hashing system to Sts's belief of how eggs should be
   made. (quick, dirty and fcked up)
-
+- Fixed a bunch of bugs in the command hash system caused by sts:
+  - You can't send numerics to servers
+  - Using ERR_NOPRIVLEDGES (says you aren't oper)
+  - Disabled commands allowed by unregistered users from registered users

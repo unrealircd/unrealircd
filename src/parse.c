@@ -371,11 +371,14 @@ int  parse(cptr, buffer, bufend)
 			ircstp->is_unco++;
 			return (-1);
 		}
-		if (((cmptr->flags & M_USER) && !(flags & M_USER))
-			|| ((cmptr->flags & M_SERVER) && !(flags & M_SERVER)))
+		if (cmptr->flags != 0) { /* temporary until all commands are updated */
+		if ((flags & M_USER) && !(cmptr->flags & M_USER))
 		{
-			sendto_one(cptr, rpl_str(ERR_NOPRIVILEGES), me.name,
-					from->name);
+			sendto_one(cptr, rpl_str(ERR_NOTFORUSERS), me.name,
+					from->name, cmptr->cmd);
+			return -1;
+		}
+		if ((flags & M_SERVER) && !(cmptr->flags & M_SERVER))
 			return -1;
 		}
 		paramcount = cmptr->parameters;
