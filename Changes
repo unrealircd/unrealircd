@@ -1070,3 +1070,4 @@ seen. gmtime warning still there
 - Fixed a typo reported by Tracer (bug #0000022)
 - Made support in *nix for encrypted SSL private keys,
   "make encpem" to make an encrypted server key if you already have one
+- Removed some ancient debugging code (num - %s)
