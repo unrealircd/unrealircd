@@ -982,3 +982,5 @@ seen. gmtime warning still there
   I see nowhere a bug could happen.
 - Removed umode +T (useless) and the fue oflags since
   oper::snomask supercedes them.
+- Fixed another module v3 bug caused by Stskeeps drunkeness
+- Started adding HP-UX module support (Not enough added where it actually works yet)

@@ -35,6 +35,9 @@
 #ifdef _WIN32
 #include <io.h>
 #define RTLD_NOW 0
+#elif defined(HPUX)
+#include <dl.h>
+#define RTLD_NOW BIND_IMMEDIATE
 #else
 #include <dlfcn.h>
 #endif
@@ -141,8 +144,6 @@ char  *Module_Load (char *path, int load)
 		}
 			if (!(Mod_Load = irc_dlsym(Mod, "Mod_Load")))
 			{
-				/* We cannot do delayed unloading if this happens */
-				(*Mod_Unload)();
 				Module_free(mod);
 				return ("Unable to locate Mod_Load"); 
 			}
@@ -365,11 +366,11 @@ void	module_loadall(int module_load)
 	{
 		if (mi->flags & MODFLAG_LOADED)
 			continue;
-		if (fp = (iFP) irc_dlsym(mi->dll, "mod_load"))
+		if (fp = (iFP) irc_dlsym(mi->dll, "Mod_Load"))
 		{
 		}
 		else
-		if (fp = (iFP) irc_dlsym(mi->dll, "_mod_load"))
+		if (fp = (iFP) irc_dlsym(mi->dll, "_Mod_Load"))
 		{
 		}
 		else
