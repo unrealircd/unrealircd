@@ -733,3 +733,4 @@
 - Updated doc/technical/token.txt, reported by webfox (#0002373).
 - NickChars: Added 'romanian', supplied by crazytoon.
 - Added 3.2.3 release notes (expected to be changed later on).
+- Updated russian-w1251 (added 2 chars).
