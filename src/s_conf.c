@@ -143,6 +143,7 @@ static ConfigCommand _ConfigCommands[] = {
 #ifdef STRIPBADWORDS
 	{ "badword",		_conf_badword,		_test_badword	},
 #endif
+	{ "ban", 		_conf_ban,		_test_ban	},
 	{ "class", 		_conf_class,		_test_class	},
 	{ "drpass",		_conf_drpass,		_test_drpass	},
 	{ "except",		_conf_except,		_test_except	},
@@ -150,17 +151,16 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "include",		NULL,	  		_test_include	},
 	{ "link", 		_conf_link,		_test_link	},
 	{ "listen", 		_conf_listen,		_test_listen	},
+	{ "loadmodule",		_conf_loadmodule, 	_test_loadmodule},
 	{ "log",		_conf_log,		_test_log	},
 	{ "me", 		_conf_me,		_test_me	},
 	{ "oper", 		_conf_oper,		_test_oper	},
+	{ "set",		_conf_set,		_test_set	},
 	{ "tld",		_conf_tld,		_test_tld	},
 	{ "ulines",		_conf_ulines,		_test_ulines	},
 	{ "vhost", 		_conf_vhost,		_test_vhost	},
 /*
-	{ "ban", 		_conf_ban,		_test_ban	},
-	{ "set",		_conf_set,		_test_set	},
 	{ "deny",		_conf_deny,		_test_deny	},
-	{ "loadmodule",		_conf_loadmodule, 	_test_loadmodule},
 	{ "alias",		_conf_alias,		_test_alias	},*/
 };
 
@@ -265,6 +265,31 @@ static OperFlag _SSLFlags[] = {
 };
 #endif
 
+struct {
+	unsigned conf_me : 1;
+	unsigned conf_admin : 1;
+	unsigned conf_listen : 1;
+	struct 
+	{
+		unsigned kline_address : 1;
+		unsigned maxchannelsperuser : 1;
+		unsigned name_server : 1;
+		unsigned host_timeout : 1;
+		unsigned host_retries : 1;
+		unsigned defaultserv : 1;
+		unsigned irc_network : 1;
+		unsigned operhost : 1;
+		unsigned adminhost : 1;
+		unsigned locophost : 1;
+		unsigned sadminhost : 1;
+		unsigned netadminhost : 1;
+		unsigned coadminhost : 1;
+		unsigned cloakkeys : 1;
+		unsigned hlpchan : 1;
+		unsigned hidhost : 1;
+	} settings;
+} requiredstuff;
+
 /*
  * Utilities
 */
@@ -336,6 +361,7 @@ ConfigItem_badword      *conf_badword_message = NULL;
 #endif
 
 aConfiguration		iConf;
+aConfiguration		tempiConf;
 ConfigFile		*conf = NULL;
 
 int			config_error_flag = 0;
@@ -854,7 +880,6 @@ ConfigEntry		*config_find_entry(ConfigEntry *ce, char *name)
 	return cep;
 }
 
-
 void config_error(char *format, ...)
 {
 	va_list		ap;
@@ -920,6 +945,53 @@ void config_progress(char *format, ...)
 	sendto_realops("%s", buffer);
 }
 
+ConfigCommand *config_binary_search(char *cmd) {
+	int start = 0;
+	int stop = sizeof(_ConfigCommands)/sizeof(_ConfigCommands[0]);
+	int mid;
+	while (start <= stop) {
+		mid = (start+stop)/2;
+		if (smycmp(cmd,_ConfigCommands[mid].name) < 0) {
+			stop = mid-1;
+		}
+		else if (smycmp(cmd,_ConfigCommands[mid].name) == 0) {
+			return &_ConfigCommands[mid];
+		}
+		else
+			start = mid+1;
+	}
+	return NULL;
+}
+
+void	free_iConf(aConfiguration *i)
+{
+	ircfree(i->name_server);
+	ircfree(i->kline_address);
+	ircfree(i->auto_join_chans);
+	ircfree(i->oper_auto_join_chans);
+	ircfree(i->oper_only_stats);
+	ircfree(i->egd_path);
+	ircfree(i->static_quit);
+#ifdef USE_SSL
+	ircfree(i->x_server_cert_pem);
+	ircfree(i->x_server_key_pem);
+	ircfree(i->trusted_ca_file);
+#endif	
+	ircfree(i->network.x_ircnetwork);
+	ircfree(i->network.x_ircnet005);	
+	ircfree(i->network.x_defserv);
+	ircfree(i->network.x_services_name);
+	ircfree(i->network.x_oper_host);
+	ircfree(i->network.x_admin_host);
+	ircfree(i->network.x_locop_host);	
+	ircfree(i->network.x_sadmin_host);
+	ircfree(i->network.x_netadmin_host);
+	ircfree(i->network.x_coadmin_host);
+	ircfree(i->network.x_hidden_host);
+	ircfree(i->network.x_prefix_quit);
+	ircfree(i->network.x_helpchan);
+	ircfree(i->network.x_stats_server);
+}
 
 int	init_conf(char *rootconf, int rehash)
 {
@@ -929,7 +1001,8 @@ int	init_conf(char *rootconf, int rehash)
 		config_error("%s:%i - Someone forgot to clean up", __FILE__, __LINE__);
 		return -1;
 	}
-
+	bzero(&tempiConf, sizeof(iConf));
+	bzero(&requiredstuff, sizeof(requiredstuff));
 	if (load_conf(rootconf) > 0)
 	{
 		if (config_test() < 0)
@@ -939,8 +1012,12 @@ int	init_conf(char *rootconf, int rehash)
 			if (!rehash)
 				win_error();
 #endif
+			config_free(conf);
+			conf = NULL;
+			free_iConf(&tempiConf);
 			return -1;
 		}
+		
 		if (rehash)
 			config_rehash();
 		if (config_run() < 0)
@@ -952,10 +1029,14 @@ int	init_conf(char *rootconf, int rehash)
 #endif
 			abort();
 		}
+			
 	}
 	else	
 	{
 		config_error("IRCd configuration failed to load");
+		config_free(conf);
+		conf = NULL;
+		free_iConf(&tempiConf);
 #ifdef _WIN32
 		if (!rehash)
 			win_error();
@@ -998,28 +1079,79 @@ void	config_rehash()
 {
 }
 
-int	config_run()
+int	config_post_test()
 {
-	return -1;
+#define Error(x) { config_error((x)); errors++; }
+	int 	errors = 0;
+	
+	if (!requiredstuff.conf_me)
+		Error("me {} block missing");
+	if (!requiredstuff.conf_admin)
+		Error("admin {} block missing");
+	if (!requiredstuff.conf_listen)
+		Error("listen {} block missing");
+	if (!requiredstuff.settings.kline_address)
+		Error("set::kline-address missing");
+	if (!requiredstuff.settings.maxchannelsperuser)
+		Error("set::maxchannelsperuser missing");
+	if (!requiredstuff.settings.name_server)
+		Error("set::dns::name-server missing");
+	if (!requiredstuff.settings.host_timeout)
+		Error("set::dns::host-timeout missing");
+	if (!requiredstuff.settings.host_retries)
+		Error("set::dns::host-retries missing");
+	if (!requiredstuff.settings.defaultserv)
+		Error("set::default-server missing");
+	if (!requiredstuff.settings.irc_network)
+		Error("set::network-name missing");
+	if (!requiredstuff.settings.operhost)
+		Error("set::hosts::global missing");
+	if (!requiredstuff.settings.adminhost)
+		Error("set::hosts::admin missing");
+	if (!requiredstuff.settings.sadminhost)
+		Error("set::hosts::servicesadmin missing");
+	if (!requiredstuff.settings.netadminhost)
+		Error("set::hosts::netadmin missing");
+	if (!requiredstuff.settings.coadminhost)
+		Error("set::hosts::coadmin missing");
+	if (!requiredstuff.settings.cloakkeys)
+		Error("set::cloak-keys missing");
+	if (!requiredstuff.settings.hlpchan)
+		Error("set::help-channel missing");
+	if (!requiredstuff.settings.hlpchan)
+		Error("set::help-channel missing");
+	if (!requiredstuff.settings.hidhost)
+		Error("set::hiddenhost-prefix missing");
+	return (errors > 0 ? -1 : 1);	
 }
 
-ConfigCommand *config_binary_search(char *cmd) {
-	int start = 0;
-	int stop = sizeof(_ConfigCommands)/sizeof(_ConfigCommands[0]);
-	int mid;
-	while (start <= stop) {
-		mid = (start+stop)/2;
-		if (smycmp(cmd,_ConfigCommands[mid].name) < 0) {
-			stop = mid-1;
+int	config_run()
+{
+	ConfigEntry 	*ce;
+	ConfigFile	*cfptr;
+	ConfigCommand	*cc;
+	int		errors = 0;
+	for (cfptr = conf; cfptr; cfptr = cfptr->cf_next)
+	{
+		config_status("Running %s", cfptr->cf_filename);
+		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
+		{
+			if ((cc = config_binary_search(ce->ce_varname))) {
+				if ((cc->conffunc) && (cc->conffunc(cfptr, ce) < 0))
+					errors++;
+			}
 		}
-		else if (smycmp(cmd,_ConfigCommands[mid].name) == 0) {
-			return &_ConfigCommands[mid];
-		}
-		else
-			start = mid+1;
 	}
-	return NULL;
+	free_iConf(&iConf);
+	bcopy(&tempiConf, &iConf, sizeof(aConfiguration));
+	bzero(&tempiConf, sizeof(aConfiguration));
+	if (errors > 0)
+	{
+		config_error("%i fatal errors encountered", errors);
+	}
+	return (errors > 0 ? -1 : 1);
 }
+
 
 OperFlag *config_binary_flags_search(OperFlag *table, char *cmd, int size) {
 	int start = 0;
@@ -1065,13 +1197,13 @@ int	config_test()
 			}
 			else 
 			{
-				config_error("%s:%i: unknown directive %s", 
+				config_status("%s:%i: unknown directive %s", 
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 					ce->ce_varname);
-				errors++;
 			}
 		}
 	}
+	errors += (config_post_test() < 0 ? 1 : 0);
 	if (errors > 0)
 	{
 		config_error("%i errors encountered", errors);
@@ -1413,6 +1545,7 @@ ConfigItem_deny_channel *Find_channel_allowed(char *name)
 void init_dynconf(void)
 {
 	bzero(&iConf, sizeof(iConf));
+	bzero(&tempiConf, sizeof(iConf));
 }
 
 /* Report the unrealircd.conf info -codemastr*/
@@ -1648,6 +1781,7 @@ int	_test_admin(ConfigFile *conf, ConfigEntry *ce)
 			continue;
 		}
 	}
+	requiredstuff.conf_admin = 1;
 	return (errors == 0 ? 1 : -1);
 }
 
@@ -1664,7 +1798,7 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 	ircstrdup(conf_me->name, cep->ce_vardata);
 	cep = config_find_entry(ce->ce_entries, "info");
 	ircfree(conf_me->info);
-	ircstrdup(conf_me->name, cep->ce_vardata);
+	ircstrdup(conf_me->info, cep->ce_vardata);
 	cep = config_find_entry(ce->ce_entries, "numeric");
 	conf_me->numeric = atol(cep->ce_vardata);
 	return 1;
@@ -1783,6 +1917,7 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 			errors++; continue;
 		}
 	}
+	requiredstuff.conf_me = 1;
 	return (errors == 0 ? 1 : -1);
 }
 
@@ -2546,6 +2681,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 		}
 
 	}
+	requiredstuff.conf_listen = 1;
 	return (errors == 0 ? 1 : -1);
 }
 
@@ -3580,6 +3716,627 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 		
 }
 
+int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
+{
+
+	ConfigEntry *cep;
+	ConfigItem_ban *ca;
+
+	ca = MyMallocEx(sizeof(ConfigItem_ban));
+	if (!strcmp(ce->ce_vardata, "nick"))
+		ca->flag.type = CONF_BAN_NICK;
+	else if (!strcmp(ce->ce_vardata, "ip"))
+		ca->flag.type = CONF_BAN_IP;
+	else if (!strcmp(ce->ce_vardata, "server"))
+		ca->flag.type = CONF_BAN_SERVER;
+	else if (!strcmp(ce->ce_vardata, "user"))
+		ca->flag.type = CONF_BAN_USER;
+	else if (!strcmp(ce->ce_vardata, "realname"))
+		ca->flag.type = CONF_BAN_REALNAME;
+
+	cep = config_find_entry(ce->ce_entries, "mask");	
+	ca->mask = strdup(cep->ce_vardata);
+	if (ca->flag.type == CONF_BAN_IP)
+		ca->masktype = parse_netmask(ca->mask, &ca->netmask, &ca->bits);
+	cep = config_find_entry(ce->ce_entries, "reason");
+	ca->reason = strdup(cep->ce_vardata);
+	AddListItem(ca, conf_ban);
+	return 0;
+}
+
+int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	int	    errors = 0;
+	if (!ce->ce_vardata)
+	{
+		config_error("%s:%i: ban without type",	
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+	if (!strcmp(ce->ce_vardata, "nick"))
+	{}
+	else if (!strcmp(ce->ce_vardata, "ip"))
+	{}
+	else if (!strcmp(ce->ce_vardata, "server"))
+	{}
+	else if (!strcmp(ce->ce_vardata, "user"))
+	{}
+	else if (!strcmp(ce->ce_vardata, "realname"))
+	{}
+	else
+	{
+		config_error("%s:%i: unknown ban type %s",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			ce->ce_vardata);
+		return -1;
+	}
+	
+	if (!(cep = config_find_entry(ce->ce_entries, "mask")))
+	{
+		config_error("%s:%i: ban %s::mask missing",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+		errors++;
+	}
+	if (!(cep = config_find_entry(ce->ce_entries, "reason")))
+	{
+		config_error("%s:%i: ban %s::reason missing",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+		errors++;
+	}
+	return (errors > 0 ? -1 : 1);	
+}
+
+int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep, *cepp, *ceppp;
+	OperFlag 	*ofl = NULL;
+	char	    temp[512];
+	int	    i;
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "kline-address")) {
+			ircstrdup(tempiConf.kline_address, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "modes-on-connect")) {
+			tempiConf.conn_modes = (long) set_usermode(cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "modes-on-oper")) {
+			tempiConf.oper_modes = (long) set_usermode(cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "static-quit")) {
+			ircstrdup(tempiConf.static_quit, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "auto-join")) {
+			ircstrdup(tempiConf.auto_join_chans, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "oper-auto-join")) {
+			ircstrdup(tempiConf.oper_auto_join_chans, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {
+			tempiConf.anti_spam_quit_message_time = config_checkval(cep->ce_vardata,CFG_TIME);
+		}
+		else if (!strcmp(cep->ce_varname, "oper-only-stats")) {
+			ircstrdup(tempiConf.oper_only_stats, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "maxchannelsperuser")) {
+			tempiConf.maxchannelsperuser = atoi(cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "network-name")) {
+			char *tmp;
+			ircstrdup(tempiConf.network.x_ircnetwork, cep->ce_vardata);
+			for (tmp = cep->ce_vardata; *cep->ce_vardata; cep->ce_vardata++) {
+				if (*cep->ce_vardata == ' ')
+					*cep->ce_vardata='-';
+			}
+			ircstrdup(tempiConf.network.x_ircnet005, tmp);
+			cep->ce_vardata = tmp;
+		}
+		else if (!strcmp(cep->ce_varname, "default-server")) {
+			ircstrdup(tempiConf.network.x_defserv, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "services-server")) {
+			ircstrdup(tempiConf.network.x_services_name, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "stats-server")) {
+			ircstrdup(tempiConf.network.x_stats_server, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "help-channel")) {
+			ircstrdup(tempiConf.network.x_helpchan, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "hiddenhost-prefix")) {
+			ircstrdup(tempiConf.network.x_hidden_host, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "prefix-quit")) {
+			if (*cep->ce_vardata == '0')
+			{
+				ircstrdup(tempiConf.network.x_prefix_quit, "");
+			}
+			else
+				ircstrdup(tempiConf.network.x_prefix_quit, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "dns")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				if (!strcmp(cepp->ce_varname, "timeout")) {
+					tempiConf.host_timeout = config_checkval(cepp->ce_vardata,CFG_TIME);
+				}
+				else if (!strcmp(cepp->ce_varname, "retries")) {
+					tempiConf.host_retries = config_checkval(cepp->ce_vardata,CFG_TIME);
+				}
+				else if (!strcmp(cepp->ce_varname, "nameserver")) {
+					ircstrdup(tempiConf.name_server, cepp->ce_vardata);
+				}
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "options")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				if (!strcmp(cepp->ce_varname, "webtv-support")) {
+					tempiConf.webtv_support = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "hide-ulines")) {
+					tempiConf.hide_ulines = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "no-stealth")) {
+					tempiConf.no_oper_hiding = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "show-opermotd")) {
+					tempiConf.som = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "identd-check")) {
+					tempiConf.ident_check = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "fail-oper-warn")) {
+					tempiConf.fail_oper_warn = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "show-connect-info")) {
+					tempiConf.show_connect_info = 1;
+				}
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "hosts")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "local")) {
+					ircstrdup(tempiConf.network.x_locop_host, cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "global")) {
+					ircstrdup(tempiConf.network.x_oper_host, cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "coadmin")) {
+					ircstrdup(tempiConf.network.x_coadmin_host, cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "admin")) {
+					ircstrdup(tempiConf.network.x_admin_host, cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "servicesadmin")) {
+					ircstrdup(tempiConf.network.x_sadmin_host, cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "netadmin")) {
+					ircstrdup(tempiConf.network.x_netadmin_host, cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "host-on-oper-up")) {
+					tempiConf.network.x_inah = config_checkval(cepp->ce_vardata,CFG_YESNO);
+				}
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "cloak-keys"))
+		{
+			tempiConf.network.key = ircabs(atol(cep->ce_entries->ce_varname));
+			tempiConf.network.key2 = ircabs(atol(cep->ce_entries->ce_next->ce_varname));
+			tempiConf.network.key3 = ircabs(atol(cep->ce_entries->ce_next->ce_next->ce_varname));
+			ircsprintf(temp, "%li.%li.%li", tempiConf.network.key,
+				tempiConf.network.key2, tempiConf.network.key3);
+			tempiConf.network.keycrc = (long) crc32(temp, strlen(temp));
+		}
+		else if (!strcmp(cep->ce_varname, "ssl")) {
+#ifdef USE_SSL
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				if (!strcmp(cepp->ce_varname, "egd")) {
+					tempiConf.use_egd = 1;
+					if (cepp->ce_vardata)
+						tempiConf.egd_path = strdup(cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "certificate"))
+				{
+					ircstrdup(tempiConf.x_server_cert_pem, cepp->ce_vardata);	
+				}
+				else if (!strcmp(cepp->ce_varname, "key"))
+				{
+					ircstrdup(tempiConf.x_server_key_pem, cepp->ce_vardata);	
+				}
+				else if (!strcmp(cepp->ce_varname, "trusted-ca-file"))
+				{
+					ircstrdup(tempiConf.trusted_ca_file, cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "options"))
+				{
+					tempiConf.ssl_options = 0;
+					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+					{
+						for (ofl = _SSLFlags; ofl->name; ofl++)
+						{
+							if (!strcmp(ceppp->ce_varname, ofl->name))
+							{	
+								tempiConf.ssl_options |= ofl->flag;
+								break;
+							}
+						}
+					}
+					if (tempiConf.ssl_options & SSLFLAG_DONOTACCEPTSELFSIGNED)
+						if (!tempiConf.ssl_options & SSLFLAG_VERIFYCERT)
+							tempiConf.ssl_options |= SSLFLAG_VERIFYCERT;
+				}	
+				
+			}
+#endif
+		}
+	}
+	return 0;
+}
+
+int	_test_set(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep, *cepp, *ceppp;
+	OperFlag 	*ofl = NULL;
+	long		templong, l1, l2,l3;
+	int		tempi;
+	char	    temp[512];
+	int	    i;
+	int	    errors = 0;
+#define CheckNull(x) if ((!(x)->ce_vardata) || (!(*((x)->ce_vardata)))) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+		{
+			config_error("%s:%i: blank set item",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum);
+			errors++;
+			continue;
+		}
+		if (!strcmp(cep->ce_varname, "kline-address")) {
+			CheckNull(cep);
+			if (!strchr(cep->ce_vardata, '@') && !strchr(cep->ce_vardata, ':'))
+			{
+				config_error("%s:%i: set::kline-address must be an e-mail or an URL",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+				continue;
+			}
+			else if (!match("*@unrealircd.com", cep->ce_vardata) || !match("*@unrealircd.org",cep->ce_vardata) || !match("unreal-*@lists.sourceforge.net",cep->ce_vardata)) 
+			{
+				config_error("%s:%i: set::kline-address may not be an UnrealIRCd Team address",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++; continue;
+			}
+			requiredstuff.settings.kline_address = 1;
+		}
+		else if (!strcmp(cep->ce_varname, "modes-on-connect")) {
+			CheckNull(cep);
+			templong = (long) set_usermode(cep->ce_vardata);
+			if (templong & UMODE_OPER)
+			{
+				config_error("%s:%i: set::modes-on-connect contains +o",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum);
+				errors++;
+				continue;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "modes-on-oper")) {
+			CheckNull(cep);
+			templong = (long) set_usermode(cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "static-quit")) {
+			CheckNull(cep);
+		}
+		else if (!strcmp(cep->ce_varname, "auto-join")) {
+			CheckNull(cep);
+		}
+		else if (!strcmp(cep->ce_varname, "oper-auto-join")) {
+			CheckNull(cep);
+		}
+		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {
+			CheckNull(cep);
+		}
+		else if (!strcmp(cep->ce_varname, "oper-only-stats")) {
+			CheckNull(cep);
+		}
+		else if (!strcmp(cep->ce_varname, "maxchannelsperuser")) {
+			CheckNull(cep);
+			tempi = atoi(cep->ce_vardata);
+			if (tempi < 1)
+			{
+				config_error("%s:%i: set::maxchannelsperuser must be > 0",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum);
+				errors++;
+				continue;
+			}
+			requiredstuff.settings.maxchannelsperuser = 1;
+		}
+		else if (!strcmp(cep->ce_varname, "network-name")) {
+			CheckNull(cep);
+			requiredstuff.settings.irc_network = 1;
+		}
+		else if (!strcmp(cep->ce_varname, "default-server")) {
+			CheckNull(cep);
+			requiredstuff.settings.defaultserv = 1;
+		}
+		else if (!strcmp(cep->ce_varname, "services-server")) {
+			CheckNull(cep);
+		}
+		else if (!strcmp(cep->ce_varname, "stats-server")) {
+			CheckNull(cep);
+		}
+		else if (!strcmp(cep->ce_varname, "help-channel")) {
+			CheckNull(cep);
+			requiredstuff.settings.hlpchan = 1;
+		}
+		else if (!strcmp(cep->ce_varname, "hiddenhost-prefix")) {
+			CheckNull(cep);
+			if (strchr(cep->ce_vardata, ' ') || (*cep->ce_vardata == ':'))
+			{
+				config_error("%s:%i: set::hiddenhost-prefix must not contain spaces or be prefixed with ':'",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+				continue;
+			}
+			requiredstuff.settings.hidhost = 1;
+		}
+		else if (!strcmp(cep->ce_varname, "prefix-quit")) {
+			CheckNull(cep);
+		}
+		else if (!strcmp(cep->ce_varname, "dns")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				CheckNull(cepp);
+				if (!strcmp(cepp->ce_varname, "timeout")) {
+					requiredstuff.settings.host_timeout = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "retries")) {
+					requiredstuff.settings.host_retries = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "nameserver")) {
+					struct in_addr in;
+					
+					in.s_addr = inet_addr(cepp->ce_vardata);
+					if (strcmp((char *)inet_ntoa(in), cepp->ce_vardata))
+					{
+						config_error("%s:%i: set::dns::nameserver (%s) is not a valid IP",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
+							cepp->ce_vardata);
+						errors++;
+						continue;
+					}
+					requiredstuff.settings.name_server = 1;
+				}
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "options")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				if (!strcmp(cepp->ce_varname, "webtv-support")) {
+				}
+				else if (!strcmp(cepp->ce_varname, "hide-ulines")) {
+				}
+				else if (!strcmp(cepp->ce_varname, "no-stealth")) {
+				}
+				else if (!strcmp(cepp->ce_varname, "show-opermotd")) {
+				}
+				else if (!strcmp(cepp->ce_varname, "identd-check")) {
+				}
+				else if (!strcmp(cepp->ce_varname, "fail-oper-warn")) {
+				}
+				else if (!strcmp(cepp->ce_varname, "show-connect-info")) {
+				}
+				else
+				{
+					config_error("%s:%i: unknown option set::options::%s",
+						cepp->ce_fileptr->cf_filename,
+						cepp->ce_varlinenum,
+						cepp->ce_varname);
+					errors++;
+					continue;
+				}
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "hosts")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!cepp->ce_vardata)
+				{
+					config_error("%s:%i: set::hosts item without value",
+						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+					errors++;
+					continue;
+				} 
+				if (!strcmp(cepp->ce_varname, "local")) {
+					requiredstuff.settings.locophost = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "global")) {
+					requiredstuff.settings.operhost = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "coadmin")) {
+					requiredstuff.settings.coadminhost = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "admin")) {
+					requiredstuff.settings.adminhost = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "servicesadmin")) {
+					requiredstuff.settings.sadminhost = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "netadmin")) {
+					requiredstuff.settings.netadminhost = 1;
+				}
+				else if (!strcmp(cepp->ce_varname, "host-on-oper-up")) {
+				}
+				else
+				{
+					config_error("%s:%i: unknown directive set::hosts::%s",
+						cepp->ce_fileptr->cf_filename,
+						cepp->ce_varlinenum,
+						cepp->ce_varname);
+					errors++;
+					continue;
+
+				}
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "cloak-keys"))
+		{
+			/* Count number of numbers there .. */
+			for (cepp = cep->ce_entries, i = 0; cepp; cepp = cepp->ce_next, i++) { }
+			if (i != 3)
+			{
+				config_error("%s:%i: set::cloak-keys: we want 3 values, not %i!",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					i);
+				errors++;
+				continue;
+			}
+			/* i == 3 SHOULD make this true .. */
+			l1 = ircabs(atol(cep->ce_entries->ce_varname));
+			l2 = ircabs(atol(cep->ce_entries->ce_next->ce_varname));
+			l3  = ircabs(atol(cep->ce_entries->ce_next->ce_next->ce_varname));
+			if ((l1 < 10000) || (l2 < 10000) || (l3 < 10000))
+			{
+				config_error("%s:%i: set::cloak-keys: values must be over 10000",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+				continue;
+			}		
+			requiredstuff.settings.cloakkeys = 1;	
+		}
+		else if (!strcmp(cep->ce_varname, "ssl")) {
+#ifdef USE_SSL
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				if (!strcmp(cepp->ce_varname, "egd")) {
+				}
+				else if (!strcmp(cepp->ce_varname, "certificate"))
+				{
+					CheckNull(cepp);
+				}
+				else if (!strcmp(cepp->ce_varname, "key"))
+				{
+					CheckNull(cepp);
+				}
+				else if (!strcmp(cepp->ce_varname, "trusted-ca-file"))
+				{
+					CheckNull(cepp);
+				}
+				else if (!strcmp(cepp->ce_varname, "options"))
+				{
+					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+					{
+						for (ofl = _SSLFlags; ofl->name; ofl++)
+						{
+							if (!strcmp(ceppp->ce_varname, ofl->name))
+							{	
+								break;
+							}
+						}
+					}
+					if (!ofl->name)
+					{
+						config_error("%s:%i: unknown SSL flag '%s'",
+							ceppp->ce_fileptr->cf_filename, 
+							ceppp->ce_varlinenum, ceppp->ce_varname);
+					}
+				}	
+				
+			}
+#endif
+		}
+		else
+		{
+			config_error("%s:%i: unknown directive set::%s",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				cep->ce_varname);
+			errors++;
+		}
+	}
+	return (errors > 0 ? -1 : 1);
+}
+
+int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
+{
+#ifdef GLOBH
+	glob_t files;
+	int i;
+#elif defined(_WIN32)
+	HANDLE hFind;
+	WIN32_FIND_DATA FindData;
+#endif
+	char *ret;
+	if (!ce->ce_vardata)
+	{
+		config_status("%s:%i: loadmodule without filename",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+#ifdef GLOBH
+#if defined(__OpenBSD__) && defined(GLOB_LIMIT)
+	glob(ce->ce_vardata, GLOB_NOSORT|GLOB_NOCHECK|GLOB_LIMIT, NULL, &files);
+#else
+	glob(ce->ce_vardata, GLOB_NOSORT|GLOB_NOCHECK, NULL, &files);
+#endif
+	if (!files.gl_pathc) {
+		globfree(&files);
+		config_status("%s:%i: loadmodule %s: failed to load",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			ce->ce_vardata);
+		return -1;
+	}	
+	for (i = 0; i < files.gl_pathc; i++) {
+		if ((ret = Module_Load(files.gl_pathv[i],0))) {
+			config_status("%s:%i: loadmodule %s: failed to load: %s",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+				files.gl_pathv[i], ret);
+		}
+	}
+	globfree(&files);
+#elif defined(_WIN32)
+	hFind = FindFirstFile(ce->ce_vardata, &FindData);
+	if (!FindData.cFileName) {
+		config_status("%s:%i: loadmodule %s: failed to load",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			ce->ce_vardata);
+		FindClose(hFind);
+		return -1;
+	}
+	if ((ret = Module_Load(FindData.cFileName,0))) {
+			config_status("%s:%i: loadmodule %s: failed to load: %s",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+				FindData.cFileName, ret);
+	}
+	while (FindNextFile(hFind, &FindData) != 0) {
+		if (((ret = Module_Load(FindData.cFileName,0)))) 
+			config_status("%s:%i: loadmodule %s: failed to load: %s",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+				FindData.cFileName, ret);
+	}
+	FindClose(hFind);
+#else
+	if ((ret = Module_Load(ce->ce_vardata,0))) {
+			config_status("%s:%i: loadmodule %s: failed to load: %s",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+				ce->ce_vardata, ret);
+				return -1;
+	}
+#endif
+	return 1;
+}
+
+int	_test_loadmodule(ConfigFile *conf, ConfigEntry *ce)
+{
+	if (!ce->ce_vardata)
+	{
+		config_status("%s:%i: loadmodule without filename",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+	return 1;
+}
 
 /*
  * Actually use configuration

@@ -1651,3 +1651,7 @@ seen. gmtime warning still there
 - Fixed a configure script bug involving gcc3 (#0000398, #0000412, #0000433) found and 
   fixed by mister
 - Fixed alphabeticalising of named oper flags, added _conf/test_link
+- Finished up conf3, still needing some directives added but it sortof works. Rehash doesn't yet. 
+-  Fixed some idiotic lack of src/modules/Makefile.in changes for the sake of commands.so when 
+  /zline /kline etc was moved to a module
+ 
