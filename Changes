@@ -2183,3 +2183,4 @@ seen. gmtime warning still there
 - Added error messages if not oper for: sdesc, mkpasswd, htm, rping, opermotd (#0000988).
 - Removed the old TSP stuff from the extras directory, this is no longer used and it just
   wastes space.
+- Made /whois work slightly faster

@@ -186,6 +186,7 @@ extern void send_user_joins(aClient *, aClient *);
 extern void clean_channelname(char *);
 extern int do_nick_name(char *);
 extern int can_send(aClient *, aChannel *, char *);
+extern long get_access(aClient *, aChannel *);
 extern int is_chan_op(aClient *, aChannel *);
 extern int has_voice(aClient *, aChannel *);
 extern int is_chanowner(aClient *, aChannel *);

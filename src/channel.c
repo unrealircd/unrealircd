@@ -662,6 +662,14 @@ void remove_user_from_channel(aClient *sptr, aChannel *chptr)
 	sub1_from_channel(chptr);
 }
 
+long get_access(aClient *cptr, aChannel *chptr)
+{
+	Membership *lp;
+	if (chptr)
+		if ((lp = find_membership_link(cptr->user->channel, chptr)))
+			return lp->flags;
+	return 0;
+}
 
 int  is_chan_op(aClient *cptr, aChannel *chptr)
 {
@@ -675,7 +683,6 @@ int  is_chan_op(aClient *cptr, aChannel *chptr)
 
 	return 0;
 }
-
 
 int  has_voice(aClient *cptr, aChannel *chptr)
 {
