@@ -24,10 +24,6 @@ static char sccsid[] =
 Computing Center and Jarkko Oikarinen";
 #endif
 
-
-/* debug --sts (chdir kludge) */
-// #define UNREAL_DEBUG
-
 #include "config.h"
 #include "struct.h"
 #include "common.h"
@@ -64,6 +60,7 @@ Computing Center and Jarkko Oikarinen";
 #include "badwords.h"
 #endif
 #include "version.h"
+
 ID_CVS("$Id$");
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
@@ -151,28 +148,9 @@ time_t nextexpire = 1;		/* next expire run on the dns cache */
 time_t nextkillcheck = 1;	/* next time to check for nickserv kills */
 time_t lastlucheck = 0;
 
-/* int	lu_noninv = 0, 
-	lu_inv = 0,
-	lu_serv = 0,
-	lu_oper = 0,
-	lu_unknown = 0,
-	lu_channel = 0,
-	lu_lu = 0,
-	lu_lulocal = 0,
-	lu_lserv = 0,
-	lu_clu = 0,
-	lu_mlu = 0,
-	lu_cglobalu = 0,
-	lu_mglobalu;
-*/
-/* */
 #ifdef UNREAL_DEBUG
 #undef CHROOTDIR
 #define CHROOT
-#endif
-#ifdef CLONE_CHECK
-aClone *Clones = NULL;
-char clonekillhost[100];
 #endif
 
 time_t NOW;

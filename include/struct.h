@@ -65,7 +65,6 @@ typedef struct	SBan	Ban;
 typedef	struct	SMode	Mode;
 typedef struct	ListOptions	LOpts;
 typedef struct  FloodOpt  aFloodOpt;
-typedef struct  CloneItem aClone;
 typedef struct  ircstatsx ircstats;
 typedef struct  MotdItem aMotd;
 typedef struct  trecord aTrecord;

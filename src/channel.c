@@ -412,7 +412,7 @@ static int find_banid(chptr, banid)
 }
 
 /*
- * IsMember - returns 1 if a person is joined and not a zombie
+ * IsMember - returns 1 if a person is joined
  * Moved to struct.h
  */
 

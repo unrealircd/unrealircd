@@ -395,3 +395,4 @@
 - Fixed /setname desynch
 - Removed IsService(), and some wierd stuff
 - Broken INETD support removed
+- Removed some odd Clone stuff(?)
