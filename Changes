@@ -362,3 +362,4 @@
   If you are concerned with security and have some time, then converting your passwords
   is probably a good idea... Just in case your configuration file gets stolen one day ;).
 - MD5 password encryption is now always available on *NIX, even if SSL is disabled.
+- Temporary fix for ircsprintf %lu 1..6 issue.
