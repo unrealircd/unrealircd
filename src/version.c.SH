@@ -107,6 +107,8 @@ char *unrealcredits[] =
 	"                         \37Donations to Unreal:\37",
 	"BlueFlame^",
 	" - the first UnrealIRCd donation :)",
+	"[Real] from ChatFIRST.com",
+	" - donation to UnrealIRCd project :)",
 	"Thanks to Headbang and WonderWal too for hardware+software",
 	"donations",
 	"   (yes your name can be here too;)",
