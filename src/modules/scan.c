@@ -55,9 +55,11 @@
 #include "modules/scan.h"
 /* IRCd will fill with a pointer to this module */
 struct SOCKADDR_IN Scan_endpoint;
+struct IN_ADDR Scan_bind;
 int Scan_BanTime = 0, Scan_TimeOut = 0;
 static Scan_AddrStruct *Scannings = NULL;
 MUTEX Scannings_lock;
+static char	*scan_message;
 
 DLLFUNC int h_scan_connect(aClient *sptr);
 DLLFUNC int	h_config_set_scan(void);
@@ -92,11 +94,13 @@ int    m_scan_Init(ModuleInfo *modinfo)
 #endif
 {
 	int id;
+	scan_message = NULL;
 	bcopy(modinfo,&ScanModInfo,modinfo->size);
 	ScanHost = (Hooktype *)HooktypeAdd(modinfo->handle, "HOOKTYPE_SCAN_HOST", &HOOKTYPE_SCAN_HOST);
 	LocConnect = HookAddEx(ScanModInfo.handle, HOOKTYPE_LOCAL_CONNECT, h_scan_connect);
 	ConfUnknown = HookAddEx(ScanModInfo.handle, HOOKTYPE_CONFIG_UNKNOWN, h_config_set_scan);
 	ServerStats = HookAddEx(ScanModInfo.handle, HOOKTYPE_STATS, h_stats_scan);
+	bzero(&Scan_bind, sizeof(Scan_bind));
 	IRCCreateMutex(Scannings_lock);
 	return MOD_SUCCESS;
 }
@@ -132,14 +136,14 @@ int    m_scan_Load(int module_load)
 		Scan_endpoint.SIN_PORT = htons(conf_listen->port);
 		Scan_endpoint.SIN_FAMILY = AFINET;
 	}
+	
 	if (Scan_BanTime == 0)
 		Scan_BanTime = 86400;
 
 	if (Scan_TimeOut == 0)
 		Scan_TimeOut = 20;
 	LockEventSystem();
-	Scannings_clean = EventAddEx(ScanModInfo.handle, "e_scannings_clean", 0, 0, e_scannings_clean,
-NULL);
+	Scannings_clean = EventAddEx(ScanModInfo.handle, "e_scannings_clean", 0, 0, e_scannings_clean, NULL);
 	UnlockEventSystem();
 	return MOD_SUCCESS;
 }
@@ -177,6 +181,8 @@ int	m_scan_Unload(void)
 		EventDel(Scannings_clean);
 		UnlockEventSystem();
 		IRCMutexDestroy(Scannings_lock);
+		if (scan_message)
+			free(scan_message);
 	}
 	return ret;
 }
@@ -307,7 +313,9 @@ DLLFUNC int h_scan_connect(aClient *sptr)
 	
 	if (Scan_IsBeingChecked(&sptr->ip))
 		return 0;
-	
+	if (scan_message)
+		sendto_one(sptr, ":%s NOTICE %s :%s",
+			me.name, sptr->name, scan_message);
 	sr = MyMalloc(sizeof(Scan_AddrStruct));
 	sr->in = sptr->ip;
 	sr->refcnt = 0;
@@ -363,6 +371,7 @@ DLLFUNC int	h_config_set_scan(void)
 					}
 					Scan_BanTime = atime(ce->ce_vardata);
 				}
+				else
 				if (!strcmp(ce->ce_varname, "timeout")) {
 					if (!ce->ce_vardata) {
 						config_status("%s:%i: set::scan::timeout has no value",
@@ -371,7 +380,7 @@ DLLFUNC int	h_config_set_scan(void)
 					}
 					Scan_TimeOut = atime(ce->ce_vardata);
 				}
-
+				else
 				if (!strcmp(ce->ce_varname, "endpoint"))
 				{
 					if (!ce->ce_vardata)
@@ -408,8 +417,32 @@ DLLFUNC int	h_config_set_scan(void)
 					Scan_endpoint.SIN_PORT = htons(iport);
 					Scan_endpoint.SIN_FAMILY = AFINET;
 				}
-				
-				
+				else if (!strcmp(ce->ce_varname, "bind-ip"))
+				{
+					if (!ce->ce_vardata)
+					{
+						config_status("%s:%i: set::scan::bind: syntax [ip]",
+							     ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+						break;
+					}
+#ifndef INET6
+					Scan_bind.S_ADDR = inet_addr(ce->ce_vardata);
+#else
+					inet_pton(AFINET, ce->ce_vardata, Scan_bind.S_ADDR);
+#endif
+				}
+				else if (!strcmp(ce->ce_varname, "message"))
+				{
+					if (!ce->ce_vardata)
+					{
+						config_status("%s:%i: set::scan::message requires an argument",
+							ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+						break;
+					}
+					if (scan_message)
+						free(scan_message);
+					scan_message = strdup(ce->ce_vardata);
+				}
 			}
 			del_ConfigItem(sets, conf_unknown_set);
 		}	
@@ -425,6 +458,10 @@ DLLFUNC int h_stats_scan(aClient *sptr, char *stats) {
 				Scan_BanTime);
 		sendto_one(sptr, ":%s %i %s :scan::timeout: %d", me.name, RPL_TEXT, sptr->name,
 				Scan_TimeOut);
+		sendto_one(sptr, ":%s %i %s :scan::bind-ip: %s",
+			me.name, RPL_TEXT, Inet_ia2p(&Scan_bind));
+		sendto_one(sptr, ":%s %i %s :scan::message: %s",
+			me.name, RPL_TEXT, scan_message ? scan_message : "<NULL>");
 	}
         return 0;
 }

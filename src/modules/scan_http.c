@@ -63,6 +63,7 @@ struct _hsstruct
 
 static vFP			xEadd_scan = NULL;
 static struct SOCKADDR_IN	*xScan_endpoint = NULL;
+static struct IN_ADDR		*xScan_bind = NULL;
 static int *xScan_TimeOut = 0;
 static Hook *HttpScanHost = NULL;
 static int HOOKTYPE_SCAN_HOST;
@@ -76,6 +77,7 @@ static Mod_SymbolDepTable modsymdep[] =
 {
 	MOD_Dep(Eadd_scan, xEadd_scan, "src/modules/scan.so"),
 	MOD_Dep(Scan_endpoint, xScan_endpoint, "src/modules/scan.so"),
+	MOD_Dep(Scan_bind, xScan_bind, "src/modules/scan.so"),
 	MOD_Dep(Scan_TimeOut, xScan_TimeOut, "src/modules/scan.so"),
 	{NULL, NULL}
 };
@@ -188,6 +190,7 @@ void	scan_http_scan_port(HSStruct *z)
 	unsigned char			*cp;
 #endif
 	struct			SOCKADDR_IN sin;
+	struct			SOCKADDR_IN bin;
 	SOCKET			fd;
 	unsigned char		httpbuf[160];
 	fd_set			rfds;
@@ -218,6 +221,14 @@ void	scan_http_scan_port(HSStruct *z)
 		goto exituniverse;
 		return;
 	}
+#ifndef INET6
+	bin.SIN_ADDR = *xScan_bind;
+#else
+	bcopy((char *)xScan_bind, (char *)&bin.SIN_ADDR, sizeof(struct IN_ADDR));
+#endif
+	bin.SIN_FAMILY = AFINET;
+	bin.SIN_PORT = 0;
+	bind(fd, (struct SOCKADDR *)&bin, sizeof(bin));
 
 	sin.SIN_PORT = htons((unsigned short)z->port);
 	sin.SIN_FAMILY = AFINET;
