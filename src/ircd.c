@@ -1173,6 +1173,9 @@ int  InitwIRCD(argc, argv)
 	SetupEvents();
 	loop.ircd_booted = 1;
 	module_loadall();
+#ifdef STATIC_LINKING
+	l_commands_load(0);
+#endif
 #ifndef NO_FDLIST
 	check_fdlists(TStime());
 #endif

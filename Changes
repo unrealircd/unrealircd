@@ -660,3 +660,4 @@ seen. gmtime warning still there
 - Removed a // comment in src/ircd.c
 - Fixed a bunch of updconf bugs reported by DarkSypher
 - Fixed an SVSFLINE bug when removing an unknown dccdeny
+- Made win32 compile and work ..

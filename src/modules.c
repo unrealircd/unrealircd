@@ -370,7 +370,7 @@ int	module_depend_resolve(MSymbolTable *dep)
 #else
 	while (d->pointer)
 	{
-		*(d->pointer) = d->realfunc;
+		*((vFP *)d->pointer) = (vFP) d->realfunc;
 		d++;
 	}
 #endif

@@ -1684,6 +1684,8 @@ int  read_message(delay, listp)
 		if (resfd >= 0)
 			FD_SET(resfd, &read_set);
 #endif
+		if (me.fd >= 0)
+			FD_SET(me.fd, &read_set);
 
 		wait.tv_sec = MIN(delay, delay2);
 		wait.tv_usec = 0;

@@ -160,7 +160,7 @@ int  deliver_it(aClient *cptr, char *str, int len)
 # ifndef _WIN32
 		Debug((DEBUG_ERROR, "write error (%s) to %s", sys_errlist[errno], cptr->name));
 # else
-		Debug((DEBUG_ERROR, "write error (%s) to %s", strerror[WSAGetLastError()], cptr->name));
+                Debug((DEBUG_ERROR, "write error (%s) to %s", "", cptr->name));
 # endif
 
 	}

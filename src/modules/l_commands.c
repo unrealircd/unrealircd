@@ -47,6 +47,10 @@
 #undef DYNAMIC_LINKING
 #endif
 
+#ifdef SCAN_API
+extern MSymbolTable scan_socks_depend[];
+#endif
+
 /* Place includes here */
 /* replace this with a common name of your module */
 #ifdef DYNAMIC_LINKING
@@ -77,34 +81,43 @@ int    l_commands_init(int module_load)
 	/*
 	 * We call our add_Command crap here
 	*/
-	m_sethost_init();
-	m_setname_init();
-	m_chghost_init();
-	m_chgident_init();
-	m_setident_init();
-	m_sdesc_init();
-	m_svsmode_init();
-	m_swhois_init();
-	m_svsmotd_init();
-	m_svsnline_init();
+	m_sethost_init(module_load);
+	m_setname_init(module_load);
+	m_chghost_init(module_load);
+	m_chgident_init(module_load);
+	m_setident_init(module_load);
+	m_sdesc_init(module_load);
+	m_svsmode_init(module_load);
+	m_swhois_init(module_load);
+	m_svsmotd_init(module_load);
+	m_svsnline_init(module_load);
+#ifdef SCAN_API
+	module_depend_resolve(&scan_socks_depend[0]);
+	m_scan_init(module_load);
+	scan_socks_init(module_load);
+#endif
+
 }
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_load()
+DLLFUNC void	mod_load(int module_load)
 #else
-void    l_commands_load()
+void    l_commands_load(int module_load)
 #endif
 {
-
-	m_sethost_load();
-	m_setname_load();
-	m_chghost_load();
-	m_chgident_load();
-	m_setident_load();
-	m_sdesc_load();
-	m_svsmode_load();
-	m_swhois_load();
-	m_svsmotd_load();
-	m_svsnline_load();
+	m_sethost_load(module_load);
+	m_setname_load(module_load);
+	m_chghost_load(module_load);
+	m_chgident_load(module_load);
+	m_setident_load(module_load);
+	m_sdesc_load(module_load);
+	m_svsmode_load(module_load);
+	m_swhois_load(module_load);
+	m_svsmotd_load(module_load);
+	m_svsnline_load(module_load);
+#ifdef SCAN_API
+	m_scan_load(module_load);
+	scan_socks_load(module_load);
+#endif
 }
 
 #ifdef DYNAMIC_LINKING
@@ -123,5 +136,9 @@ void	l_commands_unload(void)
 	m_swhois_unload();
 	m_svsmotd_unload();
 	m_svsnline_unload();
+#ifdef SCAN_API
+	scan_socks_unload();
+	m_scan_unload();
+#endif
 }
 
