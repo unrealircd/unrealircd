@@ -352,7 +352,7 @@ inline aCommand *find_Command(char *cmd, short token, int flags)
 			if (!strcmp(p->cmd, cmd))
 				return (p);
 		}
-		else
+		else if (!p->token)
 			if (!stricmp(p->cmd, cmd))
 				return (p);
 	}
