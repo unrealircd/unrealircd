@@ -278,12 +278,14 @@ int  m_svsfline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	  }
 	  case '-':
 	  {
+		  ConfigItem_deny_dcc *deny;
 		  if (!IsULine(sptr))
 			  return 0;
 		  if (parc < 3)
 			  return 0;
-		  
-		  DCCdeny_del(Find_deny_dcc(parv[2]));
+		  if (!(deny = Find_deny_dcc(parv[2])))
+			break;
+		  DCCdeny_del(deny);
 		  sendto_serv_butone_token(cptr, sptr->name,
 		 	MSG_SVSFLINE, TOK_SVSFLINE,
 			      parv[2]);
