@@ -543,3 +543,4 @@
 - Reworded a cloak-key error message to make it clearer (#0002297) reported by Bugz.
 - Fixed a bug where /whois notices were not sent to users who are +R if the sender is -r
   and on a remote server (#0002288) reported by Freadon.
+- Made /stats E include tkl except stats as well (#0001524) suggested by Cnils.

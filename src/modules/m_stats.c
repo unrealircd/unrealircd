@@ -566,7 +566,6 @@ int stats_exceptban(aClient *sptr, char *para)
 		else if (excepts->flag.type == CONF_EXCEPT_TKL)
 			sendto_one(sptr, rpl_str(RPL_STATSEXCEPTTKL), me.name,
 				sptr->name, tkl_typetochar(excepts->type), excepts->mask);
-					
 	}
 	return 0;
 }
