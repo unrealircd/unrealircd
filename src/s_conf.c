@@ -3966,7 +3966,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 /*		if (index(uhost, '@'))  now flag based -- codemastr */
 		if (!aconf->flags.noident)
 			cptr->flags |= FLAGS_DOID;
-		if (!aconf->flags.useip && hp->h_name) 
+		if (!aconf->flags.useip && hp) 
 			(void)strncpy(uhost, fullname, sizeof(uhost));
 		else
 			(void)strncpy(uhost, sockhost, sizeof(uhost));
