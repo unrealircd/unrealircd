@@ -1324,3 +1324,5 @@ seen. gmtime warning still there
 - Fixed another scanner bug causing the scanner to never timeout
 - Fixed a module bug when there is an include between a module-config-directive and the loadmodule
 - Made it so if a module fails to load it is non-fatal, reported by Adiga007 (#0000194)
+- Made hosts converted to lowercase before run through hidehost() this way ABC.com is the
+  same as abc.com, reported by Magnet (#0000065)

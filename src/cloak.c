@@ -171,6 +171,11 @@ char *hidehost(char *host)
 	int		i;
 	char		*p;
 
+	for (p = host; *p; p++) {
+		if (isupper(*p))
+		*p = tolower(*p);
+	}
+
 	/* Find out what kind of host we're dealing with here */
 	/* IPv6 ? */	
 	if (strchr(host, ':'))
