@@ -1137,3 +1137,4 @@ v- Fixed some bugreport stuff
 - Fixed some t.next's and replaced with codemastr method(tm)
 - Fixed a t.next recode typo
 - Added a ./Config check to see if gcc supports -pipe (speeds up compilation)
+- Made SHOW_SECRET (allow opers to see +s chans in /whois) defined by default, suggested by Sid-V (#0000037)
