@@ -842,7 +842,7 @@ regex_t expr;
 		goto Ilovegotos;
 
 	for (tmp = s; *tmp; tmp++) {
-		if ((int)*tmp < 65 || (int)*tmp > 123) {
+		if (!isalnum(*tmp) && !(*tmp >= 128)) {
 			if ((s == tmp) && (*tmp == '*'))
 				continue;
 			if ((*(tmp + 1) == '\0') && (*tmp == '*'))
