@@ -103,6 +103,9 @@ char serveropts[] = {
 #ifdef USE_POLL
 	'P',
 #endif
+#ifdef CRYPTOIRCD
+	'r',
+#endif
 	'\0'
 };
 

@@ -410,3 +410,4 @@
 - Made a major is_banned speed up
 - Redid K:line and n:line checking to be alot faster
 - Fixed crypto stuff 100% :))
+- Added CRYPTOIRCd ('r') to version string
