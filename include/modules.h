@@ -122,6 +122,13 @@ typedef struct {
 #define EXSJ_WEWON			1 /* We won! w00t */
 #define EXSJ_THEYWON		2 /* They won :( */
 
+/* return values for EXCHK_ACCESS*: */
+#define EX_DENY				0  /* Disallowed, except in case of operoverride */
+#define EX_ALLOW			1  /* Allowed */
+#define EX_ALWAYS_DENY		-1 /* Disallowed, even in case of operoverride
+                                * (eg: for operlevel modes like +A)
+                                */
+
 /** Extended channel mode table.
  * This table contains all extended channelmode info like the flag, mode, their
  * functions, etc..

@@ -2820,12 +2820,23 @@ int x;
 	if (paracnt && (!param || (*pcount >= MAXMODEPARAMS)))
 		return 0;
 
-	if (MyClient(cptr) && 
-#ifndef NO_OPER_OVERRIDE
-	    !IsSkoAdmin(cptr) &&
-#endif
-	    (Channelmode_Table[modeindex].is_ok(cptr, chptr, param, EXCHK_ACCESS_ERR, what) == FALSE))
-		return paracnt; /* Denied & error msg sent */
+	if (MyClient(cptr))
+	{
+		x = Channelmode_Table[modeindex].is_ok(cptr, chptr, param, EXCHK_ACCESS, what);
+		if ((x == EX_ALWAYS_DENY) ||
+		    ((x == EX_DENY) && !op_can_override(cptr)))
+		{
+			Channelmode_Table[modeindex].is_ok(cptr, chptr, param, EXCHK_ACCESS_ERR, what);
+			return paracnt; /* Denied & error msg sent */
+		}
+		if (x == EX_DENY)
+			opermode = 1; /* override in progress... */
+	} else {
+		/* remote user: we only need to check if we need to generate an operoverride msg */
+		if (!IsULine(cptr) && IsPerson(cptr) && op_can_override(cptr) &&
+		    (Channelmode_Table[modeindex].is_ok(cptr, chptr, param, EXCHK_ACCESS, what) != EX_ALLOW))
+			opermode = 1; /* override in progress... */
+	}
 
 	/* Check for multiple changes in 1 command (like +y-y+y 1 2, or +yy 1 2). */
 	for (x = 0; x < *pcount; x++)
@@ -3042,13 +3053,9 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
 				}
 #ifdef EXTCMODE
 				else if (found == 2) {
-					/* Extended mode */
-					if ((Channelmode_Table[extm].is_ok(cptr, chptr, parv[paracount], EXCHK_ACCESS, what) == FALSE) &&
-					    (opermode == 2) && (htrig != 1))
-					{
-						opermode = 0;
-						htrig = 1;
-					}
+					/* Extended mode: all override stuff is in do_extmode_char which will set
+					 * opermode if appropriate. -- Syzop
+					 */
 				}
 #endif /* EXTCMODE */
 #endif /* !NO_OPEROVERRIDE */
@@ -3098,6 +3105,7 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
 			chptr->chname, modebuf, parabuf);		
 
                 htrig = 0;
+                opermode = 0; /* stop double override notices... but is this ok??? -- Syzop */
         }
 #endif
 

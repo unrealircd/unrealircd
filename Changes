@@ -2884,3 +2884,12 @@ seen. gmtime warning still there
 - Modulized: sjoin, pass, userhost, ison, silence
 - Modulized: knock, umode2, squit, protoctl
 - Slightly changed how extcmodes handles access control
+- Module coders: for extended channelmodes the EXCHK_ACCESS* the return
+  value should now be one of EX_*:
+  EX_DENY        : disallowed, except for oper override
+  EX_ALLOW       : allowed
+  EX_ALWAYS_DENY : disallowed, even in case of operoverride (eg for
+                   operlevel modes like +A).
+  Note that it's backward compatible since TRUE/EX_ALLOW=1 and FALSE/EX_DENY=0.
+- Fixed a few bugs with oper override & extended chanmodes, for example
+  chanmode +T could not be set by a globop w/can_override and non-+hoaq.
