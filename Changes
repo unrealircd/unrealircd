@@ -280,3 +280,4 @@
 - Removed dynconf.c, from the old dynconf
 - Fixed a deny version {} bug (oops)
 - Fixed a config_load win32 problem, found by Zogg, fixed by Stskeeps/codemastr
+- Overwrote s_conf.c with s_conf2.c, and removed s_conf2.c. Viva la Conf2!
