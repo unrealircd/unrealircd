@@ -4337,7 +4337,7 @@ CMD_FUNC(m_names)
 
 	chptr = find_channel(para, (aChannel *)NULL);
 
-	if (!chptr || !ShowChannel(sptr, chptr))
+	if (!chptr || (!ShowChannel(sptr, chptr) && !IsAnOper(sptr)))
 	{
 		sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.name,
 		    parv[0], para);

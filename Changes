@@ -2007,3 +2007,4 @@ seen. gmtime warning still there
 - Made throttling use DelListItem and fixed some confusing regarding
   undeffing of THROTTLING
 - Fixed a set::modes-on-join bug and fixed an oob read in config parser.
+- Fixed an oper bug with /names on a +s channel (#0000816).
