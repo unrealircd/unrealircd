@@ -498,7 +498,7 @@ void count_memory(cptr, nick)
 	    flinks, flinks * sizeof(Link));
 
 #ifndef NEWDNS
-	rm = cres_mem(cptr);
+	rm = cres_mem(cptr,cptr->name);
 #else /*NEWDNS*/
 	rm = 0;
 #endif /*NEWDNS*/
