@@ -2173,3 +2173,5 @@ seen. gmtime warning still there
 - Added deny channel::redirect, which allows you to forward a client to another channel
   if the one he/she joined is not allowed. can also be used for channel "aliases" like
   #operhelp sends people to #help
+- Made it so Unreal always uses extended regex support
+- Fixed the compile problem on Solaris/SunOS (#0000984) reported by Dom

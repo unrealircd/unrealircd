@@ -10272,7 +10272,7 @@ fi
 rm -f core core.* *.core conftest$ac_exeext conftest.$ac_objext conftest.$ac_ext
 fi
 
-case "${host_cpu}-${host_os}" in
+case `uname -s` in
 *SunOS*)
 CFLAGS="$CFLAGS -D_SOLARIS"
 IRCDLIBS="$IRCDLIBS -lresolv "

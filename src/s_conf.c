@@ -4266,7 +4266,7 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 
 	ca = MyMallocEx(sizeof(ConfigItem_badword));
 	ca->action = BADWORD_REPLACE;
-	regflags = REG_ICASE;
+	regflags = REG_ICASE|REG_EXTENDED;
 	if (cep = config_find_entry(ce->ce_entries, "action"))
 	{
 		if (!strcmp(cep->ce_vardata, "block"))
@@ -4396,13 +4396,13 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 				}
 			}
 			if (regex)
-				errorcode = regcomp(&expr, word->ce_vardata, REG_ICASE);
+				errorcode = regcomp(&expr, word->ce_vardata, REG_ICASE|REG_EXTENDED);
 			else
 			{
 				tmpbuf = MyMalloc(strlen(word->ce_vardata) +
 					 strlen(PATTERN) -1);
 				ircsprintf(tmpbuf, PATTERN, word->ce_vardata);
-				errorcode = regcomp(&expr, tmpbuf, REG_ICASE);
+				errorcode = regcomp(&expr, tmpbuf, REG_ICASE|REG_EXTENDED);
 			}
 			if (errorcode > 0)
 			{
