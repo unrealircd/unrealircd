@@ -62,6 +62,8 @@ struct zConfiguration {
 	unsigned truehub:1;
 	unsigned stop:1;
 	unsigned showopers:1;
+	unsigned showtkl:1;
+	unsigned showklines:1;
 	unsigned killdiff:1;
 	unsigned hide_ulines:1;
 	unsigned allow_chatops:1;
@@ -98,6 +100,8 @@ extern aConfiguration iConf;
 #define CONN_MODES			iConf.conn_modes
 #define TRUEHUB				iConf.truehub
 #define SHOWOPERS			iConf.showopers
+#define SHOWTKL				iConf.showtkl
+#define SHOWKLINES			iConf.showklines
 #define KILLDIFF			iConf.killdiff
 #define SHOWOPERMOTD			iConf.som
 #define HIDE_ULINES			iConf.hide_ulines

@@ -2635,6 +2635,10 @@ int  m_stats(cptr, sptr, parc, parv)
 		  ConfigItem_ban *bans;
 		  ConfigItem_except *excepts;
 		  char type[2];
+		  if (SHOWKLINES == 0 && (!IsOper(sptr)))
+		  {
+			  break;
+		  }
   		  for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) {
 			  if (bans->flag.type == CONF_BAN_USER) {
 				if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
@@ -3669,14 +3673,10 @@ int  m_chatops(cptr, sptr, parc, parv)
 	}
 	sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL,
 	    parv[0], MSG_CHATOPS, TOK_CHATOPS, ":%s", message);
-	if (ALLOW_CHATOPS == 1)
-	{
 		sendto_umode(UMODE_OPER, "*** ChatOps -- from %s: %s",
 		    parv[0], message);
 		sendto_umode(UMODE_LOCOP, "*** ChatOps -- from %s: %s",
 		    parv[0], message);
-	}
-
 	return 0;
 }
 

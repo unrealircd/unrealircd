@@ -397,6 +397,8 @@ void tkl_stats(aClient *cptr)
 	   Character:
 	   G, Z, K, z
 	 */
+	if (SHOWTKL == 0 && (!IsOper(cptr)))
+		return;
 	tkl_check_expire(NULL);
 	curtime = TStime();
 	for (tk = tklines; tk; tk = tk->next)
