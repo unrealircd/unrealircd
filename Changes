@@ -2834,3 +2834,4 @@ seen. gmtime warning still there
   it's done automatically (via modules.h).
 - Forgot to add src/modules/m_sendsno.c to CVS, also fixed 2 compile warnings
   and a crashbug related to previous commit.. bug hunting will continue ;).
+- Fixed minor compile warning.

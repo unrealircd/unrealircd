@@ -142,33 +142,41 @@ char *download_file(char *url, char **error)
 	char *file = url_getfilename(url);
 	char *filename = unreal_getfilename(file);
 	char *tmp = unreal_mktemp("tmp", filename ? filename : "download.conf");
-	if (curl)
+	FILE *fd;
+
+	if (!curl)
 	{
-		FILE *fd = fopen(tmp, "wb");
-		if (!fd)
-		{
-			snprintf(errorbuf, CURL_ERROR_SIZE, "Cannot write to %s: %s", tmp, strerror(ERRNO));
-			if (file)
-				free(file);
-			*error = errorbuf;
-			return NULL;
-		}
-		curl_easy_setopt(curl, CURLOPT_URL, url);
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, fd);
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download);
-		curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
-#ifdef USE_SSL
-		set_curl_ssl_options(curl);
-#endif
-		bzero(errorbuf, CURL_ERROR_SIZE);
-		curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorbuf);
-		res = curl_easy_perform(curl);
-		fclose(fd);
-#if defined(IRC_UID) && defined(IRC_GID)
-		if (!loop.ircd_booted)
-			chown(tmp, IRC_UID, IRC_GID);
-#endif
+		if (file)
+			free(file);
+		strlcpy(errorbuf, "curl_easy_init() failed", sizeof(errorbuf));
+		*error = errorbuf;
+		return NULL;
 	}
+
+	fd = fopen(tmp, "wb");
+	if (!fd)
+	{
+		snprintf(errorbuf, CURL_ERROR_SIZE, "Cannot write to %s: %s", tmp, strerror(ERRNO));
+		if (file)
+			free(file);
+		*error = errorbuf;
+		return NULL;
+	}
+	curl_easy_setopt(curl, CURLOPT_URL, url);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, fd);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download);
+	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
+#ifdef USE_SSL
+	set_curl_ssl_options(curl);
+#endif
+	bzero(errorbuf, CURL_ERROR_SIZE);
+	curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorbuf);
+	res = curl_easy_perform(curl);
+	fclose(fd);
+#if defined(IRC_UID) && defined(IRC_GID)
+	if (!loop.ircd_booted)
+		chown(tmp, IRC_UID, IRC_GID);
+#endif
 	if (file)
 		free(file);
 	curl_easy_cleanup(curl);
