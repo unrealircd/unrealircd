@@ -594,4 +594,5 @@
 - Fixed a fun doublechar token problem (the AA unknown command)
 - Removed _alot_ of unused variables
 - Fixed *some* -Wall warnings (still alot left to fix)
-- Fixed some morew -Wall warnings
+- Fixed some more -Wall warnings
+- ./update now checks when you specify wget if it exists, if not it tries lynx

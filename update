@@ -15,7 +15,14 @@ cd src
 rm -f update.sh
 read $WHATYAWANT
 if [ "$WHATYAWANT" == "wget" ] ; then
+TMP=`which wget`
+TMP2=`echo $TMP | cut -c1`
+if [ "$TMP2" == "/" ] ; then
 	wget http://unreal.tspre.org/update.sh
+else
+	echo "wget not found trying lynx"
+	lynx -source http://unreal.tspre.org/update.sh > update.sh
+fi
 else
 	lynx -source http://unreal.tspre.org/update.sh > update.sh
 fi
