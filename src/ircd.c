@@ -803,6 +803,21 @@ EVENT(e_check_fdlists)
 
 #endif
 
+static void version_check_logerror(char *fmt, ...)
+{
+va_list va;
+char buf[1024];
+	
+	va_start(va, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, va);
+	va_end(va);
+#ifndef _WIN32
+	fprintf(stderr, "[!!!] %s\n", buf);
+#else
+	win_log("[!!!] %s", buf);
+#endif	
+}
+
 static void do_version_check()
 {
 const char *compiledfor, *runtime;
@@ -813,13 +828,8 @@ int error = 0;
 	runtime = SSLeay_version(SSLEAY_VERSION);
 	if (strcasecmp(compiledfor, runtime))
 	{
-#ifndef _WIN32
-		fprintf(stderr, "[!!!] OpenSSL version mismatch: compiled for '%s', library is '%s'\n",
+		version_check_logerror("[!!!] OpenSSL version mismatch: compiled for '%s', library is '%s'",
 			compiledfor, runtime);
-#else
-		win_log("[!!!] OpenSSL version mismatch: compiled for '%s', library is '%s'\n",
-			compiledfor, runtime);
-#endif
 		error=1;
 	}
 #endif
@@ -828,28 +838,18 @@ int error = 0;
 	compiledfor = ZLIB_VERSION;
 	if (strcasecmp(compiledfor, runtime))
 	{
-#ifndef _WIN32
-		fprintf(stderr, "[!!!] Zlib version mismatch: compiled for '%s', library is '%s'\n",
+		version_check_logerror("[!!!] Zlib version mismatch: compiled for '%s', library is '%s'",
 			compiledfor, runtime);
-#else
-		win_log("[!!!] Zlib version mismatch: compiled for '%s', library is '%s'\n",
-			compiledfor, runtime);
-#endif
 		error = 1;
 	}
 #endif
 	if (error)
 	{
-#ifndef _WIN32
-		fprintf(stderr, "[!!!] Header<->library mismatches can make UnrealIRCd *CRASH*! "
+		version_check_logerror("[!!!] Header<->library mismatches can make UnrealIRCd *CRASH*! "
 		                "Make sure you don't have multiple versions of openssl or zlib installed (eg: "
 		                "one in /usr and one in /usr/local). And, if you recently upgraded them, "
-		                "be sure to recompile Unreal.\n");
-#else
-		win_log("[!!!] Header<->library mismatches can make UnrealIRCd *CRASH*! "
-		        "Make sure you don't have multiple versions of openssl or zlib installed (eg: "
-		        "one in /usr and one in /usr/local). And, if you recently upgraded them, "
-		        "be sure to recompile Unreal.\n");
+		                "be sure to recompile Unreal.");
+#ifdef _WIN32
 		win_error();
 #endif
 		tainted = 1;
