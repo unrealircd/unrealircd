@@ -36,7 +36,7 @@ static char *replies[] = {
 /* 002    RPL_YOURHOST */ ":%s 002 %s :Your host is %s, running version %s",
 /* 003    RPL_CREATED */  ":%s 003 %s :This server was created %s",
 /* 004    RPL_MYINFO */   ":%s 004 %s %s %s %s %s",
-/* 005    RPL_PROTOCTL */ ":%s 005 %s %s :are available on this server",
+/* 005    RPL_PROTOCTL */ PROTOCTL_CLIENT,
 /* 006    RPL_MAP */      ":%s 006 %s :%s%-*s\2[Users:%5d]  [%2d%%]\2",
 /* 007    RPL_MAPEND */   ":%s 007 %s :End of /MAP",
 /* 008 */ NULL,

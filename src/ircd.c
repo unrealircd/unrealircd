@@ -806,6 +806,14 @@ int  InitwIRCD(argc, argv)
 			  (void)printf("sizeof(aClient) == %u\n", sizeof(aClient));
 			  (void)printf("sizeof(aChannel) == %u\n", sizeof(aChannel));
 			  (void)printf("sizeof(aServer) == %u\n", sizeof(aServer));
+			  (void)printf("sizeof(Link) == %u\n", sizeof(Link));
+			  (void)printf("sizeof(anUser) == %u\n", sizeof(anUser));
+			  (void)printf("sizeof(aConfItem) == %u\n", sizeof(aConfItem));
+			  (void)printf("sizeof(aVhost) == %u\n", sizeof(aVhost));
+			  (void)printf("sizeof(aTKline) == %u\n", sizeof(aTKline));
+			  (void)printf("sizeof(struct ircstatsx) == %u\n", sizeof(struct ircstatsx));
+			  (void)printf("aClient remote == %u\n", CLIENT_REMOTE_SIZE);
+			  
 			  exit(0);
 			  break;
 #ifndef _WIN32

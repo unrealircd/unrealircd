@@ -867,7 +867,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			    cmodestring);
 #endif
 		sendto_one(sptr, rpl_str(RPL_PROTOCTL), me.name, nick,
-		    PROTOCTL_CLIENT);
+		    PROTOCTL_PARAMETERS);
 		(void)m_lusers(sptr, sptr, 1, parv);
 		update_load();
 		(void)m_motd(sptr, sptr, 1, parv);

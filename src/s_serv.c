@@ -152,11 +152,17 @@ int  m_version(cptr, sptr, parc, parv)
 
 	if (hunt_server(cptr, sptr, ":%s VERSION :%s", 1, parc,
 	    parv) == HUNTED_ISME)
-
+	{
 		sendto_one(sptr, rpl_str(RPL_VERSION), me.name,
 		    parv[0], version, ircnetwork, debugmode, me.name,
 		    serveropts,
 		    (IsAnOper(sptr) ? MYOSNAME : "*"), UnrealProtocol, x);
+		if (MyClient(sptr))
+		{
+			sendto_one(sptr, rpl_str(RPL_PROTOCTL), me.name, sptr->name,
+				PROTOCTL_PARAMETERS);
+		}
+	}
 	return 0;
 }
 
