@@ -1628,3 +1628,4 @@ seen. gmtime warning still there
 - example.conf - Corrected incorrect set::services-services statment in alias block - reported by mcskaf (#0000401)
 - Documentation - Corrected Spelling mistake in HTM mode - Reported by CoNfOuNd (#0000387)
 - Documentation - Added coadmin to table of oper types - Reported by FrostByghte (#0000359)
+- Documentation - Corrected several HTML formating problems
