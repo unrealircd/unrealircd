@@ -717,7 +717,7 @@ static int check_init(aClient *cptr, char *sockn, size_t size)
 	(void)strlcpy(sockn, (char *)Inet_si2p(&sk), size);
 
 #ifdef INET6
-	if (IN6_IS_ADDR_LOOPBACK(&sk.SIN_ADDR))
+	if (IN6_IS_ADDR_LOOPBACK(&sk.SIN_ADDR) || !strcmp(sockn, "127.0.0.1"))
 #else
 	if (inet_netof(sk.SIN_ADDR) == IN_LOOPBACKNET)
 #endif

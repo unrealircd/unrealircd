@@ -798,7 +798,7 @@ int ircd_res_init(void)
 		int i;
 		Debug((DEBUG_DNS, "res_init: %d nameserver(s):", ircd_res.nscount));
 		for (i=0; i < ircd_res.nscount; i++)
-			Debug((DEBUG_DNS, "%d. %s", i, Inet_ia2pNB(&ircd_res.nsaddr_list[i].sin_addr, 0)));
+			Debug((DEBUG_DNS, "%d. %s", i, inet_ntoa(ircd_res.nsaddr_list[i].sin_addr)));
 	}
 #endif
 	return (0);
