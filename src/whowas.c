@@ -54,7 +54,6 @@ void add_history(aClient *cptr, int online)
 		SafeFree(new->virthost);
 		SafeFree(new->realname);
 		SafeFree(new->username);
-		SafeFree(new->away);
 		new->servername = NULL;
 
 		if (new->online)
@@ -68,12 +67,6 @@ void add_history(aClient *cptr, int online)
 	AllocCpy(new->username, cptr->user->username);
 	AllocCpy(new->hostname, cptr->user->realhost);
 	AllocCpy(new->virthost, cptr->user->virthost);
-	if (cptr->user->away)
-	{
-		AllocCpy(new->away, cptr->user->away);
-	}
-	else
-		new->away = NULL;
 	new->servername = cptr->user->server;
 	AllocCpy(new->realname, cptr->info);
 
@@ -142,8 +135,6 @@ void count_whowas_memory(int *wwu, u_long *wwum)
 		{
 			u++;
 			um += sizeof(aWhowas);
-			if (tmp->away)
-				uam += (strlen(tmp->away) + 1);
 		}
 	*wwu = u;
 	*wwum = um;
@@ -197,9 +188,6 @@ int  m_whowas(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sendto_one(sptr, rpl_str(RPL_WHOISSERVER), me.name,
 			    parv[0], temp->name, temp->servername,
 			    myctime(temp->logoff));
-			if (temp->away)
-				sendto_one(sptr, rpl_str(RPL_AWAY),
-				    me.name, parv[0], temp->name, temp->away);
 			cur++;
 			found++;
 		}

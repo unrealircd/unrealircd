@@ -596,7 +596,6 @@ typedef struct Whowas {
 	char *virthost;
 	char *servername;
 	char *realname;
-	char *away;
 	long umodes;
 	TS   logoff;
 	struct Client *online;	/* Pointer to new nickname for chasing or NULL */
