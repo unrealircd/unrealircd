@@ -43,6 +43,7 @@
 aTKline *tklines[TKLISTLEN];
 
 extern MODVAR char zlinebuf[BUFSIZE];
+int spamf_ugly_vchanoverride = 0;
 
 /** tkl hash method.
  * NOTE1: the input value 'c' is assumed to be in range a-z or A-Z!
@@ -1434,6 +1435,7 @@ char *str = (char *)StripControlCodes(str_in);
 			{
 				char *xparv[3], chbuf[CHANNELLEN + 16];
 				aChannel *chptr;
+				int ret;
 				
 				if (IsVirus(sptr)) /* Already tagged */
 					return 0;
@@ -1442,7 +1444,10 @@ char *str = (char *)StripControlCodes(str_in);
 				xparv[1] = buf;
 				xparv[2] = NULL;
 				/* RECURSIVE CAUTION in case we ever add blacklisted chans */
-				if (m_join(sptr, sptr, 2, xparv) == FLUSH_BUFFER)
+				spamf_ugly_vchanoverride = 1;
+				ret = m_join(sptr, sptr, 2, xparv);
+				spamf_ugly_vchanoverride = 0;
+				if (ret == FLUSH_BUFFER)
 					return FLUSH_BUFFER; /* don't ask me how we could have died... */
 				sendnotice(sptr, "You are now restricted to talking in %s: %s",
 					SPAMFILTER_VIRUSCHAN, unreal_decodespace(tk->spamf->tkl_reason));

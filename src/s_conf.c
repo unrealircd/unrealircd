@@ -5824,6 +5824,8 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					ircstrdup(tempiConf.spamfilter_ban_reason, cepp->ce_vardata);
 				if (!strcmp(cepp->ce_varname, "virus-help-channel"))
 					ircstrdup(tempiConf.spamfilter_virus_help_channel, cepp->ce_vardata);
+				if (!strcmp(cepp->ce_varname, "virus-help-channel-deny"))
+					tempiConf.spamfilter_vchan_deny = config_checkval(cepp->ce_vardata,CFG_YESNO);
 				if (!strcmp(cepp->ce_varname, "except"))
 				{
 					char *name, *p;
@@ -6442,6 +6444,8 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						continue;
 					}
 				} else 
+				if (!strcmp(cepp->ce_varname, "virus-help-channel-deny"))
+				{ } else
 				if (!strcmp(cepp->ce_varname, "except"))
 				{ } else
 				{

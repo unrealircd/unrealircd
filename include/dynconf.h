@@ -134,6 +134,7 @@ struct zConfiguration {
 	long spamfilter_ban_time;
 	char *spamfilter_ban_reason;
 	char *spamfilter_virus_help_channel;
+	char spamfilter_vchan_deny;
 	SpamExcept *spamexcept;
 	char *spamexcept_line;
 	aNetwork network;
@@ -230,4 +231,5 @@ extern MODVAR aConfiguration iConf;
 #define SPAMFILTER_BAN_TIME		iConf.spamfilter_ban_time
 #define SPAMFILTER_BAN_REASON	iConf.spamfilter_ban_reason
 #define SPAMFILTER_VIRUSCHAN	iConf.spamfilter_virus_help_channel
+#define SPAMFILTER_VIRUSCHANDENY	iConf.spamfilter_vchan_deny
 #define SPAMFILTER_EXCEPT		iConf.spamexcept_line

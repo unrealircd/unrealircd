@@ -193,6 +193,15 @@ DLLFUNC CMD_FUNC(m_invite)
                 }
         }
 
+		if (MyClient(sptr) && SPAMFILTER_VIRUSCHANDENY && SPAMFILTER_VIRUSCHAN &&
+		    !strcasecmp(chptr->chname, SPAMFILTER_VIRUSCHAN) &&
+		    !is_chan_op(sptr, chptr) && !IsAnOper(sptr) && !IsULine(sptr))
+		{
+			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
+				me.name, parv[0], chptr->chname);
+			return -1;
+		}
+
         if (MyConnect(sptr))
         {
                 if (check_for_target_limit(sptr, acptr, acptr->name))

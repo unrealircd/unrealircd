@@ -502,6 +502,7 @@ into spaces at runtime. And double underscore ('__') gets an underscore ('_'). A
 <p><b>set::spamfilter::ban-time</b> allows you to modify the default ban time for *lines added by spamfilter (default: 1 day)<br>
    <b>set::spamfilter::ban-reason</b> allows you to specify a default reason for the *lines (default: 'Spam/advertising')<br>
    <b>set::spamfilter::virus-help-channel</b> allows you to specify the channel to join for action 'viruschan' (default: #help)<br>
+   <b>set::spamfilter::virus-help-channel-deny</b> allows you to block any normal joins to virus-help-channel (default: no)<br>
 </p></div>
 
 <p><font size="+2"><b>3.15 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
@@ -2170,6 +2171,10 @@ set {
   Reason to be used for *lines added by spamfilter</p>
  <p><font class="set">set::spamfilter::virus-help-channel &lt;channel&gt;</font><br>
   The channel to use for the 'viruschan' action in spamfilter</p>
+ <p><font class="set">set::spamfilter::virus-help-channel-deny &lt;yes|no&gt;</font><br>
+  If set to yes (or '1') it replies 'invite only' to any normal users that try to join 
+  the virus-help-channel. Only opers, people that match spamfilters and people that 
+  are /invite'd can join.</p>
  <p><font class="set">set::spamfilter::except &lt;target(s)&gt;</font><br>
   These targets are exempt from spam filtering (no action will be taken),
   can be single target or comma seperated list.. Ex: except "#help,#spamreport"</p>

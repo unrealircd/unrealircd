@@ -65,6 +65,7 @@ long opermode = 0;
 aChannel *channel = NullChn;
 extern char backupbuf[];
 extern ircstats IRCstats;
+extern int spamf_ugly_vchanoverride;
 
 #ifndef NO_FDLIST
 extern int lifesux;
@@ -3351,7 +3352,6 @@ Ban *banned;
 #endif
 #endif
 
-
         return 0;
 }
 
@@ -3910,6 +3910,28 @@ CMD_FUNC(do_join)
 						}
 						continue;
 					}
+				}
+			}
+			/* ugly set::spamfilter::virus-help-channel-deny hack.. */
+			if (SPAMFILTER_VIRUSCHANDENY && SPAMFILTER_VIRUSCHAN &&
+			    !strcasecmp(name, SPAMFILTER_VIRUSCHAN) &&
+			    !IsAnOper(sptr) && !spamf_ugly_vchanoverride)
+			{
+				int invited = 0;
+				Link *lp;
+				aChannel *chptr = find_channel(name, NULL);
+				
+				if (chptr)
+				{
+					for (lp = sptr->user->invited; lp; lp = lp->next)
+						if (lp->value.chptr == chptr)
+							invited = 1;
+				}
+				if (!invited)
+				{
+					sendnotice(sptr, "*** Cannot join '%s' because it's the virus-help-channel which is "
+					                 "reserved for infected users only", name);
+					continue;
 				}
 			}
 		}

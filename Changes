@@ -3172,3 +3172,7 @@ This is the 3.2 fixes branch.
 - Imported TRE 0.6.7 for *nix and made use of tre_version to report the version of TRE
   in use at startup
 - Fixed a Win32 module bug
+- Added set::spamfilter::virus-help-channel-deny. This allows you to block any
+  normal joins to the virus-help-channel. This way you could prevent users into
+  accidental (or tricked) joining of the virus-help-channel and becomming infected.
+  This feature is disabled by default. Requested by bleepy (#0001811).
