@@ -4776,9 +4776,6 @@ void dump_map(cptr, server, mask, prompt_length, length)
 		acptr = lp->value.cptr;
 		if (acptr->srvptr != server)
 			continue;
-			
-		if (IsULine(acptr) && HIDE_ULINES && !IsAnOper(cptr))
-			continue;
 		acptr->flags |= FLAGS_MAP;
 		cnt++;
 	}
@@ -4786,6 +4783,8 @@ void dump_map(cptr, server, mask, prompt_length, length)
 	for (lp = (Link *) return_servers(); lp; lp = lp->next)
 	{
 		acptr = lp->value.cptr;
+		if (IsULine(acptr) && HIDE_ULINES && !IsAnOper(cptr))
+			continue;		
 		if (acptr->srvptr != server)
 			continue;
 		if (!acptr->flags & FLAGS_MAP)
