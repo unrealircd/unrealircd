@@ -520,3 +520,5 @@
 - Added command line option -F to prevent the ircd to fork out
 - Fixed the f*cken TKL bug
 - Fixed a netsplit bug
+- Changed some find_server(name, NULL) to find_server_quick to speed up
+  lookup of servers

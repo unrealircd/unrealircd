@@ -326,7 +326,7 @@ int  hunt_server(cptr, sptr, command, server, parc, parv)
 	if ((acptr = find_client(parv[server], NULL)))
 		if (acptr->from == sptr->from && !MyConnect(acptr))
 			acptr = NULL;
-	if (!acptr && (acptr = find_server(parv[server], NULL)))
+	if (!acptr && (acptr = find_server_quick(parv[server])))
 		if (acptr->from == sptr->from && !MyConnect(acptr))
 			acptr = NULL;
 	if (!acptr)
@@ -894,7 +894,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	{
 		aClient *acptr;
 
-		if (!(acptr = (aClient *) find_server_quick(user->server, NULL)))
+		if (!(acptr = (aClient *) find_server_quick(user->server)))
 		{
 			sendto_ops
 			    ("Bad USER [%s] :%s USER %s %s : No such server",
@@ -1147,7 +1147,7 @@ int  m_nick(cptr, sptr, parc, parv)
 	   ** is present in the nicklist (due to the way the below for loop is
 	   ** constructed). -avalon
 	 */
-	if ((acptr = find_server(nick, NULL)))
+	if ((acptr = find_server_quick(nick)))
 	{
 		if (MyConnect(sptr))
 		{
@@ -1924,7 +1924,7 @@ static int m_message(cptr, sptr, parc, parv, notice)
 			/* There is always a \0 if its a string */
 			if (*(server + 1) != '\0')
 			{
-				acptr = find_server(server + 1, NULL);
+				acptr = find_server_quick(server + 1);
 				if (acptr)
 				{
 					/* 
@@ -2635,7 +2635,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			}
 			if (!showperson)
 				continue;
-			a2cptr = find_server(user->server, NULL);
+			a2cptr = find_server_quick(user->server);
 
 			if (!IsPerson(acptr))
 				continue;
@@ -3309,12 +3309,12 @@ int  m_ping(cptr, sptr, parc, parv)
 
 	acptr = find_client(origin, NULL);
 	if (!acptr)
-		acptr = find_server(origin, NULL);
+		acptr = find_server_quick(origin);
 	if (acptr && acptr != sptr)
 		origin = cptr->name;
 	if (!BadPtr(destination) && mycmp(destination, me.name) != 0)
 	{
-		if ((acptr = find_server(destination, NULL)))
+		if ((acptr = find_server_quick(destination)))
 			sendto_one(acptr, ":%s PING %s :%s", parv[0],
 			    origin, destination);
 		else
@@ -3407,7 +3407,7 @@ int  m_pong(cptr, sptr, parc, parv)
 	if (!BadPtr(destination) && mycmp(destination, me.name) != 0)
 	{
 		if ((acptr = find_client(destination, NULL)) ||
-		    (acptr = find_server(destination, NULL)))
+		    (acptr = find_server_quick(destination)))
 		{
 			if (!IsServer(cptr) && !IsServer(acptr))
 			{
