@@ -38,7 +38,8 @@ OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/BSD.OBJ \
 MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OBJ \
  SRC/M_SETNAME.OBJ SRC/M_SETHOST.OBJ SRC/M_CHGIDENT.OBJ SRC/M_SVSMOTD.OBJ \
  SRC/M_SVSNLINE.OBJ SRC/M_WHO.OBJ SRC/M_SWHOIS.OBJ SRC/M_SVSMODE.OBJ \
- SRC/M_AWAY.OBJ SRC/M_SVSNOOP.OBJ SRC/M_MKPASSWD.OBJ SRC/SCAN.OBJ SRC/SCAN_SOCKS.OBJ 
+ SRC/M_AWAY.OBJ SRC/M_SVSNOOP.OBJ SRC/M_MKPASSWD.OBJ SRC/M_SVSO.OBJ SRC/M_SVSNICK.OBJ \
+ SRC/SCAN.OBJ SRC/SCAN_SOCKS.OBJ 
 
 
 ALL: WIRCD.EXE
@@ -242,6 +243,12 @@ src/m_mkpasswd.obj: src/modules/m_mkpasswd.c $(INCLUDES)
 
 src/m_svsnoop.obj: src/modules/m_svsnoop.c $(INCLUDES)
         $(CC) $(CFLAGS) src/modules/m_svsnoop.c
+
+src/m_svso.obj: src/modules/m_svso.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_svso.c
+
+src/m_svsnick.obj: src/modules/m_svsnick.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_svsnick.c
 
 src/scan.obj: src/modules/scan.c $(INCLUDES)
         $(CC) $(CFLAGS) src/modules/scan.c

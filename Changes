@@ -837,3 +837,4 @@ seen. gmtime warning still there
 - Fixed a typo in the win32 makefile
 - Made the config a bit more sturdy (would have done more, but got boring :P)
 - Moved /svso and /svsnick to modules
+- Updated the win32 makefile
