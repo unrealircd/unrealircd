@@ -605,7 +605,7 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 				if (conf_tld) {
 					ConfigItem_tld *tlds;
 					i = 6001;
-					AppendMenu(hConfig, MF_SEPARATOR, 6000,NULL);
+					AppendMenu(hConfig, MF_SEPARATOR, 6000, NULL);
 					for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *)tlds->next) {
 						if (!tlds->flag.motdptr)
 							AppendMenu(hConfig, MF_STRING, ++i, tlds->motd_file);
@@ -633,8 +633,8 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 		}
 
 			case WM_COMMAND: {
-				/* Hopefully no one will have more than 12000 motd files? */
-				if (LOWORD(wParam) > 6000 && LOWORD(wParam) < 20000) {
+				/* Hopefully no one will have more than 10000 files? */
+				if (LOWORD(wParam) > 6000 && LOWORD(wParam) < 16000) {
 					char path[MAX_PATH];
 					GetMenuString(hConfig,LOWORD(wParam), path, MAX_PATH, MF_BYCOMMAND);
 					DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, 
