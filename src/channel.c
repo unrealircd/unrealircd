@@ -352,7 +352,9 @@ static aClient *find_chasing(aClient *sptr, char *user, int *chasing)
 	}
 	if (chasing)
 		*chasing = 1;
-	return who;
+	if (!IsServer(who))
+		return who;
+	return NULL;
 }
 /*
   Exception functions to work with mode +e
