@@ -307,7 +307,6 @@ LRESULT CALLBACK CreditsDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 		case WM_INITDIALOG: {
 			char	String[16384], **s = unrealcredits;
 			SetWindowText(hDlg, "UnrealIRCd Credits");
-			SendMessage(GetDlgItem(hDlg,IDC_TEXT),EM_AUTOURLDETECT,(WPARAM)TRUE,0);
 			sprintf(String, "{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fmodern\\fprq1\\"
 				"fcharset0 Fixedsys;} {\\f1\\fnil\\fcharset0 Times New Roman;}}\r\n"
 				MIRC_COLORS
