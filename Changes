@@ -1837,7 +1837,6 @@ seen. gmtime warning still there
 - Fixed some minor sending-1-byte-too-much bugs
 - Made a STRIPBADWORDS_CHAN_ALWAYS option in include/config.h, if you define it badwords will
   always be stripped from all channels (regardless whether +G has been set or not) [default=disabled].
-- Fixed whois: "a Services Operator" -> "a Services Administrator".
 - Fix for error msgs flood at (at least) Linux 2.4.x and FreeBSD ("Transport endpoint is not connected"
   and "Socket is not connected"). (#0000677)
 - Added makefiles to compile with zip links @ windows (zlib needed).
