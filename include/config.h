@@ -93,11 +93,16 @@
  */
 #define ADMINCHAT 1
 
+
 /*
   Remote rehash
 */
 #define REMOTE_REHASH
 
+/*
+  Stripbadwords patch
+*/
+#define STRIPBADWORDS
 /* 
   Ident checking
   #define this to disable ident checking

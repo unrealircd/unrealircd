@@ -329,3 +329,4 @@ k/*
 - Created /shun, /gline style. /shun +user@host time reason /shun -user@host
   will extend it so you can /shun +nick later
 - A little anti-0 fix in channel.c
+- Made MODE_X, MODE_I etc show mode change to user
