@@ -4361,8 +4361,8 @@ int  m_close(cptr, sptr, parc, parv)
 		closed++;
 	}
 	sendto_one(sptr, rpl_str(RPL_CLOSEEND), me.name, parv[0], closed);
-	sendto_ops("%s!%s@%s closed %d unknown connections", sptr->name,
-	    sptr->user->username, sptr->user->realhost, closed);
+	sendto_realops("%s!%s@%s closed %d unknown connections", sptr->name,
+	    sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost, closed);
 	IRCstats.unknown = 0;
 	return 0;
 }

@@ -353,3 +353,4 @@
 - Fixed the double +cF notice on local connections exiting, ugly hack
 - Removed the last traces of unix sockets, flag 0x10 free now
 - Made all ircops able to use +F (totally this time)
+- /quote close do not show realhost of caller anymore
