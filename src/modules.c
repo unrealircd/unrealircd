@@ -114,7 +114,7 @@ char  *Module_Load (char *path_, int load)
 	char 		*path;
 	ModuleHeader    *mod_header;
 	int		ret = 0;
-	Module          *mod = NULL, *Mod_Handle = NULL;
+	Module          *mod = NULL, **Mod_Handle = NULL;
 	Debug((DEBUG_DEBUG, "Attempting to load module from %s",
 	       path_));
 	path = path_;
@@ -182,9 +182,9 @@ char  *Module_Load (char *path_, int load)
 			Module_free(mod);
 			return ("Dependancy problem");
 		}
-		irc_dlsym(Mod, "Mod_Handle", Mod_Handle);
+		irc_dlsymtype(Mod, "Mod_Handle", Mod_Handle, (Module **));
 		if (Mod_Handle)
-			*((Module **)Mod_Handle) = mod;
+			*Mod_Handle = mod;
 		if ((ret = (*Mod_Init)(load)) < MOD_SUCCESS)
 		{
 			ircsprintf(errorbuf, "Mod_Init returned %i",

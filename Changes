@@ -1191,3 +1191,4 @@ v- Fixed some bugreport stuff
 - Modified the OpenBSD fix to work for all OSes that add an _
 - Fixed m_rawto.c problem found by TheDarkOne
 - Possibly fixed the /who flags bug reported by sbalmos (#0000063)
+- lack of time sucks. openbsd problem
