@@ -1290,6 +1290,8 @@ loadmodule "modules/cloak.dll";
 	motd &lt;motd-file&gt;;
 	rules &lt;rules-file&gt;;
 	shortmotd &lt;shortmotd-file&gt;;
+	opermotd &lt;opermotd-file&gt;;
+	botmotd &lt;botmotd-file&gt;;
 	channel &lt;channel-name&gt;;
 	options {
 		ssl;
@@ -1298,9 +1300,10 @@ loadmodule "modules/cloak.dll";
 <p>Le tld block vous permet de sp&eacute;cifier un motd, rules (r&egrave;gles), et salon pour un utilisateur 
   en se basant sur son host. C'est utile si vous voulez diff&eacute;rents motd pour diff&eacute;rentes langues. 
   Le <b>tld::mask</b> est un masque user@host auquel l'username et l'host de l'utilisateur doivent 
-  correspondre. Les <b>tld::motd</b>, <b>tld::shortmotd</b>, et <b>tld::rules</b> sp&eacute;cifie respectivement 
-  les fichiers motd, shortmotd et rules qui doivent être affich&eacute;s pour un hostmask. 
-  Le tld::shortmotd est optionnel. <b>tld::channel</b> sp&eacute;cifie respectivement les fichiers motd, 
+  correspondre. Les <b>tld::motd</b>, <b>tld::shortmotd</b>,<b>tld::opermotd</b>,<b>tld::botmotd</b>, et 
+  <b>tld::rules</b> sp&eacute;cifie respectivement les fichiers motd, shortmotd, opermotd, botmotd et rules 
+  qui doivent être affich&eacute;s pour un hostmask. Les tld::shortmotd, tld::opermotd, et tld::botmotd sont optionnels. 
+  <b>tld::channel</b> sp&eacute;cifie respectivement les fichiers motd, 
   shortmotd et rules qui doivent être affich&eacute;s pour un hostmask. Le tld::shortmotd est optionnel.
   Le bloc <b>tld::options</b> vous permet de d&eacute;finir des exigences suppl&eacute;mentaires, habituellement 
   seuls tld::options::ssl qui affiche seulement le fichier pour les usagers SSL, et tld::options::remotes 
